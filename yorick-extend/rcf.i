@@ -3,25 +3,16 @@
   $Id$
 
   Wrapper file for rcf
+
+  Original rcf.i by C.W.Wright
+  Converted to "C" by Conan Noronha
  
-  Use
+  Use   yorick -batch make.i rcf_yorick rcf.i   to build a Makefile for this package.
 
-     yorick -batch make.i rcf_yorick rcf.i
+  Then use  make to build a custom version of yorick called "rcf_yorick".
 
-  to build a Makefile for this package.
+The function frcf can be called from the interpreter.
 
-     yorick -batch make.i
-
-  checks the existing Makefile to be sure it has the correct MAKE_TEMPLATE
-  for this platform -- you can do this when you move this package from one
-  platform to another to avoid reconstructing the Makefile.
-
-     make
-
-  builds a custom version of yorick called "rcf_yorick".  The function 
-  rcf can be called from the interpreter.
-
-  Try including make.i and typing "help, make" for more information.
 */
 
 /* MAKE-INSTRUCTIONS
@@ -29,12 +20,12 @@ SRCS = rcf.c
 */
 
 
-func rcf(jury, w, mode=)
-/* DOCUMENT rcf( jury, w, mode= )
+func frcf(jury, w, mode=)
+
+/* DOCUMENT frcf( jury, w, mode= )
 Generic Random Consensus filter.  The jury is the
 array to test for consensis, and w is the window range
 which things can vary within.
-
 
 jury       The array of points used to reach the consenus.
 
@@ -57,23 +48,23 @@ Mode=
         And lets set the window size to 6: w = 6
 
         The default mode:
-        rcf(a, w) and Enter
+        frcf(a, w) and Enter
         The result printed on the screen will be the following:
         [98, 10] where 98 is the minimum value of the points in the window
 
         Mode 1
-        rcf(a, w, mode= 1) and Enter
+        frcf(a, w, mode= 1) and Enter
         The result printed on the screen will be:
         [100.1, 10] where 100.1 is the average value within the window
         and 10 is the number of points within that window range.
 
         Mode 2
-        rcf(a, w, mode= 2) and Enter
+        frcf(a, w, mode= 2) and Enter
         The result printed on the screen will be:
         10                      number of points within the window
-        [1,2,3,4,5,6,7,8,9,10]   kwinners array
-        4                     vote
-        [0x81121bc,0x814d9bc]   location in memory of sorted list of kwinners
+        [1,2,3,4,5,6,7,8,9,10]   winners array
+        10                       vote
+        [0x81121bc,0x814d9bc]   location in memory of sorted list of winners
         and address of vote.
 
 
@@ -93,26 +84,25 @@ ASSOC COMPUTING MACHINERY, NEW YORK
 */
 
 { 
-  b = float(array(0,2));	//Return array
+  b = float(array(0,2));	//Return array for mode 0 & 1
   if ( is_void(mode) )		//Ensure a mode value
         mode = 0;
 
-  fcount = y_rcf(jury, w, mode, b);	//Call the yorick version of the "C" rcf functions
+  fcount = y_frcf(jury, w, mode, b);	//Call the yorick version of the "C" rcf function
 
- if (mode== 2)
- {
+ if (mode== 2)			//If the mode is 2,
+ {				//generate an array of size = number of winners
    c = int(array(0,fcount));
+   y_fillarray, c;		//Fill it
 
-   y_fillarray, c;
-
-   return [&c, &fcount]
+   return [&c, &fcount]		//And return the start address & address of winner count
  }
- return b;
+ return b;			//Else return b for mode 0 or 1
 }
 
-extern y_rcf;
+extern y_frcf;
 /* PROTOTYPE
-int c_rcf (float array a, float w, int mode, float array b)
+int c_frcf (float array a, float w, int mode, float array b)
 */
 
 

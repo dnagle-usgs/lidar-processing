@@ -3,15 +3,18 @@
   $Id$
 
     This file contains the c functions to implement the rcf.
-    c_compfunc is a comparing function required by qsort.
-
+    
+    c_frcf is the rcf implementation for float type data
+    c_compfunc is a comparing function required by qsort to sort the jury
+    c_compfunc2 is used by qsort, to sort the array of winners.
+    GetInfo is a function from std0.c, to get information on the array size
+    
     Original rcf.i by W. Wright, 
     Converted to "C" by Conan Noronha
 
-
 */
 
-#include "bcast.h"		//Include files required for the function
+#include "bcast.h"
 #include "yio.h"
 #include "defmem.h"
 #include "pstdlib.h"
@@ -22,7 +25,9 @@
 
 static Member type;
 
-//This function is taken directly from Y_LAUNCH/std0.c to get the number of elements in the source array
+/* This function is taken directly from Y_LAUNCH/std0.c 
+ * to get the number of elements in the source array
+ */
 
 static DataBlock *XGetInfo(Symbol *s)
 {
@@ -70,12 +75,15 @@ static DataBlock *XGetInfo(Symbol *s)
   return type.base? 0 : db;
 }
 
-//Function to compare two float values. Used by qsort. Returns -1, 0 or 1
-
-static float *copy, fcounter;
+static float *copy, fcounter;				//Global pointer to the jury & global number of winners count.
 static unsigned int *winners, *fwinners;		//Store the winners temporarily
 
-int c_compfunc(const void *x, const void *y)		//To sort the jury
+/* Function to compare index values of the jury, based on the contents of
+ * that indexed location. 
+ * Used by qsort. Returns -1, 0 or 1
+ */
+
+int c_compfunc(const void *x, const void *y)
 {
    unsigned int pp,qq;
    int t;
@@ -90,7 +98,11 @@ int c_compfunc(const void *x, const void *y)		//To sort the jury
    return t;
 }
 
-int c_compfunc2(const void *x, const void *y)		//To sort the fwinners array
+
+/* Function to compare values of the array, to sort fwinners.
+ * Used by qsort. Returns -1, 0 or 1
+ */
+int c_compfunc2(const void *x, const void *y)
 {
    unsigned int pp,qq;
    int t;
@@ -105,9 +117,11 @@ int c_compfunc2(const void *x, const void *y)		//To sort the fwinners array
    return t;
 }
 
-//Float version of the rcf algorithm
+/* Float version of the rcf algorithm.
+ * Returns the number of winners
+ */
 
-unsigned int  c_rcf (float* a, float w, int mode, float* b)
+unsigned int  c_frcf (float* a, float w, int mode, float* b)
 {
   #define MAX_MODE 2
 
@@ -120,7 +134,7 @@ unsigned int  c_rcf (float* a, float w, int mode, float* b)
   if (w<=0.0)
     YError("Window size must be positive");
 
-  db = XGetInfo(sp-3);				//stack pointer-4 is the source array 
+  db = XGetInfo(sp-3);				//stack pointer-3 is the source array 
   if (!db) 
      number_elems= (unsigned int)type.number;	//Get the number of elements in the source array
   else
@@ -134,7 +148,7 @@ unsigned int  c_rcf (float* a, float w, int mode, float* b)
 
   qsort(idx, number_elems, sizeof(unsigned int), c_compfunc);//Sort the copy
 
-  if (mode == 2)
+  if (mode == 2)				//Mode 2 needs to store the winners
      winners = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
 
   for (i=0; i<number_elems-1; i++)		//For each element in the copy
@@ -151,30 +165,26 @@ unsigned int  c_rcf (float* a, float w, int mode, float* b)
         counter++;				//Count it
         if (mode == 1)				//Add to a total if mode 1
           tmp += a[idx[j]];
-        else if (mode == 2)
-           winners[counter-1] = idx[j]+1;	//In yorick, indexing form 1 is needed
+        else if (mode == 2)			//Store its index, if mode 2
+           winners[counter-1] = idx[j]+1;	//In yorick, indexing starts from 1
       }
       else
          break;					//Break since the array is sorted
 
-    if (b[1] < (float)counter)			//Refresh the return array, if necessary
+    if (b[1] < (float)counter)			//Refresh the return array b, if necessary
     {
        b[1] = (float)counter;
-       fcounter = counter;
+       fcounter = counter;			//Remember the counter value
       
        if (mode == 1 )
-          b[0] = tmp/counter;
+          b[0] = tmp/counter;			//Mode 1, requests a mean
        else if (mode == 2)
-       {
-
-	  if (fwinners)
-	     free(fwinners);
-	  
+       {					//For mode 2, store the winners in an
 	  fwinners = (unsigned int *) malloc ((sizeof(unsigned int))*fcounter);
 
 	  memcpy ((void *)fwinners, (void *)winners, ((sizeof(unsigned int))*fcounter));
        }
-       else	//mode 0
+       else					//Mode 0, request the actual base winner
            b[0] = a[idx[i]];
 
     }
@@ -182,14 +192,20 @@ unsigned int  c_rcf (float* a, float w, int mode, float* b)
     if (a[number_elems-1] <= a[idx[i]]+w)	//Break the whole process when the last element in 
       break;					//the sorted copy falls in a window of some element
   }
-  free (winners);				//Dont need winners anymore...they are in fwinners
+  if (mode == 2)
+     free (winners);				//Dont need winners anymore...they are in fwinners
+  free (idx);					//idx array is also not needed now
+
   return fcounter;
 }
 
+/* Used to fill a 'Yorick' array with the winners indices
+ * This function is called only for mode==2
+ */
 
 void c_fillarray (unsigned int c)
 {
-   memcpy ((void*)c, (void*)fwinners, ((sizeof(unsigned int))*fcounter));
-   qsort(c, fcounter, sizeof(unsigned int), c_compfunc2);//Sort the copy
-   free (fwinners);
+   memcpy ((void*)c, (void*)fwinners, ((sizeof(unsigned int))*fcounter));	//Copy fwinners into the yorick array
+   qsort(c, fcounter, sizeof(unsigned int), c_compfunc2);			//Sort the copy
+   free (fwinners);								//fwinners not needed now
 }
