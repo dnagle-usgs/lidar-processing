@@ -45,10 +45,35 @@ func qde( r ) {
    rb = roll_bias * d2r;
    a = r.sa / Hcvt * pi + rb;
    e = -(r.irange * NS2MAIR - range_bias) *  
-         cos(a + r.rroll ) * cos(r.rpitch + pitch_bias*d2r ) ;
-   ea = [ e + r.alt - qde_vertical_offset, a ];
+         cos(a + r.rroll ) * 
+         cos(r.rpitch + pitch_bias*d2r ) ;
+   ea = [ e + r.alt - qde_vertical_offset, (r.sa+3)/4 + 80 ];
    return ea;
 }
+
+
+func open_fscube( junk ) {
+/* DOCUMENT open_fscube()
+
+   Returns a filter cube for use in spatial filtering first surface
+  return data.
+
+*/
+   return ( array( float, 160, 9 ) );
+
+}
+
+func load_fscube( w, cube ) {
+/* DOCUMENT load_fscube(w)
+*/
+   cube( , 2:9) = cube(, 1:8);	// shift cube data down one.    
+   cube( , 1) = 0;
+   cube( int( w(,2) ), 1) = w(,1);
+   return cube;
+}
+
+
+
 
 func lsq(y,x) {
 /* DOCUMENT lsq(y,x)

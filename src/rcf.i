@@ -1,5 +1,7 @@
 /* 
       $Id$
+
+   8-20-02 -ww Added to Document comment. Fixed spelling.
 */
 
 local rcf_help
@@ -8,12 +10,16 @@ local rcf_help
 */
 
 func rcf( jury, w, mode= ) {
-/* DOCUMENT rcf
-Generic Random Concensus filter.  The jury is the 
-array to test for concensis, and w is the window range
+/* DOCUMENT rcf( jury, w, mode= )
+Generic Random Consensus filter.  The jury is the 
+array to test for consensis, and w is the window range
 which things can vary within.
 
   Orginal: C. W. Wright 6/15/2002
+
+jury       The array of points used to reach the consenus.
+
+w          The window width.
 
 Mode=
 	0  Returns an array consisting of two elements
@@ -26,12 +32,12 @@ Mode=
 	2  Returns a index list of the winners
 	
 	Explanation of variables:
-	i -			index
+	i -		index
 	jury - 		initial set of points
-	vote - 		number of points that are included in the window range
-				during each pass
+	vote - 		number of points that are included in the window 
+                        range during each pass
 	kwinners-	points that have been filtered or maximum of points
-				that can be included in the window range.
+                        that can be included in the window range.
 	w -		window range that points will be tested against
 	winners- 	points within the window range after one pass
 	wtop -		window upper bound value
