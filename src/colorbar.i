@@ -2,7 +2,7 @@
    $Id$
 */
 write, "$Id$" 
-func colorbar(cmin, cmax, drag=, delta=)
+func colorbar(cmin, cmax, drag=, delta=, landscape=)
 /* DOCUMENT colorbar
             colorbar, cmin, cmax, drag=
      draw a color bar to the right of the plot.  If CMIN and CMAX
@@ -15,6 +15,10 @@ xoff = 0.0;
 yoff = 0.0;
   x = [.67,.67,.625,.625]  + xoff
   y = [.46,.84,.84,.46] + yoff
+  if (landscape) {
+     x = [.99,.99,.945,.945]  + xoff
+     y = [.30,.68,.68,.30] + yoff
+  }	
   if ( !is_void( drag ) ) {
     if ( _ytk ) 
 ////        tkcmd, " center_win  [ toplevel .temp ]\r"
