@@ -726,7 +726,7 @@ func utmfp2ll (fname, zone=) {
   }
 }
 
-func read_xy(file,yx=, utm=, zone=, color=) {
+func read_xy(file,yx=, utm=, zone=, color=, win=) {
  /* read_xy(file,yx=, utm=, zone=) 
    amar nayegandhi 11/17/03
  */
@@ -734,6 +734,7 @@ func read_xy(file,yx=, utm=, zone=, color=) {
  f = open(file,"r");
 
  if (!color) color="blue"
+ if (is_void(win)) win = window();
  
  i = 0;   
  nc = 0;		// null line counter
@@ -747,7 +748,6 @@ func read_xy(file,yx=, utm=, zone=, color=) {
      i++;
      if ( nc > 50 ) break;
      a = rdline(f);
-     a;
      if ( strlen(a) == 0 ) {
 	// null counter
 	nc++; 
@@ -756,7 +756,11 @@ func read_xy(file,yx=, utm=, zone=, color=) {
         nc = 0;
      }
      if (a > "") {
-       sread, a, x,y;
+       if (yx) {
+         sread, a, x,y;
+       } else {
+         sread, a, y,x;
+       }
     }
     if (utm) {
       llxy = utm2ll(x,y,zone);
@@ -770,6 +774,7 @@ func read_xy(file,yx=, utm=, zone=, color=) {
       
  }
  
+ window, win;
  
  for (i=1;i<numberof(xarr);i++){
    pldj, xarr(i), yarr(i), xarr(i+1), yarr(i+1), color=color, width=2.0
