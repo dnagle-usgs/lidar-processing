@@ -277,15 +277,15 @@ proc load_file_list { f } {
 				if { [ catch { set tmp $imgtime(hms$hms) } ] == 0 } {
 									if { $DEBUG_SF } { puts "    imgtime(hms$hms) $imgtime(hms$hms) exists" }
 					if { $lati > 0 } {
-						set lat(hms$hms) S[expr $lati * 1]
+						set lat(hms$hms) N[expr $lati * 1]
 					} else {
-						set lat(hms$hms) N[expr $lati * -1]
+						set lat(hms$hms) S[expr $lati * -1]
 					}
 									if { $DEBUG_SF } { puts "    lat(hms$hms) $lat(hms$hms)" }
 					if { $long > 0 } {
-						set lon(hms$hms) W[expr $long * 1]
+						set lon(hms$hms) E[expr $long * 1]
 					} else {
-						set lon(hms$hms) E[expr $long * -1]
+						set lon(hms$hms) W[expr $long * -1]
 					}
 									if { $DEBUG_SF } { puts "    lon(hms$hms) $lon(hms$hms)" }
 					set alt(hms$hms) [expr $depth * 1]M
