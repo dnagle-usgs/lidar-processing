@@ -371,7 +371,7 @@ func make_fs(latutm=, q=, ext_bad_att=) {
      for a selected region of flightlines.
      amar nayegandhi 09/18/02
   */
-  extern edb, soe_day_start, tans, pnav, type, utm, fs_all, rn_arr;
+  extern edb, soe_day_start, tans, pnav, type, utm, fs_all, rn_arr_idx;
   fs_all = [];
   rn_arr =[];
    if (!is_array(tans)) {
@@ -467,6 +467,13 @@ func make_fs(latutm=, q=, ext_bad_att=) {
 	write, "No good returns found"
 
     no_append = 0;
+
+// Compute a list of indices into each flight segment from rn_arr.
+// This information can be used to selectively plot each selected segment
+// along, or only a specfic group of selected segments.
+    rn_arr_idx = (rn_arr(dif,)(,cum)+1)(*);	
+
+write,"fs_all contains the data, and rn_arr_idx contains a list of indices"
 
     return fs_all;
 
