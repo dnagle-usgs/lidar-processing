@@ -32,8 +32,10 @@
 I32 dmars_2_gps;
 I32 recs_written = 0;
 
+
 I32 gps_time_offset = 0;
 
+I32 toff = 600;
 
 UI32 time_recs;
 UI32 dmars_recs;
@@ -269,13 +271,20 @@ process_options( int argc, char *argv[] ) {
  extern char *optarg;
  extern int optind, opterr, optopt;
  int c;
-  while ( (c=getopt(argc,argv, "O:o:t:")) != EOF ) 
+  while ( (c=getopt(argc,argv, "O:o:t:T:")) != EOF ) 
    switch (c) {
     case 'O':
     case 'o':
       if ( (odf=fopen(optarg,"w+")) == NULL ) {
         fprintf(stderr,"Can't open %s\n", optarg);
         exit(1);
+      }
+      break;
+
+    case 'T':
+      if( sscanf(optarg,"%lf", &toff ) != 1 ) {
+       perror("Invalid backoff time offset.");
+       exit(1);
       }
       break;
 
@@ -316,9 +325,9 @@ main( int argc, char *argv[] ) {
   pass1(idf);
   display_header();
 
-// Backup 10 minutes from the end of the file
+// Backup "toff" (option -T)  seconds from the end of the file
 // to sync up time with DMARS.
-  idx = time_recs-600;
+  idx = time_recs - toff;
   fprintf(stderr,"\n%d Time recs, %d DMARS recs\nsizeof(hdr)=%d\n sizeof(IEX_RECORD)=%d, gscale=%f ascale=%f\n", 
           time_recs, 
           dmars_recs,

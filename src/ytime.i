@@ -128,7 +128,7 @@ func soe2somd( soe ) {
 
 
 func soe2time( soe ) {
-/* DOCUMENT sor2sod( soe )
+/* DOCUMENT soe2time( soe )
    This function converts a time/date seconds value such as used by 
 Unix and DOS system into a return array consisting of:
   t(1)	Year

@@ -75,7 +75,7 @@ BIN = ../bin
 ###############################################################################
 #### bin_dmars2iex:	../bin/dmars2iex
 
-bin/dmars2iex:	dmars2iex.o
+../bin/dmars2iex:	dmars2iex.o
 	$(CC) -c dmars2iex.c
 	mkdir -p  ../bin
 	cc -lm -o $@ dmars2iex.o
