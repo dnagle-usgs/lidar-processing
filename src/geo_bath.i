@@ -754,20 +754,7 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset
 
  if (numberof(data) != numberof(data.north)) {
      if ((ptype == 1) && (fset == 0)) { //Convert GEOALL to GEO 
-	            data_new = array(GEO, numberof(data)*120);
-	                indx = where(data.rn >= 0);
-	         data_new.rn = data.rn(indx);
-	      data_new.north = data.north(indx);
-	       data_new.east = data.east(indx);
-	        data_new.sr2 = data.sr2(indx);
-	  data_new.elevation = data.elevation(indx);
-	     data_new.mnorth = data.mnorth(indx);
-	      data_new.meast = data.meast(indx);
-	 data_new.melevation = data.melevation(indx);
-	data_new.bottom_peak = data.bottom_peak(indx);
-	 data_new.first_peak = data.first_peak(indx);
-	      data_new.depth = data.depth(indx);
-	                data = data_new
+        data = geoall_to_geo(data);
      }
      if ((ptype == 0) && (fset==0)) { //convert R to FS 
 	data_new = array(FS, numberof(data)*120);
@@ -783,23 +770,8 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset
 
 	data = data_new
      }
-     if ((ptype == 2) && (fset == 0)) {  //convert VEGALL to VEG 
-	data_new = array(VEG_, numberof(data)*120);
-	indx = where(data.rn >= 0);
-	data_new.rn = data.rn(indx);
-	data_new.north = data.north(indx);
-	data_new.east = data.east(indx);
-	data_new.elevation = data.elevation(indx);
-	data_new.mnorth = data.mnorth(indx);
-	data_new.meast = data.meast(indx);
-	data_new.melevation = data.melevation(indx);
-	data_new.felv = data.felv(indx);
-	data_new.fint = data.fint(indx);
-	data_new.lelv = data.lelv(indx);
-	data_new.lint = data.lint(indx);
-	data_new.nx = data.nx(indx);
-
-	data = data_new
+     if ((ptype == 2) && (fset == 0)) {  //convert VEG_ALL_ to VEG__
+         data = veg_all__to_veg__(data);
      }
  }
 
@@ -1223,4 +1195,65 @@ maxx = (depth_all.elevation(q)+depth_all.depth(q))(max);
   window(w);
   return [e,h];
 }
+
+func clean_bathy(depth_all, rcf_width=) {
+  /* DOCUMENT clean_bathy(depth_all, rcf_width=)
+      This function cleans the bathy data.
+      Optionally set rcf_width to the elevation width (in meters) to use the RCF filter on the entire data set.For e.g., if you know your data set can have a maximum extent of -1m to -25m, then set rcf_width to 25.  This will remove the outliers from the data set.
+    amar nayegandhi 03/07/03
+  */
+  if (numberof(depth_all) != numberof(depth_all.north)) {
+      write, "converting GEOALL to GEO...";
+      depth_all = geoall_to_geo(depth_all);
+  }
+  write, "cleaning geo data...";
+  idx = where(depth_all.north != 0);
+  if (is_array(idx)) 
+    depth_all = depth_all(idx);
+  idx = where(depth_all.depth != 0)
+  if (is_array(idx)) 
+    depth_all = depth_all(idx);
+  idx = where(depth_all.elevation < (0.75*depth_all.melevation));
+  if (is_array(idx))
+     depth_all = depth_all(idx);
+  if (is_array(rcf_width)) {
+    write, "using rcf to clean data..."
+    //run rcf on the entire data set
+    ptr = rcf((depth_all.elevation+depth_all.depth), rcf_width*100, mode=2);
+    if (*ptr(2) > 3) {
+        depth_all = depth_all(*ptr(1));
+    } else {
+        depth_all = 0
+    }
+  }
+  return depth_all
+}
+
+func geoall_to_geo(data) {
+   /* DOCUMENT geoall_to_geo(data)
+      this function converts the data array from the GEO_ALL structure (in raster format) to the GEO structure in point format.
+      amar nayegandhi
+     03/07/03
+   */
+   
+ if (numberof(data) != numberof(data.north)) {
+	            data_new = array(GEO, numberof(data)*120);
+	                indx = where(data.rn >= 0);
+	         data_new.rn = data.rn(indx);
+	      data_new.north = data.north(indx);
+	       data_new.east = data.east(indx);
+	        data_new.sr2 = data.sr2(indx);
+	  data_new.elevation = data.elevation(indx);
+	     data_new.mnorth = data.mnorth(indx);
+	      data_new.meast = data.meast(indx);
+	 data_new.melevation = data.melevation(indx);
+	data_new.bottom_peak = data.bottom_peak(indx);
+	 data_new.first_peak = data.first_peak(indx);
+	      data_new.depth = data.depth(indx);
+  } else data_new = data;
+
+  return data_new
+}
+
+  
 
