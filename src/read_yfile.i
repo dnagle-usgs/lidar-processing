@@ -134,7 +134,7 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
     melevation = 0L;
     north = 0L;
     east = 0L;
-    melevation = 0L;
+    elevation = 0L;
     intensity = 0S;
 
     data = array(FS, recs); 

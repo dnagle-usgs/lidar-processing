@@ -99,6 +99,7 @@ func load_edb (  fn=, update= ) {
  extern data_path;
  extern soe_day_start;
  extern eaarl_time_offset;
+ extern tans, pnav;
  _ecfidx = 0;
 
 ///// if ( is_void( data_path ) ) 
@@ -257,6 +258,8 @@ if ( _ytk ) {
  /* adding time correct array (tca) function */
  time_correct, data_path;
  write,"load_edb_completed\r";
+ pnav = [];
+ tans = [];
 }
 
 

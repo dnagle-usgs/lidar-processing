@@ -220,14 +220,14 @@ func first_surface(start=, stop=, center=, delta=, north=, usecentroid=) {
 
 atime   = a.soe - soe_day_start;
 
-write,"interpolating roll..."
+write, format="\n%cInterpolating: roll...", 0x20
 roll    =  interp( tans.roll,    tans.somd, atime ) 
 
-write,"interpolating pitch..."
+write,format="%cpitch...",0x20
 pitch   = interp( tans.pitch,   tans.somd, atime ) 
 
 if ( is_void( north ) ) {
- write,"interpolating heading..."
+ write,format="%cheading...", 0x20
  hy = interp( sin( tans.heading*deg2rad), tans.somd, atime );
  hx = interp( cos( tans.heading*deg2rad), tans.somd, atime );
  heading = atan( hy, hx)/deg2rad;
@@ -237,7 +237,7 @@ if ( is_void( north ) ) {
 
 }
 
-write,"interpolating altitude..."
+write,format="%caltitude...",0x20
 palt  = interp( pnav.alt,   pnav.sod,  atime )
 
 if ( is_void( _utm ) ) {
@@ -249,7 +249,7 @@ if ( is_void( _utm ) ) {
    _utm = fll2utm( pnav.lat, pnav.lon )
 }
 
-write,"Interpolating northing and easting values..."
+write,format="%cnorthing/easting...\n", 0x20
 northing = interp( _utm(1,), pnav.sod, atime )
 easting  = interp( _utm(2,), pnav.sod, atime )
 
