@@ -131,17 +131,25 @@ write,format="Please wait while drawing..........%s", "\r"
  if ( is_void( cmax )) cmax = -1500;
  if ( is_void( size )) size = 1.4;
  ii = i;
+ /*
  if ( !is_void(edt) ) {
    ea = rrr.elevation;
-   ea = ( ea > cmin) & ( ea < cmax );
+   ea = ( (ea >= cmin) & ( ea <= cmax ) );
  } else {
    ea = rrr.elevation;
    ea = (ea != 0 );
  }
-for ( ; i<j; i++ ) {
-  q = where( ea(,i) &  (rrr(i).north) );
+ */
+for ( ; i<=j; i++ ) {
+ if ( !is_void(edt) ) {
+   ea = rrr(i).elevation;
+   q = where((ea >= cmin) & (ea <= cmax) & (rrr(i).north != 0))
+   //q = where( (ea(,i)) &  (rrr(i).north) );
+ } else {
+   q = where( (rrr(i).elevation) & (rrr(i).north) );
+ }
   if ( numberof(q) >= 1) {
-     plcm, rrr(i).elevation(q), rrr(i).north(q)/100.0, rrr(i).east(q)/100.0,
+     plcm, rrr(i).elevation(q), (rrr(i).north(q))/100.0, (rrr(i).east(q))/100.0,
       msize=size,cmin=cmin, cmax=cmax
    }
   }
