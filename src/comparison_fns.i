@@ -249,8 +249,16 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fsmode=, wfs=) {
   //now make a grid in the bbox
   ngridx = int(ceil((bbox(2)-bbox(1))/buf));
   ngridy = int(ceil((bbox(4)-bbox(3))/buf));
-  xgrid = bbox(1)+span(0, buf*(ngridx-1), ngridx);
-  ygrid = bbox(3)+span(0, buf*(ngridy-1), ngridy);
+  if (ngridx > 1)  {
+    xgrid = bbox(1)+span(0, buf*(ngridx-1), ngridx);
+  } else {
+    xgrid = [bbox(1)];
+  }
+  if (ngridy > 1)  {
+    ygrid = bbox(3)+span(0, buf*(ngridy-1), ngridy);
+  } else {
+    ygrid = [bbox(3)];
+  }
 
   if ( _ytk ) {
     tkcmd,"destroy .rcf1; toplevel .rcf1; set progress 0;"
