@@ -135,7 +135,7 @@ proc ter { n e o } {
  global total_edb_records data_path rn
  if { [ winfo exists .rslider.scale ] == 1 } {
    .rslider.scale configure -to $total_edb_records 
-   wm title .rslider "$data_path"
+   wm title .rslider "drast:  $data_path"
  }
 }
 

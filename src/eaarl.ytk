@@ -301,6 +301,7 @@ proc rbgga_menu {} {
  set mw .rbgga
  destroy $mw
  toplevel $mw
+ wm title $mw "eaarl.rbgga: "
  frame $mw.g1 -relief groove -borderwidth 3
  label $mw.g1.lulb -text "Coordinates:" -anchor e
  tk_optionMenu $mw.g1.lu gga(llu) latlon utm
