@@ -3,6 +3,7 @@
 # $Id$
 
   set ofname ""
+  set win_no 5
 
 exp_send "#include \"geo_bath.i\"\r"; # load geobath.i code
 expect ">";
@@ -110,12 +111,19 @@ ComboBox .l1wid.bf4.1.d -text "Define Region using..." -width 22 -values "Rubber
    }
 } 
 
-ComboBox .l1wid.bf4.1.p -text "Process Data For" -width 22 -values "SubAerial-Topography Submerged-Bathymetry Vegetation" -helptext "Process Data for any of the following" -editable 0 
+ComboBox .l1wid.bf4.1.p -text "Process Data For" -width 22 -values \
+	"SubAerial-Topography Submerged-Bathymetry Vegetation" \
+	-helptext "Process Data for any of the following" \
+	-editable 0 
+
+.l1wid.bf4.1.p setvalue first
 
 checkbutton .l1wid.bf4.2.cll -text "Convert UTM to Lat Lon" -variable cll 
 checkbutton .l1wid.bf4.2.cng -text "Convert to NAVD 88 (GEOID)" -variable cng 
+checkbutton .l1wid.bf4.2.fma -text "Fma" -variable l1pro_fma 
 
 Button .l1wid.bf45.p.1 -text "Plot Data" -width 15 -command {
+ global l1pro_fma
      #fill in later using what to plot
      set fs 0
      set ba 0
@@ -137,12 +145,16 @@ Button .l1wid.bf45.p.1 -text "Plot Data" -width 15 -command {
        	tk_messageBox  -icon warning \
         -message "You need to specify the type of processed data i.e. topo, bathy or veg!" \
         -type ok
+     } else {
+         if { $l1pro_fma } {
+	   exp_send "window,$win_no; fma;\r";
+	 }
      }
      if {$ptype == 0} {
        set cmax1 [expr $cmax*100]
        set cmin1 [expr $cmin*100]
        if {$disp_type == 0} {
-         exp_send "display, fs_all, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, dofma=1, edt=1;\r"
+         exp_send "display, fs_all, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, edt=1;\r"
          expect ">"
          exp_send "colorbar, $cmin, $cmax;\r"
          expect ">"
@@ -155,10 +167,16 @@ Button .l1wid.bf45.p.1 -text "Plot Data" -width 15 -command {
 }
 
 Label .l1wid.bf45.p.2 -text "in Window "
-SpinBox .l1wid.bf45.p.3 -justify center -range {0 7 1} -width 5 -textvariable win_no 
+SpinBox .l1wid.bf45.p.3 -justify center -range {0 7 1} \
+	-width 5 -textvariable win_no 
 
 Label .l1wid.bf45.p.4 -text "to display"
-ComboBox .l1wid.bf45.p.5 -text "Display Type" -width 20 -values "First_Surface_Topography Sub-aqueous_Topography Water_Depth Bare_Earth_Topography" -helptext "Select any one of the following" -editable 0
+ComboBox .l1wid.bf45.p.5 -text "Display Type" -width 20 -values \
+	"First_Surface_Topography Sub-aqueous_Topography \
+	Water_Depth Bare_Earth_Topography" \
+	-helptext "Select any one of the following" \
+	-editable 0
+.l1wid.bf45.p.5 setvalue first
 #listbox .l1wid.bf45.5 -height 1 -yscrollcommand ".l1wid.bf45.scrl set" -width 24
 #scrollbar .l1wid.bf45.scrl  -command ".l1wid.bf45.5 yview"
 #.l1wid.bf45.5 insert end "First Surface Topography"
@@ -241,7 +259,7 @@ Button .l1wid.bf5.2 -text "Begin Processing" -width 20 \
 #pack  .l1wid.bf4.1.cb .l1wid.bf4.1.xba .l1wid.bf4.1.xbd .l1wid.bf4.1.xbv -side top -padx 20 -pady 5
 #pack  .l1wid.bf4.1 -side top -padx 20 -pady 5
 pack .l1wid.bf4.1.d .l1wid.bf4.1.p -side left -padx 5
-pack  .l1wid.bf4.2.cll .l1wid.bf4.2.cng -side left -padx 3
+pack  .l1wid.bf4.2.cll .l1wid.bf4.2.cng .l1wid.bf4.2.fma -side left -padx 3
 pack .l1wid.bf4.1 .l1wid.bf4.2 -side top -pady 5
 pack .l1wid.bf1 .l1wid.bf2 .l1wid.bf3 .l1wid.bf4 -side top -expand 1 -fill both
 pack .l1wid.bf45.sc.1 .l1wid.bf45.sc.2 .l1wid.bf45.sc.3 -side left  -padx 3
