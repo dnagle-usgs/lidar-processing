@@ -524,6 +524,18 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=) {
       data_intensity = data_arr.lint;
     }
    }
+   if (!indx && !intensity) {
+     write,f, "UTMX(m), UTMY(m), Z(m)";
+   }
+   if (!indx && intensity) {
+     write,f, "UTMX(m), UTMY(m), Z(m), Intensity";
+   }
+   if (indx && !intensity) {
+     write,f, "Indx, UTMX(m), UTMY(m), Z(m)";
+   }
+   if (indx && intensity) {
+     write,f, "Indx, UTMX(m), UTMY(m), Z(m), Intensity";
+   }
 
   for (i=1;i<=num_valid;i++) {
     ++totw;
@@ -535,6 +547,18 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=) {
       sxx = swrite(format="%1d",xx);
       fn_new = fn_new(1)+"_"+sxx+fn_new(2);
       f = open(fn_new, "w")
+      if (!indx && !intensity) {
+       write,f, "UTMX(m), UTMY(m), Z(m)";
+      }
+      if (!indx && intensity) {
+       write,f, "UTMX(m), UTMY(m), Z(m), Intensity";
+      }
+      if (indx && !intensity) {
+       write,f, "Indx, UTMX(m), UTMY(m), Z(m)";
+      }
+      if (indx && intensity) {
+       write,f, "Indx, UTMX(m), UTMY(m), Z(m), Intensity";
+      }
       totw = 1;
     }
     if (type == 1) {
@@ -551,8 +575,8 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=) {
     }
  
     if (!indx && !intensity) {
-         write, f, format="%9.2f  %10.2f  %8.2f \n",data_arr.east(i)/100.,data_arr.north(i)/100., z;
-	} 
+         write, f, format="%9.2f, %10.2f, %8.2f\n",data_arr.east(i)/100.,data_arr.north(i)/100., z;
+    } 
     if (indx && !intensity) {
          write, f, format="%d, %9.2f, %10.2f, %8.2f\n",totw, data_arr.east(i)/100.,data_arr.north(i)/100., z;
     } 
@@ -560,7 +584,7 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=) {
          write, f, format="%9.2f, %10.2f, %8.2f, %d\n",data_arr.east(i)/100.,data_arr.north(i)/100., z, data_intensity(i);
     } 
     if (indx && intensity) {
-        write, f, format="%d %9.2f, %10.2f, %8.2f, %d\n",totw, data_arr.east(i)/100.,data_arr.north(i)/100., z, data_intensity(i);
+        write, f, format="%d, %9.2f, %10.2f, %8.2f, %d\n",totw, data_arr.east(i)/100.,data_arr.north(i)/100., z, data_intensity(i);
     }
     if ( (i % 1000) == 0 ) edfrstat, i, numberof(data_arr);
   }
