@@ -6,7 +6,7 @@ require, "datum_converter.i"
 
 func batch_datum_convert(con_dir,  tonad83=, tonavd88=, rcfmode=, onlymf=, searchstr=)
 {
-/* DOCUMENT batconvert(dir, tonad83=, tonavd88=, rcfmode=) This takes all of the data files for the index tiles in CON_DIR 
+/* DOCUMENT batch_datum_convert(dir, tonad83=, tonavd88=, rcfmode=) This takes all of the data files for the index tiles in CON_DIR 
 and converts them into nad83 or navd88, storing the converted data in  a new pdf
 file with the same name and location as the last, but with the datum tag changed.
 INPUT: con_dir = input directory where the files are stored.
