@@ -151,7 +151,7 @@
 
    a = long([ 100,101,100,99,60,98,99,101,105,103,30,88,99,110,101,150]);
    
-   a = long(span(1, 49, 49));
+   a = long(span(49, 1, 49));
    a(40:49) = a(10);
    timer, t0;
    for (u=0; u<10000; u++)
@@ -159,7 +159,7 @@
       junk = lrcf2(a, 6);
    }
    timer, t1
-   write,format="1000 Long Mode 0: Result= [%p,%p] time=%6.4f secs\n",junk(1), junk(2), t1(1)-t0(1);
+   write,format="10000 Long Mode 0: Result= [%p,%p] time=%6.4f secs\n",junk(1), junk(2), t1(1)-t0(1);
    timer, t0;
    junk = lrcf1(a, 6);
    timer, t1

@@ -53,6 +53,13 @@ void FNAME0 (TYPE* a, TYPE w, TYPE* b)
   else
      number_elems= 0;
 
+  if (number_elems == 1)			//For the special 1 element array
+  {
+	  b[0] = a[0];
+	  b[1] = (TYPE)1;
+	  return;
+  }
+
   if (number_elems <= TBUFSIZE)
 	  flag = 0;
   else
@@ -98,6 +105,7 @@ void FNAME0 (TYPE* a, TYPE w, TYPE* b)
   }
   if (flag)
      free (idx);					//idx array is also not needed now
+  return;
 }
 
 /* rcf algorithm for mode 1.
@@ -119,6 +127,13 @@ void FNAME1  (TYPE *a, TYPE w, float *b)
      number_elems= (unsigned int)type.number;	//Get the number of elements in the source array
   else
      number_elems= 0;
+
+  if (number_elems == 1)			//For the special 1 element array
+  {
+	  b[0] = (float)a[0];
+	  b[1] = 1.0;
+	  return;
+  }
 
   if (number_elems <= TBUFSIZE)
 	  flag = 0;
@@ -167,6 +182,7 @@ void FNAME1  (TYPE *a, TYPE w, float *b)
   }
   if (flag)
       free (idx);					//idx array is also not needed now
+  return;
 
 }
 
@@ -188,6 +204,14 @@ unsigned int  FNAME2 (TYPE* a, TYPE w)
   else
      number_elems= 0;
  
+  if (number_elems == 1)			//For the special 1 element array
+  {
+	  fwinners = tfwinners;
+	  fwinners[0] = 1;
+	  fcounter = 1;
+	  return fcounter;
+  }
+
   if (number_elems <= TBUFSIZE)
 	  flag = 0;
   else
@@ -289,6 +313,16 @@ unsigned int  FNAME3 (TYPE* a, TYPE w)
      number_elems= (unsigned int)type.number;	//Get the number of elements in the source array
   else
      number_elems= 0;
+
+  if (number_elems == 1)			//For the special 1 element array
+  {
+	  cvotes = tcvotes;
+	  CSJURY = TCSJURY;
+	  cvotes[0] = 1;
+	  CSJURY[0] = (TYPE)a[0];
+	  fcounter = 1;
+	  return fcounter;
+  }
  
   if (number_elems <= TBUFSIZE)
 	  flag = 0;

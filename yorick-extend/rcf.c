@@ -139,6 +139,12 @@ void rcf_float_0 (float* a, float w, float* b)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
+  if (number_elems == 1) //For the special 1 element array
+  {
+          b[0] = a[0];
+          b[1] = (float)1;
+          return;
+  }
   if (number_elems <= TBUFSIZE)
           flag = 0;
   else
@@ -175,6 +181,7 @@ void rcf_float_0 (float* a, float w, float* b)
   }
   if (flag)
      free (idx); //idx array is also not needed now
+  return;
 }
 /* rcf algorithm for mode 1.
  * Returns array b
@@ -191,6 +198,12 @@ void rcf_float_1 (float *a, float w, float *b)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
+  if (number_elems == 1) //For the special 1 element array
+  {
+          b[0] = (float)a[0];
+          b[1] = 1.0;
+          return;
+  }
   if (number_elems <= TBUFSIZE)
           flag = 0;
   else
@@ -229,6 +242,7 @@ void rcf_float_1 (float *a, float w, float *b)
   }
   if (flag)
       free (idx); //idx array is also not needed now
+  return;
 }
 /* rcf algorithm for mode 2.
  * Returns the number of winners
@@ -244,6 +258,13 @@ unsigned int rcf_float_2 (float* a, float w)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
+  if (number_elems == 1) //For the special 1 element array
+  {
+          fwinners = tfwinners;
+          fwinners[0] = 1;
+          fcounter = 1;
+          return fcounter;
+  }
   if (number_elems <= TBUFSIZE)
           flag = 0;
   else
@@ -324,6 +345,15 @@ unsigned int rcf_float_3 (float* a, float w)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
+  if (number_elems == 1) //For the special 1 element array
+  {
+          cvotes = tcvotes;
+          csfjury = tcsfjury;
+          cvotes[0] = 1;
+          csfjury[0] = (float)a[0];
+          fcounter = 1;
+          return fcounter;
+  }
   if (number_elems <= TBUFSIZE)
           flag = 0;
   else
@@ -422,6 +452,12 @@ void rcf_double_0 (double* a, double w, double* b)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
+  if (number_elems == 1) //For the special 1 element array
+  {
+          b[0] = a[0];
+          b[1] = (double)1;
+          return;
+  }
   if (number_elems <= TBUFSIZE)
           flag = 0;
   else
@@ -458,6 +494,7 @@ void rcf_double_0 (double* a, double w, double* b)
   }
   if (flag)
      free (idx); //idx array is also not needed now
+  return;
 }
 /* rcf algorithm for mode 1.
  * Returns array b
@@ -474,6 +511,12 @@ void rcf_double_1 (double *a, double w, float *b)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
+  if (number_elems == 1) //For the special 1 element array
+  {
+          b[0] = (float)a[0];
+          b[1] = 1.0;
+          return;
+  }
   if (number_elems <= TBUFSIZE)
           flag = 0;
   else
@@ -512,6 +555,7 @@ void rcf_double_1 (double *a, double w, float *b)
   }
   if (flag)
       free (idx); //idx array is also not needed now
+  return;
 }
 /* rcf algorithm for mode 2.
  * Returns the number of winners
@@ -527,6 +571,13 @@ unsigned int rcf_double_2 (double* a, double w)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
+  if (number_elems == 1) //For the special 1 element array
+  {
+          fwinners = tfwinners;
+          fwinners[0] = 1;
+          fcounter = 1;
+          return fcounter;
+  }
   if (number_elems <= TBUFSIZE)
           flag = 0;
   else
@@ -607,6 +658,15 @@ unsigned int rcf_double_3 (double* a, double w)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
+  if (number_elems == 1) //For the special 1 element array
+  {
+          cvotes = tcvotes;
+          csdjury = tcsdjury;
+          cvotes[0] = 1;
+          csdjury[0] = (double)a[0];
+          fcounter = 1;
+          return fcounter;
+  }
   if (number_elems <= TBUFSIZE)
           flag = 0;
   else
@@ -705,6 +765,12 @@ void rcf_long_0 (long* a, long w, long* b)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
+  if (number_elems == 1) //For the special 1 element array
+  {
+          b[0] = a[0];
+          b[1] = (long)1;
+          return;
+  }
   if (number_elems <= TBUFSIZE)
           flag = 0;
   else
@@ -741,6 +807,7 @@ void rcf_long_0 (long* a, long w, long* b)
   }
   if (flag)
      free (idx); //idx array is also not needed now
+  return;
 }
 /* rcf algorithm for mode 1.
  * Returns array b
@@ -757,6 +824,12 @@ void rcf_long_1 (long *a, long w, float *b)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
+  if (number_elems == 1) //For the special 1 element array
+  {
+          b[0] = (float)a[0];
+          b[1] = 1.0;
+          return;
+  }
   if (number_elems <= TBUFSIZE)
           flag = 0;
   else
@@ -795,6 +868,7 @@ void rcf_long_1 (long *a, long w, float *b)
   }
   if (flag)
       free (idx); //idx array is also not needed now
+  return;
 }
 /* rcf algorithm for mode 2.
  * Returns the number of winners
@@ -810,6 +884,13 @@ unsigned int rcf_long_2 (long* a, long w)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
+  if (number_elems == 1) //For the special 1 element array
+  {
+          fwinners = tfwinners;
+          fwinners[0] = 1;
+          fcounter = 1;
+          return fcounter;
+  }
   if (number_elems <= TBUFSIZE)
           flag = 0;
   else
@@ -890,6 +971,15 @@ unsigned int rcf_long_3 (long* a, long w)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
+  if (number_elems == 1) //For the special 1 element array
+  {
+          cvotes = tcvotes;
+          csljury = tcsljury;
+          cvotes[0] = 1;
+          csljury[0] = (long)a[0];
+          fcounter = 1;
+          return fcounter;
+  }
   if (number_elems <= TBUFSIZE)
           flag = 0;
   else
@@ -988,6 +1078,12 @@ void rcf_int_0 (int* a, int w, int* b)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
+  if (number_elems == 1) //For the special 1 element array
+  {
+          b[0] = a[0];
+          b[1] = (int)1;
+          return;
+  }
   if (number_elems <= TBUFSIZE)
           flag = 0;
   else
@@ -1024,6 +1120,7 @@ void rcf_int_0 (int* a, int w, int* b)
   }
   if (flag)
      free (idx); //idx array is also not needed now
+  return;
 }
 /* rcf algorithm for mode 1.
  * Returns array b
@@ -1040,6 +1137,12 @@ void rcf_int_1 (int *a, int w, float *b)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
+  if (number_elems == 1) //For the special 1 element array
+  {
+          b[0] = (float)a[0];
+          b[1] = 1.0;
+          return;
+  }
   if (number_elems <= TBUFSIZE)
           flag = 0;
   else
@@ -1078,6 +1181,7 @@ void rcf_int_1 (int *a, int w, float *b)
   }
   if (flag)
       free (idx); //idx array is also not needed now
+  return;
 }
 /* rcf algorithm for mode 2.
  * Returns the number of winners
@@ -1093,6 +1197,13 @@ unsigned int rcf_int_2 (int* a, int w)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
+  if (number_elems == 1) //For the special 1 element array
+  {
+          fwinners = tfwinners;
+          fwinners[0] = 1;
+          fcounter = 1;
+          return fcounter;
+  }
   if (number_elems <= TBUFSIZE)
           flag = 0;
   else
@@ -1173,6 +1284,15 @@ unsigned int rcf_int_3 (int* a, int w)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
+  if (number_elems == 1) //For the special 1 element array
+  {
+          cvotes = tcvotes;
+          csijury = tcsijury;
+          cvotes[0] = 1;
+          csijury[0] = (int)a[0];
+          fcounter = 1;
+          return fcounter;
+  }
   if (number_elems <= TBUFSIZE)
           flag = 0;
   else
