@@ -129,6 +129,7 @@ If that's what you want, then click Ok.  Otherwise click Cancel." ] == "ok" } {
 
 
   DynamicHelp::configure -bg yellow -delay 1000
+  exp_send "#include \"ts_check.i\"\r"
   set_time_check_defaults
 
 

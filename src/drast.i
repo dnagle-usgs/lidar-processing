@@ -66,6 +66,7 @@ func ndrast( r, units=  ) {
 
  npix = r.npixels(1) 
  somd = (rr.soe - soe_day_start)(1);
+////  tkcmd, swrite(format="send sf_a.tcl set hsr %d; gotoImage", somd );
  for (i=1; i< npix; i++ ) {
   for (j=1; j<=3; j++ ) {
     n = numberof( *r.rx(i,j) ); 		// number of samples 

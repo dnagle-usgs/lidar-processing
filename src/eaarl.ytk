@@ -188,7 +188,7 @@ proc load_edb {} {
 #   Photos
 #############
  $w.mb.photos add command -label "Review 1-Hz photos..." -command {
-    exec /home/anayegan/lidar-processing/src/sf_a.tcl &
+    exec "./sf_a.tcl" &
  }
 
 #############

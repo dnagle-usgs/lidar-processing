@@ -129,6 +129,7 @@ proc dus { n e o } {
 
 proc play {} {
  global tid play_interval rn inc play_dir play_flag total_edb_records
+ global somd;
      if { $play_dir == "fwd" } {
        set rn [ expr $rn + $inc ] 
      } else {
