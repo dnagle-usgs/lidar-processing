@@ -1141,7 +1141,7 @@ func clean_veg(veg_all, rcf_width=, type=) {
   }
 
   // remove points that have been assigned mirror elevation values
-  indx = where(veg_all.elevation < (0.75*veg_all.melevation))
+  indx = where((veg_all.melevation - veg_all.elevation) > 14000)
   if (is_array(indx)) {
     veg_all = veg_all(indx);
   } else {
