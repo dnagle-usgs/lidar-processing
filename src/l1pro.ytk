@@ -278,6 +278,33 @@ menu .l1wid.mb.options
    pack .l1write.1 .l1write.2 .l1write.3
   }
 
+.l1wid.mb.file add command -label "Read SubSampled Data File..." -underline 0 -command {
+        global data_file_path
+  	set ofn [ tk_getOpenFile -filetypes \
+	  {  
+           {{Yorick PBD file} {.pbd}  }
+	   {{All Files}       {*}   }
+          }  ]
+	destroy .l1ss
+	toplevel .l1ss
+        LabelFrame .l1ss.1 -relief groove -borderwidth 3 -text "Points to skip:"
+  	SpinBox .l1ss.1.sk \
+	-range {1 1000 1} \
+	-textvariable skip \
+	-helptext "Enter plot points to skip" \
+	-width 5
+	LabelEntry .l1ss.1.mvar -label "Variable Name: " -width 8 -bd 3 \
+		-helptext "Enter Variable Name of Data array after merging" \
+		-textvariable mvar
+ 	Button .l1ss.ok -text "OK" -width 5 -command {
+	   exp_send "$mvar = subsample_pbd_data(fname=\"$ofn\", skip = $skip);\r"
+	   destroy .l1ss
+	}
+	pack .l1ss.1.sk .l1ss.1.mvar -side left -padx 5
+	pack .l1ss.1 .l1ss.ok 
+}
+
+
 .l1wid.mb.file add command -label "Read Data Directory... " -underline 10 -command {
 	global data_file_path
         if { [info exists data_file_path ] == 0 } {
@@ -286,26 +313,74 @@ menu .l1wid.mb.options
 	destroy .l1dir
         toplevel .l1dir
 	frame .l1dir.1
-	LabelEntry .l1dir.op  -width 70 -relief sunken -bd 3 -label "Path:  " -helptext "Enter Data Path Here" \
+	frame .l1dir.2
+        wm title .l1dir "Read Data Directory"
+        LabelFrame .l1dir.3 -relief groove -borderwidth 3 -text "Options:"
+	LabelEntry .l1dir.2.op  -width 50 -relief sunken -bd 3 -label "Path:  " -helptext "Enter Data Path Here" \
 		-textvariable path -text $data_file_path
+        Button .l1dir.2.fbutton -text "Browse..." \
+	 -command {
+	   global data_file_path
+           set path [ tk_chooseDirectory -initialdir $data_file_path -mustexist 1 -title "Read Data Directory" ]/
+	}
+	
+        ComboBox .l1dir.3.dtype -text "Data Type..." -width 10 \
+	-helptext "Select Data File type" \
+	-editable 0 \
+	-values { pbd edf bin } \
+	-takefocus 0 \
+	-modifycmd {
+	  set dtype [.l1dir.3.dtype getvalue]
+	  if {$dtype == 0} {
+	     .l1dir.3.skip configure -state normal
+	     .l1dir.3.mvar configure -state normal
+	  } else {
+	     .l1dir.3.skip configure -state disabled
+	     .l1dir.3.mvar configure -state disabled
+	  }
+	}
+
+	LabelEntry .l1dir.3.mvar -label "Merged Variable Name: " -width 8 -bd 3 \
+		-helptext "Enter Variable Name of Data array after merging" \
+		-textvariable mvar
+
+
+	Label .l1dir.3.skL -text "Subsample: "
+
+  	SpinBox .l1dir.3.skip \
+	-range {1 1000 1} \
+	-textvariable skip \
+	-helptext "Enter plot points to skip" \
+	-width 5
+
  	Button .l1dir.1.ok -text "OK" -width 5 -command {
 	 if {$path != ""} {
-	  .l1dir.op configure -state disabled
+	  .l1dir.2.op configure -state disabled
 	  .l1dir.1.ok configure -state disabled
-  	  exp_send "data_ptr = read_yfile(\"$path\"); \r"
-	  expect ">"
-          exp_send "read_pointer_yfile, data_ptr, mode=1; \r"
-	  expect ">"
-	  set ptype [.l1wid.bf4.1.p getvalue]
-	  destroy .l1dir
+	  set dtype [.l1dir.3.dtype getvalue]
+	  if {$dtype == 0}  {
+	     	exp_send "$mvar = merge_data_pbds(\"$path\", skip = $skip); \r"
+		destroy .l1dir
+	  }
+  	  if {$dtype == 1 || $dtype == 2} {
+  	  	exp_send "data_ptr = read_yfile(\"$path\"); \r"
+	  	expect ">"
+          	exp_send "read_pointer_yfile, data_ptr, mode=1; \r"
+	  	expect ">"
+	  	set ptype [.l1wid.bf4.1.p getvalue]
+	  	destroy .l1dir
+	  }
 	 }
 	}
+	.l1dir.3.skip configure -state disabled
 	   
  	Button .l1dir.1.cancel -text "Cancel" -width 5 -command {
 	   destroy .l1dir
  	}
 	pack .l1dir.1.ok .l1dir.1.cancel -side left -padx 5
-	pack .l1dir.op .l1dir.1 -side top -pady 5	
+	pack .l1dir.2.op .l1dir.2.fbutton -side left -padx 5
+	pack .l1dir.3.dtype .l1dir.3.mvar .l1dir.3.skL .l1dir.3.skip -side left -padx 5
+	pack .l1dir.2 .l1dir.3 .l1dir.1 -side top -pady 5	
 }
 .l1wid.mb.file add command -label "Ascii output ..." -underline 0 \
   -command {

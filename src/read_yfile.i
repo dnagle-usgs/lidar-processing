@@ -1184,10 +1184,17 @@ func merge_data_pbds(filepath, write_to_file=, merged_filename=, vname=, skip=) 
  return eaarl
 }
 
-func subsample_pbd_data (fname=, skip=) {
+func subsample_pbd_data (fname=, skip=,output_to_file=, ofname=) {
   /* DOCUMENT subsample_pbd_data(fname, skip=)
     This function subsamples the pbd file at the skip value.
   //amar nayegandhi 06/15/03
+   INPUT:
+     fname = filename to input.  If not defined, a pop-up window will be called to select the file.
+     skip = the subsample (default = 10)
+     output_to_file = set to 1 if you want the output to be written out to a file.
+     ofname = the name of the output file name.  Valid only when output_to_file = 1.  If not defined, same as input file name with a "-skip-xx" added to it.
+     OUTPUT:
+       If called as a function, returned array is the subsampled data array.
   */
   
   extern initialdir;
@@ -1200,21 +1207,27 @@ func subsample_pbd_data (fname=, skip=) {
   }
   
   fif = openb(fname); 
-  restore, fif, vname, plyname, qname;
+  //restore, fif, vname, plyname, qname;
+  restore, fif, vname;
   eaarl = get_member(fif, vname)(1:0:skip);
-  ply = get_member(fif, plyname);
-  q = get_member(fif, qname);
+  //ply = get_member(fif, plyname);
+  //q = get_member(fif, qname);
   close, fif;
-  sp = split_path(fname, 0, ext=1)
-  ofname = sp(1)+swrite(format="-skip%d",skip)+sp(2);
-  fof = createb(ofname);
-  save, fof, vname, plyname, qname;
-  add_variable, fof, -1, vname, structof(eaarl), dimsof(eaarl);
-  get_member(fof, vname) = eaarl;
-  add_variable, fof, -1, qname, structof(q), dimsof(q);
-  get_member(fof, qname) = q;
-  add_variable, fof, -1, plyname, structof(ply), dimsof(ply);
-  get_member(fof, plyname) = ply;
-  close, fof;
+  if (output_to_file == 1) {
+    if (!ofname) {
+      sp = split_path(fname, 0, ext=1)
+      ofname = sp(1)+swrite(format="-skip%d",skip)+sp(2);
+    }
+    fof = createb(ofname);
+    save, fof, vname;
+    add_variable, fof, -1, vname, structof(eaarl), dimsof(eaarl);
+    get_member(fof, vname) = eaarl;
+    //add_variable, fof, -1, qname, structof(q), dimsof(q);
+    //get_member(fof, qname) = q;
+    //add_variable, fof, -1, plyname, structof(ply), dimsof(ply);
+    //get_member(fof, plyname) = ply;
+    close, fof;
+  }
+  return eaarl;
   
 }
