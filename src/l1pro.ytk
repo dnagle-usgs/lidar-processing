@@ -226,13 +226,19 @@ scale .l1wid.bf45.sc.1 -orient horizontal \
 	-resolution 0.5 \
 	-digits 6 \
 	-length 160
+
+proc dscale {v} {
+global cmin cdelta; 
+  .l1wid.bf45.sc.2 configure -label "Highest Elevation [ expr $cmin + $cdelta]m"
+}
+
 scale .l1wid.bf45.sc.2 -orient horizontal \
-	-label "ColorBar Range (m)" \
 	-variable cdelta \
 	-from 0. -to 100 \
 	-resolution 0.25 \
 	-digits 6 \
-	-length 160
+	-length 160 \
+	-command dscale ;
 scale .l1wid.bf45.sc.3 -orient horizontal \
 	-label msize \
 	-variable msize \
@@ -240,7 +246,7 @@ scale .l1wid.bf45.sc.3 -orient horizontal \
 	-resolution 0.25 \
 	-length 100
 
-Button .l1wid.bf5.1 -text "Write Data to File" -width 20 \
+Button .l1wid.bf5.1 -text "Write Datafile" -width 20 \
 		-command {
 	destroy .l1wid1
         toplevel .l1wid1
@@ -278,7 +284,7 @@ Button .l1wid.bf5.1 -text "Write Data to File" -width 20 \
 	pack .l1wid1.op .l1wid1.of .l1wid1.1 -side top -pady 5	
   }
 
-Button .l1wid.bf5.2 -text "Begin Processing" -width 20 \
+Button .l1wid.bf5.2 -text "Process Now" -width 20 \
 		-command {
 	 exp_send "utm = $utm\n"
 	 set ptype [.l1wid.bf4.1.p getvalue]
