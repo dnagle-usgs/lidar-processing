@@ -286,7 +286,7 @@ write,"Projecting to the surface..."
    gx = easting(, i);
    gy = northing(, i);
    yaw = -heading(, i);
-   scan_ang = (360.0/8000.0)  * a(i).sa + ops_conf.scan_bias;
+   scan_ang = (360.0/8000.0)  * (a(i).sa + ops_conf.scan_bias);
 
 // edit out tx/rx dropouts
  el = ( int(a(i).irange) & 0xc000 ) == 0 ;

@@ -97,7 +97,7 @@ func photo_orient( photo,
    y += pitch_offset;
    xx =   (x * c - y * s) * scale(2);
    yy =   (x * s + y * c) * scale(1);
- window,win; plf, p, yy+offset(1), xx+offset(2);
+ window,win; plf, p, yy+offset(1), xx+offset(2), edges=0;
   return [xx, yy ];
 
 }
