@@ -26,7 +26,7 @@ to recall the one before last, use:
 */
 
 func mtransect( fs, iwin=,owin=, w=, connect=, recall=, color=, xfma= ) {
-/* DOCUMENT mtransect( fs, win=, w= )
+/* DOCUMENT mtransect( fs, iwin=,owin=, w=, connect=, recall=, color=, xfma= )
 
   mtransect allows you to "drag out" a line wihin an ALPS topo display
 window and then create a new grah of all of the points near the line. 
