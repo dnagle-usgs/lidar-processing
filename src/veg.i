@@ -862,7 +862,7 @@ if (is_void(append)) {
 if (is_void(append)) {
   /* write header information only if append keyword not set */
   if (is_void(type)) {
-     if (veg_all.soe(1) == 0) {
+     if (vegall.soe(1) == 0) {
         type = 8
         nwpr = long(13);
      } else {
