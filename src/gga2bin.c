@@ -1,6 +1,6 @@
-/*
+/*********************************************************************
   $Id$
-*/
+*********************************************************************/
 
 #include <stdio.h>
 #include <math.h>
@@ -8,21 +8,30 @@
 #include <dirent.h>     // for MAXNAMLEN
 #include <unistd.h>     // for access()
 
-/*
+/*********************************************************************
     gga2bin.c          
    
      This program reads a nmea gpgga string, verifies it's checksum,
      and converts the time, lat,lon, and altitude to binary for reading
      into yorick.
 
-*/
+*********************************************************************/
 
 #define MAXSTR  1024 
 static struct {
   float sod, lat, lon, alt;
  } gga;                                
 
+ int 
+   total_gga=0,
+   good_gga=0, 
+    bad_gga=0, 
+   total_temp=0,
+    line=0;
+ FILE *idf, *odf;
 
+/*********************************************************************
+*********************************************************************/
 char *changename( char *ostr, char *nstr, char *txt ) {
   char *pstr;
 
@@ -38,53 +47,30 @@ char *changename( char *ostr, char *nstr, char *txt ) {
   return(nstr);
 }
 
-main( int argc, char *argv[] ) {    
- FILE *idf, *odf;
+/*********************************************************************
+  If string *t is at the beginning of string *s, then return 1
+  else 0.
+*********************************************************************/
+is ( char *s, char *t ) {
+  if ( strncmp(s,t,strlen(t)) == 0 )
+	return 1;
+  else 
+	return 0;
+}
+
  int nb;
- float sod, lat, lon, alt, s;
- int h, m, n, good=0, badcnt=0, line=0;
- char  comma[]=",";
- char *p, *t, *latp, *lonp, *tp;
- char str[MAXSTR*2], scp[ MAXSTR+2 ];
+/*********************************************************************
+  Decode gpgga messages
+*********************************************************************/
+gpgga(char *str) {
+ int n;
+ int h,m;
  int cksum, sum, i;
-  if ( (idf=fopen( argv[1], "r" ) ) == NULL ) {
-    perror(""); exit(1);
-  }
+ char scp[MAXSTR+2], *p, *t, *latp, *lonp, *tp;
+ char  comma[]=",";
+ float sod, lat, lon, alt, s;
 
-  if ( argc == 2 ) {  // generate and open the output file
-    char *pfname, nfname[MAXNAMLEN];
-    changename(argv[1], nfname, ".ybin");
-    fprintf(stderr, "creating output file: %s\n", nfname);
-    if ( access(nfname, F_OK) == 0 ) {
-      fprintf(stderr, "file %s exists, please remove it first\n", nfname);
-      exit(-1);
-    } else {
-      if ( ( odf=fopen(nfname, "w+")) == NULL ) {
-        perror(""); exit(1);
-      }
-    }
-  } else {    // open the file given on the cmdline
-
-    if ( ( odf=fopen(argv[2], "w+")) == NULL ) {
-      perror(""); exit(1);
-    }                                                      
-  }
-  
-
-// write placeholder for the number of records.  We'll reposition to
-// this after we know how many elements there are.
-    fwrite( &good, sizeof(int), 1, odf);                          
-
-   while ( 1 ) {
-
-// clear the string before use
-  memset( str, 0, MAXSTR );
-   
-// get the nmea string
-     fgets( str, MAXSTR-4, idf );
-     if (feof(idf)) 
-	     break;
-    line++;
+   total_gga++;
 
 // compute the checksum.  
      for (i=0, sum=0; i<strlen(str); i++ ) {
@@ -97,8 +83,8 @@ main( int argc, char *argv[] ) {
      //printf("cksum = %02x ; sum = %02x\n",cksum, sum);
 //     str[ strlen(str)-2] = 0;
      if ( cksum != sum ) {
- 	printf("%8d: %s %02x %02x\n",  line, str, sum, cksum); 
-	badcnt++;
+// 	printf("xx %8d: %s %02x %02x\n",  line, str, sum, cksum); 
+	bad_gga++;
      } else {	// good data
 // Process the time substring into second of the day
        p = &str[0];
@@ -124,8 +110,9 @@ main( int argc, char *argv[] ) {
        case LAT:
          latp = t;
 	 n = sscanf( t, "%02d%f", &h, &s );
-	if ( n == 2 ) 
+	if ( n == 2 )  {
 	 lat = h + s/60.0;
+        }
 	else
 	 nb++;
 	break;
@@ -137,8 +124,9 @@ main( int argc, char *argv[] ) {
        case LON:
          lonp = t;
 	 n = sscanf( t, "%03d%f", &h, &s );
-	if ( n == 2 ) 
+	if ( n == 2 ) {
 	 lon = h + s/60.0;
+        }
 	else
 	  nb++;
 	break;
@@ -153,44 +141,89 @@ main( int argc, char *argv[] ) {
 	break;
        }
       }
+
+
    if ( nb == 0 ) {
-   good++;
-   if (good == 1) {
+   good_gga++;
+   if (good_gga == 1) {
       gga.lon = (float)lon;
       gga.lat = (float)lat;
       }
    if ( abs((int)lon - (int)gga.lon) > 1 ) {
- 	printf("------> %8d: %s %02x %02x\n",  line, str, sum, cksum); 
-	good--;
-	badcnt++;
+	good_gga--;
+	bad_gga++;
    } else {
    if ( abs((int)lat - (int)gga.lat) > 1 ) {
- 	printf("-----------> %8d: %s %02x %02x\n",  line, str, sum, cksum); 
-	good--;
-	badcnt++;
+	good_gga--;
+	bad_gga++;
    } else {
    gga.sod = (float)sod;
    gga.lat = (float)lat;
    gga.lon = (float)lon;
    gga.alt = (float)alt;
-   //printf("--- %8d \n",line);
    fwrite( &gga, sizeof(gga), 1, odf);
-   }
-   }
-/*
-if ( line > 152960 )  {
-   printf("%7d====%s %s %s %f %f>%s", line,tp, latp, lonp, lat,lon,scp );
-}
-*/
-// printf("\n%f %f %f %f", gga.sod, gga.lat, gga.lon, gga.alt);
-     } else {
- 	printf("<------>%8d: %s\n",  line, scp); 
-	badcnt++;
-     }
     }
    }
+     } else {
+	bad_gga++;
+     }
+    }
+}
+
+/*********************************************************************
+*********************************************************************/
+temperature(str) {
+  total_temp++;
+}
+
+
+/*********************************************************************
+*********************************************************************/
+main( int argc, char *argv[] ) {    
+ int nb;
+ int h, m, n;
+ char str[MAXSTR*2], scp[ MAXSTR+2 ];
+  if ( (idf=fopen( argv[1], "r" ) ) == NULL ) {
+    perror(""); exit(1);
+  }
+
+  if ( argc == 2 ) {  // generate and open the output file
+    char *pfname, nfname[MAXNAMLEN];
+    changename(argv[1], nfname, ".ybin");
+    fprintf(stderr, "creating output file: %s\n", nfname);
+    if ( ( odf=fopen(nfname, "w+")) == NULL ) {
+        perror(""); exit(1);
+    }
+  } else {    // open the file given on the cmdline
+
+    if ( ( odf=fopen(argv[2], "w+")) == NULL ) {
+      perror(""); exit(1);
+    }                                                      
+  }
+  
+
+// write placeholder for the number of records.  We'll reposition to
+// this after we know how many elements there are.
+    fwrite( &good_gga, sizeof(int), 1, odf);                          
+
+   while ( 1 ) {
+  memset( str, 0, MAXSTR ); 		// clear the string before use
+     fgets( str, MAXSTR-4, idf ); 	// get a nmea string
+     if (feof(idf)) 
+	     break;
+    line++;
+
+    if      ( is(str, "GPGGA") )             gpgga( str );
+    if      ( is(str, "$GPGGA") )            gpgga( str );
+    else if ( is(str, "PASHR,TMP,") )  temperature( str );
+    else ;
+  }
   fseek( odf, 0, SEEK_SET);
-  fwrite( &good, sizeof(int), 1, odf);          // install count
-  printf("\n%d total points, %d good points, %d bad points\n", line, good, badcnt);           
+  fwrite( &good_gga, sizeof(int), 1, odf);          // install count
+  printf("\n%d total points", line);
+  printf("\n        Good    Bad");
+  printf("\n GGA: %6d %6d", good_gga, bad_gga);           
+  printf("\nTemp: %6d %6d", total_temp, 0);           
+  printf("\n");
 }
 
