@@ -16,6 +16,7 @@ func select_region(data, win=, plot=) {
 
   extern cur_east, cur_north, cur_csize;
   if (is_void(win)) win = 5;
+  data = test_and_clean( data ); 
   // wtemp = window();
   window, win;
   a = mouse(1,1,"Hold the left mouse button down and select a region:");

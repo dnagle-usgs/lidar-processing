@@ -1676,6 +1676,7 @@ proc keep_proc {} {
 	        global sels keep_var
 		set sels [.sel.1 getvalue]
 	        if {$sels == 2} {
+      		    set grow_keep 1
 		    set keep_var "temp_workdata"
 		} else {
 		    set keep_var "workdata"

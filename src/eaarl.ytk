@@ -496,8 +496,7 @@ proc rbgga_menu {} {
    } else {
       set utm 0
    }
-    exp_send "window,$_map(window);\r"
-    exp_send "show_gga_track, color=\"$gga(linecolor)\", skip=$gga(skip)$marker,msize=$gga(msize), utm=$utm; \n\r" 
+    exp_send "show_gga_track, color=\"$gga(linecolor)\", skip=$gga(skip)$marker,msize=$gga(msize), utm=$utm, win=$_map(window); \n\r" 
     expect ">"
     exp_send "\n"
     expect ">"

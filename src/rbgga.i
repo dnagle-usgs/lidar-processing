@@ -672,8 +672,9 @@ func show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, wid
 */
   extern curzone;
   if ( is_void( win ) ) {
-	win = 6; window,win;
+	win = 6; 
   }
+  window,win;
   if ( is_void( width ) ) 
 	width= 5.0;
   if ( is_void( msize ) ) 
