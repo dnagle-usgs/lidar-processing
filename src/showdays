@@ -1,0 +1,43 @@
+#!/usr/bin/perl
+# $Id$
+
+# Display the dates in a batch_process output directory.
+
+chdir ($ARGV[0]) if ( $#ARGV == 0 );
+
+$find = "find . -name \*metadata.txt |";
+
+open(FIND, $find) || die("Unable to: $find\n");
+
+$where = -1;
+while ( $line=<FIND> ) {
+  chop( $line );
+  @arr = split(/_/, $line);
+  $where = $#arr - 1;
+
+  # we don't reallly need to be this robust, our search string
+  # isn't going to move
+
+  # if ( $where < 0 ) {
+  #  for ( $i=0; $i<=$#arr; ++$i) {
+  #    $where = $i-1 if ( $arr[$i] eq "metadata.txt" );
+  #    printf("%2d: %s\n", $i, $arr[$i]);
+  #   }
+  #  printf("where = %d / %d\n", $#arr, $where);
+  #  sleep(5);
+  # }
+
+  $mydate{$arr[$where]}++;
+}
+
+$cnt = 0;
+$cells = 0;
+foreach $key (sort keys ( %mydate ) ) {
+  ++$cnt;
+  $cells += $mydate{$key};
+  printf("%s: %3d cellls occupied\n", $key, $mydate{$key});
+}
+
+printf("%3d days  %3d total cells\n", $cnt, $cells);
+
+exit(0);
