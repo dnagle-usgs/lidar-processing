@@ -13,72 +13,11 @@ $Date$
 $Header$
 $Author$
 $Id$
+
+
+  Orginal W. Wright wright@lidar.wff.nasa.gov
+
     
-$Log$
-Revision 1.6  2002/07/08 04:21:38  wwright
-
- Several bug fixes, DOCUMENTS and comments updated and clarified.
- Added geo_rast to drast.i to permit viewing rasters in a geo-refed.
- sense.
-
-
-Revision 1.5  2002/03/22 15:29:45  anayegan
-    bathy.i :  Changed start value such that it matches with 
-               start value of first_surface function.  The start 
-               keyword can now have the same record number for both 
-               functions.
-               While executing run_bath, instead of printing to 
-               screen every raster, it now prints the index value 
-               every 50th raster.
-               Commented exponential values for keys water, since I 
-               was working on tampa bay survey.
-
-    drast.i :  modified line that sends tans information to sf_a.tcl 
-               so that it only sends when there is any data to send.
-
-    drast.ytk: corrected the error causing window, 0 to erroneously 
-               pop up when initially playing through rasters.  corrected 
-               error message that arises when edb is loaded and sf_a.tcl 
-               is not open.  changed it to a warning message.
-
-    geobath.i: Added colorbar function which plots colorbar every 
-               time you display bathymetric or depth image.  Added 
-               structure GEODEPTH which will contain depth information 
-               and GEOBATH which will contain bathymetric information 
-               depending on the bathy keyword.
-
-               Documented display_bath function which explains all the 
-               keywords.
-               By setting the bathy keyword, the display_bath writes 
-               out and displays a bathymetric image corrected for the 
-               refraction of light in water for depth.  However, we 
-               still need to correct for the position of light pulse 
-               at the bottom.  Need to add the effect of the scan 
-               angle for this.
-                Made correction for displaying the bathymetric or depth 
-               image using the correct keyword such it does not plot all 
-               those erroneous points at (0,0).
-
-    sf_a.tcl:  changed the 'mogrify' command to correctly rotate the 
-               image depending on the heading value.
-
-    Revision 1.4  2002/02/12 15:53:03  anayegan
-    plcm.i : Fixed q array.
-    geo_bath.i : display "georectified" bathymetric image.
-
-    Revision 1.3  2002/01/23 04:57:58  wwright
-
-     minor changes.  Added code to update the dir var in sf automatically
-     when load_edb is called.  Saves a few steps.
-
-    Revision 1.2  2002/01/22 21:42:13  wwright
-
-      fixed somd, again, in edb_access.i and affected code in sf
-
-    Revision 1.1.1.1  2002/01/04 06:33:51  wwright
-    Initial deposit in CVS.
-
-
 */
 
 func plcm( z, y, x, cmin=, cmax=, marker=, msize=)
