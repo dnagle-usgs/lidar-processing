@@ -5,6 +5,9 @@
 
 write, "$Id$"
 
+REV = 8000;             	// Counts for 360 degrees of scanner rotation
+d2r = pi/180.0;         	// Convert degrees to radians.
+
 CNS      = 0.299792458;         // speed of light/nanosecond in space
 KAIR     = 1.000276
 KH2O     = 1.333

@@ -1,5 +1,8 @@
 
 require, "rcf.i"
+require, "eaarl_constants.i"
+require, "eaarl_mounting_bias.i"
+
 /*
      $Id$
 
@@ -34,7 +37,6 @@ func qde( xr, centroid= ) {
 		irg.
 
 */
-  extern prange;
    rb = roll_bias * d2r;
    a = xr.sa / Hcvt * pi + rb;
    if ( centroid ) {
@@ -42,10 +44,10 @@ func qde( xr, centroid= ) {
      rast = decode_raster( get_erast( rn=rn ))
      np = dimsof(rast)(2);
      np = 120;
-     prange = array(float, 3, np);
+     prange = array(float, 4, np);
      for (i=1; i< np; i++ ) {
         write,format="i=%d np=%d\n", i,np
-        pcr, rast, i;
+        prange(,i) = pcr( rast, i);
      }
      xr.irange(,1) = prange(1,) ;
      e = -(prange(1,) * NS2MAIR - range_bias) *  cos(a + xr.rroll ) * 
@@ -58,46 +60,6 @@ func qde( xr, centroid= ) {
    return ea;
 }
 
-
-func pcr(z, n) {
- extern prange;
-  np = numberof ( *z.rx(n,1) );         // find out how many points
-                                        // are in the primary
-                                        // receiver channel.
-
-  if ( np < 2 )                         // give up if there are not at
-     return;                            // least two points.
-
-  if ( np > 12 ) np = 12;               // use no more than 12
-
-  ctx = cent( *z.tx(n) ) ;              // compute transmit centroid
-
-
-/*
- Now examine all three receiver waveforms for saturation, and use the
- one thats next to the channel thats offscale. 
- First check the most sensitive channel (1), and if it's offscale,
- then check (2), and then (3).  A channel is considered offscale if
- more than 2 pixels are equal to zero.  Signals are inverted, which
- means the base line is around 240 counts and signal strength goes 
- toward zero.  An offscale pixel value would equal zero. 
-
-*/
-  if ( numberof(where(  ((*z.rx(n,1))(1:np)) == 0 )) <= 2 ) {
-     cv = cent( *z.rx(n, 1 ) );
-  } else if ( numberof(where(  ((*z.rx(n,2))(1:np)) == 0 )) <= 2 ) {
-     cv = cent( *z.rx(n, 2 ) ) + 0.36;
-     cv(3) += 300;
-  } else {
-     cv = cent( *z.rx(n, 3 ) ) + 0.23;
-     cv(3) += 600;
-  }
-
-// Now compute the actual range value in NS
-  prange(1, n) = float(z.irange(n)) - ctx(1) + cv(1);
-  prange(2, n) = cv(3);
-  prange(4, n) = n;
-}
 
 
 

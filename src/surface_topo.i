@@ -11,6 +11,7 @@
 write,"$Id$"
 
 require, "eaarl_constants.i"
+require, "eaarl_mounting_bias.i"
 require, "edb_access.i"
 require, "rbpnav.i"
 require, "rbtans.i"
@@ -32,25 +33,6 @@ require, "irg.i"
 */
 
 
-
-/* 
-   Range_bias
-
-   Range_bias computed from 7-29-02 ground test.  The EAARL data was taken from
-   pulses 8716:10810 which was captured from a static target at 101.1256 meters
-   measured distance.  The EAARL centroid range values were averaged and then 
-   the actual slope distance to the target subtracted to yield the range_bias. 
-   The rms noise on the range values used to compute the range_bias was 3.19cm
-*/
-
-        REV = 8000;	// Counts for 360 degrees of scanner rotation
-range_bias  =  0.7962;  // Laser range measurement bias.
- scan_bias  =  0.0;	// The mounting bias of the scan encoder.
- roll_bias  = -1.35;	// The mounting bias of the instrument in the plane.
- pitch_bias = +0.5;	// pitch mounting bias
- yaw_bias   =  0.0;	// Yaw mounting bias
-
-d2r = pi/180.0;		// Convert degrees to radians.
 
 /*
    Structure used to hold laser return vector information. All the 
@@ -287,7 +269,7 @@ write,"Projecting to the surface..."
  el = ( a(i).irange & 0xc000 ) == 0 ;
  a(i).irange *= el;
 
-   srm = (a(i).irange*NS2MAIR - range_bias);
+   srm = (a(i).irange*NS2MAIR - range_biasM);
    gz = palt(, i);
   m = scanflatmirror2_direct_vector(yaw+yaw_bias,
 	pitch(,i)+pitch_bias,roll(,i)+roll_bias,
@@ -327,7 +309,7 @@ for ( ; i< j; i += step) {
    gy = northing(, i);
    yaw = -heading(, i);
    scan_ang = (360.0/8000.0)  * a(i).sa + scan_bias;
-   srm = (a(i).irange*NS2MAIR - range_bias);
+   srm = (a(i).irange*NS2MAIR - range_biasM);
    gz = palt(, i);
   m = scanflatmirror2_direct_vector(yaw,pitch(,i),roll(,i)+roll_bias,
          gx,gy,gz,dx,dy,dz,cyaw, lasang, mirang, scan_ang, srm)
