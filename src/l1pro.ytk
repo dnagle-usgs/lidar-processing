@@ -317,6 +317,7 @@ menu .l1wid.mb.options
         set delimit "space"
 	set indx 0
       	set intensity 0
+	set rn 0
 	set split 0
 	set zclip 0
 	set opath $data_path
@@ -369,28 +370,28 @@ menu .l1wid.mb.options
 	   
 
  	    if {$ptype == 0} {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=FS; \r";
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=FS, rn=$rn; \r";
 	       expect ">"
 	    }
  	    if {$ptype == 1} {
 	      if {$dtype == 0} {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=GEO; \r";
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=GEO, rn=$rn; \r";
 	      } else {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=2, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=GEO; \r";
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=2, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=GEO, rn=$rn; \r";
 	      }
 	       expect ">"
 	    } 
  	    if {$ptype == 2} {
 	      if {$dtype == 0} {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=VEG__; \r";
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=VEG__, rn=$rn; \r";
 	      } else {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=3, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=VEG__; \r";
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=3, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=VEG__, rn=$rn; \r";
 	      } 
 
 	      expect ">"
 	    }
  	    if {$ptype == 3} {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=CVEG_ALL; \r";
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=CVEG_ALL, rn=$rn; \r";
 	       expect ">"
 	    }
 	    #destroy .l1asc
@@ -416,6 +417,10 @@ menu .l1wid.mb.options
       
         checkbutton .l1asc.ops.1.indx -text "Include Index Number" -variable indx 
         Separator .l1asc.ops.1.s2 -orient vertical -bg black -relief groove 
+
+        checkbutton .l1asc.ops.1.rn -text "Include Raster/Pulse Number" -variable rn 
+        Separator .l1asc.ops.1.s3 -orient vertical -bg black -relief groove 
+
         checkbutton .l1asc.ops.1.int -text "Include Intensity Data" -variable intensity 
 
         LabelEntry .l1asc.ops.2.split -width 10 -bd 3 -label "Max number of lines/file" \
@@ -438,7 +443,7 @@ menu .l1wid.mb.options
     	LabelEntry .l1asc.ops.2.zmax -width 5 -bd 3 -label "Zmax" \
 		-textvariable zmax -state disabled
 
-        pack .l1asc.ops.1.indx .l1asc.ops.1.s1 .l1asc.ops.1.int .l1asc.ops.1.s2 .l1asc.ops.1.dl .l1asc.ops.1.d  -side left -fill both -padx 3
+        pack .l1asc.ops.1.indx .l1asc.ops.1.s1 .l1asc.ops.1.rn .l1asc.ops.1.s3 .l1asc.ops.1.int .l1asc.ops.1.s2 .l1asc.ops.1.dl .l1asc.ops.1.d  -side left -fill both -padx 3
 
  	pack .l1asc.ops.2.split .l1asc.ops.2.zclip .l1asc.ops.2.zmin .l1asc.ops.2.zmax -side left -padx 3 -fill both
 	pack .l1asc.ops.1 .l1asc.ops.2 -side top

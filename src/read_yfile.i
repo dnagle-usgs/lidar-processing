@@ -607,7 +607,7 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
   return data;
 }
   
-func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, delimit=, zclip=, pstruc=) {
+func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, delimit=, zclip=, pstruc=, rn=) {
   /* DOCUMENT this function writes out an ascii file containing x,y,z,intensity information.
     amar nayegandhi 04/25/02
     Keywords:
@@ -681,16 +681,32 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
     }
   }
    if (!indx && !intensity) {
-     write,f, "UTMX(m), UTMY(m), Z(m)";
+     if (rn) {
+       write,f, "Raster/Pulse UTMX(m), UTMY(m), Z(m)";
+     } else {
+       write,f, "UTMX(m), UTMY(m), Z(m)";
+     }
    }
    if (!indx && intensity) {
-     write,f, "UTMX(m), UTMY(m), Z(m), Intensity";
+     if (rn) {
+       write,f, "Raster/Pulse UTMX(m), UTMY(m), Z(m), Intensity";
+     } else {
+       write,f, "UTMX(m), UTMY(m), Z(m), Intensity";
+     }
    }
    if (indx && !intensity) {
-     write,f, "Indx, UTMX(m), UTMY(m), Z(m)";
+     if (rn) {
+       write,f, "Indx, Raster/Pulse, UTMX(m), UTMY(m), Z(m)";
+     } else {
+       write,f, "Indx, UTMX(m), UTMY(m), Z(m)";
+     }
    }
    if (indx && intensity) {
-     write,f, "Indx, UTMX(m), UTMY(m), Z(m), Intensity";
+     if (rn) {
+       write,f, "Indx, Raster/Pulse, UTMX(m), UTMY(m), Z(m), Intensity";
+     } else {
+       write,f, "Indx, UTMX(m), UTMY(m), Z(m), Intensity";
+     }  
    }
 
   if (type == 1) {
@@ -717,16 +733,32 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
       fn_new = fn_new(1)+"_"+sxx+fn_new(2);
       f = open(fn_new, "w")
       if (!indx && !intensity) {
-       write,f, "UTMX(m), UTMY(m), Z(m)";
+        if (rn) {
+          write,f, "Raster/Pulse UTMX(m), UTMY(m), Z(m)";
+        } else {
+          write,f, "UTMX(m), UTMY(m), Z(m)";
+        }
       }
       if (!indx && intensity) {
-       write,f, "UTMX(m), UTMY(m), Z(m), Intensity";
+        if (rn) {
+          write,f, "Raster/Pulse UTMX(m), UTMY(m), Z(m), Intensity";
+        } else {
+          write,f, "UTMX(m), UTMY(m), Z(m), Intensity";
+        }
       }
       if (indx && !intensity) {
-       write,f, "Indx, UTMX(m), UTMY(m), Z(m)";
+        if (rn) {
+          write,f, "Indx, Raster/Pulse, UTMX(m), UTMY(m), Z(m)";
+        } else {
+          write,f, "Indx, UTMX(m), UTMY(m), Z(m)";
+        }
       }
       if (indx && intensity) {
-       write,f, "Indx, UTMX(m), UTMY(m), Z(m), Intensity";
+        if (rn) {
+          write,f, "Indx, Raster/Pulse, UTMX(m), UTMY(m), Z(m), Intensity";
+        } else {
+          write,f, "Indx, UTMX(m), UTMY(m), Z(m), Intensity";
+        }  
       }
       totw = 1;
     }
@@ -734,37 +766,65 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
         z = data_arr.elevation(i)/100.;
 	east = data_arr.east(i)/100.;
 	north = data_arr.north(i)/100.;
+	rnval = data_arr.rn(i)
     }
     if (type == 2) {
         z = (data_arr.elevation(i) + data_arr.depth(i))/100.;
 	east = data_arr.east(i)/100.;
 	north = data_arr.north(i)/100.;
+	rnval = data_arr.rn(i)
     }
     if (type == 3) {
         z = data_arr.lelv(i)/100.;
 	east = data_arr.least(i)/100.;
 	north = data_arr.lnorth(i)/100.;
+	rnval = data_arr.rn(i)
     }
     if (type == 4) {
         z = data_arr.depth(i)/100.;
 	east = data_arr.east(i)/100.;
 	north = data_arr.north(i)/100.;
+	rnval = data_arr.rn(i)
     }
     if (type == 5) {
         z = data_arr.lelv(i)/100.;
 	east = data_arr.east(i)/100.;
 	north = data_arr.north(i)/100.;
+	rnval = data_arr.rn(i)
     }
  
     if (!indx && !intensity) {
+      if (rn) {
+         write, f, format="%12d%c %9.2f%c %10.2f%c %8.2f\n",
+	 rnval,
+	 delimit,
+	 east,
+	 delimit,
+	 north,
+	 delimit,
+	 z;
+      } else {
          write, f, format="%9.2f%c %10.2f%c %8.2f\n",
 	 east,
 	 delimit,
 	 north,
 	 delimit,
 	 z;
+      }
     } 
     if (indx && !intensity) {
+      if (rn) {
+         write, f, format="%d%c %12d%c %9.2f%c %10.2f%c %8.2f\n",
+	 totw, 
+	 delimit,
+	 rnval,
+	 delimit,
+	 east,
+	 delimit,
+	 north,
+	 delimit,
+	 z;
+      } else {
          write, f, format="%d%c %9.2f%c %10.2f%c %8.2f\n",
 	 totw, 
 	 delimit,
@@ -773,8 +833,21 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
 	 north,
 	 delimit,
 	 z;
+      }
     } 
     if (!indx && intensity) {
+      if (rn) {
+         write, f, format="%12d%c %9.2f%c %10.2f%c %8.2f%c %d\n",
+	 rnval,
+	 delimit,
+	 east,
+	 delimit,
+	 north,
+	 delimit,
+	 z, 
+	 delimit,
+	 data_intensity(i);
+      } else {
          write, f, format="%9.2f%c %10.2f%c %8.2f%c %d\n",
 	 east,
 	 delimit,
@@ -783,8 +856,23 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
 	 z, 
 	 delimit,
 	 data_intensity(i);
+      }
     } 
     if (indx && intensity) {
+      if (rn) {
+        write, f, format="%d%c %12d%c %9.2f%c %10.2f%c %8.2f%c %d\n",
+	totw, 
+	 delimit,
+	rnval,
+	 delimit,
+	east,
+	 delimit,
+	north,
+	 delimit,
+	z, 
+	 delimit,
+	data_intensity(i);
+      } else {
         write, f, format="%d%c %9.2f%c %10.2f%c %8.2f%c %d\n",
 	totw, 
 	 delimit,
@@ -795,6 +883,7 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
 	z, 
 	 delimit,
 	data_intensity(i);
+      }
     }
     if ( (i % 1000) == 0 ) edfrstat, i, numberof(data_arr);
   } else {
