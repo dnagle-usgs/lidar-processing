@@ -795,6 +795,7 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset
  center_mouse = 2
   right_mouse = 3
 
+ rtn_data = [];
  do {
  write,format="Window: %d. Left: examine point, Center: Set Reference, Right: Quit\n",win
  spot = mouse(1,1,"");
@@ -811,6 +812,7 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset
                (data.north(q) <= spot(2)*100+buf)));
 
  indx = q(indx);
+
 
 write,"============================================================="
  if (is_array(indx)) {
@@ -916,8 +918,9 @@ write,"============================================================="
                  pnav(pnav_idx+1).lat, pnav(pnav_idx+1).lon) * 
                  3600.0/abs(pnav(pnav_idx+1).sod - pnav(pnav_idx).sod);
 
- write,format="  Raster nbr: %d UTM: %7.1f, %7.1f Delta: %7.2fm\n", 
+ write,format="Raster/Pulse: %d/%d UTM: %7.1f, %7.1f Delta: %7.2fm\n", 
                mindata.rn&0xffffff,
+	       pulseno,
                mindata.north/100.0,
 	       mindata.east/100.0,
                sqrt(double(mindata.north - _last_rastpulse(1))^2 +
@@ -967,10 +970,14 @@ write,"============================================================="
    _last_rastpulse(1) = mindata.north;
    _last_rastpulse(2) = mindata.east;
 
+// Collect all the click-points and return them so the user
+// can do stats or whatever on them.
+   grow, rtn_data, mindata;
+
 } while ( mouse_button != right_mouse );
 
   
- return mindata;
+ return rtn_data;
       
 }
 
