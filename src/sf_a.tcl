@@ -289,7 +289,10 @@ Entry .cf3.entry -width 8 -relief sunken -bd 2 \
 	-helptext "Click to Enter Value" -textvariable hsr
 tk_optionMenu .cf3.option timern hms sod cin 
 Button .cf3.button -text "Examine Rasters" \
-	-helptext "Click to Examine EAARL Rasters.  Must have drast.ytk running." -command plotRaster
+	-helptext "Click to Examine EAARL Rasters.  Must have drast.ytk running." -command {
+	  #plotRaster
+      	  send ytk "exp_send \"sfsod_to_rn, $sod;\n\"";
+         }
 Button .cf3.imgbutton -text "Goto Img" \
 	-helptext "Click to Jump to Image defined in Entry Widget" -command gotoImage
 

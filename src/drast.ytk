@@ -9,6 +9,7 @@ set play_dir fwd
 set tid 0
 set rnf 0
 set thetime 0
+set animate_georef 0
 
 if { [ info exists inc ] == 0 } {
   set inc 1
@@ -160,7 +161,7 @@ proc sft { n e o } {
 
 
 proc play {} {
- global tid play_interval rn inc play_dir play_flag total_edb_records
+ global tid play_interval rn inc play_dir play_flag total_edb_records animate_georef
      if { $play_dir == "fwd" } {
        set rn [ expr $rn + $inc ] 
      } else {
@@ -173,7 +174,11 @@ proc play {} {
  	.rslider.bf1.stop invoke	
         set rn 1;
      }
-     exp_send "ytk_rast,$rn\r" 
+     if { $animate_georef } {
+        exp_send "ytk_rast,$rn; geo_rast,$rn, fsmarks=1, eoffset=0.0; \r" 
+     } else {
+        exp_send "ytk_rast,$rn\r" 
+     }
      expect ">"
      if { $play_flag } { 
        set tid [ after $play_interval play ]
@@ -360,7 +365,11 @@ set wfc3 4
      if { $rn > $total_edb_records } {
          set rn $total_edb_records;
      } 
-     exp_send "ytk_rast,$rn\r" 
+     if { $animate_georef } {
+         exp_send "ytk_rast, [expr $rn]; geo_rast, [expr $rn], fsmarks=1, eoffset=0.0; \r" 
+     } else {
+         exp_send "ytk_rast,[expr $rn]\r" 
+     }
  }
 
  button  .rslider.bf1.prevrast -text "<" -command { 
@@ -369,7 +378,11 @@ set wfc3 4
      if { $rn < 1 } {
          set rn 1;
      } 
-     exp_send "ytk_rast,[expr $rn]\r" 
+     if { $animate_georef } {
+         exp_send "ytk_rast, [expr $rn]; geo_rast, [expr $rn], fsmarks=1, eoffset=0.0; \r" 
+     } else {
+         exp_send "ytk_rast,[expr $rn]\r" 
+     }
  }
 
 
@@ -385,7 +398,11 @@ set wfc3 4
 
 bind .rslider.scale <ButtonRelease>  { 
  global rn 
-     exp_send "ytk_rast,$rn\r"       
+	if { $animate_georef } {
+           exp_send "ytk_rast, [expr $rn]; geo_rast, [expr $rn], fsmarks=1, eoffset=0.0; \r" 
+	} else {
+           exp_send "ytk_rast,[expr $rn]\r" 
+	}
  }
 
 
@@ -406,6 +423,8 @@ button .rslider.bf2.georef -text "Geo Ref" -command {
   global rn elevation_offset;
   exp_send "geo_rast( $rn, fsmarks=1, eoffset=$elevation_offset );\r"
 }
+
+checkbutton .rslider.bf2.angeo -text "Animate GeoRef" -variable animate_georef
 
 SpinBox .rslider.bf2.elevation_offset \
         -helptext "elevation_offset: Enter the elevation offset (in meters) here." \
@@ -449,7 +468,11 @@ tk_optionMenu .rslider.bf1.pint play_interval \
 
  bind .rslider.bf1.enter_rn <Return> { 
      if { $rn < $total_edb_records } {
-        exp_send "ytk_rast,[expr $rn]\r" 
+	if { $animate_georef } {
+           exp_send "ytk_rast, [expr $rn]; geo_rast, [expr $rn], fsmarks=1, eoffset=0.0; \r" 
+	} else {
+           exp_send "ytk_rast,[expr $rn]\r" 
+	}
      } else {
         set rn $total_edb_records;
      }
@@ -494,7 +517,7 @@ trace variable thetime w sft
 	-side left -expand 0 -fill both -anchor nw 
 
   pack \
-	.rslider.bf2.georef .rslider.bf2.elevation_offset \
+	.rslider.bf2.georef .rslider.bf2.elevation_offset .rslider.bf2.angeo \
 	-side left -expand 0 -fill both
 
 

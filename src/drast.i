@@ -391,3 +391,22 @@ func transmit_char(rr, p=, win=, plot=, autofma=) {
 
   return [stx, mxtx, nmx];
 }
+
+func sfsod_to_rn(sfsod) {
+/*DOCUMENT sf_sod_to_rn(sfsod)
+  This function find the rn values for the correspoding sod from sf and returns
+the rn value to the drast gui.
+  amar nayegandhi 04/06/04.
+*/
+
+  rnarr = where((edb.seconds - soe_day_start) == sfsod);
+  if (!is_array(rnarr)) {
+    write, format="No rasters found for sod = %d from sf\n",sfsod;
+    return
+  }
+  no_rn = numberof(rnarr);
+  tkcmd, swrite(format="set rn %d\n",rnarr(1));
+  ytk_rast, rnarr(1);
+
+  return
+}
