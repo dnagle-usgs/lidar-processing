@@ -18,6 +18,10 @@
   set cdelta		10
   set cmin		-40
 
+  set cmax_max		5000
+  set cmin_min		-100
+  set cmax_inc		0.1
+
 exp_send "#include \"geo_bath.i\"\r"; # load geobath.i code
 exp_send "#include \"read_yfile.i\"\r"; # load read_yfile
 expect ">";
@@ -151,14 +155,14 @@ menu .l1wid.mb.options
 	   Label .l1wid-opts.f3.label -text "Increment:" 
 	   SpinBox  .l1wid-opts.f1.max -range { -100. 5000. 10. }  \
 		-textvariable cmax_max \
-		-modifycmd {  .l1wid.bf45.sc.1 configure -to $cmax_max }
+		-modifycmd {  .l1wid.bf45.sc.1.cmax.sc configure -to $cmax_max }
 	   SpinBox  .l1wid-opts.f2.min -range { -100. 5000. 10. }  \
                 -textvariable cmax_min \
-                -modifycmd {  .l1wid.bf45.sc.1 configure -from $cmax_min }
+                -modifycmd {  .l1wid.bf45.sc.1.cmax.sc configure -from $cmax_min }
 	   SpinBox  .l1wid-opts.f3.inc \
 		-values { 0.1 0.2 .25 .5 .75 1.0 1.5 2.0 2.5 3 4 5 6 7 8 9 10 15 20 25 }  \
                 -textvariable cmax_inc \
-                -modifycmd {  .l1wid.bf45.sc.1 configure -resolution $cmax_inc }
+                -modifycmd {  .l1wid.bf45.sc.1.cmax.sc configure -resolution $cmax_inc }
 
 	   pack .l1wid-opts.f1.label .l1wid-opts.f1.max -side left -fill x
 	   pack .l1wid-opts.f2.label .l1wid-opts.f2.min -side left -fill x
