@@ -1,0 +1,67 @@
+# proc confload {} {
+   global path conflist
+
+   exp_send "include, \"confload.i\";\r"
+   expect ">"
+
+   set data "Configuration file contents will appear here"
+
+   if { [info exists path ] == 0 } {
+      set path "~/"
+   }
+   
+   if { [info exists conflist ] == 0 } {
+      set conflist "..."
+   }
+
+   destroy  .conf
+   toplevel .conf
+   wm title .conf "Load conf files"
+
+   foreach x {1 2 3 4 5 6} {
+      frame .conf.$x -relief groove -borderwidth 3
+      pack .conf.$x -side top
+   }
+
+   LabelEntry .conf.1.path -relief sunken -borderwidth 3 \
+      -label "Path:  " -helptext "Enter path to raw data" \
+      -textvariable path -text $path
+
+   Button .conf.1.pathbutton -text "Browse..." -helptext "Open dialog to select path" \
+      -command {
+         global path
+         set path [ tk_chooseDirectory -initialdir $path -mustexist 1 -title "Raw Data Directory" ]/
+      }
+
+
+   Button .conf.1.getbutton -text "Get confs" -helptext "Find *.conf files in path" \
+      -command {
+	global conflist path
+	exp_send "confload(\"$path\")\r"
+	expect ">"
+	destroy .conf.1.cb
+	ComboBox .conf.1.cb -values $conflist -helptext "Select a configuration file" -editable 0 \
+	 -modifycmd {
+            global conflist path
+            set curconf $path[lindex $conflist [.conf.1.cb getvalue]]
+	    set fp [open $curconf r]
+	    set data [read $fp]
+	    close $fp
+	 }
+	pack .conf.1.cb .conf.1.loadbutton -side left
+
+       }
+
+   Button .conf.1.loadbutton -text "Load conf" -helptext "Load selected *.conf file" \
+	-command {
+	   global path curconf
+	   exp_send "load_this_conf(\"$curconf\")\r"
+	   expect ">"
+	}
+
+   message .conf.2.message -font {Courier 12} -textvariable data -width 800 -text "" 
+
+   pack .conf.1.path .conf.1.pathbutton .conf.1.getbutton -side left
+   pack .conf.2.message
+	
+

@@ -591,9 +591,10 @@ Button $w.show_grid -text "Show\nGrid Name" -command {
 
  $w.mb.file add command -label "Load EAARL Database Index (Edb)..." -command { load_edb } \
 	-underline 5
+ $w.mb.file add command -label "Load EAARL from Conf..." -command { source "$src_path/confload.ytk" } -underline 16
 
  exp_send "require, \"rbgga.i\"\r"
- $w.mb.file add command -label "Coastlines & Flight tracks"   -underline 0 \
+ $w.mb.file add command -label "Coastlines & Flight tracks"   -underline 13 \
 	-command rbgga_menu
  $w.mb.file add command -label "Load DMARS Attitude data..."   -underline 5 \
    -command  load_dmars;
