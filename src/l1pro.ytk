@@ -1,0 +1,100 @@
+
+#
+# $Id$
+
+exp_send "#include \"geo_bath.i\"\r"; # load geobath.i code
+expect ">";
+
+package require BWidget
+destroy .l1wid
+
+toplevel .l1wid
+frame .l1wid.bf1
+frame .l1wid.bf2
+frame .l1wid.bf3
+frame .l1wid.bf4 
+frame .l1wid.bf4.1
+frame .l1wid.bf4.2
+
+.l1wid configure -menu .l1wid.mb
+menu .l1wid.mb
+menu .l1wid.mb.file
+menu .l1wid.mb.load
+.l1wid.mb   add cascade -label File -underline 0 -menu .l1wid.mb.file
+
+.l1wid.mb.file  add command -label "Read command file .. " -underline 0 
+
+.l1wid.mb.file add command -label "Save command file .. " -underline 0
+
+.l1wid.mb.file add command -label "Dismiss" -underline 0 -command {destroy .l1wid}
+
+.l1wid.mb add cascade -label Load -underline 0 -menu .l1wid.mb.load
+
+.l1wid.mb.load add command -label "Load TANS Data .. " -underline 5 \
+		-command { exp_send "tans = rbtans();\r" 
+			   expect ">"
+			 }
+
+.l1wid.mb.load add command -label "Load PNAV Data .. " -underline 5 \
+		-command { exp_send "pnav = rbpnav(); \r"
+			 }
+
+.l1wid.mb.load add command -label "Initialize structure BATHCTL .." -underline 21 \
+		-command { exp_send "type = define_bath_ctl(junk); \r"
+			 }
+
+LabelEntry .l1wid.bf2.op -width 50 -relief sunken -bd 3 -label "Opath:  " -helptext "Enter Output File Path Here" \
+		-textvariable opath
+
+LabelEntry .l1wid.bf2.of -width 50 -relief sunken -bd 3 -label "Ofname: " -helptext "Enter Output File Name Here" \
+		-textvariable ofname
+
+# now make entry and button widgets to select region
+LabelEntry .l1wid.bf3.lat1 -width 8 -relief sunken -label "NorthLat " \
+		-helptext "Enter Maximum Latitude in degrees Here"\
+		-textvariable mxlat
+LabelEntry .l1wid.bf3.lat2 -width 8 -relief sunken -label "SouthLat " \
+		-helptext "Enter Minimum Latitude in degrees Here"\
+		-textvariable mnlat
+
+frame .l1wid.bf3.lon
+LabelEntry .l1wid.bf3.lon.mn -width 8 -relief sunken -label "WestLon " \
+		-helptext "Enter Westernmost Longitude in degrees Here"\
+		-textvariable mnlon
+LabelEntry .l1wid.bf3.lon.mx -width 8 -relief sunken -label "EastLon " \
+		-helptext "Enter Easternmost Longitude in degrees Here"\
+		-textvariable mxlon
+Button .l1wid.bf3.lon.but -text "Select Region" -helptext "Select by dragging region in gga plot (window 6)" \
+		-command { 
+		   exp_send "q = gga_win_sel(2,latlon=1);\r"
+		   expect ">"
+		   }
+
+checkbutton .l1wid.bf4.1.xba -text "Extract Bad Attitude Data" -variable xba 
+checkbutton .l1wid.bf4.1.xbd -text "Extract Bad Depth Data" -variable xbd 
+checkbutton .l1wid.bf4.2.cll -text "Convert UTM to Lat Lon" -variable cll 
+checkbutton .l1wid.bf4.2.cng -text "Convert to NAVD 88 (GEOID)" -variable cng 
+
+Button .l1wid.bf5 -text "Begin Processing" -width 20 \
+		-command {
+		   exp_send "make_bathy, opath=\"$opath\", ofname=\"$ofname\", ext_bad_att=$xba, ext_bad_depth=$xbd, latlon = 1, llarr=\[$mnlon, $mxlon, $mnlat, $mxlat\];\r"
+		 }
+
+
+
+pack .l1wid.bf2.op  .l1wid.bf2.of -side top -pady 8
+pack .l1wid.bf3.lon.mn .l1wid.bf3.lon.but .l1wid.bf3.lon.mx -side left -padx 4
+pack .l1wid.bf3.lat1 .l1wid.bf3.lon .l1wid.bf3.lat2 -side top -pady 5
+pack  .l1wid.bf4.1.xba .l1wid.bf4.1.xbd  -side top -padx 20 -pady 5
+pack  .l1wid.bf4.2.cll .l1wid.bf4.2.cng  -side top -padx 20 -pady 5
+pack .l1wid.bf4.1 .l1wid.bf4.2 -side left 
+pack .l1wid.bf1 .l1wid.bf2 .l1wid.bf3 .l1wid.bf4 -side top -expand 1 -fill both
+pack .l1wid.bf5 -side top -padx 50 -pady 10
+
+proc send_latlon_to_l1pro {minlon maxlon minlat maxlat} {
+   global mnlon mxlon mnlat mxlat
+   set mnlon $minlon
+   set mxlon $maxlon
+   set mnlat $minlat
+   set mxlat $maxlat
+}

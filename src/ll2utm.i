@@ -152,6 +152,7 @@ phi1 = phi1Rad*rad2deg;
                *D*D*D*D*D/120)/cos(phi1Rad);
 
         Long = LongOrigin + Long * rad2deg;
+return [Long, Lat]
 }
 
 

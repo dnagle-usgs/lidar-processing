@@ -26,8 +26,7 @@ struct GEOALL {
   long melevation(120);	//mirror elevation
   short bottom_peak(120);//peak amplitude of the bottom return signal
   short first_peak(120);//peak amplitude of the first surface return signal
-  long bath(120);	//water bathymetry in centimeters
-  short depth(120);	//water depth in centimeters
+  short depth(120);     //water depth in centimeters 
 }
 
 func display_bath (d, rrr, cmin =, cmax=, size=, win=, correct=, bathy=, bcmin=, bcmax=, bottom_peak= ) {
@@ -67,6 +66,10 @@ if (numberof(d(0,,)) < numberof(rrr)) { len = numberof(d(0,,)); } else {
    len = numberof(rrr);}
 
 geodepth = array(GEOALL, len);
+bath_arr = array(long,120,len);
+if (correct) {
+  cflag = array(short,120,len);
+}
 
 for (i=1; i<=len; i=i+1) {
   geodepth(i).rn = rrr(i).raster;
@@ -75,7 +78,7 @@ for (i=1; i<=len; i=i+1) {
   geodepth(i).depth = short(-d(,i).idx * CNSH2O2X *100);
   indx = where((-d(,i).idx) != 0); 
   if (is_array(indx)) {
-    geodepth(i).bath(indx) = long((-d(,i).idx(indx) * CNSH2O2X *100) + rrr(i).elevation(indx));
+    bath_arr(indx,i) = long((-d(,i).idx(indx) * CNSH2O2X *100) + rrr(i).elevation(indx));
   }
   geodepth(i).bottom_peak = d(,i).bottom_peak;
   geodepth(i).first_peak = 0;
@@ -89,15 +92,13 @@ for (i=1; i<=len; i=i+1) {
      // search for erroneous elevation values
      indx = where(rrr(i).elevation < -10000); 
      if (is_array(indx)) {
-       geodepth(i).north(indx) = 0;
-       geodepth(i).east(indx) = 0;
+        cflag(indx,i) = 0;
      }
 
      indx = where(rrr(i).elevation >  20000); 
      // these are values above any defined reference plane and will  be the erroneous points defined (by rrr) at the height of the aircraft.
      if (is_array(indx)) {
-       geodepth(i).north(indx) = 0;
-       geodepth(i).east(indx) = 0;
+       cflag(indx,i) = 0;
      }
   }
   if ((bathy) && (!bcmin || !bcmax)) {
@@ -136,7 +137,7 @@ for ( i=1; i<j; i++ ) {
   indx1 = where(geodepth(i).north != 0);
   if (is_array(indx1) == 1) {
    if (bathy) {
-    plcm, (geodepth(i).bath(indx1))/100., (geodepth(i).north(indx1))/100., (geodepth(i).east(indx1))/100., msize=size, cmin=bcmin, cmax=bcmax;
+    plcm, (bath_arr(indx1,i))/100., (geodepth(i).north(indx1))/100., (geodepth(i).east(indx1))/100., msize=size, cmin=bcmin, cmax=bcmax;
    } else if (bottom_peak) {
     plcm, (geodepth(i).bottom_peak(indx1)), (geodepth(i).north(indx1))/100, (geodepth(i).east(indx1))/100, 
     msize=size,cmin=cmin,cmax=cmax;
@@ -254,7 +255,8 @@ for (i=1;i<=len;i++) {
      byt_pos = byt_pos + 4;
      _write, f, byt_pos, geobath(i).east(indx(j));
      byt_pos = byt_pos + 4;
-     _write, f, byt_pos, geobath(i).bath(indx(j));
+     bath_arr = long((geobath(i).sr2(indx(j)))*CNSH2O2X *100);
+     _write, f, byt_pos, bath_arr;
      byt_pos = byt_pos + 4;
      _write, f, byt_pos, geobath(i).depth(indx(j));
      byt_pos = byt_pos + 2;
@@ -401,8 +403,6 @@ for (i=1;i<=len;i++) {
      byt_pos = byt_pos + 2;
      _write, f, byt_pos, geoall(i).first_peak(indx(j));
      byt_pos = byt_pos + 2;
-     _write, f, byt_pos, geoall(i).bath(indx(j));
-     byt_pos = byt_pos + 4;
      _write, f, byt_pos, geoall(i).depth(indx(j));
      byt_pos = byt_pos + 2;
   }
@@ -470,10 +470,11 @@ func compute_depth(data_ptr=, ipath=,fname=,ofname=) {
       D = -(data.sr2*CNSH2O2X*100)*cos(phi_water);
       //overwrite existing depths with newly calculated depths
       data.depth = D;
-      Dindx = where(D != 0);
-      data1 = data.bath;
+      /*Dindx = where(D != 0);
+       data1 = data.bath;
       data1(Dindx) = long(D(Dindx)+data.elevation(Dindx));
       data.bath = data1;
+      */
       if (!is_void(ofname)) {
         //write current data out to output file ofname
 	if (i==1) {
@@ -488,7 +489,7 @@ func compute_depth(data_ptr=, ipath=,fname=,ofname=) {
    return &data
 }
 
-func make_bathy(opath=,ofname=,ext_bad_att=, ext_bad_depth=) {
+func make_bathy(opath=,ofname=,ext_bad_att=, ext_bad_depth=, latlon=, llarr=) {
    /* DOCUMENT make_bathy(edb, soe_day_start, opath=,ofname=)
       this function allows a user to define a region on the gga plot of flightlines (usually window 6) to write out a 'level 1' file and plot a depth image defined in that region.
       The input parameters are:
@@ -543,8 +544,8 @@ func make_bathy(opath=,ofname=,ext_bad_att=, ext_bad_depth=) {
    write, "PNAV information LOADED. \n"
    write, "\n";
 
-   /* select a region using function gga_win_sel in rbgga.i */
-   q = gga_win_sel(2);
+    /* select a region using function gga_win_sel in rbgga.i */
+    q = gga_win_sel(2, latlon=latlon, llarr=llarr);
 
    /* find the start and stop times using gga_find_times in rbgga.i */
    t = gga_find_times(q);
@@ -646,8 +647,8 @@ func make_bathy(opath=,ofname=,ext_bad_att=, ext_bad_depth=) {
        /* if ext_bad_depth is set, find all points having depth and bath = 0  */
        if (ext_bad_depth) {
          write, format="\nExtracting data points with bad depth data and writing these points out to an output file for flightline %d. \r",i;
-         /* compare depth.bath with 0 */
-         ba_indx = where(depth.bath == 0);
+         /* compare depth.depth with 0 */
+         ba_indx = where(depth.depth == 0);
 	 bd_count += numberof(ba_indx);
 	 ba_depth = depth;
 	 deast = depth.east;
@@ -658,7 +659,7 @@ func make_bathy(opath=,ofname=,ext_bad_att=, ext_bad_depth=) {
 	 depth.north = dnorth;
 
 	 /* write array ba_depth to a file */
-	 ba_indx_r = where(ba_depth.bath != 0);
+	 ba_indx_r = where(ba_depth.depth != 0);
 	 bdeast = ba_depth.east;
 	 bdeast(ba_indx_r) = 0;
 	 bdnorth = ba_depth.north;
@@ -691,9 +692,10 @@ func make_bathy(opath=,ofname=,ext_bad_att=, ext_bad_depth=) {
     write, format = "Total number of records with bad depth data = %d\n",bd_count;
     write, format="Total number of GOOD data points = %d \n",(tot_count-ba_count-bd_count);
     pba = float(ba_count)*100/tot_count;
-    write, format = "%5.2f%% of the total records had bad attitude! (pun included)\n",pba;
+    write, format = "%5.2f%% of the total records had bad attitude! (pun intended)\n",pba;
     pbd = float(bd_count)*100/(tot_count-ba_count);
     write, format = "%5.2f%% of total records with good attitude had bad depth! \n",pbd; 
+
 
 
 }

@@ -41,6 +41,19 @@ Other:
   it must be verified and converted by the gga2bin.c. program.  
 
   $Log$
+  Revision 1.10  2002/06/21 22:39:29  anayegan
+  erange1.c : small change in parameter calls using the executable.  change made for Steve Helterbrand.
+
+  geo_bath.i : removed element bath from structure GEOALL.  Used array bath_arr instead.  Changed function make_bathy to include new parameters in gga_win_sel.
+
+  ll2utm.i :  added return statement in utm2ll conversion which returns the long, lat value.
+
+  rbgga.i : modified gga_win_sel to add a few more parameters so as to work with the new l1pro GUI.
+
+  read_yfile.i : removed element bath while reading in Level 1 data.
+
+  l1pro.ytk :  added a Tcl/Tk GUI program to process level 1 data.  Can interactively define lat lon range.
+
   Revision 1.9  2002/06/11 22:34:41  anayegan
   bathy.i: Added function define_bath_ctl that defines the structure bath_ctl depending on the type.
 
@@ -231,7 +244,7 @@ write, format="Lon:%14.3f %14.3f\n", gga(3,min), gga(3,max)
    return g;
 }
 
-func gga_win_sel( show, win=, color=, msize=, skip= ) {
+func gga_win_sel( show, win=, color=, msize=, skip= , latlon=, llarr=) {
 /* DOCUMENT gga_win_sel( show, color=, msize=, skip= )
 
   There's a bug in yorick 1.5 which causes all the graphics screens to get fouled up
@@ -243,13 +256,23 @@ properly to the zoom buttons.
 	win = 6;
 
  window,win;
- a = mouse(1,1,
+ if (!is_array(llarr)) {
+   a = mouse(1,1,
   "Hold the left mouse button down, select a region:");
- a(1:4)
- minlon = min( [ a(1), a(3) ] )
- maxlon = max( [ a(1), a(3) ] )
- minlat = min( [ a(2), a(4) ] )
- maxlat = max( [ a(2), a(4) ] )
+   a(1:4)
+   minlon = min( [ a(1), a(3) ] )
+   maxlon = max( [ a(1), a(3) ] )
+   minlat = min( [ a(2), a(4) ] )
+   maxlat = max( [ a(2), a(4) ] )
+ } else {
+   minlon = llarr(1);
+   maxlon = llarr(2);
+   minlat = llarr(3);
+   maxlat = llarr(4);
+ }
+ if (latlon) {
+   tkcmd, swrite(format="send_latlon_to_l1pro %6.3f %6.3f %6.3f %6.3f", minlon, maxlon, minlat, maxlat);
+ }
  q = where( gga.lon > minlon );
  qq = where( gga.lon(q) < maxlon );  q = q(qq);
  qq = where( gga.lat(q) > minlat ); q = q(qq);
@@ -263,8 +286,8 @@ properly to the zoom buttons.
  }
  if (show == 2) {
    /* plot a window over selected region */
-   a_x=[a(1), a(3), a(3), a(1), a(1)];
-   a_y=[a(2), a(2), a(4), a(4), a(2)];
+   a_x=[minlon, maxlon, maxlon, minlon, minlon];
+   a_y=[minlat, minlat, maxlat, maxlat, minlat];
    plg, a_y, a_x;
  }
    

@@ -11,6 +11,8 @@
 /************************************************************
     $Id$
 
+6-20-02 
+  modified to output ascii with correct argv parameters.  amar nayegandhi.
 6-27-01
   modified to output binary
 
@@ -45,18 +47,22 @@ UI32	offset, pixel_offset;		// fseek offsets
 main(unsigned int argc, char *argv[])
 {
  int i,j,k,n;
-  if ( argc == 2 ) 
+  if (argc == 1) 
+	  printf("No files to open.  Usage erange somefile.tld \n");
+  if ( argc == 2 ) { 
 	fd = fopen(argv[1], "r");
-  if ( fd == NULL ) {
+    if ( fd == NULL ) {
 	printf("\nCan't open %s\nUsage: erange somefile.tld\n\n", argv[1]);
 	exit(1);
+    }
   }
 
-  if ( argc == 3 ) 
+  if ( argc == 3 ) {
 	odf = fopen( argv[2], "w+");
   if ( odf == NULL ) { 
 	printf("\nCan't open %s\nUsage: erange somefile.tld someoutput.erange1\n\n", argv[1]);
 	exit(1);
+    }
   }
 
 

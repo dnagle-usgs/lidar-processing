@@ -118,9 +118,6 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
        _read, f, byt_pos, first_peak;
        data(i).first_peak = first_peak;
        byt_pos = byt_pos + 2;
-       _read, f, byt_pos, bath;
-       data(i).bath = bath;
-       byt_pos = byt_pos + 4;
        _read, f, byt_pos, depth;
        data(i).depth = depth;
        byt_pos = byt_pos + 2;
