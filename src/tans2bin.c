@@ -1,5 +1,7 @@
 /*
   $Id$
+
+  2/25/02 ww changed to properly handle somd.
 */
 
 #include <stdio.h>
@@ -28,7 +30,7 @@ struct {
 main( int argc, char *argv[] ) {
 FILE *idf, *odf;
  int rec, good, badcnt, bad, i, n;
- float lgt, gap, maxgap;
+ float fgt=-1.0, lgt, gap, maxgap;
  char str[ MAXSTR ];
  float sow, sod, roll, pitch, heading;
  const double sid = 86400.0;		// seconds in a day
@@ -60,12 +62,16 @@ FILE *idf, *odf;
 	  if ( sow == 0.0 ) bad++;
 	  if ( sow < lgt )  bad++;
           if ( bad == 0 )  {
-	     sod = fmod( sow, sid); 
+             if ( fgt == -1.0 ) {
+	        sod = fmod( sow, sid); 
+	 	fgt = sow - sod;	// save first good time value
+printf("\nfgt=%f ", fgt);
+             }
 
 	     attitude.heading = heading;
 	     attitude.roll = roll;
 	     attitude.pitch = pitch;
-sod = sow;
+	     sod = sow - fgt; 
 	     attitude.sod  = sod;
 	     if ( good ) fwrite( &attitude, sizeof(attitude), 1, odf );
 	     gap = sod - lgt;

@@ -1,5 +1,8 @@
 /*
    $Id$
+
+   W. Wright
+   
 */
 
 write,"$Id$"
@@ -41,14 +44,15 @@ d2r = pi/180.0;		// Convert degrees to radians.
    Structure used to hold laser return vector information. All the 
  values are in air-centimeters. 
 */
+ 
 struct R {
- long raster(120);	 // contains raster # and pulse number in msb
- long mnorth(120);	 // mirror northing
- long meast(120);	 // mirror east
+ long raster(120);       // contains raster # and pulse number in msb
+ long mnorth(120);       // mirror northing
+ long meast(120);        // mirror east
  long melevation(120);   // mirror elevation
- long north(120);	 // mirror north
- long east(120);	 // mirror east
- long elevation(120);  // mirror elevation (m)
+ long north(120);        // surface north
+ long east(120);         // surface east
+ long elevation(120);    // surface elevation (m)
 };
 
 
@@ -75,17 +79,24 @@ return q
 }
 
 
-func display(rrr, i=,j=, cmin=, cmax=, size=, win=, dofma= ) {
+func display(rrr, i=,j=, cmin=, cmax=, size=, win=, dofma=, edt= ) {
 /* DOCUMENT display, i, j, cmin=, cmax=, size=
+
  
    Display EAARL laser samples.
    rrr		type "R" data array.
    i            Starting point.
    j            Stopping point.
-   cmin=        Deepest point in meters ( -35 default )
-   cmax=        Highest point in meters ( -15 )
+   cmin=        Deepest point in centimeters ( -3500 default )
+   cmax=        Highest point in centimeters ( -1500 )
    size=        Screen size of each point. Fiddle with this
                 to get the filling-in like you want.
+   edt=		1 to plot only good data. Don't include this
+                if you want un-edited data.
+
+  The rrr northing and easting values are divided by 100 so the scales
+ are in meters instead of centimeters.  The elevation remains in centimeters.
+ 
  
 */
 
@@ -100,15 +111,27 @@ func display(rrr, i=,j=, cmin=, cmax=, size=, win=, dofma= ) {
  if ( !is_void( dofma ) )
 	fma;
 
-write,format="Please wait while drawing..........%s", "\n"
- if ( is_void( cmin )) cmin = -35.0;
- if ( is_void( cmax )) cmax = -15.0;
+
+write,format="Please wait while drawing..........%s", "\r"
+ if ( is_void( cmin )) cmin = -3500;
+ if ( is_void( cmax )) cmax = -1500;
  if ( is_void( size )) size = 1.4;
+ ii = i;
+ if ( !is_void(edt) ) {
+   ea = rrr.elevation;
+   ea = ( ea > cmin) & ( ea < cmax );
+ } else {
+   ea = rrr.elevation;
+   ea = (ea != 0 );
+ }
 for ( ; i<j; i++ ) {
-  plcm, rrr(i).elevation/100, rrr(i).north/100, rrr(i).east/100,
+  q = where( ea(,i) );
+  if ( numberof(q) >= 1) {
+     plcm, rrr(i).elevation(q), rrr(i).north(q)/100.0, rrr(i).east(q)/100.0,
       msize=size,cmin=cmin, cmax=cmax
+   }
   }
-write,format="Draw complete. %d rasters drawn. %s", j, "\n"
+write,format="Draw complete. %d rasters drawn. %s", j-ii, "\n"
 }
 
 
@@ -122,7 +145,7 @@ data plot.
    cc = mouse(,2,"Click and dragout a distance to measure:");
     dx = cc(3) - cc(1);
     dy = cc(4) - cc(2);
-  dist = sqrt( dx^2 + dy^2);
+  dist = sqrt( dx^2 + dy^2) / 100.0;
   if ( dist > 1000.0 )
     write,format="Distance is %5.3f kilometers\n", dist/1000.0;
   else

@@ -74,14 +74,16 @@ mxroll = tans(2, ) (max)
 mnroll = tans(2, ) (min)
 
 // compute seconds of the day
-tans(1,) = tans(1,) % 86400;
+//////////tans(1,) = tans(1,) % 86400;
 
 // check and correct midnight rollover
   q = where( tans(1, ) < 0 );		// look for neg spike
+/****
   if ( numberof(q) ) {			// if found, then correct
     rng = q(1)+1:dimsof(tans(1,) )(2);  // determine values to correct
     tans(1,) += 86400;			// add 86400 seconds
   }
+******/
 
  tans(1, ) += gps_time_correction;
 
