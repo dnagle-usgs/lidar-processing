@@ -13,7 +13,7 @@ require, "pnm.i"
    Bin and grid eaarl data.
 
    Inputs:
-	&r	an RRR array.
+	&r	an "R" array.
 
    Returns:
 	An array of pointers (img) where *img(1) contains the 
@@ -23,6 +23,8 @@ require, "pnm.i"
    1) Requires and eaarl "point cloud" in window 5
    2) Click and drag out a rectangle in window 5 that you want
       to grid.
+
+   See also:  fillin.i
 
    Original by W. Wright 6/7/2002
 */

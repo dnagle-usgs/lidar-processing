@@ -5,6 +5,16 @@
    
     W. Wright 
 
+   10/3/02
+	WW. Changed the algo. so non saturated surface waveforms 
+        which contain shallow depths will begin the exponential decay
+        at a fixed 9ns point in the waveform. The previous method 
+	would locate the peak of a shallow bottom signal which was
+	within the first 18ns of the waveform and it would improperly
+	begin the decay at that point.  It should properly begin
+	at the threshold crossing of the surface return.
+ 	which is typically 9ns or so, but it's not certain.
+	
     7-4-02
 	WW Added tk based progress bar.
 
