@@ -64,7 +64,7 @@ rn
 }
 
 
-func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, use_centroid= ) {
+func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, use_centroid=,use_trail= ) {
 // depths = array(float, 3, 120, len );
   if (is_void(graph)) graph=0;
 
@@ -82,8 +82,8 @@ func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, us
  }
 
 
-    
      
+   
  depths = array(VEGPIX, 120, len );
   if ( _ytk ) {
     tkcmd,"destroy .veg; toplevel .veg; set progress 0;"
@@ -112,7 +112,7 @@ func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, us
         write, format="   %d of %d   \r", j,  len
      }
      for (i=1; i<119; i++ ) {
-       depths(i,j) = ex_veg( rn+j, i, last = last, graph=graph, use_centroid=use_centroid);
+       depths(i,j) = ex_veg( rn+j, i, last = last, graph=graph, use_centroid=use_centroid,use_trail=use_trail);
        if ( !is_void(pse) ) 
 	  pause, pse;
      }
@@ -301,6 +301,7 @@ write, format="rn=%d; i = %d\n",rn,i
        if (is_array(idx1) && is_array(idx)) {
         if (idx(0) > idx1(1)) {
          //take length of  return at this point
+	 //write, format="this happens!! rn = %d; i = %d\n",rn,i;
          retdist = idx(0);
         }
        } else write, format="idx/idx1 is nuller for rn=%d, i=%d\n",rn, i  
@@ -335,6 +336,28 @@ write, format="rn=%d; i = %d\n",rn,i
     
     if (!use_centroid && use_trail) {
       // using trailing edge algorithm for bottom return
+       // find where the bottom return pulse changes direction after its trailing edge
+       idx = where(dd(xr(0)+1:xr(0)+retdist) > 0);
+       idx1 = where(dd(xr(0)+1:xr(0)+retdist) < 0);
+       if (is_array(idx1) && is_array(idx)) {
+        //write, idx;
+        //write, idx1;
+        if (idx(0) > idx1(1)) {
+         //take length of  return at this point
+	 //write, format="this happens!! rn = %d; i = %d\n",rn,i;
+         retdist = idx(0);
+        }
+       }
+       if (is_array(idx1)) {
+	ftrail = idx1(1);
+	ltrail = retdist;
+	//halftrail = 0.5*(ltrail - ftrail);
+	mx0 = xr(0)+idx1(1);
+	mv0 = a(int(mx0),i,ai);
+       } else {
+        mx0 = -10;
+	mv0 = -10;
+       }
     }
 
    } else { //donot use centroid or trailing edge
@@ -510,7 +533,7 @@ for (i=1; i<=len; i=i+1) {
 return geoveg;
 }
 
-func make_veg(latutm=, q=, ext_bad_att=, ext_bad_veg=, use_centroid=) {
+func make_veg(latutm=, q=, ext_bad_att=, ext_bad_veg=, use_centroid=, use_trail=) {
 /* DOCUMENT make_veg(opath=,ofname=,ext_bad_att=, ext_bad_veg=)
 
  This function allows a user to define a region on the gga plot 
@@ -533,6 +556,11 @@ executing make_veg.  See rbpnav() and rbtans() for details.
    
    extern edb, soe_day_start, tans, pnav, utm, veg_all, rn_arr, rn_arr_idx, ba_veg, bd_veg;
    veg_all = [];
+   /*if (use_centroid == 1) {
+           use_centroid = 0;
+	   use_trail = 1;
+   }
+   */
    
    /* check to see if required parameters have been initialized */
 
@@ -571,7 +599,7 @@ executing make_veg.  See rbpnav() and rbtans() for details.
       if ((rn_arr(1,i) != 0)) {
        fcount ++;
        write, format="Processing segment %d of %d for vegetation\n", i, no_t;
-       d = run_veg(start=rn_arr(1,i), stop=rn_arr(2,i),use_centroid=use_centroid);
+       d = run_veg(start=rn_arr(1,i), stop=rn_arr(2,i),use_centroid=use_centroid,use_trail=use_trail);
        write, "Processing for first_surface...";
        rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=use_centroid); 
        a=[];
@@ -835,7 +863,7 @@ func test_veg(veg_all,  fname=, pse=, graph=) {
   tot_count = 0;
 
   for (i = 1; i <= numberof(rasters); i++) {
-    depth = ex_veg(rasters(i), pulses(i),last=250, graph=graph, use_centroid=1, pse=pse)    
+    depth = ex_veg(rasters(i), pulses(i),last=250, graph=graph, use_trail=1, pse=pse)    
     if (veg_all(i).rn == depth.rastpix) {
       if (depth.mx1 == -10) {
        veg_all(i).felv = -10;

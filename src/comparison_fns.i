@@ -48,7 +48,7 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, be=, elv=) {
    f = open("/home/anayegan/terra_ceia_comparison/analysis/nearest_pt_be_comparisons_1m_after_rcf.txt", "w");
  else 
    f = open(fname, "w");
- write, f, "Indx  Number_of_Indices  Avg  Nearest_Point  Kings_Point  Nearest_Elv_Point Diff_Nearest Diff_Nearest_Elv"
+ //write, f, "Indx  Number_of_Indices  Avg  Nearest_Point  Kings_Point  Nearest_Elv_Point Diff_Nearest Diff_Nearest_Elv"
 
  for (i=1; i <= numberof(kings(1,)); i++) {
 
@@ -89,6 +89,7 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, be=, elv=) {
         be = mineaarl.elevation/100.;
 	} else {
         be = mineaarl.elevation/100.-(mineaarl.lelv-mineaarl.felv)/100.;
+	ii = mineaarl.rn
 	}
 
       if (elv) {
@@ -96,7 +97,7 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, be=, elv=) {
 	} else {
         be_elv = minelveaarl.elevation/100.-(minelveaarl.lelv-minelveaarl.felv)/100.;
 	}
-      write, f, format=" %d  %d  %f  %f  %f %f %f %f\n",i, numberof(indx), be_avg_pts, be, kings(3,i), be_elv,  (be-kings(3,i)), (be_elv-kings(3,i));
+      write, f, format=" %d  %d  %f  %f  %f %f %f %f\n",ii, numberof(indx), be_avg_pts, be, kings(3,i), be_elv,  (be-kings(3,i)), (be_elv-kings(3,i));
 
    }
  }
@@ -145,14 +146,28 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, be=, be_bathy=) {
   xgrid = span(bbox(1), bbox(2), int(ngridx));
   ygrid = span(bbox(3), bbox(4), int(ngridy));
 
+  if ( _ytk ) {
+    tkcmd,"destroy .rcf; toplevel .rcf; set progress 0;"
+    tkcmd,swrite(format="ProgressBar .rcf.pb \
+	-fg green \
+	-troughcolor blue \
+	-relief raised \
+	-maximum %d \
+	-variable progress \
+	-height 30 \
+	-width 400", int(ngridy) );
+    tkcmd,"pack .rcf.pb; update; center_win .rcf;"
+  }
 
   for (i = 1; i <= ngridy; i++) {
     for (j = 1; j <= ngridx; j++) {
       q = where((eaarl.east >= xgrid(j))   &
                    (eaarl.east <= xgrid(j)+buf));
-      indx = where ((eaarl.north(q) >= ygrid(i)) &
+      if (is_array(q)) {
+        indx = where ((eaarl.north(q) >= ygrid(i)) &
                    (eaarl.north(q) <= ygrid(i)+buf));
-      indx = q(indx);
+        indx = q(indx);
+      }
       if (is_array(indx)) {
        if (be) {
          be_elv = eaarl.elevation(indx)-(eaarl.lelv(indx)-eaarl.felv(indx));
@@ -161,14 +176,19 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, be=, be_bathy=) {
          be_elv = eaarl.elevation(indx)+eaarl.depth(indx);
        }
 	 sel_ptr = rcf(be_elv, w, mode=2);
-	 if (*sel_ptr(2) > 1) {
+	 if (*sel_ptr(2) > 3) {
 	    tmp_eaarl = eaarl(indx);
 	    grow, new_eaarl, tmp_eaarl(*sel_ptr(1));
 	    //write, numberof(indx), *sel_ptr(2);
 	 }
       }
     }
+    if (_ytk) 
+       tkcmd, swrite(format="set progress %d", i)
   }
+  if (_ytk) {
+   tkcmd, "destroy .rcf"
+  } 
 
   return new_eaarl
 	 
