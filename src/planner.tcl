@@ -552,12 +552,17 @@ proc llseg { name start stop } {
 proc llseg2canvas { seg } {
   global fpsegs dims
   if { $dims(fpidx) == 0 } {
+    set dims(ccnt) 0;
     set c green
     set w 4
+    incr dims(ccnt)
   } else {
-    set c blue
-    set w 1
+    switch $dims(ccnt)   {
+      9 { set c red;  set w 3; set dims(ccnt) 0; } 
+      4 { set c red;  set w 1; incr dims(ccnt); } 
+      default { set c blue; set w 1; incr dims(ccnt); }
   } 
+ }
   set seg [ split $seg ": " ]
   set start [ ll2scr $seg 0 1]
   set stop  [ ll2scr $seg 2 3]
