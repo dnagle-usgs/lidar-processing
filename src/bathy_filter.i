@@ -179,9 +179,9 @@ func compare_data(ndata, edata) {
           }
         } else {
 	    //if (ndata(3,i) >= 8) {
-              eidx = where((eedata.depth+eedata.elevation)/100. > (-1.0*ndata(4,i)-10*dif_ndata));
+              eidx = where((eedata.depth+eedata.elevation)/100. > (-1.0*ndata(4,i)-7*dif_ndata));
               if (is_array(eidx)) {
-                 eiidx = where((eedata.depth(eidx)+eedata.elevation(eidx))/100. < (-1.0*ndata(3,i)+10*dif_ndata));
+                 eiidx = where((eedata.depth(eidx)+eedata.elevation(eidx))/100. < (-1.0*ndata(3,i)+7*dif_ndata));
                 if (is_array(eiidx)) {
                   eidx = eidx(eiidx);
                   new_edata(ct+1:(ct+numberof(eidx))) = eedata(eidx);
@@ -208,8 +208,10 @@ func compare_data(ndata, edata) {
       write, format="%d of %d comparisons completed.\r",i,numberof(ndata(1,));
     } // end for loop
     ne_idx = where(tag_e == 0);
-    new_edata(ct+1:(ct+numberof(ne_idx))) = edata(ne_idx);
-    ct = ct + numberof(ne_idx);
+    if (is_array(ne_idx)) {
+      new_edata(ct+1:(ct+numberof(ne_idx))) = edata(ne_idx);
+      ct = ct + numberof(ne_idx);
+    }
     new_edata = new_edata(1:ct);
     //midx = where(tag_e > 1);
     //write, format="Number of multiple occurences of the same data point = %d.  Deleting them... \n",numberof(midx);
