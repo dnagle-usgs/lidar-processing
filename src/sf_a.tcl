@@ -22,7 +22,7 @@
 #	.73 has simple title command which can be embedded in the file list
 #	.72 added gamma adjustment
 
-set version 0.75
+set version {$Revision$ as of $Date$}
 
 # set path to be sure and check /usr/lib for the package
 set auto_path "$auto_path /usr/lib"
@@ -152,7 +152,7 @@ frame  .cf3  -borderwidth 5 -relief raised
 ####canvas .canf.can  -height 480 -width 640  
 canvas .canf.can  -height 240 -width 320  
 .canf.can create image 0 0 -tags img -image $img -anchor nw 
-set me "EAARL image/data Animator Version $version\nC. W. Wright\nwright@lidar.wff.nasa.gov"
+set me "EAARL image/data Animator \nVersion $version\nC. W. Wright\nwright@lidar.wff.nasa.gov"
 .canf.can create text 20 120 -text $me  -tag tx -anchor nw 
 label .lbl -textvariable data 
 button .cf1.prev  -text "<Prev"  -command { step_img $step -1 }
@@ -173,10 +173,10 @@ tk_optionMenu .cf2.speed speed Fast 100ms 250ms 500ms 1s \
 	1.5s 2s 4s 5s 7s 10s
 
 label .cf3.label -text "Mode "
-entry .cf3.entry -width 20 -relief sunken -bd 2 -textvariable hsr
+entry .cf3.entry -width 8 -relief sunken -bd 2 -textvariable hsr
 tk_optionMenu .cf3.option timern hms sod cin 
 button .cf3.button -text "Examine Rasters" -command plotRaster
-button .cf3.imgbutton -text "GoTo Image" -command gotoImage
+button .cf3.imgbutton -text "Goto Img" -command gotoImage
 
 bind .cf3.entry <Return> {gotoImage}
 proc gotoImage {} {
@@ -287,7 +287,8 @@ pack .cf1 .cf1.prev .cf1.next .cf1.play .cf1.playr \
 pack .cf1 -fill x -side top
 pack .cf2 .cf2.speed .cf2.lbl .cf2.step  .cf2.gamma -anchor nw  -side left
 pack .cf2 -side top -fill x
-pack .cf3 .cf3.entry .cf3.option .cf3.imgbutton .cf3.button -side left
+pack .cf3 .cf3.entry .cf3.option .cf3.imgbutton .cf3.button \
+	-side left -expand 1 -fill both
 pack .cf3 -side top -fill x
 
 # tkScaleEndDrag gets called when the mouse button is released 
