@@ -419,6 +419,8 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
   /* find start and stop raster numbers for all flightlines */
    rn_arr = sel_region(q);
 
+ if (!is_void(rn_arr)) {
+
    no_t = numberof(rn_arr(1,));
 
    /* initialize counter variables */
@@ -501,6 +503,7 @@ tkcmd, swrite(format="send_rnarr_to_l1pro %d %d %d\n", rn_arr(1,), rn_arr(2,), r
 
 
     return fs_all;
+ } else write, "No good returns found"
 
 }
 

@@ -398,92 +398,72 @@ func sel_region (q) {
    */
    no_t = numberof(t(1,));
    write, format="Number of flightlines selected = %d \n", no_t;
-   rn_arr = array(int,2,no_t);
    tyes_arr = array(int,no_t);
    tyes_arr(1:0) = 1;
-   write,""
+   t_new = [];
    for (i=1;i<=numberof(t(1,));i++) {
       tyes = 1;
       write, format="Processing %d of %d\r", i, numberof(t(1,));
-      if ((tans.somd(1) > t(2,i)) || (tans.somd(0) < t(1,i))) {
-         write, format="Corresponding TANS data for flightline %d not found."+
+      tans_idx = where(tans.somd >= t(1,i));
+      if (is_array(tans_idx)) {
+         tans_q = where(tans.somd(tans_idx) <= t(2,i));
+	 if (is_array(tans_q)) {
+	    tans_idx = tans_idx(tans_q);
+	    ftans = [];
+	    ftans = tans.somd(tans_idx);
+	    // now find the gaps in tans data for this flightline
+	    tg_idx = where(ftans(dif) > 0.5);
+	    if (is_array(tg_idx)) {
+	      //this means there are gaps in the tans data for that flightline.
+	      //break the flightline at these gaps
+	      write, format="Due to gaps in TANS data, flightline # %d is split into %d segments\n", i, numberof(tg_idx)+1;
+              ntsomd = array(float, 2, numberof(tg_idx));
+              ntsomd(1,) = ftans(tg_idx);
+              ntsomd(2,) = ftans(tg_idx+1);
+	      grow, t_new, [[ftans(1), ntsomd(1,1)]]; // add first segment to t_new
+	      for (ti = 1; ti < numberof(tg_idx); ti++) {
+	        write, "enters for loop";
+	        grow, t_new, [[ntsomd(2,ti), ntsomd(1,ti+1)]];
+	      }
+	      grow, t_new, [[ntsomd(2,0), ftans(0)]]; //add last segment to t_new
+	    } else grow, t_new, [[ftans(1), ftans(0)]];
+	 }
+      } 
+      if (!is_array(ftans)) {
+        write, format="Corresponding TANS data for flightline %d not found."+
                        "Omitting flightline ... \n",i;
-	 tyes = 0;
-	 tyes_arr(i)=0;
-      } else if ((tans.somd(1) > t(1,i)) && (tans.somd(0) >= t(2,i))) {
-         t(1,i) = tans.somd(1);
-         write, format="Corresponding TANS data for beginning section"+
-                       "of flightline %d not found.  Selecting part "+
-                       "of flightline ... \n",i;
-      } else if ((tans.somd(1) <= t(1,i)) && (tans.somd(0) < t(2,i))) {
-         t(2,i) = tans.somd(0);
-         write, format="Corresponding TANS data for end section of "+
-                       "flightline %d not found.  Selecting part of "+
-                       "flightline ... \n",i;
       }
-      if (tyes) {
-         rn_indx_start = where(((edb.seconds - soe_day_start) ) == int(t(1,i)));
-         rn_indx_stop = where(((edb.seconds - soe_day_start) ) == ceil(t(2,i)));
-         if (!is_array(rn_indx_start) || !is_array(rn_indx_stop)) {
+
+   } // end for loop for t
+	      
+	      
+   if (!is_void(t_new)) {
+     t_new;
+     no_t = numberof(t_new(1,));
+     rn_arr = array(int,2,no_t);
+     for (i=1;i<=no_t;i++) {
+       rn_indx_start = where(((edb.seconds - soe_day_start) ) == int(t_new(1,i)));
+       rn_indx_stop = where(((edb.seconds - soe_day_start) ) == ceil(t_new(2,i)));
+       if (!is_array(rn_indx_start) || !is_array(rn_indx_stop)) {
             write, format="Corresponding Rasters for flightline %d not found."+
                           "  Omitting flightline ... \n",i;
 	    rn_start = 0;
 	    rn_stop = 0;
 	    tyes_arr(i) = 0;
-         } else {
+       } else {
             rn_start = rn_indx_start(1);
             rn_stop = rn_indx_stop(0);
-         }
+       }
 
-         rn_arr(,i) =  [rn_start, rn_stop];
-      }
-   }
-   write,format="\nNumber of Rasters selected = %6d\n", (rn_arr(dif, )) (,sum); 
-
-
-
-   /* use tyes_arr to decide first valid flightline */
-   tindx = where(tyes_arr == 0);
-   if (is_array(tindx))
-   rn_arr(,tindx) = 0;
-
-   /* make a indx arr for each raster in selected region */
-   //raster_indx = array(char,numberof(edb));
-   // search for gaps in the tans data
-   idx = where(tans.somd(dif) > 1);
-   if (is_array(idx)) {
-     ntsomd = array(float, 2, numberof(idx));
-     ntsomd(1,) = tans(idx).somd;
-     ntsomd(2,) = tans(idx+1).somd;
-     for (i=1;(i<=numberof(idx));i++) {
-       edb_idx = where(((edb.seconds-soe_day_start) >= ntsomd(1,i)) & ((edb.seconds-soe_day_start) <= ntsomd(2,i)));
-       //raster_indx(edb_idx) = 1;
-       if (is_array(edb_idx)) {
-       for (j=1;(j<=numberof(rn_arr(1,)));j++) {
-         eidx = where((edb_idx >= rn_arr(1,j)) & (edb_idx <= rn_arr(2,j)));
-         if (is_array(eidx)) {
-	   if ((rn_arr(1,j) == edb_idx(eidx(1))) && (rn_arr(2,j) > edb_idx(eidx(0)))) 
-	     rn_arr(1,j) = edb_idx(eidx(0));
-	 else { 
-	if ((rn_arr(2,j) == edb_idx(eidx(0))) && (rn_arr(1,j) < edb_idx(eidx(1)))) 
-	   rn_arr(2,j) = edb_idx(eidx(1));
-	 else {
-	if ((rn_arr(1,j) > edb_idx(eidx(1))) && (rn_arr(2,j) < edb_idx(eidx(0)))) {
-	   grow, rn_arr, [edb_idx(eidx(0)),rn_arr(2,j)];
-	   rn_arr(2,j) = edb_idx(eidx(1));
-	} 
-	 else {
-	   rn_arr(,j) = [0,0];
-	 }
-	}
-      }
+       rn_arr(,i) =  [rn_start, rn_stop];
      }
-    } 
-    }
+    write,format="\nNumber of Rasters selected = %6d\n", (rn_arr(dif, )) (,sum); 
    }
-  } 
-  return rn_arr;
 
+
+  
+ if (is_array(rn_arr))
+  return rn_arr;
 
 } 
 
@@ -527,7 +507,7 @@ date
 
 
 
-func show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=, utm=   )  {
+func show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, width=   )  {
 /* DOCUMENT show_gga_track, x=,y=, color=, skip=, msize=, marker=, lines=
 
    Plot the GPS gga position lat/lon data in the current window.
@@ -587,12 +567,12 @@ func show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=, utm=   ) 
 	skip = 1;
 
   if ( lines  ) {
-     plg, y(1:0:skip), x(1:0:skip), color=color, marks=0;
+     plg, y(1:0:skip), x(1:0:skip), color=color, marks=0, width=width;
      }
 
  if ( marker ) {
   plmk,y(1:0:skip), x(1:0:skip), 
-    color=color, msize=msize, marker=marker;
+    color=color, msize=msize, marker=marker, width=width;
     }
 }
 
@@ -654,23 +634,31 @@ func plot_no_tans_fltlines (tans, gga) {
 
   w = window();
   window, 6;
+  if (is_void(width)) width = 5.0;
 
   
-  // find where the diff in tans is greater than 1 second
+  // find where the diff in tans is greater than 0.5 second
   tans_dif = tans.somd(dif);
-  indx = where((tans_dif > 1) );
+  indx = where((tans_dif > 0.5) );
   if (is_array(indx)) {
     f_notans = tans.somd(indx);
     l_notans = tans.somd(indx+1);
+    write, format="number of fnotans = %d, lnotans = %d\n", numberof(f_notans), numberof(l_notans);
 
     for (i = 1; i <= numberof(f_notans); i++) {
-      indx1 = where((gga.sod >= f_notans(i)) & (gga.sod <= l_notans(i)));
-      show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1),  marker = 5, color = "magenta", skip=50, msize=0.2, utm=utm;
+      indx1 = where(gga.sod >= f_notans(i));
+      if (is_array(indx1)) {
+        q = where(gga.sod(indx1) <= l_notans(i));
+	if (is_array(q)) {
+	  indx1 = indx1(q);
+          show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1),  marker = 5, color = "magenta", skip=50, msize=0.2, utm=utm, width=width;
+	}
+      }
     } 
   }
   // also plot over region before the tans system is initially started.
   indx1 = where(gga.sod < tans.somd(1));
-  show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1),  marker=5, color = "magenta", skip=50, msize=0.2, utm=utm;
+  show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1),  marker=5, color = "magenta", skip=1, msize=0.2, utm=utm, width=width;
 
  window, w;
 
