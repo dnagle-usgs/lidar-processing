@@ -513,8 +513,8 @@ window is 6, and color is magenta.
       cc = strtok(fpx.name, "-");
       dd = array(string, numberof(fpx.name));
       sread, cc(1,), dd;
-      idx1 = sort(dd);
-      fpx = fpx(idx1);
+      //idx1 = sort(dd);
+      //fpx = fpx(idx1);
       r = 1:0;
       pldj, fpx.lon1(r),fpx.lat1(r),fpx.lon2(r),fpx.lat2(r),color=color, width=width;
       r = 1:0:skip;
@@ -522,6 +522,7 @@ window is 6, and color is magenta.
       if (labels) 
 	plt, dd(r)(1), fpx.lon1(r)(1), fpx.lat1(r)(1), tosys=1, height=15, justify="CC", color="blue";
   }
+  pldj, fpx.lon1(1),fpx.lat1(1),fpx.lon2(1),fpx.lat2(1),color="green", width=2*width;
       
   window(w);
 }
