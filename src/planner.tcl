@@ -155,6 +155,18 @@ proc polydraw'markNodes {w item} {
  }
  proc has {list element} {expr {[lsearch $list $element]>=0}}
 
+#---- Added W. W. 
+proc output_polys { } {
+  global dims
+  foreach p [ .canf.can find withtag poly ] {
+    puts ""
+    puts "# Polygon: $p"
+    foreach { x y } [ .canf.can coords $p ] {
+      puts "[scrx2utm $x] [scry2utm $y]"
+    }
+  }
+}
+
 
 
 
@@ -283,6 +295,20 @@ pack .canf \
    set ut [ expr $dims(dy) * [ lindex [ .canf.can yview ] 0 ]];
    set east  [ format "%%7.0f" [expr  $dims(le) + (%x + $ul)*$dims(scrx2utm) ]]; 
    set north [ format "%%7.0f" [expr  $dims(rn) - (%y + $ut)*$dims(scry2utm) ]];
+}
+
+# convert screen x coords to UTM in the current zone
+proc scrx2utm { x } {
+ global dims
+ set east  [expr  $dims(le) + $x*$dims(scrx2utm) ]; 
+ return $east
+}
+
+# convert screen y coords to UTM in the current zone
+proc scry2utm { y } {
+ global dims
+ set north [expr  $dims(rn) - $y*$dims(scry2utm) ];
+ return $north
 }
 
 bind .canf.can <ButtonPress-3> { %W scan mark %x %y     }
