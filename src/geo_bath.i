@@ -73,7 +73,7 @@ geodepth = array(GEOALL, len);
 bath_arr = array(long,120,len);
 
 for (i=1; i<=len; i=i+1) {
-  geodepth(i).rn = rrr(i).raster;
+  geodepth(i).rn = rrr(i).rn;
   geodepth(i).north = rrr(i).north;
   geodepth(i).east = rrr(i).east;
   geodepth(i).depth = short(-d(,i).idx * CNSH2O2X *100);
@@ -773,8 +773,8 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset
      }
      if ((ptype == 0) && (fset==0)) { //convert R to FS 
 	data_new = array(FS, numberof(data)*120);
-	indx = where(data.raster >= 0);
-	data_new.rn = data.raster(indx);
+	indx = where(data.rn >= 0);
+	data_new.rn = data.rn(indx);
 	data_new.north = data.north(indx);
 	data_new.east = data.east(indx);
 	data_new.elevation = data.elevation(indx);
@@ -1090,7 +1090,7 @@ func sel_data_rgn(data, type, mode=,win=) {
  a = type;
  if (a == R) {
    data_out = array(FS, numberof(indx));
-   data_out.rn = data.raster(indx);
+   data_out.rn = data.rn(indx);
    data_out.mnorth = data.mnorth(indx);
    data_out.meast = data.meast(indx);
    data_out.melevation = data.melevation(indx);

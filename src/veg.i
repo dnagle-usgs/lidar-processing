@@ -605,7 +605,7 @@ if (numberof(d(0,,)) < numberof(rrr)) { len = numberof(d(0,,)); } else {
 geoveg = array(VEG_ALL_, len);
 
 for (i=1; i<=len; i=i+1) {
-  geoveg(i).rn = rrr(i).raster;
+  geoveg(i).rn = rrr(i).rn;
   geoveg(i).north = rrr(i).north;
   geoveg(i).east = rrr(i).east;
   geoveg(i).elevation = rrr(i).elevation;
@@ -1485,7 +1485,7 @@ for (i=1; i<=len; i++) {
    if (is_array(mindx)) {
     for (k=1;k<=numberof(mindx);k++) {
       ccount++;
-      geoveg.rn(ccount) = rrr(i).raster(j);
+      geoveg.rn(ccount) = rrr(i).rn(j);
       geoveg.mnorth(ccount) = rrr(i).mnorth(j);
       geoveg.meast(ccount) = rrr(i).meast(j);
       geoveg.melevation(ccount) = rrr(i).melevation(j);
