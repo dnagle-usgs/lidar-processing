@@ -41,6 +41,13 @@ Other:
   it must be verified and converted by the gga2bin.c. program.  
 
   $Log$
+  Revision 1.9  2002/06/11 22:34:41  anayegan
+  bathy.i: Added function define_bath_ctl that defines the structure bath_ctl depending on the type.
+
+  geo_bath.i: added function raspulsearch(data,win=,buf=) that uses a mouse click on a bathy/depth plot to find the associated raster and waveforms within a buffer of 1m.
+
+  rbgga.i: small change to parameter show in function gga_win_sel
+
   Revision 1.8  2002/06/01 20:30:42  anayegan
   bathy.i : changed formatting statements in run_bath function. changed j<=len from j<len in for loop.
 
@@ -248,7 +255,7 @@ properly to the zoom buttons.
  qq = where( gga.lat(q) > minlat ); q = q(qq);
  qq = where( gga.lat(q) < maxlat ); q = q(qq);
  write,format="%d GGA records found\n", numberof(q);
- if ( show != 0  ) {
+ if ( (show != 0) && (show != 2)  ) {
    if ( is_void( msize ) ) msize = 0.1;
    if ( is_void( color ) ) color = "red";
    if ( is_void( skip  ) ) skip  = 10;

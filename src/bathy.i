@@ -129,7 +129,29 @@ extern bath_ctl;
    bath_ctl = BATH_CTL();
  }
 
+func define_bath_ctl(type) {
+  /* this function defines the structure bath_ctl depending on the type.  As of now, type can be, "keys", "tampabay", "wva" */
+  /* amar nayegandhi 06/05/2002 */
+  if (type == "keys") {
+     bath_ctl.laser = -2.4;
+     bath_ctl.water = -0.6;
+     bath_ctl.agc = -0.3;
+     bath_ctl.thresh = 4.0;
+  } 
+  if (type == "tampabay") {
+     bath_ctl.laser = -2.4;
+     bath_ctl.water = -1.5;
+     bath_ctl.agc = -3.0;
+     bath_ctl.thresh = 4.0;
+  }
+  if (type == "wva") {
+     bath_ctl.laser = -2.4;
+     bath_ctl.water = -7.5;
+     bath_ctl.agc = -5.0;
+     bath_ctl.thresh = 4.0;
+  }
 
+}
 func ex_bath( rn, i,  last=, graph= ) {
 /* DOCUMENT ex_bath(raster_number, pulse_index)
 

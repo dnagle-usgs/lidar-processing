@@ -450,7 +450,7 @@ close, f;
 
 func compute_depth(data_ptr=, ipath=,fname=,ofname=) {
     
-    if ((!is_void(ipath)) && (is_void(fname))) {
+    if ((!is_void(ipath)) && (is_void(fname)) && (is_void(data_ptr))) {
        /* extract all data with *.bin extension from directory*/
        data_ptr = read_yfile(ipath);
     }
@@ -544,7 +544,7 @@ func make_bathy(edb, soe_day_start, opath=,ofname=) {
        rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i)); 
        a=[];
        write, format="processing using display_bath to provide submerged topography for flightline %d ...\n", i;
-       depth = display_bath(d,rrr,write_all=1, correct=1, cmin=-15, cmax=-2);
+       depth = display_bath(d,rrr,write_all=1, correct=1, cmin=-6, cmax=0);
        write, format="writing data from structure geoall to output file for flightline %d ... \n", i;
        if (i==1) {
          write_geoall, depth, opath=opath, ofname=ofname;
@@ -554,6 +554,51 @@ func make_bathy(edb, soe_day_start, opath=,ofname=) {
       }
     } 
 
+}
+
+
+
+func raspulsearch(data,win=,buf=) {
+ /* this function uses a mouse click on a bathy/depth plot and finds the associated rasters
+    amar nayegandhi 06/11/02
+    */
+
+ /* use mouse function to click on the reqd point */
+ extern wfa;
+ if (!(win)) win = 5;
+ window, win;
+
+ if (typeof(data)=="pointer") data=*data(1);
+
+ if (!buf) buf=100; /*100 centimeters is the buffer to look for the point */
+
+ spot = mouse(1,1,"Please click in window");
+
+ plg, spot(2),spot(1),marker=3,msize=2.0, color="black",type=0;
+
+ write, format="Searching for data within %d centimeters from selected point \n",buf;
+
+ indx = where(((data.east >= spot(1)*100-buf) & (data.east <= spot(1)*100+buf)) & ((data.north >= spot(2)*100-buf) & (data.north <= spot(2)*100+buf)));
+
+ if (is_array(indx)) {
+    write, format="%d points found \n",numberof(indx);
+    print, data(indx);
+    rn = data(indx).rn;
+    rasterno = rn&0xffffff;
+    pulseno = rn/0xffffff;
+
+    print, "The following points were found: \n";
+    write, format="Raster number %d and Pulse number %d \n",rasterno, pulseno;
+    write, format="Plotting raster and waveform with Raster number %d and Pulse number %d \n",rasterno(1), pulseno(1);
+    if (_ytk) {
+      ytk_rast, rasterno(1);
+      window, 0;
+      show_wf(*wfa, pulseno(1), win=0, cb=7);
+    } 
+ } else {
+   print, "No points found!  Please try again... \n";
+   }
+      
 }
 
 
