@@ -68,15 +68,21 @@ LabelEntry .l1wid.bf3.lat2 -width 12 -relief sunken -label "SouthLat/Min.Northin
 		-textvariable mnlat
 
 frame .l1wid.bf3.lon
+frame .l1wid.bf3.lon.but
 LabelEntry .l1wid.bf3.lon.mn -width 12 -relief sunken -label "WestLon/Min.Easting  " \
 		-helptext "Enter Westernmost Longitude in degrees or Minimum UTM Easting in meters Here"\
 		-textvariable mnlon
 LabelEntry .l1wid.bf3.lon.mx -width 12 -relief sunken -label "EastLon/Max.Easting " \
 		-helptext "Enter Easternmost Longitude in degrees or Maximum UTM Easting in meters Here"\
 		-textvariable mxlon
-Button .l1wid.bf3.lon.but -text "Select Region" -helptext "Select by dragging region in gga plot (window 6)" \
+Button .l1wid.bf3.lon.but.1 -text "Select Rectangular Region" -helptext "Select by dragging region in gga plot (window 6)" \
 		-command { 
 		   exp_send "q = gga_win_sel(2,latutm=1);\r"
+		   expect ">"
+		   }
+Button .l1wid.bf3.lon.but.2 -text "Select Region Using PIP" -helptext "Select by clicking in region to complete a polygon (window 6)" \
+		-command { 
+		   exp_send "q = gga_pip_sel(1);\r"
 		   expect ">"
 		   }
 
@@ -90,9 +96,12 @@ Button .l1wid.bf5 -text "Begin Processing" -width 20 \
     if { ![ string equal  "" $ofname ] } {
           set utm [.l1wid.bf2.utm.1 getvalue]
 	  exp_send "utm = $utm\n"
+          #exp_send "make_bathy, opath=\"$opath\", ofname=\"$ofname\",\
+          #    ext_bad_att=$xba, ext_bad_depth=$xbd, latutm = 1, llarr=\[$mnlon,\
+          #    $mxlon, $mnlat, $mxlat\];\r"
           exp_send "make_bathy, opath=\"$opath\", ofname=\"$ofname\",\
-              ext_bad_att=$xba, ext_bad_depth=$xbd, latutm = 1, llarr=\[$mnlon,\
-              $mxlon, $mnlat, $mxlat\];\r"
+              ext_bad_att=$xba, ext_bad_depth=$xbd, latutm = 1, q = q;\r"
+              
     } else { 
        tk_messageBox  -icon warning \
         -message "You need to specify an output file name before\
@@ -104,6 +113,7 @@ processing."  \
 
 pack .l1wid.bf2.utm.1 .l1wid.bf2.utm.2 -side left -padx 8
 pack .l1wid.bf2.op  .l1wid.bf2.of .l1wid.bf2.utm -side top -pady 8
+pack .l1wid.bf3.lon.but.1 .l1wid.bf3.lon.but.2 -side top -padx 4
 pack .l1wid.bf3.lon.mn .l1wid.bf3.lon.but .l1wid.bf3.lon.mx -side left -padx 4
 pack .l1wid.bf3.lat1 .l1wid.bf3.lon .l1wid.bf3.lat2 -side top -pady 5
 pack  .l1wid.bf4.1.xba .l1wid.bf4.1.xbd  -side top -padx 20 -pady 5

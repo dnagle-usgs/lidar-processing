@@ -396,7 +396,7 @@ Examples using the result data:
   a = 19;        			// byte starting point for waveform data
   if (!is_void(tca)) 
      seconds = seconds+tca(rasternbr);
-  write, format= "rasternbr = %d, seconds = %d\n", rasternbr, seconds;
+  //write, format= "rasternbr = %d, seconds = %d\n", rasternbr, seconds;
  for (i=1; i<=npixels-1; i++ ) {	// loop thru entire set of pixels
    offset_time(i) = i32(r, a);   a+= 4;	// fractional time of day since gps 1hz
        txb = r(a);      a++;		// transmit bias value

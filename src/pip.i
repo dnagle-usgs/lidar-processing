@@ -30,7 +30,7 @@ func getPoly(void)
   	result = mouse(1, 0, prompt)
   	ply(1, 1) = result(1)					// x coordinate of the first vertex
   	ply(2, 1) = result(2)					// y coordinate of the first vertex
-  	fma;
+  	//fma;
  	plmk, ply(2, 0), ply(1, 0), marker = 4, msize = .5, width = 10
 		
   	while(!((result(10)== 1) && (result(11)== 4))) 	// while !(CTRL && left mouse) loop
@@ -76,7 +76,7 @@ func testPoly(pl, ptx, pty)
 	Returns:    array of indexes of points that are inside the polygon
 */
 {
-	theta = array(float, dimsof(pl)(3), dimsof(x)(2)) // array of angles between vectors	
+	theta = array(float, dimsof(pl)(3), dimsof(ptx)(2)) // array of angles between vectors	
 	
 	for (i = 1; i < (dimsof(pl)(3)); i++)	// Loop n-times where n = number of vertices
 	{ 	

@@ -41,6 +41,17 @@ Other:
   it must be verified and converted by the gga2bin.c. program.  
 
   $Log$
+  Revision 1.14  2002/08/14 13:28:12  amar
+  edb_access.i: Commented out a write statement.
+
+  geo_bath.i:  Changed function make_bathy to return the array of locations that fall within the selected region (using pip or rectangular).
+
+  l1pro.ytk:  Added button 'Select Region using PIP' which uses the points in polygon technique to select a region.
+
+  pip.i :  Minor changes, commented initial fma command, and changed x to ptx on line 79.
+
+  rbgga.i :  added function gga_pip_sel() which uses the point in polygon technique to select a region in the gga window.
+
   Revision 1.13  2002/08/12 21:13:52  amar
   drast.ytk:  commented out animate commands for window 1.
 
@@ -281,6 +292,33 @@ write, format="Lon:%14.3f %14.3f\n", gga(3,min), gga(3,max)
    g.alt = gga(4,);
    return g;
 }
+
+func gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=) {
+ /* DOCUMENT gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=)
+ This function uses the 'points in polygon' technique to select a region in the gga window.
+ Also see: getPoly, plotPoly, testPoly, gga_win_sel
+ */
+ extern ZoneNumber, utm
+ if ( is_void(win) ) 
+	win = 6;
+ if (!is_array(llarr)) {
+     ply = getPoly();
+     box = boundBox(ply);
+     box_pts = ptsInBox(box, gga.lon, gga.lat);
+     poly_pts = testPoly(ply, gga.lon(box_pts), gga.lat(box_pts));
+     q = box_pts(poly_pts);
+ }
+ write,format="%d GGA records found\n", numberof(q);
+ if ( (show != 0) && (show != 2)  ) {
+   if ( is_void( msize ) ) msize = 0.1;
+   if ( is_void( color ) ) color = "red";
+   if ( is_void( skip  ) ) skip  = 10;
+   plmk, gga.lat( q(1:0:skip)), gga.lon( q(1:0:skip)), msize=msize, color=color;
+ }
+ return q;
+}
+
+
 
 func gga_win_sel( show, win=, color=, msize=, skip= , latutm=, llarr=) {
 /* DOCUMENT gga_win_sel( show, color=, msize=, skip= )
