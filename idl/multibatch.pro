@@ -7,6 +7,8 @@ pro multibatch, directory, mineasting, maxnorthing, number_east, number_south, t
 ; tag is an optional single-character tag appended to the filename of the tile.
 ; Set "tag" to "b" for bathymetry and "v" for vegetation
 ; Program by Lance Mosher, June 3, 2003
+number_east=long(number_east)
+number_south=long(number_south)
 for emin = mineasting, (mineasting+((number_east-1)*12000)), 12000 do begin	
 	for nmax = (maxnorthing-((number_south-1)*12000)), maxnorthing, 12000 do begin
 		if not keyword_set(tag) then begin
@@ -14,8 +16,8 @@ for emin = mineasting, (mineasting+((number_east-1)*12000)), 12000 do begin
         		batchmaker, directory, emin, nmax
 		endif
 		if keyword_set(tag) then begin
-			print, 'sending: ', directory, ' ', emin, ' ', (emin+12000), ' tag="', tag, '"'
-        		batchmaker, directory, (nmax-12000), nmax, tag=tag
+			print, 'sending: ', directory, ' ', emin, ' ', nmax, ' tag="', tag, '"'
+        		batchmaker, directory, emin, nmax, tag=tag
 		endif
 	endfor	
 endfor
