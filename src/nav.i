@@ -458,7 +458,7 @@ extern curzone; // current zone number if in UTM
 // adjust so all segments are from left to right 
 // only the user coords. are changed
 
-if (mode != 4) {
+//if (mode != 4) {
   if ( res(1) > res(3) ) {	
     temp = res;
     res(1) = temp(3);
@@ -467,7 +467,7 @@ if (mode != 4) {
     res(4) = temp(2);
     sf = -sf;		// keep block on same side
   }
-}
+//}
 res
 
 
@@ -586,11 +586,11 @@ res
       plmk, UTMNorthing(2), UTMEasting(2), marker=4, msize=0.3, color="red", width=10;
       window, w;
     }
-    //if (slope > 0) {
+    if (slope > 0) {
       mode = 1;
-    //} else {
-    //  mode = 3;
-    //}
+    } else {
+      mode = 3;
+    }
     // redefine scale factor sf
     km = sqrt((UTMNorthing(2)-UTMNorthing(1))^2+(UTMEasting(2)-UTMEasting(1))^2);
     km = km/1000.;
