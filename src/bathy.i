@@ -60,7 +60,7 @@ rn
   rn  &= 0xffffff;
    r = get_erast( rn= rn );	
    rp = decode_raster(r);
-  window,1; fma;
+   window,1; fma;
   aa = ndrast( rp, units=depth_display_units  ) 
 //  show_wf( aa, pix, win=0 )
 pix
@@ -205,9 +205,19 @@ func define_bath_ctl(junk,type=) {
 
 }
 
+func show_bath_constants {
+ extern mindata
+  if ( !is_void(mindata) ) {
+    rn = mindata(0).rn&0xffffff;
+  pulse= mindata(0).rn>>24;
+    ex_bath, rn, pulse,win=0,xfma=1,graph=1
+  }
+  
+}
 
 
-func ex_bath( rn, i,  last=, graph=, win= ) {
+
+func ex_bath( rn, i,  last=, graph=, win=, xfma= ) {
 /* DOCUMENT ex_bath(raster_number, pulse_index)
 
   See run_bath for details on usage.
@@ -368,7 +378,8 @@ func ex_bath( rn, i,  last=, graph=, win= ) {
 
 
 if ( graph ) {
-window,win; fma;
+window,win; 
+ if ( xfma ) fma;
 plg,[thresh,thresh],[1,n],marks=0, color="red";
 plmk, a(,i,1), msize=.2, marker=1, color="black";
 plg, a(,i,1);
@@ -396,7 +407,7 @@ plg,agc*40;
          mx = mvi;
 
 if ( graph ) {
- plmk, a(mx,i,1), mx, msize=1.0, marker=7, color="blue", width=10
+ plmk, a(mx,i,1), mx+1, msize=1.0, marker=7, color="blue", width=10
 }
         rv.sa = rp.sa(i);
    	rv.idx = mx;

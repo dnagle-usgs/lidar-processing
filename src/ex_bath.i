@@ -2,7 +2,9 @@
    $Id$
 */
 
-func ex_bath( rn, i, fma= ) {
+write,"$Id$"
+
+func eex_bath( rn, i, xfma= ) {
 /* DOCUMENT ex_bath(raster_number, pulse_index)
  
 */
@@ -80,3 +82,5 @@ func ex_bath( rn, i, fma= ) {
   rp.irange(i);
   return [ depth, bottom_pk ];
 }
+
+
