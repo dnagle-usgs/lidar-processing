@@ -48,7 +48,6 @@ func dws( fs_all ) {
    dws is "Directional Wave Spectra."  Used to compute and display
 the 2 dimensional directional wave spectrum.
 
-
 */
  extern wave_data;
 
@@ -85,7 +84,7 @@ wave_data.checker_board = ((-1)^span(1,256,256)) * ((-1)^(span(1,256,256))) (-,)
   hmean = rsel(where(edt))(avg)
   rsel = rsel - hmean
   hstd = rsel(where(edt))(rms)
-  maxlvl = 3.*hstd
+  maxlvl = 2.5*hstd
   minlvl = -maxlvl
   wave_data.levels = span(minlvl,maxlvl,16)
 
@@ -116,17 +115,13 @@ wave_data.checker_board = ((-1)^span(1,256,256)) * ((-1)^(span(1,256,256))) (-,)
  iy = int(128.5 + rsn/200.)
  ix = int(128.5 + rse/200.)
  edx = where(ix<1)
-// ix(edx) = ix(edx) - ix(edx) + 1
- edt(edx) = edt(edx) - edt(edx)
+ if (numberof(edx)) edt(edx) = edt(edx) - edt(edx)
  edx = where(ix>256)
-// ix(edx) = ix(edx) - ix(edx) + 256
- edt(edx) = edt(edx) - edt(edx)
+ if (numberof(edx)) edt(edx) = edt(edx) - edt(edx)
  edy = where(iy<1)
-// iy(edy) = iy(edy) - iy(edy) + 1
- edt(edy) = edt(edy) - edt(edy)
+ if (numberof(edy)) edt(edy) = edt(edy) - edt(edy)
  edy = where(iy>256)
-// iy(edy) = iy(edy) - iy(edy) + 256
- edt(edy) = edt(edy) - edt(edy)
+ if (numberof(edy)) edt(edy) = edt(edy) - edt(edy)
 
 ////////////////////////////////////////
 // Loop on each element  
@@ -145,16 +140,24 @@ wave_data.checker_board = ((-1)^span(1,256,256)) * ((-1)^(span(1,256,256))) (-,)
 ////////////////////////////////////////
 // Display the wave topography
 ////////////////////////////////////////
- window,0; fma
- plfc,wave_data.h,wave_data.x0,wave_data.y0,levs=wave_data.levels
+ window,2; fma
+ palette, "gray.gp"
+// plot topography in terms of m, not cm.  ie. x0/100
+ plfc,wave_data.h,wave_data.x0/100.,wave_data.y0/100.,levs=wave_data.levels
+ cbs = (maxlvl-minlvl)/100.
+ wh = cbs*0.8
+ str0 = swrite(format="colorbar span%5.2f m,  SWH =%5.2f m",cbs,wh)
+ pltitle,str0
+ limits,-254,256,-254,256
  write,format="minlvl = %f, maxlvl = %f, grayscale span(m) = %f  ",minlvl,maxlvl,(maxlvl-minlvl)/100.
 
  factor = 1
 ////////////////////////////////////////
 // Display the FFT wave spectra
 ////////////////////////////////////////
- window,1;  fma
- limits,-.2*pi,.2*pi,-.2*pi,.2*pi
+ window,3;  fma
+ limits,-.2*pi,.2*pi,-.2*pi,.2*pi  // for 10 m wavelength limit
+ limits,-.1*pi,.1*pi,-.1*pi,.1*pi  // for 20 m wavelength limit
  for (lambda=1; lambda<7; lambda++) {
  kcircl = 2*pi/(lambda*20)
  plg, kcircl*circly, kcircl*circlx, color="red", marks=0, width=3.
