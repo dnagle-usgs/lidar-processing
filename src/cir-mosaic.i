@@ -103,30 +103,6 @@ func cir_photo_orient( photo,
 
 }
 
-
-
-func pref (junk) {
-/* DOCUMENT pref 
-
-*/
-  lst = [];
-  m  = array( long, 11 );
-   while ( m(10) != 3 ) {
-     window,5;
-     m = mouse();
-     if ( numberof(m) < 2 ) {
-       lst = m(1:2);  
-     } else {
-       grow, lst, m(1:2);
-     } 
-     window,7;
-     plmk, m(2), m(1),msize=.3,marker=2
-     print, m(1:2);
-  }
- return lst;
-}
-
-
 func cir_gref_photo( somd=, ioff=, offset=,ggalst=, skip=, drift=, date=, win= ) {
 /* DOCUMENT gref_photo, somd=, ioff=, offset=, ggalst=, skip=
 
