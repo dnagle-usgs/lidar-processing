@@ -416,7 +416,7 @@ properly to the zoom buttons.
  window,win;
  if (!is_array(llarr)) {
    a = mouse(1,1,
-  "Hold the left mouse button down, select a point:");
+  "Hold the left mouse button down, select a point on the flightline map:");
    a(1:4)
    minlon = min( [ a(1), a(3) ] )
    maxlon = max( [ a(1), a(3) ] )
@@ -474,6 +474,8 @@ properly to the zoom buttons.
  if (!_batch) test_selection_size,q;
  return q;
 }
+
+
 func gga_click_start_isod(x) {
 /* DOCUMENT gga_click_start_isod
 

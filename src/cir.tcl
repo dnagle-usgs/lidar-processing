@@ -17,10 +17,13 @@ set settings(step)  	1
 set settings(sample) 	7
 set settings(gamma) 	1.0
 set settings(step) 	1
- set secs 0
+set settings(head) 	0
+set secs 0
+set inhd 0
 
 set img0 [ image create photo ]  ;
 set img  [ image create photo ]  ;
+set img1 [ image create photo ]  ;
 frame .canf
 scrollbar .canf.yscroll \
         -command ".canf.can  yview"
@@ -105,11 +108,14 @@ proc tfn2hms { f } {
 }
 
 proc resample { s } {
- global img img0 fn
- set settings(sample) $s
+ global img img0 fn inhd settings
+ set $settings(sample) $s
  set sample $settings(sample)
   $img configure -height 0 -width 0
   $img copy $img0 -subsample $sample -shrink 
+  if {$inhd == 1} {
+	show sod $settings(sod)
+  }
   .canf.can configure \
 	-scrollregion  "0 0 [ image width   $img ] [image height $img] " 
   wm title . "[ file tail $fn ] 1:$sample"
@@ -126,7 +132,7 @@ proc resample { s } {
 # show inc +/-val
 #####################################################################
 proc show { cmd t } {
- global settings
+ global settings inhd
  global img img0 last_tar tar secs fn
   set sample $settings(sample)
 ##  set d $settings(tar_date)
@@ -167,11 +173,51 @@ puts "tar file: $tf"
     return 5
   } else {
     wm title . "[ file tail $fn ] 1:$sample"
+    $img0 blank
+    $img blank
     $img0 read $fn
     $img copy $img0 -subsample $sample
+    if { $inhd == 1 } {
+      	get_heading $inhd
+	file delete /tmp/cir_tmp.jpg
+	catch { [image delete $img1] }
+	set img1 [image create photo]
+	$img1 copy $img0 -subsample $sample
+	$img1 write /tmp/cir_tmp.jpg -format jpeg
+	set fn /tmp/cir_tmp.jpg
+	# puts "heading = $head \n"
+	exec mogrify -rotate [expr ($settings(head))] $fn
+    	$img0 blank
+    	$img blank
+	$img read $fn
+        .canf.can configure \
+	  -scrollregion  "0 0 [ image width   $img ] [image height $img] " 
+    }
   }
   update
   after 1
+}
+
+proc get_heading {inhd} {
+  global img settings tansstr
+  ## this procedure gets the attitude information for the cir data
+  ## amar nayegandhi 12/28/04
+  if {$inhd == 1} {
+	set pcir [pid]
+	## the function request_heading is defined in eaarl.ytk
+	send ytk request_heading $pcir $inhd $settings(sod)
+	## tmp file is now saved as /tmp/tans_pkt.$pcir
+	if { [catch {set f [open "/tmp/tans_pkt.$pcir" r] } ] } {
+	  tk_messageBox -icon warning -message "Heading information is being loaded... Click OK to continue"
+   } else {
+	  set tansstr [read $f]
+	  set headidx [string last , $tansstr]
+	  set settings(head) [string range $tansstr [expr {$headidx + 1 }] end]
+	  close $f
+	}
+  } else {
+	set settings(head) 0;
+  }
 }
 
 proc tmp_image {cmd t} {
@@ -234,8 +280,8 @@ proc archive_selected_cir { type } {
 				-initialdir $dir -title "Save Selected Files as..."];
 		}
 
-		set psf [pid]
-		set tmpdir "/tmp/sf.$psf"
+		set pcir [pid]
+		set tmpdir "/tmp/cir.$pcir"
 		if {[catch "cd $tmpdir"] == 1} {exec mkdir $tmpdir}
 		for {set i $fsod} {$i<=$lsod} {incr i} {
  		  set hm  "[clock format $i -format %H%M -gmt 1 ]00"
@@ -339,6 +385,17 @@ proc prefs { } {
      archive_selected_cir "zip"
   } 
 
+  .p.mb.settings add checkbutton -label "Include Heading ..." -underline 8 -onvalue 1 \
+	-offvalue 0 -variable inhd \
+	-command {
+		global inhd;
+		set pcir [pid]
+		if { $inhd == 0 } {
+			file delete /tmp/tans_pkt.$pcir
+		}
+		get_heading $inhd
+		show sod $settings(sod)
+	}
 
   scale .p.gamma \
 	-from 0.0 \
@@ -348,7 +405,10 @@ proc prefs { } {
 	-variable settings(gamma) 
   spinbox .p.sample -from 1 -to 15 \
 	-width 5 \
-	-textvariable settings(sample)
+	-textvariable settings(sample) \
+	-command { 
+	   resample $settings(sample)
+ 	}
   entry .p.hms \
 	-width 12 \
 	-textvariable settings(hms)

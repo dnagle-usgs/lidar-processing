@@ -458,16 +458,13 @@ proc show_img { n } {
 	if ($yes_head) {
 		# include heading information...
 		# cp file to tmp_file
+		get_heading 1
 		$img blank
 		set fn $dir/$fna($n)
-		exec cp $fn /tmp/sf_tmp.jpg
+		file copy -force $fn /tmp/sf_tmp.jpg
 		set fn /tmp/sf_tmp.jpg
-		puts "heading = $head \n"
-		if {$head > 180.0}  {
-			exec mogrify -rotate [expr ($head-180)] $fn
-		} else {
-			exec mogrify -rotate [expr ($head+180)] $fn 
-		}
+		# puts "heading = $head \n"
+		exec mogrify -rotate [expr ($head)] $fn
 		#puts "$fn"
 	} else {
 		if { [ catch {set fn $dir/$fna($n) } ] } return;
@@ -600,21 +597,27 @@ proc archive_save_marked { type } {
 #}
 
 proc get_heading {inhd} {
-	global yes_head img head inhd_count
+	global yes_head img head inhd_count sod tansstr
 
 	## this procedure gets heading information from current data set
 	## amar nayegandhi 03/04/2002.
 	if {$inhd == 1} {
-		incr inhd_count 1;
 		if { [ ytk_exists ] == 1 } {
 			set yes_head 1;
 			## resize the canvas screen
 			.canf.can configure -height 420 -width 440
 			set psf [pid]
 			## the function request_heading is defined in eaarl.ytk
-			send_ytk request_heading $psf $inhd_count
-			## tmp file is now saved as /tmp/sf_tans.txt.$psf"
-			#set f [open "/tmp/sf_tans.txt.$psf" r]
+			send_ytk request_heading $psf $inhd_count $sod
+			## tmp file is now saved as /tmp/tans_pkt.$psf"
+			if { [catch {set f [open "/tmp/tans_pkt.$psf" r] } ] } {
+			  tk_messageBox -icon warning -message "Heading information is being loaded... Click OK to continue"
+		   } else {
+			  set tansstr [read $f]
+			  set headidx [string last , $tansstr]
+			  set head [string range $tansstr [expr {$headidx + 1 }] end]
+			  close $f
+			}
 		} else {
 			tk_messageBox  \
 				-message "ytk isn\'t running. You must be running Ytk and the eaarl.ytk program to use this feature."  \
@@ -685,7 +688,12 @@ menu .mb.zoom
 	-offvalue 0 -variable inhd \
 	-command {
 		global inhd;
+		set psf [pid]
+		if { $inhd == 0 } {
+			file delete /tmp/tans_pkt.$psf
+		}
 		get_heading $inhd
+		show_img $ci
 	}
 
 ##### ][ Zoom Menu

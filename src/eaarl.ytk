@@ -355,21 +355,13 @@ proc load_edb {} {
 }
 
 
-proc request_heading {psf inhd_count} {
+proc request_heading {psf inhd_count sod} {
    ## this procedure requests heading information for sf_a.tcl
    ## amar nayegandhi
-   if {($inhd_count == 1)} {
-     exp_send "require, \"rbtans.i\"\r" 
-     expect ">"
-     exp_send "if (is_void(tans)) tans=rbtans(); pkt_sf = prepare_sf_pkt(tans); \r"
-     ## function prepare_sf_pkt is defined in rbtans.i
-   } else { exp_send "pkt_sf = prepare_sf_pkt(tans); \r"}
-
-   ## write pkt_sf to a temp file
-   set tmpfile "/tmp/sf_tans.txt.$psf"
-   #exp_send "make_sf_tans_file(\"$tmpfile\");"
-
-   }
+   global sf_pid
+   set sf_pid $psf
+   exp_send "pkt_sf = prepare_sf_pkt($sod, $psf); \r"
+}
 
 proc mark_time_pos { sod } {
   exp_send "mark_time_pos, $sod\r"
@@ -479,9 +471,11 @@ proc rbgga_menu {} {
  button $mw.f1.info -text "Info"
  button $mw.f1.fma -text "Fma" -command { exp_send "window,$_map(window); fma\r\n" }
  button $mw.f1.jump -text "Jump" -command { 
+   global sf_pid
+   #file delete /tmp/tans_pkt.$sf_pid 
    exp_send "wsav=window();window,$_map(window); gga_click_start_isod()\n" 
-   tk_messageBox  -message "Click using left mouse button over a section 
- of a flightline in Yorick window-6."  -type ok
+   #tk_messageBox  -message "Click using left mouse button over a section 
+ #of a flightline in Yorick window-6."  -type ok
    expect "region_selected"
    exp_send "window(wsav)\r"
  }

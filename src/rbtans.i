@@ -136,25 +136,36 @@ t.roll(max)
 }
 
 
-func prepare_sf_pkt (tans) {
+func prepare_sf_pkt (sod, psf) {
   /* this function prepares a packet for sf_a.tcl which contains the pitch, roll, heading information
      for every camera photo every 1 second */
   /* amar nayegandhi 03/05/2002. */
 
-  print, "Preparing packet at 1Hz for sf_a.tcl\n\r";
+  extern tans
+  //write, "Preparing tans packet for sf_a.tcl";
 
-  no_t = (dimsof(tans)(2)/10); 
-  if ((dimsof(tans)(2)%10) != 0) no_t++;
+  //no_t = (dimsof(tans)(2)/10); 
+  //if ((dimsof(tans)(2)%10) != 0) no_t++;
 
-  t = array(TANS, no_t);
+  idx = where(tans.somd == sod);
 
-  t.somd = tans(1::10).somd;
-  t.roll = tans(1::10).roll;
-  t.pitch = tans(1::10).pitch;
-  t.heading = tans(1::10).heading;
+  t = tans(idx);
+  // now write it out to a temp file for process id psf
+  tmpfile = swrite(format="/tmp/tans_pkt.%d",psf);
+  f = open(tmpfile, "w");
+  write, f, format="%7d, %3.3f, %3.3f, %4.3f", (int)(t.somd), t.pitch, t.roll, t.heading;
+  close, f
+
+  
+  //t = array(TANS, no_t);
+
+  //t.somd = tans(1::10).somd;
+  //t.roll = tans(1::10).roll;
+  //t.pitch = tans(1::10).pitch;
+  //t.heading = tans(1::10).heading;
 
 
-  return t;
+  return
 
 }
 
