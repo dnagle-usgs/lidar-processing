@@ -147,7 +147,7 @@ func sel_data_rgn(data, type, mode=,win=, exclude=) {
 
 }
 
-func sel_data_ptRadius(data, point=, radius=, win=) {
+func sel_data_ptRadius(data, point=, radius=, win=, msize=) {
   /*DOCUMENT sel_data_ptRadius(data, point, radius=) 
   	This function selects data given a point (in latlon or utm) and a radius.
  	amar nayegandhi 06/26/03.
@@ -155,6 +155,7 @@ func sel_data_ptRadius(data, point=, radius=, win=) {
 
   extern utm
   if (!win) win = 5;
+  if (!msize) msize=0.5;
   if (!is_array(point)) {
      window, win;
      prompt = "Click to define center point in window";
@@ -163,7 +164,7 @@ func sel_data_ptRadius(data, point=, radius=, win=) {
   }
     
   window, win;
-  plmk, point(2), point(1), color="black", msize=0.5, marker=2
+  plmk, point(2), point(1), color="black", msize=msize, marker=2
   if (!radius) radius = 1.0;
 
   radius = float(radius)
