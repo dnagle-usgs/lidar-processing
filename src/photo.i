@@ -126,7 +126,7 @@ func pref (junk) {
 }
 
 
-func gref_photo( somd=, ioff=, offset=,ggalst=, skip=, drift= ) {
+func gref_photo( somd=, ioff=, offset=,ggalst=, skip=, drift=, date=, win= ) {
 /* DOCUMENT gref_photo, somd=, ioff=, offset=, ggalst=, skip=
 
     smod=  A time in SOMD, or a list of times.
@@ -145,6 +145,24 @@ func gref_photo( somd=, ioff=, offset=,ggalst=, skip=, drift= ) {
  if (is_array(ggalst)) somd = int(gga.sod(ggalst(unique(int(gga.sod(ggalst))))))
  if (skip)  somd = somd(1:0:skip);
  write, somd
+ // find the camera file names in the cam1/ subdir
+ cmd = swrite(format="ls -1 %s",data_path+"cam1/");
+ f = popen(cmd, 0);
+ s  = "";
+ n = read(f, format="%s",s);
+ close, f;
+ t = *pointer(s);
+ ch = where(t=='_' | t == '-' | t == '.');
+ ch = grow(0,ch,numberof(t)+1);
+ so = 0;
+ for (i=1;i<=numberof(ch)-2;i++) {
+   aa = (t(ch(i)+1:ch(i+1)-1));
+   a = sread(string(&aa), format="%6d",so);
+   if (a==1 && numberof(aa)==6) break;
+ }
+ fn1 = string(&t(1:ch(i)));
+ fn2 = string(&t(ch(i+1):));
+ 
  for ( i = 1; i <=numberof(somd); i++ ) {
   sd = somd(i) + ioff;
   csomd = sd + offset + i * drift;
@@ -158,12 +176,12 @@ func gref_photo( somd=, ioff=, offset=,ggalst=, skip=, drift= ) {
   northing = UTMNorthing;
   easting  = UTMEasting;
   zone     = UTMZone;
-  date  = "11-13";
   hms = sod2hms( int(sd ) );   
-  pname = swrite(format="%scam1_CAM1_2003-%s_%02d%02d%02d.jpg", 
+  pname = swrite(format="%s%s%02d%02d%02d%s", 
          data_path + "cam1/", 
-         date,
-         hms(1), hms(2), hms(3) ); 
+         fn1,
+         hms(1), hms(2), hms(3),
+	 fn2 ); 
   print, heading, northing, easting, roll, pitch, galt, hms
   photo = jpg_read( pname );
   photo_orient, photo, 
@@ -171,7 +189,7 @@ func gref_photo( somd=, ioff=, offset=,ggalst=, skip=, drift= ) {
 	    heading= heading,
 	       roll= roll + ops_conf.roll_bias + cam1_roll_bias,
 	     pitch = pitch + ops_conf.pitch_bias + cam1_pitch_bias,
-	     offset = [ northing, easting ]
+	     offset = [ northing, easting ], win=win;
  }
 }
 
