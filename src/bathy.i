@@ -29,7 +29,7 @@ extern rn;
   window,3;
   idx = int( mouse() (1:2) );
 idx
-//******* IMPORTANT! The *2 below is there cuz we usually only look at
+// ******* IMPORTANT! The *2 below is there cuz we usually only look at
 // every other raster. 
   rn  = m(idx(1), idx(2)*2).rastpix;  	// get the *real* raster number.
 rn

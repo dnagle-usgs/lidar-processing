@@ -33,6 +33,10 @@ func plcm( z, y, x, cmin=, cmax=, marker=, msize= )
     $Id$
     
     $Log$
+    Revision 1.4  2002/02/12 15:53:03  anayegan
+    plcm.i : Fixed q array.
+    geo_bath.i : display "georectified" bathymetric image.
+
     Revision 1.3  2002/01/23 04:57:58  wwright
 
      minor changes.  Added code to update the dir var in sf automatically
@@ -49,6 +53,8 @@ func plcm( z, y, x, cmin=, cmax=, marker=, msize= )
 */
 {
   q = where( z > cmin );
+  if ( numberof(q) == 0 ) 
+     return;
   qq = where( z(q) < cmax );
   z = z( q(qq) );
   x = x( q(qq) );
