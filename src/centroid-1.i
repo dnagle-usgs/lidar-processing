@@ -117,7 +117,7 @@ func cent( a ) {
     c = float(  (a(r) * indgen(r)) (sum) ) / s;
   } else {
     c = 10000.0;
-    write,"********* centroid-1.i  cent()  Reject: Sum was zero"
+//////     write,"********* centroid-1.i  cent()  Reject: Sum was zero"
   }
 
 //      centroid peak     average

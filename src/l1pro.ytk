@@ -5,8 +5,9 @@
 # Orginal Amar Nayegandhi aka "anayegan"
 
   set ofname ""
-  set win_no 5
-  set msize 1.0
+  set win_no 		5
+  set msize 		1.0
+  set usecentroid   	1
 
 exp_send "#include \"geo_bath.i\"\r"; # load geobath.i code
 expect ">";
@@ -153,6 +154,9 @@ ComboBox .l1wid.bf4.1.p -text "Process Data For" -width 22 -values \
 
 checkbutton .l1wid.bf4.2.cll -text "Convert UTM\nto Lat Lon" -variable cll 
 checkbutton .l1wid.bf4.2.cng -text "Convert to\nNAVD 88 (GEOID)" -variable cng 
+checkbutton .l1wid.bf4.2.cen -text "Correct Range \nWalk with Centroid" -variable usecentroid 
+
+
 checkbutton .l1wid.bf45.p.fma -text "Auto\nFma" -variable l1pro_fma 
 
 Button .l1wid.bf45.p.1 -text "Plot" -command {
@@ -297,7 +301,7 @@ Button .l1wid.bf5.2 -text "Process Now" -width 20 \
           #    ext_bad_att=$xba, ext_bad_depth=$xbd, latutm = 1, llarr=\[$mnlon,\
           #    $mxlon, $mnlat, $mxlat\];\r"
 	 if {$ptype == 0} {
-	    exp_send "fs_all = make_fs(latutm=1, q=q, ext_bad_att=1);\r"
+	    exp_send "fs_all = make_fs(latutm=1, q=q, ext_bad_att=1, usecentroid=$usecentroid);\r"
 	    expect ">"
 	 }
 	 if {$ptype == 1} {
@@ -317,7 +321,7 @@ Button .l1wid.bf5.2 -text "Process Now" -width 20 \
 #pack  .l1wid.bf4.1.cb .l1wid.bf4.1.xba .l1wid.bf4.1.xbd .l1wid.bf4.1.xbv -side top -padx 20 -pady 5
 #pack  .l1wid.bf4.1 -side top -padx 20 -pady 5
 pack .l1wid.bf4.1.d .l1wid.bf4.1.p -side left -padx 5
-pack  .l1wid.bf4.2.cll .l1wid.bf4.2.cng -side left -padx 3
+pack  .l1wid.bf4.2.cll .l1wid.bf4.2.cng .l1wid.bf4.2.cen -side left -padx 3
 pack .l1wid.bf4.1 .l1wid.bf4.2 -side top -pady 3
 pack .l1wid.bf5.1 .l1wid.bf5.2 -side right
 pack .l1wid.bf1 .l1wid.bf2 .l1wid.bf3 .l1wid.bf4 -side top -expand 1 -fill both

@@ -152,7 +152,7 @@ write,format="Draw complete. %d rasters drawn. %s", j-ii, "\n"
 
 
 
-func first_surface(start=, stop=, center=, delta=, north=) {
+func first_surface(start=, stop=, center=, delta=, north=, usecentroid=) {
 /* DOCUMENT first_surface(start=, stop=, center=, delta=, north= )
 
    Project the EAARL threshold trigger point to the surface. 
@@ -195,7 +195,7 @@ func first_surface(start=, stop=, center=, delta=, north=) {
    }
  } 
 
- a = irg(i,j);		
+ a = irg(i,j, usecentroid=usecentroid);		
 
 // The line interpolating heading needs to be done using x/y from a 
 // unit circle to work for norther headings.
@@ -365,7 +365,7 @@ for ( ; i< j; i += step){
 
 }
 
-func make_fs(latutm=, q=, ext_bad_att=) {
+func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
   /* DOCUMENT make_fs(latutm=, q=, ext_bad_att=)
      This function prepares data to write/plot first surface topography 
      for a selected region of flightlines.
@@ -407,7 +407,7 @@ func make_fs(latutm=, q=, ext_bad_att=) {
       if ((rn_arr(1,i) != 0)) {
        fcount ++;
        write, format="Processing segment %d of %d for first_surface...\n",i,no_t;
-       rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i)); 
+       rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=usecentroid); 
        a=[];
        grow, fs_all, rrr;
        tot_count += numberof(rrr.elevation);

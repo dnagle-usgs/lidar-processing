@@ -86,7 +86,7 @@ func open_irg_status_bar {
 
 
 
-func irg( b, e, inc=, delta=, georef= ) {
+func irg( b, e, inc=, delta=, georef=, usecentroid= ) {
 /* DOCUMENT irg(b, e, georef=) 
    Returns an array of irange values from record
    b to record e.  "e" can be left out and it will default to 1.  Don't
@@ -96,6 +96,8 @@ func irg( b, e, inc=, delta=, georef= ) {
     delta=      NN      Generate records from b-delta to b+delta.
    georef=	<null> 	Return RTRS records like normal.
 		1       Return XRTRS records.
+  usecentroid=  1	Set to determine centroid range using 
+                        all 3 waveforms to correct for range walk.
 
    Returns an array of RTRS structures, or an array of XRTRS.
 
@@ -128,11 +130,16 @@ func irg( b, e, inc=, delta=, georef= ) {
 
   open_irg_status_bar;
 
+
   for ( di=1, si=b; si<=e; di++, si++ ) {
     rp = decode_raster( get_erast( rn=si )) ;	// decode a raster
     a(di).raster = si; 				// install the raster nbr
     a(di).soe = rp.offset_time ;		
-    a(di).irange = rp.irange;
+    if ( usecentroid ) {
+	for (ii=1; ii< rp.npixels(1); ii++ ) 
+	   a(di).irange(ii) = pcr(rp, ii)(1);
+    } else
+      a(di).irange = rp.irange;
     a(di).sa  = rp.sa;
     if ( (di % 10) == 0  )
       if ( use_ytk ) {
