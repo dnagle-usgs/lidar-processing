@@ -672,7 +672,7 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
   return data;
 }
   
-func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, delimit=, zclip=, pstruc=, rn=, soe=, noheader=, latlon=, zone=) {
+func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, delimit=, zclip=, pstruc=, rn=, soe=, noheader=, latlon=, zone=, ESRI=) {
   /* DOCUMENT this function writes out an ascii file containing x,y,z,intensity information.
     amar nayegandhi 04/25/02
     Keywords:
@@ -692,6 +692,7 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
     noheader = set to 1 to not include the header in the ascii data file.
     latlon= set to 1 to convert xy locations to latlon (from utm)
     zone = utm zone number (if not set it will check for variable curzone). Reqd only if latlon=1
+    ESRI = Forces ESRI compatibility. Removes ()'s from header and forces header = indx = 1
     modified 12/30/02 amar nayegandhi to :
       write out x,y,z (first surface elevation) data for type=1
       to split at 1 million points and write to another file
@@ -701,6 +702,10 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
     */
 
   extern curzone
+  if (ESRI) {
+	header = 1;
+	indx = 1;
+  }
 // default delimit to ","
   if ( is_void( delimit ) ) {
     delimit = ",";
@@ -765,17 +770,22 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
   }
   if (indx) {
        hline = swrite(format="Index%cUTMX(m)%cUTMY(m)%cZ(m)",delimit,delimit,delimit);
+       if (ESRI) hline = swrite(format="id%cutm_x%cutm_y%cz_meters",delimit,delimit,delimit);
   } else {
        hline = swrite(format="UTMX(m)%cUTMY(m)%cZ(m)",delimit,delimit);
+       if (ESRI) hline = swrite(format="utm_x%cutm_y%cz_meters",delimit,delimit);
   }
   if (intensity) {
-       hline = swrite(format="%s%cIntensity(counts)",hline,delimit);
+       if (!ESRI) hline = swrite(format="%s%cIntensity(counts)",hline,delimit);
+       else hline = swrite(format="%s%cintensity_counts",hline,delimit);
   }
   if (rn) {
-       hline = swrite(format="%s%cRaster/Pulse",hline,delimit);
+       if (!ESRI) hline = swrite(format="%s%cRaster/Pulse",hline,delimit);
+       else hline = swrite(format="%s%craster_pulse",hline,delimit);
   }
   if (soe) {
-       hline = swrite(format="%s%cSOE",hline,delimit);
+       if (!ESRI) hline = swrite(format="%s%cSOE",hline,delimit);
+       else hline = swrite(format="%s%csoe",hline,delimit);
   }
   if (!noheader) {
    write, f, hline;
