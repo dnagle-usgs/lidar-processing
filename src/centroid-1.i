@@ -45,7 +45,7 @@ from 300-555 are from channel 2, and from 600-855 are from channel 3.
 Channel 1 is the most sensitive and channel 3 the least.
 
 
-See also: cent  
+See also: RAST, cent  
  
 
 */

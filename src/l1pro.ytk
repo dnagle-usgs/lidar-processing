@@ -1,9 +1,12 @@
 
 #
 # $Id$
+#
+# Orginal Amar Nayegandhi aka "anayegan"
 
   set ofname ""
   set win_no 5
+  set msize 1.0
 
 exp_send "#include \"geo_bath.i\"\r"; # load geobath.i code
 expect ">";
@@ -19,8 +22,8 @@ frame .l1wid.bf3
 frame .l1wid.bf4 
 frame .l1wid.bf4.1
 frame .l1wid.bf4.2
-frame .l1wid.bf45
-frame .l1wid.bf45.sc
+frame .l1wid.bf45	
+frame .l1wid.bf45.sc 
 frame .l1wid.bf45.p
 frame .l1wid.bf5
 
@@ -28,6 +31,7 @@ frame .l1wid.bf5
 menu .l1wid.mb
 menu .l1wid.mb.file
 menu .l1wid.mb.load
+menu .l1wid.mb.options
 .l1wid.mb   add cascade -label File -underline 0 -menu .l1wid.mb.file
 
 .l1wid.mb.file  add command -label "Read command file .. " -underline 0 
@@ -50,6 +54,33 @@ menu .l1wid.mb.load
 .l1wid.mb.load add command -label "Initialize structure BATHCTL .." -underline 21 \
 		-command { exp_send "type = define_bath_ctl(junk); \r"
 			 }
+
+
+.l1wid.mb add cascade -label Options -underline 0 -menu .l1wid.mb.options
+.l1wid.mb.options add command -label "Configure Lowest ColorBar Elevation Scale..." -underline 0 \
+	-command { 
+	   destroy  .m1wid.opts
+ 	   toplevel .l1wid-opts
+	   frame .l1wid-opts.f1
+	   frame .l1wid-opts.f2
+	   frame .l1wid-opts.f3
+	   Label .l1wid-opts.f1.label -text "Cmax:" 
+	   Label .l1wid-opts.f2.label -text "Cmin:" 
+	   Label .l1wid-opts.f3.label -text "Increment:" 
+	   SpinBox  .l1wid-opts.f1.max -range { -100. 5000. 10. }  \
+		-textvariable cmax_max \
+		-modifycmd {  .l1wid.bf45.sc.1 configure -to $cmax_max }
+	   SpinBox  .l1wid-opts.f2.min -range { -100. 5000. 10. }  \
+                -textvariable cmax_min \
+                -modifycmd {  .l1wid.bf45.sc.1 configure -from $cmax_min }
+	   SpinBox  .l1wid-opts.f3.inc -range { 0.1 100. .1 }  \
+                -textvariable cmax_inc \
+                -modifycmd {  .l1wid.bf45.sc.1 configure -resolution $cmax_inc }
+	   pack .l1wid-opts.f1.label .l1wid-opts.f1.max -side left -fill x
+	   pack .l1wid-opts.f2.label .l1wid-opts.f2.min -side left -fill x
+	   pack .l1wid-opts.f3.label .l1wid-opts.f3.inc -side left -fill x
+	   pack .l1wid-opts.f1 .l1wid-opts.f2 .l1wid-opts.f3 -side top -anchor e
+         }
 
 
 ComboBox .l1wid.bf4.1.d -text "Define Region using..." -width 22 -values "Rubberband-Box Points-in-Polygon Line-Segment Enter_Rectangular_Coordinates" -helptext "Select region to process using any of the following methods" -editable 0 -modifycmd {
@@ -150,9 +181,11 @@ Button .l1wid.bf45.p.1 -text "Plot Data" -width 15 -command {
 	   exp_send "window,$win_no; fma;\r";
 	 }
      }
+
+     set cmax [ expr $cmin + $cdelta ]
      if {$ptype == 0} {
-       set cmax1 [expr $cmax*100]
-       set cmin1 [expr $cmin*100]
+       set cmax1 [expr $cmax*100.]
+       set cmin1 [expr $cmin*100.]
        if {$disp_type == 0} {
          exp_send "display, fs_all, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, edt=1;\r"
          expect ">"
@@ -168,7 +201,7 @@ Button .l1wid.bf45.p.1 -text "Plot Data" -width 15 -command {
 
 Label .l1wid.bf45.p.2 -text "in Window "
 SpinBox .l1wid.bf45.p.3 -justify center -range {0 7 1} \
-	-width 5 -textvariable win_no 
+	-width 2 -textvariable win_no 
 
 Label .l1wid.bf45.p.4 -text "to display"
 ComboBox .l1wid.bf45.p.5 -text "Display Type" -width 20 -values \
@@ -184,9 +217,26 @@ ComboBox .l1wid.bf45.p.5 -text "Display Type" -width 20 -values \
 #.l1wid.bf45.5 insert end "Water Depth"
 #.l1wid.bf45.5 insert end "Bare Earth Topography"
 
-scale .l1wid.bf45.sc.1 -orient horizontal -from -50 -to 50 -variable cmin -resolution 0.5 -label cmin -length 150
-scale .l1wid.bf45.sc.2 -orient horizontal -from -50 -to 50 -variable cmax -resolution 0.5 -label cmax -length 150
-scale .l1wid.bf45.sc.3 -orient horizontal -from 0 -to 5 -variable msize -resolution 0.25 -label msize -length 100
+scale .l1wid.bf45.sc.1 -orient horizontal \
+	-label "Lowest ColorBar Elevation (m)" \
+	-variable cmin \
+	-from -50. -to 1000. \
+	-resolution 0.5 \
+	-digits 6 \
+	-length 160
+scale .l1wid.bf45.sc.2 -orient horizontal \
+	-label "ColorBar Range (m)" \
+	-variable cdelta \
+	-from 0. -to 100 \
+	-resolution 0.25 \
+	-digits 6 \
+	-length 160
+scale .l1wid.bf45.sc.3 -orient horizontal \
+	-label msize \
+	-variable msize \
+	-from 0 -to 5 \
+	-resolution 0.25 \
+	-length 100
 
 Button .l1wid.bf5.1 -text "Write Data to File" -width 20 \
 		-command {
