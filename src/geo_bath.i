@@ -520,13 +520,14 @@ See define_bath_ctl()
    rn_arr = sel_region(q);
 
 
-   no_t = numberof(rn_arr(1,));
+  /* initialize counter variables */
+  tot_count = 0;
+  ba_count = 0;
+  bd_count = 0;
+  fcount = 0;
 
-   /* initialize counter variables */
-   tot_count = 0;
-   ba_count = 0;
-   bd_count = 0;
-   fcount = 0;
+  if (is_array(rn_arr)) {
+   no_t = numberof(rn_arr(1,));
 
     for (i=1;i<=no_t;i++) {
       if ((rn_arr(1,i) != 0)) {
@@ -641,6 +642,7 @@ See define_bath_ctl()
 
     tkcmd, swrite(format="send_rnarr_to_l1pro %d %d %d\n", rn_arr(1,), rn_arr(2,), rn_arr_idx(1:-1))
     return depth_all;
+   } else write, "No Data in selected flightline. Good Bye!";
 
 }
 

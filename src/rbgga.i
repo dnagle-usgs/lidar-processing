@@ -373,10 +373,11 @@ func gga_find_times( q, win=, plt= ) {
 }
 
 func sel_region (q, all_tans=) {
-   /* DOCUMENT sel_region(q)
+   /* DOCUMENT sel_region(q, all_tans=)
       This function extracts the raster numbers for a region selected.  
       It returns a the array rn_arr containing start and stop raster numbers
       for each flightline.
+      Set all_tans = 1 if the selected rasters should be processed without tans data.
       amar nayegandhi 9/18/02.
    */
   

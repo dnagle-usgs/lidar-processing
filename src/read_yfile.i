@@ -114,7 +114,7 @@ if (is_void(fname_arr)) {
 }
 
 write, format="Number of files to read = %d \n", n
-write, format="Type = %d\n", type
+//write, format="Type = %d\n", type;
 
 bytord = 0L;
 type =0L;
@@ -693,7 +693,7 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
   write, format="Total records written to ascii file = %d\n", totw;
 }
 
-func read_ascii_xyz(ipath=,ifname=,type=){
+func read_ascii_xyz(ipath=,ifname=,type=, no_lines=){
  /* this function reads in an xyz ascii file and returns a 3-d array.
     amar nayegandhi 05/01/02
     */
@@ -704,9 +704,13 @@ func read_ascii_xyz(ipath=,ifname=,type=){
     x=0.0;y=0.0;z=0.0;
     a = rdline(f);
     count = 0;
+    if (is_array(no_lines)) {
+       arr = array(double, 3, no_lines)
+    }
     
     while ((a > "")) {
-      sread, a, x,y,z;
+     sread, a, x,y,z;
+     if (!no_lines) {
       if (count == 0) {
         arr = array(double, 3, 1);
 	arr(1,1) = x;
@@ -716,7 +720,14 @@ func read_ascii_xyz(ipath=,ifname=,type=){
         grow, arr, [x,y,z];
       }
       count++;
-      a=rdline(f);
+     } else {
+       count++;
+       arr(1,count) = x;
+       arr(2,count) = y;
+       arr(3,count) = z;
+     }
+       
+     a=rdline(f);
     }
 
   return arr
