@@ -196,7 +196,7 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=) {
 
  // if data array is in raster format (R, GEOALL, VEGALL), then covert to 
  // non raster format (FS, GEO, VEG).
- a = structof(eaarl);
+ a = structof(eaarl(1));
  if (a == R) {
      data_out = r_to_fs(eaarl);
  }
@@ -215,7 +215,7 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=) {
 
  if (is_array(data_out)) eaarl = data_out;
 
- a = structof(eaarl);
+ a = structof(eaarl(1));
  new_eaarl = array(a, MAXSIZE);
  selcount = 0;
 

@@ -993,3 +993,108 @@ func set_read_yorick(vname) {
 }
   
 
+func yfile_to_pbd (filename, vname) {
+  /* DOCUMENT yfile_to_pbd(filename, vname)
+     This function converts a yorick written (.edf or .bin) file to a pbd file.
+     amar nayegandhi 05/27/03
+     */
+ 
+ filepath = split_path(filename, 0);
+ path = filepath(1);
+ file = filepath(2);
+
+ data_ptr = read_yfile(path, fname_arr=file);
+ data = *data_ptr(1);
+
+ // now create the pbd file
+ fnamepbd = (split_path(filename, 1, ext=1))(1)+".pbd";
+ 
+ f = createb(fnamepbd);
+ add_variable, f, -1, vname, structof(data), dimsof(data);
+ get_member(f,vname) = data;
+ save, f, vname;
+ close, f;
+ data = []
+}
+
+func pbd_to_yfile(filename) {
+   /*DOCUMENT pbd_to_yfile(filename) 
+     This function converts a pbd file to the .edf or .bin yfile
+     */
+
+     f = openb(filename);
+     restore, f, vname;
+     data = get_member(f, vname);
+     close, f;
+     a = data(1);
+     b = structof(a);
+     
+     fnameedf = (split_path(filename, 1, ext=1))(1)+".edf";
+     filepath = split_path(fnameedf,0);
+     path = filepath(1);
+     file = filepath(2);
+
+     if (b == FS) 
+        write_topo, path, file, data;
+     if (b == GEO) 
+        write_bathy, path, file, data;
+     if (b == VEG__) 
+        write_veg, path, file, data;
+     if (b == CVEG_ALL) 
+        write_multipeak_veg, data, opath=path, ofname=file;
+
+}
+
+   
+func merge_data_pbds(filepath, write_to_file=, merged_filename=, vname=) {
+ /*DOCUMENT merge_data_pbds(filename) 
+   This function merges the EAARL processed pbd data files in the given filepath
+   INPUT:
+   filepath : the path where the pbd files are to be merged
+   write_to_file : set to 1 if you want to write the merged pbd to file
+   merged_filename : the merged filename where the merged pbd file will be written to.
+   vname = the variable name for the merged data
+   amar nayegandhi 05/29/03
+   */
+
+ eaarl = [];
+ // find all the pbd files in filepath
+ s = array(string, 1000);
+ ss = ["*.pbd"];
+ scmd = swrite(format="find %s -name '%s'", filepath, ss);
+ fp = 1; lp = 0;
+ for (i=1; i<=numberof(scmd); i++) {
+    f=popen(scmd(i), 0);
+    n = read(f,format="%s", s );
+    close, f;
+    lp = lp + n;
+    if (n) fn_all = s(fp:lp);
+    fp = fp + n;
+ }
+ for (i=1;i<=numberof(fn_all); i++) {
+    f = openb(fn_all(i));
+    restore, f, vname;
+    grow, eaarl, get_member(f,vname);
+ }   
+
+ if (write_to_file) {
+   // write merged data out to merged_filename
+   if (!merged_filename) merged_filename = filepath+"data_merged.pbd";
+   if (!vname) {
+     // create variable vname if required
+     a = eaarl(1);
+     b = structof(a);
+     if (a == FS) vname = "fst_merged";
+     if (a == GEO) vname = "bat_merged";
+     if (a == VEG__) vname = "bet_merged";
+     if (a == CVEG_ALL) vname = "mvt_merged";
+   }
+   f = createb(merged_filename);
+   add_variable, f, -1, vname, structof(eaarl), dimsof(eaarl);
+   get_member(f,vname) = veg_all;
+ }
+
+
+
+ return eaarl
+}

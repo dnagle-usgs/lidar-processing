@@ -948,6 +948,7 @@ for (i=1;i<=len;i++) {
       _write, f, byt_pos, vegall(i).soe(indx(j));
       byt_pos = byt_pos + 8;
      }
+     if ((i%1000)==0) write, format="%d of %d\r", i, len;
   }
   num_rec = num_rec + num_valid;
 }
@@ -1637,6 +1638,8 @@ for (i=1;i<=len;i++) {
     _write, f, byt_pos, vegall(i).soe;
     byt_pos = byt_pos + 8;
    }
+   if ((i%1000)==0) write, format="%d of %d\r", i, len;
+
    num_rec++;
 }
 
