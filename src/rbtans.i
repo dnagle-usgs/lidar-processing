@@ -32,7 +32,7 @@ History:
 */
 
 struct TANS {
-  float somd;
+  double somd;
   float roll;
   float pitch;
   float heading;
@@ -72,11 +72,9 @@ idf = open( ifn, "rb");
 // get the integer number of records
 _read, idf,  0, n
 
-tans = array( float, 4, n);
+tans = array( int, 4, n);
 _read(idf, 4, tans);
 
-mxroll = tans(2, ) (max)
-mnroll = tans(2, ) (min)
 
 // compute seconds of the day
 //////////tans(1,) = tans(1,) % 86400;
@@ -90,21 +88,43 @@ mnroll = tans(2, ) (min)
   }
 ******/
 
- tans(1, ) += gps_time_correction;
 
 write,format="Using %f seconds to correct time-of-day\n", gps_time_correction
 write,format="%s", 
               "               Min          Max\n"
-write, format="  SOD:%14.3f %14.3f %6.2f hrs\n", tans(1,min), tans(1,max), 
-	(tans(1,max)-tans(1,min))/ 3600.0
-write, format=" Roll:%14.3f %14.3f\n", tans(2,min), tans(2,max)
-write, format="Pitch:%14.3f %14.3f\n", tans(3,min), tans(4,max)
-print, "Tans_Information_Loaded"
  t = array( TANS, dimsof(tans)(3) );
- t.somd    = tans(1,);
- t.roll    = tans(2,);
- t.pitch   = tans(3,);
- t.heading = tans(4,);
+ t.somd    = tans(1,)/1000.0 + gps_time_correction ;
+ t.roll    = tans(2,)/1000.0;
+ t.pitch   = tans(3,)/1000.0;
+ t.heading = tans(4,)/1000.0;
+
+write, format="  SOD:%14.3f %14.3f %6.2f hrs\n", t.somd(min), t.somd(max), 
+	(t.somd(max)-t.somd(min))/ 3600.0
+write, format=" Roll:%14.3f %14.3f\n", t.roll(min), t.roll(max)
+write, format="Pitch:%14.3f %14.3f\n", t.pitch(min), t.pitch(max)
+print, "Tans_Information_Loaded"
+t.roll(min)
+t.roll(max)
+ if ( 
+      ( t.roll(min) < -180.0)  || 
+      ( t.roll(max) >  360.0)  ||
+      (t.pitch(min) < -180.0)  ||
+      (t.pitch(max) >  360.0)  
+    ) {
+   if ( _ytk ) {
+    tkcmd, "tk_messageBox -icon error -message { \
+      The Tans Vector data you loaded appears to be in the old format.\
+      You need to regenerate the tans ybin file before you can continue.\
+      }"
+   } else {
+     write,"************ WARNING *******************"
+     write,"The Tans Vector data you loaded appears"
+     write,"to be in the old format.  You need to "
+     write,"regenerate the tans ybin file before you"
+     write,"can continue."
+     write,"****************************************"
+   }
+ }
  return t;
 }
 

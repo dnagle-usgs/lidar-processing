@@ -24,15 +24,16 @@
 #define MAXSTR	1024
 
 struct {
-  float sod, roll, pitch, heading;
+  long sod, roll, pitch, heading;
  } attitude;
 
 main( int argc, char *argv[] ) {
 FILE *idf, *odf;
  int rec, good, badcnt, bad, i, n;
- float fgt=-1.0, lgt, gap, maxgap;
+ float fgt=-1.0, gap, maxgap;
  char str[ MAXSTR ];
- float sow, sod, roll, pitch, heading;
+ float  roll, pitch, heading;
+ double sod, lgt, sow;
  const double sid = 86400.0;		// seconds in a day
  int day;
  maxgap = 1.0;
@@ -52,7 +53,7 @@ FILE *idf, *odf;
     gap = 0.0;
     while ( fgets( str, MAXSTR, idf ) > 0  ) {
      if ( strncmp( str, "0x9a", 4 ) ==0 ) {
-       n = sscanf( str, "0x9a %f %f %f %f", &sow, &roll, &pitch, &heading );
+       n = sscanf( str, "0x9a %lf %f %f %f", &sow, &roll, &pitch, &heading );
        if ( n == 4 ) {
           bad = 0;
           if ( (pitch < -180.0 ) || ( pitch > 180.0 )) bad++;
@@ -65,18 +66,30 @@ FILE *idf, *odf;
              if ( fgt == -1.0 ) {
 	        sod = fmod( sow, sid); 
 	 	fgt = sow - sod;	// save first good time value
-printf("\nfgt=%f ", fgt);
+printf("\nfgt=fgt=%lf sow=%lf sod=%lf sid=%lf", fgt, sow, sod, sid);
              }
 
-	     attitude.heading = heading;
-	     attitude.roll = roll;
-	     attitude.pitch = pitch;
-	     sod = sow - fgt; 
-	     attitude.sod  = sod;
+	     attitude.heading = heading *1000.0;
+	     attitude.roll    = roll    *1000.0;
+	     attitude.pitch   = pitch   *1000.0;
+
+/************************************************************************
+ Tricky biz follows.........
+ 
+ Seconds of the week from the tans are in 0.1 increments which do not 
+ comvert to exact binary values.  In order to transport the values to 
+ the ybin file, it is read as a double, which frequently rounds to 
+ something 0.9999. 
+
+ The orginal float code caused a rounding error on the order of 0.025
+ seconds.
+**************************************************************************/
+	     attitude.sod = (((int)((sow - fgt) * 1000.0)+1)/10) * 10; 
+
 	     if ( good ) fwrite( &attitude, sizeof(attitude), 1, odf );
 	     gap = sod - lgt;
 	     if ( (gap >= maxgap) && good ) {
-                printf("%10.2f %10.3f %9.5f %7.3f %7.3f %7.3f\n", gap, sod, fmod(sow, sid), roll, pitch, heading );
+                printf("%10.2f %10d %9.5f %7.3f %7.3f %7.3f\n", gap, sod, fmod(sow, sid), roll, pitch, heading );
 	     }
 	     lgt = sod;
              good++;
