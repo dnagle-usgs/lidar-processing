@@ -1,0 +1,135 @@
+#!/bin/sh -- # comment mentioning perl to avoid looping
+eval 'perl_check="`dirname $0`/`uname -p`/perl"; \
+  PATH="`dirname $0`:$PATH"; \
+    if [ -x /usr/local/bin/perl ]; then \
+      PATH="`dirname $perl_check`:$PATH"; export PATH; \
+      exec /usr/local/bin/perl -S $0 ${1+"$@"}; \
+    else \
+      exec /usr/bin/perl -S $0 ${1+"$@"}; \
+    fi'
+  if 0;
+
+require 'newgetopt.pl' || die "Unable to require newgetopt.pl\n";
+
+undef $opt_help;    # just to quiet the warning message
+
+# $Id$
+
+###########################################
+# User Variables
+###########################################
+
+$HOME = @ENV{HOME};
+$VNCHIST = "$HOME/.vnchist";
+$CMDWDTH = 50;      # sets column to start the comment.
+
+# Put as much of the cmdline that you consistantly use into VNCCMD.
+
+$VNCCMD  = "/usr/local/bin/vncviewer -compresslevel 9 -quality 4 -nocursorshape ";
+
+###########################################
+
+sub showusage {
+  print <<EOF;
+  Use the same arguments as you would with vncserver.
+  The cmdline gets saved into: $VNCHIST
+  It can then be recalled and selected using "-list".
+
+  -list:  list the vnc history
+
+EOF
+  exit(0);
+}
+
+
+sub get_cli_opts {
+  &showusage unless
+  &NGetOpt(
+  "help",     # help
+  "list",
+  "via",
+  );
+  &showusage() if defined($opt_help);
+}
+
+# http://yoyo.its.monash.edu.au/~trent/src/Expose/expose.perl
+sub isint { #from http://google.com/groups?selm=BECK.95Oct20135611%40visi5.qtp.ufl.edu
+  my $x = shift;
+  return 0 if ($x eq "");
+  my $sign ='^\s* [-+]? \s*';
+  my $int ='\d+ \s* $ ';
+  return ($x =~ /$sign $int/x) ? 1 : 0;
+}
+
+sub numin {
+  local($prompt, $max) = @_;
+  local($answer);
+  do {
+    print STDOUT $prompt;
+    $answer = scalar(<STDIN>);
+  } while ( &isint($answer) != 1 || $answer > $max );
+  return($answer);
+}
+
+
+sub strin {
+  local($prompt) = @_;
+  print STDOUT $prompt;
+
+  return(scalar(<STDIN>));
+}
+
+############################################################
+
+&get_cli_opts();
+
+
+if ( $opt_via ) {  # standard usage, just run vnc
+  # Put the arg list into a string
+  $list="-via ";   # it got stripped in get_cli_opts();
+  for ( $i=0; $i<=$#ARGV; ++$i) {
+    $tmp = sprintf("%s%s ", $list, $ARGV[$i]);
+    $list = $tmp;
+  }
+  chop($list);
+  # printf("->%d: %s<-\n", length($list), $list);
+
+  $desc =  strin("Enter Description:\n");
+
+  # Append to the history
+  # this covers the case if the file does not already exist.
+
+  open(WHIST, ">>$VNCHIST");
+  printf WHIST ("%*s# %s", -$CMDWDTH, $list, $desc);
+  close(WHIST);
+}
+
+  # Read the VNC history
+
+  open(RHIST, $VNCHIST);
+  @hist = <RHIST>;
+  close(RHIST);
+
+  # printf("Read %d entries\n", $#hist);
+  @shist = sort @hist;
+
+if ( $opt_via ) {
+  # Save the uniq list, sorted
+  open(WHIST, "|/usr/bin/uniq >$VNCHIST");
+  print WHIST @shist;
+  close(WHIST);
+  system($VNCCMD . $list);
+}
+
+if ( $opt_list ) {
+  for ( $i=0; $i<=$#shist; ++$i) {
+    printf("%2d: %s", $i, $shist[$i]);
+  }
+
+  $sel = numin("\nEnter Selection: ", $#shist);
+  printf("You selected: %d\n", $sel);
+  ($cmd) = split(/\#/, $shist[$sel], 2);
+  printf("%s %s\n", $VNCCMD, $cmd);
+
+  system($VNCCMD . $shist[$sel]);
+}
