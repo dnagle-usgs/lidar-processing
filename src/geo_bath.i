@@ -343,6 +343,7 @@ func write_geoall (geoall, opath=, ofname=, type=, append=) {
 // input parameter geoall is an array of structure GEOALL, defined by the display_bath function.
 // amar nayegandhi 05/07/02.
 fn = opath+ofname;
+num_rec=0;
 
 if (is_void(append)) {
   /* open file to read/write if append keyword not set(it will overwrite any previous file with same name) */
@@ -495,7 +496,7 @@ func make_bathy(opath=,ofname=,ext_bad_att=, ext_bad_depth=, latlon=, llarr=) {
       The input parameters are:
       opath = ouput path where the output file must be written
       ofname= output file name
-      ext_bad_att = Extract bad attitude points (those points that were termed 'bad' in the first surface return function) and write these points to a file.
+      ext_bad_att = Extract bad first return points (those points that were termed 'bad' in the first surface return function) and write these points to a file.
       ext_bad_depth = Extract the points that failed to show any depth using the run_bath function and write these points to a file.
 
       This function does not return a value.  It writes an output file.
@@ -558,26 +559,43 @@ func make_bathy(opath=,ofname=,ext_bad_att=, ext_bad_depth=, latlon=, llarr=) {
    write, "\n";
    write,format="Total seconds of flightline data selected = %6.2f\n", (t(dif, ))(,sum);
 
+
    /* now loop through the times and find corresponding start and stop raster numbers */
    no_t = numberof(t(1,));
    write, format="Number of flightlines selected = %d \n", no_t;
    rn_arr = array(int,2,no_t);
+   tyes_arr = array(int,no_t);
+   tyes_arr(1:0) = 1;
    for (i=1;i<=numberof(t(1,));i++) {
-       rn_indx_start = where(((edb.seconds - soe_day_start) ) == int(t(1,i)));
-       rn_indx_stop = where(((edb.seconds - soe_day_start) ) == ceil(t(2,i)));
-       if (!is_array(rn_indx_start) || !is_array(rn_indx_stop)) {
-          write, format="Corresponding Rasters for flightline %d not found.  Omitting flightline ... \n",i;
-	  rn_start = 0;
-	  rn_stop = 0;
-       } else {
-          rn_start = rn_indx_start(1);
-          rn_stop = rn_indx_stop(0);
-       }
+      tyes = 1;
+      if ((tans.somd(1) > t(2,i)) || (tans.somd(0) < t(1,i))) {
+         write, format="Corresponding TANS data for flightline %d not found.  Omitting flightline ... \n",i;
+	 tyes = 0;
+	 tyes_arr(i)=0;
+      } else if ((tans.somd(1) > t(1,i)) && (tans.somd(0) >= t(2,i))) {
+         t(1,i) = tans.somd(1);
+         write, format="Corresponding TANS data for beginning section of flightline %d not found.  Selecting part of flightline ... \n",i;
+      } else if ((tans.somd(1) <= t(1,i)) && (tans.somd(0) < t(2,i))) {
+         t(2,i) = tans.somd(0);
+         write, format="Corresponding TANS data for end section of flightline %d not found.  Selecting part of flightline ... \n",i;
+      }
+      if (tyes) {
+         rn_indx_start = where(((edb.seconds - soe_day_start) ) == int(t(1,i)));
+         rn_indx_stop = where(((edb.seconds - soe_day_start) ) == ceil(t(2,i)));
+         if (!is_array(rn_indx_start) || !is_array(rn_indx_stop)) {
+            write, format="Corresponding Rasters for flightline %d not found.  Omitting flightline ... \n",i;
+	    rn_start = 0;
+	    rn_stop = 0;
+         } else {
+            rn_start = rn_indx_start(1);
+            rn_stop = rn_indx_stop(0);
+         }
 
-       rn_arr(,i) =  [rn_start, rn_stop];
+         rn_arr(,i) =  [rn_start, rn_stop];
+      }
    }
-    write,format="Number of Rasters selected = %6d\n", (rn_arr(dif, )) (,sum); 
-    write, "\n";
+   write,format="Number of Rasters selected = %6d\n", (rn_arr(dif, )) (,sum); 
+   write, "\n";
 
    /* now call run_bath from bathy.i and first_surface from surface_topo.i to extract bathy/topo information for each sequence of rasters in rn_arr. */
 
@@ -590,8 +608,14 @@ func make_bathy(opath=,ofname=,ext_bad_att=, ext_bad_depth=, latlon=, llarr=) {
    ba_count = 0;
    bd_count = 0;
 
+   /* use tyes_arr to decide first valid flightline */
+   tindx = where(tyes_arr != 0);
+   if (!is_void(tindx)) {
+     no_append = min(tindx);
+   } 
+
     for (i=1;i<=no_t;i++) {
-      if (rn_arr(1,i) != 0) {
+      if ((rn_arr(1,i) != 0) && (tyes_arr(i) != 0)) {
        write, format="Processing using bathymetry algorithm for flightline %d ... \n", i;
        d = run_bath(start=rn_arr(1,i), stop=rn_arr(2,i));
        write, format="Processing using first_surface algorithm for flightline %d ... \n", i;
@@ -612,7 +636,7 @@ func make_bathy(opath=,ofname=,ext_bad_att=, ext_bad_depth=, latlon=, llarr=) {
 
        /* if ext_bad_att is set, find all points having elevation = ht of airplane */
        if (ext_bad_att) {
-         write, format="Extracting data points with bad attitude data and writing these points out to an output file for flightline %d. \r",i;
+         write, format="Extracting data points with false first returns and writing these points out to an output file for flightline %d. \r",i;
          /* compare depth.elevation with 70% of depth.melevation */
 	 elv_thresh = 0.7*(avg(depth.melevation));
          ba_indx = where(depth.elevation > elv_thresh);
@@ -635,9 +659,9 @@ func make_bathy(opath=,ofname=,ext_bad_att=, ext_bad_depth=, latlon=, llarr=) {
 	 ba_depth.north = bdnorth;
 
 	 ba_ofname_arr = strtok(ofname, ".");
-	 ba_ofname = ba_ofname_arr(1)+"_bad_attitude."+ba_ofname_arr(2);
+	 ba_ofname = ba_ofname_arr(1)+"_bad_fr."+ba_ofname_arr(2);
 	 write, "now writing array ba_depth  to a file \r";
-         if (i==1) {
+         if (i==no_append) {
            write_geoall, ba_depth, opath=opath, ofname=ba_ofname;
          } else {
            write_geoall,  ba_depth, opath=opath, ofname=ba_ofname, append=1;
@@ -646,7 +670,7 @@ func make_bathy(opath=,ofname=,ext_bad_att=, ext_bad_depth=, latlon=, llarr=) {
 
        /* if ext_bad_depth is set, find all points having depth and bath = 0  */
        if (ext_bad_depth) {
-         write, format="\nExtracting data points with bad depth data and writing these points out to an output file for flightline %d. \r",i;
+         write, format="\nExtracting data points with false depth data and writing these points out to an output file for flightline %d. \r",i;
          /* compare depth.depth with 0 */
          ba_indx = where(depth.depth == 0);
 	 bd_count += numberof(ba_indx);
@@ -670,7 +694,7 @@ func make_bathy(opath=,ofname=,ext_bad_att=, ext_bad_depth=, latlon=, llarr=) {
 	 ba_ofname_arr = strtok(ofname, ".");
 	 ba_ofname = ba_ofname_arr(1)+"_bad_depth."+ba_ofname_arr(2);
 	 write, "now writing array bad_depth  to a file \r";
-         if (i==1) {
+         if (i==no_append) {
            write_geoall, ba_depth, opath=opath, ofname=ba_ofname;
          } else {
            write_geoall,  ba_depth, opath=opath, ofname=ba_ofname, append=1;
@@ -678,7 +702,7 @@ func make_bathy(opath=,ofname=,ext_bad_att=, ext_bad_depth=, latlon=, llarr=) {
        } 
 
        write, format="\nWriting data from structure geoall to output file for flightline %d ... \n", i;
-       if (i==1) {
+       if (i==no_append) {
          write_geoall, depth, opath=opath, ofname=ofname;
        } else {
          write_geoall, depth, opath=opath, ofname=ofname, append=1;
@@ -688,13 +712,13 @@ func make_bathy(opath=,ofname=,ext_bad_att=, ext_bad_depth=, latlon=, llarr=) {
 
     write, "\nStatistics: \r";
     write, format="Total number of records processed = %d\n",tot_count;
-    write, format="Total number of records with bad attitude data = %d\n",ba_count;
-    write, format = "Total number of records with bad depth data = %d\n",bd_count;
+    write, format="Total number of records with false first returns data = %d\n",ba_count;
+    write, format = "Total number of records with false depth data = %d\n",bd_count;
     write, format="Total number of GOOD data points = %d \n",(tot_count-ba_count-bd_count);
-    pba = float(ba_count)*100/tot_count;
-    write, format = "%5.2f%% of the total records had bad attitude! (pun intended)\n",pba;
-    pbd = float(bd_count)*100/(tot_count-ba_count);
-    write, format = "%5.2f%% of total records with good attitude had bad depth! \n",pbd; 
+    pba = float(ba_count)*100.0/tot_count;
+    write, format = "%5.2f%% of the total records had false first returns! \n",pba;
+    pbd = float(bd_count)*100.0/(tot_count-ba_count);
+    write, format = "%5.2f%% of total records with good first returns had false depth! \n",pbd; 
 
 
 
@@ -708,17 +732,17 @@ func raspulsearch(data,win=,buf=) {
     */
 
  /* use mouse function to click on the reqd point */
- extern wfa;
+ extern wfa, cmin, cmax;
  if (!(win)) win = 5;
  window, win;
 
  if (typeof(data)=="pointer") data=*data(1);
 
- if (!buf) buf=100; /*100 centimeters is the buffer to look for the point */
+ if (!buf) buf=1000; /*10 meters is the default buffer side to look for the point */
 
  spot = mouse(1,1,"Please click in window");
 
- plg, spot(2),spot(1),marker=2,msize=2.0, color="black",type=0;
+// plg, spot(2),spot(1),marker=2,msize=2.0, color="black",type=0;
 
  write, format="Searching for data within %d centimeters from selected point \n",buf;
 
@@ -726,24 +750,38 @@ func raspulsearch(data,win=,buf=) {
 
  if (is_array(indx)) {
     write, format="%d points found \n",numberof(indx);
-    print, data(indx);
-    rn = data(indx).rn;
-    rasterno = rn&0xffffff;
-    pulseno = rn/0xffffff;
+    // print, data(indx);
+    rn = data(indx(1)).rn;
+    mindist = buf*sqrt(2);
+    for (i = 1; i < numberof(indx); i++) {
+      x1 = (data(indx(i)).east)/100.0;
+      y1 = (data(indx(i)).north)/100.0;
+      dist = sqrt((spot(1)-x1)^2 + (spot(2)-y1)^2);
+      if (dist <= mindist) {
+        mindist = dist;
+	mindata = data(indx(i));
+	minindx = indx(i);
+      }
+    }
+    rasterno = mindata.rn&0xffffff;
+    pulseno = mindata.rn/0xffffff;
 
-    print, "The following point(s) were found: ";
+    write, format="The closest point is at a distance %5.3f meters from the selected point \n", mindist;
     write, format="Raster number %d and Pulse number %d \n",rasterno, pulseno;
     write, format="Plotting raster and waveform with Raster number %d and Pulse number %d \n",rasterno(1), pulseno(1);
     if (_ytk) {
       ytk_rast, rasterno(1);
       window, 0;
-      show_wf(*wfa, pulseno(1), win=0, cb=7);
+      show_wf, *wfa, pulseno(1), win=0, cb=7;
+      window, win;
+      window, 5;plcm, mindata.elevation/100., mindata.north/100., mindata.east/100., msize = 3.0, cmin= cmin, cmax = cmax
+      //write, format="minindx = %d\n",minindx;
     } 
  } else {
    print, "No points found!  Please try again... \n";
  }
 
- return data(indx);
+ return mindata;
       
 }
 

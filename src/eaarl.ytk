@@ -199,6 +199,9 @@ proc load_edb {} {
     exec "./sf_a.tcl" &
     after 2000 " send sf_a.tcl \"set dir $data_path\" " 
  }
+ $w.mb.images add command -label "Process Level 1 Lidar Data..." -command {
+    source l1pro.ytk 
+ }
  $w.mb.images add command -label "Lidar First Return Surface..." -command {
  }
  $w.mb.images add command -label "Lidar Last Return Sub-aerial Surface..." -command {

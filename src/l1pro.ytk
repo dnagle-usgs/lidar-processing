@@ -46,7 +46,7 @@ menu .l1wid.mb.load
 LabelEntry .l1wid.bf2.op -width 50 -relief sunken -bd 3 -label "Opath:  " -helptext "Enter Output File Path Here" \
 		-textvariable opath
 
-LabelEntry .l1wid.bf2.of -width 50 -relief sunken -bd 3 -label "Ofname: " -helptext "Enter Output File Name Here" \
+LabelEntry .l1wid.bf2.of -width 50 -relief sunken -bd 3 -label "Ofname: " -helptext "Enter Output File Name for GOOD Data Here" \
 		-textvariable ofname
 
 # now make entry and button widgets to select region
@@ -70,8 +70,8 @@ Button .l1wid.bf3.lon.but -text "Select Region" -helptext "Select by dragging re
 		   expect ">"
 		   }
 
-checkbutton .l1wid.bf4.1.xba -text "Extract Bad Attitude Data" -variable xba 
-checkbutton .l1wid.bf4.1.xbd -text "Extract Bad Depth Data" -variable xbd 
+checkbutton .l1wid.bf4.1.xba -text "Extract Data with False First Returns" -variable xba 
+checkbutton .l1wid.bf4.1.xbd -text "Extract Data with False Depth" -variable xbd 
 checkbutton .l1wid.bf4.2.cll -text "Convert UTM to Lat Lon" -variable cll 
 checkbutton .l1wid.bf4.2.cng -text "Convert to NAVD 88 (GEOID)" -variable cng 
 

@@ -49,9 +49,11 @@ if ( is_void( gps_time_correction ) )
   gps_time_correction = -13.0
 
 func rbtans( junk ) {
+ 
+ path = data_path+"/tans/"
 
 if ( _ytk ) {
-    ifn  = get_openfn( initialdir="/data/0/", filetype="*.ybin" );
+    ifn  = get_openfn( initialdir=path, filetype="*.ybin" );
     if (strmatch(ifn, "ybin") == 0) {
           exit, "NO FILE CHOSEN, PLEASE TRY AGAIN\r";
     }

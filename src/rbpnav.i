@@ -156,7 +156,16 @@ func rbpnav (junk) {
  }
 
  path = data_path +"/gps/"
+ if ( _ytk ) {
+    ifn  = get_openfn( initialdir=path, filetype="*.ybin" );
+    if (strmatch(ifn, "ybin") == 0) {
+          exit, "NO FILE CHOSEN, PLEASE TRY AGAIN\r";
+    }
+    ff = split_path( ifn, -1 );
+    data_path = ff(1);
+} else {
  ifn = sel_file(ss="*.ybin", path=path)(1);
+}
 
 n = int(0)
 idf = open( ifn, "rb");

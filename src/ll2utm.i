@@ -47,7 +47,7 @@ func fll2utm( lat, lon ) {
   return u;
 }
 
-func ll2utm( lat, lon ) {
+func ll2utm( lat, lon, retarr= ) {
 /* DOCUMENT  ll2utm(lat, lon)
 
    Convert lat/lon pairs to UTM.  Returns values in
@@ -96,7 +96,11 @@ UTMEasting = (double)(k0*N*(A+(1-T+C)*A*A*A/6 + \
 UTMNorthing = (double)(k0*(M+N*tan(latRad)*(A*A/2+(5-T+9*C+4*C*C)*A*A*A*A/24 + \
 	(61-58*T+T*T+600*C-330*eccPrimeSquared)*A*A*A*A*A*A/720)));
 
-return numberof(lat);
+    if (!retarr) {
+	return numberof(lat);
+    } else {
+	return [UTMEasting, UTMNorthing];
+    }	
 }
 
 
