@@ -80,7 +80,7 @@ struct VEG__ {
      double soe;
      }
 
-func read_yfile (path, fname_arr=, initialdir=) {
+func read_yfile (path, fname_arr=, initialdir=, searchstring=) {
 
 /* DOCUMENT read_yfile(path, fname_arr=) 
 This function reads an EAARL yorick-written binary file.
@@ -89,6 +89,7 @@ This function reads an EAARL yorick-written binary file.
    path 	- Path name where the file(s) are located. Don't forget the '/' at the end of the path name.
    fname_arr	- An array of file names to be read.  This may be just 1 file name.
    initialdir   - Initial data path name to search for file.
+   searchstring - search string when fname_arr= is not defined.
    Output:
    This function returns a an array of pointers.  Each pointer can be dereferenced like this:
    > data_ptr = read_yfile("~/input_files/")
@@ -120,8 +121,12 @@ if (is_void(path)) {
 }
 
 if (is_void(fname_arr)) {
-   s = array(string, 1000);
-   ss = ["*.bin", "*.edf"];
+   s = array(string, 10000);
+   if (searchstring) {
+     ss = searchstring;
+   } else {
+     ss = ["*.bin", "*.edf"];
+   }
    scmd = swrite(format = "find %s -name '%s'",path, ss); 
    fp = 1; lp = 0;
    for (i=1; i<=numberof(scmd); i++) {

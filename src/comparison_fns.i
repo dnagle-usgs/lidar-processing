@@ -305,14 +305,15 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=) {
     if (_ytk) 
        tkcmd, swrite(format="set progress %d", i)
   }
-  grow, new_eaarl_all, new_eaarl(1:selcount);
+  if (selcount > 0) 
+	grow, new_eaarl_all, new_eaarl(1:selcount);
   //timer,t1
   //t1 - t0;
   if (_ytk) {
    tkcmd, "destroy .rcf"
   } 
 
-  return new_eaarl_all
+  return new_eaarl_all;
 	 
 }
 
