@@ -213,15 +213,17 @@ func ex_veg( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
  The 12 represents the last place a surface can be found
  Variables: 
     last              The last point in the waveform to consider.
-    nsat 		A list of saturated pixels in this waveform
-    numsat		Number of saturated pixels in this waveform
+    nsat 	      A list of saturated pixels in this waveform
+    numsat	      Number of saturated pixels in this waveform
     last_surface_sat  The last pixel saturated in the surface region of the
                       Waveform.
-    escale		The maximum value of the exponential pulse decay. 
-    laser_decay	The primary exponential decay array which mostly describes
+    escale	      The maximum value of the exponential pulse decay. 
+    laser_decay	      The primary exponential decay array which mostly describes
                       the surface return laser event.
-    da                The return waveform with the computed exponentials substracted
+    da                The return waveform with the computed exponentials 
+                      substracted
     db                The return waveform equalized by agc and tilted by bias.
+
 */
 
  extern ex_bath_rn, ex_bath_rp, a
@@ -502,7 +504,11 @@ write, format="rn=%d; i = %d\n",rn,i
 
 func display_veg(veg_arr, felv=, lelv=,  fint=, lint=, cmin=, cmax=, size=, win=, dofma=, edt=, cht=, marker= ) {
   /* DOCUMENT display_veg(veg_arr, fr=, lr=,  cmin=, cmax=, size=, win=, dofma=, edt=, marker= )
-     This function displays a veg plot using the veg array from functin run_veg, and the georeferencing from the first_surface function.   If fr = 1, the first surface return is plotted.  If lr = 1, the last returns are plotted (bald earth).  If fr=lr=1, the canopy height is plotted.
+ This function displays a veg plot using the veg array from functin run_veg, 
+ and the georeferencing from the first_surface function.   If fr = 1, the 
+ first surface return is plotted.  If lr = 1, the last returns are plotted 
+ (bald earth).  If fr=lr=1, the canopy height is plotted.
+
   */
   extern elv;
   if ( is_void(win) )
@@ -578,19 +584,19 @@ func display_veg(veg_arr, felv=, lelv=,  fint=, lint=, cmin=, cmax=, size=, win=
 func make_fs_veg (d, rrr) {  
 /* DOCUMENT make_fs_veg (d, rrr) 
 
-   This function makes a veg data array using the 
-   georectification of the first surface return.  The parameters are as 
-   follows:
+ This function makes a veg data array using the 
+ georectification of the first surface return.  The parameters are as 
+ follows:
 
- d		Array of structure VEGPIX  containing veg information.  
-                This is the return value of function run_bath.
+ d	Array of structure VEGPIX  containing veg information.  
+        This is the return value of function run_bath.
 
- rrr		Array of structure R containing first surface information.  
-                This the is the return value of function first_surface.
+ rrr    Array of structure R containing first surface information.  
+        This the is the return value of function first_surface.
 
 
-   The return value veg is an array of structure VEGALL. The array 
-   can be written to a file using write_geoall  
+ The return value veg is an array of structure VEGALL. The array 
+ can be written to a file using write_geoall  
 
    See also: first_surface, run_veg, write_vegall
 */
@@ -642,19 +648,24 @@ func make_veg(latutm=, q=, ext_bad_att=, ext_bad_veg=, use_centroid=, use_peak=,
 /* DOCUMENT make_veg(opath=,ofname=,ext_bad_att=, ext_bad_veg=)
 
  This function allows a user to define a region on the gga plot 
-of flightlines (usually window 6) to  process data using the Vegetation algorithm.
-are: 
+of flightlines (usually window 6) to  process data using the 
+Vegetation algorithm.
+
+Inputs are: 
 
  ext_bad_att  	Extract bad first return points (those points that 
-                were termed 'bad' in the first surface return function) and writes it out to an array.
- ext_bad_veg  Extract the points that failed to show any veg using 
+                were termed 'bad' in the first surface return function) 
+                and writes it out to an array.
+
+ ext_bad_veg    Extract the points that failed to show any veg using 
                 the run_veg function and write these points to an array 
 
 Returns:
-This function returns the array veg_arr.
-      
+ veg_arr        This function returns the array veg_arr.
+
+**Note:      
  Check to see if the tans and pnav data have been loaded before 
-executing make_veg.  See rbpnav() and rbtans() for details.
+ executing make_veg.  See rbpnav() and rbtans() for details.
 
       See also: first_surface, run_veg, make_fs_veg 
 */
@@ -852,10 +863,12 @@ fn = opath+ofname;
 num_rec=0;
 
 if (is_void(append)) {
-  /* open file to read/write if append keyword not set(it will overwrite any previous file with same name) */
+  /* open file to read/write if append keyword not 
+    set(it will overwrite any previous file with same name) */
   f = open(fn, "w+b");
 } else {
-  /*open file to append to existing file.  Header information will not be written.*/
+  /*open file to append to existing file.  Header information 
+  will not be written.*/
   f = open(fn, "r+b");
 }
 
@@ -880,7 +893,8 @@ if (is_void(append)) {
   rec(2) = type;
   /* the third word defines the number of words in each record */
   rec(3) = nwpr;
-  /* the fourth word will eventually contain the total number of records.  We don't know the value just now, so will wait till the end. */
+  /* the fourth word will eventually contain the total number of records.  
+     We don't know the value just now, so will wait till the end. */
   rec(4) = 0;
 
   _write, f, 0, rec;
@@ -1029,10 +1043,13 @@ func clean_veg(veg_all, rcf_width=, type=) {
   /* DOCUMENT clean_veg(veg_all, rcf_width=)
    this function cleans the veg_all array
    amar nayegandhi 12/20/02
-   Input: veg_all	: Initial data array of structure VEG__ or VEG_ALL_
-          rcf_width	: The elevation width (m) to be used for the RCF filter.  If not set, rcf is not used.
-	  type		: if type = 3, structure VEG__ is used.
-	  		: if type = 5, strucutre VEG_ is used.
+   Input: veg_all    Initial data array of structure VEG__ or VEG_ALL_
+          rcf_width  The elevation width (m) to be used for the RCF 
+                     filter.  If not set, rcf is not used.
+
+	  type=      3 = structure VEG__.
+	  	     5 = strucutre VEG_.
+
    Output: Cleaned data array of type VEG_ or VEG__
    modified AN 3/8/03 to add rcf_width= option and other changes
    modified AN 3/14/03 to make this function work for data of old type
@@ -1531,7 +1548,8 @@ func write_multipeak_veg (vegall, opath=, ofname=, type=, append=) {
 
    ofname=	Output file name
 
-     type=	Type of output file, currently type = 7 is supported for multipeaks veg data.
+     type=	Type of output file, currently type = 7 is supported 
+                for multipeaks veg data.
 
    append=	Set this keyword to append to existing file.
 
@@ -1686,16 +1704,19 @@ elevation was found. The elevations are binned to 1-meter.
 	veg_all		An array of "VEG_ALL_" or "CVEG_ALL" structures.  
 	binsize=	Binsize in centimeters from 1.0 to 200.0  
 	win=		Defaults to 0.
-	dofma=		Defaults to 1 (Yes), Set to zero if you don't want an fma.
+	dofma=		Defaults to 1 (Yes), Set to zero if you don't want 
+                        an fma.
 	color=		Set graph color
 	width=		Set line width
-	normalize=	Defaults to 0 (not normalized),  Set to 1  to cause it to normalize
-                        to one.  This is very useful in case you are plotting multiple 
-                        histograms where you actually want to compare their peak value.
+	normalize=	Defaults to 0 (not normalized),  Set to 1  to cause 
+                        it to normalize to one.  This is very useful in case 
+                        you are plotting multiple histograms where you actually 
+                        want to compare their peak value.
         lst=            An optional externally generated "where" filter list.
         multi=		Set to 1 if using Multipeak vegetation algorithm
 	type = 		Set to 1 for First Return Topography only
-			       2 for Bare Earth Topography only (only when multi = 0)
+			       2 for Bare Earth Topography only (only when 
+                                 multi = 0)
 			       3 for considering all returns 
 	
 
@@ -1822,7 +1843,8 @@ See also: VEG_ALL_, CVEG_ALL
 
 func veg_all__to_veg__(data) {
 /* DOCUMENT veg_all__to_veg__(data)
-      this function converts the data array from the raster structure (VEG_ALL_) to the VEG__ structure in point format.
+      This function converts the data array from the raster structure 
+      (VEG_ALL_) to the VEG__ structure in point format.
       amar nayegandhi
      03/08/03
    */
@@ -1851,9 +1873,11 @@ func veg_all__to_veg__(data) {
 
 func veg_all_to_veg_(data) {
 /* DOCUMENT veg_all_to_veg_(data)
-      this function converts the data array from the raster structure (VEG_ALL) to the VEG_ structure in point format. Note this structure is of the OLD format.
-      amar nayegandhi
-     03/14/03
+      this function converts the data array from the raster structure (VEG_ALL) 
+      to the VEG_ structure in point format. Note this structure is of the OLD 
+      format.
+
+      amar nayegandhi 03/14/03
    */
 
  if (numberof(data) != numberof(data.north)) {
