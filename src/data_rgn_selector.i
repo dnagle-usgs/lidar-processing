@@ -84,7 +84,7 @@ func sel_data_rgn(data, type, mode=,win=, exclude=) {
 
 }
 
-func sel_data_ptRadius(data, point=, radius=, win=, msize=, retindx=) {
+func sel_data_ptRadius(data, point=, radius=, win=, msize=, retindx=, silent=) {
   /*DOCUMENT sel_data_ptRadius(data, point, radius=) 
   	This function selects data given a point (in latlon or utm) and a radius.
 	INPUT:  data:  Data array
@@ -93,6 +93,7 @@ func sel_data_ptRadius(data, point=, radius=, win=, msize=, retindx=) {
 		win = window to click point if point= not defined (defaults to 5)
 		msize = size of the marker plotted on window, win.
 		retindx = set to 1 to return the index values instead of the data array.
+		silent = set to 1 if you dont want output to screen
 	OUTPUT:
 		if retindx = 0; data array for region selected is returned
 		if retindx = 1; indices of data array returned.
@@ -109,13 +110,14 @@ func sel_data_ptRadius(data, point=, radius=, win=, msize=, retindx=) {
      point = [result(1), result(2)];
   }
     
+  data = test_and_clean(data);
   window, win;
 //  plmk, point(2), point(1), color="black", msize=msize, marker=2
   if (!radius) radius = 1.0;
 
   radius = float(radius)
-  write, format="Selected Point Coordinates: %8.2f, %9.2f\n",point(1), point(2);
-  write, format="Radius: %5.2f m\n",radius;
+  if (!silent) write, format="Selected Point Coordinates: %8.2f, %9.2f\n",point(1), point(2);
+  if (!silent) write, format="Radius: %5.2f m\n",radius;
 
   // first find the rectangular region of length radius and the point selected as center
   xmax = point(1)+radius;
@@ -131,7 +133,7 @@ func sel_data_ptRadius(data, point=, radius=, win=, msize=, retindx=) {
   indx = data_box(data.east, data.north, xmin*100, xmax*100, ymin*100, ymax*100);
 
   if (!is_array(indx)) {
-    write, "No data found within selected rectangular region. ";
+    if (!silent) write, "No data found within selected rectangular region. ";
     return
   }
 
@@ -140,7 +142,7 @@ func sel_data_ptRadius(data, point=, radius=, win=, msize=, retindx=) {
   iindx = where(datadist <= radius);
 
   if (!is_array(indx)) {
-    write, "No data found within selected region. ";
+    if (!silent) write, "No data found within selected region. ";
     return
   }
 
