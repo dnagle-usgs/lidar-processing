@@ -239,7 +239,7 @@ indx = where(x >= xmin);
 }
 
 
-func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=) {
+func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=) {
 /*DOCUMENT select_rgn_from_datatiles(junk, rgn=, data_dir=, lmap=)
   This function selects data from a series of processed data tiles.
   The processed data tiles must have the min easting and max northing in their filename.
@@ -248,6 +248,7 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=) {
    data_dir = directory where all the data tiles are located.
    lmap = set to prompt for the map.
    win = window number that will be used to drag the rectangular region.  defaults to current window.
+   mode = set to 1 for first surface, 2 for bathymetry, 3 for bare earth vegetation
   original Brendan Penney
   modified amar nayegandhi 07/17/03
 */
@@ -257,6 +258,7 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=) {
    //if (!(zone)) zone = "17r";
    if (is_void(win)) win = w;
    if (lmap) load_map(utm=1);
+   if (!mode) mode = 2; // defaults to bathymetry
    if (!is_array(rgn)) {
      rgn = array(float, 4);
      a = mouse(1,1, "select region: ");
@@ -306,6 +308,9 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=) {
    pldj, max_e, max_n, min_e, max_n, color="green"
    
    
+   if (mode == 1) file_ss = "_f";
+   if (mode == 2) file_ss = "_b";
+   if (mode == 3) file_ss = "_v";
    //dtiles = array(string, n);
    //itiles = array(string, n);
    files =  array(string, n);
@@ -316,7 +321,7 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=) {
    	//itiles(i) = swrite(format="%si_e%d_n%d_%s/", data_dir, i_east, i_north, zone);
    	//dtiles(i) = swrite(format="%st_e%d_n%d_%s/", itiles(i), min_e(i), max_n(i), zone); 
    	//command = swrite(format="ls -l %s*.pbd |awk '{print $9}'", dtiles(i)); 
-   	command = swrite(format="find  %s -name '*%d*%d*.pbd'", data_dir, min_e(i), max_n(i)); 
+   	command = swrite(format="find  %s -name '*%d*%d*%s*.pbd'", data_dir, min_e(i), max_n(i), file_ss); 
    	f = popen(command, 0);     
    	read, f, files(i); 
    }
