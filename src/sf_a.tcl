@@ -138,12 +138,12 @@ if {$mogrify_exists} {
 
 # Center a window.
 proc center_win { win } {
- set lx [ expr [winfo screenwidth  $win]/2 - [winfo width  $win]/2 ]
-  set ly [ expr [winfo screenheight $win]/2 - [winfo height $win]/2 ]
-   wm geometry $win "+$lx+$ly"
-	 wm deiconify $win
-	  update
-	  }
+	set lx [ expr [winfo screenwidth  $win]/2 - [winfo width  $win]/2 ]
+	set ly [ expr [winfo screenheight $win]/2 - [winfo height $win]/2 ]
+	wm geometry $win "+$lx+$ly"
+	wm deiconify $win
+	update
+}
 
 
 proc ytk_exists { } {
@@ -201,7 +201,7 @@ proc open_loader_window { m1 } {
 proc load_file_list { f method } {
 # Parameters
 #   f - filename of a list of files to be loaded
-#   method  lst|tar
+#   method - lst|tar
 
 	# Bring in Globals
 	global ci fna imgtime dir base_dir \
@@ -223,7 +223,7 @@ proc load_file_list { f method } {
 	if { $method == "tar" } {
 	  set success 0;
 	  foreach p { "" cam1 cam2 } {	;# iterate thru possible paths to photos
-	     puts "trying $p"
+									if { $DEBUG_SF } { puts "trying $p" }
 	     if { ![ catch {set file_lst [ glob -directory "tarmount/$p" -tails "*.jpg"  ]} ]   } {
 		     incr success;
 		     set dir "tarmount/$p"
@@ -240,15 +240,16 @@ proc load_file_list { f method } {
 	  set i [ llength $file_lst]
 	  set nbr_photos $i;
 	  set file_lst [ lsort -increasing $file_lst ]
-	  puts "$i photos found in tar"
+									if { $DEBUG_SF } { puts "$i photos found in tar" }
 	} 
 	if { $method == "lst" } {
 	  set fname $f
 	  set f [ open $f r ]
-	  set file_lst [ read $f ] 
+	  set data [ read -nonewline $f ]
+	  set file_lst [ split $data \n ]
 	  set i [ llength $file_lst]
 	  set nbr_photos $i;
-	  puts "$i photos found"
+									if { $DEBUG_SF } { puts "$i photos found" }
    }   ;# end of lst
 # Set time ticker, for use in updating the displays - 0 to make 
 # sure something displays immediately
@@ -261,7 +262,7 @@ proc load_file_list { f method } {
 
 	# Do some looping, initializing some globals as we go
 	# Iterate through the file, incrementing i for each line
-	for { set i 1 } { $i < $nbr_photos } { incr i } { 
+	for { set i 0 } { $i < $nbr_photos } { incr i } { 
 		# Set fn to the filename of the current line
 		set fn [ lindex $file_lst $i ]
 		# Split the file name based on _
@@ -298,10 +299,9 @@ proc load_file_list { f method } {
 		} else { 
 									if { $DEBUG_SF } { puts "command: $fn" }
 			eval $fn
-			incr i -1
 		}
 	} 
-	.loader.status1 configure -text "Loaded $i Jpg photos"
+	.loader.status1 configure -text "Loaded $i JPG photos"
 	update
 	
 	set nfiles [ expr $i -2 ]
@@ -709,12 +709,20 @@ proc show_img { n } {
 
 		catch { set llat $lat(hms$hms) }
 		catch { set llon $lon(hms$hms) }
-		if { [ catch { set data "$hms ($sod) $ns(hms$hms)$lat(hms$hms) $ew(hms$hms)$lon(hms$hms) $alt(hms$hms)M $pdop(hms$hms) $nsat(hms$hms)"} ]  } { 
-			set data "hms:$hms sod:$sod  No GPS Data"   } 
 
-			if { $timern == "cin" } { set hsr $cin }
-			if { $timern == "hms" } { set hsr $hms }
-			if { $timern == "sod" } { set hsr $sod }
+		if { $camtype == 1 } {
+			if { [ catch { set data "$hms ($sod) $ns(hms$hms)$lat(hms$hms) $ew(hms$hms)$lon(hms$hms) $alt(hms$hms)M $pdop(hms$hms) $nsat(hms$hms)"} ]  } { 
+				set data "hms:$hms sod:$sod  No GPS Data"
+			}
+		} elseif { $camtype == 2 } {
+			if { [ catch { set data "$hms ($sod) $lat(hms$hms) $lon(hms$hms) $alt(hms$hms)"} ] } {
+				set data "hms:$hms sod:$sod  No GPS Data"
+			}
+		}
+
+		if { $timern == "cin" } { set hsr $cin }
+		if { $timern == "hms" } { set hsr $hms }
+		if { $timern == "sod" } { set hsr $sod }
 		.canf.can config -cursor arrow
 		.canf.can config -scrollregion "0 0 [image width $img] [image height $img]"
 		update
@@ -760,7 +768,7 @@ proc archive_save_marked { type } {
 				set mark_count 0
 				set start [expr {int([.slider cget -from])}];
 				set stop  [expr {int([.slider cget -to])}];
-				if { [ info exists lat ] } {
+				if { $camtype == 1 && [ info exists lat ] } {
 				  set of [ open "$tmpdir/gps.gga" "w+" ]
 				  for { set i $start } { $i <= $stop } { incr i } {
 				      set gt  $imgtime(idx$i);
@@ -771,7 +779,6 @@ proc archive_save_marked { type } {
 				for { set i $start } { $i <= $stop } { incr i } {
 					if { $mark($i) } {
 						incr mark_count
-##						puts "Copying $dir/$fna($i) ---> $tmpdir"
 						file copy -force $dir/$fna($i) $tmpdir;
 					}
 				}
@@ -881,8 +888,6 @@ proc calculate_zoom_factor { initial percentage } {
 proc clear_marks { } {
 	global mark cur_mark ci
 
-#	array unset mark
-	
 	for { set i [expr {int([.slider cget -from])}] } { $i <= [expr {int([.slider cget -to])}] } { incr i } {
 		set mark($i) 0
 	}
@@ -1044,13 +1049,12 @@ menu .mb.zoom
 			 .loader.status1 configure -text "$f\nis mounted."
 			 .loader.ok configure -state normal
 			 update
-			 set dir "tarmount/cam1";
 			  set nfiles [ load_file_list  $f tar ];
 		   } else {
 			 open_loader_window "Loading files.\nThis will take a few seconds."
 			  ;# Do this if we have a .lst file
 			  set split_dir [split $f /]
-			  set dir [join [lrange $split_dir 0 [expr [llength $split_dir]-2]] /]
+			  set dir [join [lrange $split_dir 0 end-1] /]
 			  set nfiles [ load_file_list  $f lst ];
 			}
 			enable_controls
@@ -1174,7 +1178,7 @@ menu .mb.options.mogrify
 
 .mb.zoom add command -label "Actual pixels (100%)" -underline 0 \
 	-command { .cf3.zoom setvalue @99; show_img $ci }
-.mb.zoom add command -label "Fit to screen" -underline 0 \
+.mb.zoom add command -label "Fit to window" -underline 0 \
 	-command { .cf3.zoom setvalue @[calculate_zoom_factor [.cf3.zoom getvalue] -1]; show_img $ci }
 .mb.zoom add separator
 .mb.zoom add command -label "Zoom to 50%" -underline 8 \
