@@ -1,4 +1,10 @@
+/*
+  Id: wgs842nad83.i
+  Converted to yorick from John Sonntag's C code.
+  amar nayegandhi.
+*/
 
+ 
 func wgs842nad83(data) {
   /*DOUCMENT wgs842nad83(data)
    amar nayegandhi 07/09/03.

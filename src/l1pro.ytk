@@ -72,6 +72,9 @@ exp_send "#include \"batch_multipip_process.i\"\r"; # load batch_multipip_proces
 exp_send "#include \"comparison_fns.i\"\r"; # load for rcf filter function
 exp_send "#include \"bathy_filter.i\"\r"; # load for rcf filter function
 exp_send "#include \"data_rgn_selector.i\"\r"; 
+exp_send "#include \"wgs842nad83.i\"\r"; 
+exp_send "#include \"nad832navd88.i\"\r"; 
+exp_send "#include \"datum_converter.i\"\r"; 
 expect ">";
 
 package require BWidget
