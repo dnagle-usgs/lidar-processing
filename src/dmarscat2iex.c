@@ -13,6 +13,7 @@
      -d input device or file
      -t Time offset in SOE, sod, or sow
      -O Uncompressed data file name.
+     -o Uncompressed data file name.
      -P Printout every 200th converted values on stdout.
      -p Printout all converted values on stdout.
 
@@ -299,6 +300,7 @@ qfgetc( FILE *f ) {
 **********************************************/
 main( int argc, char *argv[] ) {
   UI8 c, *p;
+  char xxx;
   int i ;
   int n = 1;
   int opt;
@@ -316,12 +318,13 @@ main( int argc, char *argv[] ) {
 /************************************
 // Determine option settings.
 ************************************/
-  while (( opt=getopt(argc,argv, "d:O:pPt:")) != EOF ) {
+  while (( opt=getopt(argc,argv, "d:o:O:pPt:")) != EOF ) {
    switch (opt) {
      case 'd':
           select_device( sp->devfn );
           break;
 
+     case 'o':
      case 'O':
 //          verify_fn( sp->odfn, optarg);
 	  strncpy( sp->odfn, optarg, MAXLEN );
@@ -350,7 +353,7 @@ main( int argc, char *argv[] ) {
 
      default:
 	printf("\nUsage: ");
-	printf("\ndmarscat2iex -t N -d infile -O outfile\n");
+	printf("\ndmarscat2iex -t N -d infile -o outfile\n");
         exit(1);
    }
   }
@@ -389,6 +392,7 @@ main( int argc, char *argv[] ) {
    sp->bytes_written = 0;
    sp->dtis = 0;
 
+   fprintf(stderr,"\r                 Recs  Bad Recs      lgt      ct\n"); 
    while ( sp->run ) {
      if ( at_eof( devfd ) ) {
 	sp->run = 0;
@@ -428,10 +432,11 @@ main( int argc, char *argv[] ) {
           sp->bad_checksums++;
 	  oi = oi - 18;
           oi &= 0xff;
-	  fprintf(stderr,"\nBad Checksum: Rec=%d Bad Recs=%d lgt=%8.3f ct=%8.3f\n", 
+	  fprintf(stderr,"\rBad Checksum: %8d %8d %8.3f %8.3f\n", 
 		sp->record_cnt, sp->bad_checksums, 
 		lgt/200.0, ntohl(raw.data.tspo)/200.0
                 );
+          xxx = 0;
           raw.data.tspo   = ntohl(raw.data.tspo);
           for (i=XG; i<= ZA; i++ ) 
              raw.data.sensor[i] = ntohs(raw.data.sensor[i] );
@@ -460,7 +465,7 @@ main( int argc, char *argv[] ) {
      if ( hdr.nrecs == 1 ) bsow = iex.sow;
      if ( odf ) sp->bytes_written += fwrite( &iex, sizeof(iex), 1, odf);
    }
-   if ( (hdr.nrecs % 10000) == 0 ) printf("%7d Records processed   \r", hdr.nrecs);
+   if ( (hdr.nrecs % 10000) == 0 ) printf("\r %7d Records processed   \r", hdr.nrecs);
   }
   esow = iex.sow;
   rewind(odf);

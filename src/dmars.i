@@ -65,10 +65,65 @@ extern dmars_i
   The critical piece of data you need to process "cat" data is the delta time
   from the DMARS unit's "tspo" (Time Since Power On) value to the actual GPS
   time of day when the data was captured.  The easiest way to get that information
-  is to run the dmars2iex program and generate the *.imu file.  While the file will
-  have the problematic gaps, it will also generate the correct time difference 
-  you will need to process the "cat" data. So begin
+  is to run the dmars2iex program on the DMARS file which contains the NTP time
+  stamps.  The program will printout the time difference between the IMU and NTP.  
+  Even though the NTP file will contain the problematic data gaps, it will also 
+  generate the correct time difference you will need to process the "cat" data. 
   
+  Below is an example of how to run dmars2iex to find the time difference.
+ 
+3:15 <129>% dmars2iex junk.bin
+$Id$
+Pass 1...
+------------------------------------------------------------------
+    Header: $IMURAW             Version: 2.000     Byte Order: Intel
+DeltaTheta: 0            Delta Velocity: 0          Data Rate: 200Hz
+Gyro Scale: 2.746582e-03    Accel Scale: 5.981445e-04    Time: GPS
+ Time Corr: 2                 Time Bias: 13.000    Total Recs: 4734112
+ Start SOW: 58522.000          Stop SOW: 82192.000
+  Duration: 23670.0/secs (6.575/hrs)
+------------------------------------------------------------------
+ 
+23671 Time recs, 4734112 DMARS recs
+sizeof(hdr)=512
+ sizeof(IEX_RECORD)=32, gscale=0.002747 ascale=0.000598
+2004-02-13 Day:5  22:39:53
+GPS Seconds of the week time offset: 490519 seconds
+
+ The "GPS Seconds of the week time offset" of 490519 is the number
+you will need to correctly process the DMARS "cat" file. An example 
+run is shown below.  The input file is some-cat.bin and the output
+is some-cat.imu.  The time offset is 490519.  The diagonostic 
+printout shows the some limited information at records that have
+checksum errors. The Recs column shows the record number where
+the checksum error occured, the "Bad Recs" simply counts the number
+of bad records, the "lgt" is the "last good time" record, and
+the "ct" is the current time of the record.
+
+dmarscat2iex -t 490519 -d some-cat.bin -o some-cat.imu
+                 Recs  Bad Recs      lgt      ct
+Bad Checksum:    13932        1   71.995   72.000
+Bad Checksum:    25133        2  127.995  128.000
+Bad Checksum:   123534        3  619.995  620.000
+Bad Checksum:   232535        4 1164.995 1165.000
+Bad Checksum:   253536        5 1269.995 1270.000
+Bad Checksum:   253537        6 1269.995 505944.370
+Bad Checksum:   271138        7 1357.995 1358.000
+------------------------------------------------------------------
+    Header: $IMURAW             Version: 2.000     Byte Order: Intel
+DeltaTheta: 0            Delta Velocity: 0          Data Rate: 200Hz
+Gyro Scale: 2.746582e-03    Accel Scale: 5.981445e-04    Time: GPS
+ Time Corr: 2                 Time Bias: 13.000    Total Recs: 4736419
+ Start SOW: 490521.345          Stop SOW: 514203.485
+  Duration: 23682.1/secs (6.578/hrs)
+------------------------------------------------------------------
+ 4730000 Records processed
+4736419 Total records processed
+
+Once the .imu file is generated, it can be sent processed by
+the Windows IEX program which will produce a .INS file containing
+pitch/roll/heading and other information.
+ 
   
 */ 
 

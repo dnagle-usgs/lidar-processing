@@ -248,7 +248,7 @@ pass1( FILE *f ) {
   } 
   hdr.nrecs = dmars_recs;
 // Output the header record again
-  fwrite( &hdr, sizeof(hdr), 1, odf );
+  if (odf) fwrite( &hdr, sizeof(hdr), 1, odf );
 }
 
 
@@ -269,8 +269,9 @@ process_options( int argc, char *argv[] ) {
  extern char *optarg;
  extern int optind, opterr, optopt;
  int c;
-  while ( (c=getopt(argc,argv, "o:t:")) != EOF ) 
+  while ( (c=getopt(argc,argv, "O:o:t:")) != EOF ) 
    switch (c) {
+    case 'O':
     case 'o':
       if ( (odf=fopen(optarg,"w+")) == NULL ) {
         fprintf(stderr,"Can't open %s\n", optarg);
@@ -284,6 +285,10 @@ process_options( int argc, char *argv[] ) {
        exit(1);
       }
       break;
+
+    default:
+	perror("Invalid option");
+ 	exit(1);
   }
 
   if ( argv[ optind ] == NULL ) {
@@ -303,7 +308,8 @@ main( int argc, char *argv[] ) {
   UI32 idx;
   struct tm *tm;
  idf = stdin;
- odf = stdout;
+ odf = NULL;
+
   configure_header_defaults();
   fprintf(stderr,"$Id$\n");
   process_options(argc, argv );
@@ -313,8 +319,7 @@ main( int argc, char *argv[] ) {
 // Backup 10 minutes from the end of the file
 // to sync up time with DMARS.
   idx = time_recs-600;
-  fprintf(stderr,"\n%d Time recs, %d DMARS recs %d, sizeof(hdr)=%d sizeof(IEX_RECORD)=%d, gscale=%f ascale=%f\n", 
-          tarray, 
+  fprintf(stderr,"\n%d Time recs, %d DMARS recs\nsizeof(hdr)=%d\n sizeof(IEX_RECORD)=%d, gscale=%f ascale=%f\n", 
           time_recs, 
           dmars_recs,
           sizeof(hdr),
@@ -329,14 +334,12 @@ main( int argc, char *argv[] ) {
     strftime(str, 256, "%F Day:%u  %T", tm);
     fprintf(stderr,"%s", str);
   }
-  fprintf(stderr,"\nOffset: %d %6.6f %6.6f %d %d\n", 
-           tarray[idx].secs, 
-           1.0e-6*tarray[idx].usecs,
-           tarray[idx].dmars_ticks/200.0, 
-           dmars_2_gps,
-	   idx
+  fprintf(stderr,"\nGPS Seconds of the week time offset: %d seconds\n", 
+           dmars_2_gps
         );
 
+  if ( odf == NULL ) 
+	exit(0);
   rewind(idf);
 
 
