@@ -414,7 +414,7 @@ Examples using the result data:
     wa += txlen;			// update waveform addres to first rx waveform
     rxlen = i16(r,wa); wa += 2;		// get the 1st waveform and update wa to next
     if ( rxlen <= 0 ) { 
-       write, format="*** edb_access.i:decode_raster(%d)  Bad rxlen value (%d) i=%d\n", 
+       write, format="*** edb_access.i:decode_raster(%d). Channel 1  Bad rxlen value (%d) i=%d\n", 
               rxlen, wa, i ;
        break;		
     }
@@ -422,9 +422,19 @@ Examples using the result data:
     rx(,1) = r(wa: wa + rxlen-1 );	// get first waveform
     wa += rxlen;			// update wa pointer to next
     rxlen = i16(r,wa); wa += 2;
+    if (rxlen <=0) {
+       write, format="*** edb_access.i:decode_raster(%d)  Channel 2. Bad rxlen value (%d) i=%d\n", 
+              rxlen, wa, i ;
+       break;
+    }
     rx(,2) = r(wa: wa + rxlen-1 );
     wa += rxlen;
     rxlen = i16(r,wa); wa += 2;
+    if (rxlen <=0) {
+       write, format="*** edb_access.i:decode_raster(%d)  Channel 3. Bad rxlen value (%d) i=%d\n", 
+              rxlen, wa, i ;
+       break;
+    }
     rx(,3) = r(wa: wa + rxlen-1 );
    return_raster.tx(i) = &txwf;
    return_raster.rx(i,1) = &rx(,1);
