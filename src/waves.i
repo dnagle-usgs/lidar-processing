@@ -28,6 +28,17 @@ wave_data.x0 = span(-25400,25600,256) (,-:1:256)
 wave_data.y0 = span(-25400,25600,256) (-:1:256,)
 wave_data.levels = span(minlvl,maxlvl,16)
 
+fftx = span(-1.5707961, 1.5585241, 256) (,-:1:256)
+ffty = span(-1.5707961, 1.5585241, 256) (-:1:256,)
+d2r = pi/180.
+dtr = d2r
+tha360 = d2r * span(0, 360, 121)
+circly = cos(tha360)
+circlx = sin(tha360)
+radials = span(10,90,9)
+xradials = 0.9*cos(radials*d2r)
+yradials = 0.9*sin(radials*d2r)
+
 func process_a_segment {
  extern fs_all;
   rr = 19.8;
@@ -65,8 +76,18 @@ wave_data.h  = span(0.0,0.0,256) (-:1:256,);
 wave_data.checker_board = ((-1)^span(1,256,256)) * ((-1)^(span(1,256,256))) (-,)
 
 
+/*//////////////////////////////////////
+// Reverse every other raster so 
+// they all appear to move in the same
+// direction
 ////////////////////////////////////////
-// Find the median elevation for editing out outliers
+ rsel(,1:0:2) = rsel(0:1:-1,1:0:2);
+ rsn(,1:0:2) =  rsn(0:1:-1,1:0:2);
+ rse(,1:0:2) = rse(0:1:-1,1:0:2);
+*/
+
+////////////////////////////////////////
+// Find the median elevation for editing outliers
 ////////////////////////////////////////
   m = median( fs_all.elevation(*) );
  rsel = fs_all.elevation - m;
@@ -95,16 +116,6 @@ wave_data.checker_board = ((-1)^span(1,256,256)) * ((-1)^(span(1,256,256))) (-,)
  rse = fs_all.east - me;
 
 
-/*//////////////////////////////////////
-// Reverse every other raster so 
-// they all appear to move in the same
-// direction
-////////////////////////////////////////
- rsel(,1:0:2) = rsel(0:1:-1,1:0:2);
- rsn(,1:0:2) =  rsn(0:1:-1,1:0:2);
- rse(,1:0:2) = rse(0:1:-1,1:0:2);
-*/
-
 ////////////////////////////////////////
 // Develop a mask array where 1 is good
 // data and zero is bad/missing.
@@ -116,13 +127,17 @@ wave_data.checker_board = ((-1)^span(1,256,256)) * ((-1)^(span(1,256,256))) (-,)
  iy = int(128.5 + rsn/200.)
  ix = int(128.5 + rse/200.)
  edx = where(ix<1)
- ix(edx) = ix(edx) - ix(edx) + 1
+// ix(edx) = ix(edx) - ix(edx) + 1
+ edt(edx) = edt(edx) - edt(edx)
  edx = where(ix>256)
- ix(edx) = ix(edx) - ix(edx) + 256
+// ix(edx) = ix(edx) - ix(edx) + 256
+ edt(edx) = edt(edx) - edt(edx)
  edy = where(iy<1)
- iy(edy) = iy(edy) - iy(edy) + 1
+// iy(edy) = iy(edy) - iy(edy) + 1
+ edt(edy) = edt(edy) - edt(edy)
  edy = where(iy>256)
- iy(edy) = iy(edy) - iy(edy) + 256
+// iy(edy) = iy(edy) - iy(edy) + 256
+ edt(edy) = edt(edy) - edt(edy)
 
 ////////////////////////////////////////
 // Loop on each element  
@@ -143,22 +158,44 @@ wave_data.checker_board = ((-1)^span(1,256,256)) * ((-1)^(span(1,256,256))) (-,)
 ////////////////////////////////////////
  window,0; fma
  plfc,wave_data.h,wave_data.x0,wave_data.y0,levs=wave_data.levels
- write,format="minlvl = %f, maxlvl = %f",minlvl,maxlvl
+ write,format="minlvl = %f, maxlvl = %f, grayscale span(m) = %f  ",minlvl,maxlvl,(maxlvl-minlvl)/100.
 
  factor = 1
 ////////////////////////////////////////
 // Display the FFT wave spectra
 ////////////////////////////////////////
  window,1;  fma
+ limits,-.2*pi,.2*pi,-.2*pi,.2*pi
+ for (lambda=1; lambda<7; lambda++) {
+ kcircl = 2*pi/(lambda*20)
+ plg, kcircl*circly, kcircl*circlx, color="red", marks=0, width=3.
+ }
+ for (lambda=1; lambda<7; lambda++) {
+ kcircl = 2*pi/(lambda*20-10.)
+ plg, kcircl*circly, kcircl*circlx, color="red", type="dash", marks=0, width=3.
+ }
+ for (i3=1; i3<4; i3++) {
+ j = i3*3
+ plg,[yradials(j),-yradials(j)], [xradials(j),-xradials(j)],color="blue",marks=0
+ plg,[xradials(j),-xradials(j)],-[yradials(j),-yradials(j)],color="blue",marks=0
+ }
  wave_data.hf = factor * abs(fft(wave_data.h*wave_data.checker_board,[1,1],[]))^2
- plfc,wave_data.hf,x0,y0
- plc,wave_data.hf,wave_data.x0,wave_data.y0
+// plfc,wave_data.hf,x0,y0
+// plc,wave_data.hf,wave_data.x0,wave_data.y0
+// plc,wave_data.hf,fftx,ffty
+// smooth with essentially equal weighting for 3 by 3 grid of points
+ fftsmooth = 0.00001*wave_data.hf
+ for (xd=-1; xd<2; xd++) {
+ for (yd=-1; yd<2; yd++) {
+ fftsmooth(2:255,2:255) = fftsmooth(2:255,2:255) + wave_data.hf(2+xd:255+xd,2+yd:255+yd)
+ }
+ } 
+ fftsmooth(2:255,2:255) = fftsmooth(2:255,2:255)/9.
+ plc,fftsmooth,fftx,ffty
  write,format="Median elevation %6.2fm\n", m/100.0
 }
 
 
-
-//  h = interp2( y0,x0, rsel, rsn, rse, edt);
 
 
 
