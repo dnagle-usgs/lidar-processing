@@ -332,6 +332,7 @@ proc load_edb {} {
    menu $w.mb.rasters
    menu $w.mb.images
    menu $w.mb.time
+   menu $w.mb.new
    menu $w.mb.help
 
  $w.mb add cascade -label File     -underline 0 -menu $w.mb.file
@@ -340,6 +341,7 @@ proc load_edb {} {
  $w.mb add cascade -label Rasters  -underline 0 -menu $w.mb.rasters
  $w.mb add cascade -label Images   -underline 0 -menu $w.mb.images
  $w.mb add cascade -label Time     -underline 0 -menu $w.mb.time
+ $w.mb add cascade -label New      -underline 0 -menu $w.mb.new
  $w.mb add cascade -label Help     -underline 0 -menu $w.mb.help
 
  $w.mb.file add command -label "Load EAARL Database Index (Edb)..." -command { load_edb }
@@ -633,7 +635,11 @@ Button $w.show_grid -text "Show\nGrid Name" -command {
   source "$src_path/ts_check.ytk"; ts_check;
  }
 
-
+#############
+#   New
+#############
+ $w.mb.new add command -label "mtransect"     -command {  exp_send "help,mtransect\r" }
+ $w.mb.new add command -label "batch_process" -command {  exp_send "help,batch_process\r" }
 
 #############
 #   help
