@@ -115,7 +115,7 @@ if ( is_void( map_path )  ) {
 }
 
 if ( is_void( ffn ) ) { 
-  ffn = sel_file(ss="*.amap *.pbd", path=map_path ) (1);
+  ffn = sel_file(ss="*.amap *.pbd", path=map_path+"/" ) (1);
 }
 
 if ( is_void( utm ) ) {

@@ -397,10 +397,10 @@ See also: make_fs_bath, write_geoall, read_yfile, make_bathy
       // now define H, the laser slant range using 3D version of 
       // Pytagorean Theorem
 
-
-      H= sqrt((data.mnorth - data.north)^2 + 
-              (data.meast  - data.east )^2 + 
-              (data.melevation - data.elevation)^2); 
+      a = double((data.mnorth - data.north))^2;
+      b = double((data.meast - data.east))^2;
+      c = double((data.melevation - data.elevation))^2;
+      H= sqrt(a + b + c);
 
       // the angle of incidence that the laser intercepts the surface is:
       phi_air = acos(pa/H);
@@ -802,6 +802,7 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=) {
                              marker=4
 	}
         if (disp_type == 1) {
+	  a = [];
           ex_bath, rasterno, pulseno, graph=1;
           window, win; plcm, (mindata.elevation+mindata.depth)/100., 
                              mindata.north/100., mindata.east/100., 
@@ -809,6 +810,7 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=) {
                              marker=4
 	}
         if (disp_type == 2) {
+	  a = [];
           ex_bath, rasterno, pulseno, graph=1;
           window, win; plcm, mindata.depth/100., mindata.north/100., 
                              mindata.east/100., msize = msize*1.5, 
