@@ -227,10 +227,10 @@ func boat_normalize_images(src=, dest=, pdb=, min_depth=, max_depth=, verbose=) 
 								if(verbose >= 2) write, format="--/ boat_normalize_images%s", "\n";
 }
 
-func boat_create_lst(sdir=, relpath=, fname=, verbose=) {
-/* DOCUMENT  boat_create_lst(sdir=, relpath=, fname=, verbose=)
+func boat_create_lst(sdir=, relpath=, fname=, offset=, verbose=) {
+/* DOCUMENT  boat_create_lst(sdir=, relpath=, fname=, offset=, verbose=)
 
-	Creates a boat lst file for a directory's jpg's.
+	Creates a boat lst file for one or more directories' jpg's.
 
 	The following parameters are required:
 
@@ -242,9 +242,12 @@ func boat_create_lst(sdir=, relpath=, fname=, verbose=) {
 
 	The following options are optional:
 
-		relpath= The relative path from the sdir to the images. Default is "".
+		relpath= The relative path(s) from the sdir to the images. Default is "".
+			A scalar string or an array of strings may be passed.
 
 		fname= The filename to save the lst file as. Default is boat.lst.
+
+		offset= Puts a seconds offset value into the lst file. Default is to omit.
 
 		verbose= Indicates the verbosity level to run at.
 			Default: 1
@@ -262,10 +265,19 @@ func boat_create_lst(sdir=, relpath=, fname=, verbose=) {
 
 		n/a
 */
+
 	/* Check for required options */
 	if (is_void(sdir)) {
 		write, "One or more required options not provided. See 'help, boat_create_lst'.";
 		if(is_void(sdir)) write, "-> Missing 'sdir='.";
+		return;
+	}
+
+	/* Verify that relpath is a reasonable array */
+	if (!is_void(relpath) && (dimsof(relpath)(1) > 1 || dimsof(relpath)(2) < 1)) {
+		write, "Option 'relpath=' must be a single relative path or an array of one or more relative paths.";
+		write, "Or it may be omitted entirely to default to ''.";
+		write, "See 'help, boat_create_lst'.";
 		return;
 	}
 
@@ -290,19 +302,39 @@ func boat_create_lst(sdir=, relpath=, fname=, verbose=) {
 	if(is_void(relpath)) {
 		relpath = "";
 	}
-	if(0 < strlen(relpath) && "/" != strpart(relpath, strlen(relpath):strlen(relpath))) {
-		relpath = relpath + "/";
+	for(i = 1; i <= numberof(relpath); i++) {
+		if(0 < strlen(relpath(i)) && "/" != strpart(relpath(i), strlen(relpath(i)):strlen(relpath(i)))) {
+			relpath(i) = relpath(i) + "/";
+		}
 	}
-
 
 	/* Validate the fname */
 	if(is_void(fname)) {
 		fname = "boat.lst";
 	}
-								
-								if(verbose >= 2) write, format="==> boat_create_lst(sdir=%s, relpath=%s, fname=%s, verbose=%i)\n", sdir, relpath, fname, verbose;
 
-	cmd = "cd " + sdir + " > /dev/null; echo set camtype 2 > " + fname + "; find " + relpath + "*.jpg | sort >> " + fname + "; cd - > /dev/null"
+	/* Validate the offset */
+	if(is_void(offset)) {
+		offset = 0;
+	} else {
+		offset = int(offset);
+	}
+	
+	if(numberof(relpath) == 1) {
+								if(verbose >= 2) write, format="==> boat_create_lst(sdir=%s, relpath=%s, fname=%s, offset=%i, verbose=%i)\n", sdir, relpath(1), fname, offset, verbose;
+	} else {
+								if(verbose >= 2) write, format="==> boat_create_lst(sdir=%s, relpath=[%i], fname=%s, offset=%i, verbose=%i)\n", sdir, numberof(relpath), fname, offset, verbose;
+	}
+
+	cmd  = "cd " + sdir + " > /dev/null; echo set camtype 2 > " + fname + "; ";
+	if(offset) {
+		cmd += swrite(format="echo set seconds_offset %i >> %s; ", offset, fname);
+	}
+	cmd += "( ";
+	for(i = 1; i <= numberof(relpath); i++) {
+		cmd += "find " + relpath(i) + "*.jpg ; ";
+	}
+	cmd += ") | perl -n -e 'push @files, $_;END{print sort {($a =~ /([0-9]+)_[0-9]+.jpg/)[0] <=> ($b =~ /([0-9]+)_[0-9]+.jpg/)[0] } @files}' >> " + fname + " ; cd - > /dev/null"
 								if(verbose >= 2) write, format=" cmd=%s\n", cmd;
 
 	f = popen(cmd, 0);
@@ -962,7 +994,7 @@ func boat_combine_depth_gps(depth=, gps=, verbose=) {
 }
 
 func boat_apply_offset(boat=, h=, m=, s=, verbose=) {
-/* DOCUMENT  func boat_apply_offset(boat=, h=, m=, s=, verbose=)
+/* DOCUMENT  boat_apply_offset(boat=, h=, m=, s=, verbose=)
 
 	Applies a time offset to a boat dataset. Useful for changing
 	time zones.
