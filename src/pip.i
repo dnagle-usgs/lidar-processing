@@ -33,7 +33,7 @@ func getPoly(void)
   	//fma;
  	plmk, ply(2, 0), ply(1, 0), marker = 4, msize = .5, width = 10
 		
-  	while(!((result(10)== 1) && (result(11)== 4))) 	// while !(CTRL && left mouse) loop
+  	while((!((result(10)== 1) && (result(11)== 4))) && (!(result(10)==2))) 	// while !(CTRL && left mouse) loop
   	{		
    	 	result = mouse(1, 2, prompt)		
     	grow, ply, result(3:4)				// make room for new vertex

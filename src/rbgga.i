@@ -185,12 +185,13 @@ write, format="Lon:%14.3f %14.3f\n", gga(3,min), gga(3,max)
    return g;
 }
 
-func gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=) {
+func gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=, pmulti=) {
  /* DOCUMENT gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=)
  This function uses the 'points in polygon' technique to select a region in the gga window.
  Also see: getPoly, plotPoly, testPoly, gga_win_sel
  */
- extern ZoneNumber, utm, ply
+ extern ZoneNumber, utm, ply, q
+ if (!(pmulti)) q = [];
  if ( is_void(win) ) 
 	win = 6;
  window, win;
@@ -207,7 +208,27 @@ func gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=) {
 	}
      box_pts = ptsInBox(box, gga.lon, gga.lat);
      poly_pts = testPoly(ply, gga.lon(box_pts), gga.lat(box_pts));
-     q = box_pts(poly_pts);
+     if (!(pmulti)) {
+       q = box_pts(poly_pts);
+     } else {
+       v = box_pts(poly_pts);
+       ino = dimsof(q);
+       if ((is_array(ino)) && (ino(1) > 1)) {
+          w = q;
+          q = array(long, ino(2)+1, max(ino(2),numberof(v)));
+	  q(1:numberof(w(,1)),1:dimsof(w)(0)) = w;
+	  q(0,1:dimsof(v)(0)) = v;
+       } else {
+	  if (is_array(ino)) {
+ 	     q = array(long, 2, max(ino(2),numberof(v)));
+	     q(1,1:dimsof(w)(0)) = w;
+	     q(2,1:dimsof(v)(0)) = v;
+          } else {
+	     q = v;
+          }
+       }
+     }
+	  
  }
  write,format="%d GGA records found\n", numberof(q);
  if ( (show != 0) && (show != 2)  ) {
@@ -220,6 +241,44 @@ func gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=) {
 }
 
 
+func gga_multi_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=, multi=) {
+ /* DOCUMENT gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=)
+ This function uses the 'points in polygon' technique to select a region in the gga window.
+ Also see: getPoly, plotPoly, testPoly, gga_win_sel
+ */
+ extern ZoneNumber, utm, ply
+ q = [];
+ if (is_void(multi)) multi=1;
+ if ( is_void(win) ) 
+	win = 6;
+ window, win;
+ for (i=1;i<=multi;i++) {
+  write, format="selecting region %d\n",i;
+  if (!is_array(llarr)) {
+     ply = getPoly();
+     box = boundBox(ply);
+     if (utm) {
+        xx = fll2utm(gga.lat, gga.lon);
+        zidx = (xx(2,)-box(1,1))(mnx);
+        ZN = xx(3,zidx);
+        box = transpose(utm2ll(box(2,), box(1,), ZN));
+	ply = transpose(utm2ll(ply(2,), ply(1,), ZN));
+	show = 0;
+	}
+     box_pts = ptsInBox(box, gga.lon, gga.lat);
+     poly_pts = testPoly(ply, gga.lon(box_pts), gga.lat(box_pts));
+     grow, q,  box_pts(poly_pts);
+  }
+ }
+ write,format="%d GGA records found\n", numberof(q);
+ if ( (show != 0) && (show != 2)  ) {
+   if ( is_void( msize ) ) msize = 0.1;
+   if ( is_void( color ) ) color = "red";
+   if ( is_void( skip  ) ) skip  = 10;
+   plmk, gga.lat( q(1:0:skip)), gga.lon( q(1:0:skip)), msize=msize, color=color;
+ }
+ return q;
+}
 
 func gga_win_sel( show, win=, color=, msize=, skip= , latutm=, llarr=) {
 /* DOCUMENT gga_win_sel( show, color=, msize=, skip= )
