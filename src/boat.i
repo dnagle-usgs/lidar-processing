@@ -24,6 +24,8 @@ local boat_i;
 		help, boat_input_exif
 		help, boat_input_pbd
 		help, boat_get_image_somd
+		help, boat_interpolate_somd_gps
+		help, boat_find_time_indexes
 		help, boat_read_hypack_waypoints
 
 	For general purpose utility functions, see:
@@ -1661,6 +1663,195 @@ func boat_get_image_somd(sdir=, verbose=){
 								
                         if(verbose >= 2) write, format="--/ boat_get_image_somd%s", "\n";
 	return data_somd;
+}
+
+func boat_interpolate_somd_gps(boat=, somd=, range=, verbose=) {
+/* DOCUMENT  boat_interpolate_somd_gps(boat=, somd=, range=, verbose=)
+
+	Adds interpolated data for a list of somd's to a set of boat data.
+
+	The following parameters are required:
+
+		n/a
+
+	The following options are required:
+
+		boat= Boat data as an array of BOAT_PICS.
+
+		somd= Somd's as an array of floats.
+
+	The following options are optional:
+
+		range= If set, the nearest times above and below each somd must
+			be within this range from the somd. Zero will accept points
+			found at any range, which is the default behavior.
+
+		verbose= Indicates the verbosity level to run at.
+			Default: 1
+			Valid values:
+				0 - No progress info
+				1 - Limited progress information
+				2 - Full progress information
+				3 - Full progress information for this function
+					and all called functions
+				-1 - Explicitly request the default level
+				-2 - No progress info for this or any called
+					functions
+
+	Function returns:
+
+		Array of type BOAT_WAYPOINTS_UTM or BOAT_WAYPOINTS_LATLON.
+*/
+   /* Check for required options */
+   if (is_void(boat)||is_void(somd)) {
+      write, "One or more required options not provided. See 'help, boat_interpolate_somd_gps'.";
+      if(is_void(boat)) write, "-> Missing 'boat='.";
+		if(is_void(somd)) write, "-> Missing 'somd='.";
+      return;
+   }
+
+	/* Validate the range */
+	if (is_void(range)) range = 0;
+	range = abs(range);
+
+   /* Validate the verbosity */
+   if (!(is_array(verbose) && !dimsof(verbose)(1))) verbose = 1;
+   if (verbose == -1) verbose = 1;
+   verbose = int(verbose);
+
+   /* Set called function verbosity */
+   if(verbose == 3 || verbose == -2) {
+      func_verbose = verbose;
+   } else {
+      func_verbose = -1;
+   }
+
+								if(verbose >= 2) write, format="==> boat_interpolate_somd_gps(boat=[%i], somd=[%i], range=%i, verbose=%i)\n", numberof(boat), numberof(somd), range, verbose;
+	
+	added = array(BOAT_PICS, numberof(somd));
+	added.somd = somd;
+								if(verbose >= 2) write, "Created an array to hold the interpolated values and added somd to it.";
+	for(i = 1; i <= numberof(somd); i++) {
+		if(!numberof(where(boat.somd == somd(i))) && numberof(where(boat.somd < somd(i))) && numberof(where(boat.somd > somd(i)))) {
+			below_time = max(boat.somd(where(boat.somd < somd(i))));
+			below_index = where(below_time == boat.somd)(1);
+			above_time = min(boat.somd(where(boat.somd > somd(i))));
+			above_index = where(above_time == boat.somd)(1);
+			
+			if(!range || ( somd(i) - below_time <= range && above_time - somd(i) <= range )) {
+				total_time = above_time - below_time;
+				offset_time = somd(i) - below_time;
+				ratio = offset_time / total_time;
+				added.depth(i) = ratio * boat.depth(above_index) + (1 - ratio) * boat.depth(below_index);
+				added.lat(i)   = ratio * boat.lat(above_index)   + (1 - ratio) * boat.lat(below_index);
+				added.lon(i)   = ratio * boat.lon(above_index)   + (1 - ratio) * boat.lon(below_index);
+				added.heading(i) = boat.heading(below_index);
+								if(verbose >= 2) write, format="   %i (%i): Interpolated. GPS: (%.2f,%.2f) Depth: %.2f Heading: %.2f \n", i, int(somd(i)), added.lon(i), added.lat(i), added.depth(i), added.heading(i);
+			} else {
+				added.somd(i) = -1;
+								if(verbose >= 2) write, format="   %i (%i): Not interpolated. Times found were outside of specified range.\n", i, int(somd(i));
+			}
+		} else {
+			if(numberof(where(boat.somd == somd(i)))) {
+								if(verbose >= 2) write, format="   %i (%i): Not interpolated. Information already exists.\n", i, int(somd(i));
+			} else {
+								if(verbose >= 2) write, format="   %i (%i): Not interpolated. Time is above or below range in boat data.\n", i, int(somd(i));
+			}
+			added.somd(i) = -1;
+		}
+	}
+	added = added(where(added.somd >= 0));
+								if(verbose >= 2) write, "Eliminated times that weren't interpolated.";
+	boat = boat_merge_datasets(boat, added, verbose=func_verbose);
+								if(verbose >= 2) write, "Combined interpolated points with original dataset.";
+                        if(verbose >= 2) write, format="--/ boat_interpolate_somd_gps%s", "\n";
+	return boat;
+}
+
+func boat_find_time_indexes(boat=, somd=, verbose=) {
+/* DOCUMENT  boat_find_time_indexes(boat=, somd=, verbose=)
+
+	Finds the indexes of the boat data which have somd's that
+	correspond to somd's in the list of somd data.
+
+	The returned list of indexes can then be used to only look at
+	the boat data that correlates to the list of somd data.
+
+	The following parameters are required:
+
+		n/a
+
+	The following options are required:
+
+		boat= An array of type BOAT_PICS.
+
+		somd= An array of floats, representing somd data.
+
+	The following options are optional:
+
+		verbose= Indicates the verbosity level to run at.
+			Default: 1
+			Valid values:
+				0 - No progress info
+				1 - Limited progress information
+				2 - Full progress information
+				3 - Full progress information for this function
+					and all called functions
+				-1 - Explicitly request the default level
+				-2 - No progress info for this or any called
+					functions
+
+	Function returns:
+
+		Array of type long
+*/
+	
+   /* Check for required options */
+   if (is_void(boat)||is_void(somd)) {
+      write, "One or more required options not provided. See 'help, boat_find_time_indexes'.";
+      if(is_void(boat)) write, "-> Missing 'boat='.";
+		if(is_void(somd)) write, "-> Missing 'somd='.";
+      return;
+   }
+
+	/* Validate the verbosity */
+	if (!(is_array(verbose) && !dimsof(verbose)(1))) verbose = 1;
+	if (verbose == -1) verbose = 1;
+	verbose = int(verbose);
+	
+	/* Set called function verbosity */
+	if(verbose == 3 || verbose == -2) {
+		func_verbose = verbose;
+	} else {
+		func_verbose = -1;
+	}
+	
+								if(verbose >= 2) write, format="==> boat_find_time_indexes(boat=[%i], somd=[%i], verbose=%i)\n", numberof(boat), numberof(somd), verbose;
+
+	idx = array(char, numberof(boat));
+
+	a = 1; b = 1;
+	
+								if(verbose >= 2) write, "Looping through data.";
+	while(a <= numberof(boat.somd) && b <= numberof(somd)) {
+		if(boat(a).somd < somd(b)) {
+								if(verbose >= 2) write, format=" Disregarded boat %i (%.2f)\n", a, float(boat(a).somd);
+			a++;
+		} else if(boat(a).somd > somd(b)) {
+								if(verbose >= 2) write, format=" Advancing from somd %i (%i)\n", b, int(somd(b));
+			b++;
+		} else {
+								if(verbose >= 2) write, format=" Found match: boat %i == somd %i (%i)\n", a, b, int(somd(b));
+			idx(a) = 1;
+			a++;
+		}
+	}
+
+	idxes = where(idx);
+								if(verbose >= 1) write, format=" Found %i time indexes that match.\n", numberof(idxes);
+
+                        if(verbose >= 2) write, format="--/ boat_find_time_indexes%s", "\n";
+	return idxes;
 }
 
 func boat_read_hypack_waypoints(ifname=, ret=, utmzone=, verbose=){
