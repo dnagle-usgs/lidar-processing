@@ -632,7 +632,8 @@ func plot_no_raster_fltlines (gga, edb) {
 
   //also plot over region before first good raster
   lindx = where(sod_edb < 0);
-  indx1 = where(gga.sod <= sod_edb(lindx(0)+2));
+  if (is_array(lindx)) 
+    indx1 = where(gga.sod <= sod_edb(lindx(0)+2));
   if (is_array(indx1)) 
     show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1), marker=4, skip=50,  color = "yellow", utm=utm;
 
