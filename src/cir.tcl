@@ -12,11 +12,11 @@ package require Img
 package require BWidget
 package require vfs::tar
 
-set settings(path) "/data"
-set settings(step)  1
-set settings(sample) 3
-set settings(gamma) 1.0
-set settings(step) 1
+set settings(path) 	"/data"
+set settings(step)  	1
+set settings(sample) 	7
+set settings(gamma) 	1.0
+set settings(step) 	1
  set secs 0
 
 set img0 [ image create photo ]  ;
@@ -60,8 +60,32 @@ proc cirdir { } {
  puts "Path: $settings(path) "
 
 # Setup the month day and year from the first tar file
- lindex [ glob $settings(path)/*-cir.tar ] 0
- set mdy [ lindex [  split [ file tail /cir/081804-161400-cir.tar ] "/-" ] 0]
+ set flst [ lsort [ glob $settings(path)/*-cir.tar  0 ] ]
+ set mdy [ lindex [  split [ file tail $flst ] "/-" ] 0]
+ set settings(month) 0
+ set settings(day)   0
+ set settings(year)  0
+ scan $mdy "%02d%02d%02d" settings(month) settings(day) settings(year)
+ set settings(tar_date) [ format "%02d%02d%02d" $settings(month) \
+					        $settings(day) \
+						$settings(year) ]
+
+
+ set settings(file_date) [ format "%02d%02d%02d" [ expr $settings(month) -1 ]\
+					        $settings(day) \
+						$settings(year) ]
+  puts "$mdy $settings(file_date) $settings(tar_date)"
+  set start_hms [ tfn2hms [ lindex $flst 0 ]] 
+  puts "Start: $start_hms End:[ tfn2hms [ lindex $flst end ]]"
+  show hms $start_hms 
+}
+
+proc tfn2hms { f } {
+   set h 0; set m 0; set s 0;
+  set hms [ lindex [ split [ file tail $f] "-" ] 1 ]
+  scan $hms "%02d%02d%02d" h m s 
+  set rv [ format "%02d:%02d:%02d" $h $m $s ]
+  return $rv
 }
 
 proc resample { s } {
@@ -89,7 +113,7 @@ proc show { cmd t } {
  global settings
  global img img0 last_tar tar secs fn
   set sample $settings(sample)
-  set d "081704"
+##  set d $settings(tar_date)
   switch -exact $cmd {
    incr { 
          incr secs $t;
@@ -107,7 +131,7 @@ proc show { cmd t } {
  set settings(sod) $secs;
  set settings(hms) [ clock format $secs -format "%H:%M:%S" -gmt 1 ]
  set hm  "[clock format $secs -format %H%M -gmt 1 ]00"
- set tf "$d-$hm-cir.tar"
+ set tf "$settings(tar_date)-$hm-cir.tar"
 puts "tar file: $tf"
   puts "path: $settings(path)/$tf"
   if { $tf ne $last_tar } {
@@ -115,7 +139,7 @@ puts "tar file: $tf"
     puts "New tar file:$settings(path)/$tf"
     set last_tar $tf
   }
-  set pat "tar/071704-$hms-*-cir.jpg"
+  set pat "tar/$settings(file_date)-$hms-*-cir.jpg"
   if { [ catch { set fn [ glob $pat ] } ] }  {
     puts "No file: $pat"
   } else {
