@@ -73,6 +73,7 @@ set run 0           ;#
 set ci  0           ;# Current image; glued to .slider
 set nfiles 0        ;# Number of files
 set dir "/data/0/"  ;# Base directory
+set base_dir $dir
 set timern "hms"    ;# "hms" "sod" "cin"
 set fcin 0          ;# First index for range
 set lcin 0          ;# Last index for range
@@ -102,8 +103,8 @@ set rate(5s)      5000
 set rate(7s)      7000
 set rate(10s)    10000
 
-# Do we want to show a message about mogrify if it gets disabled? (Used to avoid displaying the message
-# too excessively)
+# Do we want to show a message about mogrify if it gets disabled? 
+# (Used to avoid displaying the message too excessively)
 # Setting this to -1 will completely disable this.
 set show_mog_message 1
 
@@ -134,6 +135,16 @@ if {$mogrify_exists} {
 # ] End Variable Initialization ####################
 
 # [ Procedures #####################################
+
+# Center a window.
+proc center_win { win } {
+ set lx [ expr [winfo screenwidth  $win]/2 - [winfo width  $win]/2 ]
+  set ly [ expr [winfo screenheight $win]/2 - [winfo height $win]/2 ]
+   wm geometry $win "+$lx+$ly"
+	 wm deiconify $win
+	  update
+	  }
+
 
 proc ytk_exists { } {
 	if {[ lsearch -exact [ winfo interps ] ytk ] != -1} {
@@ -167,56 +178,92 @@ proc ci_write { name1 name2 op } {
 	catch {set cur_mark $mark($ci)}
 }
 
-proc load_file_list { f } {
-# Parameters
-#   f - filename of a list of files to be loaded
 
-	# Bring in Globals
-	global ci fna imgtime dir 
-	global lat lon alt seconds_offset timern frame_off
-	global DEBUG_SF
-	global camtype tarname mark mogrify_exists mogrify_pref
+### Create loader GUI ###
+proc open_loader_window { m1 } {
+	if { ![ winfo exists .loader ] } {
+	   toplevel .loader
+   }
 
-	# Reset defaults
-	set camtype 1
-	set tarname ""
-
-	# Initialize variables
-	# hour minute seconds
-	set h 0
-	set m 0
-	set s 0
-	# filehandle
-	set fname $f
-	set f [ open $f r ]
-	# Set time ticker, for use in updating the displays - 0 to make sure something displays immediately
-	set ticker 0
-	# Set the seconds_offset back to 0 by default
-	set seconds_offset 0
-	
-	### Create GUI ###
-	toplevel .loader
-	
-	set p [split [ winfo geometry . ] "+"]
-	wm geometry .loader "+[lindex $p 1]+[lindex $p 2]"
-	
-	label .loader.status1 -text "LOADING FILES. PLEASE WAIT..."
-	label .loader.status2 -text "Loading JPG files ...:"
-	label .loader.status3 -text "Loading GPS records ...:"
+	label .loader.status1 -text $m1 
 	
 	Button .loader.ok -text "Cancel" \
 		-helptext "Click to stop loading."\
 		-helptype balloon\
 		-command { destroy .loader}
 		
-	pack .loader.status1 .loader.status2 .loader.status3 .loader.ok \
+	pack .loader.status1 .loader.ok \
 		-in .loader -side top -fill x
+	update
+	center_win .loader
+}
+
+proc load_file_list { f method } {
+# Parameters
+#   f - filename of a list of files to be loaded
+#   method  lst|tar
+
+	# Bring in Globals
+	global ci fna imgtime dir base_dir \
+			nsat pdop ns ew lat lon alt seconds_offset timern frame_off \
+			DEBUG_SF camtype tarname mark mogrify_exists mogrify_pref
+
+	# Reset defaults
+	set camtype 1
+	set tarname ""
+
+
+	# Initialize variables
+	# hour minute seconds
+	set h 0
+	set m 0
+	set s 0
+
+	set file_lst ""
+	if { $method == "tar" } {
+	  set success 0;
+	  foreach p { "" cam1 cam2 } {	;# iterate thru possible paths to photos
+	     puts "trying $p"
+	     if { ![ catch {set file_lst [ glob -directory "tarmount/$p" -tails "*.jpg"  ]} ]   } {
+		     incr success;
+		     set dir "tarmount/$p"
+			  set file_lst [ lsort -increasing $file_lst ]
+		     break;
+		  }
+	  } 
+     puts "success $success with $p"
+
+# The $success variable is 1 if photos were found and 0 if none were found.
+
+
+
+	  set i [ llength $file_lst]
+	  set nbr_photos $i;
+	  set file_lst [ lsort -increasing $file_lst ]
+	  puts "$i photos found in tar"
+	} 
+	if { $method == "lst" } {
+	  set fname $f
+	  set f [ open $f r ]
+	  set file_lst [ read $f ] 
+	  set i [ llength $file_lst]
+	  set nbr_photos $i;
+	  puts "$i photos found"
+   }   ;# end of lst
+# Set time ticker, for use in updating the displays - 0 to make 
+# sure something displays immediately
+	set ticker 0
+# Set the seconds_offset back to 0 by default
+	set seconds_offset 0
 	
+
+
+
 	# Do some looping, initializing some globals as we go
 	# Iterate through the file, incrementing i for each line
-	for { set i 1 } { ![ eof $f ] } { incr i } { 
+	for { set i 1 } { $i < $nbr_photos } { incr i } { 
 		# Set fn to the filename of the current line
-		set fn [ gets $f ]
+		set fn [ lindex $file_lst $i ]
 		# Split the file name based on _
 		# cam1   filename format is cam1/cam1_CAM1_2003-09-21_131100.jpg
 		#                           cam1/cam1_CAM1_YYYY-MM-DD_HHMMSS.jpg
@@ -244,7 +291,7 @@ proc load_file_list { f } {
 			set imgtime(hms$hms) $i;
 			if { [expr int([clock clicks -milliseconds] / 200)] - $ticker > 0 } {
 				set ticker [expr int([clock clicks -milliseconds] / 200)]
-				.loader.status2 configure -text "Loaded $i JPG files"
+				.loader.status1 configure -text "Loaded $i JPG files"
 				update
 			}
 									if { $DEBUG_SF } { puts "loaded: $fn" }
@@ -254,7 +301,8 @@ proc load_file_list { f } {
 			incr i -1
 		}
 	} 
-	.loader.status2 configure -text "Loaded $i JPG files"
+	.loader.status1 configure -text "Loaded $i Jpg photos"
+	update
 	
 	set nfiles [ expr $i -2 ]
 	set ci 0
@@ -265,9 +313,21 @@ proc load_file_list { f } {
 		#set ggafn 010614-102126.nmea
 		#set ggafn  "/gps/165045-195-2001-laptop-ttyS0C-111X.gga"
 		set ggafn  "gga"
-		if { [ catch {set ggaf [ open $dir/$ggafn "r" ] } ] == 0 } {
+		puts "Attempting to load gps from: $base_dir/$ggafn"
+# Look around for some ascii gga data.
+     set have_gps 0; 
+		if { [ catch {set ggaf [ open "tarmount/gps.gga" "r" ] } ] == 0 } {
+		  puts "loaded gps.gga from within tar file.";
+		  set have_gps 1;
+		} elseif { [ catch {set ggaf [ open $base_dir/$ggafn "r" ] } ] == 0 } {
+		  puts "loaded gps..";
+		  set have_gps 1;
+		}
+      if { $have_gps } {
 			for { set i 0 } { ![ eof $ggaf ] } { incr i } { 
 				set ggas [ gets $ggaf ]  
+				if { [string length $ggas] == 0 } { break }	;# This cuz eof doesn't seem to work
+				                                       ;# with vfs mounted files at the moment..
 				if { [ string index $ggas 13 ] == "0" } {
 					set gt [ string range $ggas 6 11 ];
 					set hrs [ expr [ string range $gt 0 1 ]  ];
@@ -276,21 +336,27 @@ proc load_file_list { f } {
 					set hms "$ms"
 					if { [expr int([clock clicks -milliseconds] / 200)] - $ticker > 0 } {
 						set ticker [expr int([clock clicks -milliseconds] / 200)]
-						.loader.status3 configure -text "Loaded $i GPS records\r"
+						.loader.status1 configure -text "Loaded $i GPS records\r"
 						update
 					}
 					#puts -nonewline "  $gt\r"
 					if { [ catch { set tmp $imgtime(hms$gt) } ] == 0 } {
 						set lst [ split $ggas "," ];
-						set lat(hms$gt) [ lindex $lst 3 ][ lindex $lst 2 ]
-						set lon(hms$gt) [ lindex $lst 5 ][ lindex $lst 4 ]
+						set lat(hms$gt)  [ lindex $lst 2 ]
+						set ns(hms$gt)   [lindex $lst  3 ]
+						set lon(hms$gt)  [ lindex $lst 4 ]
+						set ew(hms$gt)   [ lindex $lst 5 ]
+						set pdop(hms$gt) [ lindex $lst 8 ]
+						set nsat(hms$gt) [ lindex $lst 7 ]
 						scan [ lindex $lst 9 ] "%d" a
-						set alt(hms$gt) $a[ lindex $lst 10 ]
-						#	 puts "hms$gt $lat(hms$gt) $lon(hms$gt)";
+						set alt(hms$gt) $a
+
+# GPGGA,131234.00,3820.089266,N,07531.209274,W,1,07,01.0,00023.239,M,-036.306,M,,*5A
+#						puts "hms$gt: GPGGA,$gt,$lat(hms$gt),$ns(hms$gt),$lon(hms$gt),$ew(hms$gt),1,$nsat(hms$gt),$pdop(hms$gt),$alt(hms$gt),M,$alt(hms$gt),M";
 					} 
 				}
 			}
-			.loader.status3 configure -text "Loaded $i GPS records\r"
+			.loader.status1 configure -text "Loaded $i GPS records\r"
 		}
 	}
 	
@@ -316,17 +382,18 @@ proc load_file_list { f } {
 				}
 				if { [expr int([clock clicks -milliseconds] / 200)] - $ticker > 0 } {
 					set ticker [expr int([clock clicks -milliseconds] / 200)]
-					.loader.status3 configure -text "Loaded $i GPS records\r"
+					.loader.status1 configure -text "Loaded $i GPS records\r"
 					update
 				}
 			}
-			.loader.status3 configure -text "Loaded $i GPS records\r"
+			.loader.status1 configure -text "Loaded $i GPS records\r"
+			update
 		}
 	}
 
-	.loader.status1 configure -text "ALL FILES LOADED! YOU MAY BEGIN..."
+	.loader.status1 configure -text "$nbr_photos photos loaded,\nYou may begin..."
 	.loader.ok configure -text "OK" 
-	after 1500 {destroy .loader}
+	after 3500 {destroy .loader}
 
 	if { $mogrify_exists } {
 		if { $camtype == 1 } {
@@ -339,7 +406,6 @@ proc load_file_list { f } {
 	} else {
 		set mogrify_pref "only tcl"
 	}
-
 	return $nfiles
 }
 
@@ -497,13 +563,13 @@ proc title { t } {
 }
 
 proc show_img { n } {
-	global fna nfiles img run ci data imgtime dir img_opts
-	global lat lon alt seconds_offset hms sod timern 
-	global cin hsr frame_off
-	global llat llon
-	global pitch roll head yes_head
-	global zoom camtype DEBUG_SF
-	global mogrify_pref mogrify_exists tarname
+# Use as few global def as possible to keep the speed up.  
+# If you have more global vars declare them on a 
+# continued line as follows:
+	global fna nfiles img run ci data imgtime dir img_opts \
+	       lat lon alt ew ns pdop nsat seconds_offset hms sod timern cin hsr \
+			 frame_off llat llon pitch roll head yes_head zoom \
+			 camtype DEBUG_SF mogrify_pref mogrify_exists tarname 
 
 	set cin $n
 
@@ -531,7 +597,7 @@ proc show_img { n } {
 		set fn /tmp/sf_tmp_[pid].jpg
 
 		# Make sure we can read/write the temp file
-		file attributes $fn -permissions ug+rw
+		file attributes $fn -permissions uog+rw
 
 		.canf.can config -cursor watch
 
@@ -643,7 +709,7 @@ proc show_img { n } {
 
 		catch { set llat $lat(hms$hms) }
 		catch { set llon $lon(hms$hms) }
-		if { [ catch { set data "$hms ($sod) $lat(hms$hms) $lon(hms$hms) $alt(hms$hms)"} ]  } { 
+		if { [ catch { set data "$hms ($sod) $ns(hms$hms)$lat(hms$hms) $ew(hms$hms)$lon(hms$hms) $alt(hms$hms)M $pdop(hms$hms) $nsat(hms$hms)"} ]  } { 
 			set data "hms:$hms sod:$sod  No GPS Data"   } 
 
 			if { $timern == "cin" } { set hsr $cin }
@@ -657,7 +723,8 @@ proc show_img { n } {
 }
 
 proc archive_save_marked { type } {
-	global mark fna dir range_touched
+	global mark fna dir range_touched imgtime \
+		gt lat lon ew ns pdop alt nsat
 	
 	if {!([string equal "zip" $type] || [string equal "tar" $type])} {
 		tk_messageBox -type ok -icon error \
@@ -691,10 +758,19 @@ proc archive_save_marked { type } {
 				exec mkdir $tmpdir
 
 				set mark_count 0
-				for { set i [expr {int([.slider cget -from])}] } { $i <= [expr {int([.slider cget -to])}] } { incr i } {
+				set start [expr {int([.slider cget -from])}];
+				set stop  [expr {int([.slider cget -to])}];
+				set of [ open "$tmpdir/gps.gga" "w+" ]
+				for { set i $start } { $i <= $stop } { incr i } {
+				      set gt  $imgtime(idx$i);
+						puts $of "GPGGA,$gt.00,$lat(hms$gt),$ns(hms$gt),$lon(hms$gt),$ew(hms$gt),1,$nsat(hms$gt),$pdop(hms$gt),$alt(hms$gt),M,$alt(hms$gt),M";
+				}
+				close $of
+				for { set i $start } { $i <= $stop } { incr i } {
 					if { $mark($i) } {
 						incr mark_count
-						exec cp $dir/$fna($i) $tmpdir;
+##						puts "Copying $dir/$fna($i) ---> $tmpdir"
+						file copy -force $dir/$fna($i) $tmpdir;
 					}
 				}
 
@@ -703,14 +779,14 @@ proc archive_save_marked { type } {
 					cd $tmpdir
 
 					if {[string equal "tar" $type]} {
-						exec tar -cvf $sf .;
+						exec ls -1 > filelist; 
+						exec tar -cvf $sf  -T filelist --exclude filelist;
 					} elseif {[string equal "zip" $type]} {
 						eval exec zip $sf [glob *.jpg];
 					}
 
 
 				} else {
-
 					cd $dir;
 					exec rm -r $tmpdir;
 
@@ -803,7 +879,7 @@ proc calculate_zoom_factor { initial percentage } {
 proc clear_marks { } {
 	global mark cur_mark ci
 
-	array unset mark
+#	array unset mark
 	
 	for { set i [expr {int([.slider cget -from])}] } { $i <= [expr {int([.slider cget -to])}] } { incr i } {
 		set mark($i) 0
@@ -942,11 +1018,31 @@ menu .mb.zoom
 
 .mb.file add command -label "Select File.." -underline 0 \
 	-command {
-		set f [ tk_getOpenFile  -filetypes { {{List files} {.lst}} } -initialdir $dir ];
+		set f [ tk_getOpenFile  -filetypes { 
+		     { {Tar Files} {.tar} } 
+			  { {List files} {.lst} }
+			} -initialdir $base_dir ];
 		if { $f != "" } {
-			set split_dir [split $f /]
-			set dir [join [lrange $split_dir 0 [expr [llength $split_dir]-2]] /]
-			set nfiles [ load_file_list  $f ];
+		   set base_dir [ file dirname $f ]
+		   if { [file extension $f ] == ".tar" } {
+          puts "Its a tar.  vfs Mounting it..";
+			 open_loader_window "VFS Mounting\n$f.\nThis may take several seconds, even a minute! "
+			 .loader.ok configure -state disabled
+			 update 
+			 set tf [ vfs::tar::Mount $f tarmount ];
+			 puts "Mounted.."
+			 .loader.status1 configure -text "$f\nis mounted."
+			 .loader.ok configure -state normal
+			 update
+			 set dir "tarmount/cam1";
+			  set nfiles [ load_file_list  $f tar ];
+		   } else {
+			 open_loader_window "Loading files.\nThis will take a few seconds."
+			  ;# Do this if we have a .lst file
+			  set split_dir [split $f /]
+			  set dir [join [lrange $split_dir 0 [expr [llength $split_dir]-2]] /]
+			  set nfiles [ load_file_list  $f lst ];
+			}
 			enable_controls
 			.slider configure -to $nfiles
 			set ci 1
@@ -959,8 +1055,13 @@ menu .mb.zoom
 
 ##### ][ Edit Menu
 
-.mb.archive add command -label "Mark This Frame"                -underline 0 \
-   -command { global cur_mark; if {[string equal [.cf2.mark cget -state] "normal"]} {set cur_mark 1} }
+.mb.archive add command -label "Mark This Frame" -underline 0 \
+   -command { 
+	    global cur_mark; 
+	   if { [string equal [.cf2.mark cget -state] "normal"] } {
+		  set cur_mark 1
+	   } 
+	}
 .mb.archive add command -label "Unmark This Frame"              -underline 0 \
    -command { global cur_mark; if {[string equal [.cf2.mark cget -state] "normal"]} {set cur_mark 0} }
 .mb.archive add command -label "Clear All Marks"                -underline 0 \
@@ -1081,7 +1182,7 @@ canvas .canf.can -height 240 -width 320 \
 
 .canf.can create image 0 0 -tags img -image $img -anchor nw 
 
-set me "EAARL image/data Animator \n$version\n$revdate\nC. W. Wright\nwright@lidar.wff.nasa.gov"
+set me "EAARL image/data Animator \n$version\n$revdate\nC. W. Wright\ncharles.w.wright@nasa.gov"
 
 .canf.can create text 20 120 -text $me -tag tx -anchor nw 
 
@@ -1136,7 +1237,7 @@ Button .cf1.plotpos  \
 tk_optionMenu .cf2.speed speed Fast 100ms 250ms 500ms 1s \
 	1.5s 2s 4s 5s 7s 10s
 
-label .cf2.lbl -text "Step by"
+label .cf2.lbl -text "Step"
 
 tk_optionMenu .cf2.step step 1 2 5 10 20 30 60 100
 
@@ -1150,10 +1251,9 @@ SpinBox .cf2.offset \
 	-width 5 \
 	-textvariable frame_off;
 
-checkbutton .cf2.mark \
+button .cf2.mark \
 	-state disabled \
-	-variable cur_mark \
-	-text "Mark" \
+	-text "Mk" \
 	-command {
 		global mark ci cur_mark
 		set mark($ci) $cur_mark
