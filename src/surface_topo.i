@@ -80,7 +80,7 @@ return q
 
 
 func display(rrr, i=,j=, cmin=, cmax=, size=, win=, dofma=, edt= ) {
-/* DOCUMENT display, i, j, cmin=, cmax=, size=
+/* DOCUMENT display(rrr, i=,j=, cmin=, cmax=, size=, win=, dofma=, edt= )
 
  
    Display EAARL laser samples.

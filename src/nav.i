@@ -7,9 +7,61 @@
 
   W. Wright
 
+  6/3/2002 Added plrect function.
+
+
 */
 
 write,"$Id$"
+
+
+func plrect( rec, color=, text=, width=) {
+/* DOCUMENT plrect( rec, color=, text=, width=)
+
+   Use this to plot a rectangle on a lat/lon map and include a
+text name.  This is useful for plotting areas of interest.  The
+rec is a vector with four elements arranged as:
+  [ lat0, lon0, lat1, lon1 ]
+
+ The values define the left/right top/bottom corner points of the
+ rectangle.  The order is not important, as this function will 
+ pair the lower left and upper right points automatically. 
+
+*/
+
+ 
+  if ( is_void(color) ) 
+	color = "red";
+
+  if ( is_void(width) )
+	width= 1.0;
+
+rec
+  s = min( rec(1), rec(3) ); 
+  m = max( rec(1), rec(1) );
+  rec(1) = s;
+  rec(3) = m;
+  s = min( rec(2), rec(4) ); 
+  m = max( rec(2), rec(4) );
+  rec(2) = s;
+  rec(4) = m;
+rec
+
+
+
+  y = [ rec(1), rec(1), rec(3), rec(3), rec(1) ];
+  x = [ rec(2), rec(4), rec(4), rec(2), rec(2) ];
+x
+y
+  plg, y, x, marks=0, color=color, width=width
+  if ( !is_void(text) ) {
+   text
+   plt, "^" + text, x(4), y(4), height=8, tosys=1,color=color
+  }
+}
+
+
+
 
 extern FB
 /* DOCUMENT FB
@@ -165,6 +217,8 @@ func sdist( junk, block=, centerline= , fill=) {
 */
 extern sr, dv, rdv, lrdv, rrdv;
 extern blockn, segn;
+  aw = float(aw);
+  sw = float(sw);
   segs = aw / sw; 		// compute number of segments
   sega = array(float, int(segs),4);
   sr = array(float, 7, 2);  	//the array to hold the rectangle

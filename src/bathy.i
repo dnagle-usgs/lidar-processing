@@ -100,10 +100,11 @@ func run_bath( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) 
 }
 
 struct BATH_CTL{
-  float laser;
-  float water;
-  float agc;
-  float thresh;
+  float laser;		// system exponential decay  ( -1.5 )
+  float water;		// water column exponential decay ( -0.3 )
+  float agc;		// exponential equalizer ( -5 )
+  float thresh;		// threshold value ( 3 )
+  int   last;		// last nanosecond to consider (maxdepth in ns)  ( 150 )
 } ;
 
 extern bath_ctl;
@@ -286,7 +287,8 @@ plg, laser_decay, color="magenta"
 plg,agc*40
 }
 
-  if ( is_void(last) ) 		// see if user specified the max depth
+
+  if ( is_void(last) ) 		// see if user specified the max depth as input to this func
 	last = n;
 
   if ( n > last ) 		

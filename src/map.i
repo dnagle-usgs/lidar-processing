@@ -31,11 +31,11 @@ extern dllmap;          // array of pointers to digital map data
 
 if ( is_void( map_path )  ) {
 // Set the following to where the maps are stored on your system.
-  map_path = "/home/anayegan/Yorick/maps"
+  map_path = "/home/wright/lidar-processing/maps"
 }
 
 if ( is_void( ffn ) ) {
-  ffn = sel_file(ss="*.pbd", path="/home/anayegan/Yorick/maps/") (1);
+  ffn = sel_file(ss="*.pbd", path="/home/wwright/lidar-processing/maps/") (1);
 }
 
 if ( is_void(color) ) 
@@ -96,7 +96,7 @@ if ( is_void( map_path )  ) {
 }
 
 if ( is_void( ffn ) ) { 
-  ffn = sel_file(ss="*.amap *.pbd", path="./maps/") (1);
+  ffn = sel_file(ss="*.amap *.pbd", path=map_path ) (1);
 }
 
 if ( is_void( utm ) ) {
