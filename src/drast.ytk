@@ -73,8 +73,9 @@ set blist { .rslider.bf1.stop    .rslider.bf1.play        .rslider.bf2.exwf \
 
 ##AN: added procedure sod2rn to convert sf sod value to rn
 proc sod2rn { sod } {
-    global rn thetime rnf rnl
-    set cmd "where(((edb.seconds - edb(1).seconds - 4*3600) + edb(1).seconds%86400) == $thetime)"
+    global rn thetime rnf rnl 
+###    set cmd "where(((edb.seconds - edb(1).seconds - 4*3600) + edb(1).seconds%86400) == $thetime)"
+    set cmd "where(((edb.seconds - soe_day_start) - eaarl_time_offset ) == $thetime)"
     exp_send "rnarr = $cmd \r"
     expect ">"
     exp_send "write, format=\"%i \",rnarr(1)\r"

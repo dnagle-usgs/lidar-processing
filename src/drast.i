@@ -42,6 +42,7 @@ extern wfa, depth_display_units;
 }
 
 
+last_somd = 0;
 
 
 func ndrast( r, units=  ) {
@@ -61,12 +62,17 @@ func ndrast( r, units=  ) {
  extern aa;
  extern irange, sa;
  extern x0,x1;
+ extern last_somd;
 
   aa = array( short(255), 250, 120, 3);
 
  npix = r.npixels(1) 
  somd = (rr.soe - soe_day_start)(1);
-////  tkcmd, swrite(format="send sf_a.tcl set hsr %d; gotoImage", somd );
+ if ( somd != last_somd ) {
+    tkcmd, swrite(format="send sf_a.tcl set hsr %d", somd );
+    tkcmd, "send sf_a.tcl gotoImage"
+    last_somd = somd;
+ }
  for (i=1; i< npix; i++ ) {
   for (j=1; j<=3; j++ ) {
     n = numberof( *r.rx(i,j) ); 		// number of samples 
