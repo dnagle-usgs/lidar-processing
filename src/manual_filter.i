@@ -70,6 +70,13 @@ func select_region(data, win=, plot=) {
 func select_points(celldata, exclude=, win=) {
   // amar nayegandhi 11/21/03
 
+if ( is_void(celldata) ) {
+  tkcmd, "tk_messageBox -icon error "+
+     "-message \"No data found in the variable you selected."+
+     "Please select another one.\"   \r"
+  return;
+}
+
 write,"Left: Examine pixel, Center: Save Pixel, Right: Quit"
  
  if (is_void(win)) win = 4;
@@ -107,7 +114,7 @@ write,"Left: Examine pixel, Center: Save Pixel, Right: Quit"
       rtn_data = grow(rtn_data, mindata);
       continue;
      } else {
-      write, "Point already saved.";
+      write, "Use the left button to select a new point first.";
      }
    
   }

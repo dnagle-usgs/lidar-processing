@@ -1143,6 +1143,7 @@ func clean_bathy(depth_all, rcf_width=) {
         depth_all = 0
     }
   }
+  write, "cleaning completed.";
   return depth_all
 }
 
