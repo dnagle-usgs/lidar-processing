@@ -283,8 +283,8 @@ func soe2ymd(soe) {
 	
 	if(y % 4 != 0) { leap = 0; }
 	else {
-		if(y % 100 == 0 && y % 400 != 0) { leap = 1; }
-		else { leap = 0; }
+		if(y % 100 == 0 && y % 400 != 0) { leap = 0; }
+		else { leap = 1; }
 	}
 	
 	if      (doy <= 31     ) {m =  1;d=doy         ;}
