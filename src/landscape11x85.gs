@@ -1,4 +1,5 @@
 # Gist work.gs drawing style
+
 # $Id$ 
 
 # Derived by W. Wright from work.gs 
@@ -7,7 +8,7 @@
 # A single coordinate system on a portrait page
 # Legends: two columns below viewport, contours in single column to right
 
-#   Xwindow dims Width: 1108 Height: 844
+#   Xwindow dims Width: 830 Height: 660
 
 # See the header file gist.h for a more complete description of the
 # meanings of the various keywords set in this file; they coincide with the
@@ -61,15 +62,15 @@ default = {
 # to convert inches to the numbers you need here, 
 # multiply inches by 0.093951
 #inches	       .5 	10.5	  .5	   8.0
-  viewport= { 0.07897, 0.986485, 0.07697, 0.731608 },
+  viewport= { 0.07897, 1.000000, 0.07697, 0.731608 },
 
   ticks= {
 
     horiz= {
       nMajor= 7.5,  nMinor= 50.0,  logAdjMajor= 1.2,  logAdjMinor= 1.2,
-      nDigits= 6,  gridLevel= 1,  flags= 0x033,
+      nDigits= 12,  gridLevel= 1,  flags= 0x033,
       tickOff= 0.0007,  labelOff= 0.0182,
-      tickLen= { 0.01, 0.0005, 0.0052, 0.0026, 0.0013 },
+      tickLen= { 0.01, 0.0091, 0.0052, 0.0026, 0.0013 },
       tickStyle= { color= -2,  type= 1,  width= 1.0 },
       gridStyle= { color= -2,  type= 3,  width= 1.0 },
       textStyle= { color= -2,  font= 0x08,  height= 0.015,
@@ -78,7 +79,7 @@ default = {
 
     vert= {
       nMajor= 7.5,  nMinor= 50.0,  logAdjMajor= 1.2,  logAdjMinor= 1.2,
-      nDigits= 7,  gridLevel= 1,  flags= 0x033,
+      nDigits= 12,  gridLevel= 1,  flags= 0x033,
       tickOff= 0.0007,  labelOff= 0.0182,
       tickLen= { 0.0123, 0.0091, 0.0052, 0.0026, 0.0013 },
       tickStyle= { color= -2,  type= 1,  width= 1.0 },

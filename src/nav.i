@@ -7,8 +7,9 @@
 
   W. Wright
 
-  9/4/2002 added pl_fp function to display flightplans.
-  6/3/2002 Added plrect function.
+ 11/12/2002  Fixed problem with single width flight blocks.
+  9/4/2002   Added pl_fp function to display flightplans.
+  6/3/2002   Added plrect function.
 
 
 */
@@ -389,7 +390,7 @@ if (is_void(stturn) )
 if (is_void(msec) )
 	msec = 50.0		// speed in meters/second
 
-write,format="# %f %f %f %f %d\n", sw, aw, msec, stturn, blockn
+write,format="# sw=%f aw=%f msec=%f ssturn=%f block=%d\n", sw, aw, msec, stturn, blockn
 write,format="# %f %f %f %f \n", res(2),res(1), res(4), res(3)
  segsecs = res(0)*1000.0 / msec
  blocksecs = (segsecs + stturn ) * int(segs)
@@ -410,7 +411,8 @@ zone = array(ZoneNumber(1), dimsof( sega) (2) );
  if ( (fill & 0x1 ) == 1 ) {
   pldj,sega(rg,2),sega(rg,1),sega(rg,4),sega(rg,3),color="yellow"
   rg = 2:0:2
-  pldj,sega(rg,2),sega(rg,1),sega(rg,4),sega(rg,3),color="white"
+  if ( (dimsof(sega)(2)) > 1 ) 
+       pldj,sega(rg,2),sega(rg,1),sega(rg,4),sega(rg,3),color="white"
  }
 
  rg = 1
