@@ -237,7 +237,25 @@ func gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=, pmulti=) {
    if ( is_void( skip  ) ) skip  = 10;
    plmk, gga.lat( q(1:0:skip)), gga.lon( q(1:0:skip)), msize=msize, color=color;
  }
+ test_selection_size(q);
  return q;
+}
+
+func test_selection_size (q) {
+  sel_secs = (( gga_find_times(q )(dif,sum)))(1);
+ write,format="%5.1f seconds of data selected\n", sel_secs
+ if ( sel_secs > 500 ) {
+  msg = "** Warning!!!  The area you selected is probably too large."+
+        "               We recommend keeping the selected area less then"+
+        "               500 seconds of flight time."+
+        "Try selecting a smaller area before pressing the Process Now button"
+       if ( _ytk ) {
+      cmd = "tk_messageBox -icon warning -message {" + msg + "}\n"
+      tkcmd, cmd
+    } else {
+      write,format="\n%s\n",msg
+    }
+ }
 }
 
 
@@ -277,6 +295,7 @@ func gga_multi_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=, multi
    if ( is_void( skip  ) ) skip  = 10;
    plmk, gga.lat( q(1:0:skip)), gga.lon( q(1:0:skip)), msize=msize, color=color;
  }
+ test_selection_size(q);
  return q;
 }
 
@@ -345,6 +364,7 @@ properly to the zoom buttons.
    plmk, gga.lat( q(1:0:skip)), gga.lon( q(1:0:skip)), msize=msize, color=color;
  }
    
+ test_selection_size(q);
  return q;
 }
 
