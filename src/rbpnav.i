@@ -147,7 +147,7 @@ func precision_warning {
  to be a precision trajectory.\
   It should not be used in the \
  production of final data products\
- or to access accuracy of the system. i\
+ or to assess accuracy of the system. i\
       }"
 }
 
