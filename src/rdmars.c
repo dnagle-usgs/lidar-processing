@@ -48,11 +48,17 @@ NTPSOE ntpsoe;
 unsigned int tcount, dcount, count;
 double start, stop, et;
 
-main() {
+main( int argc, char *argv[]) {
  unsigned char t;
  int last_time;
+ unsigned long int offset;
   f = stdin;
-  while ( !feof(stdin) ) {
+  if ( (f = fopen( argv[1], "r")) == NULL ) {
+    printf("Usage is:   rdmars inputfile\n");
+    return -1;
+  }
+  while ( !feof(f) ) {
+    offset = ftell(f);
     t = fgetc( f );
     switch (t) {
      case 0x7d:
@@ -66,7 +72,7 @@ main() {
        fread( &raw_dmars, sizeof(raw_dmars), 1, f);
        dcount++;
        if ( (raw_dmars.tspo - last_time) > 1 ) {
-         printf("\nGap: %8.3f %6.3f", 
+         printf("\nGap detected: offset=0x%08x tspo=0x%08x %8.3f %6.3f", offset, raw_dmars.tspo,
            raw_dmars.tspo/200.0, (raw_dmars.tspo - last_time)/200.0);
        }
        last_time = raw_dmars.tspo;
