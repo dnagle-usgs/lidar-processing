@@ -63,64 +63,76 @@ menu .l1wid.mb.load
 menu .l1wid.mb.options
 .l1wid.mb   add cascade -label File -underline 0 -menu .l1wid.mb.file
 
-.l1wid.mb.file add command -label "Read Data File... " -underline 10 -command {
-        global data_file_path 
-        if { [info exists data_file_path ] == 0 } {
-              set data_file_path ""
-        }
-  	exp_send "data_ptr = read_yfile(initialdir=\"$data_file_path\"); \r"
+.l1wid.mb.file add command -label "Read Binary Data file..." -underline 0 -command {
+  set _ytk_fn [ tk_getOpenFile -filetypes \
+	{  
+           {{Yorick PBD file} {.pbd}  }
+           {{IDL Binary file} {.bin}  }
+           {{IDL Binary file} {.edf}  }
+	   {{All Files}       {*}   }
+        }  ]
+  if { $_ytk_fn != "" } {
+    switch [ file extension $_ytk_fn ] {
+    ".pbd" {  
+	    set ytk_pbd_dir [ file dirname $_ytk_fn ]
+            exp_send "_ytk_pbd_f = openb(\"$_ytk_fn\"); restore, _ytk_pbd_f;\r"
+            exp_send "show, _ytk_pbd_f\r"
+ 	       toplevel .stby
+            exp_send "\r"
+            label .stby.lbl -text "Loading\n$_ytk_fn\nplease wait.."
+            pack .stby.lbl
+ 	    update
+            center_win .stby
+            expect ">"
+            destroy .stby
+           }
+     ".edf" -
+     ".bin" {
+        #global data_file_path 
+        #if { [info exists data_file_path ] == 0 } {
+        #      set data_file_path ""
+        #}
+	set ytk_bin_dir [ file dirname $_ytk_fn ]/
+	set ytk_bin_file [ file tail $_ytk_fn ]
+  	exp_send "data_ptr = read_yfile(\"$ytk_bin_dir\", fname_arr=\"$ytk_bin_file\"); \r"
 	expect ">"
 	exp_send "read_pointer_yfile, data_ptr, mode=1; \r"
 	expect ">"
 	set ptype [.l1wid.bf4.1.p getvalue]
-	
-#	if {$ptype == 0} {
-#	  exp_send "fs_all = *data_ptr(1);\r"
-#	  expect ">"
-#	}
-#	if {$ptype == 1} {
-#	  exp_send "depth_all = *data_ptr(1);\r"
-#	  expect ">"
-#	}
-#	if {$ptype == 2} {
-#	  exp_send "veg_all = *data_ptr(1);\r"
-#	  expect ">"
-#	}
-
+     }
+    }
   }
-	
-.l1wid.mb.file add command -label "Read Data Directory... " -underline 10 -command {
-	global data_file_path
-        if { [info exists data_file_path ] == 0 } {
-              set data_file_path "~/"
-        }
-	destroy .l1dir
-        toplevel .l1dir
-	frame .l1dir.1
-	LabelEntry .l1dir.op  -width 70 -relief sunken -bd 3 -label "Path:  " -helptext "Enter Data Path Here" \
-		-textvariable path -text $data_file_path
- 	Button .l1dir.1.ok -text "OK" -width 5 -command {
-	 if {$path != ""} {
-	  .l1dir.op configure -state disabled
-	  .l1dir.1.ok configure -state disabled
-  	  exp_send "data_ptr = read_yfile(\"$path\"); \r"
-	  expect ">"
-          exp_send "read_pointer_yfile, data_ptr, mode=1; \r"
-	  expect ">"
-	  set ptype [.l1wid.bf4.1.p getvalue]
-	  destroy .l1dir
-	 }
-	}
-	   
- 	Button .l1dir.1.cancel -text "Cancel" -width 5 -command {
-	   destroy .l1dir
- 	}
-	pack .l1dir.1.ok .l1dir.1.cancel -side left -padx 5
-	pack .l1dir.op .l1dir.1 -side top -pady 5	
 }
 
+#.l1wid.mb.file add command -label "Read Data File... " -underline 10 -command {
+#        global data_file_path 
+#        if { [info exists data_file_path ] == 0 } {
+#              set data_file_path ""
+#        }
+#  	exp_send "data_ptr = read_yfile(initialdir=\"$data_file_path\"); \r"
+#	expect ">"
+#	exp_send "read_pointer_yfile, data_ptr, mode=1; \r"
+#	expect ">"
+#	set ptype [.l1wid.bf4.1.p getvalue]
+#	
+##	if {$ptype == 0} {
+##	  exp_send "fs_all = *data_ptr(1);\r"
+##	  expect ">"
+##	}
+##	if {$ptype == 1} {
+##	  exp_send "depth_all = *data_ptr(1);\r"
+##	  expect ">"
+##	}
+##	if {$ptype == 2} {
+##	  exp_send "veg_all = *data_ptr(1);\r"
+##	  expect ">"
+##	}
+#
+#  }
+	
 
-.l1wid.mb.file add command -label "Binary output ..." -underline 0 -command {
+
+.l1wid.mb.file add command -label "Write Binary Data File..." -underline 0 -command {
 	global write_some
          set ftypes {
                   {{For pbd}       {.pbd}        }
@@ -189,6 +201,35 @@ menu .l1wid.mb.options
      }
   }
 
+.l1wid.mb.file add command -label "Read Data Directory... " -underline 10 -command {
+	global data_file_path
+        if { [info exists data_file_path ] == 0 } {
+              set data_file_path "~/"
+        }
+	destroy .l1dir
+        toplevel .l1dir
+	frame .l1dir.1
+	LabelEntry .l1dir.op  -width 70 -relief sunken -bd 3 -label "Path:  " -helptext "Enter Data Path Here" \
+		-textvariable path -text $data_file_path
+ 	Button .l1dir.1.ok -text "OK" -width 5 -command {
+	 if {$path != ""} {
+	  .l1dir.op configure -state disabled
+	  .l1dir.1.ok configure -state disabled
+  	  exp_send "data_ptr = read_yfile(\"$path\"); \r"
+	  expect ">"
+          exp_send "read_pointer_yfile, data_ptr, mode=1; \r"
+	  expect ">"
+	  set ptype [.l1wid.bf4.1.p getvalue]
+	  destroy .l1dir
+	 }
+	}
+	   
+ 	Button .l1dir.1.cancel -text "Cancel" -width 5 -command {
+	   destroy .l1dir
+ 	}
+	pack .l1dir.1.ok .l1dir.1.cancel -side left -padx 5
+	pack .l1dir.op .l1dir.1 -side top -pady 5	
+}
 .l1wid.mb.file add command -label "Ascii output ..." -underline 0 \
   -command {
 	global cmin cmax  opath ofile
@@ -1109,46 +1150,54 @@ proc plot_fltlines {sel} {
      if {$ptype == 0} {
        set cmax1 [expr $cmax*100.]
        set cmin1 [expr $cmin*100.]
-       if {$sel == 0} {
-	   exp_send "fs_some = $var_type;\n"
-           expect ">"
-       } 
        if {$disp_type == 0} {
-         exp_send "display, fs_some, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1;\r"
+         if {$sel == 0} {
+           exp_send "display, $var_type, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1;\r"
+         } else {
+           exp_send "display, fs_some, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1;\r"
+         }
          expect ">"
        } elseif { $disp_type == 4 } {
-         exp_send "display, fs_some, mode=\"intensity\", win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv;\r"
+         if {$sel == 0} {
+           exp_send "display, $var_type, mode=\"intensity\", win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv;\r"
+         } else {
+           exp_send "display, fs_some, mode=\"intensity\", win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv;\r"
+         }
          expect ">"
        }
      }
      if {$ptype == 1} {
        if {$sel == 0} {
-          exp_send "depth_some = $var_type;\r"
- 	  expect ">"
+         exp_send "plot_bathy, $var_type, win=$win_no, ba=$ba, fs = $fs, de = $de , fint = $fint, lint = $lint, cmin=$cmin, cmax=$cmax, msize = $msize, marker=$markerv; \r"
+       } else {
+         exp_send "plot_bathy, depth_some, win=$win_no, ba=$ba, fs = $fs, de = $de , fint = $fint, lint = $lint, cmin=$cmin, cmax=$cmax, msize = $msize, marker=$markerv; \r"
        }
-       exp_send "plot_bathy, depth_some, win=$win_no, ba=$ba, fs = $fs, de = $de , fint = $fint, lint = $lint, cmin=$cmin, cmax=$cmax, msize = $msize, marker=$markerv; \r"
        expect ">"
      }
      if {$ptype == 2} {
         if {$sel == 0} {
-	   exp_send "veg_some = $var_type;\r"
-           expect ">"
-        } 
+         exp_send "display_veg, $var_type, win=$win_no, cmin=$cmin, cmax = $cmax, size = $msize, edt=1, felv = $fs, lelv=$lelv, fint=$fint, lint=$lint, cht = $cht, marker=$markerv;\r"
+        } else {
          exp_send "display_veg, veg_some, win=$win_no, cmin=$cmin, cmax = $cmax, size = $msize, edt=1, felv = $fs, lelv=$lelv, fint=$fint, lint=$lint, cht = $cht, marker=$markerv;\r"
+        }
          expect ">"
      }
      if {$ptype == 3} {
        set cmax1 [expr $cmax*100.]
        set cmin1 [expr $cmin*100.]
-       if {$sel == 0} {
-	   exp_send "cveg_some = $var_type;\r"
-           expect ">"
-       } 
        if {$disp_type == 0} {
-         exp_send "display, cveg_some, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1;\r"
+         if {$sel == 0} {
+           exp_send "display, $var_type, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1;\r"
+         } else {
+           exp_send "display, cveg_some, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1;\r"
+         }
          expect ">"
        } elseif { $disp_type == 4 } {
-         exp_send "display, cveg_some, mode=\"intensity\", win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv;\r"
+         if {$sel == 0} {
+           exp_send "display, $var_type, mode=\"intensity\", win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv;\r"
+         } else {
+           exp_send "display, cveg_some, mode=\"intensity\", win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv;\r"
+         }
          expect ">"
        }
      }
