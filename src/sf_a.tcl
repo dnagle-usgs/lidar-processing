@@ -43,7 +43,7 @@ set step  1
 set run 0
 set ci  0
 set nfiles 0
-set dir "/data/0/7-14-01"
+set dir "/data/0/"
 set timern "hms"
 
 proc load_file_list { f } {
@@ -63,7 +63,7 @@ label .loader.status0 -text "LOADING FILES. PLEASE WAIT..."
 label .loader.status -text "Loading JPG files ...:" 
 #pack  .loader.status -side left
 
-label .loader.status1 -text "Loading GPS files ...:" 
+label .loader.status1 -text "Loading GPS records ...:" 
 Button .loader.ok -text "Cancel" \
 	-helptext "Click to stop loading."\
 	-helptype balloon\
@@ -110,7 +110,7 @@ for { set i 0 } { ![ eof $ggaf ] } { incr i } {
 	set ms  [ string range $gt 2 5 ]
 	set gt $hrs$ms;
         set hms "$ms"
-	   .loader.status1 configure -text "Loaded $gt GPS files\r"
+	   .loader.status1 configure -text "Loaded $gt GPS records\r"
 	    update
        #puts -nonewline "  $gt\r"
        if { [ catch { set tmp $imgtime(hms$gt) } ] == 0 } {
@@ -125,7 +125,7 @@ for { set i 0 } { ![ eof $ggaf ] } { incr i } {
  }
 }
 
- .loader.status0 configure -text "ALL FILES LOADED"
+ .loader.status0 configure -text "ALL FILES LOADED! YOU MAY BEGIN..."
  .loader.ok configure -text "OK" 
  after 1500 {destroy .loader}
 
@@ -233,7 +233,8 @@ proc gotoImage {} {
   }
 }
 proc plotRaster {} {
-  global timern hms cin sod hsr frame_off
+  global timern hms cin sod hsr frame_off thetime
+  set thetime 0
   if {$timern == "hms"} {
     puts "Plotting raster using Mode Value: $hms"
     .cf3.entry delete 0 end
@@ -259,7 +260,7 @@ proc plotRaster {} {
 	   continue; #don't want any window other than ytk
 	} else {
 	   set win $interp
-	   puts $win
+	   #puts $win
 	   send $win set themode $timern
 	   send $win set thetime $sod
 	   ##send $win set thetime [expr {$sod + $frame_off}]

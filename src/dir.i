@@ -18,13 +18,13 @@ func split_path( fn, idx ) {
 
   split_path( "/data/0/7-14-01/eaarl/some_file.idx", -1)
 
-  result: ["/data/0/7-14-01/eaarl/","some_file.idx"]
+  result: ["/data/0/7-14-01/","eaarl/some_file.idx"]
 
 
 
   split_path( "/data/0/7-14-01/eaarl/some_file.idx", -2)
 
-  result: ["/data/0/7-14-01/eaarl/","some_file.idx"]
+  result: ["/data/0/","7-14-01/eaarl/some_file.idx"]
 
 
  

@@ -31,15 +31,15 @@ extern dllmap;          // array of pointers to digital map data
 
 if ( is_void( map_path )  ) {
 // Set the following to where the maps are stored on your system.
-  map_path = "./maps"
+  map_path = "/home/anayegan/Yorick/maps"
 }
 
 if ( is_void( ffn ) ) {
-  ffn = sel_file(ss="*.pbd", path="./maps/") (1);
+  ffn = sel_file(ss="*.pbd", path="/home/anayegan/Yorick/maps/") (1);
 }
 
 if ( is_void(color) ) 
-	color= "Black";
+	color= "black";
 
 mapf = openb(ffn);
 dllmap = [];

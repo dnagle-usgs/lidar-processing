@@ -7,6 +7,8 @@ global rn tid blist depth_display_units total_edb_records thetime
 set play_flag 0
 set play_dir fwd
 set tid 0
+set rnf 0
+set thetime 0
 
 if { [ info exists inc ] == 0 } {
   set inc 1
@@ -83,6 +85,20 @@ proc sod2rn { sod } {
     set cmd "where(((edb.seconds - soe_day_start) - eaarl_time_offset ) == $thetime)"
     exp_send "rnarr = $cmd \r"
     expect ">"
+    ##check to see if the variable rnarr is not a <nuller>
+    exp_send "numberof(rnarr)\r"
+    #the number of records is now echoed
+    expect ">"
+    set no_rn [lindex [split $expect_out(buffer) \n] 1]
+    puts "no_rn = $no_rn\n"
+    if {$no_rn == 0} {
+	tk_messageBox -icon error \
+	  -message "Specified SOMD value ($sod) not in Raster Range." \
+ 	  -type ok
+	return
+    }
+	
+    
     exp_send "write, format=\"%i \",rnarr(1)\r"
     expect {
 	-indices -re "\r" {
@@ -220,7 +236,7 @@ frame .rslider.bf2
   exp_send "#include \"drast.i\"\r"
 }
  .rslider.mb.file add command -label "Reload drast.ytk" -command {
-  source "drast.ytk"
+  source "~/lidar-processing/src/drast.ytk"
 }
 
 .rslider.mb.file add separator 
@@ -280,6 +296,10 @@ set wfc3 4
 
 ##AN: added menu bar options for sf photos
 ############ Photo pulldown
+.rslider.mb.photos add command -label "Review 1Hz Photos..." -command {
+        exec "./sf_a.tcl" &
+ }
+
 .rslider.mb.photos add checkbutton \
 	-label "Link sf Photos to Rasters" \
 	-onvalue 1 \

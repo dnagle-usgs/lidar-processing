@@ -82,7 +82,7 @@ proc save_eaarl_options { fn opt_array } {
 
 
 proc edb_loaded { } {
- global edb
+ global edb 
  if { [ info exists edb ] == 0 } {
    tk_messageBox -type ok \
         -icon warning \
