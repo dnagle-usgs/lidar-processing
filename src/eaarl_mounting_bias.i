@@ -16,6 +16,8 @@ write,"$Id$"
 
 // Mission configuration data structure.
 struct mission_constants {
+  string name;		// The name of the settings
+  string varname;	// The name of this variable 
   float y_offset;    // Aircraft relative + fwd along fuselage 
   float x_offset;    // Aircraft relative + out the right wing
   float z_offset;    // Aircraft relative + up  
@@ -26,6 +28,7 @@ struct mission_constants {
   float range_biasM; //  Laser range measurement bias.
   float range_biasNS; // range_biasM / NS2MAIR;
 }
+
 
 /*************************************************************
  Default operations constants.  These should not be modified
@@ -64,20 +67,22 @@ for the angle biases and the x,y and z offsets.
 
  
 *************************************************************/
- ops_default = array(mission_constants);
- ops_default.roll_bias  = -1.40;        // carefully tweaked on 2-18-03 data
- ops_default.pitch_bias = +0.5;
- ops_default.yaw_bias   =  0.0;
- ops_default.y_offset   = -1.403;	// From Applanix pospac
- ops_default.x_offset   =  -.470;       // From Applanix pospac
- ops_default.z_offset   = -1.3;		// should be -1.708... but need better 
+ ops_tans = array(mission_constants);
+ ops_tans.varname    = "ops_tans"
+ ops_tans.name       = "Tans Default Values"
+ ops_tans.roll_bias  = -1.40;        // carefully tweaked on 2-18-03 data
+ ops_tans.pitch_bias = +0.5;
+ ops_tans.yaw_bias   =  0.0;
+ ops_tans.y_offset   = -1.403;	// From Applanix pospac
+ ops_tans.x_offset   =  -.470;       // From Applanix pospac
+ ops_tans.z_offset   = -1.3;		// should be -1.708... but need better 
                                         // measurement of IMU to laser point
- ops_default.scan_bias  =  0.0;
- ops_default.range_biasM = 0.7962;         // Laser range measurement bias.
- ops_default.range_biasNS=  ops_default.range_biasM / NS2MAIR;
+ ops_tans.scan_bias  =  0.0;
+ ops_tans.range_biasM = 0.7962;         // Laser range measurement bias.
+ ops_tans.range_biasNS=  ops_default.range_biasM / NS2MAIR;
 
 // Now, copy the default values to the operating values.
- ops_conf = ops_default;
+ ops_conf = ops_default = ops_tans;
 
 /**************************************************************
  Now configure a default for the EAARL #1 IMU
@@ -86,21 +91,40 @@ for the angle biases and the x,y and z offsets.
  The default numbers below were determined from the 9-16-03
  flight from ksby to kmyr using pospac on 10-02-2003.
 **************************************************************/
- ops_IMU1_default = ops_default;
- ops_IMU1_default.x_offset =  0.470;    // This is Applanix Y Axis +Rt Wing
- ops_IMU1_default.y_offset =  1.403;    // This is Applanix X Axis +nose
- ops_IMU1_default.z_offset = -0.833;    // This is Applanix Z Axis +Down
- ops_IMU1_default.roll_bias= -0.755;    // DMARS roll bias from 2-13-04
- ops_IMU1_default.pitch_bias= 0.1;      // DMARS pitch bias from 2-13-04
+ ops_IMU1 = ops_default;
+ ops_IMU1.name       = "Applanix 510 Defaults"
+ ops_tans.varname    = "ops_IMU1"
+ ops_IMU1.x_offset   =  0.470;    // This is Applanix Y Axis +Rt Wing
+ ops_IMU1.y_offset   =  1.403;    // This is Applanix X Axis +nose
+ ops_IMU1.z_offset   = -0.833;    // This is Applanix Z Axis +Down
+ ops_IMU1.roll_bias  = -0.755;    // DMARS roll bias from 2-13-04
+ ops_IMU1.pitch_bias = 0.1;      // DMARS pitch bias from 2-13-04
 
 
- ops_IMU2_default = ops_default;
- ops_IMU2_default.roll_bias = -0.8;    // with 03/12 Albert Whitted runway
- ops_IMU2_default.pitch_bias = 0.1;    // with 03/12 Albert Whitted runway
- ops_IMU2_default.yaw_bias = 0;    // 
+ ops_IMU2 = ops_default;
+ ops_IMU2.name       = "DMARS Defaults"
+ ops_tans.varname    = "ops_IMU2"
+ ops_IMU2.roll_bias  = -0.8;    // with 03/12 Albert Whitted runway
+ ops_IMU2.pitch_bias = 0.1;    // with 03/12 Albert Whitted runway
+ ops_IMU2.yaw_bias   = 0;    // 
 
 func display_mission_constants( m, ytk= ) {
-  write,""
+  if ( ytk ) {
+  cmd = swrite( format="display_mission_constants { Name {%s} {VarName} %s Roll %4.2f  Pitch %4.2f Yaw %4.2f Scanner %5.3f {Range M} %5.3f {Range NS} %5.3f {X offset} %5.2f {Y offset} %5.2f {Z offset} %5.2f }",
+	m.name,
+	m.varname,
+        m.roll_bias,
+        m.pitch_bias,
+        m.yaw_bias,
+        m.scan_bias,
+        m.range_biasM,
+        m.range_biasNS,
+        m.x_offset,
+        m.y_offset,
+        m.z_offset );
+      tkcmd, cmd
+  } else {
+  write,format="\nMounting Bias Values: %s\n", m.name
   write, "____________________BIAS__________________     _____Offsets_____"
   write, "Roll Pitch Heading Scanner  RangeM RangeNS      X     Y     Z"
   write, format="%4.2f  %4.2f    %4.2f  %5.3f    %5.3f   %5.3f    %5.2f %5.2f %5.2f\n",
@@ -115,6 +139,7 @@ func display_mission_constants( m, ytk= ) {
         m.z_offset
 
   write,""
+  }
 }
 
 
