@@ -254,19 +254,19 @@ func sel_grid_area( r ) {
 
 
 // Extract a list containing all the elements in the selection box
-  q = where( (r).east > ll(1)*100 );
- qq = where( (r).east(q) < ur(1)*100 );
+  q = where( (r).least > ll(1)*100 );
+ qq = where( (r).least(q) < ur(1)*100 );
   q = q(qq);
- qq = where( (r).north(q) > ll(2)*100 );
+ qq = where( (r).lnorth(q) > ll(2)*100 );
   q = q(qq);
- qq = where( (r).north(q) < ur(2)*100 );
+ qq = where( (r).lnorth(q) < ur(2)*100 );
   q = q(qq);
 
 // q now holds a list of all elements within the selection box
 
-  x = int( (r).east(q)+50)/100 + 1;  	// add 50cm, then convert from cm to m
-  y = int((r).north(q)+50)/100 + 1;
-  z = (r).elevation(q); 
+  x = int( (r).least(q)+50)/100 + 1;  	// add 50cm, then convert from cm to m
+  y = int((r).lnorth(q)+50)/100 + 1;
+  z = (r).lelv(q); 
  
 z(max)
 z(avg)
