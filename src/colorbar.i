@@ -24,12 +24,10 @@ func set_cbar( bar,w= ) {
     m = mouse();
     cmd = swrite(format="set cmin %f", m(1) );
   } else if ( bar == "both" ) {
-    write, format="Select Cmin from window,%d",w
-    m = mouse();
-    cmd = swrite(format="set cmin %f;", m(1) );
-    write, format="Select Cmax from window,%d",w
-    m = mouse();
-    cmd = swrite(format="%s set cmax %f; destroy .cbartool", cmd, m(1) );
+    write, format="Select Cmin and Cmax from window, %d",w
+    m = mouse()(1);
+    n = mouse()(1);
+    cmd = swrite(format="set cmin %f; set cmax %f; destroy .cbartool", min(m,n), max(m,n) );
   } else
       return;
   tkcmd, cmd
