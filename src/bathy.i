@@ -193,6 +193,9 @@ func define_bath_ctl(junk,type=) {
      bath_ctl.agc = -5.0;
      bath_ctl.thresh = 4.0;
   }
+  if (_ytk) {
+    tkcmd, swrite(format="send_bathctl_to_l1pro %3.1f %3.1f %3.1f %3.1f %3d\n", bath_ctl.laser, bath_ctl.water, bath_ctl.agc, bath_ctl.thresh, bath_ctl.last)
+}
   return type;
 
 }

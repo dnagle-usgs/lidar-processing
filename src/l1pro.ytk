@@ -52,19 +52,83 @@ menu .l1wid.mb.options
 .l1wid.mb add cascade -label Load -underline 0 -menu .l1wid.mb.load
 
 .l1wid.mb.load add command -label "Load TANS Data .. " -underline 5 \
-		-command { exp_send "tans = rbtans();\r" 
+	-command { exp_send "tans = rbtans();\r" 
 			   expect ">"
 			 }
 
 .l1wid.mb.load add command -label "Load PNAV Data .. " -underline 5 \
-		-command { exp_send "pnav = rbpnav(); \r"
+	-command { exp_send "pnav = rbpnav(); \r"
 			 }
 
 .l1wid.mb.load add command -label "Initialize structure BATHCTL .." -underline 21 \
-		-command { exp_send "type = define_bath_ctl(junk); \r"
-			 }
+	-command { 
+   	  # show constants in GUI
+	  destroy .bathctl
+	  toplevel .bathctl
+	  ComboBox .bathctl.type -text "Select Type" -width 12 -values "Florida_Keys Tampa_Bay West_Virginia" \
+		-helptext "Select type.." -editable 0 
+		
+	  LabelEntry .bathctl.laser  -width 5 -relief sunken -bd 3 -label "Laser " \
+		-helptext "Laser Decay Constant" \
+		-textvariable laser \
+		-command {
+		    .bathctl.type configure -state disabled
+		 }
+	  
+	  LabelEntry .bathctl.water  -width 5 -relief sunken -bd 3 -label "Water " \
+		-helptext "Water Column Constant" \
+		-textvariable water \
+		-command {
+		    .bathctl.type configure -state disabled
+		 }
+
+	  LabelEntry .bathctl.agc  -width 5 -relief sunken -bd 3 -label "AGC " \
+		-helptext "Attenuation Gain Constant" \
+		-textvariable agc \
+		-command {
+		    .bathctl.type configure -state disabled
+		 }
+
+	  LabelEntry .bathctl.thresh  -width 5 -relief sunken -bd 3 -label "Threshold " \
+		-helptext "Threshold" \
+		-textvariable thresh \
+		-command {
+		    .bathctl.type configure -state disabled
+		 }
+
+	  LabelEntry .bathctl.last  -width 5 -relief sunken -bd 3 -label "Last " \
+		-helptext "Last (nanosecond)" \
+		-textvariable last \
+		-command {
+		    .bathctl.type configure -state disabled
+		 }
+ 		   
+          
+	  Button .bathctl.ok -text "OK" -width 5 -command {
+	    if {[.bathctl.type cget -state] == "disabled"} {
+ 		exp_send "bath_ctl.laser = $laser; bath_ctl.water=$water; bath_ctl.agc=$agc; bath_ctl.thresh = $thresh; bath_ctl.last = $last; \r"
+	    } else {
+              set typeval [.bathctl.type getvalue]
+	      if {$typeval == 0} {set type "keys"}
+	      if {$typeval == 1} {set type "tampabay"}
+	      if {$typeval == 2} {set type  "wva"}
+              exp_send "type = define_bath_ctl(type=\"$type\"); \r"
+	    }
+	    .bathctl.type configure -state normal
+ 	    
+	  }
+	 
+	  Button .bathctl.cancel -text "Cancel" -width 5 -command {
+	    .bathctl.type configure -state normal
+	    destroy .bathctl
+	  }
 
 
+	  pack .bathctl.type -side top 
+	  pack .bathctl.laser .bathctl.water .bathctl.agc  .bathctl.thresh .bathctl.last  -side top
+	  pack .bathctl.ok .bathctl.cancel -side left
+
+}
 .l1wid.mb add cascade -label Options -underline 0 -menu .l1wid.mb.options
 .l1wid.mb.options add command -label "Configure elevation scale limits..." -underline 0 \
 	-command { 
@@ -398,6 +462,15 @@ proc send_latlon_to_l1pro {minlon maxlon minlat maxlat utm} {
    set mxlon $maxlon
    set mnlat $minlat
    set mxlat $maxlat
+}
+
+proc send_bathctl_to_l1pro {blaser bwater bagc bthresh blast} {
+   global laser water agc thresh last
+   set laser $blaser
+   set water $bwater
+   set agc   $bagc
+   set thresh $bthresh
+   set last $blast
 }
 
 
