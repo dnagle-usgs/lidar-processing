@@ -364,8 +364,8 @@ func ex_bath( rn, i,  last=, graph=, win= ) {
 
 
 if ( graph ) {
-window,win; fma
-plg,[thresh,thresh],[1,n],marks=0, color="red"
+window,win; fma;
+plg,[thresh,thresh],[1,n],marks=0, color="red";
 plmk, a(,i,1), msize=.2, marker=1, color="black";
 plg, a(,i,1);
 plmk, da, msize=.2, marker=1, color="black";
@@ -373,7 +373,7 @@ plg, da;
 plmk, db, msize=.2, marker=1, color="blue";
 plg, db, color="blue";
 plg, laser_decay, color="magenta" 
-plg,agc*40
+plg,agc*40;
 }
 
 

@@ -76,10 +76,11 @@ for (i=1; i<=len; i=i+1) {
   geodepth(i).rn = rrr(i).rn;
   geodepth(i).north = rrr(i).north;
   geodepth(i).east = rrr(i).east;
-  geodepth(i).depth = short((-d(,i).idx + rrr(i).fs_rtn_centroid) * CNSH2O2X *100);
-  indx = where((-d(,i).idx) != 0); 
+  indx = where((d(,i).idx)); 
   if (is_array(indx)) {
+    geodepth(i).depth(indx) = short((-d(,i).idx(indx) + rrr(i).fs_rtn_centroid(indx)) * CNSH2O2X *100);
     bath_arr(indx,i) = long(((-d(,i).idx(indx)+rrr(i).fs_rtn_centroid(indx)) * CNSH2O2X *100) + rrr(i).elevation(indx));
+    geodepth(i).sr2(indx) =short(d(,i).idx(indx) - rrr(i).fs_rtn_centroid(indx)); 
   }
   geodepth(i).bottom_peak = d(,i).bottom_peak;
   geodepth(i).first_peak = d(,i).first_peak;
@@ -88,7 +89,6 @@ for (i=1; i<=len; i=i+1) {
   geodepth(i).meast = rrr(i).meast
   geodepth(i).melevation = rrr(i).melevation;
   geodepth(i).soe = rrr(i).soe;
-  geodepth(i).sr2 =short(d(,i).idx - rrr(i).fs_rtn_centroid); 
 
   indx1 = where(geodepth(i).elevation > 0.7*geodepth(i).melevation);
   if (is_array(indx1))
@@ -871,7 +871,7 @@ write,"============================================================="
 	}
         if (disp_type == 1) {
 	  a = [];
-          //ex_bath, rasterno, pulseno, graph=1;
+          ex_bath, rasterno, pulseno, win=0, graph=1;
           window, win; plcm, (mindata.elevation+mindata.depth)/100., 
                              mindata.north/100., mindata.east/100., 
                              msize = msize*1.5, cmin= cmin, cmax = cmax, 
@@ -879,14 +879,14 @@ write,"============================================================="
 	}
         if (disp_type == 2) {
 	  a = [];
-          //ex_bath, rasterno, pulseno, graph=1;
+          ex_bath, rasterno, pulseno, win=0, graph=1;
           window, win; plcm, mindata.depth/100., mindata.north/100., 
                              mindata.east/100., msize = msize*1.5, 
                              cmin= cmin, cmax = cmax, marker = 4
 	}
         if (disp_type == 3) {
 	  a = [];
-	  //ex_veg, rasterno, pulseno,  last=250, graph=1, use_peak=1;
+	  ex_veg, rasterno, pulseno,  last=250, graph=1, win=0; use_peak=1;
 	  z = mindata.lelv/100.;
           window, win; plcm, z, mindata.north/100., 
                              mindata.east/100., msize = msize*1.5, 

@@ -184,7 +184,7 @@ func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, us
 }
 
 
-func ex_veg( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
+func ex_veg( rn, i,  last=, graph=, win=, use_centroid=, use_peak=, pse= ) {
 /* DOCUMENT ex_veg(raster_number, pulse_index)
 
 
@@ -289,8 +289,9 @@ func ex_veg( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
   xr = where(  ((dd >= thresh) (dif)) == 1 ) 	//
   nxr = numberof(xr);
 
+if (is_void(win)) win = 4;
 if ( graph ) {
-window,4; fma;limits
+window,win; fma;limits
 plmk, aa(1:n,i,1), msize=.2, marker=1, color="black";
 plg, aa(1:n,i,1);
 plmk, da, msize=.2, marker=1, color="black";
