@@ -18,6 +18,7 @@
 #include <string.h>
 #include "math.h"
 #include <time.h>
+#include <dirent.h>     // for changename(argv[1], nfname, ".imu");
 
 #define I8   char
 #define UI8  unsigned I8
@@ -110,6 +111,22 @@ configure_header_defaults() {
 // EAARL Specific stuff below
   hdr.nrecs	          =     0; // Gets filled in after pass 1.
 }
+
+char *changename( char *ostr, char *nstr, char *txt ) {
+  char *pstr;
+                                                                                
+  strncpy(nstr, ostr, MAXNAMLEN-1); // make a copy
+                                                                                
+  pstr = strrchr( nstr, '.');       // find the period
+  if ( !pstr ) {                    // no period,
+    pstr = nstr;
+    while ( *(++pstr) != '\0');     // find the end of the string
+  }
+                                                                                
+  strcpy(pstr, txt);                // append the text
+  return(nstr);
+}
+
 
 week_rollover_warning() {
   fprintf(stderr,"\
@@ -333,10 +350,13 @@ pass2( FILE *f, FILE *odf ) {
 process_options( int argc, char *argv[] ) {
  extern char *optarg;
  extern int optind, opterr, optopt;
- int c;
-  while ( (c=getopt(argc,argv, "O:o:t:T:")) != EOF ) 
+ char nfname[MAXNAMLEN];
+ int c, flag=0;
+  while ( (c=getopt(argc,argv, "Oo:t:T:")) != EOF ) 
    switch (c) {
-    case 'O':
+    case 'O':       //  program will compute the output name
+		  flag = 1;
+			break;
     case 'o':
       if ( (odf=fopen(optarg,"w+")) == NULL ) {
         fprintf(stderr,"Can't open %s\n", optarg);
@@ -371,6 +391,14 @@ process_options( int argc, char *argv[] ) {
       fprintf(stderr,"Can't open %s.\n", argv[optind] );
       exit(1);
     }
+		if ( flag ) {     //  user used -O
+			changename(argv[optind], nfname, ".imu");
+			if ( (odf=fopen(nfname,"w+")) == NULL ) {
+				fprintf(stderr,"Can't open %s\n", nfname);
+				exit(1);
+			}
+		}
+
   }
 }
 
