@@ -22,7 +22,8 @@
 #	.73 has simple title command which can be embedded in the file list
 #	.72 added gamma adjustment
 
-set version {$Revision$ as of $Date$}
+set version {$Revision$ }
+set revdate {$Date$}
 
 # set path to be sure and check /usr/lib for the package
 set auto_path "$auto_path /usr/lib"
@@ -152,7 +153,7 @@ frame  .cf3  -borderwidth 5 -relief raised
 ####canvas .canf.can  -height 480 -width 640  
 canvas .canf.can  -height 240 -width 320  
 .canf.can create image 0 0 -tags img -image $img -anchor nw 
-set me "EAARL image/data Animator \nVersion $version\nC. W. Wright\nwright@lidar.wff.nasa.gov"
+set me "EAARL image/data Animator \n$version\n$revdate\nC. W. Wright\nwright@lidar.wff.nasa.gov"
 .canf.can create text 20 120 -text $me  -tag tx -anchor nw 
 label .lbl -textvariable data 
 button .cf1.prev  -text "<Prev"  -command { step_img $step -1 }
