@@ -21,9 +21,10 @@ static struct {
  } gga;                                
 
 main( int argc, char *argv[] ) {    
- FILE *idf, *odf;
+ int nb;
  float sod, lat, lon, alt, s;
- int h, m, n, nb, good=0, badcnt=0, line=0;
+ int h, m, n, good=0, badcnt=0, line=0;
+ FILE *idf, *odf;
  char  comma[]=",";
  char *p, *t, *latp, *lonp, *tp;
  char str[MAXSTR*2], scp[ MAXSTR+2 ];
@@ -42,6 +43,9 @@ main( int argc, char *argv[] ) {
 
    while ( !feof(idf) ) {
 
+// clear the string before use
+  memset( str, 0, MAXSTR );
+   
 // get the nmea string
      fgets( str, MAXSTR-4, idf );
     line++;
@@ -56,7 +60,7 @@ main( int argc, char *argv[] ) {
      cksum = strtol(  &str[i], NULL, 16 );
 //     str[ strlen(str)-2] = 0;
      if ( cksum != sum ) {
- 	printf("%8d: %s %02x\n",  line, str, sum); 
+ 	printf("%8d: %s %02x %02x\n",  line, str, sum, cksum); 
 	badcnt++;
      } else {	// good data
 // Process the time substring into second of the day
@@ -74,15 +78,19 @@ main( int argc, char *argv[] ) {
        switch (i) {
        case HMS:
          tp = t;
-         sscanf( t, "%02d%02d%f", &h, &m, &s);
-         sod = h*3600 + m*60 + s;
+         n = sscanf( t, "%02d%02d%f", &h, &m, &s);
+	 if ( n == 3 ) 
+            sod = h*3600 + m*60 + s;
+	 else nb++;
 	break;
 
        case LAT:
          latp = t;
 	 n = sscanf( t, "%02d%f", &h, &s );
-	if ( n != 2 ) nb++;
+	if ( n == 2 ) 
 	 lat = h + s/60.0;
+	else
+	 nb++;
 	break;
 
 	case NS:  
@@ -91,8 +99,11 @@ main( int argc, char *argv[] ) {
 
        case LON:
          lonp = t;
-	 sscanf( t, "%03d%f", &h, &s );
+	 n = sscanf( t, "%03d%f", &h, &s );
+	if ( n == 2 ) 
 	 lon = h + s/60.0;
+	else
+	  nb++;
 	break;
 
 	case EW:  
@@ -100,17 +111,34 @@ main( int argc, char *argv[] ) {
 	break;
 
 	case ALT:
-	  sscanf( t, "%f", &alt );
+	  n = sscanf( t, "%f", &alt );
+	  if ( n != 1) nb++;
 	break;
        }
       }
    if ( nb == 0 ) {
    good++;
-   gga.sod = sod;
-   gga.lat = lat;
-   gga.lon = lon;
-   gga.alt = alt;
+   if (good == 1) {
+      gga.lon = (float)lon;
+      gga.lat = (float)lat;
+      }
+   if ( abs((int)lon - (int)gga.lon) > 1 ) {
+ 	printf("------> %8d: %s %02x %02x\n",  line, str, sum, cksum); 
+	good--;
+	badcnt++;
+   } else {
+   if ( abs((int)lat - (int)gga.lat) > 1 ) {
+ 	printf("-----------> %8d: %s %02x %02x\n",  line, str, sum, cksum); 
+	good--;
+	badcnt++;
+   } else {
+   gga.sod = (float)sod;
+   gga.lat = (float)lat;
+   gga.lon = (float)lon;
+   gga.alt = (float)alt;
    fwrite( &gga, sizeof(gga), 1, odf);
+   }
+   }
 /*
 if ( line > 152960 )  {
    printf("%7d====%s %s %s %f %f>%s", line,tp, latp, lonp, lat,lon,scp );
@@ -118,7 +146,7 @@ if ( line > 152960 )  {
 */
 // printf("\n%f %f %f %f", gga.sod, gga.lat, gga.lon, gga.alt);
      } else {
- 	printf("%8d: %s\n",  line, scp); 
+ 	printf("<------>%8d: %s\n",  line, scp); 
 	badcnt++;
      }
     }

@@ -147,6 +147,7 @@ set img [ image create photo -gamma $gamma ]  ;
 frame .menubar -relief raised -bd 2
 menubutton .menubar.file -text "File" -menu .menubar.file.menu -underline 0
 menubutton .menubar.edit -text "Edit" -menu .menubar.edit.menu -underline 0
+menubutton .menubar.geometry -text "Geometry" -menu .menubar.geometry.menu -underline 0
 menu .menubar.file.menu
 #.menubar.file.menu add command -label "Select Directory.." -underline 8 \
 #  -command { set dir [ tk_chooseDirectory -initialdir $dir ] }                                 
@@ -200,6 +201,10 @@ menu .menubar.edit.menu
 	      set lcin 0
 	      }
             }
+
+menu .menubar.geometry.menu
+.menubar.geometry.menu add command -label "Include Heading ..." -underline 8 \
+      -command {get_heading}
 
 frame  .canf -borderwidth 5 -relief sunken
 frame  .cf1  -borderwidth 5 -relief raised
@@ -381,6 +386,8 @@ SpinBox .cf2.offset \
 pack .menubar.file \
   -side left
 pack .menubar.edit \
+  -side left
+pack .menubar.geometry \
   -side left
 pack .menubar -side top -fill x -expand true
 pack .canf .canf.can 
@@ -589,4 +596,17 @@ proc zip_save_marked {zp} {
   }
 
 }
+
+proc get_heading {} {
+   ## this procedure gets heading information from current data set
+   ## amar nayegandhi 03/04/2002.
+   if { [ lsearch -exact [ winfo interps ] ytk ] != -1 } {
+      send ytk "request_heading"
+      } else {
+	  tk_messageBox  \
+	      -message "ytk isn\'t running. You must be running Ytk and the
+	      eaarl.ytk program to use this feature."  \
+	      -type ok
+      }
+   }
 puts "Ready to go.\r\n"
