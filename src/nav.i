@@ -266,6 +266,16 @@ func sdist( junk, block=, line= , mode=, fill=) {
    A structure of type FB is returned. Type FB at the command prompt to
    see the format of the structure.
 
+   mode=[1,2,3]
+
+   where:   
+   1 = right, bottom
+   2 = center
+   3 = left, top
+
+   The mode option is used to specify the relationship of the input
+   line segment is relative to the computed block of flightlines.
+
    7/3/02  -WW Added left/right selection lines
 
 */

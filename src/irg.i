@@ -44,6 +44,7 @@ counts/revolution.
      int    raster;		// the raster number;
      double    soe(120); 	// Seconds of the epoch for each pulse.
      int    irange(120); 	// integer range counter values.
+     short  intensity(120);	// Laser return intensity
      short      sa(120); 	// scan angle counts.
   };
 
@@ -62,6 +63,7 @@ local XRTRS
      int    raster;		// the raster number;
      double    soe(120); 	// Seconds of the epoch for each pulse.
      int    irange(120); 	// integer range counter values.
+     short  intensity(120);	// Laser return intensity
      short      sa(120); 	// scan angle counts.
      float   rroll(120);	// Roll in radians
      float  rpitch(120);	// Pitch in radians
@@ -137,8 +139,11 @@ func irg( b, e, inc=, delta=, georef=, usecentroid= ) {
     a(di).raster = si; 				// install the raster nbr
     a(di).soe = rp.offset_time ;		
     if ( usecentroid ) {
-	for (ii=1; ii< rp.npixels(1); ii++ ) 
-	   a(di).irange(ii) = pcr(rp, ii)(1);
+	for (ii=1; ii< rp.npixels(1); ii++ ) {
+           centroid_values     = pcr(rp, ii);
+	   a(di).irange(ii)    = centroid_values(1);
+	   a(di).intensity(ii) = centroid_values(2);
+        }
     } else
       a(di).irange = rp.irange;
     a(di).sa  = rp.sa;

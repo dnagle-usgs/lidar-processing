@@ -27,6 +27,7 @@ require, "irg.i"
   int raster;
   double soe(120);
   short irange(120);
+  short intensity(120);
   short sa(120);
 }
 
@@ -50,6 +51,7 @@ struct R {
  long north(120);        // surface north
  long east(120);         // surface east
  long elevation(120);    // surface elevation (m)
+ short intensity(120);	 // surface return intensity
 };
 
 
@@ -93,26 +95,32 @@ func make_pnav_from_gga( gga ) {
 
 
 
-func display(rrr, i=,j=, cmin=, cmax=, size=, win=, dofma=, edt= ) {
-/* DOCUMENT display(rrr, i=,j=, cmin=, cmax=, size=, win=, dofma=, edt= )
+func display(rrr, i=,j=, mode=, cmin=, cmax=, size=, win=, dofma=, edt=, marker= ) {
+/* DOCUMENT display(rrr, i=,j=, cmin=, cmax=, size=, win=, dofma=, edt=, marker= )
 
  
    Display EAARL laser samples.
    rrr		type "R" data array.
    i            Starting point.
    j            Stopping point.
+   mode=	"elev"       elevation
+                "intensity"  intensity
    cmin=        Deepest point in centimeters ( -3500 default )
    cmax=        Highest point in centimeters ( -1500 )
    size=        Screen size of each point. Fiddle with this
                 to get the filling-in like you want.
    edt=		1 to plot only good data. Don't include this
                 if you want un-edited data.
+   marker=      Use a particular marker shape for each pixel.
+   msize        Set the size for each pixel in ndc coords.
 
   The rrr northing and easting values are divided by 100 so the scales
  are in meters instead of centimeters.  The elevation remains in centimeters.
  
  
 */
+ if ( is_void(mode) )
+	mode = "elev";
 
  if ( is_void(win) )
 	win = 5;
@@ -149,8 +157,13 @@ for ( ; i<=j; i++ ) {
    q = where( (rrr(i).elevation) & (rrr(i).north) );
  }
   if ( numberof(q) >= 1) {
-     plcm, rrr(i).elevation(q), (rrr(i).north(q))/100.0, (rrr(i).east(q))/100.0,
-      msize=size,cmin=cmin, cmax=cmax
+     if ( mode == "elev" ) { 
+       plcm, rrr(i).elevation(q), (rrr(i).north(q))/100.0, (rrr(i).east(q))/100.0,
+       msize=size,cmin=cmin, cmax=cmax, marker=marker
+     } else if ( mode == "intensity" ) {
+       plcm, rrr(i).intensity(q), (rrr(i).north(q))/100.0, (rrr(i).east(q))/100.0,
+       msize=size,cmin=cmin, cmax=cmax, marker=marker
+     }
    }
   }
 write,format="Draw complete. %d rasters drawn. %s", j-ii, "\n"
@@ -274,6 +287,7 @@ write,"Projecting to the surface..."
   rrr(i).north  =     m(,5) * 100.0;
   rrr(i).elevation =  m(,6) * 100.0;
   rrr(i).raster = (a(i).raster&0xffffff);
+  rrr(i).intensity = a(i).intensity;
   rrr(i).raster += (indgen(120)*2^24);
   if ( (i % 100 ) == 0 ) { 
     write,format="%5d %8.1f %6.2f %6.2f %6.2f\n", 

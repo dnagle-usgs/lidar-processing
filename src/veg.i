@@ -271,8 +271,8 @@ plg, dd-100, color="red"
 
 
 
-func display_veg(veg_arr, felv=, lelv=,  fint=, lint=, cmin=, cmax=, size=, win=, dofma=, edt=, cht= ) {
-  /* DOCUMENT display_veg(veg_arr, fr=, lr=,  cmin=, cmax=, size=, win=, dofma=, edt= )
+func display_veg(veg_arr, felv=, lelv=,  fint=, lint=, cmin=, cmax=, size=, win=, dofma=, edt=, cht=, marker= ) {
+  /* DOCUMENT display_veg(veg_arr, fr=, lr=,  cmin=, cmax=, size=, win=, dofma=, edt=, marker= )
      This function displays a veg plot using the veg array from functin run_veg, and the georeferencing from the first_surface function.   If fr = 1, the first surface return is plotted.  If lr = 1, the last returns are plotted (bald earth).  If fr=lr=1, the canopy height is plotted.
   */
   extern elv;
@@ -310,6 +310,9 @@ func display_veg(veg_arr, felv=, lelv=,  fint=, lint=, cmin=, cmax=, size=, win=
      if ( is_void( cmin )) cmin = 0;
      if ( is_void( cmax )) cmax = 200;
   }
+
+  if (is_void(marker)) 
+	marker = 4;
   
   if (((dimsof(elv))(1)) == 2) {
    for ( i=1; i<len; i++ ) {
@@ -317,14 +320,14 @@ func display_veg(veg_arr, felv=, lelv=,  fint=, lint=, cmin=, cmax=, size=, win=
     q = where( (veg_arr(i).north) );
     if ( numberof(q) >= 1) {
        plcm, elv(q,i), veg_arr(i).north(q)/100.0, veg_arr(i).east(q)/100.0,
-            msize=size,cmin=cmin, cmax=cmax
+            msize=size,cmin=cmin, cmax=cmax, marker=marker
     }
    }
   } else {
    q = where( (veg_arr.north) );
    if (numberof(q) >= 1) {
       plcm, elv(q), veg_arr.north(q)/100.0, veg_arr.east(q)/100.0,
-           msize=size,cmin=cmin, cmax=cmax
+           msize=size,cmin=cmin, cmax=cmax, marker=marker
    }
   }
 

@@ -508,12 +508,23 @@ trace variable cmax   w ud
  pack .l1wid.bf45.sc.1.cmax .l1wid.bf45.sc.1.cdelta .l1wid.bf45.sc.1.cmin -side top
 
 
- scale .l1wid.bf45.sc.3 -orient horizontal \
-       -label msize \
-       -variable msize \
-       -from 0 -to 5 \
-       -resolution 0.25 \
-       -length 100
+frame  .l1wid.bf45.sc.f
+  SpinBox .l1wid.bf45.sc.f.msize \
+        -range {0.1 10.0 0.1}  \
+        -textvariable msize 
+
+  SpinBox .l1wid.bf45.sc.f.marker \
+        -range {0 9 1}  \
+        -textvariable markerv
+
+#scale .l1wid.bf45.sc.f.msize -orient horizontal \
+#       -label msize \
+#       -variable msize \
+#       -from 0 -to 5 \
+#       -resolution 0.25 \
+#       -length 100
+
+ pack  .l1wid.bf45.sc.f.msize .l1wid.bf45.sc.f.marker -side top
 
 
 
@@ -624,7 +635,7 @@ pack .l1wid.bf4.1 .l1wid.bf4.2 -side top -pady 3
 pack .l1wid.bf5.1 .l1wid.bf5.2 -side right
 pack .l1wid.bf1 .l1wid.bf2 .l1wid.bf3 .l1wid.bf4 -side top -expand 1 -fill both
 pack .l1wid.bf45.sc.1  -side left  -padx 3
-pack .l1wid.bf45.sc.3  -side left
+pack .l1wid.bf45.sc.f  -side left
 pack .l1wid.bf45.q.1 .l1wid.bf45.q.2  .l1wid.bf45.q.3 -side left
 pack 	.l1wid.bf45.p.fma \
 	.l1wid.bf45.p.1 \
@@ -672,7 +683,7 @@ proc send_rnarr_to_l1pro {bstart bstop brnindx} {
 
 proc plot_fltlines {sel} {
   
- global l1pro_fma win_no cmin cmax cdelta msize
+ global l1pro_fma win_no cmin cmax cdelta msize markerv
      #fill in later using what to plot
      set fs 0
      set ba 0
@@ -714,10 +725,11 @@ proc plot_fltlines {sel} {
 	   exp_send "fs_some = fs_all;\r"
            expect ">"
         } 
-         exp_send "display, fs_some, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, edt=1;\r"
+         exp_send "display, fs_some, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1;\r"
          expect ">"
-###///////////         exp_send "colorbar, $cmin, $cmax;\r"
-###//////////         expect ">"
+       } elseif { $disp_type == 4 } {
+         exp_send "display, fs_some, mode=\"intensity\", win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1;\r"
+         expect ">"
        }
      }
      if {$ptype == 1} {
@@ -733,7 +745,7 @@ proc plot_fltlines {sel} {
 	   exp_send "veg_some = veg_all;\r"
            expect ">"
         } 
-         exp_send "display_veg, veg_some, win=$win_no, cmin=$cmin, cmax = $cmax, size = $msize, edt=1, felv = $fs, lelv=$lelv, fint=$fint, lint=$lint, cht = $cht;\r"
+         exp_send "display_veg, veg_some, win=$win_no, cmin=$cmin, cmax = $cmax, size = $msize, edt=1, felv = $fs, lelv=$lelv, fint=$fint, lint=$lint, cht = $cht, marker=$markerv;\r"
          expect ">"
 ##///////         exp_send "colorbar, $cmin, $cmax;\r"
 ##//////         expect ">"
