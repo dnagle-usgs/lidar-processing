@@ -66,7 +66,14 @@ menu .l1wid.mb.options
 	  destroy .bathctl
 	  toplevel .bathctl
 	  ComboBox .bathctl.type -text "Select Type" -width 12 -values "Florida_Keys Tampa_Bay West_Virginia" \
-		-helptext "Select type.." -editable 0 
+		-helptext "Select type.." -editable 0 \
+		-modifycmd {
+              set typeval [.bathctl.type getvalue]
+	      if {$typeval == 0} {set type "keys"}
+	      if {$typeval == 1} {set type "tampabay"}
+	      if {$typeval == 2} {set type  "wva"}
+              exp_send "type = define_bath_ctl(type=\"$type\"); \r"
+		}
 		
 	  LabelEntry .bathctl.laser  -width 5 -relief sunken -bd 3 -label "Laser " \
 		-helptext "Laser Decay Constant" \
@@ -108,11 +115,7 @@ menu .l1wid.mb.options
 	    if {[.bathctl.type cget -state] == "disabled"} {
  		exp_send "bath_ctl.laser = $laser; bath_ctl.water=$water; bath_ctl.agc=$agc; bath_ctl.thresh = $thresh; bath_ctl.last = $last; \r"
 	    } else {
-              set typeval [.bathctl.type getvalue]
-	      if {$typeval == 0} {set type "keys"}
-	      if {$typeval == 1} {set type "tampabay"}
-	      if {$typeval == 2} {set type  "wva"}
-              exp_send "type = define_bath_ctl(type=\"$type\"); \r"
+ 		exp_send "bath_ctl.laser = $laser; bath_ctl.water=$water; bath_ctl.agc=$agc; bath_ctl.thresh = $thresh; bath_ctl.last = $last; \r"
 	    }
 	    .bathctl.type configure -state normal
  	    
