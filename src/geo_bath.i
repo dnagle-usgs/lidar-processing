@@ -692,7 +692,7 @@ func plot_bathy(depth_all, fs=, ba=, de=, fint=, lint=, win=, cmin=, cmax=, msiz
  
 
 
-func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=) {
+func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset=) {
  /* This function uses a mouse click on a bathy/depth plot and 
     finds the associated rasters
 
@@ -700,7 +700,7 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=) {
     */
 
  /* use mouse function to click on the reqd point */
- extern wfa;
+ extern wfa
  extern _last_rastpulse_elevation
  if ( is_void(_last_rastpulse_elevation ) )
 	_last_rastpulse_elevation = 0.0;
@@ -709,12 +709,14 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=) {
  if (!(win)) win = 5;
  window, win;
  if (!(disp_type)) disp_type = 0; //default to first surface topo
+ if (!(ptype)) ptype = 0; //default to first surface topo
  if (!(msize)) msize = 1.0
+ if (!(fset)) fset = 0
 
  if (typeof(data)=="pointer") data=*data(1);
 
  if (numberof(data) != numberof(data.north)) {
-     if ((disp_type == 1) || (disp_type == 2) || (disp_type == 5)) {
+     if ((ptype == 1) && (fset == 0)) {
  	//convert data from GEOALL into GEO structure
 	data_new = array(GEO, numberof(data)*120);
 	indx = where(data.rn >= 0);
@@ -732,7 +734,7 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=) {
 
 	data = data_new
      }
-     if (disp_type == 0) {
+     if ((ptype == 0) && (fset==0)) {
         //convert data from R into FS structure 
 	data_new = array(FS, numberof(data)*120);
 	indx = where(data.raster >= 0);
@@ -743,6 +745,25 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=) {
 	data_new.mnorth = data.mnorth(indx);
 	data_new.meast = data.meast(indx);
 	data_new.melevation = data.melevation(indx);
+
+	data = data_new
+     }
+     if ((ptype == 2) && (fset == 0)) {
+ 	//convert data from VEGALL into VEG structure
+	data_new = array(VEG, numberof(data)*120);
+	indx = where(data.rn >= 0);
+	data_new.rn = data.rn(indx);
+	data_new.north = data.north(indx);
+	data_new.east = data.east(indx);
+	data_new.elevation = data.elevation(indx);
+	data_new.mnorth = data.mnorth(indx);
+	data_new.meast = data.meast(indx);
+	data_new.melevation = data.melevation(indx);
+	data_new.felv = data.felv(indx);
+	data_new.fint = data.fint(indx);
+	data_new.lelv = data.lelv(indx);
+	data_new.lint = data.lint(indx);
+	data_new.nx = data.nx(indx);
 
 	data = data_new
      }

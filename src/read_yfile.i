@@ -129,6 +129,9 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
     north = 0L;
     east = 0L;
     melevation = 0L;
+    if (_ytk) {
+      tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",0);
+    }
 
     data = array(FS, recs); 
     for (i=0;i<recs;i++) {
@@ -180,6 +183,9 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
     first_peak = 0S;
     sa = 0S;
 
+    if (_ytk) {
+      tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",1);
+    }
     data = array(GEO, recs); 
 
     for (i=0;i<recs;i++) {
@@ -246,6 +252,9 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
     lint = 0s;
     nx = ' ';
 
+    if (_ytk) {
+      tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",2);
+    }
 
     data = array(VEG, recs); 
 

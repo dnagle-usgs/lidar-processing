@@ -300,14 +300,23 @@ func display_veg(veg_arr, felv=, lelv=,  fint=, lint=, cmin=, cmax=, size=, win=
      if ( is_void( cmax )) cmax = 10;
   }
   
-  for ( i=1; i<len; i++ ) {
+  if (((dimsof(elv))(1)) == 2) {
+   for ( i=1; i<len; i++ ) {
     //write, format="i = %d\r",i
     q = where( (veg_arr(i).north) );
     if ( numberof(q) >= 1) {
        plcm, elv(q,i), veg_arr(i).north(q)/100.0, veg_arr(i).east(q)/100.0,
             msize=size,cmin=cmin, cmax=cmax
     }
+   }
+  } else {
+   q = where( (veg_arr.north) );
+   if (numberof(q) >= 1) {
+      plcm, elv(q), veg_arr.north(q)/100.0, veg_arr.east(q)/100.0,
+           msize=size,cmin=cmin, cmax=cmax
+   }
   }
+
   //colorbar, cmin, cmax;
   write,format="Draw complete. %d rasters drawn. %s", len, "\n"
 }
