@@ -312,7 +312,7 @@ func gga_multi_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=, multi
  return q;
 }
 
-func gga_win_sel( show, win=, color=, msize=, skip= , latutm=, llarr=) {
+func gga_win_sel( show, win=, color=, msize=, skip= , latutm=, llarr=, _batch=) {
 /* DOCUMENT gga_win_sel( show, color=, msize=, skip= )
 
   There's a bug in yorick 1.5 which causes all the graphics screens to get fouled up
@@ -377,7 +377,7 @@ properly to the zoom buttons.
    plmk, gga.lat( q(1:0:skip)), gga.lon( q(1:0:skip)), msize=msize, color=color;
  }
    
- test_selection_size,q;
+ if (!_batch) test_selection_size,q;
  return q;
 }
 
@@ -434,7 +434,7 @@ func gga_find_times( q, win=, plt= ) {
 // one second.  This list "endptlist" will be an index into the list
 // "lq" where had a change larger than one second.  Adding one to
 // "endptlist" gets us the starting point of the next segment.
-   endptlist = where( abs((gga.sod(lq) (dif)) ) > 1 )
+   endptlist = where( abs((gga.sod(lq) (dif)) ) > 2 )
    if ( numberof( endptlist ) == 0 ) 
 	return ;
    startptlist = endptlist+1;
