@@ -1,4 +1,4 @@
-func compare_trans(year, month, mode, edateinfo, data=, data_dir=, static=, dotlines=, datum=) {
+func compare_trans(year, month, mode, edateinfo, data=, data_dir=, static=, dotlines=, datum=, rawircf=, RMSE=) {
 /* DOCUMENT compare_trans(year, month, mode, edateinfo, data=, data_dir=, static=, dotlines=, datum=)
 	This function creates profile-view maps of EAARL data and ground survey data from ASIS.
 	year and month should be set to the year and month of the desired ground survey to compare
@@ -51,30 +51,62 @@ func compare_trans(year, month, mode, edateinfo, data=, data_dir=, static=, dotl
 	box = boundBox(pts);
 	if (mode == 2) selmode=2;
 	if (mode != 2) selmode=3;
-	if (data_dir) data = sel_rgn_from_datatiles(rgn=[min(box(1,)),max(box(1,)),min(box(2,)),max(box(2,))],data_dir=data_dir,win=1,mode=selmode,onlymerged=1,datum=datum);
+	if ((data_dir) && (!rawircf)) data = sel_rgn_from_datatiles(rgn=[min(box(1,)),max(box(1,)),min(box(2,)),max(box(2,))],data_dir=data_dir,win=1,mode=selmode,onlymerged=1,datum=datum);
+	if ((data_dir) && (rawircf)) transdata = sel_rgn_from_datatiles(rgn=[min(box(1,))-50,max(box(1,))+50,min(box(2,))-50,max(box(2,))+50],data_dir=data_dir,win=1,mode=selmode,onlynotmerged=1,datum=datum);
+	if ((is_void(data)) && (!rawircf)) continue;
+	if ((is_void(transdata)) && (rawircf)) continue;
+	if (rawircf) {
+		pbdfile = swrite(format="/home/lmosher/ASIS/plots/trans%d%d%3.0f", year, month, this_prof.trans(1)*100.0);
+		vname = "eaarl"
+		f = createb(pbdfile+".pbd");
+                add_variable, f, -1, vname, structof(transdata), dimsof(transdata);
+                get_member(f, vname) = transdata;
+                save, f, vname;
+                close, f;
+		winkill,5;window,5,dpi=75,style="work.gs", legends=0;
+		display_veg,transdata,win=5,cmin=-40,cmax=-30, size = 1.0, edt=1, felv = 0, lelv=1, fint=0, lint=0, cht = 0, marker=1, skip=1;
+		data = rcf_triag_filter(transdata,buf=400,w=50,mode=3,no_rcf=3,interactive=1,plottriag=1,datawin=5);
+		vname = "transdata_rcf"
+		f = createb(pbdfile+"_rcf.pbd");
+                add_variable, f, -1, vname, structof(data), dimsof(data);
+                get_member(f, vname) = data;
+                save, f, vname;
+                close, f;
+		data = data_datum_converter(data, tonad83=1, tonavd88=1, type = VEG__);
+		vname = "transdata_rcf_n88"
+		f = createb(pbdfile+"_n88_rcf.pbd");
+                add_variable, f, -1, vname, structof(data), dimsof(data);
+                get_member(f, vname) = data;
+                save, f, vname;
+                close, f;
+	}
+	
+	if ((mode == 3) || (mode == 4)) bestats = comparelines(this_prof.east, this_prof.elv, data.east/100.0, data.lelv/100.0);
+	if ((mode == 1) || (mode == 4)) fsstats = comparelines(this_prof.east, this_prof.elv, data.east/100.0, data.elevation/100.0);
 //	winkill, 5; window,5,dpi=100,width=600, height=600, style="work.gs"; fma; limits, square=1;
 //	minmax = stdev_min_max(data.lelv);
 //	display_veg, veg_all, win=5, cmin=minmax(1), cmax =minmax(2), size = 1.0, edt=1, felv = 0, lelv=1, fint=0, lint=0, cht = 0, marker=1, skip=1;
 	if (mode != 0) {
 		box_pts = ptsInBox(box*100., data.east, data.north);
+		if (!is_array(box_pts)) continue;
 		poly_pts = testPoly(pts*100., data.east(box_pts), data.north(box_pts));
 		indx = box_pts(poly_pts);
 		if (is_array(indx)) veg_all = data(indx);
 		if (!is_array(indx)) continue;
 	}
 	winkill, 4; window,4,dpi=100,width=1100, height=850, style="landscape11x85.gs", legends=0; fma; limits, square=1;
-	if (mode == 3) plmk, veg_all.lelv/100.0, veg_all.east/100.0, marker=1, msize=0.5, color="green";
-	if (mode == 1) plmk, veg_all.elevation/100.0, veg_all.east/100.0, marker=1, msize=0.5, color="green";
+	if (mode == 3) plmk, veg_all.lelv/100.0, veg_all.east/100.0, marker=1, msize=0.6, color="green", width=10;
+	if (mode == 1) plmk, veg_all.elevation/100.0, veg_all.east/100.0, marker=1, msize=0.6, color="green", width=10;
 	if (mode == 4) {
-		plmk, veg_all.elevation/100.0, veg_all.east/100.0, marker=1, msize=0.5, color="blue";
-		plmk, veg_all.lelv/100.0, veg_all.east/100.0, marker=1, msize=0.5, color="green";
+		plmk, veg_all.elevation/100.0, veg_all.east/100.0, marker=1, msize=0.6, color="blue", width=10;
+		plmk, veg_all.lelv/100.0, veg_all.east/100.0, marker=1, msize=0.6, color="green", width=10;
 	}
 	if (mode !=0) {
 		ftxt = open("/home/lmosher/ASIS/vegheights.txt", "a");
 		write, ftxt, format="%7.3f %7.3f %6.3f\n", veg_all.east/100.0, veg_all.north/100.0, (veg_all.elevation-veg_all.lelv)/100.0
 		close, ftxt;
 	}
-	plmk, this_prof.elv, this_prof.east, marker=2, msize=0.5, color="red";
+	plmk, this_prof.elv, this_prof.east, marker=2, msize=0.6, color="red", width=10;
 	if (dotlines) pldj, this_prof.east(1:-1), this_prof.elv(1:-1), this_prof.east(2:0), this_prof.elv(2:0), type=3;
 	limits, square=1;
 	lmt = limits();
@@ -89,26 +121,30 @@ func compare_trans(year, month, mode, edateinfo, data=, data_dir=, static=, dotl
 	if (mode == 4) {
 		plt, swrite(format="EAARL Bare Earth Data from %s", edateinfo), 0.11, 0.67, tosys=0;
 		plt, swrite(format="EAARL First Sfc Data from %s", edateinfo), 0.11, 0.64, tosys=0;
-		if (!static) plt, "Vertical Exaggeration: 10x", 0.1, 0.61, tosys=0;
-		plt, swrite(format="Page %d of %d", i, numberof(idx)), 0.1, 0.58, tosys=0;
+		if (!static && !rawircf) plt, "Vertical Exaggeration: 10x", 0.1, 0.61, tosys=0;
+		if (!rawircf) plt, swrite(format="Page %d of %d", i, numberof(idx)), 0.1, 0.58, tosys=0;
 	}
 	if (mode != 4) {
-		if (!static) plt, "Vertical Exaggeration: 10x", 0.1, 0.64, tosys=0;
-		plt, swrite(format="Page %d of %d", i, numberof(idx)), 0.1, 0.61, tosys=0;
+		if (!static && !rawircf) plt, "Vertical Exaggeration: 10x", 0.1, 0.64, tosys=0;
+		if (!rawircf) plt, swrite(format="Page %d of %d", i, numberof(idx)), 0.1, 0.61, tosys=0;
 	}
 	plt, "UTM easting (m)", .4547, .0257, tosys=0, height=18;
 	plt, "NAVD88 Elevation (m)", .0451, .2925, tosys=0, height=18, orient=1;
 	if (!static) pldj, lmt(1), 0, lmt(2), 0, type=2;
 	if (static) pldj, emax-620, 0, emax+5, 0, type=2;
 	plsys(0);
-	plmk, 0.707, 0.102, marker=2, msize=0.5, color="red";
-	if (mode !=0) plmk, 0.677, 0.102, marker=1, msize=0.5, color="green";
-	if (mode == 4) plmk, 0.647, 0.102, marker=1, msize=0.5, color="blue";
+	plmk, 0.707, 0.102, marker=2, msize=0.6, color="red", width=10;
+	if (mode !=0) plmk, 0.677, 0.102, marker=1, msize=0.6, color="green", width=10;
+	if (mode == 4) plmk, 0.647, 0.102, marker=1, msize=0.6, color="blue", width=10;
 	plsys(1);
 	rd = "blah";
 	if (!go) read(rd);
 	if (rd == "g") go = 1;
 	if (rd == "b") lance();
+	if (rd == "rep") {
+		i = i-1;
+		continue;
+	}
 	if (mode == 3) hcp_file, swrite(format="/home/lmosher/ASIS/plots/trans%d%d%3.0f_be.ps", year, month, this_prof.trans(1)*100.0);
 	if (mode == 1) hcp_file, swrite(format="/home/lmosher/ASIS/plots/trans%d%d%3.0f_fs.ps", year, month, this_prof.trans(1)*100.0);
 	if (mode == 4) hcp_file, swrite(format="/home/lmosher/ASIS/plots/trans%d%d%3.0f.ps", year, month, this_prof.trans(1)*100.0);

@@ -436,6 +436,8 @@ func isolate_flightline(data, pt=, win=) {
 	}
 	daelv = stdev_min_max(this_data.elevation/100.0 + this_data.depth/100.0);
 	plot_bathy, show, win=3, ba=1, fs = 0, de = 0 , fint = 0, lint = 0, cmin=daelv(1), cmax=daelv(2), msize = 1.0, marker=1, skip=1;
+	limits, square=1;
+	limits;
 	write, "Correct Flightline? (Y for yes, any other key to quit)";
 	cor = "blah";
 	read(cor);

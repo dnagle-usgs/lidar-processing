@@ -486,7 +486,7 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
     if ((*pques)(1) == 's') return;
     while(((*pques)(1) == 'y') && (!done) && (!endit) ) {
       window, plottriagwin;
-      m = mouse(1,0,"Left:Continue Selection; Middle=Pan/Zoom Mode; Right=End Interactive Mode; CTRL-left=Retriangulate");
+      m = mouse(1,0,"Left:Continue Selection; Middle=Pan/Zoom Mode; Right=Select similar; CTRL-Right=End Interactive Mode; CTRL-left=Retriangulate");
       while ((m(10) == 1) && (m(11) == 0)) {
  	tr = locate_triag_surface(pxyz, verts, win=plottriagwin, m=m, show=1);
         if (is_array(tr)) {
@@ -510,9 +510,56 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
         pques = pointer(ques);
         if ((*pques)(1) == 'd') done = 1; //done iterating for this loop
         if ((*pques)(1) == 'e') endit = 1; // ends interation mode
-        if ((*pques)(1) == 's') return;
       }
-      if (m(10) == 3) break; // right click
+      if ((m(11) != 4) && (m(10) == 3)) {
+	// right-click (select similar);
+	elvbuf=2;
+	tr = locate_triag_surface(pxyz, verts, win=plottriagwin, m=m, show=1);
+	if (is_array(tr)) {
+	 maxpt = tr(3,1,max);
+	 idx = where((pxyz(3,) >= maxpt-elvbuf/2.) & (pxyz(3,) <= maxpt+elvbuf/2.));
+	 if (is_array(idx)) {
+	   plmk, pxyz(2,idx), pxyz(1,idx), marker=4, msize=0.2, color="blue";
+	   rmv = "";
+	   while ((rmv != "y") && (rmv != "n")) {
+	   	write, "Remove selected points? (y)es (n)o (s)pecify (s)ubregion";
+	   	read(rmv);
+		if (rmv == "s") {
+			rgn = array(float, 4);
+     			a = mouse(1,1, "select box region: ");
+              		rgn(1) = min( [ a(1), a(3) ] );
+              		rgn(2) = max( [ a(1), a(3) ] );
+              		rgn(3) = min( [ a(2), a(4) ] );
+              		rgn(4) = max( [ a(2), a(4) ] );
+			seldata = data_box(pxyz(1,idx), pxyz(2,idx), rgn(1), rgn(2), rgn(3), rgn(4));
+			idx = idx(seldata);
+			plmk, pxyz(2,idx), pxyz(1,idx), marker=4, msize=0.2, color="green";
+  		 }
+           }
+	   if (rmv == "y") {
+	     if (numberof(idx) >= 100) {
+		swrite(format="Too many points selected (%i)!! Continue anyway? y/n", numberof(idx));
+		read(rmv);
+		if (rmv == "y") {write, "Ok. Continueing..";} else {continue;}
+	     }
+ 	     for (tri = 1; tri<= numberof(idx); tri++) {
+	      if (mode == 3) {
+	        tridx = where((new_eaarl_all.least/100. == pxyz(1,idx(tri))) & (new_eaarl_all.lnorth/100.== pxyz(2,idx(tri))));
+	      } else {
+	        tridx = where((new_eaarl_all.east/100. == pxyz(1,idx(tri))) & (new_eaarl_all.north/100.== pxyz(2,idx(tri))));
+  	      }
+	      new_eaarl_all(tridx).rn = 0;
+              icount++;
+             }
+	   }
+         } else {
+             write, "No points selected..."
+         }
+       } else {
+           write, "No points selected..."
+       }
+      }
+      if ((m(11) == 4) && (m(10) == 3)) break; // CTRL-right click
       if ((m(11) == 4) && (m(10) == 1)) {
 	// control-left click
 	// retriangulate....
