@@ -3,13 +3,15 @@
     $Id$
 
   fixdmars.c: 
-   Based on dmarsd.c.  This program is used to read the "cat" files
-   captured on dmars145 and fix the time.
+   Based on dmarsd.c and dmars2iex.c.  
+   This program is used to read the "cat" files captured on dmars145 
+   and transform it to a *.imu" file that iex can read.
 
-  Original: W. Wright 12/5/2003
+  Original: W. Wright 4/7/2004
 
   Options:
      -d input device or file
+     -t Time offset in SOE, sod, or sow
      -O Uncompressed data file name.
      -P Printout every 200th converted values on stdout.
      -p Printout all converted values on stdout.
@@ -22,12 +24,17 @@
 #include <sys/time.h>
 #include <netinet/in.h>
 #include <sys/stat.h>
-#include <sys/ipc.h>
-#include <sys/shm.h>
 #include <assert.h>
 #include <string.h>
-#include <sched.h>
 #include "dmars.h"
+
+#define I8   char
+#define UI8  unsigned I8
+#define I16  short
+#define UI16 unsigned I16
+#define I32  int
+#define UI32 unsigned I32
+
 
 #define INP_BUFFER_SIZE 256*1024
 #define ODF_BUFFER_SIZE 16*1024
@@ -38,10 +45,126 @@
 // The sp pointer will be set to point into shared memory.
 extern char *optarg;
 
+// THe value to add to the IMU data to get in sync with the gps.
+unsigned long int time_offset = 0 ;
+
 
 // Declare the data and set the header values
 DMARS     raw = { 0x7e } ; 
 NTPSOE ntpsoe = { 0x7d };
+
+/*******************************************************
+   The basic payload data from the DMARS.  This plus the
+   header byte, 0x7e, are  the only parts that are
+   checksumed.
+*******************************************************/
+
+typedef struct  {
+  char   szHeader[8];
+  char   bIsIntelOrMotorola;
+  double dVersionNumber     __attribute__ ((packed));
+  int    bDeltaTheta        __attribute__ ((packed));
+  int    bDeltaVelocity     __attribute__ ((packed));
+  double dDataRateHz        __attribute__ ((packed));
+  double dGyroScaleFactor   __attribute__ ((packed));
+  double dAccelScaleFactor  __attribute__ ((packed));
+  int    iUtcOrGpsTime      __attribute__ ((packed));
+  int    iRcvTimeOrCorrTime __attribute__ ((packed));
+  double dTimeTagBias       __attribute__ ((packed));
+
+  char   Reserved[443];
+
+// For EAARL DMARS Use.
+  UI32   nrecs              __attribute__ ((packed));           // number of records;
+} IEX_HEADER __attribute__ ((packed));
+
+typedef struct {
+  double   sow;
+  long gx,gy,gz;
+  long ax,ay,az;
+} IEX_RECORD __attribute__ ((packed));
+
+IEX_RECORD iex;
+IEX_HEADER hdr;
+
+// bsow beginning seconds of the week
+ double bsow, esow;
+
+
+configure_header_defaults() {
+  strcpy(hdr.szHeader, "$IMURAW");
+  hdr.bIsIntelOrMotorola  =     0;
+  hdr.dVersionNumber      =   2.0;
+  hdr.bDeltaTheta         =     0;
+  hdr.bDeltaVelocity      =     0;
+  hdr.dDataRateHz         = 200.0;
+  hdr.dGyroScaleFactor    =  90.0/(pow(2.0,15.0));
+  hdr.dAccelScaleFactor   =  19.6/(pow(2.0,15.0));
+  hdr.iUtcOrGpsTime       =     2;
+  hdr.iRcvTimeOrCorrTime  =     2;
+  hdr.dTimeTagBias        =  13.0;
+                                                                                     
+// EAARL Specific stuff below
+  hdr.nrecs               =     0; // Gets filled in after pass 1.
+}
+
+
+display_header() {
+#define MAXSTR 256
+ char s[MAXSTR];
+ fprintf(stderr,
+  "------------------------------------------------------------------\n"
+ );
+ if ( hdr.bIsIntelOrMotorola )
+    strcpy(s,"BigEndian");
+ else
+    strcpy(s,"Intel");
+  fprintf(stderr,
+  "    Header: %s             Version:%6.3f     Byte Order: %s\n",
+      hdr.szHeader,
+      hdr.dVersionNumber,
+      s
+  );
+  fprintf(stderr,
+  "DeltaTheta:%2d            Delta Velocity:%2d          Data Rate: %3.0fHz \n",
+      hdr.bDeltaTheta,
+      hdr.bDeltaVelocity,
+      hdr.dDataRateHz
+  );
+  if ( hdr.iUtcOrGpsTime )
+     strcpy(s,"GPS");
+  else
+     strcpy(s,"UTC");
+  fprintf(stderr,
+  "Gyro Scale: %8.6e    Accel Scale: %8.6e    Time: %s\n",
+      hdr.dGyroScaleFactor,
+      hdr.dAccelScaleFactor,
+      s
+  );
+  fprintf(stderr,
+  " Time Corr: %1d                 Time Bias: %4.3f    Total Recs: %7d\n",
+      hdr.iRcvTimeOrCorrTime,
+      hdr.dTimeTagBias,
+      hdr.nrecs
+  );
+  fprintf(stderr,
+  " Start SOW: %9.3f          Stop SOW: %9.3f\n", bsow, esow
+  );
+  fprintf(stderr,
+  "  Duration: %6.1f/secs (%4.3f/hrs)\n",
+       esow-bsow,
+       (esow-bsow)/3600.0
+  );
+  fprintf(stderr,
+   "------------------------------------------------------------------\n"
+  );
+
+}
+
+
+
+
+
 
 
 
@@ -87,21 +210,8 @@ select_device( char *devfn ) {
   struct stat sbuf;
   int i;
   strncpy (devfn, optarg, MAXLEN);
-  i = stat (devfn, &sbuf);
-  i = S_IFMT & sbuf.st_mode;
 
-  if        (  i == S_IFREG  ) {  // if regular file
-        ;
-  } else if ( (i == S_IFCHR) ) {  // if a serial port
-///    sprintf(str, "stty raw crtscts -echo 115200 <%s", devfn );       
-    is_a_device++;
-///    system( str );
-  } else {			// neither one.
-     printf ("\n%s is not a character device.\n", devfn);
-     exit (1);
-  }
-
-  if ((devfd = fopen (devfn, "r+")) == NULL) {
+  if ((devfd = fopen (devfn, "r")) == NULL) {
       perror ("");
       exit (1);
   }
@@ -202,10 +312,6 @@ main( int argc, char *argv[] ) {
   sp = &stats;
 
 
- t = time( NULL );  
- strftime( sp->odfn,MAXLEN,"/data/%m%d%y-%H%M%S-dmars.bin", gmtime( &t ) ) ; 
-
-
 
 /************************************
 // Determine option settings.
@@ -219,7 +325,7 @@ main( int argc, char *argv[] ) {
      case 'O':
 //          verify_fn( sp->odfn, optarg);
 	  strncpy( sp->odfn, optarg, MAXLEN );
-          if ((odf = fopen (sp->odfn, "w")) == NULL)
+          if ((odf = fopen (sp->odfn, "w+")) == NULL)
             {
               perror ("");
               exit (1);
@@ -238,9 +344,14 @@ main( int argc, char *argv[] ) {
       break;
 
      case 't':
-       if ( sscanf( optarg, "%d", &timer ) == 0 )
-         fail("Invalid timer value");
+       if ( sscanf( optarg, "%d", &time_offset ) == 0 )
+         fail("Invalid time_offset value.");
       break;
+
+     default:
+	printf("\nUsage: ");
+	printf("\ndmarscat2iex -t N -d infile -O outfile\n");
+        exit(1);
    }
   }
 
@@ -260,6 +371,13 @@ main( int argc, char *argv[] ) {
 
   if ( devfd == NULL ) fail("\nNo input device/file specified\n");
   if ( devfd == stdin) printf("\nReading data from stdin\n");
+
+  configure_header_defaults();
+
+
+// Output the header record again
+  fwrite( &hdr, sizeof(hdr), 1, odf );
+
   
 
 /***********************************************
@@ -272,8 +390,11 @@ main( int argc, char *argv[] ) {
    sp->dtis = 0;
 
    while ( sp->run ) {
-     if ( at_eof( devfd ) ) 
-        fail("EOF found on input stream");
+     if ( at_eof( devfd ) ) {
+	sp->run = 0;
+	break;
+     }
+	
 
 /************************************
  Find the header byte (0x7e).
@@ -307,38 +428,46 @@ main( int argc, char *argv[] ) {
           sp->bad_checksums++;
 	  oi = oi - 18;
           oi &= 0xff;
-	  fprintf(stderr,"Bad Checksum: Rec=%d Bad Recs=%d lgt=%8.3f ct=%8.3f\n", 
+	  fprintf(stderr,"\nBad Checksum: Rec=%d Bad Recs=%d lgt=%8.3f ct=%8.3f\n", 
 		sp->record_cnt, sp->bad_checksums, 
 		lgt/200.0, ntohl(raw.data.tspo)/200.0
                 );
           raw.data.tspo   = ntohl(raw.data.tspo);
           for (i=XG; i<= ZA; i++ ) 
              raw.data.sensor[i] = ntohs(raw.data.sensor[i] );
-	  print_packet();
-   } else {
+////	  print_packet();
+   } else {   // Good records are processed in this block
       // Convert from big Endian to host endian (Little Endian)
+       hdr.nrecs++;
        lgt = raw.data.tspo   = ntohl(raw.data.tspo);
        for (i=XG; i<= ZA; i++ ) 
            raw.data.sensor[i] = ntohs(raw.data.sensor[i] );
 
-
-/************************************
- Copy the data packet to shared memory.
-************************************/
-  memcpy( &sp->data, &raw.data, sizeof(raw.data));
-  tag = ' ';
-
-  if ( odf ) sp->bytes_written += fwrite( &raw, 1, sizeof(raw), odf);
-  switch ( print ) {
-   case 'p':
-         if ( tag == '*' ) print_packet();
-     break;
-
-   case 'P': 
-         print_packet(); 
-     break;
+      #define GX 0
+#define GY 1
+#define GZ 2
+#define AX 3
+#define AY 4
+#define AZ 5
+// Convert the order to that of iex.
+     iex.gy =  raw.data.sensor[  GX ];
+     iex.gx = -raw.data.sensor[  GY ];
+     iex.gz =  raw.data.sensor[  GZ ];
+     iex.ay =  raw.data.sensor[  AX ];
+     iex.ax = -raw.data.sensor[  AY ];
+     iex.az =  raw.data.sensor[  AZ ];
+     iex.sow = (raw.data.tspo/200.0 + time_offset ) ;
+     if ( hdr.nrecs == 1 ) bsow = iex.sow;
+     if ( odf ) sp->bytes_written += fwrite( &iex, sizeof(iex), 1, odf);
    }
+   if ( (hdr.nrecs % 10000) == 0 ) printf("%7d Records processed   \r", hdr.nrecs);
   }
- }
+  esow = iex.sow;
+  rewind(odf);
+  fwrite( &hdr, sizeof(hdr), 1, odf );
+  fclose(odf);
+  display_header();
+  printf("\n%7d Total records processed", hdr.nrecs);
+  printf("\n");
 }
 
