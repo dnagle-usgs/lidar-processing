@@ -1,0 +1,54 @@
+
+
+ $Id$
+ Original W. Wright 8/28/2002
+
+    EAARL GPS data file naming convention.
+
+
+
+  1       2        3      4     5   6     7     8   9  A
+MMDDYY-masterID-marker-remoteID-p-datum-MMDDYY-ver-dir.*
+
+
+	1	Date data was acquired.
+	2	Master location ID. Use aviation ID if possible
+	3	The base station NGS marker ID
+ 	4	Remote ID ( aircraft call sign )
+	5	"p" for precision Eff.,
+                "r" for rapid Eff.,
+                "b" for broadcast Eff.
+        6       Processing datum, ie; irtf00, nad83, etc.
+	7	Processing date.
+	8	Initials of person processing this data.
+        9       pnav direction:
+                "fwd" for forward solution.
+                "rev" for reverse solutions.
+                "cmb" for combined solutions.
+        A       File extensions:
+                .txt for pnav file.
+                .cfg for configuration file.
+                .fss Forward summary file.
+                .rss Reverse summary file.
+                .fml Forward log file.
+                .rml Reverse log.
+
+
+Examples:
+
+  032602-kear-a-n111x-nad83-082802-ver-fwd.txt
+
+  The above indicates data collected on March 26, 2002 at Kear (Kearney, NE)
+  using marker "a" with the remote being aircraft n111x.  The processing 
+  datum was nad83, and the trajectory was processed on August 28, 2002 be
+  VER (Virgil E. Rabine) in the forward direction only. The corresponding 
+  configuration file would be named:
+
+          032602-kear-a-n111x-nad83-082802-ver.cfg
+
+  and there would also be corresponding .fss, .rss, .fml, and .rml files
+  as well.
+
+
+
+
