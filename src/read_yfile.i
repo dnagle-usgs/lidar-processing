@@ -683,9 +683,9 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
   if (intensity) {
     a = structof(data_arr);
     if (type == 1) {
-      //if (a == GEO) data_intensity = data_arr.first_peak;
-      //if (a == VEG) data_intensity = data_arr.fint;
-      data_intensity = data_arr.intensity;
+           if (a == GEO) data_intensity = data_arr.first_peak;
+      else if (a == VEG__) data_intensity = data_arr.fint;
+////      data_intensity = data_arr.intensity;
     }
     if (type == 2) {
       data_intensity = data_arr.bottom_peak;
