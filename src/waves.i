@@ -149,8 +149,8 @@ wave_data.checker_board = ((-1)^span(1,256,256)) * ((-1)^(span(1,256,256))) (-,)
 */
  }
  
-789
 
+func display_waves  {
 ////////////////////////////////////////
 // Display the wave topography
 ////////////////////////////////////////

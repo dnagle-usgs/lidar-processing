@@ -3,7 +3,6 @@
 */
 
 
-require, "eaarl.i"
 require, "dir.i"
 require, "sel_file.i"
 require, "ytime.i"
