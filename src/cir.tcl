@@ -176,6 +176,94 @@ proc tmp_image {cmd t} {
  }
 }
 
+proc mark_cir {m} {
+	## this procedure is used to mark or unmark the current frame 
+	## amar nayegandhi 11/13/2004.
+	global img img0 tar secs fn 
+	global settings fsod lsod
+	if {$m == 0} {set fsod $settings(sod)
+		tk_messageBox -type ok -message "First Marked Frame at sod $fsod"
+	}
+	if {$m == 1} {set lsod $settings(sod)
+		tk_messageBox -type ok -message "Last Marked Frame at sod $lsod"
+	}
+	if {$m == 2} {
+		if {$lsod == 0} {
+			tk_messageBox -type ok -message "First Marked Frame at sod $fsod has been UNMARKED"; 
+			set fsod 0; 
+		} else {
+			tk_messageBox -type ok -message "Last Marked Frame at sod $lsod has been UNMARKED";
+			set lsod 0;
+		}
+	}   
+	update;
+}
+
+set dir "/data/"
+
+proc archive_selected_cir { type } {
+	global img img0 tar secs fn 
+	global settings fsod lsod dir last_tar
+	
+        set sample $settings(sample)
+  	set last_tar ""
+	if {$fsod == 0 || $lsod == 0} { 
+		tk_messageBox -type ok -icon error \
+			-message "First and Last Frames not Marked. Cannot Save." 
+	} elseif {$lsod < $fsod} {
+		tk_messageBox -type ok -icon error \
+			-message "Last Frame Marked is occurs before First Frame Marked. Cannot Save."
+	} elseif {!([string equal "zip" $type] || [string equal "tar" $type])} {
+		tk_messageBox -type ok -icon error \
+			-message "Invalid save type provided. Cannot Save."
+	} else {
+		if {[string equal "zip" $type]} {
+			set sf [ tk_getSaveFile -defaultextension .zip -filetypes { {{Zip Files} {.zip}} } \
+				-initialdir $dir -title "Save Selected Files as..."];
+		} elseif {[string equal "tar" $type]} {
+			set sf [ tk_getSaveFile -defaultextension .tar -filetypes { {{Tar Files} {.tar}} } \
+				-initialdir $dir -title "Save Selected Files as..."];
+		}
+
+		set psf [pid]
+		set tmpdir "/tmp/sf.$psf"
+		if {[catch "cd $tmpdir"] == 1} {exec mkdir $tmpdir}
+		for {set i $fsod} {$i<=$lsod} {incr i} {
+ 		  set hm  "[clock format $i -format %H%M -gmt 1 ]00"
+                  set hms "[clock format $i -format %H%M%S -gmt 1 ]"
+ 		  set tf "$settings(tar_date)-$hm-cir.tar"
+  	          if { $tf ne $last_tar } {
+                      if { [ catch { vfs::tar::Mount "$settings(path)/$tf" tar } ] } {
+                        tk_messageBox -message "No file found\nFile: $tf" -icon error
+                      } else {
+                        set last_tar $tf
+		      }
+       		  }
+  		  set pat "tar/$settings(file_date)-$hms-*-cir.jpg"
+  		  if { [ catch { set fn [ glob $pat ] } ] }  {
+    		    puts "No file: $pat"
+  		  } else {
+    	            $img0 read $fn
+                    $img0 write $tmpdir/[file tail $fn] -format jpeg
+  		  }
+		}
+		##puts "files in tmpdir\r\n";
+		set last_tar ""
+		cd $tmpdir;
+		
+		if {[string equal "tar" $type]} {
+			exec tar -cvf $sf .;
+		} elseif {[string equal "zip" $type]} {
+			eval exec zip $sf [glob *.jpg];
+		}
+		
+		cd $dir;
+		exec rm -r $tmpdir;
+
+		set fsod 0
+		set lsod 0
+	}
+}
 
 trace variable settings(gamma) w { 
    global img settings
@@ -205,8 +293,10 @@ proc prefs { } {
   .p configure -menu .p.mb
   menu .p.mb
   menu .p.mb.file 
+  menu .p.mb.edit
   menu .p.mb.settings 
   .p.mb add cascade -label File -underline 0 -menu .p.mb.file
+  .p.mb add cascade -label Edit -underline 0 -menu .p.mb.edit
   .p.mb add cascade -label Settings -underline 0 -menu .p.mb.settings
   .p.mb.file add command -label "Select directory..." \
 	-command cirdir 
@@ -222,6 +312,22 @@ proc prefs { } {
   } 
   .p.mb.file add command -label "Exit" -command exit;
    
+  .p.mb.edit add command -label "Mark First Frame" -command {
+      set m 0; mark_cir $m
+  }
+  .p.mb.edit add command -label "Mark Last Frame" -command {
+      set m 1; mark_cir $m
+  }
+  .p.mb.edit add command -label "Unmark Frame" -command {
+      set m 2; mark_cir $m
+  }
+  .p.mb.edit add command -label "Tar and Save Selected Images" -command {
+     archive_selected_cir "tar"
+  } 
+  .p.mb.edit add command -label "Zip and Save Selected Images" -command {
+     archive_selected_cir "zip"
+  } 
+
 
   scale .p.gamma \
 	-from 0.0 \
