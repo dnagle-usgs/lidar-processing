@@ -155,6 +155,11 @@ proc load_edb {} {
   }
 }
 
+# Set the source code path for this invocation.  It can 
+# then be used to load the other modules.
+   set src_path  [ file dirname [ info script ] ]
+   cd $src_path
+   exp_send "cd, \"$src_path\"\r"
 
    exp_send "#include \"edb_access.i\"\r"
    exp_send "#include \"map.i\"\r"
