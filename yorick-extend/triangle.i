@@ -59,7 +59,7 @@ amar nayegandhi 04/05/04
   extern _pid;
   pidstr = swrite(format="%0d",_pid);
   //write points out to a temp file in /tmp
-  file = "/tmp/triangle."+pidstr+".node";
+  file = "/tmp/triangle_"+pidstr+".node";
   idx = long(span(1,nsites1, nsites1));
   f = open(file,"w");
   write, f, format="%d 2 %d 0\n",nsites1, numberof(points(,1))-2;
@@ -70,7 +70,7 @@ amar nayegandhi 04/05/04
   file1 = *fp(1);
   raw_triangle_main, a, file1;
   // now open the file created in /tmp dir to read
-  f = open("/tmp/triangle."+pidstr+".1.ele","r");
+  f = open("/tmp/triangle_"+pidstr+".1.ele","r");
   ntri = nwd1 = nwd2 = 0;
   read, f, format="%d %d %d\n", ntri, nwd1, nwd2;
   idx1 = array(long, ntri);
@@ -80,7 +80,7 @@ amar nayegandhi 04/05/04
   read, f, format="%d %d %d %d\n",idx1, idx2, idx3, idx4;
   triidx = transpose([idx2, idx3, idx4]);
   close, f;
-  fstr = "/bin/rm /tmp/triangle."+pidstr+".node /tmp/triangle."+pidstr+".1.node /tmp/triangle."+pidstr+".1.ele";
+  fstr = "/bin/rm /tmp/triangle_"+pidstr+".node /tmp/triangle_"+pidstr+".1.node /tmp/triangle_"+pidstr+".1.ele";
   f = popen(fstr,0);
   close, f;
   return triidx;
