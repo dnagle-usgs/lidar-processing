@@ -78,72 +78,7 @@ func sel_data_rgn(data, type, mode=,win=, exclude=) {
 
  window, w;
 
- //a = [];
- //a = structof(data);
- a = type;
- if (a == R) {
-   data_out = array(FS, numberof(indx));
-   data_out.rn = data.rn(indx);
-   data_out.mnorth = data.mnorth(indx);
-   data_out.meast = data.meast(indx);
-   data_out.melevation = data.melevation(indx);
-   data_out.north = data.north(indx);
-   data_out.east = data.east(indx);
-   data_out.elevation = data.elevation(indx);
-   data_out.intensity = data.intensity(indx);
- }
- if (a == FS)  data_out = data(indx);
-
- if (a == GEOALL) {
-   data_out = array(GEO, numberof(indx));
-   data_out.rn = data.rn(indx);
-   data_out.north = data.north(indx);
-   data_out.east = data.east(indx);
-   data_out.sr2 = data.sr2(indx);
-   data_out.elevation = data.elevation(indx);
-   data_out.mnorth = data.mnorth(indx);
-   data_out.meast = data.meast(indx);
-   data_out.melevation = data.melevation(indx);
-   data_out.bottom_peak = data.bottom_peak(indx);
-   data_out.first_peak = data.first_peak(indx);
-   data_out.depth = data.depth(indx);
- }
- if (a == GEO) data_out = data(indx);
-
- if (a == VEGALL) {
-   data_out = array(VEG, numberof(indx));
-   data_out.rn = data.rn(indx);
-   data_out.north = data.north(indx);
-   data_out.east = data.east(indx);
-   data_out.elevation = data.elevation(indx);
-   data_out.mnorth = data.mnorth(indx);
-   data_out.meast = data.meast(indx);
-   data_out.melevation = data.melevation(indx);
-   data_out.felv = data.felv(indx);
-   data_out.fint = data.fint(indx);
-   data_out.lelv = data.lelv(indx);
-   data_out.lint = data.lint(indx);
-   data_out.nx = data.nx(indx);
- }
- if (a == VEG) data_out = data(indx);
-
- if (a == VEG_ALL) {
-   data_out = array(VEG_, numberof(indx));
-   data_out.rn = data.rn(indx);
-   data_out.north = data.north(indx);
-   data_out.east = data.east(indx);
-   data_out.elevation = data.elevation(indx);
-   data_out.mnorth = data.mnorth(indx);
-   data_out.meast = data.meast(indx);
-   data_out.melevation = data.melevation(indx);
-   data_out.felv = data.felv(indx);
-   data_out.fint = data.fint(indx);
-   data_out.lelv = data.lelv(indx);
-   data_out.lint = data.lint(indx);
-   data_out.nx = data.nx(indx);
- }
- if (a == VEG_) data_out = data(indx);
- if (a == VEG__) data_out = data(indx);
+ data_out = data(indx);
 
  return data_out;
 

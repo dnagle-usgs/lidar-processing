@@ -81,8 +81,12 @@ if ( is_void(data) ) {
 /***************************************************************
   Added to convert from raster format to cleaned linear format.
 ***************************************************************/
- if ( numberof( dimsof( data.rn )) >2 ) 
-     data = clean_bathy(data);  
+ if ( numberof( dimsof( data.rn )) >2 )  {
+     a = structof(data(1));
+     if (a == GEOALL) data = clean_bathy(data);  
+     if (a == VEG_ALL_) data = clean_veg(data);
+     if (a == R) data = clean_fs(data);
+ }
 
  return data
 }
