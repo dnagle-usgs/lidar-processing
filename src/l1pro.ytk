@@ -28,6 +28,7 @@
   set list		{}
   set lrnindx		{}
   set write_some 	0
+  set ssvar "*.pbd"
   
   array set _mpipx {
 	0,0	Selector
