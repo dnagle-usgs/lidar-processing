@@ -1039,12 +1039,9 @@ func set_read_tk(junk) {
   */
 
    extern vname
-   tkcmd, swrite(format="lappend varlist %s",vname);
-   tkcmd, ".l1wid.bf45.p.15 configure -values $varlist"
+   tkcmd, swrite(format="append_varlist %s",vname);
    tkcmd, "varlist_plot";
-   tkcmd, swrite(format=".varplot.1.lb insert end %s",vname);
    tkcmd, ".l1wid.bf45.p.15 setvalue @[expr {[llength $varlist]-1}]"
-   tkcmd, "varlist_plot";
    write, "Tk updated \r";
 
 }

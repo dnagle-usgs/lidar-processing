@@ -165,6 +165,11 @@ write,"Left: Examine pixel, Center: Save Pixel, Right: Quit"
 
  write, format="Total waveforms examined = %d; Total points selected = %d\n",clicks, selclicks;
 
+ if (exclude) {
+    rtn_data = exclude_region(celldata, rtn_data);
+ }
+   
+
  return rtn_data;
 }
 

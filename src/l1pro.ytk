@@ -709,9 +709,7 @@ proc varlist_plot {} {
       -textvariable addvar 
     .varplot.2.add bind <Return> { 
         global varlist
-	lappend varlist $addvar
-        .l1wid.bf45.p.15 configure -values $varlist
-        .varplot.1.lb insert end $addvar
+	append_varlist $addvar
     }
     Button .varplot.2.delete -width 8 -text "Delete" \
        -command {
@@ -725,8 +723,8 @@ proc varlist_plot {} {
           set del_var [lindex $varlist $del_no]
        	  set choice [tk_messageBox  -icon question \
             -message "Deleting variable $del_var.  Are you sure??" \
-             -type okcancel -title "Warning" ]
-          if {$choice == "ok"} {
+             -type yesno -title "Warning" ]
+          if {$choice == "yes"} {
            set new_varlist1 [lrange $varlist 0 [expr ($del_no-1)]]
            set new_varlist2 [lrange $varlist [expr ($del_no+1)] end]
 	   .varplot.1.lb delete $del_no $del_no	
@@ -743,6 +741,15 @@ proc varlist_plot {} {
     pack .varplot.2.select .varplot.2.add .varplot.2.delete .varplot.2.dismiss -side top -fill x
     pack .varplot.1 .varplot.xscroll .varplot.2 -side top -fill x
   }
+
+proc append_varlist {newvar} {
+  global varlist
+  if {[lsearch -exact $varlist $newvar] == -1} {
+      lappend varlist $newvar
+      .l1wid.bf45.p.15 configure -values $varlist
+      .varplot.1.lb insert end $newvar
+  }
+}
 
 .l1wid.mb.options add checkbutton -label "Constant Colorbar for Variables" \
 	-variable cbv \
@@ -914,7 +921,7 @@ proc rcf_region {} {
         "1" { set mode 2}
         "2" { set mode 3}
         } 
-	lappend varlist $outvar
+	append_varlist $addvar
         .l1wid.bf45.p.15 configure -values $varlist
         varlist_plot
         .varplot.1.lb insert end $addvar
@@ -931,6 +938,7 @@ proc rcf_region {} {
     pack .rcf.1 .rcf.2 .rcf.4 .rcf.3 -side top -pady 10
 }
   
+
 
 ComboBox .l1wid.bf4.1.d -text "Define Region using..." -width 22 -values "Rubberband-Box Points-in-Polygon Line-Segment Enter_Rectangular_Coordinates Multiple-PIPs" -helptext "Select region to process using any of the following methods" -editable 0 -modifycmd {
     set defr [.l1wid.bf4.1.d getvalue]
@@ -1313,9 +1321,15 @@ Label .l1wid.bf45.p.2 -text "in Win:"
 SpinBox .l1wid.bf45.p.3 -justify center -range {0 7 1} \
 	-width 2 -textvariable win_no 
 
-ComboBox .l1wid.bf45.p.5 -text "Display Type" -width 20 -values \
-	"First_Return_Topography Sub-aqueous_Topography \
-	Water_Depth Bare_Earth_Topography Surface_Amplitude Bottom_Amplitude Canopy_Height" \
+ComboBox .l1wid.bf45.p.5 -text "Display Type" -width 20 -values { \
+	First\ Return\ Topography \
+        Submerged\ Topography \
+	Water\ Depth \
+        Bare\ Earth\ Topography\
+        Surface\ Amplitude \
+        Bottom\ Amplitude \
+        Canopy\ Height \
+        } \
 	-helptext "Select any one of the following" \
 	-editable 0
 
@@ -1520,18 +1534,22 @@ ComboBox .l1wid.bf45.r.1 -text "Copy points using..." -width 16\
     if {$selr == 0} {
         set var_no [.l1wid.bf45.p.15 getvalue]
         set var_type [lindex $varlist $var_no]
-       	tk_messageBox  -icon info \
+       	set selection [tk_messageBox  -icon info \
         -message "Drag a Rectangular Box in Window $win_no to define region." \
-        -type ok -title "Message"
-         exp_send "workdata = sel_data_rgn($var_type, GEO, mode=2, win=$win_no)\r"
-         expect ">"
+        -type ok -title "Message"]
+        if {$selection == "ok"} {
+          exp_send "workdata = sel_data_rgn($var_type, GEO, mode=2, win=$win_no)\r"
+          expect ">"
+        }
     }
     if {$selr == 1} {
-       	tk_messageBox  -icon info \
+        set selection  [tk_messageBox  -icon info \
         -message "Draw a Polygon in Window $win_no to define a region using a series of left mouse clicks.  To complete the polygon, middle mouse click OR <Ctrl> and left mouse click." \
-        -type ok -title "Message"
-       exp_send "workdata = sel_data_rgn($var_type, GEO, mode=3, win=$win_no)\r"
-       expect ">"
+        -type okcancel -title "Message" ]
+       if {$selection == "ok"} { 
+	exp_send "workdata = sel_data_rgn($var_type, GEO, mode=3, win=$win_no)\r"
+        expect ">"
+       }
     }
     if {$selr == 2} {
 
@@ -1546,21 +1564,91 @@ ComboBox .l1wid.bf45.r.1 -text "Copy points using..." -width 16\
    if {$selr == -1} {
 	error "Please Define Region."
    }
-   lappend varlist workdata
-   .l1wid.bf45.p.15 configure -values $varlist
-   .varplot.1.lb insert end workdata
+   append_varlist workdata
 } 
 
-Button .l1wid.bf45.r.2 -text "Exclude" -command {
-       set var_no [.l1wid.bf45.p.15 getvalue]
-       set var_type [lindex $varlist $var_no]
-       exp_send "workdata = exclude_region($var_type, workdata);\r"
-       expect ">"
+ComboBox .l1wid.bf45.r.7 -text " Filter tools..." -width 16\
+   	 -values { \
+	 	Remove \
+	  	RCF \
+		Re-Process \
+		} \
+	 -helptext "Choose any of the following tools:" -editable 0 -modifycmd {
+             global varlist
+
+    	     set self [.l1wid.bf45.r.7 getvalue]
+             if {$self == 0} {
+		removing_proc
+             }
+             if {$self == 1} {
+    		rcf_region
+             }
+             if {$self == 2} {
+             }
+             if {$self == -1} {
+	        error "Please Define Region."
+             }
+          } 
+proc removing_proc {} {
+       destroy .rem
+       toplevel .rem
+       wm title .rem "Remove Points Using..."
+       ComboBox .rem.1 -text "Remove points using..." -width 16\
+   	 -values { \
+	 	Rubberband\ Box \
+	  	Points\ in\ Polygon \
+		Single\ Pixel\
+		} \
+	 -helptext "Remove points from \'workdata\' using any of the following methods:\n Rubberband Box\n Points in Polygon\n Single Pixel" -editable 0 
+       Button .rem.2 -width 8 -text "Go" \
+       -command {
+         global varlist outvar selr
+
+         set selr [.rem.1 getvalue]
+         if {$selr == 0} {
+            set var_no [.l1wid.bf45.p.15 getvalue]
+            set var_type [lindex $varlist $var_no]
+       	    set selection [tk_messageBox  -icon info \
+            -message "Drag a Rectangular Box in Window $win_no to define region." \
+            -type ok -title "Message"]
+            if {$selection == "ok"} {
+               exp_send "workdata = sel_data_rgn(workdata, GEO, mode=2, win=$win_no, exclude=1)\r"
+               expect ">"
+            }
+         }
+         if {$selr == 1} {
+            set selection  [tk_messageBox  -icon info \
+            -message "Draw a Polygon in Window $win_no to define a region using a series of left mouse clicks.  To complete the polygon, middle mouse click OR <Ctrl> and left mouse click." \
+            -type okcancel -title "Message" ]
+            if {$selection == "ok"} { 
+	    exp_send "workdata = sel_data_rgn(workdata, GEO, mode=3, win=$win_no, exclude=1)\r"
+            expect ">"
+            }
+         }
+         if {$selr == 2} {
+           exp_send "workdata = select_points(workdata, win=$win_no, exclude=1);\r"
+           expect ">"
+         }
+         if {$selr == -1} {
+	   error "Please Define Region."
+         } else {
+           append_varlist workdata
+	   destroy .rem
+         }
+      } 
+      Button .rem.3 -width 8 -text "Cancel" -command {
+	 destroy .rem
+      }
+
+     
+      pack .rem.1 -pady 15
+      pack .rem.2 .rem.3 -side left -padx 5 -pady 5
    }
 
 Button .l1wid.bf45.r.3 -text "Re-Process" -command {
    }
 Button .l1wid.bf45.r.4 -text "RCF" -command {
+    rcf_region
    }
 Button .l1wid.bf45.r.5 -text "Copy2Tile" -command {
   }
@@ -1703,12 +1791,13 @@ pack .l1wid.bf45.sc.f  .l1wid.bf45.sc.sk -side left -padx 5
 
 pack \
 	.l1wid.bf45.r.1 \
-	.l1wid.bf45.r.2 \
-	.l1wid.bf45.r.3 \
-	.l1wid.bf45.r.4 \
+	.l1wid.bf45.r.7 \
 	.l1wid.bf45.r.5 \
 	.l1wid.bf45.r.6 \
 	-side left
+	#.l1wid.bf45.r.2 \
+	#.l1wid.bf45.r.3 \
+	#.l1wid.bf45.r.4 \
 pack \
 	.l1wid.bf45.q.1 \
 	.l1wid.bf45.q.2  \
