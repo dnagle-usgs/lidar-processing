@@ -152,6 +152,10 @@ puts "tar file: $tf"
   set pat "tar/$settings(file_date)-$hms-*-cir.jpg"
   if { [ catch { set fn [ glob $pat ] } ] }  {
     puts "No file: $pat"
+    wm title . "No Image 1:$sample"
+    $img0 blank
+    $img blank
+    return 5
   } else {
     wm title . "[ file tail $fn ] 1:$sample"
     $img0 read $fn
@@ -164,8 +168,12 @@ puts "tar file: $tf"
 proc tmp_image {cmd t} {
  global settings
  global img img0 last_tar tar secs fn
- show $cmd $t
- $img write /tmp/tmp.jpg -format jpeg
+ if { [show $cmd $t] == 5 } {
+    file delete /tmp/tmp.jpg
+    file delete /tmp/etmp.pnm
+ } else {
+   $img write /tmp/tmp.jpg -format jpeg
+ }
 }
 
 
