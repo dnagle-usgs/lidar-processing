@@ -1,7 +1,8 @@
 #
 # $Id$
 
-global rn tid blist depth_display_units total_edb_records
+##AN: added global variable thetime sent from sf_a.tcl
+global rn tid blist depth_display_units total_edb_records thetime
 
 set play_flag 0
 set play_dir fwd
@@ -41,6 +42,10 @@ if { [ info exists data_path ] == 0 } {
   set data_path ""
 }
 
+##AN: added to initially set the value of sod time from sf
+if { [info exists thetime] != 0} {
+   puts "thetime from sf is set to $thetime"
+}
 
 # this gets set by Yorick:load_edb in edb_access.i
 exp_send "#include \"drast.i\"\r"	;# Load Yorick drast.i code
@@ -65,6 +70,38 @@ set blist { .rslider.bf1.stop    .rslider.bf1.play        .rslider.bf2.exwf \
 	    .rslider.bf1.nxtrast .rslider.bf1.prevrast    .rslider.bf1.pint \
 	    .rslider.bf1.inc \
           }
+
+##AN: added procedure sod2rn to convert sf sod value to rn
+proc sod2rn { sod } {
+    global rn thetime rnf rnl
+    set cmd "where(((edb.seconds - edb(1).seconds - 4*3600) + edb(1).seconds%86400) == $thetime)"
+    exp_send "rnarr = $cmd \r"
+    expect ">"
+    exp_send "write, format=\"%i \",rnarr(1)\r"
+    expect {
+	-indices -re "\r" {
+	#do nothing when the write command is echoed.
+	}
+    }
+    #the first record  number is now echoed
+    expect ">"
+    set rnf1 [lindex [split $expect_out(buffer) \n ] 1]
+    set rnf [lindex [split $rnf1 > ] 0] 
+    puts "first: $rnf \r"
+
+    #now display the last record number in photo
+    exp_send "write, format=\"%i \",rnarr(0)\r"
+    expect {
+        -indices -re "\r" {
+        #do nothing when the write command is echoed.
+        }
+    }
+    #the last record  number is now echoed
+    expect ">"
+    set rnl1 [lindex [split $expect_out(buffer) \n ] 1]
+    set rnl [lindex [split $rnl1 > ] 0]
+    puts "last: $rnl \r"
+}
 
 proc gstate { lst state } {
   foreach x $lst { 
@@ -112,6 +149,35 @@ proc play {} {
 }
 
 
+##AN: added procedure photoplay to play all rasters within one sf photo
+proc photoplay {} {
+ global tid play_interval rn inc play_dir play_flag total_edb_records rnf rnl
+     if { $play_dir == "fwd" } {
+       set rn [ expr $rn + $inc ] 
+     } else {
+       set rn [ expr $rn - $inc ] 
+     }
+     if { $rn > $total_edb_records } {
+ 	.rslider.bf1.stop invoke	
+        set rn $total_edb_records;
+     } elseif { $rn <= 1 } {
+ 	.rslider.bf1.stop invoke	
+        set rn 1;
+     }
+     if { $rn > $rnl } {
+ 	.rslider.bf1.stop invoke	
+        set rn $rnf;
+     } elseif { $rn < $rnf } {
+ 	.rslider.bf1.stop invoke	
+        set rn $rnf;
+     } else {
+        exp_send "ytk_rast,$rn\r" 
+        expect ">"
+        if { $play_flag } { 
+           set tid [ after $play_interval photoplay ]
+        }
+    }
+}
 
 destroy .rslider
 destroy .rslider.scale
@@ -125,9 +191,11 @@ frame .rslider.bf2
  menu .rslider.mb.file
  menu .rslider.mb.graph
  menu .rslider.mb.waveforms
+ menu .rslider.mb.photos
 .rslider.mb      add cascade -label File      -underline 0 -menu .rslider.mb.file
 .rslider.mb      add cascade -label Graph     -underline 0 -menu .rslider.mb.graph
 .rslider.mb      add cascade -label Waveforms -underline 0 -menu .rslider.mb.waveforms
+.rslider.mb      add cascade -label Photos    -underline 0 -menu .rslider.mb.photos
 
 
 ############### File pull downs
@@ -195,6 +263,59 @@ set wfc3 4
 	-variable wfc3 \
 	-command { global wf_chan wfc1; set wf_chan [ expr $wfc1+$wfc2+$wfc3 ] }  \
 	-label "1\% channel (Blue)" 
+
+##AN: added menu bar options for sf photos
+############ Photo pulldown
+.rslider.mb.photos add checkbutton \
+	-label "Link sf Photos to Rasters" \
+	-onvalue 1 \
+	-offvalue 0 \
+	-variable lsf \
+	-command {
+ 	 	global thetime lsf rn rnf
+		if {$lsf == 1} {
+		   sod2rn $thetime
+		   exp_send "ytk_rast, $rnf\r"
+		   set rn $rnf
+		} 
+	}
+.rslider.mb.photos add command -label "Display First Raster in sf Photo" -command {
+	global thetime rnf rn lsf
+	sod2rn $thetime
+	exp_send "ytk_rast, $rnf\r"
+	set rn $rnf	
+}
+
+
+.rslider.mb.photos add command -label "Play through Rasters in sf Photo" -command {
+	global thetime rnl rnf rn tid play_interval play_dir play_flag
+	sod2rn $thetime
+	exp_send "ytk_rast, $rnf\r"
+	set play_flag 1 
+ 	set play_dir fwd
+	set rn $rnf
+	exp_send "animate,1\r" 
+ 	set tid [ after $play_interval  photoplay ]
+}
+
+.rslider.mb.photos add command -label "YalP through Rasters in sf Photo" -command {
+	global thetime rnl rnf rn tid play_interval play_dir play_flag
+	sod2rn $thetime
+	exp_send "ytk_rast, $rnl\r"
+	set play_flag 1 
+ 	set play_dir rev
+	set rn $rnl
+	exp_send "animate,1\r" 
+ 	set tid [ after $play_interval  photoplay ]
+}
+
+.rslider.mb.photos add command -label "Display Last Raster in sf Photo" -command {
+	global thetime rnl rn
+	sod2rn $thetime
+	exp_send "ytk_rast, $rnl\r"
+	set rn $rnl	
+ }
+
 
 
  button  .rslider.bf1.nxtrast -text ">" -command  { 
@@ -303,8 +424,8 @@ trace variable total_edb_records   w ter
 
   pack \
 	.rslider.bf2.exwf \
-	-side left -expand 0 -fill both -anchor nw
-	
+	-side left -expand 0 -fill both -anchor nw 
+
 
   pack  \
 	.rslider.scale \

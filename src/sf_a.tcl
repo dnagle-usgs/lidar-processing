@@ -62,7 +62,6 @@ label .loader.status -text "Loading JPG files ...:"
 label .loader.status1 -text "Loading GPS files ...:" 
 button .loader.ok -text OK -command { destroy .loader}
 pack  .loader.status .loader.status1 .loader.ok -side top -fill x 
-
 for { set i 0 } { ![ eof $f ] } { incr i } { 
   set fn [ gets $f ]
   set fna($i)   "$fn"
@@ -119,7 +118,7 @@ for { set i 0 } { ![ eof $ggaf ] } { incr i } {
  }
 }
 
- #destroy .loader
+ after 1000 {destroy .loader}
 
 
  return $nfiles
@@ -135,10 +134,12 @@ set img [ image create photo -gamma $gamma ]  ;
 frame .menubar -relief raised -bd 2
 menubutton .menubar.file -text "File" -menu .menubar.file.menu -underline 0
 menu .menubar.file.menu
-.menubar.file.menu add command -label "Select Directory.." -underline 8 \
-  -command { set dir [ tk_chooseDirectory -initialdir $dir ] }                                 
+#.menubar.file.menu add command -label "Select Directory.." -underline 8 \
+#  -command { set dir [ tk_chooseDirectory -initialdir $dir ] }                                 
 .menubar.file.menu add command -label "Select File.." -underline 8 \
   -command { set f [ tk_getOpenFile  -filetypes { {{List files} {.lst}} } -initialdir $dir ];   
+		set split_dir [split $f /]
+		set dir [join [lrange $split_dir 0 [expr [llength $split_dir]-2]] /]
 		set nfiles [ load_file_list  $f ];
 		.slider configure -to $nfiles
            }                                 
@@ -173,20 +174,19 @@ tk_optionMenu .cf2.speed speed Fast 100ms 250ms 500ms 1s \
 
 label .cf3.label -text "Mode "
 entry .cf3.entry -width 20 -relief sunken -bd 2 -textvariable hsr
-tk_optionMenu .cf3.option timern hms sod rn 
-button .cf3.button -text "Plot Raster" -command plotRaster
+tk_optionMenu .cf3.option timern hms sod cin 
+button .cf3.button -text "Examine Rasters" -command plotRaster
 button .cf3.imgbutton -text "GoTo Image" -command gotoImage
 
 bind .cf3.entry <Return> {gotoImage}
 proc gotoImage {} {
-  global timern hms rn sod ci hsr imgtime seconds_offset
+  global timern hms sod ci hsr imgtime seconds_offset
   set i 0
   puts "Options selected for Goto Image is: $timern"
   if {$timern == "hms"} {
      puts "Showing Camera Image at hms = :$hsr"
      set i $imgtime(hms$hsr);
-     set rn [expr $i-$seconds_offset]
-     set ci $rn
+     set ci [expr $i-$seconds_offset]
      show_img $ci
   }
   if {$timern == "sod"} {
@@ -196,16 +196,15 @@ proc gotoImage {} {
      set ci [expr $i-$seconds_offset]
      show_img $ci
   }
-  if {$timern == "rn"} {
+  if {$timern == "cin"} {
      puts "Showing Camera Image with Index value = $hsr"
-     set rn $hsr
-     set ci $rn
-     show_img $ci
+     set cin $hsr
+     set ci $cin
+     show_img $cin
   }
 }
 proc plotRaster {} {
-  global timern hms rn sod hsr
-  puts "Option selected is: $timern"
+  global timern hms cin sod hsr
   if {$timern == "hms"} {
     puts "Plotting raster using Mode Value: $hms"
     .cf3.entry delete 0 end
@@ -215,8 +214,6 @@ proc plotRaster {} {
 	   continue; #don't want any window other than ytk
 	} else {
 	   set win $interp
-	   puts $win
-	   send $win set themode $timern
 	   send $win set thetime $sod
 	
         }
@@ -237,10 +234,10 @@ proc plotRaster {} {
         }
     }
   }
-  if {$timern == "rn"} {
-    puts "Plotting raster using Mode Value: $rn"
+  if {$timern == "cin"} {
+    puts "Plotting raster using Mode Value: $cin"
     .cf3.entry delete 0 end
-    .cf3.entry insert insert $rn
+    .cf3.entry insert insert $cin
     foreach interp [winfo interps] {
         if {!([string match "ytk" $interp])} {
 	   continue; #don't want any window other than test_send.tcl
@@ -367,9 +364,9 @@ puts "$dx $dy"
 proc show_img { n } {
 global fna nfiles img run ci data imgtime dir img_opts
 global lat lon alt seconds_offset hms sod timern 
-global rn
+global cin
 
-set rn $n
+set cin $n
 #  puts "$n  $fna($n)"
   .canf.can config -cursor watch
 # -format "jpeg -fast -grayscale" 
