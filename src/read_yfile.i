@@ -43,6 +43,22 @@ struct VEG {
      short lint;
      char nx;
      }
+
+struct VEG_ {
+     long rn;
+     long north;
+     long east;
+     long elevation;
+     long mnorth;
+     long meast;
+     long melevation;
+     long felv;
+     short fint;
+     long lelv;
+     short lint;
+     char nx;
+     }
+
 func read_yfile (path, fname_arr=) {
 
 /* DOCUMENT read_yfile(path, fname_arr=) 
@@ -61,6 +77,8 @@ This function reads an EAARL yorick-written binary file.
       - add more documentation to this function.
    modified 10/17/02.  amar nayegandhi.
       - to include struct VEG for vegetation
+   modified 01/02/03 amar nayegandhin.
+      - to include new format of veg algorithm with structure VEG_
    */
 
 extern fn_arr;
@@ -326,6 +344,77 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
     }
   }
 
+  if (type == 6) {
+
+    rn = 0L;
+    north = 0L;
+    east = 0L;
+    elevation=0L;
+    mnorth=0L;
+    meast=0L;
+    melevation=0L;
+    felv = 0L;
+    fint = 0s;
+    lelv = 0L;
+    lint = 0s;
+    nx = ' ';
+
+
+    data = array(VEG, recs); 
+
+    for (i=0;i<recs;i++) {
+
+       if ( (i % 1000) == 0 ) edfrstat, i, recs;
+       _read, f, byt_pos, rn;
+       data(i).rn = rn;
+       byt_pos = byt_pos + 4;
+
+       _read, f, byt_pos, north;
+       data(i).north = north;
+       byt_pos = byt_pos + 4;
+       
+       _read, f, byt_pos, east;
+       data(i).east = east;
+       byt_pos = byt_pos + 4;
+       
+       _read, f, byt_pos, elevation;
+       data(i).elevation = elevation;
+       byt_pos = byt_pos + 4;
+
+       _read, f, byt_pos, mnorth;
+       data(i).mnorth = mnorth;
+       byt_pos = byt_pos + 4;
+
+       _read, f, byt_pos, meast;
+       data(i).meast = meast;
+       byt_pos = byt_pos + 4;
+       
+       _read, f, byt_pos, melevation;
+       data(i).melevation = melevation;
+       byt_pos = byt_pos + 4;
+
+       _read, f, byt_pos, felv;
+       data(i).felv = felv;
+       byt_pos = byt_pos + 4;
+
+       _read, f, byt_pos, fint;
+       data(i).fint = fint;
+       byt_pos = byt_pos + 2;
+
+       _read, f, byt_pos, lelv;
+       data(i).lelv = lelv;
+       byt_pos = byt_pos + 4;
+
+       _read, f, byt_pos, lint;
+       data(i).lint = lint;
+       byt_pos = byt_pos + 2;
+
+       _read, f, byt_pos, nx;
+       data(i).nx = nx;
+       byt_pos = byt_pos + 1;
+
+    }
+  }
   return data;
 }
   

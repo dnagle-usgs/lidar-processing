@@ -30,7 +30,7 @@ func read_xyz_ascii_file(fname,n) {
   }
 
 
-func compare_pts(eaarl, kings, rgn, fname=, buf=, be=, elv=, read_file=) {
+func compare_pts(eaarl, kings, rgn, fname=, buf=, elv=, read_file=) {
    // this function compares each point of kings data within a buffer of eaarl data.
    // amar nayegandhi 11/15/2002.
 
@@ -40,6 +40,8 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, be=, elv=, read_file=) {
 	        ((kings(2,) >= rgn(3)) &
 		 (kings(2,) <= rgn(4))));
    kings = kings(,indx);
+
+   extern i, no, be_avg_pts, be, kings_elv, be_elv, diff1, diff2;
 
  ncount=0;
 
@@ -62,7 +64,8 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, be=, elv=, read_file=) {
       if (elv) {
         be_avg = eaarl.elevation(indx)/100.;
 	} else {
-        be_avg = eaarl.elevation(indx)/100.-(eaarl.lelv(indx)-eaarl.felv(indx))/100.;
+        //be_avg = eaarl.elevation(indx)/100.-(eaarl.lelv(indx)-eaarl.felv(indx))/100.;
+        be_avg = eaarl.lelv(indx)/100.;
 	}
       be_avg_pts = avg(be_avg);
       //avg_pts = avg(eaarl.elevation(indx));
@@ -80,7 +83,8 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, be=, elv=, read_file=) {
       if (elv) {
         elv_diff = abs((eaarl(indx).elevation/100.)-kings(3,i));
 	} else {
-        elv_diff = abs((eaarl(indx).elevation/100.-(eaarl(indx).lelv-eaarl(indx).felv)/100.)-kings(3,i));
+        //elv_diff = abs((eaarl(indx).elevation/100.-(eaarl(indx).lelv-eaarl(indx).felv)/100.)-kings(3,i));
+        elv_diff = abs((eaarl(indx).lelv/100.)-kings(3,i));
 	}
       minelv_idx = (elv_diff)(mnx);
       minelv_indx = indx(minelv_idx);
@@ -90,14 +94,16 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, be=, elv=, read_file=) {
         be = mineaarl.elevation/100.;
 	ii = i
 	} else {
-        be = mineaarl.elevation/100.-(mineaarl.lelv-mineaarl.felv)/100.;
+        //be = mineaarl.elevation/100.-(mineaarl.lelv-mineaarl.felv)/100.;
+        be = mineaarl.lelv/100.;
 	ii = mineaarl.rn
 	}
 
       if (elv) {
         be_elv = minelveaarl.elevation/100.;
 	} else {
-        be_elv = minelveaarl.elevation/100.-(minelveaarl.lelv-minelveaarl.felv)/100.;
+        //be_elv = minelveaarl.elevation/100.-(minelveaarl.lelv-minelveaarl.felv)/100.;
+        be_elv = minelveaarl.lelv/100.;
 	}
       write, f, format=" %d  %d  %f  %f  %f %f %f %f\n",ii, numberof(indx), be_avg_pts, be, kings(3,i), be_elv,  (be-kings(3,i)), (be_elv-kings(3,i));
       ++ncount;
@@ -248,7 +254,8 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=) {
       }
       if (is_array(indx)) {
        if (mode==3) {
-         be_elv = eaarl.elevation(indx)-(eaarl.lelv(indx)-eaarl.felv(indx));
+         //be_elv = eaarl.elevation(indx)-(eaarl.lelv(indx)-eaarl.felv(indx));
+         be_elv = eaarl.lelv(indx);
        }
        if (mode==2) {
          be_elv = eaarl.elevation(indx)+eaarl.depth(indx);

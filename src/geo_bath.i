@@ -1119,6 +1119,23 @@ func sel_data_rgn(data, mode=,win=) {
  }
  if (a == VEG) data_out = data(indx);
 
+ if (a == VEG_ALL) {
+   data_out = array(VEG_, numberof(indx));
+   data_out.rn = data.rn(indx);
+   data_out.north = data.north(indx);
+   data_out.east = data.east(indx);
+   data_out.elevation = data.elevation(indx);
+   data_out.mnorth = data.mnorth(indx);
+   data_out.meast = data.meast(indx);
+   data_out.melevation = data.melevation(indx);
+   data_out.felv = data.felv(indx);
+   data_out.fint = data.fint(indx);
+   data_out.lelv = data.lelv(indx);
+   data_out.lint = data.lint(indx);
+   data_out.nx = data.nx(indx);
+ }
+ if (a == VEG_) data_out = data(indx);
+
  return data_out;
 
 }

@@ -43,6 +43,21 @@ struct VEGALL {
   char  nx(120);	// number of return pulses found
 };
 
+struct VEG_ALL {
+  long rn(120);		// raster + pulse << 24
+  long north(120); 	//surface northing in centimeters
+  long east(120);	//surface easting in centimeters
+  long elevation(120); //first surface elevation in centimeters
+  long mnorth(120);	//mirror northing
+  long meast(120);	//mirror easting
+  long melevation(120);	//mirror elevation
+  long felv(120);	// irange value in ns 
+  short fint(120);	// first pulse peak value
+  long lelv(120);	// last return in centimeters
+  short lint(120);	// last return pulse peak value
+  char  nx(120);	// number of return pulses found
+};
+
 // 94000
 func veg_winpix( m ) {
 extern depth_display_units;
@@ -169,13 +184,15 @@ func ex_veg( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
 */
 
  extern ex_bath_rn, ex_bath_rp, a
+  irange = a(where(rn==a.raster)).irange(i);
+  intensity = a(where(rn==a.raster)).intensity(i);
   rv = VEGPIX();			// setup the return struct
   rv.rastpix = rn + (i<<24);
   if ( is_void( ex_bath_rn )) 
 	ex_bath_rn = -1;
 
-  if ( is_void(a) )
-    a  = array(float, 256, 120, 4);
+  if ( is_void(aa) )
+    aa  = array(float, 256, 120, 4);
 
   if ( ex_bath_rn != rn ) {  // simple cache for raster data
      r = get_erast( rn= rn );
@@ -186,13 +203,15 @@ func ex_veg( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
    rp = ex_bath_rp;
   }
 
+  ctx = cent(*rp.tx(i));
+
   n  = numberof(*rp.rx(i, 1)); 
   rv.sa = rp.sa(i);
   if ( n == 0 ) 
 	return rv;
 
-  w  = *rp.rx(i, 1);  a(1:n, i) = float( (~w+1) - (~w(1)+1) );
-///////  w2 = *rp.rx(i, 2);  a(1:n, i,2) = float( (~w2+1) - (~w2(1)+1) );
+  w  = *rp.rx(i, 1);  aa(1:n, i) = float( (~w+1) - (~w(1)+1) );
+///////  w2 = *rp.rx(i, 2);  aa(1:n, i,2) = float( (~w2+1) - (~w2(1)+1) );
 
  if (!(use_centroid)) {
    nsat = where( w == 0 );			// Create a list of saturated samples 
@@ -214,8 +233,8 @@ func ex_veg( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
 
  }
 
-  da = a(1:n,i,1);
-  dd = a(1:n, i, 1) (dif);
+  da = aa(1:n,i,1);
+  dd = aa(1:n, i, 1) (dif);
 
 /******************************************
    xr(1) will be the first pulse edge
@@ -228,8 +247,8 @@ func ex_veg( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
 
 if ( graph ) {
 window,4; fma;limits
-plmk, a(1:n,i,1), msize=.2, marker=1, color="black";
-plg, a(1:n,i,1);
+plmk, aa(1:n,i,1), msize=.2, marker=1, color="black";
+plg, aa(1:n,i,1);
 plmk, da, msize=.2, marker=1, color="black";
 plg, da;
 plg, dd-100, color="red"
@@ -256,16 +275,16 @@ write, format="rn=%d; i = %d\n",rn,i
            // goto second channel
             ai = 2;
            // write, format="trying channel 2, rn = %d, i = %d\n",rn, i
-            w  = *rp.rx(i, ai);  a(1:n, i,ai) = float( (~w+1) - (~w(1)+1) );
-            da = a(1:n,i,ai);
-            dd = a(1:n, i, ai) (dif);
+            w  = *rp.rx(i, ai);  aa(1:n, i,ai) = float( (~w+1) - (~w(1)+1) );
+            da = aa(1:n,i,ai);
+            dd = aa(1:n, i, ai) (dif);
             if ( numberof(where((w(xr(0):xr(0)+retdist)) == 0 )) >= 2 ) {
               // goto third channel
             //  write, format="trying channel 3, rn = %d, i = %d\n",rn, i
               ai = 3;
-              w  = *rp.rx(i, ai);  a(1:n, i,ai) = float( (~w+1) - (~w(1)+1) );
-              da = a(1:n,i,ai);
-              dd = a(1:n, i, ai) (dif);
+              w  = *rp.rx(i, ai);  aa(1:n, i,ai) = float( (~w+1) - (~w(1)+1) );
+              da = aa(1:n,i,ai);
+              dd = aa(1:n, i, ai) (dif);
               if ( numberof(where((w(xr(0):xr(0)+retdist)) == 0 )) >= 2 ) {
                  write, format="all 3 channels saturated... giving up!, rn=%d, i=%d\n",rn,i
                  ai = 0;
@@ -287,8 +306,8 @@ write, format="rn=%d; i = %d\n",rn,i
 
        if ( graph && ai >= 2) {
          //window,4; fma
-         plmk, a(1:n,i,ai), msize=.2, marker=1, color="yellow";
-         plg, a(1:n,i,ai), color="yellow";
+         plmk, aa(1:n,i,ai), msize=.2, marker=1, color="yellow";
+         plg, aa(1:n,i,ai), color="yellow";
          plmk, da, msize=.2, marker=1, color="yellow";
          plg, da, color="yellow";
          plg, dd-100, color="blue"
@@ -311,22 +330,22 @@ write, format="rn=%d; i = %d\n",rn,i
        } else 
        write, format="idx/idx1 is nuller for rn=%d, i=%d    \r",rn, i  
        //now check to see if it it passes intensity test
-       mxmint = a(xr(0)+1:xr(0)+retdist,i,ai)(max);
-       if (abs(a(xr(0)+1,i,ai) - a(xr(0)+retdist,i,ai)) < 0.2*mxmint) {
+       mxmint = aa(xr(0)+1:xr(0)+retdist,i,ai)(max);
+       if (abs(aa(xr(0)+1,i,ai) - aa(xr(0)+retdist,i,ai)) < 0.2*mxmint) {
            // this return is good to compute centroid
-           b = a(int(xr(0)+1):int(xr(0)+retdist),i,ai); // create array b for retdist returns beyond the last peak leading edge.
+           b = aa(int(xr(0)+1):int(xr(0)+retdist),i,ai); // create array b for retdist returns beyond the last peak leading edge.
            //compute centroid
           if (b(sum) != 0) {
            c = float(b*indgen(1:retdist)) (sum) / (b(sum));
            mx0 = xr(0)+c;
-           if (ai == 1) mv0 = a(int(mx0),i,ai);
+           if (ai == 1) mv0 = aa(int(mx0),i,ai);
            if (ai == 2) {
 	       mx0 = mx0 + 0.36;
-	       mv0 = a(int(mx0),i,ai)+300;
+	       mv0 = aa(int(mx0),i,ai)+300;
 	   }
            if (ai == 3) {
 	       mx0 = mx0 + 0.23;
-	       mv0 = a(int(mx0),i,ai)+600;
+	       mv0 = aa(int(mx0),i,ai)+600;
 	   }
           } else {
            mx0 = -10;
@@ -363,8 +382,8 @@ write, format="rn=%d; i = %d\n",rn,i
 	ftrail = idx1(1);
 	ltrail = retdist;
 	//halftrail = 0.5*(ltrail - ftrail);
-	mx0 = xr(0)+idx1(1);
-	mv0 = a(int(mx0),i,ai);
+	mx0 = irange+xr(0)+idx1(1)-ctx(1);
+	mv0 = aa(int(xr(0)+idx1(1)),i,ai);
        } else {
         mx0 = -10;
 	mv0 = -10;
@@ -372,11 +391,12 @@ write, format="rn=%d; i = %d\n",rn,i
     }
 
    } else { //donot use centroid or trailing edge
-      mx0 = a( xr(0):xr(0)+5, i, 1)(mxx) + xr(0) - 1;	  // find bottom peak now
-      mv0 = a( mx0, i, 1);	          
+      mx0 = irange+aa( xr(0):xr(0)+5, i, 1)(mxx) + xr(0) - 1;	  // find bottom peak now
+      mv0 = aa( mx0, i, 1);	          
     }
     // stuff below is for mx1 (first surface in veg).
-    if (use_centroid) {
+   
+    if (use_centroid || use_peak) {
        np = numberof ( *rp.rx(i,1) );      // find out how many waveform points
                                         // are in the primary (most sensitive)
                                         // receiver channel.
@@ -396,15 +416,22 @@ write, format="rn=%d; i = %d\n",rn,i
        }
 
        if (cv(1) < 10000) {
-          mx1 = cv(1);
+          mx1 = irange+cv(1)-ctx(1);
        } else {
           mx1 = -10;
        }
        mv1 = cv(3);
     } else {
-      mx1 = a( xr(1):xr(1)+5, i, 1)(mxx) + xr(1) - 1;	  // find surface peak now
-      mv1 = a( mx1, i, 1);	          
+      mx1 = aa( xr(1):xr(1)+5, i, 1)(mxx) + xr(1) - 1;	  // find surface peak now
+      mv1 = aa( mx1, i, 1);	          
     }
+
+    // make mx1 be the irange value and mv1 be the intensity value from variable 'a'
+    // edit out tx/rx dropouts
+    el = (int(irange) & 0xc000 ) == 0 ;
+    irange *= el;
+    //mx1 = irange;
+    //mv1 = intensity;
     if ( graph ) {
          plmk, mv1, mx1, msize=.5, marker=7, color="blue", width=1
          plmk, mv0, mx0, msize=.5, marker=7, color="red", width=1
@@ -421,7 +448,7 @@ write, format="rn=%d; i = %d\n",rn,i
   else {
         rv.sa = rp.sa(i);
    	rv.mx0 = -1;
-	rv.mv0 = a(max,i,1);
+	rv.mv0 = aa(max,i,1);
    	rv.mx1 = -1;
 	rv.mv1 = rv.mv0;
 	rv.nx  = numberof(xr);
@@ -451,12 +478,12 @@ func display_veg(veg_arr, felv=, lelv=,  fint=, lint=, cmin=, cmax=, size=, win=
      if ( is_void( cmax )) cmax = -10;
   }
   if (lelv) {
-     elv = veg_arr.elevation/100.-(veg_arr.lelv-veg_arr.felv)/100.;
+     elv = veg_arr.lelv/100.
      if ( is_void( cmin )) cmin = -27;
      if ( is_void( cmax )) cmax = -18;
   }
   if (cht) {
-     elv = (veg_arr.lelv-veg_arr.felv)/100.;
+     elv = (veg_arr.lelv-veg_arr.elevation)/100.;
      if ( is_void( cmin )) cmin = 0;
      if ( is_void( cmax )) cmax = 10;
   }
@@ -522,7 +549,7 @@ func make_fs_veg (d, rrr) {
 if (numberof(d(0,,)) < numberof(rrr)) { len = numberof(d(0,,)); } else { 
    len = numberof(rrr);}
 
-geoveg = array(VEGALL, len);
+geoveg = array(VEG_ALL, len);
 
 for (i=1; i<=len; i=i+1) {
   geoveg(i).rn = rrr(i).raster;
@@ -532,9 +559,17 @@ for (i=1; i<=len; i=i+1) {
   geoveg(i).mnorth = rrr(i).mnorth
   geoveg(i).meast = rrr(i).meast
   geoveg(i).melevation = rrr(i).melevation;
-  geoveg(i).felv = d(,i).mx1*NS2MAIR*100;
+  geoveg(i).felv = d(,i).mx1;
   geoveg(i).fint = d(,i).mv1;
-  geoveg(i).lelv = d(,i).mx0*NS2MAIR*100;
+ // find actual ground surface elevation using simple trig
+  elvdiff = rrr(i).melevation - rrr(i).elevation;
+  eindx = where(d(,i).mx1 > 0 & d(,i).mx0 > 0);
+  if (is_array(eindx)) {
+   elvgrd = rrr(i).melevation(eindx) - (float(d(,i).mx0(eindx))/float(d(,i).mx1(eindx)) * elvdiff(eindx));
+   geoveg(i).lelv(eindx) = int(elvgrd);
+  } else {
+   geoveg(i).lelv = 0;
+  }
   geoveg(i).lint = d(,i).mv0;
   geoveg(i).nx = d(,i).nx;
 
@@ -612,12 +647,12 @@ executing make_veg.  See rbpnav() and rbtans() for details.
     for (i=1;i<=no_t;i++) {
       if ((rn_arr(1,i) != 0)) {
        fcount ++;
-       write, format="Processing segment %d of %d for vegetation\n", i, no_t;
-       d = run_veg(start=rn_arr(1,i), stop=rn_arr(2,i),use_centroid=use_centroid,use_peak=use_peak);
        write, "Processing for first_surface...";
        if (use_peak) use_centroid = 1;
        rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=use_centroid); 
        if (use_peak) use_centroid = 0;
+       write, format="Processing segment %d of %d for vegetation\n", i, no_t;
+       d = run_veg(start=rn_arr(1,i), stop=rn_arr(2,i),use_centroid=use_centroid,use_peak=use_peak);
        a=[];
        write, "Using make_fs_veg for submerged vegetation...";
        veg = make_fs_veg(d,rrr);
@@ -759,7 +794,7 @@ if (is_void(append)) {
 
 if (is_void(append)) {
   /* write header information only if append keyword not set */
-  if (is_void(type)) type = 5;
+  if (is_void(type)) type = 6;
   nwpr = long(12);
 
   rec = array(long, 4);
@@ -805,11 +840,11 @@ for (i=1;i<=len;i++) {
      _write, f, byt_pos, vegall(i).melevation(indx(j));
      byt_pos = byt_pos + 4;
      _write, f, byt_pos, vegall(i).felv(indx(j));
-     byt_pos = byt_pos + 2;
+     byt_pos = byt_pos + 4;
      _write, f, byt_pos, vegall(i).fint(indx(j));
      byt_pos = byt_pos + 2;
      _write, f, byt_pos, vegall(i).lelv(indx(j));
-     byt_pos = byt_pos + 2;
+     byt_pos = byt_pos + 4;
      _write, f, byt_pos, vegall(i).lint(indx(j));
      byt_pos = byt_pos + 2;
      _write, f, byt_pos, vegall(i).nx(indx(j));
