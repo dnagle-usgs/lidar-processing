@@ -93,7 +93,12 @@ func select_points(celldata, exclude=, win=) {
 
   celldata = test_and_clean( celldata );
 
-write,"Left: Examine pixel, Center: Save Pixel, Right: Quit"
+if (is_void(exclude)) {
+  write,"Left: Examine pixel, Center: Save Pixel, Right: Quit"
+} else {
+  write,"Left: Examine pixel, Center: Remove Pixel, Right: Quit"
+}
+  
  
  if (is_void(win)) win = 4;
   
@@ -123,7 +128,12 @@ write,"Left: Examine pixel, Center: Save Pixel, Right: Quit"
      if ( new_point_selected ) {
       new_point_selected = 0;
       selclicks++;
-      write, format="Point saved to workdata. Total points selected:%d\n", selclicks;
+      if (is_void(exclude))  {
+        write, format="Point saved to workdata. Total points selected:%d, Right:Quit.\n", selclicks;
+      } else {
+        write, format="Point removed from workdata. Total points removed:%d. Right:Quit.\n", selclicks;
+      }
+      plmk, mindata.north/100., mindata.east/100., marker=6, color="red", msize=0.4, width=5;
       rtn_data = grow(rtn_data, mindata);
       continue;
      } else {
