@@ -395,7 +395,7 @@ write, format="rn=%d; i = %d\n",rn,i
       mv0 = aa( mx0, i, 1);	          
     }
     // stuff below is for mx1 (first surface in veg).
-   
+
     if (use_centroid || use_peak) {
        np = numberof ( *rp.rx(i,1) );      // find out how many waveform points
                                         // are in the primary (most sensitive)
@@ -953,7 +953,10 @@ func clean_veg(veg_all) {
   indx = where(veg_all.felv > 0);
   if (is_array(indx)) veg_all = veg_all(indx);
 
-  indx = where(veg_all.elevation < 2000);
+  indx = where(veg_all.elevation < 5000);
+  if (is_array(indx)) veg_all = veg_all(indx);
+
+  indx = where(veg_all.elevation > -500);
   if (is_array(indx)) veg_all = veg_all(indx);
 
   return veg_all

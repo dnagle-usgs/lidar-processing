@@ -34,6 +34,7 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, elv=, read_file=) {
    // this function compares each point of kings data within a buffer of eaarl data.
    // amar nayegandhi 11/15/2002.
 
+   extern i, no, be_avg_pts, be, kings_elv, be_elv, diff1, diff2;
    if (!buf) buf = 500 // default to 5 m buffer side.
    indx = where(((kings(1,) >= rgn(1)) &
                  (kings(1,) <= rgn(2))) & 

@@ -418,27 +418,40 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
   return data;
 }
   
-func write_ascii_xyz(geoptr, opath=,ofname=,type=) {
+func write_ascii_xyz(data_arr, opath=,ofname=,type=, indx=) {
   /* this function writes out an ascii file containing x,y,z information.
     amar nayegandhi 04/25/02
+    modified 12/30/02 amar nayegandhi to :
+      write out x,y,z (first surface elevation) data for type=1
+      to split at 1 million points and write to another file
     */
   fn = opath+ofname;
 
   /* open file to read/write (it will overwrite any previous file with same name) */
   f = open(fn, "w");
 
-  geoarr = *(geoptr)(1);
   totw = 0;
+  num_valid = numberof(data_arr.north);
+  xx = 0;
 
-  /* now look through the geobath array of structures and write out only valid points */
-  indx = where(geoarr.depth != -10000);   
-  num_valid = numberof(indx);
-  len = numberof(geoarr);
   for (i=1;i<=num_valid;i++) {
+    ++totw;
+    if (totw == 1000000) {
+      ++xx;
+      close, f
+      fn_new = split_path( fn, 1, ext=1);
+      sxx = swrite(format="%1d",xx);
+      fn_new = fn_new(1)+"_"+sxx+fn_new(2);
+      f = open(fn_new, "w")
+      totw = 1;
+     }
     if (type == 1) {
         /* this writes out xyz depth data */
-         write, f, format="%9.2f  %10.2f  %8.2f \n",geoarr.east(indx(i))/100.,geoarr.north(indx(i))/100., geoarr.depth(indx(i))/100.;
-	 totw++;
+	if (!indx) {
+         write, f, format="%9.2f  %10.2f  %8.2f \n",data_arr.east(i)/100.,data_arr.north(i)/100., data_arr.elevation(i)/100.;
+	 } else {
+         write, f, format="%2d, %9.2f, %10.2f, %8.2f\n",totw, data_arr.east(i)/100.,data_arr.north(i)/100., data_arr.elevation(i)/100.;
+	 }
     }
     if (type == 2) {
         /* this writes out xyz topo data with the 4th word being first surface return intensity */
