@@ -267,6 +267,7 @@ proc request_heading {psf inhd_count} {
 
 
 proc mark_pos { lat lon } {
+  global utm
   scan $lat "%1s%2f%f" df dd mm
   set lat [ expr $dd + $mm/60.0 ]
   if { $df == "S" } {
@@ -277,7 +278,13 @@ proc mark_pos { lat lon } {
   if { $df == "W" } {
     set lon [ expr -$lon ]
   }
+  if {$utm == 0} {
   exp_send "wsav=window();window,6; plmk, $lat, $lon, msize=.5, marker=1, color=\"red\"; window,wsav\r"
+  } else {
+  exp_send "ll2utm, $lat, $lon; \r"
+  expect ">"
+  exp_send "wsav=window();window,6; plmk, UTMNorthing, UTMEasting, msize=.5, marker=1, color=\"red\"; window,wsav\r"
+  }
 }
 
 
@@ -344,6 +351,8 @@ proc rbgga_menu {} {
     exp_send "show_gga_track, color=\"$gga(linecolor)\", skip=$gga(skip)$marker,msize=$gga(msize), utm=$utm; \n\r" 
     expect ">"
     exp_send "\n"
+    expect ">"
+    exp_send "utm= $utm; \r"
     expect ">"
  }
  button $mw.f1.info -text "Info"

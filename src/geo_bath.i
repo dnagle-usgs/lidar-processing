@@ -593,7 +593,7 @@ See also: display_bath, write_geoall, read_yfile, make_bathy
    return &data
 }
 
-func make_bathy(opath=,ofname=,ext_bad_att=, ext_bad_depth=, latlon=, llarr=) {
+func make_bathy(opath=,ofname=,ext_bad_att=, ext_bad_depth=, latutm=, llarr=) {
 /* DOCUMENT make_bathy(opath=,ofname=,ext_bad_att=, ext_bad_depth=, 
             latlon=, llarr=)
 
@@ -621,7 +621,7 @@ See define_bath_ctl()
       See also: first_surface, run_bath, display_bath 
 */
    
-   extern edb, soe_day_start, bath_ctl, tans, pnav, type;
+   extern edb, soe_day_start, bath_ctl, tans, pnav, type, utm;
    
    /* check to see if required parameters have been initialized */
    if (!(type)) {
@@ -661,7 +661,7 @@ See define_bath_ctl()
    write, "\n";
 
     /* select a region using function gga_win_sel in rbgga.i */
-    q = gga_win_sel(2, latlon=latlon, llarr=llarr);
+    q = gga_win_sel(2, latutm=latutm, llarr=llarr);
 
    /* find the start and stop times using gga_find_times in rbgga.i */
    t = gga_find_times(q);

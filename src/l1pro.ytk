@@ -13,6 +13,7 @@ destroy .l1wid
 toplevel .l1wid
 frame .l1wid.bf1
 frame .l1wid.bf2
+frame .l1wid.bf2.utm
 frame .l1wid.bf3
 frame .l1wid.bf4 
 frame .l1wid.bf4.1
@@ -45,30 +46,37 @@ menu .l1wid.mb.load
 		-command { exp_send "type = define_bath_ctl(junk); \r"
 			 }
 
-LabelEntry .l1wid.bf2.op -width 50 -relief sunken -bd 3 -label "Opath:  " -helptext "Enter Output File Path Here" \
+LabelEntry .l1wid.bf2.op  -width 70 -relief sunken -bd 3 -label "Opath:  " -helptext "Enter Output File Path Here" \
 		-textvariable opath
 
-LabelEntry .l1wid.bf2.of -width 50 -relief sunken -bd 3 -label "Ofname: " -helptext "Enter Output File Name for GOOD Data Here" \
+LabelEntry .l1wid.bf2.of  -width 70 -relief sunken -bd 3 -label "Ofname: " -helptext "Enter Output File Name for GOOD Data Here" \
 		-textvariable ofname
 
+ComboBox .l1wid.bf2.utm.1 -text "Coordinate System" -width 18 -values "LatLon UTM" -helptext "Select the Coordinate System." -editable 0 
+
+LabelEntry .l1wid.bf2.utm.2 -width 6 -relief sunken  -label "UTM Zone: " -helptext "Enter UTM Zone Here" \
+		-textvariable zone 
+		#-editable [.l1wid.bf2.utm.1 getvalue]
+
+
 # now make entry and button widgets to select region
-LabelEntry .l1wid.bf3.lat1 -width 8 -relief sunken -label "NorthLat " \
-		-helptext "Enter Maximum Latitude in degrees Here"\
+LabelEntry .l1wid.bf3.lat1 -width 12 -relief sunken -label "NorthLat/Max.Northing " \
+		-helptext "Enter Maximum Latitude in degrees or Maximum UTM Northing in meters Here"\
 		-textvariable mxlat
-LabelEntry .l1wid.bf3.lat2 -width 8 -relief sunken -label "SouthLat " \
-		-helptext "Enter Minimum Latitude in degrees Here"\
+LabelEntry .l1wid.bf3.lat2 -width 12 -relief sunken -label "SouthLat/Min.Northing  " \
+		-helptext "Enter Minimum Latitude in degrees or Minimum UTM Northing in meters Here"\
 		-textvariable mnlat
 
 frame .l1wid.bf3.lon
-LabelEntry .l1wid.bf3.lon.mn -width 8 -relief sunken -label "WestLon " \
-		-helptext "Enter Westernmost Longitude in degrees Here"\
+LabelEntry .l1wid.bf3.lon.mn -width 12 -relief sunken -label "WestLon/Min.Easting  " \
+		-helptext "Enter Westernmost Longitude in degrees or Minimum UTM Easting in meters Here"\
 		-textvariable mnlon
-LabelEntry .l1wid.bf3.lon.mx -width 8 -relief sunken -label "EastLon " \
-		-helptext "Enter Easternmost Longitude in degrees Here"\
+LabelEntry .l1wid.bf3.lon.mx -width 12 -relief sunken -label "EastLon/Max.Easting " \
+		-helptext "Enter Easternmost Longitude in degrees or Maximum UTM Easting in meters Here"\
 		-textvariable mxlon
 Button .l1wid.bf3.lon.but -text "Select Region" -helptext "Select by dragging region in gga plot (window 6)" \
 		-command { 
-		   exp_send "q = gga_win_sel(2,latlon=1);\r"
+		   exp_send "q = gga_win_sel(2,latutm=1);\r"
 		   expect ">"
 		   }
 
@@ -80,9 +88,11 @@ checkbutton .l1wid.bf4.2.cng -text "Convert to NAVD 88 (GEOID)" -variable cng
 Button .l1wid.bf5 -text "Begin Processing" -width 20 \
 		-command {
     if { ![ string equal  "" $ofname ] } {
-       exp_send "make_bathy, opath=\"$opath\", ofname=\"$ofname\",\
-         ext_bad_att=$xba, ext_bad_depth=$xbd, latlon = 1, llarr=\[$mnlon,\
-         $mxlon, $mnlat, $mxlat\];\r"
+          set utm [.l1wid.bf2.utm.1 getvalue]
+	  exp_send "utm = $utm\n"
+          exp_send "make_bathy, opath=\"$opath\", ofname=\"$ofname\",\
+              ext_bad_att=$xba, ext_bad_depth=$xbd, latutm = 1, llarr=\[$mnlon,\
+              $mxlon, $mnlat, $mxlat\];\r"
     } else { 
        tk_messageBox  -icon warning \
         -message "You need to specify an output file name before\
@@ -92,8 +102,8 @@ processing."  \
 }
 
 
-
-pack .l1wid.bf2.op  .l1wid.bf2.of -side top -pady 8
+pack .l1wid.bf2.utm.1 .l1wid.bf2.utm.2 -side left -padx 8
+pack .l1wid.bf2.op  .l1wid.bf2.of .l1wid.bf2.utm -side top -pady 8
 pack .l1wid.bf3.lon.mn .l1wid.bf3.lon.but .l1wid.bf3.lon.mx -side left -padx 4
 pack .l1wid.bf3.lat1 .l1wid.bf3.lon .l1wid.bf3.lat2 -side top -pady 5
 pack  .l1wid.bf4.1.xba .l1wid.bf4.1.xbd  -side top -padx 20 -pady 5
@@ -102,13 +112,16 @@ pack .l1wid.bf4.1 .l1wid.bf4.2 -side left
 pack .l1wid.bf1 .l1wid.bf2 .l1wid.bf3 .l1wid.bf4 -side top -expand 1 -fill both
 pack .l1wid.bf5 -side top -padx 50 -pady 10
 
-proc send_latlon_to_l1pro {minlon maxlon minlat maxlat} {
-   global mnlon mxlon mnlat mxlat
+proc send_latlon_to_l1pro {minlon maxlon minlat maxlat utm} {
+   global mnlon mxlon mnlat mxlat 
+   .l1wid.bf2.utm.1 setvalue @$utm
    set mnlon $minlon
    set mxlon $maxlon
    set mnlat $minlat
    set mxlat $maxlat
 }
+
+
 
 
 

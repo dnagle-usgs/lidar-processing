@@ -41,6 +41,15 @@ Other:
   it must be verified and converted by the gga2bin.c. program.  
 
   $Log$
+  Revision 1.12  2002/07/15 22:31:33  anayegan
+  eaarl.ytk: modified to allow 'Plot' Button in sf_a.tcl to work with UTM coordinates.
+
+  geo_bath.i: minor changes, made keyword latlon to latutm, added variable utm to extern command.
+
+  l1pro.ytk: Added capability to read/write coordinates in UTM.  Region to be extracted may now be selected using UTM.
+
+  rbgga.i: added capability to work in UTM coords.
+
   Revision 1.11  2002/07/11 23:33:03  anayegan
   drast.i: changed geo_rast window from 0 to 2. added feature to plot first surface geo rast only for data less than 70% of mirror elevation.
 
@@ -262,7 +271,7 @@ write, format="Lon:%14.3f %14.3f\n", gga(3,min), gga(3,max)
    return g;
 }
 
-func gga_win_sel( show, win=, color=, msize=, skip= , latlon=, llarr=) {
+func gga_win_sel( show, win=, color=, msize=, skip= , latutm=, llarr=) {
 /* DOCUMENT gga_win_sel( show, color=, msize=, skip= )
 
   There's a bug in yorick 1.5 which causes all the graphics screens to get fouled up
@@ -270,6 +279,7 @@ if you set show=1 when using this function.  The screen will reverse fg/bg and n
 properly to the zoom buttons.
  
 */
+ extern ZoneNumber, utm
  if ( is_void(win) ) 
 	win = 6;
 
@@ -288,9 +298,25 @@ properly to the zoom buttons.
    minlat = llarr(3);
    maxlat = llarr(4);
  }
- if (latlon) {
-   tkcmd, swrite(format="send_latlon_to_l1pro %6.3f %6.3f %6.3f %6.3f", minlon, maxlon, minlat, maxlat);
+ if (latutm) {
+   tkcmd, swrite(format="send_latlon_to_l1pro %7.3f %7.3f %7.3f %7.3f %d\n", minlon, maxlon, minlat, maxlat, utm);
  }
+ if (show == 2) {
+   /* plot a window over selected region */
+   a_x=[minlon, maxlon, maxlon, minlon, minlon];
+   a_y=[minlat, minlat, maxlat, maxlat, minlat];
+   plg, a_y, a_x;
+ }
+ if (utm == 1) {
+     minll = utm2ll(minlat, minlon, ZoneNumber(1));
+     maxll = utm2ll(maxlat, maxlon, ZoneNumber(1));
+     minlat = minll(2);
+     maxlat = maxll(2);
+     minlon = minll(1);
+     maxlon = maxll(1);
+     write, format="minlat = %7.3f, minlon= %7.3f\n", minlat, minlon;
+ }
+
  q = where( gga.lon > minlon );
  qq = where( gga.lon(q) < maxlon );  q = q(qq);
  qq = where( gga.lat(q) > minlat ); q = q(qq);
@@ -301,12 +327,6 @@ properly to the zoom buttons.
    if ( is_void( color ) ) color = "red";
    if ( is_void( skip  ) ) skip  = 10;
    plmk, gga.lat( q(1:0:skip)), gga.lon( q(1:0:skip)), msize=msize, color=color;
- }
- if (show == 2) {
-   /* plot a window over selected region */
-   a_x=[minlon, maxlon, maxlon, minlon, minlon];
-   a_y=[minlat, minlat, maxlat, maxlat, minlat];
-   plg, a_y, a_x;
  }
    
  return q;
