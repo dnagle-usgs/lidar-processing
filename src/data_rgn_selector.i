@@ -155,14 +155,15 @@ func sel_data_ptRadius(data, point=, radius=, win=) {
 
   extern utm
   if (!win) win = 5;
-  if (!point) {
+  if (!is_array(point)) {
      window, win;
      prompt = "Click to define center point in window";
      result = mouse(1, 0, prompt);
      point = [result(1), result(2)];
-     plmk, point(2), point(1), color="black", msize=0.5, marker=2
   }
     
+  window, win;
+  plmk, point(2), point(1), color="black", msize=0.5, marker=2
   if (!radius) radius = 1.0;
 
   radius = float(radius)
