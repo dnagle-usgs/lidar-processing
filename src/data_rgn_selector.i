@@ -18,6 +18,7 @@ func sel_data_rgn(data, type, mode=,win=, exclude=, rgn=) {
   //amar nayegandhi 11/26/02.
  */
 
+  extern q;
   data = test_and_clean( data );
   if (is_void(data)) return [];
   if (is_void(win)) win = 5;
@@ -93,7 +94,7 @@ func sel_data_rgn(data, type, mode=,win=, exclude=, rgn=) {
 }
 
 func sel_data_ptRadius(data, point=, radius=, win=, msize=, retindx=, silent=) {
-  /*DOCUMENT sel_data_ptRadius(data, point, radius=) 
+/* DOCUMENT sel_data_ptRadius(data, point, radius=) 
   	This function selects data given a point (in latlon or utm) and a radius.
 	INPUT:  data:  Data array
 		point = Center point
@@ -181,7 +182,7 @@ func write_sel_rgn_stats(data, type) {
 }
 
 func data_box(x, y, xmin, xmax, ymin, ymax) {
-/*DOCUMENT data_box(x, y, xmin, xmax, ymin, ymax)
+/* DOCUMENT data_box(x, y, xmin, xmax, ymin, ymax)
 	Program takes the arrays (of equal dimension) x and y and returns 
 	the indicies of the arrays that fit inside the box defined by xmin, xmax, ymin, ymax
 */
@@ -420,3 +421,28 @@ func exclude_region(origdata, seldata) {
 }
 
   
+
+func make_GEO_from_VEG(veg_arr) {
+/*
+  this function converts an array processed for vegetation into a bathy (GEO)
+ array.
+ amar nayegandhi 06/07/04.
+*/
+
+ geoarr = array(GEO, numberof(veg_arr));
+ geoarr.rn = veg_arr.rn;
+ geoarr.north = veg_arr.lnorth;
+ geoarr.east = veg_arr.least;
+ geoarr.elevation = veg_arr.elevation;
+ geoarr.mnorth = veg_arr.mnorth;
+ geoarr.meast = veg_arr.meast;
+ geoarr.melevation = veg_arr.melevation;
+ geoarr.bottom_peak = veg_arr.lint;
+ geoarr.first_peak = veg_arr.fint;
+ geoarr.depth = (veg_arr.lelv - veg_arr.elevation);
+ geoarr.soe = veg_arr.soe;
+
+return geoarr;
+
+}
+ 
