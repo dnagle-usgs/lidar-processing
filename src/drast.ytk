@@ -141,13 +141,17 @@ proc ter { n e o } {
 }
 
 proc dus { n e o } {
- global depth_display_units rn total_edb_records
+ global depth_display_units rn total_edb_records elevation_offset
+ if {$depth_display_units != "georef"} {
 ###########  exp_send "depth_display_units = \"$depth_display_units\" \r" 
   exp_send "set_depth_scale, \"$depth_display_units\" \r" 
     expect ">"
   if { $total_edb_records != 0 } {
     exp_send "ytk_rast,$rn; redraw\r" 
   }
+ } else {
+  exp_send "geo_rast( $rn, fsmarks=1, eoffset=$elevation_offset );\r"
+ }
 }
 
 ## AN: added procedure sft to be used with the trace command for sf
@@ -273,6 +277,10 @@ frame .rslider.bf2
 	-variable depth_display_units \
 	-label Nanoseconds \
 	-value ns
+.rslider.mb.graph add radiobutton \
+	-variable depth_display_units \
+	-label GeoReferenced \
+	-value georef
 
 set wfc1 1
 set wfc2 2
@@ -408,10 +416,14 @@ bind .rslider.scale <ButtonRelease>  {
 
 
 button .rslider.bf2.exwf -text "Examine waveforms" -command {
-  global blist
+  global blist depth_display_units
   gstate $blist disabled
   update idletasks
-  exp_send "window,1; rn = $rn; msel_wf(wfa, cb=$wf_chan)\r";
+  if {$depth_display_units == "georef"} {
+    exp_send "rn = $rn; msel_wf(wfa, cb=$wf_chan, geo=1)\r";
+  } else {
+    exp_send "rn = $rn; msel_wf(wfa, cb=$wf_chan)\r";
+  }
   set timeout 9999
   expect "completed"
   gstate $blist normal

@@ -229,21 +229,37 @@ window,1
    41 = ctl-left 42 = ctl-middle 43 = ctl-right
 */
 
-func msel_wf( w, cb= ) {
-extern rn, bath_ctl
+func msel_wf( w, cb=, geo= ) {
+
+win = 1;
+if (geo == 1) win = 2; //use georectified raster
+
+window, win;
+extern rn, bath_ctl, xm;
  btn = 0;
  if ( is_void( cb ) ) 
 	cb = 7;
+ prompt = swrite(format="Window: %d. Left click: Examine Waveform. Middle click: Exit",win);
  while ( 1 ) {
-    b = mouse();
-    idx = int(b(1));  
+    b = mouse(1,0,prompt);
+    prompt = "";
+    if (b(1) == 0) {
+       write, "Wrong Window... Try Again.";
+       break;
+    }
+    if (win == 1) idx = int(b(1));  
+    if (win == 2) {
+	idx = (abs(b(1)-xm))(mnx);	
+    }
+	
     btn = int(b(11)*10 + b(10));
     if ( btn == 2 ) break;
-      show_wf, *w, idx , win=0, cb=cb  
+      if (!geo) show_wf, *w, idx , win=0, cb=cb  
+      if (geo) show_geo_wf, *w, idx, win=0, cb=cb
       if (is_array(bath_ctl)) {
         if (bath_ctl.laser != 0) ex_bath, rn, idx, graph=1, win=4;
       }
-      window, 1;
+      window, win;
     write,format="Pulse %d\n", idx
  }
  write,"msel_wf completed"
@@ -266,13 +282,15 @@ func show_wf( r, pix, win=, nofma=, cb=, c1=, c2=, c3=, raster= ) {
      c3=
  raster= 	Raster where pulse is located.  This is printed if present.
 
+ georef= plot georeferenced waveform (extern variable fs must have geo info)
+
  Outputs:
 
  Returns:
 
 
 *******************************************************/
- extern depth_scale, depth_display_units, data_path;
+ extern depth_scale, depth_display_units, data_path, fs, a;
   if ( !is_void(win) ) {
      oldwin = window();
      window,win;
@@ -314,6 +332,48 @@ func show_wf( r, pix, win=, nofma=, cb=, c1=, c2=, c3=, raster= ) {
 }
 
 
+func show_geo_wf( r, pix, win=, nofma=, cb=, c1=, c2=, c3=, raster= ) {
+
+ extern data_path, fs, a;
+ 
+ elvdiff = fs(1).melevation(pix)-fs(1).elevation(pix);
+  if ( !is_void(win) ) {
+     oldwin = window();
+     window,win;
+  }
+  if ( is_void( nofma ) ) 
+	fma;
+  if ( !is_void ( cb ) ) {
+    if (cb & 1 ) c1=1;
+    if (cb & 2 ) c2=1;
+    if (cb & 4 ) c3=1;
+  }
+
+  elv = fs(1).elevation(pix)/100.;
+
+  elvspan = elv-span(-3,246,250)*0.11;
+  
+  if ( !is_void(c1) ) {
+    plg,elvspan,r(,pix,1), marker=0, color="black";    
+    plmk,elvspan,r(,pix,1),msize=.2,marker=1,color="black"
+  }
+  if ( !is_void(c2) ) {
+    plg,elvspan,r(,pix,2), marker=0, color="red";    
+    plmk,elvspan,r(,pix,2),msize=.2,marker=1,color="red"
+  }
+  if ( !is_void(c3) ) {
+    plg,elvspan,r(,pix,3), marker=0, color="blue";    
+    plmk,elvspan,r(,pix,3),msize=.2,marker=1,color="blue"
+  }
+  if ( is_void( raster ) ) {
+     xytitles,swrite(format="Pix:%d   Digital Counts", pix),
+     "Height (m)"; 
+  } else {
+     xytitles,swrite(format="Raster:%d Pix:%d   Digital Counts", raster, pix),
+     " Height (m)";
+  }
+  pltitle, data_path
+}
 
 func geo_rast(rn, fsmarks=, eoffset=   )  {
 /* DOCUMENT get_rast(rn, fsmarks=   )
@@ -331,6 +391,7 @@ func geo_rast(rn, fsmarks=, eoffset=   )  {
 
 */
 
+ extern xm, fs;
  winsave = window();
  window,2
  animate,2;
@@ -353,9 +414,10 @@ for (i=1; i<120; i++ ) {
     plcm, 255-zz,y,x, cmin=0, cmax=255, msize=2.0;
   }
 }
-  if ( !is_void( fsmarks) ) 
+  if ( !is_void( fsmarks) ) {
      indx = where(fs(1).elevation <= 0.4*(fs(1).melevation));
      plmk, sp(indx)+eoffset, xm(indx), marker=4, msize=.1, color="magenta"
+  }
 
   window(winsave);
 }
