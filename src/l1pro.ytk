@@ -89,6 +89,10 @@ menu .l1wid.mb.options
   }
 	
 .l1wid.mb.file add command -label "Read Data Directory... " -underline 10 -command {
+	global data_file_path
+        if { [info exists data_file_path ] == 0 } {
+              set data_file_path "~/"
+        }
 	destroy .l1dir
         toplevel .l1dir
 	frame .l1dir.1
