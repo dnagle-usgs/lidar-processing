@@ -103,7 +103,7 @@ func set_tile_filename(m, win=) {
 		curzone=0;
                 sread(zone, format="%d", curzone);
 	}
-	zone = swrite(format="%d", curzone); //Here zone was read as a string, converted to long and now back to string, but needed to make curzone global
+	zone = swrite(format="%d", long(curzone)); //Here zone was read as a string, converted to long and now back to string, but needed to make curzone global
 	//zonel = utm_zone_letter(nmax); //gets zone letter from function in batch_process;
 	type = "b"; //I still need to put in this part .. defaults to bathy for now.
 	tilefname = swrite(format="t_e%d_n%d_%s_%s_%s_mf.pbd", emin, nmax, zone, mdate, type);
