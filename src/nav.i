@@ -432,9 +432,11 @@ extern curzone; // current zone number if in UTM
   } else {
     res = array(float, 4 );
     n = sread(line,format="%f %f %f %f", res(2), res(1), res(4), res(3) )
+    // lldist output is in nautical miles, x by 1.852 for km
     km = lldist( res(2), res(1), res(4), res(3) ) * 1.852;
     sf = aw / km;		// determine scale factor
   }
+    write, format="Scale factor before = %5.3f\n",sf;
 
 
   if (in_utm == 1) {
@@ -456,6 +458,7 @@ extern curzone; // current zone number if in UTM
 // adjust so all segments are from left to right 
 // only the user coords. are changed
 
+if (mode != 4) {
   if ( res(1) > res(3) ) {	
     temp = res;
     res(1) = temp(3);
@@ -464,10 +467,10 @@ extern curzone; // current zone number if in UTM
     res(4) = temp(2);
     sf = -sf;		// keep block on same side
   }
+}
 res
 
 
-  sf2 = sf/2.0;			// half the scan width
      
   llat = [res(2), res(4)];
   llon = [res(1), res(3)] - res(1);   // translate to zero longitude
@@ -588,9 +591,17 @@ res
     //} else {
     //  mode = 3;
     //}
+    // redefine scale factor sf
+    km = sqrt((UTMNorthing(2)-UTMNorthing(1))^2+(UTMEasting(2)-UTMEasting(1))^2);
+    km = km/1000.;
+    sf = aw/km;
+    write, format="Scale factor after = %5.3f\n",sf;
+    
   }
   dv = [UTMNorthing (dif), UTMEasting(dif)];
   dv = [dv(1),dv(2)];
+
+  sf2 = sf/2.0;			// half the scan width
 
    if ( (mode == 1) || (mode==3) ) {
     if ( mode == 3) {
