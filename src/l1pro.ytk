@@ -1469,10 +1469,15 @@ Button .l1wid.bf45.q.3 -text "Color\nBar" \
 }
 Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
 		-command {
+	global varlist
 	destroy .l1clip
         toplevel .l1clip
         wm title .l1clip "Elevation Clipper"
+	frame .l1clip.05
 	frame .l1clip.1
+	frame .l1clip.2
+	frame .l1clip.3
+	frame .l1clip.4
         set ptype [.l1wid.bf4.1.p getvalue]
 	#SpinBox  .l1clip.max -range { -100. 5000. 10. }  \
 	#	-textvariable max_elv -text "Maximum Elevation"
@@ -1481,93 +1486,234 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
 	#SpinBox  .l1clip.range \
 	#	-range { 1 100 } \
          #       -textvariable range_elv  -text "Vertical Range"
-        checkbutton .l1clip.proc -text "Use this clipper to process new data" -variable proc_clip 
-        checkbutton .l1clip.ymin -variable ymin \
+        ##checkbutton .l1clip.proc -text "Use this clipper to process new data" -variable proc_clip 
+        Label .l1clip.05.varname -text "Input Variable:"
+        ComboBox .l1clip.05.varlist  -values \
+  	 $varlist \
+	 -helptext "Select any one of the following variables" \
+	 -editable 0 \
+         -modifycmd { 
+          global outvar varlist
+          set curvar [lindex $varlist [.l1clip.05.varlist getvalue]]
+	  set outvar $curvar
+	  set curidx [.l1clip.05.varlist getvalue]
+	  .l1wid.bf45.p.15 setvalue @$curidx
+	  retrieve_plot_settings [expr ($curidx+1)]
+         }
+
+        set curvar [.l1wid.bf45.p.15 getvalue]
+        .l1clip.05.varlist setvalue @$curvar
+        checkbutton .l1clip.1.ymin -variable ymin \
 		-command {
 		    if {$ymin == 1} {
 			set yrange 0
-			.l1clip.min.sb configure -state normal
-			.l1clip.min.lb configure -state normal
-			.l1clip.min.sc configure -state normal
-			.l1clip.range.sb configure -state disabled
-			.l1clip.range.lb configure -state disabled
-			.l1clip.range.sc configure -state disabled
+			.l1clip.1.min.sb configure -state normal
+			.l1clip.1.min.lb configure -state normal
+			.l1clip.1.min.sc configure -state normal
+			.l1clip.3.range.sb configure -state disabled
+			.l1clip.3.range.lb configure -state disabled
+			.l1clip.3.range.sc configure -state disabled
 		    }
 		    if {$ymin == 0} {
-			.l1clip.min.sb configure -state disabled
-			.l1clip.min.lb configure -state disabled
-			.l1clip.min.sc configure -state disabled
+			.l1clip.1.min.sb configure -state disabled
+			.l1clip.1.min.lb configure -state disabled
+			.l1clip.1.min.sc configure -state disabled
 		    }
 			
 		}
-        checkbutton .l1clip.ymax -variable ymax \
+        checkbutton .l1clip.2.ymax -variable ymax \
 		-command {
 		    if {$ymax == 1} {
 			set yrange 0
-			.l1clip.max.sb configure -state normal
-			.l1clip.max.lb configure -state normal
-			.l1clip.max.sc configure -state normal
-			.l1clip.range.sb configure -state disabled
-			.l1clip.range.lb configure -state disabled
-			.l1clip.range.sc configure -state disabled
+			.l1clip.2.max.sb configure -state normal
+			.l1clip.2.max.lb configure -state normal
+			.l1clip.2.max.sc configure -state normal
+			.l1clip.3.range.sb configure -state disabled
+			.l1clip.3.range.lb configure -state disabled
+			.l1clip.3.range.sc configure -state disabled
 		    }
 		    if {$ymax == 0} {
-			.l1clip.max.sb configure -state disabled
-			.l1clip.max.lb configure -state disabled
-			.l1clip.max.sc configure -state disabled
+			.l1clip.2.max.sb configure -state disabled
+			.l1clip.2.max.lb configure -state disabled
+			.l1clip.2.max.sc configure -state disabled
 		    }
  		}
-        checkbutton .l1clip.yrange -variable yrange \
+        checkbutton .l1clip.3.yrange -variable yrange \
 		 -command {
-		    if {$yrange == 1} {
-			set ymin 0
-			set ymax 0
-			.l1clip.range.sb configure -state normal
-			.l1clip.range.lb configure -state normal
-			.l1clip.range.sc configure -state normal
-			.l1clip.min.sb configure -state disabled
-			.l1clip.min.lb configure -state disabled
-			.l1clip.min.sc configure -state disabled
-			.l1clip.max.sb configure -state disabled
-			.l1clip.max.lb configure -state disabled
-			.l1clip.max.sc configure -state disabled
-		    }
-		    if {$yrange == 0} {
-			.l1clip.range.sb configure -state disabled
-			.l1clip.range.lb configure -state disabled
-			.l1clip.range.sc configure -state disabled
-		    }
+			set yrange_elv 0
+##		    if {$yrange == 1} {
+##			set ymin 0
+##			set ymax 0
+##			.l1clip.3.range.sb configure -state normal
+##			.l1clip.3.range.lb configure -state normal
+##			.l1clip.3.range.sc configure -state normal
+##			.l1clip.1.min.sb configure -state disabled
+##			.l1clip.1.min.lb configure -state disabled
+##			.l1clip.1.min.sc configure -state disabled
+##			.l1clip.2.max.sb configure -state disabled
+##			.l1clip.2.max.lb configure -state disabled
+##			.l1clip.2.max.sc configure -state disabled
+##		    }
+##		    if {$yrange == 0} {
+##			.l1clip.3.range.sb configure -state disabled
+##			.l1clip.3.range.lb configure -state disabled
+##			.l1clip.3.range.sc configure -state disabled
+##		    }
 		 }
-        sst .l1clip.max   max_elv   "  Maximum Elevation:"  { -100 1000.0 0.1  }
-        sst .l1clip.min   min_elv   "  Minimum Elevation:"  { -100 1000.0 0.1  }
-        sst .l1clip.range   range_elv   "  Vertical Range:"  { 0 100.0 0.1  }
+        sst .l1clip.2.max   max_elv   "Maximum Elevation:"  { -100 1000.0 0.1  }
+        sst .l1clip.1.min   min_elv   "Minimum Elevation:"  { -100 1000.0 0.1  }
+        sst .l1clip.3.range   range_elv   "Vertical Range:"  { 0 300.0 0.1  }
 
-	Button .l1clip.1.ok -text "OK" -width 5 -command {
+	set max_elv $cmax
+	set min_elv $cmin
+	set range_elv $cdelta
+
+        set curvar  [lindex $varlist [.l1clip.05.varlist getvalue]]
+        LabelEntry .l1clip.35 -relief sunken -label "Output Variable:" -helptext "Define output variable" \
+	-textvariable outvar -text "$curvar"
+
+	Button .l1clip.4.ok -text "OK" -width 5 -command {
+	  
+	  global outvar curvar
 	    
           set ptype [.l1wid.bf4.1.p getvalue]
-          set disp_type [.l1wid.bf45.p.5 getvalue]
+          set dtype [.l1wid.bf45.p.5 getvalue]
 	  if {$ptype == 0} {
-		//for surface topography
+	      ##for surface topography
+	      if {$ymin == 1 && $ymax == 1} {
+		   exp_send "$outvar = $curvar\(where(($curvar.elevation >= $min_elv*100) & ($curvar.elevation <= $max_elv*100)));\r"
+		   expect ">"
+	      } else {
+	     	if {$ymin == 1} {
+		   exp_send "$outvar = $curvar\(where($curvar.elevation >= $min_elv*100));\r"
+		   expect ">"
+		}
+	     	if {$ymax == 1} {
+		   exp_send "$outvar = $curvar\(where($curvar.elevation <= $max_elv*100));\r"
+		   expect ">"
+		}
+	      }
+	      if {$yrange == 1} {
+		   exp_send "sel_ptr = rcf($curvar.elevation,$range_elv*100,mode=2); $outvar = $curvar(*sel_ptr(1));\r" 
+		   expect ">"
+	      }
 	  }
 	  if {$ptype == 1} {
-		//for bathymetry
+	      ##for bathymetry
+	    	if {$dtype == 1} {
+	      	  if {$ymin == 1 && $ymax == 1} {
+		   exp_send "$outvar = $curvar\(where(($curvar.elevation+$curvar.depth >= $min_elv*100) & ($curvar.elevation+$curvar.depth <= $max_elv*100)));\r"
+		   expect ">"
+	          } else {
+		   if {$ymin == 1} {
+                     exp_send "$outvar = $curvar\(where(($curvar.elevation+$curvar.depth) >= $min_elv\*100));\r"
+		     expect ">"
+                   }
+                   if {$ymax == 1} {
+                     exp_send "$outvar = $curvar\(where(($curvar.elevation+$curvar.depth) <= $max_elv*100));\r"
+		     expect ">"
+                   }
+		  }
+                  if {$yrange == 1} {
+                     exp_send "sel_ptr = rcf(($curvar.elevation+$curvar.depth),$range_elv*100,mode=2); $outvar = $curvar\(*sel_ptr(1));\r"
+		     expect ">"
+                  }
+		}
+		if {$dtype == 0} {
+	      	  if {$ymin == 1 && $ymax == 1} {
+		   exp_send "$outvar = $curvar\(where(($curvar.elevation >= $min_elv*100) & ($curvar.elevation <= $max_elv*100)));\r"
+		   expect ">"
+	          } else {
+		   if {$ymin == 1} {
+                     exp_send "$outvar = $curvar\(where($curvar.elevation >= $min_elv*100));\r"
+		     expect ">"
+                   }
+                   if {$ymax == 1} {
+                     exp_send "$outvar = $curvar\(where($curvar.elevation <= $max_elv*100));\r"
+		     expect ">"
+                   }
+		  }
+                   if {$yrange == 1} {
+                     exp_send "sel_ptr = rcf($curvar.elevation,$range_elv*100,mode=2); $outvar = $curvar\(*sel_ptr(1));\r"
+		     expect ">"
+                   }
+		}
+		if {$dtype == 2} {
+	      	  if {$ymin == 1 && $ymax == 1} {
+		   exp_send "$outvar = $curvar\(where(($curvar.depth >= $min_elv*100) & ($curvar.depth <= $max_elv*100)));\r"
+		   expect ">"
+	          } else {
+		   if {$ymin == 1} {
+                     exp_send "$outvar = $curvar\(where($curvar.depth >= $min_elv*100));\r"
+                   }
+                   if {$ymax == 1} {
+                     exp_send "$outvar = $curvar\(where($curvar.depth <= $max_elv*100));\r"
+                   }
+		  }
+                   if {$yrange == 1} {
+                     exp_send "sel_ptr = rcf($curvar.depth,$range_elv*100,mode=2); $outvar = $curvar\(*sel_ptr(1));\r"
+                   }
+		}
+
 	  }
 	  if {$ptype == 2} {
-		//for vegetation
+		##for vegetation
+		if {$dtype == 0} {
+	      	  if {$ymin == 1 && $ymax == 1} {
+		   exp_send "$outvar = $curvar\(where(($curvar.elevation >= $min_elv*100) & ($curvar.elevation <= $max_elv*100)));\r"
+		   expect ">"
+	          } else {
+		   if {$ymin == 1} {
+                     exp_send "$outvar = $curvar(where\($curvar.elevation >= $min_elv*100));\r"
+                   }
+                   if {$ymax == 1} {
+                     exp_send "$outvar = $curvar(where\($curvar.elevation <= $max_elv*100));\r"
+                   }
+		  }
+                  if {$yrange == 1} {
+                     exp_send "sel_ptr = rcf($curvar.elevation,$range_elv*100,mode=2); $outvar = $curvar\(*sel_ptr(1));\r"
+                  }
+		}
+		if {$dtype == 3} {
+	      	  if {$ymin == 1 && $ymax == 1} {
+		   exp_send "$outvar = $curvar\(where(($curvar.lelv >= $min_elv*100) & ($curvar.lelv <= $max_elv*100)));\r"
+		   expect ">"
+	          } else {
+		   if {$ymin == 1} {
+                     exp_send "$outvar = $curvar\(where($curvar.lelv >= $min_elv*100));\r"
+                   }
+                   if {$ymax == 1} {
+                     exp_send "$outvar = $curvar\(where($curvar.lelv <= $max_elv*100));\r"
+                   }
+		  }
+                  if {$yrange == 1} {
+                     exp_send "sel_ptr = rcf($curvar.lelv,$range_elv*100,mode=2); $outvar = $curvar\(*sel_ptr(1));\r"
+                  }
+		}
 	  }
 	    destroy .l1clip
           }
  
- 	Button .l1clip.1.cancel -text "Cancel" -width 5 -command {
+ 	Button .l1clip.4.cancel -text "Cancel" -width 5 -command {
 	   destroy .l1clip
  	}
 
- 	Button .l1clip.1.dismiss -text "Dismiss" -width 5 -command {
+ 	Button .l1clip.4.dismiss -text "Dismiss" -width 5 -command {
 	   destroy .l1clip
  	}
 
-	pack .l1clip.1.ok .l1clip.1.cancel .l1clip.1.dismiss -side left -padx 5
-	pack .l1clip.proc .l1clip.ymin .l1clip.min .l1clip.ymax .l1clip.max .l1clip.yrange .l1clip.range .l1clip.1 -side top -pady 5	
+	pack .l1clip.05.varname .l1clip.05.varlist -side left -padx 5 
+	pack .l1clip.1.ymin .l1clip.1.min -side left -padx 5 
+	pack .l1clip.2.ymax .l1clip.2.max -side left -padx 5
+	pack .l1clip.3.yrange .l1clip.3.range -side left -fill x
+	
+	pack .l1clip.4.ok .l1clip.4.cancel .l1clip.4.dismiss -side left -padx 5
+	pack .l1clip.05 .l1clip.1 .l1clip.2 .l1clip.3 .l1clip.35 .l1clip.4 -side top -pady 5	
+
+	.l1clip.3.range.sb configure -state disabled
+	.l1clip.3.range.lb configure -state disabled
+	.l1clip.3.range.sc configure -state disabled 
+	set range_elv 0
   }
 
 Button .l1wid.bf45.q.44 -text "Overlay\nGrid" -command {
@@ -1578,7 +1724,7 @@ Button .l1wid.bf45.q.45 -text "Show\nGrid Name" -command {
   exp_send "show_grid_location, $win_no\r"
 }
 
-.l1wid.bf45.q.4 configure -state disabled
+##.l1wid.bf45.q.4 configure -state disabled
 
 
 checkbutton .l1wid.bf45.q.5 -text "Set Plot Limits" -variable usecentroid 
@@ -1685,8 +1831,11 @@ proc removing_proc {} {
 	-helptext "Select any one of the following variables" \
 	-editable 0 \
         -modifycmd { 
-         global outvar varlist
+         global varlist
          set curvar [lindex $varlist [.rem.05.varlist getvalue]]
+	 set curidx [.rem.05.varlist getvalue]
+	 .l1wid.bf45.p.15 setvalue @$curidx
+	 retrieve_plot_settings [expr ($curidx+1)]
        }
 
        set curvar [.l1wid.bf45.p.15 getvalue]
@@ -1765,6 +1914,9 @@ proc keep_proc {} {
         -modifycmd { 
          global outvar varlist
          set curvar [lindex $varlist [.sel.05.varlist getvalue]]
+	 set curidx [.sel.05.varlist getvalue]
+	 .l1wid.bf45.p.15 setvalue @$curidx
+	 retrieve_plot_settings [expr ($curidx+1)]
        }
 
        set curvar [.l1wid.bf45.p.15 getvalue]
