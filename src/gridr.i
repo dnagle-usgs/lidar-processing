@@ -74,7 +74,7 @@ tilefn = "";
 }
 
 func set_tile_filename(m, win=, nodata=) {
-	extern curzone, tilename, finaldata; 
+	extern curzone, tilename, finaldata, ifinaldata; 
 	if (is_void(win)) win = window();
  	if (is_void(finaldata) && (!nodata)) {
 	   write, "No finaldata found.  Cannot Save"
@@ -85,13 +85,13 @@ func set_tile_filename(m, win=, nodata=) {
 	emin = 2000*(int(m(1)/2000.));
 	nmax = int(2000*(ceil(m(2)/2000.)));
 	if (!nodata) {
-	  finaldata = finaldata(data_box(finaldata.east/100.0, finaldata.north/100.0, emin, emin+2000, nmax-2000, nmax)); //Selects finaldata only from the clicked tile;
+	  ifinaldata = finaldata(data_box(finaldata.east/100.0, finaldata.north/100.0, emin, emin+2000, nmax-2000, nmax)); //Selects finaldata only from the clicked tile;
 
-	  // find the unique elements in the finaldata array
-	  finaldata = finaldata(sort(finaldata.rn));
-	  idx = unique(finaldata.rn, ret_sort=1);
-	  finaldata = finaldata(idx);
-	  ymd = soe2ymd(finaldata.soe(where(finaldata.soe == min(finaldata.soe))));                                 // finds the year-month-day of the lowest SOE value;
+	  // find the unique elements in the ifinaldata array
+	  ifinaldata = ifinaldata(sort(ifinaldata.rn));
+	  idx = unique(ifinaldata.rn, ret_sort=1);
+	  ifinaldata = ifinaldata(idx);
+	  ymd = soe2ymd(ifinaldata.soe(where(ifinaldata.soe == min(ifinaldata.soe))));                                 // finds the year-month-day of the lowest SOE value;
 	  if (ymd(2) <=9) m = swrite(format="0%d", ymd(2));
 	  if (ymd(2) >9)  m = swrite(format="%d", ymd(2));
 	  if (ymd(3) <=9) d = swrite(format="0%d", ymd(3));

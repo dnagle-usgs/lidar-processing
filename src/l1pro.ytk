@@ -1820,7 +1820,7 @@ ComboBox .l1wid.bf45.r.7 -text " Filter tools..." -width 16\
              }
           } 
 proc removing_proc {} {
-       global varlist
+       global varlist curvar
        destroy .rem
        toplevel .rem
        frame .rem.05
@@ -1831,7 +1831,7 @@ proc removing_proc {} {
 	-helptext "Select any one of the following variables" \
 	-editable 0 \
         -modifycmd { 
-         global varlist
+         global varlist curvar
          set curvar [lindex $varlist [.rem.05.varlist getvalue]]
 	 set curidx [.rem.05.varlist getvalue]
 	 .l1wid.bf45.p.15 setvalue @$curidx
@@ -1850,7 +1850,7 @@ proc removing_proc {} {
 	 -helptext "Remove points from \'workdata\' using any of the following methods:\n Rubberband Box\n Points in Polygon\n Single Pixel" -editable 0 
        Button .rem.2 -width 8 -text "Go" \
        -command {
-         global varlist outvar selr
+         global varlist outvar selr curvar
 
          set selr [.rem.1 getvalue]
          if {$selr == 0} {
@@ -1900,7 +1900,7 @@ proc removing_proc {} {
    }
 
 proc keep_proc {} {
-       global varlist
+       global varlist curvar
        destroy .sel
        toplevel .sel
        wm title .sel "Keep Points Using..."
@@ -1912,7 +1912,7 @@ proc keep_proc {} {
 	-helptext "Select any one of the following variables" \
 	-editable 0 \
         -modifycmd { 
-         global outvar varlist
+         global outvar varlist curvar
          set curvar [lindex $varlist [.sel.05.varlist getvalue]]
 	 set curidx [.sel.05.varlist getvalue]
 	 .l1wid.bf45.p.15 setvalue @$curidx
@@ -1946,7 +1946,7 @@ proc keep_proc {} {
 
        Button .sel.2 -width 8 -text "Go" \
        -command {
-         global varlist outvar sels keep_var
+         global varlist outvar sels keep_var curvar
 
          set sels [.sel.1 getvalue]
          if {$sels == 0} {
@@ -2038,7 +2038,8 @@ Button .l1wid.bf45.r.6 -text "Save Tile" -command {
 		-initialfile $tilefname \
 	       ]
     if {$ofname != ""} {
-        exp_send "$tilename = finaldata; vname=tilename; save, createb(\"$ofname\"), vname, $tilename;\r";
+        exp_send "$tilename = ifinaldata; vname=tilename; save, createb(\"$ofname\"), vname, $tilename;\r"
+	expect ">"
     }
   }
 
