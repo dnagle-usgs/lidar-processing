@@ -1128,7 +1128,7 @@ func pbd_to_yfile(filename) {
 }
 
    
-func merge_data_pbds(filepath, write_to_file=, merged_filename=, vname=, skip=) {
+func merge_data_pbds(filepath, write_to_file=, merged_filename=, vname=, skip=, searchstring=) {
  /*DOCUMENT merge_data_pbds(filename) 
    This function merges the EAARL processed pbd data files in the given filepath
    INPUT:
@@ -1144,7 +1144,8 @@ func merge_data_pbds(filepath, write_to_file=, merged_filename=, vname=, skip=) 
  eaarl = [];
  // find all the pbd files in filepath
  s = array(string, 1000);
- ss = ["*.pbd"];
+ if (searchstring) ss = [searchstring];
+ if (!searchstring) ss = ["*.pbd"];
  scmd = swrite(format="find %s -name '%s'", filepath, ss);
  fp = 1; lp = 0;
  for (i=1; i<=numberof(scmd); i++) {
