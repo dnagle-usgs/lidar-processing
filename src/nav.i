@@ -1365,3 +1365,40 @@ if (plot) {
    pl_fp, fpfp, win=win, color="blue"
 }
 }
+
+func write_globalmapper_fp(fp=, ifname=, ofname=, out_utm=) {
+  /* DOCUMENT write_globalmapper_fp(fp, ifname=, ofname=) 
+     This function writes out the flight plan to an ascii file formatted for global mapper.
+     INPUT:
+        fp = flight plan array. If ifname is set, fp is not required.
+	ifname= input file name for the flight planning file. If fp is set, ifname is not required.
+	ofname = output file name for the Ascii Global Mapper formatted file.  If ifname is set and ofname is not set, ofname will be determined from ifname.
+	out_utm = set to 1 if you want the output to be in UTM coordinates
+     Amar Nayegandhi Feb 10, 2005.
+     */
+
+   if (!is_void(ifname)) {
+      fp = read_fp(ifname, out_utm=out_utm);
+   }
+
+   if (is_void(ofname)) {
+      sp = split_path(ifname,0, ext=1);
+      if (is_void(out_utm)) {
+        ofname = sp(1)+"_globalmapper"+sp(2);
+	} else {
+        ofname = sp(1)+"_globalmapper_utm"+sp(2);
+	}
+
+   }
+
+   
+   f = open(ofname,"w");
+   if (is_void(out_utm)) {
+     write, f, format="%10.6f %10.6f \n%10.6f %10.6f\n\n",fp.lon1, fp.lat1, fp.lon2, fp.lat2;
+   } else {
+     write, f, format="%10.2f %10.2f \n%10.2f %10.2f\n\n",fp.lon1, fp.lat1, fp.lon2, fp.lat2;
+   }
+      
+   close, f;
+
+}
