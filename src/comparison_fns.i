@@ -134,8 +134,61 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=) {
   // mode = 2; //for bathymetry
   // mode = 3; // for bare earth vegetation
 
- //reset new_eaarl
+ //reset new_eaarl and data_out
  new_eaarl = [];
+ data_out = [];
+
+ // if data array is in raster format (R, GEOALL, VEGALL), then covert to 
+ // non raster format (FS, GEO, VEG).
+ a = structof(eaarl);
+ if (a == R) {
+   indx = where(eaarl.north != 0);
+   data_out = array(FS, numberof(indx));
+   data_out.rn = eaarl.raster(indx);
+   data_out.mnorth = eaarl.mnorth(indx);
+   data_out.meast = eaarl.meast(indx);
+   data_out.melevation = eaarl.melevation(indx);
+   data_out.north = eaarl.north(indx);
+   data_out.east = eaarl.east(indx);
+   data_out.elevation = eaarl.elevation(indx);
+   data_out.intensity = eaarl.intensity(indx);
+ }
+
+ if (a == GEOALL) {
+   indx = where(eaarl.north != 0);
+   data_out = array(GEO, numberof(indx));
+   data_out.rn = eaarl.rn(indx);
+   data_out.north = eaarl.north(indx);
+   data_out.east = eaarl.east(indx);
+   data_out.sr2 = eaarl.sr2(indx);
+   data_out.elevation = eaarl.elevation(indx);
+   data_out.mnorth = eaarl.mnorth(indx);
+   data_out.meast = eaarl.meast(indx);
+   data_out.melevation = eaarl.melevation(indx);
+   data_out.bottom_peak = eaarl.bottom_peak(indx);
+   data_out.first_peak = eaarl.first_peak(indx);
+   data_out.depth = eaarl.depth(indx);
+ }
+
+ if (a == VEGALL) {
+   indx = where(eaarl.north != 0);
+   data_out = array(VEG, numberof(indx));
+   data_out.rn = eaarl.rn(indx);
+   data_out.north = eaarl.north(indx);
+   data_out.east = eaarl.east(indx);
+   data_out.elevation = eaarl.elevation(indx);
+   data_out.mnorth = eaarl.mnorth(indx);
+   data_out.meast = eaarl.meast(indx);
+   data_out.melevation = eaarl.melevation(indx);
+   data_out.felv = eaarl.felv(indx);
+   data_out.fint = eaarl.fint(indx);
+   data_out.lelv = eaarl.lelv(indx);
+   data_out.lint = eaarl.lint(indx);
+   data_out.nx = eaarl.nx(indx);
+ }
+
+ if (is_array(data_out)) eaarl = data_out;
+
  // define a bounding box
   bbox = array(float, 4);
   bbox(1) = min(eaarl.east);
