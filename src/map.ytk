@@ -16,7 +16,7 @@
 
 
 proc setmapwindow {} {
- global _map
+ global _map 
   exp_send "window,$_map(window); limits, square=1;\r"
   expect ">"
 }
