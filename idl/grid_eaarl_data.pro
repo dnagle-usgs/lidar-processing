@@ -70,6 +70,8 @@ pro plot_eaarl_grids, xgrid, ygrid, zgrid, max_elv_limit=max_elv_limit, $
 		      min_elv_limit = min_elv_limit, num=num, save_grid_plot=save_grid_plot
   ; this procedure will make a color coded grid plot
   ; amar nayegandhi 5/14/03
+  thisdevice = !d.name
+  set_plot, 'X'
   symbol_circle
   !p.background=255
   !p.color=0
@@ -133,8 +135,83 @@ pro plot_eaarl_grids, xgrid, ygrid, zgrid, max_elv_limit=max_elv_limit, $
    write_tiff, save_grid_plot, tvrd(/true, /order)
   endif
 
+  set_plot, thisdevice
+
 return
 end
+
+pro plot_zbuf_eaarl_grids, xgrid, ygrid, zgrid, max_elv_limit=max_elv_limit, $
+		      min_elv_limit = min_elv_limit, num=num, save_grid_plot=save_grid_plot
+  ; this procedure will make a color coded grid plot
+  ; amar nayegandhi 5/14/03
+
+  ; set current device to z buffer
+  thisdevice = !D.name
+  set_plot, 'Z', /copy
+  symbol_circle
+  !p.background=255
+  !p.color=0
+  !p.font=1
+  ;!p.region = [0.03,0,0.9,0.94]
+  !p.psym=8
+  !p.symsize=0.4
+  !p.thick=2.0
+  loadct, 39 
+  print, "    plotting gridded data in Z Buffer ..."
+  if (not keyword_set (max_elv_limit)) then max_elv_limit = 100000L
+  if (not keyword_set (min_elv_limit)) then min_elv_limit = -100000L 
+  if (not keyword_set (num)) then num = 1
+
+  grid_we_limit = xgrid[0]
+  grid_ea_limit = xgrid[n_elements(xgrid)-1]
+  grid_so_limit = ygrid[0]
+  grid_no_limit = ygrid[n_elements(ygrid)-1]
+  idx = where(zgrid ne -100, complement=idx1)
+  if idx[0] ne -1 then begin
+    max_elv = max(zgrid[idx], min = min_elv)
+  endif else begin
+     max_elv = -100
+     min_elv = -100
+  endelse
+
+  if max_elv gt max_elv_limit then max_elv = max_elv_limit
+  if min_elv lt min_elv_limit then min_elv = min_elv_limit
+ 
+  xsize = 2400/num & ysize = 2400/num
+
+  device, set_resolution=[xsize,ysize]
+
+  zgrid_i = bytscl(zgrid, max=max_elv, min=min_elv, top=255)
+
+  ; make missing values white
+  if (idx1[0] ne -1) then zgrid_i[idx1] = 255
+
+  zgrid_i_sb2 = congrid(zgrid_i,n_elements(xgrid)/num,n_elements(ygrid)/num)
+
+  ;if (keyword_set(save_grid_plot)) then begin
+;	atitle = (strsplit(save_grid_plot, '/', /extract))
+;	title = atitle(n_elements(atitle)-1)
+ ; endif else title = "Grid Plot"
+	
+  ;Set up the overview image plot area (ie, nodata call to plot):
+  plot, [grid_we_limit-1,grid_ea_limit], [grid_so_limit-1,grid_no_limit], $
+        /nodata, xstyle=1, ystyle=1, ticklen = -0.02, xtitle= 'UTM Easting (m)', $
+        ytitle= 'UTM Northing (m)', charsize=1.5, charthick=2.5, $
+        position = [199,199,(n_elements(xgrid)/num)+200,(n_elements(ygrid)/num)+200], /device, $
+        ytickformat = '(I10)', ycharsize = 1.5, xtickformat = '(I10)', xcharsize = 1.5, background = 255
+  tv, zgrid_i_sb2, 200,200
+  !p.region=[0,0,1,1]
+  plot_colorbar, [min_elv, max_elv], "!3 NAVD88 !3", type1="!3 Elevations !3", "!3 meters !3", $
+		xx= 0.95, yy=0.2, textcharsize=2.0, rangecharsize=1.6
+  if keyword_set(save_grid_plot) then begin
+   tvlct, r,g,b,/get
+   write_tiff, save_grid_plot, tvrd(/order), red=r, green=g, blue=b
+  endif
+  set_plot, thisdevice
+
+return
+end
+
 
 pro write_geotiff, fname, xgrid, ygrid, zgrid, zone_val, cell_dim
     ; this procedure write a geotiff for the array zgrid

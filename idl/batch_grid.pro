@@ -1,6 +1,7 @@
 pro batch_grid, path, filename=filename, only_merged=only_merged, cell=cell, mode=mode, $
 	z_grid_max = z_grid_max, z_grid_min=z_grid_min, area_threshold=area_threshold, $
-	missing = missing, $
+	missing = missing, zbuf_plot=zbuf_plot, save_zbuf_plots = save_zbuf_plots, $
+	zbuf_scale=zbuf_scale, $
 	plot_grids = plot_grids, max_elv_limit=max_elv_limit, min_elv_limit = min_elv_limit, $
 	scale_down_by = scale_down_by, save_grid_plots = save_grid_plots, $
 	write_geotiffs=write_geotiffs, utmzone = utmzone
@@ -50,7 +51,6 @@ for i = 0, n_elements(fn_arr)-1 do begin
    ptr_free, data_arr
 
    if (keyword_set(plot_grids)) then begin
-	
 	if not keyword_set(scale_down_by) then scale_down_by = 4
 	if keyword_set(save_grid_plots) then begin
 	  if (mode eq 1) then $
@@ -59,13 +59,32 @@ for i = 0, n_elements(fn_arr)-1 do begin
 	    pfname = path+(strsplit(fname_arr, '.', /extract))[0]+"_ba_gridplot.tif"
 	  if (mode eq 3) then $
 	    pfname = path+(strsplit(fname_arr, '.', /extract))[0]+"_be_gridplot.tif"
-	    plot_eaarl_grids, xgrid, ygrid, zgrid, max_elv_limit=max_elv_limit, $
+
+ 	  plot_eaarl_grids, xgrid, ygrid, zgrid, max_elv_limit=max_elv_limit, $
 			min_elv_limit = min_elv_limit, num=scale_down_by, save_grid_plot = pfname
 	endif else begin
-	    plot_eaarl_grids, xgrid, ygrid, zgrid, max_elv_limit=max_elv_limit, $
-			min_elv_limit = min_elv_limit, num=plotsize
+	  plot_eaarl_grids, xgrid, ygrid, zgrid, max_elv_limit=max_elv_limit, $
+			min_elv_limit = min_elv_limit, num=scale_down_by
 	endelse
    endif
+
+   if (keyword_set(zbuf_plot)) then begin
+	if not keyword_set(zbuf_scale) then zbuf_scale = 1
+	if keyword_set(save_zbuf_plots) then begin
+	  if (mode eq 1) then $
+	    pfname = path+(strsplit(fname_arr, '.', /extract))[0]+"_fs_zbuf_gridplot.tif"
+	  if (mode eq 2) then $
+	    pfname = path+(strsplit(fname_arr, '.', /extract))[0]+"_ba_zbuf_gridplot.tif"
+	  if (mode eq 3) then $
+	    pfname = path+(strsplit(fname_arr, '.', /extract))[0]+"_be_zbuf_gridplot.tif"
+	  plot_zbuf_eaarl_grids, xgrid, ygrid, zgrid, max_elv_limit=max_elv_limit, $
+		min_elv_limit = min_elv_limit, save_grid_plot = pfname, num=zbuf_scale
+	endif else begin
+	    plot_zbuf_eaarl_grids, xgrid, ygrid, zgrid, max_elv_limit=max_elv_limit, $
+			min_elv_limit = min_elv_limit, num=zbuf_scale
+	endelse
+   endif
+
 
    if (keyword_set(write_geotiffs)) then begin
    	; make geotiff file name
