@@ -60,8 +60,8 @@ return
 }
 
 
-func batch_pbd2edf(dirname, onlymerged=, n88=, w84=) {
-/* DOCUMENT batch_pbd2edf(dirname, onlymerged)
+func batch_pbd2edf(dirname, rcfmode=, n88=, w84=) {
+/* DOCUMENT batch_pbd2edf(dirname, rcfmode=, n88=, w84=)
         Created by Lance Mosher, June 12, 2003
         This function converts *.pbd files to *.edf files in batch mode.
         If onlymerged is defined (set to 1) then only files that have been
@@ -71,7 +71,9 @@ func batch_pbd2edf(dirname, onlymerged=, n88=, w84=) {
     require, "dir.i"
        s = array(string, 100000);
        ss = ["*.pbd"];
-       if (onlymerged) ss = ["*merged*.pbd"];
+       if (rcfmode == 1) ss = ["*_rcf*.pbd"];
+       if (rcfmode == 2) ss = ["*_ircf*.pbd"];
+       if ((rcfmode == 2) && (onlymf)) ss = ["*_ircf_mf*.pbd"];
        if (n88) {
 	 n88s = "n88";
        } else n88s = "";

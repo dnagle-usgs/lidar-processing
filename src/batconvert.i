@@ -4,28 +4,30 @@ require, "veg.i"
 require, "geo_bath.i"
 require, "datum_converter.i"
 
-func batconvert(con_dir=,  tonad83=, tonavd88=, onlymerged=)
+func batconvert(con_dir,  tonad83=, tonavd88=, rcfmode=, onlymf=)
 {
-/* DOCUMENT batconvert(dir, tonad83=, tonavd88=, onlymerged=) This takes all of the data files for the index tiles in CON_DIR 
+/* DOCUMENT batconvert(dir, tonad83=, tonavd88=, rcfmode=) This takes all of the data files for the index tiles in CON_DIR 
 and converts them into nad83 or navd88, storing the converted data in  a new pdf
 file with the same name and location as the last, but with the datum tag changed.
 INPUT: con_dir = input directory where the files are stored.
   	tonad83= set to convert to NAD83 reference datum
 	tonavd88 = set to convert to NAVD88 reference datum.
-	onlymerged = set to convert only merged/filtered data, if not set, converts merged and non-filterd data.
+	rcfmode = set to 1 to convert RCF'd files or 2 to convert IRCF'd files.
 requires "maps.i", "dir.i" and "datum_converter.i"
 see also: datum_converter.i
 -Brendan Penney, 7/18/03
 */
 
+if(!tonad83) tonad83=1;
+if(!tonavd88) tonavd88=1;
+if(!rcfmode) rcfmode = 0;
 
-if(!(con_dir))con_dir =  "/quest/data/EAARL/TB_FEB_02/";
+if(rcfmode == 1) rcftag = "_rcf";
+if(rcfmode == 2) rcftag = "_ircf";
+if(onlymf) rcftag = rcftag+="_mf";
 
-if(onlymerged){
-  command = swrite(format="find %s -name '*w84_*merged*.pbd'", con_dir);
-} else {
-  command = swrite(format= "find %s -name '*w84*.pbd'", con_dir);
-}
+command = swrite(format="find %s -name '*w84_*%s*.pbd'", con_dir, rcftag);
+
 
 files = ""
 s = array(string,10000);
