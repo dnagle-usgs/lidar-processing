@@ -838,10 +838,11 @@ Button .l1wid.bf5.3 -text "Write Ascii Data File" -width 20 \
       	set intensity 0
 	set split 0
 	set zclip 0
-	set zmin 0
-	set zmax 0
+	set zmin $cmin
+	set zmax $cmax
 	destroy .l1asc
         toplevel .l1asc
+        wm title .l1asc "Write Ascii Data"
         LabelFrame .l1asc.ops -relief groove -borderwidth 3 -text "Options:"
         frame .l1asc.ops.1 -relief groove -borderwidth 3
         frame .l1asc.ops.2 -relief groove -borderwidth 3
@@ -882,9 +883,9 @@ Button .l1wid.bf5.3 -text "Write Ascii Data File" -width 20 \
 		   }
            	 }
     	LabelEntry .l1asc.ops.2.zmin -width 5 -bd 3 -label "Zmin" \
-		-textvariable zmin 
+		-textvariable zmin -state disabled
     	LabelEntry .l1asc.ops.2.zmax -width 5 -bd 3 -label "Zmax" \
-		-textvariable zmax 
+		-textvariable zmax -state disabled
 
         pack .l1asc.ops.1.indx .l1asc.ops.1.s1 .l1asc.ops.1.int .l1asc.ops.1.s2 .l1asc.ops.1.dl .l1asc.ops.1.d  -side left -fill both -padx 3
 
