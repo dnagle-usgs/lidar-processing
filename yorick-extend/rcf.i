@@ -30,7 +30,7 @@
  */
 
 /* MAKE-INSTRUCTIONS
-SRCS = cerfc.c
+SRCS = rcf.c
 LIB = yerf
 */
 
