@@ -2,8 +2,11 @@
    $Id$
 */
 
-require,"dir.i"
-require,"drast.i"
+require, "dir.i"
+require, "sel_file.i"
+require, "ytime.i"
+require, "map.i"
+require, "string.i"
 
 local rbgga_help 
 /* DOCUMENT rbgga_help
@@ -38,6 +41,10 @@ Other:
   it must be verified and converted by the gga2bin.c. program.  
 
   $Log$
+  Revision 1.4  2002/01/17 02:29:20  wwright
+
+  small changes to rbgga.i
+
   Revision 1.3  2002/01/16 14:13:45  wwright
 
    Added function to rbgga to permit selecting a flightline section from the
@@ -73,10 +80,6 @@ Functions:
 
 */
 
-require, "sel_file.i"
-require, "ytime.i"
-require, "map.i"
-require, "string.i"
 
 write,"rbgga.i as of 1/15/2002 loaded"
 
