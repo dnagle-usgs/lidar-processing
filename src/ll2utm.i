@@ -11,7 +11,7 @@
      1984 Technical Report. Part I and II. Washington, DC: 
      Defense Mapping Agency.  Equations from USGS Bulletin 1532.
 
-   Converted to Yorick by C. W. Wright wright@osb-wff.nasa.gov
+   Converted to Yorick by C. W. Wright wright@osb.wff.nasa.gov
    6/21/1999
 
 */
