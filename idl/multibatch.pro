@@ -51,11 +51,11 @@ print, efinalspot, nfinalspot, finalmaxeast, finalminnorth
 
 for emin = efinalspot, finalmaxeast-12000, 12000 do begin
 	for nmax = finalminnorth+12000, nfinalspot, 12000 do begin
-		if keyword(tag) then batchmaker, directory, emin, nmax, tag=tag $ 
+		if keyword_set(tag) then batchmaker, directory, emin, nmax, tag=tag $ 
 	        else batchmaker, directory, emin, nmax   
 	endfor
 endfor
 spawn, "cat "+directory+"*.bat >"+directory+"merged.txt"
-print, 'Pilotbatch completed....'
+print, 'Multibatch completed....'
 return
 end
