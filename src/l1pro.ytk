@@ -119,6 +119,212 @@ menu .l1wid.mb.options
 	pack .l1dir.op .l1dir.1 -side top -pady 5	
 }
 
+
+.l1wid.mb.file add command -label "Binary output ..." -underline 0 -command {
+	global write_some
+         set ftypes {
+                  {{For pbd}       {.pbd}        }
+                  {{IDL bin}       {.bin}        }
+                  {{IDL edf}       {.edf}        }
+                  {{All Files}            *      }
+              }
+        set ptype [.l1wid.bf4.1.p getvalue]
+        set var_no [.l1wid.bf45.p.15 getvalue]
+        set var_type [lindex $varlist $var_no]
+        set ofname [ tk_getSaveFile -filetypes $ftypes -defaultextension ".pbd" ]
+	if { $ofname != "" }  {
+         switch [ file extension $ofname ] {
+          ".pbd" {
+		exp_send "vname=\"$var_type\"; save, createb(\"$ofname\"), vname, $var_type; \r";
+          }
+          ".bin" - 
+          ".edf" {
+          set opath  "[ file dirname $ofname ]/";
+	  set ofname [ file tail    $ofname ];
+    	  if { ![ string equal  "" $ofname ] } {
+ 	    if {$ptype == 0} {
+	     if {$write_some == 0} {
+ 	       exp_send "write_topo, \"$opath\", \"$ofname\", $var_type; \r";
+	       expect ">"
+	     } else {
+ 	       exp_send "write_topo, \"$opath\", \"$ofname\", fs_some; \r";
+	       expect ">"
+	     }  
+	    }
+ 	    if {$ptype == 1} {
+	     if {$write_some == 0} {
+      	       exp_send "write_bathy, \"$opath\", \"$ofname\", $var_type; \r";
+	       expect ">"
+	     } else {
+      	       exp_send "write_bathy, \"$opath\", \"$ofname\", depth_some; \r";
+	       expect ">"
+   	     }	
+	    }
+ 	    if {$ptype == 2} {
+	     if {$write_some == 0} {
+      	       exp_send "write_veg, \"$opath\", \"$ofname\", $var_type; \r";
+	       expect ">"
+	     } else {
+      	       exp_send "write_veg, \"$opath\", \"$ofname\", veg_some; \r";
+	       expect ">"
+   	     }	
+	    }
+ 	    if {$ptype == 3} {
+	     if {$write_some == 0} {
+      	       exp_send "write_multipeak_veg, $var_type, opath=\"$opath\", ofname=\"$ofname\"; \r";
+	       expect ">"
+	     } else {
+      	       exp_send "write_multipeak_veg, cveg_some, opath=\"$opath\", ofname=\"$ofname\"; \r";
+	       expect ">"
+   	     }	
+	    }
+    	  } else { 
+       	    tk_messageBox  -icon warning \
+            -message "You need to specify an output file name" \
+            -type ok
+          }
+	  set write_some 0
+        }
+      }
+     }
+  }
+
+.l1wid.mb.file add command -label "Ascii output ..." -underline 0 \
+  -command {
+	global cmin cmax  opath ofile
+	global write_asc_some
+        set delimit "space"
+	set indx 0
+      	set intensity 0
+	set split 0
+	set zclip 0
+	set opath $data_path
+	set zmin $cmin
+	set zmax $cmax
+         set ftypes {
+                  {{For QTViewer}       {.xyz}        }
+                  {{Generic ASCII}      {.asc}        }
+                  {{Simple txt}         {.txt}      TEXT}
+                  {{All Files}            *             }
+              }
+
+	destroy .l1asc
+        toplevel .l1asc
+	set w .l1asc
+	$w configure -menu $w.mb
+ 	menu $w.mb
+	menu $w.mb.file
+        $w.mb add cascade -label File     -underline 0 -menu $w.mb.file
+	$w.mb.file add command -label "File..." \
+	   -command { set ofname [ tk_getSaveFile \
+			           -filetypes $ftypes \
+		                   -initialdir $data_path \
+                                   -defaultextension xyz \
+                                ];
+		   if { $ofname != "" } {
+                      set opath  "[ file dirname $ofname ]/";
+                      set ofname [ file tail    $ofname ];
+####		      .l1asc.cmd.ok configure -state normal;
+
+	    #.l1asc.ops configure -state disabled
+	    #.l1asc.fn.of configure -state disabled
+	    #.l1asc.cmd.ok configure -state disabled
+
+        set ptype [.l1wid.bf4.1.p getvalue]
+        set var_no [.l1wid.bf45.p.15 getvalue]
+        set var_type [lindex $varlist $var_no]
+	    if {$zclip == 0} { set zclips  "\[\]" } 
+	    if {$zclip == 1} { set zclips "\[$zmin, $zmax\]"}
+	    if {$delimit == "space"} {
+		set de "\" \""		
+	    } 
+	    if {$delimit == "comma"} {
+		set de "\",\""		
+	    } 
+	    if {$delimit == "semicolon"} {
+		set de "\";\""		
+	    } 
+	   
+
+ 	    if {$ptype == 0} {
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips; \r";
+	       expect ">"
+	    }
+ 	    if {$ptype == 1} {
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=2, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips; \r";
+	       expect ">"
+	    } 
+ 	    if {$ptype == 2} {
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=3, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips; \r";
+	       expect ">"
+	    }
+ 	    if {$ptype == 3} {
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips; \r";
+	       expect ">"
+	    }
+	    #destroy .l1asc
+	  set write_some 0
+	 }
+
+        }
+
+        wm title .l1asc "Write Ascii Data"
+        LabelFrame .l1asc.ops -relief groove -borderwidth 3 -text "Options:"
+        frame .l1asc.ops.1 -relief groove -borderwidth 3
+        frame .l1asc.ops.2 -relief groove -borderwidth 3
+        frame .l1asc.fn -relief groove -borderwidth 3
+        frame .l1asc.cmd -relief groove -borderwidth 3
+        set ptype [.l1wid.bf4.1.p getvalue]
+        set var_no [.l1wid.bf45.p.15 getvalue]
+        set var_type [lindex $varlist $var_no]
+
+        label .l1asc.ops.1.dl -text "Delimiter: " 
+        tk_optionMenu .l1asc.ops.1.d delimit comma semicolon space
+        # grid .l1asc.ops.dl .l1asc.ops.d -sticky ew 
+        Separator .l1asc.ops.1.s1 -orient vertical -bg black -relief groove 
+      
+        checkbutton .l1asc.ops.1.indx -text "Include Index Number" -variable indx 
+        Separator .l1asc.ops.1.s2 -orient vertical -bg black -relief groove 
+        checkbutton .l1asc.ops.1.int -text "Include Intensity Data" -variable intensity 
+
+        LabelEntry .l1asc.ops.2.split -width 10 -bd 3 -label "Max number of lines/file" \
+		-helptext "Enter maximum number of lines in each file; enter 0 to write all data in 1 file" \
+		-textvariable split 
+
+        checkbutton .l1asc.ops.2.zclip -text "Z Clipper:" -variable zclip \
+		-command {
+		   if {$zclip == 1} {
+			.l1asc.ops.2.zmin configure -state normal
+			.l1asc.ops.2.zmax configure -state normal
+		   } 
+		   if {$zclip == 0} {
+			.l1asc.ops.2.zmin configure -state disabled
+			.l1asc.ops.2.zmax configure -state disabled
+		   }
+           	 }
+    	LabelEntry .l1asc.ops.2.zmin -width 5 -bd 3 -label "Zmin" \
+		-textvariable zmin -state disabled
+    	LabelEntry .l1asc.ops.2.zmax -width 5 -bd 3 -label "Zmax" \
+		-textvariable zmax -state disabled
+
+        pack .l1asc.ops.1.indx .l1asc.ops.1.s1 .l1asc.ops.1.int .l1asc.ops.1.s2 .l1asc.ops.1.dl .l1asc.ops.1.d  -side left -fill both -padx 3
+
+ 	pack .l1asc.ops.2.split .l1asc.ops.2.zclip .l1asc.ops.2.zmin .l1asc.ops.2.zmax -side left -padx 3 -fill both
+	pack .l1asc.ops.1 .l1asc.ops.2 -side top
+ 
+ 	Button .l1asc.cmd.cancel -text "Cancel" -width 5 -command {
+	   set write_some 0
+	   destroy .l1asc
+ 	}
+ 	Button .l1asc.cmd.dismiss -text "Dismiss" -width 5 -command {
+	   destroy .l1asc
+ 	}
+	pack .l1asc.cmd.cancel .l1asc.cmd.dismiss -side left -padx 5
+###	pack .l1asc.fn.op .l1asc.fn.of -side top -pady 5	
+        #pack .l1asc.ops.indx .l1asc.ops.int -side left
+        pack .l1asc.ops .l1asc.fn .l1asc.cmd -side top
+  }
+
 .l1wid.mb       add cascade -label "Load" -underline 0 -menu .l1wid.mb.load
 .l1wid.mb.file  add command -label "Dismiss" -underline 0 -command {destroy .l1wid}
 .l1wid.mb.load  add command -label "Load TANS Data .. " -underline 5 \
@@ -188,7 +394,6 @@ menu .l1wid.mb.options
  		exp_send "bath_ctl.laser = $laser; bath_ctl.water=$water; bath_ctl.agc=$agc; bath_ctl.thresh = $thresh; bath_ctl.last = $last; \r"
 	    }
 	    .bathctl.type configure -state normal
- 	    
 	  }
 	 
 	  Button .bathctl.cancel -text "Cancel" -width 5 -command {
@@ -205,6 +410,9 @@ menu .l1wid.mb.options
 
 
 .l1wid.mb add cascade -label Options -underline 0 -menu .l1wid.mb.options
+
+
+
 .l1wid.mb.options add command -label "Configure elevation scale limits..." -underline 0 \
 	-command { 
 	   destroy  .l1wid-opts
@@ -267,11 +475,11 @@ menu .l1wid.mb.options
 	plot_fltlines 1
 	
     }
-    Button .l1plot.write -text "Write Datafile" -command {
-	 set write_some 1
-	 make_selected_arrays {junk}
-        .l1wid.bf5.1 invoke	
-    }
+#    Button .l1plot.write -text "Write Datafile" -command {
+#	 set write_some 1
+#	 make_selected_arrays {junk}
+#        .l1wid.bf5.1 invoke	
+#    }
 
     pack .l1plot.1.lb .l1plot.1.yscroll -side left -fill y 
     pack .l1plot.1 .l1plot.xscroll -side top -fill x
@@ -754,204 +962,9 @@ frame  .l1wid.bf45.sc.f
 
 
 
-Button .l1wid.bf5.1 -text "Write Binary Data File" -width 20 \
-		-command {
-	global write_some
-	destroy .l1wid1
-        toplevel .l1wid1
-	frame .l1wid1.1
-        set ptype [.l1wid.bf4.1.p getvalue]
-        set var_no [.l1wid.bf45.p.15 getvalue]
-        set var_type [lindex $varlist $var_no]
-	LabelEntry .l1wid1.op  -width 70 -relief sunken -bd 3 -label "Opath:  " -helptext "Enter Output File Path Here" \
-		-textvariable opath
 
-	LabelEntry .l1wid1.of  -width 70 -relief sunken -bd 3 -label "Ofname: " \
-		-helptext "Enter Output File Name Here" \
-		-textvariable ofname
+##### Button .l1wid.bf5.3 -text "Write Ascii Data File" -width 20 
 
-	Button .l1wid1.1.ok -text "OK" -width 5 -command {
-    	  if { ![ string equal  "" $ofname ] } {
-	    
-	    .l1wid1.op configure -state disabled
-	    .l1wid1.of configure -state disabled
-	    .l1wid1.1.ok configure -state disabled
-
-
- 	    if {$ptype == 0} {
-	     if {$write_some == 0} {
- 	       exp_send "write_topo, \"$opath\", \"$ofname\", $var_type; \r";
-	       expect ">"
-	     } else {
- 	       exp_send "write_topo, \"$opath\", \"$ofname\", fs_some; \r";
-	       expect ">"
-	     }  
-	    }
- 	    if {$ptype == 1} {
-	     if {$write_some == 0} {
-      	       exp_send "write_bathy, \"$opath\", \"$ofname\", $var_type; \r";
-	       expect ">"
-	     } else {
-      	       exp_send "write_bathy, \"$opath\", \"$ofname\", depth_some; \r";
-	       expect ">"
-   	     }	
-	    }
- 	    if {$ptype == 2} {
-	     if {$write_some == 0} {
-      	       exp_send "write_veg, \"$opath\", \"$ofname\", $var_type; \r";
-	       expect ">"
-	     } else {
-      	       exp_send "write_veg, \"$opath\", \"$ofname\", veg_some; \r";
-	       expect ">"
-   	     }	
-	    }
- 	    if {$ptype == 3} {
-	     if {$write_some == 0} {
-      	       exp_send "write_multipeak_veg, $var_type, opath=\"$opath\", ofname=\"$ofname\"; \r";
-	       expect ">"
-	     } else {
-      	       exp_send "write_multipeak_veg, cveg_some, opath=\"$opath\", ofname=\"$ofname\"; \r";
-	       expect ">"
-   	     }	
-	    }
-	    destroy .l1wid1
-    	  } else { 
-       	    tk_messageBox  -icon warning \
-            -message "You need to specify an output file name" \
-            -type ok
-          }
-	  set write_some 0
-        }
- 
- 	Button .l1wid1.1.cancel -text "Cancel" -width 5 -command {
-	   set write_some 0
-	   destroy .l1wid1
- 	}
-	pack .l1wid1.1.ok .l1wid1.1.cancel -side left -padx 5
-	pack .l1wid1.op .l1wid1.of .l1wid1.1 -side top -pady 5	
-  }
-
-Button .l1wid.bf5.3 -text "Write Ascii Data File" -width 20 \
-		-command {
-	global write_asc_some
-        set delimit "space"
-	set indx 0
-      	set intensity 0
-	set split 0
-	set zclip 0
-	set zmin $cmin
-	set zmax $cmax
-	destroy .l1asc
-        toplevel .l1asc
-        wm title .l1asc "Write Ascii Data"
-        LabelFrame .l1asc.ops -relief groove -borderwidth 3 -text "Options:"
-        frame .l1asc.ops.1 -relief groove -borderwidth 3
-        frame .l1asc.ops.2 -relief groove -borderwidth 3
-        frame .l1asc.fn -relief groove -borderwidth 3
-        frame .l1asc.cmd -relief groove -borderwidth 3
-        set ptype [.l1wid.bf4.1.p getvalue]
-        set var_no [.l1wid.bf45.p.15 getvalue]
-        set var_type [lindex $varlist $var_no]
-	LabelEntry .l1asc.fn.op  -width 70 -relief sunken -bd 3 -label "Opath:  " -helptext "Enter Output File Path Here" \
-		-textvariable opath
-
-	LabelEntry .l1asc.fn.of  -width 70 -relief sunken -bd 3 -label "Ofname: " \
-		-helptext "Enter Output File Name Here" \
-		-textvariable ofname
-
-        label .l1asc.ops.1.dl -text "Delimiter: " 
-        tk_optionMenu .l1asc.ops.1.d delimit comma semicolon space
-        # grid .l1asc.ops.dl .l1asc.ops.d -sticky ew 
-        Separator .l1asc.ops.1.s1 -orient vertical -bg black -relief groove 
-      
-        checkbutton .l1asc.ops.1.indx -text "Include Index Number" -variable indx 
-        Separator .l1asc.ops.1.s2 -orient vertical -bg black -relief groove 
-        checkbutton .l1asc.ops.1.int -text "Include Intensity Data" -variable intensity 
-
-        LabelEntry .l1asc.ops.2.split -width 10 -bd 3 -label "Max number of lines/file" \
-		-helptext "Enter maximum number of lines in each file; enter 0 to write all data in 1 file" \
-		-textvariable split 
-
-        checkbutton .l1asc.ops.2.zclip -text "Z Clipper:" -variable zclip \
-		-command {
-		   if {$zclip == 1} {
-			.l1asc.ops.2.zmin configure -state normal
-			.l1asc.ops.2.zmax configure -state normal
-		   } 
-		   if {$zclip == 0} {
-			.l1asc.ops.2.zmin configure -state disabled
-			.l1asc.ops.2.zmax configure -state disabled
-		   }
-           	 }
-    	LabelEntry .l1asc.ops.2.zmin -width 5 -bd 3 -label "Zmin" \
-		-textvariable zmin -state disabled
-    	LabelEntry .l1asc.ops.2.zmax -width 5 -bd 3 -label "Zmax" \
-		-textvariable zmax -state disabled
-
-        pack .l1asc.ops.1.indx .l1asc.ops.1.s1 .l1asc.ops.1.int .l1asc.ops.1.s2 .l1asc.ops.1.dl .l1asc.ops.1.d  -side left -fill both -padx 3
-
- 	pack .l1asc.ops.2.split .l1asc.ops.2.zclip .l1asc.ops.2.zmin .l1asc.ops.2.zmax -side left -padx 3 -fill both
-	pack .l1asc.ops.1 .l1asc.ops.2 -side top
-	Button .l1asc.cmd.ok -text "OK" -width 5 -command {
-    	  if { ![ string equal  "" $ofname ] } {
-	    
-	    #.l1asc.ops configure -state disabled
-	    #.l1asc.fn.of configure -state disabled
-	    #.l1asc.cmd.ok configure -state disabled
-
-        set ptype [.l1wid.bf4.1.p getvalue]
-        set var_no [.l1wid.bf45.p.15 getvalue]
-        set var_type [lindex $varlist $var_no]
-	    if {$zclip == 0} { set zclips  "\[\]" } 
-	    if {$zclip == 1} { set zclips "\[$zmin, $zmax\]"}
-	    if {$delimit == "space"} {
-		set de "\" \""		
-	    } 
-	    if {$delimit == "comma"} {
-		set de "\",\""		
-	    } 
-	    if {$delimit == "semicolon"} {
-		set de "\";\""		
-	    } 
-	   
-
- 	    if {$ptype == 0} {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips; \r";
-	       expect ">"
-	    }
- 	    if {$ptype == 1} {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=2, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips; \r";
-	       expect ">"
-	    } 
- 	    if {$ptype == 2} {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=3, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips; \r";
-	       expect ">"
-	    }
- 	    if {$ptype == 3} {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips; \r";
-	       expect ">"
-	    }
-	    #destroy .l1asc
-    	  } else { 
-       	    tk_messageBox  -icon warning \
-            -message "You need to specify an output file name" \
-            -type ok
-          }
-	  set write_some 0
-        }
- 
- 	Button .l1asc.cmd.cancel -text "Cancel" -width 5 -command {
-	   set write_some 0
-	   destroy .l1asc
- 	}
- 	Button .l1asc.cmd.dismiss -text "Dismiss" -width 5 -command {
-	   destroy .l1asc
- 	}
-	pack .l1asc.cmd.ok .l1asc.cmd.cancel .l1asc.cmd.dismiss -side left -padx 5
-	pack .l1asc.fn.op .l1asc.fn.of -side top -pady 5	
-        #pack .l1asc.ops.indx .l1asc.ops.int -side left
-        pack .l1asc.ops .l1asc.fn .l1asc.cmd -side top
-  }
 
  Button .l1wid.bf4.2.proc -text "Process Now" -width 20 -bd 5\
 		-command \
@@ -1005,7 +1018,7 @@ pack .l1wid.bf4.1.d .l1wid.bf4.1.p -side left -padx 5
 #pack  .l1wid.bf4.2.cll .l1wid.bf4.2.cen -side left -padx 3
 pack  .l1wid.bf4.2.cen .l1wid.bf4.2.proc -side left -padx 10
 pack .l1wid.bf4.1 .l1wid.bf4.2 -side top -pady 10
-pack .l1wid.bf5.3 .l1wid.bf5.1  -side right -padx 35 
+####pack .l1wid.bf5.1  -side right -padx 35 
 pack .l1wid.bf1 .l1wid.bf2 .l1wid.bf3 .l1wid.bf4 -side top -expand 1 -fill both
 pack .l1wid.bf45.sc.1  -side left  -padx 3
 pack .l1wid.bf45.sc.f  -side left
