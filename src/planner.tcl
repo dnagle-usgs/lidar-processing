@@ -44,7 +44,7 @@ exec wish "$0" ${1+"$@"}
             set coo [lrange [$w coords $item] 2 end]
             $w delete $item
             unset polydraw(item$w)
-            set new [$w create poly $coo -fill {} -tag poly -outline black -width 3]
+            set new [$w create poly $coo -fill {} -tag poly -outline magenta -width 3]
             polydraw'markNodes $w $new
         } else {
             $w coords $item [concat [$w coords $item] $x $y]
@@ -165,11 +165,17 @@ proc polydraw'markNodes {w item} {
 
 proc polygon { lst } { 
   global dims
+  set w .canf.can
   foreach { b c } $lst {
-     lappend slst [ expr ($b-$dims(le)) / $dims(scrx2utm) ] [  expr ($dims(ln) - $c)/$dims(scry2utm) ]
+     set x [ expr ($b-$dims(le)) / $dims(scrx2utm) ]
+     set y [  expr ($dims(ln) - $c)/$dims(scry2utm) ]
+     polydraw'add $w $x $y
+     lappend slst $x 
+     lappend slst $y
   }
-  puts "Polygon coords: $slst"
-  .canf.can create line $slst -width 5.0 -fill red
+set x [ lindex $slst 0 ] 
+set y [ lindex $slst 1 ]
+polydraw'add $w $x $y
 }
 
 
@@ -196,6 +202,7 @@ proc save_data { } {
   set ofd [ open $fn "w" ]
   foreach a [ .canf.can find withtag poly ] { 
       set lst [ .canf.can coords $a ]
+      set slst ""
       foreach { b c } $lst {
         lappend slst [ expr $dims(le) + $b*$dims(scrx2utm) ] [  expr $dims(ln) - $c*$dims(scry2utm) ]
       }
@@ -292,13 +299,9 @@ proc load_file { fn } {
  }
 
   show_meta_data;
+  after 3000 { destroy .meta }
  .canf.can configure -scrollregion "0 0 $dims(dx) $dims(dy) "
-
  .canf.location.zone configure -text "UTM Zone: $dims(zone) "
-# puts "reported: [image type $img] $dims(dx) $dims(dy)"
-# puts "$dims(zone) $dims(le)-$dims(re) $dims(ln)-$dims(rn)"
-# puts "$dims(re) $dims(rn) $dims(dx) $dims(dy)"
-# puts "$dims(eastd) $dims(northd) $dims(scrx2utm) $dims(scry2utm)"
 }
 
 proc center_window {w} {
@@ -366,6 +369,249 @@ proc show_meta_data {} {
 }
 
 
+
+#################################################################
+# Convert utm coords to lat/lon
+#################################################################
+proc utm2ll { UTMNorthing UTMEasting UTMZone} {
+#/* DOCUMENT  utm2ll( UTMNorthing, UTMEasting, UTMZone)
+#
+#   Convert UTM coords. to  lat/lon.  Returned values are
+#   in Lat and Long;
+#*/
+
+global DEG2RAD RAD2DEG
+global Lat Long;
+global elipsoid k0 eccSquared Earth_radius eccPrimeSquared e1
+#//       earth
+#//       radius     ecc
+set NorthernHemisphere  1;
+set x  [ expr $UTMEasting - 500000.0 ] ;
+set y  $UTMNorthing;
+set M  [ expr  $y / $k0];
+set LongOrigin [ expr ($UTMZone - 1)*6 - 180 + 3 ];
+set eccPrimeSquared  [ expr double($eccSquared)/(1-$eccSquared) ];
+set mu  [ expr $M/($Earth_radius*(1-$eccSquared/4-3*$eccSquared*$eccSquared/64 - 5*$eccSquared*$eccSquared*$eccSquared/256)) ];
+
+set phi1Rad [ expr $mu    + (3*$e1/2-27*$e1*$e1*$e1/32)*sin(2*$mu) \
+                + (21*$e1*$e1/16-55*$e1*$e1*$e1*$e1/32)*sin(4*$mu) \
+                +(151*$e1*$e1*$e1/96)*sin(6*$mu) ];
+
+set phi1  [ expr $phi1Rad* $RAD2DEG];
+
+set N1 [ expr $Earth_radius/sqrt(1-$eccSquared*sin($phi1Rad)*sin($phi1Rad))];
+set T1 [ expr  tan($phi1Rad)*tan($phi1Rad)];
+set C1 [ expr  $eccPrimeSquared*cos($phi1Rad)*cos($phi1Rad)];
+set R1 [ expr  $Earth_radius*(1-$eccSquared)/pow(1-$eccSquared* sin($phi1Rad)*sin($phi1Rad), 1.5)];
+set D [ expr  $x/($N1*$k0)];
+
+set Lat [ expr  $phi1Rad - \
+               ($N1*tan($phi1Rad)/$R1)*($D*$D/2- \
+               (5+3*$T1+10*$C1-4*$C1*$C1-9*$eccPrimeSquared)*$D*$D*$D*$D/24 + \
+               (61+90*$T1+298*$C1+45*$T1*$T1-252*$eccPrimeSquared- \
+                3*$C1*$C1)*$D*$D*$D*$D*$D*$D/720)];
+
+set Lat [ expr  $Lat * $RAD2DEG];
+
+set Long [ expr  ($D-(1+2*$T1+$C1)*$D*$D*$D/6+(5-2*$C1+28*$T1- \
+               3*$C1*$C1+8*$eccPrimeSquared+24*$T1*$T1) \
+               *$D*$D*$D*$D*$D/120)/cos($phi1Rad)];
+
+set Long [ expr  $LongOrigin + $Long * $RAD2DEG];
+ return "$Lat,$Long"
+}
+
+
+#################################################################
+# This procedure loads the arrays waypoints and segs with
+# fresh nav data.
+#################################################################
+proc load_nav_file { fn } {
+global waypoints segs
+set f [ open $fn "r" ]
+  while { [ gets $f istr ] >= 0 } {
+puts $istr
+    set type [ lindex $istr 0]
+    switch $type {
+    llseg { eval $istr }
+    utm {
+      puts $istr
+      set wp [ lindex $istr 1 ]
+      set n  [ lindex $istr 2 ]
+      set e  [ lindex $istr 3 ]
+      set z  [ lindex $istr 4 ]
+  puts "$n $e $z"
+      set ll [ utm2ll $n $e $z ]
+puts "ll=$ll"
+      set waypoints($wp) [ list $wp [mkdm $ll] $ll $n $e $z ]
+    }
+    wp {
+    puts $istr
+      set wp [ lindex $istr 1 ]
+      set lat [ lindex $istr 2 ]
+      set lon [ lindex $istr 3 ]
+      set dlat [ mkdeg $lat ]
+      set dlon [ mkdeg $lon ]
+      set utm [ ll2utm $dlat $dlon ]
+      set waypoints($wp) [ list $wp $lat $lon $dlat $dlon $utm ]
+    puts $wp
+    }
+    seg {
+    puts $istr
+      set seg [ lindex $istr 1 ]
+      set segs($seg) [ lrange $istr 1 end ]
+    }
+    }
+ }
+}
+
+#################################################################
+# mkdm "dlat dlon"
+# Converts a decimal lat/lon pair to a demimal string value.
+# Example:  38.5 -75.5 --> n3830.0 w7530.0
+# returns: a string of "lat lon"
+#################################################################
+proc mkdm { ll } {
+  set dlat [ lindex $ll 0 ]
+  set dlon [ lindex $ll 1 ]
+  set f [ expr abs(($dlat - int($dlat)) *60.0) ]
+  set i [ expr abs(int($dlat)*100) ]
+  set d [ expr $i+$f ]
+  if { $dlat < 0.0 } {
+    set lat "s$d"
+  } else {
+    set lat "n$d"
+  }
+
+  set f [ expr abs(($dlon - int($dlon)) *60.0) ]
+  set i [ expr abs(int($dlon)*100) ]
+  set d [ expr $i+$f ]
+  if { $dlon < 0.0 } {
+    set lon "w$d"
+  } else {
+    set lon "e$d"
+  }
+ return "$lat $lon"
+}
+
+#################################################################
+# convert {nsew}DDDMMM.M to +/-DDD.ddddd
+# Example: n3830.0  to 38.50
+#################################################################
+proc mkdeg { a } {
+  set s [ string index $a 0 ]
+  set a [ string range $a 1 end ]
+
+  switch $s {
+  s { set s -1 }
+  n { set s 1  }
+  e { set s 1  }
+  w { set s -1 }
+  }
+
+  set deg [ expr { int($a / 100.0) } ]
+  set frac [ expr { ($a/100.0 - $deg) / .60 } ]
+  set rv [ expr { ($deg + $frac) * $s } ]
+}
+
+proc llseg2canvas { idx } {
+  global fpsegs dims
+  set seg [ split $fpsegs($idx) ": " ]
+  set lat [ mkdeg [ lindex $seg 0 ] ]
+  set lon [ mkdeg [ lindex $seg 1 ] ]
+  set utm [ ll2utm $lat $lon ]
+  puts $lat
+  puts $lon
+  puts $utm
+}
+
+
+
+#################################################################
+#
+# Convert a  lat/lon pair to UTM
+#
+#################################################################
+proc ll2utm { lat  lon } {
+#   Convert lat/lon pairs to UTM.  Returns values in
+#   UTMNorth, UTMEasting, and UTMZone;
+global DEG2RAD UTMEasting UTMNorthing ZoneNumber;
+global elipsoid k0 eccSquared Earth_radius eccPrimeSquared
+#//       earth
+#//       radius     ecc
+set Long $lon
+set Lat  $lat
+
+
+#//Make sure the longitude is between -180.00 .. 179.9
+set LongTemp [ expr ($Long+180)-int(($Long+180)/360)*360-180 ]
+set ZoneNumber [ expr int(($LongTemp + 180.0)/6.0) + 1] ;
+
+set LatRad  [ expr double($Lat*$DEG2RAD) ] ;
+set LongRad [ expr  double($LongTemp*$DEG2RAD) ] ;
+
+#//+3 puts origin in middle of zone
+set LongOrigin [ expr ($ZoneNumber - 1)*6 - 180 + 3 ];
+set LongOriginRad [ expr $LongOrigin * $DEG2RAD ];
+
+set N [ expr $Earth_radius/sqrt(1-$eccSquared*sin($LatRad)*sin($LatRad)) ];
+set T [ expr tan($LatRad)*tan($LatRad) ];
+set C [ expr $eccPrimeSquared*cos($LatRad)*cos($LatRad) ];
+set A [ expr cos($LatRad)*($LongRad-$LongOriginRad) ];
+
+set M  [ expr $Earth_radius*((1- $eccSquared/4 - \
+        3* $eccSquared* $eccSquared/64 - \
+        5* $eccSquared* $eccSquared* $eccSquared/256)* $LatRad - \
+        (3* $eccSquared/8 + 3* $eccSquared* $eccSquared/32 + \
+        45* $eccSquared* $eccSquared* $eccSquared/1024)*sin(2* $LatRad) + \
+        (15* $eccSquared* $eccSquared/256 + \
+        45* $eccSquared* $eccSquared* $eccSquared/1024)*sin(4* $LatRad) - \
+        (35* $eccSquared* $eccSquared* $eccSquared/3072)*sin(6* $LatRad)) ];
+
+set UTMEasting [ expr double( $k0* $N*($A+(1-$T+$C)*$A*$A*$A/6 + \
+        (5-18*$T+$T*$T+72*$C-58*$eccPrimeSquared)*$A*$A*$A*$A*$A/120) + 500000.0) ];
+
+set UTMNorthing [ expr double( $k0*($M+$N*tan($LatRad)*($A*$A/2+(5-$T+9*$C+4*$C*$C)*$A*$A*$A*$A/24 + \
+        (61-58*$T+$T*$T+600*$C-330*$eccPrimeSquared)*$A*$A*$A*$A*$A*$A/720))) ];
+
+return "$UTMNorthing $UTMEasting $ZoneNumber";
+}
+
+
+
+
+# convert screen x coords to UTM in the current zone
+proc scrx2utm { x } {
+ global dims
+ set east  [expr  $dims(le) + $x*$dims(scrx2utm) ]; 
+ return $east
+}
+
+# convert screen y coords to UTM in the current zone
+proc scry2utm { y } {
+ global dims
+ set north [expr  $dims(ln) - $y*$dims(scry2utm) ];
+ return $north
+}
+
+
+#================================================================
+# Install/append new flight segments to the flight plan list
+# This from hsi.tcl
+#================================================================
+proc llseg { name start stop } {
+  global segidx fpsegs fpsegname fpsegstatus seg_list
+  set fpsegs($segidx) "$start $stop"
+  set fpsegname($segidx) "$name"
+  set fpsegstatus($segidx)  "notflown"
+  puts "$name $fpsegstatus($segidx) $start $stop"
+  append seg_list "$name "
+  incr segidx
+}
+
+
+
+
 ###################################################################
 # Begin main code.
 ###################################################################
@@ -376,6 +622,8 @@ set revdate {$Date$}
 foreach a { scrx2utm scry2utm eastd northd zone le ln re rn } {
   set dims($a) 0
 }
+
+set segidx 0
 
 # Nav constants
 set PI 3.141592653589793115997963468544185161590576171875
@@ -435,6 +683,16 @@ menu .menubar.help.menu
                 load_file  $f;
               }
            }
+.menubar.file.menu add command -label "Load a flightplan.." -underline 2 \
+	-command { 
+  set fn [ tk_getOpenFile  -filetypes { 
+                              {{List files} {.fp} } 
+                              {{All} {*}} 
+                           } -initialdir $dir ];
+  if { $fn == "" } { return }
+  load_nav_file $fn
+}
+
 .menubar.file.menu add command -label "Load polygons..." -underline 2 \
 	-command load_data
 
@@ -530,72 +788,6 @@ pack .canf \
 }
 
 
-#################################################################
-# Convert utm coords to lat/lon
-#################################################################
-proc utm2ll { UTMNorthing UTMEasting UTMZone} {
-#/* DOCUMENT  utm2ll( UTMNorthing, UTMEasting, UTMZone)
-#
-#   Convert UTM coords. to  lat/lon.  Returned values are
-#   in Lat and Long;
-#*/
-
-global DEG2RAD RAD2DEG
-global Lat Long;
-global elipsoid k0 eccSquared Earth_radius eccPrimeSquared e1
-#//       earth
-#//       radius     ecc
-set NorthernHemisphere  1;
-set x  [ expr $UTMEasting - 500000.0 ] ;
-set y  $UTMNorthing;
-set M  [ expr  $y / $k0];
-set LongOrigin [ expr ($UTMZone - 1)*6 - 180 + 3 ];
-set eccPrimeSquared  [ expr double($eccSquared)/(1-$eccSquared) ];
-set mu  [ expr $M/($Earth_radius*(1-$eccSquared/4-3*$eccSquared*$eccSquared/64 - 5*$eccSquared*$eccSquared*$eccSquared/256)) ];
-
-set phi1Rad [ expr $mu    + (3*$e1/2-27*$e1*$e1*$e1/32)*sin(2*$mu) \
-                + (21*$e1*$e1/16-55*$e1*$e1*$e1*$e1/32)*sin(4*$mu) \
-                +(151*$e1*$e1*$e1/96)*sin(6*$mu) ];
-
-set phi1  [ expr $phi1Rad* $RAD2DEG];
-
-set N1 [ expr $Earth_radius/sqrt(1-$eccSquared*sin($phi1Rad)*sin($phi1Rad))];
-set T1 [ expr  tan($phi1Rad)*tan($phi1Rad)];
-set C1 [ expr  $eccPrimeSquared*cos($phi1Rad)*cos($phi1Rad)];
-set R1 [ expr  $Earth_radius*(1-$eccSquared)/pow(1-$eccSquared* sin($phi1Rad)*sin($phi1Rad), 1.5)];
-set D [ expr  $x/($N1*$k0)];
-
-set Lat [ expr  $phi1Rad - \
-               ($N1*tan($phi1Rad)/$R1)*($D*$D/2- \
-               (5+3*$T1+10*$C1-4*$C1*$C1-9*$eccPrimeSquared)*$D*$D*$D*$D/24 + \
-               (61+90*$T1+298*$C1+45*$T1*$T1-252*$eccPrimeSquared- \
-                3*$C1*$C1)*$D*$D*$D*$D*$D*$D/720)];
-
-set Lat [ expr  $Lat * $RAD2DEG];
-
-set Long [ expr  ($D-(1+2*$T1+$C1)*$D*$D*$D/6+(5-2*$C1+28*$T1- \
-               3*$C1*$C1+8*$eccPrimeSquared+24*$T1*$T1) \
-               *$D*$D*$D*$D*$D/120)/cos($phi1Rad)];
-
-set Long [ expr  $LongOrigin + $Long * $RAD2DEG];
- return "$Lat,$Long"
-}
-
-
-
-# convert screen x coords to UTM in the current zone
-proc scrx2utm { x } {
- global dims
- set east  [expr  $dims(le) + $x*$dims(scrx2utm) ]; 
- return $east
-}
-
-# convert screen y coords to UTM in the current zone
-proc scry2utm { y } {
- global dims
- set north [expr  $dims(ln) - $y*$dims(scry2utm) ];
- return $north
-}
 
 bind .canf.can <ButtonPress-3> { %W scan mark %x %y     }
 bind .canf.can <B3-Motion>     { %W scan dragto %x %y 1 }
