@@ -711,10 +711,28 @@ func boat_output_txt(boat=, ofname=, verbose=) {
 	m = int(somd % 60);
 	h = int((somd - m)/60);
 	somd = [];
+	
+	lat_deg = floor(abs(boat.lat));
+	lat_min = (abs(boat.lat) - lat_deg) * 60;
+	lat = lat_deg * 100 + lat_min;
+	lat_deg = lat_min = [];
+
+	lat_dir = array(string, numberof(lat));
+	if(numberof(where(boat.lat >= 0))) { lat_dir(where(boat.lat >= 0)) = "N"; }
+	if(numberof(where(boat.lat < 0))) { lat_dir(where(boat.lat < 0)) = "S"; }
+
+	lon_deg = floor(abs(boat.lon));
+	lon_min = (abs(boat.lon) - lon_deg) * 60;
+	lon = lon_deg * 100 + lon_min;
+	lon_deg = lon_min = [];
+
+	lon_dir = array(string, numberof(lon));
+	if(numberof(where(boat.lon >= 0))) { lon_dir(where(boat.lon >= 0)) = "E"; }
+	if(numberof(where(boat.lon < 0))) { lon_dir(where(boat.lon < 0)) = "W"; }
 
 								if(verbose >= 2) write, format=" Writing to file %s\n", ofname;
 	f = open(ofname, "w")
-	write, f, format="%02i%02i%02i,%f,%f,%f\n", h,m,s, boat.lat*100, boat.lon*100, boat.depth;
+	write, f, format="%02i%02i%02i,%s%011.6f,%s%012.6f,%f\n", h,m,s, lat_dir, lat, lon_dir, lon, boat.depth;
 	close, f;
 
 								if(verbose == 1) write, format=" Text file written to %s.\n", ofname;

@@ -279,34 +279,17 @@ proc load_file_list { f } {
 				set datalst [ split $datas "," ];
 				set hms [ lindex $datalst 0 ]
 									if { $DEBUG_SF } { puts "    hms $hms" }
-				set lati  [ lindex $datalst 1 ]
-									if { $DEBUG_SF } { puts "    lati $lati" }
-				set long  [ lindex $datalst 2 ]
-									if { $DEBUG_SF } { puts "    long $long" }
-				set depth [ lindex $datalst 3 ]
-									if { $DEBUG_SF } { puts "    depth $depth" }
+				set lat(hms$hms)  [ lindex $datalst 1 ]
+									if { $DEBUG_SF } { puts "    lat $lat(hms$hms)" }
+				set lon(hms$hms)  [ lindex $datalst 2 ]
+									if { $DEBUG_SF } { puts "    lon $lon(hms$hms)" }
+				set alt(hms$hms) [ lindex $datalst 3 ]M
+									if { $DEBUG_SF } { puts "    depth $alt(hms$hms)" }
 				if { [expr int([clock clicks -milliseconds] / 200)] - $ticker > 0 } {
 					set ticker [expr int([clock clicks -milliseconds] / 200)]
 					.loader.status3 configure -text "Loaded $i GPS records\r"
 					update
 				}
-				if { [ catch { set tmp $imgtime(hms$hms) } ] == 0 } {
-									if { $DEBUG_SF } { puts "    imgtime(hms$hms) $imgtime(hms$hms) exists" }
-					if { $lati > 0 } {
-						set lat(hms$hms) N[expr $lati * 1]
-					} else {
-						set lat(hms$hms) S[expr $lati * -1]
-					}
-									if { $DEBUG_SF } { puts "    lat(hms$hms) $lat(hms$hms)" }
-					if { $long > 0 } {
-						set lon(hms$hms) E[expr $long * 1]
-					} else {
-						set lon(hms$hms) W[expr $long * -1]
-					}
-									if { $DEBUG_SF } { puts "    lon(hms$hms) $lon(hms$hms)" }
-					set alt(hms$hms) [expr $depth * 1]M
-									if { $DEBUG_SF } { puts "    alt(hms$hms) $alt(hms$hms)" }
-				} 
 			}
 			.loader.status3 configure -text "Loaded $i GPS records\r"
 		}
@@ -958,8 +941,10 @@ Button .cf1.plotpos  \
 		if { [ ytk_exists ] == 1 } {
 			if { [ info exists llat ] } {
 				send_ytk mark_pos $llat $llon
+				tk_messageBox -message "$llat $llon" -type ok
 			} else {
 				send_ytk mark_time_pos $sod
+				tk_messageBox -message "$sod" -type ok
 			}
 		} else {
 			tk_messageBox  \
@@ -1086,7 +1071,12 @@ bind .slider <ButtonRelease> {
 
 # [ Variable Traces ################################
 
-trace add variable timern write timern_write
-trace add variable ci write ci_write
+if { [catch {package require Tcl 8.4}] } {
+   eval trace variable timern w timern_write
+	eval trace variable ci w ci_write
+} else {
+	eval trace add variable timern write timern_write
+	eval trace add variable ci write ci_write
+}
 
 # ] End Variable Traces ############################
