@@ -6,9 +6,10 @@
 write, "$Id$"
 
 CNS      = 0.299792458;         // speed of light/nanosecond in space
-KAIR     =  1.000276
+KAIR     = 1.000276
+KH2O     = 1.333
 NS2MAIR  = (CNS/KAIR)*0.5
-CNSH2O2X = 0.11270393157;       // two way Speed of light/ns  in water (m)
+CNSH2O2X = CNS/KH2O * 0.5
 CNSH2O2XF = CNSH2O2X*3.280839895; // two way Speed of light/ns  in water (ft)
 
 // Attenuation depths in water for calculating the bottom detection threshold
