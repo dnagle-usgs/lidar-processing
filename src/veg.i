@@ -1745,6 +1745,7 @@ See also: VEG_ALL_, CVEG_ALL
       if (multi == 1) 
 	veg_all = clean_cveg_all(veg_all);
   }
+  if (!type) type = 2;
 
   if ( is_void(lst)) {
      if (type == 1) {

@@ -990,6 +990,13 @@ func set_read_yorick(vname) {
     }
   }
   
+  tkcmd, swrite("set var_no [.l1wid.bf45.p.15 getvalue]");
+  tkcmd, swrite("set pvar_no [expr {$var_no + 1}]");
+  tkcmd, swrite("save_plot_settings $pvar_no");
+  tkcmd, swrite("if {$cbv == 1} {set cmin $cbvc(cmin)}");
+  tkcmd, swrite("if {$cbv == 1} {set cmin $cbvc(cmax)}");
+  tkcmd, swrite("if {$cbv == 1} {set cmin $cbvc(msize)}");
+  
 }
   
 

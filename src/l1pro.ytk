@@ -40,12 +40,29 @@
   global varc
   set varc 0
   set varlist {fs_all depth_all veg_all cveg_all}
-  array set plist {idx1 idx1, cmin cmin cmax cmax ptype ptype dtype dtype msize msize mtype mtype}
-  array set plist {idx2 idx2, cmin cmin cmax cmax ptype ptype dtype dtype msize msize mtype mtype}
-  array set plist {idx3 idx3, cmin cmin cmax cmax ptype ptype dtype dtype msize msize mtype mtype}
-  #array set {_depth_all} {cmin cmin cmax cmax ptype ptype dtype dtype msize msize mtype mtype}
-  #array set {_veg_all} {cmin cmin cmax cmax ptype ptype dtype dtype msize msize mtype mtype}
-  #array set {_cveg_all} {cmin cmin cmax cmax ptype ptype dtype dtype msize msize mtype mtype}
+  array set plist {idx1 idx1, cmin $cmin cmax $cmax ptype 0 dtype 0 msize $msize mtype $markerv}
+  set plist(idx2,cmin) $cmin
+  set plist(idx2,cmax) $cmax
+  set plist(idx2,ptype) 1
+  set plist(idx2,dtype) 1
+  set plist(idx2,msize) $msize
+  set plist(idx2,mtype) $markerv
+
+  set plist(idx3,cmin) $cmin
+  set plist(idx3,cmax) $cmax
+  set plist(idx3,ptype) 2
+  set plist(idx3,dtype) 3
+  set plist(idx3,msize) $msize
+  set plist(idx3,mtype) $markerv
+
+  set plist(idx4,cmin) $cmin
+  set plist(idx4,cmax) $cmax
+  set plist(idx4,ptype) 3
+  set plist(idx4,dtype) 0
+  set plist(idx4,msize) $msize
+  set plist(idx4,mtype) $markerv
+
+  array set cbvc {cmin cmin cmax cmax msize msize mtype mtype}
 
 exp_send "#include \"geo_bath.i\"\r"; # load geobath.i code
 exp_send "#include \"read_yfile.i\"\r"; # load read_yfile
@@ -160,7 +177,15 @@ menu .l1wid.mb.options
 
 
 .l1wid.mb.file add command -label "Write Binary Data File..." -underline 0 -command {
-	global write_some
+	global write_some data_file_path
+        if { [info exists data_file_path ] == 0 } {
+              set data_file_path "~/"
+        }
+	destroy .l1write
+        toplevel .l1write
+	frame .l1write.1
+	frame .l1write.2
+	frame .l1write.3
          set ftypes {
                   {{For pbd}       {.pbd}        }
                   {{IDL bin}       {.bin}        }
@@ -170,11 +195,27 @@ menu .l1wid.mb.options
         set ptype [.l1wid.bf4.1.p getvalue]
         set var_no [.l1wid.bf45.p.15 getvalue]
         set var_type [lindex $varlist $var_no]
-        set ofname [ tk_getSaveFile -filetypes $ftypes -defaultextension ".pbd" ]
+	LabelEntry .l1write.1.path  -width 30 -relief sunken -bd 3 -label "Output Path:  " -helptext "Enter Output Data Path Here" \
+		-textvariable ofname -text $data_file_path
+ 	Button .l1write.1.browse -text "Browse..." -width 10 -command {
+           set ofname [ tk_getSaveFile -filetypes $ftypes -defaultextension ".pbd" ]
+        }
+	LabelEntry .l1write.2.varname -width 10 -relief sunken -bd 3 -label "Variable Name: " -helptext "Enter Name of Variable to Write to file"  -textvariable var_type -text $var_type
+	LabelEntry .l1write.2.plyname -width 10 -relief sunken -bd 3 -label "PLY Name: " -helptext "Enter ply name to Write to file"  -textvariable ply_type -text "ply_$var_type"
+	LabelEntry .l1write.2.qname -width 10 -relief sunken -bd 3 -label "GGA(q) Name: " -helptext "Enter q name to Write to file"  -textvariable q_type -text "q_$var_type"
+    Button .l1write.3.ok -text "OK" -width 5 -command {
 	if { $ofname != "" }  {
          switch [ file extension $ofname ] {
           ".pbd" {
-		exp_send "vname=\"$var_type\"; q_$var_type = q; ply_$var_type = ply; save, createb(\"$ofname\"), vname, $var_type, q_$var_type, ply_$var_type; \r";
+ 	      if {($ply_type == "") && ($q_type == "")} {
+		exp_send "vname=\"$var_type\"; save, createb(\"$ofname\"), vname, $var_type; \r";
+	      }
+ 	      if {($ply_type == "") && !($q_type == "")} {
+		exp_send "vname=\"$var_type\"; qname = \"$q_type\"; save, createb(\"$ofname\"), vname, $var_type, qname, $q_type; \r";
+	      }
+ 	      if {!($ply_type == "") && !($q_type == "")} {
+		exp_send "vname=\"$var_type\"; qname = \"$q_type\"; plyname = \"$ply_type\"; save, createb(\"$ofname\"), vname, $var_type, qname, $q_type, plyname, $ply_type; \r";
+	      }
           }
           ".bin" - 
           ".edf" {
@@ -224,8 +265,16 @@ menu .l1wid.mb.options
           }
 	  set write_some 0
         }
+       }
       }
-     }
+   }
+   Button .l1write.3.cancel -text "Cancel" -width 5 -command {
+	   destroy .l1write
+   }
+   pack .l1write.1.path .l1write.1.browse -side left -padx 5
+   pack .l1write.2.varname .l1write.2.plyname .l1write.2.qname -side left -padx 5
+   pack .l1write.3.ok .l1write.3.cancel -side left -padx 5
+   pack .l1write.1 .l1write.2 .l1write.3
   }
 
 .l1wid.mb.file add command -label "Read Data Directory... " -underline 10 -command {
@@ -625,6 +674,15 @@ menu .l1wid.mb.options
 
 .l1wid.mb.options add checkbutton -label "Constant Colorbar for Variables" \
 	-variable cbv \
+	-command {
+  	    if {$cbv == 1} {
+		global cbvc
+		set cbvc(cmin) $cmin
+		set cbvc(cmax) $cmax
+		set cbvc(msize) $msize
+		set cbvc(mtype) $markerv
+ 	    }
+     	}
                
 
 proc make_selected_arrays {junk} {
@@ -1079,7 +1137,7 @@ Button .l1wid.bf45.q.2 -text "Histogram\nElevations" \
       if {$disp_type == 0} {
    	exp_send "hst = hist_fs(veg_all);\r"
       } else {
-        exp_send "hst = hist_veg(cveg_all); \r"
+        exp_send "hst = hist_veg(veg_all); \r"
       }
      }
   }
