@@ -425,6 +425,7 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
       maybe_eaarl = [];
  }
 
+
  if (is_void(tai)) tai = 3;
  done = 0; // set done to 0 to continue interactive mode
  for (ai=1;ai<=tai;ai++) {
@@ -440,6 +441,7 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
       maybe_eaarl = [];
     }
   }
+  if (!is_array(maybe_eaarl)) continue;
   tag_eaarl = array(int,numberof(maybe_eaarl));
   tag_eaarl++;
 
@@ -463,6 +465,7 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
 
   verts = triangulate_xyz(data=new_eaarl_all, plot=plottriag, win=plottriagwin, mode=mode, distthresh=distthresh, dolimits=1);
   if (is_void(plottriagwin)) plottriagwin = 0;
+ if (!is_array(verts)) continue;
 
   //endit;
   //done;

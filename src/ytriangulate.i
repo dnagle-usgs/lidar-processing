@@ -55,6 +55,7 @@ func triangulate_xyz(file=, savefile=, data=, plot=, mode=, win=, distthresh=, d
      xyz = transpose(xyz);
   }
   write, format="Total Points Read = %d\n",numberof(xyz(1,));
+  if (numberof(xyz(1,)) < 4) return [];
 
 
 /*
