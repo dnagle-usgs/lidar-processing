@@ -363,7 +363,7 @@ fn = opath+ofname;
 f = open(fn, "w+b");
 
 if (is_void(type)) type = 4;
-nwpr = long(11);
+nwpr = long(12);
 
 rec = array(long, 4);
 /* the first word in the file will decide the endian system. */
@@ -394,7 +394,7 @@ for (i=1;i<=len;i++) {
      byt_pos = byt_pos + 4;
      _write, f, byt_pos, geoall(i).east(indx(j));
      byt_pos = byt_pos + 4;
-     _write, f, byt_pos, geoall(i).bath(indx(j));
+     _write, f, byt_pos, geoall(i).sr2(indx(j));
      byt_pos = byt_pos + 4;
      _write, f, byt_pos, geoall(i).elevation(indx(j));
      byt_pos = byt_pos + 4;
@@ -404,11 +404,13 @@ for (i=1;i<=len;i++) {
      byt_pos = byt_pos + 4;
      _write, f, byt_pos, geoall(i).melevation(indx(j));
      byt_pos = byt_pos + 4;
-     _write, f, byt_pos, geoall(i).depth(indx(j));
-     byt_pos = byt_pos + 2;
      _write, f, byt_pos, geoall(i).bottom_peak(indx(j));
      byt_pos = byt_pos + 2;
-     _write, f, byt_pos, geoall(i).sa(indx(j));
+     _write, f, byt_pos, geoall(i).first_peak(indx(j));
+     byt_pos = byt_pos + 2;
+     _write, f, byt_pos, geoall(i).bath(indx(j));
+     byt_pos = byt_pos + 4;
+     _write, f, byt_pos, geoall(i).depth(indx(j));
      byt_pos = byt_pos + 2;
   }
   num_rec = num_rec + num_valid;
