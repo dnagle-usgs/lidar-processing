@@ -50,7 +50,7 @@ if  ( typ == "pbd" ) {
   dllmap = [];
   restore,mapf
 } else {
-   convert_map( ffn=ffn, save=0);
+   convert_map( ffn=ffn, msave=0);
 }
 
 
@@ -136,7 +136,7 @@ func map_warning( m ) {
   }
 }
 
-func convert_map ( ffn= , utm=, save=) {
+func convert_map ( ffn= , utm=, msave=, arcview=) {
 /* DOCUMENT convert_map(ffn=)
 
    Convert a NOAA/USGS ASCII geographical coastline lat/lon map into 
@@ -164,8 +164,8 @@ func convert_map ( ffn= , utm=, save=) {
 extern map_path
 extern dllmap;		// array of pointers to digital map data
 
- if ( is_void(save) ) 
-	save = 1;
+ if ( is_void(msave) ) 
+	msave = 1;
 
 if ( is_void( map_path )  ) {
 // Set the following to where the maps are stored on your system.
@@ -187,6 +187,7 @@ lsegs = 0
 str = array(string,1);
 lat = array(float, 1000)
 lon = array(float, 1000)
+segnum = array(long, 1);
 
  if (catch(0x02) ) { 
     close,mapf
@@ -195,11 +196,16 @@ lon = array(float, 1000)
 
 // load upto 100,000 line segments
 for (i=0; i<100000; i++) {
- n = read(mapf,format="%f %f", lon,lat)
+ if (arcview) {
+  n = read(mapf, format="%d",segnum);
+  n = read(mapf, format="%f,%f",lon,lat); 
+ } else {
+   n = read(mapf,format="%f %f", lon,lat)
+ }
  if ( n == 0 ) {
    close,mapf
    write,i," line segments loaded"
-   if ( save != 0 ) {
+   if ( msave != 0 ) {
      ofn = strtok( ffn, ".") (1);
      ofn += ".pbd";
      ofd = createb(ofn);
