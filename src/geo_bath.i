@@ -17,10 +17,10 @@ require, "eaarl_constants.i"
 */
 
 struct GEOBATH {
-  int raster(120); 	//contains raster number
-  double north(120);	//northing value
-  double east(120); 	//easting value
-  short idx(120);	//bottom index
+  long raster(120); 	//contains raster number
+  long north(120);	//northing value
+  long east(120); 	//easting value
+  short depth(120);	//water depth in meters
   short bottom_peak(120); //peak amplitude of return signal
   short sa(120);	//scan angle
 };
@@ -45,7 +45,7 @@ for (i=1; i<=len; i=i+1) {
   geodepth(i).raster = rrr(i).raster;
   geodepth(i).north = rrr(i).north;
   geodepth(i).east = rrr(i).east;
-  geodepth(i).idx = -d(,i).idx * CNSH2O2X
+  geodepth(i).depth = -d(,i).idx * CNSH2O2X
   geodepth(i).sa = d(,i).sa
   geodepth(i).bottom_peak = d(,i).bottom_peak;
   if (correct == 1) {
@@ -66,11 +66,18 @@ for (i=1; i<=len; i=i+1) {
 
 j = len;
 for ( i=1; i<j; i++ ) {
-  plcm, geodepth(i).idx, geodepth(i).north, geodepth(i).east,
+  plcm, geodepth(i).depth, geodepth(i).north, geodepth(i).east,
         msize=size,cmin=cmin, cmax=cmax;
   }
 
 write,format="Draw complete. %d rasters drawn. %s", j-i, "\n"
 return geodepth;
 }
+
+//func write_geobath (geodepth, opath=, ofname=) {
+
+//this function writes a binary file containing georeferenced bathymetric data.
+// input parameter geodepth is an array of structure GEOBATH, defined by the display_bath function.
+// amar nayegandhi 02/15/02.
+
 
