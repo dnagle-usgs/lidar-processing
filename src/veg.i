@@ -785,7 +785,7 @@ func write_vegall (vegall, opath=, ofname=, type=, append=) {
 
    ofname=	Output file name
 
-     type=	Type of output file, currently type = 5 is supported for all veg data.
+     type=	Type of output file, currently type = 6 is supported for all veg data.
 
    append=	Set this keyword to append to existing file.
 

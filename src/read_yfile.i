@@ -114,6 +114,7 @@ if (is_void(fname_arr)) {
 }
 
 write, format="Number of files to read = %d \n", n
+write, format="Type = %d\n", type
 
 bytord = 0L;
 type =0L;
@@ -360,7 +361,7 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
     nx = ' ';
 
 
-    data = array(VEG, recs); 
+    data = array(VEG_, recs); 
 
     for (i=0;i<recs;i++) {
 
@@ -419,17 +420,17 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
 }
   
 func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=) {
-  /* this function writes out an ascii file containing x,y,z,intensity information.
+  /* DOCUMENT this function writes out an ascii file containing x,y,z,intensity information.
     amar nayegandhi 04/25/02
     Keywords:
-    data_arr = Data Array.  Could be first surface, bathymetry or vegetation.
+    data_arr = Data Array.  can be fs_all (first surface), depth_all (bathymetry) or veg_all (vegetation).
     opath = Path for output file.
     ofname = File name of output file.
     type = Type of data to be written out. type = 1 for first surface, type = 2 for bathymetry,
            type = 3 for vegetation (bare earth), type = 4 for depth.
-    indx = set to write out the index number of each record in the output file.
-    split = set split to 1 if you want the output file to be split into chunks of 1million points
-    intensity = set this keyword if the output file must contain the intensity value
+    indx = set to 1 to write out the index number of each record in the output file.
+    split = set split to 1 if you want the output file to be split into chunks of 1 million points
+    intensity = set to 1 if you want to additionally include the intensity value in the output file
     modified 12/30/02 amar nayegandhi to :
       write out x,y,z (first surface elevation) data for type=1
       to split at 1 million points and write to another file
@@ -439,6 +440,72 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=) {
 
   /* open file to read/write (it will overwrite any previous file with same name) */
   f = open(fn, "w");
+  if (numberof(data_arr) != numberof(data_arr.north)) {
+     if (type == 1) { //convert FS_ALL to FS
+       data_new = array(FS, numberof(data_arr)*120);
+       rindx = where(data_arr.raster >= 0);
+       if (is_array(rindx)) {
+	data_new.rn = data_arr.raster(rindx);
+	data_new.north = data_arr.north(rindx);
+	data_new.east = data_arr.east(rindx);
+	data_new.elevation = data_arr.elevation(rindx);
+	data_new.mnorth = data_arr.mnorth(rindx);
+	data_new.meast = data_arr.meast(rindx);
+	data_new.melevation = data_arr.melevation(rindx);
+	data_new.intensity = data_arr.intensity(rindx);
+
+        n_rindx = where(data_new.north != 0);
+        if (is_array(n_rindx)) {
+          data_arr = data_new(n_rindx);
+        }
+       }
+     }
+     if (type == 2) { //Convert GEOALL to GEO 
+	data_new = array(GEO, numberof(data_arr)*120);
+	rindx = where(data_arr.rn >= 0);
+        if (is_array(rindx)) {
+	 data_new.rn = data_arr.rn(rindx);
+	 data_new.north = data_arr.north(rindx);
+	 data_new.east = data_arr.east(rindx);
+	 data_new.sr2 = data_arr.sr2(rindx);
+	 data_new.elevation = data_arr.elevation(rindx);
+	 data_new.mnorth = data_arr.mnorth(rindx);
+	 data_new.meast = data_arr.meast(rindx);
+	 data_new.melevation = data_arr.melevation(rindx);
+	 data_new.bottom_peak = data_arr.bottom_peak(rindx);
+	 data_new.first_peak = data_arr.first_peak(rindx);
+	 data_new.depth = data_arr.depth(rindx);
+
+         n_rindx = where(data_new.north != 0)
+         if (is_array(n_rindx)) {
+          data_arr = data_new(n_rindx);
+         }
+        }
+     }
+     if ((type == 3)) {  //convert VEG_ALL to VEG_
+       data_new = array(VEG_, numberof(data_arr)*120);
+       rindx = where(data_arr.rn >= 0);
+       if (is_array(rindx)) {
+	data_new.rn = data_arr.rn(rindx);
+	data_new.north = data_arr.north(rindx);
+	data_new.east = data_arr.east(rindx);
+	data_new.elevation = data_arr.elevation(rindx);
+	data_new.mnorth = data_arr.mnorth(rindx);
+	data_new.meast = data_arr.meast(rindx);
+	data_new.melevation = data_arr.melevation(rindx);
+	data_new.felv = data_arr.felv(rindx);
+	data_new.fint = data_arr.fint(rindx);
+	data_new.lelv = data_arr.lelv(rindx);
+	data_new.lint = data_arr.lint(rindx);
+	data_new.nx = data_arr.nx(rindx);
+
+        n_rindx = where(data_new.north != 0)
+        if (is_array(n_rindx)) {
+          data_arr = data_new(n_rindx);
+        }
+       }
+     }
+  }
 
   totw = 0;
   num_valid = numberof(data_arr.north);
@@ -446,9 +513,9 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=) {
   if (intensity) {
     a = structof(data_arr);
     if (type == 1) {
-      if (a == GEO) data_intensity = data_arr.first_peak;
-      if (a == VEG) data_intensity = data_arr.fint;
-      if (a == FS) data_intensity = data_arr.intensity;
+      //if (a == GEO) data_intensity = data_arr.first_peak;
+      //if (a == VEG) data_intensity = data_arr.fint;
+      data_intensity = data_arr.intensity;
     }
     if (type == 2) {
       data_intensity = data_arr.bottom_peak;
@@ -557,7 +624,7 @@ func read_pointer_yfile(data_ptr, mode=) {
       tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",1);
     }
   }
-  if (a == VEG) {
+  if (a == VEG || a == VEG_) {
     veg_all = data_out;
     if (_ytk) {
       tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",2);

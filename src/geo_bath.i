@@ -778,7 +778,7 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset
 	data = data_new
      }
      if ((ptype == 2) && (fset == 0)) {  //convert VEGALL to VEG 
-	data_new = array(VEG, numberof(data)*120);
+	data_new = array(VEG_, numberof(data)*120);
 	indx = where(data.rn >= 0);
 	data_new.rn = data.rn(indx);
 	data_new.north = data.north(indx);
@@ -1026,15 +1026,16 @@ write,"*************************************************************************
       
 }
 
-func sel_data_rgn(data, mode=,win=) {
+func sel_data_rgn(data, type, mode=,win=) {
   //this function selects a region (limits(), rubberband, pip) and returns data within that region.
   // if mode = 1, limits() function is used to define the region.
   // if mode = 2, a rubberband box is used to define the region.
   // if mode = 3, the points-in-polygon technique is used to define the region.
+  // type = type of data (R, FS, GEO, VEG_, etc.)
   //amar nayegandhi 11/26/02.
 
 
-  if (!win) win = 5;
+  if (is_void(win)) win = 5;
   if (!mode) mode = 1;
 
   w = window();
@@ -1088,8 +1089,9 @@ func sel_data_rgn(data, mode=,win=) {
 
  window, w;
 
- a = [];
- a = structof(data);
+ //a = [];
+ //a = structof(data);
+ a = type;
  if (a == R) {
    data_out = array(FS, numberof(indx));
    data_out.rn = data.raster(indx);

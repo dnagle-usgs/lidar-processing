@@ -150,8 +150,9 @@ write,format="Please wait while drawing..........%s", "\r"
  */
 for ( ; i<=j; i++ ) {
  if ( !is_void(edt) ) {
-   ea = rrr(i).elevation;
-   q = where((ea >= cmin) & (ea <= cmax) & (rrr(i).north != 0))
+   //ea = rrr(i).elevation;
+   //q = where((ea >= cmin) & (ea <= cmax) & (rrr(i).north != 0))
+   q = where(rrr(i).north);
    //q = where( (ea(,i)) &  (rrr(i).north) );
  } else {
    q = where( (rrr(i).elevation) & (rrr(i).north) );

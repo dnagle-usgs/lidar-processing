@@ -14,10 +14,11 @@
   set ofname ""
   set win_no 		5
   set msize 		1.0
+  set markerv		1
   set usecentroid   	1
   set hist_log		1
   set cmax 		40
-  set cdelta		10
+  set cdelta		80
   set cmin		-40
 
   set cmax_max		5000

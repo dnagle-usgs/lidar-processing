@@ -36,7 +36,7 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, elv=, read_file=) {
 
    extern i, no, be_avg_pts, be, kings_elv, be_elv, diff1, diff2;
    if (!buf) buf = 500 // default to 5 m buffer side.
-   if (rgn) {
+   if (is_array(rgn)) {
      indx = where(((kings(1,) >= rgn(1)) &
                  (kings(1,) <= rgn(2))) & 
 	        ((kings(2,) >= rgn(3)) &
@@ -58,10 +58,15 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, elv=, read_file=) {
 
  for (i=1; i <= numberof(kings(1,)); i++) {
 
-   indx = where(((eaarl.east >= kings(1,i)*100-buf)   & 
-               (eaarl.east <= kings(1,i)*100+buf))  & 
-               ((eaarl.north >= kings(2,i)*100-buf) & 
-               (eaarl.north <= kings(2,i)*100+buf)));
+   q = where(((eaarl.east >= kings(1,i)*100-buf)   & 
+               (eaarl.east <= kings(1,i)*100+buf)) );  
+   
+   indx = [];
+   if (is_array(q)) {
+     indx = where((eaarl.north(q) >= kings(2,i)*100-buf) & 
+               (eaarl.north(q) <= kings(2,i)*100+buf));
+     indx = q(indx);
+   }
 
    if (is_array(indx)) {
       if (elv) {
