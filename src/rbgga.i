@@ -610,21 +610,31 @@ func plot_no_raster_fltlines (gga, edb) {
 
   sod_edb = edb.seconds - soe_day_start;
   
+  
   // find where the diff in sod_edb is greater than 5 second
-  sod_dif = sod_edb(dif);
+  sod_dif = abs(sod_edb(dif));
   indx = where((sod_dif > 5) & (sod_dif < 100000));
   if (is_array(indx)) {
     f_norast = sod_edb(indx);
     l_norast = sod_edb(indx+1);
 
     for (i = 1; i <= numberof(f_norast); i++) {
+     if (l_norast(i) >= f_norast(i)) {
       indx1 = where((gga.sod >= f_norast(i)) & (gga.sod <= l_norast(i)));
       show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1),  marker=4, skip=50,  color = "yellow", utm=utm;
+     }
     } 
   }
   // also plot over region before the system is initially started.
   indx1 = where(gga.sod < sod_edb(1));
-  show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1), marker=4, skip=50,  color = "yellow", utm=utm;
+  if (is_array(indx1)) 
+    show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1), marker=4, skip=50,  color = "yellow", utm=utm;
+
+  //also plot over region before first good raster
+  lindx = where(sod_edb < 0);
+  indx1 = where(gga.sod <= sod_edb(lindx(0)+2));
+  if (is_array(indx1)) 
+    show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1), marker=4, skip=50,  color = "yellow", utm=utm;
 
   window, w;
 
