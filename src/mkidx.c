@@ -1,5 +1,6 @@
 /*
   $Id$
+  Orginal C. W. Wright  wright@lidar.wff.nasa.gov
 */
 #include <unistd.h>
 #include <stdio.h>
@@ -9,6 +10,8 @@
 #include "eaarl.h"
 
 /************************************************************
+
+  This program is superceeded by efdb.c.
 
   Program to generate an index of EAARL waveform data and
 files.  
@@ -55,7 +58,7 @@ main(unsigned int argc, char *argv[])
       ofd = fopen( argv[2], "w+" );
   } 
   if ( (fd == NULL) || ( ofd == NULL ) ) {
-	printf("\nCan't open %s\nUsage: ega somefile.tld somefile.idx\n\n", argv[1]);
+	printf("\nCan't open %s\nUsage: mkidx somefile.tld somefile.idx\n\n", argv[1]);
 	exit(1);
   }
 

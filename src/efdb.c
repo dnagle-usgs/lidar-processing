@@ -15,6 +15,7 @@
 
 
 6/24/01
+  Orginal by
   C. Wayne Wright 6/24/2001 wright@lidar.wff.nasa.gov
 
 Usage:
