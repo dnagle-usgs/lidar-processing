@@ -220,12 +220,13 @@ proc make_selected_arrays {junk} {
     	set curlist [.l1plot.1.lb curselection]
         set ptype [.l1wid.bf4.1.p getvalue]
  	if {$ptype == 0} {
-    	  exp_send "fs_some = [];\r"
+    	  exp_send "fs_some = \[\];\r"
 	  expect ">"
 	  foreach f $curlist {
-            set fidx [lindex $lrnindx $f] 
-	    set lidx [lindex $lrnindx [expr ($f+1)]]
-	    if {$lidx != ""} {
+           set fidx [lindex $lrnindx $f] 
+	   set lidx [lindex $lrnindx [expr ($f+1)]]
+	   if {[expr ($lidx-$fidx)] != 0} {
+	    if {($lidx != "")} { 
 	      set lidx [expr ($lidx - 1)]
  	      exp_send "grow, fs_some, fs_all($fidx:$lidx);\r"
 	      expect ">"
@@ -233,14 +234,16 @@ proc make_selected_arrays {junk} {
 	      exp_send "grow, fs_some, fs_all($fidx:);\r"
 	      expect ">"
  	    }
+	   }
     	  }
         }
  	if {$ptype == 1} {
     	  exp_send "depth_some = \[\];\r"
 	  expect ">"
 	  foreach f $curlist {
-            set fidx [lindex $lrnindx $f] 
-	    set lidx [lindex $lrnindx [expr ($f+1)]]
+           set fidx [lindex $lrnindx $f] 
+	   set lidx [lindex $lrnindx [expr ($f+1)]]
+	   if {[expr ($lidx-$fidx)] != 0} {
 	    if {$lidx != ""} {
 	      set lidx [expr ($lidx - 1)]
  	      exp_send "grow, depth_some, depth_all($fidx:$lidx);\r"
@@ -249,6 +252,7 @@ proc make_selected_arrays {junk} {
 	      exp_send "grow, depth_some, depth_all($fidx:);\r"
 	      expect ">"
  	    }
+	   }
     	  }
         }
 }
