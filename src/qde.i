@@ -52,27 +52,53 @@ func qde( r ) {
 }
 
 
-func open_fscube( junk ) {
+func open_fscube( junk, invalid= ) {
 /* DOCUMENT open_fscube()
 
    Returns a filter cube for use in spatial filtering first surface
   return data.
 
 */
-   return ( array( float, 160, 9 ) );
+   if ( is_void(invalid) ) 
+	invalid = float(-32768);
+   return ( array( invalid, 160, 9 ) );
 
 }
 
-func load_fscube( w, cube ) {
-/* DOCUMENT load_fscube(w)
+func load_fscube( w, cube, invalid= ) {
+/* DOCUMENT load_fscube(w, cube, invalid=)
+
+   Put values into the filter cube.
+
+   Inputs:
+    w           Input array of raster data values. 
+    cube        The data cube to insert w into.
+    invalid     A value which indicates invalid data. (default -32768);
+
+   Returns:
+    cube        The data cube with the new values installed and the
+                data shifted.
+
 */
-   cube( , 2:9) = cube(, 1:8);	// shift cube data down one.    
-   cube( , 1) = 0;
+   if ( is_void( invalid ) )
+	invalid = float(-32768);
+   n = dimsof(cube)(3);
+   cube( , 2:n) = cube(, 1:n-1);	// shift cube data down one.    
+   cube( , 1) = invalid;
    cube( int( w(,2) ), 1) = w(,1);
    return cube;
 }
 
+func f3x3(c, w) {
 
+// Prime the filter cube with 9 samples from this 
+// set if data.
+   for (i=1; i<=9; i++  ) 
+      load_fscube( w(, i, ), c);
+   n = dimsof(w)(2);  			// get the number of rasters
+    
+    
+}
 
 
 func lsq(y,x) {

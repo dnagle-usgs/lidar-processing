@@ -109,7 +109,7 @@ struct EGGNAV {
 
 // an array big enough to hold 24 hours at 10hz (76mb)
 // ncol = 11;
- ncol = 13;
+ ncol = 14;
  tmp = array( double, ncol, 864000);
  write,"Reading........."
  s = rdline(idf);

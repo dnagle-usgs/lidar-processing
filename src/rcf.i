@@ -15,7 +15,7 @@ Generic Random Consensus filter.  The jury is the
 array to test for consensis, and w is the window range
 which things can vary within.
 
-  Orginal: C. W. Wright 6/15/2002
+  Orginal: C. W. Wright 6/15/2002 wright@lidar.wff.nasa.gov
 
 jury       The array of points used to reach the consenus.
 
@@ -67,7 +67,25 @@ Mode=
 	4 	       	      vote
 	[0x81121bc,0x814d9bc]	location in memory of sorted list of kwinners
 	and address of vote.
+
+
+For a description on this method, see:
+
+Random Sample Consensus - A paradigm for model-fitting 
+with applications to image-analysis and automated cartography,
+
+Fischler MA, Bolles RC, Communications of the ACM, 
+24 (6): 381-395 1981
+ 
+FISCHLER MA, SRI INT,CTR ARTIFICIAL INTELLIGENCE,MENLO PK,CA 94025
+ 
+Publisher:
+ASSOC COMPUTING MACHINERY, NEW YORK
+
+
 */
+
+
   if ( is_void(mode) )
 	mode = 0;
   si = sort(jury);		// order the jury
@@ -91,10 +109,6 @@ Mode=
   } else if ( mode == 1 ) {
     return [  jury(si(iidx : iidx + vote -1))(avg), vote ];
   } else if ( mode == 2 ) {
-//  vote 
-//  kwinners
-//  iidx
   	return [ &si(kwinners+iidx-1), &vote ]
   }
-  
 }

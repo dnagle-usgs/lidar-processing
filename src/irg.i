@@ -2,6 +2,8 @@
    $Id$
    W. Wright
 
+   8/23/02 WW Minor additions to irg to permit giving an initial
+        raster number and an increment instead of a start and stop.
 
    8/17/02 WW
 	Added XRTRS data type to return range data and
@@ -82,17 +84,32 @@ func open_irg_status_bar {
 
 
 
-func irg( b, e, georef= ) {
+func irg( b, e, inc=, delta=, georef= ) {
 /* DOCUMENT irg(b, e, georef=) 
    Returns an array of irange values from record
-   b to record e.
+   b to record e.  "e" can be left out and it will default to 1.  Don't
+   include e if you supply inc=.
 
+   inc=         NN      Returns "inc" records beginning with b.
+    delta=      NN      Generate records from b-delta to b+delta.
    georef=	<null> 	Return RTRS records like normal.
 		1       Return XRTRS records.
 
    Returns an array of RTRS structures, or an array of XRTRS.
 
 */
+
+  if ( !is_void( delta ) ) {
+     e = b + delta;
+     b = b - delta;
+  }
+
+  if ( !is_void( inc ) ) {
+     e = b + inc;
+  } 
+
+  if ( is_void(e) ) 
+	e = b + 1;
 
   len = e - b;				// Compute the length of the return
 					// data.
