@@ -14,7 +14,7 @@ func cent( a ) {
    Compute the centroid of "a" using the no more than the
  first 12 points.  This function considers the entire pulse
  and is probably only good for solid first-return targets or
- bottom pulses.  It was tested on ground test data found in
+ bottom pulses.  
 
 */
   n = numberof(a);	// determine number of points in waveform
@@ -29,7 +29,7 @@ func cent( a ) {
     c = float(  (a(r) * indgen(r)) (sum) ) / s;
   } else {
     c = 10000.0;
-    write,"********* Reject"
+    write,"********* centroid-1.i  cent()  Reject"
   }
 
 //      centriod peak     average
