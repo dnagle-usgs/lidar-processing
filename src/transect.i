@@ -207,14 +207,15 @@ func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=, rcf_p
 ///   ss
 
    for (i=1; i<numberof(ss); i++ ) {
-     c = (color+i)&7;
+      c = (color+i)&7;
+   soeb = fs.soe(*)(glst(llst)(ss(i)+1));
+      t = soe2time( soeb );
      tb = fs.soe(*)(glst(llst)(ss(i)+1))%86400;
      te = fs.soe(*)(glst(llst)(ss(i+1)))%86400;
      td = abs(te - tb);
      hms = sod2hms( tb );
-     write, format="soe = %6.2f:%-10.2f(%-4.2f) hms=%2d:%02d:%02d utc\n", 
-
-                          tb, te, td, hms(1,), hms(2,), hms(3,);
+     write, format="%d:%d sod = %6.2f:%-10.2f(%-4.2f) utc=%2d:%02d:%02d %s\n",
+                    t(1),t(2), tb, te, td, hms(1,), hms(2,), hms(3,), clr(c);
 
      if ( xtime ) {
      plmk, elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0, 
