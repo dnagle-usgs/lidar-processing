@@ -415,13 +415,23 @@ button .rslider.bf2.exwf -text "Examine waveforms" -command {
   gstate $blist normal
 }
 
+set elevation_offset 0.0;
+
 button .rslider.bf2.georef -text "Geo Ref" -command {
-  global rn;
-  exp_send "geo_rast( $rn, fsmarks=1 );\r"
+  global rn elevation_offset;
+  exp_send "geo_rast( $rn, fsmarks=1, eoffset=$elevation_offset );\r"
 }
 
+SpinBox .rslider.bf2.elevation_offset \
+        -helptext "elevation_offset: Enter the elevation offset (in meters) here." \
+        -justify center \
+        -range { -1000 1000 .5 } \
+        -width 7 \
+        -textvariable elevation_offset;
+
+
 button .rslider.bf1.stop -text "Stop" -command {
- global tid play_flag rnf
+ global tid play_flag rnf 
  exp_send "animate,0; window,1;\r" 
   after cancel $tid;
   set play_flag 0 
@@ -498,7 +508,7 @@ trace variable thetime w sft
 	-side left -expand 0 -fill both -anchor nw 
 
   pack \
-	.rslider.bf2.georef \
+	.rslider.bf2.georef .rslider.bf2.elevation_offset \
 	-side left -expand 0 -fill both
 
 

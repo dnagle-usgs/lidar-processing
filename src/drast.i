@@ -300,7 +300,7 @@ func show_wf( r, pix, win=, nofma=, cb=, c1=, c2=, c3= ) {
 
 
 
-func geo_rast(rn, fsmarks=   )  {
+func geo_rast(rn, fsmarks=, eoffset=   )  {
 /* DOCUMENT get_rast(rn, fsmarks=   )
 
    Plot a geo-referrenced false color waveform image.
@@ -310,6 +310,8 @@ func geo_rast(rn, fsmarks=   )  {
    rn		The raster number to display.
    fsmarks= 	Define if you want the first surface range
 		values plotted over the waveforms.
+
+   eoffset=     The amount to offset the vertical scale (meters).
 
 
 */
@@ -330,15 +332,15 @@ for (i=1; i<120; i++ ) {
     if ( n > 0 ) {
       zz(1:n) = z;
     }  
-    C = .15
+    C = .15;		// in air
     x = array( xm(i), 255);
-    y = span(  sp(i), sp(i)-255*C , 255 );
+    y = span(  sp(i)+eoffset, sp(i)-255*C+eoffset , 255 );
     plcm, 255-zz,y,x, cmin=0, cmax=255, msize=2.0;
   }
 }
   if ( !is_void( fsmarks) ) 
      indx = where(fs(1).elevation <= 0.4*(fs(1).melevation));
-     plmk, sp(indx), xm(indx), marker=4, msize=.1, color="magenta"
+     plmk, sp(indx)+eoffset, xm(indx), marker=4, msize=.1, color="magenta"
 
   window(winsave);
 }

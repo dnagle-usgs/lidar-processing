@@ -82,6 +82,23 @@ return q
 }
 
 
+func make_pnav_from_gga( gga ) {
+/* make_pnav_from_gga( gga )
+ 
+  Builds and returns a pnav structure from a gga structure.
+
+*/
+   pnav = array( PNAV, dimsof( gga )(2) );
+   pnav.sod = gga.sod;
+   pnav.lat = gga.lat;
+   pnav.lon = gga.lon;
+   pnav.alt = gga.alt;
+   return pnav;
+}
+
+
+
+
 func display(rrr, i=,j=, cmin=, cmax=, size=, win=, dofma=, edt= ) {
 /* DOCUMENT display(rrr, i=,j=, cmin=, cmax=, size=, win=, dofma=, edt= )
 
@@ -184,7 +201,7 @@ func first_surface(start=, stop=, center=, delta=, north=) {
 
 */
  extern roll, pitch, heading, palt, utm, northing, easting
- extern a
+ extern a, _utm
 
  if ( !is_void( center ) ) {
     if ( is_void(delta) ) 
@@ -225,12 +242,18 @@ if ( is_void( north ) ) {
 write,"interpolating altitude..."
 palt  = interp( pnav.alt,   pnav.sod,  atime )
 
-write,"Converting from lat/lon to UTM..."
-utm = fll2utm( pnav.lat, pnav.lon )
+if ( is_void( _utm ) ) {
+   write,"Converting from lat/lon to UTM..."
+   _utm = fll2utm( pnav.lat, pnav.lon )
+} else {
+  if ( dimsof(pnav)(2) != dimsof(pnav)(2) ) 
+   write,"_utm has changed, re-converting from lat/lon to UTM..."
+   _utm = fll2utm( pnav.lat, pnav.lon )
+}
 
 write,"Interpolating northing and easting values..."
-northing = interp( utm(1,), pnav.sod, atime )
-easting  = interp( utm(2,), pnav.sod, atime )
+northing = interp( _utm(1,), pnav.sod, atime )
+easting  = interp( _utm(2,), pnav.sod, atime )
 
   sz = j - i + 1;
  rrr = array(R, sz);
