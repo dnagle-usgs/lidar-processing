@@ -51,8 +51,20 @@ set auto_path "$auto_path /usr/lib"
 package require Img
 package require BWidget
 package require vfs::tar
+package require cmdline
 
 # ] End Script Initialization ######################
+
+# [ Command Line Options ###########################
+
+set sf_options {
+	{camtype.arg 1 "The type of photography to be viewed. 1 for EAARL photography; 2 for boat photography. Default: "}
+}
+set sf_usage "\nUsage:\n sf_a.tcl \[options]\nOptions:\n"
+
+array set params [::cmdline::getoptions argv $sf_options $sf_usage]
+
+# ] End Command Line Options #######################
 
 # [ Variable Initialization ########################
 
@@ -84,7 +96,7 @@ set mark(0) 0       ;# Array of marked images
 set mark_range_inc 1;# Increment for ranges
 set range_touched 0 ;# Have fcin or lcin been set but not used?
 
-set camtype 1       ;# Default camera type -- may be overridden by .lst commands
+set camtype $params(camtype) ;# Camera type -- may be overridden by .lst commands
 set tarname ""      ;# Tar file to access - may be changed by .lst commands
 
 set frame_off 0     ;# Frame offset
