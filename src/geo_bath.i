@@ -18,6 +18,7 @@ require, "read_yfile.i"
 require, "rbgga.i"
 require, "drast.i"
 require, "nav.i"
+require, "rcf.i"
 
 /* 
   This program is used to process bathymetry data  using the 
@@ -977,6 +978,12 @@ write,"============================================================="
 
 } while ( mouse_button != right_mouse );
 
+
+ q = *(rcf( rtn_data.elevation, 1000.0, mode=2)(1));
+ write,format="Selected point avg: %6.3fm, %6.1fcm RMS, %6.1fcm Peak-to-peak\n", 
+ 	rtn_data.elevation(q)(avg)/100.0, 
+ 	rtn_data.elevation(q)(rms),
+ 	float(rtn_data.elevation(q)(ptp)); 
   
  return rtn_data;
       
