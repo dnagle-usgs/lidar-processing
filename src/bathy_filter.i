@@ -1,5 +1,9 @@
+/*
+ $Id$
+*/
+
 func read_4wd_ascii(ipath, ifname, no_lines=) {
- /* DOCUMENT read_4wd_ascii(ipath, ifname, no_lines=)
+/* DOCUMENT read_4wd_ascii(ipath, ifname, no_lines=)
     Original amar nayegandhi 02/28/03
     This function reads a 4 word ascii file of the format x y zmin zmax
     Input:
@@ -92,8 +96,13 @@ func extract_indx_tile(noaa_data, indx_no, win=) {
 }
 
 func compare_data(ndata, edata) {
-   /* DOCUMENT compare_data(data_out, edata)
+   /* DOCUMENT compare_data(ndata, edata)
+      This function compares the depth ranges of the NOAA bathy data with the EAARL data points.  The EAARL data points that are beyond a certain range of the NOAA bathy data are discarded.  
+      Input: ndata: NOAA bathy data array (from read_4wd_ascii function
+             edata: EAARL bathy data array (of type GEO)
+      Output: EAARL bathy data array of type GEO 
       amar nayegandhi 03/06/03.
+      modified AN 03/21/03 to include tagging of EAARL data that are not compared, and finding unique elements of the compared data.
    */
    //further strip the noaa data to cover only the eaarl data
    minn = min(edata.north/100.);
@@ -101,6 +110,7 @@ func compare_data(ndata, edata) {
    mine = min(edata.east/100.);
    maxe = max(edata.east/100.);
    ct = 0;
+   tag_e = array(int, numberof(edata));
 
    if (minn > min(ndata(2,))) {
       indx = where(ndata(2,) >= minn);
@@ -150,6 +160,7 @@ func compare_data(ndata, edata) {
           }
        }
        if (is_array(fidx)) {
+        tag_e(fidx)++;
         //write, format="numberof fidx = %d \n",numberof(fidx);
         eedata = edata(fidx);
         if (ndata(3,i) >= 10) {
@@ -168,9 +179,9 @@ func compare_data(ndata, edata) {
           }
         } else {
 	    //if (ndata(3,i) >= 8) {
-              eidx = where((eedata.depth+eedata.elevation)/100. > (-1.0*ndata(4,i)-6*dif_ndata));
+              eidx = where((eedata.depth+eedata.elevation)/100. > (-1.0*ndata(4,i)-10*dif_ndata));
               if (is_array(eidx)) {
-                 eiidx = where((eedata.depth(eidx)+eedata.elevation(eidx))/100. < (-1.0*ndata(3,i)+6*dif_ndata));
+                 eiidx = where((eedata.depth(eidx)+eedata.elevation(eidx))/100. < (-1.0*ndata(3,i)+10*dif_ndata));
                 if (is_array(eiidx)) {
                   eidx = eidx(eiidx);
                   new_edata(ct+1:(ct+numberof(eidx))) = eedata(eidx);
@@ -185,14 +196,47 @@ func compare_data(ndata, edata) {
 	    */
         }
        
-      } 
+       // nd = swrite(format="%2d, %2d",ndata(3,i), ndata(4,i));
+//	plt, nd, ndata(1,i), ndata(2,i), tosys=1
+ //	write, ndata(2,i), ndata(1,i);
+      } //else {
+	//write, "No eaarl data found for given noaa point."
+  //      nd = swrite(format="%2d, %2d",ndata(3,i), ndata(4,i));
+//	plt, nd, ndata(1,i), ndata(2,i), tosys=1
+ //	write, ndata(2,i), ndata(1,i);
+//      } 
+      write, format="%d of %d comparisons completed.\r",i,numberof(ndata(1,));
     } // end for loop
+    ne_idx = where(tag_e == 0);
+    new_edata(ct+1:(ct+numberof(ne_idx))) = edata(ne_idx);
+    ct = ct + numberof(ne_idx);
     new_edata = new_edata(1:ct);
-    
-   }
+    //midx = where(tag_e > 1);
+    //write, format="Number of multiple occurences of the same data point = %d.  Deleting them... \n",numberof(midx);
+    //use David Munros unique function 
+    write, "Deleting multiple occurances of the same data points..."
+    neidx = unique(new_edata.rn);
+    new_edata = new_edata(neidx);
+
+   } 
    if (is_array(new_edata)) 
     return new_edata
        
+}
+
+func unique(x) {
+  /*DOCUMENT unique(x)
+    This function used the sort function to return the unique elements of array x.
+    Input: x : 1 dimensional array
+    Output:  Indices of the unique elements in array x
+    Original David Munro 
+    adapted by amar nayegandhi 03/21/03
+  */
+  x = x(*);
+  if (numberof(x)<2) return [x(1)];
+  x = x(sort(x));
+  mask = grow([1n], x(1:-1) != x(2:0));
+  return (where(mask));
 }
 
 func test_bathy(null) {
@@ -205,7 +249,7 @@ func test_bathy(null) {
 
 
  
- 
+ write, "$Id$"
  
 
 
