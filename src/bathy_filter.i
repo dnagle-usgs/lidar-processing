@@ -218,6 +218,7 @@ func compare_data(ndata, edata) {
     //use David Munros unique function 
     write, "Deleting multiple occurances of the same data points..."
     neidx = unique(new_edata.rn);
+    new_edata = new_edata(sort(new_edata.rn));
     new_edata = new_edata(neidx);
 
    } 
@@ -235,7 +236,7 @@ func unique(x) {
     adapted by amar nayegandhi 03/21/03
   */
   x = x(*);
-  if (numberof(x)<2) return [x(1)];
+  if (numberof(x)<2) return [where(x(1))];
   x = x(sort(x));
   mask = grow([1n], x(1:-1) != x(2:0));
   return (where(mask));
