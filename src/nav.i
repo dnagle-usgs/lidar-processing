@@ -138,16 +138,16 @@ func mdist ( none, nodraw=, units=, win= ) {
 /* DOCUMENT mdist
 
   Measure the distance between two points clicked on by the mouse
-  and return the distance in nm, sm , and km.
-
-  to do a flight plan, do this:
-  fp = array(float, 14, 1)		// create an array for the segments
-  fp = grow( fp, mdist() )		// to add a segment
- 
-  plot with:
-  rr = 1:0
-  pldj,fp(1,rr),fp(2,rr),fp(3,rr),fp(4,rr),color="red"
-
+  and return the distance.  The win= lets you make the measurement in
+  other than the current window.  The current window is restored afterward.
+  "units=" can be either "ll", "m", "cm", or "mm" where ll selects 
+  decimal latitude, longitude for inout, and "m" for meters, "cm" for 
+  centimeters, and "mm" for millimeters.  The "units=" describes the
+  scaling of the input data.  For example, if the input data is in centimeters
+  then selecting units="cm" will insure the output will be in meters. The
+  output is intended to always be in meters.  If the nodraw= parameter is
+  true, then when in the "ll" mode the measured line will not be displayed.
+  
 
    Inputs:
          win=   Select a window different than current.
@@ -159,6 +159,8 @@ func mdist ( none, nodraw=, units=, win= ) {
 
   Returns:
 	Distance in meters. 
+
+  See also:  sdist, lldist, plrect
 
 */
 
