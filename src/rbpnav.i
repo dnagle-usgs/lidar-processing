@@ -37,7 +37,7 @@ History:
    short flag;
    float sod;
    float pdop;
-   float hdop;		// egg data only
+   //float hdop;		// egg data only
    float alt;
    float xrms;
    float veast;
