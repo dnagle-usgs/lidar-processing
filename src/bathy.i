@@ -157,6 +157,7 @@ struct BATH_CTL{
   float thresh;		// threshold value ( 3 )
   int   first;		// first nanosecond to consider (maxdepth in ns)  ( 150 )
   int   last;		// last nanosecond to consider (maxdepth in ns)  ( 150 )
+  int   maxsat;         // Maximum number of saturated points.
 
 //// Data area
     float a( 256, 120, 4);   // array for interim waveform data
@@ -316,6 +317,13 @@ func ex_bath( rn, i,  last=, graph=, win=, xfma= ) {
 
    nsat = where( w == 0 );			// Create a list of saturated samples 
    numsat = numberof(nsat);			// Count how many are saturated
+
+// Dont bother processing returns with more than bathctl.maxsat saturated
+// values.  
+   if ( numsat != 0 ) 
+      if ( numsat >= bath_ctl.maxsat ) 
+	 return rv;
+
    if ( (numsat > 1)  && ( nsat(1) <= 12)   ) {
       if (  nsat(dif) (max) == 1 ) { 		// only surface saturated
           last_surface_sat = nsat(0);		// so use last one

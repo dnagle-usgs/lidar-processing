@@ -7,7 +7,7 @@ proc set_bath_ctl { a b c } {
    exp_send "bath_ctl.$b = $bath_ctl($b); show_bath_constants; \r" 
 }
 
-proc send_bathctl_to_l1pro {blaser bwater bagc bthresh bfirst blast} {
+proc send_bathctl_to_l1pro {blaser bwater bagc bthresh bfirst blast bmaxsat} {
    global bath_ctl
    set bath_ctl(laser) $blaser   
    set bath_ctl(water) $bwater
@@ -15,6 +15,7 @@ proc send_bathctl_to_l1pro {blaser bwater bagc bthresh bfirst blast} {
    set bath_ctl(thresh) $bthresh
    set bath_ctl(first) $bfirst
    set bath_ctl(last) $blast
+   set bath_ctl(maxsat) $bmaxsat
 }
 
 
@@ -120,6 +121,7 @@ proc bathctl { } {
           sst .bathctl.thresh  bath_ctl(thresh)  " Thresh:"  { 0 50.0 0.1  }
           sst .bathctl.first   bath_ctl(first)   "  First:"  { 0 300 1  }
           sst .bathctl.last    bath_ctl(last)    "   Last:"  { 0 300 1  }
+          sst .bathctl.maxsat  bath_ctl(maxsat)  "Max Sat:"  { 0 10  1  }
  		   
          foreach n [ array names bath_ctl ] {
            trace vdelete  bath_ctl($n) w set_bath_ctl
@@ -141,6 +143,7 @@ proc bathctl { } {
 		.bathctl.thresh \
 		.bathctl.first  \
 		.bathctl.last  \
+		.bathctl.maxsat  \
 		-side top
 
 	  pack .bathctl.plot  .bathctl.cancel -side left
