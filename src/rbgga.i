@@ -242,7 +242,8 @@ func gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=, pmulti=) {
 }
 
 func test_selection_size (q) {
-  sel_secs = (( gga_find_times(q )(dif,sum)))(1);
+ if (!is_array(q)) return;
+ sel_secs = (( gga_find_times(q )(dif,sum)))(1);
  write,format="%5.1f seconds of data selected\n", sel_secs
  if ( sel_secs > 500 ) {
   msg = "** Warning!!!  The area you selected is probably too large."+
