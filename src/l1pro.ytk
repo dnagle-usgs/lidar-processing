@@ -82,7 +82,6 @@ menu .l1wid.mb.options
             label .stby.lbl -text "Loading\n$_ytk_fn\nplease wait.."
             pack .stby.lbl
  	    update
-            center_win .stby
             expect ">"
             destroy .stby
            }
@@ -819,22 +818,24 @@ Button .l1wid.bf45.q.1 -text "Pixel\nWaveform" \
   -command {
      set ptype [.l1wid.bf4.1.p getvalue]
      set disp_type [.l1wid.bf45.p.5 getvalue]
+     set var_no [.l1wid.bf45.p.15 getvalue]
+     set var_type [lindex $varlist $var_no]
      if {$disp_type == -1} {
        	tk_messageBox  -icon warning \
         -message "You need to specify the type of data before using this function!" \
         -type ok
      }
      if {$ptype == 0} {
-        exp_send "mindata = raspulsearch(fs_all, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype, lmark = lmark);\r"
+        exp_send "mindata = raspulsearch($var_type, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype, lmark = lmark);\r"
      }
      if {$ptype == 1} {
-        exp_send "mindata = raspulsearch(depth_all, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype, lmark = lmark );\r"
+        exp_send "mindata = raspulsearch($var_type, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype, lmark = lmark );\r"
      }
      if {$ptype == 2} {
-        exp_send "mindata = raspulsearch(veg_all, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype, lmark = lmark);\r"
+        exp_send "mindata = raspulsearch($var_type, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype, lmark = lmark);\r"
      }
      if {$ptype == 3} {
-        exp_send "mindata = raspulsearch(cveg_all, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype, lmark = lmark);\r"
+        exp_send "mindata = raspulsearch($var_type, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype, lmark = lmark);\r"
      }
    }
 	   

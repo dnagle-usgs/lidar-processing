@@ -479,7 +479,7 @@ struct FP {
     double	lon2;
     }
 
-func pl_fp( fp, win=, color= , width=) {
+func pl_fp( fp, win=, color= , width=, skip=) {
 /* DOCUMENT pl_fp(fp, color=)
   
   Plot the given flight plan on win= using color=.  Default 
@@ -489,6 +489,7 @@ window is 6, and color is magenta.
 	fp	Array of Flight plan (FP) structures
 	win=	Window number for display. Default=6
 	color=	Set the color of the displayed flight plan.
+	skip =  the line numbers to skip before plotting thicker flight line.
 
   Orginal W. Wright
 */
@@ -498,10 +499,27 @@ window is 6, and color is magenta.
 	color="magenta";
   if ( is_void(width))
 	width=1;
+  if ( is_void(skip))
+        skip = 5;
+  
+  bb = strtok(fp.name, "-");
+  mask = grow([1n], bb(1,1:-1) != bb(1,2:0), [1n]);
+  idx = where(mask);
   w = window();
-  window,6;
-  r = 1:0
-  pldj, fp.lon1(r),fp.lat1(r),fp.lon2(r),fp.lat2(r),color=color, width=width;
+  window,win;
+  for (i=1;i<numberof(idx);i++) {
+      fpx = fp(idx(i):idx(i+1)-1);
+      cc = strtok(fpx.name, "-");
+      dd = array(int, numberof(fpx.name));
+      sread, cc(2,), dd;
+      idx1 = sort(dd);
+      fpx = fpx(idx1);
+      r = 1:0;
+      pldj, fpx.lon1(r),fpx.lat1(r),fpx.lon2(r),fpx.lat2(r),color=color, width=width;
+      r = 1:0:skip;
+      pldj, fpx.lon1(r),fpx.lat1(r),fpx.lon2(r),fpx.lat2(r),color=color, width=5*width;
+  }
+      
   window(w);
 }
 
