@@ -83,7 +83,8 @@ func find_be_from_grid(veg_all, img, ll, ur) {
    //amar nayegandhi 04/08/04
 
    veg_all = test_and_clean(veg_all);
-   cell = int((ur(1)-ll(1))/numberof(img(,1)));
+   nox = float(numberof(img(,1)));
+   cell = int((ur(1)-ll(1))/nox +0.5);
   
    idx = where(veg_all.least != 0);
    out = array(float, numberof(veg_all));
@@ -119,6 +120,8 @@ func make_large_footprint_waveform(eaarl, binsize=, digitizer=, normalize=, mode
 	bin		: vertical bin of resulting synthesized waveform (in cm)
 */
 
+  tm1 = tm2 = array(double, 3);
+  timer, tm1;
   eaarl = clean_veg(eaarl);
   if (is_void(pse)) pse = 1000;
   if (is_void(bin)) bin = 50;
@@ -305,11 +308,17 @@ func make_large_footprint_waveform(eaarl, binsize=, digitizer=, normalize=, mode
     if ((i%5) == 0) write, format="%d of %d complete...\r",i, ngridy;
   }
   write, format="Number of Composite Waveforms processed = %d\n", count;
+  timer, tm2;
+  time = tm2-tm1;
+  write, "Time statistics:"
+  tm1;
+  tm2;
+  time;
   return outveg;
 }
             
      
-func make_single_lfpw(eaarl,bin=,normalize=, plot=, correct_chp=){
+func make_single_lfpw(eaarl,bin=,normalize=, plot=, correct_chp=, min_elv=){
    // amar nayegandhi 04/23/04 
    if (!bin) bin = 50;
     
@@ -370,7 +379,6 @@ func make_single_lfpw(eaarl,bin=,normalize=, plot=, correct_chp=){
         window, 2; fma; plmk, erarr(xidx,k)/100., rarr(xidx,k), color="black"; 
         plg, erarr(xidx,k)/100., rarr(xidx,k), color="black"; 
 	xytitles, "Backscatter (counts)", "Elevation (m)";
-	if (k==13) amar();
      }
       
    }
@@ -530,7 +538,7 @@ return home;
 }
 
 
-func lfp_metrics(lfpveg, thresh=, img=, fill=) {
+func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=) {
 /* DOCUMENT lfp_metrics(lfpveg, thresh=)
   This function calculates the composite large footprint metrics.
   amar nayegandhi 04/19/04.
@@ -562,6 +570,16 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=) {
 	  continue;
         }
 	lfpelv = *lfpveg(i,j).elevation;
+	if (is_array(min_elv)) {
+	  idx = where(lfpelv > min_elv);
+	  if (is_array(idx)) {
+	     sidx = idx(1); // take this to be the starting pt.
+	     lfprx = lfprx(sidx:);
+	     lfpnpix = lfpnpix(sidx:);
+	     lfpelv = lfpelv(sidx:);
+	   }
+	 }
+
 	lfpcum = (lfprx)(cum);
 	menergy = lfpcum(0)/2;
 	mindx = abs(lfpcum-menergy)(mnx);
@@ -622,7 +640,7 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=) {
 	lfpcpy = lfprx(lgr:);
 	lfpcnpix = lfpnpix(lgr:);
 	lfpgsum = (lfpgnd*lfpgnpix)(sum);
-	lfpcsum = (lfpcpy+lfpcnpix)(sum);
+	lfpcsum = (lfpcpy*lfpcnpix)(sum);
 	out(3,i,j) = lfpgsum/(lfpgsum+lfpcsum);
 	out(4,i,j) = lfpcsum/(lfpcsum+lfpgsum);
 	
@@ -733,11 +751,11 @@ func plot_veg_classes(mets, lfp, idx=, win=, dofma=, msize=, smooth=) {
 */
 
 if (is_void(msize)) msize=0.5
-idx1 = where((mets(1,) > 8) & (mets(4,) >= 0.5));
+idx1 = where((mets(1,) > 6) & (mets(4,) >= 0.5));
 
-idx2 = where((mets(1,) > 8) & (mets(4,) > 0.25) & (mets(4,) < 0.5));
+idx2 = where((mets(1,) > 6) & (mets(4,) > 0.25) & (mets(4,) < 0.5));
 
-idx3 = where((mets(1,) < 8) & (mets(1,) > 1) & (mets(4,) > 0.25));
+idx3 = where((mets(1,) < 6) & (mets(1,) > 1) & (mets(4,) > 0.25));
 
 idx4 = where((mets(1,) < 1) & (mets(1,) > -1)); 
 

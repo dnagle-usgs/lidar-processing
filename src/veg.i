@@ -1161,11 +1161,10 @@ func clean_veg(veg_all, rcf_width=, type=) {
 
 
 
-func ex_veg_all( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
-/* DOCUMENT ex_veg(raster_number, pulse_index)
+func ex_veg_all( rn, i,  last=, graph=, use_centroid=, use_peak=, pse=, thresh= ) {
+/* DOCUMENT ex_veg_all(rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
 
 
- see run_veg 
 
 
  This function returns an array of VEGPIX structures. 
@@ -1254,10 +1253,29 @@ func ex_veg_all( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
    xr(1) will be the first pulse edge
    and xr(0) will be the last
 *******************************************/
-  thresh = 4.0
+  
+  if (is_void(thresh)) thresh = 6.0
 //  xr = where( dd  > thresh ) ;	// find the hits
-  xr = where(  ((dd >= thresh) (dif)) == 1 ) 	//
+  xr = where(  ((dd >= thresh) (dif)) == 1 )  // this is the idx for start time for each 'layer'.
+  if (is_array(xr)) xr++;
+  pr = where(  ((dd(xr(1):) >= thresh) (dif)) == -1 ) 
+  if (is_array(pr)) pr += xr(1); // this is the idx for peak time for each 'layer'.
+
+  if (numberof(pr) < numberof(xr)) xr = xr(1:numberof(pr));
+
+
+  // for the idx for the end of the 'layer' (stop time) we consider the following:
+  // 1) first look for the next start point.  Mark the point before as the stop time.
+  // 2) look for the time when the trailing edge crosses the threshold.
+
+  if (numberof(xr) >=2 ) {
+    er = grow(xr(2:),n);
+  } else {
+    er = [n];
+  }
+
   nxr = numberof(xr);
+
 
   if ( graph ) {
     window,4; fma;limits
@@ -1280,160 +1298,65 @@ func ex_veg_all( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
 
   rv.nx = nxr;
   if (nxr > 10) nxr = 10; //maximum number of peaks is limited to 10
+  noise = 0;
   for (j=1;j<=nxr;j++) {
-    if (use_centroid || use_peak) {
-       //assume 12ns to be the longest duration for a complete return
-       retdist = 12;
-       ai = 1; //channel number
-       if (xr(j)+retdist+1 > n) retdist = n - xr(j)-1;
+    pta = da(pr(j):er(j));
+    idx = where(pta <= thresh);
+    if (is_array(idx)) {
+      if (pr(j)+idx(1) <= n) {
+        er(j) = pr(j)+idx(1);
+      } else {
+        er(j) = pr(j)+idx(1)-1;
+      }
+    }
+	
+    if ((er(j) - xr(j)) < 4) {
+	// the layer in the waveform is less than 4 ns and is therefore
+	// not a significant layer.
+       if (j != nxr && er(j) == xr(j+1)) { 
+          xr(j+1) = xr(j);
+       }
+       noise++;
+       continue; // noise spike
+    }
 
+    // the peak position should be the max da between xr and er
+    pr(j) = xr(j) + da(xr(j):er(j))(mxx) -1;
 
-     /* //not checking for saturation as of now!!
-       // check for saturation
-       if ( numberof(where((w(xr(i):xr(i)+retdist)) == 0 )) >= 2 ) {
-           // goto second channel
-            ai = 2;
-           // write, format="trying channel 2, rn = %d, i = %d\n",rn, i
-            w  = *rp.rx(i, ai);  aa(1:n, i,ai) = float( (~w+1) - (~w(1)+1) );
-            da = aa(1:n,i,ai);
-            dd = aa(1:n, i, ai) (dif);
-            if ( numberof(where((w(xr(i):xr(i)+retdist)) == 0 )) >= 2 ) {
-              // goto third channel
-            //  write, format="trying channel 3, rn = %d, i = %d\n",rn, i
-              ai = 3;
-              w  = *rp.rx(i, ai);  aa(1:n, i,ai) = float( (~w+1) - (~w(1)+1) );
-              da = aa(1:n,i,ai);
-              dd = aa(1:n, i, ai) (dif);
-              if ( numberof(where((w(xr(0):xr(0)+retdist)) == 0 )) >= 2 ) {
-                 write, format="all 3 channels saturated... giving up!, rn=%d, i=%d\n",rn,i
-                 ai = 0;
-              }
-	    }
-           
-            if ( numberof(where((w(xr(i):xr(i)+retdist)) == 0 )) >= 2 ) {
-                 write, format="all 3 channels saturated... giving up!, rn=%d, i=%d\n",rn,i
-                 ai = 0;
-            }
-	}
-      */
-
-       //if ( numberof(where((w(xr(j):xr(j)+retdist)) == 0 )) >= 2 ) {
- //		write, format="Channel 1 saturated for this peak, rn = %d, i = %d\n", rn, i;
-  //	        ai = 0;
-   //    }
-
-       if (retdist < 5) ai = 0; // this eliminates possible noise pulses.
-
-       if (ai > 0) {
-         //write, format="ai = %d\n", ai;
-         
-         if (pse) pause, pse;
-
-         if ( graph && ai >= 2) {
-         //window,4; fma
-         plmk, aa(1:n,i,ai), msize=.2, marker=1, color="yellow";
-         plg, aa(1:n,i,ai), color="yellow";
-         plmk, da, msize=.2, marker=1, color="yellow";
-         plg, da, color="yellow";
-         plg, dd-100, color="blue"
-	 pltit = swrite(format="ai = %d\n", ai);
-	 pltitle, pltit;
-         }
-       
-       /*
-        if (use_centroid && !use_peak) {
-
-      
-       // find where the bottom return pulse changes direction after its trailing edge
-       idx = where(dd(xr(0)+1:xr(0)+retdist) > 0);
-       idx1 = where(dd(xr(0)+1:xr(0)+retdist) < 0);
-       if (is_array(idx1) && is_array(idx)) {
-        if (idx(0) > idx1(1)) {
-         //take length of  return at this point
-	 //write, format="this happens!! rn = %d; i = %d\n",rn,i;
-         retdist = idx(0);
-        }
-       } else 
-       write, format="idx/idx1 is nuller for rn=%d, i=%d    \r",rn, i  
-       //now check to see if it it passes intensity test
-       mxmint = aa(xr(0)+1:xr(0)+retdist,i,ai)(max);
-       if (abs(aa(xr(0)+1,i,ai) - aa(xr(0)+retdist,i,ai)) < 0.2*mxmint) {
-           // this return is good to compute centroid
-           b = aa(int(xr(0)+1):int(xr(0)+retdist),i,ai); // create array b for retdist returns beyond the last peak leading edge.
-           //compute centroid
-          if (b(sum) != 0) {
-           c = float(b*indgen(1:retdist)) (sum) / (b(sum));
-           mx0 = xr(0)+c;
-           if (ai == 1) mv0 = aa(int(mx0),i,ai);
-           if (ai == 2) {
-	       mx0 = mx0 + 0.36;
-	       mv0 = aa(int(mx0),i,ai)+300;
-	   }
-           if (ai == 3) {
-	       mx0 = mx0 + 0.23;
-	       mv0 = aa(int(mx0),i,ai)+600;
-	   }
-          } else {
-           mx0 = -10;
-           mv0 = -10;
-          }
-       } else {
-          // for now, discard this pulse
-          mx0 = -10;
-          mv0 = -10;
+    if (((er(j) - pr(j)) < 2) || (da(pr(j))-da(er(j)) <= thresh)) {
+       if (j != nxr && er(j) == xr(j+1)) { 
+          xr(j+1) = xr(j);
+       }
+       noise++;
+       continue; // no real trailing edge
+    }
+    if (((pr(j) - xr(j)) < 2) || (da(pr(j))-da(xr(j)) <= thresh)) {
+       if (j != 1 && xr(j) == er(j-1)) { 
+          er(j-1) = er(j);
+          pta = da(pr(j-1):er(j-1)-1);
+	  idx = where(pta <= thresh);
+	  if (is_array(idx)) er(j-1) = pr(j-1)+idx(1);
+          noise++;
+          continue; // no real leading edge
        } 
     }
-    */
+       ai = 1; //channel number
+       
     
-    if (!use_centroid && use_peak) {
-       // if within 3 ns from xr(j) we find a peak, we can assume this to be noise related and try again using xr(j) from the first positive difference after the last negative difference.
-       nidx = where(dd(xr(j):xr(j)+3) < 0);
-       if (is_array(nidx)) {
-         xr(j) = xr(j) + nidx(1);
-	 if (xr(j)+retdist+1 > n) retdist = n - xr(j)-1;
-       }
-       // find where the bottom return pulse changes direction after its trailing edge
-       idx = where(dd(xr(j)+1:xr(j)+retdist) > 0);
-       idx1 = where(dd(xr(j)+1:xr(j)+retdist) < 0);
-       if (is_array(idx1) && is_array(idx)) {
-        //write, idx;
-        //write, idx1;
-        if (idx(0) > idx1(1)) {
-         //take length of  return at this point
-	 //write, format="this happens!! rn = %d; i = %d\n",rn,i;
-         retdist = idx(0);
-        }
-       }
-       if (is_array(idx1)) {
-	ftrail = idx1(1);
-	ltrail = retdist;
-	//halftrail = 0.5*(ltrail - ftrail);
-	mx = irange+xr(j)+idx1(1)-ctx(1);
-	mv = aa(int(xr(j)+idx1(1)),i,ai);
+	mx = irange+xr(j)+da(xr(j):er(j)-1)(mxx)-ctx(1);
+	mv = aa(int(xr(j)-1+da(xr(j):er(j)-1)(mxx)),i,ai);
         if ( graph ) {
-         plmk, mv, xr(j)+idx1(1), msize=.5, marker=7, color="blue", width=1
+         plmk, mv, xr(j)-1+da(xr(j):er(j)-1)(mxx), msize=.5, marker=7, color="blue", width=1
         }
-       } else {
-       mx = -1000;
-       mv = -1000; 
-       }
-    }
-
-    } else {
-       write, format="because ai = 0 for %d\n",j
-       mx = -1000;
-       mv = -1000;
-    }
-   } else { //donot use centroid or trailing edge
-      mx = irange+aa( xr(j):xr(j)+5, i, 1)(mxx) + xr(0) - 1;	  // find bottom peak now
-      mv = aa( mx(j), i, 1);	          
-   }
-
+        write, format= "xr = %d, pr = %d, er = %d\n",xr(j),pr(j),er(j);
 
     if (pse) pause, pse;
     rv.mx(j) = mx;
     rv.mv(j) = mv;
   }
+  nxr = nxr - noise;
+  rv.nx = nxr;
+  //if (is_array(xr) && is_array(pr) && is_array(er)) write, format= "xr = %d, pr = %d, er = %d\n",xr,pr,er;
  return rv
 }
 
