@@ -14,6 +14,7 @@ require, "rlw.i"
 require, "string.i"
 require, "sel_file.i"
 require, "eaarl_constants.i"
+require, "colorbar.i"
 
 struct VEGPIX {
   int rastpix;		// raster + pulse << 24
@@ -250,12 +251,12 @@ func display_veg(veg_arr, rrr, fr=, lr=,  cmin=, cmax=, size=, win=, dofma=, edt
   write,"Please wait while drawing..........\r"
   if ( is_void( size )) size = 1.4;
   len = numberof(veg_arr(1,));
-  if (fr) {
+  if (fr && !lr) {
      elv = rrr.elevation/100.;
      if ( is_void( cmin )) cmin = -27;
      if ( is_void( cmax )) cmax = -10;
   }
-  if (lr) {
+  if (lr && !fr) {
      elv = rrr.elevation/100.-(veg_arr.mx0-veg_arr.mx1)*NS2MAIR;
      if ( is_void( cmin )) cmin = -27;
      if ( is_void( cmax )) cmax = -18;

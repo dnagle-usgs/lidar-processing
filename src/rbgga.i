@@ -42,6 +42,11 @@ Other:
   it must be verified and converted by the gga2bin.c. program.  
 
   $Log$
+  Revision 1.16  2002/09/05 15:34:48  amar
+  eaarl.ytk:  Modified rbgga gui to move the 'Flight Plans' Frame below 'Map controls'.
+  rbgga.i : Modified win_pip_sel function to select the required window (default #6).
+  veg.i : Minor modifications; added colorbar during display.
+
   Revision 1.15  2002/08/21 14:03:15  amar
   veg.i : Added function display_veg which displays either the first return (topography), last return (bald earth), or the canopy height using the return values from the run_veg and first_surface functions.
   rbgga.i:  minor change to #include "pip.i" when rbgga.i is included.
@@ -307,6 +312,7 @@ func gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=) {
  extern ZoneNumber, utm
  if ( is_void(win) ) 
 	win = 6;
+ window, win;
  if (!is_array(llarr)) {
      ply = getPoly();
      box = boundBox(ply);
