@@ -78,9 +78,18 @@ See also: RAST, cent
  means the base line is around 240 counts and signal strength goes 
  toward zero.  An offscale pixel value would equal zero. 
 
+ Note 1) This attempts to corect range walk for situations where wf0 
+         had to be used for range even when saturated.  The 2-16-04 
+         Bombay-hook dataset for example.  On that mission, the wf0
+         was offscale while wf1 was disconected and did not produce a
+         return.  This line tries to correct by examining the number of
+        saturated points, and then corecting the centroid range by 0.2ns (3cm)
+        for each aturated point.
+
 **********************************************************************/
-  if ( numberof(where(  ((*rast.rx(n,1))(1:np)) == 0 )) <= 2 ) {
+  if ( (nsat1 = numberof(where(  ((*rast.rx(n,1))(1:np)) == 0 ))) <= 10 ) {
      cv = cent( *rast.rx(n, 1 ) );
+//     if ( nsat1 > 1 ) cv(1) = cv(1) - (nsat1 -1 ) * .1 ;    // See Note 1 above
      if ( cv(3) < -90 ) {	   // Must be water column only return.  
         slope = 0.029625
         x = cv(3)  - 90;

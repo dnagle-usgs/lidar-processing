@@ -206,6 +206,9 @@ func gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=, pmulti=) {
      if (utm) {
         //xx = fll2utm(gga.lat, gga.lon);
         //zidx = (xx(2,)-box(1,1))(mnx);
+	if (is_void(curzone)) {
+	  curzone = ZoneNumber(1);
+	}
         ZN = curzone;
         box = transpose(utm2ll(box(2,), box(1,), ZN));
 	ply = transpose(utm2ll(ply(2,), ply(1,), ZN));
