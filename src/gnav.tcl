@@ -62,19 +62,22 @@ menu .menubar.fix.antena.m
 proc openfile {} {
  fname tk_getOpenFile 
   set f [open $::f] 
-  .f.t insert end [read $f]
+  .f.t insert {end -1c} [read $f]
   close $f
 }
 
 proc save {} {
 set f [open $::f w]
-puts $f [.f.t get 1.0 end]
+set data [.f.t get 1.0 {end -1c} ] 
+set text [string trimright $data ] 
+puts -nonewline $f $data
 close $f
 }
 
 proc saveas {} {
 fname tk_getSaveFile
 save
+close $f 
 }
 
 proc ftpf {} {
@@ -84,14 +87,14 @@ set li [ PasswdDlg .pw -logintextvariable usr \
  	-type okcancel ]
 
 .f1.t1 insert 1.0 "Please Wait...\n "
-set conn "lidar.net"
+set conn "ns.lidar.net"
 set usr [lindex $li 0 ]
 set pass [lindex $li 1]
 if { [ set ftps [ ::ftp::Open $conn $usr $pass -output dump -progress fstat ]] == -1 } {    
    .f1.t1 insert 1.0 "Connection Refused! Please try again... \n"
 } else {
 set ::ftp::VERBOSE 1
-#set chdir [ ::ftp::Cd $ftps /var/ftp/pub ]
+set chdir [ ::ftp::Cd $ftps /var/ftp/pub ]
 ::ftp::Put $ftps $::f 
 ::ftp::Close $ftps
 }
@@ -118,12 +121,12 @@ proc fname proc {
  }
 
 proc fix {} {
+
 global start
 global stop
-# insert blank spaces
-.f.t delete 10.12 10.60
-.f.t insert 10.12 "                                                "
-for {set i 1} { $i <= 20} {incr i} {
+
+for {set i 1} { $i <= 50} {incr i} {
+
 set idx1  [ .f.t search -forwards  -exact "OBSERVER" $i.0 $i.end]
 set idx2  [ .f.t search -forwards -exact "WAVELENGTH" $i.0 $i.end]
 set idx3  [ .f.t search -forwards -exact "# / TYPES OF OBSERV" $i.0 $i.end]
@@ -147,6 +150,7 @@ set idx4  [ .f.t search -forwards -exact "WAVELENGTH FACT L1/2" $i.0 $i.end]
 }
 
 proc antfix {} {
+
 toplevel .top
 wm title .top "Antena Information"
 
@@ -181,6 +185,7 @@ set str1 [ $w1.fr1.recval get ]
 set str2 [ $w1.fr2.antval get ]
 set str3 [ $w1.fr3.hghtval get ]
 destroy $w1
+
 if { $str1 == "" || $str2 == "" || $str3 == "" } {
    set answer [ tk_messageBox -icon error -type retrycancel \
 			-title "Warning!" \
@@ -195,7 +200,9 @@ if { $str1 == "" || $str2 == "" || $str3 == "" } {
    set l1 [ string length $str1 ]
    set l2 [ string length $str2 ]
    set l3 [ string length $str3 ]
+
    for { set i 1 } { $i < 50 } { incr i } {
+
 	set idx1  [ .f.t search -forwards  -exact "REC #" $i.0 $i.end ]
 	set idx2 [ .f.t search -forwards -exact "ANT #" $i.0 $i.end ]
 	set idx3 [ .f.t search -forwards -exact "ANTENNA:" $i.0 $i.end ]
@@ -227,10 +234,13 @@ if { $str1 == "" || $str2 == "" || $str3 == "" } {
 }	
 
 proc hgr58 {} {
+
 for { set i 1 } { $i < 50 } { incr i } {
+
 set idx1  [ .f.t search -forwards  -exact "REC #" $i.0 $i.end ]
 set idx2 [ .f.t search -forwards -exact "ANT #" $i.0 $i.end ]
 set idx3 [ .f.t search -forwards -exact "ANTENNA:" $i.0 $i.end ]
+
  if { [ regexp {[0-9]} $idx1 ] == 1 } {
 	.f.t delete $i.20 $i.60
 	.f.t insert $i.20 "ASH UZ 12                               "
@@ -247,14 +257,17 @@ if { [ regexp {[0-9]} $idx3 ] == 1 } {
 }
 
 proc niiix {} {
+
 for { set i 1 } { $i < 50 } { incr i } {
+
 set idx1  [ .f.t search -forwards  -exact "REC #" $i.0 $i.end ]
 set idx2 [ .f.t search -forwards -exact "ANT #" $i.0 $i.end ]
 set idx3 [ .f.t search -forwards -exact "ANTENNA:" $i.0 $i.end ]
+
  if { [ regexp {[0-9]} $idx1 ] == 1 } {
 	.f.t delete $i.20 $i.60
 	.f.t insert $i.20 "ASH UZ 12                               "
-}
+    }
 if { [ regexp {[0-9]} $idx2 ] == 1 } {
 	.f.t delete $i.20 $i.60
 	.f.t insert $i.20 "ASH 700228D                             "
@@ -264,62 +277,71 @@ if { [ regexp {[0-9]} $idx2 ] == 1 } {
 }
 
 proc usgs1 {} {
+
 for { set i 1 } { $i < 50 } { incr i } {
+
 set idx1  [ .f.t search -forwards  -exact "REC #" $i.0 $i.end ]
 set idx2 [ .f.t search -forwards -exact "ANT #" $i.0 $i.end ]
 set idx3 [ .f.t search -forwards -exact "ANTENNA:" $i.0 $i.end ]
+
  if { [ regexp {[0-9]} $idx1 ] == 1 } {
 	.f.t delete $i.20 $i.60
 	.f.t insert $i.20 "ASH UZ 12                               "	
-}
+    }
 if { [ regexp {[0-9]} $idx2 ] == 1 } {
 	.f.t delete $i.20 $i.60
 	.f.t insert $i.20 "ASH 7009936                             "
-}
+   }
 if { [ regexp {[0-9]} $idx3 ] == 1 } {
 	.f.t delete $i.8 $i.15
 	.f.t insert $i.8 " 2.0000"
-}
+   }
 }
 }
 
 proc usgs2 {} {
+
 for { set i 1 } { $i < 50 } { incr i } {
+
 set idx1  [ .f.t search -forwards  -exact "REC #" $i.0 $i.end ]
 set idx2 [ .f.t search -forwards -exact "ANT #" $i.0 $i.end ]
 set idx3 [ .f.t search -forwards -exact "ANTENNA:" $i.0 $i.end ]
+
  if { [ regexp {[0-9]} $idx1 ] == 1 } {
 	.f.t delete $i.20 $i.60
 	.f.t insert $i.20 "ASH UZ 12                               "
-}
+    }
 if { [ regexp {[0-9]} $idx2 ] == 1 } {
 	.f.t delete $i.20 $i.60
 	.f.t insert $i.20 "ASH 7009936                             "
-}
+    }
 if { [ regexp {[0-9]} $idx3 ] == 1 } {
 	.f.t delete $i.8 $i.15
 	.f.t insert $i.8 " 1.2400"
-}
+   }
 }
 }
 
 proc usgs3 {} {
+
 for { set i 1 } { $i < 50 } { incr i } {
+
 set idx1  [ .f.t search -forwards  -exact "REC #" $i.0 $i.end ]
 set idx2 [ .f.t search -forwards -exact "ANT #" $i.0 $i.end ]
 set idx3 [ .f.t search -forwards -exact "ANTENNA:" $i.0 $i.end ]
+
  if { [ regexp {[0-9]} $idx1 ] == 1 } {
 	.f.t delete $i.20 $i.60
 	.f.t insert $i.20  "TRM 4700                                "
-} 
+    } 
 if { [ regexp {[0-9]} $idx2 ] == 1 } {
 	.f.t delete $i.20 $i.60
 	.f.t insert $i.20 "TRM 33429.00 -GP                        "
-}
+    }
 if { [ regexp {[0-9]} $idx3 ] == 1 } {
 	.f.t delete $i.8 $i.15
 	.f.t insert $i.8 " 1.4600"
-}
+    }
 }
 }
 
