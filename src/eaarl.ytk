@@ -244,7 +244,7 @@ proc request_heading {psf} {
 
    ## write pkt_sf to a temp file
    set tmpfile "/tmp/sf_tans.txt.$psf"
-   exp_send "make_sf_tans_file(\"$tmpfile\");"
+   #exp_send "make_sf_tans_file(\"$tmpfile\");"
 
    }
 

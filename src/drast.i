@@ -210,7 +210,7 @@ fma;
    aa(1:rxlen, i,2) = rx(2,);
    aa(1:rxlen, i,3) = rx(3,);
 /*     write,format="\n%d %d %d %d %d %d", 
-	i, offset_time, sa(i), irange(i), txlen , rxlen	/* */
+	i, offset_time, sa(i), irange(i), txlen , rxlen	 */
 // plg,txwf
 //plg,rx(1,)
 //plg,rx(2,),color="red"
