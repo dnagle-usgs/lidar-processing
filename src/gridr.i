@@ -9,7 +9,7 @@ require, "pnm.i"
 
 func dgrid(w, ll, d, c, wd) {
   x0 = ll(1);
-  x1 = ll(2)+d;
+  x1 = ll(2);
   for ( y=ll(3); y<=ll(4); y+=d ) {
    pldj, x0,y,x1,y,color=c,width=wd;
   }
@@ -25,8 +25,8 @@ func draw_grid( w ) {
  c = [200,200,200];
   if ( is_void(w) ) w = 5;
   ll = int(limits()/2000) * 2000;
-  ll(2) +=1000;
-  ll(4) += 1000;
+  ll(2) +=2000;
+  ll(4) += 2000;
    dgrid, w, ll, 250, [200,200,200],1
    dgrid, w, ll, 1000,[150,150,150],1
    dgrid, w, ll, 2000,[250,140,140],5
