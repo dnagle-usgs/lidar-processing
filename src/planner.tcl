@@ -204,6 +204,7 @@ proc load_file { fn } {
   set dims(ln)   [ lindex $dimstr 2  ]
   set dims(re)   [ lindex $dimstr 3  ]
   set dims(rn)   [ lindex $dimstr 4  ]
+  set dims(rn)   [ lindex [ split $dims(rn) "." ] 0 ]
 
  $img configure -height 1 -width 1
  $img configure -height 0 -width 0
