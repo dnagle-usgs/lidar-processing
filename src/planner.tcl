@@ -14,6 +14,8 @@ exec wish "$0" ${1+"$@"}
 # Drawing and editing polygons, Richard Suchenwirth
 ######################################################################
  proc polydraw {w} {
+   global operation_status
+   set operation_status "Draw Polygons"
     #-- add bindings for drawing/editing polygons to a canvas
     bind $w <Button-1>        {polydraw'mark   %W %x %y}
 #####    bind $w <Button-2>        {polydraw'rotate %W  0.1}
@@ -427,7 +429,8 @@ set Long [ expr  $LongOrigin + $Long * $RAD2DEG];
 # fresh nav data.
 #################################################################
 proc load_nav_file { fn } {
-global waypoints segs
+global waypoints segs dims
+set dims(fpidx) 0
 set f [ open $fn "r" ]
   while { [ gets $f istr ] >= 0 } {
 puts $istr
@@ -514,15 +517,51 @@ proc mkdeg { a } {
   set rv [ expr { ($deg + $frac) * $s } ]
 }
 
-proc llseg2canvas { idx } {
-  global fpsegs dims
-  set seg [ split $fpsegs($idx) ": " ]
-  set lat [ mkdeg [ lindex $seg 0 ] ]
-  set lon [ mkdeg [ lindex $seg 1 ] ]
+proc ll2scr { seg idx0 idx1 } {
+global dims fpsegs
+  set lat [ mkdeg [ lindex $seg $idx0 ] ]
+  set lon [ mkdeg [ lindex $seg $idx1 ] ]
   set utm [ ll2utm $lat $lon ]
-  puts $lat
-  puts $lon
-  puts $utm
+  set x [ expr ([ lindex $utm 1 ] - $dims(le))   / $dims(scrx2utm) ]
+  set y [ expr ($dims(ln) - [ lindex $utm 0 ])  / $dims(scry2utm) ]
+  puts "x=$x y=$y"
+  return "$x $y"
+}
+
+
+#================================================================
+# Install/append new flight segments to the flight plan list
+# This from hsi.tcl
+#================================================================
+proc llseg { name start stop } {
+  global segidx fpsegs fpsegname fpsegstatus seg_list dims
+### puts "llseg: $name $start $stop"
+   llseg2canvas "$start $stop"
+  incr dims(fpidx)
+  
+#  set fpsegs($segidx) "$start $stop"
+#  set fpsegname($segidx) "$name"
+#  set fpsegstatus($segidx)  "notflown"
+#  puts "$name $fpsegstatus($segidx) $start $stop"
+#  append seg_list "$name "
+#  incr segidx
+}
+
+
+proc llseg2canvas { seg } {
+  global fpsegs dims
+  if { $dims(fpidx) == 0 } {
+    set c green
+    set w 4
+  } else {
+    set c blue
+    set w 1
+  } 
+  set seg [ split $seg ": " ]
+  set start [ ll2scr $seg 0 1]
+  set stop  [ ll2scr $seg 2 3]
+##  puts "$start $stop"
+  .canf.can create line "$start $stop" -width $w -fill $c
 }
 
 
@@ -595,19 +634,6 @@ proc scry2utm { y } {
 }
 
 
-#================================================================
-# Install/append new flight segments to the flight plan list
-# This from hsi.tcl
-#================================================================
-proc llseg { name start stop } {
-  global segidx fpsegs fpsegname fpsegstatus seg_list
-  set fpsegs($segidx) "$start $stop"
-  set fpsegname($segidx) "$name"
-  set fpsegstatus($segidx)  "notflown"
-  puts "$name $fpsegstatus($segidx) $start $stop"
-  append seg_list "$name "
-  incr segidx
-}
 
 
 
@@ -617,6 +643,7 @@ proc llseg { name start stop } {
 ###################################################################
 set version {$Revision$ }
 set revdate {$Date$}
+set operation_status "The Status Line"
 
 # clear the dims vars.
 foreach a { scrx2utm scry2utm eastd northd zone le ln re rn } {
@@ -659,10 +686,15 @@ package require BWidget
 frame .menubar -relief raised -bd 2
 menubutton .menubar.file -text "File"    -menu .menubar.file.menu -underline 0
 menubutton .menubar.options -text "Options" -menu .menubar.options.menu -underline 0
+menubutton .menubar.operations -text "Operations" -menu .menubar.operations.menu -underline 0
 menubutton .menubar.help -text "Help"    -menu .menubar.help.menu -underline 0
 menu .menubar.file.menu
+menu .menubar.operations.menu
 menu .menubar.options.menu
 menu .menubar.help.menu
+
+.menubar.operations.menu add command -label "Draw Polygons" \
+  	-command { polydraw .canf.can }
 
 .menubar.options.menu add command -label "Image UTM configuration.." \
 	-command show_meta_data;
@@ -737,6 +769,8 @@ entry .canf.location.easting  -width 8 \
 label .canf.location.northlabel -text "North:"
 entry .canf.location.northing -width 8 \
 	-textvariable north
+label .canf.location.lstatus -text " Mode:"
+label .canf.location.status -textvariable operation_status
 
 pack \
 	.canf.location.zone \
@@ -744,10 +778,13 @@ pack \
 	.canf.location.easting \
 	.canf.location.northlabel \
 	.canf.location.northing \
+	.canf.location.lstatus \
+	.canf.location.status \
 	-side left -anchor w
      
 pack .menubar.file \
 	.menubar.options \
+	.menubar.operations \
   	-side left \
 	-anchor w
 
@@ -793,6 +830,5 @@ bind .canf.can <ButtonPress-3> { %W scan mark %x %y     }
 bind .canf.can <B3-Motion>     { %W scan dragto %x %y 1 }
 
  
-polydraw .canf.can
 
 
