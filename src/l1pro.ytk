@@ -4,7 +4,7 @@
 
   set ofname ""
 
-exp_send "#include \"geo_bath.new.i\"\r"; # load geobath.i code
+exp_send "#include \"geo_bath.i\"\r"; # load geobath.i code
 expect ">";
 
 package require BWidget

@@ -383,3 +383,163 @@ for ( ; i< j; i += step){
 
 }
 
+func make_fs(latutm=, q=, ext_bad_att=) {
+  /* DOCUMENT make_fs(latutm=, q=, ext_bad_att=)
+     This function prepares data to write/plot first surface topography 
+     for a selected region of flightlines.
+     amar nayegandhi 09/18/02
+  */
+  extern edb, soe_day_start, tans, pnav, type, utm, fs_all;
+  fs_all = [];
+  rn_arr =[];
+   if (!is_array(tans)) {
+     write, "TANS information not loaded.  Running function rbtans() ... \n";
+     tans = rbtans();
+     write, "\n";
+   }
+   write, "TANS information LOADED. \n";
+   if (!is_array(pnav)) {
+     write, "Precision Navigation (PNAV) data not loaded."+ 
+            "Running function rbpnav() ... \n";
+     pnav = rbpnav();
+   }
+   write, "PNAV information LOADED. \n"
+   write, "\n";
+
+   if (!is_array(q)) {
+    /* select a region using function gga_win_sel in rbgga.i */
+    q = gga_win_sel(2, latutm=latutm, llarr=llarr);
+   }
+
+  /* find start and stop raster numbers for all flightlines */
+   rn_arr = sel_region(q);
+
+   no_t = numberof(rn_arr(1,));
+
+   /* initialize counter variables */
+   tot_count = 0;
+   ba_count = 0;
+   fcount = 0;
+
+   for (i=1;i<=no_t;i++) {
+      if ((rn_arr(1,i) != 0)) {
+       fcount ++;
+       write, format="Processing segment %d of %d for first_surface...\n",i,no_t;
+       rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i)); 
+       a=[];
+       grow, fs_all, rrr;
+       tot_count += numberof(rrr.elevation);
+      }
+    }
+
+   /* if ext_bad_att is set, find all points having elevation = ht 
+       of airplane 
+   */
+   if (is_array(fs_all)) {
+    if (ext_bad_att) {
+        write, "Extracting and writing false first points";
+        /* compare rrr.elevation with 70% of rrr.melevation */
+	elv_thresh = 0.7*(avg(fs_all.melevation));
+        ba_indx = where(fs_all.elevation > elv_thresh);
+	ba_count += numberof(ba_indx);
+	ba_fs = fs_all;
+	deast = fs_all.east;
+   	if ((is_array(ba_indx))) {
+	  deast(ba_indx) = 0;
+        }
+	dnorth = fs_all.north;
+   	if ((is_array(ba_indx))) {
+	 dnorth(ba_indx) = 0;
+	}
+	fs_all.east = deast;
+	fs_all.north = dnorth;
+
+	ba_indx_r = where(ba_fs.elevation < elv_thresh);
+	bdeast = ba_fs.east;
+   	if ((is_array(ba_indx_r))) {
+	 bdeast(ba_indx_r) = 0;
+ 	}
+	bdnorth = ba_fs.north;
+   	if ((is_array(ba_indx_r))) {
+	 bdnorth(ba_indx_r) = 0;
+	}
+	ba_fs.east = bdeast;
+	ba_fs.north = bdnorth;
+
+      } 
+    }
+
+
+    write, "\nStatistics: \r";
+    write, format="Total number of records processed = %d\n",tot_count;
+    write, format="Total number of records with false first "+
+                   "returns data = %d\n",ba_count;
+    write, format="Total number of GOOD data points = %d \n",
+                   (tot_count-ba_count);
+
+    if ( tot_count != 0 ) {
+       pba = float(ba_count)*100.0/tot_count;
+       write, format = "%5.2f%% of the total records had "+
+                       "false first returns! \n",pba;
+    } else 
+	write, "No good returns found"
+
+    no_append = 0;
+
+    return fs_all;
+
+}
+
+func write_topo(opath, ofname, fs_all, type=) {
+
+//this function writes a binary file containing georeferenced topo data.
+// amar nayegandhi 03/29/02.
+fn = opath+ofname;
+
+/* open file to read/write (it will overwrite any previous file with same name) */
+f = open(fn, "w+b");
+
+nwpr = long(4);
+
+if (is_void(type)) type = 2;
+
+rec = array(long, 4);
+/* the first word in the file will decide the endian system. */
+rec(1) = 0x0000ffff;
+/* the second word defines the type of output file */
+rec(2) = type;
+/* the third word defines the number of words in each record */
+rec(3) = nwpr;
+/* the fourth word will eventually contain the total number of records.  We don't know the value just now, so will wait till the end. */
+rec(4) = 0;
+
+_write, f, 0, rec;
+
+byt_pos = 16; /* 4bytes , 4words */
+num_rec = 0;
+
+
+/* now look through the geodepth array of structures and write out only valid points */
+len = numberof(fs_all);
+
+for (i=1;i<len;i++) {
+  indx = where(fs_all(i).north !=  0);   
+  num_valid = numberof(indx);
+  for (j=1;j<=num_valid;j++) {
+     _write, f, byt_pos, fs_all(i).raster(indx(j));
+     byt_pos = byt_pos + 4;
+     _write, f, byt_pos, fs_all(i).north(indx(j));
+     byt_pos = byt_pos + 4;
+     _write, f, byt_pos, fs_all(i).east(indx(j));
+     byt_pos = byt_pos + 4;
+     _write, f, byt_pos, fs_all(i).elevation(indx(j));
+     byt_pos = byt_pos + 4;
+  }
+  num_rec = num_rec + num_valid;
+}
+
+/* now we can write the number of records in the 3rd element of the header array */
+_write, f, 12, num_rec;
+
+close, f;
+}
