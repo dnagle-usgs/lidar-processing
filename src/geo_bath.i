@@ -30,11 +30,11 @@ struct GEOBATH {
   long raster(120);     //contains raster number
   long north(120);      //northing value
   long east(120);       //easting value
-  long bath(120);     //water bathymetry in centimeters
+  short bath(120);     //water bathymetry in centimeters //changed
   short bottom_peak(120); //peak amplitude of return signal
   short sa(120);        //scan angle
 };
-func display_bath (d, rrr, cmin =, cmax=, size=, win=, correct=, bathy=, bcmin=, bcmax= ) {
+func display_bath (d, rrr, cmin =, cmax=, size=, win=, correct=, bathy=, bcmin=, bcmax=, bottom_peak= ) {
 /* DOCUMENT display_bath (d, rrr, cmin =, cmax=, size=, win=, correct=, bathy=, bcmin=, bcmax= ) 
 
    This function displays a depth or bathymetric image using the georectification of the first surface return.  The parameters are as follows:
@@ -61,8 +61,8 @@ func display_bath (d, rrr, cmin =, cmax=, size=, win=, correct=, bathy=, bcmin=,
 if ( is_void(win) )
         win = 5;
 window, win
-if ( is_void( cmin )) cmin = -5;
-if ( is_void( cmax )) cmax = 0;
+if ( is_void( cmin ) && !(bottom_peak)) cmin = -10;
+if ( is_void( cmax ) && !(bottom_peak)) cmax = 0;
 if ( is_void( size )) size = 1.4;
 bmin = 10000;
 bmax = -10000;
@@ -87,13 +87,13 @@ for (i=1; i<=len; i=i+1) {
   geodepth(i).bottom_peak = d(,i).bottom_peak;
   if (correct == 1) {
      // search for erroneous elevation values
-     indx = where(rrr(i).elevation < -4000); 
+     indx = where(rrr(i).elevation < -10000); 
      if (is_array(indx) == 1) {
        geodepth(i).north(indx) = 0;
        geodepth(i).east(indx) = 0;
      }
 
-     indx = where(rrr(i).elevation > 1000);
+     indx = where(rrr(i).elevation >  -700); //changed
      // these are values above any defined reference plane and will mostly be the erroneous points defined at the height of the aircraft.
      if (is_array(indx) == 1) {
        geodepth(i).north(indx) = 0;
@@ -113,10 +113,16 @@ for (i=1; i<=len; i=i+1) {
   }   
 }
 
-if (!bcmin) bcmin = bmin/100 + cmin;
-if (!bcmax) bcmax = bmax/100 + cmax;
+if (bathy) {
+  if (!bcmin) bcmin = bmin/100 + cmin;
+  if (!bcmax) bcmax = bmax/100 + cmax;
+}
    
 
+if (bottom_peak) {
+  if (!(cmin)) cmin = min(d.bottom_peak)
+  if (!(cmax)) cmax = max(d.bottom_peak)
+  }
 if (bathy) {
 print, "bcmin = ",bcmin; print, "bcmax = ",bcmax
 } else {
@@ -130,7 +136,11 @@ for ( i=1; i<j; i++ ) {
   if (is_array(indx1) == 1) {
    if (bathy) {
     plcm, (geodepth(i).bath(indx1))/100, (geodepth(i).north(indx1))/100, (geodepth(i).east(indx1))/100,        msize=size,cmin=bcmin, cmax=bcmax;
-   } else {
+   } else if (bottom_peak) {
+    plcm, (geodepth(i).bottom_peak(indx1)), (geodepth(i).north(indx1))/100, (geodepth(i).east(indx1))/100, 
+    msize=size,cmin=cmin,cmax=cmax;
+    }
+     else {
     plcm, (geodepth(i).depth(indx1))/100, (geodepth(i).north(indx1))/100, (geodepth(i).east(indx1))/100,	msize=size,cmin=cmin,cmax=cmax;
     }
   }
@@ -191,6 +201,60 @@ for (i=1;i<=len;i++) {
      byt_pos = byt_pos + 4;
      _write, f, byt_pos, geodepth(i).depth(indx(j));
      byt_pos = byt_pos + 2;
+  }
+  num_rec = num_rec + num_valid;
+}
+
+/* now we can write the number of records in the 3rd element of the header array */
+_write, f, 12, num_rec;
+
+close, f;
+}
+
+func write_topo(geodepth, rrr, opath=, ofname=, type=) {
+
+//this function writes a binary file containing georeferenced topo/bathy data.
+// amar nayegandhi 03/29/02.
+fn = opath+ofname;
+
+/* open file to read/write (it will overwrite any previous file with same name) */
+f = open(fn, "w+b");
+
+nwpr = long(4);
+
+if (is_void(type)) type = 2;
+
+rec = array(long, 6);
+/* the first word in the file will decide the endian system. */
+rec(1) = 0x0000ffff;
+/* the second word defines the type of output file */
+rec(2) = type;
+/* the third word defines the number of words in each record */
+rec(3) = nwpr;
+/* the fourth word will eventually contain the total number of records.  We don't know the value just now, so will wait till the end. */
+rec(4) = 0;
+
+_write, f, 0, rec;
+
+byt_pos = 16; /* 4bytes , 4words */
+num_rec = 0;
+
+
+/* now look through the geodepth array of structures and write out only valid points */
+len = numberof(rrr);
+
+for (i=1;i<len;i++) {
+  indx = where(rrr(i).elevation <  0);   
+  num_valid = numberof(indx);
+  for (j=1;j<=num_valid;j++) {
+     _write, f, byt_pos, rrr(i).raster(indx(j));
+     byt_pos = byt_pos + 4;
+     _write, f, byt_pos, rrr(i).north(indx(j));
+     byt_pos = byt_pos + 4;
+     _write, f, byt_pos, rrr(i).east(indx(j));
+     byt_pos = byt_pos + 4;
+     _write, f, byt_pos, rrr(i).elevation(indx(j));
+     byt_pos = byt_pos + 4;
   }
   num_rec = num_rec + num_valid;
 }
