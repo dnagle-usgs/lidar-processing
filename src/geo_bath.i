@@ -88,6 +88,10 @@ for (i=1; i<=len; i=i+1) {
   geodepth(i).melevation = rrr(i).melevation;
   geodepth(i).sr2 =short(d(,i).idx); 
 
+  indx1 = where(geodepth(i).elevation > 0.7*geodepth(i).melevation);
+  if (is_array(indx1))
+    geodepth(i).north(indx1) = 0;
+
 
 } /* end for loop */
 
@@ -1180,12 +1184,12 @@ See also: GEOALL
 	win = 7;
 
 // build an edit array indicating where values are between -60 meters
-// and 3000 meters.  That's enough to encompass any EAARL data than
+// and 3000 meters.  Thats enough to encompass any EAARL data than
 // can ever be taken.
   gidx = (depth_all.elevation > -6000) | (depth_all.elevation <300000);  
 
 // Now kick out values which are within 1-meter of the mirror and depth = 0. Some
-// functions will set the elevation to the mirror value if they can't
+// functions will set the elevation to the mirror value if they cant
 // process it.
   gidx &= ((depth_all.elevation < (depth_all.melevation-1) & (depth_all.depth != 0)));
 

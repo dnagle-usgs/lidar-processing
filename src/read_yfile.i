@@ -416,6 +416,62 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
 
     }
   }
+  if (type == 7) {
+
+    rn = 0L;
+    north = 0L;
+    east = 0L;
+    elevation=0L;
+    mnorth=0L;
+    meast=0L;
+    melevation=0L;
+    intensity = 0s;
+    nx = ' ';
+
+
+    data = array(CVEG_ALL, recs); 
+
+    for (i=0;i<recs;i++) {
+
+       if ( (i % 1000) == 0 ) edfrstat, i, recs;
+       _read, f, byt_pos, rn;
+       data(i).rn = rn;
+       byt_pos = byt_pos + 4;
+
+       _read, f, byt_pos, north;
+       data(i).north = north;
+       byt_pos = byt_pos + 4;
+       
+       _read, f, byt_pos, east;
+       data(i).east = east;
+       byt_pos = byt_pos + 4;
+       
+       _read, f, byt_pos, elevation;
+       data(i).elevation = elevation;
+       byt_pos = byt_pos + 4;
+
+       _read, f, byt_pos, mnorth;
+       data(i).mnorth = mnorth;
+       byt_pos = byt_pos + 4;
+
+       _read, f, byt_pos, meast;
+       data(i).meast = meast;
+       byt_pos = byt_pos + 4;
+       
+       _read, f, byt_pos, melevation;
+       data(i).melevation = melevation;
+       byt_pos = byt_pos + 4;
+
+       _read, f, byt_pos, intensity;
+       data(i).intensity = intensity;
+       byt_pos = byt_pos + 2;
+
+       _read, f, byt_pos, nx;
+       data(i).nx = nx;
+       byt_pos = byt_pos + 1;
+
+    }
+  }
   return data;
 }
   
@@ -661,7 +717,7 @@ func read_pointer_yfile(data_ptr, mode=) {
   // this function reads the data_ptr array from read_yfile.
   // select mode = 1 to merge all data files
   // amar nayegandhi 11/25/02.
-  extern fs_all, depth_all, veg_all;
+  extern fs_all, depth_all, veg_all, cveg_all;
   data_out = [];
 
   if (!is_array(data_ptr)) return;
@@ -686,6 +742,12 @@ func read_pointer_yfile(data_ptr, mode=) {
   }
   if (a == VEG || a == VEG_) {
     veg_all = data_out;
+    if (_ytk) {
+      tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",2);
+    }
+  }
+  if (a == CVEG_ALL) {
+    cveg_all = data_out;
     if (_ytk) {
       tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",2);
     }

@@ -337,6 +337,24 @@ proc make_selected_arrays {junk} {
 	   }
     	  }
         }
+ 	if {$ptype == 3} {
+    	  exp_send "cveg_some = \[\];\r"
+	  expect ">"
+	  foreach f $curlist {
+           set fidx [lindex $lrnindx $f] 
+	   set lidx [lindex $lrnindx [expr ($f+1)]]
+	   if {[expr ($lidx-$fidx)] != 0} {
+	    if {$lidx != ""} {
+	      set lidx [expr ($lidx - 1)]
+ 	      exp_send "grow, cveg_some, cveg_all($fidx:$lidx);\r"
+	      expect ">"
+	    } else {
+	      exp_send "grow, cveg_some, cveg_all($fidx:);\r"
+	      expect ">"
+ 	    }
+	   }
+    	  }
+        }
 }
     
 proc hist_linlog {} {
@@ -421,7 +439,7 @@ ComboBox .l1wid.bf4.1.d -text "Define Region using..." -width 22 -values "Rubber
 ComboBox .l1wid.bf4.1.p -text "Process For..." -width 22 \
 	-helptext "Process Data for any of the following" \
 	-editable 0 \
-	-values { SubAerial-Topography Bathymetry Vegetation }
+	-values { SubAerial-Topography Bathymetry Vegetation Multi-peak-Vegetation}
 
 .l1wid.bf4.1.p setvalue first
 
@@ -468,6 +486,13 @@ Button .l1wid.bf45.q.2 -text "Histogram\nElevations" \
         exp_send "hst = hist_depth(depth_all); \r"
       }
      }
+     if {$ptype == 2} {
+      if {$disp_type == 0} {
+   	exp_send "hst = hist_fs(veg_all);\r"
+      } else {
+        exp_send "hst = hist_veg(cveg_all); \r"
+      }
+     }
   }
 
 Button .l1wid.bf45.q.1 -text "Pixel\nWaveform" \
@@ -488,6 +513,9 @@ Button .l1wid.bf45.q.1 -text "Pixel\nWaveform" \
      }
      if {$ptype == 2} {
         exp_send "mindata = raspulsearch(veg_all, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype, lmark = lmark);\r"
+     }
+     if {$ptype == 3} {
+        exp_send "mindata = raspulsearch(cveg_all, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype, lmark = lmark);\r"
      }
    }
 	   
@@ -605,7 +633,16 @@ Button .l1wid.bf5.1 -text "Write Datafile" -width 20 \
 	       expect ">"
    	     }	
 	    }
-	     destroy .l1wid1
+ 	    if {$ptype == 3} {
+	     if {$write_some == 0} {
+      	       exp_send "write_multipeak_veg, cveg_all, opath=\"$opath\", ofname=\"$ofname\"; \r";
+	       expect ">"
+	     } else {
+      	       exp_send "write_multipeak_veg, cveg_some, opath=\"$opath\", ofname=\"$ofname\"; \r";
+	       expect ">"
+   	     }	
+	    }
+	    destroy .l1wid1
     	  } else { 
        	    tk_messageBox  -icon warning \
             -message "You need to specify an output file name" \
@@ -650,6 +687,10 @@ Button .l1wid.bf5.1 -text "Write Datafile" -width 20 \
 	    exp_send "veg_all = make_veg(latutm=1, q=q, ext_bad_att=1, ext_bad_veg=1, use_centroid=$usecentroid);\r"
 	    expect ">"
 	 }
+	 if {$ptype == 3} {
+	    exp_send "cveg_all = make_veg(latutm=1, q=q, use_peak=$usecentroid, multi_peaks=1);\r"
+	    expect ">"
+ 	 }
               
     }
 

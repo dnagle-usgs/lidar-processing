@@ -208,6 +208,7 @@ func ex_veg( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
   intensity = a(where(rn==a.raster)).intensity(i);
   rv = VEGPIX();			// setup the return struct
   rv.rastpix = rn + (i<<24);
+  if (irange < 0) return rv;
   if ( is_void( ex_bath_rn )) 
 	ex_bath_rn = -1;
 
@@ -605,7 +606,7 @@ for (i=1; i<=len; i=i+1) {
 return geoveg;
 }
 
-func make_veg(latutm=, q=, ext_bad_att=, ext_bad_veg=, use_centroid=, use_peak=) {
+func make_veg(latutm=, q=, ext_bad_att=, ext_bad_veg=, use_centroid=, use_peak=, multi_peaks=) {
 /* DOCUMENT make_veg(opath=,ofname=,ext_bad_att=, ext_bad_veg=)
 
  This function allows a user to define a region on the gga plot 
@@ -677,13 +678,22 @@ executing make_veg.  See rbpnav() and rbtans() for details.
        rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=use_centroid); 
        if (use_peak) use_centroid = 0;
        write, format="Processing segment %d of %d for vegetation\n", i, no_t;
-       d = run_veg(start=rn_arr(1,i), stop=rn_arr(2,i),use_centroid=use_centroid,use_peak=use_peak);
-       a=[];
-       write, "Using make_fs_veg for submerged vegetation...";
-       veg = make_fs_veg(d,rrr);
-       grow, veg_all, veg;
-       tot_count += numberof(veg.elevation);
-      }
+       if (!multi_peaks) {
+         d = run_veg(start=rn_arr(1,i), stop=rn_arr(2,i),use_centroid=use_centroid,use_peak=use_peak);
+         a=[];
+         write, "Using make_fs_veg for vegetation...";
+         veg = make_fs_veg(d,rrr);
+         grow, veg_all, veg;
+         tot_count += numberof(veg.elevation);
+       } else {
+         d = run_veg_all(start=rn_arr(1,i), stop=rn_arr(2,i),use_peak=use_peak);
+ 	 a = [];
+	 write, "Using make_fs_veg_all (multiple peaks!) for vegetation..."
+	 veg = make_fs_veg_all(d, rrr);
+ 	 grow, veg_all, veg;
+ 	 tot_count += numberof(veg.elevation);
+	}
+     }
     }
 
     /* if ext_bad_att is set, find all points having elevation = ht 
@@ -1030,6 +1040,7 @@ func ex_veg_all( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
   //intensity = a(where(rn==a.raster)).intensity(i);
   rv = VEGPIXS();			// setup the return struct
   rv.rastpix = rn + (i<<24);
+  if (irange < 1) return rv;
   if ( is_void( ex_bath_rn )) 
 	ex_bath_rn = -1;
 
@@ -1106,6 +1117,7 @@ func ex_veg_all( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
 
 
   rv.nx = nxr;
+  if (nxr > 10) nxr = 10; //maximum number of peaks is limited to 10
   for (j=1;j<=nxr;j++) {
     if (use_centroid || use_peak) {
        //assume 12ns to be the longest duration for a complete return
@@ -1239,18 +1251,21 @@ func ex_veg_all( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
         if ( graph ) {
          plmk, mv, xr(j)+idx1(1), msize=.5, marker=7, color="blue", width=1
         }
-       } 
+       } else {
+       mx = -1000;
+       mv = -1000; 
+       }
     }
 
     } else {
        write, format="because ai = 0 for %d\n",j
-       mx = -10;
-       mv = -10;
+       mx = -1000;
+       mv = -1000;
     }
    } else { //donot use centroid or trailing edge
       mx = irange+aa( xr(j):xr(j)+5, i, 1)(mxx) + xr(0) - 1;	  // find bottom peak now
       mv = aa( mx(j), i, 1);	          
-    }
+   }
 
 
     if (pse) pause, pse;
@@ -1364,10 +1379,10 @@ for (i=1; i<=len; i++) {
       geoveg.mnorth(ccount) = rrr(i).mnorth(j);
       geoveg.meast(ccount) = rrr(i).meast(j);
       geoveg.melevation(ccount) = rrr(i).melevation(j);
-      geoveg.nx(ccount) = d(j,i).nx;
+      geoveg.nx(ccount) = char(k);
       // find actual ground surface elevation using simple trig (similar triangles)
 
-      if (d(j,i).mx(1) > 0) {
+      if ((d(j,i).mx(1) > 0) && (rrr(i).melevation(j) > 0)) {
        eratio = float(d(j,i).mx(k))/float(d(j,i).mx(1));
        geoveg.elevation(ccount) = int(rrr(i).melevation(j) - eratio * elvdiff(j));
        geoveg.north(ccount) = int(rrr(i).mnorth(j) - eratio * ndiff(j));
@@ -1385,3 +1400,145 @@ geoveg = geoveg(1:ccount);
 //write,format="Processing complete. %d rasters drawn. %s", len, "\n"
 return geoveg;
 }
+
+func write_multipeak_veg (vegall, opath=, ofname=, type=, append=) {
+/* DOCUMENT write_vegall (vegall, opath=, ofname=, type=, append=) 
+
+ This function writes a binary file containing georeferenced EAARL data.
+ It writes an array of structure CVEG_ALL to a binary file.  
+ Input parameter vegall is an array of structure CVEG_ALL, defined by the 
+ make_fs_veg function.
+
+ Amar Nayegandhi 05/07/02.
+
+   The input parameters are:
+
+   vegall	Array of structure CVEG_ALL as returned by function 
+                make_veg with multipeaks keyword set;
+
+    opath= 	Directory in which output file is to be written
+
+   ofname=	Output file name
+
+     type=	Type of output file, currently type = 7 is supported for multipeaks veg data.
+
+   append=	Set this keyword to append to existing file.
+
+
+   See also: make_veg, make_fs_veg_all, run_veg_all, ex_veg_all
+
+*/
+
+fn = opath+ofname;
+num_rec=0;
+
+if (is_void(append)) {
+  /* open file to read/write if append keyword not set(it will overwrite any previous file with same name) */
+  f = open(fn, "w+b");
+} else {
+  /*open file to append to existing file.  Header information will not be written.*/
+  f = open(fn, "r+b");
+}
+
+if (is_void(append)) {
+  /* write header information only if append keyword not set */
+  if (is_void(type)) type = 7;
+  nwpr = long(9);
+
+  rec = array(long, 4);
+  /* the first word in the file will decide the endian system. */
+  rec(1) = 0x0000ffff;
+  /* the second word defines the type of output file */
+  rec(2) = type;
+  /* the third word defines the number of words in each record */
+  rec(3) = nwpr;
+  /* the fourth word will eventually contain the total number of records.  We don't know the value just now, so will wait till the end. */
+  rec(4) = 0;
+
+  _write, f, 0, rec;
+
+  byt_pos = 16; /* 4bytes , 4words */
+} else {
+  byt_pos = sizeof(f);
+}
+num_rec = 0;
+
+
+/* now look through the vegall array of structures and write 
+ out only valid points 
+*/
+
+/* call function clean_cveg_all to remove erroneous data. */
+write, "Cleaning data ... ";
+vegall = clean_cveg_all(vegall);
+write, "Writing data to file... ";
+len = numberof(vegall);
+
+for (i=1;i<=len;i++) {
+   _write, f, byt_pos, vegall(i).rn;
+   byt_pos = byt_pos + 4;
+   _write, f, byt_pos, vegall(i).north;
+   byt_pos = byt_pos + 4;
+   _write, f, byt_pos, vegall(i).east;
+   byt_pos = byt_pos + 4;
+   _write, f, byt_pos, vegall(i).elevation;
+   byt_pos = byt_pos + 4;
+   _write, f, byt_pos, vegall(i).mnorth;
+   byt_pos = byt_pos + 4;
+   _write, f, byt_pos, vegall(i).meast;
+   byt_pos = byt_pos + 4;
+   _write, f, byt_pos, vegall(i).melevation;
+   byt_pos = byt_pos + 4;
+   _write, f, byt_pos, vegall(i).intensity;
+   byt_pos = byt_pos + 2;
+   _write, f, byt_pos, vegall(i).nx;
+   byt_pos = byt_pos + 1;
+   num_rec++;
+}
+
+/* now we can write the number of records in the 3rd element 
+  of the header array 
+*/
+if (is_void(append)) {
+  _write, f, 12, num_rec;
+  write, format="Number of records written = %d \n", num_rec
+} else {
+  num_rec_old = 0L
+  _read, f, 12, num_rec_old;
+  num_rec = num_rec + num_rec_old;
+  write, format="Number of old records = %d \n",num_rec_old;
+  write, format="Number of new records = %d \n",(num_rec-num_rec_old);
+  write, format="Total number of records written = %d \n",num_rec;
+  _write, f, 12, num_rec;
+}
+
+close, f;
+}
+
+func clean_cveg_all(vegall) {
+  /* DOCUMENT clean_cveg_all(vegall)
+     This function cleans the multi-peak veg data.  
+     Input: vegall:  data array (with structure CVEG_ALL)
+     Output: cleaned data array (with structure CVEG_ALL)
+     Original Author: amar nayegandhi 02/12/03.
+  */
+
+  new_vegall = vegall;
+
+  indx = where(new_vegall.north != 0);
+
+  if (is_array(indx)) 
+    new_vegall = new_vegall(indx);
+
+  indx = where(new_vegall.elevation < 0.7*new_vegall.melevation);
+  if (is_array(indx))
+    new_vegall = new_vegall(indx);
+
+  indx = where(new_vegall.elevation > -100000); // assuming that no elevation will be lower than 1000m
+
+  if (is_array(indx)) 
+    new_vegall = new_vegall(indx);
+
+  return new_vegall;
+}
+  
