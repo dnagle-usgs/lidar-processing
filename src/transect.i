@@ -8,13 +8,26 @@
 
 */
 
+write, "$Id$"
+
 func mtransect( fs, win=, w=, connect= ) {
 /* DOCUMENT mtransect( fs, win=, w= )
 
+  mtransect allows you to "drag out" a line wihin an ALPS topo display
+window and then create a new grah of all of the points near the line. 
+The w= option lets you set the "search distance in meters" from the line.
+The win= option is used to designate the window (default=5), and the 
+connect= option specifies drawing lines to connect the points (default is
+off).
+
+
    Mouse selected transect. 
-   fs   fs_all structure.
-   win= desired Yorick graph window.
-   w=   search distance from line in centimeters.
+   fs       fs_all structure.
+   win=     desired Yorick graph window.
+   w=       search distance from line in centimeters.
+  connect=  set to 1 to connect the points.
+
+See also: transect.
 
 */
 
