@@ -212,7 +212,11 @@ Button .l1wid.bf5.2 -text "Begin Processing" -width 20 \
 		-command {
 	 exp_send "utm = $utm\n"
 	 set ptype [.l1wid.bf4.1.p getvalue]
+         set defr [.l1wid.bf4.1.d getvalue]
 	 exp_send "ptype = $ptype\n\r"
+	 if {$defr == 3} {
+	  exp_send "q = gga_win_sel(2, win=6, llarr=\[$mnlon, $mxlon, $mnlat, $mxlat\]);\r"
+	 }
           #exp_send "make_bathy, opath=\"$opath\", ofname=\"$ofname\",\
           #    ext_bad_att=$xba, ext_bad_depth=$xbd, latutm = 1, llarr=\[$mnlon,\
           #    $mxlon, $mnlat, $mxlat\];\r"
