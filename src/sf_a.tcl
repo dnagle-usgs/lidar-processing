@@ -55,6 +55,10 @@ package require BWidget
 
 # [ Variable Initialization ########################
 
+# Disables the display of messages about mogrify. Change to any nonzero value
+# to disable. Zero will enable messages.
+set no_mog_messages 0
+
 set DEBUG_SF 0      ;# Show debug info on (1) or off (0)
 
 # The camera is frequently out of time sync so we add this to correct it.
@@ -96,6 +100,23 @@ set rate(5s)      5000
 set rate(7s)      7000
 set rate(10s)    10000
 
+# Do we want to show a message about mogrify if it gets disabled? (Used to avoid displaying the message
+# too excessively)
+# Setting this to -1 will completely disable this.
+set show_mog_message 1
+
+# Setting for the existance of mogrify
+set mogrify_exists [expr {! [ catch { exec which mogrify } ]} ]
+
+# Set the version of ImageMagick -- not currently used, but may be useful in the future
+if {$mogrify_exists} {
+	if {[catch { set mogrify_version [split [scan [exec mogrify -version] "Version: ImageMagick %s"] .] } ]} {
+		set mogrify_version [list 0]
+	}
+} else {
+	set mogrify_version [list 0]
+}
+
 # Additional globals - initialized within load_file_list
 # imgtime lat lon alt hms sod
 
@@ -106,7 +127,7 @@ set rate(10s)    10000
 # Additional globals
 # llat and llon are used internally
 # thetime is used by plotRaster only
-# I don't know for sure where cin originates
+# cin
 
 # ] End Variable Initialization ####################
 
@@ -152,7 +173,7 @@ proc load_file_list { f } {
 	global ci fna imgtime dir 
 	global lat lon alt seconds_offset timern frame_off
 	global DEBUG_SF
-	global camtype mark
+	global camtype mark mogrify_exists mogrify_pref
 
 	# Initialize variables
 	# hour minute seconds
@@ -279,12 +300,14 @@ proc load_file_list { f } {
 				set datalst [ split $datas "," ];
 				set hms [ lindex $datalst 0 ]
 									if { $DEBUG_SF } { puts "    hms $hms" }
-				set lat(hms$hms)  [ lindex $datalst 1 ]
-									if { $DEBUG_SF } { puts "    lat $lat(hms$hms)" }
-				set lon(hms$hms)  [ lindex $datalst 2 ]
-									if { $DEBUG_SF } { puts "    lon $lon(hms$hms)" }
-				set alt(hms$hms) [ lindex $datalst 3 ]M
-									if { $DEBUG_SF } { puts "    depth $alt(hms$hms)" }
+				if { [ catch { set tmp $imgtime(hms$hms) } ] == 0 } {
+					set lat(hms$hms)  [ lindex $datalst 1 ]
+										if { $DEBUG_SF } { puts "    lat $lat(hms$hms)" }
+					set lon(hms$hms)  [ lindex $datalst 2 ]
+										if { $DEBUG_SF } { puts "    lon $lon(hms$hms)" }
+					set alt(hms$hms) [ lindex $datalst 3 ]M
+										if { $DEBUG_SF } { puts "    depth $alt(hms$hms)" }
+				}
 				if { [expr int([clock clicks -milliseconds] / 200)] - $ticker > 0 } {
 					set ticker [expr int([clock clicks -milliseconds] / 200)]
 					.loader.status3 configure -text "Loaded $i GPS records\r"
@@ -298,6 +321,18 @@ proc load_file_list { f } {
 	.loader.status1 configure -text "ALL FILES LOADED! YOU MAY BEGIN..."
 	.loader.ok configure -text "OK" 
 	after 1500 {destroy .loader}
+
+	if { $mogrify_exists } {
+		if { $camtype == 1 } {
+			set mogrify_pref "prefer tcl"
+		} elseif { $camtype == 2 } {
+			set mogrify_pref "prefer mogrify"
+		} else {
+			set mogrify_pref "prefer tcl"
+		}
+	} else {
+		set mogrify_pref "only tcl"
+	}
 
 	return $nfiles
 }
@@ -461,14 +496,18 @@ proc show_img { n } {
 	global cin hsr frame_off
 	global llat llon
 	global pitch roll head yes_head
-	global zoom
-	global camtype
-	global DEBUG_SF
+	global zoom camtype DEBUG_SF
+	global mogrify_pref mogrify_exists
 
 	set cin $n
 
 	if { [info exists fna($n)] == 1 } {
-	
+		
+		# Some shorthand variables
+		if { [string equal $mogrify_pref "only tcl"      ] } { set only_tcl       1 } else { set only_tcl       0 }
+		if { [string equal $mogrify_pref "prefer tcl"    ] } { set prefer_tcl     1 } else { set prefer_tcl     0 }
+		if { [string equal $mogrify_pref "prefer mogrify"] } { set prefer_mogrify 1 } else { set prefer_mogrify 0 }
+
 		# Copy the file to a temp file, to protect the original from changes
 		set fn $dir/$fna($n)
 										if { $DEBUG_SF } { puts "fn: $fn" }
@@ -481,8 +520,15 @@ proc show_img { n } {
 		.canf.can config -cursor watch
 
 		set rotate_amount 0
+		
+		if {$yes_head && $only_tcl} {
+			.mb.options invoke "Include Heading"
+			tk_messageBox  \
+				-message "Mogrify is disabled, so heading utilizations has been disabled." \
+				-type ok
+		}
 
-		if ($yes_head) {
+		if {$yes_head} {
 			# include heading information...
 			get_heading 1
 			$img blank
@@ -493,27 +539,78 @@ proc show_img { n } {
 			set rotate_amount [expr ($rotate_amount + 180)]
 		}
 
-		set zoom_amount [expr {round($zoom)}]%
 		set rotate_amount [expr {$rotate_amount % 360}]
+		
 
-		if ($rotate_amount) {
-			if {$zoom != 100} {
-				exec mogrify -sample $zoom_amount -rotate $rotate_amount $fn
+		# Make zoom variables
+		set zoom_percent [expr {round($zoom)}]%
+		if { $zoom > 100 } {
+			set zoom_type 1
+			set zoom_factor [expr {round($zoom/100.0)}]
+			if { $zoom_factor == [expr {$zoom/100.0}] } {
+				set zoom_even 1
 			} else {
-				exec mogrify -rotate $rotate_amount $fn
+				set zoom_even 0
 			}
-		} elseif {$zoom != 1} {
-			exec mogrify -sample $zoom_amount $fn
+		} else {
+			set zoom_type -1
+			set zoom_factor [expr {round(100.0/$zoom)}]
+			if { $zoom_factor == [expr {100.0/$zoom}] } {
+				set zoom_even 1
+			} else {
+				set zoom_even 0
+			}
 		}
 		
-		if { [ catch { $img read $fn -shrink } ] } {
-			if { [ file extension $fna($n) ] == ".jpg" } {
-				puts "Unable to decode: $fna($n)";
-			} else {
-				puts "cmd: $fna($n)"
-				if { [ catch { eval $fna($n); } ] } {
-					puts "*** Errors in cmd: $fna($n) "
+		# Mogrify process image before loading
+		
+		if {! $only_tcl} {
+		
+			if {$rotate_amount != 0 && (!$prefer_tcl || $rotate_amount != 180) } {
+				if {$zoom != 100 && (!$prefer_tcl || !$zoom_even)} {
+					exec mogrify -sample $zoom_percent -rotate $rotate_amount $fn
+										if { $DEBUG_SF } { puts "mogrified: rotate and zoom" }
+				} else {
+					exec mogrify -rotate $rotate_amount $fn
+										if { $DEBUG_SF } { puts "mogrified: rotate" }
 				}
+			} elseif {$zoom != 100 && (!$prefer_tcl || !$zoom_even)} {
+				exec mogrify -sample $zoom_percent $fn
+										if { $DEBUG_SF } { puts "mogrified: zoom" }
+			}
+
+		}
+
+		# Done processing, direct load image
+		if {$prefer_mogrify || ($prefer_tcl && !($rotate_amount == 180) && !$zoom_even)} {
+			if { [ catch { $img read $fn -shrink } ] } {
+				puts "Unable to decode: $fna($n)";
+			}
+										if { $DEBUG_SF } { puts "loaded finished img" }
+		} else {
+		# Not done processing, load image and tcl process
+			if { [ catch { image create photo tempimage -file $fn } ] } {
+				puts "Unable to decode: $fna($n)";
+			}
+										if { $DEBUG_SF } { puts "loaded unfinished img" }
+			if {!$zoom_even && !$only_tcl} {
+				set zoom_factor 1
+				set zoom_type -1
+			}
+			if {$zoom_type == 1} {
+				if {$rotate_amount == 180} {
+					$img copy tempimage -zoom $zoom_factor -subsample -1 -shrink
+										if { $DEBUG_SF } { puts "copied finished img: zoom subsample" }
+				} else {
+					$img copy tempimage -zoom $zoom_factor -shrink
+										if { $DEBUG_SF } { puts "copied finished img: zoom" }
+				}
+			} else {
+				if {$rotate_amount == 180} {
+					set zoom_factor [expr {-1 * $zoom_factor}]
+				}
+				$img copy tempimage -subsample $zoom_factor -shrink
+										if { $DEBUG_SF } { puts "copied finished img: subsample" }
 			}
 		}
 
@@ -618,11 +715,12 @@ proc archive_save_marked { type } {
 
 proc get_heading {inhd} {
 	global yes_head img head inhd_count sod tansstr
+	global mogrify_pref mogrify_exists
 
 	## this procedure gets heading information from current data set
 	## amar nayegandhi 03/04/2002.
 	if {$inhd == 1} {
-		if { [ ytk_exists ] == 1 } {
+		if { [ ytk_exists ] == 1 && ![string equal $mogrify_pref "only tcl"] } {
 			set yes_head 1;
 			## resize the canvas screen
 			.canf.can configure -height 420 -width 440
@@ -639,9 +737,21 @@ proc get_heading {inhd} {
 			  close $f
 			}
 		} else {
-			tk_messageBox  \
-				-message "ytk isn\'t running. You must be running Ytk and the eaarl.ytk program to use this feature."  \
-				-type ok
+			if { !([ytk_exists] == 1) } {
+				tk_messageBox  \
+					-message "ytk isn\'t running. You must be running Ytk and the eaarl.ytk program to use this feature."  \
+					-type ok
+			} else {
+				if { !$mogrify_exists } {
+					tk_messageBox  \
+						-message "You do not have mogrify on your system, so images cannot be rotated."  \
+						-type ok
+				} else {
+					tk_messageBox  \
+						-message "Please enable mogrify to use this feature."  \
+						-type ok
+				}
+			}
 		}
 	} else {
 		## resize the canvas screen
@@ -772,10 +882,24 @@ proc mark_range { } {
 }
 
 proc enable_controls { } {
+	global mogrify_exists mogrify_pref camtype
+
 	.cf2.mark configure            -state normal
+	.mb entryconfigure File        -state normal
 	.mb entryconfigure Archive     -state normal
-	.mb entryconfigure Geometry    -state normal
+	.mb entryconfigure Options     -state normal
 	.mb entryconfigure Zoom        -state normal
+
+	if { $mogrify_exists == 1 } {
+		.mb.options.mogrify entryconfigure "Prefer mogrify over native Tcl" -state normal
+		.mb.options.mogrify entryconfigure "Prefer native Tcl over mogrify" -state normal
+		.mb.options.mogrify entryconfigure "Disable mogrify completely"   -state normal
+	} else {
+		.mb.options.mogrify entryconfigure "Prefer mogrify over native Tcl" -state disabled
+		.mb.options.mogrify entryconfigure "Prefer native Tcl over mogrify" -state disabled
+		.mb.options.mogrify entryconfigure "Disable mogrify completely"   -state normal
+	}
+
 }
 
 # ] End Procedures #################################
@@ -790,12 +914,12 @@ menu .mb
 # Menubar
 menu .mb.file
 menu .mb.archive
-menu .mb.geometry
+menu .mb.options
 menu .mb.zoom
 
 .mb add cascade -label "File" -underline 0 -menu .mb.file
 .mb add cascade -label "Archive" -underline 0 -menu .mb.archive -state disabled
-.mb add cascade -label "Geometry" -underline 0 -menu .mb.geometry -state disabled
+.mb add cascade -label "Options" -underline 0 -menu .mb.options -state disabled
 .mb add cascade -label "Zoom" -underline 0 -menu .mb.zoom -state disabled
 
 #####  [ File Menu
@@ -840,9 +964,9 @@ menu .mb.zoom
 .mb.archive add command -label "Zip and Save Marked Images ..." -underline 0 \
 	-command { archive_save_marked "zip" }
 
-##### ][ Geometry Menu
+##### ][ Options Menu
 
-.mb.geometry add checkbutton -label "Include Heading ..." -underline 8 -onvalue 1 \
+.mb.options add checkbutton -label "Include Heading" -underline 8 -onvalue 1 \
 	-offvalue 0 -variable inhd \
 	-command {
 		global inhd;
@@ -854,12 +978,52 @@ menu .mb.zoom
 		show_img $ci
 	}
 
+.mb.options add separator
+
+menu .mb.options.mogrify
+.mb.options add cascade -label "Image manipulation" -menu .mb.options.mogrify -underline 0
+
+.mb.options.mogrify add radiobutton -label "Prefer mogrify over native Tcl" -underline 7 \
+	-variable mogrify_pref -value "prefer mogrify" -command {
+		global show_mog_message
+		if {$show_mog_message == 0} {
+			set show_mog_message 1
+		}
+	}
+.mb.options.mogrify add radiobutton -label "Prefer native Tcl over mogrify" -underline 14 \
+	-variable mogrify_pref -value "prefer tcl" -command {
+		global show_mog_message
+		if {$show_mog_message == 0} {
+			set show_mog_message 1
+		}
+	}
+.mb.options.mogrify add radiobutton -label "Disable mogrify completely"   -underline 0 \
+	-variable mogrify_pref -value "only tcl" -command {
+		if {$show_mog_message == 1 && $no_mog_messages == 0} {
+			set show_mog_message 0
+			tk_messageBox  \
+				-message "Since mogrify is disabled, some features will not work correctly. Zooming will round to the nearest even fraction (1/2, 1/3, 1/4, etc.), so the amount that is zoomed to may not be what is indicated. Including heading information is disabled due to the inability to rotate images. Please enable mogrify to fix these issues."  \
+				-type ok
+		}
+	}
+
 ##### ][ Zoom Menu
 
 .mb.zoom add command -label "Actual pixels (100%)" -underline 0 \
 	-command { .cf3.zoom setvalue @99; show_img $ci }
 .mb.zoom add command -label "Fit to screen" -underline 0 \
 	-command { .cf3.zoom setvalue @[calculate_zoom_factor [.cf3.zoom getvalue] -1]; show_img $ci }
+.mb.zoom add separator
+.mb.zoom add command -label "Zoom to 50%" -underline 8 \
+	-command { .cf3.zoom setvalue @49; show_img $ci }
+.mb.zoom add command -label "Zoom to 33%" -underline 8 \
+	-command { .cf3.zoom setvalue @32; show_img $ci }
+.mb.zoom add command -label "Zoom to 25%" -underline 8 \
+	-command { .cf3.zoom setvalue @24; show_img $ci }
+.mb.zoom add command -label "Zoom to 20%" -underline 5 \
+	-command { .cf3.zoom setvalue @19; show_img $ci }
+.mb.zoom add command -label "Zoom to 10%" -underline 8 \
+	-command { .cf3.zoom setvalue @9; show_img $ci }
 .mb.zoom add separator
 .mb.zoom add command -label "Zoom In by 25%" -underline 0 \
 	-command { .cf3.zoom setvalue @[calculate_zoom_factor [.cf3.zoom getvalue] 1.25] ; show_img $ci }
@@ -941,10 +1105,8 @@ Button .cf1.plotpos  \
 		if { [ ytk_exists ] == 1 } {
 			if { [ info exists llat ] } {
 				send_ytk mark_pos $llat $llon
-				tk_messageBox -message "$llat $llon" -type ok
 			} else {
 				send_ytk mark_time_pos $sod
-				tk_messageBox -message "$sod" -type ok
 			}
 		} else {
 			tk_messageBox  \
@@ -1065,9 +1227,34 @@ bind .slider <ButtonRelease> {
 
 .cf3.zoom setvalue @99
 
+if { $mogrify_exists } {
+	if { $camtype == 1 } {
+		set mogrify_pref "prefer tcl"
+	} elseif { $camtype == 2 } {
+		set mogrify_pref "prefer mogrify"
+	} else {
+		set mogrify_pref "prefer tcl"
+	}
+} else {
+	set mogrify_pref "only tcl"
+}
+
+if { $DEBUG_SF } { enable_controls }
+
 ### ] /Select defaults
 
 # ] End GUI Initialization #########################
+
+# [ Display necessary notices ######################
+
+if {!$mogrify_exists && $no_mog_messages != 0} {
+	tk_messageBox  \
+		-message "Since mogrify does not exist on your system, some features will not work correctly. Zooming will round to the nearest even fraction (1/2, 1/3, 1/4, etc.), so the amount that is zoomed to may not be what is indicated. Including heading information is disabled due to the inability to rotate images. Please install ImageMagick <http://www.imagemagick.org/> to correct these issues."  \
+		-type ok
+	set show_mog_message 0
+}
+
+# ] End Display necessary notices ##################
 
 # [ Variable Traces ################################
 
