@@ -477,6 +477,7 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
     pques = pointer(ques);
     if ((*pques)(1) == 'd') done = 1; //done iterating for this loop
     if ((*pques)(1) == 'e') endit = 1; // ends interation mode
+    if ((*pques)(1) == 's') return;
     while(((*pques)(1) == 'y') && (!done) && (!endit) ) {
       window, plottriagwin;
       m = mouse(1,0,"Left:Continue Selection; Middle=Pan/Zoom Mode; Right=End Interactive Mode; CTRL-left=Retriangulate");
