@@ -166,10 +166,9 @@ func plot_veg_result_points(i, pse=) {
 }
 
 func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=) {
-  /*DOCUMENT rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=)
+  /* DOCUMENT rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=)
  this function uses the random consensus filter (rcf) within a defined
- buffer size (default 5m by 4m) to filter within an elevation width
- defined by w.
+ buffer size to filter within an elevation width (w) which defines the vertical extent.
  amar nayegandhi 11/18/02.
 
   INPUT:
