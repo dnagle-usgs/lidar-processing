@@ -843,8 +843,8 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset
  if ( mouse_button == right_mouse ) break;
 
  if ( mouse_button == ctl_left_mouse ) { 
-       grow, workdata, mindata;
-       write, format="\007Point saved to workdata. Total saved =%d\n", ++nsaved;
+       grow, finaldata, mindata;
+       write, format="\007Point appended to finaldata. Total saved =%d\n", ++nsaved;
        ex_bath, rasterno, pulseno, win=0, graph=1;
        window, 4; plcm, (mindata.elevation+mindata.depth)/100., 
                              mindata.north/100., mindata.east/100., 
