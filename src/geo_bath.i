@@ -42,7 +42,7 @@ struct GEOALL {
   double soe(120);     //Seconds of the Epoch
 }
 
-func make_fs_bath (d, rrr) {  
+func make_fs_bath (d, rrr, avg_surf=) {  
 /* DOCUMENT make_fs_bath (d, rrr) 
 
    This function makes a depth or bathymetric image using the 
@@ -54,6 +54,9 @@ func make_fs_bath (d, rrr) {
 
  rrr		Array of structure R containing first surface information.  
                 This the is the return value of function first_surface.
+
+avg_surf	Set to 1 if the surface returns should be averaged to the 
+		first surface returns at the center of the swath.
 
 
    The return value depth is an array of structure GEOALL. The array 
@@ -69,21 +72,56 @@ func make_fs_bath (d, rrr) {
 if (numberof(d(0,,)) < numberof(rrr)) { len = numberof(d(0,,)); } else { 
    len = numberof(rrr);}
 
+if (is_void(avg_surf)) avg_surf = 0;
+
 geodepth = array(GEOALL, len);
 bath_arr = array(long,120,len);
+
+offset = array(double, 120);
 
 for (i=1; i<=len; i=i+1) {
   geodepth(i).rn = rrr(i).rn;
   geodepth(i).north = rrr(i).north;
   geodepth(i).east = rrr(i).east;
-  indx = where((d(,i).idx)); 
+//
+  // code added by AN (Dec 04) to make all surface returns 
+  // across a raster to be the average of the fresnel reflections.
+  // the surface return is determined from the reflections 
+  // that have the first channel saturated and come from
+  // close to the center of the swath.  added 12/03/04 by Amar Nayegandhi
+  if (avg_surf) {
+   iidx = where((rrr(i).intensity > 220) & (rrr(i).rn/0xffffff > 35) & (rrr(i).rn/0xffffff < 85));
+   if (is_array(iidx)) {
+    elvs = median(rrr(i).elevation(iidx));
+    old_elvs = rrr(i).elevation;
+    //write, format="%5.2f ",elvs/100.;
+    indx = where(rrr(i).elevation < (rrr(i).melevation - 5000));
+    rrr(i).elevation(indx) = int(elvs);
+    // now rrr.fs_rtn_centroid will change depending on where in time the surface occurs
+    // for each laser pulse with respect to where its current surface elevation is.
+    // this change is defined by the array offset
+    offset = ((old_elvs - elvs)/(CNSH2O2X*100));
+   } else {
+    write,format= "No water surface Fresnel reflection in raster rn = %d\n",(rrr(i).rn(1) & 0xffffff);
+    offset(*) = 0;
+   }
+  }
+// 
+  if (avg_surf) {
+      indx = where((d(,i).idx > 0) & (abs(offset) < 100)); 
+  } else {
+    indx = where((d(,i).idx)); 
+  }
   if (is_array(indx)) {
-    geodepth(i).depth(indx) = short((-d(,i).idx(indx) + rrr(i).fs_rtn_centroid(indx)) * CNSH2O2X *100);
-    bath_arr(indx,i) = long(((-d(,i).idx(indx)+rrr(i).fs_rtn_centroid(indx)) * CNSH2O2X *100) + rrr(i).elevation(indx));
+    if (avg_surf) rrr(i).fs_rtn_centroid(indx) += offset(indx);
+    geodepth(i).depth(indx) = short((-d(,i).idx(indx) + rrr(i).fs_rtn_centroid(indx) ) * CNSH2O2X *100);
+    bath_arr(indx,i) = long(((-d(,i).idx(indx)+rrr(i).fs_rtn_centroid(indx) ) * CNSH2O2X *100) + rrr(i).elevation(indx));
     geodepth(i).sr2(indx) =short(d(,i).idx(indx) - rrr(i).fs_rtn_centroid(indx)); 
   }
   geodepth(i).bottom_peak = d(,i).bottom_peak;
   geodepth(i).first_peak = d(,i).first_peak;
+
+    
   geodepth(i).elevation = rrr(i).elevation;
   geodepth(i).mnorth = rrr(i).mnorth
   geodepth(i).meast = rrr(i).meast
@@ -445,6 +483,29 @@ See also: make_fs_bath, write_geoall, read_yfile, make_bathy
       data1(Dindx) = long(D(Dindx)+data.elevation(Dindx));
       data.bath = data1;
       */
+      
+    
+
+      //Added by AN on 12/15/04 to correct for easting and northing
+      // code below (within for loop) uses the ratio of the mirror
+	// easting and northing to the surface easting and northing
+	// to determine the change in the horizontal for the bottom.
+	// The data.east and data.north values are replaced with the
+	// bottom easting and northing.
+
+      for (i=1;i<=numberof(data);i++) { 
+        idx = where(irg_a(i).irange != 0);
+	if (!is_array(idx)) continue;
+        nsdepth = -1*data(i).depth/(CNSH2O2X*100); // actual depth in ns
+        dratio = float(irg_a(i).irange(idx)+nsdepth(idx)+irg_a(i).fs_rtn_centroid(idx))/float(irg_a(i).irange(idx)+irg_a(i).fs_rtn_centroid(idx));
+        ndiff = data(i).mnorth-data(i).north;
+        ediff = data(i).meast-data(i).east;
+        bnorth = int(data(i).mnorth(idx)-dratio*ndiff(idx));
+        beast = int(data(i).meast(idx)-dratio*ediff(idx));
+        data(i).north(idx) = bnorth;
+        data(i).east(idx) = beast;
+      }
+
       if (!is_void(ofname)) {
         //write current data out to output file ofname
 	if (i==1) {
@@ -459,7 +520,7 @@ See also: make_fs_bath, write_geoall, read_yfile, make_bathy
    return &data
 }
 
-func make_bathy(latutm=, q=, ext_bad_att=, ext_bad_depth=) {
+func make_bathy(latutm=, q=, ext_bad_att=, ext_bad_depth=, avg_surf=) {
 /* DOCUMENT make_bathy(opath=,ofname=,ext_bad_att=, ext_bad_depth=, 
             latlon=, llarr=)
 
@@ -558,7 +619,7 @@ See define_bath_ctl()
        rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=1); 
        a=[];
        write, "Using make_fs_bath for submerged topography...";
-       depth = make_fs_bath(d,rrr) ;
+       depth = make_fs_bath(d,rrr, avg_surf=avg_surf) ;
        //limits,square=1; limits
 
 
@@ -574,9 +635,10 @@ See define_bath_ctl()
     /* if ext_bad_att is set, find all points having elevation = ht 
         of airplane 
     */
+/*
     if (ext_bad_att && is_array(depth_all)) {
         write, "Extracting and writing false first points";
-        /* compare depth.elevation within 20m  of depth.melevation */
+        // compare depth.elevation within 20m  of depth.melevation 
 	elv_thresh = (depth_all.melevation-2000);
         ba_indx = where(depth_all.elevation > elv_thresh);
 	ba_count += numberof(ba_indx);
@@ -592,7 +654,7 @@ See define_bath_ctl()
 	depth_all.east = deast;
 	depth_all.north = dnorth;
 
-	/* compute array for bad attitude (ba_depth) to write to a file */
+	// compute array for bad attitude (ba_depth) to write to a file 
 	ba_indx_r = where(ba_depth.elevation < elv_thresh);
 	bdeast = ba_depth.east;
    	if ((is_array(ba_indx_r))) {
@@ -606,13 +668,15 @@ See define_bath_ctl()
 	ba_depth.north = bdnorth;
 
       } 
+*/
 
       /* if ext_bad_depth is set, find all points having depth 
          and bath = 0  
       */
+/*
       if (ext_bad_depth && is_array(depth_all)) {
         write, "Extracting false depths ";
-        /* compare depth.depth with 0 */
+        // compare depth.depth with 0 
         bd_indx = where(depth_all.depth == 0);
 	bd_count += numberof(ba_indx);
 	bd_depth = depth_all;
@@ -623,7 +687,7 @@ See define_bath_ctl()
 	//depth_all.east = deast;
 	//depth_all.north = dnorth;
 
-	/* compute array for bad depth (bd_depth) to write to a file */
+	// compute array for bad depth (bd_depth) to write to a file 
 	bd_indx_r = where(bd_depth.depth != 0);
 	if (is_array(bd_indx_r)) {
 	  bdeast = bd_depth.east;
@@ -635,10 +699,12 @@ See define_bath_ctl()
   	}
 
       } 
+*/
 
 
     write, "\nStatistics: \r";
     write, format="Total number of records processed = %d\n",tot_count;
+/*
     write, format="Total number of records with false first "+
                    "returns data = %d\n",ba_count;
     write, format = "Total number of records with false depth data = %d\n",
@@ -663,11 +729,13 @@ See define_bath_ctl()
                       "first returns had false depth! \n",pbd; 
     } else 
 	write, "No bathy records found"
+*/
     no_append = 0;
     rn_arr_idx = (rn_arr(dif,)(,cum)+1)(*);	
 
     tkcmd, swrite(format="send_rnarr_to_l1pro %d %d %d\n", rn_arr(1,), rn_arr(2,), rn_arr_idx(1:-1))
     return depth_all;
+
    } else write, "No Data in selected flightline. Good Bye!";
 
 }
@@ -741,7 +809,7 @@ struct RASPULSESEARCH {
  
 
 
-func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset=, lmark=) {
+func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset=, lmark=, bconst=) {
 /* DOCUMENT raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset=)
 
   This function uses a mouse click on an EAARL image plot and finds the associated 
@@ -764,6 +832,7 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset
 		2
 	fset=	
 		0
+        bconst= set to 1 to show the bathy waveform with constants
 
   Returns:
 	An "FS" structure.  type "FS" at the Yorick prompt to see 
@@ -924,9 +993,14 @@ write,"============================================================="
                              marker=4
 	} else
         if ((disp_type == 1) || (disp_type == 2) ) {
+         if (bconst) {
 	  a = [];
           irg_a = irg(rasterno,rasterno,usecentroid=1);
           ex_bath, rasterno, pulseno, win=0, graph=1;
+        } else {
+          show_wf, *wfa, pulseno(1), win=0, cb=7, raster=rasterno(1);
+        }
+          
           if ( mindata.depth == 0 ) {
             msz = 1.0; mkr = 6;
           } else {
@@ -1132,7 +1206,7 @@ See also: GEOALL
 
 
   if ( is_void(win) ) 
-	win = 0;
+	win = 7;
 
 // build an edit array indicating where values are between -60 meters
 // and 3000 meters.  Thats enough to encompass any EAARL data than

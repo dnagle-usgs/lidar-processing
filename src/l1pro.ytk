@@ -29,6 +29,7 @@
   set write_some 	0
   set ssvar "*.pbd"
   set changed_dpi 	0
+  set avg_surf		1
   
   array set _mpipx {
 	0,0	Selector
@@ -1371,7 +1372,16 @@ proc multi_pip_sel {junk} {
 ComboBox .l1wid.bf4.1.p -text "Process For..." -width 16 \
 	-helptext "Process Data for any of the following" \
 	-editable 0 \
-	-values $l1pro_data(processing_mode)
+	-values $l1pro_data(processing_mode) \
+	-modifycmd {
+		set curs [.l1wid.bf4.1.p getvalue]
+		if {$curs == 1} {
+		  .l1wid.bf4.2.surf configure -state active
+		} else {
+		  .l1wid.bf4.2.surf configure -state disabled
+		}
+		
+	}
 .l1wid.bf4.1.p setvalue first
 
 ComboBox .l1wid.bf4.1.m -text "Method"  \
@@ -1389,7 +1399,9 @@ SpinBox .l1wid.bf4.1.sw -justify center -range {0 7 1} \
 #checkbutton .l1wid.bf4.2.cll -text "Convert UTM\nto Lat Lon" -variable cll 
 # checkbutton .l1wid.bf4.2.cng -text "Convert to\nNAVD 88 (GEOID)" -variable cng 
 checkbutton .l1wid.bf4.2.cen -text "Correct Range \nWalk with Centroid" -variable usecentroid 
+checkbutton .l1wid.bf4.2.surf -text "Use Fresnel reflections\nto determine water surface" -variable avg_surf
 
+.l1wid.bf4.2.surf configure -state disabled
 
 checkbutton .l1wid.bf45.p.fma -text "Auto\nFma" -variable l1pro_fma 
 
@@ -2267,7 +2279,7 @@ Button .l1wid.bf45.sc.pl -text "Plot" -width 6 -height 2 -bd 5 -command {
 	    .l1wid.bf45.p.15 setvalue @0
 	 }
 	 if {$ptype == 1} {
-           exp_send "depth_all = make_bathy(latutm = 1, q = q, ext_bad_depth=1, ext_bad_att=1);\r"
+           exp_send "depth_all = make_bathy(latutm = 1, q = q, ext_bad_depth=1, ext_bad_att=1, avg_surf=$avg_surf);\r"
 	   expect ">"
 	   .l1wid.bf45.p.15 setvalue @1
 	 }
@@ -2307,7 +2319,7 @@ pack \
   -padx 5
 
 #pack  .l1wid.bf4.2.cll .l1wid.bf4.2.cen -side left -padx 3
-pack  .l1wid.bf4.2.cen .l1wid.bf4.2.proc -side left -padx 10
+pack  .l1wid.bf4.2.cen .l1wid.bf4.2.surf .l1wid.bf4.2.proc -side left -padx 10
 pack .l1wid.bf4.1 .l1wid.bf4.2 -side top -pady 10
 ####pack .l1wid.bf5.1  -side right -padx 35 
 

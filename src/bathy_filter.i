@@ -228,8 +228,8 @@ func compare_data(ndata, edata) {
 }
 
 func unique(x, ret_sort=) {
-  /*DOCUMENT unique(x)
-    This function used the sort function to return the unique elements of array x.
+  /* DOCUMENT unique(x)
+    This function uses the sort function to return the unique elements of array x.
     Input: x : 1 dimensional array 
     If ret_sort is set, the program will return the sorted indices. If not set it will return the indices in the same order. USE ret_sort = 1 FOR MOST CASES.
     Output:  Indices of the unique elements in array x
