@@ -18,6 +18,7 @@
 
 require, "eaarl_constants.i"
 require, "edb_access.i"
+require, "centroid-1.i"
 
 write,"$Id$"
 
