@@ -16,6 +16,7 @@ struct GEO {
      short first_peak;
      long bath;
      short depth;
+     double soe;
      }
 
 struct FS {
@@ -27,6 +28,7 @@ struct FS {
      long east;
      long elevation;
      short intensity;
+     double soe;
      }
 
 struct VEG {
@@ -42,6 +44,7 @@ struct VEG {
      short lelv;
      short lint;
      char nx;
+     double soe;
      }
 
 struct VEG_ {
@@ -57,6 +60,7 @@ struct VEG_ {
      long lelv;
      short lint;
      char nx;
+     double soe;
      }
 
 struct VEG__ {
@@ -73,6 +77,7 @@ struct VEG__ {
      short fint;
      short lint;
      char nx;
+     double soe;
      }
 
 func read_yfile (path, fname_arr=, initialdir=) {
@@ -152,6 +157,7 @@ for (i=0;i<n;i++) {
   _read, f, 8, nwpr;
   //read the total number of records
   _read, f, 12, recs;
+  write, format="Reading file of type %d\n",type;
   write, format="%d records to be read\n",recs;
 
   byt_pos = 16;
@@ -176,7 +182,7 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
      This function is used by read_yfile to define the structure depending on the data type.
      */
 
-  if (type == 3) {
+  if ((type == 3) || (type == 101)) {
     rn = 0L;
     mnorth = 0L;
     meast = 0L;
@@ -185,6 +191,7 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
     east = 0L;
     elevation = 0L;
     intensity = 0S;
+    soe = 0.0;
 
     data = array(FS, recs); 
     for (i=0;i<recs;i++) {
@@ -221,10 +228,16 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
        _read, f, byt_pos, intensity;
        data(i).intensity = intensity;
        byt_pos = byt_pos + 2;
+
+      if (type == 101) {
+       _read, f, byt_pos, soe;
+       data(i).soe = soe;
+       byt_pos = byt_pos + 8;
+      }
     }
   }  
 
-  if (type == 4) {
+  if ((type == 4) || (type == 102)) {
 
     rn = 0L;
     north = 0L;
@@ -239,6 +252,7 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
     bottom_peak = 0S;
     first_peak = 0S;
     sa = 0S;
+    soe = 0.0;
 
     data = array(GEO, recs); 
 
@@ -289,10 +303,16 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
        data(i).depth = depth;
        byt_pos = byt_pos + 2;
 
+      if (type == 102) {
+       _read, f, byt_pos, soe;
+       data(i).soe = soe;
+       byt_pos = byt_pos + 8;
+      }
+
     }
   }
 
-  if (type == 5) {
+  if (type == 5) {  //OLD VEG
 
     rn = 0L;
     north = 0L;
@@ -306,6 +326,7 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
     lelv = 0s;
     lint = 0s;
     nx = ' ';
+    soe = 0.0;
 
 
     data = array(VEG, recs); 
@@ -364,7 +385,7 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
     }
   }
 
-  if (type == 6) {
+  if (type == 6) { //OLD VEG_
 
     rn = 0L;
     north = 0L;
@@ -378,6 +399,7 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
     lelv = 0L;
     lint = 0s;
     nx = ' ';
+    soe = 0.0;
 
 
     data = array(VEG_, recs); 
@@ -435,7 +457,7 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
 
     }
   }
-  if (type == 7) {
+  if ((type == 7) || (type == 104)) { // CVEG_ALL
 
     rn = 0L;
     north = 0L;
@@ -446,6 +468,7 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
     melevation=0L;
     intensity = 0s;
     nx = ' ';
+    soe = 0.0;
 
 
     data = array(CVEG_ALL, recs); 
@@ -489,10 +512,16 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
        data(i).nx = nx;
        byt_pos = byt_pos + 1;
 
+      if (type == 104) {
+       _read, f, byt_pos, soe;
+       data(i).soe = soe;
+       byt_pos = byt_pos + 8;
+      }
+
     }
   }
 
-  if (type == 8) {
+  if ((type == 8) || (type == 103)) {
     //type = 8 introduced on 08/03/03 for processing "VEGETATION" to include both first and last return locations. Type of structure VEG__
 
     rn = 0L;
@@ -508,6 +537,7 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
     fint = 0s;
     lint = 0s;
     nx = ' ';
+    soe = 0.0;
 
 
     data = array(VEG__, recs); 
@@ -567,6 +597,11 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
        data(i).nx = nx;
        byt_pos = byt_pos + 1;
 
+      if (type == 103) {
+       _read, f, byt_pos, soe;
+       data(i).soe = soe;
+       byt_pos = byt_pos + 8;
+      }
     }
   }
   return data;

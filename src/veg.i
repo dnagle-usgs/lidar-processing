@@ -49,6 +49,7 @@ struct VEGALL {
   short lelv(120);	// last pulse index
   short lint(120);	// last pulse peak value
   char  nx(120);	// number of return pulses found
+  double soe(120);	// Seconds of the epoch
 };
 
 struct VEG_ALL {
@@ -64,6 +65,7 @@ struct VEG_ALL {
   long lelv(120);	// last return in centimeters
   short lint(120);	// last return pulse peak value
   char  nx(120);	// number of return pulses found
+  double soe(120);	// Seconds of the epoch
 };
 
 // this structure below (VEG_ALL_)introduced on 03/08/03 to include the first surface easting, northing as well as the llast surface (bare earth) easting/northing.
@@ -81,6 +83,7 @@ struct VEG_ALL_ {
   short fint(120);	// first pulse peak value
   short lint(120);	// last return pulse peak value
   char  nx(120);	// number of return pulses found
+  double soe(120);	// Seconds of the epoch
 };
 
 struct CVEG_ALL {
@@ -93,6 +96,7 @@ struct CVEG_ALL {
   long melevation;//mirror elevation
   short intensity;// pulse peak intensity value
   char  nx;	// number of return pulses found
+  double soe(120);	// Seconds of the epoch
 };
 
 // 94000
@@ -608,6 +612,7 @@ for (i=1; i<=len; i=i+1) {
   geoveg(i).mnorth = rrr(i).mnorth
   geoveg(i).meast = rrr(i).meast
   geoveg(i).melevation = rrr(i).melevation;
+  geoveg(i).soe = rrr(i).soe;
   geoveg(i).fint = d(,i).mv1;
  // find actual ground surface elevation using simple trig (similar triangles)
   elvdiff = rrr(i).melevation - rrr(i).elevation;
@@ -856,7 +861,7 @@ if (is_void(append)) {
 
 if (is_void(append)) {
   /* write header information only if append keyword not set */
-  if (is_void(type)) type = 8;
+  if (is_void(type)) type = 103;
   nwpr = long(13);
 
   rec = array(long, 4);
@@ -914,6 +919,8 @@ for (i=1;i<=len;i++) {
      byt_pos = byt_pos + 2;
      _write, f, byt_pos, vegall(i).nx(indx(j));
      byt_pos = byt_pos + 1;
+     _write, f, byt_pos, vegall(i).soe(indx(j));
+     byt_pos = byt_pos + 8;
   }
   num_rec = num_rec + num_valid;
 }
@@ -1471,6 +1478,7 @@ for (i=1; i<=len; i++) {
       geoveg.mnorth(ccount) = rrr(i).mnorth(j);
       geoveg.meast(ccount) = rrr(i).meast(j);
       geoveg.melevation(ccount) = rrr(i).melevation(j);
+      geoveg.soe(ccount) = rrr(i).soe(j);
       geoveg.nx(ccount) = char(k);
       // find actual ground surface elevation using simple trig (similar triangles)
 
@@ -1534,7 +1542,7 @@ if (is_void(append)) {
 
 if (is_void(append)) {
   /* write header information only if append keyword not set */
-  if (is_void(type)) type = 7;
+  if (is_void(type)) type = 104;
   nwpr = long(9);
 
   rec = array(long, 4);
@@ -1585,6 +1593,8 @@ for (i=1;i<=len;i++) {
    byt_pos = byt_pos + 2;
    _write, f, byt_pos, vegall(i).nx;
    byt_pos = byt_pos + 1;
+   _write, f, byt_pos, vegall(i).soe;
+   byt_pos = byt_pos + 8;
    num_rec++;
 }
 
@@ -1811,6 +1821,7 @@ func veg_all__to_veg__(data) {
                data_new.fint = data.fint(indx);
                data_new.lint = data.lint(indx);
                  data_new.nx = data.nx(indx);
+                data_new.soe = data.soe(indx);
   } else data_new = data;
 
   return data_new
@@ -1838,6 +1849,7 @@ func veg_all_to_veg_(data) {
                data_new.lelv = data.lelv(indx);
                data_new.lint = data.lint(indx);
                  data_new.nx = data.nx(indx);
+                data_new.soe = data.soe(indx);
   } else data_new = data;
 
   return data_new

@@ -39,6 +39,7 @@ struct GEOALL {
   short bottom_peak(120);//peak amplitude of the bottom return signal
   short first_peak(120);//peak amplitude of the first surface return signal
   short depth(120);     //water depth in centimeters 
+  double soe(120);     //Seconds of the Epoch
 }
 
 func make_fs_bath (d, rrr) {  
@@ -86,6 +87,7 @@ for (i=1; i<=len; i=i+1) {
   geodepth(i).mnorth = rrr(i).mnorth
   geodepth(i).meast = rrr(i).meast
   geodepth(i).melevation = rrr(i).melevation;
+  geodepth(i).soe = rrr(i).soe;
   geodepth(i).sr2 =short(d(,i).idx); 
 
   indx1 = where(geodepth(i).elevation > 0.7*geodepth(i).melevation);
@@ -289,7 +291,7 @@ if (is_void(append)) {
 
 if (is_void(append)) {
   /* write header information only if append keyword not set */
-  if (is_void(type)) type = 4;
+  if (is_void(type)) type = 102;
   nwpr = long(12);
 
   rec = array(long, 4);
@@ -342,6 +344,8 @@ for (i=1;i<=len;i++) {
      byt_pos = byt_pos + 2;
      _write, f, byt_pos, geoall(i).depth(indx(j));
      byt_pos = byt_pos + 2;
+     _write, f, byt_pos, geoall(i).soe(indx(j));
+     byt_pos = byt_pos + 8;
   }
   num_rec = num_rec + num_valid;
 }
@@ -1250,6 +1254,7 @@ func geoall_to_geo(data) {
 	data_new.bottom_peak = data.bottom_peak(indx);
 	 data_new.first_peak = data.first_peak(indx);
 	      data_new.depth = data.depth(indx);
+	        data_new.soe = data.soe(indx);
   } else data_new = data;
 
   return data_new

@@ -44,7 +44,7 @@ require, "irg.i"
 
  
 struct R {
- long raster(120);       // contains raster # and pulse number in msb
+ long rn(120);       // contains raster # and pulse number in msb
  long mnorth(120);       // mirror northing
  long meast(120);        // mirror east
  long melevation(120);   // mirror elevation
@@ -52,6 +52,7 @@ struct R {
  long east(120);         // surface east
  long elevation(120);    // surface elevation (m)
  short intensity(120);	 // surface return intensity
+ double soe(120);
 };
 
 
@@ -287,9 +288,10 @@ write,"Projecting to the surface..."
   rrr(i).east   =     m(,4) * 100.0;
   rrr(i).north  =     m(,5) * 100.0;
   rrr(i).elevation =  m(,6) * 100.0;
-  rrr(i).raster = (a(i).raster&0xffffff);
+  rrr(i).rn = (a(i).raster&0xffffff);
   rrr(i).intensity = a(i).intensity;
-  rrr(i).raster += (indgen(120)*2^24);
+  rrr(i).rn += (indgen(120)*2^24);
+  rrr(i).soe = a(i).soe;
   if ( (i % 100 ) == 0 ) { 
     write,format="%5d %8.1f %6.2f %6.2f %6.2f\n", 
          i, (a(i).soe(60))%86400, palt(60,i), roll(60,i), pitch(60,i);
@@ -614,7 +616,7 @@ f = open(fn, "w+b");
 
 nwpr = long(8);
 
-if (is_void(type)) type = 3;
+if (is_void(type)) type = 101;
 
 rec = array(long, 4);
 /* the first word in the file will define the endian system. */
@@ -629,6 +631,8 @@ rec(4) = 0;
 a = structof(fs_all);
 _write, f, 0, rec;
 
+write, format="Writing first surface data of type %d\n",type
+
 byt_pos = 16; /* 4bytes , 4words  for header position*/
 num_rec = 0;
 
@@ -640,11 +644,11 @@ for (i=1;i<len;i++) {
   indx = where(fs_all(i).north !=  0);   
   num_valid = numberof(indx);
   for (j=1;j<=num_valid;j++) {
-     if (a == R) {
-     _write, f, byt_pos, fs_all(i).raster(indx(j));
-     } else {
+     //if (a == R) {
      _write, f, byt_pos, fs_all(i).rn(indx(j));
-     }
+     //} else {
+     //_write, f, byt_pos, fs_all(i).rn(indx(j));
+     //}
      
      byt_pos = byt_pos + 4;
      _write, f, byt_pos, fs_all(i).mnorth(indx(j));
@@ -661,6 +665,8 @@ for (i=1;i<len;i++) {
      byt_pos = byt_pos + 4;
      _write, f, byt_pos, fs_all(i).intensity(indx(j));
      byt_pos = byt_pos + 2;
+     _write, f, byt_pos, fs_all(i).soe(indx(j));
+     byt_pos = byt_pos + 8;
   }
   num_rec = num_rec + num_valid;
 }
@@ -679,8 +685,8 @@ func  r_to_fs(data) {
 */
  if (numberof(data) != numberof(data.north)) {
 	data_new = array(FS, numberof(data)*120);
-        indx = where(data.raster >= 0);
-        data_new.rn = data.raster(indx);
+        indx = where(data.rn >= 0);
+        data_new.rn = data.rn(indx);
         data_new.north = data.north(indx);
         data_new.east = data.east(indx);
         data_new.elevation = data.elevation(indx);
@@ -688,6 +694,7 @@ func  r_to_fs(data) {
         data_new.meast = data.meast(indx);
         data_new.melevation = data.melevation(indx);
         data_new.intensity = data.intensity(indx);
+        data_new.soe = data.soe(indx);
   } else data_new = data;
   return data_new
 }
