@@ -237,7 +237,7 @@ func gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=, pmulti=) {
    if ( is_void( skip  ) ) skip  = 10;
    plmk, gga.lat( q(1:0:skip)), gga.lon( q(1:0:skip)), msize=msize, color=color;
  }
- test_selection_size(q);
+ test_selection_size,q;
  return q;
 }
 
@@ -295,7 +295,7 @@ func gga_multi_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=, multi
    if ( is_void( skip  ) ) skip  = 10;
    plmk, gga.lat( q(1:0:skip)), gga.lon( q(1:0:skip)), msize=msize, color=color;
  }
- test_selection_size(q);
+ test_selection_size,q;
  return q;
 }
 
@@ -364,7 +364,7 @@ properly to the zoom buttons.
    plmk, gga.lat( q(1:0:skip)), gga.lon( q(1:0:skip)), msize=msize, color=color;
  }
    
- test_selection_size(q);
+ test_selection_size,q;
  return q;
 }
 
