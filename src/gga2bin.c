@@ -5,7 +5,9 @@
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
- 
+#include <dirent.h>     // for MAXNAMLEN
+#include <unistd.h>     // for access()
+
 /*
     gga2bin.c          
    
@@ -20,6 +22,22 @@ static struct {
   float sod, lat, lon, alt;
  } gga;                                
 
+
+char *changename( char *ostr, char *nstr, char *txt ) {
+  char *pstr;
+
+  strncpy(nstr, ostr, MAXNAMLEN-1); // make a copy
+
+  pstr = strrchr( nstr, '.');       // find the period
+  if ( !pstr ) {                    // no period,
+    pstr = nstr;
+    while ( *(++pstr) != '\0');     // find the end of the string
+  }
+
+  strcpy(pstr, txt);                // append the text
+  return(nstr);
+}
+
 main( int argc, char *argv[] ) {    
  FILE *idf, *odf;
  int nb;
@@ -32,9 +50,25 @@ main( int argc, char *argv[] ) {
   if ( (idf=fopen( argv[1], "r" ) ) == NULL ) {
     perror(""); exit(1);
   }
-  if ( ( odf=fopen(argv[2], "w+")) == NULL ) {
-    perror(""); exit(1);
-  }                                                      
+
+  if ( argc == 2 ) {  // generate and open the output file
+    char *pfname, nfname[MAXNAMLEN];
+    changename(argv[1], nfname, ".ybin");
+    fprintf(stderr, "creating output file: %s\n", nfname);
+    if ( access(nfname, F_OK) == 0 ) {
+      fprintf(stderr, "file %s exists, please remove it first\n", nfname);
+      exit(-1);
+    } else {
+      if ( ( odf=fopen(nfname, "w+")) == NULL ) {
+        perror(""); exit(1);
+      }
+    }
+  } else {    // open the file given on the cmdline
+
+    if ( ( odf=fopen(argv[2], "w+")) == NULL ) {
+      perror(""); exit(1);
+    }                                                      
+  }
   
 
 // write placeholder for the number of records.  We'll reposition to
