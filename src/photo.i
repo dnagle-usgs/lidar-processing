@@ -124,7 +124,7 @@ func pref (junk) {
 }
 
 
-func gref_photo( somd=, ioff=, offset=,ggalst=, skip= ) {
+func gref_photo( somd=, ioff=, offset=,ggalst=, skip=, drift= ) {
 /* DOCUMENT gref_photo, somd=, ioff=, offset=, ggalst=, skip=
 
     smod=
@@ -142,13 +142,13 @@ func gref_photo( somd=, ioff=, offset=,ggalst=, skip= ) {
  write, somd
  for ( i = 1; i <=numberof(somd); i++ ) {
   sd = somd(i) + ioff;
-  csomd = sd + offset;
+  csomd = sd + offset + i * drift;
   heading = interp( tans.heading, tans.somd, csomd);
   roll    = interp( tans.roll   , tans.somd, csomd);
   pitch   = interp( tans.pitch  , tans.somd, csomd);
-  lat = interp( pnav.lat, pnav.sod, csomd);
-  lon = interp( pnav.lon, pnav.sod, csomd);
-  galt= interp( pnav.alt, pnav.sod, csomd);
+  lat     = interp( pnav.lat, pnav.sod, csomd);
+  lon     = interp( pnav.lon, pnav.sod, csomd);
+  galt    = interp( pnav.alt, pnav.sod, csomd);
   ll2utm, lat, lon;
   northing = UTMNorthing;
   easting  = UTMEasting;
@@ -166,6 +166,5 @@ func gref_photo( somd=, ioff=, offset=,ggalst=, skip= ) {
 	     pitch = pitch + pitch_bias + cam1_pitch_bias,
 	     offset = [ northing, easting ]
  }
- 	
 }
 
