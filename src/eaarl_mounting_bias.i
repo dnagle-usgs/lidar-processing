@@ -55,19 +55,45 @@ Applanix, and for the new Inertial Science DTG unit.  If and
 when the EAARL system is ever installed on an different aircraft 
 a new configuration file will need to be created with new values 
 for the angle biases and the x,y and z offsets.
+
+ The body coords. system of the plane is as follows:
+
+ +X  Out the right wing.
+ +Y  Forward along the fuselage
+ +Z  Up.
+
+ 
 *************************************************************/
  ops_default = array(mission_constants);
  ops_default.roll_bias  = -1.35;
  ops_default.pitch_bias = +0.5;
  ops_default.yaw_bias   =  0.0;
  ops_default.y_offset   = -2.0;
- ops_default.x_offset   = -1.3;
- ops_default.z_offset   =  0.0;
+ ops_default.x_offset   =  0.0;
+ ops_default.z_offset   = -1.3;
  ops_default.scan_bias  =  0.0;
  ops_default.range_biasM = 0.7962;                 // Laser range measurement bias.
  ops_default.range_biasNS=  ops_default.range_biasM / NS2MAIR;
 
 // Now, copy the default values to the operating values.
  ops_conf = ops_default;
+
+func display_mission_constants( m, ytk= ) {
+  write,""
+  write, "____________________BIAS__________________     _____Offsets_____"
+  write, "Roll Pitch Heading Scanner  RangeM RangeNS      X     Y     Z"
+  write, format="%4.2f  %4.2f    %4.2f  %5.3f    %5.3f   %5.3f    %5.2f %5.2f %5.2f\n",
+        m.roll_bias,
+        m.pitch_bias,
+        m.yaw_bias,
+        m.scan_bias,
+        m.range_biasM,
+        m.range_biasNS,
+        m.x_offset,
+        m.y_offset,
+        m.z_offset
+
+  write,""
+}
 
 
