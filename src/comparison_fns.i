@@ -30,7 +30,7 @@ func read_xyz_ascii_file(fname,n) {
   }
 
 
-func compare_pts(eaarl, kings, rgn, fname=, buf=) {
+func compare_pts(eaarl, kings, rgn, fname=, buf=, be=, elv=) {
    // this function compares each point of kings data within a buffer of eaarl data.
    // amar nayegandhi 11/15/2002.
 
@@ -58,7 +58,11 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=) {
                (eaarl.north <= kings(2,i)*100+buf)));
 
    if (is_array(indx)) {
-      be_avg = eaarl.elevation(indx)/100.-(eaarl.lelv(indx)-eaarl.felv(indx))/100.;
+      if (elv) {
+        be_avg = eaarl.elevation(indx)/100.;
+	} else {
+        be_avg = eaarl.elevation(indx)/100.-(eaarl.lelv(indx)-eaarl.felv(indx))/100.;
+	}
       be_avg_pts = avg(be_avg);
       //avg_pts = avg(eaarl.elevation(indx));
       mindist = buf*sqrt(2);
@@ -72,13 +76,26 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=) {
 	  minindx = indx(j);
         }
       }
-      elv_diff = abs((eaarl(indx).elevation/100.-(eaarl(indx).lelv-eaarl(indx).felv)/100.)-kings(3,i));
+      if (elv) {
+        elv_diff = abs((eaarl(indx).elevation/100.)-kings(3,i));
+	} else {
+        elv_diff = abs((eaarl(indx).elevation/100.-(eaarl(indx).lelv-eaarl(indx).felv)/100.)-kings(3,i));
+	}
       minelv_idx = (elv_diff)(mnx);
       minelv_indx = indx(minelv_idx);
       minelveaarl = eaarl(minelv_indx);
       //write, mineaarl.elevation, kings(3,i);
-      be = mineaarl.elevation/100.-(mineaarl.lelv-mineaarl.felv)/100.;
-      be_elv = minelveaarl.elevation/100.-(minelveaarl.lelv-minelveaarl.felv)/100.;
+      if (elv) {
+        be = mineaarl.elevation/100.;
+	} else {
+        be = mineaarl.elevation/100.-(mineaarl.lelv-mineaarl.felv)/100.;
+	}
+
+      if (elv) {
+        be_elv = minelveaarl.elevation/100.;
+	} else {
+        be_elv = minelveaarl.elevation/100.-(minelveaarl.lelv-minelveaarl.felv)/100.;
+	}
       write, f, format=" %d  %d  %f  %f  %f %f %f %f\n",i, numberof(indx), be_avg_pts, be, kings(3,i), be_elv,  (be-kings(3,i)), (be_elv-kings(3,i));
 
    }
