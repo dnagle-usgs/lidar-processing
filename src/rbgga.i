@@ -554,6 +554,8 @@ func show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, wid
    See also: plmk, plg, color
 
 */
+  if ( is_void( width ) ) 
+	width= 5.0;
   if ( is_void( msize ) ) 
 	msize= 0.1;
   if ( is_void( marker ) ) 

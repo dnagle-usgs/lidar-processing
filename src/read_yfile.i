@@ -633,7 +633,10 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
     delimit = ",";
   }   
   delimit = ((*pointer( delimit ))(1))
-  if ( !is_array( zclip ) ) zclip = [ -6000.0, 300000.0 ];
+  if ( !is_array( zclip ) ) 
+     zclip = [ -60.0, 3000.0 ];
+  zclip *= 100.0;
+  
 
   fn = opath+ofname;
 
