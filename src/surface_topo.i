@@ -479,6 +479,39 @@ write,"fs_all contains the data, and rn_arr_idx contains a list of indices"
 
 }
 
+func hist_fs( fs ) {
+/* DOCUMENT hist_fs(fs)
+
+   Return the histogram of the good elevations in fs.  The input fs elevation
+data are in cm, and the output is an array of the number of time a given
+elevation was found. The elevations are binned to 1-meter.
+
+  Inputs: 
+	fs	An array of "R" structures.  
+
+ Orginal: W. Wright 9/29/2002
+
+See also: R
+*/
+
+// build an edit array indicating where values are between 20 meters
+// and 3000 meters.  That's enough to encompass any EAARL data than
+// can ever be taken.
+  gidx = (fs_all.elevation > 2000) | (fs_all.elevation <300000);  
+
+// Now kick out values which are within 1-meter of the mirror. Some
+// functions will set the elevation to the mirror value if they can't
+// process it.
+  gidx &= (fs_all.elevation < (fs_all.melevation-1));
+
+// Now generate a list of where the good values are.
+  q = where( gidx )
+
+// make a histogram of the data indexed by q.
+  h = histogram( fs_all.elevation (q ) / 100 );
+  return h;
+}
+
 func write_topo(opath, ofname, fs_all, type=) {
 
 //this function writes a binary file containing georeferenced topo data.
