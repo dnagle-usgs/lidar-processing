@@ -64,7 +64,7 @@ proc display_mission_constants { l } {
 proc load_dmars {} { 
   global data_path
       if { [ info exists data_path ] } {
-       set tpath "$data_path/dmars/";
+       set tpath "$data_path/trajectories/";
        if { [ expr ![ file isdirectory $tpath ]] } {
          set tpath $data_path;
        }
