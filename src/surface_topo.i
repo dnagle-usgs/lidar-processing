@@ -52,6 +52,7 @@ struct R {
  long east(120);         // surface east
  long elevation(120);    // surface elevation (m)
  short intensity(120);	 // surface return intensity
+ short fs_rtn_centroid(120);  // surface return centroid location within the waveform
  double soe(120);
 };
 
@@ -294,6 +295,7 @@ write,"Projecting to the surface..."
   rrr(i).elevation =  m(,6) * 100.0;
   rrr(i).rn = (a(i).raster&0xffffff);
   rrr(i).intensity = a(i).intensity;
+  rrr(i).fs_rtn_centroid = a(i).fs_rtn_centroid;
   rrr(i).rn += (indgen(120)*2^24);
   rrr(i).soe = a(i).soe;
   if ( (i % 100 ) == 0 ) { 

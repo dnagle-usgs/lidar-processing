@@ -96,6 +96,9 @@ See also: RAST, cent
   rv(1) = float(rast.irange(n)) - ctx(1) + cv(1);
   rv(2) = cv(3);
   rv(3) = rast.irange(n);
+  if ( cv(1) > 300.0) rv(4) = 0;
+  else 
+      rv(4) = cv(1);		// This will be needed to compute true depth
  return rv;
 }
 

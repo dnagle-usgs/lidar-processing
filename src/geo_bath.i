@@ -76,10 +76,10 @@ for (i=1; i<=len; i=i+1) {
   geodepth(i).rn = rrr(i).rn;
   geodepth(i).north = rrr(i).north;
   geodepth(i).east = rrr(i).east;
-  geodepth(i).depth = short(-d(,i).idx * CNSH2O2X *100);
+  geodepth(i).depth = short((-d(,i).idx + rrr(i).fs_rtn_centroid) * CNSH2O2X *100);
   indx = where((-d(,i).idx) != 0); 
   if (is_array(indx)) {
-    bath_arr(indx,i) = long((-d(,i).idx(indx) * CNSH2O2X *100) + rrr(i).elevation(indx));
+    bath_arr(indx,i) = long(((-d(,i).idx(indx)+rrr(i).fs_rtn_centroid(indx)) * CNSH2O2X *100) + rrr(i).elevation(indx));
   }
   geodepth(i).bottom_peak = d(,i).bottom_peak;
   geodepth(i).first_peak = d(,i).first_peak;
@@ -88,7 +88,7 @@ for (i=1; i<=len; i=i+1) {
   geodepth(i).meast = rrr(i).meast
   geodepth(i).melevation = rrr(i).melevation;
   geodepth(i).soe = rrr(i).soe;
-  geodepth(i).sr2 =short(d(,i).idx); 
+  geodepth(i).sr2 =short(d(,i).idx - rrr(i).fs_rtn_centroid); 
 
   indx1 = where(geodepth(i).elevation > 0.7*geodepth(i).melevation);
   if (is_array(indx1))
@@ -409,6 +409,7 @@ See also: make_fs_bath, write_geoall, read_yfile, make_bathy
       data_ptr = read_yfile(ipath, fname_arr=fname);
     }
 
+
     nfiles = numberof(data_ptr);
 
     for (i=1;i<=nfiles;i++) {
@@ -417,7 +418,7 @@ See also: make_fs_bath, write_geoall, read_yfile, make_bathy
       pa = data.melevation - data.elevation;
 
       // now define H, the laser slant range using 3D version of 
-      // Pytagorean Theorem
+      // Pythagorean Theorem
 
       a = double((data.mnorth - data.north))^2;
       b = double((data.meast - data.east))^2;
@@ -551,10 +552,10 @@ See define_bath_ctl()
        write, format="Processing segment %d of %d for bathymetry\n", i, no_t;
        d = run_bath(start=rn_arr(1,i), stop=rn_arr(2,i));
        write, "Processing for first_surface...";
-       rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i)); 
+       rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=1); 
        a=[];
        write, "Using make_fs_bath for submerged topography...";
-       depth = make_fs_bath(d,rrr);
+       depth = make_fs_bath(d,rrr) ;
        //limits,square=1; limits
 
 

@@ -54,6 +54,9 @@ it.
      float    irange(120); 	// integer range counter values.
      short  intensity(120);	// Laser return intensity
      short      sa(120); 	// scan angle counts.
+     short  fs_rtn_centroid(120); // The location within the return waveform of the
+                                  // first return centroid.  This is to used to subtract
+                                  // from the depth idx to get true depth.
   };
 
 local XRTRS
@@ -76,6 +79,9 @@ local XRTRS
      float   rroll(120);	// Roll in radians
      float  rpitch(120);	// Pitch in radians
      float     alt(120);	// altitude in either NS or meters.
+     short  fs_rtn_centroid(120); // The location within the return waveform of the
+                                  // first return centroid.  This is to used to subtract
+                                  // from the depth idx to get true depth.
 }
 
 func open_irg_status_bar {
@@ -156,6 +162,7 @@ func irg( b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo= ) {
               if ( numberof(centroid_values) ) {
 	        a(di).irange(ii)    = centroid_values(1);
 	        a(di).intensity(ii) = centroid_values(2);
+	        a(di).fs_rtn_centroid(ii) = centroid_values(4);
               }
 	    }
  	  } else {
@@ -163,6 +170,7 @@ func irg( b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo= ) {
             if ( numberof(centroid_values) ) {
 	      a(di).irange(ii)    = centroid_values(1);
 	      a(di).intensity(ii) = centroid_values(2);
+	      a(di).fs_rtn_centroid(ii) = centroid_values(4);
             }
          }
             

@@ -382,7 +382,8 @@ plg,agc*40
 	n = last;
 
   mv = db(1:n)(max);		// find peak value
-  mvi = db(1:n)(mxx);		// find peak position
+  mvi = db(1:n)(mxx)-1;		// find peak position ( adjusted to index the orginal
+                                // return waveform.
 
 // test pw with 9-6-01:17673:50
   if ( mv > thresh ) {		// check to see if above thresh
