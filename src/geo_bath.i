@@ -1022,14 +1022,16 @@ write,"*************************************************************************
       
 }
 
-func sel_data_rgn(data, type, mode=,win=) {
-  //this function selects a region (limits(), rubberband, pip) and returns data within that region.
+func sel_data_rgn(data, type, mode=,win=, exclude=) {
+  /* DOCUMENT sel_data_rgn(data,type, mode=, win=)
+  this function selects a region (limits(), rubberband, pip) and returns data within that region.
   // if mode = 1, limits() function is used to define the region.
   // if mode = 2, a rubberband box is used to define the region.
   // if mode = 3, the points-in-polygon technique is used to define the region.
   // type = type of data (R, FS, GEO, VEG_, etc.)
+  // set exclude =1 if you want to exclude the selected region and return the rest of the data.
   //amar nayegandhi 11/26/02.
-
+ */
 
   if (is_void(win)) win = 5;
   if (!mode) mode = 1;
@@ -1082,6 +1084,13 @@ func sel_data_rgn(data, type, mode=,win=) {
      poly_pts = testPoly(ply*100., data.east(box_pts), data.north(box_pts));
      indx = box_pts(poly_pts);
  }
+ 
+ if (exclude) {
+     iindx = array(int,numberof(data.rn));
+     iindx(indx) = 1;
+     indx = where(iindx == 0);
+ }
+    
 
  window, w;
 
@@ -1150,6 +1159,7 @@ func sel_data_rgn(data, type, mode=,win=) {
    data_out.nx = data.nx(indx);
  }
  if (a == VEG_) data_out = data(indx);
+ if (a == VEG__) data_out = data(indx);
 
  return data_out;
 
