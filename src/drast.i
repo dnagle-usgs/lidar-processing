@@ -247,7 +247,7 @@ window,1
 */
 
 func msel_wf( w, cb= ) {
-
+extern rn, bath_ctl
  btn = 0;
  if ( is_void( cb ) ) 
 	cb = 7;
@@ -257,6 +257,10 @@ func msel_wf( w, cb= ) {
     btn = int(b(11)*10 + b(10));
     if ( btn == 2 ) break;
       show_wf, *w, idx , win=0, cb=cb  
+      if (is_array(bath_ctl)) {
+        if (bath_ctl.laser != 0) ex_bath, rn, idx, graph=1, win=4;
+      }
+      window, 1;
     write,format="Pulse %d\n", idx
  }
  write,"msel_wf completed"

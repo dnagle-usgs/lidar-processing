@@ -409,7 +409,7 @@ button .rslider.bf2.exwf -text "Examine waveforms" -command {
   global blist
   gstate $blist disabled
   update idletasks
-  exp_send "window,1; msel_wf(wfa, cb=$wf_chan)\r";
+  exp_send "window,1; rn = $rn; msel_wf(wfa, cb=$wf_chan)\r";
   set timeout 9999
   expect "completed"
   gstate $blist normal

@@ -165,13 +165,17 @@ extern bath_ctl;
 
 */
 
- if ( is_void( bath_ctl ) ) {
+  if ( is_void( bath_ctl ) ) {
    bath_ctl = BATH_CTL();
- }
+  }
 
 func define_bath_ctl(junk,type=) {
   /* this function defines the structure bath_ctl depending on the type.  As of now, type can be, "keys", "tampabay", "wva" */
   /* amar nayegandhi 06/05/2002 */
+  extern bath_ctl;
+  if ( is_void( bath_ctl ) ) {
+   bath_ctl = BATH_CTL();
+  }
   if (!type) {
     type = rdline(prompt="Enter type of data set ('keys', 'tampabay' or 'wva'): ");
   }
