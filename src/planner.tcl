@@ -372,6 +372,10 @@ proc show_meta_data {} {
 set version {$Revision$ }
 set revdate {$Date$}
 
+# clear the dims vars.
+foreach a { scrx2utm scry2utm eastd northd zone le ln re rn } {
+  set dims($a) 0
+}
 
 # Nav constants
 set PI 3.141592653589793115997963468544185161590576171875
