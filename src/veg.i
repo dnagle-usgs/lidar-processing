@@ -854,9 +854,12 @@ Returns:
 	write, "No good returns found"
 
     if ( ba_count > 0 ) {
-      pbd = float(bd_count)*100.0/(tot_count-ba_count);
+      diff_count = (tot_count-ba_count);
+       if (diff_count) {
+      pbd = float(bd_count)*100.0/diff_count;
       write, format = "%5.2f%% of total records with good "+
                       "first returns had false veg data! \n",pbd; 
+	}
     } else 
 	write, "No veg records found"
     no_append = 0;
