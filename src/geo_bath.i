@@ -701,6 +701,9 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=) {
 
  /* use mouse function to click on the reqd point */
  extern wfa;
+ extern _last_rastpulse_elevation
+ if ( is_void(_last_rastpulse_elevation ) )
+	_last_rastpulse_elevation = 0.0;
  if (!(win)) win = 5;
  window, win;
  if (!(disp_type)) disp_type = 0; //default to first surface topo
@@ -818,9 +821,11 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=) {
  }
  write,format=" Raster nbr: %d\n", mindata.rn
  write,format="Scanner Elev: %7.2fm\n", mindata.melevation/100.0
- write,format="Surface elev: %7.2fm North:%d east:%d\n", 
+ write,format="Surface elev: %7.2fm Delta: %7.2fm\n",
                mindata.elevation/100.0,
-               mindata.north, mindata.east
+               mindata.elevation/100.0 - _last_rastpulse_elevation/100.0
+
+ _last_rastpulse_elevation = mindata.elevation;
   
  return mindata;
       
