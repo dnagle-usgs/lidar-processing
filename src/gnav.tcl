@@ -5,7 +5,7 @@ global state
 set state active
 proc createFix {} {
 scrollbar .ys -command ".t yview"
-text .t -wrap word -yscrollcommand ".ys set"
+text .t -width 80 -height 30 -wrap word -yscrollcommand ".ys set"
 pack .t .ys -side left -fill y
 }
 
@@ -53,7 +53,12 @@ proc fname proc {
  }
 
 proc fix {} {
+# state of the text widget
+# j is a count variable that represents the number of empty lines
 global state
+global j
+set j 11
+
 if { $state == "disabled" } {
 tk_messageBox -icon info -type ok -title "Warning!" \
 	-message "File has already been fixed"
@@ -61,7 +66,19 @@ tk_messageBox -icon info -type ok -title "Warning!" \
 .t delete 10.12 10.60
 #insert blank spaces
 .t insert 10.12 "                                                "
-.t delete 11.0 15.0
+
+for {set i 11} { $i <= 20} {incr i} {
+set idx [ .t search -forwards -exact "WAVELENGTH" $i.0 $i.end]
+if {[regexp {[1-9]} $idx] == 1} {
+.t delete $i.0 $i.end
+incr j
+}
+}
+
+# delete blank lines
+.t delete 11.0 $j.0
+
+# don't allow further editing of the file
 .t configure -state disabled
 set state disabled
 }
