@@ -153,6 +153,7 @@ func rbpnav (junk) {
 
 */
 // extern pn;
+extern pnav_filename;		// so we can show which trajectory was used
  if ( is_void(data_path) ) {
  write,"Enter path:"
    data_path = rdline(prompt="Enter data path:");
@@ -165,6 +166,7 @@ func rbpnav (junk) {
     if (strmatch(ifn, "ybin") == 0) {
           exit, "NO FILE CHOSEN, PLEASE TRY AGAIN\r";
     }
+    pnav_filename = ifn;
     ff = split_path( ifn, -1 );
     path = ff(1);
 } else {

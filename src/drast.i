@@ -263,8 +263,29 @@ func msel_wf( w, cb= ) {
 }
 
 
-func show_wf( r, pix, win=, nofma=, cb=, c1=, c2=, c3= ) {
- extern depth_scale, depth_display_units;
+func show_wf( r, pix, win=, nofma=, cb=, c1=, c2=, c3=, raster= ) {
+/* DOCUMENT show_wf( r, pix, win=, nofma=, cb=, c1=, c2=, c3=, raster= )
+
+ display a set of waveforms for a given pulse.
+
+ Inputs:
+      r
+    pix
+    win=
+  nofma=
+     cb=
+     c1=
+     c2=
+     c3=
+ raster= 	Raster where pulse is located.  This is printed if present.
+
+ Outputs:
+
+ Returns:
+
+
+*******************************************************/
+ extern depth_scale, depth_display_units, data_path;
   if ( !is_void(win) ) {
      oldwin = window();
      window,win;
@@ -290,8 +311,15 @@ func show_wf( r, pix, win=, nofma=, cb=, c1=, c2=, c3= ) {
     plg,depth_scale,r(,pix,3),  marker=0, color="blue";   
     plmk,depth_scale,r(,pix,3), msize=.2,marker=1,color="blue"
   }
-  xytitles,swrite(format="Pix:%d   Digital Counts", pix),
-	swrite(format="Water depth (%s)", depth_display_units)
+  if ( is_void( raster ) ) {
+     xytitles,swrite(format="Pix:%d   Digital Counts", pix),
+     swrite(format="Water depth (%s)", depth_display_units)
+  } else {
+     xytitles,swrite(format="Raster:%d Pix:%d   Digital Counts", raster, pix),
+     swrite(format="Water depth (%s)", depth_display_units)
+  }
+  pltitle, data_path
+  
 
   if ( !is_void(win) ) {
     window, oldwin ;

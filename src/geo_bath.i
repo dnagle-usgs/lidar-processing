@@ -723,9 +723,10 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset
 	An "FS" structure.  type "FS" at the Yorick prompt to see 
         what constitutes the structure.
 
+ Original by:
     Amar Nayegandhi 06/11/02
 */
-
+ extern pnav_filename;
  extern wfa
  extern _last_rastpulse
  extern _rastpulse_reference
@@ -843,7 +844,7 @@ write,"============================================================="
       ytk_rast, rasterno(1);
       window, 0, wait=1; redraw;
       tkcmd, swrite(format="set rn %d", rasterno(1))
-      show_wf, *wfa, pulseno(1), win=0, cb=7;
+      show_wf, *wfa, pulseno(1), win=0, cb=7, raster=rasterno(1);
       if (is_void(cmin) || is_void(cmax)) {
         window, win; plmk, mindata.north/100., 
                            mindata.east/100., 
@@ -931,7 +932,7 @@ write,"============================================================="
                sqrt(double(mindata.north - _last_rastpulse(1))^2 +
                     double(mindata.east  - _last_rastpulse(2))^2)/100.0
 
- write,format="        Time: %7.4f (%02d:%02d:%02d) Delta:%d:%02d:%02d\n", 
+ write,format="        Time: %7.4f (%02d:%02d:%02d) Delta:%d:%02d:%02d \n", 
         double(somd),
         ztime(4),ztime(5),ztime(6),
         zdt(4), zdt(5), zdt(6);
@@ -993,12 +994,14 @@ write,"============================================================="
 
 
  q = *(rcf( rtn_data.elevation, 1000.0, mode=2)(1));
-write,"********************************************************************"
- write,format=" * Selected point avg: %6.3fm, %6.1fcm RMS, %6.1fcm Peak-to-peak *\n", 
+write,"*************************************************************************************"
+ write,format=" * Trajectory file: %-64s *\n", pnav_filename
+ write,format=" * %d points, avg elev: %6.3fm, %6.1fcm RMS, %6.1fcm Peak-to-peak                  *\n", 
+        numberof(rtn_data),
  	rtn_data.elevation(q)(avg)/100.0, 
  	rtn_data.elevation(q)(rms),
  	float(rtn_data.elevation(q)(ptp)); 
-write,"********************************************************************"
+write,"*************************************************************************************"
   
  return rtn_data;
       

@@ -13,7 +13,6 @@
 	Minor changes to omit progress bar when fewer then 10
 	rasters to process.
 
-  test....
 */
 
 require, "eaarl_constants.i"
@@ -138,13 +137,19 @@ func irg( b, e, inc=, delta=, georef=, usecentroid= ) {
     rp = decode_raster( get_erast( rn=si )) ;	// decode a raster
     a(di).raster = si; 				// install the raster nbr
     a(di).soe = rp.offset_time ;		
-    if ( usecentroid ) {
+    if ( usecentroid == 1 ) {
 	for (ii=1; ii< rp.npixels(1); ii++ ) {
            centroid_values     = pcr(rp, ii);
 	   a(di).irange(ii)    = centroid_values(1);
 	   a(di).intensity(ii) = centroid_values(2);
         }
-    } else
+    } else if ( usecentroid == 2 ) {	//  This area is for the Leading-edge-tracker stuff
+	for (ii=1; ii< rp.npixels(1); ii++ ) {
+           centroid_values     = let(rp, ii);
+	   a(di).irange(ii)    = centroid_values(1);
+	   a(di).intensity(ii) = centroid_values(2);
+        }
+    } else 
       a(di).irange = rp.irange;
     a(di).sa  = rp.sa;
     if ( (di % 10) == 0  )
