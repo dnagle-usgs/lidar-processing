@@ -10,11 +10,28 @@
 
 */
 
-// For converting litte endian values
+// Default to  converting litte endian values
 _bitweights = [1,256,65536,16777216];
 
-// For converting big Endian values
-_Bitweights = [16777216,65536,256,1];
+func set_endian_type( endian ) {
+/* DOCUMENT set_endian_type( endian )
+
+     endian = "big" for Big Endian (Sun)
+     endian = "little" for Little Endian (Intel)
+
+  Sets conversion method for i32, i24, i16, etc.
+
+ See also i32, i16, i24.
+*/
+extern _bitweights;
+ if ( endian == "little" ) {
+    _bitweights = [1,256,65536,16777216];
+ } 
+ if ( endian == "big" )  { 
+    _bitweights = [16777216,65536,256,1];
+ }
+}
+
 
 
 func i32( ary, idx  ) {
