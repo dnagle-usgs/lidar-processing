@@ -791,12 +791,14 @@ Returns:
 
 	/* compute array for bad veg (bd_veg) */
 	bd_indx_r = where(bd_veg.lelv != 0);
-	bdeast = bd_veg.east;
-	bdeast(bd_indx_r) = 0;
-	bdnorth = bd_veg.north;
-	bdnorth(bd_indx_r) = 0;
-	bd_veg.east = bdeast;
-	bd_veg.north = bdnorth;
+        if (is_array(bd_indx_r)) {
+	  bdeast = bd_veg.east;
+	  bdeast(bd_indx_r) = 0;
+	  bdnorth = bd_veg.north;
+	  bdnorth(bd_indx_r) = 0;
+	  bd_veg.east = bdeast;
+	  bd_veg.north = bdnorth;
+        }  
 
       } 
 

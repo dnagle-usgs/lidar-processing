@@ -69,7 +69,7 @@ func nad832navd88(data_in, gdata_dir=) {
         return;
   }
   close, f;
-
+  
   if (data_in(1,1) < 0) data_in(1,) += 360.0;
 
   // now we know the number of geoid pbd data files in directory gdata_dir
@@ -151,6 +151,9 @@ func nad832navd88(data_in, gdata_dir=) {
     mxirown = max(irown)+1;
     mnicoln = min(icoln)-1;
     mxicoln = max(icoln)+1;
+
+    if (mxirown > nrows) mxirown = nrows;
+    if (mxicoln > ncols) mxicoln = ncols;
     
     // extracting the geoid data
     f = openb(apbdfile(ik));
@@ -158,6 +161,18 @@ func nad832navd88(data_in, gdata_dir=) {
     gdata = get_member(f,vname)(mnicoln:mxicoln, mnirown:mxirown);
     close, f;
     
+    if (mxirown > nrows) {
+        gdata1 = array(double, numberof(gdata(,1)), max(irown)+1-mnirown+1);
+   	gdata1(,1:numberof(gdata(1,))) = gdata;
+	gdata1(,numberof(gdata(1,)):) = gdata(,numberof(gdata(1,)));
+        gdata = gdata1;
+    }
+    if (mxicoln > ncols) {
+        gdata1 = array(double, max(icoln)+1-mnicoln+1, numberof(gdata(1,)));
+   	gdata1(1:numberof(gdata(,1)), ) = gdata;
+	gdata1(numberof(gdata(,1)):,) = gdata(numberof(gdata(,1)),);
+        gdata = gdata1;
+    }
     xx = (data_in(1,)-(aglomn(ik)+(icoln-2)*adlo(ik)))/ adlo(ik);
     yy = (data_in(2,)-(aglamn(ik)+(irown-2)*adla(ik)))/ adla(ik)
     
