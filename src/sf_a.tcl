@@ -298,7 +298,8 @@ Button .cf3.imgbutton -text "Goto Img" \
 	-helptext "Click to Jump to Image defined in Entry Widget" -command gotoImage
 Button .cf3.cirbutton -text "cir" \
 	-helptext "Click to shown CIR image" -command {
-          if { [ catch { send cir.tcl "show sod $sod"; } ] } { 
+          set cir_sod [ expr $sod - 2 ]
+          if { [ catch { send cir.tcl "show sod $cir_sod"; } ] } { 
             tk_messageBox -icon warning -message "You must run cir.tcl first."  
           }
         }

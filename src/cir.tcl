@@ -236,7 +236,9 @@ proc prefs { } {
   button .p.rgb \
 	-text RGB \
 	-command { 
-            send sf_a.tcl "set timern sod; set hsr $settings(sod); gotoImage";
+#####  The
+            set sf_sod [ expr $settings(sod) +2 ]
+            send sf_a.tcl "set timern sod; set hsr $sf_sod; gotoImage";
         }
 
   spinbox .p.step  \
