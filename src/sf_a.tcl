@@ -55,7 +55,7 @@ package require BWidget
 
 # [ Variable Initialization ########################
 
-set DEBUG_SF 1      ;# Show debug info on (1) or off (0)
+set DEBUG_SF 0      ;# Show debug info on (1) or off (0)
 
 # The camera is frequently out of time sync so we add this to correct it.
 set seconds_offset [ expr 3600 * 0 ]
@@ -67,12 +67,12 @@ set step 1          ;# Step by thru images
 set run 0           ;#
 set ci  0           ;# Current image; glued to .slider
 set nfiles 0        ;# Number of files
-set dir "/data/0/"  ;# Base directory (?)
+set dir "/data/0/"  ;# Base directory
 set timern "hms"    ;# "hms" "sod" "cin"
 set fcin 0          ;# First marked index number
 set lcin 0          ;# Last marked index number
-set yes_head 0      ;# Use heading (?)
-set head 0          ;# Heading (?)
+set yes_head 0      ;# Use heading
+set head 0          ;# Heading
 set inhd_count 0    ;#
 
 set camtype 1       ;# Default camera type -- may be overridden by .lst commands
@@ -466,24 +466,40 @@ proc show_img { n } {
 	global camtype
 
 	set cin $n
+
+	set fn $dir/$fna($n)
+	file copy -force $fn /tmp/sf_tmp.jpg
+	set fn /tmp/sf_tmp.jpg
+
+	.canf.can config -cursor watch
+
+	set rotate_amount 0
+
 	if ($yes_head) {
 		# include heading information...
-		# cp file to tmp_file
 		get_heading 1
 		$img blank
-		set fn $dir/$fna($n)
-		file copy -force $fn /tmp/sf_tmp.jpg
-		set fn /tmp/sf_tmp.jpg
-		# puts "heading = $head \n"
-		exec mogrify -rotate [expr ($head)] $fn
-		#puts "$fn"
-	} else {
-		if { [ catch {set fn $dir/$fna($n) } ] } return;
+		set rotate_amount [expr ($rotate_amount + $head)]
 	}
-	#  puts "$n  $fna($n)"
-	.canf.can config -cursor watch
-	# -format "jpeg -fast -grayscale" 
-	if { [ catch { image create photo tempimage -file $fn } ] } {
+	
+	if {$camtype == 1} {
+		set rotate_amount [expr ($rotate_amount + 180)]
+	}
+
+	set zoom_amount [expr {round($zoom)}]%
+	set rotate_amount [expr {$rotate_amount % 360}]
+
+	if ($rotate_amount) {
+		if {$zoom != 100} {
+			exec mogrify -sample $zoom_amount -rotate $rotate_amount $fn
+		} else {
+			exec mogrify -rotate $rotate_amount $fn
+		}
+	} elseif {$zoom != 1} {
+		exec mogrify -sample $zoom_amount $fn
+	}
+	
+	if { [ catch { $img read $fn -shrink } ] } {
 		if { [ file extension $fna($n) ] == ".jpg" } {
 			puts "Unable to decode: $fna($n)";
 		} else {
@@ -492,22 +508,8 @@ proc show_img { n } {
 				puts "*** Errors in cmd: $fna($n) "
 			}
 		}
-	} else {
-		if { $zoom < 1 } {
-			set scaletype subsample
-			set scalesize [expr {round(1/$zoom)}]
-		} else {
-			set scaletype zoom
-			set scalesize [expr {round($zoom)}]
-		}
-		$img copy tempimage -$scaletype $scalesize -shrink
-		if { $camtype == 1 } {
-			tempimage copy $img -shrink
-			$img copy tempimage -subsample -1 -1
-		}
 	}
-		
-	###  .canf.can itemconfigure tx -text $n
+
 	.canf.can itemconfigure tx -text ""
 		set lst [ split $fn "_" ]
 		set data "$n  [ lindex $lst 3 ]"
@@ -515,7 +517,6 @@ proc show_img { n } {
 		scan $hms "%02d%02d%02d" h m s 
 		set sod [ expr $h*3600 + $m*60 + $s + $seconds_offset - $frame_off]
 		set hms [ clock format $sod -format "%H%M%S" -gmt 1   ] 
-	###    set sod [ expr $sod - $seconds_offset ]
 
 	catch { set llat $lat(hms$hms) }
 	catch { set llon $lon(hms$hms) }
@@ -527,8 +528,6 @@ proc show_img { n } {
 		if { $timern == "sod" } { set hsr $sod }
 	.canf.can config -cursor arrow
 	.canf.can config -scrollregion "0 0 [image width $img] [image height $img]"
-#	.canf.can config -width [image width $img]
-#	.canf.can config -height [image height $img]
 	update
 }
 
@@ -642,6 +641,13 @@ proc get_heading {inhd} {
 	}
 }
 
+proc calculate_zoom_factor { initial percentage } {
+	set final [expr {round(($initial + 1) * $percentage) - 1}]
+	if {$final < 0} { set final 0 }
+	if {$final > 199 } { set final 199 }
+	return $final
+}
+
 # ] End Procedures #################################
 
 # [ GUI Initialization #############################
@@ -709,10 +715,14 @@ menu .mb.zoom
 
 ##### ][ Zoom Menu
 
-.mb.zoom add command -label "Zoom In" -underline 5 \
-	-command { .cf3.zoom setvalue next    ; show_img $ci }
-.mb.zoom add command -label "Zoom Out" -underline 5 \
-	-command { .cf3.zoom setvalue previous; show_img $ci }
+.mb.zoom add command -label "Zoom In (25%)" -underline 0 \
+	-command { .cf3.zoom setvalue @[calculate_zoom_factor [.cf3.zoom getvalue] 1.25] ; show_img $ci }
+.mb.zoom add command -label "Zoom In (10%)" -underline 5 \
+	-command { .cf3.zoom setvalue @[calculate_zoom_factor [.cf3.zoom getvalue] 1.1] ; show_img $ci }
+.mb.zoom add command -label "Zoom Out (10%)" -underline 5 \
+	-command { .cf3.zoom setvalue @[calculate_zoom_factor [.cf3.zoom getvalue] 0.9] ; show_img $ci }
+.mb.zoom add command -label "Zoom Out (25%)" -underline 3 \
+	-command { .cf3.zoom setvalue @[calculate_zoom_factor [.cf3.zoom getvalue] 0.75] ; show_img $ci }
 
 ##### ]
 
@@ -838,7 +848,7 @@ Button .cf3.cirbutton -text "cir" \
 SpinBox .cf3.zoom \
 	-helptext "Zoom: Select a zooming factor."\
 	-justify center \
-	-values {0.125 0.25 0.5 1 2 4 8}\
+	-range {1 200 1} \
 	-width 5 \
 	-textvariable zoom \
 	-modifycmd { show_img $ci }
@@ -879,6 +889,7 @@ bind . <Key-Home>  { .cf1.rewind invoke }
 bind . <Control-Key-equal> { .cf3.zoom setvalue next    ; show_img $ci }
 bind . <Control-Key-plus>  { .cf3.zoom setvalue next    ; show_img $ci }
 bind . <Control-Key-minus> { .cf3.zoom setvalue previous; show_img $ci }
+.cf3.zoom bind <Key-Return> {show_img $ci}
 bind .cf3.entry <Key-Return> {gotoImage}
 bind .slider <ButtonRelease> {
    global ci
@@ -889,7 +900,7 @@ bind .slider <ButtonRelease> {
 
 ### [ Select defaults
 
-.cf3.zoom setvalue @3
+.cf3.zoom setvalue @99
 
 ### ] /Select defaults
 
