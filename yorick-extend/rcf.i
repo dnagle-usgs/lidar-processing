@@ -20,7 +20,6 @@ SRCS = rcf.c
 */
 
 
-func frcf(jury, w, mode=)
 
 /* DOCUMENT frcf( jury, w, mode= )
 Generic Random Consensus filter.  The jury is the
@@ -83,28 +82,190 @@ ASSOC COMPUTING MACHINERY, NEW YORK
 
 */
 
+/*FLOAT*/
+
+func frcf0(jury, w)
 { 
-  b = float(array(0,2));	//Return array for mode 0 & 1
-  if ( is_void(mode) )		//Ensure a mode value
-        mode = 0;
+  b = float(array(0,2));	//Return array for mode 0
 
-  fcount = y_frcf(jury, w, mode, b);	//Call the yorick version of the "C" rcf function
+  y_frcf0, jury, w, b;		//Call the yorick version of the "C" rcf function
 
- if (mode== 2)			//If the mode is 2,
- {				//generate an array of size = number of winners
-   c = int(array(0,fcount));
-   y_fillarray, c;		//Fill it
-
-   return [&c, &fcount]		//And return the start address & address of winner count
- }
- return b;			//Else return b for mode 0 or 1
+  return b;
 }
 
-extern y_frcf;
+func frcf1(jury, w)
+{ 
+  b = float(array(0,2));	//Return array for mode 1
+
+  y_frcf1, jury, w, b;		//Call the yorick version of the "C" rcf function
+
+  return b;
+}
+
+func frcf2(jury, w)
+{ 
+
+  fcount = y_frcf2(jury, w);	//Call the yorick version of the "C" rcf function
+
+  c = int(array(0,fcount));
+  y_fillarray, c;		//Fill it
+
+  return [&c, &fcount]		//And return the start address & address of winner count
+}
+
+extern y_frcf0;
 /* PROTOTYPE
-int c_frcf (float array a, float w, int mode, float array b)
+void rcf_float_0 (float array a, float w, float array b)
 */
 
+extern y_frcf1;
+/* PROTOTYPE
+void rcf_float_1 (float array a, float w, float array b)
+*/
+
+extern y_frcf2;
+/* PROTOTYPE
+int rcf_float_2 (float array a, float w)
+*/
+
+
+/*DOUBLE*/
+
+func drcf0(jury, w)
+{ 
+  b = double(array(0,2));	//Return array for mode 0 
+
+  y_drcf0, jury, w, b;		//Call the yorick version of the "C" rcf function
+
+  return b;
+}
+
+func drcf1(jury, w)
+{ 
+  b = float(array(0,2));	//Return array for mode  1
+
+  y_drcf1, jury, w, b;		//Call the yorick version of the "C" rcf function
+
+  return b;
+}
+
+func drcf2(jury, w)
+{ 
+
+  fcount = y_drcf2(jury, w);	//Call the yorick version of the "C" rcf function
+
+  c = int(array(0,fcount));
+  y_fillarray, c;		//Fill it
+
+  return [&c, &fcount]		//And return the start address & address of winner count
+}
+
+extern y_drcf0;
+/* PROTOTYPE
+void rcf_double_0 (double array a, double w, double array b)
+*/
+
+extern y_drcf1;
+/* PROTOTYPE
+void rcf_double_1 (double array a, double w, float array b)
+*/
+
+extern y_drcf2;
+/* PROTOTYPE
+int rcf_double_2 (double array a, double w)
+*/
+
+/*LONG*/
+
+func lrcf0(jury, w)
+{ 
+  b = long(array(0,2));		//Return array for mode 0 
+
+  y_lrcf0, jury, w, b;		//Call the yorick version of the "C" rcf function
+
+  return b;
+}
+
+func lrcf1(jury, w)
+{ 
+  b = float(array(0,2));	//Return array for mode  1
+
+  y_lrcf1, jury, w, b;		//Call the yorick version of the "C" rcf function
+
+  return b;
+}
+
+func lrcf2(jury, w)
+{ 
+
+  fcount = y_lrcf2(jury, w);	//Call the yorick version of the "C" rcf function
+
+  c = int(array(0,fcount));
+  y_fillarray, c;		//Fill it
+
+  return [&c, &fcount]		//And return the start address & address of winner count
+}
+
+extern y_lrcf0;
+/* PROTOTYPE
+void rcf_long_0 (long array a, long w, long array b)
+*/
+
+extern y_lrcf1;
+/* PROTOTYPE
+void rcf_long_1 (long array a, long w, float array b)
+*/
+
+extern y_lrcf2;
+/* PROTOTYPE
+int rcf_long_2 (long array a, long w)
+*/
+
+/*INT*/
+
+func ircf0(jury, w)
+{ 
+  b = int(array(0,2));		//Return array for mode 0 
+
+  y_ircf0, jury, w, b;		//Call the yorick version of the "C" rcf function
+
+  return b;
+}
+
+func ircf1(jury, w)
+{ 
+  b = float(array(0,2));	//Return array for mode  1
+
+  y_ircf1, jury, w, b;		//Call the yorick version of the "C" rcf function
+
+  return b;
+}
+
+func ircf2(jury, w)
+{ 
+
+  fcount = y_ircf2(jury, w);	//Call the yorick version of the "C" rcf function
+
+  c = int(array(0,fcount));
+  y_fillarray, c;		//Fill it
+
+  return [&c, &fcount]		//And return the start address & address of winner count
+}
+
+extern y_ircf0;
+/* PROTOTYPE
+void rcf_int_0 (int array a, int w, int array b)
+*/
+
+extern y_ircf1;
+/* PROTOTYPE
+void rcf_int_1 (int array a, int w, float array b)
+*/
+
+extern y_ircf2;
+/* PROTOTYPE
+int rcf_int_2 (int array a, int w)
+*/
 
 extern y_fillarray;
 /* PROTOTYPE
@@ -120,33 +281,4 @@ void c_fillarray (int array c)
        complicated data types should use the interpreted data type
        "pointer" and pass their arguments as "&arg".
  */
-
-func lrcf(jury, w, mode=)
-/*Long version of rcf algorithm
-*/
-
-{ 
-  b = float(array(0,2));	//Return array for mode 0 & 1
-  if ( is_void(mode) )		//Ensure a mode value
-        mode = 0;
-
-  fcount = y_lrcf(jury, w, mode, b);	//Call the yorick version of the "C" rcf function
-
- if (mode== 2)			//If the mode is 2,
- {				//generate an array of size = number of winners
-   c = int(array(0,fcount));
-   y_fillarray, c;		//Fill it
-
-   return [&c, &fcount]		//And return the start address & address of winner count
- }
- else if (mode== 0)
-   return long(b);		//Else return long version of b for mode 0 
- else
-   return b;			//Or float b for mode 1
-}
-
-extern y_lrcf;
-/* PROTOTYPE
-int c_lrcf (long array a, long w, int mode, float array b)
-*/
 
