@@ -164,6 +164,7 @@ func rbpnav (junk, fn=) {
 */
 // extern pn;
 extern pnav_filename;		// so we can show which trajectory was used
+extern data_path
 extern gga;
  if ( !is_void( fn ) ) {
     ifn = fn;
@@ -181,9 +182,9 @@ extern gga;
  }
 
  if ( _ytk ) {
-    path = data_path +"/gps/"
-path
-    ifn  = get_openfn( initialdir=path, filetype="*.ybin" );
+    path = data_path + "/gps/"
+    tkcmd, "path_exists "+path
+    ifn  = get_openfn( initialdir= path , filetype="*pnav.ybin" );
     if (strmatch(ifn, "ybin") == 0) {
           exit, "NO FILE CHOSEN, PLEASE TRY AGAIN\r";
     }

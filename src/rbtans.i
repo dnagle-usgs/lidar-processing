@@ -50,6 +50,7 @@ if ( is_void( gps_time_correction ) )
 
 func rbtans( junk, fn= ) {
  extern data_path;
+ extern tans_filename;
  if ( !is_void( fn ) ) {
     ifn = fn;
     ff = split_path( ifn, -1 );
@@ -73,6 +74,7 @@ if ( _ytk ) {
 
 n = int(0)
 idf = open( ifn, "rb");
+ tans_filename = ifn;
 
 // get the integer number of records
 _read, idf,  0, n

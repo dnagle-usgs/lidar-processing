@@ -48,23 +48,6 @@ extern _ytk_rast;
 }
 
 
-if ( is_void( last_somd) )
-    last_somd = 0;
-
-func send_sod_to_sf( somd ) {
- extern last_somd
-    tkcmd, swrite(format="send_sod_to_sf %d", somd);
-//    tkcmd, "send sf_a.tcl set timern sod";
-//    tkcmd, swrite(format="send sf_a.tcl set hsr %d", somd );
-//    tkcmd, "send sf_a.tcl gotoImage"
-    last_somd = somd;
-}
-
-func send_tans_to_sf( somd, pitch, roll, heading ) {
-  extern last_somd
-  tkcmd, swrite(format="send_tans_to_sf %d %f %f %f", somd, pitch, roll, heading);
-  last_somd = somd;
-  }
 
 func ndrast( r, units= ) {
 /* DOCUMENT drast(r)

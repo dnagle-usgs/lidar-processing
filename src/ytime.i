@@ -112,6 +112,21 @@ func soe2sod( soe ) {
 
 
 
+func soe2somd( soe ) {
+/* DOCUMENT soe2sod( soe ) 
+
+   Convert a soe time to an somd.
+
+  See also:
+    soe2sod soe2time hms2sod sod2hms time2soe soe2somd
+
+*/
+
+  return int(soe) % 86400;
+}
+
+
+
 func soe2time( soe ) {
 /* DOCUMENT sor2sod( soe )
    This function converts a time/date seconds value such as used by 

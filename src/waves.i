@@ -57,6 +57,9 @@ the 2 dimensional directional wave spectrum.
    return;
  }
 
+ somd = soe2somd(  median(int(fs_all.soe(*))));
+ send_sod_to_sf, somd
+
 wave_data.hf = wave_data.hc = span(0.000001,0.000001,256) (-:1:256,);
 wave_data.h  = span(0.0,0.0,256) (-:1:256,);
 wave_data.checker_board = ((-1)^span(1,256,256)) * ((-1)^(span(1,256,256))) (-,)

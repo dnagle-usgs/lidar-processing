@@ -13,12 +13,39 @@
 #  to the mission notes with your favorit editor. It uses the editor selected
 #  in the Ytk Edit menu.
 #
-#  edb_access update option
-#  save offset changes to edb files
-#  time check options
-#  check for numberof(edb) in time check
 #
 #
+
+
+proc send_sod_to_sf { somd } {
+  catch {
+   send sf_a.tcl set timern sod
+   send sf_a.tcl set hsr $somd
+   send sf_a.tcl gotoImage
+  }
+}
+
+proc send_tans_to_sf {somd p r h} {
+   catch {
+    send sf_a.tcl set pitch $p
+    send sf_a.tcl set roll $r
+    send sf_a.tcl set head $h
+    send sf_a.tcl gotoImage
+   }
+}
+
+
+#
+# Test if a path exists, and pop up warning if not.
+#
+proc path_exists { path } {
+  if { [ file isdirectory $path ]  == 0 } {
+    tk_messageBox \
+	-icon warning \
+	-type ok \
+	-message "$path doesn't exist."
+  }
+}
 
 #
 # Do a screen capture of a mouse selected window.
@@ -270,8 +297,24 @@ proc load_edb {} {
  $w.mb add cascade -label Time     -underline 0 -menu $w.mb.time
  $w.mb add cascade -label Help     -underline 0 -menu $w.mb.help
 
- $w.mb.file add command -label "Load Edb..." -command { load_edb }
+ $w.mb.file add command -label "Load EAARL Database Index (Edb)..." -command { load_edb }
+
+ exp_send "require, \"rbgga.i\"\r"
+ $w.mb.file add command -label "Load NMEA GGA..."   -underline 2 \
+	-command rbgga_menu
+ $w.mb.file add command -label "Load Tans Attitude data..."   -underline 2 \
+   -command { exp_send "require, \"rbtans.i\"\r"
+   	      expect ">"
+    	      exp_send "tans = rbtans() \r" }
+ $w.mb.file add command -label "Load GPS PNAV data..."   -underline 2 \
+   -command { exp_send "require, \"rbpnav.i\"\r"
+    	      expect ">"
+     	      exp_send "pnav = rbpnav() \r" }
+
+  $w.mb.file add separator
+
  $w.mb.file add command -label "Edb Status" -command  edb_status 
+
  $w.mb.file add command -label "Load command file..." -command { 
    load_cmd $data_path 
  }
@@ -323,19 +366,17 @@ proc load_edb {} {
 
  exp_send "require, \"rbgga.i\"\r"
  menu $w.mb.nav.rbgga
- $w.mb.nav add command -label "Rbgga..."   -underline 2 \
+ $w.mb.nav add command -label "Load NMEA GGA..."   -underline 2 \
 	-command rbgga_menu
-#####	-menu $w.mb.nav.rbgga
- $w.mb.nav add command -label "Rbtans..."   -underline 2 \
+ $w.mb.nav add command -label "Load Tans Attitude data..."   -underline 2 \
    -command { exp_send "require, \"rbtans.i\"\r"
    	      expect ">"
     	      exp_send "tans = rbtans() \r" }
- $w.mb.nav add command -label "Rbpnav..."   -underline 2 \
+ $w.mb.nav add command -label "Load GPS PNAV data..."   -underline 2 \
    -command { exp_send "require, \"rbpnav.i\"\r"
     	      expect ">"
      	      exp_send "pnav = rbpnav() \r" }
 
-#####  $w.mb.nav.rbgga add command -label "Rbgga..." -command rbgga_menu
 
  set clist "black red blue green cyan magenta yellow white"
 
@@ -551,12 +592,12 @@ Button $w.show_grid -text "Show\nGrid Name" -command {
    -label "Version:\$Id$"
  $w.mb.help add command -label "Yorick Graphics Window Use"
  $w.mb.help add command -label "0 Waveform Display"
- $w.mb.help add command -label "1 Raster Images"
+ $w.mb.help add command -label "1 Laser Rasters"
  $w.mb.help add command -label "2 "
  $w.mb.help add command -label "3 "
  $w.mb.help add command -label "4 "
- $w.mb.help add command -label "5 "
- $w.mb.help add command -label "6 Lat/Lon Coast maps, GGA nav data"
+ $w.mb.help add command -label "5 Laser point plots"
+ $w.mb.help add command -label "6 Coast maps, NMEA GGA nav data"
  $w.mb.help add command -label "7 Geographic maps and Nav data"
 
 
