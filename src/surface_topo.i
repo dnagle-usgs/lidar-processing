@@ -479,7 +479,7 @@ write,"fs_all contains the data, and rn_arr_idx contains a list of indices"
 
 }
 
-func hist_fs( fs ) {
+func hist_fs( fs, win= ) {
 /* DOCUMENT hist_fs(fs)
 
    Return the histogram of the good elevations in fs.  The input fs elevation
@@ -494,10 +494,14 @@ elevation was found. The elevations are binned to 1-meter.
 See also: R
 */
 
-// build an edit array indicating where values are between 20 meters
+
+  if ( is_void(win) ) 
+	win = 7;
+
+// build an edit array indicating where values are between -60 meters
 // and 3000 meters.  That's enough to encompass any EAARL data than
 // can ever be taken.
-  gidx = (fs_all.elevation > 2000) | (fs_all.elevation <300000);  
+  gidx = (fs_all.elevation > -6000) | (fs_all.elevation <300000);  
 
 // Now kick out values which are within 1-meter of the mirror. Some
 // functions will set the elevation to the mirror value if they can't
@@ -506,10 +510,24 @@ See also: R
 
 // Now generate a list of where the good values are.
   q = where( gidx )
+  
+// now find the minimum 
+minn = fs_all.elevation(q)(min);
+maxx = fs_all.elevation(q)(max);
+
+ fsy = fs_all.elevation(q) - minn ;
+ minn /= 100.0
+ maxx /= 100.0;
+
 
 // make a histogram of the data indexed by q.
-  h = histogram( fs_all.elevation (q ) / 100 );
-  return h;
+  h = histogram( (fsy / 100) + 1 );
+  e = span( minn, maxx, numberof(h) ) + 1 ; 
+  w = window();
+  window,win; fma; plg,h,e;
+  xytitles,"Meters", "Elevations"
+  window(w);
+  return [e,h];
 }
 
 func write_topo(opath, ofname, fs_all, type=) {

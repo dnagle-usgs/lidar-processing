@@ -225,7 +225,7 @@ Button .l1wid.bf45.p.1 -text "Plot" -command {
        }
 }
 
-Label .l1wid.bf45.p.2 -text "in Window "
+Label .l1wid.bf45.p.2 -text "in Win:"
 SpinBox .l1wid.bf45.p.3 -justify center -range {0 7 1} \
 	-width 2 -textvariable win_no 
 
@@ -243,7 +243,13 @@ ComboBox .l1wid.bf45.p.5 -text "Display Type" -width 20 -values \
 #.l1wid.bf45.5 insert end "Water Depth"
 #.l1wid.bf45.5 insert end "Bare Earth Topography"
 
-Button .l1wid.bf45.p.6 -text "Plot Pulse" -width 5 \
+Button .l1wid.bf45.p.7 -text "Histogram\nElevations" \
+  -helptext "Generate and display a histogram of all the first return elevations" \
+  -command {
+      exp_send "hst = hist_fs(fs_all); \r"
+  }
+
+Button .l1wid.bf45.p.6 -text "Pixel\nWaveform" \
   -helptext "Click to jump to raster, pulse, and image for xyz point" \
   -command {
      set ptype [.l1wid.bf4.1.p getvalue]
@@ -365,8 +371,14 @@ pack .l1wid.bf4.1 .l1wid.bf4.2 -side top -pady 3
 pack .l1wid.bf5.1 .l1wid.bf5.2 -side right
 pack .l1wid.bf1 .l1wid.bf2 .l1wid.bf3 .l1wid.bf4 -side top -expand 1 -fill both
 pack .l1wid.bf45.sc.1 .l1wid.bf45.sc.2 .l1wid.bf45.sc.3 -side left  -padx 3
-pack .l1wid.bf45.p.fma .l1wid.bf45.p.1 .l1wid.bf45.p.5 \
-	.l1wid.bf45.p.2 .l1wid.bf45.p.3 .l1wid.bf45.p.6 -side left -fill x 
+pack 	.l1wid.bf45.p.fma \
+	.l1wid.bf45.p.1 \
+	.l1wid.bf45.p.5 \
+	.l1wid.bf45.p.2 \
+	.l1wid.bf45.p.3 \
+	.l1wid.bf45.p.6 \
+	.l1wid.bf45.p.7 \
+	-side left -fill x  -padx 2
 pack .l1wid.bf45.p .l1wid.bf45.sc  -side top -fill x -expand 1
 pack .l1wid.bf5 .l1wid.bf45  -side top -pady 3 
 
