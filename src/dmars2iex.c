@@ -13,6 +13,7 @@
 #include "stdio.h"
 #include <sys/time.h>
 #include <netinet/in.h>
+#include <sys/types.h>
 #include <sys/stat.h>
 #include <string.h>
 #include "math.h"
@@ -34,6 +35,16 @@ I32 recs_written = 0;
 I32 gps_time_offset = -2;
 
 
+UI32 time_recs;
+UI32 dmars_recs;
+UI32 current_rec;
+
+typedef struct {
+  UI32 secs;
+  UI32 usecs;
+  UI32 dmars_ticks;
+} XTIME;
+XTIME  *tarray;
 
 /*******************************************************
    The basic payload data from the DMARS.  This plus the
@@ -77,7 +88,7 @@ typedef struct {
 
 IEX_HEADER hdr;
 
-configure_header() {
+configure_header_defaults() {
   strcpy(hdr.szHeader, "$IMURAW");
   hdr.bIsIntelOrMotorola  =     0;
   hdr.dVersionNumber      =   2.0;
@@ -95,6 +106,62 @@ configure_header() {
 }
 
 
+display_header() {
+#define MAXSTR 256
+ char s[MAXSTR];
+ double bsow, esow;
+ bsow = tarray[0].secs % 86400;
+ esow = tarray[time_recs-1].secs % 86400;
+ fprintf(stderr,
+  "------------------------------------------------------------------\n"
+ );
+ if ( hdr.bIsIntelOrMotorola ) 
+    strcpy(s,"BigEndian");
+ else
+    strcpy(s,"Intel");
+  fprintf(stderr,
+  "    Header: %s             Version:%6.3f     Byte Order: %s\n",
+      hdr.szHeader,
+      hdr.dVersionNumber,
+      s
+  );
+  fprintf(stderr,
+  "DeltaTheta:%2d            Delta Velocity:%2d          Data Rate: %3.0fHz \n",
+      hdr.bDeltaTheta,
+      hdr.bDeltaVelocity,
+      hdr.dDataRateHz
+  );
+  if ( hdr.iUtcOrGpsTime )
+     strcpy(s,"GPS");
+  else
+     strcpy(s,"UTC");
+  fprintf(stderr,
+  "Gyro Scale: %8.6e    Accel Scale: %8.6e    Time: %s\n",
+      hdr.dGyroScaleFactor,
+      hdr.dAccelScaleFactor,
+      s
+  );
+  fprintf(stderr,
+  " Time Corr: %1d                 Time Bias: %4.3f    Total Recs: %7d\n",
+      hdr.iRcvTimeOrCorrTime,
+      hdr.dTimeTagBias,
+      hdr.nrecs
+  );
+  fprintf(stderr,
+  " Start SOW: %9.3f          Stop SOW: %9.3f\n", bsow, esow
+  );
+  fprintf(stderr,
+  "  Duration: %6.1f/secs (%4.3f/hrs)\n",
+       esow-bsow,
+       (esow-bsow)/3600.0
+  );
+  fprintf(stderr,
+   "------------------------------------------------------------------\n"
+  );
+
+}
+
+
 /*
    1) Read our dmars file and determine:
       a) Total number of records
@@ -108,23 +175,13 @@ configure_header() {
 
 */
 
-UI32 time_recs;
-UI32 dmars_recs;
-UI32 current_rec;
-
-typedef struct {
-  UI32 secs;
-  UI32 usecs;
-  UI32 dmars_ticks;
-} XTIME;
-XTIME  *tarray;
 
 time_rec(FILE *f, int pass) {
   struct timeval tv;
   fread( &tv, sizeof(tv), 1, idf);
   switch (pass) {
    case 1:
-     tarray[time_recs].secs = tv.tv_sec + gps_time_offset;
+     tarray[time_recs].secs = tv.tv_sec + gps_time_offset ;
      tarray[time_recs].usecs = tv.tv_usec;
      time_recs++;
      break;
@@ -222,12 +279,16 @@ process_options( int argc, char *argv[] ) {
       break;
 
     case 't':
+      if( sscanf(optarg,"%lf", &hdr.dTimeTagBias ) != 1 ) {
+       perror("Invalid time offset.");
+       exit(1);
+      }
       break;
   }
 
   if ( argv[ optind ] == NULL ) {
-    fprintf(stderr,"No input file given.\n");
-    exit(1);
+      fprintf(stderr,"No input file given.\n");
+      exit(1);
   } else {
     if (( idf = fopen(argv[optind], "r")) == NULL ) {
       fprintf(stderr,"Can't open %s.\n", argv[optind] );
@@ -243,9 +304,11 @@ main( int argc, char *argv[] ) {
   struct tm *tm;
  idf = stdin;
  odf = stdout;
+  configure_header_defaults();
+  fprintf(stderr,"$Id$\n");
   process_options(argc, argv );
-  configure_header();
   pass1(idf);
+  display_header();
 
 // Backup 10 minutes from the end of the file
 // to sync up time with DMARS.
