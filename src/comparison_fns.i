@@ -48,7 +48,7 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, elv=, read_file=, pdop=) {
 
  ncount=0;
 
- write, format="Searching for data within %d centimeters from kings data \n",buf;
+ //write, format="Searching for data within %d centimeters from kings data \n",buf;
 
  if (!fname) 
    f = open("/home/anayegan/terra_ceia_comparison/analysis/nearest_pt_be_comparisons_1m_after_rcf.txt", "w");
@@ -57,9 +57,10 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, elv=, read_file=, pdop=) {
  //write, f, "Indx  Number_of_Indices  Avg  Nearest_Point  Kings_Point  Nearest_Elv_Point Diff_Nearest Diff_Nearest_Elv"
 
  for (i=1; i <= numberof(kings(1,)); i++) {
-   write, format="Kings Point %10.2f, %10.2f. Region Number %d\n",kings(1,i), kings(2,i), i;
+   //write, format="Kings Point %10.2f, %10.2f. Region Number %d\n",kings(1,i), kings(2,i), i;
+   if (i%50 == 0) write, format="%d of %d complete\r",i,numberof(kings(1,));
    
-   indx = sel_data_ptRadius(eaarl, point=kings(,i), radius=buf/100., msize=0.2, retindx=1)
+   indx = sel_data_ptRadius(eaarl, point=kings(,i), radius=buf/100., msize=0.2, retindx=1, silent=1)
 
    //q = where(((eaarl.east >= kings(1,i)*100-buf)   & 
    //            (eaarl.east <= kings(1,i)*100+buf)) );  
