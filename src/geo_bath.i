@@ -460,7 +460,7 @@ See define_bath_ctl()
       See also: first_surface, run_bath, make_fs_bath 
 */
    
-   extern edb, soe_day_start, bath_ctl, tans, pnav, type, utm, depth_all;
+   extern edb, soe_day_start, bath_ctl, tans, pnav, type, utm, depth_all, rn_arr, rn_arr_idx;
    depth_all = [];
    
    /* check to see if required parameters have been initialized */
@@ -626,6 +626,7 @@ See define_bath_ctl()
     } else 
 	write, "No bathy records found"
     no_append = 0;
+    rn_arr_idx = (rn_arr(dif,)(,cum)+1)(*);	
 
     return depth_all;
 

@@ -139,7 +139,7 @@ write,format="Please wait while drawing..........%s", "\r"
    ea = (ea != 0 );
  }
 for ( ; i<j; i++ ) {
-  q = where( ea(,i) );
+  q = where( ea(,i) & (rrr(i).north));
   if ( numberof(q) >= 1) {
      plcm, rrr(i).elevation(q), rrr(i).north(q)/100.0, rrr(i).east(q)/100.0,
       msize=size,cmin=cmin, cmax=cmax
@@ -371,7 +371,7 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
      for a selected region of flightlines.
      amar nayegandhi 09/18/02
   */
-  extern edb, soe_day_start, tans, pnav, type, utm, fs_all, rn_arr_idx;
+  extern edb, soe_day_start, tans, pnav, type, utm, fs_all, rn_arr_idx, rn_arr;
   fs_all = [];
   rn_arr =[];
    if (!is_array(tans)) {
