@@ -254,7 +254,7 @@ indx = where(x >= xmin);
 }
 
 
-func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged=, onlynotmerged=, onlyrcfd=) {
+func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged=, onlynotmerged=, onlyrcfd=, datum=, skip=, noplot=) {
 /*DOCUMENT select_rgn_from_datatiles(junk, rgn=, data_dir=, lmap=)
   This function selects data from a series of processed data tiles.
   The processed data tiles must have the min easting and max northing in their filename.
@@ -289,7 +289,7 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged
    /* plot a window over selected region */
    a_x=[rgn(1), rgn(2), rgn(2), rgn(1), rgn(1)];
    a_y=[rgn(3), rgn(3), rgn(4), rgn(4), rgn(3)];
-   plg, a_y, a_x;
+   if (!noplot) plg, a_y, a_x;
    
   	   ind_e_min = 2000 * (int((rgn(1)/2000)));
            ind_e_max = 2000 * (1+int((rgn(2)/2000)));
@@ -324,12 +324,12 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged
    min_e = long(min_e);
    max_n = long(max_n);
    
-   
-   pldj, min_e, min_n, min_e, max_n, color="green"
-   pldj, min_e, min_n, max_e, min_n, color="green"
-   pldj, max_e, min_n, max_e, max_n, color="green"
-   pldj, max_e, max_n, min_e, max_n, color="green"
-   
+   if (!noplot) {
+   	pldj, min_e, min_n, min_e, max_n, color="green"
+   	pldj, min_e, min_n, max_e, min_n, color="green"
+   	pldj, max_e, min_n, max_e, max_n, color="green"
+   	pldj, max_e, max_n, min_e, max_n, color="green"
+   }
    
    if (mode == 1) file_ss = "_f";
    if (mode == 2) file_ss = "_b";
@@ -350,16 +350,25 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged
 	  ssm = strmatch(s,"merge");
           s = s(where(ssm));
           nn = numberof(s);
+	  if (nn == 0) continue;
 	}
 	if (onlynotmerged) {
 	  ssm = strmatch(s,"merge");
 	  s = s(where(!ssm));
 	  nn = numberof(where(s));
+	  if (nn == 0) continue;
  	}
 	if (onlyrcfd) {
 	  ssm = strmatch(s,"rcf");
 	  s = s(where(ssm));
-	  nn =  numberof(s)
+	  nn =  numberof(s);
+	  if (nn == 0) continue;
+ 	}
+	if (datum) {
+	  ssm = strmatch(s,datum);
+	  s = s(where(ssm));
+	  nn =  numberof(s);
+	  if (nn == 0) continue;
  	}
 	lp +=  nn;
 	flp += nn;
@@ -374,15 +383,16 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged
    
    sel_eaarl = [];
    files =  files(where(files));
+   if (!noplot) write, files;
    floc = floc(,where(files));
    if (numberof(files) > 0) {
       write, format="%d files selected.\n",numberof(files)
       // now open these files one at at time and select only the region defined
       for (i=1;i<=numberof(files);i++) {
 	  write, format="Searching File %d of %d\r",i,numberof(files);
-          f = openb(files(i));
-          restore, f, vname;
-          eaarl = get_member(f,vname);
+	  f = openb(files(i));
+	  restore, f, vname;
+          eaarl = get_member(f,vname)(1:0:skip);
           idx = data_box(eaarl.east/100., eaarl.north/100., rgn(1), rgn(2), rgn(3), rgn(4));
 	  if (is_array(idx)) {
   	     iidx = data_box(eaarl.east(idx)/100., eaarl.north(idx)/100., floc(1,i), floc(1,i)+2000, floc(2,i)-2000, floc(2,i));
