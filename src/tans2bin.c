@@ -6,6 +6,8 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <dirent.h>     // for MAXNAMLEN
+#include <unistd.h>     // for access()
 
 /*
     tans2bin.c
@@ -19,6 +21,12 @@
  integer describing the number of time/roll/pitch/heading values
  to follow.  Time is converted to seconds-of-the-day.
 
+     If only one filename is given, the output filename is generated
+ by replacing everything after the last period with "ybin" or adding
+ ".ybin" to the end if there is no period.  If a file already exists
+ with the generated named, the program exits instead of over writing
+ it.
+
 */
 
 #define MAXSTR	1024
@@ -26,6 +34,22 @@
 struct {
   long sod, roll, pitch, heading;
  } attitude;
+
+
+char *changename( char *ostr, char *nstr, char *txt ) {
+  char *pstr;
+
+	strncpy(nstr, ostr, MAXNAMLEN-1); // make a copy
+
+  pstr = strrchr( nstr, '.');       // find the period
+  if ( !pstr ) {                    // no period,
+	  pstr = nstr;
+	  while ( *(++pstr) != '\0');     // find the end of the string
+  }
+
+	strcpy(pstr, txt);                // append the text
+  return(nstr);
+}
 
 main( int argc, char *argv[] ) {
 FILE *idf, *odf;
@@ -37,11 +61,28 @@ FILE *idf, *odf;
  const double sid = 86400.0;		// seconds in a day
  int day;
  maxgap = 1.0;
+
   if ( (idf=fopen( argv[1], "r" ) ) == NULL ) {
     perror(""); exit(1);
   }
-  if ( ( odf=fopen(argv[2], "w+")) == NULL ) {
-    perror(""); exit(1);
+
+  if ( argc == 2 ) {  // generate and open the output file
+    char *pfname, nfname[MAXNAMLEN];
+		changename(argv[1], nfname, ".ybin");
+    fprintf(stderr, "creating output file: %s\n", nfname);
+    if ( access(nfname, F_OK) == 0 ) {
+      fprintf(stderr, "file %s exists, please remove it first\n", nfname);
+			exit(-1);
+    } else {
+      if ( ( odf=fopen(nfname, "w+")) == NULL ) {
+        perror(""); exit(1);
+      }
+    }
+  } else {    // open the file given on the cmdline
+
+    if ( ( odf=fopen(argv[2], "w+")) == NULL ) {
+       perror(""); exit(1);
+    }
   }
 
 
