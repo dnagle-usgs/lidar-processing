@@ -684,7 +684,7 @@ func select_any_region(xdata, ydata, mode=, win=) {
    if mode = 2, a rubberband box is used to define the region.
    if mode = 3, the points-in-polygon technique is used to define the region.
 
-   OUTPUT:  The output is a 2 D array that contains the x and y data points in the selected region.
+   OUTPUT:  The output is a index that contains the x and y data points in the selected region.
    amar nayegandhi 11/26/02.
    */
 
@@ -739,7 +739,7 @@ func select_any_region(xdata, ydata, mode=, win=) {
 
   window, w;
 
-  return transpose([xdata(indx), ydata(indx)]);
+  return indx;
 
 }
 

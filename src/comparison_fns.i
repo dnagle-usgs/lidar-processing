@@ -116,12 +116,23 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, elv=, read_file=) {
 }
 
 
-func read_txt_anal_file(fname, n) {
+func read_txt_anal_file(fname, n=) {
   // this function reads the analysis data file written out from compare_pts
   // amar nayegandhi 11/18/02
    
    extern i, no, be_avg_pts, be, kings_elv, be_elv, diff1, diff2;
 
+   if (!n) {
+      f = open(fname, "r");
+      xx = 0;
+      do {
+        line = rdline(f);
+        xx++;
+      } while (strlen(line) > 0);
+      n = xx-1;
+      close, f;
+   }
+     
    i = array(int, n)
    no =  array(int, n)
    be_avg_pts = array(float, n)
