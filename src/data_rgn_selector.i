@@ -181,11 +181,7 @@ func sel_data_ptRadius(data, point=, radius=, win=) {
   //a_y=[ymin, ymin, ymax, ymax, ymin];
   //plg, a_y, a_x, color="blue", width=2.0;
 
-  q = where((data.east >= xmin*100.)   & 
-               (data.east <= xmax*100.)) ;
-  indx = where(((data.north(q) >= ymin*100) & 
-               (data.north(q) <= ymax*100)));
-  indx = q(indx);
+  indx = data_box(data.east, data.north, xmin*100, xmax*100, ymin*100, ymax*100);
 
   if (!is_array(indx)) {
     write, "No data found within selected rectangular region. ";
@@ -221,4 +217,22 @@ func write_sel_rgn_stats(data, type) {
   }
   write, "****************************"
   return
+}
+
+func data_box(x, y, xmin, xmax, ymin, ymax) {
+/*DOCUMENT data_box(x, y, xmin, xmax, ymin, ymax)
+	Program takes the arrays (of equal dimension) x and y and returns 
+	the indicies of the arrays that fit inside the box defined by xmin, xmax, ymin, ymax
+*/
+indx = where(x >= xmin);
+ if (is_array(indx)) {
+    indx1 = where(x(indx) <= xmax);
+    if (is_array(indx1)) {
+       indx2 = where(y(indx(indx1)) >= ymin);
+       if (is_array(indx2)) {
+          indx3 = where(y(indx(indx1(indx2))) <= ymax);
+          if (is_array(indx3)) return indx(indx1(indx2(indx3)));
+       } else return;
+    } else return;
+ } else return;
 }
