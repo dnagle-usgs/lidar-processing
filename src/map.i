@@ -63,22 +63,53 @@ if ( is_void( dllmap ) ) {
 
 
 func show_map( m,color=,utm=,width=, noff=, eoff= ) {
+ /*DOCUMENT show_map( m,color=,utm=,width=, noff=, eoff= )
+   This function plots the base map in either lat lon or utm.  For utm, if the map crosses 2 or more zones, the user is prompted for the zone number. 
+   Original: C. W. Wright
+   Modified by amar nayegandhi to include utm plot.
+ */
+ extern curzone;
  if (!(noff)) noff = 0;
  if (!(eoff)) eoff = 0;
  sz = dimsof(m)(2);
  if (is_void(width)) width = 1.0
  if ( is_void( color ) )
-	color = "black"
+	color = "black";
+ if (utm) {
+    // check for zone boundaries
+    minlon = 361.0
+    maxlon = -361.0
+    for (i=1;i<=sz;i++) {
+      if (min(*m(i))(1,) < minlon) minlon = min((*m(i))(,2));
+      if (max(*m(i))(1,) > maxlon) maxlon = max((*m(i))(,2));
+    }
+    zmaxlon = int(maxlon+180)/6 + 1;
+    zminlon = int(minlon+180)/6 + 1;
+    zdiff = zmaxlon - zminlon;
+    curzone = 0;
+    if (zdiff > 0) {
+      // map data definitely crosses atleast 2 zones
+      write, format="Selected Base Map crosses %d UTM Zones. \n",zdiff;
+      write, format="Select Zone Number from %d to %d: \n", zminlon, zmaxlon;
+      strzone = rdline( prompt="Enter Zone Number: ");
+      sread, strzone, format="%d",curzone;
+    } 
+ }
  for (i=1; i<=sz; i++ ) {
   a = *m(i);
   if (utm) {
     u = fll2utm(a(,1),a(,2));
-    u = combine_zones(u);
-    zone = u(3,1);
-    u = u(1:2,);
-    a = transpose(u);
+    //u = combine_zones(u);
+    zone = u(3,);
+    idxcurzone = where(zone == curzone);
+    if (is_array(idxcurzone)) {
+      u = u(1:2,idxcurzone);
+      a = transpose(u);
+    } else { a = []; }
   }
-  plg,a(,1)+noff,a(,2)+eoff,marks=0,color=color, width=width;
+  if (is_array(a)) {
+    plg,a(,1)+noff,a(,2)+eoff,marks=0,color=color, width=width;
+  }
  }
 }
 

@@ -190,7 +190,7 @@ func gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=, pmulti=) {
  This function uses the 'points in polygon' technique to select a region in the gga window.
  Also see: getPoly, plotPoly, testPoly, gga_win_sel
  */
- extern ZoneNumber, utm, ply, q
+ extern ZoneNumber, utm, ply, q, curzone
  if (!(pmulti)) q = [];
  if ( is_void(win) ) 
 	win = 6;
@@ -199,13 +199,13 @@ func gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=, pmulti=) {
      ply = getPoly();
      box = boundBox(ply);
      if (utm) {
-        xx = fll2utm(gga.lat, gga.lon);
-        zidx = (xx(2,)-box(1,1))(mnx);
-        ZN = xx(3,zidx);
+        //xx = fll2utm(gga.lat, gga.lon);
+        //zidx = (xx(2,)-box(1,1))(mnx);
+        ZN = curzone;
         box = transpose(utm2ll(box(2,), box(1,), ZN));
 	ply = transpose(utm2ll(ply(2,), ply(1,), ZN));
 	show = 0;
-	}
+     }
      box_pts = ptsInBox(box, gga.lon, gga.lat);
      poly_pts = testPoly(ply, gga.lon(box_pts), gga.lat(box_pts));
      if (!(pmulti)) {
@@ -288,7 +288,7 @@ if you set show=1 when using this function.  The screen will reverse fg/bg and n
 properly to the zoom buttons.
  
 */
- extern ZoneNumber, utm, ply
+ extern ZoneNumber, utm, ply, curzone;
  if ( is_void(win) ) 
 	win = 6;
 
@@ -317,8 +317,8 @@ properly to the zoom buttons.
    plg, a_y, a_x, color=color;
  }
  if (utm == 1) {
-     minll = utm2ll(minlat, minlon, ZoneNumber(1));
-     maxll = utm2ll(maxlat, maxlon, ZoneNumber(1));
+     minll = utm2ll(minlat, minlon, curzone);
+     maxll = utm2ll(maxlat, maxlon, curzone);
      minlat = minll(2);
      maxlat = maxll(2);
      minlon = minll(1);
@@ -629,6 +629,7 @@ func show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, wid
    See also: plmk, plg, color
 
 */
+  extern curzone;
   if ( is_void( width ) ) 
 	width= 5.0;
   if ( is_void( msize ) ) 
@@ -648,20 +649,39 @@ func show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, wid
   if (utm == 1) {
   	/* convert latlon to utm */
 	u = fll2utm(y, x);
-        u = combine_zones(u);
-	x = u(2,);
-	y = u(1,);
+	// check to see if data crosses utm zones
+	zd = where(abs(u(3,)(dif)) > 0);
+	if (is_array(zd)) {
+	  write, "Selected flightline crosses UTM Zones."
+	  if (curzone) {
+	     write, format="Using currently selected zone number: %d\n",curzone;
+	  } else {
+	     read, prompt="Enter Zone Number: ",curzone;
+	  }
+	  zidx = where(u(3,) == curzone);
+	  if (is_array(zidx)) {
+	    x = u(2,zidx);
+	    y = u(1,zidx);
+	  } else {
+	    x = y = [];
+	  }
+	} else {
+	  x = u(2,);
+	  y = u(1,);
+	}
   }
 
  if ( skip == 0 ) 
 	skip = 1;
 
   if ( lines  ) {
-     plg, y(1:0:skip), x(1:0:skip), color=color, marks=0, width=width;
+    if (is_array(x) && is_array(y)) 
+      plg, y(1:0:skip), x(1:0:skip), color=color, marks=0, width=width;
      }
 
  if ( marker ) {
-  plmk,y(1:0:skip), x(1:0:skip), 
+    if (is_array(x) && is_array(y)) 
+      plmk,y(1:0:skip), x(1:0:skip), 
     color=color, msize=msize, marker=marker, width=width;
     }
 }
