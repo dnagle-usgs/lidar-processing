@@ -804,6 +804,7 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset
  write,format="Window: %d. Left: examine point, Center: Set Reference, Right: Quit\n",win
  spot = mouse(1,1,"");
  mouse_button = spot(10);
+ if ( mouse_button == right_mouse ) break;
 
 
 // Breaking the following where into two sections generally increases
