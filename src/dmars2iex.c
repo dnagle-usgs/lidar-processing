@@ -99,7 +99,7 @@ configure_header_defaults() {
   hdr.dAccelScaleFactor   =  19.6/(pow(2.0,15.0));
   hdr.iUtcOrGpsTime       =     2;
   hdr.iRcvTimeOrCorrTime  =     2;
-  hdr.dTimeTagBias        =   0.0;
+  hdr.dTimeTagBias        =  13.0;
 
 // EAARL Specific stuff below
   hdr.nrecs	          =     0; // Gets filled in after pass 1.
@@ -317,11 +317,11 @@ main( int argc, char *argv[] ) {
           tarray, 
           time_recs, 
           dmars_recs,
-	  sizeof(hdr),
+          sizeof(hdr),
           sizeof(IEX_RECORD),
           hdr.dGyroScaleFactor,
           hdr.dAccelScaleFactor
-         );
+     );
   tm = gmtime( (time_t *)&tarray[idx].secs );
   dmars_2_gps = (tm->tm_wday*86400 +tarray[idx].secs%86400) - 
                 tarray[idx].dmars_ticks/200 ;

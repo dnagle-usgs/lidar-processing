@@ -57,6 +57,7 @@
 # rdmars
 ###############################################################################
 ../bin/rdmars:	rdmars.o
+		mkdir -p  ../bin
 		cc -lm -o ../bin/rdmars rdmars.o
 	
 
@@ -64,7 +65,8 @@
 # dmars
 ###############################################################################
 ../bin/dmars2iex:	dmars2iex.o
-		cc -lm -o ../bin/dmars2iex tans2bin.o
+		mkdir -p  ../bin
+		cc -lm -o ../bin/dmars2iex dmars2iex.o
 	
 ###############################################################################
 # pospac2ybin Converts a pospac SBET data file produced by pospac 
