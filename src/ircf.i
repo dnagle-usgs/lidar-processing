@@ -6,7 +6,7 @@ write, "$Id$";
 require, "msort.i"
 require, "rcf.i"
 
-func rcf_triag_filter(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=, plottriag=, plottriagwin=, prefilter_min=, prefilter_max=, distthresh=) {
+func rcf_triag_filter(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=, plottriag=, plottriagwin=, prefilter_min=, prefilter_max=, distthresh=, datawin=) {
   /* DOCUMENT rcf_triag_filter(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=)
  this function splits data sets into manageable portions and calls new_rcfilter_eaarl_pts that 
 uses the random consensus filter (rcf) and triangulation method to filter data.
@@ -33,6 +33,7 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
   plottriagwin = windown number where triangulations should be plotted (default = 0)
   distthresh = distance threshold that defines the max length of any side of a triangle 
 		(default: 100m) set to 0 if you don't want to use it.
+  datawin = window number where unfiltered data is plotted (when interactive=1)
    OUTPUT:
     rcf'd data array of the same type as the 'eaarl' data array.
 
@@ -47,7 +48,8 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
  new_eaarl_all = [];
  data_out = [];
  if (!mode) mode = 3;
- if (is_void(distthresh)) distthresh = 100
+ if (is_void(distthresh)) distthresh = 100;
+ if (is_void(datawin)) datawin = 5;
  ecount = 0;
 
  endit = 0; // if set, will end the iteration mode
@@ -150,7 +152,12 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
   for (j=1;j<numberof(spany);j++) {
     for (k=1;k<numberof(spanx);k++) {
        isp1 = data_box(eaarl.east, eaarl.north,  spanx(k)*100-100, spanx(k+1)*100+100, spany(j)*100-100, spany(j+1)*100+100);
-       //window, 5; plg, [spany(j), spany(j), spany(j+1), spany(j+1), spany(j)], [spanx(k), spanx(k+1), spanx(k+1), spanx(k), spanx(k)], color="red";
+       if (interactive) {
+         w = window();
+         window, datawin; 
+	 plg, [spany(j), spany(j), spany(j+1), spany(j+1), spany(j)], [spanx(k), spanx(k+1), spanx(k+1), spanx(k), spanx(k)], color="red";
+	 window, w;
+       }
        if (!is_array(isp1)) continue;
        eaarl1 = eaarl(isp1);
        xx = new_rcfilter_eaarl_pts(eaarl1, buf=buf, w=w, mode=mode, no_rcf=no_rcf, fbuf=fbuf, fw=fw, tw=tw, interactive=interactive, tai=tai, plottriag=plottriag, plottriagwin=plottriagwin);
@@ -457,8 +464,8 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
   verts = triangulate_xyz(data=new_eaarl_all, plot=plottriag, win=plottriagwin, mode=mode, distthresh=distthresh, dolimits=1);
   if (is_void(plottriagwin)) plottriagwin = 0;
 
-  endit;
-  done;
+  //endit;
+  //done;
   if ((interactive == 1) && (!endit) && (!done)) {
     // allow interactive mode to remove any outliers
     ques = "";
@@ -650,7 +657,7 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
   }
   */
   }
-  write, format="%d of %d iterations complete\n",j,numberof(spany);
+  write, format="%d of %d iterations complete\r",j,numberof(spany);
  }
   write, format="%d of %d facets complete\n",numberof(verts(1,ito)),numberof(verts(1,ito));
   write, format="%d new points added in this iteration.\n",(ncount-n_eaarl);

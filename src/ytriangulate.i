@@ -124,8 +124,11 @@ func triangulate_xyz(file=, savefile=, data=, plot=, mode=, win=, distthresh=, d
     n = array(int,numberof(zz))
     n(*) = 3
     window, win; fma; 
-    if (dolimits) limits, square=1;
-    plfp, zz, yy, xx, n, edges=1
+    if (dolimits) {
+        limits, square=1;
+	limits;
+    }
+    plfp, zz, yy, xx, n, edges=0
     colorbar, min(zz), max(zz), units="m";
     window, w;
   }
