@@ -66,6 +66,7 @@ for(i=1; !(eof) ; i++)
    add_variable, newf, -1, vname, structof(new_data), dimsof(new_data);
    get_member(newf,vname) = new_data;
    save, newf , vname;
+   close, newf;
 
 }
 
