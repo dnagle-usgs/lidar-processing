@@ -1,7 +1,12 @@
+; $Id$
 function extract_closest_raster, data, east, north, maxdist, minpt=minpt, rastdist=rastdist, $
 	retdist=retdist
   ; this procedure extracts the closest raster from the given (east,north) location
   ; amar nayegandhi 10/08/03
+  ; modified 10/14/03 to search for given raster outside of the selected area (using maxdist); 
+	; included check for soe (to ensure selected raster number is from the same day);
+	; the center point on the selected raster is now no more the closest point.  Instead, 
+	; it now searches for the closest minpt's from the closest point on the raster
   ; INPUT KEYWORDS:
   	;data:  EAARL data array
 	;east: Easting location in meters
@@ -40,7 +45,8 @@ function extract_closest_raster, data, east, north, maxdist, minpt=minpt, rastdi
   
   ;now find the raster number and all pulses in the same raster
   minrast = sel_data(id).rn AND 'ffffff'XL
-  minpulseidx = where((sel_data.rn  AND 'ffffff'XL) eq minrast)
+  ; search for the same raster within the entire data set
+  minpulseidx = where((data.rn  AND 'ffffff'XL) eq minrast)
   if (n_elements(minpulseidx) lt minpt) then begin 
 	sel_data = remove_this_raster(sel_data, id)
   	if (sel_data(0).rn ne -1) then begin
@@ -49,15 +55,32 @@ function extract_closest_raster, data, east, north, maxdist, minpt=minpt, rastdi
 	    break
 	endelse
   endif
-  rast_data = sel_data(minpulseidx)
+  rast_data = data(minpulseidx)
+  ; now check to see that all the rast_data come from the same day (within 12 hours)
+  dayidx = where(abs(rast_data.soe - sel_data(id).soe) le 48200) 
+  
+  rast_data = rast_data(dayidx)
+ 
+  ; find the unique elements
+  uidx = uniq(rast_data.rn)
+  rast_data = rast_data(uidx)
+  if (n_elements(rast_data) lt minpt) then begin 
+	sel_data = remove_this_raster(sel_data, id)
+  	if (sel_data(0).rn ne -1) then begin
+	   continue
+	endif else begin
+	    break
+	endelse
+  endif
+
   rast_east = sel_data(id).east
   rast_north = sel_data(id).north
   ; rast_east and rast_north are the closest points on the raster to the given location
 
   ;now calculate the distance along the raster from rast_east and rast_north
   rast_dist = sqrt((rast_data.east-rast_east)^2 + (rast_data.north-rast_north)^2)
-  ;now find the points that are retdist/2 away from the raster center point
-  rastidx = where(rast_dist le (rastdist*100.)/2.)
+  ;now find the points that are rastdist away from the raster center point
+  rastidx = where(rast_dist le (rastdist*100.))
   if (n_elements(rast_data(rastidx)) lt minpt) then begin
 	sel_data = remove_this_raster(sel_data, id)
 	if (sel_data(0).rn ne -1) then begin
@@ -66,6 +89,10 @@ function extract_closest_raster, data, east, north, maxdist, minpt=minpt, rastdi
 	    break
 	endelse
   endif
+  ;now find the closest minpt's from rast_east and rast_north
+  sortidx = sort(rast_dist(rastidx))
+  sortidx = sortidx(0:minpt-1)
+
   success = 1
   break
 
@@ -74,6 +101,7 @@ function extract_closest_raster, data, east, north, maxdist, minpt=minpt, rastdi
  if (success eq 1) then begin
   retdist = mindist/100.
   retdata = rast_data(rastidx)
+  retdata = retdata(sortidx)
 
   return, retdata
  endif else begin
