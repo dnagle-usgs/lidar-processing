@@ -838,6 +838,7 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset
  nsaved = 0;
  do {
  write,format="Window: %d. Left: examine point, Center: Set Reference, Right: Quit\n",win
+ window,win; 
  spot = mouse(1,1,"");
  mouse_button = spot(10) + 10 * spot(11);
  if ( mouse_button == right_mouse ) break;
@@ -945,6 +946,7 @@ write,"============================================================="
 	} else if (disp_type == 3) {
 	  a = [];
 	  ex_veg, rasterno, pulseno,  last=250, graph=1, win=0; use_peak=1;
+          if ( _errno < 0 ) continue;
 	  z = mindata.lelv/100.;
           window, win; plcm, z, mindata.north/100., 
                              mindata.east/100., msize = msize*1.5, 

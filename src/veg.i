@@ -226,9 +226,15 @@ func ex_veg( rn, i,  last=, graph=, win=, use_centroid=, use_peak=, pse= ) {
 
 */
 
- extern ex_bath_rn, ex_bath_rp, a
-  irange = a(where(rn==a.raster)).irange(i);
-  intensity = a(where(rn==a.raster)).intensity(i);
+ extern ex_bath_rn, ex_bath_rp, a, irg_a, _errno
+  _errno = 0;		// If not specifically set, preset to assume no errors.
+  if ( (rn == 0 ) && ( i == 0 ) ) {
+     write,format="Are you clicking in window %d?,  No data was found.\n",win
+     _errno = -1;
+     return ;
+  }
+  irange = irg_a(where(rn==irg_a.raster)).irange(i);
+  intensity = irg_a(where(rn==irg_a.raster)).intensity(i);
   rv = VEGPIX();			// setup the return struct
   rv.rastpix = rn + (i<<24);
   if (irange < 0) return rv;
@@ -251,8 +257,10 @@ func ex_veg( rn, i,  last=, graph=, win=, use_centroid=, use_peak=, pse= ) {
 
   n  = numberof(*rp.rx(i, 1)); 
   rv.sa = rp.sa(i);
-  if ( n == 0 ) 
+  if ( n == 0 ) {
+	_errno = -1;
 	return rv;
+  }
 
   w  = *rp.rx(i, 1);  aa(1:n, i) = float( (~w+1) - (~w(1)+1) );
 ///////  w2 = *rp.rx(i, 2);  aa(1:n, i,2) = float( (~w2+1) - (~w2(1)+1) );
@@ -291,7 +299,8 @@ func ex_veg( rn, i,  last=, graph=, win=, use_centroid=, use_peak=, pse= ) {
 
 if (is_void(win)) win = 4;
 if ( graph ) {
-window,win; fma;limits
+window,win; fma;
+//limits
 plmk, aa(1:n,i,1), msize=.2, marker=1, color="black";
 plg, aa(1:n,i,1);
 plmk, da, msize=.2, marker=1, color="black";
@@ -345,6 +354,7 @@ write, format="rn=%d; i = %d\n",rn,i
    	rv.mx1 = -1;
 	rv.mv1 = -11;
 	rv.nx  = -1;
+	_errno = 0;
         return rv
        }
        if (pse) pause, pse;
@@ -436,8 +446,9 @@ write, format="rn=%d; i = %d\n",rn,i
     }
 
    } else { //donot use centroid or trailing edge
-      mx0 = irange+aa( xr(0):xr(0)+5, i, 1)(mxx) + xr(0) - 1;	  // find bottom peak now
-      mv0 = aa( mx0, i, 1);	          
+     mvx =  aa( xr(0):xr(0)+5, i, 1)(mxx);
+     mx0 = irange+aa( xr(0):xr(0)+5, i, 1)(mxx) + xr(0) - 1;	  // find bottom peak now
+      mv0 = aa( mvx, i, 1);	          
     }
     // stuff below is for mx1 (first surface in veg).
 
@@ -446,8 +457,10 @@ write, format="rn=%d; i = %d\n",rn,i
                                         // are in the primary (most sensitive)
                                         // receiver channel.
 
-       if ( np < 2 )                         // give up if there are not at
+       if ( np < 2 ) {                         // give up if there are not at
+	      _errno = -1;
               return;                            // least two points.
+       }
 
        if ( np > 12 ) np = 12;               // use no more than 12
        if ( numberof(where(  ((*rp.rx(i,1))(1:np)) == 0 )) <= 2 ) {
@@ -488,6 +501,7 @@ write, format="rn=%d; i = %d\n",rn,i
    	rv.mx1 = mx1;
 	rv.mv1 = mv1;
 	rv.nx  = numberof(xr);
+	_errno = 0;
 	return rv;
   }
   else {
@@ -497,6 +511,7 @@ write, format="rn=%d; i = %d\n",rn,i
    	rv.mx1 = -1;
 	rv.mv1 = rv.mv0;
 	rv.nx  = numberof(xr);
+	_errno = 0;
 	return rv;
   }
 }

@@ -205,7 +205,7 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
 
 */
  extern roll, pitch, heading, palt, utm, northing, easting
- extern a, _utm
+ extern a, irg_a, _utm
 
  if ( !is_void( center ) ) {
     if ( is_void(delta) ) 
@@ -223,6 +223,7 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
  } 
 
  a = irg(i,j, usecentroid=usecentroid, use_highelv_echo=use_highelv_echo);		
+ irg_a = a;
 
 atime   = a.soe - soe_day_start;
 
