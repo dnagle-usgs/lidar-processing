@@ -40,25 +40,27 @@ proc ycbar { } {
 
 
 proc display_mission_constants { l } {
+  global w1
   array set ary $l
-  set w .$ary(VarName)
-  destroy $w
-  toplevel $w
+  set w1 .$ary(VarName)
+  destroy $w1
+  toplevel $w1
   set row 0
   foreach {lbl x} $l {
-    label $w.l$lbl -text "$lbl:" -relief sunken -anchor e -padx 5
-    label $w.v$lbl{v}    -text  $x -relief sunken -padx 5
-    grid  $w.l$lbl -column 0  -row $row -sticky ew
-    grid  $w.v$lbl{v}    -column 1  -row $row -sticky ew
+    label $w1.l$lbl -text "$lbl:" -relief sunken -anchor e -padx 5
+    label $w1.v$lbl{v}    -text  $x -relief sunken -padx 5
+    grid  $w1.l$lbl -column 0  -row $row -sticky ew
+    grid  $w1.v$lbl{v}    -column 1  -row $row -sticky ew
     incr row
   }
-  button $w.dismiss -text "Dismiss" -command { destroy .ops_conf }
-  button $w.set     -text "Use these" -command "eval { 
+  button $w1.dismiss -text "Dismiss" -command { 
+	destroy $w1 }
+  button $w1.set     -text "Use these" -command "eval { 
      exp_send ops_conf=$ary(VarName)\\r; 
-     destroy $w }" 
-  grid  $w.dismiss -row $row -column 0
-  grid  $w.set -row $row -column 1 -sticky ew
-  center_win $w
+     destroy $w1 }" 
+  grid  $w1.dismiss -row $row -column 0
+  grid  $w1.set -row $row -column 1 -sticky ew
+  center_win $w1
 }
 
 proc load_dmars {} { 
@@ -580,25 +582,26 @@ Button $w.show_grid -text "Show\nGrid Name" -command {
  $w.mb add cascade -label File     -underline 0 -menu $w.mb.file
 ### $w.mb add cascade -label Map      -underline 0 -menu $w.mb.map
  $w.mb add cascade -label "Maps/Nav"     -underline 0 -menu $w.mb.nav
- $w.mb add cascade -label "Attitude"     -underline 0 -menu $w.mb.attitude
+ $w.mb add cascade -label "Settings"     -underline 0 -menu $w.mb.attitude
  $w.mb add cascade -label Rasters  -underline 0 -menu $w.mb.rasters
  $w.mb add cascade -label Images   -underline 0 -menu $w.mb.images
  $w.mb add cascade -label Time     -underline 0 -menu $w.mb.time
  $w.mb add cascade -label New      -underline 0 -menu $w.mb.new
  $w.mb add cascade -label Help     -underline 0 -menu $w.mb.help
 
- $w.mb.file add command -label "Load EAARL Database Index (Edb)..." -command { load_edb }
+ $w.mb.file add command -label "Load EAARL Database Index (Edb)..." -command { load_edb } \
+	-underline 5
 
  exp_send "require, \"rbgga.i\"\r"
- $w.mb.file add command -label "Coastlines & Flight tracks"   -underline 2 \
+ $w.mb.file add command -label "Coastlines & Flight tracks"   -underline 0 \
 	-command rbgga_menu
- $w.mb.file add command -label "Load DMARS Attitude data..."   -underline 2 \
+ $w.mb.file add command -label "Load DMARS Attitude data..."   -underline 5 \
    -command  load_dmars;
- $w.mb.file add command -label "Load Tans Attitude data..."   -underline 2 \
+ $w.mb.file add command -label "Load Tans Attitude data..."   -underline 5 \
    -command { exp_send "require, \"rbtans.i\"\r"
    	      expect ">"
     	      exp_send "tans = rbtans() \r" }
- $w.mb.file add command -label "Load GPS PNAV data..."   -underline 2 \
+ $w.mb.file add command -label "Load GPS PNAV data..."   -underline 9 \
    -command { exp_send "require, \"rbpnav.i\"\r"
     	      expect ">"
      	      exp_send "pnav = rbpnav() \r" }
@@ -651,7 +654,7 @@ Button $w.show_grid -text "Show\nGrid Name" -command {
 
 ##############################
 #   Attitude Sensors
-##############################
+#############################9
  $w.mb.attitude add command -label "Current Ops_conf Settings..." \
 	-command { exp_send "display_mission_constants, ops_conf, ytk=1\r"; }
  $w.mb.attitude add command -label "TANS Settings..." \
@@ -674,17 +677,18 @@ Button $w.show_grid -text "Show\nGrid Name" -command {
 
  exp_send "require, \"rbgga.i\"\r"
  menu $w.mb.nav.rbgga
- $w.mb.nav add command -label "Flight Tracks & Coastlines..."   -underline 2 \
+ $w.mb.nav add command -label "Flight Tracks & Coastlines..."   -underline 0 \
 	-command rbgga_menu
- $w.mb.nav add command -label "Load Tans Attitude data..."   -underline 2 \
+ $w.mb.nav add command -label "Load Tans Attitude data..."   -underline 5 \
    -command { exp_send "require, \"rbtans.i\"\r"
    	      expect ">"
     	      exp_send "tans = rbtans() \r" }
- $w.mb.nav add command -label "Load GPS PNAV data..."   -underline 2 \
+ $w.mb.nav add command -label "Load GPS PNAV data..."   -underline 9 \
    -command { exp_send "require, \"rbpnav.i\"\r"
     	      expect ">"
      	      exp_send "pnav = rbpnav() \r" }
-
+ $w.mb.nav add command -label "Load DMARS data..."   -underline 5 \
+   -command load_dmars
 
  set clist "black red blue green cyan magenta yellow white"
 
