@@ -1,4 +1,4 @@
-/*
+/**********************************************************************
 
    $Id$
 
@@ -6,7 +6,7 @@
    Original W. Wright 9/21/2003
 
 
-*/
+*********************************************************************/
 
 write, "$Id$"
 
@@ -123,6 +123,11 @@ func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color= ) {
 */
 
   glst = where(good);
+  if ( numberof(glst) == 0 ) {
+    write, "No points found along specified line";
+    return ;
+  }
+    
 
   y = fs.north(*)(glst) - l(2);
   x = fs.east(*)(glst)  - l(1);
@@ -168,7 +173,11 @@ func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color= ) {
     }
    }
  } else {
-  plmk, fs.elevation(*)(glst(llst))/100.0, rx(llst)/100.0
+   xx = rx(llst)/100.0;
+   si = sort(xx);
+   yy = fs.elevation(*)(glst(llst))/100.0;
+   plmk,yy,xx, color=color, msize=msize, marker=1
+  if ( connect ) plg, yy(si), xx(si),color=color
  }
 
 ///  limits,rx(llst)(min),rx(llst)(max),-4500,-2500
