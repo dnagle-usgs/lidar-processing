@@ -56,7 +56,7 @@ amar nayegandhi 04/05/04
 */
 
   
-  extern _pid;
+  // extern _pid;
   pidstr = swrite(format="%0d",_pid);
   //write points out to a temp file in /tmp
   file = "/tmp/triangle_"+pidstr+".node";
