@@ -401,6 +401,17 @@ proc rbgga_menu {} {
 
  pack $mw.f2 -side bottom -expand 1 -fill both
  pack $mw.f1 $mw.g1 -side left -anchor n -fill both -expand 1
+
+ frame $mw.f3 -relief groove -borderwidth 3
+ button $mw.f3.fpload    -text "Load" -command {
+    load_fp
+ }
+ label $mw.f3.title -text "Flight Plans"
+
+ pack $mw.f3.title -side top
+ pack $mw.f3 -side bottom -expand 1 -fill both
+ pack $mw.f3.fpload -side left
+### pack $mw.f3 -side bottom -anchor n -fill both -expand 1
 }
 
 

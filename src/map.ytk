@@ -28,6 +28,20 @@ proc plot_last_map {utm} {
   expect ">"
 }
 
+proc load_fp { } {
+ global _map w
+
+   set fn [ tk_getOpenFile -initialdir "$_map(path)" \
+	-filetypes { \
+	  {{ Fp Files} {.fp} }
+	  {{ All files} {*}    }
+         } ]
+   if { $fn != "" } {
+     setmapwindow
+     exp_send "fp=read_fp( \"$fn\", plot=1)\r"
+   }
+}
+
 proc load_map {utm} {
  global _map w
 

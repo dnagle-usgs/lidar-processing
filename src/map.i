@@ -15,12 +15,14 @@ func load_map( ffn=, color=,utm=) {
    Get the maps from: http://crusty.er.usgs.gov/coast/getcoast.html
    Use the "mapgen" format option. After you download the map, remove
    the first line (which is a comment beginning with a # sign).  This
-   function expects the map files to end with a .amap extension.  This
-   function uses sel_file to solicite a filename from the user.
+   function expects the map files to end with a .pbd or .amap extension.  
+   This function uses sel_file to solicite a filename from the user.
 
    C. W. Wright wright@web-span.com  99-03-20
 
-   Modified 11/3/2000 to display in utm coords.
+   9/4/2002  -ww modified to detect either .pbd or .amap and 
+             load accordingly.
+   11/3/2000 -an to display in utm coords.
 
    See also:   sel_file, ll2utm, show_map, convert_map
 
@@ -41,9 +43,17 @@ if ( is_void( ffn ) ) {
 if ( is_void(color) ) 
 	color= "black";
 
-mapf = openb(ffn);
-dllmap = [];
-restore,mapf
+typ = strtok(ffn,".")(2);
+typ
+if  ( typ == "pbd" ) {
+  mapf = openb(ffn);
+  dllmap = [];
+  restore,mapf
+} else {
+   convert_map( ffn=ffn, save=0);
+}
+
+
 if ( is_void( dllmap ) ) {
   print,,"This does not appear to be a pbd map file"
   return;
@@ -68,7 +78,7 @@ func show_map( m,color=,utm= ) {
  }
 }
 
-func convert_map ( ffn= , utm=) {
+func convert_map ( ffn= , utm=, save=) {
 /* DOCUMENT convert_map(ffn=)
 
    Convert a NOAA/USGS ASCII geographical coastline lat/lon map into 
@@ -95,6 +105,9 @@ func convert_map ( ffn= , utm=) {
 */
 extern map_path
 extern dllmap;		// array of pointers to digital map data
+
+ if ( is_void(save) ) 
+	save = 1;
 
 if ( is_void( map_path )  ) {
 // Set the following to where the maps are stored on your system.
@@ -128,12 +141,14 @@ for (i=0; i<100000; i++) {
  if ( n == 0 ) {
    close,mapf
    write,i," line segments loaded"
-   ofn = strtok( ffn, ".") (1);
-   ofn += ".pbd";
-   ofd = createb(ofn);
-   save,ofd,dllmap
-   close,ofd
-   write,format="Binary map saved to: %s\n", ofn
+   if ( save != 0 ) {
+     ofn = strtok( ffn, ".") (1);
+     ofn += ".pbd";
+     ofd = createb(ofn);
+     save,ofd,dllmap
+     close,ofd
+     write,format="Binary map saved to: %s\n", ofn
+   }
    return; 
  }
  n = n/2
