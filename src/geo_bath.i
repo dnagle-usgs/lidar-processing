@@ -560,7 +560,7 @@ See define_bath_ctl()
 	depth_all.east = deast;
 	depth_all.north = dnorth;
 
-	/* compute array ba_depth to write to a file */
+	/* compute array for bad attitude (ba_depth) to write to a file */
 	ba_indx_r = where(ba_depth.elevation < elv_thresh);
 	bdeast = ba_depth.east;
    	if ((is_array(ba_indx_r))) {
@@ -581,22 +581,22 @@ See define_bath_ctl()
       if (ext_bad_depth) {
         write, "Extracting false depths ";
         /* compare depth.depth with 0 */
-        ba_indx = where(depth_all.depth == 0);
+        bd_indx = where(depth_all.depth == 0);
 	bd_count += numberof(ba_indx);
 	bd_depth = depth_all;
 	deast = depth_all.east;
-	deast(ba_indx) = 0;
+	deast(bd_indx) = 0;
 	dnorth = depth_all.north;
-	dnorth(ba_indx) = 0;
-	depth_all.east = deast;
-	depth_all.north = dnorth;
+	dnorth(bd_indx) = 0;
+	//depth_all.east = deast;
+	//depth_all.north = dnorth;
 
-	/* compute array ba_depth to write to a file */
-	ba_indx_r = where(ba_depth.depth != 0);
-	bdeast = ba_depth.east;
-	bdeast(ba_indx_r) = 0;
-	bdnorth = ba_depth.north;
-	bdnorth(ba_indx_r) = 0;
+	/* compute array for bad depth (bd_depth) to write to a file */
+	bd_indx_r = where(bd_depth.depth != 0);
+	bdeast = bd_depth.east;
+	bdeast(bd_indx_r) = 0;
+	bdnorth = bd_depth.north;
+	bdnorth(bd_indx_r) = 0;
 	bd_depth.east = bdeast;
 	bd_depth.north = bdnorth;
 
