@@ -1079,7 +1079,7 @@ See also: GEOALL
 
 
   if ( is_void(win) ) 
-	win = 7;
+	win = 0;
 
 // build an edit array indicating where values are between -60 meters
 // and 3000 meters.  Thats enough to encompass any EAARL data than

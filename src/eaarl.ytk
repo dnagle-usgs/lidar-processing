@@ -399,7 +399,7 @@ proc rbgga_menu {} {
  grid $mw.g1.lwlb $mw.g1.lw -sticky ew
 
  label $mw.g1.lclb -text "Line Color:" -anchor e
- tk_optionMenu $mw.g1.lc   gga(linecolor) black red blue green cyan magenta yellow white
+ tk_optionMenu $mw.g1.lc   gga(linecolor)  red black blue green cyan magenta yellow white
  grid $mw.g1.lclb $mw.g1.lc -sticky ew
 
  label $mw.g1.skiplb -text "Points to skip:" -anchor e

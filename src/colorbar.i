@@ -2,6 +2,36 @@
    $Id$
 */
 write, "$Id$" 
+
+
+func set_cbar( bar ) {
+/* DOCUMENT set_cbar(bar)
+   
+   Lets the  user interactively set the color bar for the histogram
+  in window,7
+
+*/
+  window,0 
+  if ( bar == "cmax" ) {
+    write, "Select a point to use as Cmax from window,7"
+    m = mouse();
+    cmd = swrite(format="set cmax %f", m(1) );
+  } else if ( bar == "cmin" ) {
+    write, "Select a point to use as Cmin from window,7"
+    m = mouse();
+    cmd = swrite(format="set cmin %f", m(1) );
+  } else if ( bar == "both" ) {
+    write, "Select Cmin from window,7"
+    m = mouse();
+    cmd = swrite(format="set cmin %f;", m(1) );
+    write, "Select Cmax from window,7"
+    m = mouse();
+    cmd = swrite(format="%s set cmax %f; destroy .cbartool", cmd, m(1) );
+  } else
+      return;
+  tkcmd, cmd
+}
+
 func colorbar(cmin, cmax, drag=, delta=, landscape=, units=, datum=)
 /* DOCUMENT colorbar
             colorbar, cmin, cmax, drag=

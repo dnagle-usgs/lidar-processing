@@ -1259,6 +1259,43 @@ proc retrieve_plot_settings {pvar_no} {
    
 }
 
+proc cbar_tool { } {
+  set w .cbartool
+  destroy $w
+  toplevel $w
+  wm title $w "Color Bar Tool"
+  frame $w.1
+  Button $w.both -text "Both" \
+         -helptext "Interactively set Cmin, Cmax by \
+                     clicking in the histogram window" \
+         -command {
+          exp_send "set_cbar, \"both\" \r"
+         }
+  Button $w.cmax -text "Cmax" \
+         -helptext "Interactively set Cmax by \
+                     clicking in the histogram window" \
+         -command {
+          exp_send "set_cbar, \"cmax\" \r"
+         }
+  Button $w.cmin -text "Cmin" \
+         -helptext "Interactively set Cmin by \
+                     clicking in the histogram window" \
+         -command {
+          exp_send "set_cbar, \"cmin\" \r"
+         }
+  Button $w.dismiss -text "Dismiss" -command {
+           destroy .cbartool
+         }
+  pack \
+	$w.both \
+	$w.cmax \
+	$w.cmin \
+	$w.dismiss \
+	-side top \
+	-fill both
+}
+
+
 proc save_plot_settings {pvar_no} {
   global cmin cmax msize markerv var_type plist
   #puts "to save $var_type in _$var_type"
@@ -1313,6 +1350,7 @@ Button .l1wid.bf45.q.2 -text "Histogram\nElevations" \
         exp_send "hst = hist_veg($var_type); \r"
       }
      }
+     cbar_tool
   }
 
 Button .l1wid.bf45.q.1 -text "Pixel\nWaveform" \
