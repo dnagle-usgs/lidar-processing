@@ -439,7 +439,8 @@ window is 6, and color is magenta.
 	color="magenta";
   w = window();
   window,6;
-  pldj, fp.lon1,fp.lat1,fp.lon2,fp.lat2,color=color;
+  r = 1:0
+  pldj, fp.lon1(r),fp.lat1(r),fp.lon2(r),fp.lat2(r),color=color;
   window(w);
 }
 
@@ -477,8 +478,6 @@ extern a;
 	nc++; 
      else 
         nc = 0;
-i
-a
      w="";x="";y="";z="";
      if ((a > "") && !(strmatch(a,"#"))) {
        sread, a, w,x,y,z;
