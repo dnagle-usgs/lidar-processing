@@ -211,19 +211,19 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=) {
  // non raster format (FS, GEO, VEG).
  a = structof(eaarl(1));
  if (a == R) {
-     data_out = r_to_fs(eaarl);
+     data_out = clean_fs(eaarl);
  }
 
  if (a == GEOALL) {
-     data_out = geoall_to_geo(eaarl);
+     data_out = clean_bathy(eaarl);
  }
 
  if (a == VEG_ALL) {
-     data_out = veg_all_to_veg_(eaarl);
+     data_out = clean_veg(eaarl);
  }
 
  if (a == VEG_ALL_) {
-     data_out = veg_all__to_veg__(eaarl);
+     data_out = clean_veg(eaarl);
  }
 
  if (is_array(data_out)) eaarl = data_out;

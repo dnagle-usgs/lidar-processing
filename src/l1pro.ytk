@@ -112,6 +112,7 @@ menu .l1wid.mb.file
 menu .l1wid.mb.load
 menu .l1wid.mb.options
 menu .l1wid.mb.graph
+menu .l1wid.mb.filter
 .l1wid.mb   add cascade -label File -underline 0 -menu .l1wid.mb.file
 
 .l1wid.mb.file add command -label "Read Binary Data file..." -underline 0 -command {
@@ -722,11 +723,11 @@ menu .l1wid.mb.graph
 	plot_fltlines 1
 	
     }
-#    Button .l1plot.write -text "Write Datafile" -command {
+    Button .l1plot.write -text "Write Datafile" -command {
 #	 set write_some 1
 #	 make_selected_arrays {junk}
 #        .l1wid.bf5.1 invoke	
-#    }
+    }
 
     pack .l1plot.1.lb .l1plot.1.yscroll -side left -fill y 
     pack .l1plot.1 .l1plot.xscroll -side top -fill x
@@ -903,7 +904,82 @@ proc hist_linlog {} {
 .l1wid.mb.graph add radiobutton \
         -label "100 Dpi (1100x850)" -value "1100" -variable plot_dpi -underline 1
 
+.l1wid.mb   add cascade -label Filter -underline 1 -menu .l1wid.mb.filter
 
+.l1wid.mb.filter add command -label "RCF Region Filter" -underline 0 -command {
+    rcf_region
+}
+
+proc rcf_region {} {
+    global varlist
+    destroy .rcf
+    toplevel .rcf
+    wm title .rcf "Random Consensus Filter"
+    frame .rcf.1
+    frame .rcf.2
+    frame .rcf.3
+    frame .rcf.4
+    LabelEntry .rcf.1.buf -width 4 -relief sunken -label "Input Window (cm):" -helptext "The input window size that will slide through the data set (in centimeters)" \
+      -textvariable buf -text 500
+    LabelEntry .rcf.1.w -width 4 -relief sunken -label "Elevation width (cm):" -helptext "The vertical extent or range of the filter (in centimeters)" \
+      -textvariable w -text 20
+    LabelEntry .rcf.1.no -width 4 -relief sunken -label "Minimum winners:" -helptext "The minimum number of winners" \
+      -textvariable no_rcf -text 3
+
+    Label .rcf.2.varname -text "Input Variable:"
+    ComboBox .rcf.2.varlist  -values \
+  	$varlist \
+	-helptext "Select any one of the following variables to RCF" \
+	-editable 0 \
+        -modifycmd { 
+         global outvar varlist
+         set curvar [lindex $varlist [.rcf.2.varlist getvalue]]
+         set outvar "rcf_$curvar"
+        }
+
+    set curvar [.l1wid.bf45.p.15 getvalue]
+    .rcf.2.varlist setvalue @$curvar
+
+    Label .rcf.2.dispname -text "Mode:"
+    ComboBox .rcf.2.disp -width 20 -values \
+	"First_Return_Topography Bathymetry \
+	 Bare_Earth_Topography" \
+	-helptext "Select any one of the following" \
+	-editable 0 
+	   
+    set curproc [.l1wid.bf4.1.p getvalue]
+    .rcf.2.disp setvalue @$curproc
+
+    set curvar  [lindex $varlist [.rcf.2.varlist getvalue]]
+    LabelEntry .rcf.4.outvar -relief sunken -label "Output Variable:" -helptext "Define output variable" \
+	-textvariable outvar -text "rcf_$curvar"
+
+    Button .rcf.3.go -width 8 -text "Go" \
+       -command {
+        global varlist outvar
+        set curvar [lindex $varlist [.rcf.2.varlist getvalue]]
+        switch [.rcf.2.disp getvalue] {
+        "0" { set mode 1}
+        "1" { set mode 2}
+        "2" { set mode 3}
+        } 
+	lappend varlist $outvar
+        .l1wid.bf45.p.15 configure -values $varlist
+        varlist_plot
+        .varplot.1.lb insert end $addvar
+        exp_send "$outvar = rcfilter_eaarl_pts($curvar, buf=$buf, w=$w, no_rcf=$no_rcf);\r\n"
+        
+    }
+    Button .rcf.3.cancel -text "Cancel" -width 8 -command {
+          destroy .rcf
+    }
+    pack .rcf.1.buf .rcf.1.w .rcf.1.no -side left -padx 3
+    pack .rcf.2.varname .rcf.2.varlist .rcf.2.dispname .rcf.2.disp -side left -padx 3
+    pack .rcf.4.outvar
+    pack .rcf.3.go .rcf.3.cancel -side left -padx 5
+    pack .rcf.1 .rcf.2 .rcf.4 .rcf.3 -side top -pady 10
+}
+  
 
 ComboBox .l1wid.bf4.1.d -text "Define Region using..." -width 22 -values "Rubberband-Box Points-in-Polygon Line-Segment Enter_Rectangular_Coordinates Multiple-PIPs" -helptext "Select region to process using any of the following methods" -editable 0 -modifycmd {
     set defr [.l1wid.bf4.1.d getvalue]
@@ -1413,6 +1489,10 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
 	pack .l1clip.proc .l1clip.ymin .l1clip.min .l1clip.ymax .l1clip.max .l1clip.yrange .l1clip.range .l1clip.1 -side top -pady 5	
   }
 
+.l1wid.bf45.q.4 configure -state disabled
+
+.l1wid.bf45.q.4 configure -state disabled
+
 
 
 
@@ -1696,4 +1776,7 @@ proc plot_fltlines {sel} {
        }
      }
 }
+
+.l1wid.mb.options entryconfigure 3 -state disabled
+
 

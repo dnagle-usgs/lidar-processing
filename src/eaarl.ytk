@@ -262,7 +262,7 @@ proc load_edb {} {
  $w.mb.images add command -label "1-Hz Digital Camera Images..." -command {
     start_sf
  }
- $w.mb.images add command -label "Process Level 1 Lidar Data..." -command {
+ $w.mb.images add command -label "Process Lidar Data..." -command {
     source l1pro.ytk 
  }
  $w.mb.images add command -label "Lidar First Return Surface..." -command {
@@ -508,3 +508,8 @@ proc rbgga_menu {} {
 
 
 
+## disabled unused menu options
+$w.mb.nav entryconfigure 1 -state disabled
+$w.mb.images entryconfigure 4 -state disabled
+$w.mb.images entryconfigure 5 -state disabled
+$w.mb.images entryconfigure 6 -state disabled
