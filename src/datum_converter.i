@@ -33,9 +33,11 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, type=) {
    // convert...
    if (tonad83) {
      data_out = wgs842nad83(data_in);
+     if (tonavd88) 
+       data_in = data_out;
    }
    if (tonavd88) {
-     data_out = nad832navd88(data_out);
+     data_out = nad832navd88(data_in);
    }
    // convert data back to utm
    utmdata_out = fll2utm(data_out(2,), data_out(1,));
@@ -51,9 +53,11 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, type=) {
    // convert...
    if (tonad83) {
      data_out = wgs842nad83(data_in);
+     if (tonavd88) 
+       data_in = data_out;
    }
    if (tonavd88) {
-     data_out = nad832navd88(data_out);
+     data_out = nad832navd88(data_in);
    }
    // convert data back to utm
    utmdata_out = fll2utm(data_out(2,), data_out(1,));
@@ -71,9 +75,11 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, type=) {
       // convert...
       if (tonad83) {
         data_out = wgs842nad83(data_in);
+        if (tonavd88) 
+          data_in = data_out;
       }
       if (tonavd88) {
-        data_out = nad832navd88(data_out);
+        data_out = nad832navd88(data_in);
       }
       // convert data back to utm
       utmdata_out = fll2utm(data_out(2,), data_out(1,));
