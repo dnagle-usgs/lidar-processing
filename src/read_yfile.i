@@ -1177,7 +1177,7 @@ func merge_data_pbds(filepath, write_to_file=, merged_filename=, vname=, skip=, 
  if (!skip) skip = 1;
  eaarl = [];
  // find all the pbd files in filepath
- s = array(string, 1000);
+ s = array(string, 10000);
  if (searchstring) ss = [searchstring];
  if (!searchstring) ss = ["*.pbd"];
  scmd = swrite(format="find %s -name '%s'", filepath, ss);
