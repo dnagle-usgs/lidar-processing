@@ -783,9 +783,10 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=) {
     write, format="       Raster: %6d    Pulse: %d\n",rasterno, pulseno;
     write, format="Plot   raster: %6d waveform: %d\n",rasterno(1), pulseno(1);
     if (_ytk) {
-      window, 1;
+      window,1,wait=1
       ytk_rast, rasterno(1);
-      window, 0;
+      window, 0, wait=1; redraw;
+      tkcmd, swrite(format="set rn %d", rasterno(1))
       show_wf, *wfa, pulseno(1), win=0, cb=7;
       if (is_void(cmin) || is_void(cmax)) {
         window, win; plmk, mindata.north/100., 

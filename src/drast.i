@@ -39,7 +39,7 @@ extern wfa, depth_display_units;
 extern _ytk_rast;
  r = get_erast(rn=rn);
  rr = decode_raster(r);
- window,1; fma;
+ window,1,wait=0; fma;
  wfa  = ndrast(rr, units=depth_display_units);
  if ( is_void( _ytk_rast) ) {
    limits;
