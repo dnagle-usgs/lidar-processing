@@ -50,6 +50,7 @@ set auto_path "$auto_path /usr/lib"
 
 package require Img
 package require BWidget
+package require vfs::tar
 
 # ] End Script Initialization ######################
 
@@ -83,6 +84,7 @@ set mark_range_inc 1;# Increment for ranges
 set range_touched 0 ;# Have fcin or lcin been set but not used?
 
 set camtype 1       ;# Default camera type -- may be overridden by .lst commands
+set tarname ""      ;# Tar file to access - may be changed by .lst commands
 
 set frame_off 0     ;# Frame offset
 
@@ -173,7 +175,11 @@ proc load_file_list { f } {
 	global ci fna imgtime dir 
 	global lat lon alt seconds_offset timern frame_off
 	global DEBUG_SF
-	global camtype mark mogrify_exists mogrify_pref
+	global camtype tarname mark mogrify_exists mogrify_pref
+
+	# Reset defaults
+	set camtype 1
+	set tarname ""
 
 	# Initialize variables
 	# hour minute seconds
@@ -497,7 +503,7 @@ proc show_img { n } {
 	global llat llon
 	global pitch roll head yes_head
 	global zoom camtype DEBUG_SF
-	global mogrify_pref mogrify_exists
+	global mogrify_pref mogrify_exists tarname
 
 	set cin $n
 
@@ -508,9 +514,19 @@ proc show_img { n } {
 		if { [string equal $mogrify_pref "prefer tcl"    ] } { set prefer_tcl     1 } else { set prefer_tcl     0 }
 		if { [string equal $mogrify_pref "prefer mogrify"] } { set prefer_mogrify 1 } else { set prefer_mogrify 0 }
 
-		# Copy the file to a temp file, to protect the original from changes
-		set fn $dir/$fna($n)
+		if { [string length $tarname] > 0 } {
+			if { [ catch { vfs::tar::Mount "$dir/$tarname" tar } ] } {
+				tk_messageBox -message "File not found: $tarname" -icon error
+				error "File not found: $tarname"
+			} else {
+				set fn tar/$fna($n)
+			}
+		} else {
+			set fn $dir/$fna($n)
+		}
 										if { $DEBUG_SF } { puts "fn: $fn" }
+
+		# Copy the file to a temp file, to protect the original from changes
 		file copy -force $fn /tmp/sf_tmp_[pid].jpg
 		set fn /tmp/sf_tmp_[pid].jpg
 
@@ -1245,17 +1261,6 @@ if { $DEBUG_SF } { enable_controls }
 
 # ] End GUI Initialization #########################
 
-# [ Display necessary notices ######################
-
-if {!$mogrify_exists && $no_mog_messages != 0} {
-	tk_messageBox  \
-		-message "Since mogrify does not exist on your system, some features will not work correctly. Zooming will round to the nearest even fraction (1/2, 1/3, 1/4, etc.), so the amount that is zoomed to may not be what is indicated. Including heading information is disabled due to the inability to rotate images. Please install ImageMagick <http://www.imagemagick.org/> to correct these issues."  \
-		-type ok
-	set show_mog_message 0
-}
-
-# ] End Display necessary notices ##################
-
 # [ Variable Traces ################################
 
 if { [catch {package require Tcl 8.4}] } {
@@ -1267,3 +1272,14 @@ if { [catch {package require Tcl 8.4}] } {
 }
 
 # ] End Variable Traces ############################
+
+# [ Display necessary notices ######################
+
+if {!$mogrify_exists && $no_mog_messages != 0} {
+	tk_messageBox  \
+		-message "Since mogrify does not exist on your system, some features will not work correctly. Zooming will round to the nearest even fraction (1/2, 1/3, 1/4, etc.), so the amount that is zoomed to may not be what is indicated. Including heading information is disabled due to the inability to rotate images. Please install ImageMagick <http://www.imagemagick.org/> to correct these issues."  \
+		-type ok
+	set show_mog_message 0
+}
+
+# ] End Display necessary notices ##################
