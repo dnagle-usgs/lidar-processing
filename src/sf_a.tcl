@@ -45,6 +45,8 @@ set ci  0
 set nfiles 0
 set dir "/data/0/"
 set timern "hms"
+set fcin 0
+set lcin 0
 
 proc load_file_list { f } {
 global ci fna imgtime dir 
@@ -142,6 +144,7 @@ set img [ image create photo -gamma $gamma ]  ;
 # Menubar
 frame .menubar -relief raised -bd 2
 menubutton .menubar.file -text "File" -menu .menubar.file.menu -underline 0
+menubutton .menubar.edit -text "Edit" -menu .menubar.edit.menu -underline 0
 menu .menubar.file.menu
 #.menubar.file.menu add command -label "Select Directory.." -underline 8 \
 #  -command { set dir [ tk_chooseDirectory -initialdir $dir ] }                                 
@@ -153,6 +156,33 @@ menu .menubar.file.menu
 		.slider configure -to $nfiles
            }                                 
 .menubar.file.menu add command -label "Exit" -underline 1 -command { exit }                                 
+menu .menubar.edit.menu
+.menubar.edit.menu add command -label "Mark This Frame as First" -underline 19 \
+   -command { set m 0;
+   	      mark $m;
+	    }
+.menubar.edit.menu add command -label "Mark This Frame as Last" -underline 19 \
+   -command { set m 1;
+   	      mark $m;
+	    }
+.menubar.edit.menu add command -label "Unmark This Frame" -underline 0 \
+   -command { set m 2;
+   	      mark $m;
+	    }
+.menubar.edit.menu add command -label "Tar and Save Marked Images ..." -underline 0 \
+   -command { 
+    	      global fcin lcin dir
+	      if {$fcin == 0 || $lcin == 0} { 
+	         tk_messageBox -type ok -icon error \
+		 	-message "First and Last Frames not Marked. Cannot Save." 
+		 } else {
+	      set tn [ tk_getSaveFile -defaultextension tar -filetypes { {{Tar Files} {.tar}} } \
+	      		-initialdir $dir -title "Save Marked Files as..."];
+	      tar_save_marked $tn;
+	      set fcin 0
+	      set lcin 0
+	      }
+            }
 
 frame  .canf -borderwidth 5 -relief sunken
 frame  .cf1  -borderwidth 5 -relief raised
@@ -333,6 +363,8 @@ SpinBox .cf2.offset \
 
 pack .menubar.file \
   -side left
+pack .menubar.edit \
+  -side left
 pack .menubar -side top -fill x -expand true
 pack .canf .canf.can 
 pack .lbl -side top -anchor nw
@@ -468,4 +500,52 @@ set cin $n
   
 }
 
+proc mark {m} {
+  ## this procedure is used to mark or unmark the current frame
+  ## amar nayegandhi 02/06/2002.
+  global cin 
+  global fcin lcin
+  if {$m == 0} {set fcin $cin;
+  	        tk_messageBox -type ok -message "First Marked Frame at Index Number $cin"
+	       }
+  if {$m == 1} {set lcin $cin;
+  	        tk_messageBox -type ok -message "Last Marked Frame at Index Number $cin"
+	       }
+  if {$m == 2} {
+     if {$lcin == 0} {
+        tk_messageBox -type ok -message "First Marked Frame at Index Number $fcin has been UNMARKED"; 
+        set fcin 0; 
+     }  else {
+     	  tk_messageBox -type ok -message "Last Marked Frame at Index Number $lcin has been UNMARKED";
+	  set lcin 0;
+	}
+  }   
+  update;
+     
+}
+
+proc tar_save_marked {tn} {
+  ## this procedure first tar and then saves the file of images that are marked
+  ## amar nayegandhi 02/06/2002.
+  global lcin fcin fna dir
+  if {$lcin < $fcin} {
+      tk_messageBox -type ok -icon error \
+                              -message "Last Frame Marked is less than First Frame Marked. Cannot Save."
+  } else {      
+  set psf [pid]
+  set tmpdir "/tmp/sf.$psf"
+  exec mkdir $tmpdir
+  for {set i $fcin} {$i<=$lcin} {incr i} {
+     exec cp $dir/$fna($i) $tmpdir;
+     
+  }
+  puts "files in tmpdir\r\n";
+  cd $tmpdir;
+  exec tar -cvf $tn .
+  cd $dir
+  exec rm -r $tmpdir
+  
+  }
+
+}
 puts "Ready to go.\r\n"

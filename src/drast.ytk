@@ -413,7 +413,7 @@ button .rslider.bf1.stop -text "Stop" -command {
  exp_send "animate,0; window,1; fma\r" 
   after cancel $tid;
   set play_flag 0 
-  exp_send "ytk_rast, $rnf\r"
+  ##exp_send "ytk_rast, $rnf\r"
 }
 
 

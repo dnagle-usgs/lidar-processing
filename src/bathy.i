@@ -43,8 +43,25 @@ rn
 }
 
 
-func run_bath( rn, len, last=, graph=, pse= ) {
+func run_bath( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) {
 // depths = array(float, 3, 120, len );
+
+ if ( is_void(rn) || is_void(len) ) {
+    if (!is_void(center) && !is_void(delta)) {
+       rn = center - delta;
+       len = 2 * delta;
+    } else if (!is_void(start) && !is_void(stop)) {
+             rn = start;
+	     len = stop - start;
+    } else {
+	     write, "Input parameters not correctly defined.  See help, run_bath.  Please start again.";
+	     return 0;
+    }
+ }
+
+
+    
+     
  depths = array(BATHPIX, 120, len );
  if ( graph != 0 ) 
 	animate,1;
