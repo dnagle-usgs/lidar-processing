@@ -46,13 +46,13 @@ for i = 0, n_elements(fn_arr)-1 do begin
        date = strmid(spp(n_elements(spp)-1), 0, dpos)
    endif else begin
        if keyword_set(rcf_meta) then begin
-         rcf_params = spp(n_elements(spp)-5)+spp(n_elements(spp)-4)+spp(n_elements(spp)-3)
+         rcf_params = spp(n_elements(spp)-3)+spp(n_elements(spp)-2)
        endif
-       date = spp(n_elements(spp)-2)
+       date = spp(n_elements(spp)-4)
    endelse
 
    if keyword_set(rcf_meta) then begin
-     title = "Bathymetry Plot. Date: "+date+" Tile Location: "+spp(1)+" "+spp(2) + "RCF: "+rcf_params
+     title = "Bathymetry Plot. Tile Location: "+spp(1)+"\n Date/RCF: "+date+" "+rcf_params
    endif else begin
      title = "Bathymetry Plot. Date: "+date+" Tile Location: "+spp(1)+" "+spp(2)
    endelse
