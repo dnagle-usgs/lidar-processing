@@ -164,7 +164,7 @@ func sel_data_ptRadius(data, point=, radius=, win=, msize=) {
   }
     
   window, win;
-  plmk, point(2), point(1), color="black", msize=msize, marker=2
+//  plmk, point(2), point(1), color="black", msize=msize, marker=2
   if (!radius) radius = 1.0;
 
   radius = float(radius)
@@ -177,7 +177,7 @@ func sel_data_ptRadius(data, point=, radius=, win=, msize=) {
   ymax = point(2)+radius;
   ymin = point(2)-radius;
 
-  plg, [point(2), point(2)], [point(1), point(1)+radius], width=2.0, color="blue";
+//  plg, [point(2), point(2)], [point(1), point(1)+radius], width=2.0, color="blue";
   //a_x=[xmin, xmax, xmax, xmin, xmin];
   //a_y=[ymin, ymin, ymax, ymax, ymin];
   //plg, a_y, a_x, color="blue", width=2.0;
@@ -285,7 +285,7 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged
            n_east = (ind_e_max - ind_e_min)/2000;
            n_north = (ind_n_max - ind_n_min)/2000;
            n = n_east * n_north;
-   
+  	   n = long(n); 
            min_e = array(float, n);
            max_e = array(float, n);
            min_n = array(float, n);
