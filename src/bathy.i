@@ -300,10 +300,15 @@ func ex_bath( rn, i,  last=, graph= ) {
           last_surface_sat = nsat(  where(nsat(dif) > 1 ) ) (1);   
           escale = 255;
       }
-   } else {
+   } else {	// do this when none saturated
           wflen = numberof(w);
-          if ( wflen > 18 ) wflen = 18;
-	  last_surface_sat =  w(1:wflen) (mnx) ;
+          if ( wflen > 18 ) { 
+	     wflen = 18;
+	     last_surface_sat = 9;
+	  } else {
+	     last_surface_sat = 9;
+	  }
+//	  last_surface_sat =  w(1:wflen) (mnx) ;
           escale = 255 - w(1:wflen) (min);
    }
 

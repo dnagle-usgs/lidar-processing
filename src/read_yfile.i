@@ -46,6 +46,13 @@ This function reads an EAARL yorick-written binary file.
       - add more documentation to this function.
    */
 
+if (is_void(path)) {
+   ifn  = get_openfn( initialdir="~/", filetype="*.bin", title="Open Data File" );
+   ff = split_path( ifn, 0 );
+   path = ff(1);
+   fname_arr = ff(2);
+}
+
 if (is_void(fname_arr)) {
    s = array(string, 1000);
    ss = "*.bin"

@@ -665,7 +665,7 @@ func plot_bathy(depth_all, fs=, ba=, de=, lint=, win=, cmin=, cmax=, msize=) {
 
   */
   if (is_void(win)) win = 5;
-  window, win;fma;limits;
+  window, win;fma;
   if (fs) {
      indx = where(depth_all.north != 0);
      plcm, depth_all.elevation(indx)/100., depth_all.north(indx)/100., depth_all.east(indx)/100., cmin=cmin, cmax=cmax, msize = msize;
@@ -689,7 +689,7 @@ func plot_bathy(depth_all, fs=, ba=, de=, lint=, win=, cmin=, cmax=, msize=) {
  
 
 
-func raspulsearch(data,win=,buf=) {
+func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=) {
  /* This function uses a mouse click on a bathy/depth plot and 
     finds the associated rasters
 
@@ -697,11 +697,48 @@ func raspulsearch(data,win=,buf=) {
     */
 
  /* use mouse function to click on the reqd point */
- extern wfa, cmin, cmax;
+ extern wfa;
  if (!(win)) win = 5;
  window, win;
+ if (!(disp_type)) disp_type = 0; //default to first surface topo
+ if (!(msize)) msize = 1.0
 
  if (typeof(data)=="pointer") data=*data(1);
+
+ if (numberof(data) != numberof(data.north)) {
+     if ((disp_type == 1) || (disp_type == 2)) {
+ 	//convert data from GEOALL into GEO structure
+	data_new = array(GEO, numberof(data)*120);
+	indx = where(data.rn > 0);
+	data_new.rn = data.rn(indx);
+	data_new.north = data.north(indx);
+	data_new.east = data.east(indx);
+	data_new.sr2 = data.sr2(indx);
+	data_new.elevation = data.elevation(indx);
+	data_new.mnorth = data.mnorth(indx);
+	data_new.meast = data.meast(indx);
+	data_new.melevation = data.melevation(indx);
+	data_new.bottom_peak = data.bottom_peak(indx);
+	data_new.first_peak = data.first_peak(indx);
+	data_new.depth = data.depth(indx);
+
+	data = data_new
+     }
+     if (disp_type == 0) {
+        //convert data from R into FS structure 
+	data_new = array(FS, numberof(data)*120);
+	indx = where(data.rn > 0);
+	data_new.rn = data.raster(indx);
+	data_new.north = data.north(indx);
+	data_new.east = data.east(indx);
+	data_new.elevation = data.elevation(indx);
+	data_new.mnorth = data.mnorth(indx);
+	data_new.meast = data.meast(indx);
+	data_new.melevation = data.melevation(indx);
+
+	data = data_new
+     }
+ }
 
  if (!buf) buf=1000; /* 10 meters is the default buffer side to 
                         look for the point 
@@ -742,11 +779,25 @@ func raspulsearch(data,win=,buf=) {
     write, format="Plotting raster and waveform with Raster number %d"+
                   " and Pulse number %d \n",rasterno(1), pulseno(1);
     if (_ytk) {
+      window, 1;
       ytk_rast, rasterno(1);
       window, 0;
       show_wf, *wfa, pulseno(1), win=0, cb=7;
-      window, win;
-      //window, 5;plcm, mindata.elevation/100., mindata.north/100., mindata.east/100., msize = 3.0, cmin= cmin, cmax = cmax
+      if (is_void(cmin) || is_void(cmax)) {
+        window, win; plmk, mindata.north/100., mindata.east/100., msize = 0.4, marker = 1, color = "red";
+      } else {
+        if (disp_type == 0) {
+          window, win; plcm, mindata.elevation/100., mindata.north/100., mindata.east/100., msize = msize*1.5, cmin= cmin, cmax = cmax, marker=4
+	}
+        if (disp_type == 1) {
+          ex_bath, rasterno, pulseno, graph=1;
+          window, win; plcm, (mindata.elevation+mindata.depth)/100., mindata.north/100., mindata.east/100., msize = msize*1.5, cmin= cmin, cmax = cmax, marker=4
+	}
+        if (disp_type == 2) {
+          ex_bath, rasterno, pulseno, graph=1;
+          window, win; plcm, mindata.depth/100., mindata.north/100., mindata.east/100., msize = msize*1.5, cmin= cmin, cmax = cmax, marker = 4
+	}
+      }
       //write, format="minindx = %d\n",minindx;
     } 
  } else {

@@ -445,6 +445,9 @@ func sel_region (q) {
 
 } 
 
+func gga_click_sel() {
+}
+
 func mk_photo_list( q, ofn= ) {
 /* DOCUMENT mk_photo_list(q)
    
