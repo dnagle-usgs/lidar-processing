@@ -321,8 +321,29 @@ func ex_bath( rn, i,  last=, graph=, win=, xfma= ) {
 // Dont bother processing returns with more than bathctl.maxsat saturated
 // values.  
    if ( numsat != 0 ) 
-      if ( numsat >= bath_ctl.maxsat ) 
+      if ( numsat >= bath_ctl.maxsat ) {
+         if ( graph ) {
+             write,format="Rejected: Saturation. numsat=%d\n", numsat
+             window,win; gridxy,2,2
+             if ( xfma ) fma;
+             last = n;
+             plt, swrite(format="%d points\nsaturated.", numsat),
+                 (limits()(1:2)(dif)/2)(1), 
+                 (limits()(3:4)(dif)/2)(1), 
+                 tosys=1,color="red"
+             plot_bath_ctl;
+/*
+             plg,[thresh,thresh],[first,last],marks=0, color="red";
+             plg,[0,thresh],[first,first],marks=0, color="green", width=7;
+             plg,[0,thresh],[last,last],marks=0, color="red", width=7;
+             plmk, bath_ctl.a(1:n,i,1), msize=.2, marker=1, color="black";
+             plg, bath_ctl.a(1:n,i,1), color=black, width=4;
+             plg, laser_decay, color="magenta" 
+             plg,agc*40, color=[100,100,100];
+*/
+         }
 	 return rv;
+      }
 
    if ( (numsat > 1)  && ( nsat(1) <= 12)   ) {
       if (  nsat(dif) (max) == 1 ) { 		// only surface saturated
@@ -386,17 +407,11 @@ last = bath_ctl.last;
 if ( graph ) {
   window,win; gridxy,2,2
   if ( xfma ) fma;
-  plg,[thresh,thresh],[first,last],marks=0, color="red";
-  plg,[0,thresh],[first,first],marks=0, color="green", width=7;
-  plg,[0,thresh],[last,last],marks=0, color="red", width=7;
-  plmk, bath_ctl.a(1:n,i,1), msize=.2, marker=1, color="black";
-  plg, bath_ctl.a(1:n,i,1), color=black, width=4;
+  plot_bath_ctl;
   plmk, da(1:n), msize=.2, marker=1, color="black";
   plg, da(1:n);
   plmk, db(1:n), msize=.2, marker=1, color="blue";
   plg, db(1:n), color="blue";
-  plg, laser_decay, color="magenta" 
-  plg,agc*40, color=[100,100,100];
 }
 
 
@@ -414,14 +429,30 @@ if ( graph ) {
                                 // return waveform.
 
 // test pw with 9-6-01:17673:50
-  if ( mv > thresh ) {		// check to see if above thresh
-         mx = mvi;
-
+// first, just check to see if anything is above thresh
+  lpx = mvi-1;
+  rpx = mvi+3;
+  if ( (mv > thresh) && ( n >= rpx) ) {
+    if ( ( lpx < first ) || ( rpx > last ) ) {
+      if ( graph) plt, swrite("Too close\nto gate edge."),
+	      mvi, 
+              bath_ctl.a(mvi,i,1)+2.0, tosys=1,color="red"
+      return rv; 
+    }
+    l_wing = 0.6 * mv;	// +/- 2ns should be no more than .6 the max
+    r_wing = 0.75 * mv;	// +/- 2ns should be no more than .6 the max
+    if ( (db(lpx) <= l_wing) && (db(rpx) <= r_wing) ) {
+            mx = mvi;
         if ( graph ) {
+             show_pulse_wings;
             plg,  [bath_ctl.a(mx,i,1)+1.5,0], [mx+1,mx+1],
                   marks=0,type=2,color="blue" 
             plmk, bath_ctl.a(mx,i,1)+1.5, mx+1, 
                   msize=1.0, marker=7, color="blue", width=10
+            plt, swrite(format="    %3dns\n     %3.0f sfc\n    %3.1f cnts\n     (%3.1fm)",
+                        mvi, mv1, mv, (mvi-7)*CNSH2O2X
+                       ),
+                 mx, bath_ctl.a(mx,i,1)+2.0, tosys=1,color="blue"
         }
         rv.sa = rp.sa(i);
    	rv.idx = mx;
@@ -429,14 +460,52 @@ if ( graph ) {
 	//new
 	rv.first_peak = mv1;
 	return rv;
-  }
-  else
+   } else {
+      if( graph ) { 
+         write,"Rejected: Pulse shape. \n"
+         show_pulse_wings;
+         plmk, bath_ctl.a(mvi,i,1)+1.5, mvi+1, 
+	   msize=1.0, marker=6, color="red", width=10
+         plt, "Bad pulse\n shape", 
+              mvi+2.0, 
+              bath_ctl.a(mvi,i,1)+2.0, 
+              tosys=1,color="red"
+     }
+   }
+  } else {
+       if ( graph ) {
+          plt, "Below\nthreshold", mvi+2.0, 
+            bath_ctl.a(mvi,i,1)+2.0, tosys=1,color="red"
+          write,"Rejected: below threshold \n"
+       }
    	rv.idx = 0;
 	rv.bottom_peak = bath_ctl.a(mvi,i,1);
 	//new
 	rv.first_peak = mv1;
 	return rv;
+  }
+  return rv;
 }
+
+
+ func show_pulse_wings {
+    plmk, l_wing, lpx, marker=5,color="magenta",msize= 0.4,width=10
+    plmk, r_wing, rpx, marker=5,color="magenta",msize= 0.4,width=10
+}
+
+
+func plot_bath_ctl {
+  if ( !is_void(thresh) ) {
+    plg,[thresh,thresh],[first,last],marks=0, color="red";
+    plg,[0,thresh],[first,first],marks=0, color="green", width=7;
+    plg,[0,thresh],[last,last],marks=0, color="red", width=7;
+  }
+  plmk, bath_ctl.a(1:n,i,1), msize=.2, marker=1, color="black";
+  plg, bath_ctl.a(1:n,i,1), color=black, width=4;
+  if ( !is_void(laser_decay) ) plg, laser_decay, color="magenta" 
+  if ( !is_void(agc) ) plg,agc*40, color=[100,100,100];
+}
+
 
 
 

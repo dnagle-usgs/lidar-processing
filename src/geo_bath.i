@@ -922,30 +922,34 @@ write,"============================================================="
                              cmin= cmin, cmax = cmax, 
                              marker=4
 	} else
-        if (disp_type == 1) {
+        if ((disp_type == 1) || (disp_type == 2) ) {
 	  a = [];
           ex_bath, rasterno, pulseno, win=0, graph=1;
-          window, win; plcm, (mindata.elevation+mindata.depth)/100., 
-                             mindata.north/100., mindata.east/100., 
-                             msize = msize*2.5, cmin= cmin, cmax = cmax, 
-                             marker=4
-	} else 
-        if (disp_type == 2) {
-	  a = [];
-          ex_bath, rasterno, pulseno, win=0, graph=1;
-          window, win; plcm, mindata.depth/100., mindata.north/100., 
-                             mindata.east/100., msize = msize*1.5, 
-                             cmin= cmin, cmax = cmax, marker = 4
-	} else
-        if (disp_type == 3) {
+          if ( mindata.depth == 0 ) {
+            msz = 1.0; mkr = 6;
+          } else {
+            msz = 2.0; mkr = 4; 
+          }
+          if ( disp_type == 1 ) 
+             elev = (mindata.elevation+mindata.depth)/100.;
+          else
+             elev = mindata.depth/100.;
+
+          window, win; plcm, elev, mindata.north/100., 
+                             mindata.east/100., msize = msize*msz, 
+                             cmin= cmin, cmax = cmax, marker = mkr
+//          window, win; plcm, (mindata.elevation+mindata.depth)/100., 
+//                             mindata.north/100., mindata.east/100., 
+//                             msize = msize*2.5, cmin= cmin, cmax = cmax, 
+//                             marker=4
+	} else if (disp_type == 3) {
 	  a = [];
 	  ex_veg, rasterno, pulseno,  last=250, graph=1, win=0; use_peak=1;
 	  z = mindata.lelv/100.;
           window, win; plcm, z, mindata.north/100., 
                              mindata.east/100., msize = msize*1.5, 
                              cmin= cmin, cmax = cmax, marker = 4
-	} else
-        if (disp_type == 4) {
+	} else if (disp_type == 4) {
 	  a = [];
 	  if (ptype == 0) 
 	     z = mindata.intensity/100.;
