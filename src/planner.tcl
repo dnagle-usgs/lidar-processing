@@ -16,8 +16,8 @@ exec wish "$0" ${1+"$@"}
  proc polydraw {w} {
     #-- add bindings for drawing/editing polygons to a canvas
     bind $w <Button-1>        {polydraw'mark   %W %x %y}
-    bind $w <Button-2>        {polydraw'rotate %W  0.1}
-# (b3 is used to pan)
+#####    bind $w <Button-2>        {polydraw'rotate %W  0.1}
+##### (b3 is used to pan)
 
     bind $w <Double-1>        {polydraw'insert %W}
     bind $w <Double-3>        {polydraw'delete %W}
@@ -159,28 +159,88 @@ proc polydraw'markNodes {w item} {
     }
     $w coords $item $coords
  }
- proc has {list element} {expr {[lsearch $list $element]>=0}}
+ proc has {list element} {
+    expr { [lsearch $list $element]>=0 }
+ }
+
+proc polygon { lst } { 
+  global dims
+  foreach { b c } $lst {
+     lappend slst [ expr ($b-$dims(le)) / $dims(scrx2utm) ] [  expr ($dims(ln) - $c)/$dims(scry2utm) ]
+  }
+  puts "Polygon coords: $slst"
+  .canf.can create line $slst -width 5.0 -fill red
+}
 
 
-#---- Added W. W. 
+# Load polygons, lines, settings, etc.
+proc load_data { } {
+ global dims
+ set fn [ tk_getOpenFile  -filetypes {
+                                      {{List files} {.fpl } }
+                                      {{All} {*}}
+                                    } ];
+ if { $fn != "" } {
+   wm title . "Map/Photo Viewer"
+   source $fn
+ }
+}
+
+# Save polygons, lines, settings, etc. so they can be read in again. 
+proc save_data { } {
+ global dims
+  set fn [ tk_getSaveFile -defaultextension ".fpl" ]
+  if { $fn == "" } {
+	return;
+  }
+  set ofd [ open $fn "w" ]
+  foreach a [ .canf.can find withtag poly ] { 
+      set lst [ .canf.can coords $a ]
+      foreach { b c } $lst {
+        lappend slst [ expr $dims(le) + $b*$dims(scrx2utm) ] [  expr $dims(ln) - $c*$dims(scry2utm) ]
+      }
+      puts $ofd "[ .canf.can type $a ] \{ $slst \}"
+  }
+  close $ofd
+}
+
+
+#
+# Save the polygons as a Yorick source file.
 proc output_polys { } {
   global dims
-  set ofn [ tk_getSaveFile ]
+  set ofn "  "
+  set omode [ lindex {utm latlon} \
+              [ tk_dialog .d title {Select output format} "" 0  UTM {Latitude/Longitude} ]
+            ]
+#  set ofn [ tk_getSaveFile ]
   if { $ofn == "" } { 
 	return;
   }
-  set ofd [ open $ofn w ]
+#  set ofd [ open $ofn w ]
+  set ofd stdout
+
   foreach p [ .canf.can find withtag poly ] {
+    set lst [ .canf.can coords $p ]
     puts $ofd ""
     puts $ofd "// Polygon: $p"
     puts $ofd "poly$p = \["
-    foreach { x y } [ .canf.can coords $p ] {
-      puts $ofd "  [ utm2ll [scry2utm $y] [scrx2utm $x] $dims(zone) ],"
-##      puts $ofd "  [scrx2utm $x], [scry2utm $y],"
+    foreach { x y } [ lrange $lst 0 end-2 ] {
+      switch $omode { 
+       latlon {  puts $ofd "  [ utm2ll [scry2utm $y] [scrx2utm $x] $dims(zone) ]," }
+       utm    {  puts $ofd "  [scrx2utm $x], [scry2utm $y]," }
+      }
+    }
+    set x [ lindex $lst end-1 ]		;# process the last line
+    set y [ lindex $lst end   ];    
+    if { $omode == "latlon" } {
+        puts $ofd "  [ utm2ll [scry2utm $y] [scrx2utm $x] $dims(zone) ]"
+    } else {
+        puts $ofd "  [scrx2utm $x], [scry2utm $y]"
     }
     puts $ofd "\]"
   }
-  close $ofd
+#  close $ofd
 }
 
 
@@ -358,7 +418,7 @@ menu .menubar.help.menu
 .menubar.help.menu add command -label "About"
 .menubar.help.menu add command -label "Drawing Polygons"
 
-.menubar.file.menu add command -label "Select File.." -underline 8 \
+.menubar.file.menu add command -label "Load an image.." -underline 2 \
   -command { 
                 set f [ tk_getOpenFile  -filetypes { 
                                                   {{List files} {.jpg .tif} } 
@@ -371,6 +431,12 @@ menu .menubar.help.menu
                 load_file  $f;
               }
            }
+.menubar.file.menu add command -label "Load polygons..." -underline 2 \
+	-command load_data
+
+.menubar.file.menu add separator
+.menubar.file.menu add command -label "Save.." -underline 0 \
+  -command save_data;
 
 .menubar.file.menu add command -label "Write Yorick Polygons.." \
 	-underline 1 \
@@ -425,7 +491,9 @@ pack .menubar.file \
 
 pack .menubar.help -side right
 
-pack .menubar -side top -fill x -expand true \
+pack .menubar -side top \
+	-fill x \
+	-expand 0 \
 	-anchor w
 
 pack .canf \
@@ -437,11 +505,16 @@ pack .canf.location \
 	-fill both -side bottom \
 	-anchor w
 
-
 pack .canf \
 	.canf.yscroll \
-	.canf.can \
 	-fill both -side left \
+	-anchor w
+
+
+pack .canf \
+	.canf.can \
+	-fill both -side top \
+	-expand 1 \
 	-anchor w
 
 .canf.can bind  all <Motion> { 
@@ -523,21 +596,7 @@ proc scry2utm { y } {
 bind .canf.can <ButtonPress-3> { %W scan mark %x %y     }
 bind .canf.can <B3-Motion>     { %W scan dragto %x %y 1 }
 
-# See: http://www.tcl.tk/man/tcl8.4/TkCmd/bind.htm#M4
-bind .canf <Configure> { 
-###    puts "[ bind . ] %b %h %w" 
-    if { %b == 1074052889 } {
-      .canf.can configure -height %h
-      .canf.can configure -width  %w
-    }
-}
-
-
-## See: http://wiki.tcl.tk/3893  for wheel on linux
-#### bind . <<ResizeRequest ButtonRelease>> { puts "Resize requested...."};
-
  
- 
- polydraw .canf.can
+polydraw .canf.can
 
 
