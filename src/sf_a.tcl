@@ -1,3 +1,7 @@
+#!/bin/sh
+# \
+exec wish "$0" ${1+"$@"}
+
 #!/eaarl/packages/ActiveTcl/bin/wish
 #!/usr/local/ActiveTcl/bin/wish
 #!/usr/src/ActiveTcl8.3.4.2-linux-ix86/bin/wish
