@@ -80,6 +80,8 @@
   set plist(idx5,msize) $msize
   set plist(idx5,mtype) $markerv
 
+  set var_no 1
+  set pvar_no 1
   set plot_dpi 75
   array set cbvc {cmin cmin cmax cmax msize msize mtype mtype}
 
@@ -1300,39 +1302,31 @@ ComboBox .l1wid.bf45.p.15  -values \
   	$varlist \
 	-helptext "Select any one of the following variables " \
 	-editable 0 \
-	-modifycmd {
-           global cmin cmax markerv msize varlist cbv
-	   global  var_no var_type plist
-           set var_no [.l1wid.bf45.p.15 getvalue]
+	-modifycmd { 
+	   global cbv
+	   set var_no [.l1wid.bf45.p.15 getvalue]
+           set var_type [lindex $varlist $var_no]
 	   #puts "$var_no"
-	   set pvar_no [expr {$var_no + 1}]
-           set var_type [lindex $varlist $var_no]
-	   #puts "variable in modifycommand $var_type"
            if {$cbv == 0} {
-	     retrieve_plot_settings $pvar_no
+	     retrieve_plot_settings $var_no
            }
-	   #puts "***********************"
-        } \
-	-postcommand {
- 	   global var_no var_type cmin cmax markerv msize varlist plist cbv
+	} \
+	 -postcommand {
+ 	   global cbv
+	   #puts "$var_no"
            set var_no [.l1wid.bf45.p.15 getvalue]
-	   set pvar_no [expr {$var_no + 1}]
            set var_type [lindex $varlist $var_no]
-	   #puts "variable in postcommand $var_type no $pvar_no"
+#	   #puts "variable in postcommand $var_type no $pvar_no"
 	   if {$cbv == 0} {
-	     save_plot_settings  $pvar_no
+	     save_plot_settings  $var_no
            }
-   	   # foreach e [array names {_$var_type}] {
-	   #  puts "$e:\t${_$var_type(msize)}"
-           #}
- 	   #puts "saved $var_type"
-	   #puts "***********************"
-        } 
+         } 
 .l1wid.bf45.p.15 setvalue first
 
 proc retrieve_plot_settings {pvar_no} {
    global cmin cmax msize markerv var_type plist 
    #puts "to retrieve _$var_type from $var_type"
+   incr pvar_no
    #puts "pvar_no = $pvar_no"
    set cmin $plist(idx$pvar_no,cmin)
   #puts "$cmin read from  $plist(idx$pvar_no,cmin)"
@@ -1385,6 +1379,7 @@ proc cbar_tool { } {
 proc save_plot_settings {pvar_no} {
   global cmin cmax msize markerv var_type plist
   #puts "to save $var_type in _$var_type"
+  incr pvar_no
   set ptype [.l1wid.bf4.1.p getvalue]
   set dtype [.l1wid.bf45.p.5 getvalue]
   set plist(idx$pvar_no,cmin) $cmin
