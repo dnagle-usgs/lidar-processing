@@ -104,6 +104,7 @@ func load_edb (  fn=, update= ) {
 
 ///// if ( is_void( data_path ) ) 
 
+if (is_void(fn)) {
 if ( _ytk ) {
     fn  = get_openfn( initialdir="/data/0/", filetype="*.idx" ); 
     if (strmatch(fn, "idx") == 0) {
@@ -118,6 +119,7 @@ if ( _ytk ) {
  if ( is_void( fn ) ) {
      fn  = get_openfn( initialdir=tldpath, filetype="*.idx" );
  }
+}
 }
 
  filemode = "rb";
