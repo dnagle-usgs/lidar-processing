@@ -16,6 +16,7 @@ require, "eaarl_constants.i"
 require, "colorbar.i"
 require, "read_yfile.i"
 require, "rbgga.i"
+require, "drast.i"
 
 /* 
   This program is used to display a bathymetric image using the 
