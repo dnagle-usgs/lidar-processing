@@ -124,12 +124,18 @@ func read_txt_anal_file(fname, n) {
    close, f1;
 } 
 
-func rcfilter_eaarl_pts(eaarl, buf=, w=, be=, be_bathy=) {
+func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=) {
   //this function uses the random consensus filter (rcf) within a defined
   // buffer size (default 4m by 4m) to filter within an elevation width
   // defined by w.
   // amar nayegandhi 11/18/02.
 
+  // mode = 1; //for first surface
+  // mode = 2; //for bathymetry
+  // mode = 3; // for bare earth vegetation
+
+ //reset new_eaarl
+ new_eaarl = [];
  // define a bounding box
   bbox = array(float, 4);
   bbox(1) = min(eaarl.east);
@@ -139,6 +145,8 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, be=, be_bathy=) {
 
   if (!buf) buf = 400; //in centimeters
   if (!w) w = 30; //in centimeters
+  // no_rcf is the minimum number of points required to be returned from rcf
+  if (!no_rcf) no_rcf = 3;
 
   //now make a grid in the bbox
   ngridx = ceil((bbox(2)-bbox(1))/buf);
@@ -169,18 +177,22 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, be=, be_bathy=) {
         indx = q(indx);
       }
       if (is_array(indx)) {
-       if (be) {
+       if (mode==3) {
          be_elv = eaarl.elevation(indx)-(eaarl.lelv(indx)-eaarl.felv(indx));
        }
-       if (be_bathy) {
+       if (mode==2) {
          be_elv = eaarl.elevation(indx)+eaarl.depth(indx);
        }
-	 sel_ptr = rcf(be_elv, w, mode=2);
-	 if (*sel_ptr(2) > 3) {
+       if (mode==1) {
+         be_elv = eaarl.elevation(indx);
+       }
+
+       sel_ptr = rcf(be_elv, w, mode=2);
+       if (*sel_ptr(2) >= no_rcf) {
 	    tmp_eaarl = eaarl(indx);
 	    grow, new_eaarl, tmp_eaarl(*sel_ptr(1));
 	    //write, numberof(indx), *sel_ptr(2);
-	 }
+       }
       }
     }
     if (_ytk) 

@@ -63,6 +63,8 @@ This function reads an EAARL yorick-written binary file.
       - to include struct VEG for vegetation
    */
 
+extern fn_arr;
+
 if (is_void(path)) {
    ifn  = get_openfn( initialdir="~/", filetype="*.bin *.edf", title="Open Data File" );
    if (ifn != "") {
@@ -77,16 +79,21 @@ if (is_void(path)) {
 
 if (is_void(fname_arr)) {
    s = array(string, 1000);
-   ss = "*.bin"
+   ss = ["*.bin", "*.edf"];
    scmd = swrite(format = "find %s -name '%s'",path, ss); 
-   f=popen(scmd, 0); 
-   n = read(f,format="%s", s ); 
-   close, f;
-   fn_arr = s(1:n);
+   fp = 1; lp = 0;
+   for (i=1; i<=numberof(scmd); i++) {
+     f=popen(scmd(i), 0); 
+     n = read(f,format="%s", s ); 
+     close, f;
+     lp = lp + n;
+     if (n) fn_arr = s(fp:lp);
+     fp = fp + n;
+   }
 } else { 
   fn_arr = path+fname_arr; 
   n = numberof(fn_arr);
-  }
+}
 
 write, format="Number of files to read = %d \n", n
 
