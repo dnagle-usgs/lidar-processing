@@ -100,7 +100,6 @@ struct FB {
  ll = array( float, 2, 100)
 
 
- PI     = 3.141592653589793115997963468544185161590576171875
  ONERAD =  180.0 / pi
  TWORAD =  360.0 / pi
  DEG2RAD = pi  / 180.0
@@ -135,7 +134,7 @@ msz = .3
 sres = array(float,11);
 dd = array(float, 1);
 
-func mdist ( none, nodraw= ) {
+func mdist ( none, nodraw=, units=, win= ) {
 /* DOCUMENT mdist
 
   Measure the distance between two points clicked on by the mouse
@@ -149,30 +148,70 @@ func mdist ( none, nodraw= ) {
   rr = 1:0
   pldj,fp(1,rr),fp(2,rr),fp(3,rr),fp(4,rr),color="red"
 
+
+   Inputs:
+         win=   Select a window different than current.
+      nodraw= 
+       units=	"m"  for meters
+		"cm" for Centimeters
+		"mm" for Millimeters
+		"ll" for lat/lon in decimal degrees 
+
+  Returns:
+	Distance in meters. 
+
 */
-d = array(double, 3);
-res = mouse(1, 2, "cmd>");		// style=2 normally
-    redraw
- d(1) = lldist( res(2), res(1), res(4), res(3) );
- d(2) = d(1)  * 1.1507794;      // convert to stat miles
- d(3) = d(1)  * 1.852;          // also to kilometers
- print,"# nm/sm/km",d
- for (i=1; i<100000; i++ )
-	i=i;
- if ( is_void(nodraw) ) {
+
+// Default to decimal degrees of lat/lon if units is not
+// set.
+ if ( is_void( units ) ) {
+   units = "ll";
+ }
+
+ if ( !is_void(win) )
+	winSave = window(win);
+
+   res = mouse(1, 2, "Hold left mouse, and drag distance:"); // style=2 normally
+   redraw
+
+ if ( units == "ll" ) {   ////////////  Lat/Lon
+   d = array(double, 3);
+   d(1) = lldist( res(2), res(1), res(4), res(3) );
+   d(2) = d(1)  * 1.1507794;      // convert to stat miles
+   d(3) = d(1)  * 1.852;          // also to kilometers
+   print,"# nm/sm/km",d
+
+  if ( is_void(nodraw) ) {
     plmk, res(2),res(1), msize=msz
     plmk, res(4),res(3), msize=msz
     plg, [res(2),res(4)], [res(1),res(3)],color="red",marks=0
+  }
+  grow, res, d
+  rv = res;
  }
- grow, res, d
- return res
+
+ if ( (units=="mm") || (units=="cm") || (units=="m") ) {
+    dx = res(3) - res(1);
+    dy = res(4) - res(2);
+       if ( units == "m" )  div =    1.0;
+  else if ( units == "cm" ) div =  100.0;
+  else if ( units == "mm" ) div = 1000.0;
+
+  dist = sqrt( dx^2 + dy^2) ;
+  distm = dist / div;
+  
+
+  if ( distm > 1000.0 )
+    write,format="Distance is %5.3f kilometers\n", distm/1000.0;
+  else
+    write,format="Distance is %5.3f meters\n", distm;
+   rv = dist;
+ }
+  if ( !is_void(win) )		// restore orginal window
+        window(winSave);
+ return rv;
 }                                                     
 
-
-
-func cir (r) {
-  d = mdist;		// get a mouse point 
-}
 
 
 if (is_void(blockn) )

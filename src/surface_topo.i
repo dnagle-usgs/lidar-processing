@@ -149,23 +149,6 @@ write,format="Draw complete. %d rasters drawn. %s", j-ii, "\n"
 }
 
 
-func mdist {
-/* DOCUMENT mdist
-   
-  Use the mouse to measure a distance, in meters, on a UTM
-data plot.
-
-*/
-   cc = mouse(,2,"Click and dragout a distance to measure:");
-    dx = cc(3) - cc(1);
-    dy = cc(4) - cc(2);
-  dist = sqrt( dx^2 + dy^2) / 100.0;
-  if ( dist > 1000.0 )
-    write,format="Distance is %5.3f kilometers\n", dist/1000.0;
-  else
-    write,format="Distance is %5.3f meters\n", dist;
-}
-
 
 
 
