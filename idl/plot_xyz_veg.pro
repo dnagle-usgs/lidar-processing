@@ -1,5 +1,5 @@
 pro plot_xyz_veg, data_arr, min_z=min_z, max_z=max_z, $
-	plot_range=plot_range, title=title, win = win, be=be, fs=fs, ch=ch
+	plot_range=plot_range, title=title, win = win, be=be, fs=fs, ch=ch, fint=fint
 
 ;this procedure plots the xyz points of one or more  3-D arrays representing flight swaths
 ;the z value is that of data.bath
@@ -11,8 +11,8 @@ n_arr = n_elements(data_arr)
 !p.font=1
 !p.region = [0.03,0,0.9,0.94]
 !p.psym=8
-!p.symsize=0.5
-!p.thick=2.0
+!p.symsize=0.3
+!p.thick=1.0
 
 symbol_circle
 
@@ -20,7 +20,7 @@ if not keyword_set(min_z) then min_z = -50
 if not keyword_set(max_z) then max_z = -35
 if not keyword_set(win) then win = 0
 
-window, win, xsize=1000, ysize=600, color = -1
+window, win, xsize=1000, ysize=550, color = -1
 
 if keyword_set(plot_range) then begin
    x0_all = plot_range[0]
@@ -59,7 +59,7 @@ plot, [x0_all,x1_all],[y0_all,y1_all],xrange=[x0_all,x1_all],yrange=[y0_all,y1_a
 ;plot, [583773,584765],[2807564,2808734],xrange=[583773,584765],yrange=[2807564,2808734], $
 	 /nodata, /noerase, xstyle=1, ystyle=1,$
 	 ticklen = .01, title=title, xtitle="!4 UTM Easting (m) !3", ytitle = "!4 UTM Northing (m) !3", $
-	 charsize=1.8, xtickformat = '(I6)', ytickformat = '(I7)', xtickinterval=500, ytickinterval=500, $
+	 charsize=1.2, xtickformat = '(I6)', ytickformat = '(I7)', xtickinterval=500, ytickinterval=500, $
 	 xticklayout=0, /isotropic
 
 for i = 0, n_arr-1 do begin
@@ -75,6 +75,10 @@ for i = 0, n_arr-1 do begin
       z = ((*data_arr[i]).lelv[0] - (*data_arr[i]).felv[0])/100.
       indx = where( (z gt min_z) and (z lt max_z) and ((*data_arr[i]).nx[0] gt 0))
     endif
+    if (keyword_set(fint)) then begin
+      z = (*data_arr[i]).fint
+      indx = where( (z gt min_z) and (z lt max_z) )
+    endif
    ;indx = where((((*data_arr[i]).elevation[0])/100. ne 0) and ((((*data_arr[i]).elevation[0])) ne -10000))
    ;indx = where(((*data_arr[i]).elevation[0])/100. ne 0)
    color_plot = bytscl(z[indx],$
@@ -89,6 +93,8 @@ if (keyword_set(fs)) then $
 plot_colorbar, [min_z, max_z], "!3  NAVD88  !3", type1="!3First Surface!3", "!3 meters !3"
 if (keyword_set(ch)) then $
 plot_colorbar, [min_z, max_z], "!3  NAVD88  !3", type1="!3Canopy Height!3", "!3 meters !3"
+if (keyword_set(fint)) then $
+plot_colorbar, [min_z, max_z], "!3  NAVD88  !3", type1="!3Surface Intensity!3", "!3 counts !3"
 
 return
 end

@@ -17,7 +17,7 @@ case type of
 	 end
       3: begin
 	 ;this structure is the similar to structure FS in ytk-EAARL
-	  data = {dat2, RN:0L, MNORTH:0L, MEAST:0L, MELEVATION:0L, NORTH:0L, EAST:0L, ELEVATION:0L}
+	  data = {dat2, RN:0L, MNORTH:0L, MEAST:0L, MELEVATION:0L, NORTH:0L, EAST:0L, ELEVATION:0L, INTENSITY:0S}
 	  data_arr = replicate(data,recs)
 	 end
       4: begin

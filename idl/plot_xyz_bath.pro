@@ -1,10 +1,11 @@
 pro plot_xyz_bath, data_arr, min_z=min_z, max_z=max_z, $
-	plot_range=plot_range, title=title, win = win, bathy=bathy
+	plot_range=plot_range, title=title, win = win, bathy=bathy, make_tiff=make_tiff
 
-;this procedure plots the xyz points of one or more  3-D arrays representing flight swaths
-;the z value is that of data.bath
+;this procedure plots xyz bathymetry data
 ;amar nayegandhi 03/25/02
+; modified on 12/13/02 to automatically define min_z and max_z
 
+symbol_circle
 n_arr = n_elements(data_arr)
 !p.background=255
 !p.color=0
@@ -14,11 +15,36 @@ n_arr = n_elements(data_arr)
 !p.symsize=0.4
 !p.thick=2.0
 
-if not keyword_set(min_z) then min_z = -50
-if not keyword_set(max_z) then max_z = -35
+if ((not keyword_set(min_z)) or (not keyword_set(max_z))) then begin
+
+ max_z_all = -999999L
+ min_z_all = 999999L
+
+ for i = 0L, n_arr-1L do begin
+
+   if not keyword_set(min_z) then begin
+    ; statistically determine min_z from data_arr
+    min_z = min((*data_arr[i]).depth[0] + (*data_arr[i]).elevation[0])/100.
+   endif
+
+   if not keyword_set(max_z) then begin
+    ; statistically determine max_z from data_arr
+    max_z = max((*data_arr[i]).depth[0] + (*data_arr[i]).elevation[0])/100.
+   endif
+   
+   if (min_z_all gt min_z) then min_z_all = min_z
+   if (max_z_all lt max_z) then max_z_all = max_z
+
+ endfor
+
+ min_z = min_z_all
+ max_z = max_z_all
+
+endif
+
 if not keyword_set(win) then win = 0
 
-window, 0, xsize=650, ysize=800, color = -1
+window, win, xsize=650, ysize=550, color = -1
 
 if keyword_set(plot_range) then begin
    x0_all = plot_range[0]
@@ -57,7 +83,7 @@ plot, [x0_all,x1_all],[y0_all,y1_all],xrange=[x0_all,x1_all],yrange=[y0_all,y1_a
 ;plot, [583773,584765],[2807564,2808734],xrange=[583773,584765],yrange=[2807564,2808734], $
 	 /nodata, /noerase, xstyle=1, ystyle=1,$
 	 ticklen = .01, title=title, xtitle="!4 UTM Easting (m) !3", ytitle = "!4 UTM Northing (m) !3", $
-	 charsize=1.8, xtickformat = '(I6)', ytickformat = '(I7)', xtickinterval=200, ytickinterval=200, $
+	 charsize=1.8, xtickformat = '(I6)', ytickformat = '(I7)', xtickinterval=400, ytickinterval=400, $
 	 xticklayout=0, /isotropic
 
 for i = 0, n_arr-1 do begin
@@ -71,7 +97,9 @@ for i = 0, n_arr-1 do begin
 endfor
 
 !p.region=[0,0,1,1]
-plot_colorbar, [min_z, max_z], "!3  NAVD88  !3", "!3 meters !3"
+plot_colorbar, [min_z, max_z], "!3  NAVD88  !3", "!3 meters !3", yy=0.15
 
+if keyword_set(make_tiff) then $
+   write_tiff, make_tiff, tvrd(/true, /order)
 return
 end
