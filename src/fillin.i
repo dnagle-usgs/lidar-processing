@@ -8,7 +8,8 @@
 func fillin(z, &done)
 {
 //   good = (z>-9.)&(z<-0.5);
-   good = (z> -4500.)&(z< -2000.0);
+//   good = (z> -4500.)&(z< -2000.0);
+   good = (z> -2900.)&(z< -900.0);
    bad = where(!good);
    done = !numberof(bad);
    if (done) return z;

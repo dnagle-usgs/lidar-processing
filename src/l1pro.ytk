@@ -15,6 +15,7 @@
   set usecentroid   	1
   set hist_log		1
   set cmax 		40
+  set cdelta		10
   set cmin		-40
 
 exp_send "#include \"geo_bath.i\"\r"; # load geobath.i code

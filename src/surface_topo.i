@@ -501,7 +501,7 @@ See also: R
 
 
   if ( is_void(win) ) 
-	win = 7;
+	win = 0;
 
 // build an edit array indicating where values are between -60 meters
 // and 3000 meters.  Thats enough to encompass any EAARL data than
@@ -534,9 +534,10 @@ maxx = fs_all.elevation(q)(max);
   pltitle(swrite( format="Elevation Histogram %s", data_path));
   xytitles,"Elevation (meters)", "Number of measurements"
   //limits
+  hst = [e,h];
   window, win; limits,,,,hst(max,2) * 1.5
   window(w);
-  return [e,h];
+  return hst;
 }
 
 func write_topo(opath, ofname, fs_all, type=) {
