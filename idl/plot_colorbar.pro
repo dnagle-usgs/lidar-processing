@@ -1,13 +1,18 @@
-pro plot_colorbar, elv_range, type, unit, other = other, block = block, color=color
+pro plot_colorbar, elv_range, type, unit, other = other, block = block, color=color, $
+	xx = xx, yy = yy
+
 ;colorbar
 ;amar nayegandhi, 02/25/02
+;modified 10/02/02 to include xx and yy as keywords
 ;extracted from LaserMap v1.0
 ;keywords:  elv_range = the range of elevation values within the color bar
 ;	    type = title of the colorbar, e.g. "elevation"
 ;	    unit = units of the elv range e.g. "meters"
+;	    xx = x screen position for the colorbar (0<xx<1)
+;	    yy = y screen position for the colorbar (0<yy<1)
 
-xx = 0.9
-yy = 0.25
+if not keyword_set(xx) then xx = 0.9
+if not keyword_set(yy) then yy = 0.25
 xnorm = xx+[.0, .03]
 ynorm = yy+[.0, .45] 
 
