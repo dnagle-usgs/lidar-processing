@@ -1,6 +1,4 @@
-/*
-   $Id$
-*/
+;   $Id$
 
 function read_yfile, path, fname_arr=fname_arr
 
