@@ -1425,20 +1425,20 @@ Button .l1wid.bf45.q.2 -text "Histogram\nElevations" \
         -type ok
      }
      if {$ptype == 0} {
-      exp_send "hst = hist_fs($var_type); \r"
+      exp_send "hst = hist_fs($var_type, win=7); \r"
      }
      if {$ptype == 1} {
       if {$disp_type == 0} {
-   	exp_send "hst = hist_fs($var_type);\r"
+   	exp_send "hst = hist_fs($var_type, win=7);\r"
       } else {
-        exp_send "hst = hist_depth($var_type); \r"
+        exp_send "hst = hist_depth($var_type, win=7); \r"
       }
      }
      if {$ptype == 2} {
       if {$disp_type == 0} {
-   	exp_send "hst = hist_fs($var_type);\r"
+   	exp_send "hst = hist_fs($var_type, win=7);\r"
       } else {
-        exp_send "hst = hist_veg($var_type); \r"
+        exp_send "hst = hist_veg($var_type, win=7); \r"
       }
      }
      cbar_tool
