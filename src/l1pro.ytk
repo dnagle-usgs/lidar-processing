@@ -71,6 +71,7 @@ exp_send "#include \"batch_process.i\"\r"; # load batch_process.i
 exp_send "#include \"batch_multipip_process.i\"\r"; # load batch_multipip_process.i
 exp_send "#include \"comparison_fns.i\"\r"; # load for rcf filter function
 exp_send "#include \"bathy_filter.i\"\r"; # load for rcf filter function
+exp_send "#include \"data_rgn_selector.i\"\r"; 
 expect ">";
 
 package require BWidget
@@ -827,12 +828,13 @@ ComboBox .l1wid.bf4.1.d -text "Define Region using..." -width 22 -values "Rubber
 		-textvariable mxlon
 	Button .l1widc.1.ok -text "OK" -width 5 -command {
           set utm [.l1widc.utm.1 getvalue]
+          exp_send "utm = $utm; q = gga_win_sel(2, win=$_map(window), llarr=\[mnlon, mxlon, mnlat, mxlat\]);\r"
 	  destroy .l1widc
 	}
 	Button .l1widc.1.box -text "Plot Region" -width 7 -command {
 	   exp_send "a_x=\[$mnlon, $mxlon, $mxlon, $mnlon, $mnlon\];\r"
 	   exp_send "a_y=\[$mnlat, $mnlat, $mxlat, $mxlat, $mnlat\];\r"
-	   exp_send "plg, a_y, a_x;\r";
+	   exp_send "window, $_map(window); plg, a_y, a_x;\r";
 	}
 
 	  
