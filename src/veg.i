@@ -64,7 +64,7 @@ rn
 }
 
 
-func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) {
+func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, usecentroid= ) {
 // depths = array(float, 3, 120, len );
   if (is_void(graph)) graph=0;
 
@@ -126,7 +126,7 @@ func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) {
 }
 
 
-func ex_veg( rn, i,  last=, graph= ) {
+func ex_veg( rn, i,  last=, graph=, use_centroid= ) {
 /* DOCUMENT ex_veg(raster_number, pulse_index)
 
 
@@ -242,10 +242,26 @@ plg, dd-100, color="red"
 
 
   if ( numberof(xr) > 0  ) {
-    mx0 = a( xr(0):xr(0)+5, i, 1)(mxx) + xr(0) - 1;	  // find surface peak now
-    mv0 = a( mx0, i, 1);	          
-    mx1 = a( xr(1):xr(1)+5, i, 1)(mxx) + xr(1) - 1;	  // find surface peak now
-    mv1 = a( mx1, i, 1);	          
+    if (use_centroid) {
+       b = a(int(xr(0)+1):int(xr(0)+12),i,1); // create array b for 12 returns beyond the last peak leading edge.
+       //compute centroid
+       c = float(b*indgen(1:12)) (sum) / (b(sum));
+       mx0 = xr(0)+1+c;
+       mv0 = a(int(mx0),i,1);
+    } else {
+      mx0 = a( xr(0):xr(0)+5, i, 1)(mxx) + xr(0) - 1;	  // find bottom peak now
+      mv0 = a( mx0, i, 1);	          
+    }
+    if (use_centroid) {
+       b = a(int(xr(1)+1):int(xr(1)+12),i,1); // create array b for 12 returns beyond the last peak leading edge.
+       //compute centroid
+       c = float(b*indgen(1:12)) (sum) / (b(sum));
+       mx1 = xr(1)+1+c;
+       mv1 = a(int(mx1),i,1);
+    } else {
+      mx1 = a( xr(1):xr(1)+5, i, 1)(mxx) + xr(1) - 1;	  // find surface peak now
+      mv1 = a( mx1, i, 1);	          
+    }
     if ( graph ) {
          plmk, mv1, mx1, msize=.5, marker=7, color="blue", width=1
          plmk, mv0, mx0, msize=.5, marker=7, color="red", width=1
@@ -385,7 +401,7 @@ for (i=1; i<=len; i=i+1) {
 return geoveg;
 }
 
-func make_veg(latutm=, q=, ext_bad_att=, ext_bad_veg=) {
+func make_veg(latutm=, q=, ext_bad_att=, ext_bad_veg=, usecentroid=) {
 /* DOCUMENT make_veg(opath=,ofname=,ext_bad_att=, ext_bad_veg=)
 
  This function allows a user to define a region on the gga plot 
@@ -446,9 +462,9 @@ executing make_veg.  See rbpnav() and rbtans() for details.
       if ((rn_arr(1,i) != 0)) {
        fcount ++;
        write, format="Processing segment %d of %d for vegetation\n", i, no_t;
-       d = run_veg(start=rn_arr(1,i), stop=rn_arr(2,i));
+       d = run_veg(start=rn_arr(1,i), stop=rn_arr(2,i),usecentroid=usecentroid);
        write, "Processing for first_surface...";
-       rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i)); 
+       rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=usecentroid); 
        a=[];
        write, "Using make_fs_veg for submerged vegetation...";
        veg = make_fs_veg(d,rrr);
@@ -688,5 +704,41 @@ func write_veg(opath, ofname, veg_all, ba_veg=, bd_veg=) {
 
 
   write_vegall, veg_all, opath=opath, ofname=ofname;
+
+}
+
+
+func test_veg(veg_all,  fname=) {
+  // this function can be used to process for vegetation for only those pulses that are in rasternos or those that are in file fname.
+  // amar nayegandhi 11/27/02.
+
+  if (fname) {
+    ofn = split_path(fname,0);
+    data_ptr = read_yfile(ofn(1), fname_arr = ofn(2));
+    veg_all = *data_ptr(1);
+  } 
+
+  rasternos = veg_all.rn;
+   
+
+  rasters = rasternos & 0xffffff;
+  pulses = rasternos / 0xffffff;
+  tot_count = 0;
+
+  for (i = 1; i <= numberof(rasters); i++) {
+    depth = ex_veg(rasters(i), pulses(i),last=250, graph=1, use_centroid=1)   
+    if (veg_all(i).rn == depth.rastpix) {
+      veg_all(i).felv = depth.mx1*NS2MAIR*100;
+      veg_all(i).fint = depth.mv1;
+      veg_all(i).lelv = depth.mx0*NS2MAIR*100;
+      veg_all(i).lint = depth.mv0;
+      veg_all(i).nx = depth.nx;
+    } else {
+     write, "ooooooooops!!!"
+    }
+  }
+
+
+  return veg_all
 
 }

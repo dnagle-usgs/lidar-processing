@@ -171,3 +171,30 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, be=) {
 }
 
 
+func extract_closest_pts(eaarl, kings, buf=, fname=) {
+  //this function returns a data set of the closest points
+
+  if (!(buf)) buf = 100; //default 1m buffer
+
+ for (i=1; i <= numberof(kings(1,)); i++) {
+
+   q = where(((eaarl.east >= kings(1,i)*100-buf)   & 
+               (eaarl.east <= kings(1,i)*100+buf)));
+   if (is_array(q)) {
+   indx = where((eaarl.north(q) >= kings(2,i)*100-buf) & 
+               (eaarl.north(q) <= kings(2,i)*100+buf));
+   indx = q(indx);
+   }
+
+
+   if (is_array(indx)) {
+     grow, eaarl_out, eaarl(indx);
+   }
+ }
+   if (fname) {
+     f = open(fname, "w");
+     write, f, eaarl_out.rn;
+     close, f
+   }
+   return eaarl_out
+}
