@@ -288,13 +288,18 @@ label .cf3.label -text "Mode "
 Entry .cf3.entry -width 8 -relief sunken -bd 2 \
 	-helptext "Click to Enter Value" -textvariable hsr
 tk_optionMenu .cf3.option timern hms sod cin 
-Button .cf3.button -text "Examine Rasters" \
+Button .cf3.button -text "Raster" \
 	-helptext "Click to Examine EAARL Rasters.  Must have drast.ytk running." -command {
 	  #plotRaster
       	  send ytk "exp_send \"sfsod_to_rn, $sod;\n\"";
          }
 Button .cf3.imgbutton -text "Goto Img" \
 	-helptext "Click to Jump to Image defined in Entry Widget" -command gotoImage
+Button .cf3.cirbutton -text "cir" \
+	-helptext "Click to shown CIR image" -command {
+          send cir.tcl "show sod $sod";
+        }
+
 
 bind .cf3.entry <Return> {gotoImage}
 proc gotoImage {} {
@@ -422,7 +427,7 @@ pack .cf1 .cf1.prev .cf1.next .cf1.playr .cf1.stop .cf1.play \
 pack .cf1 -fill x -side top
 pack .cf2 .cf2.speed .cf2.lbl .cf2.step  .cf2.gamma .cf2.offset -padx 3 -side left
 pack .cf2 -side top -expand 1 -fill x
-pack .cf3 .cf3.entry .cf3.option .cf3.imgbutton .cf3.button \
+pack .cf3 .cf3.entry .cf3.option .cf3.imgbutton .cf3.button .cf3.cirbutton \
 	-side left -expand 1 -fill both
 pack .cf3 -side top -fill x
 

@@ -54,14 +54,10 @@ set t "170000"
 set last_tar ""
 set fn ""
 
-proc cirdir { } {
- global settings
- set settings(path) [ tk_chooseDirectory -initialdir $settings(path) ]
- puts "Path: $settings(path) "
 
-# Setup the month day and year from the first tar file
- set flst [ lsort [ glob $settings(path)/*-cir.tar  0 ] ]
- set mdy [ lindex [  split [ file tail $flst ] "/-" ] 0]
+proc cfg_file { fn } { 
+ global settings
+ set mdy [ lindex [  split [ file tail $fn ] "/-" ] 0]
  set settings(month) 0
  set settings(day)   0
  set settings(year)  0
@@ -75,6 +71,17 @@ proc cirdir { } {
 					        $settings(day) \
 						$settings(year) ]
   puts "$mdy $settings(file_date) $settings(tar_date)"
+}
+
+
+proc cirdir { } {
+ global settings
+ set settings(path) [ tk_chooseDirectory -initialdir $settings(path) ]
+ puts "Path: $settings(path) "
+
+# Setup the month day and year from the first tar file
+ set flst [ lsort [ glob $settings(path)/*-cir.tar  0 ] ]
+ cfg_file  [ lindex $flst 0 ]
   set start_hms [ tfn2hms [ lindex $flst 0 ]] 
   puts "Start: $start_hms End:[ tfn2hms [ lindex $flst end ]]"
   show hms $start_hms 
@@ -191,7 +198,7 @@ proc prefs { } {
       puts "Tar file:$tfn"
       set settings(path) [ file dirname $tfn ]
       set settings(tar_name) [ file tail $tfn ]
-      vfs::tar::Mount "$settings(path)/$settings(tar_file)" tar
+      vfs::tar::Mount "$settings(path)/$settings(tar_name)" tar
     }
   } 
   .p.mb.file add command -label "Exit" -command exit;
