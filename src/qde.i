@@ -1,4 +1,5 @@
 
+require, "rcf.i"
 /*
      $Id$
 
@@ -33,7 +34,7 @@ func qde( r ) {
 
 
   animate,1;
-  for (i=1; i<200; i++) {
+  for (i=1; i< numberof(r); i++) {
     fma;
     plmk, w(,i,1), w(,i,2), marker=4;
   }
@@ -70,13 +71,13 @@ func lsq(y,x) {
   return [ a, b ];
 }
 
-func d(a,b, wn=) {
+func d(start,stop, wn=) {
   if ( is_void(wn) )
 	wn = 2.0;
  
   xx = [-.5, .5];
   animate,1;
-  for (i=1; i<200; i++) {
+  for (i=start; i<stop; i++) {
     s = *rcf( w(,i,1), wn, mode=2)(1);		// Find surface values.
     ns = indgen(1:120); 			// Find rejects.
     ns(s) = 0;					// Zero out good indexes.

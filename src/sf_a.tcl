@@ -1,4 +1,5 @@
 #!/usr/local/ActiveTcl/bin/wish
+#!/usr/src/ActiveTcl8.3.4.2-linux-ix86/bin/wish
 #!/usr/bin/wish
 #!/usr/local/bin/wish8.4 
 # $Id$
