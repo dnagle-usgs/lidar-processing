@@ -6,37 +6,13 @@ exec wish "$0" ${1+"$@"}
 
 # [ Header #########################################
 #
-#!/eaarl/packages/ActiveTcl/bin/wish
-#!/usr/local/ActiveTcl/bin/wish
-#!/usr/src/ActiveTcl8.3.4.2-linux-ix86/bin/wish
-#!/usr/bin/wish
-#!/usr/local/bin/wish8.4 
 # $Id$
 #
-# TCLLIBPATH=`pwd`; export TCLLIBPATH;
-# SHLIB_PATH=`pwd`:/usr/local/lib:/usr/X11R6/lib:/usr/local/lib:/usr/local/lib;
-# export SHLIB_PATH;
-# LD_LIBRARY_PATH=`pwd`:/usr/local/lib:/usr/X11R6/lib:/usr/local/lib:/usr/local/lib;
-# export LD_LIBRARY_PATH;
+# Web sources for components and modules used by sf.
+# Activetcl www.activestate.com
+# Jpg image module at:    http://members1.chello.nl/~j.nijtmans/img.html
+# Mogrify and friends at: http://www.imagemagick.org
 #
-# Find the jpg image stuff at:  http://members1.chello.nl/~j.nijtmans/img.html
-#
-#  Add:
-#	scaling
-#	date display
-#	fix directory stuff
-#	gray scale / color option
-#	add mark set and ability to write a new file list
-#
-#
-#     7/5/02 WW
-#	Fixed minor bugs which caused errors when canceling a file open
-#       and another when trying to move the slider with no file selected.
-#
-#	.75 Fixed linux 7.1/tk8.4 problem with the scale drag command.
-#	.74 has gps time_offset corrections.
-#	.73 has simple title command which can be embedded in the file list
-#	.72 added gamma adjustment
 #
 # ] End Header #####################################
 
@@ -1053,8 +1029,10 @@ menu .mb.zoom
 .mb.file add command -label "Select File.." -underline 0 \
 	-command {
 		set f [ tk_getOpenFile  -filetypes { 
-		     { {Tar Files} {.tar} } 
+		     { {Tar Files } {.tar} } 
 			  { {List files} {.lst} }
+			  { {Zip  files} {.zip} }
+			  { {All files } { *  } }
 			} -initialdir $base_dir ];
 		if { $f != "" } {
 		   set base_dir [ file dirname $f ]
@@ -1123,6 +1101,7 @@ menu .mb.zoom
 		 wm geometry . ""
 	  } else {
 	    pack forget .cf1
+		 wm geometry . ""
 	  }
   }
 .mb.options add command  -label "GPS Info..." -underline 1  -command {
@@ -1131,6 +1110,7 @@ menu .mb.zoom
 		 wm geometry . ""
 	  } else {
 	    pack forget .gps
+		 wm geometry . ""
 	  }
   }
 .mb.options add command  -label "Image slider..." -underline 1  -command {
@@ -1139,6 +1119,7 @@ menu .mb.zoom
 		 wm geometry . ""
 	  } else {
 	    pack forget .slider
+		 wm geometry . ""
 	  }
   }
 .mb.options add command  -label "ALPS Interface..." -underline 1  -command {
@@ -1148,6 +1129,7 @@ menu .mb.zoom
 		 wm geometry . ""
 	  } else {
 	    pack forget .cf3 .cf1.plotpos
+		 wm geometry . ""
 	  }
   }
 .mb.options add command  -label "Speed, Gamma..." -underline 1  -command {
@@ -1156,8 +1138,21 @@ menu .mb.zoom
 		 wm geometry . ""
 	  } else {
 	    pack forget .cf2
+		 wm geometry . ""
 	  }
 	}
+.mb.options add command  -label "Hide/Show Scroll bars..." -underline 1  -command {
+	  if { [ catch { pack info .canf.xscroll } ] } {
+	    pack .canf.yscroll -side right  -fill y -before .canf.can
+	    pack .canf.xscroll -side bottom -fill x -before .canf.can
+		 wm geometry . ""
+	  } else {
+	    pack forget .canf.xscroll
+	    pack forget .canf.yscroll
+		 wm geometry . ""
+	  }
+	}
+
 .mb.options add checkbutton -label "Include Heading" -underline 8 -onvalue 1 \
 	-offvalue 0 -variable inhd \
 	-command {
@@ -1243,7 +1238,7 @@ scale .slider -orient horizontal -from 1 -to 1 -variable ci
 
 scrollbar .canf.xscroll -orient horizontal -command { .canf.can xview }
 scrollbar .canf.yscroll -orient vertical   -command { .canf.can yview }
-canvas .canf.can -height 240 -width 320 \
+canvas .canf.can -height 240 -width 350 \
 	-xscrollcommand { .canf.xscroll set } \
 	-yscrollcommand { .canf.yscroll set } \
 	-scrollregion { 0 0 0 0 } \
