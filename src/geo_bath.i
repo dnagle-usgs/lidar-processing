@@ -942,7 +942,17 @@ write,"============================================================="
                knots * 1852.0/3600.0, 
                knots;
 
- write,format="Scanner Elev: %8.2fm\n", mindata.melevation/100.0
+ hy = sqrt( (mindata.melevation - mindata.elevation)^2 +
+ 	    (mindata.meast      - mindata.east)^2 +
+	    (mindata.mnorth     - mindata.north)^2 );
+	  
+ if ( mindata.melevation > mindata.elevation )
+ aoi = acos( (mindata.melevation - mindata.elevation) / hy ) * rad2deg;	
+ else aoi = -9999.999;
+ write,format="Scanner Elev: %8.2fm Aoi:%6.3f Slant rng:%6.3f\n", 
+ 	mindata.melevation/100.0,
+	aoi, hy;
+
  write,format="Surface elev: %8.2fm Delta: %7.2fm\n",
                mindata.elevation/100.0,
                mindata.elevation/100.0 - _last_rastpulse(3)/100.0
