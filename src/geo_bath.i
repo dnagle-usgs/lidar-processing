@@ -32,8 +32,8 @@ func display_bath (d, rrr, cmin =, cmax=, size=, win=, correct= ) {
 // rrr is the topo array from surface_topo.i
 if ( is_void(win) )
         win = 5;
- if ( is_void( cmin )) cmin = -1;
- if ( is_void( cmax )) cmax = 251;
+ if ( is_void( cmin )) cmin = -15;
+ if ( is_void( cmax )) cmax = 0;
  if ( is_void( size )) size = 1.4;
 
 if (numberof(d(0,,)) < numberof(rrr)) { len = numberof(d(0,,)); } else { 
