@@ -256,7 +256,7 @@ func msel_wf( w, cb= ) {
     idx = int(b(1));  
     btn = int(b(11)*10 + b(10));
     if ( btn == 2 ) break;
-      show_wf( *w, idx , win=0, cb=cb  )
+      show_wf, *w, idx , win=0, cb=cb  
     write,format="Pulse %d\n", idx
  }
  write,"msel_wf completed"
@@ -294,7 +294,7 @@ func show_wf( r, pix, win=, nofma=, cb=, c1=, c2=, c3= ) {
 	swrite(format="Water depth (%s)", depth_display_units)
 
   if ( !is_void(win) ) {
-    window( oldwin );
+    window, oldwin ;
   }
 }
 

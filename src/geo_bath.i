@@ -693,17 +693,35 @@ func plot_bathy(depth_all, fs=, ba=, de=, fint=, lint=, win=, cmin=, cmax=, msiz
 
 
 func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset=) {
- /* This function uses a mouse click on a bathy/depth plot and 
-    finds the associated rasters
+/* DOCUMENT raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset=)
+
+  This function uses a mouse click on an EAARL image plot and finds the associated 
+  pulse and raster.
+
+  Inputs:
+	mouse click
+	data
+
+  Options:
+	win=
+	buf=
+	cmin=
+	cmax=
+	msize=
+	disp_type=
+	ptype=
+	fset=	
+
+  Returns:
 
     Amar Nayegandhi 06/11/02
-    */
+*/
 
  /* use mouse function to click on the reqd point */
  extern wfa
- extern _last_rastpulse_elevation
- if ( is_void(_last_rastpulse_elevation ) )
-	_last_rastpulse_elevation = 0.0;
+ extern _last_rastpulse
+ if ( is_void(_last_rastpulse ) )
+	_last_rastpulse = [0.0, 0.0, 0.0];
  if ( is_void(_last_soe) )
 	_last_soe = 0;
  if (!(win)) win = 5;
@@ -773,11 +791,11 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset
                         look for the point 
                       */
 
- spot = mouse(1,1,"Please click in window");
+ write,format="Click on a point in window %d\n\n", win
+ spot = mouse(1,1,"");
 
 // plg, spot(2),spot(1),marker=2,msize=2.0, color="black",type=0;
 
- write, format="Searching for data within %d centimeters from selected point \n",buf;
 
  indx = where(((data.east >= spot(1)*100-buf)   & 
                (data.east <= spot(1)*100+buf))  & 
@@ -785,7 +803,7 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset
                (data.north <= spot(2)*100+buf)));
 
  if (is_array(indx)) {
-    write, format="%d points found \n",numberof(indx);
+write,"============================================================="
     // print, data(indx);
     rn = data(indx(1)).rn;
     mindist = buf*sqrt(2);
@@ -802,9 +820,9 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset
     rasterno = mindata.rn&0xffffff;
     pulseno = mindata.rn/0xffffff;
 
-    write, format="Nearest point: %5.3fm\n", mindist;
-    write, format="       Raster: %6d    Pulse: %d\n",rasterno, pulseno;
-    write, format="Plot   raster: %6d waveform: %d\n",rasterno(1), pulseno(1);
+///////    write, format="Nearest point: %5.3fm\n", mindist;
+///////    write, format="       Raster: %6d    Pulse: %d\n",rasterno, pulseno;
+///////    write, format="Plot   raster: %6d waveform: %d\n",rasterno(1), pulseno(1);
     if (_ytk) {
       window,1,wait=1
       ytk_rast, rasterno(1);
@@ -879,19 +897,40 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset
  } else {
    print, "No points found!  Please try again... \n";
  }
- ztime = soe2time( edb( mindata.rn&0xffffff ).seconds );
+ somd = edb(mindata.rn&0xffffff ).seconds % 86400; 
+ ztime = soe2time( somd );
  zdt   = soe2time( abs(edb( mindata.rn&0xffffff ).seconds - _last_soe) );
- write,format="  Raster nbr: %d %d (%02d:%02d:%02d) (%d:%02d:%02d)\n", 
-               mindata.rn&0xffffff,  edb( mindata.rn&0xffffff ).seconds,
-               ztime(4),ztime(5),ztime(6), 
-               zdt(4), zdt(5), zdt(6);
- write,format="Scanner Elev: %7.2fm\n", mindata.melevation/100.0
- write,format="Surface elev: %7.2fm Delta: %7.2fm\n",
+ pnav_idx = where(  pnav.sod == double(somd) )(1);
+ tans_idx = where(  tans.somd == double(somd) )(1);
+ write,format="  Raster nbr: %d UTM: %7.1f, %7.1f Delta: %7.2fm\n", 
+               mindata.rn&0xffffff,
+               mindata.north/100.0,
+	       mindata.east/100.0,
+               sqrt(double(mindata.north - _last_rastpulse(1))^2 +
+                    double(mindata.east  - _last_rastpulse(2))^2)/100.0
+
+ write,format="        Time: %7.4f (%02d:%02d:%02d) Delta:%d:%02d:%02d\n", 
+        double(somd),
+        ztime(4),ztime(5),ztime(6),
+        zdt(4), zdt(5), zdt(6);
+ write,format="    GPS Pdop: %8.2f  Svs:%2d  Rms:%6.3f Flag:%d\n", 
+	       pnav(pnav_idx).pdop, pnav(pnav_idx).sv, pnav(pnav_idx).xrms,
+	       pnav(pnav_idx).flag
+ write,format="     Heading: %8.3f Roll: %5.3f Pitch: %5.3f\n",
+	       tans(tans_idx).heading,
+	       tans(tans_idx).roll,
+	       tans(tans_idx).pitch
+
+ write,format="Scanner Elev: %8.2fm\n", mindata.melevation/100.0
+ write,format="Surface elev: %8.2fm Delta: %7.2fm\n",
                mindata.elevation/100.0,
-               mindata.elevation/100.0 - _last_rastpulse_elevation/100.0
+               mindata.elevation/100.0 - _last_rastpulse(3)/100.0
+ write,"\n"
 
  _last_soe = edb( mindata.rn&0xffffff ).seconds;
- _last_rastpulse_elevation = mindata.elevation;
+ _last_rastpulse(3) = mindata.elevation;
+ _last_rastpulse(1) = mindata.north;
+ _last_rastpulse(2) = mindata.east;
   
  return mindata;
       

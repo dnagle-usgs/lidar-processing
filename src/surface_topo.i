@@ -218,8 +218,6 @@ func first_surface(start=, stop=, center=, delta=, north=, usecentroid=) {
 
  a = irg(i,j, usecentroid=usecentroid);		
 
-// The line interpolating heading needs to be done using x/y from a 
-// unit circle to work for norther headings.
 atime   = a.soe - soe_day_start;
 
 write,"interpolating roll..."
@@ -230,7 +228,9 @@ pitch   = interp( tans.pitch,   tans.somd, atime )
 
 if ( is_void( north ) ) {
  write,"interpolating heading..."
- heading = interp( tans.heading, tans.somd, atime ) 
+ hy = interp( sin( tans.heading*deg2rad), tans.somd, atime );
+ hx = interp( cos( tans.heading*deg2rad), tans.somd, atime );
+ heading = atan( hy, hx)/deg2rad;
 } else {
  write,"interpolating North only..."
  heading = interp( array( 0.0, dimsof(tans)(2) ), tans.somd, atime ) 
