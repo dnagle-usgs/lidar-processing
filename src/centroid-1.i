@@ -87,7 +87,8 @@ See also: RAST, cent
         for each aturated point.
 
 **********************************************************************/
-  if ( (nsat1 = numberof(where(  ((*rast.rx(n,1))(1:np)) == 0 ))) <= 10 ) {
+  max_sfc_sat = 2;	// The maximum number of saturated surface values
+  if ( (nsat1 = numberof(where(  ((*rast.rx(n,1))(1:np)) == 0 ))) <= max_sfc_sat ) {
      cv = cent( *rast.rx(n, 1 ) );
 //     if ( nsat1 > 1 ) cv(1) = cv(1) - (nsat1 -1 ) * .1 ;    // See Note 1 above
      if ( cv(3) < -90 ) {	   // Must be water column only return.  
