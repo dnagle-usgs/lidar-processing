@@ -15,6 +15,7 @@ require, "rbpnav.i"
 require, "nav.i"
 require, "map.i"
 require, "waves.i"
+require, "gridr.i"
 
 
 // Transmit somd time to sf_a
