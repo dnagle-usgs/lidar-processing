@@ -479,7 +479,7 @@ struct FP {
     double	lon2;
     }
 
-func pl_fp( fp, win=, color= , width=, skip=) {
+func pl_fp( fp, win=, color= , width=, skip=, labels=) {
 /* DOCUMENT pl_fp(fp, color=)
   
   Plot the given flight plan on win= using color=.  Default 
@@ -490,6 +490,7 @@ window is 6, and color is magenta.
 	win=	Window number for display. Default=6
 	color=	Set the color of the displayed flight plan.
 	skip =  the line numbers to skip before plotting thicker flight line.
+ 	labels = write the label name on the plot
 
   Orginal W. Wright
 */
@@ -510,14 +511,16 @@ window is 6, and color is magenta.
   for (i=1;i<numberof(idx);i++) {
       fpx = fp(idx(i):idx(i+1)-1);
       cc = strtok(fpx.name, "-");
-      dd = array(int, numberof(fpx.name));
-      sread, cc(2,), dd;
+      dd = array(string, numberof(fpx.name));
+      sread, cc(1,), dd;
       idx1 = sort(dd);
       fpx = fpx(idx1);
       r = 1:0;
       pldj, fpx.lon1(r),fpx.lat1(r),fpx.lon2(r),fpx.lat2(r),color=color, width=width;
       r = 1:0:skip;
       pldj, fpx.lon1(r),fpx.lat1(r),fpx.lon2(r),fpx.lat2(r),color=color, width=5*width;
+      if (labels) 
+	plt, dd(r)(1), fpx.lon1(r)(1), fpx.lat1(r)(1), tosys=1, height=15, justify="CC", color="blue";
   }
       
   window(w);
@@ -693,3 +696,32 @@ func xyz2nad83( Xi, Yi, Zi, E= ) {
 */
 }
 
+func utmfp2ll (fname, zone=) {
+  //amar nayegandhi 06/14/03
+  
+  if (!zone) zone = 19;
+  // read the input ascii file
+  fp = open(fname, "r");
+
+
+  i = 0;   
+  nc = 0;		// null line counter
+  loop=1; 
+
+  while (loop) {
+    i++;
+    if ( nc > 50 ) break;
+    a = rdline(fp) (1);
+    if ( strlen(a) == 0 ) 	// null counter
+	nc++; 
+    else 
+        nc = 0;
+    st = ""; w=0.0;x=0.0;y=0.0;z=0.0;
+    if ((a > "") && !(strmatch(a,"#"))) {
+       sread, a, st, w,x,y,z;
+       ll = utm2ll([w,y], [x,z], zone);
+       lldm = abs(ll-int(ll))*60.0;
+       write,format="llseg %s %c%d%10.8f:%c%d%10.8f %c%d%10.8f:%c%d%10.8f\n", st, 'n',int(ll(3)),lldm(3), 'w', abs(int(ll(1))), lldm(1), 'n', int(ll(4)), lldm(4), 'w', abs(int(ll(2))), lldm(2);
+    }
+  }
+}
