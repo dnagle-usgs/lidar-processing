@@ -101,14 +101,8 @@ func ex_bath( rn, i,  last=, graph= ) {
  fma;pli,-z,cmin=-22, cmax=-10
 
 
- This function returns a three element with the following organization:
+ This function returns a BATHPIX structure element
 
-  Element     Description
-	1	Raw scan angle counts
- 	2	Bottom location (index) in the waveform 
-	3	Bottom peak signal value in first waveform counts
-
-	[ rp.sa(i), mx, a(mx,i,1) ];
  
 */
 
@@ -116,7 +110,7 @@ func ex_bath( rn, i,  last=, graph= ) {
  The following developed using 7-14-01 data at rn = 46672 data. (sod=70510)
  Check waveform samples to see how many samples are
  saturated. 
- The function checks the following conditions so far:
+ At this time, this function checks only for the following conditions:
   1) Saturated surface return - locates last saturated sample
   2) Non-saturated surface with saturated bottom signal
   3) Non saturated surface with non-saturated bottom
@@ -126,8 +120,14 @@ func ex_bath( rn, i,  last=, graph= ) {
  We come out of this with the last_surface_sat set to the last
  saturated value of surface return.
  The 12 represents the last place a surface can be found
+
+ Controls:
+    last              160    1:300     The last point in the waveform to consider.
+    laser_exp	      -3.0  -1:-5.0    The exponent which describes the laser decay rate
+    water_exp         -2.0  -0.1:-10.0 The exponent which best describes this water column
+      agc_exp         -0.3  -0.1:-10.0 Agc scaling exponent.
+
  Variables: 
-    last              The last point in the waveform to consider.
     nsat 		A list of saturated pixels in this waveform
     numsat		Number of saturated pixels in this waveform
     last_surface_sat  The last pixel saturated in the surface region of the
@@ -189,15 +189,19 @@ func ex_bath( rn, i,  last=, graph= ) {
           escale = 255 - w(1:wflen) (min);
    }
 
-   laser_decay     = exp( -2.4 * attdepth) * escale;
-   //secondary_decay = exp( -1.5 * attdepth) * escale; // for tampa bay water
-   secondary_decay = exp( -0.6 * attdepth) * escale; // for keys water
+//   laser_decay     = exp( -2.4 * attdepth) * escale; // tampa and keys laser decay
+   laser_decay     = exp( -3.7 * attdepth) * escale;  // installed for wva water
+
+//   secondary_decay = exp( -0.6 * attdepth) * escale; // for keys water
+//   secondary_decay = exp( -1.5 * attdepth) * escale; // for tampa bay water
+   secondary_decay = exp( -7.5 * attdepth) * escale; // for wva water
    laser_decay(last_surface_sat:0) = laser_decay(1:0-last_surface_sat+1) + 
 					secondary_decay(1:0-last_surface_sat+1)*.25;
    laser_decay(1:last_surface_sat) = escale;
 
-  // agc     = 1.0 - exp( -3.0 * attdepth) ;	// for tampa bay water
-   agc     = 1.0 - exp( -0.3 * attdepth) ;	// for keys water
+//   agc     = 1.0 - exp( -0.3 * attdepth) ;	// for keys water
+//   agc     = 1.0 - exp( -3.0 * attdepth) ;	// for tampa bay water
+   agc     = 1.0 - exp( -5.0 * attdepth) ;	// for wva water
    agc(last_surface_sat:0) = agc(1:0-last_surface_sat+1); 
    agc(1:last_surface_sat) = 0.0;
    

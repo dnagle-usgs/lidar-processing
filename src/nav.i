@@ -129,7 +129,7 @@ if (is_void(sw) )
 
 
 
-func sdist( junk, centerline= , fill=) {
+func sdist( junk, block=, centerline= , fill=) {
 /* DOCUMENT sdist(centerline=)
    Measure distance, and draw a proportional rectangle showing the 
    resulting coverage.
@@ -138,6 +138,11 @@ func sdist( junk, centerline= , fill=) {
    as sdist(), it will expect the user to select the points with the 
    mouse by clicking and holding down the left button over one endpoint
    and releasing the mouse over the other endpoint.
+
+   If called with "block" it will expect a block of FB data. The block of
+   FB data usually would be a previously returned FB block, but with 
+   altered values for sw, aw, etc. etc.
+   
 
    If it is called as sdist( centerline="A B C D" ) then it expects a 
    string of four floating point numbers as "A B C D" where A and B are 

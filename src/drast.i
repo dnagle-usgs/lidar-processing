@@ -152,6 +152,7 @@ func drast( r ) {
   Be sure to load a database file with load_edb first.
 */
  extern x,y;
+ extern txwf;
  extern aa;
  extern irange, sa;
  extern x0,x1;
