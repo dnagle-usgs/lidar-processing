@@ -1,0 +1,10 @@
+#!/bin/sh
+#mkcamlist: automatically make the camlist
+# find cam1 -name \*.jpg > MM-DD-YY-cam1.lst
+
+dir=`pwd`
+lname=`basename $dir`"-cam1.lst"
+tname=`basename $dir`"-cam1.tar"
+echo $lname
+# find cam1 -name \*.jpg > $lname
+tar -tvf $tname | awk '{ if ( NR > 1 ) print $NF; }' > $lname

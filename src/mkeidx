@@ -1,0 +1,10 @@
+#!/bin/sh
+#mkeidx: automatically make the master earl index
+# ls *.tld | /opt/eaarl/lidar-processing/bin/efdb MM-DD-YY.idx
+
+dir=`pwd`
+name=`basename $dir`".idx"
+echo $name
+cd eaarl
+# find . -name \*.tld | sed 's#./##'
+find . -name \*.tld | sed 's#./##' | /opt/eaarl/lidar-processing/bin/efdb $name
