@@ -56,8 +56,8 @@ func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) {
        rn = center - delta;
        len = 2 * delta;
     } else if (!is_void(start) && !is_void(stop)) {
-             rn = start;
-	     len = stop - start;
+             rn = start-1;
+	     len = stop - start+1;
     } else {
 	     write, "Input parameters not correctly defined.  See help, run_veg.  Please start again.";
 	     return 0;
@@ -236,3 +236,44 @@ plg, dd-100, color="red"
 
 
 
+func display_veg(veg_arr, rrr, fr=, lr=,  cmin=, cmax=, size=, win=, dofma=, edt= ) {
+  /* DOCUMENT display_veg(veg_arr, rrr, fr=, lr=,  cmin=, cmax=, size=, win=, dofma=, edt= )
+     This function displays a veg plot using the veg array from functin run_veg, and the georeferencing from the first_surface function.   If fr = 1, the first surface return is plotted.  If lr = 1, the last returns are plotted (bald earth).  If fr=lr=1, the canopy height is plotted.
+  */
+  extern elv;
+  if ( is_void(win) )
+      win = 5;
+	    
+  window,win; animate, 0;
+  if ( !is_void( dofma ) )
+      fma;
+  write,"Please wait while drawing..........\r"
+  if ( is_void( size )) size = 1.4;
+  len = numberof(veg_arr(1,));
+  if (fr) {
+     elv = rrr.elevation/100.;
+     if ( is_void( cmin )) cmin = -27;
+     if ( is_void( cmax )) cmax = -10;
+  }
+  if (lr) {
+     elv = rrr.elevation/100.-(veg_arr.mx0-veg_arr.mx1)*NS2MAIR;
+     if ( is_void( cmin )) cmin = -27;
+     if ( is_void( cmax )) cmax = -18;
+  }
+  if (lr && fr) {
+     elv = (veg_arr.mx0-veg_arr.mx1)*NS2MAIR;
+     if ( is_void( cmin )) cmin = 0;
+     if ( is_void( cmax )) cmax = 10;
+  }
+  
+  for ( i=1; i<len; i++ ) {
+    write, format="i = %d\r",i
+    q = where( elv(,i));
+    if ( numberof(q) >= 1) {
+       plcm, elv(q,i), rrr(i).north(q)/100.0, rrr(i).east(q)/100.0,
+            msize=size,cmin=cmin, cmax=cmax
+    }
+  }
+  colorbar, cmin, cmax;
+  write,format="Draw complete. %d rasters drawn. %s", len, "\n"
+}

@@ -7,6 +7,7 @@ require, "sel_file.i"
 require, "ytime.i"
 require, "map.i"
 require, "string.i"
+require, "pip.i"
 
 local rbgga_help 
 /* DOCUMENT rbgga_help
@@ -41,6 +42,11 @@ Other:
   it must be verified and converted by the gga2bin.c. program.  
 
   $Log$
+  Revision 1.15  2002/08/21 14:03:15  amar
+  veg.i : Added function display_veg which displays either the first return (topography), last return (bald earth), or the canopy height using the return values from the run_veg and first_surface functions.
+  rbgga.i:  minor change to #include "pip.i" when rbgga.i is included.
+  l1pro.ytk: minor documentation-related change.
+
   Revision 1.14  2002/08/14 13:28:12  amar
   edb_access.i: Commented out a write statement.
 
