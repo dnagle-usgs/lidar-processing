@@ -256,9 +256,15 @@ func mark_time_pos( sod ) {
  sf_a.tcl via eaarl.ytk
 
 */
+  extern utm;
   q = where( gga.sod == sod )
   window,6
-  plmk, gga.lat(q), gga.lon(q), marker=5, color="red", msize=0.8
+  if (utm) {
+   ll2utm, gga.lat(q), gga.lon(q) 
+   plmk, UTMNorthing, UTMEasting, marker=5, color="red", msize=0.6
+  } else {
+   plmk, gga.lat(q), gga.lon(q), marker=5, color="red", msize=0.6
+  }
 }
 
 func test_selection_size (q) {
