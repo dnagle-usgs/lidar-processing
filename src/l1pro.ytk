@@ -202,8 +202,8 @@ menu .l1wid.mb.options
            set ofname [ tk_getSaveFile -filetypes $ftypes -defaultextension ".pbd" ]
         }
 	LabelEntry .l1write.2.varname -width 10 -relief sunken -bd 3 -label "Variable Name: " -helptext "Enter Name of Variable to Write to file"  -textvariable var_type -text $var_type
-	LabelEntry .l1write.2.plyname -width 10 -relief sunken -bd 3 -label "PLY Name: " -helptext "Enter ply name to Write to file"  -textvariable ply_type -text "ply_$var_type"
-	LabelEntry .l1write.2.qname -width 10 -relief sunken -bd 3 -label "GGA(q) Name: " -helptext "Enter q name to Write to file"  -textvariable q_type -text "q_$var_type"
+	LabelEntry .l1write.2.plyname -width 10 -relief sunken -bd 3 -label "PLY Name: " -helptext "Enter ply name to Write to file; Leave it empty if you don't want to write out ply data"  -textvariable ply_type -text ""
+	LabelEntry .l1write.2.qname -width 10 -relief sunken -bd 3 -label "GGA(q) Name: " -helptext "Enter q name to Write to file; Leave it empty if you don't want to write out gga data"  -textvariable q_type -text ""
     Button .l1write.3.ok -text "OK" -width 5 -command {
 	if { $ofname != "" }  {
          switch [ file extension $ofname ] {
@@ -287,21 +287,28 @@ menu .l1wid.mb.options
           }  ]
 	destroy .l1ss
 	toplevel .l1ss
+	wm title .l1ss "Read SubSampled Data File"
         LabelFrame .l1ss.1 -relief groove -borderwidth 3 -text "Points to skip:"
+	frame .l1ss.2
   	SpinBox .l1ss.1.sk \
 	-range {1 1000 1} \
 	-textvariable skip \
-	-helptext "Enter plot points to skip" \
+	-helptext "Enter points to skip (Subsample)" \
 	-width 5
-	LabelEntry .l1ss.1.mvar -label "Variable Name: " -width 8 -bd 3 \
+	LabelEntry .l1ss.1.mvar -label "Variable Name: " -width 10 -bd 3 \
 		-helptext "Enter Variable Name of Data array after merging" \
 		-textvariable mvar
- 	Button .l1ss.ok -text "OK" -width 5 -command {
+ 	Button .l1ss.2.ok -text "OK" -width 5 -command {
 	   exp_send "$mvar = subsample_pbd_data(fname=\"$ofn\", skip = $skip);\r"
 	   destroy .l1ss
 	}
+ 	Button .l1ss.2.cancel -text "Cancel" -width 5 -command {
+	   destroy .l1ss
+ 	}
 	pack .l1ss.1.sk .l1ss.1.mvar -side left -padx 5
-	pack .l1ss.1 .l1ss.ok 
+	pack .l1ss.2.ok .l1ss.2.cancel -side left -padx 5  
+	pack .l1ss.1 .l1ss.2 -pady 5
+	
 }
 
 
