@@ -840,7 +840,6 @@ proc multi_pip_sel {junk} {
 		set cursr [string range $curs 0 [expr ($cidx-1)]]
 		set cursc [string range $curs [expr ($cidx+1)] end]
         	if { ([info exists _mpipx($cursr,2) ] == 0) || ($_mpipx($cursr,2)=="") } {
-		   incr varc
 		   set _mpipx($cursr,2) "q_$cursr"
 		}
         	if { [info exists _mpipx($cursr,1) ] == 0 } {
@@ -893,21 +892,27 @@ proc multi_pip_sel {junk} {
 	global tpath _mpipx usecentroid data_var pip_var fname_var ptype_var
 	set data_var "\["
 	set pip_var "\["
+	set qname_var "\["
 	set fname_var "\["
 	set ptype_var "\["
+	set ply_var "\["
         for {set seli 2} { $seli < $row } {incr seli} { 
 	   if { $_mpipx($seli,0) == 1 } {
 		append pip_var "&$_mpipx($seli,2),"
+		append qname_var "\"$_mpipx($seli,2)\","
 		append data_var "\"$_mpipx($seli,1)\","
 		append fname_var "\"$_mpipx($seli,3)\","
 		append ptype_var "$_mpipx($seli,4),"
+		append ply_var "\"ply_$_mpipx($seli,2)\","
 	    }
 	}
 	set pip_var [string replace $pip_var end end "\]"]
+	set qname_var [string replace $qname_var end end "\]"]
 	set data_var [string replace $data_var end end "\]"]
 	set fname_var [string replace $fname_var end end "\]"]
 	set ptype_var [string replace $ptype_var end end "\]"]
-	exp_send "batch_multipip_process, $pip_var, $data_var, $fname_var, $ptype_var \r\n"
+	set ply_var [string replace $ply_var end end "\]"]
+	exp_send "batch_multipip_process, $pip_var, $data_var, $fname_var, $ptype_var, $qname_var, $ply_var \r\n"
 	expect ">"
               
     }

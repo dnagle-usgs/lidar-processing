@@ -1,38 +1,38 @@
 
-func batch_multipip_process (pip_var, data_var, fname_var, ptype_var) {
+func batch_multipip_process (pip_var, data_var, fname_var, ptype_var, qname_var, ply_var) {
    /* amar nayegandhi 05/19/03
    */
 
   for (i=1;i<=numberof(pip_var);i++) {
 	if (ptype_var(i) == 0)  {
-	   fs_all = make_fs(latutm=1, q=&pip_var(i), ext_bad_att=1, usecentroid=1);
+	   fs_all = make_fs(latutm=1, q=*pip_var(i), ext_bad_att=1, usecentroid=1);
 	   fs_all = clean_fs(fs_all);
 	   write, format="processing for region %d complete\n",i;
-	   tkcmd, swrite(format="exp_send \"%s = fs_all \\r\\n\"",data_var(i));
 	 }
 	 if (ptype_var(i) == 1)  {
 	   depth_all = make_bathy(latutm = 1, q = *pip_var(i), ext_bad_depth=1, ext_bad_att=1);
 	   depth_all = clean_bathy(depth_all);
 	   write, format="processing for region %d complete\n",i;
-	   tkcmd, swrite(format="exp_send \"%s = depth_all \\r\\n\"",data_var(i));
+	   //tkcmd, swrite(format="exp_send \"%s = depth_all \\r\\n\"",data_var(i));
 	 }
 	 if (ptype_var(i) == 2)  {
 	   veg_all = make_veg(latutm=1, q=*pip_var(i), ext_bad_att=1, ext_bad_veg=1, use_centroid=1);
 	   veg_all = clean_veg(veg_all);
 	   write, format="processing for region %d complete\n",i;
-	   tkcmd, swrite(format="exp_send \"%s = veg_all; \\r\\n\"",data_var(i));
+	   //tkcmd, swrite(format="exp_send \"%s = veg_all; \\r\\n\"",data_var(i));
 	   //tkcmd, swrite(format="expect \">\"");
          }
 	 if (ptype_var(i) == 3)  {
 	   cveg_all = make_veg(latutm=1, q=*pip_var(i), use_peak=1, multi_peaks=1);
 	   write, format="processing for region %d complete\n",i;
-	   tkcmd, swrite(format="exp_send \"%s = cveg_all \\r\\n\"",data_var(i));
+	   //tkcmd, swrite(format="exp_send \"%s = cveg_all \\r\\n\"",data_var(i));
          }
 	
          // now write processed data to a pbd file
 	 q = *pip_var(i);
 	 vname = data_var(i);
-	 save, createb(fname_var(i)), veg_all, vname, q, ply;
+	 qname = qname_var(i);
+	 plyname = ply_var(i);
         /*
 	 tkcmd, swrite(format="exp_send \"extern %s\\r\\n\"",data_var(i));
 	 tkcmd, swrite(format="exp_send \"vname=\\\"%s\\\"\\r\\n\"",data_var(i));
@@ -44,10 +44,22 @@ func batch_multipip_process (pip_var, data_var, fname_var, ptype_var) {
 	 pause( 1000);
         */
 
-	 if (ptype_var(i) == 1) fs_all=[];
-	 if (ptype_var(i) == 2) depth_all=[];
-	 if (ptype_var(i) == 3) veg_all=[];
-	 if (ptype_var(i) == 4) cveg_all=[];
+	 if (ptype_var(i) == 0) {
+	    save, createb(fname_var(i)), fs_all, vname, q, ply, qname, plyname;
+	    fs_all=[];
+	 }
+	 if (ptype_var(i) == 1) {
+	    save, createb(fname_var(i)), depth_all, vname, q, ply, qname, plyname;
+	    depth_all=[];
+	 }
+	 if (ptype_var(i) == 2) {
+	    save, createb(fname_var(i)), veg_all, vname, q, ply, qname, plyname;
+	    veg_all=[];
+ 	 }
+	 if (ptype_var(i) == 3) {
+	    save, createb(fname_var(i)), cveg_all, vname, q, ply, qname, plyname;
+	    cveg_all=[];
+	 }
  
    }
 
