@@ -2334,18 +2334,20 @@ proc plot_fltlines {sel} {
 	    }
 	   "1100" {
 	      exp_send "winkill, $win_no; window, $win_no, dpi=100, width=1100, height=850, style=\"landscape11x85.gs\";fma; limits, square=1;\r";
+              expect ">"
 	    }
            }
 	   set changed_dpi 0
 	  } else {
 	      exp_send "window, $win_no; fma;\r";
+              expect ">"
 	  }
 	   
 	 }
 	 if {$setll} {
 	      exp_send "limits, _ytk_ll(1), _ytk_ll(2), _ytk_ll(3), _ytk_ll(4);\r"
+              expect ">"
 	 }
-         expect ">"
      }
 
      set cmax [ expr $cmin + $cdelta ]
