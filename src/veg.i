@@ -733,8 +733,8 @@ executing make_veg.  See rbpnav() and rbtans() for details.
     */
     if ((ext_bad_att==1) && (is_array(veg_all))) {
         write, "Extracting and writing false first points";
-        /* compare veg.elevation with 70% of veg.melevation */
-	elv_thresh = 0.7*(avg(veg_all.melevation));
+        /* compare veg.elevation within 20m of veg.melevation */
+	elv_thresh = (veg_all.melevation-2000);
         ba_indx = where(veg_all.elevation > elv_thresh);
 	ba_count += numberof(ba_indx);
 	ba_veg = veg_all;

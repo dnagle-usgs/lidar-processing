@@ -571,8 +571,8 @@ See define_bath_ctl()
     */
     if (ext_bad_att && is_array(depth_all)) {
         write, "Extracting and writing false first points";
-        /* compare depth.elevation with 70% of depth.melevation */
-	elv_thresh = 0.7*(avg(depth_all.melevation));
+        /* compare depth.elevation within 20m  of depth.melevation */
+	elv_thresh = (depth_all.melevation-2000);
         ba_indx = where(depth_all.elevation > elv_thresh);
 	ba_count += numberof(ba_indx);
 	ba_depth = depth_all;

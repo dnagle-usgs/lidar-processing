@@ -447,8 +447,8 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
    if (is_array(fs_all)) {
     if (ext_bad_att) {
         write, "Extracting and writing false first points";
-        /* compare rrr.elevation with 70% of rrr.melevation */
-	elv_thresh = 0.7*(avg(fs_all.melevation));
+        /* compare rrr.elevation within 20m  of rrr.melevation */
+	elv_thresh = fs_all.melevation-2000;
         ba_indx = where(fs_all.elevation > elv_thresh);
 	ba_count += numberof(ba_indx);
 	ba_fs = fs_all;

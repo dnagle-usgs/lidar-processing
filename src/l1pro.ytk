@@ -814,8 +814,7 @@ proc multi_pip_sel {junk} {
 	-colwidth 15 \
 	-multiline 0 \
 	-sparsearray 0 \
-	-browsecommand {set table(current) %S} \
-	-justify center
+	-browsecommand {set table(current) %S} 
     $tpath tag configure active \
 	-fg blue \
 	-relief sunken
