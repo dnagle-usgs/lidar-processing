@@ -35,6 +35,7 @@ exp_send "#include \"geo_bath.i\"\r"; # load geobath.i code
 exp_send "#include \"read_yfile.i\"\r"; # load read_yfile
 exp_send "#include \"veg.i\"\r"; # load veg.i
 exp_send "#include \"batch_process.i\"\r"; # load batch_process.i
+exp_send "#include \"comparison_fns.i\"\r"; # load for rcf filter function
 expect ">";
 
 package require BWidget

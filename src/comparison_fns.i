@@ -166,15 +166,27 @@ func plot_veg_result_points(i, pse=) {
 }
 
 func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=) {
-  //this function uses the random consensus filter (rcf) within a defined
-  // buffer size (default 4m by 4m) to filter within an elevation width
-  // defined by w.
-  // amar nayegandhi 11/18/02.
+  /*DOCUMENT rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=)
+ this function uses the random consensus filter (rcf) within a defined
+ buffer size (default 5m by 4m) to filter within an elevation width
+ defined by w.
+ amar nayegandhi 11/18/02.
 
-  // mode = 1; //for first surface
-  // mode = 2; //for bathymetry
-  // mode = 3; // for bare earth vegetation
+  INPUT:
+  eaarl : data array to be rcf'ed.  Can be of type FS, GEO, VEG__, etc.
+  buf = buffer size in CENTIMETERS within which the rcf filter will be implemented (default is 500cm).
+  w   = elevation width (vertical extent) in CENTIMETERS of the filter (default is 50cm)
+  no_rcf = minimum number of 'winners' required in each buffer (default is 3).
+  mode =
+   mode = 1; //for first surface
+   mode = 2; //for bathymetry
+   mode = 3; // for bare earth vegetation
+   (default mode = 3)
 
+   OUTPUT:
+    rcf'd data array of the same type as the 'eaarl' data array.
+
+*/
  //reset new_eaarl and data_out
  //t0 = t1 = double( [0,0,0] );
  MAXSIZE = 50000;
@@ -273,8 +285,11 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=) {
          be_elv = eaarl.elevation(indx);
        }
 
-       //sel_ptr = lrcf2(be_elv, w);
-       sel_ptr = rcf(be_elv, w, mode=2);
+       if (is_func(lrcf2)) {
+         sel_ptr = lrcf2(be_elv, w);
+       } else {
+         sel_ptr = rcf(be_elv, w, mode=2);
+       }
        if (*sel_ptr(2) >= no_rcf) {
 	  tmp_eaarl = eaarl(indx);
 	  if (selcount+(*sel_ptr(2)) > MAXSIZE) {
