@@ -21,12 +21,28 @@ struct WAVE_DATA {
    float  levels(16);
 };
 
+maxlvl = 250
+minlvl = -maxlvl
 wave_data = WAVE_DATA();
-
 wave_data.x0 = span(-25400,25600,256) (,-:1:256)
 wave_data.y0 = span(-25400,25600,256) (-:1:256,)
-wave_data.levels = span(-250,250,16)
+wave_data.levels = span(minlvl,maxlvl,16)
 
+func process_a_segment {
+ extern fs_all;
+  rr = 19.8;
+  n = 360;
+  d =  int((n/rr)*.5)+1;
+  q = gga_win_sel(2, win=6);
+  p = int(median(q));
+  q = indgen(p-2000:p+1000);	// generate a shorter list of gga index values
+  tc = int(gga(p).sod);
+  i0 = q(where( gga(q).sod == tc-d ) (1));
+  i1 = q(where( gga(q).sod == tc+d ) (1));
+  q = indgen(i0:i1);
+  fs_all = make_fs(latutm=1, q=q, ext_bad_att=1, usecentroid=1);
+  dws,fs_all
+}
 
 
 func dws( fs_all ) {
@@ -40,42 +56,62 @@ the 2 dimensional directional wave spectrum.
 */
  extern wave_data;
 
+ if ( is_void(fs_all) ) {
+   process_a_segment;
+ }
+
 wave_data.hf = wave_data.hc = span(0.000001,0.000001,256) (-:1:256,);
 wave_data.h  = span(0.0,0.0,256) (-:1:256,);
 wave_data.checker_board = ((-1)^span(1,256,256)) * ((-1)^(span(1,256,256))) (-,)
 
+
 ////////////////////////////////////////
-// Find the center of the dataset
+// Find the median elevation for editing out outliers
 ////////////////////////////////////////
   m = median( fs_all.elevation(*) );
-  mn = median( fs_all.north(*) );
-  me = median( fs_all.east(*) );
+ rsel = fs_all.elevation - m;
+
+  edt = ( abs(rsel) < 1500.0);
+  hmean = rsel(where(edt))(avg)
+  rsel = rsel - hmean
+  hstd = rsel(where(edt))(rms)
+  maxlvl = 3.*hstd
+  minlvl = -maxlvl
+  wave_data.levels = span(minlvl,maxlvl,16)
+
+////////////////////////////////////////
+// Find the approximate center of the dataset
+////////////////////////////////////////
+//  mn = median( fs_all.north(*) );
+//  me = median( fs_all.east(*) );
+  mn =  fs_all.north(where(edt))(avg);
+  me =  fs_all.east(where(edt))(avg);
 
 
 ////////////////////////////////////////
 // re-reference it to the center point
 ////////////////////////////////////////
- rsel = fs_all.elevation - m;
  rsn = fs_all.north - mn;
  rse = fs_all.east - me;
 
 
-////////////////////////////////////////
-// Reverse every other raster
+/*//////////////////////////////////////
+// Reverse every other raster so 
+// they all appear to move in the same
+// direction
 ////////////////////////////////////////
  rsel(,1:0:2) = rsel(0:1:-1,1:0:2);
  rsn(,1:0:2) =  rsn(0:1:-1,1:0:2);
  rse(,1:0:2) = rse(0:1:-1,1:0:2);
-
+*/
 
 ////////////////////////////////////////
 // Develop a mask array where 1 is good
 // data and zero is bad/missing.
 ////////////////////////////////////////
-  edt = ( abs(rsel) < 1500.0);
 
 ////////////////////////////////////////
-// Eds binning code
+// Ed's binning code
 ////////////////////////////////////////
  iy = int(128.5 + rsn/200.)
  ix = int(128.5 + rse/200.)
@@ -107,6 +143,7 @@ wave_data.checker_board = ((-1)^span(1,256,256)) * ((-1)^(span(1,256,256))) (-,)
 ////////////////////////////////////////
  window,0; fma
  plfc,wave_data.h,wave_data.x0,wave_data.y0,levs=wave_data.levels
+ write,format="minlvl = %f, maxlvl = %f",minlvl,maxlvl
 
  factor = 1
 ////////////////////////////////////////
