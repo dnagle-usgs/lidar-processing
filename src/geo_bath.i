@@ -935,10 +935,10 @@ write,"============================================================="
  write,format="    GPS Pdop: %8.2f  Svs:%2d  Rms:%6.3f Flag:%d\n", 
 	       pnav(pnav_idx).pdop, pnav(pnav_idx).sv, pnav(pnav_idx).xrms,
 	       pnav(pnav_idx).flag
- write,format="     Heading: %8.3f Roll: %5.3f Pitch: %5.3f %5.1fm/s %4.1fkts\n",
+ write,format="     Heading:  %8.3f Pitch: %5.3f Roll: %5.3f %5.1fm/s %4.1fkts\n",
 	       tans(tans_idx).heading,
-	       tans(tans_idx).roll,
 	       tans(tans_idx).pitch,
+	       tans(tans_idx).roll,
                knots * 1852.0/3600.0, 
                knots;
 
@@ -946,12 +946,12 @@ write,"============================================================="
  	    (mindata.meast      - mindata.east)^2 +
 	    (mindata.mnorth     - mindata.north)^2 );
 	  
- if ( mindata.melevation > mindata.elevation )
+ if ( (mindata.melevation > mindata.elevation) && ( mindata.elevation > -100000) )
  aoi = acos( (mindata.melevation - mindata.elevation) / hy ) * rad2deg;	
  else aoi = -9999.999;
- write,format="Scanner Elev: %8.2fm Aoi:%6.3f Slant rng:%6.3f\n", 
+ write,format="Scanner Elev: %8.2fm   Aoi:%6.3f Slant rng:%6.3f\n", 
  	mindata.melevation/100.0,
-	aoi, hy;
+	aoi, hy/100.0;
 
  write,format="Surface elev: %8.2fm Delta: %7.2fm\n",
                mindata.elevation/100.0,
