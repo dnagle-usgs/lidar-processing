@@ -10,7 +10,7 @@ exec wish "$0" ${1+"$@"}
 #####################################################################
 package require Img
 package require BWidget
-package require vfs
+package require vfs::tar
 
 set settings(path) "/data"
 set settings(step)  1
@@ -83,7 +83,7 @@ proc show { cmd t } {
  global settings
  global img img0 last_tar tar secs fn
   set sample $settings(sample)
-  set d "080504"
+  set d "081604"
   switch -exact $cmd {
    incr { 
          incr secs $t;
@@ -102,14 +102,14 @@ proc show { cmd t } {
  set settings(hms) [ clock format $secs -format "%H:%M:%S" -gmt 1 ]
  set hm  "[clock format $secs -format %H%M -gmt 1 ]00"
  set tf "$d-$hm-cir.tar"
-puts $tf
-  puts "$settings(path)/$tf"
+puts "tar file: $tf"
+  puts "path: $settings(path)/$tf"
   if { $tf ne $last_tar } {
     vfs::tar::Mount "$settings(path)/$tf" tar
     puts "New tar file:$settings(path)/$tf"
     set last_tar $tf
   }
-  set pat "tar/070504-$hms-*-cir.jpg"
+  set pat "tar/071604-$hms-*-cir.jpg"
   if { [ catch { set fn [ glob $pat ] } ] }  {
     puts "No file: $pat"
   } else {
