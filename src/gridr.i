@@ -46,10 +46,20 @@ func draw_grid( w ) {
   ll = int(limits()/2000) * 2000;
   ll(2) +=2000;
   ll(4) += 2000;
-   dgrid, w, ll, 250, [200,200,200],5
-   dgrid, w, ll, 1000,[120,120,120],5
-   dgrid, w, ll, 2000,[250,140,140],10
-   window(old_w);
+  if ((ll(4)-ll(3)) <= 4000) {
+   dgrid, w, ll, 250, [200,200,200],0.1
+   dgrid, w, ll, 1000,[120,120,120],0.1
+  }
+  if ((ll(4)-ll(3)) >= 8000) {
+   ll = int(limits()/10000) * 10000;
+   ll(2) +=10000;
+   ll(4) += 10000;
+   dgrid, w, ll, 2000,[250,140,140],3
+   dgrid, w, ll, 10000, [170,120,170], 7
+  } else {
+    dgrid, w, ll, 2000,[250,140,140],5
+  }
+  window(old_w);
 }
 
 func tile_file_name(m) {
