@@ -58,7 +58,7 @@ package require BWidget
 set DEBUG_SF 0      ;# Show debug info on (1) or off (0)
 
 # The camera is frequently out of time sync so we add this to correct it.
-set seconds_offset [ expr 3600 * 0 ]
+set seconds_offset 0
 
 set fna(0) ""       ;#
 set gamma 1.0       ;#
@@ -153,6 +153,8 @@ proc load_file_list { f } {
 	set f [ open $f r ]
 	# Set time ticker, for use in updating the displays - 0 to make sure something displays immediately
 	set ticker 0
+	# Set the seconds_offset back to 0 by default
+	set seconds_offset 0
 	
 	### Create GUI ###
 	toplevel .loader
@@ -174,17 +176,15 @@ proc load_file_list { f } {
 	
 	# Do some looping, initializing some globals as we go
 	# Iterate through the file, incrementing i for each line
-	for { set i 0 } { ![ eof $f ] } { incr i } { 
+	for { set i 1 } { ![ eof $f ] } { incr i } { 
 		# Set fn to the filename of the current line
 		set fn [ gets $f ]
-		# Put the filename in the fna array
-		set fna($i) "$fn"
 		# Split the file name based on _
 		# cam1   filename format is cam1/cam1_CAM1_2003-09-21_131100.jpg
 		#                           cam1/cam1_CAM1_YYYY-MM-DD_HHMMSS.jpg
 		# cam2   filename format is dir/strg_2004-10-28_122430_0024.jpg
 		#                           ANYTHING_YYYY-MM-DD_HHMMSS_NNNN.jpg
-		set lst [ split $fna($i) "_" ]
+		set lst [ split $fn "_" ]
 		# Grab the HMS section
 		set hms ""
 		if { $camtype == 1 } {
@@ -193,7 +193,10 @@ proc load_file_list { f } {
 		if { $camtype == 2 } {
 			set hms [ lindex $lst end-1 ]
 		}
-		if { [ string equal $hms "" ] == 0  } {
+		if { [ string equal $hms "" ] == 0 || [ string equal -nocase -length 3 $fn "set" ] == 0 } {
+			# Put the filename in the fna array
+			set fna($i) "$fn"
+			
 			scan $hms "%02d%02d%02d" h m s
 			set thms [ format "%02d:%02d:%02d" $h $m $s ]
 			#set sod [ expr $h*3600 + $m*60 + $s  + $seconds_offset ]
@@ -206,9 +209,11 @@ proc load_file_list { f } {
 				.loader.status2 configure -text "Loaded $i JPG files"
 				update
 			}
+									if { $DEBUG_SF } { puts "loaded: $fn" }
 		} else { 
-			#puts "Command:$fn"
+									if { $DEBUG_SF } { puts "command: $fn" }
 			eval $fn
+			incr i -1
 		}
 	} 
 	.loader.status2 configure -text "Loaded $i JPG files"
@@ -464,78 +469,84 @@ proc show_img { n } {
 	global pitch roll head yes_head
 	global zoom
 	global camtype
+	global DEBUG_SF
 
 	set cin $n
+
+	if { [info exists fna($n)] == 1 } {
 	
-	# Copy the file to a temp file, to protect the original from changes
-	set fn $dir/$fna($n)
-	file copy -force $fn /tmp/sf_tmp_[pid].jpg
-	set fn /tmp/sf_tmp_[pid].jpg
+		# Copy the file to a temp file, to protect the original from changes
+		set fn $dir/$fna($n)
+										if { $DEBUG_SF } { puts "fn: $fn" }
+		file copy -force $fn /tmp/sf_tmp_[pid].jpg
+		set fn /tmp/sf_tmp_[pid].jpg
 
-	# Make sure we can read/write the temp file
-	file attributes $fn -permissions ug+rw
+		# Make sure we can read/write the temp file
+		file attributes $fn -permissions ug+rw
 
-	.canf.can config -cursor watch
+		.canf.can config -cursor watch
 
-	set rotate_amount 0
+		set rotate_amount 0
 
-	if ($yes_head) {
-		# include heading information...
-		get_heading 1
-		$img blank
-		set rotate_amount [expr ($rotate_amount + $head)]
-	}
-	
-	if {$camtype == 1} {
-		set rotate_amount [expr ($rotate_amount + 180)]
-	}
-
-	set zoom_amount [expr {round($zoom)}]%
-	set rotate_amount [expr {$rotate_amount % 360}]
-
-	if ($rotate_amount) {
-		if {$zoom != 100} {
-			exec mogrify -sample $zoom_amount -rotate $rotate_amount $fn
-		} else {
-			exec mogrify -rotate $rotate_amount $fn
+		if ($yes_head) {
+			# include heading information...
+			get_heading 1
+			$img blank
+			set rotate_amount [expr ($rotate_amount + $head)]
 		}
-	} elseif {$zoom != 1} {
-		exec mogrify -sample $zoom_amount $fn
-	}
-	
-	if { [ catch { $img read $fn -shrink } ] } {
-		if { [ file extension $fna($n) ] == ".jpg" } {
-			puts "Unable to decode: $fna($n)";
-		} else {
-			puts "cmd: $fna($n)"
-			if { [ catch { eval $fna($n); } ] } {
-				puts "*** Errors in cmd: $fna($n) "
+		
+		if {$camtype == 1} {
+			set rotate_amount [expr ($rotate_amount + 180)]
+		}
+
+		set zoom_amount [expr {round($zoom)}]%
+		set rotate_amount [expr {$rotate_amount % 360}]
+
+		if ($rotate_amount) {
+			if {$zoom != 100} {
+				exec mogrify -sample $zoom_amount -rotate $rotate_amount $fn
+			} else {
+				exec mogrify -rotate $rotate_amount $fn
+			}
+		} elseif {$zoom != 1} {
+			exec mogrify -sample $zoom_amount $fn
+		}
+		
+		if { [ catch { $img read $fn -shrink } ] } {
+			if { [ file extension $fna($n) ] == ".jpg" } {
+				puts "Unable to decode: $fna($n)";
+			} else {
+				puts "cmd: $fna($n)"
+				if { [ catch { eval $fna($n); } ] } {
+					puts "*** Errors in cmd: $fna($n) "
+				}
 			}
 		}
+
+		# Cleanup -- remove the temp file since we're done with it
+		file delete $fn
+
+		.canf.can itemconfigure tx -text ""
+			set lst [ split $fn "_" ]
+			set data "$n  [ lindex $lst 3 ]"
+			set hms  $imgtime(idx$n);
+			scan $hms "%02d%02d%02d" h m s 
+			set sod [ expr $h*3600 + $m*60 + $s + $seconds_offset - $frame_off]
+			set hms [ clock format $sod -format "%H%M%S" -gmt 1   ] 
+
+		catch { set llat $lat(hms$hms) }
+		catch { set llon $lon(hms$hms) }
+		if { [ catch { set data "$hms ($sod) $lat(hms$hms) $lon(hms$hms) $alt(hms$hms)"} ]  } { 
+			set data "hms:$hms sod:$sod  No GPS Data"   } 
+
+			if { $timern == "cin" } { set hsr $cin }
+			if { $timern == "hms" } { set hsr $hms }
+			if { $timern == "sod" } { set hsr $sod }
+		.canf.can config -cursor arrow
+		.canf.can config -scrollregion "0 0 [image width $img] [image height $img]"
+		update
+
 	}
-
-	# Cleanup -- remove the temp file since we're done with it
-	file delete $fn
-
-	.canf.can itemconfigure tx -text ""
-		set lst [ split $fn "_" ]
-		set data "$n  [ lindex $lst 3 ]"
-		set hms  $imgtime(idx$n);
-		scan $hms "%02d%02d%02d" h m s 
-		set sod [ expr $h*3600 + $m*60 + $s + $seconds_offset - $frame_off]
-		set hms [ clock format $sod -format "%H%M%S" -gmt 1   ] 
-
-	catch { set llat $lat(hms$hms) }
-	catch { set llon $lon(hms$hms) }
-	if { [ catch { set data "$hms ($sod) $lat(hms$hms) $lon(hms$hms) $alt(hms$hms)"} ]  } { 
-		set data "hms:$hms sod:$sod  No GPS Data"   } 
-
-		if { $timern == "cin" } { set hsr $cin }
-		if { $timern == "hms" } { set hsr $hms }
-		if { $timern == "sod" } { set hsr $sod }
-	.canf.can config -cursor arrow
-	.canf.can config -scrollregion "0 0 [image width $img] [image height $img]"
-	update
 }
 
 proc mark {m} {
@@ -581,27 +592,27 @@ proc archive_save_marked { type } {
 			set sf [ tk_getSaveFile -defaultextension .tar -filetypes { {{Tar Files} {.tar}} } \
 				-initialdir $dir -title "Save Marked Files as..."];
 		}
+		if { $sf != "" } {
+			set psf [pid]
+			set tmpdir "/tmp/sf.$psf"
+			if {[catch "cd $tmpdir"] == 1} {exec mkdir $tmpdir}
+			for {set i $fcin} {$i<=$lcin} {incr i} {
+				exec cp $dir/$fna($i) $tmpdir;
+			}
+			cd $tmpdir;
+			
+			if {[string equal "tar" $type]} {
+				exec tar -cvf $sf .;
+			} elseif {[string equal "zip" $type]} {
+				eval exec zip $sf [glob *.jpg];
+			}
+			
+			cd $dir;
+			exec rm -r $tmpdir;
 
-		set psf [pid]
-		set tmpdir "/tmp/sf.$psf"
-		if {[catch "cd $tmpdir"] == 1} {exec mkdir $tmpdir}
-		for {set i $fcin} {$i<=$lcin} {incr i} {
-			exec cp $dir/$fna($i) $tmpdir;
+			set fcin 0
+			set lcin 0
 		}
-		##puts "files in tmpdir\r\n";
-		cd $tmpdir;
-		
-		if {[string equal "tar" $type]} {
-			exec tar -cvf $sf .;
-		} elseif {[string equal "zip" $type]} {
-			eval exec zip $sf [glob *.jpg];
-		}
-		
-		cd $dir;
-		exec rm -r $tmpdir;
-
-		set fcin 0
-		set lcin 0
 	}
 }
 
@@ -656,12 +667,15 @@ proc calculate_zoom_factor { initial percentage } {
 	} else {
 		set iw [expr {[image width $img] / (([.cf3.zoom getvalue]+1)/100.0)}]
 		set ih [expr {[image height $img] / (([.cf3.zoom getvalue]+1)/100.0)}]
-		set cw [winfo width .canf.can]
-		set ch [winfo height .canf.can]
-		set wr [expr {int(100*$cw/$iw)}]
-		set hr [expr {int(100*$ch/$ih)}]
-		set final [expr {(($wr < $hr) ? $wr : $hr) - 1}]
-		puts "$iw $ih $cw $ch $wr $hr $final"
+		if {$iw && $ih} {
+			set cw [winfo width .canf.can]
+			set ch [winfo height .canf.can]
+			set wr [expr {int(100*$cw/$iw)}]
+			set hr [expr {int(100*$ch/$ih)}]
+			set final [expr {(($wr < $hr) ? $wr : $hr) - 1}]
+		} else {
+			set final [.cf3.zoom getvalue]
+		}
 	}
 	if {$final < 0} { set final 0 }
 	if {$final > 199 } { set final 199 }
@@ -692,16 +706,15 @@ menu .mb.zoom
 
 .mb.file add command -label "Select File.." -underline 0 \
 	-command {
-		set f [ tk_getOpenFile  -filetypes { {{List files} {.lst}} } -initialdir $dir ];   
-		set split_dir [split $f /]
-		set dir [join [lrange $split_dir 0 [expr [llength $split_dir]-2]] /]
+		set f [ tk_getOpenFile  -filetypes { {{List files} {.lst}} } -initialdir $dir ];
 		if { $f != "" } {
-#			wm title . "sf.tcl: $f"
+			set split_dir [split $f /]
+			set dir [join [lrange $split_dir 0 [expr [llength $split_dir]-2]] /]
 			set nfiles [ load_file_list  $f ];
 			.slider configure -to $nfiles
+			set ci 1
+			show_img $ci
 		}
-		set ci 1
-		show_img $ci
 	}
 
 .mb.file add command -label "Exit" -underline 1 -command { exit }
@@ -914,8 +927,10 @@ bind . <Key-Home>  { .cf1.rewind invoke }
 bind . <Control-Key-equal> { .cf3.zoom setvalue next    ; show_img $ci }
 bind . <Control-Key-plus>  { .cf3.zoom setvalue next    ; show_img $ci }
 bind . <Control-Key-minus> { .cf3.zoom setvalue previous; show_img $ci }
-.cf3.zoom bind <Key-Return> {show_img $ci}
-bind .cf3.entry <Key-Return> {gotoImage}
+.cf3.zoom bind <Key-Return>    {show_img $ci}
+.cf3.zoom bind <Key-KP_Enter>  {show_img $ci}
+bind .cf3.entry <Key-Return>   {gotoImage}
+bind .cf3.entry <Key-KP_Enter> {gotoImage}
 bind .slider <ButtonRelease> {
    global ci
    show_img $ci
