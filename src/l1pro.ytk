@@ -249,6 +249,9 @@ menu .l1wid.mb.options
   -command {
 	global cmin cmax  opath ofile
 	global write_asc_some
+        if { [ info exists data_path ]  == 0} {
+	     set data_path "~/"
+        }
         set delimit "space"
 	set indx 0
       	set intensity 0
