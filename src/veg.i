@@ -66,6 +66,7 @@ rn
 
 func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) {
 // depths = array(float, 3, 120, len );
+  if (is_void(graph)) graph=0;
 
  if ( is_void(rn) || is_void(len) ) {
     if (!is_void(center) && !is_void(delta)) {

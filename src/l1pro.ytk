@@ -200,7 +200,7 @@ menu .l1wid.mb.options
     toplevel .l1plot 
     wm title .l1plot "Plot / Write Selected Flightlines"
     frame .l1plot.1
-    listbox .l1plot.1.lb -selectmode extended -width 35 -xscrollcommand ".l1plot.xscroll set" -yscrollcommand ".l1plot.1.yscroll set" 
+    listbox .l1plot.1.lb -selectmode extended -width 50 -xscrollcommand ".l1plot.xscroll set" -yscrollcommand ".l1plot.1.yscroll set" 
     scrollbar .l1plot.xscroll -orient horizontal -command [list .l1plot.1.lb xview]
     scrollbar .l1plot.1.yscroll -command [list .l1plot.1.lb yview]
     for {set i 0} { $i < [llength $lrnindx] } {incr i} { 
@@ -231,10 +231,20 @@ menu .l1wid.mb.options
         .l1wid.bf5.1 invoke	
     }
 
-    pack .l1plot.1.lb .l1plot.1.yscroll -side left -fill y
+    pack .l1plot.1.lb .l1plot.1.yscroll -side left -fill y 
     pack .l1plot.1 .l1plot.xscroll -side top -fill x
-    pack .l1plot.sall .l1plot.clear .l1plot.plot .l1plot.write -side left 
+    pack .l1plot.sall .l1plot.clear .l1plot.plot .l1plot.write -side left -fill x
 }
+
+.l1wid.mb.options add command -label "Show Flightlines with No Raster Data..." -underline 25 \
+ -command {
+   exp_send "plot_no_raster_fltlines(gga, edb);\r"
+ }
+
+.l1wid.mb.options add command -label "Show Flightlines with No TANS Data..." -underline 25 \
+ -command {
+   exp_send "plot_no_tans_fltlines(tans, gga);\r"
+ }
 
 proc make_selected_arrays {junk} {
     global lrnindx list
@@ -566,6 +576,10 @@ Button .l1wid.bf5.1 -text "Write Datafile" -width 20 \
  Button .l1wid.bf5.2 -text "Process Now" -width 20 \
 		-command \
      {
+  	   global list lrnindx
+	   .l1plot.1.lb delete 0 end
+           set list {}
+           set lrnindx {}
 	   exp_send "utm = $utm\n"
 	   set ptype [.l1wid.bf4.1.p getvalue]
            set defr [.l1wid.bf4.1.d getvalue]

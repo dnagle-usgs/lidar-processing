@@ -443,9 +443,41 @@ func sel_region (q) {
    rn_arr(,tindx) = 0;
 
    /* make a indx arr for each raster in selected region */
-   tras = sum(rn_arr(2,)-rn_arr(1,));
-   raster_indx = array(char,tras);
-   return rn_arr;
+   //raster_indx = array(char,numberof(edb));
+   // search for gaps in the tans data
+   idx = where(tans.somd(dif) > 1);
+   if (is_array(idx)) {
+     ntsomd = array(float, 2, numberof(idx));
+     ntsomd(1,) = tans(idx).somd;
+     ntsomd(2,) = tans(idx+1).somd;
+     for (i=1;(i<=numberof(idx));i++) {
+       edb_idx = where(((edb.seconds-soe_day_start) >= ntsomd(1,i)) & ((edb.seconds-soe_day_start) <= ntsomd(2,i)));
+       //raster_indx(edb_idx) = 1;
+       if (is_array(edb_idx)) {
+       for (j=1;(j<=numberof(rn_arr(1,)));j++) {
+         eidx = where((edb_idx >= rn_arr(1,j)) & (edb_idx <= rn_arr(2,j)));
+         if (is_array(eidx)) {
+	   if ((rn_arr(1,j) == edb_idx(eidx(1))) && (rn_arr(2,j) > edb_idx(eidx(0)))) 
+	     rn_arr(1,j) = edb_idx(eidx(0));
+	 else { 
+	if ((rn_arr(2,j) == edb_idx(eidx(0))) && (rn_arr(1,j) < edb_idx(eidx(1)))) 
+	   rn_arr(2,j) = edb_idx(eidx(1));
+	 else {
+	if ((rn_arr(1,j) > edb_idx(eidx(1))) && (rn_arr(2,j) < edb_idx(eidx(0)))) {
+	   grow, rn_arr, [edb_idx(eidx(0)),rn_arr(2,j)];
+	   rn_arr(2,j) = edb_idx(eidx(1));
+	} 
+	 else {
+	   rn_arr(,j) = [0,0];
+	 }
+	}
+      }
+     }
+    } 
+    }
+   }
+  } 
+  return rn_arr;
 
 
 } 
@@ -579,17 +611,45 @@ func plot_no_raster_fltlines (gga, edb) {
 
     for (i = 1; i <= numberof(f_norast); i++) {
       indx1 = where((gga.sod >= f_norast(i)) & (gga.sod <= l_norast(i)));
-      show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1),  color = "red";
+      show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1),  marker=4, skip=50,  color = "yellow";
     } 
   }
   // also plot over region before the system is initially started.
   indx1 = where(gga.sod < sod_edb(1));
-  show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1),  color = "red";
+  show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1), marker=4, skip=50,  color = "yellow";
 
 
 }
 
   
+func plot_no_tans_fltlines (tans, gga) {
+  /* Document no_raster_flightline (gga, edb)
+      This function overplots the flight lines having no rasters with a different color.
+*/
+
+  /* amar nayegandhi 08/05/02 */
+
+  extern soe_day_start;
+
+  
+  // find where the diff in tans is greater than 1 second
+  tans_dif = tans.somd(dif);
+  indx = where((tans_dif > 1) );
+  if (is_array(indx)) {
+    f_notans = tans.somd(indx);
+    l_notans = tans.somd(indx+1);
+
+    for (i = 1; i <= numberof(f_notans); i++) {
+      indx1 = where((gga.sod >= f_notans(i)) & (gga.sod <= l_notans(i)));
+      show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1),  marker = 5, color = "magenta", skip=50, msize=0.2;
+    } 
+  }
+  // also plot over region before the tans system is initially started.
+  indx1 = where(gga.sod < tans.somd(1));
+  show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1),  marker=5, color = "magenta", skip=50, msize=0.2;
+
+
+}
 
 
 
