@@ -34,6 +34,6 @@
 
 # YORICK building stuff
   
-  yorick -batch make.i rcf_yorick rcf.i triangulate.i
+  yorick -batch make.i rcf_yorick rcf.i triangulate.i triangle.i
   make
 
