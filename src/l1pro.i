@@ -8,6 +8,7 @@
 write,"$Id$"
 
 cd, src_path
+require,  "pip.i"
 require,  "geo_bath.i" 
 require,  "read_yfile.i" 
 require,  "veg.i" 
@@ -22,5 +23,6 @@ require,  "datum_converter.i"
 require,  "gridr.i"
 require,  "transect.i"
 require,  "manual_filter.i"
+require,  "ytriangulate.i"
 
 
