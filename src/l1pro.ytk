@@ -2350,9 +2350,9 @@ proc plot_fltlines {sel} {
 	 if {$setll} {
 	      exp_send "limits, _ytk_ll(1), _ytk_ll(2), _ytk_ll(3), _ytk_ll(4);\r"
 	 }
+         expect ">"
      }
 
-     expect ">"
      set cmax [ expr $cmin + $cdelta ]
      ycbar;		;# Set the color bar values in yorick
      if {$ptype == 0} {
@@ -2360,33 +2360,33 @@ proc plot_fltlines {sel} {
        set cmin1 [expr $cmin*100.]
        if {$disp_type == 0} {
          if {$sel == 0} {
-           exp_send "display, $var_type, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1;\r"
+           exp_send "window, $win_no; display, $var_type, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1;\r"
          } else {
-           exp_send "display, fs_some, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1;\r"
+           exp_send "window, $win_no; display, fs_some, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1;\r"
          }
          expect ">"
        } elseif { $disp_type == 4 } {
          if {$sel == 0} {
-           exp_send "display, $var_type, mode=\"intensity\", win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv;\r"
+           exp_send "window, $win_no; display, $var_type, mode=\"intensity\", win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv;\r"
          } else {
-           exp_send "display, fs_some, mode=\"intensity\", win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv;\r"
+           exp_send "window, $win_no; display, fs_some, mode=\"intensity\", win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv;\r"
          }
          expect ">"
        }
      }
      if {$ptype == 1} {
        if {$sel == 0} {
-         exp_send "plot_bathy, $var_type, win=$win_no, ba=$ba, fs = $fs, de = $de , fint = $fint, lint = $lint, cmin=$cmin, cmax=$cmax, msize = $msize, marker=$markerv, skip=$skip; \r"
+         exp_send "window, $win_no; plot_bathy, $var_type, win=$win_no, ba=$ba, fs = $fs, de = $de , fint = $fint, lint = $lint, cmin=$cmin, cmax=$cmax, msize = $msize, marker=$markerv, skip=$skip; \r"
        } else {
-         exp_send "plot_bathy, depth_some, win=$win_no, ba=$ba, fs = $fs, de = $de , fint = $fint, lint = $lint, cmin=$cmin, cmax=$cmax, msize = $msize, marker=$markerv, skip=$skip; \r"
+         exp_send "window, $win_no; plot_bathy, depth_some, win=$win_no, ba=$ba, fs = $fs, de = $de , fint = $fint, lint = $lint, cmin=$cmin, cmax=$cmax, msize = $msize, marker=$markerv, skip=$skip; \r"
        }
        expect ">"
      }
      if {$ptype == 2} {
         if {$sel == 0} {
-         exp_send "display_veg, $var_type, win=$win_no, cmin=$cmin, cmax = $cmax, size = $msize, edt=1, felv = $fs, lelv=$lelv, fint=$fint, lint=$lint, cht = $cht, marker=$markerv, skip=$skip;\r"
+         exp_send "window, $win_no; display_veg, $var_type, win=$win_no, cmin=$cmin, cmax = $cmax, size = $msize, edt=1, felv = $fs, lelv=$lelv, fint=$fint, lint=$lint, cht = $cht, marker=$markerv, skip=$skip;\r"
         } else {
-         exp_send "display_veg, veg_some, win=$win_no, cmin=$cmin, cmax = $cmax, size = $msize, edt=1, felv = $fs, lelv=$lelv, fint=$fint, lint=$lint, cht = $cht, marker=$markerv, skip=$skip;\r"
+         exp_send "window, $win_no; display_veg, veg_some, win=$win_no, cmin=$cmin, cmax = $cmax, size = $msize, edt=1, felv = $fs, lelv=$lelv, fint=$fint, lint=$lint, cht = $cht, marker=$markerv, skip=$skip;\r"
         }
          expect ">"
      }
