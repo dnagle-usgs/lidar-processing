@@ -573,7 +573,7 @@ fn = opath+ofname;
 /* open file to read/write (it will overwrite any previous file with same name) */
 f = open(fn, "w+b");
 
-nwpr = long(7);
+nwpr = long(8);
 
 if (is_void(type)) type = 3;
 

@@ -162,7 +162,7 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
        byt_pos = byt_pos + 4;
 
        _read, f, byt_pos, north;
-       data(i).mnorth = north;
+       data(i).north = north;
        byt_pos = byt_pos + 4;
 
        _read, f, byt_pos, east;
