@@ -8,6 +8,7 @@ func list_reefs {
    shoals.dmlat, shoals.dmlon;
 }
 
+extern utm
 f = open("../maps/fla-reefs.dat", "r")
 
 n = 205
@@ -34,6 +35,12 @@ junk = array( string, n);
 aunk = array( string, n);
 //   r = array( reefs, n);
    read, f, format="%d %d %s %s %s %f %f", st, rt, name, dmlat, dmlon, lat, lon
+
+if (utm) {
+  utm_arr = fll2utm(lat, lon);
+  lat = utm_arr(1,);
+  lon = utm_arr(2,);
+}
 
 shoals.name = name
 shoals.lat  = lat
