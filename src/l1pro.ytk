@@ -815,6 +815,8 @@ proc append_varlist {newvar} {
 	    }
 	 }
 
+.l1wid.mb.options add checkbutton -label "Show bathy constants in Pixel Waveform" -variable bconst 
+
 proc make_selected_arrays {junk} {
     global lrnindx list
     	set curlist [.l1plot.1.lb curselection]
@@ -1445,6 +1447,7 @@ Button .l1wid.bf45.q.2 -text "Histogram\nElevations" \
 Button .l1wid.bf45.q.1 -text "Pixel\nWaveform" \
   -helptext "Click to jump to raster, pulse, and image for xyz point" \
   -command {
+     global bconst
      set ptype [.l1wid.bf4.1.p getvalue]
      set disp_type [.l1wid.bf45.p.5 getvalue]
      set var_no [.l1wid.bf45.p.15 getvalue]
@@ -1458,7 +1461,7 @@ Button .l1wid.bf45.q.1 -text "Pixel\nWaveform" \
         exp_send "mindata = raspulsearch($var_type, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype, lmark = lmark);\r"
      }
      if {$ptype == 1} {
-        exp_send "mindata = raspulsearch($var_type, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype, lmark = lmark );\r"
+        exp_send "mindata = raspulsearch($var_type, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype, lmark = lmark, bconst=$bconst );\r"
      }
      if {$ptype == 2} {
         exp_send "mindata = raspulsearch($var_type, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype, lmark = lmark);\r"
@@ -1470,7 +1473,8 @@ Button .l1wid.bf45.q.1 -text "Pixel\nWaveform" \
 	   
 Button .l1wid.bf45.q.3 -text "Color\nBar" \
 	-command { 
-        exp_send "colorbar, $cmin, $cmax, drag=1\r";
+   	global win_no
+        exp_send "window, $win_no; colorbar, $cmin, $cmax, drag=1\r";
 }
 Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
 		-command {

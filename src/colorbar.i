@@ -4,7 +4,7 @@
 write, "$Id$" 
 
 
-func set_cbar( bar ) {
+func set_cbar( bar,w= ) {
 /* DOCUMENT set_cbar(bar)
    
    Lets the  user interactively set the color bar for the histogram
@@ -13,8 +13,8 @@ func set_cbar( bar ) {
  // this thing is messed up...
 
 */
-  w = 0
-  window,w 
+  if (is_void(w)) w = 7;
+  window,w; 
   if ( bar == "cmax" ) {
     write, "Select a point to use as Cmax from window,7"
     m = mouse();
