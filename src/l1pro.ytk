@@ -577,7 +577,6 @@ Button .l1wid.bf5.1 -text "Write Datafile" -width 20 \
 		-command \
      {
   	   global list lrnindx
-	   .l1plot.1.lb delete 0 end
            set list {}
            set lrnindx {}
 	   exp_send "utm = $utm\n"
