@@ -83,27 +83,7 @@ func triangulate_xyz(file=, savefile=, data=, plot=, mode=, win=, distthresh=, d
   // using C version of triangulate function...
   //v = triangulate(nv, pxyz);
 
-  do {	
-     fn_all = [];
-     s = array(string, 100000);
-     scmd = "find /tmp/.triag.lock -name triag.lock";
-     fp = 1; lp = 0;
-     for (i=1; i<=numberof(scmd); i++) {
-       f=popen(scmd(i), 0);
-       n = read(f,format="%s", s );
-       close, f;
-       lp = lp + n;
-       if (n) fn_all = s(fp:lp);
-       fp = fp + n;
-     }
-  } while (is_array(fn_all));
-  f = popen("touch /tmp/.triag.lock/triag.lock", 0);
-  close, f;
-
   v = ytriangle(nv, xyz);
-
-  f = popen("rm /tmp/.triag.lock/triag.lock", 0);
-  close, f;
 
   //v++;
   // below if when using triangulation function

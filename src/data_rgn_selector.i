@@ -4,12 +4,13 @@
    Orginal by Amar Nayegandhi
    */
 
-func sel_data_rgn(data, type, mode=,win=, exclude=) {
-  /* DOCUMENT sel_data_rgn(data,type, mode=, win=)
+func sel_data_rgn(data, type, mode=,win=, exclude=, rgn=) {
+  /* DOCUMENT sel_data_rgn(data,type, mode=, win=, exclude=, rgn=)
   this function selects a region (limits(), rubberband, pip) and returns data within that region.
   // if mode = 1, limits() function is used to define the region.
   // if mode = 2, a rubberband box is used to define the region.
   // if mode = 3, the points-in-polygon technique is used to define the region.
+  // if mode = 4, use rgn= to define a rubberband box.
   // type = type of data (R, FS, GEO, VEG_, etc.)
   // set exclude =1 if you want to exclude the selected region and return the rest of the data.
   //amar nayegandhi 11/26/02.
@@ -45,7 +46,7 @@ func sel_data_rgn(data, type, mode=,win=, exclude=) {
      //write, int(rgn*100);
   }
 
-  if ((mode==1) || (mode==2)) {
+  if ((mode==1) || (mode==2) || (mode==4)) {
     q = where((data.east >= rgn(1)*100.)   & 
                (data.east <= rgn(2)*100.)) ;
 
@@ -68,10 +69,9 @@ func sel_data_rgn(data, type, mode=,win=, exclude=) {
      poly_pts = testPoly(ply*100., data.east(box_pts), data.north(box_pts));
      indx = box_pts(poly_pts);
  }
- 
  if (exclude) {
      iindx = array(int,numberof(data.rn));
-     iindx(indx) = 1;
+     if (is_array(indx)) iindx(indx) = 1;
      indx = where(iindx == 0);
  }
     
