@@ -145,13 +145,28 @@ func write_ascii_xyz(geoptr, opath=,ofname=,type=) {
   len = numberof(geoarr);
   for (i=1;i<=num_valid;i++) {
     if (type == 1) {
+        /* this writes out xyz depth data */
          write, f, format="%9.2f  %10.2f  %8.2f \n",geoarr.east(indx(i))/100.,geoarr.north(indx(i))/100., geoarr.depth(indx(i))/100.;
 	 totw++;
     }
+    if (type == 2) {
+        /* this writes out xyz topo data with the 4th word being first surface return intensity */
+        write, f, format="%9.2f  %10.2f  %8.2f  %d \n", geoarr.east(indx(i))/100., geoarr.north(indx(i))/100., geoarr.elevation(indx(i))/100., geoarr.first_peak(indx(i));
+	totw++;
+    }
     if (type == 3) {
-         write, f, format="%9.2f  %10.2f  %8.2f \n",geoarr.east(indx(i))/100.,geoarr.north(indx(i))/100., geoarr.bath(indx(i))/100.;
+        /* this writes out xyz submerged topography data with the 4th word being bottom peak intensity return */
+	bath = geoarr.elevation(indx(i))+geoarr.depth(indx(i));
+        write, f, format="%9.2f  %10.2f  %8.2f %d \n",geoarr.east(indx(i))/100.,geoarr.north(indx(i))/100., bath/100., geoarr.bottom_peak(indx(i));
 	 totw++;
     }
+    if (type == 4) {
+        /* this writes out xyz bottom subaerial topography with the 4th word being the bottom peak intensity */
+	bottom_topo = geoarr.elevation(indx(i)) + geoarr.sr2(indx(i))*NS2MAIR;
+        write, f, format="%9.2f  %10.2f  %8.2f %d \n",geoarr.east(indx(i))/100.,geoarr.north(indx(i))/100., bottom_topo/100., geoarr.bottom_peak(indx(i));
+	 totw++;
+    }
+
   }
   close, f;
   write, format="Total records written to ascii file = %d\n", totw;
