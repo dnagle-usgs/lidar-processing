@@ -91,6 +91,7 @@ func testPoly(pl, ptx, pty)
 	Returns:    array of indexes of points that are inside the polygon
 */
 {
+  if ((is_void(ptx)) || (is_void(pty))) return [];
  // array of angles between vectors	
   theta = array(float, dimsof(pl)(3), dimsof(ptx)(2)) 
 	

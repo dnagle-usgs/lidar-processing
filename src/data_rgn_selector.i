@@ -63,9 +63,14 @@ func sel_data_rgn(data, type, mode=,win=, exclude=, rgn=) {
 
   if (mode == 3) {
      window, win;
-     ply = getPoly();
+     if (is_void(rgn)) {
+         ply = getPoly();
+     } else {
+         ply = rgn;
+     }
      box = boundBox(ply);
      box_pts = ptsInBox(box*100., data.east, data.north);
+     if (!is_array(box_pts)) return [];
      poly_pts = testPoly(ply*100., data.east(box_pts), data.north(box_pts));
      indx = box_pts(poly_pts);
  }
@@ -78,7 +83,8 @@ func sel_data_rgn(data, type, mode=,win=, exclude=, rgn=) {
 
  window, w;
 
- data_out = data(indx);
+ if (is_array(indx)) 
+   data_out = data(indx);
 
  return data_out;
 
@@ -190,9 +196,9 @@ indx = where(x >= xmin);
  } else return;
 }
 
-func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged=, onlynotmerged=, onlyrcfd=, onlynotrcfd=, datum=, skip=, noplot=, search_str=) {
+func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged=, onlynotmerged=, onlyrcfd=, onlynotrcfd=, datum=, skip=, noplot=, search_str=, pip=, pidx=) {
 
-/* DOCUMENT sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged=, onlynotmerged=, onlyrcfd=, onlynotrcfd=, datum=, skip=, noplot=) 
+/* DOCUMENT sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged=, onlynotmerged=, onlyrcfd=, onlynotrcfd=, datum=, skip=, noplot=, search_str=, pip=) 
 
   This function selects data from a series of processed data tiles.
   The processed data tiles must have the min easting and max northing in their filename.
@@ -205,6 +211,9 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged
    onlymerged= set to 1 to search for only merged files 
    onlynotmerged = set to 1 to search for all non-merged files.
    onlyrcfd = set to 1 to search for only rcfd files.
+   search_str= define search string for file name
+   pip = set to 1 if pip is to be used to define the region.
+   pidx = the array of a previously clicked polygon.
   original Brendan Penney
   modified amar nayegandhi 07/17/03
 */
@@ -217,13 +226,27 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged
    if (lmap) load_map(utm=1);
    if (!mode) mode = 2; // defaults to bathymetry
    if (!is_array(rgn)) {
+    if (!pip) {
      rgn = array(float, 4);
      a = mouse(1,1, "select region: ");
               rgn(1) = min( [ a(1), a(3) ] );
               rgn(2) = max( [ a(1), a(3) ] );
               rgn(3) = min( [ a(2), a(4) ] );
               rgn(4) = max( [ a(2), a(4) ] );
+    } else {
+      // use pip to define region
+      if (!is_array(pidx))  
+           pidx = getPoly();
+      pidx = grow(pidx,pidx(,1));
+            
+      rgn = array(float,4);
+      rgn(1) = min(pidx(1,));
+      rgn(2) = max(pidx(1,));
+      rgn(3) = min(pidx(2,));
+      rgn(4) = max(pidx(2,));
+    }
    }
+    
    /* plot a window over selected region */
    a_x=[rgn(1), rgn(2), rgn(2), rgn(1), rgn(1)];
    a_y=[rgn(3), rgn(3), rgn(4), rgn(4), rgn(3)];
@@ -348,15 +371,27 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged
 	  f = openb(files(i));
 	  restore, f, vname;
           eaarl = get_member(f,vname)(1:0:skip);
-          idx = data_box(eaarl.east/100., eaarl.north/100., rgn(1), rgn(2), rgn(3), rgn(4));
-	  if (is_array(idx)) {
+          if (!pip) {
+            idx = data_box(eaarl.east/100., eaarl.north/100., rgn(1), rgn(2), rgn(3), rgn(4));
+	    if (is_array(idx)) {
   	     iidx = data_box(eaarl.east(idx)/100., eaarl.north(idx)/100., floc(1,i), floc(1,i)+2000, floc(2,i)-2000, floc(2,i));
 	     if (is_array(iidx))
                 grow, sel_eaarl, eaarl(idx(iidx));
-  	 }
+  	    }
+          } else {
+            data_out = [];
+	    data_out = sel_data_rgn(eaarl, type, mode=3, rgn=pidx);
+            if (is_array(data_out)) {
+              sel_eaarl=grow(sel_eaarl, data_out);
+            } else {
+	      data_out = [];
+            }
+         }
 	 // grow, sel_eaarl, eaarl(idx);
+
      }
    }
+         
    write, format = "Total Number of selected points = %d\n", numberof(sel_eaarl);
 
   window, w;
