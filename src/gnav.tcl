@@ -10,7 +10,6 @@ pack .t .ys -side left -fill y
 }
 
 proc createMain {} {
-global state
 wm title . "Gnav-Editor"
 menu .menubar
 .menubar add cascade -menu .menubar.file -label "File" -underline 0
@@ -22,7 +21,16 @@ menu .menubar.file -tearoff 1
 .menubar.file add separator
 .menubar.file add command -label Quit -command exit -underline 0
 menu .menubar.fix -tearoff 1
-.menubar.fix add command -label "Fix File" -command fix -state $state 
+.menubar.fix add command -label "Fix File" -command fix -underline 0
+.menubar.fix add cascade -label "Antena Type" -menu .menubar.fix.antena
+menu .menubar.fix.antena
+.menubar.fix.antena add command -label "HGR 58" -command hgr58 -underline 0
+.menubar.fix.antena add command -label "NIIIX" -command niiix -underline 0
+.menubar.fix.antena add cascade -label "USGS" -menu .menubar.fix.antena.m
+menu .menubar.fix.antena.m
+.menubar.fix.antena.m add command -label "Amar" -command usgsm1
+.menubar.fix.antena.m add command -label "BJ" -command usgsm2
+
 . configure -menu .menubar 
 }
 
@@ -55,16 +63,15 @@ proc fname proc {
 proc fix {} {
 # state of the text widget
 # j is a count variable that represents the number of empty lines
-global state
 global j
 set j 11
 
-if { $state == "disabled" } {
-tk_messageBox -icon info -type ok -title "Warning!" \
-	-message "File has already been fixed"
-} elseif {$state == "active"} {
+# insert user name and company 
+.t delete 5.00 5.24 
+.t insert 5.00 "Virg                Nasa"
+
+# insert blank spaces
 .t delete 10.12 10.60
-#insert blank spaces
 .t insert 10.12 "                                                "
 
 for {set i 11} { $i <= 20} {incr i} {
@@ -79,10 +86,35 @@ incr j
 .t delete 11.0 $j.0
 
 # don't allow further editing of the file
-.t configure -state disabled
-set state disabled
+#.t configure -state disabled
+#set state disabled
 }
+
+proc hgr58 {} {
+# delete text"Some Generic Rcv" so you can add the antena type later
+.t delete 6.20 6.36
+.t insert 6.20 "700718B         "
 }
+
+proc niiix {} {
+.t delete 6.20 6.36
+.t insert 6.20 "700228D         "
+}
+
+proc usgsm1 {} {
+.t delete 6.20 6.36
+.t insert 6.20 "7009936         "
+.t delete 9.8 9.15
+.t insert 9.8 " 2.0000"
+}
+
+proc usgsm2 {} {
+.t delete 6.20 6.36
+.t insert 6.20 "7009936         "
+.t delete 9.8  9.15
+.t insert 9.8 " 1.2400"
+}
+
 eval destroy [winfo child .]
 set f {}
 createFix
