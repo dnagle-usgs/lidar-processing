@@ -82,16 +82,16 @@ return home;
 func find_be_from_grid(veg_all, img, ll, ur) {
    //amar nayegandhi 04/08/04
 
-   a = structof(veg_all(1));
+   veg_all = test_and_clean(veg_all);
    cell = int((ur(1)-ll(1))/numberof(img(,1)));
   
    idx = where(veg_all.least != 0);
-   out = array(float, 120, numberof(veg_all));
+   out = array(float, numberof(veg_all));
    
    for (i=1;i<=numberof(idx);i++) {
      en = [veg_all.least(idx(i))/100., veg_all.lnorth(idx(i))/100.];
-     xidx = int((en(1)-ll(1))/cell+0.5);
-     yidx = int((en(2)-ll(2))/cell+0.5);
+     xidx = int((en(1)-ll(1))/cell);
+     yidx = int((en(2)-ll(2))/cell);
      out(idx(i)) = img(xidx,yidx);
    }
  
@@ -237,7 +237,7 @@ func make_large_footprint_waveform(eaarl, binsize=, digitizer=, normalize=, mode
   	         rr = decode_raster(get_erast(rn=rn));
 		 ai = irg(rn, inc=0, usecentroid=1);
 	     }
-	     if (v1.elevation < -300 || v1.elevation > 2500) continue;
+	     if (v1.elevation < -300 || v1.elevation > 3500) continue;
   	     elvdiff = v1.melevation - v1.elevation;
 	     rarr(1:numberof(*rr.rx(p,1)),k) = max(*rr.rx(p,1))-(*rr.rx(p,1));
  	     nrarr = span(1,numberof(*rr.rx(p,1)),numberof(*rr.rx(p,1)))+ai.irange(p);
@@ -309,42 +309,166 @@ func make_large_footprint_waveform(eaarl, binsize=, digitizer=, normalize=, mode
 }
             
      
+func make_single_lfpw(eaarl,bin=,normalize=, plot=, correct_chp=){
+   // amar nayegandhi 04/23/04 
+   if (!bin) bin = 50;
+    
+   outveg = array(LFP_VEG, 1);
+   outveg.north = long(avg(eaarl.north));
+   outveg.east = long(avg(eaarl.east));
+   outveg.npix = numberof(eaarl);
+   rarr = array(char, 250, numberof(eaarl));
+   erarr = array(float, 250, numberof(eaarl));
+   aiarr = array(float, 3, numberof(eaarl));
+   rn_old = [];
+   rn = [];
+   //now loop through each pulse and find the returned waveform and irange
+   for (k = 1; k<=numberof(eaarl); k++) {
+      rn_old = rn;
+      v1 = eaarl(k);
+      rn = v1.rn & 0xffffff;
+      p = v1.rn / 0xffffff;
+      if (rn != rn_old) {
+         rr = decode_raster(get_erast(rn=rn));
+	 ai = irg(rn, inc=0, usecentroid=1);
+      }
+      if (v1.elevation < -300 || v1.elevation > 3500) continue;
+      elvdiff = v1.melevation - v1.elevation;
+      rarr(1:numberof(*rr.rx(p,1)),k) = max(*rr.rx(p,1))-(*rr.rx(p,1));
+      nrarr = span(1,numberof(*rr.rx(p,1)),numberof(*rr.rx(p,1)))+ai.irange(p);
+      eratio = nrarr/float(ai.irange(p)+ai.fs_rtn_centroid(p));
+      erarr(1:numberof(*rr.rx(p,1)),k) = int(v1.melevation - eratio*elvdiff);
+ 
+     if (correct_chp) {
+      // code below tries to remove the noise below the ground
+      pgnd = where(erarr(,k) <= 0)(1); // where the ground possibly is
+      if (erarr(pgnd,k) != 0) {
+	pgnd1 = where(rarr(pgnd:,k)(dif) > 0);// first instance when the pulse rises after 0
+        if (is_array(pgnd1)) {
+          lgnd = pgnd+pgnd1(1)-1;
+        } else {
+          lgnd = pgnd+1;
+        }
+      } else {
+	lgnd = pgnd-1;
+      }
+      rarr((lgnd+1):,k) = 0
+      erarr((lgnd+1):,k) = 0
+     
+      //aiarr(,k) = [ai.irange(p), ai.fs_rtn_centroid(p), numberof(*rr.rx(p,1))];
+      aiarr(,k) = [eaarl(k).elevation/100., ai.fs_rtn_centroid(p), lgnd];
+      ngr = int(aiarr(3,k)); // number of good rarrs.
+      if (plot) {
+        window, 2; fma; plmk, erarr(1:ngr,k)/100., rarr(1:ngr,k), color="black"; 
+        plg, erarr(1:ngr,k)/100., rarr(1:ngr,k), color="black"; 
+      }
+      rarr(1:ngr,k) = correct_1_chp(rarr(1:ngr,k), erarr(1:ngr,k)/100.);
+      //pause, 1000;
+     }
+     if (plot) {
+	xidx = where(erarr(,k) != 0)
+        window, 2; fma; plmk, erarr(xidx,k)/100., rarr(xidx,k), color="black"; 
+        plg, erarr(xidx,k)/100., rarr(xidx,k), color="black"; 
+	xytitles, "Backscatter (counts)", "Elevation (m)";
+	if (k==13) amar();
+     }
+      
+   }
+   idx = where(erarr != 0);
+   emin = min(erarr(idx));
+   emax = max(erarr(idx));
+   nbins = int(ceil((emax-emin)/bin));
+   rrarr = array(float, nbins);
+   errarr = array(float, nbins);
+   karr = array(long, nbins);
+   for (k=1; k<= nbins; k++) {
+      kemin = emin+(k-1)*bin;
+      kemax = emin+(k)*bin;
+      kidx = where((erarr(idx) >= kemin) & (erarr(idx) < kemax));
+      if (!is_array(kidx)) continue;
+      rrarr(k) = sum(int(rarr(idx(kidx))));
+      if (normalize) rrarr(k) = rrarr(k)/numberof(kidx);
+      errarr(k) = (kemin+kemax)/200.
+      karr(k) = numberof(kidx);
+   }
+   if (plot) {
+       pidx = where(rrarr != 0);
+       window, 7; fma; plmk, rrarr(pidx), errarr(pidx), msize=0.2, color="red", marker=1;
+       plg, rrarr(pidx), errarr(pidx);
+       if (is_void(pse)) pse = 0;
+       pause, pse;
+   }
+   outveg.rx = &rrarr;
+   outveg.elevation = &errarr;
+   outveg.npixels = &karr;
+   return outveg;
+}
 
-func plot_slfw(outveg, outwin=, indx=, dofma=, color=, interactive=, show=, inwin=) {
+func plot_slfw(outveg, outwin=, indx=, dofma=, color=, interactive=, show=, inwin=, title=, noxytitles=,  normalize=) {
 //amar nayegandhi 04/14/04
 // plot synthesized large footprint waveform
+// returns the waveforms selected
+// normalize = 1 by default
+
 
 w = window();
 if (is_void(outwin)) outwin = 7;
 if (is_void(inwin)) inwin = 5;
 if (is_void(color)) color="black";
+if (is_void(normalize)) normalize = 1;
+out = [];
 
 if (!is_void(dofma)) {
 	window, outwin; fma;
 }
 
 if (!is_void(interactive)) {
+  count = 0;
+  idx = where(outveg.east != 0);
+  outveg = outveg(idx);
+  fp = max((outveg.east(2)-outveg.east(1)), (outveg.north(2)-outveg.north(1)));
   window, inwin;
   while (1) {
-   m = mouse(1,0,"Left: Select waveform; Right:Quit");
+   count++;
+   if (count == 1) {
+      m = mouse(1,0,"Left: Select waveform; Right:Quit");
+   } else {
+      m = mouse(1,0,"");
+   }
    if (m(10) != 1) break;
    east = m(1);
    north = m(2);
-   idx = where(outveg.east != 0);
-   outveg = outveg(idx);
    idx = data_box(outveg.east/100., outveg.north/100., m(1)-50, m(1)+50, m(2)-50, m(2)+50);
    iidx = ((outveg.east(idx)/100.-m(1))^2+(outveg.north(idx)/100.-m(2))^2)(mnx);
    tveg = outveg(idx(iidx));
-
+   if (show) {
+	// plot the footprint box in inwin.
+	plg, [(tveg.north-fp/2), (tveg.north-fp/2), (tveg.north+fp/2), (tveg.north+fp/2), (tveg.north-fp/2)]/100., [(tveg.east-fp/2), (tveg.east+fp/2), (tveg.east+fp/2), (tveg.east-fp/2), (tveg.east-fp/2)]/100., color="black";
+   }
+  
+   if (is_void(*tveg.rx)) {
+	write, "No waveform found...";
+	continue;
+   }
+       
    window, outwin;
    yy = *tveg.rx;
    xx = *tveg.elevation;
+   nn = *tveg.npixels
 
    if (!is_void(dofma)) {
 	window, outwin; fma;
    }
-   plmk, yy, xx, msize=0.2, color=color, marker=1;
-   plg, yy, xx, color=color;
+   if (normalize == 1) {
+    plmk, xx, yy, msize=0.2, color=color, marker=1;
+    plg, xx, yy, color=color;
+   } else {
+    plmk, xx, yy*nn, msize=0.2, color=color, marker=1;
+    plg, xx, yy*nn, color=color;
+   }
+    
+
+   out = grow(out,tveg);
 
    window, inwin;
   }
@@ -355,14 +479,27 @@ window, outwin;
 
 
 if (is_array(indx)) {
-  tveg = outveg(indx(1), indx(2))
+  dims = dimsof(indx);
+  if (dims(1) == 1) tveg = outveg(indx(1), indx(2));
+  if (dims(1) == 0) tveg = outveg(indx);
   yy = *tveg.rx;
   xx = *tveg.elevation;
+  nn = *tveg.npixels
 
-  plmk, yy, xx, msize=0.2, color=color, marker=1;
-  plg, yy, xx, color=color;
+  if (normalize == 1) {
+    plmk, xx, yy, msize=0.2, color=color, marker=1;
+    plg, xx, yy, color=color;
+  } else {
+    plmk, xx, yy*nn, msize=0.2, color=color, marker=1;
+    plg, xx, yy*nn, color=color;
+  }
+  out = tveg;
 }
 
+if (!noxytitles) xytitles, "Normalized Backscatter (counts)", "NAVD88 Elevation (m)"
+if (is_array(title)) pltitle, title;
+
+return out;
 }
 
 
@@ -393,7 +530,7 @@ return home;
 }
 
 
-func lfp_metrics(lfpveg, thresh=) {
+func lfp_metrics(lfpveg, thresh=, img=, fill=) {
 /* DOCUMENT lfp_metrics(lfpveg, thresh=)
   This function calculates the composite large footprint metrics.
   amar nayegandhi 04/19/04.
@@ -403,23 +540,37 @@ func lfp_metrics(lfpveg, thresh=) {
    grr;	// ground return ratio
    crr;	// canopy reflection ratio
    home;  // height of median energy
+
+   img = 2-D gridded images with true ground elevations
 */
 
  dims = dimsof(lfpveg);
- out = array(double, 5, dims(2), dims(3));
+ dimsimg = dimsof(img);
+ if (dims(1) == 2) out = array(double, 5, dims(2), dims(3));
+ if (dims(1) == 1) {
+    out = array(double, 5, dims(2));
+    dims = grow(dims,1);
+ }
  if (is_void(thresh)) thresh = 10;
   
  for (i=1;i<=dims(2);i++) {
     for (j=1;j<=dims(3);j++) {
 	lfprx = *lfpveg(i,j).rx;
-	if (!is_array(lfprx)) continue;
+	lfpnpix = *lfpveg(i,j).npixels;
+	if (!is_array(lfprx)) {
+	  out(1,i,j) = -1000;
+	  continue;
+        }
 	lfpelv = *lfpveg(i,j).elevation;
 	lfpcum = (lfprx)(cum);
 	menergy = lfpcum(0)/2;
 	mindx = abs(lfpcum-menergy)(mnx);
-	out(5,i,j) = (lfpelv)(mindx-1);
-        lfpdif = where(lfprx(dif) >= thresh);
-	if (!is_array(lfpdif)) continue;
+	out(5,i,j) = (lfpelv)(mindx-1); // this is HOME
+
+      lfpdif = where(lfprx(dif) >= thresh);
+      if (!is_array(lfpdif)) continue;
+      out(1,i,j) = lfpelv(lfpdif(0)+1);
+      if (!is_array(img)) {
 	// max(lfpdif(1):+5) should be the ground elevation 
 	mnxgnd = min(lfpdif(1)+5, numberof(lfprx));
   	mxxgnd = (lfprx(lfpdif(1):mnxgnd))(mxx)+lfpdif(1)-1;
@@ -437,20 +588,88 @@ func lfp_metrics(lfpveg, thresh=) {
 	} else {
 	    fgr = 1;
 	}
+      } else {
+	// correct the canopy height by subtracting the bare earth elevation
+	out(1,i,j) = out(1,i,j) - img(i,j);
+	out(2,i,j) = img(i,j);
+	gidx = (abs(lfpelv - img(i,j)))(mnx);
+	if (abs(lfpelv(gidx)-img(i,j)) > 2) {
+	   // this waveform does not contain gnd info
+	   continue;
+        }
+	mxxgnd = min(gidx+5, numberof(lfpelv));
+        mxxgnd = long(mxxgnd(1));
+        mnxgnd = max(gidx-5, 1);
+        mnxgnd = long(mnxgnd(1));
+        if (numberof(lfpelv(gidx:mxxgnd)) > 1)
+ 	  lgndidx = where(lfpelv(gidx:mxxgnd)(dif) > 0);
+	if (is_array(lgndidx)) {
+	   lgr = lgndidx(1)+gidx-1;
+	} else {
+	   lgr = mxxgnd;
+	}
+        if (numberof(lfpelv(mnxgnd:gidx)) > 1)
+          fgndidx = where(lfpelv(mnxgnd:gidx)(dif) < 0);
+	if (is_array(fgndidx)) {
+	   fgr = fgndidx(0)+mnxgnd;
+	} else {
+	   fgr = mnxgnd;
+	}
+      }
+      if (fgr > lgr) continue;
 	lfpgnd = lfprx(fgr:lgr);
-	lfpcpy = lfprx(lgr+1:);
-	lfpgsum = lfpgnd(sum);
-	lfpcsum = lfpcpy(sum);
+	lfpgnpix = lfpnpix(fgr:lgr);
+	lfpcpy = lfprx(lgr:);
+	lfpcnpix = lfpnpix(lgr:);
+	lfpgsum = (lfpgnd*lfpgnpix)(sum);
+	lfpcsum = (lfpcpy+lfpcnpix)(sum);
 	out(3,i,j) = lfpgsum/(lfpgsum+lfpcsum);
 	out(4,i,j) = lfpcsum/(lfpcsum+lfpgsum);
 	
-	out(1,i,j) = lfpelv(lfpdif(0)+1);
     }
  }
-        
 
+ if (fill) {
+   for (i=2;i<dims(2);i++) {
+     for (j=2;j<dims(3);j++) {
+	if (out(1,i,j) == -1000) continue;
+	if (out(4,i,j) == 0) {
+	  data = out(4,i-1:i+1,j-1:j+1);
+	  idx = where(data != 0 & data != -1000);
+          if (is_array(idx)) 
+	  out(4,i,j) = avg(data(idx));
+	}
+	if (out(3,i,j) == 0) {
+	  data = out(3,i-1:i+1,j-1:j+1);
+	  idx = where(data != 0 & data != -1000);
+          if (is_array(idx)) 
+	  out(3,i,j) = avg(data(idx));
+	}
+	if (out(2,i,j) == 0) {
+	  data = out(2,i-1:i+1,j-1:j+1);
+	  idx = where(data != 0 & data != -1000);
+          if (is_array(idx)) 
+	  out(2,i,j) = avg(data(idx));
+	}
+	if (out(1,i,j) == 0) {
+	  data = out(1,i-1:i+1,j-1:j+1);
+	  idx = where(data != 0 & data != -1000);
+          if (is_array(idx)) 
+	  out(1,i,j) = avg(data(idx));
+	}
+	if (out(5,i,j) == 0) {
+	  data = out(5,i-1:i+1,j-1:j+1);
+	  idx = where(data != 0 & data != -1000);
+          if (is_array(idx)) 
+	  out(5,i,j) = avg(data(idx));
+	}
+     }
+   }
+ }
+	     
 return out;
 }
+
   	
 
 func plot_metrics(vmets, lfpveg, vmetsidx=, cmin=, cmax=, msize=, marker= ,win=, dofma=, xbias=, ybias=) {
@@ -462,7 +681,7 @@ func plot_metrics(vmets, lfpveg, vmetsidx=, cmin=, cmax=, msize=, marker= ,win=,
  if (is_void(xbias)) xbias = 0;
  if (is_void(ybias)) ybias = 0;
 
- idx = where(vmets(1,,) != 0);
+ idx = where(vmets(vmetsidx,,) != 0);
 
  if (is_void(cmin)) cmin = min(vmets(vmetsidx,idx));
  if (is_void(cmax)) cmax = max(vmets(vmetsidx,idx));
@@ -502,4 +721,187 @@ func plot_classes(vmets, lfpveg, vmetsidx=, nclasses=, classint=, win=) {
 		msize=0.5, width=10.0,  color=colorbar(i);
  }
 
+}
+
+func plot_veg_classes(mets, lfp, idx=, win=, dofma=, msize=, smooth=) {
+// amar nayegandhi 051104
+/*
+ FOREST: cht > 8m and 60-100% cover
+ WOODLAND: cht > 8m and 25-60% cover
+ SHRUBLAND: cht < 8m and cht > 1m & > 25% cover
+ DWARF SHRUBLAND & HERBACEOUS: cht < 1m and cht > 0m 
+*/
+
+if (is_void(msize)) msize=0.5
+idx1 = where((mets(1,) > 8) & (mets(4,) >= 0.5));
+
+idx2 = where((mets(1,) > 8) & (mets(4,) > 0.25) & (mets(4,) < 0.5));
+
+idx3 = where((mets(1,) < 8) & (mets(1,) > 1) & (mets(4,) > 0.25));
+
+idx4 = where((mets(1,) < 1) & (mets(1,) > -1)); 
+
+
+if (is_void(win)) win=4;
+window, win;
+if (dofma) fma;
+if (!is_array(idx)) idx = [1,2,3,4,5];
+ for (i=1;i<=numberof(idx);i++) {
+    if (idx(i) == 1) {
+	plmk, lfp.north(idx1)/100., lfp.east(idx1)/100., marker=1, msize=msize, width=10, color="yellow";
+    }
+    if (idx(i) == 2) {
+	plmk, lfp.north(idx2)/100., lfp.east(idx2)/100., marker=1, msize=msize, width=10, color="green";
+    }
+    if (idx(i) == 3) {
+	plmk, lfp.north(idx3)/100., lfp.east(idx3)/100., marker=1, msize=msize, width=10, color="blue";
+    }
+    if (idx(i) == 4) {
+	plmk, lfp.north(idx4)/100., lfp.east(idx4)/100., marker=1, msize=msize, width=10, color="red";
+    }
+ }
+
+if (smooth) {
+   // make 2d array with class numbers
+   xx = dimsof(lfp);
+   vcl = array(long, xx(2), xx(3));
+   vclnew = array(long, xx(2), xx(3));
+   vcl(idx1)=1;
+   vcl(idx2)=2;
+   vcl(idx3)=3;
+   vcl(idx4)=4;
+   for (i=2;i<xx(3);i++) {
+     for (j=2;j<xx(2);j++) {
+	i1 = where(vcl(j-1:j+1,i-1:i+1) == 1)
+	i2 = where(vcl(j-1:j+1,i-1:i+1) == 2)
+	i3 = where(vcl(j-1:j+1,i-1:i+1) == 3)
+	i4 = where(vcl(j-1:j+1,i-1:i+1) == 4)
+	imxx = [numberof(i1),numberof(i2),numberof(i3),numberof(i4)](mxx);
+	imx = [numberof(i1),numberof(i2),numberof(i3),numberof(i4)](max);
+	if (imx != 0) vclnew(j,i) = imxx;
+     }
+   }
+   window, win+1; fma;
+   idx1 = where(vclnew == 1);
+   idx2 = where(vclnew == 2);
+   idx3 = where(vclnew == 3);
+   idx4 = where(vclnew == 4);
+   plmk, lfp.north(idx1)/100., lfp.east(idx1)/100., marker=1, msize=msize, width=10, color="yellow";
+   plmk, lfp.north(idx2)/100., lfp.east(idx2)/100., marker=1, msize=msize, width=10, color="green";
+   plmk, lfp.north(idx3)/100., lfp.east(idx3)/100., marker=1, msize=msize, width=10, color="blue";
+   plmk, lfp.north(idx4)/100., lfp.east(idx4)/100., marker=1, msize=msize, width=10, color="red";
+}
+	
+return
+}
+
+
+
+
+
+
+
+
+func plot_fcht_histograms(fcht, binsize=, scale=, win=, color=, width=, dofma=, noxytitles=) {
+ // amar nayegandhi 04/26/04
+ 
+ if (!binsize) binsize = 2;
+ if (is_void(win)) win = window();
+ if (is_void(color)) color = "blue";
+ if (is_void(width)) width = 1.0;
+ if (is_void(scale)) scale = 1.0;
+
+ minn = fcht(min);
+ maxx = fcht(max)+1;
+   
+ nbins = int(ceil((maxx-minn)/float(binsize)));
+ hist = array(float, nbins, 2);
+
+ for (i=1; i<=nbins; i++) {
+      minc = minn + (i-1)*binsize;  
+      maxc = minn + (i)*binsize;
+      indx = where((fcht>= minc) & (fcht< maxc));
+      if (is_array(indx)) {
+         hist(i,1) = numberof(indx);
+         hist(i,2) = avg(fcht(indx));
+      } else {
+  	 hist(i,1) = 0;
+	 hist(i,2) = minc+binsize/2;
+      }
+ }
+ //hist = hist(where(hist(,1) != 0));
+ w = window();
+ window, win;
+ if (dofma) fma;
+ minz = min(fcht);
+ maxz = max(fcht);
+  
+ nbins = int(ceil((maxz-minz)/float(binsize))+1);
+ xsc = span(minz, maxz, nbins);
+ color=-3;
+ for (i=1; i< numberof(hist(,1));i++) {
+      y = hist(,1);
+      //plg, [0,y(i),y(i),0], [xsc(i),xsc(i),xsc(i+1),xsc(i+1)], width=5, color=color;
+      plg, [xsc(i),xsc(i),xsc(i+1),xsc(i+1)], [0,y(i)*scale,y(i)*scale,0], width=width, color="blue";
+     
+      //plmk, hist(i,1), hist(i,2), marker=4, msize=0.4, width=10, color=color;
+      //plmk, hist(i,2), hist(i,1), marker=4, msize=0.4, width=10, color=color;
+      //xytitles,"Mean Elevation (meters)", "# of measurements (normalized n/n_max)";
+      if (!noxytitles) xytitles,"# of measurements", "Canopy Height (meters)" 
+      //pltitle, swrite(format="Elevation Histogram Site PT-%d", number);
+
+    color--;
+ }
+ //plg, hist(,2), hist(,1)*scale, color=color, width=width;
+ //plmk, hist(,2), hist(,1)*scale, marker=4, msize=0.2, width=10, color=color;
+ return
+}
+
+func derive_chp(out1) {
+
+ rx = *out1.rx(1);
+ re = *out1.elevation(1);
+ rn = *out1.npixels(1);
+
+ nrx = numberof(rx);
+ irx = indgen(nrx:1:-1);
+ cumrx = (rx(irx))(cum)
+ plmk, re(irx), (rx(irx))(cum)(2:), color="red";
+ plg, re(irx), (rx(irx))(cum)(2:), color="red";
+
+ cumrxn = cumrx(2:)/cumrx(0);
+ cumnew = (cumrxn(1:-2)-log(1-cumrxn(1:-2)))(dif);
+ cumnew = cumnew*cumrx(0);
+ cumnew = grow(cumnew, rx(0));
+ 
+ plmk, re(irx(3:0)), cumnew, color="blue";
+ plg, re(irx(3:0)), cumnew, color="blue";
+
+ return cumnew;
+ 
+}
+
+func correct_1_chp(rarr,erarr) {
+
+ rx = double(rarr);
+ re = erarr;
+
+ nrx = numberof(rx);
+ //irx = indgen(nrx:1:-1);
+ //cumrx = (rx(irx))(cum)
+ cumrx = (rx)(cum)
+ plmk, re, cumrx(2:), color="red";
+ plg, re, (cumrx)(2:), color="red";
+
+ cumrxn = cumrx(2:)/cumrx(0);
+ idx = where(cumrxn != 1)
+ cumnew = (cumrxn(idx)-log(1-cumrxn(idx)))(dif);
+ cumnew = cumnew*cumrx(0);
+ cumnew = grow(rx(1), cumnew, rx(numberof(idx)+1:0));
+ 
+ plmk, re, cumnew, color="blue";
+ plg, re, cumnew, color="blue";
+
+ return cumnew;
+ 
 }
