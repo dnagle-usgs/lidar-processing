@@ -23,6 +23,7 @@ func mtransect( fs, win=, w=, connect= ) {
  if ( is_void(w))             w = 150;
  if ( is_void(connect)) connect = 0;
  if ( is_void(win))         win = 5;
+ if ( is_void(msize))         msize = 0.1;
  window,win
 // get the line coords with the mouse and convert to cm
   l = mouse(1, 2)(1:4)*100.0;
@@ -31,16 +32,24 @@ func mtransect( fs, win=, w=, connect= ) {
   return glst;
 }
 
-func transect( fs, l, lw=, connect= ) {
+func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, win=, color= ) {
 /* DOCUMENT transect( fs, line, lw=)
 
    fs   fs_all structure where you drew the line.
    line the line.
-   lw=  search distance either side of the line in centimeters.
+   lw=      search distance either side of the line in centimeters.
+   xtime=   1 to plot against time (soe)
+   xfma=    set to clear screen
+   win=     output window
+   color=   0-7 
 
 */
 
- if (is_void(lw) ) lw = 150;
+ if ( is_void(lw)    )    lw = 150;		// search width, cm
+ if ( is_void(color) ) color = 0;		// 0 is first color
+ if ( is_void(win)   )   win = 3;
+ window, win;
+ if ( !is_void(xfma) ) fma; 
 
 // determine the bounding box n,s,e,w coords
   n = l(2:4:2)(max);
@@ -88,12 +97,22 @@ func transect( fs, l, lw=, connect= ) {
  if ( nsegs > 1 ) { 
    grow, ss,segs,[0]
    ss
+
+//            1      2       3        4          5         6       7
   clr = ["black", "red", "blue", "green", "magenta", "yellow", "cyan" ];
    for (i=1; i<numberof(ss); i++ ) {
+     c = (color+i)&7;
+     if ( xtime ) {
      plmk, fs.elevation(*)(glst(llst)(ss(i):ss(i+1)))/100.0, 
-           rx(llst)(ss(i):ss(i+1))/100.0,color=clr(i&7)
+           fs.soe(*)(llst)(ss(i):ss(i+1))/100.0,color=clr(c), msize=msize
      if ( connect ) plg, fs.elevation(*)(glst(llst)(ss(i):ss(i+1)))/100.0, 
-                rx(llst)(ss(i):ss(i+1))/100.0,color=clr(i&7)
+                fs.soe(*)(llst)(ss(i):ss(i+1))/100.0,color=clr(c)
+     } else {
+     plmk, fs.elevation(*)(glst(llst)(ss(i):ss(i+1)))/100.0, 
+           rx(llst)(ss(i):ss(i+1))/100.0,color=clr(c), msize=msize
+     if ( connect ) plg, fs.elevation(*)(glst(llst)(ss(i):ss(i+1)))/100.0, 
+                rx(llst)(ss(i):ss(i+1))/100.0,color=clr(c)
+    }
    }
  } else {
   plmk, fs.elevation(*)(glst(llst))/100.0, rx(llst)/100.0
