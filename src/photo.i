@@ -10,6 +10,8 @@
 
 require, "pnm.i"
 
+write,"$Id$"
+
 
 func jpg_read(filename)
 /* DOCUMENT image= jpg_read(filename)
@@ -127,16 +129,19 @@ func pref (junk) {
 func gref_photo( somd=, ioff=, offset=,ggalst=, skip=, drift= ) {
 /* DOCUMENT gref_photo, somd=, ioff=, offset=, ggalst=, skip=
 
-    smod=
-    ioff=
+    smod=  A time in SOMD, or a list of times.
+    ioff= Integer offset 
   offset=
   ggalst=
-    skip=
+    skip= Images to skip
+   drift= Clock drift to add
 
 
 */
 
- if (!(offset)) offset = 0;
+ if ( is_void(ioff) ) ioff = 0;
+ if ( is_void(drift) ) drift = 0.0;
+ if ( is_void(offset)) offset = 0;
  if (is_array(ggalst)) somd = int(gga.sod(ggalst(unique(int(gga.sod(ggalst))))))
  if (skip)  somd = somd(1:0:skip);
  write, somd
@@ -153,9 +158,11 @@ func gref_photo( somd=, ioff=, offset=,ggalst=, skip=, drift= ) {
   northing = UTMNorthing;
   easting  = UTMEasting;
   zone     = UTMZone;
+  date  = "11-13";
   hms = sod2hms( int(sd ) );   
-  pname = swrite(format="%scam1_CAM1_2003-05-02_%02d%02d%02d.jpg", 
+  pname = swrite(format="%scam1_CAM1_2003-%s_%02d%02d%02d.jpg", 
          data_path + "cam1/", 
+         date,
          hms(1), hms(2), hms(3) ); 
   print, heading, northing, easting, roll, pitch, galt, hms
   photo = jpg_read( pname );
