@@ -914,8 +914,8 @@ write,"============================================================="
  somd = edb(mindata.rn&0xffffff ).seconds % 86400; 
  ztime = soe2time( somd );
  zdt   = soe2time( abs(edb( mindata.rn&0xffffff ).seconds - _last_soe) );
- pnav_idx = where(  pnav.sod == double(somd) )(1);
- tans_idx = where(  tans.somd == double(somd) )(1);
+ pnav_idx = abs( pnav.sod - somd)(mnx);
+ tans_idx = abs( tans.somd - somd)(mnx);
  knots = lldist( pnav(pnav_idx).lat,   pnav(pnav_idx).lon,
                  pnav(pnav_idx+1).lat, pnav(pnav_idx+1).lon) * 
                  3600.0/abs(pnav(pnav_idx+1).sod - pnav(pnav_idx).sod);

@@ -122,6 +122,10 @@ for (i=0;i<n;i++) {
 return data_ptr;
 }
 
+func edfrstat( i, nbr ) {
+  write, format=" %6d of %6d\r", i, nbr
+}
+
 func data_struc (type, nwpr, recs, byt_pos, f) {
   /* DOCUMENT data_struc(type, nwpr, recs, byt_pos, f).
      This function is used by read_yfile to define the structure depending on the data type.
@@ -140,6 +144,7 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
     data = array(FS, recs); 
     for (i=0;i<recs;i++) {
 
+       if ( (i % 1000) == 0 ) edfrstat, i, recs;
        _read, f, byt_pos, rn;
        data(i).rn = rn;
        byt_pos = byt_pos + 4;
@@ -194,6 +199,7 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
 
     for (i=0;i<recs;i++) {
 
+       if ( (i % 1000) == 0 ) edfrstat, i, recs;
        _read, f, byt_pos, rn;
        data(i).rn = rn;
        byt_pos = byt_pos + 4;
@@ -261,6 +267,7 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
 
     for (i=0;i<recs;i++) {
 
+       if ( (i % 1000) == 0 ) edfrstat, i, recs;
        _read, f, byt_pos, rn;
        data(i).rn = rn;
        byt_pos = byt_pos + 4;
