@@ -271,8 +271,14 @@ func mdist ( none, nodraw=, units=, win=, redrw= ) {
 	winSave = window();
 	window(win);
  }
-
+ 
+ forever = 1;
+ do  {
    res = mouse(1, 2, "Hold left mouse, and drag distance:"); // style=2 normally
+   forever = [abs(res(1:4:2)(dif))(1),abs(res(2:4:2)(dif))(1)](sum); 
+   if ( forever == 0 ) 
+      write,format="\007You must keep the left mouse button down when you're dragging out the line!",""
+ } while ( forever == 0 );
    if ( redrw ) 
 	redraw;
 
@@ -478,10 +484,9 @@ res
   zone = ZoneNumber(1);		// they are all the same cuz we translated
 
 
-
+  w = window();
   if (mode == 4) {
     if (debug) {
-       w = window();
        window, 5; fma;
        plmk, uply(1,), uply(2,), marker=4, width=10, color="black", msize=0.3;
     }
@@ -1150,7 +1155,7 @@ func read_xy(file,yx=, utm=, zone=, color=, win=, plot=, writefile=) {
    
 }
 
-func pip_fp(fp=, ply=, win=, mode=,in_utm=,out_utm=, debug=) {
+func pip_fp(junk,fp=, ply=, win=, mode=,in_utm=,out_utm=, debug=) {
 /* DOCUMENT pip_fp(fp, ply=, win=)
   This function allows the user to make a flight plan by selecting a polygon
   with a series of mouse clicks and defining the orientation...
@@ -1179,6 +1184,7 @@ func pip_fp(fp=, ply=, win=, mode=,in_utm=,out_utm=, debug=) {
 
   extern curzone
   extern lply1;
+  if (is_void(mode)) mode = 4;
   if (is_void(win)) win = 6;
   window, win;
   
@@ -1241,10 +1247,18 @@ func pip_fp(fp=, ply=, win=, mode=,in_utm=,out_utm=, debug=) {
 	x4 = fpxy(j,4)
 	y4 = fpxy(j,3)
 
-        ua = ((x4-x3)*(y1-y3)-(y4-y3)*(x1-x3))/((y4-y3)*(x2-x1)-(x4-x3)*(y2-y1));
+        denom = ((y4-y3)*(x2-x1)-(x4-x3)*(y2-y1));
+
+
+// Check for zero denominator where perfect north/south or east/west line drawn.
+// If it is zero, make it 1.0 for now.  This should be fixed by modifying the algo.
+// -WW.
+        if ( denom == 0 ) denom = 1.0;
+
+        ua = ((x4-x3)*(y1-y3)-(y4-y3)*(x1-x3))/ denom;
         if ((ua < 0) || (ua > 1)) continue;
 
-        ub = ((x2-x1)*(y1-y3)-(y2-y1)*(x1-x3))/((y4-y3)*(x2-x1)-(x4-x3)*(y2-y1)); 
+        ub = ((x2-x1)*(y1-y3)-(y2-y1)*(x1-x3))/ denom;
         if ((ub < 0) || (ub > 1)) continue;
 
         x = x1+ua*(x2-x1);

@@ -20,18 +20,17 @@ write, "$Id$"
 
 func getPoly(void)
 /* DOCUMENT function getPoly
-	This function draws a polygon on the Yorick window
-	Start by cli
-	cking on the Yorick	window. To close the
-	polygon or to stop clicking points hit Ctrl and click 
-	the left mouse button at the same time.
-	Parameters: none
-	Returns:    ply - array of polygon vertices
+This function draws a polygon on the Yorick window Start 
+by clicking in the current Yorick graphics window. 
+To close the polygon and stop clicking points use 
+Ctrl-left mouse button at the same time.
+Parameters: none
+Returns:    ply - array of polygon vertices
 */
 { 
  extern _ply;	// global copy of most recently defined ply
+ prompt = "Left mouse generates a vertice. Ctl-Left to end and close polygon."
 	ply = array(float, 2, 1)     // array that contains polygon vertices
-  	prompt = "Click"	     // prompt for each vertex	
   	result = mouse(1, 0, prompt)
   	ply(1, 1) = result(1)	     // x coordinate of the first vertex
   	ply(2, 1) = result(2)	     // y coordinate of the first vertex
@@ -42,6 +41,7 @@ func getPoly(void)
                  (result(11)== 4))) && 
                  (!(result(10)==2))) 	// while !(CTRL && left mouse) loop
   	{		
+          prompt = "Ctl-left mouse to close polygon."
    	 	result = mouse(1, 2, prompt)		
     	grow, ply, result(3:4)				// make room for new vertex
     	plmk, ply(2, 0), ply(1, 0), marker = 4, msize = .5, width = 10
