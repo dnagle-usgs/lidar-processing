@@ -72,7 +72,9 @@ func batch_pbd2edf(dirname, onlymerged=, n88=) {
        s = array(string, 100000);
        ss = ["*.pbd"];
        if (onlymerged) ss = ["*merged*.pbd"];
-       if (n88) n88 = "n88";
+       if (n88) {
+	 n88 = "n88";
+       } else n88 = "";
        scmd = swrite(format = "find %s -name '*%s*%s'",dirname, n88, ss);
        fp = 1; lp = 0;
        for (i=1; i<=numberof(scmd); i++) {
