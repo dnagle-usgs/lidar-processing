@@ -58,9 +58,12 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
 
  // if data array is in raster format (R, GEOALL, VEGALL), then covert to 
  // non raster format (FS, GEO, VEG).
+  eaarl = test_and_clean(eaarl);
  a = structof(eaarl(1));
+/*
  if (a == R) {
      data_out = clean_fs(eaarl);
+3B
  }
 
  if (a == GEOALL) {
@@ -74,6 +77,7 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
  if (a == VEG_ALL_) {
      data_out = clean_veg(eaarl);
  }
+*/
 
  if (is_array(data_out)) eaarl = data_out;
  data_out = [];
