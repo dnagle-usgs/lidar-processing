@@ -48,7 +48,7 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
  new_eaarl_all = [];
  data_out = [];
  if (!mode) mode = 3;
- if (is_void(distthresh)) distthresh = 100;
+ if (is_void(distthresh)) distthresh = 200;
  if (is_void(datawin)) datawin = 5;
  ecount = 0;
 
@@ -151,12 +151,12 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
  
   for (j=1;j<numberof(spany);j++) {
     for (k=1;k<numberof(spanx);k++) {
-       isp1 = data_box(eaarl.east, eaarl.north,  spanx(k)*100-100, spanx(k+1)*100+100, spany(j)*100-100, spany(j+1)*100+100);
+       isp1 = data_box(eaarl.east, eaarl.north,  spanx(k)*100-5000, spanx(k+1)*100+5000, spany(j)*100-5000, spany(j+1)*100+5000);
        if (interactive) {
-         w = window();
+         wi = window();
          window, datawin; 
-	 plg, [spany(j), spany(j), spany(j+1), spany(j+1), spany(j)], [spanx(k), spanx(k+1), spanx(k+1), spanx(k), spanx(k)], color="red";
-	 window, w;
+	 plg, [spany(j)-50, spany(j)-50, spany(j+1)+50, spany(j+1)+50, spany(j)-50], [spanx(k)-50, spanx(k+1)+50, spanx(k+1)+50, spanx(k)-50, spanx(k)-50], color="red";
+	 window, wi;
        }
        if (!is_array(isp1)) continue;
        eaarl1 = eaarl(isp1);
