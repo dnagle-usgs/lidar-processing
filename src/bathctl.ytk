@@ -83,7 +83,7 @@ proc bathctl { } {
             set bath_ctl(water) -0.6
             set bath_ctl(agc)   -0.3
             set bath_ctl(thresh) 4.0
-            set bath_ctl(first)  1
+            set bath_ctl(first)  11
             set bath_ctl(last)   220
           }
 
@@ -92,7 +92,7 @@ proc bathctl { } {
             set bath_ctl(water) -1.5
             set bath_ctl(agc)   -3.0
             set bath_ctl(thresh) 4.0
-            set bath_ctl(first)  1
+            set bath_ctl(first)  11
             set bath_ctl(last)   60
           }
 
@@ -101,7 +101,7 @@ proc bathctl { } {
             set bath_ctl(water) -3.5
             set bath_ctl(agc)   -6.0
             set bath_ctl(thresh) 2.0
-            set bath_ctl(first)  1
+            set bath_ctl(first)  11
             set bath_ctl(last)   60
           }
 
