@@ -96,7 +96,7 @@ for (i=1; i<=len; i=i+1) {
     old_elvs = rrr(i).elevation;
     //write, format="%5.2f ",elvs/100.;
     indx = where(rrr(i).elevation < (rrr(i).melevation - 5000));
-    rrr(i).elevation(indx) = int(elvs);
+    if (is_array(indx)) rrr(i).elevation(indx) = int(elvs);
     // now rrr.fs_rtn_centroid will change depending on where in time the surface occurs
     // for each laser pulse with respect to where its current surface elevation is.
     // this change is defined by the array offset
