@@ -40,6 +40,7 @@ frame .l1wid.bf4.2
 frame .l1wid.bf45 -relief groove -borderwidth 3
 frame .l1wid.bf45.sc -relief groove -borderwidth 3
 frame .l1wid.bf45.p -relief groove -borderwidth 3
+frame .l1wid.bf45.q -relief groove -borderwidth 3
 frame .l1wid.bf5 
 
 .l1wid configure -menu .l1wid.mb
@@ -260,7 +261,7 @@ ComboBox .l1wid.bf4.1.p -text "Process Data For" -width 22 -values \
 .l1wid.bf4.1.p setvalue first
 
 checkbutton .l1wid.bf4.2.cll -text "Convert UTM\nto Lat Lon" -variable cll 
-checkbutton .l1wid.bf4.2.cng -text "Convert to\nNAVD 88 (GEOID)" -variable cng 
+# checkbutton .l1wid.bf4.2.cng -text "Convert to\nNAVD 88 (GEOID)" -variable cng 
 checkbutton .l1wid.bf4.2.cen -text "Correct Range \nWalk with Centroid" -variable usecentroid 
 
 
@@ -326,7 +327,7 @@ ComboBox .l1wid.bf45.p.5 -text "Display Type" -width 20 -values \
 
 .l1wid.bf45.p.5 setvalue first
 
-Button .l1wid.bf45.p.7 -text "Histogram\nElevations" \
+Button .l1wid.bf45.q.2 -text "Histogram\nElevations" \
   -helptext "Generate and display a histogram of all the first return elevations" \
   -command {
       set ptype [.l1wid.bf4.1.p getvalue]
@@ -348,7 +349,7 @@ Button .l1wid.bf45.p.7 -text "Histogram\nElevations" \
      }
   }
 
-Button .l1wid.bf45.p.6 -text "Pixel\nWaveform" \
+Button .l1wid.bf45.q.1 -text "Pixel\nWaveform" \
   -helptext "Click to jump to raster, pulse, and image for xyz point" \
   -command {
      set ptype [.l1wid.bf4.1.p getvalue]
@@ -492,21 +493,21 @@ Button .l1wid.bf5.2 -text "Process Now" -width 20 \
 #pack  .l1wid.bf4.1.cb .l1wid.bf4.1.xba .l1wid.bf4.1.xbd .l1wid.bf4.1.xbv -side top -padx 20 -pady 5
 #pack  .l1wid.bf4.1 -side top -padx 20 -pady 5
 pack .l1wid.bf4.1.d .l1wid.bf4.1.p -side left -padx 5
-pack  .l1wid.bf4.2.cll .l1wid.bf4.2.cng .l1wid.bf4.2.cen -side left -padx 3
+pack  .l1wid.bf4.2.cll .l1wid.bf4.2.cen -side left -padx 3
 pack .l1wid.bf4.1 .l1wid.bf4.2 -side top -pady 3
 pack .l1wid.bf5.1 .l1wid.bf5.2 -side right
 pack .l1wid.bf1 .l1wid.bf2 .l1wid.bf3 .l1wid.bf4 -side top -expand 1 -fill both
 pack .l1wid.bf45.sc.1  -side left  -padx 3
 pack .l1wid.bf45.sc.3  -side left
+pack .l1wid.bf45.q.1 .l1wid.bf45.q.2  -side left
 pack 	.l1wid.bf45.p.fma \
 	.l1wid.bf45.p.1 \
 	.l1wid.bf45.p.5 \
 	.l1wid.bf45.p.2 \
 	.l1wid.bf45.p.3 \
-	.l1wid.bf45.p.6 \
-	.l1wid.bf45.p.7 \
 	-side left -fill x  -padx 2
-pack .l1wid.bf45.p .l1wid.bf45.sc  -side top -fill x -expand 1
+pack .l1wid.bf45.p .l1wid.bf45.sc .l1wid.bf45.q \
+	-side top -fill x -expand 1
 pack .l1wid.bf5 .l1wid.bf45  -side top -pady 3 
 
 proc send_latlon_to_l1pro {minlon maxlon minlat maxlat utm} {
