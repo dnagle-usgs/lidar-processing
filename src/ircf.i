@@ -129,7 +129,7 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
 
  neaarl = numberof(eaarl);
 
- //break the array into 4 regional blocks if greater than MAXN points
+ //break the array into regional blocks if greater than MAXN points
  MAXN = 100000;
  if (neaarl > MAXN) {
   eaarl_out = array(a, neaarl);
@@ -137,7 +137,12 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
   max_mx = max(eaarl.east)/100.;
   min_my = min(eaarl.north)/100.;
   max_my = max(eaarl.north)/100.;
-  nmx = nmy = 5;
+
+  // using max block size, figure out how many blocks to make, and use those to make blocks
+  max_block_size = 650;
+  nmx = int(ceil((max_mx - min_mx) / max_block_size))+1;
+  nmy = int(ceil((max_my - min_my) / max_block_size))+1;
+  
   if (nmx > 1)  {
      spanx = span(min_mx, max_mx, nmx);
   } else {
@@ -170,6 +175,7 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
  } else {
        eaarl_out = new_rcfilter_eaarl_pts(eaarl, buf=buf, w=w, mode=mode, no_rcf=no_rcf, fbuf=fbuf, fw=fw, tw=tw, interactive=interactive, tai=tai, plottriag=plottriag, plottriagwin=plottriagwin);
        ecount = numberof(eaarl_out);
+       if(! ecount) return;
  }
  if (is_void(eaarl_out)) return;
  eaarl_out = eaarl_out(1:ecount);
@@ -504,6 +510,7 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
         pques = pointer(ques);
         if ((*pques)(1) == 'd') done = 1; //done iterating for this loop
         if ((*pques)(1) == 'e') endit = 1; // ends interation mode
+        if ((*pques)(1) == 's') return;
       }
       if (m(10) == 3) break; // right click
       if ((m(11) == 4) && (m(10) == 1)) {
@@ -525,6 +532,7 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
            pques = pointer(ques);
            if ((*pques)(1) == 'd') done = 1; //done iterating for this loop
            if ((*pques)(1) == 'e') endit = 1; // ends interation mode
+    	   if ((*pques)(1) == 's') return;
         }
       }
     }
