@@ -42,6 +42,7 @@ struct BATHPIX {
   short sa;		// scan angle  
   short idx;		// bottom index
   short bottom_peak;	// peak amplitude of bottom signal
+  short first_peak;	// peak amplitude of the surface signal
 };
 
 // 94000
@@ -344,6 +345,15 @@ func ex_bath( rn, i,  last=, graph= ) {
   da = a(,i,1) - laser_decay;
   db = da*agc + bias;
 
+  //new
+  dd = a(1:n,i,1)(dif);
+  xr = where ( ((dd >= 4.0)(dif)) == 1);
+  nxr = numberof(xr);
+  if (nxr > 0) {
+    mx1 = a( xr(1):xr(1)+5, i, 1)(mxx) + xr(1) - 1;	  // find surface peak now
+    mv1 = a( mx1, i, 1);	          
+  } else mv1 = 0;
+
 
   thresh = bath_ctl.thresh;
   if ( numsat > 14 ) {
@@ -384,11 +394,15 @@ if ( graph ) {
         rv.sa = rp.sa(i);
    	rv.idx = mx;
 	rv.bottom_peak = a(mx,i,1);
+	//new
+	rv.first_peak = mv1;
 	return rv;
   }
   else
    	rv.idx = 0;
 	rv.bottom_peak = a(mvi,i,1);
+	//new
+	rv.first_peak = mv1;
 	return rv;
 }
 

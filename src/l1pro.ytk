@@ -409,7 +409,7 @@ SpinBox .l1wid.bf45.p.3 -justify center -range {0 7 1} \
 
 ComboBox .l1wid.bf45.p.5 -text "Display Type" -width 20 -values \
 	"First_Return_Topography Sub-aqueous_Topography \
-	Water_Depth Bare_Earth_Topography(pH) Surface_Amplitude(pH) Bottom_Amplitude" \
+	Water_Depth Bare_Earth_Topography Surface_Amplitude Bottom_Amplitude Canopy_Height" \
 	-helptext "Select any one of the following" \
 	-editable 0
 

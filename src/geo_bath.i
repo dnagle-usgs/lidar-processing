@@ -79,7 +79,7 @@ for (i=1; i<=len; i=i+1) {
     bath_arr(indx,i) = long((-d(,i).idx(indx) * CNSH2O2X *100) + rrr(i).elevation(indx));
   }
   geodepth(i).bottom_peak = d(,i).bottom_peak;
-  geodepth(i).first_peak = 0;
+  geodepth(i).first_peak = d(,i).first_peak;
   geodepth(i).elevation = rrr(i).elevation;
   geodepth(i).mnorth = rrr(i).mnorth
   geodepth(i).meast = rrr(i).meast
@@ -839,9 +839,43 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset
                              mindata.east/100., msize = msize*1.5, 
                              cmin= cmin, cmax = cmax, marker = 4
 	}
-      }
+        if (disp_type == 3) {
+	  a = [];
+	  z = mindata.elevation/100.-(mindata.lelv-mindata.felv)/100.;
+          window, win; plcm, z, mindata.north/100., 
+                             mindata.east/100., msize = msize*1.5, 
+                             cmin= cmin, cmax = cmax, marker = 4
+	}
+        if (disp_type == 4) {
+	  a = [];
+	  if (ptype == 1) 
+	     z = mindata.first_peak;
+	  if (pytpe = 2) 
+	     z = mindata.fint
+          window, win; plcm, z, mindata.north/100., 
+                             mindata.east/100., msize = msize*1.5, 
+                             cmin= cmin, cmax = cmax, marker = 4
+       }
+        if (disp_type == 5) {
+	  a = [];
+	  if (ptype == 1) 
+	     z = mindata.bottom_peak;
+	  if (pytpe = 2) 
+	     z = mindata.lint
+          window, win; plcm, z, mindata.north/100., 
+                             mindata.east/100., msize = msize*1.5, 
+                             cmin= cmin, cmax = cmax, marker = 4
+       }
+        if (disp_type == 6) {
+	  a = [];
+	  z = (mindata.lelv-mindata.felv)/100.;
+          window, win; plcm, z, mindata.north/100., 
+                             mindata.east/100., msize = msize*1.5, 
+                             cmin= cmin, cmax = cmax, marker = 4
+       }
       //write, format="minindx = %d\n",minindx;
     } 
+   }
  } else {
    print, "No points found!  Please try again... \n";
  }
