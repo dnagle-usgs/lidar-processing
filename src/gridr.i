@@ -73,10 +73,10 @@ tilefn = "";
   return tilefn;
 }
 
-func set_tile_filename(m, win=) {
+func set_tile_filename(m, win=, nodata=) {
 	extern curzone, tilename, finaldata; 
 	if (is_void(win)) win = window();
- 	if (is_void(finaldata)) {
+ 	if (is_void(finaldata) && (!nodata)) {
 	   write, "No finaldata found.  Cannot Save"
 	   return
 	}
@@ -84,18 +84,22 @@ func set_tile_filename(m, win=) {
 	if (is_void(m)) m = mouse(,,"Click in window:");
 	emin = 2000*(int(m(1)/2000.));
 	nmax = int(2000*(ceil(m(2)/2000.)));
-	finaldata = finaldata(data_box(finaldata.east/100.0, finaldata.north/100.0, emin, emin+2000, nmax-2000, nmax)); //Selects finaldata only from the clicked tile;
+	if (!nodata) {
+	  finaldata = finaldata(data_box(finaldata.east/100.0, finaldata.north/100.0, emin, emin+2000, nmax-2000, nmax)); //Selects finaldata only from the clicked tile;
 
-	// find the unique elements in the finaldata array
-	finaldata = finaldata(sort(finaldata.rn));
-	idx = unique(finaldata.rn, ret_sort=1);
-	finaldata = finaldata(idx);
-	ymd = soe2ymd(finaldata.soe(where(finaldata.soe == min(finaldata.soe))));                                 // finds the year-month-day of the lowest SOE value;
-	if (ymd(2) <=9) m = swrite(format="0%d", ymd(2));
-	if (ymd(2) >9)  m = swrite(format="%d", ymd(2));
-	if (ymd(3) <=9) d = swrite(format="0%d", ymd(3));
-	if (ymd(3) >9)  d = swrite(format="%d", ymd(3));
-	mdate = swrite(format="%d%s%s", ymd(1), m, d);
+	  // find the unique elements in the finaldata array
+	  finaldata = finaldata(sort(finaldata.rn));
+	  idx = unique(finaldata.rn, ret_sort=1);
+	  finaldata = finaldata(idx);
+	  ymd = soe2ymd(finaldata.soe(where(finaldata.soe == min(finaldata.soe))));                                 // finds the year-month-day of the lowest SOE value;
+	  if (ymd(2) <=9) m = swrite(format="0%d", ymd(2));
+	  if (ymd(2) >9)  m = swrite(format="%d", ymd(2));
+	  if (ymd(3) <=9) d = swrite(format="0%d", ymd(3));
+	  if (ymd(3) >9)  d = swrite(format="%d", ymd(3));
+	  mdate = swrite(format="%d%s%s", ymd(1), m, d);
+        } else {
+	  mdate = "yyyymmdd"
+        }
 	if (!curzone) {
 		zone="void";
 		write, "Please enter the current UTM zone: \n";
@@ -173,6 +177,7 @@ func show_grid_location(w,m) {
 
   
 */
+
   if ( is_void(w) ) w = 5;
   ltr = [["A","B"],["C","D"]];
   cells =[
@@ -183,17 +188,22 @@ func show_grid_location(w,m) {
          ];
   if ( is_void(m) ) 
       m = mouse();
+  tilefname = set_tile_filename(m, nodata=1);
   im = int(m);
   tile  = tile_location(im);
   tilen = tile(1); 
   tilee = tile(2);
+  itilee = tilee/10000 * 10000;
+  itilen = tilen/10000 * 10000 + 10000;
   quadn = ((int(m)(2) - tilen ) / 1000 + 1);
   quade = ((int(m)(1) - tilee ) / 1000 + 1);
   celln =  ((im(2) - tilen - (quadn*1000 - 1000)) )/250 + 1;
   celle =  ((im(1) - tilee - (quade*1000 - 1000)) )/250 + 1;
-  write,format="Tile: N%d E%d Quad:%s Cell:%d\n", 
-      (tilen+2000)/1000,
-      tilee/1000, 
+  write, format="Index Tile: i_e%d_n%d\n",itilee, itilen;
+  write, format="Tile File name will be %s\n", tilefname;
+  write,format="Tile: E%d N%d Quad:%s Cell:%d\n", 
+      tilee/1000 *1000, 
+      (tilen+2000)/1000 *1000,
       ltr(quade,3-quadn), 
       cells(celle,5-celln);
   return [tilen,tilee,quadn,quade,celln,celle];
