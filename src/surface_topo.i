@@ -489,6 +489,11 @@ elevation was found. The elevations are binned to 1-meter.
   Inputs: 
 	fs	An array of "R" structures.  
 
+  Outputs:
+	A histogram graphic in Window 0
+
+  Returns:
+
  Orginal: W. Wright 9/29/2002
 
 See also: R
@@ -496,7 +501,7 @@ See also: R
 
 
   if ( is_void(win) ) 
-	win = 7;
+	win = 0;
 
 // build an edit array indicating where values are between -60 meters
 // and 3000 meters.  That's enough to encompass any EAARL data than
@@ -526,7 +531,10 @@ maxx = fs_all.elevation(q)(max);
   e = span( minn, maxx, numberof(h) ) + 1 ; 
   w = window();
   window,win; fma; plg,h,e;
-  xytitles,"Meters", "Elevations"
+  pltitle(swrite( format="Elevation Histogram %s", data_path));
+  xytitles,"Elevation (meters)", "Number of measurements"
+  limits
+  limits,,,,hst(max,2) * 1.5
   window(w);
   return [e,h];
 }

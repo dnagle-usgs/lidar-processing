@@ -3,12 +3,19 @@
 # $Id$
 #
 # Orginal Amar Nayegandhi aka "anayegan"
+#
+
+#unset cdelta
+#unset cmin
+#unset cmax
 
   set ofname ""
   set win_no 		5
   set msize 		1.0
   set usecentroid   	1
   set hist_log		1
+  set cmax 		40
+  set cmin		-40
 
 exp_send "#include \"geo_bath.i\"\r"; # load geobath.i code
 exp_send "#include \"read_yfile.i\"\r"; # load read_yfile
@@ -43,16 +50,12 @@ menu .l1wid.mb.options
   }
 	
 
+.l1wid.mb       add cascade -label "Load" -underline 0 -menu .l1wid.mb.load
 .l1wid.mb.file  add command -label "Read command file .. " -underline 0 
-
-.l1wid.mb.file add command -label "Save command file .. " -underline 0
-
-.l1wid.mb.file add command -label "Dismiss" -underline 0 -command {destroy .l1wid}
-
-.l1wid.mb add cascade -label Load -underline 0 -menu .l1wid.mb.load
-
-.l1wid.mb.load add command -label "Load TANS Data .. " -underline 5 \
-	-command { exp_send "tans = rbtans();\r" 
+.l1wid.mb.file  add command -label "Save command file .. " -underline 0
+.l1wid.mb.file  add command -label "Dismiss" -underline 0 -command {destroy .l1wid}
+.l1wid.mb.load  add command -label "Load TANS Data .. " -underline 5 \
+		-command { exp_send "tans = rbtans();\r" 
 			   expect ">"
 			 }
 
@@ -132,6 +135,8 @@ menu .l1wid.mb.options
 	  pack .bathctl.ok .bathctl.cancel -side left
 
 }
+
+
 .l1wid.mb add cascade -label Options -underline 0 -menu .l1wid.mb.options
 .l1wid.mb.options add command -label "Configure elevation scale limits..." -underline 0 \
 	-command { 
@@ -161,10 +166,13 @@ menu .l1wid.mb.options
          }
 .l1wid.mb.options add checkbutton -label "Log Historgrams" -underline 0 \
 	-variable hist_log \
-	-command {
-       exp_send "_win=window();window,7;\
+	-command hist_linlog 
+
+proc hist_linlog {} {
+ global hist_log
+       exp_send "_win=window();window,0;\
   logxy,0,$hist_log; range,$hist_log;window,_win \r"
-	}
+}
 
 
 ComboBox .l1wid.bf4.1.d -text "Define Region using..." -width 22 -values "Rubberband-Box Points-in-Polygon Line-Segment Enter_Rectangular_Coordinates" -helptext "Select region to process using any of the following methods" -editable 0 -modifycmd {
@@ -305,24 +313,19 @@ Label .l1wid.bf45.p.2 -text "in Win:"
 SpinBox .l1wid.bf45.p.3 -justify center -range {0 7 1} \
 	-width 2 -textvariable win_no 
 
-### Label .l1wid.bf45.p.4 -text "to display"
 ComboBox .l1wid.bf45.p.5 -text "Display Type" -width 20 -values \
 	"First_Return_Topography Sub-aqueous_Topography \
 	Water_Depth Bare_Earth_Topography(pH) Surface_Amplitude(pH) Bottom_Amplitude" \
 	-helptext "Select any one of the following" \
 	-editable 0
+
 .l1wid.bf45.p.5 setvalue first
-#listbox .l1wid.bf45.5 -height 1 -yscrollcommand ".l1wid.bf45.scrl set" -width 24
-#scrollbar .l1wid.bf45.scrl  -command ".l1wid.bf45.5 yview"
-#.l1wid.bf45.5 insert end "First Surface Topography"
-#.l1wid.bf45.5 insert end "Sub-aqueous Topography"
-#.l1wid.bf45.5 insert end "Water Depth"
-#.l1wid.bf45.5 insert end "Bare Earth Topography"
 
 Button .l1wid.bf45.p.7 -text "Histogram\nElevations" \
   -helptext "Generate and display a histogram of all the first return elevations" \
   -command {
       exp_send "hst = hist_fs(fs_all); \r"
+      hist_linlog
   }
 
 Button .l1wid.bf45.p.6 -text "Pixel\nWaveform" \
@@ -344,32 +347,59 @@ Button .l1wid.bf45.p.6 -text "Pixel\nWaveform" \
    }
 	   
 
-scale .l1wid.bf45.sc.1 -orient horizontal \
-	-label "Lowest ColorBar Elevation (m)" \
-	-variable cmin \
-	-from -50. -to 1000. \
-	-resolution 0.5 \
-	-digits 6 \
-	-length 160
+frame  .l1wid.bf45.sc.1
 
-proc dscale {v} {
-global cmin cdelta; 
-  .l1wid.bf45.sc.2 configure -label "Highest Elevation [ expr $cmin + $cdelta]m"
+## This procedure builds a widget composed of a
+## Label, a Spinbox, and a scale so one can enter 
+## values by direct entry, the spin clicks, or 
+## the scale.
+proc sst  { w var lbl rg } {
+  frame $w
+  SpinBox $w.sb -textvariable $var \
+	-range $rg \
+	-width 6
+  scale $w.sc -showvalue 0 -orient horizontal  \
+	-variable $var \
+	-from [ lindex $rg 0 ] \
+	-to   [ lindex $rg 1 ] \
+	-resolution [ lindex $rg 2 ]
+  label $w.lb -text $lbl
+  pack $w.lb $w.sb $w.sc -side left -fill x -expand 1
+  return $w
 }
 
-scale .l1wid.bf45.sc.2 -orient horizontal \
-	-variable cdelta \
-	-from 0. -to 200 \
-	-resolution 0.25 \
-	-digits 6 \
-	-length 160 \
-	-command dscale ;
-scale .l1wid.bf45.sc.3 -orient horizontal \
-	-label msize \
-	-variable msize \
-	-from 0 -to 5 \
-	-resolution 0.25 \
-	-length 100
+proc ud { a b c } {
+global cmax cmin cdelta
+  switch $a {
+   cmax   { set cdelta [ expr $cmax - $cmin ]; }
+   cmin   { set cmax   [ expr $cmin + $cdelta ]; } 
+   cdelta { set cmax   [ expr $cmin + $cdelta ]; }
+  }
+}
+
+trace vdelete cdelta w ud 
+trace vdelete cmin w ud 
+trace vdelete cmax w ud 
+
+trace variable cdelta w ud
+trace variable cmin   w ud
+trace variable cmax   w ud
+
+ sst .l1wid.bf45.sc.1.cmax   cmax   "  Cmax:"	  { -50 5000.0 0.1  }
+ sst .l1wid.bf45.sc.1.cmin   cmin   "  Cmin:"	  { -50 5000.0 0.1  }
+ sst .l1wid.bf45.sc.1.cdelta cdelta "Cdelta:"  { 0.0  100.0 0.1 }
+ pack .l1wid.bf45.sc.1.cmax .l1wid.bf45.sc.1.cdelta .l1wid.bf45.sc.1.cmin -side top
+
+
+ scale .l1wid.bf45.sc.3 -orient horizontal \
+       -label msize \
+       -variable msize \
+       -from 0 -to 5 \
+       -resolution 0.25 \
+       -length 100
+
+
+
 
 Button .l1wid.bf5.1 -text "Write Datafile" -width 20 \
 		-command {
@@ -446,7 +476,8 @@ pack  .l1wid.bf4.2.cll .l1wid.bf4.2.cng .l1wid.bf4.2.cen -side left -padx 3
 pack .l1wid.bf4.1 .l1wid.bf4.2 -side top -pady 3
 pack .l1wid.bf5.1 .l1wid.bf5.2 -side right
 pack .l1wid.bf1 .l1wid.bf2 .l1wid.bf3 .l1wid.bf4 -side top -expand 1 -fill both
-pack .l1wid.bf45.sc.1 .l1wid.bf45.sc.2 .l1wid.bf45.sc.3 -side left  -padx 3
+pack .l1wid.bf45.sc.1  -side left  -padx 3
+pack .l1wid.bf45.sc.3  -side left
 pack 	.l1wid.bf45.p.fma \
 	.l1wid.bf45.p.1 \
 	.l1wid.bf45.p.5 \
