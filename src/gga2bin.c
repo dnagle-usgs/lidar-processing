@@ -21,10 +21,10 @@ static struct {
  } gga;                                
 
 main( int argc, char *argv[] ) {    
+ FILE *idf, *odf;
  int nb;
  float sod, lat, lon, alt, s;
  int h, m, n, good=0, badcnt=0, line=0;
- FILE *idf, *odf;
  char  comma[]=",";
  char *p, *t, *latp, *lonp, *tp;
  char str[MAXSTR*2], scp[ MAXSTR+2 ];
@@ -41,13 +41,15 @@ main( int argc, char *argv[] ) {
 // this after we know how many elements there are.
     fwrite( &good, sizeof(int), 1, odf);                          
 
-   while ( !feof(idf) ) {
+   while ( 1 ) {
 
 // clear the string before use
   memset( str, 0, MAXSTR );
    
 // get the nmea string
      fgets( str, MAXSTR-4, idf );
+     if (feof(idf)) 
+	     break;
     line++;
 
 // compute the checksum.  
@@ -58,6 +60,7 @@ main( int argc, char *argv[] ) {
      }
      i++;
      cksum = strtol(  &str[i], NULL, 16 );
+     //printf("cksum = %02x ; sum = %02x\n",cksum, sum);
 //     str[ strlen(str)-2] = 0;
      if ( cksum != sum ) {
  	printf("%8d: %s %02x %02x\n",  line, str, sum, cksum); 
@@ -136,6 +139,7 @@ main( int argc, char *argv[] ) {
    gga.lat = (float)lat;
    gga.lon = (float)lon;
    gga.alt = (float)alt;
+   //printf("--- %8d \n",line);
    fwrite( &gga, sizeof(gga), 1, odf);
    }
    }
