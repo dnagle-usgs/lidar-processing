@@ -30,6 +30,7 @@ Use pli to display the image.
 
   cam1_roll_bias = -3.0;
   cam1_yaw_bias  = -3.5;
+  cam1_pitch_bias  = 0.0;
   fov = 39.5 * pi/180.0;	// camera FOV
 
 
@@ -42,7 +43,7 @@ func photo_orient( photo,
 	offset=, 
 	scale=, 
 	win= 
-	) {
+) {
 /* DOCUMENT photo_orient( p, 
 	heading=, pitch=, roll= , center=, offset=, scale= 
   )
@@ -87,10 +88,11 @@ func photo_orient( photo,
     center(1) = dy / 2.0;  
   }
   roll_offset = tan( roll * pi/180.0) * alt;
-roll_offset
+ pitch_offset = tan( pitch * pi/180.0) * alt;
    x = span(-center(2), dx-center(2), dx+1 ) (,-:1:dy+1); 
    x += roll_offset;
    y = span(-center(1), dy-center(1), dy+1 ) (-:1:dx+1, ); 
+   y += pitch_offset;
    xx =   (x * c - y * s) * scale(2);
    yy =   (x * s + y * c) * scale(1);
  window,win; plf, p, yy+offset(1), xx+offset(2);
@@ -98,7 +100,12 @@ roll_offset
 
 }
 
+
+
 func pref (junk) {
+/* DOCUMENT pref 
+
+*/
   lst = [];
   m  = array( long, 11 );
    while ( m(10) != 3 ) {
@@ -117,13 +124,24 @@ func pref (junk) {
 }
 
 
-func gref_photo( somd=, offset=,ggalst=, skip= ) {
+func gref_photo( somd=, ioff=, offset=,ggalst=, skip= ) {
+/* DOCUMENT gref_photo, somd=, ioff=, offset=, ggalst=, skip=
+
+    smod=
+    ioff=
+  offset=
+  ggalst=
+    skip=
+
+
+*/
+
  if (!(offset)) offset = 0;
  if (is_array(ggalst)) somd = int(gga.sod(ggalst(unique(int(gga.sod(ggalst))))))
  if (skip)  somd = somd(1:0:skip);
  write, somd
  for ( i = 1; i <=numberof(somd); i++ ) {
-  sd = somd(i);
+  sd = somd(i) + ioff;
   csomd = sd + offset;
   heading = interp( tans.heading, tans.somd, csomd);
   roll    = interp( tans.roll   , tans.somd, csomd);
@@ -145,6 +163,7 @@ func gref_photo( somd=, offset=,ggalst=, skip= ) {
 	        alt= galt,
 	    heading= heading,
 	       roll= roll + roll_bias + cam1_roll_bias,
+	     pitch = pitch + pitch_bias + cam1_pitch_bias,
 	     offset = [ northing, easting ]
  }
  	
