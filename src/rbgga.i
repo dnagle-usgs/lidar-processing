@@ -573,7 +573,7 @@ func show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=, utm=   ) 
   }
   if (utm == 1) {
   	/* convert latlon to utm */
-	u = fll2utm(gga.lat, gga.lon);
+	u = fll2utm(y, x);
 	x = u(2,);
 	y = u(1,);
   }
@@ -598,7 +598,7 @@ func plot_no_raster_fltlines (gga, edb) {
 
   /* amar nayegandhi 08/05/02 */
 
-  extern soe_day_start;
+  extern soe_day_start, utm;
 
   sod_edb = edb.seconds - soe_day_start;
   
@@ -611,12 +611,12 @@ func plot_no_raster_fltlines (gga, edb) {
 
     for (i = 1; i <= numberof(f_norast); i++) {
       indx1 = where((gga.sod >= f_norast(i)) & (gga.sod <= l_norast(i)));
-      show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1),  marker=4, skip=50,  color = "yellow";
+      show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1),  marker=4, skip=50,  color = "yellow", utm=utm;
     } 
   }
   // also plot over region before the system is initially started.
   indx1 = where(gga.sod < sod_edb(1));
-  show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1), marker=4, skip=50,  color = "yellow";
+  show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1), marker=4, skip=50,  color = "yellow", utm=utm;
 
 
 }
@@ -629,7 +629,7 @@ func plot_no_tans_fltlines (tans, gga) {
 
   /* amar nayegandhi 08/05/02 */
 
-  extern soe_day_start;
+  extern soe_day_start, utm;
 
   
   // find where the diff in tans is greater than 1 second
@@ -641,12 +641,12 @@ func plot_no_tans_fltlines (tans, gga) {
 
     for (i = 1; i <= numberof(f_notans); i++) {
       indx1 = where((gga.sod >= f_notans(i)) & (gga.sod <= l_notans(i)));
-      show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1),  marker = 5, color = "magenta", skip=50, msize=0.2;
+      show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1),  marker = 5, color = "magenta", skip=50, msize=0.2, utm=utm;
     } 
   }
   // also plot over region before the tans system is initially started.
   indx1 = where(gga.sod < tans.somd(1));
-  show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1),  marker=5, color = "magenta", skip=50, msize=0.2;
+  show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1),  marker=5, color = "magenta", skip=50, msize=0.2, utm=utm;
 
 
 }

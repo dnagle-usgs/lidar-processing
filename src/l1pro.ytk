@@ -504,7 +504,7 @@ trace variable cmax   w ud
 
  sst .l1wid.bf45.sc.1.cmax   cmax   "  Cmax:"	  { -50 5000.0 0.1  }
  sst .l1wid.bf45.sc.1.cmin   cmin   "  Cmin:"	  { -50 5000.0 0.1  }
- sst .l1wid.bf45.sc.1.cdelta cdelta "Cdelta:"  { 0.0  100.0 0.1 }
+ sst .l1wid.bf45.sc.1.cdelta cdelta "Cdelta:"  { 0.0  300.0 0.1 }
  pack .l1wid.bf45.sc.1.cmax .l1wid.bf45.sc.1.cdelta .l1wid.bf45.sc.1.cmin -side top
 
 
