@@ -399,8 +399,6 @@ func sel_region (q, all_tans=) {
    */
   no_t = numberof(t(1,));
   write, format="Number of flightlines selected = %d \n", no_t;
-  tyes_arr = array(int,no_t);
-  tyes_arr(1:0) = 1;
   t_new = [];
   if (!all_tans) {
    for (i=1;i<=numberof(t(1,));i++) {
@@ -409,7 +407,7 @@ func sel_region (q, all_tans=) {
       tans_idx = where(tans.somd >= t(1,i));
       if (is_array(tans_idx)) {
          tans_q = where(tans.somd(tans_idx) <= t(2,i));
-	 if (is_array(tans_q)) {
+	 if (numberof(tans_q)>1) {
 	    tans_idx = tans_idx(tans_q);
 	    ftans = [];
 	    ftans = tans.somd(tans_idx);
@@ -444,6 +442,8 @@ func sel_region (q, all_tans=) {
   if (!is_void(t_new)) {
      t_new;
      no_t = numberof(t_new(1,));
+     tyes_arr = array(int,no_t);
+     tyes_arr(1:0) = 1;
      rn_arr = array(int,2,no_t);
      for (i=1;i<=no_t;i++) {
        rn_indx_start = where(((edb.seconds - soe_day_start) ) == ceil(t_new(1,i)));
