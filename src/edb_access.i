@@ -437,5 +437,5 @@ Examples using the result data:
 
 
 pldefault,marks=0
-write,"edb_access.i as of 12/27/2001 loaded"
+write,"$Id$"
 

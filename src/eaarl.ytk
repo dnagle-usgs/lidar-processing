@@ -132,9 +132,11 @@ proc edb_status { } {
 }
 
 proc load_edb {} {
+ global data_path
    exp_send "load_edb, update=0\r"
   expect "load_edb_completed"
   edb_status
+  send sf_a.tcl "set dir $data_path"
 }
 
 
@@ -154,15 +156,15 @@ proc load_edb {} {
    menu $w.mb.map
    menu $w.mb.nav
    menu $w.mb.rasters
-   menu $w.mb.photos
+   menu $w.mb.images
    menu $w.mb.time
    menu $w.mb.help
 
  $w.mb add cascade -label File     -underline 0 -menu $w.mb.file
  $w.mb add cascade -label Map      -underline 0 -menu $w.mb.map
- $w.mb add cascade -label Nav      -underline 0 -menu $w.mb.nav
+ $w.mb add cascade -label Nav/Attitude      -underline 0 -menu $w.mb.nav
  $w.mb add cascade -label Rasters  -underline 0 -menu $w.mb.rasters
- $w.mb add cascade -label Photos   -underline 0 -menu $w.mb.photos
+ $w.mb add cascade -label Images   -underline 0 -menu $w.mb.images
  $w.mb add cascade -label Time     -underline 0 -menu $w.mb.time
  $w.mb add cascade -label Help     -underline 0 -menu $w.mb.help
 
@@ -185,10 +187,17 @@ proc load_edb {} {
  }
 
 #############
-#   Photos
+#   Images
 #############
- $w.mb.photos add command -label "Review 1-Hz photos..." -command {
+ $w.mb.images add command -label "1-Hz Digital Camera Images..." -command {
     exec "./sf_a.tcl" &
+    after 2000 " send sf_a.tcl \"set dir $data_path\" " 
+ }
+ $w.mb.images add command -label "Lidar First Return Surface..." -command {
+ }
+ $w.mb.images add command -label "Lidar Last Return Sub-aerial Surface..." -command {
+ }
+ $w.mb.images add command -label "Lidar Bathymetric Surface..." -command {
  }
 
 #############
@@ -203,8 +212,12 @@ proc load_edb {} {
 
  exp_send "#include \"rbgga.i\"\r"
  menu $w.mb.nav.rbgga
- $w.mb.nav add cascade -label "Rbgga..."   -underline 0 \
+ $w.mb.nav add cascade -label "Rbgga..."   -underline 2 \
 	-menu $w.mb.nav.rbgga
+ $w.mb.nav add command -label "Rbtans..."   -underline 2 \
+   -command { exp_send "#include \"rbtans.i\"\r" }
+ $w.mb.nav add command -label "Rbpnav..."   -underline 2 \
+   -command { exp_send "#include \"rbpnav.i\"\r" }
 
  $w.mb.nav.rbgga add command -label "Rbgga..." -command rbgga_menu
 
@@ -332,9 +345,16 @@ proc rbgga_menu {} {
 #############
 #   help
 #############
- $w.mb.help add command -label " Yorick Window Use"
- $w.mb.help add command -label "0 Raster images"
- $w.mb.help add command -label "1 Waveforms"
+ $w.mb.help add command \
+   -label "Version:\$Id$"
+ $w.mb.help add command -label "Yorick Graphics Window Use"
+ $w.mb.help add command -label "0 Waveform Display"
+ $w.mb.help add command -label "1 Raster Images"
+ $w.mb.help add command -label "2 "
+ $w.mb.help add command -label "3 "
+ $w.mb.help add command -label "4 "
+ $w.mb.help add command -label "5 "
+ $w.mb.help add command -label "6 Lat/Lon Coast maps, GGA nav data"
  $w.mb.help add command -label "7 Geographic maps and Nav data"
 
 

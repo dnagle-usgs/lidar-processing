@@ -41,7 +41,7 @@ struct TANS {
 
 require, "sel_file.i"
 require, "ytime.i"
-write,"rbtans.i as of 1/21/2002 loaded"
+write,"$Id$"
 
 plmk_default,msize=.1
 

@@ -52,4 +52,4 @@ func i16( ary, idx  ) {
 }
 
 
-write,"rlw.i as of 11/8/2001 loaded"
+write,"$Id$"

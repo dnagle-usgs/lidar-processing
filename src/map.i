@@ -3,7 +3,7 @@ require,"string.i"
 require,"sel_file.i"
 require, "ll2utm.i"
 
-write,"map.i as of 12/28/2001 loaded"
+write,"$Id$"
 
 func load_map( ffn=, color=) {
 /* DOCUMENT load_map(ffn=, color=)

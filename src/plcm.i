@@ -2,7 +2,7 @@
    $Id$
 */
 
-write,"plcm.i as of 11/25/2001"
+write,"$Id$"
 
 
 func plcm( z, y, x, cmin=, cmax=, marker=, msize= )
@@ -33,6 +33,11 @@ func plcm( z, y, x, cmin=, cmax=, marker=, msize= )
     $Id$
     
     $Log$
+    Revision 1.3  2002/01/23 04:57:58  wwright
+
+     minor changes.  Added code to update the dir var in sf automatically
+     when load_edb is called.  Saves a few steps.
+
     Revision 1.2  2002/01/22 21:42:13  wwright
 
       fixed somd, again, in edb_access.i and affected code in sf

@@ -41,6 +41,11 @@ Other:
   it must be verified and converted by the gga2bin.c. program.  
 
   $Log$
+  Revision 1.6  2002/01/23 04:57:58  wwright
+
+   minor changes.  Added code to update the dir var in sf automatically
+   when load_edb is called.  Saves a few steps.
+
   Revision 1.5  2002/01/19 04:02:07  wwright
 
    added plot command to sf_a.tcl so you can plot the displayed lat/lon
@@ -86,7 +91,7 @@ Functions:
 */
 
 
-write,"rbgga.i as of 1/15/2002 loaded"
+write,"$Id$"
 
 plmk_default,msize=.1
 

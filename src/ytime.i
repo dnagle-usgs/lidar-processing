@@ -238,4 +238,4 @@ func time2soe( a ) {
 }
 
 
-write,"ytime.i as of 11/8/2001 loaded"
+write,"$Id$"

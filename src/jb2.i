@@ -92,7 +92,7 @@ func mdist {
     write,format="Distance is %5.3f meters\n", dist;
 }
 
-load
-display(1, 2000);
+//load
+//display(1, 2000);
 
 

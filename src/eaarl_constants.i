@@ -3,7 +3,7 @@
    $Id$
 */
 
-write, "eaarl_constants.i as of 12/22/2001"
+write, "$Id$"
 
 CNS      = 0.299792458;         // speed of light/nanosecond in space
 KAIR     =  1.000276

@@ -24,7 +24,7 @@ func set_depth_scale ( u ) {
   depth_display_units  = u;
 }
 
-write,"drast.i as of 12/23/2001"
+write,"$Id$"
 
 local wfa;	// decoded waveform array
 

@@ -7,7 +7,7 @@
 
 */
 
-write,"nav.i as of 11/28/2001"
+write,"$Id$"
 
   d = array(float, 100)
  ll = array( float, 2, 100)

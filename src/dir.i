@@ -102,5 +102,5 @@ func set_data_path( junk ) {
 }
 
 
-write,"dir.i as of 12/27/01"
+write,"$Id$"
 
