@@ -13,8 +13,8 @@
  *    4) Computes true heading from platform_heading and wander_angle.
  *    5) Outputs a binary "ybin" file in the following format:
  *       
- *        data_ptr 8 ascii encoded hex bytes 32 bit offset to start:
- *        count    8 ascii encoded 32 bit number of records.
+ *        32 byte string with start and record_cnt encoded
+ *        as hex.
  *        string notes (at least 1024 bytes reserved here for notes)
  *        ......
  * start: r(1)
@@ -27,10 +27,10 @@
  * Where "r" is structure composed of:
  *        somd    32 bit unsigned seconds of the mission day
  *        alt     32 bit signed integer. lsb=.001m or 1mm
- *        pitch   32 bit signed integer.  lsb = 360.0/2^32
- *        roll    32 bit signed integer.  lsb = 360.0/2^32
- *        heading 32 bit signed integer.  lsb = 360.0/2^32
- *        lat     32 bit latitude decimal degrees where lsb = 360.0 / 2^32
+ *        pitch   32 bit signed integer.  lsb = 360.0/2^31
+ *        roll    32 bit signed integer.  lsb = 360.0/2^31
+ *        heading 32 bit signed integer.  lsb = 360.0/2^31
+ *        lat     32 bit latitude decimal degrees where lsb = 360.0 / 2^31
  *        lon     32 bit longitude decimal degrees  
  *
  *
@@ -69,7 +69,7 @@ struct POSPAC {
 // to convert angles to double multiply by 360.0*2^31
 struct POSPRH {
   unsigned long  somd;   // lsb = 1 second
-  unsigned long fsecs;   // lsb = 1e-6
+  unsigned long    ns;   // lsb = 1e-9
   long            alt;   // lsb =  .001 meters (1mm)   *1e-3 for meters
   long          pitch;   // lsb on all angles = 360.0 / 2^31   *(2^-31)
   long           roll;
@@ -131,7 +131,7 @@ main(int argc, char *argv[]) {
           cnt, nbr_input_recs, ((float)cnt*100.0)/(float)nbr_input_recs, '%' );
      }
        posprh.somd = (unsigned int)pospac.time;
-      posprh.fsecs = (unsigned int)((pospac.time-(int)pospac.time) * 1.0e6);
+      posprh.ns    = (unsigned int)((pospac.time-(int)pospac.time) * 1.0e9);
       posprh.lat   = (int)(pospac.latitude*BIN_ANGLE);
       posprh.lon   = (int)(pospac.longitude*BIN_ANGLE);
       posprh.pitch = (int)(pospac.pitch*BIN_ANGLE);
@@ -139,14 +139,14 @@ main(int argc, char *argv[]) {
         posprh.alt = pospac.altitude*1000.0;
     posprh.heading = (int)((pospac.platform_heading)*BIN_ANGLE);
      if ( cnt == 1 ) {
-       printf("\nStart time: %d.%d(somd)\n", posprh.somd, posprh.fsecs);
+       printf("\nStart time: %d.%d(somd)\n", posprh.somd, posprh.ns);
        start_somd = posprh.somd;
      }
 
     /*
      printf("%10u.%06u %12d %12d %12d %12d %12d %12d \n",
       posprh.somd, 
-      posprh.fsecs,
+      posprh.ns,
       posprh.lat,
       posprh.lon,
       posprh.alt,
@@ -162,7 +162,7 @@ main(int argc, char *argv[]) {
   fwrite(start, sizeof(start), 1, odf);	                // 
   fclose(odf);
    printf("\nStop  time: %d.%d, Mission time %3.2f(hrs)\n", 
-		   posprh.somd, posprh.fsecs, (posprh.somd-start_somd)/3600.0);
+		   posprh.somd, posprh.ns, (posprh.somd-start_somd)/3600.0);
    printf("\nConversion completed\n");
 }
 

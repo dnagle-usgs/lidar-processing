@@ -13,7 +13,7 @@
  to convert angles to double multiply by 360.0*2^31
 struct POSPRH {
   unsigned long  somd;   // lsb = 1 second
-  unsigned long fsecs;   // lsb = 1e-6
+  unsigned long fsecs;   // lsb = 1e-9
   long            alt;   // lsb =  .001 meters (1mm)   *1e-3 for meters
   long          pitch;   // lsb on all angles = (360.0 / 2.0^31)
   long           roll;
@@ -53,7 +53,7 @@ func load_posprh {
 write,"Read complete...."
 
 write,format="Converting..%s", "time.."
- posprh_somd = posprh(1,) + posprh(2,)*1.0e-6;
+ posprh_somd = posprh(1,) + posprh(2,)*1.0e-9;
 
 write,format="%s","alt.."
  posprh_alt  = posprh(3,) * 1.0e-3;
