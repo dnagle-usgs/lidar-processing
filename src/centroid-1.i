@@ -89,7 +89,9 @@ See also: RAST, cent
         for each aturated point.
 
 **********************************************************************/
-  max_sfc_sat = 2;	// The maximum number of saturated surface values
+  if ( is_void( max_sfc_sat) ) 
+       max_sfc_sat = 2;	// The maximum number of saturated surface values
+
   if ( (nsat1 = numberof(where(  ((*rast.rx(n,1))(1:np)) == 0 ))) <= max_sfc_sat ) {
      cv = cent( *rast.rx(n, 1 ) );
 //     if ( nsat1 > 1 ) cv(1) = cv(1) - (nsat1 -1 ) * .1 ;    // See Note 1 above
@@ -99,7 +101,7 @@ See also: RAST, cent
         y = slope * x;
         cv(1) += y;
      }
-  } else if ( numberof(where(  ((*rast.rx(n,2))(1:np)) == 0 )) <= 2 ) {
+  } else if ( numberof(where(  ((*rast.rx(n,2))(1:np)) == 0 )) <= max_sfc_sat ) {
      cv = cent( *rast.rx(n, 2 ) ) + 0.36;
      cv(3) += 300;
   } else {

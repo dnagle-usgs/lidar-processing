@@ -17,6 +17,51 @@
 #
 
 
+
+proc load_dmars {} { 
+  global data_path
+      if { [ info exists data_path ] } {
+       set tpath "$data_path/dmars/";
+       if { [ expr ![ file isdirectory $tpath ]] } {
+         set tpath $data_path;
+       }
+    } else {
+       set tpath "";
+    }
+
+  set _ytk_fn [ tk_getOpenFile \
+	-initialdir $tpath \
+	-filetypes \
+        {
+           {{Yorick PBD file} {.pbd}  }
+           {{All Files}       {*}   }
+        }  ]
+  if { $_ytk_fn != "" } {
+    switch [ file extension $_ytk_fn ] {
+    ".pbd" {
+            set ytk_pbd_dir [ file dirname $_ytk_fn ]
+            exp_send "_ytk_pbd_f = openb(\"$_ytk_fn\"); restore, _ytk_pbd_f;\r"
+            exp_send "show, _ytk_pbd_f\r"
+            exp_send "iex2tans;\r"
+               toplevel .stby
+            exp_send "\r\n"
+   set sz [ wm maxsize . ]
+               label .stby.lbl -text "Loading\n$_ytk_fn\nplease wait.."
+               pack .stby.lbl
+   set wz "50 50"
+   set sx [ expr [ lindex $sz 0 ] / 2  - [lindex $wz 0]/2 ]
+   set sy [ expr [ lindex $sz 1 ] / 2  - [lindex $wz 1]/2 ]
+   wm geometry .stby "+$sx+$sy"
+               update
+            expect ">"
+               destroy .stby
+           }
+    }
+  }
+}
+
+
+
 proc send_sod_to_sf { somd } {
   catch {
    send sf_a.tcl set timern sod
@@ -302,6 +347,8 @@ proc load_edb {} {
  exp_send "require, \"rbgga.i\"\r"
  $w.mb.file add command -label "Coastlines & Flight tracks"   -underline 2 \
 	-command rbgga_menu
+ $w.mb.file add command -label "Load DMARS Attitude data..."   -underline 2 \
+   -command  load_dmars;
  $w.mb.file add command -label "Load Tans Attitude data..."   -underline 2 \
    -command { exp_send "require, \"rbtans.i\"\r"
    	      expect ">"

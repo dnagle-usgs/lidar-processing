@@ -1,13 +1,76 @@
 
-/*
+extern dmars_i
+/* DOCUMENT dmars_i
 
   $Id$
 
   Original: W. Wright
 
-  Read a raw dmars dataset produced by dmarsd.c
+  The DMARS (Digital Miniature Attitude Reference System) is a set of three 
+  spinning mass "dynamically tuned" gyros and a set of three high accuracy 
+  precision accelerometers.  There is one gyro and one accelerometer for each
+  axis, X Y and Z.  
 
-*/
+  The gyros put out rotation rates for each axis, not the actual attitude. In other
+  words they put out how fast the pitch, roll, and yaw are changing.  The 
+  accelerometers output the acceleration along each axis.  Measurements are taken
+  and output every five miliseconds (0.005 seconds) which is 200 Hertz.  Every 
+  sample is locked to GPS time of day by way of a 1-Hz electronic signal delivered 
+  from a precision GPS receiver to the DMARS IMU.  
+
+  Extreme care must be taken to insure the DMARS is properly synchronized with the
+  GPS time.
+
+  The EAARL DMARS datasystem consists of two single board Linux systems interfaced
+  to the DMARS via a 115kbaud asynchronous 8 bit rs-232 serial connection. One 
+  datasystem captures DMARS data simultaneous with NTP (Network Time Protocol) data
+  and records the result in a compressed file.  The second system captures the 
+  same data stream using the builtin Linux command "cat."  The "cat" file has no 
+  time information at all and is intended as a backup in the even that the NTP
+  based system fails for some reason. 
+
+  POST PROCESSING
+  
+  Normally, only the NTP DMARS files need to be processed.  The "cat" files only 
+  need to be processed if there were problems in the NTP system.  Problems in the
+  NTP system are indicated by time gaps larger then 20-30ms as indicated by reading
+  the data file with rdmars.c as follows:
+  
+
+ The normal NTP based IMU data undergoes the following processing:
+
+
+ dmarsd -> *.bin -> 
+                  rdmars.c
+                  dmars2iex.c -> *.imu -> 
+                                      Iex -> *INS.txt -> 
+                                                      iex_ascii2pbd -> *.pbd
+
+ Dmarsd is run during the flight mission to capture the NTP based data (*.bin). 
+ Postprocessing begins by running rdmars and simply viewing the output and visually
+ scanning for time gaps greater than 20-30ms. Problematic data are typically 
+ indicated by gaps of several seconds.  If no larger gaps are seen, then the 
+ dmars2iex "C" program is run which generates a *.imu file.  If you detected gaps
+ then see the section below "PROCESSING CAT FILES". The *.imu file mus then
+ be transferred to the Windows based Grafnav Inertial Explorer (IEX) program where
+ it will be combined with the GPS data to produce an ASCII INS.txt file.  The ASCII
+ INS.txt file is transferred back into your linux system and converted to a Yorick
+ *.pbd file using the ALPS Yorick function iex_ascii2pbd found in dmars.i.
+
+  Read a dmars dataset produced by dmarsd.c
+
+
+  PROCESSING CAT FILES
+
+  The critical piece of data you need to process "cat" data is the delta time
+  from the DMARS unit's "tspo" (Time Since Power On) value to the actual GPS
+  time of day when the data was captured.  The easiest way to get that information
+  is to run the dmars2iex program and generate the *.imu file.  While the file will
+  have the problematic gaps, it will also generate the correct time difference 
+  you will need to process the "cat" data. So begin
+  
+  
+*/ 
 
 
  G = 9.80665;
@@ -334,12 +397,6 @@ func iex_ascii2pbd( fn ) {
  iex program.  This function reads the ascii records, and saves them as
  an array of IEX_ATTITUDE structures in a pbd file.
 
- The IMU data undergoes the following processing:
-
- dmarsd -> *.bin -> 
-                  dmars2iex.c -> *.imu -> 
-                                      Iex -> *.ascii -> 
-                                                      iex_ascii2pbd -> *.pbd
 
  Original: W. Wright 12/27/2003
 

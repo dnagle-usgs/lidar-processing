@@ -594,6 +594,9 @@ menu .l1wid.mb.filter
 		-command { exp_send "tans = rbtans();\r" 
 			   expect ">"
 			 }
+.l1wid.mb.load  add command -label "Load DMARS PBD Data .. " -underline 5 \
+		-command load_dmars;
+
 
 .l1wid.mb.load add command -label "Load PNAV Data .. " -underline 5 \
 	-command { exp_send "pnav = rbpnav(); \r"
@@ -2275,6 +2278,7 @@ proc send_rnarr_to_l1pro {bstart bstop brnindx} {
     set lrnindx [concat $lrnindx $rnindx]
    }
 }
+
 
 
 proc plot_fltlines {sel} {

@@ -18,6 +18,11 @@ require, "sel_file.i"
 require, "eaarl_constants.i"
 require, "colorbar.i"
 
+struct VEG_CONF { 	// Veg configuration parameters
+  float thresh;		// threshold
+  int max_sat(3); 	// Maximum number of sat dig pixels before switching
+};
+
 struct VEGPIX {
   int rastpix;		// raster + pulse << 24
   short sa;		// scan angle  
@@ -226,6 +231,14 @@ func ex_veg( rn, i,  last=, graph=, win=, use_centroid=, use_peak=, pse= ) {
 
 */
 
+ extern veg_conf;
+ if ( is_void(veg_conf)) {
+   veg_conf = VEG_CONF();
+   veg_conf.thresh = 4.0;
+   veg_conf.max_sat(1) = max_sfc_sat;
+   veg_conf.max_sat(2) = max_sfc_sat;
+   veg_conf.max_sat(3) = max_sfc_sat;
+ }
  extern ex_bath_rn, ex_bath_rp, a, irg_a, _errno
   _errno = 0;		// If not specifically set, preset to assume no errors.
   if ( (rn == 0 ) && ( i == 0 ) ) {
@@ -292,9 +305,8 @@ func ex_veg( rn, i,  last=, graph=, win=, use_centroid=, use_peak=, pse= ) {
    xr(1) will be the first pulse edge
    and xr(0) will be the last
 *******************************************/
-  thresh = 4.0
-//  xr = where( dd  > thresh ) ;	// find the hits
-  xr = where(  ((dd >= thresh) (dif)) == 1 ) 	//
+//  xr = where( dd  > veg_conf.thresh ) ;	// find the hits
+  xr = where(  ((dd >= veg_conf.thresh) (dif)) == 1 ) 	//
   nxr = numberof(xr);
 
 if (is_void(win)) win = 4;
@@ -325,21 +337,21 @@ write, format="rn=%d; i = %d\n",rn,i
        ai = 1; //channel number
        if (xr(0)+retdist+1 > n) retdist = n - xr(0)-1;
        // check for saturation
-       if ( numberof(where((w(xr(0):xr(0)+retdist)) == 0 )) >= 2 ) {
+       if ( numberof(where((w(xr(0):xr(0)+retdist)) == 0 )) >= veg_conf.max_sat(ai) ) {
            // goto second channel
             ai = 2;
            // write, format="trying channel 2, rn = %d, i = %d\n",rn, i
             w  = *rp.rx(i, ai);  aa(1:n, i,ai) = float( (~w+1) - (~w(1)+1) );
             da = aa(1:n,i,ai);
             dd = aa(1:n, i, ai) (dif);
-            if ( numberof(where((w(xr(0):xr(0)+retdist)) == 0 )) >= 2 ) {
+            if ( numberof(where((w(xr(0):xr(0)+retdist)) == 0 )) >= veg_conf.max_sat(ai) ) {
               // goto third channel
             //  write, format="trying channel 3, rn = %d, i = %d\n",rn, i
               ai = 3;
               w  = *rp.rx(i, ai);  aa(1:n, i,ai) = float( (~w+1) - (~w(1)+1) );
               da = aa(1:n,i,ai);
               dd = aa(1:n, i, ai) (dif);
-              if ( numberof(where((w(xr(0):xr(0)+retdist)) == 0 )) >= 2 ) {
+              if ( numberof(where((w(xr(0):xr(0)+retdist)) == 0 )) >= veg_conf.max_sat(ai) ) {
                  write, format="all 3 channels saturated... giving up!, rn=%d, i=%d\n",rn,i
                  ai = 0;
               }
