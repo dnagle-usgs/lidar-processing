@@ -1,0 +1,250 @@
+/*
+   $Id$
+   */
+   write, "$Id$"
+struct DEPTH {
+     long rn;
+     long north;
+     long east;
+     short depth;
+     }
+
+struct BATH {
+     long rn;
+     long north;
+     long east;
+     long bath;
+     short depth;
+     short bottom_peak;
+     }
+
+struct GEO {
+     long rn;
+     long north;
+     long east;
+     long bath;
+     long elevation;
+     long mnorth;
+     long meast;
+     long melevation;
+     short depth;
+     short bottom_peak;
+     short sa;
+     }
+
+func read_yfile (path, fname_arr=) {
+
+/* this function reads an EAARL yorick-written binary file.
+   amar nayegandhi 04/15/2002.
+   */
+
+if (is_void(fname_arr)) {
+   s = array(string, 1000);
+   ss = "*.bin"
+   scmd = swrite(format = "find %s -name '%s'",path, ss); 
+   f=popen(scmd, 0); 
+   n = read(f,format="%s", s ); 
+   close, f;
+   fn_arr = s(1:n);
+} else { 
+  fn_arr = path+fname_arr; 
+  n = numberof(fn_arr);
+  }
+
+write, format="Number of files to read = %d \n", n
+
+bytord = 0L;
+type =0L;
+nwpr = 0L;
+recs = 0L;
+byt_pos=0L;
+data_ptr = array(pointer, n);
+
+for (i=0;i<n;i++) {
+  f=open(fn_arr(i), "r+b"); 
+  _read, f, 0, bytord;
+  if (bytord == 65535L) order = 1; else order = 0; 
+  //read the output type of the file
+  _read, f, 4, type;
+  //read the number of words in each record
+  _read, f, 8, nwpr;
+  //read the total number of records
+  _read, f, 12, recs;
+
+  byt_pos = 16;
+       
+  //fill the array of data structures using the value of type.
+  data_ptr(i) = &(data_struc(type, nwpr, recs, byt_pos, f));
+  close, f;
+
+
+ }
+ write, format="All %d files read. \n",n;
+
+return data_ptr;
+}
+
+func data_struc (type, nwpr, recs, byt_pos, f) {
+  if (type == 1) {
+    rn = 0L;
+    north = 0L;
+    east = 0L;
+    depth = 0S;
+    data = array(DEPTH, recs); 
+    for (i=0;i<recs;i++) {
+       _read, f, byt_pos, rn;
+       data(i).rn = rn;
+       byt_pos = byt_pos + 4;
+       _read, f, byt_pos, north;
+       data(i).north = north;
+       byt_pos = byt_pos + 4;
+       _read, f, byt_pos, east;
+       data(i).east = east;
+       byt_pos = byt_pos + 4;
+       _read, f, byt_pos, depth;
+       data(i).depth = depth;
+       byt_pos = byt_pos + 2;
+
+    }
+  }
+  if (type == 3) {
+    rn = 0L;
+    north = 0L;
+    east = 0L;
+    depth = 0S;
+    bath = 0L;
+    bottom_peak = 0S;
+    data = array(BATH, recs); 
+    for (i=0;i<recs;i++) {
+       _read, f, byt_pos, rn;
+       data(i).rn = rn;
+       byt_pos = byt_pos + 4;
+       _read, f, byt_pos, north;
+       data(i).north = north;
+       byt_pos = byt_pos + 4;
+       _read, f, byt_pos, east;
+       data(i).east = east;
+       byt_pos = byt_pos + 4;
+       _read, f, byt_pos, bath;
+       data(i).bath = bath;
+       byt_pos = byt_pos + 4;
+       _read, f, byt_pos, depth;
+       data(i).depth = depth;
+       byt_pos = byt_pos + 2;
+       _read, f, byt_pos, bottom_peak;
+       data(i).bottom_peak = bottom_peak;
+       byt_pos = byt_pos + 2;
+
+    }
+  }
+  if (type == 4) {
+    rn = 0L;
+    north = 0L;
+    east = 0L;
+    bath = 0L;
+    elevation=0L;
+    mnorth=0L;
+    meast=0L;
+    melevation=0L;
+    depth = 0S;
+    bottom_peak = 0S;
+    sa = 0S;
+    data = array(GEO, recs); 
+    for (i=0;i<recs;i++) {
+       _read, f, byt_pos, rn;
+       data(i).rn = rn;
+       byt_pos = byt_pos + 4;
+       _read, f, byt_pos, north;
+       data(i).north = north;
+       byt_pos = byt_pos + 4;
+       _read, f, byt_pos, east;
+       data(i).east = east;
+       byt_pos = byt_pos + 4;
+       _read, f, byt_pos, bath;
+       data(i).bath = bath;
+       byt_pos = byt_pos + 4;
+       _read, f, byt_pos, elevation;
+       data(i).elevation = elevation;
+       byt_pos = byt_pos + 4;
+       _read, f, byt_pos, mnorth;
+       data(i).mnorth = mnorth;
+       byt_pos = byt_pos + 4;
+       _read, f, byt_pos, meast;
+       data(i).meast = meast;
+       byt_pos = byt_pos + 4;
+       _read, f, byt_pos, melevation;
+       data(i).melevation = melevation;
+       byt_pos = byt_pos + 4;
+       _read, f, byt_pos, depth;
+       data(i).depth = depth;
+       byt_pos = byt_pos + 2;
+       _read, f, byt_pos, bottom_peak;
+       data(i).bottom_peak = bottom_peak;
+       byt_pos = byt_pos + 2;
+       _read, f, byt_pos, sa;
+       data(i).sa = sa;
+       byt_pos = byt_pos + 2;
+
+    }
+  }
+  return data;
+}
+  
+func write_ascii_xyz(geoptr, opath=,ofname=,type=) {
+  /* this function writes out an ascii file containing x,y,z information.
+    amar nayegandhi 04/25/02
+    */
+  fn = opath+ofname;
+
+  /* open file to read/write (it will overwrite any previous file with same name) */
+  f = open(fn, "w");
+
+  geoarr = *(geoptr)(1);
+  totw = 0;
+
+  /* now look through the geobath array of structures and write out only valid points */
+  indx = where(geoarr.depth != -10000);   
+  num_valid = numberof(indx);
+  len = numberof(geoarr);
+  for (i=1;i<=num_valid;i++) {
+    if (type == 1) {
+         write, f, format="%9.2f  %10.2f  %8.2f \n",geoarr.east(indx(i))/100.,geoarr.north(indx(i))/100., geoarr.depth(indx(i))/100.;
+	 totw++;
+    }
+    if (type == 3) {
+         write, f, format="%9.2f  %10.2f  %8.2f \n",geoarr.east(indx(i))/100.,geoarr.north(indx(i))/100., geoarr.bath(indx(i))/100.;
+	 totw++;
+    }
+  }
+  close, f;
+  write, format="Total records written to ascii file = %d\n", totw;
+}
+
+func read_ascii_xyz(ipath=,ifname=,type=){
+ /* this function reads in an xyz ascii file and returns a 3-d array.
+    amar nayegandhi 05/01/02
+    */
+
+    fn = ipath+ifname
+    /* open file to read */
+    f = open(fn, "r");
+    x=0.0;y=0.0;z=0.0;
+    a = rdline(f);
+    count = 0;
+    
+    while ((a > "")) {
+      sread, a, x,y,z;
+      if (count == 0) {
+        arr = array(double, 3, 1);
+	arr(1,1) = x;
+	arr(2,1) = y;
+	arr(3,1) = z;
+	} else {
+        grow, arr, [x,y,z];
+      }
+      count++;
+      a=rdline(f);
+    }
+
+  return arr
+}
