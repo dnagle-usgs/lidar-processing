@@ -15,7 +15,8 @@ package require vfs::tar
 set settings(path) "/data"
 set settings(step)  1
 set settings(sample) 3
- set settings(gamma) 1.0
+set settings(gamma) 1.0
+set settings(step) 1
  set secs 0
 
 set img0 [ image create photo ]  ;
@@ -56,6 +57,11 @@ set fn ""
 proc cirdir { } {
  global settings
  set settings(path) [ tk_chooseDirectory -initialdir $settings(path) ]
+ puts "Path: $settings(path) "
+
+# Setup the month day and year from the first tar file
+ lindex [ glob $settings(path)/*-cir.tar ] 0
+ set mdy [ lindex [  split [ file tail /cir/081804-161400-cir.tar ] "/-" ] 0]
 }
 
 proc resample { s } {
@@ -83,7 +89,7 @@ proc show { cmd t } {
  global settings
  global img img0 last_tar tar secs fn
   set sample $settings(sample)
-  set d "081604"
+  set d "081704"
   switch -exact $cmd {
    incr { 
          incr secs $t;
@@ -109,7 +115,7 @@ puts "tar file: $tf"
     puts "New tar file:$settings(path)/$tf"
     set last_tar $tf
   }
-  set pat "tar/071604-$hms-*-cir.jpg"
+  set pat "tar/071704-$hms-*-cir.jpg"
   if { [ catch { set fn [ glob $pat ] } ] }  {
     puts "No file: $pat"
   } else {
@@ -149,7 +155,9 @@ proc prefs { } {
   .p configure -menu .p.mb
   menu .p.mb
   menu .p.mb.file 
+  menu .p.mb.settings 
   .p.mb add cascade -label File -underline 0 -menu .p.mb.file
+  .p.mb add cascade -label Settings -underline 0 -menu .p.mb.settings
   .p.mb.file add command -label "Select directory..." \
 	-command cirdir 
   .p.mb.file add command -label "Tar File..." \
@@ -162,6 +170,7 @@ proc prefs { } {
       vfs::tar::Mount "$settings(path)/$settings(tar_file)" tar
     }
   } 
+  .p.mb.file add command -label "Exit" -command exit;
    
 
   scale .p.gamma \
@@ -190,6 +199,14 @@ proc prefs { } {
 	-text Stop \
 	-command { set settings(loop) 0; }
 
+  spinbox .p.step  \
+ 	-values { 1 2 3 4 5 7 10 15 20 25 30 45 60 90 100 120 180 300 600 } \
+	-width 5 \
+	-textvariable settings(step)
+
+button .p.next  -text Next -command { show incr $settings(step)  } 
+button .p.prev  -text Prev -command { show incr [ expr -$settings(step) ] } 
+
 proc play { dir } {
   global settings
   set settings(loop) 1
@@ -206,11 +223,16 @@ bind .p.sod <Return> { global settings; show sod $settings(sod); }
   pack \
 	.p.gamma \
 	.p.sample \
+	.p.step \
 	.p.hms  \
 	.p.sod \
+	.p.next \
+	.p.prev \
 	.p.play \
 	.p.yalp \
-	.p.stop 
+	.p.stop \
+	-fill both \
+	-expand 1
 }
 
 
