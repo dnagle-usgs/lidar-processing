@@ -16,6 +16,16 @@
 #
 #
 
+# Center a window.
+proc center_win { win } {
+ set lx [ expr [winfo screenwidth  $win]/2 - [winfo width  $win]/2 ]
+ set ly [ expr [winfo screenheight $win]/2 - [winfo height $win]/2 ]
+ wm geometry $win "+$lx+$ly"
+ wm deiconify $win
+ update
+}
+
+
 # Load
 proc ycbar { } {
   global cmax cmin cdelta
@@ -29,11 +39,11 @@ proc ycbar { } {
 
 
 proc display_mission_constants { l } {
-  set w .ops_conf
+  array set ary $l
+  set w .$ary(VarName)
   destroy $w
   toplevel $w
   set row 0
-  array set ary $l
   foreach {lbl x} $l {
     label $w.l$lbl -text "$lbl:" -relief sunken -anchor e -padx 5
     label $w.v$lbl{v}    -text  $x -relief sunken -padx 5

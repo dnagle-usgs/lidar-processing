@@ -67,7 +67,10 @@ for the angle biases and the x,y and z offsets.
 
  
 *************************************************************/
- ops_tans = array(mission_constants);
+ ops_tans = ops_default = ops_conf = array(mission_constants);
+ ops_default.range_biasM =   0.7962;         // Laser range measurement bias.
+ ops_default.range_biasNS=  ops_default.range_biasM / NS2MAIR;
+
  ops_tans.varname    = "ops_tans"
  ops_tans.name       = "Tans Default Values"
  ops_tans.roll_bias  = -1.40;        // carefully tweaked on 2-18-03 data
@@ -93,14 +96,14 @@ for the angle biases and the x,y and z offsets.
 **************************************************************/
  ops_IMU1 = ops_default;
  ops_IMU1.name       = "Applanix 510 Defaults"
- ops_tans.varname    = "ops_IMU1"
+ ops_IMU1.varname    = "ops_IMU1"
  ops_IMU1.x_offset   =  0.470;    // This is Applanix Y Axis +Rt Wing
  ops_IMU1.y_offset   =  1.403;    // This is Applanix X Axis +nose
  ops_IMU1.z_offset   = -0.833;    // This is Applanix Z Axis +Down
  ops_IMU1.roll_bias  = -0.755;    // DMARS roll bias from 2-13-04
  ops_IMU1.pitch_bias = 0.1;      // DMARS pitch bias from 2-13-04
 
-
+// Start with existing default values
  ops_IMU2 = ops_default;
  ops_IMU2.name       = "DMARS Defaults"
  ops_IMU2.varname    = "ops_IMU2"
@@ -110,8 +113,8 @@ for the angle biases and the x,y and z offsets.
 
 func display_mission_constants( m, ytk= ) {
   if ( ytk ) {
-  cmd = swrite( format="display_mission_constants { Name {%s} {VarName} %s Roll %4.2f  Pitch %4.2f Yaw %4.2f Scanner %5.3f {Range M} %5.3f {Range NS} %5.3f {X offset} %5.2f {Y offset} %5.2f {Z offset} %5.2f }",
-	m.name,
+  cmd = swrite( format="display_mission_constants { Name {%s} VarName %s Roll %4.2f  Pitch %4.2f Yaw %4.2f Scanner %5.3f {Range M} %5.3f {Range NS} %5.3f {X offset} %5.2f {Y offset} %5.2f {Z offset} %5.2f }", 
+        m.name,
 	m.varname,
         m.roll_bias,
         m.pitch_bias,

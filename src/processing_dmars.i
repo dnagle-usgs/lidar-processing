@@ -41,7 +41,7 @@ extern processing_dmars_cat
 
 
   1 	Generate a .imu file using dmars2iex
-  2	Run ytk and load "dmars.i"
+  2	Run ytk and do: #include "dmars.i"
   3	Run the function load_iex, "your imu file"
   4	Copy the data to iex0 variable.
   5 	Plot the vertical accel vs time with:

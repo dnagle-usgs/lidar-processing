@@ -10,21 +10,24 @@ func set_cbar( bar ) {
    Lets the  user interactively set the color bar for the histogram
   in window,7
 
+ // this thing is messed up...
+
 */
-  window,0 
+  w = 0
+  window,w 
   if ( bar == "cmax" ) {
     write, "Select a point to use as Cmax from window,7"
     m = mouse();
     cmd = swrite(format="set cmax %f", m(1) );
   } else if ( bar == "cmin" ) {
-    write, "Select a point to use as Cmin from window,7"
+    write, format="Select a point to use as Cmin from window,%d",w
     m = mouse();
     cmd = swrite(format="set cmin %f", m(1) );
   } else if ( bar == "both" ) {
-    write, "Select Cmin from window,7"
+    write, format="Select Cmin from window,%d",w
     m = mouse();
     cmd = swrite(format="set cmin %f;", m(1) );
-    write, "Select Cmax from window,7"
+    write, format="Select Cmax from window,%d",w
     m = mouse();
     cmd = swrite(format="%s set cmax %f; destroy .cbartool", cmd, m(1) );
   } else

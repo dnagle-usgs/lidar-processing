@@ -7,6 +7,8 @@
 */
 
 write,"$Id$"
+require, "eaarl_constants.i"
+require, "eaarl_mounting_bias.i"
 require, "load_cmd.i"
 require, "rbgga.i"
 require, "edb_access.i"
