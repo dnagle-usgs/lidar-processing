@@ -253,8 +253,8 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fsmode=, wfs=) {
   ygrid = span(bbox(3), bbox(4), int(ngridy));
 
   if ( _ytk ) {
-    tkcmd,"destroy .rcf; toplevel .rcf; set progress 0;"
-    tkcmd,swrite(format="ProgressBar .rcf.pb \
+    tkcmd,"destroy .rcf1; toplevel .rcf1; set progress 0;"
+    tkcmd,swrite(format="ProgressBar .rcf1.pb \
 	-fg green \
 	-troughcolor blue \
 	-relief raised \
@@ -262,7 +262,7 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fsmode=, wfs=) {
 	-variable progress \
 	-height 30 \
 	-width 400", int(ngridy) );
-    tkcmd,"pack .rcf.pb; update; center_win .rcf;"
+    tkcmd,"pack .rcf1.pb; update; center_win .rcf1;"
   }
 
 
@@ -358,7 +358,7 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fsmode=, wfs=) {
   //timer,t1
   //t1 - t0;
   if (_ytk) {
-   tkcmd, "destroy .rcf"
+   tkcmd, "destroy .rcf1"
   } 
 
 

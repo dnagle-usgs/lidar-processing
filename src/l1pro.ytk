@@ -921,10 +921,8 @@ proc rcf_region {} {
         "1" { set mode 2}
         "2" { set mode 3}
         } 
-	append_varlist $addvar
-        .l1wid.bf45.p.15 configure -values $varlist
-        varlist_plot
-        .varplot.1.lb insert end $addvar
+	append_varlist $outvar
+	destroy .rcf
         exp_send "$outvar = rcfilter_eaarl_pts($curvar, buf=$buf, w=$w, no_rcf=$no_rcf, mode=$mode);\r\n"
         
     }
@@ -1520,6 +1518,7 @@ ComboBox .l1wid.bf45.r.1 -text "Copy points using..." -width 16\
 	 	Rubberband\ Box \
 	  	Points\ in\ Polygon \
 		Single\ Pixel\
+		Select\ Cell\/Quad\/Tile \
 		} \
 	 -helptext "Copy points to \'workdata\' using any of the following methods:\n Rubberband Box\n Points in Polygon\n Single Pixel" -editable 0 -modifycmd {
    global varlist
@@ -1561,6 +1560,15 @@ ComboBox .l1wid.bf45.r.1 -text "Copy points using..." -width 16\
        exp_send "workdata = select_points($var_type, win=$win_no);\r"
        expect ">"
     }
+    if {$selr == 3} {
+       set selection  [tk_messageBox  -icon info \
+        -message "Select a cell (250m by 250m) region by dragging a region within the required cell."\
+        -type okcancel -title "Message" ]
+       if {$selection == "ok"} { 
+	exp_send "workdata = select_region($var_type, win=$win_no, plot=1);\r"
+        expect ">"
+       }
+    }
    if {$selr == -1} {
 	error "Please Define Region."
    }
@@ -1569,6 +1577,7 @@ ComboBox .l1wid.bf45.r.1 -text "Copy points using..." -width 16\
 
 ComboBox .l1wid.bf45.r.7 -text " Filter tools..." -width 16\
    	 -values { \
+		Select \
 	 	Remove \
 	  	RCF \
 		Re-Process \
@@ -1578,12 +1587,15 @@ ComboBox .l1wid.bf45.r.7 -text " Filter tools..." -width 16\
 
     	     set self [.l1wid.bf45.r.7 getvalue]
              if {$self == 0} {
-		removing_proc
+		select_proc
              }
              if {$self == 1} {
-    		rcf_region
+		removing_proc
              }
              if {$self == 2} {
+    		rcf_region
+             }
+             if {$self == 3} {
              }
              if {$self == -1} {
 	        error "Please Define Region."
@@ -1645,14 +1657,85 @@ proc removing_proc {} {
       pack .rem.2 .rem.3 -side left -padx 5 -pady 5
    }
 
-Button .l1wid.bf45.r.3 -text "Re-Process" -command {
+proc select_proc {} {
+       destroy .sel
+       toplevel .sel
+       wm title .sel "Select Points Using..."
+       ComboBox .sel.1 -text "Select points using..." -width 16\
+   	 -values { \
+	 	Rubberband\ Box \
+	  	Points\ in\ Polygon \
+		Single\ Pixel\
+		} \
+	 -helptext "Select points from \'workdata\' using any of the following methods:\n Rubberband Box\n Points in Polygon\n Single Pixel" -editable 0 
+       Button .sel.2 -width 8 -text "Go" \
+       -command {
+         global varlist outvar sels
+
+         set sels [.sel.1 getvalue]
+         if {$sels == 0} {
+            set var_no [.l1wid.bf45.p.15 getvalue]
+            set var_type [lindex $varlist $var_no]
+       	    set selection [tk_messageBox  -icon info \
+            -message "Drag a Rectangular Box in Window $win_no to define region." \
+            -type ok -title "Message"]
+            if {$selection == "ok"} {
+               exp_send "workdata = sel_data_rgn(workdata, GEO, mode=2, win=$win_no)\r"
+               expect ">"
+            }
+         }
+         if {$sels == 1} {
+            set selection  [tk_messageBox  -icon info \
+            -message "Draw a Polygon in Window $win_no to define a region using a series of left mouse clicks.  To complete the polygon, middle mouse click OR <Ctrl> and left mouse click." \
+            -type okcancel -title "Message" ]
+            if {$selection == "ok"} { 
+	    exp_send "workdata = sel_data_rgn(workdata, GEO, mode=3, win=$win_no)\r"
+            expect ">"
+            }
+         }
+         if {$sels == 2} {
+           exp_send "workdata = select_points(workdata, win=$win_no);\r"
+           expect ">"
+         }
+         if {$sels == -1} {
+	   error "Please Define Region."
+         } else {
+           append_varlist workdata
+	   destroy .sel
+         }
+      } 
+      Button .sel.3 -width 8 -text "Cancel" -command {
+	 destroy .sel
+      }
+
+     
+      pack .sel.1 -pady 15
+      pack .sel.2 .sel.3 -side left -padx 5 -pady 5
    }
-Button .l1wid.bf45.r.4 -text "RCF" -command {
-    rcf_region
-   }
+
 Button .l1wid.bf45.r.5 -text "Copy2Tile" -command {
+    set selection  [tk_messageBox  -icon question \
+      -message "Copy \'workdata\' array to final data array?" \
+            -type yesno -title "Warning" ]
+    if {$selection == "yes"} {
+      exp_send "finaldata = grow(finaldata,workdata);\r"
+      expect ">" 
+    }
   }
 Button .l1wid.bf45.r.6 -text "Save Tile" -command {
+    global tilefname initialpath
+    
+    if {[info exists initialpath] == 0} {set initialpath "~/"}
+    exp_send "tilefname = set_tile_filename(win=$win_no);\r"
+    expect ">"
+    puts "$tilefname\n"
+    set ofname [tk_getSaveFile -initialdir $initialpath \
+		-defaultextension "*.pbd" \
+		-initialfile $tilefname \
+	       ]
+    if {$ofname != ""} {
+        exp_send "$tilename = finaldata; vname=tilename; save, createb(\"$ofname\"), vname, $tilename; \r";
+    }
   }
 
 

@@ -25,19 +25,19 @@ func select_region(data, win=, plot=) {
 
   seldist = sqrt((a(3)-a(1))^2+(a(4)-a(2))^2);
   if (seldist < 250*sqrt(2)) {
-    write, "Congratulations! You have selected a number tile."
+    write, "Congratulations! You have selected a 250m by 250m cell tile."
     teast = int(mneast/250) * 250;
     tnorth = ceil(mxnorth/250) * 250;
     csize = 250;
   } else {
      if (seldist < 1000*sqrt(2)) {
-       write, "Congratulations! You have selected a letter tile."
+       write, "Congratulations! You have selected a 1km by 1km quad tile."
        teast = int(mneast/1000) * 1000;
        tnorth = ceil(mxnorth/1000) * 1000;
        csize = 1000;
      } else {
        if (seldist < 2000*sqrt(2)) {
-         write, "Congratulations! You have selected a data tile."
+         write, "Congratulations! You have selected a 2km by 2km data tile."
          teast = int(mneast/2000) * 2000;
          tnorth = ceil(mxnorth/2000) * 2000;
          csize = 2000;
@@ -105,6 +105,10 @@ write,"Left: Examine pixel, Center: Save Pixel, Right: Quit"
  rtn_data = [];
  clicks = selclicks = 0;
 
+ if (!is_array(edb)) {
+    write, "No EDB data present.  Use left OR middle mouse to select point, right mouse to quit."
+    new_point_selected = 1;
+ }
 
   
  do {
@@ -114,6 +118,7 @@ write,"Left: Examine pixel, Center: Save Pixel, Right: Quit"
   if (mouse_button == right_mouse) break;
   
   if ( (mouse_button == center_mouse)  ) {
+   if (is_array(edb)) {
      if ( new_point_selected ) {
       new_point_selected = 0;
       selclicks++;
@@ -123,7 +128,7 @@ write,"Left: Examine pixel, Center: Save Pixel, Right: Quit"
      } else {
       write, "Use the left button to select a new point first.";
      }
-   
+   } 
   }
      
   q = where(((celldata.east >= spot(1)*100-buf)   &
@@ -138,7 +143,7 @@ write,"Left: Examine pixel, Center: Save Pixel, Right: Quit"
   if (is_array(indx)) {
     rn = celldata(indx(1)).rn;
     mindist = buf*sqrt(2);
-    for (i = 1; i < numberof(indx); i++) {
+    for (i = 1; i <= numberof(indx); i++) {
       x1 = (celldata(indx(i)).east)/100.0;
       y1 = (celldata(indx(i)).north)/100.0;
       dist = sqrt((spot(1)-x1)^2 + (spot(2)-y1)^2);
@@ -153,11 +158,21 @@ write,"Left: Examine pixel, Center: Save Pixel, Right: Quit"
     pulseno  = mindata.rn/0xffffff;
 
     if (mouse_button == left_mouse) {
+      if (is_array(edb)) {
           new_point_selected = 1;
 	  a = [];
 	  clicks++;
           ex_bath, rasterno, pulseno, win=0, graph=1, xfma=1;
 	  window, win;
+      }
+    }
+    if (!is_array(edb)) {
+     if ((mouse_button == left_mouse) || (mouse_button == center_mouse)) {
+      selclicks++;
+      write, format="Point saved to workdata. Total points selected:%d\n", selclicks;
+      rtn_data = grow(rtn_data, mindata);
+        
+     }
     }
   }
 

@@ -73,13 +73,24 @@ tilefn = "";
   return tilefn;
 }
 
-func set_tile_filename(data, m) {
-	if (is_void(data)) data=depth_all;
-	if (is_void(m)) m = mouse();
+func set_tile_filename(m, win=) {
+	extern curzone, tilename, finaldata; 
+	if (is_void(win)) win = window();
+ 	if (is_void(finaldata)) {
+	   write, "No finaldata found.  Cannot Save"
+	   return
+	}
+ 	window, win;
+	if (is_void(m)) m = mouse(,,"Click in window:");
 	emin = 2000*(int(m(1)/2000.));
 	nmax = int(2000*(ceil(m(2)/2000.)));
-	data = data(data_box(depth_all.east/100.0, depth_all.north/100.0, emin, emin+2000, nmax-2000, nmax)); //Selects data only from the clicked tile;
-	ymd = soe2ymd(data.soe(where(data.soe == min(data.soe))));                                 // finds the year-month-day of the lowest SOE value;
+	finaldata = finaldata(data_box(finaldata.east/100.0, finaldata.north/100.0, emin, emin+2000, nmax-2000, nmax)); //Selects finaldata only from the clicked tile;
+
+	// find the unique elements in the finaldata array
+	finaldata = finaldata(sort(finaldata.rn));
+	idx = unique(finaldata.rn, ret_sort=1);
+	finaldata = finaldata(idx);
+	ymd = soe2ymd(finaldata.soe(where(finaldata.soe == min(finaldata.soe))));                                 // finds the year-month-day of the lowest SOE value;
 	if (ymd(2) <=9) m = swrite(format="0%d", ymd(2));
 	if (ymd(2) >9)  m = swrite(format="%d", ymd(2));
 	if (ymd(3) <=9) d = swrite(format="0%d", ymd(3));
@@ -91,13 +102,21 @@ func set_tile_filename(data, m) {
 		read(zone); 
 		curzone=0;
                 sread(zone, format="%d", curzone);
-		extern curzone; //I am not sure if this is how to make it a global...?;
 	}
 	zone = swrite(format="%d", curzone); //Here zone was read as a string, converted to long and now back to string, but needed to make curzone global
-	zonel = utm_zone_letter(nmax); //gets zone letter from function in batch_process;
-	type = ""; //I still need to put in this part;
-	tilefname = swrite(format="t_e%d_n%d_%s%s_%s_%s.pbd", emin, nmax, zone, zonel, mdate, type);
+	//zonel = utm_zone_letter(nmax); //gets zone letter from function in batch_process;
+	type = "b"; //I still need to put in this part .. defaults to bathy for now.
+	tilefname = swrite(format="t_e%d_n%d_%s_%s_%s_mf.pbd", emin, nmax, zone, mdate, type);
+	temin = emin/1000;
+	tnmax = nmax/1000;
+	tmdate = strpart(mdate,5:);
+	tilename = swrite(format="t_%d_%d_%s_%s_%s",temin,tnmax,zone,tmdate,type);
 	
+	if (_ytk) {
+	  //send tilefname to tk
+ 	  tkcmd, swrite(format="set tilefname %s",tilefname);
+ 	  tkcmd, swrite(format="set tilename %s",tilename);
+        }
 	return tilefname;		
 }
 
