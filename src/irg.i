@@ -166,9 +166,10 @@ func irg( b, e, inc=, delta=, georef=, usecentroid= ) {
        txb = ta(1:3)(avg);
        ta -= txb;
        tas = ta(sum);
-       if ( tas )
+       if ( tas ) {
           tc = (ta * x )(sum) / tas;
-       a(di).irange(ii) -= tc; 
+          a(di).irange(ii) -= tc; 
+       }
          
        if ( numberof( (*rp.rx(ii,1) )) >= 8 ) {
          bias = (*rp.rx(ii,1) )(1:5)(avg);
