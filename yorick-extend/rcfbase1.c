@@ -76,7 +76,13 @@ static DataBlock *XGetInfo(Symbol *s)
   return type.base? 0 : db;
 }
 
+#define TBUFSIZE        32767
 static unsigned int *winners, *fwinners, fcounter;	//Store the winners temporarily & global number of winners count.
+
+short flag;	//Decides on the array use
+
+unsigned int  twinners[ TBUFSIZE ], tidx[ TBUFSIZE ], tfwinners[ TBUFSIZE ];	//These arrays are only used when number_elems <= TBUFSIZE
+
 
 /* Used to fill a 'Yorick' array with the winners indices
  * This function is called only for mode==2
@@ -85,7 +91,8 @@ static unsigned int *winners, *fwinners, fcounter;	//Store the winners temporari
 void c_fillarray (unsigned int *c)
 {
    memcpy ((void*)c, (void*)fwinners, ((sizeof(unsigned int))*fcounter));	//Copy fwinners into the yorick array
-   free (fwinners);								//fwinners not needed now
+   if (flag)
+      free (fwinners);		//fwinners not needed now
 }
 
 /** CODE BELOW INSERTED FROM rcfbase2.c **/

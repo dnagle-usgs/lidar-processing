@@ -53,7 +53,20 @@ void FNAME0 (TYPE* a, TYPE w, TYPE* b)
   else
      number_elems= 0;
 
-  idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);	//Generate an index array of max size
+  if (number_elems <= TBUFSIZE)
+	  flag = 0;
+  else
+	  flag =1;
+
+  if (!flag)					//Use arrays if number_elems is less than array size
+  {
+	idx = tidx;
+  }
+  else
+  { 
+  	idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);
+  }
+
   for (i=0; i<number_elems; i++)
 	  idx[i]=i;
   
@@ -83,7 +96,8 @@ void FNAME0 (TYPE* a, TYPE w, TYPE* b)
     if (a[idx[number_elems-1]] < a[idx[i]]+w)	//Break the whole process when the last element in 
       break;					//the sorted copy falls in a window of some element
   }
-  free (idx);					//idx array is also not needed now
+  if (flag)
+     free (idx);					//idx array is also not needed now
 }
 
 /* rcf algorithm for mode 1.
@@ -106,7 +120,20 @@ void FNAME1  (TYPE *a, TYPE w, float *b)
   else
      number_elems= 0;
 
-  idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);	//Generate an index array of max size
+  if (number_elems <= TBUFSIZE)
+	  flag = 0;
+  else
+	  flag =1;
+
+  if (!flag)					//Use arrays if number_elems is less than array size
+  {
+	idx = tidx;
+  }
+  else
+  { 
+  	idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);
+  }
+
   for (i=0; i<number_elems; i++)
 	  idx[i]=i;
   
@@ -138,7 +165,8 @@ void FNAME1  (TYPE *a, TYPE w, float *b)
     if (a[idx[number_elems-1]] < a[idx[i]]+w)	//Break the whole process when the last element in 
       break;					//the sorted copy falls in a window of some element
   }
-  free (idx);					//idx array is also not needed now
+  if (flag)
+      free (idx);					//idx array is also not needed now
 
 }
 
@@ -148,7 +176,6 @@ void FNAME1  (TYPE *a, TYPE w, float *b)
 
 unsigned int  FNAME2 (TYPE* a, TYPE w)
 {
-
   unsigned int i, j, number_elems, counter, *idx;
   DataBlock *db;
  
@@ -160,8 +187,25 @@ unsigned int  FNAME2 (TYPE* a, TYPE w)
      number_elems= (unsigned int)type.number;	//Get the number of elements in the source array
   else
      number_elems= 0;
+ 
+  if (number_elems <= TBUFSIZE)
+	  flag = 0;
+  else
+	  flag =1;
 
-  idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);	//Generate an index array of max size
+  if (!flag)					//Use arrays if number_elems is less than array size
+  {
+	idx = tidx;
+	winners = twinners;
+	fwinners = tfwinners;
+  }
+  else
+  {
+  	idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);
+        winners = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
+        fwinners = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
+  }
+
   for (i=0; i<number_elems; i++)
 	  idx[i]=i;
   
@@ -169,8 +213,6 @@ unsigned int  FNAME2 (TYPE* a, TYPE w)
 
   qsort(idx, number_elems, sizeof(unsigned int), CNAME);//Sort the copy
 
-  winners = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
-  fwinners = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
   fcounter = 0;
 
   for (i=0; i<number_elems-1; i++)		//For each element in the copy
@@ -199,9 +241,12 @@ unsigned int  FNAME2 (TYPE* a, TYPE w)
     if (a[idx[number_elems-1]] < a[idx[i]]+w)	//Break the whole process when the last element in 
       break;					//the sorted copy falls in a window of some element
   }
-  free (winners);				//Dont need winners anymore...they are in fwinners
-  free (idx);					//idx array is also not needed now
-
+ 
+  if (flag)
+  {
+	  free (winners);				//Dont need winners anymore...they are in fwinners
+          free (idx);					//idx array is also not needed now
+  }
   return fcounter;
 }
 

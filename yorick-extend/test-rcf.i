@@ -38,10 +38,10 @@
 //   w = 1.0;
 //   junk = frcf0(a,w);
 
-// Test with  20k elements
-//   a = float(span(10000., -10000, 20000));
-//   a(800:900) = a(100);
-//   w=2;
+// Test with  200k elements
+   a = float(span(100000., -100000, 200000));
+   a(8000:9000) = a(1000);
+   w=20;
 
 //Check for comparison between results of oldrcf and new frcf
 //   timer, t0;
@@ -49,10 +49,10 @@
 //   timer, t1;
 //   write,format="Oldrcf Result= [%f,%f] time=%6.4f secs\n",junk(1), junk(2), t1(1)-t0(1);
 
-//   timer, t0;
-//   junk = frcf1(a,w);
-//   timer, t1;
-//   write,format="***Result= [%f,%f] time=%6.4f secs\n",junk(1), junk(2), t1(1)-t0(1);
+   timer, t0;
+   junk = frcf2(a,w);
+   timer, t1;
+   write,format="***Result= [%p,%p] time=%6.4f secs\n",junk(1), junk(2), t1(1)-t0(1);
 
 // Test for error conditions on w
 
@@ -147,14 +147,15 @@
 
    a = long([ 100,101,100,99,60,98,99,101,105,103,30,88,99,110,101,150]);
    
-//   a = long(span(100000, -100000, 200001));
-//   a(8000:9000) = a(1000);
-//   timer, t0;
-
-   junk = lrcf0(a, 6);
+   a = long(span(1, 49, 49));
+   a(40:49) = a(10);
+   timer, t0;
+   for (u=0; u<10000; u++)
+   {
+      junk = lrcf2(a, 6);
+   }
    timer, t1
-   write,format="Long Mode 0: Result= [%d,%d] time=%6.4f secs\n",junk(1), junk(2), t1(1)-t0(1);
-
+   write,format="1000 Long Mode 0: Result= [%p,%p] time=%6.4f secs\n",junk(1), junk(2), t1(1)-t0(1);
    timer, t0;
    junk = lrcf1(a, 6);
    timer, t1
