@@ -55,7 +55,7 @@ package require BWidget
 
 # [ Variable Initialization ########################
 
-set DEBUG_SF 0      ;# Show debug info on (1) or off (0)
+set DEBUG_SF 1      ;# Show debug info on (1) or off (0)
 
 # The camera is frequently out of time sync so we add this to correct it.
 set seconds_offset [ expr 3600 * 0 ]
@@ -149,9 +149,8 @@ proc load_file_list { f } {
 	set m 0
 	set s 0
 	# filehandle
+	set fname $f
 	set f [ open $f r ]
-	# Should be un-necessary
-#	set i 100
 	# Set time ticker, for use in updating the displays - 0 to make sure something displays immediately
 	set ticker 0
 	
@@ -183,27 +182,19 @@ proc load_file_list { f } {
 		# Split the file name based on _
 		# cam1   filename format is cam1/cam1_CAM1_2003-09-21_131100.jpg
 		#                           cam1/cam1_CAM1_YYYY-MM-DD_HHMMSS.jpg
-		# cam147 filename format is cam147/cam147_040726_095148_01.jpg
-		#                           cam147/cam147_YYMMDD_HHMMSS_NUM.jpg
-		#                           Images080904/cam147_04-08-09_11-25-17-69.jpg
-		#                           ImagesMMDDYY/cam147_YY-MM-DD_HH-MM-SS-MS.jpg
-		# cam147 format (and related code) is likely to change (2004-10-05)
+		# cam2   filename format is dir/strg_2004-10-28_122430_0024.jpg
+		#                           ANYTHING_YYYY-MM-DD_HHMMSS_NNNN.jpg
 		set lst [ split $fna($i) "_" ]
 		# Grab the HMS section
 		set hms ""
 		if { $camtype == 1 } {
 			set hms [ lindex $lst 3 ]
 		}
-		if { $camtype == 147 } {
-			set hms [ lindex $lst 2 ]
+		if { $camtype == 2 } {
+			set hms [ lindex $lst end-1 ]
 		}
 		if { [ string equal $hms "" ] == 0  } {
-			if { $camtype == 1 } {
-				scan $hms "%02d%02d%02d" h m s
-			}
-			if { $camtype == 147 } {
-				scan $hms "%02d-%02d-%02d-%02d" h m s ms
-			}
+			scan $hms "%02d%02d%02d" h m s
 			set thms [ format "%02d:%02d:%02d" $h $m $s ]
 			#set sod [ expr $h*3600 + $m*60 + $s  + $seconds_offset ]
 			set sod [ expr $h*3600 + $m*60 + $s ]
@@ -260,52 +251,45 @@ proc load_file_list { f } {
 		}
 	}
 	
-	# This section will change once cam147 is finalized (2004-10-04)
-	if { $camtype == 147 } {
-		set datafn "cam147.txt"
-		if { [ catch {set dataf [ open $dir/$datafn "r" ] } ] == 0 } {
+	if { $camtype == 2 } {
+									if { $DEBUG_SF } { puts "fname: $fname" }
+		set datafn [string range $fname 0 end-3]txt
+									if { $DEBUG_SF } { puts "datafn: $datafn" }
+		if { [ catch {set dataf [ open $datafn "r" ] } ] == 0 } {
 			for { set i 0 } { ![ eof $dataf ] } { incr i } { 
 									if { $DEBUG_SF } { puts "$i:" }
 				set datas [ gets $dataf ]
 									if { $DEBUG_SF } { puts "    $datas" }
 				set datalst [ split $datas "," ];
-				set times [ lindex $datalst 0 ]
-									if { $DEBUG_SF } { puts "    times $times" }
+				set hms [ lindex $datalst 0 ]
+									if { $DEBUG_SF } { puts "    hms $hms" }
 				set lati  [ lindex $datalst 1 ]
 									if { $DEBUG_SF } { puts "    lati $lati" }
 				set long  [ lindex $datalst 2 ]
 									if { $DEBUG_SF } { puts "    long $long" }
 				set depth [ lindex $datalst 3 ]
 									if { $DEBUG_SF } { puts "    depth $depth" }
-				set hrs [ expr {[string range $times 0 1 ]} ];
-									if { $DEBUG_SF } { puts "    hrs $hrs" }
-				set ms [ string range $times 2 5 ];
-									if { $DEBUG_SF } { puts "    ms $ms" }
-				set gt $hrs$ms;
-									if { $DEBUG_SF } { puts "    gt $gt" }
-				set hms "$ms"
-									if { $DEBUG_SF } { puts "    hms $hms" }
 				if { [expr int([clock clicks -milliseconds] / 200)] - $ticker > 0 } {
 					set ticker [expr int([clock clicks -milliseconds] / 200)]
 					.loader.status3 configure -text "Loaded $i GPS records\r"
 					update
 				}
-				if { [ catch { set tmp $imgtime(hms$gt) } ] == 0 } {
-									if { $DEBUG_SF } { puts "    imgtime(hms$gt) $imgtime(hms$gt) exists" }
+				if { [ catch { set tmp $imgtime(hms$hms) } ] == 0 } {
+									if { $DEBUG_SF } { puts "    imgtime(hms$hms) $imgtime(hms$hms) exists" }
 					if { $lati > 0 } {
-						set lat(hms$gt) S[expr $lati * 1]
+						set lat(hms$hms) S[expr $lati * 1]
 					} else {
-						set lat(hms$gt) N[expr $lati * -1]
+						set lat(hms$hms) N[expr $lati * -1]
 					}
-									if { $DEBUG_SF } { puts "    lat(hms$gt) $lat(hms$gt)" }
+									if { $DEBUG_SF } { puts "    lat(hms$hms) $lat(hms$hms)" }
 					if { $long > 0 } {
-						set lon(hms$gt) W[expr $long * 1]
+						set lon(hms$hms) W[expr $long * 1]
 					} else {
-						set lon(hms$gt) E[expr $long * -1]
+						set lon(hms$hms) E[expr $long * -1]
 					}
-									if { $DEBUG_SF } { puts "    lon(hms$gt) $lon(hms$gt)" }
-					set alt(hms$gt) [expr $depth * 1]M
-									if { $DEBUG_SF } { puts "    alt(hms$gt) $alt(hms$gt)" }
+									if { $DEBUG_SF } { puts "    lon(hms$hms) $lon(hms$hms)" }
+					set alt(hms$hms) [expr $depth * 1]M
+									if { $DEBUG_SF } { puts "    alt(hms$hms) $alt(hms$hms)" }
 				} 
 			}
 			.loader.status3 configure -text "Loaded $i GPS records\r"
@@ -320,28 +304,55 @@ proc load_file_list { f } {
 }
 
 proc gotoImage {} {
-	global timern hms sod ci hsr imgtime seconds_offset frame_off pitch roll head
+	global timern hms sod ci hsr imgtime seconds_offset frame_off
+	global pitch roll head DEBUG_SF
+									if { $DEBUG_SF } { puts "gotoImage:" }
+									if { $DEBUG_SF } { puts " timern:$timern hsr:$hsr" }
+
 	set i 0
-	##puts "Options selected for Goto Image is: $timern \n"
-	if {$timern == "hms"} {
-		######     puts "Showing Camera Image at hms = :$hsr \n"
-		set i $imgtime(hms$hsr);
-		set ci [expr $i-$seconds_offset+$frame_off]
-		show_img $ci
-	}
 	if {$timern == "sod"} {
-		######     puts "Showing Camera Image at sod = $hsr \n"
+		set sod $hsr
+	} elseif { $timern == "hms" } {
+		scan $hsr "%2d%2d%2d" h m s
+		set sod [expr $s + 60*$m + 60*60*$h]
+	}
+									if { $DEBUG_SF } { puts " hms:$hms" }
+	if {$timern == "hms" || $timern == "sod"} {
+		set sod [expr {$sod - $seconds_offset}]
 		set hms [ clock format $hsr -format "%H%M%S" -gmt 1 ]
-		set i $imgtime(hms$hms);
-		set ci [expr $i-$seconds_offset+$frame_off]
-		show_img $ci
+									if { $DEBUG_SF } { puts " after offset hms:$hms" }
+		set x 0
+		set test_hms $hms
+									if { $DEBUG_SF } { puts " testing hms:$test_hms" }
+		if {
+			[catch {
+				while { [catch {set i $imgtime(hms$test_hms)}] } {
+					if {$x == 30} {
+						throw "Invalid command to break the while loop."
+					} elseif {$x < 0} {
+						set x [expr {0 - $x}]
+					} else {
+						set x [expr {-1 - $x}]
+					}
+					set test_hms [ clock format [expr {$sod + $x}] -format "%H%M%S" -gmt 1 ]
+#					set test_hms [expr {$hms + $x}]
+									if { $DEBUG_SF } { puts " testing hms:$test_hms" }
+				}
+			}]
+		} {
+									if { $DEBUG_SF } { puts " not found, disregarding" }
+		} else {
+									if { $DEBUG_SF } { puts " i:$i" }
+			set ci [expr $i+$frame_off]
+									if { $DEBUG_SF } { puts " ci:$ci" }
+		}
 	}
 	if {$timern == "cin"} {
 		######     puts "Showing Camera Image with Index value = $hsr \n"
 		set cin $hsr
 		set ci $cin
-		show_img $cin
 	}
+	show_img $ci
 }
 
 proc plotRaster {} {
@@ -862,9 +873,7 @@ pack .cf3    -side top -in . -fill x
 ### [ Bindings
 
 bind . <Key-p>     { .cf1.prev invoke }
-bind . <Key-Left>  { .cf1.prev invoke }
 bind . <Key-n>     { .cf1.next invoke }
-bind . <Key-Right> { .cf1.next invoke }
 bind . <Key-space> { if { $run == 0 } { .cf1.play invoke } else { .cf1.stop invoke } }
 bind . <Key-Home>  { .cf1.rewind invoke }
 bind . <Control-Key-equal> { .cf3.zoom setvalue next    ; show_img $ci }
