@@ -731,7 +731,7 @@ proc show_img { n } {
 
 proc archive_save_marked { type } {
 	global mark fna dir range_touched imgtime \
-		gt lat lon ew ns pdop alt nsat
+		gt lat lon ew ns pdop alt nsat camtype
 	
 	if {!([string equal "zip" $type] || [string equal "tar" $type])} {
 		tk_messageBox -type ok -icon error \
@@ -790,7 +790,7 @@ proc archive_save_marked { type } {
 						exec ls -1 > filelist; 
 						exec tar -cvf $sf  -T filelist --exclude filelist;
 					} elseif {[string equal "zip" $type]} {
-						eval exec zip $sf [glob *.jpg];
+						eval exec zip $sf [glob *.jpg] *.gga;
 					}
 
 
@@ -1225,9 +1225,16 @@ canvas .canf.can -height 240 -width 320 \
 
 .canf.can create image 0 0 -tags img -image $img -anchor nw 
 
-set me "EAARL image/data Animator \n$version\n$revdate\nC. W. Wright\ncharles.w.wright@nasa.gov"
+set me "\
+EAARL image/data Animator\n\
+$version\n\
+$revdate\n\
+C. W. Wright charles.w.wright@nasa.gov\n\
+Amar Nayegandhi anayegan@usgs.gov\n\
+David Nagle dnagle@usgs.gov\n\
+"
 
-.canf.can create text 20 120 -text $me -tag tx -anchor nw 
+.canf.can create text 25 80 -text $me -tag tx -anchor nw 
 
 # Frame .cf1
 
