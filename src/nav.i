@@ -16,8 +16,68 @@
 
 write,"$Id$"
 
+func dms2dd( v ) {
+/* DOCUMENT dms2dd(v)
 
-func plrect( rec, color=, text=, width=) {
+  Convert a lat or lon in serveral different dd:mm:ss.ss formats to a 
+ signed double in decimal degrees where longitude is represented 
+ with a negative value.
+
+  Acceptable input format test array:
+
+  Test array:
+   [ "n25:08:53.69144", "w080:31:58.48680", 
+     "n25 08 53.69144", "w080 31 58.48680",
+     "n250853.69144",   "w0803158.48680",
+     "n25:08:53.69144", "E279:28:2.5132"
+     "n250853.69144", "E2792802.5132"
+   ]
+
+  Examples: 
+  dms2dd( "n25:08:53.69144");
+  returns: 25.1482
+
+  dms2dd( "n250853.69144");
+  returns: 25.1482
+
+  dms2dd( "n25 08 53.69144");
+  returns: 25.1482
+
+  dms2dd( ["n25 08 53.69144", "w080 31 58.48680"] )
+  returns: [25.1482,-80.5329]
+ 
+    
+*/
+ n = numberof(v);
+ rv = array(double, n);
+ for (i=1; i<=n; i++ ) {
+   f = array(string,1)
+   d = array(double,3)
+   bias = 0.0;
+   dlim = array(string,3)
+   nbr=sread(v(i), format="%1s%f%[-: ]%f%[-: ]%f", f(1), d(1), dlim(1), d(2), dlim(2),d(3)); 
+   if ( (nbr==2)) {
+    if ( (f(1) == "n") || (f(1) == "N") ) 
+      fs = "%1s%02f%02f%f";
+    else 
+      fs = "%1s%03f%02f%f";	// This works for EeWw values
+    nbr=sread(v(i), format=fs, f(1), d(1), d(2), d(3)); 
+   }
+   if ( (f(1) == "S") || (f(1)=="s")  || (f(1)=="W") || (f(1)=="w")) {
+     s = -1.0;
+   } else {
+     s =  1.0;
+   } 
+   if ( (f(1)=="e") || (f(1)=="E") ) { bias=-360.0; }
+    rv(i) = d(1) + d(2)/60.0 + d(3)/3600.0 + bias;
+    rv(i) *= s;
+  }
+  if ( n == 1 ) rv = rv(1);
+  return rv;
+}
+
+
+func plrect( rec, format=, color=, text=, width=) {
 /* DOCUMENT plrect( rec, color=, text=, width=)
 
    Use this to plot a rectangle on a lat/lon map and include a
@@ -29,27 +89,38 @@ rec is a vector with four elements arranged as:
  rectangle.  The order is not important, as this function will 
  pair the lower left and upper right points automatically. 
 
+ Input:
+    rec 	array of cornet points
+    format=     "dms" if the elements of rec are in the string 
+                format "n38:35:234.434"  See: ddmmss function for 
+                acceptable details.
+
 */
 
- 
+  if ( is_void(format) ) 
+	format= "double"; 
+  if ( format == "dms" ) {
+    o = array(double,4);
+    for (i=1; i<=numberof(rec); i++ ) {
+      o(i) = ddmmss2dd(rec(i) );
+    }
+    rec = o;
+  }
+
   if ( is_void(color) ) 
 	color = "red";
 
   if ( is_void(width) )
 	width= 1.0;
 
-rec
   s = min( rec(1), rec(3) ); 
-  m = max( rec(1), rec(1) );
+  m = max( rec(1), rec(3) );
   rec(1) = s;
   rec(3) = m;
   s = min( rec(2), rec(4) ); 
   m = max( rec(2), rec(4) );
   rec(2) = s;
   rec(4) = m;
-rec
-
-
 
   y = [ rec(1), rec(1), rec(3), rec(3), rec(1) ];
   x = [ rec(2), rec(4), rec(4), rec(2), rec(2) ];
