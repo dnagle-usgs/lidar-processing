@@ -547,7 +547,7 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
 
   for (i=1;i<=num_valid;i++) {
     ++totw;
-    if (totw == 1000000) {
+    if (totw == 1000000 && split) {
       ++xx;
       close, f
       write, format="Total records written to ascii file = %d\n", totw;
