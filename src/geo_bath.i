@@ -1,3 +1,7 @@
+/*
+   $Id$
+*/
+write, "$Id$"
 require, "surface_topo.i"
 require, "bathy.i"
 require, "eaarl_constants.i"
