@@ -1,0 +1,67 @@
+#
+# $Id$
+
+
+#############
+#   Map 
+#############
+
+
+ set coast_line(color) black
+ global coast_line
+
+
+proc setmapwindow {} {
+  exp_send "window,6;\r"
+  expect ">"
+}
+
+proc plot_last_map {} {
+ global coast_line
+   setmapwindow
+   exp_send "show_map, dllmap, color=\"$coast_line(color)\" \r"
+  expect ">"
+}
+
+proc load_map { } {
+ global coast_line
+
+   set fn [ tk_getOpenFile -initialdir "./maps" \
+	-filetypes { \
+	  {{ PBD Files} {.pbd} }
+	  {{ All files} {*}    }
+         } ]
+   if { $fn != "" } {
+     setmapwindow
+     exp_send "load_map, color=\"$coast_line(color)\", ffn=\"$fn\"; \
+               limits\r"
+   }
+}
+
+ $w.mb.map add command -label "Load a Pbd Coastline..." -command load_map  
+
+ $w.mb.map add command     -label "Limits" -command {
+   setmapwindow
+   exp_send "limits\r"
+ }
+
+ $w.mb.map add command     -label "Fma" -command {
+   setmapwindow
+   exp_send "fma\r"
+ }
+
+ $w.mb.map add command     -label "Redraw last map" -command plot_last_map
+
+
+ $w.mb.map add separator
+ $w.mb.map add command     -label "Coastline Color" 
+ set clist "black red blue green cyan magenta yellow white"
+ foreach a $clist {
+   $w.mb.map add radiobutton -label [ string totitle $a ] \
+	-variable coast_line(color) -value $a
+ }
+
+
+
+
+

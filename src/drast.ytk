@@ -1,0 +1,318 @@
+#
+# $Id$
+
+global rn tid blist depth_display_units total_edb_records
+
+set play_flag 0
+set play_dir fwd
+set tid 0
+
+if { [ info exists inc ] == 0 } {
+  set inc 1
+}
+
+if { [ info exists play_interval ] == 0 } {
+  set play_interval 100
+}
+
+if { [ info exists rn ] == 0 } {
+  set rn 1000
+  set old_rn $rn
+} else {
+  set old_rn $rn
+  unset rn
+  set rn $old_rn
+}
+
+
+if { [ info exists wf_chan ] == 0 } {
+  set wf_chan [ expr int(7) ]
+}
+
+if { [ info exists depth_display_units ] == 0 } {
+  set depth_display_units  meters
+} else {
+  set temp $depth_display_units;	;# need to kill old traces
+  unset depth_display_units
+  set depth_display_units  $temp
+}
+
+if { [ info exists data_path ] == 0 } {
+  set data_path ""
+}
+
+
+# this gets set by Yorick:load_edb in edb_access.i
+exp_send "#include \"drast.i\"\r"	;# Load Yorick drast.i code
+expect ">";				;# Wait for Yorick prompt
+
+
+############################################################################## 
+# The following calls Yorick get_total_edb_records function which causes
+# it to then execute a tcl command to set total_edb_records in tcl.  This 
+# cannot be inside a { block } or it won't set the variable for some reason.
+############################################################################## 
+set   total_edb_records 0
+unset total_edb_records 		;# this to insure no traces are attached
+set   total_edb_records 1000;		;# restablish this variable
+exp_send "get_total_edb_records\r";	;# reload from Yorick to insure sync
+expect ">";				;# Wait for Yorick prompt
+
+
+####global blist
+set blist { .rslider.bf1.stop    .rslider.bf1.play        .rslider.bf2.exwf \
+	    .rslider.bf1.yalp    .rslider.bf1.enter_rn    .rslider.scale    \
+	    .rslider.bf1.nxtrast .rslider.bf1.prevrast    .rslider.bf1.pint \
+	    .rslider.bf1.inc \
+          }
+
+proc gstate { lst state } {
+  foreach x $lst { 
+    eval "$x configure -state $state"
+  }
+}
+
+proc ter { n e o } {
+ global total_edb_records data_path rn
+ if { [ winfo exists .rslider.scale ] == 1 } {
+   .rslider.scale configure -to $total_edb_records 
+   wm title .rslider "$data_path"
+ }
+}
+
+proc dus { n e o } {
+ global depth_display_units rn total_edb_records
+###########  exp_send "depth_display_units = \"$depth_display_units\" \r" 
+  exp_send "set_depth_scale, \"$depth_display_units\" \r" 
+    expect ">"
+  if { $total_edb_records != 0 } {
+    exp_send "ytk_rast,$rn; redraw\r" 
+  }
+}
+
+proc play {} {
+ global tid play_interval rn inc play_dir play_flag total_edb_records
+     if { $play_dir == "fwd" } {
+       set rn [ expr $rn + $inc ] 
+     } else {
+       set rn [ expr $rn - $inc ] 
+     }
+     if { $rn > $total_edb_records } {
+ 	.rslider.bf1.stop invoke	
+        set rn $total_edb_records;
+     } elseif { $rn <= 1 } {
+ 	.rslider.bf1.stop invoke	
+        set rn 1;
+     }
+     exp_send "ytk_rast,$rn\r" 
+     expect ">"
+     if { $play_flag } { 
+       set tid [ after $play_interval play ]
+     }
+}
+
+
+
+destroy .rslider
+destroy .rslider.scale
+
+toplevel .rslider
+frame .rslider.bf1
+frame .rslider.bf2
+
+ .rslider configure -menu .rslider.mb
+ menu .rslider.mb
+ menu .rslider.mb.file
+ menu .rslider.mb.graph
+ menu .rslider.mb.waveforms
+.rslider.mb      add cascade -label File      -underline 0 -menu .rslider.mb.file
+.rslider.mb      add cascade -label Graph     -underline 0 -menu .rslider.mb.graph
+.rslider.mb      add cascade -label Waveforms -underline 0 -menu .rslider.mb.waveforms
+
+
+############### File pull downs
+.rslider.mb.file add command -label "load_edb.." -command {
+    exp_send "load_edb\r"
+  }
+.rslider.mb.file add command -label "Reload drast.i" -command {
+  exp_send "#include \"drast.i\"\r"
+}
+ .rslider.mb.file add command -label "Reload drast.ytk" -command {
+  source "drast.ytk"
+}
+
+.rslider.mb.file add separator 
+.rslider.mb.file add command -label "Dismiss" -command { destroy .rslider }
+
+
+############ Graph pulldown
+.rslider.mb.graph add command -label "Reset Raster window limits" -command {
+     exp_send "window,1; limits;\r";
+  }
+
+.rslider.mb.graph add separator 
+
+.rslider.mb.graph  add command -label "Reset Waveform limits" -command {
+  exp_send "window,0; limits;\r";
+}
+.rslider.mb.graph add separator 
+.rslider.mb.graph add radiobutton \
+	-variable depth_display_units \
+	-label Meters \
+	-value meters
+.rslider.mb.graph add radiobutton \
+	-variable depth_display_units \
+	-label Feet \
+	-value feet
+.rslider.mb.graph add radiobutton \
+	-variable depth_display_units \
+	-label Nanoseconds \
+	-value ns
+
+set wfc1 1
+set wfc2 2
+set wfc3 4
+
+
+############ Waveform pulldown
+.rslider.mb.waveforms add checkbutton \
+	-label "90\% channel (Black)" \
+	-onvalue  1 \
+	-offvalue 0 \
+	-variable wfc1 \
+	-command { global wf_chan wfc1; set wf_chan [ expr $wfc1+$wfc2+$wfc3 ] } \
+
+.rslider.mb.waveforms add checkbutton \
+	-onvalue  2 \
+	-offvalue 0 \
+	-variable wfc2 \
+	-command { global wf_chan wfc1; set wf_chan [ expr $wfc1+$wfc2+$wfc3 ] } \
+	-label "10\% channel (Red)" 
+
+.rslider.mb.waveforms add checkbutton \
+	-onvalue  4 \
+	-offvalue 0 \
+	-variable wfc3 \
+	-command { global wf_chan wfc1; set wf_chan [ expr $wfc1+$wfc2+$wfc3 ] }  \
+	-label "1\% channel (Blue)" 
+
+
+ button  .rslider.bf1.nxtrast -text ">" -command  { 
+  global total_edb_records rn
+     set rn [ expr $rn + $inc ]
+     if { $rn > $total_edb_records } {
+         set rn $total_edb_records;
+     } 
+     exp_send "ytk_rast,$rn\r" 
+ }
+
+ button  .rslider.bf1.prevrast -text "<" -command { 
+  global rn
+     set rn [ expr $rn - $inc ]
+     if { $rn < 1 } {
+         set rn 1;
+     } 
+     exp_send "ytk_rast,[expr $rn]\r" 
+ }
+
+
+ scale .rslider.scale \
+	-orient horizontal \
+	-length 445 \
+	-showvalue 0 \
+	-from 1 \
+	-to $total_edb_records \
+	-variable rn \
+	-bigincrement 100 
+
+
+bind .rslider.scale <ButtonRelease>  { 
+ global rn 
+     exp_send "ytk_rast,$rn\r"       
+ }
+
+
+
+button .rslider.bf2.exwf -text "Examine waveforms" -command {
+  global blist
+  gstate $blist disabled
+  update idletasks
+  exp_send "window,1; msel_wf(wfa, cb=$wf_chan)\r";
+  set timeout 9999
+  expect "completed"
+  gstate $blist normal
+}
+
+
+button .rslider.bf1.stop -text "Stop" -command {
+ global tid play_flag
+ exp_send "animate,0\r" 
+  after cancel $tid;
+  set play_flag 0 
+}
+
+
+button .rslider.bf1.play -text "Play->" -command {
+ global tid play_interval play_dir play_flag
+ set play_flag 1 
+ set play_dir fwd
+ exp_send "animate,1\r" 
+ set tid [ after $play_interval  play ]
+}
+
+ button .rslider.bf1.yalp -text "<-Yalp" -command {
+ global tid play_interval play_dir play_flag
+ set play_flag 1 
+ set play_dir rev 
+ exp_send "animate,1\r" 
+ set tid [ after $play_interval  play ]
+}
+
+tk_optionMenu .rslider.bf1.pint play_interval \
+	 1 5 10 25 50 75 100 150 200 250 300 500 1000 2000 3000 
+
+
+ entry .rslider.bf1.enter_rn -width 7 -textvariable rn
+
+ bind .rslider.bf1.enter_rn <Return> { 
+     if { $rn < $total_edb_records } {
+        exp_send "ytk_rast,[expr $rn]\r" 
+     } else {
+        set rn $total_edb_records;
+     }
+}
+
+
+ tk_optionMenu .rslider.bf1.inc \
+	inc 1 2 3 4 5 8 10 15 20 25 40 50 75 100 150 200 250 300 500 1000
+
+trace variable depth_display_units w dus
+trace variable total_edb_records   w ter
+
+  pack \
+	.rslider.bf1.prevrast \
+	.rslider.bf1.nxtrast \
+        .rslider.bf1.enter_rn \
+	.rslider.bf1.inc \
+	.rslider.bf1.yalp \
+	.rslider.bf1.stop \
+	.rslider.bf1.play  \
+	.rslider.bf1.pint  \
+	-side left -expand 1 -fill both -anchor nw
+
+
+  pack \
+	.rslider.bf2.exwf \
+	-side left -expand 0 -fill both -anchor nw
+	
+
+  pack  \
+	.rslider.scale \
+	.rslider.bf1  \
+	.rslider.bf2  \
+	-side top -expand 1 -fill both
+
+
+puts "rn = $rn  old_rn=$old_rn\r\n"
+
+

@@ -1,0 +1,224 @@
+#
+# $Id$
+#
+#
+#
+#  eaarl.ytk 
+#
+
+
+proc edb_status { } {
+ global edb;
+ destroy .edb
+ if { [ info exists edb ] == 0 } {
+   tk_messageBox -type ok \
+        -icon warning \
+        -message { No EDB (EAARL Data Base) is loaded }
+   return;
+ }
+ 
+ toplevel .edb
+ set v " \
+        Year                            year \
+        {Day of Year}                   day \
+         Path                           path \
+        {Index File}                    idx_file \
+        {Total Data (GB)}               gb \
+        {Number of Files}               number_of_files \
+        {Total Rasters}                 nbr_rasters \
+        {First Good Raster}             data_begins \
+        {Last Good Raster}              data_ends \
+        {Mission Duration (Hours)}      mission_duration \
+        {Seconds of the Epoch}          soe \
+       "
+ 
+  set edb(idx_file) [ file tail $edb(idx_file) ]
+  set row 0
+  foreach {lbl x} $v {
+    label .edb.$x\lbl -text "$lbl:" -relief sunken -anchor e -padx 5
+    label .edb.v$x    -text  $edb($x) -relief sunken -padx 5
+    grid  .edb.$x\lbl -column 0  -row $row -sticky ew
+    grid  .edb.v$x    -column 1  -row $row -sticky ew
+    incr row
+  }
+  button .edb.dismiss -text Dismiss -command { destroy .edb }
+  grid .edb.dismiss -row $row -columnspan 2 -sticky ew
+ 
+}
+
+proc load_edb {} {
+   exp_send "load_edb\r"
+  expect ">"
+  edb_status
+}
+
+
+   exp_send "#include \"edb_access.i\"\r"
+   exp_send "#include \"map.i\"\r"
+
+   set w .eaarl
+   global w
+   destroy  $w
+   toplevel $w
+   frame $w.f -width 450
+   pack $w.f
+
+  $w configure -menu $w.mb
+   menu $w.mb
+   menu $w.mb.file
+   menu $w.mb.map
+   menu $w.mb.nav
+   menu $w.mb.rasters
+   menu $w.mb.photos
+   menu $w.mb.time
+   menu $w.mb.help
+
+ $w.mb add cascade -label File     -underline 0 -menu $w.mb.file
+ $w.mb add cascade -label Map      -underline 0 -menu $w.mb.map
+ $w.mb add cascade -label Nav      -underline 0 -menu $w.mb.nav
+ $w.mb add cascade -label Rasters  -underline 0 -menu $w.mb.rasters
+ $w.mb add cascade -label Photos   -underline 0 -menu $w.mb.photos
+ $w.mb add cascade -label Time     -underline 0 -menu $w.mb.time
+ $w.mb add cascade -label Help     -underline 0 -menu $w.mb.help
+
+ $w.mb.file add command -label "Load Edb..." -command { load_edb }
+ $w.mb.file add command -label "Edb Status" -command  edb_status 
+ $w.mb.file add command -label Dismiss -command { destroy $w }
+
+ source map.ytk
+
+#############
+#   Rasters
+#############
+ $w.mb.rasters add command -label "Examine Rasters..." -command {
+   source drast.ytk
+ }
+
+#############
+#   Photos
+#############
+ $w.mb.photos add command -label "Review 1-Hz photos..." -command {
+    exec /home/wwright/lidar_processing-9-15-01/sf.tcl &
+ }
+
+#############
+#   Nav
+#############
+
+
+ $w.mb.nav add command -label "Flight Planning..." 
+
+
+ set gga_color black
+
+ exp_send "#include \"rbgga.i\"\r"
+ menu $w.mb.nav.rbgga
+ $w.mb.nav add cascade -label "Rbgga..."   -underline 0 \
+	-menu $w.mb.nav.rbgga
+
+ $w.mb.nav.rbgga add command -label "Rbgga..." -command rbgga_menu
+
+ $w.mb.nav.rbgga add command -label "Plot gga data..." -command {
+   exp_send "show_gga_track, color=\"$gga_color\"\r"
+ }
+ set clist "black red blue green cyan magenta yellow white"
+ foreach a $clist {
+   $w.mb.nav.rbgga add radiobutton -label [ string totitle $a ] \
+        -variable gga_color -value $a
+ }
+
+ $w.mb.nav.rbgga add command -label "Plot gga data..." -command {
+   exp_send "show_gga_track, color=\"$gga_color\"\r"
+ }
+
+
+proc rbgga_menu {} {
+ global ytk_PLMK_marker
+ set gga(null) ""
+ set mw .rbgga
+ destroy $mw
+ toplevel $mw
+ frame $mw.g1 -relief groove -borderwidth 3
+ label $mw.g1.lwlb -text "Line Width:" -anchor e
+ tk_optionMenu $mw.g1.lw   gga(linewidth) 1 3 5 7 10 12 15 20 25
+ grid $mw.g1.lwlb $mw.g1.lw -sticky ew
+
+ label $mw.g1.lclb -text "Line Color:" -anchor e
+ tk_optionMenu $mw.g1.lc   gga(linecolor) black red blue green cyan magenta yellow white
+ grid $mw.g1.lclb $mw.g1.lc -sticky ew
+
+ label $mw.g1.skiplb -text "Points to skip:" -anchor e
+ tk_optionMenu $mw.g1.skip gga(skip) 0 1 2 5 10 15 20 25 50 75 100  
+ grid $mw.g1.skiplb $mw.g1.skip -sticky ew
+
+# label $mw.g1.markerslb -text "Use Markers:" -anchor e
+# tk_optionMenu $mw.g1.markers gga(markers) Yes No
+# grid $mw.g1.markerslb $mw.g1.markers -sticky ew
+
+ label $mw.g1.mshapelb -text "Marker shape:" -anchor e
+ tk_optionMenu $mw.g1.mshape gga(mshape) None Square Cross \
+	Triangle Circle Diamond Cross45 "Inverted-Triangle"
+ grid $mw.g1.mshapelb $mw.g1.mshape -sticky ew
+
+ label $mw.g1.msizelb -text "Marker size:" -anchor e
+ tk_optionMenu $mw.g1.msize gga(msize) .1 .2 .3 .4 .5 \
+	.6 .7 1.0 1.5 2.0 2.5 3.0 5.0 10.0 
+ grid $mw.g1.msizelb $mw.g1.msize -sticky ew
+
+ frame $mw.f1 -relief groove -borderwidth 3
+ button $mw.f1.load -text "Load" -command { exp_send "gga=rbgga()\r" }
+ button $mw.f1.plot -text "Plot" -command {
+   if { $gga(mshape) == "None" } {
+      set marker ",marker=0";
+   } else {
+      set marker ",marker=$ytk_PLMK_marker($gga(mshape))"
+   }
+    exp_send "window,6\r"
+    exp_send "show_gga_track, \
+ color=\"$gga(linecolor)\" \
+ ,skip=$gga(skip)$marker,msize=$gga(msize) \r\n" 
+ }
+ button $mw.f1.info -text "Info"
+ button $mw.f1.fma -text "Fma" -command { exp_send "window,6; fma\r\n" }
+ button $mw.f1.limits -text "Limits" \
+	-command { exp_send "window,6; limits\r\n" }
+ button $mw.f1.dismiss -text "Dismiss" -command "destroy $mw "
+ pack $mw.f1.load $mw.f1.plot $mw.f1.info $mw.f1.limits \
+	$mw.f1.fma -side top -fill x
+ pack $mw.f1.dismiss -side bottom -anchor s -fill both
+
+ frame $mw.f2 -relief groove -borderwidth 3
+ label $mw.f2.title -text "Map controls"
+ button $mw.f2.mapredraw  -text "Replot" -command plot_last_map
+ button $mw.f2.mapload    -text "Load" -command load_map
+ pack  $mw.f2.title -side top
+ pack  $mw.f2.mapload $mw.f2.mapredraw -fill both -expand 1 -side left
+
+
+
+ pack $mw.f2 -side bottom -expand 1 -fill both
+ pack $mw.f1 $mw.g1 -side left -anchor n -fill both -expand 1
+}
+
+
+
+
+#############
+#   Time
+#############
+ $w.mb.time add command -label "Time..." -command {  
+
+ }
+
+
+#############
+#   help
+#############
+ $w.mb.help add command -label " Yorick Window Use"
+ $w.mb.help add command -label "0 Raster images"
+ $w.mb.help add command -label "1 Waveforms"
+ $w.mb.help add command -label "7 Geographic maps and Nav data"
+
+
+
+
