@@ -74,6 +74,7 @@ for(i=1; i<=numfiles; i++)
 
    if (!is_array(data)) continue;
    new_data = data_datum_converter(data, utmzone=zonel, tonad83=tonad83, tonavd88=tonavd88, type = vtype);
+   if (!is_array(new_data)) continue;
 
    vname = dvname;
    newf = createb(newfile);

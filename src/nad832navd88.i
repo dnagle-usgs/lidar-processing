@@ -116,9 +116,16 @@ func nad832navd88(data_in, gdata_dir=) {
        }
     }
   }
-  if (is_array(where(data_wpbd(dif) > 0))) {
-    // data required 2 geoid pbd file... 
-    uidx = unique(data_wpbd);
+  dw_idx = where(data_wpbd != 0);
+  if (is_array(dw_idx)) {
+   data_wpbd = data_wpbd(dw_idx);
+  } else return [];
+ 
+  if (numberof(data_wpbd) > 1) {
+     if (is_array(where(data_wpbd(dif) > 0))) {
+       // data required 2 geoid pbd file... 
+       uidx = unique(data_wpbd);
+     } else uidx = [1];
   } else uidx = [1];
   
   for (i=1;i<=numberof(uidx);i++) {
