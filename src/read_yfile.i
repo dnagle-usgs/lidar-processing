@@ -1194,6 +1194,7 @@ func merge_data_pbds(filepath, write_to_file=, merged_filename=, vname=, skip=, 
     write, format="Merging File %d of %d, skip = %d\n",i,numberof(fn_all), skip;
     f = openb(fn_all(i));
     restore, f, vname;
+    if (get_member(f,vname) == 0) continue;
     grow, eaarl, get_member(f,vname)(1:0:skip);
  }   
 
