@@ -22,14 +22,18 @@ func get_transect(data, win=, width=) {
 	x = cos(atan(-m))*width;
         y = sin(atan(-m))*width;
 	if (m==0){y=x;x=0;}
-	if (m > 0) pts = [[pt(1,1)-x,pt(2,1)+y],[pt(1,1)+x,pt(2,1)-y],[pt(1,2)-x, pt(2,2)+y],[pt(1,2)+x, pt(2,2)-y]];
-	if (m < 0) pts = [[pt(1,1)+x,pt(2,1)+y],[pt(1,1)-x,pt(2,1)-y],[pt(1,2)+x, pt(2,2)+y],[pt(1,2)-x, pt(2,2)-y]];
+	if (m < 0) pts = [[pt(1,1)-x,pt(2,1)-y],[pt(1,1)+x,pt(2,1)+y],[pt(1,2)+x, pt(2,2)+y],[pt(1,2)-x, pt(2,2)-y]];
+	if (m > 0) pts = [[pt(1,1)+x,pt(2,1)+y],[pt(1,1)-x,pt(2,1)-y],[pt(1,2)-x, pt(2,2)-y],[pt(1,2)+x, pt(2,2)+y]];
 	
         plmk, pts(2,), pts(1,), marker=2, msize=0.3, color="blue";
         box = boundBox(pts);
 	box_pts = ptsInBox(box*100., data.east, data.north);
 	poly_pts = testPoly(pts*100., data.east(box_pts), data.north(box_pts));
 	indx = box_pts(poly_pts);
+	if (!is_array(indx)) {
+		write, "Couldn't find points under the line..."
+		return;
+	}
 	data = data(indx);
 	window, 0; fma;
 	plmk, data.elevation, data.east/100.0;
@@ -130,7 +134,7 @@ func find_transect_slope(data, typ) {
 	dist = sqrt(xdist^2 + ydist^2);
 
 
-//	for (i=1;i<=numberof(idx)-1;i++) {col="blue";if (i%2 == 0) col="green";plmk, data.elevation(idx(i):idx(i+1)-1)/100.0, dist(idx(i):idx(i+1)-1)/100.0, color=col, width=10, marker=3;}
+//for (i=1;i<=numberof(idx)-1;i++) {col="blue";if(i%2==0)col="green";plmk,data.elevation(idx(i):idx(i+1)-1)/100.0,dist(idx(i):idx(i+1)-1)/100.0,color=col,width=10,marker=3;}
 	for (i=1;i<=numberof(idx)-1;i++) {
 		slopes(i) = linear_regression(dist(idx(i):idx(i+1)-1)/100.0, data.elevation(idx(i):idx(i+1)-1)/100.0, plotline=1)(1);
 	}
