@@ -609,6 +609,66 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
       }
     }
   }
+  if (type == 1001) {
+    //type = 1001 introduced on 11/03/03 for processing eaarl bottom return stats using bottom_return.i
+    rn = 0L;
+    idx = 0s;
+    sidx = 0s;
+    range=0s;
+    ac=0.0F;
+    cent=0.0F;
+    centidx=0.0F;
+    peak= 0.0F;
+    peakidx= 0s;
+    soe = 0.0;
+
+
+    data = array(BOTRET, recs); 
+
+    for (i=1;i<=recs;i++) {
+
+       if ( (i % 1000) == 0 ) edfrstat, i, recs;
+       _read, f, byt_pos, rn;
+       data(i).rn = rn;
+       byt_pos = byt_pos + 4;
+
+       _read, f, byt_pos, idx;
+       data(i).idx = idx;
+       byt_pos = byt_pos + 2;
+       
+       _read, f, byt_pos, sidx;
+       data(i).sidx = sidx;
+       byt_pos = byt_pos + 2;
+       
+       _read, f, byt_pos, range;
+       data(i).range = range;
+       byt_pos = byt_pos + 2;
+
+       _read, f, byt_pos, ac;
+       data(i).ac = ac;
+       byt_pos = byt_pos + 4;
+
+       _read, f, byt_pos, cent;
+       data(i).cent = cent;
+       byt_pos = byt_pos + 4;
+
+       _read, f, byt_pos, centidx;
+       data(i).centidx = centidx;
+       byt_pos = byt_pos + 4;
+       
+       _read, f, byt_pos, peak;
+       data(i).peak = peak;
+       byt_pos = byt_pos + 4;
+
+       _read, f, byt_pos, peakidx;
+       data(i).peakidx = peakidx;
+       byt_pos = byt_pos + 2;
+       
+       _read, f, byt_pos, soe;
+       data(i).soe = soe;
+       byt_pos = byt_pos + 8;
+    }
+  }
   return data;
 }
   
