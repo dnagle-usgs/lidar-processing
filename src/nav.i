@@ -633,4 +633,33 @@ extern a;
   
   
 
+/*
+
+  See: http://www.ngs.noaa.gov/CORS/Derivation.html
+  for more info.
+
+   Xn = Tx + (1 + S)*Xi + Rz*Yi - Ry*Zi
+Yn = Ty - Rz*Xi + (1 + S)*Yi + Rx*Zi
+Zn = Tz + Ry*Xi - Rx*Yi + (1 + S)*Zi
+
+where
+Tx = 0.9910 m Rx = (125033 + 258*(E - 1997.0))*(10**-12) radian
+Ty = -1.9072 m Ry = ( 46785 - 3599*(E - 1997.0))*(10**-12) radian
+Tz = -0.5129 m Rz = ( 56529 - 153*(E - 1997.0))*(10**-12) radian
+*/
+
+func xyz2nad83( Xi, Yi, Zi, E= ) {
+/*
+  if ( is_void(E) )
+	E = 2002.0;
+  S = 0.0;
+  Tx = 0.9910 m Rx = (125033 + 258*(E - 1997.0))*(10**-12) radian
+  Ty = -1.9072 m Ry = ( 46785 - 3599*(E - 1997.0))*(10**-12) radian
+  Tz = -0.5129 m Rz = ( 56529 - 153*(E - 1997.0))*(10**-12) radian
+  Xn = Tx + (1 + S)*Xi + Rz*Yi - Ry*Zi
+  Yn = Ty - Rz*Xi + (1 + S)*Yi + Rx*Zi
+  Zn = Tz + Ry*Xi - Rx*Yi + (1 + S)*Z
+  return [ Tx, Ty, Tz ];
+*/
+}
 

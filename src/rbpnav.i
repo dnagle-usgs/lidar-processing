@@ -156,10 +156,11 @@ func rbpnav (junk) {
  if ( is_void(data_path) ) {
  write,"Enter path:"
    data_path = rdline(prompt="Enter data path:");
+   path = data_path;
  }
 
- path = data_path +"/gps/"
  if ( _ytk ) {
+    path = data_path +"/gps/"
     ifn  = get_openfn( initialdir=path, filetype="*.ybin" );
     if (strmatch(ifn, "ybin") == 0) {
           exit, "NO FILE CHOSEN, PLEASE TRY AGAIN\r";
@@ -167,6 +168,7 @@ func rbpnav (junk) {
     ff = split_path( ifn, -1 );
     path = ff(1);
 } else {
+  write,format="data_path=%s\n",path
  ifn = sel_file(ss="*.ybin", path=path)(1);
 }
 

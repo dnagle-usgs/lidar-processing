@@ -45,6 +45,11 @@ func plcm( z, y, x, cmin=, cmax=, marker=, msize=)
 
 
 {
+  if ( is_void( cmin) ) 
+	cmin = z(min);
+  if ( is_void(cmax) )
+	cmax = z(max);
+
   q = where( z > cmin );
   if ( numberof(q) == 0 ) 
      return;
