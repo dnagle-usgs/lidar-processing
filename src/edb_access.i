@@ -435,11 +435,16 @@ Examples using the result data:
         wa = a;                 	// starting waveform index (wa)
          a = a + plen;			// use plen to skip to next pulse
     txlen = r(wa); wa++;		// transmit len is 8 bits max
+    if ( txlen <=0 ) {
+       write, format=" (txlen<=0) raster:%d edb_access.i:decode_raster(%d). Channel 1  Bad rxlen value (%d) i=%d\n", 
+              rasternbr, txlen, wa, i ;
+       break;		
+    }
     txwf = r(wa:wa+txlen-1);		// get the transmit waveform
     wa += txlen;			// update waveform addres to first rx waveform
     rxlen = i16(r,wa); wa += 2;		// get the 1st waveform and update wa to next
     if ( rxlen <= 0 ) { 
-       write, format=" raster:%d edb_access.i:decode_raster(%d). Channel 1  Bad rxlen value (%d) i=%d\n", 
+       write, format=" (rxlen<-0)raster:%d edb_access.i:decode_raster(%d). Channel 1  Bad rxlen value (%d) i=%d\n", 
               rasternbr, rxlen, wa, i ;
        break;		
     }

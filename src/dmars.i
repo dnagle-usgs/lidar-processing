@@ -457,12 +457,13 @@ func iex2tans( junk ) {
  3) Adjusts the iex_time from gps to utc
 */
  extern tans, iex_nav;
+ day_start = int(iex_nav.somd(1) / 86400) * 86400; 
  tans = array( IEX_ATTITUDE, dimsof(iex_nav)(2));
  tans.somd   = iex_nav.somd;
  tans.roll   = iex_nav.roll;
  tans.pitch  = iex_nav.pitch;
  tans.heading= iex_nav.heading;
- tans.somd  %= 86400;
+ tans.somd  =  iex_nav.somd - day_start;
  tans.somd  -= 13.0;
 }
 

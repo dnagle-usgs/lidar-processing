@@ -174,6 +174,13 @@ write,format="Draw complete. %d rasters drawn. %s", j-ii, "\n"
 }
 
 
+func ops_conf_not_loaded(junk) {
+ if ( is_void(ops_conf) ) {
+   write,"ops_conf is not set.  Please either load tans or dmars settings."
+   return 1;
+ } else return 0;
+}
+
 
 
 
@@ -206,6 +213,9 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
 */
  extern roll, pitch, heading, palt, utm, northing, easting
  extern a, irg_a, _utm
+
+ if ( ops_conf_not_loaded(1) ) 
+	return;
 
  if ( !is_void( center ) ) {
     if ( is_void(delta) ) 
@@ -406,6 +416,10 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
   extern edb, soe_day_start, tans, pnav, type, utm, fs_all, rn_arr_idx, rn_arr;
   fs_all = [];
   rn_arr =[];
+   if ( ops_conf_not_loaded(1) ) 
+	return;
+
+
    if (!is_array(tans)) {
      write, "TANS information not loaded.  Running function rbtans() ... \n";
      tans = rbtans();
