@@ -623,7 +623,7 @@ date
 
 
 
-func show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, width=   )  {
+func show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, width=, win=   )  {
 /* DOCUMENT show_gga_track, x=,y=, color=, skip=, msize=, marker=, lines=
 
    Plot the GPS gga position lat/lon data in the current window.
@@ -659,6 +659,9 @@ func show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, wid
 
 */
   extern curzone;
+  if ( is_void( win ) ) {
+	win = 6; window,win;
+  }
   if ( is_void( width ) ) 
 	width= 5.0;
   if ( is_void( msize ) ) 
@@ -874,5 +877,6 @@ func select_any_region(xdata, ydata, mode=, win=) {
 
 if ( is_void(_ytk) ) 
 	help, rbgga_help
+
 
 

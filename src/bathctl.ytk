@@ -57,7 +57,7 @@ proc save_bath_ctl { } {
 
 
 
-proc bathctl {} {
+proc bathctl { } {
  global bath_ctl
    	  # show constants in GUI
           set w .bathctl
@@ -75,7 +75,9 @@ proc bathctl {} {
               save_bath_ctl
           }
           $w.mb.file add separator 
-          $w.mb.file add command -label "Generic water settings" -background darkgray
+          $w.mb.file add command \
+	     -label "Generic water settings" \
+	     -background darkgray
           $w.mb.file add command -label "  Clear" -command {
             set bath_ctl(laser) -2.4
             set bath_ctl(water) -0.6
@@ -125,7 +127,7 @@ proc bathctl {} {
          }
 	 
 	  Button .bathctl.cancel -text "Dismiss" -width 5 -command {
-	    destroy .bathctl
+	     destroy .bathctl
 	  }
 
 	  Button .bathctl.plot -text "Plot" -width 5 -command {
@@ -142,7 +144,6 @@ proc bathctl {} {
 		-side top
 
 	  pack .bathctl.plot  .bathctl.cancel -side left
-
 }
 
 

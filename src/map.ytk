@@ -97,6 +97,11 @@ proc load_map {utm} {
  }
 
 
+  if { [info exists utm  ] == 0 } {
+    set utm 0;
+  }
+
+
 
 
 

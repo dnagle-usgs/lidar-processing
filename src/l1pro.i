@@ -7,6 +7,7 @@
 
 write,"$Id$"
 
+cd, src_path
 require,  "geo_bath.i" 
 require,  "read_yfile.i" 
 require,  "veg.i" 

@@ -491,12 +491,15 @@ See define_bath_ctl()
    depth_all = [];
    
    /* check to see if required parameters have been initialized */
+
+/*
    if (!(type)) {
     write, "BATH_CTL structure not initialized.  Running define_bath_ctl... \n";
      type=define_bath_ctl(junk);
      write, "\n";
    }
    write, "BATH_CTL initialized to : \r";
+*/
 
    /* define cmin and cmax depending on type */
    if (type == "tampabay") {
@@ -550,6 +553,7 @@ See define_bath_ctl()
        fcount ++;
        write, format="Processing segment %d of %d for bathymetry\n", i, no_t;
        d = run_bath(start=rn_arr(1,i), stop=rn_arr(2,i));
+       if ( d == 0 ) return 0;
        write, "Processing for first_surface...";
        rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=1); 
        a=[];

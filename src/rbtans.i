@@ -48,10 +48,14 @@ plmk_default,msize=.1
 if ( is_void( gps_time_correction ) )
   gps_time_correction = -13.0
 
-func rbtans( junk ) {
- 
+func rbtans( junk, fn= ) {
+ extern data_path;
+ if ( !is_void( fn ) ) {
+    ifn = fn;
+    ff = split_path( ifn, -1 );
+    data_path = ff(1);
+ } else {
  path = data_path+"/tans/"
-
 if ( _ytk ) {
     ifn  = get_openfn( initialdir=path, filetype="*.ybin" );
     if (strmatch(ifn, "ybin") == 0) {
@@ -59,10 +63,11 @@ if ( _ytk ) {
     }
     ff = split_path( ifn, -1 );
     data_path = ff(1);
-} else {
+ } else {
  if ( is_void(data_path) )
    data_path = rdline(prompt="Enter data path:");
  ifn = sel_file(ss="*.ybin", path=data_path+"/tans/")(1);
+ }
 }
 
 

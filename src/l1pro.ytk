@@ -75,7 +75,7 @@
   set plot_dpi 75
   array set cbvc {cmin cmin cmax cmax msize msize mtype mtype}
 
-exp_send "#include \"l1pro.i\"\r";   #load all yorick support functions
+exp_send "#include \"$src_path/l1pro.i\"\r";   #load all yorick support functions
 expect ">";
 
 package require BWidget
@@ -592,7 +592,9 @@ menu .l1wid.mb.filter
 			 }
 
 .l1wid.mb.load add command -label "Load Bathymetry Settings .." -underline 21 \
-	-command { source bathctl.ytk; bathctl  }
+	-command { 
+            bathctl 
+         }
 
 
 .l1wid.mb add cascade -label Options -underline 0 -menu .l1wid.mb.options
@@ -1818,6 +1820,8 @@ proc plot_fltlines {sel} {
      }
 }
 
+
+source "$src_path/bathctl.ytk"; 
 .l1wid.mb.options entryconfigure 3 -state disabled
 
 

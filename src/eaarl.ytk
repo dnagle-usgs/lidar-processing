@@ -125,6 +125,37 @@ proc save_eaarl_options { fn opt_array } {
  tk_messageBox -icon info -message "Options saved to: $f" -type ok
 }
 
+proc load_cmd { start_dir } {
+ global _ytk_fn y_codedir ytk_codedir _ytk_mrl _ytk_mrl_idx
+  set _ytk_fn [ tk_getOpenFile \
+        -initialdir $start_dir \
+        -filetypes \
+        {
+           {{Yorick Programs} {.i}  }
+           {{Yorick or Tcl/tk program} {.i .ytk}  }
+           {{Yorick Specfic Tcl/Tk Programs} {.ytk} }
+           {{Tcl/Tk Programs} {.tcl .tk} }
+           {{All Files}       {*}   }
+        }  ]
+  if { $_ytk_fn != "" } {
+    switch [ file extension $_ytk_fn ] {
+    ".tcl" -
+    ".tk"  -
+    ".ytk" {
+            uplevel { source $_ytk_fn }
+           }
+    ".i"   {
+            set ycode_dir [ file dirname $_ytk_fn ]
+            cd $ycode_dir;
+            exp_send "cd, \"$ycode_dir\"\r"
+            exp_send "load_cmd, \"$_ytk_fn\"\r"
+           }
+
+    }
+  }
+}
+
+
 
 proc start_sf {} {
  global data_path
@@ -203,12 +234,16 @@ proc load_edb {} {
 
 # Set the source code path for this invocation.  It can 
 # then be used to load the other modules.
+   set data_path "/data/"
    set src_path  [ file dirname [ info script ] ]
    cd $src_path
    exp_send "cd, \"$src_path\"\r"
+   exp_send "src_path= \"$src_path\"\r"
 
-   exp_send "#include \"edb_access.i\"\r"
-   exp_send "#include \"map.i\"\r"
+   exp_send "#include \"eaarl.i\"\r"
+
+####   exp_send "#include \"edb_access.i\"\r"
+####   exp_send "#include \"map.i\"\r"
 
    set w .eaarl
    global w
@@ -237,6 +272,9 @@ proc load_edb {} {
 
  $w.mb.file add command -label "Load Edb..." -command { load_edb }
  $w.mb.file add command -label "Edb Status" -command  edb_status 
+ $w.mb.file add command -label "Load command file..." -command { 
+   load_cmd $data_path 
+ }
  $w.mb.file add command -label "Edit missions notes..." -command  {
    if { [ edb_loaded ] } { 
      ytk_kick_off_editor  $_ytk(editor) "$edb(path)/notes.txt"    
@@ -244,13 +282,13 @@ proc load_edb {} {
  } 
  $w.mb.file add command -label Dismiss -command { destroy $w }
 
- source map.ytk
+ source "$src_path/map.ytk"
 
 #############
 #   Rasters
 #############
  $w.mb.rasters add command -label "Examine Rasters..." -command {
-   source drast.ytk
+   source "$src_path/drast.ytk"
  }
 
 #############
@@ -263,7 +301,7 @@ proc load_edb {} {
     start_sf
  }
  $w.mb.images add command -label "Process Lidar Data..." -command {
-    source l1pro.ytk 
+    source "$src_path/l1pro.ytk"
  }
  $w.mb.images add command -label "Lidar First Return Surface..." -command {
  }
@@ -278,22 +316,22 @@ proc load_edb {} {
 
 
  $w.mb.nav add command -label "Flight Planning..." \
-	-command { exp_send "#include \"nav.i\"\r" }
+	-command { exp_send "require, \"nav.i\"\r" }
 
 
  set gga_color black
 
- exp_send "#include \"rbgga.i\"\r"
+ exp_send "require, \"rbgga.i\"\r"
  menu $w.mb.nav.rbgga
  $w.mb.nav add command -label "Rbgga..."   -underline 2 \
 	-command rbgga_menu
 #####	-menu $w.mb.nav.rbgga
  $w.mb.nav add command -label "Rbtans..."   -underline 2 \
-   -command { exp_send "#include \"rbtans.i\"\r"
+   -command { exp_send "require, \"rbtans.i\"\r"
    	      expect ">"
     	      exp_send "tans = rbtans() \r" }
  $w.mb.nav add command -label "Rbpnav..."   -underline 2 \
-   -command { exp_send "#include \"rbpnav.i\"\r"
+   -command { exp_send "require, \"rbpnav.i\"\r"
     	      expect ">"
      	      exp_send "pnav = rbpnav() \r" }
 
@@ -307,7 +345,7 @@ proc request_heading {psf inhd_count} {
    ## this procedure requests heading information for sf_a.tcl
    ## amar nayegandhi
    if {($inhd_count == 1)} {
-     exp_send "#include \"rbtans.i\"\r" 
+     exp_send "require, \"rbtans.i\"\r" 
      expect ">"
      exp_send "if (is_void(tans)) tans=rbtans(); pkt_sf = prepare_sf_pkt(tans); \r"
      ## function prepare_sf_pkt is defined in rbtans.i
@@ -485,7 +523,7 @@ proc rbgga_menu {} {
 
  }
  $w.mb.time add command -label "Check and correct EDB time..." -command {
-  source ts_check.ytk; ts_check;
+  source "$src_path/ts_check.ytk"; ts_check;
  }
 
 

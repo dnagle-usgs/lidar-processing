@@ -69,7 +69,8 @@ rn
 
 
 func run_bath( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) {
-// depths = array(float, 3, 120, len );
+  extern bath_ctl;
+
 
  if ( is_void(rn) || is_void(len) ) {
     if (!is_void(center) && !is_void(delta)) {
@@ -84,6 +85,15 @@ func run_bath( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) 
 	     return 0;
     }
  }
+
+
+  if ( is_void( bath_ctl) ) {
+    define_bath_ctl(1);
+    return 0;
+  } else if ( bath_ctl.laser == 0.0 ) {
+    define_bath_ctl(1);
+    return 0;
+  }
 
 
     
@@ -171,49 +181,26 @@ extern bath_ctl;
 */
 
  if ( is_void( bath_ctl ) ) {
-   bath_ctl = BATH_CTL();
+    bath_ctl = BATH_CTL();
   }
 
 func define_bath_ctl(junk,type=) {
-  /* this function defines the structure bath_ctl depending on the type.  As of now, type can be, "keys", "tampabay", "wva" */
-  /* amar nayegandhi 06/05/2002 */
+  /* this function defines the structure bath_ctl depending on the type.  
+   amar nayegandhi 06/05/2002 
+ */
   extern bath_ctl;
+
   if ( is_void( bath_ctl ) ) {
    bath_ctl = BATH_CTL();
   }
-  if (!type) {
-    type = rdline(prompt="Enter type of data set ('keys', 'tampabay' or 'wva'): ");
-  }
     
-  if (type == "keys") {
-     bath_ctl.laser = -2.4;
-     bath_ctl.water = -0.6;
-     bath_ctl.agc = -0.3;
-     bath_ctl.thresh = 4.0;
-     bath_ctl.first = 1;
-     bath_ctl.last  = 220;
-  } 
-  if (type == "tampabay") {
-     bath_ctl.laser = -2.4;
-     bath_ctl.water = -1.5;
-     bath_ctl.agc = -3.0;
-     bath_ctl.thresh = 4.0;
-     bath_ctl.first = 1;
-     bath_ctl.last  = 60;
-  }
-  if (type == "wva") {
-     bath_ctl.laser = -2.4;
-     bath_ctl.water = -7.5;
-     bath_ctl.agc = -5.0;
-     bath_ctl.thresh = 4.0;
-     bath_ctl.first = 1;
-     bath_ctl.last  = 50;
-  }
-  if (_ytk) {
-    tkcmd, swrite(format="send_bathctl_to_l1pro %3.1f %3.1f %3.1f %3.1f %3d %3d\n", bath_ctl.laser, bath_ctl.water, bath_ctl.agc, bath_ctl.thresh, bath_ctl.first,bath_ctl.last)
-}
-  return type;
-
+  if ( bath_ctl.last == 0 ) {
+    tkcmd, "bathctl"
+    tk_messageBox("You must first configure "+
+                  "the system for the water properties",
+                  "ok" );
+           
+   }
 }
 
 func show_bath_constants {
@@ -222,8 +209,11 @@ func show_bath_constants {
     rn = mindata(0).rn&0xffffff;
   pulse= mindata(0).rn>>24;
     ex_bath, rn, pulse,win=0,xfma=1,graph=1
-  }
-  
+  } else 
+    write, "That\'s meaningless without waveforms.\n"+
+           " Process a small segment for \'First Return Topo\' \n"+
+           " and then Use \'Pixel Waveform\' to examine the \n"+
+           " waveforms together with the settings." 
 }
 
 
@@ -296,16 +286,6 @@ func ex_bath( rn, i,  last=, graph=, win=, xfma= ) {
  extern bath_ctl;
 
  if (is_void(win)) win=4;
-
-  if ( is_void( bath_ctl) ) {
-    write, "You havn't defined a bath_ctl structure.  type help, bath_ctl for details"
-    return;
-  }
-
-    if ( bath_ctl.laser == 0.0 ) {
-    write, "You havn't defined a bath_ctl structure.  type help, bath_ctl for details"
-    return;
-   }
 
   rv = BATHPIX();			// setup the return struct
   rv.rastpix = rn + (i<<24);
