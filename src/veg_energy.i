@@ -1454,7 +1454,7 @@ func clean_lfpw (lfpw, beimg=, thresh=, min_elv=, max_elv=) {
   return lfpw_new
  }
 
-func compare_mets(outveg1, mets1, outveg2, mets2, idx=, win=) {
+func compare_mets(outveg1, mets1, outveg2, mets2, idx=, outwin=, inwin=, mselect=) {
 /* DOCUMENT compare_mets(outveg1, mets1, outveg2, mets2, idx=, win=)
    This function compares the vegetation metrics from 2 diff surveys.
 	amar nayegandhi 03/25/05.
@@ -1464,9 +1464,15 @@ func compare_mets(outveg1, mets1, outveg2, mets2, idx=, win=) {
 	outveg2 = lfpw array for mission 2
 	mets2 = vegetation metrics for mission 2
 	idx = metric index to compare
-	win = window number to plot the difference
+	outwin = window number to plot the difference
+ 	inwin = input window number to select region
+	mselect = set to 1 to select the region in window inwin.
+
+   OUTPUT:
+	Array outmets that contains the difference in the selected / overlapping region.
 */
 
+  extern idx1, idx2;
   if (is_void(idx)) idx = 1;
   if (is_void(win)) win = 1;
   
@@ -1488,6 +1494,17 @@ func compare_mets(outveg1, mets1, outveg2, mets2, idx=, win=) {
   xbin = xbin1; ybin = ybin1;
   if (xbin == ybin) bin = xbin;
 
+  if (mselect) {
+   // select rectangular region in window, inwin;
+   window, inwin;
+   m = mouse(-1,1);
+   m(1:4) *= 100;
+   mineast = min(m(1),m(3));
+   maxeast = max(m(1),m(3));
+   minnorth = min(m(2),m(4));
+   maxnorth = max(m(2),m(4));
+  } else { 
+   
   // now find the common area for both missions
   mineast1 = min(outveg1.east);
   minnorth1 = min(outveg1.north);
@@ -1503,17 +1520,17 @@ func compare_mets(outveg1, mets1, outveg2, mets2, idx=, win=) {
   maxeast = min(maxeast1,maxeast2);
   minnorth = max(minnorth1,minnorth2);
   maxnorth = min(maxnorth1, maxnorth2);
+  }
 
   idx1 = where((outveg1.east > mineast) & (outveg1.east < maxeast) & (outveg1.north > minnorth) & (outveg1.north < maxnorth));
   idx2 = where((outveg2.east > mineast) & (outveg2.east < maxeast) & (outveg2.north > minnorth) & (outveg2.north < maxnorth));
-  ngridx = (maxeast-mineast)/xbin;
-  ngridy = (maxnorth-minnorth)/ybin;
 
-  amar();
-  outmets = array(5,ngridx,ngridy);
-  omets1 = array(5,ngridx,ngridy);
-  omets2 = array(5,ngridx,ngridy);
-  
+  if (numberof(idx1) == numberof(idx2)) {
+    outmets = mets1(,idx1) - mets2(,idx2);
+  } else {
+     amar();
+  }
+ /*
   if (mineast != mineast1) {
     sxidx1 = (mineast-mineast1)/xbin;
     sxidx2 = 1;
@@ -1548,7 +1565,7 @@ func compare_mets(outveg1, mets1, outveg2, mets2, idx=, win=) {
   mets1 = mets1(sxidx1:exidx1,syidx1:eyidx1); 
   mets2 = mets2(sxidx2:exidx2,syidx2:eyidx2); 
 
-  outmets = mets1-mets2;
+ */
 
   return outmets;
 }
