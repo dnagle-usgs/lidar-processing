@@ -2,6 +2,8 @@
 #
 # $Id$
 
+  set ofname ""
+
 exp_send "#include \"geo_bath.i\"\r"; # load geobath.i code
 expect ">";
 
@@ -77,8 +79,17 @@ checkbutton .l1wid.bf4.2.cng -text "Convert to NAVD 88 (GEOID)" -variable cng
 
 Button .l1wid.bf5 -text "Begin Processing" -width 20 \
 		-command {
-		   exp_send "make_bathy, opath=\"$opath\", ofname=\"$ofname\", ext_bad_att=$xba, ext_bad_depth=$xbd, latlon = 1, llarr=\[$mnlon, $mxlon, $mnlat, $mxlat\];\r"
-		 }
+    if { ![ string equal  "" $ofname ] } {
+       exp_send "make_bathy, opath=\"$opath\", ofname=\"$ofname\",\
+         ext_bad_att=$xba, ext_bad_depth=$xbd, latlon = 1, llarr=\[$mnlon,\
+         $mxlon, $mnlat, $mxlat\];\r"
+    } else { 
+       tk_messageBox  -icon warning \
+        -message "You need to specify an output file name before\
+processing."  \
+        -type ok
+    }
+}
 
 
 
@@ -98,3 +109,6 @@ proc send_latlon_to_l1pro {minlon maxlon minlat maxlat} {
    set mnlat $minlat
    set mxlat $maxlat
 }
+
+
+

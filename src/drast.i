@@ -10,6 +10,7 @@ require, "sel_file.i"
 require, "ytime.i"
 require, "rlw.i"
 require, "eaarl_constants.i"
+require, "surface_topo.i"
 
 
 func set_depth_scale ( u ) {
@@ -65,7 +66,7 @@ func send_tans_to_sf( somd, pitch, roll, heading ) {
   last_somd = somd;
   }
 
-func ndrast( r, units=  ) {
+func ndrast( r, units= ) {
 /* DOCUMENT drast(r)
   display raster waveform data.  try this:
   rn = 1000
@@ -295,6 +296,48 @@ func show_wf( r, pix, win=, nofma=, cb=, c1=, c2=, c3= ) {
   if ( !is_void(win) ) {
     window( oldwin );
   }
+}
+
+
+
+func geo_rast(rn, fsmarks=   )  {
+/* DOCUMENT get_rast(rn, fsmarks=   )
+
+   Plot a geo-referrenced false color waveform image.
+  
+   Inputs:
+
+   rn		The raster number to display.
+   fsmarks= 	Define if you want the first surface range
+		values plotted over the waveforms.
+
+
+*/
+
+ winsave = window();
+ window,0
+ animate,0;
+fs = first_surface( start=rn, stop=rn+1, north=1); 
+fma; 
+sp = fs.elevation(, 1)/ 100.0;
+xm = -(fs.east(,1) - fs.meast(1,1))/100.0;
+rst = decode_raster( get_erast( rn=rn ) )
+for (i=1; i<120; i++ ) {
+  zz = array(245, 255);
+  z = (*rst(1).rx(i));
+  n = numberof( z )
+  if ( n > 0 ) {
+    zz(1:n) = z;
+  }  
+  C = .15
+  x = array( xm(i), 255);
+  y = span(  sp(i), sp(i)-255*C , 255 );
+  plcm, 255-zz,y,x, cmin=0, cmax=255, msize=2.0;
+}
+  if ( !is_void( fsmarks) ) 
+     plmk, sp, xm, marker=4, msize=.1, color="magenta"
+
+  window(winsave);
 }
 
 

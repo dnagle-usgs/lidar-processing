@@ -1,6 +1,11 @@
 /*
    $Id$
    W. Wright
+
+
+   7/6/02 WW
+	Minor changes to omit progress bar when fewer then 10
+	rasters to process.
 */
 
 require, "eaarl_constants.i"
@@ -29,7 +34,12 @@ func irg( b, e ) {
   len = e - b;
   a = array( RTRS,  len + 1 );
 
-  if ( _ytk ) {
+  if ( _ytk && ( len > 10 ) )
+	use_ytk = 1;
+  else
+	use_ytk = 0;
+
+  if ( use_ytk ) {
     tkcmd,"destroy .irg; toplevel .irg; set progress 0;"
     tkcmd,swrite(format="ProgressBar .irg.pb \
 	-fg green \
@@ -39,7 +49,8 @@ func irg( b, e ) {
 	-variable progress \
 	-height 30 \
 	-width 400", len );
-    tkcmd,"pack .irg.pb; update;" /*center_win .irg;*/
+    tkcmd,"pack .irg.pb; update;" 
+    tkcmd,"center_win .irg;"
   }
   for ( di=1, si=b; si<=e; di++, si++ ) {
     rp = decode_raster( get_erast( rn=si )) ;
@@ -48,12 +59,12 @@ func irg( b, e ) {
     a(di).irange = rp.irange;
     a(di).sa  = rp.sa;
    if ( (di % 10) == 0  )
-    if ( _ytk ) {
+    if ( use_ytk ) {
       tkcmd,swrite(format="set progress %d", di)
     } else 
        write,format="  %d/%d     \r", di, len
   }
-  if ( _ytk ) 
+  if ( use_ytk ) 
     tkcmd,"destroy .irg";
 
   return a;

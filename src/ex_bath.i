@@ -61,7 +61,8 @@ func ex_bath( rn, i, fma= ) {
   plg,a(,i,3),marks=0; 
   plmk,a(,i,1), marker=4, msize=.25, width=10.0;
   if ( bottom_idx > 0 ) 
-    plmk, bottom_pk, bottom_idx,msize=1.4, color="green", marker=4, width = 11.0
+    plmk, bottom_pk, bottom_idx,msize=1.4, color="green", 
+        marker=4, width = 11.0
   else
     plmk, bottom_pk, da(mxx),msize=1.0, color="red", marker=6
   plg,db,color="blue",width=1.0, marker=3, msize=5.0, marks=0; 

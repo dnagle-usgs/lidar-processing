@@ -5,9 +5,11 @@
    
     W. Wright 
 
+    7-4-02
+	WW Added tk based progress bar.
 
     5-14-02  
-	Added bath_ctl structure
+	WW Added bath_ctl structure
 	Changed thresh from fixed for all waveforms to self adjusting
 	based on how many surface pixels are saturated.  This is because
 	the subsurface noise goes up significantly when the surface is 
@@ -66,7 +68,8 @@ func run_bath( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) 
              rn = start-1;
 	     len = stop - start;
     } else {
-	     write, "Input parameters not correctly defined.  See help, run_bath.  Please start again.";
+	     write, "Input parameters not correctly defined.  "+
+	            "See help, run_bath.  Please start again.";
 	     return 0;
     }
  }
@@ -78,13 +81,36 @@ func run_bath( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) 
  //if ( graph != 0 ) 
 //	animate,1;
 
+  if ( _ytk ) {
+    tkcmd,"destroy .bathy; toplevel .bathy; set progress 0;"
+    tkcmd,swrite(format="ProgressBar .bathy.pb \
+	-fg blue \
+	-troughcolor magenta \
+	-relief raised \
+	-maximum %d \
+	-variable progress \
+	-height 30 \
+	-width 400", len );
+    tkcmd,"pack .bathy.pb; update; center_win .bathy;"
+  }
+
  if ( is_void(last) ) 
 	last = 250;
  if ( is_void(graph) ) 
 	graph = 0;
+
+ if ( _ytk ) 	// set update interval for progress indicator
+   udi = 10;
+ else 
+   udi = 25;
+
    for ( j=1; j<= len; j++ ) {
-     if (!(j%25)) write, format="%5d of %5d rasters completed \r",j,len;
-     if (j == len) write, format= "%5d of %5d rasters completed \r",j,len;
+     if ( (!(j % udi))  || ( j==len)) 
+        if ( _ytk) 
+  	  tkcmd,swrite(format="set progress %d", j)
+	else
+	  write, format="%5d of %5d rasters completed \r",j,len;
+/////     if (j == len) write, format= "%5d of %5d rasters completed \r",j,len;
      for (i=1; i<119; i++ ) {
        depths(i,j) = ex_bath( rn+j, i, last = last, graph=graph);
        if ( !is_void(pse) ) 
@@ -94,7 +120,10 @@ func run_bath( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) 
  //if ( graph != 0 ) 
 //	animate,0;
 
-  write,"\n"
+  if ( _ytk) 
+	tkcmd, "destroy .bathy";
+  else
+        write,"\n"
  
   return depths;
 }
@@ -199,23 +228,23 @@ func ex_bath( rn, i,  last=, graph= ) {
 
     See bath_ctl structure.
 
-    last              160    1:300     The last point in the waveform to consider.
-     laser	      -3.0  -1:-5.0    The exponent which describes the laser decay rate
-     water         -2.0  -0.1:-10.0 The exponent which best describes this water column
-       agc         -0.3  -0.1:-10.0 Agc scaling exponent.
-    thresh	    4.0   1:50      bottom peak value threshold
+      last        160      1:300     The last point in the waveform to consider.
+     laser         -3.0   -1:-5.0    The exponent which describes the laser decay rate
+     water         -2.0 -0.1:-10.0   The exponent which best describes this water column
+       agc         -0.3 -0.1:-10.0   Agc scaling exponent.
+    thresh	    4.0    1:50      Bottom peak value threshold
 
  Variables: 
-    nsat 		A list of saturated pixels in this waveform
-    numsat		Number of saturated pixels in this waveform
+    nsat 	      A list of saturated pixels in this waveform
+    numsat	      Number of saturated pixels in this waveform
     last_surface_sat  The last pixel saturated in the surface region of the
                       Waveform.
-    escale		The maximum value of the exponential pulse decay. 
-    laser_decay	The primary exponential decay array which mostly describes
+    escale	      The maximum value of the exponential pulse decay. 
+    laser_decay	      The primary exponential decay array which mostly describes
                       the surface return laser event.
     secondary_decay   The exponential decay of the backscatter from within the
                       water column.
-    agc		An array to equalize returns with depth so near surface 
+    agc		      An array to equalize returns with depth so near surface 
                       water column backscatter does't win over a weaker bottom signal.
     bias              A linear tilt which is subtracted from the waveform to
                       reduce the likelyhood of triggering on shallow noise.

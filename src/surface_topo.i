@@ -2,6 +2,9 @@
    $Id$
 
    W. Wright
+
+   7/7/02 WW
+	Added north= to first_surface. 
    
 */
 
@@ -155,11 +158,19 @@ data plot.
 
 
 
-func first_surface(start=, stop=, center=, delta=) {
-/* DOCUMENT first_surface,i,j
+func first_surface(start=, stop=, center=, delta=, north=) {
+/* DOCUMENT first_surface(start=, stop=, center=, delta=, north= )
 
-   Project the EAARL threshold trigger point to the surface. Start with
- raster "i" and stop at "j."  This returns an array of type "R" which
+   Project the EAARL threshold trigger point to the surface. 
+
+ Inputs:
+   start=	Raster number to start with.
+    stop=	Ending raster number.
+  center=	Center raster when doing before and after.
+   delta=	NUmber of rasters to process before and after.
+   north=       Ignore heading, and assume north.
+	
+ This returns an array of type "R" which
  will contain the xyz of the mirror "track point" and the xyz of the
  "first surface threshold trigger point" or "fsttp."  The "fsttp" is
  derived here by using the "irange" (integer range) value from the raw
@@ -198,14 +209,25 @@ atime   = a.soe - soe_day_start;
 
 write,"interpolating roll..."
 roll    =  interp( tans.roll,    tans.somd, atime ) 
+
 write,"interpolating pitch..."
 pitch   = interp( tans.pitch,   tans.somd, atime ) 
-write,"interpolating heading..."
-heading = interp( tans.heading, tans.somd, atime ) 
+
+if ( is_void( north ) ) {
+ write,"interpolating heading..."
+ heading = interp( tans.heading, tans.somd, atime ) 
+} else {
+ write,"interpolating North only..."
+ heading = interp( array( 0.0, dimsof(tans)(2) ), tans.somd, atime ) 
+
+}
+
 write,"interpolating altitude..."
 palt  = interp( pnav.alt,   pnav.sod,  atime )
+
 write,"Converting from lat/lon to UTM..."
 utm = fll2utm( pnav.lat, pnav.lon )
+
 write,"Interpolating northing and easting values..."
 northing = interp( utm(1,), pnav.sod, atime )
 easting  = interp( utm(2,), pnav.sod, atime )

@@ -18,6 +18,11 @@
 #	gray scale / color option
 #	add mark set and ability to write a new file list
 #
+#
+#     7/5/02 WW
+#	Fixed minor bugs which caused errors when canceling a file open
+#       and another when trying to move the slider with no file selected.
+#
 #	.75 Fixed linux 7.1/tk8.4 problem with the scale drag command.
 #	.74 has gps time_offset corrections.
 #	.73 has simple title command which can be embedded in the file list
@@ -158,8 +163,10 @@ menu .menubar.file.menu
   -command { set f [ tk_getOpenFile  -filetypes { {{List files} {.lst}} } -initialdir $dir ];   
 		set split_dir [split $f /]
 		set dir [join [lrange $split_dir 0 [expr [llength $split_dir]-2]] /]
+	      if { $f != "" } {
 		set nfiles [ load_file_list  $f ];
 		.slider configure -to $nfiles
+              }
            }                                 
 .menubar.file.menu add command -label "Exit" -underline 1 -command { exit }                                 
 menu .menubar.edit.menu
@@ -505,7 +512,7 @@ set cin $n
 	}
      #puts "$fn"
      } else {
-     set fn $dir/$fna($n)
+       if { [ catch {set fn $dir/$fna($n) } ] } return;
      }
 #  puts "$n  $fna($n)"
   .canf.can config -cursor watch

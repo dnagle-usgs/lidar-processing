@@ -415,6 +415,10 @@ button .rslider.bf2.exwf -text "Examine waveforms" -command {
   gstate $blist normal
 }
 
+button .rslider.bf2.georef -text "Geo Ref" -command {
+  global rn;
+  exp_send "geo_rast( $rn, fsmarks=1 );\r"
+}
 
 button .rslider.bf1.stop -text "Stop" -command {
  global tid play_flag rnf
@@ -492,6 +496,10 @@ trace variable thetime w sft
   pack \
 	.rslider.bf2.exwf \
 	-side left -expand 0 -fill both -anchor nw 
+
+  pack \
+	.rslider.bf2.georef \
+	-side left -expand 0 -fill both
 
 
   pack  \

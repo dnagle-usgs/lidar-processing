@@ -81,6 +81,12 @@ proc save_eaarl_options { fn opt_array } {
 }
 
 
+proc start_sf {} {
+ global data_path
+    exec "./sf_a.tcl" &
+    after 2000 " send sf_a.tcl \"set dir $data_path\" " 
+}
+
 proc edb_loaded { } {
  global edb 
  if { [ info exists edb ] == 0 } {
@@ -139,9 +145,13 @@ proc load_edb {} {
   if { [ lsearch -exact [ winfo interps ] sf_a.tcl ] != -1 } {
      send sf_a.tcl "set dir $data_path"
   } else {
-     tk_messageBox  \
-           -message "Digital Camera Playback Software isn\'t running.  " \
-           -type ok
+      set sfrun [ tk_messageBox  \
+           -message "Digital Camera Playback Software\
+ isn\'t running. Would you like to run it now?  " \
+           -type yesno ]
+      switch  -- $sfrun {
+	yes start_sf;
+      }
   }
 }
 
@@ -196,8 +206,7 @@ proc load_edb {} {
 #   Images
 #############
  $w.mb.images add command -label "1-Hz Digital Camera Images..." -command {
-    exec "./sf_a.tcl" &
-    after 2000 " send sf_a.tcl \"set dir $data_path\" " 
+    start_sf
  }
  $w.mb.images add command -label "Process Level 1 Lidar Data..." -command {
     source l1pro.ytk 
@@ -214,34 +223,26 @@ proc load_edb {} {
 #############
 
 
- $w.mb.nav add command -label "Flight Planning..." 
+ $w.mb.nav add command -label "Flight Planning..." \
+	-command { exp_send "#include \"nav.i\"\r" }
 
 
  set gga_color black
 
  exp_send "#include \"rbgga.i\"\r"
  menu $w.mb.nav.rbgga
- $w.mb.nav add cascade -label "Rbgga..."   -underline 2 \
-	-menu $w.mb.nav.rbgga
+ $w.mb.nav add command -label "Rbgga..."   -underline 2 \
+	-command rbgga_menu
+#####	-menu $w.mb.nav.rbgga
  $w.mb.nav add command -label "Rbtans..."   -underline 2 \
    -command { exp_send "#include \"rbtans.i\"\r" }
  $w.mb.nav add command -label "Rbpnav..."   -underline 2 \
    -command { exp_send "#include \"rbpnav.i\"\r" }
 
- $w.mb.nav.rbgga add command -label "Rbgga..." -command rbgga_menu
+#####  $w.mb.nav.rbgga add command -label "Rbgga..." -command rbgga_menu
 
- $w.mb.nav.rbgga add command -label "Plot gga data..." -command {
-   exp_send "show_gga_track, color=\"$gga_color\"\r"
- }
  set clist "black red blue green cyan magenta yellow white"
- foreach a $clist {
-   $w.mb.nav.rbgga add radiobutton -label [ string totitle $a ] \
-        -variable gga_color -value $a
- }
 
- $w.mb.nav.rbgga add command -label "Plot gga data..." -command {
-   exp_send "show_gga_track, color=\"$gga_color\"\r"
- }
 
 
 proc request_heading {psf inhd_count} {
