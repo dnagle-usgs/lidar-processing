@@ -279,6 +279,12 @@ proc start_sf {} {
     after 2000 " send sf_a.tcl \"set dir $data_path\" " 
 }
 
+proc start_cir {} {
+ global data_path
+    exec "./cir.tcl" &
+    after 2000 " send cir.tcl \"cirdir {$data_path\/cir}\" " 
+}
+
 proc edb_loaded { } {
  global edb 
  if { [ info exists edb ] == 0 } {
@@ -632,8 +638,11 @@ Button $w.show_grid -text "Show\nGrid Name" -command {
  $w.mb.images add command -label "Capture a display..." -command {
     scap
  }
- $w.mb.images add command -label "1-Hz Digital Camera Images..." -command {
+ $w.mb.images add command -label "1-Hz RGB Low-Res Images..." -command {
     start_sf
+ }
+ $w.mb.images add command -label "1-Hz CIR High-Res Images..." -command {
+    start_cir
  }
  $w.mb.images add command -label "Process Lidar Data..." -command {
     source "$src_path/l1pro.ytk"
@@ -731,8 +740,8 @@ Button $w.show_grid -text "Show\nGrid Name" -command {
 
 ## disabled unused menu options
 $w.mb.nav entryconfigure 1 -state normal
-$w.mb.images entryconfigure 4 -state disabled
 $w.mb.images entryconfigure 5 -state disabled
 $w.mb.images entryconfigure 6 -state disabled
+$w.mb.images entryconfigure 7 -state disabled
 
 

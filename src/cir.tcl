@@ -74,9 +74,18 @@ proc cfg_file { fn } {
 }
 
 
-proc cirdir { } {
+proc cirdir { path } {
  global settings
- set settings(path) [ tk_chooseDirectory -initialdir $settings(path) ]
+
+ if { $path == "" } {
+   set settings(path) [ tk_chooseDirectory -initialdir $settings(path) ]
+ } else {
+   if { [ catch { [glob $path/*-cir.tar 0] } ] } {
+     set settings(path) [ tk_chooseDirectory -initialdir $settings(path) -title "Select Data Path for CIR Images" ]
+   } else {
+     set settings(path) $path
+   }
+ }
  puts "Path: $settings(path) "
 
 # Setup the month day and year from the first tar file
@@ -299,7 +308,9 @@ proc prefs { } {
   .p.mb add cascade -label Edit -underline 0 -menu .p.mb.edit
   .p.mb add cascade -label Settings -underline 0 -menu .p.mb.settings
   .p.mb.file add command -label "Select directory..." \
-	-command cirdir 
+	-command {
+           cirdir ""
+         }
   .p.mb.file add command -label "Tar File..." \
 	-command {
     set tfn [ tk_getOpenFile -initialdir "/data" ]
