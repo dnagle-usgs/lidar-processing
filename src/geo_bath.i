@@ -685,7 +685,7 @@ func plot_bathy(depth_all, fs=, ba=, de=, fint=, lint=, win=, cmin=, cmax=, msiz
     indx = where((depth_all.north != 0) & (depth_all.depth !=0));
     plcm, depth_all.depth(indx)/100., depth_all.north(indx)/100., depth_all.east(indx)/100., cmin = cmin, cmax = cmax, msize = msize;
   }
-  colorbar, cmin, cmax;
+//////////////   colorbar, cmin, cmax, drag=1;
 }
 
  
