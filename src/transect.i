@@ -32,7 +32,7 @@ to recall the one before last, use:
 
 */
 
-func mtransect( fs, iwin=,owin=, w=, connect=, recall=, color=, xfma=, rcf_parms= ) {
+func mtransect( fs, iwin=,owin=, w=, connect=, recall=, color=, xfma=, rcf_parms=, rtn= ) {
 /* DOCUMENT mtransect( fs, iwin=,owin=, w=, connect=, recall=, color=, xfma= )
 
   mtransect allows you to "drag out" a line wihin an ALPS topo display
@@ -56,6 +56,9 @@ the one before that, etc. etc.
   recall=    Used to recall a previously generated transact line.
   color=    The starting color 0:7
    xfma=    Do an fma.
+   rtn=     Select return type where:
+            0 first return
+            1 veg last return
 
 Examples:
 
@@ -80,6 +83,8 @@ See also: transect, _transect_history
 
  extern _transect_history;
 
+
+ if ( is_void(rtn)   )    rtn = 0;		// default is first return
  if ( is_void(w))             w = 150;
  if ( is_void(connect)) connect = 0;
  if ( is_void(owin))       owin = 3;
@@ -102,12 +107,12 @@ See also: transect, _transect_history
   if ( recall > 0 ) recall = -recall;
   l = _transect_history(, recall);
  }
-  glst = transect( fs, l, connect=connect, color=color,xfma=xfma, rcf_parms=rcf_parms );
+  glst = transect( fs, l, connect=connect, color=color,xfma=xfma, rcf_parms=rcf_parms,rtn=rtn );
   return glst;
 }
 
-func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=, rcf_parms= ) {
-/* DOCUMENT transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color= )
+func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=, rcf_parms=,rtn= ) {
+/* DOCUMENT transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=,rtn= )
 
    fs       fs_all structure where you drew the line.
    l        the line (as given by mouse()).
@@ -118,16 +123,24 @@ func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=, rcf_p
    color=   0-7 
   rcf_parms[fw,np] = wherefw is the width of the filter, and np is the number
             of points on either side of the index to use as a jury.
+   rtn=     Select return type where:
+            0 first return
+            1 veg last return
 
  See also: mtransact, _transect_history
 
 */
 
+
+ if ( is_void(rtn)   )    rtn = 0;		// default is first return
  if ( is_void(lw)    )    lw = 150;		// search width, cm
  if ( is_void(color) ) color = 0;		// 0 is first color
  if ( is_void(owin)   )   owin = 3;
  window, owin;
- if ( !is_void(xfma) ) fma; 
+ if ( !is_void(xfma) ) { 
+   if ( xfma)  fma; 
+ }
+
 
 // determine the bounding box n,s,e,w coords
   n = l(2:4:2)(max);
@@ -170,6 +183,14 @@ func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=, rcf_p
   ry = y*ca + x*sa
 
   llst = where( abs(ry) < lw );
+rtn
+  if ( rtn == 0 ) 
+	  elevation = fs.elevation(*);
+  else if ( rtn == 1 ) 
+	  elevation = fs.lelv(*);
+
+//            1      2       3        4          5         6       7
+  clr = ["black", "red", "blue", "green", "magenta", "yellow", "cyan" ];
 
   window,owin
 ///  fma
@@ -181,8 +202,6 @@ func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=, rcf_p
    grow, ss,segs,[0]
 ///   ss
 
-//            1      2       3        4          5         6       7
-  clr = ["black", "red", "blue", "green", "magenta", "yellow", "cyan" ];
    for (i=1; i<numberof(ss); i++ ) {
      c = (color+i)&7;
      tb = fs.soe(*)(glst(llst)(ss(i)+1))%86400;
@@ -190,16 +209,18 @@ func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=, rcf_p
      td = abs(te - tb);
      hms = sod2hms( tb );
      write, format="soe = %6.2f:%-10.2f(%-4.2f) hms=%2d:%02d:%02d utc\n", 
+
                           tb, te, td, hms(1,), hms(2,), hms(3,);
+
      if ( xtime ) {
-     plmk, fs.elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0, 
+     plmk, elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0, 
            fs.soe(*)(llst)(ss(i)+1:ss(i+1))/100.0,color=clr(c), msize=msize
-       if ( connect ) plg, fs.elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0, 
+       if ( connect ) plg, elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0, 
                 fs.soe(*)(llst)(ss(i)+1:ss(i+1))/100.0,color=clr(c)
      } else {
      xx = rx(llst)(ss(i)+1:ss(i+1))/100.0;
      si = sort(xx);
-     yy = fs.elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0;
+     yy = elevation(glst(llst)(ss(i)+1:ss(i+1)))/100.0;
      if ( !is_void(rcf_parms) ) 
          si = si(moving_rcf(yy(si), rcf_parms(1), int(rcf_parms(2) ))); 
      plmk, yy(si), xx(si),color=clr(c), msize=msize
@@ -208,12 +229,12 @@ func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=, rcf_p
    }
  } else {
    xx = rx(llst)/100.0;
-   yy = fs.elevation(*)(glst(llst))/100.0;
+   yy = elevation(glst(llst))/100.0;
    si = sort(xx);
    if ( !is_void(rcf_parms) ) 
          si = si(moving_rcf(yy(si), rcf_parms(1), int(rcf_parms(2) ))); 
-  plmk, yy(si),xx(si), color=color, msize=msize, marker=1
-  if ( connect ) plg, yy(si), xx(si),color=color
+  plmk, yy(si),xx(si), color=clr(color), msize=msize, marker=1
+  if ( connect ) plg, yy(si), xx(si),color=clr(color)
  }
  return glst(llst);
 }
