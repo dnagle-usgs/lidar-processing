@@ -50,7 +50,16 @@ set auto_path "$auto_path /usr/lib"
 
 package require Img
 package require BWidget
-package require vfs::tar
+if { [ catch {package require vfs::tar} ] } {
+  wm withdraw .
+  tk_messageBox \
+	-message "Can't find vfs::tar package.\n\
+	You are using tk version $tk_version,\n\
+   Recommend you install the most recent stable version of Activetcl" \
+	-icon error \
+	-type ok
+	exit 1;
+}
 package require cmdline
 
 # ] End Script Initialization ######################
@@ -1111,6 +1120,7 @@ menu .mb.zoom
 .mb.options add command  -label "VCR Controls..." -underline 1  -command {
 	  if { [ catch { pack info .cf1 } ] } {
        pack .cf1 -side top -in . -fill x
+		 wm geometry . ""
 	  } else {
 	    pack forget .cf1
 	  }
@@ -1118,6 +1128,7 @@ menu .mb.zoom
 .mb.options add command  -label "GPS Info..." -underline 1  -command {
 	  if { [ catch { pack info .gps } ] } {
 		 pack_gps
+		 wm geometry . ""
 	  } else {
 	    pack forget .gps
 	  }
@@ -1125,6 +1136,7 @@ menu .mb.zoom
 .mb.options add command  -label "Image slider..." -underline 1  -command {
 	  if { [ catch { pack info .slider } ] } {
        pack .slider -side top -in . -fill x
+		 wm geometry . ""
 	  } else {
 	    pack forget .slider
 	  }
@@ -1133,6 +1145,7 @@ menu .mb.zoom
 	  if { [ catch { pack info .cf3 } ] } {
       pack .cf3    -side top -in . -fill x
 	   pack .cf1.plotpos -side left -in .cf1 -expand 1 -fill x
+		 wm geometry . ""
 	  } else {
 	    pack forget .cf3 .cf1.plotpos
 	  }
@@ -1140,6 +1153,7 @@ menu .mb.zoom
 .mb.options add command  -label "Speed, Gamma..." -underline 1  -command {
 	  if { [ catch { pack info .cf2 } ] } {
 	    pack .cf2 -side top
+		 wm geometry . ""
 	  } else {
 	    pack forget .cf2
 	  }
