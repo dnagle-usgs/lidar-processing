@@ -28,6 +28,14 @@ struct VEGPIX {
   char  nx;		// number of return pulses found
 };
 
+struct VEGPIXS {
+  int rastpix;		// raster + pulse << 24
+  short sa;		// scan angle  
+  short mx(10);		// range in ns of all return peaks from irange
+  short mv(10);		// intensities of all return peaks (max 10)
+  char  nx;		// number of return pulses found
+};
+
 struct VEGALL {
   long rn(120);		// raster + pulse << 24
   long north(120); 	//surface northing in centimeters
@@ -968,7 +976,7 @@ func clean_veg(veg_all) {
 }
 
 
-/*
+
 func ex_veg_all( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
 /* DOCUMENT ex_veg(raster_number, pulse_index)
 
@@ -983,7 +991,6 @@ func ex_veg_all( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
 */
 
 /*
- The following developed using 8-25-01 data at rn = 239269 data. 
  Check waveform samples to see how many samples are
  saturated. 
  The function checks the following conditions so far:
@@ -1002,17 +1009,14 @@ func ex_veg_all( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
     numsat		Number of saturated pixels in this waveform
     last_surface_sat  The last pixel saturated in the surface region of the
                       Waveform.
-    escale		The maximum value of the exponential pulse decay. 
-    laser_decay	The primary exponential decay array which mostly describes
-                      the surface return laser event.
     da                The return waveform with the computed exponentials substracted
-    db                The return waveform equalized by agc and tilted by bias.
 */
 
- extern ex_bath_rn, ex_bath_rp, a;
-  irange = a(where(rn==a.raster)).irange(i);
-  intensity = a(where(rn==a.raster)).intensity(i);
-  rv = VEGPIX();			// setup the return struct
+  extern ex_bath_rn, ex_bath_rp, a
+  //irange = a(where(rn==a.raster)).irange(i);
+  irange=0;
+  //intensity = a(where(rn==a.raster)).intensity(i);
+  rv = VEGPIXS();			// setup the return struct
   rv.rastpix = rn + (i<<24);
   if ( is_void( ex_bath_rn )) 
 	ex_bath_rn = -1;
@@ -1021,7 +1025,7 @@ func ex_veg_all( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
     aa  = array(float, 256, 120, 4);
 
   if ( ex_bath_rn != rn ) {  // simple cache for raster data
-     r = get_erast( rn= rn );
+    r = get_erast( rn= rn );
     rp = decode_raster( r );
     ex_bath_rn = rn;
     ex_bath_rp = rp;
@@ -1037,7 +1041,6 @@ func ex_veg_all( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
 	return rv;
 
   w  = *rp.rx(i, 1);  aa(1:n, i) = float( (~w+1) - (~w(1)+1) );
-///////  w2 = *rp.rx(i, 2);  aa(1:n, i,2) = float( (~w2+1) - (~w2(1)+1) );
 
  if (!(use_centroid)) {
    nsat = where( w == 0 );			// Create a list of saturated samples 
@@ -1071,17 +1074,17 @@ func ex_veg_all( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
   xr = where(  ((dd >= thresh) (dif)) == 1 ) 	//
   nxr = numberof(xr);
 
-if ( graph ) {
-window,4; fma;limits
-plmk, aa(1:n,i,1), msize=.2, marker=1, color="black";
-plg, aa(1:n,i,1);
-plmk, da, msize=.2, marker=1, color="black";
-plg, da;
-plg, dd-100, color="red"
-write, format="rn=%d; i = %d\n",rn,i
-///if ( nxr > 0 ) 
-///	plmk, a( xr(0),i,1), xr(0),msize=.3,marker=3
-}
+  if ( graph ) {
+    window,4; fma;limits
+    plmk, aa(1:n,i,1), msize=.2, marker=1, color="black";
+    plg, aa(1:n,i,1);
+    plmk, da, msize=.2, marker=1, color="black";
+    plg, da;
+    plg, dd-100, color="red"
+    write, format="rn=%d; i = %d\n",rn,i
+    ///if ( nxr > 0 ) 
+    ///	plmk, a( xr(0),i,1), xr(0),msize=.3,marker=3
+  }
 
   if ( is_void(last) ) 		// see if user specified the max veg
 	last = n;
@@ -1090,12 +1093,16 @@ write, format="rn=%d; i = %d\n",rn,i
 	n = last;
 
 
-  for (i=1;i<numberof(xr);i++) {
+  rv.nx = nxr;
+  for (j=1;j<=nxr;j++) {
     if (use_centroid || use_peak) {
        //assume 12ns to be the longest duration for a complete return
        retdist = 12;
        ai = 1; //channel number
-       if (xr(i)+retdist+1 > n) retdist = n - xr(i)-1;
+       if (xr(j)+retdist+1 > n) retdist = n - xr(j)-1;
+
+
+     /* //not checking for saturation as of now!!
        // check for saturation
        if ( numberof(where((w(xr(i):xr(i)+retdist)) == 0 )) >= 2 ) {
            // goto second channel
@@ -1104,9 +1111,6 @@ write, format="rn=%d; i = %d\n",rn,i
             w  = *rp.rx(i, ai);  aa(1:n, i,ai) = float( (~w+1) - (~w(1)+1) );
             da = aa(1:n,i,ai);
             dd = aa(1:n, i, ai) (dif);
-            // not using channel 3 because of some error in the digitizer for the blue channel in 
-            // asis surveys
-            /*
             if ( numberof(where((w(xr(i):xr(i)+retdist)) == 0 )) >= 2 ) {
               // goto third channel
             //  write, format="trying channel 3, rn = %d, i = %d\n",rn, i
@@ -1119,26 +1123,26 @@ write, format="rn=%d; i = %d\n",rn,i
                  ai = 0;
               }
 	    }
-           */
+           
             if ( numberof(where((w(xr(i):xr(i)+retdist)) == 0 )) >= 2 ) {
                  write, format="all 3 channels saturated... giving up!, rn=%d, i=%d\n",rn,i
                  ai = 0;
             }
 	}
+      */
+
+       if ( numberof(where((w(xr(j):xr(j)+retdist)) == 0 )) >= 2 ) {
+ 		write, format="Channel 1 saturated for this peak, rn = %d, i = %d\n", rn, i;
+  	        ai = 0;
+       }
 
        if (retdist < 5) ai = 0; // this eliminates possible noise pulses.
-       if (!ai) {
-        rv.sa = rp.sa(i);
-   	rv.mx0 = -1;
-	rv.mv0 = -10;
-   	rv.mx1 = -1;
-	rv.mv1 = -11;
-	rv.nx  = -1;
-        return rv
-       }
-       if (pse) pause, pse;
 
-       if ( graph && ai >= 2) {
+       if (ai) {
+         
+         if (pse) pause, pse;
+
+         if ( graph && ai >= 2) {
          //window,4; fma
          plmk, aa(1:n,i,ai), msize=.2, marker=1, color="yellow";
          plg, aa(1:n,i,ai), color="yellow";
@@ -1147,9 +1151,10 @@ write, format="rn=%d; i = %d\n",rn,i
          plg, dd-100, color="blue"
 	 pltit = swrite(format="ai = %d\n", ai);
 	 pltitle, pltit;
-       }
+         }
        
-     if (use_centroid && !use_peak) {
+       /*
+        if (use_centroid && !use_peak) {
 
       
        // find where the bottom return pulse changes direction after its trailing edge
@@ -1191,18 +1196,18 @@ write, format="rn=%d; i = %d\n",rn,i
           mv0 = -10;
        } 
     }
+    */
     
     if (!use_centroid && use_peak) {
-       // if within 3 ns from xr(0) we find a peak, we can assume this to be noise related and try again using xr(0) from the first positive difference after the last negative difference.
-       nidx = where(dd(xr(0):xr(0)+3) < 0);
+       // if within 3 ns from xr(j) we find a peak, we can assume this to be noise related and try again using xr(j) from the first positive difference after the last negative difference.
+       nidx = where(dd(xr(j):xr(j)+3) < 0);
        if (is_array(nidx)) {
-         xr(0) = xr(0) + nidx(1);
-	 if (xr(0)+retdist+1 > n) retdist = n - xr(0)-1;
+         xr(j) = xr(j) + nidx(1);
+	 if (xr(j)+retdist+1 > n) retdist = n - xr(j)-1;
        }
-      // using trailing edge algorithm for bottom return
        // find where the bottom return pulse changes direction after its trailing edge
-       idx = where(dd(xr(0)+1:xr(0)+retdist) > 0);
-       idx1 = where(dd(xr(0)+1:xr(0)+retdist) < 0);
+       idx = where(dd(xr(j)+1:xr(j)+retdist) > 0);
+       idx1 = where(dd(xr(j)+1:xr(j)+retdist) < 0);
        if (is_array(idx1) && is_array(idx)) {
         //write, idx;
         //write, idx1;
@@ -1216,77 +1221,29 @@ write, format="rn=%d; i = %d\n",rn,i
 	ftrail = idx1(1);
 	ltrail = retdist;
 	//halftrail = 0.5*(ltrail - ftrail);
-	mx0 = irange+xr(0)+idx1(1)-ctx(1);
-	mv0 = aa(int(xr(0)+idx1(1)),i,ai);
+	mx = irange+xr(j)+idx1(1)-ctx(1);
+	mv = aa(int(xr(j)+idx1(1)),i,ai);
        } else {
-        mx0 = -10;
-	mv0 = -10;
+        mx = -10;
+	mv = -10;
        }
     }
 
-   } else { //donot use centroid or trailing edge
-      mx0 = irange+aa( xr(0):xr(0)+5, i, 1)(mxx) + xr(0) - 1;	  // find bottom peak now
-      mv0 = aa( mx0, i, 1);	          
-    }
-    // stuff below is for mx1 (first surface in veg).
-
-    if (use_centroid || use_peak) {
-       np = numberof ( *rp.rx(i,1) );      // find out how many waveform points
-                                        // are in the primary (most sensitive)
-                                        // receiver channel.
-
-       if ( np < 2 )                         // give up if there are not at
-              return;                            // least two points.
-
-       if ( np > 12 ) np = 12;               // use no more than 12
-       if ( numberof(where(  ((*rp.rx(i,1))(1:np)) == 0 )) <= 2 ) {
-         cv = cent( *rp.rx(i, 1 ) );
-       } else if ( numberof(where(  ((*rp.rx(i,2))(1:np)) == 0 )) <= 2 ) {
-         cv = cent( *rp.rx(i, 2 ) ) + 0.36;
-         cv(3) += 300;
-       } else {
-         cv = cent( *rp.rx(i, 3 ) ) + 0.23;
-         cv(3) += 600;
-       }
-
-       if (cv(1) < 10000) {
-          mx1 = irange+cv(1)-ctx(1);
-       } else {
-          mx1 = -10;
-       }
-       mv1 = cv(3);
     } else {
-      mx1 = aa( xr(1):xr(1)+5, i, 1)(mxx) + xr(1) - 1;	  // find surface peak now
-      mv1 = aa( mx1, i, 1);	          
+       print, format="because ai = 0 for %d\n",j
+       mx = -10;
+       mv = -10;
+    }
+   } else { //donot use centroid or trailing edge
+      mx = irange+aa( xr(j):xr(j)+5, i, 1)(mxx) + xr(0) - 1;	  // find bottom peak now
+      mv = aa( mx(j), i, 1);	          
     }
 
-    // make mx1 be the irange value and mv1 be the intensity value from variable 'a'
-    // edit out tx/rx dropouts
-    el = (int(irange) & 0xc000 ) == 0 ;
-    irange *= el;
-    //mx1 = irange;
-    //mv1 = intensity;
-    if ( graph ) {
-         plmk, mv1, mx1, msize=.5, marker=7, color="blue", width=1
-         plmk, mv0, mx0, msize=.5, marker=7, color="red", width=1
-    }
+
     if (pse) pause, pse;
-        rv.sa = rp.sa(i);
-   	rv.mx0 = mx0;
-	rv.mv0 = mv0;
-   	rv.mx1 = mx1;
-	rv.mv1 = mv1;
-	rv.nx  = numberof(xr);
-	return rv;
+    rv.mx(j) = mx;
+    rv.mv(j) = mv;
   }
-  else {
-        rv.sa = rp.sa(i);
-   	rv.mx0 = -1;
-	rv.mv0 = aa(max,i,1);
-   	rv.mx1 = -1;
-	rv.mv1 = rv.mv0;
-	rv.nx  = numberof(xr);
-	return rv;
-  }
+ return rv
 }
-*/
+

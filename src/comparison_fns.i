@@ -36,13 +36,15 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, elv=, read_file=) {
 
    extern i, no, be_avg_pts, be, kings_elv, be_elv, diff1, diff2;
    if (!buf) buf = 500 // default to 5 m buffer side.
-   indx = where(((kings(1,) >= rgn(1)) &
+   if (rgn) {
+     indx = where(((kings(1,) >= rgn(1)) &
                  (kings(1,) <= rgn(2))) & 
 	        ((kings(2,) >= rgn(3)) &
 		 (kings(2,) <= rgn(4))));
-   kings = kings(,indx);
+     kings = kings(,indx);
+   }
 
-   extern i, no, be_avg_pts, be, kings_elv, be_elv, diff1, diff2;
+   //extern i, no, be_avg_pts, be, kings_elv, be_elv, diff1, diff2;
 
  ncount=0;
 
