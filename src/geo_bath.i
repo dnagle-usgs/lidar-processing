@@ -40,7 +40,7 @@ struct GEOALL {
   long rn (120); 	//contains raster value
   long north(120); 	//surface northing
   long east(120);	//surface east
-  long sr2(120);	//slant range from the first to the last return as if in air in centimeters
+  short sr2(120);	//slant range from the first to the last return as if in air in centimeters
   long elevation(120); //first surface elevation in centimeters
   long mnorth(120);	//mirror northing
   long meast(120);	//mirror easting
@@ -99,19 +99,22 @@ for (i=1; i<=len; i=i+1) {
   geodepth(i).rn = rrr(i).raster;
   geodepth(i).north = rrr(i).north;
   geodepth(i).east = rrr(i).east;
-  if ((is_void(bathy)) || (is_void(write_all))) {
-  geodepth(i).depth = short(-d(,i).idx * CNSH2O2X *100);
+  if ((is_void(bathy))) {
+    geodepth(i).depth = short(-d(,i).idx * CNSH2O2X *100);
+    if (write_all) geodepth(i).bath = long((-d(,i).idx * CNSH2O2X *100) + rrr(i).elevation);
   } else {
    geodepth(i).bath = long((-d(,i).idx * CNSH2O2X *100) + rrr(i).elevation);
    geodepth(i).depth = short(-d(,i).idx * CNSH2O2X *100);
   }
   geodepth(i).sa = d(,i).sa
   geodepth(i).bottom_peak = d(,i).bottom_peak;
+  geodepth(i).first_peak = d(,i).bottom_peak;
   if (write_all) {
+    geodepth(i).elevation = rrr(i).elevation;
     geodepth(i).mnorth = rrr(i).mnorth
     geodepth(i).meast = rrr(i).meast
     geodepth(i).melevation = rrr(i).melevation;
-    geodepth(i).sr2 =long(-d(,i).idx * NS2MAIR*100); 
+    geodepth(i).sr2 =short(d(,i).idx); 
   }
   if (correct == 1) {
      // search for erroneous elevation values
@@ -121,7 +124,7 @@ for (i=1; i<=len; i=i+1) {
        geodepth(i).east(indx) = 0;
      }
 
-     indx = where(rrr(i).elevation >  10000); //changed
+     indx = where(rrr(i).elevation >  10000); 
      // these are values above any defined reference plane and will mostly be the erroneous points defined at the height of the aircraft.
      if (is_array(indx) == 1) {
        geodepth(i).north(indx) = 0;
@@ -352,32 +355,42 @@ _write, f, 12, num_rec;
 close, f;
 }
 
-func write_geoall (geoall, opath=, ofname=, type=) {
+func write_geoall (geoall, opath=, ofname=, type=, append=, correct=) {
 
 //this function writes a binary file containing georeferenced EAARL data.
 // input parameter geoall is an array of structure GEOALL, defined by the display_bath function.
 // amar nayegandhi 05/07/02.
 fn = opath+ofname;
 
-/* open file to read/write (it will overwrite any previous file with same name) */
-f = open(fn, "w+b");
+if (is_void(append)) {
+  /* open file to read/write if append keyword not set(it will overwrite any previous file with same name) */
+  f = open(fn, "w+b");
+} else {
+  /*open file to append to existing file.  Header information will not be written.*/
+  f = open(fn, "r+b");
+}
 
-if (is_void(type)) type = 4;
-nwpr = long(12);
+if (is_void(append)) {
+  /* write header information only if append keyword not set */
+  if (is_void(type)) type = 4;
+  nwpr = long(12);
 
-rec = array(long, 4);
-/* the first word in the file will decide the endian system. */
-rec(1) = 0x0000ffff;
-/* the second word defines the type of output file */
-rec(2) = type;
-/* the third word defines the number of words in each record */
-rec(3) = nwpr;
-/* the fourth word will eventually contain the total number of records.  We don't know the value just now, so will wait till the end. */
-rec(4) = 0;
+  rec = array(long, 4);
+  /* the first word in the file will decide the endian system. */
+  rec(1) = 0x0000ffff;
+  /* the second word defines the type of output file */
+  rec(2) = type;
+  /* the third word defines the number of words in each record */
+  rec(3) = nwpr;
+  /* the fourth word will eventually contain the total number of records.  We don't know the value just now, so will wait till the end. */
+  rec(4) = 0;
 
-_write, f, 0, rec;
+  _write, f, 0, rec;
 
-byt_pos = 16; /* 4bytes , 4words */
+  byt_pos = 16; /* 4bytes , 4words */
+} else {
+  byt_pos = sizeof(f);
+}
 num_rec = 0;
 
 
@@ -395,7 +408,7 @@ for (i=1;i<=len;i++) {
      _write, f, byt_pos, geoall(i).east(indx(j));
      byt_pos = byt_pos + 4;
      _write, f, byt_pos, geoall(i).sr2(indx(j));
-     byt_pos = byt_pos + 4;
+     byt_pos = byt_pos + 2;
      _write, f, byt_pos, geoall(i).elevation(indx(j));
      byt_pos = byt_pos + 4;
      _write, f, byt_pos, geoall(i).mnorth(indx(j));
@@ -417,7 +430,67 @@ for (i=1;i<=len;i++) {
 }
 
 /* now we can write the number of records in the 3rd element of the header array */
-_write, f, 12, num_rec;
+if (is_void(append)) {
+  _write, f, 12, num_rec;
+  write, format="Number of records written = %d \n", num_rec
+} else {
+  num_rec_old = 0L
+  _read, f, 12, num_rec_old;
+  num_rec = num_rec + num_rec_old;
+  write, format="Number of old records = %d \n",num_rec_old;
+  write, format="Number of new records = %d \n",(num_rec-num_rec_old);
+  write, format="Total number of records written = %d \n",num_rec;
+  _write, f, 12, num_rec;
+}
 
 close, f;
 }
+
+func compute_depth(data_ptr=, ipath=,fname=,ofname=) {
+    
+    if ((!is_void(ipath)) && (is_void(fname))) {
+       /* extract all data with *.bin extension from directory*/
+       data_ptr = read_yfile(ipath);
+    }
+
+    if ((!is_void(ipath)) && (!is_void(fname))) {
+      /* extract data from file(s) */
+      data_ptr = read_yfile(ipath, fname_arr=fname);
+    }
+
+    nfiles = numberof(data_ptr);
+
+    for (i=1;i<=nfiles;i++) {
+      data = *data_ptr(i);
+      // define the altitude for the 3rd point in poi
+      pa = data.melevation - data.elevation;
+
+      // now define H, the laser slant range using 3D version of Pytagorean Theorem
+      H= sqrt((data.mnorth - data.north)^2 + (data.meast - data.east)^2 + (data.melevation - data.elevation)^2); 
+
+      // the angle of incidence that the laser intercepts the surface is:
+      phi_air = acos(pa/H);
+
+      // using Snells law:
+      phi_water = asin(sin(phi_air)/KH2O);
+      // where KH20 is the index of refraction at the operating wavelength of 532nm.
+
+      // finally, depth D is given by:
+      D = -(data.sr2*CNSH2O2X*100)*cos(phi_water);
+      //overwrite existing depths with newly calculated depths
+      data.depth = D;
+      data.bath = D+data.elevation;
+      if (!is_void(ofname)) {
+        //write current data out to output file ofname
+	if (i==1) {
+	write_geoall, data, opath=ipath, ofname=ofname;
+	} else {
+	write_geoall, data, opath=ipath, ofname=ofname, append=1;
+	}
+
+      }
+	
+   }
+   return &data
+}
+

@@ -22,14 +22,15 @@ struct GEO {
      long rn;
      long north;
      long east;
-     long bath;
+     long sr2;
      long elevation;
      long mnorth;
      long meast;
      long melevation;
-     short depth;
      short bottom_peak;
-     short sa;
+     short first_peak;
+     long bath;
+     short depth;
      }
 
 func read_yfile (path, fname_arr=) {
@@ -70,6 +71,7 @@ for (i=0;i<n;i++) {
   _read, f, 8, nwpr;
   //read the total number of records
   _read, f, 12, recs;
+  write, format="%d records to be read\n",recs;
 
   byt_pos = 16;
        
@@ -141,6 +143,7 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
     rn = 0L;
     north = 0L;
     east = 0L;
+    sr2 = 0S;
     bath = 0L;
     elevation=0L;
     mnorth=0L;
@@ -148,6 +151,7 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
     melevation=0L;
     depth = 0S;
     bottom_peak = 0S;
+    first_peak = 0S;
     sa = 0S;
     data = array(GEO, recs); 
     for (i=0;i<recs;i++) {
@@ -160,9 +164,9 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
        _read, f, byt_pos, east;
        data(i).east = east;
        byt_pos = byt_pos + 4;
-       _read, f, byt_pos, bath;
-       data(i).bath = bath;
-       byt_pos = byt_pos + 4;
+       _read, f, byt_pos, sr2;
+       data(i).sr2 = sr2;
+       byt_pos = byt_pos + 2;
        _read, f, byt_pos, elevation;
        data(i).elevation = elevation;
        byt_pos = byt_pos + 4;
@@ -175,14 +179,17 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
        _read, f, byt_pos, melevation;
        data(i).melevation = melevation;
        byt_pos = byt_pos + 4;
-       _read, f, byt_pos, depth;
-       data(i).depth = depth;
-       byt_pos = byt_pos + 2;
        _read, f, byt_pos, bottom_peak;
        data(i).bottom_peak = bottom_peak;
        byt_pos = byt_pos + 2;
-       _read, f, byt_pos, sa;
-       data(i).sa = sa;
+       _read, f, byt_pos, first_peak;
+       data(i).first_peak = first_peak;
+       byt_pos = byt_pos + 2;
+       _read, f, byt_pos, bath;
+       data(i).bath = bath;
+       byt_pos = byt_pos + 4;
+       _read, f, byt_pos, depth;
+       data(i).depth = depth;
        byt_pos = byt_pos + 2;
 
     }

@@ -59,7 +59,7 @@ func data_in_win(a, data_arr) {
 
   // there can be a maximum of xlen*ylen/2 points in this window
   len = int(xlen*ylen/2);
-  depth_win = array(BATH, len);
+  depth_win = array(GEO, len);
 
   
   fir_indx=1;
