@@ -94,6 +94,8 @@ See also: transect, _transect_history
  if ( is_void(color))      color= 1;
  if ( is_void(rcf_parms))   rcf_parms = [];
 
+ window,owin;
+ lmts = limits();
  window,iwin; 
  if ( is_void(recall) ) {
 // get the line coords with the mouse and convert to cm
@@ -108,6 +110,11 @@ See also: transect, _transect_history
   l = _transect_history(, recall);
  }
   glst = transect( fs, l, connect=connect, color=color,xfma=xfma, rcf_parms=rcf_parms,rtn=rtn, owin=owin );
+  if ( is_void(recall) ) {
+        limits
+	limits,,, cbar.cmin, cbar.cmax
+  } else 
+	limits(lmts(1),lmts(2), lmts(3), lmts(4)); 
   return glst;
 }
 
@@ -241,8 +248,8 @@ func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=, rcf_p
   plmk, yy(si),xx(si), color=clr(color), msize=msize, marker=1
   if ( connect ) plg, yy(si), xx(si),color=clr(color)
  }
- limits
- limits,,, cbar.cmin, cbar.cmax
+// limits
+// limits,,, cbar.cmin, cbar.cmax
  return glst(llst);
 }
 
