@@ -2,7 +2,7 @@
    $Id$
 */
 write, "$Id$" 
-func colorbar(cmin, cmax, drag=, delta=, landscape=)
+func colorbar(cmin, cmax, drag=, delta=, landscape=, units=, datum=)
 /* DOCUMENT colorbar
             colorbar, cmin, cmax, drag=
      draw a color bar to the right of the plot.  If CMIN and CMAX
@@ -53,9 +53,19 @@ yoff = 0.0;
     pli, span(0,1,200)(-,), x(1)+xoff,y(4)+yoff,x(4)+xoff,y(2)+yoff, legend="";
     plg, y,x, closed=1, marks=0,color="fg",width=1,type=1,legend="";
     plg, dy/2+y(1), xx, color="fg", width=3, type = 1, legend="";
-    plt, swrite(format=" %5.2f", cmin), x(1)+xoff,y(1)+yoff, justify="CT";
-    plt, swrite(format=" %5.2f", cmax), x(1)+xoff,y(2)+yoff, justify="CB";
     plt, swrite(format="%5.2f", cmax-cmin), x(3)+0.002,y(3)-dpy/2, justify="CA", orient=3;
+    if (!units) {
+    	plt, swrite(format=" %5.2f", cmin), x(1)+xoff-0.03,y(1)+yoff, justify="CT";
+    	plt, swrite(format=" %5.2f", cmax), x(1)+xoff-0.03,y(2)+yoff, justify="CB";
+    }
+    if (units) { 
+    	plt, swrite(format=" %5.2f %s", cmin, units), x(1)+xoff-0.03,y(1)+yoff, justify="CT";
+    	plt, swrite(format=" %5.2f %s", cmax, units), x(1)+xoff-0.03,y(2)+yoff, justify="CB";
+    }
+    if (datum) {
+	plt, datum, x(1)+xoff-0.03,y(1)+yoff-0.03, justify="CT";
+	plt, "elevations", x(1)+xoff-0.03,y(1)+yoff-0.05, justify="CT";	
+    }
   } else {
     pli, span(0,1,200)(,-), x(1),y(4),x(4),y(2), legend="";
     plg, y,x, closed=1, marks=0,color="fg",width=1,type=1,legend="";
