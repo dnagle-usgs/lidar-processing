@@ -33,9 +33,18 @@ require, "irg.i"
 
 
 
+/* 
+   Range_bias
 
-REV = 8000;		// Counts for 360 degrees of scan angle
-range_bias  = -6.0;	// Laser range measurement bias.
+   Range_bias computed from 7-29-02 ground test.  The EAARL data was taken from
+   pulses 8716:10810 which was captured from a static target at 101.1256 meters
+   measured distance.  The EAARL centroid range values were averaged and then 
+   the actual slope distance to the target subtracted to yield the range_bias. 
+   The rms noise on the range values used to compute the range_bias was 3.19cm
+*/
+
+        REV = 8000;	// Counts for 360 degrees of scanner rotation
+range_bias  =  0.7962;  // Laser range measurement bias.
  scan_bias  =  0.0;	// The mounting bias of the scan encoder.
  roll_bias  = -1.45;	// The mounting bias of the instrument in the plane.
  pitch_bias = -0.5;	// pitch mounting bias
@@ -46,7 +55,9 @@ d2r = pi/180.0;		// Convert degrees to radians.
 /*
    Structure used to hold laser return vector information. All the 
  values are in air-centimeters. 
+
 */
+
  
 struct R {
  long raster(120);       // contains raster # and pulse number in msb
