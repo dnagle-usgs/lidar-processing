@@ -938,22 +938,36 @@ proc rcf_region {} {
   
 
 
-ComboBox .l1wid.bf4.1.d -text "Define Region using..." -width 22 -values "Rubberband-Box Points-in-Polygon Line-Segment Enter_Rectangular_Coordinates Multiple-PIPs" -helptext "Select region to process using any of the following methods" -editable 0 -modifycmd {
+ComboBox .l1wid.bf4.1.d -text "Define Region using..." -width 22 -values \
+       {
+	 Rubberband\ Box\
+	 Points\ in\ Polygon\
+	 Line\ Segment\
+	 Enter\ Rectangular\ Coordinates\
+	 Multiple\ PIPs\
+       }\
+	 -helptext "Select region to process using any of the following methods" -editable 0 \
+   -modifycmd {
+    
     set defr [.l1wid.bf4.1.d getvalue]
     puts $defr
     if {$defr == 0} {
-       	tk_messageBox  -icon info \
+       	set result [tk_messageBox  -icon info \
         -message "Drag a Rectangular Box in Window $_map(window) to define region." \
-        -type ok -title "Message"
-       exp_send "q = gga_win_sel(2, win=$_map(window));\r"
-       expect ">"
+        -type okcancel -title "Message"]
+        if {$result == "ok"} {
+         exp_send "q = gga_win_sel(2, win=$_map(window));\r"
+         expect ">"
+        }
     }
     if {$defr == 1} {
-       	tk_messageBox  -icon info \
+       	set result [tk_messageBox  -icon info \
         -message "Draw a Polygon in Window $_map(window) to define a region using a series of left mouse clicks.  To complete the polygon, middle mouse click OR <Ctrl> and left mouse click." \
-        -type ok -title "Message"
-       exp_send "q = gga_pip_sel(1, win=$_map(window));\r"
-       expect ">"
+        -type okcancel -title "Message"]
+        if {$result == "ok"} {
+         exp_send "q = gga_pip_sel(1, win=$_map(window));\r"
+         expect ">"
+        }
     }
     if {$defr == 2} {
        exp_send "q = gga_click_sel(1, win=$_map(window));\r"
@@ -1202,8 +1216,12 @@ ComboBox .l1wid.bf4.1.p -text "Process For..." -width 20 \
 	-helptext "Process Data for any of the following" \
 	-editable 0 \
 	-values $l1pro_data(processing_mode)
-
 .l1wid.bf4.1.p setvalue first
+
+Label .l1wid.bf4.1.lw -text "in Win:"
+SpinBox .l1wid.bf4.1.sw -justify center -range {0 7 1} \
+	-width 2 -textvariable _map(window)
+
 
 #checkbutton .l1wid.bf4.2.cll -text "Convert UTM\nto Lat Lon" -variable cll 
 # checkbutton .l1wid.bf4.2.cng -text "Convert to\nNAVD 88 (GEOID)" -variable cng 
@@ -1216,9 +1234,10 @@ Button .l1wid.bf45.p.1 -text "Plot" -command {
  plot_fltlines 0
 }
 
+Label .l1wid.bf45.p.14 -text "Variable:"
 ComboBox .l1wid.bf45.p.15  -values \
   	$varlist \
-	-helptext "Select any one of the following variables to plot" \
+	-helptext "Select any one of the following variables " \
 	-editable 0 \
 	-modifycmd {
            global cmin cmax markerv msize varlist cbv
@@ -1315,10 +1334,12 @@ proc save_plot_settings {pvar_no} {
   set plist(idx$pvar_no,ptype) $ptype
   set plist(idx$pvar_no,dtype) $dtype
 }
+
 Label .l1wid.bf45.p.2 -text "in Win:"
 SpinBox .l1wid.bf45.p.3 -justify center -range {0 7 1} \
 	-width 2 -textvariable win_no 
 
+Label .l1wid.bf45.p.25 -text "Mode:"
 ComboBox .l1wid.bf45.p.5 -text "Display Type" -width 20 -values { \
 	First\ Return\ Topography \
         Submerged\ Topography \
@@ -1842,15 +1863,28 @@ LabelFrame  .l1wid.bf45.sc.f -relief sunken -borderwidth 3 -text "Marker:"
 	-helptext "Enter Marker Type (See help, marker for more details)" \
  	-width 5
 
-LabelFrame .l1wid.bf45.sc.sk -relief groove -borderwidth 3 -text "Skip:"
-  SpinBox .l1wid.bf45.sc.sk.skip \
+frame .l1wid.bf45.sc.g 
+LabelFrame .l1wid.bf45.sc.g.sk -relief groove -borderwidth 3 -text "Skip:"
+  SpinBox .l1wid.bf45.sc.g.sk.skip \
 	-range {1 1000 1} \
 	-textvariable skip \
 	-helptext "Enter plot points to skip" \
 	-width 5
 
- pack  .l1wid.bf45.sc.f.msize .l1wid.bf45.sc.f.marker -side top
- pack .l1wid.bf45.sc.sk.skip 
+checkbutton .l1wid.bf45.sc.g.fma -text "Auto Fma" -variable l1pro_fma 
+
+Button .l1wid.bf45.sc.pl -text "Plot" -width 6 -height 2 -bd 5 -command {
+ plot_fltlines 0
+}
+ pack \
+	.l1wid.bf45.sc.f.msize \
+	.l1wid.bf45.sc.f.marker \
+	 -side top
+ pack .l1wid.bf45.sc.g.sk.skip
+ pack \
+	.l1wid.bf45.sc.g.fma \
+	.l1wid.bf45.sc.g.sk \
+	-side top -pady 5 
 
 
 
@@ -1911,14 +1945,21 @@ LabelFrame .l1wid.bf45.sc.sk -relief groove -borderwidth 3 -text "Skip:"
 #pack .l1wid.bf3.lat1 .l1wid.bf3.lon .l1wid.bf3.lat2 -side top -pady 5
 #pack  .l1wid.bf4.1.cb .l1wid.bf4.1.xba .l1wid.bf4.1.xbd .l1wid.bf4.1.xbv -side top -padx 20 -pady 5
 #pack  .l1wid.bf4.1 -side top -padx 20 -pady 5
-pack .l1wid.bf4.1.d .l1wid.bf4.1.p -side left -padx 5
+pack .l1wid.bf4.1.d .l1wid.bf4.1.p .l1wid.bf4.1.lw .l1wid.bf4.1.sw -side left -padx 5
 #pack  .l1wid.bf4.2.cll .l1wid.bf4.2.cen -side left -padx 3
 pack  .l1wid.bf4.2.cen .l1wid.bf4.2.proc -side left -padx 10
 pack .l1wid.bf4.1 .l1wid.bf4.2 -side top -pady 10
 ####pack .l1wid.bf5.1  -side right -padx 35 
-pack .l1wid.bf1 .l1wid.bf2 .l1wid.bf3 .l1wid.bf4 -side top -expand 1 -fill both
+
+pack \
+	.l1wid.bf1 \
+	.l1wid.bf2 \
+	.l1wid.bf3 \
+	.l1wid.bf4 \
+	-side top -expand 1 -fill both
+
 pack .l1wid.bf45.sc.1  -side left  -padx 3
-pack .l1wid.bf45.sc.f  .l1wid.bf45.sc.sk -side left -padx 5
+pack .l1wid.bf45.sc.f .l1wid.bf45.sc.g .l1wid.bf45.sc.pl -side left -padx 5
 
 pack \
 	.l1wid.bf45.r.1 \
@@ -1935,16 +1976,28 @@ pack \
 	.l1wid.bf45.q.45 \
 	-side left 
 
-pack 	.l1wid.bf45.p.fma \
-	.l1wid.bf45.p.1 \
+##	.l1wid.bf45.p.fma 
+##	.l1wid.bf45.p.1 
+pack \
+	.l1wid.bf45.p.14 \
 	.l1wid.bf45.p.15 \
+	.l1wid.bf45.p.25 \
 	.l1wid.bf45.p.5 \
 	.l1wid.bf45.p.2 \
 	.l1wid.bf45.p.3 \
 	-side left -fill x  -padx 2
-pack .l1wid.bf45.p .l1wid.bf45.sc .l1wid.bf45.q .l1wid.bf45.r \
+
+pack \
+	.l1wid.bf45.p \
+	.l1wid.bf45.sc \
+	.l1wid.bf45.q \
+	.l1wid.bf45.r \
 	-side top -fill x -expand 1
-pack .l1wid.bf5 .l1wid.bf45  -side top -pady 3 -fill x
+
+pack \
+	.l1wid.bf5 \
+	.l1wid.bf45 \
+	-side top -pady 3 -fill x
 
 proc send_latlon_to_l1pro {minlon maxlon minlat maxlat utm} {
    global mnlon mxlon mnlat mxlat utm
