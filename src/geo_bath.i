@@ -947,7 +947,7 @@ write,"============================================================="
 	} else if (disp_type == 3) {
 	  a = [];
           irg_a = irg(rasterno,rasterno,usecentroid=1);
-	  ex_veg, rasterno, pulseno,  last=250, graph=1, win=0; use_peak=1;
+	  ex_veg, rasterno, pulseno,  last=250, graph=1, win=0, use_peak=1;
           if ( _errno < 0 ) continue;
 	  z = mindata.lelv/100.;
           window, win; plcm, z, mindata.north/100., 

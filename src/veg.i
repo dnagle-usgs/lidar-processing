@@ -310,6 +310,7 @@ func ex_veg( rn, i,  last=, graph=, win=, use_centroid=, use_peak=, pse= ) {
   nxr = numberof(xr);
 
 if (is_void(win)) win = 4;
+/*
 if ( graph ) {
 window,win; fma;
 //limits
@@ -322,6 +323,7 @@ write, format="rn=%d; i = %d\n",rn,i
 ///if ( nxr > 0 ) 
 ///	plmk, a( xr(0),i,1), xr(0),msize=.3,marker=3
 }
+*/
 
   if ( is_void(last) ) 		// see if user specified the max veg
 	last = n;
@@ -371,8 +373,8 @@ write, format="rn=%d; i = %d\n",rn,i
        }
        if (pse) pause, pse;
 
-       if ( graph && ai >= 2) {
-         //window,4; fma
+       if ( (graph==1) ) {
+         window,win; fma;
          plmk, aa(1:n,i,ai), msize=.2, marker=1, color="yellow";
          plg, aa(1:n,i,ai), color="yellow";
          plmk, da, msize=.2, marker=1, color="yellow";
@@ -450,6 +452,7 @@ write, format="rn=%d; i = %d\n",rn,i
 	ltrail = retdist;
 	//halftrail = 0.5*(ltrail - ftrail);
 	mx0 = irange+xr(0)+idx1(1)-ctx(1);
+	//mx0 = irange+xr(0)+idx1(1)-irg_a.fs_rtn_centroid(i);
 	mv0 = aa(int(xr(0)+idx1(1)),i,ai);
        } else {
         mx0 = -10;
@@ -486,7 +489,8 @@ write, format="rn=%d; i = %d\n",rn,i
        }
 
        if (cv(1) < 10000) {
-          mx1 = irange+cv(1)-ctx(1);
+         mx1 = irange+cv(1)-ctx(1);
+         // mx1 = irange;
        } else {
           mx1 = -10;
        }
@@ -503,8 +507,10 @@ write, format="rn=%d; i = %d\n",rn,i
     //mx1 = irange;
     //mv1 = intensity;
     if ( graph ) {
-         plmk, mv1, mx1, msize=.5, marker=7, color="blue", width=1
-         plmk, mv0, mx0, msize=.5, marker=7, color="red", width=1
+	window, win;
+	mx1;mv1;mx0;mv0;
+        plmk, mv1, irg_a.fs_rtn_centroid(i), msize=.5, marker=7, color="blue", width=1
+        plmk, mv0, mx0-irange+irg_a.fs_rtn_centroid(i), msize=.5, marker=7, color="red", width=1
     }
     if (pse) pause, pse;
         rv.sa = rp.sa(i);
@@ -1421,7 +1427,7 @@ func run_veg_all( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=
   return depths;
 }
 
-func make_fs_veg_all (d, rrr) {  
+func make_fs_veg_all (d, rrr) {
 /* DOCUMENT make_fs_veg_all (d, rrr) 
 
    This function makes a veg data array using the 
