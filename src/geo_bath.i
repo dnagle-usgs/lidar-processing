@@ -14,69 +14,44 @@ require, "rbgga.i"
   topographic georectification.
 */
 
-/*
- Define struct GEODEPTH & GEOBATH to contain the georectification of topo image
- and pixel value of using bathy.i
-*/
-
-struct GEODEPTH {
-  long rn (120); 	//contains raster number
-  long north(120);	//northing value
-  long east(120); 	//easting value
-  short depth(120);	//water depth in centimeters
-  short bottom_peak(120); //peak amplitude of return signal
-  short sa(120);	//scan angle
-};
-
-struct GEOBATH {
-  long rn (120);     //contains raster number
-  long north(120);      //northing value
-  long east(120);       //easting value
-  long bath(120);     //water bathymetry in centimeters 
-  short depth(120);	//water depth in centimeters
-  short bottom_peak(120); //peak amplitude of return signal
-  short sa(120);        //scan angle
-};
 
 struct GEOALL {
-  long rn (120); 	//contains raster value
-  long north(120); 	//surface northing
-  long east(120);	//surface east
-  short sr2(120);	//slant range from the first to the last return as if in air in centimeters
+  long rn (120); 	//contains raster value and pulse value
+  long north(120); 	//surface northing in centimeters
+  long east(120);	//surface easting in centimeters
+  short sr2(120);	//slant range from the first to the last return in nanoseconds
   long elevation(120); //first surface elevation in centimeters
   long mnorth(120);	//mirror northing
   long meast(120);	//mirror easting
   long melevation(120);	//mirror elevation
-  short bottom_peak(120);//peak amplitude of the return signal
+  short bottom_peak(120);//peak amplitude of the bottom return signal
   short first_peak(120);//peak amplitude of the first surface return signal
   long bath(120);	//water bathymetry in centimeters
   short depth(120);	//water depth in centimeters
-  short sa(120);        //scan angle
-  }
+}
 
-func display_bath (d, rrr, cmin =, cmax=, size=, win=, correct=, bathy=, write_all=,bcmin=, bcmax=, bottom_peak= ) {
+func display_bath (d, rrr, cmin =, cmax=, size=, win=, correct=, bathy=, bcmin=, bcmax=, bottom_peak= ) {
 /* DOCUMENT display_bath (d, rrr, cmin =, cmax=, size=, win=, correct=, bathy=, bcmin=, bcmax= ) 
 
    This function displays a depth or bathymetric image using the georectification of the first surface return.  The parameters are as follows:
    d = array of structure BATHPIX  containing depth information.  This is the return value of function run_bath.
    rrr = array of structure R containing first surface information.  This the is the return value of function first_surface.
-   cmin = Deepest point in meters (default is -5m)
-   cmax = Highest point in meters (default is 0m)
-   size = Screen size of each point.  
+   cmin = Minimum depth (water column thickness) in meters(default is -10m)
+   cmax = Maximum depth (water column thickness) in meters(default is 0m)
+   size = Screen size of each point (default 1.2).  
    win =  graphics window to be used for plotting image (default is window 5).
    correct = set this keyword if you would like to correct the image to exclude points with incorrect first surface returns.  Highly recommended.
-   bathy = set this keyword for producing bathymetric image.  Default produces depth image.
-   write_all = set this keyword to write an array containing all information (include mirror point etc.)
-   bcmin = Deepest point in meters for bathymetric image (default is calculated by function).
-   bcmax = Highest point in meters for bathymetric image (default is calculated by function).
+   bathy = set this keyword for displaying submerged topography.  Default displays depth image.
+   bottom_peak = set this keyword to display the amplitude of the bottom return signal.  
+   bcmin = Minimum value for submerged topography in NAD 83 elevations  (default is calculated by function).
+   bcmax = Maximum value for submerged topography in NAD 83 elevations  (default is calculated by function).
 
-   The return value depth is an array of structure; if bathy=1, it returns an array of structure GEOBATH, else it returns array of structure GEODEPTH.  This returned array can be written out to a file using function write_geobath.
+   The return value depth is an array of structure GEOALL. The array can be written to a file using write_geoall  
 
-   see also: first_surface, run_bath, write_geobath
-   */
+   see also: first_surface, run_bath, write_geoall
+*/
 
 
-//need to define geodepth array
 // d is the depth array from bathy.i
 // rrr is the topo array from surface_topo.i
 if ( is_void(win) )
@@ -91,71 +66,64 @@ bmax = -10000;
 if (numberof(d(0,,)) < numberof(rrr)) { len = numberof(d(0,,)); } else { 
    len = numberof(rrr);}
 
-if (is_void(write_all)) {
-  if (is_void(bathy)) {
-    geodepth = array(GEODEPTH, len); 
-  } else geodepth = array(GEOBATH, len);
-} else geodepth = array(GEOALL, len);
+geodepth = array(GEOALL, len);
 
 for (i=1; i<=len; i=i+1) {
   geodepth(i).rn = rrr(i).raster;
   geodepth(i).north = rrr(i).north;
   geodepth(i).east = rrr(i).east;
-  if ((is_void(bathy))) {
-    geodepth(i).depth = short(-d(,i).idx * CNSH2O2X *100);
-    if (write_all) geodepth(i).bath = long((-d(,i).idx * CNSH2O2X *100) + rrr(i).elevation);
-  } else {
-   geodepth(i).bath = long((-d(,i).idx * CNSH2O2X *100) + rrr(i).elevation);
-   geodepth(i).depth = short(-d(,i).idx * CNSH2O2X *100);
+  geodepth(i).depth = short(-d(,i).idx * CNSH2O2X *100);
+  indx = where((-d(,i).idx) != 0); 
+  if (is_array(indx)) {
+    geodepth(i).bath(indx) = long((-d(,i).idx(indx) * CNSH2O2X *100) + rrr(i).elevation(indx));
   }
-  geodepth(i).sa = d(,i).sa
   geodepth(i).bottom_peak = d(,i).bottom_peak;
-  geodepth(i).first_peak = d(,i).bottom_peak;
-  if (write_all) {
-    geodepth(i).elevation = rrr(i).elevation;
-    geodepth(i).mnorth = rrr(i).mnorth
-    geodepth(i).meast = rrr(i).meast
-    geodepth(i).melevation = rrr(i).melevation;
-    geodepth(i).sr2 =short(d(,i).idx); 
-  }
-  if (correct == 1) {
+  geodepth(i).first_peak = 0;
+  geodepth(i).elevation = rrr(i).elevation;
+  geodepth(i).mnorth = rrr(i).mnorth
+  geodepth(i).meast = rrr(i).meast
+  geodepth(i).melevation = rrr(i).melevation;
+  geodepth(i).sr2 =short(d(,i).idx); 
+
+ if (correct) {
      // search for erroneous elevation values
      indx = where(rrr(i).elevation < -10000); 
-     if (is_array(indx) == 1) {
+     if (is_array(indx)) {
        geodepth(i).north(indx) = 0;
        geodepth(i).east(indx) = 0;
      }
 
-     indx = where(rrr(i).elevation >  10000); 
-     // these are values above any defined reference plane and will mostly be the erroneous points defined at the height of the aircraft.
-     if (is_array(indx) == 1) {
+     indx = where(rrr(i).elevation >  20000); 
+     // these are values above any defined reference plane and will  be the erroneous points defined (by rrr) at the height of the aircraft.
+     if (is_array(indx)) {
        geodepth(i).north(indx) = 0;
        geodepth(i).east(indx) = 0;
      }
-     if ((bathy) && (!bcmin || !bcmax)) {
-       indx = where((rrr(i).elevation > -5000) & (rrr(i).elevation < 1000));
-       if (is_array(indx)) {
+  }
+  if ((bathy) && (!bcmin || !bcmax)) {
+     indx = where((rrr(i).elevation > -5000) & (rrr(i).elevation < 1000));
+     if (is_array(indx)) {
 	if (is_void(bcmin)) {
            if (min(rrr(i).elevation(indx)) < bmin) bmin = min(rrr(i).elevation(indx));
 	}
 	if (is_void(bcmax)) {
            if (max(rrr(i).elevation(indx)) > bmax) bmax = max(rrr(i).elevation(indx));
 	}
-       }
      }
-  }   
-}
+  }
+} /* end for loop */
 
 if (bathy) {
-  if (!bcmin) bcmin = bmin/100 + cmin;
-  if (!bcmax) bcmax = bmax/100 + cmax;
+  if (!bcmin) bcmin = bmin/100. + cmin;
+  if (!bcmax) bcmax = bmax/100. + cmax;
 }
    
 
 if (bottom_peak) {
   if (!(cmin)) cmin = min(d.bottom_peak)
   if (!(cmax)) cmax = max(d.bottom_peak)
-  }
+}
+
 if (bathy) {
 print, "bcmin = ",bcmin; print, "bcmax = ",bcmax
 } else {
@@ -168,13 +136,13 @@ for ( i=1; i<j; i++ ) {
   indx1 = where(geodepth(i).north != 0);
   if (is_array(indx1) == 1) {
    if (bathy) {
-    plcm, (geodepth(i).bath(indx1))/100, (geodepth(i).north(indx1))/100, (geodepth(i).east(indx1))/100,        msize=size,cmin=bcmin, cmax=bcmax;
+    plcm, (geodepth(i).bath(indx1))/100., (geodepth(i).north(indx1))/100., (geodepth(i).east(indx1))/100., msize=size, cmin=bcmin, cmax=bcmax;
    } else if (bottom_peak) {
     plcm, (geodepth(i).bottom_peak(indx1)), (geodepth(i).north(indx1))/100, (geodepth(i).east(indx1))/100, 
     msize=size,cmin=cmin,cmax=cmax;
     }
      else {
-    plcm, (geodepth(i).depth(indx1))/100, (geodepth(i).north(indx1))/100, (geodepth(i).east(indx1))/100,	msize=size,cmin=cmin,cmax=cmax;
+    plcm, (geodepth(i).depth(indx1))/100., (geodepth(i).north(indx1))/100., (geodepth(i).east(indx1))/100., msize=size,cmin=cmin,cmax=cmax;
     }
   }
 }
@@ -357,7 +325,17 @@ _write, f, 12, num_rec;
 close, f;
 }
 
-func write_geoall (geoall, opath=, ofname=, type=, append=, correct=) {
+func write_geoall (geoall, opath=, ofname=, type=, append=) {
+/* DOCUMENT write_geoall (geoall, opath=, ofname=, type=, append=) 
+   This function write an array of structure GEOALL to a binary file.  The input parameters are:
+   geoall = array of structure geoall as returned by function display_bath;
+   opath = directory in which output file is to be written
+   ofname = output file name
+   type = type of output file, currently only type = 4 is supported.
+   append = set this keyword to append to existing file.
+
+   see also: display_bath, make_bathy
+*/
 
 //this function writes a binary file containing georeferenced EAARL data.
 // input parameter geoall is an array of structure GEOALL, defined by the display_bath function.
@@ -449,6 +427,17 @@ close, f;
 }
 
 func compute_depth(data_ptr=, ipath=,fname=,ofname=) {
+   /* DOCUMENT compute_depth(data_ptr=, ipath=,fname=,ofname=)  
+      This function computes the depth in water using the mirror position and the angle of refraction in water.  The input parameters defined are as follows:
+      data_ptr = pointer to data array of structure GEOALL.  
+      ipath= input (and output) directory
+      fname = file name of input file
+      ofname = file name of output file.  
+
+      This function returns the pointer to the data array with computed depth.
+
+      see also: display_bath, write_geoall, read_yfile, make_bathy
+   */
     
     if ((!is_void(ipath)) && (is_void(fname)) && (is_void(data_ptr))) {
        /* extract all data with *.bin extension from directory*/
@@ -481,7 +470,10 @@ func compute_depth(data_ptr=, ipath=,fname=,ofname=) {
       D = -(data.sr2*CNSH2O2X*100)*cos(phi_water);
       //overwrite existing depths with newly calculated depths
       data.depth = D;
-      data.bath = D+data.elevation;
+      Dindx = where(D != 0);
+      data1 = data.bath;
+      data1(Dindx) = long(D(Dindx)+data.elevation(Dindx));
+      data.bath = data1;
       if (!is_void(ofname)) {
         //write current data out to output file ofname
 	if (i==1) {
@@ -496,22 +488,78 @@ func compute_depth(data_ptr=, ipath=,fname=,ofname=) {
    return &data
 }
 
-func make_bathy(edb, soe_day_start, opath=,ofname=) {
-   /* this function allows a user to define a region on the gga plot of flightlines
-      and makes bathymetric plots defined in that region.
-      */
+func make_bathy(opath=,ofname=,ext_bad_att=, ext_bad_depth=) {
+   /* DOCUMENT make_bathy(edb, soe_day_start, opath=,ofname=)
+      this function allows a user to define a region on the gga plot of flightlines (usually window 6) to write out a 'level 1' file and plot a depth image defined in that region.
+      The input parameters are:
+      opath = ouput path where the output file must be written
+      ofname= output file name
+      ext_bad_att = Extract bad attitude points (those points that were termed 'bad' in the first surface return function) and write these points to a file.
+      ext_bad_depth = Extract the points that failed to show any depth using the run_bath function and write these points to a file.
+
+      This function does not return a value.  It writes an output file.
+      
+      Please ensure that the tans and pnav data have been loaded before executing make_bathy.  See rbpnav() and rbtans() for details.
+      The structure BATH_CTL must be initialized as well.  See define_bath_ctl()
+
+      see also: first_surface, run_bath, display_bath 
+   */
    
+   extern edb, soe_day_start, bath_ctl, tans, pnav, type;
+   
+   /* check to see if required parameters have been initialized */
+   if (!(type)) {
+     write, "BATH_CTL structure not initialized.  Running define_bath_ctl... \n";
+     type=define_bath_ctl(junk);
+     write, "\n";
+   }
+   write, "BATH_CTL initialized to : \r";
+   print, bath_ctl;
+
+   /* define cmin and cmax depending on type */
+   if (type == "tampabay") {
+     cmin = -6;
+     cmax = -0.1;
+   }
+   if (type == "keys") {
+     cmin = -18;
+     cmax = -2;
+   }
+   if (type == "wva") {
+     cmin = -10;
+     cmax = 0;
+   }
+
+   if (!is_array(tans)) {
+     write, "TANS information not loaded.  Running function rbtans() ... \n";
+     tans = rbtans();
+     write, "\n";
+   }
+   write, "TANS information LOADED. \n";
+   if (!is_array(pnav)) {
+     write, "Precision Navigation (PNAV) data not loaded.  Running function rbpnav() ... \n";
+     pnav = rbpnav();
+   }
+   write, "PNAV information LOADED. \n"
+   write, "\n";
+
    /* select a region using function gga_win_sel in rbgga.i */
    q = gga_win_sel(2);
 
    /* find the start and stop times using gga_find_times in rbgga.i */
    t = gga_find_times(q);
 
-   write,format="%6.2f total seconds selected\n", (t(dif, )) (,sum);
+   if (is_void(t)) {
+     write, "No flightline found in selected area. Please start again... \r";
+     return
+   }
+
+   write, "\n";
+   write,format="Total seconds of flightline data selected = %6.2f\n", (t(dif, ))(,sum);
 
    /* now loop through the times and find corresponding start and stop raster numbers */
    no_t = numberof(t(1,));
-   write, format="Total flightlines selected = %d \n", no_t;
+   write, format="Number of flightlines selected = %d \n", no_t;
    rn_arr = array(int,2,no_t);
    for (i=1;i<=numberof(t(1,));i++) {
        rn_indx_start = where(((edb.seconds - soe_day_start) ) == int(t(1,i)));
@@ -527,7 +575,8 @@ func make_bathy(edb, soe_day_start, opath=,ofname=) {
 
        rn_arr(,i) =  [rn_start, rn_stop];
    }
-    write,format="%6d total rasters selected\n", (rn_arr(dif, )) (,sum); 
+    write,format="Number of Rasters selected = %6d\n", (rn_arr(dif, )) (,sum); 
+    write, "\n";
 
    /* now call run_bath from bathy.i and first_surface from surface_topo.i to extract bathy/topo information for each sequence of rasters in rn_arr. */
 
@@ -535,24 +584,117 @@ func make_bathy(edb, soe_day_start, opath=,ofname=) {
    if (!(ofname)) ofname = "geoall_rgn_l1.bin";
    if (!win) win = 5;
    window, win; fma;
+   /* initialize counter variables */
+   tot_count = 0;
+   ba_count = 0;
+   bd_count = 0;
 
     for (i=1;i<=no_t;i++) {
       if (rn_arr(1,i) != 0) {
-       write, format="processing using bathymetry algorithm for flightline %d ... \n", i;
+       write, format="Processing using bathymetry algorithm for flightline %d ... \n", i;
        d = run_bath(start=rn_arr(1,i), stop=rn_arr(2,i));
-       write, format="processing using first_surface algorithm for flightline %d ... \n", i;
+       write, format="Processing using first_surface algorithm for flightline %d ... \n", i;
        rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i)); 
        a=[];
-       write, format="processing using display_bath to provide submerged topography for flightline %d ...\n", i;
-       depth = display_bath(d,rrr,write_all=1, correct=1, cmin=-6, cmax=0);
-       write, format="writing data from structure geoall to output file for flightline %d ... \n", i;
+       write, "\n";
+       write, format="Processing using display_bath to derive submerged topography for flightline %d ...\n", i;
+       depth = display_bath(d,rrr, cmin=cmin, cmax=cmax);
+
+
+       //make depth correction using compute_depth
+       write, "\n";
+       write, format="Performing water depth correction for flightline %d ... \n",i;
+       cdepth_ptr = compute_depth(data_ptr=&depth); 
+       depth = *cdepth_ptr(1);
+       tot_count += numberof(depth.elevation);
+       write, "\n";
+
+       /* if ext_bad_att is set, find all points having elevation = ht of airplane */
+       if (ext_bad_att) {
+         write, format="Extracting data points with bad attitude data and writing these points out to an output file for flightline %d. \r",i;
+         /* compare depth.elevation with 70% of depth.melevation */
+	 elv_thresh = 0.7*(avg(depth.melevation));
+         ba_indx = where(depth.elevation > elv_thresh);
+	 ba_count += numberof(ba_indx);
+	 ba_depth = depth;
+	 deast = depth.east;
+	 deast(ba_indx) = 0;
+	 dnorth = depth.north;
+	 dnorth(ba_indx) = 0;
+	 depth.east = deast;
+	 depth.north = dnorth;
+
+	 /* write array ba_depth to a file */
+	 ba_indx_r = where(ba_depth.elevation < elv_thresh);
+	 bdeast = ba_depth.east;
+	 bdeast(ba_indx_r) = 0;
+	 bdnorth = ba_depth.north;
+	 bdnorth(ba_indx_r) = 0;
+	 ba_depth.east = bdeast;
+	 ba_depth.north = bdnorth;
+
+	 ba_ofname_arr = strtok(ofname, ".");
+	 ba_ofname = ba_ofname_arr(1)+"_bad_attitude."+ba_ofname_arr(2);
+	 write, "now writing array ba_depth  to a file \r";
+         if (i==1) {
+           write_geoall, ba_depth, opath=opath, ofname=ba_ofname;
+         } else {
+           write_geoall,  ba_depth, opath=opath, ofname=ba_ofname, append=1;
+         }
+       } 
+
+       /* if ext_bad_depth is set, find all points having depth and bath = 0  */
+       if (ext_bad_depth) {
+         write, format="\nExtracting data points with bad depth data and writing these points out to an output file for flightline %d. \r",i;
+         /* compare depth.bath with 0 */
+         ba_indx = where(depth.bath == 0);
+	 bd_count += numberof(ba_indx);
+	 ba_depth = depth;
+	 deast = depth.east;
+	 deast(ba_indx) = 0;
+	 dnorth = depth.north;
+	 dnorth(ba_indx) = 0;
+	 depth.east = deast;
+	 depth.north = dnorth;
+
+	 /* write array ba_depth to a file */
+	 ba_indx_r = where(ba_depth.bath != 0);
+	 bdeast = ba_depth.east;
+	 bdeast(ba_indx_r) = 0;
+	 bdnorth = ba_depth.north;
+	 bdnorth(ba_indx_r) = 0;
+	 ba_depth.east = bdeast;
+	 ba_depth.north = bdnorth;
+
+	 ba_ofname_arr = strtok(ofname, ".");
+	 ba_ofname = ba_ofname_arr(1)+"_bad_depth."+ba_ofname_arr(2);
+	 write, "now writing array bad_depth  to a file \r";
+         if (i==1) {
+           write_geoall, ba_depth, opath=opath, ofname=ba_ofname;
+         } else {
+           write_geoall,  ba_depth, opath=opath, ofname=ba_ofname, append=1;
+         }
+       } 
+
+       write, format="\nWriting data from structure geoall to output file for flightline %d ... \n", i;
        if (i==1) {
          write_geoall, depth, opath=opath, ofname=ofname;
        } else {
-         write_geoall,  depth, opath=opath, ofname=ofname, append=1;
+         write_geoall, depth, opath=opath, ofname=ofname, append=1;
        }
       }
     } 
+
+    write, "\nStatistics: \r";
+    write, format="Total number of records processed = %d\n",tot_count;
+    write, format="Total number of records with bad attitude data = %d\n",ba_count;
+    write, format = "Total number of records with bad depth data = %d\n",bd_count;
+    write, format="Total number of GOOD data points = %d \n",(tot_count-ba_count-bd_count);
+    pba = float(ba_count)*100/tot_count;
+    write, format = "%5.2f%% of the total records had bad attitude! (pun included)\n",pba;
+    pbd = float(bd_count)*100/(tot_count-ba_count);
+    write, format = "%5.2f%% of total records with good attitude had bad depth! \n",pbd; 
+
 
 }
 
@@ -574,7 +716,7 @@ func raspulsearch(data,win=,buf=) {
 
  spot = mouse(1,1,"Please click in window");
 
- plg, spot(2),spot(1),marker=3,msize=2.0, color="black",type=0;
+ plg, spot(2),spot(1),marker=2,msize=2.0, color="black",type=0;
 
  write, format="Searching for data within %d centimeters from selected point \n",buf;
 
@@ -587,7 +729,7 @@ func raspulsearch(data,win=,buf=) {
     rasterno = rn&0xffffff;
     pulseno = rn/0xffffff;
 
-    print, "The following points were found: \n";
+    print, "The following point(s) were found: ";
     write, format="Raster number %d and Pulse number %d \n",rasterno, pulseno;
     write, format="Plotting raster and waveform with Raster number %d and Pulse number %d \n",rasterno(1), pulseno(1);
     if (_ytk) {
@@ -597,7 +739,9 @@ func raspulsearch(data,win=,buf=) {
     } 
  } else {
    print, "No points found!  Please try again... \n";
-   }
+ }
+
+ return data(indx);
       
 }
 

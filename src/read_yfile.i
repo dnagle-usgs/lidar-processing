@@ -2,27 +2,12 @@
    $Id$
    */
    write, "$Id$"
-struct DEPTH {
-     long rn;
-     long north;
-     long east;
-     short depth;
-     }
-
-struct BATH {
-     long rn;
-     long north;
-     long east;
-     long bath;
-     short depth;
-     short bottom_peak;
-     }
 
 struct GEO {
      long rn;
      long north;
      long east;
-     long sr2;
+     short sr2;
      long elevation;
      long mnorth;
      long meast;
@@ -87,58 +72,6 @@ return data_ptr;
 }
 
 func data_struc (type, nwpr, recs, byt_pos, f) {
-  if (type == 1) {
-    rn = 0L;
-    north = 0L;
-    east = 0L;
-    depth = 0S;
-    data = array(DEPTH, recs); 
-    for (i=0;i<recs;i++) {
-       _read, f, byt_pos, rn;
-       data(i).rn = rn;
-       byt_pos = byt_pos + 4;
-       _read, f, byt_pos, north;
-       data(i).north = north;
-       byt_pos = byt_pos + 4;
-       _read, f, byt_pos, east;
-       data(i).east = east;
-       byt_pos = byt_pos + 4;
-       _read, f, byt_pos, depth;
-       data(i).depth = depth;
-       byt_pos = byt_pos + 2;
-
-    }
-  }
-  if (type == 3) {
-    rn = 0L;
-    north = 0L;
-    east = 0L;
-    depth = 0S;
-    bath = 0L;
-    bottom_peak = 0S;
-    data = array(BATH, recs); 
-    for (i=0;i<recs;i++) {
-       _read, f, byt_pos, rn;
-       data(i).rn = rn;
-       byt_pos = byt_pos + 4;
-       _read, f, byt_pos, north;
-       data(i).north = north;
-       byt_pos = byt_pos + 4;
-       _read, f, byt_pos, east;
-       data(i).east = east;
-       byt_pos = byt_pos + 4;
-       _read, f, byt_pos, bath;
-       data(i).bath = bath;
-       byt_pos = byt_pos + 4;
-       _read, f, byt_pos, depth;
-       data(i).depth = depth;
-       byt_pos = byt_pos + 2;
-       _read, f, byt_pos, bottom_peak;
-       data(i).bottom_peak = bottom_peak;
-       byt_pos = byt_pos + 2;
-
-    }
-  }
   if (type == 4) {
     rn = 0L;
     north = 0L;
