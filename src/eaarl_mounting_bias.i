@@ -65,18 +65,31 @@ for the angle biases and the x,y and z offsets.
  
 *************************************************************/
  ops_default = array(mission_constants);
- ops_default.roll_bias  = -1.35;
+ ops_default.roll_bias  = -1.40;        // carefully tweaked on 2-18-03 data
  ops_default.pitch_bias = +0.5;
  ops_default.yaw_bias   =  0.0;
- ops_default.y_offset   = -2.0;
- ops_default.x_offset   =  0.0;
- ops_default.z_offset   = -1.3;
+ ops_default.y_offset   = -1.403;	// From Applanix pospac
+ ops_default.x_offset   =  -.470;       // From Applanix pospac
+ ops_default.z_offset   = -1.3;		// should be -1.708... but need better 
+                                        // measurement of IMU to laser point
  ops_default.scan_bias  =  0.0;
- ops_default.range_biasM = 0.7962;                 // Laser range measurement bias.
+ ops_default.range_biasM = 0.7962;         // Laser range measurement bias.
  ops_default.range_biasNS=  ops_default.range_biasM / NS2MAIR;
 
 // Now, copy the default values to the operating values.
  ops_conf = ops_default;
+
+/**************************************************************
+ Now configure a default for the EAARL #1 IMU
+ which is the location directly above the scanner
+
+ The default numbers below were determined from the 9-16-03
+ flight from ksby to kmyr using pospac on 10-02-2003.
+**************************************************************/
+ ops_IMU1_default = ops_default;
+ ops_IMU1_default.x_offset =  0.470;    // This is Applanix Y Axis +Rt Wing
+ ops_IMU1_default.y_offset =  1.403;    // This is Applanix X Axis +nose
+ ops_IMU1_default.z_offset = -0.833;    // This is Applanix Z Axis +Down
 
 func display_mission_constants( m, ytk= ) {
   write,""
