@@ -21,6 +21,7 @@ require, "gridr.i"
 require, "dmars.i"
 require, "batch_process.i"
 require, "transect.i"
+require, "large_window.i"
 
 /* DOCUMENT CBAR
  The color bar values from l1pro.ytk
