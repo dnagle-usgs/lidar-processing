@@ -612,7 +612,7 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
   return data;
 }
   
-func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, delimit=, zclip=, pstruc=, rn=) {
+func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, delimit=, zclip=, pstruc=, rn=, soe=, noheader=) {
   /* DOCUMENT this function writes out an ascii file containing x,y,z,intensity information.
     amar nayegandhi 04/25/02
     Keywords:
@@ -624,13 +624,17 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
     indx = set to 1 to write out the index number of each record in the output file.
     split = set split to 1 if you want the output file to be split into chunks of 1 million points
     intensity = set to 1 if you want to additionally include the intensity value in the output file
-    delimit =  a string containing a single character to delimite ascii output with.
+    delimit =  a string containing a single character to delimit ascii output with.
     zclip = [ lower, upper] Clip out, and don't write values outside the range given in the
             zclip array. These lower and upper values are in centimeters.
+    rn = Unique Raster/pulse number
+    soe = seconds of the epoch 
+    noheader = set to 1 to not include the header in the ascii data file.
     modified 12/30/02 amar nayegandhi to :
       write out x,y,z (first surface elevation) data for type=1
       to split at 1 million points and write to another file
     modified 01/30/03 to optionally split at 1 million points
+    modified 10/06/03 to add rn and soe and correct the output format for different delimiters.
     */
 
 // default delimit to ","
@@ -639,7 +643,7 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
   }   
   delimit = ((*pointer( delimit ))(1))
   if ( !is_array( zclip ) ) 
-     zclip = [ -60.0, 3000.0 ];
+     zclip = [ -600.0, 30000.0 ];
   zclip *= 100.0;
   
 
@@ -685,34 +689,23 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
       }
     }
   }
-   if (!indx && !intensity) {
-     if (rn) {
-       write,f, "Raster/Pulse UTMX(m), UTMY(m), Z(m)";
-     } else {
-       write,f, "UTMX(m), UTMY(m), Z(m)";
-     }
-   }
-   if (!indx && intensity) {
-     if (rn) {
-       write,f, "Raster/Pulse UTMX(m), UTMY(m), Z(m), Intensity";
-     } else {
-       write,f, "UTMX(m), UTMY(m), Z(m), Intensity";
-     }
-   }
-   if (indx && !intensity) {
-     if (rn) {
-       write,f, "Indx, Raster/Pulse, UTMX(m), UTMY(m), Z(m)";
-     } else {
-       write,f, "Indx, UTMX(m), UTMY(m), Z(m)";
-     }
-   }
-   if (indx && intensity) {
-     if (rn) {
-       write,f, "Indx, Raster/Pulse, UTMX(m), UTMY(m), Z(m), Intensity";
-     } else {
-       write,f, "Indx, UTMX(m), UTMY(m), Z(m), Intensity";
-     }  
-   }
+  if (indx) {
+       hline = swrite(format="Index%cUTMX(m)%cUTMY(m)%cZ(m)",delimit,delimit,delimit);
+  } else {
+       hline = swrite(format="UTMX(m)%cUTMY(m)%cZ(m)",delimit,delimit);
+  }
+  if (intensity) {
+       hline = swrite(format="%s%cIntensity(counts)",hline,delimit);
+  }
+  if (rn) {
+       hline = swrite(format="%s%cRaster/Pulse",hline,delimit);
+  }
+  if (soe) {
+       hline = swrite(format="%s%cSOE",hline,delimit);
+  }
+  if (!noheader) {
+   write, f, hline;
+  }
 
   if (type == 1) {
     zvalid = ( (data_arr.elevation) > zclip(1) ) & (data_arr.elevation  < zclip(2) );
@@ -728,176 +721,88 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
   }
   for (i=1;i<=num_valid;i++) {
     if (zvalid(i) ) {
-    ++totw;
-    if (totw == split && split) {
-      ++xx;
+    totw++;
+    if ((totw == split) && split) {
+      xx++;
       close, f
       write, format="Total records written to ascii file = %d\n", totw;
       fn_new = split_path( fn, 1, ext=1);
       sxx = swrite(format="%1d",xx);
       fn_new = fn_new(1)+"_"+sxx+fn_new(2);
       f = open(fn_new, "w")
-      if (!indx && !intensity) {
-        if (rn) {
-          write,f, "Raster/Pulse UTMX(m), UTMY(m), Z(m)";
-        } else {
-          write,f, "UTMX(m), UTMY(m), Z(m)";
-        }
-      }
-      if (!indx && intensity) {
-        if (rn) {
-          write,f, "Raster/Pulse UTMX(m), UTMY(m), Z(m), Intensity";
-        } else {
-          write,f, "UTMX(m), UTMY(m), Z(m), Intensity";
-        }
-      }
-      if (indx && !intensity) {
-        if (rn) {
-          write,f, "Indx, Raster/Pulse, UTMX(m), UTMY(m), Z(m)";
-        } else {
-          write,f, "Indx, UTMX(m), UTMY(m), Z(m)";
-        }
-      }
-      if (indx && intensity) {
-        if (rn) {
-          write,f, "Indx, Raster/Pulse, UTMX(m), UTMY(m), Z(m), Intensity";
-        } else {
-          write,f, "Indx, UTMX(m), UTMY(m), Z(m), Intensity";
-        }  
-      }
+
+      if (!noheader) write, f, hline;
       totw = 1;
     }
     if (type == 1) {
         z = data_arr.elevation(i)/100.;
 	east = data_arr.east(i)/100.;
 	north = data_arr.north(i)/100.;
-	rnval = data_arr.rn(i)
     }
     if (type == 2) {
         z = (data_arr.elevation(i) + data_arr.depth(i))/100.;
 	east = data_arr.east(i)/100.;
 	north = data_arr.north(i)/100.;
-	rnval = data_arr.rn(i)
     }
     if (type == 3) {
         z = data_arr.lelv(i)/100.;
 	east = data_arr.least(i)/100.;
 	north = data_arr.lnorth(i)/100.;
-	rnval = data_arr.rn(i)
     }
     if (type == 4) {
         z = data_arr.depth(i)/100.;
 	east = data_arr.east(i)/100.;
 	north = data_arr.north(i)/100.;
-	rnval = data_arr.rn(i)
     }
     if (type == 5) {
         z = data_arr.lelv(i)/100.;
 	east = data_arr.east(i)/100.;
 	north = data_arr.north(i)/100.;
-	rnval = data_arr.rn(i)
     }
- 
-    if (!indx && !intensity) {
-      if (rn) {
-         write, f, format="%12d%c %9.2f%c %10.2f%c %8.2f\n",
-	 rnval,
+
+    if (indx) {
+       curline = swrite(format="%d%c%8.2f%c%9.2f%c%4.2f", 
+	 totw,
 	 delimit,
 	 east,
 	 delimit,
 	 north,
 	 delimit,
-	 z;
-      } else {
-         write, f, format="%9.2f%c %10.2f%c %8.2f\n",
+	 z);
+    } else {
+       curline = swrite(format="%8.2f%c%9.2f%c%4.2f", 
 	 east,
 	 delimit,
 	 north,
 	 delimit,
-	 z;
-      }
-    } 
-    if (indx && !intensity) {
-      if (rn) {
-         write, f, format="%d%c %12d%c %9.2f%c %10.2f%c %8.2f\n",
-	 totw, 
-	 delimit,
-	 rnval,
-	 delimit,
-	 east,
-	 delimit,
-	 north,
-	 delimit,
-	 z;
-      } else {
-         write, f, format="%d%c %9.2f%c %10.2f%c %8.2f\n",
-	 totw, 
-	 delimit,
-	 east,
-	 delimit,
-	 north,
-	 delimit,
-	 z;
-      }
-    } 
-    if (!indx && intensity) {
-      if (rn) {
-         write, f, format="%12d%c %9.2f%c %10.2f%c %8.2f%c %d\n",
-	 rnval,
-	 delimit,
-	 east,
-	 delimit,
-	 north,
-	 delimit,
-	 z, 
-	 delimit,
-	 data_intensity(i);
-      } else {
-         write, f, format="%9.2f%c %10.2f%c %8.2f%c %d\n",
-	 east,
-	 delimit,
-	 north,
-	 delimit,
-	 z, 
-	 delimit,
-	 data_intensity(i);
-      }
-    } 
-    if (indx && intensity) {
-      if (rn) {
-        write, f, format="%d%c %12d%c %9.2f%c %10.2f%c %8.2f%c %d\n",
-	totw, 
-	 delimit,
-	rnval,
-	 delimit,
-	east,
-	 delimit,
-	north,
-	 delimit,
-	z, 
-	 delimit,
-	data_intensity(i);
-      } else {
-        write, f, format="%d%c %9.2f%c %10.2f%c %8.2f%c %d\n",
-	totw, 
-	 delimit,
-	east,
-	 delimit,
-	north,
-	 delimit,
-	z, 
-	 delimit,
-	data_intensity(i);
-      }
+	 z);
     }
+    if (intensity) {
+       curline = swrite(format="%s%c%d", 
+	 curline,
+	 delimit,
+	 data_intensity(i));
+    }
+    if (rn) {
+       curline = swrite(format="%s%c%d",
+	 curline,
+	 delimit,
+	 data_arr.rn(i));
+    }
+    if (soe) {
+       curline = swrite(format="%s%c%12.3f",
+	 curline,
+	 delimit,
+	 data_arr.soe(i));
+    } 
+    write, f, curline;
+
     if ( (i % 1000) == 0 ) edfrstat, i, numberof(data_arr);
-  } else {
-////////    write, format="rejected %f\n", data_arr.elevation(i)/100.0;
   } 
  }
  close, f;
 
-  write, format="Total records written to ascii file = %d\n", totw;
+ write, format="Total records written to ascii file = %d\n", split*xx + totw;
 }
 
 func read_ascii_xyz(ipath=,ifname=,type=, no_lines=){

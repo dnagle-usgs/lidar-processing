@@ -416,7 +416,7 @@ menu .l1wid.mb.filter
 }
 .l1wid.mb.file add command -label "Ascii output ..." -underline 0 \
   -command {
-	global cmin cmax  opath ofile
+	global cmin cmax  opath ofile data_path
 	global write_asc_some
         if { [ info exists data_path ]  == 0} {
 	     set data_path "~/"
@@ -424,7 +424,9 @@ menu .l1wid.mb.filter
         set delimit "space"
 	set indx 0
       	set intensity 0
-	set rn 0
+	set rnidx 0
+ 	set soeindx 0
+	set hline 0
 	set split 0
 	set zclip 0
 	set opath $data_path
@@ -448,11 +450,12 @@ menu .l1wid.mb.filter
 	   -command { set ofname [ tk_getSaveFile \
 			           -filetypes $ftypes \
 		                   -initialdir $data_path \
-                                   -defaultextension xyz \
+                                   -defaultextension .xyz \
                                 ];
 		   if { $ofname != "" } {
                       set opath  "[ file dirname $ofname ]/";
                       set ofname [ file tail    $ofname ];
+ 		      set data_path $opath;
 ####		      .l1asc.cmd.ok configure -state normal;
 
 	    #.l1asc.ops configure -state disabled
@@ -477,28 +480,28 @@ menu .l1wid.mb.filter
 	   
 
  	    if {$ptype == 0} {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=FS, rn=$rn; \r";
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=FS, rn=$rnidx, soe=$soeindx, noheader=!$hline; \r";
 	       expect ">"
 	    }
  	    if {$ptype == 1} {
 	      if {$dtype == 0} {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=GEO, rn=$rn; \r";
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=GEO, rn=$rnidx, soe=$soeindx, noheader=!$hline; \r";
 	      } else {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=2, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=GEO, rn=$rn; \r";
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=2, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=GEO, rn=$rnidx, soe=$soeindx, noheader=!hline; \r";
 	      }
 	       expect ">"
 	    } 
  	    if {$ptype == 2} {
 	      if {$dtype == 0} {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=VEG__, rn=$rn; \r";
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=VEG__, rn=$rnidx, soe=$soeindx, noheader=!$hline; \r";
 	      } else {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=3, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=VEG__, rn=$rn; \r";
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=3, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=VEG__, rn=$rnidx, soe=$soeindx, noheader=!$hline; \r";
 	      } 
 
 	      expect ">"
 	    }
  	    if {$ptype == 3} {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=CVEG_ALL, rn=$rn; \r";
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=CVEG_ALL, rn=$rnidx, soe=$soeindx, noheader=!$hline; \r";
 	       expect ">"
 	    }
 	    #destroy .l1asc
@@ -509,7 +512,7 @@ menu .l1wid.mb.filter
 
         wm title .l1asc "Write Ascii Data"
         LabelFrame .l1asc.ops -relief groove -borderwidth 3 -text "Options:"
-        frame .l1asc.ops.1 -relief groove -borderwidth 3
+        LabelFrame .l1asc.ops.1 -relief groove -borderwidth 3 -text "Include:"
         frame .l1asc.ops.2 -relief groove -borderwidth 3
         frame .l1asc.fn -relief groove -borderwidth 3
         frame .l1asc.cmd -relief groove -borderwidth 3
@@ -517,22 +520,34 @@ menu .l1wid.mb.filter
         set var_no [.l1wid.bf45.p.15 getvalue]
         set var_type [lindex $varlist $var_no]
 
-        label .l1asc.ops.1.dl -text "Delimiter: " 
-        tk_optionMenu .l1asc.ops.1.d delimit comma semicolon space
         # grid .l1asc.ops.dl .l1asc.ops.d -sticky ew 
+        Separator .l1asc.ops.1.s0 -orient vertical -bg black -relief groove 
         Separator .l1asc.ops.1.s1 -orient vertical -bg black -relief groove 
       
-        checkbutton .l1asc.ops.1.indx -text "Include Index Number" -variable indx 
+        checkbutton .l1asc.ops.1.indx -text "Index Number" -variable indx 
         Separator .l1asc.ops.1.s2 -orient vertical -bg black -relief groove 
 
-        checkbutton .l1asc.ops.1.rn -text "Include Raster/Pulse Number" -variable rn 
+        checkbutton .l1asc.ops.1.rn -text "Raster/Pulse Number" -variable rnidx 
         Separator .l1asc.ops.1.s3 -orient vertical -bg black -relief groove 
 
-        checkbutton .l1asc.ops.1.int -text "Include Intensity Data" -variable intensity 
+        checkbutton .l1asc.ops.1.int -text "Intensity Data" -variable intensity 
 
-        LabelEntry .l1asc.ops.2.split -width 10 -bd 3 -label "Max number of lines/file" \
+        checkbutton .l1asc.ops.1.soe -text "SOE" -variable soeindx 
+        Separator .l1asc.ops.1.s4 -orient vertical -bg black -relief groove 
+
+        checkbutton .l1asc.ops.1.header -text "Header" -variable hline 
+        Separator .l1asc.ops.1.s5 -orient vertical -bg black -relief groove 
+
+        Separator .l1asc.ops.2.s1 -orient vertical -bg black -relief groove 
+
+        label .l1asc.ops.2.dl -text "Delimiter: " 
+        tk_optionMenu .l1asc.ops.2.d delimit comma semicolon space
+
+        LabelEntry .l1asc.ops.2.split -width 7 -bd 3 -label "Max number of lines/file" \
 		-helptext "Enter maximum number of lines in each file; enter 0 to write all data in 1 file" \
 		-textvariable split 
+
+        Separator .l1asc.ops.2.s2 -orient vertical -bg black -relief groove 
 
         checkbutton .l1asc.ops.2.zclip -text "Z Clipper:" -variable zclip \
 		-command {
@@ -550,9 +565,9 @@ menu .l1wid.mb.filter
     	LabelEntry .l1asc.ops.2.zmax -width 5 -bd 3 -label "Zmax" \
 		-textvariable zmax -state disabled
 
-        pack .l1asc.ops.1.indx .l1asc.ops.1.s1 .l1asc.ops.1.rn .l1asc.ops.1.s3 .l1asc.ops.1.int .l1asc.ops.1.s2 .l1asc.ops.1.dl .l1asc.ops.1.d  -side left -fill both -padx 3
+        pack .l1asc.ops.1.s0 .l1asc.ops.1.indx .l1asc.ops.1.s1 .l1asc.ops.1.rn .l1asc.ops.1.s2 .l1asc.ops.1.int .l1asc.ops.1.s3  .l1asc.ops.1.soe  .l1asc.ops.1.s4 .l1asc.ops.1.header .l1asc.ops.1.s5 -side left -fill both -padx 3
 
- 	pack .l1asc.ops.2.split .l1asc.ops.2.zclip .l1asc.ops.2.zmin .l1asc.ops.2.zmax -side left -padx 3 -fill both
+ 	pack .l1asc.ops.2.dl .l1asc.ops.2.d .l1asc.ops.2.s1 .l1asc.ops.2.split .l1asc.ops.2.s2 .l1asc.ops.2.zclip .l1asc.ops.2.zmin .l1asc.ops.2.zmax -side left -padx 3 -fill both
 	pack .l1asc.ops.1 .l1asc.ops.2 -side top
  
  	Button .l1asc.cmd.cancel -text "Cancel" -width 5 -command {
