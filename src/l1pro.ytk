@@ -1716,9 +1716,16 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
 	set range_elv 0
   }
 
+#<<<<<<< l1pro.ytk
+#Button .l1wid.bf45.q.5 -text "Landscape:5" -command {
+#        exp_send "window,5,style=\"landscape11x85.gs\"\r";
+#}
+
+#=======
 Button .l1wid.bf45.q.44 -text "Overlay\nGrid" -command {
   exp_send "draw_grid, $win_no\r"
 }
+#>>>>>>> 1.114
 
 Button .l1wid.bf45.q.45 -text "Show\nGrid Name" -command {
   exp_send "show_grid_location, $win_no\r"
@@ -2197,6 +2204,13 @@ pack \
 	-side top -expand 1 -fill both
 
 pack .l1wid.bf45.sc.1  -side left  -padx 3
+#<<<<<<< l1pro.ytk
+#pack .l1wid.bf45.sc.f  .l1wid.bf45.sc.sk -side left -padx 5
+#pack .l1wid.bf45.q.1 .l1wid.bf45.q.2  .l1wid.bf45.q.3 .l1wid.bf45.q.4 \
+#       .l1wid.bf45.q.5 -side left
+#pack 	.l1wid.bf45.p.fma \
+#	.l1wid.bf45.p.1 \
+#=======
 pack .l1wid.bf45.sc.f .l1wid.bf45.sc.g .l1wid.bf45.sc.pl -side left -padx 5
 
 pack \
