@@ -756,6 +756,8 @@ Button .l1wid.bf5.1 -text "Write Datafile" -width 20 \
         toplevel .l1wid1
 	frame .l1wid1.1
         set ptype [.l1wid.bf4.1.p getvalue]
+        set var_no [.l1wid.bf45.p.15 getvalue]
+        set var_type [lindex $varlist $var_no]
 	LabelEntry .l1wid1.op  -width 70 -relief sunken -bd 3 -label "Opath:  " -helptext "Enter Output File Path Here" \
 		-textvariable opath
 
@@ -770,9 +772,10 @@ Button .l1wid.bf5.1 -text "Write Datafile" -width 20 \
 	    .l1wid1.of configure -state disabled
 	    .l1wid1.1.ok configure -state disabled
 
+
  	    if {$ptype == 0} {
 	     if {$write_some == 0} {
- 	       exp_send "write_topo, \"$opath\", \"$ofname\", fs_all; \r";
+ 	       exp_send "write_topo, \"$opath\", \"$ofname\", $var_type; \r";
 	       expect ">"
 	     } else {
  	       exp_send "write_topo, \"$opath\", \"$ofname\", fs_some; \r";
@@ -781,7 +784,7 @@ Button .l1wid.bf5.1 -text "Write Datafile" -width 20 \
 	    }
  	    if {$ptype == 1} {
 	     if {$write_some == 0} {
-      	       exp_send "write_bathy, \"$opath\", \"$ofname\", depth_all; \r";
+      	       exp_send "write_bathy, \"$opath\", \"$ofname\", $var_type; \r";
 	       expect ">"
 	     } else {
       	       exp_send "write_bathy, \"$opath\", \"$ofname\", depth_some; \r";
@@ -790,7 +793,7 @@ Button .l1wid.bf5.1 -text "Write Datafile" -width 20 \
 	    }
  	    if {$ptype == 2} {
 	     if {$write_some == 0} {
-      	       exp_send "write_veg, \"$opath\", \"$ofname\", veg_all; \r";
+      	       exp_send "write_veg, \"$opath\", \"$ofname\", $var_type; \r";
 	       expect ">"
 	     } else {
       	       exp_send "write_veg, \"$opath\", \"$ofname\", veg_some; \r";
@@ -799,7 +802,7 @@ Button .l1wid.bf5.1 -text "Write Datafile" -width 20 \
 	    }
  	    if {$ptype == 3} {
 	     if {$write_some == 0} {
-      	       exp_send "write_multipeak_veg, cveg_all, opath=\"$opath\", ofname=\"$ofname\"; \r";
+      	       exp_send "write_multipeak_veg, $var_type, opath=\"$opath\", ofname=\"$ofname\"; \r";
 	       expect ">"
 	     } else {
       	       exp_send "write_multipeak_veg, cveg_some, opath=\"$opath\", ofname=\"$ofname\"; \r";
