@@ -7,6 +7,7 @@
 
   W. Wright
 
+  9/4/2002 added pl_fp function to display flightplans.
   6/3/2002 Added plrect function.
 
 
