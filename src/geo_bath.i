@@ -17,6 +17,7 @@ require, "colorbar.i"
 require, "read_yfile.i"
 require, "rbgga.i"
 require, "drast.i"
+require, "nav.i"
 
 /* 
   This program is used to process bathymetry data  using the 
@@ -710,50 +711,53 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset
 	msize=
 	disp_type=
 	ptype=
+		0
+		1
+		2
 	fset=	
+		0
 
   Returns:
+	An "FS" structure.  type "FS" at the Yorick prompt to see 
+        what constitutes the structure.
 
     Amar Nayegandhi 06/11/02
 */
 
- /* use mouse function to click on the reqd point */
  extern wfa
  extern _last_rastpulse
- if ( is_void(_last_rastpulse ) )
-	_last_rastpulse = [0.0, 0.0, 0.0];
- if ( is_void(_last_soe) )
-	_last_soe = 0;
- if (!(win)) win = 5;
- window, win;
- if (!(disp_type)) disp_type = 0; //default to first surface topo
- if (!(ptype)) ptype = 0; //default to first surface topo
- if (!(msize)) msize = 1.0
- if (!(fset)) fset = 0
+ extern _rastpulse_reference
 
- if (typeof(data)=="pointer") data=*data(1);
+ if ( is_void(_last_rastpulse ) ) _last_rastpulse = [0.0, 0.0, 0.0];
+ if ( is_void(_last_soe) )        _last_soe = 0;
+ if (!(win))                            win = 5;
+ if (!(disp_type))                disp_type = 0; //default fs topo
+ if (!(ptype))                        ptype = 0; //default fs topo
+ if (!(msize))                        msize = 1.0
+ if (!(fset))                          fset = 0
+ if (typeof(data)=="pointer")          data = *data(1);
+ if (!buf)                              buf = 1000; // 10 meters  
+
+ window, win;
 
  if (numberof(data) != numberof(data.north)) {
-     if ((ptype == 1) && (fset == 0)) {
- 	//convert data from GEOALL into GEO structure
-	data_new = array(GEO, numberof(data)*120);
-	indx = where(data.rn >= 0);
-	data_new.rn = data.rn(indx);
-	data_new.north = data.north(indx);
-	data_new.east = data.east(indx);
-	data_new.sr2 = data.sr2(indx);
-	data_new.elevation = data.elevation(indx);
-	data_new.mnorth = data.mnorth(indx);
-	data_new.meast = data.meast(indx);
-	data_new.melevation = data.melevation(indx);
+     if ((ptype == 1) && (fset == 0)) { //Convert GEOALL to GEO 
+	            data_new = array(GEO, numberof(data)*120);
+	                indx = where(data.rn >= 0);
+	         data_new.rn = data.rn(indx);
+	      data_new.north = data.north(indx);
+	       data_new.east = data.east(indx);
+	        data_new.sr2 = data.sr2(indx);
+	  data_new.elevation = data.elevation(indx);
+	     data_new.mnorth = data.mnorth(indx);
+	      data_new.meast = data.meast(indx);
+	 data_new.melevation = data.melevation(indx);
 	data_new.bottom_peak = data.bottom_peak(indx);
-	data_new.first_peak = data.first_peak(indx);
-	data_new.depth = data.depth(indx);
-
-	data = data_new
+	 data_new.first_peak = data.first_peak(indx);
+	      data_new.depth = data.depth(indx);
+	                data = data_new
      }
-     if ((ptype == 0) && (fset==0)) {
-        //convert data from R into FS structure 
+     if ((ptype == 0) && (fset==0)) { //convert R to FS 
 	data_new = array(FS, numberof(data)*120);
 	indx = where(data.raster >= 0);
 	data_new.rn = data.raster(indx);
@@ -766,8 +770,7 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset
 
 	data = data_new
      }
-     if ((ptype == 2) && (fset == 0)) {
- 	//convert data from VEGALL into VEG structure
+     if ((ptype == 2) && (fset == 0)) {  //convert VEGALL to VEG 
 	data_new = array(VEG, numberof(data)*120);
 	indx = where(data.rn >= 0);
 	data_new.rn = data.rn(indx);
@@ -787,23 +790,30 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset
      }
  }
 
- if (!buf) buf=1000; /* 10 meters is the default buffer side to 
-                        look for the point 
-                      */
 
- write,format="Click on a point in window %d\n\n", win
+  left_mouse  = 1
+ center_mouse = 2
+  right_mouse = 3
+
+ do {
+ write,format="Window: %d. Left: examine point, Center: Set Reference, Right: Quit\n",win
  spot = mouse(1,1,"");
+ mouse_button = spot(10);
 
-// plg, spot(2),spot(1),marker=2,msize=2.0, color="black",type=0;
 
+// Breaking the following where into two sections generally increases
+// the speed by 2x,  but it can be much faster depending on the geometry
+// of the data and the selection box.
+ q = where(((data.east >= spot(1)*100-buf)   & 
+               (data.east <= spot(1)*100+buf)) )
+ 
+ indx = where(((data.north(q) >= spot(2)*100-buf) & 
+               (data.north(q) <= spot(2)*100+buf)));
 
- indx = where(((data.east >= spot(1)*100-buf)   & 
-               (data.east <= spot(1)*100+buf))  & 
-               ((data.north >= spot(2)*100-buf) & 
-               (data.north <= spot(2)*100+buf)));
+ indx = q(indx);
 
- if (is_array(indx)) {
 write,"============================================================="
+ if (is_array(indx)) {
     // print, data(indx);
     rn = data(indx(1)).rn;
     mindist = buf*sqrt(2);
@@ -895,13 +905,17 @@ write,"============================================================="
     } 
    }
  } else {
-   print, "No points found!  Please try again... \n";
+   print, "No points found.\n";
  }
  somd = edb(mindata.rn&0xffffff ).seconds % 86400; 
  ztime = soe2time( somd );
  zdt   = soe2time( abs(edb( mindata.rn&0xffffff ).seconds - _last_soe) );
  pnav_idx = where(  pnav.sod == double(somd) )(1);
  tans_idx = where(  tans.somd == double(somd) )(1);
+ knots = lldist( pnav(pnav_idx).lat,   pnav(pnav_idx).lon,
+                 pnav(pnav_idx+1).lat, pnav(pnav_idx+1).lon) * 
+                 3600.0/abs(pnav(pnav_idx+1).sod - pnav(pnav_idx).sod);
+
  write,format="  Raster nbr: %d UTM: %7.1f, %7.1f Delta: %7.2fm\n", 
                mindata.rn&0xffffff,
                mindata.north/100.0,
@@ -916,21 +930,45 @@ write,"============================================================="
  write,format="    GPS Pdop: %8.2f  Svs:%2d  Rms:%6.3f Flag:%d\n", 
 	       pnav(pnav_idx).pdop, pnav(pnav_idx).sv, pnav(pnav_idx).xrms,
 	       pnav(pnav_idx).flag
- write,format="     Heading: %8.3f Roll: %5.3f Pitch: %5.3f\n",
+ write,format="     Heading: %8.3f Roll: %5.3f Pitch: %5.3f %5.1fm/s %4.1fkts\n",
 	       tans(tans_idx).heading,
 	       tans(tans_idx).roll,
-	       tans(tans_idx).pitch
+	       tans(tans_idx).pitch,
+               knots * 1852.0/3600.0, 
+               knots;
 
  write,format="Scanner Elev: %8.2fm\n", mindata.melevation/100.0
  write,format="Surface elev: %8.2fm Delta: %7.2fm\n",
                mindata.elevation/100.0,
                mindata.elevation/100.0 - _last_rastpulse(3)/100.0
+
+   if ( (mouse_button == center_mouse)  ) {
+     _rastpulse_reference = array(double, 3);
+     _rastpulse_reference(1) = mindata.north;
+     _rastpulse_reference(2) = mindata.east;
+     _rastpulse_reference(3) = mindata.elevation;
+   }
+
+ if ( is_void(_rastpulse_reference) ) {
+   write, " No reference point set"
+ } else {
+   write,format="   Ref. Dist: %8.2fm  Elev diff: %7.2fm\n", 
+               sqrt(double(mindata.north - _rastpulse_reference(1))^2 +
+                    double(mindata.east  - _rastpulse_reference(2))^2)/100.0,
+               _rastpulse_reference(3)/100.0 - mindata.elevation/100.0; 
+ }
+	
+
+write,"============================================================="
  write,"\n"
 
- _last_soe = edb( mindata.rn&0xffffff ).seconds;
- _last_rastpulse(3) = mindata.elevation;
- _last_rastpulse(1) = mindata.north;
- _last_rastpulse(2) = mindata.east;
+   _last_soe = edb( mindata.rn&0xffffff ).seconds;
+   _last_rastpulse(3) = mindata.elevation;
+   _last_rastpulse(1) = mindata.north;
+   _last_rastpulse(2) = mindata.east;
+
+} while ( mouse_button != right_mouse );
+
   
  return mindata;
       
