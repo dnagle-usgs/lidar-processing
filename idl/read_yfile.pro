@@ -17,8 +17,8 @@ function read_yfile, path, fname_arr=fname_arr
 
 if not keyword_set(fname_arr) then begin
     ;search in the directory path to find all files with .bin extension
-    spawn, 'find '+path+' -name "*_rcf.bin"', fn_arr
-    spawn, 'find '+path+' -name "*_rcf.edf"', fn_arr1
+    spawn, 'find '+path+' -name "*.bin"', fn_arr
+    spawn, 'find '+path+' -name "*.edf"', fn_arr1
     fn_arr_new = fn_arr+fn_arr1
     fn_arr = fn_arr_new
 endif else fn_arr = path+fname_arr
