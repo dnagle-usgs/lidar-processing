@@ -192,6 +192,8 @@ Button .l1wid.bf45.p.1 -text "Plot" -command {
      set fs 0
      set ba 0
      set de 0
+     set fint 0
+     set lint 0
      set disp_type [.l1wid.bf45.p.5 getvalue]
      if {$disp_type == -1} {
        	tk_messageBox  -icon warning \
@@ -227,7 +229,7 @@ Button .l1wid.bf45.p.1 -text "Plot" -command {
        }
      }
      if {$ptype == 1} {
-       exp_send "plot_bathy, depth_all, win=$win_no, ba=$ba, fs = $fs, de = $de , cmin=$cmin, cmax=$cmax, msize = $msize; \r"
+       exp_send "plot_bathy, depth_all, win=$win_no, ba=$ba, fs = $fs, de = $de , fint = $fint, lint = $lint, cmin=$cmin, cmax=$cmax, msize = $msize; \r"
        expect ">"
        }
 }
@@ -239,7 +241,7 @@ SpinBox .l1wid.bf45.p.3 -justify center -range {0 7 1} \
 ### Label .l1wid.bf45.p.4 -text "to display"
 ComboBox .l1wid.bf45.p.5 -text "Display Type" -width 20 -values \
 	"First_Return_Topography Sub-aqueous_Topography \
-	Water_Depth Bare_Earth_Topography" \
+	Water_Depth Bare_Earth_Topography(pH) Surface_Amplitude(pH) Bottom_Amplitude" \
 	-helptext "Select any one of the following" \
 	-editable 0
 .l1wid.bf45.p.5 setvalue first
@@ -290,7 +292,7 @@ global cmin cdelta;
 
 scale .l1wid.bf45.sc.2 -orient horizontal \
 	-variable cdelta \
-	-from 0. -to 100 \
+	-from 0. -to 200 \
 	-resolution 0.25 \
 	-digits 6 \
 	-length 160 \

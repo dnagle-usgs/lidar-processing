@@ -655,7 +655,7 @@ func write_bathy(opath, ofname, depth_all, ba_depth=, bd_depth=) {
 
 }
 
-func plot_bathy(depth_all, fs=, ba=, de=, lint=, win=, cmin=, cmax=, msize=) {
+func plot_bathy(depth_all, fs=, ba=, de=, fint=, lint=, win=, cmin=, cmax=, msize=) {
   /* DOCUMENT plot_bathy(depth_all, fs=, ba=, de=, int=, win=)
      This function plots bathy data in window, "win" depending on which variable is set.
      If fs = 1, first surface returns are plotted referenced to NAD83.
@@ -706,10 +706,10 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=) {
  if (typeof(data)=="pointer") data=*data(1);
 
  if (numberof(data) != numberof(data.north)) {
-     if ((disp_type == 1) || (disp_type == 2)) {
+     if ((disp_type == 1) || (disp_type == 2) || (disp_type == 5)) {
  	//convert data from GEOALL into GEO structure
 	data_new = array(GEO, numberof(data)*120);
-	indx = where(data.rn > 0);
+	indx = where(data.rn >= 0);
 	data_new.rn = data.rn(indx);
 	data_new.north = data.north(indx);
 	data_new.east = data.east(indx);
@@ -727,8 +727,8 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=) {
      if (disp_type == 0) {
         //convert data from R into FS structure 
 	data_new = array(FS, numberof(data)*120);
-	indx = where(data.rn > 0);
-	data_new.rn = data.rn(indx);
+	indx = where(data.raster >= 0);
+	data_new.rn = data.raster(indx);
 	data_new.north = data.north(indx);
 	data_new.east = data.east(indx);
 	data_new.elevation = data.elevation(indx);
