@@ -13,8 +13,8 @@ struct BOAT_PICS {
 	float somd;
 }
 
-func boat_normalize_images(src=, dest=, pdb=, min_depth=, max_depth=, verbose=) {
-/* DOCUMENT  boat_normalize_images(src=, dest=, pdb=, min_depth=, max_depth=)
+func boat_normalize_images(src=, dest=, pbd=, min_depth=, max_depth=, verbose=) {
+/* DOCUMENT  boat_normalize_images(src=, dest=, pbd=, min_depth=, max_depth=, verbose=)
 
 	Converts boat images such that they are uniform in size and such that they
 	portray an area uniform in size. (In other words, they all have the same
@@ -30,7 +30,7 @@ func boat_normalize_images(src=, dest=, pdb=, min_depth=, max_depth=, verbose=) 
 
 		dest= Directory in which the converted images will be placed.
 
-		pdb= File containing BOAT_PICS data correlating to the src directory.
+		pbd= File containing BOAT_PICS data correlating to the src directory.
 			(Must have complete path and file name.)
 
 	The following options are optional:
@@ -58,11 +58,11 @@ func boat_normalize_images(src=, dest=, pdb=, min_depth=, max_depth=, verbose=) 
 		n/a
 */
 	/* Check for required options */
-	if (is_void(src) || is_void(dest) || is_void(pdb)) {
+	if (is_void(src) || is_void(dest) || is_void(pbd)) {
 		write, "One or more required options not provided. See 'help, boat_normalize_images'.";
 		if(is_void(src)) write, "-> Missing 'src='.";
 		if(is_void(dest)) write, "-> Missing 'dest='.";
-		if(is_void(pdb)) write, "-> Missing 'pdb='.";
+		if(is_void(pbd)) write, "-> Missing 'pbd='.";
 		return;
 	}
 
@@ -102,10 +102,10 @@ func boat_normalize_images(src=, dest=, pdb=, min_depth=, max_depth=, verbose=) 
 	}
 	max_depth = float(max_depth);
 	
-								if(verbose >= 2) write, format="==> boat_normalize_images(src=%s, dest=%s, pdb=%s, min_depth=%f, max_depth=%f, verbose=%d)\n", src, dest, pdb, min_depth, max_depth, verbose;
+								if(verbose >= 2) write, format="==> boat_normalize_images(src=%s, dest=%s, pbd=%s, min_depth=%f, max_depth=%f, verbose=%d)\n", src, dest, pbd, min_depth, max_depth, verbose;
 
-								if(verbose >= 1) write, "Loading pdb data.";
-	boat = boat_input_pdb(ifname=pdb, verbose=func_verbose);
+								if(verbose >= 1) write, "Loading pbd data.";
+	boat = boat_input_pbd(ifname=pbd, verbose=func_verbose);
 	
 								if(verbose >= 1) write, "Generating list of file names and time stamps.";
 	cmd = "cd " + src + " ; ( ls *.jpg | wc -l ) ; ls *.jpg | awk -F _ '{print $0\" \"$3}' ; cd -"
@@ -450,11 +450,11 @@ func boat_rename_exif_files(indir=, outdir=, datestring=, move=, verbose=) {
 								if(verbose >= 2) write, format="--/ boat_rename_exif_files%s", "\n";
 }
 
-func boat_output(boat=, ofbase=, no_pdb=, no_txt=, no_gga=, verbose=) {
-/* DOCUMENT  boat_output(boat=, ofbase=, no_pdb=, no_txt=, no_gga=, verbose=)
+func boat_output(boat=, ofbase=, no_pbd=, no_txt=, no_gga=, verbose=) {
+/* DOCUMENT  boat_output(boat=, ofbase=, no_pbd=, no_txt=, no_gga=, verbose=)
 
 	Saves boat camera data in various formats. By default, saves in all three
-	of pdb, txt, and gga. Save formats may be selectively disabled.
+	of pbd, txt, and gga. Save formats may be selectively disabled.
 
 	The following parameters are required:
 
@@ -466,14 +466,14 @@ func boat_output(boat=, ofbase=, no_pdb=, no_txt=, no_gga=, verbose=) {
 			be saved to the files.
 
 		ofbase= Full path and the base of the file to save data as. This
-			base will have ".txt" appended to save as a txt file, ".pdb"
-			appended to save as pdb, and "-gga.ybin" appended to save as
+			base will have ".txt" appended to save as a txt file, ".pbd"
+			appended to save as pbd, and "-gga.ybin" appended to save as
 			gga format.
 
 	The following options are optional:
 
-		no_pdb= Set to any non-zero value to disable the output of a
-			pdb file.
+		no_pbd= Set to any non-zero value to disable the output of a
+			pbd file.
 
 		no_txt= Set to any non-zero value to disable the output of a
 			txt file.
@@ -523,15 +523,15 @@ func boat_output(boat=, ofbase=, no_pdb=, no_txt=, no_gga=, verbose=) {
 		func_verbose = -1;
 	}
 
-	/* Validate no_pdb, no_txt, no_gga */
-	if(no_pdb) { no_pdb = 1; } else { no_pdb = 0; }
+	/* Validate no_pbd, no_txt, no_gga */
+	if(no_pbd) { no_pbd = 1; } else { no_pbd = 0; }
 	if(no_txt) { no_txt = 1; } else { no_txt = 0; }
 	if(no_gga) { no_gga = 1; } else { no_gga = 0; }
 	
-								if(verbose >= 2) write, format="==> boat_output(boat=[%i], ofbase=%s, no_pdb=%i, no_txt=%i, no_gga=%i, verbose=%i)\n", numberof(boat), ofbase, no_pdb, no_txt, no_gga, verbose;
+								if(verbose >= 2) write, format="==> boat_output(boat=[%i], ofbase=%s, no_pbd=%i, no_txt=%i, no_gga=%i, verbose=%i)\n", numberof(boat), ofbase, no_pbd, no_txt, no_gga, verbose;
 
-	if(! no_pdb) {
-		boat_output_pdb, boat=boat, ofname=ofbase+".pdb", verbose=func_verbose;
+	if(! no_pbd) {
+		boat_output_pbd, boat=boat, ofname=ofbase+".pbd", verbose=func_verbose;
 	}
 	if(! no_txt) {
 		boat_output_txt, boat=boat, ofname=ofbase+".txt", verbose=func_verbose;
@@ -642,7 +642,7 @@ func boat_output_gga(boat=, ofname=, verbose=) {
 }
 
 func boat_output_txt(boat=, ofname=, verbose=) {
-/* DOCUMENT  boat_output_gga(boat=, ofname=, verbose=)
+/* DOCUMENT  boat_output_txt(boat=, ofname=, verbose=)
 
 	Saves boat camera data to a text file, used by sf_a.tcl.
 
@@ -721,10 +721,10 @@ func boat_output_txt(boat=, ofname=, verbose=) {
 								if(verbose >= 2) write, format="--/ boat_output_txt%s", "\n";
 }
 
-func boat_output_pdb(boat=, ofname=, verbose=) {
-/* DOCUMENT  boat_output_pdb(boat=, ofname=, verbose=)
+func boat_output_pbd(boat=, ofname=, verbose=) {
+/* DOCUMENT  boat_output_pbd(boat=, ofname=, verbose=)
 
-	Saves boat camera data to a Yorick pdb file.
+	Saves boat camera data to a Yorick pbd file.
 
 	The following parameters are required:
 
@@ -733,7 +733,7 @@ func boat_output_pdb(boat=, ofname=, verbose=) {
 	The following options are required:
 
 		boat= Array of type BOAT_PICS, containing the data to
-			be saved to the pdb file.
+			be saved to the pbd file.
 
 		ofname= Full path and file name to save data as.
 
@@ -760,7 +760,7 @@ func boat_output_pdb(boat=, ofname=, verbose=) {
 	
 	/* Check for required options */
 	if (is_void(boat) || is_void(ofname)) {
-		write, "One or more required options not provided. See 'help, boat_output_pdb'.";
+		write, "One or more required options not provided. See 'help, boat_output_pbd'.";
 		if(is_void(boat)) write, "-> Missing 'boat='.";
 		if(is_void(ofname)) write, "-> Missing 'ofname='.";
 		return;
@@ -768,7 +768,7 @@ func boat_output_pdb(boat=, ofname=, verbose=) {
 
 	/* Partially validate the ofname */
 	if (dimsof(ofname)(1)) {
-		write, "An array was passed for ofname, but only a scalar value is acceptable.\nSee 'help, boat_output_pdb'.";
+		write, "An array was passed for ofname, but only a scalar value is acceptable.\nSee 'help, boat_output_pbd'.";
 		return;
 	}
 
@@ -787,7 +787,7 @@ func boat_output_pdb(boat=, ofname=, verbose=) {
 	/* Variable name to save to file as */
 	vname = "boat_data";
 
-								if(verbose >= 2) write, format="==> boat_output_pdb(boat=[%i], ofname=%s, verbose=%i)\n", numberof(boat), ofname, verbose;
+								if(verbose >= 2) write, format="==> boat_output_pbd(boat=[%i], ofname=%s, verbose=%i)\n", numberof(boat), ofname, verbose;
 
 								if(verbose >=1) write, "Writing PBD file.";
 	f = createb(ofname);
@@ -796,7 +796,7 @@ func boat_output_pdb(boat=, ofname=, verbose=) {
 	save, f, vname;
 	close, f; 
 								if(verbose >=1) write, format=" PBD file written to %s as %s.\n", ofname, vname;
-								if(verbose >= 2) write, format="--/ boat_output_pdb%s", "\n";
+								if(verbose >= 2) write, format="--/ boat_output_pbd%s", "\n";
 }
 
 func boat_merge_datasets(boatA, boatB, verbose=) {
@@ -1447,10 +1447,10 @@ func boat_input_exif(ifdir=, step=, verbose=) {
 	return boat;
 }
 
-func boat_input_pdb(ifname=, verbose=) {
-/* DOCUMENT  boat_input_pdb(ifname=, verbose=)
+func boat_input_pbd(ifname=, verbose=) {
+/* DOCUMENT  boat_input_pbd(ifname=, verbose=)
 
-	Reads and returns an array of BOAT_PICS that was saved to a Yorick pdb file.
+	Reads and returns an array of BOAT_PICS that was saved to a Yorick pbd file.
 
 	The following parameters are required:
 
@@ -1458,7 +1458,7 @@ func boat_input_pdb(ifname=, verbose=) {
 
 	The following options are required:
 
-		ifname= Full path and file name of pdb file to be read.
+		ifname= Full path and file name of pbd file to be read.
 
 	The following options are optional:
 
@@ -1482,7 +1482,7 @@ func boat_input_pdb(ifname=, verbose=) {
 	
 	/* Check for required options */
 	if (is_void(ifname)) {
-		write, "One or more required options not provided. See 'help, boat_input_pdb'.";
+		write, "One or more required options not provided. See 'help, boat_input_pbd'.";
 		if(is_void(ifname)) write, "-> Missing 'ifname='.";
 		return;
 	}
@@ -1499,7 +1499,7 @@ func boat_input_pdb(ifname=, verbose=) {
 		func_verbose = -1;
 	}
 
-								if(verbose >= 2) write, format="==> boat_input_pdb(ifname=%s, verbose=%i)\n", ifname, verbose;
+								if(verbose >= 2) write, format="==> boat_input_pbd(ifname=%s, verbose=%i)\n", ifname, verbose;
 
 								if(verbose >= 2) write, "  Reading file";
 	f = openb(ifname);
@@ -1508,7 +1508,7 @@ func boat_input_pdb(ifname=, verbose=) {
 								if(verbose >= 2) write, format="     vname=%s\n", vname;
 	close, f;
 
-								if(verbose >= 2) write, format="--/ boat_input_pdb%s", "\n";
+								if(verbose >= 2) write, format="--/ boat_input_pbd%s", "\n";
 	return boat;
 }
 
@@ -1586,7 +1586,7 @@ func perpendicular_intercept(x1, y1, x2, y2, x3, y3) {
 /* DOCUMENT perpendicular_intercept(x1, y1, x2, y2, x3, y3)
 	
 	Returns the coordinates of the point where the line that passes through
-	(x1, y2) and (x2, y2) intersects with the line that passes through
+	(x1, y1) and (x2, y2) intersects with the line that passes through
 	(x3, y3)	and is perpendicular to the first line.
 
 	The following paramaters are required:
@@ -1649,4 +1649,155 @@ func perpendicular_intercept(x1, y1, x2, y2, x3, y3) {
 	}
 
 	return [xi, yi];
+}
+
+func find_nearest_point(x, y, xs, ys, force_single=, radius=, verbose=) {
+/* DOCUMENT find_nearest_point(x, y, xs, ys, force_single=, radius=, verbose=)
+
+	Returns the index(es) of the nearest point(s) to a specified location.
+
+	The following parameters are required:
+
+		x, y    An ordered pair for the location to be found near.
+
+		xs, ys  Correlating arrays of x and y values in which to find the
+			nearest point.
+
+	The following options are required:
+
+		n/a
+
+	The following options are optional:
+
+		force_single= By default, if several points are all equally near
+			then the indexes of all of them will be returned in an array.
+			Specifying force_single to a positive value will return only
+			one value, selected randomly. Specifying force_single to a
+			negative value will return only the first value.
+
+		radius= The initial radius within which to search. Radius multiplies
+			by the square root of 2 on each interation of the search. By
+			default, radius initializes to 1.
+
+		verbose= Indicates the verbosity level to run at.
+			Default: 0
+			Valid values:
+				0 - No progress info
+				1 - Limited progress information
+				2 - Full progress information
+				3 - Full progress information for this function
+					and all called functions
+				-1 - Explicitly request the default level
+				-2 - No progress info for this or any called
+					functions
+
+	Function returns:
+
+		The index (or indexes) of the point(s) nearest to the specified point.
+*/
+
+	require, "data_rgn_selector.i";
+	
+	problem_string = "";
+	/* Validate xs and ys */
+	if(dimsof(xs)(1) != 1) {
+		problem_string += " -> Array xs is not a one-dimensional array.\n";
+	}
+	if(dimsof(ys)(1) != 1) {
+		problem_string += " -> Array ys is not a one-dimensional array.\n";
+	}
+	if(problem_string == "" && dimsof(xs)(2) != dimsof(ys)(2)) {
+		problem_string += " -> The dimensions of xs do not match the dimensions of ys.\n";
+	}
+	if(dimsof(x)(1) != 0) {
+		problem_string += " -> Only a scalar value may be specified for x.\n";
+	}
+	if(dimsof(y)(1) != 0) {
+		problem_string += " -> Only a scalar value may be specified for y.\n";
+	}
+
+	if(problem_string != "") {
+		write, format="Invalid options were specified. See 'help, find_nearest_point'.\n%s", problem_string;
+		return;
+	}
+	
+	/* Validate force_single */
+	if(is_void(force_single)) { force_single = 0; }
+	force_single = int(force_single);
+
+	/* Validate radius */
+	if(is_void(radius)) { radius = 1.0; }
+	radius = abs(radius);
+
+	/* Validate the verbosity and set func_verbose */
+	if (!(is_array(verbose) && !dimsof(verbose)(1))) verbose = 0;
+	if (verbose == -1) verbose = 0;
+	if (verbose == 3 || verbose == -2) {
+		func_verbose = verbose;
+	} else {
+		func_verbose = -1;
+	}
+	verbose = int(verbose);
+	
+								if(verbose >= 2) write, format="==> find_nearest_point(x:%f, y:%f, xs:[%i], ys:[%i], force_single=%i, radius=%f, verbose=%i)\n", float(x), float(y), numberof(xs), numberof(ys), force_single, float(radius), verbose;
+
+	/* Initialize the indx of points in the box def by radius */
+	indx = data_box(xs, ys, x-radius, x+radius, y-radius, y+radius);
+
+								if(verbose >= 1) counter = 0;
+	
+	/* The points furthest away from the center in a data_box actually have a
+		radius of r * sqrt(2). Thus, when we initially find a box containing
+		points, we have to expand the box to make sure there weren't any closer
+		ones that just happened to be at the wrong angle. */
+								if(verbose >= 1) write, "Looking for points.";
+	do {
+								if(verbose >= 1) counter++;
+								if(verbose >= 1) write, format=" Iteration %i", counter;
+								if(verbose == 1) write, format=".%s", "\r";
+								if(verbose >= 2) write, format=":%s", "\n";
+		indx_orig = indx;
+								if(verbose >= 2) write, format="   Smaller radius is %f, ", float(radius);
+		radius *= 2 ^ .5;
+								if(verbose >= 2) write, format="larger radius is %f.\n", float(radius);
+		indx = data_box(xs, ys, x-radius, x+radius, y-radius, y+radius);
+								if(verbose >= 2) write, format="   Found %i points in smaller box, %i points in larger box.\n", numberof(indx_orig), numberof(indx);
+	} while (!is_array(indx_orig));
+								if(verbose == 1) write, format=" Points have been found.%s", "\n";
+								if(verbose >= 2) write, format=" Found points within a radius of %f.\n", orig_radius;
+
+	/* Calculate the distance of each point in the index from the center */
+								if(verbose >= 2) write, "Calculating relevant distances.";
+	dist = array(double, numberof(xs));
+	dist() = -1;
+	dist(indx) = ( (x - xs(indx))^2 + (y - ys(indx))^2 ) ^ .5;
+	
+	/* Find the minimum distance */
+								if(verbose >= 2) write, "Finding minimal distance.";
+	above_zero = where(dist(indx)>=0);
+	min_dist = min(dist(indx)(above_zero));
+								if(verbose >= 2) write, format=" Minimal distance is %f.\n", min_dist;
+
+	/* Find the indexes in the original array that have the min dist */
+								if(verbose >= 2) write, "Finding points with minimal distance.";
+	point_indx = where(dist == min_dist);
+
+	/* Force single return if necessary */
+	if(force_single && numberof(point_indx) > 1) {
+		if(force_single > 0) {
+			pick = int(floor(numberof(point_indx) * random() + 1));
+			if(pick > numberof(point_indx)) { pick = int(numberof(point_indx)); }
+			point_indx = point_indx(pick);
+								if(verbose >= 2) write, "Randomly selected only one point.";
+		} else {
+			point_indx = point_indx(1);
+								if(verbose >= 2) write, "Selected last point only.";
+		}
+								if(verbose == 1) write, "Nearest point has been located.";
+	} else {
+								if(verbose == 1) write, "Nearest points have been located.";
+	}
+	
+								if(verbose >= 2) write, format="--/ find_nearest_point%s", "\n";
+	return point_indx;
 }
