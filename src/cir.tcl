@@ -230,6 +230,12 @@ proc prefs { } {
 	-text Stop \
 	-command { set settings(loop) 0; }
 
+  button .p.rgb \
+	-text RGB \
+	-command { 
+            send sf_a.tcl "set timern sod; set hsr $settings(sod); gotoImage";
+        }
+
   spinbox .p.step  \
  	-values { 1 2 3 4 5 7 10 15 20 25 30 45 60 90 100 120 180 300 600 } \
 	-width 5 \
@@ -262,6 +268,7 @@ bind .p.sod <Return> { global settings; show sod $settings(sod); }
 	.p.play \
 	.p.yalp \
 	.p.stop \
+	.p.rgb \
 	-fill both \
 	-expand 1
 }
