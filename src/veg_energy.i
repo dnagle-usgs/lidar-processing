@@ -775,6 +775,8 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, normalize=) {
 	}
       }
       if (fgr > lgr) continue;
+      if (lgr > numberof(lfprx)) lgr = numberof(lfprx);
+      if (fgr > numberof(lfprx)) fgr = numberof(lfprx);
 	lfpgnd = lfprx(fgr:lgr);
 	lfpgnpix = lfpnpix(fgr:lgr);
 	lfpcpy = lfprx(lgr:);
@@ -909,10 +911,10 @@ func plot_veg_classes(mets, lfp, idx=, win=, dofma=, msize=, smooth=, write_imag
 */
 
 if (is_void(msize)) msize=0.5
+/*
 //idx1 = where((mets(1,) > 6) & (mets(1,) < 22) & (mets(4,) >= 0.5));
 idx1 = where((mets(1,) > 5) & (mets(1,) <= 22) & (mets(4,) >= 0.59)); // FOREST 
-
-//idx2 = where((mets(1,) > 6) & (mets(4,) > 0.25) & (mets(4,) < 0.6));
+idx2 = where((mets(1,) > 6) & (mets(4,) > 0.25) & (mets(4,) < 0.6));
 idx2 = where((mets(1,) > 5) & (mets(1,) <= 22) & (mets(4,) < 0.59) & (mets(4,) >= 0.24)); // WOODLAND
 
 idx3 = where((mets(1,) > 5) & (mets(1,) <= 22) & (mets(4,) < 0.24) & (mets(4,) >= 0.10)); // SPARSE WOODLAND
@@ -922,6 +924,22 @@ idx4 = where((mets(1,) <= 5) & (mets(1,) > 1) & (mets(4,) >= 0.2)); // SHRUBLAND
 idx5 = where((mets(1,) <= 5) & (mets(1,) > 1) & (mets(4,) < 0.2)); // SPARSE SHRUBLAND
 
 idx6 = where((mets(1,) <= 1) & (mets(1,) > -2.0)); // HERBACEOUS VEG, SAND, WATER etc.
+*/
+
+//modified 03/25/05 
+idx1 = where((mets(1,) > 5) & (mets(1,) <= 29) & (mets(4,) >= 0.59) & (mets(2,) < 0.0)); // WETLAND FOREST 
+
+idx2 = where((mets(1,) > 5) & (mets(1,) <= 29) & (mets(4,) >= 0.59) & (mets(2,) > 0.0)); // upLAND FOREST 
+
+idx3 = where((mets(1,) > 5) & (mets(1,) <= 29) & (mets(4,) < 0.59)); // WOODLAND 
+
+idx4 = where((mets(1,) > 1) & (mets(1,) <= 5) & (mets(4,) >= 0.19) & (mets(2,) < 0.0)); // wetLAND SHRUBLAND 
+
+idx5 = where((mets(1,) > 1) & (mets(1,) <= 5) & (mets(4,) >= 0.19) & (mets(2,) > 0.0)); // upLAND SHRUBLAND 
+
+idx6 = where((mets(1,) > 0.5) & (mets(1,) <= 1.5) & (mets(2,) > 0.5)); // HERBACEOUS VEGETATION
+
+idx7 = where((mets(2,) < -0.5)); // WATER
 
 z = mets(1,,);
 z(*) = 0;
@@ -929,7 +947,7 @@ z(*) = 0;
 if (is_void(win)) win=4;
 window, win;
 if (dofma) fma;
-if (!is_array(idx)) idx = [1,2,3,4,5];
+if (!is_array(idx)) idx = [1,2,3,4,5,6,7];
 
 if (is_array(idx1)) z(idx1) = 1;
 if (is_array(idx2)) z(idx2) = 2;
@@ -937,6 +955,7 @@ if (is_array(idx3)) z(idx3) = 3;
 if (is_array(idx4)) z(idx4) = 4;
 if (is_array(idx5)) z(idx5) = 5;
 if (is_array(idx6)) z(idx6) = 6;
+if (is_array(idx7)) z(idx7) = 7;
 
  if (smooth) {
    // make 2d array with class numbers
@@ -954,6 +973,7 @@ if (is_array(idx6)) z(idx6) = 6;
 	i4 = where(z(j-1:j+1,i-1:i+1) == 4)
 	i5 = where(z(j-1:j+1,i-1:i+1) == 5)
 	i6 = where(z(j-1:j+1,i-1:i+1) == 6)
+	i7 = where(z(j-1:j+1,i-1:i+1) == 7)
 	imxx = [numberof(i1),numberof(i2),numberof(i3),numberof(i4),numberof(i5), numberof(i6)](mxx);
 	imx = [numberof(i1),numberof(i2),numberof(i3),numberof(i4), numberof(i5), numberof(i6)](max);
 	if (z(j,i)!= 0) {
@@ -995,9 +1015,17 @@ if (is_array(idx6)) z(idx6) = 6;
   close,f;
 
  }
-     
  z = bytscl(z);
  pli, z, lfp(1,1).east/100., lfp(1,1).north/100., lfp(0,1).east/100., lfp(1,0).north/100.;
+ colors = span(0,7,8);
+ colors = bytscl(colors);
+ window, 3; fma;
+ for (i=1;i<=8;i++) {
+   plmk, i,1, color=colors(i), marker=4, msize=1.0, width=10;
+   txt1 = swrite(format="%d",i-1);
+   plt, txt1, 2,i, tosys=1;
+ }
+ 
 	
 return
 }
@@ -1215,34 +1243,48 @@ func correct_1_chp(rarr,erarr) {
  
 }
 
-func make_begrid_from_bexyz(bexyz, binsize=, intdist=) {
+func make_begrid_from_bexyz(bexyz, binsize=, intdist=, lfpveg=) {
 /* DOCUMENT make_begrid_from_bexyz(bexyz, binsize=)
   amar nayegandhi 02/16/05.
   This function makes a Bare Earth grid using the processed/filtered bare earth 
   data (bexyz) at a grid resolution of binsize.  
   intdist = interpolation distance to average missing values (default=2)
+  lfpveg = array that describes the composite waveforms.  This is used to make the
+  	   begrid conform to the size of the lfpveg array.
   OUTPUT:  array img containing the Bare Earth grid
 */
 
   extern bbox
   if (is_void(intdist)) intdist=2;
-  // define a bounding box
-  bbox = array(float, 4);
-  bbox(1) = min(bexyz.least);
-  bbox(2) = max(bexyz.least);
-  bbox(3) = min(bexyz.lnorth);
-  bbox(4) = max(bexyz.lnorth);
-
   if (!binsize) binsize = 5; //in meters
   binsize = binsize * 100;
 
-  // transform bbox to a regular grid with "binsize" dimensions
-  b1box = array(long,4);
-  b1box(1) = int(bbox(1)/binsize)*binsize;
-  b1box(2) = int(ceil(bbox(2)/binsize)*binsize);
-  b1box(3) = int(bbox(3)/binsize)*binsize;
-  b1box(4) = int(ceil(bbox(4)/binsize)*binsize);
-  bbox = b1box;
+  // define a bounding box
+  bbox = array(long, 4);
+  if (is_array(lfpveg)) {
+    bbox(1) = lfpveg(1,1).east;
+    bbox(3) = lfpveg(1,1).north;
+    bbox(2) = lfpveg(0,0).east+binsize;
+    bbox(4) = lfpveg(0,0).north+binsize;
+  } else {
+    bbox(1) = min(bexyz.least);
+    bbox(2) = max(bexyz.least);
+    bbox(3) = min(bexyz.lnorth);
+    bbox(4) = max(bexyz.lnorth);
+  }
+
+
+  // transform bbox to a regular grid with "binsize" dimensions, if required
+  if (!is_array(lfpveg)) {
+    b1box = array(long,4);
+    bbox = float(bbox);
+    b1box(1) = int(bbox(1)/binsize)*binsize;
+    b1box(2) = int(ceil(bbox(2)/binsize)*binsize);
+    b1box(3) = int(bbox(3)/binsize)*binsize;
+    b1box(4) = int(ceil(bbox(4)/binsize)*binsize);
+    bbox = b1box;
+    bbox = long(bbox);
+  }
   ll = [bbox(1), bbox(3)]/100; // lower left location
   //now find the grid dimensions
   ngridx = (bbox(2)-bbox(1))/binsize;
@@ -1250,6 +1292,10 @@ func make_begrid_from_bexyz(bexyz, binsize=, intdist=) {
 
   img = array(float, ngridx, ngridy); img(*) = -1000; // initialize with missing value
   imgcount = array(int, ngridx,ngridy); // counter 
+  if ((dimsof(lfpveg)(2) != dimsof(img)(2)) || (dimsof(lfpveg)(3) != dimsof(img)(3))) {
+    write, "dimensions not the same ... halt!"
+    amar();
+  }
 
  // now use delaunay triangulation to find the vertices
   verts = triangulate_xyz(data=bexyz, mode=3, distthresh=100);
@@ -1342,13 +1388,14 @@ func clean_lfpw (lfpw, beimg=, thresh=, min_elv=, max_elv=) {
 
  lfpw_new = array(LFP_VEG,dims(2),dims(3));
 
- for (i=1;i<=dims(2);i++) {
-   for (j=1;j<=dims(3);j++) {
+ for (i=1;i<=dims(3);i++) {
+   for (j=1;j<=dims(2);j++) {
      lfp = lfpw(j,i);
      lfpw_new(j,i).north = lfp.north;
      lfpw_new(j,i).east = lfp.east;
      if (lfp.npix <= 0) continue;
      lfprx = *lfp.rx;
+     if (!is_array(lfprx)) continue;
      npixels = *lfp.npixels;
      elvs = *lfp.elevation;
      nzidx = where(npixels != 0);
@@ -1404,3 +1451,102 @@ func clean_lfpw (lfpw, beimg=, thresh=, min_elv=, max_elv=) {
   }
   return lfpw_new
  }
+
+func compare_mets(outveg1, mets1, outveg2, mets2, idx=, win=) {
+/* DOCUMENT compare_mets(outveg1, mets1, outveg2, mets2, idx=, win=)
+   This function compares the vegetation metrics from 2 diff surveys.
+	amar nayegandhi 03/25/05.
+   INPUT:
+	outveg1 = lfpw array for mission 1
+	mets1 = vegetation metrics for mission 1
+	outveg2 = lfpw array for mission 2
+	mets2 = vegetation metrics for mission 2
+	idx = metric index to compare
+	win = window number to plot the difference
+*/
+
+  if (is_void(idx)) idx = 1;
+  if (is_void(win)) win = 1;
+  
+  // make sure the grid cells are the same size
+  xbin1 = outveg1(2,1).east - outveg1(1,1).east;
+  ybin1 = outveg1(1,2).north - outveg1(1,1).north;
+
+  xbin2= outveg2(2,1).east - outveg2(1,1).east;
+  ybin2 = outveg2(1,2).north - outveg2(1,1).north;
+
+  if (xbin1 != xbin2) {
+    write, "X Grid cell size not same... cannot compare... goodbye!"
+    return
+  }
+  if (ybin1 != ybin2) {
+    write, "Y Grid cell size not same... cannot compare... goodbye!"
+    return
+  }
+  xbin = xbin1; ybin = ybin1;
+  if (xbin == ybin) bin = xbin;
+
+  // now find the common area for both missions
+  mineast1 = min(outveg1.east);
+  minnorth1 = min(outveg1.north);
+  maxeast1 = max(outveg1.east);
+  maxnorth1 = max(outveg1.north);
+  
+  mineast2 = min(outveg2.east);
+  minnorth2 = min(outveg2.north);
+  maxeast2 = max(outveg2.east);
+  maxnorth2 = max(outveg2.north);
+
+  mineast = max(mineast1,mineast2);
+  maxeast = min(maxeast1,maxeast2);
+  minnorth = max(minnorth1,minnorth2);
+  maxnorth = min(maxnorth1, maxnorth2);
+
+  idx1 = where((outveg1.east > mineast) & (outveg1.east < maxeast) & (outveg1.north > minnorth) & (outveg1.north < maxnorth));
+  idx2 = where((outveg2.east > mineast) & (outveg2.east < maxeast) & (outveg2.north > minnorth) & (outveg2.north < maxnorth));
+  ngridx = (maxeast-mineast)/xbin;
+  ngridy = (maxnorth-minnorth)/ybin;
+
+  amar();
+  outmets = array(5,ngridx,ngridy);
+  omets1 = array(5,ngridx,ngridy);
+  omets2 = array(5,ngridx,ngridy);
+  
+  if (mineast != mineast1) {
+    sxidx1 = (mineast-mineast1)/xbin;
+    sxidx2 = 1;
+  } else {
+    sxidx2 = (mineast-mineast2)/xbin;
+    sxidx1 = 1;
+  }
+  if (maxeast != maxeast1) {
+    exidx1 = (maxeast2-maxeast)/xbin;
+    exidx2 = maxeast;
+  } else {
+    exidx2 = 0;
+    exidx1 = maxeast;
+  }
+    
+  if (minnorth != minnorth1) {
+    eyidx1 = (minnorth-minnorth1);
+    exidx2 = maxeast;
+  } else {
+    exidx2 = 0;
+    exidx1 = maxeast;
+  }
+  
+  if (maxnorth != maxnorth1) {
+    exidx1 = 0;
+    exidx2 = maxeast;
+  } else {
+    exidx2 = 0;
+    exidx1 = maxeast;
+  }
+  amar();
+  mets1 = mets1(sxidx1:exidx1,syidx1:eyidx1); 
+  mets2 = mets2(sxidx2:exidx2,syidx2:eyidx2); 
+
+  outmets = mets1-mets2;
+
+  return outmets;
+}

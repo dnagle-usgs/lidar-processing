@@ -6,6 +6,7 @@ func batch_veg_lfpw(ipath, opath, fname=, searchstr=, onlyupdate=,binsize=, norm
     This function makes large footprint waveforms in a batch mode. 
     See make_large_footprint_waveform in veg_energy.i
     onlyupdate = set to 1 if you want to continue from where you left off (at the file level).
+    opath = do not set if you want to write the files out to the data tiles within the input directory. 
    amar nayegandhi 09/27/04
 */
 
@@ -74,7 +75,9 @@ func batch_veg_lfpw(ipath, opath, fname=, searchstr=, onlyupdate=,binsize=, norm
         new_fn = fn_split(1)+fnametag+fn_split(2);
         if (opath) {
            fn_split = split_path(fn_all(i), 0);
- 	   new_fn = opath+fn_split(2);
+	   fn1 = fn_split(2);
+  	   fn_split = split_path(fn1, 1, ext=1);
+ 	   new_fn = opath+fn_split(1)+fnametag+fn_split(2);
         }
         if (onlyupdate) {
            if (is_array(where(old_fn == new_fn))) continue;
@@ -105,9 +108,11 @@ func batch_veg_lfpw(ipath, opath, fname=, searchstr=, onlyupdate=,binsize=, norm
         
 }
 
-func batch_veg_metrics(ipath, opath, fname=,searchstr=, plotclasses=, thresh=, min_elv=, outwin=, onlyplot=, dofma=) {
+func batch_veg_metrics(ipath, opath, fname=,searchstr=, plotclasses=, thresh=, min_elv=, outwin=, onlyplot=, dofma=, use_be=, cl_lfpw=) {
 /* DOCUMENT batch_veg_metrics(ipath, opath, searchstr=, plot=, plotclasses=)
    amar nayegandhi 10/01/04
+   use_be = use bare earth data (in *ircf or *mf files).
+   cl_lfpw = set to 1 to reduce the noise in the large footprint waveform.
 */
 
    // start timer
@@ -151,7 +156,32 @@ func batch_veg_metrics(ipath, opath, fname=,searchstr=, plotclasses=, thresh=, m
         new_fn = fn_split(1)+fnametag+fn_split(2);
         if (opath) {
            fn_split = split_path(fn_all(i), 0);
- 	   new_fn = opath+fn_split(2);
+	   fn1 = fn_split(2);
+  	   fn_split = split_path(fn1, 1, ext=1);
+ 	   new_fn = opath+fn_split(1)+fnametag+fn_split(2);
+        }
+	// look for bare earth files if use_be = 1
+  	if (use_be) {
+	   fn_split = split_path(fn_all(i),0);
+	   // find ircf and/or mf files
+     	   s = array(string,10000);
+           ss = "*n88_*ircf*";
+           scmd = swrite(format = "find %s -name '%s'",fn_split(1), ss);
+           fp = 1; lp = 0;
+           f=popen(scmd, 0);
+           n = read(f,format="%s", s );
+           close, f;
+           lp = lp + n;
+           if (n) be_file = s(fp:lp);
+           fp = fp + n;
+	   if (numberof(be_file) > 1) {
+	      idx = where(strmatch(be_file, "mf"));
+              if (is_array(idx)) {
+		be_file = be_file(idx(1));
+	      } else {
+	        be_file = be_file(1);
+	      }
+	   }
         }
         fn_split = split_path(fn_all(i),0);
         s_east = strpart(fn_split(2), 4:9);
@@ -167,11 +197,27 @@ func batch_veg_metrics(ipath, opath, fname=,searchstr=, plotclasses=, thresh=, m
           restore, f, mets;
           close, f;
 	} else {
+	  if (use_be) {
+	    write, "Opening bare earth data file... ";
+	    f = openb(be_file(1));
+	    restore, f;
+	    bexyz = get_member(f,vname);
+	    close, f;
+	    write, "Converting bare earth xyz into a grid...";
+  	    img = make_begrid_from_bexyz(bexyz, binsize=5, intdist=5, lfpveg=outveg);
+	  }
+          if (cl_lfpw) {
+	   write, "cleaning composite waveform data array..."
+	   outveg = clean_lfpw(outveg, beimg=img, min_elv=min_elv, max_elv=max_elv)
+	  }
+	   write, "computing large-footprint metrics..."
 	  mets = lfp_metrics(outveg, thresh=thresh, img=img, fill=fill, min_elv=min_elv);
+	   write, "writing metrics file..."
           f = createb(new_fn);
           save, f, mets;
           close, f;
         }
+
 
         if (plotclasses) {
 
