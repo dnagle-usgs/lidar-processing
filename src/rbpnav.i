@@ -182,9 +182,11 @@ extern gga;
  }
 
  if ( _ytk ) {
-    path = data_path + "/gps/"
+    // path = data_path + "/gps/"
+    path = data_path + "/trajectories/"
     tkcmd, "path_exists "+path
-    ifn  = get_openfn( initialdir=data_path, filetype="*pnav.ybin" );
+    // ifn  = get_openfn( initialdir=data_path, filetype="*pnav.ybin" );
+    ifn  = get_openfn( initialdir=path, filetype="*pnav.ybin" );
     if (strmatch(ifn, "ybin") == 0) {
           exit, "NO FILE CHOSEN, PLEASE TRY AGAIN\r";
     }
