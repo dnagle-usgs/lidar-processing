@@ -1,3 +1,8 @@
+/*
+
+   $Id$
+
+*/
 
 func select_region(data, win=, plot=) {
  /*DOCUMENT select_region(data, win=)

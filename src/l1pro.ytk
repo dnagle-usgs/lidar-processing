@@ -600,7 +600,7 @@ menu .l1wid.mb.filter
 	-command { exp_send "pnav = rbpnav(); \r"
 			 }
 
-.l1wid.mb.load add command -label "Initialize structure BATHCTL .." -underline 21 \
+.l1wid.mb.load add command -label "Load Bathymetry Settings .." -underline 21 \
 	-command { source bathctl.ytk; bathctl  }
 
 

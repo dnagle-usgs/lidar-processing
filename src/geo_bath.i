@@ -723,7 +723,17 @@ func plot_bathy(depth_all, fs=, ba=, de=, fint=, lint=, win=, cmin=, cmax=, msiz
 //////////////   colorbar, cmin, cmax, drag=1;
 }
 
- 
+
+struct RASPULSESEARCH {
+  float cmax;
+  float cmin;
+  int  win;
+  float msize;
+  int disp_type;
+  int ptype;
+  int fset;
+}; 
+
  
 
 
@@ -798,7 +808,22 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset
      }
  }
 
+/*
+    Mouse commands:
+   
+  left            Examine a point
+  middle          Set reference point
+  right           Quit
 
+  shift-left      Append point 
+  shift-middle
+  shift-right
+
+  control-left
+  control-middle
+  control-right
+
+*/
   left_mouse  = 1
  center_mouse = 2
   right_mouse = 3

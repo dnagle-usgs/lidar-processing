@@ -348,12 +348,14 @@ func ex_bath( rn, i,  last=, graph=, win=, xfma= ) {
           wflen = numberof(w);
           if ( wflen > 18 ) { 
 	     wflen = 18;
-	     last_surface_sat = 9;
+	      last_surface_sat = w(1:10)(mnx);
 	  } else {
 	     last_surface_sat = 9;
 	  }
 //	  last_surface_sat =  w(1:wflen) (mnx) ;
-          escale = (255 - w(1:wflen) (min)) - dbias;
+          if ( wflen < 10 ) wfl = wflen; 
+          else wfl = 10;
+          escale = (255 - w(1:wfl) (min)) - dbias;
    }
 
 
@@ -394,11 +396,11 @@ first = bath_ctl.first;
 last = bath_ctl.last;
 
 if ( graph ) {
-  window,win; 
+  window,win; gridxy,2,2
   if ( xfma ) fma;
-  plg,[thresh,thresh],[1,n],marks=0, color="red";
-  plg,[0,5],[first,first],marks=0, color="green", width=7;
-  plg,[0,5],[last,last],marks=0, color="red", width=7;
+  plg,[thresh,thresh],[first,last],marks=0, color="red";
+  plg,[0,thresh],[first,first],marks=0, color="green", width=7;
+  plg,[0,thresh],[last,last],marks=0, color="red", width=7;
   plmk, bath_ctl.a(1:n,i,1), msize=.2, marker=1, color="black";
   plg, bath_ctl.a(1:n,i,1), color=black, width=4;
   plmk, da(1:n), msize=.2, marker=1, color="black";

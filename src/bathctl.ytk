@@ -1,3 +1,6 @@
+#
+# $Id$
+#
 
 proc set_bath_ctl { a b c } {
  global bath_ctl
@@ -15,44 +18,76 @@ proc send_bathctl_to_l1pro {blaser bwater bagc bthresh bfirst blast} {
 }
 
 
+proc load_bath_ctl {  } {
+ global data_path bath_ctl
+   set w $bath_ctl(w);
+   set fn [ tk_getOpenFile -initialdir "$data_path/processing/" \
+        -filetypes { \
+          {{ bctl Files} {.bctl} }
+          {{ All files} {*}    }
+         } ]
+   if { $fn != "" } {
+     source $fn
+     wm title $w "bathctl:[file tail $fn]"
+   }
+}
+
+proc save_bath_ctl { } {
+ global data_path bath_ctl
+   set w $bath_ctl(w);
+   set fn [ tk_getSaveFile -initialdir "$data_path/processing/" \
+        -filetypes { \
+          {{ bctl Files} {.bctl} }
+          {{ All files} {*}    }
+         } ]
+  if { $fn != "" } { 
+    if { [ file extension $fn ] != ".bctl"  } {
+      set fn "$fn.bctl";
+    }
+    set of [ open $fn w ];
+      foreach n [ array names bath_ctl ] {
+       if { $n != "w" } { 
+          puts $of "set bath_ctl($n) $bath_ctl($n)"
+       }
+      }
+    tk_messageBox -icon info -message "bath_ctl settings saved to:[file tail $fn]"
+    close $of
+  }
+}
+
+
+
 proc bathctl {} {
  global bath_ctl
    	  # show constants in GUI
-	  destroy .bathctl
-	  toplevel .bathctl
-	  ComboBox .bathctl.type -text "Select Type" -width 12 -values "Florida_Keys Tampa_Bay West_Virginia" \
-		-helptext "Select type.." -editable 0 \
-		-modifycmd {
-              set typeval [.bathctl.type getvalue]
-	      if {$typeval == 0} {set type "keys"}
-	      if {$typeval == 1} {set type "tampabay"}
-	      if {$typeval == 2} {set type  "wva"}
-              exp_send "type = define_bath_ctl(type=\"$type\"); \r"
-		}
-		
+          set w .bathctl
+          set bath_ctl(w) $w
+	  destroy $w
+	  toplevel $w
+          $w configure -menu $w.mb
+          menu $w.mb
+          menu $w.mb.file
+          $w.mb add cascade -label File -underline 0 -menu $w.mb.file
+          $w.mb.file add command -label "Load Bathy Parameters..." -command { 
+              load_bath_ctl 
+          }
+          $w.mb.file add command -label "Save Bathy Parameters..." -command { 
+              save_bath_ctl
+          }
+          
           sst .bathctl.laser   bath_ctl(laser)   "  Laser:"  { -5.0 -1.0 0.1  }
           sst .bathctl.water   bath_ctl(water)   "  Water:"  { -10 -0.1 0.1  }
-          sst .bathctl.agc     bath_ctl(agc)   "  AGC:"  { -10 0.1 0.1  }
-          sst .bathctl.thresh  bath_ctl(thresh)   "  Threshold:"  { 0 50.0 0.1  }
-          sst .bathctl.first   bath_ctl(first)   " First:"  { 0 300 1  }
-          sst .bathctl.last    bath_ctl(last)   "  Last:"  { 0 300 1  }
+          sst .bathctl.agc     bath_ctl(agc)     "    AGC:"  { -10 0.1 0.1  }
+          sst .bathctl.thresh  bath_ctl(thresh)  " Thresh:"  { 0 50.0 0.1  }
+          sst .bathctl.first   bath_ctl(first)   "  First:"  { 0 300 1  }
+          sst .bathctl.last    bath_ctl(last)    "   Last:"  { 0 300 1  }
  		   
-         trace vdelete  bath_ctl(laser) w set_bath_ctl
-         trace variable bath_ctl(laser) w set_bath_ctl
-         trace vdelete  bath_ctl(water) w set_bath_ctl
-         trace variable bath_ctl(water) w set_bath_ctl
-         trace vdelete  bath_ctl(agc) w set_bath_ctl
-         trace variable bath_ctl(agc) w set_bath_ctl
-         trace vdelete  bath_ctl(thresh) w set_bath_ctl
-         trace variable bath_ctl(thresh) w set_bath_ctl
-         trace vdelete  bath_ctl(last) w set_bath_ctl
-         trace variable bath_ctl(last) w set_bath_ctl
-         trace vdelete  bath_ctl(first) w set_bath_ctl
-         trace variable bath_ctl(first) w set_bath_ctl
-          
+         foreach n [ array names bath_ctl ] {
+           trace vdelete  bath_ctl($n) w set_bath_ctl
+           trace variable bath_ctl($n) w set_bath_ctl
+         }
 	 
-	  Button .bathctl.cancel -text "Cancel" -width 5 -command {
-	    .bathctl.type configure -state normal
+	  Button .bathctl.cancel -text "Dismiss" -width 5 -command {
 	    destroy .bathctl
 	  }
 
@@ -60,8 +95,6 @@ proc bathctl {} {
             exp_send "show_bath_constants\r"
 	  }
 
-
-	  pack .bathctl.type -side top 
 	  pack \
 		.bathctl.laser \
 		.bathctl.water \
