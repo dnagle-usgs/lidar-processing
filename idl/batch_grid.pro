@@ -1,4 +1,4 @@
-pro batch_grid, path, filename=filename, only_merged=only_merged, cell=cell, mode=mode, $
+pro batch_grid, path, filename=filename, rcfmode=rcfmode, cell=cell, mode=mode, $
 	z_grid_max = z_grid_max, z_grid_min=z_grid_min, area_threshold=area_threshold, $
 	missing = missing, zbuf_plot=zbuf_plot, save_zbuf_plots = save_zbuf_plots, $
 	zbuf_scale=zbuf_scale, $
@@ -9,16 +9,21 @@ pro batch_grid, path, filename=filename, only_merged=only_merged, cell=cell, mod
    ; amar nayegandhi 05/14/03
 
 start_time = systime(1)
-
+if not keyword_set(rcfmode) then rcfmode = 0
 if not keyword_set(filename) then begin
    ;search in the directory path to find all files with .bin or .edf extension
-   if keyword_set(only_merged) then begin
-    spawn, 'find '+path+' -name "*_merged*.bin"', fn_arr
-    spawn, 'find '+path+' -name "*_merged*.edf"', fn_arr1
-   endif else begin 
+   if (rcfmode eq 0) then begin
     spawn, 'find '+path+' -name "*.bin"', fn_arr
     spawn, 'find '+path+' -name "*.edf"', fn_arr1
-   endelse	
+   endif
+   if (rcfmode eq 1) then begin 
+    spawn, 'find '+path+' -name "*_rcf*.bin"', fn_arr
+    spawn, 'find '+path+' -name "*_rcf*.edf"', fn_arr1
+   endif
+   if (rcfmode eq 2) then begin
+    spawn, 'find '+path+' -name "*_ircf*.bin"', fn_arr
+    spawn, 'find '+path+' -name "*_ircf*.edf"', fn_arr1
+   endif
     fn_arr_new = fn_arr+fn_arr1
     fn_arr = fn_arr_new
 endif else begin
@@ -37,6 +42,8 @@ for i = 0, n_elements(fn_arr)-1 do begin
    print, 'File name: '+fname_arr
 
    data_arr = read_yfile(path, fname_arr=fname_arr)
+
+   if (n_elements(*data_arr[0]) le 10) then continue
    
    ; find the corner points for the data tile
    spfn = strsplit(fname_arr, "_", /extract)
@@ -49,6 +56,14 @@ for i = 0, n_elements(fn_arr)-1 do begin
 	area_threshold = area_threshold
 
    ptr_free, data_arr
+
+; Make sure grid_eaarl_data returned a grid..
+
+   if not (keyword_set(xgrid)) then begin
+	print, "No grids found, continueing to next file..."
+	colin = 0
+	continue
+   endif
 
    if (keyword_set(plot_grids)) then begin
 	if not keyword_set(scale_down_by) then scale_down_by = 4
