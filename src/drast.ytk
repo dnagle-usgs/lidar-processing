@@ -410,7 +410,7 @@ button .rslider.bf2.exwf -text "Examine waveforms" -command {
 
 button .rslider.bf1.stop -text "Stop" -command {
  global tid play_flag rnf
- exp_send "animate,0; window,1; fma\r" 
+ exp_send "animate,0; window,1;\r" 
   after cancel $tid;
   set play_flag 0 
   ##exp_send "ytk_rast, $rnf\r"

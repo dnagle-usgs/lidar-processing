@@ -8,7 +8,7 @@ func list_reefs {
    shoals.dmlat, shoals.dmlon;
 }
 
-f = open("../maps/fla-reefs.dat", "r")
+f = open("../fla-reefs.dat", "r")
 
 n = 205
 
@@ -50,7 +50,7 @@ for (i=1; i<= numberof(name); i++ )
       plmk,lat(i),lon(i),color=c,msize=.3,marker=1,width=10
 }
 
-c = "red"
+c = "black"
 for (i=1; i<= numberof(name); i++ ) 
    if ( (rt(i) == 1) && (st(i))  ) {
       plt, name(i), lon(i), lat(i), tosys=1, height=3, justify="CC", color=c

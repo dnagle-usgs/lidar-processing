@@ -65,8 +65,8 @@ func run_bath( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) 
     
      
  depths = array(BATHPIX, 120, len );
- if ( graph != 0 ) 
-	animate,1;
+ //if ( graph != 0 ) 
+//	animate,1;
 
  if ( is_void(last) ) 
 	last = 250;
@@ -80,8 +80,8 @@ func run_bath( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) 
 	  pause, pse;
      }
    }
- if ( graph != 0 ) 
-	animate,0;
+ //if ( graph != 0 ) 
+//	animate,0;
  
   return depths;
 }

@@ -100,15 +100,15 @@ func display(rrr, i=,j=, cmin=, cmax=, size=, win=, dofma= ) {
  if ( !is_void( dofma ) )
 	fma;
 
-write,format="Please wait while drawing..........%s", "\r"
+write,format="Please wait while drawing..........%s", "\n"
  if ( is_void( cmin )) cmin = -35.0;
  if ( is_void( cmax )) cmax = -15.0;
  if ( is_void( size )) size = 1.4;
 for ( ; i<j; i++ ) {
-  plcm, rrr(i).elevation, rrr(i).north, rrr(i).east,
+  plcm, rrr(i).elevation/100, rrr(i).north/100, rrr(i).east/100,
       msize=size,cmin=cmin, cmax=cmax
   }
-write,format="Draw complete. %d rasters drawn. %s", j-i, "\n"
+write,format="Draw complete. %d rasters drawn. %s", j, "\n"
 }
 
 
