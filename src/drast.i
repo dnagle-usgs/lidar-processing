@@ -74,6 +74,7 @@ func ndrast( r, units= ) {
 
  npix = r.npixels(1) 
  somd = (rr.soe - soe_day_start)(1);
+ hms = sod2hms(somd);
  if ( somd != last_somd ) {
     send_sod_to_sf, somd;
     if (!is_void(pkt_sf)) {
@@ -110,7 +111,7 @@ func ndrast( r, units= ) {
 
  } else if ( units == "meters" ) {
     pli, -transpose(aa(,,1)), 1,4*CNSH2O2X, 121, -244 * CNSH2O2X
-    xytitles,swrite(format="Somd:%7d Rn:%d    Raster Pixel #", somd, rn), 
+    xytitles,swrite(format="Somd:%7d HMS:%2d%2d%2d Rn:%d  Pixel #", somd,hms(1),hms(2),hms(3),rn), 
         "Water depth (meters)"
 
  } else if ( units == "feet" ) {
@@ -257,7 +258,7 @@ extern rn, bath_ctl, xm;
       if (!geo) show_wf, *w, idx , win=0, cb=cb  
       if (geo) show_geo_wf, *w, idx, win=0, cb=cb
       if (is_array(bath_ctl)) {
-        if (bath_ctl.laser != 0) ex_bath, rn, idx, graph=1, win=4;
+        if (bath_ctl.laser != 0) ex_bath, rn, idx, graph=1, win=4, xfma=1;
       }
       window, win;
     write,format="Pulse %d\n", idx
