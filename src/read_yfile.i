@@ -129,9 +129,6 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
     north = 0L;
     east = 0L;
     melevation = 0L;
-    if (_ytk) {
-      tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",0);
-    }
 
     data = array(FS, recs); 
     for (i=0;i<recs;i++) {
@@ -183,9 +180,6 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
     first_peak = 0S;
     sa = 0S;
 
-    if (_ytk) {
-      tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",1);
-    }
     data = array(GEO, recs); 
 
     for (i=0;i<recs;i++) {
@@ -252,9 +246,6 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
     lint = 0s;
     nx = ' ';
 
-    if (_ytk) {
-      tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",2);
-    }
 
     data = array(VEG, recs); 
 
@@ -387,3 +378,40 @@ func read_ascii_xyz(ipath=,ifname=,type=){
 
   return arr
 }
+
+func read_pointer_yfile(data_ptr, mode=) {
+  // this function reads the data_ptr array from read_yfile.
+  // select mode = 1 to merge all data files
+  // amar nayegandhi 11/25/02.
+  extern fs_all, depth_all, veg_all;
+  data_out = [];
+
+  if (mode == 1) {
+    //merge all data files 
+    for (i=1; i <= numberof(data_ptr); i++) {
+       grow, data_out, (*data_ptr(i));
+    }
+  }
+  a = structof(data_out);
+  if (a == FS) {
+    fs_all = data_out;
+    if (_ytk) {
+      tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",0);
+    }
+  }
+  if (a == GEO) {
+    depth_all = data_out;
+    if (_ytk) {
+      tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",1);
+    }
+  }
+  if (a == VEG) {
+    veg_all = data_out;
+    if (_ytk) {
+      tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",2);
+    }
+  }
+
+}
+    
+    

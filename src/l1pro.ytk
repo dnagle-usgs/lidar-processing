@@ -58,24 +58,48 @@ menu .l1wid.mb.load
 menu .l1wid.mb.options
 .l1wid.mb   add cascade -label File -underline 0 -menu .l1wid.mb.file
 
-.l1wid.mb.file add command -label "Read Data File... " -underline 5 -command {
+.l1wid.mb.file add command -label "Read Data File... " -underline 10 -command {
   	exp_send "data_ptr = read_yfile(); \r"
 	expect ">"
+	exp_send "read_pointer_yfile, data_ptr, mode=1; \r"
+	expect ">"
 	set ptype [.l1wid.bf4.1.p getvalue]
-	if {$ptype == 0} {
-	  exp_send "fs_all = *data_ptr(1);\r"
-	  expect ">"
-	}
-	if {$ptype == 1} {
-	  exp_send "depth_all = *data_ptr(1);\r"
-	  expect ">"
-	}
-	if {$ptype == 2} {
-	  exp_send "veg_all = *data_ptr(1);\r"
-	  expect ">"
-	}
+	
+#	if {$ptype == 0} {
+#	  exp_send "fs_all = *data_ptr(1);\r"
+#	  expect ">"
+#	}
+#	if {$ptype == 1} {
+#	  exp_send "depth_all = *data_ptr(1);\r"
+#	  expect ">"
+#	}
+#	if {$ptype == 2} {
+#	  exp_send "veg_all = *data_ptr(1);\r"
+#	  expect ">"
+#	}
+
   }
 	
+.l1wid.mb.file add command -label "Read Data Directory... " -underline 10 -command {
+	destroy .l1dir
+        toplevel .l1dir
+	frame .l1dir.1
+	LabelEntry .l1dir.op  -width 70 -relief sunken -bd 3 -label "Path:  " -helptext "Enter Data Path Here" \
+		-textvariable path
+ 	Button .l1dir.1.ok -text "OK" -width 5 -command {
+  	  exp_send "data_ptr = read_yfile(\"$path\"); \r"
+	  expect ">"
+          exp_send "read_pointer_yfile, data_ptr, mode=1; \r"
+	  expect ">"
+	  set ptype [.l1wid.bf4.1.p getvalue]
+	}
+	   
+ 	Button .l1dir.1.cancel -text "Cancel" -width 5 -command {
+	   destroy .l1dir
+ 	}
+	pack .l1dir.1.ok .l1dir.1.cancel -side left -padx 5
+	pack .l1dir.op .l1dir.1 -side top -pady 5	
+}
 
 .l1wid.mb       add cascade -label "Load" -underline 0 -menu .l1wid.mb.load
 .l1wid.mb.file  add command -label "Read command file .. " -underline 0 
@@ -513,11 +537,13 @@ trace variable cmax   w ud
 frame  .l1wid.bf45.sc.f
   SpinBox .l1wid.bf45.sc.f.msize \
         -range {0.1 10.0 0.1}  \
-        -textvariable msize 
+        -textvariable msize \
+	-helptext "Enter Marker Size (msize)"
 
   SpinBox .l1wid.bf45.sc.f.marker \
         -range {0 9 1}  \
-        -textvariable markerv
+        -textvariable markerv \
+	-helptext "Enter Marker Type (See help, marker for more details)"
 
  pack  .l1wid.bf45.sc.f.msize .l1wid.bf45.sc.f.marker -side top
 

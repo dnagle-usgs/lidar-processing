@@ -605,6 +605,9 @@ func plot_no_raster_fltlines (gga, edb) {
 
   extern soe_day_start, utm;
 
+  w = window();
+  window, 6;
+
   sod_edb = edb.seconds - soe_day_start;
   
   // find where the diff in sod_edb is greater than 5 second
@@ -623,6 +626,8 @@ func plot_no_raster_fltlines (gga, edb) {
   indx1 = where(gga.sod < sod_edb(1));
   show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1), marker=4, skip=50,  color = "yellow", utm=utm;
 
+  window, w;
+
 
 }
 
@@ -635,6 +640,9 @@ func plot_no_tans_fltlines (tans, gga) {
   /* amar nayegandhi 08/05/02 */
 
   extern soe_day_start, utm;
+
+  w = window();
+  window, 6;
 
   
   // find where the diff in tans is greater than 1 second
@@ -653,6 +661,7 @@ func plot_no_tans_fltlines (tans, gga) {
   indx1 = where(gga.sod < tans.somd(1));
   show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1),  marker=5, color = "magenta", skip=50, msize=0.2, utm=utm;
 
+ window, w;
 
 }
 

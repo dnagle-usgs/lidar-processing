@@ -460,7 +460,7 @@ executing make_veg.  See rbpnav() and rbtans() for details.
     /* if ext_bad_att is set, find all points having elevation = ht 
         of airplane 
     */
-    if (ext_bad_att) {
+    if ((ext_bad_att==1) && (is_array(veg_all))) {
         write, "Extracting and writing false first points";
         /* compare veg.elevation with 70% of veg.melevation */
 	elv_thresh = 0.7*(avg(veg_all.melevation));
@@ -495,7 +495,7 @@ executing make_veg.  See rbpnav() and rbtans() for details.
 
       /* if ext_bad_veg is set, find all points having veg = 0 
       */
-      if (ext_bad_veg) {
+      if ((ext_bad_veg==1) && (is_array(veg_all)))  {
         write, "Extracting false bald earth returns ";
         /* compare veg_all.lelv with 0 */
         bd_indx = where(veg_all.lelv == 0);

@@ -506,6 +506,7 @@ See define_bath_ctl()
     /* select a region using function gga_win_sel in rbgga.i */
     q = gga_win_sel(2, latutm=latutm, llarr=llarr);
    }
+   
 
   /* find start and stop raster numbers for all flightlines */
    rn_arr = sel_region(q);
