@@ -178,7 +178,7 @@ func plot_veg_result_points(i, pse=) {
   }
 }
 
-func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=) {
+func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fsmode=, wfs=) {
   /* DOCUMENT rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=)
  this function uses the random consensus filter (rcf) within a defined
  buffer size to filter within an elevation width (w) which defines the vertical extent.
@@ -194,7 +194,8 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=) {
    mode = 2; //for bathymetry
    mode = 3; // for bare earth vegetation
    (default mode = 3)
-
+  fsmode = 4; // for bare earth under veg *and* first surface filtering.
+  wfs = elevation width (vertical range) in meters for the first surface returns above the bare earth.  Valid only for fsmode = 4.
    OUTPUT:
     rcf'd data array of the same type as the 'eaarl' data array.
 
@@ -243,6 +244,7 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=) {
   if (!w) w = 30; //in centimeters
   // no_rcf is the minimum number of points required to be returned from rcf
   if (!no_rcf) no_rcf = 3;
+  if (!wfs) wfs = 25; // 25 meters default
 
   //now make a grid in the bbox
   ngridx = ceil((bbox(2)-bbox(1))/buf);
@@ -327,13 +329,22 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=) {
          sel_ptr = rcf(be_elv, w, mode=2);
        }
        if (*sel_ptr(2) >= no_rcf) {
-	  tmp_eaarl = eaarl(indx);
+	  tmp_eaarl = eaarl(indx(*sel_ptr(1)));
+          if (fsmode == 4 && mode == 3) {
+	      fsidx = where(tmp_eaarl.elevation < (avg(tmp_eaarl.lelv)+wfs*100));
+	      if (is_array(fsidx)) {
+	         tmp_eaarl = tmp_eaarl(fsidx);
+		 *sel_ptr(2) = numberof(fsidx);
+	      } else {
+	         continue;
+	      }
+	  }
 	  if (selcount+(*sel_ptr(2)) > MAXSIZE) {
 	      grow, new_eaarl_all, new_eaarl(1:selcount);
 	      new_eaarl = array(a, MAXSIZE);
 	      selcount = 0;
 	  }
-	  new_eaarl(selcount+1:selcount+(*sel_ptr(2))) = tmp_eaarl(*sel_ptr(1));
+	  new_eaarl(selcount+1:selcount+(*sel_ptr(2))) = tmp_eaarl;
 	  selcount = selcount + (*sel_ptr(2));
 	  //write, numberof(indx), *sel_ptr(2);
        }
@@ -349,6 +360,7 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=) {
   if (_ytk) {
    tkcmd, "destroy .rcf"
   } 
+
 
   return new_eaarl_all;
 	 
