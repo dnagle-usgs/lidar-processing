@@ -69,6 +69,8 @@ func ndrast( r, units=  ) {
  npix = r.npixels(1) 
  somd = (rr.soe - soe_day_start)(1);
  if ( somd != last_somd ) {
+    // AN: added send command to make sf always in sod mode
+    tkcmd, "send sf_a.tcl set timern sod";
     tkcmd, swrite(format="send sf_a.tcl set hsr %d", somd );
     tkcmd, "send sf_a.tcl gotoImage"
     last_somd = somd;

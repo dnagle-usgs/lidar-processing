@@ -44,7 +44,12 @@ if { [ info exists data_path ] == 0 } {
 
 ##AN: added to initially set the value of sod time from sf
 if { [info exists thetime] != 0} {
+   set temp $thetime;
+   unset thetime
+   set thetime $temp
    puts "thetime from sf is set to $thetime"
+} else {
+   set thetime 0
 }
 
 # this gets set by Yorick:load_edb in edb_access.i
@@ -128,9 +133,16 @@ proc dus { n e o } {
   }
 }
 
+## AN: added procedure sft to be used with the trace command for sf
+proc sft { n e o } {
+	global thetime rnf rn
+	sod2rn $thetime
+	exp_send "ytk_rast, $rnf\r"
+	set rn $rnf	
+} 
+
 proc play {} {
  global tid play_interval rn inc play_dir play_flag total_edb_records
- global somd;
      if { $play_dir == "fwd" } {
        set rn [ expr $rn + $inc ] 
      } else {
@@ -412,6 +424,8 @@ tk_optionMenu .rslider.bf1.pint play_interval \
 
 trace variable depth_display_units w dus
 trace variable total_edb_records   w ter
+##AN: added trace command to trace thetime from sf
+trace variable thetime w sft
 
   pack \
 	.rslider.bf1.prevrast \

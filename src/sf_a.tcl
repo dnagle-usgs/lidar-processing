@@ -1,3 +1,4 @@
+#!/usr/local/ActiveTcl/bin/wish
 #!/usr/bin/wish
 #!/usr/local/bin/wish8.4 
 # $Id$
@@ -29,7 +30,8 @@ set revdate {$Date$}
 set auto_path "$auto_path /usr/lib"
 
 package require Img
-puts "Img loaded.."
+package require BWidget
+puts "Img loaded.. \r\n"
 
 # The camera is frequently out of time sync so we add this to correct it.
 set seconds_offset [ expr 3600 * 0 ]
@@ -46,7 +48,7 @@ set timern "hms"
 
 proc load_file_list { f } {
 global ci fna imgtime dir 
-global lat lon alt seconds_offset timern
+global lat lon alt seconds_offset timern frame_off
 set h 0
 set m 0
 set s 0
@@ -57,12 +59,16 @@ toplevel .loader
 ####wm overrideredirect .loader 1
 set p [split [ winfo geometry . ] "+"]
 wm geometry .loader "+[lindex $p 1]+[lindex $p 2]"
+label .loader.status0 -text "LOADING FILES. PLEASE WAIT..."
 label .loader.status -text "Loading JPG files ...:" 
 #pack  .loader.status -side left
 
 label .loader.status1 -text "Loading GPS files ...:" 
-button .loader.ok -text OK -command { destroy .loader}
-pack  .loader.status .loader.status1 .loader.ok -side top -fill x 
+Button .loader.ok -text "Cancel" \
+	-helptext "Click to stop loading."\
+	-helptype balloon\
+	-command { destroy .loader}
+pack  .loader.status0 .loader.status .loader.status1 .loader.ok -side top -fill x 
 for { set i 0 } { ![ eof $f ] } { incr i } { 
   set fn [ gets $f ]
   set fna($i)   "$fn"
@@ -119,7 +125,9 @@ for { set i 0 } { ![ eof $ggaf ] } { incr i } {
  }
 }
 
- after 1000 {destroy .loader}
+ .loader.status0 configure -text "ALL FILES LOADED"
+ .loader.ok configure -text "OK" 
+ after 1500 {destroy .loader}
 
 
  return $nfiles
@@ -156,56 +164,76 @@ canvas .canf.can  -height 240 -width 320
 set me "EAARL image/data Animator \n$version\n$revdate\nC. W. Wright\nwright@lidar.wff.nasa.gov"
 .canf.can create text 20 120 -text $me  -tag tx -anchor nw 
 label .lbl -textvariable data 
-button .cf1.prev  -text "<Prev"  -command { step_img $step -1 }
-button .cf1.next  -text " Next>" -command { step_img $step  1 }
-button .cf1.play  -text "Play>" -command  { play  1 }
-button .cf1.playr -text "<yalP" -command  { play -1 }
-button .cf1.stop  -text stop -command { set run 0 }
-button .cf1.rewind -text rewind -command { 
-  if { [no_file_selected $nfiles] } { return }
-  set ci 0; show_img $ci 
- }
+#button .cf1.prev  -text "<Prev"  -command { step_img $step -1 }
+ArrowButton .cf1.prev  -relief raised -type button -width 40 \
+ 	    -dir left  -height 25 -helptext "Click for Previous Image. Keep Mouse Button Pressed to Repeat Command" \
+	    -repeatdelay 1000 -repeatinterval 500 \
+	    -armcommand { step_img $step -1 }
+ArrowButton .cf1.next  -relief raised -type button -width 40 \
+ 	    -dir right  -height 25 -helptext "Click for Next Image. Keep Mouse Button Pressed to Repeat Command" \
+	    -repeatdelay 1000 -repeatinterval 500 \
+	    -armcommand { step_img $step 1 }
+#button .cf1.next  -text " Next>" -command { step_img $step  1 }
+#button .cf1.play  -text "Play->" -command  { play  1 }
+
+ArrowButton .cf1.play  -arrowrelief raised -type arrow -arrowbd 2 -width 40 \
+ 	    -dir right  -height 25 -helptext "Click To Play Through Images." \
+	     -clean 0 -command { play 1 }
+#button .cf1.playr -text "<-YalP" -command  { play -1 }
+ArrowButton .cf1.playr  -arrowrelief raised -type arrow -arrowbd 2 -width 40 \
+ 	    -dir left -height 25 -helptext "Click To YalP (Play Backwards) Through Images." \
+	     -clean 0 -command { play -1 }
+Button .cf1.stop  -text "Stop" -helptext "Stop Playing Through Images" \
+	      -command { set run 0 }
+Button .cf1.rewind -text "Rewind" -helptext "Rewind to First Image" \
+	       -command { 
+  	          if { [no_file_selected $nfiles] } { return }
+  	 	  set ci 0; show_img $ci 
+ 		}
 
 bind . <p> { step_img $step -1 }
 bind . <n> { step_img $step 1 }
 
-scale .slider -orient horizontal -from 0 -to 0 -variable ci
+scale .slider -orient horizontal -from 1 -to 1 -variable ci
 tk_optionMenu .cf2.speed speed Fast 100ms 250ms 500ms 1s \
 	1.5s 2s 4s 5s 7s 10s
 
 label .cf3.label -text "Mode "
-entry .cf3.entry -width 8 -relief sunken -bd 2 -textvariable hsr
+Entry .cf3.entry -width 8 -relief sunken -bd 2 \
+	-helptext "Click to Enter Value" -textvariable hsr
 tk_optionMenu .cf3.option timern hms sod cin 
-button .cf3.button -text "Examine Rasters" -command plotRaster
-button .cf3.imgbutton -text "Goto Img" -command gotoImage
+Button .cf3.button -text "Examine Rasters" \
+	-helptext "Click to Examine EAARL Rasters.  Must have drast.ytk running." -command plotRaster
+Button .cf3.imgbutton -text "Goto Img" \
+	-helptext "Click to Jump to Image defined in Entry Widget" -command gotoImage
 
 bind .cf3.entry <Return> {gotoImage}
 proc gotoImage {} {
-  global timern hms sod ci hsr imgtime seconds_offset
+  global timern hms sod ci hsr imgtime seconds_offset frame_off
   set i 0
-  puts "Options selected for Goto Image is: $timern"
+  ##puts "Options selected for Goto Image is: $timern \n"
   if {$timern == "hms"} {
-     puts "Showing Camera Image at hms = :$hsr"
+     puts "Showing Camera Image at hms = :$hsr \n"
      set i $imgtime(hms$hsr);
-     set ci [expr $i-$seconds_offset]
+     set ci [expr $i-$seconds_offset+$frame_off]
      show_img $ci
   }
   if {$timern == "sod"} {
-     puts "Showing Camera Image at sod = $hsr"
+     puts "Showing Camera Image at sod = $hsr \n"
      set hms [ clock format $hsr -format "%H%M%S" -gmt 1 ]
      set i $imgtime(hms$hms);
-     set ci [expr $i-$seconds_offset]
+     set ci [expr $i-$seconds_offset+$frame_off]
      show_img $ci
   }
   if {$timern == "cin"} {
-     puts "Showing Camera Image with Index value = $hsr"
+     puts "Showing Camera Image with Index value = $hsr \n"
      set cin $hsr
      set ci $cin
      show_img $cin
   }
 }
 proc plotRaster {} {
-  global timern hms cin sod hsr
+  global timern hms cin sod hsr frame_off
   if {$timern == "hms"} {
     puts "Plotting raster using Mode Value: $hms"
     .cf3.entry delete 0 end
@@ -215,7 +243,9 @@ proc plotRaster {} {
 	   continue; #don't want any window other than ytk
 	} else {
 	   set win $interp
+	   send $win set themode $timern
 	   send $win set thetime $sod
+	   ##send $win set thetime [expr {$sod + $frame_off}]
 	
         }
     }
@@ -226,12 +256,13 @@ proc plotRaster {} {
     .cf3.entry insert insert $sod
     foreach interp [winfo interps] {
         if {!([string match "ytk" $interp])} {
-	   continue; #don't want any window other than test_send.tcl
+	   continue; #don't want any window other than ytk
 	} else {
 	   set win $interp
 	   puts $win
 	   send $win set themode $timern
 	   send $win set thetime $sod
+	   ##send $win set thetime [expr {$sod + $frame_off}]
         }
     }
   }
@@ -241,12 +272,13 @@ proc plotRaster {} {
     .cf3.entry insert insert $cin
     foreach interp [winfo interps] {
         if {!([string match "ytk" $interp])} {
-	   continue; #don't want any window other than test_send.tcl
+	   continue; #don't want any window other than ytk
 	} else {
 	   set win $interp
 	   puts $win
 	   send $win set themode $timern
 	   send $win set thetime $sod
+	   ##send $win set thetime [expr {$sod + $frame_off}]
         }
     }
   }
@@ -277,30 +309,45 @@ proc set_gamma { g } {
   $img configure -gamma $g 
 } 
 
+set frame_off 0
+SpinBox .cf2.offset \
+       -helptext "Offset: Enter the frames to be offset here."\
+       -justify center \
+       -range {-20 20 1}\
+       -width 5 \
+       -textvariable frame_off;
+
 pack .menubar.file \
   -side left
 pack .menubar -side top -fill x -expand true
 pack .canf .canf.can 
 pack .lbl -side top -anchor nw
 pack .slider -side top -fill x  
-pack .cf1 .cf1.prev .cf1.next .cf1.play .cf1.playr \
-	.cf1.stop .cf1.rewind -side left -fill x -expand true
+pack .cf1 .cf1.prev .cf1.next .cf1.playr .cf1.stop .cf1.play \
+	.cf1.rewind -side left -fill x -expand true
 pack .cf1 -fill x -side top
-pack .cf2 .cf2.speed .cf2.lbl .cf2.step  .cf2.gamma -anchor nw  -side left
-pack .cf2 -side top -fill x
+pack .cf2 .cf2.speed .cf2.lbl .cf2.step  .cf2.gamma .cf2.offset -padx 3 -side left
+pack .cf2 -side top -expand 1 -fill x
 pack .cf3 .cf3.entry .cf3.option .cf3.imgbutton .cf3.button \
 	-side left -expand 1 -fill both
 pack .cf3 -side top -fill x
 
+## AN: Commented tkScaleEndDrag.  Instead used the BWidget capability
+##     to properly define the scale.
 # tkScaleEndDrag gets called when the mouse button is released 
 # after moving the scale widget slider.  We insert our handler
 # so we can display the image upon slider release.
 #rename ::tk::ScaleEndDrag old_tkScaleEndDrag
-proc ::tk::ScaleEndDrag { z } {
-  global ci nfiles timern
- if { [no_file_selected $nfiles] } { return }
-  show_img $ci
+#proc ::tk::ScaleEndDrag { z } {
+#  global ci nfiles timern
+# if { [no_file_selected $nfiles] } { return }
+#  show_img $ci
 ####  old_tkScaleEndDrag  $z
+#}
+
+bind .slider <ButtonRelease> {
+   global ci
+   show_img $ci
 }
 
 proc no_file_selected { nfiles } {
@@ -366,7 +413,7 @@ puts "$dx $dy"
 proc show_img { n } {
 global fna nfiles img run ci data imgtime dir img_opts
 global lat lon alt seconds_offset hms sod timern 
-global cin
+global cin hsr frame_off
 
 set cin $n
 #  puts "$n  $fna($n)"
@@ -389,7 +436,7 @@ set cin $n
    set data "$n  [ lindex $lst 3 ]"
    set hms  $imgtime(idx$n);
    scan $hms "%02d%02d%02d" h m s 
-   set sod [ expr $h*3600 + $m*60 + $s + $seconds_offset ]
+   set sod [ expr $h*3600 + $m*60 + $s + $seconds_offset - $frame_off]
     set hms [ clock format $sod -format "%H%M%S" -gmt 1   ] 
 ###    set sod [ expr $sod - $seconds_offset ]
 
@@ -397,9 +444,12 @@ set cin $n
  if { [ catch { set data "$hms ($sod) $lat(hms$hms) $lon(hms$hms) $alt(hms$hms)"} ]  } { 
     set data "hms:$hms sod:$sod  No GPS Data"   } 
 
+   if { $timern == "cin" } { set hsr $cin }
+   if { $timern == "hms" } { set hsr $hms }
+   if { $timern == "sod" } { set hsr $sod }
    update
   .canf.can config -cursor arrow
   
 }
 
-puts "Ready to go."
+puts "Ready to go.\r\n"
