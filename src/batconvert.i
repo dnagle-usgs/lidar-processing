@@ -39,7 +39,7 @@ for(i=1; !(eof) ; i++)
 {
    e=read(f, files);
    if (!(files)){e=write(format="%s", newline);  break;} 
-   e = write(format="converting file %d out of %d\r", i, numfiles)
+   e = write(format="converting file %d out of %d\n", i, numfiles)
    files2 = split_path(files, 0)  
    files3 = files2(2);
    t= *pointer(files3); 
@@ -67,6 +67,10 @@ for(i=1; !(eof) ; i++)
    close, f2;
    dvname = vname;
 
+   if (type=="v") data = clean_veg(data);
+   if (type=="b") data = clean_bathy(data);
+
+   if (!is_array(data)) continue;
    new_data = data_datum_converter(data, utmzone=zonel, tonad83=tonad83, tonavd88=tonavd88, type = type)
 
    vname = dvname;

@@ -161,13 +161,13 @@ func nad832navd88(data_in, gdata_dir=) {
     gdata = get_member(f,vname)(mnicoln:mxicoln, mnirown:mxirown);
     close, f;
     
-    if (mxirown > nrows) {
+    if (mxirown >= nrows) {
         gdata1 = array(double, numberof(gdata(,1)), max(irown)+1-mnirown+1);
    	gdata1(,1:numberof(gdata(1,))) = gdata;
 	gdata1(,numberof(gdata(1,)):) = gdata(,numberof(gdata(1,)));
         gdata = gdata1;
     }
-    if (mxicoln > ncols) {
+    if (mxicoln >= ncols) {
         gdata1 = array(double, max(icoln)+1-mnicoln+1, numberof(gdata(1,)));
    	gdata1(1:numberof(gdata(,1)), ) = gdata;
 	gdata1(numberof(gdata(,1)):,) = gdata(numberof(gdata(,1)),);
