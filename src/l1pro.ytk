@@ -399,10 +399,10 @@ Button .l1wid.bf45.q.1 -text "Pixel\nWaveform" \
         -type ok
      }
      if {$ptype == 0} {
-        exp_send "raspulsearch(fs_all, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type);\r"
+        exp_send "raspulsearch,fs_all, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type;\r"
      }
      if {$ptype == 1} {
-        exp_send "raspulsearch(depth_all, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type);\r"
+        exp_send "raspulsearch,depth_all, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type;\r"
      }
    }
 	   

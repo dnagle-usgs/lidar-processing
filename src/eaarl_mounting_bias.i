@@ -17,7 +17,7 @@
 range_biasM =  0.7962;  // Laser range measurement bias.
 range_biasNS=  range_biasM / NS2MAIR;
  scan_bias  =  0.0;     // The mounting bias of the scan encoder.
- roll_bias  = -1.35;    // The mounting bias of the instrument in the plane.
+ roll_bias  = -1.45;    // The mounting bias of the instrument in the plane.
  pitch_bias = +0.5;     // pitch mounting bias
  yaw_bias   =  0.0;     // Yaw mounting bias
 

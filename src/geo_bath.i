@@ -776,29 +776,39 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=) {
     rasterno = mindata.rn&0xffffff;
     pulseno = mindata.rn/0xffffff;
 
-    write, format="The closest point is at a distance %5.3f meters "+
-                  "from the selected point \n", mindist;
-    write, format="Raster number %d and Pulse number %d \n",rasterno, pulseno;
-    write, format="Plotting raster and waveform with Raster number %d"+
-                  " and Pulse number %d \n",rasterno(1), pulseno(1);
+    write, format="Nearest point: %5.3fm\n", mindist;
+    write, format="       Raster: %6d    Pulse: %d\n",rasterno, pulseno;
+    write, format="Plot   raster: %6d waveform: %d\n",rasterno(1), pulseno(1);
     if (_ytk) {
       window, 1;
       ytk_rast, rasterno(1);
       window, 0;
       show_wf, *wfa, pulseno(1), win=0, cb=7;
       if (is_void(cmin) || is_void(cmax)) {
-        window, win; plmk, mindata.north/100., mindata.east/100., msize = 0.4, marker = 1, color = "red";
+        window, win; plmk, mindata.north/100., 
+                           mindata.east/100., 
+                           msize = 0.4, marker = 1, color = "red";
       } else {
         if (disp_type == 0) {
-          window, win; plcm, mindata.elevation/100., mindata.north/100., mindata.east/100., msize = msize*1.5, cmin= cmin, cmax = cmax, marker=4
+          window, win; plcm, mindata.elevation/100., 
+                             mindata.north/100., 
+                             mindata.east/100., 
+                             msize = msize*1.5, 
+                             cmin= cmin, cmax = cmax, 
+                             marker=4
 	}
         if (disp_type == 1) {
           ex_bath, rasterno, pulseno, graph=1;
-          window, win; plcm, (mindata.elevation+mindata.depth)/100., mindata.north/100., mindata.east/100., msize = msize*1.5, cmin= cmin, cmax = cmax, marker=4
+          window, win; plcm, (mindata.elevation+mindata.depth)/100., 
+                             mindata.north/100., mindata.east/100., 
+                             msize = msize*1.5, cmin= cmin, cmax = cmax, 
+                             marker=4
 	}
         if (disp_type == 2) {
           ex_bath, rasterno, pulseno, graph=1;
-          window, win; plcm, mindata.depth/100., mindata.north/100., mindata.east/100., msize = msize*1.5, cmin= cmin, cmax = cmax, marker = 4
+          window, win; plcm, mindata.depth/100., mindata.north/100., 
+                             mindata.east/100., msize = msize*1.5, 
+                             cmin= cmin, cmax = cmax, marker = 4
 	}
       }
       //write, format="minindx = %d\n",minindx;
@@ -806,7 +816,12 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=) {
  } else {
    print, "No points found!  Please try again... \n";
  }
-
+ write,format=" Raster nbr: %d\n", mindata.rn
+ write,format="Scanner Elev: %7.2fm\n", mindata.melevation/100.0
+ write,format="Surface elev: %7.2fm North:%d east:%d\n", 
+               mindata.elevation/100.0,
+               mindata.north, mindata.east
+  
  return mindata;
       
 }
