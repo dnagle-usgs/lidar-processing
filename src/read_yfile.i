@@ -624,7 +624,7 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
         }
        }
      */
-        data_arr = clean_topo(data_arr);
+        data_arr = clean_fs(data_arr);
      }
      if (type == 2) { //Convert GEOALL to GEO 
        //data_arr = geoall_to_geo(data_arr);
@@ -684,7 +684,7 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
   for (i=1;i<=num_valid;i++) {
     if (zvalid(i) ) {
     ++totw;
-    if (totw == 1000000 && split) {
+    if (totw == split && split) {
       ++xx;
       close, f
       write, format="Total records written to ascii file = %d\n", totw;

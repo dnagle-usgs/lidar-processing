@@ -53,7 +53,7 @@ frame .l1wid.bf45 -relief groove -borderwidth 3
 frame .l1wid.bf45.sc -relief groove -borderwidth 3
 frame .l1wid.bf45.p -relief groove -borderwidth 3
 frame .l1wid.bf45.q -relief groove -borderwidth 3
-frame .l1wid.bf5 
+frame .l1wid.bf5  -relief groove -borderwidth 3
 
 .l1wid configure -menu .l1wid.mb
 menu .l1wid.mb
@@ -498,7 +498,7 @@ ComboBox .l1wid.bf4.1.p -text "Process For..." -width 22 \
 
 .l1wid.bf4.1.p setvalue first
 
-checkbutton .l1wid.bf4.2.cll -text "Convert UTM\nto Lat Lon" -variable cll 
+#checkbutton .l1wid.bf4.2.cll -text "Convert UTM\nto Lat Lon" -variable cll 
 # checkbutton .l1wid.bf4.2.cng -text "Convert to\nNAVD 88 (GEOID)" -variable cng 
 checkbutton .l1wid.bf4.2.cen -text "Correct Range \nWalk with Centroid" -variable usecentroid 
 
@@ -749,7 +749,7 @@ frame  .l1wid.bf45.sc.f
 
 
 
-Button .l1wid.bf5.1 -text "Write Datafile" -width 20 \
+Button .l1wid.bf5.1 -text "Write Binary Data File" -width 20 \
 		-command {
 	global write_some
 	destroy .l1wid1
@@ -826,7 +826,128 @@ Button .l1wid.bf5.1 -text "Write Datafile" -width 20 \
 	pack .l1wid1.op .l1wid1.of .l1wid1.1 -side top -pady 5	
   }
 
- Button .l1wid.bf5.2 -text "Process Now" -width 20 \
+Button .l1wid.bf5.3 -text "Write Ascii Data File" -width 20 \
+		-command {
+	global write_asc_some
+        set delimit "space"
+	set indx 0
+      	set intensity 0
+	set split 0
+	set zclip 0
+	set zmin 0
+	set zmax 0
+	destroy .l1asc
+        toplevel .l1asc
+        LabelFrame .l1asc.ops -relief groove -borderwidth 3 -text "Options:"
+        frame .l1asc.ops.1 -relief groove -borderwidth 3
+        frame .l1asc.ops.2 -relief groove -borderwidth 3
+        frame .l1asc.fn -relief groove -borderwidth 3
+        frame .l1asc.cmd -relief groove -borderwidth 3
+        set ptype [.l1wid.bf4.1.p getvalue]
+        set var_no [.l1wid.bf45.p.15 getvalue]
+        set var_type [lindex $varlist $var_no]
+	LabelEntry .l1asc.fn.op  -width 70 -relief sunken -bd 3 -label "Opath:  " -helptext "Enter Output File Path Here" \
+		-textvariable opath
+
+	LabelEntry .l1asc.fn.of  -width 70 -relief sunken -bd 3 -label "Ofname: " \
+		-helptext "Enter Output File Name Here" \
+		-textvariable ofname
+
+        label .l1asc.ops.1.dl -text "Delimiter: " 
+        tk_optionMenu .l1asc.ops.1.d delimit comma semicolon space
+        # grid .l1asc.ops.dl .l1asc.ops.d -sticky ew 
+        Separator .l1asc.ops.1.s1 -orient vertical -bg black -relief groove 
+      
+        checkbutton .l1asc.ops.1.indx -text "Include Index Number" -variable indx 
+        Separator .l1asc.ops.1.s2 -orient vertical -bg black -relief groove 
+        checkbutton .l1asc.ops.1.int -text "Include Intensity Data" -variable intensity 
+
+        LabelEntry .l1asc.ops.2.split -width 10 -bd 3 -label "Max number of lines/file" \
+		-helptext "Enter maximum number of lines in each file; enter 0 to write all data in 1 file" \
+		-textvariable split 
+
+        checkbutton .l1asc.ops.2.zclip -text "Z Clipper:" -variable zclip \
+		-command {
+		   if {$zclip == 1} {
+			.l1asc.ops.2.zmin configure -state normal
+			.l1asc.ops.2.zmax configure -state normal
+		   } 
+		   if {$zclip == 0} {
+			.l1asc.ops.2.zmin configure -state disabled
+			.l1asc.ops.2.zmax configure -state disabled
+		   }
+           	 }
+    	LabelEntry .l1asc.ops.2.zmin -width 5 -bd 3 -label "Zmin" \
+		-textvariable zmin 
+    	LabelEntry .l1asc.ops.2.zmax -width 5 -bd 3 -label "Zmax" \
+		-textvariable zmax 
+
+        pack .l1asc.ops.1.indx .l1asc.ops.1.s1 .l1asc.ops.1.int .l1asc.ops.1.s2 .l1asc.ops.1.dl .l1asc.ops.1.d  -side left -fill both -padx 3
+
+ 	pack .l1asc.ops.2.split .l1asc.ops.2.zclip .l1asc.ops.2.zmin .l1asc.ops.2.zmax -side left -padx 3 -fill both
+	pack .l1asc.ops.1 .l1asc.ops.2 -side top
+	Button .l1asc.cmd.ok -text "OK" -width 5 -command {
+    	  if { ![ string equal  "" $ofname ] } {
+	    
+	    #.l1asc.ops configure -state disabled
+	    #.l1asc.fn.of configure -state disabled
+	    #.l1asc.cmd.ok configure -state disabled
+
+        set ptype [.l1wid.bf4.1.p getvalue]
+        set var_no [.l1wid.bf45.p.15 getvalue]
+        set var_type [lindex $varlist $var_no]
+	    if {$zclip == 0} { set zclips  "\[\]" } 
+	    if {$zclip == 1} { set zclips "\[$zmin, $zmax\]"}
+	    if {$delimit == "space"} {
+		set de "\" \""		
+	    } 
+	    if {$delimit == "comma"} {
+		set de "\",\""		
+	    } 
+	    if {$delimit == "semicolon"} {
+		set de "\";\""		
+	    } 
+	   
+
+ 	    if {$ptype == 0} {
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips; \r";
+	       expect ">"
+	    }
+ 	    if {$ptype == 1} {
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=2, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips; \r";
+	       expect ">"
+	    } 
+ 	    if {$ptype == 2} {
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=3, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips; \r";
+	       expect ">"
+	    }
+ 	    if {$ptype == 3} {
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips; \r";
+	       expect ">"
+	    }
+	    #destroy .l1asc
+    	  } else { 
+       	    tk_messageBox  -icon warning \
+            -message "You need to specify an output file name" \
+            -type ok
+          }
+	  set write_some 0
+        }
+ 
+ 	Button .l1asc.cmd.cancel -text "Cancel" -width 5 -command {
+	   set write_some 0
+	   destroy .l1asc
+ 	}
+ 	Button .l1asc.cmd.dismiss -text "Dismiss" -width 5 -command {
+	   destroy .l1asc
+ 	}
+	pack .l1asc.cmd.ok .l1asc.cmd.cancel .l1asc.cmd.dismiss -side left -padx 5
+	pack .l1asc.fn.op .l1asc.fn.of -side top -pady 5	
+        #pack .l1asc.ops.indx .l1asc.ops.int -side left
+        pack .l1asc.ops .l1asc.fn .l1asc.cmd -side top
+  }
+
+ Button .l1wid.bf4.2.proc -text "Process Now" -width 20 -bd 5\
 		-command \
      {
   	   global list lrnindx
@@ -845,18 +966,22 @@ Button .l1wid.bf5.1 -text "Write Datafile" -width 20 \
 	 if {$ptype == 0} {
 	    exp_send "fs_all = make_fs(latutm=1, q=q, ext_bad_att=1, usecentroid=$usecentroid);\r"
 	    expect ">"
+	    .l1wid.bf45.p.15 setvalue @0
 	 }
 	 if {$ptype == 1} {
            exp_send "depth_all = make_bathy(latutm = 1, q = q, ext_bad_depth=1, ext_bad_att=1);\r"
 	   expect ">"
+	   .l1wid.bf45.p.15 setvalue @1
 	 }
 	 if {$ptype == 2} {
 	    exp_send "veg_all = make_veg(latutm=1, q=q, ext_bad_att=1, ext_bad_veg=1, use_centroid=$usecentroid);\r"
 	    expect ">"
+	   .l1wid.bf45.p.15 setvalue @2
 	 }
 	 if {$ptype == 3} {
 	    exp_send "cveg_all = make_veg(latutm=1, q=q, use_peak=$usecentroid, multi_peaks=1);\r"
 	    expect ">"
+	   .l1wid.bf45.p.15 setvalue @3
  	 }
               
     }
@@ -871,9 +996,10 @@ Button .l1wid.bf5.1 -text "Write Datafile" -width 20 \
 #pack  .l1wid.bf4.1.cb .l1wid.bf4.1.xba .l1wid.bf4.1.xbd .l1wid.bf4.1.xbv -side top -padx 20 -pady 5
 #pack  .l1wid.bf4.1 -side top -padx 20 -pady 5
 pack .l1wid.bf4.1.d .l1wid.bf4.1.p -side left -padx 5
-pack  .l1wid.bf4.2.cll .l1wid.bf4.2.cen -side left -padx 3
-pack .l1wid.bf4.1 .l1wid.bf4.2 -side top -pady 3
-pack .l1wid.bf5.1 .l1wid.bf5.2 -side right
+#pack  .l1wid.bf4.2.cll .l1wid.bf4.2.cen -side left -padx 3
+pack  .l1wid.bf4.2.cen .l1wid.bf4.2.proc -side left -padx 10
+pack .l1wid.bf4.1 .l1wid.bf4.2 -side top -pady 10
+pack .l1wid.bf5.3 .l1wid.bf5.1  -side right -padx 35 
 pack .l1wid.bf1 .l1wid.bf2 .l1wid.bf3 .l1wid.bf4 -side top -expand 1 -fill both
 pack .l1wid.bf45.sc.1  -side left  -padx 3
 pack .l1wid.bf45.sc.f  -side left
@@ -887,7 +1013,7 @@ pack 	.l1wid.bf45.p.fma \
 	-side left -fill x  -padx 2
 pack .l1wid.bf45.p .l1wid.bf45.sc .l1wid.bf45.q \
 	-side top -fill x -expand 1
-pack .l1wid.bf5 .l1wid.bf45  -side top -pady 3 
+pack .l1wid.bf5 .l1wid.bf45  -side top -pady 3 -fill x
 
 proc send_latlon_to_l1pro {minlon maxlon minlat maxlat utm} {
    global mnlon mxlon mnlat mxlat utm
