@@ -91,6 +91,12 @@ for the angle biases and the x,y and z offsets.
  ops_IMU1_default.y_offset =  1.403;    // This is Applanix X Axis +nose
  ops_IMU1_default.z_offset = -0.833;    // This is Applanix Z Axis +Down
 
+
+ ops_IMU2_default = ops_default;
+ ops_IMU2_default.roll_bias = -0.8;    // with 03/12 Albert Whitted runway
+ ops_IMU2_default.pitch_bias = 0.1;    // with 03/12 Albert Whitted runway
+ ops_IMU2_default.yaw_bias = 0;    // 
+
 func display_mission_constants( m, ytk= ) {
   write,""
   write, "____________________BIAS__________________     _____Offsets_____"
