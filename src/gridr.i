@@ -13,7 +13,7 @@ require, "pnm.i"
    Bin and grid eaarl data.
 
    Inputs:
-	r	an RRR array.
+	&r	an RRR array.
 
    Returns:
 	An array of pointers (img) where *img(1) contains the 
@@ -29,6 +29,8 @@ require, "pnm.i"
 
 
 func sel_grid_area( r ) {
+/* DOCUMENT sel_grid_area( r ) 
+*/
   w = window();
   window,5; 
   res=mouse(, 1);
@@ -43,19 +45,23 @@ func sel_grid_area( r ) {
 
 
 // Extract a list containing all the elements in the selection box
-  q = where( (*r).east > ll(1)*100 );
- qq = where( (*r).east(q) < ur(1)*100 );
+  q = where( (r).east > ll(1)*100 );
+ qq = where( (r).east(q) < ur(1)*100 );
   q = q(qq);
- qq = where( (*r).north(q) > ll(2)*100 );
+ qq = where( (r).north(q) > ll(2)*100 );
   q = q(qq);
- qq = where( (*r).north(q) < ur(2)*100 );
+ qq = where( (r).north(q) < ur(2)*100 );
   q = q(qq);
 
 // q now holds a list of all elements within the selection box
 
-  x = int( (*r).east(q)+50)/100 + 1;  	// add 50cm, then convert from cm to m
-  y = int((*r).north(q)+50)/100 + 1;
-  z = (*r).elevation(q); 
+  x = int( (r).east(q)+50)/100 + 1;  	// add 50cm, then convert from cm to m
+  y = int((r).north(q)+50)/100 + 1;
+  z = (r).elevation(q); 
+ 
+z(max)
+z(avg)
+z(min)
 
 // insert elevations into the grid array 
   for (i=1; i<=numberof(x); i++ ) { 

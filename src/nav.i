@@ -150,11 +150,14 @@ func mdist ( none, nodraw= ) {
 
 */
 d = array(double, 3);
-res = mouse(1, 0, "cmd>");		// style=2 normally
+res = mouse(1, 2, "cmd>");		// style=2 normally
+    redraw
  d(1) = lldist( res(2), res(1), res(4), res(3) );
  d(2) = d(1)  * 1.1507794;      // convert to stat miles
  d(3) = d(1)  * 1.852;          // also to kilometers
  print,"# nm/sm/km",d
+ for (i=1; i<100000; i++ )
+	i=i;
  if ( is_void(nodraw) ) {
     plmk, res(2),res(1), msize=msz
     plmk, res(4),res(3), msize=msz
@@ -179,14 +182,15 @@ if (is_void(sw) )
 	sw = 0.2;		// scan width in km (minus desired overlap)
 
 
+mission_time = 0.0
 
 
-func sdist( junk, block=, centerline= , fill=) {
-/* DOCUMENT sdist(centerline=)
+func sdist( junk, block=, line= , mode=, fill=) {
+/* DOCUMENT sdist(junk, block=, line= , mode=, fill=)
    Measure distance, and draw a proportional rectangle showing the 
    resulting coverage.
 
-   Develops a flightline block from the centerline segment.  If called
+   Develops a flightline block from the line segment.  If called
    as sdist(), it will expect the user to select the points with the 
    mouse by clicking and holding down the left button over one endpoint
    and releasing the mouse over the other endpoint.
@@ -196,7 +200,7 @@ func sdist( junk, block=, centerline= , fill=) {
    altered values for sw, aw, etc. etc.
    
 
-   If it is called as sdist( centerline="A B C D" ) then it expects a 
+   If it is called as sdist( line="A B C D" ) then it expects a 
    string of four floating point numbers as "A B C D" where A and B are 
    the lat/lon pair for one endpoint and C D are the lat/lon pair for 
    the other point.  All points are in decimal degrees and west longitudes 
@@ -213,8 +217,10 @@ func sdist( junk, block=, centerline= , fill=) {
    A structure of type FB is returned. Type FB at the command prompt to
    see the format of the structure.
 
+   7/3/02  -WW Added left/right selection lines
 
 */
+extern mission_time
 extern sr, dv, rdv, lrdv, rrdv;
 extern blockn, segn;
   aw = float(aw);
@@ -224,13 +230,20 @@ extern blockn, segn;
   sr = array(float, 7, 2);  	//the array to hold the rectangle
 
 
-  if ( is_void( centerline ) ) {
+// line mode
+// 1 = right, bottom
+// 2 = center
+// 3 = left, top
+ if ( is_void( mode ) ) 
+	mode = 2;
+
+  if ( is_void( line ) ) {
     res = mdist(nodraw=1);		// get the segment from the user
     sf = aw / res(14);		// determine scale factor
     km = res(14);
   } else {
     res = array(float, 4 );
-    n = sread(centerline,format="%f %f %f %f", res(2), res(1), res(4), res(3) )
+    n = sread(line,format="%f %f %f %f", res(2), res(1), res(4), res(3) )
     km = lldist( res(2), res(1), res(4), res(3) ) * 1.852;
     sf = aw / km;		// determine scale factor
   }
@@ -239,13 +252,17 @@ extern blockn, segn;
 
 
 // adjust so all segments are from left to right 
-  if ( res(1) > res(3) ) {	// only the user coords. are changed
+// only the user coords. are changed
+re
+  if ( res(1) > res(3) ) {	
     temp = res;
     res(1) = temp(3);
     res(2) = temp(4);
     res(3) = temp(1);
     res(4) = temp(2);
+    sf = -sf;		// keep block on same side
   }
+res
 
 
   sf2 = sf/2.0;			// half the scan width
@@ -256,20 +273,40 @@ extern blockn, segn;
   zone = ZoneNumber(1);		// they are all the same cuz we translated
   dv = [UTMNorthing (dif), UTMEasting(dif)];
   dv = [dv(1),dv(2)];
-  lrdv = [-dv(2), dv(1)] * sf2; 	// 90 deg left rotated difs
-  rrdv = [dv(2), -dv(1)] * sf2; 	// 90 deg right rotated difs
 
-  sr(1,) = [UTMNorthing(1),UTMEasting(1)];	// first point
-  sr(2,) = [UTMNorthing(2),UTMEasting(2)];	// end point
-  sr(3,) = [UTMNorthing(1),UTMEasting(1)] + lrdv;	// end point
-  sr(4,) = [UTMNorthing(2),UTMEasting(2)] + lrdv;	// end point
-  sr(5,) = [UTMNorthing(2),UTMEasting(2)] - lrdv;	// end point
-  sr(6,) = [UTMNorthing(1),UTMEasting(1)] - lrdv;	// end point
-  sr(7,) = sr(3,) ;					// end point
 
-  ssf = (sw/aw) * -lrdv * 2.0;		// scale for one scan line
-  sega(1,1:2) = sr(3,) + ssf/2.0;
-  sega(1,3:4) = sr(4,) + ssf/2.0;
+
+    if ( (mode == 1) || (mode==3) ) {
+     if ( mode == 3) {
+	dv = -dv;
+     }
+    lrdv = [-dv(2), dv(1)] * sf; 	// 90 deg left rotated difs
+    sr(1,) = [UTMNorthing(1),UTMEasting(1)];	// first point
+    sr(2,) = [UTMNorthing(2),UTMEasting(2)];	// end point
+    sr(3,) = [UTMNorthing(1),UTMEasting(1)] ;	// first point
+    sr(4,) = [UTMNorthing(1),UTMEasting(1)] +lrdv ;	// end point
+    sr(5,) = [UTMNorthing(2),UTMEasting(2)] +lrdv;	// end point
+    sr(6,) = [UTMNorthing(2),UTMEasting(2)];	// end point
+    sr(7,) = sr(3,) ;					// end point
+    ssf = (sw/aw) * lrdv ;		// scale for one scan line
+    sega(1,1:2) = sr(3,) + ssf/2.0;
+    sega(1,3:4) = sr(6,) + ssf/2.0;
+  } else if ( mode == 2 ) {
+    lrdv = [-dv(2), dv(1)] * sf2; 	// 90 deg left rotated difs
+    rrdv = [dv(2), -dv(1)] * sf2; 	// 90 deg right rotated difs
+    sr(1,) = [UTMNorthing(1),UTMEasting(1)];	// first point
+    sr(2,) = [UTMNorthing(2),UTMEasting(2)];	// end point
+    sr(3,) = [UTMNorthing(1),UTMEasting(1)] + lrdv;	// end point
+    sr(4,) = [UTMNorthing(2),UTMEasting(2)] + lrdv;	// end point
+    sr(5,) = [UTMNorthing(2),UTMEasting(2)] - lrdv;	// end point
+    sr(6,) = [UTMNorthing(1),UTMEasting(1)] - lrdv;	// end point
+    sr(7,) = sr(3,) ;					// end point
+    ssf = (sw/aw) * -lrdv * 2.0;		// scale for one scan line
+    sega(1,1:2) = sr(3,) + ssf/2.0;
+    sega(1,3:4) = sr(4,) + ssf/2.0;
+  } 
+
+
   for (i=2; i<=int(segs); i++ ) {
     sega(i,1:2) = sega(i-1,1:2) +ssf;
     sega(i,3:4) = sega(i-1,3:4) +ssf;
@@ -370,6 +407,7 @@ r = 3:7
  rs.dseg = res(1:4);	// block definition segment
 
  blockn++;
+ mission_time += blocksecs/3600.0;
  return rs
 }
 

@@ -76,7 +76,8 @@ func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) {
  if ( is_void(graph) ) 
 	graph = 0;
    for ( j=1; j< len; j++ ) {
-     j;
+     if ( (j % 10)  == 0 ) 
+        write, format="   %d of %d   \r", j,  len
      for (i=1; i<119; i++ ) {
        depths(i,j) = ex_veg( rn+j, i, last = last, graph=graph);
        if ( !is_void(pse) ) 
@@ -97,12 +98,7 @@ func ex_veg( rn, i,  last=, graph= ) {
  see run_veg 
 
 
- This function returns a three element with the following organization:
-
-  Element     Description
-	1	Raw scan angle counts
- 	2	Bottom location (index) in the waveform 
-	3	Bottom peak signal value in first waveform counts
+ This function returns an array of VEGPIX structures. 
 
 	[ rp.sa(i), mx, a(mx,i,1) ];
  

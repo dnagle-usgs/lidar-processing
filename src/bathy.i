@@ -158,6 +158,8 @@ func define_bath_ctl(junk,type=) {
 
 }
 
+
+
 func ex_bath( rn, i,  last=, graph= ) {
 /* DOCUMENT ex_bath(raster_number, pulse_index)
 
