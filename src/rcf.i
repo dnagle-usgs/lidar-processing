@@ -90,6 +90,7 @@ ASSOC COMPUTING MACHINERY, NEW YORK
 	mode = 0;
   si = sort(jury);		// order the jury
   nj = numberof(jury);
+  write,format="** Warning **  %d points in rcf jury pool... May be slow...", nj
   vote = 0;
   nvote = -1;
   for (i=1; i<=nj; i++ ) {
