@@ -219,3 +219,83 @@ func batch_veg_metrics(ipath, opath, fname=,searchstr=, plotclasses=, thresh=, m
 
    return
 }
+
+func batch_merge_veg_energy(ipath, searchstr=) {
+  // this function merges the *energy.pbd files for data tiles in a batch mode
+  // amar nayegandhi 10/07/04
+
+  if (is_void(searchstr)) searchstr = "*energy.pbd";
+
+ 
+  s = array(string,10000);
+  if (searchstr) ss = searchstr;
+  scmd = swrite(format = "find %s -name '%s'",ipath, ss);
+  fp = 1; lp = 0;
+  for (i=1; i<=numberof(scmd); i++) {
+      f=popen(scmd(i), 0);
+      n = read(f,format="%s", s );
+      close, f;
+      lp = lp + n;
+      if (n) fn_all = s(fp:lp);
+      fp = fp + n;
+  }
+
+  fn_path = array(string, numberof(fn_all));
+  fn_file = array(string, numberof(fn_all));
+  for (i=1;i<=numberof(fn_all);i++) {
+      path = split_path(fn_all(i), 0)
+      fn_path(i) = path(1);
+      fn_file(i) = path(2);
+  }
+
+  xx = unique(fn_path, ret_sort=1);
+ 
+ // now find the files in each unique path 
+  for (i=1;i<=numberof(xx);i++) {
+    write, format="Merging File %d of %d\r",i,numberof(xx);
+    s = array(string,10000);
+    scmd = swrite(format = "find %s -name '%s'",fn_path(xx(i)), ss);
+    fp = 1; lp = 0;
+    fn_all = [];
+    for (j=1; j<=numberof(scmd); j++) {
+      f=popen(scmd(j), 0);
+      n = read(f,format="%s", s );
+      close, f;
+      lp = lp + n;
+      if (n) fn_all = s(fp:lp);
+      fp = fp + n;
+    }
+    // we need to merge
+    // open the first file
+    f = openb(fn_all(1));
+    restore, f;
+    close, f;
+    outveg1 = outveg;
+    fcount = 1;
+    fn_split = split_path(fn_all(1), 1, ext=1);
+    fnametag = "_merged";
+    new_fn = fn_split(1)+fnametag+fn_split(2);
+    if (opath) {
+       fn_split = split_path(fn_all(1), 0);
+       fn_split1 = split_path(fn_split1(2), 1, ext=1);
+       new_fn = opath+fn_split1(1)+fnametag+fn_split1(2);
+    }
+    while (fcount < numberof(fn_all)) {
+        fcount++;
+        f = openb(fn_all(fcount));
+        restore, f;
+        close, f;
+        outveg2 = outveg;
+        outveg1 = merge_veg_lfpw(outveg1, outveg2);
+    }
+    outveg = outveg1;
+    // write outveg to new file with keyword merged in it.
+    f = createb(new_fn);
+    save, f, outveg;
+    close, f;
+    
+       
+  }
+
+}
+      

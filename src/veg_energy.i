@@ -412,11 +412,12 @@ func make_single_lfpw(eaarl,bin=,normalize=, plot=, correct_chp=, min_elv=){
    return outveg;
 }
 
-func plot_slfw(outveg, ipath=, outwin=, indx=, dofma=, color=, interactive=, show=, inwin=, title=, noxytitles=,  normalize=) {
+func plot_slfw(outveg, ipath=, outwin=, indx=, dofma=, color=, interactive=, show=, inwin=, title=, noxytitles=,  normalize=, searchstr=) {
 //amar nayegandhi 04/14/04
 // plot synthesized large footprint waveform
 // returns the waveforms selected
 // normalize = 1 by default
+// if outveg is [] search for the waveform in the files define by searchstr
 
 
 w = window();
@@ -424,6 +425,7 @@ if (is_void(outwin)) outwin = 7;
 if (is_void(inwin)) inwin = 5;
 if (is_void(color)) color="black";
 if (is_void(normalize)) normalize = 1;
+if (is_void(searchstr)) searchstr="*merged.pbd";
 out = [];
 
 if (!is_void(dofma)) {
@@ -431,7 +433,21 @@ if (!is_void(dofma)) {
 }
 
 
-     
+if (!is_array(outveg)) {
+  // find all the files in ipath using searchstr
+  s = array(string,10000);
+  if (searchstr) ss = searchstr;
+  scmd = swrite(format = "find %s -name '%s'",ipath, ss);
+  fp = 1; lp = 0;
+  for (i=1; i<=numberof(scmd); i++) {
+      f=popen(scmd(i), 0);
+      n = read(f,format="%s", s );
+      close, f;
+      lp = lp + n;
+      if (n) fn_all = s(fp:lp);
+      fp = fp + n;
+  }
+}
 
 if (!is_void(interactive)) {
   count = 0;
@@ -458,7 +474,10 @@ if (!is_void(interactive)) {
      tilee = tile(2);
      itilee = tilee/10000 * 10000;
      itilen = tilen/10000 * 10000 + 10000;
-     fname = swrite(format="%si_e%d_n%d_18s/t_e%d_n%d_18s/t_e%d_n%d_18s_n88_20020911_v_energy.pbd",ipath, itilee, itilen, tilee, tilen+2000, tilee, tilen+2000);
+     pattern = swrite(format="t_e%d_n%d",tilee, tilen+2000);
+     fn_idx = where(strmatch(fn_all, pattern));
+     //fname = swrite(format="%si_e%d_n%d_18s/t_e%d_n%d_18s/t_e%d_n%d_18s_n88_20020911_v_energy.pbd",ipath, itilee, itilen, tilee, tilen+2000, tilee, tilen+2000);
+     fname = fn_all(fn_idx(1));
      write, format="Opening File %s\n",fname;
      f = openb(fname);
      restore, f;
@@ -468,6 +487,8 @@ if (!is_void(interactive)) {
      fp = max((outveg.east(2)-outveg.east(1)), (outveg.north(2)-outveg.north(1)));
    }
    
+  if ((count == 1) && (show)) 
+      write, "CanopyHt BareEarth GRR CRR HOME NoPixels"
    
    east = m(1);
    north = m(2);
@@ -497,7 +518,17 @@ if (!is_void(interactive)) {
 	
    if (show) {
 	// plot the footprint box in inwin.
-	plg, [(tveg.north-fp/2), (tveg.north-fp/2), (tveg.north+fp/2), (tveg.north+fp/2), (tveg.north-fp/2)]/100., [(tveg.east-fp/2), (tveg.east+fp/2), (tveg.east+fp/2), (tveg.east-fp/2), (tveg.east-fp/2)]/100., color="black";
+	plg, [(tveg.north-fp/4), (tveg.north-fp/4), (tveg.north+fp/4), (tveg.north+fp/4), (tveg.north-fp/4)]/100., [(tveg.east-fp/4), (tveg.east+fp/4), (tveg.east+fp/4), (tveg.east-fp/4), (tveg.east-fp/4)]/100., color="black";
+	mets = lfp_metrics([tveg], min_elv=-2.0);
+	write, format="%4.2f\t%3.2f\t%4.3f\t%4.3f\t%4.2f",mets(,1);
+        if ((mets(1,1) > 5) & (mets(1,1) <= 22) & (mets(4,1) >= 0.59)) write, " FOREST ";
+        if ((mets(1,1) > 5) & (mets(1,1) <= 22) & (mets(4,1) < 0.59) & (mets(4,1) >= 0.24)) write," WOODLAND ";
+	if ((mets(1,1) > 5) & (mets(1,1) <= 22) & (mets(4,1) < 0.24) & (mets(4,1) >= 0.10)) write, " SPARSE WOODLAND ";
+	if ((mets(1,1) <= 5) & (mets(1,1) > 1) & (mets(4,1) >= 0.2)) write, " SHRUBLAND ";
+	if ((mets(1,1) <= 5) & (mets(1,1) > 1) & (mets(4,1) < 0.2)) write, " SPARSE SHRUBLAND ";
+	if ((mets(1,1) <= 1) & (mets(1,1) > -2.0)) write, "OTHER"; // HERBACEOUS VEG, SAND, WATER etc.
+
+	write, "\n";
    }
   
    if (is_void(*tveg.rx)) {
@@ -522,6 +553,7 @@ if (!is_void(interactive)) {
     plg, xx, yy, color=color;
    }
     
+  pltitle, swrite(format="Number of samples = %d",tveg.npix);
 
    out = grow(out,tveg);
 
@@ -606,7 +638,7 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=) {
     out = array(double, 5, dims(2));
     dims = grow(dims,1);
  }
- if (is_void(thresh)) thresh = 10;
+ if (is_void(thresh)) thresh = 5;
   
  for (i=1;i<=dims(2);i++) {
     for (j=1;j<=dims(3);j++) {
@@ -616,6 +648,11 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=) {
 	  out(1,i,j) = -1000;
 	  continue;
         }
+	//normalize for number of pixels in each rx
+        nzidx = where(lfpnpix != 0);
+        if (is_array(nzidx)) lfprx(nzidx) = lfprx(nzidx)/lfpnpix(nzidx);
+        nzidx = where(lfpnpix == 0);
+        if (is_array(nzidx)) lfprx(nzidx) = 0;
 	lfpelv = *lfpveg(i,j).elevation;
 	if (is_array(min_elv)) {
 	  idx = where(lfpelv > min_elv);
@@ -630,29 +667,59 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=) {
 	lfpcum = (lfprx)(cum);
 	menergy = lfpcum(0)/2;
 	mindx = abs(lfpcum-menergy)(mnx);
-	out(5,i,j) = (lfpelv)(mindx-1); // this is HOME
+	out(5,i,j) = (lfpelv)(mindx); // this is HOME
 
-      lfpdif = where(lfprx(dif) >= thresh);
+      if (numberof(lfprx) < 2) continue;
+      lfpdif = where(lfprx(dif) <= -thresh);
       if (!is_array(lfpdif)) continue;
-      out(1,i,j) = lfpelv(lfpdif(0)+1);
+      mnxcan = min(lfpdif(0)-5,numberof(lfprx));
+      if (mnxcan <= 0) continue;
+      //mxxcan = (lfprx(mnxcan:lfpdif(0)))(mxx) + mnxcan -1;
+      mxidx = where(lfprx(mnxcan:lfpdif(0))(dif) < 0);
+      if (is_array(mxidx)) {
+	mxxcan = mxidx(0) + mnxcan - 1;
+      } else {
+        mxxcan = (lfprx(mnxcan:lfpdif(0)))(mxx) + mnxcan -1;
+      }
+      out(1,i,j) = lfpelv(mxxcan);
       if (!is_array(img)) {
+        // no additional bare earth image available
+	lfpdif = where(lfprx(dif) >= thresh);
+        if (!is_array(lfpdif)) continue;
 	// max(lfpdif(1):+5) should be the ground elevation 
 	mnxgnd = min(lfpdif(1)+5, numberof(lfprx));
   	mxxgnd = (lfprx(lfpdif(1):mnxgnd))(mxx)+lfpdif(1)-1;
 	out(2,i,j) = lfpelv(mxxgnd);
+        // if out(2,i,j) is between -2 and 2m then this is bare earth
+        // else try harder knowing that bare earth could be between -2 and 2m.
+        if (((out(2,i,j) < -2.0) || (out(2,i,j) > 2.0)) || (out(2,i,j) == 0)) {
+            //find all returns between -2 and 2
+	    bidx = where((lfpelv >= -2.0) & (lfpelv <= 2.0))
+	    if (numberof(bidx) >= 2) {
+	      lfpdif = where(lfprx(bidx)(dif) >= 2);// thresh=2 is low enough to trip on any possible gnd return
+		if (is_array(lfpdif)) {
+                   lfpidx = where(lfprx(bidx(lfpdif)) < 0);
+                   if (is_array(lfpidx)) {
+		     mxxgnd = (lfprx(bidx(lfpdif)+1))(mxx);
+		     out(2,i,j) = lfpelv(mxxgnd);
+		   }
+                }
+            }
+        }
 	lastgnd = min(numberof(lfpelv), mxxgnd+5);
-	lgridx = where(lfprx(mxxgnd:lastgnd)(dif) > 0);
+	if (lastgnd > mxxgnd) lgridx = where(lfprx(mxxgnd:lastgnd)(dif) > 0);
  	if (is_array(lgridx)) {
 	  lgr = mxxgnd+lgridx(1)-1; // this is the last gnd return
 	} else {
 	  lgr = lastgnd-1;
 	}
-	fgridx = where(lfprx(1:mxxgnd)(dif) < 0);
+	if (mxxgnd > 1) fgridx = where(lfprx(1:mxxgnd)(dif) < 0);
 	if (is_array(fgridx)) {
 	    fgr = fgridx(0)+1;
 	} else {
 	    fgr = 1;
 	}
+	if (out(2,i,j) < 2.5) out(1,i,j) -= out(2,i,j); // assuming gnd is below 2.5 m
       } else {
 	// correct the canopy height by subtracting the bare earth elevation
 	out(1,i,j) = out(1,i,j) - img(i,j);
@@ -686,10 +753,21 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=) {
 	lfpgnpix = lfpnpix(fgr:lgr);
 	lfpcpy = lfprx(lgr:);
 	lfpcnpix = lfpnpix(lgr:);
-	lfpgsum = (lfpgnd*lfpgnpix)(sum);
-	lfpcsum = (lfpcpy*lfpcnpix)(sum);
-	out(3,i,j) = lfpgsum/(lfpgsum+lfpcsum);
-	out(4,i,j) = lfpcsum/(lfpcsum+lfpgsum);
+	lfpgsum = (lfpgnd)(sum);
+	lfpcsum = (lfpcpy)(sum);
+	if (abs(out(2,i,j)- out(1,i,j)) <= 0.5) { // return only from gnd
+	    out(1,i,j) = 0;
+	    out(3,i,j) = 1.0;
+	    out(4,i,j) = 0.0;
+        } else {
+	 if ((out(2,i,j) > -1.5) && (out(2,i,j) < 2.0)) {
+           out(3,i,j) = lfpgsum/(lfpgsum+lfpcsum);
+	   out(4,i,j) = lfpcsum/(lfpcsum+lfpgsum);
+         } else { // all returns are from the canopy
+	   out(3,i,j) = 0.0;
+           out(4,i,j) = 1.0;
+         }
+        }
 	
     }
  }
@@ -791,22 +869,31 @@ func plot_classes(vmets, lfpveg, vmetsidx=, nclasses=, classint=, win=) {
 func plot_veg_classes(mets, lfp, idx=, win=, dofma=, msize=, smooth=) {
 // amar nayegandhi 051104
 /*
- FOREST: cht > 8m and 60-100% cover
- WOODLAND: cht > 8m and 25-60% cover
- SHRUBLAND: cht < 8m and cht > 1m & > 25% cover
- DWARF SHRUBLAND & HERBACEOUS: cht < 1m and cht > 0m 
+ based on NPS Vegetation mapping program: Final Draft
+ http://biology.usgs.gov/npsveg/classifcation/sect5.html
+
+ FOREST: cht > 5m and 60-100% cover
+ WOODLAND: cht > 5m and 25-60% cover
+ SPARSE WOODLAND: cht > 5m and 10-25% cover
+ SHRUBLAND: cht < 5m and cht > 0.5m & 100-25% cover
+ SPARSE SHRUBLAND: cht < 5m and cht > 0.5m & 10-25% cover
+ DWARF SHRUBLAND & HERBACEOUS: cht < 0.5m and cht > 0m 
 */
 
 if (is_void(msize)) msize=0.5
-//idx1 = where((mets(1,) > 6) & (mets(4,) >= 0.5));
-idx1 = where((mets(1,) > 6) & (mets(4,) >= 0.4));
+//idx1 = where((mets(1,) > 6) & (mets(1,) < 22) & (mets(4,) >= 0.5));
+idx1 = where((mets(1,) > 5) & (mets(1,) <= 22) & (mets(4,) >= 0.59)); // FOREST 
 
-//idx2 = where((mets(1,) > 6) & (mets(4,) > 0.25) & (mets(4,) < 0.5));
-idx2 = where((mets(1,) > 6) & (mets(4,) < 0.4) & (mets(4,) > 0.1));
+//idx2 = where((mets(1,) > 6) & (mets(4,) > 0.25) & (mets(4,) < 0.6));
+idx2 = where((mets(1,) > 5) & (mets(1,) <= 22) & (mets(4,) < 0.59) & (mets(4,) >= 0.24)); // WOODLAND
 
-idx3 = where((mets(1,) < 6) & (mets(1,) > 1) & (mets(4,) > 0.25));
+idx3 = where((mets(1,) > 5) & (mets(1,) <= 22) & (mets(4,) < 0.24) & (mets(4,) >= 0.10)); // SPARSE WOODLAND
 
-idx4 = where((mets(1,) < 1) & (mets(1,) > -1)); 
+idx4 = where((mets(1,) <= 5) & (mets(1,) > 1) & (mets(4,) >= 0.2)); // SHRUBLAND
+
+idx5 = where((mets(1,) <= 5) & (mets(1,) > 1) & (mets(4,) < 0.2)); // SPARSE SHRUBLAND
+
+idx6 = where((mets(1,) <= 1) & (mets(1,) > -2.0)); // HERBACEOUS VEG, SAND, WATER etc.
 
 z = mets(1,,);
 z(*) = 0;
@@ -815,19 +902,13 @@ if (is_void(win)) win=4;
 window, win;
 if (dofma) fma;
 if (!is_array(idx)) idx = [1,2,3,4,5];
- for (i=1;i<=numberof(idx);i++) {
-    if (idx(i) == 1) 
-        z(idx1) = 1;
-    
-    if (idx(i) == 2) 
-	z(idx2) = 2;
 
-    if (idx(i) == 3) 
-        z(idx3) = 3;
-
-    if (idx(i) == 4) 
-	z(idx4) = 4;
- }
+if (is_array(idx1)) z(idx1) = 1;
+if (is_array(idx2)) z(idx2) = 2;
+if (is_array(idx3)) z(idx3) = 3;
+if (is_array(idx4)) z(idx4) = 4;
+if (is_array(idx5)) z(idx5) = 5;
+if (is_array(idx6)) z(idx6) = 6;
 
  if (smooth) {
    // make 2d array with class numbers
@@ -835,17 +916,33 @@ if (!is_array(idx)) idx = [1,2,3,4,5];
    vclnew = array(long, xx(2), xx(3));
    for (i=2;i<xx(3);i++) {
      for (j=2;j<xx(2);j++) {
-	if (z(j,i)!= 0) {
-	   vclnew(j,i) = z(j,i);
-	   continue;
-	}
+	//if (z(j,i)!= 0) {
+	//   vclnew(j,i) = z(j,i);
+	//   continue;
+	//}
 	i1 = where(z(j-1:j+1,i-1:i+1) == 1)
 	i2 = where(z(j-1:j+1,i-1:i+1) == 2)
 	i3 = where(z(j-1:j+1,i-1:i+1) == 3)
 	i4 = where(z(j-1:j+1,i-1:i+1) == 4)
-	imxx = [numberof(i1),numberof(i2),numberof(i3),numberof(i4)](mxx);
-	imx = [numberof(i1),numberof(i2),numberof(i3),numberof(i4)](max);
-	if (imx != 0) vclnew(j,i) = imxx;
+	i5 = where(z(j-1:j+1,i-1:i+1) == 5)
+	i6 = where(z(j-1:j+1,i-1:i+1) == 6)
+	imxx = [numberof(i1),numberof(i2),numberof(i3),numberof(i4),numberof(i5), numberof(i6)](mxx);
+	imx = [numberof(i1),numberof(i2),numberof(i3),numberof(i4), numberof(i5), numberof(i6)](max);
+	if (z(j,i)!= 0) {
+           if (imx*100./8.0 > 70) { // smooth only if significant (>70%) of surrouding classes are same
+	      if (imxx == 6) {
+		vclnew(j,i) = imxx;// only for "other" class
+	      } else {
+	        vclnew(j,i) = z(j,i); 
+	        continue;
+	      }
+           } else {
+	      vclnew(j,i) = z(j,i); 
+	      continue;
+           }
+	} else { // smooth irrespective of number of classes since otherwise it will be unclassified
+	  if (imx != 0) vclnew(j,i) = imxx;
+        }
      }
    }
    vclnew(,1) = long(z(,1));
@@ -861,6 +958,113 @@ if (!is_array(idx)) idx = [1,2,3,4,5];
 return
 }
 
+func merge_veg_lfpw(outveg1, outveg2) {
+ // this function merges 2 veg class outveg arrays usually within
+ // the same data tile
+ // amar nayegandhi 10/06/04. 
+
+
+ while (outveg1(1,1).east == 0) {
+   if (outveg1(0,1).east == 0) {
+      outveg1 = outveg1(,2:);
+   } else {
+      outveg1 = outveg1(2:,);
+   }
+ }
+      
+ while (outveg2(1,1).east == 0) {
+   if (outveg2(0,1).east == 0) {
+      outveg2 = outveg2(,2:);
+   } else {
+      outveg2 = outveg2(2:,);
+   }
+ }
+
+ bin1 = outveg1(2,1).east-outveg1(1,1).east;
+ bin2 = outveg2(2,1).east-outveg2(1,1).east;
+
+ if (bin1 != bin2) {
+   write, "Input arrays do not have the same composite footprint size. Cannot merge.  Goodbye."
+   return
+ } else {
+   bin = bin1;
+ }
+
+ outeast1 = min(outveg2(1,1).east,outveg1(1,1).east);
+ outnorth1 = min(outveg2(1,1).north,outveg1(1,1).north);
+
+ outeast2 = max(outveg2(0,0).east,outveg1(0,0).east);
+ outnorth2 = max(outveg2(0,0).north,outveg1(0,0).north);
+
+ xn = (outeast2-outeast1)/bin +1 ;
+ yn = (outnorth2-outnorth1)/bin +1;
+ 
+ ooutveg1 = array(LFP_VEG,xn,yn);
+ ooutveg2 = array(LFP_VEG,xn,yn);
+ outveg = array(LFP_VEG,xn,yn);
+
+ outveg(1,1).east = outeast1;
+ outveg(1,1).north = outnorth1;
+ 
+ outveg(0,1).east = outeast1 + xn*bin;
+ outveg(0,1).north = outnorth1;
+
+ outveg(1,0).east = outeast1;
+ outveg(1,0).north = outnorth1 + yn*bin;
+
+
+ xstart1 = (outveg1(1,1).east-outeast1)/bin+1;
+ xstart2 = (outveg2(1,1).east-outeast1)/bin+1;
+
+ ystart1 = (outveg1(1,1).north-outnorth1)/bin+1;
+ ystart2 = (outveg2(1,1).north-outnorth1)/bin+1;
+
+ xstop1 = (outveg1(0,0).east-outeast1)/bin+1;
+ xstop2 = (outveg2(0,0).east-outeast1)/bin +1;
+
+ ystop1 = (outveg1(0,0).north-outnorth1)/bin+1;
+ ystop2 = (outveg2(0,0).north-outnorth1)/bin+1;
+
+ ooutveg1(xstart1:xstop1, ystart1:ystop1) = outveg1;
+ ooutveg2(xstart2:xstop2, ystart2:ystop2) = outveg2;
+
+ ooutveg1(1,1).east = outeast1;
+ ooutveg1(1,1).north = outnorth1;
+ 
+ ooutveg1(0,1).east = outeast1 + xn*bin;
+ ooutveg1(0,1).north = outnorth1;
+
+ ooutveg1(1,0).east = outeast1;
+ ooutveg1(1,0).north = outnorth1 + yn*bin;
+
+ ooutveg2(1,1).east = outeast1;
+ ooutveg2(1,1).north = outnorth1;
+ 
+ ooutveg2(0,1).east = outeast1 + xn*bin;
+ ooutveg2(0,1).north = outnorth1;
+
+ ooutveg2(1,0).east = outeast1;
+ ooutveg2(1,0).north = outnorth1 + yn*bin;
+
+ idx = [];
+ idx = where((ooutveg2.npix > ooutveg1.npix));
+ if (is_array(idx)) outveg(idx) = ooutveg2(idx);
+
+ idx = [];
+ idx = where((ooutveg1.npix > ooutveg2.npix));
+ if (is_array(idx)) outveg(idx) = ooutveg1(idx);
+
+ // redefine north and east fields using bin and starting pt
+ outveg(1,1).east = outeast1;
+ outveg(1,1).north = outnorth1;
+ outveg(,*).east = indgen(outeast1:outeast2:bin);
+ o1 = transpose(outveg.north);
+ o1(,*) = indgen(outnorth1:outnorth2:bin);
+ o1 = transpose(o1);
+ outveg.north = o1;
+  
+ return outveg;
+}
 
 
 
