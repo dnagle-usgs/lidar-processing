@@ -122,7 +122,7 @@ if (!ifn) {
       path = data_path+"/gps/";
    ifn = sel_file(ss="*.ybin", path=path)(1);
  } else {
-    path = data_path+"/gps/";
+    path = data_path;
     ifn  = get_openfn( initialdir=path, filetype="*.ybin" );
     ff = split_path( ifn, -1 );
     //data_path = ff(1);

@@ -7,16 +7,16 @@ func write_gga_ascii (ofname, utm=, uniq=, pnav=) {
   }
    f = open(ofname, "w");
    if (utm) {
-     write, f, "Easting, Northing\n"
+     write, f, "Easting, Northing"
      u = fll2utm(gga.lat, gga.lon)
      if (uniq) {
        uqu = multi_unique(transpose([u(1,),u(2,)]));
      } else {
        uqu = transpose([u(2,), u(1,)]);
      }
-     write, f, format="%12.2f,  %12.2f\n", uqu(2,), uqu(1,);
+     write, f, format="%9.2f, %10.2f\n", uqu(2,), uqu(1,);
    } else {
-     write, f, "Longitude, Latitude\n"
+     write, f, "Longitude, Latitude"
      if (uniq) {
        uql = multi_unique(transpose([gga.lon, gga.lat]));
        write, f, format="%10.7f,  %10.7f\n", uql(1,), uql(2,);
