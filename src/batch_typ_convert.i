@@ -60,7 +60,7 @@ return
 }
 
 
-func batch_pbd2edf(dirname, onlymerged=, n88=) {
+func batch_pbd2edf(dirname, onlymerged=, n88=, w84=) {
 /* DOCUMENT batch_pbd2edf(dirname, onlymerged)
         Created by Lance Mosher, June 12, 2003
         This function converts *.pbd files to *.edf files in batch mode.
@@ -75,7 +75,14 @@ func batch_pbd2edf(dirname, onlymerged=, n88=) {
        if (n88) {
 	 n88 = "n88";
        } else n88 = "";
-       scmd = swrite(format = "find %s -name '*%s*%s'",dirname, n88, ss);
+       if (w84) {
+	 w84 = "w84";
+       } else w84 = "";
+       if ((n88) && (w84)) {
+	 w84="";
+	 n88="";
+       }
+       scmd = swrite(format = "find %s -name '*%s*%s*%s'",dirname, n88, w84, ss);
        fp = 1; lp = 0;
        for (i=1; i<=numberof(scmd); i++) {
          f=popen(scmd(i), 0);
