@@ -68,7 +68,7 @@ struct POSPAC {
 // The structure that will be read by ALPS
 // to convert angles to double multiply by 360.0*2^31
 struct POSPRH {
-  unsigned long  somd;   // lsb = 1 seconds
+  unsigned long  somd;   // lsb = 1 second
   unsigned long fsecs;   // lsb = 1e-6
   long            alt;   // lsb =  .001 meters (1mm)   *1e-3 for meters
   long          pitch;   // lsb on all angles = 360.0 / 2^31   *(2^-31)
@@ -82,35 +82,52 @@ struct POSPRH {
 FILE *idf, *odf;
 int idf_fd;
 struct stat idf_stat;
-unsigned int cnt=0, nbr_input_recs;
+unsigned int cnt=0, 
+	     data_start,
+	     start_somd,
+	     nbr_input_recs;
 
-char idxstr[8]={"AAAABBBB"};	// only 8 bytes get written
-char cntstr[8]={"CCCCDDDD"};
+char start[20];
 char notes[2048]={"No comments"};
+
+usage ( int rv ) {
+     printf("\n\nUsage:\npospac2ybin inputfile outputfile\n\n");
+     exit(rv);
+}
 
 main(int argc, char *argv[]) {
 	unsigned int ft;
+	char str[256];
    if ( argc < 3 ) {
-     printf("\n\nUsage:\npospac2ybin inputfile outputfile\n\n");
-     exit(1);
+     usage(1);
    }
-   idf = fopen(argv[1], "r");
-   odf = fopen(argv[2], "w");
+   if ( (idf = fopen(argv[1], "r")) < 0 ) {
+	   perror("");
+	   usage(1);
+   }
+
+   if ( (odf = fopen(argv[2], "w")) < 0 ) {
+	   perror("");
+	   usage(1);
+   }
 
   idf_fd = fileno(idf);
   fstat( idf_fd, &idf_stat);
   nbr_input_recs = idf_stat.st_size/sizeof(pospac);
   printf("\n %s contains %d sbet records\n", argv[1], nbr_input_recs);
+  sprintf( str, "%08x ", nbr_input_recs);
 
-  fwrite(&idxstr, 8, 1, odf);	                // 
-  fwrite(&cntstr, 8, 1, odf);	                // 
+  fwrite(start, sizeof(start), 1, odf);	        // 
   fwrite(&notes, sizeof(notes), 1, odf);	// save notes space
+
+  // Store the ascii/hex byte offset to the start of data.
+  data_start = ftell(odf);
 
   while ( !feof(idf) ) {
     fread( &pospac, sizeof(pospac), 1, idf);
      cnt++;
      if ( (cnt % 1000) == 0 ) {
-       printf("\r%6d of %6d  %3.2f%c completed  ",    
+       printf("\r%7d of %7d  %3.0f%c completed  ",    
           cnt, nbr_input_recs, ((float)cnt*100.0)/(float)nbr_input_recs, '%' );
      }
        posprh.somd = (unsigned int)pospac.time;
@@ -121,6 +138,10 @@ main(int argc, char *argv[]) {
       posprh.roll  = (int)(pospac.roll*BIN_ANGLE);
         posprh.alt = pospac.altitude*1000.0;
     posprh.heading = (int)((pospac.platform_heading)*BIN_ANGLE);
+     if ( cnt == 1 ) {
+       printf("\nStart time: %d.%d(somd)\n", posprh.somd, posprh.fsecs);
+       start_somd = posprh.somd;
+     }
 
     /*
      printf("%10u.%06u %12d %12d %12d %12d %12d %12d \n",
@@ -136,6 +157,12 @@ main(int argc, char *argv[]) {
      */
      fwrite(&posprh, sizeof(posprh), 1, odf);
    }
+  fseek( odf, 0, SEEK_SET);
+  sprintf( start, "%08x %08x ", data_start, nbr_input_recs);
+  fwrite(start, sizeof(start), 1, odf);	                // 
+  fclose(odf);
+   printf("\nStop  time: %d.%d, Mission time %3.2f(hrs)\n", 
+		   posprh.somd, posprh.fsecs, (posprh.somd-start_somd)/3600.0);
    printf("\nConversion completed\n");
 }
 
