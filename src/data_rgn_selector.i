@@ -254,7 +254,7 @@ indx = where(x >= xmin);
 }
 
 
-func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged=, onlynotmerged=, onlyrcfd=, datum=, skip=, noplot=) {
+func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged=, onlynotmerged=, onlyrcfd=, onlynotrcfd=, datum=, skip=, noplot=) {
 /*DOCUMENT select_rgn_from_datatiles(junk, rgn=, data_dir=, lmap=)
   This function selects data from a series of processed data tiles.
   The processed data tiles must have the min easting and max northing in their filename.
@@ -361,6 +361,12 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged
 	if (onlyrcfd) {
 	  ssm = strmatch(s,"rcf");
 	  s = s(where(ssm));
+	  nn =  numberof(s);
+	  if (nn == 0) continue;
+ 	}
+	if (onlynotrcfd) {
+	  ssm = strmatch(s,"rcf");
+	  s = s(where(!ssm));
 	  nn =  numberof(s);
 	  if (nn == 0) continue;
  	}
