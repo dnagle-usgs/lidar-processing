@@ -510,14 +510,16 @@ func sel_region (q, all_tans=) {
      rn_arr = array(int,2,no_t);
      for (i=1;i<=no_t;i++) {
        rnsidx = where(((edb.seconds - soe_day_start) ) >= ceil(t_new(1,i)));
-       if (is_array(rnsidx)) {
-           rn_indx_start = rnsidx(1);
+       if (is_array(rnsidx) && (numberof(rnsidx) > 1)) {
+	   idxrn = where(rnsidx(dif) == 1);
+           rn_indx_start = rnsidx(idxrn(1));
        } else {
 	   rn_indx_start = [];
        }
        rnsidx = where(((edb.seconds - soe_day_start) ) <= int(t_new(2,i)));
-       if (is_array(rnsidx)) {
-	   rn_indx_stop = rnsidx(0);
+       if (is_array(rnsidx) && (numberof(rnsidx) > 1)) {
+	   idxrn = where(rnsidx(dif) == 1);
+	   rn_indx_stop = rnsidx(idxrn(0));
  	} else {
 	   rn_indx_stop = [];
 	}
@@ -538,8 +540,14 @@ func sel_region (q, all_tans=) {
 	    rn_stop = 0;
 	    tyes_arr(i) = 0;
        }
-          
-
+       // assume a maximum of 40 rasters per second
+       if ((rn_stop-rn_start) > (t_new(,i)(dif)(1)*40)) {
+	   write, format="Time error in determining number of rasters.  Eliminating flightline segment %d.\n",i;
+	   rn_start = 0;
+	   rn_stop = 0;
+	   tyes_arr(i) = 0;
+      }
+	  
        rn_arr(,i) =  [rn_start, rn_stop];
      }
     write,format="\nNumber of Rasters selected = %6d\n", (rn_arr(dif, )) (,sum); 

@@ -397,8 +397,13 @@ Examples using the result data:
   npixels   = i16(r, 17)&0x7fff;        // number of pixels
   digitizer = (i16(r,17)>>15)&0x1;      // digitizer                          
   a = 19;        			// byte starting point for waveform data
-  if ((!is_void(tca)) && (numberof(tca) > rasternbr)) 
+  if (rasternbr < 0) return return_raster;
+  if (fseconds < 0) return return_raster;
+  if (npixels < 0) return return_raster;
+  if (seconds(1) < 0) return return_raster;
+  if ((!is_void(tca)) && (numberof(tca) > rasternbr) ) { 
      seconds = seconds+tca(rasternbr);
+  }
 //write, format= "rasternbr = %d, seconds = %d\n", rasternbr, seconds;
  for (i=1; i<=npixels-1; i++ ) {	// loop thru entire set of pixels
    offset_time(i) = i32(r, a);   a+= 4;	// fractional time of day since gps 1hz
