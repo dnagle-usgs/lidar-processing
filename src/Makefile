@@ -97,7 +97,7 @@ BIN = ../bin
 	cp $<	$@
 
 ../bin/shapefile_filter:	shapefile_filter.pl
-	cp $<	$@
+	install -m uog+rx  $<	$@
 
 ###############################################################################
 # all  Builds all the "C" programs in this directory that need it.  You can force
