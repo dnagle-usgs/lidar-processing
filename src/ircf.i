@@ -190,6 +190,8 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
  write, format="RCF'ing data set with window size = %d, and elevation width = %d meters...\n",fbuf,fw
  eaarl = rcfilter_eaarl_pts(eaarl, buf=fbuf*100, w=fw*100, mode=mode)
 
+ if (!is_array(eaarl)) return;
+
  tag_eaarl = array(int, numberof(eaarl));
  tag_eaarl++;
  indx = [];
@@ -217,14 +219,23 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
 
   if (!buf) buf = 500; //in centimeters
   if (!w) w = 20; //in centimeters
+  if (is_void(tw)) tw = w;
   // no_rcf is the minimum number of points required to be returned from rcf
   if (!no_rcf) no_rcf = 3;
 
   //now make a grid in the bbox
   ngridx = int(ceil((bbox(2)-bbox(1))/buf));
   ngridy = int(ceil((bbox(4)-bbox(3))/buf));
-  xgrid = bbox(1)+span(0, buf*(ngridx-1), ngridx);
-  ygrid = bbox(3)+span(0, buf*(ngridy-1), ngridy);
+  if (ngridx > 1) {
+    xgrid = bbox(1)+span(0, buf*(ngridx-1), ngridx);
+  } else {
+    xgrid = [bbox(1)];
+  }
+  if (ngridy > 1) {
+    ygrid = bbox(3)+span(0, buf*(ngridy-1), ngridy);
+  } else {
+    ygrid = [bbox(3)];
+  }
 
   if ( _ytk ) {
     tkcmd,"destroy .rcf1; toplevel .rcf1; set progress 0;"
@@ -335,6 +346,7 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
   if (_ytk) {
    tkcmd, "destroy .rcf1"
   } 
+  if (!is_array(new_eaarl_all)) return;
 
  // **** initial RCF complete ****
 
@@ -412,7 +424,12 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
         tridx = where(new_eaarl_all.rn != 0);
 	new_eaarl_all = new_eaarl_all(tridx);
         write, "Retriangulating..."
-  	nea_idx = msort(new_eaarl_all.least, new_eaarl_all.lnorth);
+	if (mode == 3) {
+  	  nea_idx = msort(new_eaarl_all.least, new_eaarl_all.lnorth);
+	} else {
+  	  nea_idx = msort(new_eaarl_all.east, new_eaarl_all.north);
+	}
+
   	new_eaarl_all = new_eaarl_all(nea_idx);
   	verts = triangulate_xyz(data=new_eaarl_all, plot=plottriag, win=plottriagwin, mode=mode);
      }
