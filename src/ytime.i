@@ -281,7 +281,7 @@ func soe2ymd(soe) {
 	y = timevals(1);
 	doy = timevals(2);
 	
-	if(y % 4 == 0) { leap = 0; }
+	if(y % 4 != 0) { leap = 0; }
 	else {
 		if(y % 100 == 0 && y % 400 != 0) { leap = 1; }
 		else { leap = 0; }
