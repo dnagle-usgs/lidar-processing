@@ -134,7 +134,7 @@ msz = .3
 sres = array(float,11);
 dd = array(float, 1);
 
-func mdist ( none, nodraw=, units=, win= ) {
+func mdist ( none, nodraw=, units=, win=, redrw= ) {
 /* DOCUMENT mdist
 
   Measure the distance between two points clicked on by the mouse
@@ -170,11 +170,15 @@ func mdist ( none, nodraw=, units=, win= ) {
    units = "ll";
  }
 
- if ( !is_void(win) )
-	winSave = window(win);
+ if ( !is_void(win) ) {
+	winSave = window();
+	window(win);
+ }
 
+win
    res = mouse(1, 2, "Hold left mouse, and drag distance:"); // style=2 normally
-   redraw
+   if ( redrw ) 
+	redraw;
 
  if ( units == "ll" ) {   ////////////  Lat/Lon
    d = array(double, 3);
@@ -211,6 +215,8 @@ func mdist ( none, nodraw=, units=, win= ) {
  }
   if ( !is_void(win) )		// restore orginal window
         window(winSave);
+ win;
+ winSave
  return rv;
 }                                                     
 
