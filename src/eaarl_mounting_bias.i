@@ -103,7 +103,7 @@ for the angle biases and the x,y and z offsets.
 
  ops_IMU2 = ops_default;
  ops_IMU2.name       = "DMARS Defaults"
- ops_tans.varname    = "ops_IMU2"
+ ops_IMU2.varname    = "ops_IMU2"
  ops_IMU2.roll_bias  = -0.8;    // with 03/12 Albert Whitted runway
  ops_IMU2.pitch_bias = 0.1;    // with 03/12 Albert Whitted runway
  ops_IMU2.yaw_bias   = 0;    // 
