@@ -21,11 +21,13 @@ TRUE = 1;
 EPSILON = 1e-6;
 
 
-func triangulate_xyz(file=, savefile=, data=, plot=) {
-/*DOCUMENT prepare_xyz(file=,xyz=)
+func triangulate_xyz(file=, savefile=, data=, plot=, mode=, win=) {
+/*DOCUMENT prepare_xyz(file=, savefile=, data=, plot=, mode=) 
   amar nayegandhi 01/05/03.
  */
   
+  if (is_void(win)) win = 0; // default window to plot triangulations
+  if (is_void(mode)) mode = 3; // default to bare earth
   //elapsed = elapsed1 = array(double, 3);
   //timer, elapsed;
   extern xyz, pxyz, ntri;
@@ -36,7 +38,15 @@ func triangulate_xyz(file=, savefile=, data=, plot=) {
   }
 
   if (is_array(data)) {
-     xyz = [data.least/100., data.lnorth/100., (data.lelv)/100.];
+     if (mode == 3) {
+       xyz = [data.least/100., data.lnorth/100., (data.lelv)/100.];
+     } 
+     if (mode == 2) {
+       xyz = [data.east/100., data.north/100., (data.elevation+data.depth)/100.];
+     }
+     if (mode == 1) {
+       xyz = [data.east/100., data.north/100., (data.elevation)/100.];
+     }
      xyz = transpose(xyz);
   }
   write, format="Total Points Read = %d\n",numberof(xyz(1,));
@@ -60,22 +70,26 @@ func triangulate_xyz(file=, savefile=, data=, plot=) {
   //pxyz.x = xyz(1,);
   //pxyz.y = xyz(2,);
   //pxyz.z = xyz(3,);
-  pxyz = grow(xyz, array(double,3,3));
+  //pxyz = grow(xyz, array(double,3,3));
 
   //pxyz = pxyz(sort(pxyz.x));
   // using C version of triangulate function...
-  v = triangulate(nv, pxyz);
+  //v = triangulate(nv, pxyz);
+  v = ytriangle(nv, xyz);
+  //v++;
+  // below if when using triangulation function
+  /*
   xi = where(v(1,) == 0 & v(2,) == 0 & v(3,)==0);
   if (is_array(xi)) {
     v = v(,1:xi(1)-1)
   }
-  v++;
   ntri = numberof(v(1,));
   //write, format="Total Triangles formed = %d\n",ntri;
   xi = where(v(1,) <= nv & v(2,) <= nv & v(3,) <= nv);
   if (is_array(xi)) {
     v = v(,xi)
   }
+*/
   ntri = numberof(v(1,));
   write, format="Total Triangles formed = %d\n",ntri;
   pxyz = xyz;
@@ -92,6 +106,7 @@ func triangulate_xyz(file=, savefile=, data=, plot=) {
   }
 
   if (plot) {
+    w = window();
     x = [pxyz(1,(v(1,))), pxyz(1,(v(2,))), pxyz(1,(v(3,)))]
     y = [pxyz(2,(v(1,))), pxyz(2,(v(2,))), pxyz(2,(v(3,)))]
     z = [pxyz(3,(v(1,))), pxyz(3,(v(2,))), pxyz(3,(v(3,)))]
@@ -100,8 +115,9 @@ func triangulate_xyz(file=, savefile=, data=, plot=) {
     zz = z(,sum); zz = zz/3;
     n = array(int,numberof(zz))
     n(*) = 3
-    window, 0; fma; plfp, zz, yy, xx, n, edges=1
+    window, win; fma; plfp, zz, yy, xx, n, edges=1
     colorbar, min(zz), max(zz), units="m";
+    window, w;
   }
 
 
@@ -392,6 +408,7 @@ func locate_triag_surface(pxyz,tr,win=, m=) {
 
   if (is_void(m)) m = mouse();
   buffer = data_box(pxyz(1,),pxyz(2,),m(1)-100,m(1)+100, m(2)-100,m(2)+100);
+  if (!is_array(buffer)) return;
   dist = (pxyz(1,buffer)-m(1))^2 + (pxyz(2,buffer)-m(2))^2;
   mindist = min(dist);
   mnxdist = buffer(dist(mnx));
@@ -416,3 +433,69 @@ func locate_triag_surface(pxyz,tr,win=, m=) {
   return transpose([[x],[y],[z]]);
 }
   
+
+func grid_triag_data(eaarl, cell=) {
+// amar nayegandhi 04/07/04
+
+ // if data array is in raster format (R, GEOALL, VEGALL), then covert to 
+ // non raster format (FS, GEO, VEG).
+ a = structof(eaarl(1));
+ if (a == R) {
+     data_out = clean_fs(eaarl);
+ }
+
+ if (a == GEOALL) {
+     data_out = clean_bathy(eaarl);
+ }
+
+ if (a == VEG_ALL) {
+     data_out = clean_veg(eaarl);
+ }
+
+ if (a == VEG_ALL_) {
+     data_out = clean_veg(eaarl);
+ }
+
+ if (is_array(data_out)) eaarl = data_out;
+ data_out = [];
+
+ verts = triangulate_xyz(data=eaarl, plot=1);
+
+ //define lower left and upper right coordinates
+ ll =long( [min(eaarl.least)/100., min(eaarl.lnorth)/100.]);
+ ur =long( [max(eaarl.least)/100., max(eaarl.lnorth)/100.]);
+ ll;
+ ur;
+ xcell = (ur(1)-ll(1))/cell;
+ ycell = (ur(2)-ll(2))/cell;
+ img = array( double, xcell, ycell );
+ 
+
+ //x = int( eaarl.least+50)/100 + 1;    // add 50cm, then convert from cm to m
+ //y = int(eaarl.lnorth+50)/100 + 1;
+ //z = eaarl.lelv;
+
+ count = 0;
+
+
+ // insert elevations into the grid array
+  for (i=1; i<=xcell; i++ ) {
+    for (j=1; j<=ycell; j++) {
+    //locate triangulated surface
+    tr = locate_triag_surface(pxyz, verts, m=[ll(1)+cell*i,ll(2)+cell*j]);
+     if (is_array(tr))  {
+	z = avg(tr(3,));
+        count++;
+        img( i, j ) = z;
+     }
+    }
+    if ( (i % 10) == 0 ) write, format="%d of %d\r", i, xcell ;
+  }
+  idx = where(img == 0);
+  img(idx) = -1000.0
+
+  count;
+
+ return [&ll, &ur, &img];
+
+}

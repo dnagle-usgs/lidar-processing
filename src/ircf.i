@@ -1,7 +1,8 @@
 
 require, "msort.i"
+require, "rcf.i"
 
-func rcf_triag_filter(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=) {
+func rcf_triag_filter(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=, plottriag=, plottriagwin=) {
   /* DOCUMENT rcf_triag_filter(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=)
  this function splits data sets into manageable portions and calls new_rcfilter_eaarl_pts that 
 uses the random consensus filter (rcf) and triangulation method to filter data.
@@ -9,7 +10,7 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
  amar nayegandhi April 2004.
 
   INPUT:
-  eaarl : data array to be filtered.  Can be of type VEG__ as of now.
+  eaarl : data array to be filtered.  
   buf = buffer size in CENTIMETERS within which the rcf block minimum filter will be implemented (default is 500cm).
   w   = block minimum elevation width (vertical extent) in CENTIMETERS of the filter (default is 20cm)
   no_rcf = minimum number of 'winners' required in each buffer (default is 3).
@@ -21,16 +22,18 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
   fbuf = buffer size in METERS for the initial RCF to remove the "bad" outliers. Default = 100m
   fw = window size in METERS for the initial RCF to remove the "bad" outliers. Default = 15m
   tw = triangulation vertical range in centimeters Default = w
-  tai = number of 'triangulation' iterations to be performed. Default = 3;
-  interactive = set to 1 to allow interactive mode.  The user can deleted triangulated facets 
+  interactive = set to 1 to allow interactive mode.  The user can delete triangulated facets 
      		with mouse clicks in the triangulated mesh.
+  tai = number of 'triangulation' iterations to be performed. Default = 3;
+  plottriag = set to 1 to plot resulting triangulations for each iteration (default = 0)
+  plottriagwin = windown number where triangulations should be plotted (default = 0)
    OUTPUT:
     rcf'd data array of the same type as the 'eaarl' data array.
 
 */
  tmr1 = tmr2 = array(double, 3);
  timer, tmr1;
- extern boxmarker, tag_eaarl;
+ extern tag_eaarl;
  //reset new_eaarl and data_out
  //t0 = t1 = double( [0,0,0] );
  MAXSIZE = 50000;
@@ -93,14 +96,14 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
        window, 5; plg, [spany(j), spany(j), spany(j+1), spany(j+1), spany(j)], [spanx(k), spanx(k+1), spanx(k+1), spanx(k), spanx(k)], color="red";
        if (!is_array(isp1)) continue;
        eaarl1 = eaarl(isp1);
-       xx = new_rcfilter_eaarl_pts(eaarl1, buf=buf, w=w, mode=mode, no_rcf=no_rcf, fbuf=fbuf, fw=fw, tw=tw, interactive=interactive, tai=tai);
+       xx = new_rcfilter_eaarl_pts(eaarl1, buf=buf, w=w, mode=mode, no_rcf=no_rcf, fbuf=fbuf, fw=fw, tw=tw, interactive=interactive, tai=tai, plottriag=plottriag, plottriagwin=plottriagwin);
        if (!is_array(xx)) continue;
        eaarl_out(ecount+1:ecount+numberof(xx)) = xx;
        ecount += numberof(xx);
      }
    }
  } else {
-       eaarl_out = new_rcfilter_eaarl_pts(eaarl, buf=buf, w=w, mode=mode, no_rcf=no_rcf, fbuf=fbuf, fw=fw, tw=tw, interactive=interactive, tai=tai);
+       eaarl_out = new_rcfilter_eaarl_pts(eaarl, buf=buf, w=w, mode=mode, no_rcf=no_rcf, fbuf=fbuf, fw=fw, tw=tw, interactive=interactive, tai=tai, plottriag=plottriag, plottriagwin=plottriagwin);
        ecount = numberof(eaarl_out);
  }
  eaarl_out = eaarl_out(1:ecount);
@@ -113,14 +116,14 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
  return eaarl_out;    
 }
    
-func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=) {
+func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=, plottriag=, plottriagwin=) {
   /* DOCUMENT new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=)
  this function uses the random consensus filter (rcf) and triangulation method to filter data.
  
  amar nayegandhi Jan/Feb 2004.
 
   INPUT:
-  eaarl : data array to be filtered.  Can be of type VEG__ as of now.
+  eaarl : data array to be filtered.  
   buf = buffer size in CENTIMETERS within which the rcf block minimum filter will be implemented (default is 500cm).
   w   = block minimum elevation width (vertical extent) in CENTIMETERS of the filter (default is 20cm)
   no_rcf = minimum number of 'winners' required in each buffer (default is 3).
@@ -132,16 +135,18 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
   fbuf = buffer size in METERS for the initial RCF to remove the "bad" outliers. Default = 100m
   fw = window size in METERS for the initial RCF to remove the "bad" outliers. Default = 15m
   tw = triangulation vertical range in centimeters Default = w
-  tai = number of 'triangulation' iterations to be performed. Default = 3;
   interactive = set to 1 to allow interactive mode.  The user can deleted triangulated facets 
      		with mouse clicks in the triangulated mesh.
+  tai = number of 'triangulation' iterations to be performed. Default = 3;
+  plottriag = set to 1 to plot resulting triangulations for each iteration (default = 0)
+  plottriagwin = windown number where triangulations should be plotted (default = 0)
    OUTPUT:
     rcf'd data array of the same type as the 'eaarl' data array.
 
 */
  tmr1 = tmr2 = array(double, 3);
  timer, tmr1;
- extern boxmarker, tag_eaarl;
+ extern tag_eaarl;
  //reset new_eaarl and data_out
  //t0 = t1 = double( [0,0,0] );
  MAXSIZE = 50000;
@@ -198,10 +203,17 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
     
  // define a bounding box
   bbox = array(float, 4);
+ if (mode != 3) {
   bbox(1) = min(eaarl.east);
   bbox(2) = max(eaarl.east);
   bbox(3) = min(eaarl.north);
   bbox(4) = max(eaarl.north);
+ } else {
+  bbox(1) = min(eaarl.least);
+  bbox(2) = max(eaarl.least);
+  bbox(3) = min(eaarl.lnorth);
+  bbox(4) = max(eaarl.lnorth);
+ }
 
   if (!buf) buf = 500; //in centimeters
   if (!w) w = 20; //in centimeters
@@ -277,7 +289,6 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
       if (is_array(indx)) {
        // this is the data inside the box
        if (mode==3) {
-         //be_elv = eaarl.elevation(indx)-(eaarl.lelv(indx)-eaarl.felv(indx));
          be_elv = eaarl.lelv(indx);
        }
        if (mode==2) {
@@ -325,6 +336,8 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
    tkcmd, "destroy .rcf1"
   } 
 
+ // **** initial RCF complete ****
+
  // now find all points that have been rejected in the above step
  // i.e. where tag_eaarl == 1
  tidx = where(tag_eaarl == 1);
@@ -334,14 +347,12 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
       maybe_eaarl = [];
  }
 
- // **** initial RCF complete ****
-
  if (is_void(tai)) tai = 3;
  for (ai=1;ai<=tai;ai++) {
   selcount = 0;
   write, format="Iteration number %d...\n", ai;
   if (ai > 1) {
-    // now find all points that have been rejected in the above step
+    // again find all points that have been rejected in the above step
     // i.e. where tag_eaarl == 1
     tidx = where(tag_eaarl == 1);
     if (is_array(tidx)) {
@@ -354,16 +365,25 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
   tag_eaarl++;
 
   // now triangulate all the selected bare earth points
-  nea_idx = msort(new_eaarl_all.least, new_eaarl_all.lnorth);
+  if (mode == 3) {
+    nea_idx = msort(new_eaarl_all.least, new_eaarl_all.lnorth);
+  } else {
+    nea_idx = msort(new_eaarl_all.east, new_eaarl_all.north);
+  }
   new_eaarl_all = new_eaarl_all(nea_idx);
 
   // initial check for duplicates
   dupidx = [];
-  dupidx = where((new_eaarl_all.least(dif) != 0) | (new_eaarl_all.lnorth(dif) != 0));
+  if (mode == 3) {
+    dupidx = where((new_eaarl_all.least(dif) != 0) | (new_eaarl_all.lnorth(dif) != 0));
+  } else {
+    dupidx = where((new_eaarl_all.east(dif) != 0) | (new_eaarl_all.north(dif) != 0));
+  }
   new_eaarl_all = grow(new_eaarl_all(dupidx),new_eaarl_all(0));
   //write, format="number of new_eaarl_all = %d when ai = %d\n",numberof(new_eaarl_all), ai;
 
-  verts = triangulate_xyz(data=new_eaarl_all, plot=1);
+  verts = triangulate_xyz(data=new_eaarl_all, plot=plottriag, win=plottriagwin, mode=mode);
+  if (is_void(plottriagwin)) plottriagwin = 0;
 
   if (interactive == 1) {
     // allow interactive mode to remove any outliers
@@ -371,10 +391,14 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
     n = read(prompt="Interactive Mode? ",ques);
     icount=0;
     while(ques == "y" || ques == "yes") {
- 	tr = locate_triag_surface(pxyz, verts);
+ 	tr = locate_triag_surface(pxyz, verts, win=plottriagwin);
           if (is_array(tr)) {
  	    for (tri = 1; tri<= 3; tri++) {
-	     tridx = where((new_eaarl_all.least/100. == tr(1,tri)) & (new_eaarl_all.lnorth/100.== tr(2,tri)));
+	     if (mode == 3) {
+	       tridx = where((new_eaarl_all.least/100. == tr(1,tri)) & (new_eaarl_all.lnorth/100.== tr(2,tri)));
+	     } else {
+	       tridx = where((new_eaarl_all.east/100. == tr(1,tri)) & (new_eaarl_all.north/100.== tr(2,tri)));
+  	     }
 	     new_eaarl_all(tridx).rn = 0;
              icount++;
             }
@@ -390,21 +414,40 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
         write, "Retriangulating..."
   	nea_idx = msort(new_eaarl_all.least, new_eaarl_all.lnorth);
   	new_eaarl_all = new_eaarl_all(nea_idx);
-  	verts = triangulate_xyz(data=new_eaarl_all, plot=1);
+  	verts = triangulate_xyz(data=new_eaarl_all, plot=plottriag, win=plottriagwin, mode=mode);
      }
   }
 
   n_eaarl = numberof(new_eaarl_all);
   n_maybe = numberof(maybe_eaarl);
-  new_eaarl_all1 = array(VEG__, n_eaarl+n_maybe);
+  if (mode == 3) {
+    new_eaarl_all1 = array(VEG__, n_eaarl+n_maybe);
+  }
+  if (mode == 2) {
+    new_eaarl_all1 = array(GEO, n_eaarl+n_maybe);
+  }
+  if (mode == 1) {
+    new_eaarl_all1 = array(FS, n_eaarl+n_maybe);
+  }
+
   new_eaarl_all1(1:n_eaarl) = new_eaarl_all;
   new_eaarl_all = new_eaarl_all1;
   new_eaarl_all1 = [];
   
   // now loop through the 'maybe' points and see if they fit within the TIN
   ncount = n_eaarl;
-  maybe_xyz = [maybe_eaarl.least/100., maybe_eaarl.lnorth/100., maybe_eaarl.lelv/100.];
-  neweaarl_xyz = [new_eaarl_all.least/100., new_eaarl_all.lnorth/100., new_eaarl_all.lelv/100.];
+  if (mode == 3) {
+    maybe_xyz = [maybe_eaarl.least/100., maybe_eaarl.lnorth/100., maybe_eaarl.lelv/100.];
+    neweaarl_xyz = [new_eaarl_all.least/100., new_eaarl_all.lnorth/100., new_eaarl_all.lelv/100.];
+  }
+  if (mode == 2) {
+    maybe_xyz = [maybe_eaarl.east/100., maybe_eaarl.north/100., (maybe_eaarl.elevation+maybe_eaarl.depth)/100.];
+    neweaarl_xyz = [new_eaarl_all.east/100., new_eaarl_all.north/100., (new_eaarl_all.elevation+new_eaarl_all.depth)/100.];
+  }
+  if (mode == 1) {
+    maybe_xyz = [maybe_eaarl.east/100., maybe_eaarl.north/100., maybe_eaarl.elevation/100.];
+    neweaarl_xyz = [new_eaarl_all.east/100., new_eaarl_all.north/100., new_eaarl_all.elevation/100.];
+  }
   verts_idx = array(int, numberof(verts(1,)));
 
   // if maybe_xyz is greater than 100, split the array in regional blocks of 100 m
@@ -428,7 +471,9 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
   for (j=1;j<numberof(spany);j++) {
     for (k=1;k<numberof(spanx);k++) {
        isp1 = data_box(maybe_xyz(,1), maybe_xyz(,2),  spanx(k), spanx(k+1), spany(j), spany(j+1));
-       plg, [spany(j), spany(j), spany(j+1), spany(j+1), spany(j)], [spanx(k), spanx(k+1), spanx(k+1), spanx(k), spanx(k)], color="red";
+       if (plottriag) {
+         window, plottriagwin;  plg, [spany(j), spany(j), spany(j+1), spany(j+1), spany(j)], [spanx(k), spanx(k+1), spanx(k+1), spanx(k), spanx(k)], color="red";
+       }
        if (!is_array(isp1)) continue;
        maybe_sp = maybe_xyz(isp1,);
        //plmk, maybe_sp(,2), maybe_sp(,1), color="green", msize=0.1, marker=1;
