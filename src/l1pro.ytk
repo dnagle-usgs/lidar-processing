@@ -35,6 +35,7 @@
 	0,2	PIP_Variable
 	0,3	File_Name
 	0,4	Processing_Type
+	0,5	GGA_Array
   }
   global varc
   set varc 0
@@ -50,6 +51,7 @@ exp_send "#include \"geo_bath.i\"\r"; # load geobath.i code
 exp_send "#include \"read_yfile.i\"\r"; # load read_yfile
 exp_send "#include \"veg.i\"\r"; # load veg.i
 exp_send "#include \"batch_process.i\"\r"; # load batch_process.i
+exp_send "#include \"batch_multipip_process.i\"\r"; # load batch_multipip_process.i
 exp_send "#include \"comparison_fns.i\"\r"; # load for rcf filter function
 exp_send "#include \"bathy_filter.i\"\r"; # load for rcf filter function
 expect ">";
@@ -799,7 +801,7 @@ proc multi_pip_sel {junk} {
     set tpath .mpip.1.table
     table $tpath \
 	-rows $row \
-	-cols 5 \
+	-cols 6 \
 	-variable _mpipx \
 	-titlerows 2 \
 	-titlecols 0 \
@@ -811,7 +813,7 @@ proc multi_pip_sel {junk} {
 	-width 5 -height 8 \
 	-colwidth 15 \
 	-multiline 0 \
-	-sparsearray 1 \
+	-sparsearray 0 \
 	-browsecommand {set table(current) %S} \
 	-justify center
     $tpath tag configure active \
@@ -840,13 +842,17 @@ proc multi_pip_sel {junk} {
 		set cursr [string range $curs 0 [expr ($cidx-1)]]
 		set cursc [string range $curs [expr ($cidx+1)] end]
         	if { ([info exists _mpipx($cursr,2) ] == 0) || ($_mpipx($cursr,2)=="") } {
-		   set _mpipx($cursr,2) "q_$cursr"
+		   set _mpipx($cursr,2) "ply_$cursr"
+		   set _mpipx($cursr,5) "q_$cursr"
 		}
         	if { [info exists _mpipx($cursr,1) ] == 0 } {
-		   set _mpipx($cursr,1) "var_$cursr"
+		   set _mpipx($cursr,1) "var_$_mpipx($cursr,2)"
+		}
+        	if { [info exists _mpipx($cursr,5) ] == 0 } {
+		   set _mpipx($cursr,5) "q_$_mpipx($cursr,2)"
 		}
 		set pcurs $curs
-       		exp_send "$_mpipx($curs) = gga_pip_sel(1, win=$_map(window));\r"
+       		exp_send "$_mpipx($cursr,5) = gga_pip_sel(1, win=$_map(window)); $_mpipx($cursr,2) = ply; \r"
        		expect ">"
 	} \
         -helptext "Draw a Polygon in Window 6 to define a region using a series of left mouse clicks.  To complete the polygon, middle mouse click OR <Ctrl> and left mouse click." 
@@ -896,14 +902,16 @@ proc multi_pip_sel {junk} {
 	set fname_var "\["
 	set ptype_var "\["
 	set ply_var "\["
+	set plyname_var "\["
         for {set seli 2} { $seli < $row } {incr seli} { 
 	   if { $_mpipx($seli,0) == 1 } {
-		append pip_var "&$_mpipx($seli,2),"
-		append qname_var "\"$_mpipx($seli,2)\","
+		append pip_var "&$_mpipx($seli,5),"
+		append qname_var "\"$_mpipx($seli,5)\","
 		append data_var "\"$_mpipx($seli,1)\","
 		append fname_var "\"$_mpipx($seli,3)\","
 		append ptype_var "$_mpipx($seli,4),"
-		append ply_var "\"ply_$_mpipx($seli,2)\","
+		append ply_var "&$_mpipx($seli,2),"
+		append plyname_var "\"$_mpipx($seli,2)\","
 	    }
 	}
 	set pip_var [string replace $pip_var end end "\]"]
@@ -912,14 +920,35 @@ proc multi_pip_sel {junk} {
 	set fname_var [string replace $fname_var end end "\]"]
 	set ptype_var [string replace $ptype_var end end "\]"]
 	set ply_var [string replace $ply_var end end "\]"]
-	exp_send "batch_multipip_process, $pip_var, $data_var, $fname_var, $ptype_var, $qname_var, $ply_var \r\n"
+	set plyname_var [string replace $plyname_var end end "\]"]
+	exp_send "batch_multipip_process, $pip_var, $data_var, $fname_var, $ptype_var, $qname_var, $ply_var, $plyname_var \r\n"
 	expect ">"
               
     }
 
+    Button .mpip.2.delete -text "Delete Rows" -width 20 -bd 5 \
+	-command \
+    {
+        global tpath _mpipx row 
+        for {set seli 2} { $seli < $row } {incr seli} { 
+	   if { $_mpipx($seli,0) == 1 } {
+		set _mpipx($seli,0) 0
+		$tpath delete rows $seli
+		set row [expr {$row - 1}]
+	   }
+	}
+    }
+    Button .mpip.2.insert -text "Insert Row" -width 20 -bd 5 \
+	-command \
+    {
+        global tpath _mpipx row
+	$tpath insert rows  [expr {$row-1}]
+	set row [expr {$row + 1}]
+    }
+		
     pack .mpip.1.sx -side bottom -fill x
     pack .mpip.1.sy -side right -fill y
-    pack .mpip.2.process 
+    pack .mpip.2.process .mpip.2.insert .mpip.2.delete -side left -padx 5
     pack $tpath -side left
     pack .mpip.1 .mpip.2 -side top
 

@@ -1,5 +1,5 @@
 
-func batch_multipip_process (pip_var, data_var, fname_var, ptype_var, qname_var, ply_var) {
+func batch_multipip_process (pip_var, data_var, fname_var, ptype_var, qname_var, ply_var, plyname_var) {
    /* amar nayegandhi 05/19/03
    */
 
@@ -32,7 +32,17 @@ func batch_multipip_process (pip_var, data_var, fname_var, ptype_var, qname_var,
 	 q = *pip_var(i);
 	 vname = data_var(i);
 	 qname = qname_var(i);
-	 plyname = ply_var(i);
+	 plyname = plyname_var(i);
+	 ply = *ply_var(i);
+
+	 f = createb(fname_var(i));
+	 add_variable, f, -1, qname, structof(q), dimsof(q);
+	 get_member(f, qname) = q;
+
+	 add_variable, f, -1, plyname, structof(ply), dimsof(ply);
+	 get_member(f, plyname) = ply;
+
+	 save, f, vname, qname, plyname;
         /*
 	 tkcmd, swrite(format="exp_send \"extern %s\\r\\n\"",data_var(i));
 	 tkcmd, swrite(format="exp_send \"vname=\\\"%s\\\"\\r\\n\"",data_var(i));
@@ -45,19 +55,27 @@ func batch_multipip_process (pip_var, data_var, fname_var, ptype_var, qname_var,
         */
 
 	 if (ptype_var(i) == 0) {
-	    save, createb(fname_var(i)), fs_all, vname, q, ply, qname, plyname;
+	    add_variable, f, -1, vname, structof(fs_all), dimsof(fs_all);
+	    get_member(f, vname) = fs_all;
+	    close, f;
 	    fs_all=[];
 	 }
 	 if (ptype_var(i) == 1) {
-	    save, createb(fname_var(i)), depth_all, vname, q, ply, qname, plyname;
+	    add_variable, f, -1, vname, structof(depth_all), dimsof(depth_all);
+	    get_member(f, vname) = depth_all;
+	    close, f;
 	    depth_all=[];
 	 }
 	 if (ptype_var(i) == 2) {
-	    save, createb(fname_var(i)), veg_all, vname, q, ply, qname, plyname;
+	    add_variable, f, -1, vname, structof(veg_all), dimsof(veg_all);
+	    get_member(f, vname) = veg_all;
+	    close, f;
 	    veg_all=[];
  	 }
 	 if (ptype_var(i) == 3) {
-	    save, createb(fname_var(i)), cveg_all, vname, q, ply, qname, plyname;
+	    add_variable, f, -1, vname, structof(cveg_all), dimsof(cveg_all);
+	    get_member(f, vname) = cveg_all;
+	    close, f;
 	    cveg_all=[];
 	 }
  
