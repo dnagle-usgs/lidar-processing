@@ -217,7 +217,7 @@ func compare_data(ndata, edata) {
     //write, format="Number of multiple occurences of the same data point = %d.  Deleting them... \n",numberof(midx);
     //use David Munros unique function 
     write, "Deleting multiple occurances of the same data points..."
-    neidx = unique(new_edata.rn);
+    neidx = unique(new_edata.rn, ret_sort=1);
     new_edata = new_edata(sort(new_edata.rn));
     new_edata = new_edata(neidx);
 
@@ -227,10 +227,11 @@ func compare_data(ndata, edata) {
        
 }
 
-func unique(x) {
+func unique(x, ret_sort=) {
   /*DOCUMENT unique(x)
     This function used the sort function to return the unique elements of array x.
-    Input: x : 1 dimensional array
+    Input: x : 1 dimensional array 
+    If ret_sort is set, the program will the sorted indices. If not set it will return the indices in the same order.
     Output:  Indices of the unique elements in array x
     Original David Munro 
     adapted by amar nayegandhi 03/21/03
@@ -241,6 +242,7 @@ func unique(x) {
   y = y(sort(y));
   mask = grow([1n], y(1:-1) != y(2:0));
   idx = where(mask);
+  if (ret_sort) return idx;
   result = array(int, numberof(idx));
   for (i=1;i<=numberof(idx);i++){
     iidx = where(x == y(idx(i)));
