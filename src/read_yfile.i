@@ -802,7 +802,7 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
  }
  close, f;
 
- write, format="Total records written to ascii file = %d\n", split*xx + totw;
+ write, format="Total records written to ascii file = %d\n", totw;
 }
 
 func read_ascii_xyz(ipath=,ifname=,type=, no_lines=){
