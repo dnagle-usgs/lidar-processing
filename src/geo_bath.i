@@ -1071,6 +1071,7 @@ func sel_data_rgn(data, mode=,win=) {
 
  window, w;
 
+ a = [];
  a = structof(data);
  if (a == R) {
    data_out = array(FS, numberof(indx));

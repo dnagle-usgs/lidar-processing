@@ -622,6 +622,7 @@ rec(3) = nwpr;
 /* the fourth word will eventually contain the total number of records.  We don't know the value just now, so will wait till the end. */
 rec(4) = 0;
 
+a = structof(fs_all);
 _write, f, 0, rec;
 
 byt_pos = 16; /* 4bytes , 4words  for header position*/
@@ -635,7 +636,12 @@ for (i=1;i<len;i++) {
   indx = where(fs_all(i).north !=  0);   
   num_valid = numberof(indx);
   for (j=1;j<=num_valid;j++) {
+     if (a == R) {
      _write, f, byt_pos, fs_all(i).raster(indx(j));
+     } else {
+     _write, f, byt_pos, fs_all(i).rn(indx(j));
+     }
+     
      byt_pos = byt_pos + 4;
      _write, f, byt_pos, fs_all(i).mnorth(indx(j));
      byt_pos = byt_pos + 4;

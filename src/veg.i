@@ -572,6 +572,8 @@ executing make_veg.  See rbpnav() and rbtans() for details.
            use_centroid = 0;
 	   use_peak = 1;
    }
+
+   if (use_peak) write, "Using peak of last return to find bare earth...";
    
    
    /* check to see if required parameters have been initialized */
@@ -613,7 +615,9 @@ executing make_veg.  See rbpnav() and rbtans() for details.
        write, format="Processing segment %d of %d for vegetation\n", i, no_t;
        d = run_veg(start=rn_arr(1,i), stop=rn_arr(2,i),use_centroid=use_centroid,use_peak=use_peak);
        write, "Processing for first_surface...";
+       if (use_peak) use_centroid = 1;
        rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=use_centroid); 
+       if (use_peak) use_centroid = 0;
        a=[];
        write, "Using make_fs_veg for submerged vegetation...";
        veg = make_fs_veg(d,rrr);
@@ -709,6 +713,7 @@ executing make_veg.  See rbpnav() and rbtans() for details.
     rn_arr_idx = (rn_arr(dif,)(,cum)+1)(*);	
 
     tkcmd, swrite(format="send_rnarr_to_l1pro %d %d %d\n", rn_arr(1,), rn_arr(2,), rn_arr_idx(1:-1))
+
     return veg_all;
 
 }
@@ -900,4 +905,21 @@ func test_veg(veg_all,  fname=, pse=, graph=) {
 
   return veg_all
 
+}
+
+func clean_veg(veg_all) {
+  // this function removes the bad data points from the veg_all array
+  // amar nayegandhi 12/20/02
+
+  indx = where(veg_all.lelv > 0);
+  if (is_array(indx)) veg_all = veg_all(indx);
+
+
+  indx = where(veg_all.felv > 0);
+  if (is_array(indx)) veg_all = veg_all(indx);
+
+  indx = where(veg_all.elevation < 2000);
+  if (is_array(indx)) veg_all = veg_all(indx);
+
+  return veg_all
 }

@@ -30,7 +30,7 @@ func read_xyz_ascii_file(fname,n) {
   }
 
 
-func compare_pts(eaarl, kings, rgn, fname=, buf=, be=, elv=) {
+func compare_pts(eaarl, kings, rgn, fname=, buf=, be=, elv=, read_file=) {
    // this function compares each point of kings data within a buffer of eaarl data.
    // amar nayegandhi 11/15/2002.
 
@@ -41,6 +41,7 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, be=, elv=) {
 		 (kings(2,) <= rgn(4))));
    kings = kings(,indx);
 
+ ncount=0;
 
  write, format="Searching for data within %d centimeters from kings data \n",buf;
 
@@ -87,6 +88,7 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, be=, elv=) {
       //write, mineaarl.elevation, kings(3,i);
       if (elv) {
         be = mineaarl.elevation/100.;
+	ii = i
 	} else {
         be = mineaarl.elevation/100.-(mineaarl.lelv-mineaarl.felv)/100.;
 	ii = mineaarl.rn
@@ -98,10 +100,12 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, be=, elv=) {
         be_elv = minelveaarl.elevation/100.-(minelveaarl.lelv-minelveaarl.felv)/100.;
 	}
       write, f, format=" %d  %d  %f  %f  %f %f %f %f\n",ii, numberof(indx), be_avg_pts, be, kings(3,i), be_elv,  (be-kings(3,i)), (be_elv-kings(3,i));
+      ++ncount;
 
    }
  }
  close, f;
+ if (read_file) read_txt_anal_file, fname, ncount;
 }
 
 
@@ -124,6 +128,18 @@ func read_txt_anal_file(fname, n) {
    close, f1;
 } 
 
+func plot_veg_result_points(i, pse=) {
+  // amar nayegandhi 12/19/02
+  extern nx_indx;
+  rnp = i
+  rn = rnp & 0xffffff; p = rnp / 0xffffff
+  nx_indx = [];
+  for (j=1; j<=numberof(rnp); j++) {
+    depth = ex_veg(rn(j), p(j), last=250, graph=1, use_peak=1, pse=pse);
+    if (depth.nx > 1) grow, nx_indx, j
+  }
+}
+
 func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=) {
   //this function uses the random consensus filter (rcf) within a defined
   // buffer size (default 4m by 4m) to filter within an elevation width
@@ -137,6 +153,7 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=) {
  //reset new_eaarl and data_out
  new_eaarl = [];
  data_out = [];
+ if (!mode) mode = 3;
 
  // if data array is in raster format (R, GEOALL, VEGALL), then covert to 
  // non raster format (FS, GEO, VEG).
@@ -287,3 +304,4 @@ func extract_closest_pts(eaarl, kings, buf=, fname=) {
    }
    return eaarl_out
 }
+
