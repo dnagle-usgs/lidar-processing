@@ -5,6 +5,16 @@
    
     W. Wright 
 
+
+    5-14-02  
+	Added bath_ctl structure
+	Changed thresh from fixed for all waveforms to self adjusting
+	based on how many surface pixels are saturated.  This is because
+	the subsurface noise goes up significantly when the surface is 
+	driven far into saturation.  The function needs to be carefully
+	evaluated to determine the exact relationship between noise level
+	changes and the required threshold change.
+
  */
 
  write,"$Id$" 
@@ -73,7 +83,7 @@ func run_bath( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) 
  if ( is_void(graph) ) 
 	graph = 0;
    for ( j=1; j< len; j++ ) {
-     if (!(j%50)) write, format="%d of %d rasters completed \n",j,len;
+     if (!(j%25)) write, format="%d of %d rasters completed \r",j,len;
      for (i=1; i<119; i++ ) {
        depths(i,j) = ex_bath( rn+j, i, last = last, graph=graph);
        if ( !is_void(pse) ) 
@@ -82,29 +92,61 @@ func run_bath( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) 
    }
  //if ( graph != 0 ) 
 //	animate,0;
+
+  write,"\n"
  
   return depths;
 }
+
+struct BATH_CTL{
+  float laser;
+  float water;
+  float agc;
+  float thresh;
+} ;
+
+extern bath_ctl;
+/* DOCUMENT extern struct bath_ctl 
+
+   laser	water	agc	thresh 
+   -2.4       -1.5    -3.0	4.0	tampa and keys laser decay
+   -2.4	      -0.6    -0.3	4.0	keys
+   -2.4       -7.5    -5.0	4.0	wva
+
+  Do this to set the values:
+
+  bath_ctl.laser = -1.5
+  bath_ctl.water = -0.6
+  bath_ctl.agc   = -5.0
+  bath_ctl.thresh=  4.0
+
+
+*/
+
+ if ( is_void( bath_ctl ) ) {
+   bath_ctl = BATH_CTL();
+ }
 
 
 func ex_bath( rn, i,  last=, graph= ) {
 /* DOCUMENT ex_bath(raster_number, pulse_index)
 
- for (j=1; j<1000; j++) { 
-   j; 
-   for (i=1; i<119; i++ ) { 
-     qqq(,i,j) = ex_bath( rn+j,i,last=100, graph=0);
-   }
- }
- fma; plmk,qqq(2,,j),qqq(1,,j),msize=.3, marker=1; rn 
- z = qqq(2,,2:1000:2)
- fma;pli,-z,cmin=-22, cmax=-10
+  See run_bath for details on usage.
 
 
  This function returns a BATHPIX structure element
 
+ For the turbid key areas use:
+  bath_ctl = BATH_CTL(laser=-1.5,water=-0.4,agc=-0.3,thresh=3)
+
+ For the clear areas:
+  bath_ctl = BATH_CTL(laser=-2.5,water=-0.3,agc=-0.3,thresh=3)
+
  
 */
+
+
+
 
 /*
  The following developed using 7-14-01 data at rn = 46672 data. (sod=70510)
@@ -122,10 +164,14 @@ func ex_bath( rn, i,  last=, graph= ) {
  The 12 represents the last place a surface can be found
 
  Controls:
+
+    See bath_ctl structure.
+
     last              160    1:300     The last point in the waveform to consider.
-    laser_exp	      -3.0  -1:-5.0    The exponent which describes the laser decay rate
-    water_exp         -2.0  -0.1:-10.0 The exponent which best describes this water column
-      agc_exp         -0.3  -0.1:-10.0 Agc scaling exponent.
+     laser	      -3.0  -1:-5.0    The exponent which describes the laser decay rate
+     water         -2.0  -0.1:-10.0 The exponent which best describes this water column
+       agc         -0.3  -0.1:-10.0 Agc scaling exponent.
+    thresh	    4.0   1:50      bottom peak value threshold
 
  Variables: 
     nsat 		A list of saturated pixels in this waveform
@@ -146,6 +192,17 @@ func ex_bath( rn, i,  last=, graph= ) {
 */
 
  extern ex_bath_rn, ex_bath_rp, a
+
+  if ( is_void( bath_ctl) ) {
+    write, "You havn't defined a bath_ctl structure.  type help, bath_ctl for details"
+    return;
+  }
+
+    if ( bath_ctl.laser == 0.0 ) {
+    write, "You havn't defined a bath_ctl structure.  type help, bath_ctl for details"
+    return;
+   }
+
   rv = BATHPIX();			// setup the return struct
   rv.rastpix = rn + (i<<24);
   if ( is_void( ex_bath_rn )) 
@@ -184,24 +241,21 @@ func ex_bath( rn, i,  last=, graph= ) {
       }
    } else {
           wflen = numberof(w);
-          if ( wflen > 12 ) wflen = 12;
+          if ( wflen > 18 ) wflen = 18;
 	  last_surface_sat =  w(1:wflen) (mnx) ;
           escale = 255 - w(1:wflen) (min);
    }
 
-//   laser_decay     = exp( -2.4 * attdepth) * escale; // tampa and keys laser decay
-   laser_decay     = exp( -3.7 * attdepth) * escale;  // installed for wva water
 
-//   secondary_decay = exp( -0.6 * attdepth) * escale; // for keys water
-//   secondary_decay = exp( -1.5 * attdepth) * escale; // for tampa bay water
-   secondary_decay = exp( -7.5 * attdepth) * escale; // for wva water
+
+   laser_decay     = exp( bath_ctl.laser * attdepth) * escale;  
+   secondary_decay = exp( bath_ctl.water * attdepth) * escale; 
+
    laser_decay(last_surface_sat:0) = laser_decay(1:0-last_surface_sat+1) + 
 					secondary_decay(1:0-last_surface_sat+1)*.25;
    laser_decay(1:last_surface_sat) = escale;
 
-//   agc     = 1.0 - exp( -0.3 * attdepth) ;	// for keys water
-//   agc     = 1.0 - exp( -3.0 * attdepth) ;	// for tampa bay water
-   agc     = 1.0 - exp( -5.0 * attdepth) ;	// for wva water
+   agc     = 1.0 - exp( bath_ctl.agc * attdepth) ;	
    agc(last_surface_sat:0) = agc(1:0-last_surface_sat+1); 
    agc(1:last_surface_sat) = 0.0;
    
@@ -210,8 +264,17 @@ func ex_bath( rn, i,  last=, graph= ) {
 
   da = a(,i,1) - laser_decay;
   db = da*agc + bias;
+
+
+  thresh = bath_ctl.thresh;
+  if ( numsat > 14 ) {
+    thresh = thresh * (numsat-13)*0.65;
+  }
+
+
 if ( graph ) {
 window,4; fma
+plg,[thresh,thresh],[1,n],marks=0, color="red"
 plmk, a(,i,1), msize=.2, marker=1, color="black";
 plg, a(,i,1);
 plmk, da, msize=.2, marker=1, color="black";
@@ -230,7 +293,9 @@ plg,agc*40
 
   mv = db(1:n)(max);		// find peak value
   mvi = db(1:n)(mxx);		// find peak position
-  if ( mv > 4.0) {		// check to see if above thresh
+
+// test pw with 9-6-01:17673:50
+  if ( mv > thresh ) {		// check to see if above thresh
          mx = mvi;
 
 if ( graph ) {
