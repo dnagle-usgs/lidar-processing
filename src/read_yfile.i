@@ -418,12 +418,22 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
   return data;
 }
   
-func write_ascii_xyz(data_arr, opath=,ofname=,type=, indx=) {
-  /* this function writes out an ascii file containing x,y,z information.
+func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=) {
+  /* this function writes out an ascii file containing x,y,z,intensity information.
     amar nayegandhi 04/25/02
+    Keywords:
+    data_arr = Data Array.  Could be first surface, bathymetry or vegetation.
+    opath = Path for output file.
+    ofname = File name of output file.
+    type = Type of data to be written out. type = 1 for first surface, type = 2 for bathymetry,
+           type = 3 for vegetation (bare earth), type = 4 for depth.
+    indx = set to write out the index number of each record in the output file.
+    split = set split to 1 if you want the output file to be split into chunks of 1million points
+    intensity = set this keyword if the output file must contain the intensity value
     modified 12/30/02 amar nayegandhi to :
       write out x,y,z (first surface elevation) data for type=1
       to split at 1 million points and write to another file
+    modified 01/30/03 to optionally split at 1 million points
     */
   fn = opath+ofname;
 
@@ -433,44 +443,59 @@ func write_ascii_xyz(data_arr, opath=,ofname=,type=, indx=) {
   totw = 0;
   num_valid = numberof(data_arr.north);
   xx = 0;
+  if (intensity) {
+    a = structof(data_arr);
+    if (type == 1) {
+      if (a == GEO) data_intensity = data_arr.first_peak;
+      if (a == VEG) data_intensity = data_arr.fint;
+      if (a == FS) data_intensity = data_arr.intensity;
+    }
+    if (type == 2) {
+      data_intensity = data_arr.bottom_peak;
+    }
+    if (type == 3) {
+      data_intensity = data_arr.lint;
+    }
+   }
 
   for (i=1;i<=num_valid;i++) {
     ++totw;
     if (totw == 1000000) {
       ++xx;
       close, f
+      write, format="Total records written to ascii file = %d\n", totw;
       fn_new = split_path( fn, 1, ext=1);
       sxx = swrite(format="%1d",xx);
       fn_new = fn_new(1)+"_"+sxx+fn_new(2);
       f = open(fn_new, "w")
       totw = 1;
-     }
+    }
     if (type == 1) {
-        /* this writes out xyz depth data */
-	if (!indx) {
-         write, f, format="%9.2f  %10.2f  %8.2f \n",data_arr.east(i)/100.,data_arr.north(i)/100., data_arr.elevation(i)/100.;
-	 } else {
-         write, f, format="%2d, %9.2f, %10.2f, %8.2f\n",totw, data_arr.east(i)/100.,data_arr.north(i)/100., data_arr.elevation(i)/100.;
-	 }
+        z = data_arr.elevation(i)/100.;
     }
     if (type == 2) {
-        /* this writes out xyz topo data with the 4th word being first surface return intensity */
-        write, f, format="%9.2f  %10.2f  %8.2f  %d \n", geoarr.east(indx(i))/100., geoarr.north(indx(i))/100., geoarr.elevation(indx(i))/100., geoarr.first_peak(indx(i));
-	totw++;
+        z = (data_arr.elevation(i) + data_arr.depth(i))/100.;
     }
     if (type == 3) {
-        /* this writes out xyz submerged topography data with the 4th word being bottom peak intensity return */
-	bath = geoarr.elevation(indx(i))+geoarr.depth(indx(i));
-        write, f, format="%9.2f  %10.2f  %8.2f %d \n",geoarr.east(indx(i))/100.,geoarr.north(indx(i))/100., bath/100., geoarr.bottom_peak(indx(i));
-	 totw++;
+        z = data_arr.lelv(i)/100.;
     }
     if (type == 4) {
-        /* this writes out xyz bottom subaerial topography with the 4th word being the bottom peak intensity */
-	bottom_topo = geoarr.elevation(indx(i)) + geoarr.sr2(indx(i))*NS2MAIR;
-        write, f, format="%9.2f  %10.2f  %8.2f %d \n",geoarr.east(indx(i))/100.,geoarr.north(indx(i))/100., bottom_topo/100., geoarr.bottom_peak(indx(i));
-	 totw++;
+        z = data_arr.depth(i)/100.;
     }
-
+ 
+    if (!indx && !intensity) {
+         write, f, format="%9.2f  %10.2f  %8.2f \n",data_arr.east(i)/100.,data_arr.north(i)/100., z;
+	} 
+    if (indx && !intensity) {
+         write, f, format="%d, %9.2f, %10.2f, %8.2f\n",totw, data_arr.east(i)/100.,data_arr.north(i)/100., z;
+    } 
+    if (!indx && intensity) {
+         write, f, format="%9.2f, %10.2f, %8.2f, %d\n",data_arr.east(i)/100.,data_arr.north(i)/100., z, data_intensity(i);
+    } 
+    if (indx && intensity) {
+        write, f, format="%d %9.2f, %10.2f, %8.2f, %d\n",totw, data_arr.east(i)/100.,data_arr.north(i)/100., z, data_intensity(i);
+    }
+    if ( (i % 1000) == 0 ) edfrstat, i, numberof(data_arr);
   }
   close, f;
   write, format="Total records written to ascii file = %d\n", totw;

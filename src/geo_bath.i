@@ -698,7 +698,7 @@ func plot_bathy(depth_all, fs=, ba=, de=, fint=, lint=, win=, cmin=, cmax=, msiz
  
 
 
-func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset=) {
+func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset=, lmark=) {
 /* DOCUMENT raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset=)
 
   This function uses a mouse click on an EAARL image plot and finds the associated 
@@ -845,15 +845,19 @@ write,"============================================================="
 ///////    write, format="       Raster: %6d    Pulse: %d\n",rasterno, pulseno;
 ///////    write, format="Plot   raster: %6d waveform: %d\n",rasterno(1), pulseno(1);
     if (_ytk) {
-      window,1,wait=1
-      ytk_rast, rasterno(1);
-      window, 0, wait=1; redraw;
-      tkcmd, swrite(format="set rn %d", rasterno(1))
-      show_wf, *wfa, pulseno(1), win=0, cb=7, raster=rasterno(1);
-      if (is_void(cmin) || is_void(cmax)) {
+      if (strlen(data_path) > 0) {
+       window,1,wait=1;
+       ytk_rast, rasterno(1);
+       window, 0, wait=1; redraw;
+       tkcmd, swrite(format="set rn %d", rasterno(1))
+       show_wf, *wfa, pulseno(1), win=0, cb=7, raster=rasterno(1);
+      }
+      if (is_void(cmin) || is_void(cmax) || lmark) {
+        if (!lmark) marker = 1;
+	if (lmark) marker = lmark;
         window, win; plmk, mindata.north/100., 
                            mindata.east/100., 
-                           msize = 0.4, marker = 1, color = "red";
+                           msize = 0.4, marker = lmark, color = "red";
       } else {
         if (disp_type == 0) {
           window, win; plcm, mindata.elevation/100., 
@@ -921,14 +925,18 @@ write,"============================================================="
  } else {
    print, "No points found.\n";
  }
- somd = edb(mindata.rn&0xffffff ).seconds % 86400; 
- ztime = soe2time( somd );
- zdt   = soe2time( abs(edb( mindata.rn&0xffffff ).seconds - _last_soe) );
- pnav_idx = abs( pnav.sod - somd)(mnx);
- tans_idx = abs( tans.somd - somd)(mnx);
- knots = lldist( pnav(pnav_idx).lat,   pnav(pnav_idx).lon,
+ if (is_array(edb)) {
+   somd = edb(mindata.rn&0xffffff ).seconds % 86400; 
+   ztime = soe2time( somd );
+   zdt   = soe2time( abs(edb( mindata.rn&0xffffff ).seconds - _last_soe) );
+ }
+ if (is_array(tans) && is_array(pnav)) {
+   pnav_idx = abs( pnav.sod - somd)(mnx);
+   tans_idx = abs( tans.somd - somd)(mnx);
+   knots = lldist( pnav(pnav_idx).lat,   pnav(pnav_idx).lon,
                  pnav(pnav_idx+1).lat, pnav(pnav_idx+1).lon) * 
                  3600.0/abs(pnav(pnav_idx+1).sod - pnav(pnav_idx).sod);
+ }
 
  write,format="        Indx: %4d Raster/Pulse: %d/%d UTM: %7.1f, %7.1f\n", 
  	       blockindx,
@@ -937,19 +945,23 @@ write,"============================================================="
                mindata.north/100.0,
 	       mindata.east/100.0
 
- write,format="        Time: %7.4f (%02d:%02d:%02d) Delta:%d:%02d:%02d \n", 
+ if (is_array(edb)) {
+   write,format="        Time: %7.4f (%02d:%02d:%02d) Delta:%d:%02d:%02d \n", 
         double(somd),
         ztime(4),ztime(5),ztime(6),
         zdt(4), zdt(5), zdt(6);
- write,format="    GPS Pdop: %8.2f  Svs:%2d  Rms:%6.3f Flag:%d\n", 
+ }
+ if (is_array(tans) && is_array(pnav)) {
+   write,format="    GPS Pdop: %8.2f  Svs:%2d  Rms:%6.3f Flag:%d\n", 
 	       pnav(pnav_idx).pdop, pnav(pnav_idx).sv, pnav(pnav_idx).xrms,
 	       pnav(pnav_idx).flag
- write,format="     Heading:  %8.3f Pitch: %5.3f Roll: %5.3f %5.1fm/s %4.1fkts\n",
+   write,format="     Heading:  %8.3f Pitch: %5.3f Roll: %5.3f %5.1fm/s %4.1fkts\n",
 	       tans(tans_idx).heading,
 	       tans(tans_idx).pitch,
 	       tans(tans_idx).roll,
                knots * 1852.0/3600.0, 
                knots;
+ }
 
  hy = sqrt( double(mindata.melevation - mindata.elevation)^2 +
  	    double(mindata.meast      - mindata.east)^2 +
@@ -986,7 +998,9 @@ write,"============================================================="
 write,"============================================================="
  write,"\n"
 
+  if (is_array(edb)) {
    _last_soe = edb( mindata.rn&0xffffff ).seconds;
+  }
    _last_rastpulse(3) = mindata.elevation;
    _last_rastpulse(1) = mindata.north;
    _last_rastpulse(2) = mindata.east;
@@ -999,7 +1013,7 @@ write,"============================================================="
 
 
  q = *(rcf( rtn_data.elevation, 1000.0, mode=2)(1));
-write,"*************************************************************************************"
+ write,"*************************************************************************************"
  write,format=" * Trajectory file: %-64s *\n", pnav_filename
  write,format=" * %d points, avg elev: %6.3fm, %6.1fcm RMS, %6.1fcm Peak-to-peak                  *\n", 
         numberof(rtn_data),

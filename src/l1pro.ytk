@@ -480,13 +480,13 @@ Button .l1wid.bf45.q.1 -text "Pixel\nWaveform" \
         -type ok
      }
      if {$ptype == 0} {
-        exp_send "mindata = raspulsearch(fs_all, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype);\r"
+        exp_send "mindata = raspulsearch(fs_all, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype, lmark = lmark);\r"
      }
      if {$ptype == 1} {
-        exp_send "mindata = raspulsearch(depth_all, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype);\r"
+        exp_send "mindata = raspulsearch(depth_all, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype, lmark = lmark );\r"
      }
      if {$ptype == 2} {
-        exp_send "mindata = raspulsearch(veg_all, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype);\r"
+        exp_send "mindata = raspulsearch(veg_all, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype, lmark = lmark);\r"
      }
    }
 	   
