@@ -11,6 +11,38 @@
 
 write,"$Id$"
 
+extern FB
+/* DOCUMENT FB
+
+struct FB {
+    string name;	// block name
+    int block;		// block number
+    float aw;		// area width  (km)
+    float sw;		// scan  spacing (km)
+    float kmlen;	// length of block (km)
+    double dseg(4);	// defining segment
+    float  alat(5);	// lat corners of total area
+    float  alon(5);	// lon corners of total area
+    float  *p;    	// a pointer to the array of flightlines.
+};
+ 
+*/
+
+
+struct FB {
+    string name;	// block name
+    int block;		// block number
+    float aw;		// area width  (km)
+    float sw;		// scan  spacing (km)
+    float kmlen;	// length of block (km)
+    double dseg(4);	// defining segment
+    float  alat(5);	// lat corners of total area
+    float  alon(5);	// lon corners of total area
+    float  *p;    	// a pointer to the array of flightlines.
+};
+
+
+
   d = array(float, 100)
  ll = array( float, 2, 100)
 
@@ -49,6 +81,7 @@ func lldist ( lat0,lon0,lat1,lon1 )
 msz = .3
 sres = array(float,11);
 dd = array(float, 1);
+
 func mdist ( none, nodraw= ) {
 /* DOCUMENT mdist
 
@@ -95,53 +128,57 @@ if (is_void(sw) )
 
 
 
-struct FB {
-    string name;	// block name
-    int block;		// block number
-    float aw;		// area width  (km)
-    float sw;		// scan  spacing (km)
-    float kmlen;	// length of block (km)
-    double dseg(4);	// defining segment
-    float  alat(5);	// lat corners of total area
-    float  alon(5);	// lon corners of total area
-    float  *p;    
-};
 
-func sdist( junk, line= ) {
-/* DOCUMENT sdist(line=)
+func sdist( junk, centerline= , fill=) {
+/* DOCUMENT sdist(centerline=)
    Measure distance, and draw a proportional rectangle showing the 
    resulting coverage.
 
-   Get the line segment via user mouse input
-   determine scale factor to get a vector length for scanwidth
-   translate to 0 longitude
-   convert to utm 
-   get difference components  (dx dy)
-   rotate the difs, and scale to scan width
-   generate the utm coords of all the corners of the scan rectangle
-   convert them back to lat/lon
-   plot results
+   Develops a flightline block from the centerline segment.  If called
+   as sdist(), it will expect the user to select the points with the 
+   mouse by clicking and holding down the left button over one endpoint
+   and releasing the mouse over the other endpoint.
 
-  res(14) is the length in km
+   If it is called as sdist( centerline="A B C D" ) then it expects a 
+   string of four floating point numbers as "A B C D" where A and B are 
+   the lat/lon pair for one endpoint and C D are the lat/lon pair for 
+   the other point.  All points are in decimal degrees and west longitudes 
+   are represented by negative numbers.  
+ 
+   fill=V   This controls what is displayed for a block.  Each bit in the
+   values turns on/off pats of the diplay.  Not defining fill will default
+   to everything being displayed. The bits are as follows:
+   1  Display all flight lines in the block with alternating colors.
+   2  Show the first flight line in Green.
+   4  Show the centerline. 
+   8  Area filled with color.
+
+   A structure of type FB is returned. Type FB at the command prompt to
+   see the format of the structure.
+
+
 */
 extern sr, dv, rdv, lrdv, rrdv;
 extern blockn, segn;
   segs = aw / sw; 		// compute number of segments
   sega = array(float, int(segs),4);
-
-
   sr = array(float, 7, 2);  	//the array to hold the rectangle
-  if ( is_void( line ) ) {
+
+
+  if ( is_void( centerline ) ) {
     res = mdist(nodraw=1);		// get the segment from the user
     sf = aw / res(14);		// determine scale factor
     km = res(14);
   } else {
     res = array(float, 4 );
-    n = sread(line,format="%f %f %f %f", res(2), res(1), res(4), res(3) )
+    n = sread(centerline,format="%f %f %f %f", res(2), res(1), res(4), res(3) )
     km = lldist( res(2), res(1), res(4), res(3) ) * 1.852;
     sf = aw / km;		// determine scale factor
   }
-//res;
+
+
+
+
 // adjust so all segments are from left to right 
   if ( res(1) > res(3) ) {	// only the user coords. are changed
     temp = res;
@@ -150,7 +187,8 @@ extern blockn, segn;
     res(3) = temp(1);
     res(4) = temp(2);
   }
-/// res;
+
+
   sf2 = sf/2.0;			// half the scan width
   llat = [res(2), res(4)];
   llon = [res(1), res(3)] - res(1);   // translate to zero longitude
@@ -193,9 +231,14 @@ extern blockn, segn;
 r = 3:7
 
 // plot a filled rectangle
- n = [5];
- z = [char(185)]
- plfp,z,Lat(r),Long(r), n
+ if ( is_void( fill ) ) 
+	fill = 0xf;
+
+ if ( (fill & 0x8)  == 8 ) {
+   n = [5];
+   z = [char(185)]
+   plfp,z,Lat(r),Long(r), n
+ }
 
 if (is_void(stturn) )
 	stturn = 300.0;		// seconds to turn
@@ -218,11 +261,18 @@ zone = array(ZoneNumber(1), dimsof( sega) (2) );
   utm2ll, sega(,3), sega(,4), zone;
   sega(,3) = Lat; sega(,4) = Long + res(1);
  rg = 1:0:2
+
+// See if the user want's to display the lines
+ if ( (fill & 0x1 ) == 1 ) {
   pldj,sega(rg,2),sega(rg,1),sega(rg,4),sega(rg,3),color="yellow"
- rg = 2:0:2
+  rg = 2:0:2
   pldj,sega(rg,2),sega(rg,1),sega(rg,4),sega(rg,3),color="white"
+ }
+
  rg = 1
+ if ( (fill & 0x2 ) == 2 ) {
   pldj,sega(rg,2),sega(rg,1),sega(rg,4),sega(rg,3),color="green"
+ }
 //  write,format="%12.8f %12.8f %12.8f %12.8f\n", sega(,1),sega(,2),sega(,3),sega(,4)
   segd = abs(double(int(sega)*100 + ((sega - int(sega)) * 60.0) ));
   nsew = ( sega < 0.0 );
@@ -246,7 +296,9 @@ zone = array(ZoneNumber(1), dimsof( sega) (2) );
 // put a line around it
 r = 3:7
 /// plg,Lat(r),Long(r)
- plg, [res(2),res(4)], [res(1),res(3)],color="red",marks=0
+ if ( (fill & 0x4 ) == 4 ) {
+   plg, [res(2),res(4)], [res(1),res(3)],color="red",marks=0
+ }
 
  rs = FB();
  rs.kmlen = km;
