@@ -15,6 +15,8 @@ func sel_data_rgn(data, type, mode=,win=, exclude=) {
   //amar nayegandhi 11/26/02.
  */
 
+  data = test_and_clean( data );
+  if (is_void(data)) return [];
   if (is_void(win)) win = 5;
   if (!mode) mode = 1;
 

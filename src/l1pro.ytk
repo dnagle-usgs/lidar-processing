@@ -861,7 +861,7 @@ proc hist_linlog {} {
 }
 
 proc rcf_region {} {
-    global varlist
+    global varlist l1pro_data
     destroy .rcf
     toplevel .rcf
     wm title .rcf "Random Consensus Filter"
@@ -891,9 +891,8 @@ proc rcf_region {} {
     .rcf.2.varlist setvalue @$curvar
 
     Label .rcf.2.dispname -text "Mode:"
-    ComboBox .rcf.2.disp -width 20 -values \
-	"First_Return_Topography Bathymetry \
-	 Bare_Earth_Topography" \
+    ComboBox .rcf.2.disp -width 20 \
+	-values $l1pro_data(processing_mode) \
 	-helptext "Select any one of the following" \
 	-editable 0 
 	   
@@ -1009,8 +1008,15 @@ ComboBox .l1wid.bf4.1.d -text "Define Region using..." -width 22 -values "Rubber
    }
 } 
 
+set l1pro_data(processing_mode)  {\
+		  First\ Return\ Topo\
+		  Submerged\ Topo\
+		  Topo\ Under\ Veg \
+		  Multi\ Peak\ Veg \
+		}
+
 proc multi_pip_sel {junk} {
-    global _map tpath
+    global _map tpath l1pro_data
     destroy .mpip
     toplevel .mpip
     frame .mpip.1
@@ -1093,10 +1099,10 @@ proc multi_pip_sel {junk} {
 	}
     $tpath window configure 1,3 -window $tpath.fbutton -sticky news
 
-    ComboBox $tpath.ptype -text "Process For..." -width 22 \
+    ComboBox $tpath.ptype -text "Process For..." -width 16 \
 	-helptext "Process Data for any of the following" \
 	-editable 0 \
-	-values { SubAerial-Topography Bathymetry Vegetation Multi-peak-Vegetation} \
+	-values $l1pro_data(processing_mode) \
 	-takefocus 0 \
 	-modifycmd {
 		global tpath
@@ -1183,10 +1189,10 @@ proc multi_pip_sel {junk} {
   #    expect ">"
 }
    
-ComboBox .l1wid.bf4.1.p -text "Process For..." -width 22 \
+ComboBox .l1wid.bf4.1.p -text "Process For..." -width 16 \
 	-helptext "Process Data for any of the following" \
 	-editable 0 \
-	-values { SubAerial-Topography Bathymetry Vegetation Multi-peak-Vegetation}
+	-values $l1pro_data(processing_mode)
 
 .l1wid.bf4.1.p setvalue first
 
@@ -1454,7 +1460,13 @@ checkbutton .l1wid.bf45.q.5 -text "Set Plot Limits" -variable usecentroid
 
 frame  .l1wid.bf45.sc.1
 
-ComboBox .l1wid.bf45.r.1 -text "Select Region using..." -width 16 -values "Rubberband-Box Points-in-Polygon Single-Pixel" -helptext "Select region to filter using any of the following methods:" -editable 0 -modifycmd {
+ComboBox .l1wid.bf45.r.1 -text "Copy points using..." -width 16\
+   	 -values { \
+	 	Rubberband\ Box \
+	  	Points\ in\ Polygon \
+		Single\ Pixel\
+		} \
+	 -helptext "Copy points to \'workdata\' using any of the following methods:\n Rubberband Box\n Points in Polygon\n Single Pixel" -editable 0 -modifycmd {
    global varlist
 
 # Deleted to reduce clicks required to work.  This should be changed to

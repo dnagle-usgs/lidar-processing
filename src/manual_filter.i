@@ -67,15 +67,30 @@ func select_region(data, win=, plot=) {
 
 }
 
-func select_points(celldata, exclude=, win=) {
-  // amar nayegandhi 11/21/03
+func test_and_clean( data ) {
 
-if ( is_void(celldata) ) {
+if ( is_void(data) ) {
   tkcmd, "tk_messageBox -icon error "+
      "-message \"No data found in the variable you selected."+
      "Please select another one.\"   \r"
-  return;
+  return [] ;
 }
+
+
+/***************************************************************
+  Added to convert from raster format to cleaned linear format.
+***************************************************************/
+ if ( numberof( dimsof( data.rn )) >2 ) 
+     data = clean_bathy(data);  
+
+ return data
+}
+
+func select_points(celldata, exclude=, win=) {
+  // amar nayegandhi 11/21/03
+
+
+  celldata = test_and_clean( celldata );
 
 write,"Left: Examine pixel, Center: Save Pixel, Right: Quit"
  
@@ -89,14 +104,6 @@ write,"Left: Examine pixel, Center: Save Pixel, Right: Quit"
  
  rtn_data = [];
  clicks = selclicks = 0;
-
-/***************************************************************
-  Added to convert from raster format to cleaned linear format.
-  This should actually call a function which can clean and
-  convert all the different types.  
-***************************************************************/
- if ( numberof( dimsof( celldata.rn )) >2 ) 
-     celldata = clean_bathy(celldata);  
 
 
   

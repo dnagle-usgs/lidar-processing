@@ -74,6 +74,43 @@ proc bathctl {} {
           $w.mb.file add command -label "Save Bathy Parameters..." -command { 
               save_bath_ctl
           }
+          $w.mb.file add separator 
+          $w.mb.file add command -label "Generic water settings" -background darkgray
+          $w.mb.file add command -label "  Clear" -command {
+            set bath_ctl(laser) -2.4
+            set bath_ctl(water) -0.6
+            set bath_ctl(agc)   -0.3
+            set bath_ctl(thresh) 4.0
+            set bath_ctl(first)  1
+            set bath_ctl(last)   220
+          }
+
+          $w.mb.file add command -label "  Bays" -command {
+            set bath_ctl(laser) -2.4
+            set bath_ctl(water) -1.5
+            set bath_ctl(agc)   -3.0
+            set bath_ctl(thresh) 4.0
+            set bath_ctl(first)  1
+            set bath_ctl(last)   60
+          }
+
+          $w.mb.file add command -label "  Crappy" -command {
+            set bath_ctl(laser) -2.4
+            set bath_ctl(water) -3.5
+            set bath_ctl(agc)   -6.0
+            set bath_ctl(thresh) 2.0
+            set bath_ctl(first)  1
+            set bath_ctl(last)   60
+          }
+
+          $w.mb.file add command -label "  Super shallow" -command {
+            set bath_ctl(laser) -2.4
+            set bath_ctl(water) -2.4
+            set bath_ctl(agc)   -3.0
+            set bath_ctl(thresh) 4.0
+            set bath_ctl(first)  9
+            set bath_ctl(last)   30
+          }
           
           sst .bathctl.laser   bath_ctl(laser)   "  Laser:"  { -5.0 -1.0 0.1  }
           sst .bathctl.water   bath_ctl(water)   "  Water:"  { -10 -0.1 0.1  }
