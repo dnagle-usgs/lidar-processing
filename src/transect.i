@@ -92,7 +92,7 @@ func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, win=, color= ) {
 ///  fma
   segs = where( abs(fs.soe(glst(llst))(dif)) > 5.0 );
  nsegs = numberof(segs)+1;
- ss = [1];
+ ss = [0];
  nsegs
  if ( nsegs > 1 ) { 
    grow, ss,segs,[0]
@@ -102,16 +102,20 @@ func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, win=, color= ) {
   clr = ["black", "red", "blue", "green", "magenta", "yellow", "cyan" ];
    for (i=1; i<numberof(ss); i++ ) {
      c = (color+i)&7;
+     tb = fs.soe(*)(glst(llst)(ss(i)+1))%86400;
+     te = fs.soe(*)(glst(llst)(ss(i+1)))%86400;
+     td = abs(te - tb);
+     write, format="soe=%10.5f:%10.5f (%7.4f)\n", tb, te, td;
      if ( xtime ) {
-     plmk, fs.elevation(*)(glst(llst)(ss(i):ss(i+1)))/100.0, 
-           fs.soe(*)(llst)(ss(i):ss(i+1))/100.0,color=clr(c), msize=msize
-     if ( connect ) plg, fs.elevation(*)(glst(llst)(ss(i):ss(i+1)))/100.0, 
-                fs.soe(*)(llst)(ss(i):ss(i+1))/100.0,color=clr(c)
+     plmk, fs.elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0, 
+           fs.soe(*)(llst)(ss(i)+1:ss(i+1))/100.0,color=clr(c), msize=msize
+     if ( connect ) plg, fs.elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0, 
+                fs.soe(*)(llst)(ss(i)+1:ss(i+1))/100.0,color=clr(c)
      } else {
-     plmk, fs.elevation(*)(glst(llst)(ss(i):ss(i+1)))/100.0, 
-           rx(llst)(ss(i):ss(i+1))/100.0,color=clr(c), msize=msize
-     if ( connect ) plg, fs.elevation(*)(glst(llst)(ss(i):ss(i+1)))/100.0, 
-                rx(llst)(ss(i):ss(i+1))/100.0,color=clr(c)
+     plmk, fs.elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0, 
+           rx(llst)(ss(i)+1:ss(i+1))/100.0,color=clr(c), msize=msize
+     if ( connect ) plg, fs.elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0, 
+                rx(llst)(ss(i)+1:ss(i+1))/100.0,color=clr(c)
     }
    }
  } else {

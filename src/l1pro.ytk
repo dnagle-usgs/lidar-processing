@@ -810,6 +810,12 @@ proc varlist_plot {} {
  	    }
      	}
                
+.l1wid.mb.options add checkbutton -label "Set Plot Limits" -variable setll \
+	-command {
+	    if {$setll == 1} {
+	    	exp_send "_ytk_ll = limits();\n"
+	    }
+	 }
 
 proc make_selected_arrays {junk} {
     global lrnindx list
@@ -967,7 +973,7 @@ proc rcf_region {} {
         .l1wid.bf45.p.15 configure -values $varlist
         varlist_plot
         .varplot.1.lb insert end $addvar
-        exp_send "$outvar = rcfilter_eaarl_pts($curvar, buf=$buf, w=$w, no_rcf=$no_rcf);\r\n"
+        exp_send "$outvar = rcfilter_eaarl_pts($curvar, buf=$buf, w=$w, no_rcf=$no_rcf, mode=$mode);\r\n"
         
     }
     Button .rcf.3.cancel -text "Cancel" -width 8 -command {
@@ -1493,6 +1499,7 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
 
 .l1wid.bf45.q.4 configure -state disabled
 
+checkbutton .l1wid.bf45.q.5 -text "Set Plot Limits" -variable usecentroid 
 
 
 
@@ -1674,7 +1681,7 @@ proc send_rnarr_to_l1pro {bstart bstop brnindx} {
 
 proc plot_fltlines {sel} {
   
- global l1pro_fma win_no cmin cmax cdelta msize markerv varlist skip plot_dpi
+ global l1pro_fma win_no cmin cmax cdelta msize markerv varlist skip plot_dpi setll
      #fill in later using what to plot
      set fs 0
      set ba 0
@@ -1717,6 +1724,9 @@ proc plot_fltlines {sel} {
 	      exp_send "winkill, $win_no; window, $win_no, dpi=100, width=1100, height=850, style=\"landscape11x85.gs\";fma; limits, square=1;\r";
 	    }
            }
+	   if {$setll} {
+	      exp_send "limits, _ytk_ll(1), _ytk_ll(2), _ytk_ll(3), _ytk_ll(4);\r"
+	   }
 	 }
      }
 
