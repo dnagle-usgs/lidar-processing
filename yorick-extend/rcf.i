@@ -120,3 +120,33 @@ void c_fillarray (int array c)
        complicated data types should use the interpreted data type
        "pointer" and pass their arguments as "&arg".
  */
+
+func lrcf(jury, w, mode=)
+/*Long version of rcf algorithm
+*/
+
+{ 
+  b = float(array(0,2));	//Return array for mode 0 & 1
+  if ( is_void(mode) )		//Ensure a mode value
+        mode = 0;
+
+  fcount = y_lrcf(jury, w, mode, b);	//Call the yorick version of the "C" rcf function
+
+ if (mode== 2)			//If the mode is 2,
+ {				//generate an array of size = number of winners
+   c = int(array(0,fcount));
+   y_fillarray, c;		//Fill it
+
+   return [&c, &fcount]		//And return the start address & address of winner count
+ }
+ else if (mode== 0)
+   return long(b);		//Else return long version of b for mode 0 
+ else
+   return b;			//Or float b for mode 1
+}
+
+extern y_lrcf;
+/* PROTOTYPE
+int c_lrcf (long array a, long w, int mode, float array b)
+*/
+
