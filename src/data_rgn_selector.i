@@ -147,9 +147,18 @@ func sel_data_rgn(data, type, mode=,win=, exclude=) {
 
 }
 
-func sel_data_ptRadius(data, point=, radius=, win=, msize=) {
+func sel_data_ptRadius(data, point=, radius=, win=, msize=, retindx=) {
   /*DOCUMENT sel_data_ptRadius(data, point, radius=) 
   	This function selects data given a point (in latlon or utm) and a radius.
+	INPUT:  data:  Data array
+		point = Center point
+		radius = radius in same units as data/point
+		win = window to click point if point= not defined (defaults to 5)
+		msize = size of the marker plotted on window, win.
+		retindx = set to 1 to return the index values instead of the data array.
+	OUTPUT:
+		if retindx = 0; data array for region selected is returned
+		if retindx = 1; indices of data array returned.
  	amar nayegandhi 06/26/03.
   */
 
@@ -199,7 +208,11 @@ func sel_data_ptRadius(data, point=, radius=, win=, msize=) {
   }
 
 
-  return data(indx)(iindx);
+  if (retindx) {
+	return indx(iindx);
+  } else {
+  	return data(indx)(iindx);
+  }
   
 }
 

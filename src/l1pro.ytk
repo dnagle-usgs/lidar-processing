@@ -1223,26 +1223,28 @@ Button .l1wid.bf45.q.2 -text "Histogram\nElevations" \
   -command {
       set ptype [.l1wid.bf4.1.p getvalue]
       set disp_type [.l1wid.bf45.p.5 getvalue]
+      set var_no [.l1wid.bf45.p.15 getvalue]
+      set var_type [lindex $varlist $var_no]
       if {$disp_type == -1} {
        	tk_messageBox  -icon warning \
         -message "You need to specify the type of data before using this function!" \
         -type ok
      }
      if {$ptype == 0} {
-      exp_send "hst = hist_fs(fs_all); \r"
+      exp_send "hst = hist_fs($var_type); \r"
      }
      if {$ptype == 1} {
       if {$disp_type == 0} {
-   	exp_send "hst = hist_fs(depth_all);\r"
+   	exp_send "hst = hist_fs($var_type);\r"
       } else {
-        exp_send "hst = hist_depth(depth_all); \r"
+        exp_send "hst = hist_depth($var_type); \r"
       }
      }
      if {$ptype == 2} {
       if {$disp_type == 0} {
-   	exp_send "hst = hist_fs(veg_all);\r"
+   	exp_send "hst = hist_fs($var_type);\r"
       } else {
-        exp_send "hst = hist_veg(veg_all); \r"
+        exp_send "hst = hist_veg($var_type); \r"
       }
      }
   }

@@ -27,19 +27,24 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, type=) {
    // and data.meast, data.mnorth and data.melevation; do the conversion without testing for type.
 
    //convert data to latlon
+   write, "***  Converting Mirror Location  ***"
+   write, "Converting data to lat/long..."
    data_in = utm2ll(data.north/100., data.east/100., utmzone);
    // put data in correct format for conversion
    data_in = transpose([data_in(,1), data_in(,2), data.elevation/100.]);
    // convert...
    if (tonad83) {
+     write, "Converting to NAD83..."
      data_out = wgs842nad83(data_in);
      if (tonavd88) 
        data_in = data_out;
    }
    if (tonavd88) {
+     write, "Converting to NAVD88..."
      data_out = nad832navd88(data_in);
    }
    // convert data back to utm
+   write, "Converting data back to UTM..."
    utmdata_out = fll2utm(data_out(2,), data_out(1,));
    // put converted data in output format
    data.north = int(utmdata_out(1,)*100);
@@ -47,19 +52,24 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, type=) {
    data.elevation = int(data_out(3,)*100);
 
    //convert data to latlon
+   write, "***  Converting First Surface Location  ***"
+   write, "Converting data to lat/long..."
    data_in = utm2ll(data.mnorth/100., data.meast/100., utmzone);
    // put data in correct format for conversion
    data_in = transpose([data_in(,1), data_in(,2), data.melevation/100.]);
    // convert...
    if (tonad83) {
+     write, "Converting to NAD83..."
      data_out = wgs842nad83(data_in);
      if (tonavd88) 
        data_in = data_out;
    }
    if (tonavd88) {
+     write, "Converting to NAVD88..."
      data_out = nad832navd88(data_in);
    }
    // convert data back to utm
+   write, "Converting data back to UTM..."
    utmdata_out = fll2utm(data_out(2,), data_out(1,));
    // put converted data in output format
    data.mnorth = int(utmdata_out(1,)*100);
@@ -68,20 +78,25 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, type=) {
     
    // now look at type for the special case of veg
    if (type == VEG__) {
+      write, "***  Converting Last Return Location  ***"
+      write, "Converting data to lat/long..."
       //convert data to latlon
       data_in = utm2ll(data.lnorth/100., data.least/100., utmzone);
       // put data in correct format for conversion
       data_in = transpose([data_in(,1), data_in(,2), data.lelv/100.]);
       // convert...
       if (tonad83) {
+        write, "Converting to NAD83..."
         data_out = wgs842nad83(data_in);
         if (tonavd88) 
           data_in = data_out;
       }
       if (tonavd88) {
+        write, "Converting to NAVD88..."
         data_out = nad832navd88(data_in);
       }
       // convert data back to utm
+      write, "Converting data back to UTM..."
       utmdata_out = fll2utm(data_out(2,), data_out(1,));
       // put converted data in output format
       data.lnorth = int(utmdata_out(1,)*100);
