@@ -18,7 +18,8 @@ func plcm( z, y, x, cmin=, cmax=, marker=, msize= )
    elevation where elevation variations are shown as varying colors.
    1=squares, 3=triangles
 
-
+    1/22/02   Added edges=0 to plfp cuz Yorick 1.5 doesn't seem to default
+              to 0 as 1.4 did.
    11/27/1999 Mostly rewritten by David Munro.
    11/15/99 Fixed problem where z values were shifted from the x/y
             values.
@@ -32,8 +33,13 @@ func plcm( z, y, x, cmin=, cmax=, marker=, msize= )
     $Id$
     
     $Log$
-    Revision 1.1  2002/01/04 06:33:51  wwright
-    Initial revision
+    Revision 1.2  2002/01/22 21:42:13  wwright
+
+      fixed somd, again, in edb_access.i and affected code in sf
+
+    Revision 1.1.1.1  2002/01/04 06:33:51  wwright
+    Initial deposit in CVS.
+
 
 */
 {
@@ -51,7 +57,7 @@ func plcm( z, y, x, cmin=, cmax=, marker=, msize= )
   n= array(1, 1+numberof(y));
   n(1)= numberof(py);
   if (is_void(x)) x= indgen(numberof(y));
-  plfp, grow([0.],z), grow(py,y), grow(px,x), n, cmin=cmin, cmax=cmax;
+  plfp, edges=0, grow([0.],z), grow(py,y), grow(px,x), n, cmin=cmin, cmax=cmax;
 }
 
 

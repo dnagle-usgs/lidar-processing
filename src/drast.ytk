@@ -15,7 +15,7 @@ if { [ info exists inc ] == 0 } {
 }
 
 if { [ info exists play_interval ] == 0 } {
-  set play_interval 100
+  set play_interval 1
 }
 
 if { [ info exists rn ] == 0 } {
@@ -82,7 +82,7 @@ set blist { .rslider.bf1.stop    .rslider.bf1.play        .rslider.bf2.exwf \
 proc sod2rn { sod } {
     global rn thetime rnf rnl 
 ###    set cmd "where(((edb.seconds - edb(1).seconds - 4*3600) + edb(1).seconds%86400) == $thetime)"
-    set cmd "where(((edb.seconds - soe_day_start) - eaarl_time_offset ) == $thetime)"
+    set cmd "where(((edb.seconds - soe_day_start) ) == $thetime)"
     exp_send "rnarr = $cmd \r"
     expect ">"
     ##check to see if the variable rnarr is not a <nuller>
@@ -156,6 +156,15 @@ proc sft { n e o } {
 	exp_send "ytk_rast, $rnf\r"
 	set rn $rnf	
 } 
+
+proc send_sod_to_sf { somd } {
+  catch {
+   send sf_a.tcl set timern sod
+   send sf_a.tcl set hsr $somd 
+   send sf_a.tcl gotoImage
+  }
+}
+
 
 proc play {} {
  global tid play_interval rn inc play_dir play_flag total_edb_records
@@ -437,6 +446,19 @@ tk_optionMenu .rslider.bf1.pint play_interval \
         set rn $total_edb_records;
      }
 }
+
+bind .rslider  <y> {
+  .rslider.bf1.yalp invoke
+}
+
+bind .rslider  <s> {
+  .rslider.bf1.stop invoke
+}
+
+bind .rslider  <p> {
+  .rslider.bf1.play invoke
+}
+
 
 
  tk_optionMenu .rslider.bf1.inc \

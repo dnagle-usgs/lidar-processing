@@ -28,7 +28,7 @@ Useful commands:
  command.
 
 */
-f = openb("mth-7-14-01.pbd");
+f = openb("/data/0/7-14-01/mth-7-14-01.pbd");
 write,"Loading........"
 restore,f
 show,f

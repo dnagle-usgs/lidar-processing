@@ -35,10 +35,15 @@ if ( is_void(depth_display_units) )
 
 func ytk_rast( rn ) {
 extern wfa, depth_display_units;
+extern _ytk_rast;
  r = get_erast(rn=rn);
  rr = decode_raster(r);
  window,1; fma;
  wfa  = ndrast(rr, units=depth_display_units);
+ if ( is_void( _ytk_rast) ) {
+   limits;
+   _ytk_rast = 1;
+ }
 }
 
 
@@ -47,9 +52,10 @@ if ( is_void( last_somd) )
 
 func send_sod_to_sf( somd ) {
  extern last_somd
-    tkcmd, "send sf_a.tcl set timern sod";
-    tkcmd, swrite(format="send sf_a.tcl set hsr %d", somd );
-    tkcmd, "send sf_a.tcl gotoImage"
+    tkcmd, swrite(format="send_sod_to_sf %d", somd);
+//    tkcmd, "send sf_a.tcl set timern sod";
+//    tkcmd, swrite(format="send sf_a.tcl set hsr %d", somd );
+//    tkcmd, "send sf_a.tcl gotoImage"
     last_somd = somd;
 }
 

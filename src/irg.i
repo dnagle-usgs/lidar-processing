@@ -5,6 +5,7 @@
 require, "eaarl_constants.i"
 require, "edb_access.i"
 
+write,"$Id$"
 
 
 // RTRS = Raster/Time/Range/ScanAngle

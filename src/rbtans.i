@@ -10,20 +10,29 @@
   is seconds of the week, and the rest are in degrees with pitch and roll 
   varying from -180:+180 and heading from 0:360.
   
+Returns an array of type TANS as follows:
 
-   tans(1,)     seconds of the week.  do a "mod 86400" to get sod
-   tans(2,) 	roll
-   tans(3,)	pitch
-   tans(4,)	heading
+   tans.somd	Second of the mission day.
+   tans.roll	Degrees of roll
+   tans.pitch   Degrees of pitch
+   tans.heading Degrees of heading **Note: Heading values range from 
+		0 to 360. Passing through 0 or 360 causes a wrap-around
+		which will cause invalid results if you try to use the
+		data with "interp".  To correct the problem, break the
+		heading into it's X and Y components for a unit circle,
+		do the interp on those components, and then reform the
+		heading in degrees (or radians).
 
 History:
+  1/21/02  Added correction for gps time offset. Modified the comments, 
+           changed sod to somd.
  11/13/01  Modified to: 1) convert time from sow, to sod, 2) check and
            correct for midnight rollover. -WW
 
 */
 
 struct TANS {
-  float sod;
+  float somd;
   float roll;
   float pitch;
   float heading;
@@ -32,9 +41,12 @@ struct TANS {
 
 require, "sel_file.i"
 require, "ytime.i"
-write,"rbtans.i as of 11/18/2001 loaded"
+write,"rbtans.i as of 1/21/2002 loaded"
 
 plmk_default,msize=.1
+
+if ( is_void( gps_time_correction ) )
+  gps_time_correction = -13.0
 
 func rbtans( junk ) {
 
@@ -71,7 +83,9 @@ tans(1,) = tans(1,) % 86400;
     tans(1,) += 86400;			// add 86400 seconds
   }
 
+ tans(1, ) += gps_time_correction;
 
+write,format="Using %f seconds to correct time-of-day\n", gps_time_correction
 write,format="%s", 
               "               Min          Max\n"
 write, format="  SOD:%14.3f %14.3f %6.2f hrs\n", tans(1,min), tans(1,max), 
@@ -79,7 +93,7 @@ write, format="  SOD:%14.3f %14.3f %6.2f hrs\n", tans(1,min), tans(1,max),
 write, format=" Roll:%14.3f %14.3f\n", tans(2,min), tans(2,max)
 write, format="Pitch:%14.3f %14.3f\n", tans(3,min), tans(4,max)
  t = array( TANS, dimsof(tans)(3) );
- t.sod     = tans(1,);
+ t.somd    = tans(1,);
  t.roll    = tans(2,);
  t.pitch   = tans(3,);
  t.heading = tans(4,);

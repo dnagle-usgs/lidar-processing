@@ -107,7 +107,7 @@ MM   = RM(,1)*a(,1) + RM(,2)*a(,2) + RM(,3)*a(,3);
 mx   = a(,1) - 2*MM*RM(,1) + mir(,1);	// Compute reflected vector
 my   = a(,2) - 2*MM*RM(,2) + mir(,2);   // x,y,z position
 mz   = a(,3) - 2*MM*RM(,3) + mir(,3);
-M    = [mx,my,mz];
+M    = [mir(,1), mir(,2), mir(,3), mx,my,mz];
 
 return M;  
 }

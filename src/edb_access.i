@@ -190,7 +190,7 @@ if ( _ytk ) {
 // If valid soe time then do this.
  if ( numberof(q) > 0 ) {
   write,"*****  TIME contains date information ********"
-  edb.seconds += eaarl_time_offset ;	// adjust time to gps
+//////  edb.seconds += eaarl_time_offset ;	// adjust time to gps
    data_begins = q(1);
    data_ends   = q(0);
    year = soe2time( edb(data_begins).seconds ) (1);
