@@ -74,6 +74,12 @@ case type of
 			MELEVATION:0L, INTENSITY:0S, NX:0B, SOE:0D}
 	  data_arr = replicate(data,recs)
   	 end
+     1001:begin
+	  ;BOTRET for bottom return statistics
+	  data = {dat1001, RN:0L, IDX:0S, SIDX:0S, RANGE:0S, AC:0F, CENT:0F, $
+			CENTIDX:0F, PEAK:0F, PEAKIDX:0S, SOE:0D}
+	  data_arr = replicate(data,recs)
+  	 end
 endcase
 
 
