@@ -156,7 +156,8 @@ for { set i 0 } { ![ eof $ggaf ] } { incr i } {
 
 set data "no data"
 ###### set fn $fna(0);
-set img [ image create photo -gamma $gamma ]  ;
+set img    [ image create photo -gamma $gamma ]  ;
+set imgtmp [ image create photo ]  ;
 
 # Menubar
 frame .menubar -relief raised -bd 2
@@ -297,7 +298,9 @@ Button .cf3.imgbutton -text "Goto Img" \
 	-helptext "Click to Jump to Image defined in Entry Widget" -command gotoImage
 Button .cf3.cirbutton -text "cir" \
 	-helptext "Click to shown CIR image" -command {
-          send cir.tcl "show sod $sod";
+          if { [ catch { send cir.tcl "show sod $sod"; } ] } { 
+            tk_messageBox -icon warning -message "You must run cir.tcl first."  
+          }
         }
 
 
@@ -509,7 +512,12 @@ puts "$dx $dy"
   .canf.can delete title
 }
 
+
+
+
+
 proc show_img { n } {
+global imgtmp
 global fna nfiles img run ci data imgtime dir img_opts
 global lat lon alt seconds_offset hms sod timern 
 global cin hsr frame_off
@@ -537,7 +545,7 @@ set cin $n
 #  puts "$n  $fna($n)"
   .canf.can config -cursor watch
 # -format "jpeg -fast -grayscale" 
-  if { [ catch {$img read $fn } ] } {
+  if { [ catch {$imgtmp read $fn } ] } {
     if { [ file extension $fna($n) ] == ".jpg" } {
       puts "Unable to decode: $fna($n)";
     } else {
@@ -547,6 +555,7 @@ set cin $n
       }
     }
   }
+  $img copy $imgtmp  -subsample -1 -1
      
 ###  .canf.can itemconfigure tx -text $n
   .canf.can itemconfigure tx -text ""
@@ -570,6 +579,10 @@ set cin $n
   .canf.can config -cursor arrow
   
 }
+
+
+
+
 
 proc mark {m} {
   ## this procedure is used to mark or unmark the current frame

@@ -142,9 +142,12 @@ proc show { cmd t } {
 puts "tar file: $tf"
   puts "path: $settings(path)/$tf"
   if { $tf ne $last_tar } {
-    vfs::tar::Mount "$settings(path)/$tf" tar
-    puts "New tar file:$settings(path)/$tf"
-    set last_tar $tf
+    if { [ catch { vfs::tar::Mount "$settings(path)/$tf" tar } ] } {
+      tk_messageBox -message "No file found\nFile: $tf" -icon error
+    } else {
+      puts "New tar file:$settings(path)/$tf"
+      set last_tar $tf
+    }
   }
   set pat "tar/$settings(file_date)-$hms-*-cir.jpg"
   if { [ catch { set fn [ glob $pat ] } ] }  {
