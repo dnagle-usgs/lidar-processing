@@ -503,7 +503,7 @@ tkcmd, swrite(format="send_rnarr_to_l1pro %d %d %d\n", rn_arr(1,), rn_arr(2,), r
 
 }
 
-func hist_fs( fs_all, win= ) {
+func hist_fs( fs_all, binsize=, win=, dofma=, color=, normalize= ) {
 /* DOCUMENT hist_fs(fs)
 
    Return the histogram of the good elevations in fs.  The input fs elevation
@@ -511,21 +511,33 @@ data are in cm, and the output is an array of the number of time a given
 elevation was found. The elevations are binned to 1-meter.
 
   Inputs: 
-	fs	An array of "R" structures.  
+	fs_all		An array of "R" structures.  
+	binsize=	Binsize in centimeters from 1.0 to 200.0  
+	win=		Defaults to 0.
+	dofma=		Defaults to 1 (Yes), Set to zero if you don't want an fma.
+	color=		Set graph color
+	normalize=	Defaults to 0 (not normalized),  Set to 1  to cause it to normalize
+                        to one.  This is very useful in case you are plotting multiple 
+                        histograms where you actually want to compare their peak value.
+	
 
   Outputs:
 	A histogram graphic in Window 0
 
   Returns:
+	An 2xn array of x values and counts found at those values.
 
  Orginal: W. Wright 9/29/2002
 
 See also: R
 */
 
+  if ( is_void(binsize))
+	binsize = 100.0;
 
   if ( is_void(win) ) 
 	win = 0;
+
 
 // build an edit array indicating where values are between -60 meters
 // and 3000 meters.  Thats enough to encompass any EAARL data than
@@ -545,16 +557,26 @@ minn = fs_all.elevation(q)(min);
 maxx = fs_all.elevation(q)(max);
 
  fsy = fs_all.elevation(q) - minn ;
- minn /= 100.0
- maxx /= 100.0;
+// minn /= binsize;
+// maxx /= binsize;
 
+  minn /= 100.0
+  maxx /= 100.0
+  
 
 // make a histogram of the data indexed by q.
-  h = histogram( (fsy / 100) + 1 );
+  h = histogram( (fsy / int(binsize)) + 1 );
   h( where( h == 0 ) ) = 1;
   e = span( minn, maxx, numberof(h) ) + 1 ; 
   w = window();
-  window,win; fma; plg,h,e;
+  window,win; 
+  if ( dofma ) 
+  	fma; 
+  if ( normalize ) {
+	h = float(h);
+	h = h/(h(max));
+   }
+  plg,h,e, color=color;
   pltitle(swrite( format="Elevation Histogram %s", data_path));
   xytitles,"Elevation (meters)", "Number of measurements"
   //limits
