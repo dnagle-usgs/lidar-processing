@@ -114,3 +114,36 @@ ASSOC COMPUTING MACHINERY, NEW YORK
   	return [ &si(kwinners+iidx-1), &vote ]
   }
 }
+
+
+
+
+func moving_rcf( yy, fw, n) {
+/* DOCUMENT moving_rcf( yy, fw, n )
+
+ This function filters a vector of data (yy) with rcf using a filter width of (fw) 
+and a jury of +/-(n).  It returns an index list to yy of the points within the 
+filter.  This is used in transect.i.
+
+
+See also: rcf, rcf.i, transect, mtransect.
+Original:  W. Wright 9/30/2003
+
+*/
+
+   np = numberof(yy);
+   edt = array(0, np);
+   for ( i=n+1; i<= np-n; i++ ) {
+     rv = rcf(yy(i-n:i+n),  fw, mode=0);
+     if ( (rv(2) >=2) ) {
+       v = yy(i);
+       ll = rv(1); ul=ll+fw;
+       if (( v >= ll) && ( v <= ul))  {
+            edt(i) = 1;
+       }
+     }
+   }
+   return (where( edt )) ;
+ }
+
+
