@@ -154,6 +154,7 @@ func rbpnav (junk) {
 */
 // extern pn;
 extern pnav_filename;		// so we can show which trajectory was used
+extern gga;
  if ( is_void(data_path) ) {
  write,"Enter path:"
    data_path = rdline(prompt="Enter data path:");
@@ -205,6 +206,7 @@ _read(idf, 4, pn );
   }
 
   pn.sod += gps_time_correction;
+  
 
 write,format="Applied GPS time correction of %f\n", gps_time_correction
 write,format="%s", 
@@ -216,6 +218,11 @@ write, format="  Lat:%14.3f %14.3f\n", pn.lat(min), pn.lat(max)
 write, format="  Lon:%14.3f %14.3f\n", pn.lon(min), pn.lon(max)
 write, format="  Alt:%14.3f %14.3f\n", pn.alt(min), pn.alt(max)
 write, format="  Rms:%14.3f %14.3f\n", pn.xrms(min), pn.xrms(max)
+  if ( is_void( gga ) ) {
+    gga = pn;
+    write,"**Note: Created gga from pnav"
+  }
+
  return pn;
 }
 
