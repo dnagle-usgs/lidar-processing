@@ -88,7 +88,7 @@ default = {
         orient= 0,  alignH= 0,  alignV= 0,  opaque= 0 },
       xOver= 0.001,  yOver= 0.03 },
 
-    frame= 0,
+    frame= 1,
     frameStyle= { color= -2,  type= 1,  width= 1.0 }}}
 
 # The one coordinate system matches the default template exactly

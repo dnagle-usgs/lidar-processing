@@ -58,14 +58,15 @@ for(i=1; !(eof) ; i++)
    restore, f2, vname;
    data = get_member(f2, vname);
    close, f2;
+   dvname = vname;
 
    new_data = data_datum_converter(data, utmzone=zonel, tonad83=tonad83, tonavd88=tonavd88, type = type)
 
-
+   vname = dvname;
    newf = createb(newfile);
    add_variable, newf, -1, vname, structof(new_data), dimsof(new_data);
    get_member(newf,vname) = new_data;
-   save, newf , vname;
+   save, newf ,vname;
    close, newf;
 
 }
