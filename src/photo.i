@@ -30,10 +30,10 @@ Use pli to display the image.
 }
 
 
-  cam1_roll_bias = -3.0;
+  cam1_roll_bias = 9.0;
   cam1_yaw_bias  = -3.5;
   cam1_pitch_bias  = 0.0;
-  fov = 39.5 * pi/180.0;	// camera FOV
+  fov = 43.0 * pi/180.0;	// camera FOV
 
 
 func photo_orient( photo, 
@@ -174,4 +174,6 @@ func gref_photo( somd=, ioff=, offset=,ggalst=, skip=, drift= ) {
 	     offset = [ northing, easting ]
  }
 }
+
+
 
