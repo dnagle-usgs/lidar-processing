@@ -1,5 +1,6 @@
 pro batch_plot, path, filename=filename, only_rcf=only_rcf, min_z_limit=min_z_limit, max_z_limit=max_z_limit, $
-		print_all_to = print_all_to, only_no_rcf = only_no_rcf, rcf_meta= rcf_meta, mode=mode
+		print_all_to = print_all_to, only_no_rcf = only_no_rcf, rcf_meta= rcf_meta, mode=mode, $
+		print_all_ps = print_all_ps
 
 ; this procedure batch plots all xyz data points and saves them as jpegs.
 ; amar nayegandhi 12/13/02.
@@ -85,9 +86,16 @@ for i = 0, n_elements(fn_arr)-1 do begin
      plot_xyz_veg, data_arr, min_z_limit=min_z_limit, max_z_limit=max_z_limit, $
 	plot_range=prange, title=title, win = win, pmode=1, make_tiff=tfname
    
-
    if keyword_set(print_all_to) then begin
-        spawn, 'lp -d'+print_all_to+' '+tfname
+	spawn, 'lp -d'+print_all_to+' '+tfname
+   endif
+
+	
+   if keyword_set(print_all_ps) then begin
+	spawn, 'convert '+tfname+' '+tfname+'.ps'
+	print, "converted to "+tfname+".ps"
+        spawn, 'lp -d'+print_all_ps+' '+tfname+'.ps'
+	spawn, 'rm -r'+tfname+'.ps'
    endif
 
    ptr_free, data_arr
