@@ -1,5 +1,6 @@
 pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygrid=ygrid, $
-	z_max = z_max, z_min=z_min, missing = missing, limits=limits, area_threshold=area_threshold
+	z_max = z_max, z_min=z_min, missing = missing, limits=limits, $
+	area_threshold=area_threshold, dist_threshold = dist_threshold
   ; this procedure does tinning / gridding on eaarl data
   ; amar nayegandhi 5/14/03.
   ; INPUT KEYWORDS:
@@ -18,6 +19,7 @@ pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygri
   if (not keyword_set(z_min)) then z_min = -100L
   if (not keyword_set(missing)) then missing = -100L
   if (not keyword_set(area_threshold)) then area_threshold = 100
+  if (not keyword_set(dist_threshold)) then dist_threshold = 20
 
   print, "    triangulating..."
   if ((mode eq 1) OR (mode eq 2)) then begin
@@ -28,7 +30,7 @@ pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygri
 
   ; now remove the large triangles by comparing the area to the threshold
   ; tr returns the indices of the array
-  print, "    removing large triangles..."
+  print, "    removing large triangles using area threshold..."
   xa = double(data(tr(0,*)).east/100.)
   xb = double(data(tr(1,*)).east/100.)
   xc = double(data(tr(2,*)).east/100.)
@@ -40,6 +42,18 @@ pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygri
   aidx = where(area lt area_threshold)
   tr = tr(*,aidx)
 
+  print, "    removing spiderweb effects using distance threshold..."
+  ; find the lengths of the 3 sides of the triangle using the distance formula
+  d1sq = reform((double(data(tr(0,*)).east/100. - data(tr(1,*)).east/100.))^2 + $
+	    (double(data(tr(0,*)).north/100. - data(tr(1,*)).north/100.))^2)
+  d2sq = reform((double(data(tr(1,*)).east/100. - data(tr(2,*)).east/100.))^2 + $
+	    (double(data(tr(1,*)).north/100. - data(tr(2,*)).north/100.))^2)
+  d3sq = reform((double(data(tr(2,*)).east/100. - data(tr(0,*)).east/100.))^2 + $
+	    (double(data(tr(2,*)).north/100. - data(tr(0,*)).north/100.))^2)
+  dsq = max([transpose(d1sq), transpose(d2sq), transpose(d3sq)], dimension=1)
+  didx = where(dsq le dist_threshold^2)
+  tr = tr(*,didx)
+  
   print, "    gridding..."
   case mode of 
   1: begin
