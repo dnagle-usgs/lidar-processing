@@ -1,8 +1,12 @@
 
+/* $Id$
+*/
+write, "$Id$";
+
 require, "msort.i"
 require, "rcf.i"
 
-func rcf_triag_filter(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=, plottriag=, plottriagwin=, prefilter_min=, prefilter_max=) {
+func rcf_triag_filter(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=, plottriag=, plottriagwin=, prefilter_min=, prefilter_max=, distthresh=) {
   /* DOCUMENT rcf_triag_filter(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=)
  this function splits data sets into manageable portions and calls new_rcfilter_eaarl_pts that 
 uses the random consensus filter (rcf) and triangulation method to filter data.
@@ -27,6 +31,8 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
   tai = number of 'triangulation' iterations to be performed. Default = 3;
   plottriag = set to 1 to plot resulting triangulations for each iteration (default = 0)
   plottriagwin = windown number where triangulations should be plotted (default = 0)
+  distthresh = distance threshold that defines the max length of any side of a triangle 
+		(default: 100m) set to 0 if you don't want to use it.
    OUTPUT:
     rcf'd data array of the same type as the 'eaarl' data array.
 
@@ -41,6 +47,7 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
  new_eaarl_all = [];
  data_out = [];
  if (!mode) mode = 3;
+ if (is_void(distthresh)) distthresh = 100
  ecount = 0;
 
  fsmode = mode;
@@ -445,7 +452,7 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
   new_eaarl_all = grow(new_eaarl_all(dupidx),new_eaarl_all(0));
   //write, format="number of new_eaarl_all = %d when ai = %d\n",numberof(new_eaarl_all), ai;
 
-  verts = triangulate_xyz(data=new_eaarl_all, plot=plottriag, win=plottriagwin, mode=mode);
+  verts = triangulate_xyz(data=new_eaarl_all, plot=plottriag, win=plottriagwin, mode=mode, distthresh=distthresh);
   if (is_void(plottriagwin)) plottriagwin = 0;
 
   if (interactive == 1) {
@@ -482,7 +489,7 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
 	}
 
   	new_eaarl_all = new_eaarl_all(nea_idx);
-  	verts = triangulate_xyz(data=new_eaarl_all, plot=plottriag, win=plottriagwin, mode=mode);
+  	verts = triangulate_xyz(data=new_eaarl_all, plot=plottriag, win=plottriagwin, mode=mode, distthresh=distthresh);
      }
   }
 
@@ -670,4 +677,41 @@ func derive_plane_constants(p,q,r) {
   D = -1.0*D;
 
 return [A,B,C,D];
+}
+
+func remove_large_triangles(verts, data, distthresh, mode=) {
+/* DOCUMENT remove_large_triangles(verts, distthresh) 
+   this function removes large triangles using a distance threshold.  
+   the length of the sides of a triangle must be lesser than this threshold.
+   amar nayegandhi 04/16/04.
+*/
+
+  if (is_void(mode)) mode = 3;
+  if (!is_void(distthresh)) {
+      write, "removing large triangles using distance threshold...";
+      if (mode != 3) {
+        d1sq = (data(verts(1,)).east/100. - data(verts(2,)).east/100.)^2 +
+		(data(verts(1,)).north/100. - data(verts(2,)).north/100.)^2;
+        d2sq = (data(verts(2,)).east/100. - data(verts(3,)).east/100.)^2 +
+		(data(verts(2,)).north/100. - data(verts(3,)).north/100.)^2;
+        d3sq = (data(verts(3,)).east/100. - data(verts(1,)).east/100.)^2 +
+		(data(verts(3,)).north/100. - data(verts(1,)).north/100.)^2;
+      } else {
+        d1sq = (data(verts(1,)).least/100. - data(verts(2,)).least/100.)^2 +
+		(data(verts(1,)).lnorth/100. - data(verts(2,)).lnorth/100.)^2;
+        d2sq = (data(verts(2,)).least/100. - data(verts(3,)).least/100.)^2 +
+		(data(verts(2,)).lnorth/100. - data(verts(3,)).lnorth/100.)^2;
+        d3sq = (data(verts(3,)).least/100. - data(verts(1,)).least/100.)^2 +
+		(data(verts(3,)).lnorth/100. - data(verts(1,)).lnorth/100.)^2;
+      }
+      dsq = [d1sq, d2sq, d3sq](,max);
+      didx = where(dsq <= distthresh^2);
+      if (is_array(didx)) {
+        verts = verts(,didx);
+      } else {
+	verts = [];
+      }
+  }
+
+  return verts;
 }

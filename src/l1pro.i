@@ -24,5 +24,8 @@ require,  "gridr.i"
 require,  "transect.i"
 require,  "manual_filter.i"
 require,  "ytriangulate.i"
+require,  "ircf.i"
+include,  "rcf.i"
+
 
 

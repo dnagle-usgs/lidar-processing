@@ -1,4 +1,9 @@
+/* 
+  $Id$
+*/
 
+write, "$Id$";
+  
 /* DELAUNAY TRIANGULATION procedure
   adapted from Paul Bourke's C source code available at
   http://astronomy.swin.edu.au/~pbourke/terrain/triangulate/
@@ -21,7 +26,7 @@ TRUE = 1;
 EPSILON = 1e-6;
 
 
-func triangulate_xyz(file=, savefile=, data=, plot=, mode=, win=) {
+func triangulate_xyz(file=, savefile=, data=, plot=, mode=, win=, distthresh=) {
 /*DOCUMENT prepare_xyz(file=, savefile=, data=, plot=, mode=) 
   amar nayegandhi 01/05/03.
  */
@@ -93,6 +98,9 @@ func triangulate_xyz(file=, savefile=, data=, plot=, mode=, win=) {
   ntri = numberof(v(1,));
   write, format="Total Triangles formed = %d\n",ntri;
   pxyz = xyz;
+
+  if (distthresh)
+    v = remove_large_triangles(v, data, distthresh, mode=mode);
   
   if (savefile) {
     f = open(savefile,"w");
