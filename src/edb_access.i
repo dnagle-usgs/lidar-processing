@@ -106,7 +106,7 @@ func load_edb (  fn=, update= ) {
 
 if (is_void(fn)) {
 if ( _ytk ) {
-    fn  = get_openfn( initialdir="/data/0/", filetype="*.idx" ); 
+    if (!fn) fn  = get_openfn( initialdir="/data/0/", filetype="*.idx" ); 
     if (strmatch(fn, "idx") == 0) {
        exit, "NO FILE CHOSEN, USING PREVIOUSLY DEFINED .idx FILE IF PRESENT";
     } 
