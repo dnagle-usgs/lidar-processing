@@ -105,7 +105,9 @@ func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, win=, color= ) {
      tb = fs.soe(*)(glst(llst)(ss(i)+1))%86400;
      te = fs.soe(*)(glst(llst)(ss(i+1)))%86400;
      td = abs(te - tb);
-     write, format="soe=%10.5f:%10.5f (%7.4f)\n", tb, te, td;
+     hms = sod2hms( tb );
+     write, format="soe = %6.2f:%-10.2f(%-4.2f) hms=%2d:%02d:%02d utc\n", 
+                          tb, te, td, hms(1,), hms(2,), hms(3,);
      if ( xtime ) {
      plmk, fs.elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0, 
            fs.soe(*)(llst)(ss(i)+1:ss(i+1))/100.0,color=clr(c), msize=msize
