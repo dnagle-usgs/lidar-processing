@@ -61,6 +61,8 @@ for i = 0, n_elements(fn_arr)-1 do begin
      ;title = "Bathymetry Plot. Tile Location: "+spp(1)+"Date/RCF: "+date+" "+rcf_params
      title = title
    endif else begin
+     if (mode eq 1) then $
+ 	title = "First Surface Plot. Date: "+date+" Tile Location: "+spp(1)+" "+spp(2)
      if (mode eq 2) then $
        	title = "Bathymetry Plot. Date: "+date+" Tile Location: "+spp(1)+" "+spp(2)
      if (mode eq 3) then $
@@ -72,7 +74,9 @@ for i = 0, n_elements(fn_arr)-1 do begin
 
    ; make jpeg file name
    tfname = path+(strsplit(fname_arr, '.', /extract))[0]+".tif"
-   
+   if (mode eq 1) then $ 
+     plot_xyz_veg, data_arr, min_z_limit=min_z_limit, max_z_limit=max_z_limit, $
+	plot_range=prange, title=title, win = win, pmode=2, make_tiff=tfname   
    if (mode eq 2) then $
      plot_xyz_bath, data_arr, min_z_limit=min_z_limit, max_z_limit=max_z_limit, $
 	plot_range=prange, title=title, win = win, bathy=1, make_tiff=tfname
