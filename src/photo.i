@@ -162,8 +162,8 @@ func gref_photo( somd=, ioff=, offset=,ggalst=, skip=, drift= ) {
   photo_orient, photo, 
 	        alt= galt,
 	    heading= heading,
-	       roll= roll + roll_bias + cam1_roll_bias,
-	     pitch = pitch + pitch_bias + cam1_pitch_bias,
+	       roll= roll + ops_conf.roll_bias + cam1_roll_bias,
+	     pitch = pitch + ops_conf.pitch_bias + cam1_pitch_bias,
 	     offset = [ northing, easting ]
  }
 }

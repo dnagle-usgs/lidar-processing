@@ -51,10 +51,10 @@ func qde( xr, centroid= ) {
      }
      xr.irange(,1) = prange(1,) ;
      e = -(prange(1,) * NS2MAIR - range_bias) *  cos(a + xr.rroll ) * 
-         cos(xr.rpitch + pitch_bias*d2r ) ;
+         cos(xr.rpitch + ops_conf.pitch_bias*d2r ) ;
    } else {
      e = -(xr.irange * NS2MAIR - range_bias) *  cos(a + xr.rroll ) * 
-         cos(xr.rpitch + pitch_bias*d2r ) ;
+         cos(xr.rpitch + ops_conf.pitch_bias*d2r ) ;
    }
    ea = [ e + xr.alt - qde_vertical_offset, (xr.sa+3)/4 + 80 ];
    return ea;

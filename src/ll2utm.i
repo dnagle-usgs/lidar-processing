@@ -51,7 +51,7 @@ func ll2utm( lat, lon, retarr= ) {
 /* DOCUMENT  ll2utm(lat, lon)
 
    Convert lat/lon pairs to UTM.  Returns values in
-   UTMNorth, UTMEasting, and UTMZone;
+   the global arrays UTMNorth, UTMEasting, and UTMZone;
 
    See also: fll2utm.
 */

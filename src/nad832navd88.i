@@ -56,7 +56,7 @@ func nad832navd88(data_in, gdata_dir=) {
    OUTPUT: data_out = NAVD88 referenced data in the same format as the input format (3,n).
    amar nayegandhi 07/10/03
 */
-  if (!gdata_dir) gdata_dir = "~/lidar-processing/GEOID99/pbd_data/";
+  if (!gdata_dir) gdata_dir = "/opt/eaarl/lidar-processing/GEOID99/pbd_data/";
   
   //read the header values for each geoid99 pbd data file.
   scmd = swrite(format="ls -1 %s*.pbd | wc -l",gdata_dir);

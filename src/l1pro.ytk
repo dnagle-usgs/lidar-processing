@@ -1495,7 +1495,6 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
 	pack .l1clip.proc .l1clip.ymin .l1clip.min .l1clip.ymax .l1clip.max .l1clip.yrange .l1clip.range .l1clip.1 -side top -pady 5	
   }
 
-.l1wid.bf45.q.4 configure -state disabled
 
 .l1wid.bf45.q.4 configure -state disabled
 
@@ -1633,7 +1632,13 @@ pack .l1wid.bf4.1 .l1wid.bf4.2 -side top -pady 10
 pack .l1wid.bf1 .l1wid.bf2 .l1wid.bf3 .l1wid.bf4 -side top -expand 1 -fill both
 pack .l1wid.bf45.sc.1  -side left  -padx 3
 pack .l1wid.bf45.sc.f  .l1wid.bf45.sc.sk -side left -padx 5
-pack .l1wid.bf45.q.1 .l1wid.bf45.q.2  .l1wid.bf45.q.3 .l1wid.bf45.q.4 -side left
+pack \
+	.l1wid.bf45.q.1 \
+	.l1wid.bf45.q.2  \
+	.l1wid.bf45.q.3 \
+	.l1wid.bf45.q.4  \
+	-side left 
+
 pack 	.l1wid.bf45.p.fma \
 	.l1wid.bf45.p.1 \
 	.l1wid.bf45.p.15 \

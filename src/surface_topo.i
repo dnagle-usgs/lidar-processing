@@ -262,9 +262,10 @@ easting  = interp( _utm(2,), pnav.sod, atime )
  rrr = array(R, sz);
  if ( is_void(step) ) 
    step = 1;
-  dx = cyaw = gz = gx = gy = lasang = yaw = array(0.0, 120);
-  dy = array( -2.0, 120);	// mirror offset along fuselage
-  dz = array(-1.3, 120);	// vertical mirror offset 
+  dx = cyaw = gz = gx = gy = lasang = yaw = array( ops_conf.x_offset, 120);
+
+  dy = array( ops_conf.y_offset, 120);	// mirror offset along fuselage
+  dz = array( ops_conf.z_offset, 120);	// vertical mirror offset 
   mirang = array(-22.5, 120);
   lasang = array(45.0, 120);
 
@@ -273,16 +274,16 @@ write,"Projecting to the surface..."
    gx = easting(, i);
    gy = northing(, i);
    yaw = -heading(, i);
-   scan_ang = (360.0/8000.0)  * a(i).sa + scan_bias;
+   scan_ang = (360.0/8000.0)  * a(i).sa + ops_conf.scan_bias;
 
 // edit out tx/rx dropouts
  el = ( int(a(i).irange) & 0xc000 ) == 0 ;
  a(i).irange *= el;
 
-   srm = (a(i).irange*NS2MAIR - range_biasM);
+   srm = (a(i).irange*NS2MAIR - ops_conf.range_biasM);
    gz = palt(, i);
-  m = scanflatmirror2_direct_vector(yaw+yaw_bias,
-	pitch(,i)+pitch_bias,roll(,i)+roll_bias,
+  m = scanflatmirror2_direct_vector(yaw+ ops_conf.yaw_bias,
+	pitch(,i)+ ops_conf.pitch_bias,roll(,i)+ ops_conf.roll_bias,
          gx,gy,gz,dx,dy,dz,cyaw, lasang, mirang, scan_ang, srm)
   
   rrr(i).meast  =     m(,1) * 100.0;
@@ -320,10 +321,10 @@ for ( ; i< j; i += step) {
    gx = easting(, i);
    gy = northing(, i);
    yaw = -heading(, i);
-   scan_ang = (360.0/8000.0)  * a(i).sa + scan_bias;
-   srm = (a(i).irange*NS2MAIR - range_biasM);
+   scan_ang = (360.0/8000.0)  * a(i).sa + ops_conf.scan_bias;
+   srm = (a(i).irange*NS2MAIR - ops_conf.range_biasM);
    gz = palt(, i);
-  m = scanflatmirror2_direct_vector(yaw,pitch(,i),roll(,i)+roll_bias,
+  m = scanflatmirror2_direct_vector(yaw,pitch(,i),roll(,i)+ ops_conf.roll_bias,
          gx,gy,gz,dx,dy,dz,cyaw, lasang, mirang, scan_ang, srm)
   
   rrr(i).east   =  m(,1);
@@ -369,7 +370,7 @@ animate,1;
 //    plmk, a(2,,i) * NS2MAIR, a.sa,msize=.1, marker=1; 
 for ( ; i< j; i += step){ 
    fma; 
-   croll = ((720.0/8000) * a(i).sa ) + roll(, i) + roll_bias;
+   croll = ((720.0/8000) * a(i).sa ) + roll(, i) + ops_conf.roll_bias;
    rad_roll = roll * d2r; 
    cr = cos( rad_roll);
    srm = a(i).irange*NS2MAIR;
@@ -544,7 +545,7 @@ See also: R
 */
 
   if ( is_void(binsize))
-	binsize = 100.0;
+	binsize = 10.0;
 
   if ( is_void(win) ) 
 	win = 0;
