@@ -164,6 +164,7 @@ func make_large_footprint_waveform(eaarl, binsize=, digitizer=, normalize=, mode
     ygrid = [bbox(3)];
   }
 
+ /*
   if ( _ytk ) {
     tkcmd,"destroy .rcf1; toplevel .rcf1; set progress 0;"
     tkcmd,swrite(format="ProgressBar .rcf1.pb \
@@ -176,6 +177,7 @@ func make_large_footprint_waveform(eaarl, binsize=, digitizer=, normalize=, mode
 	-width 400", int(ngridy) );
     tkcmd,"pack .rcf1.pb; update; center_win .rcf1;"
   }
+ */
   //timer, t0
   count = 0;
   for (i = 1; i <= ngridy; i++) {

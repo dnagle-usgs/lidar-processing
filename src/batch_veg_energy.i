@@ -105,7 +105,13 @@ func batch_veg_lfpw(ipath, opath, fname=, searchstr=, onlyupdate=,binsize=, norm
 	close, f;
     }
 
-        
+   // stop timer
+   timer, tb2;
+   time = tb2-tb1;
+
+   write, "BATCH PROCESS FOR LFPW COMPLETE!!"
+   write, format="Total time taken for batch process = %f hours\n",time(3)/3600.;
+ return
 }
 
 func batch_veg_metrics(ipath, opath, fname=,searchstr=, plotclasses=, thresh=, min_elv=, outwin=, onlyplot=, dofma=, use_be=, cl_lfpw=) {
@@ -268,6 +274,12 @@ func batch_veg_metrics(ipath, opath, fname=,searchstr=, plotclasses=, thresh=, m
         }
      }
 
+   // stop timer
+   timer, tb2;
+   time = tb2-tb1;
+
+   write, "BATCH PROCESS FOR METRICS COMPLETE!!"
+   write, format="Total time taken for batch process = %f hours\n",time(3)/3600.;
    return
 }
 
