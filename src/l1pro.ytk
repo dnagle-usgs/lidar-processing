@@ -59,7 +59,7 @@ menu .l1wid.mb.options
 .l1wid.mb add cascade -label Options -underline 0 -menu .l1wid.mb.options
 .l1wid.mb.options add command -label "Configure Lowest ColorBar Elevation Scale..." -underline 0 \
 	-command { 
-	   destroy  .m1wid.opts
+	   destroy  .l1wid-opts
  	   toplevel .l1wid-opts
 	   frame .l1wid-opts.f1
 	   frame .l1wid-opts.f2
