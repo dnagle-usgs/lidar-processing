@@ -187,66 +187,19 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=) {
  // non raster format (FS, GEO, VEG).
  a = structof(eaarl);
  if (a == R) {
-   indx = where(eaarl.north != 0);
-   data_out = array(FS, numberof(indx));
-   data_out.rn = eaarl.raster(indx);
-   data_out.mnorth = eaarl.mnorth(indx);
-   data_out.meast = eaarl.meast(indx);
-   data_out.melevation = eaarl.melevation(indx);
-   data_out.north = eaarl.north(indx);
-   data_out.east = eaarl.east(indx);
-   data_out.elevation = eaarl.elevation(indx);
-   data_out.intensity = eaarl.intensity(indx);
+     data_out = r_to_fs(eaarl);
  }
 
  if (a == GEOALL) {
-   indx = where(eaarl.north != 0);
-   data_out = array(GEO, numberof(indx));
-   data_out.rn = eaarl.rn(indx);
-   data_out.north = eaarl.north(indx);
-   data_out.east = eaarl.east(indx);
-   data_out.sr2 = eaarl.sr2(indx);
-   data_out.elevation = eaarl.elevation(indx);
-   data_out.mnorth = eaarl.mnorth(indx);
-   data_out.meast = eaarl.meast(indx);
-   data_out.melevation = eaarl.melevation(indx);
-   data_out.bottom_peak = eaarl.bottom_peak(indx);
-   data_out.first_peak = eaarl.first_peak(indx);
-   data_out.depth = eaarl.depth(indx);
- }
-
- if (a == VEGALL) {
-   indx = where(eaarl.north != 0);
-   data_out = array(VEG, numberof(indx));
-   data_out.rn = eaarl.rn(indx);
-   data_out.north = eaarl.north(indx);
-   data_out.east = eaarl.east(indx);
-   data_out.elevation = eaarl.elevation(indx);
-   data_out.mnorth = eaarl.mnorth(indx);
-   data_out.meast = eaarl.meast(indx);
-   data_out.melevation = eaarl.melevation(indx);
-   data_out.felv = eaarl.felv(indx);
-   data_out.fint = eaarl.fint(indx);
-   data_out.lelv = eaarl.lelv(indx);
-   data_out.lint = eaarl.lint(indx);
-   data_out.nx = eaarl.nx(indx);
+     data_out = geoall_to_geo(eaarl);
  }
 
  if (a == VEG_ALL) {
-   indx = where(eaarl.north != 0);
-   data_out = array(VEG_, numberof(indx));
-   data_out.rn = eaarl.rn(indx);
-   data_out.north = eaarl.north(indx);
-   data_out.east = eaarl.east(indx);
-   data_out.elevation = eaarl.elevation(indx);
-   data_out.mnorth = eaarl.mnorth(indx);
-   data_out.meast = eaarl.meast(indx);
-   data_out.melevation = eaarl.melevation(indx);
-   data_out.felv = eaarl.felv(indx);
-   data_out.fint = eaarl.fint(indx);
-   data_out.lelv = eaarl.lelv(indx);
-   data_out.lint = eaarl.lint(indx);
-   data_out.nx = eaarl.nx(indx);
+     data_out = veg_all_to_veg_(eaarl);
+ }
+
+ if (a == VEG_ALL_) {
+     data_out = veg_all__to_veg__(eaarl);
  }
 
  if (is_array(data_out)) eaarl = data_out;
@@ -289,13 +242,23 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=) {
 
   //timer, t0
   for (i = 1; i <= ngridy; i++) {
+   if (mode == 3) {
+    q = where ((eaarl.lnorth >= ygrid(i)) &
+                   (eaarl.lnorth <= ygrid(i)+buf));
+   } else {
     q = where ((eaarl.north >= ygrid(i)) &
                    (eaarl.north <= ygrid(i)+buf));
+   }
       
     for (j = 1; j <= ngridx; j++) {
       if (is_array(q)) {
+       if (mode == 3) {
         indx = where((eaarl.east(q) >= xgrid(j))   &
                    (eaarl.east(q) <= xgrid(j)+buf));
+		   } else {
+        indx = where((eaarl.east(q) >= xgrid(j))   &
+                   (eaarl.east(q) <= xgrid(j)+buf));
+		   }
         indx = q(indx);
       }
       if (is_array(indx)) {
