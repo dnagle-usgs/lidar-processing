@@ -621,12 +621,14 @@ See define_bath_ctl()
 
 	/* compute array for bad depth (bd_depth) to write to a file */
 	bd_indx_r = where(bd_depth.depth != 0);
-	bdeast = bd_depth.east;
-	bdeast(bd_indx_r) = 0;
-	bdnorth = bd_depth.north;
-	bdnorth(bd_indx_r) = 0;
-	bd_depth.east = bdeast;
-	bd_depth.north = bdnorth;
+	if (is_array(bd_indx_r)) {
+	  bdeast = bd_depth.east;
+	  bdeast(bd_indx_r) = 0;
+	  bdnorth = bd_depth.north;
+	  bdnorth(bd_indx_r) = 0;
+	  bd_depth.east = bdeast;
+	  bd_depth.north = bdnorth;
+  	}
 
       } 
 
@@ -648,7 +650,11 @@ See define_bath_ctl()
 	write, "No good returns found"
 
     if ( ba_count > 0 ) {
-      pbd = float(bd_count)*100.0/(tot_count-ba_count);
+      if (tot_count != ba_count) {
+        pbd = float(bd_count)*100.0/(tot_count-ba_count);
+      } else {
+	pbd = 100.0;
+      }
       write, format = "%5.2f%% of total records with good "+
                       "first returns had false depth! \n",pbd; 
     } else 
