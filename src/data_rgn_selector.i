@@ -7,6 +7,8 @@
 func sel_data_rgn(data, type, mode=,win=, exclude=, rgn=) {
   /* DOCUMENT sel_data_rgn(data,type, mode=, win=, exclude=, rgn=)
   this function selects a region (limits(), rubberband, pip) and returns data within that region.
+   Don't use this function for batch.  Use sel_rgn_from_datatiles instead.
+ INPUT: data = input data array e.g. fs_all
   // if mode = 1, limits() function is used to define the region.
   // if mode = 2, a rubberband box is used to define the region.
   // if mode = 3, the points-in-polygon technique is used to define the region.
@@ -197,7 +199,6 @@ indx = where(x >= xmin);
 }
 
 func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged=, onlynotmerged=, onlyrcfd=, onlynotrcfd=, datum=, skip=, noplot=, search_str=, pip=, pidx=) {
-
 /* DOCUMENT sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged=, onlynotmerged=, onlyrcfd=, onlynotrcfd=, datum=, skip=, noplot=, search_str=, pip=) 
 
   This function selects data from a series of processed data tiles.
