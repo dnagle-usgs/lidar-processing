@@ -316,132 +316,6 @@ proc load_edb {} {
   }
 }
 
-# Set the source code path for this invocation.  It can 
-# then be used to load the other modules.
-   set data_path "/data/"
-   set src_path  [ file dirname [ info script ] ]
-   cd $src_path
-   exp_send "cd, \"$src_path\"\r"
-   exp_send "src_path= \"$src_path\"\r"
-
-   exp_send "#include \"eaarl.i\"\r"
-
-####   exp_send "#include \"edb_access.i\"\r"
-####   exp_send "#include \"map.i\"\r"
-
-   set w .eaarl
-   global w
-   destroy  $w
-   toplevel $w
-   frame $w.f -width 450
-   pack $w.f
-
-  $w configure -menu $w.mb
-   menu $w.mb
-   menu $w.mb.file
-   menu $w.mb.map
-   menu $w.mb.nav
-   menu $w.mb.rasters
-   menu $w.mb.images
-   menu $w.mb.time
-   menu $w.mb.new
-   menu $w.mb.help
-
- $w.mb add cascade -label File     -underline 0 -menu $w.mb.file
-### $w.mb add cascade -label Map      -underline 0 -menu $w.mb.map
- $w.mb add cascade -label "Maps/Nav"     -underline 0 -menu $w.mb.nav
- $w.mb add cascade -label Rasters  -underline 0 -menu $w.mb.rasters
- $w.mb add cascade -label Images   -underline 0 -menu $w.mb.images
- $w.mb add cascade -label Time     -underline 0 -menu $w.mb.time
- $w.mb add cascade -label New      -underline 0 -menu $w.mb.new
- $w.mb add cascade -label Help     -underline 0 -menu $w.mb.help
-
- $w.mb.file add command -label "Load EAARL Database Index (Edb)..." -command { load_edb }
-
- exp_send "require, \"rbgga.i\"\r"
- $w.mb.file add command -label "Coastlines & Flight tracks"   -underline 2 \
-	-command rbgga_menu
- $w.mb.file add command -label "Load DMARS Attitude data..."   -underline 2 \
-   -command  load_dmars;
- $w.mb.file add command -label "Load Tans Attitude data..."   -underline 2 \
-   -command { exp_send "require, \"rbtans.i\"\r"
-   	      expect ">"
-    	      exp_send "tans = rbtans() \r" }
- $w.mb.file add command -label "Load GPS PNAV data..."   -underline 2 \
-   -command { exp_send "require, \"rbpnav.i\"\r"
-    	      expect ">"
-     	      exp_send "pnav = rbpnav() \r" }
-
-  $w.mb.file add separator
-
- $w.mb.file add command -label "Edb Status" -command  edb_status 
-
- $w.mb.file add command -label "Load command file..." -command { 
-   load_cmd $data_path 
- }
- $w.mb.file add command -label "Edit missions notes..." -command  {
-   if { [ edb_loaded ] } { 
-     ytk_kick_off_editor  $_ytk(editor) "$edb(path)/notes.txt"    
-   }
- } 
- $w.mb.file add command -label Dismiss -command { destroy $w }
-
- source "$src_path/map.ytk"
-
-#############
-#   Rasters
-#############
- $w.mb.rasters add command -label "Examine Rasters..." -command {
-   source "$src_path/drast.ytk"
- }
-
-#############
-#   Images
-#############
- $w.mb.images add command -label "Capture a display..." -command {
-    scap
- }
- $w.mb.images add command -label "1-Hz Digital Camera Images..." -command {
-    start_sf
- }
- $w.mb.images add command -label "Process Lidar Data..." -command {
-    source "$src_path/l1pro.ytk"
- }
- $w.mb.images add command -label "Lidar First Return Surface..." -command {
- }
- $w.mb.images add command -label "Lidar Last Return Sub-aerial Surface..." -command {
- }
- $w.mb.images add command -label "Lidar Bathymetric Surface..." -command {
- }
-
-#############
-#   Nav
-#############
-
-
- $w.mb.nav add command -label "Yorick Flight Planning..." \
-	-command { exp_send "require, \"nav.i\"\r" }
-
-
- set gga_color black
-
- exp_send "require, \"rbgga.i\"\r"
- menu $w.mb.nav.rbgga
- $w.mb.nav add command -label "Flight Tracks & Coastlines..."   -underline 2 \
-	-command rbgga_menu
- $w.mb.nav add command -label "Load Tans Attitude data..."   -underline 2 \
-   -command { exp_send "require, \"rbtans.i\"\r"
-   	      expect ">"
-    	      exp_send "tans = rbtans() \r" }
- $w.mb.nav add command -label "Load GPS PNAV data..."   -underline 2 \
-   -command { exp_send "require, \"rbpnav.i\"\r"
-    	      expect ">"
-     	      exp_send "pnav = rbpnav() \r" }
-
-
- set clist "black red blue green cyan magenta yellow white"
-
-
 
 proc request_heading {psf inhd_count} {
    ## this procedure requests heading information for sf_a.tcl
@@ -634,6 +508,137 @@ Button $w.show_grid -text "Show\nGrid Name" -command {
 
 }
 
+#####################################################################
+# main
+# Set the source code path for this invocation.  It can 
+# then be used to load the other modules.
+#####################################################################
+   set data_path "/data/"
+   set src_path  [ file dirname [ info script ] ]
+   cd $src_path
+   exp_send "cd, \"$src_path\"\r"
+   exp_send "src_path= \"$src_path\"\r"
+
+   exp_send "#include \"eaarl.i\"\r"
+
+####   exp_send "#include \"edb_access.i\"\r"
+####   exp_send "#include \"map.i\"\r"
+
+   set w .eaarl
+   global w
+   destroy  $w
+   toplevel $w
+   frame $w.f -width 450
+   pack $w.f
+
+  $w configure -menu $w.mb
+   menu $w.mb
+   menu $w.mb.file
+   menu $w.mb.map
+   menu $w.mb.nav
+   menu $w.mb.rasters
+   menu $w.mb.images
+   menu $w.mb.time
+   menu $w.mb.new
+   menu $w.mb.help
+
+ $w.mb add cascade -label File     -underline 0 -menu $w.mb.file
+### $w.mb add cascade -label Map      -underline 0 -menu $w.mb.map
+ $w.mb add cascade -label "Maps/Nav"     -underline 0 -menu $w.mb.nav
+ $w.mb add cascade -label Rasters  -underline 0 -menu $w.mb.rasters
+ $w.mb add cascade -label Images   -underline 0 -menu $w.mb.images
+ $w.mb add cascade -label Time     -underline 0 -menu $w.mb.time
+ $w.mb add cascade -label New      -underline 0 -menu $w.mb.new
+ $w.mb add cascade -label Help     -underline 0 -menu $w.mb.help
+
+ $w.mb.file add command -label "Load EAARL Database Index (Edb)..." -command { load_edb }
+
+ exp_send "require, \"rbgga.i\"\r"
+ $w.mb.file add command -label "Coastlines & Flight tracks"   -underline 2 \
+	-command rbgga_menu
+ $w.mb.file add command -label "Load DMARS Attitude data..."   -underline 2 \
+   -command  load_dmars;
+ $w.mb.file add command -label "Load Tans Attitude data..."   -underline 2 \
+   -command { exp_send "require, \"rbtans.i\"\r"
+   	      expect ">"
+    	      exp_send "tans = rbtans() \r" }
+ $w.mb.file add command -label "Load GPS PNAV data..."   -underline 2 \
+   -command { exp_send "require, \"rbpnav.i\"\r"
+    	      expect ">"
+     	      exp_send "pnav = rbpnav() \r" }
+
+  $w.mb.file add separator
+
+ $w.mb.file add command -label "Edb Status" -command  edb_status 
+
+ $w.mb.file add command -label "Load command file..." -command { 
+   load_cmd $data_path 
+ }
+ $w.mb.file add command -label "Edit missions notes..." -command  {
+   if { [ edb_loaded ] } { 
+     ytk_kick_off_editor  $_ytk(editor) "$edb(path)/notes.txt"    
+   }
+ } 
+ $w.mb.file add command -label Dismiss -command { destroy $w }
+
+ source "$src_path/map.ytk"
+
+#############
+#   Rasters
+#############
+ $w.mb.rasters add command -label "Examine Rasters..." -command {
+   source "$src_path/drast.ytk"
+ }
+
+#############
+#   Images
+#############
+ $w.mb.images add command -label "Capture a display..." -command {
+    scap
+ }
+ $w.mb.images add command -label "1-Hz Digital Camera Images..." -command {
+    start_sf
+ }
+ $w.mb.images add command -label "Process Lidar Data..." -command {
+    source "$src_path/l1pro.ytk"
+ }
+ $w.mb.images add command -label "Lidar First Return Surface..." -command {
+ }
+ $w.mb.images add command -label "Lidar Last Return Sub-aerial Surface..." -command {
+ }
+ $w.mb.images add command -label "Lidar Bathymetric Surface..." -command {
+ }
+
+#############
+#   Nav
+#############
+
+
+ $w.mb.nav add command -label "Yorick Flight Planning..." \
+	-command { exp_send "require, \"nav.i\"\r" }
+
+
+ set gga_color black
+
+ exp_send "require, \"rbgga.i\"\r"
+ menu $w.mb.nav.rbgga
+ $w.mb.nav add command -label "Flight Tracks & Coastlines..."   -underline 2 \
+	-command rbgga_menu
+ $w.mb.nav add command -label "Load Tans Attitude data..."   -underline 2 \
+   -command { exp_send "require, \"rbtans.i\"\r"
+   	      expect ">"
+    	      exp_send "tans = rbtans() \r" }
+ $w.mb.nav add command -label "Load GPS PNAV data..."   -underline 2 \
+   -command { exp_send "require, \"rbpnav.i\"\r"
+    	      expect ">"
+     	      exp_send "pnav = rbpnav() \r" }
+
+
+ set clist "black red blue green cyan magenta yellow white"
+
+
+
+
 
 
 
@@ -680,3 +685,5 @@ $w.mb.nav entryconfigure 1 -state normal
 $w.mb.images entryconfigure 4 -state disabled
 $w.mb.images entryconfigure 5 -state disabled
 $w.mb.images entryconfigure 6 -state disabled
+
+
