@@ -1,5 +1,6 @@
 require, "surface_topo.i"
 require, "bathy.i"
+require, "eaarl_constants.i"
 
 /* 
   This program is used to display a bathymetric image using the 
@@ -40,7 +41,7 @@ for (i=1; i<=len; i=i+1) {
   geodepth(i).raster = rrr(i).raster;
   geodepth(i).north = rrr(i).north;
   geodepth(i).east = rrr(i).east;
-  geodepth(i).idx = d(,i).idx
+  geodepth(i).idx = -d(,i).idx * CNSH2O2X
   geodepth(i).sa = d(,i).sa
   geodepth(i).bottom_peak = d(,i).bottom_peak;
   if (correct == 1) {
