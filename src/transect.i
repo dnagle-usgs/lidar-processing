@@ -59,6 +59,7 @@ the one before that, etc. etc.
    rtn=     Select return type where:
             0 first return
             1 veg last return
+	    2 submerged topo
 
 Examples:
 
@@ -126,6 +127,7 @@ func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=, rcf_p
    rtn=     Select return type where:
             0 first return
             1 veg last return
+	    2 submerged topo from bathy algo
 
  See also: mtransact, _transect_history
 
@@ -183,11 +185,12 @@ func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=, rcf_p
   ry = y*ca + x*sa
 
   llst = where( abs(ry) < lw );
-rtn
   if ( rtn == 0 ) 
 	  elevation = fs.elevation(*);
   else if ( rtn == 1 ) 
 	  elevation = fs.lelv(*);
+  else if ( rtn == 2 ) 
+	  elevation = fs.elevation(*) + fs.depth(*);
 
 //            1      2       3        4          5         6       7
   clr = ["black", "red", "blue", "green", "magenta", "yellow", "cyan" ];
