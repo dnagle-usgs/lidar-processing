@@ -20,7 +20,7 @@ struct GEOBATH {
   long raster(120); 	//contains raster number
   long north(120);	//northing value
   long east(120); 	//easting value
-  short depth(120);	//water depth in meters
+  short depth(120);	//water depth in centimeters
   short bottom_peak(120); //peak amplitude of return signal
   short sa(120);	//scan angle
 };
@@ -45,7 +45,7 @@ for (i=1; i<=len; i=i+1) {
   geodepth(i).raster = rrr(i).raster;
   geodepth(i).north = rrr(i).north;
   geodepth(i).east = rrr(i).east;
-  geodepth(i).depth = -d(,i).idx * CNSH2O2X
+  geodepth(i).depth = short(-d(,i).idx * CNSH2O2X *100)
   geodepth(i).sa = d(,i).sa
   geodepth(i).bottom_peak = d(,i).bottom_peak;
   if (correct == 1) {
@@ -66,7 +66,7 @@ for (i=1; i<=len; i=i+1) {
 
 j = len;
 for ( i=1; i<j; i++ ) {
-  plcm, geodepth(i).depth, geodepth(i).north/100, geodepth(i).east/100,
+  plcm, geodepth(i).depth/100, geodepth(i).north/100, geodepth(i).east/100,
         msize=size,cmin=cmin, cmax=cmax;
   }
 

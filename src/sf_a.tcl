@@ -178,9 +178,24 @@ menu .menubar.edit.menu
 	         tk_messageBox -type ok -icon error \
 		 	-message "First and Last Frames not Marked. Cannot Save." 
 		 } else {
-	      set tn [ tk_getSaveFile -defaultextension tar -filetypes { {{Tar Files} {.tar}} } \
+	      set tn [ tk_getSaveFile -defaultextension .tar -filetypes { {{Tar Files} {.tar}} } \
 	      		-initialdir $dir -title "Save Marked Files as..."];
 	      tar_save_marked $tn;
+	      set fcin 0
+	      set lcin 0
+	      }
+            }
+
+.menubar.edit.menu add command -label "Zip and Save Marked Images ..." -underline 0 \
+   -command { 
+    	      global fcin lcin dir
+	      if {$fcin == 0 || $lcin == 0} { 
+	         tk_messageBox -type ok -icon error \
+		 	-message "First and Last Frames not Marked. Cannot Save." 
+		 } else {
+	      set zp [ tk_getSaveFile -defaultextension .zip -filetypes { {{Zip Files} {.zip}} } \
+	      		-initialdir $dir -title "Save Marked Files as..."];
+	      zip_save_marked $zp;
 	      set fcin 0
 	      set lcin 0
 	      }
@@ -536,16 +551,40 @@ proc tar_save_marked {tn} {
   } else {      
     set psf [pid]
     set tmpdir "/tmp/sf.$psf"
-    exec mkdir $tmpdir
+    if {[catch "cd $tmpdir"] == 1} {exec mkdir $tmpdir}
     for {set i $fcin} {$i<=$lcin} {incr i} {
        exec cp $dir/$fna($i) $tmpdir;
      
     }
     ##puts "files in tmpdir\r\n";
     cd $tmpdir;
-    exec tar -cvf $tn .
-    cd $dir
-    exec rm -r $tmpdir
+    exec tar -cvf $tn .;
+    cd $dir;
+    exec rm -r $tmpdir;
+  
+  }
+
+}
+proc zip_save_marked {zp} {
+  ## this procedure first zips and then saves the file of images that are marked
+  ## amar nayegandhi 03/04/2002.
+  global lcin fcin fna dir
+  if {$lcin < $fcin} {
+      tk_messageBox -type ok -icon error \
+                              -message "Last Frame Marked is less than First Frame Marked. Cannot Save."
+  } else {      
+    set psf [pid]
+    set tmpdir "/tmp/sf.$psf"
+    if {[catch "cd $tmpdir"] == 1} {exec mkdir $tmpdir}
+    for {set i $fcin} {$i<=$lcin} {incr i} {
+       exec cp $dir/$fna($i) $tmpdir;
+     
+    }
+    ##puts "files in tmpdir\r\n";
+    cd $tmpdir;
+    eval exec zip $zp [glob *.jpg];
+    cd $dir;
+    exec rm -r $tmpdir;
   
   }
 

@@ -8,7 +8,7 @@ func list_reefs {
    shoals.dmlat, shoals.dmlon;
 }
 
-f = open("../fla-reefs.dat", "r")
+f = open("~/Yorick/maps/fla-reefs.dat", "r")
 
 n = 205
 
