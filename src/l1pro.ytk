@@ -200,6 +200,13 @@ menu .l1wid.mb.options
     Button .l1plot.sall -text "Select All" -width 10 -command {
         .l1plot.1.lb selection set 0 [llength $lrnindx]
     }
+
+    Button .l1plot.clear -text "Clear All" -width 10 -command {
+        .l1plot.1.lb delete 0 end
+       set list {}
+       set lrnindx {}
+    }
+
     Button .l1plot.plot -text "Plot" -width 6 -command {
 	make_selected_arrays {junk}
 	plot_fltlines 1
@@ -213,7 +220,7 @@ menu .l1wid.mb.options
 
     pack .l1plot.1.lb .l1plot.1.yscroll -side left -fill y
     pack .l1plot.1 .l1plot.xscroll -side top -fill x
-    pack .l1plot.sall .l1plot.plot .l1plot.write -side left 
+    pack .l1plot.sall .l1plot.clear .l1plot.plot .l1plot.write -side left 
 }
 
 proc make_selected_arrays {junk} {
