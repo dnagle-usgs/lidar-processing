@@ -203,7 +203,7 @@ func define_bath_ctl(junk,type=) {
 
 
 
-func ex_bath( rn, i,  last=, graph= ) {
+func ex_bath( rn, i,  last=, graph=, win= ) {
 /* DOCUMENT ex_bath(raster_number, pulse_index)
 
   See run_bath for details on usage.
@@ -267,6 +267,8 @@ func ex_bath( rn, i,  last=, graph= ) {
 */
 
  extern ex_bath_rn, ex_bath_rp, a
+
+ if (is_void(win)) win=4;
 
   if ( is_void( bath_ctl) ) {
     write, "You havn't defined a bath_ctl structure.  type help, bath_ctl for details"
@@ -362,7 +364,7 @@ func ex_bath( rn, i,  last=, graph= ) {
 
 
 if ( graph ) {
-window,4; fma
+window,win; fma
 plg,[thresh,thresh],[1,n],marks=0, color="red"
 plmk, a(,i,1), msize=.2, marker=1, color="black";
 plg, a(,i,1);
