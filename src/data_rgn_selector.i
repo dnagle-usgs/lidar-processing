@@ -239,7 +239,7 @@ indx = where(x >= xmin);
 }
 
 
-func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=) {
+func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged=, onlynotmerged=, onlyrcfd=) {
 /*DOCUMENT select_rgn_from_datatiles(junk, rgn=, data_dir=, lmap=)
   This function selects data from a series of processed data tiles.
   The processed data tiles must have the min easting and max northing in their filename.
@@ -249,6 +249,9 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=) {
    lmap = set to prompt for the map.
    win = window number that will be used to drag the rectangular region.  defaults to current window.
    mode = set to 1 for first surface, 2 for bathymetry, 3 for bare earth vegetation
+   onlymerged= set to 1 to search for only merged files 
+   onlynotmerged = set to 1 to search for all non-merged files.
+   onlyrcfd = set to 1 to search for only rcfd files.
   original Brendan Penney
   modified amar nayegandhi 07/17/03
 */
@@ -257,6 +260,7 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=) {
    if(!(data_dir)) data_dir =  "/quest/data/EAARL/TB_FEB_02/";
    //if (!(zone)) zone = "17r";
    if (is_void(win)) win = w;
+   window, win;
    if (lmap) load_map(utm=1);
    if (!mode) mode = 2; // defaults to bathymetry
    if (!is_array(rgn)) {
@@ -266,7 +270,11 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=) {
               rgn(2) = max( [ a(1), a(3) ] );
               rgn(3) = min( [ a(2), a(4) ] );
               rgn(4) = max( [ a(2), a(4) ] );
-  }
+   }
+   /* plot a window over selected region */
+   a_x=[rgn(1), rgn(2), rgn(2), rgn(1), rgn(1)];
+   a_y=[rgn(3), rgn(3), rgn(4), rgn(4), rgn(3)];
+   plg, a_y, a_x;
    
   	   ind_e_min = 2000 * (int((rgn(1)/2000)));
            ind_e_max = 2000 * (1+int((rgn(2)/2000)));
@@ -311,26 +319,47 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=) {
    if (mode == 1) file_ss = "_f";
    if (mode == 2) file_ss = "_b";
    if (mode == 3) file_ss = "_v";
-   //dtiles = array(string, n);
-   //itiles = array(string, n);
-   files =  array(string, n);
+   files =  array(string, 10000);
+   floc = array(long, 2, 10000);
+   ffp = 1; flp = 0;
+   if (onlymerged) ssm = "merge";
+   if (onlyrcfd) ssr = "rcf";
    for(i=1; i<=n; i++) {
-   	//i_east = 10000 * long(max_e(i)/10000);	
-   	//i_north = 10000*(long(max_n(i)/10000)+1);
-   
-   	//itiles(i) = swrite(format="%si_e%d_n%d_%s/", data_dir, i_east, i_north, zone);
-   	//dtiles(i) = swrite(format="%st_e%d_n%d_%s/", itiles(i), min_e(i), max_n(i), zone); 
-   	//command = swrite(format="ls -l %s*.pbd |awk '{print $9}'", dtiles(i)); 
+        fp = 1; lp=0;
+   	s = array(string,100);
    	command = swrite(format="find  %s -name '*%d*%d*%s*.pbd'", data_dir, min_e(i), max_n(i), file_ss); 
    	f = popen(command, 0);     
-   	read, f, files(i); 
+   	nn = read(f, format="%s",s);
+	close,f
+        if (onlymerged) {
+	  ssm = strmatch(s,"merge");
+          s = s(where(ssm));
+          nn = numberof(s);
+	}
+	if (onlynotmerged) {
+	  ssm = strmatch(s,"merge");
+	  s = s(where(!ssm));
+	  nn = numberof(where(s));
+ 	}
+	if (onlyrcfd) {
+	  ssm = strmatch(s,"rcf");
+	  s = s(where(ssm));
+	  nn =  numberof(s)
+ 	}
+	lp +=  nn;
+	flp += nn;
+	if (nn) {
+  	  files(ffp:flp) = s(fp:lp);
+	  floc(1,ffp:flp) = long(min_e(i));
+	  floc(2,ffp:flp) = long(max_n(i));
+        }
+	ffp = flp+1;	
    }
-   
    
    
    sel_eaarl = [];
    files =  files(where(files));
-   
+   floc = floc(,where(files));
    if (numberof(files) > 0) {
       write, format="%d files selected.\n",numberof(files)
       // now open these files one at at time and select only the region defined
@@ -341,10 +370,11 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=) {
           eaarl = get_member(f,vname);
           idx = data_box(eaarl.east/100., eaarl.north/100., rgn(1), rgn(2), rgn(3), rgn(4));
 	  if (is_array(idx)) {
-  	     iidx = data_box(eaarl.east(idx)/100., eaarl.north(idx)/100., min_e(i), max_e(i), min_n(i), max_n(i));
+  	     iidx = data_box(eaarl.east(idx)/100., eaarl.north(idx)/100., floc(1,i), floc(1,i)+2000, floc(2,i)-2000, floc(2,i));
 	     if (is_array(iidx))
                 grow, sel_eaarl, eaarl(idx(iidx));
   	 }
+	 // grow, sel_eaarl, eaarl(idx);
      }
    }
    write, format = "Total Number of selected points = %d\n", numberof(sel_eaarl);
