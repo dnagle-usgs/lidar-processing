@@ -21,8 +21,9 @@ write, "$Id$"
 // unit circle to work for norther headings.
 
  
-   Hcvt = 2115.0;	// keys
-   Hcvt = 2140.0;	// tbay
+   Hcvt = 2115.0;			// keys
+   qde_vertical_offset = -1.09;		// vertical distance from
+					// gps antenna to MCP
  
 func qde( r ) {
 /* DOCUMENT qde(  r, scan= )
@@ -43,8 +44,9 @@ func qde( r ) {
 */
    rb = roll_bias * d2r;
    a = r.sa / Hcvt * pi + rb;
-   e = -r.irange * cos(a + r.rroll ) * NS2MAIR;
-   ea = [ e + r.alt, a ];
+   e = -(r.irange * NS2MAIR - range_bias) *  
+         cos(a + r.rroll ) * cos(r.rpitch + pitch_bias*d2r ) ;
+   ea = [ e + r.alt - qde_vertical_offset, a ];
    return ea;
 }
 
