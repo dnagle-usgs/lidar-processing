@@ -317,6 +317,7 @@ func ex_bath( rn, i,  last=, graph=, win=, xfma= ) {
 	return rv;
 
   w  = *rp.rx(i, 1);  a(1:n, i) = float( (~w+1) - (~w(1)+1) );
+  dbias = int(~w(1)+1);
 ///////  w2 = *rp.rx(i, 2);  a(1:n, i,2) = float( (~w2+1) - (~w2(1)+1) );
 
 
@@ -339,7 +340,7 @@ func ex_bath( rn, i,  last=, graph=, win=, xfma= ) {
 	     last_surface_sat = 9;
 	  }
 //	  last_surface_sat =  w(1:wflen) (mnx) ;
-          escale = 255 - w(1:wflen) (min);
+          escale = (255 - w(1:wflen) (min)) - dbias;
    }
 
 
