@@ -59,7 +59,23 @@ struct VEG_ {
      char nx;
      }
 
-func read_yfile (path, fname_arr=) {
+struct VEG__ {
+     long rn;
+     long north;
+     long east;
+     long elevation;
+     long mnorth;
+     long meast;
+     long melevation;
+     long lnorth;
+     long least;
+     long lelv;
+     short fint;
+     short lint;
+     char nx;
+     }
+
+func read_yfile (path, fname_arr=, initialdir=) {
 
 /* DOCUMENT read_yfile(path, fname_arr=) 
 This function reads an EAARL yorick-written binary file.
@@ -67,6 +83,7 @@ This function reads an EAARL yorick-written binary file.
    Input parameters:
    path 	- Path name where the file(s) are located. Don't forget the '/' at the end of the path name.
    fname_arr	- An array of file names to be read.  This may be just 1 file name.
+   initialdir   - Initial data path name to search for file.
    Output:
    This function returns a an array of pointers.  Each pointer can be dereferenced like this:
    > data_ptr = read_yfile("~/input_files/")
@@ -84,11 +101,13 @@ This function reads an EAARL yorick-written binary file.
 extern fn_arr;
 
 if (is_void(path)) {
-   ifn  = get_openfn( initialdir="~/", filetype="*.bin *.edf", title="Open Data File" );
+   if (is_void(initialdir)) initialdir = "~/";
+   ifn  = get_openfn( initialdir=initialdir, filetype="*.bin *.edf", title="Open Data File" );
    if (ifn != "") {
      ff = split_path( ifn, 0 );
      path = ff(1);
      fname_arr = ff(2);
+     tkcmd, swrite(format="set data_file_path \"%s\" \n",path);
    } else {
     write, "No File chosen.  Return to main."
     return
@@ -472,6 +491,84 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
 
     }
   }
+
+  if (type == 8) {
+    //type = 8 introduced on 08/03/03 for processing "VEGETATION" to include both first and last return locations. Type of structure VEG__
+
+    rn = 0L;
+    north = 0L;
+    east = 0L;
+    elevation=0L;
+    mnorth=0L;
+    meast=0L;
+    melevation=0L;
+    lnorth = 0L;
+    least = 0L;
+    lelv = 0L;
+    fint = 0s;
+    lint = 0s;
+    nx = ' ';
+
+
+    data = array(VEG__, recs); 
+
+    for (i=0;i<recs;i++) {
+
+       if ( (i % 1000) == 0 ) edfrstat, i, recs;
+       _read, f, byt_pos, rn;
+       data(i).rn = rn;
+       byt_pos = byt_pos + 4;
+
+       _read, f, byt_pos, north;
+       data(i).north = north;
+       byt_pos = byt_pos + 4;
+       
+       _read, f, byt_pos, east;
+       data(i).east = east;
+       byt_pos = byt_pos + 4;
+       
+       _read, f, byt_pos, elevation;
+       data(i).elevation = elevation;
+       byt_pos = byt_pos + 4;
+
+       _read, f, byt_pos, mnorth;
+       data(i).mnorth = mnorth;
+       byt_pos = byt_pos + 4;
+
+       _read, f, byt_pos, meast;
+       data(i).meast = meast;
+       byt_pos = byt_pos + 4;
+       
+       _read, f, byt_pos, melevation;
+       data(i).melevation = melevation;
+       byt_pos = byt_pos + 4;
+
+       _read, f, byt_pos, lnorth;
+       data(i).lnorth = lnorth;
+       byt_pos = byt_pos + 4;
+       
+       _read, f, byt_pos, least;
+       data(i).least = least;
+       byt_pos = byt_pos + 4;
+       
+       _read, f, byt_pos, lelv;
+       data(i).lelv = lelv;
+       byt_pos = byt_pos + 4;
+
+       _read, f, byt_pos, fint;
+       data(i).fint = fint;
+       byt_pos = byt_pos + 2;
+
+       _read, f, byt_pos, lint;
+       data(i).lint = lint;
+       byt_pos = byt_pos + 2;
+
+       _read, f, byt_pos, nx;
+       data(i).nx = nx;
+       byt_pos = byt_pos + 1;
+
+    }
+  }
   return data;
 }
   
@@ -528,49 +625,10 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
        }
      }
      if (type == 2) { //Convert GEOALL to GEO 
-	data_new = array(GEO, numberof(data_arr)*120);
-	rindx = where(data_arr.rn >= 0);
-        if (is_array(rindx)) {
-	 data_new.rn = data_arr.rn(rindx);
-	 data_new.north = data_arr.north(rindx);
-	 data_new.east = data_arr.east(rindx);
-	 data_new.sr2 = data_arr.sr2(rindx);
-	 data_new.elevation = data_arr.elevation(rindx);
-	 data_new.mnorth = data_arr.mnorth(rindx);
-	 data_new.meast = data_arr.meast(rindx);
-	 data_new.melevation = data_arr.melevation(rindx);
-	 data_new.bottom_peak = data_arr.bottom_peak(rindx);
-	 data_new.first_peak = data_arr.first_peak(rindx);
-	 data_new.depth = data_arr.depth(rindx);
-
-         n_rindx = where(data_new.north != 0)
-         if (is_array(n_rindx)) {
-          data_arr = data_new(n_rindx);
-         }
-        }
+       data_new = geoall_to_geo(data_arr);
      }
      if ((type == 3)) {  //convert VEG_ALL to VEG_
-       data_new = array(VEG_, numberof(data_arr)*120);
-       rindx = where(data_arr.rn >= 0);
-       if (is_array(rindx)) {
-	data_new.rn = data_arr.rn(rindx);
-	data_new.north = data_arr.north(rindx);
-	data_new.east = data_arr.east(rindx);
-	data_new.elevation = data_arr.elevation(rindx);
-	data_new.mnorth = data_arr.mnorth(rindx);
-	data_new.meast = data_arr.meast(rindx);
-	data_new.melevation = data_arr.melevation(rindx);
-	data_new.felv = data_arr.felv(rindx);
-	data_new.fint = data_arr.fint(rindx);
-	data_new.lelv = data_arr.lelv(rindx);
-	data_new.lint = data_arr.lint(rindx);
-	data_new.nx = data_arr.nx(rindx);
-
-        n_rindx = where(data_new.north != 0)
-        if (is_array(n_rindx)) {
-          data_arr = data_new(n_rindx);
-        }
-       }
+       data_new = veg_all__to_veg__(data_arr);
      }
   }
 
@@ -752,24 +810,28 @@ func read_pointer_yfile(data_ptr, mode=) {
     fs_all = data_out;
     if (_ytk) {
       tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",0);
+      tkcmd, swrite(format=".l1wid.bf45.p.15 setvalue @%d",0);
     }
   }
   if (a == GEO) {
     depth_all = data_out;
     if (_ytk) {
       tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",1);
+      tkcmd, swrite(format=".l1wid.bf45.p.15 setvalue @%d",1);
     }
   }
-  if (a == VEG || a == VEG_) {
+  if (a == VEG || a == VEG_ || a == VEG__) {
     veg_all = data_out;
     if (_ytk) {
       tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",2);
+      tkcmd, swrite(format=".l1wid.bf45.p.15 setvalue @%d",2);
     }
   }
   if (a == CVEG_ALL) {
     cveg_all = data_out;
     if (_ytk) {
-      tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",2);
+      tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",3);
+      tkcmd, swrite(format=".l1wid.bf45.p.15 setvalue @%d",3);
     }
   }
 
