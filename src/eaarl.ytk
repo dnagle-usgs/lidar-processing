@@ -132,7 +132,7 @@ proc edb_status { } {
 }
 
 proc load_edb {} {
-   exp_send "load_edb, update=1\r"
+   exp_send "load_edb, update=0\r"
   expect ">"
   edb_status
 }

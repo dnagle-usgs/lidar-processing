@@ -1,0 +1,25 @@
+#!/bin/bash
+
+#
+# $Id$
+#
+
+
+#
+# Build a command file to generate md5sums for all files
+# in the directory from which this command was executed.
+#
+# After this runs, you will have a file named md5sums.txt.  This file
+# will contain an md5 checksum for each file in the directory.  You can verify
+# the files by running the command:
+#    md5sum -c md5sums.txt
+#
+
+
+echo "Building command file.."
+find    -type f  | awk '{print "echo "$0"; md5sum "$0 " >>md5sum.txt"}' >/tmp/md5cmd
+
+rm -rf md5sum.txt
+echo "Generating md5sums"
+sh /tmp/md5cmd
+
