@@ -5,8 +5,8 @@
 
 
 
-func split_path( fn, idx ) {
-/* DOCUMENT split_path(fn,n);
+func split_path( fn, idx, ext= ) {
+/* DOCUMENT split_path(fn,n, ext=);
 
  Examples:
 
@@ -27,11 +27,16 @@ func split_path( fn, idx ) {
   result: ["/data/0/","7-14-01/eaarl/some_file.idx"]
 
 
+if ext=1, the function splits at the extension i.e. at the position of the .(dot).
  
 */
   path = "";
   t = *pointer( fn );
-  n = where( t == '/' );
+  if (ext) {
+    n = (where(t == '.'))-1;
+  } else {
+    n = where( t == '/' );
+  }
   if ( numberof( n ) > 0 ) {
     path = string( &t(1: n(idx)) );
       fn = string( &t(n(idx)+1:0 ));
