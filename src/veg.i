@@ -15,15 +15,18 @@ require, "string.i"
 require, "sel_file.i"
 require, "eaarl_constants.i"
 
-struct BATHPIX {
+struct VEGPIX {
   int rastpix;		// raster + pulse << 24
   short sa;		// scan angle  
-  short idx;		// bottom index
-  short bottom_peak;	// peak amplitude of bottom signal
+  short mx1;		// first pulse index
+  short mv1;		// first pulse peak value
+  short mx0;		// last pulse index
+  short mv0;		// last pulse peak value
+  char  nx;		// number of return pulses found
 };
 
 // 94000
-func bath_winpix( m ) {
+func veg_winpix( m ) {
 extern depth_display_units;
 extern rn;
   window,3;
@@ -45,7 +48,7 @@ rn
 }
 
 
-func run_bath( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) {
+func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) {
 // depths = array(float, 3, 120, len );
 
  if ( is_void(rn) || is_void(len) ) {
@@ -56,7 +59,7 @@ func run_bath( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) 
              rn = start;
 	     len = stop - start;
     } else {
-	     write, "Input parameters not correctly defined.  See help, run_bath.  Please start again.";
+	     write, "Input parameters not correctly defined.  See help, run_veg.  Please start again.";
 	     return 0;
     }
  }
@@ -64,7 +67,7 @@ func run_bath( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) 
 
     
      
- depths = array(BATHPIX, 120, len );
+ depths = array(VEGPIX, 120, len );
  if ( graph != 0 ) 
 	animate,1;
 
@@ -75,7 +78,7 @@ func run_bath( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) 
    for ( j=1; j< len; j++ ) {
      j;
      for (i=1; i<119; i++ ) {
-       depths(i,j) = ex_bath( rn+j, i, last = last, graph=graph);
+       depths(i,j) = ex_veg( rn+j, i, last = last, graph=graph);
        if ( !is_void(pse) ) 
 	  pause, pse;
      }
@@ -87,18 +90,11 @@ func run_bath( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) 
 }
 
 
-func ex_bath( rn, i,  last=, graph= ) {
-/* DOCUMENT ex_bath(raster_number, pulse_index)
+func ex_veg( rn, i,  last=, graph= ) {
+/* DOCUMENT ex_veg(raster_number, pulse_index)
 
- for (j=1; j<1000; j++) { 
-   j; 
-   for (i=1; i<119; i++ ) { 
-     qqq(,i,j) = ex_bath( rn+j,i,last=100, graph=0);
-   }
- }
- fma; plmk,qqq(2,,j),qqq(1,,j),msize=.3, marker=1; rn 
- z = qqq(2,,2:1000:2)
- fma;pli,-z,cmin=-22, cmax=-10
+
+ see run_veg 
 
 
  This function returns a three element with the following organization:
@@ -113,7 +109,7 @@ func ex_bath( rn, i,  last=, graph= ) {
 */
 
 /*
- The following developed using 7-14-01 data at rn = 46672 data. (sod=70510)
+ The following developed using 8-25-01 data at rn = 239269 data. 
  Check waveform samples to see how many samples are
  saturated. 
  The function checks the following conditions so far:
@@ -135,18 +131,12 @@ func ex_bath( rn, i,  last=, graph= ) {
     escale		The maximum value of the exponential pulse decay. 
     laser_decay	The primary exponential decay array which mostly describes
                       the surface return laser event.
-    secondary_decay   The exponential decay of the backscatter from within the
-                      water column.
-    agc		An array to equalize returns with depth so near surface 
-                      water column backscatter does't win over a weaker bottom signal.
-    bias              A linear tilt which is subtracted from the waveform to
-                      reduce the likelyhood of triggering on shallow noise.
     da                The return waveform with the computed exponentials substracted
     db                The return waveform equalized by agc and tilted by bias.
 */
 
  extern ex_bath_rn, ex_bath_rp, a
-  rv = BATHPIX();			// setup the return struct
+  rv = VEGPIX();			// setup the return struct
   rv.rastpix = rn + (i<<24);
   if ( is_void( ex_bath_rn )) 
 	ex_bath_rn = -1;
@@ -189,33 +179,28 @@ func ex_bath( rn, i,  last=, graph= ) {
           escale = 255 - w(1:wflen) (min);
    }
 
-   laser_decay     = exp( -2.4 * attdepth) * escale;
-   secondary_decay = exp( -1.5 * attdepth) * escale; // for tampa bay water
-   secondary_decay = exp( -0.6 * attdepth) * escale; // for keys water
-   laser_decay(last_surface_sat:0) = laser_decay(1:0-last_surface_sat+1) + 
-					secondary_decay(1:0-last_surface_sat+1)*.25;
-   laser_decay(1:last_surface_sat) = escale;
 
-   agc     = 1.0 - exp( -3.0 * attdepth) ;	// for tampa bay water
-   agc     = 1.0 - exp( -0.3 * attdepth) ;	// for keys water
-   agc(last_surface_sat:0) = agc(1:0-last_surface_sat+1); 
-   agc(1:last_surface_sat) = 0.0;
-   
-   bias = (1-agc) * -5.0  ;
-   
+  da = a(1:n,i,1);
+  dd = a(1:n, i, 1) (dif);
 
-  da = a(,i,1) - laser_decay;
-  db = da*agc + bias;
+/******************************************
+   xr(1) will be the first pulse edge
+   and xr(0) will be the last
+*******************************************/
+  thresh = 4.0
+//  xr = where( dd  > thresh ) ;	// find the hits
+  xr = where(  ((dd >= thresh) (dif)) == 1 ) 	//
+  nxr = numberof(xr);
+
 if ( graph ) {
 window,4; fma
-plmk, a(,i,1), msize=.2, marker=1, color="black";
-plg, a(,i,1);
+plmk, a(1:n,i,1), msize=.2, marker=1, color="black";
+plg, a(1:n,i,1);
 plmk, da, msize=.2, marker=1, color="black";
 plg, da;
-plmk, db, msize=.2, marker=1, color="blue";
-plg, db, color="blue";
-plg, laser_decay, color="magenta" 
-plg,agc*40
+plg, dd-100, color="red"
+///if ( nxr > 0 ) 
+///	plmk, a( xr(0),i,1), xr(0),msize=.3,marker=3
 }
 
   if ( is_void(last) ) 		// see if user specified the max depth
@@ -224,23 +209,33 @@ plg,agc*40
   if ( n > last ) 		
 	n = last;
 
-  mv = db(1:n)(max);		// find peak value
-  mvi = db(1:n)(mxx);		// find peak position
-  if ( mv > 4.0) {		// check to see if above thresh
-         mx = mvi;
 
-if ( graph ) {
- plmk, a(mx,i,1), mx, msize=1.0, marker=7, color="blue", width=10
-}
+  if ( numberof(xr) > 0  ) {
+    mx0 = a( xr(0):xr(0)+5, i, 1)(mxx) + xr(0) - 1;	  // find surface peak now
+    mv0 = a( mx0, i, 1);	          
+    mx1 = a( xr(1):xr(1)+5, i, 1)(mxx) + xr(1) - 1;	  // find surface peak now
+    mv1 = a( mx1, i, 1);	          
+    if ( graph ) {
+         plmk, mv1, mx1, msize=.5, marker=7, color="blue", width=1
+         plmk, mv0, mx0, msize=.5, marker=7, color="red", width=1
+    }
         rv.sa = rp.sa(i);
-   	rv.idx = mx;
-	rv.bottom_peak = a(mx,i,1);
+   	rv.mx0 = mx0;
+	rv.mv0 = mv0;
+   	rv.mx1 = mx1;
+	rv.mv1 = mv1;
+	rv.nx  = numberof(xr);
 	return rv;
   }
-  else
-   	rv.idx = 0;
-	rv.bottom_peak = a(mvi,i,1);
+  else {
+        rv.sa = rp.sa(i);
+   	rv.mx0 = -1;
+	rv.mv0 = a(max,i,1);
+   	rv.mx1 = -1;
+	rv.mv1 = rv.mv0;
+	rv.nx  = numberof(xr);
 	return rv;
+  }
 }
 
 

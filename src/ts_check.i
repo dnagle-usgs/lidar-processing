@@ -4,6 +4,8 @@
 /*
    $Id$
 
+  W. Wright
+
   ts_check.i 
 
   Functions to verify that the lidar time is in sync with the

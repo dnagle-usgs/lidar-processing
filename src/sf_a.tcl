@@ -112,8 +112,10 @@ for { set i 0 } { ![ eof $ggaf ] } { incr i } {
 	set ms  [ string range $gt 2 5 ]
 	set gt $hrs$ms;
         set hms "$ms"
+	  if { [ expr $i % 25 ] == 0 } {
 	   .loader.status1 configure -text "Loaded $gt GPS records\r"
 	    update
+          }
        #puts -nonewline "  $gt\r"
        if { [ catch { set tmp $imgtime(hms$gt) } ] == 0 } {
 	 set lst [ split $ggas "," ];
