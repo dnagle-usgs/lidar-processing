@@ -439,7 +439,7 @@ func plot_all_trans(junk, mapview=, profview=, nostats=, plotavg=) {
 	}
 }
 
-func linear_regression(x, y, m=, b=) {
+func linear_regression(x, y, m=, b=, plotline=) {
 /* DOCUMENT linear_regression(x, y, m=, b=)
 	This program performs a linear regression on the points x,y and outputs m (slope), b (y-isept), rsq (statistical r squared), rad (average physical radius from the points to the avg. line, squared). If m= or b= is set, the program uses that value instead of the statistical value. This allows one to force b=0, or by setting m and b, one can find the average radius squared to the some other line (specified by m and b.
 */
@@ -460,6 +460,13 @@ func linear_regression(x, y, m=, b=) {
 	yisect = xisect*m + b;
 	r = sqrt( (x-xisect)^2 + (y-yisect)^2 );
 	rad = avg(r^2);
+	if (plotline) {
+		minx = min(x);
+		maxx = max(x);
+		miny = minx*m+b;
+		maxy = maxx*m+b;
+		pldj, minx, miny, maxx, maxy, color="cyan";
+	}
 	return [m, b, rsq, rad];
 	end
 }
@@ -488,7 +495,7 @@ func avgline(x, y, step=) {
 
 func comparelines(x, y, a, b, start=, stop=) {
 /* DOCUMENT comaparelines(x, y, a, b, start=, stop=)
-	This function returns the average radius squard of the points (a, b) to the line formed by the points (x, y). 
+	This function returns the average y-distance between points (a,b) and line (x, y). 
 	x, y is the reference, or zero line.
 	a, b is the line to be compared to x, y.
 	start= is the x value to start the analysis.
@@ -527,3 +534,4 @@ func comparelines(x, y, a, b, start=, stop=) {
 	return avgerr;
 	end
 }
+
