@@ -154,10 +154,10 @@ func compare_data(ndata, edata) {
         eedata = edata(fidx);
         if (ndata(3,i) >= 10) {
           eidx = where((eedata.depth+eedata.elevation)/100. > (-1.0*ndata(4,i)-dif_ndata));
-          //eidx = where((eedata.depth)/100. > (-1.0*ndata(4,i)-avg_ndata));
+          //eidx = where((eedata.depth)/100. > (-1.0*ndata(4,i)-avg_ndata-1.0));
           //eidx = where((eedata.depth+eedata.elevation)/100. > (-1.0*ndata(4,i)));
           if (is_array(eidx)) {
-           eiidx = where((eedata.depth(eidx)+eedata.elevation(eidx))/100. < (-1.0*ndata(3,i)+dif_ndata));
+           eiidx = where((eedata.depth(eidx)+eedata.elevation(eidx))/100. < (-1.0*ndata(3,i)+dif_ndata+1.0));
            //eiidx = where((eedata.depth(eidx))/100. < (-1.0*ndata(3,i)+avg_ndata));
            //eiidx = where((eedata.depth(eidx)+eedata.elevation(eidx))/100. < (-1.0*ndata(3,i)));
            if (is_array(eiidx)) {
@@ -168,9 +168,9 @@ func compare_data(ndata, edata) {
           }
         } else {
 	    //if (ndata(3,i) >= 8) {
-              eidx = where((eedata.depth+eedata.elevation)/100. > (-1.0*ndata(4,i)-4*dif_ndata));
+              eidx = where((eedata.depth+eedata.elevation)/100. > (-1.0*ndata(4,i)-6*dif_ndata));
               if (is_array(eidx)) {
-                 eiidx = where((eedata.depth(eidx)+eedata.elevation(eidx))/100. < (-1.0*ndata(3,i)+4*dif_ndata));
+                 eiidx = where((eedata.depth(eidx)+eedata.elevation(eidx))/100. < (-1.0*ndata(3,i)+6*dif_ndata));
                 if (is_array(eiidx)) {
                   eidx = eidx(eiidx);
                   new_edata(ct+1:(ct+numberof(eidx))) = eedata(eidx);
