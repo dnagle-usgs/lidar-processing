@@ -301,7 +301,13 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged
 	  nn = numberof(where(s));
 	  if (nn == 0) continue;
  	}
-	if (onlyrcfd) {
+	if (onlyrcfd == 2) {
+	  ssm = strmatch(s,"ircf");
+	  s = s(where(ssm));
+	  nn =  numberof(s);
+	  if (nn == 0) continue;
+ 	}
+	if (onlyrcfd == 1) {
 	  ssm = strmatch(s,"rcf");
 	  s = s(where(ssm));
 	  nn =  numberof(s);
