@@ -493,8 +493,24 @@ proc rbgga_menu {} {
    }
    load_map $utm 
  }
+
+ set w $mw.f2
+Button $w.overlay_grid -text "Overlay\nGrid" -command {
+  exp_send "draw_grid, $_map(window)\r"
+}
+
+Button $w.show_grid -text "Show\nGrid Name" -command {
+  exp_send "show_grid_location, $_map(window)\r"
+}
+
+
  pack  $mw.f2.title -side top
- pack  $mw.f2.mapload $mw.f2.mapredraw -fill both -expand 1 -side left
+ pack  \
+	$mw.f2.mapload \
+	$mw.f2.mapredraw \
+        $w.overlay_grid \
+        $w.show_grid \
+	-fill both -expand 1 -side left
 
  frame $mw.f3 -relief groove -borderwidth 3
  button $mw.f3.fpload    -text "Load" -command {

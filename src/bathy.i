@@ -319,10 +319,10 @@ func ex_bath( rn, i,  last=, graph=, win=, xfma= ) {
    if ( (numsat > 1)  && ( nsat(1) <= 12)   ) {
       if (  nsat(dif) (max) == 1 ) { 		// only surface saturated
           last_surface_sat = nsat(0);		// so use last one
-          escale = 255;				
+          escale = 255 - dbias;				
       } else {					// bottom must be saturated too
           last_surface_sat = nsat(  where(nsat(dif) > 1 ) ) (1);   
-          escale = 255;
+          escale = 255 - dbias;
       }
    } else {	// do this when none saturated
           wflen = numberof(w);

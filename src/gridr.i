@@ -41,12 +41,15 @@ func draw_grid( w ) {
 */
  c = [200,200,200];
   if ( is_void(w) ) w = 5;
+  old_w = window();
+  window,w
   ll = int(limits()/2000) * 2000;
   ll(2) +=2000;
   ll(4) += 2000;
    dgrid, w, ll, 250, [200,200,200],1
    dgrid, w, ll, 1000,[150,150,150],1
    dgrid, w, ll, 2000,[250,140,140],5
+   window(old_w);
 }
 
 func tile_file_name(m) {
