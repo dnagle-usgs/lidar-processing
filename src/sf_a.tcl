@@ -69,11 +69,14 @@ set ci  0           ;# Current image; glued to .slider
 set nfiles 0        ;# Number of files
 set dir "/data/0/"  ;# Base directory
 set timern "hms"    ;# "hms" "sod" "cin"
-set fcin 0          ;# First marked index number
-set lcin 0          ;# Last marked index number
+set fcin 0          ;# First index for range
+set lcin 0          ;# Last index for range
 set yes_head 0      ;# Use heading
 set head 0          ;# Heading
 set inhd_count 0    ;#
+set mark(0) 0       ;# Array of marked images
+set mark_range_inc 1;# Increment for ranges
+set range_touched 0 ;# Have fcin or lcin been set but not used?
 
 set camtype 1       ;# Default camera type -- may be overridden by .lst commands
 
@@ -133,6 +136,14 @@ proc timern_write { name1 name2 op } {
 	show_img $ci
 }
 
+# ci_write is  used in a variable trace to keep the
+# mark box up to date with the current image
+proc ci_write { name1 name2 op } {
+	global mark ci cur_mark
+	
+	catch {set cur_mark $mark($ci)}
+}
+
 proc load_file_list { f } {
 # Parameters
 #   f - filename of a list of files to be loaded
@@ -141,7 +152,7 @@ proc load_file_list { f } {
 	global ci fna imgtime dir 
 	global lat lon alt seconds_offset timern frame_off
 	global DEBUG_SF
-	global camtype
+	global camtype mark
 
 	# Initialize variables
 	# hour minute seconds
@@ -549,80 +560,78 @@ proc show_img { n } {
 	}
 }
 
-proc mark {m} {
-	## this procedure is used to mark or unmark the current frame
-	## amar nayegandhi 02/06/2002.
-	global cin 
-	global fcin lcin
-	if {$m == 0} {set fcin $cin;
-		tk_messageBox -type ok -message "First Marked Frame at Index Number $cin"
-	}
-	if {$m == 1} {set lcin $cin;
-		tk_messageBox -type ok -message "Last Marked Frame at Index Number $cin"
-	}
-	if {$m == 2} {
-		if {$lcin == 0} {
-			tk_messageBox -type ok -message "First Marked Frame at Index Number $fcin has been UNMARKED"; 
-			set fcin 0; 
-		} else {
-			tk_messageBox -type ok -message "Last Marked Frame at Index Number $lcin has been UNMARKED";
-			set lcin 0;
-		}
-	}   
-	update;
-}
-
 proc archive_save_marked { type } {
-	global lcin fcin fna dir
+	global mark fna dir range_touched
 	
-	if {$fcin == 0 || $lcin == 0} { 
-		tk_messageBox -type ok -icon error \
-			-message "First and Last Frames not Marked. Cannot Save." 
-	} elseif {$lcin < $fcin} {
-		tk_messageBox -type ok -icon error \
-			-message "Last Frame Marked is less than First Frame Marked. Cannot Save."
-	} elseif {!([string equal "zip" $type] || [string equal "tar" $type])} {
+	if {!([string equal "zip" $type] || [string equal "tar" $type])} {
 		tk_messageBox -type ok -icon error \
 			-message "Invalid save type provided. Cannot Save."
 	} else {
-		if {[string equal "zip" $type]} {
-			set sf [ tk_getSaveFile -defaultextension .zip -filetypes { {{Zip Files} {.zip}} } \
-				-initialdir $dir -title "Save Marked Files as..."];
-		} elseif {[string equal "tar" $type]} {
-			set sf [ tk_getSaveFile -defaultextension .tar -filetypes { {{Tar Files} {.tar}} } \
-				-initialdir $dir -title "Save Marked Files as..."];
+		if { $range_touched } {
+			set answer [tk_messageBox -message "You set a range boundary but did not enter the 'Apply Marks over Range' dialog. Would you like to visit the 'Apply Marks over Range' dialog now?" -type yesnocancel -icon question]
+			set range_touched 0
+		} else {
+			set answer "no"
 		}
-		if { $sf != "" } {
-			set psf [pid]
-			set tmpdir "/tmp/sf.$psf"
-			if {[catch "cd $tmpdir"] == 1} {exec mkdir $tmpdir}
-			for {set i $fcin} {$i<=$lcin} {incr i} {
-				exec cp $dir/$fna($i) $tmpdir;
+		
+		if {[string equal $answer "yes"]} {
+			mark_range
+		} elseif {[string equal $answer "no"]} {
+		
+			if {[string equal "zip" $type]} {
+				set sf [ tk_getSaveFile -defaultextension .zip -filetypes { {{Zip Files} {.zip}} } \
+					-initialdir $dir -title "Save Marked Files as..."];
+			} elseif {[string equal "tar" $type]} {
+				set sf [ tk_getSaveFile -defaultextension .tar -filetypes { {{Tar Files} {.tar}} } \
+					-initialdir $dir -title "Save Marked Files as..."];
 			}
-			cd $tmpdir;
-			
-			if {[string equal "tar" $type]} {
-				exec tar -cvf $sf .;
-			} elseif {[string equal "zip" $type]} {
-				eval exec zip $sf [glob *.jpg];
-			}
-			
-			cd $dir;
-			exec rm -r $tmpdir;
+			if { $sf != "" } {
+				set psf [pid]
+				set tmpdir "/tmp/sf.$psf"
+				if {[catch "cd $tmpdir"] != 1} {
+					cd $dir
+					exec rm -r $tmpdir
+				}
+				exec mkdir $tmpdir
 
-			set fcin 0
-			set lcin 0
+				set mark_count 0
+				for { set i [expr {int([.slider cget -from])}] } { $i <= [expr {int([.slider cget -to])}] } { incr i } {
+					if { $mark($i) } {
+						incr mark_count
+						exec cp $dir/$fna($i) $tmpdir;
+					}
+				}
+
+				if { $mark_count > 0 } {
+
+					cd $tmpdir
+
+					if {[string equal "tar" $type]} {
+						exec tar -cvf $sf .;
+					} elseif {[string equal "zip" $type]} {
+						eval exec zip $sf [glob *.jpg];
+					}
+
+
+				} else {
+
+					cd $dir;
+					exec rm -r $tmpdir;
+
+					tk_messageBox -type ok -icon error \
+						-message "No images were marked to be archived, so no archive was made."
+
+				}
+
+			} else {
+
+				tk_messageBox -type ok -icon error \
+					-message "The 'Save File As' dialog was cancelled. Thus, the images were not archived."
+
+			}
 		}
 	}
 }
-
-#proc tar_save_marked {tn} {
-# replaced by archive_save_marked
-#}
-
-#proc zip_save_marked {zp} {
-# replaced by archive_save_marked
-#}
 
 proc get_heading {inhd} {
 	global yes_head img head inhd_count sod tansstr
@@ -682,6 +691,110 @@ proc calculate_zoom_factor { initial percentage } {
 	return $final
 }
 
+proc clear_marks { } {
+	global mark cur_mark ci
+
+	array unset mark
+	
+	for { set i [expr {int([.slider cget -from])}] } { $i <= [expr {int([.slider cget -to])}] } { incr i } {
+		set mark($i) 0
+	}
+
+	set cur_mark $mark($ci)
+}
+
+proc invert_marks { } {
+	global mark cur_mark ci
+	for { set i [expr {int([.slider cget -from])}] } { $i <= [expr {int([.slider cget -to])}] } { incr i } {
+		set mark($i) [expr {1 - $mark($i)}]
+	}
+
+	set cur_mark $mark($ci)
+}
+
+proc mark_range { } {
+	global fcin lcin mark mark_range_inc cur_mark ci
+
+	if { $lcin < $fcin } {
+		tk_messageBox -icon warning -message "The beginning of the range occured after the end of the range. The range boundaries have been exchanged to remain sensible."
+		set temp $fcin
+		set fcin $lcin
+		set lcin $temp
+	}
+
+	set range_min [expr {int([.slider cget -from])}]
+	set range_max [expr {int([.slider cget -to])}]
+
+	toplevel .ranger
+
+	frame .ranger.1
+	frame .ranger.2
+	frame .ranger.3
+	frame .ranger.4
+
+	label .ranger.1.lbl -text "Start"
+	SpinBox .ranger.1.start \
+		-range [list [set range_min] [set range_max] 1] \
+		-helptext "Start: The beginning of the range you want to mark." \
+		-justify right \
+		-textvariable fcin \
+		-width 5 \
+		-modifycmd {
+			if { $fcin > $lcin } { set lcin $fcin }
+		}
+
+	label .ranger.2.lbl -text "Stop"
+	SpinBox .ranger.2.stop \
+		-range [list [set range_min] [set range_max] 1] \
+		-helptext "Stop: The end of the range you want to mark." \
+		-justify right \
+		-textvariable lcin \
+		-width 5 \
+		-modifycmd {
+			if { $lcin < $fcin } { set fcin $lcin }
+		}
+		
+	label .ranger.3.lbl -text "Increment"
+	SpinBox .ranger.3.inc \
+		-range [list 1 [set range_max] 1] \
+		-helptext "Increment: The amount to increment by when going through the range. For example, 1 marks every image while 2 marks 1st, 3rd, 5th, etc. The start frame is always the first marked. Depending on the increment, the stop frame may not be marked." \
+		-justify right \
+		-textvariable mark_range_inc \
+		-width 5
+
+	Button .ranger.4.mark \
+		-text "Mark" \
+		-underline 0 \
+		-command {
+			for { set i $fcin } { $i <= $lcin } { incr i $mark_range_inc } {
+				set mark($i) 1
+			}
+			set cur_mark $mark($ci)
+			destroy .ranger
+		}
+	
+	Button .ranger.4.cancel \
+		-text "Cancel" \
+		-underline 0 \
+		-command { destroy .ranger }
+
+	pack .ranger.1.lbl .ranger.1.start -side left -in .ranger.1
+	pack .ranger.2.lbl .ranger.2.stop -side left -in .ranger.2
+	pack .ranger.3.lbl .ranger.3.inc -side left -in .ranger.3
+	pack .ranger.4.mark .ranger.4.cancel \
+		-side left -in .ranger.4
+	pack .ranger.1 .ranger.2 .ranger.3 .ranger.4 \
+		-side top -in .ranger
+	
+}
+
+proc enable_controls { } {
+	.cf2.mark configure            -state normal
+	.mb entryconfigure Archive     -state normal
+	.mb entryconfigure Geometry    -state normal
+	.mb entryconfigure Zoom        -state normal
+}
+
 # ] End Procedures #################################
 
 # [ GUI Initialization #############################
@@ -693,14 +806,14 @@ menu .mb
 
 # Menubar
 menu .mb.file
-menu .mb.edit
+menu .mb.archive
 menu .mb.geometry
 menu .mb.zoom
 
 .mb add cascade -label "File" -underline 0 -menu .mb.file
-.mb add cascade -label "Edit" -underline 0 -menu .mb.edit
-.mb add cascade -label "Geometry" -underline 0 -menu .mb.geometry
-.mb add cascade -label "Zoom" -underline 0 -menu .mb.zoom
+.mb add cascade -label "Archive" -underline 0 -menu .mb.archive -state disabled
+.mb add cascade -label "Geometry" -underline 0 -menu .mb.geometry -state disabled
+.mb add cascade -label "Zoom" -underline 0 -menu .mb.zoom -state disabled
 
 #####  [ File Menu
 
@@ -711,8 +824,10 @@ menu .mb.zoom
 			set split_dir [split $f /]
 			set dir [join [lrange $split_dir 0 [expr [llength $split_dir]-2]] /]
 			set nfiles [ load_file_list  $f ];
+			enable_controls
 			.slider configure -to $nfiles
 			set ci 1
+			clear_marks
 			show_img $ci
 		}
 	}
@@ -721,15 +836,25 @@ menu .mb.zoom
 
 ##### ][ Edit Menu
 
-.mb.edit add command -label "Mark This Frame as First"       -underline 19 \
-	-command { set m 0; mark $m; }
-.mb.edit add command -label "Mark This Frame as Last"        -underline 19 \
-	-command { set m 1; mark $m; }
-.mb.edit add command -label "Unmark This Frame"              -underline 0 \
-   -command { set m 2; mark $m; }
-.mb.edit add command -label "Tar and Save Marked Images ..." -underline 0 \
+.mb.archive add command -label "Mark This Frame"                -underline 0 \
+   -command { global cur_mark; if {[string equal [.cf2.mark cget -state] "normal"]} {set cur_mark 1} }
+.mb.archive add command -label "Unmark This Frame"              -underline 0 \
+   -command { global cur_mark; if {[string equal [.cf2.mark cget -state] "normal"]} {set cur_mark 0} }
+.mb.archive add command -label "Clear All Marks"                -underline 0 \
+	-command { clear_marks }
+.mb.archive add command -label "Invert All Marks"               -underline 0 \
+	-command { invert_marks }
+.mb.archive add separator
+.mb.archive add command -label "Begin Range with this Frame"    -underline 0 \
+	-command { global fcin cin range_touched; set fcin $cin; set range_touched 1 }
+.mb.archive add command -label "End Range with this Frame"      -underline 0 \
+	-command { global lcin cin range_touched; set lcin $cin; set range_touched 1 }
+.mb.archive add command -label "Apply Marks over Range..."      -underline 0 \
+	-command { global range_touched; set range_touched 0; mark_range }
+.mb.archive add separator
+.mb.archive add command -label "Tar and Save Marked Images ..." -underline 0 \
 	-command { archive_save_marked "tar" }
-.mb.edit add command -label "Zip and Save Marked Images ..." -underline 0 \
+.mb.archive add command -label "Zip and Save Marked Images ..." -underline 0 \
 	-command { archive_save_marked "zip" }
 
 ##### ][ Geometry Menu
@@ -829,6 +954,7 @@ Button .cf1.rewind -text "Rewind" -helptext "Rewind to First Image" \
 Button .cf1.plotpos  \
 	-text "Plot" -helptext "Plot position on Yorick-6\nunder the eaarl.ytk program." \
 	-command { 
+		if { [no_file_selected $nfiles] } { return }
 		if { [ ytk_exists ] == 1 } {
 			if { [ info exists llat ] } {
 				send_ytk mark_pos $llat $llon
@@ -861,6 +987,15 @@ SpinBox .cf2.offset \
 	-width 5 \
 	-textvariable frame_off;
 
+checkbutton .cf2.mark \
+	-state disabled \
+	-variable cur_mark \
+	-text "Mark" \
+	-command {
+		global mark ci cur_mark
+		set mark($ci) $cur_mark
+	}
+
 # Frame .cf3
 
 Entry .cf3.entry -width 8 -relief sunken -bd 2 \
@@ -871,12 +1006,14 @@ tk_optionMenu .cf3.option timern hms sod cin
 Button .cf3.button -text "Raster" \
 	-helptext "Click to Examine EAARL Rasters.  Must have drast.ytk running." \
 	-command {
+		if { [no_file_selected $nfiles] } { return }
 		send_ytk exp_send "sfsod_to_rn, $sod;\n";
 	}
 
 Button .cf3.cirbutton -text "cir" \
 	-helptext "Click to show CIR image" \
 	-command {
+		if { [no_file_selected $nfiles] } { return }
 		set cir_sod [ expr $sod - 2 ]
 		if { [ catch { send cir.tcl "show sod $cir_sod"; } ] } {
 			tk_messageBox -icon warning -message "You must run cir.tcl first."
@@ -903,11 +1040,11 @@ pack .canf.can     -anchor nw   -fill both -expand 1 -in .canf
 pack .cf1.prev .cf1.next .cf1.playr .cf1.stop .cf1.play .cf1.rewind .cf1.plotpos \
 	-side left -in .cf1 -expand 1 -fill x
 
-pack .cf2.speed .cf2.lbl .cf2.step .cf2.gamma .cf2.offset  \
-	-side left -in .cf2 -padx 3
+pack .cf2.speed .cf2.lbl .cf2.step .cf2.gamma .cf2.offset .cf2.mark \
+	-side left -in .cf2 -expand 1 -fill x -padx 3
 
 pack .cf3.entry .cf3.option .cf3.button .cf3.cirbutton .cf3.zoom \
-	-side left -in .cf3 -expand 1 -fill both
+	-side left -in .cf3 -expand 1 -fill x
 
 pack .canf   -side top -in . -fill both -expand 1
 pack .lbl    -side top -in . -anchor nw
@@ -922,6 +1059,7 @@ pack .cf3    -side top -in . -fill x
 
 bind . <Key-p>     { .cf1.prev invoke }
 bind . <Key-n>     { .cf1.next invoke }
+bind . <Key-m>     { .cf2.mark toggle }
 bind . <Key-space> { if { $run == 0 } { .cf1.play invoke } else { .cf1.stop invoke } }
 bind . <Key-Home>  { .cf1.rewind invoke }
 bind . <Control-Key-equal> { .cf3.zoom setvalue next    ; show_img $ci }
@@ -949,28 +1087,6 @@ bind .slider <ButtonRelease> {
 # [ Variable Traces ################################
 
 trace add variable timern write timern_write
+trace add variable ci write ci_write
 
 # ] End Variable Traces ############################
-
-# [ Artifacts ######################################
-
-### [ Moved to artifacts on 2004-08-02
-
-## AN: Commented tkScaleEndDrag.  Instead used the BWidget capability
-##     to properly define the scale.
-# tkScaleEndDrag gets called when the mouse button is released 
-# after moving the scale widget slider.  We insert our handler
-# so we can display the image upon slider release.
-#rename ::tk::ScaleEndDrag old_tkScaleEndDrag
-#proc ::tk::ScaleEndDrag { z } {
-#  global ci nfiles timern
-# if { [no_file_selected $nfiles] } { return }
-#  show_img $ci
-####  old_tkScaleEndDrag  $z
-#}
-
-### ]
-
-# ] End Artifacts ##################################
-
-puts "Ready to go.\n"
