@@ -95,7 +95,11 @@ func photo_orient( photo,
 }
 
 
-func gref_photo( somd, offset ) {
+func gref_photo( somd=, offset=,ggalst=, skip= ) {
+ if (!(offset)) offset = 0;
+ if (is_array(ggalst)) somd = int(gga.sod(ggalst(unique(int(gga.sod(ggalst))))))
+ if (skip)  somd = somd(1:0:skip);
+ write, somd
  for ( i = 1; i <=numberof(somd); i++ ) {
   sd = somd(i);
   csomd = sd - int(offset) + offset;
