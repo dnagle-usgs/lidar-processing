@@ -670,3 +670,76 @@ _write, f, 12, num_rec;
 
 close, f;
 }
+
+func  r_to_fs(data) {
+/*DOCUMENT r_to_fs(data)
+    this function converts the data array from the raster structure R to the point structure FS for surface topography.
+    amar nayegandhi
+    03/08/03.
+*/
+ if (numberof(data) != numberof(data.north)) {
+	data_new = array(FS, numberof(data)*120);
+        indx = where(data.raster >= 0);
+        data_new.rn = data.raster(indx);
+        data_new.north = data.north(indx);
+        data_new.east = data.east(indx);
+        data_new.elevation = data.elevation(indx);
+        data_new.mnorth = data.mnorth(indx);
+        data_new.meast = data.meast(indx);
+        data_new.melevation = data.melevation(indx);
+        data_new.intensity = data.intensity(indx);
+  } else data_new = data;
+  return data_new
+}
+
+func clean_fs(fs_all, rcf_width=) {
+  /* DOCUMENT clean_fs(fs_all, rcf_width=)
+   this function cleans the fs_all array
+   amar nayegandhi 08/03/03
+   Input: fs_all	: Initial data array of structure R or FS
+          rcf_width	: The elevation width (m) to be used for the RCF filter.  If not set, rcf is not used.
+   Output: Cleaned data array of type FS
+  */
+
+  if (numberof(fs_all) != numberof(fs_all.north)) {
+      // convert R to FS
+      write, "converting raster structure (R) to point structure (FS)";
+      fs_all = r_to_fs(fs_all);
+  }
+  
+  write, "cleaning data...";
+
+
+  // remove pts that had north values assigned to 0
+  indx = where(fs_all.north != 0);
+  if (is_array(indx)) {
+     fs_all = fs_all(indx);
+  } else {
+      fs_all = [];
+      return fs_all
+  }
+
+
+  // remove points that have been assigned mirror elevation values
+  indx = where(fs_all.elevation < (0.75*fs_all.melevation))
+  if (is_array(indx)) {
+    fs_all = fs_all(indx);
+  } else {
+    fs_all = [];
+    return fs_all
+  }
+
+  if (is_array(rcf_width)) {
+    write, "using rcf filter to clean fs data..."
+    //run rcf on the entire data set
+    ptr = rcf(fs_all.elevation, rcf_width*100, mode=2);
+    if (*ptr(2) > 3) {
+        fs_all = fs_all(*ptr(1));
+    } else {
+        fs_all = [];
+    }
+  }
+
+
+  return fs_all
+}
