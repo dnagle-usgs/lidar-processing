@@ -1726,9 +1726,12 @@ Button .l1wid.bf45.r.6 -text "Save Tile" -command {
     global tilefname initialpath
     
     if {[info exists initialpath] == 0} {set initialpath "~/"}
-    exp_send "tilefname = set_tile_filename(win=$win_no);\r"
+    exp_send "if (is_void(curzone)) curzone = 17; tilefname = set_tile_filename(win=$win_no);\r"
     expect ">"
-    puts "$tilefname\n"
+    #puts "$tilefname\n"
+    if {[info exists tilefname] == 0} {
+	set tilefname ""
+    }
     set ofname [tk_getSaveFile -initialdir $initialpath \
 		-defaultextension "*.pbd" \
 		-initialfile $tilefname \
@@ -1774,6 +1777,8 @@ trace vdelete cmax w ud
 trace variable cdelta w ud
 trace variable cmin   w ud
 trace variable cmax   w ud
+
+trace variable tilefname w ud
 
  sst .l1wid.bf45.sc.1.cmax   cmax   "  Cmax:"	  { -50 5000.0 0.1  }
  sst .l1wid.bf45.sc.1.cmin   cmin   "  Cmin:"	  { -100 5000.0 0.1  }

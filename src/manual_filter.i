@@ -169,7 +169,7 @@ write,"Left: Examine pixel, Center: Save Pixel, Right: Quit"
     if (!is_array(edb)) {
      if ((mouse_button == left_mouse) || (mouse_button == center_mouse)) {
       selclicks++;
-      write, format="Point saved to workdata. Total points selected:%d\n", selclicks;
+      write, format="Point saved to (or removed from) workdata. Total points selected:%d\n", selclicks;
       rtn_data = grow(rtn_data, mindata);
         
      }
