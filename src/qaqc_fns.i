@@ -506,16 +506,16 @@ func mod_flightline(data, data_dir, soes=, pt=, win=, clipmax=, clipmin=, alsome
 
 //Open each tile in index tile and check for the bad flightline
    this_data = data.soe(i1:i2);
-   yr = soe2time(this_data(numberof(this_data)/2))(1);
-   doy = soe2time(this_data(numberof(this_data)/2))(2);
+   yr = soe2ymd(this_data(numberof(this_data)/2))(1);
+   mon = soe2ymd(this_data(numberof(this_data)/2))(2);
+   day = soe2ymd(this_data(numberof(this_data)/2))(3);
    hr = soe2time(this_data(numberof(this_data)/2))(4);
-   if (doy % 181 <= 30) {day = doy % 181; mon = 7;}
-   if (doy % 212 <= 30) {day = doy % 212; mon = 8;}
-   if (doy % 243 <= 29) {day = doy % 243; mon = 9;}
-   if (hr < 2) day--;
    if (day < 10) sday = swrite(format="0%d", day);
-   if (day >= 10) sday = swrite(format="%d", day);
-   mdate = swrite(format="%d0%d%s", yr, mon, sday);
+   if (day > 9 ) sday = swrite(format="%d", day);
+   if (mon < 10) smon = swrite(format="0%d", mon);
+   if (mon > 9 ) smon = swrite(format="%d", mon);
+   if (hr < 2) day--;
+   mdate = swrite(format="%d%s%s", yr, smon, sday);
    if (mdate == "20020803") {
 	mdate = mdate+"*";
    }
@@ -573,7 +573,7 @@ func mod_flightline(data, data_dir, soes=, pt=, win=, clipmax=, clipmin=, alsome
 	if (!is_array(bad_data)) {write, "No bad points in flightline... continueing"; continue;}
 	windold = window();
 	window, 3; fma;
-	belv = stdev_min_max(bad_data.elevation/100.0 + bad_data.depth/100.0);
+	belv = stdev_min_max(bad_data.elevation/100.0 + bad_data.depth/100.0, N_factor=0.3);
 	plot_bathy, bad_data, win=3, ba=1, fs = 0, de = 0 , fint = 0, lint = 0, cmin=belv(1), cmax=belv(2), msize = 2.0, marker=1, skip=1;
 	limits, square=1;
 	limits;
@@ -595,7 +595,7 @@ func mod_flightline(data, data_dir, soes=, pt=, win=, clipmax=, clipmin=, alsome
 		if (is_array(bad_data)) good_data = grow(good_data, bad_data);
 		if (is_array(l2)) good_data = grow(good_data, eaarl(l2));
 	}
-	gelv = stdev_min_max(good_data.elevation/100.0 + good_data.depth/100.0);
+	gelv = stdev_min_max(good_data.elevation/100.0 + good_data.depth/100.0, N_factor=0.3);
 	window, 2; fma;
 	if (!trust) plot_bathy, good_data, win=2, ba=1, fs = 0, de = 0 , fint = 0, lint = 0, cmin=gelv(1), cmax=gelv(2), msize = 2.0, marker=1, skip=3;
 	limits, square=1;
