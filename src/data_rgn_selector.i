@@ -237,3 +237,114 @@ indx = where(x >= xmin);
     } else return;
  } else return;
 }
+
+
+func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=) {
+/*DOCUMENT select_rgn_from_datatiles(junk, rgn=, data_dir=, lmap=)
+  This function selects data from a series of processed data tiles.
+  The processed data tiles must have the min easting and max northing in their filename.
+  INPUT:
+   rgn = array [min_e,max_e,min_n,max_n] that defines the region to be selected.  If rgn is not defined, the function will prompt to drag a rectangular region on window win.
+   data_dir = directory where all the data tiles are located.
+   lmap = set to prompt for the map.
+   win = window number that will be used to drag the rectangular region.  defaults to current window.
+  original Brendan Penney
+  modified amar nayegandhi 07/17/03
+*/
+
+   w = window();
+   if(!(data_dir)) data_dir =  "/quest/data/EAARL/TB_FEB_02/";
+   //if (!(zone)) zone = "17r";
+   if (is_void(win)) win = w;
+   if (lmap) load_map(utm=1);
+   if (!is_array(rgn)) {
+     rgn = array(float, 4);
+     a = mouse(1,1, "select region: ");
+              rgn(1) = min( [ a(1), a(3) ] );
+              rgn(2) = max( [ a(1), a(3) ] );
+              rgn(3) = min( [ a(2), a(4) ] );
+              rgn(4) = max( [ a(2), a(4) ] );
+  }
+   
+  	   ind_e_min = 2000 * (int((rgn(1)/2000)));
+           ind_e_max = 2000 * (1+int((rgn(2)/2000)));
+           if ((rgn(2) % 2000) == 0) ind_e_max = rgn(2);
+           ind_n_min = 2000 * (int((rgn(3)/2000)));
+           ind_n_max = 2000 * (1+int((rgn(4)/2000)));
+           if ((rgn(4) % 2000) == 0) ind_n_max = rgn(4);
+           n_east = (ind_e_max - ind_e_min)/2000;
+           n_north = (ind_n_max - ind_n_min)/2000;
+           n = n_east * n_north;
+   
+           min_e = array(float, n);
+           max_e = array(float, n);
+           min_n = array(float, n);
+           max_n = array(float, n);
+           i = 1;
+           for (e=ind_e_min; e<=(ind_e_max-2000); e=e+2000) {
+                   for(north=(ind_n_min+2000); north<=ind_n_max; north=north+2000) {
+                   min_e(i) = e;
+                   max_e(i) = e+2000;
+                   min_n(i) = north-2000;
+                   max_n(i) = north;
+                   i++;
+                   }
+           }
+    
+   //find data tiles
+   
+   n_i_east =( n_east/5)+1;
+   n_i_north =( n_north/5)+1;
+   n_i=n_i_east*n_i_north;
+   min_e = long(min_e);
+   max_n = long(max_n);
+   
+   
+   pldj, min_e, min_n, min_e, max_n, color="green"
+   pldj, min_e, min_n, max_e, min_n, color="green"
+   pldj, max_e, min_n, max_e, max_n, color="green"
+   pldj, max_e, max_n, min_e, max_n, color="green"
+   
+   
+   //dtiles = array(string, n);
+   //itiles = array(string, n);
+   files =  array(string, n);
+   for(i=1; i<=n; i++) {
+   	//i_east = 10000 * long(max_e(i)/10000);	
+   	//i_north = 10000*(long(max_n(i)/10000)+1);
+   
+   	//itiles(i) = swrite(format="%si_e%d_n%d_%s/", data_dir, i_east, i_north, zone);
+   	//dtiles(i) = swrite(format="%st_e%d_n%d_%s/", itiles(i), min_e(i), max_n(i), zone); 
+   	//command = swrite(format="ls -l %s*.pbd |awk '{print $9}'", dtiles(i)); 
+   	command = swrite(format="find  %s -name '*%d*%d*.pbd'", data_dir, min_e(i), max_n(i)); 
+   	f = popen(command, 0);     
+   	read, f, files(i); 
+   }
+   
+   
+   
+   sel_eaarl = [];
+   files =  files(where(files));
+   
+   if (numberof(files) > 0) {
+      write, format="%d files selected.\n",numberof(files)
+      // now open these files one at at time and select only the region defined
+      for (i=1;i<=numberof(files);i++) {
+	  write, format="Searching File %d of %d\r",i,numberof(files);
+          f = openb(files(i));
+          restore, f, vname;
+          eaarl = get_member(f,vname);
+          idx = data_box(eaarl.east/100., eaarl.north/100., rgn(1), rgn(2), rgn(3), rgn(4));
+	  if (is_array(idx)) {
+  	     iidx = data_box(eaarl.east(idx)/100., eaarl.north(idx)/100., min_e(i), max_e(i), min_n(i), max_n(i));
+	     if (is_array(iidx))
+                grow, sel_eaarl, eaarl(idx(iidx));
+  	 }
+     }
+   }
+   write, format = "Total Number of selected points = %d\n", numberof(sel_eaarl);
+
+  window, w;
+  return sel_eaarl;
+   
+}
