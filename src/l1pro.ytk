@@ -1765,8 +1765,8 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
 ##			.l1clip.3.range.sc configure -state disabled
 ##		    }
 		 }
-        sst .l1clip.2.max   max_elv   "Maximum Elevation:"  { -100 1000.0 0.1  }
-        sst .l1clip.1.min   min_elv   "Minimum Elevation:"  { -100 1000.0 0.1  }
+        sst .l1clip.2.max   max_elv   "Maximum Elevation:"  { -100 5000.0 0.1  }
+        sst .l1clip.1.min   min_elv   "Minimum Elevation:"  { -100 5000.0 0.1  }
         sst .l1clip.3.range   range_elv   "Vertical Range:"  { 0 300.0 0.1  }
 
 	set max_elv $cmax

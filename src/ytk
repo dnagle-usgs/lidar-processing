@@ -171,6 +171,7 @@ wm withdraw .
  catch { set rlterm [ exec which rlterm ] }
 
 ############# set _ytk(yorick_executable) junk
+puts "e: $_ytk(yorick_executable)"
  if { [ file exists $_ytk(yorick_executable) ] == 0 } {
     catch { set _ytk(yorick_executable)  [ exec which yorick ] }
 ############ set _ytk(yorick_executable) junk

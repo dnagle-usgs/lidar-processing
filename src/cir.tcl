@@ -56,6 +56,8 @@ $img configure -height 0 -width 0
 set t "170000"
 set last_tar ""
 set fn ""
+set settings(tar_file) ""
+set settings(tar_date) ""
 
 
 proc cfg_file { fn } { 
@@ -474,7 +476,7 @@ bind .p.sod <Return> { global settings; show sod $settings(sod); }
 
 bind .canf.can <ButtonPress-1> { show incr 1 } 
 bind .canf.can <ButtonPress-2> { prefs  } 
-bind .canf.can <ButtonPress-3> { show incr -1 } 
+bind .canf.can <ButtonPress-3> { prefs } 
 
 
 
