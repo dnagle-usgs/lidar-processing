@@ -64,8 +64,10 @@ if ((not keyword_set(min_z)) or (not keyword_set(max_z))) then begin
 
 endif
 
-if min_z < min_z_limit then min_z = min_z_limit
-if max_z > max_z_limit then max_z = max_z_limit
+if (keyword_set(min_z_limit) and keyword_set(max_z_limit)) then begin
+  if min_z < min_z_limit then min_z = min_z_limit
+  if max_z > max_z_limit then max_z = max_z_limit
+endif
 
 
 if not keyword_set(win) then win = 0
@@ -87,10 +89,17 @@ endif else begin
   for i = 0L, n_arr-1L do begin
 
    ;find the lowest and highest easting/northing value
-   x0 = min((*data_arr[i]).east[0])/100. 
-   x1 = max((*data_arr[i]).east[0])/100.
-   y0 = min((*data_arr[i]).north[0])/100.
-   y1 = max((*data_arr[i]).north[0])/100.
+   if (pmode eq 2) then begin
+     x0 = min((*data_arr[i]).east[0])/100. 
+     x1 = max((*data_arr[i]).east[0])/100.
+     y0 = min((*data_arr[i]).north[0])/100.
+     y1 = max((*data_arr[i]).north[0])/100.
+   endif else begin
+     x0 = min((*data_arr[i]).least[0])/100. 
+     x1 = max((*data_arr[i]).least[0])/100.
+     y0 = min((*data_arr[i]).lnorth[0])/100.
+     y1 = max((*data_arr[i]).lnorth[0])/100.
+   endelse
 
    if x0 lt x0_all then x0_all=x0
    if x1 gt x1_all then x1_all=x1
@@ -131,7 +140,11 @@ for i = 0, n_arr-1 do begin
     if (indx(0) ne -1) then begin
       color_plot = bytscl(z[indx],$
 			min=min_z,max=max_z)
-      plots, [((*data_arr[i]).east[0])[indx]/100.], [((*data_arr[i]).north[0])[indx]/100.], color=color_plot, noclip=0
+      if (pmode eq 2) then begin
+       plots, [((*data_arr[i]).east[0])[indx]/100.], [((*data_arr[i]).north[0])[indx]/100.], color=color_plot, noclip=0
+      endif else begin 
+       plots, [((*data_arr[i]).least[0])[indx]/100.], [((*data_arr[i]).lnorth[0])[indx]/100.], color=color_plot, noclip=0
+      endelse
     endif
 endfor
 

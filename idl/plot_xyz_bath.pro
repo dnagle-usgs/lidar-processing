@@ -43,8 +43,10 @@ if ((not keyword_set(min_z)) or (not keyword_set(max_z))) then begin
 
 endif
 
-if min_z < min_z_limit then min_z = min_z_limit
-if max_z > max_z_limit then max_z = max_z_limit
+if (keyword_set(min_z_limit) and keyword_set(max_z_limit)) then begin
+  if min_z < min_z_limit then min_z = min_z_limit
+  if max_z > max_z_limit then max_z = max_z_limit
+endif
 
 if not keyword_set(win) then win = 0
 
