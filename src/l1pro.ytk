@@ -1111,7 +1111,7 @@ proc plot_fltlines {sel} {
           exp_send "depth_some = $var_type;\r"
  	  expect ">"
        }
-       exp_send "plot_bathy, depth_some, win=$win_no, ba=$ba, fs = $fs, de = $de , fint = $fint, lint = $lint, cmin=$cmin, cmax=$cmax, msize = $msize; \r"
+       exp_send "plot_bathy, depth_some, win=$win_no, ba=$ba, fs = $fs, de = $de , fint = $fint, lint = $lint, cmin=$cmin, cmax=$cmax, msize = $msize, marker=$markerv; \r"
        expect ">"
      }
      if {$ptype == 2} {

@@ -1700,9 +1700,12 @@ See also: VEG_ALL_, CVEG_ALL
           lst = lst(ilst);
        }
       }
+      elev = veg_all.elevation(lst);
      }
-     if (type == 2) 
+     if (type == 2) {
 	lst = where(veg_all.lelv);
+        elev = veg_all.lelv(lst);
+     }
      if (type == 3) {
       if (multi == 0) {
 	lst = where(veg_all.elevation);
@@ -1712,10 +1715,12 @@ See also: VEG_ALL_, CVEG_ALL
             lst = lst(ilst);
  	}
       } else lst = where(veg_all.elevation);
+      elev = veg_all.elevation(lst);
     }
+  } else {
+      elev = veg_all.elevation(lst);
   }
 
- elev = veg_all.elevation(lst);
  if (multi == 0) {
   // clean the array only if multi = 0.  
   melev = veg_all.melevation(lst);
@@ -1760,17 +1765,26 @@ See also: VEG_ALL_, CVEG_ALL
   if ( dofma ) 
   	fma; 
   if ( normalize ) {
-	h = float(h);
-	h = h/(h(max));
+	h = float(h-1);
+        if ((h(max)) > 0) {
+	  h = h/(h(max));
+        } else {
+          h = [0];
+        }
+        
+  	plg,h,e, color=color, width=width;
+  	plmk, h, e, marker=4, msize=0.4, width=10, color="red";
+   } else {
+        h = h-1
+  	plg,h,e, color=color, width=width;
+  	plmk, h, e, marker=4, msize=0.4, width=10, color="red";
    }
-  plg,h-1,e, color=color, width=width;
-  plmk, h-1, e, marker=4, msize=0.4, width=10, color="red";
-  pltitle(swrite( format="Elevation Histogram %s", data_path));
+  pltitle, swrite( format="Elevation Histogram %s", data_path);
   xytitles,"Elevation (meters)", "Number of measurements"
   //limits
   hst = [e,h];
   window, win; limits,,,,hst(max,2) * 1.5
-  window(w);
+  window, w;
   return hst;
 }
 

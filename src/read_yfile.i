@@ -842,6 +842,11 @@ func read_pointer_yfile(data_ptr, mode=) {
     if (_ytk) {
       tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",0);
       tkcmd, swrite(format=".l1wid.bf45.p.15 setvalue @%d",0);
+      tkcmd, swrite(format=".l1wid.bf45.p.5 setvalue @%d",0);
+      cmin = min(fs_all.elevation)/100.;
+      cmax = max(fs_all.elevation)/100.;
+      tkcmd, swrite(format="set cmin %f", cmin);
+      tkcmd, swrite(format="set cmax %f", cmax);
     }
   }
   if (a == GEO) {
@@ -849,6 +854,11 @@ func read_pointer_yfile(data_ptr, mode=) {
     if (_ytk) {
       tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",1);
       tkcmd, swrite(format=".l1wid.bf45.p.15 setvalue @%d",1);
+      tkcmd, swrite(format=".l1wid.bf45.p.5 setvalue @%d",1);
+      cmin = min(depth_all.depth+depth_all.elevation)/100.;
+      cmax = max(depth_all.depth+depth_all.elevation)/100.;
+      tkcmd, swrite(format="set cmin %f", cmin);
+      tkcmd, swrite(format="set cmax %f", cmax);
     }
   }
   if (a == VEG || a == VEG_ || a == VEG__) {
@@ -856,6 +866,11 @@ func read_pointer_yfile(data_ptr, mode=) {
     if (_ytk) {
       tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",2);
       tkcmd, swrite(format=".l1wid.bf45.p.15 setvalue @%d",2);
+      tkcmd, swrite(format=".l1wid.bf45.p.5 setvalue @%d",3);
+      cmin = min(veg_all.lelv)/100.;
+      cmax = max(veg_all.lelv)/100.;
+      tkcmd, swrite(format="set cmin %f", cmin);
+      tkcmd, swrite(format="set cmax %f", cmax);
     }
   }
   if (a == CVEG_ALL) {
@@ -863,6 +878,11 @@ func read_pointer_yfile(data_ptr, mode=) {
     if (_ytk) {
       tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",3);
       tkcmd, swrite(format=".l1wid.bf45.p.15 setvalue @%d",3);
+      tkcmd, swrite(format=".l1wid.bf45.p.5 setvalue @%d",0);
+      cmin = min(cveg_all.elevation)/100.;
+      cmax = max(cveg_all.elevation)/100.;
+      tkcmd, swrite(format="set cmin %f", cmin);
+      tkcmd, swrite(format="set cmax %f", cmax);
     }
   }
 
