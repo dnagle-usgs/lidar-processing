@@ -222,7 +222,7 @@ proc load_file { fn } {
 
  if  { [ catch { 
   set dims(eastd)    [ expr $dims(re) - $dims(le)   ];
-  set dims(northd)   [ expr $dims(rn) - $dims(ln)   ];
+  set dims(northd)   [ expr $dims(ln) - $dims(rn)   ];
   set dims(scrx2utm) [ expr $dims(eastd) / double($dims(dx))];
   set dims(scry2utm) [ expr $dims(northd) / double($dims(dy))];
  } ] } {
@@ -389,7 +389,7 @@ scrollbar .canf.xscroll -orient horizontal \
 
 canvas .canf.can  \
 	-height 600 \
-	-width 600 \
+	-width 800 \
 	-scrollregion { 0 0 500 500 } \
 	-xscrollcommand [ list .canf.xscroll set ] \
 	-yscrollcommand [ list .canf.yscroll set ] \
@@ -449,7 +449,7 @@ pack .canf \
    set ul [ expr $dims(dx) * [ lindex [ .canf.can xview ] 0 ]];
    set ut [ expr $dims(dy) * [ lindex [ .canf.can yview ] 0 ]];
    set east  [ format "%%7.0f" [expr  $dims(le) + (%x + $ul)*$dims(scrx2utm) ]]; 
-   set north [ format "%%7.0f" [expr  $dims(rn) - (%y + $ut)*$dims(scry2utm) ]];
+   set north [ format "%%7.0f" [expr  $dims(ln) - (%y + $ut)*$dims(scry2utm) ]];
 }
 
 
@@ -516,7 +516,7 @@ proc scrx2utm { x } {
 # convert screen y coords to UTM in the current zone
 proc scry2utm { y } {
  global dims
- set north [expr  $dims(rn) - $y*$dims(scry2utm) ];
+ set north [expr  $dims(ln) - $y*$dims(scry2utm) ];
  return $north
 }
 
