@@ -2,6 +2,7 @@
 
 /* 
    $Id$
+
 */
 
 require, "pnm.i"
@@ -23,6 +24,7 @@ require, "pnm.i"
    2) Click and drag out a rectangle in window 5 that you want
       to grid.
 
+   Original by W. Wright 6/7/2002
 */
 
 
