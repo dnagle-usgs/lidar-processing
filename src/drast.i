@@ -78,6 +78,7 @@ func ndrast( r, units=  ) {
  extern irange, sa;
  extern x0,x1;
  extern last_somd;
+ extern rn;
 
   aa = array( short(255), 250, 120, 3);
 

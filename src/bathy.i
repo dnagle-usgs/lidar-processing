@@ -20,6 +20,28 @@ struct BATHPIX {
   short bottom_peak;	// peak amplitude of bottom signal
 };
 
+// 94000
+func bath_winpix( m ) {
+extern depth_display_units;
+extern rn;
+  window,3;
+  idx = int( mouse() (1:2) );
+idx
+//******* IMPORTANT! The *2 below is there cuz we usually only look at
+// every other raster. 
+  rn  = m(idx(1), idx(2)*2).rastpix;  	// get the *real* raster number.
+rn
+  pix = rn / 2^24;
+  rn  &= 0xffffff;
+   r = get_erast( rn= rn );	
+   rp = decode_raster(r);
+  window,1; fma;
+  aa = ndrast( rp, units=depth_display_units  ) 
+//  show_wf( aa, pix, win=0 )
+pix
+rn
+}
+
 
 func run_bath( rn, len, last=, graph=, pse= ) {
 // depths = array(float, 3, 120, len );
@@ -123,6 +145,7 @@ func ex_bath( rn, i,  last=, graph= ) {
   }
 
   n  = numberof(*rp.rx(i, 1)); 
+  rv.sa = rp.sa(i);
   if ( n == 0 ) 
 	return rv;
 
