@@ -89,7 +89,7 @@ extern gga
 */
 
 
-func rbgga( x, plt=, color=, map=, utm= ) {
+func rbgga( x, plt=, color=, map=, utm=, ifn= ) {
 /* DOCUMENT v = rbgga( plt=(0/1), map=(0/1) ) 
 
    The rbgga function reads converted NMEA GPGGA gps message data.  
@@ -112,6 +112,9 @@ func rbgga( x, plt=, color=, map=, utm= ) {
 */
 
  extern gga, data_path;
+ 
+
+if (!ifn) {
  if ( is_void( _ytk ) ) {
    if ( is_void( data_path) )
       data_path = set_data_path();
@@ -128,6 +131,7 @@ func rbgga( x, plt=, color=, map=, utm= ) {
     }
       
  }
+}
 
 n = int(0)
 idf = open( ifn, "rb");
