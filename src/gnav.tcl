@@ -2,6 +2,11 @@
 # $Id$
 #
 
+
+# Enable ftp
+package require ftp 
+# Enable Bwidget 
+package require BWidget
 # set plat for different platforms ex. Unix, Windows
 global plat
 set plat $tcl_platform(platform)
@@ -31,6 +36,7 @@ menu .menubar.file -tearoff 1
 .menubar.file add command -label Open -command openfile -underline 0
 .menubar.file add command -label Save -command save -underline 0
 .menubar.file add command -label "Save As" -command saveas -underline 0
+.menubar.file add command -label "Ftp File" -command ftpf -underline 0
 .menubar.file add separator
 .menubar.file add command -label Quit -command exit -underline 0
 menu .menubar.fix -tearoff 1
@@ -63,6 +69,19 @@ close $f
 proc saveas {} {
 fname tk_getSaveFile
 save
+}
+
+proc ftpf {} {
+set li [ PasswdDlg .pw -logintextvariable usr \
+	-logintext enils \
+	-passwdtextvariable passwd\
+ 	-type okcancel ]
+
+set usr [lindex $li 0 ]
+set passwd [lindex $li 1]
+set ftpsession [ ::ftp::Open lidar.net $usr $passwd ] 
+#set chdir [ ::ftp::Cd $ftpsession /var/ftp/pub ]
+set send [ ::ftp::Put $ftpsession $::f ]
 }
 
 proc fname proc {
