@@ -290,8 +290,8 @@ proc load_edb {} {
    menu $w.mb.help
 
  $w.mb add cascade -label File     -underline 0 -menu $w.mb.file
- $w.mb add cascade -label Map      -underline 0 -menu $w.mb.map
- $w.mb add cascade -label Nav/Attitude      -underline 0 -menu $w.mb.nav
+### $w.mb add cascade -label Map      -underline 0 -menu $w.mb.map
+ $w.mb add cascade -label "Maps/Nav"     -underline 0 -menu $w.mb.nav
  $w.mb add cascade -label Rasters  -underline 0 -menu $w.mb.rasters
  $w.mb add cascade -label Images   -underline 0 -menu $w.mb.images
  $w.mb add cascade -label Time     -underline 0 -menu $w.mb.time
@@ -300,7 +300,7 @@ proc load_edb {} {
  $w.mb.file add command -label "Load EAARL Database Index (Edb)..." -command { load_edb }
 
  exp_send "require, \"rbgga.i\"\r"
- $w.mb.file add command -label "Load NMEA GGA..."   -underline 2 \
+ $w.mb.file add command -label "Coastlines & Flight tracks"   -underline 2 \
 	-command rbgga_menu
  $w.mb.file add command -label "Load Tans Attitude data..."   -underline 2 \
    -command { exp_send "require, \"rbtans.i\"\r"
@@ -358,7 +358,7 @@ proc load_edb {} {
 #############
 
 
- $w.mb.nav add command -label "Flight Planning..." \
+ $w.mb.nav add command -label "Yorick Flight Planning..." \
 	-command { exp_send "require, \"nav.i\"\r" }
 
 
@@ -366,7 +366,7 @@ proc load_edb {} {
 
  exp_send "require, \"rbgga.i\"\r"
  menu $w.mb.nav.rbgga
- $w.mb.nav add command -label "Load NMEA GGA..."   -underline 2 \
+ $w.mb.nav add command -label "Flight Tracks & Coastlines..."   -underline 2 \
 	-command rbgga_menu
  $w.mb.nav add command -label "Load Tans Attitude data..."   -underline 2 \
    -command { exp_send "require, \"rbtans.i\"\r"
@@ -477,7 +477,7 @@ proc rbgga_menu {} {
 
 
  frame $mw.f1 -relief groove -borderwidth 3
- button $mw.f1.load -text "Load" -command { 
+ button $mw.f1.load -text "Load GGA" -command { 
    if {$gga(llu) == "utm"} {
       set utm 1
    } else {
@@ -607,7 +607,7 @@ Button $w.show_grid -text "Show\nGrid Name" -command {
 
 
 ## disabled unused menu options
-$w.mb.nav entryconfigure 1 -state disabled
+$w.mb.nav entryconfigure 1 -state normal
 $w.mb.images entryconfigure 4 -state disabled
 $w.mb.images entryconfigure 5 -state disabled
 $w.mb.images entryconfigure 6 -state disabled
