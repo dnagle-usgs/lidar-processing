@@ -30,12 +30,19 @@
   set write_some 	0
   
   set varlist {fs_all depth_all veg_all cveg_all}
+  array set plist {idx1 idx1, cmin cmin cmax cmax ptype ptype dtype dtype msize msize mtype mtype}
+  array set plist {idx2 idx2, cmin cmin cmax cmax ptype ptype dtype dtype msize msize mtype mtype}
+  array set plist {idx3 idx3, cmin cmin cmax cmax ptype ptype dtype dtype msize msize mtype mtype}
+  #array set {_depth_all} {cmin cmin cmax cmax ptype ptype dtype dtype msize msize mtype mtype}
+  #array set {_veg_all} {cmin cmin cmax cmax ptype ptype dtype dtype msize msize mtype mtype}
+  #array set {_cveg_all} {cmin cmin cmax cmax ptype ptype dtype dtype msize msize mtype mtype}
 
 exp_send "#include \"geo_bath.i\"\r"; # load geobath.i code
 exp_send "#include \"read_yfile.i\"\r"; # load read_yfile
 exp_send "#include \"veg.i\"\r"; # load veg.i
 exp_send "#include \"batch_process.i\"\r"; # load batch_process.i
 exp_send "#include \"comparison_fns.i\"\r"; # load for rcf filter function
+exp_send "#include \"bathy_filter.i\"\r"; # load for rcf filter function
 expect ">";
 
 package require BWidget
@@ -81,7 +88,16 @@ menu .l1wid.mb.options
             exp_send "\r"
             label .stby.lbl -text "Loading\n$_ytk_fn\nplease wait.."
             pack .stby.lbl
- 	    update
+            expect ">"
+	    update
+  	    exp_send "set_read_tk \r"
+            expect "Tk updated"
+	    expect ">"
+	    update
+            set var_type [lindex $varlist [expr {[llength $varlist] -1}]]
+	    update
+            exp_send "set_read_yorick, $var_type \r"
+ 	    puts $var_type
             expect ">"
             destroy .stby
            }
@@ -146,7 +162,7 @@ menu .l1wid.mb.options
 	if { $ofname != "" }  {
          switch [ file extension $ofname ] {
           ".pbd" {
-		exp_send "vname=\"$var_type\"; save, createb(\"$ofname\"), vname, $var_type; \r";
+		exp_send "vname=\"$var_type\"; q_$var_type = q; ply_$var_type = ply; save, createb(\"$ofname\"), vname, $var_type, q_$var_type, ply_$var_type; \r";
           }
           ".bin" - 
           ".edf" {
@@ -592,6 +608,10 @@ menu .l1wid.mb.options
     pack .varplot.1 .varplot.xscroll .varplot.2 -side top -fill x
   }
 
+.l1wid.mb.options add checkbutton -label "Constant Colorbar for Variables" \
+	-variable cbv \
+               
+
 proc make_selected_arrays {junk} {
     global lrnindx list
     	set curlist [.l1plot.1.lb curselection]
@@ -684,18 +704,18 @@ ComboBox .l1wid.bf4.1.d -text "Define Region using..." -width 22 -values "Rubber
        	tk_messageBox  -icon info \
         -message "Drag a Rectangular Box in Window 6 to define region." \
         -type ok -title "Message"
-       exp_send "q = gga_win_sel(2, win=$win_no);\r"
+       exp_send "q = gga_win_sel(2, win=$_map(window));\r"
        expect ">"
     }
     if {$defr == 1} {
        	tk_messageBox  -icon info \
         -message "Draw a Polygon in Window 6 to define a region using a series of left mouse clicks.  To complete the polygon, hit <Ctrl> and left mouse click." \
         -type ok -title "Message"
-       exp_send "q = gga_pip_sel(1, win=$win_no);\r"
+       exp_send "q = gga_pip_sel(1, win=$_map(window));\r"
        expect ">"
     }
     if {$defr == 2} {
-       exp_send "q = gga_click_sel(1, win=$win_no);\r"
+       exp_send "q = gga_click_sel(1, win=$_map(window));\r"
        expect ">"
     }
     if {$defr == 3} {
@@ -767,11 +787,68 @@ Button .l1wid.bf45.p.1 -text "Plot" -command {
  plot_fltlines 0
 }
 
-ComboBox .l1wid.bf45.p.15 -text "Variable" -width 10 -values \
+ComboBox .l1wid.bf45.p.15  -values \
   	$varlist \
 	-helptext "Select any one of the following variables to plot" \
-	-editable 1
+	-editable 0 \
+	-modifycmd {
+           global cmin cmax markerv msize varlist cbv
+	   global  var_no var_type plist
+           set var_no [.l1wid.bf45.p.15 getvalue]
+	   #puts "$var_no"
+	   set pvar_no [expr {$var_no + 1}]
+           set var_type [lindex $varlist $var_no]
+	   #puts "variable in modifycommand $var_type"
+           if {$cbv == 0} {
+	     retrieve_plot_settings $pvar_no
+           }
+	   #puts "***********************"
+        } \
+	-postcommand {
+ 	   global var_no var_type cmin cmax markerv msize varlist plist cbv
+           set var_no [.l1wid.bf45.p.15 getvalue]
+	   set pvar_no [expr {$var_no + 1}]
+           set var_type [lindex $varlist $var_no]
+	   #puts "variable in postcommand $var_type"
+	   if {$cbv == 0} {
+	     save_plot_settings  $pvar_no
+           }
+   	   # foreach e [array names {_$var_type}] {
+	   #  puts "$e:\t${_$var_type(msize)}"
+           #}
+ 	   #puts "saved $var_type"
+	   #puts "***********************"
+        } 
+.l1wid.bf45.p.15 setvalue first
 
+proc retrieve_plot_settings {pvar_no} {
+   global cmin cmax msize markerv var_type plist 
+   #puts "to retrieve _$var_type from $var_type"
+   #puts "pvar_no = $pvar_no"
+   set cmin $plist(idx$pvar_no,cmin)
+  #puts "$cmin read from  $plist(idx$pvar_no,cmin)"
+   #puts "cmin = $cmin"
+   set cmax $plist(idx$pvar_no,cmax)
+   set msize $plist(idx$pvar_no,msize)
+   set markerv $plist(idx$pvar_no,mtype)
+   .l1wid.bf4.1.p setvalue @$plist(idx$pvar_no,ptype)
+   .l1wid.bf45.p.5 setvalue @$plist(idx$pvar_no,dtype)
+   
+}
+
+proc save_plot_settings {pvar_no} {
+  global cmin cmax msize markerv var_type plist
+  #puts "to save $var_type in _$var_type"
+  set ptype [.l1wid.bf4.1.p getvalue]
+  set dtype [.l1wid.bf45.p.5 getvalue]
+  set plist(idx$pvar_no,cmin) $cmin
+  #puts "$cmin written to $plist(idx$pvar_no,cmin)"
+  set plist(idx$pvar_no,cmax) $cmax
+  set plist(idx$pvar_no,msize) $msize
+  set plist(idx$pvar_no,mtype) $markerv
+  set plist(idx$pvar_no,ptype) $ptype
+  set plist(idx$pvar_no,dtype) $dtype
+}
 Label .l1wid.bf45.p.2 -text "in Win:"
 SpinBox .l1wid.bf45.p.3 -justify center -range {0 7 1} \
 	-width 2 -textvariable win_no 

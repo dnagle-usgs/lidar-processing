@@ -190,7 +190,7 @@ func gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=) {
  This function uses the 'points in polygon' technique to select a region in the gga window.
  Also see: getPoly, plotPoly, testPoly, gga_win_sel
  */
- extern ZoneNumber, utm
+ extern ZoneNumber, utm, ply
  if ( is_void(win) ) 
 	win = 6;
  window, win;
@@ -229,7 +229,7 @@ if you set show=1 when using this function.  The screen will reverse fg/bg and n
 properly to the zoom buttons.
  
 */
- extern ZoneNumber, utm
+ extern ZoneNumber, utm, ply
  if ( is_void(win) ) 
 	win = 6;
 
@@ -267,6 +267,7 @@ properly to the zoom buttons.
      write, format="minlat = %7.3f, minlon= %7.3f\n", minlat, minlon;
  }
 
+ ply = [[minlat, minlon], [maxlat, maxlon]]
  q = where( gga.lon > minlon );
  if (is_array(q)) {
    qq = where( gga.lon(q) < maxlon );  q = q(qq);

@@ -927,3 +927,69 @@ func read_pointer_yfile(data_ptr, mode=) {
 }
     
     
+func set_read_tk(junk) {
+  /* DOCUMENT set_read_tk(vname)
+    This function sets the variable name in the Process Eaarl Data gui
+   amar nayegandhi 05/05/03
+  */
+
+   extern vname
+   tkcmd, swrite(format="lappend varlist %s",vname);
+   tkcmd, ".l1wid.bf45.p.15 configure -values $varlist"
+   tkcmd, swrite(format=".varplot.1.lb insert end %s",vname);
+   tkcmd, ".l1wid.bf45.p.15 setvalue @[expr {[llength $varlist]-1}]"
+   write, "Tk updated \r";
+
+}
+
+func set_read_yorick(vname) {
+  /* DOCUMENT set_read_yorick(vname)
+    This function sets the cmin and cmax values in the Process EAARL data GUI
+    amar nayegandhi 05/06/03
+  */
+
+  ab = structof(vname);
+  if (ab == FS || ab == R) {
+    if (_ytk) {
+      tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",0);
+      tkcmd, swrite(format=".l1wid.bf45.p.5 setvalue @%d",0);
+      cmin = min(vname.elevation)/100.;
+      cmax = max(vname.elevation)/100.;
+      tkcmd, swrite(format="set cmin %f", cmin);
+      tkcmd, swrite(format="set cmax %f", cmax);
+    }
+  }
+  if (ab == GEO || ab == GEOALL) {
+    if (_ytk) {
+      tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",1);
+      tkcmd, swrite(format=".l1wid.bf45.p.5 setvalue @%d",1);
+      cmin = min(vname.depth+vname.elevation)/100.;
+      cmax = max(vname.depth+vname.elevation)/100.;
+      tkcmd, swrite(format="set cmin %f", cmin);
+      tkcmd, swrite(format="set cmax %f", cmax);
+    }
+  }
+  if (ab == VEG || ab == VEG_ || ab == VEG__ || ab == VEGALL || ab == VEG_ALL || ab == VEG_ALL_) {
+    if (_ytk) {
+      tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",2);
+      tkcmd, swrite(format=".l1wid.bf45.p.5 setvalue @%d",3);
+      cmin = min(vname.lelv)/100.;
+      cmax = max(vname.lelv)/100.;
+      tkcmd, swrite(format="set cmin %f", cmin);
+      tkcmd, swrite(format="set cmax %f", cmax);
+    }
+  }
+  if (ab == CVEG_ALL) {
+    if (_ytk) {
+      tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",3);
+      tkcmd, swrite(format=".l1wid.bf45.p.5 setvalue @%d",0);
+      cmin = min(cveg_all.elevation)/100.;
+      cmax = max(cveg_all.elevation)/100.;
+      tkcmd, swrite(format="set cmin %f", cmin);
+      tkcmd, swrite(format="set cmax %f", cmax);
+    }
+  }
+  
+}
+  
+
