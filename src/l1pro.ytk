@@ -29,6 +29,7 @@
   set lrnindx		{}
   set write_some 	0
   set ssvar "*.pbd"
+  set changed_dpi 	0
   
   array set _mpipx {
 	0,0	Selector
@@ -668,8 +669,8 @@ menu .l1wid.mb.filter
     Button .l1plot.plot -text "Plot" -width 6 -command {
 	make_selected_arrays {junk}
 	plot_fltlines 1
-	
     }
+
     Button .l1plot.write -text "Write Datafile" -command {
 #	 set write_some 1
 #	 make_selected_arrays {junk}
@@ -896,11 +897,20 @@ proc hist_linlog {} {
 
 .l1wid.mb   add cascade -label Graph -underline 0 -menu .l1wid.mb.graph
 .l1wid.mb.graph add radiobutton \
-        -label "75 Dpi (450x450)" -value "75" -variable plot_dpi -underline 1
+        -label "75 Dpi (450x450)" -value "75" -variable plot_dpi -underline 1 \
+	-command {
+	   set changed_dpi 1
+	}
 .l1wid.mb.graph add radiobutton \
-        -label "100 Dpi (600x600)" -value "100" -variable plot_dpi -underline 1
+        -label "100 Dpi (600x600)" -value "100" -variable plot_dpi -underline 1 \
+	-command {
+	   set changed_dpi 1
+	}
 .l1wid.mb.graph add radiobutton \
-        -label "100 Dpi (1100x850)" -value "1100" -variable plot_dpi -underline 1
+        -label "100 Dpi (1100x850)" -value "1100" -variable plot_dpi -underline 1 \
+	-command {
+	   set changed_dpi 1
+	}
 
 .l1wid.mb   add cascade -label Filter -underline 1 -menu .l1wid.mb.filter
 
@@ -2102,7 +2112,8 @@ proc send_rnarr_to_l1pro {bstart bstop brnindx} {
 
 proc plot_fltlines {sel} {
   
- global l1pro_fma win_no cmin cmax cdelta msize markerv varlist skip plot_dpi setll
+ global l1pro_fma win_no cmin cmax cdelta msize markerv varlist skip plot_dpi setll \
+	changed_dpi
      #fill in later using what to plot
      set fs 0
      set ba 0
@@ -2134,6 +2145,7 @@ proc plot_fltlines {sel} {
      } else {
          if { $l1pro_fma } {
            
+          if {$changed_dpi == 1} {
            switch  $plot_dpi  {
   	   "75" {
 	      exp_send "winkill, $win_no; window,$win_no,dpi=$plot_dpi,width=450, height=450, style=\"work.gs\"; fma;limits, square=1;\r";
@@ -2145,9 +2157,14 @@ proc plot_fltlines {sel} {
 	      exp_send "winkill, $win_no; window, $win_no, dpi=100, width=1100, height=850, style=\"landscape11x85.gs\";fma; limits, square=1;\r";
 	    }
            }
-	   if {$setll} {
+	   set changed_dpi 0
+	  } else {
+	      exp_send "window, $win_no; fma;\r";
+	  }
+	   
+	 }
+	 if {$setll} {
 	      exp_send "limits, _ytk_ll(1), _ytk_ll(2), _ytk_ll(3), _ytk_ll(4);\r"
-	   }
 	 }
      }
 
