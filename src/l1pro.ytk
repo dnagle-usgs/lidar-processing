@@ -72,20 +72,10 @@
   set plist(idx4,msize) $msize
   set plist(idx4,mtype) $markerv
 
-  set plot_dpi 100
+  set plot_dpi 75
   array set cbvc {cmin cmin cmax cmax msize msize mtype mtype}
 
-exp_send "#include \"geo_bath.i\"\r"; # load geobath.i code
-exp_send "#include \"read_yfile.i\"\r"; # load read_yfile
-exp_send "#include \"veg.i\"\r"; # load veg.i
-exp_send "#include \"batch_process.i\"\r"; # load batch_process.i
-exp_send "#include \"batch_multipip_process.i\"\r"; # load batch_multipip_process.i
-exp_send "#include \"comparison_fns.i\"\r"; # load for rcf filter function
-exp_send "#include \"bathy_filter.i\"\r"; # load for rcf filter function
-exp_send "#include \"data_rgn_selector.i\"\r"; 
-exp_send "#include \"wgs842nad83.i\"\r"; 
-exp_send "#include \"nad832navd88.i\"\r"; 
-exp_send "#include \"datum_converter.i\"\r"; 
+exp_send "#include \"l1pro.i\"\r";   #load all yorick support functions
 expect ">";
 
 package require BWidget
@@ -1442,12 +1432,17 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
 	pack .l1clip.proc .l1clip.ymin .l1clip.min .l1clip.ymax .l1clip.max .l1clip.yrange .l1clip.range .l1clip.1 -side top -pady 5	
   }
 
+Button .l1wid.bf45.q.44 -text "Overlay\nGrid" -command {
+  exp_send "draw_grid, $win_no\r"
+}
+
+Button .l1wid.bf45.q.45 -text "Show\nGrid Name" -command {
+  exp_send "show_grid_location, $win_no\r"
+}
 
 .l1wid.bf45.q.4 configure -state disabled
 
 checkbutton .l1wid.bf45.q.5 -text "Set Plot Limits" -variable usecentroid 
-
-
 
 frame  .l1wid.bf45.sc.1
 
@@ -1584,6 +1579,8 @@ pack \
 	.l1wid.bf45.q.2  \
 	.l1wid.bf45.q.3 \
 	.l1wid.bf45.q.4  \
+	.l1wid.bf45.q.44 \
+	.l1wid.bf45.q.45 \
 	-side left 
 
 pack 	.l1wid.bf45.p.fma \

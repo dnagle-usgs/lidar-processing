@@ -109,8 +109,8 @@ See also: transect, _transect_history
 func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=, rcf_parms= ) {
 /* DOCUMENT transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color= )
 
-   fs   fs_all structure where you drew the line.
-   line the line.
+   fs       fs_all structure where you drew the line.
+   l        the line (as given by mouse()).
    lw=      search distance either side of the line in centimeters.
    xtime=   1 to plot against time (sod)
    xfma=    set to clear screen

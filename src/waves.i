@@ -21,23 +21,7 @@ struct WAVE_DATA {
    float  levels(16);
 };
 
-maxlvl = 250
-minlvl = -maxlvl
-wave_data = WAVE_DATA();
-wave_data.x0 = span(-25400,25600,256) (,-:1:256)
-wave_data.y0 = span(-25400,25600,256) (-:1:256,)
-wave_data.levels = span(minlvl,maxlvl,16)
 
-fftx = span(-1.5707961, 1.5585241, 256) (,-:1:256)
-ffty = span(-1.5707961, 1.5585241, 256) (-:1:256,)
-d2r = pi/180.
-dtr = d2r
-tha360 = d2r * span(0, 360, 121)
-circly = cos(tha360)
-circlx = sin(tha360)
-radials = span(10,90,9)
-xradials = 0.9*cos(radials*d2r)
-yradials = 0.9*sin(radials*d2r)
 
 func process_a_segment {
  extern fs_all;
@@ -122,7 +106,7 @@ wave_data.checker_board = ((-1)^span(1,256,256)) * ((-1)^(span(1,256,256))) (-,)
 ////////////////////////////////////////
 
 ////////////////////////////////////////
-// Ed's binning code
+// Eds binning code
 ////////////////////////////////////////
  iy = int(128.5 + rsn/200.)
  ix = int(128.5 + rse/200.)
@@ -224,6 +208,30 @@ func clean_and_sort( fs, vwidth )
  return ms;
 
 }
+
+
+/*************************************************************
+  Inline code goes below. 
+**************************************************************/
+
+maxlvl = 250
+minlvl = -maxlvl
+wave_data = WAVE_DATA();
+wave_data.x0 = span(-25400,25600,256) (,-:1:256)
+wave_data.y0 = span(-25400,25600,256) (-:1:256,)
+wave_data.levels = span(minlvl,maxlvl,16)
+
+fftx = span(-1.5707961, 1.5585241, 256) (,-:1:256)
+ffty = span(-1.5707961, 1.5585241, 256) (-:1:256,)
+d2r = pi/180.
+dtr = d2r
+tha360 = d2r * span(0, 360, 121)
+circly = cos(tha360)
+circlx = sin(tha360)
+radials = span(10,90,9)
+xradials = 0.9*cos(radials*d2r)
+yradials = 0.9*sin(radials*d2r)
+
 
 
 
