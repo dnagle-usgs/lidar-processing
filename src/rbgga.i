@@ -42,6 +42,12 @@ Other:
   it must be verified and converted by the gga2bin.c. program.  
 
   $Log$
+  Revision 1.17  2002/09/26 13:44:42  amar
+  geo_bath.i : renamed function display_bath to make_fs_bath.  This function makes the bathymetry structure GEOALL.  Deleted function write_topo (a modified version of it can be found in surface_topo.i).  Other changes made to return an array instead of automatically writing to a file.  Added option to write bathy data to a file.
+  l1pro.ytk: This GUI interacts with yorick to select regions on the flight track map and process the data optionally for sub-aerial topography or bathymetry.  The GUI also allows you to plot an xyz image in a yorick window.  Added scale bars for cmin, cmax, and msize.
+  rbgga.i : Added function sel_region to select a region in the flight track window.
+  surface_topo.i : Added functions make_fs and write_topo to make a first surface image using l1pro.ytk and write that image to a file.
+
   Revision 1.16  2002/09/05 15:34:48  amar
   eaarl.ytk:  Modified rbgga gui to move the 'Flight Plans' Frame below 'Map controls'.
   rbgga.i : Modified win_pip_sel function to select the required window (default #6).
@@ -480,6 +486,83 @@ func gga_find_times( q, win=, plt= ) {
   return ssa;
 }
 
+func sel_region (q) {
+   /* DOCUMENT sel_region(q)
+      This function extracts the raster numbers for a region selected.  
+      It returns a the array rn_arr containing start and stop raster numbers
+      for each flightline.
+      amar nayegandhi 9/18/02.
+   */
+  
+   /* find the start and stop times using gga_find_times in rbgga.i */
+   t = gga_find_times(q);
+
+   if (is_void(t)) {
+     write, "No flightline found in selected area. Please start again... \r";
+     return
+   }
+
+   write, "\n";
+   write,format="Total seconds of flightline data selected = %6.2f\n", 
+         (t(dif, ))(,sum);
+
+
+   /* now loop through the times and find corresponding start and 
+      stop raster numbers 
+   */
+   no_t = numberof(t(1,));
+   write, format="Number of flightlines selected = %d \n", no_t;
+   rn_arr = array(int,2,no_t);
+   tyes_arr = array(int,no_t);
+   tyes_arr(1:0) = 1;
+   write,""
+   for (i=1;i<=numberof(t(1,));i++) {
+      tyes = 1;
+      write, format="Processing %d of %d\r", i, numberof(t(1,));
+      if ((tans.somd(1) > t(2,i)) || (tans.somd(0) < t(1,i))) {
+         write, format="Corresponding TANS data for flightline %d not found."+
+                       "Omitting flightline ... \n",i;
+	 tyes = 0;
+	 tyes_arr(i)=0;
+      } else if ((tans.somd(1) > t(1,i)) && (tans.somd(0) >= t(2,i))) {
+         t(1,i) = tans.somd(1);
+         write, format="Corresponding TANS data for beginning section"+
+                       "of flightline %d not found.  Selecting part "+
+                       "of flightline ... \n",i;
+      } else if ((tans.somd(1) <= t(1,i)) && (tans.somd(0) < t(2,i))) {
+         t(2,i) = tans.somd(0);
+         write, format="Corresponding TANS data for end section of "+
+                       "flightline %d not found.  Selecting part of "+
+                       "flightline ... \n",i;
+      }
+      if (tyes) {
+         rn_indx_start = where(((edb.seconds - soe_day_start) ) == int(t(1,i)));
+         rn_indx_stop = where(((edb.seconds - soe_day_start) ) == ceil(t(2,i)));
+         if (!is_array(rn_indx_start) || !is_array(rn_indx_stop)) {
+            write, format="Corresponding Rasters for flightline %d not found."+
+                          "  Omitting flightline ... \n",i;
+	    rn_start = 0;
+	    rn_stop = 0;
+	    tyes_arr(i) = 0;
+         } else {
+            rn_start = rn_indx_start(1);
+            rn_stop = rn_indx_stop(0);
+         }
+
+         rn_arr(,i) =  [rn_start, rn_stop];
+      }
+   }
+   write,format="\nNumber of Rasters selected = %6d\n", (rn_arr(dif, )) (,sum); 
+
+
+
+   /* use tyes_arr to decide first valid flightline */
+   tindx = where(tyes_arr == 0);
+   if (is_array(tindx))
+   rn_arr(,tindx) = 0;
+   return rn_arr;
+
+} 
 
 func mk_photo_list( q, ofn= ) {
 /* DOCUMENT mk_photo_list(q)

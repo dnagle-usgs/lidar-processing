@@ -4,7 +4,7 @@
 
   set ofname ""
 
-exp_send "#include \"geo_bath.i\"\r"; # load geobath.i code
+exp_send "#include \"geo_bath.new.i\"\r"; # load geobath.i code
 expect ">";
 
 package require BWidget
@@ -18,6 +18,10 @@ frame .l1wid.bf3
 frame .l1wid.bf4 
 frame .l1wid.bf4.1
 frame .l1wid.bf4.2
+frame .l1wid.bf45
+frame .l1wid.bf45.sc
+frame .l1wid.bf45.p
+frame .l1wid.bf5
 
 .l1wid configure -menu .l1wid.mb
 menu .l1wid.mb
@@ -46,85 +50,205 @@ menu .l1wid.mb.load
 		-command { exp_send "type = define_bath_ctl(junk); \r"
 			 }
 
-LabelEntry .l1wid.bf2.op  -width 70 -relief sunken -bd 3 -label "Opath:  " -helptext "Enter Output File Path Here" \
-		-textvariable opath
 
-LabelEntry .l1wid.bf2.of  -width 70 -relief sunken -bd 3 -label "Ofname: " -helptext "Enter Output File Name for GOOD Data Here" \
-		-textvariable ofname
-
-ComboBox .l1wid.bf2.utm.1 -text "Coordinate System" -width 18 -values "LatLon UTM" -helptext "Select the Coordinate System." -editable 0 
-
-LabelEntry .l1wid.bf2.utm.2 -width 6 -relief sunken  -label "UTM Zone: " -helptext "Enter UTM Zone Here" \
+ComboBox .l1wid.bf4.1.d -text "Define Region using..." -width 22 -values "Rubberband-Box Points-in-Polygon Line-Segment Enter_Rectangular_Coordinates" -helptext "Select region to process using any of the following methods" -editable 0 -modifycmd {
+    set defr [.l1wid.bf4.1.d getvalue]
+    puts $defr
+    if {$defr == 0} {
+       exp_send "q = gga_win_sel(2,latutm=1);\r"
+       expect ">"
+    }
+    if {$defr == 1} {
+       exp_send "q = gga_pip_sel(1);\r"
+       expect ">"
+    }
+    if {$defr == 2} {
+       exp_send "q = gga_click_sel(1);\r"
+       expect ">"
+    }
+    if {$defr == 3} {
+        destroy .l1widc
+        toplevel .l1widc
+	frame .l1widc.lon
+	frame .l1widc.1
+	frame .l1widc.utm
+	ComboBox .l1widc.utm.1 -text "Coordinate System" -width 18 -values "LatLon UTM" \
+		-helptext "Select the Coordinate System." -editable 0 
+	LabelEntry .l1widc.utm.2 -width 6 -relief sunken  -label "UTM Zone: " -helptext "Enter UTM Zone Here" \
 		-textvariable zone 
-		#-editable [.l1wid.bf2.utm.1 getvalue]
 
-
-# now make entry and button widgets to select region
-LabelEntry .l1wid.bf3.lat1 -width 12 -relief sunken -label "NorthLat/Max.Northing " \
+	LabelEntry .l1widc.lat1 -width 12 -relief sunken -label "NorthLat/Max.Northing " \
 		-helptext "Enter Maximum Latitude in degrees or Maximum UTM Northing in meters Here"\
 		-textvariable mxlat
-LabelEntry .l1wid.bf3.lat2 -width 12 -relief sunken -label "SouthLat/Min.Northing  " \
+	LabelEntry .l1widc.lat2 -width 12 -relief sunken -label "SouthLat/Min.Northing  " \
 		-helptext "Enter Minimum Latitude in degrees or Minimum UTM Northing in meters Here"\
 		-textvariable mnlat
 
-frame .l1wid.bf3.lon
-frame .l1wid.bf3.lon.but
-LabelEntry .l1wid.bf3.lon.mn -width 12 -relief sunken -label "WestLon/Min.Easting  " \
+	LabelEntry .l1widc.lon.mn -width 12 -relief sunken -label "WestLon/Min.Easting  " \
 		-helptext "Enter Westernmost Longitude in degrees or Minimum UTM Easting in meters Here"\
 		-textvariable mnlon
-LabelEntry .l1wid.bf3.lon.mx -width 12 -relief sunken -label "EastLon/Max.Easting " \
+	LabelEntry .l1widc.lon.mx -width 12 -relief sunken -label "EastLon/Max.Easting " \
 		-helptext "Enter Easternmost Longitude in degrees or Maximum UTM Easting in meters Here"\
 		-textvariable mxlon
-Button .l1wid.bf3.lon.but.1 -text "Select Rectangular Region" -helptext "Select by dragging region in gga plot (window 6)" \
-		-command { 
-		   exp_send "q = gga_win_sel(2,latutm=1);\r"
-		   expect ">"
-		   }
-Button .l1wid.bf3.lon.but.2 -text "Select Region Using PIP" -helptext "Select by clicking in region to complete a polygon (window 6)" \
-		-command { 
-		   exp_send "q = gga_pip_sel(1);\r"
-		   expect ">"
-		   }
+	Button .l1widc.1.ok -text "OK" -width 5 -command {
+          set utm [.l1widc.utm.1 getvalue]
+	  destroy .l1widc
+	}
+	Button .l1widc.1.cancel -text "Cancel" -width 5 -command {
+	  destroy .l1widc
+	}
+	pack .l1widc.utm.1 .l1widc.utm.2 -side left 
+	pack .l1widc.lon.mn .l1widc.lon.mx -side left -padx 4
+	pack .l1widc.utm .l1widc.lat1 .l1widc.lon .l1widc.lat2 -side top -pady 5
+	pack .l1widc.1.ok .l1widc.1.cancel -side left
+	pack .l1widc.1 -side top
 
-checkbutton .l1wid.bf4.1.xba -text "Extract Data with False First Returns" -variable xba 
-checkbutton .l1wid.bf4.1.xbd -text "Extract Data with False Depth" -variable xbd 
+
+   }
+   if {$defr == -1} {
+	error "Please Define Region."
+   }
+} 
+
+ComboBox .l1wid.bf4.1.p -text "Process Data For" -width 22 -values "SubAerial-Topography Submerged-Bathymetry Vegetation" -helptext "Process Data for any of the following" -editable 0 
+
 checkbutton .l1wid.bf4.2.cll -text "Convert UTM to Lat Lon" -variable cll 
 checkbutton .l1wid.bf4.2.cng -text "Convert to NAVD 88 (GEOID)" -variable cng 
 
-Button .l1wid.bf5 -text "Begin Processing" -width 20 \
+Button .l1wid.bf45.p.1 -text "Plot Data" -width 15 -command {
+     #fill in later using what to plot
+     set fs 0
+     set ba 0
+     set de 0
+     set disp_type [.l1wid.bf45.p.5 getvalue]
+     if {$disp_type == -1} {
+       	tk_messageBox  -icon warning \
+        -message "You need to specify the type of data to display!" \
+        -type ok
+     }
+     if {$disp_type == 0} { set fs  1}
+     if {$disp_type == 1} { set ba  1}
+     if {$disp_type == 2} { set de  1}
+     if {$disp_type == 3} { set veg  1}
+     if {$disp_type == 4} { set fint 1}
+     if {$disp_type == 5} { set lint 1}
+     set ptype [.l1wid.bf4.1.p getvalue]
+     if {$ptype == -1} {
+       	tk_messageBox  -icon warning \
+        -message "You need to specify the type of processed data i.e. topo, bathy or veg!" \
+        -type ok
+     }
+     if {$ptype == 0} {
+       set cmax1 [expr $cmax*100]
+       set cmin1 [expr $cmin*100]
+       if {$disp_type == 0} {
+         exp_send "display, fs_all, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, dofma=1, edt=1;\r"
+         expect ">"
+         exp_send "colorbar, $cmin, $cmax;\r"
+         expect ">"
+       }
+     }
+     if {$ptype == 1} {
+       exp_send "plot_bathy, depth_all, win=$win_no, ba=$ba, fs = $fs, de = $de , cmin=$cmin, cmax=$cmax, msize = $msize; \r"
+       expect ">"
+       }
+}
+
+Label .l1wid.bf45.p.2 -text "in Window "
+SpinBox .l1wid.bf45.p.3 -justify center -range {0 7 1} -width 5 -textvariable win_no 
+
+Label .l1wid.bf45.p.4 -text "to display"
+ComboBox .l1wid.bf45.p.5 -text "Display Type" -width 20 -values "First_Surface_Topography Sub-aqueous_Topography Water_Depth Bare_Earth_Topography" -helptext "Select any one of the following" -editable 0
+#listbox .l1wid.bf45.5 -height 1 -yscrollcommand ".l1wid.bf45.scrl set" -width 24
+#scrollbar .l1wid.bf45.scrl  -command ".l1wid.bf45.5 yview"
+#.l1wid.bf45.5 insert end "First Surface Topography"
+#.l1wid.bf45.5 insert end "Sub-aqueous Topography"
+#.l1wid.bf45.5 insert end "Water Depth"
+#.l1wid.bf45.5 insert end "Bare Earth Topography"
+
+scale .l1wid.bf45.sc.1 -orient horizontal -from -50 -to 50 -variable cmin -resolution 0.5 -label cmin -length 150
+scale .l1wid.bf45.sc.2 -orient horizontal -from -50 -to 50 -variable cmax -resolution 0.5 -label cmax -length 150
+scale .l1wid.bf45.sc.3 -orient horizontal -from 0 -to 5 -variable msize -resolution 0.25 -label msize -length 100
+
+Button .l1wid.bf5.1 -text "Write Data to File" -width 20 \
 		-command {
-    if { ![ string equal  "" $ofname ] } {
-          set utm [.l1wid.bf2.utm.1 getvalue]
-	  exp_send "utm = $utm\n"
+	destroy .l1wid1
+        toplevel .l1wid1
+	frame .l1wid1.1
+        set ptype [.l1wid.bf4.1.p getvalue]
+	LabelEntry .l1wid1.op  -width 70 -relief sunken -bd 3 -label "Opath:  " -helptext "Enter Output File Path Here" \
+		-textvariable opath
+
+	LabelEntry .l1wid1.of  -width 70 -relief sunken -bd 3 -label "Ofname: " \
+		-helptext "Enter Output File Name for GOOD Data Here" \
+		-textvariable ofname
+
+	Button .l1wid1.1.ok -text "OK" -width 5 -command {
+    	  if { ![ string equal  "" $ofname ] } {
+ 	    if {$ptype == 0} {
+ 	     exp_send "write_topo, \"$opath\", \"$ofname\", fs_all; \r";
+	     expect ">"
+	    }
+ 	    if {$ptype == 1} {
+      	     exp_send "write_bathy, \"$opath\", \"$ofname\", depth_all; \r";
+	     expect ">"
+	    }
+	     destroy .l1wid1
+    	  } else { 
+       	    tk_messageBox  -icon warning \
+            -message "You need to specify an output file name" \
+            -type ok
+          }
+        }
+ 
+ 	Button .l1wid1.1.cancel -text "Cancel" -width 5 -command {
+	   destroy .l1wid1
+ 	}
+	pack .l1wid1.1.ok .l1wid1.1.cancel -side left -padx 5
+	pack .l1wid1.op .l1wid1.of .l1wid1.1 -side top -pady 5	
+  }
+
+Button .l1wid.bf5.2 -text "Begin Processing" -width 20 \
+		-command {
+	 exp_send "utm = $utm\n"
+	 set ptype [.l1wid.bf4.1.p getvalue]
+	 exp_send "ptype = $ptype\n\r"
           #exp_send "make_bathy, opath=\"$opath\", ofname=\"$ofname\",\
           #    ext_bad_att=$xba, ext_bad_depth=$xbd, latutm = 1, llarr=\[$mnlon,\
           #    $mxlon, $mnlat, $mxlat\];\r"
-          exp_send "make_bathy, opath=\"$opath\", ofname=\"$ofname\",\
-              ext_bad_att=$xba, ext_bad_depth=$xbd, latutm = 1, q = q;\r"
+	 if {$ptype == 0} {
+	    exp_send "fs_all = make_fs(latutm=1, q=q, ext_bad_att=1);\r"
+	    expect ">"
+	 }
+	 if {$ptype == 1} {
+           exp_send "depth_all = make_bathy(latutm = 1, q = q, ext_bad_depth=1, ext_bad_att=1);\r"
+	   expect ">"
+	 }
               
-    } else { 
-       tk_messageBox  -icon warning \
-        -message "You need to specify an output file name before\
-processing."  \
-        -type ok
-    }
-}
+ }
 
 
-pack .l1wid.bf2.utm.1 .l1wid.bf2.utm.2 -side left -padx 8
-pack .l1wid.bf2.op  .l1wid.bf2.of .l1wid.bf2.utm -side top -pady 8
-pack .l1wid.bf3.lon.but.1 .l1wid.bf3.lon.but.2 -side top -padx 4
-pack .l1wid.bf3.lon.mn .l1wid.bf3.lon.but .l1wid.bf3.lon.mx -side left -padx 4
-pack .l1wid.bf3.lat1 .l1wid.bf3.lon .l1wid.bf3.lat2 -side top -pady 5
-pack  .l1wid.bf4.1.xba .l1wid.bf4.1.xbd  -side top -padx 20 -pady 5
-pack  .l1wid.bf4.2.cll .l1wid.bf4.2.cng  -side top -padx 20 -pady 5
-pack .l1wid.bf4.1 .l1wid.bf4.2 -side left 
+#pack  .l1wid.bf2.utm.1 .l1wid.bf2.utm.2 -side left 
+#pack .l1wid.bf2.op  .l1wid.bf2.of .l1wid.bf2.utm -side top -pady 8
+#pack .l1wid.bf2.utm -side top -pady 8
+#pack .l1wid.bf3.lon.but.1 .l1wid.bf3.lon.but.2 -side top -padx 4
+#pack .l1wid.bf3.lon.mn .l1wid.bf3.lon.mx -side left -padx 4
+#pack .l1wid.bf3.lat1 .l1wid.bf3.lon .l1wid.bf3.lat2 -side top -pady 5
+#pack  .l1wid.bf4.1.cb .l1wid.bf4.1.xba .l1wid.bf4.1.xbd .l1wid.bf4.1.xbv -side top -padx 20 -pady 5
+#pack  .l1wid.bf4.1 -side top -padx 20 -pady 5
+pack .l1wid.bf4.1.d .l1wid.bf4.1.p -side left -padx 5
+pack  .l1wid.bf4.2.cll .l1wid.bf4.2.cng -side left -padx 3
+pack .l1wid.bf4.1 .l1wid.bf4.2 -side top -pady 5
 pack .l1wid.bf1 .l1wid.bf2 .l1wid.bf3 .l1wid.bf4 -side top -expand 1 -fill both
-pack .l1wid.bf5 -side top -padx 50 -pady 10
+pack .l1wid.bf45.sc.1 .l1wid.bf45.sc.2 .l1wid.bf45.sc.3 -side left  -padx 3
+pack .l1wid.bf45.p.1 .l1wid.bf45.p.2 .l1wid.bf45.p.3 .l1wid.bf45.p.4 .l1wid.bf45.p.5 -side left
+pack .l1wid.bf45.p .l1wid.bf45.sc  -side top 
+pack .l1wid.bf5.1 .l1wid.bf5.2 -side right
+pack .l1wid.bf45 .l1wid.bf5 -side top -pady 10
 
 proc send_latlon_to_l1pro {minlon maxlon minlat maxlat utm} {
    global mnlon mxlon mnlat mxlat 
-   .l1wid.bf2.utm.1 setvalue @$utm
+   .l1widc.utm.1 setvalue @$utm
    set mnlon $minlon
    set mxlon $maxlon
    set mnlat $minlat
