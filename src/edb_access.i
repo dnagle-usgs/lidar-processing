@@ -256,7 +256,7 @@ if ( _ytk ) {
  }
  /* adding time correct array (tca) function */
  time_correct, data_path;
- write,"load_edb_completed";
+ write,"load_edb_completed\r";
 }
 
 

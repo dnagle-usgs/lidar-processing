@@ -10,15 +10,15 @@
 #
 
 
-proc edb_status { } {
- global edb;
- destroy .edb
- if { [ info exists edb ] == 0 } {
-   tk_messageBox -type ok \
-	-icon warning \
-	-message { No EDB (EAARL Data Base) is loaded }
-   return;
- }
+#proc edb_status { } {
+# global edb;
+# destroy .edb
+# if { [ info exists edb ] == 0 } {
+#   tk_messageBox -type ok \
+#	-icon warning \
+#	-message { No EDB (EAARL Data Base) is loaded }
+#   return;
+# }
 
  toplevel .edb
  set v " \
