@@ -466,6 +466,9 @@ menu .l1wid.mb.filter
   	set dtype [.l1wid.bf45.p.5 getvalue]
         set var_no [.l1wid.bf45.p.15 getvalue]
         set var_type [lindex $varlist $var_no]
+
+     	if {$utmll == "UTM"} {set latlon 0}
+     	if {$utmll == "LATLON"} {set latlon 1}
 	    if {$zclip == 0} { set zclips  "\[\]" } 
 	    if {$zclip == 1} { set zclips "\[$zmin, $zmax\]"}
 	    if {$delimit == "space"} {
@@ -480,28 +483,28 @@ menu .l1wid.mb.filter
 	   
 
  	    if {$ptype == 0} {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=FS, rn=$rnidx, soe=$soeindx, noheader=!$hline; \r";
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=FS, rn=$rnidx, soe=$soeindx, noheader=!$hline, latlon=$latlon; \r";
 	       expect ">"
 	    }
  	    if {$ptype == 1} {
 	      if {$dtype == 0} {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=GEO, rn=$rnidx, soe=$soeindx, noheader=!$hline; \r";
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=GEO, rn=$rnidx, soe=$soeindx, noheader=!$hline, latlon=$latlon; \r";
 	      } else {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=2, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=GEO, rn=$rnidx, soe=$soeindx, noheader=!hline; \r";
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=2, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=GEO, rn=$rnidx, soe=$soeindx, noheader=!hline, latlon=$latlon; \r";
 	      }
 	       expect ">"
 	    } 
  	    if {$ptype == 2} {
 	      if {$dtype == 0} {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=VEG__, rn=$rnidx, soe=$soeindx, noheader=!$hline; \r";
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=VEG__, rn=$rnidx, soe=$soeindx, noheader=!$hline, latlon=$latlon; \r";
 	      } else {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=3, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=VEG__, rn=$rnidx, soe=$soeindx, noheader=!$hline; \r";
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=3, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=VEG__, rn=$rnidx, soe=$soeindx, noheader=!$hline, latlon=$latlon; \r";
 	      } 
 
 	      expect ">"
 	    }
  	    if {$ptype == 3} {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=CVEG_ALL, rn=$rnidx, soe=$soeindx, noheader=!$hline; \r";
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=CVEG_ALL, rn=$rnidx, soe=$soeindx, noheader=!$hline, latlon=$latlon; \r";
 	       expect ">"
 	    }
 	    #destroy .l1asc
@@ -511,8 +514,10 @@ menu .l1wid.mb.filter
         }
 
         wm title .l1asc "Write Ascii Data"
-        LabelFrame .l1asc.ops -relief groove -borderwidth 3 -text "Options:"
-        LabelFrame .l1asc.ops.1 -relief groove -borderwidth 3 -text "Include:"
+        LabelFrame .l1asc.ops -justify center -relief groove -borderwidth 3 -text "Options:"
+        set utmll "UTM"
+        tk_optionMenu .l1asc.ops.0 utmll UTM LATLON
+        LabelFrame .l1asc.ops.1 -justify center -relief groove -borderwidth 3 -text "Include:"
         frame .l1asc.ops.2 -relief groove -borderwidth 3
         frame .l1asc.fn -relief groove -borderwidth 3
         frame .l1asc.cmd -relief groove -borderwidth 3
@@ -568,7 +573,7 @@ menu .l1wid.mb.filter
         pack .l1asc.ops.1.s0 .l1asc.ops.1.indx .l1asc.ops.1.s1 .l1asc.ops.1.rn .l1asc.ops.1.s2 .l1asc.ops.1.int .l1asc.ops.1.s3  .l1asc.ops.1.soe  .l1asc.ops.1.s4 .l1asc.ops.1.header .l1asc.ops.1.s5 -side left -fill both -padx 3
 
  	pack .l1asc.ops.2.dl .l1asc.ops.2.d .l1asc.ops.2.s1 .l1asc.ops.2.split .l1asc.ops.2.s2 .l1asc.ops.2.zclip .l1asc.ops.2.zmin .l1asc.ops.2.zmax -side left -padx 3 -fill both
-	pack .l1asc.ops.1 .l1asc.ops.2 -side top
+	pack .l1asc.ops.0 .l1asc.ops.1 .l1asc.ops.2 -side top
  
  	Button .l1asc.cmd.cancel -text "Cancel" -width 5 -command {
 	   set write_some 0

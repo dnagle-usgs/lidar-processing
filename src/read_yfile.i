@@ -650,7 +650,7 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
      zclip = [ -600.0, 30000.0 ];
   zclip *= 100.0;
   
- if (!zone) { 
+ if (latlon && !zone) { 
     zone = curzone;
     if (!zone) {
       szone = "";
