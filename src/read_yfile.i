@@ -586,7 +586,7 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
     intensity = set to 1 if you want to additionally include the intensity value in the output file
     delimit =  a string containing a single character to delimite ascii output with.
     zclip = [ lower, upper] Clip out, and don't write values outside the range given in the
-            zclip array.
+            zclip array. These lower and upper values are in centimeters.
     modified 12/30/02 amar nayegandhi to :
       write out x,y,z (first surface elevation) data for type=1
       to split at 1 million points and write to another file
@@ -598,15 +598,15 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
     delimit = ",";
   }   
   delimit = ((*pointer( delimit ))(1))
+  if ( !is_array( zclip ) ) zclip = [ -6000.0, 300000.0 ];
 
   fn = opath+ofname;
 
   /* open file to read/write (it will overwrite any previous file with same name) */
   f = open(fn, "w");
-  if (numberof(data_arr) != numberof(data_arr.north)) {
+  //if (numberof(data_arr) != numberof(data_arr.north)) {
      if (type == 1) { //convert FS_ALL to FS
-       data_new = array(FS, numberof(data_arr)*120);
-       if ( !is_array( zclip ) ) zclip = [ -6000.0, 300000.0 ];
+       /*data_new = array(FS, numberof(data_arr)*120);
        rindx = where(data_arr.raster >= 0);
        if (is_array(rindx)) {
 	data_new.north = data_arr.north(rindx);
@@ -623,14 +623,21 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
           data_arr = data_new(n_rindx);
         }
        }
+     */
+        data_arr = clean_topo(data_arr);
      }
      if (type == 2) { //Convert GEOALL to GEO 
-       data_new = geoall_to_geo(data_arr);
+       //data_arr = geoall_to_geo(data_arr);
+       data_arr = clean_bathy(data_arr);
      }
-     if ((type == 3)) {  //convert VEG_ALL to VEG_
-       data_new = veg_all__to_veg__(data_arr);
+     if ((type == 3)) {  //clean veg_all_ and convert to veg__
+       //data_new = veg_all__to_veg__(data_arr);
+       data_arr = clean_veg(data_arr, type=type);
      }
-  }
+     if ((type == 5)) {  //convert VEG_ALL to VEG_
+       data_arr = clean_veg(data_arr, type=type);
+     }
+  //}
 
   totw = 0;
   num_valid = numberof(data_arr.north);
@@ -662,7 +669,18 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
      write,f, "Indx, UTMX(m), UTMY(m), Z(m), Intensity";
    }
 
-  zvalid = ( data_arr.elevation > zclip(1) ) & (data_arr.elevation  < zclip(2) );
+  if (type == 1) {
+    zvalid = ( (data_arr.elevation) > zclip(1) ) & (data_arr.elevation  < zclip(2) );
+  }
+  if (type == 2) {
+    zvalid = ( (data_arr.elevation+data_arr.depth) > zclip(1) ) & ((data_arr.elevation+data_arr.depth)  < zclip(2) );
+  }
+  if ((type == 3) || (type == 5)) {
+    zvalid = ( (data_arr.lelv) > zclip(1) ) & (data_arr.lelv  < zclip(2) );
+  }
+  if (type == 4) {
+    zvalid = ( (data_arr.depth) > zclip(1) ) & (data_arr.depth  < zclip(2) );
+  }
   for (i=1;i<=num_valid;i++) {
     if (zvalid(i) ) {
     ++totw;
@@ -690,22 +708,35 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
     }
     if (type == 1) {
         z = data_arr.elevation(i)/100.;
+	east = data_arr.east(i)/100.;
+	north = data_arr.north(i)/100.;
     }
     if (type == 2) {
         z = (data_arr.elevation(i) + data_arr.depth(i))/100.;
+	east = data_arr.east(i)/100.;
+	north = data_arr.north(i)/100.;
     }
     if (type == 3) {
         z = data_arr.lelv(i)/100.;
+	east = data_arr.least(i)/100.;
+	north = data_arr.lnorth(i)/100.;
     }
     if (type == 4) {
         z = data_arr.depth(i)/100.;
+	east = data_arr.east(i)/100.;
+	north = data_arr.north(i)/100.;
+    }
+    if (type == 5) {
+        z = data_arr.lelv(i)/100.;
+	east = data_arr.east(i)/100.;
+	north = data_arr.north(i)/100.;
     }
  
     if (!indx && !intensity) {
          write, f, format="%9.2f%c %10.2f%c %8.2f\n",
-	 data_arr.east(i)/100.,
+	 east,
 	 delimit,
-	 data_arr.north(i)/100.,
+	 north,
 	 delimit,
 	 z;
     } 
@@ -713,17 +744,17 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
          write, f, format="%d%c %9.2f%c %10.2f%c %8.2f\n",
 	 totw, 
 	 delimit,
-	 data_arr.east(i)/100.,
+	 east,
 	 delimit,
-	 data_arr.north(i)/100., 
+	 north,
 	 delimit,
 	 z;
     } 
     if (!indx && intensity) {
          write, f, format="%9.2f%c %10.2f%c %8.2f%c %d\n",
-	 data_arr.east(i)/100.,
+	 east,
 	 delimit,
-	 data_arr.north(i)/100., 
+	 north,
 	 delimit,
 	 z, 
 	 delimit,
@@ -733,9 +764,9 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
         write, f, format="%d%c %9.2f%c %10.2f%c %8.2f%c %d\n",
 	totw, 
 	 delimit,
-	data_arr.east(i)/100.,
+	east,
 	 delimit,
-	data_arr.north(i)/100.,
+	north,
 	 delimit,
 	z, 
 	 delimit,
