@@ -165,15 +165,22 @@ proc polydraw'markNodes {w item} {
 #---- Added W. W. 
 proc output_polys { } {
   global dims
-  foreach p [ .canf.can find withtag poly ] {
-    puts ""
-    puts "# Polygon: $p"
-    puts "poly$p = \["
-    foreach { x y } [ .canf.can coords $p ] {
-      puts "  [scrx2utm $x], [scry2utm $y],"
-    }
-    puts "\]"
+  set ofn [ tk_getSaveFile ]
+  if { $ofn == "" } { 
+	return;
   }
+  set ofd [ open $ofn w ]
+  foreach p [ .canf.can find withtag poly ] {
+    puts $ofd ""
+    puts $ofd "// Polygon: $p"
+    puts $ofd "poly$p = \["
+    foreach { x y } [ .canf.can coords $p ] {
+      puts $ofd "  [ utm2ll [scry2utm $y] [scrx2utm $x] $dims(zone) ],"
+##      puts $ofd "  [scrx2utm $x], [scry2utm $y],"
+    }
+    puts $ofd "\]"
+  }
+  close $ofd
 }
 
 
@@ -186,7 +193,7 @@ proc output_polys { } {
 # Load an image file
 ###################################################################
 proc load_file { fn } {
- global img dims
+ global img dims 
   puts "load file: $fn"
   set n [ split $fn "_" ]
   set dimstr [ split [ lindex $n 1 ] "x" ];
@@ -197,24 +204,104 @@ proc load_file { fn } {
   set dims(ln)   [ lindex $dimstr 2  ]
   set dims(re)   [ lindex $dimstr 3  ]
   set dims(rn)   [ lindex $dimstr 4  ]
-#  set dims(dx)   [ lindex $dimstr 5  ]
-#  set dims(dy)   [ lindex [ split [ lindex $dimstr 6  ] "." ] 0 ]
 
-#  .canf.can  configure -height $dims(dy) -width $dims(dx)
+ $img configure -height 1 -width 1
+ $img configure -height 0 -width 0
  $img read $fn
- set dims(dx) [image width $img];
+
+ set dims(dx) [image width  $img ];
  set dims(dy) [image height $img ];
- set dims(eastd)    [ expr $dims(re) - $dims(le)   ];
- set dims(northd)   [ expr $dims(rn) - $dims(ln)   ];
- set dims(scrx2utm) [ expr $dims(eastd) / double($dims(dx))];
- set dims(scry2utm) [ expr $dims(northd) / double($dims(dy))];
+
+# Preload default values in case the file name doesn't
+# include proper any UTM information
+ set dims(eastd)  $dims(dx)
+ set dims(northd) $dims(dy)
+ set dims(scrx2utm) 1
+ set dims(scry2utm) -1
+
+ if  { [ catch { 
+  set dims(eastd)    [ expr $dims(re) - $dims(le)   ];
+  set dims(northd)   [ expr $dims(rn) - $dims(ln)   ];
+  set dims(scrx2utm) [ expr $dims(eastd) / double($dims(dx))];
+  set dims(scry2utm) [ expr $dims(northd) / double($dims(dy))];
+ } ] } {
+   tk_messageBox \
+	-icon warning \
+	-message "No UTM configuration information embedded within the filename."
+ }
+
+  show_meta_data;
  .canf.can configure -scrollregion "0 0 $dims(dx) $dims(dy) "
 
  .canf.location.zone configure -text "UTM Zone: $dims(zone) "
- puts "reported: [image type $img] $dims(dx) $dims(dy)"
- puts "$dims(zone) $dims(le)-$dims(re) $dims(ln)-$dims(rn)"
- puts "$dims(re) $dims(rn) $dims(dx) $dims(dy)"
- puts "$dims(eastd) $dims(northd) $dims(scrx2utm) $dims(scry2utm)"
+# puts "reported: [image type $img] $dims(dx) $dims(dy)"
+# puts "$dims(zone) $dims(le)-$dims(re) $dims(ln)-$dims(rn)"
+# puts "$dims(re) $dims(rn) $dims(dx) $dims(dy)"
+# puts "$dims(eastd) $dims(northd) $dims(scrx2utm) $dims(scry2utm)"
+}
+
+proc center_window {w} {
+    wm withdraw $w
+    update idletasks
+    set x [expr [winfo screenwidth $w]/2 - [winfo reqwidth $w]/2 \
+	  - [winfo vrootx [winfo parent $w]]]
+    set y [expr [winfo screenheight $w]/2 - [winfo reqheight $w]/2 \
+	  - [winfo vrooty [winfo parent $w]]]
+    wm geom $w +$x+$y
+    wm deiconify $w
+}
+
+proc show_meta_data {} {
+  global dims
+  set w .meta
+  destroy $w
+  toplevel $w
+
+  set row 0
+
+#------------  
+  label $w.lpixdims -text "Pixels"
+  grid $w.lpixdims -column 0 -row $row
+  label $w.pixdims -text "$dims(dx)x$dims(dy)"
+  grid $w.pixdims -column 1 -row $row
+#------------  
+  incr row
+  label $w.lkmdims -text "Km"
+  set xk [format %7.2f [expr $dims(eastd)/1000.0]]
+  set yk [format %7.2f [expr $dims(northd)/1000.0]]
+  set x x
+  label $w.kmdims -text "$xk $x$yk"
+  grid $w.lkmdims -column 0 -row $row
+  grid $w.kmdims  -column 1 -row $row
+#------------  
+  incr row
+  label $w.lzone -text "UTM Zone"
+  grid  $w.lzone -column 0 -row $row
+  entry $w.zone  -textvariable dims(zone)  -width 5
+  grid $w.zone  -column 1 -row $row
+#------------  
+  label $w.lln -text "North(m)"
+  label $w.lle -text "East(m)"
+  label $w.lul -text "Upper left"
+  label $w.llr -text "Lower right"
+  entry $w.ln  -textvariable dims(ln) -width 8 
+  entry $w.le  -textvariable dims(le) -width 8
+  entry $w.rn  -textvariable dims(rn) -width 8
+  entry $w.re  -textvariable dims(re) -width 8
+  grid  $w.lzone -column 0 -row $row
+  grid $w.zone  -column 1 -row $row
+  incr row
+  grid $w.lln  -column 1 -row $row
+  grid $w.lle  -column 2 -row $row
+  incr row
+  grid $w.lul  -column 0 -row $row
+  grid $w.ln   -column 1 -row $row
+  grid $w.le   -column 2 -row $row
+  incr row
+  grid $w.llr  -column 0 -row $row
+  grid $w.rn   -column 1 -row $row
+  grid $w.re   -column 2 -row $row
+  center_window $w
 }
 
 
@@ -224,6 +311,30 @@ proc load_file { fn } {
 set version {$Revision$ }
 set revdate {$Date$}
 
+
+# Nav constants
+set PI 3.141592653589793115997963468544185161590576171875
+set ONERAD      [ expr 180.0 / $PI ]
+set TWORAD      [ expr 360.0 / $PI ]
+set DEG2RAD     [ expr 1.0 / $ONERAD ]
+set RAD2DEG     [ expr 180.0 / $PI ]
+
+set wgs84  {6378137 0.00669438};
+set wgs72  {6378135 0.006694318};
+set k0     [ expr  double(0.9996) ];
+
+# this stuff gets changed to switch ellipsoids
+set elipseoid $wgs84
+set eccSquared    [ lindex $elipseoid 1 ];
+set Earth_radius  [ lindex $elipseoid 0 ];
+set eccPrimeSquared [ expr double($eccSquared)/(1-$eccSquared) ];
+set e1   [ expr double(1-sqrt(1-$eccSquared))/(1+sqrt(1-$eccSquared)) ]
+
+
+
+
+set dims(dx) 100
+set dims(dy) 100
 set dir "~/walker-lake"
 
 # set path to be sure and check /usr/lib for the package
@@ -240,12 +351,18 @@ menu .menubar.file.menu
 menu .menubar.options.menu
 menu .menubar.help.menu
 
+.menubar.options.menu add command -label "Image UTM configuration.." \
+	-command show_meta_data;
 .menubar.options.menu add command -label "Polygons.."
 .menubar.help.menu add command -label "About"
 .menubar.help.menu add command -label "Drawing Polygons"
 
 .menubar.file.menu add command -label "Select File.." -underline 8 \
-  -command { set f [ tk_getOpenFile  -filetypes { {{List files} {.jpg}} } -initialdir $dir ];
+  -command { 
+                set f [ tk_getOpenFile  -filetypes { 
+                                                  {{List files} {.jpg .tif} } 
+                                                  {{All} {*}} 
+                                                } -initialdir $dir ];
                 set split_dir [split $f /]
                 set dir [join [lrange $split_dir 0 [expr [llength $split_dir]-2]] /]
               if { $f != "" } {
@@ -253,6 +370,10 @@ menu .menubar.help.menu
                 load_file  $f;
               }
            }
+
+.menubar.file.menu add command -label "Write Yorick Polygons.." \
+	-underline 1 \
+	-command output_polys; 
 .menubar.file.menu add command -label "Exit" -underline 1 -command { exit }
 
 set img [ image create photo ]  ;
@@ -329,6 +450,60 @@ pack .canf \
    set east  [ format "%%7.0f" [expr  $dims(le) + (%x + $ul)*$dims(scrx2utm) ]]; 
    set north [ format "%%7.0f" [expr  $dims(rn) - (%y + $ut)*$dims(scry2utm) ]];
 }
+
+
+#################################################################
+# Convert utm coords to lat/lon
+#################################################################
+proc utm2ll { UTMNorthing UTMEasting UTMZone} {
+#/* DOCUMENT  utm2ll( UTMNorthing, UTMEasting, UTMZone)
+#
+#   Convert UTM coords. to  lat/lon.  Returned values are
+#   in Lat and Long;
+#*/
+
+global DEG2RAD RAD2DEG
+global Lat Long;
+global elipsoid k0 eccSquared Earth_radius eccPrimeSquared e1
+#//       earth
+#//       radius     ecc
+set NorthernHemisphere  1;
+set x  [ expr $UTMEasting - 500000.0 ] ;
+set y  $UTMNorthing;
+set M  [ expr  $y / $k0];
+set LongOrigin [ expr ($UTMZone - 1)*6 - 180 + 3 ];
+set eccPrimeSquared  [ expr double($eccSquared)/(1-$eccSquared) ];
+set mu  [ expr $M/($Earth_radius*(1-$eccSquared/4-3*$eccSquared*$eccSquared/64 - 5*$eccSquared*$eccSquared*$eccSquared/256)) ];
+
+set phi1Rad [ expr $mu    + (3*$e1/2-27*$e1*$e1*$e1/32)*sin(2*$mu) \
+                + (21*$e1*$e1/16-55*$e1*$e1*$e1*$e1/32)*sin(4*$mu) \
+                +(151*$e1*$e1*$e1/96)*sin(6*$mu) ];
+
+set phi1  [ expr $phi1Rad* $RAD2DEG];
+
+set N1 [ expr $Earth_radius/sqrt(1-$eccSquared*sin($phi1Rad)*sin($phi1Rad))];
+set T1 [ expr  tan($phi1Rad)*tan($phi1Rad)];
+set C1 [ expr  $eccPrimeSquared*cos($phi1Rad)*cos($phi1Rad)];
+set R1 [ expr  $Earth_radius*(1-$eccSquared)/pow(1-$eccSquared* sin($phi1Rad)*sin($phi1Rad), 1.5)];
+set D [ expr  $x/($N1*$k0)];
+
+set Lat [ expr  $phi1Rad - \
+               ($N1*tan($phi1Rad)/$R1)*($D*$D/2- \
+               (5+3*$T1+10*$C1-4*$C1*$C1-9*$eccPrimeSquared)*$D*$D*$D*$D/24 + \
+               (61+90*$T1+298*$C1+45*$T1*$T1-252*$eccPrimeSquared- \
+                3*$C1*$C1)*$D*$D*$D*$D*$D*$D/720)];
+
+set Lat [ expr  $Lat * $RAD2DEG];
+
+set Long [ expr  ($D-(1+2*$T1+$C1)*$D*$D*$D/6+(5-2*$C1+28*$T1- \
+               3*$C1*$C1+8*$eccPrimeSquared+24*$T1*$T1) \
+               *$D*$D*$D*$D*$D/120)/cos($phi1Rad)];
+
+set Long [ expr  $LongOrigin + $Long * $RAD2DEG];
+ return "$Lat,$Long"
+}
+
+
 
 # convert screen x coords to UTM in the current zone
 proc scrx2utm { x } {
