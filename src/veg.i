@@ -66,6 +66,18 @@ struct VEG_ALL {
   char  nx(120);	// number of return pulses found
 };
 
+struct CVEG_ALL {
+  long rn;	// raster + pulse << 24
+  long north; 	//target northing in centimeters
+  long east;	//target easting in centimeters
+  long elevation; //target elevation in centimeters
+  long mnorth;	//mirror northing
+  long meast;	//mirror easting
+  long melevation;//mirror elevation
+  short intensity;// pulse peak intensity value
+  char  nx;	// number of return pulses found
+};
+
 // 94000
 func veg_winpix( m ) {
 extern depth_display_units;
@@ -1013,8 +1025,8 @@ func ex_veg_all( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
 */
 
   extern ex_bath_rn, ex_bath_rp, a
-  //irange = a(where(rn==a.raster)).irange(i);
-  irange=0;
+  irange = a(where(rn==a.raster)).irange(i);
+  //irange=0;
   //intensity = a(where(rn==a.raster)).intensity(i);
   rv = VEGPIXS();			// setup the return struct
   rv.rastpix = rn + (i<<24);
@@ -1042,7 +1054,7 @@ func ex_veg_all( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
 
   w  = *rp.rx(i, 1);  aa(1:n, i) = float( (~w+1) - (~w(1)+1) );
 
- if (!(use_centroid)) {
+ if (!(use_centroid) && !(use_peak)) {
    nsat = where( w == 0 );			// Create a list of saturated samples 
    numsat = numberof(nsat);			// Count how many are saturated
    if ( (numsat > 1)  && ( nsat(1) <= 12)   ) {
@@ -1131,14 +1143,15 @@ func ex_veg_all( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
 	}
       */
 
-       if ( numberof(where((w(xr(j):xr(j)+retdist)) == 0 )) >= 2 ) {
- 		write, format="Channel 1 saturated for this peak, rn = %d, i = %d\n", rn, i;
-  	        ai = 0;
-       }
+       //if ( numberof(where((w(xr(j):xr(j)+retdist)) == 0 )) >= 2 ) {
+ //		write, format="Channel 1 saturated for this peak, rn = %d, i = %d\n", rn, i;
+  //	        ai = 0;
+   //    }
 
        if (retdist < 5) ai = 0; // this eliminates possible noise pulses.
 
-       if (ai) {
+       if (ai > 0) {
+         //write, format="ai = %d\n", ai;
          
          if (pse) pause, pse;
 
@@ -1223,14 +1236,14 @@ func ex_veg_all( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
 	//halftrail = 0.5*(ltrail - ftrail);
 	mx = irange+xr(j)+idx1(1)-ctx(1);
 	mv = aa(int(xr(j)+idx1(1)),i,ai);
-       } else {
-        mx = -10;
-	mv = -10;
-       }
+        if ( graph ) {
+         plmk, mv, xr(j)+idx1(1), msize=.5, marker=7, color="blue", width=1
+        }
+       } 
     }
 
     } else {
-       print, format="because ai = 0 for %d\n",j
+       write, format="because ai = 0 for %d\n",j
        mx = -10;
        mv = -10;
     }
@@ -1247,3 +1260,128 @@ func ex_veg_all( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
  return rv
 }
 
+func run_veg_all( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, use_centroid=,use_peak= ) {
+// depths = array(float, 3, 120, len );
+  if (is_void(graph)) graph=0;
+
+ if ( is_void(rn) || is_void(len) ) {
+    if (!is_void(center) && !is_void(delta)) {
+       rn = center - delta;
+       len = 2 * delta;
+    } else if (!is_void(start) && !is_void(stop)) {
+             rn = start-1;
+	     len = stop - start+1;
+    } else {
+	     write, "Input parameters not correctly defined.  See help, run_veg.  Please start again.";
+	     return 0;
+    }
+ }
+
+
+     
+   
+ depths = array(VEGPIXS, 120, len );
+  if ( _ytk ) {
+    tkcmd,"destroy .veg; toplevel .veg; set progress 0;"
+    tkcmd,swrite(format="ProgressBar .veg.pb \
+	-fg yellow \
+	-troughcolor blue \
+	-relief raised \
+	-maximum %d \
+	-variable progress \
+	-height 30 \
+	-width 400", len );
+    tkcmd,"pack .veg.pb; update; center_win .veg;"
+  }
+ if ( graph != 0 ) 
+	animate,1;
+
+ if ( is_void(last) ) 
+	last = 255;
+ if ( is_void(graph) ) 
+	graph = 0;
+   for ( j=1; j<= len; j++ ) {
+     if (_ytk) 
+       tkcmd, swrite(format="set progress %d", j)
+     else {
+     if ( (j % 10)  == 0 ) 
+        write, format="   %d of %d   \r", j,  len
+     }
+     for (i=1; i<=120; i++ ) {
+       depths(i,j) = ex_veg_all( rn+j, i, last = last, graph=graph, use_centroid=use_centroid,use_peak=use_peak);
+       if ( !is_void(pse) ) 
+	  pause, pse;
+     }
+   }
+ if ( graph != 0 ) 
+	animate,0;
+ if (_ytk) {
+   tkcmd, "destroy .veg"
+   } else write, "\n"; 
+  return depths;
+}
+
+func make_fs_veg_all (d, rrr) {  
+/* DOCUMENT make_fs_veg_all (d, rrr) 
+
+   This function makes a veg data array using the 
+   georectification of the first surface return.  The parameters are as 
+   follows:
+
+ d		Array of structure VEGPIX  containing veg information.  
+                This is the return value of function run_bath.
+
+ rrr		Array of structure R containing first surface information.  
+                This the is the return value of function first_surface.
+
+
+   The return value veg is an array of structure VEGALL. The array 
+   can be written to a file using write_geoall  
+
+   See also: first_surface, run_veg, write_vegall
+*/
+
+
+// d is the veg array from veg.i
+// rrr is the topo array from surface_topo.i
+
+if (numberof(d(0,,)) < numberof(rrr)) { len = numberof(d(0,,)); } else { 
+   len = numberof(rrr);}
+
+geoveg = array(CVEG_ALL, len*120*10);
+
+ccount = 0;
+for (i=1; i<=len; i++) {
+  elvdiff = rrr(i).melevation - rrr(i).elevation;
+  ndiff = rrr(i).mnorth - rrr(i).north;
+  ediff = rrr(i).meast - rrr(i).east;
+  for (j=1; j<=120; j++) {
+   mindx = where(d(j,i).mx > 0);
+   if (is_array(mindx)) {
+    for (k=1;k<=numberof(mindx);k++) {
+      ccount++;
+      geoveg.rn(ccount) = rrr(i).raster(j);
+      geoveg.mnorth(ccount) = rrr(i).mnorth(j);
+      geoveg.meast(ccount) = rrr(i).meast(j);
+      geoveg.melevation(ccount) = rrr(i).melevation(j);
+      geoveg.nx(ccount) = d(j,i).nx;
+      // find actual ground surface elevation using simple trig (similar triangles)
+
+      if (d(j,i).mx(1) > 0) {
+       eratio = float(d(j,i).mx(k))/float(d(j,i).mx(1));
+       geoveg.elevation(ccount) = int(rrr(i).melevation(j) - eratio * elvdiff(j));
+       geoveg.north(ccount) = int(rrr(i).mnorth(j) - eratio * ndiff(j));
+       geoveg.east(ccount) = int(rrr(i).meast(j) - eratio * ediff(j));
+       geoveg.intensity(ccount) = d(j,i).mv(k);
+      } 
+    }
+   }
+  }
+
+} /* end for loop */
+
+geoveg = geoveg(1:ccount);
+   
+//write,format="Processing complete. %d rasters drawn. %s", len, "\n"
+return geoveg;
+}

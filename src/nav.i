@@ -479,7 +479,7 @@ struct FP {
     double	lon2;
     }
 
-func pl_fp( fp, win=, color= ) {
+func pl_fp( fp, win=, color= , width=) {
 /* DOCUMENT pl_fp(fp, color=)
   
   Plot the given flight plan on win= using color=.  Default 
@@ -496,10 +496,12 @@ window is 6, and color is magenta.
 	win = 6;
   if ( is_void(color))
 	color="magenta";
+  if ( is_void(width))
+	width=1;
   w = window();
   window,6;
   r = 1:0
-  pldj, fp.lon1(r),fp.lat1(r),fp.lon2(r),fp.lat2(r),color=color;
+  pldj, fp.lon1(r),fp.lat1(r),fp.lon2(r),fp.lat2(r),color=color, width=width;
   window(w);
 }
 
