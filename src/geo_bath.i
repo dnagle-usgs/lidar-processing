@@ -769,6 +769,7 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset
 	data_new.mnorth = data.mnorth(indx);
 	data_new.meast = data.meast(indx);
 	data_new.melevation = data.melevation(indx);
+	data_new.intensity = data.intensity(indx);
 
 	data = data_new
      }
@@ -881,10 +882,10 @@ write,"============================================================="
         if (disp_type == 4) {
 	  a = [];
 	  if (ptype == 0) 
-	     z = mindata.intensity;
+	     z = mindata.intensity/100.;
 	  if (ptype == 1) 
 	     z = mindata.first_peak;
-	  if (pytpe = 2) 
+	  if (ptype == 2) 
 	     z = mindata.fint;
           window, win; plcm, z, mindata.north/100., 
                              mindata.east/100., msize = msize*1.5, 
