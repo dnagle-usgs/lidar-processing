@@ -194,11 +194,11 @@ Button .cf1.plotpos  \
 	-text "Plot" -helptext "Plot position on Yorick-6 
  under the eaarl.ytk program." \
 	      -command { 
-  if { [ lsearch -exact [ winfo interp ] ytk ] == 1 } {
+  if { [ lsearch -exact [ winfo interps ] ytk ] != -1 } {
    send ytk "mark_pos $llat $llon"
   } else {
      tk_messageBox  \
-        -message "ytk is\'nt running. You must be running Ytk and the
+        -message "ytk isn\'t running. You must be running Ytk and the
 eaarl.ytk program to use this feature."  \
 	-type ok
   }
