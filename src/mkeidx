@@ -1,6 +1,15 @@
 #!/bin/sh
 #mkeidx: automatically make the master earl index
 # ls *.tld | /opt/eaarl/lidar-processing/bin/efdb MM-DD-YY.idx
+# 
+# Original: Richard Mitchell.
+#
+# This program:
+#
+# 1) Determines the mission date 
+# 2) Generates a sorted list of files in the "eaarl" subdir and
+#    feeds those names to efdb which creates an "idx" file named
+#    after the mission date.     
 
 dir=`pwd`
 name=`basename $dir`".idx"
