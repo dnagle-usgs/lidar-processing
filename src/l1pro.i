@@ -25,6 +25,7 @@ require,  "transect.i"
 require,  "manual_filter.i"
 require,  "ytriangulate.i"
 require,  "ircf.i"
+require,  "dataexplore.i"
 include,  "rcf.i"
 
 
