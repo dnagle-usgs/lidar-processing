@@ -990,12 +990,12 @@ proc rcf_region {} {
   
 
 
-ComboBox .l1wid.bf4.1.d -text "Define Region using..." -width 22 -values \
+ComboBox .l1wid.bf4.1.d -text "Define Region..." -width 15 -values \
        {
 	 Rubberband\ Box\
 	 Points\ in\ Polygon\
 	 Line\ Segment\
-	 Enter\ Rectangular\ Coordinates\
+	 Rectangular\ Coords\
 	 Multiple\ PIPs\
        }\
 	 -helptext "Select region to process using any of the following methods" -editable 0 \
@@ -1087,7 +1087,7 @@ set l1pro_data(processing_mode)  {\
 		  Submerged\ Topo\
 		  Topo\ Under\ Veg \
 		  Multi\ Peak\ Veg \
-		  Directional\ Wave\ Spectra \
+		  Direct.\ Wave\ Spectra \
 		}
 
 proc multi_pip_sel {junk} {
@@ -1264,10 +1264,17 @@ proc multi_pip_sel {junk} {
   #    expect ">"
 }
    
-ComboBox .l1wid.bf4.1.p -text "Process For..." -width 20 \
+ComboBox .l1wid.bf4.1.p -text "Process For..." -width 16 \
 	-helptext "Process Data for any of the following" \
 	-editable 0 \
 	-values $l1pro_data(processing_mode)
+.l1wid.bf4.1.p setvalue first
+
+ComboBox .l1wid.bf4.1.m -text "Method"  \
+        -width 7 \
+	-helptext "Batch or single processing" \
+	-editable 0 \
+	-values "Batch Single"
 .l1wid.bf4.1.p setvalue first
 
 Label .l1wid.bf4.1.lw -text "in Win:"
@@ -2193,7 +2200,15 @@ Button .l1wid.bf45.sc.pl -text "Plot" -width 6 -height 2 -bd 5 -command {
 #pack .l1wid.bf3.lat1 .l1wid.bf3.lon .l1wid.bf3.lat2 -side top -pady 5
 #pack  .l1wid.bf4.1.cb .l1wid.bf4.1.xba .l1wid.bf4.1.xbd .l1wid.bf4.1.xbv -side top -padx 20 -pady 5
 #pack  .l1wid.bf4.1 -side top -padx 20 -pady 5
-pack .l1wid.bf4.1.d .l1wid.bf4.1.p .l1wid.bf4.1.lw .l1wid.bf4.1.sw -side left -padx 5
+pack \
+  .l1wid.bf4.1.d \
+  .l1wid.bf4.1.p \
+  .l1wid.bf4.1.m \
+  .l1wid.bf4.1.lw \
+  .l1wid.bf4.1.sw \
+  -side left \
+  -padx 5
+
 #pack  .l1wid.bf4.2.cll .l1wid.bf4.2.cen -side left -padx 3
 pack  .l1wid.bf4.2.cen .l1wid.bf4.2.proc -side left -padx 10
 pack .l1wid.bf4.1 .l1wid.bf4.2 -side top -pady 10
