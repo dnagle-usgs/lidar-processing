@@ -6,10 +6,18 @@
 require, "wgs842nad83.i"
 require, "nad832navd88.i"
 func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, type=) {
-   /*DOCUMENT data_w842n83(data, type)
-     This function converts eaarl data of structure type 'type' to nad83.
+/* DOCUMENT data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, type=)
+     This function converts eaarl data of structure type 'type' to nad83 and navd88.
+     INPUT:
+	wdata: data in wgs84 coordinates
+	utmzone: current utm zone number
+	tonad83= set to 1 to convert to nad83 horizontal datum
+	tonavd88= set to 1 to convert to navd88 vertical datum using GEOID99 model
+	type= type of input data array (e.g. FS, VEG__, GEO)
+     OUTPUT:
+	returned data array after conversion.
      amar nayegandhi 07/15/03.
-   */
+*/
    
    extern curzone;
    data = wdata;
@@ -109,7 +117,7 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, type=) {
 
 func pnav_datum_converter(tonad83=, tonavd88=, wpnav=,pnavfile=,outfile=,outfilename=) {
   /* DOCUMENT pnav_w842n83(pnav=,pnavfile=,outfile=,outfilename=)
-     This function converts pnav data referenced to wgs84 to nad83.
+     This function converts pnav data referenced to wgs84 to nad83 and navd88.
      amar nayegandhi 07/15/03.
   */
    if (pnavfile) {

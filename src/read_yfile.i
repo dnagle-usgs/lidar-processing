@@ -612,7 +612,7 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
   return data;
 }
   
-func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, delimit=, zclip=, pstruc=, rn=, soe=, noheader=) {
+func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, delimit=, zclip=, pstruc=, rn=, soe=, noheader=, latlon=, zone=) {
   /* DOCUMENT this function writes out an ascii file containing x,y,z,intensity information.
     amar nayegandhi 04/25/02
     Keywords:
@@ -630,13 +630,17 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
     rn = Unique Raster/pulse number
     soe = seconds of the epoch 
     noheader = set to 1 to not include the header in the ascii data file.
+    latlon= set to 1 to convert xy locations to latlon (from utm)
+    zone = utm zone number (if not set it will check for variable curzone). Reqd only if latlon=1
     modified 12/30/02 amar nayegandhi to :
       write out x,y,z (first surface elevation) data for type=1
       to split at 1 million points and write to another file
     modified 01/30/03 to optionally split at 1 million points
     modified 10/06/03 to add rn and soe and correct the output format for different delimiters.
+    modified 10/09/03 to add latlon conversion capability
     */
 
+  extern curzone
 // default delimit to ","
   if ( is_void( delimit ) ) {
     delimit = ",";
@@ -646,6 +650,16 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
      zclip = [ -600.0, 30000.0 ];
   zclip *= 100.0;
   
+ if (!zone) { 
+    zone = curzone;
+    if (!zone) {
+      szone = "";
+      zone = 0;
+      f = read(prompt="Enter UTM Zone Number:", szone);
+      sread, szone, zone;
+      curzone = zone;
+    }
+ }
 
   fn = opath+ofname;
 
@@ -738,29 +752,55 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
         z = data_arr.elevation(i)/100.;
 	east = data_arr.east(i)/100.;
 	north = data_arr.north(i)/100.;
+        if (latlon) {
+         ldat = utm2ll(north,east,zone);
+	 east = ldat(1);
+	 north = ldat(2);
+        }
     }
     if (type == 2) {
         z = (data_arr.elevation(i) + data_arr.depth(i))/100.;
 	east = data_arr.east(i)/100.;
 	north = data_arr.north(i)/100.;
+        if (latlon) {
+         ldat = utm2ll(north,east,zone);
+	 east = ldat(1);
+	 north = ldat(2);
+        }
     }
     if (type == 3) {
         z = data_arr.lelv(i)/100.;
 	east = data_arr.least(i)/100.;
 	north = data_arr.lnorth(i)/100.;
+        if (latlon) {
+         ldat = utm2ll(north,east,zone);
+	 east = ldat(1);
+	 north = ldat(2);
+        }
     }
     if (type == 4) {
         z = data_arr.depth(i)/100.;
 	east = data_arr.east(i)/100.;
 	north = data_arr.north(i)/100.;
+        if (latlon) {
+         ldat = utm2ll(north,east,zone);
+	 east = ldat(1);
+	 north = ldat(2);
+        }
     }
     if (type == 5) {
         z = data_arr.lelv(i)/100.;
 	east = data_arr.east(i)/100.;
 	north = data_arr.north(i)/100.;
+        if (latlon) {
+         ldat = utm2ll(north,east,zone);
+	 east = ldat(1);
+	 north = ldat(2);
+        }
     }
 
     if (indx) {
+     if (!latlon) {
        curline = swrite(format="%d%c%8.2f%c%9.2f%c%4.2f", 
 	 totw,
 	 delimit,
@@ -769,13 +809,33 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
 	 north,
 	 delimit,
 	 z);
+     } else {
+       curline = swrite(format="%d%c%3.7f%c%3.7f%c%4.2f", 
+	 totw,
+	 delimit,
+	 east,
+	 delimit,
+	 north,
+	 delimit,
+	 z);
+     } 
     } else {
+     if (!latlon) {
        curline = swrite(format="%8.2f%c%9.2f%c%4.2f", 
 	 east,
 	 delimit,
 	 north,
 	 delimit,
 	 z);
+     } else {
+       curline = swrite(format="%3.7f%c%3.7f%c%4.2f", 
+	 east,
+	 delimit,
+	 north,
+	 delimit,
+	 z);
+     }
+
     }
     if (intensity) {
        curline = swrite(format="%s%c%d", 
