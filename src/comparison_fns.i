@@ -123,7 +123,7 @@ func read_txt_anal_file(fname, n) {
    close, f1;
 } 
 
-func rcfilter_eaarl_pts(eaarl, buf=, w=, be=) {
+func rcfilter_eaarl_pts(eaarl, buf=, w=, be=, be_bathy=) {
   //this function uses the random consensus filter (rcf) within a defined
   // buffer size (default 4m by 4m) to filter within an elevation width
   // defined by w.
@@ -148,20 +148,24 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, be=) {
 
   for (i = 1; i <= ngridy; i++) {
     for (j = 1; j <= ngridx; j++) {
-      indx = where(((eaarl.east >= xgrid(j))   &
-                   (eaarl.east <= xgrid(j)+buf))  &
-                   ((eaarl.north >= ygrid(i)) &
-                   (eaarl.north <= ygrid(i)+buf)));
+      q = where((eaarl.east >= xgrid(j))   &
+                   (eaarl.east <= xgrid(j)+buf));
+      indx = where ((eaarl.north(q) >= ygrid(i)) &
+                   (eaarl.north(q) <= ygrid(i)+buf));
+      indx = q(indx);
       if (is_array(indx)) {
        if (be) {
          be_elv = eaarl.elevation(indx)-(eaarl.lelv(indx)-eaarl.felv(indx));
+       }
+       if (be_bathy) {
+         be_elv = eaarl.elevation(indx)+eaarl.depth(indx);
+       }
 	 sel_ptr = rcf(be_elv, w, mode=2);
 	 if (*sel_ptr(2) > 1) {
 	    tmp_eaarl = eaarl(indx);
 	    grow, new_eaarl, tmp_eaarl(*sel_ptr(1));
 	    //write, numberof(indx), *sel_ptr(2);
 	 }
-       }
       }
     }
   }

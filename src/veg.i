@@ -64,7 +64,7 @@ rn
 }
 
 
-func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, usecentroid= ) {
+func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, use_centroid= ) {
 // depths = array(float, 3, 120, len );
   if (is_void(graph)) graph=0;
 
@@ -112,7 +112,7 @@ func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, us
         write, format="   %d of %d   \r", j,  len
      }
      for (i=1; i<119; i++ ) {
-       depths(i,j) = ex_veg( rn+j, i, last = last, graph=graph);
+       depths(i,j) = ex_veg( rn+j, i, last = last, graph=graph, use_centroid=use_centroid);
        if ( !is_void(pse) ) 
 	  pause, pse;
      }
@@ -126,7 +126,7 @@ func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, us
 }
 
 
-func ex_veg( rn, i,  last=, graph=, use_centroid= ) {
+func ex_veg( rn, i,  last=, graph=, use_centroid=, use_trail=, pse= ) {
 /* DOCUMENT ex_veg(raster_number, pulse_index)
 
 
@@ -192,7 +192,7 @@ func ex_veg( rn, i,  last=, graph=, use_centroid= ) {
   w  = *rp.rx(i, 1);  a(1:n, i) = float( (~w+1) - (~w(1)+1) );
 ///////  w2 = *rp.rx(i, 2);  a(1:n, i,2) = float( (~w2+1) - (~w2(1)+1) );
 
-
+ if (!(use_centroid)) {
    nsat = where( w == 0 );			// Create a list of saturated samples 
    numsat = numberof(nsat);			// Count how many are saturated
    if ( (numsat > 1)  && ( nsat(1) <= 12)   ) {
@@ -203,13 +203,14 @@ func ex_veg( rn, i,  last=, graph=, use_centroid= ) {
           last_surface_sat = nsat(  where(nsat(dif) > 1 ) ) (1);   
           escale = 255;
       }
-   } else {
+   } else { // surface not saturated
           wflen = numberof(w);
           if ( wflen > 12 ) wflen = 12;
 	  last_surface_sat =  w(1:wflen) (mnx) ;
           escale = 255 - w(1:wflen) (min);
    }
 
+ }
 
   da = a(1:n,i,1);
   dd = a(1:n, i, 1) (dif);
@@ -224,12 +225,13 @@ func ex_veg( rn, i,  last=, graph=, use_centroid= ) {
   nxr = numberof(xr);
 
 if ( graph ) {
-window,4; fma
+window,4; fma;limits
 plmk, a(1:n,i,1), msize=.2, marker=1, color="black";
 plg, a(1:n,i,1);
 plmk, da, msize=.2, marker=1, color="black";
 plg, da;
 plg, dd-100, color="red"
+write, format="rn=%d; i = %d\n",rn,i
 ///if ( nxr > 0 ) 
 ///	plmk, a( xr(0),i,1), xr(0),msize=.3,marker=3
 }
@@ -242,22 +244,128 @@ plg, dd-100, color="red"
 
 
   if ( numberof(xr) > 0  ) {
-    if (use_centroid) {
-       b = a(int(xr(0)+1):int(xr(0)+12),i,1); // create array b for 12 returns beyond the last peak leading edge.
-       //compute centroid
-       c = float(b*indgen(1:12)) (sum) / (b(sum));
-       mx0 = xr(0)+1+c;
-       mv0 = a(int(mx0),i,1);
-    } else {
+    if (use_centroid || use_trail) {
+       //assume 12ns to be the longest duration for a complete bottom return
+       retdist = 12;
+       ai = 1; //channel number
+       if (xr(0)+retdist+1 > n) retdist = n - xr(0)-1;
+       // check for saturation
+       if ( numberof(where((w(xr(0):xr(0)+retdist)) == 0 )) >= 2 ) {
+           // goto second channel
+            ai = 2;
+           // write, format="trying channel 2, rn = %d, i = %d\n",rn, i
+            w  = *rp.rx(i, ai);  a(1:n, i,ai) = float( (~w+1) - (~w(1)+1) );
+            da = a(1:n,i,ai);
+            dd = a(1:n, i, ai) (dif);
+            if ( numberof(where((w(xr(0):xr(0)+retdist)) == 0 )) >= 2 ) {
+              // goto third channel
+            //  write, format="trying channel 3, rn = %d, i = %d\n",rn, i
+              ai = 3;
+              w  = *rp.rx(i, ai);  a(1:n, i,ai) = float( (~w+1) - (~w(1)+1) );
+              da = a(1:n,i,ai);
+              dd = a(1:n, i, ai) (dif);
+              if ( numberof(where((w(xr(0):xr(0)+retdist)) == 0 )) >= 2 ) {
+                 write, format="all 3 channels saturated... giving up!, rn=%d, i=%d\n",rn,i
+                 ai = 0;
+              }
+	    }
+	}
+
+       if (!ai) {
+        rv.sa = rp.sa(i);
+   	rv.mx0 = -10;
+	rv.mv0 = -10;
+   	rv.mx1 = -11;
+	rv.mv1 = -11;
+	rv.nx  = -1;
+        return rv
+       }
+       if (pse) pause, pse;
+
+       if ( graph && ai >= 2) {
+         //window,4; fma
+         plmk, a(1:n,i,ai), msize=.2, marker=1, color="yellow";
+         plg, a(1:n,i,ai), color="yellow";
+         plmk, da, msize=.2, marker=1, color="yellow";
+         plg, da, color="yellow";
+         plg, dd-100, color="blue"
+	 pltit = swrite(format="ai = %d\n", ai);
+	 pltitle, pltit;
+       }
+       
+     if (use_centroid && !use_trail) {
+      
+       // find where the bottom return pulse changes direction after its trailing edge
+       idx = where(dd(xr(0)+1:xr(0)+retdist) > 0);
+       idx1 = where(dd(xr(0)+1:xr(0)+retdist) < 0);
+       if (is_array(idx1) && is_array(idx)) {
+        if (idx(0) > idx1(1)) {
+         //take length of  return at this point
+         retdist = idx(0);
+        }
+       } else write, format="idx/idx1 is nuller for rn=%d, i=%d\n",rn, i  
+       //now check to see if it it passes intensity test
+       mxmint = a(xr(0)+1:xr(0)+retdist,i,ai)(max);
+       if (abs(a(xr(0)+1,i,ai) - a(xr(0)+retdist,i,ai)) < 0.2*mxmint) {
+           // this return is good to compute centroid
+           b = a(int(xr(0)+1):int(xr(0)+retdist),i,ai); // create array b for retdist returns beyond the last peak leading edge.
+           //compute centroid
+          if (b(sum) != 0) {
+           c = float(b*indgen(1:retdist)) (sum) / (b(sum));
+           mx0 = xr(0)+c;
+           if (ai == 1) mv0 = a(int(mx0),i,ai);
+           if (ai == 2) {
+	       mx0 = mx0 + 0.36;
+	       mv0 = a(int(mx0),i,ai)+300;
+	   }
+           if (ai == 3) {
+	       mx0 = mx0 + 0.23;
+	       mv0 = a(int(mx0),i,ai)+600;
+	   }
+          } else {
+           mx0 = -10;
+           mv0 = -10;
+          }
+       } else {
+          // for now, discard this pulse
+          mx0 = -10;
+          mv0 = -10;
+       } 
+    }
+    
+    if (!use_centroid && use_trail) {
+      // using trailing edge algorithm for bottom return
+    }
+
+   } else { //donot use centroid or trailing edge
       mx0 = a( xr(0):xr(0)+5, i, 1)(mxx) + xr(0) - 1;	  // find bottom peak now
       mv0 = a( mx0, i, 1);	          
     }
     if (use_centroid) {
-       b = a(int(xr(1)+1):int(xr(1)+12),i,1); // create array b for 12 returns beyond the last peak leading edge.
-       //compute centroid
-       c = float(b*indgen(1:12)) (sum) / (b(sum));
-       mx1 = xr(1)+1+c;
-       mv1 = a(int(mx1),i,1);
+       np = numberof ( *rp.rx(i,1) );      // find out how many waveform points
+                                        // are in the primary (most sensitive)
+                                        // receiver channel.
+
+       if ( np < 2 )                         // give up if there are not at
+              return;                            // least two points.
+
+       if ( np > 12 ) np = 12;               // use no more than 12
+       if ( numberof(where(  ((*rp.rx(i,1))(1:np)) == 0 )) <= 2 ) {
+         cv = cent( *rp.rx(i, 1 ) );
+       } else if ( numberof(where(  ((*rp.rx(i,2))(1:np)) == 0 )) <= 2 ) {
+         cv = cent( *rp.rx(i, 2 ) ) + 0.36;
+         cv(3) += 300;
+       } else {
+         cv = cent( *rp.rx(i, 3 ) ) + 0.23;
+         cv(3) += 600;
+       }
+
+       if (cv(1) < 10000) {
+          mx1 = cv(1);
+       } else {
+          mx1 = -10;
+       }
+       mv1 = cv(3);
     } else {
       mx1 = a( xr(1):xr(1)+5, i, 1)(mxx) + xr(1) - 1;	  // find surface peak now
       mv1 = a( mx1, i, 1);	          
@@ -266,6 +374,7 @@ plg, dd-100, color="red"
          plmk, mv1, mx1, msize=.5, marker=7, color="blue", width=1
          plmk, mv0, mx0, msize=.5, marker=7, color="red", width=1
     }
+    if (pse) pause, pse;
         rv.sa = rp.sa(i);
    	rv.mx0 = mx0;
 	rv.mv0 = mv0;
@@ -401,7 +510,7 @@ for (i=1; i<=len; i=i+1) {
 return geoveg;
 }
 
-func make_veg(latutm=, q=, ext_bad_att=, ext_bad_veg=, usecentroid=) {
+func make_veg(latutm=, q=, ext_bad_att=, ext_bad_veg=, use_centroid=) {
 /* DOCUMENT make_veg(opath=,ofname=,ext_bad_att=, ext_bad_veg=)
 
  This function allows a user to define a region on the gga plot 
@@ -462,9 +571,9 @@ executing make_veg.  See rbpnav() and rbtans() for details.
       if ((rn_arr(1,i) != 0)) {
        fcount ++;
        write, format="Processing segment %d of %d for vegetation\n", i, no_t;
-       d = run_veg(start=rn_arr(1,i), stop=rn_arr(2,i),usecentroid=usecentroid);
+       d = run_veg(start=rn_arr(1,i), stop=rn_arr(2,i),use_centroid=use_centroid);
        write, "Processing for first_surface...";
-       rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=usecentroid); 
+       rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=use_centroid); 
        a=[];
        write, "Using make_fs_veg for submerged vegetation...";
        veg = make_fs_veg(d,rrr);
@@ -708,8 +817,8 @@ func write_veg(opath, ofname, veg_all, ba_veg=, bd_veg=) {
 }
 
 
-func test_veg(veg_all,  fname=) {
-  // this function can be used to process for vegetation for only those pulses that are in rasternos or those that are in file fname.
+func test_veg(veg_all,  fname=, pse=, graph=) {
+  // this function can be used to process for vegetation for only those pulses that are in data array veg_all or  those that are in file fname.
   // amar nayegandhi 11/27/02.
 
   if (fname) {
@@ -726,11 +835,21 @@ func test_veg(veg_all,  fname=) {
   tot_count = 0;
 
   for (i = 1; i <= numberof(rasters); i++) {
-    depth = ex_veg(rasters(i), pulses(i),last=250, graph=1, use_centroid=1)   
+    depth = ex_veg(rasters(i), pulses(i),last=250, graph=graph, use_centroid=1, pse=pse)    
     if (veg_all(i).rn == depth.rastpix) {
-      veg_all(i).felv = depth.mx1*NS2MAIR*100;
+      if (depth.mx1 == -10) {
+       veg_all(i).felv = -10;
+       write, format="yo! rn=%d; i=%d\n",rasters(i), pulses(i);
+      } else {
+        veg_all(i).felv = depth.mx1*NS2MAIR*100;
+      }
       veg_all(i).fint = depth.mv1;
-      veg_all(i).lelv = depth.mx0*NS2MAIR*100;
+      if (depth.mx0 == -10) {
+       veg_all(i).lelv = -10;
+       //write, format="lyo! rn=%d; i=%d\n",rasters(i), pulses(i);
+      } else {
+        veg_all(i).lelv = depth.mx0*NS2MAIR*100;
+      }
       veg_all(i).lint = depth.mv0;
       veg_all(i).nx = depth.nx;
     } else {
