@@ -50,7 +50,10 @@ Channel 1 is the most sensitive and channel 3 the least.
 See also: RAST, cent  
 */
 
- extern max_sfc_sat;
+ extern max_sfc_sat, chn2_range_bias, chn3_range_bias;
+
+ if (is_void(chn2_range_bias)) chn2_range_bias=0.36;
+ if (is_void(chn3_range_bias)) chn3_range_bias=0.23;
 
 
  rv = array(float,4);			// return values
@@ -102,10 +105,10 @@ See also: RAST, cent
         cv(1) += y;
      }
   } else if ( numberof(where(  ((*rast.rx(n,2))(1:np)) == 0 )) <= max_sfc_sat ) {
-     cv = cent( *rast.rx(n, 2 ) ) + 0.36;
+     cv = cent( *rast.rx(n, 2 ) ) + chn2_range_bias;
      cv(3) += 300;
   } else {
-     cv = cent( *rast.rx(n, 3 ) ) + 0.23;
+     cv = cent( *rast.rx(n, 3 ) ) + chn3_range_bias;
      cv(3) += 600;
   }
 

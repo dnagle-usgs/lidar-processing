@@ -305,15 +305,33 @@ func ex_bath( rn, i,  last=, graph=, win=, xfma= ) {
    rp = ex_bath_rp;
   }
 
-  n  = numberof(*rp.rx(i, 1)); 
+  chn = 1; // waveform channel to use
+  n  = numberof(*rp.rx(i, chn)); 
   rv.sa = rp.sa(i);
   if ( n == 0 ) 
 	return rv;
 
-  w  = *rp.rx(i, 1);  bath_ctl.a(1:n, i) = float( (~w+1) - (~w(1)+1) );
+  w  = *rp.rx(i, chn); 
+  nsat = where( w == 0 );			// Create a list of saturated samples 
+  numsat = numberof(nsat);			// Count how many are saturated
+   // Added by AN to use red or blue channels if waveform is saturated
+   if (numsat > bath_ctl.maxsat) {
+	chn = 2;  //use red channel waveform
+  	n  = numberof(*rp.rx(i, chn)); 
+	w  = *rp.rx(i, chn);  
+        nsat = where( w == 0 );			// Create a list of saturated samples 
+        numsat = numberof(nsat);			// Count how many are saturated
+   }
+   if (numsat > bath_ctl.maxsat) {
+        chn = 3;  //use blue channel waveform
+  	n  = numberof(*rp.rx(i, chn)); 
+	w  = *rp.rx(i, chn);  
+        nsat = where( w == 0 );			// Create a list of saturated samples 
+        numsat = numberof(nsat);			// Count how many are saturated
+   }
+  bath_ctl.a(1:n, i) = float( (~w+1) - (~w(1)+1) );
   dbias = int(~w(1)+1);
 ///////  w2 = *rp.rx(i, 2);  a(1:n, i,2) = float( (~w2+1) - (~w2(1)+1) );
-
 
    nsat = where( w == 0 );			// Create a list of saturated samples 
    numsat = numberof(nsat);			// Count how many are saturated
@@ -331,7 +349,7 @@ func ex_bath( rn, i,  last=, graph=, win=, xfma= ) {
                  (limits()(1:2)(dif)/2)(1), 
                  (limits()(3:4)(dif)/2)(1), 
                  tosys=1,color="red"
-             plot_bath_ctl;
+             plot_bath_ctl, chn;
 /*
              plg,[thresh,thresh],[first,last],marks=0, color="red";
              plg,[0,thresh],[first,first],marks=0, color="green", width=7;
@@ -407,7 +425,7 @@ last = bath_ctl.last;
 if ( graph ) {
   window,win; gridxy,2,2
   if ( xfma ) fma;
-  plot_bath_ctl;
+  plot_bath_ctl, chn;
   plmk, da(1:n), msize=.2, marker=1, color="black";
   plg, da(1:n);
   plmk, db(1:n), msize=.2, marker=1, color="blue";
@@ -439,8 +457,11 @@ if ( graph ) {
               bath_ctl.a(mvi,i,1)+2.0, tosys=1,color="red"
       return rv; 
     }
-    l_wing = 0.6 * mv;	// +/- 2ns should be no more than .6 the max
-    r_wing = 0.75 * mv;	// +/- 2ns should be no more than .6 the max
+   // modified by AN for drto large fov 
+    l_wing = 0.9 * mv;	// +/- 2ns should be no more than .6 the max
+    r_wing = 0.9 * mv;	// +/- 2ns should be no more than .6 the max
+    //l_wing = 0.6 * mv;	// +/- 2ns should be no more than .6 the max
+    //r_wing = 0.75 * mv;	// +/- 2ns should be no more than .6 the max
     if ( (db(lpx) <= l_wing) && (db(rpx) <= r_wing) ) {
             mx = mvi;
         if ( graph ) {
@@ -464,22 +485,22 @@ if ( graph ) {
       if( graph ) { 
          write,"Rejected: Pulse shape. \n"
          show_pulse_wings;
-         plmk, bath_ctl.a(mvi,i,1)+1.5, mvi+1, 
+         plmk, bath_ctl.a(mvi,i,chn)+1.5, mvi+1, 
 	   msize=1.0, marker=6, color="red", width=10
          plt, "Bad pulse\n shape", 
               mvi+2.0, 
-              bath_ctl.a(mvi,i,1)+2.0, 
+              bath_ctl.a(mvi,i,chn)+2.0, 
               tosys=1,color="red"
      }
    }
   } else {
        if ( graph ) {
           plt, "Below\nthreshold", mvi+2.0, 
-            bath_ctl.a(mvi,i,1)+2.0, tosys=1,color="red"
+            bath_ctl.a(mvi,i,chn)+2.0, tosys=1,color="red"
           write,"Rejected: below threshold \n"
        }
    	rv.idx = 0;
-	rv.bottom_peak = bath_ctl.a(mvi,i,1);
+	rv.bottom_peak = bath_ctl.a(mvi,i,chn);
 	//new
 	rv.first_peak = mv1;
 	return rv;
@@ -494,14 +515,18 @@ if ( graph ) {
 }
 
 
-func plot_bath_ctl {
+func plot_bath_ctl(chn) {
+  if (is_void(chn)) chn = 1;
+  if (chn == 1) pltitle, "Black (90\%) Channel";
+  if (chn == 2) pltitle, "Red (9\%) Channel";
+  if (chn == 3) pltitle, "Blue (1\%) Channel";
   if ( !is_void(thresh) ) {
     plg,[thresh,thresh],[first,last],marks=0, color="red";
     plg,[0,thresh],[first,first],marks=0, color="green", width=7;
     plg,[0,thresh],[last,last],marks=0, color="red", width=7;
   }
-  plmk, bath_ctl.a(1:n,i,1), msize=.2, marker=1, color="black";
-  plg, bath_ctl.a(1:n,i,1), color=black, width=4;
+  plmk, bath_ctl.a(1:n,i,chn), msize=.2, marker=1, color="black";
+  plg, bath_ctl.a(1:n,i,chn), color=black, width=4;
   if ( !is_void(laser_decay) ) plg, laser_decay, color="magenta" 
   if ( !is_void(agc) ) plg,agc*40, color=[100,100,100];
 }

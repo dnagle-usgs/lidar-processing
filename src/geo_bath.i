@@ -777,7 +777,7 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset
  extern _last_rastpulse
  extern _rastpulse_reference
 
- if ( is_void(_last_rastpulse ) ) _last_rastpulse = [0.0, 0.0, 0.0];
+ if ( is_void(_last_rastpulse ) ) _last_rastpulse = [0.0, 0.0, 0.0, 0.0];
  if ( is_void(_last_soe) )        _last_soe = 0;
  if (!(win))                            win = 5;
  if (!(disp_type))                disp_type = 0; //default fs topo
@@ -1042,12 +1042,26 @@ write,"============================================================="
  write,format="Surface elev: %8.2fm Delta: %7.2fm\n",
                mindata.elevation/100.0,
                mindata.elevation/100.0 - _last_rastpulse(3)/100.0
+ if (structof(mindata(1)) == GEO) {
+  write, format="Bottom elev: %8.2fm Delta: %7.2fm\n",
+		(mindata.elevation+mindata.depth)/100.,
+		(mindata.elevation+mindata.depth)/100.-_last_rastpulse(4)/100.
+ }
+ if (structof(mindata(1)) == VEG__) {
+  write, format="Last return elev: %8.2fm Delta: %7.2fm\n",
+		mindata.lelv/100.,
+		mindata.lelv/100.-_last_rastpulse(4)/100.
+ }
 
    if ( (mouse_button == center_mouse)  ) {
-     _rastpulse_reference = array(double, 3);
+     _rastpulse_reference = array(double, 4);
      _rastpulse_reference(1) = mindata.north;
      _rastpulse_reference(2) = mindata.east;
      _rastpulse_reference(3) = mindata.elevation;
+     if (structof(mindata(1)) == GEO) 
+	_rastpulse_reference(4) = (mindata.elevation+mindata.depth)/100.
+     if (structof(mindata(1)) == VEG__) 
+	_rastpulse_reference(4) = mindata.lelv/100.
    }
 
  if ( is_void(_rastpulse_reference) ) {
@@ -1070,6 +1084,11 @@ write,"============================================================="
    _last_rastpulse(1) = mindata.north;
    _last_rastpulse(2) = mindata.east;
 
+   if (structof(mindata(1)) == GEO) 
+	_last_rastpulse(4) = (mindata.elevation+mindata.depth)
+
+   if (structof(mindata(1)) == VEG__) 
+	_last_rastpulse(4) = mindata.lelv
 // Collect all the click-points and return them so the user
 // can do stats or whatever on them.
    grow, rtn_data, mindata;
