@@ -993,6 +993,8 @@ proc plot_fltlines {sel} {
          expect ">"
      }
      if {$ptype == 3} {
+       set cmax1 [expr $cmax*100.]
+       set cmin1 [expr $cmin*100.]
        if {$sel == 0} {
 	   exp_send "cveg_some = $var_type;\r"
            expect ">"

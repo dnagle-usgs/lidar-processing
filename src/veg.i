@@ -66,6 +66,23 @@ struct VEG_ALL {
   char  nx(120);	// number of return pulses found
 };
 
+// this structure below (VEG_ALL_)introduced on 03/08/03 to include the first surface easting, northing as well as the llast surface (bare earth) easting/northing.
+struct VEG_ALL_ {
+  long rn(120);		// raster + pulse << 24
+  long north(120); 	//surface northing in centimeters
+  long east(120);	//surface easting in centimeters
+  long elevation(120); //first surface elevation in centimeters
+  long mnorth(120);	//mirror northing
+  long meast(120);	//mirror easting
+  long melevation(120);	//mirror elevation
+  long lnorth(120); 	//bottom northing in centimeters
+  long least(120);	//bottom easting in centimeters
+  long lelv(120);	// last return in centimeters
+  short fint(120);	// first pulse peak value
+  short lint(120);	// last return pulse peak value
+  char  nx(120);	// number of return pulses found
+};
+
 struct CVEG_ALL {
   long rn;	// raster + pulse << 24
   long north; 	//target northing in centimeters
@@ -495,28 +512,28 @@ func display_veg(veg_arr, felv=, lelv=,  fint=, lint=, cmin=, cmax=, size=, win=
   len = numberof(veg_arr);
   if (felv) {
      elv = veg_arr.elevation/100.;
-     if ( is_void( cmin )) cmin = -27;
-     if ( is_void( cmax )) cmax = -10;
+     if ( is_void( cmin )) cmin = min(veg_all.elevation)/100.;
+     if ( is_void( cmax )) cmax = max(veg_all.elevation)/100.;
   }
   if (lelv) {
      elv = veg_arr.lelv/100.
-     if ( is_void( cmin )) cmin = -27;
-     if ( is_void( cmax )) cmax = -18;
+     if ( is_void( cmin )) cmin = min(veg_all.lelv)/100.;
+     if ( is_void( cmax )) cmax = max(veg_all.lelv)/100.;
   }
   if (cht) {
      elv = (veg_arr.lelv-veg_arr.elevation)/100.;
-     if ( is_void( cmin )) cmin = 0;
-     if ( is_void( cmax )) cmax = 10;
+     if ( is_void( cmin )) cmin = min(veg_all.lelv-veg_all.elevation)/100.;
+     if ( is_void( cmax )) cmax = max(veg_all.lelv-veg_all.elevation)/100.;
   }
   if (fint) {
      elv = veg_arr.fint;
-     if ( is_void( cmin )) cmin = 0;
-     if ( is_void( cmax )) cmax = 200;
+     if ( is_void( cmin )) cmin = min(veg_all.fint);
+     if ( is_void( cmax )) cmax = max(veg_all.fint);
   }
   if (lint) {
      elv = veg_arr.lint;
-     if ( is_void( cmin )) cmin = 0;
-     if ( is_void( cmax )) cmax = 200;
+     if ( is_void( cmin )) cmin = min(veg_all.lint);
+     if ( is_void( cmax )) cmax = max(veg_all.lint);
   }
 
   if (is_void(marker)) 
@@ -527,15 +544,26 @@ func display_veg(veg_arr, felv=, lelv=,  fint=, lint=, cmin=, cmax=, size=, win=
     //write, format="i = %d\r",i
     q = where( (veg_arr(i).north) );
     if ( numberof(q) >= 1) {
-       plcm, elv(q,i), veg_arr(i).north(q)/100.0, veg_arr(i).east(q)/100.0,
+       if (lelv || lint) {
+         plcm, elv(q,i), veg_arr(i).lnorth(q)/100.0, veg_arr(i).least(q)/100.0,
+            msize=size,cmin=cmin, cmax=cmax, marker=marker;
+       } else {
+         plcm, elv(q,i), veg_arr(i).north(q)/100.0, veg_arr(i).east(q)/100.0,
             msize=size,cmin=cmin, cmax=cmax, marker=marker
+       }
     }
    }
   } else {
    q = where( (veg_arr.north) );
    if (numberof(q) >= 1) {
-      plcm, elv(q), veg_arr.north(q)/100.0, veg_arr.east(q)/100.0,
-           msize=size,cmin=cmin, cmax=cmax, marker=marker
+      if (lelv || lint) {
+        plcm, elv(q), veg_arr.lnorth(q)/100.0, veg_arr.least(q)/100.0,
+           msize=size,cmin=cmin, cmax=cmax, marker=marker;
+      } else {
+        plcm, elv(q), veg_arr.north(q)/100.0, veg_arr.east(q)/100.0,
+           msize=size,cmin=cmin, cmax=cmax, marker=marker;
+      }
+       
    }
   }
 
@@ -570,17 +598,16 @@ func make_fs_veg (d, rrr) {
 if (numberof(d(0,,)) < numberof(rrr)) { len = numberof(d(0,,)); } else { 
    len = numberof(rrr);}
 
-geoveg = array(VEG_ALL, len);
+geoveg = array(VEG_ALL_, len);
 
 for (i=1; i<=len; i=i+1) {
   geoveg(i).rn = rrr(i).raster;
-  //geoveg(i).north = rrr(i).north;
-  //geoveg(i).east = rrr(i).east;
+  geoveg(i).north = rrr(i).north;
+  geoveg(i).east = rrr(i).east;
   geoveg(i).elevation = rrr(i).elevation;
   geoveg(i).mnorth = rrr(i).mnorth
   geoveg(i).meast = rrr(i).meast
   geoveg(i).melevation = rrr(i).melevation;
-  geoveg(i).felv = d(,i).mx1;
   geoveg(i).fint = d(,i).mv1;
  // find actual ground surface elevation using simple trig (similar triangles)
   elvdiff = rrr(i).melevation - rrr(i).elevation;
@@ -591,8 +618,8 @@ for (i=1; i<=len; i=i+1) {
   if (is_array(eindx)) {
    eratio = float(d(,i).mx0(eindx))/float(d(,i).mx1(eindx));
    geoveg(i).lelv(eindx) = int(rrr(i).melevation(eindx) - eratio * elvdiff(eindx));
-   geoveg(i).north(eindx) = int(rrr(i).mnorth(eindx) - eratio * ndiff(eindx));
-   geoveg(i).east(eindx) = int(rrr(i).meast(eindx) - eratio * ediff(eindx));
+   geoveg(i).lnorth(eindx) = int(rrr(i).mnorth(eindx) - eratio * ndiff(eindx));
+   geoveg(i).least(eindx) = int(rrr(i).meast(eindx) - eratio * ediff(eindx));
   } else {
    geoveg(i).lelv = 0;
   }
@@ -829,8 +856,8 @@ if (is_void(append)) {
 
 if (is_void(append)) {
   /* write header information only if append keyword not set */
-  if (is_void(type)) type = 6;
-  nwpr = long(12);
+  if (is_void(type)) type = 8;
+  nwpr = long(13);
 
   rec = array(long, 4);
   /* the first word in the file will decide the endian system. */
@@ -850,6 +877,7 @@ if (is_void(append)) {
 }
 num_rec = 0;
 
+vegall = clean_veg(vegall);
 
 /* now look through the vegall array of structures and write 
  out only valid points 
@@ -874,12 +902,14 @@ for (i=1;i<=len;i++) {
      byt_pos = byt_pos + 4;
      _write, f, byt_pos, vegall(i).melevation(indx(j));
      byt_pos = byt_pos + 4;
-     _write, f, byt_pos, vegall(i).felv(indx(j));
+     _write, f, byt_pos, vegall(i).lnorth(indx(j));
+     byt_pos = byt_pos + 4;
+     _write, f, byt_pos, vegall(i).least(indx(j));
+     byt_pos = byt_pos + 4;
+     _write, f, byt_pos, vegall(i).lelv(indx(j));
      byt_pos = byt_pos + 4;
      _write, f, byt_pos, vegall(i).fint(indx(j));
      byt_pos = byt_pos + 2;
-     _write, f, byt_pos, vegall(i).lelv(indx(j));
-     byt_pos = byt_pos + 4;
      _write, f, byt_pos, vegall(i).lint(indx(j));
      byt_pos = byt_pos + 2;
      _write, f, byt_pos, vegall(i).nx(indx(j));
@@ -977,22 +1007,70 @@ func test_veg(veg_all,  fname=, pse=, graph=) {
 
 }
 
-func clean_veg(veg_all) {
-  // this function removes the bad data points from the veg_all array
-  // amar nayegandhi 12/20/02
+func clean_veg(veg_all, rcf_width=) {
+  /* DOCUMENT clean_veg(veg_all, rcf_width=)
+   this function cleans the veg_all array
+   amar nayegandhi 12/20/02
+   Input: veg_all	: Initial data array of structure VEG__ or VEG_ALL_
+          rcf_width	: The elevation width (m) to be used for the RCF filter.  If not set, rcf is not used.
+   Output: Cleaned data array of type VEG_
+   modified AN 3/8/03 to add rcf_width= option and other changes
+  */
 
-  indx = where(veg_all.lelv > 0);
-  if (is_array(indx)) veg_all = veg_all(indx);
+  if (numberof(veg_all) != numberof(veg_all.north)) {
+      // convert VEG_ALL_ to VEG_
+      write, "converting raster structure (VEG_ALL_) to point structure (VEG__)";
+      veg_all = veg_all__to_veg__(veg_all);
+  }
+  
+  write, "cleaning data...";
 
+  // remove pts that had bare earth elevations assigned to 0
+  indx = where(veg_all.lelv != 0);
+  if (is_array(indx)) {
+    veg_all = veg_all(indx);
+  } else {
+    veg_all = [];
+    return veg_all
+  }
 
-  indx = where(veg_all.felv > 0);
-  if (is_array(indx)) veg_all = veg_all(indx);
+  // remove pts that had north and lnorth values assigned to 0
+  indx = where(veg_all.north != 0);
+  if (is_array(indx)) {
+     veg_all = veg_all(indx);
+  } else {
+      veg_all = [];
+      return veg_all
+  }
 
-  indx = where(veg_all.elevation < 5000);
-  if (is_array(indx)) veg_all = veg_all(indx);
+  indx = where(veg_all.lnorth != 0);
+  if (is_array(indx)) {
+     veg_all = veg_all(indx);
+  } else {
+      veg_all = [];
+      return veg_all
+  }
 
-  indx = where(veg_all.elevation > -500);
-  if (is_array(indx)) veg_all = veg_all(indx);
+  // remove points that have been assigned mirror elevation values
+  indx = where(veg_all.elevation < (0.75*veg_all.melevation))
+  if (is_array(indx)) {
+    veg_all = veg_all(indx);
+  } else {
+    veg_all = [];
+    return veg_all
+  }
+
+  if (is_array(rcf_width)) {
+    write, "using rcf filter to clean veg data..."
+    //run rcf on the entire data set
+    ptr = rcf(veg_all.elevation, rcf_width*100, mode=2);
+    if (*ptr(2) > 3) {
+        veg_all = veg_all(*ptr(1));
+    } else {
+        veg_all = [];
+    }
+  }
+
 
   return veg_all
 }
@@ -1515,7 +1593,7 @@ if (is_void(append)) {
 close, f;
 }
 
-func clean_cveg_all(vegall) {
+func clean_cveg_all(vegall, rcf_width=) {
   /* DOCUMENT clean_cveg_all(vegall)
      This function cleans the multi-peak veg data.  
      Input: vegall:  data array (with structure CVEG_ALL)
@@ -1530,7 +1608,7 @@ func clean_cveg_all(vegall) {
   if (is_array(indx)) 
     new_vegall = new_vegall(indx);
 
-  indx = where(new_vegall.elevation < 0.7*new_vegall.melevation);
+  indx = where(new_vegall.elevation < 0.75*new_vegall.melevation);
   if (is_array(indx))
     new_vegall = new_vegall(indx);
 
@@ -1539,6 +1617,174 @@ func clean_cveg_all(vegall) {
   if (is_array(indx)) 
     new_vegall = new_vegall(indx);
 
+  if (rcf_width) {
+    ptr = rcf(new_vegall.elevation, rcf_width*100, mode=2);
+    if (*ptr(2) > 3) {
+	new_vegall = new_vegall(*ptr(1));
+    } else {
+        new_vegall = 0
+    }
+  }
+
   return new_vegall;
 }
   
+func hist_veg( veg_all, binsize=, win=, dofma=, color=, normalize=, lst=, width=, multi=, type= ) {
+/* DOCUMENT hist_veg(fs)
+
+   Return the histogram of the good elevations in veg.  The input veg elevation
+data are in cm, and the output is an array of the number of time a given
+elevation was found. The elevations are binned to 1-meter.
+
+  Inputs: 
+	veg_all		An array of "VEG_ALL_" or "CVEG_ALL" structures.  
+	binsize=	Binsize in centimeters from 1.0 to 200.0  
+	win=		Defaults to 0.
+	dofma=		Defaults to 1 (Yes), Set to zero if you don't want an fma.
+	color=		Set graph color
+	width=		Set line width
+	normalize=	Defaults to 0 (not normalized),  Set to 1  to cause it to normalize
+                        to one.  This is very useful in case you are plotting multiple 
+                        histograms where you actually want to compare their peak value.
+        lst=            An optional externally generated "where" filter list.
+        multi=		Set to 1 if using Multipeak vegetation algorithm
+	type = 		Set to 1 for First Return Topography only
+			       2 for Bare Earth Topography only (only when multi = 0)
+			       3 for considering all returns 
+	
+
+  Outputs:
+	A histogram graphic in Window 0
+
+  Returns:
+	An 2xn array of x values and counts found at those values.
+
+ Orginal: Amar Nayegandhi 02/20/03.  Adapted from hist_fs by WW.
+
+See also: VEG_ALL_, CVEG_ALL
+*/
+
+  if ( is_void(binsize))
+	binsize = 100.0;
+
+  if ( is_void(win) ) 
+	win = 0;
+  if (numberof(where(veg_all.north == 0)) > 0) {
+      if (multi == 1) 
+	veg_all = clean_cveg_all(veg_all);
+  }
+
+  if ( is_void(lst)) {
+     if (type == 1) {
+      if (multi == 0) {
+       lst = where(veg_all.elevation);
+      } else {
+       lst = where(veg_all.nx == 1)
+       if (is_array(lst)) {
+         ilst = where(veg_all.elevation(lst))
+         if (is_array(ilst))
+          lst = lst(ilst);
+       }
+      }
+     }
+     if (type == 2) 
+	lst = where(veg_all.lelv);
+     if (type == 3) {
+      if (multi == 0) {
+	lst = where(veg_all.elevation);
+        if (is_array(lst)) {
+	  ilst = where(veg_all.lelv(lst));
+          if (is_array(ilst))
+            lst = lst(ilst);
+ 	}
+      } else lst = where(veg_all.elevation);
+    }
+  }
+
+ elev = veg_all.elevation(lst);
+ if (multi == 0) {
+  // clean the array only if multi = 0.  
+  melev = veg_all.melevation(lst);
+  // build an edit array indicating where values are between -60 meters
+  // and 3000 meters.  Thats enough to encompass any EAARL data than
+  // can ever be taken.
+  gidx = (elev > -6000) | (elev <300000);  
+
+  // Now kick out values which are within 1-meter of the mirror. Some
+  // functions will set the elevation to the mirror value if they cant
+  // process it.
+  gidx &= (elev < (melev-1));
+
+
+  // Now generate a list of where the good values are.
+  q = where( gidx )
+  elev = elev(q);
+ }
+  
+
+ // now find the minimum 
+ minn = elev(min);
+ maxx = elev(max);
+
+ fsy = elev - minn ;
+
+ minn /= 100.0
+ maxx /= 100.0
+
+
+ // make a histogram of the data indexed by q.
+ h = histogram( (fsy / int(binsize)) + 1 );
+ zero_list = where( h == 0 ) 
+ if ( numberof(h) < 2 ) {
+   h = [1,h(1),1];   
+ }
+ if ( numberof(zero_list) )
+ 	h( zero_list ) = 1;
+  e = span( minn, maxx, numberof(h) )  ; 
+  w = window();
+  window,win; 
+  if ( dofma ) 
+  	fma; 
+  if ( normalize ) {
+	h = float(h);
+	h = h/(h(max));
+   }
+  plg,h-1,e, color=color, width=width;
+  plmk, h-1, e, marker=4, msize=0.4, width=10, color="red";
+  pltitle(swrite( format="Elevation Histogram %s", data_path));
+  xytitles,"Elevation (meters)", "Number of measurements"
+  //limits
+  hst = [e,h];
+  window, win; limits,,,,hst(max,2) * 1.5
+  window(w);
+  return hst;
+}
+
+func veg_all__to_veg__(data) {
+/* DOCUMENT veg_all__to_veg__(data)
+      this function converts the data array from the raster structure (VEG_ALL_) to the VEG__ structure in point format.
+      amar nayegandhi
+     03/08/03
+   */
+
+ if (numberof(data) != numberof(data.north)) {
+                    data_new = array(VEG__, numberof(data)*120);
+                        indx = where(data.rn >= 0);
+                 data_new.rn = data.rn(indx);
+              data_new.north = data.north(indx);
+               data_new.east = data.east(indx);
+          data_new.elevation = data.elevation(indx);
+             data_new.mnorth = data.mnorth(indx);
+              data_new.meast = data.meast(indx);
+         data_new.melevation = data.melevation(indx);
+             data_new.lnorth = data.lnorth(indx);
+              data_new.least = data.least(indx);
+               data_new.lelv = data.lelv(indx);
+               data_new.fint = data.fint(indx);
+               data_new.lint = data.lint(indx);
+                 data_new.nx = data.nx(indx);
+  } else data_new = data;
+
+  return data_new
+}
+

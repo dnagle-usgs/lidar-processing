@@ -2,6 +2,12 @@ func read_4wd_ascii(ipath, ifname, no_lines=) {
  /* DOCUMENT read_4wd_ascii(ipath, ifname, no_lines=)
     Original amar nayegandhi 02/28/03
     This function reads a 4 word ascii file of the format x y zmin zmax
+    Input:
+    ipath - Input path
+    ifname - Input file name
+    no_lines = Optional keyword to define the number of lines to read.  If no_lines is not set, the function will read all the lines in the file.
+    Output:
+    Data array of type array(int, 4, no_lines)
  */
 
  if (!no_lines) {
