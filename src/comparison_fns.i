@@ -30,12 +30,18 @@ func read_xyz_ascii_file(fname,n) {
   }
 
 
-func compare_pts(eaarl, kings, rgn, fname=, buf=, elv=, read_file=, pdop=) {
+func compare_pts(eaarl, kings, rgn, fname=, buf=, elv=, read_file=, pdop=, mode=) {
    // this function compares each point of kings data within a buffer of eaarl data.
    // amar nayegandhi 11/15/2002.
 
-   extern i, no, be_avg_pts, be, kings_elv, be_elv, diff1, diff2, kings_indx, day123_pnav;
+   // mode = 1 - first surface
+   // mode = 2 for bathy
+   // mode = 3 for topo under veg
+
+   extern i, no, be_avg_pts, be, kings_elv, be_elv, diff1, diff2, kings_indx, day123_pnav, eaarl2;
+   kings_indx = [];
    if (!buf) buf = 500 // default to 5 m buffer side.
+   if (is_void(mode)) mode = 3
    if (is_array(rgn)) {
      indx = where(((kings(1,) >= rgn(1)) &
                  (kings(1,) <= rgn(2))) & 
@@ -44,6 +50,7 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, elv=, read_file=, pdop=) {
      kings = kings(,indx);
    }
 
+   eaarl2 = [];
    //extern i, no, be_avg_pts, be, kings_elv, be_elv, diff1, diff2;
 
  ncount=0;
@@ -73,13 +80,18 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, elv=, read_file=, pdop=) {
    //}
 
    if (is_array(indx)) {
+      eaarl2 = grow(eaarl2, eaarl(indx));
       grow, kings_indx, i;
-      if (elv) {
+      if (elv || (mode == 1)) {
         be_avg = eaarl.elevation(indx)/100.;
-	} else {
+	}
+      if (mode == 2) {
+	be_avg = (eaarl.elevation(indx)+eaarl.depth(indx))/100.;
+      } 
+      if (mode == 3) {
         //be_avg = eaarl.elevation(indx)/100.-(eaarl.lelv(indx)-eaarl.felv(indx))/100.;
         be_avg = eaarl.lelv(indx)/100.;
-	}
+      }
       be_avg_pts = avg(be_avg);
       //avg_pts = avg(eaarl.elevation(indx));
       mindist = buf*sqrt(2);
@@ -93,31 +105,38 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, elv=, read_file=, pdop=) {
 	  minindx = indx(j);
         }
       }
-      if (elv) {
-        elv_diff = abs((eaarl(indx).elevation/100.)-kings(3,i));
-	} else {
-        //elv_diff = abs((eaarl(indx).elevation/100.-(eaarl(indx).lelv-eaarl(indx).felv)/100.)-kings(3,i));
-        elv_diff = abs((eaarl(indx).lelv/100.)-kings(3,i));
+        if ((elv == 1) || (mode == 1)) {
+          elv_diff = abs((eaarl(indx).elevation/100.)-kings(3,i));
 	}
+	if (mode == 2) {
+          elv_diff = abs(((eaarl(indx).elevation+eaarl(indx).depth)/100.)-kings(3,i));
+        }
+        if (mode == 3) {
+          //elv_diff = abs((eaarl(indx).elevation/100.-(eaarl(indx).lelv-eaarl(indx).felv)/100.)-kings(3,i));
+          elv_diff = abs((eaarl(indx).lelv/100.)-kings(3,i));
+        }
       minelv_idx = (elv_diff)(mnx);
       minelv_indx = indx(minelv_idx);
       minelveaarl = eaarl(minelv_indx);
       //write, mineaarl.elevation, kings(3,i);
-      if (elv) {
-        be = mineaarl.elevation/100.;
-	ii = i
-	} else {
-        //be = mineaarl.elevation/100.-(mineaarl.lelv-mineaarl.felv)/100.;
-        be = mineaarl.lelv/100.;
-	ii = mineaarl.rn
+        if (elv || mode == 1) {
+          be = mineaarl.elevation/100.;
+          be_elv = minelveaarl.elevation/100.;
+	  ii = i
+	}
+	if (mode == 2) {
+	  be = (mineaarl.elevation+mineaarl.depth)/100.;
+	  ii = mineaarl.rn
+          be_elv = (minelveaarl.elevation+minelveaarl.depth)/100.;
+ 	}
+	if (mode == 3) {
+          //be = mineaarl.elevation/100.-(mineaarl.lelv-mineaarl.felv)/100.;
+          be = mineaarl.lelv/100.;
+	  ii = mineaarl.rn
+          //be_elv = minelveaarl.elevation/100.-(minelveaarl.lelv-minelveaarl.felv)/100.;
+          be_elv = minelveaarl.lelv/100.;
 	}
 
-      if (elv) {
-        be_elv = minelveaarl.elevation/100.;
-	} else {
-        //be_elv = minelveaarl.elevation/100.-(minelveaarl.lelv-minelveaarl.felv)/100.;
-        be_elv = minelveaarl.lelv/100.;
-	}
        if (pdop) {
          write, f, format=" %d  %d  %f  %f  %f %f %f %f %f\n",ii, numberof(indx), be_avg_pts, be, kings(3,i), be_elv,  (be-kings(3,i)), (be_elv-kings(3,i)), day123_pnav(minindx);
        } else {
