@@ -615,7 +615,7 @@ menu .l1wid.mb.filter
               exp_send "type = define_bath_ctl(type=\"$type\"); \r"
 		}
 		
-          sst .bathctl.laser   laser   "  Laser:"  { -10 10.0 0.1  }
+          sst .bathctl.laser   laser   "  Laser:"  { -5.0 -1.0 0.1  }
 	  #LabelEntry .bathctl.laser  -width 5 -relief sunken -bd 3 -label "Laser " \
 	#	-helptext "Laser Decay Constant" \
 	#	-textvariable laser \
@@ -623,7 +623,7 @@ menu .l1wid.mb.filter
 	#	    .bathctl.type configure -state disabled
 	#	 }
 	  
-          sst .bathctl.water   water   "  Water:"  { -20 20.0 0.1  }
+          sst .bathctl.water   water   "  Water:"  { -10 -0.1 0.1  }
 	  #LabelEntry .bathctl.water  -width 5 -relief sunken -bd 3 -label "Water " \
 	#	-helptext "Water Column Constant" \
 	#	-textvariable water \
@@ -631,7 +631,7 @@ menu .l1wid.mb.filter
 	#	    .bathctl.type configure -state disabled
 	#	 }
 
-          sst .bathctl.agc   agc   "  AGC:"  { -20 20.0 0.1  }
+          sst .bathctl.agc   agc   "  AGC:"  { -10 0.1 0.1  }
 	  #LabelEntry .bathctl.agc  -width 5 -relief sunken -bd 3 -label "AGC " \
 	#	-helptext "Attenuation Gain Constant" \
 	#	-textvariable agc \
@@ -639,7 +639,7 @@ menu .l1wid.mb.filter
 	#	    .bathctl.type configure -state disabled
 	#	 }
 
-          sst .bathctl.thresh   thresh   "  Threshold:"  { 0 20.0 0.1  }
+          sst .bathctl.thresh   thresh   "  Threshold:"  { 0 50.0 0.1  }
 	  #LabelEntry .bathctl.thresh  -width 5 -relief sunken -bd 3 -label "Threshold " \
 	#	-helptext "Threshold" \
 	#	-textvariable thresh \
@@ -647,7 +647,7 @@ menu .l1wid.mb.filter
 	#	    .bathctl.type configure -state disabled
 	#	 }
 
-          sst .bathctl.last   last   "  Last:"  { 0 20.0 1  }
+          sst .bathctl.last   last   "  Last:"  { 0 300 1  }
 	  #LabelEntry .bathctl.last  -width 5 -relief sunken -bd 3 -label "Last " \
 	#	-helptext "Last (nanosecond)" \
 	#	-textvariable last \

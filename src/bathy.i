@@ -270,7 +270,7 @@ func ex_bath( rn, i,  last=, graph=, win= ) {
     db                The return waveform equalized by agc and tilted by bias.
 */
 
- extern ex_bath_rn, ex_bath_rp, a
+ extern ex_bath_rn, ex_bath_rp, a, db
 
  if (is_void(win)) win=4;
 
