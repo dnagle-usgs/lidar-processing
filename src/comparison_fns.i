@@ -247,10 +247,10 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fsmode=, wfs=) {
   if (!wfs) wfs = 25; // 25 meters default
 
   //now make a grid in the bbox
-  ngridx = ceil((bbox(2)-bbox(1))/buf);
-  ngridy = ceil((bbox(4)-bbox(3))/buf);
-  xgrid = span(bbox(1), bbox(2), int(ngridx));
-  ygrid = span(bbox(3), bbox(4), int(ngridy));
+  ngridx = int(ceil((bbox(2)-bbox(1))/buf));
+  ngridy = int(ceil((bbox(4)-bbox(3))/buf));
+  xgrid = bbox(1)+span(0, buf*(ngridx-1), ngridx);
+  ygrid = bbox(3)+span(0, buf*(ngridy-1), ngridy);
 
   if ( _ytk ) {
     tkcmd,"destroy .rcf1; toplevel .rcf1; set progress 0;"
@@ -264,8 +264,6 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fsmode=, wfs=) {
 	-width 400", int(ngridy) );
     tkcmd,"pack .rcf1.pb; update; center_win .rcf1;"
   }
-
-
   //timer, t0
   for (i = 1; i <= ngridy; i++) {
    q = [];
