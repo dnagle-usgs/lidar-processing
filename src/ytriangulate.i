@@ -455,11 +455,15 @@ func locate_triag_surface(pxyz,tr,win=, m=,show=) {
 }
   
 
-func grid_triag_data(eaarl, cell=) {
+func grid_triag_data(eaarl, cell=, nlimit=) {
 // amar nayegandhi 04/07/04
+// nlimit is the square area that is used to divide the data into chunks.
 
+  if (is_void(cell)) cell = 5
+  if (is_void(nlimit)) nlimit = 40000; // defaults to 200m^2
  // if data array is in raster format (R, GEOALL, VEGALL), then covert to 
  // non raster format (FS, GEO, VEG).
+ data_out = test_and_clean(eaarl);
  a = structof(eaarl(1));
  if (a == R) {
      data_out = clean_fs(eaarl);
@@ -480,43 +484,91 @@ func grid_triag_data(eaarl, cell=) {
  if (is_array(data_out)) eaarl = data_out;
  data_out = [];
 
- verts = triangulate_xyz(data=eaarl, plot=1);
-
- //define lower left and upper right coordinates
- ll =long( [min(eaarl.least)/100., min(eaarl.lnorth)/100.]);
- ur =long( [max(eaarl.least)/100., max(eaarl.lnorth)/100.]);
- ll;
- ur;
- xcell = (ur(1)-ll(1))/cell;
- ycell = (ur(2)-ll(2))/cell;
- img = array( double, xcell, ycell );
- 
-
- //x = int( eaarl.least+50)/100 + 1;    // add 50cm, then convert from cm to m
- //y = int(eaarl.lnorth+50)/100 + 1;
- //z = eaarl.lelv;
-
- count = 0;
+ nlsqrt = sqrt(nlimit);
 
 
- // insert elevations into the grid array
-  for (i=1; i<=xcell; i++ ) {
-    for (j=1; j<=ycell; j++) {
-    //locate triangulated surface
-    tr = locate_triag_surface(pxyz, verts, m=[ll(1)+cell*i,ll(2)+cell*j]);
-     if (is_array(tr))  {
+ // if number of eaarl is > nlimit, divide the data into smaller chunks
+ lla =long( [min(eaarl.least)/100., min(eaarl.lnorth)/100.]);
+ ura =long( [max(eaarl.least)/100., max(eaarl.lnorth)/100.]);
+ xa = long(ceil((ura(1)-lla(1))/nlsqrt))+1;
+ ya = long(ceil((ura(2)-lla(2))/nlsqrt))+1;
+ xcella = (ura(1)-lla(1))/cell;
+ ycella = (ura(2)-lla(2))/cell;
+ imga = array(double, xcella, ycella);
+ imga(*) = -1000;
+
+
+ if (xa > 1) {
+    spanx = span(lla(1), ura(1), xa);
+ } else {
+    spanx = [lla(1), ura(1)];
+ }
+
+ if (ya > 1) {
+    spany = span(lla(2), ura(2), ya);
+ } else {
+    spanx = [lla(2), ura(2)];
+ }
+
+ for (ii=1;ii<numberof(spany);ii++) {
+   for (jj=1;jj<numberof(spanx);jj++) {
+    isp1 = data_box(eaarl.least, eaarl.lnorth, spanx(jj)*100-2000, spanx(jj+1)*100+2000, spany(ii)*100-2000, spany(ii+1)*100+2000);
+    if (!is_array(isp1)) continue;
+    eaarl1 = eaarl(isp1);
+   
+      
+    verts = triangulate_xyz(data=eaarl1, plot=1);
+    if (!is_array(verts)) continue;
+
+    //define lower left and upper right coordinates
+    ll = ([spanx(jj), spany(ii)]);
+    ur = ([spanx(jj+1), spany(ii+1)]);
+    xcell = long(ceil((ur(1)-ll(1))/cell));
+    ycell = long(ceil((ur(2)-ll(2))/cell));
+    img = array( double, xcell, ycell );
+    img(*) = -1000;
+    xcell;
+    ycell;
+    
+    count = 0;
+
+    // insert elevations into the grid array
+    for (i=1; i<=xcell; i++ ) {
+     for (j=1; j<=ycell; j++) {
+      //locate triangulated surface
+      tr = locate_triag_surface(pxyz, verts, m=[ll(1)+cell*i,ll(2)+cell*j]);
+      if (is_array(tr))  {
 	z = avg(tr(3,));
         count++;
         img( i, j ) = z;
+      }
      }
+     if ( (i % 10) == 0 ) write, format="%d of %d\r", i, xcell ;
     }
-    if ( (i % 10) == 0 ) write, format="%d of %d\r", i, xcell ;
-  }
-  idx = where(img == 0);
-  img(idx) = -1000.0
+    fxa = (jj-1)*xcell+1;
+    lxa = fxa + xcell-1;
+    if (lxa > xcella) {
+       lxa = xcella;
+       xl = xcella-fxa+1;
+    } else {
+       xl = numberof(img(,1));
+    }
+    fya = (ii-1)*ycell+1;
+    lya = fya + ycell-1;
+    if (lya > ycella) {
+       lya = ycella;
+       yl = ycella-fya+1;
+    } else {
+       yl = numberof(img(1,));
+    }
+    
+    imga(fxa:lxa, fya:lya) = img(1:xl,1:yl);
 
-  count;
+   write, format="**********%d of %d complete***********\n", jj, numberof(spanx);
+   write, format="**********%d of %d complete***********\n", ii, numberof(spany);
+   }
+ }
 
- return [&ll, &ur, &img];
+ return [&lla, &ura, &imga];
 
 }
