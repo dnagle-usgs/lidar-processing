@@ -72,6 +72,7 @@ func show_map( m,color=,utm=,width=, noff=, eoff= ) {
  if (!(noff)) noff = 0;
  if (!(eoff)) eoff = 0;
  sz = dimsof(m)(2);
+ map_warning,m;
  if (is_void(width)) width = 1.0
  if ( is_void( color ) )
 	color = "black";
@@ -112,6 +113,27 @@ func show_map( m,color=,utm=,width=, noff=, eoff= ) {
     plg,a(,1)+noff,a(,2)+eoff,marks=0,color=color, width=width;
   }
  }
+}
+
+func map_warning( m ) {
+/* DOCUMENT map_warning, m
+
+   Test the size of a map variable (array of pointers) and if it's greater
+ than 6000 print a warning.  This was tested on the pacific ocean where there
+ are many small islands which cause a map to easily contain more than the 
+ ~6000 limit.  If you zoom way in on a feature, Yorick will give a 
+ "looping error" and crash.
+
+*/
+  if ( dimsof(m)(2) > 6000 ) {
+   write,"***********************************************"
+   write,"*              ** Warning **                  *"
+   write,"* Your map is too large. It will crash Ytk if *"
+   write,"* you zoom way in on small features.          *"
+   write,format=" * Your map contains %d polygons. You       *\n", dimsof(m)(2)
+   write,"* should not exceed 6000 polygons.            *"
+   write,"***********************************************"
+  }
 }
 
 func convert_map ( ffn= , utm=, save=) {

@@ -508,7 +508,7 @@ zone = array(pZoneNumber, dimsof( sega) (2) );
   if ( numberof(q) ) nsewa(q,2) = 'w'; 
   q = where( nsew(, 4) == 1 );
   if ( numberof(q) ) nsewa(q,4) = 'w'; 
-  write,format="llseg %d-%d %c%12.8f:%c%12.8f %c%12.8f:%c%12.8f\n", blockn, indgen(1:int(segs)),
+  write,format="llseg %d-%d %c%013.8f:%c%12.8f %c%013.8f:%c%12.8f\n", blockn, indgen(1:int(segs)),
 	nsewa(,1),segd(,1),
 	nsewa(,2),segd(,2),
 	nsewa(,3),segd(,3),
@@ -795,7 +795,7 @@ func utmfp2ll (fname, zone=) {
        sread, a, st, w,x,y,z;
        ll = utm2ll([w,y], [x,z], zone);
        lldm = abs(ll-int(ll))*60.0;
-       write,format="llseg %s %c%d%10.8f:%c%d%10.8f %c%d%10.8f:%c%d%10.8f\n", st, 'n',int(ll(3)),lldm(3), 'w', abs(int(ll(1))), lldm(1), 'n', int(ll(4)), lldm(4), 'w', abs(int(ll(2))), lldm(2);
+       write,format="llseg %s %c%02d%10.8f:%c%d%10.8f %c%02d%10.8f:%c%d%10.8f\n", st, 'n',int(ll(3)),lldm(3), 'w', abs(int(ll(1))), lldm(1), 'n', int(ll(4)), lldm(4), 'w', abs(int(ll(2))), lldm(2);
     }
   }
 }
