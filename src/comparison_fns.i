@@ -169,7 +169,10 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=) {
   // mode = 3; // for bare earth vegetation
 
  //reset new_eaarl and data_out
+ //t0 = t1 = double( [0,0,0] );
+ MAXSIZE = 50000;
  new_eaarl = [];
+ new_eaarl_all = [];
  data_out = [];
  if (!mode) mode = 3;
 
@@ -222,7 +225,28 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=) {
    data_out.nx = eaarl.nx(indx);
  }
 
+ if (a == VEG_ALL) {
+   indx = where(eaarl.north != 0);
+   data_out = array(VEG_, numberof(indx));
+   data_out.rn = eaarl.rn(indx);
+   data_out.north = eaarl.north(indx);
+   data_out.east = eaarl.east(indx);
+   data_out.elevation = eaarl.elevation(indx);
+   data_out.mnorth = eaarl.mnorth(indx);
+   data_out.meast = eaarl.meast(indx);
+   data_out.melevation = eaarl.melevation(indx);
+   data_out.felv = eaarl.felv(indx);
+   data_out.fint = eaarl.fint(indx);
+   data_out.lelv = eaarl.lelv(indx);
+   data_out.lint = eaarl.lint(indx);
+   data_out.nx = eaarl.nx(indx);
+ }
+
  if (is_array(data_out)) eaarl = data_out;
+
+ a = structof(eaarl);
+ new_eaarl = array(a, MAXSIZE);
+ selcount = 0;
 
  // define a bounding box
   bbox = array(float, 4);
@@ -231,7 +255,7 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=) {
   bbox(3) = min(eaarl.north);
   bbox(4) = max(eaarl.north);
 
-  if (!buf) buf = 400; //in centimeters
+  if (!buf) buf = 500; //in centimeters
   if (!w) w = 30; //in centimeters
   // no_rcf is the minimum number of points required to be returned from rcf
   if (!no_rcf) no_rcf = 3;
@@ -255,13 +279,16 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=) {
     tkcmd,"pack .rcf.pb; update; center_win .rcf;"
   }
 
+
+  //timer, t0
   for (i = 1; i <= ngridy; i++) {
+    q = where ((eaarl.north >= ygrid(i)) &
+                   (eaarl.north <= ygrid(i)+buf));
+      
     for (j = 1; j <= ngridx; j++) {
-      q = where((eaarl.east >= xgrid(j))   &
-                   (eaarl.east <= xgrid(j)+buf));
       if (is_array(q)) {
-        indx = where ((eaarl.north(q) >= ygrid(i)) &
-                   (eaarl.north(q) <= ygrid(i)+buf));
+        indx = where((eaarl.east(q) >= xgrid(j))   &
+                   (eaarl.east(q) <= xgrid(j)+buf));
         indx = q(indx);
       }
       if (is_array(indx)) {
@@ -276,22 +303,32 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=) {
          be_elv = eaarl.elevation(indx);
        }
 
+       //sel_ptr = lrcf2(be_elv, w);
        sel_ptr = rcf(be_elv, w, mode=2);
        if (*sel_ptr(2) >= no_rcf) {
-	    tmp_eaarl = eaarl(indx);
-	    grow, new_eaarl, tmp_eaarl(*sel_ptr(1));
-	    //write, numberof(indx), *sel_ptr(2);
+	  tmp_eaarl = eaarl(indx);
+	  if (selcount+(*sel_ptr(2)) > MAXSIZE) {
+	      grow, new_eaarl_all, new_eaarl(1:selcount);
+	      new_eaarl = array(a, MAXSIZE);
+	      selcount = 0;
+	  }
+	  new_eaarl(selcount+1:selcount+(*sel_ptr(2))) = tmp_eaarl(*sel_ptr(1));
+	  selcount = selcount + (*sel_ptr(2));
+	  //write, numberof(indx), *sel_ptr(2);
        }
       }
     }
     if (_ytk) 
        tkcmd, swrite(format="set progress %d", i)
   }
+  grow, new_eaarl_all, new_eaarl(1:selcount);
+  //timer,t1
+  //t1 - t0;
   if (_ytk) {
    tkcmd, "destroy .rcf"
   } 
 
-  return new_eaarl
+  return new_eaarl_all
 	 
 }
 
