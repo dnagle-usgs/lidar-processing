@@ -1017,6 +1017,10 @@ func sel_data_rgn(data, mode=,win=) {
      rgn(2) = max( [ a(1), a(3) ] );
      rgn(3) = min( [ a(2), a(4) ] );
      rgn(4) = max( [ a(2), a(4) ] );
+     /* plot a window over selected region */
+     a_x=[rgn(1), rgn(2), rgn(2), rgn(1), rgn(1)];
+     a_y=[rgn(3), rgn(3), rgn(4), rgn(4), rgn(3)];
+     plg, a_y, a_x;
      
      //write, int(rgn*100);
   }
