@@ -20,6 +20,41 @@
 #
 #
 
+#
+# scap fn
+# Do a screen capture of a mouse selected window.
+proc scap { } {
+ global capture_path data_path capture_name
+  if { [ info exists capture_path ] == 0 } {
+    if { [ info exists data_path ] } {
+       set capture_path $data_path
+    } else {
+       set capture_path "";
+    }
+  }
+  if { [info exists capture_name ] == 0 } {
+    set capture_name "";
+  }
+  tk_messageBox -type ok \
+	-message {Raise the window you want to capture, and then click OK}
+  update
+  exec /usr/X11R6/bin/xwd -out /tmp/junk.xwd;
+  set fn [tk_getSaveFile  -initialdir $capture_path \
+	-defaultextension .png \
+	-initialfile $capture_name \
+ 	 ]
+  set capture_name [ file tail $fn ]
+  set ext [ file extension $fn ]
+  set n [ lsearch ".jpg .gif .png .bmp .pnm .tif .tiff" $ext ]
+  set capture_path [ file dirname $fn ]
+  if { $n == -1 } {
+    set fn "[ file rootname $fn ].png"
+  }
+  update
+  exec /usr/X11R6/bin/convert /tmp/junk.xwd $fn
+  file delete -force /tmp/junk.xwd
+}
+
 proc restore_eaarl_defaults { } {
 
 } 
@@ -211,6 +246,9 @@ proc load_edb {} {
 #############
 #   Images
 #############
+ $w.mb.images add command -label "Capture a display..." -command {
+    scap
+ }
  $w.mb.images add command -label "1-Hz Digital Camera Images..." -command {
     start_sf
  }
