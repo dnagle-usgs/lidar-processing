@@ -8,6 +8,7 @@
   set win_no 		5
   set msize 		1.0
   set usecentroid   	1
+  set hist_log		1
 
 exp_send "#include \"geo_bath.i\"\r"; # load geobath.i code
 exp_send "#include \"read_yfile.i\"\r"; # load read_yfile
@@ -91,6 +92,12 @@ menu .l1wid.mb.options
 	   pack .l1wid-opts.f3.label .l1wid-opts.f3.inc -side left -fill x
 	   pack .l1wid-opts.f1 .l1wid-opts.f2 .l1wid-opts.f3 -side top -anchor e
          }
+.l1wid.mb.options add checkbutton -label "Log Historgrams" -underline 0 \
+	-variable hist_log \
+	-command {
+       exp_send "_win=window();window,7;\
+  logxy,0,$hist_log; range,$hist_log;window,_win \r"
+	}
 
 
 ComboBox .l1wid.bf4.1.d -text "Define Region using..." -width 22 -values "Rubberband-Box Points-in-Polygon Line-Segment Enter_Rectangular_Coordinates" -helptext "Select region to process using any of the following methods" -editable 0 -modifycmd {

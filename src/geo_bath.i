@@ -728,7 +728,7 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=) {
         //convert data from R into FS structure 
 	data_new = array(FS, numberof(data)*120);
 	indx = where(data.rn > 0);
-	data_new.rn = data.raster(indx);
+	data_new.rn = data.rn(indx);
 	data_new.north = data.north(indx);
 	data_new.east = data.east(indx);
 	data_new.elevation = data.elevation(indx);
