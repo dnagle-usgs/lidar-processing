@@ -47,6 +47,7 @@ set dir "/data/0/"
 set timern "hms"
 set fcin 0
 set lcin 0
+set yes_head 0
 
 proc load_file_list { f } {
 global ci fna imgtime dir 
@@ -210,7 +211,7 @@ frame  .canf -borderwidth 5 -relief sunken
 frame  .cf1  -borderwidth 5 -relief raised
 frame  .cf2  -borderwidth 5 -relief raised
 frame  .cf3  -borderwidth 5 -relief raised
-####canvas .canf.can  -height 480 -width 640  
+#canvas .canf.can  -height 420 -width 440  
 canvas .canf.can  -height 240 -width 320  
 .canf.can create image 0 0 -tags img -image $img -anchor nw 
 set me "EAARL image/data Animator \n$version\n$revdate\nC. W. Wright\nwright@lidar.wff.nasa.gov"
@@ -250,8 +251,7 @@ Button .cf1.plotpos  \
    send ytk "mark_pos $llat $llon"
   } else {
      tk_messageBox  \
-        -message "ytk isn\'t running. You must be running Ytk and the
-eaarl.ytk program to use this feature."  \
+        -message "ytk isn\'t running. You must be running Ytk and the eaarl.ytk program to use this feature."  \
 	-type ok
   }
 }
@@ -274,7 +274,7 @@ Button .cf3.imgbutton -text "Goto Img" \
 
 bind .cf3.entry <Return> {gotoImage}
 proc gotoImage {} {
-  global timern hms sod ci hsr imgtime seconds_offset frame_off
+  global timern hms sod ci hsr imgtime seconds_offset frame_off pitch roll head
   set i 0
   ##puts "Options selected for Goto Image is: $timern \n"
   if {$timern == "hms"} {
@@ -485,12 +485,25 @@ global fna nfiles img run ci data imgtime dir img_opts
 global lat lon alt seconds_offset hms sod timern 
 global cin hsr frame_off
 global llat llon
+global pitch roll head yes_head
 
 set cin $n
+  if ($yes_head) {
+     # include heading information...
+     # cp file to tmp_file
+     $img blank
+     set fn $dir/$fna($n)
+     exec cp $fn /tmp/sf_tmp.jpg
+     set fn /tmp/sf_tmp.jpg
+     exec mogrify -rotate [expr $head] $fn
+     #puts "$fn"
+     } else {
+     set fn $dir/$fna($n)
+     }
 #  puts "$n  $fna($n)"
   .canf.can config -cursor watch
 # -format "jpeg -fast -grayscale" 
-  if { [ catch {$img read $dir/$fna($n) } ] } {
+  if { [ catch {$img read $fn } ] } {
     if { [ file extension $fna($n) ] == ".jpg" } {
       puts "Unable to decode: $fna($n)";
     } else {
@@ -500,7 +513,7 @@ set cin $n
       }
     }
   }
-  set fn $dir/$fna($n)
+     
 ###  .canf.can itemconfigure tx -text $n
   .canf.can itemconfigure tx -text ""
    set lst [ split $fn "_" ]
@@ -598,14 +611,21 @@ proc zip_save_marked {zp} {
 }
 
 proc get_heading {} {
+   global yes_head img
+
    ## this procedure gets heading information from current data set
    ## amar nayegandhi 03/04/2002.
    if { [ lsearch -exact [ winfo interps ] ytk ] != -1 } {
-      send ytk "request_heading"
+     set yes_head  1;
+     ## resize the canvas screen
+     .canf.can configure -height 420 -width 440
+      set psf [pid]
+      send ytk "request_heading $psf"
+      ## tmp file is now saved as /tmp/sf_tans.txt.$psf"
+      #set f [open "/tmp/sf_tans.txt.$psf" r]
       } else {
 	  tk_messageBox  \
-	      -message "ytk isn\'t running. You must be running Ytk and the
-	      eaarl.ytk program to use this feature."  \
+	      -message "ytk isn\'t running. You must be running Ytk and the eaarl.ytk program to use this feature."  \
 	      -type ok
       }
    }

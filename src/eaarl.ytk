@@ -235,6 +235,19 @@ proc load_edb {} {
  }
 
 
+proc request_heading {psf} {
+   ## this procedure requests heading information for sf_a.tcl
+   ## amar nayegandhi
+   exp_send "#include \"rbtans.i\"\r" 
+   expect ">"
+   exp_send "tans=rbtans(); pkt_sf = prepare_sf_pkt(tans);"
+
+   ## write pkt_sf to a temp file
+   set tmpfile "/tmp/sf_tans.txt.$psf"
+   exp_send "make_sf_tans_file(\"$tmpfile\");"
+
+   }
+
 proc mark_pos { lat lon } {
   scan $lat "%1s%2f%f" df dd mm
   set lat [ expr $dd + $mm/60.0 ]

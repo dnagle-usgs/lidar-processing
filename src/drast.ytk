@@ -165,6 +165,14 @@ proc send_sod_to_sf { somd } {
   }
 }
 
+proc send_tans_to_sf {somd p r h} {
+   catch {
+    send sf_a.tcl set pitch $p
+    send sf_a.tcl set roll $r
+    send sf_a.tcl set head $h
+    send sf_a.tcl gotoImage
+   }
+}
 
 proc play {} {
  global tid play_interval rn inc play_dir play_flag total_edb_records

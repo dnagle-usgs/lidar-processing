@@ -52,6 +52,9 @@ func rbtans( junk ) {
 
 if ( _ytk ) {
     ifn  = get_openfn( initialdir="/data/0/", filetype="*.ybin" );
+    if (strmatch(ifn, "ybin") == 0) {
+          exit, "NO FILE CHOSEN, PLEASE TRY AGAIN\r";
+    }
     ff = split_path( ifn, -1 );
     data_path = ff(1);
 } else {
@@ -94,6 +97,7 @@ write, format="  SOD:%14.3f %14.3f %6.2f hrs\n", tans(1,min), tans(1,max),
 	(tans(1,max)-tans(1,min))/ 3600.0
 write, format=" Roll:%14.3f %14.3f\n", tans(2,min), tans(2,max)
 write, format="Pitch:%14.3f %14.3f\n", tans(3,min), tans(4,max)
+print, "Tans_Information_Loaded"
  t = array( TANS, dimsof(tans)(3) );
  t.somd    = tans(1,);
  t.roll    = tans(2,);
@@ -102,6 +106,35 @@ write, format="Pitch:%14.3f %14.3f\n", tans(3,min), tans(4,max)
  return t;
 }
 
+
+func prepare_sf_pkt (tans) {
+  /* this function prepares a packet for sf_a.tcl which contains the pitch, roll, heading information
+     for every camera photo every 1 second */
+  /* amar nayegandhi 03/05/2002. */
+
+  print, "Preparing packet at 1Hz for sf_a.tcl\n\r";
+
+  no_t = (dimsof(tans)(2)/10); 
+  if ((dimsof(tans)(2)%10) != 0) no_t++;
+
+  t = array(TANS, no_t);
+
+  t.somd = tans(1::10).somd;
+  t.roll = tans(1::10).roll;
+  t.pitch = tans(1::10).pitch;
+  t.heading = tans(1::10).heading;
+
+
+  return t;
+
+}
+
+func make_sf_tans_file(tmpfile) {
+  /* this function writes out a tmpfile containing tans information for sf */
+  f = open(tmpfile, "w");
+  write, f, format=" %7d, %3.3f, %3.3f, %4.3f\n", (int)(pkt_sf.somd), pkt_sf.pitch, pkt_sf.roll, pkt_sf.heading;
+  close, f
+  }
 
 
 

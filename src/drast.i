@@ -59,6 +59,11 @@ func send_sod_to_sf( somd ) {
     last_somd = somd;
 }
 
+func send_tans_to_sf( somd, pitch, roll, heading ) {
+  extern last_somd
+  tkcmd, swrite(format="send_tans_to_sf %d %f %f %f", somd, pitch, roll, heading);
+  last_somd = somd;
+  }
 
 func ndrast( r, units=  ) {
 /* DOCUMENT drast(r)
@@ -79,6 +84,7 @@ func ndrast( r, units=  ) {
  extern x0,x1;
  extern last_somd;
  extern rn;
+ extern pkt_sf;
 
   aa = array( short(255), 250, 120, 3);
 
@@ -86,6 +92,10 @@ func ndrast( r, units=  ) {
  somd = (rr.soe - soe_day_start)(1);
  if ( somd != last_somd ) {
     send_sod_to_sf, somd;
+    if (!is_void(pkt_sf)) {
+       idx = where((int)(pkt_sf.somd) == somd);
+       send_tans_to_sf, somd, tans(idx).pitch, tans(idx).roll, tans(idx).heading;
+       }
  }
  for (i=1; i< npix; i++ ) {
   for (j=1; j<=3; j++ ) {
