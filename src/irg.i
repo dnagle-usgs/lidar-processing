@@ -160,6 +160,7 @@ func irg( b, e, inc=, delta=, georef=, usecentroid= ) {
         }
     } else {	// This section processes basic irange
       a(di).irange = rp.irange;
+/****************
       for ( ii=1; ii< rp.npixels(1); ii++ ) { 
        ta = -float(*rp.tx(ii));
        x = indgen(1:numberof(ta))-1;
@@ -178,6 +179,7 @@ func irg( b, e, inc=, delta=, georef=, usecentroid= ) {
            a(di).intensity(ii) = w(3) - w(1); //   
         }
       }
+****************/
     }
     a(di).sa  = rp.sa;
     if ( (di % 10) == 0  )
