@@ -161,6 +161,14 @@ puts "tar file: $tf"
   after 1
 }
 
+proc tmp_image {cmd t} {
+ global settings
+ global img img0 last_tar tar secs fn
+ show $cmd $t
+ $img write /tmp/tmp.jpg -format jpeg
+}
+
+
 trace variable settings(gamma) w { 
    global img settings
    $img configure -gamma $settings(gamma) 
