@@ -4,6 +4,8 @@
 
 */
 
+write,"$Id$"
+
 func select_region(data, win=, plot=) {
  /*DOCUMENT select_region(data, win=)
    This function allows the user to select a region by using a mouse click.  The user 
@@ -67,6 +69,8 @@ func select_region(data, win=, plot=) {
 
 func select_points(celldata, exclude=, win=) {
   // amar nayegandhi 11/21/03
+
+write,"Left: Examine pixel, Center: Save Pixel, Right: Quit"
  
  if (is_void(win)) win = 4;
   
@@ -78,18 +82,34 @@ func select_points(celldata, exclude=, win=) {
  
  rtn_data = [];
  clicks = selclicks = 0;
- 
+
+/***************************************************************
+  Added to convert from raster format to cleaned linear format.
+  This should actually call a function which can clean and
+  convert all the different types.  
+***************************************************************/
+ if ( numberof( dimsof( celldata.rn )) >2 ) 
+     celldata = clean_bathy(celldata);  
+
+
+  
  do {
   //write, format="Window: %d, Controls:- Left: View Waveform, Middle: Select Recently Viewed Waveform, Right: Quit \n",win;
   spot = mouse(1,1,"");
   mouse_button = spot(10);
   if (mouse_button == right_mouse) break;
   
-  if (mouse_button == center_mouse) {
+  if ( (mouse_button == center_mouse)  ) {
+     if ( new_point_selected ) {
+      new_point_selected = 0;
       selclicks++;
-      write, format="Number of points selected = %d\n", selclicks;
+      write, format="Point saved to workdata. Total points selected:%d\n", selclicks;
       rtn_data = grow(rtn_data, mindata);
       continue;
+     } else {
+      write, "Point already saved.";
+     }
+   
   }
      
   q = where(((celldata.east >= spot(1)*100-buf)   &
@@ -119,6 +139,7 @@ func select_points(celldata, exclude=, win=) {
     pulseno  = mindata.rn/0xffffff;
 
     if (mouse_button == left_mouse) {
+          new_point_selected = 1;
 	  a = [];
 	  clicks++;
           ex_bath, rasterno, pulseno, win=0, graph=1, xfma=1;

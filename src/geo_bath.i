@@ -874,9 +874,8 @@ write,"============================================================="
       if (strlen(data_path) > 0) {
        window,1,wait=1;
        ytk_rast, rasterno(1);
-       window, 0, wait=1; redraw;
+       window, 0, wait=1; fma; redraw;
        tkcmd, swrite(format="set rn %d", rasterno(1))
-       show_wf, *wfa, pulseno(1), win=0, cb=7, raster=rasterno(1);
       }
       if (is_void(cmin) || is_void(cmax) || lmark) {
         if (!lmark) marker = 1;
@@ -886,13 +885,14 @@ write,"============================================================="
                            msize = 0.4, marker = lmark, color = "red";
       } else {
         if (disp_type == 0) {
+          show_wf, *wfa, pulseno(1), win=0, cb=7, raster=rasterno(1);
           window, win; plcm, mindata.elevation/100., 
                              mindata.north/100., 
                              mindata.east/100., 
                              msize = msize*1.5, 
                              cmin= cmin, cmax = cmax, 
                              marker=4
-	}
+	} else
         if (disp_type == 1) {
 	  a = [];
           ex_bath, rasterno, pulseno, win=0, graph=1;
@@ -900,14 +900,14 @@ write,"============================================================="
                              mindata.north/100., mindata.east/100., 
                              msize = msize*1.5, cmin= cmin, cmax = cmax, 
                              marker=4
-	}
+	} else 
         if (disp_type == 2) {
 	  a = [];
           ex_bath, rasterno, pulseno, win=0, graph=1;
           window, win; plcm, mindata.depth/100., mindata.north/100., 
                              mindata.east/100., msize = msize*1.5, 
                              cmin= cmin, cmax = cmax, marker = 4
-	}
+	} else
         if (disp_type == 3) {
 	  a = [];
 	  ex_veg, rasterno, pulseno,  last=250, graph=1, win=0; use_peak=1;
@@ -915,7 +915,7 @@ write,"============================================================="
           window, win; plcm, z, mindata.north/100., 
                              mindata.east/100., msize = msize*1.5, 
                              cmin= cmin, cmax = cmax, marker = 4
-	}
+	} else
         if (disp_type == 4) {
 	  a = [];
 	  if (ptype == 0) 
@@ -924,10 +924,11 @@ write,"============================================================="
 	     z = mindata.first_peak;
 	  if (ptype == 2) 
 	     z = mindata.fint;
+          show_wf, *wfa, pulseno(1), win=0, cb=7, raster=rasterno(1);
           window, win; plcm, z, mindata.north/100., 
                              mindata.east/100., msize = msize*1.5, 
                              cmin= cmin, cmax = cmax, marker = 4
-       }
+       } else 
         if (disp_type == 5) {
 	  a = [];
 	  if (ptype == 1) 
@@ -937,7 +938,7 @@ write,"============================================================="
           window, win; plcm, z, mindata.north/100., 
                              mindata.east/100., msize = msize*1.5, 
                              cmin= cmin, cmax = cmax, marker = 4
-       }
+       } else 
         if (disp_type == 6) {
 	  a = [];
 	  z = (mindata.lelv-mindata.felv)/100.;

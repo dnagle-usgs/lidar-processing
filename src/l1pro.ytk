@@ -1456,9 +1456,13 @@ frame  .l1wid.bf45.sc.1
 
 ComboBox .l1wid.bf45.r.1 -text "Select Region using..." -width 16 -values "Rubberband-Box Points-in-Polygon Single-Pixel" -helptext "Select region to filter using any of the following methods:" -editable 0 -modifycmd {
    global varlist
-   tk_messageBox  -icon info \
-   -message "Region Selected will be saved in variable \"workdata\"" \
-   -type ok -title "Message"
+
+# Deleted to reduce clicks required to work.  This should be changed to
+# a message box that times out in 1 or 2 seconds on its own.
+#   tk_messageBox  -icon info \
+#   -message "Region Selected will be saved in variable \"workdata\"" \
+#   -type ok -title "Message"
+
     set selr [.l1wid.bf45.r.1 getvalue]
     if {$selr == 0} {
         set var_no [.l1wid.bf45.p.15 getvalue]
@@ -1477,9 +1481,12 @@ ComboBox .l1wid.bf45.r.1 -text "Select Region using..." -width 16 -values "Rubbe
        expect ">"
     }
     if {$selr == 2} {
-       	tk_messageBox  -icon info \
-        -message "Select pixels with the following mouse controls: Left = View Waveform; Middle = Select recently viewed waveform; Right = Quit" \
-        -type ok -title "Message"
+
+# Deleted to reduce clicks required to work. # Perhaps we need a general 
+# message or status bar somehwere...
+#      	tk_messageBox  -icon info \
+#        -message "Select pixels with the following mouse controls: Left = View Waveform; Middle = Select recently viewed waveform; Right = Quit" \
+#        -type ok -title "Message"
        exp_send "workdata = select_points($var_type, win=$win_no);\r"
        expect ">"
     }

@@ -350,7 +350,7 @@ func ex_bath( rn, i,  last=, graph=, win=, xfma= ) {
 	     wflen = 18;
 	      last_surface_sat = w(1:10)(mnx);
 	  } else {
-	     last_surface_sat = 9;
+	     last_surface_sat = 10;
 	  }
 //	  last_surface_sat =  w(1:wflen) (mnx) ;
           if ( wflen < 10 ) wfl = wflen; 
@@ -364,8 +364,8 @@ func ex_bath( rn, i,  last=, graph=, win=, xfma= ) {
    secondary_decay = exp( bath_ctl.water * attdepth) * escale; 
 
    laser_decay(last_surface_sat:0) = laser_decay(1:0-last_surface_sat+1) + 
-					secondary_decay(1:0-last_surface_sat+1)*.25;
-   laser_decay(1:last_surface_sat) = escale;
+    				  secondary_decay(1:0-last_surface_sat+1)*.25;
+   laser_decay(1:last_surface_sat+1) = escale;
 
    agc     = 1.0 - exp( bath_ctl.agc * attdepth) ;	
    agc(last_surface_sat:0) = agc(1:0-last_surface_sat+1); 
@@ -430,6 +430,8 @@ if ( graph ) {
          mx = mvi;
 
         if ( graph ) {
+            plg,  [bath_ctl.a(mx,i,1)+1.5,0], [mx+1,mx+1],
+                  marks=0,type=2,color="blue" 
             plmk, bath_ctl.a(mx,i,1)+1.5, mx+1, 
                   msize=1.0, marker=7, color="blue", width=10
         }
