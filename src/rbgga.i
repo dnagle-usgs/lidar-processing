@@ -441,7 +441,12 @@ func sel_region (q) {
    tindx = where(tyes_arr == 0);
    if (is_array(tindx))
    rn_arr(,tindx) = 0;
+
+   /* make a indx arr for each raster in selected region */
+   tras = sum(rn_arr(2,)-rn_arr(1,));
+   raster_indx = array(char,tras);
    return rn_arr;
+
 
 } 
 
