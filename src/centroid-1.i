@@ -50,6 +50,8 @@ Channel 1 is the most sensitive and channel 3 the least.
 See also: RAST, cent  
 */
 
+ extern max_sfc_sat;
+
 
  rv = array(float,4);			// return values
  if ( n == 0 ) return [];
