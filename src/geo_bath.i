@@ -546,7 +546,7 @@ See define_bath_ctl()
     /* if ext_bad_att is set, find all points having elevation = ht 
         of airplane 
     */
-    if (ext_bad_att) {
+    if (ext_bad_att && is_array(depth_all)) {
         write, "Extracting and writing false first points";
         /* compare depth.elevation with 70% of depth.melevation */
 	elv_thresh = 0.7*(avg(depth_all.melevation));
@@ -582,7 +582,7 @@ See define_bath_ctl()
       /* if ext_bad_depth is set, find all points having depth 
          and bath = 0  
       */
-      if (ext_bad_depth) {
+      if (ext_bad_depth && is_array(depth_all)) {
         write, "Extracting false depths ";
         /* compare depth.depth with 0 */
         bd_indx = where(depth_all.depth == 0);
