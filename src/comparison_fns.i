@@ -1,4 +1,20 @@
-func read_ascii_file(fname,n) {
+/*
+  $Id$
+  These functions were originally written to compare eaarl data with ground survey(Kings) data.
+  There are a few useful functions in this file:
+
+  read_xyz_ascii_file(fname, n): This function reads a 3 column xyz file and returns an n-element array containing the data.
+
+  compare_pts(eaarl, kings, rgn, fname=, buf=) : This function writes compares eaarl data (for veg) with a xyz data array within a region specified by rgn (from the limits function).  The buf= variable defines the maximum area to search for a lidar point for each kings point. The result is written out to a file.
+
+  read_txt_anal_file(fname, n) : This function read the file written out by compare_pts().
+
+  rcfilter_eaarl_pts(eaarl, buf=, w=, be=) : This function uses the Random Consensus Filter on a set of data points (eaarl).  The buf= keyword defines the area for rcf and w defines the elevation width.  be= is set for bare earth elevations.  The function returns an array new_eaarl which contains only those points that won.
+
+
+     */
+
+func read_xyz_ascii_file(fname,n) {
   //this function reads a UTM ascii file 
   f = open(fname, "r");
   data = array(float,3,n);
