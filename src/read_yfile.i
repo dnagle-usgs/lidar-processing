@@ -475,7 +475,7 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
   return data;
 }
   
-func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, delimit=) {
+func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, delimit=, zclip=) {
   /* DOCUMENT this function writes out an ascii file containing x,y,z,intensity information.
     amar nayegandhi 04/25/02
     Keywords:
@@ -488,6 +488,8 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
     split = set split to 1 if you want the output file to be split into chunks of 1 million points
     intensity = set to 1 if you want to additionally include the intensity value in the output file
     delimit =  a string containing a single character to delimite ascii output with.
+    zclip = [ lower, upper] Clip out, and don't write values outside the range given in the
+            zclip array.
     modified 12/30/02 amar nayegandhi to :
       write out x,y,z (first surface elevation) data for type=1
       to split at 1 million points and write to another file
@@ -507,9 +509,9 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
   if (numberof(data_arr) != numberof(data_arr.north)) {
      if (type == 1) { //convert FS_ALL to FS
        data_new = array(FS, numberof(data_arr)*120);
+       if ( !is_array( zclip ) ) zclip = [ -6000.0, 300000.0 ];
        rindx = where(data_arr.raster >= 0);
        if (is_array(rindx)) {
-	data_new.rn = data_arr.raster(rindx);
 	data_new.north = data_arr.north(rindx);
 	data_new.east = data_arr.east(rindx);
 	data_new.elevation = data_arr.elevation(rindx);
@@ -517,6 +519,7 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
 	data_new.meast = data_arr.meast(rindx);
 	data_new.melevation = data_arr.melevation(rindx);
 	data_new.intensity = data_arr.intensity(rindx);
+	data_new.rn = data_arr.raster(rindx);
 
         n_rindx = where(data_new.north != 0);
         if (is_array(n_rindx)) {
@@ -601,7 +604,9 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
      write,f, "Indx, UTMX(m), UTMY(m), Z(m), Intensity";
    }
 
+  zvalid = ( data_arr.elevation > zclip(1) ) & (data_arr.elevation  < zclip(2) );
   for (i=1;i<=num_valid;i++) {
+    if (zvalid(i) ) {
     ++totw;
     if (totw == 1000000 && split) {
       ++xx;
@@ -679,8 +684,12 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
 	data_intensity(i);
     }
     if ( (i % 1000) == 0 ) edfrstat, i, numberof(data_arr);
-  }
-  close, f;
+  } else {
+////////    write, format="rejected %f\n", data_arr.elevation(i)/100.0;
+  } 
+ }
+ close, f;
+
   write, format="Total records written to ascii file = %d\n", totw;
 }
 
