@@ -1,7 +1,6 @@
 /**********************************************************************
 
-   $Id$
-
+  $Id$
    Transect.i
    Original W. Wright 9/21/2003
 
@@ -99,6 +98,7 @@ See also: transect, _transect_history
  if ( is_void(recall) ) {
 // get the line coords with the mouse and convert to cm
   l = mouse(1, 2, "")(1:4)*100.0;
+  grow, _transect_history, [l]
  } else {
   if ( numberof(_transect_history) == 0 ) {
     write, "No transect lines in _transect_history";
