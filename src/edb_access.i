@@ -396,7 +396,13 @@ Examples using the result data:
   offset_time = array(int, 120);
   len = i24(r, 1);      		// raster length
   type= r(4);           		// raster type id (should be 5 )
-  if ( len < 20  )			// return empty raster.  System must have 
+  if ( type != 5 ) {
+        write,format="Raster %d has invalid type (%d) Len:%d\n", 
+        rasternbr, type, len
+	return return_raster;
+  }
+
+  if ( len < 20  )			// return empty raster.
 	return return_raster;		// failed.
 
   seconds = i32(r, 5);  		// raster seconds of the day
@@ -408,9 +414,12 @@ Examples using the result data:
   npixels   = i16(r, 17)&0x7fff;        // number of pixels
   digitizer = (i16(r,17)>>15)&0x1;      // digitizer                          
   a = 19;        			// byte starting point for waveform data
+// write,format="Raster: %d npixels: %d\n", rasternbr, npixels
+
   if (rasternbr < 0) return return_raster;
   if (fseconds < 0) return return_raster;
   if (npixels < 0) return return_raster;
+  if (npixels > 120 ) return return_raster;
   if (seconds(1) < 0) return return_raster;
   if ((!is_void(tca)) && (numberof(tca) > rasternbr) ) { 
      seconds = seconds+tca(rasternbr);
@@ -430,8 +439,8 @@ Examples using the result data:
     wa += txlen;			// update waveform addres to first rx waveform
     rxlen = i16(r,wa); wa += 2;		// get the 1st waveform and update wa to next
     if ( rxlen <= 0 ) { 
-       write, format="*** edb_access.i:decode_raster(%d). Channel 1  Bad rxlen value (%d) i=%d\n", 
-              rxlen, wa, i ;
+       write, format=" raster:%d edb_access.i:decode_raster(%d). Channel 1  Bad rxlen value (%d) i=%d\n", 
+              rasternbr, rxlen, wa, i ;
        break;		
     }
     rx = array(char, rxlen, 4);	// get all four return waveform bias values
@@ -439,16 +448,16 @@ Examples using the result data:
     wa += rxlen;			// update wa pointer to next
     rxlen = i16(r,wa); wa += 2;
     if (rxlen <=0) {
-       write, format="*** edb_access.i:decode_raster(%d)  Channel 2. Bad rxlen value (%d) i=%d\n", 
-              rxlen, wa, i ;
+       write, format=" raster:%d edb_access.i:decode_raster(%d). Channel 2  Bad rxlen value (%d) i=%d\n", 
+              rasternbr, rxlen, wa, i ;
        break;
     }
     rx(,2) = r(wa: wa + rxlen-1 );
     wa += rxlen;
     rxlen = i16(r,wa); wa += 2;
     if (rxlen <=0) {
-       write, format="*** edb_access.i:decode_raster(%d)  Channel 3. Bad rxlen value (%d) i=%d\n", 
-              rxlen, wa, i ;
+       write, format=" raster:%d edb_access.i:decode_raster(%d). Channel 3  Bad rxlen value (%d) i=%d\n", 
+              rasternbr, rxlen, wa, i ;
        break;
     }
     rx(,3) = r(wa: wa + rxlen-1 );

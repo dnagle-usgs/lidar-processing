@@ -52,6 +52,9 @@ See also: RAST, cent
 
 
  rv = array(float,4);			// return values
+ if ( n == 0 ) return [];
+
+
   np = numberof ( *rast.rx(n,1) );      // find out how many waveform points
                                         // are in the primary (most sensitive)
                                         // receiver channel.
