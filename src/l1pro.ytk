@@ -392,40 +392,45 @@ menu .l1wid.mb.options
               exp_send "type = define_bath_ctl(type=\"$type\"); \r"
 		}
 		
-	  LabelEntry .bathctl.laser  -width 5 -relief sunken -bd 3 -label "Laser " \
-		-helptext "Laser Decay Constant" \
-		-textvariable laser \
-		-command {
-		    .bathctl.type configure -state disabled
-		 }
+          sst .bathctl.laser   laser   "  Laser:"  { -10 10.0 0.1  }
+	  #LabelEntry .bathctl.laser  -width 5 -relief sunken -bd 3 -label "Laser " \
+	#	-helptext "Laser Decay Constant" \
+	#	-textvariable laser \
+	#	-command {
+	#	    .bathctl.type configure -state disabled
+	#	 }
 	  
-	  LabelEntry .bathctl.water  -width 5 -relief sunken -bd 3 -label "Water " \
-		-helptext "Water Column Constant" \
-		-textvariable water \
-		-command {
-		    .bathctl.type configure -state disabled
-		 }
+          sst .bathctl.water   water   "  Water:"  { -20 20.0 0.1  }
+	  #LabelEntry .bathctl.water  -width 5 -relief sunken -bd 3 -label "Water " \
+	#	-helptext "Water Column Constant" \
+	#	-textvariable water \
+	#	-command {
+	#	    .bathctl.type configure -state disabled
+	#	 }
 
-	  LabelEntry .bathctl.agc  -width 5 -relief sunken -bd 3 -label "AGC " \
-		-helptext "Attenuation Gain Constant" \
-		-textvariable agc \
-		-command {
-		    .bathctl.type configure -state disabled
-		 }
+          sst .bathctl.agc   agc   "  AGC:"  { -20 20.0 0.1  }
+	  #LabelEntry .bathctl.agc  -width 5 -relief sunken -bd 3 -label "AGC " \
+	#	-helptext "Attenuation Gain Constant" \
+	#	-textvariable agc \
+	#	-command {
+	#	    .bathctl.type configure -state disabled
+	#	 }
 
-	  LabelEntry .bathctl.thresh  -width 5 -relief sunken -bd 3 -label "Threshold " \
-		-helptext "Threshold" \
-		-textvariable thresh \
-		-command {
-		    .bathctl.type configure -state disabled
-		 }
+          sst .bathctl.thresh   thresh   "  Threshold:"  { 0 20.0 0.1  }
+	  #LabelEntry .bathctl.thresh  -width 5 -relief sunken -bd 3 -label "Threshold " \
+	#	-helptext "Threshold" \
+	#	-textvariable thresh \
+	#	-command {
+	#	    .bathctl.type configure -state disabled
+	#	 }
 
-	  LabelEntry .bathctl.last  -width 5 -relief sunken -bd 3 -label "Last " \
-		-helptext "Last (nanosecond)" \
-		-textvariable last \
-		-command {
-		    .bathctl.type configure -state disabled
-		 }
+          sst .bathctl.last   last   "  Last:"  { 0 20.0 1  }
+	  #LabelEntry .bathctl.last  -width 5 -relief sunken -bd 3 -label "Last " \
+	#	-helptext "Last (nanosecond)" \
+	#	-textvariable last \
+	#	-command {
+	#	    .bathctl.type configure -state disabled
+	#	 }
  		   
           
 	  Button .bathctl.ok -text "OK" -width 5 -command {
@@ -680,18 +685,18 @@ ComboBox .l1wid.bf4.1.d -text "Define Region using..." -width 22 -values "Rubber
        	tk_messageBox  -icon info \
         -message "Drag a Rectangular Box in Window 6 to define region." \
         -type ok -title "Message"
-       exp_send "q = gga_win_sel(2);\r"
+       exp_send "q = gga_win_sel(2, win=$win_no);\r"
        expect ">"
     }
     if {$defr == 1} {
        	tk_messageBox  -icon info \
         -message "Draw a Polygon in Window 6 to define a region using a series of left mouse clicks.  To complete the polygon, hit <Ctrl> and left mouse click." \
         -type ok -title "Message"
-       exp_send "q = gga_pip_sel(1);\r"
+       exp_send "q = gga_pip_sel(1, win=$win_no);\r"
        expect ">"
     }
     if {$defr == 2} {
-       exp_send "q = gga_click_sel(1);\r"
+       exp_send "q = gga_click_sel(1, win=$win_no);\r"
        expect ">"
     }
     if {$defr == 3} {
