@@ -103,7 +103,7 @@ yoff = 0.0;
     plt, swrite(format="%5.2f", cmax), x(3),y(1), justify="CT";
     plt, swrite(format="%5.2f", cmax-cmin), xx(1)-dpx/2,y(3), justify="CB";
   }
-  plsys(sys);  
+  plsys, sys;  
 }
 
 func stdev_min_max(x, N_factor=) {
