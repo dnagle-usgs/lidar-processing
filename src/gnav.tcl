@@ -2,7 +2,6 @@
 # $Id$
 #
 
-
 # Enable ftp
 package require ftp 
 # Enable Bwidget 
@@ -16,7 +15,7 @@ global plat
 frame .f
 pack .f
 frame .f1
-pack .f1 -after .f -side bottom 
+pack .f1 -after .f 
 scrollbar .f.ys -command ".f.t yview"
 scrollbar .f1.ys1 -command ".f1.t1 yview"
 if { ($plat) == "windows" } {
@@ -26,9 +25,9 @@ text .f.t -font "$sys" \
 } else {
 text .f.t -width 80 -height 30 -wrap none -yscrollcommand ".f.ys set"
 }
-text .f1.t1 -width 80 -height 4 -wrap none -yscrollcommand ".f1.ys1 set"
+text .f1.t1 -width 80 -height 5  -wrap none -yscrollcommand ".f1.ys1 set"
 pack .f.t .f.ys -side left -fill y 
-pack .f1.t1 .f1.ys1 -side left -fill y 
+pack .f1.t1 .f1.ys1 -side left -fill y -in .f1 
 }
 
 proc createMain {} {
@@ -78,37 +77,37 @@ save
 proc ftpf {} {
 set li [ PasswdDlg .pw -logintextvariable usr \
 	-logintext enils \
-	-passwdtextvariable passwd\
+	-passwdtextvariable pass\
  	-type okcancel ]
 
+.f1.t1 insert 1.0 "Please Wait...\n "
+set conn "lidar.net"
 set usr [lindex $li 0 ]
-set passwd [lindex $li 1]
-if { [ set ftpsession [ ::ftp::Open lidar.net $usr $passwd -progress xstat ]] == -1 } {    
+set pass [lindex $li 1]
+if { [ set ftps [ ::ftp::Open $conn $usr $pass -output dump -progress fstat ]] == -1 } {    
    .f1.t1 insert 2.0 "Connection Refused! Please try again... \n"
 } else {
-.f1.t1 delete 0.0 0.end
-.f1.t1 insert 0.0 "Opening FTP session .... \n"
-.f1.t1 insert 1.0 "Logging in .... \n"
-.f1.t1 insert 2.0 "Transfer Started ... Please wait! \n"
+set ::ftp::VERBOSE 1
+#set chdir [ ::ftp::Cd $ftps /var/ftp/pub ]
+::ftp::Put $ftps $::f 
+::ftp::Close $ftps
+}
+}
 
-set ::ftp::VERBOSE 1 
-#set chdir [ ::ftp::Cd $ftpsession /var/ftp/pub ]
-::ftp::Put $ftpsession $::f 
-::ftp::Close $ftpsession 
-}
-}
-# xstat procedure prints the percentage transfered via ftp
-proc xstat { b } {
+# fstat procedure prints the percentage transfered via ftp
+proc fstat { b } {
   set size [ file size $::f ]
   set pc [ expr $b * 100/$size ]
-  set i 3
-  .f1.t1 insert $i.0 "$b bytes transfered .... $pc % \n"
   if { $pc == 100 } {
-  .f1.t1 insert $i.0 "Transfered Completed... \n"
-  }
-  incr i 
+        .f1.t1 insert 1.0 "Transfer Successful...\n" 
+     } 
+  .f1.t1 delete 1.0 1.end
+  .f1.t1 insert 1.0 "$b bytes transfered .... $pc % " 1.end
 }
 
+proc dump { args } {
+  .f1.t1 insert 1.0 "Current Status..:   $args \n"
+}
 proc fname proc {
    set new [$proc]
    if {{} == $new} {
