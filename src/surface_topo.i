@@ -371,7 +371,7 @@ func make_fs(latutm=, q=, ext_bad_att=) {
      for a selected region of flightlines.
      amar nayegandhi 09/18/02
   */
-  extern edb, soe_day_start, tans, pnav, type, utm, fs_all;
+  extern edb, soe_day_start, tans, pnav, type, utm, fs_all, rn_arr;
   fs_all = [];
   rn_arr =[];
    if (!is_array(tans)) {
