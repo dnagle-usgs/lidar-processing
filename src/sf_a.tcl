@@ -89,7 +89,7 @@ set tarname ""      ;# Tar file to access - may be changed by .lst commands
 
 set frame_off 0     ;# Frame offset
 
-set data "no data"  ;#
+set data "No GPS data"  ;#
 set img    [ image create photo -gamma $gamma ] ;
 
 set rate(Fast)       0
@@ -978,7 +978,7 @@ proc mark_range { } {
 proc enable_controls { } {
 	global mogrify_exists mogrify_pref camtype
 
-	.cf2.mark configure            -state normal
+####	.cf2.mark configure            -state normal
 	.mb entryconfigure File        -state normal
 	.mb entryconfigure Archive     -state normal
 	.mb entryconfigure Options     -state normal
@@ -999,6 +999,13 @@ proc enable_controls { } {
 # ] End Procedures #################################
 
 # [ GUI Initialization #############################
+
+### [ Frames
+frame .canf -borderwidth 5 -relief sunken
+frame .cf1  -borderwidth 5 -relief raised
+frame .cf2  -borderwidth 5 -relief raised
+frame .cf3  -borderwidth 5 -relief raised
+### ] /Frames
 
 ### [ Menubar
 
@@ -1026,6 +1033,7 @@ menu .mb.zoom
 			} -initialdir $base_dir ];
 		if { $f != "" } {
 		   set base_dir [ file dirname $f ]
+			wm title . $base_dir
 		   if { [file extension $f ] == ".tar" } {
           puts "Its a tar.  vfs Mounting it..";
 			 open_loader_window "VFS Mounting\n$f.\nThis may take several seconds, even minutes! "
@@ -1085,6 +1093,42 @@ menu .mb.zoom
 
 ##### ][ Options Menu
 
+.mb.options add command  -label "VCR Controls..." -underline 1  -command {
+	  if { [ catch { pack info .cf1 } ] } {
+       pack .cf1 -side top -in . -fill x
+	  } else {
+	    pack forget .cf1
+	  }
+  }
+.mb.options add command  -label "GPS Info..." -underline 1  -command {
+	  if { [ catch { pack info .gps } ] } {
+		 pack_gps
+	  } else {
+	    pack forget .gps
+	  }
+  }
+.mb.options add command  -label "Image slider..." -underline 1  -command {
+	  if { [ catch { pack info .slider } ] } {
+       pack .slider -side top -in . -fill x
+	  } else {
+	    pack forget .slider
+	  }
+  }
+.mb.options add command  -label "ALPS Interface..." -underline 1  -command {
+	  if { [ catch { pack info .cf3 } ] } {
+      pack .cf3    -side top -in . -fill x
+	   pack .cf1.plotpos -side left -in .cf1 -expand 1 -fill x
+	  } else {
+	    pack forget .cf3 .cf1.plotpos
+	  }
+  }
+.mb.options add command  -label "Speed, Gamma..." -underline 1  -command {
+	  if { [ catch { pack info .cf2 } ] } {
+	    pack .cf2 -side top
+	  } else {
+	    pack forget .cf2
+	  }
+	}
 .mb.options add checkbutton -label "Include Heading" -underline 8 -onvalue 1 \
 	-offvalue 0 -variable inhd \
 	-command {
@@ -1157,18 +1201,12 @@ menu .mb.options.mogrify
 
 ### ] /Menubar
 
-### [ Frames
-frame .canf -borderwidth 5 -relief sunken
-frame .cf1  -borderwidth 5 -relief raised
-frame .cf2  -borderwidth 5 -relief raised
-frame .cf3  -borderwidth 5 -relief raised
-### ] /Frames
 
 ### [ Frame Contents
 
 # Toplevel .
 
-label .lbl -textvariable data
+label .gps -textvariable data
 
 scale .slider -orient horizontal -from 1 -to 1 -variable ci
 
@@ -1235,7 +1273,6 @@ Button .cf1.plotpos  \
 	}
 
 # Frame .cf2
-
 tk_optionMenu .cf2.speed speed Fast 100ms 250ms 500ms 1s \
 	1.5s 2s 4s 5s 7s 10s
 
@@ -1260,6 +1297,15 @@ button .cf2.mark \
 		global mark ci cur_mark
 		set mark($ci) $cur_mark
 	}
+pack	\
+		.cf2.speed \
+		.cf2.lbl \
+		.cf2.step \
+		.cf2.gamma \
+		.cf2.offset \
+		.cf2.mark \
+	-side left -in .cf2 -expand 1 -fill x -padx 3
+
 
 # Frame .cf3
 
@@ -1302,21 +1348,32 @@ pack .canf.xscroll -side bottom -fill x              -in .canf
 pack .canf.yscroll -side right  -fill y              -in .canf
 pack .canf.can     -anchor nw   -fill both -expand 1 -in .canf
 
-pack .cf1.prev .cf1.next .cf1.playr .cf1.stop .cf1.play .cf1.rewind .cf1.plotpos \
+pack \
+	.cf1.prev \
+	.cf1.next \
+	.cf1.playr \
+	.cf1.stop \
+	.cf1.play \
+	.cf1.rewind \
 	-side left -in .cf1 -expand 1 -fill x
 
-pack .cf2.speed .cf2.lbl .cf2.step .cf2.gamma .cf2.offset .cf2.mark \
-	-side left -in .cf2 -expand 1 -fill x -padx 3
 
-pack .cf3.entry .cf3.option .cf3.button .cf3.cirbutton .cf3.zoom \
+pack \
+	.cf3.entry \
+	.cf3.option \
+	.cf3.button \
+	.cf3.cirbutton \
+	.cf3.zoom \
 	-side left -in .cf3 -expand 1 -fill x
 
 pack .canf   -side top -in . -fill both -expand 1
-pack .lbl    -side top -in . -anchor nw
-pack .slider -side top -in . -fill x
+
+proc pack_gps { } {
+  pack .gps    -side top -in . -anchor nw
+}
+pack_gps
 pack .cf1    -side top -in . -fill x
-pack .cf2    -side top -in . -fill x
-pack .cf3    -side top -in . -fill x
+######pack .cf2    -side top -in . -fill x
 
 ### ] /Pack
 
