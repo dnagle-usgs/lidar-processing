@@ -19,7 +19,7 @@ require, "rbgga.i"
 require, "drast.i"
 
 /* 
-  This program is used to display a bathymetric image using the 
+  This program is used to process bathymetry data  using the 
   topographic georectification.
 
 */
@@ -461,7 +461,7 @@ See define_bath_ctl()
       See also: first_surface, run_bath, make_fs_bath 
 */
    
-   extern edb, soe_day_start, bath_ctl, tans, pnav, type, utm, depth_all, rn_arr, rn_arr_idx;
+   extern edb, soe_day_start, bath_ctl, tans, pnav, type, utm, depth_all, rn_arr, rn_arr_idx, ba_depth, bd_depth;
    depth_all = [];
    
    /* check to see if required parameters have been initialized */

@@ -139,7 +139,7 @@ write,format="Please wait while drawing..........%s", "\r"
    ea = (ea != 0 );
  }
 for ( ; i<j; i++ ) {
-  q = where( ea(,i) & (rrr(i).north));
+  q = where( ea(,i) &  (rrr(i).north) );
   if ( numberof(q) >= 1) {
      plcm, rrr(i).elevation(q), rrr(i).north(q)/100.0, rrr(i).east(q)/100.0,
       msize=size,cmin=cmin, cmax=cmax

@@ -28,6 +28,7 @@
 
 exp_send "#include \"geo_bath.i\"\r"; # load geobath.i code
 exp_send "#include \"read_yfile.i\"\r"; # load read_yfile
+exp_send "#include \"veg.i\"\r"; # load veg.i
 expect ">";
 
 package require BWidget
@@ -213,7 +214,7 @@ menu .l1wid.mb.options
     pack .l1plot.1.lb .l1plot.1.yscroll -side left -fill y
     pack .l1plot.1 .l1plot.xscroll -side top -fill x
     pack .l1plot.sall .l1plot.plot .l1plot.write -side left 
-  }
+}
 
 proc make_selected_arrays {junk} {
     global lrnindx list
@@ -250,6 +251,24 @@ proc make_selected_arrays {junk} {
 	      expect ">"
 	    } else {
 	      exp_send "grow, depth_some, depth_all($fidx:);\r"
+	      expect ">"
+ 	    }
+	   }
+    	  }
+        }
+ 	if {$ptype == 2} {
+    	  exp_send "veg_some = \[\];\r"
+	  expect ">"
+	  foreach f $curlist {
+           set fidx [lindex $lrnindx $f] 
+	   set lidx [lindex $lrnindx [expr ($f+1)]]
+	   if {[expr ($lidx-$fidx)] != 0} {
+	    if {$lidx != ""} {
+	      set lidx [expr ($lidx - 1)]
+ 	      exp_send "grow, veg_some, veg_all($fidx:$lidx);\r"
+	      expect ">"
+	    } else {
+	      exp_send "grow, veg_some, veg_all($fidx:);\r"
 	      expect ">"
  	    }
 	   }
@@ -495,6 +514,15 @@ Button .l1wid.bf5.1 -text "Write Datafile" -width 20 \
 	       expect ">"
    	     }	
 	    }
+ 	    if {$ptype == 2} {
+	     if {$write_some == 0} {
+      	       exp_send "write_veg, \"$opath\", \"$ofname\", veg_all; \r";
+	       expect ">"
+	     } else {
+      	       exp_send "write_veg, \"$opath\", \"$ofname\", veg_some; \r";
+	       expect ">"
+   	     }	
+	    }
 	     destroy .l1wid1
     	  } else { 
        	    tk_messageBox  -icon warning \
@@ -531,6 +559,10 @@ Button .l1wid.bf5.2 -text "Process Now" -width 20 \
 	 if {$ptype == 1} {
            exp_send "depth_all = make_bathy(latutm = 1, q = q, ext_bad_depth=1, ext_bad_att=1);\r"
 	   expect ">"
+	 }
+	 if {$ptype == 2} {
+	    exp_send "veg_all = make_veg(latutm=1, q=q, ext_bad_att=1, ext_bad_veg=1);\r"
+	    expect ">"
 	 }
               
  }
@@ -603,8 +635,10 @@ proc plot_fltlines {sel} {
      set fs 0
      set ba 0
      set de 0
+     set lelv 0
      set fint 0
      set lint 0
+     set cht 0
      set disp_type [.l1wid.bf45.p.5 getvalue]
      if {$disp_type == -1} {
        	tk_messageBox  -icon warning \
@@ -614,9 +648,10 @@ proc plot_fltlines {sel} {
      if {$disp_type == 0} { set fs  1}
      if {$disp_type == 1} { set ba  1}
      if {$disp_type == 2} { set de  1}
-     if {$disp_type == 3} { set veg  1}
+     if {$disp_type == 3} { set lelv  1}
      if {$disp_type == 4} { set fint 1}
      if {$disp_type == 5} { set lint 1}
+     if {$disp_type == 6} { set cht 1}
      set ptype [.l1wid.bf4.1.p getvalue]
      if {$ptype == -1} {
        	tk_messageBox  -icon warning \
@@ -650,6 +685,16 @@ proc plot_fltlines {sel} {
        }
        exp_send "plot_bathy, depth_some, win=$win_no, ba=$ba, fs = $fs, de = $de , fint = $fint, lint = $lint, cmin=$cmin, cmax=$cmax, msize = $msize; \r"
        expect ">"
-       }
+     }
+     if {$ptype == 2} {
+        if {$sel == 0} {
+	   exp_send "veg_some = veg_all;\r"
+           expect ">"
+        } 
+         exp_send "display_veg, veg_some, win=$win_no, cmin=$cmin, cmax = $cmax, size = $msize, edt=1, felv = $fs, lelv=$lelv, fint=$fint, lint=$lint, cht = $cht;\r"
+         expect ">"
+         exp_send "colorbar, $cmin, $cmax;\r"
+         expect ">"
+     }
 }
 
