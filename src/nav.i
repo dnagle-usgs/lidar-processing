@@ -358,7 +358,7 @@ zone = array(ZoneNumber(1), dimsof( sega) (2) );
   sega(,3) = Lat; sega(,4) = Long + res(1);
  rg = 1:0:2
 
-// See if the user want's to display the lines
+/* See if the user want's to display the lines */
  if ( (fill & 0x1 ) == 1 ) {
   pldj,sega(rg,2),sega(rg,1),sega(rg,4),sega(rg,3),color="yellow"
   rg = 2:0:2
@@ -410,5 +410,119 @@ r = 3:7
  mission_time += blocksecs/3600.0;
  return rs
 }
+
+struct FP {
+    string	name;
+    double 	lat1;
+    double	lon1;
+    double	lat2;
+    double	lon2;
+    }
+
+func read_fp(fname, no_lines, fwrite=,utm=,fpoly=) {
+  /* this function reads a .fp file */
+  /* amar nayegandhi 07/22/02 */
+  fp = open(fname, "r");
+  fp_arr = array(FP,no_lines);
+  for (i=1;i<=no_lines;i++) {
+     a = rdline(fp);
+     w="";x="";y="";z="";
+     if ((a > "") && !(strmatch(a,"#"))) {
+       sread, a, w,x,y,z;
+       yarr = strtok(y,":");
+       yarr = strpart(yarr,2:);
+       ylat = 0.0; ylon=0.0;
+       sread, yarr(1), ylat;
+       sread, yarr(2), ylon;
+       ylat1=ylat/100.; ylon1 = ylon/100.;
+       ydeclat = (ylat1-int(ylat1))*100./60.;
+       ydeclon = (ylon1-int(ylon1))*100./60.;
+       ylat = int(ylat1) + ydeclat;
+       ylon = int(ylon1) + ydeclon;
+
+       zarr = strtok(z,":");
+       zarr = strpart(zarr,2:);
+       zlat = 0.0; zlon=0.0;
+       sread, zarr(1), zlat;
+       sread, zarr(2), zlon;
+       zlat1=zlat/100.; zlon1 = zlon/100.;
+       zdeclat = (zlat1-int(zlat1))*100./60.;
+       zdeclon = (zlon1-int(zlon1))*100./60.;
+       zlat = int(zlat1) + zdeclat;
+       zlon = int(zlon1) + zdeclon;
+
+       /* now write information to structure FP */
+       fp_arr(i).name = x;
+       fp_arr(i).lat1 = ylat;
+       fp_arr(i).lon1 = -ylon;
+       fp_arr(i).lat2 = zlat;
+       fp_arr(i).lon2 = -zlon;
+
+     }
+   }  
+   indx = where(fp_arr.lat1 != 0);
+   fp_arr = fp_arr(indx);
+   close, fp;
+
+   if (utm) {
+     u1 = fll2utm(fp_arr.lat1, fp_arr.lon1);
+     u2 = fll2utm(fp_arr.lat2, fp_arr.lon2);
+     fp_arr.lat1 = u1(1,);
+     fp_arr.lat2 = u2(1,);
+     fp_arr.lon1 = u1(2,);
+     fp_arr.lon2 = u2(2,);
+   }
+     
+
+   if (fwrite) {
+     fw_arr = strtok(fname, ".");
+     if (utm) {
+       fw_name = fw_arr(1)+"_utm.txt";
+     }  else {
+       fw_name = fw_arr(1)+".txt";
+     }
+     fp = open(fw_name, "w");
+     for (i=1;i<=numberof(fp_arr);i++) {
+       write, fp, format="%s  %9.4f  %8.4f  %9.4f  %8.4f\n",fp_arr(i).name, fp_arr(i).lon1, fp_arr(i).lat1, fp_arr(i).lon2, fp_arr(i).lat2;
+     }
+     close, fp;
+        
+   }
+
+   if (fpoly) {
+     fp_arr1 = array(float, 2, 2*numberof(fp_arr));
+     for (i = 1; i <= numberof(fp_arr); i++) {
+       if (i%2) {
+         fp_arr1(1,2*i-1) = fp_arr(i).lon1;
+	 fp_arr1(2,2*i-1) = fp_arr(i).lat1;
+	 fp_arr1(1,2*i) = fp_arr(i).lon2;
+	 fp_arr1(2,2*i) = fp_arr(i).lat2;
+       } else {
+         fp_arr1(1,2*i-1) = fp_arr(i).lon2;
+	 fp_arr1(2,2*i-1) = fp_arr(i).lat2;
+	 fp_arr1(1,2*i) = fp_arr(i).lon1;
+	 fp_arr1(2,2*i) = fp_arr(i).lat1;
+       }
+     }
+     fw_arr = strtok(fname, ".");  
+     fw_name = fw_arr(1)+"_utm_poly.txt"
+     fp = open(fw_name, "w");
+     for (i=1;i<=numberof(fp_arr1(1,));i++) {
+        write, fp, format="%9.4f  %8.4f\n", fp_arr1(1,i), fp_arr1(2,i);
+     }
+     close, fp;
+       
+   }
+
+   if (!fpoly) {  
+     return fp_arr; 
+   } else {
+     return fp_arr1;
+   }
+
+ }
+
+  
+  
 
 
