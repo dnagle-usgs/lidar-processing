@@ -474,6 +474,8 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
     rn_arr_idx = (rn_arr(dif,)(,cum)+1)(*);	
 
 write,"fs_all contains the data, and rn_arr_idx contains a list of indices"
+tkcmd, swrite(format="send_rnarr_to_l1pro %d %d %d\n", rn_arr(1,), rn_arr(2,), rn_arr_idx(1:-1))
+
 
     return fs_all;
 

@@ -21,6 +21,10 @@
   set cmax_max		5000
   set cmin_min		-100
   set cmax_inc		0.1
+  
+  set list		{}
+  set lrnindx		{}
+  set write_some 	0
 
 exp_send "#include \"geo_bath.i\"\r"; # load geobath.i code
 exp_send "#include \"read_yfile.i\"\r"; # load read_yfile
@@ -30,6 +34,7 @@ package require BWidget
 destroy .l1wid
 
 toplevel .l1wid
+wm title .l1wid "Process EAARL Data"
 frame .l1wid.bf1
 frame .l1wid.bf2
 frame .l1wid.bf2.utm
@@ -176,11 +181,78 @@ menu .l1wid.mb.options
 
 .l1wid.mb.options add command -label "Plot/Write Indvidual Flightlines..." -underline 0 \
  -command {
+    global list lrnindx
     destroy .l1plot
-    toplevel .l1plot
-    ListBox .l1plot.lb -height 10 
-    pack .l1plot.lb
+    toplevel .l1plot 
+    wm title .l1plot "Plot / Write Selected Flightlines"
+    frame .l1plot.1
+    listbox .l1plot.1.lb -selectmode extended -width 35 -xscrollcommand ".l1plot.xscroll set" -yscrollcommand ".l1plot.1.yscroll set" 
+    scrollbar .l1plot.xscroll -orient horizontal -command [list .l1plot.1.lb xview]
+    scrollbar .l1plot.1.yscroll -command [list .l1plot.1.lb yview]
+    for {set i 0} { $i < [llength $lrnindx] } {incr i} { 
+       set e [lindex $lrnindx $i]
+       set rnf [lindex $list [expr ($i*2)]]
+       set rnl [lindex $list [expr ($i*2+1)]]
+       .l1plot.1.lb insert end "Flightline $i. Rasters $rnf to $rnl. Start Index = $e" 
     }
+    
+    Button .l1plot.sall -text "Select All" -width 10 -command {
+        .l1plot.1.lb selection set 0 [llength $lrnindx]
+    }
+    Button .l1plot.plot -text "Plot" -width 6 -command {
+	make_selected_arrays {junk}
+	plot_fltlines 1
+	
+    }
+    Button .l1plot.write -text "Write Datafile" -command {
+	 set write_some 1
+	 make_selected_arrays {junk}
+        .l1wid.bf5.1 invoke	
+    }
+
+    pack .l1plot.1.lb .l1plot.1.yscroll -side left -fill y
+    pack .l1plot.1 .l1plot.xscroll -side top -fill x
+    pack .l1plot.sall .l1plot.plot .l1plot.write -side left 
+  }
+
+proc make_selected_arrays {junk} {
+    global lrnindx list
+    	set curlist [.l1plot.1.lb curselection]
+        set ptype [.l1wid.bf4.1.p getvalue]
+ 	if {$ptype == 0} {
+    	  exp_send "fs_some = [];\r"
+	  expect ">"
+	  foreach f $curlist {
+            set fidx [lindex $lrnindx $f] 
+	    set lidx [lindex $lrnindx [expr ($f+1)]]
+	    if {$lidx != ""} {
+	      set lidx [expr ($lidx - 1)]
+ 	      exp_send "grow, fs_some, fs_all($fidx:$lidx);\r"
+	      expect ">"
+	    } else {
+	      exp_send "grow, fs_some, fs_all($fidx:);\r"
+	      expect ">"
+ 	    }
+    	  }
+        }
+ 	if {$ptype == 1} {
+    	  exp_send "depth_some = \[\];\r"
+	  expect ">"
+	  foreach f $curlist {
+            set fidx [lindex $lrnindx $f] 
+	    set lidx [lindex $lrnindx [expr ($f+1)]]
+	    if {$lidx != ""} {
+	      set lidx [expr ($lidx - 1)]
+ 	      exp_send "grow, depth_some, depth_all($fidx:$lidx);\r"
+	      expect ">"
+	    } else {
+	      exp_send "grow, depth_some, depth_all($fidx:);\r"
+	      expect ">"
+ 	    }
+    	  }
+        }
+}
+    
 proc hist_linlog {} {
  global hist_log
        exp_send "_win=window();window,0;\
@@ -275,51 +347,7 @@ checkbutton .l1wid.bf4.2.cen -text "Correct Range \nWalk with Centroid" -variabl
 checkbutton .l1wid.bf45.p.fma -text "Auto\nFma" -variable l1pro_fma 
 
 Button .l1wid.bf45.p.1 -text "Plot" -command {
- global l1pro_fma
-     #fill in later using what to plot
-     set fs 0
-     set ba 0
-     set de 0
-     set fint 0
-     set lint 0
-     set disp_type [.l1wid.bf45.p.5 getvalue]
-     if {$disp_type == -1} {
-       	tk_messageBox  -icon warning \
-        -message "You need to specify the type of data to display!" \
-        -type ok
-     }
-     if {$disp_type == 0} { set fs  1}
-     if {$disp_type == 1} { set ba  1}
-     if {$disp_type == 2} { set de  1}
-     if {$disp_type == 3} { set veg  1}
-     if {$disp_type == 4} { set fint 1}
-     if {$disp_type == 5} { set lint 1}
-     set ptype [.l1wid.bf4.1.p getvalue]
-     if {$ptype == -1} {
-       	tk_messageBox  -icon warning \
-        -message "You need to specify the type of processed data i.e. topo, bathy or veg!" \
-        -type ok
-     } else {
-         if { $l1pro_fma } {
-	   exp_send "window,$win_no; fma;\r";
-	 }
-     }
-
-     set cmax [ expr $cmin + $cdelta ]
-     if {$ptype == 0} {
-       set cmax1 [expr $cmax*100.]
-       set cmin1 [expr $cmin*100.]
-       if {$disp_type == 0} {
-         exp_send "display, fs_all, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, edt=1;\r"
-         expect ">"
-         exp_send "colorbar, $cmin, $cmax;\r"
-         expect ">"
-       }
-     }
-     if {$ptype == 1} {
-       exp_send "plot_bathy, depth_all, win=$win_no, ba=$ba, fs = $fs, de = $de , fint = $fint, lint = $lint, cmin=$cmin, cmax=$cmax, msize = $msize; \r"
-       expect ">"
-       }
+ plot_fltlines 0
 }
 
 Label .l1wid.bf45.p.2 -text "in Win:"
@@ -431,6 +459,7 @@ trace variable cmax   w ud
 
 Button .l1wid.bf5.1 -text "Write Datafile" -width 20 \
 		-command {
+	global write_some
 	destroy .l1wid1
         toplevel .l1wid1
 	frame .l1wid1.1
@@ -439,18 +468,28 @@ Button .l1wid.bf5.1 -text "Write Datafile" -width 20 \
 		-textvariable opath
 
 	LabelEntry .l1wid1.of  -width 70 -relief sunken -bd 3 -label "Ofname: " \
-		-helptext "Enter Output File Name for GOOD Data Here" \
+		-helptext "Enter Output File Name Here" \
 		-textvariable ofname
 
 	Button .l1wid1.1.ok -text "OK" -width 5 -command {
     	  if { ![ string equal  "" $ofname ] } {
  	    if {$ptype == 0} {
- 	     exp_send "write_topo, \"$opath\", \"$ofname\", fs_all; \r";
-	     expect ">"
+	     if {$write_some == 0} {
+ 	       exp_send "write_topo, \"$opath\", \"$ofname\", fs_all; \r";
+	       expect ">"
+	     } else {
+ 	       exp_send "write_topo, \"$opath\", \"$ofname\", fs_some; \r";
+	       expect ">"
+	     }  
 	    }
  	    if {$ptype == 1} {
-      	     exp_send "write_bathy, \"$opath\", \"$ofname\", depth_all; \r";
-	     expect ">"
+	     if {$write_some == 0} {
+      	       exp_send "write_bathy, \"$opath\", \"$ofname\", depth_all; \r";
+	       expect ">"
+	     } else {
+      	       exp_send "write_bathy, \"$opath\", \"$ofname\", depth_some; \r";
+	       expect ">"
+   	     }	
 	    }
 	     destroy .l1wid1
     	  } else { 
@@ -458,9 +497,11 @@ Button .l1wid.bf5.1 -text "Write Datafile" -width 20 \
             -message "You need to specify an output file name" \
             -type ok
           }
+	  set write_some 0
         }
  
  	Button .l1wid1.1.cancel -text "Cancel" -width 5 -command {
+	   set write_some 0
 	   destroy .l1wid1
  	}
 	pack .l1wid1.1.ok .l1wid1.1.cancel -side left -padx 5
@@ -535,12 +576,76 @@ proc send_bathctl_to_l1pro {blaser bwater bagc bthresh blast} {
    set last $blast
 }
 
-proc send_rnarr_to_l1pro {bstart bstop} {
-   global start stop
+proc send_rnarr_to_l1pro {bstart bstop brnindx} {
+   global start stop list lrnindx
    set start $bstart
    set stop $bstop
-   eval rnlist insert end [start stop]
+   set rnindx $brnindx
+   set list1 [concat $start $stop]
+   if {[llength $list] == 0} {
+    set list $list1 
+    set lrnindx $rnindx
+   } else {
+    set list [concat $list $list1 ]
+    set lrnindx [concat $lrnindx $rnindx]
+   }
 }
 
 
+proc plot_fltlines {sel} {
+  
+ global l1pro_fma win_no cmin cmax cdelta msize
+     #fill in later using what to plot
+     set fs 0
+     set ba 0
+     set de 0
+     set fint 0
+     set lint 0
+     set disp_type [.l1wid.bf45.p.5 getvalue]
+     if {$disp_type == -1} {
+       	tk_messageBox  -icon warning \
+        -message "You need to specify the type of data to display!" \
+        -type ok
+     }
+     if {$disp_type == 0} { set fs  1}
+     if {$disp_type == 1} { set ba  1}
+     if {$disp_type == 2} { set de  1}
+     if {$disp_type == 3} { set veg  1}
+     if {$disp_type == 4} { set fint 1}
+     if {$disp_type == 5} { set lint 1}
+     set ptype [.l1wid.bf4.1.p getvalue]
+     if {$ptype == -1} {
+       	tk_messageBox  -icon warning \
+        -message "You need to specify the type of processed data i.e. topo, bathy or veg!" \
+        -type ok
+     } else {
+         if { $l1pro_fma } {
+	   exp_send "window,$win_no; fma;\r";
+	 }
+     }
+
+     set cmax [ expr $cmin + $cdelta ]
+     if {$ptype == 0} {
+       set cmax1 [expr $cmax*100.]
+       set cmin1 [expr $cmin*100.]
+       if {$disp_type == 0} {
+        if {$sel == 0} {
+	   exp_send "fs_some = fs_all;\r"
+           expect ">"
+        } 
+         exp_send "display, fs_some, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, edt=1;\r"
+         expect ">"
+         exp_send "colorbar, $cmin, $cmax;\r"
+         expect ">"
+       }
+     }
+     if {$ptype == 1} {
+       if {$sel == 0} {
+          exp_send "depth_some = depth_all;\r"
+ 	  expect ">"
+       }
+       exp_send "plot_bathy, depth_some, win=$win_no, ba=$ba, fs = $fs, de = $de , fint = $fint, lint = $lint, cmin=$cmin, cmax=$cmax, msize = $msize; \r"
+       expect ">"
+       }
+}
 
