@@ -651,6 +651,7 @@ func show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, wid
 	u = fll2utm(y, x);
 	// check to see if data crosses utm zones
 	zd = where(abs(u(3,)(dif)) > 0);
+	if (is_void(curzone)) curzone = 0;
 	if (is_array(zd)) {
 	  write, "Selected flightline crosses UTM Zones."
 	  if (curzone) {
