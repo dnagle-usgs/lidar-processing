@@ -295,7 +295,10 @@ length depending on the complexity of the laser waveforms therein.
 
 If the timeonly variable is set to anything, get_erast will only
 read and return the first 16 bytes of the raster.  This is used
-to improve speed when updating the seconds field in the data.
+to improve speed when updating the seconds field in the data.  Setting
+timeonly will also cause get_erast to open the waveform files for
+random access read/write so the time can be updated.  See time_fix.i
+for more information on this.
 
 See also:
 	drast decode_raster
@@ -324,12 +327,18 @@ See also:
 
 // If the currently open file is the same as the same as the
 // one the requested raster is in, then we use it else we
-// chage to the new file.
+// change to the new file.
  if ( _ecfidx != fidx ) {
    _ecfidx = fidx;
    i = strchr( edb_files( fidx ).name, '/', last=1);   // strip out filename only
    fn = strpart( edb_files( fidx ).name, i+1:0 );
-   _eidf = open( data_path+"/eaarl/"+fn, "rb" );    
+
+   if ( is_void(timeonly) ) 
+        omode = "rb";
+   else 
+        omode = "r+b";
+
+   _eidf = open( data_path+"/eaarl/"+fn, omode );    
  }
 
 // _eidf now should point to our file

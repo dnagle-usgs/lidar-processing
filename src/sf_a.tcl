@@ -117,7 +117,7 @@ set ggafn bike.gga
 #set ggafn 010614-102126.nmea
 #set ggafn  "/gps/165045-195-2001-laptop-ttyS0C-111X.gga"
 set ggafn  "gga"
-set ggaf [ open $dir/$ggafn "r" ]
+if { [ catch {set ggaf [ open $dir/$ggafn "r" ] } ] == 0 } {
 for { set i 0 } { ![ eof $ggaf ] } { incr i } { 
   set ggas [ gets $ggaf ]  
   if { [ string index $ggas 13 ] == "0" } {
@@ -141,6 +141,7 @@ for { set i 0 } { ![ eof $ggaf ] } { incr i } {
        }; 
   }
  }
+}
 }
 
  .loader.status0 configure -text "ALL FILES LOADED! YOU MAY BEGIN..."

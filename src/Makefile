@@ -54,6 +54,14 @@
 		cc -lm -o ../bin/tans2bin tans2bin.o
 
 
+###############################################################################
+# pospac2ybin Converts a pospac SBET data file produced by pospac 
+# software into a binary file which can be read by rbsbet.i
+###############################################################################
+../bin/pospac2ybin:	pospac2ybin.o
+		mkdir -p  ../bin
+		cc -lm -o ../bin/pospac2ybin pospac2ybin.o
+
 
 
 ###############################################################################
