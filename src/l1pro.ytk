@@ -1795,9 +1795,6 @@ pack \
 	.l1wid.bf45.r.5 \
 	.l1wid.bf45.r.6 \
 	-side left
-	#.l1wid.bf45.r.2 \
-	#.l1wid.bf45.r.3 \
-	#.l1wid.bf45.r.4 \
 pack \
 	.l1wid.bf45.q.1 \
 	.l1wid.bf45.q.2  \
