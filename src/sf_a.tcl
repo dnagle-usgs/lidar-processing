@@ -165,6 +165,7 @@ menu .menubar.file.menu
 		set split_dir [split $f /]
 		set dir [join [lrange $split_dir 0 [expr [llength $split_dir]-2]] /]
 	      if { $f != "" } {
+		wm title . "sf.tcl: $f"
 		set nfiles [ load_file_list  $f ];
 		.slider configure -to $nfiles
               }
