@@ -372,7 +372,7 @@ func gga_find_times( q, win=, plt= ) {
   return ssa;
 }
 
-func sel_region (q) {
+func sel_region (q, all_tans=) {
    /* DOCUMENT sel_region(q)
       This function extracts the raster numbers for a region selected.  
       It returns a the array rn_arr containing start and stop raster numbers
@@ -396,11 +396,12 @@ func sel_region (q) {
    /* now loop through the times and find corresponding start and 
       stop raster numbers 
    */
-   no_t = numberof(t(1,));
-   write, format="Number of flightlines selected = %d \n", no_t;
-   tyes_arr = array(int,no_t);
-   tyes_arr(1:0) = 1;
-   t_new = [];
+  no_t = numberof(t(1,));
+  write, format="Number of flightlines selected = %d \n", no_t;
+  tyes_arr = array(int,no_t);
+  tyes_arr(1:0) = 1;
+  t_new = [];
+  if (!all_tans) {
    for (i=1;i<=numberof(t(1,));i++) {
       tyes = 1;
       write, format="Processing %d of %d\r", i, numberof(t(1,));
@@ -435,15 +436,17 @@ func sel_region (q) {
       }
 
    } // end for loop for t
+  }
 	      
-	      
-   if (!is_void(t_new)) {
+  if (all_tans) t_new = t;	      
+
+  if (!is_void(t_new)) {
      t_new;
      no_t = numberof(t_new(1,));
      rn_arr = array(int,2,no_t);
      for (i=1;i<=no_t;i++) {
-       rn_indx_start = where(((edb.seconds - soe_day_start) ) == int(t_new(1,i)));
-       rn_indx_stop = where(((edb.seconds - soe_day_start) ) == ceil(t_new(2,i)));
+       rn_indx_start = where(((edb.seconds - soe_day_start) ) == ceil(t_new(1,i)));
+       rn_indx_stop = where(((edb.seconds - soe_day_start) ) == int(t_new(2,i)));
        if (!is_array(rn_indx_start) || !is_array(rn_indx_stop)) {
             write, format="Corresponding Rasters for flightline %d not found."+
                           "  Omitting flightline ... \n",i;
@@ -458,7 +461,7 @@ func sel_region (q) {
        rn_arr(,i) =  [rn_start, rn_stop];
      }
     write,format="\nNumber of Rasters selected = %6d\n", (rn_arr(dif, )) (,sum); 
-   }
+  }
 
 
   
@@ -643,7 +646,7 @@ func plot_no_tans_fltlines (tans, gga) {
   if (is_array(indx)) {
     f_notans = tans.somd(indx);
     l_notans = tans.somd(indx+1);
-    write, format="number of fnotans = %d, lnotans = %d\n", numberof(f_notans), numberof(l_notans);
+    write, format="number of locations with bad tans data = %d\n", numberof(f_notans);
 
     for (i = 1; i <= numberof(f_notans); i++) {
       indx1 = where(gga.sod >= f_notans(i));
