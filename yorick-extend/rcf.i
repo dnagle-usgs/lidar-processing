@@ -6,11 +6,11 @@
   This stuff will get hacked into some EAARL specfic "C" functions.  For now
   it serves as a starting place.
   
-  CERFC.I
+  rcf.i
 
   Simple example of a C compiled function callable from Yorick.
 
-     yorick -batch make.i yerf cerfc.i
+     yorick -batch make.i yerf rcf.i
 
   builds a Makefile for this package.
 
