@@ -117,7 +117,7 @@ func testPoly(pl, ptx, pty)
   return ( where ( inout == 0 ) );
 }
 
-func boundBox(pl)
+func boundBox(pl, noplot=)
 /* DOCUMENT function boundBox
 	This function creates a bound rectangular box that wraps around the polygon
 	Parameters: pl - polygon of array vertices
@@ -131,8 +131,10 @@ func boundBox(pl)
 	box(1,2) = box(1,3) = pl(1, max)  // upper right vertex	
 	box(2,3) = box(2,4) = pl(2, max)  // upper left vertex
 
-	plg, box(2,), box(1,), color = "cyan", marks = 0		
-	plg, [box(2,1), box(2,0)],  [box(1,1), box(1,0)], color = "cyan", marks = 0
+        if (!noplot) {
+	  plg, box(2,), box(1,), color = "cyan", marks = 0		
+	  plg, [box(2,1), box(2,0)],  [box(1,1), box(1,0)], color = "cyan", marks = 0
+        }
 	return box
 }
 	
@@ -151,7 +153,6 @@ func ptsInBox(box, x, y)
  yl = box(2, min) // y-lower bound of box					
  yh = box(2, max) // x-upper bound of box
 
-// area bounded by the box
  area = ((x > xl) & (x < xh) & (y > yl) & (y < yh)) 
 
  pts = numberof(where(area)) // points within area
