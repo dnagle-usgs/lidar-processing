@@ -522,6 +522,7 @@ maxx = fs_all.elevation(q)(max);
 
 // make a histogram of the data indexed by q.
   h = histogram( (fsy / 100) + 1 );
+  h( where( h == 0 ) ) = 1;
   e = span( minn, maxx, numberof(h) ) + 1 ; 
   w = window();
   window,win; fma; plg,h,e;
