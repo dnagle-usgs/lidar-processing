@@ -21,7 +21,7 @@ menu .menubar.file -tearoff 1
 .menubar.file add separator
 .menubar.file add command -label Quit -command exit -underline 0
 menu .menubar.fix -tearoff 1
-.menubar.fix add command -label "Fix File" 
+.menubar.fix add command -label "Fix File" -command fix 
 . configure -menu .menubar
 }
 
@@ -55,6 +55,13 @@ save
    }
    set ::f $new
  }
+
+proc fix {} {
+.t delete 10.12 10.60
+#insert blank spaces
+.t insert 10.12 "                                                "
+.t delete 11.0 15.0
+}
 
 eval destroy [winfo child .]
 set f {}
