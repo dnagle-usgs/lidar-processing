@@ -9,8 +9,7 @@
    
 */
 
-write,"$Id$
-"
+write,"$Id$"
 
 require, "eaarl_constants.i"
 require, "eaarl_mounting_bias.i"
