@@ -53,7 +53,19 @@
 		mkdir -p  ../bin
 		cc -lm -o ../bin/tans2bin tans2bin.o
 
+###############################################################################
+# rdmars
+###############################################################################
+../bin/rdmars:	rdmars.o
+		cc -lm -o ../bin/rdmars rdmars.o
+	
 
+###############################################################################
+# dmars
+###############################################################################
+../bin/dmars2iex:	dmars2iex.o
+		cc -lm -o ../bin/dmars2iex tans2bin.o
+	
 ###############################################################################
 # pospac2ybin Converts a pospac SBET data file produced by pospac 
 # software into a binary file which can be read by rbsbet.i
@@ -68,7 +80,8 @@
 # all  Builds all the "C" programs in this directory that need it.  You can force
 ###############################################################################
 all:		../bin/efdb ../bin/gga2bin ../bin/mkidx \
-		../bin/pnav2ybin ../bin/tans2bin
+		../bin/pnav2ybin ../bin/tans2bin \
+		../bin/rdmars ../bin/dmars2iex
 
 
 
