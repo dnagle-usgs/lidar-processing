@@ -149,8 +149,10 @@ func irg( b, e, inc=, delta=, georef=, usecentroid= ) {
     if ( usecentroid == 1 ) {
 	for (ii=1; ii< rp.npixels(1); ii++ ) {
            centroid_values     = pcr(rp, ii);
-	   a(di).irange(ii)    = centroid_values(1);
-	   a(di).intensity(ii) = centroid_values(2);
+           if ( numberof(centroid_values) ) {
+	     a(di).irange(ii)    = centroid_values(1);
+	     a(di).intensity(ii) = centroid_values(2);
+           }
         }
     } else if ( usecentroid == 2 ) {	//  This area is for the Leading-edge-tracker stuff
 	for (ii=1; ii< rp.npixels(1); ii++ ) {

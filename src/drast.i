@@ -103,7 +103,7 @@ func ndrast( r, units= ) {
  for (i=1; i< npix; i++ ) {
   for (j=1; j<=3; j++ ) {
     n = numberof( *r.rx(i,j) ); 		// number of samples 
-    aa(1:n,i,j) = *r.rx(i,j);		 
+    if ( n) aa(1:n,i,j) = *r.rx(i,j);		 
   }
  } 
 

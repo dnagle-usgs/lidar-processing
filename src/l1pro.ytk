@@ -937,13 +937,15 @@ proc multi_pip_sel {junk} {
 	   }
 	}
     }
-    Button .mpip.2.insert -text "Insert Row" -width 20 -bd 5 \
+    .mpip.2.delete configure -state disabled
+    Button .mpip.2.insert -text "Add Row" -width 20 -bd 5 \
 	-command \
     {
         global tpath _mpipx row
 	$tpath insert rows  [expr {$row-1}]
 	set row [expr {$row + 1}]
     }
+    .mpip.2.insert configure -state disabled
 		
     pack .mpip.1.sx -side bottom -fill x
     pack .mpip.1.sy -side right -fill y
