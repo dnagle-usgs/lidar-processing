@@ -1,4 +1,4 @@
-pro plot_colorbar, elv_range, type, unit, other = other, block = block, color=color, $
+pro plot_colorbar, elv_range, type, type1=type1, unit, other = other, block = block, color=color, $
 	xx = xx, yy = yy
 
 ;colorbar
@@ -34,9 +34,11 @@ if not keyword_set(block) then begin
   endif else begin
      ;xyouts, xx-0.025, ynorm[1]+0.08, '!3 Apparent', /normal, color=0, charsize=1, charthick = 1
      ;xyouts, xx-0.02, ynorm[1]+0.085,  '!3'+'NAVD88', /normal, color = color, charsize = 1.4, charthick = 1
-     xyouts, xx, ynorm[1]+0.055,  '!3'+type, /normal, color = color, charsize = 1.4, charthick = 1
+     xyouts, xx-0.02, ynorm[1]+0.07,  '!3'+type, /normal, color = color, charsize = 1.8, charthick = 1
+     if keyword_set(type1) then $
+       xyouts, xx-0.02, ynorm[1]+0.04,  '!3'+type1, /normal, color = color, charsize = 1.8, charthick = 1
      ;xyouts, xx-0.02, ynorm[1]+0.055,  '!3'+type+' Range', /normal, color = color, charsize = 1.2, charthick = 1
-    xyouts, xx, ynorm[1]+0.03, '('+unit+')', /normal, color = color, charsize = 1.4, charthick = 1
+    xyouts, xx-0.02, ynorm[1]+0.01, '('+unit+')', /normal, color = color, charsize = 1.8, charthick = 1
   endelse
 endif else begin
   if block eq 'white' then begin
@@ -48,8 +50,8 @@ endif else begin
 endelse
 	
 
-xyouts, xx+0.034, ynorm[0], strcompress(string(format='(F6.1)',z0), /remove_all), /normal, color = color, charsize = 1.4;, charthick = 1
-xyouts, xx+0.034, ynorm[1]-0.01, strcompress(string(format='(F6.1)',z1), /remove_all), /normal, color = color, charsize = 1.4;, charthick = 1
+xyouts, xx+0.034, ynorm[0], strcompress(string(format='(F6.1)',z0), /remove_all), /normal, color = color, charsize = 1.7;, charthick = 1
+xyouts, xx+0.034, ynorm[1]-0.01, strcompress(string(format='(F6.1)',z1), /remove_all), /normal, color = color, charsize = 1.7;, charthick = 1
 
 return
 end

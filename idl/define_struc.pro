@@ -26,6 +26,14 @@ case type of
 			MELEVATION:0L, BOTTOM_PEAK:0S, FIRST_PEAK:0S, DEPTH:0S}
 	  data_arr = replicate(data,recs)
 	 end
+      5: begin
+	  ; this structure is what VEG is in ytk-EAARL...
+	  data = {dat4, RN:0L, NORTH:0L, EAST:0L, ELEVATION:0L, MNORTH:0L, MEAST:0L, $
+			MELEVATION:0L, FELV:0S, FINT:0S, LELV:0S, LINT:0S, NX: 0B}
+	  data_arr = replicate(data, recs)
+	 end
+
+
 endcase
 
 
