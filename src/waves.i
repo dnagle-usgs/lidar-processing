@@ -49,6 +49,7 @@ func dws( fs_all ) {
 the 2 dimensional directional wave spectrum.
 
 */
+
  extern wave_data;
 
  if ( is_void(fs_all) ) {
@@ -87,6 +88,7 @@ wave_data.checker_board = ((-1)^span(1,256,256)) * ((-1)^(span(1,256,256))) (-,)
   maxlvl = 2.5*hstd
   minlvl = -maxlvl
   wave_data.levels = span(minlvl,maxlvl,16)
+  tsim = 0
 
 ////////////////////////////////////////
 // Find the approximate center of the dataset
@@ -137,19 +139,38 @@ wave_data.checker_board = ((-1)^span(1,256,256)) * ((-1)^(span(1,256,256))) (-,)
 
  wave_data.h = wave_data.h/wave_data.hc
 
+"wwwww"
 /*/ simulation to check out effect of not using windowing on elevation data before fft
+ tsim = 1
+ tsim = 2
+ k50 = 2*pi/5000.
  k40 = 2*pi/4000.
  k20 = 2*pi/2000.
  k10 = 2*pi/1000.
+ k5 = 2*pi/500.
  for (i=1; i<257; i++) {
  for (j=1; j<257; j++) {
- if(wave_data.hc(j,i)>0.5)  wave_data.h(j,i) = sin(k40*wave_data.x0(1,i)) +  sin(k40*wave_data.y0(j,1) + 0.4) + sin(k20*wave_data.x0(1,i) + 0.8) +  sin(k20*wave_data.y0(j,1) + 1.2) + sin(k10*wave_data.x0(1,i) + 1.6) +  sin(k10*wave_data.y0(j,1) + 2.0)
+//following line for 40, 20, 10, 5 m wl with 1 m amplitudes toward E & S
+// if(wave_data.hc(j,i)>0.5)  wave_data.h(j,i) = sin(k40*wave_data.x0(i,1)) +  sin(k40*wave_data.y0(1,j) + 0.4) + sin(k20*wave_data.x0(i,1) + 0.8) +  sin(k20*wave_data.y0(1,j) + 1.2) + sin(k10*wave_data.x0(i,1) + 1.6) +  sin(k10*wave_data.y0(1,j) + 2.0)  + sin(k5*wave_data.x0(i,1) + 3.6) +  sin(k5*wave_data.y0(1,j) + 3.0) 
+//following line for 1 m amp 50 m wl toward SE, 0.1 m amp 5 m wl toward E & S 
+ if(wave_data.hc(j,i)>0.5)  wave_data.h(j,i) = sin(k50*(-0.707*wave_data.y0(i,j)+0.707*wave_data.x0(i,j))) + 0.1*sin(k5*wave_data.x0(i,1) + 3.6) + 0.1*sin(k5*wave_data.y0(1,j) + 3.0) 
  }
  }
-*/
- }
- 
+maxlvl = max(wave_data.h)
+minlvl = min(wave_data.h)
 
+cbs = maxlvl - minlvl
+minlvl = maxlvl - 1.2*cbs
+edt = (wave_data.h==0)
+//following line makes dropouts black, comment it when computing simulated spectra
+//wave_data.h = wave_data.h + (wave_data.h+minlvl)*edt 
+
+wave_data.levels = span(minlvl,maxlvl,16)
+*/
+
+  display_waves
+}
+ 
 func display_waves  {
 ////////////////////////////////////////
 // Display the wave topography
@@ -161,17 +182,28 @@ func display_waves  {
  cbs = (maxlvl-minlvl)/100.
  wh = cbs*0.8
  str0 = swrite(format="colorbar span%5.2f m,  SWH =%5.2f m",cbs,wh)
- pltitle,str0
+ if (tsim==0) pltitle,str0
+ if (tsim==1) pltitle,"5, 10, 20, 40 m wavelengths toward S & E"
+ if (tsim==2) pltitle,"1 m amp 50 m wl to SE, 0.1 m amp 5 m wl to S & E"
+
  limits,-254,256,-254,256
+ xytitles,"east displacement (m)","north displacement (m)",[-0.0075,0.013]
  write,format="minlvl = %f, maxlvl = %f, grayscale span(m) = %f  ",minlvl,maxlvl,(maxlvl-minlvl)/100.
 
+ // add up the elevation data points that aren't null (zero)
+ good = numberof( where( wave_data.h != 0.0 ) )
  factor = 1
+ if(good>0.) factor = 1/32768./good
+
 ////////////////////////////////////////
 // Display the FFT wave spectra
 ////////////////////////////////////////
  window,3;  fma
- limits,-.2*pi,.2*pi,-.2*pi,.2*pi  // for 10 m wavelength limit
+// limits,-.2*pi,.2*pi,-.2*pi,.2*pi  // for 10 m wavelength limit
  limits,-.1*pi,.1*pi,-.1*pi,.1*pi  // for 20 m wavelength limit
+// limits,-.5*pi,.5*pi,-.5*pi,.5*pi  // for  5 m wavelength limit
+ kcircl = 2*pi/5.
+ plg, kcircl*circly, kcircl*circlx, color="red", marks=0, width=3.
  for (lambda=1; lambda<7; lambda++) {
  kcircl = 2*pi/(lambda*20)
  plg, kcircl*circly, kcircl*circlx, color="red", marks=0, width=3.
@@ -197,17 +229,35 @@ func display_waves  {
  }
  } 
  fftsmooth(2:255,2:255) = fftsmooth(2:255,2:255)/9.
+ swhs = 4 * sqrt( sum(fftsmooth) /2. )
+ iswhs = int(swhs+0.5)
+ str1 = swrite(format="integrated spectrum SWH(cm) = %d", iswhs)
+
  pk = max(fftsmooth)
+
  strt=0.001*pk
- stop = 0.1*pk
+ stop = 0.512*pk
  levsed = spanl(strt,stop,10)
+
+ strt=0.005*pk
+ stop = 0.64*pk
+ levsed = spanl(strt,stop,8)
+
+ strt=0.10*pk
+ stop = 0.9*pk
+ levsed = span(strt,stop,9)
+
  plc, fftsmooth, fftx, ffty,marks=0,legend="",levs=levsed 
- plc,fftsmooth,fftx,ffty
+ levsdsh = 0.05*pk
+ plc, fftsmooth, fftx, ffty,marks=0,legend="",levs=levsdsh,type="dash" 
+// plc,fftsmooth,fftx,ffty
  write,format="Median elevation %6.2fm\n", m/100.0
+ xytitles,"east wave number (rad/m)","north wave number (rad/m)",[-0.0075,0.013]
+ if (tsim==0) pltitle,str1
+ if (tsim==1) pltitle,"5, 10, 20, 40 m wavelengths toward S & E"
+ if (tsim==2) pltitle,"1 m amp 50 m wl to SE, 0.1 m amp 5 m wl to S & E"
+
 }
-
-
-
 
 
 func clean_and_sort( fs, vwidth )
@@ -256,9 +306,7 @@ tha360 = d2r * span(0, 360, 121)
 circly = cos(tha360)
 circlx = sin(tha360)
 radials = span(10,90,9)
-xradials = 0.9*cos(radials*d2r)
-yradials = 0.9*sin(radials*d2r)
-
-
+xradials = 1.2*cos(radials*d2r)
+yradials = 1.2*sin(radials*d2r)
 
 
