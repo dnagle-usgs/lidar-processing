@@ -390,7 +390,7 @@ set frame_off 0
 SpinBox .cf2.offset \
        -helptext "Offset: Enter the frames to be offset here."\
        -justify center \
-       -range {-20 20 1}\
+       -range {-60 60 1}\
        -width 5 \
        -textvariable frame_off;
 

@@ -4,6 +4,8 @@
 #
 # Orginal Amar Nayegandhi aka "anayegan"
 #
+# For info on using the Bwidget NoteBoook see:  http://mini.net/tcl/2298
+#
 
 #unset cdelta
 #unset cmin
@@ -517,13 +519,6 @@ frame  .l1wid.bf45.sc.f
         -range {0 9 1}  \
         -textvariable markerv
 
-#scale .l1wid.bf45.sc.f.msize -orient horizontal \
-#       -label msize \
-#       -variable msize \
-#       -from 0 -to 5 \
-#       -resolution 0.25 \
-#       -length 100
-
  pack  .l1wid.bf45.sc.f.msize .l1wid.bf45.sc.f.marker -side top
 
 
@@ -747,8 +742,6 @@ proc plot_fltlines {sel} {
         } 
          exp_send "display_veg, veg_some, win=$win_no, cmin=$cmin, cmax = $cmax, size = $msize, edt=1, felv = $fs, lelv=$lelv, fint=$fint, lint=$lint, cht = $cht, marker=$markerv;\r"
          expect ">"
-##///////         exp_send "colorbar, $cmin, $cmax;\r"
-##//////         expect ">"
      }
 }
 
