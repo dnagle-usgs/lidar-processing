@@ -249,5 +249,40 @@ func time_correct (path) {
    close, f;
 }
 
+func soe2ymd(soe) {	
+/* DOCUMENT soe2ymd(soe) 
+	Function converts soe to ymd format: year, month, day.
+	
+	Input: soe
+
+	Output is 3-value array where:
+		array(1) = year
+		array(2) = month
+		array(3) = day
+
+	L. Mosher, 20031125
+*/
+	timevals = soe2time(soe);
+	y = timevals(1);
+	doy = timevals(2);
+	if (doy <= 31) {m = 1;d=doy;}
+	if ((doy >=32) && (doy <=59)) {m = 2;d=doy-31;}
+	if ((doy >=60) && (doy <=90)) {m = 3;d=doy-59;}
+	if ((doy >=91) && (doy <=120)) {m = 4;d=doy-90;}
+	if ((doy >=121) && (doy <=151)) {m = 5;d=doy-120;}
+	if ((doy >=152) && (doy <=181)) {m = 6;d=doy-151;}
+	if ((doy >=182) && (doy <=212)) {m = 7;d=doy-181;}
+	if ((doy >=213) && (doy <=243)) {m = 8;d=doy-212;}
+	if ((doy >=244) && (doy <=273)) {m = 9;d=doy-243;}
+	if ((doy >=274) && (doy <=304)) {m = 10;d=doy-273;}
+	if ((doy >=305) && (doy <=334)) {m = 11;d=doy-304;}
+	if ((doy >=335) && (doy <=265)) {m = 12;d=doy-334;}
+	ymd = array(int, 3);
+	ymd(1) = y;
+	ymd(2) = m;
+	ymd(3) = d;
+	return ymd;	
+}
+
 
 write,"$Id$"
