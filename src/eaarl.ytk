@@ -133,7 +133,7 @@ proc edb_status { } {
 
 proc load_edb {} {
    exp_send "load_edb, update=0\r"
-  expect ">"
+  expect "load_edb_completed"
   edb_status
 }
 
@@ -272,11 +272,16 @@ proc rbgga_menu {} {
  }
  button $mw.f1.info -text "Info"
  button $mw.f1.fma -text "Fma" -command { exp_send "window,6; fma\r\n" }
+ button $mw.f1.jump -text "Jump" -command { 
+   exp_send "window,6; gga_click_start_isod()\n" 
+   tk_messageBox  -message "Drag out a rectangular seclection over a section 
+ of a flightline in Yorick window-6."  -type ok
+ }
  button $mw.f1.limits -text "Limits" \
 	-command { exp_send "window,6; limits\r\n" }
  button $mw.f1.dismiss -text "Dismiss" -command "destroy $mw "
  pack $mw.f1.load $mw.f1.plot $mw.f1.info $mw.f1.limits \
-	$mw.f1.fma -side top -fill x
+	$mw.f1.fma $mw.f1.jump -side top -fill x
  pack $mw.f1.dismiss -side bottom -anchor s -fill both
 
  frame $mw.f2 -relief groove -borderwidth 3

@@ -251,7 +251,7 @@ if ( _ytk ) {
     tkcmd,swrite(format="set edb(idx_file)  %s",  fn);
     tkcmd,swrite(format="set edb(nbr_rasters)  %d",  numberof(edb) );
  }
-
+ write,"load_edb_completed"
 }
 
 

@@ -40,7 +40,11 @@ If that's what you want, then click Ok.  Otherwise click Cancel." ] == "ok" } {
     set secs [ compute_total_secs ]
     exp_send "irg_replot( temp_time_offset=$secs, range_offset=$time_check(range_offset))\r"
   }
-  Button  $f1.loadedb  -text "Load Edb..."
+  Button  $f1.loadedb  -text "Load Edb..." -command {
+   exp_send "load_edb, update=1\r"
+   expect "load_edb_completed"
+   edb_status
+  }
   Button  $f1.loadgga  -text "Load gga..."
   Button  $f1.fma      -text "Fma" -command { exp_send "window($time_check(window));fma\r" } \
 	-helptext "Clear the graphics window before displaying the next plot." 
