@@ -238,7 +238,7 @@ func time2soe( a ) {
 }
 
 func time_correct (path) {
-   extern tca ;
+   extern tca, edb ;
    fname = path+"tca.pbd";
    if (catch(0x02)) {
     return
@@ -246,6 +246,7 @@ func time_correct (path) {
    f = openb(fname);
    restore, f, tca;
    edb.seconds = edb.seconds + tca;
+   close, f;
 }
 
 
