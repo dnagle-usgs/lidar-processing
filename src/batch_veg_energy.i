@@ -213,7 +213,12 @@ func batch_veg_metrics(ipath, opath, fname=,searchstr=, plotclasses=, thresh=, m
 
 	   outveg = outveg(startx:stopx,starty:stopy);
 	   mets = mets(,startx:stopx,starty:stopy);
-	   plot_veg_classes, mets, outveg, win=outwin, smooth=1;
+	   if (opath) {
+		opath1 = opath;
+	   } else {
+		opath1 = ipath;
+	   }
+	   plot_veg_classes, mets, outveg, win=outwin, smooth=1, write_imagefile=1, opath=opath1;
         }
      }
 

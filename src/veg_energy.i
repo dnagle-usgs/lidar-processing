@@ -488,7 +488,7 @@ if (!is_void(interactive)) {
    }
    
   if ((count == 1) && (show)) 
-      write, "CanopyHt BareEarth GRR CRR HOME NoPixels"
+      write, "CanopyHt BareEarth GRR CRR HOME "
    
    east = m(1);
    north = m(2);
@@ -518,7 +518,7 @@ if (!is_void(interactive)) {
 	
    if (show) {
 	// plot the footprint box in inwin.
-	plg, [(tveg.north-fp/4), (tveg.north-fp/4), (tveg.north+fp/4), (tveg.north+fp/4), (tveg.north-fp/4)]/100., [(tveg.east-fp/4), (tveg.east+fp/4), (tveg.east+fp/4), (tveg.east-fp/4), (tveg.east-fp/4)]/100., color="black";
+	plg, [(tveg.north-fp/2), (tveg.north-fp/2), (tveg.north+fp/2), (tveg.north+fp/2), (tveg.north-fp/2)]/100., [(tveg.east-fp/2), (tveg.east+fp/2), (tveg.east+fp/2), (tveg.east-fp/2), (tveg.east-fp/2)]/100., color="black";
 	mets = lfp_metrics([tveg], min_elv=-2.0);
 	write, format="%4.2f\t%3.2f\t%4.3f\t%4.3f\t%4.2f",mets(,1);
         if ((mets(1,1) > 5) & (mets(1,1) <= 22) & (mets(4,1) >= 0.59)) write, " FOREST ";
@@ -573,14 +573,17 @@ if (is_array(indx)) {
   xx = *tveg.elevation;
   nn = *tveg.npixels
 
+  idx = where(nn != 0);
+
   if (normalize == 1) {
-    plmk, xx, yy, msize=0.2, color=color, marker=1;
-    plg, xx, yy, color=color;
+    plmk, xx(idx), yy(idx)/nn(idx), msize=0.2, color=color, marker=1;
+    plg, xx(idx), yy(idx)/nn(idx), color=color;
   } else {
     plmk, xx, yy*nn, msize=0.2, color=color, marker=1;
     plg, xx, yy*nn, color=color;
   }
   out = tveg;
+  pltitle, swrite(format="Number of samples = %d",tveg.npix);
 }
 
 if (!noxytitles) xytitles, "Normalized Backscatter (counts)", "NAVD88 Elevation (m)"
@@ -692,9 +695,9 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=) {
 	out(2,i,j) = lfpelv(mxxgnd);
         // if out(2,i,j) is between -2 and 2m then this is bare earth
         // else try harder knowing that bare earth could be between -2 and 2m.
-        if (((out(2,i,j) < -2.0) || (out(2,i,j) > 2.0)) || (out(2,i,j) == 0)) {
+        if (((out(2,i,j) < -5.0) || (out(2,i,j) > 5.0)) || (out(2,i,j) == 0)) {
             //find all returns between -2 and 2
-	    bidx = where((lfpelv >= -2.0) & (lfpelv <= 2.0))
+	    bidx = where((lfpelv >= -5.0) & (lfpelv <= 5.0))
 	    if (numberof(bidx) >= 2) {
 	      lfpdif = where(lfprx(bidx)(dif) >= 2);// thresh=2 is low enough to trip on any possible gnd return
 		if (is_array(lfpdif)) {
@@ -719,7 +722,7 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=) {
 	} else {
 	    fgr = 1;
 	}
-	if (out(2,i,j) < 2.5) out(1,i,j) -= out(2,i,j); // assuming gnd is below 2.5 m
+	if (out(2,i,j) < 5.5) out(1,i,j) -= out(2,i,j); // assuming gnd is below 2.5 m
       } else {
 	// correct the canopy height by subtracting the bare earth elevation
 	out(1,i,j) = out(1,i,j) - img(i,j);
@@ -760,7 +763,7 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=) {
 	    out(3,i,j) = 1.0;
 	    out(4,i,j) = 0.0;
         } else {
-	 if ((out(2,i,j) > -1.5) && (out(2,i,j) < 2.0)) {
+	 if ((out(2,i,j) > -1.5) && (out(2,i,j) < 5.0)) {
            out(3,i,j) = lfpgsum/(lfpgsum+lfpcsum);
 	   out(4,i,j) = lfpcsum/(lfpcsum+lfpgsum);
          } else { // all returns are from the canopy
@@ -866,7 +869,7 @@ func plot_classes(vmets, lfpveg, vmetsidx=, nclasses=, classint=, win=) {
 
 }
 
-func plot_veg_classes(mets, lfp, idx=, win=, dofma=, msize=, smooth=) {
+func plot_veg_classes(mets, lfp, idx=, win=, dofma=, msize=, smooth=, write_imagefile=,opath=) {
 // amar nayegandhi 051104
 /*
  based on NPS Vegetation mapping program: Final Draft
@@ -952,6 +955,22 @@ if (is_array(idx6)) z(idx6) = 6;
    z = vclnew; vclnew=[];
  }
 
+ if (write_imagefile) {
+  snclasses = sbin= seast = snorth = "";
+  seast = swrite(format="%d",int(lfp(1,1).east/100.));
+  snorth = swrite(format="%d",int(lfp(0,1).north/100.));
+  sbin = swrite(format="%d", int(lfp(2,1).east-lfp(1,1).east)/100);
+  snclasses = "6";
+  ofile = opath+"t_e"+seast+"_n"+snorth+"_bin"+sbin+"_vegclasses"+snclasses+".pnm";
+  pnm_write, z, ofile;
+  ofilearr = split_path(ofile, 1, ext=1);
+  ofile_tif = ofilearr(1)+".tif";
+  cmd = swrite(format="convert %s %s", ofile, ofile_tif); 
+  f = popen( cmd, 0);
+  close,f;
+
+ }
+     
  z = bytscl(z);
  pli, z, lfp(1,1).east/100., lfp(1,1).north/100., lfp(0,1).east/100., lfp(1,0).north/100.;
 	
@@ -1047,7 +1066,7 @@ func merge_veg_lfpw(outveg1, outveg2) {
  ooutveg2(1,0).north = outnorth1 + yn*bin;
 
  idx = [];
- idx = where((ooutveg2.npix > ooutveg1.npix));
+ idx = where((ooutveg2.npix >= ooutveg1.npix));
  if (is_array(idx)) outveg(idx) = ooutveg2(idx);
 
  idx = [];
