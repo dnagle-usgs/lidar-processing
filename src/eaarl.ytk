@@ -474,7 +474,7 @@ proc rbgga_menu {} {
  button $mw.f1.fma -text "Fma" -command { exp_send "window,$_map(window); fma\r\n" }
  button $mw.f1.jump -text "Jump" -command { 
    exp_send "wsav=window();window,$_map(window); gga_click_start_isod()\n" 
-   tk_messageBox  -message "Drag out a rectangular seclection over a section 
+   tk_messageBox  -message "Click using left mouse button over a section 
  of a flightline in Yorick window-6."  -type ok
    expect "region_selected"
    exp_send "window(wsav)\r"

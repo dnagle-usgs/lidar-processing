@@ -389,6 +389,79 @@ properly to the zoom buttons.
  return q;
 }
 
+func gga_point_sel( show, win=, color=, msize=, skip= , latutm=, llarr=, _batch=) {
+/* DOCUMENT gga_point_sel( show, color=, msize=, skip= )
+
+  There's a bug in yorick 1.5 which causes all the graphics screens to get fouled up
+if you set show=1 when using this function.  The screen will reverse fg/bg and not respond
+properly to the zoom buttons.
+ 
+*/
+ extern ZoneNumber, utm, ply, curzone;
+ if ( is_void(win) ) 
+	win = window();
+
+ window,win;
+ if (!is_array(llarr)) {
+   a = mouse(1,1,
+  "Hold the left mouse button down, select a point:");
+   a(1:4)
+   minlon = min( [ a(1), a(3) ] )
+   maxlon = max( [ a(1), a(3) ] )
+   minlat = min( [ a(2), a(4) ] )
+   maxlat = max( [ a(2), a(4) ] )
+ } else {
+   minlon = llarr(1);
+   maxlon = llarr(2);
+   minlat = llarr(3);
+   maxlat = llarr(4);
+ }
+ if (latutm) {
+   tkcmd, swrite(format="send_latlon_to_l1pro %7.3f %7.3f %7.3f %7.3f %d\n", minlon, maxlon, minlat, maxlat, utm);
+ }
+ if (show == 2) {
+   /* plot a window over selected region */
+   a_x=[minlon, maxlon, maxlon, minlon, minlon];
+   a_y=[minlat, minlat, maxlat, maxlat, minlat];
+   plg, a_y, a_x, color=color;
+ }
+ if (utm == 1) {
+     minll = utm2ll(minlat, minlon, curzone);
+     maxll = utm2ll(maxlat, maxlon, curzone);
+     minlat = minll(2);
+     maxlat = maxll(2);
+     minlon = minll(1);
+     maxlon = maxll(1);
+     write, format="minlat = %7.3f, minlon= %7.3f\n", minlat, minlon;
+ }
+
+ ply = [[minlat, minlon], [maxlat, maxlon]]
+ q = where( gga.lon > (minlon-0.1) );
+ if (is_array(q)) {
+   qq = where( gga.lon(q) < (maxlon+0.1) );  q = q(qq);
+ }
+ if (is_array(q)) {
+   qq = where( gga.lat(q) > (minlat-0.1) ); q = q(qq);
+ }
+ if (is_array(q)) {
+   qq = where( gga.lat(q) < (maxlat+0.1) ); q = q(qq);
+ }
+ write,format="%d GGA records found\n", numberof(q);
+ // now find the closest gga record to the selected point
+ ggaq = gga(q);
+ dist = (ggaq.lon-minlon)^2 + (ggaq.lat-minlat)^2;
+ didx = dist(mnx);
+ q = q(didx);
+ if ( (show != 0) && (show != 2)  ) {
+   if ( is_void( msize ) ) msize = 0.1;
+   if ( is_void( color ) ) color = "red";
+   if ( is_void( skip  ) ) skip  = 10;
+   plmk, gga.lat( q(1:0:skip)), gga.lon( q(1:0:skip)), msize=msize, color=color;
+ }
+   
+ if (!_batch) test_selection_size,q;
+ return q;
+}
 func gga_click_start_isod(x) {
 /* DOCUMENT gga_click_start_isod
 
@@ -397,9 +470,11 @@ of the selected region.  You can then use the "Examine Rasters" button on sf to 
 and continue looking at data down the flight line. 
 
 */
-   st = gga_find_times(  gga_win_sel(0)  );
+   //st = gga_find_times(  gga_point_sel(0)  );
+   q = gga_point_sel(0);
+   st = gga(q).sod;
    if ( numberof( st ) ) {
-     st = int( st(min) ) 
+     st = int( st ) 
      send_sod_to_sf, st;		// command sf and drast there.
    }
   write,"region_selected"
