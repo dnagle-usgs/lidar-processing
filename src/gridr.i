@@ -5,6 +5,12 @@
 
 */
 
+/* DOCUMENT 
+*/
+
+
+write,"$Id$"
+
 require, "pnm.i"
 
 func dgrid(w, ll, d, c, wd) {
@@ -22,6 +28,17 @@ func dgrid(w, ll, d, c, wd) {
 }
 
 func draw_grid( w ) {
+/* DOCUMENT draw_grid(w)
+ 
+   Draws a standard grid in window "w" using the windows current
+ limits.  The grid outlines tiles in red, quads in dark gray, and 
+ cells in light gray.
+
+ For a description of tiles, quads, and cells type:
+ help, show_grid_location.
+
+ See also: tile_file_name, draw_grid, show_grid_location, dgrid
+*/
  c = [200,200,200];
   if ( is_void(w) ) w = 5;
   ll = int(limits()/2000) * 2000;
@@ -30,6 +47,47 @@ func draw_grid( w ) {
    dgrid, w, ll, 250, [200,200,200],1
    dgrid, w, ll, 1000,[150,150,150],1
    dgrid, w, ll, 2000,[250,140,140],5
+}
+
+func tile_file_name(m) {
+/* DOCUMENT tile_file_name(m)
+
+   Determines the file name of a tile based on the input coords
+  of "m".  
+
+   Returns:  
+      tilefn     A string containing the filename of the tile
+                 which goes with the selected location.
+
+ See also: tile_file_name, draw_grid, show_grid_location, dgrid
+*/
+tilefn = "";
+  tile = tile_location(m);
+  tilefn=swrite( format="%d-%d-tile.pbd", 
+     tile(1)/1000, 
+     tile(2)/1000
+         );
+  return tilefn;
+}
+
+func tile_location(m) {
+/* DOCUMENT tile_location(m)
+
+   Return the tile location in a 2 element linear array.
+
+  Inputs:
+    	   m   What's returned by mouse();
+
+ Returns:
+          tile  A 2 element integet array containing the tile
+                numbers.
+
+ See also: tile_file_name, draw_grid, show_grid_location, dgrid
+*/
+ tile = array(int,2);
+  tile(1) = int(m)(2) / 2000 * 2000;
+  tile(2) = int(m)(1) / 2000 * 2000;
+  return tile;
 }
 
 func show_grid_location(w,m) {
@@ -61,7 +119,7 @@ func show_grid_location(w,m) {
 
   [4230000,484000,2,2,3,4]
 
- See also: draw_grid, show_grid_location, dgrid
+ See also: tile_file_name, draw_grid, show_grid_location, dgrid
 
   
 */
@@ -76,18 +134,19 @@ func show_grid_location(w,m) {
   if ( is_void(m) ) 
       m = mouse();
   im = int(m);
-  tilen = int(m)(2) / 2000 * 2000;
-  tilee = int(m)(1) / 2000 * 2000;
-  blockn = ((int(m)(2) - tilen ) / 1000 + 1);
-  blocke = ((int(m)(1) - tilee ) / 1000 + 1);
-  celln =  ((im(2) - tilen - (blockn*1000 - 1000)) )/250 + 1;
-  celle =  ((im(1) - tilee - (blocke*1000 - 1000)) )/250 + 1;
+  tile  = tile_location(im);
+  tilen = tile(1); 
+  tilee = tile(2);
+  quadn = ((int(m)(2) - tilen ) / 1000 + 1);
+  quade = ((int(m)(1) - tilee ) / 1000 + 1);
+  celln =  ((im(2) - tilen - (quadn*1000 - 1000)) )/250 + 1;
+  celle =  ((im(1) - tilee - (quade*1000 - 1000)) )/250 + 1;
   write,format="Tile: N%d E%d Quad:%s Cell:%d\n", 
       (tilen+2000)/1000,
       tilee/1000, 
-      ltr(blocke,3-blockn), 
+      ltr(quade,3-quadn), 
       cells(celle,5-celln);
-  return [tilen,tilee,blockn,blocke,celln,celle];
+  return [tilen,tilee,quadn,quade,celln,celle];
 }
 
 func slimits(w) {
