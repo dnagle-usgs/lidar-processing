@@ -3,6 +3,7 @@
   $Id$
 
   Wrapper file for rcf
+ 
   Use
 
      yorick -batch make.i rcf_yorick rcf.i
@@ -92,20 +93,36 @@ ASSOC COMPUTING MACHINERY, NEW YORK
 */
 
 { 
-  c = float(array(0,2));
-  if ( is_void(mode) )
+  b = float(array(0,2));	//Return array
+  if ( is_void(mode) )		//Ensure a mode value
         mode = 0;
 
-  y_rcf, jury, w, mode, c;
-  return c;
+  fcount = y_rcf(jury, w, mode, b);	//Call the yorick version of the "C" rcf functions
+
+ if (mode== 2)
+ {
+   c = int(array(0,fcount));
+
+   y_fillarray, c;
+
+   return [&c, &fcount]
+ }
+ return b;
 }
 
 extern y_rcf;
 /* PROTOTYPE
-void c_rcf (float array a, float w, int mode, float array b)
+int c_rcf (float array a, float w, int mode, float array b)
+*/
+
+
+extern y_fillarray;
+/* PROTOTYPE
+void c_fillarray (int array c)
 */
 
 /* The PROTOTYPE comment:
+
    (1) attaches the compiled function c_rcf to the interpreted 
        function y_rcf
    (2) note that the word "array" replaces the symbol "*" in the

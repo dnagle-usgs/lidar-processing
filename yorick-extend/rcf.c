@@ -11,33 +11,18 @@
 
 */
 
-
-#include "bcast.h"
+#include "bcast.h"		//Include files required for the function
 #include "yio.h"
 #include "defmem.h"
 #include "pstdlib.h"
 #include "play.h"
 #include <string.h>
 #include <stdio.h>
-
 #include <errno.h>
 
-int float_compfunc(const void *x, const void *y)
-{
-   float pp,qq;
-   int t;
-
-   pp = (float)(*(float *)x);
-   qq = (float)(*(float *)y);
-
-   if (pp < qq) t = -1;
-   else
-   if (pp == qq) t = 0;
-   else  t = 1;
-   return t;
-}
-
 static Member type;
+
+//This function is taken directly from Y_LAUNCH/std0.c to get the number of elements in the source array
 
 static DataBlock *XGetInfo(Symbol *s)
 {
@@ -85,62 +70,126 @@ static DataBlock *XGetInfo(Symbol *s)
   return type.base? 0 : db;
 }
 
-void c_rcf (float* c, float w, int mode, float *b)
+//Function to compare two float values. Used by qsort. Returns -1, 0 or 1
+
+static float *copy, fcounter;
+static unsigned int *winners, *fwinners;		//Store the winners temporarily
+
+int c_compfunc(const void *x, const void *y)		//To sort the jury
 {
-  int i, j, counter;
-  float tmp, *a;
+   unsigned int pp,qq;
+   int t;
+
+   pp = (unsigned int)(*(unsigned int *)x);
+   qq = (unsigned int)(*(unsigned int *)y);
+
+   if (copy[pp] < copy[qq]) t = -1;
+   else
+   if (copy[pp] == copy[qq]) t = 0;
+   else  t = 1;
+   return t;
+}
+
+int c_compfunc2(const void *x, const void *y)		//To sort the fwinners array
+{
+   unsigned int pp,qq;
+   int t;
+
+   pp = (unsigned int)(*(unsigned int *)x);
+   qq = (unsigned int)(*(unsigned int *)y);
+
+   if (pp < qq) t = -1;
+   else
+   if (pp == qq) t = 0;
+   else  t = 1;
+   return t;
+}
+
+//Float version of the rcf algorithm
+
+unsigned int  c_rcf (float* a, float w, int mode, float* b)
+{
+  #define MAX_MODE 2
+
+  unsigned int i, j, number_elems, counter, *idx, q;
+  float tmp;
   DataBlock *db;
-  unsigned int number_elems;
-
-#define MAX_MODE 2
-
-  if ( (mode<0) || (mode> MAX_MODE) )
+ 
+  if ( (mode<0) || (mode> MAX_MODE) )		//Error checking for mode & window variables  
     YError("mode must be 0, 1 or 2");
   if (w<=0.0)
     YError("Window size must be positive");
 
-  db = XGetInfo(sp-3);
-  if (!db) number_elems= (unsigned int)type.number;
-    else number_elems= 0;
+  db = XGetInfo(sp-3);				//stack pointer-4 is the source array 
+  if (!db) 
+     number_elems= (unsigned int)type.number;	//Get the number of elements in the source array
+  else
+     number_elems= 0;
 
-  printf ("\n num = %d\n",number_elems);
-
-  a = (float *) malloc ((sizeof(float))*number_elems);
-  memcpy((void *)a, (void *)c, ((sizeof(float))*number_elems));
+  idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);	//Generate an index array of max size
+  for (i=0; i<number_elems; i++)
+	  idx[i]=i;
   
-  qsort(a, number_elems, sizeof(float), float_compfunc);
+  copy = a;					//Make the jury gloabally accessible
 
-  for (i=0; i<number_elems-1; i++)
+  qsort(idx, number_elems, sizeof(unsigned int), c_compfunc);//Sort the copy
+
+  if (mode == 2)
+     winners = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
+
+  for (i=0; i<number_elems-1; i++)		//For each element in the copy
   {
     counter=1;
-    tmp =a[i];
+    tmp =a[idx[i]];				//The element itself will always be in the window
 
-    for (j=i+1; j< number_elems;j++)
-      if (a[j] <= a[i]+w)
+    if (mode ==2)
+      winners[counter-1] = idx[i]+1;		//So add its index to winners...increment for yorick
+
+    for (j=i+1; j< number_elems;j++)		//For each subsequent element
+      if (a[idx[j]] <= a[idx[i]]+w)		//If it lies in the window
       {
-        counter++;
-        if (mode == 1)
-        {
-          tmp += a[j];
-        }
+        counter++;				//Count it
+        if (mode == 1)				//Add to a total if mode 1
+          tmp += a[idx[j]];
+        else if (mode == 2)
+           winners[counter-1] = idx[j]+1;	//In yorick, indexing form 1 is needed
       }
       else
-        break;
+         break;					//Break since the array is sorted
 
-    if (b[1] < counter)
+    if (b[1] < (float)counter)			//Refresh the return array, if necessary
     {
-      b[1] = counter;
+       b[1] = (float)counter;
+       fcounter = counter;
+      
+       if (mode == 1 )
+          b[0] = tmp/counter;
+       else if (mode == 2)
+       {
 
-      if (mode == 1 )
-         b[0] = tmp/counter;
-      else
-         b[0] = a[i];
+	  if (fwinners)
+	     free(fwinners);
+	  
+	  fwinners = (unsigned int *) malloc ((sizeof(unsigned int))*fcounter);
+
+	  memcpy ((void *)fwinners, (void *)winners, ((sizeof(unsigned int))*fcounter));
+       }
+       else	//mode 0
+           b[0] = a[idx[i]];
+
     }
 
-    if (a[number_elems-1] <= a[i]+w)
-      break;
-
+    if (a[number_elems-1] <= a[idx[i]]+w)	//Break the whole process when the last element in 
+      break;					//the sorted copy falls in a window of some element
   }
-  
-  free (a);
+  free (winners);				//Dont need winners anymore...they are in fwinners
+  return fcounter;
+}
+
+
+void c_fillarray (unsigned int c)
+{
+   memcpy ((void*)c, (void*)fwinners, ((sizeof(unsigned int))*fcounter));
+   qsort(c, fcounter, sizeof(unsigned int), c_compfunc2);//Sort the copy
+   free (fwinners);
 }
