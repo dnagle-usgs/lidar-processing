@@ -309,6 +309,24 @@ fn = "/data/6/2003/asis/12-18-03/dmars/121803133617-dmars-eaarliex-x146y51z48.as
   float  heading
 };
 
+func iex2tans( junk ) {
+/* DOCUMENT iex2tans
+
+  Convert an iex_nav variable to a tans variable.  This procedure:
+ 1) Creates a tans structure.  If it exists, it overwrites it.
+ 2) Fills it with iex_data
+ 3) Adjusts the iex_time from gps to utc
+*/
+ extern tans, iex_nav;
+ tans = array( IEX_ATTITUDE, dimsof(iex_nav)(2));
+ tans.somd   = iex_nav.somd;
+ tans.roll   = iex_nav.roll;
+ tans.pitch  = iex_nav.pitch;
+ tans.heading= iex_nav.heading;
+ tans.somd  %= 86400;
+ tans.somd  -= 13.0;
+}
+
 func iex_ascii2pbd( fn ) {
 /* DOCUMENT load_iex,fn
 

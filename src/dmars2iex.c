@@ -32,7 +32,7 @@
 I32 dmars_2_gps;
 I32 recs_written = 0;
 
-I32 gps_time_offset = -2;
+I32 gps_time_offset = 0;
 
 
 UI32 time_recs;
