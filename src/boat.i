@@ -13,6 +13,220 @@ struct BOAT_PICS {
 	float somd;
 }
 
+func boat_normalize_images(src=, dest=, pdb=, min_depth=, max_depth=, verbose=) {
+/* DOCUMENT  boat_normalize_images(src=, dest=, pdb=, min_depth=, max_depth=)
+
+	Converts boat images such that they are uniform in size and such that they
+	portray an area uniform in size. (In other words, they all have the same
+	pixel size and they all show an area that has the same physical dimensions.
+
+	The following parameters are required:
+
+		n/a
+
+	The following options are required:
+
+		src= Directory containing the source images.
+
+		dest= Directory in which the converted images will be placed.
+
+		pdb= File containing BOAT_PICS data correlating to the src directory.
+			(Must have complete path and file name.)
+
+	The following options are optional:
+
+		min_depth= The minimum depth to be used. Any images with a depth less
+			than this will be disregarded.
+
+		max_depth= The maximum depth to be used. Any images with a depth greater
+			than this will be disregarded.
+
+		verbose= Indicates the verbosity level to run at.
+			Default: 1
+			Valid values:
+				0 - No progress info
+				1 - Limited progress information
+				2 - Full progress information
+				3 - Full progress information for this function
+					and all called functions
+				-1 - Explicitly request the default level
+				-2 - No progress info for this or any called
+					functions
+
+	Function returns:
+
+		n/a
+*/
+	/* Check for required options */
+	if (is_void(src) || is_void(dest) || is_void(pdb)) {
+		write, "One or more required options not provided. See 'help, boat_normalize_images'.";
+		if(is_void(src)) write, "-> Missing 'src='.";
+		if(is_void(dest)) write, "-> Missing 'dest='.";
+		if(is_void(pdb)) write, "-> Missing 'pdb='.";
+		return;
+	}
+
+	/* Validate the verbosity */
+	if (!(is_array(verbose) && !dimsof(verbose)(1))) verbose = 1;
+	if (verbose == -1) verbose = 1;
+	verbose = int(verbose);
+	
+	/* Set called function verbosity */
+	if(verbose == 3 || verbose == -2) {
+		func_verbose = verbose;
+	} else {
+		func_verbose = -1;
+	}
+	
+	/* Validate the src */
+	if("/" != strpart(src, strlen(src):strlen(src))) {
+		src = src + "/";
+	}
+
+	/* Validate the dest */
+	if("/" != strpart(dest, strlen(dest):strlen(dest))) {
+		dest = dest + "/";
+	}
+
+	/* Validate the min_depth */
+	if(is_void(min_depth) || min_depth <= 0) {
+		min_depth = -1;
+	}
+	min_depth = float(min_depth);
+
+	/* Validate the max_depth */
+	if(is_void(max_depth) || max_depth <= 0) {
+		max_depth = -1;
+	} else if(max_depth < min_depth) {
+		max_depth = min_depth;
+	}
+	max_depth = float(max_depth);
+	
+								if(verbose >= 2) write, format="==> boat_normalize_images(src=%s, dest=%s, pdb=%s, min_depth=%f, max_depth=%f, verbose=%d)\n", src, dest, pdb, min_depth, max_depth, verbose;
+
+								if(verbose >= 1) write, "Loading pdb data.";
+	boat = boat_input_pdb(ifname=pdb, verbose=func_verbose);
+	
+								if(verbose >= 1) write, "Generating list of file names and time stamps.";
+	cmd = "cd " + src + " ; ( ls *.jpg | wc -l ) ; ls *.jpg | awk -F _ '{print $0\" \"$3}' ; cd -"
+								if(verbose >= 2) write, format=" cmd=%s\n", cmd;
+
+	f = popen(cmd, 0);
+								if(verbose >= 2) write, "Reading data from pipe.";
+	num = 0;
+	read, f, format="%d", num;
+								if(verbose >= 2) write, format=" Number of entries assigned as %d\n", num;
+	
+	file_name = array(string, num);
+	file_time = array(int, num);
+	
+	read, f, format="%s %d", file_name, file_time;
+								if(verbose >= 1) write, format=" Data read in, %d entries.\n", numberof(file_name);
+	
+	close, f;
+								if(verbose >= 2) write, "Pipe closed.";
+
+	file_time_h = int(file_time / 10000);
+	file_time_m = int(file_time / 100) % 100;
+	file_time_s = int(file_time) % 100;
+	file_somd = ((60 * file_time_h) + file_time_m) * 60 + file_time_s;
+	file_time = file_time_h = file_time_m = file_time_s = [];
+								if(verbose >= 2) write, "Time values converted from HHMMSS to SOMD.";
+
+	/* Coerce the min_depth */
+	if(min_depth == -1) {
+		min_depth = min(boat.depth);
+	} else {
+		min_depth = min(boat.depth(where(boat.depth >= min_depth)));
+	}
+								if(verbose >= 1) write, format=" Minimum depth coerced to %f.\n", min_depth;
+	
+								if(verbose >= 1) write, "Cropping images to match in physical dimensions:";
+	skipped = skipped_range = skipped_info = 0;
+	for(i = 1; i <= num; i++) {
+								if(verbose >= 1) write, format="   Converting image %d of %d.", i, num;
+								if(verbose == 1) write, format="%s", "\r";
+								if(verbose >= 2) write, format="%s", "\n";
+	
+		bigger_where = where(boat.somd >= file_somd(i));
+		smaller_where = where(boat.somd <= file_somd(i));
+		
+		if(numberof(bigger_where) && numberof(smaller_where)) {
+		
+			bigger_somd = (boat.somd(bigger_where))(1);
+			bigger_depth = (boat.depth(bigger_where))(1);
+			
+			smaller_somd = (boat.somd(smaller_where))(0);
+			smaller_depth = (boat.depth(smaller_where))(0);
+
+			if(smaller_somd == bigger_somd) {
+			
+				depth = bigger_depth;
+
+			} else {
+
+				time_range = bigger_somd - smaller_somd;
+				time_dist = (file_somd(i) - smaller_somd) / time_range;
+			
+				depth = smaller_depth * time_dist + bigger_depth * (1 - time_dist);
+			}
+								if(verbose >= 2) write, format="     Depth interpolated as %f.\n", depth;
+			
+			if(depth >= min_depth && (max_depth < 0 || depth <= max_depth)) {
+			
+				shave_factor = 100 * 0.5 * (1 - min_depth/depth);
+				cmd = swrite(format="convert -shave %#.2f%% %s%s %s%s", shave_factor, src, file_name(i), dest, file_name(i));
+								if(verbose >= 2) write, format="   Converting...%s", "\r";
+				f = popen(cmd, 0);
+				close, f;
+
+			} else {
+				++skipped;
+				++skipped_range;
+								if(verbose >= 2) write, "    Depth outside of min/max range. Skipped.";
+			}
+		} else {
+			++skipped;
+			++skipped_info;
+								if(verbose >= 2) write, "    Insufficient depth info. Skipped.";
+		}
+	}
+								if(verbose == 1) write, format="%s", "\n";
+	if(skipped) {
+								if(verbose >= 1) write, format=" %d images were skipped.\n", skipped;
+		if(skipped_info) {
+								if(verbose >= 1) write, format="   %d: Insufficient depth info.\n", skipped_info;
+		}
+		if(skipped_range) {
+								if(verbose >= 1) write, format="   %d: Depth outside of min/max range.\n", skipped_range;
+		}
+	}
+	skipped = skipped_range = skipped_info = [];
+	
+								if(verbose >= 1) write, "Analyzing dimensions of converted images.";
+	
+	cmd = "cd " + dest + " ; ls *.jpg | wc -l; identify *.jpg | awk -F \\  '{print $3}' | awk -F x '{print $1\" \"$2}' ; cd -"
+								if(verbose >= 2) write, format=" cmd=%s\n", cmd;
+								
+	f = popen(cmd, 0);
+								if(verbose >= 2) write, "Reading analysis.";
+	orig_num = num; /* orig_num is how many we started with */
+	read, f, format="%d", num; /* num is how many we have left after skips */
+	dims_w = array(int, num);
+	dims_h = array(int, num);
+	read, f, format="%d %d", dims_w, dims_h;
+	close, f;
+								if(verbose >= 2) write, format=" Min width: %d / Min height: %d\n", min(dims_w), min(dims_h);
+								if(verbose >= 1) write, "Mogrifying images to a uniform set of dimensions.";
+	cmd = swrite(format="cd %s ; mogrify -resize %dx%d! *.jpg ; cd -", dest, min(dims_w), min(dims_h));
+								if(verbose >= 2) write, format=" cmd=%s\n", cmd;
+	f = popen(cmd, 0);
+	close, f;
+								if(verbose >= 1) write, "Normalization complete.";
+								if(verbose >= 1) write, format=" %d out of %d images were normalized and placed into the destination directory.\n", num, orig_num;
+								if(verbose >= 2) write, format="--/ boat_normalize_images%s", "\n";
+}
+
 func boat_create_lst(sdir=, relpath=, fname=, verbose=) {
 /* DOCUMENT  boat_create_lst(sdir=, relpath=, fname=, verbose=)
 
