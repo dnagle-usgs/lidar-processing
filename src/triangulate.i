@@ -96,6 +96,28 @@ func triangulate_xyz(file=, savefile=, data=, plot=) {
   return v;
 }
 
+func plot_triag_mesh(tr,pxyz,edges=,win=,cmin=,cmax=) {
+/*DOCUMENT plot_triag_mesh(tr,pxyz,edge=,win=)
+  amar nayegandhi 01/09/04
+*/
+  
+  if (is_void(win)) win = window();
+  if (is_void(edges)) edges = 0;
+
+  x = [pxyz.x(tr.p1), pxyz.x(tr.p2), pxyz.x(tr.p3)]
+  y = [pxyz.y(tr.p1), pxyz.y(tr.p2), pxyz.y(tr.p3)]
+  z = [pxyz.z(tr.p1), pxyz.z(tr.p2), pxyz.z(tr.p3)]
+
+  xx = transpose(x)(*)
+  yy = transpose(y)(*)
+  zz = z(,sum); zz = zz/3;
+
+  n = array(int,numberof(zz))
+  n(*) = 3
+
+  window, win; fma; plfp, zz, yy, xx, n, edges=edges, cmin=cmin, cmax=cmax;
+}
+
   
 func triangulate(nv) {
 /*DOCUMENT triangulate(int nv, XYZ pxyz, ITRIANGLE v, int ntri)
@@ -339,3 +361,33 @@ func CircumCircle(xp,yp,x1,y1,x2,y2,x3,y3) {
 }
 
 
+func locate_triag_surface(pxyz,tr,win=) {
+/*DOCUMENT locate_triag_surface(pxyz,tr,win=)
+  amar nayegandhi 01/09/04.
+*/
+  if (is_void(win)) win = window();
+  window, win;
+  m = mouse();
+  buffer = data_box(pxyz.x,pxyz.y,m(1)-20,m(1)+20, m(2)-20,m(2)+20);
+  dist = (pxyz.x(buffer)-m(1))^2 + (pxyz.y(buffer)-m(2))^2;
+  mindist = min(dist);
+  mnxdist = buffer(dist(mnx));
+  whedge = where(mnxdist == tr.p1 | mnxdist == tr.p2 | mnxdist == tr.p3);
+
+  plall = [pxyz(tr(whedge).p1), pxyz(tr(whedge).p2), pxyz(tr(whedge).p3)];
+  for (i=1;i<=numberof(plall(,1));i++) {
+     pl = transpose([plall(i,).x,plall(i,).y]);
+     pl = grow(pl, pl(,1));
+     tp = testPoly(pl, [m(1)], [m(2)]);
+     if (is_array(tp))  break;
+  }
+  plthis = plall(i,);
+  x = plthis(*).x;
+  y = plthis(*).y;
+  z = plthis(*).z;
+  
+  plg, grow(y,y(1)), grow(x,x(1)), color="red";
+
+  return transpose([[x],[y],[z]]);
+}
+  

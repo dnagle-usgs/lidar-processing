@@ -41,7 +41,7 @@
   global varc
   set varc 0
   if {[info exists varname]} {unset varlist}
-  set varlist {fs_all depth_all veg_all cveg_all}
+  set varlist {fs_all depth_all veg_all cveg_all workdata}
   if {[info exists plist]} { unset plist } 
   array set plist {idx1 idx1, cmin $cmin cmax $cmax ptype 0 dtype 0 msize $msize mtype $markerv}
   set plist(idx1,cmin) $cmin
@@ -71,6 +71,13 @@
   set plist(idx4,dtype) 0
   set plist(idx4,msize) $msize
   set plist(idx4,mtype) $markerv
+
+  set plist(idx5,cmin) $cmin
+  set plist(idx5,cmax) $cmax
+  set plist(idx5,ptype) 1
+  set plist(idx5,dtype) 1
+  set plist(idx5,msize) $msize
+  set plist(idx5,mtype) $markerv
 
   set plot_dpi 75
   array set cbvc {cmin cmin cmax cmax msize msize mtype mtype}
@@ -743,11 +750,43 @@ proc varlist_plot {} {
   }
 
 proc append_varlist {newvar} {
-  global varlist
+  global varlist plist cmin cmax msize markerv
+  set ptype [.l1wid.bf4.1.p getvalue]
+  set dtype [.l1wid.bf45.p.5 getvalue]
+
+  ## save previous variable's constants in plist
+  set curvar  [lindex $varlist [.l1wid.bf45.p.15 getvalue]]
+  set lslth [expr ([lsearch -exact $varlist $curvar] + 1)]
+  set plist(idx$lslth,cmin) $cmin
+  set plist(idx$lslth,cmax) $cmax
+  set plist(idx$lslth,ptype) $ptype
+  set plist(idx$lslth,dtype) $dtype
+  set plist(idx$lslth,msize) $msize
+  set plist(idx$lslth,mtype) $markerv
+
   if {[lsearch -exact $varlist $newvar] == -1} {
       lappend varlist $newvar
+      ## save current constants to $newvar
+      set lslth [llength $varlist]
+      set plist(idx$lslth,cmin) $cmin
+      set plist(idx$lslth,cmax) $cmax
+      set plist(idx$lslth,ptype) $ptype
+      set plist(idx$lslth,dtype) $dtype
+      set plist(idx$lslth,msize) $msize
+      set plist(idx$lslth,mtype) $markerv
       .l1wid.bf45.p.15 configure -values $varlist
+      varlist_plot
       .varplot.1.lb insert end $newvar
+      varlist_plot
+  } else {
+     ## save current constants to $newvar even if it exists
+     set lslth [expr ([lsearch -exact $varlist $newvar] + 1)]
+     set plist(idx$lslth,cmin) $cmin
+     set plist(idx$lslth,cmax) $cmax
+     set plist(idx$lslth,ptype) $ptype
+     set plist(idx$lslth,dtype) $dtype
+     set plist(idx$lslth,msize) $msize
+     set plist(idx$lslth,mtype) $markerv
   }
 }
 
@@ -1234,7 +1273,9 @@ Button .l1wid.bf45.p.1 -text "Plot" -command {
  plot_fltlines 0
 }
 
-Label .l1wid.bf45.p.14 -text "Variable:"
+Button .l1wid.bf45.p.14 -text "Variable:" -command {
+  varlist_plot
+}
 ComboBox .l1wid.bf45.p.15  -values \
   	$varlist \
 	-helptext "Select any one of the following variables " \
@@ -1623,9 +1664,24 @@ ComboBox .l1wid.bf45.r.7 -text " Filter tools..." -width 16\
              }
           } 
 proc removing_proc {} {
+       global varlist
        destroy .rem
        toplevel .rem
+       frame .rem.05
        wm title .rem "Remove Points Using..."
+       Label .rem.05.varname -text "Input Variable:"
+       ComboBox .rem.05.varlist  -values \
+  	$varlist \
+	-helptext "Select any one of the following variables" \
+	-editable 0 \
+        -modifycmd { 
+         global outvar varlist
+         set curvar [lindex $varlist [.rem.05.varlist getvalue]]
+       }
+
+       set curvar [.l1wid.bf45.p.15 getvalue]
+       .rem.05.varlist setvalue @$curvar
+
        ComboBox .rem.1 -text "Remove points using..." -width 16\
    	 -values { \
 	 	Rubberband\ Box \
@@ -1645,7 +1701,7 @@ proc removing_proc {} {
             -message "Drag a Rectangular Box in Window $win_no to define region." \
             -type okcancel -title "Message"]
             if {$selection == "ok"} {
-               exp_send "workdata = sel_data_rgn(workdata, GEO, mode=2, win=$win_no, exclude=1)\r"
+               exp_send "$curvar = sel_data_rgn($curvar, GEO, mode=2, win=$win_no, exclude=1)\r"
                expect ">"
             }
          }
@@ -1654,7 +1710,7 @@ proc removing_proc {} {
             -message "Draw a Polygon in Window $win_no to define a region using a series of left mouse clicks.  To complete the polygon, middle mouse click OR <Ctrl> and left mouse click." \
             -type okcancel -title "Message" ]
             if {$selection == "ok"} { 
-	    exp_send "workdata = sel_data_rgn(workdata, GEO, mode=3, win=$win_no, exclude=1)\r"
+	    exp_send "$curvar = sel_data_rgn($curvar, GEO, mode=3, win=$win_no, exclude=1)\r"
             expect ">"
             }
          }
@@ -1663,14 +1719,14 @@ proc removing_proc {} {
             -message "Select points to remove from window $win_no" \
             -type okcancel -title "Message"]
            if {$selection == "ok"} {
-             exp_send "workdata = select_points(workdata, win=$win_no, exclude=1);\r"
+             exp_send "$curvar = select_points($curvar, win=$win_no, exclude=1);\r"
              expect ">"
 	   }
          }
          if {$selr == -1} {
 	   error "Please Define Region."
          } else {
-           append_varlist workdata
+           append_varlist $curvar
 	   destroy .rem
          }
       } 
@@ -1679,14 +1735,31 @@ proc removing_proc {} {
       }
 
      
-      pack .rem.1 -pady 15
+      pack .rem.05.varname .rem.05.varlist -side left -padx 5
+      pack .rem.05 .rem.1 -pady 15
       pack .rem.2 .rem.3 -side left -padx 5 -pady 5
    }
 
 proc keep_proc {} {
+       global varlist
        destroy .sel
        toplevel .sel
        wm title .sel "Keep Points Using..."
+       frame .sel.05
+
+       Label .sel.05.varname -text "Input Variable:"
+       ComboBox .sel.05.varlist  -values \
+  	$varlist \
+	-helptext "Select any one of the following variables" \
+	-editable 0 \
+        -modifycmd { 
+         global outvar varlist
+         set curvar [lindex $varlist [.sel.05.varlist getvalue]]
+       }
+
+       set curvar [.l1wid.bf45.p.15 getvalue]
+       .sel.05.varlist setvalue @$curvar
+
        ComboBox .sel.1 -text "Keep points using..." -width 16\
    	 -values { \
 	 	Rubberband\ Box \
@@ -1698,9 +1771,9 @@ proc keep_proc {} {
 		set sels [.sel.1 getvalue]
 	        if {$sels == 2} {
       		    set grow_keep 1
-		    set keep_var "temp_workdata"
+		    set keep_var "finaldata"
 		} else {
-		    set keep_var "workdata"
+		    set keep_var $curvar
 		}
 	 } \
 	 -helptext "Keep points from \'workdata\' using any of the following methods:\n Rubberband Box\n Points in Polygon\n Single Pixel" -editable 0 
@@ -1722,10 +1795,10 @@ proc keep_proc {} {
             -type okcancel -title "Message"]
             if {$selection == "ok"} {
 	     if {$grow_keep == 0} {
-               exp_send "$keep_var = sel_data_rgn(workdata, GEO, mode=2, win=$win_no)\r"
+               exp_send "$keep_var = sel_data_rgn($curvar, GEO, mode=2, win=$win_no)\r"
                expect ">"
 	     } else {
-               exp_send "$keep_var = grow($keep_var, sel_data_rgn(workdata, GEO, mode=2, win=$win_no));\r"
+               exp_send "$keep_var = grow($keep_var, sel_data_rgn($curvar, GEO, mode=2, win=$win_no));\r"
                expect ">"
 	     }
 	      
@@ -1737,10 +1810,10 @@ proc keep_proc {} {
             -type okcancel -title "Message" ]
             if {$selection == "ok"} { 
 	     if {$grow_keep == 0} {
-	       exp_send "$keep_var = sel_data_rgn(workdata, GEO, mode=3, win=$win_no)\r"
+	       exp_send "$keep_var = sel_data_rgn($curvar, GEO, mode=3, win=$win_no)\r"
                expect ">"
 	     } else {
-	       exp_send "$keep_var = grow($keep_var, sel_data_rgn(workdata, GEO, mode=3, win=$win_no));\r"
+	       exp_send "$keep_var = grow($keep_var, sel_data_rgn($curvar, GEO, mode=3, win=$win_no));\r"
                expect ">"
 	    }
 	       
@@ -1752,10 +1825,10 @@ proc keep_proc {} {
             -type okcancel -title "Message"]
            if {$selection == "ok"} {
 	    if {$grow_keep == 0} {
-             exp_send "$keep_var = select_points(workdata, win=$win_no);\r"
+             exp_send "$keep_var = select_points($curvar, win=$win_no);\r"
              expect ">"
 	    } else {
-             exp_send "$keep_var = grow($keep_var, select_points(workdata, win=$win_no));\r"
+             exp_send "$keep_var = grow($keep_var, select_points($curvar, win=$win_no));\r"
              expect ">"
 	    }
 	     
@@ -1764,7 +1837,7 @@ proc keep_proc {} {
          if {$sels == -1} {
 	   error "Please Define Region."
          } else {
-           append_varlist workdata
+           append_varlist $curvar
 	   destroy .sel
          }
       } 
@@ -1773,16 +1846,18 @@ proc keep_proc {} {
       }
 
      
-      pack .sel.1 .sel.grow .sel.15 -side top -pady 10
+      pack .sel.05.varname .sel.05.varlist -side left -padx 5
+      pack .sel.05 .sel.1 .sel.grow .sel.15 -side top -pady 10
       pack .sel.2 .sel.3 -side left -padx 5 -pady 5
    }
 
 Button .l1wid.bf45.r.5 -text "Append2Tile" -command {
+    set curvar  [lindex $varlist [.l1wid.bf45.p.15 getvalue]]
     set selection  [tk_messageBox  -icon question \
-      -message "Append \'workdata\' array to final data array?" \
+      -message "Append \'$curvar\' array to final data array?" \
             -type yesno -title "Warning" ]
     if {$selection == "yes"} {
-      exp_send "finaldata = grow(finaldata,workdata);\r"
+      exp_send "finaldata = grow(finaldata,$curvar);\r"
       expect ">" 
     }
   }
