@@ -95,11 +95,10 @@ See also: transect, _transect_history
  if ( is_void(color))      color= 1;
  if ( is_void(rcf_parms))   rcf_parms = [];
 
- window,iwin
+ window,iwin; 
  if ( is_void(recall) ) {
 // get the line coords with the mouse and convert to cm
-  l = mouse(1, 2)(1:4)*100.0;
-  grow, _transect_history, [l]
+  l = mouse(1, 2, "")(1:4)*100.0;
  } else {
   if ( numberof(_transect_history) == 0 ) {
     write, "No transect lines in _transect_history";
@@ -138,6 +137,7 @@ func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=, rcf_p
  if ( is_void(lw)    )    lw = 150;		// search width, cm
  if ( is_void(color) ) color = 0;		// 0 is first color
  if ( is_void(owin)   )   owin = 3;
+ window,wait=1;
  window, owin;
  if ( !is_void(xfma) ) { 
    if ( xfma)  fma; 
@@ -196,6 +196,7 @@ func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=, rcf_p
   clr = ["black", "red", "blue", "green", "magenta", "yellow", "cyan" ];
 
   window,owin
+  window,wait=1;
 ///  fma
   segs = where( abs(fs.soe(glst(llst))(dif)) > 5.0 );
  nsegs = numberof(segs)+1;
@@ -239,6 +240,8 @@ func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=, rcf_p
   plmk, yy(si),xx(si), color=clr(color), msize=msize, marker=1
   if ( connect ) plg, yy(si), xx(si),color=clr(color)
  }
+ limits
+ limits,,, cbar.cmin, cbar.cmax
  return glst(llst);
 }
 

@@ -16,6 +16,17 @@
 #
 #
 
+# Load
+proc ycbar { } {
+  global cmax cmin cdelta
+  if { ![ info exists cmax ] } {
+    set cmax 0;
+    set cmin 0;
+    set cdelta 0;
+  }
+  exp_send "cbar.cmax=$cmax; cbar.cmin=$cmin; cbar.cdelta=$cdelta\r"
+}
+
 
 
 proc load_dmars {} { 
@@ -40,9 +51,10 @@ proc load_dmars {} {
     switch [ file extension $_ytk_fn ] {
     ".pbd" {
             set ytk_pbd_dir [ file dirname $_ytk_fn ]
-            exp_send "_ytk_pbd_f = openb(\"$_ytk_fn\"); restore, _ytk_pbd_f;\r"
-            exp_send "show, _ytk_pbd_f\r"
-            exp_send "iex2tans;\r"
+	     exp_send "load_iexpbd,\"$_ytk_fn\"";
+#            exp_send "_ytk_pbd_f = openb(\"$_ytk_fn\"); restore, _ytk_pbd_f;\r"
+#            exp_send "show, _ytk_pbd_f\r"
+#            exp_send "iex2tans;\r"
                toplevel .stby
             exp_send "\r\n"
    set sz [ wm maxsize . ]
@@ -638,8 +650,12 @@ Button $w.show_grid -text "Show\nGrid Name" -command {
 #############
 #   New
 #############
- $w.mb.new add command -label "mtransect"     -command {  exp_send "help,mtransect\r" }
- $w.mb.new add command -label "batch_process" -command {  exp_send "help,batch_process\r" }
+ $w.mb.new add command -label "mtransect"     -command {  
+      exp_send "require,\"transect.i\"; help,mtransect\r" 
+ }
+ $w.mb.new add command -label "batch_process" -command {  
+      exp_send "require, \"batch_process.i\"; help,batch_process\r" 
+ }
 
 #############
 #   help

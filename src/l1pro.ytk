@@ -1726,16 +1726,14 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
 	set range_elv 0
   }
 
-#<<<<<<< l1pro.ytk
-#Button .l1wid.bf45.q.5 -text "Landscape:5" -command {
+#
+# Button .l1wid.bf45.q.5 -text "Landscape:5" -command {
 #        exp_send "window,5,style=\"landscape11x85.gs\"\r";
-#}
+# }
 
-#=======
 Button .l1wid.bf45.q.44 -text "Overlay\nGrid" -command {
   exp_send "draw_grid, $win_no\r"
 }
-#>>>>>>> 1.114
 
 Button .l1wid.bf45.q.45 -text "Show\nGrid Name" -command {
   exp_send "show_grid_location, $win_no\r"
@@ -2083,7 +2081,7 @@ proc sst  { w var lbl rg } {
 proc ud { a b c } {
 global cmax cmin cdelta
   switch $a {
-   cmax   { set cdelta [ expr $cmax - $cmin ]; }
+   cmax   { set cdelta [ expr $cmax - $cmin ];  }
    cmin   { set cmax   [ expr $cmin + $cdelta ]; } 
    cdelta { set cmax   [ expr $cmin + $cdelta ]; }
   }
@@ -2354,7 +2352,9 @@ proc plot_fltlines {sel} {
 	 }
      }
 
+     expect ">"
      set cmax [ expr $cmin + $cdelta ]
+     ycbar;		;# Set the color bar values in yorick
      if {$ptype == 0} {
        set cmax1 [expr $cmax*100.]
        set cmin1 [expr $cmin*100.]

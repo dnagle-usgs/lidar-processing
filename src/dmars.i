@@ -173,6 +173,23 @@ struct ENGR_DMARS {
 
 write,"$Id$"
 
+// This is designed to be driven by ytk.
+func load_iexpbd( fn ) {
+  extern _ytk_pbd_f,
+        tans,
+        iex_head,
+        iex_nav,
+        ops_conf,
+        ops_IMU2_default;
+  _ytk_pbd_f = openb(fn)
+  restore, _ytk_pbd_f;
+  show, _ytk_pbd_f;
+  iex2tans;
+  ops_conf = ops_IMU2_default;
+  write, "Using default DMARS mounting bias and lever arms.(ops_IMU2_default)"
+}
+
+
 
 
 func load_raw_dmars(fn=) {

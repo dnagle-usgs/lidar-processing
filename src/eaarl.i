@@ -16,6 +16,17 @@ require, "nav.i"
 require, "map.i"
 require, "waves.i"
 require, "gridr.i"
+require, "dmars.i"
+require, "batch_process.i"
+require, "transect.i"
+
+/* DOCUMENT CBAR
+ The color bar values from l1pro.ytk
+ can be send to cbar by executing tkcmd, "ycbar"
+ from within a yorick program.
+*/
+struct CBAR { float cmax; float cmin; float cdelta; }
+if ( is_void(cbar)) cbar = CBAR();
 
 
 // Transmit somd time to sf_a
