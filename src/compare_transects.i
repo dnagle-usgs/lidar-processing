@@ -1,0 +1,493 @@
+func compare_trans(year, month, mode, edateinfo, data=, data_dir=, static=, dotlines=, datum=) {
+/* DOCUMENT compare_trans(year, month, mode, edateinfo, data=, data_dir=, static=, dotlines=, datum=)
+	This function creates profile-view maps of EAARL data and ground survey data from ASIS.
+	year and month should be set to the year and month of the desired ground survey to compare
+	mode should be 1 to compare first surface, 3 for veg or 4 for both (on the same plot)
+	edateinfo is the date string for the EAARL array. E.g. "20020911"
+	data= and data_dir= specify either the array or directory, respectively, where EAARL data is located.
+	satatic= 1 will set the limits of the plots to be hard-coded values
+	dotlines= will plot using dotted lines
+	datum= sets the shortened data string. Set to either "n88" or "w84". Default is "n88"
+*/
+  if (!datum) datum="n88";
+  f = openb("/home/lmosher/ASIS/profiles.pbd");
+  restore, f, profs;
+  close, f
+  idx = where(profs.year == year);
+  if (!is_array(idx)) {write, "Year not found in data...\n"; return;}
+  profs = profs(idx);
+  write, format="%d records found in year %d\n", numberof(idx), year;
+  idx = where(profs.mon == month);
+  if (!is_array(idx)) {write, "Month not found in data...\n"; return;}
+  profs = profs(idx);
+  write, format="%d records found in month %d\n", numberof(idx), month;
+  profs = profs(where(profs.trans != 45));
+  profs = profs(sort(profs.trans));
+  idx = unique(profs.trans);
+  write, format="%d transects found...\n", numberof(idx);
+  for (i=1; i<=numberof(idx); i++) {
+	write, format="Displaying transect %d of %d\n", i, numberof(idx);
+	if (i==numberof(idx)) j = 0;
+        if (i<numberof(idx)) j = idx(i+1)-1;
+	this_prof = profs(idx(i):j);
+	this_prof = this_prof(sort(this_prof.north));
+	window, 1; fma;
+	plmk, this_prof.north, this_prof.east, marker=2, msize=0.5;
+	if (is_array(where(this_prof.north(dif) > 50))) this_prof = this_prof(min(where(abs(this_prof.north(dif)) < 50)):max(where(abs(this_prof.north(dif)) < 50)) + 1);
+	plmk, this_prof.north, this_prof.east, marker=2, msize=0.5, color="red"; limits;
+	ndifs = this_prof.north(dif)(where(this_prof.east(dif) != 0));
+	edifs = this_prof.east(dif)(where(this_prof.east(dif) != 0));
+	m = avg(ndifs/edifs);
+	if (m > 0) {write, "Program needs to be updated for positive slope.."; return;}
+	w = -avg(ndifs/edifs);
+	x = cos(atan(w))*0.5;
+	y = sin(atan(w))*0.5;
+	emin = min(this_prof.east);
+	emax = max(this_prof.east);
+	nmin = min(this_prof.north);
+	nmax = max(this_prof.north);
+	pts = [[emin+x,nmax+y],[emax+x,nmin+y],[emax-x,nmin-y],[emin-x,nmax-y]];
+	plmk, pts(2,), pts(1,), marker=2, msize=0.3, color="blue";
+	box = boundBox(pts);
+	if (mode == 2) selmode=2;
+	if (mode != 2) selmode=3;
+	if (data_dir) data = sel_rgn_from_datatiles(rgn=[min(box(1,)),max(box(1,)),min(box(2,)),max(box(2,))],data_dir=data_dir,win=1,mode=selmode,onlymerged=1,datum=datum);
+//	winkill, 5; window,5,dpi=100,width=600, height=600, style="work.gs"; fma; limits, square=1;
+//	minmax = stdev_min_max(data.lelv);
+//	display_veg, veg_all, win=5, cmin=minmax(1), cmax =minmax(2), size = 1.0, edt=1, felv = 0, lelv=1, fint=0, lint=0, cht = 0, marker=1, skip=1;
+	if (mode != 0) {
+		box_pts = ptsInBox(box*100., data.east, data.north);
+		poly_pts = testPoly(pts*100., data.east(box_pts), data.north(box_pts));
+		indx = box_pts(poly_pts);
+		if (is_array(indx)) veg_all = data(indx);
+		if (!is_array(indx)) continue;
+	}
+	winkill, 4; window,4,dpi=100,width=1100, height=850, style="landscape11x85.gs", legends=0; fma; limits, square=1;
+	if (mode == 3) plmk, veg_all.lelv/100.0, veg_all.east/100.0, marker=1, msize=0.5, color="green";
+	if (mode == 1) plmk, veg_all.elevation/100.0, veg_all.east/100.0, marker=1, msize=0.5, color="green";
+	if (mode == 4) {
+		plmk, veg_all.elevation/100.0, veg_all.east/100.0, marker=1, msize=0.5, color="blue";
+		plmk, veg_all.lelv/100.0, veg_all.east/100.0, marker=1, msize=0.5, color="green";
+	}
+	if (mode !=0) {
+		ftxt = open("/home/lmosher/ASIS/vegheights.txt", "a");
+		write, ftxt, format="%7.3f %7.3f %6.3f\n", veg_all.east/100.0, veg_all.north/100.0, (veg_all.elevation-veg_all.lelv)/100.0
+		close, ftxt;
+	}
+	plmk, this_prof.elv, this_prof.east, marker=2, msize=0.5, color="red";
+	if (dotlines) pldj, this_prof.east(1:-1), this_prof.elv(1:-1), this_prof.east(2:0), this_prof.elv(2:0), type=3;
+	limits, square=1;
+	lmt = limits();
+	med = avg(this_prof.elv);
+	range = (lmt(4)-lmt(3))/20.0;
+	limits, lmt(1), lmt(2), med-range, med+range;
+	if (static) limits, emax-620, emax+5, -2, 5;
+	lmt = limits();
+	plt, swrite(format="ASIS Transect Data from year: %d month: %d transect: %3.2f", year, month, this_prof.trans(1)), 0.11, 0.7, tosys=0;
+	if (mode == 3) plt, swrite(format="EAARL Bare Earth Data from %s", edateinfo), 0.11, 0.67, tosys=0;
+	if (mode == 1) plt, swrite(format="EAARL First Sfc Data from %s", edateinfo), 0.11, 0.67, tosys=0;
+	if (mode == 4) {
+		plt, swrite(format="EAARL Bare Earth Data from %s", edateinfo), 0.11, 0.67, tosys=0;
+		plt, swrite(format="EAARL First Sfc Data from %s", edateinfo), 0.11, 0.64, tosys=0;
+		if (!static) plt, "Vertical Exaggeration: 10x", 0.1, 0.61, tosys=0;
+		plt, swrite(format="Page %d of %d", i, numberof(idx)), 0.1, 0.58, tosys=0;
+	}
+	if (mode != 4) {
+		if (!static) plt, "Vertical Exaggeration: 10x", 0.1, 0.64, tosys=0;
+		plt, swrite(format="Page %d of %d", i, numberof(idx)), 0.1, 0.61, tosys=0;
+	}
+	plt, "UTM easting (m)", .4547, .0257, tosys=0, height=18;
+	plt, "NAVD88 Elevation (m)", .0451, .2925, tosys=0, height=18, orient=1;
+	if (!static) pldj, lmt(1), 0, lmt(2), 0, type=2;
+	if (static) pldj, emax-620, 0, emax+5, 0, type=2;
+	plsys(0);
+	plmk, 0.707, 0.102, marker=2, msize=0.5, color="red";
+	if (mode !=0) plmk, 0.677, 0.102, marker=1, msize=0.5, color="green";
+	if (mode == 4) plmk, 0.647, 0.102, marker=1, msize=0.5, color="blue";
+	plsys(1);
+	rd = "blah";
+	if (!go) read(rd);
+	if (rd == "g") go = 1;
+	if (rd == "b") lance();
+	if (mode == 3) hcp_file, swrite(format="/home/lmosher/ASIS/plots/trans%d%d%3.0f_be.ps", year, month, this_prof.trans(1)*100.0);
+	if (mode == 1) hcp_file, swrite(format="/home/lmosher/ASIS/plots/trans%d%d%3.0f_fs.ps", year, month, this_prof.trans(1)*100.0);
+	if (mode == 4) hcp_file, swrite(format="/home/lmosher/ASIS/plots/trans%d%d%3.0f.ps", year, month, this_prof.trans(1)*100.0);
+	if (mode == 0) hcp_file, swrite(format="/home/lmosher/ASIS/plots/trans%d%d%3.0f_noeaarl.ps", year, month, this_prof.trans(1)*100.0);
+	if (month <=9) {
+		if (mode == 3) hcp_file, swrite(format="/home/lmosher/ASIS/plots/trans%d0%d%3.0f_be.ps", year, month, this_prof.trans(1)*100.0);
+		if (mode == 1) hcp_file, swrite(format="/home/lmosher/ASIS/plots/trans%d0%d%3.0f_fs.ps", year, month, this_prof.trans(1)*100.0);
+		if (mode == 4) hcp_file, swrite(format="/home/lmosher/ASIS/plots/trans%d0%d%3.0f.ps", year, month, this_prof.trans(1)*100.0);
+		if (mode == 0) hcp_file, swrite(format="/home/lmosher/ASIS/plots/trans%d0%d%3.0f_noeaarl.ps", year, month, this_prof.trans(1)*100.0);
+	}
+	if (static) {
+		if (mode == 3) hcp_file, swrite(format="/home/lmosher/ASIS/plots/trans%d%d%3.0f_be_static.ps", year, month, this_prof.trans(1)*100.0);
+		if (mode == 1) hcp_file, swrite(format="/home/lmosher/ASIS/plots/trans%d%d%3.0f_fs_static.ps", year, month, this_prof.trans(1)*100.0);
+		if (mode == 4) hcp_file, swrite(format="/home/lmosher/ASIS/plots/trans%d%d%3.0f_static.ps", year, month, this_prof.trans(1)*100.0);
+		if (mode == 0) hcp_file, swrite(format="/home/lmosher/ASIS/plots/trans%d%d%3.0f_noeaarl.ps", year, month, this_prof.trans(1)*100.0);
+		if (month <=9) {
+			if (mode == 3) hcp_file, swrite(format="/home/lmosher/ASIS/plots/trans%d0%d%3.0f_be_static.ps", year, month, this_prof.trans(1)*100.0);
+			if (mode == 1) hcp_file, swrite(format="/home/lmosher/ASIS/plots/trans%d0%d%3.0f_fs_static.ps", year, month, this_prof.trans(1)*100.0);
+			if (mode == 4) hcp_file, swrite(format="/home/lmosher/ASIS/plots/trans%d0%d%3.0f_static.ps", year, month, this_prof.trans(1)*100.0);
+			if (mode == 0) hcp_file, swrite(format="/home/lmosher/ASIS/plots/trans%d0%d%3.0f_noeaarl.ps", year, month, this_prof.trans(1)*100.0);
+		}
+	}
+	hcp;
+  }
+}
+
+func show_all_profs {
+/* DOCUMENT show_all_profs
+	This function runs compare_trans for each day and year of the ASIS transects.
+*/
+  f = openb("/home/lmosher/ASIS/profiles.pbd");
+  restore, f, profs;
+  close, f;
+  all_profs = profs;
+  all_profs = profs(sort(profs.year));
+  yrs = all_profs.year(unique(all_profs.year));
+  for (i=1;i<=numberof(yrs);i++){
+	year = long(yrs(i));
+	this_year = all_profs(where(all_profs.year == year));
+  	write, format="%d records found in year %d\n", numberof(this_year), year;
+	mons = this_year.mon(unique(this_year.mon));
+	for (j=1;j<=numberof(mons);j++){
+		compare_trans(long(yrs(i)), long(mons(j)), 0, "20020911 and 20020912", static=1, dotlines=1);
+	}
+  }
+}		
+
+
+func show_trans {
+/* DOCUMENT show_trans
+	show_trans plots a map-view of each ASIS transect.
+*/
+  f = openb("/home/lmosher/ASIS/profiles.pbd");
+  restore, f, profs;
+  close, f
+  profs = profs(sort(profs.year));
+  yrs = profs.year(unique(profs.year));
+  for (i=1;i<=numberof(yrs);i++){
+	year = long(yrs(i));
+	this_year = profs(where(profs.year == year));
+  	write, format="%d records found in year %d\n", numberof(this_year), year;
+	mons = this_year.mon(unique(this_year.mon));
+	for (j=1;j<=numberof(mons);j++){
+		month = long(mons(j));
+		this_mon = this_year(where(this_year.mon == month));
+  		write, format="%d records found in month %d\n", numberof(this_mon), month;
+		load_map, color="black", ffn="/home/lmosher/lidar-processing/maps/delmarva.pbd", utm=1;
+		winkill,6;window,6,dpi=100,width=1100, height=850, style="landscape11x85.gs", legends=0; fma; limits, square=1;
+		show_map, dllmap, color="black",utm=1;
+		plmk, this_mon.north, this_mon.east, marker=2, msize=0.07, color="blue";
+		emin = min(this_mon.east);
+		emax = max(this_mon.east);
+		nmin = min(this_mon.north);
+		nmax = max(this_mon.north);
+		size = (max([emax-emin,nmax-nmin]))/2.0+3000;
+		cte = (emax-emin)/2.0 + emin;
+		ctn = (nmax-nmin)/2.0 + nmin;
+		limits, cte-size, cte+size, ctn-size, ctn+size;
+		this_mon = this_mon(sort(this_mon.trans));
+  		trns = this_mon.trans(unique(this_mon.trans));
+  		write, format="%d transects found...\n", numberof(trns);
+		for (k=1;k<=numberof(trns);k++){
+			trans = trns(k);
+			this_trans = this_mon(where(this_mon.trans == trans));
+			mark = "GPS";
+			if (trans % 1) mark = "NPS";
+			this_trans = this_trans(sort(this_trans.east));
+			pte = where(this_trans.east == max(this_trans.east))-5;
+			if (pte(1) < 1) pte = 1;
+			plt, swrite(format="%s %3.2f", mark, trans), this_trans.east(pte)(1)+500, this_trans.north(pte)(1)-100, height=10, tosys=1
+			pldj, this_trans.east(pte)(1)+250, this_trans.north(pte)(1)-20, this_trans.east(pte)(1)+450, this_trans.north(pte)(1), color="blue", width=1.3;
+		}
+		pltitle, swrite(format="Year:%d Month:%d", year, month);
+		hcp_file, swrite(format="/home/lmosher/ASIS/plots/map%d%d.ps", year, month);
+		if (month <= 9) hcp_file, swrite(format="/home/lmosher/ASIS/plots/map%d0%d.ps", year, month);
+		hcp;
+	}
+  }
+}
+
+func plot_all_trans(junk, mapview=, profview=, nostats=, plotavg=) {
+/* DOCUMENT plot_all_trans(junk, mapview=, profview=, nostats=, plotavg=)
+	This program plots transect data from all surveys on one plot. It performs horizontal or vertical error analysis (average radius^2 from the average line), depending on whether mapview=1 or profview=1 (don't set both at the same time...). Profile view plots the elevation vs the distance from the starting point. The program chooses the easternmost point as the starting point in this case.
+	junk any value. Required since there are no default options. 
+	mapview= and profview= set whether to plot transects in profile or map view. If mapview=1 is set, a coastline must be loaded.
+	nostats= does not calculate vertical statistics in proview=1 mode.
+	plotavg= plots the average line used to find the radius^2 values in profview=1 mode.
+*/
+	winkill,6;window,6,dpi=100,style="landscape11x85.gs",legends=0,width=1100,height=850;
+	f = openb("/home/lmosher/ASIS/profiles.pbd");
+	restore, f, profs;
+	close, f;
+	profs = profs(sort(profs.trans));
+	tranidx = unique(profs.trans);
+	for (i=1; i<=numberof(tranidx); i++) {
+		if (i != numberof(tranidx)) j = tranidx(i+1)-1;
+		if (i == numberof(tranidx)) j = numberof(profs);
+		thistrans = profs(tranidx(i):j);
+		if (thistrans.trans(0) == 45) continue;
+		thistrans = thistrans(sort(thistrans.north));
+		minidx = thistrans(1:numberof(thistrans)/2);
+		mindif = where(abs(minidx.north(dif)) > 20);
+		if (numberof(mindif) == 1) minidx = mindif(0) +1;
+		if (numberof(mindif) > 1)  minidx = max(mindif +1);
+		if (numberof(mindif) == 0) minidx = 1;
+		maxidx = thistrans(numberof(thistrans)/2:0);
+		maxdif = where(abs(maxidx.north(dif)) > 20);
+		if (numberof(maxdif) == 1) maxidx = maxdif(0) + numberof(thistrans)/2 -1;
+		if (numberof(maxdif) > 1)  maxidx = min(maxdif) + numberof(thistrans)/2 -1;
+		if (numberof(maxdif) == 0) maxidx = 0;
+		thistrans = thistrans(minidx:maxidx);
+		thistrans = thistrans(sort(thistrans.north));
+		endidx = int(numberof(thistrans)*0.1);
+		m = (thistrans.north(5) - thistrans.north(-endidx))/(thistrans.east(5) - thistrans.east(-endidx));
+		b = thistrans.north(5) - m*thistrans.east(5);
+		thistrans = thistrans(where(abs((thistrans.north - (thistrans.east*m+b))) < 10));
+		minmine = min(thistrans.east);
+		minminen = thistrans.north(where(thistrans.east == minmine));
+		maxmaxe = max(thistrans.east);
+		maxmaxen = thistrans.north(where(thistrans.east == maxmaxe));
+		thistrans = thistrans(sort(thistrans.east))
+		transxdist = thistrans.east - minmine;
+		transydist = minminen - thistrans.north;
+		transdist = sqrt(transxdist^2 + transydist^2);
+		if (profview) {
+			new = avgline(transdist, thistrans.elv);
+			fma;
+			plmk, thistrans.elv, transdist, marker=4, msize=0.1, color="blue";
+			limits;
+			pt = array(float, 2,2);
+		        a = mouse(1,2,
+        		"Drag line over the beginning of vertical statistics region...\n");
+		        pt(1,) = [min([a(1), a(3)]), max([a(2), a(4)])];
+		        dx = max([a(1), a(3)]) - min([a(1), a(3)]);
+		        dy = max([a(2), a(4)]) - min([a(2), a(4)]);
+		        rad1 = sqrt( dx^2 + dy^2);
+		        a = mouse(1,2,
+		        "Drag line over the end of vertical statistics region...\n");
+		        pt(2,) = [min([a(1), a(3)]), max([a(2), a(4)])];
+		        dx = max([a(1), a(3)]) - min([a(1), a(3)]);
+		        dy = max([a(2), a(4)]) - min([a(2), a(4)]);
+		        rad2 = sqrt( dx^2 + dy^2);
+		}
+		thistrans = thistrans(sort(thistrans.year));
+		yearidx = unique(thistrans.year);
+		mons = []
+		for(k=1;k<=numberof(yearidx);k++) {
+			if (k != numberof(yearidx)) l = yearidx(k+1)-1;
+			if (k == numberof(yearidx)) l = numberof(thistrans);
+			thisyear = thistrans(yearidx(k):l);
+			thisyear = thisyear(sort(thisyear.mon));
+			monidx = unique(thisyear.mon);
+			grow, mons, numberof(monidx);
+		}
+		k = []
+		l = []
+		nsurveys = sum(mons)
+		survi = 1;
+		datelist = [];
+		statlist = [];
+		col_list = [];
+		mar_list = [];
+		regstats = linear_regression(thistrans.east, thistrans.north);
+		fma;
+		if (mapview && !(is_array(dllmap))) {write, "Please load a coastline!"; return;}
+		if (mapview) show_map, dllmap, color="black",utm=1
+		pltitle, swrite(format="%3.2f",thistrans.trans(1));
+		for(k=1;k<=numberof(yearidx);k++) {
+			if (k != numberof(yearidx)) l = yearidx(k+1)-1;
+			if (k == numberof(yearidx)) l = numberof(thistrans);
+			thisyear = thistrans(yearidx(k):l);
+			thisyear = thisyear(sort(thisyear.mon));
+			monidx = unique(thisyear.mon);
+			for(m=1;m<=numberof(monidx);m++) {
+				if (m != numberof(monidx)) n = monidx(m+1)-1;
+				if (m == numberof(monidx)) n = numberof(thisyear);
+				thismon = thisyear(monidx(m):n);
+				thismon = thismon(sort(thismon.north));
+				if (numberof(thismon) > 2) if (is_array(where(thismon.north(dif) > 40))) thismon = thismon(min(where(abs(thismon.north(dif)) < 40)):max(where(abs(thismon.north(dif)) < 40)) + 1);
+				splits = ceil(nsurveys/6.0);
+		                delta = ceil(155.0/splits);
+	        	        n = survi/6;
+				mark = n;
+   		             	c = survi%6;
+	       	        	if (scalecolor) {
+	                        	c = scalecolor;
+	                        	n = i;
+		                        delta = ceil(155.0/numberof(gga_list));
+		                        if (scalecolor == 6) c = 0;
+		                }
+		                if (c == 1) col = [255-delta*n, 0, 0]
+		                if (c == 2) col = [0, 255-delta*n, 0]
+		                if (c == 3) col = [0, 0, 255-delta*n]
+		                if (c == 4) col = [255-delta*n, 255-delta*n, 0]
+		                if (c == 5) col = [255-delta*n, 0, 255-delta*n]
+		                if (c == 0) {n=n-1; col = [0, 255-delta*n, 255-delta*n];}
+				survi++
+				if (mapview) {
+					plmk, thismon.north, thismon.east, color=col, marker=mark, msize=0.25;
+					maxe = max(thismon.east)+20;
+					mine = min(thismon.east)-20;
+					maxn = max(thismon.north);
+					minn = min(thismon.north);
+					dele = maxe-mine;
+					deln = dele * 0.710767;
+					rangemid = minn + (maxn-minn)/2;
+					rangemin = rangemid - deln/2.0;
+					rangemax = rangemid + deln/2.0;
+					limits, mine, maxe, rangemin, rangemax;
+				}
+				if (profview) {
+					thismon = thismon(sort(thismon.east));
+					xdist = thismon.east - minmine;
+					ydist = minminen - thismon.north;
+					dist = sqrt(xdist^2 + ydist^2);
+					plmk, thismon.elv, dist, color=col, marker=mark, msize=0.25;
+					for(q=1;q<=numberof(thismon)-1;q++) pldj, dist(q), thismon.elv(q), dist(q+1), thismon.elv(q+1), color=col;
+				}
+				if (mapview) {stats = linear_regression(thismon.east, thismon.north, m=regstats(1), b=regstats(2));slist=stats(4);}
+				if (profview) slist = comparelines(new(,1), new(,2), dist, thismon.elv, start=pt(1,1), stop=pt(2,1));
+				grow, statlist, swrite(format=", %3.3f", slist*100.0);
+				grow, col_list, col;
+				grow, mar_list, mark;
+				grow, datelist, swrite(format="%d", long(thismon.year(1)*100+thismon(1).mon))
+			}
+		}
+		regstatss = swrite(format="%3.3f, %5.6f", regstats(4), regstats(3))
+		if (profview) {
+			newx = new(,1)
+			newy = new(,2);
+			if (plotavg) plmk, newy, newx, color="green", msize=0.3, width=10, marker=4;
+			if (plotavg) for(ii=1;ii<=numberof(newx)-1;ii++) pldj, newx(ii), newy(ii), newx(ii+1), newy(ii+1), color="yellow", width=5;
+			limits, 0, sqrt((maxmaxe-minmine)^2+(minminen-maxmaxen)^2)(0), -1, 8;
+			pldj, pt(1,1), pt(1,2), pt(1,1), pt(1,2)-rad1, color="blue";
+			pldj, pt(2,1), pt(2,2), pt(2,1), pt(2,2)-rad2, color="blue";
+		}
+		lmt = limits();
+		if (mapview) {
+			f13 = 0;
+			if (thistrans.trans(1) == 13) f13 = 10
+			for (z=1;z<=numberof(datelist);z++) {
+				lmt = limits();
+				if (z <= 5)plmk, lmt(4) -(10+f13)*z, lmt(1) + 20 + 3*f13, color=[col_list(3*z-2), col_list(3*z-1),col_list(3*z)], marker=mar_list(z), msize=0.25;
+				if ((z > 5)&&(z<=10))plmk,lmt(4)-(10+f13)*(z-5),lmt(1)+120 + 6*f13, color=[col_list(3*z-2), col_list(3*z-1),col_list(3*z)], marker=mar_list(z), msize=0.25;
+				if (z >  10)plmk, lmt(4) -(10+f13)*(z-10), lmt(1) + 230 + 9*f13, color=[col_list(3*z-2), col_list(3*z-1),col_list(3*z)], marker=mar_list(z), msize=0.25;
+				if (z <= 5)plt, datelist(z)+statlist(z), lmt(1) + 30 + 3*f13, lmt(4) - 3 - (10+f13)*z, tosys=1;
+				if ((z > 5)&&(z<=10))plt, datelist(z)+statlist(z), lmt(1) + 130 + 6*f13, lmt(4) - 3 - (10+f13)*(z-5), tosys=1;
+				if (z >  10)plt, datelist(z)+statlist(z), lmt(1) + 240 + 9*f13, lmt(4) - 3 - (10+f13)*(z-10), tosys=1;
+			}
+			fn = "mapview";
+		}
+		if (profview) {
+			for(z=1;z<=numberof(datelist);z++) {
+				if (z <=10)plmk,lmt(4)-0.5*z, lmt(1) + 10, color=[col_list(3*z-2), col_list(3*z-1), col_list(3*z)], marker=mar_list(z), msize=0.25;
+				if (z <=10)plt, datelist(z)+statlist(z), lmt(1) + 12, lmt(4) - z*0.5-0.1, tosys=1;
+				if (z > 10)plmk,lmt(4)-0.5*(z-10), lmt(1) + 120, color=[col_list(3*z-2), col_list(3*z-1), col_list(3*z)],marker=mar_list(z),msize=0.25;
+				if (z > 10)plt, datelist(z)+statlist(z), lmt(1) + 125, lmt(4) - 0.5*(z-10)-0.1, tosys=1;
+				}
+			fn = "plotview";
+		}
+		plt, "Deviation^2, r^2; "+regstatss, lmt(1) + 40, lmt(3)+20, tosys=1;
+		if (thistrans.trans(1) < 10) fname = swrite(format="alltrans_%3.0f_%s.ps", thistrans.trans(1)*100, fn);
+		if (thistrans.trans(1) < 1) fname = swrite(format="alltrans_%2.0f_%s.ps", thistrans.trans(1)*100, fn);
+		if (thistrans.trans(1) >= 10) fname = swrite(format="alltrans_%4.0f_%s.ps", thistrans.trans(1)*100, fn);
+		write, "Fname is:... "+fname;
+		rd = "";
+//		read(rd);
+//		if (rd == "s") lance();
+		
+		hcp_file, "/home/lmosher/ASIS/plots/alltrans_"+fn+"/"+fname;
+		hcp;
+	}
+}
+
+func linear_regression(x, y, m=, b=) {
+/* DOCUMENT linear_regression(x, y, m=, b=)
+	This program performs a linear regression on the points x,y and outputs m (slope), b (y-isept), rsq (statistical r squared), rad (average physical radius from the points to the avg. line, squared). If m= or b= is set, the program uses that value instead of the statistical value. This allows one to force b=0, or by setting m and b, one can find the average radius squared to the some other line (specified by m and b.
+*/
+	x = double(x);
+	y = double(y);
+	d = sum(x^2)*numberof(x) - sum(x)^2;
+	mm = (sum(x*y)*numberof(x) - sum(x)*sum(y))/d;
+	bb = (sum(x^2)*sum(y) - sum(x*y)*sum(x))/d;
+	if (is_void(m)) m = mm;
+	if (is_void(b)) b = bb;
+	ydash = m*x + b;
+	xmean = avg(x);
+	ymean = avg(y);
+	rsq = (sum((ydash-ymean)^2))/(sum((y-ymean)^2));
+
+	binv = y+x/m;
+	xisect = (binv - b)/(m+1/m);
+	yisect = xisect*m + b;
+	r = sqrt( (x-xisect)^2 + (y-yisect)^2 );
+	rad = avg(r^2);
+	return [m, b, rsq, rad];
+	end
+}
+
+func avgline(x, y, step=) {
+/* DOCUMENT avgline(x, y, step=)
+	This program finds the moving-average line of an x-y scatter. The program moves along the x direction and replaces every step= points with the average x and average y in that bin. The output is a new array [newx, newy] of the average line.
+	x and y are the points to be averaged
+	step= is the number of points to bin for one average point. Default is set to 10. For faster changing, but less noisy lines this should be reduced. 
+*/
+	if (!step) step= 10;
+	num = numberof(x);
+	numstep = floor(num/step);
+	newx = array(float, int(numstep));
+	newy = array(float, int(numstep));
+	step = int(step);
+	for (i=1;i<=numstep;i++) {
+		xx = x((i-1)*step+1:step*i);
+		yy = y((i-1)*step+1:step*i);
+		newx(i) = avg(xx);
+		newy(i) = avg(yy);
+	}
+	return [newx, newy];
+	end	
+}
+
+func comparelines(x, y, a, b, start=, stop=) {
+/* DOCUMENT comaparelines(x, y, a, b, start=, stop=)
+	This function returns the average radius squard of the points (a, b) to the line formed by the points (x, y). 
+	x, y is the reference, or zero line.
+	a, b is the line to be compared to x, y.
+	start= is the x value to start the analysis.
+	stop= is the x value to stop the analysis.
+*/
+	x = x(sort(x));
+	y = y(sort(x));
+	a = a(sort(a));
+	b = b(sort(a));
+	if (!start) start = min(x);
+	if (!stop) stop = max(x);
+	x = x(where(x >= start));
+	y = y(where(x >= start));
+	if (is_array(x)) x = x(where(x <= stop));
+	if (is_array(y)) y = y(where(x <= stop));
+	err = array(float, numberof(a));
+	count = 1
+	for (i=1;i<=numberof(x)-1;i++) {
+		start = x(i);
+		stop = x(i+1);
+		aa = a(where(a >= start));
+		if (is_array(aa)) bb = b(where(a >= start));
+		if (is_array(aa)) aa = aa(where(aa < stop));
+		if (is_array(aa)) bb = bb(where(aa < stop));
+		if (!is_array(aa)) continue;
+		m = (y(i)-y(i+1))/(x(i)-x(i+1));
+		s = y(i) - m*x(i);
+		for (j=1;j<=numberof(aa);j++) {
+			err(count) = bb(j)- (m*aa(j)+s);
+			count++;
+		}
+	}
+	err = err(where(err));
+	if (is_array(err)) avgerr = avg(err^2);
+	if (!is_array(err)) avgerr = 0;
+	return avgerr;
+	end
+}
