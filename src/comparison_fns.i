@@ -112,7 +112,7 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, elv=, read_file=) {
    }
  }
  close, f;
- if (read_file) read_txt_anal_file, fname, ncount;
+ if (read_file) read_txt_anal_file, fname, n=ncount;
 }
 
 

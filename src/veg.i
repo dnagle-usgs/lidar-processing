@@ -553,20 +553,25 @@ geoveg = array(VEG_ALL, len);
 
 for (i=1; i<=len; i=i+1) {
   geoveg(i).rn = rrr(i).raster;
-  geoveg(i).north = rrr(i).north;
-  geoveg(i).east = rrr(i).east;
+  //geoveg(i).north = rrr(i).north;
+  //geoveg(i).east = rrr(i).east;
   geoveg(i).elevation = rrr(i).elevation;
   geoveg(i).mnorth = rrr(i).mnorth
   geoveg(i).meast = rrr(i).meast
   geoveg(i).melevation = rrr(i).melevation;
   geoveg(i).felv = d(,i).mx1;
   geoveg(i).fint = d(,i).mv1;
- // find actual ground surface elevation using simple trig
+ // find actual ground surface elevation using simple trig (similar triangles)
   elvdiff = rrr(i).melevation - rrr(i).elevation;
+  ndiff = rrr(i).mnorth - rrr(i).north;
+  ediff = rrr(i).meast - rrr(i).east;
+
   eindx = where(d(,i).mx1 > 0 & d(,i).mx0 > 0);
   if (is_array(eindx)) {
-   elvgrd = rrr(i).melevation(eindx) - (float(d(,i).mx0(eindx))/float(d(,i).mx1(eindx)) * elvdiff(eindx));
-   geoveg(i).lelv(eindx) = int(elvgrd);
+   eratio = float(d(,i).mx0(eindx))/float(d(,i).mx1(eindx));
+   geoveg(i).lelv(eindx) = int(rrr(i).melevation(eindx) - eratio * elvdiff(eindx));
+   geoveg(i).north(eindx) = int(rrr(i).mnorth(eindx) - eratio * ndiff(eindx));
+   geoveg(i).east(eindx) = int(rrr(i).meast(eindx) - eratio * ediff(eindx));
   } else {
    geoveg(i).lelv = 0;
   }
@@ -961,3 +966,327 @@ func clean_veg(veg_all) {
 
   return veg_all
 }
+
+
+/*
+func ex_veg_all( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
+/* DOCUMENT ex_veg(raster_number, pulse_index)
+
+
+ see run_veg 
+
+
+ This function returns an array of VEGPIX structures. 
+
+	[ rp.sa(i), mx, a(mx,i,1) ];
+ 
+*/
+
+/*
+ The following developed using 8-25-01 data at rn = 239269 data. 
+ Check waveform samples to see how many samples are
+ saturated. 
+ The function checks the following conditions so far:
+  1) Saturated surface return - locates last saturated sample
+  2) Non-saturated surface with saturated bottom signal
+  3) Non saturated surface with non-saturated bottom
+  4) Bottom signal above specified threshold
+ We'll used this infomation to develope the threshold
+ array for this waveform.
+ We come out of this with the last_surface_sat set to the last
+ saturated value of surface return.
+ The 12 represents the last place a surface can be found
+ Variables: 
+    last              The last point in the waveform to consider.
+    nsat 		A list of saturated pixels in this waveform
+    numsat		Number of saturated pixels in this waveform
+    last_surface_sat  The last pixel saturated in the surface region of the
+                      Waveform.
+    escale		The maximum value of the exponential pulse decay. 
+    laser_decay	The primary exponential decay array which mostly describes
+                      the surface return laser event.
+    da                The return waveform with the computed exponentials substracted
+    db                The return waveform equalized by agc and tilted by bias.
+*/
+
+ extern ex_bath_rn, ex_bath_rp, a;
+  irange = a(where(rn==a.raster)).irange(i);
+  intensity = a(where(rn==a.raster)).intensity(i);
+  rv = VEGPIX();			// setup the return struct
+  rv.rastpix = rn + (i<<24);
+  if ( is_void( ex_bath_rn )) 
+	ex_bath_rn = -1;
+
+  if ( is_void(aa) )
+    aa  = array(float, 256, 120, 4);
+
+  if ( ex_bath_rn != rn ) {  // simple cache for raster data
+     r = get_erast( rn= rn );
+    rp = decode_raster( r );
+    ex_bath_rn = rn;
+    ex_bath_rp = rp;
+  } else {
+   rp = ex_bath_rp;
+  }
+
+  ctx = cent(*rp.tx(i));
+
+  n  = numberof(*rp.rx(i, 1)); 
+  rv.sa = rp.sa(i);
+  if ( n == 0 ) 
+	return rv;
+
+  w  = *rp.rx(i, 1);  aa(1:n, i) = float( (~w+1) - (~w(1)+1) );
+///////  w2 = *rp.rx(i, 2);  aa(1:n, i,2) = float( (~w2+1) - (~w2(1)+1) );
+
+ if (!(use_centroid)) {
+   nsat = where( w == 0 );			// Create a list of saturated samples 
+   numsat = numberof(nsat);			// Count how many are saturated
+   if ( (numsat > 1)  && ( nsat(1) <= 12)   ) {
+      if (  nsat(dif) (max) == 1 ) { 		// only surface saturated
+          last_surface_sat = nsat(0);		// so use last one
+          escale = 255;				
+      } else {					// bottom must be saturated too
+          last_surface_sat = nsat(  where(nsat(dif) > 1 ) ) (1);   
+          escale = 255;
+      }
+   } else { // surface not saturated
+          wflen = numberof(w);
+          if ( wflen > 12 ) wflen = 12;
+	  last_surface_sat =  w(1:wflen) (mnx) ;
+          escale = 255 - w(1:wflen) (min);
+   }
+
+ }
+
+  da = aa(1:n,i,1);
+  dd = aa(1:n, i, 1) (dif);
+
+/******************************************
+   xr(1) will be the first pulse edge
+   and xr(0) will be the last
+*******************************************/
+  thresh = 4.0
+//  xr = where( dd  > thresh ) ;	// find the hits
+  xr = where(  ((dd >= thresh) (dif)) == 1 ) 	//
+  nxr = numberof(xr);
+
+if ( graph ) {
+window,4; fma;limits
+plmk, aa(1:n,i,1), msize=.2, marker=1, color="black";
+plg, aa(1:n,i,1);
+plmk, da, msize=.2, marker=1, color="black";
+plg, da;
+plg, dd-100, color="red"
+write, format="rn=%d; i = %d\n",rn,i
+///if ( nxr > 0 ) 
+///	plmk, a( xr(0),i,1), xr(0),msize=.3,marker=3
+}
+
+  if ( is_void(last) ) 		// see if user specified the max veg
+	last = n;
+
+  if ( n > last ) 		
+	n = last;
+
+
+  for (i=1;i<numberof(xr);i++) {
+    if (use_centroid || use_peak) {
+       //assume 12ns to be the longest duration for a complete return
+       retdist = 12;
+       ai = 1; //channel number
+       if (xr(i)+retdist+1 > n) retdist = n - xr(i)-1;
+       // check for saturation
+       if ( numberof(where((w(xr(i):xr(i)+retdist)) == 0 )) >= 2 ) {
+           // goto second channel
+            ai = 2;
+           // write, format="trying channel 2, rn = %d, i = %d\n",rn, i
+            w  = *rp.rx(i, ai);  aa(1:n, i,ai) = float( (~w+1) - (~w(1)+1) );
+            da = aa(1:n,i,ai);
+            dd = aa(1:n, i, ai) (dif);
+            // not using channel 3 because of some error in the digitizer for the blue channel in 
+            // asis surveys
+            /*
+            if ( numberof(where((w(xr(i):xr(i)+retdist)) == 0 )) >= 2 ) {
+              // goto third channel
+            //  write, format="trying channel 3, rn = %d, i = %d\n",rn, i
+              ai = 3;
+              w  = *rp.rx(i, ai);  aa(1:n, i,ai) = float( (~w+1) - (~w(1)+1) );
+              da = aa(1:n,i,ai);
+              dd = aa(1:n, i, ai) (dif);
+              if ( numberof(where((w(xr(0):xr(0)+retdist)) == 0 )) >= 2 ) {
+                 write, format="all 3 channels saturated... giving up!, rn=%d, i=%d\n",rn,i
+                 ai = 0;
+              }
+	    }
+           */
+            if ( numberof(where((w(xr(i):xr(i)+retdist)) == 0 )) >= 2 ) {
+                 write, format="all 3 channels saturated... giving up!, rn=%d, i=%d\n",rn,i
+                 ai = 0;
+            }
+	}
+
+       if (retdist < 5) ai = 0; // this eliminates possible noise pulses.
+       if (!ai) {
+        rv.sa = rp.sa(i);
+   	rv.mx0 = -1;
+	rv.mv0 = -10;
+   	rv.mx1 = -1;
+	rv.mv1 = -11;
+	rv.nx  = -1;
+        return rv
+       }
+       if (pse) pause, pse;
+
+       if ( graph && ai >= 2) {
+         //window,4; fma
+         plmk, aa(1:n,i,ai), msize=.2, marker=1, color="yellow";
+         plg, aa(1:n,i,ai), color="yellow";
+         plmk, da, msize=.2, marker=1, color="yellow";
+         plg, da, color="yellow";
+         plg, dd-100, color="blue"
+	 pltit = swrite(format="ai = %d\n", ai);
+	 pltitle, pltit;
+       }
+       
+     if (use_centroid && !use_peak) {
+
+      
+       // find where the bottom return pulse changes direction after its trailing edge
+       idx = where(dd(xr(0)+1:xr(0)+retdist) > 0);
+       idx1 = where(dd(xr(0)+1:xr(0)+retdist) < 0);
+       if (is_array(idx1) && is_array(idx)) {
+        if (idx(0) > idx1(1)) {
+         //take length of  return at this point
+	 //write, format="this happens!! rn = %d; i = %d\n",rn,i;
+         retdist = idx(0);
+        }
+       } else 
+       write, format="idx/idx1 is nuller for rn=%d, i=%d    \r",rn, i  
+       //now check to see if it it passes intensity test
+       mxmint = aa(xr(0)+1:xr(0)+retdist,i,ai)(max);
+       if (abs(aa(xr(0)+1,i,ai) - aa(xr(0)+retdist,i,ai)) < 0.2*mxmint) {
+           // this return is good to compute centroid
+           b = aa(int(xr(0)+1):int(xr(0)+retdist),i,ai); // create array b for retdist returns beyond the last peak leading edge.
+           //compute centroid
+          if (b(sum) != 0) {
+           c = float(b*indgen(1:retdist)) (sum) / (b(sum));
+           mx0 = xr(0)+c;
+           if (ai == 1) mv0 = aa(int(mx0),i,ai);
+           if (ai == 2) {
+	       mx0 = mx0 + 0.36;
+	       mv0 = aa(int(mx0),i,ai)+300;
+	   }
+           if (ai == 3) {
+	       mx0 = mx0 + 0.23;
+	       mv0 = aa(int(mx0),i,ai)+600;
+	   }
+          } else {
+           mx0 = -10;
+           mv0 = -10;
+          }
+       } else {
+          // for now, discard this pulse
+          mx0 = -10;
+          mv0 = -10;
+       } 
+    }
+    
+    if (!use_centroid && use_peak) {
+       // if within 3 ns from xr(0) we find a peak, we can assume this to be noise related and try again using xr(0) from the first positive difference after the last negative difference.
+       nidx = where(dd(xr(0):xr(0)+3) < 0);
+       if (is_array(nidx)) {
+         xr(0) = xr(0) + nidx(1);
+	 if (xr(0)+retdist+1 > n) retdist = n - xr(0)-1;
+       }
+      // using trailing edge algorithm for bottom return
+       // find where the bottom return pulse changes direction after its trailing edge
+       idx = where(dd(xr(0)+1:xr(0)+retdist) > 0);
+       idx1 = where(dd(xr(0)+1:xr(0)+retdist) < 0);
+       if (is_array(idx1) && is_array(idx)) {
+        //write, idx;
+        //write, idx1;
+        if (idx(0) > idx1(1)) {
+         //take length of  return at this point
+	 //write, format="this happens!! rn = %d; i = %d\n",rn,i;
+         retdist = idx(0);
+        }
+       }
+       if (is_array(idx1)) {
+	ftrail = idx1(1);
+	ltrail = retdist;
+	//halftrail = 0.5*(ltrail - ftrail);
+	mx0 = irange+xr(0)+idx1(1)-ctx(1);
+	mv0 = aa(int(xr(0)+idx1(1)),i,ai);
+       } else {
+        mx0 = -10;
+	mv0 = -10;
+       }
+    }
+
+   } else { //donot use centroid or trailing edge
+      mx0 = irange+aa( xr(0):xr(0)+5, i, 1)(mxx) + xr(0) - 1;	  // find bottom peak now
+      mv0 = aa( mx0, i, 1);	          
+    }
+    // stuff below is for mx1 (first surface in veg).
+
+    if (use_centroid || use_peak) {
+       np = numberof ( *rp.rx(i,1) );      // find out how many waveform points
+                                        // are in the primary (most sensitive)
+                                        // receiver channel.
+
+       if ( np < 2 )                         // give up if there are not at
+              return;                            // least two points.
+
+       if ( np > 12 ) np = 12;               // use no more than 12
+       if ( numberof(where(  ((*rp.rx(i,1))(1:np)) == 0 )) <= 2 ) {
+         cv = cent( *rp.rx(i, 1 ) );
+       } else if ( numberof(where(  ((*rp.rx(i,2))(1:np)) == 0 )) <= 2 ) {
+         cv = cent( *rp.rx(i, 2 ) ) + 0.36;
+         cv(3) += 300;
+       } else {
+         cv = cent( *rp.rx(i, 3 ) ) + 0.23;
+         cv(3) += 600;
+       }
+
+       if (cv(1) < 10000) {
+          mx1 = irange+cv(1)-ctx(1);
+       } else {
+          mx1 = -10;
+       }
+       mv1 = cv(3);
+    } else {
+      mx1 = aa( xr(1):xr(1)+5, i, 1)(mxx) + xr(1) - 1;	  // find surface peak now
+      mv1 = aa( mx1, i, 1);	          
+    }
+
+    // make mx1 be the irange value and mv1 be the intensity value from variable 'a'
+    // edit out tx/rx dropouts
+    el = (int(irange) & 0xc000 ) == 0 ;
+    irange *= el;
+    //mx1 = irange;
+    //mv1 = intensity;
+    if ( graph ) {
+         plmk, mv1, mx1, msize=.5, marker=7, color="blue", width=1
+         plmk, mv0, mx0, msize=.5, marker=7, color="red", width=1
+    }
+    if (pse) pause, pse;
+        rv.sa = rp.sa(i);
+   	rv.mx0 = mx0;
+	rv.mv0 = mv0;
+   	rv.mx1 = mx1;
+	rv.mv1 = mv1;
+	rv.nx  = numberof(xr);
+	return rv;
+  }
+  else {
+        rv.sa = rp.sa(i);
+   	rv.mx0 = -1;
+	rv.mv0 = aa(max,i,1);
+   	rv.mx1 = -1;
+	rv.mv1 = rv.mv0;
+	rv.nx  = numberof(xr);
+	return rv;
+  }
+}
+*/
