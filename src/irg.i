@@ -13,6 +13,8 @@
 	Minor changes to omit progress bar when fewer then 10
 	rasters to process.
 
+  test comment.
+
 */
 
 require, "eaarl_constants.i"
