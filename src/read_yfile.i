@@ -419,7 +419,7 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
   return data;
 }
   
-func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=) {
+func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, delimit=) {
   /* DOCUMENT this function writes out an ascii file containing x,y,z,intensity information.
     amar nayegandhi 04/25/02
     Keywords:
@@ -431,11 +431,19 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=) {
     indx = set to 1 to write out the index number of each record in the output file.
     split = set split to 1 if you want the output file to be split into chunks of 1 million points
     intensity = set to 1 if you want to additionally include the intensity value in the output file
+    delimit =  a string containing a single character to delimite ascii output with.
     modified 12/30/02 amar nayegandhi to :
       write out x,y,z (first surface elevation) data for type=1
       to split at 1 million points and write to another file
     modified 01/30/03 to optionally split at 1 million points
     */
+
+// default delimit to ","
+  if ( is_void( delimit ) ) {
+    delimit = ",";
+  }   
+  delimit = ((*pointer( delimit ))(1))
+
   fn = opath+ofname;
 
   /* open file to read/write (it will overwrite any previous file with same name) */
@@ -575,16 +583,44 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=) {
     }
  
     if (!indx && !intensity) {
-         write, f, format="%9.2f, %10.2f, %8.2f\n",data_arr.east(i)/100.,data_arr.north(i)/100., z;
+         write, f, format="%9.2f%c %10.2f%c %8.2f\n",
+	 data_arr.east(i)/100.,
+	 delimit,
+	 data_arr.north(i)/100.,
+	 delimit,
+	 z;
     } 
     if (indx && !intensity) {
-         write, f, format="%d, %9.2f, %10.2f, %8.2f\n",totw, data_arr.east(i)/100.,data_arr.north(i)/100., z;
+         write, f, format="%d%c %9.2f%c %10.2f%c %8.2f\n",
+	 totw, 
+	 delimit,
+	 data_arr.east(i)/100.,
+	 delimit,
+	 data_arr.north(i)/100., 
+	 delimit,
+	 z;
     } 
     if (!indx && intensity) {
-         write, f, format="%9.2f, %10.2f, %8.2f, %d\n",data_arr.east(i)/100.,data_arr.north(i)/100., z, data_intensity(i);
+         write, f, format="%9.2f%c %10.2f%c %8.2f%c %d\n",
+	 data_arr.east(i)/100.,
+	 delimit,
+	 data_arr.north(i)/100., 
+	 delimit,
+	 z, 
+	 delimit,
+	 data_intensity(i);
     } 
     if (indx && intensity) {
-        write, f, format="%d, %9.2f, %10.2f, %8.2f, %d\n",totw, data_arr.east(i)/100.,data_arr.north(i)/100., z, data_intensity(i);
+        write, f, format="%d%c %9.2f%c %10.2f%c %8.2f%c %d\n",
+	totw, 
+	 delimit,
+	data_arr.east(i)/100.,
+	 delimit,
+	data_arr.north(i)/100.,
+	 delimit,
+	z, 
+	 delimit,
+	data_intensity(i);
     }
     if ( (i % 1000) == 0 ) edfrstat, i, numberof(data_arr);
   }
