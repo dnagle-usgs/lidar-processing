@@ -62,7 +62,9 @@ if ( is_void( dllmap ) ) {
 }
 
 
-func show_map( m,color=,utm=,width= ) {
+func show_map( m,color=,utm=,width=, noff=, eoff= ) {
+ if (!(noff)) noff = 0;
+ if (!(eoff)) eoff = 0;
  sz = dimsof(m)(2);
  if (is_void(width)) width = 1.0
  if ( is_void( color ) )
@@ -76,7 +78,7 @@ func show_map( m,color=,utm=,width= ) {
     u = u(1:2,);
     a = transpose(u);
   }
-  plg,a(,1),a(,2),marks=0,color=color, width=width;
+  plg,a(,1)+noff,a(,2)+eoff,marks=0,color=color, width=width;
  }
 }
 

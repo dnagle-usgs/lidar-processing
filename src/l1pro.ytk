@@ -1318,22 +1318,32 @@ trace variable cmax   w ud
 
  sst .l1wid.bf45.sc.1.cmax   cmax   "  Cmax:"	  { -50 5000.0 0.1  }
  sst .l1wid.bf45.sc.1.cmin   cmin   "  Cmin:"	  { -100 5000.0 0.1  }
- sst .l1wid.bf45.sc.1.cdelta cdelta "Cdelta:"  { 0.0  500.0 0.1 }
+ sst .l1wid.bf45.sc.1.cdelta cdelta "Cdelta:"  { 0.0  2000.0 0.1 }
  pack .l1wid.bf45.sc.1.cmax .l1wid.bf45.sc.1.cdelta .l1wid.bf45.sc.1.cmin -side top
 
 
-frame  .l1wid.bf45.sc.f
+LabelFrame  .l1wid.bf45.sc.f -relief sunken -borderwidth 3 -text "Marker:"
   SpinBox .l1wid.bf45.sc.f.msize \
         -range {0.1 10.0 0.1}  \
         -textvariable msize \
-	-helptext "Enter Marker Size (msize)"
+	-helptext "Enter Marker Size (msize)" \
+	-width 5
 
   SpinBox .l1wid.bf45.sc.f.marker \
         -range {0 9 1}  \
         -textvariable markerv \
-	-helptext "Enter Marker Type (See help, marker for more details)"
+	-helptext "Enter Marker Type (See help, marker for more details)" \
+ 	-width 5
+
+LabelFrame .l1wid.bf45.sc.sk -relief groove -borderwidth 3 -text "Skip:"
+  SpinBox .l1wid.bf45.sc.sk.skip \
+	-range {1 1000 1} \
+	-textvariable skip \
+	-helptext "Enter plot points to skip" \
+	-width 5
 
  pack  .l1wid.bf45.sc.f.msize .l1wid.bf45.sc.f.marker -side top
+ pack .l1wid.bf45.sc.sk.skip 
 
 
 
@@ -1397,7 +1407,7 @@ pack .l1wid.bf4.1 .l1wid.bf4.2 -side top -pady 10
 ####pack .l1wid.bf5.1  -side right -padx 35 
 pack .l1wid.bf1 .l1wid.bf2 .l1wid.bf3 .l1wid.bf4 -side top -expand 1 -fill both
 pack .l1wid.bf45.sc.1  -side left  -padx 3
-pack .l1wid.bf45.sc.f  -side left
+pack .l1wid.bf45.sc.f  .l1wid.bf45.sc.sk -side left -padx 5
 pack .l1wid.bf45.q.1 .l1wid.bf45.q.2  .l1wid.bf45.q.3 .l1wid.bf45.q.4 -side left
 pack 	.l1wid.bf45.p.fma \
 	.l1wid.bf45.p.1 \
@@ -1446,7 +1456,7 @@ proc send_rnarr_to_l1pro {bstart bstop brnindx} {
 
 proc plot_fltlines {sel} {
   
- global l1pro_fma win_no cmin cmax cdelta msize markerv varlist
+ global l1pro_fma win_no cmin cmax cdelta msize markerv varlist skip
      #fill in later using what to plot
      set fs 0
      set ba 0
@@ -1503,17 +1513,17 @@ proc plot_fltlines {sel} {
      }
      if {$ptype == 1} {
        if {$sel == 0} {
-         exp_send "plot_bathy, $var_type, win=$win_no, ba=$ba, fs = $fs, de = $de , fint = $fint, lint = $lint, cmin=$cmin, cmax=$cmax, msize = $msize, marker=$markerv; \r"
+         exp_send "plot_bathy, $var_type, win=$win_no, ba=$ba, fs = $fs, de = $de , fint = $fint, lint = $lint, cmin=$cmin, cmax=$cmax, msize = $msize, marker=$markerv, skip=$skip; \r"
        } else {
-         exp_send "plot_bathy, depth_some, win=$win_no, ba=$ba, fs = $fs, de = $de , fint = $fint, lint = $lint, cmin=$cmin, cmax=$cmax, msize = $msize, marker=$markerv; \r"
+         exp_send "plot_bathy, depth_some, win=$win_no, ba=$ba, fs = $fs, de = $de , fint = $fint, lint = $lint, cmin=$cmin, cmax=$cmax, msize = $msize, marker=$markerv, skip=$skip; \r"
        }
        expect ">"
      }
      if {$ptype == 2} {
         if {$sel == 0} {
-         exp_send "display_veg, $var_type, win=$win_no, cmin=$cmin, cmax = $cmax, size = $msize, edt=1, felv = $fs, lelv=$lelv, fint=$fint, lint=$lint, cht = $cht, marker=$markerv;\r"
+         exp_send "display_veg, $var_type, win=$win_no, cmin=$cmin, cmax = $cmax, size = $msize, edt=1, felv = $fs, lelv=$lelv, fint=$fint, lint=$lint, cht = $cht, marker=$markerv, skip=$skip;\r"
         } else {
-         exp_send "display_veg, veg_some, win=$win_no, cmin=$cmin, cmax = $cmax, size = $msize, edt=1, felv = $fs, lelv=$lelv, fint=$fint, lint=$lint, cht = $cht, marker=$markerv;\r"
+         exp_send "display_veg, veg_some, win=$win_no, cmin=$cmin, cmax = $cmax, size = $msize, edt=1, felv = $fs, lelv=$lelv, fint=$fint, lint=$lint, cht = $cht, marker=$markerv, skip=$skip;\r"
         }
          expect ">"
      }
@@ -1522,16 +1532,16 @@ proc plot_fltlines {sel} {
        set cmin1 [expr $cmin*100.]
        if {$disp_type == 0} {
          if {$sel == 0} {
-           exp_send "display, $var_type, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1;\r"
+           exp_send "display, $var_type, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1, skip=$skip;\r"
          } else {
-           exp_send "display, cveg_some, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1;\r"
+           exp_send "display, cveg_some, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1, skip=$skip;\r"
          }
          expect ">"
        } elseif { $disp_type == 4 } {
          if {$sel == 0} {
-           exp_send "display, $var_type, mode=\"intensity\", win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv;\r"
+           exp_send "display, $var_type, mode=\"intensity\", win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, skip=$skip;\r"
          } else {
-           exp_send "display, cveg_some, mode=\"intensity\", win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv;\r"
+           exp_send "display, cveg_some, mode=\"intensity\", win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, skip=$skip;\r"
          }
          expect ">"
        }

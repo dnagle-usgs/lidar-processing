@@ -97,7 +97,7 @@ func open_irg_status_bar {
 
 
 
-func irg( b, e, inc=, delta=, georef=, usecentroid= ) {
+func irg( b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo= ) {
 /* DOCUMENT irg(b, e, georef=) 
    Returns an array of irange values from record
    b to record e.  "e" can be left out and it will default to 1.  Don't
@@ -109,7 +109,9 @@ func irg( b, e, inc=, delta=, georef=, usecentroid= ) {
 		1       Return XRTRS records.
   usecentroid=  1	Set to determine centroid range using 
                         all 3 waveforms to correct for range walk.
-
+  use_highelv_echo =    Set to 1 to exclude  the waveforms that tripped above
+			the range gate and its echo caused a peak in the 
+			positive direction higher than the bias.
    Returns an array of RTRS structures, or an array of XRTRS.
 
 */
@@ -147,13 +149,24 @@ func irg( b, e, inc=, delta=, georef=, usecentroid= ) {
     a(di).raster = si; 				// install the raster nbr
     a(di).soe = rp.offset_time ;		
     if ( usecentroid == 1 ) {
-	for (ii=1; ii< rp.npixels(1); ii++ ) {
-           centroid_values     = pcr(rp, ii);
-           if ( numberof(centroid_values) ) {
-	     a(di).irange(ii)    = centroid_values(1);
-	     a(di).intensity(ii) = centroid_values(2);
-           }
-        }
+       for (ii=1; ii< rp.npixels(1); ii++ ) {
+	  if (use_highelv_echo) {
+	    if (int((*rp.rx(ii,1))(max)-min((*rp.rx(ii,1))(1),(*rp.rx(ii,1))(0))) < 5) {
+              centroid_values     = pcr(rp, ii);
+              if ( numberof(centroid_values) ) {
+	        a(di).irange(ii)    = centroid_values(1);
+	        a(di).intensity(ii) = centroid_values(2);
+              }
+	    }
+ 	  } else {
+            centroid_values     = pcr(rp, ii);
+            if ( numberof(centroid_values) ) {
+	      a(di).irange(ii)    = centroid_values(1);
+	      a(di).intensity(ii) = centroid_values(2);
+            }
+         }
+            
+       }
     } else if ( usecentroid == 2 ) {	//  This area is for the Leading-edge-tracker stuff
 	for (ii=1; ii< rp.npixels(1); ii++ ) {
            centroid_values     = let(rp, ii);

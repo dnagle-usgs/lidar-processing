@@ -502,7 +502,7 @@ write, format="rn=%d; i = %d\n",rn,i
 
 
 
-func display_veg(veg_arr, felv=, lelv=,  fint=, lint=, cmin=, cmax=, size=, win=, dofma=, edt=, cht=, marker= ) {
+func display_veg(veg_arr, felv=, lelv=,  fint=, lint=, cmin=, cmax=, size=, win=, dofma=, edt=, cht=, marker=, skip= ) {
   /* DOCUMENT display_veg(veg_arr, fr=, lr=,  cmin=, cmax=, size=, win=, dofma=, edt=, marker= )
  This function displays a veg plot using the veg array from functin run_veg, 
  and the georeferencing from the first_surface function.   If fr = 1, the 
@@ -555,10 +555,10 @@ func display_veg(veg_arr, felv=, lelv=,  fint=, lint=, cmin=, cmax=, size=, win=
     q = where( (veg_arr(i).north) );
     if ( numberof(q) >= 1) {
        if (lelv || lint) {
-         plcm, elv(q,i), veg_arr(i).lnorth(q)/100.0, veg_arr(i).least(q)/100.0,
+         plcm, elv(q,i)(1:0:skip), veg_arr(i).lnorth(q)(1:0:skip)/100.0, veg_arr(i).least(q)(1:0:skip)/100.0,
             msize=size,cmin=cmin, cmax=cmax, marker=marker;
        } else {
-         plcm, elv(q,i), veg_arr(i).north(q)/100.0, veg_arr(i).east(q)/100.0,
+         plcm, elv(q,i)(1:0:skip), veg_arr(i).north(q)(1:0:skip)/100.0, veg_arr(i).east(q)(1:0:skip)/100.0,
             msize=size,cmin=cmin, cmax=cmax, marker=marker
        }
     }
@@ -567,10 +567,10 @@ func display_veg(veg_arr, felv=, lelv=,  fint=, lint=, cmin=, cmax=, size=, win=
    q = where( (veg_arr.north) );
    if (numberof(q) >= 1) {
       if (lelv || lint) {
-        plcm, elv(q), veg_arr.lnorth(q)/100.0, veg_arr.least(q)/100.0,
+        plcm, elv(q)(1:0:skip), veg_arr.lnorth(q)(1:0:skip)/100.0, veg_arr.least(q)(1:0:skip)/100.0,
            msize=size,cmin=cmin, cmax=cmax, marker=marker;
       } else {
-        plcm, elv(q), veg_arr.north(q)/100.0, veg_arr.east(q)/100.0,
+        plcm, elv(q)(1:0:skip), veg_arr.north(q)(1:0:skip)/100.0, veg_arr.east(q)(1:0:skip)/100.0,
            msize=size,cmin=cmin, cmax=cmax, marker=marker;
       }
        
@@ -644,7 +644,7 @@ for (i=1; i<=len; i=i+1) {
 return geoveg;
 }
 
-func make_veg(latutm=, q=, ext_bad_att=, ext_bad_veg=, use_centroid=, use_peak=, multi_peaks=) {
+func make_veg(latutm=, q=, ext_bad_att=, ext_bad_veg=, use_centroid=, use_peak=, use_highelv_echo=, multi_peaks=) {
 /* DOCUMENT make_veg(opath=,ofname=,ext_bad_att=, ext_bad_veg=)
 
  This function allows a user to define a region on the gga plot 
@@ -718,7 +718,7 @@ Returns:
        fcount ++;
        write, "Processing for first_surface...";
        if (use_peak) use_centroid = 1;
-       rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=use_centroid); 
+       rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=use_centroid, use_highelv_echo=use_highelv_echo); 
        if (use_peak) use_centroid = 0;
        write, format="Processing segment %d of %d for vegetation\n", i, no_t;
        if (!multi_peaks) {

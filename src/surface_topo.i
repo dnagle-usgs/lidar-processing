@@ -96,7 +96,7 @@ func make_pnav_from_gga( gga ) {
 
 
 
-func display(rrr, i=,j=, mode=, cmin=, cmax=, size=, win=, dofma=, edt=, marker= ) {
+func display(rrr, i=,j=, mode=, cmin=, cmax=, size=, win=, dofma=, edt=, marker=, skip= ) {
 /* DOCUMENT display(rrr, i=,j=, cmin=, cmax=, size=, win=, dofma=, edt=, marker= )
 
  
@@ -133,6 +133,7 @@ func display(rrr, i=,j=, mode=, cmin=, cmax=, size=, win=, dofma=, edt=, marker=
  window,win 
  if ( !is_void( dofma ) )
 	fma;
+ if (is_void(skip)) skip = 1;
 
 
 write,format="Please wait while drawing..........%s", "\r"
@@ -160,10 +161,10 @@ for ( ; i<=j; i++ ) {
  }
   if ( numberof(q) >= 1) {
      if ( mode == "elev" ) { 
-       plcm, rrr(i).elevation(q), (rrr(i).north(q))/100.0, (rrr(i).east(q))/100.0,
+       plcm, rrr(i).elevation(q)(1:0:skip), (rrr(i).north(q)(1:0:skip))/100.0, (rrr(i).east(q)(1:0:skip))/100.0,
        msize=size,cmin=cmin, cmax=cmax, marker=marker
      } else if ( mode == "intensity" ) {
-       plcm, rrr(i).intensity(q), (rrr(i).north(q))/100.0, (rrr(i).east(q))/100.0,
+       plcm, rrr(i).intensity(q), (rrr(i).north(q)(1:0:skip))/100.0, (rrr(i).east(q)(1:0:skip))/100.0,
        msize=size,cmin=cmin, cmax=cmax, marker=marker
      }
    }
@@ -175,7 +176,7 @@ write,format="Draw complete. %d rasters drawn. %s", j-ii, "\n"
 
 
 
-func first_surface(start=, stop=, center=, delta=, north=, usecentroid=) {
+func first_surface(start=, stop=, center=, delta=, north=, usecentroid=, use_highelv_echo=) {
 /* DOCUMENT first_surface(start=, stop=, center=, delta=, north= )
 
    Project the EAARL threshold trigger point to the surface. 
@@ -186,6 +187,8 @@ func first_surface(start=, stop=, center=, delta=, north=, usecentroid=) {
   center=	Center raster when doing before and after.
    delta=	NUmber of rasters to process before and after.
    north=       Ignore heading, and assume north.
+usecentroid=	Set to 1 to use the centroid of the waveform.  
+use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gate.
 	
  This returns an array of type "R" which
  will contain the xyz of the mirror "track point" and the xyz of the
@@ -218,7 +221,7 @@ func first_surface(start=, stop=, center=, delta=, north=, usecentroid=) {
    }
  } 
 
- a = irg(i,j, usecentroid=usecentroid);		
+ a = irg(i,j, usecentroid=usecentroid, use_highelv_echo=use_highelv_echo);		
 
 atime   = a.soe - soe_day_start;
 
@@ -435,7 +438,7 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
        fcount ++;
        write, format="Processing segment %d of %d for first_surface...\n",i,no_t;
        rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=usecentroid); 
-       a=[];
+       //a=[];
        grow, fs_all, rrr;
        tot_count += numberof(rrr.elevation);
       }
