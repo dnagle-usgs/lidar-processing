@@ -833,6 +833,7 @@ write,"============================================================="
 	minindx = indx(i);
       }
     }
+    blockindx = minindx / 120;
     rasterno = mindata.rn&0xffffff;
     pulseno = mindata.rn/0xffffff;
 
@@ -924,13 +925,12 @@ write,"============================================================="
                  pnav(pnav_idx+1).lat, pnav(pnav_idx+1).lon) * 
                  3600.0/abs(pnav(pnav_idx+1).sod - pnav(pnav_idx).sod);
 
- write,format="Raster/Pulse: %d/%d UTM: %7.1f, %7.1f Delta: %7.2fm\n", 
+ write,format="        Indx: %4d Raster/Pulse: %d/%d UTM: %7.1f, %7.1f\n", 
+ 	       blockindx,
                mindata.rn&0xffffff,
 	       pulseno,
                mindata.north/100.0,
-	       mindata.east/100.0,
-               sqrt(double(mindata.north - _last_rastpulse(1))^2 +
-                    double(mindata.east  - _last_rastpulse(2))^2)/100.0
+	       mindata.east/100.0
 
  write,format="        Time: %7.4f (%02d:%02d:%02d) Delta:%d:%02d:%02d \n", 
         double(somd),

@@ -304,7 +304,8 @@ write, format="rn=%d; i = %d\n",rn,i
 	 //write, format="this happens!! rn = %d; i = %d\n",rn,i;
          retdist = idx(0);
         }
-       } else write, format="idx/idx1 is nuller for rn=%d, i=%d\n",rn, i  
+       } else 
+       write, format="idx/idx1 is nuller for rn=%d, i=%d    \r",rn, i  
        //now check to see if it it passes intensity test
        mxmint = a(xr(0)+1:xr(0)+retdist,i,ai)(max);
        if (abs(a(xr(0)+1,i,ai) - a(xr(0)+retdist,i,ai)) < 0.2*mxmint) {
