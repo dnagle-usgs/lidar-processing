@@ -548,7 +548,7 @@ func sel_region (q, all_tans=) {
 
   
  if (!(is_array(rn_arr))) {
-  rn_arr = [0,0];
+  rn_arr = [];
  }
  return rn_arr;
 

@@ -236,10 +236,17 @@ func unique(x) {
     adapted by amar nayegandhi 03/21/03
   */
   x = x(*);
-  if (numberof(x)<2) return [where(x(1))];
-  x = x(sort(x));
-  mask = grow([1n], x(1:-1) != x(2:0));
-  return (where(mask));
+  y = x;
+  if (numberof(y)<2) return [where(y(1))];
+  y = y(sort(y));
+  mask = grow([1n], y(1:-1) != y(2:0));
+  idx = where(mask);
+  result = array(int, numberof(idx));
+  for (i=1;i<=numberof(idx);i++){
+    iidx = where(x == y(idx(i)));
+    result(i) = iidx(1);
+  }
+  return result;
 }
 
 func test_bathy(null) {
