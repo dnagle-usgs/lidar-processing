@@ -22,10 +22,10 @@ frame .l1wid.bf3
 frame .l1wid.bf4 
 frame .l1wid.bf4.1
 frame .l1wid.bf4.2
-frame .l1wid.bf45	
-frame .l1wid.bf45.sc 
-frame .l1wid.bf45.p
-frame .l1wid.bf5
+frame .l1wid.bf45 -relief groove -borderwidth 3
+frame .l1wid.bf45.sc -relief groove -borderwidth 3
+frame .l1wid.bf45.p -relief groove -borderwidth 3
+frame .l1wid.bf5 
 
 .l1wid configure -menu .l1wid.mb
 menu .l1wid.mb
@@ -57,15 +57,15 @@ menu .l1wid.mb.options
 
 
 .l1wid.mb add cascade -label Options -underline 0 -menu .l1wid.mb.options
-.l1wid.mb.options add command -label "Configure Lowest ColorBar Elevation Scale..." -underline 0 \
+.l1wid.mb.options add command -label "Configure elevation scale limits..." -underline 0 \
 	-command { 
 	   destroy  .l1wid-opts
  	   toplevel .l1wid-opts
 	   frame .l1wid-opts.f1
 	   frame .l1wid-opts.f2
 	   frame .l1wid-opts.f3
-	   Label .l1wid-opts.f1.label -text "Cmax:" 
-	   Label .l1wid-opts.f2.label -text "Cmin:" 
+	   Label .l1wid-opts.f1.label -text "Maximum:" 
+	   Label .l1wid-opts.f2.label -text "Minimum:" 
 	   Label .l1wid-opts.f3.label -text "Increment:" 
 	   SpinBox  .l1wid-opts.f1.max -range { -100. 5000. 10. }  \
 		-textvariable cmax_max \
@@ -73,9 +73,11 @@ menu .l1wid.mb.options
 	   SpinBox  .l1wid-opts.f2.min -range { -100. 5000. 10. }  \
                 -textvariable cmax_min \
                 -modifycmd {  .l1wid.bf45.sc.1 configure -from $cmax_min }
-	   SpinBox  .l1wid-opts.f3.inc -range { 0.1 100. .1 }  \
+	   SpinBox  .l1wid-opts.f3.inc \
+		-values { 0.1 0.2 .25 .5 .75 1.0 1.5 2.0 2.5 3 4 5 6 7 8 9 10 15 20 25 }  \
                 -textvariable cmax_inc \
                 -modifycmd {  .l1wid.bf45.sc.1 configure -resolution $cmax_inc }
+
 	   pack .l1wid-opts.f1.label .l1wid-opts.f1.max -side left -fill x
 	   pack .l1wid-opts.f2.label .l1wid-opts.f2.min -side left -fill x
 	   pack .l1wid-opts.f3.label .l1wid-opts.f3.inc -side left -fill x
@@ -149,11 +151,11 @@ ComboBox .l1wid.bf4.1.p -text "Process Data For" -width 22 -values \
 
 .l1wid.bf4.1.p setvalue first
 
-checkbutton .l1wid.bf4.2.cll -text "Convert UTM to Lat Lon" -variable cll 
-checkbutton .l1wid.bf4.2.cng -text "Convert to NAVD 88 (GEOID)" -variable cng 
-checkbutton .l1wid.bf4.2.fma -text "Fma" -variable l1pro_fma 
+checkbutton .l1wid.bf4.2.cll -text "Convert UTM\nto Lat Lon" -variable cll 
+checkbutton .l1wid.bf4.2.cng -text "Convert to\nNAVD 88 (GEOID)" -variable cng 
+checkbutton .l1wid.bf45.p.fma -text "Auto\nFma" -variable l1pro_fma 
 
-Button .l1wid.bf45.p.1 -text "Plot Data" -width 15 -command {
+Button .l1wid.bf45.p.1 -text "Plot" -command {
  global l1pro_fma
      #fill in later using what to plot
      set fs 0
@@ -203,9 +205,9 @@ Label .l1wid.bf45.p.2 -text "in Window "
 SpinBox .l1wid.bf45.p.3 -justify center -range {0 7 1} \
 	-width 2 -textvariable win_no 
 
-Label .l1wid.bf45.p.4 -text "to display"
+### Label .l1wid.bf45.p.4 -text "to display"
 ComboBox .l1wid.bf45.p.5 -text "Display Type" -width 20 -values \
-	"First_Surface_Topography Sub-aqueous_Topography \
+	"First_Return_Topography Sub-aqueous_Topography \
 	Water_Depth Bare_Earth_Topography" \
 	-helptext "Select any one of the following" \
 	-editable 0
@@ -309,14 +311,15 @@ Button .l1wid.bf5.2 -text "Begin Processing" -width 20 \
 #pack  .l1wid.bf4.1.cb .l1wid.bf4.1.xba .l1wid.bf4.1.xbd .l1wid.bf4.1.xbv -side top -padx 20 -pady 5
 #pack  .l1wid.bf4.1 -side top -padx 20 -pady 5
 pack .l1wid.bf4.1.d .l1wid.bf4.1.p -side left -padx 5
-pack  .l1wid.bf4.2.cll .l1wid.bf4.2.cng .l1wid.bf4.2.fma -side left -padx 3
-pack .l1wid.bf4.1 .l1wid.bf4.2 -side top -pady 5
+pack  .l1wid.bf4.2.cll .l1wid.bf4.2.cng -side left -padx 3
+pack .l1wid.bf4.1 .l1wid.bf4.2 -side top -pady 3
+pack .l1wid.bf5.1 .l1wid.bf5.2 -side right
 pack .l1wid.bf1 .l1wid.bf2 .l1wid.bf3 .l1wid.bf4 -side top -expand 1 -fill both
 pack .l1wid.bf45.sc.1 .l1wid.bf45.sc.2 .l1wid.bf45.sc.3 -side left  -padx 3
-pack .l1wid.bf45.p.1 .l1wid.bf45.p.2 .l1wid.bf45.p.3 .l1wid.bf45.p.4 .l1wid.bf45.p.5 -side left
-pack .l1wid.bf45.p .l1wid.bf45.sc  -side top 
-pack .l1wid.bf5.1 .l1wid.bf5.2 -side right
-pack .l1wid.bf45 .l1wid.bf5 -side top -pady 10
+pack .l1wid.bf45.p.fma .l1wid.bf45.p.1 .l1wid.bf45.p.5 \
+	.l1wid.bf45.p.2 .l1wid.bf45.p.3  -side left -fill x 
+pack .l1wid.bf45.p .l1wid.bf45.sc  -side top -fill x -expand 1
+pack .l1wid.bf5 .l1wid.bf45  -side top -pady 3 
 
 proc send_latlon_to_l1pro {minlon maxlon minlat maxlat utm} {
    global mnlon mxlon mnlat mxlat 
