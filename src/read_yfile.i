@@ -1019,6 +1019,7 @@ func set_read_tk(junk) {
    tkcmd, "varlist_plot";
    tkcmd, swrite(format=".varplot.1.lb insert end %s",vname);
    tkcmd, ".l1wid.bf45.p.15 setvalue @[expr {[llength $varlist]-1}]"
+   tkcmd, "varlist_plot";
    write, "Tk updated \r";
 
 }
@@ -1034,8 +1035,9 @@ func set_read_yorick(vname) {
     if (_ytk) {
       tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",0);
       tkcmd, swrite(format=".l1wid.bf45.p.5 setvalue @%d",0);
-      cmin = min(vname.elevation)/100.;
-      cmax = max(vname.elevation)/100.;
+      cminmax = stdev_min_max(vname.elevation)/100.;
+      cmin = cminmax(1);
+      cmax = cminmax(2);
       tkcmd, swrite(format="set cmin %f", cmin);
       tkcmd, swrite(format="set cmax %f", cmax);
     }
@@ -1044,8 +1046,9 @@ func set_read_yorick(vname) {
     if (_ytk) {
       tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",1);
       tkcmd, swrite(format=".l1wid.bf45.p.5 setvalue @%d",1);
-      cmin = min(vname.depth+vname.elevation)/100.;
-      cmax = max(vname.depth+vname.elevation)/100.;
+      cminmax = stdev_min_max(vname.depth+vname.elevation)/100.;
+      cmin = cminmax(1);
+      cmax = cminmax(2);
       tkcmd, swrite(format="set cmin %f", cmin);
       tkcmd, swrite(format="set cmax %f", cmax);
     }
@@ -1054,8 +1057,9 @@ func set_read_yorick(vname) {
     if (_ytk) {
       tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",2);
       tkcmd, swrite(format=".l1wid.bf45.p.5 setvalue @%d",3);
-      cmin = min(vname.lelv)/100.;
-      cmax = max(vname.lelv)/100.;
+      cminmax = stdev_min_max(vname.lelv)/100.;
+      cmin = cminmax(1);
+      cmax = cminmax(2);
       tkcmd, swrite(format="set cmin %f", cmin);
       tkcmd, swrite(format="set cmax %f", cmax);
     }
@@ -1064,8 +1068,9 @@ func set_read_yorick(vname) {
     if (_ytk) {
       tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",3);
       tkcmd, swrite(format=".l1wid.bf45.p.5 setvalue @%d",0);
-      cmin = min(cveg_all.elevation)/100.;
-      cmax = max(cveg_all.elevation)/100.;
+      cminmax = stdev_min_max(vname.elevation)/100.;
+      cmin = cminmax(1);
+      cmax = cminmax(2);
       tkcmd, swrite(format="set cmin %f", cmin);
       tkcmd, swrite(format="set cmax %f", cmax);
     }
@@ -1073,6 +1078,7 @@ func set_read_yorick(vname) {
   
   tkcmd, swrite("set var_no [.l1wid.bf45.p.15 getvalue]");
   tkcmd, swrite("set pvar_no [expr {$var_no + 1}]");
+  tkcmd, swrite("puts $pvar_no");
   tkcmd, swrite("save_plot_settings $pvar_no");
   tkcmd, swrite("if {$cbv == 1} {set cmin $cbvc(cmin)}");
   tkcmd, swrite("if {$cbv == 1} {set cmin $cbvc(cmax)}");

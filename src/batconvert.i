@@ -25,7 +25,6 @@ if(onlymerged){
   command = swrite(format= "find %s -name '*w84*.pbd'", con_dir);
 }
 
-f = popen(command,0);
 files = ""
 s = array(string,10000);
 f = popen(command, 0);

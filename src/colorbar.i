@@ -68,6 +68,7 @@ yoff = 0.0;
 
 func stdev_min_max(x, N_factor=) {
 /*DOCUMENT stdev_min_max(x, N_factor=)
+original: Lance Mosher
 Input= one-dimensional array.
 Ouput= An array [min,max] of the min and max values to be used when making a colorbar based on the standard deviation of the data.
 N_factor is the number of standard deviations away the min and max values will be from the mean. The default is 2*/

@@ -39,8 +39,17 @@
   }
   global varc
   set varc 0
+  if {[info exists varname]} {unset varlist}
   set varlist {fs_all depth_all veg_all cveg_all}
+  if {[info exists plist]} { unset plist } 
   array set plist {idx1 idx1, cmin $cmin cmax $cmax ptype 0 dtype 0 msize $msize mtype $markerv}
+  set plist(idx1,cmin) $cmin
+  set plist(idx1,cmax) $cmax
+  set plist(idx1,ptype) 0
+  set plist(idx1,dtype) 0
+  set plist(idx1,msize) $msize
+  set plist(idx1,mtype) $markerv
+
   set plist(idx2,cmin) $cmin
   set plist(idx2,cmax) $cmax
   set plist(idx2,ptype) 1
@@ -135,6 +144,7 @@ menu .l1wid.mb.graph
  	    puts $var_type
             expect ">"
             destroy .stby
+	    save_plot_settings [expr {[llength $varlist]-1}]
  	    if {$cbv == 1} {
 		set cmin $cbvc(cmin)
 		set cmax $cbvc(cmax)
@@ -1187,7 +1197,7 @@ ComboBox .l1wid.bf45.p.15  -values \
            set var_no [.l1wid.bf45.p.15 getvalue]
 	   set pvar_no [expr {$var_no + 1}]
            set var_type [lindex $varlist $var_no]
-	   #puts "variable in postcommand $var_type"
+	   #puts "variable in postcommand $var_type no $pvar_no"
 	   if {$cbv == 0} {
 	     save_plot_settings  $pvar_no
            }
@@ -1220,7 +1230,7 @@ proc save_plot_settings {pvar_no} {
   set ptype [.l1wid.bf4.1.p getvalue]
   set dtype [.l1wid.bf45.p.5 getvalue]
   set plist(idx$pvar_no,cmin) $cmin
-  #puts "$cmin written to $plist(idx$pvar_no,cmin)"
+  #puts "$cmin written to $pvar_no = $plist(idx$pvar_no,cmin)"
   set plist(idx$pvar_no,cmax) $cmax
   set plist(idx$pvar_no,msize) $msize
   set plist(idx$pvar_no,mtype) $markerv

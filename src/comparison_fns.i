@@ -30,11 +30,11 @@ func read_xyz_ascii_file(fname,n) {
   }
 
 
-func compare_pts(eaarl, kings, rgn, fname=, buf=, elv=, read_file=) {
+func compare_pts(eaarl, kings, rgn, fname=, buf=, elv=, read_file=, pdop=) {
    // this function compares each point of kings data within a buffer of eaarl data.
    // amar nayegandhi 11/15/2002.
 
-   extern i, no, be_avg_pts, be, kings_elv, be_elv, diff1, diff2;
+   extern i, no, be_avg_pts, be, kings_elv, be_elv, diff1, diff2, kings_indx, day123_pnav;
    if (!buf) buf = 500 // default to 5 m buffer side.
    if (is_array(rgn)) {
      indx = where(((kings(1,) >= rgn(1)) &
@@ -57,18 +57,22 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, elv=, read_file=) {
  //write, f, "Indx  Number_of_Indices  Avg  Nearest_Point  Kings_Point  Nearest_Elv_Point Diff_Nearest Diff_Nearest_Elv"
 
  for (i=1; i <= numberof(kings(1,)); i++) {
-
-   q = where(((eaarl.east >= kings(1,i)*100-buf)   & 
-               (eaarl.east <= kings(1,i)*100+buf)) );  
+   write, format="Kings Point %10.2f, %10.2f. Region Number %d\n",kings(1,i), kings(2,i), i;
    
-   indx = [];
-   if (is_array(q)) {
-     indx = where((eaarl.north(q) >= kings(2,i)*100-buf) & 
-               (eaarl.north(q) <= kings(2,i)*100+buf));
-     indx = q(indx);
-   }
+   indx = sel_data_ptRadius(eaarl, point=kings(,i), radius=buf/100., msize=0.2, retindx=1)
+
+   //q = where(((eaarl.east >= kings(1,i)*100-buf)   & 
+   //            (eaarl.east <= kings(1,i)*100+buf)) );  
+   
+   //indx = [];
+   //if (is_array(q)) {
+   //  indx = where((eaarl.north(q) >= kings(2,i)*100-buf) & 
+   //            (eaarl.north(q) <= kings(2,i)*100+buf));
+   //  indx = q(indx);
+   //}
 
    if (is_array(indx)) {
+      grow, kings_indx, i;
       if (elv) {
         be_avg = eaarl.elevation(indx)/100.;
 	} else {
@@ -113,7 +117,11 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, elv=, read_file=) {
         //be_elv = minelveaarl.elevation/100.-(minelveaarl.lelv-minelveaarl.felv)/100.;
         be_elv = minelveaarl.lelv/100.;
 	}
-      write, f, format=" %d  %d  %f  %f  %f %f %f %f\n",ii, numberof(indx), be_avg_pts, be, kings(3,i), be_elv,  (be-kings(3,i)), (be_elv-kings(3,i));
+       if (pdop) {
+         write, f, format=" %d  %d  %f  %f  %f %f %f %f %f\n",ii, numberof(indx), be_avg_pts, be, kings(3,i), be_elv,  (be-kings(3,i)), (be_elv-kings(3,i)), day123_pnav(minindx);
+       } else {
+         write, f, format=" %d  %d  %f  %f  %f %f %f %f\n",ii, numberof(indx), be_avg_pts, be, kings(3,i), be_elv,  (be-kings(3,i)), (be_elv-kings(3,i));
+       }
       ++ncount;
 
    }
@@ -123,11 +131,11 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, elv=, read_file=) {
 }
 
 
-func read_txt_anal_file(fname, n=) {
+func read_txt_anal_file(fname, n=, pdop=) {
   // this function reads the analysis data file written out from compare_pts
   // amar nayegandhi 11/18/02
    
-   extern i, no, be_avg_pts, be, kings_elv, be_elv, diff1, diff2;
+   extern i, no, be_avg_pts, be, kings_elv, be_elv, diff1, diff2, pdop_val;
 
    if (!n) {
       f = open(fname, "r");
@@ -148,8 +156,13 @@ func read_txt_anal_file(fname, n=) {
    be_elv = array(float, n)
    diff1 = array(float, n)
    diff2 = array(float, n)
+   pdop_val = array(float, n)
    f1 =open(fname, "r");
-   read, f1, format=" %d  %d  %f  %f  %f %f %f %f",i,no,be_avg_pts, be, kings_elv, be_elv, diff1, diff2;
+   if (pdop) {
+     read, f1, format=" %d  %d  %f  %f  %f %f %f %f %f",i,no,be_avg_pts, be, kings_elv, be_elv, diff1, diff2, pdop_val;
+   } else {
+     read, f1, format=" %d  %d  %f  %f  %f %f %f %f",i,no,be_avg_pts, be, kings_elv, be_elv, diff1, diff2;
+   }
    close, f1;
 } 
 
@@ -253,24 +266,48 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=) {
 
   //timer, t0
   for (i = 1; i <= ngridy; i++) {
+   q = [];
    if (mode == 3) {
-    q = where ((eaarl.lnorth >= ygrid(i)) &
-                   (eaarl.lnorth <= ygrid(i)+buf));
+    q = where(eaarl.lnorth >= ygrid(i));
+    if (is_array(q)) {
+       qq = where(eaarl.lnorth(q) <= ygrid(i)+buf);
+       if (is_array(qq)) {
+          q = q(qq);
+       } else q = []
+    }
    } else {
-    q = where ((eaarl.north >= ygrid(i)) &
-                   (eaarl.north <= ygrid(i)+buf));
+    q = where (eaarl.north >= ygrid(i));
+    if (is_array(q)) {
+       qq = where(eaarl.north(q) <= ygrid(i)+buf);
+       if (is_array(qq)){
+	   q = q(qq);
+       } else q = [];
+    }
    }
+   if (!(is_array(q))) break;
       
     for (j = 1; j <= ngridx; j++) {
+      indx = [];
       if (is_array(q)) {
        if (mode == 3) {
-        indx = where((eaarl.east(q) >= xgrid(j))   &
-                   (eaarl.east(q) <= xgrid(j)+buf));
-		   } else {
-        indx = where((eaarl.east(q) >= xgrid(j))   &
-                   (eaarl.east(q) <= xgrid(j)+buf));
-		   }
-        indx = q(indx);
+        indx = where(eaarl.least(q) >= xgrid(j));
+	if (is_array(indx)) {
+           iindx = where(eaarl.least(q)(indx) <= xgrid(j)+buf);
+	   if (is_array(iindx)) {
+             indx = indx(iindx);
+             indx = q(indx);
+           } else indx = [];
+        }
+       } else {
+        indx = where(eaarl.east(q) >= xgrid(j));
+	if (is_array(indx)) {
+           iindx = where(eaarl.east(q)(indx) <= xgrid(j)+buf);
+	   if (is_array(iindx)) {
+             indx = indx(iindx);
+             indx = q(indx);
+           } else indx = [];
+        }
+       }
       }
       if (is_array(indx)) {
        if (mode==3) {
@@ -346,3 +383,74 @@ func extract_closest_pts(eaarl, kings, buf=, fname=) {
    return eaarl_out
 }
 
+
+func subsample_data(data, subsample=, type=) {
+  /* DOCUMENT subsample_data(data, subsample=)
+	this function subsamples data by taking the average of the values in the given subsample box.
+ 	amar nayegandhi 07/26/03
+     OPTIONS:
+   	INPUT:  data = input data array of type FS, VEG__, GEO, etc.
+ 		subsample = the subsampling factor  (default = 10m)
+		type = type of input data (VEG__, FS, GEO, etc.)
+	OUTPUT: data_out = output data array.
+  */
+
+  if (!subsample) subsample = 10;
+  
+  data_out = [];
+  subsample = subsample * 100;
+  if (type == VEG__) {
+    mine = min(data.least);
+    maxe = max(data.least);
+    minn = min(data.lnorth);
+    maxn = max(data.lnorth);
+  } else {
+    mine = min(data.east);
+    maxe = max(data.east);
+    minn = min(data.north);
+    maxn = max(data.north);
+  }
+
+  noe = int(maxe-mine)/subsample;
+  non = int(maxn-minn)/subsample;
+
+  data_out = array(VEG__, numberof(data));
+  count = 0;
+  for (i=1;i<=noe;i++) {
+    write, format="%d of %d\n", i, noe;
+    indx = where((data.least >= (mine + (i-1)*subsample)) &
+		  (data.least <= (mine + i*subsample)));
+    if (is_array(indx)) {
+       for (j=1;j<=non;j++) {
+          iindx = where((data.lnorth(indx) >= (minn + (j-1)*subsample)) &
+		  (data.lnorth(indx) <= (minn + j*subsample)));
+	  if (is_array(iindx)) {
+             //write, format="i=%d, j=%d\n",i, j;
+	     iiindx = indx(iindx);
+             //elvarr = lrcf1(data.lelv(iiindx), 50);
+	     //maxelv = (*elvarr(2))(max);
+	     //maxelv = elvarr(2);
+	     elv = avg(data.lelv(iiindx));
+	     //if (maxelv >= 1) {
+	       //elv = elvarr(1);
+	       //minidx = (abs(data.lelv(iiindx)+0.1-elv))(min)
+	       //if (minidx < 100) {
+               //  do_indx = (abs(data.lelv(iiindx)+0.1- elv))(mnx);
+	       //} else {
+               do_indx = (abs(data.lelv(iiindx)- elv))(mnx);
+	       //}
+	        count++;
+		//elvindx = (where((*elvarr(2)) > 0.6*(*elvarr(2))(max)))(0);
+		//if (numberof(where(*elvarr(2) >= 3)) > 2) amar();
+		//elvindx = (where((*elvarr(2)) >= 3))(1);
+		//elv = (*elvarr(1))(elvindx);
+		//data_out(count) = data(iiindx(where(data.lelv(iiindx) == elv)(0)));
+		data_out(count) = data(iiindx(do_indx(1)));
+	     //}
+          }
+      }
+    }
+  }
+  data_out = data_out(1:count);
+  return data_out
+}
