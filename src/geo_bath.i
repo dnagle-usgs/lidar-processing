@@ -826,8 +826,9 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=) {
  }
  ztime = soe2time( edb( mindata.rn&0xffffff ).seconds );
  zdt   = soe2time( abs(edb( mindata.rn&0xffffff ).seconds - _last_soe) );
- write,format="  Raster nbr: %d  (%02d:%02d:%02d) (%d:%02d:%02d)\n", 
-               mindata.rn&0xffffff, ztime(4),ztime(5),ztime(6), 
+ write,format="  Raster nbr: %d %d (%02d:%02d:%02d) (%d:%02d:%02d)\n", 
+               mindata.rn&0xffffff,  edb( mindata.rn&0xffffff ).seconds,
+               ztime(4),ztime(5),ztime(6), 
                zdt(4), zdt(5), zdt(6);
  write,format="Scanner Elev: %7.2fm\n", mindata.melevation/100.0
  write,format="Surface elev: %7.2fm Delta: %7.2fm\n",

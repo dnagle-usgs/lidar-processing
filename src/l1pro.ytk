@@ -362,10 +362,10 @@ ComboBox .l1wid.bf4.1.d -text "Define Region using..." -width 22 -values "Rubber
    }
 } 
 
-ComboBox .l1wid.bf4.1.p -text "Process Data For" -width 22 -values \
-	"SubAerial-Topography Submerged-Bathymetry Vegetation" \
+ComboBox .l1wid.bf4.1.p -text "Process For..." -width 22 \
 	-helptext "Process Data for any of the following" \
-	-editable 0 
+	-editable 0 \
+	-values { SubAerial-Topography Bathymetry Vegetation }
 
 .l1wid.bf4.1.p setvalue first
 
@@ -547,15 +547,16 @@ Button .l1wid.bf5.1 -text "Write Datafile" -width 20 \
 	pack .l1wid1.op .l1wid1.of .l1wid1.1 -side top -pady 5	
   }
 
-Button .l1wid.bf5.2 -text "Process Now" -width 20 \
-		-command {
-	 exp_send "utm = $utm\n"
-	 set ptype [.l1wid.bf4.1.p getvalue]
-         set defr [.l1wid.bf4.1.d getvalue]
-	 exp_send "ptype = $ptype\n\r"
-	 if {$defr == 3} {
-	  exp_send "q = gga_win_sel(2, win=6, llarr=\[$mnlon, $mxlon, $mnlat, $mxlat\]);\r"
-	 }
+ Button .l1wid.bf5.2 -text "Process Now" -width 20 \
+		-command \
+     {
+	   exp_send "utm = $utm\n"
+	   set ptype [.l1wid.bf4.1.p getvalue]
+           set defr [.l1wid.bf4.1.d getvalue]
+	   exp_send "ptype = $ptype\n\r"
+	   if {$defr == 3} {
+	     exp_send "q = gga_win_sel(2, win=6, llarr=\[$mnlon, $mxlon, $mnlat, $mxlat\]);\r"
+	   }
           #exp_send "make_bathy, opath=\"$opath\", ofname=\"$ofname\",\
           #    ext_bad_att=$xba, ext_bad_depth=$xbd, latutm = 1, llarr=\[$mnlon,\
           #    $mxlon, $mnlat, $mxlat\];\r"
@@ -572,7 +573,7 @@ Button .l1wid.bf5.2 -text "Process Now" -width 20 \
 	    expect ">"
 	 }
               
- }
+    }
 
 
 #pack  .l1wid.bf2.utm.1 .l1wid.bf2.utm.2 -side left 
