@@ -828,7 +828,7 @@ ComboBox .l1wid.bf4.1.d -text "Define Region using..." -width 22 -values "Rubber
 		-textvariable mxlon
 	Button .l1widc.1.ok -text "OK" -width 5 -command {
           set utm [.l1widc.utm.1 getvalue]
-          exp_send "utm = $utm; q = gga_win_sel(2, win=$_map(window), llarr=\[mnlon, mxlon, mnlat, mxlat\]);\r"
+          exp_send "utm = $utm; q = gga_win_sel(2, win=$_map(window), llarr=\[$mnlon, $mxlon, $mnlat, $mxlat\]);\r"
 	  destroy .l1widc
 	}
 	Button .l1widc.1.box -text "Plot Region" -width 7 -command {
