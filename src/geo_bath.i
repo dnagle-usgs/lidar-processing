@@ -819,7 +819,7 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset
   middle          Set reference point
   right           Quit
 
-  shift-left      Append point 
+  shift-left      Append point  
   shift-middle
   shift-right
 
@@ -832,12 +832,21 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset
  center_mouse = 2
   right_mouse = 3
 
+ ctl_left_mouse = 41;
+
  rtn_data = [];
+ nsaved = 0;
  do {
  write,format="Window: %d. Left: examine point, Center: Set Reference, Right: Quit\n",win
  spot = mouse(1,1,"");
- mouse_button = spot(10);
+ mouse_button = spot(10) + 10 * spot(11);
  if ( mouse_button == right_mouse ) break;
+
+ if ( mouse_button == ctl_left_mouse ) { 
+       grow, workdata, mindata;
+       write, format="\007Point saved to workdata. Total saved =%d\n", ++nsaved;
+       continue;
+ }
 
 
 // Breaking the following where into two sections generally increases
@@ -902,7 +911,7 @@ write,"============================================================="
           ex_bath, rasterno, pulseno, win=0, graph=1;
           window, win; plcm, (mindata.elevation+mindata.depth)/100., 
                              mindata.north/100., mindata.east/100., 
-                             msize = msize*1.5, cmin= cmin, cmax = cmax, 
+                             msize = msize*2.5, cmin= cmin, cmax = cmax, 
                              marker=4
 	} else 
         if (disp_type == 2) {
@@ -1042,6 +1051,7 @@ write,"============================================================="
 // Collect all the click-points and return them so the user
 // can do stats or whatever on them.
    grow, rtn_data, mindata;
+
 
 } while ( mouse_button != right_mouse );
 
