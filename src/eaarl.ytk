@@ -248,6 +248,7 @@ proc request_heading {psf} {
 
    }
 
+
 proc mark_pos { lat lon } {
   scan $lat "%1s%2f%f" df dd mm
   set lat [ expr $dd + $mm/60.0 ]

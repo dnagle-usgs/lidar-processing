@@ -5,6 +5,8 @@
 
  $Id$
 
+  W. Wright
+
 */
 
 write,"$Id$"
@@ -63,11 +65,11 @@ func mdist ( none, nodraw= ) {
 
 */
 d = array(double, 3);
-res = mouse(1, 2, "cmd>");
+res = mouse(1, 0, "cmd>");		// style=2 normally
  d(1) = lldist( res(2), res(1), res(4), res(3) );
  d(2) = d(1)  * 1.1507794;      // convert to stat miles
  d(3) = d(1)  * 1.852;          // also to kilometers
- print,"nm/sm/km",d
+ print,"# nm/sm/km",d
  if ( is_void(nodraw) ) {
     plmk, res(2),res(1), msize=msz
     plmk, res(4),res(3), msize=msz
@@ -91,8 +93,22 @@ if (is_void(aw) )
 if (is_void(sw) )
 	sw = 0.2;		// scan width in km (minus desired overlap)
 
-func sdist(none) {
-/* DOCUMENT sdist(none)
+
+
+struct FB {
+    string name;	// block name
+    int block;		// block number
+    float aw;		// area width  (km)
+    float sw;		// scan  spacing (km)
+    float kmlen;	// length of block (km)
+    double dseg(4);	// defining segment
+    float  alat(5);	// lat corners of total area
+    float  alon(5);	// lon corners of total area
+    float  *p;    
+};
+
+func sdist( junk, line= ) {
+/* DOCUMENT sdist(line=)
    Measure distance, and draw a proportional rectangle showing the 
    resulting coverage.
 
@@ -112,8 +128,19 @@ extern sr, dv, rdv, lrdv, rrdv;
 extern blockn, segn;
   segs = aw / sw; 		// compute number of segments
   sega = array(float, int(segs),4);
+
+
   sr = array(float, 7, 2);  	//the array to hold the rectangle
-  res = mdist(nodraw=1);		// get the segment from the user
+  if ( is_void( line ) ) {
+    res = mdist(nodraw=1);		// get the segment from the user
+    sf = aw / res(14);		// determine scale factor
+    km = res(14);
+  } else {
+    res = array(float, 4 );
+    n = sread(line,format="%f %f %f %f", res(2), res(1), res(4), res(3) )
+    km = lldist( res(2), res(1), res(4), res(3) ) * 1.852;
+    sf = aw / km;		// determine scale factor
+  }
 //res;
 // adjust so all segments are from left to right 
   if ( res(1) > res(3) ) {	// only the user coords. are changed
@@ -124,7 +151,6 @@ extern blockn, segn;
     res(4) = temp(2);
   }
 /// res;
-  sf = aw / res(14);		// determine scale factor
   sf2 = sf/2.0;			// half the scan width
   llat = [res(2), res(4)];
   llon = [res(1), res(3)] - res(1);   // translate to zero longitude
@@ -171,14 +197,32 @@ r = 3:7
  z = [char(185)]
  plfp,z,Lat(r),Long(r), n
 
+if (is_void(stturn) )
+	stturn = 300.0;		// seconds to turn
+if (is_void(msec) )
+	msec = 50.0		// speed in meters/second
+
+write,format="# %f %f %f %f %d\n", sw, aw, msec, stturn, blockn
+write,format="# %f %f %f %f \n", res(2),res(1), res(4), res(3)
+ segsecs = res(0)*1000.0 / msec
+ blocksecs = (segsecs + stturn ) * int(segs)
+ write, format="# Seglen=%5.3fkm segtime=%4.2f(min) Total time=%3.2f(hrs)\n", 
+     km, segsecs/60.0, blocksecs/3600.0
 
 /////////// Now convert the actual flight lines
+Xlong = Long;		// save Long cuz utm2ll clobbers it
+Xlat  = Lat;
 zone = array(ZoneNumber(1), dimsof( sega) (2) );
   utm2ll, sega(,1), sega(,2), zone ;
   sega(,1) = Lat; sega(,2) = Long + res(1);
   utm2ll, sega(,3), sega(,4), zone;
   sega(,3) = Lat; sega(,4) = Long + res(1);
-  pldj,sega(,2),sega(,1),sega(,4),sega(,3),color="yellow"
+ rg = 1:0:2
+  pldj,sega(rg,2),sega(rg,1),sega(rg,4),sega(rg,3),color="yellow"
+ rg = 2:0:2
+  pldj,sega(rg,2),sega(rg,1),sega(rg,4),sega(rg,3),color="white"
+ rg = 1
+  pldj,sega(rg,2),sega(rg,1),sega(rg,4),sega(rg,3),color="green"
 //  write,format="%12.8f %12.8f %12.8f %12.8f\n", sega(,1),sega(,2),sega(,3),sega(,4)
   segd = abs(double(int(sega)*100 + ((sega - int(sega)) * 60.0) ));
   nsew = ( sega < 0.0 );
@@ -193,19 +237,29 @@ zone = array(ZoneNumber(1), dimsof( sega) (2) );
   if ( numberof(q) ) nsewa(q,2) = 'w'; 
   q = where( nsew(, 4) == 1 );
   if ( numberof(q) ) nsewa(q,4) = 'w'; 
-  write,format="%d-%d %c%12.8f:%c%12.8f %c%12.8f:%c%12.8f\n", blockn, indgen(1:int(segs)),
+  write,format="llseg %d-%d %c%12.8f:%c%12.8f %c%12.8f:%c%12.8f\n", blockn, indgen(1:int(segs)),
 	nsewa(,1),segd(,1),
 	nsewa(,2),segd(,2),
 	nsewa(,3),segd(,3),
 	nsewa(,4),segd(,4)
-blockn++;
 
 // put a line around it
 r = 3:7
 /// plg,Lat(r),Long(r)
  plg, [res(2),res(4)], [res(1),res(3)],color="red",marks=0
 
- return res;
+ rs = FB();
+ rs.kmlen = km;
+ rs.alat = Xlat(r);
+ rs.alon = Xlong(r);
+ rs.block = blockn;
+ rs.p = &sega;		// pointer to all the segments
+ rs.sw = sw;		// flight line spacing (swath width)
+ rs.aw = aw;		// area width
+ rs.dseg = res(1:4);	// block definition segment
+
+ blockn++;
+ return rs
 }
 
 
