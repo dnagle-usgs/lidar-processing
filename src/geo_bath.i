@@ -865,7 +865,7 @@ write,"============================================================="
 	}
         if (disp_type == 1) {
 	  a = [];
-          ex_bath, rasterno, pulseno, graph=1;
+          //ex_bath, rasterno, pulseno, graph=1;
           window, win; plcm, (mindata.elevation+mindata.depth)/100., 
                              mindata.north/100., mindata.east/100., 
                              msize = msize*1.5, cmin= cmin, cmax = cmax, 
@@ -873,15 +873,15 @@ write,"============================================================="
 	}
         if (disp_type == 2) {
 	  a = [];
-          ex_bath, rasterno, pulseno, graph=1;
+          //ex_bath, rasterno, pulseno, graph=1;
           window, win; plcm, mindata.depth/100., mindata.north/100., 
                              mindata.east/100., msize = msize*1.5, 
                              cmin= cmin, cmax = cmax, marker = 4
 	}
         if (disp_type == 3) {
 	  a = [];
-	  ex_veg, rasterno, pulseno,  last=250, graph=1, use_peak=1;
-	  z = mindata.elevation/100.-(mindata.lelv-mindata.felv)/100.;
+	  //ex_veg, rasterno, pulseno,  last=250, graph=1, use_peak=1;
+	  z = mindata.lelv/100.;
           window, win; plcm, z, mindata.north/100., 
                              mindata.east/100., msize = msize*1.5, 
                              cmin= cmin, cmax = cmax, marker = 4
