@@ -705,7 +705,8 @@ Returns:
    rn_arr = sel_region(q);
 
 
-   no_t = numberof(rn_arr(1,));
+  if (is_array(rn_arr)) {
+     no_t = numberof(rn_arr(1,));
 
    /* initialize counter variables */
    tot_count = 0;
@@ -830,6 +831,7 @@ Returns:
     }
 
     return veg_all;
+  } else write, "No record numbers found for selected flightline."
 
 }
 
