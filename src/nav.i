@@ -725,3 +725,57 @@ func utmfp2ll (fname, zone=) {
     }
   }
 }
+
+func read_xy(file,yx=, utm=, zone=, color=) {
+ /* read_xy(file,yx=, utm=, zone=) 
+   amar nayegandhi 11/17/03
+ */
+
+ f = open(file,"r");
+
+ if (!color) color="blue"
+ 
+ i = 0;   
+ nc = 0;		// null line counter
+ loop=1; 
+
+ x = 0.0;
+ y = 0.0;
+ xarr = yarr = [];
+
+ while (loop) {
+     i++;
+     if ( nc > 50 ) break;
+     a = rdline(f);
+     a;
+     if ( strlen(a) == 0 ) {
+	// null counter
+	nc++; 
+  	continue;
+     } else { 
+        nc = 0;
+     }
+     if (a > "") {
+       sread, a, x,y;
+    }
+    if (utm) {
+      llxy = utm2ll(x,y,zone);
+      xarr = grow(xarr,llxy(1));
+      yarr = grow(yarr,llxy(2));
+    } else {
+      xarr = grow(xarr,x);
+      yarr = grow(yarr,y);
+    }
+ 	
+      
+ }
+ 
+ 
+ for (i=1;i<numberof(xarr);i++){
+   pldj, xarr(i), yarr(i), xarr(i+1), yarr(i+1), color=color, width=2.0
+ }
+ pldj, xarr(1), yarr(1), xarr(0), yarr(0), color=color, width=2.0
+
+ return [xarr, yarr]
+   
+}
