@@ -27,12 +27,19 @@ else {command = swrite(format= "find %s -name '*w84*.pbd'", con_dir);
 
 f = popen(command,0);
 files = ""
-data=[]
+junk="";
+for (j=0;;j++){if(!(read(f, junk))) break;}
+numfiles = j;
+f = popen(command, 0);
+newline = "\n"
+data=[];
+
 for(i=1; !(eof) ; i++)
 
 {
    e=read(f, files);
-   if (!(files)) break; 
+   if (!(files)){e=write(format="%s", newline);  break;} 
+   e = write(format="converting file %d out of %d\r", i, numfiles)
    files2 = split_path(files, 0)  
    files3 = files2(2);
    t= *pointer(files3); 
