@@ -160,3 +160,30 @@ return [Long, Lat]
 }
 
 
+func combine_zones(u) {
+  //this function combines zones for plotting purposes.
+  //amar nayegandhi 04/22/03
+  //search for change in utm zones
+  m = where(u(3,1:-1) != u(3,2:0));
+  if (is_array(m)) {
+     z = array(int,60);
+     for (i=1;i<=numberof(m);i++) {
+       //find the zones
+       z(int(u(3,m(i))))++;
+       z(int(u(3,m(i)+1)))++;
+     } 
+     lz = where(z);
+     z1 = where(u(3,) == lz(1));
+     z2 = where(u(3,) == lz(2));
+    
+     if (numberof(z1) > numberof(z2)) {
+        u(2,z2) = 1000000-u(2,z2);
+     } else {
+        u(2,z1) = 1000000-u(2,z1);
+     }
+   
+  }
+  return u
+}
+ 
+

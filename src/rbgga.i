@@ -198,8 +198,11 @@ func gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=) {
      ply = getPoly();
      box = boundBox(ply);
      if (utm) {
-        box = transpose(utm2ll(box(2,), box(1,), ZoneNumber(1)));
-	ply = transpose(utm2ll(ply(2,), ply(1,), ZoneNumber(1)));
+        xx = fll2utm(gga.lat, gga.lon);
+        zidx = (xx(2,)-box(1,1))(mnx);
+        ZN = xx(3,zidx);
+        box = transpose(utm2ll(box(2,), box(1,), ZN));
+	ply = transpose(utm2ll(ply(2,), ply(1,), ZN));
 	show = 0;
 	}
      box_pts = ptsInBox(box, gga.lon, gga.lat);
@@ -573,6 +576,7 @@ func show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, wid
   if (utm == 1) {
   	/* convert latlon to utm */
 	u = fll2utm(y, x);
+        u = combine_zones(u);
 	x = u(2,);
 	y = u(1,);
   }

@@ -62,19 +62,21 @@ if ( is_void( dllmap ) ) {
 }
 
 
-func show_map( m,color=,utm= ) {
+func show_map( m,color=,utm=,width= ) {
  sz = dimsof(m)(2);
+ if (is_void(width)) width = 1.0
  if ( is_void( color ) )
 	color = "black"
  for (i=1; i<=sz; i++ ) {
   a = *m(i);
   if (utm) {
     u = fll2utm(a(,1),a(,2));
+    u = combine_zones(u);
     zone = u(3,1);
     u = u(1:2,);
     a = transpose(u);
   }
-  plg,a(,1),a(,2),marks=0,color=color
+  plg,a(,1),a(,2),marks=0,color=color, width=width;
  }
 }
 
