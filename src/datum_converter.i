@@ -11,8 +11,8 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, type=) {
      INPUT:
 	wdata: data in wgs84 coordinates
 	utmzone: current utm zone number
-	tonad83= set to 1 to convert to nad83 horizontal datum
-	tonavd88= set to 1 to convert to navd88 vertical datum using GEOID99 model
+	tonad83= set to 1 to convert to nad83 horizontal datum, else set to 0 (default 1)
+	tonavd88= set to 1 to convert to navd88 vertical datum using GEOID99 model, else set to 0 (default = 1).
 	type= type of input data array (e.g. FS, VEG__, GEO)
      OUTPUT:
 	returned data array after conversion.
@@ -20,6 +20,10 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, type=) {
 */
    
    extern curzone;
+
+   if (is_void(tonad83)) tonad83=1;
+   if (is_void(tonavd88)) tonavd88=1;
+
    data = wdata;
    if (!utmzone) {
      if (curzone) {

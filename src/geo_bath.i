@@ -31,7 +31,9 @@ struct GEOALL {
   long rn (120); 	//contains raster value and pulse value
   long north(120); 	//surface northing in centimeters
   long east(120);	//surface easting in centimeters
-  short sr2(120);	// Slant range first to last return in nanoseconds
+  short sr2(120);	// Slant range first to last return in nanoseconds*10
+			// Modified slant range by a factor of 10 to increase the 
+			// the accuracy of the range vector (AN-Jan 2005).
   long elevation(120); //first surface elevation in centimeters
   long mnorth(120);	//mirror northing
   long meast(120);	//mirror easting
@@ -69,6 +71,7 @@ avg_surf	Set to 1 if the surface returns should be averaged to the
 // d is the depth array from bathy.i
 // rrr is the topo array from surface_topo.i
 
+
 if (numberof(d(0,,)) < numberof(rrr)) { len = numberof(d(0,,)); } else { 
    len = numberof(rrr);}
 
@@ -93,6 +96,8 @@ for (i=1; i<=len; i=i+1) {
    iidx = where((rrr(i).intensity > 220) & (rrr(i).rn/0xffffff > 35) & (rrr(i).rn/0xffffff < 85));
    if (is_array(iidx)) {
     elvs = median(rrr(i).elevation(iidx));
+    elvsidx = where(abs(rrr(i).elevation(iidx)-elvs) <= 100) 
+    elvs = avg(rrr(i).elevation(iidx(elvsidx)));
     old_elvs = rrr(i).elevation;
     //write, format="%5.2f ",elvs/100.;
     indx = where(rrr(i).elevation < (rrr(i).melevation - 5000));
@@ -100,7 +105,7 @@ for (i=1; i<=len; i=i+1) {
     // now rrr.fs_rtn_centroid will change depending on where in time the surface occurs
     // for each laser pulse with respect to where its current surface elevation is.
     // this change is defined by the array offset
-    offset = ((old_elvs - elvs)/(CNSH2O2X*100));
+    offset = ((old_elvs - elvs)/(CNSH2O2X*100.));
    } else {
     write,format= "No water surface Fresnel reflection in raster rn = %d\n",(rrr(i).rn(1) & 0xffffff);
     offset(*) = 0;
@@ -113,10 +118,15 @@ for (i=1; i<=len; i=i+1) {
     indx = where((d(,i).idx)); 
   }
   if (is_array(indx)) {
-    if (avg_surf) rrr(i).fs_rtn_centroid(indx) += offset(indx);
-    geodepth(i).depth(indx) = short((-d(,i).idx(indx) + rrr(i).fs_rtn_centroid(indx) ) * CNSH2O2X *100);
-    bath_arr(indx,i) = long(((-d(,i).idx(indx)+rrr(i).fs_rtn_centroid(indx) ) * CNSH2O2X *100) + rrr(i).elevation(indx));
-    geodepth(i).sr2(indx) =short(d(,i).idx(indx) - rrr(i).fs_rtn_centroid(indx)); 
+    if (avg_surf) {
+      fs_rtn_cent = rrr(i).fs_rtn_centroid(indx)+offset(indx);
+      rrr(i).fs_rtn_centroid(indx) += offset(indx);
+    } else {
+      fs_rtn_cent = rrr(i).fs_rtn_centroid(indx);
+    }
+    geodepth(i).depth(indx) = short((-d(,i).idx(indx) + fs_rtn_cent ) * CNSH2O2X *100.-0.5);
+    bath_arr(indx,i) = long(((-d(,i).idx(indx)+fs_rtn_cent ) * CNSH2O2X *100) + rrr(i).elevation(indx));
+    geodepth(i).sr2(indx) =short((d(,i).idx(indx) - fs_rtn_cent)*10); 
   }
   geodepth(i).bottom_peak = d(,i).bottom_peak;
   geodepth(i).first_peak = d(,i).first_peak;
@@ -269,7 +279,7 @@ for (i=1;i<=len;i++) {
      byt_pos = byt_pos + 4;
      _write, f, byt_pos, geobath(i).east(indx(j));
      byt_pos = byt_pos + 4;
-     bath_arr = long((geobath(i).sr2(indx(j)))*CNSH2O2X *100);
+     bath_arr = long((geobath(i).sr2(indx(j)))*CNSH2O2X *10);
      _write, f, byt_pos, bath_arr;
      byt_pos = byt_pos + 4;
      _write, f, byt_pos, geobath(i).depth(indx(j));
@@ -475,7 +485,7 @@ See also: make_fs_bath, write_geoall, read_yfile, make_bathy
       // wavelength of 532nm.
 
       // finally, depth D is given by:
-      D = -(data.sr2*CNSH2O2X*100)*cos(phi_water);
+      D = -(data.sr2*CNSH2O2X*10)*cos(phi_water);
       //overwrite existing depths with newly calculated depths
       data.depth = D;
       /*Dindx = where(D != 0);
