@@ -1176,7 +1176,8 @@ interact   {
 	    -yscrollcommand {  .docwin$hwin.sb set }"
           eval $cmd
           .docwin$hwin.doc insert end $str
-	  pack .docwin$hwin.doc .docwin$hwin.sb -side left -fill y -expand 1
+	  pack .docwin$hwin.doc -side left -fill both -expand 1
+	  pack .docwin$hwin.sb -side left -fill y -expand 0
           wm title .docwin$hwin $wintitle
         } else {
 	   send_user $str
