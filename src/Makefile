@@ -93,13 +93,16 @@ BIN = ../bin
 	cp ytk ../bin/ytk
 	chmod uog+rx ../bin/ytk
 
+../bin/checksys:	checksys
+	cp $<	$@
 
 ###############################################################################
 # all  Builds all the "C" programs in this directory that need it.  You can force
 ###############################################################################
 all:		../bin/efdb ../bin/gga2bin ../bin/mkidx \
 		../bin/pnav2ybin ../bin/tans2bin \
-		../bin/rdmars ../bin/dmars2iex ../bin/dmarscat2iex
+		../bin/rdmars ../bin/dmars2iex ../bin/dmarscat2iex \
+		../bin/checksys
 
 
 
