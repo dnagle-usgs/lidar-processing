@@ -141,6 +141,16 @@ write, format="  Alt:%14.3f %14.3f\n", egg.alt(min), egg.alt(max)
  return egg;
 }
 
+func precision_warning {
+      tkcmd, "tk_messageBox -icon warning -message { \
+      The pnav file you have selected does not appear\
+ to be a precision trajectory.\
+  It should not be used in the \
+ production of final data products\
+ or to access accuracy of the system. i\
+      }"
+}
+
 
 func rbpnav (junk) {
 /* DOCUMENT rbpnav()
@@ -163,6 +173,7 @@ extern gga;
 
  if ( _ytk ) {
     path = data_path +"/gps/"
+path
     ifn  = get_openfn( initialdir=path, filetype="*.ybin" );
     if (strmatch(ifn, "ybin") == 0) {
           exit, "NO FILE CHOSEN, PLEASE TRY AGAIN\r";
@@ -170,6 +181,9 @@ extern gga;
     pnav_filename = ifn;
     ff = split_path( ifn, -1 );
     path = ff(1);
+    if ( !strmatch(pnav_filename,"-p-") ) {
+      precision_warning;
+    }
 } else {
   write,format="data_path=%s\n",path
  ifn = sel_file(ss="*.ybin", path=path)(1);
