@@ -9,6 +9,8 @@
 #
 #
 
+BIN = ../bin
+
 ../bin/efdb:	efdb.o
 		mkdir -p  ../bin
 		cc -lm -o ../bin/efdb efdb.o
@@ -71,9 +73,12 @@
 ###############################################################################
 # dmars
 ###############################################################################
-../bin/dmars2iex:	dmars2iex.o dmars2iex.c
-		mkdir -p  ../bin
-		cc -lm -o ../bin/dmars2iex dmars2iex.o
+#### bin_dmars2iex:	../bin/dmars2iex
+
+bin/dmars2iex:	dmars2iex.o
+	$(CC) -c dmars2iex.c
+	mkdir -p  ../bin
+	cc -lm -o $@ dmars2iex.o
 	
 ###############################################################################
 # pospac2ybin Converts a pospac SBET data file produced by pospac 
@@ -90,7 +95,7 @@
 ###############################################################################
 all:		../bin/efdb ../bin/gga2bin ../bin/mkidx \
 		../bin/pnav2ybin ../bin/tans2bin \
-		../bin/rdmars ../bin/dmars2iex ../dmarscat2iex
+		../bin/rdmars ../bin/dmars2iex ../bin/dmarscat2iex
 
 
 
