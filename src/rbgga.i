@@ -112,7 +112,7 @@ func rbgga( x, plt=, color=, map=, utm=, ifn= ) {
 
 */
 
- extern gga, data_path;
+ extern gga, pnav, data_path;
  
 
 if (!ifn) {
@@ -123,7 +123,7 @@ if (!ifn) {
    ifn = sel_file(ss="*.ybin", path=path)(1);
  } else {
     path = data_path+"/gps/";
-    ifn  = get_openfn( initialdir=path, filetype="*gga.ybin" );
+    ifn  = get_openfn( initialdir=path, filetype="*.ybin" );
     ff = split_path( ifn, -1 );
     //data_path = ff(1);
     if (ff(2) == "") {
@@ -132,6 +132,12 @@ if (!ifn) {
     }
       
  }
+}
+
+if (strmatch(ifn,"pnav")==1) {
+   pnav = rbpnav(fn=ifn);
+   g = pnav;
+   return g;
 }
 
 n = int(0)
