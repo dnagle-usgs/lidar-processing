@@ -16,15 +16,21 @@ exec wish "$0" ${1+"$@"}
  proc polydraw {w} {
     #-- add bindings for drawing/editing polygons to a canvas
     bind $w <Button-1>        {polydraw'mark   %W %x %y}
+    bind $w <Button-2>        {polydraw'rotate %W  0.1}
+# (b3 is used to pan)
+
     bind $w <Double-1>        {polydraw'insert %W}
+    bind $w <Double-3>        {polydraw'delete %W}
+
+    bind $w <Shift-2>         {polydraw'rotate %W -0.1}
+    bind $w <Shift-3>         {polydraw'delete %W 1}
+
     bind $w <B1-Motion>       {polydraw'move   %W %x %y}
     bind $w <Shift-B1-Motion> {polydraw'move   %W %x %y 1}
-    bind $w <Button-2>        {polydraw'rotate %W  0.1}
-    bind $w <Shift-2>         {polydraw'rotate %W -0.1}
-    bind $w <Double-3>        {polydraw'delete %W}
-    bind $w <Shift-3>         {polydraw'delete %W 1}
+
     interp alias {} tags$w {} $w itemcget current -tags
  }
+
  proc polydraw'add {w x y} {
     #-- start or extend a line, turn it into a polygon if closed
     global polydraw
@@ -155,6 +161,7 @@ proc polydraw'markNodes {w item} {
  }
  proc has {list element} {expr {[lsearch $list $element]>=0}}
 
+
 #---- Added W. W. 
 proc output_polys { } {
   global dims
@@ -188,21 +195,24 @@ proc load_file { fn } {
   set dims(ln)   [ lindex $dimstr 2  ]
   set dims(re)   [ lindex $dimstr 3  ]
   set dims(rn)   [ lindex $dimstr 4  ]
-  set dims(dx)   [ lindex $dimstr 5  ]
-  set dims(dy)   [ lindex [ split [ lindex $dimstr 6  ] "." ] 0 ]
+#  set dims(dx)   [ lindex $dimstr 5  ]
+#  set dims(dy)   [ lindex [ split [ lindex $dimstr 6  ] "." ] 0 ]
 
-  set dims(eastd)    [ expr $dims(re) - $dims(le)   ];
-  set dims(northd)   [ expr $dims(rn) - $dims(ln)   ];
-  set dims(scrx2utm) [ expr $dims(eastd) / double($dims(dx))];
-  set dims(scry2utm) [ expr $dims(northd) / double($dims(dy))];
+#  .canf.can  configure -height $dims(dy) -width $dims(dx)
+ $img read $fn
+ set dims(dx) [image width $img];
+ set dims(dy) [image height $img ];
+ set dims(eastd)    [ expr $dims(re) - $dims(le)   ];
+ set dims(northd)   [ expr $dims(rn) - $dims(ln)   ];
+ set dims(scrx2utm) [ expr $dims(eastd) / double($dims(dx))];
+ set dims(scry2utm) [ expr $dims(northd) / double($dims(dy))];
+ .canf.can configure -scrollregion "0 0 $dims(dx) $dims(dy) "
 
- .menubar.zone configure -text "UTMZone:$dims(zone) "
+ .canf.location.zone configure -text "UTM Zone: $dims(zone) "
+ puts "reported: [image type $img] $dims(dx) $dims(dy)"
  puts "$dims(zone) $dims(le)-$dims(re) $dims(ln)-$dims(rn)"
  puts "$dims(re) $dims(rn) $dims(dx) $dims(dy)"
  puts "$dims(eastd) $dims(northd) $dims(scrx2utm) $dims(scry2utm)"
-#  .canf.can  configure -height $dims(dy) -width $dims(dx)
-  .canf.can configure -scrollregion "0 0 $dims(dx) $dims(dy) "
-  $img read $fn
 }
 
 
@@ -221,8 +231,17 @@ package require Img
 package require BWidget
 
 frame .menubar -relief raised -bd 2
-menubutton .menubar.file -text "File" -menu .menubar.file.menu -underline 0
+menubutton .menubar.file -text "File"    -menu .menubar.file.menu -underline 0
+menubutton .menubar.options -text "Options" -menu .menubar.options.menu -underline 0
+menubutton .menubar.help -text "Help"    -menu .menubar.help.menu -underline 0
 menu .menubar.file.menu
+menu .menubar.options.menu
+menu .menubar.help.menu
+
+.menubar.options.menu add command -label "Polygons.."
+.menubar.help.menu add command -label "About"
+.menubar.help.menu add command -label "Drawing Polygons"
+
 .menubar.file.menu add command -label "Select File.." -underline 8 \
   -command { set f [ tk_getOpenFile  -filetypes { {{List files} {.jpg}} } -initialdir $dir ];
                 set split_dir [split $f /]
@@ -236,7 +255,8 @@ menu .menubar.file.menu
 
 set img [ image create photo ]  ;
 
-frame  .canf -borderwidth 5 -relief sunken
+frame  .canf -borderwidth 5  -relief sunken
+frame  .canf.location -border 2 -relief sunken
 
 scrollbar .canf.yscroll \
 	-command ".canf.can  yview" 
@@ -257,23 +277,29 @@ canvas .canf.can  \
 
 .canf.can create image 0 0 -tags img -image $img -anchor nw 
 
-label .menubar.zone      -text "Zone:None"
-label .menubar.eastlabel -text "East:"
-entry .menubar.easting  -width 8 \
+label .canf.location.zone -text ""
+label .canf.location.eastlabel -text "East:"
+entry .canf.location.easting  -width 8 \
 	-textvariable east
 
-label .menubar.northlabel -text "North:"
-entry .menubar.northing -width 8 \
+label .canf.location.northlabel -text "North:"
+entry .canf.location.northing -width 8 \
 	-textvariable north
 
+pack \
+	.canf.location.zone \
+	.canf.location.eastlabel \
+	.canf.location.easting \
+	.canf.location.northlabel \
+	.canf.location.northing \
+	-side left -anchor w
+     
 pack .menubar.file \
-	.menubar.zone \
-	.menubar.eastlabel \
-	.menubar.easting \
-	.menubar.northlabel \
-	.menubar.northing \
+	.menubar.options \
   	-side left \
 	-anchor w
+
+pack .menubar.help -side right
 
 pack .menubar -side top -fill x -expand true \
 	-anchor w
@@ -282,6 +308,11 @@ pack .canf \
 	.canf.xscroll \
 	-fill both -side bottom \
 	-anchor w
+
+pack .canf.location \
+	-fill both -side bottom \
+	-anchor w
+
 
 pack .canf \
 	.canf.yscroll \
@@ -314,7 +345,17 @@ proc scry2utm { y } {
 bind .canf.can <ButtonPress-3> { %W scan mark %x %y     }
 bind .canf.can <B3-Motion>     { %W scan dragto %x %y 1 }
 
+# See: http://www.tcl.tk/man/tcl8.4/TkCmd/bind.htm#M4
+bind .canf <Configure> { 
+###    puts "[ bind . ] %b %h %w" 
+    if { %b == 1074052889 } {
+      .canf.can configure -height %h
+      .canf.can configure -width  %w
+    }
+}
 
+
+## See: http://wiki.tcl.tk/3893  for wheel on linux
 #### bind . <<ResizeRequest ButtonRelease>> { puts "Resize requested...."};
 
  
