@@ -265,7 +265,11 @@ Button .cf1.plotpos  \
  under the eaarl.ytk program." \
 	      -command { 
   if { [ lsearch -exact [ winfo interps ] ytk ] != -1 } {
-   send ytk "mark_pos $llat $llon"
+   if { [ info exists llat ] } {
+       send ytk "mark_pos $llat $llon"
+   } else {
+       send ytk "mark_time_pos $sod"
+   }
   } else {
      tk_messageBox  \
         -message "ytk isn\'t running. You must be running Ytk and the eaarl.ytk program to use this feature."  \

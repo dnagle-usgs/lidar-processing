@@ -398,6 +398,10 @@ proc request_heading {psf inhd_count} {
 
    }
 
+proc mark_time_pos { sod } {
+  exp_send "mark_time_pos, $sod\r"
+}
+
 
 proc mark_pos { lat lon } {
   global utm _map

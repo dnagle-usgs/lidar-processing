@@ -241,6 +241,18 @@ func gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=, pmulti=) {
  return q;
 }
 
+func mark_time_pos( sod ) {
+/* DOCUMENT mark_time_pos, sod
+
+   Mark a lat/lon position on win 6 based on the sod.  Used from
+ sf_a.tcl via eaarl.ytk
+
+*/
+  q = where( gga.sod == sod )
+  window,6
+  plmk, gga.lat(q), gga.lon(q), marker=5, color="red", msize=0.8
+}
+
 func test_selection_size (q) {
  if (!is_array(q)) return;
  sel_secs = (( gga_find_times(q )(dif,sum)))(1);
