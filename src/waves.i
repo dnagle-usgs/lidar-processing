@@ -137,6 +137,20 @@ wave_data.checker_board = ((-1)^span(1,256,256)) * ((-1)^(span(1,256,256))) (-,)
 
  wave_data.h = wave_data.h/wave_data.hc
 
+/*/ simulation to check out effect of not using windowing on elevation data before fft
+ k40 = 2*pi/4000.
+ k20 = 2*pi/2000.
+ k10 = 2*pi/1000.
+ for (i=1; i<257; i++) {
+ for (j=1; j<257; j++) {
+ if(wave_data.hc(j,i)>0.5)  wave_data.h(j,i) = sin(k40*wave_data.x0(1,i)) +  sin(k40*wave_data.y0(j,1) + 0.4) + sin(k20*wave_data.x0(1,i) + 0.8) +  sin(k20*wave_data.y0(j,1) + 1.2) + sin(k10*wave_data.x0(1,i) + 1.6) +  sin(k10*wave_data.y0(j,1) + 2.0)
+ }
+ }
+*/
+ }
+ 
+789
+
 ////////////////////////////////////////
 // Display the wave topography
 ////////////////////////////////////////
@@ -183,6 +197,11 @@ wave_data.checker_board = ((-1)^span(1,256,256)) * ((-1)^(span(1,256,256))) (-,)
  }
  } 
  fftsmooth(2:255,2:255) = fftsmooth(2:255,2:255)/9.
+ pk = max(fftsmooth)
+ strt=0.001*pk
+ stop = 0.1*pk
+ levsed = spanl(strt,stop,10)
+ plc, fftsmooth, fftx, ffty,marks=0,legend="",levs=levsed 
  plc,fftsmooth,fftx,ffty
  write,format="Median elevation %6.2fm\n", m/100.0
 }
