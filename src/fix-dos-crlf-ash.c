@@ -17,6 +17,15 @@ The main use for this program is to "fix" raw binary
 Ashtech data which was accidently downloaded without the
 "bi" option enabled.
 
+
+Usage:
+  fix-dos-crlf-ash  < file-with-problems.ash > fixed-file.ash 
+
+  The program will display a running count of the errors that
+  it repairs.  NOTE***  Do not run this program using a repaired
+  file for input, only run against input files which were 
+  corrupted by the windows/dos ftp program.
+
 **********************************************************/
 #include <stdio.h>
 unsigned char c,d,e;
