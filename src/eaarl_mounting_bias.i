@@ -21,7 +21,7 @@ range_biasNS=  range_biasM / NS2MAIR;
  scan_bias  =  0.0;     // The mounting bias of the scan encoder.
  roll_bias  = -1.40;    // The mounting bias of the instrument in the plane.
  pitch_bias = +0.5;     // pitch mounting bias
- yaw_bias   =  -3.0;     // Yaw mounting bias
+ yaw_bias   =  0.0;     // Yaw mounting bias
 
 
 

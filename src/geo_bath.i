@@ -973,7 +973,7 @@ write,"============================================================="
    write,format="   Ref. Dist: %8.2fm  Elev diff: %7.2fm\n", 
                sqrt(double(mindata.north - _rastpulse_reference(1))^2 +
                     double(mindata.east  - _rastpulse_reference(2))^2)/100.0,
-               _rastpulse_reference(3)/100.0 - mindata.elevation/100.0; 
+               (mindata.elevation/100.0 - _rastpulse_reference(3)/100.0) ; 
  }
 	
 
@@ -993,10 +993,12 @@ write,"============================================================="
 
 
  q = *(rcf( rtn_data.elevation, 1000.0, mode=2)(1));
- write,format="Selected point avg: %6.3fm, %6.1fcm RMS, %6.1fcm Peak-to-peak\n", 
+write,"********************************************************************"
+ write,format=" * Selected point avg: %6.3fm, %6.1fcm RMS, %6.1fcm Peak-to-peak *\n", 
  	rtn_data.elevation(q)(avg)/100.0, 
  	rtn_data.elevation(q)(rms),
  	float(rtn_data.elevation(q)(ptp)); 
+write,"********************************************************************"
   
  return rtn_data;
       
