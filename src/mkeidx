@@ -1,4 +1,7 @@
 #!/bin/sh
+#
+# $Id$
+#
 #mkeidx: automatically make the master earl index
 # ls *.tld | /opt/eaarl/lidar-processing/bin/efdb MM-DD-YY.idx
 # 
