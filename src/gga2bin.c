@@ -23,7 +23,7 @@ static struct {
 main( int argc, char *argv[] ) {    
  FILE *idf, *odf;
  float sod, lat, lon, alt, s;
- int h, m, good=0, badcnt=0, line=0;
+ int h, m, n, nb, good=0, badcnt=0, line=0;
  char  comma[]=",";
  char *p, *t, *latp, *lonp, *tp;
  char str[MAXSTR*2], scp[ MAXSTR+2 ];
@@ -59,11 +59,10 @@ main( int argc, char *argv[] ) {
  	printf("%8d: %s %02x\n",  line, str, sum); 
 	badcnt++;
      } else {	// good data
-	good++;
 // Process the time substring into second of the day
        p = &str[0];
        strcpy( scp, str );
-       for (i=0; i<10; i++ ) {
+       for (nb=0, i=0; i<10; i++ ) {
        t = strsep( &p, comma );
 
 #define HMS	1
@@ -81,7 +80,8 @@ main( int argc, char *argv[] ) {
 
        case LAT:
          latp = t;
-	 sscanf( t, "%02d%f", &h, &s );
+	 n = sscanf( t, "%02d%f", &h, &s );
+	if ( n != 2 ) nb++;
 	 lat = h + s/60.0;
 	break;
 
@@ -104,6 +104,8 @@ main( int argc, char *argv[] ) {
 	break;
        }
       }
+   if ( nb == 0 ) {
+   good++;
    gga.sod = sod;
    gga.lat = lat;
    gga.lon = lon;
@@ -115,7 +117,11 @@ if ( line > 152960 )  {
 }
 */
 // printf("\n%f %f %f %f", gga.sod, gga.lat, gga.lon, gga.alt);
+     } else {
+ 	printf("%8d: %s\n",  line, scp); 
+	badcnt++;
      }
+    }
    }
   fseek( odf, 0, SEEK_SET);
   fwrite( &good, sizeof(int), 1, odf);          // install count
