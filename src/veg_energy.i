@@ -138,9 +138,18 @@ func make_large_footprint_waveform(eaarl, binsize=, digitizer=, normalize=, mode
   if (!binsize) binsize = 5; //in meters
   binsize = binsize * 100;
 
-  //now make a grid in the bbox
-  ngridx = int(ceil((bbox(2)-bbox(1))/binsize));
-  ngridy = int(ceil((bbox(4)-bbox(3))/binsize));
+  // transform bbox to a regular grid with "binsize" dimensions
+  b1box = array(long,4);
+  b1box(1) = int(bbox(1)/binsize)*binsize;
+  b1box(2) = int(ceil(bbox(2)/binsize)*binsize);
+  b1box(3) = int(bbox(3)/binsize)*binsize;
+  b1box(4) = int(ceil(bbox(4)/binsize)*binsize);
+  bbox = b1box;
+  //now find the grid dimensions
+  //ngridx = int(ceil((bbox(2)-bbox(1))/binsize));
+  //ngridy = int(ceil((bbox(4)-bbox(3))/binsize));
+  ngridx = (bbox(2)-bbox(1))/binsize;
+  ngridy = (bbox(4)-bbox(3))/binsize;
 
   outveg = array(LFP_VEG, ngridx, ngridy);
 
@@ -155,7 +164,7 @@ func make_large_footprint_waveform(eaarl, binsize=, digitizer=, normalize=, mode
     ygrid = [bbox(3)];
   }
 
-  if ( __ytk ) {
+  if ( _ytk ) {
     tkcmd,"destroy .rcf1; toplevel .rcf1; set progress 0;"
     tkcmd,swrite(format="ProgressBar .rcf1.pb \
 	-fg green \
@@ -173,7 +182,7 @@ func make_large_footprint_waveform(eaarl, binsize=, digitizer=, normalize=, mode
    //if (i!=19) continue;
    q = [];
    if (mode == 3) {
-    q = where(eaarl.lnorth >= ygrid(i));
+    q = where(eaarl.lnorth > ygrid(i));
     if (is_array(q)) {
        qq = where(eaarl.lnorth(q) <= ygrid(i)+binsize);
        if (is_array(qq)) {
@@ -181,7 +190,7 @@ func make_large_footprint_waveform(eaarl, binsize=, digitizer=, normalize=, mode
        } else q = []
     }
    } else {
-    q = where (eaarl.north >= ygrid(i));
+    q = where (eaarl.north > ygrid(i));
     if (is_array(q)) {
        qq = where(eaarl.north(q) <= ygrid(i)+binsize);
        if (is_array(qq)){
@@ -189,15 +198,15 @@ func make_large_footprint_waveform(eaarl, binsize=, digitizer=, normalize=, mode
        } else q = [];
     }
    }
-   outveg(,i).north = long((ygrid(i)+binsize/2.));
+   outveg(,i).north = long(ygrid(i));
    if (!(is_array(q))) continue;
       
     for (j = 1; j <= ngridx; j++) {
-      outveg(j,i).east = long((xgrid(j)+binsize/2.));
+      outveg(j,i).east = long(xgrid(j));
       indx = [];
       if (is_array(q)) {
        if (mode == 3) {
-        indx = where(eaarl.least(q) >= xgrid(j));
+        indx = where(eaarl.least(q) > xgrid(j));
 	if (is_array(indx)) {
            iindx = where(eaarl.least(q)(indx) <= xgrid(j)+binsize);
 	   if (is_array(iindx)) {
@@ -206,7 +215,7 @@ func make_large_footprint_waveform(eaarl, binsize=, digitizer=, normalize=, mode
            } else indx = [];
         }
        } else {
-        indx = where(eaarl.east(q) >= xgrid(j));
+        indx = where(eaarl.east(q) > xgrid(j));
 	if (is_array(indx)) {
            iindx = where(eaarl.east(q)(indx) <= xgrid(j)+binsize);
 	   if (is_array(iindx)) {
@@ -216,8 +225,6 @@ func make_large_footprint_waveform(eaarl, binsize=, digitizer=, normalize=, mode
         }
        }
       }
-	 // count++;
-	 //if (count < 17) continue;
       if (is_array(indx)) {
 	 outveg(j,i).npix = numberof(indx);
          yy = [ygrid(i), ygrid(i), ygrid(i)+binsize, ygrid(i)+binsize, ygrid(i)]/100.
@@ -311,6 +318,7 @@ func make_large_footprint_waveform(eaarl, binsize=, digitizer=, normalize=, mode
   timer, tm2;
   time = tm2-tm1;
   write, "Time statistics:"
+  write, format=" Total time taken = %f minutes\n",time(3)/60.;
   tm1;
   tm2;
   time;
@@ -412,7 +420,7 @@ func make_single_lfpw(eaarl,bin=,normalize=, plot=, correct_chp=, min_elv=){
    return outveg;
 }
 
-func plot_slfw(outveg, ipath=, outwin=, indx=, dofma=, color=, interactive=, show=, inwin=, title=, noxytitles=,  normalize=, searchstr=) {
+func plot_slfw(outveg, cmets=, ipath=, outwin=, indx=, dofma=, color=, interactive=, show=, inwin=, title=, noxytitles=,  normalize=, searchstr=) {
 //amar nayegandhi 04/14/04
 // plot synthesized large footprint waveform
 // returns the waveforms selected
@@ -519,7 +527,13 @@ if (!is_void(interactive)) {
    if (show) {
 	// plot the footprint box in inwin.
 	plg, [(tveg.north-fp/2), (tveg.north-fp/2), (tveg.north+fp/2), (tveg.north+fp/2), (tveg.north-fp/2)]/100., [(tveg.east-fp/2), (tveg.east+fp/2), (tveg.east+fp/2), (tveg.east-fp/2), (tveg.east-fp/2)]/100., color="black";
-	mets = lfp_metrics([tveg], min_elv=-2.0);
+        // write out indexing information
+	write, format="1-D index = %d\n",idx(iidx);
+	if (is_array(cmets)) {
+          mets = cmets(,idx(iidx));
+        } else {
+	  mets = lfp_metrics([tveg], min_elv=-2.0);
+        }
 	write, format="%4.2f\t%3.2f\t%4.3f\t%4.3f\t%4.2f",mets(,1);
         if ((mets(1,1) > 5) & (mets(1,1) <= 22) & (mets(4,1) >= 0.59)) write, " FOREST ";
         if ((mets(1,1) > 5) & (mets(1,1) <= 22) & (mets(4,1) < 0.59) & (mets(4,1) >= 0.24)) write," WOODLAND ";
@@ -620,10 +634,17 @@ return home;
 }
 
 
-func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=) {
+func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, normalize=) {
 /* DOCUMENT lfp_metrics(lfpveg, thresh=)
   This function calculates the composite large footprint metrics.
   amar nayegandhi 04/19/04.
+  INPUT:
+      lfpveg: large-footprint waveform array
+      thresh= amplitude threshold to consider significan return
+      img = 2d array of bare-earth data at same resolution
+      fill = ??
+      min_elv = minimum elevation (in meters) to consider for bare earth
+      normalize = set to 0 if you do not want to normalize (default = 1).
   the output array will contain the following metrics:
    cht;	//canopy height in meters
    be;	// bare earth in meters
@@ -652,8 +673,10 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=) {
 	  continue;
         }
 	//normalize for number of pixels in each rx
-        nzidx = where(lfpnpix != 0);
-        if (is_array(nzidx)) lfprx(nzidx) = lfprx(nzidx)/lfpnpix(nzidx);
+   	if (normalize) {
+          nzidx = where(lfpnpix != 0);
+          if (is_array(nzidx)) lfprx(nzidx) = lfprx(nzidx)/lfpnpix(nzidx);
+        }
         nzidx = where(lfpnpix == 0);
         if (is_array(nzidx)) lfprx(nzidx) = 0;
 	lfpelv = *lfpveg(i,j).elevation;
@@ -675,7 +698,7 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=) {
       if (numberof(lfprx) < 2) continue;
       lfpdif = where(lfprx(dif) <= -thresh);
       if (!is_array(lfpdif)) continue;
-      mnxcan = min(lfpdif(0)-5,numberof(lfprx));
+      mnxcan = min(lfpdif(0)-3,numberof(lfprx));
       if (mnxcan <= 0) continue;
       //mxxcan = (lfprx(mnxcan:lfpdif(0)))(mxx) + mnxcan -1;
       mxidx = where(lfprx(mnxcan:lfpdif(0))(dif) < 0);
@@ -737,14 +760,14 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=) {
         mnxgnd = max(gidx-5, 1);
         mnxgnd = long(mnxgnd(1));
         if (numberof(lfpelv(gidx:mxxgnd)) > 1)
- 	  lgndidx = where(lfpelv(gidx:mxxgnd)(dif) > 0);
+ 	  lgndidx = where(lfpelv(gidx:mxxgnd)(dif) > 1);// dont really need to do this
 	if (is_array(lgndidx)) {
 	   lgr = lgndidx(1)+gidx-1;
 	} else {
 	   lgr = mxxgnd;
 	}
         if (numberof(lfpelv(mnxgnd:gidx)) > 1)
-          fgndidx = where(lfpelv(mnxgnd:gidx)(dif) < 0);
+          fgndidx = where(lfpelv(mnxgnd:gidx)(dif) < -1); // dont really need to do this
 	if (is_array(fgndidx)) {
 	   fgr = fgndidx(0)+mnxgnd;
 	} else {
@@ -835,8 +858,10 @@ func plot_metrics(vmets, lfpveg, vmetsidx=, cmin=, cmax=, msize=, marker= ,win=,
  window, win;
  if (dofma) fma;
   
- plcm, vmets(vmetsidx,idx), lfpveg.north(idx)/100.+ybias, lfpveg.east(idx)/100.+xbias, cmin=cmin,
-	cmax = cmax, msize=msize, marker=marker;
+ //z = bytscl(vmets(vmetsidx,));
+ z = vmets(vmetsidx,);
+ pli, z, lfpveg(1,1).east/100., lfpveg(1,1).north/100., lfpveg(0,1).east/100., lfpveg(1,0).north/100., cmin=cmin, cmax=cmax;
+ //plcm, vmets(vmetsidx,idx), lfpveg.north(idx)/100.+ybias, lfpveg.east(idx)/100.+xbias, cmin=cmin, cmax = cmax, msize=msize, marker=marker;
 
 }
 
@@ -1086,11 +1111,6 @@ func merge_veg_lfpw(outveg1, outveg2) {
 }
 
 
-
-
-
-
-
 func plot_fcht_histograms(fcht, binsize=, scale=, win=, color=, width=, dofma=, noxytitles=) {
  // amar nayegandhi 04/26/04
  
@@ -1194,3 +1214,193 @@ func correct_1_chp(rarr,erarr) {
  return cumnew;
  
 }
+
+func make_begrid_from_bexyz(bexyz, binsize=, intdist=) {
+/* DOCUMENT make_begrid_from_bexyz(bexyz, binsize=)
+  amar nayegandhi 02/16/05.
+  This function makes a Bare Earth grid using the processed/filtered bare earth 
+  data (bexyz) at a grid resolution of binsize.  
+  intdist = interpolation distance to average missing values (default=2)
+  OUTPUT:  array img containing the Bare Earth grid
+*/
+
+  extern bbox
+  if (is_void(intdist)) intdist=2;
+  // define a bounding box
+  bbox = array(float, 4);
+  bbox(1) = min(bexyz.least);
+  bbox(2) = max(bexyz.least);
+  bbox(3) = min(bexyz.lnorth);
+  bbox(4) = max(bexyz.lnorth);
+
+  if (!binsize) binsize = 5; //in meters
+  binsize = binsize * 100;
+
+  // transform bbox to a regular grid with "binsize" dimensions
+  b1box = array(long,4);
+  b1box(1) = int(bbox(1)/binsize)*binsize;
+  b1box(2) = int(ceil(bbox(2)/binsize)*binsize);
+  b1box(3) = int(bbox(3)/binsize)*binsize;
+  b1box(4) = int(ceil(bbox(4)/binsize)*binsize);
+  bbox = b1box;
+  ll = [bbox(1), bbox(3)]/100; // lower left location
+  //now find the grid dimensions
+  ngridx = (bbox(2)-bbox(1))/binsize;
+  ngridy = (bbox(4)-bbox(3))/binsize;
+
+  img = array(float, ngridx, ngridy); img(*) = -1000; // initialize with missing value
+  imgcount = array(int, ngridx,ngridy); // counter 
+
+ // now use delaunay triangulation to find the vertices
+  verts = triangulate_xyz(data=bexyz, mode=3, distthresh=100);
+
+  // find the centroid for each triangle
+  
+  da = sqrt(((bexyz.least(verts(2,))-bexyz.lnorth(verts(3,)))/100.)^2+((bexyz.lnorth(verts(2,))-bexyz.lnorth(verts(3,)))/100.)^2);
+  db = sqrt(((bexyz.least(verts(3,))-bexyz.lnorth(verts(1,)))/100.)^2+((bexyz.lnorth(verts(3,))-bexyz.lnorth(verts(1,)))/100.)^2);
+  dc = sqrt(((bexyz.least(verts(1,))-bexyz.lnorth(verts(2,)))/100.)^2+((bexyz.lnorth(verts(1,))-bexyz.lnorth(verts(2,)))/100.)^2);
+
+
+  centx = (da*bexyz.least(verts(1,))/100.+db*bexyz.least(verts(2,))/100.+dc*bexyz.least(verts(3,))/100.)/(da+db+dc);
+  centy = (da*bexyz.lnorth(verts(1,))/100.+db*bexyz.lnorth(verts(2,))/100.+dc*bexyz.lnorth(verts(3,))/100.)/(da+db+dc);
+  centz = (bexyz.lelv(verts(1,))+bexyz.lelv(verts(2,))+bexyz.lelv(verts(3,)))/300.0;
+
+  // now loop through the centroids and place the centz values in the img array
+  // if there is more than 1 centz value for the same bincell, then take an avg.
+
+  // we are now working in meters
+  binsize = binsize/100;
+  for (i=1;i<=numberof(centz);i++) {
+     imgx = int(ceil((centx(i)-ll(1))/binsize));
+     imgy = int(ceil((centy(i)-ll(2))/binsize));
+     if (img(imgx,imgy) == -1000) {
+        img(imgx,imgy) = centz(i);
+     } else {
+        img(imgx,imgy) = sum([img(imgx,imgy),centz(i)]);
+	imgcount(imgx,imgy)++;
+     }
+     if (i%10000 == 0) write, format="%d of %d complete \r",i,numberof(centz);
+  }
+
+  idx = where(imgcount != 0);
+  img(idx) = img(idx)/imgcount(idx);
+
+  // now find those img locations that have not yet been assigned
+  // check to see if the neighbors have any significant value else
+  // assign them a missing value of -1000
+
+  // define intdist i.e. how many neigbors to look at for assigning value
+  // to the unassigned img locations
+
+  idx = where(img == -1000);
+  dimg = dimsof(img);
+  img1 = img;
+  for (i=1;i<=numberof(idx);i++) {
+     imgx = idx(i) % dimg(2);
+     imgy = idx(i) / dimg(2) +1;
+     mindistx = min(intdist,imgx-1);
+     maxdistx = min(intdist,dimg(2)-imgx-1);
+     mindisty = min(intdist,imgy-1);
+     maxdisty = min(intdist,dimg(3)-imgy-1);
+     zcount = z = 0.0;
+     for (j=-mindisty;j<=maxdisty;j++) {
+       for (k=-mindistx;k<=maxdistx;k++) {
+         if (img(imgx+k,imgy+j) != -1000) {
+           z = sum([z,img(imgx+k,imgy+j)])
+           zcount++
+         }
+        }
+      }
+      if (zcount != 0) {
+         img1(imgx,imgy) = z/zcount;
+      }
+  }
+  
+  bbox /= 100;
+  return img1;
+}
+
+
+func clean_lfpw (lfpw, beimg=, thresh=, min_elv=, max_elv=) {
+ /* DOCUMENT clean_lfpw (lfpw, beimg=) 
+    lfpw = large footprint waveform array
+    beimg = bare earth image (grid)
+    thresh= threshold limit
+    min_elv = elevation below which will be filtered out
+    max_elv = elevation above which will be filtered out
+
+    this function cleans the large footprint waveform 
+    -- removes false returns coming from the atmosphere
+    -- removes "noise" returns below bare earth.
+  */
+
+ dims = dimsof(lfpw);
+ if (is_void(thresh)) thresh = 5;
+
+ if (is_void(min_elv)) min_elv = -1.0
+ if (is_void(max_elv)) max_elv = 25.0;
+
+ lfpw_new = array(LFP_VEG,dims(2),dims(3));
+
+ for (i=1;i<=dims(2);i++) {
+   for (j=1;j<=dims(3);j++) {
+     lfp = lfpw(j,i);
+     lfpw_new(j,i).north = lfp.north;
+     lfpw_new(j,i).east = lfp.east;
+     if (lfp.npix <= 0) continue;
+     lfprx = *lfp.rx;
+     npixels = *lfp.npixels;
+     elvs = *lfp.elevation;
+     nzidx = where(npixels != 0);
+     if (is_array(nzidx)) lfprx(nzidx) = lfprx(nzidx)/npixels(nzidx);
+     if (numberof(lfprx) < 2) {
+        continue;
+      }
+
+     // filter points above max_elv and below min_elv
+     // add 1 m for trailing/leading edge of waveform
+     elidx = where((elvs > (min_elv-1)) & (elvs < (max_elv+1)));
+     if (is_array(elidx)) {
+        elvs = elvs(elidx);
+        lfprx = lfprx(elidx);
+        npixels = npixels(elidx);
+     } else {
+        continue;
+     }
+     //find peaks in the waveform above a specific threshold
+     lfpdif = where(lfprx(dif) <= -thresh);
+     if (!is_array(lfpdif)) {
+        continue;
+     }
+     // now find the start and stop waveform points to remove noise
+     // the trailing edge near lfpdif(1) will be the last return
+     // the leading edge near lfpdif(0) will be the first return
+     start_idx = max(1,lfpdif(1)-10);
+     stop_idx = min(numberof(lfprx),lfpdif(0)+5);
+
+     lfprx = lfprx(start_idx:stop_idx);
+     elvs = elvs(start_idx:stop_idx);
+     npixels = npixels(start_idx:stop_idx);
+     zidx = where(lfprx != 0);
+     lfprx = lfprx(zidx);
+     elvs = elvs(zidx);
+     npixels = npixels(zidx);
+
+     // test to see where elvs(dif) > 1.5m
+     ezidx = where(elvs(dif) > 1.5);
+     if (is_array(ezidx)) {
+       elvs = elvs(1:ezidx(1));
+       lfprx = lfprx(1:ezidx(1));
+       npixels = lfprx(1:ezidx(1));
+     }
+     zidx = where(npixels != 0);
+     lfprx(zidx) *= npixels(zidx);
+     lfp.elevation = &elvs;
+     lfp.rx = &lfprx;
+     lfp.npixels = &npixels;
+     lfp.npix = numberof(elvs);
+     lfpw_new(j,i) = lfp;
+   }
+  }
+  return lfpw_new
+ }
