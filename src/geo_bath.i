@@ -1,7 +1,7 @@
 /*
    $Id$
 
-   Orginal by A. Anayegangi
+   Orginal by Amar Nayegandhi
 
 
    7/6/02 WW

@@ -5,7 +5,7 @@ require, "ll2utm.i"
 
 write,"$Id$"
 
-func load_map( ffn=, color=) {
+func load_map( ffn=, color=,utm=) {
 /* DOCUMENT load_map(ffn=, color=)
    Load a NOAA/USGS geographical coastline lat/lon map into the present
    window.  This is useful if you want to project some GPS positions
@@ -31,11 +31,11 @@ extern dllmap;          // array of pointers to digital map data
 
 if ( is_void( map_path )  ) {
 // Set the following to where the maps are stored on your system.
-  map_path = "/home/wright/lidar-processing/maps"
+  map_path = "~/lidar-processing/maps"
 }
 
 if ( is_void( ffn ) ) {
-  ffn = sel_file(ss="*.pbd", path="/home/wwright/lidar-processing/maps/") (1);
+  ffn = sel_file(ss="*.pbd", path="~/lidar-processing/maps/") (1);
 }
 
 if ( is_void(color) ) 
@@ -48,16 +48,22 @@ if ( is_void( dllmap ) ) {
   print,,"This does not appear to be a pbd map file"
   return;
 }
- show_map( dllmap, color=color );
+ show_map( dllmap, color=color,utm=utm );
 }
 
 
-func show_map( m,color= ) {
+func show_map( m,color=,utm= ) {
  sz = dimsof(m)(2);
  if ( is_void( color ) )
 	color = "black"
  for (i=1; i<=sz; i++ ) {
   a = *m(i);
+  if (utm) {
+    u = fll2utm(a(,1),a(,2));
+    zone = u(3,1);
+    u = u(1:2,);
+    a = transpose(u);
+  }
   plg,a(,1),a(,2),marks=0,color=color
  }
 }

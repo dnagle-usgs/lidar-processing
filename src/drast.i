@@ -315,27 +315,30 @@ func geo_rast(rn, fsmarks=   )  {
 */
 
  winsave = window();
- window,0
- animate,0;
+ window,2
+ animate,2;
 fs = first_surface( start=rn, stop=rn+1, north=1); 
 fma; 
 sp = fs.elevation(, 1)/ 100.0;
 xm = -(fs.east(,1) - fs.meast(1,1))/100.0;
 rst = decode_raster( get_erast( rn=rn ) )
 for (i=1; i<120; i++ ) {
-  zz = array(245, 255);
-  z = (*rst(1).rx(i));
-  n = numberof( z )
-  if ( n > 0 ) {
-    zz(1:n) = z;
-  }  
-  C = .15
-  x = array( xm(i), 255);
-  y = span(  sp(i), sp(i)-255*C , 255 );
-  plcm, 255-zz,y,x, cmin=0, cmax=255, msize=2.0;
+  if (fs(1).elevation(i) <= 0.4*fs(1).melevation(i)) {
+    zz = array(245, 255);
+    z = (*rst(1).rx(i));
+    n = numberof( z )
+    if ( n > 0 ) {
+      zz(1:n) = z;
+    }  
+    C = .15
+    x = array( xm(i), 255);
+    y = span(  sp(i), sp(i)-255*C , 255 );
+    plcm, 255-zz,y,x, cmin=0, cmax=255, msize=2.0;
+  }
 }
   if ( !is_void( fsmarks) ) 
-     plmk, sp, xm, marker=4, msize=.1, color="magenta"
+     indx = where(fs(1).elevation <= 0.4*(fs(1).melevation));
+     plmk, sp(indx), xm(indx), marker=4, msize=.1, color="magenta"
 
   window(winsave);
 }

@@ -21,14 +21,14 @@ proc setmapwindow {} {
   expect ">"
 }
 
-proc plot_last_map {} {
+proc plot_last_map {utm} {
  global _map 
    setmapwindow
-   exp_send "show_map, dllmap, color=\"$_map(coast_color)\" \r"
+   exp_send "show_map, dllmap, color=\"$_map(coast_color)\",utm=$utm \r"
   expect ">"
 }
 
-proc load_map { } {
+proc load_map {utm} {
  global _map w
 
    set fn [ tk_getOpenFile -initialdir "$_map(path)" \
@@ -38,7 +38,7 @@ proc load_map { } {
          } ]
    if { $fn != "" } {
      setmapwindow
-     exp_send "load_map, color=\"$_map(coast_color)\", ffn=\"$fn\"; \
+     exp_send "load_map, color=\"$_map(coast_color)\", ffn=\"$fn\", utm=$utm; \
                limits\r"
      set _map(most_recent_map) $fn;
      $w.mb.map entryconfigure 2 -label "Load ([ file tail $_map(most_recent_map)])"

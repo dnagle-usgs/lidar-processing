@@ -41,6 +41,17 @@ Other:
   it must be verified and converted by the gga2bin.c. program.  
 
   $Log$
+  Revision 1.11  2002/07/11 23:33:03  anayegan
+  drast.i: changed geo_rast window from 0 to 2. added feature to plot first surface geo rast only for data less than 70% of mirror elevation.
+
+  eaarl.ytk: Added functions for rbtans and rbpnav in eaarl.ytk menu bar.  Added option 'Coordinates' in rbgga window for selecting between utm and latlon coordinates. The option works for both gga plots and map plots.
+
+  map.i: added options to allow plotting of map in utm coordinates.  the coordinates are converted on the fly.
+
+  map.ytk: added option to plot in utm.
+
+  rbgga.i: added option to plot flightlines in utm.
+
   Revision 1.10  2002/06/21 22:39:29  anayegan
   erange1.c : small change in parameter calls using the executable.  change made for Steve Helterbrand.
 
@@ -155,7 +166,7 @@ extern gga
 */
 
 
-func rbgga( x, plt=, color=, map= ) {
+func rbgga( x, plt=, color=, map=, utm= ) {
 /* DOCUMENT v = rbgga( plt=(0/1), map=(0/1) ) 
 
    The rbgga function reads converted NMEA GPGGA gps message data.  
@@ -181,11 +192,18 @@ func rbgga( x, plt=, color=, map= ) {
  if ( is_void( _ytk ) ) {
    if ( is_void( data_path) )
       data_path = set_data_path();
-   ifn = sel_file(ss="*.ybin", path=data_path+"/gps/")(1);
+      path = data_path+"/gps/";
+   ifn = sel_file(ss="*.ybin", path=path)(1);
  } else {
-    ifn  = get_openfn( initialdir="/data/0/", filetype="*gga.ybin" );
+    path = data_path+"/gps/";
+    ifn  = get_openfn( initialdir=path, filetype="*gga.ybin" );
     ff = split_path( ifn, -1 );
-    data_path = ff(1);
+    //data_path = ff(1);
+    if (ff(2) == "") {
+      write, "File not chosen.  Please reload gga file\n";
+      exit;
+    }
+      
  }
 
 n = int(0)
@@ -421,7 +439,7 @@ date
 
 
 
-func show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=   )  {
+func show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=, utm=   )  {
 /* DOCUMENT show_gga_track, x=,y=, color=, skip=, msize=, marker=, lines=
 
    Plot the GPS gga position lat/lon data in the current window.
@@ -470,16 +488,24 @@ func show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=   )  {
         x = gga.lon;
         y = gga.lat;
   }
+  if (utm == 1) {
+  	/* convert latlon to utm */
+	u = fll2utm(gga.lat, gga.lon);
+	x = u(2,);
+	y = u(1,);
+  }
 
  if ( skip == 0 ) 
 	skip = 1;
 
-  if ( lines  ) 
+  if ( lines  ) {
      plg, y(1:0:skip), x(1:0:skip), color=color, marks=0;
+     }
 
- if ( marker ) 
+ if ( marker ) {
   plmk,y(1:0:skip), x(1:0:skip), 
     color=color, msize=msize, marker=marker;
+    }
 }
 
 
