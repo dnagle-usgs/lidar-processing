@@ -222,6 +222,21 @@ proc load_edb {} {
  }
 
 
+proc mark_pos { lat lon } {
+  scan $lat "%1s%2f%f" df dd mm
+  set lat [ expr $dd + $mm/60.0 ]
+  if { $df == "S" } {
+    set lat [ expr -$lat ]
+  }
+  scan $lon "%1s%3f%f" df dd mm
+  set lon [ expr $dd + $mm/60.0 ]
+  if { $df == "W" } {
+    set lon [ expr -$lon ]
+  }
+  exp_send "wsav=window();window,6; plmk, $lat, $lon, msize=.5, marker=1, color=\"red\"; window,wsav\r"
+}
+
+
 proc rbgga_menu {} {
  global ytk_PLMK_marker
  global data_path
@@ -273,9 +288,11 @@ proc rbgga_menu {} {
  button $mw.f1.info -text "Info"
  button $mw.f1.fma -text "Fma" -command { exp_send "window,6; fma\r\n" }
  button $mw.f1.jump -text "Jump" -command { 
-   exp_send "window,6; gga_click_start_isod()\n" 
+   exp_send "wsav=window();window,6; gga_click_start_isod()\n" 
    tk_messageBox  -message "Drag out a rectangular seclection over a section 
  of a flightline in Yorick window-6."  -type ok
+   expect "region_selected"
+   exp_send "window(wsav)\r"
  }
  button $mw.f1.limits -text "Limits" \
 	-command { exp_send "window,6; limits\r\n" }

@@ -1,7 +1,5 @@
-/*
-   $Id$
+#   $Id$
 
-*/
 
 proc set_time_check_defaults { } {
  global time_check;

@@ -177,11 +177,11 @@ ArrowButton .cf1.next  -relief raised -type button -width 40 \
 #button .cf1.play  -text "Play->" -command  { play  1 }
 
 ArrowButton .cf1.play  -arrowrelief raised -type arrow -arrowbd 2 -width 40 \
- 	    -dir right  -height 25 -helptext "Click To Play Through Images." \
+ 	    -dir right  -height 25 -helptext "Click To play forward through images." \
 	     -clean 0 -command { play 1 }
 #button .cf1.playr -text "<-YalP" -command  { play -1 }
 ArrowButton .cf1.playr  -arrowrelief raised -type arrow -arrowbd 2 -width 40 \
- 	    -dir left -height 25 -helptext "Click To YalP (Play Backwards) Through Images." \
+ 	    -dir left -height 25 -helptext "Click to play backwards (YalP) through images." \
 	     -clean 0 -command { play -1 }
 Button .cf1.stop  -text "Stop" -helptext "Stop Playing Through Images" \
 	      -command { set run 0 }
@@ -190,6 +190,19 @@ Button .cf1.rewind -text "Rewind" -helptext "Rewind to First Image" \
   	          if { [no_file_selected $nfiles] } { return }
   	 	  set ci 0; show_img $ci 
  		}
+Button .cf1.plotpos  \
+	-text "Plot" -helptext "Plot position on Yorick-6 
+ under the eaarl.ytk program." \
+	      -command { 
+  if { [ lsearch -exact [ winfo interp ] ytk ] == 1 } {
+   send ytk "mark_pos $llat $llon"
+  } else {
+     tk_messageBox  \
+        -message "ytk is\'nt running. You must be running Ytk and the
+eaarl.ytk program to use this feature."  \
+	-type ok
+  }
+}
 
 bind . <p> { step_img $step -1 }
 bind . <n> { step_img $step 1 }
@@ -325,7 +338,7 @@ pack .canf .canf.can
 pack .lbl -side top -anchor nw
 pack .slider -side top -fill x  
 pack .cf1 .cf1.prev .cf1.next .cf1.playr .cf1.stop .cf1.play \
-	.cf1.rewind -side left -fill x -expand true
+	.cf1.rewind .cf1.plotpos -side left -fill x -expand true
 pack .cf1 -fill x -side top
 pack .cf2 .cf2.speed .cf2.lbl .cf2.step  .cf2.gamma .cf2.offset -padx 3 -side left
 pack .cf2 -side top -expand 1 -fill x
@@ -415,6 +428,7 @@ proc show_img { n } {
 global fna nfiles img run ci data imgtime dir img_opts
 global lat lon alt seconds_offset hms sod timern 
 global cin hsr frame_off
+global llat llon
 
 set cin $n
 #  puts "$n  $fna($n)"
@@ -441,7 +455,8 @@ set cin $n
     set hms [ clock format $sod -format "%H%M%S" -gmt 1   ] 
 ###    set sod [ expr $sod - $seconds_offset ]
 
-
+ catch { set llat $lat(hms$hms) }
+ catch { set llon $lon(hms$hms) }
  if { [ catch { set data "$hms ($sod) $lat(hms$hms) $lon(hms$hms) $alt(hms$hms)"} ]  } { 
     set data "hms:$hms sod:$sod  No GPS Data"   } 
 

@@ -41,6 +41,11 @@ Other:
   it must be verified and converted by the gga2bin.c. program.  
 
   $Log$
+  Revision 1.5  2002/01/19 04:02:07  wwright
+
+   added plot command to sf_a.tcl so you can plot the displayed lat/lon
+  position on the Yorick-6 window if ytk/eaarl.ytk is running.
+
   Revision 1.4  2002/01/17 02:29:20  wwright
 
   small changes to rbgga.i
@@ -245,6 +250,7 @@ and continue looking at data down the flight line.
      st = int( st(min) ) 
      send_sod_to_sf, st;		// command sf and drast there.
    }
+  write,"region_selected"
   return st;
 }
 

@@ -119,9 +119,9 @@ if ( _ytk ) {
  }
 }
 
-  if ( is_void( update ) )
-	filemode = "rb";
-  else
+ filemode = "rb";
+  if ( !is_void( update )  )
+     if ( update == 1 ) 
 	filemode = "r+b";
 
   _edb_fd = idf = open(fn, filemode );
