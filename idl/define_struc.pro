@@ -71,7 +71,7 @@ case type of
      104:begin
 	  ;CVEG_ALL with SOE
 	  data = {dat11, RN:0L, NORTH:0L, EAST:0L, ELEVATION:0L, MNORTH:0L, MEAST:0L, $
-			MELEVATION:0L, INTENSITY:0S, NX:0B, SOE:0D, SOE:0D}
+			MELEVATION:0L, INTENSITY:0S, NX:0B, SOE:0D}
 	  data_arr = replicate(data,recs)
   	 end
 endcase
