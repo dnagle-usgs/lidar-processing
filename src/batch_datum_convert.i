@@ -4,7 +4,7 @@ require, "veg.i"
 require, "geo_bath.i"
 require, "datum_converter.i"
 
-func batconvert(con_dir,  tonad83=, tonavd88=, rcfmode=, onlymf=)
+func batch_datum_convert(con_dir,  tonad83=, tonavd88=, rcfmode=, onlymf=, searchstr=)
 {
 /* DOCUMENT batconvert(dir, tonad83=, tonavd88=, rcfmode=) This takes all of the data files for the index tiles in CON_DIR 
 and converts them into nad83 or navd88, storing the converted data in  a new pdf
@@ -13,6 +13,7 @@ INPUT: con_dir = input directory where the files are stored.
   	tonad83= set to convert to NAD83 reference datum
 	tonavd88 = set to convert to NAVD88 reference datum.
 	rcfmode = set to 1 to convert RCF'd files or 2 to convert IRCF'd files.
+        searchstr = define your own search string instead of using rcfmode
 requires "maps.i", "dir.i" and "datum_converter.i"
 see also: datum_converter.i
 -Brendan Penney, 7/18/03
@@ -22,11 +23,17 @@ if(!tonad83) tonad83=1;
 if(!tonavd88) tonavd88=1;
 if(!rcfmode) rcfmode = 0;
 
-if(rcfmode == 1) rcftag = "_rcf";
-if(rcfmode == 2) rcftag = "_ircf";
-if(onlymf) rcftag = rcftag+="_mf";
+ if (!searchstr) {
+   if(rcfmode == 1) rcftag = "_rcf";
+   if(rcfmode == 2) rcftag = "_ircf";
+   if(onlymf) rcftag = rcftag+="_mf";
 
-command = swrite(format="find %s -name '*w84_*%s*.pbd'", con_dir, rcftag);
+   if (!rcftag) rcftag = "";
+
+   command = swrite(format="find %s -name '*w84_*%s*.pbd'", con_dir, rcftag);
+ } else {
+   command = swrite(format="find %s -name '%s'", con_dir, searchstr);
+ }
 
 
 files = ""
