@@ -66,7 +66,7 @@ rn
 }
 
 
-func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, use_centroid=,use_trail= ) {
+func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, use_centroid=,use_peak= ) {
 // depths = array(float, 3, 120, len );
   if (is_void(graph)) graph=0;
 
@@ -114,7 +114,7 @@ func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, us
         write, format="   %d of %d   \r", j,  len
      }
      for (i=1; i<119; i++ ) {
-       depths(i,j) = ex_veg( rn+j, i, last = last, graph=graph, use_centroid=use_centroid,use_trail=use_trail);
+       depths(i,j) = ex_veg( rn+j, i, last = last, graph=graph, use_centroid=use_centroid,use_peak=use_peak);
        if ( !is_void(pse) ) 
 	  pause, pse;
      }
@@ -128,7 +128,7 @@ func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, us
 }
 
 
-func ex_veg( rn, i,  last=, graph=, use_centroid=, use_trail=, pse= ) {
+func ex_veg( rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
 /* DOCUMENT ex_veg(raster_number, pulse_index)
 
 
@@ -246,7 +246,7 @@ write, format="rn=%d; i = %d\n",rn,i
 
 
   if ( numberof(xr) > 0  ) {
-    if (use_centroid || use_trail) {
+    if (use_centroid || use_peak) {
        //assume 12ns to be the longest duration for a complete bottom return
        retdist = 12;
        ai = 1; //channel number
@@ -273,11 +273,12 @@ write, format="rn=%d; i = %d\n",rn,i
 	    }
 	}
 
+       if (retdist < 5) ai = 0; // this eliminates possible noise pulses.
        if (!ai) {
         rv.sa = rp.sa(i);
-   	rv.mx0 = -10;
+   	rv.mx0 = -1;
 	rv.mv0 = -10;
-   	rv.mx1 = -11;
+   	rv.mx1 = -1;
 	rv.mv1 = -11;
 	rv.nx  = -1;
         return rv
@@ -295,7 +296,8 @@ write, format="rn=%d; i = %d\n",rn,i
 	 pltitle, pltit;
        }
        
-     if (use_centroid && !use_trail) {
+     if (use_centroid && !use_peak) {
+
       
        // find where the bottom return pulse changes direction after its trailing edge
        idx = where(dd(xr(0)+1:xr(0)+retdist) > 0);
@@ -337,7 +339,13 @@ write, format="rn=%d; i = %d\n",rn,i
        } 
     }
     
-    if (!use_centroid && use_trail) {
+    if (!use_centroid && use_peak) {
+       // if within 3 ns from xr(0) we find a peak, we can assume this to be noise related and try again using xr(0) from the first positive difference after the last negative difference.
+       nidx = where(dd(xr(0):xr(0)+3) < 0);
+       if (is_array(nidx)) {
+         xr(0) = xr(0) + nidx(1);
+	 if (xr(0)+retdist+1 > n) retdist = n - xr(0)-1;
+       }
       // using trailing edge algorithm for bottom return
        // find where the bottom return pulse changes direction after its trailing edge
        idx = where(dd(xr(0)+1:xr(0)+retdist) > 0);
@@ -367,6 +375,7 @@ write, format="rn=%d; i = %d\n",rn,i
       mx0 = a( xr(0):xr(0)+5, i, 1)(mxx) + xr(0) - 1;	  // find bottom peak now
       mv0 = a( mx0, i, 1);	          
     }
+    // stuff below is for mx1 (first surface in veg).
     if (use_centroid) {
        np = numberof ( *rp.rx(i,1) );      // find out how many waveform points
                                         // are in the primary (most sensitive)
@@ -536,7 +545,7 @@ for (i=1; i<=len; i=i+1) {
 return geoveg;
 }
 
-func make_veg(latutm=, q=, ext_bad_att=, ext_bad_veg=, use_centroid=, use_trail=) {
+func make_veg(latutm=, q=, ext_bad_att=, ext_bad_veg=, use_centroid=, use_peak=) {
 /* DOCUMENT make_veg(opath=,ofname=,ext_bad_att=, ext_bad_veg=)
 
  This function allows a user to define a region on the gga plot 
@@ -559,11 +568,11 @@ executing make_veg.  See rbpnav() and rbtans() for details.
    
    extern edb, soe_day_start, tans, pnav, utm, veg_all, rn_arr, rn_arr_idx, ba_veg, bd_veg;
    veg_all = [];
-   /*if (use_centroid == 1) {
+   if (use_centroid == 1) {
            use_centroid = 0;
-	   use_trail = 1;
+	   use_peak = 1;
    }
-   */
+   
    
    /* check to see if required parameters have been initialized */
 
@@ -602,7 +611,7 @@ executing make_veg.  See rbpnav() and rbtans() for details.
       if ((rn_arr(1,i) != 0)) {
        fcount ++;
        write, format="Processing segment %d of %d for vegetation\n", i, no_t;
-       d = run_veg(start=rn_arr(1,i), stop=rn_arr(2,i),use_centroid=use_centroid,use_trail=use_trail);
+       d = run_veg(start=rn_arr(1,i), stop=rn_arr(2,i),use_centroid=use_centroid,use_peak=use_peak);
        write, "Processing for first_surface...";
        rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=use_centroid); 
        a=[];
@@ -866,7 +875,7 @@ func test_veg(veg_all,  fname=, pse=, graph=) {
   tot_count = 0;
 
   for (i = 1; i <= numberof(rasters); i++) {
-    depth = ex_veg(rasters(i), pulses(i),last=250, graph=graph, use_trail=1, pse=pse)    
+    depth = ex_veg(rasters(i), pulses(i),last=250, graph=graph, use_peak=1, pse=pse)    
     if (veg_all(i).rn == depth.rastpix) {
       if (depth.mx1 == -10) {
        veg_all(i).felv = -10;

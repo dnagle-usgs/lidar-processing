@@ -877,6 +877,7 @@ write,"============================================================="
 	}
         if (disp_type == 3) {
 	  a = [];
+	  ex_veg, rasterno, pulseno,  last=250, graph=1, use_peak=1;
 	  z = mindata.elevation/100.-(mindata.lelv-mindata.felv)/100.;
           window, win; plcm, z, mindata.north/100., 
                              mindata.east/100., msize = msize*1.5, 
