@@ -2134,8 +2134,10 @@ proc keep_proc {} {
 	 retrieve_plot_settings [expr ($curidx+1)]
        }
 
-       set curvar [.l1wid.bf45.p.15 getvalue]
-       .sel.05.varlist setvalue @$curvar
+       set curidx [.l1wid.bf45.p.15 getvalue]
+       set curvar [lindex $varlist $curidx]
+       
+       .sel.05.varlist setvalue @$curidx
 
        ComboBox .sel.1 -text "Keep points using..." -width 16\
    	 -values { \
@@ -2248,7 +2250,6 @@ proc replace_proc {} {
          set curvar [lindex $varlist [.rep.05.varlist getvalue]]
 	 set curidx [.rep.05.varlist getvalue]
 	 .l1wid.bf45.p.15 setvalue @$curidx
-	 retrieve_plot_settings [expr ($curidx+1)]
        }
 
        set curidx [.l1wid.bf45.p.15 getvalue]
@@ -2265,7 +2266,6 @@ proc replace_proc {} {
          set origvar [lindex $varlist [.rep.005.varlist getvalue]]
 	 set origidx [.rep.005.varlist getvalue]
 	 .l1wid.bf45.p.15 setvalue @$origidx
-	 retrieve_plot_settings [expr ($origidx+1)]
        }
        set origidx [.l1wid.bf45.p.15 getvalue]
        set origvar [lindex $varlist $curidx]
