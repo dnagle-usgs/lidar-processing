@@ -457,6 +457,14 @@ func sel_region (q, all_tans=) {
             rn_start = rn_indx_start(1);
             rn_stop = rn_indx_stop(0);
        }
+       if (rn_start > rn_stop) {
+            write, format="Corresponding Rasters for flightline %d not found."+
+                          "  Omitting flightline ... \n",i;
+	    rn_start = 0;
+	    rn_stop = 0;
+	    tyes_arr(i) = 0;
+       }
+          
 
        rn_arr(,i) =  [rn_start, rn_stop];
      }
