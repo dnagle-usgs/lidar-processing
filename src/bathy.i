@@ -73,7 +73,7 @@ func run_bath( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) 
  if ( is_void(graph) ) 
 	graph = 0;
    for ( j=1; j< len; j++ ) {
-     if (!(j%50)) print, j,"rasters completed";
+     if (!(j%50)) write, format="%d of %d rasters completed \n",j,len;
      for (i=1; i<119; i++ ) {
        depths(i,j) = ex_bath( rn+j, i, last = last, graph=graph);
        if ( !is_void(pse) ) 
@@ -190,14 +190,14 @@ func ex_bath( rn, i,  last=, graph= ) {
    }
 
    laser_decay     = exp( -2.4 * attdepth) * escale;
-   secondary_decay = exp( -1.5 * attdepth) * escale; // for tampa bay water
-   //secondary_decay = exp( -0.6 * attdepth) * escale; // for keys water
+   //secondary_decay = exp( -1.5 * attdepth) * escale; // for tampa bay water
+   secondary_decay = exp( -0.6 * attdepth) * escale; // for keys water
    laser_decay(last_surface_sat:0) = laser_decay(1:0-last_surface_sat+1) + 
 					secondary_decay(1:0-last_surface_sat+1)*.25;
    laser_decay(1:last_surface_sat) = escale;
 
-   agc     = 1.0 - exp( -3.0 * attdepth) ;	// for tampa bay water
-   //agc     = 1.0 - exp( -0.3 * attdepth) ;	// for keys water
+  // agc     = 1.0 - exp( -3.0 * attdepth) ;	// for tampa bay water
+   agc     = 1.0 - exp( -0.3 * attdepth) ;	// for keys water
    agc(last_surface_sat:0) = agc(1:0-last_surface_sat+1); 
    agc(1:last_surface_sat) = 0.0;
    

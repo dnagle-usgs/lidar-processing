@@ -49,6 +49,7 @@ set fcin 0
 set lcin 0
 set yes_head 0
 set head 0
+set inhd_count 0
 
 proc load_file_list { f } {
 global ci fna imgtime dir 
@@ -205,8 +206,8 @@ menu .menubar.edit.menu
             }
 
 menu .menubar.geometry.menu
-.menubar.geometry.menu add command -label "Include Heading ..." -underline 8 \
-      -command {get_heading}
+.menubar.geometry.menu add checkbutton -label "Include Heading ..." -underline 8 -onvalue 1 \
+      -offvalue 0 -variable inhd -command {global inhd; get_heading $inhd}
 
 frame  .canf -borderwidth 5 -relief sunken
 frame  .cf1  -borderwidth 5 -relief raised
@@ -616,17 +617,20 @@ proc zip_save_marked {zp} {
 
 }
 
-proc get_heading {} {
-   global yes_head img
+proc get_heading {inhd} {
+  global yes_head img head inhd_count
 
-   ## this procedure gets heading information from current data set
-   ## amar nayegandhi 03/04/2002.
+  ## this procedure gets heading information from current data set
+  ## amar nayegandhi 03/04/2002.
+  if {$inhd == 1} {
+   incr inhd_count 1;
    if { [ lsearch -exact [ winfo interps ] ytk ] != -1 } {
      set yes_head  1;
      ## resize the canvas screen
      .canf.can configure -height 420 -width 440
       set psf [pid]
-      send ytk "request_heading $psf"
+        ## the function request_heading is defined in eaarl.ytk
+        send ytk "request_heading $psf $inhd_count"
       ## tmp file is now saved as /tmp/sf_tans.txt.$psf"
       #set f [open "/tmp/sf_tans.txt.$psf" r]
       } else {
@@ -634,5 +638,12 @@ proc get_heading {} {
 	      -message "ytk isn\'t running. You must be running Ytk and the eaarl.ytk program to use this feature."  \
 	      -type ok
       }
-   }
+   } else {
+    ## resize the canvas screen
+    .canf.can configure -height 240 -width 320
+    set head -180;
+    set yes_head 0
+    }
+}
+
 puts "Ready to go.\r\n"

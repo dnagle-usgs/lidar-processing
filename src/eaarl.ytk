@@ -241,12 +241,15 @@ proc load_edb {} {
  }
 
 
-proc request_heading {psf} {
+proc request_heading {psf inhd_count} {
    ## this procedure requests heading information for sf_a.tcl
    ## amar nayegandhi
-   exp_send "#include \"rbtans.i\"\r" 
-   expect ">"
-   exp_send "tans=rbtans(); pkt_sf = prepare_sf_pkt(tans);"
+   if {($inhd_count == 1)} {
+     exp_send "#include \"rbtans.i\"\r" 
+     expect ">"
+     exp_send "if (is_void(tans)) tans=rbtans(); pkt_sf = prepare_sf_pkt(tans); \r"
+     ## function prepare_sf_pkt is defined in rbtans.i
+   } else { exp_send "pkt_sf = prepare_sf_pkt(tans); \r"}
 
    ## write pkt_sf to a temp file
    set tmpfile "/tmp/sf_tans.txt.$psf"
