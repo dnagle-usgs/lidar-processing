@@ -53,17 +53,29 @@ yoff = 0.0;
     pli, span(0,1,200)(-,), x(1)+xoff,y(4)+yoff,x(4)+xoff,y(2)+yoff, legend="";
     plg, y,x, closed=1, marks=0,color="fg",width=1,type=1,legend="";
     plg, dy/2+y(1), xx, color="fg", width=3, type = 1, legend="";
-    plt, pr1(cmin), x(1)+xoff,y(1)+yoff, justify="CT";
-    plt, pr1(cmax), x(1)+xoff,y(2)+yoff, justify="CB";
-    plt, pr1(cmax-cmin), x(3)+0.002,y(3)-dpy/2, justify="CA", orient=3;
+    plt, swrite(format=" %5.2f", cmin), x(1)+xoff,y(1)+yoff, justify="CT";
+    plt, swrite(format=" %5.2f", cmax), x(1)+xoff,y(2)+yoff, justify="CB";
+    plt, swrite(format="%5.2f", cmax-cmin), x(3)+0.002,y(3)-dpy/2, justify="CA", orient=3;
   } else {
     pli, span(0,1,200)(,-), x(1),y(4),x(4),y(2), legend="";
     plg, y,x, closed=1, marks=0,color="fg",width=1,type=1,legend="";
-    plt, pr1(cmin), x(1),y(1), justify="CT";
-    plt, pr1(cmax), x(3),y(1), justify="CT";
-    plt, pr1(cmax-cmin), xx(1)-dpx/2,y(3), justify="CB";
+    plt, swrite(format="%5.2f", cmin), x(1),y(1), justify="CT";
+    plt, swrite(format="%5.2f", cmax), x(3),y(1), justify="CT";
+    plt, swrite(format="%5.2f", cmax-cmin), xx(1)-dpx/2,y(3), justify="CB";
   }
   plsys(sys);  
 }
 
-
+func stdev_min_max(x, N_factor=) {
+/*DOCUMENT stdev_min_max(x, N_factor=)
+Input= one-dimensional array.
+Ouput= An array [min,max] of the min and max values to be used when making a colorbar based on the standard deviation of the data.
+N_factor is the number of standard deviations away the min and max values will be from the mean. The default is 2*/
+x = x(*);
+if (!N_factor) N_factor = 2;
+xbar = avg(x);
+n = float(numberof(x));
+stdev = sqrt((sum((x-xbar)^2)/n));
+min_max = [xbar - (N_factor * stdev),xbar + (N_factor * stdev)];
+return min_max
+}
