@@ -26,7 +26,7 @@ TRUE = 1;
 EPSILON = 1e-6;
 
 
-func triangulate_xyz(file=, savefile=, data=, plot=, mode=, win=, distthresh=) {
+func triangulate_xyz(file=, savefile=, data=, plot=, mode=, win=, distthresh=, dolimits=) {
 /*DOCUMENT prepare_xyz(file=, savefile=, data=, plot=, mode=) 
   amar nayegandhi 01/05/03.
  */
@@ -123,7 +123,9 @@ func triangulate_xyz(file=, savefile=, data=, plot=, mode=, win=, distthresh=) {
     zz = z(,sum); zz = zz/3;
     n = array(int,numberof(zz))
     n(*) = 3
-    window, win; fma; plfp, zz, yy, xx, n, edges=1
+    window, win; fma; 
+    if (dolimits) limits, square=1;
+    plfp, zz, yy, xx, n, edges=1
     colorbar, min(zz), max(zz), units="m";
     window, w;
   }
@@ -401,11 +403,12 @@ func CircumCircle(xp,yp,x1,y1,x2,y2,x3,y3) {
 }
 
 
-func locate_triag_surface(pxyz,tr,win=, m=) {
+func locate_triag_surface(pxyz,tr,win=, m=,show=) {
 /*DOCUMENT locate_triag_surface(pxyz,tr,win=)
   amar nayegandhi 01/09/04.
 */
   if (is_void(win)) win = window();
+  if (is_void(show)) show = 0;
   window, win;
   /*
   pxyz = array(XYZ,numberof(eaarl));
@@ -436,8 +439,11 @@ func locate_triag_surface(pxyz,tr,win=, m=) {
   y = plthis(2,*);
   z = plthis(3,*);
   
- // plg, grow(y,y(1)), grow(x,x(1)), color="red";
 
+  if (show) {
+    plmk, y,x, marker=5, msize=0.3, color="red";
+    plg, grow(y,y(1)), grow(x,x(1)), color="red";
+  }
   return transpose([[x],[y],[z]]);
 }
   

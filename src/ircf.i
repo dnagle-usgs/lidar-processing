@@ -50,6 +50,7 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
  if (is_void(distthresh)) distthresh = 100
  ecount = 0;
 
+ endit = 0; // if set, will end the iteration mode
  fsmode = mode;
  wfs = 15;
 
@@ -418,6 +419,7 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
  }
 
  if (is_void(tai)) tai = 3;
+ done = 0; // set done to 0 to continue interactive mode
  for (ai=1;ai<=tai;ai++) {
   selcount = 0;
   write, format="Iteration number %d...\n", ai;
@@ -452,17 +454,25 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
   new_eaarl_all = grow(new_eaarl_all(dupidx),new_eaarl_all(0));
   //write, format="number of new_eaarl_all = %d when ai = %d\n",numberof(new_eaarl_all), ai;
 
-  verts = triangulate_xyz(data=new_eaarl_all, plot=plottriag, win=plottriagwin, mode=mode, distthresh=distthresh);
+  verts = triangulate_xyz(data=new_eaarl_all, plot=plottriag, win=plottriagwin, mode=mode, distthresh=distthresh, dolimits=1);
   if (is_void(plottriagwin)) plottriagwin = 0;
 
-  if (interactive == 1) {
+  endit;
+  done;
+  if ((interactive == 1) && (!endit) && (!done)) {
     // allow interactive mode to remove any outliers
     ques = "";
-    n = read(prompt="Interactive Mode? ",ques);
+    n = read(prompt="Interactive Mode?(yes/no/done/end):",ques);
     icount=0;
-    while(ques == "y" || ques == "yes") {
- 	tr = locate_triag_surface(pxyz, verts, win=plottriagwin);
-          if (is_array(tr)) {
+    pques = pointer(ques);
+    if ((*pques)(1) == 'd') done = 1; //done iterating for this loop
+    if ((*pques)(1) == 'e') endit = 1; // ends interation mode
+    while(((*pques)(1) == 'y') && (!done) && (!endit) ) {
+      window, plottriagwin;
+      m = mouse(1,0,"Left:Continue Selection; Middle=Pan/Zoom Mode; Right=End Interactive Mode; CTRL-left=Retriangulate");
+      while ((m(10) == 1) && (m(11) == 0)) {
+ 	tr = locate_triag_surface(pxyz, verts, win=plottriagwin, m=m, show=1);
+        if (is_array(tr)) {
  	    for (tri = 1; tri<= 3; tri++) {
 	     if (mode == 3) {
 	       tridx = where((new_eaarl_all.least/100. == tr(1,tri)) & (new_eaarl_all.lnorth/100.== tr(2,tri)));
@@ -475,7 +485,37 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
           } else {
              write, "No points selected..."
           }
-	n = read(prompt="Continue Interactive Mode? ",ques);
+	m = mouse(1,0,"");
+      }
+      if (m(10) == 2) {
+	// middle click
+	n = read(prompt="Continue Interactive Mode?(yes/no/done/end):",ques);
+        pques = pointer(ques);
+        if ((*pques)(1) == 'd') done = 1; //done iterating for this loop
+        if ((*pques)(1) == 'e') endit = 1; // ends interation mode
+      }
+      if (m(10) == 3) break; // right click
+      if ((m(11) == 4) && (m(10) == 1)) {
+	// control-left click
+	// retriangulate....
+        if (icount) {
+           tridx = where(new_eaarl_all.rn != 0);
+	   new_eaarl_all = new_eaarl_all(tridx);
+           write, "Retriangulating..."
+	   if (mode == 3) {
+  	     nea_idx = msort(new_eaarl_all.least, new_eaarl_all.lnorth);
+	   } else {
+  	     nea_idx = msort(new_eaarl_all.east, new_eaarl_all.north);
+	   }
+
+  	   new_eaarl_all = new_eaarl_all(nea_idx);
+  	   verts = triangulate_xyz(data=new_eaarl_all, plot=plottriag, win=plottriagwin, mode=mode, distthresh=distthresh);
+	   n = read(prompt="Continue Interactive Mode?(yes/no/done/end):",ques);
+           pques = pointer(ques);
+           if ((*pques)(1) == 'd') done = 1; //done iterating for this loop
+           if ((*pques)(1) == 'e') endit = 1; // ends interation mode
+        }
+      }
     }
 
     if (icount) {
