@@ -41,6 +41,10 @@ UI32 time_recs;
 UI32 dmars_recs;
 UI32 current_rec;
 
+#define SECS_WEEK (86400*7)
+double bsow, esow, bsowe=-1;	// beginning seconds of the week
+int week_rollover = 0;
+
 typedef struct {
   UI32 secs;
   UI32 usecs;
@@ -107,13 +111,33 @@ configure_header_defaults() {
   hdr.nrecs	          =     0; // Gets filled in after pass 1.
 }
 
+week_rollover_warning() {
+  fprintf(stderr,"\
+\n********************************************************************\
+\n*****  Week Rollover occured!!!  The output will be truncated    ***\
+\n*****  to the end of the week so IEX will not become confused    ***\
+\n*****  and screwup.                                              ***\
+\n********************************************************************\n");
+   week_rollover = 1;
+}
+
+
+ time_t * it( double v ) {
+ static time_t i;
+ i = v;
+ return &i;
+}
 
 display_header() {
 #define MAXSTR 256
  char s[MAXSTR];
- double bsow, esow;
- bsow = tarray[0].secs % 86400;
- esow = tarray[time_recs-1].secs % 86400;
+ double start_secs, end_secs, day_start_sow;
+ start_secs = tarray[0].secs;
+ end_secs   = tarray[time_recs-1].secs;
+ bsow = fmod(start_secs, SECS_WEEK);
+ bsow = start_secs - bsowe;
+ esow = end_secs - start_secs + bsow;
+////  bsowe = (int)(start_secs/SECS_WEEK) * SECS_WEEK;
  fprintf(stderr,
   "------------------------------------------------------------------\n"
  );
@@ -149,9 +173,21 @@ display_header() {
       hdr.dTimeTagBias,
       hdr.nrecs
   );
-  fprintf(stderr,
-  " Start SOW: %9.3f          Stop SOW: %9.3f\n", bsow, esow
+  {
+    char start[MAXSTR], stop[MAXSTR], wk[MAXSTR];
+    strftime( start, MAXSTR,"%D %T", gmtime( it(start_secs)));
+    strftime(  stop, MAXSTR,"%D %T", gmtime( it(end_secs)));
+    strftime(    wk, MAXSTR,"%D %T", gmtime( it(bsowe)));
+  fprintf(stderr, "\
+ Start SOE: %9.0f          Stop SOE: %9.0f     Bsowe: %9.0f\n\
+ Date/Time: %17s            %17s     %17s\n", 
+     start_secs, end_secs, bsowe, start, stop, wk
   );
+  }
+  fprintf(stderr,
+  " Start SOW: %9.0f         Stop SOW: %9.0f\n", bsow, esow
+  );  
+
   fprintf(stderr,
   "  Duration: %6.1f/secs (%4.3f/hrs)\n",
        esow-bsow,
@@ -180,16 +216,31 @@ display_header() {
 
 time_rec(FILE *f, int pass) {
   struct timeval tv;
+  struct tm *tm;
+  int rv=1;
+  int sod;
   fread( &tv, sizeof(tv), 1, idf);
+  if ( time_recs == 0 ) {
+     tarray[0].secs = tv.tv_sec + gps_time_offset ;
+     tm = gmtime( (time_t *)&tarray[0].secs );
+       sod = tarray[0].secs % 86400;
+     bsowe = tarray[0].secs - sod - tm->tm_wday*86400;
+  }
   switch (pass) {
    case 1:
      tarray[time_recs].secs = tv.tv_sec + gps_time_offset ;
      tarray[time_recs].usecs = tv.tv_usec;
-     time_recs++;
+     if  ((((tv.tv_sec + gps_time_offset  ) - bsowe) ) >= (SECS_WEEK-1)) {
+	rv =0;
+     } else 
+        time_recs++;
      break;
-   case 2:	// Just skip the time data in pass 2.
+   case 2:	// Check for crossing a SOW boundry and stop if found.
+     if  ((((tv.tv_sec + gps_time_offset  ) - bsowe) ) >= (SECS_WEEK-1))
+	rv =0;
      break;
   }
+  return rv;
 }
 
 dmars_rec( FILE *f, FILE *odf, int pass) {
@@ -239,15 +290,22 @@ if ( cnt++ == 0 )
 
 pass1( FILE *f ) {
   I32 type;
+  int rv=1;
   current_rec = 0;
   fprintf(stderr,"Pass 1...\n");
   tarray = (XTIME *)malloc(86400*sizeof(XTIME));
   while ( (type=fgetc(idf)) != EOF ) {
     switch (type) {
-      case 0x7d:  time_rec(f, 1); break;
+      case 0x7d:  
+	  rv=time_rec(f, 1); break;
+
       case 0x7e: dmars_rec(f, NULL, 1); break;
     }
-  } 
+    if ( rv == 0 ) {
+      week_rollover_warning();
+      break;
+    } 
+  }
   hdr.nrecs = dmars_recs;
 // Output the header record again
   if (odf) fwrite( &hdr, sizeof(hdr), 1, odf );
@@ -256,12 +314,17 @@ pass1( FILE *f ) {
 
 pass2( FILE *f, FILE *odf ) {
   I32 type;
+  int rv=1;
   current_rec = 0;
   fprintf(stderr,"Pass 2...");
   while ( (type=fgetc(idf)) != EOF ) {
     switch (type) {
-      case 0x7d:  time_rec(f,2); break;
+      case 0x7d:  rv=time_rec(f,2); break;
       case 0x7e: dmars_rec(f,odf,2); break;
+    }
+    if ( rv == 0 ) {
+      week_rollover_warning;
+      break;
     }
   } 
 
@@ -282,7 +345,7 @@ process_options( int argc, char *argv[] ) {
       break;
 
     case 'T':
-      if( sscanf(optarg,"%lf", &toff ) != 1 ) {
+      if( sscanf(optarg,"%d", &toff ) != 1 ) {
        perror("Invalid backoff time offset.");
        exit(1);
       }
@@ -328,18 +391,19 @@ main( int argc, char *argv[] ) {
 // Backup "toff" (option -T)  seconds from the end of the file
 // to sync up time with DMARS.
   idx = time_recs - toff;
-  fprintf(stderr,"\n%d Time recs, %d DMARS recs\nsizeof(hdr)=%d\n sizeof(IEX_RECORD)=%d, gscale=%f ascale=%f\n", 
+  fprintf(stderr, "\
+  Time Recs: %-5d          DMARS Recs: %-7d\n\
+sizeof(hdr): %-5d  sizeof(IEX_RECORD): %-7d\n", 
           time_recs, 
           dmars_recs,
           sizeof(hdr),
-          sizeof(IEX_RECORD),
-          hdr.dGyroScaleFactor,
-          hdr.dAccelScaleFactor
+          sizeof(IEX_RECORD)
      );
   tm = gmtime( (time_t *)&tarray[idx].secs );
   dmars_2_gps = (tm->tm_wday*86400 +tarray[idx].secs%86400) - 
                 tarray[idx].dmars_ticks/200 ;
   { char str[256];
+    printf("sow = %d\n", tm->tm_wday*86400);
     strftime(str, 256, "%F Day:%u  %T", tm);
     fprintf(stderr,"%s", str);
   }
@@ -357,6 +421,7 @@ main( int argc, char *argv[] ) {
   fprintf(stderr,"\nRecs Written: %d\n", recs_written);
   fclose(odf);
 }
+
 
 
 

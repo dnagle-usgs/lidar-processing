@@ -1,0 +1,1225 @@
+#!/bin/sh
+# \
+exec wish "$0" ${1+"$@"}
+
+
+##### #!/opt/eaarl/packages/ActiveTcl8430/bin/wish
+
+#
+# Program to add some limited tcl/Tk GUI capability to Yorick programs.
+#
+#  C. W. Wright   wright@lidar.wff.nasa.gov
+#
+# $Id$
+#  
+# This program is copyrighted under the terms of 
+# The GNU GENERAL PUBLIC LICENSE,  Version 2, June 1991.
+# A full copy can be found at: http://www.gnu.org/licenses/gpl.txt
+#
+# 
+#
+# The main site for this program is:
+#     http://ytk.sourceforge.net
+# *** NOTE: The newer version at ytk.sourceforge.net isn't compatible
+# with ytk (yet) so don't try using it.
+#
+# The easiest way to get this program working it to download and use
+# the ActiveTcl from:        http://aspn.activestate.com/ASPN/Tcl
+#
+# The best source (according to Dave Munro) for Yorick is:
+#  http://rhcontrib.bero.org 
+#  Look under "Development/Languages" to find it.  The main site
+# for Yorick is:   ftp://ftp-icf.llnl.gov/pub/Yorick/doc/index.html
+# Another version of Yorick with builtin command history and
+# an ability for dynamic linking of "C" modules is at:
+# https://sourceforge.net/projects/yorick-mb/
+#
+#
+# Make "most recent" persist from run to run.
+# Stuff to add sometime.
+# popup balloon help
+# expand plot menus
+# time calculator
+# some method to "alias" the window names to names meaningful to a project
+# fg/bg color change method for plot so we could have colors on black
+# html help stuff.
+#
+#
+#  
+#
+#
+# Revision history
+#
+# 5/31/2003 Added runline commands.  Now you can say:  ytk somefile.[ytk,i,tcl,tk]
+# 1/3/2002
+#  -> Added  extended help for menu items.
+#  -> Moved fifos to users home dir and use a unique name so several
+#     Ytks can run at once.
+#  -) Added "Save Options" button in Edit pulldown.
+#  -) Added .ytkrc default file in users home dir.
+#  -) Changed many variables to be elements of the _ytk array so
+#     they can easily be saved/restored in .ytkrc
+#
+#   1/2/2002 ww *) Moved fifos to user's home dir and added some "uniqueness"
+#                  to the name to avoid problems when two or more ytks are running.
+# 12/31/2001 ww *) Minor changes to gracefully fail if ytk can't find Yorick.
+#               *) Added code to look for yorick and rlterm and use what it
+#                  finds if it can't use what the user provided.
+# 12/28/2001 ww Added some simple most recent file selection stuff
+# 12/21/2001 ww Added /tmp/ytk fifo for passing data back from yorick
+#               to tcl/tk.  Also added /tmp/tky for sending stuff from
+#               tcl/tk to Yorick in cases where you want/need to avoid
+#               using the exp_send command.
+#  
+#
+
+if { $argc != 0 } {
+  puts $argv
+  set load_on_start $argv;
+} else {
+  set load_on_start "";
+}
+
+
+variable ycode_dir "."
+variable ytkcode_dir "."
+variable Y_SITE ""
+
+proc restore_defaults { } {
+ global _ytk
+set _ytk(editor)			vi
+set _ytk(yorick_executable)		/opt/eaarl/bin/yorick
+set _ytk(use_rlterm)			Yes
+set _ytk(splash_gif)			/opt/eaarl/packages/yorick-1.5/contrib/ytk.gif
+set _ytk(plot_dpi)			75
+set _ytk(plot_style)			work
+set _ytk(plot_palette)			earth
+set _ytk(separate_help_win)		Yes
+set _ytk(ycode_dir)			.
+set _ytk(ytkcode_dir)			/opt/eaarl/lidar-processing/src/
+set _ytk(plmk_default_color)		black
+set _ytk(plmk_default_msize)		0.2
+set _ytk(plmk_default_width)		0.5
+set _ytk(annoying_help)		 	No
+}
+
+ restore_defaults;			;# begin with the above default settings
+
+
+############################################################
+# Stuff below here doesn't need to be changed if you are
+# just porting to another system.
+############################################################
+
+package require BWidget
+package require fileutil
+
+set ytk_version "Ytk version 1.0  as of 1/3/2002"
+
+set ytk_PLMK_marker(None)   		0 
+set ytk_PLMK_marker(Square) 		1 
+set ytk_PLMK_marker(Cross) 		2 
+set ytk_PLMK_marker(Triangle) 		3 
+set ytk_PLMK_marker(Circle) 		4 
+set ytk_PLMK_marker(Diamond) 		5 
+set ytk_PLMK_marker(Cross45) 		6 
+set ytk_PLMK_marker(Inverted-Triangle) 	7 
+
+
+proc save_options { } {
+ global _ytk
+ set fn "~/.ytkrc"
+ if { [ file exists $fn ] } {
+   if { [ catch { set f [ open $fn "w+" ] } err ] } {
+     tk_messageBox -icon error -message $err -type ok
+   } else { 
+	 set names [ array names _ytk ];
+	 foreach x $names { 
+	   set s [ format "set %32s    %-32s"  "_ytk($x)" $_ytk($x) ]; 
+	   puts $f "$s"
+	 }
+     close $f
+     tk_messageBox -icon info -message "Options saved to: $fn" -type ok
+   }
+ } else {
+     tk_messageBox -icon error -message "There's no .ytkrc file in your home dir" -type ok
+ }
+}
+
+
+
+
+# Check for a .ytkrc file in the users home dir.
+ if { [ file exists "~/.ytkrc" ] } {
+   puts "Found .ytk...."
+   if { [ catch { source "~/.ytkrc" } err ] } {
+     puts "Problem in ~/.ytkrc: $err "
+   }
+ } else {			;# No ~.ytkrc found, so use defaults
+   puts "No  ~/.ytk found, using defaults"
+ }
+
+
+wm withdraw .
+ if { [ catch { package require Expect } err ]  } {
+     tk_messageBox -icon error \
+	-message "$err\n Ytk cannot function without ExpectK. Sorry." -type ok
+     exit
+ } 
+
+
+ catch { set rlterm [ exec which rlterm ] }
+
+############# set _ytk(yorick_executable) junk
+ if { [ file exists $_ytk(yorick_executable) ] == 0 } {
+    catch { set _ytk(yorick_executable)  [ exec which yorick ] }
+############ set _ytk(yorick_executable) junk
+    if { [ file exists _ytk(yorick_executable) ] == 0 } {
+           tk_messageBox -icon error \
+	      -message "$err\n Ytk cannot function without Yorick.\n\
+Please click OK, and then use the file dialog to find a Yorick we can use." -type ok
+         set _ytk(yorick_executable) [ tk_getOpenFile -initialdir "/" ]
+    }
+ }
+
+
+# fifo name for data coming from yorick.
+set ytk_fifo_name "/tmp/ytkfifo.[ pid ]"
+
+# fifo name for special data going to yorick.
+set tky_fifo_name "/tmp/tkyfifo.[ pid ]"
+
+set rn 1
+set tkcmd_line 0
+
+
+
+# Establish fifo for communications from Yorick ---> tcl/tk
+if { [ file exists $ytk_fifo_name ] == 0 } {
+  exec mkfifo -m uog+rw "$ytk_fifo_name" 
+}
+  set ytk_fifo [ open $ytk_fifo_name "r+" ] 
+  fconfigure $ytk_fifo -buffering line -blocking 0
+
+# Establish fifo for communications to  Yorick <---- tcl/tk
+if { [ file exists $tky_fifo_name ] == 0 } {
+  exec mkfifo -m uog+rw "$tky_fifo_name"
+}
+  set tky_fifo [ open $tky_fifo_name "r+" ] 
+  fconfigure $tky_fifo -buffering line -blocking 0
+
+
+fileevent $ytk_fifo readable {
+  global tkcmd_line
+  incr tkcmd_line;
+  set ycmdstr [ gets $ytk_fifo ]  
+  .tx.doc insert end "$tkcmd_line:$ycmdstr\n"
+  if { [ catch { eval $ycmdstr } errcode ] } {
+    send_user "*** Ytk Error in:$ycmdstr"
+    incr tkcmd_line;
+    .tx.doc insert end "**ERROR:  $errcode\n"
+  }  
+  .tx.doc yview  moveto 1.0;
+  .tx.doc delete  1.0  "end - 100 lines"
+  update
+}
+
+
+############# Show a signon spash window
+if { [ catch { set _ytk_splash_img [ image create photo -file "$_ytk(splash_gif)" ] } err ] } {
+  puts "Cant't find $_ytk(splash_gif)";
+  tk_messageBox -icon error -message $err -type ok
+  set _ytk_splash_img [ image create photo ]
+}
+
+toplevel .splash
+label .splash.yorickimg -image $_ytk_splash_img -relief raised -borderwidth 4
+pack .splash.yorickimg -side top
+update
+set sz [ wm maxsize . ]
+set cx [ expr [ lindex $sz 0 ]/2 - [winfo width .splash ]/2];  
+set cy [ expr [ lindex $sz 1 ] / 2 - [winfo height .splash ]/2 ]
+set about_geo "+$cx+$cy"
+wm geometry .splash $about_geo 
+update
+
+ if { [ info exists rlterm ] && [ string equal $_ytk(use_rlterm) "Yes" ]  } {
+ if { [ catch  { spawn $rlterm $_ytk(yorick_executable) } ] } {
+   puts "Could't find Yorick.  Please edit \"ytk\" and set \"_ytk(yorick_executable)\" to \
+   your Yorick location"
+   file delete $ytk_fifo_name
+   file delete $tky_fifo_name
+   exit
+  } 
+ } else {
+ if { [ catch  { spawn $_ytk(yorick_executable) } ] } {
+   puts "Could't find Yorick.  Please edit \"ytk\" and set \"_ytk(yorick_executable)\" to \
+   your Yorick location"
+   file delete $ytk_fifo_name
+   file delete $tky_fifo_name
+   exit
+  } 
+ } 
+
+expect "Yorick * ready"
+set yorick_version [ lindex [ split $expect_out(0,string) ] 1 ]
+expect ">"
+exp_send "_ytk = 1\r"
+expect ">"
+exp_send "Y_SITE\r"
+expect "\r*>"
+set Y_SITE  [ lindex [ split [ string trim $expect_out(0,string) "\r\n" ] "\"" ] 1 ]
+
+if { [ file exists "$Y_SITE//contrib/ytk.i" ] == 0 } {
+  tk_messageBox -icon error \
+     -message "Can't find ytk.i. \n\
+ Find the ytk.i file from the Ytk  from the distribution \n\
+and put it somewhere in your Yorick path."  -type ok
+   file delete $ytk_fifo_name
+   file delete $tky_fifo_name
+ exit
+}
+exp_send "#include \"ytk.i\"\r"
+expect ">"
+exp_send "open_tkcmd_fifo, \"$ytk_fifo_name\"\r"
+set indoc 0
+set hwin 0
+puts $spawn_id
+match_max -i $spawn_id 32768
+
+
+label .splash.signon -justify center \
+   -text "$ytk_version
+Yorick Version: $yorick_version
+Tcl $tcl_version, Tk $tk_version, ExpectK [exp_version]" 
+
+button .splash.start -text "Get Started" \
+	-state normal \
+	-command { set run_ytk 1 }
+pack .splash.signon .splash.start -side top -fill x
+update
+after 2000 { set run_ytk 1 }
+vwait run_ytk
+pack forget .splash.yorickimg
+pack forget .splash.signon
+pack forget .splash.start
+destroy .splash
+##################### End of spash
+
+
+
+wm minsize . 350 1
+. configure -width 350
+menu .mb
+. configure -menu .mb
+menu .mb.file 
+menu .mb.edit 
+menu .mb.graph 
+menu .mb.graph.open
+menu .mb.graph.kill
+menu .mb.graph.select
+menu .mb.graph.gridxy
+menu .mb.graph.plot
+menu .mb.debug
+menu .mb.tkcon
+menu .mb.demo
+menu .mb.help
+.mb add cascade -label File  -underline 0 -menu .mb.file
+.mb add cascade -label Edit  -underline 0 -menu .mb.edit
+.mb add cascade -label Debug -underline 0 -menu .mb.debug
+.mb add cascade -label Graph -underline 0 -menu .mb.graph
+.mb add cascade -label "Tcl/Tk" -underline 0 -menu .mb.tkcon
+.mb add cascade -label Demos -underline 2 -menu .mb.demo
+.mb add cascade -label Help  -underline 0 -menu .mb.help
+
+
+
+
+##############################################################
+proc ytk_About {} {
+  global _ytk_splash_img tcl_version tk_version yorick_version ytk_version
+    set w .about
+    if {[winfo exists $w]} {
+        wm deiconify $w
+    } else {
+        global about_geo
+        global tk_patchLevel tcl_patchLevel
+        toplevel $w 
+        wm title $w "About Ytk"
+        button $w.b -text Dismiss -command [list wm withdraw $w]
+        label $w.img -image $_ytk_splash_img -relief raised -borderwidth 4
+        label $w.text -bd 1 -text \
+"Yorick-Tcl-tK (and Expect)\n\
+$ytk_version\n\
+Yorick $yorick_version\n\
+Tcl v$tcl_version,   Tk v$tk_version,   Expect [exp_version]"
+        pack $w.img -side top
+        pack $w.text -fill both -side top -expand 1
+        pack $w.b -fill x -side bottom
+        wm  geometry $w $about_geo
+	update
+    }
+}
+
+proc ytk_kick_off_editor { editor fn } {
+   if { $fn != "" } { 
+     switch $editor {
+       vi { exec xterm -T "$editor $fn" -e $editor $fn & }
+       kedit  -
+       kwrite -
+       emacs  -
+       gedit  -
+       gvim   -
+       xedit  -
+       nedit  -
+       xemacs { 
+          if { $editor == "gvim" } {
+            exec $editor $fn  & 
+          } else {
+            exec $editor $fn & 
+          }
+       }
+     }
+   }
+}
+
+.mb.edit add command -label "Y_SITE ..." -command { 
+   set _ytk_fn [ select_for_edit $Y_SITE ]
+   ytk_kick_off_editor $_ytk(editor) $_ytk_fn
+}
+
+.mb.edit add command -label "~/Yorick ..." -command { 
+   set _ytk_fn [ select_for_edit "~/Yorick/" ]
+   ytk_kick_off_editor $_ytk(editor) $_ytk_fn
+}
+
+.mb.edit add command -label "~/lidar-processing ..." -command { 
+   set _ytk_fn [ select_for_edit "~/lidar-processing/" ]
+   ytk_kick_off_editor $_ytk(editor) $_ytk_fn
+}
+
+.mb.edit add separator
+.mb.edit add command -label "      Editors"
+.mb.edit add radiobutton -label "vi"       -value  "vi"     -variable _ytk(editor) -underline 0 
+.mb.edit add radiobutton -label "gvim"     -value  "gvim"   -variable _ytk(editor) -underline 2 
+.mb.edit add radiobutton -label "emacs"    -value  "emacs"  -variable _ytk(editor) -underline 0 
+.mb.edit add radiobutton -label "xemacs"   -value  "xemacs" -variable _ytk(editor) -underline 0 
+.mb.edit add radiobutton -label "kedit"    -value  "kedit"  -variable _ytk(editor) -underline 2 
+.mb.edit add radiobutton -label "nedit"    -value  "nedit"  -variable _ytk(editor) -underline 0 
+.mb.edit add radiobutton -label "kwrite"   -value  "kwrite" -variable _ytk(editor) -underline 1 
+.mb.edit add radiobutton -label "gedit"    -value  "gedit"  -variable _ytk(editor) -underline 0 
+.mb.edit add radiobutton -label "xedit"    -value  "xedit"  -variable _ytk(editor) -underline 4 
+.mb.edit add separator
+.mb.edit add command -label "Save Options" -command  save_options;
+.mb.edit add command -label "Restore Defaults" -command  restore_defaults;
+
+
+.mb.debug add command \
+	-label "dbauto,0  Enter dbug automatically" -command { exp_send "dbauto,0\r" }
+.mb.debug add command \
+	-label "dbauto,1  Enter dbug after hitting <RET>" -command { exp_send "dbauto,1\r" }
+.mb.debug add command -label "dbdis" -command { exp_send "dbdis\r" }
+.mb.debug add command -label "dbexit" -command { exp_send "dbexit\r" }
+.mb.debug add command -label "dbinfo" -command { exp_send "dbinfo\r" }
+.mb.debug add command -label "dbskip" -command { exp_send "dbskip\r" }
+.mb.debug add command -label "dbup" -command { exp_send "dbup\r" }
+
+
+.mb.tkcon add command -label "Tkcon" -command { 
+  exec tkcon & 
+}
+
+.mb.tkcon add checkbutton -label "Tkcmd window"  \
+	-onvalue "wm deiconify .tx" \
+	-offvalue "wm withdraw .tx" \
+	 -variable tkcmdvalue  -underline 1 -command { 
+   eval $tkcmdvalue  
+}
+
+
+proc ytk_run_demo { n } {
+  exp_send "#include \"$n.i\"\r"
+  expect ">"
+  exp_send "$n\r"
+}
+
+
+.mb.demo add command -label "demo 1  sliding sine wave" -command { ytk_run_demo demo1  }
+.mb.demo add command -label "demo 2  drum head simulation" -command { ytk_run_demo demo2  }
+.mb.demo add command -label "demo 3  mechanical arms swinging around" -command { ytk_run_demo demo3  }
+.mb.demo add command -label "demo 4  Air flow around an airfoil section" -command { ytk_run_demo demo4  }
+.mb.demo add command -label "demo 5  3D graphics and 3D slicing" -command { ytk_run_demo demo5  }
+.mb.demo add command -label "testg   Graphics performance test" -command { ytk_run_demo testg  }
+.mb.demo add command -label "testlp  Test linear algebra functions" -command { ytk_run_demo testlp  }
+.mb.demo add command -label "testm   Test Fft, LU, QR, and SVD" -command { ytk_run_demo testm  }
+.mb.demo add command -label "test1" -command { ytk_run_demo test1  }
+.mb.demo add command -label "test2" -command { ytk_run_demo test2  }
+.mb.demo add command -label "test3" -command { ytk_run_demo test3  }
+.mb.demo add command -label "testb   Test I/O stuff" -command { ytk_run_demo testb  }
+.mb.demo add command -label "testfull Runs a complete test of Yorick" -command { ytk_run_demo testfull  }
+
+.mb.help add checkbutton -label "Help goes in new window" \
+	-onvalue Yes -offvalue No -variable _ytk(separate_help_win)
+.mb.help add checkbutton -label "Help PopUp" \
+	-onvalue Yes -offvalue No -variable _ytk(annoying_help) \
+-command { 
+  if { $_ytk(annoying_help) == "Yes" } {
+    wm state .ytk_dynamic_help normal 
+  }  else {
+    wm state .ytk_dynamic_help  withdrawn
+  }
+}
+.mb.help add separator
+.mb.help add command -label "About Ytk" -command { ytk_About }
+.mb.help add command -label "Y_SITE: $Y_SITE" 
+.mb.help add command -label "Yorick Version: $yorick_version" 
+.mb.help add command -label "Yorick location: $_ytk(yorick_executable)" 
+.mb.help add command -label "Tcl $tcl_version, Tk $tk_version, ExpectK [exp_version]" 
+.mb.help add command -label "Yorick" -command { exp_send "help\r" }
+.mb.help add separator
+.mb.help add command -label "array"    -command { exp_send "help,array\r" }
+.mb.help add command -label "animate"    -command { exp_send "help,animate\r" }
+.mb.help add command -label "fft"    -command { exp_send "help,fft\r" }
+.mb.help add command -label "fma"    -command { exp_send "help,fma\r" }
+.mb.help add command -label "grow"    -command { exp_send "help,grow\r" }
+.mb.help add command -label "help"    -command { exp_send "help,help\r" }
+.mb.help add command -label "hardcopy" -command { exp_send "help,hcp\r" }
+.mb.help add command -label "indgen" -command { exp_send "help,indgen\r" }
+.mb.help add command -label "interp" -command { exp_send "help,interp\r" }
+.mb.help add command -label "limits" -command { exp_send "help,limits\r" }
+.mb.help add command -label "numberof" -command { exp_send "help,numberof\r" }
+.mb.help add command -label "plg"    -command { exp_send "help,plg\r" }
+.mb.help add command -label "plmk"    -command { exp_send "help,plmk\r" }
+.mb.help add command -label "plsys" -command { exp_send "help,plsys\r" }
+.mb.help add command -label "print"    -command { exp_send "help,print\r" }
+.mb.help add command -label "sort"    -command { exp_send "help,sort\r" }
+.mb.help add command -label "span"    -command { exp_send "help,span\r" }
+.mb.help add command -label "where"    -command { exp_send "help,where\r" }
+.mb.help add command -label "where2"    -command { exp_send "help,where2\r" }
+.mb.help add command -label "write"    -command { exp_send "help,write\r" }
+.mb.help add command -label "window"    -command { exp_send "help,window\r" }
+.mb.help add command -label "viewport"    -command { exp_send "help,viewport\r" }
+.mb.help add separator
+.mb.help add command -label "get_dir"    -command { exp_send "help,get_dir\r" }
+.mb.help add command -label "get_openfn"    -command { exp_send "help,get_openfn\r" }
+.mb.help add command -label "get_savefn"    -command { exp_send "help,get_savefn\r" }
+.mb.help add command -label "tk_messageBox" -command { exp_send "help,tk_messageBox\r" }
+
+
+proc select_for_edit { start_dir } {
+ global _ytk_fn y_codedir ytk_codedir
+  set _ytk_fn [ tk_getOpenFile \
+	-initialdir $start_dir \
+     	-filetypes \
+	{  
+           {{Yorick Programs, files} {.i .gp .gs}  }
+	   {{Yorick Specfic Tcl/Tk Programs} {.ytk} } 
+	   {{Tcl/Tk Programs} {.tcl .tk} } 
+	   {{All Files}       {*}   }
+        }  ]
+  if { $_ytk_fn != "" } {
+    switch [ file extension $_ytk_fn ] {
+    ".tcl" -
+    ".tk"  -
+    ".ytk" {  
+#########	    set ytkcode_dir [ file dirname $_ytk_fn ]
+           }
+
+    }
+  }
+  return $_ytk_fn
+}
+
+
+# clear the most recent file queue
+set _ytk_mrl_idx 1
+for { set i 1 } { $i <= 8 } { incr i } {
+  set _ytk_mrl($i) ""
+}
+
+
+proc most_recent_loaded {} {
+ global _ytk_mrl _ytk_mrl_idx
+ toplevel .most_recent
+ wm transient .most_recent .
+ listbox .most_recent.lb \
+	-height 0 \
+	-width 0 
+ button .most_recent.dismiss -text "Dismiss" -command { destroy .most_recent }
+ pack   .most_recent.lb \
+	.most_recent.dismiss \
+	-side top -fill x 
+for { set i 1 } { $i <= 8 } { incr i } {
+  if { $_ytk_mrl($i) != "" } {
+    .most_recent.lb insert end "$i [ file tail $_ytk_mrl($i)  ]"
+  }
+ }
+
+bind .most_recent.lb <Double-Button-1> {
+ global ycode_dir _ytk_fn
+  set idx [ lindex [ selection get ] 0 ]
+  set _ytk_fn $_ytk_mrl($idx)
+
+    switch [ file extension $_ytk_fn ] {
+    ".tcl" -
+    ".tk"  -
+    ".ytk" {  
+	    uplevel #0 { source $_ytk_fn }
+           }
+    ".i"   {   
+	    set ycode_dir [ file dirname $_ytk_fn ]
+	    cd $ycode_dir;
+	    exp_send "cd, \"$ycode_dir\"\r"
+	    exp_send "#include \"$_ytk_fn\"\r"
+           }
+
+    }
+ }
+}
+
+
+
+proc ytk_mr_enqueue { f } {
+ global _ytk_mrl _ytk_mrl_idx 
+ set _ytk_mrl($_ytk_mrl_idx) $f;
+ incr _ytk_mrl_idx
+ if { $_ytk_mrl_idx > 8 } { set _ytk_mrl_idx 1 }
+}
+
+proc select_ytk_fn { start_dir } {
+ global _ytk_fn y_codedir ytk_codedir _ytk_mrl _ytk_mrl_idx
+  set _ytk_fn [ tk_getOpenFile \
+	-initialdir $start_dir \
+     	-filetypes \
+	{  
+	   {{Yorick Specfic Tcl/Tk Programs} {.ytk} } 
+           {{Yorick or Tcl/tk program} {.i .ytk}  }
+           {{Yorick Programs} {.i}  }
+	   {{Tcl/Tk Programs} {.tcl .tk} } 
+	   {{All Files}       {*}   }
+        }  ]
+  if { $_ytk_fn != "" } {
+    switch [ file extension $_ytk_fn ] {
+    ".tcl" -
+    ".tk"  -
+    ".ytk" {  
+	    uplevel { source $_ytk_fn }
+	    ytk_mr_enqueue $_ytk_fn
+           }
+    ".i"   {   
+	    ytk_mr_enqueue $_ytk_fn
+	    set ycode_dir [ file dirname $_ytk_fn ]
+	    cd $ycode_dir;
+	    exp_send "cd, \"$ycode_dir\"\r"
+	    exp_send "#include \"$_ytk_fn\"\r"
+###  set _ytk_funclist [ ::fileutil::grep {func } $_ytk_fn ]
+###  puts $_ytk_funclist
+           }
+
+    }
+  }
+}
+
+
+
+
+.mb.file add command -label "Load a Yorick/ytk program file ..." \
+	-command { select_ytk_fn $ytkcode_dir }
+.mb.file add command -label "Load Yorick/ytk from ~/Yorick ..." \
+	-command { select_ytk_fn "~/Yorick" }
+.mb.file add command -label "Load Yorick/ytk from Y_SITE ..." \
+	-command { select_ytk_fn $Y_SITE }
+
+.mb.file add command -label "Restore PBD Data file..." -command {
+  set _ytk_fn [ tk_getOpenFile -filetypes \
+	{  
+           {{Yorick PBD file} {.pbd}  }
+	   {{All Files}       {*}   }
+        }  ]
+  if { $_ytk_fn != "" } {
+    switch [ file extension $_ytk_fn ] {
+    ".pbd" {  
+	    set ytk_pbd_dir [ file dirname $_ytk_fn ]
+            exp_send "_ytk_pbd_f = openb(\"$_ytk_fn\"); restore, _ytk_pbd_f;\r"
+            exp_send "show, _ytk_pbd_f\r"
+ 	       toplevel .stby
+            exp_send "\r"
+   set sz [ wm maxsize . ]
+               label .stby.lbl -text "Loading\n$_ytk_fn\nplease wait.."
+               pack .stby.lbl
+   set wz "50 50"
+   set sx [ expr [ lindex $sz 0 ] / 2  - [lindex $wz 0]/2 ]
+   set sy [ expr [ lindex $sz 1 ] / 2  - [lindex $wz 1]/2 ]
+   wm geometry .stby "+$sx+$sy"
+ 	       update
+            expect ">"
+               destroy .stby
+           }
+    }
+  }
+}
+
+.mb.file add separator
+.mb.file add command -label "Most recent loaded" \
+	-command { most_recent_loaded; }
+.mb.file add separator
+.mb.file add command -label   Exit -command  { 
+   file delete $ytk_fifo_name
+   file delete $tky_fifo_name
+exit
+}
+
+toplevel .ytk_dynamic_help
+set varinfo "This is the Dynamic help window. 
+Many of the menu items will be described here 
+when you place the mouse cursor over each item."
+########### wm overrideredirect .xxx 1
+label .ytk_dynamic_help.lhelp \
+	-textvariable varinfo \
+	-bg yellow -fg black -borderwidth 7
+button .ytk_dynamic_help.dismiss \
+	-fg black \
+	-bg orange \
+	-activebackground red \
+	-activeforeground white \
+	-text "Turn dynamic help OFF" \
+	-command { 
+  wm state .ytk_dynamic_help withdrawn 
+  set _ytk(annoying_help) No;
+ } 
+pack .ytk_dynamic_help.lhelp .ytk_dynamic_help.dismiss \
+	-side top -expand 1 -fill both
+
+if { $_ytk(annoying_help) == "No" } {
+  wm state .ytk_dynamic_help withdrawn
+}
+
+####################### File menu
+DynamicHelp::register .mb.file menu varinfo
+DynamicHelp::register .mb.file menuentry 0 \
+"Click the dashed-line to convert this menu
+ into a separate window which will persist."
+DynamicHelp::register .mb.file menuentry 1 \
+"Load Ytk program into the Tcl/Tk portion of
+Ytk, or load Yorick .i file into Yorick."
+
+DynamicHelp::register .mb.file menuentry 2 \
+"Load Ytk program or a 
+ Yorick .i file from 
+ your personal Yorick 
+ directory."
+
+DynamicHelp::register .mb.file menuentry 3 \
+"Load Ytk program or a Yorick .i 
+ file from the Y_SITE directory. 
+ (Y_SITE on your system is: $Y_SITE)"
+
+DynamicHelp::register .mb.file menuentry 4 \
+"Load a Yorick PBD (Portable Binary Data)
+ file into Yorick and display the variable
+ names stored in it."
+
+DynamicHelp::register .mb.file menuentry 6 \
+"Use this to quickly re-load a file that
+ you have previously loaded.  This saves 
+ having to locate the file with the file
+ dialog window."
+
+DynamicHelp::register .mb.file menuentry 8 \
+"This terminates Ytk and Yorick. If you 
+ would like to keep any setting changes
+ you've made, be sure and save them by
+ clicking Edit, then \"Save Options\" 
+ before exiting."
+
+####################### Edit menu
+DynamicHelp::register .mb.edit menu varinfo
+DynamicHelp::register .mb.edit menuentry 0 \
+"Click the dashed-line to convert this menu
+ into a separate window which will persist."
+DynamicHelp::register .mb.edit menuentry 1 \
+"Select, then edit a file from Y_SITE 
+($Y_SITE on your system) 
+with the selected editor."
+
+DynamicHelp::register .mb.edit menuentry 2 \
+"Select, then edit a file from 
+your personal Yorick subdirectory
+with the selected editor."
+
+DynamicHelp::register .mb.edit menuentry 3 \
+"Select, then edit a file from 
+the lidar-processing subdirectory
+with the selected editor.  This is
+specific to my project, edit ytk
+and change it if you want."
+
+DynamicHelp::register .mb.edit menuentry 5 \
+"Select your favorite editor below.  Whichever
+editor is selected is the one that will be
+used by the above menus.  The editors need 
+to be present on your system and in a location
+described in your path statement." 
+
+DynamicHelp::register .mb.edit menuentry 16 \
+"Save all the ytk settings to .ytkrc in your 
+home directory."
+
+DynamicHelp::register .mb.edit menuentry 17 \
+"Restore ytk to the default settings.  If you 
+want the defaults to be loaded the next time
+you run ytk, be sure and click \"Save Options\"
+above to write them to .ytkrc."
+
+####################### Graph menu
+DynamicHelp::register .mb.graph menu varinfo
+DynamicHelp::register .mb.graph menuentry 0 \
+"Click the dashed-line to convert this menu
+ into a separate window which will persist."
+
+DynamicHelp::register .mb.graph menuentry 1 \
+"Open a Yorick graphics window. **BEFORE**
+you open the window, be sure and select the
+size (Dpi 75 or 100) and also the style.  You
+can't change dpi or style without killing, and
+then reopening the graphics window. 
+  Up to 8 windows can be opened at once. Be 
+careful to always kill a window with the winkill
+command or the \"Window Kill\" menu selection. If
+you use the little \"X\". Yorick won't know 
+the window was killed."
+
+DynamicHelp::register .mb.graph menuentry 2 \
+"Get rid of a Yorick graphics window."
+
+DynamicHelp::register .mb.graph menuentry 3 \
+"Select a Yorick window for use.  After selecting
+a window, all Yorick plotting commands will 
+use it."
+
+DynamicHelp::register .mb.graph menuentry 4 \
+"Draw various grids over the current
+ Yorick graphics window."
+
+DynamicHelp::register .mb.graph menuentry 5 \
+"This menu contains all the Yorick plotting
+commands and basic menus to select many of the
+specific options."
+
+DynamicHelp::register .mb.graph menuentry 7 \
+"The next \"Open Window..\" will create a 
+75 Dpi (450x450 pixel) graphics window."
+
+DynamicHelp::register .mb.graph menuentry 8 \
+"The next \"Open Window..\" will create a 
+100 Dpi (600x600 pixel) graphics window."
+
+DynamicHelp::register .mb.graph menuentry 10 \
+"Axes: Has coordinate axes with ticks running through 
+the middle of the viewport, similar to the style 
+of many elementary math textbooks."
+
+DynamicHelp::register .mb.graph menuentry 11 \
+"Boxed: Many people prefer the 'Boxed' style, 
+which looks more like other graphics packages."
+
+DynamicHelp::register .mb.graph menuentry 12 \
+"Boxed2: Variant of Boxed. Allows you to put 
+a second set of tick marks and labels on the 
+right hand side of the plot, independent of 
+the ones on the left side." 
+
+DynamicHelp::register .mb.graph menuentry 13 \
+"L_nobox: Allow you to put a second set of 
+tick marks and labels on the right hand side 
+of the plot, independent of the ones on the 
+left side." 
+
+DynamicHelp::register .mb.graph menuentry 14 \
+"Nobox: has no tick marks, labels, or other 
+distractions; use it for drawing geometrical 
+figures or imitating photographs."
+
+DynamicHelp::register .mb.graph menuentry 15 \
+"Vgbox: Viewgraph graphics style in a box."
+
+DynamicHelp::register .mb.graph menuentry 16 \
+"Vg: Viewgraph graphics style'', which the
+High Priest of Yorick, David Munro, recommends 
+as the starting point for high quality graphics."
+
+DynamicHelp::register .mb.graph menuentry 17 \
+"Work: the default style and David Munro's
+ own preference."
+
+DynamicHelp::register .mb.graph menuentry 18 \
+"Work2: allow you to put a second set of tick 
+marks and labels on the right hand side of the 
+plot, independent of the ones on the left side."
+
+DynamicHelp::register .mb.graph menuentry 20 \
+"Pops up Yorick graphics window-0 and fills it 
+with the selected color bar.  After the window
+is up, you can select other color bars and the
+display update and show you what they look like."
+
+
+####################### Tcl/Tk menu
+DynamicHelp::register .mb.tkcon menu varinfo
+DynamicHelp::register .mb.tkcon menuentry 0 \
+"Click the dashed-line to convert this menu
+ into a separate window which will persist."
+
+DynamicHelp::register .mb.tkcon menuentry 1 \
+"Run Tkcon.  You can use Tkcon to help debug 
+Ytk and Tcl/Tk programs.  You can attach Tkcon
+to Ytk by clicking: 
+
+Console->Attach to->Interpreter->ytk.
+
+You will be able to send Tcl/Tk commands to Ytk 
+and examine variables etc. etc.  See the Tkcon
+website: http://tkcon.sourceforge.net. for more
+documentation.  Tkcon is part of the Activetcl
+package."
+
+
+DynamicHelp::register .mb.tkcon menuentry 2 \
+"Open a window to view Tcl/Tk commands sent to ytk
+ for execution.  If you call ytk functions from 
+your Yorick programs, you can see what ytk actually
+received and executed in this window."
+
+
+####################### Tcl/Tk menu
+DynamicHelp::register .mb.help menu varinfo
+DynamicHelp::register .mb.help menuentry 0 \
+"Click the dashed-line to convert this menu
+ into a separate window which will persist."
+ 
+DynamicHelp::register .mb.help menuentry 1 \
+"Redirects the Yorick help results to a separate
+window."
+
+DynamicHelp::register .mb.help menuentry 2 \
+"Enable or disable the annoying dynamic help display
+which is displaying this message right now."
+
+####################### plg submenu
+DynamicHelp::register .mb.graph.plot menu varinfo
+DynamicHelp::register .mb.graph.plot menuentry 0 \
+"Plg: This command plots with lines connecting 
+ the points. It is much faster then plmk if you 
+ have much data."
+
+proc winopen { n } {
+ global _ytk  
+  exp_send "winkill,$n;window,$n,dpi=$_ytk(plot_dpi),style=\"$_ytk(plot_style).gs\"\r" 
+}
+
+proc setpalette { a b c } {
+  global _ytk
+  exp_send "palette, \"$_ytk(plot_palette).gp\"\r"
+}
+
+
+
+trace variable  _ytk(plot_palette) w  setpalette
+
+.mb.graph add cascade -label "Open window..."    -underline 1 -menu .mb.graph.open
+.mb.graph add cascade -label "Kill window..."    -underline 1 -menu .mb.graph.kill
+.mb.graph add cascade -label "Select window..."  -underline 1 -menu .mb.graph.select
+.mb.graph add cascade -label "Grid Settings..."  -underline 1 -menu .mb.graph.gridxy
+.mb.graph add cascade -label "Plot ..."  -underline 2 -menu .mb.graph.plot
+.mb.graph add separator
+.mb.graph add radiobutton \
+	-label "75 Dpi (450x450)" -value "75" -variable _ytk(plot_dpi) -underline 1 
+.mb.graph add radiobutton \
+	-label "100 Dpi (600x600)" -value "100" -variable _ytk(plot_dpi) -underline 1
+.mb.graph add separator
+.mb.graph add radiobutton -label "axes"    -value "axes" -variable _ytk(plot_style) -underline 1 
+.mb.graph add radiobutton -label "boxed"   -value "boxed" -variable _ytk(plot_style) -underline 1 
+.mb.graph add radiobutton -label "boxed2"  -value "boxed2" -variable _ytk(plot_style) -underline 1 
+.mb.graph add radiobutton -label "l_nobox" -value "l_nobox" -variable _ytk(plot_style) -underline 1 
+.mb.graph add radiobutton -label "nobox"   -value "nobox" -variable _ytk(plot_style) -underline 1 
+.mb.graph add radiobutton -label "vgbox"   -value "vgbox" -variable _ytk(plot_style) -underline 1 
+.mb.graph add radiobutton -label "vg"      -value "vg" -variable _ytk(plot_style) -underline 1 
+.mb.graph add radiobutton -label "work"    -value "work" -variable _ytk(plot_style) -underline 1 
+.mb.graph add radiobutton -label "work2"   -value "work2" -variable _ytk(plot_style) -underline 1 
+.mb.graph add separator
+.mb.graph add command -label "Show color bar in win-0" -command { 
+  exp_send "winkill,0;window,0;\
+  _ytk_z = char(span(1,240,240)) (,-:1:10);pli,_ytk_z\r" 
+
+expect ">"
+  tk_messageBox -message "You should see the color bar in the\
+Yorick window 0.\n\n\
+      To see other color bars, Click on <GRAPH> and then the \
+color bar you want to see. "
+  
+}
+.mb.graph add radiobutton -label "earth"   -value "earth" -variable _ytk(plot_palette) -underline 1 
+.mb.graph add radiobutton -label "stern"   -value "stern" -variable _ytk(plot_palette) -underline 1 
+.mb.graph add radiobutton -label "rainbow" -value "rainbow" -variable _ytk(plot_palette) -underline 1 
+.mb.graph add radiobutton -label "yarg"    -value "yarg" -variable _ytk(plot_palette) -underline 1 
+.mb.graph add radiobutton -label "heat"    -value "heat" -variable _ytk(plot_palette) -underline 1 
+.mb.graph add radiobutton -label "gray"    -value "gray" -variable _ytk(plot_palette) -underline 1 
+
+.mb.graph.open add command -label "Window 0" -command { winopen 0  }
+.mb.graph.open add command -label "Window 1" -command { winopen 1  }
+.mb.graph.open add command -label "Window 2" -command { winopen 2  }
+.mb.graph.open add command -label "Window 3" -command { winopen 3  }
+.mb.graph.open add command -label "Window 4" -command { winopen 4  }
+.mb.graph.open add command -label "Window 5" -command { winopen 5  }
+.mb.graph.open add command -label "Window 6" -command { winopen 6  }
+.mb.graph.open add command -label "Window 7" -command { winopen 7  }
+
+.mb.graph.kill add command -label "Winkill 0" -command { exp_send "winkill,0\r" }
+.mb.graph.kill add command -label "Winkill 1" -command { exp_send "winkill,1\r" }
+.mb.graph.kill add command -label "Winkill 2" -command { exp_send "winkill,2\r" }
+.mb.graph.kill add command -label "Winkill 3" -command { exp_send "winkill,3\r" }
+.mb.graph.kill add command -label "Winkill 4" -command { exp_send "winkill,4\r" }
+.mb.graph.kill add command -label "Winkill 5" -command { exp_send "winkill,5\r" }
+.mb.graph.kill add command -label "Winkill 6" -command { exp_send "winkill,6\r" }
+.mb.graph.kill add command -label "Winkill 7" -command { exp_send "winkill,7\r" }
+
+.mb.graph.select add command -label "Window 0" -command { exp_send "window,0\r"  }
+.mb.graph.select add command -label "Window 1" -command { exp_send "window,1\r"  }
+.mb.graph.select add command -label "Window 2" -command { exp_send "window,2\r"  }
+.mb.graph.select add command -label "Window 3" -command { exp_send "window,3\r"  }
+.mb.graph.select add command -label "Window 4" -command { exp_send "window,4\r"  }
+.mb.graph.select add command -label "Window 5" -command { exp_send "window,5\r"  }
+.mb.graph.select add command -label "Window 6" -command { exp_send "window,6\r"  }
+.mb.graph.select add command -label "Window 7" -command { exp_send "window,7\r"  }
+
+.mb.graph.gridxy add command -label "No grid lines" -command { exp_send "gridxy,0,0\r"  }
+.mb.graph.gridxy add command -label "Y axis only" -command { exp_send "gridxy,0,1\r"  }
+.mb.graph.gridxy add command -label "X axis only" -command { exp_send "gridxy,1,0\r"  }
+.mb.graph.gridxy add command -label "Grid X and Y" -command { exp_send "gridxy,1,1\r"  }
+.mb.graph.gridxy add separator
+.mb.graph.gridxy add command -label "Y origin only" -command { exp_send "gridxy,,2\r"  }
+.mb.graph.gridxy add command -label "X origin  only" -command { exp_send "gridxy,2,0\r"  }
+.mb.graph.gridxy add command -label "X and Y origins only" -command { exp_send "gridxy,2,2\r"  }
+
+.mb.graph.plot add command -label "plc  ..." -underline 2 \
+	-command { ytk_plot plc  } -state disabled
+.mb.graph.plot add command -label "pldj ..." -underline 2 \
+	-command { ytk_plot pldj } -state disabled
+.mb.graph.plot add command -label "plf  ..." -underline 2 \
+	-command { ytk_plot plf  } -state disabled
+.mb.graph.plot add command -label "plfp ..." -underline 2 \
+	-command { ytk_plot plfp } -state disabled 
+.mb.graph.plot add command -label "Plg  ..." -underline 2 -command { ytk_plot plg  }
+.mb.graph.plot add command -label "pli  ..." -underline 2 \
+	-command { ytk_plot pli  } -state disabled 
+.mb.graph.plot add command -label "plm  ..." -underline 2 \
+	-command { ytk_plot plm  } -state disabled 
+.mb.graph.plot add command -label "Plmk ..." -underline 2 -command { ytk_plot plmk }
+.mb.graph.plot add command -label "Plt  ..." -underline 2 \
+	-command { ytk_plot plt  } -state disabled 
+.mb.graph.plot add command -label "plv  ..." -underline 2 \
+	-command { ytk_plot plv  } -state disabled 
+
+
+set markers "square cross triangle circle diamond cross45 inverted_triangle" 
+
+proc plot_cmd { cmd n } {
+ global plot_array markers
+ set idx    "$cmd$n"
+ set win    "window($plot_array(window$idx));"
+ set fma    "$plot_array(fma$idx);"
+ if { $fma != "fma;" } { set fma  "" }
+ set color  "$plot_array(color$idx)"
+ set _ytk_x      "$plot_array(x$idx)"
+ set _ytk_y      "$plot_array(y$idx)"
+ set lwidth "width=$plot_array(lwidth$idx)"
+ switch $cmd {
+ plg { 
+       set marks  "$plot_array(marks$idx)"
+       set lwidth "width=$plot_array(lwidth$idx)"
+       set type   "$plot_array(type$idx)"
+
+       send_user "($n)$win$fma $cmd,$_ytk_y,$_ytk_x,\
+	$marks,type=\"$type\",$lwidth,color=\"$color\"\n"
+       exp_send "$win$fma$cmd,$_ytk_y,$_ytk_x,\
+	$marks,type=\"$type\",$lwidth,color=\"$color\"\r"
+     }
+ plmk {
+       set marker "$plot_array(marker$idx)"
+       set marker [ expr [ lsearch $markers $marker ] +1 ]
+       set msize  "$plot_array(msize$idx)"
+       exp_send "$win$fma$cmd,$_ytk_y,$_ytk_x,\
+	marker=$marker,$lwidth,msize=$msize,color=\"$color\"\r"
+     }
+
+ }
+
+}
+
+
+
+proc ytk_plot { pt } {
+ global rn markers expect_out plot_array _ytk_x _ytk_y
+ set fma 1
+ set w $pt$rn;
+ set plot_array(x$w) _ytk_x
+ set plot_array(y$w) _ytk_y
+ toplevel ".$w"
+
+## Determine the present window by asking Yorick with a window() command
+## We'll keep the information and use it to insure we're plotting in the
+## desired window.
+ exp_send "window()\r"
+ expect "\r*>"
+  set win  [ lindex [ split [ string trim $expect_out(0,string) "\r\n>" ] "\"" ] 0 ]    
+ set plot_array(window$w)  $win
+
+## send some data for testing.
+ exp_send "_ytk_x = span(-6*pi,6*pi, 256); _ytk_y = sin(_ytk_x)/_ytk_x;\r";
+
+
+ frame .$w.a -relief sunken -borderwidth 3
+ eval " button .$w.a.dismiss -text Dismiss -command  {  destroy .$w } "
+ tk_optionMenu .$w.a.window plot_array(window$w)  0 1 2 3 4 5 6 7
+ entry .$w.x -width 32 -textvariable plot_array(x$w)
+ entry .$w.y -width 32 -textvariable plot_array(y$w)
+ eval " button .$w.a.kill -text Kill \
+	-command { exp_send \"winkill,\$plot_array(window$w)\r\" } "
+ tk_optionMenu .$w.color plot_array(color$w) \
+	fg bg black white red green blue cyan magenta yellow
+ checkbutton .$w.fma -text {Fma first} \
+	-variable plot_array(fma$w)   -onvalue fma 
+ tk_optionMenu .$w.lwidth plot_array(lwidth$w) \
+	0.5 1.0 1.5 2.0 2.5 3 5 7 10 15 20 25
+
+ switch $pt {
+  plg {
+       checkbutton .$w.marks -text Marks \
+	-variable plot_array(marks$w) \
+	-offvalue "marks=0" \
+	-onvalue  "marks=1"  
+      tk_optionMenu .$w.type plot_array(type$w) solid none dash dot dashdot dashdotdot
+      }
+
+ plmk {
+       eval " tk_optionMenu .$w.marker plot_array(marker$w) \
+	$markers "
+      tk_optionMenu .$w.msize plot_array(msize$w) \
+  	.1 .2 .3 .4 .5 .75 1.0 1.5 2.0 2.5 3 4 5 6 7 10 15 20	
+      }
+ }
+
+
+ frame .$w.c -relief raised -borderwidth 3
+ eval " button .$w.c.plot -text {Execute Plot} -command {  plot_cmd  $pt $rn } "
+ eval " button .$w.c.fma -text Fma -command { 
+       exp_send \"window(\$plot_array(window$w));fma\r\" } "
+ eval " button .$w.c.limits -text Limits -command { 
+       exp_send \"window(\$plot_array(window$w));limits\r\" } "
+ pack .$w.c.plot .$w.c.fma .$w.c.limits \
+	-side left  -fill x -expand 1 
+ label .$w.a.winlabel -text "Window:"
+ pack .$w.a.dismiss -side right -anchor ne
+ pack .$w.a.winlabel .$w.a.window .$w.a.kill -side left -expand 1 -fill x
+ pack .$w.a -side top -expand 1 -fill x
+ pack .$w.fma -side top 
+ pack .$w.color -side top 
+ pack .$w.lwidth -side top 
+ switch $pt {
+ plg {
+   pack .$w.marks -side top 
+   pack .$w.type -side top 
+     }     
+ plmk {
+   pack .$w.marker -side top
+   pack .$w.msize -side top
+     }
+ }
+ pack .$w.x .$w.y -side top
+ pack .$w.c -side bottom -expand 1 -fill x
+ incr rn
+}
+
+
+toplevel .tx
+wm withdraw .tx 
+button .tx.hide -text "Click to hide this window" \
+	-command { .mb.tkcon invoke 2  }
+pack .tx.hide -side top -fill x -expand 1
+scrollbar .tx.sb -command {.tx.doc yview }
+text .tx.doc  -width 80 -height 4 -yscrollcommand {  .tx.sb set }
+pack  .tx.doc .tx.sb -side left -fill y -expand 1
+
+
+proc yorick {}  {
+global _ytk
+global interact_out indoc hwin 
+global str
+global Y_SITE
+upvar  spawn_id spawn_id
+expect ">"
+set n 0;
+interact   {
+  -o
+
+  -re "/\\* DOCUMENT.*\\*/"   { 
+ 	 regsub -all "\r" $interact_out(0,string) "" str
+         if { $_ytk(separate_help_win) == "Yes" } {
+	  incr hwin
+          set wintitle [ lindex [ split $str "\n" ] 0 ];
+          toplevel .docwin$hwin
+          set cmd "scrollbar .docwin$hwin.sb -command {.docwin$hwin.doc yview }"
+          eval $cmd;
+         
+          set cmd "text .docwin$hwin.doc  -height 25 \
+	    -yscrollcommand {  .docwin$hwin.sb set }"
+          eval $cmd
+          .docwin$hwin.doc insert end $str
+	  pack .docwin$hwin.doc .docwin$hwin.sb -side left -fill y -expand 1
+          wm title .docwin$hwin $wintitle
+        } else {
+	   send_user $str
+        }
+        }
+
+ }
+}
+
+proc load_and_run { fn } {
+    switch [ file extension $fn ] {
+    ".tcl" -
+    ".tk"  -
+    ".ytk" {  
+            if { [ file exists $fn ] == 0 } { 
+             tk_messageBox -icon error -message "$fn not found"; 
+             exit; 
+            }
+	    uplevel #0 " source $fn "
+           }
+    ".i"   {   
+	    set ycode_dir [ file dirname $fn ]
+	    cd $ycode_dir;
+	    exp_send "cd, \"$ycode_dir\"\r"
+	    exp_send "#include \"$fn\"\r"
+           }
+    default { tk_messageBox -icon error -message "$fn not found"; exit; }
+    }
+}
+
+
+
+
+
+wm state . normal
+ if { $load_on_start != "" } {
+   load_and_run $load_on_start;
+ }
+
+yorick
+file delete $ytk_fifo_name
+file delete $tky_fifo_name
+exit
+
+
+
+

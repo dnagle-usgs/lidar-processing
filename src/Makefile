@@ -89,6 +89,10 @@ BIN = ../bin
 		cc -lm -o ../bin/pospac2ybin pospac2ybin.o
 
 
+../bin/ytk:	ytk
+	cp ytk ../bin/ytk
+	chmod uog+rx ../bin/ytk
+
 
 ###############################################################################
 # all  Builds all the "C" programs in this directory that need it.  You can force
