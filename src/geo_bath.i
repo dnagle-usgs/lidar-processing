@@ -925,6 +925,7 @@ write,"============================================================="
 	} else
         if ((disp_type == 1) || (disp_type == 2) ) {
 	  a = [];
+          irg_a = irg(rasterno,rasterno,usecentroid=1);
           ex_bath, rasterno, pulseno, win=0, graph=1;
           if ( mindata.depth == 0 ) {
             msz = 1.0; mkr = 6;
@@ -945,6 +946,7 @@ write,"============================================================="
 //                             marker=4
 	} else if (disp_type == 3) {
 	  a = [];
+          irg_a = irg(rasterno,rasterno,usecentroid=1);
 	  ex_veg, rasterno, pulseno,  last=250, graph=1, win=0; use_peak=1;
           if ( _errno < 0 ) continue;
 	  z = mindata.lelv/100.;
