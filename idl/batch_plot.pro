@@ -1,5 +1,5 @@
 pro batch_plot, path, filename=filename, only_rcf=only_rcf, min_z_limit=min_z_limit, max_z_limit=max_z_limit, $
-		print_all_to = print_all_to
+		print_all_to = print_all_to, only_no_rcf = only_no_rcf
 
 ; this procedure batch plots all xyz data points and saves them as jpegs.
 ; amar nayegandhi 12/13/02.
@@ -9,9 +9,14 @@ if not keyword_set(filename) then begin
    if keyword_set(only_rcf) then begin
     spawn, 'find '+path+' -name "*_rcf.bin"', fn_arr
     spawn, 'find '+path+' -name "*_rcf.edf"', fn_arr1
-   endif else begin
-    spawn, 'find '+path+' -name "*.bin"', fn_arr
-    spawn, 'find '+path+' -name "*.edf"', fn_arr1
+   endif else begin  
+    if keyword_set(only_no_rcf) then begin
+     spawn, 'find '+path+' -name "*[0-9].bin"', fn_arr
+     spawn, 'find '+path+' -name "*[0-9].edf"', fn_arr1
+    endif else begin
+     spawn, 'find '+path+' -name "*.bin"', fn_arr
+     spawn, 'find '+path+' -name "*.edf"', fn_arr1
+    endelse
    endelse
    fn_arr_new = fn_arr+fn_arr1
    fn_arr = fn_arr_new
