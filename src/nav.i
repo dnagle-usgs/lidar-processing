@@ -518,7 +518,7 @@ window is 6, and color is magenta.
       r = 1:0;
       pldj, fpx.lon1(r),fpx.lat1(r),fpx.lon2(r),fpx.lat2(r),color=color, width=width;
       r = 1:0:skip;
-      pldj, fpx.lon1(r),fpx.lat1(r),fpx.lon2(r),fpx.lat2(r),color=color, width=5*width;
+      //pldj, fpx.lon1(r),fpx.lat1(r),fpx.lon2(r),fpx.lat2(r),color=color, width=5*width;
       if (labels) 
 	plt, dd(r)(1), fpx.lon1(r)(1), fpx.lat1(r)(1), tosys=1, height=15, justify="CC", color="blue";
   }
@@ -726,7 +726,7 @@ func utmfp2ll (fname, zone=) {
   }
 }
 
-func read_xy(file,yx=, utm=, zone=, color=, win=) {
+func read_xy(file,yx=, utm=, zone=, color=, win=, plot=, writefile=) {
  /* read_xy(file,yx=, utm=, zone=) 
    amar nayegandhi 11/17/03
  */
@@ -734,7 +734,6 @@ func read_xy(file,yx=, utm=, zone=, color=, win=) {
  f = open(file,"r");
 
  if (!color) color="blue"
- if (is_void(win)) win = window();
  
  i = 0;   
  nc = 0;		// null line counter
@@ -774,13 +773,23 @@ func read_xy(file,yx=, utm=, zone=, color=, win=) {
       
  }
  
- window, win;
+ if (plot) {
+  if (is_void(win)) win = window();
+  window, win;
  
- for (i=1;i<numberof(xarr);i++){
-   pldj, xarr(i), yarr(i), xarr(i+1), yarr(i+1), color=color, width=2.0
+  for (i=1;i<numberof(xarr);i++){
+    pldj, xarr(i), yarr(i), xarr(i+1), yarr(i+1), color=color, width=2.0
+  }
+  pldj, xarr(1), yarr(1), xarr(0), yarr(0), color=color, width=2.0
  }
- pldj, xarr(1), yarr(1), xarr(0), yarr(0), color=color, width=2.0
 
+ if (writefile) {
+  ff = split_path(file,1,ext=1);
+  fout = ff(1)+"_ll"+ff(2);
+  f = open(fout, "w");
+  write, f,format="%12.8f %12.8f\n", yarr, xarr;
+  close, f;
+ }
  return [xarr, yarr]
    
 }
