@@ -126,7 +126,7 @@ int c_compfunc2(const void *x, const void *y)
  * This function is called only for mode==2
  */
 
-void c_fillarray (unsigned int c)
+void c_fillarray (unsigned int *c)
 {
    memcpy ((void*)c, (void*)fwinners, ((sizeof(unsigned int))*fcounter));	//Copy fwinners into the yorick array
    qsort(c, fcounter, sizeof(unsigned int), c_compfunc2);			//Sort the copy
@@ -165,7 +165,10 @@ unsigned int  c_frcf (float* a, float w, int mode, float* b)
   qsort(idx, number_elems, sizeof(unsigned int), c_fcompfunc);//Sort the copy
 
   if (mode == 2)				//Mode 2 needs to store the winners
+  {
      winners = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
+     fwinners = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
+  }
 
   for (i=0; i<number_elems-1; i++)		//For each element in the copy
   {
@@ -195,9 +198,7 @@ unsigned int  c_frcf (float* a, float w, int mode, float* b)
        if (mode == 1 )
           b[0] = tmp/counter;			//Mode 1, requests a mean
        else if (mode == 2)
-       {					//For mode 2, store the winners in an
-	  fwinners = (unsigned int *) malloc ((sizeof(unsigned int))*fcounter);
-
+       {					//For mode 2, store the winners 
 	  memcpy ((void *)fwinners, (void *)winners, ((sizeof(unsigned int))*fcounter));
        }
        else					//Mode 0, request the actual base winner
@@ -269,7 +270,10 @@ unsigned int  c_lrcf (long* a, long w, int mode, float* b)
   qsort(idx, number_elems, sizeof(unsigned int), c_lcompfunc);//Sort the copy
 
   if (mode == 2)				//Mode 2 needs to store the winners
+  {
      winners = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
+     fwinners = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
+  }
 
   for (i=0; i<number_elems-1; i++)		//For each element in the copy
   {
@@ -299,9 +303,7 @@ unsigned int  c_lrcf (long* a, long w, int mode, float* b)
        if (mode == 1 )
           b[0] = (float)tmp/counter;			//Mode 1, requests a mean
        else if (mode == 2)
-       {					//For mode 2, store the winners in an
-	  fwinners = (unsigned int *) malloc ((sizeof(unsigned int))*fcounter);
-
+       {					//For mode 2, store the winners
 	  memcpy ((void *)fwinners, (void *)winners, ((sizeof(unsigned int))*fcounter));
        }
        else					//Mode 0, request the actual base winner

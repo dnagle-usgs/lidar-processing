@@ -30,7 +30,7 @@
 //   timer, t0;
 //   junk = frcf(a, 6, mode=2);
 //   timer, t1
- //  write,format="Mode 2: Result= [%p,%p] time=%6.4f secs\n",junk(1), junk(2),t1(1)-t0(1);
+//   write,format="Mode 2: Result= [%p,%p] time=%6.4f secs\n",junk(1), junk(2),t1(1)-t0(1);
 
 //Test for Null array
 //   a = []
@@ -133,13 +133,21 @@
 //   write,format="Mode 2: Result= [%p,%p] time=%10.8f secs\n",junk(1), junk(2), t1(1)-t0(1);
 
 //Test for mode =2 with int window
-//   w=4;
+//   w=2;
 //   timer,t0;
 //   junk = frcf(a,w, mode=2);
 //   timer,t1;
-//   write,format="Mode 2: Result= [%p,%p] time=%10.8f secs\n",junk(1), junk(2), t1(1)-t0(1);
+//   write,format="**Mode 2: Result= [%p,%p] time=%10.8f secs\n",junk(1), junk(2), t1(1)-t0(1);
 
-
+//Test for multiple calls
+//   w=2;
+//   for (i=0; i<1000; i++)
+//   {
+//     timer,t0;
+//     junk = frcf(a,w, mode=2);
+//     timer,t1;
+//     write,format="**Mode 2: Result= [%p,%p] time=%10.8f secs\n",junk(1), junk(2), t1(1)-t0(1);
+//   }
 
 
 
@@ -217,15 +225,15 @@
 //   write,format="Mode 5: Result= [%f,%f] time=%6.4f secs\n",junk(1), junk(2), t1(1)-t0(1);
 
 // Test for mode = 0
-   timer,t0;
-   junk = lrcf(a,w);
-   timer,t1;
-   write,format="Mode 0: Result= [%d,%d] time=%6.4f secs\n",junk(1), junk(2), t1(1)-t0(1);
+//   timer,t0;
+//   junk = lrcf(a,w);
+//   timer,t1;
+//   write,format="Mode 0: Result= [%d,%d] time=%6.4f secs\n",junk(1), junk(2), t1(1)-t0(1);
 //Test for mode = 1
-   timer,t0;
-   junk = lrcf(a,w, mode=1);
-   timer,t1;
-   write,format="Mode 1: Result= [%f,%f] time=%6.4f secs\n",junk(1), junk(2), t1(1)-t0(1);
+//   timer,t0;
+//   junk = lrcf(a,w, mode=1);
+//   timer,t1;
+//   write,format="Mode 1: Result= [%f,%f] time=%6.4f secs\n",junk(1), junk(2), t1(1)-t0(1);
 
 //Test for mode =2
 //   timer,t0;
@@ -264,3 +272,14 @@
 //   junk = frcf(a,w, mode=2);
 //   timer,t1;
 //   write,format="Mode 2: Result= [%p,%p] time=%10.8f secs\n",junk(1), junk(2), t1(1)-t0(1);
+
+//Test for multiple calls
+   w=2;
+   for (i=0; i<1; i++)
+   {
+     timer,t0;
+     junk = lrcf(a,w, mode=2);
+     timer,t1;
+     write,format="**Mode 2: Result= [%p,%p] time=%10.8f secs\n",junk(1), junk(2), t1(1)-t0(1);
+   }
+
