@@ -479,7 +479,7 @@ write,"fs_all contains the data, and rn_arr_idx contains a list of indices"
 
 }
 
-func hist_fs( fs, win= ) {
+func hist_fs( fs_all, win= ) {
 /* DOCUMENT hist_fs(fs)
 
    Return the histogram of the good elevations in fs.  The input fs elevation
@@ -501,15 +501,15 @@ See also: R
 
 
   if ( is_void(win) ) 
-	win = 0;
+	win = 7;
 
 // build an edit array indicating where values are between -60 meters
-// and 3000 meters.  That's enough to encompass any EAARL data than
+// and 3000 meters.  Thats enough to encompass any EAARL data than
 // can ever be taken.
   gidx = (fs_all.elevation > -6000) | (fs_all.elevation <300000);  
 
 // Now kick out values which are within 1-meter of the mirror. Some
-// functions will set the elevation to the mirror value if they can't
+// functions will set the elevation to the mirror value if they cant
 // process it.
   gidx &= (fs_all.elevation < (fs_all.melevation-1));
 
@@ -533,8 +533,8 @@ maxx = fs_all.elevation(q)(max);
   window,win; fma; plg,h,e;
   pltitle(swrite( format="Elevation Histogram %s", data_path));
   xytitles,"Elevation (meters)", "Number of measurements"
-  limits
-  limits,,,,hst(max,2) * 1.5
+  //limits
+  window, win; limits,,,,hst(max,2) * 1.5
   window(w);
   return [e,h];
 }

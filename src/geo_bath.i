@@ -809,4 +809,57 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=) {
 }
 
 
+func hist_depth( depth_all, win=, dtyp= ) {
+/* DOCUMENT hist_depth(depth_all)
+
+   Return the histogram of the good depths.  The input depth_all 
+data are in cm, and the output is an array of the number of time a given
+elevation was found. The elevations are binned to 1-meter.
+
+  Inputs: 
+	depth_all   An array of "GEOALL" structures.  
+	dytp = display type (water surface or bathymetry)
+
+ amar nayegandhi 10/6/2002.  similar to hist_fs by W. Wright
+
+See also: GEOALL
+*/
+
+
+  if ( is_void(win) ) 
+	win = 7;
+
+// build an edit array indicating where values are between -60 meters
+// and 3000 meters.  That's enough to encompass any EAARL data than
+// can ever be taken.
+  gidx = (depth_all.elevation > -6000) | (depth_all.elevation <300000);  
+
+// Now kick out values which are within 1-meter of the mirror and depth = 0. Some
+// functions will set the elevation to the mirror value if they can't
+// process it.
+  gidx &= ((depth_all.elevation < (depth_all.melevation-1) & (depth_all.depth != 0)));
+
+// Now generate a list of where the good elevation values are.
+  q = where( gidx )
+  
+// now find the minimum 
+minn = (depth_all.elevation(q)+depth_all.depth(q))(min);
+maxx = (depth_all.elevation(q)+depth_all.depth(q))(max);
+
+ depthy = (depth_all.elevation(q) + depth_all.depth(q))- minn ;
+ minn /= 100.0
+ maxx /= 100.0;
+
+
+// make a histogram of the data indexed by q.
+  h = histogram( (depthy / 100) + 1 );
+  h( where( h == 0 ) ) = 1;
+  e = span( minn, maxx, numberof(h) ) + 1 ; 
+  w = window();
+  window,win; fma; plg,h,e;
+  pltitle(swrite( format="Depth Histogram %s", data_path));
+  xytitles,"Depth Elevation (meters)", "Number of measurements"
+  window(w);
+  return [e,h];
+}
 
