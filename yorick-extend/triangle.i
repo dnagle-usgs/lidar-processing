@@ -80,7 +80,7 @@ amar nayegandhi 04/05/04
   read, f, format="%d %d %d %d\n",idx1, idx2, idx3, idx4;
   triidx = transpose([idx2, idx3, idx4]);
   close, f;
-  fstr = "/bin/rm /tmp/triangle."+pidstr+".node /tmp/triangle."+pidstr+".1.node /tmp/triangle."+pidstr+".1.ele")
+  fstr = "/bin/rm /tmp/triangle."+pidstr+".node /tmp/triangle."+pidstr+".1.node /tmp/triangle."+pidstr+".1.ele";
   f = popen(fstr,0);
   close, f;
   return triidx;
