@@ -948,9 +948,9 @@ write,"============================================================="
                knots * 1852.0/3600.0, 
                knots;
 
- hy = sqrt( (mindata.melevation - mindata.elevation)^2 +
- 	    (mindata.meast      - mindata.east)^2 +
-	    (mindata.mnorth     - mindata.north)^2 );
+ hy = sqrt( double(mindata.melevation - mindata.elevation)^2 +
+ 	    double(mindata.meast      - mindata.east)^2 +
+	    double(mindata.mnorth     - mindata.north)^2 );
 	  
  if ( (mindata.melevation > mindata.elevation) && ( mindata.elevation > -100000) )
  aoi = acos( (mindata.melevation - mindata.elevation) / hy ) * rad2deg;	
