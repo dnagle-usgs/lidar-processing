@@ -12,6 +12,8 @@
    7/6/02 WW
 	Minor changes to omit progress bar when fewer then 10
 	rasters to process.
+
+  test....
 */
 
 require, "eaarl_constants.i"
@@ -39,9 +41,9 @@ counts/revolution.
 */
   struct RTRS { 
      int    raster;		// the raster number;
-     double soe(120); 		// Seconds of the epoch for each pulse.
-     short  irange(120); 	// integer range counter values.
-     short  sa(120); 		// scan angle counts.
+     double    soe(120); 	// Seconds of the epoch for each pulse.
+     int    irange(120); 	// integer range counter values.
+     short      sa(120); 	// scan angle counts.
   };
 
 local XRTRS
@@ -57,12 +59,12 @@ local XRTRS
 
   struct XRTRS {
      int    raster;		// the raster number;
-     double soe(120); 		// Seconds of the epoch for each pulse.
-     short  irange(120); 	// integer range counter values.
-     short  sa(120); 		// scan angle counts.
-     float  rroll(120);		// Roll in radians
+     double    soe(120); 	// Seconds of the epoch for each pulse.
+     int    irange(120); 	// integer range counter values.
+     short      sa(120); 	// scan angle counts.
+     float   rroll(120);	// Roll in radians
      float  rpitch(120);	// Pitch in radians
-     float  alt(120);		// altitude in either NS or meters.
+     float     alt(120);	// altitude in either NS or meters.
 }
 
 func open_irg_status_bar {

@@ -15,7 +15,7 @@ is seconds-of-day.  There are 86400 seconds in a day.
 
 */
 
-/* Seconds of the year at midnite, jan 1 in GMT for all years
+/* Seconds of the year at midnight, jan 1 in GMT for all years
  covered by a 32 bit seconds counter starting on jan 1, 1970 at
  midnight gmt.
  This stuff generated with the following tcl code:

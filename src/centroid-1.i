@@ -18,6 +18,8 @@ func cent( a ) {
 
 */
   n = numberof(a);	// determine number of points in waveform
+  if ( n < 2 ) 
+	return [ 0,0,0];
   if ( n > 12 ) n = 12; // if more than 12, only use the first 12
   r = 1:n;		// set the range we will consider 
    a = -short(a);	// flip it over and convert to signed short
