@@ -37,23 +37,16 @@ for i = 0, n_elements(fn_arr)-1 do begin
    ; find the corner points for the data tile
    spfn = strsplit(fname_arr, "_", /extract)
    we = long( strmid(spfn(1), 1))+1
-   so = long(strmid(spfn(2), 1))+1
+   no = long(strmid(spfn(2), 1))
+   print, 'Grid locations: West:'+strcompress(string(we))+'  North:'+strcompress(string(no))
    ;call gridding procedure
    grid_eaarl_data, *data_arr[0], cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygrid=ygrid, $
-	z_max = z_grid_max, z_min=z_grid_min, missing = missing, limits=[we,so,we+1999,so+1999]
+	z_max = z_grid_max, z_min=z_grid_min, missing = missing, limits=[we,no-1999,we+1999,no]
 
    ptr_free, data_arr
 
    if (keyword_set(plot_grids)) then begin
-	symbol_circle
-	!p.background=255
-	!p.color=0
-	!p.font=1
-	!p.region = [0.03,0,0.9,0.94]
-	!p.psym=8
-	!p.symsize=0.4
-	!p.thick=2.0
-	loadct, 39
+	
 	if not keyword_set(scale_down_by) then scale_down_by = 4
 	if keyword_set(save_grid_plots) then begin
 	    pfname = path+(strsplit(fname_arr, '.', /extract))[0]+"_gridplot.tif"
