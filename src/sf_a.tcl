@@ -410,8 +410,8 @@ proc load_file_list { f method } {
 }
 
 proc gotoImage {} {
-	global timern hms sod ci hsr imgtime seconds_offset frame_off
-	global pitch roll head DEBUG_SF
+	global timern hms sod ci hsr imgtime seconds_offset frame_off \
+		pitch roll head DEBUG_SF
 									if { $DEBUG_SF } { puts "gotoImage:" }
 									if { $DEBUG_SF } { puts " timern:$timern hsr:$hsr" }
 
@@ -497,8 +497,7 @@ proc plotRaster {} {
 }
 
 proc set_gamma { g } {
-	global img
-	global gamma
+	global img gamma
 	$img configure -gamma $g 
 }
 
@@ -761,9 +760,9 @@ proc archive_save_marked { type } {
 				set tmpdir "/tmp/sf.$psf"
 				if {[catch "cd $tmpdir"] != 1} {
 					cd $dir
-					exec rm -r $tmpdir
+					file delete -force -- $tmpdir
 				}
-				exec mkdir $tmpdir
+				file mkdir $tmpdir
 
 				set mark_count 0
 				set start [expr {int([.slider cget -from])}];
@@ -797,7 +796,7 @@ proc archive_save_marked { type } {
 
 				} else {
 					cd $dir;
-					exec rm -r $tmpdir;
+					file delete -force -- $tmpdir
 
 					tk_messageBox -type ok -icon error \
 						-message "No images were marked to be archived, so no archive was made."
@@ -815,8 +814,8 @@ proc archive_save_marked { type } {
 }
 
 proc get_heading {inhd} {
-	global yes_head img head inhd_count sod tansstr
-	global mogrify_pref mogrify_exists
+	global yes_head img head inhd_count sod tansstr \
+		mogrify_pref mogrify_exists
 
 	## this procedure gets heading information from current data set
 	## amar nayegandhi 03/04/2002.
