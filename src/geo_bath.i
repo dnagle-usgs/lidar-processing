@@ -406,7 +406,8 @@ See also: make_fs_bath, write_geoall, read_yfile, make_bathy
 
       // the angle of incidence that the laser intercepts the surface is:
       Hindx = where(H == 0);
-      H(Hindx) = 0.0001
+      if (is_array(Hindx))
+        H(Hindx) = 0.0001;
       phi_air = acos(pa/H);
 
       // using Snells law:
