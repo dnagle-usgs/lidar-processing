@@ -42,7 +42,16 @@ extern wfa, depth_display_units;
 }
 
 
-last_somd = 0;
+if ( is_void( last_somd) )
+    last_somd = 0;
+
+func send_sod_to_sf( somd ) {
+ extern last_somd
+    tkcmd, "send sf_a.tcl set timern sod";
+    tkcmd, swrite(format="send sf_a.tcl set hsr %d", somd );
+    tkcmd, "send sf_a.tcl gotoImage"
+    last_somd = somd;
+}
 
 
 func ndrast( r, units=  ) {
@@ -69,11 +78,7 @@ func ndrast( r, units=  ) {
  npix = r.npixels(1) 
  somd = (rr.soe - soe_day_start)(1);
  if ( somd != last_somd ) {
-    // AN: added send command to make sf always in sod mode
-    tkcmd, "send sf_a.tcl set timern sod";
-    tkcmd, swrite(format="send sf_a.tcl set hsr %d", somd );
-    tkcmd, "send sf_a.tcl gotoImage"
-    last_somd = somd;
+    send_sod_to_sf, somd;
  }
  for (i=1; i< npix; i++ ) {
   for (j=1; j<=3; j++ ) {

@@ -3,6 +3,7 @@
 */
 
 require,"dir.i"
+require,"drast.i"
 
 local rbgga_help 
 /* DOCUMENT rbgga_help
@@ -37,6 +38,12 @@ Other:
   it must be verified and converted by the gga2bin.c. program.  
 
   $Log$
+  Revision 1.3  2002/01/16 14:13:45  wwright
+
+   Added function to rbgga to permit selecting a flightline section from the
+  gga map on win6, and then setting the sf photoviewer to the corresponding
+  picture.
+
   Revision 1.2  2002/01/16 05:04:54  wwright
 
   changes to rbgga.i to fix several functions to work with the gga structure instead
@@ -191,6 +198,10 @@ write, format="Lon:%14.3f %14.3f\n", gga(3,min), gga(3,max)
 
 func gga_win_sel( show, win=, color=, msize=, skip= ) {
 /* DOCUMENT gga_win_sel( show, color=, msize=, skip= )
+
+  There's a bug in yorick 1.5 which causes all the graphics screens to get fouled up
+if you set show=1 when using this function.  The screen will reverse fg/bg and not respond
+properly to the zoom buttons.
  
 */
  if ( is_void(win) ) 
@@ -218,6 +229,22 @@ func gga_win_sel( show, win=, color=, msize=, skip= ) {
  return q;
 }
 
+func gga_click_start_isod(x) {
+/* DOCUMENT gga_click_start_isod
+
+   Select a region from the gga map. This procedure will then show the picture at the start
+of the selected region.  You can then use the "Examine Rasters" button on sf to see the raster
+and continue looking at data down the flight line. 
+
+*/
+   st = gga_find_times(  gga_win_sel(0)  );
+   if ( numberof( st ) ) {
+     st = int( st(min) ) 
+     send_sod_to_sf, st;		// command sf and drast there.
+   }
+  return st;
+}
+
 func gga_click_times( x )  {
 /* DOCUMENT gga_click_times(x)
    
@@ -227,12 +254,12 @@ func gga_click_times( x )  {
 
    See also: gga, rbgga, gga_find_times, gga_win_sel
 */
-  t =  gga_find_times(  gga_win_sel()  ); 
+  t =  gga_find_times(  gga_win_sel(0)  ); 
   write,format="%6.2f total seconds selected\n", (t(dif, )) (,sum)
   return t;
 }
 
-func gga_find_times( q, plt= ) {
+func gga_find_times( q, win=, plt= ) {
 /* DOCUMENT gga_find_times(q)
 
    This function finds the start and stop times from a list generated
@@ -255,6 +282,8 @@ func gga_find_times( q, plt= ) {
 // "lq" where had a change larger than one second.  Adding one to
 // "endptlist" gets us the starting point of the next segment.
    endptlist = where( abs((gga.sod(lq) (dif)) ) > 1 )
+   if ( numberof( endptlist ) == 0 ) 
+	return ;
    startptlist = endptlist+1;
  
   // start of each line is at qq+1
@@ -274,7 +303,9 @@ func gga_find_times( q, plt= ) {
   if ( is_void( plt ) )
 	plt = 0;
   if ( plt == 1 ) {
-    window,7
+    if ( is_void(win) ) 
+      win=6
+    window,win;
     fma; 
     plmk, gga.sod( q),q;		// plot the selected times
     plmk, startggasod(1:-1), lq(startptlist(1:-1)), color="green", msize=.3

@@ -213,20 +213,20 @@ proc gotoImage {} {
   set i 0
   ##puts "Options selected for Goto Image is: $timern \n"
   if {$timern == "hms"} {
-     puts "Showing Camera Image at hms = :$hsr \n"
+######     puts "Showing Camera Image at hms = :$hsr \n"
      set i $imgtime(hms$hsr);
      set ci [expr $i-$seconds_offset+$frame_off]
      show_img $ci
   }
   if {$timern == "sod"} {
-     puts "Showing Camera Image at sod = $hsr \n"
+######     puts "Showing Camera Image at sod = $hsr \n"
      set hms [ clock format $hsr -format "%H%M%S" -gmt 1 ]
      set i $imgtime(hms$hms);
      set ci [expr $i-$seconds_offset+$frame_off]
      show_img $ci
   }
   if {$timern == "cin"} {
-     puts "Showing Camera Image with Index value = $hsr \n"
+######     puts "Showing Camera Image with Index value = $hsr \n"
      set cin $hsr
      set ci $cin
      show_img $cin
