@@ -396,3 +396,24 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged
   return sel_eaarl;
    
 }
+
+
+func exclude_region(origdata, seldata) {
+/*DOCUMENT exclude_region(origdata, seldata)
+ This function excludes the data points in seldata from the original data array
+ (origdata).
+ The returned data array contains all points within origdata that are not in seldata.
+ amar nayegandhi 11/24/03.
+*/
+
+ unitarr = array(char, numberof(origdata));
+ unitarr(*) = 1;
+ for (i=1;i<=numberof(seldata);i++) {
+   indx = where(origdata.rn == seldata(i).rn);
+   unitarr(indx) = 0;
+ }
+ return origdata(where(unitarr));
+
+}
+
+  

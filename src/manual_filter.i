@@ -77,13 +77,21 @@ func select_points(celldata, exclude=, win=) {
  buf = 1000;  // 10 meters
  
  rtn_data = [];
+ clicks = selclicks = 0;
  
  do {
-  write, format="Window: %d, Controls:- Left: Select point, Middle: View Waveform, Right: Quit \n",win;
+  //write, format="Window: %d, Controls:- Left: View Waveform, Middle: Select Recently Viewed Waveform, Right: Quit \n",win;
   spot = mouse(1,1,"");
   mouse_button = spot(10);
   if (mouse_button == right_mouse) break;
-
+  
+  if (mouse_button == center_mouse) {
+      selclicks++;
+      write, format="Number of points selected = %d\n", selclicks;
+      rtn_data = grow(rtn_data, mindata);
+      continue;
+  }
+     
   q = where(((celldata.east >= spot(1)*100-buf)   &
                (celldata.east <= spot(1)*100+buf)) )
 
@@ -110,17 +118,17 @@ func select_points(celldata, exclude=, win=) {
     rasterno = mindata.rn&0xffffff;
     pulseno  = mindata.rn/0xffffff;
 
-    if (mouse_button == center_mouse) {
+    if (mouse_button == left_mouse) {
 	  a = [];
-          ex_bath, rasterno, pulseno, win=0, graph=1;
+	  clicks++;
+          ex_bath, rasterno, pulseno, win=0, graph=1, xfma=1;
+	  window, win;
     }
- 
-    if (mouse_button == left_mouse) 
-          rtn_data = grow(rtn_data, mindata);
-    
   }
 
  } while ( mouse_button != right_mouse );
+
+ write, format="Total waveforms examined = %d; Total points selected = %d\n",clicks, selclicks;
 
  return rtn_data;
 }

@@ -95,6 +95,7 @@ frame .l1wid.bf45 -relief groove -borderwidth 3
 frame .l1wid.bf45.sc -relief groove -borderwidth 3
 frame .l1wid.bf45.p -relief groove -borderwidth 3
 frame .l1wid.bf45.q -relief groove -borderwidth 3
+LabelFrame .l1wid.bf45.r -relief groove -borderwidth 7 -text "FILTER:"
 frame .l1wid.bf5  -relief groove -borderwidth 3
 
 .l1wid configure -menu .l1wid.mb
@@ -720,11 +721,17 @@ proc varlist_plot {} {
              -type ok
          } else {
           set del_var [lindex $varlist $del_no]
-          set new_varlist1 [lrange $varlist 0 [expr ($del_no-1)]]
-          set new_varlist2 [lrange $varlist [expr ($del_no+1)] end]
-	  .varplot.1.lb delete $del_no $del_no	
-          set varlist [concat $new_varlist1 $new_varlist2]
-          .l1wid.bf45.p.15 configure -values $varlist
+       	  set choice [tk_messageBox  -icon question \
+            -message "Deleting variable $del_var.  Are you sure??" \
+             -type okcancel -title "Warning" ]
+          if {$choice == "ok"} {
+           set new_varlist1 [lrange $varlist 0 [expr ($del_no-1)]]
+           set new_varlist2 [lrange $varlist [expr ($del_no+1)] end]
+	   .varplot.1.lb delete $del_no $del_no	
+           set varlist [concat $new_varlist1 $new_varlist2]
+           .l1wid.bf45.p.15 configure -values $varlist
+           exp_send "$del_var = \[\];\r"
+          }
          }
     }
     Button .varplot.2.dismiss -text "Dismiss" -width 8 -command {
@@ -929,14 +936,14 @@ ComboBox .l1wid.bf4.1.d -text "Define Region using..." -width 22 -values "Rubber
     puts $defr
     if {$defr == 0} {
        	tk_messageBox  -icon info \
-        -message "Drag a Rectangular Box in Window 6 to define region." \
+        -message "Drag a Rectangular Box in Window $_map(window) to define region." \
         -type ok -title "Message"
        exp_send "q = gga_win_sel(2, win=$_map(window));\r"
        expect ">"
     }
     if {$defr == 1} {
        	tk_messageBox  -icon info \
-        -message "Draw a Polygon in Window 6 to define a region using a series of left mouse clicks.  To complete the polygon, middle mouse click OR <Ctrl> and left mouse click." \
+        -message "Draw a Polygon in Window $_map(window) to define a region using a series of left mouse clicks.  To complete the polygon, middle mouse click OR <Ctrl> and left mouse click." \
         -type ok -title "Message"
        exp_send "q = gga_pip_sel(1, win=$_map(window));\r"
        expect ">"
@@ -1442,9 +1449,64 @@ Button .l1wid.bf45.q.45 -text "Show\nGrid Name" -command {
 
 .l1wid.bf45.q.4 configure -state disabled
 
+
 checkbutton .l1wid.bf45.q.5 -text "Set Plot Limits" -variable usecentroid 
 
 frame  .l1wid.bf45.sc.1
+
+ComboBox .l1wid.bf45.r.1 -text "Select Region using..." -width 16 -values "Rubberband-Box Points-in-Polygon Single-Pixel" -helptext "Select region to filter using any of the following methods:" -editable 0 -modifycmd {
+   global varlist
+   tk_messageBox  -icon info \
+   -message "Region Selected will be saved in variable \"workdata\"" \
+   -type ok -title "Message"
+    set selr [.l1wid.bf45.r.1 getvalue]
+    if {$selr == 0} {
+        set var_no [.l1wid.bf45.p.15 getvalue]
+        set var_type [lindex $varlist $var_no]
+       	tk_messageBox  -icon info \
+        -message "Drag a Rectangular Box in Window $win_no to define region." \
+        -type ok -title "Message"
+         exp_send "workdata = sel_data_rgn($var_type, GEO, mode=2, win=$win_no)\r"
+         expect ">"
+    }
+    if {$selr == 1} {
+       	tk_messageBox  -icon info \
+        -message "Draw a Polygon in Window $win_no to define a region using a series of left mouse clicks.  To complete the polygon, middle mouse click OR <Ctrl> and left mouse click." \
+        -type ok -title "Message"
+       exp_send "workdata = sel_data_rgn($var_type, GEO, mode=3, win=$win_no)\r"
+       expect ">"
+    }
+    if {$selr == 2} {
+       	tk_messageBox  -icon info \
+        -message "Select pixels with the following mouse controls: Left = View Waveform; Middle = Select recently viewed waveform; Right = Quit" \
+        -type ok -title "Message"
+       exp_send "workdata = select_points($var_type, win=$win_no);\r"
+       expect ">"
+    }
+   if {$selr == -1} {
+	error "Please Define Region."
+   }
+   lappend varlist workdata
+   .l1wid.bf45.p.15 configure -values $varlist
+   .varplot.1.lb insert end workdata
+} 
+
+Button .l1wid.bf45.r.2 -text "Exclude" -command {
+       set var_no [.l1wid.bf45.p.15 getvalue]
+       set var_type [lindex $varlist $var_no]
+       exp_send "workdata = exclude_region($var_type, workdata);\r"
+       expect ">"
+   }
+
+Button .l1wid.bf45.r.3 -text "Re-Process" -command {
+   }
+Button .l1wid.bf45.r.4 -text "RCF" -command {
+   }
+Button .l1wid.bf45.r.5 -text "Copy2Tile" -command {
+  }
+Button .l1wid.bf45.r.6 -text "Save Tile" -command {
+  }
+
 
 ## This procedure builds a widget composed of a
 ## Label, a Spinbox, and a scale so one can enter 
@@ -1574,6 +1636,15 @@ pack .l1wid.bf4.1 .l1wid.bf4.2 -side top -pady 10
 pack .l1wid.bf1 .l1wid.bf2 .l1wid.bf3 .l1wid.bf4 -side top -expand 1 -fill both
 pack .l1wid.bf45.sc.1  -side left  -padx 3
 pack .l1wid.bf45.sc.f  .l1wid.bf45.sc.sk -side left -padx 5
+
+pack \
+	.l1wid.bf45.r.1 \
+	.l1wid.bf45.r.2 \
+	.l1wid.bf45.r.3 \
+	.l1wid.bf45.r.4 \
+	.l1wid.bf45.r.5 \
+	.l1wid.bf45.r.6 \
+	-side left
 pack \
 	.l1wid.bf45.q.1 \
 	.l1wid.bf45.q.2  \
@@ -1590,7 +1661,7 @@ pack 	.l1wid.bf45.p.fma \
 	.l1wid.bf45.p.2 \
 	.l1wid.bf45.p.3 \
 	-side left -fill x  -padx 2
-pack .l1wid.bf45.p .l1wid.bf45.sc .l1wid.bf45.q \
+pack .l1wid.bf45.p .l1wid.bf45.sc .l1wid.bf45.q .l1wid.bf45.r \
 	-side top -fill x -expand 1
 pack .l1wid.bf5 .l1wid.bf45  -side top -pady 3 -fill x
 
