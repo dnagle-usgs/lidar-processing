@@ -41,6 +41,12 @@ Other:
   it must be verified and converted by the gga2bin.c. program.  
 
   $Log$
+  Revision 1.7  2002/02/15 12:48:40  wwright
+
+   changed first_surface structure "R" to be in " 32 bit integer centimeters"
+   instead of "double meters."  This uses 1/2 as much space and it better for
+   export.
+
   Revision 1.6  2002/01/23 04:57:58  wwright
 
    minor changes.  Added code to update the dir var in sf automatically
@@ -107,12 +113,12 @@ struct GGA {
 extern gga
 /* DOCUMENT gga
 
-  gga is a 4xN array of floats holding the following:
+  gga is a structure containing:
 
-   gga(1,)      Seconds of the day.  
-   gga(2,) 	Latitude in degrees
-   gga(3,)	Longitude in degrees ( negative values for west )
-   gga(4,)	Altitude in meters
+   gga.sod      Seconds of the day.  
+   gga.lat 	Latitude in degrees
+   gga.lon	Longitude in degrees ( negative values for west )
+   gga.alt 	Altitude in meters
 
    See also:  
      rbgga	Reads ybin files into Yorick.

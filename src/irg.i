@@ -1,5 +1,6 @@
 /*
    $Id$
+   W. Wright
 */
 
 require, "eaarl_constants.i"

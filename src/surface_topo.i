@@ -39,16 +39,16 @@ d2r = pi/180.0;		// Convert degrees to radians.
 
 /*
    Structure used to hold laser return vector information. All the 
- values are in air-meters. 
+ values are in air-centimeters. 
 */
 struct R {
- int raster(120);	 // contains raster # and pulse number in msb
- double mnorth(120);	 // mirror northing
- double meast(120);	 // mirror east
- double melevation(120); // mirror elevation
- double north(120);	 // mirror north
- double east(120);	 // mirror east
- float  elevation(120);  // mirror elevation (m)
+ long raster(120);	 // contains raster # and pulse number in msb
+ long mnorth(120);	 // mirror northing
+ long meast(120);	 // mirror east
+ long melevation(120);   // mirror elevation
+ long north(120);	 // mirror north
+ long east(120);	 // mirror east
+ long elevation(120);  // mirror elevation (m)
 };
 
 
@@ -75,7 +75,7 @@ return q
 }
 
 
-func display(rrr, i=,j=, cmin=, cmax=, size=, win= ) {
+func display(rrr, i=,j=, cmin=, cmax=, size=, win=, dofma= ) {
 /* DOCUMENT display, i, j, cmin=, cmax=, size=
  
    Display EAARL laser samples.
@@ -97,6 +97,9 @@ func display(rrr, i=,j=, cmin=, cmax=, size=, win= ) {
  if ( is_void(j) ) 
 	j = dimsof(rrr)(2);
  window,win 
+ if ( !is_void( dofma ) )
+	fma;
+
 write,format="Please wait while drawing..........%s", "\r"
  if ( is_void( cmin )) cmin = -35.0;
  if ( is_void( cmax )) cmax = -15.0;
@@ -125,9 +128,6 @@ data plot.
   else
     write,format="Distance is %5.3f meters\n", dist;
 }
-
-
-
 
 
 
@@ -172,11 +172,18 @@ func first_surface(start=, stop=, center=, delta=) {
 // The line interpolating heading needs to be done using x/y from a 
 // unit circle to work for norther headings.
 atime   = a.soe - soe_day_start;
+
+write,"interpolating roll..."
 roll    =  interp( tans.roll,    tans.somd, atime ) 
+write,"interpolating pitch..."
 pitch   = interp( tans.pitch,   tans.somd, atime ) 
+write,"interpolating heading..."
 heading = interp( tans.heading, tans.somd, atime ) 
+write,"interpolating altitude..."
 palt  = interp( pnav.alt,   pnav.sod,  atime )
+write,"Converting from lat/lon to UTM..."
 utm = fll2utm( pnav.lat, pnav.lon )
+write,"Interpolating northing and easting values..."
 northing = interp( utm(1,), pnav.sod, atime )
 easting  = interp( utm(2,), pnav.sod, atime )
 
@@ -190,23 +197,29 @@ easting  = interp( utm(2,), pnav.sod, atime )
   mirang = array(-22.5, 120);
   lasang = array(45.0, 120);
 
+write,"Projecting to the surface..."
  for ( i=1; i< sz; i += step) { 
    gx = easting(, i);
    gy = northing(, i);
    yaw = -heading(, i);
    scan_ang = (360.0/8000.0)  * a(i).sa + scan_bias;
+
+// edit out tx/rx dropouts
+ el = ( a(i).irange & 0xc000 ) == 0 ;
+ a(i).irange *= el;
+
    srm = (a(i).irange*NS2MAIR - range_bias);
    gz = palt(, i);
   m = scanflatmirror2_direct_vector(yaw+yaw_bias,
 	pitch(,i)+pitch_bias,roll(,i)+roll_bias,
          gx,gy,gz,dx,dy,dz,cyaw, lasang, mirang, scan_ang, srm)
   
-  rrr(i).meast  =  m(,1);
-  rrr(i).mnorth =  m(,2);
-  rrr(i).melevation=  m(,3);
-  rrr(i).east   =  m(,4);
-  rrr(i).north  =  m(,5);
-  rrr(i).elevation =  m(,6);
+  rrr(i).meast  =     m(,1) * 100.0;
+  rrr(i).mnorth =     m(,2) * 100.0;
+  rrr(i).melevation=  m(,3) * 100.0;
+  rrr(i).east   =     m(,4) * 100.0;
+  rrr(i).north  =     m(,5) * 100.0;
+  rrr(i).elevation =  m(,6) * 100.0;
   rrr(i).raster = (a(i).raster&0xffffff);
   rrr(i).raster += (indgen(120)*2^24);
   if ( (i % 100 ) == 0 ) { 
