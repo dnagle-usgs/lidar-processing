@@ -532,18 +532,18 @@ proc tar_save_marked {tn} {
       tk_messageBox -type ok -icon error \
                               -message "Last Frame Marked is less than First Frame Marked. Cannot Save."
   } else {      
-  set psf [pid]
-  set tmpdir "/tmp/sf.$psf"
-  exec mkdir $tmpdir
-  for {set i $fcin} {$i<=$lcin} {incr i} {
-     exec cp $dir/$fna($i) $tmpdir;
+    set psf [pid]
+    set tmpdir "/tmp/sf.$psf"
+    exec mkdir $tmpdir
+    for {set i $fcin} {$i<=$lcin} {incr i} {
+       exec cp $dir/$fna($i) $tmpdir;
      
-  }
-  puts "files in tmpdir\r\n";
-  cd $tmpdir;
-  exec tar -cvf $tn .
-  cd $dir
-  exec rm -r $tmpdir
+    }
+    ##puts "files in tmpdir\r\n";
+    cd $tmpdir;
+    exec tar -cvf $tn .
+    cd $dir
+    exec rm -r $tmpdir
   
   }
 
