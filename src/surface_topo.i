@@ -271,7 +271,7 @@ write,"Projecting to the surface..."
    scan_ang = (360.0/8000.0)  * a(i).sa + scan_bias;
 
 // edit out tx/rx dropouts
- el = ( a(i).irange & 0xc000 ) == 0 ;
+ el = ( int(a(i).irange) & 0xc000 ) == 0 ;
  a(i).irange *= el;
 
    srm = (a(i).irange*NS2MAIR - range_biasM);

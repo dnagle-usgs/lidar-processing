@@ -13,8 +13,9 @@
 	Minor changes to omit progress bar when fewer then 10
 	rasters to process.
 
-  test comment.
 
+
+ test...
 */
 
 require, "eaarl_constants.i"
@@ -38,13 +39,19 @@ angle) in digital counts.  The sa contains digital counts based on
  twice the angle of incidence, so effectively you should use 4000
 counts/revolution.
 
+Though the "irange" value comes from the system as an integer, it 
+is converted and stored in RTRS as a floating point value.  In this
+way it can be refined to better than the one-ns resolution by 
+processing methods. By carying it as a float, we don't have to scale
+it.
+
 
  ---------end-----------
 */
   struct RTRS { 
      int    raster;		// the raster number;
      double    soe(120); 	// Seconds of the epoch for each pulse.
-     int    irange(120); 	// integer range counter values.
+     float    irange(120); 	// integer range counter values.
      short  intensity(120);	// Laser return intensity
      short      sa(120); 	// scan angle counts.
   };
@@ -63,7 +70,7 @@ local XRTRS
   struct XRTRS {
      int    raster;		// the raster number;
      double    soe(120); 	// Seconds of the epoch for each pulse.
-     int    irange(120); 	// integer range counter values.
+     float    irange(120); 	// integer range counter values.
      short  intensity(120);	// Laser return intensity
      short      sa(120); 	// scan angle counts.
      float   rroll(120);	// Roll in radians
@@ -151,7 +158,7 @@ func irg( b, e, inc=, delta=, georef=, usecentroid= ) {
 	   a(di).irange(ii)    = centroid_values(1);
 	   a(di).intensity(ii) = centroid_values(2);
         }
-    } else {
+    } else {	// This section processes basic irange
       a(di).irange = rp.irange;
       for ( ii=1; ii< rp.npixels(1); ii++ ) { 
        ta = -float(*rp.tx(ii));
@@ -161,16 +168,13 @@ func irg( b, e, inc=, delta=, georef=, usecentroid= ) {
        tas = ta(sum);
        if ( tas )
           tc = (ta * x )(sum) / tas;
-       a(di).irange(ii) -= (tc+0.5); 
+       a(di).irange(ii) -= tc; 
          
        if ( numberof( (*rp.rx(ii,1) )) >= 8 ) {
          bias = (*rp.rx(ii,1) )(1:5)(avg);
 	 w = -((*rp.rx(ii,1) )(6:8) -bias);
          if ( w(1) > 0 )
            a(di).intensity(ii) = w(3) - w(1); //   
-
-// (w(2)))+(w(1:3)(avg)); 
-
         }
       }
     }
