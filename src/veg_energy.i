@@ -468,11 +468,12 @@ if (!is_void(interactive)) {
 	window, outwin; fma;
    }
    if (normalize == 1) {
+    idx = where(nn != 0);
+    plmk, xx(idx), yy(idx)/nn(idx), msize=0.2, color=color, marker=1;
+    plg, xx(idx), yy(idx)/nn(idx), color=color;
+   } else {
     plmk, xx, yy, msize=0.2, color=color, marker=1;
     plg, xx, yy, color=color;
-   } else {
-    plmk, xx, yy*nn, msize=0.2, color=color, marker=1;
-    plg, xx, yy*nn, color=color;
    }
     
 
@@ -759,56 +760,47 @@ idx3 = where((mets(1,) < 6) & (mets(1,) > 1) & (mets(4,) > 0.25));
 
 idx4 = where((mets(1,) < 1) & (mets(1,) > -1)); 
 
+z = mets(1,,);
+z(*) = 0;
 
 if (is_void(win)) win=4;
 window, win;
 if (dofma) fma;
 if (!is_array(idx)) idx = [1,2,3,4,5];
  for (i=1;i<=numberof(idx);i++) {
-    if (idx(i) == 1) {
-	plmk, lfp.north(idx1)/100., lfp.east(idx1)/100., marker=1, msize=msize, width=10, color="yellow";
-    }
-    if (idx(i) == 2) {
-	plmk, lfp.north(idx2)/100., lfp.east(idx2)/100., marker=1, msize=msize, width=10, color="green";
-    }
-    if (idx(i) == 3) {
-	plmk, lfp.north(idx3)/100., lfp.east(idx3)/100., marker=1, msize=msize, width=10, color="blue";
-    }
-    if (idx(i) == 4) {
-	plmk, lfp.north(idx4)/100., lfp.east(idx4)/100., marker=1, msize=msize, width=10, color="red";
-    }
+    if (idx(i) == 1) 
+        z(idx1) = 1;
+    
+    if (idx(i) == 2) 
+	z(idx2) = 2;
+
+    if (idx(i) == 3) 
+        z(idx3) = 3;
+
+    if (idx(i) == 4) 
+	z(idx4) = 4;
  }
 
-if (smooth) {
+ if (smooth) {
    // make 2d array with class numbers
    xx = dimsof(lfp);
-   vcl = array(long, xx(2), xx(3));
    vclnew = array(long, xx(2), xx(3));
-   vcl(idx1)=1;
-   vcl(idx2)=2;
-   vcl(idx3)=3;
-   vcl(idx4)=4;
    for (i=2;i<xx(3);i++) {
      for (j=2;j<xx(2);j++) {
-	i1 = where(vcl(j-1:j+1,i-1:i+1) == 1)
-	i2 = where(vcl(j-1:j+1,i-1:i+1) == 2)
-	i3 = where(vcl(j-1:j+1,i-1:i+1) == 3)
-	i4 = where(vcl(j-1:j+1,i-1:i+1) == 4)
+	i1 = where(z(j-1:j+1,i-1:i+1) == 1)
+	i2 = where(z(j-1:j+1,i-1:i+1) == 2)
+	i3 = where(z(j-1:j+1,i-1:i+1) == 3)
+	i4 = where(z(j-1:j+1,i-1:i+1) == 4)
 	imxx = [numberof(i1),numberof(i2),numberof(i3),numberof(i4)](mxx);
 	imx = [numberof(i1),numberof(i2),numberof(i3),numberof(i4)](max);
 	if (imx != 0) vclnew(j,i) = imxx;
      }
    }
-   window, win+1; fma;
-   idx1 = where(vclnew == 1);
-   idx2 = where(vclnew == 2);
-   idx3 = where(vclnew == 3);
-   idx4 = where(vclnew == 4);
-   plmk, lfp.north(idx1)/100., lfp.east(idx1)/100., marker=1, msize=msize, width=10, color="yellow";
-   plmk, lfp.north(idx2)/100., lfp.east(idx2)/100., marker=1, msize=msize, width=10, color="green";
-   plmk, lfp.north(idx3)/100., lfp.east(idx3)/100., marker=1, msize=msize, width=10, color="blue";
-   plmk, lfp.north(idx4)/100., lfp.east(idx4)/100., marker=1, msize=msize, width=10, color="red";
-}
+   z = vclnew; vlcnew=[];
+ }
+
+ z = bytscl(z);
+ pli, z, lfp(1,1).east/100., lfp(1,1).north/100., lfp(0,1).east/100., lfp(1,0).north/100.;
 	
 return
 }
