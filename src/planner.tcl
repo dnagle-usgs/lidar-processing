@@ -264,16 +264,17 @@ proc output_polys { } {
 proc load_file { fn } {
  global img dims 
   puts "load file: $fn"
-  set n [ split $fn "_" ]
+  set n [ split $fn "_." ]
   set dimstr [ split [ lindex $n 1 ] "x" ];
   puts "Title: [ lindex $n 0 ]"
   puts " dims: [ lindex $n 1 ]"
+  set dms [ lrange $dimstr 1 4 ]
+  set sdims [ lsort -real $dimstr ]
   set dims(zone) [ lindex $dimstr 0  ]
-  set dims(le)   [ lindex $dimstr 1  ]
-  set dims(ln)   [ lindex $dimstr 2  ]
-  set dims(re)   [ lindex $dimstr 3  ]
-  set dims(rn)   [ lindex $dimstr 4  ]
-  set dims(rn)   [ lindex [ split $dims(rn) "." ] 0 ]
+  set dims(le)   [ lindex $sdims  1  ]
+  set dims(re)   [ lindex $sdims  2  ]
+  set dims(rn)   [ lindex $sdims  3  ]
+  set dims(ln)   [ lindex $sdims  4  ]
 
  $img configure -height 1 -width 1
  $img configure -height 0 -width 0
@@ -675,7 +676,7 @@ set e1   [ expr double(1-sqrt(1-$eccSquared))/(1+sqrt(1-$eccSquared)) ]
 
 set dims(dx) 100
 set dims(dy) 100
-set dir "~/walker-lake"
+set dir "~/"
 
 # set path to be sure and check /usr/lib for the package
 set auto_path "$auto_path /usr/lib"
