@@ -40,14 +40,16 @@ struct GEOALL {
   long rn (120); 	//contains raster value
   long north(120); 	//surface northing
   long east(120);	//surface east
-  long bath(120);	//water bathymetry in centimeters
+  long sr2(120);	//slant range from the first to the last return as if in air in centimeters
   long elevation(120); //first surface elevation in centimeters
   long mnorth(120);	//mirror northing
   long meast(120);	//mirror easting
   long melevation(120);	//mirror elevation
-  short depth(120);	//water depth in centimeters
   short bottom_peak(120);//peak amplitude of the return signal
-  short sa(120);	//scan angle
+  short first_peak(120);//peak amplitude of the first surface return signal
+  long bath(120);	//water bathymetry in centimeters
+  short depth(120);	//water depth in centimeters
+  short sa(120);        //scan angle
   }
 
 func display_bath (d, rrr, cmin =, cmax=, size=, win=, correct=, bathy=, write_all=,bcmin=, bcmax=, bottom_peak= ) {
@@ -109,6 +111,7 @@ for (i=1; i<=len; i=i+1) {
     geodepth(i).mnorth = rrr(i).mnorth
     geodepth(i).meast = rrr(i).meast
     geodepth(i).melevation = rrr(i).melevation;
+    geodepth(i).sr2 =long(-d(,i).idx * CNS *100); 
   }
   if (correct == 1) {
      // search for erroneous elevation values
