@@ -1,16 +1,14 @@
 
-/*
+/********************************************************************
    $Id$
-
+   $Rev$
    dmars2iex.c
 
    Converts DMARS IMU and system time data into Inertial Explorer
    generic raw format.
 
    Original: W. Wright 12/21/2003
-
-
-*/
+********************************************************************/
 
 #include "stdio.h"
 #include <sys/time.h>
@@ -54,19 +52,20 @@ typedef struct {
 typedef struct  {
   char   szHeader[8];
   char   bIsIntelOrMotorola;
-  double dVersionNumber;
-  int    bDeltaTheta;
-  int    bDeltaVelocity;
-  double dDataRateHz;
-  double dGyroScaleFactor;
-  double dAccelScaleFactor;
-  int    iUtcOrGpsTime;
-  int    iRcvTimeOrCorrTime;
-  int    dTimeTagBias;
+  double dVersionNumber     __attribute__ ((packed));
+  int    bDeltaTheta        __attribute__ ((packed));
+  int    bDeltaVelocity     __attribute__ ((packed));
+  double dDataRateHz        __attribute__ ((packed));
+  double dGyroScaleFactor   __attribute__ ((packed));
+  double dAccelScaleFactor  __attribute__ ((packed));
+  int    iUtcOrGpsTime      __attribute__ ((packed));
+  int    iRcvTimeOrCorrTime __attribute__ ((packed));
+  double dTimeTagBias       __attribute__ ((packed));
+
+  char   Reserved[443];
 
 // For EAARL DMARS Use.
-  UI32   nrecs;		// number of records;
-  char   Reserved[443];
+  UI32   nrecs              __attribute__ ((packed));		// number of records;
 } IEX_HEADER __attribute__ ((packed));
 
 typedef struct {
@@ -99,7 +98,7 @@ configure_header() {
 /*
    1) Read our dmars file and determine:
       a) Total number of records
-      b) Time offset to add to convert dmars to GMT.
+      b) Time offset to add to convert dmars to GMT or GPS.
          (Use a record near the end for time offset determination.)
    2) Rewind the input file.
    3) Reread the file and:
@@ -191,7 +190,6 @@ pass1( FILE *f ) {
     }
   } 
   hdr.nrecs = dmars_recs;
-  rewind(f);
 // Output the header record again
   fwrite( &hdr, sizeof(hdr), 1, odf );
 }
@@ -277,9 +275,6 @@ main( int argc, char *argv[] ) {
         );
 
   rewind(idf);
-
-// Output the header record
-  fwrite( &hdr, sizeof(hdr), 1, odf );
 
 
 // Now output the dmars records
