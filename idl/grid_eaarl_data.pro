@@ -1,5 +1,5 @@
 pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygrid=ygrid, $
-	z_max = z_max, z_min=z_min, missing = missing, limits=limits
+	z_max = z_max, z_min=z_min, missing = missing, limits=limits, area_threshold=area_threshold
   ; this procedure does tinning / gridding on eaarl data
   ; amar nayegandhi 5/14/03.
   ; INPUT KEYWORDS:
@@ -17,6 +17,7 @@ pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygri
   if (not keyword_set(cell)) then cell = 1  
   if (not keyword_set(z_min)) then z_min = -100L
   if (not keyword_set(missing)) then missing = -100L
+  if (not keyword_set(area_threshold)) then area_threshold = 100
 
   print, "    triangulating..."
   if ((mode eq 1) OR (mode eq 2)) then begin
@@ -24,6 +25,20 @@ pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygri
   endif else begin
     triangulate, float(data.least/100.), float(data.lnorth/100.), tr, b
   endelse
+
+  ; now remove the large triangles by comparing the area to the threshold
+  ; tr returns the indices of the array
+  print, "    removing large triangles..."
+  xa = double(data(tr(0,*)).east/100.)
+  xb = double(data(tr(1,*)).east/100.)
+  xc = double(data(tr(2,*)).east/100.)
+  ya = double(data(tr(0,*)).north/100.)
+  yb = double(data(tr(1,*)).north/100.)
+  yc = double(data(tr(2,*)).north/100.)
+  area = abs((xb*ya-xa*yb)+(xc*yb-xb*yc)+(xa*yc-xc*ya))/2
+
+  aidx = where(area lt area_threshold)
+  tr = tr(*,aidx)
 
   print, "    gridding..."
   case mode of 
