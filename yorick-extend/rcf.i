@@ -1,18 +1,13 @@
 /*
 
-
   $Id$
 
-  This stuff will get hacked into some EAARL specfic "C" functions.  For now
-  it serves as a starting place.
-  
-  rcf.i
+  Wrapper file for rcf
+  Use
 
-  Simple example of a C compiled function callable from Yorick.
+     yorick -batch make.i rcf_yorick rcf.i
 
-     yorick -batch make.i yerf rcf.i
-
-  builds a Makefile for this package.
+  to build a Makefile for this package.
 
      yorick -batch make.i
 
@@ -22,60 +17,98 @@
 
      make
 
-  builds a custom version of yorick called "yerf".  The function cerfc
-  can be called from the interpreter.  You can compare the speed of this
-  compiled function with the interpreted version of erfc in gamma.i.
+  builds a custom version of yorick called "rcf_yorick".  The function 
+  rcf can be called from the interpreter.
 
   Try including make.i and typing "help, make" for more information.
- */
+*/
 
 /* MAKE-INSTRUCTIONS
 SRCS = rcf.c
-LIB = yerf
 */
 
-/* If there are many SRCS, you can place a \ at the end of each line
-   to continue the space delimited list to the next line.
-   The LIB keyword is optional; if not present (you can put a # on that
-     line to comment it out) you will not get a libyerf.a and this
-     cerfc.i package cannot be included as an "old package" in future
-     builds.
-   The DEPLIBS and NO-WRAPPERS keywords are not needed here.
- */
 
-func cerfc(x)
-/* DOCUMENT cerfc(x)
-     returns the complementary error function 1-erf with fractional
-     error less than 1.2e-7 everywhere.
-   SEE ALSO: erfc (in gamma.i)
- */
-{
-  /* A simple interpreted wrapper can generate additional arguments
-     necessary for the compiled function.
-     In this case, the result of the calculation is an array, which
-     is an input parameter to the compiled function.
-     The length and dimensions of the result array are the same as the
-     input x array.
-   */
-  y= array(double, dimsof(x));
-  raw_cerfc, y, x, numberof(x);
-  return y;
+func rcf(jury, w, mode=)
+/* DOCUMENT rcf( jury, w, mode= )
+Generic Random Consensus filter.  The jury is the
+array to test for consensis, and w is the window range
+which things can vary within.
+
+
+jury       The array of points used to reach the consenus.
+
+w          The window width.
+
+Mode=
+        0  Returns an array consisting of two elements
+           where the first is the minimum value of the
+           window and the second element is the number
+           of votes.
+
+        1  Returns the average of the winners.
+
+        2  Returns a index list of the winners
+
+        The following is a simple method to test the filter:
+
+        For jury we will use the array a:
+    a = float([100,101,100,99,60,98,99,101,105,103,30,88,99,110,101,150])
+        And lets set the window size to 6: w = 6
+
+        The default mode:
+        rcf(a, w) and Enter
+        The result printed on the screen will be the following:
+        [98, 10] where 98 is the minimum value of the points in the window
+
+        Mode 1
+        rcf(a, w, mode= 1) and Enter
+        The result printed on the screen will be:
+        [100.1, 10] where 100.1 is the average value within the window
+        and 10 is the number of points within that window range.
+
+        Mode 2
+        rcf(a, w, mode= 2) and Enter
+        The result printed on the screen will be:
+        10                      number of points within the window
+        [1,2,3,4,5,6,7,8,9,10]   kwinners array
+        4                     vote
+        [0x81121bc,0x814d9bc]   location in memory of sorted list of kwinners
+        and address of vote.
+
+
+For a description on this method, see:
+
+Random Sample Consensus - A paradigm for model-fitting with applications 
+to image-analysis and automated cartography,
+
+Fischler MA, Bolles RC, Communications of the ACM,
+24 (6): 381-395 1981
+
+FISCHLER MA, SRI INT,CTR ARTIFICIAL INTELLIGENCE,MENLO PK,CA 94025
+
+Publisher:
+ASSOC COMPUTING MACHINERY, NEW YORK
+
+*/
+
+{ 
+  c = float(array(0,2));
+  if ( is_void(mode) )
+        mode = 0;
+
+  y_rcf, jury, w, mode, c;
+  return c;
 }
 
-extern raw_cerfc;
+extern y_rcf;
 /* PROTOTYPE
-   void cerfc(double array y, double array x, long n)
- */
+void c_rcf (float array a, float w, int mode, float array b)
+*/
 
 /* The PROTOTYPE comment:
-   (1) attaches the compiled function cerfc to the interpreted function
-       raw_cerfc
-   (2) generates wrapper code for cerfc that converts the data types
-       to those shown in the comment -- for output variables such as
-       y in this case, it is the responsibility of the interpreted caller
-       (func cerf above) to ensure that no conversion is necessary
-       (otherwise the result will go to a temporary array and be discarded)
-   (3) note that the word "array" replaces the symbol "*" in the
+   (1) attaches the compiled function c_rcf to the interpreted 
+       function y_rcf
+   (2) note that the word "array" replaces the symbol "*" in the
        corresponding ANSI C prototype
        complicated data types should use the interpreted data type
        "pointer" and pass their arguments as "&arg".
