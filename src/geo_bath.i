@@ -1164,7 +1164,9 @@ maxx = (depth_all.elevation(q)+depth_all.depth(q))(max);
 
 // make a histogram of the data indexed by q.
   h = histogram( (depthy / 100) + 1 );
-  h( where( h == 0 ) ) = 1;
+  hind = where(h == 0);
+  if (is_array(hind)) 
+    h(hind) = 1;
   e = span( minn, maxx, numberof(h) ) + 1 ; 
   w = window();
   window,win; fma; plg,h,e;
