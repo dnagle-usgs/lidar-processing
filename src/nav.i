@@ -176,13 +176,12 @@ func mdist ( none, nodraw=, units=, win=, redrw= ) {
 	window(win);
  }
 
-win
    res = mouse(1, 2, "Hold left mouse, and drag distance:"); // style=2 normally
    if ( redrw ) 
 	redraw;
 
+ d = array(double, 3);
  if ( units == "ll" ) {   ////////////  Lat/Lon
-   d = array(double, 3);
    d(1) = lldist( res(2), res(1), res(4), res(3) );
    d(2) = d(1)  * 1.1507794;      // convert to stat miles
    d(3) = d(1)  * 1.852;          // also to kilometers
@@ -207,17 +206,28 @@ win
   dist = sqrt( dx^2 + dy^2) ;
   distm = dist / div;
   
+  d(3) = dist/1000; // convert to km
+  d(1) = d(3)/1.852;  // convert to nautical miles
+  d(2) = d(1)*1.1507794; // convert to stat miles
+  print,"# nm/sm/km",d
+ 
+  if ( is_void(nodraw) ) {
+    plmk, res(2),res(1), msize=msz
+    plmk, res(4),res(3), msize=msz
+    plg, [res(2),res(4)], [res(1),res(3)],color="red",marks=0
+  }
+  grow, res, d
+  rv = res;
 
   if ( distm > 1000.0 )
     write,format="Distance is %5.3f kilometers\n", distm/1000.0;
   else
     write,format="Distance is %5.3f meters\n", distm;
-   rv = dist;
+    
+   //rv = dist;
  }
   if ( !is_void(win) )		// restore orginal window
-        window(winSave);
- win;
- winSave
+        window,winSave;
  return rv;
 }                                                     
 
@@ -234,7 +244,7 @@ if (is_void(sw) )
 mission_time = 0.0
 
 
-func sdist( junk, block=, line= , mode=, fill=) {
+func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=) {
 /* DOCUMENT sdist(junk, block=, line= , mode=, fill=)
    Measure distance, and draw a proportional rectangle showing the 
    resulting coverage.
@@ -282,12 +292,16 @@ func sdist( junk, block=, line= , mode=, fill=) {
 extern mission_time
 extern sr, dv, rdv, lrdv, rrdv;
 extern blockn, segn;
+extern curzone; // current zone number if in UTM
   aw = float(aw);
   sw = float(sw);
   segs = aw / sw; 		// compute number of segments
   sega = array(float, int(segs),4);
   sr = array(float, 7, 2);  	//the array to hold the rectangle
 
+
+  if (is_void(in_utm)) in_utm = 0;
+  if (is_void(out_utm)) out_utm = 0;
 
 // line mode
 // 1 = right, bottom
@@ -297,7 +311,11 @@ extern blockn, segn;
 	mode = 2;
 
   if ( is_void( line ) ) {
-    res = mdist(nodraw=1);		// get the segment from the user
+    if (in_utm) {
+	res = mdist(nodraw=1,units="m"); // get the segment from the user in utm
+    } else {
+        res = mdist(nodraw=1);	// get the segment from the user in ll
+    }
     sf = aw / res(14);		// determine scale factor
     km = res(14);
   } else {
@@ -308,11 +326,24 @@ extern blockn, segn;
   }
 
 
+  if (in_utm == 1) {
+     //convert to latlon to continue using the code below
+     if (is_void(curzone)) {
+        czone = ""
+	read, prompt="Could not determine UTM Zone Number.\nPlease enter zone number: ",czone;
+	sread, czone, format="%f",curzone;
+     }
+     ll = utm2ll([res(2), res(4)], [res(1), res(3)], [curzone, curzone]);
+     res(1) = ll(1,1);
+     res(2) = ll(1,2);
+     res(3) = ll(2,1);
+     res(4) = ll(2,2);
+  }
 
 
 // adjust so all segments are from left to right 
 // only the user coords. are changed
-re
+
   if ( res(1) > res(3) ) {	
     temp = res;
     res(1) = temp(3);
@@ -325,20 +356,20 @@ res
 
 
   sf2 = sf/2.0;			// half the scan width
+     
   llat = [res(2), res(4)];
   llon = [res(1), res(3)] - res(1);   // translate to zero longitude
   ll2utm(llat, llon);		// convert to utm
- 
   zone = ZoneNumber(1);		// they are all the same cuz we translated
   dv = [UTMNorthing (dif), UTMEasting(dif)];
   dv = [dv(1),dv(2)];
 
 
 
-    if ( (mode == 1) || (mode==3) ) {
-     if ( mode == 3) {
+   if ( (mode == 1) || (mode==3) ) {
+    if ( mode == 3) {
 	dv = -dv;
-     }
+    }
     lrdv = [-dv(2), dv(1)] * sf; 	// 90 deg left rotated difs
     sr(1,) = [UTMNorthing(1),UTMEasting(1)];	// first point
     sr(2,) = [UTMNorthing(2),UTMEasting(2)];	// end point
@@ -381,6 +412,13 @@ res
 // to keep it all i the same utm zone
   Long += res(1);
 
+// save previous zone number
+pZoneNumber = ZoneNumber(1);
+
+if (in_utm == 1) {
+  // convert to utm so as to plot it on the window
+  u = fll2utm(Lat, Long)
+}
 // Plot the scan rectangle.  Points 3:7 have the vertices of 
 // the scan rectangle.  1:2 have the end points.
 r = 3:7
@@ -392,7 +430,11 @@ r = 3:7
  if ( (fill & 0x8)  == 8 ) {
    n = [5];
    z = [char(185)]
-   plfp,z,Lat(r),Long(r), n
+   if (in_utm == 1) {
+    plfp, z, u(1,r), u(2,r), n
+   } else {
+    plfp,z,Lat(r),Long(r), n
+   }
  }
 
 if (is_void(stturn) )
@@ -410,7 +452,7 @@ write,format="# %f %f %f %f \n", res(2),res(1), res(4), res(3)
 /////////// Now convert the actual flight lines
 Xlong = Long;		// save Long cuz utm2ll clobbers it
 Xlat  = Lat;
-zone = array(ZoneNumber(1), dimsof( sega) (2) );
+zone = array(pZoneNumber, dimsof( sega) (2) );
   utm2ll, sega(,1), sega(,2), zone ;
   sega(,1) = Lat; sega(,2) = Long + res(1);
   utm2ll, sega(,3), sega(,4), zone;
@@ -419,17 +461,40 @@ zone = array(ZoneNumber(1), dimsof( sega) (2) );
 
 /* See if the user want's to display the lines */
  if ( (fill & 0x1 ) == 1 ) {
-  pldj,sega(rg,2),sega(rg,1),sega(rg,4),sega(rg,3),color="yellow"
+  if (in_utm) {
+     useg1 = fll2utm(sega(,1), sega(,2));
+     useg2 = fll2utm(sega(,3), sega(,4));
+     usega = [useg1(1,), useg1(2,), useg2(1,), useg2(2,)];
+     pldj,usega(rg,2),usega(rg,1),usega(rg,4),usega(rg,3),color="yellow"
+  } else {
+    pldj,sega(rg,2),sega(rg,1),sega(rg,4),sega(rg,3),color="yellow"
+  }    
   rg = 2:0:2
-  if ( (dimsof(sega)(2)) > 1 ) 
-       pldj,sega(rg,2),sega(rg,1),sega(rg,4),sega(rg,3),color="white"
+  if ( (dimsof(sega)(2)) > 1 ) {
+       if (in_utm) {
+         pldj,usega(rg,2),usega(rg,1),usega(rg,4),usega(rg,3),color="white"
+       } else {
+         pldj,sega(rg,2),sega(rg,1),sega(rg,4),sega(rg,3),color="white"
+       }
+  }
  }
 
  rg = 1
  if ( (fill & 0x2 ) == 2 ) {
-  pldj,sega(rg,2),sega(rg,1),sega(rg,4),sega(rg,3),color="green"
+  if (in_utm) {
+    pldj,usega(rg,2),usega(rg,1),usega(rg,4),usega(rg,3),color="green"
+  } else {
+    pldj,sega(rg,2),sega(rg,1),sega(rg,4),sega(rg,3),color="green"
+  }
  }
 //  write,format="%12.8f %12.8f %12.8f %12.8f\n", sega(,1),sega(,2),sega(,3),sega(,4)
+ if (out_utm) {
+  write,format="utmseg %d-%d e%8.2f:n%9.2f e%8.2f:n%9.2f\n", blockn, indgen(1:int(segs)),
+	usega(,2),
+	usega(,1),
+	usega(,4),
+	usega(,3)
+ } else {
   segd = abs(double(int(sega)*100 + ((sega - int(sega)) * 60.0) ));
   nsew = ( sega < 0.0 );
   nsewa = nsew;
@@ -448,12 +513,14 @@ zone = array(ZoneNumber(1), dimsof( sega) (2) );
 	nsewa(,2),segd(,2),
 	nsewa(,3),segd(,3),
 	nsewa(,4),segd(,4)
-
+ }
 // put a line around it
 r = 3:7
 /// plg,Lat(r),Long(r)
- if ( (fill & 0x4 ) == 4 ) {
+ if (!in_utm) {
+  if ( (fill & 0x4 ) == 4 ) {
    plg, [res(2),res(4)], [res(1),res(3)],color="red",marks=0
+  }
  }
 
  rs = FB();
