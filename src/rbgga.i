@@ -290,7 +290,7 @@ properly to the zoom buttons.
 */
  extern ZoneNumber, utm, ply, curzone;
  if ( is_void(win) ) 
-	win = 6;
+	win = window();
 
  window,win;
  if (!is_array(llarr)) {

@@ -161,7 +161,7 @@ for ( ; i<=j; i++ ) {
  }
   if ( numberof(q) >= 1) {
      if ( mode == "elev" ) { 
-       plcm, rrr(i).elevation(q)(1:0:skip), (rrr(i).north(q)(1:0:skip))/100.0, (rrr(i).east(q)(1:0:skip))/100.0,
+       plcm, [rrr(i).elevation(q)](1:0:skip), ([rrr(i).north(q)](1:0:skip))/100.0, ([rrr(i).east(q)](1:0:skip))/100.0,
        msize=size,cmin=cmin, cmax=cmax, marker=marker
      } else if ( mode == "intensity" ) {
        plcm, rrr(i).intensity(q), (rrr(i).north(q)(1:0:skip))/100.0, (rrr(i).east(q)(1:0:skip))/100.0,

@@ -62,6 +62,7 @@
   set plist(idx4,msize) $msize
   set plist(idx4,mtype) $markerv
 
+  set plot_dpi 100
   array set cbvc {cmin cmin cmax cmax msize msize mtype mtype}
 
 exp_send "#include \"geo_bath.i\"\r"; # load geobath.i code
@@ -101,6 +102,7 @@ menu .l1wid.mb
 menu .l1wid.mb.file
 menu .l1wid.mb.load
 menu .l1wid.mb.options
+menu .l1wid.mb.graph
 .l1wid.mb   add cascade -label File -underline 0 -menu .l1wid.mb.file
 
 .l1wid.mb.file add command -label "Read Binary Data file..." -underline 0 -command {
@@ -133,6 +135,12 @@ menu .l1wid.mb.options
  	    puts $var_type
             expect ">"
             destroy .stby
+ 	    if {$cbv == 1} {
+		set cmin $cbvc(cmin)
+		set cmax $cbvc(cmax)
+		set msize $cbvc(msize)
+		set markerv $cbvc(mtype) 
+	    }
            }
      ".edf" -
      ".bin" {
@@ -726,7 +734,10 @@ menu .l1wid.mb.options
  }
 
 .l1wid.mb.options add command -label "List Plot Variables..." -underline 10 -command {
-   
+    varlist_plot
+}
+
+proc varlist_plot {} {
     global varlist
     destroy .varplot
     toplevel .varplot 
@@ -872,6 +883,16 @@ proc hist_linlog {} {
        exp_send "_win=window();window,0;\
   logxy,0,$hist_log; range,$hist_log;window,_win \r"
 }
+
+
+.l1wid.mb   add cascade -label Graph -underline 0 -menu .l1wid.mb.graph
+.l1wid.mb.graph add radiobutton \
+        -label "75 Dpi (450x450)" -value "75" -variable plot_dpi -underline 1
+.l1wid.mb.graph add radiobutton \
+        -label "100 Dpi (600x600)" -value "100" -variable plot_dpi -underline 1
+.l1wid.mb.graph add radiobutton \
+        -label "100 Dpi (1100x850)" -value "1100" -variable plot_dpi -underline 1
+
 
 
 ComboBox .l1wid.bf4.1.d -text "Define Region using..." -width 22 -values "Rubberband-Box Points-in-Polygon Line-Segment Enter_Rectangular_Coordinates Multiple-PIPs" -helptext "Select region to process using any of the following methods" -editable 0 -modifycmd {
@@ -1563,7 +1584,7 @@ proc send_rnarr_to_l1pro {bstart bstop brnindx} {
 
 proc plot_fltlines {sel} {
   
- global l1pro_fma win_no cmin cmax cdelta msize markerv varlist skip
+ global l1pro_fma win_no cmin cmax cdelta msize markerv varlist skip plot_dpi
      #fill in later using what to plot
      set fs 0
      set ba 0
@@ -1594,7 +1615,18 @@ proc plot_fltlines {sel} {
         -type ok
      } else {
          if { $l1pro_fma } {
-	   exp_send "window,$win_no; fma;\r";
+           
+           switch  $plot_dpi  {
+  	   "75" {
+	      exp_send "winkill, $win_no; window,$win_no,dpi=$plot_dpi,width=450, height=450, style=\"work.gs\"; fma;limits, square=1;\r";
+	    }
+  	   "100" {
+	      exp_send "winkill, $win_no; window,$win_no,dpi=$plot_dpi,width=600, height=600, style=\"work.gs\"; fma; limits, square=1;\r";
+	    }
+	   "1100" {
+	      exp_send "winkill, $win_no; window, $win_no, dpi=100, width=1100, height=850, style=\"landscape11x85.gs\";fma; limits, square=1;\r";
+	    }
+           }
 	 }
      }
 
