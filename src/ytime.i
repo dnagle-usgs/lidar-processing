@@ -280,18 +280,26 @@ func soe2ymd(soe) {
 	timevals = soe2time(soe);
 	y = timevals(1);
 	doy = timevals(2);
-	if (doy <= 31) {m = 1;d=doy;}
-	if ((doy >=32) && (doy <=59)) {m = 2;d=doy-31;}
-	if ((doy >=60) && (doy <=90)) {m = 3;d=doy-59;}
-	if ((doy >=91) && (doy <=120)) {m = 4;d=doy-90;}
-	if ((doy >=121) && (doy <=151)) {m = 5;d=doy-120;}
-	if ((doy >=152) && (doy <=181)) {m = 6;d=doy-151;}
-	if ((doy >=182) && (doy <=212)) {m = 7;d=doy-181;}
-	if ((doy >=213) && (doy <=243)) {m = 8;d=doy-212;}
-	if ((doy >=244) && (doy <=273)) {m = 9;d=doy-243;}
-	if ((doy >=274) && (doy <=304)) {m = 10;d=doy-273;}
-	if ((doy >=305) && (doy <=334)) {m = 11;d=doy-304;}
-	if ((doy >=335) && (doy <=265)) {m = 12;d=doy-334;}
+	
+	if(y % 4 == 0) { leap = 0; }
+	else {
+		if(y % 100 == 0 && y % 400 != 0) { leap = 1; }
+		else { leap = 0; }
+	}
+	
+	if      (doy <= 31     ) {m =  1;d=doy         ;}
+	else if (doy <= 59+leap) {m =  2;d=doy-31      ;}
+	else if (doy <= 90+leap) {m =  3;d=doy-59 -leap;}
+	else if (doy <=120+leap) {m =  4;d=doy-90 -leap;}
+	else if (doy <=151+leap) {m =  5;d=doy-120-leap;}
+	else if (doy <=181+leap) {m =  6;d=doy-151-leap;}
+	else if (doy <=212+leap) {m =  7;d=doy-181-leap;}
+	else if (doy <=243+leap) {m =  8;d=doy-212-leap;}
+	else if (doy <=273+leap) {m =  9;d=doy-243-leap;}
+	else if (doy <=304+leap) {m = 10;d=doy-273-leap;}
+	else if (doy <=334+leap) {m = 11;d=doy-304-leap;}
+	else                     {m = 12;d=doy-334-leap;}
+	
 	ymd = array(int, 3);
 	ymd(1) = y;
 	ymd(2) = m;
