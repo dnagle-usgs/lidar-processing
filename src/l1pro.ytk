@@ -723,7 +723,7 @@ proc plot_fltlines {sel} {
          exp_send "display, fs_some, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1;\r"
          expect ">"
        } elseif { $disp_type == 4 } {
-         exp_send "display, fs_some, mode=\"intensity\", win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1;\r"
+         exp_send "display, fs_some, mode=\"intensity\", win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv;\r"
          expect ">"
        }
      }
