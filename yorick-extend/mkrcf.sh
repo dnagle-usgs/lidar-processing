@@ -10,6 +10,8 @@
 
  cp rcfbase1.c rcf.c
 
+ mv Makefile Makefile.old
+
  NAME=rcf
  COMP=compare
 
@@ -32,6 +34,6 @@
 
 # YORICK building stuff
   
-  yorick -batch make.i rcf_yorick rcf.i
+  yorick -batch make.i rcf_yorick rcf.i triangulate.i
   make
 
