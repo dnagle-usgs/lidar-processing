@@ -1780,7 +1780,7 @@ Button .l1wid.bf45.r.6 -text "Save Tile" -command {
 		-initialfile $tilefname \
 	       ]
     if {$ofname != ""} {
-        exp_send "$tilename = finaldata; vname=tilename; save, createb(\"$ofname\"), vname, $tilename; finaldata = []; \r";
+        exp_send "$tilename = finaldata; vname=tilename; save, createb(\"$ofname\"), vname, $tilename; finaldata = \[\]; \r";
     }
   }
 
