@@ -340,7 +340,7 @@ if (is_void(sw) )
 mission_time = 0.0
 
 
-func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=) {
+func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=, debug=) {
 /* DOCUMENT sdist(junk, block=, line= , mode=, fill=)
    Measure distance, and draw a proportional rectangle showing the 
    resulting coverage.
@@ -385,11 +385,26 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=) {
    7/3/02  -WW Added left/right selection lines
 
 */
-extern mission_time
+extern mission_time, aw, sw;
 extern sr, dv, rdv, lrdv, rrdv;
 extern blockn, segn;
 extern curzone; // current zone number if in UTM
-  aw = float(aw);
+
+  if (is_array(ply)) {
+    if (!in_utm) {
+      //translate to zero longitude
+      ply1 = ply;
+      ply(1,) = ply(1,)-min(ply(1,));
+    }
+    box = boundBox(ply, noplot=1);
+    if (!in_utm) 
+      box = fll2utm(box(2,), box(1,))(1:2,);
+    dist1 = sqrt((box(1,3)-box(1,1))^2+(box(2,3)-box(2,1))^2);
+    dist2 = sqrt((box(1,2)-box(1,4))^2+(box(2,2)-box(2,4))^2);
+    aw = 2*max(dist1,dist2)/1000.; //multiply by 2 to ensure entire rgn is included.
+  } else {
+    aw = float(aw);
+  }
   sw = float(sw);
   segs = aw / sw; 		// compute number of segments
   sega = array(float, int(segs),4);
@@ -458,10 +473,124 @@ res
   llon = [res(1), res(3)] - res(1);   // translate to zero longitude
   ll2utm(llat, llon);		// convert to utm
   zone = ZoneNumber(1);		// they are all the same cuz we translated
+
+
+
+  if (mode == 4) {
+    if (debug) {
+       w = window();
+       window, 5; fma;
+       plmk, uply(1,), uply(2,), marker=4, width=10, color="black", msize=0.3;
+    }
+    // user can plot the line anywhere to define slope.  Use the pip coords to 
+    // define region.
+    slope = (UTMNorthing(2)-UTMNorthing(1))/(UTMEasting(2)-UTMEasting(1));
+    // find the leftmost ply point in translated utm coords
+    uply = fll2utm(ply(2,), ply(1,));
+    minleftidx = (uply(2,))(mnx);
+    leftpt = [uply(2,minleftidx), uply(1,minleftidx)]; // xy format
+    /*
+    // now find the northernmost ply translated pt
+    //minnorthidx = (uply(1,))(mxx);
+    //northpt = [uply(2,minnorthidx), uply(1,minnorthidx)]; // xy format
+   
+    // now loop through each uply pt and find the line passing through it with 
+    // slope "slope"
+
+    npty = northpt(2);
+    spty = southpt(2);
+    nptx = array(double,numberof(uply(2,)));
+    sptx = array(double,numberof(uply(2,)));
+    for (i=1;i<=numberof(uply(2,));i++) {
+       nptx(i) = uply(2,i)-(uply(1,i)-npty)/slope;
+       sptx(i) = uply(2,i)-(uply(1,i)-spty)/slope;
+    }
+
+    sptxidx = sptx(mnx);
+    fsouthpt = [sptx(sptxidx), spty];
+
+    //UTMNorthing = [spty,npty];
+    //UTMEasting = [sptx(sptxidx),nptx(sptxidx)];
+
+    */
+    // the slope of the line perpedicular to this line is -1/slope
+    pslope = -1.0/slope;
+    // now loop through each uply pt and find the intersecting pt of the 2 
+    // perpendicular lines -- one line is the line passing through leftpt 
+    // with slope "slope" and other line is passing through a ply pt with 
+    // slope "pslope".
+    
+    px = array(double,numberof(uply(2,)));
+    py = array(double,numberof(uply(2,)));
+    for (i=1;i<=numberof(uply(2,));i++) {
+        px(i) = (leftpt(2)-uply(1,i) + slope*uply(2,i) - pslope*leftpt(1))/(slope-pslope);
+	py(i) = leftpt(2)+pslope*(px(i)-leftpt(1));
+    }
+    // now find the leftmost px
+    pxidx = px(mnx);
+    fleftpt = [px(pxidx), py(pxidx)];
+
+    if (debug) {
+       write, "Plotted leftpt in blue";
+       plmk, fleftpt(2), fleftpt(1), marker=4, width=10, color="blue", msize=0.3
+    }
+
+    // now this is the left most point but we still need to find the north and south extent
+    // again find intersecting pt of perpendiculars to this line and take the southermost
+    // and northernmost points as end points
+    px = array(double,numberof(uply(2,)));
+    py = array(double,numberof(uply(2,)));
+    for (i=1;i<=numberof(uply(2,));i++) {
+        px(i) = (uply(1,i)-(fleftpt(2)) + slope*fleftpt(1) - pslope*uply(2,i))/(slope-pslope);
+	py(i) = uply(1,i)+pslope*(px(i)-uply(2,i));
+    }
+    f1idx = py(mnx);
+    f1pt = [px(f1idx),py(f1idx)];
+    f2idx = py(mxx);
+    f2pt = [px(f2idx),py(f2idx)];
+     
+    if (debug) {
+      write, "Plotted f1pt and f2pt in green"
+      plmk, f2pt(2), f2pt(1), marker=4, width=10, color="green", msize=0.3;
+      plmk, f1pt(2), f1pt(1), marker=4, width=10, color="green", msize=0.3;
+    }
+    if (f1pt(1) < f2pt(1)) {
+      UTMNorthing = [f1pt(2),f2pt(2)];
+      UTMEasting = [f1pt(1), f2pt(1)];
+    } else {
+      UTMNorthing = [f2pt(2),f1pt(2)];
+      UTMEasting = [f2pt(1), f1pt(1)];
+    }
+
+    // now extend the line by 5*sw on both ends such that it covers the entire
+    // polygon.
+    s = 5*sw*1000;
+    xc = UTMEasting(2)+sqrt(s*s/(slope*slope+1));
+    yc = UTMNorthing(2)+slope*(xc-UTMEasting(2));
+
+    UTMNorthing(2) = yc; 
+    UTMEasting(2) = xc;
+
+    xc = UTMEasting(1)-sqrt(s*s/(slope*slope+1));
+    yc = UTMNorthing(1)+slope*(xc-UTMEasting(1));
+
+    UTMNorthing(1) = yc; 
+    UTMEasting(1) = xc;
+
+    if (debug) {
+      write, "plotted extended points in red"
+      plmk, UTMNorthing(1), UTMEasting(1), marker=4, msize=0.3, color="red", width=10;
+      plmk, UTMNorthing(2), UTMEasting(2), marker=4, msize=0.3, color="red", width=10;
+      window, w;
+    }
+    //if (slope > 0) {
+      mode = 1;
+    //} else {
+    //  mode = 3;
+    //}
+  }
   dv = [UTMNorthing (dif), UTMEasting(dif)];
   dv = [dv(1),dv(2)];
-
-
 
    if ( (mode == 1) || (mode==3) ) {
     if ( mode == 3) {
@@ -507,7 +636,10 @@ res
 
 // Add the longitude back in that we subtrated in the beginning.
 // to keep it all i the same utm zone
+  if (is_array(ply1))
+    res(1) = min(ply1(1,));
   Long += res(1);
+  //Long += min(ply1(1,));
 
 // save previous zone number
 pZoneNumber = ZoneNumber(1);
@@ -539,22 +671,30 @@ if (is_void(stturn) )
 if (is_void(msec) )
 	msec = 50.0		// speed in meters/second
 
+if (!silent) {
 write,format="# set sw %f; set aw %f;  set msec %f; set ssturn %f set block %d\n", 
   sw, aw, msec, stturn, blockn
 write,format="# %f %f %f %f \n", res(2),res(1), res(4), res(3)
+}
  segsecs = res(0)*1000.0 / msec
  blocksecs = (segsecs + stturn ) * int(segs)
+if (!silent) {
  write, format="# set Seglen %5.3fkm; set segtime %4.2f; (min) set Total_time %3.2f(hrs)\n", 
      km, segsecs/60.0, blocksecs/3600.0
+}
 
 /////////// Now convert the actual flight lines
 Xlong = Long;		// save Long cuz utm2ll clobbers it
 Xlat  = Lat;
 zone = array(pZoneNumber, dimsof( sega) (2) );
   utm2ll, sega(,1), sega(,2), zone ;
-  sega(,1) = Lat; sega(,2) = Long + res(1);
+  sega(,1) = Lat; 
+  sega(,2) = Long + res(1);
+  //sega(,2) = Long + min(ply1(1,));
   utm2ll, sega(,3), sega(,4), zone;
-  sega(,3) = Lat; sega(,4) = Long + res(1);
+  sega(,3) = Lat; 
+  sega(,4) = Long + res(1);
+  //sega(,4) = Long + min(ply1(1,));
  rg = 1:0:2
 
 /* See if the user want's to display the lines */
@@ -586,6 +726,7 @@ zone = array(pZoneNumber, dimsof( sega) (2) );
   }
  }
 //  write,format="%12.8f %12.8f %12.8f %12.8f\n", sega(,1),sega(,2),sega(,3),sega(,4)
+if (!silent) {
  if (out_utm) {
   write,format="utmseg %d-%d e%8.2f:n%9.2f e%8.2f:n%9.2f\n", blockn, indgen(1:int(segs)),
 	usega(,2),
@@ -612,6 +753,8 @@ zone = array(pZoneNumber, dimsof( sega) (2) );
 	nsewa(,3),segd(,3),
 	nsewa(,4),segd(,4)
  }
+
+}
 // put a line around it
 r = 3:7
 /// plg,Lat(r),Long(r)
@@ -681,15 +824,18 @@ window is 6, and color is magenta.
       fpx = fp(idx(i):idx(i+1)-1);
       cc = strtok(fpx.name, "-");
       dd = array(string, numberof(fpx.name));
-      sread, cc(1,), dd;
+      sread, cc(2,), dd;
       //idx1 = sort(dd);
       //fpx = fpx(idx1);
       r = 1:0;
       pldj, fpx.lon1(r),fpx.lat1(r),fpx.lon2(r),fpx.lat2(r),color=color, width=width;
       r = 1:0:skip;
-      //pldj, fpx.lon1(r),fpx.lat1(r),fpx.lon2(r),fpx.lat2(r),color=color, width=5*width;
-      if (labels) 
-	plt, dd(r)(1), fpx.lon1(r)(1), fpx.lat1(r)(1), tosys=1, height=15, justify="CC", color="black";
+      if (labels) {
+        for (j=1;j<=numberof(dd(r));j++) {
+	 plt, dd(r)(j), fpx.lon1(r)(j), fpx.lat1(r)(j), tosys=1, height=15, justify="CC", color="black";
+         pldj, fpx.lon1(r)(j),fpx.lat1(r)(j),fpx.lon2(r)(j),fpx.lat2(r)(j),color=color, width=5*width;
+	}
+      }  
   }
   //pldj, fpx.lon1(1),fpx.lat1(1),fpx.lon2(1),fpx.lat2(1),color="green", width=2*width;
       
@@ -797,13 +943,15 @@ extern a;
        fp_arr.lat2 = u2(1,);
        fp_arr.lon1 = u1(2,);
        fp_arr.lon2 = u2(2,);
-     } else {
+     } 
+   } else {
+     if (in_utm) {
       ll1 = utm2ll(fp_arr.lat1, fp_arr.lon1, curzone);
       ll2 = utm2ll(fp_arr.lat2, fp_arr.lon2, curzone);
-      fp_arr.lat1 = ll1(1,);
-      fp_arr.lat2 = ll2(1,);
-      fp_arr.lon1 = ll1(2,);
-      fp_arr.lon2 = ll2(2,);
+      fp_arr.lat1 = ll1(,1);
+      fp_arr.lat2 = ll2(,1);
+      fp_arr.lon1 = ll1(,2);
+      fp_arr.lon2 = ll2(,2);
      }
    }
 
@@ -991,32 +1139,84 @@ func read_xy(file,yx=, utm=, zone=, color=, win=, plot=, writefile=) {
    
 }
 
-func polycrop_fp(fp, ply=, win=) {
-/* DOCUMENT polycrop_fp(fp, ply=, win=)
-  This function allows the user to select a polygon with a series of mouse click...
-  It then finds the intersection point between the flight line and each side 
-  of the polygon.  The end segments of the fp are thus modified.
+func pip_fp(fp=, ply=, win=, mode=,in_utm=,out_utm=, debug=) {
+/* DOCUMENT pip_fp(fp, ply=, win=)
+  This function allows the user to make a flight plan by selecting a polygon
+  with a series of mouse clicks and defining the orientation...
+  The orientation can be defined anywhere in the window by drawing a line.
+  The orientation MUST be defined south->north. 
   amar nayegandhi 07/11/04.
+  updated by AN on 09/15/04 to include pip and orientation feature.
   Intersection point of 2 lines equation described by Paul Bourke at
   http://astronomy.swin.edu.au/~pbourke/geometry/lineline2d/
 
   Inputs:
-	fp      The input fp variable.  This is generated by sdist().
-	ply=    If specified, then use an already defined poly defined.
+	fp=     The input fp variable.  This is generated by sdist().
+		It can by of type FP or FB.  If fp is not set, the user
+		can select the polygon with a series of mouse clicks.
+	ply=    If specified, then use an already defined polygon.
 	win=	Default=6. Window you want to work in.
+        mode=  set to 4 to use the pip feature. Use function sdist() for
+		modes 1 through 3. see help, sdist()
+        in_utm= set to 1 if input window is in utm coords
+	out_utm= set to 1 if you want output in utm coords
+	debug = set to 1 to work in debug mode.
+
+  Output:  Variable of type FB.  Also writes out the flight plan lines
+           to terminal.
 */
 
+  extern curzone
+  extern lply1;
   if (is_void(win)) win = 6;
   window, win;
   
+  //ply = lply1;
   if (is_void(ply)) 
     ply = getPoly();
+  lply1 = ply;
+  plotPoly, lply1;
 
+
+  if (!is_array(fp)) {
+      write, "Please define flight plan orientation"
+      fp = sdist(mode=mode, block=block, line=line,in_utm=in_utm, out_utm=out_utm, ply=ply, silent=1, fill=0, debug=debug);
+  }
+  fpxy = *fp.p;
+  // convert to utm
+  ufpxy1 = transpose(fll2utm(fpxy(,1), fpxy(,2)));
+  ufpxy2 = transpose(fll2utm(fpxy(,3), fpxy(,4)));
+  fpxy(,1:2) = ufpxy1(,1:2);
+  fpxy(,3:4) = ufpxy2(,1:2);
+  curzone = ufpxy1(1,3);
+
+  if (!in_utm) {
+     ply = lply1;
+     ply1 = (fll2utm(ply(2,), ply(1,)))(1:2,);
+     ply(1,) = ply1(2,);
+     ply(2,) = ply1(1,);
+  }
+     
+
+  new_fpxy = fpxy;
+  new_fpxy(*) = 0;
+  nlines = numberof(fpxy(,1));
+  // define array to tag for selected lines within pip
+  tag_arr = array(int,nlines);
   ply = grow(ply, ply(,1));
-  fp_new = array(FP, numberof(fp));
+  fp_new = array(FB);
 
-  if ( fp.name(1) == "" ) 
+  if ( !fp.name  ) 
 	fp.name = "noname";
+  
+  fp_new.name = fp.name;
+  fp_new.block = fp.block;
+  fp_new.aw = fp.aw;
+  fp_new.sw = fp.sw;
+  fp_new.kmlen = fp.kmlen;
+  fp_new.dseg = fp.dseg;
+  fp_new.alat = fp.alat;
+  fp_new.alon = fp.alon;
   
   for (i=1; i<numberof(ply(1,));i++) {
     x1 = ply(1,i)
@@ -1024,11 +1224,11 @@ func polycrop_fp(fp, ply=, win=) {
     x2 = ply(1,i+1)
     y2 = ply(2,i+1)
 
-    for (j=1; j<=numberof(fp);j++) {
-	x3 = fp(j).lon1
-	y3 = fp(j).lat1
-	x4 = fp(j).lon2
-	y4 = fp(j).lat2
+    for (j=1; j<=nlines;j++) {
+	x3 = fpxy(j,2)
+	y3 = fpxy(j,1)
+	x4 = fpxy(j,4)
+	y4 = fpxy(j,3)
 
         ua = ((x4-x3)*(y1-y3)-(y4-y3)*(x1-x3))/((y4-y3)*(x2-x1)-(x4-x3)*(y2-y1));
         if ((ua < 0) || (ua > 1)) continue;
@@ -1039,27 +1239,27 @@ func polycrop_fp(fp, ply=, win=) {
         x = x1+ua*(x2-x1);
 	y = y1+ua*(y2-y1);
 
-        fp_new(j).name = fp(j).name;
-        if (fp_new(j).lon1 == 0) {
-           fp_new(j).lon1 = x;
-           fp_new(j).lat1 = y;
+        tag_arr(j) = 1;
+        if (new_fpxy(j,2) == 0) {
+           new_fpxy(j,2) = x;
+           new_fpxy(j,1) = y;
 	} else {
-	   if (fp_new(j).lon2 == 0) {
-	      fp_new(j).lon2 = x;
-	      fp_new(j).lat2 = y;
+	   if (new_fpxy(j,4) == 0) {
+	      new_fpxy(j,4) = x;
+	      new_fpxy(j,3) = y;
 	   } else {
 	      // select the segment that makes the longest distance
-	      d1 = ((fp_new(j).lon2-fp_new(j).lon1)^2+(fp_new(j).lat2-fp_new(j).lat1)^2);
-	      d2 = ((fp_new(j).lon2-x)^2+(fp_new(j).lat2-y)^2);
-	      d3 = ((fp_new(j).lon1-x)^2+(fp_new(j).lat1-y)^2);
+	      d1 = ((new_fpxy(j,4)-new_fpxy(j,2))^2+(new_fpxy(j,3)-new_fpxy(j,1))^2);
+	      d2 = ((new_fpxy(j,4)-x)^2+(new_fpxy(j,3)-y)^2);
+	      d3 = ((new_fpxy(j,2)-x)^2+(new_fpxy(j,1)-y)^2);
 	      didx = [d1,d2,d3](mxx);
 	      if (didx == 2) {
-		fp_new(j).lon1 = x;
-		fp_new(j).lat1 = y;
+		new_fpxy(j,2) = x;
+		new_fpxy(j,1) = y;
 	      }
 	      if (didx == 3) {
-		fp_new(j).lon2 = x;
-		fp_new(j).lat2 = y;
+		new_fpxy(j,4) = x;
+		new_fpxy(j,3) = y;
 	      }
 	   }
 	}
@@ -1067,26 +1267,39 @@ func polycrop_fp(fp, ply=, win=) {
      }
    }
 
-  idx = where(fp_new.name);
+  idx = where(tag_arr);
   
-  widx = where(fp_new(idx).lat1 == 0);
-  if (is_array(widx)) fp_new(idx(widx)).lat1 = fp(idx(widx)).lat1;
+  widx = where(new_fpxy(idx,1) == 0);
+  if (is_array(widx)) new_fpxy(idx(widx),1) = fpxy(idx(widx),1);
   
-  widx = where(fp_new(idx).lon1 == 0);
-  if (is_array(widx)) fp_new(idx(widx)).lon1 = fp(idx(widx)).lon1;
+  widx = where(new_fpxy(idx,2) == 0);
+  if (is_array(widx)) new_fpxy(idx(widx),2) = fpxy(idx(widx),2);
 
-  widx = where(fp_new(idx).lat2 == 0);
-  if (is_array(widx)) fp_new(idx(widx)).lat2 = fp(idx(widx)).lat2;
+  widx = where(new_fpxy(idx,3) == 0);
+  if (is_array(widx)) new_fpxy(idx(widx),3) = fpxy(idx(widx),3);
 
-  widx = where(fp_new(idx).lon2 == 0);
-  if (is_array(widx)) fp_new(idx(widx)).lon2 = fp(idx(widx)).lon2;
+  widx = where(new_fpxy(idx,4) == 0);
+  if (is_array(widx)) new_fpxy(idx(widx),4) = fpxy(idx(widx),4);
 
-  return fp_new(idx);
+
+  new_fpxy = new_fpxy(idx,);
+
+  //convert back to latlon
+  xy1 = utm2ll(new_fpxy(,1), new_fpxy(,2), curzone);
+  xy2 = utm2ll(new_fpxy(,3), new_fpxy(,4), curzone);
+  new_fpxy(,1:2) = xy1;
+  new_fpxy(,3:4) = xy2;
+
+  fp_new.p = &new_fpxy;
+
+  write_fp, fp_new, plot=1;
+ 
+  return fp_new;
 
 }
 
 
-func write_fp(fp, sw=, aw=) {
+func write_fp(fp, sw=, aw=, plot=) {
 /* DOCUMENT write_fp(fp)
    This function writes out the flight plan to the standard output
    amar nayegandhi 07/12/04
@@ -1099,17 +1312,24 @@ if (is_void(ssturn)) ssturn = 300.0; // 300 seconds to turn
 
 if (is_void(blockn)) blockn = 7;
 
-res = array(double, 4);
-res(1) = min(fp.lat1);
-res(2) = min(fp.lon1);
-res(3) = max(fp.lat2);
-res(4) = max(fp.lon2);
+sw = fp.sw;
+aw = fp.aw;
 
-write,format="# sw=%f aw=%f msec=%f ssturn=%f block=%d\n", sw, aw, msec, stturn, blockn
+fpxy = *fp.p;
+fpxy = transpose(fpxy);
+
+counter = int(span(1,numberof(fpxy(1,)), numberof(fpxy(1,))));
+res = array(double, 4);
+res(1) = min(fpxy(1,));
+res(2) = min(fpxy(2,));
+res(3) = max(fpxy(3,));
+res(4) = max(fpxy(4,));
+
+write,format="# sw=%f aw=%f msec=%f ssturn=%f block=%d\n", sw, aw, msec, ssturn, blockn
 write,format="# %f %f %f %f \n", res(2),res(1), res(4), res(3)
 
 // now calculate the new total segment length and total time
-segdist = lldist(fp.lat1, fp.lon1, fp.lat2, fp.lon2);
+segdist = lldist(fpxy(2,), fpxy(1,), fpxy(4,), fpxy(3,));
 
 km = sum(segdist);
 segsecs = sum(segdist*1000./msec);
@@ -1118,11 +1338,19 @@ blocksecs = segsecs+(ssturn*numberof(segdist));
 write, format="# Total Seglen=%5.3fkm Total segtime=%4.2f(min) Total time=%3.2f(hrs)\n", 
      km, segsecs/60.0, blocksecs/3600.0
 
-lat1d = abs(double(int(fp.lat1)*100 + ((fp.lat1 - int(fp.lat1)) * 60.0) ));
-lon1d = abs(double(int(fp.lon1)*100 + ((fp.lon1 - int(fp.lon1)) * 60.0) ));
-lat2d = abs(double(int(fp.lat2)*100 + ((fp.lat2 - int(fp.lat2)) * 60.0) ));
-lon2d = abs(double(int(fp.lon2)*100 + ((fp.lon2 - int(fp.lon2)) * 60.0) ));
+lat1d = abs(double(int(fpxy(2,))*100 + ((fpxy(2,) - int(fpxy(2,))) * 60.0) ));
+lon1d = abs(double(int(fpxy(1,))*100 + ((fpxy(1,) - int(fpxy(1,))) * 60.0) ));
+lat2d = abs(double(int(fpxy(4,))*100 + ((fpxy(4,) - int(fpxy(4,))) * 60.0) ));
+lon2d = abs(double(int(fpxy(3,))*100 + ((fpxy(3,) - int(fpxy(3,))) * 60.0) ));
 
-write, format="llseg %s n%013.8f:w%12.8f n%13.8f:w%12.8f\n", fp.name, lat1d, lon1d, lat2d, lon2d; 
+write, format="llseg %s-%d n%013.8f:w%12.8f n%13.8f:w%12.8f\n", fp.name, counter, lat1d, lon1d, lat2d, lon2d; 
 
+if (plot) {
+   fpfp = array(FP,numberof(fpxy(2,)));
+   fpfp.lat1 = fpxy(2,);
+   fpfp.lon1 = fpxy(1,);
+   fpfp.lat2 = fpxy(4,);
+   fpfp.lon2 = fpxy(3,);
+   pl_fp, fpfp, win=win, color="blue"
+}
 }
