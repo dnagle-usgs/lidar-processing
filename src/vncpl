@@ -131,5 +131,5 @@ if ( $opt_list ) {
   ($cmd) = split(/\#/, $shist[$sel], 2);
   printf("%s %s\n", $VNCCMD, $cmd);
 
-  system($VNCCMD . $shist[$sel]);
+  system($VNCCMD . $cmd);
 }
