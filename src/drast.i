@@ -18,7 +18,7 @@ func set_depth_scale ( u ) {
          if ( u == "meters" ) {
            depth_scale = span(5*CNSH2O2X, -245 * CNSH2O2X, 250 );
   } else if ( u == "ns"     ) {
-           depth_scale = span(0, -255, 255 );
+           depth_scale = span(0, -249, 250 );
   } else if ( u == "feet"   ) {
            depth_scale = span(5*CNSH2O2XF, -245 * CNSH2O2XF, 250 );
   } else depth_scale = -1;
@@ -362,3 +362,32 @@ for (i=1; i<120; i++ ) {
 
 
 
+func transmit_char(rr, p=, win=, plot=, autofma=) {
+/* DOCUMENT transmit_char(rr)
+   This function determines the peak power and area under the curve for
+   the transmit waveform.
+   It also returns the time (in ns) the signal is at its peak (useful in
+    determining if signal is saturated).
+   amar nayegandhi 01/21/04
+*/
+
+  mxtx = max(*rr.tx(p));
+  tx = mxtx - *rr.tx(p);
+  mxtx = max(tx);
+  stx = sum(tx);
+  
+  mxidx = where(tx == mxtx);
+  nmx = numberof(mxidx);
+
+  if (is_void(win)) win = window();
+  window, win;
+  if (autofma) {
+      window,win; fma;
+  }
+  if (plot) {
+      plmk, tx, marker=1, msize=.3, color="black";
+      plg, tx;
+  }
+
+  return [stx, mxtx, nmx];
+}
