@@ -77,11 +77,11 @@ static DataBlock *XGetInfo(Symbol *s)
 }
 
 #define TBUFSIZE        32767
-static unsigned int *winners, *fwinners, fcounter;	//Store the winners temporarily & global number of winners count.
+static unsigned int *winners, *fwinners, *cvotes, fcounter;	//Store the winners temporarily & global number of winners count.
 
 short flag;	//Decides on the array use
 
-unsigned int  twinners[ TBUFSIZE ], tidx[ TBUFSIZE ], tfwinners[ TBUFSIZE ];	//These arrays are only used when number_elems <= TBUFSIZE
+unsigned int  twinners[ TBUFSIZE ], tidx[ TBUFSIZE ], tfwinners[ TBUFSIZE ], tcvotes[TBUFSIZE];	//These arrays are only used when number_elems <= TBUFSIZE
 
 
 /* Used to fill a 'Yorick' array with the winners indices
@@ -293,13 +293,33 @@ unsigned int rcf_float_2 (float* a, float w)
   }
   return fcounter;
 }
-void rcf_float_3 (float* a, float w, float* sorteda, unsigned int* votes)
+/* rcf algorithm for mode 3
+ * Returns a sorted version of the input array and the votes that
+ * each element recieves
+ */
+float * csfjury, tcsfjury[TBUFSIZE];
+/*This fuction fills the arrays of the appropriate size (i.e. fcounter)
+ * as provided by the rcf function for mode 3
+ */
+void c_float_fillarray (float *sortedjury, unsigned int *votes)
 {
-  unsigned int i, j, number_elems, counter, *idx;
+  memcpy ((void*)sortedjury, (void*)csfjury, ((sizeof(float))*fcounter));
+  memcpy ((void*)votes, (void*)cvotes, ((sizeof(unsigned int))*fcounter));
+  if (flag)
+  {
+          free (cvotes);
+          free (csfjury);
+  }
+}
+/* This is the actual implementation of mode 3
+ */
+unsigned int rcf_float_3 (float* a, float w)
+{
+  unsigned int i, j, number_elems, *idx;
   DataBlock *db;
   if (w<=(float)0)
     YError("Window size must be positive");
-  db = XGetInfo(sp-3); //stack pointer-3 is the source array 
+  db = XGetInfo(sp-1); //stack pointer-3 is the source array 
   if (!db)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
@@ -311,34 +331,53 @@ void rcf_float_3 (float* a, float w, float* sorteda, unsigned int* votes)
   if (!flag) //Use arrays if number_elems is less than array size
   {
         idx = tidx;
+        cvotes = tcvotes;
+        csfjury = tcsfjury;
   }
   else
   {
         idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);
+        cvotes = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
+        csfjury = (float *) malloc ((sizeof(float))*number_elems);
   }
   for (i=0; i<number_elems; i++)
           idx[i]=i;
   fcopy = a; //Make the jury gloabally accessible
   qsort(idx, number_elems, sizeof(unsigned int), float_compare);//Sort the copy
-  for (i=0; i<number_elems-1; i++) //For each element in the copy
+  fcounter = 0;
+  for (i=0; i<number_elems; i++) //For each element in the copy
   {
-    sorteda[i] = a[idx[i]]; //Fill the sorted a array
-    votes[i]=1; //Each element starts with 1 vote
+    if (i == number_elems-1) //If its the last element,
+    { //We can't look ahead, so break
+            if (a[idx[i]] != a[idx[i-1]]) //Add it if its different from the previous
+            {
+                    csfjury[fcounter] = a[idx[i]];
+                    cvotes[fcounter] = 1;
+                    fcounter++; //Increment fcounter to be consistent with the case
+            } //where we do not break here
+            break;
+    }
+    else if ((i != 0) && (a[idx[i]] == a[idx[i-1]])) //If the element is not the 1st &  the same as 
+    { //the previous simply continue thru a[]
+            continue;
+    }
+    csfjury[fcounter] = a[idx[i]]; //For all other cases, copy the element
+    cvotes[fcounter] = 1; //and initialize its vote to 1
     for (j=i+1; j< number_elems;j++) //For each subsequent element
       if (a[idx[j]] < a[idx[i]]+w) //If it lies in the window
       {
-        votes[i]++; //Count it
+        cvotes[fcounter]++; //Count it
       }
       else
          break; //Break since the array is sorted
+    fcounter++;
   }
-  sorteda[number_elems-1]=a[idx[number_elems-1]];
-  votes[number_elems-1]=1;
   if (flag)
   {
-          free (idx); //idx array is also not needed now
+          free (idx); //idx array is not needed now
   }
-  return;
+  return (fcounter); //fcounter is left at one more, which is good
+                                                //because of the 0 indexing
 }
 /*
  * $Id$
@@ -537,13 +576,33 @@ unsigned int rcf_double_2 (double* a, double w)
   }
   return fcounter;
 }
-void rcf_double_3 (double* a, double w, double* sorteda, unsigned int* votes)
+/* rcf algorithm for mode 3
+ * Returns a sorted version of the input array and the votes that
+ * each element recieves
+ */
+double * csdjury, tcsdjury[TBUFSIZE];
+/*This fuction fills the arrays of the appropriate size (i.e. fcounter)
+ * as provided by the rcf function for mode 3
+ */
+void c_double_fillarray (double *sortedjury, unsigned int *votes)
 {
-  unsigned int i, j, number_elems, counter, *idx;
+  memcpy ((void*)sortedjury, (void*)csdjury, ((sizeof(double))*fcounter));
+  memcpy ((void*)votes, (void*)cvotes, ((sizeof(unsigned int))*fcounter));
+  if (flag)
+  {
+          free (cvotes);
+          free (csdjury);
+  }
+}
+/* This is the actual implementation of mode 3
+ */
+unsigned int rcf_double_3 (double* a, double w)
+{
+  unsigned int i, j, number_elems, *idx;
   DataBlock *db;
   if (w<=(double)0)
     YError("Window size must be positive");
-  db = XGetInfo(sp-3); //stack pointer-3 is the source array 
+  db = XGetInfo(sp-1); //stack pointer-3 is the source array 
   if (!db)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
@@ -555,34 +614,53 @@ void rcf_double_3 (double* a, double w, double* sorteda, unsigned int* votes)
   if (!flag) //Use arrays if number_elems is less than array size
   {
         idx = tidx;
+        cvotes = tcvotes;
+        csdjury = tcsdjury;
   }
   else
   {
         idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);
+        cvotes = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
+        csdjury = (double *) malloc ((sizeof(double))*number_elems);
   }
   for (i=0; i<number_elems; i++)
           idx[i]=i;
   dcopy = a; //Make the jury gloabally accessible
   qsort(idx, number_elems, sizeof(unsigned int), double_compare);//Sort the copy
-  for (i=0; i<number_elems-1; i++) //For each element in the copy
+  fcounter = 0;
+  for (i=0; i<number_elems; i++) //For each element in the copy
   {
-    sorteda[i] = a[idx[i]]; //Fill the sorted a array
-    votes[i]=1; //Each element starts with 1 vote
+    if (i == number_elems-1) //If its the last element,
+    { //We can't look ahead, so break
+            if (a[idx[i]] != a[idx[i-1]]) //Add it if its different from the previous
+            {
+                    csdjury[fcounter] = a[idx[i]];
+                    cvotes[fcounter] = 1;
+                    fcounter++; //Increment fcounter to be consistent with the case
+            } //where we do not break here
+            break;
+    }
+    else if ((i != 0) && (a[idx[i]] == a[idx[i-1]])) //If the element is not the 1st &  the same as 
+    { //the previous simply continue thru a[]
+            continue;
+    }
+    csdjury[fcounter] = a[idx[i]]; //For all other cases, copy the element
+    cvotes[fcounter] = 1; //and initialize its vote to 1
     for (j=i+1; j< number_elems;j++) //For each subsequent element
       if (a[idx[j]] < a[idx[i]]+w) //If it lies in the window
       {
-        votes[i]++; //Count it
+        cvotes[fcounter]++; //Count it
       }
       else
          break; //Break since the array is sorted
+    fcounter++;
   }
-  sorteda[number_elems-1]=a[idx[number_elems-1]];
-  votes[number_elems-1]=1;
   if (flag)
   {
-          free (idx); //idx array is also not needed now
+          free (idx); //idx array is not needed now
   }
-  return;
+  return (fcounter); //fcounter is left at one more, which is good
+                                                //because of the 0 indexing
 }
 /*
  * $Id$
@@ -781,13 +859,33 @@ unsigned int rcf_long_2 (long* a, long w)
   }
   return fcounter;
 }
-void rcf_long_3 (long* a, long w, long* sorteda, unsigned int* votes)
+/* rcf algorithm for mode 3
+ * Returns a sorted version of the input array and the votes that
+ * each element recieves
+ */
+long * csljury, tcsljury[TBUFSIZE];
+/*This fuction fills the arrays of the appropriate size (i.e. fcounter)
+ * as provided by the rcf function for mode 3
+ */
+void c_long_fillarray (long *sortedjury, unsigned int *votes)
 {
-  unsigned int i, j, number_elems, counter, *idx;
+  memcpy ((void*)sortedjury, (void*)csljury, ((sizeof(long))*fcounter));
+  memcpy ((void*)votes, (void*)cvotes, ((sizeof(unsigned int))*fcounter));
+  if (flag)
+  {
+          free (cvotes);
+          free (csljury);
+  }
+}
+/* This is the actual implementation of mode 3
+ */
+unsigned int rcf_long_3 (long* a, long w)
+{
+  unsigned int i, j, number_elems, *idx;
   DataBlock *db;
   if (w<=(long)0)
     YError("Window size must be positive");
-  db = XGetInfo(sp-3); //stack pointer-3 is the source array 
+  db = XGetInfo(sp-1); //stack pointer-3 is the source array 
   if (!db)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
@@ -799,34 +897,53 @@ void rcf_long_3 (long* a, long w, long* sorteda, unsigned int* votes)
   if (!flag) //Use arrays if number_elems is less than array size
   {
         idx = tidx;
+        cvotes = tcvotes;
+        csljury = tcsljury;
   }
   else
   {
         idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);
+        cvotes = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
+        csljury = (long *) malloc ((sizeof(long))*number_elems);
   }
   for (i=0; i<number_elems; i++)
           idx[i]=i;
   lcopy = a; //Make the jury gloabally accessible
   qsort(idx, number_elems, sizeof(unsigned int), long_compare);//Sort the copy
-  for (i=0; i<number_elems-1; i++) //For each element in the copy
+  fcounter = 0;
+  for (i=0; i<number_elems; i++) //For each element in the copy
   {
-    sorteda[i] = a[idx[i]]; //Fill the sorted a array
-    votes[i]=1; //Each element starts with 1 vote
+    if (i == number_elems-1) //If its the last element,
+    { //We can't look ahead, so break
+            if (a[idx[i]] != a[idx[i-1]]) //Add it if its different from the previous
+            {
+                    csljury[fcounter] = a[idx[i]];
+                    cvotes[fcounter] = 1;
+                    fcounter++; //Increment fcounter to be consistent with the case
+            } //where we do not break here
+            break;
+    }
+    else if ((i != 0) && (a[idx[i]] == a[idx[i-1]])) //If the element is not the 1st &  the same as 
+    { //the previous simply continue thru a[]
+            continue;
+    }
+    csljury[fcounter] = a[idx[i]]; //For all other cases, copy the element
+    cvotes[fcounter] = 1; //and initialize its vote to 1
     for (j=i+1; j< number_elems;j++) //For each subsequent element
       if (a[idx[j]] < a[idx[i]]+w) //If it lies in the window
       {
-        votes[i]++; //Count it
+        cvotes[fcounter]++; //Count it
       }
       else
          break; //Break since the array is sorted
+    fcounter++;
   }
-  sorteda[number_elems-1]=a[idx[number_elems-1]];
-  votes[number_elems-1]=1;
   if (flag)
   {
-          free (idx); //idx array is also not needed now
+          free (idx); //idx array is not needed now
   }
-  return;
+  return (fcounter); //fcounter is left at one more, which is good
+                                                //because of the 0 indexing
 }
 /*
  * $Id$
@@ -1025,13 +1142,33 @@ unsigned int rcf_int_2 (int* a, int w)
   }
   return fcounter;
 }
-void rcf_int_3 (int* a, int w, int* sorteda, unsigned int* votes)
+/* rcf algorithm for mode 3
+ * Returns a sorted version of the input array and the votes that
+ * each element recieves
+ */
+int * csijury, tcsijury[TBUFSIZE];
+/*This fuction fills the arrays of the appropriate size (i.e. fcounter)
+ * as provided by the rcf function for mode 3
+ */
+void c_int_fillarray (int *sortedjury, unsigned int *votes)
 {
-  unsigned int i, j, number_elems, counter, *idx;
+  memcpy ((void*)sortedjury, (void*)csijury, ((sizeof(int))*fcounter));
+  memcpy ((void*)votes, (void*)cvotes, ((sizeof(unsigned int))*fcounter));
+  if (flag)
+  {
+          free (cvotes);
+          free (csijury);
+  }
+}
+/* This is the actual implementation of mode 3
+ */
+unsigned int rcf_int_3 (int* a, int w)
+{
+  unsigned int i, j, number_elems, *idx;
   DataBlock *db;
   if (w<=(int)0)
     YError("Window size must be positive");
-  db = XGetInfo(sp-3); //stack pointer-3 is the source array 
+  db = XGetInfo(sp-1); //stack pointer-3 is the source array 
   if (!db)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
@@ -1043,32 +1180,51 @@ void rcf_int_3 (int* a, int w, int* sorteda, unsigned int* votes)
   if (!flag) //Use arrays if number_elems is less than array size
   {
         idx = tidx;
+        cvotes = tcvotes;
+        csijury = tcsijury;
   }
   else
   {
         idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);
+        cvotes = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
+        csijury = (int *) malloc ((sizeof(int))*number_elems);
   }
   for (i=0; i<number_elems; i++)
           idx[i]=i;
   icopy = a; //Make the jury gloabally accessible
   qsort(idx, number_elems, sizeof(unsigned int), int_compare);//Sort the copy
-  for (i=0; i<number_elems-1; i++) //For each element in the copy
+  fcounter = 0;
+  for (i=0; i<number_elems; i++) //For each element in the copy
   {
-    sorteda[i] = a[idx[i]]; //Fill the sorted a array
-    votes[i]=1; //Each element starts with 1 vote
+    if (i == number_elems-1) //If its the last element,
+    { //We can't look ahead, so break
+            if (a[idx[i]] != a[idx[i-1]]) //Add it if its different from the previous
+            {
+                    csijury[fcounter] = a[idx[i]];
+                    cvotes[fcounter] = 1;
+                    fcounter++; //Increment fcounter to be consistent with the case
+            } //where we do not break here
+            break;
+    }
+    else if ((i != 0) && (a[idx[i]] == a[idx[i-1]])) //If the element is not the 1st &  the same as 
+    { //the previous simply continue thru a[]
+            continue;
+    }
+    csijury[fcounter] = a[idx[i]]; //For all other cases, copy the element
+    cvotes[fcounter] = 1; //and initialize its vote to 1
     for (j=i+1; j< number_elems;j++) //For each subsequent element
       if (a[idx[j]] < a[idx[i]]+w) //If it lies in the window
       {
-        votes[i]++; //Count it
+        cvotes[fcounter]++; //Count it
       }
       else
          break; //Break since the array is sorted
+    fcounter++;
   }
-  sorteda[number_elems-1]=a[idx[number_elems-1]];
-  votes[number_elems-1]=1;
   if (flag)
   {
-          free (idx); //idx array is also not needed now
+          free (idx); //idx array is not needed now
   }
-  return;
+  return (fcounter); //fcounter is left at one more, which is good
+                                                //because of the 0 indexing
 }

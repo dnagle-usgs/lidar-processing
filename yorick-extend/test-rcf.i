@@ -16,7 +16,6 @@
 //Tests with a small array for each mode
 
    a = float([ 100,101,100,99,60,98,99,101,105,103,30,88,99,110,101,150]);
-   
 
    timer, t0;
    junk = frcf0(a, 6);
@@ -32,6 +31,11 @@
    junk = frcf2(a, 6);
    timer, t1
    write,format="Float Mode 2: Result= [%p,%p] time=%6.4f secs\n",junk(1), junk(2),t1(1)-t0(1);
+
+   timer, t0;
+   junk = frcf3(a, 6);
+   timer, t1
+   write,format="Float Mode 3: Result= [%p,%p] time=%6.4f secs\n",junk(1), junk(2),t1(1)-t0(1);
 
 //Test for Null array
 //   a = []
@@ -167,6 +171,11 @@
   write,format="Long Mode 2: Result= [%p,%p] time=%6.4f secs\n",junk(1), junk(2),t1(1)-t0(1);
 
 
+   timer, t0;
+   junk = lrcf3(a, 6);
+   timer, t1
+  write,format="Long Mode 3: Result= [%p,%p] time=%6.4f secs\n",junk(1), junk(2),t1(1)-t0(1);
+
 //Test for Null array
 //   a = []
 //   w = 1.0;
@@ -287,7 +296,15 @@
    timer, t1
   write,format="Double Mode 2: Result= [%p,%p] time=%6.4f secs\n",junk(1), junk(2),t1(1)-t0(1);
 
+
+   timer, t0;
+   junk = drcf3(a, 6);
+   timer, t1
+  write,format="Double Mode 3: Result= [%p,%p] time=%6.4f secs\n",junk(1), junk(2),t1(1)-t0(1);
+
+
 /*INT TESTS*/
+
 
 //Tests with a small array for each mode
 
@@ -307,4 +324,32 @@
    junk = ircf2(a, 6);
    timer, t1
   write,format="Int Mode 2: Result= [%p,%p] time=%6.4f secs\n",junk(1), junk(2),t1(1)-t0(1);
+
+   timer, t0;
+   junk = ircf2(a, 6);
+   timer, t1
+  write,format="Int Mode 2: Result= [%p,%p] time=%6.4f secs\n",junk(1), junk(2),t1(1)-t0(1);
+
+
+   timer, t0;
+   junk = ircf3(a, 6);
+   timer, t1
+  write,format="Int Mode 3: Result= [%p,%p] time=%6.4f secs\n",junk(1), junk(2),t1(1)-t0(1);
+
+/* Mode 3 test for case where last 2 elements in SORTED jury are identical */
+
+   a = float([ 100,101,100,99,60,98,99,101,150,103,30,88,99,110,101,150]);
+   timer, t0;
+   junk = frcf3(a, 6);
+   timer, t1
+  write,format="Mode 3(last 2 elems ==): Result= [%p,%p] time=%6.4f secs\n",junk(1), junk(2),t1(1)-t0(1);
+
+
+/* Mode 3 test for array with all identical elements */
+
+   b = [1,1,1,1,1,1];
+   timer, t0;
+   junk = lrcf3(b, 6);
+   timer, t1
+  write,format="Mode 3(all elements ==): Result= [%p,%p] time=%6.4f secs\n",junk(1), junk(2),t1(1)-t0(1);
 

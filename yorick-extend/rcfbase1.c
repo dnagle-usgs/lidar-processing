@@ -77,11 +77,11 @@ static DataBlock *XGetInfo(Symbol *s)
 }
 
 #define TBUFSIZE        32767
-static unsigned int *winners, *fwinners, fcounter;	//Store the winners temporarily & global number of winners count.
+static unsigned int *winners, *fwinners, *cvotes, fcounter;	//Store the winners temporarily & global number of winners count.
 
 short flag;	//Decides on the array use
 
-unsigned int  twinners[ TBUFSIZE ], tidx[ TBUFSIZE ], tfwinners[ TBUFSIZE ];	//These arrays are only used when number_elems <= TBUFSIZE
+unsigned int  twinners[ TBUFSIZE ], tidx[ TBUFSIZE ], tfwinners[ TBUFSIZE ], tcvotes[TBUFSIZE];	//These arrays are only used when number_elems <= TBUFSIZE
 
 
 /* Used to fill a 'Yorick' array with the winners indices
