@@ -113,6 +113,18 @@ func frcf2(jury, w)
   return [&c, &fcount]		//And return the start address & address of winner count
 }
 
+
+func frcf3(jury, w)
+{ 
+
+  fcount = numberof(jury);
+  sortedjury = array(float, fcount);
+  votes =  array(int, fcount);
+
+  y_frcf3,jury, w, sortedjury, votes;	//Call the yorick version of the "C" rcf function
+
+  return [&sortedjury, &votes]		//And return the address of the array of sorted jury and the number of votes of each
+}
 extern y_frcf0;
 /* PROTOTYPE
 void rcf_float_0 (float array a, float w, float array b)
@@ -128,6 +140,10 @@ extern y_frcf2;
 int rcf_float_2 (float array a, float w)
 */
 
+extern y_frcf3;
+/*PROTOTYPE
+void rcf_float_3 (float array a, float w, float array sorteda, int array votes)
+*/
 
 /*DOUBLE*/
 

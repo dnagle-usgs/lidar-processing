@@ -250,3 +250,68 @@ unsigned int  FNAME2 (TYPE* a, TYPE w)
   return fcounter;
 }
 
+/* rcf algorithm for mode 3
+ * Returns a sorted version of the input array and the votes that
+ * each element recieves
+ */
+
+void FNAME3 (TYPE* a, TYPE w, TYPE* sorteda, unsigned int* votes)
+{
+  unsigned int i, j, number_elems, counter, *idx;
+  DataBlock *db;
+ 
+  if (w<=(TYPE)0)
+    YError("Window size must be positive");
+
+  db = XGetInfo(sp-3);				//stack pointer-3 is the source array 
+  if (!db) 
+     number_elems= (unsigned int)type.number;	//Get the number of elements in the source array
+  else
+     number_elems= 0;
+ 
+  if (number_elems <= TBUFSIZE)
+	  flag = 0;
+  else
+	  flag =1;
+
+  if (!flag)					//Use arrays if number_elems is less than array size
+  {
+	idx = tidx;
+  }
+  else
+  {
+  	idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);
+  }
+
+  for (i=0; i<number_elems; i++)
+	  idx[i]=i;
+  
+  COPY = a;					//Make the jury gloabally accessible
+
+  qsort(idx, number_elems, sizeof(unsigned int), CNAME);//Sort the copy
+
+
+  for (i=0; i<number_elems-1; i++)		//For each element in the copy
+  {
+    sorteda[i] = a[idx[i]];			//Fill the sorted a array
+    votes[i]=1;					//Each element starts with 1 vote
+
+    for (j=i+1; j< number_elems;j++)		//For each subsequent element
+      if (a[idx[j]] < a[idx[i]]+w)		//If it lies in the window
+      {
+        votes[i]++;				//Count it
+      }
+      else
+         break;					//Break since the array is sorted
+
+  }
+  sorteda[number_elems-1]=a[idx[number_elems-1]];
+  votes[number_elems-1]=1;
+ 
+  if (flag)
+  {
+     free (idx);				//idx array is also not needed now
+  }
+  return;
+}
+

@@ -76,7 +76,13 @@ static DataBlock *XGetInfo(Symbol *s)
   return type.base? 0 : db;
 }
 
+#define TBUFSIZE        32767
 static unsigned int *winners, *fwinners, fcounter;	//Store the winners temporarily & global number of winners count.
+
+short flag;	//Decides on the array use
+
+unsigned int  twinners[ TBUFSIZE ], tidx[ TBUFSIZE ], tfwinners[ TBUFSIZE ];	//These arrays are only used when number_elems <= TBUFSIZE
+
 
 /* Used to fill a 'Yorick' array with the winners indices
  * This function is called only for mode==2
@@ -85,7 +91,8 @@ static unsigned int *winners, *fwinners, fcounter;	//Store the winners temporari
 void c_fillarray (unsigned int *c)
 {
    memcpy ((void*)c, (void*)fwinners, ((sizeof(unsigned int))*fcounter));	//Copy fwinners into the yorick array
-   free (fwinners);								//fwinners not needed now
+   if (flag)
+      free (fwinners);		//fwinners not needed now
 }
 
 /** CODE BELOW INSERTED FROM rcfbase2.c **/
@@ -118,7 +125,7 @@ int float_compare (const void *x, const void *y)
    else t = 1;
    return t;
 }
-/* Float version of the rcf algorithm for mode0.
+/* rcf algorithm for mode0.
  * Returns array b
  */
 void rcf_float_0 (float* a, float w, float* b)
@@ -132,7 +139,18 @@ void rcf_float_0 (float* a, float w, float* b)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
-  idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems); //Generate an index array of max size
+  if (number_elems <= TBUFSIZE)
+          flag = 0;
+  else
+          flag =1;
+  if (!flag) //Use arrays if number_elems is less than array size
+  {
+        idx = tidx;
+  }
+  else
+  {
+        idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);
+  }
   for (i=0; i<number_elems; i++)
           idx[i]=i;
   fcopy = a; //Make the jury gloabally accessible
@@ -155,9 +173,10 @@ void rcf_float_0 (float* a, float w, float* b)
     if (a[idx[number_elems-1]] < a[idx[i]]+w) //Break the whole process when the last element in 
       break; //the sorted copy falls in a window of some element
   }
-  free (idx); //idx array is also not needed now
+  if (flag)
+     free (idx); //idx array is also not needed now
 }
-/* Float version of the rcf algorithm for mode 1.
+/* rcf algorithm for mode 1.
  * Returns array b
  */
 void rcf_float_1 (float *a, float w, float *b)
@@ -172,7 +191,18 @@ void rcf_float_1 (float *a, float w, float *b)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
-  idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems); //Generate an index array of max size
+  if (number_elems <= TBUFSIZE)
+          flag = 0;
+  else
+          flag =1;
+  if (!flag) //Use arrays if number_elems is less than array size
+  {
+        idx = tidx;
+  }
+  else
+  {
+        idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);
+  }
   for (i=0; i<number_elems; i++)
           idx[i]=i;
   fcopy = a; //Make the jury gloabally accessible
@@ -197,9 +227,10 @@ void rcf_float_1 (float *a, float w, float *b)
     if (a[idx[number_elems-1]] < a[idx[i]]+w) //Break the whole process when the last element in 
       break; //the sorted copy falls in a window of some element
   }
-  free (idx); //idx array is also not needed now
+  if (flag)
+      free (idx); //idx array is also not needed now
 }
-/* Float version of the rcf algorithm for mode 2.
+/* rcf algorithm for mode 2.
  * Returns the number of winners
  */
 unsigned int rcf_float_2 (float* a, float w)
@@ -213,13 +244,26 @@ unsigned int rcf_float_2 (float* a, float w)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
-  idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems); //Generate an index array of max size
+  if (number_elems <= TBUFSIZE)
+          flag = 0;
+  else
+          flag =1;
+  if (!flag) //Use arrays if number_elems is less than array size
+  {
+        idx = tidx;
+        winners = twinners;
+        fwinners = tfwinners;
+  }
+  else
+  {
+        idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);
+        winners = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
+        fwinners = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
+  }
   for (i=0; i<number_elems; i++)
           idx[i]=i;
   fcopy = a; //Make the jury gloabally accessible
   qsort(idx, number_elems, sizeof(unsigned int), float_compare);//Sort the copy
-  winners = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
-  fwinners = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
   fcounter = 0;
   for (i=0; i<number_elems-1; i++) //For each element in the copy
   {
@@ -242,9 +286,59 @@ unsigned int rcf_float_2 (float* a, float w)
     if (a[idx[number_elems-1]] < a[idx[i]]+w) //Break the whole process when the last element in 
       break; //the sorted copy falls in a window of some element
   }
-  free (winners); //Dont need winners anymore...they are in fwinners
-  free (idx); //idx array is also not needed now
+  if (flag)
+  {
+          free (winners); //Dont need winners anymore...they are in fwinners
+          free (idx); //idx array is also not needed now
+  }
   return fcounter;
+}
+void rcf_float_3 (float* a, float w, float* sorteda, unsigned int* votes)
+{
+  unsigned int i, j, number_elems, counter, *idx;
+  DataBlock *db;
+  if (w<=(float)0)
+    YError("Window size must be positive");
+  db = XGetInfo(sp-3); //stack pointer-3 is the source array 
+  if (!db)
+     number_elems= (unsigned int)type.number; //Get the number of elements in the source array
+  else
+     number_elems= 0;
+  if (number_elems <= TBUFSIZE)
+          flag = 0;
+  else
+          flag =1;
+  if (!flag) //Use arrays if number_elems is less than array size
+  {
+        idx = tidx;
+  }
+  else
+  {
+        idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);
+  }
+  for (i=0; i<number_elems; i++)
+          idx[i]=i;
+  fcopy = a; //Make the jury gloabally accessible
+  qsort(idx, number_elems, sizeof(unsigned int), float_compare);//Sort the copy
+  for (i=0; i<number_elems-1; i++) //For each element in the copy
+  {
+    sorteda[i] = a[idx[i]]; //Fill the sorted a array
+    votes[i]=1; //Each element starts with 1 vote
+    for (j=i+1; j< number_elems;j++) //For each subsequent element
+      if (a[idx[j]] < a[idx[i]]+w) //If it lies in the window
+      {
+        votes[i]++; //Count it
+      }
+      else
+         break; //Break since the array is sorted
+  }
+  sorteda[number_elems-1]=a[idx[number_elems-1]];
+  votes[number_elems-1]=1;
+  if (flag)
+  {
+          free (idx); //idx array is also not needed now
+  }
+  return;
 }
 /*
  * $Id$
@@ -275,7 +369,7 @@ int double_compare (const void *x, const void *y)
    else t = 1;
    return t;
 }
-/* Float version of the rcf algorithm for mode0.
+/* rcf algorithm for mode0.
  * Returns array b
  */
 void rcf_double_0 (double* a, double w, double* b)
@@ -289,7 +383,18 @@ void rcf_double_0 (double* a, double w, double* b)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
-  idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems); //Generate an index array of max size
+  if (number_elems <= TBUFSIZE)
+          flag = 0;
+  else
+          flag =1;
+  if (!flag) //Use arrays if number_elems is less than array size
+  {
+        idx = tidx;
+  }
+  else
+  {
+        idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);
+  }
   for (i=0; i<number_elems; i++)
           idx[i]=i;
   dcopy = a; //Make the jury gloabally accessible
@@ -312,9 +417,10 @@ void rcf_double_0 (double* a, double w, double* b)
     if (a[idx[number_elems-1]] < a[idx[i]]+w) //Break the whole process when the last element in 
       break; //the sorted copy falls in a window of some element
   }
-  free (idx); //idx array is also not needed now
+  if (flag)
+     free (idx); //idx array is also not needed now
 }
-/* Float version of the rcf algorithm for mode 1.
+/* rcf algorithm for mode 1.
  * Returns array b
  */
 void rcf_double_1 (double *a, double w, float *b)
@@ -329,7 +435,18 @@ void rcf_double_1 (double *a, double w, float *b)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
-  idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems); //Generate an index array of max size
+  if (number_elems <= TBUFSIZE)
+          flag = 0;
+  else
+          flag =1;
+  if (!flag) //Use arrays if number_elems is less than array size
+  {
+        idx = tidx;
+  }
+  else
+  {
+        idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);
+  }
   for (i=0; i<number_elems; i++)
           idx[i]=i;
   dcopy = a; //Make the jury gloabally accessible
@@ -354,9 +471,10 @@ void rcf_double_1 (double *a, double w, float *b)
     if (a[idx[number_elems-1]] < a[idx[i]]+w) //Break the whole process when the last element in 
       break; //the sorted copy falls in a window of some element
   }
-  free (idx); //idx array is also not needed now
+  if (flag)
+      free (idx); //idx array is also not needed now
 }
-/* Float version of the rcf algorithm for mode 2.
+/* rcf algorithm for mode 2.
  * Returns the number of winners
  */
 unsigned int rcf_double_2 (double* a, double w)
@@ -370,13 +488,26 @@ unsigned int rcf_double_2 (double* a, double w)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
-  idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems); //Generate an index array of max size
+  if (number_elems <= TBUFSIZE)
+          flag = 0;
+  else
+          flag =1;
+  if (!flag) //Use arrays if number_elems is less than array size
+  {
+        idx = tidx;
+        winners = twinners;
+        fwinners = tfwinners;
+  }
+  else
+  {
+        idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);
+        winners = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
+        fwinners = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
+  }
   for (i=0; i<number_elems; i++)
           idx[i]=i;
   dcopy = a; //Make the jury gloabally accessible
   qsort(idx, number_elems, sizeof(unsigned int), double_compare);//Sort the copy
-  winners = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
-  fwinners = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
   fcounter = 0;
   for (i=0; i<number_elems-1; i++) //For each element in the copy
   {
@@ -399,9 +530,59 @@ unsigned int rcf_double_2 (double* a, double w)
     if (a[idx[number_elems-1]] < a[idx[i]]+w) //Break the whole process when the last element in 
       break; //the sorted copy falls in a window of some element
   }
-  free (winners); //Dont need winners anymore...they are in fwinners
-  free (idx); //idx array is also not needed now
+  if (flag)
+  {
+          free (winners); //Dont need winners anymore...they are in fwinners
+          free (idx); //idx array is also not needed now
+  }
   return fcounter;
+}
+void rcf_double_3 (double* a, double w, double* sorteda, unsigned int* votes)
+{
+  unsigned int i, j, number_elems, counter, *idx;
+  DataBlock *db;
+  if (w<=(double)0)
+    YError("Window size must be positive");
+  db = XGetInfo(sp-3); //stack pointer-3 is the source array 
+  if (!db)
+     number_elems= (unsigned int)type.number; //Get the number of elements in the source array
+  else
+     number_elems= 0;
+  if (number_elems <= TBUFSIZE)
+          flag = 0;
+  else
+          flag =1;
+  if (!flag) //Use arrays if number_elems is less than array size
+  {
+        idx = tidx;
+  }
+  else
+  {
+        idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);
+  }
+  for (i=0; i<number_elems; i++)
+          idx[i]=i;
+  dcopy = a; //Make the jury gloabally accessible
+  qsort(idx, number_elems, sizeof(unsigned int), double_compare);//Sort the copy
+  for (i=0; i<number_elems-1; i++) //For each element in the copy
+  {
+    sorteda[i] = a[idx[i]]; //Fill the sorted a array
+    votes[i]=1; //Each element starts with 1 vote
+    for (j=i+1; j< number_elems;j++) //For each subsequent element
+      if (a[idx[j]] < a[idx[i]]+w) //If it lies in the window
+      {
+        votes[i]++; //Count it
+      }
+      else
+         break; //Break since the array is sorted
+  }
+  sorteda[number_elems-1]=a[idx[number_elems-1]];
+  votes[number_elems-1]=1;
+  if (flag)
+  {
+          free (idx); //idx array is also not needed now
+  }
+  return;
 }
 /*
  * $Id$
@@ -432,7 +613,7 @@ int long_compare (const void *x, const void *y)
    else t = 1;
    return t;
 }
-/* Float version of the rcf algorithm for mode0.
+/* rcf algorithm for mode0.
  * Returns array b
  */
 void rcf_long_0 (long* a, long w, long* b)
@@ -446,7 +627,18 @@ void rcf_long_0 (long* a, long w, long* b)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
-  idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems); //Generate an index array of max size
+  if (number_elems <= TBUFSIZE)
+          flag = 0;
+  else
+          flag =1;
+  if (!flag) //Use arrays if number_elems is less than array size
+  {
+        idx = tidx;
+  }
+  else
+  {
+        idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);
+  }
   for (i=0; i<number_elems; i++)
           idx[i]=i;
   lcopy = a; //Make the jury gloabally accessible
@@ -469,9 +661,10 @@ void rcf_long_0 (long* a, long w, long* b)
     if (a[idx[number_elems-1]] < a[idx[i]]+w) //Break the whole process when the last element in 
       break; //the sorted copy falls in a window of some element
   }
-  free (idx); //idx array is also not needed now
+  if (flag)
+     free (idx); //idx array is also not needed now
 }
-/* Float version of the rcf algorithm for mode 1.
+/* rcf algorithm for mode 1.
  * Returns array b
  */
 void rcf_long_1 (long *a, long w, float *b)
@@ -486,7 +679,18 @@ void rcf_long_1 (long *a, long w, float *b)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
-  idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems); //Generate an index array of max size
+  if (number_elems <= TBUFSIZE)
+          flag = 0;
+  else
+          flag =1;
+  if (!flag) //Use arrays if number_elems is less than array size
+  {
+        idx = tidx;
+  }
+  else
+  {
+        idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);
+  }
   for (i=0; i<number_elems; i++)
           idx[i]=i;
   lcopy = a; //Make the jury gloabally accessible
@@ -511,9 +715,10 @@ void rcf_long_1 (long *a, long w, float *b)
     if (a[idx[number_elems-1]] < a[idx[i]]+w) //Break the whole process when the last element in 
       break; //the sorted copy falls in a window of some element
   }
-  free (idx); //idx array is also not needed now
+  if (flag)
+      free (idx); //idx array is also not needed now
 }
-/* Float version of the rcf algorithm for mode 2.
+/* rcf algorithm for mode 2.
  * Returns the number of winners
  */
 unsigned int rcf_long_2 (long* a, long w)
@@ -527,13 +732,26 @@ unsigned int rcf_long_2 (long* a, long w)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
-  idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems); //Generate an index array of max size
+  if (number_elems <= TBUFSIZE)
+          flag = 0;
+  else
+          flag =1;
+  if (!flag) //Use arrays if number_elems is less than array size
+  {
+        idx = tidx;
+        winners = twinners;
+        fwinners = tfwinners;
+  }
+  else
+  {
+        idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);
+        winners = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
+        fwinners = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
+  }
   for (i=0; i<number_elems; i++)
           idx[i]=i;
   lcopy = a; //Make the jury gloabally accessible
   qsort(idx, number_elems, sizeof(unsigned int), long_compare);//Sort the copy
-  winners = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
-  fwinners = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
   fcounter = 0;
   for (i=0; i<number_elems-1; i++) //For each element in the copy
   {
@@ -556,9 +774,59 @@ unsigned int rcf_long_2 (long* a, long w)
     if (a[idx[number_elems-1]] < a[idx[i]]+w) //Break the whole process when the last element in 
       break; //the sorted copy falls in a window of some element
   }
-  free (winners); //Dont need winners anymore...they are in fwinners
-  free (idx); //idx array is also not needed now
+  if (flag)
+  {
+          free (winners); //Dont need winners anymore...they are in fwinners
+          free (idx); //idx array is also not needed now
+  }
   return fcounter;
+}
+void rcf_long_3 (long* a, long w, long* sorteda, unsigned int* votes)
+{
+  unsigned int i, j, number_elems, counter, *idx;
+  DataBlock *db;
+  if (w<=(long)0)
+    YError("Window size must be positive");
+  db = XGetInfo(sp-3); //stack pointer-3 is the source array 
+  if (!db)
+     number_elems= (unsigned int)type.number; //Get the number of elements in the source array
+  else
+     number_elems= 0;
+  if (number_elems <= TBUFSIZE)
+          flag = 0;
+  else
+          flag =1;
+  if (!flag) //Use arrays if number_elems is less than array size
+  {
+        idx = tidx;
+  }
+  else
+  {
+        idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);
+  }
+  for (i=0; i<number_elems; i++)
+          idx[i]=i;
+  lcopy = a; //Make the jury gloabally accessible
+  qsort(idx, number_elems, sizeof(unsigned int), long_compare);//Sort the copy
+  for (i=0; i<number_elems-1; i++) //For each element in the copy
+  {
+    sorteda[i] = a[idx[i]]; //Fill the sorted a array
+    votes[i]=1; //Each element starts with 1 vote
+    for (j=i+1; j< number_elems;j++) //For each subsequent element
+      if (a[idx[j]] < a[idx[i]]+w) //If it lies in the window
+      {
+        votes[i]++; //Count it
+      }
+      else
+         break; //Break since the array is sorted
+  }
+  sorteda[number_elems-1]=a[idx[number_elems-1]];
+  votes[number_elems-1]=1;
+  if (flag)
+  {
+          free (idx); //idx array is also not needed now
+  }
+  return;
 }
 /*
  * $Id$
@@ -589,7 +857,7 @@ int int_compare (const void *x, const void *y)
    else t = 1;
    return t;
 }
-/* Float version of the rcf algorithm for mode0.
+/* rcf algorithm for mode0.
  * Returns array b
  */
 void rcf_int_0 (int* a, int w, int* b)
@@ -603,7 +871,18 @@ void rcf_int_0 (int* a, int w, int* b)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
-  idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems); //Generate an index array of max size
+  if (number_elems <= TBUFSIZE)
+          flag = 0;
+  else
+          flag =1;
+  if (!flag) //Use arrays if number_elems is less than array size
+  {
+        idx = tidx;
+  }
+  else
+  {
+        idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);
+  }
   for (i=0; i<number_elems; i++)
           idx[i]=i;
   icopy = a; //Make the jury gloabally accessible
@@ -626,9 +905,10 @@ void rcf_int_0 (int* a, int w, int* b)
     if (a[idx[number_elems-1]] < a[idx[i]]+w) //Break the whole process when the last element in 
       break; //the sorted copy falls in a window of some element
   }
-  free (idx); //idx array is also not needed now
+  if (flag)
+     free (idx); //idx array is also not needed now
 }
-/* Float version of the rcf algorithm for mode 1.
+/* rcf algorithm for mode 1.
  * Returns array b
  */
 void rcf_int_1 (int *a, int w, float *b)
@@ -643,7 +923,18 @@ void rcf_int_1 (int *a, int w, float *b)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
-  idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems); //Generate an index array of max size
+  if (number_elems <= TBUFSIZE)
+          flag = 0;
+  else
+          flag =1;
+  if (!flag) //Use arrays if number_elems is less than array size
+  {
+        idx = tidx;
+  }
+  else
+  {
+        idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);
+  }
   for (i=0; i<number_elems; i++)
           idx[i]=i;
   icopy = a; //Make the jury gloabally accessible
@@ -668,9 +959,10 @@ void rcf_int_1 (int *a, int w, float *b)
     if (a[idx[number_elems-1]] < a[idx[i]]+w) //Break the whole process when the last element in 
       break; //the sorted copy falls in a window of some element
   }
-  free (idx); //idx array is also not needed now
+  if (flag)
+      free (idx); //idx array is also not needed now
 }
-/* Float version of the rcf algorithm for mode 2.
+/* rcf algorithm for mode 2.
  * Returns the number of winners
  */
 unsigned int rcf_int_2 (int* a, int w)
@@ -684,13 +976,26 @@ unsigned int rcf_int_2 (int* a, int w)
      number_elems= (unsigned int)type.number; //Get the number of elements in the source array
   else
      number_elems= 0;
-  idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems); //Generate an index array of max size
+  if (number_elems <= TBUFSIZE)
+          flag = 0;
+  else
+          flag =1;
+  if (!flag) //Use arrays if number_elems is less than array size
+  {
+        idx = tidx;
+        winners = twinners;
+        fwinners = tfwinners;
+  }
+  else
+  {
+        idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);
+        winners = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
+        fwinners = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
+  }
   for (i=0; i<number_elems; i++)
           idx[i]=i;
   icopy = a; //Make the jury gloabally accessible
   qsort(idx, number_elems, sizeof(unsigned int), int_compare);//Sort the copy
-  winners = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
-  fwinners = (unsigned int *) malloc ((sizeof(unsigned int))*number_elems);
   fcounter = 0;
   for (i=0; i<number_elems-1; i++) //For each element in the copy
   {
@@ -713,7 +1018,57 @@ unsigned int rcf_int_2 (int* a, int w)
     if (a[idx[number_elems-1]] < a[idx[i]]+w) //Break the whole process when the last element in 
       break; //the sorted copy falls in a window of some element
   }
-  free (winners); //Dont need winners anymore...they are in fwinners
-  free (idx); //idx array is also not needed now
+  if (flag)
+  {
+          free (winners); //Dont need winners anymore...they are in fwinners
+          free (idx); //idx array is also not needed now
+  }
   return fcounter;
+}
+void rcf_int_3 (int* a, int w, int* sorteda, unsigned int* votes)
+{
+  unsigned int i, j, number_elems, counter, *idx;
+  DataBlock *db;
+  if (w<=(int)0)
+    YError("Window size must be positive");
+  db = XGetInfo(sp-3); //stack pointer-3 is the source array 
+  if (!db)
+     number_elems= (unsigned int)type.number; //Get the number of elements in the source array
+  else
+     number_elems= 0;
+  if (number_elems <= TBUFSIZE)
+          flag = 0;
+  else
+          flag =1;
+  if (!flag) //Use arrays if number_elems is less than array size
+  {
+        idx = tidx;
+  }
+  else
+  {
+        idx = (unsigned int*)malloc((sizeof(unsigned int))*number_elems);
+  }
+  for (i=0; i<number_elems; i++)
+          idx[i]=i;
+  icopy = a; //Make the jury gloabally accessible
+  qsort(idx, number_elems, sizeof(unsigned int), int_compare);//Sort the copy
+  for (i=0; i<number_elems-1; i++) //For each element in the copy
+  {
+    sorteda[i] = a[idx[i]]; //Fill the sorted a array
+    votes[i]=1; //Each element starts with 1 vote
+    for (j=i+1; j< number_elems;j++) //For each subsequent element
+      if (a[idx[j]] < a[idx[i]]+w) //If it lies in the window
+      {
+        votes[i]++; //Count it
+      }
+      else
+         break; //Break since the array is sorted
+  }
+  sorteda[number_elems-1]=a[idx[number_elems-1]];
+  votes[number_elems-1]=1;
+  if (flag)
+  {
+          free (idx); //idx array is also not needed now
+  }
+  return;
 }

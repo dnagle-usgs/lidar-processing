@@ -15,19 +15,19 @@
 
  TYPE=float
 
- cpp -P -C  -D CNAME=${TYPE}_${COMP} -D COPY=fcopy -D FNAME0=${NAME}_${TYPE}_0 -D FNAME1=${NAME}_${TYPE}_1 -D FNAME2=${NAME}_${TYPE}_2  -D TYPE=float  rcfbase2.c >> rcf.c 
+ cpp -P -C  -D CNAME=${TYPE}_${COMP} -D COPY=fcopy -D FNAME0=${NAME}_${TYPE}_0 -D FNAME1=${NAME}_${TYPE}_1 -D FNAME2=${NAME}_${TYPE}_2 -D FNAME3=${NAME}_${TYPE}_3 -D TYPE=float  rcfbase2.c >> rcf.c 
 
  TYPE=double
 
- cpp -P -C -D CNAME=${TYPE}_${COMP} -D COPY=dcopy -D FNAME0=${NAME}_${TYPE}_0 -D FNAME1=${NAME}_${TYPE}_1 -D FNAME2=${NAME}_${TYPE}_2  -D TYPE=double  rcfbase2.c >> rcf.c
+ cpp -P -C -D CNAME=${TYPE}_${COMP} -D COPY=dcopy -D FNAME0=${NAME}_${TYPE}_0 -D FNAME1=${NAME}_${TYPE}_1 -D FNAME2=${NAME}_${TYPE}_2 -D FNAME3=${NAME}_${TYPE}_3 -D TYPE=double  rcfbase2.c >> rcf.c
 
  TYPE=long
 
- cpp -P -C -D CNAME=${TYPE}_${COMP} -D COPY=lcopy -D FNAME0=${NAME}_${TYPE}_0 -D FNAME1=${NAME}_${TYPE}_1 -D FNAME2=${NAME}_${TYPE}_2  -D TYPE=long  rcfbase2.c >> rcf.c
+ cpp -P -C -D CNAME=${TYPE}_${COMP} -D COPY=lcopy -D FNAME0=${NAME}_${TYPE}_0 -D FNAME1=${NAME}_${TYPE}_1 -D FNAME2=${NAME}_${TYPE}_2 -D FNAME3=${NAME}_${TYPE}_3 -D TYPE=long  rcfbase2.c >> rcf.c
 
  TYPE=int
 
- cpp -P -C -D CNAME=${TYPE}_${COMP} -D COPY=icopy -D FNAME0=${NAME}_${TYPE}_0 -D FNAME1=${NAME}_${TYPE}_1 -D FNAME2=${NAME}_${TYPE}_2  -D TYPE=int  rcfbase2.c >> rcf.c
+ cpp -P -C -D CNAME=${TYPE}_${COMP} -D COPY=icopy -D FNAME0=${NAME}_${TYPE}_0 -D FNAME1=${NAME}_${TYPE}_1 -D FNAME2=${NAME}_${TYPE}_2 -D FNAME3=${NAME}_${TYPE}_3 -D TYPE=int  rcfbase2.c >> rcf.c
 
 
 # YORICK building stuff
