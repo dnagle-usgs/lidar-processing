@@ -28,6 +28,9 @@ Use pli to display the image.
 }
 
 
+  cam1_roll_bias = -3.0;
+  cam1_yaw_bias  = -3.5;
+  fov = 39.5 * pi/180.0;	// camera FOV
 
 
 func photo_orient( photo, 
@@ -58,7 +61,7 @@ func photo_orient( photo,
    
 
 */
-  fov = 40.0 * pi/180.0;	// camera FOV
+
   if ( is_void( scale  ) ) scale  = [1.0, 1.0];
   if ( is_void( offset ) ) offset = [0.0, 0.0];
   if ( is_void(heading)  ) heading = 0.0;
@@ -67,7 +70,7 @@ func photo_orient( photo,
   p = photo;
 ////  p(, , -15:0) = 0;		// zeros the time in the image
   p = photo(,, 1:-16);		// removes the time image
-  heading = (-heading - 180.0) * pi / 180.0;
+  heading = (-heading + cam1_yaw_bias  - 180.0) * pi / 180.0;
   s = sin(heading);
   c = cos(heading);
   dx = dimsof(p) (3)
@@ -84,6 +87,7 @@ func photo_orient( photo,
     center(1) = dy / 2.0;  
   }
   roll_offset = tan( roll * pi/180.0) * alt;
+roll_offset
    x = span(-center(2), dx-center(2), dx+1 ) (,-:1:dy+1); 
    x += roll_offset;
    y = span(-center(1), dy-center(1), dy+1 ) (-:1:dx+1, ); 
@@ -94,6 +98,24 @@ func photo_orient( photo,
 
 }
 
+func pref (junk) {
+  lst = [];
+  m  = array( long, 11 );
+   while ( m(10) != 3 ) {
+     window,5;
+     m = mouse();
+     if ( numberof(m) < 2 ) {
+       lst = m(1:2);  
+     } else {
+       grow, lst, m(1:2);
+     } 
+     window,7;
+     plmk, m(2), m(1),msize=.3,marker=2
+     print, m(1:2);
+  }
+ return lst;
+}
+
 
 func gref_photo( somd=, offset=,ggalst=, skip= ) {
  if (!(offset)) offset = 0;
@@ -102,7 +124,7 @@ func gref_photo( somd=, offset=,ggalst=, skip= ) {
  write, somd
  for ( i = 1; i <=numberof(somd); i++ ) {
   sd = somd(i);
-  csomd = sd - int(offset) + offset;
+  csomd = sd + offset;
   heading = interp( tans.heading, tans.somd, csomd);
   roll    = interp( tans.roll   , tans.somd, csomd);
   pitch   = interp( tans.pitch  , tans.somd, csomd);
@@ -113,7 +135,7 @@ func gref_photo( somd=, offset=,ggalst=, skip= ) {
   northing = UTMNorthing;
   easting  = UTMEasting;
   zone     = UTMZone;
-  hms = sod2hms( int(sd + offset) );   
+  hms = sod2hms( int(sd ) );   
   pname = swrite(format="%scam1_CAM1_2003-05-02_%02d%02d%02d.jpg", 
          data_path + "cam1/", 
          hms(1), hms(2), hms(3) ); 
@@ -122,7 +144,7 @@ func gref_photo( somd=, offset=,ggalst=, skip= ) {
   photo_orient, photo, 
 	        alt= galt,
 	    heading= heading,
-	       roll= roll + roll_bias,
+	       roll= roll + roll_bias + cam1_roll_bias,
 	     offset = [ northing, easting ]
  }
  	
