@@ -22,7 +22,7 @@ if(!(con_dir))con_dir =  "/quest/data/EAARL/TB_FEB_02/";
 if(onlymerged){
 command = swrite(format="find %s -name '*w84_*merged*.pbd'", con_dir);
 }
-else {command = swrite(format= "find %s -name '*w84*.pbd''", con_dir);
+else {command = swrite(format= "find %s -name '*w84*.pbd'", con_dir);
 }
 
 f = popen(command,0);
