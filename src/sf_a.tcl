@@ -466,10 +466,14 @@ proc show_img { n } {
 	global camtype
 
 	set cin $n
-
+	
+	# Copy the file to a temp file, to protect the original from changes
 	set fn $dir/$fna($n)
-	file copy -force $fn /tmp/sf_tmp.jpg
-	set fn /tmp/sf_tmp.jpg
+	file copy -force $fn /tmp/sf_tmp_[pid].jpg
+	set fn /tmp/sf_tmp_[pid].jpg
+
+	# Make sure we can read/write the temp file
+	file attributes $fn -permissions ug+rw
 
 	.canf.can config -cursor watch
 
@@ -509,6 +513,9 @@ proc show_img { n } {
 			}
 		}
 	}
+
+	# Cleanup -- remove the temp file since we're done with it
+	file delete $fn
 
 	.canf.can itemconfigure tx -text ""
 		set lst [ split $fn "_" ]
@@ -642,7 +649,20 @@ proc get_heading {inhd} {
 }
 
 proc calculate_zoom_factor { initial percentage } {
-	set final [expr {round(($initial + 1) * $percentage) - 1}]
+	global img
+
+	if {$percentage > 0 } {
+		set final [expr {round(($initial + 1) * $percentage) - 1}]
+	} else {
+		set iw [expr {[image width $img] / (([.cf3.zoom getvalue]+1)/100.0)}]
+		set ih [expr {[image height $img] / (([.cf3.zoom getvalue]+1)/100.0)}]
+		set cw [winfo width .canf.can]
+		set ch [winfo height .canf.can]
+		set wr [expr {int(100*$cw/$iw)}]
+		set hr [expr {int(100*$ch/$ih)}]
+		set final [expr {(($wr < $hr) ? $wr : $hr) - 1}]
+		puts "$iw $ih $cw $ch $wr $hr $final"
+	}
 	if {$final < 0} { set final 0 }
 	if {$final > 199 } { set final 199 }
 	return $final
@@ -715,13 +735,18 @@ menu .mb.zoom
 
 ##### ][ Zoom Menu
 
-.mb.zoom add command -label "Zoom In (25%)" -underline 0 \
+.mb.zoom add command -label "Actual pixels (100%)" -underline 0 \
+	-command { .cf3.zoom setvalue @99; show_img $ci }
+.mb.zoom add command -label "Fit to screen" -underline 0 \
+	-command { .cf3.zoom setvalue @[calculate_zoom_factor [.cf3.zoom getvalue] -1]; show_img $ci }
+.mb.zoom add separator
+.mb.zoom add command -label "Zoom In by 25%" -underline 0 \
 	-command { .cf3.zoom setvalue @[calculate_zoom_factor [.cf3.zoom getvalue] 1.25] ; show_img $ci }
-.mb.zoom add command -label "Zoom In (10%)" -underline 5 \
+.mb.zoom add command -label "Zoom In by 10%" -underline 5 \
 	-command { .cf3.zoom setvalue @[calculate_zoom_factor [.cf3.zoom getvalue] 1.1] ; show_img $ci }
-.mb.zoom add command -label "Zoom Out (10%)" -underline 5 \
+.mb.zoom add command -label "Zoom Out by 10%" -underline 5 \
 	-command { .cf3.zoom setvalue @[calculate_zoom_factor [.cf3.zoom getvalue] 0.9] ; show_img $ci }
-.mb.zoom add command -label "Zoom Out (25%)" -underline 3 \
+.mb.zoom add command -label "Zoom Out by 25%" -underline 3 \
 	-command { .cf3.zoom setvalue @[calculate_zoom_factor [.cf3.zoom getvalue] 0.75] ; show_img $ci }
 
 ##### ]
