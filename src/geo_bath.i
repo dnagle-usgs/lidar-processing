@@ -989,6 +989,114 @@ write,"============================================================="
       
 }
 
+func sel_data_rgn(data, mode=,win=) {
+  //this function selects a region (limits(), rubberband, pip) and returns data within that region.
+  // if mode = 1, limits() function is used to define the region.
+  // if mode = 2, a rubberband box is used to define the region.
+  // if mode = 3, the points-in-polygon technique is used to define the region.
+  //amar nayegandhi 11/26/02.
+
+
+  if (!win) win = 5;
+  if (!mode) mode = 1;
+
+  w = window();
+
+  if (mode == 1) {
+     window, win
+     rgn = limits();
+     //write, int(rgn*100);
+  }
+
+  if (mode == 2) {
+     window, win;
+     a = mouse(1,1,
+     "Hold the left mouse button down, select a region:");
+     rgn = array(float, 4);
+     rgn(1) = min( [ a(1), a(3) ] );
+     rgn(2) = max( [ a(1), a(3) ] );
+     rgn(3) = min( [ a(2), a(4) ] );
+     rgn(4) = max( [ a(2), a(4) ] );
+     
+     //write, int(rgn*100);
+  }
+
+  if ((mode==1) || (mode==2)) {
+    q = where((data.east >= rgn(1)*100.)   & 
+               (data.east <= rgn(2)*100.)) ;
+
+    //write, numberof(q);
+ 
+    indx = where(((data.north(q) >= rgn(3)*100) & 
+               (data.north(q) <= rgn(4)*100)));
+
+    //write, numberof(indx);
+
+    indx = q(indx);
+  }
+     
+
+  if (mode == 3) {
+     window, win;
+     ply = getPoly();
+     box = boundBox(ply);
+     box_pts = ptsInBox(box*100., data.east, data.north);
+     poly_pts = testPoly(ply*100., data.east(box_pts), data.north(box_pts));
+     indx = box_pts(poly_pts);
+ }
+
+ window, w;
+
+ a = structof(data);
+ if (a == R) {
+   data_out = array(FS, numberof(indx));
+   data_out.rn = data.raster(indx);
+   data_out.mnorth = data.mnorth(indx);
+   data_out.meast = data.meast(indx);
+   data_out.melevation = data.melevation(indx);
+   data_out.north = data.north(indx);
+   data_out.east = data.east(indx);
+   data_out.elevation = data.elevation(indx);
+   data_out.intensity = data.intensity(indx);
+ }
+ if (a == FS)  data_out = data(indx);
+
+ if (a == GEOALL) {
+   data_out = array(GEO, numberof(indx));
+   data_out.rn = data.rn(indx);
+   data_out.north = data.north(indx);
+   data_out.east = data.east(indx);
+   data_out.sr2 = data.sr2(indx);
+   data_out.elevation = data.elevation(indx);
+   data_out.mnorth = data.mnorth(indx);
+   data_out.meast = data.meast(indx);
+   data_out.melevation = data.melevation(indx);
+   data_out.bottom_peak = data.bottom_peak(indx);
+   data_out.first_peak = data.first_peak(indx);
+   data_out.depth = data.depth(indx);
+ }
+ if (a == GEO) data_out = data(indx);
+
+ if (a == VEGALL) {
+   data_out = array(VEG, numberof(indx));
+   data_out.rn = data.rn(indx);
+   data_out.north = data.north(indx);
+   data_out.east = data.east(indx);
+   data_out.elevation = data.elevation(indx);
+   data_out.mnorth = data.mnorth(indx);
+   data_out.meast = data.meast(indx);
+   data_out.melevation = data.melevation(indx);
+   data_out.felv = data.felv(indx);
+   data_out.fint = data.fint(indx);
+   data_out.lelv = data.lelv(indx);
+   data_out.lint = data.lint(indx);
+   data_out.nx = data.nx(indx);
+ }
+ if (a == VEG) data_out = data(indx);
+
+ return data_out;
+
+}
 
 func hist_depth( depth_all, win=, dtyp= ) {
 /* DOCUMENT hist_depth(depth_all)
