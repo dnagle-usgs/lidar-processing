@@ -413,9 +413,9 @@ Examples using the result data:
     txwf = r(wa:wa+txlen-1);		// get the transmit waveform
     wa += txlen;			// update waveform addres to first rx waveform
     rxlen = i16(r,wa); wa += 2;		// get the 1st waveform and update wa to next
-    if ( rxlen < 0 ) { 
+    if ( rxlen <= 0 ) { 
        write, format="*** edb_access.i:decode_raster(%d)  Bad rxlen value (%d) i=%d\n", 
-              rxlen, wa ;
+              rxlen, wa, i ;
        break;		
     }
     rx = array(char, rxlen, 4);	// get all four return waveform bias values
