@@ -85,9 +85,9 @@ Mode=
   } else if ( mode == 1 ) {
     return [  jury(si(iidx : iidx + vote -1))(avg), vote ];
   } else if ( mode == 2 ) {
-  vote 
-  kwinners
-  iidx
+//  vote 
+//  kwinners
+//  iidx
   	return [ &si(kwinners+iidx-1), &vote ]
   }
   

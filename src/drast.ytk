@@ -432,8 +432,8 @@ SpinBox .rslider.bf2.elevation_offset \
 
 button .rslider.bf1.stop -text "Stop" -command {
  global tid play_flag rnf 
- #exp_send "animate,0; window,1;\r" 
- exp_send "window,1;\r" 
+  exp_send "window,1; animate,0; \r" 
+#### exp_send "window,1;\r" 
   after cancel $tid;
   set play_flag 0 
   ##exp_send "ytk_rast, $rnf\r"
@@ -444,7 +444,7 @@ button .rslider.bf1.play -text "Play->" -command {
  global tid play_interval play_dir play_flag
  set play_flag 1 
  set play_dir fwd
- #exp_send "animate,1\r" 
+ exp_send "window,1; animate,1\r" 
  set tid [ after $play_interval  play ]
 }
 
@@ -452,7 +452,7 @@ button .rslider.bf1.play -text "Play->" -command {
  global tid play_interval play_dir play_flag
  set play_flag 1 
  set play_dir rev 
- #exp_send "animate,1\r" 
+ exp_send "window,1; animate,1\r" 
  set tid [ after $play_interval  play ]
 }
 
