@@ -480,14 +480,19 @@ func avgline(x, y, step=) {
 	if (!step) step= 10;
 	num = numberof(x);
 	numstep = floor(num/step);
-	newx = array(float, int(numstep));
-	newy = array(float, int(numstep));
-	step = int(step);
-	for (i=1;i<=numstep;i++) {
-		xx = x((i-1)*step+1:step*i);
-		yy = y((i-1)*step+1:step*i);
-		newx(i) = avg(xx);
-		newy(i) = avg(yy);
+	if(numstep < 2) { /* In case of a too-small dataset */
+		newx = avg(x);
+		newy = avg(y);
+	} else {
+		newx = array(float, int(numstep));
+		newy = array(float, int(numstep));
+		step = int(step);
+		for (i=1;i<=numstep;i++) {
+			xx = x((i-1)*step+1:step*i);
+			yy = y((i-1)*step+1:step*i);
+			newx(i) = avg(xx);
+			newy(i) = avg(yy);
+		}
 	}
 	return [newx, newy];
 	end	
