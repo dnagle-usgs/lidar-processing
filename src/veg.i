@@ -300,6 +300,16 @@ func display_veg(veg_arr, felv=, lelv=,  fint=, lint=, cmin=, cmax=, size=, win=
      if ( is_void( cmin )) cmin = 0;
      if ( is_void( cmax )) cmax = 10;
   }
+  if (fint) {
+     elv = veg_arr.fint;
+     if ( is_void( cmin )) cmin = 0;
+     if ( is_void( cmax )) cmax = 200;
+  }
+  if (lint) {
+     elv = veg_arr.lint;
+     if ( is_void( cmin )) cmin = 0;
+     if ( is_void( cmax )) cmax = 200;
+  }
   
   if (((dimsof(elv))(1)) == 2) {
    for ( i=1; i<len; i++ ) {

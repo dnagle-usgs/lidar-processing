@@ -197,6 +197,11 @@ func gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=) {
  if (!is_array(llarr)) {
      ply = getPoly();
      box = boundBox(ply);
+     if (utm) {
+        box = transpose(utm2ll(box(2,), box(1,), ZoneNumber(1)));
+	ply = transpose(utm2ll(ply(2,), ply(1,), ZoneNumber(1)));
+	show = 0;
+	}
      box_pts = ptsInBox(box, gga.lon, gga.lat);
      poly_pts = testPoly(ply, gga.lon(box_pts), gga.lat(box_pts));
      q = box_pts(poly_pts);
