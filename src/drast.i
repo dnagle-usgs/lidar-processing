@@ -65,6 +65,7 @@ func ndrast( r, units=  ) {
   aa = array( short(255), 250, 120, 3);
 
  npix = r.npixels(1) 
+ somd = (rr.soe - soe_day_start)(1);
  for (i=1; i< npix; i++ ) {
   for (j=1; j<=3; j++ ) {
     n = numberof( *r.rx(i,j) ); 		// number of samples 
@@ -87,17 +88,17 @@ func ndrast( r, units=  ) {
     units = "ns";
  if ( units == "ns" ) {
     pli, -transpose(aa(,,1)), 1,4, 121, -244
-    xytitles,swrite(format="Rn:%d    Raster Pixel #", rn), 
+    xytitles,swrite(format="Somd:%6d Rn:%d Ras Pix#", somd, rn), 
            "Nanoseconds"
 
  } else if ( units == "meters" ) {
     pli, -transpose(aa(,,1)), 1,4*CNSH2O2X, 121, -244 * CNSH2O2X
-    xytitles,swrite(format="Rn:%d    Raster Pixel #", rn), 
+    xytitles,swrite(format="Somd:%7d Rn:%d    Raster Pixel #", somd, rn), 
         "Water depth (meters)"
 
  } else if ( units == "feet" ) {
     pli, -transpose(aa(,,1)), 1, 4*CNSH2O2XF,  121, -244 * CNSH2O2XF
-    xytitles,swrite(format="Rn:%d    Raster Pixel #", rn), 
+    xytitles,swrite(format="Somd:%7d Rn:%d    Raster Pixel #", somd, rn), 
         "Water depth (feet)"
  }
  pltitle,swrite(format=" %s",data_path);

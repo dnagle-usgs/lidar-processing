@@ -1,0 +1,135 @@
+
+proc set_time_check_defaults { } {
+ global time_check;
+ set time_check(range_offset)		0
+ set time_check(window)		 	7
+ set time_check(hours_offset)	 	0
+ set time_check(seconds_offset)	 	0
+ set time_check(start_record)	 	1000
+ set time_check(run_len)	 	1000
+}
+
+proc compute_total_secs { } {
+ global time_check
+    set secs [ expr $time_check(hours_offset)*3600  + $time_check(seconds_offset) ];
+  return $secs
+}
+
+
+proc ts_check {} {
+  global time_check;
+  set w .ts_check;
+  destroy $w
+  toplevel $w;
+  set f1 $w.f1;
+  frame $f1
+
+  Button  $f1.update   -text "Update edb idx file" \
+	-helptext "Commit your change in the laser time offset to the EDB file" \
+	-command {
+        if { [ tk_messageBox -icon warning -type okcancel \
+	    -message "You are about to update the edb index file.  \
+If that's what you want, then click Ok.  Otherwise click Cancel." ] == "ok" } {
+            exp_send "edb_update, [ compute_total_secs ]\r"
+         }
+    }
+  Button  $f1.replot   -text "Replot" \
+	-helptext "Redraw the graph showing the laser range value \
+ in RED and the GPS altitude in black" \
+	-command {
+    set secs [ compute_total_secs ]
+    exp_send "irg_replot( temp_time_offset=$secs, range_offset=$time_check(range_offset))\r"
+  }
+  Button  $f1.loadedb  -text "Load Edb..."
+  Button  $f1.loadgga  -text "Load gga..."
+  Button  $f1.fma      -text "Fma" -command { exp_send "window($time_check(window));fma\r" } \
+	-helptext "Clear the graphics window before displaying the next plot." 
+
+  Button  $f1.limits   -text "Limits" -command { 
+         exp_send "window($time_check(window));limits\r" 
+   }
+  Button  $f1.limits_gps   -text "X-Limits (GPS data)" -command { 
+         exp_send "window($time_check(window));limits,gga(1).sod,gga(0).sod\r" 
+   }
+  Button  $f1.limits_lidar   -text "X-Limits (Lidar)" -command { 
+      exp_send "window($time_check(window));limits,irg_t(60,1),irg_t(60,0)\r" 
+   }
+  Button  $f1.get_ird   -text "Get Irange" \
+	-helptext "Load a new region of laser data from the currently loaded EDB" \
+	-command { 
+   set b  $time_check(start_record);
+   set e  [ expr $b + $time_check(run_len) ]
+    set secs [ compute_total_secs ]
+    exp_send "rtrs = irg($b, $e);  irg_replot( temp_time_offset=$secs, range_offset=$time_check(range_offset))\r";
+  }
+
+  Button  $f1.dismiss  -text Dismiss -command { destroy .ts_check }
+
+  SpinBox $f1.range_offset \
+	-helptext "range_offset: Enter the range offset (in meters) here." \
+	-justify center \
+	-range { -100 100 .5 } \
+	-width 5 \
+	-textvariable time_check(range_offset);
+
+  Button  $f1.set_offset      -text "Set Time Correction" -command {
+  }
+
+  SpinBox $f1.hours_offset \
+	-helptext "hours_offset: Change the time correction by hour increments" \
+	-justify center \
+	-range { -48 48 1 } \
+	-width 5 \
+	-textvariable time_check(hours_offset);
+
+  SpinBox $f1.seconds_offset \
+	-helptext "seconds_offset: Change time corrections by whole seconds.\
+ 	    This is normally not required." \
+	-justify center \
+	-range { -30 30 1 } \
+	-width 5 \
+	-textvariable time_check(seconds_offset);
+
+  SpinBox $f1.start_record \
+	-helptext "start_record: Beginning laser raster number used to extract range values." \
+	-justify center \
+	-range { 1000 300000 1000 } \
+	-width 7 \
+	-textvariable time_check(start_record);
+
+  SpinBox $f1.run_len \
+	-helptext "run_len: The number of laser rasters to use in the comparison with GPS altitude." \
+	-justify center \
+	-range { 1000 20000 500 } \
+	-width 7 \
+	-textvariable time_check(run_len);
+
+  pack \
+	$f1.get_ird \
+	$f1.range_offset \
+	$f1.start_record \
+	$f1.run_len	\
+	$f1.hours_offset \
+	$f1.seconds_offset \
+	$f1.start_record \
+	$f1.replot \
+	$f1.loadedb \
+	$f1.loadgga \
+	$f1.limits \
+	$f1.limits_gps \
+	$f1.limits_lidar \
+	$f1.fma \
+	$f1.update \
+	$f1.dismiss \
+	-side top -expand 1 -fill x
+
+  pack $f1
+
+}
+
+
+  DynamicHelp::configure -bg yellow -delay 1000
+  set_time_check_defaults
+
+
+

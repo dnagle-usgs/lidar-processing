@@ -6,39 +6,57 @@
 #   Map 
 #############
 
-
- set coast_line(color) black
- global coast_line
+ proc restore_map_defaults { } {
+   global _map
+   set _map(path) 		"~/lidar-processing/maps/"
+   set _map(coast_color)	black
+   set _map(window)		6
+   set _map(most_recent_map) 	""
+ }
 
 
 proc setmapwindow {} {
-  exp_send "window,6;\r"
+ global _map
+  exp_send "window,$_map(window);\r"
   expect ">"
 }
 
 proc plot_last_map {} {
- global coast_line
+ global _map 
    setmapwindow
-   exp_send "show_map, dllmap, color=\"$coast_line(color)\" \r"
+   exp_send "show_map, dllmap, color=\"$_map(coast_color)\" \r"
   expect ">"
 }
 
 proc load_map { } {
- global coast_line
+ global _map w
 
-   set fn [ tk_getOpenFile -initialdir "./maps" \
+   set fn [ tk_getOpenFile -initialdir "$_map(path)" \
 	-filetypes { \
 	  {{ PBD Files} {.pbd} }
 	  {{ All files} {*}    }
          } ]
    if { $fn != "" } {
      setmapwindow
-     exp_send "load_map, color=\"$coast_line(color)\", ffn=\"$fn\"; \
+     exp_send "load_map, color=\"$_map(coast_color)\", ffn=\"$fn\"; \
                limits\r"
+     set _map(most_recent_map) $fn;
+     $w.mb.map entryconfigure 2 -label "Load ([ file tail $_map(most_recent_map)])"
    }
 }
 
+ restore_map_defaults
+ restore_eaarl_options "map.options" _map
+
  $w.mb.map add command -label "Load a Pbd Coastline..." -command load_map  
+ $w.mb.map add command -label "Load ([ file tail $_map(most_recent_map)])" \
+	-command {
+    if { $_map(most_recent_map) != "" } {
+    setmapwindow
+    exp_send "load_map, color=\"$_map(coast_color)\", ffn=\"$_map(most_recent_map)\"; \
+               limits\r"
+    }
+ }
 
  $w.mb.map add command     -label "Limits" -command {
    setmapwindow
@@ -51,6 +69,9 @@ proc load_map { } {
  }
 
  $w.mb.map add command     -label "Redraw last map" -command plot_last_map
+ $w.mb.map add command     -label "Save Map Options" -command { 
+    save_eaarl_options map.options _map
+ }
 
 
  $w.mb.map add separator
@@ -58,7 +79,7 @@ proc load_map { } {
  set clist "black red blue green cyan magenta yellow white"
  foreach a $clist {
    $w.mb.map add radiobutton -label [ string totitle $a ] \
-	-variable coast_line(color) -value $a
+	-variable _map(coast_color) -value $a
  }
 
 

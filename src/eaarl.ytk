@@ -5,15 +5,99 @@
 #
 #  eaarl.ytk 
 #
+# To Do
+#  Default and option settings.
+#
+#  1/4/2002  
+#  WW Added "Edit notes.txt" option in file.  Use this for quick access
+#  to the mission notes with your favorit editor. It uses the editor selected
+#  in the Ytk Edit menu.
+#
+#  edb_access update option
+#  save offset changes to edb files
+#  time check options
+#  check for numberof(edb) in time check
+#
+#
+
+proc restore_eaarl_defaults { } {
+
+} 
+
+proc restore_eaarl_options { fn opt_array } {
+# DOCUMENT restore_eaarl_options fn opt_array
+# 
+# fn		File name to restore options from.
+# opt_array	The name of the option array you want to restore.
+#
+# This procedure is intended to be used by any eaarl module for restoring it's
+# options.
+#
+ upvar $opt_array ary
+ global $opt_array
+ set dir "~/.eaarl";
+ set f "$dir/$fn"
+ if { [ file exists $f ] == 0 } {
+      tk_messageBox  -icon warning \
+	-message "$f Doesn't exist. Click on \"Save Map Options\" to establish the file."  \
+	-type ok
+    return
+ }
+ source $f
+
+} 
+
+proc save_eaarl_options { fn opt_array } {
+# DOCUMENT save_eaarl_options fn opt_array
+# 
+# fn		File name to save options to.
+# opt_array	The option array you want to save.
+#
+# This procedure is intended to be used by any eaarl module for saving it's
+# options.
+#
+ upvar $opt_array ary
+ 
+ set dir "~/.eaarl";
+ if { [ file exists $dir ] == 0 } {
+      tk_messageBox  -message "Creating $dir subdirectory to store program options"  -type ok
+      file mkdir $dir
+ }
+
+ set f "$dir/$fn"
+ if { [ file exists $f ] == 0 } {
+      tk_messageBox  -message "Creating $f to store eaarl options"  -type ok
+ }
+ set fd [ open $f "w+" ];
+
+ set names [ array names ary ] 
+ puts $fd "#   EAARL Settings"
+ foreach x $names {
+   set s [ format "set %32s    %-32s"  "$opt_array\($x\)" $ary($x) ];
+   puts $fd "$s"
+ }
+ close $fd
+ tk_messageBox -icon info -message "Options saved to: $f" -type ok
+}
 
 
-proc edb_status { } {
- global edb;
- destroy .edb
+proc edb_loaded { } {
+ global edb
  if { [ info exists edb ] == 0 } {
    tk_messageBox -type ok \
         -icon warning \
         -message { No EDB (EAARL Data Base) is loaded }
+  set rv 0;
+ } else { 
+   set rv  1;
+ } 
+ return $rv;
+}
+
+proc edb_status { } {
+ global edb;
+ destroy .edb
+ if { [ edb_loaded ] == 0 } {
    return;
  }
  
@@ -29,7 +113,8 @@ proc edb_status { } {
         {First Good Raster}             data_begins \
         {Last Good Raster}              data_ends \
         {Mission Duration (Hours)}      mission_duration \
-        {Seconds of the Epoch}          soe \
+        {Seconds of the Epoch at day start}          soe \
+        {eaarl_time_offset}          	eaarl_time_offset \
        "
  
   set edb(idx_file) [ file tail $edb(idx_file) ]
@@ -47,7 +132,7 @@ proc edb_status { } {
 }
 
 proc load_edb {} {
-   exp_send "load_edb\r"
+   exp_send "load_edb, update=1\r"
   expect ">"
   edb_status
 }
@@ -83,6 +168,11 @@ proc load_edb {} {
 
  $w.mb.file add command -label "Load Edb..." -command { load_edb }
  $w.mb.file add command -label "Edb Status" -command  edb_status 
+ $w.mb.file add command -label "Edit missions notes..." -command  {
+   if { [ edb_loaded ] } { 
+     ytk_kick_off_editor  $_ytk(editor) "$edb(path)/notes.txt"    
+   }
+ } 
  $w.mb.file add command -label Dismiss -command { destroy $w }
 
  source map.ytk
@@ -134,6 +224,8 @@ proc load_edb {} {
 
 proc rbgga_menu {} {
  global ytk_PLMK_marker
+ global data_path
+ global _ytk
  set gga(null) ""
  set mw .rbgga
  destroy $mw
@@ -209,6 +301,10 @@ proc rbgga_menu {} {
  $w.mb.time add command -label "Time..." -command {  
 
  }
+ $w.mb.time add command -label "Check and correct EDB time..." -command {
+  source ts_check.ytk; ts_check;
+ }
+
 
 
 #############

@@ -93,10 +93,12 @@ func load_edb (  fn=, update= ) {
   edb(N) where N is the record number.
   
 */
- extern edb, edb_filenames;
+ extern edb_filename, edb;
  extern edb_files, _ecfidx, _edb_fd;
  extern total_edb_records;
  extern data_path;
+ extern soe_day_start;
+ extern eaarl_time_offset;
  _ecfidx = 0;
 
 ///// if ( is_void( data_path ) ) 
@@ -118,7 +120,9 @@ if ( _ytk ) {
 	filemode = "rb";
   else
 	filemode = "r+b";
+
   _edb_fd = idf = open(fn, filemode );
+  edb_filename = fn;			// 
 
 // get the first three 32 bit integers from the file. They describe
 // things in the file as follows:
@@ -157,8 +161,23 @@ if ( _ytk ) {
   _read(idf, 12, edb);
 
 
-/// eaarl_time_offset = 3600 * 4;		// to correct the eaarl time to utc
- eaarl_time_offset = 0;
+
+/*
+   eaarl_time_offset is computed below.  It needs to be added to any soe values 
+ read from the waveform database.  It is computed below by subtracting the time 
+ found in the first raster from the time in the first record of  edb.  This works
+ because after we determine the time offset, we correct the edb and write out
+ a new version of the idx file.  This makes the idx file differ from times in 
+ the waveform data base by eaarl_time_offset seconds.  If you read in an idx
+ file which hasn't been time corrected, the eaarl_time_offset will become 0
+ because there will be no difference in the time values in edb and the waveform
+ database.
+
+ The eaarl_time_offset can be safely used from decode_raster to correct time
+ valuse as the rasters are read in.
+ */
+ eaarl_time_offset = 0;	// need this first, cuz get_erast uses it.
+ eaarl_time_offset = edb(1).seconds - decode_raster( get_erast(rn=1) ).soe;
 
 
 
@@ -168,7 +187,7 @@ if ( _ytk ) {
 // If valid soe time then do this.
  if ( numberof(q) > 0 ) {
   write,"*****  TIME contains date information ********"
-  edb.seconds -= eaarl_time_offset ;	// adjust time to gps
+  edb.seconds += eaarl_time_offset ;	// adjust time to gps
    data_begins = q(1);
    data_ends   = q(0);
    year = soe2time( edb(data_begins).seconds ) (1);
@@ -227,12 +246,32 @@ if ( _ytk ) {
     tkcmd,swrite(format="set edb(data_ends)    %d",  data_ends);
     tkcmd,swrite(format="set edb(mission_duration)  %f",  mission_duration);
     tkcmd,swrite(format="set edb(soe)  %d",  soe_day_start);
+    tkcmd,swrite(format="set edb(eaarl_time_offset)  %d",  eaarl_time_offset);
     tkcmd,swrite(format="set edb(path)  %s",  data_path);
     tkcmd,swrite(format="set edb(idx_file)  %s",  fn);
     tkcmd,swrite(format="set edb(nbr_rasters)  %d",  numberof(edb) );
  }
 
 }
+
+
+func edb_update ( time_correction ) {
+/* DOCUMENT edb_update
+   
+  Writes the memory version of edb back into the file.  Used to correct time
+  of day problems.
+
+
+*/
+ extern _edb_fd
+ extern edb
+  if ( (!is_void( _edb_fd ))  && (!is_void(edb))  ) {
+     edb.seconds += time_correction;
+     _write(_edb_fd, 12, edb);
+     write,"edb updated"
+  }
+}
+
 
 
 func get_erast( rn=, sod=, hms=, timeonly= ) {
@@ -256,6 +295,7 @@ See also:
 
 */
  extern data_path, edb, edb_files, _eidf, _ecfidx;
+ extern soe_day_start;
 
 
  if ( is_void( rn ) ) {
@@ -321,9 +361,15 @@ Examples using the result data:
  To extract, convert to integer, and remove bias from pixel 60, ch 1 use:
    w = *p.rx(60,1)
    w = int((~w+1) - (~w(1)+1));
+
+ History:
+	2/7/02 ww Modified to check for short rasters and return an empty one if 
+	       short one was found.  The problem occured reading 9-7-01 data.  It
+		may have been caused by data system lockup.
    
 */
  extern t0,t1
+ extern eaarl_time_offset
   timer,t0
   return_raster = array(RAST,1);
   irange = array(int, 120);
@@ -331,7 +377,12 @@ Examples using the result data:
   offset_time = array(int, 120);
   len = i24(r, 1);      		// raster length
   type= r(4);           		// raster type id (should be 5 )
+  if ( len < 20  )			// return empty raster.  System must have 
+	return return_raster;		// failed.
+
   seconds = i32(r, 5);  		// raster seconds of the day
+  seconds += eaarl_time_offset;		// correct for time set errors.
+
   fseconds = i32(r, 9); 		// raster fractional seconds 1.6us lsb
   rasternbr = i32(r, 13); 		// raster number
   npixels   = i16(r, 17)&0x7fff;        // number of pixels
