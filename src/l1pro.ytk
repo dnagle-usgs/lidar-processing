@@ -28,6 +28,8 @@
   set list		{}
   set lrnindx		{}
   set write_some 	0
+  
+  set varlist {fs_all depth_all veg_all cveg_all}
 
 exp_send "#include \"geo_bath.i\"\r"; # load geobath.i code
 exp_send "#include \"read_yfile.i\"\r"; # load read_yfile
@@ -61,7 +63,11 @@ menu .l1wid.mb.options
 .l1wid.mb   add cascade -label File -underline 0 -menu .l1wid.mb.file
 
 .l1wid.mb.file add command -label "Read Data File... " -underline 10 -command {
-  	exp_send "data_ptr = read_yfile(); \r"
+        global data_file_path 
+        if { [info exists data_file_path ] == 0 } {
+              set data_file_path ""
+        }
+  	exp_send "data_ptr = read_yfile(initialdir=\"$data_file_path\"); \r"
 	expect ">"
 	exp_send "read_pointer_yfile, data_ptr, mode=1; \r"
 	expect ">"
@@ -87,7 +93,7 @@ menu .l1wid.mb.options
         toplevel .l1dir
 	frame .l1dir.1
 	LabelEntry .l1dir.op  -width 70 -relief sunken -bd 3 -label "Path:  " -helptext "Enter Data Path Here" \
-		-textvariable path
+		-textvariable path -text $data_file_path
  	Button .l1dir.1.ok -text "OK" -width 5 -command {
 	 if {$path != ""} {
 	  .l1dir.op configure -state disabled
@@ -109,8 +115,6 @@ menu .l1wid.mb.options
 }
 
 .l1wid.mb       add cascade -label "Load" -underline 0 -menu .l1wid.mb.load
-.l1wid.mb.file  add command -label "Read command file .. " -underline 0 
-.l1wid.mb.file  add command -label "Save command file .. " -underline 0
 .l1wid.mb.file  add command -label "Dismiss" -underline 0 -command {destroy .l1wid}
 .l1wid.mb.load  add command -label "Load TANS Data .. " -underline 5 \
 		-command { exp_send "tans = rbtans();\r" 
@@ -278,6 +282,57 @@ menu .l1wid.mb.options
  -command {
    exp_send "plot_no_tans_fltlines(tans, gga);\r"
  }
+
+.l1wid.mb.options add command -label "List Plot Variables..." -underline 10 -command {
+   
+    global varlist
+    destroy .varplot
+    toplevel .varplot 
+    wm title .varplot "List"
+    frame .varplot.1
+    frame .varplot.2
+    listbox .varplot.1.lb -selectmode single -width 12 -xscrollcommand ".varplot.xscroll set" -yscrollcommand ".varplot.1.yscroll set" 
+    scrollbar .varplot.xscroll -orient horizontal -command [list .varplot.1.lb xview]
+    scrollbar .varplot.1.yscroll -command [list .varplot.1.lb yview]
+    for {set i 0} { $i < [llength $varlist] } {incr i} { 
+       .varplot.1.lb insert end [lindex $varlist $i]
+    }
+    Button .varplot.2.select -text "Select" -command {
+      set plot_var [lindex $varlist [.varplot.1.lb curselection]]
+      .l1wid.bf45.p.15 setvalue @[.varplot.1.lb curselection]
+    }
+    LabelEntry .varplot.2.add -width 8 -relief sunken -label "Add:" -helptext "Add variable name to list" \
+      -textvariable addvar 
+    .varplot.2.add bind <Return> { 
+        global varlist
+	lappend varlist $addvar
+        .l1wid.bf45.p.15 configure -values $varlist
+        .varplot.1.lb insert end $addvar
+    }
+    Button .varplot.2.delete -width 8 -text "Delete" \
+       -command {
+         set del_no [.varplot.1.lb curselection]
+         if {$del_no <= 3} {
+          # don't delete fixed variables
+       	  tk_messageBox  -icon warning \
+            -message "Cannot delete this variable" \
+             -type ok
+         } else {
+          set del_var [lindex $varlist $del_no]
+          set new_varlist1 [lrange $varlist 0 [expr ($del_no-1)]]
+          set new_varlist2 [lrange $varlist [expr ($del_no+1)] end]
+	  .varplot.1.lb delete $del_no $del_no	
+          set varlist [concat $new_varlist1 $new_varlist2]
+          .l1wid.bf45.p.15 configure -values $varlist
+         }
+    }
+    Button .varplot.2.dismiss -text "Dismiss" -width 8 -command {
+          destroy .varplot
+    }
+    pack .varplot.1.lb .varplot.1.yscroll -side left -fill y 
+    pack .varplot.2.select .varplot.2.add .varplot.2.delete .varplot.2.dismiss -side top -fill x
+    pack .varplot.1 .varplot.xscroll .varplot.2 -side top -fill x
+  }
 
 proc make_selected_arrays {junk} {
     global lrnindx list
@@ -454,6 +509,11 @@ Button .l1wid.bf45.p.1 -text "Plot" -command {
  plot_fltlines 0
 }
 
+ComboBox .l1wid.bf45.p.15 -text "Variable" -width 10 -values \
+  	$varlist \
+	-helptext "Select any one of the following variables to plot" \
+	-editable 1
+
 Label .l1wid.bf45.p.2 -text "in Win:"
 SpinBox .l1wid.bf45.p.3 -justify center -range {0 7 1} \
 	-width 2 -textvariable win_no 
@@ -523,6 +583,110 @@ Button .l1wid.bf45.q.3 -text "Color\nBar" \
 	-command { 
         exp_send "colorbar, $cmin, $cmax, drag=1\r";
 }
+Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
+		-command {
+	destroy .l1clip
+        toplevel .l1clip
+        wm title .l1clip "Elevation Clipper"
+	frame .l1clip.1
+        set ptype [.l1wid.bf4.1.p getvalue]
+	#SpinBox  .l1clip.max -range { -100. 5000. 10. }  \
+	#	-textvariable max_elv -text "Maximum Elevation"
+	#SpinBox  .l1clip.min -range { -100. 5000. 10. }  \
+        #        -textvariable min_elv -text "Minimum Elevation"
+	#SpinBox  .l1clip.range \
+	#	-range { 1 100 } \
+         #       -textvariable range_elv  -text "Vertical Range"
+        checkbutton .l1clip.proc -text "Use this clipper to process new data" -variable proc_clip 
+        checkbutton .l1clip.ymin -variable ymin \
+		-command {
+		    if {$ymin == 1} {
+			set yrange 0
+			.l1clip.min.sb configure -state normal
+			.l1clip.min.lb configure -state normal
+			.l1clip.min.sc configure -state normal
+			.l1clip.range.sb configure -state disabled
+			.l1clip.range.lb configure -state disabled
+			.l1clip.range.sc configure -state disabled
+		    }
+		    if {$ymin == 0} {
+			.l1clip.min.sb configure -state disabled
+			.l1clip.min.lb configure -state disabled
+			.l1clip.min.sc configure -state disabled
+		    }
+			
+		}
+        checkbutton .l1clip.ymax -variable ymax \
+		-command {
+		    if {$ymax == 1} {
+			set yrange 0
+			.l1clip.max.sb configure -state normal
+			.l1clip.max.lb configure -state normal
+			.l1clip.max.sc configure -state normal
+			.l1clip.range.sb configure -state disabled
+			.l1clip.range.lb configure -state disabled
+			.l1clip.range.sc configure -state disabled
+		    }
+		    if {$ymax == 0} {
+			.l1clip.max.sb configure -state disabled
+			.l1clip.max.lb configure -state disabled
+			.l1clip.max.sc configure -state disabled
+		    }
+ 		}
+        checkbutton .l1clip.yrange -variable yrange \
+		 -command {
+		    if {$yrange == 1} {
+			set ymin 0
+			set ymax 0
+			.l1clip.range.sb configure -state normal
+			.l1clip.range.lb configure -state normal
+			.l1clip.range.sc configure -state normal
+			.l1clip.min.sb configure -state disabled
+			.l1clip.min.lb configure -state disabled
+			.l1clip.min.sc configure -state disabled
+			.l1clip.max.sb configure -state disabled
+			.l1clip.max.lb configure -state disabled
+			.l1clip.max.sc configure -state disabled
+		    }
+		    if {$yrange == 0} {
+			.l1clip.range.sb configure -state disabled
+			.l1clip.range.lb configure -state disabled
+			.l1clip.range.sc configure -state disabled
+		    }
+		 }
+        sst .l1clip.max   max_elv   "  Maximum Elevation:"  { -100 1000.0 0.1  }
+        sst .l1clip.min   min_elv   "  Minimum Elevation:"  { -100 1000.0 0.1  }
+        sst .l1clip.range   range_elv   "  Vertical Range:"  { 0 100.0 0.1  }
+
+	Button .l1clip.1.ok -text "OK" -width 5 -command {
+	    
+          set ptype [.l1wid.bf4.1.p getvalue]
+          set disp_type [.l1wid.bf45.p.5 getvalue]
+	  if {$ptype == 0} {
+		//for surface topography
+	  }
+	  if {$ptype == 1} {
+		//for bathymetry
+	  }
+	  if {$ptype == 2} {
+		//for vegetation
+	  }
+	    destroy .l1clip
+          }
+ 
+ 	Button .l1clip.1.cancel -text "Cancel" -width 5 -command {
+	   destroy .l1clip
+ 	}
+
+ 	Button .l1clip.1.dismiss -text "Dismiss" -width 5 -command {
+	   destroy .l1clip
+ 	}
+
+	pack .l1clip.1.ok .l1clip.1.cancel .l1clip.1.dismiss -side left -padx 5
+	pack .l1clip.proc .l1clip.ymin .l1clip.min .l1clip.ymax .l1clip.max .l1clip.yrange .l1clip.range .l1clip.1 -side top -pady 5	
+  }
+
+
 
 
 frame  .l1wid.bf45.sc.1
@@ -710,9 +874,10 @@ pack .l1wid.bf5.1 .l1wid.bf5.2 -side right
 pack .l1wid.bf1 .l1wid.bf2 .l1wid.bf3 .l1wid.bf4 -side top -expand 1 -fill both
 pack .l1wid.bf45.sc.1  -side left  -padx 3
 pack .l1wid.bf45.sc.f  -side left
-pack .l1wid.bf45.q.1 .l1wid.bf45.q.2  .l1wid.bf45.q.3 -side left
+pack .l1wid.bf45.q.1 .l1wid.bf45.q.2  .l1wid.bf45.q.3 .l1wid.bf45.q.4 -side left
 pack 	.l1wid.bf45.p.fma \
 	.l1wid.bf45.p.1 \
+	.l1wid.bf45.p.15 \
 	.l1wid.bf45.p.5 \
 	.l1wid.bf45.p.2 \
 	.l1wid.bf45.p.3 \
@@ -757,7 +922,7 @@ proc send_rnarr_to_l1pro {bstart bstop brnindx} {
 
 proc plot_fltlines {sel} {
   
- global l1pro_fma win_no cmin cmax cdelta msize markerv
+ global l1pro_fma win_no cmin cmax cdelta msize markerv varlist
      #fill in later using what to plot
      set fs 0
      set ba 0
@@ -767,6 +932,8 @@ proc plot_fltlines {sel} {
      set lint 0
      set cht 0
      set disp_type [.l1wid.bf45.p.5 getvalue]
+     set var_no [.l1wid.bf45.p.15 getvalue]
+     set var_type [lindex $varlist $var_no]
      if {$disp_type == -1} {
        	tk_messageBox  -icon warning \
         -message "You need to specify the type of data to display!" \
@@ -794,11 +961,11 @@ proc plot_fltlines {sel} {
      if {$ptype == 0} {
        set cmax1 [expr $cmax*100.]
        set cmin1 [expr $cmin*100.]
-       if {$disp_type == 0} {
-        if {$sel == 0} {
-	   exp_send "fs_some = fs_all;\r"
+       if {$sel == 0} {
+	   exp_send "fs_some = $var_type;\n"
            expect ">"
-        } 
+       } 
+       if {$disp_type == 0} {
          exp_send "display, fs_some, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1;\r"
          expect ">"
        } elseif { $disp_type == 4 } {
@@ -808,7 +975,7 @@ proc plot_fltlines {sel} {
      }
      if {$ptype == 1} {
        if {$sel == 0} {
-          exp_send "depth_some = depth_all;\r"
+          exp_send "depth_some = $var_type;\r"
  	  expect ">"
        }
        exp_send "plot_bathy, depth_some, win=$win_no, ba=$ba, fs = $fs, de = $de , fint = $fint, lint = $lint, cmin=$cmin, cmax=$cmax, msize = $msize; \r"
@@ -816,11 +983,24 @@ proc plot_fltlines {sel} {
      }
      if {$ptype == 2} {
         if {$sel == 0} {
-	   exp_send "veg_some = veg_all;\r"
+	   exp_send "veg_some = $var_type;\r"
            expect ">"
         } 
          exp_send "display_veg, veg_some, win=$win_no, cmin=$cmin, cmax = $cmax, size = $msize, edt=1, felv = $fs, lelv=$lelv, fint=$fint, lint=$lint, cht = $cht, marker=$markerv;\r"
          expect ">"
+     }
+     if {$ptype == 3} {
+       if {$sel == 0} {
+	   exp_send "cveg_some = $var_type;\r"
+           expect ">"
+       } 
+       if {$disp_type == 0} {
+         exp_send "display, cveg_some, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1;\r"
+         expect ">"
+       } elseif { $disp_type == 4 } {
+         exp_send "display, cveg_some, mode=\"intensity\", win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv;\r"
+         expect ">"
+       }
      }
 }
 
