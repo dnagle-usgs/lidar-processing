@@ -41,10 +41,10 @@ the one before that, etc. etc.
 
 
    Mouse selected transect. 
-   fs       fs_all structure.
-  owin=     desired Yorick output graph window.
-  iwin=     Source window for transect
-   w=       search distance from line in centimeters.
+   fs       fs_all structure. 
+  owin=     desired Yorick output graph window. Default 3.
+  iwin=     Source window for transect Default 5.
+   w=       search distance from line in centimeters. Default 100cm.
   connect=  set to 1 to connect the points.
   recall=    Used to recall a previously generated transact line.
   color=    The starting color 0:7
@@ -58,11 +58,11 @@ See also: transect, mouse_transects
 
  if ( is_void(w))             w = 150;
  if ( is_void(connect)) connect = 0;
- if ( is_void(owin))         owin = 3;
- if ( is_void(iwin))         iwin = 5;
- if ( is_void(msize))         msize = 0.1;
- if ( is_void(xfma))         xfma=0;
- if ( is_void(color))         color=1;
+ if ( is_void(owin))       owin = 3;
+ if ( is_void(iwin))       iwin = 5;
+ if ( is_void(msize))     msize = 0.1;
+ if ( is_void(xfma))        xfma= 0;
+ if ( is_void(color))      color= 1;
  window,iwin
  if ( is_void(recall) ) {
 // get the line coords with the mouse and convert to cm
@@ -77,7 +77,7 @@ See also: transect, mouse_transects
 }
 
 func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color= ) {
-/* DOCUMENT transect( fs, line, lw=)
+/* DOCUMENT transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color= )
 
    fs   fs_all structure where you drew the line.
    line the line.
@@ -87,7 +87,7 @@ func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color= ) {
    owin=     output window
    color=   0-7 
 
- See also: mtransact
+ See also: mtransact, mouse_transects
 
 */
 
@@ -157,13 +157,14 @@ func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color= ) {
      if ( xtime ) {
      plmk, fs.elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0, 
            fs.soe(*)(llst)(ss(i)+1:ss(i+1))/100.0,color=clr(c), msize=msize
-     if ( connect ) plg, fs.elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0, 
+       if ( connect ) plg, fs.elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0, 
                 fs.soe(*)(llst)(ss(i)+1:ss(i+1))/100.0,color=clr(c)
      } else {
-     plmk, fs.elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0, 
-           rx(llst)(ss(i)+1:ss(i+1))/100.0,color=clr(c), msize=msize
-     if ( connect ) plg, fs.elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0, 
-                rx(llst)(ss(i)+1:ss(i+1))/100.0,color=clr(c)
+     xx = rx(llst)(ss(i)+1:ss(i+1))/100.0;
+     si = sort(xx);
+     yy = fs.elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0;
+     plmk, yy, xx,color=clr(c), msize=msize
+       if ( connect ) plg, yy(si), xx(si),color=clr(c)
     }
    }
  } else {
