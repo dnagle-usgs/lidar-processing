@@ -1,5 +1,7 @@
 require, "map.i"
 require, "dir.i" 
+require, "veg.i"
+require, "geo_bath.i"
 require, "datum_converter.i"
 
 func batconvert(con_dir=,  tonad83=, tonavd88=, onlymerged=)

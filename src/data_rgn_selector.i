@@ -188,12 +188,10 @@ indx = where(x >= xmin);
  } else return;
 }
 
+func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged=, onlynotmerged=, onlyrcfd=, onlynotrcfd=, datum=, skip=, noplot=, search_str=) {
 
-func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged=, onlynotmerged=, onlyrcfd=, onlynotrcfd=, datum=, skip=, noplot=) {
 /* DOCUMENT sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged=, onlynotmerged=, onlyrcfd=, onlynotrcfd=, datum=, skip=, noplot=) 
 
-
-  see:   ../doc/test.png
   This function selects data from a series of processed data tiles.
   The processed data tiles must have the min easting and max northing in their filename.
   INPUT:
@@ -272,6 +270,7 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged
    if (mode == 1) file_ss = "_v";
    if (mode == 2) file_ss = "_b";
    if (mode == 3) file_ss = "_v";
+   if ((onlyrcfd)||(onlymerged)) file_ss = file_ss+"_";
    files =  array(string, 10000);
    floc = array(long, 2, 10000);
    ffp = 1; flp = 0;
@@ -281,9 +280,15 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged
         fp = 1; lp=0;
    	s = array(string,100);
    	command = swrite(format="find  %s -name '*%d*%d*%s*.pbd'", data_dir, min_e(i), max_n(i), file_ss); 
-   	f = popen(command, 0);     
+   	f = popen(command, 0); 
    	nn = read(f, format="%s",s);
 	close,f
+	if (search_str) {
+	  ssm = strmatch(s,search_str);
+	  s = s(where(ssm));
+	  nn = numberof(where(s));
+	  if (nn == 0) continue;
+ 	}
         if (onlymerged) {
 	  ssm = strmatch(s,"merge");
           s = s(where(ssm));
@@ -323,8 +328,6 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged
         }
 	ffp = flp+1;	
    }
-   
-   
    sel_eaarl = [];
    files =  files(where(files));
    if (!noplot) write, files;
