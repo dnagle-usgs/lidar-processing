@@ -168,9 +168,11 @@ proc output_polys { } {
   foreach p [ .canf.can find withtag poly ] {
     puts ""
     puts "# Polygon: $p"
+    puts "poly$p = \["
     foreach { x y } [ .canf.can coords $p ] {
-      puts "[scrx2utm $x] [scry2utm $y]"
+      puts "  [scrx2utm $x], [scry2utm $y],"
     }
+    puts "\]"
   }
 }
 
