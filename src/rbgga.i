@@ -677,7 +677,71 @@ func plot_no_tans_fltlines (tans, gga) {
 }
 
 
+func select_any_region(xdata, ydata, mode=, win=) {
+  /*DOCUMENT  select_any_region(xdata, ydata, mode=, win=)
+   this function allows the user to select a region on an xy image plot.
+   if mode = 1, limits() function is used to define the region.
+   if mode = 2, a rubberband box is used to define the region.
+   if mode = 3, the points-in-polygon technique is used to define the region.
 
+   OUTPUT:  The output is a 2 D array that contains the x and y data points in the selected region.
+   amar nayegandhi 11/26/02.
+   */
+
+  if (!win) win = 5;
+  if (!mode) mode = 1;
+  
+  w = window();
+
+  if (mode == 1) {
+     window, win
+     rgn = limits();
+  }
+
+  if (mode == 2) {
+     window, win;
+     a = mouse(1,1,
+     "Hold the left mouse button down, select a region:");
+     rgn = array(float, 4);
+     rgn(1) = min( [ a(1), a(3) ] );
+     rgn(2) = max( [ a(1), a(3) ] );
+     rgn(3) = min( [ a(2), a(4) ] );
+     rgn(4) = max( [ a(2), a(4) ] );
+     /* plot a window over selected region */
+     a_x=[rgn(1), rgn(2), rgn(2), rgn(1), rgn(1)];
+     a_y=[rgn(3), rgn(3), rgn(4), rgn(4), rgn(3)];
+     plg, a_y, a_x;
+     
+  }
+
+  if ((mode==1) || (mode==2)) {
+    q = where((xdata >= rgn(1))   & 
+               (xdata <= rgn(2))) ;
+
+    //write, numberof(q);
+ 
+    indx = where((ydata(q) >= rgn(3)) & 
+               (ydata(q) <= rgn(4)));
+
+    //write, numberof(indx);
+
+    indx = q(indx);
+  }
+
+  if (mode == 3) {
+     window, win;
+     ply = getPoly();
+     box = boundBox(ply);
+     box_pts = ptsInBox(box, xdata, ydata);
+     poly_pts = testPoly(ply, xdata(box_pts), ydata(box_pts));
+     indx = box_pts(poly_pts);
+  }
+
+  window, w;
+
+  return transpose([xdata(indx), ydata(indx)]);
+
+}
 
 if ( is_void(_ytk) ) 
 	help, rbgga_help
