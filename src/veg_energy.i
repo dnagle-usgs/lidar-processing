@@ -412,7 +412,7 @@ func make_single_lfpw(eaarl,bin=,normalize=, plot=, correct_chp=, min_elv=){
    return outveg;
 }
 
-func plot_slfw(outveg, outwin=, indx=, dofma=, color=, interactive=, show=, inwin=, title=, noxytitles=,  normalize=) {
+func plot_slfw(outveg, ipath=, outwin=, indx=, dofma=, color=, interactive=, show=, inwin=, title=, noxytitles=,  normalize=) {
 //amar nayegandhi 04/14/04
 // plot synthesized large footprint waveform
 // returns the waveforms selected
@@ -430,11 +430,16 @@ if (!is_void(dofma)) {
 	window, outwin; fma;
 }
 
+
+     
+
 if (!is_void(interactive)) {
   count = 0;
-  idx = where(outveg.east != 0);
-  outveg = outveg(idx);
-  fp = max((outveg.east(2)-outveg.east(1)), (outveg.north(2)-outveg.north(1)));
+  if (is_array(outveg)) {
+   idx = where(outveg.east != 0);
+   outveg = outveg(idx);
+   fp = max((outveg.east(2)-outveg.east(1)), (outveg.north(2)-outveg.north(1)));
+  }
   window, inwin;
   while (1) {
    count++;
@@ -444,11 +449,52 @@ if (!is_void(interactive)) {
       m = mouse(1,0,"");
    }
    if (m(10) != 1) break;
+
+   if ((count == 1) && (!is_array(outveg))) {
+     // if outveg is not an array, search in ipath for the 
+     // batch processed file
+     tile = tile_location(m);
+     tilen = tile(1);
+     tilee = tile(2);
+     itilee = tilee/10000 * 10000;
+     itilen = tilen/10000 * 10000 + 10000;
+     fname = swrite(format="%si_e%d_n%d_18s/t_e%d_n%d_18s/t_e%d_n%d_18s_n88_20020911_v_energy.pbd",ipath, itilee, itilen, tilee, tilen+2000, tilee, tilen+2000);
+     write, format="Opening File %s\n",fname;
+     f = openb(fname);
+     restore, f;
+     close, f;
+     idx = where(outveg.east != 0);
+     outveg = outveg(idx);
+     fp = max((outveg.east(2)-outveg.east(1)), (outveg.north(2)-outveg.north(1)));
+   }
+   
+   
    east = m(1);
    north = m(2);
    idx = data_box(outveg.east/100., outveg.north/100., m(1)-50, m(1)+50, m(2)-50, m(2)+50);
-   iidx = ((outveg.east(idx)/100.-m(1))^2+(outveg.north(idx)/100.-m(2))^2)(mnx);
-   tveg = outveg(idx(iidx));
+   if (is_array(idx)) {
+     iidx = ((outveg.east(idx)/100.-m(1))^2+(outveg.north(idx)/100.-m(2))^2)(mnx);
+     tveg = outveg(idx(iidx));
+   }
+   if ((count > 1) && (!is_array(idx))) {
+     tile = tile_location(m);
+     tilen = tile(1);
+     tilee = tile(2);
+     itilee = tilee/10000 * 10000;
+     itilen = tilen/10000 * 10000 + 10000;
+     fname = swrite(format="%si_e%d_n%d_18s/t_e%d_n%d_18s/t_e%d_n%d_18s_n88_20020911_v_energy.pbd",ipath, itilee, itilen, tilee, tilen+2000, tilee, tilen+2000);
+     write, format="Opening File %s\n",fname;
+     f = openb(fname);
+     restore, f;
+     close, f;
+     idx = where(outveg.east != 0);
+     outveg = outveg(idx);
+     fp = max((outveg.east(2)-outveg.east(1)), (outveg.north(2)-outveg.north(1)));
+     idx = data_box(outveg.east/100., outveg.north/100., m(1)-50, m(1)+50, m(2)-50, m(2)+50);
+     iidx = ((outveg.east(idx)/100.-m(1))^2+(outveg.north(idx)/100.-m(2))^2)(mnx);
+     tveg = outveg(idx(iidx));
+   }
+	
    if (show) {
 	// plot the footprint box in inwin.
 	plg, [(tveg.north-fp/2), (tveg.north-fp/2), (tveg.north+fp/2), (tveg.north+fp/2), (tveg.north-fp/2)]/100., [(tveg.east-fp/2), (tveg.east+fp/2), (tveg.east+fp/2), (tveg.east-fp/2), (tveg.east-fp/2)]/100., color="black";
@@ -752,9 +798,11 @@ func plot_veg_classes(mets, lfp, idx=, win=, dofma=, msize=, smooth=) {
 */
 
 if (is_void(msize)) msize=0.5
-idx1 = where((mets(1,) > 6) & (mets(4,) >= 0.5));
+//idx1 = where((mets(1,) > 6) & (mets(4,) >= 0.5));
+idx1 = where((mets(1,) > 6) & (mets(4,) >= 0.4));
 
-idx2 = where((mets(1,) > 6) & (mets(4,) > 0.25) & (mets(4,) < 0.5));
+//idx2 = where((mets(1,) > 6) & (mets(4,) > 0.25) & (mets(4,) < 0.5));
+idx2 = where((mets(1,) > 6) & (mets(4,) < 0.4) & (mets(4,) > 0.1));
 
 idx3 = where((mets(1,) < 6) & (mets(1,) > 1) & (mets(4,) > 0.25));
 
@@ -787,6 +835,10 @@ if (!is_array(idx)) idx = [1,2,3,4,5];
    vclnew = array(long, xx(2), xx(3));
    for (i=2;i<xx(3);i++) {
      for (j=2;j<xx(2);j++) {
+	if (z(j,i)!= 0) {
+	   vclnew(j,i) = z(j,i);
+	   continue;
+	}
 	i1 = where(z(j-1:j+1,i-1:i+1) == 1)
 	i2 = where(z(j-1:j+1,i-1:i+1) == 2)
 	i3 = where(z(j-1:j+1,i-1:i+1) == 3)
@@ -796,7 +848,11 @@ if (!is_array(idx)) idx = [1,2,3,4,5];
 	if (imx != 0) vclnew(j,i) = imxx;
      }
    }
-   z = vclnew; vlcnew=[];
+   vclnew(,1) = long(z(,1));
+   vclnew(,0) = long(z(,0));
+   vclnew(1,) = long(z(1,));
+   vclnew(0,) = long(z(0,));
+   z = vclnew; vclnew=[];
  }
 
  z = bytscl(z);
