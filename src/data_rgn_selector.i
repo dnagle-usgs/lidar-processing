@@ -334,7 +334,7 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged
    	pldj, max_e, max_n, min_e, max_n, color="green"
    }
    
-   if (mode == 1) file_ss = "_f";
+   if (mode == 1) file_ss = "_v";
    if (mode == 2) file_ss = "_b";
    if (mode == 3) file_ss = "_v";
    files =  array(string, 10000);
