@@ -397,7 +397,7 @@ Examples using the result data:
   npixels   = i16(r, 17)&0x7fff;        // number of pixels
   digitizer = (i16(r,17)>>15)&0x1;      // digitizer                          
   a = 19;        			// byte starting point for waveform data
-  if (!is_void(tca)) 
+  if ((!is_void(tca)) && (numberof(tca) > rasternbr)) 
      seconds = seconds+tca(rasternbr);
 //write, format= "rasternbr = %d, seconds = %d\n", rasternbr, seconds;
  for (i=1; i<=npixels-1; i++ ) {	// loop thru entire set of pixels
