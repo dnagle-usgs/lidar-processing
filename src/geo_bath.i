@@ -845,7 +845,7 @@ write,"============================================================="
     }
     blockindx = minindx / 120;
     rasterno = mindata.rn&0xffffff;
-    pulseno = mindata.rn/0xffffff;
+    pulseno  = mindata.rn/0xffffff;
 
 ///////    write, format="Nearest point: %5.3fm\n", mindist;
 ///////    write, format="       Raster: %6d    Pulse: %d\n",rasterno, pulseno;
@@ -933,6 +933,8 @@ write,"============================================================="
  }
  if (is_array(edb)) {
    somd = edb(mindata.rn&0xffffff ).seconds % 86400; 
+   rast  = decode_raster(get_erast( rn=rasterno ));
+   fsecs = rast.offset_time - edb(mindata.rn&0xffffff ).seconds ;
    ztime = soe2time( somd );
    zdt   = soe2time( abs(edb( mindata.rn&0xffffff ).seconds - _last_soe) );
  }
@@ -952,8 +954,9 @@ write,"============================================================="
 	       mindata.east/100.0
 
  if (is_array(edb)) {
+/// breakpoint();
    write,format="        Time: %7.4f (%02d:%02d:%02d) Delta:%d:%02d:%02d \n", 
-        double(somd),
+        double(somd)+fsecs(pulseno),
         ztime(4),ztime(5),ztime(6),
         zdt(4), zdt(5), zdt(6);
  }
