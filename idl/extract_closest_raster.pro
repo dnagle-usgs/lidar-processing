@@ -75,6 +75,7 @@ function extract_closest_raster, data, east, north, maxdist, minpt=minpt, rastdi
 
   rast_east = sel_data(id).east
   rast_north = sel_data(id).north
+  rast_rn = sel_data(id).rn
   ; rast_east and rast_north are the closest points on the raster to the given location
 
   ;now calculate the distance along the raster from rast_east and rast_north
@@ -89,19 +90,68 @@ function extract_closest_raster, data, east, north, maxdist, minpt=minpt, rastdi
 	    break
 	endelse
   endif
-  ;now find the closest minpt's from rast_east and rast_north
-  sortidx = sort(rast_dist(rastidx))
-  sortidx = sortidx(0:minpt-1)
+  rast_data = rast_data(rastidx)
 
+  ;sort by pulse number
+  sortidx = sort(rast_data.rn / 'ffffff'XL)
+  rast_data = rast_data(sortidx)
+  rast_dist = (rast_dist(rastidx))(sortidx)
+  ;now search through these points to find the best point population that
+  maxrastidx = [-1]
+  ; contains the (rast_east,rast_north) point and is of size rastdist along the raster
+  for j=0,n_elements(rast_data)-1L do begin
+     ;find the distance from each point to point j
+     trast_dist = sqrt((rast_data.east-rast_data(j).east)^2 + (rast_data.north-rast_data(j).north)^2)
+     trastidx = where(trast_dist le ((rastdist/2.)*100.))
+     rridx = where(rast_data(trastidx).rn eq rast_rn)
+     if ((rridx(0) eq -1) or (n_elements(trastidx) lt minpt)) then continue
+     if (n_elements(trastidx) ge n_elements(maxrastidx)) then begin
+	maxrastidx = trastidx
+	mretdata = rast_data(maxrastidx)
+     endif
+  endfor  
+     
+  if (n_elements(maxrastidx) lt minpt) then begin
+      	sel_data = remove_this_raster(sel_data, id)
+	if (sel_data(0).rn ne -1) then begin
+	   continue
+	endif else begin
+	    break
+	endelse
+  endif
   success = 1
   break
 
  endwhile
- 
+
  if (success eq 1) then begin
   retdist = mindist/100.
-  retdata = rast_data(rastidx)
-  retdata = retdata(sortidx)
+  retdata = mretdata
+;  sortidx = sort(retdata.rn / 'ffffff'XL)
+;  retdata = retdata(sortidx)
+;  rast_dist = (rast_dist(rastidx))(sortidx)
+;  rdidx = where(rast_dist le rastdist*100.0/2.0)
+;  if n_elements(rdidx) lt minpt then begin
+;     ;find the location of rast_data
+;     if (rast_dist(0) le rastdist/2.0) then begin
+;	;now calculate the distance along the raster from rast_dist(0)
+;  	rast_dist = sqrt((retdata.east-retdata(0).east)^2 + (retdata.north-retdata(0).north)^2)
+;  	;now find the points that are rastdist away from the raster center point
+;  	rdidx = where(rast_dist le (rastdist*100.))
+;	yes = 1
+;     endif 
+;     if (rast_dist(n_elements(rast_dist)-1) le rastdist/2.0) then begin
+;	;now calculate the distance along the raster from last element in rast_dist
+;  	rast_dist = sqrt((retdata.east-retdata(n_elements(retdata)-1).east)^2 + (retdata.north-retdata(n_elements(retdata)-1).north)^2)
+;  	;now find the points that are rastdist away from the raster center point
+;  	rdidx = where(rast_dist le (rastdist*100.))
+;	yes = 2
+;     endif
+;     retdata = retdata(rdidx)
+;     if (yes ge 1) then print, "YES!!!", string(yes)
+;  endif
+;	
+	   
 
   return, retdata
  endif else begin
