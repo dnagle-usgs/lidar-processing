@@ -45,15 +45,36 @@ func load_this_conf(confile) {
 	write, "***** LOADING MAP SETTINGS";
 	window,6; limits, square=1;
 	load_map, color="black", ffn=fn_map, utm=1;
-	if (fn_lim != default) {
+	if ((fn_lim != "default") && (fn_lim != "gga")) {
 		mine = double(1);
 		maxe = double(1);
 		minn = double(1);
 		maxn = double(1);
 		x=sread(fn_lim, format="%f,%f,%f,%f", mine,maxe,minn,maxn);
 		limits, mine, maxe, minn, maxn;
-		show_gga_track, color="blue", skip=0,marker=0,msize=.1, utm=1, win=6;
-	}
+	} else if (fn_lim == "gga") {
+		llne = [gga.lat(max), gga.lon(min)];
+		llsw = [gga.lat(min), gga.lon(max)];
+		utmne = fll2utm(llne(1), llne(2));
+		utmsw = fll2utm(llsw(1), llsw(2));
+		mine = utmne(2); 
+		maxe = utmsw(2);
+		minn = utmsw(1);
+		maxn = utmne(1);
+		if (maxe-mine < maxn-minn) {
+			d = (maxn - minn)/2.0;
+			xav = avg([mine, maxe]);
+			mine = xav - d;
+			maxe = xav + d;
+		} else {
+			d = (maxe - mine)/2.0;
+			yav = avg([mine, maxe]);
+			minn = yav - d;
+			maxn = yav + d;
+		}
+		limits, mine, maxe, minn, maxn;
+	} else limits;
+	show_gga_track, color="blue", skip=0,marker=0,msize=.1, utm=1, win=6;
 
 	write, "***** LOADING OPS_CONF SETTINGS";
 	include, fn_ops;
@@ -82,7 +103,7 @@ func load_this_conf(confile) {
 			bath_ctl.thresh = 2.0;
 			bath_ctl.first  =  11;
 			bath_ctl.last   =  60;
-		} else if (fn_bath == "super shallow") {
+		} else if (fn_bath == "supershallow") {
 			bath_ctl.laser  = -2.4;
 			bath_ctl.water  = -2.4;
 			bath_ctl.agc    = -3.0;
