@@ -8,7 +8,7 @@
 
 */
 
-func mtransect( fs, win=, w= ) {
+func mtransect( fs, win=, w=, connect= ) {
 /* DOCUMENT mtransect( fs, win=, w= )
 
    Mouse selected transect. 
@@ -20,18 +20,18 @@ func mtransect( fs, win=, w= ) {
 
  extern mouse_transects;
 
- if ( is_void(w)) w = 150;
-
- if ( is_void(win)) win = 5;
+ if ( is_void(w))             w = 150;
+ if ( is_void(connect)) connect = 0;
+ if ( is_void(win))         win = 5;
  window,win
 // get the line coords with the mouse and convert to cm
   l = mouse(1, 2)(1:4)*100.0;
-  glst = transect( fs, l);
+  glst = transect( fs, l, connect=connect);
   grow, mouse_transects, [l]
   return glst;
 }
 
-func transect( fs, l, lw= ) {
+func transect( fs, l, lw=, connect= ) {
 /* DOCUMENT transect( fs, line, lw=)
 
    fs   fs_all structure where you drew the line.
@@ -92,6 +92,8 @@ func transect( fs, l, lw= ) {
    for (i=1; i<numberof(ss); i++ ) {
      plmk, fs.elevation(*)(glst(llst)(ss(i):ss(i+1)))/100.0, 
            rx(llst)(ss(i):ss(i+1))/100.0,color=clr(i&7)
+     if ( connect ) plg, fs.elevation(*)(glst(llst)(ss(i):ss(i+1)))/100.0, 
+                rx(llst)(ss(i):ss(i+1))/100.0,color=clr(i&7)
    }
  } else {
   plmk, fs.elevation(*)(glst(llst))/100.0, rx(llst)/100.0
