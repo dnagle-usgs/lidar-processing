@@ -509,9 +509,11 @@ func sel_region (q, all_tans=) {
      tyes_arr(1:0) = 1;
      rn_arr = array(int,2,no_t);
      for (i=1;i<=no_t;i++) {
-       rn_indx_start = where(((edb.seconds - soe_day_start) ) == ceil(t_new(1,i)));
-       rn_indx_stop = where(((edb.seconds - soe_day_start) ) == int(t_new(2,i)));
-       if (!is_array(rn_indx_start) || !is_array(rn_indx_stop)) {
+       rnsidx = where(((edb.seconds - soe_day_start) ) >= ceil(t_new(1,i)));
+       if (is_array(rnsidx)) rn_indx_start = rnsidx(1);
+       rnsidx = where(((edb.seconds - soe_day_start) ) <= int(t_new(2,i)));
+       if (is_array(rnsidx)) rn_indx_stop = rnsidx(0);
+       if ((!is_array(rn_indx_start) || !is_array(rn_indx_stop)) || (rn_indx_start > rn_indx_stop)) {
             write, format="Corresponding Rasters for flightline %d not found."+
                           "  Omitting flightline ... \n",i;
 	    rn_start = 0;

@@ -1053,7 +1053,7 @@ func pbd_to_yfile(filename) {
 }
 
    
-func merge_data_pbds(filepath, write_to_file=, merged_filename=, vname=) {
+func merge_data_pbds(filepath, write_to_file=, merged_filename=, vname=, skip=) {
  /*DOCUMENT merge_data_pbds(filename) 
    This function merges the EAARL processed pbd data files in the given filepath
    INPUT:
@@ -1061,9 +1061,11 @@ func merge_data_pbds(filepath, write_to_file=, merged_filename=, vname=) {
    write_to_file : set to 1 if you want to write the merged pbd to file
    merged_filename : the merged filename where the merged pbd file will be written to.
    vname = the variable name for the merged data
+   skip = set to subsample the data sets read in.
    amar nayegandhi 05/29/03
    */
 
+ if (!skip) skip = 1;
  eaarl = [];
  // find all the pbd files in filepath
  s = array(string, 1000);
@@ -1079,9 +1081,10 @@ func merge_data_pbds(filepath, write_to_file=, merged_filename=, vname=) {
     fp = fp + n;
  }
  for (i=1;i<=numberof(fn_all); i++) {
+    write, format="Merging File %d of %d, skip = %d\n",i,numberof(fn_all), skip;
     f = openb(fn_all(i));
     restore, f, vname;
-    grow, eaarl, get_member(f,vname);
+    grow, eaarl, get_member(f,vname)(1:0:skip);
  }   
 
  if (write_to_file) {
@@ -1104,4 +1107,39 @@ func merge_data_pbds(filepath, write_to_file=, merged_filename=, vname=) {
 
 
  return eaarl
+}
+
+func subsample_pbd_data (fname=, skip=) {
+  /* DOCUMENT subsample_pbd_data(fname, skip=)
+    This function subsamples the pbd file at the skip value.
+  //amar nayegandhi 06/15/03
+  */
+  
+  extern initialdir;
+  if (!skip) skip = 10;
+
+  //read pbd file
+  if (!fname) {
+   if (is_void(initialdir)) initialdir = "/data/0/";
+   fname  = get_openfn( initialdir=initialdir, filetype="*.pbd", title="Open PBD Data File" );
+  }
+  
+  fif = openb(fname); 
+  restore, fif, vname, plyname, qname;
+  eaarl = get_member(fif, vname)(1:0:skip);
+  ply = get_member(fif, plyname);
+  q = get_member(fif, qname);
+  close, fif;
+  sp = split_path(fname, 0, ext=1)
+  ofname = sp(1)+swrite(format="-skip%d",skip)+sp(2);
+  fof = createb(ofname);
+  save, fof, vname, plyname, qname;
+  add_variable, fof, -1, vname, structof(eaarl), dimsof(eaarl);
+  get_member(fof, vname) = eaarl;
+  add_variable, fof, -1, qname, structof(q), dimsof(q);
+  get_member(fof, qname) = q;
+  add_variable, fof, -1, plyname, structof(ply), dimsof(ply);
+  get_member(fof, plyname) = ply;
+  close, fof;
+  
 }

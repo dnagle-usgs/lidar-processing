@@ -16,8 +16,8 @@ func batch_multipip_process (pip_var, data_var, fname_var, ptype_var, qname_var,
 	   //tkcmd, swrite(format="exp_send \"%s = depth_all \\r\\n\"",data_var(i));
 	 }
 	 if (ptype_var(i) == 2)  {
-	   veg_all = make_veg(latutm=1, q=*pip_var(i), ext_bad_att=1, ext_bad_veg=1, use_centroid=1);
-	   //veg_all = clean_veg(veg_all);
+	   veg_all = make_veg(latutm=1, q=*pip_var(i), ext_bad_att=1, ext_bad_veg=1, use_centroid=1, use_highelv_echo=1);
+	   veg_all = clean_veg(veg_all);
 	   write, format="processing for region %d complete\n",i;
 	   //tkcmd, swrite(format="exp_send \"%s = veg_all; \\r\\n\"",data_var(i));
 	   //tkcmd, swrite(format="expect \">\"");
