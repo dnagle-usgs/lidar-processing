@@ -16,6 +16,7 @@
 #
 #
 
+
 # Center a window.
 proc center_win { win } {
  set lx [ expr [winfo screenwidth  $win]/2 - [winfo width  $win]/2 ]
@@ -549,6 +550,8 @@ Button $w.show_grid -text "Show\nGrid Name" -command {
    cd $src_path
    exp_send "cd, \"$src_path\"\r"
    exp_send "src_path= \"$src_path\"\r"
+   # send ytk process id to yorick global variable _pid.
+   exp_send "_pid = [pid]\r";
 
    exp_send "#include \"eaarl.i\"\r"
 
