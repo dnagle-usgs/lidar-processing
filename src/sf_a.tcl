@@ -760,12 +760,14 @@ proc archive_save_marked { type } {
 				set mark_count 0
 				set start [expr {int([.slider cget -from])}];
 				set stop  [expr {int([.slider cget -to])}];
-				set of [ open "$tmpdir/gps.gga" "w+" ]
-				for { set i $start } { $i <= $stop } { incr i } {
+				if { [ info exists lat ] } {
+				  set of [ open "$tmpdir/gps.gga" "w+" ]
+				  for { set i $start } { $i <= $stop } { incr i } {
 				      set gt  $imgtime(idx$i);
 						puts $of "GPGGA,$gt.00,$lat(hms$gt),$ns(hms$gt),$lon(hms$gt),$ew(hms$gt),1,$nsat(hms$gt),$pdop(hms$gt),$alt(hms$gt),M,$alt(hms$gt),M";
+				  }
+				  close $of
 				}
-				close $of
 				for { set i $start } { $i <= $stop } { incr i } {
 					if { $mark($i) } {
 						incr mark_count
@@ -1026,7 +1028,7 @@ menu .mb.zoom
 		   set base_dir [ file dirname $f ]
 		   if { [file extension $f ] == ".tar" } {
           puts "Its a tar.  vfs Mounting it..";
-			 open_loader_window "VFS Mounting\n$f.\nThis may take several seconds, even a minute! "
+			 open_loader_window "VFS Mounting\n$f.\nThis may take several seconds, even minutes! "
 			 .loader.ok configure -state disabled
 			 update 
 			 set tf [ vfs::tar::Mount $f tarmount ];
