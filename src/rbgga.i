@@ -565,7 +565,7 @@ func plot_no_raster_fltlines (gga, edb) {
 
   sod_edb = edb.seconds - soe_day_start;
   
-  // find where the diff in sod_edb is greater than 1 second
+  // find where the diff in sod_edb is greater than 5 second
   sod_dif = sod_edb(dif);
   indx = where((sod_dif > 5) & (sod_dif < 100000));
   if (is_array(indx)) {
@@ -574,9 +574,13 @@ func plot_no_raster_fltlines (gga, edb) {
 
     for (i = 1; i <= numberof(f_norast); i++) {
       indx1 = where((gga.sod >= f_norast(i)) & (gga.sod <= l_norast(i)));
-      show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1), skip = 0, color = "red", marker=1;
+      show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1),  color = "red";
     } 
   }
+  // also plot over region before the system is initially started.
+  indx1 = where(gga.sod < sod_edb(1));
+  show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1),  color = "red";
+
 
 }
 

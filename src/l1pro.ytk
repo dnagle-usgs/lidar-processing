@@ -187,7 +187,7 @@ ComboBox .l1wid.bf4.1.d -text "Define Region using..." -width 22 -values "Rubber
        	tk_messageBox  -icon info \
         -message "Drag a Rectangular Box in Window 6 to define region." \
         -type ok -title "Message"
-       exp_send "q = gga_win_sel(2,latutm=1);\r"
+       exp_send "q = gga_win_sel(2);\r"
        expect ">"
     }
     if {$defr == 1} {
@@ -510,8 +510,8 @@ pack .l1wid.bf45.p .l1wid.bf45.sc  -side top -fill x -expand 1
 pack .l1wid.bf5 .l1wid.bf45  -side top -pady 3 
 
 proc send_latlon_to_l1pro {minlon maxlon minlat maxlat utm} {
-   global mnlon mxlon mnlat mxlat 
-   .l1widc.utm.1 setvalue @$utm
+   global mnlon mxlon mnlat mxlat utm
+   # .l1widc.utm.1 setvalue @$utm
    set mnlon $minlon
    set mxlon $maxlon
    set mnlat $minlat
