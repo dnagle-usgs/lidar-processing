@@ -286,7 +286,7 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fsmode=, wfs=) {
        } else q = [];
     }
    }
-   if (!(is_array(q))) break;
+   if (!(is_array(q))) continue;
       
     for (j = 1; j <= ngridx; j++) {
       indx = [];
