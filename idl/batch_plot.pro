@@ -1,5 +1,5 @@
 pro batch_plot, path, filename=filename, only_rcf=only_rcf, min_z_limit=min_z_limit, max_z_limit=max_z_limit, $
-		print_all_to = print_all_to, only_no_rcf = only_no_rcf
+		print_all_to = print_all_to, only_no_rcf = only_no_rcf, rcf_meta= rcf_meta
 
 ; this procedure batch plots all xyz data points and saves them as jpegs.
 ; amar nayegandhi 12/13/02.
@@ -45,10 +45,18 @@ for i = 0, n_elements(fn_arr)-1 do begin
        dpos = strpos(spp(n_elements(spp)-1), ".")
        date = strmid(spp(n_elements(spp)-1), 0, dpos)
    endif else begin
+       if keyword_set(rcf_meta) then begin
+         rcf_params = spp(n_elements(spp)-5)+spp(n_elements(spp)-4)+spp(n_elements(spp)-3)
+       endif
        date = spp(n_elements(spp)-2)
    endelse
 
-   title = "Bathymetry Plot. Date: "+date+" Tile Location: "+spp(1)+" "+spp(2)
+   if keyword_set(rcf_meta) then begin
+     title = "Bathymetry Plot. Date: "+date+" Tile Location: "+spp(1)+" "+spp(2) + "RCF: "+rcf_params
+   endif else begin
+     title = "Bathymetry Plot. Date: "+date+" Tile Location: "+spp(1)+" "+spp(2)
+   endelse
+     
 
    data_arr = read_yfile(path, fname_arr=fname_arr)
 
