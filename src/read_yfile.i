@@ -607,7 +607,7 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
   return data;
 }
   
-func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, delimit=, zclip=) {
+func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, delimit=, zclip=, pstruc=) {
   /* DOCUMENT this function writes out an ascii file containing x,y,z,intensity information.
     amar nayegandhi 04/25/02
     Keywords:
@@ -642,58 +642,44 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
 
   /* open file to read/write (it will overwrite any previous file with same name) */
   f = open(fn, "w");
-  //if (numberof(data_arr) != numberof(data_arr.north)) {
-     if (type == 1) { //convert FS_ALL to FS
-       /*data_new = array(FS, numberof(data_arr)*120);
-       rindx = where(data_arr.raster >= 0);
-       if (is_array(rindx)) {
-	data_new.north = data_arr.north(rindx);
-	data_new.east = data_arr.east(rindx);
-	data_new.elevation = data_arr.elevation(rindx);
-	data_new.mnorth = data_arr.mnorth(rindx);
-	data_new.meast = data_arr.meast(rindx);
-	data_new.melevation = data_arr.melevation(rindx);
-	data_new.intensity = data_arr.intensity(rindx);
-	data_new.rn = data_arr.raster(rindx);
-
-        n_rindx = where(data_new.north != 0);
-        if (is_array(n_rindx)) {
-          data_arr = data_new(n_rindx);
-        }
-       }
-     */
+  if (numberof(data_arr) != numberof(data_arr.north)) {
+     if (pstruc == FS) { //convert FS_ALL to FS
         data_arr = clean_fs(data_arr);
      }
-     if (type == 2) { //Convert GEOALL to GEO 
-       //data_arr = geoall_to_geo(data_arr);
+     if (pstruc == GEO) { //Convert GEOALL to GEO 
        data_arr = clean_bathy(data_arr);
      }
-     if ((type == 3)) {  //clean veg_all_ and convert to veg__
-       //data_new = veg_all__to_veg__(data_arr);
-       data_arr = clean_veg(data_arr, type=type);
+     if (pstruc == VEG__) {  //clean veg_all_ and convert to veg__
+       data_arr = clean_veg(data_arr);
      }
-     if ((type == 5)) {  //convert VEG_ALL to VEG_
-       data_arr = clean_veg(data_arr, type=type);
-     }
-  //}
+  }
 
   totw = 0;
   num_valid = numberof(data_arr.north);
   xx = 0;
   if (intensity) {
-    a = structof(data_arr);
     if (type == 1) {
-           if (a == GEO) data_intensity = data_arr.first_peak;
-      else if (a == VEG__) data_intensity = data_arr.fint;
-////      data_intensity = data_arr.intensity;
+      if (pstruc == FS) {
+        data_intensity = data_arr.intensity;
+      }
+      if (pstruc == GEO) {
+        data_intensity = data_arr.first_peak;
+      }
+      if (pstruc == VEG__) {
+        data_intensity = data_arr.fint;
+      }
     }
-    if (type == 2) {
-      data_intensity = data_arr.bottom_peak;
+    if ((type == 2) || (type == 4)) {
+      if (pstruc == GEO) {
+        data_intensity = data_arr.bottom_peak;
+      }
     }
-    if (type == 3) {
-      data_intensity = data_arr.lint;
+    if ((type == 3) || (type == 5)) {
+      if (pstruc == VEG__) {
+        data_intensity = data_arr.lint;
+      }
     }
-   }
+  }
    if (!indx && !intensity) {
      write,f, "UTMX(m), UTMY(m), Z(m)";
    }

@@ -351,6 +351,7 @@ menu .l1wid.mb.options
 	    #.l1asc.cmd.ok configure -state disabled
 
         set ptype [.l1wid.bf4.1.p getvalue]
+  	set dtype [.l1wid.bf45.p.5 getvalue]
         set var_no [.l1wid.bf45.p.15 getvalue]
         set var_type [lindex $varlist $var_no]
 	    if {$zclip == 0} { set zclips  "\[\]" } 
@@ -367,19 +368,28 @@ menu .l1wid.mb.options
 	   
 
  	    if {$ptype == 0} {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips; \r";
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=FS; \r";
 	       expect ">"
 	    }
  	    if {$ptype == 1} {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=2, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips; \r";
+	      if {$dtype == 0} {
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=GEO; \r";
+	      } else {
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=2, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=GEO; \r";
+	      }
 	       expect ">"
 	    } 
  	    if {$ptype == 2} {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=3, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips; \r";
-	       expect ">"
+	      if {$dtype == 0} {
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=VEG__; \r";
+	      } else {
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=3, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=VEG__; \r";
+	      } 
+
+	      expect ">"
 	    }
  	    if {$ptype == 3} {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips; \r";
+ 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=CVEG_ALL; \r";
 	       expect ">"
 	    }
 	    #destroy .l1asc
