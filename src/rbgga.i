@@ -314,7 +314,7 @@ properly to the zoom buttons.
    /* plot a window over selected region */
    a_x=[minlon, maxlon, maxlon, minlon, minlon];
    a_y=[minlat, minlat, maxlat, maxlat, minlat];
-   plg, a_y, a_x;
+   plg, a_y, a_x, color=color;
  }
  if (utm == 1) {
      minll = utm2ll(minlat, minlon, ZoneNumber(1));
