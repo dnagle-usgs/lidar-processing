@@ -19,29 +19,7 @@
 
 *********************************************************************/
 
-
-
- func compute_aoi( r ) {
-////// extern aoi, hyp; 
- n = numberof( r );
- hyp = array( float, 120, n ); 
- aoi = array( float, 120, n ); 
- for (i=1; i<n; i++ ) { 
-    a = b = c = d = array( double, 120 );
-    de = r(i).melevation - r(i).elevation;
-    lst = where( (de > 100) & (de < 90000 ));
-    if ( numberof(lst) ) {
-      a(lst) = (de(lst))^2;
-      b(lst) = double(r(i).meast(lst)      - r(i).east(lst))^2;
-      c(lst) = double(r(i).mnorth(lst)     - r(i).north(lst))^2;
-      hyp(lst,i) = sqrt( a(lst) + b(lst) + c(lst));
-
-      aoi(lst,i) = acos( (r(i).melevation(lst) - 
-                     r(i).elevation(lst)) / hyp(lst,i) )*rad2deg; 
-    }
- }
- return aoi;
-}
+write,"$Id$"
 
 
 func correct_fs( r, aoi= ) {
@@ -68,6 +46,30 @@ func correct_fs( r, aoi= ) {
        rtn(i).elevation( sr) = r(i).elevation( sr) + aoi( sr, i) * 0.279269;
   }
  return rtn;
+}
+
+
+
+ func compute_aoi( r ) {
+////// extern aoi, hyp; 
+ n = numberof( r );
+ hyp = array( float, 120, n ); 
+ aoi = array( float, 120, n ); 
+ for (i=1; i<n; i++ ) { 
+    a = b = c = d = array( double, 120 );
+    de = r(i).melevation - r(i).elevation;
+    lst = where( (de > 100) & (de < 90000 ));
+    if ( numberof(lst) ) {
+      a(lst) = (de(lst))^2;
+      b(lst) = double(r(i).meast(lst)      - r(i).east(lst))^2;
+      c(lst) = double(r(i).mnorth(lst)     - r(i).north(lst))^2;
+      hyp(lst,i) = sqrt( a(lst) + b(lst) + c(lst));
+
+      aoi(lst,i) = acos( (r(i).melevation(lst) - 
+                     r(i).elevation(lst)) / hyp(lst,i) )*rad2deg; 
+    }
+ }
+ return aoi;
 }
 
 
