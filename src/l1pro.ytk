@@ -2007,6 +2007,7 @@ ComboBox .l1wid.bf45.r.7 -text " Filter tools..." -width 16\
    	 -values { \
 		Keep \
 	 	Remove \
+		Replace \
 	  	RCF \
 		Re-Process \
 		} \
@@ -2021,9 +2022,12 @@ ComboBox .l1wid.bf45.r.7 -text " Filter tools..." -width 16\
 		removing_proc
              }
              if {$self == 2} {
-    		rcf_region
+		replace_proc
              }
              if {$self == 3} {
+    		rcf_region
+             }
+             if {$self == 4} {
              }
              if {$self == -1} {
 	        error "Please Define Region."
@@ -2048,8 +2052,9 @@ proc removing_proc {} {
 	 retrieve_plot_settings [expr ($curidx+1)]
        }
 
-       set curvar [.l1wid.bf45.p.15 getvalue]
-       .rem.05.varlist setvalue @$curvar
+       set curidx [.l1wid.bf45.p.15 getvalue]
+       set curvar [lindex $varlist $curidx]
+       .rem.05.varlist setvalue @$curidx
 
        ComboBox .rem.1 -text "Remove points using..." -width 16\
    	 -values { \
@@ -2223,6 +2228,137 @@ proc keep_proc {} {
       pack .sel.2 .sel.3 -side left -padx 5 -pady 5
    }
 
+proc replace_proc {} {
+       global varlist curvar
+       destroy .rep
+       toplevel .rep
+       wm title .rep "Replace Points Using..."
+       frame .rep.05
+       frame .rep.005
+       frame .rep.15
+
+       set sameinput 0
+       Label .rep.05.varname -text "Input Variable:"
+       ComboBox .rep.05.varlist  -values \
+  	$varlist \
+	-helptext "Select any one of the following variables" \
+	-editable 0 \
+        -modifycmd { 
+         global outvar varlist curvar
+         set curvar [lindex $varlist [.rep.05.varlist getvalue]]
+	 set curidx [.rep.05.varlist getvalue]
+	 .l1wid.bf45.p.15 setvalue @$curidx
+	 retrieve_plot_settings [expr ($curidx+1)]
+       }
+
+       set curidx [.l1wid.bf45.p.15 getvalue]
+       set curvar [lindex $varlist $curidx]
+       .rep.05.varlist setvalue @$curidx
+
+       Label .rep.005.varname -text "Original Data Variable:"
+       ComboBox .rep.005.varlist  -values \
+  	$varlist \
+	-helptext "This variable should contain the original data that will be refiltered" \
+	-editable 0 \
+        -modifycmd { 
+         global outvar varlist origvar
+         set origvar [lindex $varlist [.rep.005.varlist getvalue]]
+	 set origidx [.rep.005.varlist getvalue]
+	 .l1wid.bf45.p.15 setvalue @$origidx
+	 retrieve_plot_settings [expr ($origidx+1)]
+       }
+       set origidx [.l1wid.bf45.p.15 getvalue]
+       set origvar [lindex $varlist $curidx]
+       .rep.005.varlist setvalue @$origidx
+
+       ComboBox .rep.1 -text "Select points to replace using..." -width 28 \
+   	 -values { \
+	 	Rubberband\ Box \
+	  	Points\ in\ Polygon \
+		Window\ Limits \
+		} \
+	 -helptext "Select points to replace using any of the following methods:\n Rubberband Box\n Points in Polygon\n Window Limits.\nSelected points from the original data array will be written to variable \"workdata\"" -editable 0 \
+	-modifycmd {
+	   set curidx [.rep.05.varlist getvalue]
+           set curvar [lindex $varlist $curidx]
+    	   set defr [.rep.1 getvalue]
+    	   if {$defr == 0} {
+       		set result [tk_messageBox  -icon info \
+        	-message "Drag a Rectangular Box in Window $win_no to define region." \
+        	-type okcancel -title "Message"]
+        	if {$result == "ok"} {
+	           exp_send "$keep_var = sel_data_rgn($curvar, GEO, mode=2, win=$win_no, exclude=1, make_workdata=1, origdata=$origvar)\r"
+         	   expect ">"
+        	}
+    	   }
+    	   if {$defr == 1} {
+       	        set result [tk_messageBox  -icon info \
+        	-message "Draw a Polygon in Window $_map(window) to define a region using a series of left mouse clicks.  To complete the polygon, middle mouse click OR <Ctrl> and left mouse click." \
+        	-type okcancel -title "Message"]
+        	if {$result == "ok"} {
+	           exp_send "$keep_var = sel_data_rgn($curvar, GEO, mode=3, win=$win_no, exclude=1, make_workdata=1, origdata=$origvar)\r"
+         	   expect ">"
+        	}
+    	   }
+    	   if {$defr == 2} {
+		exp_send "$keep_var = sel_data_rgn($curvar, GEO, mode=1, win=$win_no, exclude=1, make_workdata=1)\r"
+	   }
+	}
+
+      Button .rep.type -text "Filter selected points" -width 15 -bd 5 \
+	-command {
+	     global curvar
+	     rcf_region
+    	     .rcf.2.varlist setvalue @4
+	     set curvar [.rcf.2.varlist getvalue]
+	     set outvar rcf_workdata
+	}
+
+
+      LabelEntry .rep.15.1 -relief sunken -label "Output Variable:" -helptext "Define output variable" \
+	-textvariable keep_var -text "finaldata"
+      checkbutton .rep.15.2 -text "Same as input variable" -variable sameinput \
+	-command { 
+		if {$sameinput == 1} {
+		  set keep_var $curvar
+	        }
+  	}
+		  
+
+       Button .rep.2 -width 8 -text "Replace..." -bd 5 \
+       -command {
+         global varlist outvar reps keep_var curvar origvar
+	 set selection [tk_messageBox -icon question \
+	    -message "Append array $outvar to $keep_var?" \
+            -type yesno -title "Warning" ]
+     	 if {$selection == "yes"} {
+           exp_send "$keep_var = grow($keep_var,$outvar);\r"
+           expect ">" 
+	 }
+       } 
+       Button .rep.4 -width 10 -text "Do Not Replace..." -bd 5 \
+       -command {
+         global varlist outvar reps keep_var curvar origvar
+	 set selection [tk_messageBox -icon question \
+	    -message "Append ORIGINAL cropped array croppeddata to $keep_var?" \
+            -type yesno -title "Warning" ]
+     	 if {$selection == "yes"} {
+           exp_send "$keepvar = grow($keepvar,croppeddata);\r"
+           expect ">" 
+	 }
+       } 
+      Button .rep.3 -width 8 -text "Cancel" -command {
+	 destroy .rep
+      }
+
+     
+      pack .rep.05.varname .rep.05.varlist -side left -padx 5
+      pack .rep.005.varname .rep.005.varlist -side left -padx 5
+      pack .rep.15.1 .rep.15.2 -side top -pady 1
+      pack .rep.05 .rep.005 .rep.15 .rep.1 .rep.type  -side top -pady 10
+      pack .rep.2 .rep.4 .rep.3 -side left -padx 5 -pady 5
+
+}
 Button .l1wid.bf45.r.5 -text "Append2Tile" -command {
     set curvar  [lindex $varlist [.l1wid.bf45.p.15 getvalue]]
     set selection  [tk_messageBox  -icon question \

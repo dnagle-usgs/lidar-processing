@@ -4,7 +4,7 @@
    Orginal by Amar Nayegandhi
    */
 
-func sel_data_rgn(data, type, mode=,win=, exclude=, rgn=) {
+func sel_data_rgn(data, type, mode=,win=, exclude=, rgn=, make_workdata=, origdata=) {
   /* DOCUMENT sel_data_rgn(data,type, mode=, win=, exclude=, rgn=)
   this function selects a region (limits(), rubberband, pip) and returns data within that region.
    Don't use this function for batch.  Use sel_rgn_from_datatiles instead.
@@ -15,10 +15,12 @@ func sel_data_rgn(data, type, mode=,win=, exclude=, rgn=) {
   // if mode = 4, use rgn= to define a rubberband box.
   // type = type of data (R, FS, GEO, VEG_, etc.)
   // set exclude =1 if you want to exclude the selected region and return the rest of the data.
+  // make_workdata = 1 if you want to write a workdata array that contains the selected region and the output array contains the rest of the data (must be used with exclude=1).
+  // origdata = this should be the name of the original data array from which workdata will be extracted.  This is useful when re-filtering a certain section of the filtered data set.  Orig data should be the non-filtered data array which will be refiltered.  
   //amar nayegandhi 11/26/02.
  */
 
-  extern q;
+  extern q, workdata, croppeddata;
   data = test_and_clean( data );
   if (is_void(data)) return [];
   if (is_void(win)) win = 5;
@@ -61,6 +63,14 @@ func sel_data_rgn(data, type, mode=,win=, exclude=, rgn=) {
     //write, numberof(indx);
 
     indx = q(indx);
+
+    if (!is_void(origdata)) {
+       origq = where((origdata.east >= rgn(1)*100.)   & 
+               (origdata.east <= rgn(2)*100.)) ;
+       origindx = where(((origdata.north(origq) >= rgn(3)*100) & 
+               (origdata.north(origq) <= rgn(4)*100)));
+       origindx = origq(origindx);
+    }
   }
      
 
@@ -76,8 +86,23 @@ func sel_data_rgn(data, type, mode=,win=, exclude=, rgn=) {
      if (!is_array(box_pts)) return [];
      poly_pts = testPoly(ply*100., data.east(box_pts), data.north(box_pts));
      indx = box_pts(poly_pts);
+     if (!is_void(origdata)) {
+        orig_box_pts = ptsInBox(box*100., origdata.east, origdata.north);
+        if (!is_array(orig_box_pts)) return [];
+        orig_poly_pts = testPoly(ply*100., origdata.east(orig_box_pts), origdata.north(orig_box_pts));
+        origindx = orig_box_pts(orig_poly_pts);
+     }
+	
  }
  if (exclude) {
+     if (make_workdata) {
+	if (!is_void(origdata)) {
+	   workdata = origdata(origindx);
+	   croppeddata = data(indx);
+	} else {
+           workdata = data(indx);
+ 	}
+     }
      iindx = array(int,numberof(data.rn));
      if (is_array(indx)) iindx(indx) = 1;
      indx = where(iindx == 0);
@@ -446,3 +471,4 @@ return geoarr;
 
 }
  
+
