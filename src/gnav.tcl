@@ -1,11 +1,24 @@
 #
 # $Id$
 #
-global state
-set state active
+
+# set plat for different platforms ex. Unix, Windows
+global plat
+set plat $tcl_platform(platform)
+
 proc createFix {} {
+global plat
+
 scrollbar .ys -command ".t yview"
-text .t -width 80 -height 30 -wrap word -yscrollcommand ".ys set"
+
+if { ($plat) == "windows" } {
+set sys ansifixed
+text .t -font "$sys" \
+	-width 80 -height 30 -wrap none -yscrollcommand ".ys set"
+} else {
+text .t -width 80 -height 30 -wrap none -yscrollcommand ".ys set"
+}
+
 pack .t .ys -side left -fill y
 }
 
@@ -28,9 +41,9 @@ menu .menubar.fix.antena
 .menubar.fix.antena add command -label "NIIIX" -command niiix -underline 0
 .menubar.fix.antena add cascade -label "USGS" -menu .menubar.fix.antena.m
 menu .menubar.fix.antena.m
-.menubar.fix.antena.m add command -label "Amar" -command usgsm1
-.menubar.fix.antena.m add command -label "BJ" -command usgsm2
-
+.menubar.fix.antena.m add command -label "ASH 7009936 a" -command usgs1
+.menubar.fix.antena.m add command -label "ASH 7009936 b" -command usgs2
+.menubar.fix.antena.m add command -label "TRM 33429.00 -GP p" -command usgs3
 . configure -menu .menubar 
 }
 
@@ -61,7 +74,6 @@ proc fname proc {
  }
 
 proc fix {} {
-# state of the text widget
 # j is a count variable that represents the number of empty lines
 global j
 set j 11
@@ -84,35 +96,47 @@ incr j
 
 # delete blank lines
 .t delete 11.0 $j.0
-
-# don't allow further editing of the file
-#.t configure -state disabled
-#set state disabled
 }
 
 proc hgr58 {} {
-# delete text"Some Generic Rcv" so you can add the antena type later
 .t delete 6.20 6.36
-.t insert 6.20 "700718B         "
+.t insert 6.20 "ASH UZ 12       "
+.t delete 7.20 7.36
+.t insert 7.20 "ASH 700718B     "
 }
 
 proc niiix {} {
 .t delete 6.20 6.36
-.t insert 6.20 "700228D         "
+.t insert 6.20 "ASH UZ 12       "
+.t delete 7.20 7.36
+.t insert 7.20 "ASH 700228D     "
 }
 
-proc usgsm1 {} {
+proc usgs1 {} {
 .t delete 6.20 6.36
-.t insert 6.20 "7009936         "
+.t insert 6.20 "ASH UZ 12       "
+.t delete 7.20 7.36
+.t insert 7.20 "ASH 7009936     "
 .t delete 9.8 9.15
 .t insert 9.8 " 2.0000"
 }
 
-proc usgsm2 {} {
+proc usgs2 {} {
 .t delete 6.20 6.36
-.t insert 6.20 "7009936         "
+.t insert 6.20 "ASH UZ 12       "
+.t delete 7.20 7.36
+.t insert 7.20 "ASH 7009936     "
 .t delete 9.8  9.15
 .t insert 9.8 " 1.2400"
+}
+
+proc usgs3 {} { 
+.t delete 6.20 6.36
+.t insert 6.20 "TRM 4700        "
+.t delete 7.20 7.36
+.t insert 7.20 "TRM 33429.00 -GP"
+.t delete 9.8  9.15
+.t insert 9.8 " 1.4600"
 }
 
 eval destroy [winfo child .]
