@@ -23,12 +23,13 @@ struct WAVE_DATA {
 
 
 
-func process_a_segment {
+func process_for_dws(q) {
  extern fs_all;
   rr = 19.8;
   n = 360;
   d =  int((n/rr)*.5)+1;
-  q = gga_win_sel(2, win=6);
+  if ( is_void(q) )
+     q = gga_win_sel(2, win=6);
   p = int(median(q));
   q = indgen(p-2000:p+1000);	// generate a shorter list of gga index values
   tc = int(gga(p).sod);
@@ -52,7 +53,8 @@ the 2 dimensional directional wave spectrum.
  extern wave_data;
 
  if ( is_void(fs_all) ) {
-   process_a_segment;
+   process_a_segment_for_dws;
+   return;
  }
 
 wave_data.hf = wave_data.hc = span(0.000001,0.000001,256) (-:1:256,);

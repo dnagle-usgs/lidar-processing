@@ -1015,6 +1015,7 @@ set l1pro_data(processing_mode)  {\
 		  Submerged\ Topo\
 		  Topo\ Under\ Veg \
 		  Multi\ Peak\ Veg \
+		  Directional\ Wave\ Spectra \
 		}
 
 proc multi_pip_sel {junk} {
@@ -1191,7 +1192,7 @@ proc multi_pip_sel {junk} {
   #    expect ">"
 }
    
-ComboBox .l1wid.bf4.1.p -text "Process For..." -width 16 \
+ComboBox .l1wid.bf4.1.p -text "Process For..." -width 20 \
 	-helptext "Process Data for any of the following" \
 	-editable 0 \
 	-values $l1pro_data(processing_mode)
@@ -1636,7 +1637,11 @@ LabelFrame .l1wid.bf45.sc.sk -relief groove -borderwidth 3 -text "Skip:"
 	    exp_send "cveg_all = make_veg(latutm=1, q=q, use_peak=$usecentroid, multi_peaks=1);\r"
 	    expect ">"
 	   .l1wid.bf45.p.15 setvalue @3
- 	 }
+ 	 } 
+         if { $ptype == 4 }  {
+           exp_send "process_for_dws,q\r"
+	   expect ">"
+         }
               
     }
 
