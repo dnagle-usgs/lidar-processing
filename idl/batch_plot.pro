@@ -1,4 +1,4 @@
-pro batch_plot, path, filename=filename, only_rcf=only_rcf, min_z=min_z, max_z=max_z, $
+pro batch_plot, path, filename=filename, only_rcf=only_rcf, min_z_limit=min_z_limit, max_z_limit=max_z_limit, $
 		print_all_to = print_all_to
 
 ; this procedure batch plots all xyz data points and saves them as jpegs.
@@ -51,7 +51,7 @@ for i = 0, n_elements(fn_arr)-1 do begin
    tfname = path+(strsplit(fname_arr, '.', /extract))[0]+".tif"
    
    
-   plot_xyz_bath, data_arr, min_z=min_z, max_z=max_z, $
+   plot_xyz_bath, data_arr, min_z_limit=min_z_limit, max_z_limit=max_z_limit, $
 	plot_range=prange, title=title, win = win, bathy=1, make_tiff=tfname
    
 
@@ -59,6 +59,7 @@ for i = 0, n_elements(fn_arr)-1 do begin
         spawn, 'lp -d'+print_all_to+' '+tfname
    endif
 
+   ptr_free, data_arr
    
 endfor
 

@@ -1,4 +1,5 @@
 pro plot_xyz_bath, data_arr, min_z=min_z, max_z=max_z, $
+	min_z_limit=min_z_limit, max_z_limit = max_z_limit, $
 	plot_range=plot_range, title=title, win = win, bathy=bathy, make_tiff=make_tiff
 
 ;this procedure plots xyz bathymetry data
@@ -41,6 +42,9 @@ if ((not keyword_set(min_z)) or (not keyword_set(max_z))) then begin
  max_z = max_z_all
 
 endif
+
+if min_z < min_z_limit then min_z = min_z_limit
+if max_z > max_z_limit then max_z = max_z_limit
 
 if not keyword_set(win) then win = 0
 
@@ -91,9 +95,12 @@ for i = 0, n_arr-1 do begin
     indx = where( (bathy gt min_z) and (bathy lt max_z) )
    ;indx = where((((*data_arr[i]).elevation[0])/100. ne 0) and ((((*data_arr[i]).elevation[0])) ne -10000))
    ;indx = where(((*data_arr[i]).elevation[0])/100. ne 0)
-   color_plot = bytscl(((*data_arr[i]).elevation[0]+(*data_arr[i]).depth[0])[indx]/100.,$
-			min=min_z,max=max_z)
-   plots, [((*data_arr[i]).east[0])[indx]/100.], [((*data_arr[i]).north[0])[indx]/100.], color=color_plot, noclip=0
+   if (indx(0) ne -1) then begin
+     color_plot = bytscl(((*data_arr[i]).elevation[0]+(*data_arr[i]).depth[0])[indx]/100.,$
+  			min=min_z,max=max_z)
+     plots, [((*data_arr[i]).east[0])[indx]/100.], [((*data_arr[i]).north[0])[indx]/100.], $
+			color=color_plot, noclip=0
+   endif
 endfor
 
 !p.region=[0,0,1,1]
