@@ -1,6 +1,10 @@
-func write_gga_ascii (ofname, utm=, uniq=) {
+func write_gga_ascii (ofname, utm=, uniq=, pnav=) {
    extern gga;
-   gga = rbgga();
+   if (pnav) {
+	gga = rbpnav();
+  } else {
+ 	gga = rbgga();
+  }
    f = open(ofname, "w");
    if (utm) {
      write, f, "Easting, Northing\n"
