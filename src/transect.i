@@ -107,7 +107,7 @@ See also: transect, _transect_history
   if ( recall > 0 ) recall = -recall;
   l = _transect_history(, recall);
  }
-  glst = transect( fs, l, connect=connect, color=color,xfma=xfma, rcf_parms=rcf_parms,rtn=rtn );
+  glst = transect( fs, l, connect=connect, color=color,xfma=xfma, rcf_parms=rcf_parms,rtn=rtn, owin=owin );
   return glst;
 }
 
