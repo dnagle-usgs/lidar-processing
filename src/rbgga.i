@@ -42,6 +42,16 @@ Other:
   it must be verified and converted by the gga2bin.c. program.  
 
   $Log$
+  Revision 1.18  2002/10/01 19:51:00  amar
+  l1pro.ytk:  Added place-holder 'Read Data File...' in GUI menu.
+  	    Added help messages boxes for selecting regions using PIP and rubberband box.  Also added a 'Plot region' in the 'Enter Rectangular Coordinate' GUI to plot the region defined on window, 6.
+
+  rbgga.i :  Minor change in func gga_win_sel to ensure validity of array q.
+
+  read_yfile.i :  Modified data structure for topography so that it includes the mirror north, east and elevation data.
+
+  surface_topo.i : Modified function write_topo to include the mirror xyz data.
+
   Revision 1.17  2002/09/26 13:44:42  amar
   geo_bath.i : renamed function display_bath to make_fs_bath.  This function makes the bathymetry structure GEOALL.  Deleted function write_topo (a modified version of it can be found in surface_topo.i).  Other changes made to return an array instead of automatically writing to a file.  Added option to write bathy data to a file.
   l1pro.ytk: This GUI interacts with yorick to select regions on the flight track map and process the data optionally for sub-aerial topography or bathymetry.  The GUI also allows you to plot an xyz image in a yorick window.  Added scale bars for cmin, cmax, and msize.
@@ -385,9 +395,15 @@ properly to the zoom buttons.
  }
 
  q = where( gga.lon > minlon );
- qq = where( gga.lon(q) < maxlon );  q = q(qq);
- qq = where( gga.lat(q) > minlat ); q = q(qq);
- qq = where( gga.lat(q) < maxlat ); q = q(qq);
+ if (is_array(q)) {
+   qq = where( gga.lon(q) < maxlon );  q = q(qq);
+ }
+ if (is_array(q)) {
+   qq = where( gga.lat(q) > minlat ); q = q(qq);
+ }
+ if (is_array(q)) {
+   qq = where( gga.lat(q) < maxlat ); q = q(qq);
+ }
  write,format="%d GGA records found\n", numberof(q);
  if ( (show != 0) && (show != 2)  ) {
    if ( is_void( msize ) ) msize = 0.1;

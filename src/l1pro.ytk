@@ -35,6 +35,10 @@ menu .l1wid.mb.load
 menu .l1wid.mb.options
 .l1wid.mb   add cascade -label File -underline 0 -menu .l1wid.mb.file
 
+.l1wid.mb.file add command -label "Read Data File... " -underline 5 -command {
+  }
+	
+
 .l1wid.mb.file  add command -label "Read command file .. " -underline 0 
 
 .l1wid.mb.file add command -label "Save command file .. " -underline 0
@@ -90,10 +94,16 @@ ComboBox .l1wid.bf4.1.d -text "Define Region using..." -width 22 -values "Rubber
     set defr [.l1wid.bf4.1.d getvalue]
     puts $defr
     if {$defr == 0} {
+       	tk_messageBox  -icon info \
+        -message "Drag a Rectangular Box in Window 6 to define region." \
+        -type ok -title "Message"
        exp_send "q = gga_win_sel(2,latutm=1);\r"
        expect ">"
     }
     if {$defr == 1} {
+       	tk_messageBox  -icon info \
+        -message "Draw a Polygon in Window 6 to define a region using a series of left mouse clicks.  To complete the polygon, hit <Ctrl> and left mouse click." \
+        -type ok -title "Message"
        exp_send "q = gga_pip_sel(1);\r"
        expect ">"
     }
@@ -129,13 +139,20 @@ ComboBox .l1wid.bf4.1.d -text "Define Region using..." -width 22 -values "Rubber
           set utm [.l1widc.utm.1 getvalue]
 	  destroy .l1widc
 	}
+	Button .l1widc.1.box -text "Plot Region" -width 7 -command {
+	   exp_send "a_x=\[$mnlon, $mxlon, $mxlon, $mnlon, $mnlon\];\r"
+	   exp_send "a_y=\[$mnlat, $mnlat, $mxlat, $mxlat, $mnlat\];\r"
+	   exp_send "plg, a_y, a_x;\r";
+	}
+
+	  
 	Button .l1widc.1.cancel -text "Cancel" -width 5 -command {
 	  destroy .l1widc
 	}
 	pack .l1widc.utm.1 .l1widc.utm.2 -side left 
 	pack .l1widc.lon.mn .l1widc.lon.mx -side left -padx 4
 	pack .l1widc.utm .l1widc.lat1 .l1widc.lon .l1widc.lat2 -side top -pady 5
-	pack .l1widc.1.ok .l1widc.1.cancel -side left
+	pack .l1widc.1.ok .l1widc.1.box .l1widc.1.cancel -side left
 	pack .l1widc.1 -side top
 
 

@@ -414,7 +414,7 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
       }
     }
 
-   /* if ext_bad_att is set, find all points having elevation = ht 
+   /* if ext_bad_att is set, find all points having elevation = 70% of ht 
        of airplane 
    */
    if (is_array(fs_all)) {
@@ -521,12 +521,12 @@ fn = opath+ofname;
 /* open file to read/write (it will overwrite any previous file with same name) */
 f = open(fn, "w+b");
 
-nwpr = long(4);
+nwpr = long(7);
 
-if (is_void(type)) type = 2;
+if (is_void(type)) type = 3;
 
 rec = array(long, 4);
-/* the first word in the file will decide the endian system. */
+/* the first word in the file will define the endian system. */
 rec(1) = 0x0000ffff;
 /* the second word defines the type of output file */
 rec(2) = type;
@@ -537,7 +537,7 @@ rec(4) = 0;
 
 _write, f, 0, rec;
 
-byt_pos = 16; /* 4bytes , 4words */
+byt_pos = 16; /* 4bytes , 4words  for header position*/
 num_rec = 0;
 
 
@@ -549,6 +549,12 @@ for (i=1;i<len;i++) {
   num_valid = numberof(indx);
   for (j=1;j<=num_valid;j++) {
      _write, f, byt_pos, fs_all(i).raster(indx(j));
+     byt_pos = byt_pos + 4;
+     _write, f, byt_pos, fs_all(i).mnorth(indx(j));
+     byt_pos = byt_pos + 4;
+     _write, f, byt_pos, fs_all(i).meast(indx(j));
+     byt_pos = byt_pos + 4;
+     _write, f, byt_pos, fs_all(i).melevation(indx(j));
      byt_pos = byt_pos + 4;
      _write, f, byt_pos, fs_all(i).north(indx(j));
      byt_pos = byt_pos + 4;

@@ -18,10 +18,32 @@ struct GEO {
      short depth;
      }
 
+struct FS {
+     long rn;
+     long mnorth;
+     long meast;
+     long melevation;
+     long north;
+     long east;
+     long elevation;
+     }
+
 func read_yfile (path, fname_arr=) {
 
-/* this function reads an EAARL yorick-written binary file.
+/* DOCUMENT read_yfile(path, fname_arr=) 
+This function reads an EAARL yorick-written binary file.
    amar nayegandhi 04/15/2002.
+   Input parameters:
+   path 	- Path name where the file(s) are located. Don't forget the '/' at the end of the path name.
+   fname_arr	- An array of file names to be read.  This may be just 1 file name.
+   Output:
+   This function returns a an array of pointers.  Each pointer can be dereferenced like this:
+   > data_ptr = read_yfile("~/input_files/")
+   > data1 = *data_ptr(1)
+   > data2 = *data_ptr(2)
+   modified 10/01/02.  amar nayegandhi.
+      - to include struct FS for first surface topography
+      - add more documentation to this function.
    */
 
 if (is_void(fname_arr)) {
@@ -72,7 +94,55 @@ return data_ptr;
 }
 
 func data_struc (type, nwpr, recs, byt_pos, f) {
+  /* DOCUMENT data_struc(type, nwpr, recs, byt_pos, f).
+     This function is used by read_yfile to define the structure depending on the data type.
+     */
+
+  if (type == 3) {
+    rn = 0L;
+    mnorth = 0L;
+    meast = 0L;
+    melevation = 0L;
+    north = 0L;
+    east = 0L;
+    melevation = 0L;
+
+    data = array(FS, recs); 
+    for (i=0;i<recs;i++) {
+
+       _read, f, byt_pos, rn;
+       data(i).rn = rn;
+       byt_pos = byt_pos + 4;
+
+       _read, f, byt_pos, mnorth;
+       data(i).mnorth = mnorth;
+       byt_pos = byt_pos + 4;
+
+       _read, f, byt_pos, meast;
+       data(i).meast = meast;
+       byt_pos = byt_pos + 4;
+
+       _read, f, byt_pos, melevation;
+       data(i).melevation = melevation;
+       byt_pos = byt_pos + 4;
+
+       _read, f, byt_pos, north;
+       data(i).mnorth = north;
+       byt_pos = byt_pos + 4;
+
+       _read, f, byt_pos, east;
+       data(i).east = east;
+       byt_pos = byt_pos + 4;
+
+       _read, f, byt_pos, elevation;
+       data(i).elevation = elevation;
+       byt_pos = byt_pos + 4;
+
+    }
+  }  
+
   if (type == 4) {
+
     rn = 0L;
     north = 0L;
     east = 0L;
@@ -86,44 +156,58 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
     bottom_peak = 0S;
     first_peak = 0S;
     sa = 0S;
+
     data = array(GEO, recs); 
+
     for (i=0;i<recs;i++) {
+
        _read, f, byt_pos, rn;
        data(i).rn = rn;
        byt_pos = byt_pos + 4;
+
        _read, f, byt_pos, north;
        data(i).north = north;
        byt_pos = byt_pos + 4;
+       
        _read, f, byt_pos, east;
        data(i).east = east;
        byt_pos = byt_pos + 4;
+       
        _read, f, byt_pos, sr2;
        data(i).sr2 = sr2;
        byt_pos = byt_pos + 2;
+
        _read, f, byt_pos, elevation;
        data(i).elevation = elevation;
        byt_pos = byt_pos + 4;
+
        _read, f, byt_pos, mnorth;
        data(i).mnorth = mnorth;
        byt_pos = byt_pos + 4;
+
        _read, f, byt_pos, meast;
        data(i).meast = meast;
        byt_pos = byt_pos + 4;
+       
        _read, f, byt_pos, melevation;
        data(i).melevation = melevation;
        byt_pos = byt_pos + 4;
+
        _read, f, byt_pos, bottom_peak;
        data(i).bottom_peak = bottom_peak;
        byt_pos = byt_pos + 2;
+
        _read, f, byt_pos, first_peak;
        data(i).first_peak = first_peak;
        byt_pos = byt_pos + 2;
+       
        _read, f, byt_pos, depth;
        data(i).depth = depth;
        byt_pos = byt_pos + 2;
 
     }
   }
+
   return data;
 }
   
