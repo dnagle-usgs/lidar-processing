@@ -27,12 +27,17 @@ case type of
 	  data_arr = replicate(data,recs)
 	 end
       5: begin
-	  ; this structure is what VEG is in ytk-EAARL...
+	  ; this structure is what VEG (old format) is in ytk-EAARL...
 	  data = {dat4, RN:0L, NORTH:0L, EAST:0L, ELEVATION:0L, MNORTH:0L, MEAST:0L, $
 			MELEVATION:0L, FELV:0S, FINT:0S, LELV:0S, LINT:0S, NX: 0B}
 	  data_arr = replicate(data, recs)
 	 end
-
+      6: begin
+	  ; this structure is what bare earth VEG (new format) is in ytk-EAARL...
+	  data = {dat5, RN:0L, NORTH:0L, EAST:0L, ELEVATION:0L, MNORTH:0L, MEAST:0L, $
+			MELEVATION:0L, FELV:0L, FINT:0S, LELV:0L, LINT:0S, NX: 0B}
+	  data_arr = replicate(data, recs)
+	 end
 
 endcase
 

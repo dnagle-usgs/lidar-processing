@@ -1,8 +1,13 @@
 pro batch_plot, path, filename=filename, only_rcf=only_rcf, min_z_limit=min_z_limit, max_z_limit=max_z_limit, $
-		print_all_to = print_all_to, only_no_rcf = only_no_rcf, rcf_meta= rcf_meta
+		print_all_to = print_all_to, only_no_rcf = only_no_rcf, rcf_meta= rcf_meta, mode=mode
 
 ; this procedure batch plots all xyz data points and saves them as jpegs.
 ; amar nayegandhi 12/13/02.
+; mode = 1 for first surface
+; mode = 2 for bathymetry
+; mode = 3 for bare earth
+
+if not keyword_set(mode) then mode = 2 ; for bathymetry
 
 if not keyword_set(filename) then begin
    ;search in the directory path to find all files with .bin extension
@@ -56,7 +61,10 @@ for i = 0, n_elements(fn_arr)-1 do begin
      ;title = "Bathymetry Plot. Tile Location: "+spp(1)+"Date/RCF: "+date+" "+rcf_params
      title = title
    endif else begin
-     title = "Bathymetry Plot. Date: "+date+" Tile Location: "+spp(1)+" "+spp(2)
+     if (mode eq 2) then $
+       	title = "Bathymetry Plot. Date: "+date+" Tile Location: "+spp(1)+" "+spp(2)
+     if (mode eq 3) then $
+ 	title = "Bare Earth Plot. Date: "+date+" Tile Location: "+spp(1)+" "+spp(2)
    endelse
      
 
@@ -65,9 +73,13 @@ for i = 0, n_elements(fn_arr)-1 do begin
    ; make jpeg file name
    tfname = path+(strsplit(fname_arr, '.', /extract))[0]+".tif"
    
-   
-   plot_xyz_bath, data_arr, min_z_limit=min_z_limit, max_z_limit=max_z_limit, $
+   if (mode eq 2) then $
+     plot_xyz_bath, data_arr, min_z_limit=min_z_limit, max_z_limit=max_z_limit, $
 	plot_range=prange, title=title, win = win, bathy=1, make_tiff=tfname
+   
+   if (mode eq 3) then $ 
+     plot_xyz_veg, data_arr, min_z_limit=min_z_limit, max_z_limit=max_z_limit, $
+	plot_range=prange, title=title, win = win, pmode=1, make_tiff=tfname
    
 
    if keyword_set(print_all_to) then begin
