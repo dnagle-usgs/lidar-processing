@@ -70,6 +70,34 @@ tilefn = "";
   return tilefn;
 }
 
+func set_tile_filename(data, m) {
+	if (is_void(data)) data=depth_all;
+	if (is_void(m)) m = mouse();
+	emin = 2000*(int(m(1)/2000.));
+	nmax = int(2000*(ceil(m(2)/2000.)));
+	data = data(data_box(depth_all.east/100.0, depth_all.north/100.0, emin, emin+2000, nmax-2000, nmax)); //Selects data only from the clicked tile;
+	ymd = soe2ymd(data.soe(where(data.soe == min(data.soe))));                                 // finds the year-month-day of the lowest SOE value;
+	if (ymd(2) <=9) m = swrite(format="0%d", ymd(2));
+	if (ymd(2) >9)  m = swrite(format="%d", ymd(2));
+	if (ymd(3) <=9) d = swrite(format="0%d", ymd(3));
+	if (ymd(3) >9)  d = swrite(format="%d", ymd(3));
+	mdate = swrite(format="%d%s%s", ymd(1), m, d);
+	if (!curzone) {
+		zone="void";
+		write, "Please enter the current UTM zone: \n";
+		read(zone); 
+		curzone=0;
+                sread(zone, format="%d", curzone);
+		extern curzone; //I am not sure if this is how to make it a global...?;
+	}
+	zone = swrite(format="%d", curzone); //Here zone was read as a string, converted to long and now back to string, but needed to make curzone global
+	zonel = utm_zone_letter(nmax); //gets zone letter from function in batch_process;
+	type = ""; //I still need to put in this part;
+	tilefname = swrite(format="t_e%d_n%d_%s%s_%s_%s.pbd", emin, nmax, zone, zonel, mdate, type);
+	
+	return tilefname;		
+}
+
 func tile_location(m) {
 /* DOCUMENT tile_location(m)
 
