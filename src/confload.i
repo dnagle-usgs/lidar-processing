@@ -40,7 +40,7 @@ func load_this_conf(confile) {
 	write, "***** LOADING ATTITDE FILE";
 	ext = split_path(fn_att,0,ext=1)(0);
 	if (ext == ".pbd") {write, "Loading IMU file"; load_iexpbd,fn_att;}
-	if (ext == ".ybin") {write, "Loading TANS file"; rbtans(fn=fn_att);}
+	if (ext == ".ybin") {write, "Loading TANS file"; tans=rbtans(fn=fn_att);}
 
 	write, "***** LOADING MAP SETTINGS";
 	window,6; limits, square=1;
