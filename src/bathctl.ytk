@@ -4,12 +4,13 @@ proc set_bath_ctl { a b c } {
    exp_send "bath_ctl.$b = $bath_ctl($b); show_bath_constants; \r" 
 }
 
-proc send_bathctl_to_l1pro {blaser bwater bagc bthresh blast} {
+proc send_bathctl_to_l1pro {blaser bwater bagc bthresh bfirst blast} {
    global bath_ctl
    set bath_ctl(laser) $blaser   
    set bath_ctl(water) $bwater
    set bath_ctl(agc)   $bagc
    set bath_ctl(thresh) $bthresh
+   set bath_ctl(first) $bfirst
    set bath_ctl(last) $blast
 }
 
@@ -33,7 +34,8 @@ proc bathctl {} {
           sst .bathctl.water   bath_ctl(water)   "  Water:"  { -10 -0.1 0.1  }
           sst .bathctl.agc     bath_ctl(agc)   "  AGC:"  { -10 0.1 0.1  }
           sst .bathctl.thresh  bath_ctl(thresh)   "  Threshold:"  { 0 50.0 0.1  }
-          sst .bathctl.last   bath_ctl(last)   "  Last:"  { 0 300 1  }
+          sst .bathctl.first   bath_ctl(first)   " First:"  { 0 300 1  }
+          sst .bathctl.last    bath_ctl(last)   "  Last:"  { 0 300 1  }
  		   
          trace vdelete  bath_ctl(laser) w set_bath_ctl
          trace variable bath_ctl(laser) w set_bath_ctl
@@ -45,6 +47,8 @@ proc bathctl {} {
          trace variable bath_ctl(thresh) w set_bath_ctl
          trace vdelete  bath_ctl(last) w set_bath_ctl
          trace variable bath_ctl(last) w set_bath_ctl
+         trace vdelete  bath_ctl(first) w set_bath_ctl
+         trace variable bath_ctl(first) w set_bath_ctl
           
 	 
 	  Button .bathctl.cancel -text "Cancel" -width 5 -command {
@@ -58,7 +62,15 @@ proc bathctl {} {
 
 
 	  pack .bathctl.type -side top 
-	  pack .bathctl.laser .bathctl.water .bathctl.agc  .bathctl.thresh .bathctl.last  -side top
+	  pack \
+		.bathctl.laser \
+		.bathctl.water \
+		.bathctl.agc  \
+		.bathctl.thresh \
+		.bathctl.first  \
+		.bathctl.last  \
+		-side top
+
 	  pack .bathctl.plot  .bathctl.cancel -side left
 
 }

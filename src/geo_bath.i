@@ -497,7 +497,6 @@ See define_bath_ctl()
      write, "\n";
    }
    write, "BATH_CTL initialized to : \r";
-   print, bath_ctl;
 
    /* define cmin and cmax depending on type */
    if (type == "tampabay") {

@@ -140,11 +140,16 @@ func run_bath( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) 
 }
 
 struct BATH_CTL{
+// Settings
   float laser;		// system exponential decay  ( -1.5 )
   float water;		// water column exponential decay ( -0.3 )
   float agc;		// exponential equalizer ( -5 )
   float thresh;		// threshold value ( 3 )
+  int   first;		// first nanosecond to consider (maxdepth in ns)  ( 150 )
   int   last;		// last nanosecond to consider (maxdepth in ns)  ( 150 )
+
+//// Data area
+    float a( 256, 120, 4);   // array for interim waveform data
 } ;
 
 extern bath_ctl;
@@ -165,7 +170,7 @@ extern bath_ctl;
 
 */
 
-  if ( is_void( bath_ctl ) ) {
+ if ( is_void( bath_ctl ) ) {
    bath_ctl = BATH_CTL();
   }
 
@@ -185,21 +190,27 @@ func define_bath_ctl(junk,type=) {
      bath_ctl.water = -0.6;
      bath_ctl.agc = -0.3;
      bath_ctl.thresh = 4.0;
+     bath_ctl.first = 1;
+     bath_ctl.last  = 220;
   } 
   if (type == "tampabay") {
      bath_ctl.laser = -2.4;
      bath_ctl.water = -1.5;
      bath_ctl.agc = -3.0;
      bath_ctl.thresh = 4.0;
+     bath_ctl.first = 1;
+     bath_ctl.last  = 60;
   }
   if (type == "wva") {
      bath_ctl.laser = -2.4;
      bath_ctl.water = -7.5;
      bath_ctl.agc = -5.0;
      bath_ctl.thresh = 4.0;
+     bath_ctl.first = 1;
+     bath_ctl.last  = 50;
   }
   if (_ytk) {
-    tkcmd, swrite(format="send_bathctl_to_l1pro %3.1f %3.1f %3.1f %3.1f %3d\n", bath_ctl.laser, bath_ctl.water, bath_ctl.agc, bath_ctl.thresh, bath_ctl.last)
+    tkcmd, swrite(format="send_bathctl_to_l1pro %3.1f %3.1f %3.1f %3.1f %3d %3d\n", bath_ctl.laser, bath_ctl.water, bath_ctl.agc, bath_ctl.thresh, bath_ctl.first,bath_ctl.last)
 }
   return type;
 
@@ -221,7 +232,6 @@ func ex_bath( rn, i,  last=, graph=, win=, xfma= ) {
 /* DOCUMENT ex_bath(raster_number, pulse_index)
 
   See run_bath for details on usage.
-
 
  This function returns a BATHPIX structure element
 
@@ -256,6 +266,7 @@ func ex_bath( rn, i,  last=, graph=, win=, xfma= ) {
 
     See bath_ctl structure.
 
+     first          1      1:300     The first ns point to use for detection
       last        160      1:300     The last point in the waveform to consider.
      laser         -3.0   -1:-5.0    The exponent which describes the laser decay rate
      water         -2.0 -0.1:-10.0   The exponent which best describes this water column
@@ -280,7 +291,9 @@ func ex_bath( rn, i,  last=, graph=, win=, xfma= ) {
     db                The return waveform equalized by agc and tilted by bias.
 */
 
+
  extern ex_bath_rn, ex_bath_rp, a, db
+ extern bath_ctl;
 
  if (is_void(win)) win=4;
 
@@ -299,8 +312,8 @@ func ex_bath( rn, i,  last=, graph=, win=, xfma= ) {
   if ( is_void( ex_bath_rn )) 
 	ex_bath_rn = -1;
 
-  if ( is_void(a) )
-    a  = array(float, 256, 120, 4);
+//  if ( is_void(a) )
+//    a  = array(float, 256, 120, 4);
 
   if ( ex_bath_rn != rn ) {  // simple cache for raster data
      r = get_erast( rn= rn );
@@ -316,7 +329,7 @@ func ex_bath( rn, i,  last=, graph=, win=, xfma= ) {
   if ( n == 0 ) 
 	return rv;
 
-  w  = *rp.rx(i, 1);  a(1:n, i) = float( (~w+1) - (~w(1)+1) );
+  w  = *rp.rx(i, 1);  bath_ctl.a(1:n, i) = float( (~w+1) - (~w(1)+1) );
   dbias = int(~w(1)+1);
 ///////  w2 = *rp.rx(i, 2);  a(1:n, i,2) = float( (~w2+1) - (~w2(1)+1) );
 
@@ -359,67 +372,75 @@ func ex_bath( rn, i,  last=, graph=, win=, xfma= ) {
    bias = (1-agc) * -5.0  ;
    
 
-  da = a(,i,1) - laser_decay;
+  da = bath_ctl.a(,i,1) - laser_decay;
   db = da*agc + bias;
 
   //new
-  dd = a(1:n,i,1)(dif);
-  xr = where ( ((dd >= 4.0)(dif)) == 1);
+  thresh = bath_ctl.thresh;
+  dd = bath_ctl.a(1:n,i,1)(dif);
+  xr = where ( ((dd >= thresh)(dif)) == 1);
   nxr = numberof(xr);
   if (nxr > 0) {
-    mx1 = a( xr(1):xr(1)+5, i, 1)(mxx) + xr(1) - 1;	  // find surface peak now
-    mv1 = a( mx1, i, 1);	          
+    mx1 = bath_ctl.a( xr(1):xr(1)+5, i, 1)(mxx) + xr(1) - 1;	  // find surface peak now
+    mv1 = bath_ctl.a( mx1, i, 1);	          
   } else mv1 = 0;
 
 
-  thresh = bath_ctl.thresh;
   if ( numsat > 14 ) {
     thresh = thresh * (numsat-13)*0.65;
   }
 
+first = bath_ctl.first;
+last = bath_ctl.last;
 
 if ( graph ) {
-window,win; 
- if ( xfma ) fma;
-plg,[thresh,thresh],[1,n],marks=0, color="red";
-plmk, a(,i,1), msize=.2, marker=1, color="black";
-plg, a(,i,1);
-plmk, da, msize=.2, marker=1, color="black";
-plg, da;
-plmk, db, msize=.2, marker=1, color="blue";
-plg, db, color="blue";
-plg, laser_decay, color="magenta" 
-plg,agc*40;
+  window,win; 
+  if ( xfma ) fma;
+  plg,[thresh,thresh],[1,n],marks=0, color="red";
+  plg,[0,5],[first,first],marks=0, color="green", width=7;
+  plg,[0,5],[last,last],marks=0, color="red", width=7;
+  plmk, bath_ctl.a(1:n,i,1), msize=.2, marker=1, color="black";
+  plg, bath_ctl.a(1:n,i,1), color=black, width=4;
+  plmk, da(1:n), msize=.2, marker=1, color="black";
+  plg, da(1:n);
+  plmk, db(1:n), msize=.2, marker=1, color="blue";
+  plg, db(1:n), color="blue";
+  plg, laser_decay, color="magenta" 
+  plg,agc*40, color=[100,100,100];
 }
 
 
-  if ( is_void(last) ) 		// see if user specified the max depth as input to this func
+  if ( is_void(last) ) 		// see if user specified the max depth 
 	last = n;
 
   if ( n > last ) 		
 	n = last;
 
-  mv = db(1:n)(max);		// find peak value
-  mvi = db(1:n)(mxx)-1;		// find peak position ( adjusted to index the orginal
+ if ( n < first ) first = n;
+
+  mv = db(first:n)(max);	// find peak value
+  mvi = (db(first:n)(mxx)-1)+first-1;	// find peak position 
+                                // ( adjusted to index the orginal
                                 // return waveform.
 
 // test pw with 9-6-01:17673:50
   if ( mv > thresh ) {		// check to see if above thresh
          mx = mvi;
 
-if ( graph ) {
- plmk, a(mx,i,1), mx+1, msize=1.0, marker=7, color="blue", width=10
-}
+        if ( graph ) {
+            plmk, bath_ctl.a(mx,i,1)+1.5, mx+1, 
+                  msize=1.0, marker=7, color="blue", width=10
+        }
         rv.sa = rp.sa(i);
    	rv.idx = mx;
-	rv.bottom_peak = a(mx,i,1);
+	rv.bottom_peak = bath_ctl.a(mx,i,1);
 	//new
 	rv.first_peak = mv1;
 	return rv;
   }
   else
    	rv.idx = 0;
-	rv.bottom_peak = a(mvi,i,1);
+	rv.bottom_peak = bath_ctl.a(mvi,i,1);
 	//new
 	rv.first_peak = mv1;
 	return rv;
