@@ -111,7 +111,7 @@ for (i=1; i<=len; i=i+1) {
     geodepth(i).mnorth = rrr(i).mnorth
     geodepth(i).meast = rrr(i).meast
     geodepth(i).melevation = rrr(i).melevation;
-    geodepth(i).sr2 =long(-d(,i).idx * CNS *100); 
+    geodepth(i).sr2 =long(-d(,i).idx * NS2MAIR*100); 
   }
   if (correct == 1) {
      // search for erroneous elevation values
