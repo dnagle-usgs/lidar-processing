@@ -37,8 +37,14 @@ Other:
   it must be verified and converted by the gga2bin.c. program.  
 
   $Log$
-  Revision 1.1  2002/01/04 06:33:51  wwright
-  Initial revision
+  Revision 1.2  2002/01/16 05:04:54  wwright
+
+  changes to rbgga.i to fix several functions to work with the gga structure instead
+  of the old gga array.
+
+  Revision 1.1.1.1  2002/01/04 06:33:51  wwright
+  Initial deposit in CVS.
+
 
   Revision 1.0  2001/08/11 06:23:20  wwright
   Initial revision
@@ -52,7 +58,7 @@ Other:
 
 Functions:
   rbgga
-  gga_win_sel( show, color=, msize=, skip= )
+  gga_win_sel( show, win=, color=, msize=, skip= )
   gga_click_times()
   show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=   )  
   mk_photo_list( q )
@@ -65,7 +71,7 @@ require, "ytime.i"
 require, "map.i"
 require, "string.i"
 
-write,"rbgga.i as of 12/27/2001 loaded"
+write,"rbgga.i as of 1/15/2002 loaded"
 
 plmk_default,msize=.1
 
@@ -183,10 +189,14 @@ write, format="Lon:%14.3f %14.3f\n", gga(3,min), gga(3,max)
    return g;
 }
 
-func gga_win_sel( show, color=, msize=, skip= ) {
+func gga_win_sel( show, win=, color=, msize=, skip= ) {
 /* DOCUMENT gga_win_sel( show, color=, msize=, skip= )
  
 */
+ if ( is_void(win) ) 
+	win = 6;
+
+ window,win;
  a = mouse(1,1,
   "Hold the left mouse button down, select a region:");
  a(1:4)
@@ -194,16 +204,16 @@ func gga_win_sel( show, color=, msize=, skip= ) {
  maxlon = max( [ a(1), a(3) ] )
  minlat = min( [ a(2), a(4) ] )
  maxlat = max( [ a(2), a(4) ] )
- q = where( gga(3,) > minlon );
- qq = where( gga(3,q) < maxlon );  q = q(qq);
- qq = where( gga(2, q) > minlat ); q = q(qq);
- qq = where( gga(2, q) < maxlat ); q = q(qq);
+ q = where( gga.lon > minlon );
+ qq = where( gga.lon(q) < maxlon );  q = q(qq);
+ qq = where( gga.lat(q) > minlat ); q = q(qq);
+ qq = where( gga.lat(q) < maxlat ); q = q(qq);
  write,format="%d GGA records found\n", numberof(q);
  if ( show != 0  ) {
    if ( is_void( msize ) ) msize = 0.1;
    if ( is_void( color ) ) color = "blue";
    if ( is_void( skip  ) ) skip  = 10;
-   plmk, gga(2, q(1:0:skip)), gga(3, q(1:0:skip)), msize=msize, color=color;
+   plmk, gga.lat( q(1:0:skip)), gga.lon( q(1:0:skip)), msize=msize, color=color;
  }
  return q;
 }
@@ -244,13 +254,13 @@ func gga_find_times( q, plt= ) {
 // one second.  This list "endptlist" will be an index into the list
 // "lq" where had a change larger than one second.  Adding one to
 // "endptlist" gets us the starting point of the next segment.
-   endptlist = where( abs((gga(1, lq) (dif)) ) > 1 )
+   endptlist = where( abs((gga.sod(lq) (dif)) ) > 1 )
    startptlist = endptlist+1;
  
   // start of each line is at qq+1
   // end of each line is at qq
-  startggasod = gga(1, lq(startptlist));
-   stopggasod = gga(1, lq(endptlist) );
+  startggasod = gga.sod( lq(startptlist));
+   stopggasod = gga.sod( lq(endptlist) );
 
 // The startggasod and stopggasod have bogus values at the beginning
 // and end so we want to fix that and also copy the proper start/stop
@@ -266,7 +276,7 @@ func gga_find_times( q, plt= ) {
   if ( plt == 1 ) {
     window,7
     fma; 
-    plmk, gga(1, q),q;		// plot the selected times
+    plmk, gga.sod( q),q;		// plot the selected times
     plmk, startggasod(1:-1), lq(startptlist(1:-1)), color="green", msize=.3
     plmk, stopggasod(2:0)-1, lq(startptlist(2:0)-1), color="red", msize=.3
     limits;
