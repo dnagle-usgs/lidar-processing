@@ -103,7 +103,7 @@ This function reads an EAARL yorick-written binary file.
       - to include new format of veg algorithm with structure VEG_
    */
 
-extern fn_arr;
+extern fn_arr, type;
 
 if (is_void(path)) {
    if (is_void(initialdir)) initialdir = "~/";
@@ -157,7 +157,7 @@ for (i=0;i<n;i++) {
   _read, f, 8, nwpr;
   //read the total number of records
   _read, f, 12, recs;
-  write, format="Reading file of type %d\n",type;
+  write, format="Reading file %s of type %d\n",fn_arr(i), type;
   write, format="%d records to be read\n",recs;
 
   byt_pos = 16;

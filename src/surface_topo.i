@@ -614,9 +614,16 @@ fn = opath+ofname;
 /* open file to read/write (it will overwrite any previous file with same name) */
 f = open(fn, "w+b");
 
-nwpr = long(8);
+nwpr = long(9);
 
-if (is_void(type)) type = 101;
+if (is_void(type)) {
+   if (fs_all.soe(1) == 0) {
+      type = 3;
+      nwpr = long(8);
+   } else {
+      type = 101;
+   }
+}
 
 rec = array(long, 4);
 /* the first word in the file will define the endian system. */
@@ -665,8 +672,10 @@ for (i=1;i<len;i++) {
      byt_pos = byt_pos + 4;
      _write, f, byt_pos, fs_all(i).intensity(indx(j));
      byt_pos = byt_pos + 2;
-     _write, f, byt_pos, fs_all(i).soe(indx(j));
-     byt_pos = byt_pos + 8;
+     if (type = 101) {
+       _write, f, byt_pos, fs_all(i).soe(indx(j));
+       byt_pos = byt_pos + 8;
+     }
   }
   num_rec = num_rec + num_valid;
 }

@@ -96,7 +96,7 @@ struct CVEG_ALL {
   long melevation;//mirror elevation
   short intensity;// pulse peak intensity value
   char  nx;	// number of return pulses found
-  double soe(120);	// Seconds of the epoch
+  double soe;	// Seconds of the epoch
 };
 
 // 94000
@@ -839,7 +839,7 @@ func write_vegall (vegall, opath=, ofname=, type=, append=) {
 
    ofname=	Output file name
 
-     type=	Type of output file, currently type = 6 is supported for all veg data.
+     type=	Type of output file.
 
    append=	Set this keyword to append to existing file.
 
@@ -861,8 +861,17 @@ if (is_void(append)) {
 
 if (is_void(append)) {
   /* write header information only if append keyword not set */
-  if (is_void(type)) type = 103;
-  nwpr = long(13);
+  if (is_void(type)) {
+     if (veg_all.soe(1) == 0) {
+        type = 8
+        nwpr = long(13);
+     } else {
+        type = 103;
+        nwpr = long(14);
+     }
+  } else {
+        nwpr = long(14);
+  }
 
   rec = array(long, 4);
   /* the first word in the file will decide the endian system. */
@@ -919,8 +928,10 @@ for (i=1;i<=len;i++) {
      byt_pos = byt_pos + 2;
      _write, f, byt_pos, vegall(i).nx(indx(j));
      byt_pos = byt_pos + 1;
-     _write, f, byt_pos, vegall(i).soe(indx(j));
-     byt_pos = byt_pos + 8;
+     if (type == 103) {
+      _write, f, byt_pos, vegall(i).soe(indx(j));
+      byt_pos = byt_pos + 8;
+     }
   }
   num_rec = num_rec + num_valid;
 }
@@ -1542,8 +1553,17 @@ if (is_void(append)) {
 
 if (is_void(append)) {
   /* write header information only if append keyword not set */
-  if (is_void(type)) type = 104;
-  nwpr = long(9);
+  if (is_void(type)) {
+      if (vegall.soe(1) == 0) {
+         type = 7;
+         nwpr = long(9);
+      } else {
+         type = 104;
+ 	 nwpr = long(10);
+      }
+  } else {
+	nwpr = 10;
+  }
 
   rec = array(long, 4);
   /* the first word in the file will decide the endian system. */
@@ -1593,8 +1613,10 @@ for (i=1;i<=len;i++) {
    byt_pos = byt_pos + 2;
    _write, f, byt_pos, vegall(i).nx;
    byt_pos = byt_pos + 1;
-   _write, f, byt_pos, vegall(i).soe;
-   byt_pos = byt_pos + 8;
+   if (type == 104) {
+    _write, f, byt_pos, vegall(i).soe;
+    byt_pos = byt_pos + 8;
+   }
    num_rec++;
 }
 

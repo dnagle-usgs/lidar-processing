@@ -291,8 +291,17 @@ if (is_void(append)) {
 
 if (is_void(append)) {
   /* write header information only if append keyword not set */
-  if (is_void(type)) type = 102;
-  nwpr = long(12);
+  if (is_void(type)) {
+    if (geoall.soe(1) == 0) {
+      type = 4;
+      nwpr = long(11);
+    } else {
+      type = 102;
+      nwpr = long(12);
+    }
+  } else {
+      nwpr = long(12);
+  }
 
   rec = array(long, 4);
   /* the first word in the file will decide the endian system. */
@@ -344,8 +353,10 @@ for (i=1;i<=len;i++) {
      byt_pos = byt_pos + 2;
      _write, f, byt_pos, geoall(i).depth(indx(j));
      byt_pos = byt_pos + 2;
-     _write, f, byt_pos, geoall(i).soe(indx(j));
-     byt_pos = byt_pos + 8;
+     if (type == 102) {
+       _write, f, byt_pos, geoall(i).soe(indx(j));
+       byt_pos = byt_pos + 8;
+     }
   }
   num_rec = num_rec + num_valid;
 }
