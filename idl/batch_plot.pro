@@ -95,7 +95,7 @@ for i = 0, n_elements(fn_arr)-1 do begin
 	spawn, 'convert '+tfname+' '+tfname+'.ps'
 	print, "converted to "+tfname+".ps"
         spawn, 'lp -d'+print_all_ps+' '+tfname+'.ps'
-	spawn, 'rm -r'+tfname+'.ps'
+	spawn, 'rm -rf '+tfname+'.ps'
    endif
 
    ptr_free, data_arr
