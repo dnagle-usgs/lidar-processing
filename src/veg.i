@@ -337,21 +337,21 @@ write, format="rn=%d; i = %d\n",rn,i
        ai = 1; //channel number
        if (xr(0)+retdist+1 > n) retdist = n - xr(0)-1;
        // check for saturation
-       if ( numberof(where((w(xr(0):xr(0)+retdist)) == 0 )) >= veg_conf.max_sat(ai) ) {
+       if ( numberof(where((w(xr(0):xr(0)+retdist)) == 0 )) > veg_conf.max_sat(ai) ) {
            // goto second channel
             ai = 2;
            // write, format="trying channel 2, rn = %d, i = %d\n",rn, i
             w  = *rp.rx(i, ai);  aa(1:n, i,ai) = float( (~w+1) - (~w(1)+1) );
             da = aa(1:n,i,ai);
             dd = aa(1:n, i, ai) (dif);
-            if ( numberof(where((w(xr(0):xr(0)+retdist)) == 0 )) >= veg_conf.max_sat(ai) ) {
+            if ( numberof(where((w(xr(0):xr(0)+retdist)) == 0 )) > veg_conf.max_sat(ai) ) {
               // goto third channel
             //  write, format="trying channel 3, rn = %d, i = %d\n",rn, i
               ai = 3;
               w  = *rp.rx(i, ai);  aa(1:n, i,ai) = float( (~w+1) - (~w(1)+1) );
               da = aa(1:n,i,ai);
               dd = aa(1:n, i, ai) (dif);
-              if ( numberof(where((w(xr(0):xr(0)+retdist)) == 0 )) >= veg_conf.max_sat(ai) ) {
+              if ( numberof(where((w(xr(0):xr(0)+retdist)) == 0 )) > veg_conf.max_sat(ai) ) {
                  write, format="all 3 channels saturated... giving up!, rn=%d, i=%d\n",rn,i
                  ai = 0;
               }
