@@ -2,7 +2,7 @@
 require, "msort.i"
 require, "rcf.i"
 
-func rcf_triag_filter(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=, plottriag=, plottriagwin=) {
+func rcf_triag_filter(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=, plottriag=, plottriagwin=, prefilter_min=, prefilter_max=) {
   /* DOCUMENT rcf_triag_filter(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=)
  this function splits data sets into manageable portions and calls new_rcfilter_eaarl_pts that 
 uses the random consensus filter (rcf) and triangulation method to filter data.
@@ -68,6 +68,55 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
  if (is_array(data_out)) eaarl = data_out;
  data_out = [];
 
+ //crop region to within user-specified elevation limits
+	if (!is_void(prefilter_min) && (is_void(prefilter_max))) {
+         if (mode == 1) {
+           pfindx = where(eaarl.elevation > prefilter_min*100);
+         }
+         if (mode == 2) {
+           pfindx = where((eaarl.depth+eaarl.elevation) > prefilter_min*100);
+         }
+         if (mode == 3) {
+           pfindx = where(eaarl.lelv > prefilter_min*100);
+         }
+         if (is_array(pfindx)) {
+           eaarl = eaarl(pfindx);
+         } 
+        }
+        if (is_void(prefilter_min) && !(is_void(prefilter_max))) {
+         if (mode == 1) {
+           pfindx = where(eaarl.elevation < prefilter_max*100);
+         }
+         if (mode == 2) {
+           pfindx = where((eaarl.depth+eaarl.elevation) < prefilter_max*100);
+         }
+         if (mode == 3) {
+           pfindx = where(eaarl.lelv < prefilter_max*100);
+         }
+         if (is_array(pfindx)) {
+           eaarl = eaarl(pfindx);
+         }
+        }
+        if (!is_void(prefilter_min) && !(is_void(prefilter_max))) {
+         if (mode == 1) {
+           pfindx = where(eaarl.elevation < prefilter_max*100);
+           pfpfindx = where(eaarl.elevation(pfindx) > prefilter_min*100);
+         }
+         if (mode == 2) {
+           pfindx = where((eaarl.depth+eaarl.elevation) < prefilter_max*100);
+           pfpfindx = where((eaarl.depth(pfindx)+eaarl.elevation(pfindx)) > prefilter_min*100);
+         }
+         if (mode == 3) {
+           pfindx = where(eaarl.lelv < prefilter_max*100);
+           pfpfindx = where(eaarl.lelv(pfindx) > prefilter_min*100);
+         }
+         pfindx = pfindx(pfpfindx);
+         if (is_array(pfindx)) {
+           eaarl = eaarl(pfindx);
+         }
+        }
+
+
  neaarl = numberof(eaarl);
 
  //break the array into 4 regional blocks if greater than MAXN points
@@ -92,12 +141,13 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
  
   for (j=1;j<numberof(spany);j++) {
     for (k=1;k<numberof(spanx);k++) {
-       isp1 = data_box(eaarl.east, eaarl.north,  spanx(k)*100, spanx(k+1)*100, spany(j)*100, spany(j+1)*100);
-       window, 5; plg, [spany(j), spany(j), spany(j+1), spany(j+1), spany(j)], [spanx(k), spanx(k+1), spanx(k+1), spanx(k), spanx(k)], color="red";
+       isp1 = data_box(eaarl.east, eaarl.north,  spanx(k)*100-100, spanx(k+1)*100+100, spany(j)*100-100, spany(j+1)*100+100);
+       //window, 5; plg, [spany(j), spany(j), spany(j+1), spany(j+1), spany(j)], [spanx(k), spanx(k+1), spanx(k+1), spanx(k), spanx(k)], color="red";
        if (!is_array(isp1)) continue;
        eaarl1 = eaarl(isp1);
        xx = new_rcfilter_eaarl_pts(eaarl1, buf=buf, w=w, mode=mode, no_rcf=no_rcf, fbuf=fbuf, fw=fw, tw=tw, interactive=interactive, tai=tai, plottriag=plottriag, plottriagwin=plottriagwin);
        if (!is_array(xx)) continue;
+       xx = xx(data_box(xx.east, xx.north,  spanx(k)*100, spanx(k+1)*100, spany(j)*100, spany(j+1)*100));
        eaarl_out(ecount+1:ecount+numberof(xx)) = xx;
        ecount += numberof(xx);
      }
@@ -106,6 +156,7 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
        eaarl_out = new_rcfilter_eaarl_pts(eaarl, buf=buf, w=w, mode=mode, no_rcf=no_rcf, fbuf=fbuf, fw=fw, tw=tw, interactive=interactive, tai=tai, plottriag=plottriag, plottriagwin=plottriagwin);
        ecount = numberof(eaarl_out);
  }
+ if (is_void(eaarl_out)) return;
  eaarl_out = eaarl_out(1:ecount);
  
  write, format="Original points %d, Filtered points %d.  %2.2f%% data reduction\n", neaarl, ecount, (neaarl-ecount)*100./neaarl;
