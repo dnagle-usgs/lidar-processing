@@ -46,8 +46,8 @@ require, "irg.i"
         REV = 8000;	// Counts for 360 degrees of scanner rotation
 range_bias  =  0.7962;  // Laser range measurement bias.
  scan_bias  =  0.0;	// The mounting bias of the scan encoder.
- roll_bias  = -1.45;	// The mounting bias of the instrument in the plane.
- pitch_bias = -0.5;	// pitch mounting bias
+ roll_bias  = -1.35;	// The mounting bias of the instrument in the plane.
+ pitch_bias = +0.5;	// pitch mounting bias
  yaw_bias   =  0.0;	// Yaw mounting bias
 
 d2r = pi/180.0;		// Convert degrees to radians.
@@ -271,7 +271,7 @@ easting  = interp( _utm(2,), pnav.sod, atime )
  if ( is_void(step) ) 
    step = 1;
   dx = cyaw = gz = gx = gy = lasang = yaw = array(0.0, 120);
-  dy = array( 2.0, 120);	// mirror offset along fuselage
+  dy = array( -2.0, 120);	// mirror offset along fuselage
   dz = array(-1.3, 120);	// vertical mirror offset 
   mirang = array(-22.5, 120);
   lasang = array(45.0, 120);

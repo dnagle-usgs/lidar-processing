@@ -771,18 +771,26 @@ See define_bath_ctl()
 	 ba_count += numberof(ba_indx);
 	 ba_depth = depth;
 	 deast = depth.east;
+   	 if ((is_array(ba_indx))) {
 	 deast(ba_indx) = 0;
+         }
 	 dnorth = depth.north;
+   	 if ((is_array(ba_indx))) {
 	 dnorth(ba_indx) = 0;
+	 }
 	 depth.east = deast;
 	 depth.north = dnorth;
 
 	 /* write array ba_depth to a file */
 	 ba_indx_r = where(ba_depth.elevation < elv_thresh);
 	 bdeast = ba_depth.east;
+   	 if ((is_array(ba_indx_r))) {
 	 bdeast(ba_indx_r) = 0;
+ 	 }
 	 bdnorth = ba_depth.north;
+   	 if ((is_array(ba_indx_r))) {
 	 bdnorth(ba_indx_r) = 0;
+	 }
 	 ba_depth.east = bdeast;
 	 ba_depth.north = bdnorth;
 
@@ -927,7 +935,7 @@ func raspulsearch(data,win=,buf=) {
       window, 0;
       show_wf, *wfa, pulseno(1), win=0, cb=7;
       window, win;
-      window, 5;plcm, mindata.elevation/100., mindata.north/100., mindata.east/100., msize = 3.0, cmin= cmin, cmax = cmax
+      //window, 5;plcm, mindata.elevation/100., mindata.north/100., mindata.east/100., msize = 3.0, cmin= cmin, cmax = cmax
       //write, format="minindx = %d\n",minindx;
     } 
  } else {

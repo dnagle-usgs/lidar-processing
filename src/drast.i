@@ -325,13 +325,13 @@ sp = fs.elevation(, 1)/ 100.0;
 xm = -(fs.east(,1) - fs.meast(1,1))/100.0;
 rst = decode_raster( get_erast( rn=rn ) )
 for (i=1; i<120; i++ ) {
-  if (fs(1).elevation(i) <= 0.4*fs(1).melevation(i)) {
+  //if (fs(1).elevation(i) <= 0.4*fs(1).melevation(i)) {
     zz = array(245, 255);
     z = (*rst(1).rx(i));
     n = numberof( z )
     if ( n > 0 ) {
       zz(1:n) = z;
-    }  
+   // }  
     C = .15;		// in air
     x = array( xm(i), 255);
     y = span(  sp(i)+eoffset, sp(i)-255*C+eoffset , 255 );

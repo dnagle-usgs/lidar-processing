@@ -41,6 +41,17 @@ Other:
   it must be verified and converted by the gga2bin.c. program.  
 
   $Log$
+  Revision 1.13  2002/08/12 21:13:52  amar
+  drast.ytk:  commented out animate commands for window 1.
+
+  edb_access.i, ytime.i:  added time correct array (tca) and time_correct function to correct the laser timing to be in sync with the rest of the times.
+
+  geo_bath.i:  small corrections to check for arrays after where command.
+
+  rbgga.i:  added function plot_no_raster_fltlines(gga,edb) to overplot the flightlines with no rasters in window 6.
+
+  surface_topo.i:  changed pitch_bias to 0.5 and roll_bias to -1.35
+
   Revision 1.12  2002/07/15 22:31:33  anayegan
   eaarl.ytk: modified to allow 'Plot' Button in sf_a.tcl to work with UTM coordinates.
 
@@ -527,6 +538,36 @@ func show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=, utm=   ) 
     color=color, msize=msize, marker=marker;
     }
 }
+
+func plot_no_raster_fltlines (gga, edb) {
+  /* Document no_raster_flightline (gga, edb)
+      This function overplots the flight lines having no rasters with a different color.
+*/
+
+  /* amar nayegandhi 08/05/02 */
+
+  extern soe_day_start;
+
+  sod_edb = edb.seconds - soe_day_start;
+  
+  // find where the diff in sod_edb is greater than 1 second
+  sod_dif = sod_edb(dif);
+  indx = where((sod_dif > 5) & (sod_dif < 100000));
+  if (is_array(indx)) {
+    f_norast = sod_edb(indx);
+    l_norast = sod_edb(indx+1);
+
+    for (i = 1; i <= numberof(f_norast); i++) {
+      indx1 = where((gga.sod >= f_norast(i)) & (gga.sod <= l_norast(i)));
+      show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1), skip = 0, color = "red", marker=1;
+    } 
+  }
+
+}
+
+  
+
+
 
 
 if ( is_void(_ytk) ) 

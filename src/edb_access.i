@@ -236,8 +236,8 @@ if ( _ytk ) {
 
 
   total_edb_records = numberof(edb);
-// if we're using ytk, then set a var over in tcl to indicate the total
-// number of records and the data path.
+/* if we're using ytk, then set a var over in tcl to indicate the total
+ number of records and the data path. */
  if ( _ytk ) {
 	get_total_edb_records;
     tkcmd,swrite(format="set edb(gb) %6.3f\n", 
@@ -254,7 +254,9 @@ if ( _ytk ) {
     tkcmd,swrite(format="set edb(idx_file)  %s",  fn);
     tkcmd,swrite(format="set edb(nbr_rasters)  %d",  numberof(edb) );
  }
- write,"load_edb_completed"
+ /* adding time correct array (tca) function */
+ time_correct, data_path;
+ write,"load_edb_completed";
 }
 
 
@@ -372,7 +374,7 @@ Examples using the result data:
    
 */
  extern t0,t1
- extern eaarl_time_offset
+ extern eaarl_time_offset, tca; 
   timer,t0
   return_raster = array(RAST,1);
   irange = array(int, 120);
@@ -385,12 +387,16 @@ Examples using the result data:
 
   seconds = i32(r, 5);  		// raster seconds of the day
   seconds += eaarl_time_offset;		// correct for time set errors.
+  
 
   fseconds = i32(r, 9); 		// raster fractional seconds 1.6us lsb
   rasternbr = i32(r, 13); 		// raster number
   npixels   = i16(r, 17)&0x7fff;        // number of pixels
   digitizer = (i16(r,17)>>15)&0x1;      // digitizer                          
   a = 19;        			// byte starting point for waveform data
+  if (!is_void(tca)) 
+     seconds = seconds+tca(rasternbr);
+  write, format= "rasternbr = %d, seconds = %d\n", rasternbr, seconds;
  for (i=1; i<=npixels-1; i++ ) {	// loop thru entire set of pixels
    offset_time(i) = i32(r, a);   a+= 4;	// fractional time of day since gps 1hz
        txb = r(a);      a++;		// transmit bias value
@@ -425,7 +431,7 @@ Examples using the result data:
    return_raster.rxbias(i,) = rxb;
 /*****
     write,format="\n%d %d %d %d %d %d",
-        i, offset_time, sa(i), irange(i), txlen , rxlen		/* */
+        i, offset_time, sa(i), irange(i), txlen , rxlen		 */
 }                                                   
  return_raster.offset_time  = ((offset_time & 0x00ffffff) 
                               + fseconds) * 1.6e-6 + seconds;
