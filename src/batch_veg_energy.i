@@ -198,6 +198,7 @@ func batch_veg_metrics(ipath, opath, fname=,searchstr=, plotclasses=, thresh=, m
         f = openb(fn_all(i));
         restore, f, outveg;
         close, f;
+        binsize = (outveg.east(2)-outveg.east(1))/100.;
         if (onlyplot) {
           f = openb(new_fn);
           restore, f, mets;
@@ -210,7 +211,7 @@ func batch_veg_metrics(ipath, opath, fname=,searchstr=, plotclasses=, thresh=, m
 	    bexyz = get_member(f,vname);
 	    close, f;
 	    write, "Converting bare earth xyz into a grid...";
-  	    img = make_begrid_from_bexyz(bexyz, binsize=5, intdist=5, lfpveg=outveg);
+  	    img = make_begrid_from_bexyz(bexyz, binsize=binsize, intdist=5, lfpveg=outveg);
 	  }
           if (cl_lfpw) {
 	   write, "cleaning composite waveform data array..."
@@ -218,9 +219,11 @@ func batch_veg_metrics(ipath, opath, fname=,searchstr=, plotclasses=, thresh=, m
 	  }
 	   write, "computing large-footprint metrics..."
 	  mets = lfp_metrics(outveg, thresh=thresh, img=img, fill=fill, min_elv=min_elv);
-	   write, "writing metrics file..."
+	  write, "writing metrics file..."
+ 	  // write the mets array along with the positioning information and size of bin
+	  mets_pos = [[outveg(1,1).east, outveg(1,1).north], [outveg(0,0).east, outveg(0,0).north]]/100;
           f = createb(new_fn);
-          save, f, mets;
+          save, f, mets, mets_pos, binsize;
           close, f;
         }
 
@@ -360,5 +363,88 @@ func batch_merge_veg_energy(ipath, searchstr=) {
        
   }
 
+}
+
+func write_pbd_to_gdf(ipath=, opath=, fname=, searchstr=) {
+/* DOCUMENT write_pbd_to_gdf(ipath=, opath=, file=, searchstr=) 
+    This function reads in a pbd file representing a "multi-dimensional" 
+    grid and writes out a binary file known as "grid data format" (gdf).
+    This gdf file is readable by IDL.
+     INPUT:
+	ipath= Input path where pbd files are stored
+	opath = output path where gdf files will be written to.  Leave 
+		blank if you want to write it to the same ipath directory.
+	fname= file name if you want to convert only one file.
+	searchstr = set to search for specific file(s) in ipath.
+      OUTPUT:
+	
+        amar nayegandhi 03/30/05.
+*/
+ 
+   extern curzone
+   // start timer
+   tb1=tb2=array(double, 3);
+   timer, tb1;
+   if (is_void(searchstr)) searchstr = "*energy*mets.pbd";
+
+   if (is_void(curzone)) {
+     curzone = 0L;
+     read, prompt="Enter UTM Zone Number: ",curzone;
+   }
+   if (is_void(fname)) {
+     s = array(string,10000);
+     if (searchstr) ss = searchstr;
+     scmd = swrite(format = "find %s -name '%s'",ipath, ss);
+     fp = 1; lp = 0;
+     for (i=1; i<=numberof(scmd); i++) {
+        f=popen(scmd(i), 0);
+        n = read(f,format="%s", s );
+        close, f;
+        lp = lp + n;
+        if (n) fn_all = s(fp:lp);
+        fp = fp + n;
+     }
+    } else {
+        fn_all = ipath+fname;
+    }
+    nfiles = numberof(fn_all);
+    write, format="Total number of veg metric files to convert to gdf  = %d\n",nfiles;
+
+    for (i=1;i<=nfiles;i++) {
+	write, format="Converting %d of %d\r", i, nfiles;
+        f = openb(fn_all(i));
+        restore, f;
+	close, f;
+	if (is_void(mets_pos)) {
+	  write, "Need position information in metrics file to continue... No file written"
+	  continue;
+	} 
+        dmets = dimsof(mets);
+        dim3 = 0L;
+        if (dmets(1) == 2) {
+	  // only 2 dimensions in mets array..
+	  dim3 = 0; // # of elements in 3rd dimension
+        } else {
+	  dim3 = dmets(2);
+        }
+        fn_split = split_path(fn_all(i), 1, ext=1);
+	outf = fn_split(1)+".gdf";
+        f = open(outf,"w+b");
+	byt_pos=0;
+	_write, f, byt_pos, mets_pos; // xy position information in input file
+	byt_pos = 16;
+	binsize = long(binsize);
+	_write, f, byt_pos, binsize; // bin size
+	byt_pos += 4;
+	_write, f, byt_pos, curzone; // utm zone
+	byt_pos += 4;
+	_write, f, byt_pos, dim3; // number of elements in 3rd dimension
+	byt_pos += 4;
+        _write, f, byt_pos, mets; // metrics data array
+	close, f;
+	mets = binsize = mets_pos = [];
+   }
+        
+   return
 }
       

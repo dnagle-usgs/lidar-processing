@@ -1289,8 +1289,8 @@ func make_begrid_from_bexyz(bexyz, binsize=, intdist=, lfpveg=) {
   }
   ll = [bbox(1), bbox(3)]/100; // lower left location
   //now find the grid dimensions
-  ngridx = (bbox(2)-bbox(1))/binsize;
-  ngridy = (bbox(4)-bbox(3))/binsize;
+  ngridx = long((bbox(2)-bbox(1))/binsize);
+  ngridy = long((bbox(4)-bbox(3))/binsize);
 
   img = array(float, ngridx, ngridy); img(*) = -1000; // initialize with missing value
   imgcount = array(int, ngridx,ngridy); // counter 
