@@ -39,7 +39,7 @@ func irg( b, e ) {
 	-variable progress \
 	-height 30 \
 	-width 400", len );
-    tkcmd,"pack .irg.pb; update; center_win .irg;"
+    tkcmd,"pack .irg.pb; update;" /*center_win .irg;*/
   }
   for ( di=1, si=b; si<=e; di++, si++ ) {
     rp = decode_raster( get_erast( rn=si )) ;

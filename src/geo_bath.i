@@ -6,6 +6,8 @@ require, "surface_topo.i"
 require, "bathy.i"
 require, "eaarl_constants.i"
 require, "colorbar.i"
+require, "read_yfile.i"
+require, "rbgga.i"
 
 /* 
   This program is used to display a bathymetric image using the 
@@ -493,4 +495,66 @@ func compute_depth(data_ptr=, ipath=,fname=,ofname=) {
    }
    return &data
 }
+
+func make_bathy(edb, soe_day_start, opath=,ofname=) {
+   /* this function allows a user to define a region on the gga plot of flightlines
+      and makes bathymetric plots defined in that region.
+      */
+   
+   /* select a region using function gga_win_sel in rbgga.i */
+   q = gga_win_sel(2);
+
+   /* find the start and stop times using gga_find_times in rbgga.i */
+   t = gga_find_times(q);
+
+   write,format="%6.2f total seconds selected\n", (t(dif, )) (,sum);
+
+   /* now loop through the times and find corresponding start and stop raster numbers */
+   no_t = numberof(t(1,));
+   write, format="Total flightlines selected = %d \n", no_t;
+   rn_arr = array(int,2,no_t);
+   for (i=1;i<=numberof(t(1,));i++) {
+       rn_indx_start = where(((edb.seconds - soe_day_start) ) == int(t(1,i)));
+       rn_indx_stop = where(((edb.seconds - soe_day_start) ) == ceil(t(2,i)));
+       if (!is_array(rn_indx_start) || !is_array(rn_indx_stop)) {
+          write, format="Corresponding Rasters for flightline %d not found.  Omitting flightline ... \n",i;
+	  rn_start = 0;
+	  rn_stop = 0;
+       } else {
+          rn_start = rn_indx_start(1);
+          rn_stop = rn_indx_stop(0);
+       }
+
+       rn_arr(,i) =  [rn_start, rn_stop];
+   }
+    write,format="%6d total rasters selected\n", (rn_arr(dif, )) (,sum); 
+
+   /* now call run_bath from bathy.i and first_surface from surface_topo.i to extract bathy/topo information for each sequence of rasters in rn_arr. */
+
+   if (!(opath)) opath="~/";
+   if (!(ofname)) ofname = "geoall_rgn_l1.bin";
+   if (!win) win = 5;
+   window, win; fma;
+
+    for (i=1;i<=no_t;i++) {
+      if (rn_arr(1,i) != 0) {
+       write, format="processing using bathymetry algorithm for flightline %d ... \n", i;
+       d = run_bath(start=rn_arr(1,i), stop=rn_arr(2,i));
+       write, format="processing using first_surface algorithm for flightline %d ... \n", i;
+       rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i)); 
+       a=[];
+       write, format="processing using display_bath to provide submerged topography for flightline %d ...\n", i;
+       depth = display_bath(d,rrr,write_all=1, correct=1, cmin=-15, cmax=-2);
+       write, format="writing data from structure geoall to output file for flightline %d ... \n", i;
+       if (i==1) {
+         write_geoall, depth, opath=opath, ofname=ofname;
+       } else {
+         write_geoall,  depth, opath=opath, ofname=ofname, append=1;
+       }
+      }
+    } 
+
+}
+
+
 

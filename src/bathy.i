@@ -82,8 +82,9 @@ func run_bath( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) 
 	last = 250;
  if ( is_void(graph) ) 
 	graph = 0;
-   for ( j=1; j< len; j++ ) {
-     if (!(j%25)) write, format="%d of %d rasters completed \r",j,len;
+   for ( j=1; j<= len; j++ ) {
+     if (!(j%25)) write, format="%5d of %5d rasters completed \r",j,len;
+     if (j == len) write, format= "%5d of %5d rasters completed \r",j,len;
      for (i=1; i<119; i++ ) {
        depths(i,j) = ex_bath( rn+j, i, last = last, graph=graph);
        if ( !is_void(pse) ) 

@@ -41,6 +41,15 @@ Other:
   it must be verified and converted by the gga2bin.c. program.  
 
   $Log$
+  Revision 1.8  2002/06/01 20:30:42  anayegan
+  bathy.i : changed formatting statements in run_bath function. changed j<=len from j<len in for loop.
+
+  geo_bath.i: added function make_bathy to define interactively select a region on the gga plot of flightlines to run  run_bath and first_surface functions.
+
+  irg.i : commented center_win .irg command to remove the error during first_surface function.
+
+  rbgga.i : added show=2 in selecting window so that it draws a border on the window.
+
   Revision 1.7  2002/02/15 12:48:40  wwright
 
    changed first_surface structure "R" to be in " 32 bit integer centimeters"
@@ -241,10 +250,17 @@ properly to the zoom buttons.
  write,format="%d GGA records found\n", numberof(q);
  if ( show != 0  ) {
    if ( is_void( msize ) ) msize = 0.1;
-   if ( is_void( color ) ) color = "blue";
+   if ( is_void( color ) ) color = "red";
    if ( is_void( skip  ) ) skip  = 10;
    plmk, gga.lat( q(1:0:skip)), gga.lon( q(1:0:skip)), msize=msize, color=color;
  }
+ if (show == 2) {
+   /* plot a window over selected region */
+   a_x=[a(1), a(3), a(3), a(1), a(1)];
+   a_y=[a(2), a(2), a(4), a(4), a(2)];
+   plg, a_y, a_x;
+ }
+   
  return q;
 }
 
