@@ -614,6 +614,8 @@ for (i=1;i<len;i++) {
      byt_pos = byt_pos + 4;
      _write, f, byt_pos, fs_all(i).elevation(indx(j));
      byt_pos = byt_pos + 4;
+     _write, f, byt_pos, fs_all(i).intensity(indx(j));
+     byt_pos = byt_pos + 2;
   }
   num_rec = num_rec + num_valid;
 }

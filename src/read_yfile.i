@@ -26,6 +26,7 @@ struct FS {
      long north;
      long east;
      long elevation;
+     short intensity;
      }
 
 struct VEG {
@@ -63,10 +64,15 @@ This function reads an EAARL yorick-written binary file.
    */
 
 if (is_void(path)) {
-   ifn  = get_openfn( initialdir="~/", filetype="*.bin", title="Open Data File" );
-   ff = split_path( ifn, 0 );
-   path = ff(1);
-   fname_arr = ff(2);
+   ifn  = get_openfn( initialdir="~/", filetype="*.bin *.edf", title="Open Data File" );
+   if (ifn != "") {
+     ff = split_path( ifn, 0 );
+     path = ff(1);
+     fname_arr = ff(2);
+   } else {
+    write, "No File chosen.  Return to main."
+    return
+   }
 }
 
 if (is_void(fname_arr)) {
@@ -129,6 +135,7 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
     north = 0L;
     east = 0L;
     melevation = 0L;
+    intensity = 0S;
 
     data = array(FS, recs); 
     for (i=0;i<recs;i++) {
@@ -161,6 +168,9 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
        data(i).elevation = elevation;
        byt_pos = byt_pos + 4;
 
+       _read, f, byt_pos, intensity;
+       data(i).intensity = intensity;
+       byt_pos = byt_pos + 2;
     }
   }  
 
@@ -386,6 +396,7 @@ func read_pointer_yfile(data_ptr, mode=) {
   extern fs_all, depth_all, veg_all;
   data_out = [];
 
+  if (!is_array(data_ptr)) return;
   if (mode == 1) {
     //merge all data files 
     for (i=1; i <= numberof(data_ptr); i++) {

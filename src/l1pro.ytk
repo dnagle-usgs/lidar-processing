@@ -31,6 +31,7 @@
 exp_send "#include \"geo_bath.i\"\r"; # load geobath.i code
 exp_send "#include \"read_yfile.i\"\r"; # load read_yfile
 exp_send "#include \"veg.i\"\r"; # load veg.i
+exp_send "#include \"batch_process.i\"\r"; # load batch_process.i
 expect ">";
 
 package require BWidget
@@ -87,11 +88,16 @@ menu .l1wid.mb.options
 	LabelEntry .l1dir.op  -width 70 -relief sunken -bd 3 -label "Path:  " -helptext "Enter Data Path Here" \
 		-textvariable path
  	Button .l1dir.1.ok -text "OK" -width 5 -command {
+	 if {$path != ""} {
+	  .l1dir.op configure -state disabled
+	  .l1dir.1.ok configure -state disabled
   	  exp_send "data_ptr = read_yfile(\"$path\"); \r"
 	  expect ">"
           exp_send "read_pointer_yfile, data_ptr, mode=1; \r"
 	  expect ">"
 	  set ptype [.l1wid.bf4.1.p getvalue]
+	  destroy .l1dir
+	 }
 	}
 	   
  	Button .l1dir.1.cancel -text "Cancel" -width 5 -command {
@@ -566,6 +572,11 @@ Button .l1wid.bf5.1 -text "Write Datafile" -width 20 \
 
 	Button .l1wid1.1.ok -text "OK" -width 5 -command {
     	  if { ![ string equal  "" $ofname ] } {
+	    
+	    .l1wid1.op configure -state disabled
+	    .l1wid1.of configure -state disabled
+	    .l1wid1.1.ok configure -state disabled
+
  	    if {$ptype == 0} {
 	     if {$write_some == 0} {
  	       exp_send "write_topo, \"$opath\", \"$ofname\", fs_all; \r";
