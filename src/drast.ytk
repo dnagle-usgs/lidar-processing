@@ -345,7 +345,7 @@ set wfc3 4
 	set play_flag 1 
  	set play_dir fwd
 	set rn $rnf
-	exp_send "animate,1\r" 
+	exp_send "window, 1;animate,1\r" 
  	set tid [ after $play_interval  photoplay ]
 }
 

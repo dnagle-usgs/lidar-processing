@@ -94,7 +94,9 @@ func ndrast( r, units=  ) {
     send_sod_to_sf, somd;
     if (!is_void(pkt_sf)) {
        idx = where((int)(pkt_sf.somd) == somd);
-       send_tans_to_sf, somd, tans(idx).pitch, tans(idx).roll, tans(idx).heading;
+       if (is_array(idx)) {
+         send_tans_to_sf, somd, tans(idx).pitch, tans(idx).roll, tans(idx).heading;
+         }
        }
  }
  for (i=1; i< npix; i++ ) {

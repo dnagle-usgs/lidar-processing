@@ -48,6 +48,7 @@ set timern "hms"
 set fcin 0
 set lcin 0
 set yes_head 0
+set head 0
 
 proc load_file_list { f } {
 global ci fna imgtime dir 
@@ -495,7 +496,12 @@ set cin $n
      set fn $dir/$fna($n)
      exec cp $fn /tmp/sf_tmp.jpg
      set fn /tmp/sf_tmp.jpg
-     exec mogrify -rotate [expr $head] $fn
+     puts "heading = $head \r\n"
+     if {$head > 180.0}  {
+        exec mogrify -rotate [expr ($head-180)] $fn
+	} else {
+	exec mogrify -rotate [expr ($head+180)] $fn 
+	}
      #puts "$fn"
      } else {
      set fn $dir/$fna($n)

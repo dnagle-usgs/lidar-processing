@@ -136,7 +136,13 @@ proc load_edb {} {
    exp_send "load_edb, update=0\r"
   expect "load_edb_completed"
   edb_status
-  send sf_a.tcl "set dir $data_path"
+  if { [ lsearch -exact [ winfo interps ] sf_a.tcl ] != -1 } {
+     send sf_a.tcl "set dir $data_path"
+  } else {
+     tk_messageBox  \
+           -message "Digital Camera Playback Software isn\'t running.  " \
+           -type ok
+  }
 }
 
 
