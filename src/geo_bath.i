@@ -880,10 +880,12 @@ write,"============================================================="
 	}
         if (disp_type == 4) {
 	  a = [];
+	  if (ptype == 0) 
+	     z = mindata.intensity;
 	  if (ptype == 1) 
 	     z = mindata.first_peak;
 	  if (pytpe = 2) 
-	     z = mindata.fint
+	     z = mindata.fint;
           window, win; plcm, z, mindata.north/100., 
                              mindata.east/100., msize = msize*1.5, 
                              cmin= cmin, cmax = cmax, marker = 4
