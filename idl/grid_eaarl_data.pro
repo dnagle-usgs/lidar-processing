@@ -59,6 +59,10 @@ pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygri
     end
   endcase
 
+  zgrid = zgrid(100:2099, 100:2099)
+  xgrid = xgrid(100:2099)
+  ygrid = ygrid(100:2099)
+
 return
 end
 

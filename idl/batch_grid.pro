@@ -44,7 +44,7 @@ for i = 0, n_elements(fn_arr)-1 do begin
    print, 'Grid locations: West:'+strcompress(string(we))+'  North:'+strcompress(string(no))
    ;call gridding procedure
    grid_eaarl_data, *data_arr[0], cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygrid=ygrid, $
-	z_max = z_grid_max, z_min=z_grid_min, missing = missing, limits=[we-50,no-2049,we+2049,no+50], $
+	z_max = z_grid_max, z_min=z_grid_min, missing = missing, limits=[we-100,no-2099,we+2099,no+100], $
 	area_threshold = area_threshold
 
    ptr_free, data_arr
