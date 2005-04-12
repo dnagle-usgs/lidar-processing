@@ -313,7 +313,7 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
     ygrid = [bbox(3)];
   }
 
-  if ( _ytk ) {
+  if ( _ytk && (ngridy>1)) {
     tkcmd,"destroy .rcf1; toplevel .rcf1; set progress 0;"
     tkcmd,swrite(format="ProgressBar .rcf1.pb \
 	-fg green \
@@ -412,7 +412,7 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
        } 
       }
     }
-    if (_ytk) 
+    if (_ytk && (ngridy>1)) 
        tkcmd, swrite(format="set progress %d", i)
   }
   if (selcount > 0) 

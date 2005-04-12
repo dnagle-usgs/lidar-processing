@@ -224,8 +224,8 @@ indx = where(x >= xmin);
  } else return;
 }
 
-func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged=, onlynotmerged=, onlyrcfd=, onlynotrcfd=, datum=, skip=, noplot=, search_str=, pip=, pidx=) {
-/* DOCUMENT sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged=, onlynotmerged=, onlyrcfd=, onlynotrcfd=, datum=, skip=, noplot=, search_str=, pip=) 
+func sel_rgn_from_datatiles(rgn=, data_dir=,lmap=, win=, mode=, search_str=, skip=, noplot=,  pip=, pidx=) {
+/* DOCUMENT  sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, search_str=,  onlymerged=, onlynotmerged=, onlyrcfd=, onlynotrcfd=, datum=, skip=, noplot=,  pip=, pidx=) 
 
   This function selects data from a series of processed data tiles.
   The processed data tiles must have the min easting and max northing in their filename.
@@ -235,36 +235,37 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged
    lmap = set to prompt for the map.
    win = window number that will be used to drag the rectangular region.  defaults to current window.
    mode = set to 1 for first surface, 2 for bathymetry, 3 for bare earth vegetation
-   onlymerged= set to 1 to search for only merged files 
-   onlynotmerged = set to 1 to search for all non-merged files.
-   onlyrcfd = set to 1 to search for only rcfd files.
    search_str= define search string for file name
    pip = set to 1 if pip is to be used to define the region.
-   pidx = the array of a previously clicked polygon.
+   pidx = the array of a previously clicked polygon. Set to lpidx if this function 
+	  is previously used.
   original Brendan Penney
   modified amar nayegandhi 07/17/03
 */
 
+   extern lpidx; // this takes the values of the polygon selected by user. 
    w = window();
    if(!(data_dir)) data_dir =  "/quest/data/EAARL/TB_FEB_02/";
-   //if (!(zone)) zone = "17r";
    if (is_void(win)) win = w;
    window, win;
    if (lmap) load_map(utm=1);
    if (!mode) mode = 2; // defaults to bathymetry
+
    if (!is_array(rgn)) {
     if (!pip) {
-     rgn = array(float, 4);
-     a = mouse(1,1, "select region: ");
+      rgn = array(float, 4);
+      a = mouse(1,1, "select region: ");
               rgn(1) = min( [ a(1), a(3) ] );
               rgn(2) = max( [ a(1), a(3) ] );
               rgn(3) = min( [ a(2), a(4) ] );
               rgn(4) = max( [ a(2), a(4) ] );
     } else {
       // use pip to define region
-      if (!is_array(pidx))  
+      if (!is_array(pidx)) {
            pidx = getPoly();
-      pidx = grow(pidx,pidx(,1));
+           pidx = grow(pidx,pidx(,1));
+      }
+      lpidx = pidx;
             
       rgn = array(float,4);
       rgn(1) = min(pidx(1,));
@@ -279,30 +280,30 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged
    a_y=[rgn(3), rgn(3), rgn(4), rgn(4), rgn(3)];
    if (!noplot) plg, a_y, a_x;
    
-  	   ind_e_min = 2000 * (int((rgn(1)/2000)));
-           ind_e_max = 2000 * (1+int((rgn(2)/2000)));
-           if ((rgn(2) % 2000) == 0) ind_e_max = rgn(2);
-           ind_n_min = 2000 * (int((rgn(3)/2000)));
-           ind_n_max = 2000 * (1+int((rgn(4)/2000)));
-           if ((rgn(4) % 2000) == 0) ind_n_max = rgn(4);
-           n_east = (ind_e_max - ind_e_min)/2000;
-           n_north = (ind_n_max - ind_n_min)/2000;
-           n = n_east * n_north;
-  	   n = long(n); 
-           min_e = array(float, n);
-           max_e = array(float, n);
-           min_n = array(float, n);
-           max_n = array(float, n);
-           i = 1;
-           for (e=ind_e_min; e<=(ind_e_max-2000); e=e+2000) {
-                   for(north=(ind_n_min+2000); north<=ind_n_max; north=north+2000) {
-                   min_e(i) = e;
-                   max_e(i) = e+2000;
-                   min_n(i) = north-2000;
-                   max_n(i) = north;
-                   i++;
-                   }
-           }
+   ind_e_min = 2000 * (int((rgn(1)/2000)));
+   ind_e_max = 2000 * (1+int((rgn(2)/2000)));
+   if ((rgn(2) % 2000) == 0) ind_e_max = rgn(2);
+   ind_n_min = 2000 * (int((rgn(3)/2000)));
+   ind_n_max = 2000 * (1+int((rgn(4)/2000)));
+   if ((rgn(4) % 2000) == 0) ind_n_max = rgn(4);
+   n_east = (ind_e_max - ind_e_min)/2000;
+   n_north = (ind_n_max - ind_n_min)/2000;
+   n = n_east * n_north;
+   n = long(n); 
+   min_e = array(float, n);
+   max_e = array(float, n);
+   min_n = array(float, n);
+   max_n = array(float, n);
+   i = 1;
+   for (e=ind_e_min; e<=(ind_e_max-2000); e=e+2000) {
+      for (north=(ind_n_min+2000); north<=ind_n_max; north=north+2000) {
+          min_e(i) = e;
+          max_e(i) = e+2000;
+          min_n(i) = north-2000;
+          max_n(i) = north;
+          i++;
+       }
+    }
     
    //find data tiles
    
@@ -319,64 +320,24 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged
    	pldj, max_e, max_n, min_e, max_n, color="green"
    }
    
-   if (mode == 1) file_ss = "_v";
-   if (mode == 2) file_ss = "_b";
-   if (mode == 3) file_ss = "_v";
-   if ((onlyrcfd)||(onlymerged)) file_ss = file_ss+"_";
+   if (is_void(search_str)) {
+      if (mode == 1) file_ss = "_v";
+      if (mode == 2) file_ss = "_b";
+      if (mode == 3) file_ss = "_v";
+   } else {
+      file_ss = search_str;
+   }
+  
    files =  array(string, 10000);
    floc = array(long, 2, 10000);
    ffp = 1; flp = 0;
-   if (onlymerged) ssm = "merge";
-   if (onlyrcfd) ssr = "rcf";
    for(i=1; i<=n; i++) {
         fp = 1; lp=0;
    	s = array(string,100);
-   	command = swrite(format="find  %s -name '*%d*%d*%s*.pbd'", data_dir, min_e(i), max_n(i), file_ss); 
+   	command = swrite(format="find  %s -name '*%d*%d*%s'", data_dir, min_e(i), max_n(i), file_ss); 
    	f = popen(command, 0); 
    	nn = read(f, format="%s",s);
 	close,f
-	if (search_str) {
-	  ssm = strmatch(s,search_str);
-	  s = s(where(ssm));
-	  nn = numberof(where(s));
-	  if (nn == 0) continue;
- 	}
-        if (onlymerged) {
-	  ssm = strmatch(s,"merge");
-          s = s(where(ssm));
-          nn = numberof(s);
-	  if (nn == 0) continue;
-	}
-	if (onlynotmerged) {
-	  ssm = strmatch(s,"merge");
-	  s = s(where(!ssm));
-	  nn = numberof(where(s));
-	  if (nn == 0) continue;
- 	}
-	if (onlyrcfd == 2) {
-	  ssm = strmatch(s,"ircf");
-	  s = s(where(ssm));
-	  nn =  numberof(s);
-	  if (nn == 0) continue;
- 	}
-	if (onlyrcfd == 1) {
-	  ssm = strmatch(s,"_rcf");
-	  s = s(where(ssm));
-	  nn =  numberof(s);
-	  if (nn == 0) continue;
- 	}
-	if (onlynotrcfd) {
-	  ssm = strmatch(s,"rcf");
-	  s = s(where(!ssm));
-	  nn =  numberof(s);
-	  if (nn == 0) continue;
- 	}
-	if (datum) {
-	  ssm = strmatch(s,datum);
-	  s = s(where(ssm));
-	  nn =  numberof(s);
-	  if (nn == 0) continue;
- 	}
 	lp +=  nn;
 	flp += nn;
 	if (nn) {
@@ -414,7 +375,6 @@ func sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, onlymerged
 	      data_out = [];
             }
          }
-	 // grow, sel_eaarl, eaarl(idx);
 
      }
    }

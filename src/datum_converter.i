@@ -25,6 +25,7 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, type=) {
    if (is_void(tonavd88)) tonavd88=1;
 
    data = test_and_clean(wdata);
+   type = structof(data(1));
    if (!utmzone) {
      if (curzone) {
        utmzone = curzone;
