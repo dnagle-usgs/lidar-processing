@@ -1,0 +1,66 @@
+#!/usr/bin/perl
+# $Id$
+
+# Create ops_conf files from a batch_process output directory.
+# Run this from the directory that holds all of the missions.
+# It will then put a ops_conf file into each of the mission days
+# that has been batched process.
+
+$mydir = $ENV{PWD};
+# printf("mydir = %s\n", $mydir);
+
+chdir ($ARGV[0]) if ( $#ARGV == 0 );
+
+$find = "find . -name \*metadata.txt |";
+
+open(FIND, $find) || die("Unable to: $find\n");
+
+$where = -1;
+while ( $entry=<FIND> ) {
+  chop( $entry );
+  @arr = split(/_/, $entry);
+  $where = $#arr - 1;
+
+  $sdate = $arr[$where];
+  $mydate{$sdate}++;
+
+  $tmpfile = sprintf("/tmp/ops_conf-%s", $sdate);
+  $newfile = sprintf("%s/%s/ops_conf-%s", $mydir, $sdate, $sdate);
+
+  open(FILE,$entry) || die ("Unable to open $entry\n");
+  $start = 0;
+  $done  = 0;
+  $sout = sprintf("ops_conf =\nmission_constants(name=\"DMARS Defaults\",varname=\"ops_IMU2\"");
+  while ( !$done && ($line = <FILE>) ) {
+    chop ($line);
+
+    if ( $start ) {
+      @vals = split(/:/, $line);
+      # printf("\tvals = %d\n", $#vals);
+      if ( $#vals == 1 ) {
+        $sout = sprintf("%s,%s=%s", $sout, $vals[0], $vals[1]);
+      } else {
+        $start = 0;
+        $done  = 1;
+      }
+    }
+
+    $start = 1 if ( $line =~ "ops_conf constants:" );
+  }
+  $sout = sprintf("%s)\n", $sout);
+
+  open(OUT, ">$tmpfile") || die("unable to create $tmpfile\n");
+    printf("opening %s\n", $entry);
+    printf OUT ("%s\n",$sout);
+  close(OUT);
+
+  if ( -e $newfile ) {
+    # printf("File already exists: %s\n", $newfile);
+    system("diff $tmpfile $newfile");
+  } else {
+    printf("creating %s\n", $newfile);
+    system("cp $tmpfile $newfile");
+  }
+}
+
+
