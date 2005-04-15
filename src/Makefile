@@ -102,13 +102,10 @@ BIN = ../bin
 ###############################################################################
 # all  Builds all the "C" programs in this directory that need it.  You can force
 ###############################################################################
-all:		../bin/efdb ../bin/gga2bin ../bin/mkidx \
-		../bin/pnav2ybin ../bin/tans2bin \
-		../bin/rdmars ../bin/dmars2iex ../bin/dmarscat2iex \
-		../bin/checksys \
+all:		../bin/efdb ../bin/gga2bin ../bin/mkidx ../bin/pnav2ybin \
+		../bin/tans2bin ../bin/rdmars ../bin/dmars2iex           \
+		../bin/dmarscat2iex ../bin/checksys                      \
 		../bin/shapefile_filter
-
-
 
 
 ###############################################################################
@@ -118,6 +115,4 @@ rebuildall:	all
 		touch *.o
 		make all
 		
-
-
 
