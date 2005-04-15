@@ -1,0 +1,30 @@
+#!/usr/bin/perl
+# a wrapper for rsync.
+# sets the most commonly used options (-Pav) and also the timeout value to
+# 5 seconds.  The wrapper checks the return value.  If the return value
+# indicates the transfer timed out or never started, then the rsync is
+# re-issued.
+
+# $Id$
+
+$TIMEOUT = 3072;  # should be 30 according to man, but actual use returned this
+$NOSTART = 7680;  # discovered through use.
+
+$cmd = "rsync --timeout 5 -Pav ";
+for ( $i=0; $i<=$#ARGV; ++$i) {
+  $cmd .= $ARGV[$i];
+  $cmd .= " ";
+}
+
+
+$stat = $TIMEOUT;
+
+while ( $stat == $TIMEOUT || $stat == $NOSTART) {
+  system("echo $cmd");
+  system("     $cmd");
+  $stat = $?;
+  printf("Status = %d\n", $stat);
+  sleep(5);    # Give things a chance to fix
+}
+
+exit(0);
