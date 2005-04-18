@@ -545,20 +545,16 @@ proc play { dir } {
 	set run 1
 	if { [no_file_selected $nfiles] } { return }
 
-	if { $dir > 0 } {
-		for { set n $ci } { ($n <= $nfiles) && ($run == 1) } { incr n [expr $step * $dir ] } {
-			show_img $n
-			set ci $n;
+	while { $run == 1 } {
+		if { (($dir > 0) && ($ci < $nfiles)) || (($dir < 0) && ($ci > 1)) } {
+			incr ci [expr $step * $dir]
+			show_img $ci
 			set u [ expr $rate($speed) / 100 ]
 			for { set ii 0; } { $ii < $u } { incr ii } { 
 				after 100; update; 
 			}
-		}
-	} else {
-		for { set n $ci } { ($n >= 0 ) && ($run == 1) } { incr n [expr $step * $dir ] } {
-			show_img $n
-			set ci $n;
-			after $rate($speed)
+		} else {
+			set run 0
 		}
 	}
 }
@@ -1285,7 +1281,7 @@ canvas .canf.can -height 240 -width 350 \
 .canf.can create image 0 0 -tags img -image $img -anchor nw 
 
 set me "\
-EAARL image/data Animator\n\
+EAARL Image/Data Animator\n\
 $version\n\
 $revdate\n\
 C. W. Wright charles.w.wright@nasa.gov\n\
