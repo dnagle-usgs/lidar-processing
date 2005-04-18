@@ -470,7 +470,6 @@ proc gotoImage {} {
 						set x [expr {-1 - $x}]
 					}
 					set test_hms [ clock format [expr {$sod + $x}] -format "%H%M%S" -gmt 1 ]
-#					set test_hms [expr {$hms + $x}]
 									if { $DEBUG_SF } { puts " testing hms:$test_hms" }
 				}
 			}]
@@ -1011,7 +1010,7 @@ proc mark_range { } {
 proc enable_controls { } {
 	global mogrify_exists mogrify_pref camtype
 
-####	.cf2.mark configure            -state normal
+#	.cf2.mark configure            -state normal
 	.mb entryconfigure File        -state normal
 	.mb entryconfigure Archive     -state normal
 	.mb entryconfigure Options     -state normal
@@ -1026,7 +1025,14 @@ proc enable_controls { } {
 		.mb.options.mogrify entryconfigure "Prefer native Tcl over mogrify" -state disabled
 		.mb.options.mogrify entryconfigure "Disable mogrify completely"   -state normal
 	}
+	catch { .mb entryconfigure Tools -state normal }
+}
 
+proc atris_init { } {
+   menu .mb.tools
+	.mb insert "Archive" cascade -label "Tools" -underline 0 -menu .mb.tools -state disabled
+	.mb.tools add command -label "Vessel Tracks and Coastlines" -underline 0 \
+		-command { send_ytk rbgga_menu }
 }
 
 # ] End Procedures #################################

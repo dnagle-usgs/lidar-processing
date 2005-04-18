@@ -236,9 +236,9 @@ proc restore_eaarl_options { fn opt_array } {
  set dir "~/.eaarl";
  set f "$dir/$fn"
  if { [ file exists $f ] == 0 } {
-      tk_messageBox  -icon warning \
-	-message "$f Doesn't exist. Click on \"Save Map Options\" to establish the file."  \
-	-type ok
+#      tk_messageBox  -icon warning \
+#	-message "$f Doesn't exist. Click on \"Save Map Options\" to establish the file."  \
+#	-type ok
     return
  }
  source $f
@@ -311,7 +311,7 @@ proc load_cmd { start_dir } {
 
 
 proc start_sf {} {
- global data_path cir_id
+ global cir_id
     exec ./sf_a.tcl -parent [::comm::comm self] -cir $cir_id &
 }
 
@@ -321,7 +321,7 @@ proc init_sf {} {
 }
 
 proc start_cir {} {
- global data_path sf_a_id
+ global sf_a_id
     exec ./cir.tcl -parent [::comm::comm self] -sf $sf_a_id &
 }
 
@@ -399,192 +399,6 @@ proc load_edb {} {
   }
 }
 
-
-proc request_heading {psf inhd_count sod} {
-   ## this procedure requests heading information for sf_a.tcl
-   ## amar nayegandhi
-   global sf_pid
-   set sf_pid $psf
-   exp_send "pkt_sf = prepare_sf_pkt($sod, $psf); \r"
-}
-
-proc mark_time_pos { sod } {
-  exp_send "mark_time_pos, $sod\r"
-}
-
-
-proc mark_pos { lat lon } {
-  global utm _map
-  scan $lat "%1s%2f%f" df dd mm
-  set lat [ expr $dd + $mm/60.0 ]
-  if { $df == "S" } {
-    set lat [ expr -$lat ]
-  }
-  scan $lon "%1s%3f%f" df dd mm
-  set lon [ expr $dd + $mm/60.0 ]
-  if { $df == "W" } {
-    set lon [ expr -$lon ]
-  }
-  if {$utm == 0} {
-  exp_send "wsav=window();window,$_map(window); plmk, $lat, $lon, msize=.5, marker=1, color=\"red\"; window,wsav\r"
-  } else {
-  exp_send "ll2utm, $lat, $lon; \r"
-  expect ">"
-  exp_send "wsav=window();window,$_map(window); plmk, UTMNorthing, UTMEasting, msize=.5, marker=1, color=\"red\"; window,wsav\r"
-  }
-}
-
-
-proc rbgga_menu {} {
- global ytk_PLMK_marker
- global data_path _map
- global _ytk utm
- set gga(null) ""
- set mw .rbgga
- destroy $mw
- toplevel $mw
- wm title $mw "eaarl.rbgga: "
- frame $mw.g1 -relief groove -borderwidth 3
- label $mw.g1.lulb -text "Coordinates:" -anchor e
- tk_optionMenu $mw.g1.lu gga(llu) latlon utm
- grid $mw.g1.lulb $mw.g1.lu -sticky ew
-
- label $mw.g1.lwlb -text "Line Width:" -anchor e
- tk_optionMenu $mw.g1.lw   gga(linewidth) 1 3 5 7 10 12 15 20 25
- grid $mw.g1.lwlb $mw.g1.lw -sticky ew
-
- label $mw.g1.lclb -text "Line Color:" -anchor e
- tk_optionMenu $mw.g1.lc   gga(linecolor)  red black blue green cyan magenta yellow white
- grid $mw.g1.lclb $mw.g1.lc -sticky ew
-
- label $mw.g1.skiplb -text "Points to skip:" -anchor e
- tk_optionMenu $mw.g1.skip gga(skip) 0 1 2 5 10 15 20 25 50 75 100  
- grid $mw.g1.skiplb $mw.g1.skip -sticky ew
-
-# label $mw.g1.markerslb -text "Use Markers:" -anchor e
-# tk_optionMenu $mw.g1.markers gga(markers) Yes No
-# grid $mw.g1.markerslb $mw.g1.markers -sticky ew
-
- label $mw.g1.mshapelb -text "Marker shape:" -anchor e
- tk_optionMenu $mw.g1.mshape gga(mshape) None Square Cross \
-	Triangle Circle Diamond Cross45 "Inverted-Triangle"
- grid $mw.g1.mshapelb $mw.g1.mshape -sticky ew
-
- label $mw.g1.msizelb -text "Marker size:" -anchor e
- tk_optionMenu $mw.g1.msize gga(msize) .1 .2 .3 .4 .5 \
-	.6 .7 1.0 1.5 2.0 2.5 3.0 5.0 10.0 
-
- grid $mw.g1.msizelb $mw.g1.msize -sticky ew
-
- set _map(window) 6
- Label $mw.g1.owinlbl -text "in Win:"
- SpinBox $mw.g1.owin -justify center -range {0 7 1} \
-         -width 2 -textvariable _map(window)
-
- grid $mw.g1.owinlbl $mw.g1.owin -sticky ew
-
-
-
-
- frame $mw.f1 -relief groove -borderwidth 3
- button $mw.f1.load -text "Load GGA" -command { 
-   if {$gga(llu) == "utm"} {
-      set utm 1
-   } else {
-      set utm 0
-   }
-   exp_send "gga=rbgga()\r" 
- }
- button $mw.f1.plot -text "Plot" -command {
-   if { $gga(mshape) == "None" } {
-      set marker ",marker=0";
-   } else {
-      set marker ",marker=$ytk_PLMK_marker($gga(mshape))"
-   }
-   if {$gga(llu) == "utm"} {
-      set utm 1
-   } else {
-      set utm 0
-   }
-    exp_send "show_gga_track, color=\"$gga(linecolor)\", skip=$gga(skip)$marker,msize=$gga(msize), utm=$utm, win=$_map(window); \n\r" 
-    expect ">"
-    exp_send "\n"
-    expect ">"
-    exp_send "utm= $utm; \r"
-    expect ">"
- }
- button $mw.f1.info -text "Info"
- button $mw.f1.fma -text "Fma" -command { exp_send "window,$_map(window); fma\r\n" }
- button $mw.f1.jump -text "Jump" -command { 
-   global sf_pid
-   #file delete /tmp/tans_pkt.$sf_pid 
-   exp_send "wsav=window();window,$_map(window); gga_click_start_isod()\n" 
-   #tk_messageBox  -message "Click using left mouse button over a section 
- #of a flightline in Yorick window-6."  -type ok
-   expect "region_selected"
-   exp_send "window(wsav)\r"
- }
- button $mw.f1.limits -text "Limits" \
-	-command { exp_send "window,$_map(window); limits\r\n" }
- button $mw.f1.dismiss -text "Dismiss" -command "destroy $mw "
- pack $mw.f1.load $mw.f1.plot $mw.f1.info $mw.f1.limits \
-	$mw.f1.fma $mw.f1.jump -side top -fill x
- pack $mw.f1.dismiss -side bottom -anchor s -fill both
-
- frame $mw.f2 -relief groove -borderwidth 3
- label $mw.f2.title -text "Map controls"
- button $mw.f2.mapredraw  -text "Replot" -command {
-   if {$gga(llu) == "utm"} {
-      set utm 1
-   } else {
-      set utm 0
-   }
-   plot_last_map $utm 
- }
- button $mw.f2.mapload    -text "Load" -command {
-   if {$gga(llu) == "utm"} {
-      set utm 1
-   } else {
-      set utm 0
-   }
-   load_map $utm 
- }
-
- set w $mw.f2
-Button $w.overlay_grid -text "Overlay\nGrid" -command {
-  exp_send "draw_grid, $_map(window)\r"
-}
-
-Button $w.show_grid -text "Show\nGrid Name" -command {
-  exp_send "show_grid_location, $_map(window)\r"
-}
-
-
- pack  $mw.f2.title -side top
- pack  \
-	$mw.f2.mapload \
-	$mw.f2.mapredraw \
-        $w.overlay_grid \
-        $w.show_grid \
-	-fill both -expand 1 -side left
-
- frame $mw.f3 -relief groove -borderwidth 3
- button $mw.f3.fpload    -text "Load" -command {
-    load_fp
- }
- label $mw.f3.title -text "Flight Plans"
-
- pack $mw.f3.title -side top
- pack $mw.f3.fpload -side left
-### pack $mw.f3 -side bottom -anchor n -fill both -expand 1
-
-
- pack $mw.f3 -side bottom -expand 1 -fill both
- pack $mw.f2 -side bottom -expand 1 -fill both
- pack $mw.f1 $mw.g1 -side left -anchor n -fill both -expand 1
-
-}
-
 #####################################################################
 # main
 # Set the source code path for this invocation.  It can 
@@ -613,7 +427,6 @@ Button $w.show_grid -text "Show\nGrid Name" -command {
   $w configure -menu $w.mb
    menu $w.mb
    menu $w.mb.file
-   menu $w.mb.map
    menu $w.mb.nav
    menu $w.mb.attitude
    menu $w.mb.rasters
@@ -623,7 +436,6 @@ Button $w.show_grid -text "Show\nGrid Name" -command {
    menu $w.mb.help
 
  $w.mb add cascade -label File     -underline 0 -menu $w.mb.file
-### $w.mb add cascade -label Map      -underline 0 -menu $w.mb.map
  $w.mb add cascade -label "Maps/Nav"     -underline 0 -menu $w.mb.nav
  $w.mb add cascade -label "Settings"     -underline 0 -menu $w.mb.attitude
  $w.mb add cascade -label Rasters  -underline 0 -menu $w.mb.rasters
@@ -637,6 +449,7 @@ Button $w.show_grid -text "Show\nGrid Name" -command {
  $w.mb.file add command -label "Load EAARL from Conf..." -command { source "$src_path/confload.ytk" } -underline 16
 
  exp_send "require, \"rbgga.i\"\r"
+ source rbgga.ytk
  $w.mb.file add command -label "Coastlines & Flight tracks"   -underline 13 \
 	-command rbgga_menu
  $w.mb.file add command -label "Load DMARS Attitude data..."   -underline 5 \
@@ -665,6 +478,7 @@ Button $w.show_grid -text "Show\nGrid Name" -command {
  $w.mb.file add command -label Dismiss -command { destroy $w }
 
  source "$src_path/map.ytk"
+ restore_eaarl_options "map.options" _map
 
 #############
 #   Rasters
