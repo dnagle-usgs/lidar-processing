@@ -37,6 +37,7 @@ if { [ catch {package require vfs::tar} ] } {
 	exit 1;
 }
 package require cmdline
+package require comm
 
 # ] End Script Initialization ######################
 
@@ -44,6 +45,8 @@ package require cmdline
 
 set sf_options {
 	{camtype.arg 1 "The type of photography to be viewed. 1 for EAARL photography; 2 for boat photography. Default: "}
+	{parent.arg -1 "The comm port number for the application (usually ytk) calling this program. Default: -1 (disabled)"}
+	{cir.arg -1 "The comm port number for cir.tcl. Default: -1 (disabled)"}
 }
 set sf_usage "\nUsage:\n sf_a.tcl \[options]\nOptions:\n"
 
@@ -83,6 +86,9 @@ set range_touched 0 ;# Have fcin or lcin been set but not used?
 
 set camtype $params(camtype) ;# Camera type -- may be overridden by .lst commands
 set tarname ""      ;# Tar file to access - may be changed by .lst commands
+
+set ytk_id $params(parent) ;# Comm id for ytk
+set cir_id $params(cir)    ;# Comm id for cir
 
 set frame_off 0     ;# Frame offset
 
@@ -142,22 +148,48 @@ proc center_win { win } {
 	update
 }
 
-
 proc ytk_exists { } {
-	if {[ lsearch -exact [ winfo interps ] ytk ] != -1} {
-		return 1
+	global ytk_id
+	return [expr {$ytk_id != -1}]
+}
+
+proc send_ytk { args } {
+	global ytk_id
+	if { $ytk_id != -1 } {
+		if { [catch { eval ::comm::comm send $ytk_id $args }] } {
+			set ytk_id -1
+			return 0
+		} else {
+			return 1
+		}
 	} else {
 		return 0
 	}
 }
 
-proc send_ytk { args } {
-	if { [ytk_exists] == 1 } {
-		send ytk $args
-		return 1
+proc cir_exists { } {
+	global cir_id
+	return [expr {$cir_id != -1}]
+}
+
+proc send_cir { args } {
+	global cir_id
+	if { $cir_id != -1 } {
+		if { [catch { eval ::comm::comm send $cir_id $args }] } {
+			set cir_id -1
+			return 0
+		} else {
+			return 1
+		}
 	} else {
 		return 0
 	}
+}
+
+proc send_comm_id { } {
+	global ytk_id cir_id
+	send_ytk set sf_a_id [::comm::comm self]
+	send_cir set sf_a_id [::comm::comm self]
 }
 
 # timern_write is used in a variable trace to keep
@@ -1357,7 +1389,7 @@ Button .cf3.cirbutton -text "cir" \
 	-command {
 		if { [no_file_selected $nfiles] } { return }
 		set cir_sod [ expr $sod - 2 ]
-		if { [ catch { send cir.tcl "show sod $cir_sod"; } ] } {
+		if { !([ cir_exists ] && [ send_cir "show sod $cir_sod" ]) } {
 			tk_messageBox -icon warning -message "You must run cir.tcl first."
 		}
 	}
@@ -1429,7 +1461,9 @@ bind .slider <ButtonRelease> {
 
 ### ] /Bindings
 
-### [ Select defaults
+# ] End GUI Initialization #########################
+
+# [ Select defaults ################################
 
 .cf3.zoom setvalue @99
 
@@ -1447,9 +1481,10 @@ if { $mogrify_exists } {
 
 if { $DEBUG_SF } { enable_controls }
 
-### ] /Select defaults
+send_comm_id
+send_ytk init_sf
 
-# ] End GUI Initialization #########################
+# ] End Select defaults ############################
 
 # [ Variable Traces ################################
 

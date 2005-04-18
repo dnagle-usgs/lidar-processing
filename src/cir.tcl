@@ -11,6 +11,18 @@ exec wish "$0" ${1+"$@"}
 package require Img
 package require BWidget
 package require vfs::tar
+package require cmdline
+package require comm
+
+set cir_options {
+	{parent.arg -1 "The comm port number for the application (usually ytk) calling this program. Default: -1 (disabled)"}
+	{sf.arg -1 "The comm port number for sf_a.tcl. Default: -1 (disabled)"}
+}
+set cir_usage "\nUsage:\n sf_a.tcl \[options]\nOptions:\n"
+
+array set params [::cmdline::getoptions argv $cir_options $cir_usage]
+set ytk_id  $params(parent) ;# Comm id for ytk
+set sf_a_id $params(sf)     ;# Comm id for sf_a
 
 set settings(path) 	"/data"
 set settings(step)  	1
@@ -59,6 +71,40 @@ set fn ""
 set settings(tar_file) ""
 set settings(tar_date) ""
 
+proc ytk_exists { } {
+   global ytk_id
+   return [expr {$ytk_id != -1}]
+}
+
+proc send_ytk { args } {
+   global ytk_id
+   if { $ytk_id != -1 } {
+      if { [catch { eval ::comm::comm send $ytk_id $args }] } {
+         set ytk_id -1
+         return 0
+      } else {
+         return 1
+      }
+   } else {
+      return 0
+   }
+}
+
+proc sf_exists { } {
+# See if sf_a exists
+    global sf_a_id
+    return [expr {$sf_a_id != -1}]
+}
+
+proc send_sf { args } {
+# Send a message to sf_a.tcl safely
+    global sf_a_id
+    if { $sf_a_id != -1 } {
+        if { [catch { eval ::comm::comm send $sf_a_id $args }] } {
+            set sf_a_id -1
+        }
+    }
+}
 
 proc cfg_file { fn } { 
  global settings
@@ -207,7 +253,7 @@ proc get_heading {inhd} {
   if {$inhd == 1} {
 	set pcir [pid]
 	## the function request_heading is defined in eaarl.ytk
-	send ytk request_heading $pcir $inhd $settings(sod)
+	send_ytk request_heading $pcir $inhd $settings(sod)
 	## tmp file is now saved as /tmp/tans_pkt.$pcir
 	if { [catch {set f [open "/tmp/tans_pkt.$pcir" r] } ] } {
 	  tk_messageBox -icon warning -message "Heading information is being loaded... Click OK to continue"
@@ -431,9 +477,10 @@ proc prefs { } {
   button .p.rgb \
 	-text RGB \
 	-command { 
+            global sf_a_id
 #####  The
             set sf_sod [ expr $settings(sod) +2 ]
-            send sf_a.tcl "set timern sod; set hsr $sf_sod; gotoImage";
+            send_sf "set timern sod; set hsr $sf_sod; gotoImage"
         }
 
   spinbox .p.step  \
@@ -479,4 +526,8 @@ bind .canf.can <ButtonPress-2> { prefs  }
 bind .canf.can <ButtonPress-3> { prefs } 
 
 
+send_ytk set cir_id [::comm::comm self]
+send_sf set cir_id [::comm::comm self]
+
+send_ytk init_cir
 

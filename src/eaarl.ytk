@@ -16,6 +16,41 @@
 #
 #
 
+package require comm
+set sf_a_id -1
+set cir_id -1
+
+proc send_sf { args } {
+# Send a message to sf_a.tcl safely
+    global sf_a_id
+    if { $sf_a_id != -1 } {
+        if { [catch { eval ::comm::comm send $sf_a_id $args }] } {
+            set sf_a_id -1
+        }
+    }
+}
+
+proc send_cir { args } {
+# Send a message to cir.tcl safely
+    global cir_id
+    if { $cir_id != -1 } {
+        if { [catch { eval ::comm::comm send $cir_id $args }] } {
+            set cir_id -1
+        }
+    }
+}
+
+proc sf_exists { } {
+# See if sf_a exists
+    global sf_a_id
+    return [expr {$sf_a_id != -1}]
+}
+
+proc cir_exists { } {
+# See if cir exists
+	global cir_id
+	return [expr {$cir_id != -1}]
+}
 
 # Center a window.
 proc center_win { win } {
@@ -110,18 +145,18 @@ proc load_dmars {} {
 
 proc send_sod_to_sf { somd } {
   catch {
-   send sf_a.tcl set timern sod
-   send sf_a.tcl set hsr $somd
-   send sf_a.tcl gotoImage
+   send_sf set timern sod
+   send_sf set hsr $somd
+   send_sf gotoImage
   }
 }
 
 proc send_tans_to_sf {somd p r h} {
    catch {
-    send sf_a.tcl set pitch $p
-    send sf_a.tcl set roll $r
-    send sf_a.tcl set head $h
-    send sf_a.tcl gotoImage
+    send_sf set pitch $p
+    send_sf set roll $r
+    send_sf set head $h
+    send_sf gotoImage
    }
 }
 
@@ -276,15 +311,23 @@ proc load_cmd { start_dir } {
 
 
 proc start_sf {} {
+ global data_path cir_id
+    exec ./sf_a.tcl -parent [::comm::comm self] -cir $cir_id &
+}
+
+proc init_sf {} {
  global data_path
-    exec "./sf_a.tcl" &
-    after 2000 " send sf_a.tcl \"set dir $data_path\" " 
+    send_sf set dir $data_path
 }
 
 proc start_cir {} {
+ global data_path sf_a_id
+    exec ./cir.tcl -parent [::comm::comm self] -sf $sf_a_id &
+}
+
+proc init_cir {} {
  global data_path
-    exec "./cir.tcl" &
-    after 2000 " send cir.tcl \"cirdir {$data_path\/cir}\" " 
+    send_cir cirdir "$data_path/cir"
 }
 
 proc edb_loaded { } {
@@ -343,8 +386,8 @@ proc load_edb {} {
   expect "load_edb_completed"
   expect ">"
   edb_status
-  if { [ lsearch -exact [ winfo interps ] sf_a.tcl ] != -1 } {
-     send sf_a.tcl "set dir $data_path"
+  if { [sf_exists] } {
+     send_sf "set dir $data_path"
   } else {
       set sfrun [ tk_messageBox  \
            -message "Digital Camera Playback Software\
