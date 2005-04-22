@@ -87,4 +87,8 @@ proc send_sod_to_sf { somd } {
 #   }
 #}
 
+proc depth_profile { data_file } {
+	exp_send "depth_profile, \"$data_file\"\r"
+}
+
 start_sf

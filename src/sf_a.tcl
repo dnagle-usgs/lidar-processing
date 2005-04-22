@@ -60,7 +60,7 @@ array set params [::cmdline::getoptions argv $sf_options $sf_usage]
 # to disable. Zero will enable messages.
 set no_mog_messages 0
 
-set DEBUG_SF 0      ;# Show debug info on (1) or off (0)
+set DEBUG_SF 1      ;# Show debug info on (1) or off (0)
 
 # The camera is frequently out of time sync so we add this to correct it.
 set seconds_offset 0
@@ -1029,6 +1029,13 @@ proc atris_init { } {
 	.mb insert "Archive" cascade -label "Tools" -underline 0 -menu .mb.tools -state disabled
 	.mb.tools add command -label "Vessel Tracks and Coastlines" -underline 0 \
 		-command { send_ytk rbgga_menu }
+	.mb.tools add command -label "Depth Profile" -underline 0 \
+		-command {
+			global split_dir
+			set temp_f [join [lrange [split [join [lrange $split_dir 0 end] /] .] 0 end-1] .].pbd
+			send_ytk depth_profile $temp_f
+			unset temp_f
+		}
 }
 
 # ] End Procedures #################################
@@ -1062,12 +1069,21 @@ menu .mb.zoom
 
 .mb.file add command -label "Select File.." -underline 0 \
 	-command {
-		set f [ tk_getOpenFile  -filetypes { 
-		     { {Tar Files } {.tar} } 
-			  { {List files} {.lst} }
-			  { {Zip  files} {.zip} }
-			  { {All files } { *  } }
-			} -initialdir $base_dir ];
+		if { $camtype == 2 } {
+			set f [ tk_getOpenFile  -filetypes { 
+				{ {List files} {.lst} }
+				{ {Tar Files } {.tar} } 
+				{ {Zip  files} {.zip} }
+				{ {All files } { *  } }
+				} -initialdir $base_dir ];
+		} else {
+			set f [ tk_getOpenFile  -filetypes { 
+				{ {Tar Files } {.tar} } 
+				{ {List files} {.lst} }
+				{ {Zip  files} {.zip} }
+				{ {All files } { *  } }
+				} -initialdir $base_dir ];
+		}
 		if { $f != "" } {
 		   set base_dir [ file dirname $f ]
 			wm title . $base_dir
@@ -1130,62 +1146,63 @@ menu .mb.zoom
 ##### ][ Options Menu
 
 .mb.options add command  -label "VCR Controls..." -underline 1  -command {
-	  if { [ catch { pack info .cf1 } ] } {
-       pack .cf1 -side top -in . -fill x
-		 wm geometry . ""
-	  } else {
-	    pack forget .cf1
-		 wm geometry . ""
-	  }
-  }
+	if { [ catch { pack info .cf1 } ] } {
+		pack .cf1 -side top -in . -fill x
+		wm geometry . ""
+	} else {
+		pack forget .cf1
+		wm geometry . ""
+	}
+}
 .mb.options add command  -label "GPS Info..." -underline 1  -command {
-	  if { [ catch { pack info .gps } ] } {
-		 pack_gps
-		 wm geometry . ""
-	  } else {
-	    pack forget .gps
-		 wm geometry . ""
-	  }
-  }
+	if { [ catch { pack info .gps } ] } {
+		pack .gps    -side top -in . -anchor nw
+#		pack_gps
+		wm geometry . ""
+	} else {
+		pack forget .gps
+		wm geometry . ""
+	}
+}
 .mb.options add command  -label "Image slider..." -underline 1  -command {
-	  if { [ catch { pack info .slider } ] } {
-       pack .slider -side top -in . -fill x
-		 wm geometry . ""
-	  } else {
-	    pack forget .slider
-		 wm geometry . ""
-	  }
-  }
+	if { [ catch { pack info .slider } ] } {
+		pack .slider -side top -in . -fill x
+		wm geometry . ""
+	} else {
+		pack forget .slider
+		wm geometry . ""
+	}
+}
 .mb.options add command  -label "ALPS Interface..." -underline 1  -command {
-	  if { [ catch { pack info .cf3 } ] } {
-      pack .cf3    -side top -in . -fill x
-	   pack .cf1.plotpos -side left -in .cf1 -expand 1 -fill x
-		 wm geometry . ""
-	  } else {
-	    pack forget .cf3 .cf1.plotpos
-		 wm geometry . ""
-	  }
-  }
+	if { [ catch { pack info .cf3 } ] } {
+		pack .cf3    -side top -in . -fill x
+		pack .cf1.plotpos -side left -in .cf1 -expand 1 -fill x
+		wm geometry . ""
+	} else {
+		pack forget .cf3 .cf1.plotpos
+		wm geometry . ""
+	}
+}
 .mb.options add command  -label "Speed, Gamma..." -underline 1  -command {
-	  if { [ catch { pack info .cf2 } ] } {
-	    pack .cf2 -side top
-		 wm geometry . ""
-	  } else {
-	    pack forget .cf2
-		 wm geometry . ""
-	  }
+	if { [ catch { pack info .cf2 } ] } {
+		pack .cf2 -side top
+		wm geometry . ""
+	} else {
+		pack forget .cf2
+		wm geometry . ""
 	}
+}
 .mb.options add command  -label "Hide/Show Scroll bars..." -underline 1  -command {
-	  if { [ catch { pack info .canf.xscroll } ] } {
-	    pack .canf.yscroll -side right  -fill y -before .canf.can
-	    pack .canf.xscroll -side bottom -fill x -before .canf.can
-		 wm geometry . ""
-	  } else {
-	    pack forget .canf.xscroll
-	    pack forget .canf.yscroll
-		 wm geometry . ""
-	  }
+	if { [ catch { pack info .canf.xscroll } ] } {
+		pack .canf.yscroll -side right  -fill y -before .canf.can
+		pack .canf.xscroll -side bottom -fill x -before .canf.can
+		wm geometry . ""
+	} else {
+		pack forget .canf.xscroll
+		pack forget .canf.yscroll
+		wm geometry . ""
 	}
+}
 
 .mb.options add checkbutton -label "Include Heading" -underline 8 -onvalue 1 \
 	-offvalue 0 -variable inhd \
@@ -1281,7 +1298,7 @@ canvas .canf.can -height 240 -width 350 \
 .canf.can create image 0 0 -tags img -image $img -anchor nw 
 
 set me "\
-EAARL Image/Data Animator\n\
+EAARL and ATRIS Image/Data Animator\n\
 $version\n\
 $revdate\n\
 C. W. Wright charles.w.wright@nasa.gov\n\
@@ -1433,12 +1450,19 @@ pack \
 
 pack .canf   -side top -in . -fill both -expand 1
 
-proc pack_gps { } {
-  pack .gps    -side top -in . -anchor nw
-}
-pack_gps
-pack .cf1    -side top -in . -fill x
-######pack .cf2    -side top -in . -fill x
+# Toolbar Packing
+
+.mb.options invoke "GPS Info..."
+if {$camtype == 2} { .mb.options invoke "Image slider..." }
+.mb.options invoke "VCR Controls..."
+
+
+#proc pack_gps { } {
+#  pack .gps    -side top -in . -anchor nw
+#}
+#pack_gps
+#pack .cf1    -side top -in . -fill x
+#pack .cf2    -side top -in . -fill x
 
 ### ] /Pack
 
@@ -1481,10 +1505,10 @@ if { $mogrify_exists } {
 	set mogrify_pref "only tcl"
 }
 
-if { $DEBUG_SF } { enable_controls }
-
 send_comm_id
 send_ytk init_sf
+
+if { $DEBUG_SF } { enable_controls }
 
 # ] End Select defaults ############################
 
