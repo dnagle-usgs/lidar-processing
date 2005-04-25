@@ -33,6 +33,7 @@ local boat_i;
 		help, calculate_heading
 		help, perpendicular_intercept
 		help, find_nearest_point
+		help, find_points_in_radius
 
 	Several structs are also defined. See:
 
@@ -70,7 +71,7 @@ func boat_normalize_images(src=, dest=, pbd=, min_depth=, max_depth=, verbose=) 
 
 	Converts boat images such that they are uniform in size and such that they
 	portray an area uniform in size. (In other words, they all have the same
-	pixel size and they all show an area that has the same physical dimensions.
+	pixel size and they all show an area that has the same physical dimensions.)
 
 	The following parameters are required:
 
@@ -403,8 +404,11 @@ func boat_rename_exif_files(indir=, outdir=, datestring=, move=, verbose=) {
 	default, all files are copied from indir to outdir using the new name,
 	but this can be overridden to move them instead.
 
-	NOTE: This will ONLY rename files that contain EXIF GPS time imformation. Any
-	files that do not contain an EXIF GPS time stamp will be silently ignored.
+	NOTE: This will rename files that contain EXIF GPS time imformation when the
+	GPS information is present. However, files that do not contain an EXIF GPS
+	time stamp will be renamed according to their "date-taken" field. This value
+	is typically close to GPS time, but isn't guaranteed to be accurate as it is
+	based off the computer's clock rather than the GPS instrument.
 
 	The following parameters are required:
 
@@ -415,13 +419,13 @@ func boat_rename_exif_files(indir=, outdir=, datestring=, move=, verbose=) {
 		indir= Input directory, containing the JPG images to be renamed. Must
 			be a full path.
 
-		outdir= Output directory, where the renamed JPG images will be placed.
-			Must be a full path.
-
 		datestring= A string representing the mission date. This string must be
 			formatted as YYYY-MM-DD.
 
 	The following options are optional:
+
+		outdir= Output directory, where the renamed JPG images will be placed.
+			Must be a full path. If omitted, outdir will be the same as indir.
 
 		move= Set to any nonzero value to indicate that the file is to be moved
 			instead of copied.
@@ -444,10 +448,9 @@ func boat_rename_exif_files(indir=, outdir=, datestring=, move=, verbose=) {
 */
 	
 	/* Check for required options */
-	if (is_void(indir) || is_void(outdir) || is_void(datestring)) {
+	if (is_void(indir) || is_void(datestring)) {
 		write, "One or more required options not provided. See 'help, boat_rename_exif_files'.";
 		if(is_void(indir)) write, "-> Missing 'indir='.";
-		if(is_void(outdir)) write, "-> Missing 'outdir='.";
 		if(is_void(datestring)) write, "-> Missing 'datestring='.";
 		return;
 	}
@@ -470,7 +473,12 @@ func boat_rename_exif_files(indir=, outdir=, datestring=, move=, verbose=) {
 	} else {
 		move = 0;
 	}
-
+	
+	/* Populate outdir as indir if empty */
+	if(strlen(outdir) < 1) {
+		outdir = indir;
+	}
+	
 	/* Validate and fix the indir and outdir to have trailing / */
 	if("/" != strpart(indir, strlen(indir):strlen(indir))) {
 		indir = indir + "/";
@@ -1150,6 +1158,8 @@ func boat_gps_smooth(boat, lat, lon, step, verbose=) {
 	information is unavailable. The lat and lon variables are to
 	contain the GPS information; any latitude and longitude info
 	that is already in boat is disregarded and replaced.
+
+	This function is used by boat_input_edt and boat_input_exif.
 
 	The following parameters are required:
 
@@ -1914,7 +1924,7 @@ func boat_read_hypack_waypoints(ifname=, ret=, utmzone=, verbose=){
 								if(verbose >= 2) write, format="==> boat_read_hypack_waypoints(ifname=%s, ret=%s, utmzone=%i, verbose=%i)\n", ifname, ret, utmzone, verbose;
 	require, "ll2utm.i";
 	
-	cmd_temp = "awk 'BEGIN{FS=\" \"}{print $2\" \"$3\" \"$4}' " + ifname + " | awk 'BEGIN{FS=\"\\\"\"}{print $2$3}'"; /* ' */
+	cmd_temp = "awk 'BEGIN{FS=\" \"}{print $2\" \"$3\" \"$4}' " + ifname + " | awk 'BEGIN{FS=\"\\\"\"}{print $2$3}'"; /* " */
 	cmd = "(" + cmd_temp + " | wc -l ); " + cmd_temp;
 
 	f = popen(cmd, 0);
@@ -2249,3 +2259,98 @@ func find_nearest_point(x, y, xs, ys, force_single=, radius=, verbose=) {
 	return point_indx;
 }
 
+func find_points_in_radius(x, y, xs, ys, radius=, verbose=) {
+/* DOCUMENT find_points_in_radius(x, y, xs, ys, radius=, verbose=)
+
+	Returns the index(es) of the points within a radius of a specified location.
+
+	The following parameters are required:
+
+		x, y    An ordered pair for the location to be found near.
+
+		xs, ys  Correlating arrays of x and y values in which to find the
+			nearest point.
+
+	The following options are required:
+
+		n/a
+
+	The following options are optional:
+
+		radius= The radius within which to search. By default, radius
+			initializes to 3.
+
+		verbose= Indicates the verbosity level to run at.
+			Default: 0
+			Valid values:
+				0 - No progress info
+				1 - Limited progress information
+				2 - Full progress information
+				3 - Full progress information for this function
+					and all called functions
+				-1 - Explicitly request the default level
+				-2 - No progress info for this or any called
+					functions
+
+	Function returns:
+
+		The indexes of the points within radius.
+*/
+
+	require, "data_rgn_selector.i";
+	
+	problem_string = "";
+	/* Validate xs and ys */
+	if(dimsof(xs)(1) != 1) {
+		problem_string += " -> Array xs is not a one-dimensional array.\n";
+	}
+	if(dimsof(ys)(1) != 1) {
+		problem_string += " -> Array ys is not a one-dimensional array.\n";
+	}
+	if(problem_string == "" && dimsof(xs)(2) != dimsof(ys)(2)) {
+		problem_string += " -> The dimensions of xs do not match the dimensions of ys.\n";
+	}
+	if(dimsof(x)(1) != 0) {
+		problem_string += " -> Only a scalar value may be specified for x.\n";
+	}
+	if(dimsof(y)(1) != 0) {
+		problem_string += " -> Only a scalar value may be specified for y.\n";
+	}
+
+	if(problem_string != "") {
+		write, format="Invalid options were specified. See 'help, find_points_in_radius'.\n%s", problem_string;
+		return;
+	}
+	
+	/* Validate radius */
+	if(is_void(radius)) { radius = 3.0; }
+	radius = abs(radius);
+
+	/* Validate the verbosity and set func_verbose */
+	if (!(is_array(verbose) && !dimsof(verbose)(1))) verbose = 0;
+	if (verbose == -1) verbose = 0;
+	if (verbose == 3 || verbose == -2) {
+		func_verbose = verbose;
+	} else {
+		func_verbose = -1;
+	}
+	verbose = int(verbose);
+	
+								if(verbose >= 2) write, format="==> find_points_in_radius(x:%f, y:%f, xs:[%i], ys:[%i], radius=%f, verbose=%i)\n", float(x), float(y), numberof(xs), numberof(ys), float(radius), verbose;
+
+	/* Initialize the indx of points in the box def by radius */
+	indx = data_box(xs, ys, x-radius, x+radius, y-radius, y+radius);
+
+	/* Calculate the distance of each point in the index from the center */
+								if(verbose >= 2) write, "Calculating relevant distances.";
+	dist = array(double, numberof(xs));
+	dist() = radius + 1;  // By default, points are too far away
+	dist(indx) = ( (x - xs(indx))^2 + (y - ys(indx))^2 ) ^ .5;
+	
+	/* Find the indexes in the original array that are within radius */
+								if(verbose >= 2) write, "Finding points within radius.";
+	point_indx = where(dist <= radius);
+
+								if(verbose >= 2) write, format="--/ find_points_in_radius%s", "\n";
+	return point_indx;
+}
