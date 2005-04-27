@@ -1,5 +1,198 @@
-# proc confload {} {
-   global path conflist
+global path conflist
+
+proc write_conf { } {
+   destroy  .write
+   toplevel .write
+   wm title .write "Write conf file"
+
+   foreach x {1 2 3 4 5 6 7 8 9} {
+      frame .write.$x -relief groove -borderwidth 3
+      pack .write.$x -side top
+   }
+
+	set fname ""
+	set edbfn   ""
+   set pnav  ""
+	set imu   ""
+	set map   ""
+	set lim   0
+	set ops   ""
+	set bat   0 
+	set batfs ""
+   set oth   "none"
+
+	LabelEntry .write.1.fake -textvariable bat -text $bat
+	LabelEntry .write.2.fake -textvariable lim -text $lim
+
+	LabelEntry .write.1.fname -relief sunken -borderwidth 3 -width 80\
+      -label "fname:  " -helptext "Enter conf filename" \
+      -textvariable fname -text $fname
+	
+	Button .write.1.fnbrowse -text "Browse..." -helptext "Open dialog to select conf file" \
+      -command {
+		set fname [tk_getSaveFile -title "set conf file" -filetypes {{{Conf files} {.conf}}}]         
+      }
+	
+	LabelEntry .write.2.edb -relief sunken -borderwidth 3 -width 80\
+      -label "edb:      " -helptext "Select edb filename" \
+      -textvariable edbfn -text $edbfn
+	
+	Button .write.2.edbbrowse -text "Browse..." -helptext "Open dialog to select edb file" \
+      -command {
+		set edbfn [tk_getOpenFile -title "set edb file" -filetypes {{{edb index files} {.idx}}}]         
+      }
+
+	LabelEntry .write.3.pnav -relief sunken -borderwidth 3 -width 80\
+      -label "PNAV:   " -helptext "Select PNAV filename" \
+      -textvariable pnav -text $pnav
+	
+	Button .write.3.pnavbrowse -text "Browse..." -helptext "Open dialog to select PNAV file" \
+      -command {
+		set pnav [tk_getOpenFile -title "set PNAV file" -filetypes {{{PNAV files} {.ybin}}}]         
+      }
+
+	LabelEntry .write.4.imu -relief sunken -borderwidth 3 -width 80\
+      -label "IMU:     " -helptext "Select IMU filename" \
+      -textvariable imu -text $imu
+	
+	Button .write.4.imubrowse -text "Browse..." -helptext "Open dialog to select IMU file" \
+      -command {
+		set imu [tk_getOpenFile -title "set IMU file" \
+			-filetypes {
+				{{TANS files} {.ybin}	} 
+				{{IMU files}  {.pbd}		}
+			}]         
+      }
+
+	LabelEntry .write.5.map -relief sunken -borderwidth 3 -width 53\
+      -label "map:     " -helptext "Select coastline map filename" \
+      -textvariable map -text $map
+	
+	Button .write.5.mapbrowse -text "Browse..." -helptext "Open dialog to select coastline map file" \
+      -command {
+		set map [tk_getOpenFile -title "set map file" -filetypes {{{map files} {.pbd}}}]
+      }
+	
+	label .write.5.limlab -text "Plot limits:"
+
+	ComboBox .write.5.lim -text "From GGA" -width 11 -editable 0 -values \
+		{
+			From_GGA \
+			From_map \
+			From_window \
+		} \
+		-helptext "Select how to set limits for coastline map" \
+		-modifycmd {
+			set lim [.write.5.lim getvalue]
+			puts $lim
+			if {$lim == 0} {
+				.write.5.win configure -state disabled
+			}
+			if {$lim == 1} {
+				.write.5.win configure -state disabled
+			}
+			if {$lim == 2} {
+				.write.5.win configure -state normal
+			}
+		}
+
+	SpinBox .write.5.win  \
+        -range {1 7 1} \
+        -textvariable win \
+        -helptext "Window to take limits" \
+        -width 1
+	
+   set win   6
+	.write.5.win configure -state disabled	
+
+	LabelEntry .write.6.ops -relief sunken -borderwidth 3 -width 80\
+      -label "opsconf:" -helptext "Select ops_conf filename. File should set correct ops_conf settings on #include" \
+      -textvariable ops -text $ops
+	
+	Button .write.6.opsbrowse -text "Browse..." -helptext "Open dialog to select ops_conf file" \
+      -command {
+		set ops [tk_getOpenFile -title "set ops_conf file" -filetypes {{{ops_conf files} {.conf}}}]
+      }
+
+	label .write.7.batl -text "Bathy settings: "	
+
+	ComboBox .write.7.bat -text "N/A (veg data)" -width 15 -editable 0 -values \
+		{
+			"N/A (veg data)" \
+			Bays \
+			Clear \
+			Crappy \
+			SuperShallow \
+			"From file:" \
+		} \
+		-helptext "Select laser settings of bathymetry data" \
+		-modifycmd {
+			set bat [.write.7.bat getvalue]
+			puts $bat
+			if {$bat == 0} {
+				.write.7.batf configure -state disabled
+				.write.7.batfbrowse configure -state disabled
+			}
+			if {$bat == 1} {
+				.write.7.batf configure -state disabled
+				.write.7.batfbrowse configure -state disabled
+			}
+			if {$bat == 2} {
+				.write.7.batf configure -state disabled
+				.write.7.batfbrowse configure -state disabled
+			}
+			if {$bat == 3} {
+				.write.7.batf configure -state disabled
+				.write.7.batfbrowse configure -state disabled
+			}
+			if {$bat == 4} {
+				.write.7.batf configure -state disabled
+				.write.7.batfbrowse configure -state disabled
+			}
+			if {$bat == 5} {
+				.write.7.batf configure -state normal
+				.write.7.batfbrowse configure -state normal
+			}
+		}
+	
+	LabelEntry .write.7.batf -relief sunken -borderwidth 3 -width 55\
+      -helptext "Select bathy settings filename. File should set correct ops_conf settings on #include" \
+      -textvariable batfs -text $batfs
+	
+	Button .write.7.batfbrowse -text "Browse..." -helptext "Open dialog to select bathy settings file" \
+      -command {
+		set batfs [tk_getOpenFile -title "set bathy settings file" -filetypes {{{bathy settings files} {.conf}}}]
+      }
+				
+	.write.7.batf configure -state disabled
+	.write.7.batfbrowse configure -state disabled
+	
+	LabelEntry .write.8.oth -relief sunken -borderwidth 3 -width 80\
+      -label "other:    " -helptext "Select other settings filename. File should set correct ops_conf settings on #include" \
+      -textvariable oth -text $oth
+	
+	Button .write.8.othbrowse -text "Browse..." -helptext "Open dialog to select other settings file" \
+      -command {
+		set oth [tk_getOpenFile -title "set other settings file" -filetypes {{{other settings files} {*}}}]
+      }
+
+	Button .write.9.write -text "Write Conf File..." -helptext "Write configuration file" \
+		-command {
+			exp_send "write_conf(\"$fname\",\"$edbfn\",\"$pnav\",\"$imu\",\"$map\",$lim,$win,\"$ops\",$bat,\"$batfs\",\"$oth\")\r"
+			expect ">"
+		}
+
+	pack .write.1.fname .write.1.fnbrowse -side left
+	pack .write.2.edb .write.2.edbbrowse -side left 
+	pack .write.3.pnav .write.3.pnavbrowse -side left 
+	pack .write.4.imu .write.4.imubrowse -side left
+	pack .write.5.map .write.5.mapbrowse .write.5.limlab .write.5.lim .write.5.win -side left
+   pack .write.6.ops .write.6.opsbrowse -side left
+	pack .write.7.batl .write.7.bat .write.7.batf .write.7.batfbrowse -side left
+	pack .write.8.oth .write.8.othbrowse -side left
+	pack .write.9.write -side left
+}
+
 
    exp_send "include, \"confload.i\";\r"
    expect ">"
@@ -22,6 +215,9 @@
       frame .conf.$x -relief groove -borderwidth 3
       pack .conf.$x -side top
    }
+
+   Button .conf.1.writebutton -text "Write Conf" -helptext "Open GUI to write conf" \
+      -command write_conf
 
    LabelEntry .conf.1.path -relief sunken -borderwidth 3 \
       -label "Path:  " -helptext "Enter path to raw data" \
@@ -48,7 +244,7 @@
 	    set data [read $fp]
 	    close $fp
 	 }
-	pack .conf.1.cb .conf.1.loadbutton -side left
+	pack .conf.1.cb .conf.1.loadbutton .conf.1.writebutton -side left
 
        }
 
@@ -61,7 +257,7 @@
 
    message .conf.2.message -font {Courier 12} -textvariable data -width 800 -text "" 
 
-   pack .conf.1.path .conf.1.pathbutton .conf.1.getbutton -side left
+   pack .conf.1.path .conf.1.pathbutton .conf.1.getbutton .conf.1.writebutton -side left
    pack .conf.2.message
 	
 

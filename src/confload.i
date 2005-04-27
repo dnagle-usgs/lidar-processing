@@ -10,14 +10,25 @@ func confload(path) {
 		if (n) fn_all = s(fp:lp);
 		fp = fp + n;
 	}
-	if (!is_array(fn_all)) {tkcmd, "set conflist \"No Files Found\"";return;}
-	tkcmd, "set conflist \""+split_path(fn_all(1), -1)(2)+"\"";
-	for (i=2;i<=numberof(fn_all);i++) tkcmd, "lappend conflist \""+split_path(fn_all(i), -1)(2)+"\"";
+	if (!is_array(fn_all)) {write, "set conflist \"No Files Found\"";return;}
+	if (split_path(fn_all(1), -1)(2) != split_path(fn_all(1), 2)(2)) {
+		tkcmd, "set conflist \""+split_path(fn_all(1), -1)(2)+"\"";
+	} else { 
+		tkcmd, "set conflist \""+split_path(fn_all(1), 0)(2)+"\"";
+	}
+	
+	for (i=2;i<=numberof(fn_all);i++) {
+		if (split_path(fn_all(i), -1)(2) != split_path(fn_all(i), 2)(2)) {
+			tkcmd, "lappend conflist \""+split_path(fn_all(i), -1)(2)+"\"";
+		} else { 
+			tkcmd, "lappend conflist \""+split_path(fn_all(i), 0)(2)+"\"";
+		}
+	}
 	pause, 50
 }
 
 func load_this_conf(confile) {
-	extern edb, soe_day_start, data_path, nostats, tans, pnav, gga, ops_conf;
+	extern edb, soe_day_start, data_path, nostats, tans, pnav, gga, ops_conf, utm;
 	fn_edb="";fn_pnav="";fn_att="";fn_map="";fn_lim="";fn_ops="";fn_bath="";fn_other="";
 	f = open(confile, "r");
 	read, f, fn_edb;
@@ -29,6 +40,8 @@ func load_this_conf(confile) {
 	read, f, fn_bath;
 	read, f, fn_other;
 	close, f;
+
+	if (!fn_other) fn_other = "none";
 
 	write, "***** LOADING EDB FILE";
 	data_path = split_path(fn_edb, -1)(1);
@@ -75,7 +88,7 @@ func load_this_conf(confile) {
 		limits, mine, maxe, minn, maxn;
 	} else limits;
 	show_gga_track, color="blue", skip=0,marker=0,msize=.1, utm=1, win=6;
-
+	utm=1;
 	write, "***** LOADING OPS_CONF SETTINGS";
 	include, fn_ops;
 
@@ -123,4 +136,59 @@ func load_this_conf(confile) {
 	}
 	write, "***** DATA SET LOADED";
 
+}
+
+func write_conf(fname, edb, pnav, imu, map, lim, win, ops, bat, batf, oth) {
+/* DOCUMENT write_conf(fname,edb,pnav,imu,map,lim,win,ops,bat,batf,oth)
+	This function writes a configuration file readable by load_this_conf
+	
+	All of the following are required:
+	fname: Full path + filename of the conf file to be generated
+	edb: Full path + filename of the EDB database .idx file
+	pnav: Full path + filename of the precision navigation pnav.ybin file
+	imu: Full path + filename to either the imu.pbd or tans.ybin attitude file
+	map: Full path + filename to the coastline .pbd file
+	lim: Setting to load limits of coastline file. Set to:
+			0 - Load limits from extents of the GGA file
+			1 - Load limits from extents of the coastline file
+			2 - Save the limits of window # (specified below)
+	win: window number to save limits. If lim != 2 is ignored.
+	ops: Full path + filename to the #includable ops_conf file
+	bat: Setting to specify bathy constants. Set to:
+			0 - N/A (veg data)
+			1 - Bays
+			2 - Clear
+			3 - Crappy
+			4 - Super Shallow
+			5 - From a file (specified below)
+	batf: Full path + filename of #includable bathy settings file. 
+		note: If bat != 5, batf is ignored
+	oth: Set to "none" or full path + filename of alternate #includable file
+*/
+	f = open(fname, "w");
+	write, f, edb;
+	write, f, pnav;
+	write, f, imu;
+	write, f, map;
+		
+	if (lim == 0) lmt = "gga";
+	if (lim == 1) lmt = "default";
+	if (lim == 2) {
+		window, win;
+		lmt = limits();
+		lmt = swrite(format="%f,%f,%f,%f", lmt(1), lmt(2), lmt(3), lmt(4));
+	}
+	
+	write, f, lmt;
+	write, f, ops;
+
+	if (bat == 0) write, f, "veg";
+	if (bat == 1) write, f, "bays";
+	if (bat == 2) write, f, "clear";
+	if (bat == 3) write, f, "crappy";
+	if (bat == 4) write, f, "supershallow";
+	if (bat == 5) write, f, batf
+	
+	write, f, oth;
+	close, f
 }
