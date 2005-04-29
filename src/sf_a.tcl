@@ -60,7 +60,7 @@ array set params [::cmdline::getoptions argv $sf_options $sf_usage]
 # to disable. Zero will enable messages.
 set no_mog_messages 0
 
-set DEBUG_SF 1      ;# Show debug info on (1) or off (0)
+set DEBUG_SF 0      ;# Show debug info on (1) or off (0)
 
 # The camera is frequently out of time sync so we add this to correct it.
 set seconds_offset 0
@@ -1038,6 +1038,101 @@ proc atris_init { } {
 		}
 }
 
+proc select_file { } {
+	global camtype f base_dir tf nfiles split_dir dir ci lst
+	if { $camtype == 2 } {
+		set f [ tk_getOpenFile  -filetypes { 
+			{ {List files} {.lst} }
+			{ {Tar Files } {.tar} } 
+			{ {Zip  files} {.zip} }
+			{ {All files } { *  } }
+			} -initialdir $base_dir ];
+	} else {
+		set f [ tk_getOpenFile  -filetypes { 
+			{ {Tar Files } {.tar} } 
+			{ {List files} {.lst} }
+			{ {Zip  files} {.zip} }
+			{ {All files } { *  } }
+			} -initialdir $base_dir ];
+	}
+	if { $f != "" } {
+		set base_dir [ file dirname $f ]
+		wm title . $base_dir
+		if { [file extension $f ] == ".tar" } {
+			puts "Its a tar.  vfs Mounting it..";
+			open_loader_window "VFS Mounting\n$f.\nThis may take several seconds, even minutes! "
+			.loader.ok configure -state disabled
+			update 
+			set tf [ vfs::tar::Mount $f tarmount ];
+			puts "Mounted.."
+			.loader.status1 configure -text "$f\nis mounted."
+			.loader.ok configure -state normal
+			update
+			set nfiles [ load_file_list  $f tar ];
+		} else {
+			open_loader_window "Loading files.\nThis will take a few seconds."
+			;# Do this if we have a .lst file
+			set split_dir [split $f /]
+			set dir [join [lrange $split_dir 0 end-1] /]
+			set nfiles [ load_file_list  $f lst ];
+		}
+		enable_controls
+		.slider configure -to $nfiles
+		set ci 1
+		clear_marks
+		show_img $ci
+	}
+}
+
+proc plotpos { } {
+	global nfiles llat llon sod
+	if { [no_file_selected $nfiles] } { return }
+	if { [ ytk_exists ] == 1 } {
+		if { [ info exists llat ] } {
+			send_ytk mark_pos $llat $llon
+		} else {
+			send_ytk mark_time_pos $sod
+		}
+	} else {
+		tk_messageBox  \
+			-message "ytk isn\'t running. You must be running Ytk and the eaarl.ytk program to use this feature."  \
+			-type ok
+	}
+}
+
+proc include_heading { } {
+	global inhd ci
+	set psf [pid]
+	if { $inhd == 0 } {
+		file delete /tmp/tans_pkt.$psf
+	}
+	get_heading $inhd
+	show_img $ci
+}
+
+proc enable_mog_message { } {
+	global show_mog_message
+	if {$show_mog_message == 0} {
+		set show_mog_message 1
+	}
+}
+
+proc mog_message { } {
+	global show_mog_message no_mog_messages
+	if {$show_mog_message == 1 && $no_mog_messages == 0} {
+		set show_mog_message 0
+		tk_messageBox  \
+			-message "Since mogrify is disabled, some features will not work correctly. Zooming will round to the nearest even fraction (1/2, 1/3, 1/4, etc.), so the amount that is zoomed to may not be what is indicated. Including heading information is disabled due to the inability to rotate images. Please enable mogrify to fix these issues."  \
+			-type ok
+	}
+}
+
+proc rewind { } {
+	global ci nfiles
+	if { [no_file_selected $nfiles] } { return }
+	set ci 0; show_img $ci 
+}
+
 # ] End Procedures #################################
 
 # [ GUI Initialization #############################
@@ -1068,50 +1163,7 @@ menu .mb.zoom
 #####  [ File Menu
 
 .mb.file add command -label "Select File.." -underline 0 \
-	-command {
-		if { $camtype == 2 } {
-			set f [ tk_getOpenFile  -filetypes { 
-				{ {List files} {.lst} }
-				{ {Tar Files } {.tar} } 
-				{ {Zip  files} {.zip} }
-				{ {All files } { *  } }
-				} -initialdir $base_dir ];
-		} else {
-			set f [ tk_getOpenFile  -filetypes { 
-				{ {Tar Files } {.tar} } 
-				{ {List files} {.lst} }
-				{ {Zip  files} {.zip} }
-				{ {All files } { *  } }
-				} -initialdir $base_dir ];
-		}
-		if { $f != "" } {
-		   set base_dir [ file dirname $f ]
-			wm title . $base_dir
-		   if { [file extension $f ] == ".tar" } {
-          puts "Its a tar.  vfs Mounting it..";
-			 open_loader_window "VFS Mounting\n$f.\nThis may take several seconds, even minutes! "
-			 .loader.ok configure -state disabled
-			 update 
-			 set tf [ vfs::tar::Mount $f tarmount ];
-			 puts "Mounted.."
-			 .loader.status1 configure -text "$f\nis mounted."
-			 .loader.ok configure -state normal
-			 update
-			  set nfiles [ load_file_list  $f tar ];
-		   } else {
-			 open_loader_window "Loading files.\nThis will take a few seconds."
-			  ;# Do this if we have a .lst file
-			  set split_dir [split $f /]
-			  set dir [join [lrange $split_dir 0 end-1] /]
-			  set nfiles [ load_file_list  $f lst ];
-			}
-			enable_controls
-			.slider configure -to $nfiles
-			set ci 1
-			clear_marks
-			show_img $ci
-		}
-	}
+	-command { select_file }
 
 .mb.file add command -label "Exit" -underline 1 -command { exit }
 
@@ -1119,10 +1171,10 @@ menu .mb.zoom
 
 .mb.archive add command -label "Mark This Frame" -underline 0 \
    -command { 
-	    global cur_mark; 
-	   if { [string equal [.cf2.mark cget -state] "normal"] } {
-		  set cur_mark 1
-	   } 
+		global cur_mark; 
+		if { [string equal [.cf2.mark cget -state] "normal"] } {
+			set cur_mark 1
+		} 
 	}
 .mb.archive add command -label "Unmark This Frame"              -underline 0 \
    -command { global cur_mark; if {[string equal [.cf2.mark cget -state] "normal"]} {set cur_mark 0} }
@@ -1206,15 +1258,7 @@ menu .mb.zoom
 
 .mb.options add checkbutton -label "Include Heading" -underline 8 -onvalue 1 \
 	-offvalue 0 -variable inhd \
-	-command {
-		global inhd;
-		set psf [pid]
-		if { $inhd == 0 } {
-			file delete /tmp/tans_pkt.$psf
-		}
-		get_heading $inhd
-		show_img $ci
-	}
+	-command { include_heading }
 
 .mb.options add separator
 
@@ -1222,28 +1266,13 @@ menu .mb.options.mogrify
 .mb.options add cascade -label "Image manipulation" -menu .mb.options.mogrify -underline 0
 
 .mb.options.mogrify add radiobutton -label "Prefer mogrify over native Tcl" -underline 7 \
-	-variable mogrify_pref -value "prefer mogrify" -command {
-		global show_mog_message
-		if {$show_mog_message == 0} {
-			set show_mog_message 1
-		}
-	}
+	-variable mogrify_pref -value "prefer mogrify" -command { enable_mog_message }
+
 .mb.options.mogrify add radiobutton -label "Prefer native Tcl over mogrify" -underline 14 \
-	-variable mogrify_pref -value "prefer tcl" -command {
-		global show_mog_message
-		if {$show_mog_message == 0} {
-			set show_mog_message 1
-		}
-	}
+	-variable mogrify_pref -value "prefer tcl" -command { enable_mog_message }
+
 .mb.options.mogrify add radiobutton -label "Disable mogrify completely"   -underline 0 \
-	-variable mogrify_pref -value "only tcl" -command {
-		if {$show_mog_message == 1 && $no_mog_messages == 0} {
-			set show_mog_message 0
-			tk_messageBox  \
-				-message "Since mogrify is disabled, some features will not work correctly. Zooming will round to the nearest even fraction (1/2, 1/3, 1/4, etc.), so the amount that is zoomed to may not be what is indicated. Including heading information is disabled due to the inability to rotate images. Please enable mogrify to fix these issues."  \
-				-type ok
-		}
-	}
+	-variable mogrify_pref -value "only tcl" -command { mog_message }
 
 ##### ][ Zoom Menu
 
@@ -1331,28 +1360,11 @@ ArrowButton .cf1.play  -arrowrelief raised -type arrow -arrowbd 2 -width 40 \
 	-dir right  -height 25 -helptext "Click To play forward through images." \
 	-clean 0 -command { play 1 }
 
-Button .cf1.rewind -text "Rewind" -helptext "Rewind to First Image" \
-	-command { 
-		if { [no_file_selected $nfiles] } { return }
-		set ci 0; show_img $ci 
-	}
+Button .cf1.rewind -text "Rewind" -helptext "Rewind to First Image" -command { rewind }
 
 Button .cf1.plotpos  \
 	-text "Plot" -helptext "Plot position on Yorick-6\nunder the eaarl.ytk program." \
-	-command { 
-		if { [no_file_selected $nfiles] } { return }
-		if { [ ytk_exists ] == 1 } {
-			if { [ info exists llat ] } {
-				send_ytk mark_pos $llat $llon
-			} else {
-				send_ytk mark_time_pos $sod
-			}
-		} else {
-			tk_messageBox  \
-				-message "ytk isn\'t running. You must be running Ytk and the eaarl.ytk program to use this feature."  \
-				-type ok
-		}
-	}
+	-command { plotpos }
 
 # Frame .cf2
 tk_optionMenu .cf2.speed speed Fast 100ms 250ms 500ms 1s \
@@ -1379,6 +1391,7 @@ button .cf2.mark \
 		global mark ci cur_mark
 		set mark($ci) $cur_mark
 	}
+
 pack	\
 		.cf2.speed \
 		.cf2.lbl \
