@@ -28,5 +28,14 @@ require,  "ircf.i"
 require,  "dataexplore.i"
 include,  "rcf.i"
 
-
+func winlimits( win1, win2 ) {
+/* DOCUMENT set_winlimits( window1, window2 )
+    Convenient shortcut function to set the window limits in window2
+    equal to the limits in window1. i.e. make window2 look like window1. 
+*/
+  window, win1;
+  lm=limits();
+  window, win2;
+  limits,lm(1),lm(2),lm(3),lm(4);
+}
 

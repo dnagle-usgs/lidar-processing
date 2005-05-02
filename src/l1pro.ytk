@@ -11,6 +11,8 @@
 #unset cmax
 
   set ofname ""
+  set curvar ""
+  set outvar ""
   set win_no 		5
   set msize 		1.0
   set markerv		1
@@ -1019,6 +1021,7 @@ proc hist_linlog {} {
 	-command {
 	   set changed_dpi 1
 	}
+.l1wid.mb.graph add command -label "Open the Limits Tool" -underline 0 -command { limits_tool }
 
 .l1wid.mb   add cascade -label Filter -underline 1 -menu .l1wid.mb.filter
 
@@ -2231,7 +2234,9 @@ proc keep_proc {} {
    }
 
 proc replace_proc {} {
-       global varlist curvar
+       global varlist curvar croppeddata have_replaced have_undone
+       set have_undone 0
+       set have_replaced 0
        destroy .rep
        toplevel .rep
        wm title .rep "Replace Points Using..."
@@ -2287,8 +2292,11 @@ proc replace_proc {} {
         	-message "Drag a Rectangular Box in Window $win_no to define region." \
         	-type okcancel -title "Message"]
         	if {$result == "ok"} {
-	           exp_send "$keep_var = sel_data_rgn($curvar, GEO, mode=2, win=$win_no, exclude=1, make_workdata=1, origdata=$origvar)\r"
+	           exp_send "$keep_var = sel_data_rgn($curvar, GEO, mode=2, win=$win_no, exclude=1, make_workdata=1, origdata=$origvar);\r"
+                   exp_send "croppeddata = workdata;\r"
          	   expect ">"
+                   set have_replaced 0
+                   set have_undone 0
         	}
     	   }
     	   if {$defr == 1} {
@@ -2296,22 +2304,33 @@ proc replace_proc {} {
         	-message "Draw a Polygon in Window $_map(window) to define a region using a series of left mouse clicks.  To complete the polygon, middle mouse click OR <Ctrl> and left mouse click." \
         	-type okcancel -title "Message"]
         	if {$result == "ok"} {
-	           exp_send "$keep_var = sel_data_rgn($curvar, GEO, mode=3, win=$win_no, exclude=1, make_workdata=1, origdata=$origvar)\r"
+	           exp_send "$keep_var = sel_data_rgn($curvar, GEO, mode=3, win=$win_no, exclude=1, make_workdata=1, origdata=$origvar);\r"
+                   exp_send "croppeddata = workdata;\r"
          	   expect ">"
+                   set have_replaced 0
+                   set have_undone 0
         	}
     	   }
     	   if {$defr == 2} {
-		exp_send "$keep_var = sel_data_rgn($curvar, GEO, mode=1, win=$win_no, exclude=1, make_workdata=1)\r"
+		exp_send "$keep_var = sel_data_rgn($curvar, GEO, mode=1, win=$win_no, exclude=1, make_workdata=1);\r"
+                exp_send "croppeddata = workdata;\r"
+                set have_replaced 0
+                set have_undone 0
 	   }
 	}
 
       Button .rep.type -text "Filter selected points" -width 15 -bd 5 \
 	-command {
-	     global curvar
+	     global curvar have_replaced have_undone croppeddata outvar
+             if {$have_replaced == 1 || $have_undone == 1} {
+                exp_send "$keep_var = $keep_var (1: - numberof(croppeddata));\r"
+             }
 	     rcf_region
     	     .rcf.2.varlist setvalue @4
 	     set curvar [.rcf.2.varlist getvalue]
 	     set outvar rcf_workdata
+             set have_replaced 0
+             set have_undone 0
 	}
 
 
@@ -2324,40 +2343,71 @@ proc replace_proc {} {
 	        }
   	}
 		  
-
+       # Significant change made by Jeremy Bracone 4/4/05
+       # Do No Replace as been fixed and now acts as an undo while Replace acts as a redo
+       # Replace will put filtered data into output array, "Do Not Replace" will put original data into output array
+       # If a replace or "Do Not Replace" has already been done, hitting replace or Do not will have no effect
+       # If replace or "Do Not Replace" has already been done, hitting one will undo the action of the other and perform
+       #            the expected operation; i.e. Replace was done, now hit Do Not Replace and it will take out the data
+       #            inserted in the Replace and put in the original data.  Same is true for opposite situation.
        Button .rep.2 -width 8 -text "Replace..." -bd 5 \
        -command {
-         global varlist outvar reps keep_var curvar origvar
+         global varlist outvar reps keep_var curvar origvar have_replaced have_undone croppeddata
 	 set selection [tk_messageBox -icon question \
 	    -message "Append array $outvar to $keep_var?" \
             -type yesno -title "Warning" ]
-     	 if {$selection == "yes"} {
+         if {$selection == "yes" && $have_replaced == 0 && $have_undone == 0} {
            exp_send "$keep_var = grow($keep_var,$outvar);\r"
-           expect ">" 
-	 }
-       } 
+         }
+         if {$selection == "yes" && $have_replaced == 0 && $have_undone == 1} {
+           exp_send "$keep_var = $keep_var (1: - numberof(croppeddata));\r"
+           exp_send "$keep_var = grow($keep_var, $outvar);\r"
+           set have_undone 0
+         }
+         expect ">"
+         set have_replaced 1
+       }
        Button .rep.4 -width 10 -text "Do Not Replace..." -bd 5 \
        -command {
          global varlist outvar reps keep_var curvar origvar
 	 set selection [tk_messageBox -icon question \
 	    -message "Append ORIGINAL cropped array croppeddata to $keep_var?" \
             -type yesno -title "Warning" ]
-     	 if {$selection == "yes"} {
-           exp_send "$keepvar = grow($keepvar,croppeddata);\r"
-           expect ">" 
-	 }
-       } 
-      Button .rep.3 -width 8 -text "Cancel" -command {
+         if {$selection == "yes"} {
+           if {$have_replaced == 0 && $have_undone == 0} {
+              exp_send "$keep_var = grow($keep_var,croppeddata);\r"
+           }
+           if {$have_replaced == 1 && $have_undone == 0} {
+              exp_send "$keep_var = $keep_var (1: - numberof($outvar));\r"
+              exp_send "$keep_var = grow($keep_var, croppeddata);\r"
+           }
+           expect ">"
+           set have_undone 1
+           set have_replaced 0
+         }
+       }
+      Button .rep.3 -width 8 -text "Close" -command {
 	 destroy .rep
       }
 
+      Button .rep.5 -width 3 -text "Help" -command {
+         tk_messageBox -icon info \
+            -message "Hitting replace adds new filtered array to the output array which Do Not Replace adds the original data back in." \
+            -type ok -title "Info 1 of 3"
+         tk_messageBox -icon info \
+            -message "Once a replace or Do Not Replace has been done, the effects of one can be replaced by the other." \
+            -type ok -title "Info 2 of 3"
+         tk_messageBox -icon info \
+            -message "Example: Hit replace and insert filtered data, then hit DO NOT REPLACE, and inserted data is taken out and original put in." \
+            -type ok -title "Info 3 of 3"
+      }
      
       pack .rep.05.varname .rep.05.varlist -side left -padx 5
       pack .rep.005.varname .rep.005.varlist -side left -padx 5
       pack .rep.15.1 .rep.15.2 -side top -pady 1
       pack .rep.05 .rep.005 .rep.15 .rep.1 .rep.type  -side top -pady 10
       pack .rep.2 .rep.4 .rep.3 -side left -padx 5 -pady 5
-
+      pack .rep.5 -side left -pady 5
 }
 Button .l1wid.bf45.r.5 -text "Append2Tile" -command {
     set curvar  [lindex $varlist [.l1wid.bf45.p.15 getvalue]]
@@ -2598,6 +2648,7 @@ pack \
 	.l1wid.bf45 \
 	-side top -pady 3 -fill x
 
+
 proc send_latlon_to_l1pro {minlon maxlon minlat maxlat utm} {
    global mnlon mxlon mnlat mxlat utm
    # .l1widc.utm.1 setvalue @$utm
@@ -2714,6 +2765,7 @@ proc plot_fltlines {sel} {
          exp_send "window, $win_no; plot_bathy, depth_some, win=$win_no, ba=$ba, fs = $fs, de = $de , fint = $fint, lint = $lint, cmin=$cmin, cmax=$cmax, msize = $msize, marker=$markerv, skip=$skip; \r"
        }
        expect ">"
+       exp_send "\r"
      }
      if {$ptype == 2} {
         if {$sel == 0} {
@@ -2722,6 +2774,7 @@ proc plot_fltlines {sel} {
          exp_send "window, $win_no; display_veg, veg_some, win=$win_no, cmin=$cmin, cmax = $cmax, size = $msize, edt=1, felv = $fs, lelv=$lelv, fint=$fint, lint=$lint, cht = $cht, marker=$markerv, skip=$skip;\r"
         }
          expect ">"
+         exp_send "\r"
      }
      if {$ptype == 3} {
        set cmax1 [expr $cmax*100.]
@@ -2733,6 +2786,7 @@ proc plot_fltlines {sel} {
            exp_send "display, cveg_some, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1, skip=$skip;\r"
          }
          expect ">"
+         exp_send "\r"
        } elseif { $disp_type == 4 } {
          if {$sel == 0} {
            exp_send "display, $var_type, mode=\"intensity\", win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, skip=$skip;\r"
@@ -2740,10 +2794,56 @@ proc plot_fltlines {sel} {
            exp_send "display, cveg_some, mode=\"intensity\", win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, skip=$skip;\r"
          }
          expect ">"
+         exp_send "\r"
        }
      }
 }
 
+proc limits_tool { } {
+  #Added by Jeremy Bracone 4/15/05
+  #Opens a limits tool that makes a few functions a little quicker to perform.
+  #The main function it provides is to set the limits from one window equal to another.
+  destroy .limitstool
+  toplevel .limitstool
+  wm title .limitstool "Limits Tool"
+  frame .limitstool.1 -relief groove -bd 4
+  label .limitstool.1.t1 -text "Set limits from window "
+  ComboBox .limitstool.1.c1 -text "0" -width 2 -editable 0 \
+        -values { 0 1 2 3 4 5 6 7 } \
+        -takefocus 0
+
+  label .limitstool.1.t2 -text " = to window "
+  ComboBox .limitstool.1.c2 -text "0" -width 2 -editable 0 \
+        -values { 0 1 2 3 4 5 6 7 } \
+        -takefocus 0
+
+
+  Button .limitstool.1.limits -text "Set Limits" \
+    -helptext "Set Limits in window from box 2 equal to limits in window from box 1\n i.e. make the second window look like the first" \
+    -command {
+        set window1 [.limitstool.1.c1 getvalue]
+        set window2 [.limitstool.1.c2 getvalue]
+        if {$window1 >= 0 && $window2 >= 0} {
+           #This function provided by l1pro.i
+           exp_send "winlimits($window1,$window2); \r"
+        }
+  }
+  
+  frame .limitstool.2
+  Button .limitstool.2.l -text "Limits()" \
+        -helptext "Set current window limits to view entire plot" \
+        -command {
+        exp_send "limits\r" 
+        expect ">"
+  } 
+  Button .limitstool.2.dismiss -text "Dismiss" -command {
+           destroy .limitstool
+  }
+  pack .limitstool.1 -side top
+  pack .limitstool.1.t1 .limitstool.1.c1 .limitstool.1.t2 .limitstool.1.c2 .limitstool.1.limits -side left -fill both
+  pack .limitstool.2 -side right 
+  pack .limitstool.2.dismiss .limitstool.2.l -padx 4 -side right 
+}
 
 source "$src_path/bathctl.ytk"; 
 .l1wid.mb.options entryconfigure 3 -state disabled
