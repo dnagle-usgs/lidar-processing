@@ -490,7 +490,7 @@ func iex_ascii2pbd( fn ) {
  ofn = strtok(fn, ".")(1) + ".pbd";
  f = open(fn);
  of = createb(ofn);
- iex_head=rdline(f, 16);
+ iex_head=rdline(f, 24);
  write,iex_head
  write,"\n"
  while ( (n = read(f,format="%lf", temp )) == 7*BSZ ) {
