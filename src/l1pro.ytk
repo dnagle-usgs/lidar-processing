@@ -2276,6 +2276,8 @@ proc replace_proc {} {
        set origvar [lindex $varlist $curidx]
        .rep.005.varlist setvalue @$origidx
 
+       #Note: In code below, the yorick variables "croppeddata" and "workdata" are created through sel_data_rgn
+       #      croppeddata = (selected filtered points);    workdata = (selected original data points);
        ComboBox .rep.1 -text "Select points to replace using..." -width 28 \
    	 -values { \
 	 	Rubberband\ Box \
@@ -2293,7 +2295,6 @@ proc replace_proc {} {
         	-type okcancel -title "Message"]
         	if {$result == "ok"} {
 	           exp_send "$keep_var = sel_data_rgn($curvar, GEO, mode=2, win=$win_no, exclude=1, make_workdata=1, origdata=$origvar);\r"
-                   exp_send "croppeddata = workdata;\r"
          	   expect ">"
                    set have_replaced 0
                    set have_undone 0
@@ -2305,7 +2306,6 @@ proc replace_proc {} {
         	-type okcancel -title "Message"]
         	if {$result == "ok"} {
 	           exp_send "$keep_var = sel_data_rgn($curvar, GEO, mode=3, win=$win_no, exclude=1, make_workdata=1, origdata=$origvar);\r"
-                   exp_send "croppeddata = workdata;\r"
          	   expect ">"
                    set have_replaced 0
                    set have_undone 0
@@ -2313,7 +2313,6 @@ proc replace_proc {} {
     	   }
     	   if {$defr == 2} {
 		exp_send "$keep_var = sel_data_rgn($curvar, GEO, mode=1, win=$win_no, exclude=1, make_workdata=1);\r"
-                exp_send "croppeddata = workdata;\r"
                 set have_replaced 0
                 set have_undone 0
 	   }
