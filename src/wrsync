@@ -10,7 +10,7 @@
 $TIMEOUT = 3072;  # should be 30 according to man, but actual use returned this
 $NOSTART = 7680;  # discovered through use.
 
-$cmd = "rsync --timeout 5 -Pav ";
+$cmd = "rsync --timeout 20 -Pav ";
 for ( $i=0; $i<=$#ARGV; ++$i) {
   $cmd .= $ARGV[$i];
   $cmd .= " ";
