@@ -6,7 +6,7 @@ write, "$Id$";
 require, "msort.i"
 require, "rcf.i"
 
-func rcf_triag_filter(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=, plottriag=, plottriagwin=, prefilter_min=, prefilter_max=, distthresh=, datawin=) {
+func rcf_triag_filter(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=, plottriag=, plottriagwin=, prefilter_min=, prefilter_max=, distthresh=, datawin=, wfs=) {
   /* DOCUMENT rcf_triag_filter(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=)
  this function splits data sets into manageable portions and calls new_rcfilter_eaarl_pts that 
 uses the random consensus filter (rcf) and triangulation method to filter data.
@@ -24,7 +24,7 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
    mode = 3; // for bare earth vegetation
    (default mode = 3)
   fbuf = buffer size in METERS for the initial RCF to remove the "bad" outliers. Default = 100m
-  fw = window size in METERS for the initial RCF to remove the "bad" outliers. Default = 15m
+  fw = window size in METERS for the initial RCF to remove the "bad" outliers. Default = 25m
   tw = triangulation vertical range in centimeters Default = w
   interactive = set to 1 to allow interactive mode.  The user can delete triangulated facets 
      		with mouse clicks in the triangulated mesh.
@@ -209,7 +209,7 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
    mode = 3; // for bare earth vegetation
    (default mode = 3)
   fbuf = buffer size in METERS for the initial RCF to remove the "bad" outliers. Default = 100m
-  fw = window size in METERS for the initial RCF to remove the "bad" outliers. Default = 15m
+  fw = window size in METERS for the initial RCF to remove the "bad" outliers. Default = 25m
   tw = triangulation vertical range in centimeters Default = w
   interactive = set to 1 to allow interactive mode.  The user can deleted triangulated facets 
      		with mouse clicks in the triangulated mesh.
@@ -261,8 +261,8 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
  new_eaarl = array(a, MAXSIZE);
  selcount = 0;
 
- if (is_void(fw)) fw = 15; //15m
- if (is_void(fbuf)) fbuf = 100; // 100m
+ if (is_void(fw)) fw = 25; //25m
+ if (is_void(fbuf)) fbuf = 25; // 25m
  write, format="RCF'ing data set with window size = %d, and elevation width = %d meters...\n",fbuf,fw
  eaarl = rcfilter_eaarl_pts(eaarl, buf=fbuf*100, w=fw*100, mode=mode)
 
