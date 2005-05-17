@@ -159,7 +159,6 @@ phi1 = phi1Rad*rad2deg;
 return [Long, Lat]
 }
 
-
 func combine_zones(u) {
   //this function combines zones for plotting purposes.
   //amar nayegandhi 04/22/03
@@ -185,5 +184,53 @@ func combine_zones(u) {
   }
   return u
 }
- 
 
+func ddm2deg(coord) {
+/* DOCUMENT dms2deg(coord)
+	
+   Converts coordinates in degree-deciminute format to degrees.
+
+   The following parameter is required:
+
+      coord: A scalar or array of coordinate values to be converted.
+         The format should be DDDMMMM.MM where DDD is the value for
+         degrees and MMMM.MM is the value for deciminutes. Deciminutes
+         must have a width of four (zero-padding if necessary). (The
+         number of places after the decimal may vary.)
+
+   Function returns:
+
+      A scalar or array of the converted degree values.
+*/
+	d = int(coord / 10000.0);
+	coord -= d * 10000;
+	m = coord / 100.0 / 60.0;
+	deg = d + m;
+	return deg;
+}
+
+func dms2deg(coord) {
+/* DOCUMENT dms2deg(coord)
+	
+   Converts coordinates in degree-minute-second format to degrees.
+
+   The following parameter is required:
+
+      coord: A scalar or array of coordinate values to be converted.
+         The format should be DDDMMSS.SS where DDD is the value for
+         degrees, MM is the value for minutes, and SS.SS is the value
+         for seconds. Minutes and seconds must each have a width of
+         two (zero-padding if necessary). (The number of places after
+         the decimal may vary.)
+
+   Function returns:
+
+      A scalar or array of the converted degree values.
+*/
+	d = int(coord / 10000.0);
+	coord -= d * 10000;
+	m = int(coord / 100.0);
+	s = coord - (m * 100);
+	deg = d + m / 60.0 + s / 3600.0;
+	return deg;
+}
