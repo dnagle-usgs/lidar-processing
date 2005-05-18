@@ -192,6 +192,10 @@ proc send_comm_id { } {
 	send_cir set sf_a_id [::comm::comm self]
 }
 
+proc curzone { zone } {
+	send_ytk "exp_send \"curzone = $zone \\n\";"
+}
+
 # timern_write is used in a variable trace to keep
 # .cf3.entry up to date when .cf3.option changes
 proc timern_write { name1 name2 op } {
@@ -233,12 +237,16 @@ proc load_file_list { f method } {
 #   method - lst|tar
 
 	# Bring in Globals
-	global ci fna imgtime dir base_dir \
+	global ci fna imgtime dir base_dir atris_mode \
 			nsat pdop ns ew lat lon alt seconds_offset timern frame_off \
 			DEBUG_SF camtype tarname mark mogrify_exists mogrify_pref
 
 	# Reset defaults
-	set camtype 1
+	if { $atris_mode } {
+		set camtype 2
+	} else {
+		set camtype 1
+	}
 	set tarname ""
 
 
@@ -286,12 +294,11 @@ proc load_file_list { f method } {
 # Set the seconds_offset back to 0 by default
 	set seconds_offset 0
 	
-
-
-
 	# Do some looping, initializing some globals as we go
 	# Iterate through the file, incrementing i for each line
-	for { set i 0 } { $i < $nbr_photos } { incr i } { 
+		set DEBUG_SF 1
+	set stop_num $nbr_photos
+	for { set i 0; set j 1 } { $i < $stop_num } { incr i; incr j } { 
 		# Set fn to the filename of the current line
 		set fn [ lindex $file_lst $i ]
 		# Split the file name based on _
@@ -308,32 +315,43 @@ proc load_file_list { f method } {
 		if { $camtype == 2 } {
 			set hms [ lindex $lst end-1 ]
 		}
-		if { [ string equal $hms "" ] == 0 || [ string equal -nocase -length 3 $fn "set" ] == 0 } {
+		if { [ string equal $hms "" ] == 0 && [ string equal -nocase -length 3 $fn "set" ] == 0 } {
 			# Put the filename in the fna array
-			set fna($i) "$fn"
+			set fna($j) "$fn"
 			
 			scan $hms "%02d%02d%02d" h m s
 			set thms [ format "%02d:%02d:%02d" $h $m $s ]
 			#set sod [ expr $h*3600 + $m*60 + $s  + $seconds_offset ]
 			set sod [ expr $h*3600 + $m*60 + $s ]
 			set hms [ clock format $sod -format "%H%M%S" -gmt 1 ]
-			set imgtime(idx$i) $hms;
-			set imgtime(hms$hms) $i;
+			set imgtime(idx$j) $hms;
+			set imgtime(hms$hms) $j;
 			if { [expr int([clock clicks -milliseconds] / 200)] - $ticker > 0 } {
 				set ticker [expr int([clock clicks -milliseconds] / 200)]
-				.loader.status1 configure -text "Loaded $i JPG files"
+				.loader.status1 configure -text "Loaded $j JPG files"
 				update
 			}
-									if { $DEBUG_SF } { puts "loaded: $fn" }
+				if { $i < 5 } {
+									if { $DEBUG_SF } { puts "loaded: $fn"
+										puts $hms
+										puts [string equal $hms ""]
+										puts [string equal -nocase -length 3 $fn "set"]
+										puts [string equal -nocase -length 4 $fn "exec"]
+									}
+				}
 		} else { 
 									if { $DEBUG_SF } { puts "command: $fn" }
 			eval $fn
+			incr j -1
+			incr nbr_photos -1
 		}
+		unset lst
 	} 
-	.loader.status1 configure -text "Loaded $i JPG photos"
+		set DEBUG_SF 0
+	.loader.status1 configure -text "Loaded $j JPG photos"
 	update
 	
-	set nfiles [ expr $i -2 ]
+	set nfiles $nbr_photos
 	set ci 0
 
 	if { $camtype == 1 } {
@@ -1025,6 +1043,8 @@ proc enable_controls { } {
 }
 
 proc atris_init { } {
+	global atris_mode
+	set atris_mode 1
    menu .mb.tools
 	.mb insert "Archive" cascade -label "Tools" -underline 0 -menu .mb.tools -state disabled
 	.mb.tools add command -label "Vessel Tracks and Coastlines" -underline 0 \
@@ -1413,7 +1433,7 @@ Button .cf3.button -text "Raster" \
 	-helptext "Click to Examine EAARL Rasters.  Must have drast.ytk running." \
 	-command {
 		if { [no_file_selected $nfiles] } { return }
-		send_ytk exp_send "sfsod_to_rn, $sod;\n";
+		send_ytk "exp_send \"sfsod_to_rn, $sod;\\n\";"
 	}
 
 Button .cf3.cirbutton -text "cir" \
