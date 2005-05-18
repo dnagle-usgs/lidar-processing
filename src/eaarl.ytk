@@ -142,6 +142,44 @@ proc load_dmars {} {
 }
 
 
+proc load_ops_conf {} { 
+  global data_path
+      if { [ info exists data_path ] } {
+       set tpath "$data_path/";
+       if { [ expr ![ file isdirectory $tpath ]] } {
+         set tpath $data_path;
+       }
+    } else {
+       set tpath "";
+    }
+
+  set _ytk_fn [ tk_getOpenFile \
+	-initialdir $tpath \
+	-filetypes \
+        {
+           {{Yorick .i files} {.i}  }
+           {{All Files}       {*}   }
+        }  ]
+  if { $_ytk_fn != "" } {
+    switch [ file extension $_ytk_fn ] {
+    ".i" {
+	     exp_send "#include \"$_ytk_fn\"";
+            toplevel .stby
+            exp_send "\r\n"
+   set sz [ wm maxsize . ]
+               label .stby.lbl -text "Loading\n$_ytk_fn\nplease wait.."
+               pack .stby.lbl
+   set wz "50 50"
+   set sx [ expr [ lindex $sz 0 ] / 2  - [lindex $wz 0]/2 ]
+   set sy [ expr [ lindex $sz 1 ] / 2  - [lindex $wz 1]/2 ]
+   wm geometry .stby "+$sx+$sy"
+               update
+            expect ">"
+               destroy .stby
+           }
+    }
+  }
+}
 
 proc send_sod_to_sf { somd } {
   catch {
@@ -513,6 +551,8 @@ proc load_edb {} {
 ##############################
 #   Attitude Sensors
 #############################9
+ $w.mb.attitude add command -label "Load Ops_conf Settings..." \
+	-command load_ops_conf 
  $w.mb.attitude add command -label "Current Ops_conf Settings..." \
 	-command { exp_send "display_mission_constants, ops_conf, ytk=1\r"; }
  $w.mb.attitude add command -label "TANS Settings..." \
