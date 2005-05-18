@@ -4,42 +4,53 @@
 local boat_i;
 /* DOCUMENT boat.i
 
-	Functions specific to boat camera images, as well as some general
-	purpose utility functions.
+	Code for ATRIS data processing.
 
-	For boat specific functions, see:
+	Data processing functions:
 
-		help, boat_normalize_images
-		help, boat_create_lst
-		help, boat_rename_exif_files
-		help, boat_output
-		help, boat_output_gga
-		help, boat_output_txt
-		help, boat_output_pbd
-		help, boat_merge_datasets
-		help, boat_combine_depth_gps
-		help, boat_apply_offset
-		help, boat_gps_smooth
-		help, boat_input_edt
-		help, boat_input_exif
-		help, boat_input_pbd
-		help, boat_get_image_somd
-		help, boat_interpolate_somd_gps
-		help, boat_find_time_indexes
-		help, boat_read_hypack_waypoints
+		boat_process 
+		boat_process_data 
+		boat_create_lst
+		boat_rename_exif_files
+		boat_output
+		boat_output_gga
+		boat_output_txt
+		boat_output_pbd
+		boat_merge_datasets
+		boat_interpolate_depth
+		boat_apply_offset
+		boat_gps_smooth
+		boat_input_edt
+		boat_add_input_edt
+		boat_input_exif
+		boat_input_pbd
+		boat_input_pbd_idx
+		boat_get_image_somd
+		boat_interpolate_somd_gps
+		boat_find_time_indexes
+		boat_get_raw_list
+		boat_convert_raw_to_boatpics
+		boat_input_raw
+		boat_input_raw_full
 
-	For general purpose utility functions, see:
+	Waypoints processing functions:
 
-		help, calculate_heading
-		help, perpendicular_intercept
-		help, find_nearest_point
-		help, find_points_in_radius
+		boat_read_hypack_waypoints
+		boat_find_waypoints
+		boat_copy_waypoints
+		boat_read_csv_waypoints
 
-	Several structs are also defined. See:
+	Image transformation functions:
 
-		info, BOAT_PICS
-		info, BOAT_WAYPOINTS_LATLON
-		info, BOAT_WAYPOINTS_UTM
+		boat_normalize_images
+
+	Several structs are also defined:
+
+		BOAT_PICS
+		BOAT_WAYPOINTS
+		HYPACK_RAW
+		HYPACK_POS
+		HYPACK_EC
 */
 
 struct BOAT_PICS {
@@ -50,20 +61,123 @@ struct BOAT_PICS {
 	float somd;
 }
 
-struct BOAT_WAYPOINTS_LATLON {
-	string label;
-	float target_lat;
-	float target_lon;
-	float actual_lat;
-	float actual_lon;
-}
-
-struct BOAT_WAYPOINTS_UTM {
+struct BOAT_WAYPOINTS {
 	string label;
 	float target_north;
 	float target_east;
 	float actual_north;
 	float actual_east;
+	double somd;
+}
+
+struct HYPACK_RAW {
+	double sod;
+	double lat;
+	double lon;
+	double time;
+}
+
+struct HYPACK_EC {
+	double sod;
+	double depth;
+}
+
+struct HYPACK_POS {
+	double sod;
+	double north;
+	double east;
+}
+
+func boat_process (imgdir, hypackdir, base, date) {
+/* DOCUMENT boat_process (imgdir, hypackdir, base, date)
+
+	Renames EXIF JPEG images, then process images and Hypack data to generate
+	the various output files usable by ATRIS software.
+
+	IMPORTANT: Only run this on an image directory once, otherwise the files
+	will be double-renamed! If you must regenerate the data files, you should
+	use boat_process instead.
+
+	Required parameters:
+
+		imgdir: The full path to the directory with the JPEG images.
+
+		hypackdir: The full path to the directory with the Hypack .RAW files.
+
+		base: The base file name to use when naming generated files. A value
+			of "sample" would generate sample.lst, sample.pbd, sample.txt, and
+			sample-gga.ybin. They will all be placed in imgdir.
+		
+		date: A string representing the mission date. This string must be
+			formatted as YYYY-MM-DD.
+	
+	Returns:
+		
+		n/a
+	
+	See also: boat_process_data
+*/
+	write, "Renaming EXIF JPEG files...";
+	boat_rename_exif_files, indir=imgdir, datestring=date, move=1, verbose=-2;
+	
+	boat_process_data, imgdir, hypackdir, base;
+}
+
+func boat_process_data (imgdir, hypackdir, base) {
+/* DOCUMENT boat_process_data (imgdir, hypackdir, base)
+	
+	Processes images and Hypack data to generate the various output files
+	usable by ATRIS software.
+
+	Required parameters:
+
+		imgdir: The full path to the directory with the JPEG images.
+
+		hypackdir: The full path to the directory with the Hypack .RAW files.
+
+		base: The base file name to use when naming generated files. A value
+			of "sample" would generate sample.lst, sample.pbd, sample.txt, and
+			sample-gga.ybin. They will all be placed in imgdir.
+	
+	Returns:
+
+		n/a
+	
+	See also: boat_process
+*/
+	require, "ll2utm.i";
+
+	write, "Retrieving list of Hypack RAW files...";
+	files = boat_get_raw_list(sdir=hypackdir);
+	
+	write, "Reading Hypack RAW files...";
+	hypack = [];
+	for(i = 1; i <= numberof(files); i++) {
+		write, " ->", files(i);
+		hypack_raw = boat_input_raw(files(i));
+		if(numberof(hypack) > 0)
+			hypack = boat_merge_datasets(hypack, hypack_raw);
+		else
+			hypack = hypack_raw;
+	}
+
+	// Use hypack to get UTM zone
+	zone = fll2utm( hypack(1).lat, hypack(1).lon )(3,1);
+
+	write, "Generating .lst file...";
+	boat_create_lst, sdir=imgdir, fname=base+".lst", utmzone=zone;
+	
+	write, "Determining SOMD data for images...";
+	somd = boat_get_image_somd(sdir=imgdir, verbose=2);
+	
+	write, "Interpolating GPS data for SOMD data...";
+	boat = boat_interpolate_somd_gps(boat=hypack, somd=somd);
+	
+	write, "Generating index for image data...";
+	index = boat_find_time_indexes(boat=boat, somd=somd);
+
+	write, "Outputting data...";
+	boat_output, boat=boat, idx=index, ofbase=imgdir+base;
 }
 
 func boat_normalize_images(src=, dest=, pbd=, min_depth=, max_depth=, verbose=) {
@@ -120,7 +234,7 @@ func boat_normalize_images(src=, dest=, pbd=, min_depth=, max_depth=, verbose=) 
 	}
 
 	/* Validate the verbosity */
-	if (!(is_array(verbose) && !dimsof(verbose)(1))) verbose = 1;
+	if (numberof(verbose) != 1) verbose = -1;
 	if (verbose == -1) verbose = 1;
 	verbose = int(verbose);
 	
@@ -161,7 +275,8 @@ func boat_normalize_images(src=, dest=, pbd=, min_depth=, max_depth=, verbose=) 
 	boat = boat_input_pbd(ifname=pbd, verbose=func_verbose);
 	
 								if(verbose >= 1) write, "Generating list of file names and time stamps.";
-	cmd = "cd " + src + " ; ( ls *.jpg | wc -l ) ; ls *.jpg | awk -F _ '{print $0\" \"$3}' ; cd -"
+	cmd = "find . -iname '*.jpg' -print '%f\\n' " + " | awk -F _ '{print $0\" \"$3}'";
+	cmd = "cd " + src + " ; " + cmd + " | wc -l " + "; " + cmd + " ; cd -";
 								if(verbose >= 2) write, format=" cmd=%s\n", cmd;
 
 	f = popen(cmd, 0);
@@ -280,8 +395,8 @@ func boat_normalize_images(src=, dest=, pbd=, min_depth=, max_depth=, verbose=) 
 								if(verbose >= 2) write, format="--/ boat_normalize_images%s", "\n";
 }
 
-func boat_create_lst(sdir=, relpath=, fname=, offset=, verbose=) {
-/* DOCUMENT  boat_create_lst(sdir=, relpath=, fname=, offset=, verbose=)
+func boat_create_lst(sdir=, relpath=, fname=, offset=, utmzone=, verbose=) {
+/* DOCUMENT  boat_create_lst(sdir=, relpath=, fname=, offset=, utmzone=, verbose=)
 
 	Creates a boat lst file for one or more directories' jpg's.
 
@@ -301,6 +416,8 @@ func boat_create_lst(sdir=, relpath=, fname=, offset=, verbose=) {
 		fname= The filename to save the lst file as. Default is boat.lst.
 
 		offset= Puts a seconds offset value into the lst file. Default is to omit.
+
+		utmzone= Sets a utmzone for the lst file. Default is to omit.
 
 		verbose= Indicates the verbosity level to run at.
 			Default: 1
@@ -335,57 +452,60 @@ func boat_create_lst(sdir=, relpath=, fname=, offset=, verbose=) {
 	}
 
 	/* Validate the verbosity */
-	if (!(is_array(verbose) && !dimsof(verbose)(1))) verbose = 1;
+	if (numberof(verbose) != 1) verbose = -1;
 	if (verbose == -1) verbose = 1;
 	verbose = int(verbose);
 	
 	/* Set called function verbosity */
-	if(verbose == 3 || verbose == -2) {
+	if(verbose == 3 || verbose == -2)
 		func_verbose = verbose;
-	} else {
+	else
 		func_verbose = -1;
-	}
 	
 	/* Validate the sdir */
-	if("/" != strpart(sdir, strlen(sdir):strlen(sdir))) {
+	if("/" != strpart(sdir, strlen(sdir):strlen(sdir)))
 		sdir = sdir + "/";
-	}
 
 	/* Validate the relpath */
-	if(is_void(relpath)) {
+	if(is_void(relpath))
 		relpath = "";
-	}
 	for(i = 1; i <= numberof(relpath); i++) {
-		if(0 < strlen(relpath(i)) && "/" != strpart(relpath(i), strlen(relpath(i)):strlen(relpath(i)))) {
+		if(0 < strlen(relpath(i)) && "/" != strpart(relpath(i), strlen(relpath(i)):strlen(relpath(i))))
 			relpath(i) = relpath(i) + "/";
-		}
 	}
 
 	/* Validate the fname */
-	if(is_void(fname)) {
+	if(is_void(fname))
 		fname = "boat.lst";
-	}
 
 	/* Validate the offset */
-	if(is_void(offset)) {
+	if(is_void(offset))
 		offset = 0;
-	} else {
+	else
 		offset = int(offset);
-	}
+
+	/* Validate utmzone */
+	if(is_void(utmzone))
+		utmzone = 0;
+	else
+		utmzone = int(utmzone);
 	
 	if(numberof(relpath) == 1) {
-								if(verbose >= 2) write, format="==> boat_create_lst(sdir=%s, relpath=%s, fname=%s, offset=%i, verbose=%i)\n", sdir, relpath(1), fname, offset, verbose;
+								if(verbose >= 2) write, format="==> boat_create_lst(sdir=%s, relpath=%s, fname=%s, offset=%i, utmzone=%i, verbose=%i)\n", sdir, relpath(1), fname, offset, utmzone, verbose;
 	} else {
-								if(verbose >= 2) write, format="==> boat_create_lst(sdir=%s, relpath=[%i], fname=%s, offset=%i, verbose=%i)\n", sdir, numberof(relpath), fname, offset, verbose;
+								if(verbose >= 2) write, format="==> boat_create_lst(sdir=%s, relpath=[%i], fname=%s, offset=%i, utmzone=%i, verbose=%i)\n", sdir, numberof(relpath), fname, offset, utmzone, verbose;
 	}
 
 	cmd  = "cd " + sdir + " > /dev/null; echo set camtype 2 > " + fname + "; ";
 	if(offset) {
 		cmd += swrite(format="echo set seconds_offset %i >> %s; ", offset, fname);
 	}
+	if(utmzone) {
+		cmd += swrite(format="echo curzone %i >> %s; ", utmzone, fname);
+	}
 	cmd += "( ";
 	for(i = 1; i <= numberof(relpath); i++) {
-		cmd += "find " + relpath(i) + "*.jpg ; ";
+		cmd += "find " + relpath(i) + " -iname '*.jpg' ; ";
 	}
 	cmd += ") | perl -n -e 'push @files, $_;END{print sort {($a =~ /([0-9]+)_[0-9]+.jpg/)[0] <=> ($b =~ /([0-9]+)_[0-9]+.jpg/)[0] } @files}' >> " + fname + " ; cd - > /dev/null"
 								if(verbose >= 2) write, format=" cmd=%s\n", cmd;
@@ -456,7 +576,7 @@ func boat_rename_exif_files(indir=, outdir=, datestring=, move=, verbose=) {
 	}
 
 	/* Validate the verbosity */
-	if (!(is_array(verbose) && !dimsof(verbose)(1))) verbose = 1;
+	if (numberof(verbose) != 1) verbose = -1;
 	if (verbose == -1) verbose = 1;
 	verbose = int(verbose);
 	
@@ -475,7 +595,7 @@ func boat_rename_exif_files(indir=, outdir=, datestring=, move=, verbose=) {
 	}
 	
 	/* Populate outdir as indir if empty */
-	if(strlen(outdir) < 1) {
+	if(is_void(outdir)) {
 		outdir = indir;
 	}
 	
@@ -498,7 +618,7 @@ func boat_rename_exif_files(indir=, outdir=, datestring=, move=, verbose=) {
 								if(verbose >= 1) write, "Files will be copied.";
 	}
 	
-	cmd = "exiflist -o l -f file-name,date-taken,gps-time " + indir + "*.jpg | perl -an -F',' -e 'chomp $F[1];chomp $F[2]; sub gettime {@temp=split/ /,shift(@_);return $temp[1];}; sub hms {return split/:/,shift(@_);}; @t=($F[2]?hms($F[2]):hms(gettime($F[1])));system \"" + action + " " + indir + "\" . $F[0] . \" " + outdir + "\" . substr($F[0], 0, length($F[0])-8) . \"_\" . \"" + datestring + "\" . \"_\" . sprintf(\"%02d\",$t[0]) . sprintf(\"%02d\",$t[1]) . sprintf(\"%02d\", $t[2]) . \"_\" . substr ($F[0], length($F[0])-8) . \"\\n\";';"
+	cmd = "find " + indir + " -iname '*.jpg' -exec exiflist -o l -f file-name,date-taken,gps-time \\\{} \\\; | perl -an -F',' -e 'chomp $F[1];chomp $F[2]; sub gettime {@temp=split/ /,shift(@_);return $temp[1];}; sub hms {return split/:/,shift(@_);}; @t=($F[2]?hms($F[2]):hms(gettime($F[1])));system \"" + action + " " + indir + "\" . $F[0] . \" " + outdir + "\" . substr($F[0], 0, length($F[0])-8) . \"_\" . \"" + datestring + "\" . \"_\" . sprintf(\"%02d\",$t[0]) . sprintf(\"%02d\",$t[1]) . sprintf(\"%02d\", $t[2]) . \"_\" . substr ($F[0], length($F[0])-8) . \"\\n\";';"
 
 								if(verbose >= 2) write, format=" cmd=%s\n", cmd;
 
@@ -510,8 +630,8 @@ func boat_rename_exif_files(indir=, outdir=, datestring=, move=, verbose=) {
 								if(verbose >= 2) write, format="--/ boat_rename_exif_files%s", "\n";
 }
 
-func boat_output(boat=, ofbase=, no_pbd=, no_txt=, no_gga=, verbose=) {
-/* DOCUMENT  boat_output(boat=, ofbase=, no_pbd=, no_txt=, no_gga=, verbose=)
+func boat_output(boat=, idx=, ofbase=, no_pbd=, no_txt=, no_gga=, verbose=) {
+/* DOCUMENT  boat_output(boat=, idx=, ofbase=, no_pbd=, no_txt=, no_gga=, verbose=)
 
 	Saves boat camera data in various formats. By default, saves in all three
 	of pbd, txt, and gga. Save formats may be selectively disabled.
@@ -524,6 +644,9 @@ func boat_output(boat=, ofbase=, no_pbd=, no_txt=, no_gga=, verbose=) {
 
 		boat= Array of type BOAT_PICS, containing the data to
 			be saved to the files.
+
+		idx= Array of type float?, containg the indexes of boat that
+			match the camera images. (no_pbd will make this optional)
 
 		ofbase= Full path and the base of the file to save data as. This
 			base will have ".txt" appended to save as a txt file, ".pbd"
@@ -558,9 +681,10 @@ func boat_output(boat=, ofbase=, no_pbd=, no_txt=, no_gga=, verbose=) {
 		n/a
 */
 	/* Check for required options */
-	if (is_void(boat) || is_void(ofbase)) {
+	if (is_void(boat) || is_void(ofbase) || (is_void(idx) && (is_void(no_pbd) || !no_pbd))) {
 		write, "One or more required options not provided. See 'help, boat_output'.";
 		if(is_void(boat)) write, "-> Missing 'boat='.";
+		if(is_void(idx) && (is_void(no_pbd) || !no_pbd)) write, "-> Missing 'idx='.";
 		if(is_void(ofbase)) write, "-> Missing 'ofbase='.";
 		return;
 	}
@@ -572,7 +696,7 @@ func boat_output(boat=, ofbase=, no_pbd=, no_txt=, no_gga=, verbose=) {
 	}
 
 	/* Validate the verbosity */
-	if (!(is_array(verbose) && !dimsof(verbose)(1))) verbose = 1;
+	if (numberof(verbose) != 1) verbose = -1;
 	if (verbose == -1) verbose = 1;
 	verbose = int(verbose);
 	
@@ -588,10 +712,10 @@ func boat_output(boat=, ofbase=, no_pbd=, no_txt=, no_gga=, verbose=) {
 	if(no_txt) { no_txt = 1; } else { no_txt = 0; }
 	if(no_gga) { no_gga = 1; } else { no_gga = 0; }
 	
-								if(verbose >= 2) write, format="==> boat_output(boat=[%i], ofbase=%s, no_pbd=%i, no_txt=%i, no_gga=%i, verbose=%i)\n", numberof(boat), ofbase, no_pbd, no_txt, no_gga, verbose;
+								if(verbose >= 2) write, format="==> boat_output(boat=[%i], idx=[%i], ofbase=%s, no_pbd=%i, no_txt=%i, no_gga=%i, verbose=%i)\n", numberof(boat), numberof(idx), ofbase, no_pbd, no_txt, no_gga, verbose;
 
 	if(! no_pbd) {
-		boat_output_pbd, boat=boat, ofname=ofbase+".pbd", verbose=func_verbose;
+		boat_output_pbd, boat=boat, idx=idx, ofname=ofbase+".pbd", verbose=func_verbose;
 	}
 	if(! no_txt) {
 		boat_output_txt, boat=boat, ofname=ofbase+".txt", verbose=func_verbose;
@@ -653,7 +777,7 @@ func boat_output_gga(boat=, ofname=, verbose=) {
 	}
 
 	/* Validate the verbosity */
-	if (!(is_array(verbose) && !dimsof(verbose)(1))) verbose = 1;
+	if (numberof(verbose) != 1) verbose = -1;
 	if (verbose == -1) verbose = 1;
 	verbose = int(verbose);
 	
@@ -752,7 +876,7 @@ func boat_output_txt(boat=, ofname=, verbose=) {
 	}
 
 	/* Validate the verbosity */
-	if (!(is_array(verbose) && !dimsof(verbose)(1))) verbose = 1;
+	if (numberof(verbose) != 1) verbose = -1;
 	if (verbose == -1) verbose = 1;
 	verbose = int(verbose);
 	
@@ -799,10 +923,10 @@ func boat_output_txt(boat=, ofname=, verbose=) {
 								if(verbose >= 2) write, format="--/ boat_output_txt%s", "\n";
 }
 
-func boat_output_pbd(boat=, ofname=, verbose=) {
+func boat_output_pbd(boat=, idx=, ofname=, verbose=) {
 /* DOCUMENT  boat_output_pbd(boat=, ofname=, verbose=)
 
-	Saves boat camera data to a Yorick pbd file.
+	Saves boat camera data and index data to a Yorick pbd file.
 
 	The following parameters are required:
 
@@ -812,6 +936,9 @@ func boat_output_pbd(boat=, ofname=, verbose=) {
 
 		boat= Array of type BOAT_PICS, containing the data to
 			be saved to the pbd file.
+		
+		idx= Array of type float?, containing the index data
+			to be saved to the pbd file.
 
 		ofname= Full path and file name to save data as.
 
@@ -837,9 +964,10 @@ func boat_output_pbd(boat=, ofname=, verbose=) {
 /*	require, "dir.i"; */
 	
 	/* Check for required options */
-	if (is_void(boat) || is_void(ofname)) {
+	if (is_void(boat) || is_void(idx) || is_void(ofname)) {
 		write, "One or more required options not provided. See 'help, boat_output_pbd'.";
 		if(is_void(boat)) write, "-> Missing 'boat='.";
+		if(is_void(idx)) write, "-> Missing 'idx='.";
 		if(is_void(ofname)) write, "-> Missing 'ofname='.";
 		return;
 	}
@@ -851,7 +979,7 @@ func boat_output_pbd(boat=, ofname=, verbose=) {
 	}
 
 	/* Validate the verbosity */
-	if (!(is_array(verbose) && !dimsof(verbose)(1))) verbose = 1;
+	if (numberof(verbose) != 1) verbose = -1;
 	if (verbose == -1) verbose = 1;
 	verbose = int(verbose);
 	
@@ -862,18 +990,17 @@ func boat_output_pbd(boat=, ofname=, verbose=) {
 		func_verbose = -1;
 	}
 	
-	/* Variable name to save to file as */
-	vname = "boat_data";
-
-								if(verbose >= 2) write, format="==> boat_output_pbd(boat=[%i], ofname=%s, verbose=%i)\n", numberof(boat), ofname, verbose;
+								if(verbose >= 2) write, format="==> boat_output_pbd(boat=[%i], idx=[%i], ofname=%s, verbose=%i)\n", numberof(boat), numberof(idx), ofname, verbose;
 
 								if(verbose >=1) write, "Writing PBD file.";
 	f = createb(ofname);
-	add_variable, f, -1, vname, structof(boat), dimsof(boat);
-	get_member(f, vname) = boat;
-	save, f, vname;
+	add_variable, f, -1, "boat_data", structof(boat), dimsof(boat);
+	add_variable, f, -1, "boat_idx", structof(idx), dimsof(idx);
+	get_member(f, "boat_data") = boat;
+	get_member(f, "boat_idx") = idx;
+	save, f, boat, idx;
 	close, f; 
-								if(verbose >=1) write, format=" PBD file written to %s as %s.\n", ofname, vname;
+								if(verbose >= 1) write, format=" PBD file written to %s.\n", ofname;
 								if(verbose >= 2) write, format="--/ boat_output_pbd%s", "\n";
 }
 
@@ -918,7 +1045,7 @@ func boat_merge_datasets(boatA, boatB, verbose=) {
 */
 	
 	/* Validate the verbosity */
-	if (!(is_array(verbose) && !dimsof(verbose)(1))) verbose = 1;
+	if (numberof(verbose) != 1) verbose = -1;
 	if (verbose == -1) verbose = 1;
 	verbose = int(verbose);
 	
@@ -976,8 +1103,8 @@ func boat_merge_datasets(boatA, boatB, verbose=) {
 
 }
 
-func boat_combine_depth_gps(depth=, gps=, verbose=) {
-/* DOCUMENT  boat_combine_depth_gps(depth=, gps=, verbose=)
+func boat_interpolate_depth(depth=, gps=, verbose=) {
+/* DOCUMENT  boat_interpolate_depth(depth=, gps=, verbose=)
 
 	Adds depth information from an array of BOAT_PICS to the GPS information
 	in an array of BOAT_PICS and returns an array of BOAT_PICS. Depth info is
@@ -1016,14 +1143,14 @@ func boat_combine_depth_gps(depth=, gps=, verbose=) {
 	
 	/* Check for required options */
 	if (is_void(depth) || is_void(gps)) {
-		write, "One or more required options not provided. See 'help, boat_combine_depth_gps'.";
+		write, "One or more required options not provided. See 'help, boat_interpolate_depth'.";
 		if(is_void(depth)) write, "-> Missing 'depth='.";
 		if(is_void(gps)) write, "-> Missing 'gps='.";
 		return;
 	}
 
 	/* Validate the verbosity */
-	if (!(is_array(verbose) && !dimsof(verbose)(1))) verbose = 1;
+	if (numberof(verbose) != 1) verbose = -1;
 	if (verbose == -1) verbose = 1;
 	verbose = int(verbose);
 	
@@ -1034,7 +1161,7 @@ func boat_combine_depth_gps(depth=, gps=, verbose=) {
 		func_verbose = -1;
 	}
 	
-								if(verbose >= 2) write, format="==> boat_combine_depth_gps(depth=[%i], gps=[%i], verbose=%i)\n", numberof(depth), numberof(gps), verbose;
+								if(verbose >= 2) write, format="==> boat_interpolate_depth(depth=[%i], gps=[%i], verbose=%i)\n", numberof(depth), numberof(gps), verbose;
 
 	/* d is where we are at with depth; g is where we are at with gps */
 	d = 1; g = 1;
@@ -1067,7 +1194,7 @@ func boat_combine_depth_gps(depth=, gps=, verbose=) {
 		}
 	}
 								if(verbose == 1) write, format="%s", "\n";
-								if(verbose >= 2) write, format="--/ boat_combine_depth_gps%s", "\n";
+								if(verbose >= 2) write, format="--/ boat_interpolate_depth%s", "\n";
 	return gps;
 }
 
@@ -1118,7 +1245,7 @@ func boat_apply_offset(boat=, h=, m=, s=, verbose=) {
 	}
 
 	/* Validate the verbosity */
-	if (!(is_array(verbose) && !dimsof(verbose)(1))) verbose = 1;
+	if (numberof(verbose) != 1) verbose = -1;
 	if (verbose == -1) verbose = 1;
 	verbose = int(verbose);
 	
@@ -1199,10 +1326,11 @@ func boat_gps_smooth(boat, lat, lon, step, verbose=) {
 		Array of type BOAT_PICS
 */
 	require, "compare_transects.i";
+	require, "general.i";
 /*	require, "ll2utm.i"; */
 
 	/* Validate the verbosity */
-	if (!(is_array(verbose) && !dimsof(verbose)(1))) verbose = 1;
+	if (numberof(verbose) != 1) verbose = -1;
 	if (verbose == -1) verbose = 1;
 	verbose = int(verbose);
 	
@@ -1214,6 +1342,11 @@ func boat_gps_smooth(boat, lat, lon, step, verbose=) {
 	}
 
 									if(verbose >= 2) write, format="==> boat_gps_smooth(boat:[%i], lat:[%i], lon:[%i], step:%i, verbose=%i)\n", numberof(boat), numberof(lat), numberof(lon), step, verbose;
+	
+	boat.lat = lat;
+	boat.lon = lon;
+	return boat;
+	/* above is temporary bypass */
 
 									if(verbose >= 2) write, format=" Step = %i\n", step;
 	av1 = avgline(lat, lon, step=step);
@@ -1262,7 +1395,7 @@ func boat_gps_smooth(boat, lat, lon, step, verbose=) {
 									if(verbose >= 2) write, format="     %d: Geo (%.2f,%.2f)", i, boat.lat(i), boat.lon(i);
 									if(verbose == 2) write, format="%s", " - ";
 									if(verbose == 3) write, format="%s", "\n";
-		boat.heading(i) = calculate_heading(av_lon(cur_av), av_lat(cur_av), av_lon(cur_av+1), av_lat(cur_av+1), verbose=func_verbose);
+		boat.heading(i) = calculate_heading(av_lon(cur_av), av_lat(cur_av), av_lon(cur_av+1), av_lat(cur_av+1));
 									if(verbose == 3) write, format="     %d: ", i;
 									if(verbose >= 2) write, format="Heading %.2f\n", boat.heading(i);
 
@@ -1299,8 +1432,8 @@ func boat_input_edt(ifname=, utmzone=, step=, depthonly=, verbose=) {
 
 		depthonly= Set to any nonzero value to indicate that only the depth
 			information is needed. This will disregard latitude and longitude
-			data, causing the function to run more quickly. (This is used
-			when the GPS information is being pulled from the EXIF headers.)
+			data, causing the function to run more quickly. (This option should
+			not be normally used.)
 
 		verbose= Indicates the verbosity level to run at.
 			Default: 1
@@ -1338,7 +1471,7 @@ func boat_input_edt(ifname=, utmzone=, step=, depthonly=, verbose=) {
 	}
 
 	/* Validate the verbosity */
-	if (!(is_array(verbose) && !dimsof(verbose)(1))) verbose = 1;
+	if (numberof(verbose) != 1) verbose = -1;
 	if (verbose == -1) verbose = 1;
 	verbose = int(verbose);
 	
@@ -1422,6 +1555,71 @@ func boat_input_edt(ifname=, utmzone=, step=, depthonly=, verbose=) {
 	return boat;
 }
 
+func boat_add_input_edt(boat=, ifname=, utmzone=, verbose=) {
+/* DOCUMENT  boat_add_input_edt(boat=, ifname=, utmzone=, verbose=)
+
+	Typically there are several edt files for a single set of images. Normally,
+	you would have to use boat_input_edt on each edt file, then use boat_merge_datasets
+	to combine each pair until you had a single consolidated dataset.
+
+	This function simplifies the process. The first edt file should be created using
+	boat_input_edt. Afterwards, additional datasets can be added using this function
+	by specifying the boat dataset and the parameters for the next edt file.
+
+	The following parameters are required:
+
+		n/a
+
+	The following options are required:
+
+		boat= An array of BOAT_PICS data.
+
+		ifname= The edt file to process. See information at boat_input_edt.
+
+		utmzone= UTM zone of the data. See information at boat_input_edt.
+
+	The following options are optional:
+
+		verbose= Indicates the verbosity level to run at.
+			Default: 1
+			Valid values:
+				0 - No progress info
+				1 - Limited progress information
+				2 - Full progress information
+				3 - Full progress information for this function
+					and all called functions
+				-1 - Explicitly request the default level
+				-2 - No progress info for this or any called
+					functions
+
+	Function returns:
+
+		Array of type BOAT_PICS
+*/
+/* Methodology:
+
+		This is just a wrapper. It runs boat_input_edt to get the new data, then runs
+		boat_merge_datasets to combine the new data into the old.
+*/
+	if(is_void(ifname) || is_void(utmzone) || is_void(boat)) {
+		write, "One or more required options not provided. See 'help, boat_add_input_edt'.";
+		if(is_void(boat))    write, "-> Missing 'boat='.";
+		if(is_void(ifname))  write, "-> Missing 'ifname='.";
+		if(is_void(utmzone)) write, "-> Missing 'utmzone='.";
+		return;
+	}
+
+	// Validate the verbosity
+	if (numberof(verbose) != 1) verbose = -1;
+	if (verbose == -1) verbose = 1;
+	verbose = int(verbose);
+
+
+	add_boat = boat_input_edt(ifname=ifname, utmzone=utmzone, verbose=verbose);
+	new_boat = boat_merge_datasets(boat, add_boat, verbose=verbose);
+	return new_boat;
+}
+
 func boat_input_exif(sdir=, step=, verbose=) {
 /* DOCUMENT  boat_input_exif(sdir=, step=, verbose=)
 
@@ -1468,7 +1666,7 @@ func boat_input_exif(sdir=, step=, verbose=) {
 	}
 
 	/* Validate the verbosity */
-	if (!(is_array(verbose) && !dimsof(verbose)(1))) verbose = 1;
+	if (numberof(verbose) != 1) verbose = -1;
 	if (verbose == -1) verbose = 1;
 	verbose = int(verbose);
 	
@@ -1499,7 +1697,13 @@ func boat_input_exif(sdir=, step=, verbose=) {
 
 		Output is preceded by a line with the count of data items.
 	*/
-	cmd = "( exiflist -o l -f gps-time,gps-latitude,gps-lat-ref,gps-longitude,gps-long-ref " + sdir + "/*.jpg | wc -l ); exiflist -o l -f gps-time,gps-latitude,gps-lat-ref,gps-longitude,gps-long-ref " + sdir + "/*.jpg | perl -an -F',' -e 'sub ll {@c = split / /, shift(@_); $c[1] += $c[2] / 60; $c[0] += $c[1]/60; return $c[0];};sub ld {$d = shift(@_); return 1 if($d eq \"North\" || $d eq \"East\"); return -1 if($d eq \"South\" || $d eq \"West\"); return 0};sub sod {my @t = split /:/,shift(@_); $t[1] += $t[0] * 60; $t[2] += $t[1] * 60; return $t[2];};chomp($F[4]);print sod($F[0]) . \" \" . ll($F[1]) * ld($F[2]) . \" \" . ll($F[3]) * ld($F[4]) . \"\\n\"' | sort "
+	cmd = "find " + sdir + " -iname '*.jpg' -exec exiflist -o l -f gps-time,gps-latitude,gps-lat-ref,gps-longitude,gps-long-ref \\\{} \\\; ";
+
+	cmd = "( " + cmd + " | wc -l ); " + cmd + " | perl -an -F',' -e 'sub ll {@c = split / /, shift(@_); $c[1] += $c[2] / 60; $c[0] += $c[1]/60; return $c[0];};sub ld {$d = shift(@_); return 1 if($d eq \"North\" || $d eq \"East\"); return -1 if($d eq \"South\" || $d eq \"West\"); return 0};sub sod {my @t = split /:/,shift(@_); $t[1] += $t[0] * 60; $t[2] += $t[1] * 60; return $t[2];};chomp($F[4]);print sod($F[0]) . \" \" . ll($F[1]) * ld($F[2]) . \" \" . ll($F[3]) * ld($F[4]) . \"\\n\"' | sort "
+	
+//	cmd = "( exiflist -o l -f gps-time,gps-latitude,gps-lat-ref,gps-longitude,gps-long-ref " + sdir + "/*.jpg | wc -l ); exiflist -o l -f gps-time,gps-latitude,gps-lat-ref,gps-longitude,gps-long-ref " + sdir + "/*.jpg | perl -an -F',' -e 'sub ll {@c = split / /, shift(@_); $c[1] += $c[2] / 60; $c[0] += $c[1]/60; return $c[0];};sub ld {$d = shift(@_); return 1 if($d eq \"North\" || $d eq \"East\"); return -1 if($d eq \"South\" || $d eq \"West\"); return 0};sub sod {my @t = split /:/,shift(@_); $t[1] += $t[0] * 60; $t[2] += $t[1] * 60; return $t[2];};chomp($F[4]);print sod($F[0]) . \" \" . ll($F[1]) * ld($F[2]) . \" \" . ll($F[3]) * ld($F[4]) . \"\\n\"' | sort "
+
+//	cmd = "find " + indir + " -iname '*.jpg' -exec exiflist -o l -f file-name,date-taken,gps-time \\\{} \\\; | perl -an -F',' -e 'chomp $F[1];chomp $F[2]; sub gettime {@temp=split/ /,shift(@_);return $temp[1];}; sub hms {return split/:/,shift(@_);}; @t=($F[2]?hms($F[2]):hms(gettime($F[1])));system \"" + action + " " + indir + "\" . $F[0] . \" " + outdir + "\" . substr($F[0], 0, length($F[0])-8) . \"_\" . \"" + datestring + "\" . \"_\" . sprintf(\"%02d\",$t[0]) . sprintf(\"%02d\",$t[1]) . sprintf(\"%02d\", $t[2]) . \"_\" . substr ($F[0], length($F[0])-8) . \"\\n\";';"
 
 	f = popen(cmd, 0);
 								if(verbose >= 2) write, format=" Pipe opened to %s\n", cmd;
@@ -1573,7 +1777,7 @@ func boat_input_pbd(ifname=, verbose=) {
 	}
 
 	/* Validate the verbosity */
-	if (!(is_array(verbose) && !dimsof(verbose)(1))) verbose = 1;
+	if (numberof(verbose) != 1) verbose = -1;
 	if (verbose == -1) verbose = 1;
 	verbose = int(verbose);
 	
@@ -1588,8 +1792,8 @@ func boat_input_pbd(ifname=, verbose=) {
 
 								if(verbose >= 2) write, "  Reading file";
 	f = openb(ifname);
-	restore, f, vname;
-	boat = get_member(f, vname);
+	restore, f, "boat_data";
+	boat = get_member(f, "boat_data");
 								if(verbose >= 2) write, format="     vname=%s\n", vname;
 	close, f;
 
@@ -1597,7 +1801,71 @@ func boat_input_pbd(ifname=, verbose=) {
 	return boat;
 }
 
-func boat_get_image_somd(sdir=, verbose=){
+func boat_input_pbd_idx(ifname=, verbose=) {
+/* DOCUMENT  boat_input_pbd_idx(ifname=, verbose=)
+
+	Reads and returns an array of index data that was saved to a Yorick pbd file.
+
+	The following parameters are required:
+
+		n/a
+
+	The following options are required:
+
+		ifname= Full path and file name of pbd file to be read.
+
+	The following options are optional:
+
+		verbose= Indicates the verbosity level to run at.
+			Default: 1
+			Valid values:
+				0 - No progress info
+				1 - Limited progress information
+				2 - Full progress information
+				3 - Full progress information for this function
+					and all called functions
+				-1 - Explicitly request the default level
+				-2 - No progress info for this or any called
+					functions
+
+	Function returns:
+
+		Array of type float?
+*/
+/*	require, "dir.i"; */
+	
+	/* Check for required options */
+	if (is_void(ifname)) {
+		write, "One or more required options not provided. See 'help, boat_input_pbd'.";
+		if(is_void(ifname)) write, "-> Missing 'ifname='.";
+		return;
+	}
+
+	/* Validate the verbosity */
+	if (numberof(verbose) != 1) verbose = -1;
+	if (verbose == -1) verbose = 1;
+	verbose = int(verbose);
+	
+	/* Set called function verbosity */
+	if(verbose == 3 || verbose == -2) {
+		func_verbose = verbose;
+	} else {
+		func_verbose = -1;
+	}
+
+								if(verbose >= 2) write, format="==> boat_input_pbd_idx(ifname=%s, verbose=%i)\n", ifname, verbose;
+
+								if(verbose >= 2) write, "  Reading file";
+	f = openb(ifname);
+	restore, f, "boat_idx";
+	boat = get_member(f, "boat_idx");
+	close, f;
+
+								if(verbose >= 2) write, format="--/ boat_input_pbd_idx%s", "\n";
+	return boat;
+}
+
+func boat_get_image_somd(sdir=, verbose=) {
 /* DOCUMENT  boat_get_image_somd(sdir=, verbose=)
 
 	Scans through the images in a directory to determine the somd's represented
@@ -1637,7 +1905,7 @@ func boat_get_image_somd(sdir=, verbose=){
    }
 
    /* Validate the verbosity */
-   if (!(is_array(verbose) && !dimsof(verbose)(1))) verbose = 1;
+   if (numberof(verbose) != 1) verbose = -1;
    if (verbose == -1) verbose = 1;
    verbose = int(verbose);
 
@@ -1654,12 +1922,12 @@ func boat_get_image_somd(sdir=, verbose=){
 	}
 								if(verbose >= 2) write, format="==> boat_get_image_somd(sdir=%s, verbose=%i)\n", sdir, verbose;
 
-	cmd_temp = "ls *_*_*_*.jpg | awk 'BEGIN{FS=\"_\"}{A=NF-1;print $A}' | perl -n -e 'chomp; print substr($_,0,2)*60*60 + substr($_,2,2)*60 + substr($_,4,2) .\"\\n\"' | sort -u"
-	cmd = "cd " + sdir + " ; ( " + cmd_temp + " ) | wc -l ; " + cmd_temp + " ; cd - ";
+	cmd = "find . -iname '*_*_*_*.jpg' | awk 'BEGIN{FS=\"_\"}{A=NF-1;print $A}' | perl -n -e 'chomp; print substr($_,0,2)*60*60 + substr($_,2,2)*60 + substr($_,4,2) .\"\\n\"' | sort -u"
+	cmd = "cd " + sdir + " ; ( " + cmd + " ) | wc -l ; " + cmd + " ; cd - ";
 	f = popen(cmd, 0);
 
                         if(verbose >= 2) write, format=" Pipe opened to %s\n", cmd;
-   cmd = cmd_temp = [];
+   cmd = cmd = [];
 
 	num = 1;
 	read, f, format="%d", num;
@@ -1710,7 +1978,7 @@ func boat_interpolate_somd_gps(boat=, somd=, range=, verbose=) {
 
 	Function returns:
 
-		Array of type BOAT_WAYPOINTS_UTM or BOAT_WAYPOINTS_LATLON.
+		Array of type BOAT_PICS.
 */
    /* Check for required options */
    if (is_void(boat)||is_void(somd)) {
@@ -1725,7 +1993,7 @@ func boat_interpolate_somd_gps(boat=, somd=, range=, verbose=) {
 	range = abs(range);
 
    /* Validate the verbosity */
-   if (!(is_array(verbose) && !dimsof(verbose)(1))) verbose = 1;
+   if (numberof(verbose) != 1) verbose = -1;
    if (verbose == -1) verbose = 1;
    verbose = int(verbose);
 
@@ -1825,7 +2093,7 @@ func boat_find_time_indexes(boat=, somd=, verbose=) {
    }
 
 	/* Validate the verbosity */
-	if (!(is_array(verbose) && !dimsof(verbose)(1))) verbose = 1;
+	if (numberof(verbose) != 1) verbose = -1;
 	if (verbose == -1) verbose = 1;
 	verbose = int(verbose);
 	
@@ -1864,7 +2132,7 @@ func boat_find_time_indexes(boat=, somd=, verbose=) {
 	return idxes;
 }
 
-func boat_read_hypack_waypoints(ifname=, ret=, utmzone=, verbose=){
+func boat_read_hypack_waypoints(ifname=, utmzone=, verbose=){
 /* DOCUMENT  boat_read_hypack_waypoints(ifname=, ret=, utmzone=, verbose=)
 
 	Reads a Hypack waypoints file and returns its information.
@@ -1878,10 +2146,6 @@ func boat_read_hypack_waypoints(ifname=, ret=, utmzone=, verbose=){
 		ifname= Full path and file name of file to read.
 
 	The following options are optional:
-
-		ret= The format in which to return the info. If ret=utm, then
-			it will return an array of BOAT_WAYPOINTS_UTM. Otherwise,
-			it will return an array of BOAT_WAYPOINTS_LATLON.
 
 		utmzone= UTM within which the points are located. This option
 			is required if ret=utm.
@@ -1900,7 +2164,7 @@ func boat_read_hypack_waypoints(ifname=, ret=, utmzone=, verbose=){
 
 	Function returns:
 
-		Array of type BOAT_WAYPOINTS_UTM or BOAT_WAYPOINTS_LATLON.
+		Array of type BOAT_WAYPOINTS
 */
    /* Check for required options */
    if (is_void(ifname)) {
@@ -1910,7 +2174,7 @@ func boat_read_hypack_waypoints(ifname=, ret=, utmzone=, verbose=){
    }
 
    /* Validate the verbosity */
-   if (!(is_array(verbose) && !dimsof(verbose)(1))) verbose = 1;
+   if (numberof(verbose) != 1) verbose = -1;
    if (verbose == -1) verbose = 1;
    verbose = int(verbose);
 
@@ -1921,7 +2185,7 @@ func boat_read_hypack_waypoints(ifname=, ret=, utmzone=, verbose=){
       func_verbose = -1;
    }
 
-								if(verbose >= 2) write, format="==> boat_read_hypack_waypoints(ifname=%s, ret=%s, utmzone=%i, verbose=%i)\n", ifname, ret, utmzone, verbose;
+								if(verbose >= 2) write, format="==> boat_read_hypack_waypoints(ifname=%s, utmzone=%i, verbose=%i)\n", ifname, utmzone, verbose;
 	require, "ll2utm.i";
 	
 	cmd_temp = "awk 'BEGIN{FS=\" \"}{print $2\" \"$3\" \"$4}' " + ifname + " | awk 'BEGIN{FS=\"\\\"\"}{print $2$3}'"; /* " */
@@ -1944,50 +2208,42 @@ func boat_read_hypack_waypoints(ifname=, ret=, utmzone=, verbose=){
 	close, f;
 								if(verbose >= 2) write, "Pipe closed.";
 
-	if(ret=="utm") {
-		waypt = array(BOAT_WAYPOINTS_UTM, num);
+	waypt = array(BOAT_WAYPOINTS, num);
 
-		waypt.label = data_label;
-		waypt.target_north = data_north;
-		waypt.target_east = data_east;
+	waypt.label = data_label;
+	waypt.target_north = data_north;
+	waypt.target_east = data_east;
 								if(verbose >= 2) write, "Data stored to struct array as UTM.";
-	} else {
-		latlon = utm2ll(data_north, data_east, utmzone);
-								if(verbose >= 2) write, "UTM converted to Lat-Lon.";
-
-		data_north = data_east = [];
-
-		waypt = array(BOAT_WAYPOINTS_LATLON, num);
-		
-		waypt.label = data_label;
-		waypt.target_lat = latlon(, 2);
-		waypt.target_lon = latlon(, 1);
-								if(verbose >= 2) write, "Data stored to struct array as Lat-Lon.";
-	}
 
                         if(verbose >= 2) write, format="--/ boat_read_hypack_waypoints%s", "\n";
 	return waypt;
 }
 
-func calculate_heading(x1, y1, x2, y2, verbose=) {
-/* DOCUMENT calculate_heading(x1, y1, x2, y2, verbose=)
-	
-	Returns the heading in degrees clockwise from north of an object
-	that moved from point x1, y1 to point x2, y2.
+func boat_find_waypoints(boat=, waypoints=, method=, radius=) {
+/* DOCUMENT boat_find_waypoints(boat=, waypoints=, method=, radius=)
+
+	Given a set of waypoint data and a set of boat data, this function will
+	determine which images in the boat data set are within the radius of each
+	waypoint and return the information on those images.
 
 	The following parameters are required:
 
-		x1, y1  An ordered pair for the first point an object passed through
-		x2, y2  An ordered pair for the second point an object passed through
-	
+		n/a
+
 	The following options are required:
 
-		n/a
+		boat= An array of BOAT_PICS data.
+
+		waypoints=
 
 	The following options are optional:
 
+		method=
+
+		radius=
+
 		verbose= Indicates the verbosity level to run at.
-			Default: 0
+			Default: 1
 			Valid values:
 				0 - No progress info
 				1 - Limited progress information
@@ -2000,357 +2256,343 @@ func calculate_heading(x1, y1, x2, y2, verbose=) {
 
 	Function returns:
 
-		heading in degrees clockwise from north
+		Array of type _____
 */
-	if (!(is_array(verbose) && !dimsof(verbose)(1))) verbose = 0;
-	if (verbose == -1) verbose = 0;
-	if (verbose == 3 || verbose == -2) {
-		func_verbose = verbose;
-	} else {
-		func_verbose = -1;
-	}
-	verbose = int(verbose);
+/* Methodology:
 
-								if(verbose >= 2) write, format="==> calculate_heading(x1:%.2f, y1:%.2f, x2:%.2f, y2:%.2f, verbose=%i)\n", float(x1), float(y1), float(x2), float(y2), int(verbose);
-	/* Calculate the angle of the point in radians CCW from the positive x-axis */
-	/* Special case - x1 == x2 */
-	if(x1 == x2) {
-								if(verbose >= 2) write, "x1 == x2";
-		radians = pi/2.0;
-	/* Normal case */
-	} else {
-								if(verbose >= 2) write, "x1 != x2";
-		radians = atan(float(y2-y1)/float(x2-x1));
-	}
-								if(verbose >= 2) write, format=" radians set to %.2f\n", float(radians);
-	
-	/* Convert the angle to degrees */
-	degrees = radians * 180.0 / pi;
-								if(verbose >= 2) write, format=" degrees set to %.2f\n", float(degrees);
-
-	/* Put angle in the proper quadrant */
-	if(x2 < x1 || (y2 < y1 && x2 == x1)) degrees -= 180;
-								if(verbose >= 2) write, format=" degrees adjusted to %.2f\n", float(degrees);
-
-	/* Convert angle to a heading */
-	heading = 90 - degrees;
-								if(verbose >= 1) write, format=" heading set to %.2f\n", float(heading);
-								if(verbose >= 2) write, format="--/ calculate_heading%s", "\n";
-	return heading;
-}
-
-func perpendicular_intercept(x1, y1, x2, y2, x3, y3) {
-/* DOCUMENT perpendicular_intercept(x1, y1, x2, y2, x3, y3)
-	
-	Returns the coordinates of the point where the line that passes through
-	(x1, y1) and (x2, y2) intersects with the line that passes through
-	(x3, y3)	and is perpendicular to the first line.
-
-	The following paramaters are required:
-
-		x1, y1  An ordered pair for a point on a line
-		x2, y2  An ordered pair for a point on the same line as x1, y1
-		x3, y3  An ordered pair from which to find a perpendicular intersect
-
-	The following options are required:
-
-		n/a
-	
-	The following options are optional:
-
-		n/a
-
-	Function returns:
-
-		[x, y]
+		For each waypoint, all points in the boat data are found that are within radius.
+		These points are added into a result array as they are found.
+		
+		Variable "result" holds the result data. Rather than grow this each time new data is
+		found, I am using a fixed-size array that I periodically replace with a larger new
+		array into which all current results have been copied.
 */
 	
-/* Make everything doubles */
-	x1 = double(x1);
-	y1 = double(y1);
-	x2 = double(x2);
-	y2 = double(y2);
-	x3 = double(x3);
-	y3 = double(y3);
+	require, "ll2utm.i";
+	require, "general.i";
 
-	/* Special case: x1 == x2 */
-	if (x1 == x2) {
-	
-		xi = x1;
-		yi = y3;
-	
-	/* Special case: y1 == y2 */
-	} else if (y1 == y2) {
-
-		yi = y1;
-		xi = x3;
-	
-	/* Normal case */
-	} else {
-	
-		/* m12 - slope of the line passing through pts 1 and 2 */
-		m12 = (y2 - y1)/(x2 - x1);
-		/* m3 - slope of the line passing through pt 3, perpendicular to line 12 */
-		m3 = -1 / m12;
-
-		/* y-intercepts of the two lines */
-		b12 = y1 - m12 * x1;
-		b3 = y3 - m3 * x3;
-
-		/* x value of the intersection point */
-		xi = (b3 - b12)/(m12 - m3);
-
-		/* y value of the intersection point */
-		yi = m12 * xi + b12;
-
-	}
-
-	return [xi, yi];
-}
-
-func find_nearest_point(x, y, xs, ys, force_single=, radius=, verbose=) {
-/* DOCUMENT find_nearest_point(x, y, xs, ys, force_single=, radius=, verbose=)
-
-	Returns the index(es) of the nearest point(s) to a specified location.
-
-	The following parameters are required:
-
-		x, y    An ordered pair for the location to be found near.
-
-		xs, ys  Correlating arrays of x and y values in which to find the
-			nearest point.
-
-	The following options are required:
-
-		n/a
-
-	The following options are optional:
-
-		force_single= By default, if several points are all equally near
-			then the indexes of all of them will be returned in an array.
-			Specifying force_single to a positive value will return only
-			one value, selected randomly. Specifying force_single to a
-			negative value will return only the first value.
-
-		radius= The initial radius within which to search. Radius multiplies
-			by the square root of 2 on each interation of the search. By
-			default, radius initializes to 1.
-
-		verbose= Indicates the verbosity level to run at.
-			Default: 0
-			Valid values:
-				0 - No progress info
-				1 - Limited progress information
-				2 - Full progress information
-				3 - Full progress information for this function
-					and all called functions
-				-1 - Explicitly request the default level
-				-2 - No progress info for this or any called
-					functions
-
-	Function returns:
-
-		The index (or indexes) of the point(s) nearest to the specified point.
-*/
-
-	require, "data_rgn_selector.i";
-	
-	problem_string = "";
-	/* Validate xs and ys */
-	if(dimsof(xs)(1) != 1) {
-		problem_string += " -> Array xs is not a one-dimensional array.\n";
-	}
-	if(dimsof(ys)(1) != 1) {
-		problem_string += " -> Array ys is not a one-dimensional array.\n";
-	}
-	if(problem_string == "" && dimsof(xs)(2) != dimsof(ys)(2)) {
-		problem_string += " -> The dimensions of xs do not match the dimensions of ys.\n";
-	}
-	if(dimsof(x)(1) != 0) {
-		problem_string += " -> Only a scalar value may be specified for x.\n";
-	}
-	if(dimsof(y)(1) != 0) {
-		problem_string += " -> Only a scalar value may be specified for y.\n";
-	}
-
-	if(problem_string != "") {
-		write, format="Invalid options were specified. See 'help, find_nearest_point'.\n%s", problem_string;
+	if(structof(waypoints) != BOAT_WAYPOINTS) {
+		write, "Waypoint data should be in UTM.";
 		return;
 	}
-	
-	/* Validate force_single */
-	if(is_void(force_single)) { force_single = 0; }
-	force_single = int(force_single);
 
-	/* Validate radius */
-	if(is_void(radius)) { radius = 1.0; }
-	radius = abs(radius);
-
-	/* Validate the verbosity and set func_verbose */
-	if (!(is_array(verbose) && !dimsof(verbose)(1))) verbose = 0;
-	if (verbose == -1) verbose = 0;
-	if (verbose == 3 || verbose == -2) {
-		func_verbose = verbose;
-	} else {
-		func_verbose = -1;
+	// Amount to increment result by
+	inc = numberof(boat)/10;
+	if(inc < 100) {
+		inc = 100;
 	}
-	verbose = int(verbose);
+
+	// If result is not big enough, it will inrease by incr as needed
+	result = array(structof(waypoints), inc * 2);
+
+	// Index into result
+	r = 1; 
 	
-								if(verbose >= 2) write, format="==> find_nearest_point(x:%f, y:%f, xs:[%i], ys:[%i], force_single=%i, radius=%f, verbose=%i)\n", float(x), float(y), numberof(xs), numberof(ys), force_single, float(radius), verbose;
+	// Convert boat to UTM since waypoints are in UTM
+	boat_utm = fll2utm( boat.lat, boat.lon );
+	boat_n = boat_utm(1,);
+	boat_e = boat_utm(2,);
 
-	/* Initialize the indx of points in the box def by radius */
-	indx = data_box(xs, ys, x-radius, x+radius, y-radius, y+radius);
+	// Get somd
+	boat_s = boat.somd;
 
-								if(verbose >= 1) counter = 0;
+	// Cleanup - these should no longer be needed
+//	boat_utm = [];
+//	boat = [];
 	
-	/* The points furthest away from the center in a data_box actually have a
-		radius of r * sqrt(2). Thus, when we initially find a box containing
-		points, we have to expand the box to make sure there weren't any closer
-		ones that just happened to be at the wrong angle. */
-								if(verbose >= 1) write, "Looking for points.";
-	do {
-								if(verbose >= 1) counter++;
-								if(verbose >= 1) write, format=" Iteration %i", counter;
-								if(verbose == 1) write, format=".%s", "\r";
-								if(verbose >= 2) write, format=":%s", "\n";
-		indx_orig = indx;
-								if(verbose >= 2) write, format="   Smaller radius is %f, ", float(radius);
-		radius *= 2 ^ .5;
-								if(verbose >= 2) write, format="larger radius is %f.\n", float(radius);
-		indx = data_box(xs, ys, x-radius, x+radius, y-radius, y+radius);
-								if(verbose >= 2) write, format="   Found %i points in smaller box, %i points in larger box.\n", numberof(indx_orig), numberof(indx);
-	} while (!is_array(indx_orig));
-								if(verbose == 1) write, format=" Points have been found.%s", "\n";
-								if(verbose >= 2) write, format=" Found points within a radius of %f.\n", orig_radius;
-
-	/* Calculate the distance of each point in the index from the center */
-								if(verbose >= 2) write, "Calculating relevant distances.";
-	dist = array(double, numberof(xs));
-	dist() = -1;
-	dist(indx) = ( (x - xs(indx))^2 + (y - ys(indx))^2 ) ^ .5;
-	
-	/* Find the minimum distance */
-								if(verbose >= 2) write, "Finding minimal distance.";
-	above_zero = where(dist(indx)>=0);
-	min_dist = min(dist(indx)(above_zero));
-								if(verbose >= 2) write, format=" Minimal distance is %f.\n", min_dist;
-
-	/* Find the indexes in the original array that have the min dist */
-								if(verbose >= 2) write, "Finding points with minimal distance.";
-	point_indx = where(dist == min_dist);
-
-	/* Force single return if necessary */
-	if(force_single && numberof(point_indx) > 1) {
-		if(force_single > 0) {
-			pick = int(floor(numberof(point_indx) * random() + 1));
-			if(pick > numberof(point_indx)) { pick = int(numberof(point_indx)); }
-			point_indx = point_indx(pick);
-								if(verbose >= 2) write, "Randomly selected only one point.";
-		} else {
-			point_indx = point_indx(1);
-								if(verbose >= 2) write, "Selected last point only.";
+	for(i = 1; i <= numberof(waypoints); i++) {
+		if(method == "radius") {
+			points = find_points_in_radius(waypoints.target_north(i), waypoints.target_east(i), boat_n, boat_e, radius=radius);
+		} else if(method == "nearest") {
+			points = find_nearest_point(waypoints.target_north(i), waypoints.target_east(i), boat_n, boat_e, radius=radius);
 		}
-								if(verbose == 1) write, "Nearest point has been located.";
-	} else {
-								if(verbose == 1) write, "Nearest points have been located.";
+		if(numberof(points) > 0) {
+			write, "points!";
+			for(j = 1; j <= numberof(points); j++) {
+				result(r) = waypoints(i);
+				result(r).actual_north = boat_n(points(j));
+				result(r).actual_east  = boat_e(points(j));
+				result(r).somd         = boat_s(points(j));
+				r++;
+
+				// Allocate more space for results if necessary
+				if(r > numberof(result)) { 
+					temp = result;
+					result = array(structof(waypoints), numberof(temp) + inc);
+					result(1:numberof(temp)) = temp;
+					temp = [];
+				}
+			}
+		}
 	}
 	
-								if(verbose >= 2) write, format="--/ find_nearest_point%s", "\n";
-	return point_indx;
+	if(r > 1) {
+		// Strip off empty portion of array
+		result = result(1:r-1);
+	} else {
+		result = [];
+	}
+
+	return result;
 }
 
-func find_points_in_radius(x, y, xs, ys, radius=, verbose=) {
-/* DOCUMENT find_points_in_radius(x, y, xs, ys, radius=, verbose=)
+func boat_copy_waypoints(waypoints, src, dest) {
+/* DOCUMENT boat_copy_waypoints(waypoints, src, dest)
 
-	Returns the index(es) of the points within a radius of a specified location.
+	Copies the images corresponding to the data in the waypoints array
+	from the src directory to the dest directory.
 
-	The following parameters are required:
+	Required parameters:
 
-		x, y    An ordered pair for the location to be found near.
+		waypoints: Array of type BOAT_WAYPOINTS.
 
-		xs, ys  Correlating arrays of x and y values in which to find the
-			nearest point.
+		src: Full path to the source directory.
 
-	The following options are required:
+		dest: Full path to the destination directory.
+	
+	Returns:
 
 		n/a
-
-	The following options are optional:
-
-		radius= The radius within which to search. By default, radius
-			initializes to 3.
-
-		verbose= Indicates the verbosity level to run at.
-			Default: 0
-			Valid values:
-				0 - No progress info
-				1 - Limited progress information
-				2 - Full progress information
-				3 - Full progress information for this function
-					and all called functions
-				-1 - Explicitly request the default level
-				-2 - No progress info for this or any called
-					functions
-
-	Function returns:
-
-		The indexes of the points within radius.
 */
-
-	require, "data_rgn_selector.i";
+	require, "ytime.i";
 	
-	problem_string = "";
-	/* Validate xs and ys */
-	if(dimsof(xs)(1) != 1) {
-		problem_string += " -> Array xs is not a one-dimensional array.\n";
-	}
-	if(dimsof(ys)(1) != 1) {
-		problem_string += " -> Array ys is not a one-dimensional array.\n";
-	}
-	if(problem_string == "" && dimsof(xs)(2) != dimsof(ys)(2)) {
-		problem_string += " -> The dimensions of xs do not match the dimensions of ys.\n";
-	}
-	if(dimsof(x)(1) != 0) {
-		problem_string += " -> Only a scalar value may be specified for x.\n";
-	}
-	if(dimsof(y)(1) != 0) {
-		problem_string += " -> Only a scalar value may be specified for y.\n";
-	}
-
-	if(problem_string != "") {
-		write, format="Invalid options were specified. See 'help, find_points_in_radius'.\n%s", problem_string;
-		return;
-	}
+	hms_a = sod2hms(waypoints.somd);
+	hms = swrite(format="%02i%02i%02i", hms_a(1,), hms_a(2,), hms_a(3,));
 	
-	/* Validate radius */
-	if(is_void(radius)) { radius = 3.0; }
-	radius = abs(radius);
+	for(i = 1; i <= numberof(waypoints); i++) {
+		cmd  = "find " + src + " -iname '*.jpg' -printf '%f\\n' | grep " + hms(i) + " ; ";
+		cmd  = "( " + cmd + " ) | wc -l ; " + cmd;
+		cmd  = "cd " + src + " ; " + cmd + "cd - ; ";
+		
+		f = popen(cmd, 0);
+		
+		num = 1;
+		read, f, format="%d", num;
+		
+		if(num > 0) {
+			files = array(string, num);
+			read, f, format="%s", files;
 
-	/* Validate the verbosity and set func_verbose */
-	if (!(is_array(verbose) && !dimsof(verbose)(1))) verbose = 0;
-	if (verbose == -1) verbose = 0;
-	if (verbose == 3 || verbose == -2) {
-		func_verbose = verbose;
-	} else {
-		func_verbose = -1;
+			close, f;
+			
+			for(j = 1; j <= numberof(files); j++) {
+				cmd  = "cp " + src + "/" + files(j) + " ";
+				cmd += dest + "/n" + swrite(format="%.0f", waypoints(i).target_north) + "_e" + swrite(format="%.0f", waypoints(i).target_east);
+				cmd += "_" + files(j) + " ; ";
+
+				f = popen(cmd, 0);
+				close, f;
+			}
+		}
 	}
-	verbose = int(verbose);
-	
-								if(verbose >= 2) write, format="==> find_points_in_radius(x:%f, y:%f, xs:[%i], ys:[%i], radius=%f, verbose=%i)\n", float(x), float(y), numberof(xs), numberof(ys), float(radius), verbose;
-
-	/* Initialize the indx of points in the box def by radius */
-	indx = data_box(xs, ys, x-radius, x+radius, y-radius, y+radius);
-
-	/* Calculate the distance of each point in the index from the center */
-								if(verbose >= 2) write, "Calculating relevant distances.";
-	dist = array(double, numberof(xs));
-	dist() = radius + 1;  // By default, points are too far away
-	dist(indx) = ( (x - xs(indx))^2 + (y - ys(indx))^2 ) ^ .5;
-	
-	/* Find the indexes in the original array that are within radius */
-								if(verbose >= 2) write, "Finding points within radius.";
-	point_indx = where(dist <= radius);
-
-								if(verbose >= 2) write, format="--/ find_points_in_radius%s", "\n";
-	return point_indx;
 }
+
+func boat_read_csv_waypoints(ifname) {
+/* DOCUMENT
+	
+	Reads a CSV file of waypoint information and returns an array of
+	waypoints in UTM format.
+
+	The CSV file is expected to have three decimal fields. The first
+	is used as the label, the second is the northing, the third is the
+	easting. The first line of the file will be disregarded as the
+	titles of these fields.
+
+	Required parameters:
+	
+		ifname: The input file's name.
+	
+	Returns:
+	
+		Array of type BOAT_WAYPOINTS
+	
+	See also: boat_read_hypack_waypoints
+*/
+	cmd = "cat " + ifname;
+	cmd = "( " + cmd + " | wc -l ); " + cmd;
+
+	f = popen(cmd, 0);
+	num = 0;
+	read, f, format="%d", num;
+	num -= 1; // Header row
+
+	temp = "";
+	read, f, format="%s", temp; // Header row
+	temp = [];
+
+	etime = east = north = array(int, num);
+	read, f, format="%d,%d,%d", etime, east, north;
+
+	way = array(BOAT_WAYPOINTS, num);
+	way.label = swrite(format="%d", etime);
+	way.target_north = north;
+	way.target_east = east;
+	
+	return way;
+}
+
+func boat_get_raw_list(dir) {
+/* DOCUMENT boat_get_raw_list(dir)
+
+	Generates a list of .RAW files in a directory.
+
+	Required parameters:
+
+		dir: The directory in which to find the .RAW files.
+	
+	Returns:
+
+		An array of type string containing the full path and file names.
+*/
+	cmd = "find " + sdir + " -iname '*.raw' ";
+	cmd = "( " + cmd + " ) | wc -l ; " + cmd;
+	
+	f = popen(cmd, 0);
+	
+	num = 0;
+	read, f, format="%d", num;
+	
+	list = array(string, num);
+	read, f, format="%s", list;
+	close, f;
+	
+	return list;
+}
+
+func boat_convert_raw_to_boatpics(raw, ec1) {
+/* DOCUMENT boat_convert_raw_to_boatpics(raw, ec1)
+	
+	Converts arrays of HYPACK_RAW and HYPACK_EC to an array of BOAT_PICS.
+
+	Required parameters:
+
+		raw: Array of HYPACK_RAW.
+
+		ec1: Array of HYPACK_EC.
+
+	Returns:
+
+		Array of type BOAT_PICS.
+*/
+	require, "ytime.i";
+	require, "ll2utm.i";
+
+	boat = array(BOAT_PICS, numberof(raw));
+	
+	boat.lat = ddm2deg(raw.lat);
+	boat.lon = ddm2deg(raw.lon);
+	boat.somd = hms2sod(raw.time);
+	boat.depth = interp(ec1.depth, ec1.sod, raw.sod);
+
+	return boat;
+}
+
+func boat_input_raw(file) {
+/* DOCUMENT boat_input_raw(file)
+
+	Reads a Hypack RAW file and returns it as an array of BOAT_PICS.
+
+	Required parameters:
+
+		file: The full path and file name to read.
+	
+	Returns:
+		
+		Array of type BOAT_PICS.
+	
+	See also: boat_input_raw_full
+*/
+	boat_input_raw_full, file, raw, pos, ec1, ec2;
+	return boat_convert_raw_to_boatpics(raw, ec1);
+}
+
+func boat_input_raw_full(ifname, &raw, &pos, &ec1, &ec2) {
+/* DOCUMENT boat_input_raw_full(ifname, &raw, &pos, &ec1, &ec2)
+
+	Extracts data from a Hypack .RAW file.
+
+	Required parameters:
+		
+		ifname: The full path and file name of the .RAW file.
+	
+	Output parameters:
+
+		&raw: An array of HYPACK_RAW corresponding to the RAW lines.
+
+		&pos: An array of HYPACK_POS corresponding to the POS lines.
+
+		&ec1: An array of HYPACK_EC corresponding to the EC1 lines.
+
+		&ec2: An array of HYPACK_EC corresponding to the EC2 lines.
+	
+	Returns:
+
+		n/a
+	
+	See also: boat_input_raw
+*/
+	require, "general.i";
+
+	f = open(ifname, "r");
+
+	// Initial buffers for information to be read
+	raw = array(HYPACK_RAW, 2000);
+	pos = array(HYPACK_POS, 2000);
+	ec1 = array(HYPACK_EC,  2000);
+	ec2 = array(HYPACK_EC,  2000);
+
+	raw_i = pos_i = ec1_i = ec2_i = 1;
+	
+	while(line = rdline(f)) {
+		key = f1 = f2 = f3 = f4 = f5 = f6 = f7 = f8 = "";
+		sread, line, key, f1, f2, f3, f4, f5, f6, f7, f8;
+
+		// Process line if it corresponds to a desired key value
+		if(key == "RAW") {
+			raw(raw_i).sod  = atod(f2);
+			raw(raw_i).lat  = atod(f4);
+			raw(raw_i).lon  = atod(f5);
+			raw(raw_i).time = atod(f7);
+			raw_i++;
+		}
+		else if(key == "POS") {
+			pos(pos_i).sod   = atod(f2);
+			pos(pos_i).north = atod(f3);
+			pos(pos_i).east  = atod(f4);
+			pos_i++;
+		}
+		else if(key == "EC1") {
+			ec1(ec1_i).sod   = atod(f2);
+			ec1(ec1_i).depth = atod(f3);
+			ec1_i++;
+		}
+		else if(key == "EC2") {
+			ec2(ec2_i).sod   = atod(f2);
+			ec2(ec2_i).depth = atod(f3);
+			ec2_i++;
+		}
+		
+		// Increase buffers if needed
+		if(raw_i > numberof(raw)) {
+			raw = [raw, 0](*)(1:numberof(raw)+500);
+		}
+		if(pos_i > numberof(pos)) {
+			pos = [pos, 0](*)(1:numberof(pos)+500);
+		}
+		if(ec1_i > numberof(ec1)) {
+			ec1 = [ec1, 0](*)(1:numberof(ec1)+500);
+		}
+		if(ec2_i > numberof(ec2)) {
+			ec2 = [ec2, 0](*)(1:numberof(ec2)+500);
+		}
+	}
+	
+	close, f;
+
+	// Resize buffers to match the final dataset
+	raw = raw(1:raw_i-1);
+	pos = pos(1:pos_i-1);
+	ec1 = ec1(1:ec1_i-1);
+	ec2 = ec2(1:ec2_i-1);
+}
+
