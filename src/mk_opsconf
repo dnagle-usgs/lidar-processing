@@ -2,9 +2,10 @@
 # $Id$
 
 # Create ops_conf files from a batch_process output directory.
-# Run this from the directory that holds all of the missions.
+# Run this from the directory that holds all of the data/missions.
 # It will then put a ops_conf file into each of the mission days
 # that has been batched process.
+#   mk_opsconf ../output
 
 $mydir = $ENV{PWD};
 # printf("mydir = %s\n", $mydir);
@@ -24,8 +25,8 @@ while ( $entry=<FIND> ) {
   $sdate = $arr[$where];
   $mydate{$sdate}++;
 
-  $tmpfile = sprintf("/tmp/ops_conf-%s", $sdate);
-  $newfile = sprintf("%s/%s/ops_conf-%s", $mydir, $sdate, $sdate);
+  $tmpfile = sprintf("/tmp/%s-batch-ops_conf.i", $sdate);
+  $newfile = sprintf("%s/%s/%s-batch-ops_conf.i", $mydir, $sdate, $sdate);
 
   open(FILE,$entry) || die ("Unable to open $entry\n");
   $start = 0;
