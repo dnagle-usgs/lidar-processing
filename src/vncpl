@@ -25,7 +25,10 @@ $CMDWDTH = 50;      # sets column to start the comment.
 
 # Put as much of the cmdline that you consistantly use into VNCCMD.
 
-$VNCCMD  = "/usr/local/bin/vncviewer -compresslevel 9 -quality 4 -nocursorshape ";
+
+$VNCCMD  = "-compresslevel 9 -quality 4 -nocursorshape ";
+
+# check below for setting for VNCVWR
 
 ###########################################
 
@@ -36,6 +39,7 @@ sub showusage {
   It can then be recalled and selected using "-list".
 
   -list:  list the vnc history
+	-old:   use an old version of vnc
 
 EOF
   exit(0);
@@ -48,6 +52,7 @@ sub get_cli_opts {
   "help",     # help
   "list",
   "via",
+	"old",
   );
   &showusage() if defined($opt_help);
 }
@@ -83,6 +88,10 @@ sub strin {
 
 &get_cli_opts();
 
+$opt_list = True if ( $#ARGV < 0 ); # I got tired of typing -list
+
+$VNCVWR = "/usr/local/bin/vncviewer "      if ( ! $opt_old );
+$VNCVWR = "/usr/local/bin/vncviewer-129 "  if (   $opt_old );
 
 if ( $opt_via ) {  # standard usage, just run vnc
   # Put the arg list into a string
@@ -118,7 +127,7 @@ if ( $opt_via ) {
   open(WHIST, "|/usr/bin/uniq >$VNCHIST");
   print WHIST @shist;
   close(WHIST);
-  system($VNCCMD . $list);
+  exec($VNCVWR . $VNCCMD . $list);
 }
 
 if ( $opt_list ) {
@@ -129,7 +138,7 @@ if ( $opt_list ) {
   $sel = numin("\nEnter Selection: ", $#shist);
   printf("You selected: %d\n", $sel);
   ($cmd) = split(/\#/, $shist[$sel], 2);
-  printf("%s %s\n", $VNCCMD, $cmd);
+  printf("%s %s %s\n", $VNCVWR, $VNCCMD, $cmd);
 
-  system($VNCCMD . $cmd);
+  exec($VNCVWR . $VNCCMD . $cmd);
 }
