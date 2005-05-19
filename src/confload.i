@@ -48,6 +48,7 @@ func load_this_conf(confile) {
 	load_edb, fn=fn_edb;
 
 	write, "***** LOADING PNAV FILE";
+	gga = [];
 	pnav = rbpnav(fn=fn_pnav);
 
 	write, "***** LOADING ATTITDE FILE";
@@ -56,7 +57,8 @@ func load_this_conf(confile) {
 	if (ext == ".ybin") {write, "Loading TANS file"; tans=rbtans(fn=fn_att);}
 
 	write, "***** LOADING MAP SETTINGS";
-	window,6; limits, square=1;
+	window,6; limits, square=1;fma;
+	utm = 1;
 	load_map, color="black", ffn=fn_map, utm=1;
 	if ((fn_lim != "default") && (fn_lim != "gga")) {
 		mine = double(1);
