@@ -148,7 +148,7 @@ func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, us
      
    
  depths = array(VEGPIX, 120, len );
-  if ( _ytk ) {
+  if ( _ytk && (len != 0) ) {
     tkcmd,"destroy .veg; toplevel .veg; set progress 0;"
     tkcmd,swrite(format="ProgressBar .veg.pb \
 	-fg yellow \
@@ -1390,7 +1390,7 @@ func run_veg_all( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=
      
    
  depths = array(VEGPIXS, 120, len );
-  if ( _ytk ) {
+  if ( _ytk && (len != 0) ) {
     tkcmd,"destroy .veg; toplevel .veg; set progress 0;"
     tkcmd,swrite(format="ProgressBar .veg.pb \
 	-fg yellow \

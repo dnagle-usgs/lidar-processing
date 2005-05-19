@@ -85,7 +85,7 @@ local XRTRS
 }
 
 func open_irg_status_bar {
-  if ( use_ytk ) {
+  if ( use_ytk && (len != 0) ) {
     tkcmd,"destroy .irg; toplevel .irg; set progress 0;"
     tkcmd,swrite(format="ProgressBar .irg.pb \
 	-fg green \

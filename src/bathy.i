@@ -102,7 +102,7 @@ func run_bath( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) 
  //if ( graph != 0 ) 
 //	animate,1;
 
-  if ( _ytk ) {
+  if ( _ytk && (len != 0) ) {
     tkcmd,"destroy .bathy; toplevel .bathy; set progress 0;"
     tkcmd,swrite(format="ProgressBar .bathy.pb \
 	-fg blue \

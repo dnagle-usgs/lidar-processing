@@ -38,7 +38,7 @@ func batch_veg_lfpw(ipath, opath, fname=, searchstr=, onlyupdate=,binsize=, norm
     nfiles = numberof(fn_all);
     write, format="Total number of veg energy files to process  = %d\n",nfiles;
 
-    if ( _ytk ) {
+    if ( _ytk && (int(nfiles) != 0) ) {
      tkcmd,"destroy .batch_energy; toplevel .batch_energy; set progress 0;"
      tkcmd,swrite(format="ProgressBar .batch_energy.pb \
         -fg black \

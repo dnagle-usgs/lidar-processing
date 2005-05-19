@@ -58,7 +58,7 @@ func batch_add_time_record(dirname, date=, fname=, mode=) {
     }
 
     nfiles = numberof(fn_all);
-    if ( _ytk ) {
+    if ( _ytk && (int(nfiles) != 0) ) {
      tkcmd,"destroy .batch_add; toplevel .batch_add; set progress 0;"
      tkcmd,swrite(format="ProgressBar .batch_add.pb \
         -fg green \

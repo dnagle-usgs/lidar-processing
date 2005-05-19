@@ -280,7 +280,7 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fsmode=, wfs=) {
     ygrid = [bbox(3)];
   }
 
-  if ( _ytk ) {
+  if ( _ytk && (int(ngridy) != 0) ) {
     tkcmd,"destroy .rcf1; toplevel .rcf1; set progress 0;"
     tkcmd,swrite(format="ProgressBar .rcf1.pb \
 	-fg green \
