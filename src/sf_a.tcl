@@ -90,6 +90,8 @@ set tarname ""      ;# Tar file to access - may be changed by .lst commands
 set ytk_id $params(parent) ;# Comm id for ytk
 set cir_id $params(cir)    ;# Comm id for cir
 
+set atris_mode 0    ;# By default, we're not in Atris mode
+
 set frame_off 0     ;# Frame offset
 
 set data "No GPS data"  ;#
@@ -296,7 +298,6 @@ proc load_file_list { f method } {
 	
 	# Do some looping, initializing some globals as we go
 	# Iterate through the file, incrementing i for each line
-		set DEBUG_SF 1
 	set stop_num $nbr_photos
 	for { set i 0; set j 1 } { $i < $stop_num } { incr i; incr j } { 
 		# Set fn to the filename of the current line
@@ -331,14 +332,7 @@ proc load_file_list { f method } {
 				.loader.status1 configure -text "Loaded $j JPG files"
 				update
 			}
-				if { $i < 5 } {
-									if { $DEBUG_SF } { puts "loaded: $fn"
-										puts $hms
-										puts [string equal $hms ""]
-										puts [string equal -nocase -length 3 $fn "set"]
-										puts [string equal -nocase -length 4 $fn "exec"]
-									}
-				}
+									if { $DEBUG_SF } { puts "loaded: $fn" }
 		} else { 
 									if { $DEBUG_SF } { puts "command: $fn" }
 			eval $fn
@@ -347,7 +341,6 @@ proc load_file_list { f method } {
 		}
 		unset lst
 	} 
-		set DEBUG_SF 0
 	.loader.status1 configure -text "Loaded $j JPG photos"
 	update
 	
