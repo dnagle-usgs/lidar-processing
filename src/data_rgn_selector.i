@@ -18,6 +18,10 @@ func sel_data_rgn(data, type, mode=,win=, exclude=, rgn=, make_workdata=, origda
   // make_workdata = 1 if you want to write a workdata array that contains the selected region and the output array contains the rest of the data (must be used with exclude=1).
   // origdata = this should be the name of the original data array from which workdata will be extracted.  This is useful when re-filtering a certain section of the filtered data set.  Orig data should be the non-filtered data array which will be refiltered.  
   //amar nayegandhi 11/26/02.
+  //
+  //Modified by Jeremy Bracone 5/9/05 - when using mode 4 and sending points through rgn,
+  //	you can either send points selected by the mouse(1,1) method (this is is a rectangle)
+  //	or points selected by the getPoly() method (for a polygon).
  */
 
   extern q, workdata, croppeddata;
@@ -25,6 +29,19 @@ func sel_data_rgn(data, type, mode=,win=, exclude=, rgn=, make_workdata=, origda
   if (is_void(data)) return [];
   if (is_void(win)) win = 5;
   if (!mode) mode = 1;
+  if ( (!is_void(rgn)) && (mode == 4) ) {
+     //mouse (1,1) always returns a size 11 array while getPoly() always sends an even number of points with the lowest being 6
+     if ( (numberof(rgn) == 11) ) {
+	mode = 4;
+	pnts = rgn;
+        rgn(1) = min( [ pnts(1), pnts(3) ] );
+	rgn(2) = max( [ pnts(1), pnts(3) ] );
+	rgn(3) = min( [ pnts(2), pnts(4) ] );
+	rgn(4) = max( [ pnts(2), pnts(4) ] );
+     } else if ( numberof(rgn) != 4 ) {
+	mode = 3;
+     }
+  }
 
   w = window();
 
@@ -63,7 +80,6 @@ func sel_data_rgn(data, type, mode=,win=, exclude=, rgn=, make_workdata=, origda
     //write, numberof(indx);
 
     indx = q(indx);
-
     if (!is_void(origdata)) {
        origq = where((origdata.east >= rgn(1)*100.)   & 
                (origdata.east <= rgn(2)*100.)) ;
@@ -430,5 +446,86 @@ func make_GEO_from_VEG(veg_arr) {
 return geoarr;
 
 }
- 
 
+func add_buffer_rgn(points, buffer, mode=) {
+/*DOCUMENT add_buffer_rgn(points,buffer,mode=1)
+  This function takes an area around of points, creates a buffer region around them, then
+  returns the buffer region.
+  INPUTS:  points = the array of points
+           buffer = the amount of buffer in m
+           mode = 1: input array of points are for a rectangle
+           mode = 2: input array of points are for a polygon
+	   mode = 3: input array of points is already a defined region (like from the limits() function)
+  OUTPUT:  rgn:  the expanded rgn defined the a new array of points (will always be a rectangle)
+  --Jeremy Bracone 5/9/05--
+*/
+ rgn = array(float, 4);
+ if (mode == 1) {
+    //Plot the selected region
+    rgn(1) = min( [ points(1), points(3) ] );
+    rgn(2) = max( [ points(1), points(3) ] );
+    rgn(3) = min( [ points(2), points(4) ] );
+    rgn(4) = max( [ points(2), points(4) ] );
+    a_x=[rgn(1), rgn(2), rgn(2), rgn(1), rgn(1)];
+    a_y=[rgn(3), rgn(3), rgn(4), rgn(4), rgn(3)];
+    plg, a_y, a_x, color="cyan";
+    //Get and plot the buffer region
+    rgn(1) -= buffer;
+    rgn(2) += buffer;
+    rgn(3) -= buffer;
+    rgn(4) += buffer;
+ }
+ if (mode == 2) {
+    //Find and plot the bounding box of polygon
+    box  = boundBox(points);
+    //Get and plot the buffer region
+    rgn(1) = box(1,1) - buffer;
+    rgn(2) = box(1,3) + buffer;
+    rgn(3) = box(2,1) - buffer;
+    rgn(4) = box(2,3) + buffer;
+ }
+ if (mode == 3) {
+    //Plot square for selected region
+    a_x=[points(1), points(2), points(2), points(1), points(1)];
+    a_y=[points(3), points(3), points(4), points(4), points(3)];
+    plg, a_y, a_x, color="cyan";
+    //Get and plot the buffer region
+    rgn(1) = points(1) - buffer;
+    rgn(2) = points(2) + buffer;
+    rgn(3) = points(3) - buffer;
+    rgn(4) = points(4) + buffer;
+ }
+ a_x=[rgn(1), rgn(2), rgn(2), rgn(1), rgn(1)];
+ a_y=[rgn(3), rgn(3), rgn(4), rgn(4), rgn(3)];
+ plg, a_y, a_x, color="red";
+ return rgn;
+}
+
+func getPoly_add_buffer(buf,origdata=,windw=) {
+/*DOCUMENT getPoly_add_buffer()
+  This is a function was necessary to combine the following commands into one:
+	getPoly()
+	add_buffer_rgn()
+	sel_data_rgn()
+  INPUTS:	buffer = the size of the buffer region in meters
+		origdata = the unfiltered data for the call in sel_data_rgn()
+		win = the current window number
+  OUTPUTS:	buf_points = the array of points returned by getPoly that represents the actual region selected
+		temp_rgn = the returned buffer region returned by add_buffer_rgn (array(float,4) = points of rectangle)
+		workdata = the selected points within the buffer region
+  **FUNCTION RETURNS 1 IF SUCCESSFUL AND 2 IF UNSUCCESSFUL**
+  --Jeremy Bracone 5/11/05--
+*/
+ extern buf_points,workdata;
+ workdata=[];
+ if (is_void(origdata)) return 0;
+ if (is_void(window)) window=5; 
+ buf_points = getPoly();
+ temp_rgn = add_buffer_rgn(buf_points, buf, mode=2);
+ workdata = sel_data_rgn(origdata, GEO, mode=4, win=windw, rgn=temp_rgn);
+ if (!is_void(workdata)) {
+    return 1;
+ } else {
+    return 0;
+ }
+}

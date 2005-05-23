@@ -37,5 +37,6 @@ func winlimits( win1, win2 ) {
   lm=limits();
   window, win2;
   limits,lm(1),lm(2),lm(3),lm(4);
+  window, win1;
 }
 
