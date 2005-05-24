@@ -36,22 +36,24 @@ if { [ catch {package require vfs::tar} ] } {
 	-type ok
 	exit 1;
 }
-package require cmdline
 package require comm
 
 # ] End Script Initialization ######################
 
 # [ Command Line Options ###########################
 
-set sf_options {
-	{camtype.arg 1 "The type of photography to be viewed. 1 for EAARL photography; 2 for boat photography. Default: "}
-	{parent.arg -1 "The comm port number for the application (usually ytk) calling this program. Default: -1 (disabled)"}
-	{cir.arg -1 "The comm port number for cir.tcl. Default: -1 (disabled)"}
+if { ![catch {package require cmdline}] } {
+	set sf_options {
+		{camtype.arg 1 "The type of photography to be viewed. 1 for EAARL photography; 2 for boat photography. Default: "}
+		{parent.arg -1 "The comm port number for the application (usually ytk) calling this program. Default: -1 (disabled)"}
+		{cir.arg -1 "The comm port number for cir.tcl. Default: -1 (disabled)"}
+	}
+	set sf_usage "\nUsage:\n sf_a.tcl \[options]\nOptions:\n"
+
+	array set params [::cmdline::getoptions argv $sf_options $sf_usage]
+} else {
+	array set params { camtype 1 parent -1 cir -1 }
 }
-set sf_usage "\nUsage:\n sf_a.tcl \[options]\nOptions:\n"
-
-array set params [::cmdline::getoptions argv $sf_options $sf_usage]
-
 # ] End Command Line Options #######################
 
 # [ Variable Initialization ########################
@@ -60,7 +62,7 @@ array set params [::cmdline::getoptions argv $sf_options $sf_usage]
 # to disable. Zero will enable messages.
 set no_mog_messages 0
 
-set DEBUG_SF 0      ;# Show debug info on (1) or off (0)
+set DEBUG_SF 1      ;# Show debug info on (1) or off (0)
 
 # The camera is frequently out of time sync so we add this to correct it.
 set seconds_offset 0
@@ -107,6 +109,11 @@ set rate(4s)      4000
 set rate(5s)      5000
 set rate(7s)      7000
 set rate(10s)    10000
+
+# Zoom configuration
+set zoom 100
+set zoom_min 1
+set zoom_max 200
 
 # Do we want to show a message about mogrify if it gets disabled? 
 # (Used to avoid displaying the message too excessively)
@@ -211,6 +218,28 @@ proc ci_write { name1 name2 op } {
 	global mark ci cur_mark
 	
 	catch {set cur_mark $mark($ci)}
+}
+
+# zoom_write is used in a variable trace to keep zoom
+# within its proper range and to update the image shown
+proc zoom_write { name1 name2 op } {
+	global zoom ci zoom_min zoom_max
+	
+	if { $zoom < $zoom_min } { set zoom $zoom_min }
+	if { $zoom > $zoom_max } { set zoom $zoom_max }
+	
+	show_img $ci
+}
+
+# cur_mark_write updates mark($ci) to reflect the new
+# value of $cur_mark. Note that this will be called
+# whenever 'set cur_mark $mark($ci)' is used, but that
+# isn't a problem since mark($ci) is just set back to
+# it's current value.
+proc cur_mark_write { name1 name2 op } {
+	global cur_mark mark ci
+
+	catch { set mark($ci) $cur_mark }
 }
 
 
@@ -896,27 +925,22 @@ proc get_heading {inhd} {
 	}
 }
 
-proc calculate_zoom_factor { initial percentage } {
-	global img
+proc apply_zoom_factor { percentage } {
+	global img zoom
 
 	if {$percentage > 0 } {
-		set final [expr {round(($initial + 1) * $percentage) - 1}]
+		set zoom [expr {round($zoom * $percentage)}]
 	} else {
-		set iw [expr {[image width $img] / (([.cf3.zoom getvalue]+1)/100.0)}]
-		set ih [expr {[image height $img] / (([.cf3.zoom getvalue]+1)/100.0)}]
+		set iw [expr {[image width $img] / ($zoom/100.0)}]
+		set ih [expr {[image height $img] / ($zoom/100.0)}]
 		if {$iw && $ih} {
 			set cw [winfo width .canf.can]
 			set ch [winfo height .canf.can]
 			set wr [expr {int(100*$cw/$iw)}]
 			set hr [expr {int(100*$ch/$ih)}]
-			set final [expr {(($wr < $hr) ? $wr : $hr) - 1}]
-		} else {
-			set final [.cf3.zoom getvalue]
+			set zoom [expr {(($wr < $hr) ? $wr : $hr)}]
 		}
 	}
-	if {$final < 0} { set final 0 }
-	if {$final > 199 } { set final 199 }
-	return $final
 }
 
 proc clear_marks { } {
@@ -1017,7 +1041,7 @@ proc mark_range { } {
 proc enable_controls { } {
 	global mogrify_exists mogrify_pref camtype
 
-#	.cf2.mark configure            -state normal
+	.cf2.mark configure            -state normal
 	.mb entryconfigure File        -state normal
 	.mb entryconfigure Archive     -state normal
 	.mb entryconfigure Options     -state normal
@@ -1072,7 +1096,7 @@ proc select_file { } {
 		set base_dir [ file dirname $f ]
 		wm title . $base_dir
 		if { [file extension $f ] == ".tar" } {
-			puts "Its a tar.  vfs Mounting it..";
+			puts "It's a tar. VFS mounting it..";
 			open_loader_window "VFS Mounting\n$f.\nThis may take several seconds, even minutes! "
 			.loader.ok configure -state disabled
 			update 
@@ -1184,13 +1208,11 @@ menu .mb.zoom
 
 .mb.archive add command -label "Mark This Frame" -underline 0 \
    -command { 
-		global cur_mark; 
-		if { [string equal [.cf2.mark cget -state] "normal"] } {
-			set cur_mark 1
-		} 
+		global cur_mark;
+		set cur_mark 1;
 	}
 .mb.archive add command -label "Unmark This Frame"              -underline 0 \
-   -command { global cur_mark; if {[string equal [.cf2.mark cget -state] "normal"]} {set cur_mark 0} }
+   -command { global cur_mark; set cur_mark 0; }
 .mb.archive add command -label "Clear All Marks"                -underline 0 \
 	-command { clear_marks }
 .mb.archive add command -label "Invert All Marks"               -underline 0 \
@@ -1250,7 +1272,7 @@ menu .mb.zoom
 }
 .mb.options add command  -label "Speed, Gamma..." -underline 1  -command {
 	if { [ catch { pack info .cf2 } ] } {
-		pack .cf2 -side top
+		pack .cf2 -side top -expand 1 -fill x
 		wm geometry . ""
 	} else {
 		pack forget .cf2
@@ -1290,29 +1312,29 @@ menu .mb.options.mogrify
 ##### ][ Zoom Menu
 
 .mb.zoom add command -label "Actual pixels (100%)" -underline 0 \
-	-command { .cf3.zoom setvalue @99; show_img $ci }
+	-command { set zoom 100 }
 .mb.zoom add command -label "Fit to window" -underline 0 \
-	-command { .cf3.zoom setvalue @[calculate_zoom_factor [.cf3.zoom getvalue] -1]; show_img $ci }
+	-command { apply_zoom_factor -1 }
 .mb.zoom add separator
 .mb.zoom add command -label "Zoom to 50%" -underline 8 \
-	-command { .cf3.zoom setvalue @49; show_img $ci }
+	-command { set zoom 50  }
 .mb.zoom add command -label "Zoom to 33%" -underline 8 \
-	-command { .cf3.zoom setvalue @32; show_img $ci }
+	-command { set zoom 33 }
 .mb.zoom add command -label "Zoom to 25%" -underline 8 \
-	-command { .cf3.zoom setvalue @24; show_img $ci }
+	-command { set zoom 25 }
 .mb.zoom add command -label "Zoom to 20%" -underline 5 \
-	-command { .cf3.zoom setvalue @19; show_img $ci }
+	-command { set zoom 20 }
 .mb.zoom add command -label "Zoom to 10%" -underline 8 \
-	-command { .cf3.zoom setvalue @9; show_img $ci }
+	-command { set zoom 10 }
 .mb.zoom add separator
 .mb.zoom add command -label "Zoom In by 25%" -underline 0 \
-	-command { .cf3.zoom setvalue @[calculate_zoom_factor [.cf3.zoom getvalue] 1.25] ; show_img $ci }
+	-command { apply_zoom_factor 1.25 }
 .mb.zoom add command -label "Zoom In by 10%" -underline 5 \
-	-command { .cf3.zoom setvalue @[calculate_zoom_factor [.cf3.zoom getvalue] 1.1] ; show_img $ci }
+	-command { apply_zoom_factor 1.1 }
 .mb.zoom add command -label "Zoom Out by 10%" -underline 5 \
-	-command { .cf3.zoom setvalue @[calculate_zoom_factor [.cf3.zoom getvalue] 0.9] ; show_img $ci }
+	-command { apply_zoom_factor 0.9 }
 .mb.zoom add command -label "Zoom Out by 25%" -underline 3 \
-	-command { .cf3.zoom setvalue @[calculate_zoom_factor [.cf3.zoom getvalue] 0.75] ; show_img $ci }
+	-command { apply_zoom_factor 0.75 }
 
 ##### ]
 
@@ -1387,8 +1409,9 @@ label .cf2.lbl -text "Step"
 
 tk_optionMenu .cf2.step step 1 2 5 10 20 30 60 100
 
-scale .cf2.gamma -orient horizontal -from 0.0 -to 2.0 -resolution 0.01 \
-	-bigincrement .1 -variable gamma -command set_gamma 
+scale .cf2.gamma -orient horizontal -from 0.01 -to 2.00 -resolution 0.01 \
+	-bigincrement .1 -variable gamma -command set_gamma \
+	-length 60 -sliderlength 15
 
 SpinBox .cf2.offset \
 	-helptext "Offset: Enter the frames to be offset here."\
@@ -1397,13 +1420,10 @@ SpinBox .cf2.offset \
 	-width 5 \
 	-textvariable frame_off;
 
-button .cf2.mark \
+checkbutton .cf2.mark \
 	-state disabled \
-	-text "Mk" \
-	-command {
-		global mark ci cur_mark
-		set mark($ci) $cur_mark
-	}
+	-variable cur_mark \
+	-text "Mk"
 
 pack	\
 		.cf2.speed \
@@ -1442,7 +1462,7 @@ Button .cf3.cirbutton -text "cir" \
 SpinBox .cf3.zoom \
 	-helptext "Zoom: Select a zooming factor."\
 	-justify center \
-	-range {1 200 1} \
+	-range {$zoom_min $zoom_max 1} \
 	-width 5 \
 	-textvariable zoom \
 	-modifycmd { show_img $ci }
@@ -1494,30 +1514,26 @@ if {$camtype == 2} { .mb.options invoke "Image slider..." }
 
 ### [ Bindings
 
-bind . <Key-p>     { .cf1.prev invoke }
-bind . <Key-n>     { .cf1.next invoke }
-bind . <Key-m>     { .cf2.mark toggle }
-bind . <Key-space> { if { $run == 0 } { .cf1.play invoke } else { .cf1.stop invoke } }
-bind . <Key-Home>  { .cf1.rewind invoke }
-bind . <Control-Key-equal> { .cf3.zoom setvalue next    ; show_img $ci }
-bind . <Control-Key-plus>  { .cf3.zoom setvalue next    ; show_img $ci }
-bind . <Control-Key-minus> { .cf3.zoom setvalue previous; show_img $ci }
+bind . <Key-p>     { step_img $step -1 }
+bind . <Key-n>     { step_img $step 1 }
+# Since marking is currently broken, this binding is void:
+bind . <Key-m>     { set cur_mark [expr {1 - $cur_mark}] }
+bind . <Key-space> { if { $run == 0 } { play 1 } else { play -1 } }
+bind . <Key-Home>  { rewind }
+bind . <Control-Key-equal> { incr zoom }
+bind . <Control-Key-plus>  { incr zoom }
+bind . <Control-Key-minus> { incr zoom -1 }
 .cf3.zoom bind <Key-Return>    {show_img $ci}
 .cf3.zoom bind <Key-KP_Enter>  {show_img $ci}
 bind .cf3.entry <Key-Return>   {gotoImage}
 bind .cf3.entry <Key-KP_Enter> {gotoImage}
-bind .slider <ButtonRelease> {
-   global ci
-   show_img $ci
-}
+bind .slider <ButtonRelease> { show_img $ci }
 
 ### ] /Bindings
 
 # ] End GUI Initialization #########################
 
 # [ Select defaults ################################
-
-.cf3.zoom setvalue @99
 
 if { $mogrify_exists } {
 	if { $camtype == 1 } {
@@ -1543,9 +1559,13 @@ if { $DEBUG_SF } { enable_controls }
 if { [catch {package require Tcl 8.4}] } {
    eval trace variable timern w timern_write
 	eval trace variable ci w ci_write
+	eval trace variable zoom w zoom_write
+	eval trace variable cur_mark w cur_mark_write
 } else {
 	eval trace add variable timern write timern_write
 	eval trace add variable ci write ci_write
+	eval trace add variable zoom write zoom_write
+	eval trace add variable cur_mark write cur_mark_write
 }
 
 # ] End Variable Traces ############################
