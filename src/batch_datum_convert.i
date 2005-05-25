@@ -19,9 +19,9 @@ see also: datum_converter.i
 -Brendan Penney, 7/18/03
 */
 
-if(!tonad83) tonad83=1;
-if(!tonavd88) tonavd88=1;
-if(!rcfmode) rcfmode = 0;
+if(is_void(tonad83)) tonad83=1;
+if(is_void(tonavd88)) tonavd88=1;
+if(is_void(rcfmode)) rcfmode = 0;
 
  if (!searchstr) {
    if(rcfmode == 1) rcftag = "_rcf";

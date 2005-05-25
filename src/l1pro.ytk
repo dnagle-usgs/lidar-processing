@@ -342,7 +342,7 @@ menu .l1wid.mb.filter
 .l1wid.mb.file add command -label "Read Data Directory... " -underline 10 -command {
 	global data_file_path
         if { [info exists data_file_path ] == 0 } {
-              set data_file_path "~/"
+              set data_file_path "/data/"
         }
 	destroy .l1dir
         toplevel .l1dir
@@ -356,6 +356,7 @@ menu .l1wid.mb.filter
 	 -command {
 	   global data_file_path
            set path [ tk_chooseDirectory -initialdir $data_file_path -mustexist 1 -title "Read Data Directory" ]/
+	   set data_file_path $path
 	}
 	
         ComboBox .l1dir.3.dtype -text "Data Type..." -width 10 \
@@ -385,18 +386,20 @@ menu .l1wid.mb.filter
 	-range {1 1000 1} \
 	-textvariable skip \
 	-helptext "Enter plot points to skip" \
-	-width 5
+	-width 3
 
 	LabelEntry .l1dir.3.ssvar -label "Search String: " -width 8 -bd 3 \
 		-helptext "Enter search string" \
 		-textvariable ssvar
+
+        checkbutton .l1dir.3.uniq -text "Unique" -variable uniq
  	Button .l1dir.1.ok -text "OK" -width 5 -command {
 	 if {$path != ""} {
 	  .l1dir.2.op configure -state disabled
 	  .l1dir.1.ok configure -state disabled
 	  set dtype [.l1dir.3.dtype getvalue]
 	  if {$dtype == 0}  {
-	     	exp_send "$mvar = merge_data_pbds(\"$path\", skip = $skip, searchstring=\"$ssvar\"); \r"
+	     	exp_send "$mvar = merge_data_pbds(\"$path\", skip = $skip, uniq = $uniq, searchstring=\"$ssvar\"); \r"
 		destroy .l1dir
 	  }
   	  if {$dtype == 1 || $dtype == 2} {
@@ -416,7 +419,7 @@ menu .l1wid.mb.filter
  	}
 	pack .l1dir.1.ok .l1dir.1.cancel -side left -padx 5
 	pack .l1dir.2.op .l1dir.2.fbutton -side left -padx 5
-	pack .l1dir.3.dtype .l1dir.3.mvar .l1dir.3.skL .l1dir.3.skip .l1dir.3.ssvar -side left -padx 3
+	pack .l1dir.3.dtype .l1dir.3.mvar .l1dir.3.skL .l1dir.3.skip .l1dir.3.uniq .l1dir.3.ssvar -side left -padx 3
 	pack .l1dir.2 .l1dir.3 .l1dir.1 -side top -pady 5	
 }
 .l1wid.mb.file add command -label "Ascii output ..." -underline 0 \

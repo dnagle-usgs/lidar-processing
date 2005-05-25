@@ -1172,7 +1172,7 @@ func pbd_to_yfile(filename) {
 }
 
    
-func merge_data_pbds(filepath, write_to_file=, merged_filename=, vname=, skip=, searchstring=) {
+func merge_data_pbds(filepath, write_to_file=, merged_filename=, vname=, uniq=, skip=, searchstring=) {
  /*DOCUMENT merge_data_pbds(filename) 
    This function merges the EAARL processed pbd data files in the given filepath
    INPUT:
@@ -1180,6 +1180,7 @@ func merge_data_pbds(filepath, write_to_file=, merged_filename=, vname=, skip=, 
    write_to_file : set to 1 if you want to write the merged pbd to file
    merged_filename : the merged filename where the merged pbd file will be written to.
    vname = the variable name for the merged data
+   uniq = set to 1 if you want to delete the same records (keep only unique records).
    skip = set to subsample the data sets read in.
    amar nayegandhi 05/29/03
    */
@@ -1207,6 +1208,24 @@ func merge_data_pbds(filepath, write_to_file=, merged_filename=, vname=, skip=, 
     if (get_member(f,vname) == 0) continue;
     grow, eaarl, get_member(f,vname)(1:0:skip);
  }   
+
+ if (uniq) {
+   write, "Finding unique elements in array..."
+   // sort the elements by soe
+   idx = sort(eaarl.soe);
+   if (!is_array(idx)) {
+     write, "No Records found.";
+     return
+   }
+   eaarl = eaarl(idx);
+   // now use the unique function with ret_sort=1
+   idx = unique(eaarl.soe, ret_sort=1);
+   if (!is_array(idx)) {
+     write, "No Records found.";
+     return
+   }
+   eaarl = eaarl(idx);
+ }
 
  if (write_to_file) {
    // write merged data out to merged_filename
