@@ -17,7 +17,7 @@ func send_sod_to_sf( somd ) {
 
 func depth_profile( data_file ) {
 	require, "boat.i";
-	boat = boat_input_pbd(ifname=data_file, verbose=-2);
+	boat = boat_input_pbd(data_file);
 	window, 0;
 	plmk, boat.depth*-1, boat.somd, color="blue", marker=4, msize=0.1;
 }

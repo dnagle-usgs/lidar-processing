@@ -600,7 +600,8 @@ func boat_output(boat, idx, ofbase, no_pbd=, no_txt=, no_gga=, progress=) {
 
 		n/a
 	
-	See also: boat_output_pbd, boat_output_gga, boat_output_txt
+	See also: boat_output_pbd, boat_output_gga, boat_output_txt,
+		boat_input_pbd, boat_input_pbd_idx
 */
 	// Partially validate the ofname
 	if (dimsof(ofbase)(1)) {
@@ -780,6 +781,8 @@ func boat_output_pbd(boat, idx, ofname, progress=) {
 	Returns:
 
 		n/a
+	
+	See also: boat_output, boat_input_pbd, boat_input_pbd_idx
 */
 	// Validate progress
 	progress = (progress ? 1 : 0);
@@ -924,7 +927,7 @@ func boat_apply_offset(boat, h=, m=, s=, progress=) {
 	return boat;
 }
 
-func boat_gps_smooth(boat, step, progress=) {
+//func boat_gps_smooth(boat, step, progress=) {
 /* DOCUMENT  boat_gps_smooth(boat, step, progress=)
 
 	Applies a smoothing algorithm to the boat data to help even
@@ -952,7 +955,7 @@ func boat_gps_smooth(boat, step, progress=) {
 	Returns:
 
 		Array of type BOAT_PICS
-*/
+*//*
 	require, "compare_transects.i";
 	require, "general.i";
 
@@ -1001,7 +1004,7 @@ func boat_gps_smooth(boat, step, progress=) {
 		boat.lon(i) = intersection(2);
 		if(DEBUG) write, format="     %d: Geo (%.2f,%.2f) - ", i, boat.lat(i), boat.lon(i);
 
-		boat.heading(i) = calculate_heading(av_lon(cur_av), av_lat(cur_av), av_lon(cur_av+1), av_lat(cur_av+1));
+		boat.heading(i) = calculate_heading([av_lon(cur_av), av_lon(cur_av+1)], [av_lat(cur_av), av_lat(cur_av+1)])(1);
 		if(DEBUG) write, format="Heading %.2f\n", boat.heading(i);
 
 	}
@@ -1010,7 +1013,7 @@ func boat_gps_smooth(boat, step, progress=) {
 	if(DEBUG) write, format="--/ boat_gps_smooth%s", "\n";
 	return boat;
 }
-
+*/
 func boat_input_edt(ifname, utmzone, smooth=, step=, depthonly=, progress=) {
 /* DOCUMENT  boat_input_edt(ifname, utmzone, step=, depthonly=, progress=)
 
@@ -1277,7 +1280,7 @@ func boat_input_pbd(ifname, progress=) {
 	if(DEBUG) write, format="==> boat_input_pbd(ifname=%s, progress=%i)\n", ifname, progress;
 
 	f = openb(ifname);
-	restore, f, "boat_data";
+	restore, f, boat;
 	boat = get_member(f, "boat_data");
 
 	close, f;
@@ -1314,12 +1317,12 @@ func boat_input_pbd_idx(ifname, progress=) {
 	if(DEBUG) write, format="==> boat_input_pbd_idx(ifname=%s, progress=%i)\n", ifname, progress;
 
 	f = openb(ifname);
-	restore, f, "boat_idx";
-	boat = get_member(f, "boat_idx");
+	restore, f, idx;
+	idx = get_member(f, "boat_idx");
 	close, f;
 
 	if(DEBUG) write, format="--/ boat_input_pbd_idx%s", "\n";
-	return boat;
+	return idx;
 }
 
 func boat_get_image_somd(sdir, progress=) {

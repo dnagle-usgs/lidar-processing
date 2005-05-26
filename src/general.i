@@ -20,34 +20,60 @@ local general_i;
 		atod
 */
 
-func calculate_heading(x1, y1, x2, y2) {
-/* DOCUMENT calculate_heading(x1, y1, x2, y2)
+func calculate_heading(x, y) {
+/* DOCUMENT calculate_heading(x, y)
 	
-	Returns the heading in degrees clockwise from north of an object
-	that moved from point x1, y1 to point x2, y2.
+	Returns the heading in degrees clockwise from north that an object
+	moved from each pair of consecutive points.
+
+	The returned array will have one less index than x and y.
 
 	The following parameters are required:
+		
+		x: An array representing the easting. Must be in UTM.
 
-		x1, y1: An ordered pair for the first point an object passed through
-		x2, y2: An ordered pair for the second point an object passed through
-	
+		y: An array representing the northing. Must be in UTM.
+
 	Function returns:
 
-		heading in degrees clockwise from north
+		Array of headings in degrees clockwise from north.
 */
-	// Calculate the angle of the point in radians CCW from the positive x-axis
-	if(x1 == x2) // Special case
-		radians = pi/2.0;
-	else       // Normal case
-		radians = atan(float(y2-y1)/float(x2-x1));
+	if(typeof(x) == "int" || typeof(x) == "long")
+		x = double(x);
+	if(typeof(y) == "int" || typeof(y) == "long")
+		y = double(y);
 	
+	x_dif = x(dif);
+	y_dif = y(dif);
+
+	radians = array(structof(x_dif), numberof(x_dif));
+
+	// Special case - radians
+	temp = where(!x_dif);
+	if(numberof(temp))
+		radians(temp) = pi/2.0;
+	
+	// Normal case - radians
+	temp = where(x_dif);
+	if(numberof(temp))
+		radians(temp) = atan(y_dif(temp)/x_dif(temp));
+
+	// Convert to degrees
 	degrees = radians * 180.0 / pi;
+	
+	// Fix quadrants
+	temp = where(x_dif < 0);
+	if(numberof(temp))
+		degrees(temp) -= 180;
+	
+	// Fix quadrants
+	temp = where(y_dif < 0 & !x_dif);
+	if(numberof(temp))
+		degrees(temp) -= 180;
 
-	// Put angle in the proper quadrant
-	if(x2 < x1 || (y2 < y1 && x2 == x1)) degrees -= 180;
+	// Convert to heading
+	heading = 90.0 - degrees;
 
-	// Convert angle to a heading 
-	heading = 90 - degrees;
 	return heading;
 }
 
@@ -58,6 +84,9 @@ func perpendicular_intercept(x1, y1, x2, y2, x3, y3) {
 	(x1, y1) and (x2, y2) intersects with the line that passes through
 	(x3, y3)	and is perpendicular to the first line.
 
+	Either scalars or arrays may be passed as parameters provided the
+	arrays all have the same size.
+
 	The following paramaters are required:
 
 		x1, y1: An ordered pair for a point on a line
@@ -66,9 +95,8 @@ func perpendicular_intercept(x1, y1, x2, y2, x3, y3) {
 
 	Function returns:
 
-		[x, y]
+		[x, y] where x and y are arrays of the same size as the parameters.
 */
-	
 	// Make everything doubles to avoid integer-related errors
 	x1 = double(x1);
 	y1 = double(y1);
@@ -76,28 +104,41 @@ func perpendicular_intercept(x1, y1, x2, y2, x3, y3) {
 	y2 = double(y2);
 	x3 = double(x3);
 	y3 = double(y3);
+	
+	// Result arrays
+	xi = yi = array(double, numberof(x1));
 
-	if (x1 == x2) { // Special case
-		xi = x1;
-		yi = y3;
-	} else if (y1 == y2) { // Special case
-		yi = y1;
-		xi = x3;
-	} else { // Normal case
-		// m12 - slope of the line passing through pts 1 and 2
-		m12 = (y2 - y1)/(x2 - x1);
-		// m3 - slope of the line passing through pt 3, perpendicular to line 12
+	// Generate indexes for different portions
+	x_eq = where(x1 == x2); // Special case
+	y_eq = where(y1 == y2); // Special case
+	norm = where(!x1 == x2 | !y1 == y2); // Normal
+	
+	// Special case
+	if(numberof(x_eq)) {
+		xi(x_eq) = x1(x_eq);
+		yi(x_eq) = y3(x_eq);
+	}
+
+	// Special case
+	if(numberof(y_eq)) {
+		yi(y_eq) = y1(y_eq);
+		xi(y_eq) = x3(y_eq);
+	}
+
+	// Normal
+	if(numberof(norm)) {
+		// m12: Slope of line passing through pts 1 and 2
+		m12 = (y2(norm) - y1(norm))/(x2(norm) - x1(norm));
+		// m3: Slope of line passing through pt 3, perpendicular to line 12
 		m3 = -1 / m12;
 
 		// y-intercepts of the two lines
-		b12 = y1 - m12 * x1;
-		b3 = y3 - m3 * x3;
+		b12 = y1(norm) - m12 * x1(norm);
+		b3 = y3(norm) - m3 * x3(norm);
 
-		// x value of the intersection point
-		xi = (b3 - b12)/(m12 - m3);
-
-		// y value of the intersection point
-		yi = m12 * xi + b12;
+		// x and y values of intersection points
+		xi(norm) = (b3 - b12)/(m12 - m3);
+		yi(norm) = m12 * xi(norm) + b12;
 	}
 
 	return [xi, yi];
