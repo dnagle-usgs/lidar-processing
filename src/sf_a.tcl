@@ -62,7 +62,7 @@ if { ![catch {package require cmdline}] } {
 # to disable. Zero will enable messages.
 set no_mog_messages 0
 
-set DEBUG_SF 1      ;# Show debug info on (1) or off (0)
+set DEBUG_SF 0      ;# Show debug info on (1) or off (0)
 
 # The camera is frequently out of time sync so we add this to correct it.
 set seconds_offset 0
@@ -1073,6 +1073,14 @@ proc atris_init { } {
 			send_ytk depth_profile $temp_f
 			unset temp_f
 		}
+	.mb.tools add command -label "Load and Plot CSV Waypoints (UTM)" -underline 18 \
+		-command {
+			global base_dir
+			set f [ tk_getOpenFile -filetypes { {{CSV files} {.csv}} } -initialdir $base_dir ];
+			if { $f != "" } {
+				send_ytk plot_waypoints_file $f
+			}
+		}
 }
 
 proc select_file { } {
@@ -1272,7 +1280,7 @@ menu .mb.zoom
 }
 .mb.options add command  -label "Speed, Gamma..." -underline 1  -command {
 	if { [ catch { pack info .cf2 } ] } {
-		pack .cf2 -side top -expand 1 -fill x
+		pack .cf2 -side top -fill x
 		wm geometry . ""
 	} else {
 		pack forget .cf2

@@ -91,4 +91,8 @@ proc depth_profile { data_file } {
 	exp_send "depth_profile, \"$data_file\"\r"
 }
 
+proc plot_waypoints_file { fname } {
+	exp_send "plot_waypoints_file, \"$fname\"\r"
+}
+
 start_sf
