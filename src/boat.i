@@ -43,6 +43,8 @@ local boat_i;
 		boat_convert_raw_to_boatpics
 		boat_input_raw
 		boat_input_raw_full
+		boat_read_image_times
+		boat_output_adf
 
 	Waypoints processing functions:
 
@@ -65,8 +67,8 @@ local boat_i;
 */
 
 struct BOAT_PICS {
-	float lat;
-	float lon;
+	double lat;
+	double lon;
 	float depth;
 	float heading;
 	float somd;
@@ -74,27 +76,27 @@ struct BOAT_PICS {
 
 struct BOAT_WAYPOINTS {
 	string label;
-	float target_north;
-	float target_east;
-	float actual_north;
-	float actual_east;
-	double somd;
+	double target_north;
+	double target_east;
+	double actual_north;
+	double actual_east;
+	float somd;
 }
 
 struct HYPACK_RAW {
-	double sod;
+	float sod;
 	double lat;
 	double lon;
-	double time;
+	float time;
 }
 
 struct HYPACK_EC {
-	double sod;
-	double depth;
+	float sod;
+	float depth;
 }
 
 struct HYPACK_POS {
-	double sod;
+	float sod;
 	double north;
 	double east;
 }
@@ -164,7 +166,7 @@ func boat_process_data (imgdir, hypackdir, base) {
 	require, "ll2utm.i";
 
 	write, "Retrieving list of Hypack RAW files...";
-	files = boat_get_raw_list(sdir=hypackdir);
+	files = boat_get_raw_list(hypackdir);
 	
 	write, "Reading Hypack RAW files...";
 	hypack = [];
@@ -180,6 +182,10 @@ func boat_process_data (imgdir, hypackdir, base) {
 	// Use hypack to get UTM zone
 	zone = fll2utm( hypack(1).lat, hypack(1).lon )(3,1);
 
+	write, "Reading filenames and times...";
+	ifn = ""; isod = 0;
+	boat_read_image_times, imgdir, ifn, isod;
+
 	write, "Generating .lst file...";
 	boat_create_lst, imgdir, fname=base+".lst", utmzone=zone;
 	
@@ -194,6 +200,7 @@ func boat_process_data (imgdir, hypackdir, base) {
 
 	write, "Outputting data...";
 	boat_output, boat, index, imgdir+base;
+	boat_output_adf, boat, imgdir+base+".adf", ifn, isod;
 }
 
 func boat_normalize_images(src, dest, pbd, min_depth=, max_depth=, progress=) {
@@ -515,7 +522,7 @@ func boat_rename_exif_files(indir, outdir, datestring=, move=, progress=) {
 *//*
 	TODO:
 
-		Either in here or in boat_rename_exif_files, add some detection to
+		Either in here or in boat_process, add some detection to
 		avoid double renaming.
 */
 	// Validate progress
@@ -927,7 +934,7 @@ func boat_apply_offset(boat, h=, m=, s=, progress=) {
 	return boat;
 }
 
-//func boat_gps_smooth(boat, step, progress=) {
+func boat_gps_smooth(boat, step, progress=) {
 /* DOCUMENT  boat_gps_smooth(boat, step, progress=)
 
 	Applies a smoothing algorithm to the boat data to help even
@@ -955,7 +962,7 @@ func boat_apply_offset(boat, h=, m=, s=, progress=) {
 	Returns:
 
 		Array of type BOAT_PICS
-*//*
+*/
 	require, "compare_transects.i";
 	require, "general.i";
 
@@ -967,7 +974,7 @@ func boat_apply_offset(boat, h=, m=, s=, progress=) {
 	av1 = avgline(boat.lat, boat.lon, step=step);
 	av2 = avgline(boat.lat(step/2+1:), boat.lon(step/2+1:), step=step);
 
-	av = array(float, numberof(av1(,1)) + numberof(av2(,1)), 2);
+	av = array(double, numberof(av1(,1)) + numberof(av2(,1)), 2);
 		
 	av(1::2,) = av1;
 	av(2::2,) = av2;
@@ -1013,7 +1020,7 @@ func boat_apply_offset(boat, h=, m=, s=, progress=) {
 	if(DEBUG) write, format="--/ boat_gps_smooth%s", "\n";
 	return boat;
 }
-*/
+
 func boat_input_edt(ifname, utmzone, smooth=, step=, depthonly=, progress=) {
 /* DOCUMENT  boat_input_edt(ifname, utmzone, step=, depthonly=, progress=)
 
@@ -1095,8 +1102,8 @@ func boat_input_edt(ifname, utmzone, smooth=, step=, depthonly=, progress=) {
 	read, f, format="%d", num;
 	if(DEBUG) write, format=" num=%d\n", num;
 	
-	data_north = array(float, num);
-	data_east = array(float, num);
+	data_north = array(double, num);
+	data_east = array(double, num);
 	data_depth = array(float, num);
 	data_somd = array(float, num);
 	
@@ -1231,8 +1238,8 @@ func boat_input_exif(sdir, smooth=, step=, progress=) {
 	read, f, format="%d", num;
 	if(DEBUG) write, format=" num=%d\n", num;
 	
-	data_lat = array(float, num);
-	data_lon = array(float, num);
+	data_lat = array(double, num);
+	data_lon = array(double, num);
 	data_somd = array(float, num);
 	
 	read, f, format="%f %f %f", data_somd, data_lat, data_lon;
@@ -1543,8 +1550,8 @@ func boat_read_hypack_waypoints(ifname, utmzone, progress=){
 	if(progress || DEBUG) write, format=" Number of waypoints is %d\n", num;
 	
 	data_label = array(string, num);
-	data_east = array(float, num);
-	data_north = array(float, num);
+	data_east = array(double, num);
+	data_north = array(double, num);
 	
 	read, f, format="%s %f %f", data_label, data_east, data_north;
 	close, f;
@@ -1758,7 +1765,7 @@ func boat_get_raw_list(dir) {
 
 		An array of type string containing the full path and file names.
 */
-	cmd = "find " + sdir + " -iname '*.raw' ";
+	cmd = "find " + dir + " -iname '*.raw' ";
 	cmd = "( " + cmd + " ) | wc -l ; " + cmd;
 	
 	f = popen(cmd, 0);
@@ -1909,4 +1916,155 @@ func boat_input_raw_full(ifname, &raw, &pos, &ec1, &ec2) {
 	ec1 = ec1(1:ec1_i-1);
 	ec2 = ec2(1:ec2_i-1);
 }
+
+func boat_read_image_times(sdir, &fn, &sod) {
+/* DOCUMENT boat_read_image_times(sdir, &fn, &sod)
+
+	Runs exiflist on a directory of image files to read their file
+	names and timestamps.
+
+	Parameter:
+
+		sdir: The directory where the images are located.
+	
+	Output parameters:
+
+		&fn: An array of strings containing the filenames.
+
+		&sod: An array of integers containing the sod's.
+
+	Returns:
+
+		n/a
+*/
+	require, "ytime.i";
+
+	cmd = "find " + sdir + " -iname '*.jpg' ";
+	cmd = cmd + "| wc -l; " + cmd + "-exec exiflist -o l -c t -f file-name,gps-time \\\{} \\\;"
+
+	if(DEBUG) write, " cmd=%s\n", cmd;
+	
+	f = popen(cmd, 0);
+
+	num = 0;
+	read, f, format="%d", num;
+	if(DEBUG) write, " num=%i\n", num;
+
+	fname = array(string, num);
+	cyr = cmo = cdy = chr = cmi = csc = gh = gm = gs = array(int, num);
+
+	read, f, format="%s %d:%d:%d", fname, gh, gm, gs;
+	close, f;
+	
+	fname = fname(where(fname));
+	gh    =    gh(where(fname));
+	gm    =    gm(where(fname));
+	gs    =    gs(where(fname));
+
+	fn = fname;
+	sod = hms2sod(gh * 10000 + gm * 100 + gs );
+}
+
+func boat_output_adf(boat, ofname, fname, fsod, progress=) {
+/* DOCUMENT boat_output_adf(boat, ofname, fname, fsod)
+
+	Outputs an ADAPT Data File (*.adf) for the data given.
+
+	Parameters:
+
+		boat: An array of BOAT_PICS.
+
+		ofname: The full path and file name to save the data to. The
+			file's extension should be .adf.
+
+		fname: An array of strings containing the file names of the
+			images.
+
+		fsod: An array of integers containing the sod's corresponding
+			to the images.
+	
+	Options:
+
+		progress= Set to any nonzero value to display progress info.
+
+	Returns:
+	
+		n/a
+*/
+	require, "ytime.i";
+	require, "ll2utm.i";
+
+	f = open(ofname, "w");
+
+	// Filenames data
+
+	f_num = numberof(fname);
+	
+	sort_idx = sort(fsod);
+	f_n = fname(sort_idx);
+	f_sod = fsod(sort_idx);
+	f_idx = indgen(numberof(fn));
+	f_hms_raw = sod2hms(int(f_sod));
+	f_hms = swrite(format="%02d%02d%02d", f_hms_raw(1,), f_hms_raw(2,), f_hms_raw(3,));
+	f_hms_raw = [];
+
+	if (progress) write, "-> filenames";
+	write, f, format="%d filenames\n", f_num;
+	write, f, format="%d %s %s\n", f_idx, f_hms, f_n;
+
+	// Deciminutes data
+
+	b_num = numberof(boat);
+	b_idx = indgen(numberof(boat));
+	
+	b_hms_raw = sod2hms(int(boat.somd));
+	b_hms = swrite(format="%02d%02d%02d", b_hms_raw(1,), b_hms_raw(2,), b_hms_raw(3,));
+	b_hms_raw = [];
+	
+	b_lat_dir = b_lon_dir = array(char, numberof(boat));
+
+	sub = where(boat.lat < 0);
+	if(numberof(sub))
+		b_lat_dir(sub) = 'S';
+	sub = where(!(boat.lat < 0));
+	if(numberof(sub))
+		b_lat_dir(sub) = 'N';
+	sub = where(boat.lon < 0);
+	if(numberof(sub))
+		b_lon_dir(where(boat.lon < 0)) = 'W';
+	sub = where(!(boat.lon < 0));
+	if(numberof(sub))
+		b_lon_dir(where(!(boat.lon < 0))) = 'E';
+
+	b_lat_ddm = deg2ddm(abs(boat.lat));
+	b_lon_ddm = deg2ddm(abs(boat.lon));
+	
+	if (progress) write, "-> deciminutes";
+	write, f, format="%d deciminutes\n", b_num;
+	write, f, format="%d %s %c%011.6f %c%012.6f %.3f\n", b_idx, b_hms, b_lat_dir, b_lat_ddm, b_lon_dir, b_lon_ddm, boat.depth;
+	
+	// Latlon data
+	if (progress) write, "-> latlon";
+	write, f, format="%d latlon\n", b_num;
+	write, f, format="%d %s %.6f %.6f %.3f\n", b_idx, b_hms, boat.lat, boat.lon, boat.depth;
+
+	// UTM data
+	b_utm = fll2utm(boat.lat, boat.lon);
+	b_utm_n = b_utm(1,);
+	b_utm_e = b_utm(2,);
+	b_utm_z = b_utm(3,);
+	b_utm = [];
+	
+	if (progress) write, "-> utm";
+	write, f, format="%d utm\n", b_num;
+	write, f, format="%d %s %.3f %.3f %d %.3f\n", b_idx, b_hms, b_utm_n, b_utm_e, int(b_utm_z), boat.depth;
+
+	// SOD data
+	if (progress) write, "-> boatsod";
+	write, f, format="%d boatsod\n", b_num;
+	write, f, format="%d %.3f\n", b_idx, boat.somd;
+	
+	close, f;
+}
+
 

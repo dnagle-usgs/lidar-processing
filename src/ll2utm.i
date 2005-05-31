@@ -201,12 +201,36 @@ func ddm2deg(coord) {
    Function returns:
 
       A scalar or array of the converted degree values.
+
+   See also: deg2ddm, dms2deg, deg2dms
 */
 	d = int(coord / 10000.0);
 	coord -= d * 10000;
 	m = coord / 100.0 / 60.0;
 	deg = d + m;
 	return deg;
+}
+
+func deg2ddm(coord) {
+/* DOCUMENT deg2ddm(coord)
+
+   Converts coordinates in degrees to degree-deciminute format.
+
+   Required parameter:
+
+      coord: A scalar or array of coordinate values in degrees to
+         be converted.
+
+   Function returns:
+
+      A scalar or array of converted degree-deciminute values.
+
+   See also: ddm2deg, dms2deg, deg2dms
+*/
+	d = floor(abs(coord));
+	dm = (abs(coord) - d) * 60;
+	ddm = sign(coord) * d * 100 + dm;
+	return ddm;
 }
 
 func dms2deg(coord) {
@@ -226,6 +250,8 @@ func dms2deg(coord) {
    Function returns:
 
       A scalar or array of the converted degree values.
+
+   See also: deg2dms, ddm2deg, deg2ddm
 */
 	d = int(coord / 10000.0);
 	coord -= d * 10000;
@@ -233,4 +259,35 @@ func dms2deg(coord) {
 	s = coord - (m * 100);
 	deg = d + m / 60.0 + s / 3600.0;
 	return deg;
+}
+
+func deg2dms(coord, arr=) {
+/* DOCUMENT deg2dms(coord, arr=)
+
+   Converts coordinates in degrees to degrees, minutes, and seconds.
+
+   Required parameter:
+
+      coord: A scalar or array of coordinates values in degrees to
+         be converted.
+
+   Options:
+
+      arr= Set to any non-zero value to make this return an array
+         of [d, m, s]. Otherwise, returns [ddmmss.ss].
+
+   Function returns:
+
+      Depending on arr=, either [d, m, s] or [ddmmss.ss].
+
+   See also: dms2deg, ddm2deg, deg2ddm
+*/
+	d = floor(abs(coord));
+	m = floor((abs(coord) - d) * 60);
+	s = ((abs(coord) - d) * 60 - m) * 60;
+	dms = d * 10000 + m * 100 + s;
+	if(arr)
+		return [d, m, s];
+	else
+		return dms;
 }

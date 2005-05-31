@@ -262,6 +262,93 @@ proc open_loader_window { m1 } {
 	center_win .loader
 }
 
+proc load_file_list_adf { f } {
+# Parameters
+#   f - filename of a list of files to be loaded
+
+	# Bring in Globals
+	global ci fna imgtime dir base_dir atris_mode \
+			nsat pdop ns ew lat lon alt seconds_offset timern frame_off \
+			DEBUG_SF camtype tarname mark mogrify_exists mogrify_pref
+
+	# Reset defaults
+	set camtype 2
+	set tarname ""
+
+	# Initialize variables
+	# hour minute seconds
+	set h 0
+	set m 0
+	set s 0
+
+	set fname $f
+								if { $DEBUG_SF } { puts "$i photos found" }
+# Set time ticker, for use in updating the displays - 0 to make 
+# sure something displays immediately
+	set ticker 0
+# Set the seconds_offset back to 0 by default
+	set seconds_offset 0
+
+	if { [ catch {set dataf [ open $fname "r" ] } ] == 0 } {
+		while { ![ eof $dataf ] } { 
+			set heads [ gets $dataf ]
+			set headlst [ split $heads " " ];
+			set dataset [ lindex $headlst 1 ];
+			set datanum [ lindex $headlst 0 ];
+
+			if { [string equal $dataset "filenames"] } {
+				set nfiles $datanum
+			}
+
+			for { set i 1 } { $i <= $datanum } { incr i } {
+				set datas [ gets $dataf ]
+				set datalst [ split $datas " " ]
+
+				if { [string equal $dataset "filenames"] } {
+					set hms [ lindex $datalst 1]
+					set fn  [ lindex $datalst 2]
+					
+					set fna($i) "$fn"
+					
+					scan $hms "%02d%02d%02d" h m s
+					set thms [ format "%02d:%02d:%02d" $h $m $s ]
+					set sod [ expr $h*3600 + $m*60 + $s ]
+					set hms [ clock format $sod -format "%H%M%S" -gmt 1 ]
+					set imgtime(idx$i) $hms;
+					set imgtime(hms$hms) $i;
+					if { [expr int([clock clicks -milliseconds] / 200)] - $ticker > 0 } {
+						set ticker [expr int([clock clicks -milliseconds] / 200)]
+						.loader.status1 configure -text "Loaded $i JPG files"
+						update
+					}
+				} elseif {[string equal $dataset "deciminutes"]} {
+					set hms [ lindex $datalst 1]
+					set lat(hms$hms) [ lindex $datalst 2]
+					set lon(hms$hms) [ lindex $datalst 3]
+					set alt(hms$hms) [ lindex $datalst 4]M
+					if { [expr int([clock clicks -milliseconds] / 200)] - $ticker > 0 } {
+						set ticker [expr int([clock clicks -milliseconds] / 200)]
+						.loader.status1 configure -text "Loaded $i GPS records\r"
+						update
+					}
+				}
+			}
+		}
+	}
+	set ci 0
+
+	.loader.status1 configure -text "$nfiles photos loaded,\nYou may begin..."
+	.loader.ok configure -text "OK" 
+	after 3500 {destroy .loader}
+
+	if { $mogrify_exists } {
+		set mogrify_pref "prefer mogrify"
+	} else {
+		set mogrify_pref "only tcl"
+	}
+	return $nfiles
+}
+
 proc load_file_list { f method } {
 # Parameters
 #   f - filename of a list of files to be loaded
@@ -1064,7 +1151,7 @@ proc atris_init { } {
 	set atris_mode 1
    menu .mb.tools
 	.mb insert "Archive" cascade -label "Tools" -underline 0 -menu .mb.tools -state disabled
-	.mb.tools add command -label "Vessel Tracks and Coastlines" -underline 0 \
+	.mb.tools add command -label "Vessel Track" -underline 0 \
 		-command { send_ytk rbgga_menu }
 	.mb.tools add command -label "Depth Profile" -underline 0 \
 		-command {
@@ -1087,17 +1174,19 @@ proc select_file { } {
 	global camtype f base_dir tf nfiles split_dir dir ci lst
 	if { $camtype == 2 } {
 		set f [ tk_getOpenFile  -filetypes { 
-			{ {List files} {.lst} }
-			{ {Tar Files } {.tar} } 
-			{ {Zip  files} {.zip} }
-			{ {All files } { *  } }
+			{ {ADAPT files} {.adf} }
+			{ {List files } {.lst} }
+			{ {Tar files  } {.tar} } 
+			{ {Zip files  } {.zip} }
+			{ {All files  } { *  } }
 			} -initialdir $base_dir ];
 	} else {
 		set f [ tk_getOpenFile  -filetypes { 
-			{ {Tar Files } {.tar} } 
-			{ {List files} {.lst} }
-			{ {Zip  files} {.zip} }
-			{ {All files } { *  } }
+			{ {Tar files  } {.tar} } 
+			{ {List files } {.lst} }
+			{ {Zip files  } {.zip} }
+			{ {ADAPT files} {.adf} }
+			{ {All files  } { *  } }
 			} -initialdir $base_dir ];
 	}
 	if { $f != "" } {
@@ -1114,6 +1203,11 @@ proc select_file { } {
 			.loader.ok configure -state normal
 			update
 			set nfiles [ load_file_list  $f tar ];
+		} elseif { [file extension $f] == ".adf" } {
+			open_loader_window "Loading files.\nThis will take a few seconds."
+			set split_dir [split $f /]
+			set dir [join [lrange $split_dir 0 end-1] /]
+			set nfiles [ load_file_list_adf $f ];
 		} else {
 			open_loader_window "Loading files.\nThis will take a few seconds."
 			;# Do this if we have a .lst file
