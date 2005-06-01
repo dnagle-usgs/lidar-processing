@@ -69,7 +69,7 @@ func show_map( m,color=,utm=,width=, noff=, eoff= ) {
    Modified by amar nayegandhi to include utm plot.
  */
  extern curzone;
- if (!(m)) {
+ if (!is_array(m)) {
     write, "No map data is available.";
     return;
  }
