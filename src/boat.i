@@ -101,8 +101,8 @@ struct HYPACK_POS {
 	double east;
 }
 
-func boat_process (imgdir, hypackdir, base, date) {
-/* DOCUMENT boat_process (imgdir, hypackdir, base, date)
+func boat_process (imgdir, hypackdir, base, date, progress=, adaptprog=) {
+/* DOCUMENT boat_process (imgdir, hypackdir, base, date, progress=, adaptprog=)
 
 	Renames EXIF JPEG images, then process images and Hypack data to generate
 	the various output files usable by ATRIS software.
@@ -124,6 +124,14 @@ func boat_process (imgdir, hypackdir, base, date) {
 		date: A string representing the mission date. This string must be
 			formatted as YYYY-MM-DD.
 	
+	Options:
+
+		progress= Indicates whether progress information should be output. 1 will
+			enable and 0 will disable. Default: 1.
+
+		adaptprog= Set to any nonzero value to enable integration with sf_a to
+			update the progress dialog.
+	
 	Returns:
 		
 		n/a
@@ -135,14 +143,32 @@ func boat_process (imgdir, hypackdir, base, date) {
 		Either in here or in boat_rename_exif_files, add some detection to
 		avoid double renaming.
 */
-	write, "Renaming EXIF JPEG files...";
+	if("/" != strpart(imgdir, strlen(imgdir):strlen(imgdir)))
+		imgdir = imgdir + "/";
+	if("/" != strpart(hypackdir, strlen(hypackdir):strlen(hypackdir)))
+		hypackdir = hypackdir + "/";
+	
+	// Validate progress
+	if(is_void(progress))
+		progress = 1;
+	progress = (progress ? 1 : 0);
+
+	adaptprog = (adaptprog ? 1 : 0);
+	if(adaptprog)
+		require, "atris.i";
+	
+	status = "Renaming EXIF JPEG files...";
+	if(adaptprog)
+		adapt_send_progress, status, 0;
+	if(progress)
+		write, status;
 	boat_rename_exif_files, imgdir, date, move=1;
 	
-	boat_process_data, imgdir, hypackdir, base;
+	boat_process_data, imgdir, hypackdir, base, adaptprog=adaptprog, aprogadd=1;
 }
 
-func boat_process_data (imgdir, hypackdir, base) {
-/* DOCUMENT boat_process_data (imgdir, hypackdir, base)
+func boat_process_data (imgdir, hypackdir, base, progress=, adaptprog=, aprogadd=) {
+/* DOCUMENT boat_process_data (imgdir, hypackdir, base, adaptprog=, aprogadd=)
 	
 	Processes images and Hypack data to generate the various output files
 	usable by ATRIS software.
@@ -157,6 +183,17 @@ func boat_process_data (imgdir, hypackdir, base) {
 			of "sample" would generate sample.lst, sample.pbd, sample.txt, and
 			sample-gga.ybin. They will all be placed in imgdir.
 	
+	Options:
+
+		progress= Indicates whether progress information should be output. 1 will
+			enable and 0 will disable. Default: 1.
+
+		adaptprog= Set to any nonzero value to enable integration with sf_a to
+			update the progress dialog.
+
+		aprogadd= Use this to increase (or decrease) the number of "units" used
+			to send percentages to sf_a's progress dialog.
+	
 	Returns:
 
 		n/a
@@ -165,10 +202,37 @@ func boat_process_data (imgdir, hypackdir, base) {
 */
 	require, "ll2utm.i";
 
-	write, "Retrieving list of Hypack RAW files...";
+	if("/" != strpart(imgdir, strlen(imgdir):strlen(imgdir)))
+		imgdir = imgdir + "/";
+	if("/" != strpart(hypackdir, strlen(hypackdir):strlen(hypackdir)))
+		hypackdir = hypackdir + "/";
+	
+	// Validate progress
+	if(is_void(progress))
+		progress = 1;
+	progress = (progress ? 1 : 0);
+	
+	adaptprog = (adaptprog ? 1 : 0);
+	if(adaptprog)
+		require, "atris.i";
+	
+	aprogadd = (aprogadd ? aprogadd : 0);
+	
+	progcnt = 8.0 + aprogadd;
+	progcur = aprogadd;
+
+	status = "Retrieving list of Hypack RAW files...";
+	if(adaptprog)
+		adapt_send_progress, status, progcur++/progcnt;
+	if(progress)
+		write, status;
 	files = boat_get_raw_list(hypackdir);
 	
-	write, "Reading Hypack RAW files...";
+	status = "Reading Hypack RAW files...";
+	if(adaptprog)
+		adapt_send_progress, status, progcur++/progcnt;
+	if(progress)
+		write, status;
 	hypack = [];
 	for(i = 1; i <= numberof(files); i++) {
 		write, " ->", files(i);
@@ -182,25 +246,54 @@ func boat_process_data (imgdir, hypackdir, base) {
 	// Use hypack to get UTM zone
 	zone = fll2utm( hypack(1).lat, hypack(1).lon )(3,1);
 
-	write, "Reading filenames and times...";
+	status = "Reading filenames and times...";
+	if(adaptprog)
+		adapt_send_progress, status, progcur++/progcnt;
+	if(progress)
+		write, status;
 	ifn = ""; isod = 0;
 	boat_read_image_times, imgdir, ifn, isod;
 
-	write, "Generating .lst file...";
+	status = "Generating .lst file...";
+	if(adaptprog)
+		adapt_send_progress, status, progcur++/progcnt;
+	if(progress)
+		write, status;
 	boat_create_lst, imgdir, fname=base+".lst", utmzone=zone;
 	
-	write, "Determining SOMD data for images...";
+	status = "Determining SOMD data for images...";
+	if(adaptprog)
+		adapt_send_progress, status, progcur++/progcnt;
+	if(progress)
+		write, status;
 	somd = boat_get_image_somd(imgdir);
 	
-	write, "Interpolating GPS data for SOMD data...";
+	status = "Interpolating GPS data for SOMD data...";
+	if(adaptprog)
+		adapt_send_progress, status, progcur++/progcnt;
+	if(progress)
+		write, status;
 	boat = boat_interpolate_somd_gps(hypack, somd);
 	
-	write, "Generating index for image data...";
+	status = "Generating index for image data...";
+	if(adaptprog)
+		adapt_send_progress, status, progcur++/progcnt;
+	if(progress)
+		write, status;
 	index = boat_find_time_indexes(boat, somd);
 
-	write, "Outputting data...";
+	status = "Outputting data...";
+	if(adaptprog)
+		adapt_send_progress, status, progcur++/progcnt;
+	if(progress)
+		write, status;
 	boat_output, boat, index, imgdir+base;
 	boat_output_adf, boat, imgdir+base+".adf", ifn, isod;
+
+	if(adaptprog) {
+		adapt_send_progress, "Processing complete.", 100;
+		adapt_send_progress_done;
+	}
 }
 
 func boat_normalize_images(src, dest, pbd, min_depth=, max_depth=, progress=) {
@@ -482,7 +575,7 @@ func boat_create_lst(sdir, relpath=, fname=, offset=, utmzone=, progress=) {
 	if(DEBUG) write, format="--/ boat_create_lst%s", "\n";
 }
 
-func boat_rename_exif_files(indir, outdir, datestring=, move=, progress=) {
+func boat_rename_exif_files(indir, datestring, outdir=, move=, progress=) {
 /* DOCUMENT  boat_rename_exif_files(indir, outdir, datestring=, move=, progress=)
 
 	Renames the JPG files in a directory using their EXIF information. By

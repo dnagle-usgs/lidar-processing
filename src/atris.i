@@ -29,3 +29,15 @@ func plot_waypoints_file( fname ) {
 	ways = boat_read_csv_waypoints(fname);
 	plmk, ways.target_north, ways.target_east, marker=5, msize=0.5, color="magenta";
 }
+
+func adapt_send_progress(txt, per) {
+	if(DEBUG) {
+		write, "txt:", txt;
+		write, "per:", per;
+	}
+	tkcmd, swrite(format="adapt_process_progress {%s} %d", txt, int(per*100));
+}
+
+func adapt_send_progress_done {
+	tkcmd, "adapt_process_done";
+}

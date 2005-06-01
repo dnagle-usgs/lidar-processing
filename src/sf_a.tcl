@@ -274,6 +274,7 @@ proc load_file_list_adf { f } {
 	# Reset defaults
 	set camtype 2
 	set tarname ""
+	set nfiles 0
 
 	# Initialize variables
 	# hour minute seconds
@@ -282,7 +283,6 @@ proc load_file_list_adf { f } {
 	set s 0
 
 	set fname $f
-								if { $DEBUG_SF } { puts "$i photos found" }
 # Set time ticker, for use in updating the displays - 0 to make 
 # sure something displays immediately
 	set ticker 0
@@ -336,11 +336,11 @@ proc load_file_list_adf { f } {
 		}
 	}
 	set ci 0
-
+	
 	.loader.status1 configure -text "$nfiles photos loaded,\nYou may begin..."
 	.loader.ok configure -text "OK" 
 	after 3500 {destroy .loader}
-
+	
 	if { $mogrify_exists } {
 		set mogrify_pref "prefer mogrify"
 	} else {
@@ -1168,6 +1168,200 @@ proc atris_init { } {
 				send_ytk plot_waypoints_file $f
 			}
 		}
+	.mb.file insert "Exit" command -label "Process Raw Data" -underline 0 \
+		-command { adapt_process }
+		
+	proc adapt_process { } {
+		global adapt_rename
+		set w .adp
+		toplevel $w
+		wm title $w "ADAPT Processing"
+
+		set opt $w.fraOptions
+		frame $opt
+
+		Label $opt.lblImg  -text "Images directory"
+		Label $opt.lblRaw  -text "Hypack RAW directory"
+		Label $opt.lblBase -text "Created files basename"
+		Label $opt.lblRen  -text "Rename images"
+		Label $opt.lblDate -text "Date string"
+
+		Entry $opt.entImg  -textvariable adapt_image_dir \
+			-helptext "The absolute path to the directory containing the images."
+		Entry $opt.entRaw  -textvariable adapt_raw_dir \
+			-helptext "The absolute path to the directory containing the Hypack RAW files for the above images."
+		Entry $opt.entBase -textvariable adapt_base \
+			-helptext "The base name to use for the created files. These files will be placed in the 'Images directory'. Extensions will be appended to the base name, for example, 'test' will result in files like 'test.adf'."
+		Entry $opt.entDate -textvariable adapt_date \
+			-helptext "A string representing the mission date for the above images. This MUST be formatted as YYYY-MM-DD in order for .lst files to work properly."
+		
+		if { ![info exists adapt_rename] } {
+			set adapt_rename 0
+		}
+		if { $adapt_rename } {
+			$opt.entDate configure -state normal
+			$opt.lblDate configure -state normal
+		} else {
+			$opt.entDate configure -state disabled
+			$opt.lblDate configure -state disabled
+		}
+
+		checkbutton $opt.chkRen -variable adapt_rename \
+			-command {
+				if { $adapt_rename } {
+					.adp.fraOptions.entDate configure -state normal
+					.adp.fraOptions.lblDate configure -state normal
+				} else {
+					.adp.fraOptions.entDate configure -state disabled
+					.adp.fraOptions.lblDate configure -state disabled
+				}
+			}
+		DynamicHelp::register $opt.chkRen balloon "Renaming the images is required for .lst files to work properly. However, you should only rename the files ONCE or they will end up with multiple date strings."
+
+		Button $opt.butImg -text "Choose" \
+			-command {
+				if { ![string equal "" $adapt_image_dir] } {
+					set tmp_path $adapt_image_dir
+				} elseif { ![string equal "" $adapt_raw_dir] } {
+					set tmp_path $adapt_raw_dir
+				} else {
+					set tmp_path $dir
+				}
+				set tmp_path [tk_chooseDirectory -initialdir $tmp_path -parent .adp -title "Select the Images Directory" -mustexist 1]
+				if { ![string equal $tmp_path ""] } {
+					set old_aid $adapt_image_dir
+					set adapt_image_dir $tmp_path
+					set tmp_path [split $adapt_image_dir /]
+					set tmp_end [lindex $tmp_path end]
+					if { [string equal "" $tmp_end] } {
+						set tmp_end [lindex $tmp_path end-1]
+					}
+					if { [string equal $adapt_base ""] } {
+						set adapt_base $tmp_end
+					} elseif { ![string equal $old_aid ""] } {
+						set old_aid_sp [split $old_aid /]
+						set old_aid [lindex $old_aid_sp end]
+						if { [string equal "" $old_aid] } {
+							set old_aid [lindex $old_aid_sp end-1]
+						}
+						if { [string equal $old_aid $adapt_base] } {
+							set adapt_base $tmp_end
+						}
+					}
+				}
+			}
+		Button $opt.butRaw -text "Choose" \
+			-command {
+				if { ![string equal "" $adapt_raw_dir] } {
+					set tmp_path $adapt_raw_dir
+				} elseif { ![string equal "" $adapt_image_dir] } {
+					set tmp_path $adapt_image_dir
+				} else {
+					set tmp_path $dir
+				}
+				set tmp_path [tk_chooseDirectory -initialdir $tmp_path -parent .adp -title "Select the Hypack RAW Files Directory" -mustexist 1]
+				if { ![string equal $tmp_path ""] } {
+					set adapt_raw_dir $tmp_path
+				}
+			}
+
+		grid $opt.lblImg  -in $opt -column 0 -row 0 -sticky "e"
+		grid $opt.lblRaw  -in $opt -column 0 -row 1 -sticky "e"
+		grid $opt.lblBase -in $opt -column 0 -row 2 -sticky "e"
+		grid $opt.lblRen  -in $opt -column 0 -row 3 -sticky "e"
+		grid $opt.lblDate -in $opt -column 0 -row 4 -sticky "e"
+
+		grid $opt.entImg  -in $opt -column 1 -row 0 -sticky "ew"
+		grid $opt.entRaw  -in $opt -column 1 -row 1 -sticky "ew"
+		grid $opt.entBase -in $opt -column 1 -row 2 -sticky "ew" -columnspan 2
+		grid $opt.entDate -in $opt -column 1 -row 4 -sticky "ew" -columnspan 2
+
+		grid $opt.chkRen  -in $opt -column 1 -row 3 -sticky "w"
+
+		grid $opt.butImg  -in $opt -column 2 -row 0 -sticky "ew"
+		grid $opt.butRaw  -in $opt -column 2 -row 1 -sticky "ew"
+		
+		grid columnconfigure $opt 0 -weight 0
+		grid columnconfigure $opt 1 -weight 1 -minsize 250
+		grid columnconfigure $opt 2 -weight 0
+
+		set ctl $w.fraControl
+		frame $ctl
+
+		Button $ctl.butProcess -text "Process Data" \
+			-command {
+				if { [string equal $adapt_image_dir ""] } {
+					MessageDlg .adp.err -parent .adp -type ok -icon error -title "Error" \
+						-message "A value must be given for the Images Directory."
+				} elseif { [string equal $adapt_raw_dir ""] } {
+					MessageDlg .adp.err -parent .adp -type ok -icon error -title "Error" \
+						-message "A value must be given for the Hypack RAW Directory."
+				} elseif { [string equal $adapt_base ""] } {
+					MessageDlg .adp.err -parent .adp -type ok -icon error -title "Error" \
+						-message "A value must be given for the Created Files Basename."
+				} elseif { $adapt_rename && [string equal $adapt_date ""] } {
+					MessageDlg .adp.err -parent .adp -type ok -icon error -title "Error" \
+						-message "When renaming the images, a value must be given for the Date String."
+				} else {
+					ProgressDlg .adp.prog -textvariable progress_txt -variable progress_per -parent .adp -title "Processing Progress"
+					if { $adapt_rename } {
+						send_ytk adapt_process $adapt_image_dir $adapt_raw_dir $adapt_base $adapt_date
+					} else {
+						send_ytk adapt_process $adapt_image_dir $adapt_raw_dir $adapt_base
+					}
+				}
+			}
+		Button $ctl.butClose   -text "Close" \
+			-command {
+				destroy .adp
+			}
+
+		grid $ctl.butProcess -in $ctl -column 0 -row 0
+		grid $ctl.butClose   -in $ctl -column 1 -row 0
+
+		grid $opt -in $w -column 0 -row 0 -sticky "ews"
+		grid $ctl -in $w -column 0 -row 1 -sticky "ewn"
+
+		grid columnconfigure $w 0 -weight 1
+	}
+
+	proc adapt_process_done { } {
+		global adapt_image_dir adapt_base split_dir base_dir dir nfiles ci
+		catch { destroy .adp.prog }
+		
+		set next .adp.next
+		Dialog $next -parent .adp -side right -title "Processing Complete"
+		$next add -text "Process more data" \
+			-command {
+				destroy .adp.next
+			}
+		$next add -text "View the images that were just processed" \
+			-command {
+				destroy .adp.next
+				destroy .adp
+				set f $adapt_image_dir/$adapt_base.adf
+				set base_dir [ file dirname $f ]
+				wm title . $base_dir
+				open_loader_window "Loading files.\nThis will take a few seconds."
+				set split_dir [split $f /]
+				set dir [join [lrange $split_dir 0 end-1] /]
+				set nfiles [load_file_list_adf $f]
+				enable_controls
+				.slider configure -to $nfiles
+				set ci 1
+				clear_marks
+				show_img $ci
+			}
+		$next add -text "Return to the image browser" \
+			-command {
+				destroy .adp.next
+				destroy .adp
+			}
+		label $next.lbl -text "Processing is complete.\nWhat would you like to do next?"
+		pack $next.lbl -in $next -side left
+		$next draw
+		
+	}
 }
 
 proc select_file { } {
