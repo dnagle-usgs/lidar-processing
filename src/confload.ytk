@@ -24,13 +24,18 @@ proc write_conf { } {
 	LabelEntry .write.1.fake -textvariable bat -text $bat
 	LabelEntry .write.2.fake -textvariable lim -text $lim
 
-	LabelEntry .write.1.fname -relief sunken -borderwidth 3 -width 80\
-      -label "fname:  " -helptext "Enter conf filename" \
+	LabelEntry .write.1.fname -relief sunken -borderwidth 3 -width 76\
+      -label "conf fname:  " -helptext "Enter conf filename" \
       -textvariable fname -text $fname
 	
 	Button .write.1.fnbrowse -text "Browse..." -helptext "Open dialog to select conf file" \
       -command {
-		set fname [tk_getSaveFile -title "set conf file" -filetypes {{{Conf files} {.conf}}}]         
+		set fname [tk_getSaveFile -title "set conf file" \
+			-filetypes {
+				{{.i files}   {.i}	} 
+				{{Conf files} {.conf}	}
+				{{ALL files}  {}	}
+			}]         
       }
 	
 	LabelEntry .write.2.edb -relief sunken -borderwidth 3 -width 80\
@@ -59,8 +64,8 @@ proc write_conf { } {
       -command {
 		set imu [tk_getOpenFile -title "set IMU file" \
 			-filetypes {
+				{{IMU files}  {.pbd}	}
 				{{TANS files} {.ybin}	} 
-				{{IMU files}  {.pbd}		}
 			}]         
       }
 
@@ -180,6 +185,12 @@ proc write_conf { } {
 		-command {
 			exp_send "write_conf(\"$fname\",\"$edbfn\",\"$pnav\",\"$imu\",\"$map\",$lim,$win,\"$ops\",$bat,\"$batfs\",\"$oth\")\r"
 			expect ">"
+			tk_messageBox -icon info -message "Configuration file written" -type ok -title "Finished"			
+		}
+
+	Button .write.9.dismiss -text "Dismiss" -helptext "Close this window" \
+		-command {
+			destroy .write
 		}
 
 	pack .write.1.fname .write.1.fnbrowse -side left
@@ -187,10 +198,10 @@ proc write_conf { } {
 	pack .write.3.pnav .write.3.pnavbrowse -side left 
 	pack .write.4.imu .write.4.imubrowse -side left
 	pack .write.5.map .write.5.mapbrowse .write.5.limlab .write.5.lim .write.5.win -side left
-   pack .write.6.ops .write.6.opsbrowse -side left
+	pack .write.6.ops .write.6.opsbrowse -side left
 	pack .write.7.batl .write.7.bat .write.7.batf .write.7.batfbrowse -side left
 	pack .write.8.oth .write.8.othbrowse -side left
-	pack .write.9.write -side left
+	pack .write.9.write .write.9.dismiss -side left
 }
 
 
@@ -215,9 +226,6 @@ proc write_conf { } {
       frame .conf.$x -relief groove -borderwidth 3
       pack .conf.$x -side top
    }
-
-   Button .conf.1.writebutton -text "Write Conf" -helptext "Open GUI to write conf" \
-      -command write_conf
 
    LabelEntry .conf.1.path -relief sunken -borderwidth 3 \
       -label "Path:  " -helptext "Enter path to raw data" \
@@ -244,20 +252,36 @@ proc write_conf { } {
 	    set data [read $fp]
 	    close $fp
 	 }
-	pack .conf.1.cb .conf.1.loadbutton .conf.1.writebutton -side left
+	pack .conf.1.cb .conf.1.loadbutton .conf.1.writebutton .conf.1.dismiss .conf.1.hide -side left
 
        }
+
+   Button .conf.1.writebutton -text "Write Conf" -helptext "Open GUI to write conf" \
+      -command write_conf
+
+   Button .conf.1.dismiss -text "Dismiss" -helptext "Close this window" -command {destroy .conf}
+   
+   checkbutton .conf.1.hide -text "hide conf" -variable hidemessage \
+	-command {
+		if {$hidemessage == 0} {
+			pack .conf.2
+		}
+		if {$hidemessage == 1} {
+			pack forget .conf.2
+		}
+	}	
 
    Button .conf.1.loadbutton -text "Load conf" -helptext "Load selected *.conf file" \
 	-command {
 	   global path curconf
 	   exp_send "load_this_conf(\"$curconf\")\r"
+	   exp_send "#include \"l1pro.i\"\r"
 	   expect ">"
 	}
 
    message .conf.2.message -font {Courier 12} -textvariable data -width 800 -text "" 
 
-   pack .conf.1.path .conf.1.pathbutton .conf.1.getbutton .conf.1.writebutton -side left
+   pack .conf.1.path .conf.1.pathbutton .conf.1.getbutton .conf.1.writebutton .conf.1.dismiss .conf.1.hide -side left
    pack .conf.2.message
 	
 
