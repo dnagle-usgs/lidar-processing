@@ -50,6 +50,10 @@ exec wish "$0" ${1+"$@"}
 #
 # Revision history
 #
+# 06/02/2005 - Amar Nayegandhi
+#  Added option to use rlwrap or rlterm with yorick. Default setting uses
+#  rlwrap. Download rlwrap from: http://www.maumae.net/yorick/rlwrap-0.18.tar.gz
+#
 # 5/31/2003 Added runline commands.  Now you can say:  ytk somefile.[ytk,i,tcl,tk]
 # 1/3/2002
 #  -> Added  extended help for menu items.
@@ -88,9 +92,10 @@ variable Y_SITE ""
 proc restore_defaults { } {
  global _ytk
 set _ytk(editor)			vi
-set _ytk(yorick_executable)		/opt/eaarl/bin/yorick
-set _ytk(use_rlterm)			Yes
-set _ytk(splash_gif)			/opt/eaarl/packages/yorick-1.5/contrib/ytk.gif
+set _ytk(yorick_executable)		/usr/local/bin/yorick
+set _ytk(use_rlterm)			No
+set _ytk(use_rlwrap)			Yes
+set _ytk(splash_gif)			/usr/local/src/yorick-1.5/contrib/ytk.gif
 set _ytk(plot_dpi)			75
 set _ytk(plot_style)			work
 set _ytk(plot_palette)			earth
@@ -169,6 +174,7 @@ wm withdraw .
 
 
  catch { set rlterm [ exec which rlterm ] }
+ catch { set rlwrap [ exec which rlwrap ] }
 
 ############# set _ytk(yorick_executable) junk
 puts "e: $_ytk(yorick_executable)"
@@ -253,6 +259,15 @@ update
    exit
   } 
  } else {
+ if { [ info exists rlwrap ] && [ string equal $_ytk(use_rlwrap) "Yes" ]  } {
+ if { [ catch  { spawn $rlwrap -c  $_ytk(yorick_executable) } ] } {
+   puts "Could't find Yorick.  Please edit \"ytk\" and set \"_ytk(yorick_executable)\" to \
+   your Yorick location"
+   file delete $ytk_fifo_name
+   file delete $tky_fifo_name
+   exit
+  } 
+ } else {
  if { [ catch  { spawn $_ytk(yorick_executable) } ] } {
    puts "Could't find Yorick.  Please edit \"ytk\" and set \"_ytk(yorick_executable)\" to \
    your Yorick location"
@@ -261,6 +276,8 @@ update
    exit
   } 
  } 
+ }
+
 
 expect "Yorick * ready"
 set yorick_version [ lindex [ split $expect_out(0,string) ] 1 ]
@@ -269,7 +286,8 @@ exp_send "_ytk = 1\r"
 expect ">"
 exp_send "Y_SITE\r"
 expect "\r*>"
-set Y_SITE  [ lindex [ split [ string trim $expect_out(0,string) "\r\n" ] "\"" ] 1 ]
+#set Y_SITE  [ lindex [ split [ string trim $expect_out(0,string) "\r\n" ] "\"" ] 1 ]
+set Y_SITE /[join [lrange [split $_ytk(splash_gif) \/ ] 1 end-2] \/]
 
 if { [ file exists "$Y_SITE//contrib/ytk.i" ] == 0 } {
   tk_messageBox -icon error \
