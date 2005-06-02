@@ -7,7 +7,7 @@
 func sel_data_rgn(data, type, mode=,win=, exclude=, rgn=, make_workdata=, origdata=) {
   /* DOCUMENT sel_data_rgn(data,type, mode=, win=, exclude=, rgn=)
   this function selects a region (limits(), rubberband, pip) and returns data within that region.
-   Don't use this function for batch.  Use sel_rgn_from_datatiles instead.
+   Don't use this function for batch.  Use el_rgn_from_datatiles instead.
  INPUT: data = input data array e.g. fs_all
   // if mode = 1, limits() function is used to define the region.
   // if mode = 2, a rubberband box is used to define the region.
@@ -337,9 +337,9 @@ func sel_rgn_from_datatiles(rgn=, data_dir=,lmap=, win=, mode=, search_str=, ski
    }
    
    if (is_void(search_str)) {
-      if (mode == 1) file_ss = "_v";
-      if (mode == 2) file_ss = "_b";
-      if (mode == 3) file_ss = "_v";
+      if (mode == 1) file_ss = "_v.pbd";
+      if (mode == 2) file_ss = "_b.pbd";
+      if (mode == 3) file_ss = "_v.pbd";
    } else {
       file_ss = search_str;
    }
