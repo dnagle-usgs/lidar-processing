@@ -2,7 +2,108 @@
 require, "qaqc_fns.i"
 require, "compare_transects.i"
 
-func get_transect(data, win=, width=) {
+func updatebias {
+	tkcmd, swrite(format="set bias %f", ops_conf.roll_bias);
+}
+
+func selgoodflightlines(data, win=) {
+   winold = window();
+   if (!is_array(win)) win=window();
+   window, win;
+   winkill,4;window,4,dpi=100,style="work.gs";
+   outdata = [];
+   idx = [];
+   data = data(sort(data.soe));
+   idx = split_flightlines(data);
+   gooddata = array(int, numberof(idx));
+   for (k=1;k<=numberof(idx)-1;k++) {
+	idx = [];
+	data = data(sort(data.soe));
+        idx = split_flightlines(data);
+        grow, idx, numberof(data)+1;
+        slopes = array(float, numberof(idx)-1);
+        inout = array(float, numberof(idx)-1);
+        linreg = linear_regression(data.east/100.0, data.north/100.0);
+        m = linreg(1);
+        b = linreg(2);
+        binv = data.north/100.0+(data.east/100.0)/m;
+        xisect = (binv - b)/(m+1/m);
+        yisect = xisect*m + b;
+        r = sqrt( ((data.east/100.0)-xisect)^2 + ((data.north/100.0)-yisect)^2 );
+        minmine = min(xisect);
+        minminen = yisect(where(xisect == minmine));
+        xdist = double(xisect - minmine);
+        ydist = double(minminen - yisect);
+        dist = sqrt(xdist^2 + ydist^2);
+	plt, "Type yes for flightlines", min(dist)/100.0, max(data.elevation)/100.0+3, tosys=1;
+	plt, "going the same direction", min(dist)/100.0, max(data.elevation)/100.0+2.5, tosys=1;
+	plt, "and with similar slopes", min(dist)/100.0, max(data.elevation)/100.0+2, tosys=1;
+
+	for (i=k;i<=numberof(idx)-1;i++) {
+	   col="blue";
+	   if(i%2==0)col="magenta";
+	   if(i==k)col="red";
+	   plmk,data.elevation(idx(i):idx(i+1)-1)/100.0,dist(idx(i):idx(i+1)-1)/100.0,color=col,width=10,marker=3;
+           slopes(i) = linear_regression(dist(idx(i):idx(i+1)-1)/100.0, data.elevation(idx(i):idx(i+1)-1)/100.0, plotline=1)(1);
+	   plt, swrite(format="%2.2f", slopes(i)), min(dist(idx(i):idx(i+1)-1))/100.0, max(data.elevation(idx(i):idx(i+1)-1)/100.0)+1, color=col, tosys=1;   
+	}
+
+	yn = "";
+	write, "Keep red flightline?"
+	read(yn);
+	if (strmatch(yn, "b")) lance();
+	if (!strmatch(yn, "y")) { 
+		gooddata(k) = -1;
+		plmk,data.elevation(idx(k):idx(k+1)-1)/100.0,dist(idx(k):idx(k+1)-1)/100.0,color="yellow",width=10,marker=3;
+		plt, "N", avg(dist(idx(k):idx(k+1)-1))/100.0, max(data.elevation(idx(k):idx(k+1)-1)/100.0)+0.2, color="yellow", tosys=1;
+	} else {
+		gooddata(k) = 1;
+		plmk,data.elevation(idx(k):idx(k+1)-1)/100.0,dist(idx(k):idx(k+1)-1)/100.0,color="cyan",width=10,marker=3;
+		plt, "Y", avg(dist(idx(k):idx(k+1)-1))/100.0, max(data.elevation(idx(k):idx(k+1)-1)/100.0)+0.2, color="cyan", tosys=1;
+	}
+   }
+   for (i=1;i<=numberof(idx)-1;i++) {
+	if (gooddata(i) == 1) grow, outdata, data(idx(i):idx(i+1)-1);
+	if (gooddata(i) == 0) lance();
+   }
+   window, winold
+   return outdata;
+}
+
+func plot_flightline_transect(data, win) {
+	winold = window();
+	winkill,win;window,win,dpi=100,style="work.gs";
+
+	data = data(sort(data.soe));
+        idx = split_flightlines(data);
+        grow, idx, numberof(data)+1;
+        slopes = array(float, numberof(idx)-1);
+        inout = array(float, numberof(idx)-1);
+        linreg = linear_regression(data.east/100.0, data.north/100.0);
+        m = linreg(1);
+        b = linreg(2);
+        binv = data.north/100.0+(data.east/100.0)/m;
+        xisect = (binv - b)/(m+1/m);
+        yisect = xisect*m + b;
+        r = sqrt( ((data.east/100.0)-xisect)^2 + ((data.north/100.0)-yisect)^2 );
+        minmine = min(xisect);
+        minminen = yisect(where(xisect == minmine));
+        xdist = double(xisect - minmine);
+        ydist = double(minminen - yisect);
+        dist = sqrt(xdist^2 + ydist^2);
+
+	for (i=1;i<=numberof(idx)-1;i++) {
+	   col="blue";
+	   if(i%2==0)col="green";
+	   plmk,data.elevation(idx(i):idx(i+1)-1)/100.0,dist(idx(i):idx(i+1)-1)/100.0,color=col,width=10,marker=3;
+           slopes(i) = linear_regression(dist(idx(i):idx(i+1)-1)/100.0, data.elevation(idx(i):idx(i+1)-1)/100.0, plotline=1)(1);
+	   plt, swrite(format="%2.2f", slopes(i)), min(dist(idx(i):idx(i+1)-1))/100.0, max(data.elevation(idx(i):idx(i+1)-1)/100.0)+1, color=col, tosys=1;   
+	}
+
+	window, winold;
+}
+
+func get_transect(data, win=, width=, update=) {
 /* DOCUMENT get_transect(data,win=)
  This function prompts the user to drag a line over plotted EAARL data 
       in win= and returns the data within width= meters from this line.
@@ -13,6 +114,8 @@ func get_transect(data, win=, width=) {
 	if (!is_array(width)) width=5.0;
 	winold = window();
 	if (win) window, win;
+
+	if (update) updatebias;
 
         a = mouse(1,2,
         "Drag line across flightlines...\n");
@@ -52,9 +155,7 @@ func get_transect(data, win=, width=) {
 	return data;
 }
 
-
-
-func find_roll_bias(data, typ, inout, startbias=, threshold=) {
+func find_roll_bias(data, typ, inout, startbias=, threshold=, update=) {
 /* DOCUMENT find_roll_bias(data, typ, inout, startbias=, threshold=)
  This function attempts to determine the best ops_conf.roll_bias by minimizing 
     the average of the slopes of each flightline in the data array. In order
@@ -70,13 +171,13 @@ Usage: goodroll = find_roll_bias(data, typ, inout, startbias=, threshold=)
 		transect view, set inout = 1. If the plane is moving out of
 		the screen, set inout= -1.
 	startbias = The starting bias (default uses ops_conf.roll_bias)
-	threshold = The threshold for proper flatness. Default = 0.00005
+	threshold = The threshold for proper flatness. Default = 0.0005
 
 */
 	if (!inout) inout = 1;
 	if (!startbias) startbias = ops_conf.roll_bias;
 	ops_conf.roll_bias = startbias;
-	if (!threshold) threshold = 0.00005;
+	if (!threshold) threshold = 0.0005;
 	write, format="Processing data with roll bias of: %f\n",ops_conf.roll_bias;
 	m = find_transect_slope(data, typ)*inout;
 	if (abs(m) <= threshold) {
@@ -97,7 +198,10 @@ Usage: goodroll = find_roll_bias(data, typ, inout, startbias=, threshold=)
 		if (m < 0) rollmin = curroll;
 		if (rollmax < rollmin) lance();
 		write, format=" M was %f\n rollmax was %f\n rollmin was %f\n curroll is %f\n bias was %f\n", m, rollmax, rollmin, curroll, ops_conf.roll_bias;
-		pause(5000)
+		if (update) {
+			tkcmd, swrite(format="set bias %f", ops_conf.roll_bias);
+			tkcmd, swrite(format="set slope %f", m);
+		}
 	}
 	return goodroll;
 }
@@ -109,8 +213,7 @@ func find_transect_slope(data, typ) {
     1 for bathy and 2 for veg.
 
 */
-	if (!typ) data = reprocess_fs_data(data);
-	if (typ) data = reprocess_data(data, typ);
+	data = reprocess_data(data, typ);
 	data = data(sort(data.soe));
 	idx = split_flightlines(data);
 	grow, idx, numberof(data);
@@ -133,7 +236,7 @@ func find_transect_slope(data, typ) {
 	ydist = double(minminen - yisect);
 	dist = sqrt(xdist^2 + ydist^2);
 
-
+//Uncomment to plot points similarly to plot_flightline_transect
 //for (i=1;i<=numberof(idx)-1;i++) {col="blue";if(i%2==0)col="green";plmk,data.elevation(idx(i):idx(i+1)-1)/100.0,dist(idx(i):idx(i+1)-1)/100.0,color=col,width=10,marker=3;}
 	for (i=1;i<=numberof(idx)-1;i++) {
 		slopes(i) = linear_regression(dist(idx(i):idx(i+1)-1)/100.0, data.elevation(idx(i):idx(i+1)-1)/100.0, plotline=1)(1);
@@ -156,7 +259,7 @@ func reprocess_data(data, typ) {
 	array and finds the corresponding reprocessed point.
 	This will be tremendously slow for large data sets.
 */
-	extents = [data.east(min)/100.0-75, data.east(max)/100.0+75, data.north(min)/100.0-75, data.north(max)/100.0+75];
+	extents = [data.east(min)/100.0-75, data.east(max)/100.0+75, data.north(min)/100.0-175, data.north(max)/100.0+75];
 	q = gga_win_sel(0,llarr=extents,_batch=1);
 	if (!is_array(q)) {write, "No gga records found. GGA records not from correct dataset?"; return;}
 	if (typ == 0) {
@@ -209,4 +312,79 @@ func reprocess_fs_data(data) {
 	}
 	eaarl = eaarl(where(idx));
 	return eaarl;
+}
+
+
+func reprocess_bathy_data(data) {
+/* DOCUMENT reprocess_bathy_data(data)
+    This function reprocesses and returns the exact bathy input data array.
+
+   ***WARNING*** This function re-processes each raster in the input
+	data and then goes through each point in the input data array
+       and finds the corresponding reprocessed point.
+	This will be tremendously slow for large data sets.
+*/
+	data = data(sort(data.rn&0xffffff));
+	rnidx = unique(data.rn&0xffffff);
+	grow, rnidx, numberof(data);
+	eaarl = array(GEOALL, numberof(rnidx));
+	goodpts = [];
+	write, format="Reprocessing %i rasters...", numberof(rnidx)-1;
+	for (i=1;i<=numberof(rnidx)-1;i++) {
+		raster = data.rn(rnidx(i))&0xffffff;
+		write, format="Processing raster %i of %i for bathy\r", i, numberof(rnidx)-1;
+		bat = run_bath(start=raster, stop=raster+1);
+		fs = first_surface(start=raster, stop=raster+1, usecentroid=1, quiet=1);
+		depth = make_fs_bath(bat,fs);
+		cdepth_ptr = compute_depth(data_ptr=&depth);
+		depth = *cdepth_ptr(1);
+		thisrast = geoall_to_geo(depth);
+
+		write, format="Saving good points from raster %i...\n", i;
+		idx = array(int, numberof(thisrast));
+		thisdata = data(rnidx(i):rnidx(i+1)-1);
+		for (j=1;j<=numberof(thisdata);j++) {
+			test = where(thisrast.soe == thisdata.soe(j));
+			if (!is_array(test)) lance();
+			idx(test(1)) = 1;
+		}
+		thisrast = thisrast(where(idx));
+		grow, goodpts, thisrast;
+	}
+	return eaarl;
+}
+
+
+func reprocess_bathy_flightline(data) {
+	goodpts = [];
+	data = data(sort(data.rn&0xffffff));
+	rnidx = unique(data.rn&0xffffff);
+	grow, rnidx, numberof(data);
+	write, format="Reprocessing %i rasters...", numberof(rnidx)-1;
+
+	ras1 = data.rn(rnidx(1))&0xffffff;
+	ras2 = data.rn(rnidx(0))&0xffffff;
+	ras2++;
+	bat = run_bath(start=ras1, stop=ras2);
+	fs = first_surface(start=ras1, stop=ras2, usecentroid=1, quiet=1);
+	depth = make_fs_bath(bat,fs);
+	cdepth_ptr = compute_depth(data_ptr=&depth);
+	depth = *cdepth_ptr(1);
+	rasters = depth.rn(1,)&0xffffff;
+	
+	for (i=1;i<=numberof(rnidx)-1;i++) {
+		raster = data.rn(rnidx(i))&0xffffff
+		thisrast = geoall_to_geo(depth(where(rasters == raster)));
+		thisdata = data(rnidx(i):rnidx(i+1)-1); 
+		write, format="Saving good points from raster %i...\n", i;
+		idx = array(int, numberof(thisrast));
+		for (j=1;j<=numberof(thisdata);j++) {
+			test = where(thisrast.soe == thisdata.soe(j));
+			if (!is_array(test)) lance();
+			idx(test(1)) = 1;
+		}
+		thisrast = thisrast(where(idx));
+		grow, goodpts, thisrast;
+	}
+return goodpts;
 }

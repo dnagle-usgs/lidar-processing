@@ -276,9 +276,9 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
  } else {
      eaarl = eaarl(sort(eaarl.east)); // for first surface and bathy
  }
-     
+
  eaarl_orig = eaarl;
-    
+
  // define a bounding box
   bbox = array(float, 4);
  if (mode != 3) {
@@ -441,6 +441,11 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
  for (ai=1;ai<=tai;ai++) {
   selcount = 0;
   write, format="Iteration number %d...\n", ai;
+
+//-----Uncomment to enable reducing tw each step
+//  tw = tw - tw*((ai-1)/(2.0*tai-2.5));
+//  write, format="Using tw of %f\n", tw;
+
   if (ai > 1) {
     // again find all points that have been rejected in the above step
     // i.e. where tag_eaarl == 1
@@ -583,7 +588,6 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
            pques = pointer(ques);
            if ((*pques)(1) == 'd') done = 1; //done iterating for this loop
            if ((*pques)(1) == 'e') endit = 1; // ends interation mode
-    	   if ((*pques)(1) == 's') return;
         }
       }
     }

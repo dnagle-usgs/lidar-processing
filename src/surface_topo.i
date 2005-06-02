@@ -184,7 +184,7 @@ func ops_conf_not_loaded(junk) {
 
 
 
-func first_surface(start=, stop=, center=, delta=, north=, usecentroid=, use_highelv_echo=) {
+func first_surface(start=, stop=, center=, delta=, north=, usecentroid=, use_highelv_echo=, quiet=) {
 /* DOCUMENT first_surface(start=, stop=, center=, delta=, north= )
 
    Project the EAARL threshold trigger point to the surface. 
@@ -237,36 +237,36 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
 
 atime   = a.soe - soe_day_start;
 
-write, format="\n%cInterpolating: roll...", 0x20
+if (!quiet) write, format="\n%cInterpolating: roll...", 0x20
 roll    =  interp( tans.roll,    tans.somd, atime ) 
 
-write,format="%cpitch...",0x20
+if (!quiet) write,format="%cpitch...",0x20
 pitch   = interp( tans.pitch,   tans.somd, atime ) 
 
 if ( is_void( north ) ) {
- write,format="%cheading...", 0x20
+ if (!quiet) write,format="%cheading...", 0x20
  hy = interp( sin( tans.heading*deg2rad), tans.somd, atime );
  hx = interp( cos( tans.heading*deg2rad), tans.somd, atime );
  heading = atan( hy, hx)/deg2rad;
 } else {
- write,"interpolating North only..."
+ if (!quiet) write,"interpolating North only..."
  heading = interp( array( 0.0, dimsof(tans)(2) ), tans.somd, atime ) 
 
 }
 
-write,format="%caltitude...",0x20
+if (!quiet) write,format="%caltitude...",0x20
 palt  = interp( pnav.alt,   pnav.sod,  atime )
 
 if ( is_void( _utm ) ) {
-   write,"Converting from lat/lon to UTM..."
+   if (!quiet) write,"Converting from lat/lon to UTM..."
    _utm = fll2utm( pnav.lat, pnav.lon )
 } else {
   if ( dimsof(pnav)(2) != dimsof(pnav)(2) ) 
-   write,"_utm has changed, re-converting from lat/lon to UTM..."
+   if (!quiet) write,"_utm has changed, re-converting from lat/lon to UTM..."
    _utm = fll2utm( pnav.lat, pnav.lon )
 }
 
-write,format="%cnorthing/easting...\n", 0x20
+if (!quiet) write,format="%cnorthing/easting...\n", 0x20
 northing = interp( _utm(1,), pnav.sod, atime )
 easting  = interp( _utm(2,), pnav.sod, atime )
 
@@ -281,7 +281,7 @@ easting  = interp( _utm(2,), pnav.sod, atime )
   mirang = array(-22.5, 120);
   lasang = array(45.0, 120);
 
-write,"Projecting to the surface..."
+if (!quiet) write,"Projecting to the surface..."
  for ( i=1; i< sz; i += step) { 
    gx = easting(, i);
    gy = northing(, i);
@@ -310,7 +310,7 @@ write,"Projecting to the surface..."
   rrr(i).rn += (indgen(120)*2^24);
   rrr(i).soe = a(i).soe;
   if ( (i % 100 ) == 0 ) { 
-    write,format="%5d %8.1f %6.2f %6.2f %6.2f\n", 
+    if (!quiet) write,format="%5d %8.1f %6.2f %6.2f %6.2f\n", 
          i, (a(i).soe(60))%86400, palt(60,i), roll(60,i), pitch(60,i);
   }
  }

@@ -465,7 +465,7 @@ func linear_regression(x, y, m=, b=, plotline=) {
 		maxx = max(x);
 		miny = minx*m+b;
 		maxy = maxx*m+b;
-		pldj, minx, miny, maxx, maxy, color="cyan";
+		pldj, minx, miny, maxx, maxy, color="red", width=2;
 	}
 	return [m, b, rsq, rad];
 	end

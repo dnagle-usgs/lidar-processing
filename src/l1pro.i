@@ -26,6 +26,7 @@ require,  "manual_filter.i"
 require,  "ytriangulate.i"
 require,  "ircf.i"
 require,  "dataexplore.i"
+require,  "determine_bias.i"
 include,  "rcf.i"
 
 func winlimits( win1, win2 ) {

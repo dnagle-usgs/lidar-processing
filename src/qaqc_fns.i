@@ -499,7 +499,7 @@ func isolate_flightline(data, pt=, win=) {
    return [this_data.soe(idx(fl1)), this_data.soe(idx(fl2)-1)];
 }
 
-func mod_flightline(data, data_dir, soes=, pt=, win=, clipmax=, clipmin=, alsomerged=) {
+func mod_flightline(data, data_dir, soes=, pt=, win=, clipmax=, clipmin=, alsomerged=, reprocess=, mode=) {
    data = data(sort(data.soe));
 //Get SOE and index values for flightline to remove
    if (!is_array(soes)) soes = isolate_flightline(data, pt=pt, win=win);
@@ -572,6 +572,7 @@ func mod_flightline(data, data_dir, soes=, pt=, win=, clipmax=, clipmin=, alsome
 	bad_data = eaarl(badline);
 	if (clipmax) bad_data = bad_data(where( (bad_data.depth+bad_data.elevation) <= clipmax*100));
 	if (clipmin) bad_data = bad_data(where( (bad_data.depth+bad_data.elevation) >= clipmin*100));
+	if (repocess)bad_data = reprocess_bathy_flightline(bad_data); 
 	if (!is_array(bad_data)) {write, "No bad points in flightline... continueing"; continue;}
 	windold = window();
 	window, 3; fma;
@@ -591,7 +592,7 @@ func mod_flightline(data, data_dir, soes=, pt=, win=, clipmax=, clipmin=, alsome
 	   continue;
 	}
 	good_data = eaarl(l3);
-	if ((clipmax) || (clipmin)) {	
+	if ((clipmax) || (clipmin) || (reprocess)) {	
 		good_data = []
 		if (is_array(l1)) good_data = grow(good_data, eaarl(l1));
 		if (is_array(bad_data)) good_data = grow(good_data, bad_data);
@@ -606,8 +607,8 @@ func mod_flightline(data, data_dir, soes=, pt=, win=, clipmax=, clipmin=, alsome
 	if (!trust) plot_bathy, eaarl, win=2, ba=1, fs = 0, de = 0 , fint = 0, lint = 0, cmin=gelv(1), cmax=gelv(2), msize = 2.0, marker=1, skip=3;
 	limits, square=1;
 	limits;
-	if ((numberof(eaarl) == numberof(good_data)+numberof(bad_data)) || (clipmax) || (clipmin)) write, "OK to remove this line from datatile? (y for yes, n for no, q to quit program)";
-	if ((numberof(eaarl) != numberof(good_data)+numberof(bad_data)) && (!clipmax) && (!clipmin)) lance();
+	if ((numberof(eaarl) == numberof(good_data)+numberof(bad_data)) || (clipmax) || (clipmin)) write, "OK to modify this flightline? (y for yes, n for no, q to quit program)";
+	if ((numberof(eaarl) != numberof(good_data)+numberof(bad_data)) && (!clipmax) && (!clipmin) && (!reprocess)) lance();
 	swrite(format="%d points removed...", numberof(eaarl) - numberof(good_data));
 	rd = "blah";
         if (!trust) read(rd);
