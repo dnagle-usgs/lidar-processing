@@ -11,18 +11,20 @@ local set_i;
 		set_difference
 		set_symmetric_difference
 		set_cartesian_product
+		set_remove_dupicates
 	
 	Note that a set's complement can be obtained with set_difference
 	(see set_difference).
 
 	All set functions assume that the arrays passed are one-dimensional
-	and have no repeated elements. The returned arrays will not have
-	any guaranteed ordering for the elements. Empty sets are permissible
-	as [].
+	and have no repeated elements (except set_remove_duplicates, which
+	removes the repeated elements). The returned arrays will not have
+	any guaranteed ordering for the elements, except where noted. Empty
+	sets are permissible as [].
 */
 
-func set_intersection(A, B) {
-/* DOCUMENT set_intersection(A, B)
+func set_intersection(A, B, idx=) {
+/* DOCUMENT set_intersection(A, B, idx=)
 
 	Returns the intersection of the sets represented by A and B.
 
@@ -31,24 +33,30 @@ func set_intersection(A, B) {
 
 	The elements of set_intersection(a,b) and set_intersection(b,a)
 	will be the same, but the arrays will not be ordered the same.
+
+	Options:
+
+		idx= Set to 1 and the index of the intersection set into A will
+			be returned instead of the elements.
 */
 	if(! numberof(A) || ! numberof(B))
 		return [];
-
 	AA = array(A, numberof(B));
 	BB = array(B, numberof(A));
 	BB = transpose(BB);
 	matches = AA == BB;
 	colmatches = matches(,sum);
-	idx = where(colmatches);
-	if(numberof(idx))
-		return A(idx);
+	index = where(colmatches);
+	if(idx)
+		return index;
+	if(numberof(index))
+		return A(index);
 	else
 		return [];
 }
 
-func set_difference(A, B) {
-/* DOCUMENT set_difference(A, B)
+func set_difference(A, B, idx=) {
+/* DOCUMENT set_difference(A, B, idx=)
 
 	Returns the difference of the sets represented by A and B.
 	
@@ -60,18 +68,24 @@ func set_difference(A, B) {
 
 	To obtain a set S's complement when S is a subset of X,
 	use set_difference(X,S).
+
+	Options:
+
+		idx= Set to 1 and the index of the difference set into A will
+			be returned instead of the elements.
 */
 	if(! numberof(A) || ! numberof(B))
 		return A;
-
 	AA = array(A, numberof(B));
 	BB = array(B, numberof(A));
 	BB = transpose(BB);
 	matches = AA == BB;
 	colmatches = matches(,sum);
-	idx = where(!colmatches);
-	if(numberof(idx))
-		return A(idx);
+	index = where(!colmatches);
+	if(idx)
+		return index;
+	if(numberof(index))
+		return A(index);
 	else
 		return [];
 }
@@ -144,8 +158,27 @@ func set_cartesian_product(A, B) {
 	      cp(,2) is the values from b
 			cp(i,) is the ith ordered pair [xi,yi]
 */
+	if(! numberof(A) || ! numberof(B))
+		return [];
 	C = array(A(1), numberof(A)*numberof(B), 2);
 	C(,1) = transpose(array(A, numberof(B)))(*);
 	C(,2) = array(B, numberof(A))(*);
 	return C;
 }
+
+func set_remove_duplicates(A) {
+/* DOCUMENT set_remove_duplicates(A)
+
+	Returns the set A with its duplicate elements removed. The
+	returned list will also be sorted.
+*/
+	if(! numberof(A))
+		return [];
+	sorted = A(sort(A));
+	a = sorted(:-1);
+	b = sorted(2:);
+	remove = where(a == b);
+	keep = set_difference(indgen(numberof(sorted)), remove);
+	return sorted(keep);
+}
+
