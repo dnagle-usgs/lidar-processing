@@ -1,0 +1,368 @@
+#!/usr/bin/perl
+
+use Getopt::Long;
+GetOptions(
+	"rootdir:s" => \$rootdir,
+	"esidelength|eslen|el:i" => \$esidelength,
+	"nsidelength|nslen|nl:i" => \$nsidelength,
+	"starteast|spixe|pe:i" => \$starteast,
+	"startnorth|spixn|pn:i" => \$startnorth,
+	"starteasting|sutme|ue:i" => \$starteasting,
+	"startnorthing|sutmn|un:i" => \$startnorthing,
+	"bigheight|bh:i" => \$bigheight,
+	"desiredbigheight|dbh:i" => \$desiredbigheight,
+	"convert|c" => \$cbool,
+	"scale|s" => \$scale,
+	"title:s" => \$title,
+	"plotheight|ph:i" => \$plotheight
+);
+if($title) { $title .= " @ "; }
+
+# About GetOptions:
+#
+# See: http://www.perl.com/doc/manual/html/lib/Getopt/Long.html
+#
+# Suffixes to command options:
+#
+#   :s or =s - expects string
+#   :i or =i - expects integer
+#   :f or =f - expects float
+#   no ending - boolean, no arg
+#   ! - boolean but can be negated (--foo is 1 but --nofoo is 0), no arg
+#   + - no arg, each instance increments the variable
+#
+#   : means optional
+#   = means required
+#
+#   | means alias
+#
+# Thus,      "starteast|spixe|pe:i" => \$starteast
+# and,       ./makeweb --pe 500
+# would set  $starteast=500
+#
+# All options should be prefixed by --, except for "s" and "c"
+# which may be prefixed by - and grouped, as in -sc
+#    ./makeweb --s --c
+# or ./makeweb -s -c
+# or ./makeweb -sc
+# BUT NOT ./makeweb -pe 500 <== WILL NOT WORK
+#
+# Values may be specified as
+#    ./makeweb --pe=500
+# or ./makeweb --pe 500
+#
+# Strings may be in quotes or without quotes
+#    ./makeweb --title Hello
+# or ./makeweb --title "Hello"
+# or ./makeweb --title "Hello world!"
+# You MUST put quotes if your strings have spaces
+####Change this according to your file system####
+$rootdir = "/home/lmosher/Webpages/TB04/" if(!$rootdir);  
+###############################################
+
+#$cbool = 0;
+#if($ARGV[0] eq "-c"){$cbool = 1;}
+#if($ARGV[0] eq "-s"){$scale = 1;}
+#if($ARGV[1] eq "-c"){$cbool = 1;}
+#if($ARGV[1] eq "-s"){$scale = 1;}
+chdir "$rootdir" or die "cant get to web dir $rootdir: $!";
+$dir = "$rootdir";
+opendir DH, $dir or die "can't open dir: $!";
+foreach $file (readdir DH)
+         {
+	  if ($file ne "." and $file ne ".."){
+	  if (-d $file){
+	  push @indextiles, $file;
+	  }
+		}
+          }
+$ni = @indextiles;
+
+####These must be changed by the user to fit the bigmap of the area##
+$esidelength = 72	if(!$esidelength);		#Number of horizontal pixels of an index tile
+$nsidelength = 72	if(!$nsidelength);		#Number of vertical pixels of an index tile
+$starteast =  192	if(!$starteast);		#Pixel of eastmost index tile
+$startnorth =  9	if(!$startnorth);		#Pixel of northmost index tile
+$starteasting= 310000	if(!$starteasting);		#UTM easting of eastmost index tile
+$startnorthing= 3110000	if(!$startnorthing);		#UTM northing of northmost index tile
+$bigheight = 550	if(!$bigheight); 		#This is the number of vertical pixels in the bigmap.
+$desiredbigheight = 826	if(!$desiredbigheight);		#Desired number of vertical pixels in bigmap. Will scale other constants if using option -s
+if($scale==1){ #This scales above constants to the desired big height if using -s option
+	$scalefactor=$desiredbigheight/$bigheight;
+	print "$scalefactor";
+	$esidelength = int($esidelength*$scalefactor);
+	$nsidelength = int($nsidelength*$scalefactor);
+	$starteast =  int($starteast*$scalefactor);
+	$startnorth =  int($startnorth*$scalefactor);
+	$bigheight = $desiredbigheight;
+}
+###############################################################
+#These shouldn't need to change except for plotheight (to make data tile images bigger)#
+$plotheight = 800 if(!$plotheight); 	#Height of data tiles on web page in pixels
+$istarteast = 155;  			#Pixel of the eastmost data tile
+$istartnorth= 33;   			#Pixel of the northmost data tile
+$iside = 101;       			#Length of data tile side in pixels
+$iheight = 595; 			#Number of vertical pixels in the index image (after flipping)
+$desirediheight = 800; 			#Desired number of vertical pixels in index tile. Will scale all other factors if using option -s
+if ($scale==1){
+	$iscalefactor=$desirediheight/$iheight;
+	$istarteast = int($istarteast*$iscalefactor);
+	$istartnorth = int($istartnorth*$iscalefactor);
+	$iside = int($iside*$iscalefactor);
+	$iheight = $desirediheight;
+}
+################################################################
+
+
+foreach $tile (@indextiles){
+	$easting = (substr($tile, 0, 3))*1000;
+	$northing =(substr($tile, 3, 4))*1000;
+	push(@easting, $easting);
+	push(@northing, $northing);
+        $esquares = $starteast + ((($easting - $starteasting)/10000)*$esidelength);
+	$nsquares = $startnorth + ((($startnorthing - $northing)/10000)*$nsidelength);
+        $onsquares = $nsquares+$nsidelength;
+	$oesquares = $esquares+$esidelength;
+	$bound = "$esquares, $nsquares, $oesquares, $onsquares";
+	print "Easting $easting Northing $northing stored as $bound \n";
+	$linknor = $northing/ 1000;
+	$linkeas = $easting/  1000;
+	#print "hey $linkeas $linknor \n";
+	$link = "$linkeas$linknor/$linkeas$linknor.html";	
+        $link = "<AREA HREF=\"$link\" ALT=\"indxtile\" SHAPE=RECT COORDS=\"$bound\">";
+	push(@mapsegs, $link);
+}
+
+open LA, ">$rootdir/front.html";
+select LA;
+
+&makeheader;
+
+#Creating BigMap##
+
+print "<MAP NAME=\"KEYSMAP\"> \n";
+foreach $mapseg (@mapsegs){
+	print "$mapseg \n";
+}
+print "</MAP> \n";
+
+print <<"EOF";
+<div id="content">
+<img src="bigpic.png" alt = "map of eaarl coverage" height = $bigheight ISMAP usemap="#KEYSMAP">
+<P>
+</div>
+</body>
+</html>
+
+
+EOF
+select STDOUT;
+close LA;
+
+
+#Creating Dot Plot Tile Pages###
+for($i=0; $i<$ni; $i++){
+	$linknor = $northing[$i] /1000;
+	$linkeas = $easting[$i] / 1000;
+	$indexdir = "$rootdir/$linkeas$linknor/";
+	#mkdir "$indexdir", 0755 or warn "cannot make dir: $!";
+	$itilestring = "$linkeas$linknor.html";
+	$filestring = "$indexdir$itilestring";
+	chdir $dir.$indextiles[$i];	
+	#print "file: ", $dir.$indextiles[$i]," \n";
+	opendir RD, $dir.$indextiles[$i] or die "can't find $indexdir";
+	
+	$ipsbool = 1;
+	foreach $file (readdir RD){
+            if ($file ne "." and $file ne ".." and $file ne ""){
+            if (-d $file){
+               push @datatiles, $file;
+            }
+          $ending = substr($file, -3, 3);
+	  if($ending eq "jpg"){$ipsbool =0;}
+ 
+	    }
+        }
+	shift @datatiles;
+	$nd = @datatiles;
+
+        #convert .ps to .png##
+        $psfile =  "$dir$indextiles[$i]/$linkeas"."i$linknor.ps";
+        $jpgfile = "$dir$indextiles[$i]/$linkeas"."i$linknor.png";
+        $reljpgfile = "$linkeas"."i$linknor.png";
+	if($cbool==1 && $ipsbool == 1){
+	print " convert -quality 9 -rotate 90 $psfile $jpgfile \n";
+	system "convert -quality 9 -rotate 90 $psfile $jpgfile";
+	}
+	
+	open INDEXFILE, ">$filestring";
+        select INDEXFILE;
+
+	&makeheader;
+        print "<MAP NAME=\"indexmap\"> \n";	
+        
+	#print "$indextiles[$i]";
+
+
+	foreach $tile (@datatiles){
+		
+		$datdir = "$dir$indextiles[$i]"."/"."$tile"."/";
+		select STDOUT;
+	
+		select INDEXFILE;
+		chdir $datadir;
+		opendir RDD, $datdir or die "cant find $datdir";
+		
+		$dpsbool =1;
+		foreach $file (readdir RDD){
+		    $ending = substr($file, -3, 3);
+		    if($ending eq "jpg"){$dpsbool =0;}
+		}
+
+
+		$dataeast = substr($tile, 0, 3)*1000;
+		$datanorth = substr($tile, 3, 4)*1000; 
+       		select STDOUT;
+		#print "dat is $dataeast $datanorth \n";
+
+		push @datanorthing, $datanorth;
+		push @dataeasting, $dataeast;	
+		$epxls = $istarteast + ((($dataeast - $easting[$i])/2000)*$iside);
+		$npxls = $istartnorth + ((($northing[$i] - $datanorth)/2000)*$iside);
+		$oepxls = $epxls + $iside;
+		$onpxls = $npxls + $iside;
+		$bounds = "$epxls, $npxls, $oepxls, $onpxls";    
+		$linkeast = $dataeast /1000;
+		$linknort = $datanorth/1000;
+		#select STDOUT;
+		select INDEXFILE;
+		$link = "$linkeast$linknort/$linkeast$linknort".".html";
+		$flink = "$indexdir/$linkeast$linknort/$linkeast$linknort".".html";
+		#mkdir "$indexdir/$linkeast$linknort/" , 0755 or warn "cannot make data dir: $!";
+		if($linkeast != 00) {$map= "<AREA HREF= \"$link\" ALT=\"datatile\" SHAPE=RECT COORDS=\"$bounds\">";
+	        print "$map \n";}
+		
+		open DATAFILE, ">$flink";
+		select DATAFILE; 
+		
+		&makeheader;
+		select STDOUT;
+		$dataimg = "$linkeast"."d$linknort";
+	        $dataps = $dataimg.".ps";
+		$datajpg = $dataimg.".png";
+		if ($linkeast !=00 && $cbool == 1 && $dpsbool ==1){
+			$clnk = "$indexdir/$linkeast$linknort/";	
+			system "echo $clnk$dataps $clnk$datajpg";
+			system "convert -rotate 90 $clnk$dataps $clnk$datajpg";
+		}
+		select DATAFILE;
+		$dataimg = $datajpg;	
+		$dataimgs = "<img src=\"$dataimg\" height=$plotheight>"; 
+		print <<"EOF";
+	        <div id ="content">
+		<P>
+		<br><p>
+        	$dataimgs
+		<P>
+       		</div>
+		</body>
+		</html>
+EOF
+		close DATAFILE;	
+                select INDEXFILE;
+		push @mapblock, $link;	
+	
+	} 
+	
+$imgstring = "<img src=\"$reljpgfile\"  height=$iheight ISMAP usemap=\"#indexmap\">";
+print <<"EOF";
+</map>
+<div id ="content">
+$imgstring
+<P>
+</div>
+</body>
+</html>
+EOF
+
+	close INDEXFILE; 
+	select STDOUT;
+	@datatiles =  undef;
+
+
+}
+
+sub makeheader {
+
+
+print <<"EOF";
+
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<html>
+<head>
+        <title>{$title}USGS Center for Coastal and Watershed Studies</title>
+
+<style type="text/css">
+<!--
+
+#content {position: absolute; top: 1px; left: 30px; right: 270px;
+   color: White; background: Black;
+   font: 16px Arial, sans-serif; padding: 10px; text-align: justify;}
+
+#bigcontent {position: absolute; top: 1px; left: 30px; right: 270px;
+   color: White; background: Black;
+   font: 30px Arial, sans-serif; padding: 10px; text-align: justify;}
+
+#anim {
+            position: absolute;
+                left:258px;
+                top:400px;
+                width:30px;
+                height:30px;
+                border:0px;
+            }
+
+
+h2 {
+       font-size:18px;
+           font-family: garamond;
+           padding-top:1px;
+           color: #006699;
+           text-decoration: none;
+           text-align: center;
+           }
+
+
+H4      {
+        color: White;
+        font: 20px arial, sans-serif;;
+        padding: 0px;
+        text-align: justify;}
+</style>
+
+<style type="text/css">
+  a:link {color: white; text-decoration: none}
+  a:visited {color: #00ffcc; text-decoration: none}
+  a:hover {color: Blue; font-size: 110%; text-decoration: none }
+</style>
+
+</head>
+<body bgcolor="black" leftmargin="0" topmargin="0" marginheight="0">
+
+
+
+EOF
+
+##<div id="usgslogo"><img height=80 width=600 border=0 src="/home/lmosher/img/usgs1.gif"></div>
+
+# #usgslogo {
+#            position: absolute;
+#                left:30px;
+#                top:10px;
+#                width:30px;
+#                height:30px;
+#                border:0px;
+#            }
+}
