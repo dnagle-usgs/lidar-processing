@@ -1,4 +1,3 @@
-	require, "picmaker.i"
 	require, "dir.i"
 	require, "bathy_filter.i"
 
