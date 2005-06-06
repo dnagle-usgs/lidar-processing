@@ -199,8 +199,10 @@ Original: Lance Mosher
 	        idx_nmax = 0;
         	sread(strpart(dir_list(i), (nn+3):(nn+8)), format="%d", idx_emin);
 	        sread(strpart(dir_list(i), (nn+11):(nn+17)), format="%d", idx_nmax);
-		if (!onlymerged) searchstr = "*_"+ss+".pbd"; 	//Excludes merged
-		if (onlymerged)  searchstr = "*_"+ss+"_*merged*.pbd";
+		searchstr = "*_"+ss+".pbd"; 	//Excludes filtered
+		if (rcfmode == 1)  searchstr = "*_"+ss+"*_rcf.pbd";
+		if (rcfmode == 2)  searchstr = "*_"+ss+"*_ircf.pbd";
+
 
 //-----If file already exists continue loop
 		idxtilename = swrite(format="%s%di%d.ps", newdiri, idx_emin/1000, idx_nmax/1000)
@@ -215,6 +217,7 @@ Original: Lance Mosher
 //-----Load, plot and save data in each index tile
 		if (iexist != 1) {
 			depth_all = merge_data_pbds(dir_list(i), skip = 10, searchstring=searchstr);
+			if (is_void(depth_all)) continue;
 			depth_all = depth_all(data_box(depth_all.east/100., depth_all.north/100., idx_emin, idx_emin + 10000, idx_nmax-10000, idx_nmax)); //Crop data to exact size of index tile
 			if (!is_array(depth_all)) {
 				write, "No good data in selected region..."; 
@@ -223,19 +226,22 @@ Original: Lance Mosher
 		
 			winkill,5;window,5,dpi=100,style="landscape11x85.gs",width=1100,height=850;		//Prepare window
 			if ((mode == 1) && (!skipthis)) {
-			  	if (getcolor) elvs = stdev_min_max(depth_all.elevation/100.);
+				elv = depth_all.elevation(where((depth_all.elevation >= -50000) & (depth_all.elevation <=50000)));
+				if (getcolor) elvs = stdev_min_max(elv/100., N_factor=1.5);
 				display_veg, depth_all, win=5, cmin=elvs(1), cmax = elvs(2), size = 1.0, edt=1, felv = 1, lelv=0, fint=0, lint=0, cht = 0, marker=1, skip=1;
 		                pltitle, tle + " first surface";
        				xytitles, "UTM easting (M)", "UTM northing (M)";
 			 }
        			 if (mode == 2) {
-				if (getcolor) elvs = stdev_min_max((depth_all.elevation + depth_all.depth)/100.);
+				elv = depth_all(where((depth_all.elevation >= -50000) & (depth_all.elevation <=50000)));
+				if (getcolor) elvs = stdev_min_max((elv.elevation + elv.depth)/100., N_factor=1.5);
 				plot_bathy, depth_all, win=5, ba=1, fs = 0, de = 0 , fint = 0, lint = 0, cmin=elvs(1), cmax=elvs(2), msize = 1.0, marker=1, skip=1;
 				pltitle, tle + " bathy";
 				xytitles, "UTM easting (M)", "UTM northing (M)";
 			}
 			if (mode == 3) {
-				if (getcolor) elvs = stdev_min_max(depth_all.lelv/100.);
+				lelv = depth_all.lelv(where((depth_all.elevation >= -50000) & (depth_all.elevation <=50000)));
+				if (getcolor) elvs = stdev_min_max(lelv/100., N_factor=1.5);
 				display_veg, depth_all, win=5, cmin=elvs(1), cmax=elvs(2), size = 1.0, edt=1, felv = 0, lelv=1, fint=0, lint=0, cht = 0, marker=1, skip=1;
 				pltitle, tle + " bare earth";
 				xytitles, "UTM easting (M)", "UTM northing (M)";
@@ -312,28 +318,30 @@ Original: Lance Mosher
 			winkill,4;window,4,dpi=100,style="landscape11x85.gs", width=1100, height=850;		//Set up the window
 			if(mode==1){fixmode = 3;}else{fixmode=mode;}	
 
-			if (rcfmode == 1) search_str = "_rcf";
-			if (rcfmode == 2) search_str = "_ircf";
+			if (rcfmode == 1) search_str = "*_rcf.pbd";
+			if (rcfmode == 2) search_str = "*_ircf.pbd";
 			data_sel = sel_rgn_from_datatiles(rgn=rgn, data_dir=data_dir,mode=fixmode, win=5, search_str=search_str);
-			if (!is_array(data_sel)) {write, "bad \n";  continue;}
+			if (!is_array(data_sel)) {write, "bad \n"; continue;}
 			if ((mode == 1) && (!skipthis)) {
-				if (getcolor) elvs=stdev_min_max(data_sel.elevation/100.);
-       		 	        display_veg, data_sel, win=4, cmin=elvs(1), cmax=elvs(2), size=1.0, edt=1, felv=1, lelv=0, fint=0, lint=0, cht = 0, marker=1,
-				skip=1;
+				elv = data_sel.elevation(where((data_sel.elevation >= -50000) & (data_sel.elevation <=50000)));
+				if (getcolor) elvs=stdev_min_max(elv/100., N_factor=1.5);
+       		 	        display_veg, data_sel, win=4, cmin=elvs(1), cmax=elvs(2), size=1.0, edt=1, felv=1, lelv=0, fint=0, lint=0, cht = 0, marker=1,skip=1;
 				pltitle, swrite(format="t!_e%6.0f!_n%7.0f first surface", float(emin), float(nmax));
 			        xytitles, "UTM easting (M)", "UTM northing (M)";
 			}
 			if (mode == 2) {
-				if (getcolor) elvs=stdev_min_max((data_sel.elevation+data_sel.depth)/100.);
+				elv = data_sel(where((data_sel.elevation >= -50000) & (data_sel.elevation <=50000)));
+				if (getcolor) elvs=stdev_min_max((elv.elevation+elv.depth)/100., N_facotor=1.5);
 				plot_bathy, data_sel, win=4, ba=1, fs = 0, de = 0 , fint = 0, lint = 0, cmin=elvs(1), cmax=elvs(2), msize = 1.0, marker=1, skip=1;
 				pltitle, swrite(format="t!_e%6.0f!_n%7.0f bathy", float(emin), float(nmax));
 				xytitles, "UTM easting (M)", "UTM northing (M)";
 			}
        		 	if (mode == 3) {
-       	 			if (getcolor) elvs=stdev_min_max(data_sel.lelv/100.);
-					display_veg, data_sel, win=4, cmin=elvs(1), cmax=elvs(2), size = 1.0, edt=1, felv = 0, lelv=1, fint=0, lint=0, cht = 0,marker=1, skip=1;
-					pltitle, swrite(format="t!_e%6.0f!_n%7.0f bare earth", float(emin), float(nmax));
-					xytitles, "UTM easting (M)", "UTM northing (M)";
+				lelv = data_sel.lelv(where((data_sel.elevation >= -50000) & (data_sel.elevation <=50000)));
+       	 			if (getcolor) elvs=stdev_min_max(lelv/100., N_factor=1.5);
+				display_veg, data_sel, win=4, cmin=elvs(1), cmax=elvs(2), size = 1.0, edt=1, felv = 0, lelv=1, fint=0, lint=0, cht = 0,marker=1, skip=1;
+				pltitle, swrite(format="t!_e%6.0f!_n%7.0f bare earth", float(emin), float(nmax));
+				xytitles, "UTM easting (M)", "UTM northing (M)";
 			}
 			colorbar, elvs(1), elvs(2), landscape=1, datum = dattag, units="M";
 			limits, square=1;
