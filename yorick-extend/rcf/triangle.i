@@ -1,9 +1,4 @@
 /*
-  You must download the triangle library from:
-  https://www.cs.cmu.edu/~quake/triangle.com
-  Then put triangle.c and triangle.h in this directory.
-*/
-/*
 
   Simple example of a C compiled function callable from Yorick.
 
@@ -26,6 +21,7 @@
   Try including make.i and typing "help, make" for more information.
  */
 
+if(!is_void(plug_in)) plug_in, "rcf";
 /* MAKE-INSTRUCTIONS
 SRCS = \
         triangle.c \
@@ -43,7 +39,7 @@ SRCS = \
 
 
 func ytriangle(nsites1, points) {
-/*DOCUMENT ytriangle(nsites1, points)
+/* DOCUMENT ytriangle(nsites1, points)
 This function performs Delaunay Triangulation using the 'triangle' function
 in C.  
 

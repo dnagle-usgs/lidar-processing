@@ -21,6 +21,7 @@
   Try including make.i and typing "help, make" for more information.
  */
 
+if(!is_void(plug_in)) plug_in, "rcf";
 /* MAKE-INSTRUCTIONS
 SRCS = triangulate.c
 */

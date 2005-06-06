@@ -22,6 +22,11 @@ require, "dmars.i"
 require, "batch_process.i"
 require, "transect.i"
 require, "large_window.i"
+if(!is_void(plug_in)) {
+	require, "triangle.i";
+	require, "rcf_triangulate.i";
+	require, "rcf_utils.i";
+}
 
 /* DOCUMENT CBAR
  The color bar values from l1pro.ytk

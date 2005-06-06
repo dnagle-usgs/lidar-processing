@@ -15,6 +15,8 @@ The function frcf can be called from the interpreter.
 
 */
 
+if(!is_void(plug_in)) plug_in, "rcf";
+
 /* MAKE-INSTRUCTIONS
 SRCS = rcf.c
 */
