@@ -1,5 +1,5 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent: */
-/* $Id$ */
+write, "$Id$"
 
 local general_i;
 /* DOCUMENT general.i
@@ -12,6 +12,10 @@ local general_i;
 		perpendicular_intercept
 		find_nearest_point
 		find_points_in_radius
+	
+	Functions for interpolations:
+
+		interp_periodic
 	
 	Functions to convert strings to numbers:
 
@@ -256,6 +260,134 @@ func find_points_in_radius(x, y, xs, ys, radius=, verbose=) {
 	point_indx = where(dist <= radius);
 
 	return point_indx;
+}
+
+func interp_periodic(y, x, xp, ps, pe) {
+/* DOCUMENT interp_periodic(y, x, xp, ps, pe)
+
+	Performs a piece-wise linear interpolation with periodic (cyclic) values.
+	This is designed to be similar to interp. The difference is it handles
+	situations where the values of xp are periodic such as with degrees
+	and radians.
+
+	Parameters:
+
+		y: The known values around which to interpolate.
+
+		x: The reference values corresponding to the known values.
+
+		xp: The reference values for which you want to interpolate values.
+
+		ps: The start of the period.
+
+		pe: The end of the period.
+	
+	Returns:
+
+		yp, which is the interpolated values.
+	
+	Examples:
+
+		Suppose you're working in degrees, which range from 0 to 360. You
+		have known values of x=[1,2,3,4,5] and y=[300,320,350,10,30].
+		You want the values of yp for xp=[2.2,3.6,4.1].
+
+			yp = interp_periodic(y, x, xp, 0, 360);
+
+		Suppose you're working in radians, which range from -pi to pi.
+		You have known values of x=[1,2,3,4,5] and y=[-2,-3,3,2,1.5].
+		You want the values of yp for xp=[2.2,3.6,4.1].
+		
+			yp = interp_periodic(y, x, xp, -pi, pi);
+
+	See also: interp
+*/
+	pl = pe - ps;
+	ph = pl * 0.5;
+
+	yd = array(0.0, numberof(y));
+	yd(:-1) = abs(y(dif));
+
+	diff = x(-:1:numberof(xp),) - xp(,-:1:numberof(x));
+	gt = diff > 0;
+	eq = diff == 0;
+
+	too_lo = where(gt(,sum) == numberof(x));
+	too_hi = where(gt(,sum) == 0);
+
+	gtd = gt(,dif);
+
+	wgtd = where(gtd);
+	weq = where(eq);
+
+	i = indgen(numberof(xp))(,-:1:numberof(x));
+	v = indgen(numberof(x))(-:1:numberof(xp),);
+
+	gtr = array(0.0, numberof(xp));
+	eqr = gtr;
+	
+	if(numberof(wgtd))
+		gtr(i(wgtd)) = v(wgtd);
+	if(numberof(weq))
+		eqr(i(weq)) = v(weq);
+
+	idx_lo = array(0, numberof(xp));
+	idx_hi = idx_lo;
+	val_lo = array(0.0, numberof(xp));
+	val_hi = val_lo;
+	ref_lo = ref_hi = val_lo;
+	yd_lo = val_lo;
+
+	if(numberof(where(eqr))) {
+		idx_lo(where(eqr)) = eqr(where(eqr));
+		idx_hi(where(eqr)) = eqr(where(eqr));
+	}
+
+	if(numberof(where(! idx_lo)))
+		idx_lo(where(! idx_lo)) = gtr(where(! idx_lo));
+	if(numberof(where(! idx_hi)))
+		idx_hi(where(! idx_hi)) = gtr(where(! idx_hi)) + 1;
+	if(numberof(where(idx_hi == 1)))
+		idx_hi(where(idx_hi == 1)) = 0;
+
+	wl = where(idx_lo);
+	wh = where(idx_hi);
+
+	if(numberof(wl)) {
+		ref_lo(wl) =  x(idx_lo(wl));
+		val_lo(wl) =  y(idx_lo(wl));
+		yd_lo(wl)  = yd(idx_lo(wl));
+	}
+	if(numberof(wh)) {
+		ref_hi(wh) = x(idx_hi(wh));
+		val_hi(wh) = y(idx_hi(wh));
+	}
+
+	yp = array(0.0, numberof(xp));
+	we = where(idx_lo > 0 & ref_hi == ref_lo);
+	wd_bn = where(idx_lo > 0 & ref_hi != ref_lo & yd_lo <= ph);
+	wd_by_al = where(idx_lo > 0 & ref_hi != ref_lo & yd_lo > ph & val_lo < val_hi);
+	wd_by_ah = where(idx_lo > 0 & ref_hi != ref_lo & yd_lo > ph & val_lo > val_hi);
+	wd = where(idx_lo > 0 & ref_hi != ref_lo);
+	if(numberof(we))
+		yp(we) = val_lo(we);
+	if(numberof(wd_bn))
+		yp(wd_bn) = 1.0 * (xp(wd_bn) - ref_lo(wd_bn))/(ref_hi(wd_bn) - ref_lo(wd_bn)) * val_hi(wd_bn) +
+					  1.0 * (ref_hi(wd_bn) - xp(wd_bn))/(ref_hi(wd_bn) - ref_lo(wd_bn)) * val_lo(wd_bn);
+	if(numberof(wd_by_al))
+		yp(wd_by_al) = (( 1.0 * (xp(wd_by_al) - ref_lo(wd_by_al))/(ref_hi(wd_by_al) - ref_lo(wd_by_al)) * val_hi(wd_by_al) +
+						     1.0 * (ref_hi(wd_by_al) - xp(wd_by_al))/(ref_hi(wd_by_al) - ref_lo(wd_by_al)) * (val_lo(wd_by_al) + pl)
+						   ) - ps ) % pl + ps;
+	if(numberof(wd_by_ah))
+		yp(wd_by_ah) = (( 1.0 * (xp(wd_by_ah) - ref_lo(wd_by_ah))/(ref_hi(wd_by_ah) - ref_lo(wd_by_ah)) * (val_hi(wd_by_ah) + pl) +
+						     1.0 * (ref_hi(wd_by_ah) - xp(wd_by_ah))/(ref_hi(wd_by_ah) - ref_lo(wd_by_ah)) * val_lo(wd_by_ah)
+							) - ps ) % pl + ps;
+	if(numberof(too_lo))
+		yp(too_lo) = y(1);
+	if(numberof(too_hi))
+		yp(too_hi) = y(0);
+	
+	return yp;
 }
 
 func atoi(str) {

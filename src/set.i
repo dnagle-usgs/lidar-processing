@@ -41,12 +41,7 @@ func set_intersection(A, B, idx=) {
 */
 	if(! numberof(A) || ! numberof(B))
 		return [];
-	AA = array(A, numberof(B));
-	BB = array(B, numberof(A));
-	BB = transpose(BB);
-	matches = AA == BB;
-	colmatches = matches(,sum);
-	index = where(colmatches);
+	index = where((A(,-:1:numberof(B)) == B(-:1:numberof(A),))(,sum));
 	if(idx)
 		return index;
 	if(numberof(index))
@@ -76,12 +71,7 @@ func set_difference(A, B, idx=) {
 */
 	if(! numberof(A) || ! numberof(B))
 		return A;
-	AA = array(A, numberof(B));
-	BB = array(B, numberof(A));
-	BB = transpose(BB);
-	matches = AA == BB;
-	colmatches = matches(,sum);
-	index = where(!colmatches);
+	index = where(!((A(,-:1:numberof(B)) == B(-:1:numberof(A),))(,sum)));
 	if(idx)
 		return index;
 	if(numberof(index))
@@ -161,8 +151,8 @@ func set_cartesian_product(A, B) {
 	if(! numberof(A) || ! numberof(B))
 		return [];
 	C = array(A(1), numberof(A)*numberof(B), 2);
-	C(,1) = transpose(array(A, numberof(B)))(*);
-	C(,2) = array(B, numberof(A))(*);
+	C(,1) = A(-:1:numberof(B),)(*);
+	C(,2) = B(,-:1:numberof(A))(*);
 	return C;
 }
 
