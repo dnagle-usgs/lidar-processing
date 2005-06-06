@@ -41,9 +41,7 @@ proc cir_exists { } {
 	return [expr {$cir_id != -1}]
 }
 
-#
 # Test if a path exists, and pop up warning if not.
-#
 proc path_exists { path } {
 	if { [ file isdirectory $path ]  == 0 } {
 		tk_messageBox \
@@ -78,30 +76,17 @@ proc send_sod_to_sf { somd } {
   }
 }
 
-#proc send_tans_to_sf {somd p r h} {
-#   catch {
-#    send_sf set pitch $p
-#    send_sf set roll $r
-#    send_sf set head $h
-#    send_sf gotoImage
-#   }
-#}
-
 proc depth_profile { data_file } {
-	exp_send "depth_profile, \"$data_file\"\r"
+	exp_send "depth_profile, \"$data_file\"\n"
 }
 
 proc plot_waypoints_file { fname } {
-	exp_send "plot_waypoints_file, \"$fname\"\r"
+	exp_send "plot_waypoints_file, \"$fname\"\n"
 }
 
-proc adapt_process { imgdir hypdir base {datestr ""} } {
-	exp_send "require, \"boat.i\"\r"
-	if { [string equal $datestr ""] } {
-		exp_send "boat_process_data, \"$imgdir\", \"$hypdir\", \"$base\", adaptprog=1\r"
-	} else {
-		exp_send "boat_process, \"$imgdir\", \"$hypdir\", \"$base\", \"$datestr\", adaptprog=1\r"
-	}
+proc adapt_process { imgdir hypdir ofname gps_src } {
+	exp_send "require, \"adf.i\"\n"
+	exp_send "adf_generate, \"$imgdir\", \"$hypdir\", \"$ofname\", adaptprog=1, gps_src=\"$gps_src\"\n"
 }
 
 proc adapt_process_progress { progress_txt progress_per } {
@@ -109,9 +94,21 @@ proc adapt_process_progress { progress_txt progress_per } {
 	send_sf set progress_per $progress_per
 }
 
-proc adapt_process_done { } {
-	send_sf adapt_process_done
+proc open_vessel_track { fn } {
+	global gga utm _map
+	set gga(llu) utm
+	set utm 1
+	exp_send "gga=open_vessel_track(ifn=\"$fn\")\n"
+	MessageDlg .rbgga.msg -parent .rbgga -type ok -icon info -title "Data Loaded" \
+		-message "The vessel track for the data you are viewing has been loaded. Please select a map file."
+	load_map $utm
+	if { $gga(mshape) == "None" } {
+		set marker ",marker=0";
+	} else {
+		set marker ",marker=$ytk_PLMK_marker($gga(mshape))"
+	}
+	exp_send "show_vessel_track, color=\"$gga(linecolor)\", skip=$gga(skip)$marker, msize=$gga(msize), utm=$utm, win=$_map(window);\n"
+	exp_send "utm= $utm;\n"
 }
-
 
 start_sf

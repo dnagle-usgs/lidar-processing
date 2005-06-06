@@ -9,6 +9,7 @@ require, "ytime.i"
 require, "map.i"
 require, "string.i"
 require, "pip.i"
+require, "gridr.i"
 
 local rbgga_help 
 /* DOCUMENT rbgga_help
@@ -460,18 +461,20 @@ properly to the zoom buttons.
  }
  write,format="%d GGA records found\n", numberof(q);
  // now find the closest gga record to the selected point
- ggaq = gga(q);
- dist = (ggaq.lon-minlon)^2 + (ggaq.lat-minlat)^2;
- didx = dist(mnx);
- q = q(didx);
- if ( (show != 0) && (show != 2)  ) {
-   if ( is_void( msize ) ) msize = 0.1;
-   if ( is_void( color ) ) color = "red";
-   if ( is_void( skip  ) ) skip  = 10;
-   plmk, gga.lat( q(1:0:skip)), gga.lon( q(1:0:skip)), msize=msize, color=color;
+ if(numberof(q)) {
+	 ggaq = gga(q);
+	 dist = (ggaq.lon-minlon)^2 + (ggaq.lat-minlat)^2;
+	 didx = dist(mnx);
+	 q = q(didx);
+	 if ( (show != 0) && (show != 2)  ) {
+	   if ( is_void( msize ) ) msize = 0.1;
+	   if ( is_void( color ) ) color = "red";
+	   if ( is_void( skip  ) ) skip  = 10;
+	   plmk, gga.lat( q(1:0:skip)), gga.lon( q(1:0:skip)), msize=msize, color=color;
+	 }
+	   
+	 if (!_batch) test_selection_size,q;
  }
-   
- if (!_batch) test_selection_size,q;
  return q;
 }
 
@@ -486,7 +489,11 @@ and continue looking at data down the flight line.
 */
    //st = gga_find_times(  gga_point_sel(0)  );
    q = gga_point_sel(0);
-   st = gga(q).sod;
+   if(numberof(q)) {
+     st = gga(q).sod;
+   } else {
+     st = [];
+   }
    if ( numberof( st ) ) {
      st = int( st ) 
      send_sod_to_sf, st;		// command sf and drast there.

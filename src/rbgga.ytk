@@ -1,14 +1,17 @@
 exp_send "require, \"rbgga.i\"\r"
 
-proc rbgga_menu {} {
- global ytk_PLMK_marker
- global data_path _map
- global _ytk utm
+proc rbgga_menu { {mode "eaarl"} } {
+ global ytk_PLMK_marker data_path _map _ytk utm rbgga_mode
  set gga(null) ""
  set mw .rbgga
+ set rbgga_mode $mode
  destroy $mw
  toplevel $mw
- wm title $mw "eaarl.rbgga: "
+ if {[string equal $rbgga_mode "adapt"]} {
+    wm title $mw "Vessel Tracks"
+ } else {
+    wm title $mw "eaarl.rbgga: "
+ }
  frame $mw.g1 -relief groove -borderwidth 3
  label $mw.g1.lulb -text "Coordinates:" -anchor e
  tk_optionMenu $mw.g1.lu gga(llu) latlon utm
@@ -49,16 +52,25 @@ proc rbgga_menu {} {
  grid $mw.g1.owinlbl $mw.g1.owin -sticky ew
 
 
-
-
  frame $mw.f1 -relief groove -borderwidth 3
- button $mw.f1.load -text "Load GGA" -command { 
-   if {$gga(llu) == "utm"} {
-      set utm 1
-   } else {
-      set utm 0
+ if {[string equal $rbgga_mode "adapt"]} {
+   button $mw.f1.load -text "Load ADF" -command { 
+     if {$gga(llu) == "utm"} {
+        set utm 1
+     } else {
+        set utm 0
+     }
+     exp_send "gga=open_vessel_track()\n" 
    }
-   exp_send "gga=rbgga()\r" 
+ } else {
+   button $mw.f1.load -text "Load GGA" -command { 
+     if {$gga(llu) == "utm"} {
+        set utm 1
+     } else {
+        set utm 0
+     }
+     exp_send "gga=rbgga()\r" 
+   }
  }
  button $mw.f1.plot -text "Plot" -command {
    if { $gga(mshape) == "None" } {
@@ -71,7 +83,11 @@ proc rbgga_menu {} {
    } else {
       set utm 0
    }
+   if { [string equal $rbgga_mode "adapt"] } {
+    exp_send "show_vessel_track, color=\"$gga(linecolor)\", skip=$gga(skip)$marker, msize=$gga(msize), utm=$utm, win=$_map(window); \n\r" 
+   } else {
     exp_send "show_gga_track, color=\"$gga(linecolor)\", skip=$gga(skip)$marker,msize=$gga(msize), utm=$utm, win=$_map(window); \n\r" 
+   }
     expect ">"
     exp_send "\n"
     expect ">"
@@ -163,16 +179,25 @@ proc mark_time_pos { sod } {
 
 
 proc mark_pos { lat lon } {
-  global utm _map
-  scan $lat "%1s%2f%f" df dd mm
-  set lat [ expr $dd + $mm/60.0 ]
-  if { $df == "S" } {
-    set lat [ expr -$lat ]
-  }
-  scan $lon "%1s%3f%f" df dd mm
-  set lon [ expr $dd + $mm/60.0 ]
-  if { $df == "W" } {
-    set lon [ expr -$lon ]
+  global utm _map rbgga_mode
+  if { [string equal $rbgga_mode "adapt"] } {
+	  set d [expr {int($lat / 100.0)}]
+	  set m [expr {fmod($lat, 100.0)/60.0}]
+	  set lat [expr {$d + $m}]
+	  set d [expr {int($lon / 100.0)}]
+	  set m [expr {fmod($lon, 100.0)/60.0}]
+	  set lon [expr {$d + $m}]
+  } else {
+	  scan $lat "%1s%2f%f" df dd mm
+	  set lat [ expr $dd + $mm/60.0 ]
+	  if { $df == "S" } {
+	    set lat [ expr -$lat ]
+	  }
+	  scan $lon "%1s%3f%f" df dd mm
+	  set lon [ expr $dd + $mm/60.0 ]
+	  if { $df == "W" } {
+	    set lon [ expr -$lon ]
+	  }
   }
   if {$utm == 0} {
   exp_send "wsav=window();window,$_map(window); plmk, $lat, $lon, msize=.5, marker=1, color=\"red\"; window,wsav\r"

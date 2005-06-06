@@ -1,5 +1,5 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent: */
-/* $Id$ */
+write, "$Id$ */"
 
 extern DEBUG;
 /* DOCUMENT DEBUG
@@ -83,26 +83,8 @@ struct BOAT_WAYPOINTS {
 	float somd;
 }
 
-struct HYPACK_RAW {
-	float sod;
-	double lat;
-	double lon;
-	float time;
-}
-
-struct HYPACK_EC {
-	float sod;
-	float depth;
-}
-
-struct HYPACK_POS {
-	float sod;
-	double north;
-	double east;
-}
-
-func boat_process (imgdir, hypackdir, base, date, progress=, adaptprog=) {
-/* DOCUMENT boat_process (imgdir, hypackdir, base, date, progress=, adaptprog=)
+func boat_process (imgdir, hypackdir, base, date, progress=, adaptprog=, gps_src=) {
+/* DOCUMENT boat_process (imgdir, hypackdir, base, date, progress=, adaptprog=, gps_src=)
 
 	Renames EXIF JPEG images, then process images and Hypack data to generate
 	the various output files usable by ATRIS software.
@@ -123,6 +105,9 @@ func boat_process (imgdir, hypackdir, base, date, progress=, adaptprog=) {
 		
 		date: A string representing the mission date. This string must be
 			formatted as YYYY-MM-DD.
+	
+		gps_src= Used to specify which GPS source to use from the RAW files. See
+			boat_input_raw for details.
 	
 	Options:
 
@@ -148,6 +133,8 @@ func boat_process (imgdir, hypackdir, base, date, progress=, adaptprog=) {
 	if("/" != strpart(hypackdir, strlen(hypackdir):strlen(hypackdir)))
 		hypackdir = hypackdir + "/";
 	
+	if(is_void(gps_src)) gps_src = "";
+	
 	// Validate progress
 	if(is_void(progress))
 		progress = 1;
@@ -164,11 +151,11 @@ func boat_process (imgdir, hypackdir, base, date, progress=, adaptprog=) {
 		write, status;
 	boat_rename_exif_files, imgdir, date, move=1;
 	
-	boat_process_data, imgdir, hypackdir, base, adaptprog=adaptprog, aprogadd=1;
+	boat_process_data, imgdir, hypackdir, base, adaptprog=adaptprog, aprogadd=1, gps_src=gps_src;
 }
 
-func boat_process_data (imgdir, hypackdir, base, progress=, adaptprog=, aprogadd=) {
-/* DOCUMENT boat_process_data (imgdir, hypackdir, base, adaptprog=, aprogadd=)
+func boat_process_data (imgdir, hypackdir, base, progress=, adaptprog=, aprogadd=, gps_src=) {
+/* DOCUMENT boat_process_data (imgdir, hypackdir, base, adaptprog=, aprogadd=, gps_src=)
 	
 	Processes images and Hypack data to generate the various output files
 	usable by ATRIS software.
@@ -193,6 +180,9 @@ func boat_process_data (imgdir, hypackdir, base, progress=, adaptprog=, aprogadd
 
 		aprogadd= Use this to increase (or decrease) the number of "units" used
 			to send percentages to sf_a's progress dialog.
+
+		gps_src= Used to specify which GPS source to use from the RAW files. See
+			boat_input_raw for details.
 	
 	Returns:
 
@@ -206,6 +196,10 @@ func boat_process_data (imgdir, hypackdir, base, progress=, adaptprog=, aprogadd
 		imgdir = imgdir + "/";
 	if("/" != strpart(hypackdir, strlen(hypackdir):strlen(hypackdir)))
 		hypackdir = hypackdir + "/";
+	
+	if(is_void(gps_src)) gps_src = "";
+
+	if(DEBUG) write, "gps_src", gps_src;
 	
 	// Validate progress
 	if(is_void(progress))
@@ -236,7 +230,9 @@ func boat_process_data (imgdir, hypackdir, base, progress=, adaptprog=, aprogadd
 	hypack = [];
 	for(i = 1; i <= numberof(files); i++) {
 		write, " ->", files(i);
-		hypack_raw = boat_input_raw(files(i));
+		hypack_raw = boat_input_raw(files(i), gps_used, gps_src=gps_src);
+		if(adaptprog)
+			adapt_set_gps_used, gps_used;
 		if(numberof(hypack) > 0)
 			hypack = boat_merge_datasets(hypack, hypack_raw);
 		else
@@ -1511,10 +1507,15 @@ func boat_interpolate_somd_gps(boat, somd, range=, progress=) {
 	progress = (progress ? 1 : 0);
 
 	if(DEBUG) write, format="==> boat_interpolate_somd_gps(boat=[%i], somd=[%i], range=%i, progress=%i)\n", numberof(boat), numberof(somd), range, progress;
-	
+
 	added = array(BOAT_PICS, numberof(somd));
 	added.somd = somd;
 
+	added.depth = interp(added.somd, boat.somd, boat.depth);
+	added.lat = interp(added.somd, boat.somd, boat.lat);
+	added.lon = interp(added.somd, boat.somd, boat.lon);
+
+	
 	for(i = 1; i <= numberof(somd); i++) {
 		if(!numberof(where(boat.somd == somd(i))) && numberof(where(boat.somd < somd(i))) && numberof(where(boat.somd > somd(i)))) {
 			below_time = max(boat.somd(where(boat.somd < somd(i))));
@@ -1526,9 +1527,6 @@ func boat_interpolate_somd_gps(boat, somd, range=, progress=) {
 				total_time = above_time - below_time;
 				offset_time = somd(i) - below_time;
 				ratio = offset_time / total_time;
-				added.depth(i) = ratio * boat.depth(above_index) + (1 - ratio) * boat.depth(below_index);
-				added.lat(i)   = ratio * boat.lat(above_index)   + (1 - ratio) * boat.lat(below_index);
-				added.lon(i)   = ratio * boat.lon(above_index)   + (1 - ratio) * boat.lon(below_index);
 				added.heading(i) = boat.heading(below_index);
 				if(DEBUG) write, format="   %i (%i): Interpolated. GPS: (%.2f,%.2f) Depth: %.2f Heading: %.2f \n", i, int(somd(i)), added.lon(i), added.lat(i), added.depth(i), added.heading(i);
 			} else {
@@ -1866,6 +1864,9 @@ func boat_get_raw_list(dir) {
 	num = 0;
 	read, f, format="%d", num;
 	
+	if(!num)
+		return [];
+
 	list = array(string, num);
 	read, f, format="%s", list;
 	close, f;
@@ -1873,16 +1874,19 @@ func boat_get_raw_list(dir) {
 	return list;
 }
 
-func boat_convert_raw_to_boatpics(raw, ec1) {
-/* DOCUMENT boat_convert_raw_to_boatpics(raw, ec1)
+func boat_convert_raw_to_boatpics(raw, ec, gyr) {
+/* DOCUMENT boat_convert_raw_to_boatpics(raw, ec, gyr)
 	
-	Converts arrays of HYPACK_RAW and HYPACK_EC to an array of BOAT_PICS.
+	Converts arrays of HYPACK_RAW, HYPACK_EC, and HYPACK_GYR to an array
+	of BOAT_PICS.
 
 	Parameters:
 
 		raw: Array of HYPACK_RAW.
 
-		ec1: Array of HYPACK_EC.
+		ec: Array of HYPACK_EC.
+
+		gyr: Array of HYPAC_GYR.
 
 	Returns:
 
@@ -1897,12 +1901,13 @@ func boat_convert_raw_to_boatpics(raw, ec1) {
 	boat.lon = ddm2deg(raw.lon);
 	boat.somd = hms2sod(raw.time);
 	boat.depth = interp(ec1.depth, ec1.sod, raw.sod);
+	boat.heading = interp(gyr.heading, gyr.sod, raw.sod);
 
 	return boat;
 }
 
-func boat_input_raw(file) {
-/* DOCUMENT boat_input_raw(file)
+func boat_input_raw(file, &gps_used, gps_src=) {
+/* DOCUMENT boat_input_raw(file, &gps_used, gps_src=)
 
 	Reads a Hypack RAW file and returns it as an array of BOAT_PICS.
 
@@ -1910,18 +1915,38 @@ func boat_input_raw(file) {
 
 		file: The full path and file name to read.
 	
+	Output parameter:
+
+		&gps_used: A string indicating which GPS source was used, "RAW"
+			or "CAP".
+	
+	Options:
+		
+		gps_src= The source to use for GPS information. By default, CAP
+			will be used if present; otherwise, RAW will be used. Set this
+			to "RAW" to force the use of RAW instead.
+	
 	Returns:
 		
 		Array of type BOAT_PICS.
 	
 	See also: boat_input_raw_full
 */
-	boat_input_raw_full, file, raw, pos, ec1, ec2;
-	return boat_convert_raw_to_boatpics(raw, ec1);
+	if(is_void(gps_src)) gps_src = "";
+	
+	boat_input_raw_full, file, raw, pos, ec1, ec2, cap, gyr;
+
+	if(! numberof(cap) || gps_src == "RAW") {
+		gps_used = "RAW";
+		return boat_convert_raw_to_boatpics(raw, ec1, gyr);
+	} else {
+		gps_used = "CAP";
+		return boat_convert_raw_to_boatpics(cap, ec1, gyr);
+	}
 }
 
-func boat_input_raw_full(ifname, &raw, &pos, &ec1, &ec2) {
-/* DOCUMENT boat_input_raw_full(ifname, &raw, &pos, &ec1, &ec2)
+func boat_input_raw_full(ifname, &raw, &pos, &ec1, &ec2, &cap, &gyr, &Hcp) {
+/* DOCUMENT boat_input_raw_full(ifname, &raw, &pos, &ec1, &ec2, &cap, &gyr, &Hcp)
 
 	Extracts data from a Hypack .RAW file.
 
@@ -1938,6 +1963,13 @@ func boat_input_raw_full(ifname, &raw, &pos, &ec1, &ec2) {
 		&ec1: An array of HYPACK_EC corresponding to the EC1 lines.
 
 		&ec2: An array of HYPACK_EC corresponding to the EC2 lines.
+
+		&cap: An array of HYPACK_RAW corresponding to the CAP lines.
+
+		&gyr: An array of HYPACK_GYR corresponding to the GYR lines.
+
+		&Hcp: An array of HYPACK_HCP corresponding to the HCP lines. (Note: hcp is a
+			built-in function, so variables should not be named 'hcp'.)
 	
 	Returns:
 
@@ -1946,6 +1978,8 @@ func boat_input_raw_full(ifname, &raw, &pos, &ec1, &ec2) {
 	See also: boat_input_raw
 */
 	require, "general.i";
+	require, "nmea.i";
+	require, "ll2utm.i";
 
 	f = open(ifname, "r");
 
@@ -1954,8 +1988,11 @@ func boat_input_raw_full(ifname, &raw, &pos, &ec1, &ec2) {
 	pos = array(HYPACK_POS, 2000);
 	ec1 = array(HYPACK_EC,  2000);
 	ec2 = array(HYPACK_EC,  2000);
+	cap = array(HYPACK_RAW, 2000);
+	gyr = array(HYPACK_GYR, 2000);
+	Hcp = array(HYPACK_HCP, 2000);
 
-	raw_i = pos_i = ec1_i = ec2_i = 1;
+	raw_i = pos_i = ec1_i = ec2_i = cap_i = gyr_i = Hcp_i = 1;
 	
 	while(line = rdline(f)) {
 		key = f1 = f2 = f3 = f4 = f5 = f6 = f7 = f8 = "";
@@ -1985,29 +2022,87 @@ func boat_input_raw_full(ifname, &raw, &pos, &ec1, &ec2) {
 			ec2(ec2_i).depth = atod(f3);
 			ec2_i++;
 		}
-		
+		else if(key == "CAP") {
+			res = nmea_decode(f3, datatype, time, lat, latdir, lon, londir);
+			if(res == 1 && datatype == "GPGGA") {
+				cap(cap_i).sod = atod(f2);
+				cap(cap_i).time = time;
+				cap(cap_i).lat = deg2dms(dm2deg(lat));
+				cap(cap_i).lat *= (latdir == "N" ? 1 : -1);
+				cap(cap_i).lon = deg2dms(dm2deg(lon));
+				cap(cap_i).lon *= (londir == "E" ? 1 : -1);
+				cap_i++;
+			} else {
+				if(DEBUG) write, "Bad NMEA datatype", res, f3;
+			}
+		}
+		else if(key == "GYR") {
+			gyr(gyr_i).sod = atod(f2);
+			gyr(gyr_i).heading = atod(f3);
+			gyr_i++;
+		}
+		else if(key == "HCP") {
+			Hcp(Hcp_i).sod = atod(f2);
+			Hcp(Hcp_i).heave = atod(f3);
+			Hcp(Hcp_i).roll = atod(f4);
+			Hcp(Hcp_i).pitch = atod(f5);
+			Hcp_i++;
+		}
+	
 		// Increase buffers if needed
-		if(raw_i > numberof(raw)) {
+		if(raw_i > numberof(raw))
 			raw = [raw, 0](*)(1:numberof(raw)+500);
-		}
-		if(pos_i > numberof(pos)) {
+		if(pos_i > numberof(pos))
 			pos = [pos, 0](*)(1:numberof(pos)+500);
-		}
-		if(ec1_i > numberof(ec1)) {
+		if(ec1_i > numberof(ec1))
 			ec1 = [ec1, 0](*)(1:numberof(ec1)+500);
-		}
-		if(ec2_i > numberof(ec2)) {
+		if(ec2_i > numberof(ec2))
 			ec2 = [ec2, 0](*)(1:numberof(ec2)+500);
-		}
+		if(cap_i > numberof(cap))
+			cap = [cap, 0](*)(1:numberof(cap)+500);
+		if(gyr_i > numberof(gyr))
+			gyr = [gyr, 0](*)(1:numberof(cap)+500);
+		if(Hcp_i > numberof(Hcp))
+			Hcp = [Hcp, 0](*)(1:numberof(Hcp)+500);
 	}
 	
 	close, f;
 
 	// Resize buffers to match the final dataset
-	raw = raw(1:raw_i-1);
-	pos = pos(1:pos_i-1);
-	ec1 = ec1(1:ec1_i-1);
-	ec2 = ec2(1:ec2_i-1);
+	if(raw_i - 1)
+		raw = raw(1:raw_i-1);
+	else
+		raw = [];
+	
+	if(pos_i - 1)
+		pos = pos(1:pos_i-1);
+	else
+		pos = [];
+		
+	if(ec1_i - 1)
+		ec1 = ec1(1:ec1_i-1);
+	else
+		ec1 = [];
+		
+	if(ec2_i - 1)
+		ec2 = ec2(1:ec2_i-1);
+	else
+		ec2 = [];
+		
+	if(cap_i - 1)
+		cap = cap(1:cap_i-1);
+	else
+		cap = [];
+		
+	if(gyr_i - 1)
+		gyr = gyr(1:gyr_i-1);
+	else
+		gyr = [];
+		
+	if(Hcp_i - 1)
+		Hcp = Hcp(1:Hcp_i-1);
+	else
+		Hcp = [];
 }
 
 func boat_read_image_times(sdir, &fn, &sod) {

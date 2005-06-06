@@ -44,7 +44,7 @@ package require comm
 
 if { ![catch {package require cmdline}] } {
 	set sf_options {
-		{camtype.arg 1 "The type of photography to be viewed. 1 for EAARL photography; 2 for boat photography. Default: "}
+		{camtype.arg 1 "The type of photography to be viewed. 1 for EAARL photography; 2 for ADAPT photography. Default: 1"}
 		{parent.arg -1 "The comm port number for the application (usually ytk) calling this program. Default: -1 (disabled)"}
 		{cir.arg -1 "The comm port number for cir.tcl. Default: -1 (disabled)"}
 	}
@@ -267,9 +267,9 @@ proc load_file_list_adf { f } {
 #   f - filename of a list of files to be loaded
 
 	# Bring in Globals
-	global ci fna imgtime dir base_dir atris_mode \
+	global ci fna imgtime dir base_dir atris_mode cur_fname \
 			nsat pdop ns ew lat lon alt seconds_offset timern frame_off \
-			DEBUG_SF camtype tarname mark mogrify_exists mogrify_pref
+			DEBUG_SF camtype tarname mark mogrify_exists mogrify_pref nfiles
 
 	# Reset defaults
 	set camtype 2
@@ -283,20 +283,22 @@ proc load_file_list_adf { f } {
 	set s 0
 
 	set fname $f
+	set cur_fname $f
 # Set time ticker, for use in updating the displays - 0 to make 
 # sure something displays immediately
 	set ticker 0
 # Set the seconds_offset back to 0 by default
 	set seconds_offset 0
 
+	set need_data 1
 	if { [ catch {set dataf [ open $fname "r" ] } ] == 0 } {
-		while { ![ eof $dataf ] } { 
+		while { ![ eof $dataf ] && $need_data } { 
 			set heads [ gets $dataf ]
 			set headlst [ split $heads " " ];
-			set dataset [ lindex $headlst 1 ];
-			set datanum [ lindex $headlst 0 ];
+			set dataset [ lindex $headlst 0 ];
+			set datanum [ lindex $headlst 1 ];
 
-			if { [string equal $dataset "filenames"] } {
+			if { [string equal $dataset "image-files"] } {
 				set nfiles $datanum
 			}
 
@@ -304,9 +306,9 @@ proc load_file_list_adf { f } {
 				set datas [ gets $dataf ]
 				set datalst [ split $datas " " ]
 
-				if { [string equal $dataset "filenames"] } {
-					set hms [ lindex $datalst 1]
-					set fn  [ lindex $datalst 2]
+				if { [string equal $dataset "image-files"] } {
+					set fn  [lindex $datalst 0]
+					set hms [lindex $datalst 1]
 					
 					set fna($i) "$fn"
 					
@@ -316,22 +318,22 @@ proc load_file_list_adf { f } {
 					set hms [ clock format $sod -format "%H%M%S" -gmt 1 ]
 					set imgtime(idx$i) $hms;
 					set imgtime(hms$hms) $i;
+					
+					set lat(hms$hms) [lindex $datalst 2]
+					set lon(hms$hms) [lindex $datalst 3]
+					set alt(hms$hms) [lindex $datalst 4]M
+
+					set heading(hms$hms) [lindex $datalst 5]
+
 					if { [expr int([clock clicks -milliseconds] / 200)] - $ticker > 0 } {
 						set ticker [expr int([clock clicks -milliseconds] / 200)]
-						.loader.status1 configure -text "Loaded $i JPG files"
-						update
-					}
-				} elseif {[string equal $dataset "deciminutes"]} {
-					set hms [ lindex $datalst 1]
-					set lat(hms$hms) [ lindex $datalst 2]
-					set lon(hms$hms) [ lindex $datalst 3]
-					set alt(hms$hms) [ lindex $datalst 4]M
-					if { [expr int([clock clicks -milliseconds] / 200)] - $ticker > 0 } {
-						set ticker [expr int([clock clicks -milliseconds] / 200)]
-						.loader.status1 configure -text "Loaded $i GPS records\r"
+						.loader.status1 configure -text "Loaded $i records\r"
 						update
 					}
 				}
+			}
+			if { [string equal $dataset "image-files"] } {
+				set need_data 0
 			}
 		}
 	}
@@ -346,6 +348,7 @@ proc load_file_list_adf { f } {
 	} else {
 		set mogrify_pref "only tcl"
 	}
+
 	return $nfiles
 }
 
@@ -882,7 +885,7 @@ proc show_img { n } {
 
 proc archive_save_marked { type } {
 	global mark fna dir range_touched imgtime \
-		gt lat lon ew ns pdop alt nsat camtype
+		gt lat lon ew ns pdop alt nsat camtype nfiles
 	
 	if {!([string equal "zip" $type] || [string equal "tar" $type])} {
 		tk_messageBox -type ok -icon error \
@@ -916,8 +919,8 @@ proc archive_save_marked { type } {
 				file mkdir $tmpdir
 
 				set mark_count 0
-				set start [expr {int([.slider cget -from])}];
-				set stop  [expr {int([.slider cget -to])}];
+				set start 1;
+				set stop  $nfiles;
 				if { $camtype == 1 && [ info exists lat ] } {
 				  set of [ open "$tmpdir/gps.gga" "w+" ]
 				  for { set i $start } { $i <= $stop } { incr i } {
@@ -1031,18 +1034,18 @@ proc apply_zoom_factor { percentage } {
 }
 
 proc clear_marks { } {
-	global mark cur_mark ci
+	global mark cur_mark ci nfiles
 
-	for { set i [expr {int([.slider cget -from])}] } { $i <= [expr {int([.slider cget -to])}] } { incr i } {
+	for { set i 1 } { $i <= $nfiles } { incr i } {
 		set mark($i) 0
 	}
 
-	set cur_mark $mark($ci)
+	catch { set cur_mark $mark($ci) }
 }
 
 proc invert_marks { } {
-	global mark cur_mark ci
-	for { set i [expr {int([.slider cget -from])}] } { $i <= [expr {int([.slider cget -to])}] } { incr i } {
+	global mark cur_mark ci nfiles
+	for { set i 1 } { $i <= $nfiles } { incr i } {
 		set mark($i) [expr {1 - $mark($i)}]
 	}
 
@@ -1050,7 +1053,7 @@ proc invert_marks { } {
 }
 
 proc mark_range { } {
-	global fcin lcin mark mark_range_inc cur_mark ci
+	global fcin lcin mark mark_range_inc cur_mark ci nfiles
 
 	if { $lcin < $fcin } {
 		tk_messageBox -icon warning -message "The beginning of the range occured after the end of the range. The range boundaries have been exchanged to remain sensible."
@@ -1059,8 +1062,8 @@ proc mark_range { } {
 		set lcin $temp
 	}
 
-	set range_min [expr {int([.slider cget -from])}]
-	set range_max [expr {int([.slider cget -to])}]
+	set range_min 1
+	set range_max $nfiles
 
 	toplevel .ranger
 
@@ -1147,12 +1150,13 @@ proc enable_controls { } {
 }
 
 proc atris_init { } {
-	global atris_mode
-	set atris_mode 1
    menu .mb.tools
 	.mb insert "Archive" cascade -label "Tools" -underline 0 -menu .mb.tools -state disabled
 	.mb.tools add command -label "Vessel Track" -underline 0 \
-		-command { send_ytk rbgga_menu }
+		-command {
+			send_ytk rbgga_menu adapt
+			send_ytk open_vessel_track $cur_fname
+		}
 	.mb.tools add command -label "Depth Profile" -underline 0 \
 		-command {
 			global split_dir
@@ -1168,11 +1172,11 @@ proc atris_init { } {
 				send_ytk plot_waypoints_file $f
 			}
 		}
-	.mb.file insert "Exit" command -label "Process Raw Data" -underline 0 \
+	.mb.file insert "Exit" command -label "Generate ADF File" -underline 0 \
 		-command { adapt_process }
 		
 	proc adapt_process { } {
-		global adapt_rename
+		global adapt_gps_src
 		set w .adp
 		toplevel $w
 		wm title $w "ADAPT Processing"
@@ -1182,41 +1186,22 @@ proc atris_init { } {
 
 		Label $opt.lblImg  -text "Images directory"
 		Label $opt.lblRaw  -text "Hypack RAW directory"
-		Label $opt.lblBase -text "Created files basename"
-		Label $opt.lblRen  -text "Rename images"
-		Label $opt.lblDate -text "Date string"
+		Label $opt.lblFile -text "Target file name"
+		Label $opt.lblSrc  -text "GPS source"
 
 		Entry $opt.entImg  -textvariable adapt_image_dir \
 			-helptext "The absolute path to the directory containing the images."
 		Entry $opt.entRaw  -textvariable adapt_raw_dir \
-			-helptext "The absolute path to the directory containing the Hypack RAW files for the above images."
-		Entry $opt.entBase -textvariable adapt_base \
-			-helptext "The base name to use for the created files. These files will be placed in the 'Images directory'. Extensions will be appended to the base name, for example, 'test' will result in files like 'test.adf'."
-		Entry $opt.entDate -textvariable adapt_date \
-			-helptext "A string representing the mission date for the above images. This MUST be formatted as YYYY-MM-DD in order for .lst files to work properly."
+			-helptext "The absolute path to the directory containing the Hypack RAW files for the above\n images."
+		Entry $opt.entFile -textvariable adapt_ofname \
+			-helptext "The file name to use for the created ADF file. This files will be placed in the\n'Images directory'. This file's extension should be '.adf' unless there's a\ncompelling reason to use something else."
 		
-		if { ![info exists adapt_rename] } {
-			set adapt_rename 0
-		}
-		if { $adapt_rename } {
-			$opt.entDate configure -state normal
-			$opt.lblDate configure -state normal
-		} else {
-			$opt.entDate configure -state disabled
-			$opt.lblDate configure -state disabled
-		}
+		ComboBox $opt.cboSrc -values {Auto-select RAW CAP} -textvariable adapt_gps_src -editable 0 \
+			-helptext "The Hypack source to use from the RAW files. Auto-select will use CAP if it is\npresent, otherwise it will use RAW. RAW or CAP will try to force those choices.\nIf you select CAP and it isn't present, then RAW will be used instead."
 
-		checkbutton $opt.chkRen -variable adapt_rename \
-			-command {
-				if { $adapt_rename } {
-					.adp.fraOptions.entDate configure -state normal
-					.adp.fraOptions.lblDate configure -state normal
-				} else {
-					.adp.fraOptions.entDate configure -state disabled
-					.adp.fraOptions.lblDate configure -state disabled
-				}
-			}
-		DynamicHelp::register $opt.chkRen balloon "Renaming the images is required for .lst files to work properly. However, you should only rename the files ONCE or they will end up with multiple date strings."
+		if { [$opt.cboSrc getvalue] == -1 } {
+			$opt.cboSrc setvalue first
+		}
 
 		Button $opt.butImg -text "Choose" \
 			-command {
@@ -1232,20 +1217,20 @@ proc atris_init { } {
 					set old_aid $adapt_image_dir
 					set adapt_image_dir $tmp_path
 					set tmp_path [split $adapt_image_dir /]
-					set tmp_end [lindex $tmp_path end]
-					if { [string equal "" $tmp_end] } {
-						set tmp_end [lindex $tmp_path end-1]
+					set tmp_end [lindex $tmp_path end].adf
+					if { [string equal ".adf" $tmp_end] } {
+						set tmp_end [lindex $tmp_path end-1].adf
 					}
-					if { [string equal $adapt_base ""] } {
-						set adapt_base $tmp_end
+					if { [string equal $adapt_ofname ""] } {
+						set adapt_ofname $tmp_end
 					} elseif { ![string equal $old_aid ""] } {
 						set old_aid_sp [split $old_aid /]
-						set old_aid [lindex $old_aid_sp end]
-						if { [string equal "" $old_aid] } {
-							set old_aid [lindex $old_aid_sp end-1]
+						set old_aid [lindex $old_aid_sp end].adf
+						if { [string equal ".adf" $old_aid] } {
+							set old_aid [lindex $old_aid_sp end-1].adf
 						}
-						if { [string equal $old_aid $adapt_base] } {
-							set adapt_base $tmp_end
+						if { [string equal $old_aid $adapt_ofname] } {
+							set adapt_ofname $tmp_end
 						}
 					}
 				}
@@ -1267,16 +1252,14 @@ proc atris_init { } {
 
 		grid $opt.lblImg  -in $opt -column 0 -row 0 -sticky "e"
 		grid $opt.lblRaw  -in $opt -column 0 -row 1 -sticky "e"
-		grid $opt.lblBase -in $opt -column 0 -row 2 -sticky "e"
-		grid $opt.lblRen  -in $opt -column 0 -row 3 -sticky "e"
-		grid $opt.lblDate -in $opt -column 0 -row 4 -sticky "e"
+		grid $opt.lblFile -in $opt -column 0 -row 2 -sticky "e"
+		grid $opt.lblSrc  -in $opt -column 0 -row 3 -sticky "e"
 
 		grid $opt.entImg  -in $opt -column 1 -row 0 -sticky "ew"
 		grid $opt.entRaw  -in $opt -column 1 -row 1 -sticky "ew"
-		grid $opt.entBase -in $opt -column 1 -row 2 -sticky "ew" -columnspan 2
-		grid $opt.entDate -in $opt -column 1 -row 4 -sticky "ew" -columnspan 2
+		grid $opt.entFile -in $opt -column 1 -row 2 -sticky "ew" -columnspan 2
 
-		grid $opt.chkRen  -in $opt -column 1 -row 3 -sticky "w"
+		grid $opt.cboSrc  -in $opt -column 1 -row 3 -sticky "ew" -columnspan 2
 
 		grid $opt.butImg  -in $opt -column 2 -row 0 -sticky "ew"
 		grid $opt.butRaw  -in $opt -column 2 -row 1 -sticky "ew"
@@ -1296,19 +1279,17 @@ proc atris_init { } {
 				} elseif { [string equal $adapt_raw_dir ""] } {
 					MessageDlg .adp.err -parent .adp -type ok -icon error -title "Error" \
 						-message "A value must be given for the Hypack RAW Directory."
-				} elseif { [string equal $adapt_base ""] } {
+				} elseif { [string equal $adapt_ofname ""] } {
 					MessageDlg .adp.err -parent .adp -type ok -icon error -title "Error" \
 						-message "A value must be given for the Created Files Basename."
-				} elseif { $adapt_rename && [string equal $adapt_date ""] } {
-					MessageDlg .adp.err -parent .adp -type ok -icon error -title "Error" \
-						-message "When renaming the images, a value must be given for the Date String."
 				} else {
+					array unset adapt_gps_src
 					ProgressDlg .adp.prog -textvariable progress_txt -variable progress_per -parent .adp -title "Processing Progress"
-					if { $adapt_rename } {
-						send_ytk adapt_process $adapt_image_dir $adapt_raw_dir $adapt_base $adapt_date
-					} else {
-						send_ytk adapt_process $adapt_image_dir $adapt_raw_dir $adapt_base
+					set tmp_src $adapt_gps_src
+					if { [string equal "Auto-select" $tmp_src] } {
+						set tmp_src "auto"
 					}
+					send_ytk adapt_process $adapt_image_dir $adapt_raw_dir $adapt_ofname $tmp_src
 				}
 			}
 		Button $ctl.butClose   -text "Close" \
@@ -1326,8 +1307,10 @@ proc atris_init { } {
 	}
 
 	proc adapt_process_done { } {
-		global adapt_image_dir adapt_base split_dir base_dir dir nfiles ci
+		global adapt_image_dir adapt_ofname split_dir base_dir dir nfiles ci adapt_gps_used
 		catch { destroy .adp.prog }
+
+		set sources [join [array names adapt_gps_used] " "]
 		
 		set next .adp.next
 		Dialog $next -parent .adp -side right -title "Processing Complete"
@@ -1339,7 +1322,7 @@ proc atris_init { } {
 			-command {
 				destroy .adp.next
 				destroy .adp
-				set f $adapt_image_dir/$adapt_base.adf
+				set f $adapt_image_dir/$adapt_ofname
 				set base_dir [ file dirname $f ]
 				wm title . $base_dir
 				open_loader_window "Loading files.\nThis will take a few seconds."
@@ -1357,23 +1340,29 @@ proc atris_init { } {
 				destroy .adp.next
 				destroy .adp
 			}
-		label $next.lbl -text "Processing is complete.\nWhat would you like to do next?"
+		label $next.lbl -text "Processing is complete.\nThese source(s) were used for GPS data: $sources \nWhat would you like to do next?"
 		pack $next.lbl -in $next -side left
 		$next draw
-		
 	}
 }
 
 proc select_file { } {
-	global camtype f base_dir tf nfiles split_dir dir ci lst
+	global camtype f base_dir tf nfiles split_dir dir ci lst atris_mode
 	if { $camtype == 2 } {
-		set f [ tk_getOpenFile  -filetypes { 
-			{ {ADAPT files} {.adf} }
-			{ {List files } {.lst} }
-			{ {Tar files  } {.tar} } 
-			{ {Zip files  } {.zip} }
-			{ {All files  } { *  } }
-			} -initialdir $base_dir ];
+		if { $atris_mode } {
+			set f [ tk_getOpenFile  -filetypes { 
+				{ {ADAPT files} {.adf} }
+				{ {All files  } { *  } }
+				} -initialdir $base_dir ];
+		} else {
+			set f [ tk_getOpenFile  -filetypes { 
+				{ {ADAPT files} {.adf} }
+				{ {List files } {.lst} }
+				{ {Tar files  } {.tar} } 
+				{ {Zip files  } {.zip} }
+				{ {All files  } { *  } }
+				} -initialdir $base_dir ];
+		}
 	} else {
 		set f [ tk_getOpenFile  -filetypes { 
 			{ {Tar files  } {.tar} } 

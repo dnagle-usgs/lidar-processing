@@ -326,9 +326,9 @@ func deg2dms(coord, arr=) {
 	d = floor(abs(coord));
 	m = floor((abs(coord) - d) * 60);
 	s = ((abs(coord) - d) * 60 - m) * 60;
-	dms = d * 10000 + m * 100 + s;
+	dms = sign(coord) * d * 10000 + m * 100 + s;
 	if(arr)
-		return [d, m, s];
+		return sign(coord) * [d, m, s];
 	else
 		return dms;
 }
