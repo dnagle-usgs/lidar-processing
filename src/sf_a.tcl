@@ -1157,13 +1157,13 @@ proc atris_init { } {
 			send_ytk rbgga_menu adapt
 			send_ytk open_vessel_track $cur_fname
 		}
-	.mb.tools add command -label "Depth Profile" -underline 0 \
-		-command {
-			global split_dir
-			set temp_f [join [lrange [split [join [lrange $split_dir 0 end] /] .] 0 end-1] .].pbd
-			send_ytk depth_profile $temp_f
-			unset temp_f
-		}
+#	.mb.tools add command -label "Depth Profile" -underline 0 \
+#		-command {
+#			global split_dir
+#			set temp_f [join [lrange [split [join [lrange $split_dir 0 end] /] .] 0 end-1] .].pbd
+#			send_ytk depth_profile $temp_f
+#			unset temp_f
+#		}
 	.mb.tools add command -label "Load and Plot CSV Waypoints (UTM)" -underline 18 \
 		-command {
 			global base_dir
@@ -1188,6 +1188,7 @@ proc atris_init { } {
 		Label $opt.lblRaw  -text "Hypack RAW directory"
 		Label $opt.lblFile -text "Target file name"
 		Label $opt.lblSrc  -text "GPS source"
+		Label $opt.lblAdj  -text "CAP time adjustment"
 
 		Entry $opt.entImg  -textvariable adapt_image_dir \
 			-helptext "The absolute path to the directory containing the images."
@@ -1202,8 +1203,26 @@ proc atris_init { } {
 		if { [$opt.cboSrc getvalue] == -1 } {
 			$opt.cboSrc setvalue first
 		}
+		
+		set adj $opt.fraAdj
+		frame $adj
+
+		Label   $adj.lblH -text "Hours"
+		Label   $adj.lblM -text "Minutes"
+		Label   $adj.lblS -text "Seconds"
+
+		SpinBox $adj.spbH -textvariable adapt_cap_adj_h -range {-23 23 1} -width 5 -justify right
+		SpinBox $adj.spbM -textvariable adapt_cap_adj_m -range {-59 59 1} -width 5 -justify right
+		SpinBox $adj.spbS -textvariable adapt_cap_adj_s -range {-59 59 1} -width 5 -justify right
+
+		if { ! ([$adj.spbH getvalue] || [$adj.spbM getvalue] || [$adj.spbS getvalue]) } {
+			$adj.spbH setvalue @23
+			$adj.spbM setvalue @59
+			$adj.spbS setvalue @59
+		}
 
 		Button $opt.butImg -text "Choose" \
+			-helptext "Dialog to choose the images directory." \
 			-command {
 				if { ![string equal "" $adapt_image_dir] } {
 					set tmp_path $adapt_image_dir
@@ -1236,6 +1255,7 @@ proc atris_init { } {
 				}
 			}
 		Button $opt.butRaw -text "Choose" \
+			-helptext "Dialog to choose the Hypack RAW directory." \
 			-command {
 				if { ![string equal "" $adapt_raw_dir] } {
 					set tmp_path $adapt_raw_dir
@@ -1249,11 +1269,31 @@ proc atris_init { } {
 					set adapt_raw_dir $tmp_path
 				}
 			}
+		Button $opt.butAdj -text "Calculate" \
+			-helptext "Analyzes the RAW files and determines the best median adjustment to make the CAP\ndata agree with the RAW data." \
+			-command {
+				if {![string equal "" $adapt_raw_dir]} {
+					ProgressDlg .adp.prog -textvariable progress_txt -variable progress_per -parent .adp -title "Processing Progress"
+					send_ytk atris_cap_time_diff $adapt_raw_dir
+				} else {
+					MessageDlg .adp.adjerr -parent .adp -type ok -icon error -title "Error" \
+						-message "A value must be given for the Hypack RAW Directory."
+				}
+			}
+
+		grid $adj.lblH    -in $adj -column 1 -row 0 -sticky "ew"
+		grid $adj.lblM    -in $adj -column 3 -row 0 -sticky "ew"
+		grid $adj.lblS    -in $adj -column 5 -row 0 -sticky "ew"
+
+		grid $adj.spbH    -in $adj -column 0 -row 0 -sticky "ew"
+		grid $adj.spbM    -in $adj -column 2 -row 0 -sticky "ew"
+		grid $adj.spbS    -in $adj -column 4 -row 0 -sticky "ew"
 
 		grid $opt.lblImg  -in $opt -column 0 -row 0 -sticky "e"
 		grid $opt.lblRaw  -in $opt -column 0 -row 1 -sticky "e"
 		grid $opt.lblFile -in $opt -column 0 -row 2 -sticky "e"
 		grid $opt.lblSrc  -in $opt -column 0 -row 3 -sticky "e"
+		grid $opt.lblAdj  -in $opt -column 0 -row 4 -sticky "e"
 
 		grid $opt.entImg  -in $opt -column 1 -row 0 -sticky "ew"
 		grid $opt.entRaw  -in $opt -column 1 -row 1 -sticky "ew"
@@ -1261,8 +1301,11 @@ proc atris_init { } {
 
 		grid $opt.cboSrc  -in $opt -column 1 -row 3 -sticky "ew" -columnspan 2
 
+		grid $adj         -in $opt -column 1 -row 4 -sticky "w"
+
 		grid $opt.butImg  -in $opt -column 2 -row 0 -sticky "ew"
 		grid $opt.butRaw  -in $opt -column 2 -row 1 -sticky "ew"
+		grid $opt.butAdj  -in $opt -column 2 -row 4 -sticky "ew"
 		
 		grid columnconfigure $opt 0 -weight 0
 		grid columnconfigure $opt 1 -weight 1 -minsize 250
@@ -1289,7 +1332,7 @@ proc atris_init { } {
 					if { [string equal "Auto-select" $tmp_src] } {
 						set tmp_src "auto"
 					}
-					send_ytk adapt_process $adapt_image_dir $adapt_raw_dir $adapt_ofname $tmp_src
+					send_ytk adapt_process $adapt_image_dir $adapt_raw_dir $adapt_ofname $tmp_src $adapt_cap_adj_h $adapt_cap_adj_m $adapt_cap_adj_s
 				}
 			}
 		Button $ctl.butClose   -text "Close" \

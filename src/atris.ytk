@@ -84,9 +84,9 @@ proc plot_waypoints_file { fname } {
 	exp_send "plot_waypoints_file, \"$fname\"\n"
 }
 
-proc adapt_process { imgdir hypdir ofname gps_src } {
+proc adapt_process { imgdir hypdir ofname gps_src adj_h adj_m adj_s } {
 	exp_send "require, \"adf.i\"\n"
-	exp_send "adf_generate, \"$imgdir\", \"$hypdir\", \"$ofname\", adaptprog=1, gps_src=\"$gps_src\"\n"
+	exp_send "adf_generate, \"$imgdir\", \"$hypdir\", \"$ofname\", adaptprog=1, gps_src=\"$gps_src\", cap_adj=\[$adj_h, $adj_m, $adj_s\]\n"
 }
 
 proc adapt_process_progress { progress_txt progress_per } {
@@ -109,6 +109,10 @@ proc open_vessel_track { fn } {
 	}
 	exp_send "show_vessel_track, color=\"$gga(linecolor)\", skip=$gga(skip)$marker, msize=$gga(msize), utm=$utm, win=$_map(window);\n"
 	exp_send "utm= $utm;\n"
+}
+
+proc atris_cap_time_diff { dir } {
+	exp_send "atris_cap_time_diff, \"$dir\";\n";
 }
 
 start_sf

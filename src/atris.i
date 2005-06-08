@@ -6,6 +6,7 @@
 write,"$Id$"
 
 require, "rbgga.i";
+require, "adf.i";
 
 // Transmit somd time to sf_a
 if ( is_void( last_somd) )
@@ -208,4 +209,11 @@ func show_vessel_track ( x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, 
 	}
 }
 
-
+func atris_cap_time_diff(dir) {
+	res = hypack_determine_cap_adj(dir, adaptprog=1);
+	if(! numberof(res)) res = [0,0,0];
+	tkcmd, swrite(format="send_sf set adapt_cap_adj_h %d", res(1));
+	tkcmd, swrite(format="send_sf set adapt_cap_adj_m %d", res(2));
+	tkcmd, swrite(format="send_sf set adapt_cap_adj_s %d", res(3));
+	tkcmd, "send_sf destroy .adp.prog";
+}

@@ -23,6 +23,9 @@ local adf_i;
 	
 		hypack_list_raw
 		hypack_parse_raw
+		hypack_determine_cap_adj
+		hypack_raw_time_diff
+		hypack_raw_adjust_time
 
 	Functions for working JPEG EXIF data:
 
@@ -96,8 +99,8 @@ extern DEBUG;
 		DEBUG = []; // Also disables debugging
 */
 
-func adf_generate(imgdir, hypackdir, ofname, progress=, adaptprog=, gps_src=) {
-/* DOCUMENT adf_generate(imgdir, hypackdir, ofname, progress=, adaptprog=, gps_src=)
+func adf_generate(imgdir, hypackdir, ofname, progress=, adaptprog=, gps_src=, cap_adj=) {
+/* DOCUMENT adf_generate(imgdir, hypackdir, ofname, progress=, adaptprog=, gps_src=, cap_adj=)
 
 	Generates an ADF file for a set of data.
 
@@ -121,6 +124,11 @@ func adf_generate(imgdir, hypackdir, ofname, progress=, adaptprog=, gps_src=) {
 		gps_src= The source to use for GPS information. By default, CAP
 			will be used if present; otherwise, RAW will be used. Set this
 			to "RAW" to force the use of RAW instead.
+
+		cap_adj= An adjustment to be made to the CAP data from the RAW files. This
+			is a three element array of [hours, minutes, seconds] to be added to
+			the CAP times. These values may be positive or negative. See adf_adjust_time
+			for more details.
 	
 	Returns:
 
@@ -132,16 +140,18 @@ func adf_generate(imgdir, hypackdir, ofname, progress=, adaptprog=, gps_src=) {
 	if("/" != strpart(hypackdir, strlen(hypackdir):strlen(hypackdir)))
 		hypackdir = hypackdir + "/";
 	
+	if(is_void(progress)) progress = 1;
+	progress = progress ? 1 : 0;
+	
 	// Create full path + filename for output
 	ofname = imgdir + ofname;
 	
 	if(is_void(gps_src)) gps_src = "";
-	
-	// Validate progress
-	if(is_void(progress))
-		progress = 1;
-	progress = progress ? 1 : 0;
 
+	// Validate cap_adj
+	if(! is_array(cap_adj)) cap_adj = [0,0,0];
+	if(dimsof(cap_adj)(1) != 1 || dimsof(cap_adj)(2) != 3) cap_adj = [0,0,0];
+	
 	// Get list of RAW's
 	status = "Generating list of RAW files...";
 	if(adaptprog) adapt_send_progress, status, 0;
@@ -161,76 +171,87 @@ func adf_generate(imgdir, hypackdir, ofname, progress=, adaptprog=, gps_src=) {
 	
 	img_data = gps_data = [];
 	// An array of pointers is used because each track's array will have a different size
-	gps_tracks = array(pointer, numberof(files));
-	gps_num = 0;
+	if(numberof(files)) {
+		gps_tracks = array(pointer, numberof(files));
+		gps_num = 0;
 
-	for(i = 1; i <= numberof(files); i++) {
-		// Read a RAW
-		status = swrite(format="RAW file %i of %i: Parsing...", i, numberof(files));
-		if(adaptprog) adapt_send_progress, status, progcur++/progcnt;
-		if(progress) write, status;
+		for(i = 1; i <= numberof(files); i++) {
+			// Read a RAW
+			status = swrite(format="RAW file %i of %i: Parsing...", i, numberof(files));
+			if(adaptprog) adapt_send_progress, status, progcur++/progcnt;
+			if(progress) write, status;
 
-		hypack_parse_raw, files(i), raw, pos, ec1, ec2, cap, gyr, Hcp;
+			hypack_parse_raw, files(i), raw, pos, ec1, ec2, cap, gyr, Hcp;
 
-		if(! numberof(cap) || gps_src == "RAW") {
-			if(adaptprog)
-				adapt_set_gps_used, "RAW";
-			hyp_gps = raw;
-		} else {
-			if(adaptprog)
-				adapt_set_gps_used, "CAP";
-			hyp_gps = cap;
+			if(! numberof(cap) || gps_src == "RAW") {
+				if(adaptprog)
+					adapt_set_gps_used, "RAW";
+				hyp_gps = raw;
+			} else {
+				if(adaptprog)
+					adapt_set_gps_used, "CAP";
+				hyp_gps = hypack_raw_adjust_time(cap, cap_adj(1), cap_adj(2), cap_adj(3));
+			}
+			
+			// Interp info for each GPS coord
+			status = swrite(format="RAW file %i of %i: Interpolating for vessel track...", i, numberof(files));
+			if(adaptprog) adapt_send_progress, status, progcur++/progcnt;
+			if(progress) write, status;
+
+			gps_data = adf_interp_data(hms2sod(hyp_gps.time), hyp_gps, ec1, gyr, Hcp);
+			gps_tracks(i) = &gps_data;
+			gps_num += numberof(gps_data);
+			
+			// Interp info for each image
+			status = swrite(format="RAW file %i of %i: Interpolating for images...", i, numberof(files));
+			if(adaptprog) adapt_send_progress, status, progcur++/progcnt;
+			if(progress) write, status;
+
+			new_img_data = adf_interp_data(isod, hyp_gps, ec1, gyr, Hcp);
+			img_data = adf_merge_data(img_data, new_img_data);
 		}
-		
-		// Interp info for each GPS coord
-		status = swrite(format="RAW file %i of %i: Interpolating for vessel track...", i, numberof(files));
-		if(adaptprog) adapt_send_progress, status, progcur++/progcnt;
-		if(progress) write, status;
-
-		gps_data = adf_interp_data(hms2sod(hyp_gps.time), hyp_gps, ec1, gyr, Hcp);
-		gps_tracks(i) = &gps_data;
-		gps_num += numberof(gps_data);
-		
-		// Interp info for each image
-		status = swrite(format="RAW file %i of %i: Interpolating for images...", i, numberof(files));
-		if(adaptprog) adapt_send_progress, status, progcur++/progcnt;
-		if(progress) write, status;
-
-		new_img_data = adf_interp_data(isod, hyp_gps, ec1, gyr, Hcp);
-		img_data = adf_merge_data(img_data, new_img_data);
-
+	} else {
+		gps_tracks = [];
+		gps_num = 0;
 	}
 
 	status = "Merging vessel tracks...";
 	if(adaptprog) adapt_send_progress, status, progcur++/progcnt;
 	if(progress) write, status;
 
-	gps_data = array(ADF_DATA, gps_num);
-	gps_tn = array(int, gps_num);
-	start = 1;
-	for(i = 1; i <= numberof(gps_tracks); i++) {
-		temp = *gps_tracks(i);
-		if(numberof(temp)) {
-			gps_data(start:start+numberof(temp)-1) = temp;
-			gps_tn  (start:start+numberof(temp)-1) = i;
-			start += numberof(temp);
+	if(gps_num) {
+		gps_data = array(ADF_DATA, gps_num);
+		gps_tn = array(int, gps_num);
+		start = 1;
+		for(i = 1; i <= numberof(gps_tracks); i++) {
+			temp = *gps_tracks(i);
+			if(numberof(temp)) {
+				gps_data(start:start+numberof(temp)-1) = temp;
+				gps_tn  (start:start+numberof(temp)-1) = i;
+				start += numberof(temp);
+			}
 		}
 	}
 	
 	// Make sure the data is sorted by time, not track number
-	idx = sort(gps_data.hms);
-	gps_data = gps_data(idx);
-	gps_tn   = gps_tn  (idx);
+	if(numberof(gps_data)) {
+		idx = sort(gps_data.hms);
+		gps_data = gps_data(idx);
+		gps_tn   = gps_tn  (idx);
+	}
 
 	status = "Identifying images without GPS data...";
 	if(adaptprog) adapt_send_progress, status, progcur++/progcnt;
 	if(progress) write, status;
 
-	img_no_data_sod = set_difference(isod, hms2sod(img_data.hms), idx=1);
-	if(numberof(img_no_data_sod)) {
+	if(numberof(img_data)) {
+		img_no_data_sod = set_difference(isod, hms2sod(img_data.hms), idx=1);
+	} else {
+		img_no_data_sod = indgen(numberof(isod));
+	}
+	if(numberof(img_no_data_sod) && dimsof(img_no_data_sod)(1)) {
 		img_no_data = array(ADF_DATA, numberof(img_no_data_sod));
-		temp = sod2hms(isod)(,img_no_data_sod);
-		img_no_data.hms = temp(1,)*10000 + temp(2,)*100 + temp(3,) ;
+		img_no_data.hms = sod2hms(isod, noary=1)(img_no_data_sod);
 		img_data = adf_merge_data(img_data, img_no_data);
 	}
 
@@ -294,10 +315,9 @@ func adf_interp_data(sod, raw, ec, gyr, Hcp) {
 
 		An array of ADF_DATA.
 */
-	if(numberof(raw)) {
+	if(numberof(raw) && numberof(sod)) {
 		data = array(ADF_DATA, numberof(sod));
-		temp = sod2hms(sod);
-		data.hms = temp(1,)*10000 + temp(2,)*100 + temp(3,);
+		data.hms = sod2hms(sod, noary=1);
 
 		raw_utm_sod = hms2sod(raw.time);
 		raw_where = where(sod >= raw_utm_sod(1) & sod <= raw_utm_sod(0));
@@ -381,17 +401,25 @@ func adf_output(ifn, img_data, tn, gps_data, ofname) {
 	write, f, format="%s %s\n", "date", getdate();
 	write, f, format="%s %s\n", "time", gettime();
 	
-	write, f, format="adf-contents %d\n", 2;
-	write, f, format="%s %d\n", "image-files", numberof(img_data);
-	write, f, format="%s %d\n", "vessel-track", numberof(gps_data);
+	num = (1 && numberof(img_data)) + (1 && numberof(gps_data));
+	
+	write, f, format="adf-contents %d\n", num;
+	if(numberof(img_data))
+		write, f, format="%s %d\n", "image-files", numberof(img_data);
+	if(numberof(gps_data))
+		write, f, format="%s %d\n", "vessel-track", numberof(gps_data);
 
 	d = img_data;
-	write, f, format="image-files %d\n", numberof(d);
-	write, f, format="%s %06.0f %.5f %.5f %.3f %.2f %.2f %.2f %.2f\n", linesize=1000, ifn, d.hms, d.lat, d.lon, d.depth, d.heading, d.heave, d.roll, d.pitch;
+	if(numberof(d)) {
+		write, f, format="image-files %d\n", numberof(d);
+		write, f, format="%s %06.0f %.5f %.5f %.3f %.2f %.2f %.2f %.2f\n", linesize=1000, ifn, d.hms, d.lat, d.lon, d.depth, d.heading, d.heave, d.roll, d.pitch;
+	}
 
 	d = gps_data;
-	write, f, format="vessel-track %d\n", numberof(d);
-	write, f, format="%d %06.3f %.5f %.5f %.3f %.2f %.2f %.2f %.2f\n", linesize=1000, tn, d.hms, d.lat, d.lon, d.depth, d.heading, d.heave, d.roll, d.pitch;
+	if(numberof(d)) {
+		write, f, format="vessel-track %d\n", numberof(d);
+		write, f, format="%d %06.3f %.5f %.5f %.3f %.2f %.2f %.2f %.2f\n", linesize=1000, tn, d.hms, d.lat, d.lon, d.depth, d.heading, d.heave, d.roll, d.pitch;
+	}
 
 	close, f;
 }
@@ -633,6 +661,144 @@ func hypack_parse_raw(ifname, &raw, &pos, &ec1, &ec2, &cap, &gyr, &Hcp) {
 		Hcp = [];
 }
 
+func hypack_determine_cap_adj(dir, progress=, adaptprog=) {
+/* DOCUMENT hypack_determine_cap_adj(dir, progress=, adaptprog=)
+	
+	Determines the adjustment that should be made to the CAP data for a directory
+	of RAW data.
+
+	Parameter:
+
+		dir: The Hypack RAW directory.
+
+	Options:
+
+		progress= Set to 1 to display progress information or 0 to disable. Default
+			is 1.
+
+		adaptprog= Set to 1 to enable ADAPT integration. Default: 0 (disabled).
+	
+	Returns:
+		
+		Array of [h, m, s] indicating the time that should be added to CAP.
+*/
+	if("/" != strpart(dir, strlen(dir):strlen(dir)))
+		dir = dir + "/";
+		
+	if(is_void(progress)) progress = 1;
+	progress = progress ? 1 : 0;
+	
+	// Get list of RAW's
+	status = "Generating list of RAW files...";
+	if(adaptprog) adapt_send_progress, status, 0;
+	if(progress) write, status;
+
+	files = hypack_list_raw(dir);
+
+	progcnt = 2.0 + numberof(files);
+	progcur = 1;
+
+	rval = raw_all = cap_all = [];
+	
+	if(numberof(files)) {
+
+		for(i = 1; i <= numberof(files); i++) {
+			status = swrite(format="RAW file %i of %i: Parsing...", i, numberof(files));
+			if(adaptprog) adapt_send_progress, status, progcur++/progcnt;
+			if(progress) write, status;
+
+			hypack_parse_raw, files(i), raw, pos, ec1, ec2, cap;
+			pos = ec1 = ec2 = [];
+
+			if(numberof(raw)) {
+				if(numberof(raw_all)) {
+					raw_new = array(HYPACK_RAW, numberof(raw_all) + numberof(raw));
+					raw_new(:numberof(raw_all)) = raw_all;
+					raw_new(numberof(raw_all)+1:) = raw;
+					raw_all = raw_new; raw_new = [];
+				} else {
+					raw_all = raw;
+				}
+			}
+			raw = [];
+
+			if(numberof(cap)) {
+				if(numberof(cap_all)) {
+					cap_new = array(HYPACK_RAW, numberof(cap_all) + numberof(cap));
+					cap_new(:numberof(cap_all)) = cap_all;
+					cap_new(numberof(cap_all)+1:) = cap;
+					cap_all = cap_new; cap_new = [];
+				} else {
+					cap_all = cap;
+				}
+			}
+			cap = [];
+		}
+
+		status = "Calculating time adjustment...";
+		if(adaptprog) adapt_send_progress, status, progcur++/progcnt;
+		if(progress) write, status;
+
+		if(numberof(cap_all) && numberof(raw_all)) {
+
+			rval = hypack_raw_time_diff(raw_all, cap_all);
+		}
+	}
+	if(adaptprog) adapt_send_progress, "Processing complete.", 100;
+	return rval;
+}
+
+func hypack_raw_time_diff(ref, adj) {
+/* DOCUMENT hypack_raw_time_diff(ref, adj)
+
+	Determines the time difference between two sets of HYPACK_RAW data.
+
+	Parameters:
+
+		ref: Array of HYPACK_RAW data whose .time information is to be used as
+			the reference.
+
+		adj: Array of HYPACK_RAW data whose .time information is to be analyzed.
+	
+	Returns:
+
+		An array of [h, m, s] containing the amount of time that needs to be
+		added to adj.time in order to make it match ref.time.
+*/
+	return sod2hms(median(interp(hms2sod(ref.time), ref.sod, adj.sod) - hms2sod(adj.time)));
+}
+
+func hypack_raw_adjust_time(dat, h, m, s) {
+/* DOCUMENT  hypack_raw_adjust_time(dat, h, m, s)
+
+	Adjusts the time (.hms) for an array of HYPACK_RAW.
+
+	Parameters:
+
+		dat: The array of HYPAC_RAW to adjust.
+
+		h: The number of hours that will be added to the time.
+
+		m: The number of seconds that will be added to the time.
+
+		s: The number of seconds that will be added to the time.
+	
+	Returns:
+
+		Array of HYPAC_RAW.
+	
+	Note:
+
+		Each of h, m, and s will be added to the time, and they
+		may each have different signs. So h=1 and m=-30 is the same
+		as m=30. Further, h=-1, m=59, s=59 would be equivalent to
+		s=-1.
+*/
+	d = dat;
+	d.time = sod2hms(hms2sod(d.time) + (h * 60 + m) * 60 + s, noary=1);
+	return d;
+}
+
 func exif_extract_time(dir, &fn, &sod) {
 /* DOCUMENT exif_extract_time(dir, &fn, &sod)
 
@@ -663,6 +829,12 @@ func exif_extract_time(dir, &fn, &sod) {
 	num = 0;
 	read, f, format="%d", num;
 	if(DEBUG) write, " num=%i\n", num;
+
+	if(! num) {
+		fn = [];
+		sod = [];
+		return;
+	}
 
 	fn = array(string, num);
 	h = m = s = array(int, num);
