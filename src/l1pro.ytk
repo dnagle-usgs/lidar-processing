@@ -624,23 +624,23 @@ menu .l1wid.mb.post
            set data_file_path [ tk_chooseDirectory -initialdir $data_file_path -mustexist 1 -title "Processed Data Directory" ]/
         }
 
-	ComboBox .l1map.2.rcf -text "RCF Mode..." -width 10 \
-   	   -helptext "Select RCF mode" \
-	   -editable 0 \
-	   -values { none RCF IRCF } \
-	   -takefocus 0 \
-	   -modifycmd {
-		set rcf [.l1map.2.rcf getvalue]
-	   }
+#	ComboBox .l1map.2.rcf -text "RCF Mode..." -width 10 \
+#   	   -helptext "Select RCF mode" \
+#	   -editable 0 \
+#	   -values { none RCF IRCF } \
+#	   -takefocus 0 \
+#	   -modifycmd {
+#		set rcf [.l1map.2.rcf getvalue]
+#	   }
 	
-	ComboBox .l1map.2.dat -text "Datum..." -width 10 \
-   	   -helptext "Select Datum" \
-	   -editable 0 \
-	   -values { w84 n88 } \
-	   -takefocus 0 \
-	   -modifycmd {
-		set dat [.l1map.2.dat getvalue]
-	   }
+#	ComboBox .l1map.2.dat -text "Datum..." -width 10 \
+#   	   -helptext "Select Datum" \
+#	   -editable 0 \
+#	   -values { w84 n88 } \
+#	   -takefocus 0 \
+#	   -modifycmd {
+#		set dat [.l1map.2.dat getvalue]
+#	   }
 
 	ComboBox .l1map.2.mode -text "Data Type..." -width 10 \
    	   -helptext "Select Data Type" \
@@ -677,23 +677,24 @@ menu .l1wid.mb.post
 		append_varlist "exploredata"
 		set mvar "exploredata"
 		set curvar "exploredata"
-		if {$dat == 0} {
-		   set datt "w84"
-		}
-		if {$dat == 1} {
-		   set datt "n88"
-		}
+#		if {$dat == 0} {
+#		   set datt "w84"
+#		}
+#		if {$dat == 1} {
+#		   set datt "n88"
+#		}
 		if {$skipb == 1} {
-		   exp_send "explorestart, \"$data_file_path\", $rcf, \"$datt\", $modes, win=$win_no, search_str=\"$search\", forceskip=$skip\r"
+		   exp_send "explorestart, \"$data_file_path\", $modes, win=$win_no, search_str=\"$search\", forceskip=$skip\r"
 		   expect ">"
 		}
 		if {$skipb == 0} {
-		   exp_send "explorestart, \"$data_file_path\", $rcf, \"$datt\", $modes, win=$win_no, search_str=\"$search\"\r"
+		   exp_send "explorestart, \"$data_file_path\", $modes, win=$win_no, search_str=\"$search\"\r"
 		   expect ">"
 		}
 	}
 	pack .l1map.1.path .l1map.1.pathbutton -side left -padx 5
-	pack .l1map.2.rcf .l1map.2.dat .l1map.2.mode .l1map.2.winl .l1map.2.win .l1map.2.skipb .l1map.2.skip .l1map.2.search .l1map.2.go -side left -padx 5
+#	pack .l1map.2.rcf .l1map.2.dat .l1map.2.mode .l1map.2.winl .l1map.2.win .l1map.2.skipb .l1map.2.skip .l1map.2.search .l1map.2.go -side left -padx 5
+	pack .l1map.2.mode .l1map.2.winl .l1map.2.win .l1map.2.skipb .l1map.2.skip .l1map.2.search .l1map.2.go -side left -padx 5
   }
 	
 

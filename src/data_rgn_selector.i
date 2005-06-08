@@ -241,7 +241,7 @@ indx = where(x >= xmin);
 }
 
 func sel_rgn_from_datatiles(rgn=, data_dir=,lmap=, win=, mode=, search_str=, skip=, noplot=,  pip=, pidx=) {
-/* DOCUMENT  sel_rgn_from_datatiles(junk, rgn=, data_dir=,lmap=, win=, mode=, search_str=,  onlymerged=, onlynotmerged=, onlyrcfd=, onlynotrcfd=, datum=, skip=, noplot=,  pip=, pidx=) 
+/* DOCUMENT  sel_rgn_from_datatiles(rgn=, data_dir=,lmap=, win=, mode=, search_str=,  skip=, noplot=,  pip=, pidx=) 
 
   This function selects data from a series of processed data tiles.
   The processed data tiles must have the min easting and max northing in their filename.
@@ -256,7 +256,7 @@ func sel_rgn_from_datatiles(rgn=, data_dir=,lmap=, win=, mode=, search_str=, ski
    pidx = the array of a previously clicked polygon. Set to lpidx if this function 
 	  is previously used.
   original Brendan Penney
-  modified amar nayegandhi 07/17/03
+  modified amar nayegandhi April 2005
 */
 
    extern lpidx; // this takes the values of the polygon selected by user. 
