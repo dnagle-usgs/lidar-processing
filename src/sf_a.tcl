@@ -1357,11 +1357,11 @@ proc atris_init { } {
 		
 		set next .adp.next
 		Dialog $next -parent .adp -side right -title "Processing Complete"
-		$next add -text "Process more data" \
+		$next add -text "Process more data" -width 40 \
 			-command {
 				destroy .adp.next
 			}
-		$next add -text "View the images that were just processed" \
+		$next add -text "View the images that were just processed" -width 40 \
 			-command {
 				destroy .adp.next
 				destroy .adp
@@ -1378,7 +1378,7 @@ proc atris_init { } {
 				clear_marks
 				show_img $ci
 			}
-		$next add -text "Return to the image browser" \
+		$next add -text "Return to the image browser" -width 40 \
 			-command {
 				destroy .adp.next
 				destroy .adp
