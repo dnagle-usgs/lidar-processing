@@ -1,7 +1,7 @@
 	require, "dir.i"
 	require, "bathy_filter.i"
 
-func webview(data_dir, webdir, mode, rcfmode=, min_elv=, max_elv=, getcolor=, datum=, update=, fltdir=, indir=, nohtml=, title=) {
+func webview(data_dir, webdir, mode, rcfmode=, min_elv=, max_elv=, getcolor=, datum=, update=, fltdir=, indir=, nohtml=, title=, alwaysdrawmap=) {
 /* DOCUMENT webview(data_dir, webdir, mode, num_reef, reeffile, onlymerged=, min_elv, max_elv, pres, getcolor, update)
 This program searches through data_dir for all i_e######_n####### folders runs through various plotting options for each one.
 The user may save the plain image with a title, an image w/ a grid of named datatiles, and choose several individual data
@@ -11,7 +11,7 @@ display coral reef boxes if they have been defined. It stores images in webdir i
 Options: data_dir = string for directory containing index tile directories created using batch_process
 webdir=where images and associated directory structure is placed.
 mode = Display mode, 1 = first surface (from veg), 2 = bathymertry 3 = veg (bare earth)
-rcfmode= Set to 1 for RCF or 2 for IRCF
+rcfmode= Set to 1 for RCF or 2 for IRCF or 3 for ircf_mf (manually filtered)
 min_elv/max_elv = the min and max elevations to be displayed. The default is -40 to -28 for bathy or -30 to 0 for veg (wgs84). 
 getcolor = if one,automatically selects a color bar that covers a certain number of standard deviations of the data
 datum= Set to "NAVD88" or "WGS84"
@@ -20,6 +20,7 @@ fltdir= To plot flightlines on the bigmap, set to the directory containing EAARL
 indir= If all GGA files are located in a single directory, use fltdir=<gga directory> and indir = 1
 nohtml = Only create images, do not generate the webpage
 title = The title of the web page. e.g. title="Tampa Bay 2004"
+alwaysdrawmap = If 1, will draw the coastline map on every image
 
 To make updates simply place the new data in a folder broken down into the normal indextile/datatile/data file sturcture and run the command
 
@@ -202,6 +203,7 @@ Original: Lance Mosher
 		searchstr = "*_"+ss+".pbd"; 	//Excludes filtered
 		if (rcfmode == 1)  searchstr = "*_"+ss+"*_rcf.pbd";
 		if (rcfmode == 2)  searchstr = "*_"+ss+"*_ircf.pbd";
+		if (rcfmode == 3)  searchstr = "*_"+ss+"*_ircf_mf.pbd";
 
 
 //-----If file already exists continue loop
@@ -255,6 +257,11 @@ Original: Lance Mosher
 			picmaker, color="black", rgn=idx_rgn;
 			limits, square=1;
 			window, 5, legends=0;
+			if (alwaysdrawmap) {
+				idxlmt = limits();
+				show_map, dllmap, utm=1, width=2;			//draw coastline map
+				limits, idxlmt(1), idxlmt(2), idxlmt(3), idxlmt(4);
+			}
 
 //-----Save postscript of index tile
 			idx_emin = idx_emin/1000;
@@ -320,6 +327,7 @@ Original: Lance Mosher
 
 			if (rcfmode == 1) search_str = "*_rcf.pbd";
 			if (rcfmode == 2) search_str = "*_ircf.pbd";
+			if (rcfmode == 3) search_str = "*_ircf_mf.pbd";
 			data_sel = sel_rgn_from_datatiles(rgn=rgn, data_dir=data_dir,mode=fixmode, win=5, search_str=search_str);
 			if (!is_array(data_sel)) {write, "bad \n"; continue;}
 			if ((mode == 1) && (!skipthis)) {
@@ -346,6 +354,11 @@ Original: Lance Mosher
 			colorbar, elvs(1), elvs(2), landscape=1, datum = dattag, units="M";
 			limits, square=1;
 			window, 4, legends=0;
+			if (alwaysdrawmap) {
+				tillmt = limits();
+				show_map, dllmap, utm=1, width=2;
+				limits, tillmt(1), tillmt(2), tillmt(3), tillmt(4);
+			}
 			emint = emin/1000;
 			nmaxt = nmax/1000;
 			hcp_file, tilename; 
