@@ -108,6 +108,9 @@ func nmea_tokenize(str) {
 	// Find the indexes for commas
 	commas = where(ary == ',');
 
+	// if no commas, then no tokens 
+	if (!is_array(commas)) return [""]
+
 	a = z = array(int, numberof(commas)+2);
 	
 	// The dollar preceeds the first token ...

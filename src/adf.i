@@ -617,7 +617,7 @@ func hypack_parse_raw(ifname, &raw, &pos, &ec1, &ec2, &cap, &gyr, &Hcp) {
 		if(cap_i > numberof(cap))
 			cap = [cap, 0](*)(1:numberof(cap)+500);
 		if(gyr_i > numberof(gyr))
-			gyr = [gyr, 0](*)(1:numberof(cap)+500);
+			gyr = [gyr, 0](*)(1:numberof(gyr)+500);
 		if(Hcp_i > numberof(Hcp))
 			Hcp = [Hcp, 0](*)(1:numberof(Hcp)+500);
 	}
