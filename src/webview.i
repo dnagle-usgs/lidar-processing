@@ -20,7 +20,7 @@ fltdir= To plot flightlines on the bigmap, set to the directory containing EAARL
 indir= If all GGA files are located in a single directory, use fltdir=<gga directory> and indir = 1
 nohtml = Only create images, do not generate the webpage
 title = The title of the web page. e.g. title="Tampa Bay 2004"
-alwaysdrawmap = If 1, will draw the coastline map on every image
+alwaysdrawmap = If 1, will draw the coastline map on every image. Default is 1.
 
 To make updates simply place the new data in a folder broken down into the normal indextile/datatile/data file sturcture and run the command
 
@@ -29,6 +29,7 @@ Original: Lance Mosher
 
 
 	if(!(is_array(update))){update=1;}   
+	if(!(is_array(alwaysdrawmap))){alwaysdrawmap=1;}   
 	if ((!is_array(getcolor)) && ((!min_elv) && (!max_elv))) getcolor=1;
 	if (!is_array(datum)) datum = "WGS84";
 	if(!onlymerged) onlymerged=0;

@@ -1,4 +1,4 @@
-//This document contains functions that can determine biases
+//This document contains functions that can determine bias corrections 
 require, "qaqc_fns.i"
 require, "compare_transects.i"
 
@@ -140,7 +140,7 @@ func get_transect(data, win=, width=, update=) {
 	data = data(indx);
 	window, 0; fma;
 	plmk, data.elevation, data.east/100.0;
-	limits, square=1;
+	limits, square=0;
 	write, "Set good limits then type something and hit return...";
 	rd="";rd=read(rd);
 	rgn = array(float, 4);
@@ -260,6 +260,7 @@ func reprocess_data(data, typ) {
 	This will be tremendously slow for large data sets.
 */
 	extents = [data.east(min)/100.0-75, data.east(max)/100.0+75, data.north(min)/100.0-175, data.north(max)/100.0+75];
+	utm=1;
 	q = gga_win_sel(0,llarr=extents,_batch=1);
 	if (!is_array(q)) {write, "No gga records found. GGA records not from correct dataset?"; return;}
 	if (typ == 0) {
