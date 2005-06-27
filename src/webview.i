@@ -154,7 +154,10 @@ Original: Lance Mosher
 		}
 	}
 	window, 0;
-	show_map, dllmap, utm=1, width=4;
+	curzone = 0;
+	strzone = rdline( prompt="Enter Zone Number: ");
+	sread, strzone, format="%d",curzone;
+	show_map, dllmap, utm=1, width=4, zone=curzone;
 	limits, save_lmt;
 	if (is_void(bpexist)) {
 		hcp_file, bigpicname;
@@ -260,7 +263,7 @@ Original: Lance Mosher
 			window, 5, legends=0;
 			if (alwaysdrawmap) {
 				idxlmt = limits();
-				show_map, dllmap, utm=1, width=2;			//draw coastline map
+				show_map, dllmap, utm=1, width=2, zone=curzone; //draw coastline map
 				limits, idxlmt(1), idxlmt(2), idxlmt(3), idxlmt(4);
 			}
 
@@ -357,7 +360,7 @@ Original: Lance Mosher
 			window, 4, legends=0;
 			if (alwaysdrawmap) {
 				tillmt = limits();
-				show_map, dllmap, utm=1, width=2;
+				show_map, dllmap, utm=1, width=2, zone=curzone;
 				limits, tillmt(1), tillmt(2), tillmt(3), tillmt(4);
 			}
 			emint = emin/1000;

@@ -62,8 +62,8 @@ if ( is_void( dllmap ) ) {
 }
 
 
-func show_map( m,color=,utm=,width=, noff=, eoff= ) {
- /*DOCUMENT show_map( m,color=,utm=,width=, noff=, eoff= )
+func show_map( m,color=,utm=,width=, noff=, eoff=, zone=) {
+ /*DOCUMENT show_map( m,color=,utm=,width=, noff=, eoff=, zone=)
    This function plots the base map in either lat lon or utm.  For utm, if the map crosses 2 or more zones, the user is prompted for the zone number. 
    Original: C. W. Wright
    Modified by amar nayegandhi to include utm plot.
@@ -95,9 +95,13 @@ func show_map( m,color=,utm=,width=, noff=, eoff= ) {
     if (zdiff > 0) {
       // map data definitely crosses atleast 2 zones
       write, format="Selected Base Map crosses %d UTM Zones. \n",zdiff;
-      write, format="Select Zone Number from %d to %d: \n", zminlon, zmaxlon;
-      strzone = rdline( prompt="Enter Zone Number: ");
-      sread, strzone, format="%d",curzone;
+      if (!is_array(zone)) {		
+         write, format="Select Zone Number from %d to %d: \n", zminlon, zmaxlon;
+         strzone = rdline( prompt="Enter Zone Number: ");
+         sread, strzone, format="%d",curzone;
+      } else {
+	curzone = zone;
+      }
     } 
  }
  for (i=1; i<=sz; i++ ) {
