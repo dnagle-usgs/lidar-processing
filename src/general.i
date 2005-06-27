@@ -302,6 +302,14 @@ func interp_periodic(y, x, xp, ps, pe) {
 
 	See also: interp
 */
+	if(numberof(x) * numberof(xp) > 16000000 && numberof(xp) > 1) {
+		yp = array(structof(y(1)), numberof(xp));
+		for(i = 1; i <= numberof(yp); i++) {
+			yp(i) = interp_periodic(y, x, [xp(i)], ps, pe);
+		}
+		return yp;
+	}
+
 	pl = pe - ps;
 	ph = pl * 0.5;
 
