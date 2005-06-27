@@ -69,26 +69,36 @@ func sel_data_rgn(data, type, mode=,win=, exclude=, rgn=, make_workdata=, origda
   }
 
   if ((mode==1) || (mode==2) || (mode==4)) {
-    q = where((data.east >= rgn(1)*100.)   & 
+    if ( type == VEG__ ) {
+	q = where((data.least >= rgn(1)*100.)   &
+               (data.least <= rgn(2)*100.)) ;
+        indx = where(((data.lnorth(q) >= rgn(3)*100) &
+               (data.lnorth(q) <= rgn(4)*100)));
+        indx = q(indx);
+        if (!is_void(origdata)) {
+           origq = where((origdata.least >= rgn(1)*100.)   &
+                   (origdata.least <= rgn(2)*100.)) ;
+           origindx = where(((origdata.lnorth(origq) >= rgn(3)*100) &
+                   (origdata.lnorth(origq) <= rgn(4)*100)));
+           origindx = origq(origindx);
+        }
+    } else {
+        q = where((data.east >= rgn(1)*100.)   & 
                (data.east <= rgn(2)*100.)) ;
-
-    //write, numberof(q);
- 
-    indx = where(((data.north(q) >= rgn(3)*100) & 
+        //write, numberof(q);
+        indx = where(((data.north(q) >= rgn(3)*100) & 
                (data.north(q) <= rgn(4)*100)));
-
-    //write, numberof(indx);
-
-    indx = q(indx);
-    if (!is_void(origdata)) {
-       origq = where((origdata.east >= rgn(1)*100.)   & 
+        //write, numberof(indx);
+        indx = q(indx);
+        if (!is_void(origdata)) {
+           origq = where((origdata.east >= rgn(1)*100.)   & 
                (origdata.east <= rgn(2)*100.)) ;
-       origindx = where(((origdata.north(origq) >= rgn(3)*100) & 
+           origindx = where(((origdata.north(origq) >= rgn(3)*100) & 
                (origdata.north(origq) <= rgn(4)*100)));
-       origindx = origq(origindx);
-    }
-  }
-     
+           origindx = origq(origindx);
+        }
+    } //end if/else for type
+  }   
 
   if (mode == 3) {
      window, win;
@@ -98,16 +108,29 @@ func sel_data_rgn(data, type, mode=,win=, exclude=, rgn=, make_workdata=, origda
          ply = rgn;
      }
      box = boundBox(ply);
-     box_pts = ptsInBox(box*100., data.east, data.north);
-     if (!is_array(box_pts)) return [];
-     poly_pts = testPoly(ply*100., data.east(box_pts), data.north(box_pts));
-     indx = box_pts(poly_pts);
-     if (!is_void(origdata)) {
-        orig_box_pts = ptsInBox(box*100., origdata.east, origdata.north);
-        if (!is_array(orig_box_pts)) return [];
-        orig_poly_pts = testPoly(ply*100., origdata.east(orig_box_pts), origdata.north(orig_box_pts));
-        origindx = orig_box_pts(orig_poly_pts);
-     }
+     if ( type == VEG__ ) {
+         box_pts = ptsInBox(box*100., data.least, data.lnorth);
+         if (!is_array(box_pts)) return [];
+         poly_pts = testPoly(ply*100., data.least(box_pts), data.lnorth(box_pts));
+         indx = box_pts(poly_pts);
+         if (!is_void(origdata)) {
+            orig_box_pts = ptsInBox(box*100., origdata.least, origdata.lnorth);
+            if (!is_array(orig_box_pts)) return [];
+            orig_poly_pts = testPoly(ply*100., origdata.least(orig_box_pts), origdata.lnorth(orig_box_pts));
+            origindx = orig_box_pts(orig_poly_pts);
+         }
+     } else {
+         box_pts = ptsInBox(box*100., data.east, data.north);
+         if (!is_array(box_pts)) return [];
+         poly_pts = testPoly(ply*100., data.east(box_pts), data.north(box_pts));
+         indx = box_pts(poly_pts);
+         if (!is_void(origdata)) {
+            orig_box_pts = ptsInBox(box*100., origdata.east, origdata.north);
+            if (!is_array(orig_box_pts)) return [];
+            orig_poly_pts = testPoly(ply*100., origdata.east(orig_box_pts), origdata.north(orig_box_pts));
+            origindx = orig_box_pts(orig_poly_pts);
+         }
+    }//end if/else for type
 	
  }
  if (exclude) {
