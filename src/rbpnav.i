@@ -175,7 +175,7 @@ extern gga;
       precision_warning;
     }
  } else {
- if ( is_void(data_path) ) {
+ if ( is_void(data_path)  || data_path == "") {
  write,"Enter path:"
    data_path = rdline(prompt="Enter data path:");
    path = data_path;
@@ -183,7 +183,8 @@ extern gga;
 
  if ( _ytk ) {
     // path = data_path + "/gps/"
-    path = data_path + "/trajectories/"
+    //path = data_path + "/trajectories/"
+    path = data_path;
     tkcmd, "path_exists "+path
     // ifn  = get_openfn( initialdir=data_path, filetype="*pnav.ybin" );
     ifn  = get_openfn( initialdir=path, filetype="*pnav.ybin" );
@@ -193,6 +194,7 @@ extern gga;
     pnav_filename = ifn;
     ff = split_path( ifn, -1 );
     path = ff(1);
+    data_path = path;
     if ( !strmatch(pnav_filename,"-p-") ) {
       precision_warning;
     }
