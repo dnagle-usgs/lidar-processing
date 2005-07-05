@@ -424,6 +424,76 @@ func adf_output(ifn, img_data, tn, gps_data, ofname) {
 	close, f;
 }
 
+func adf_input(ifname, section) {
+/* DOCUMENT adf_input(ifname, section)
+	
+	Returns the data from a given section of an ADF file.
+
+	Parameters:
+
+		ifname: The ADF file to read.
+
+		section: The section of the ADF file from which to return data.
+	
+	Returns:
+
+		An array of strings with dimensions [number of data lines, number of fields].
+*/
+	valid = ["adf-header", "adf-contents", "image-files", "vessel-track"];
+	isvalid = numberof(where(valid == section));
+
+	if(!isvalid) {
+		return [];
+	}
+	
+	f = open(ifname, "r");
+
+	output = [];
+
+	while(line = rdline(f)) {
+		sname = scount = "";
+		sread, line, sname, scount;
+		scount = atoi(scount)(1);
+		
+		if(section == sname) {
+			if(sname == "adf-header") {
+				output = array(string, scount, 2);
+			}
+			if(sname == "adf-contents") {
+				output = array(string, scount, 2);
+			}
+			if(sname == "image-files") {
+				output = array(string, scount, 9);
+			}
+			if(sname == "vessel-track") {
+				output = array(string, scount, 9);
+			}
+			f1 = f2 = f3 = f4 = f5 = f6 = f7 = f8 = f9 = "";
+			for (i = 1; i <= scount; i++) {
+				line = rdline(f);
+				sread, line, f1, f2, f3, f4, f5, f6, f7, f8, f9;
+
+				if(sname == "adf-header" || sname == "adf-contents") {
+					output(i,) = [f1, f2];
+				}
+				if(sname == "image-files" || sname == "vessel-track") {
+					output(i,) = [f1, f2, f3, f4, f5, f6, f7, f8, f9];
+				}
+			}
+
+			close, f;
+			return output;
+		} else {
+			for (i = 0; i < scount; i++) {
+				line = rdline(f);
+			}
+		}
+	}
+	
+	close, f;
+	return output;
+}
+
 func adf_input_vessel_track(fname, &tn, &d) {
 /* DOCUMENT adf_input_vessel_track(fname, &tn, &d)
 	
