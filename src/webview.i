@@ -27,6 +27,10 @@ To make updates simply place the new data in a folder broken down into the norma
 Original: Lance Mosher
 */
 
+	convert_cmd = "";
+	f = popen("which convert", 0);
+	read, f, convert_cmd;
+	close, f;
 
 	if(!(is_array(update))){update=1;}   
 	if(!(is_array(alwaysdrawmap))){alwaysdrawmap=1;}   
@@ -162,8 +166,9 @@ Original: Lance Mosher
 	if (is_void(bpexist)) {
 		hcp_file, bigpicname;
 		hcp;
-		write, "*****Converting bigmap postscript to png..\n"
-		system, "convert -quality 9 -rotate 90 "+webdir+"bigpic.ps "+webdir+"bigpic.png";
+		hcp_file, "/tmp/yoricktmp.ps";
+		write, "*****Converting bigmap postscript to png..\n";
+		system, convert_cmd+" -size 550x773 -quality 0 -rotate 90 "+webdir+"bigpic.ps "+webdir+"bigpic.png";
 	}
 	
 //-----Find the pixel dimensions of the bigpic for the web page
@@ -272,8 +277,9 @@ Original: Lance Mosher
 			idx_nmax = idx_nmax/1000;
 			hcp_file, idxtilename; 
 			hcp;
+			hcp_file, "/tmp/yoricktmp.ps";
 			swrite, format="*****Converting index tile %i of %i to png...\n", i, ni;
-			system, "convert -quality 9 -rotate 90 "+swrite(format="%s%di%d.ps", newdiri, idx_emin, idx_nmax)+" "+swrite(format="%s%di%d.png", newdiri, idx_emin, idx_nmax);
+			system, "convert -size 595x777 -quality 0 -rotate 90 "+swrite(format="%s%di%d.ps", newdiri, idx_emin, idx_nmax)+" "+swrite(format="%s%di%d.png", newdiri, idx_emin, idx_nmax);
 		}
 		if(iexist == 1){
 			swrite(format="Index tile %s exists... continuing", idxtilename);
@@ -367,8 +373,9 @@ Original: Lance Mosher
 			nmaxt = nmax/1000;
 			hcp_file, tilename; 
 			hcp;
+			hcp_file, "/tmp/yoricktmp.ps";
 			write, format="*****Converting data tile %i of %i (index tile %i of %i) to png...\n", j, nj, i, ni;
-			system, "convert -quality 9 -rotate 90 "+swrite(format="%s%dd%d.ps", newdird, emint, nmaxt)+" "+swrite(format="%s%dd%d.png", newdird, emint, nmaxt);
+			system, "convert -quality 0 -rotate 90 "+swrite(format="%s%dd%d.ps", newdird, emint, nmaxt)+" "+swrite(format="%s%dd%d.png", newdird, emint, nmaxt);
    		}
 	}
 	if (!nohtml) {
