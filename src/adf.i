@@ -557,20 +557,29 @@ func hypack_list_raw(dir) {
 
 		An array of type string containing the full path and file names.
 */
-	cmd = "find " + dir + " -iname '*.raw' ";
-	cmd = "( " + cmd + " ) | wc -l ; " + cmd;
+	if("/" != strpart(dir, strlen(dir):strlen(dir)))
+		dir = dir + "/";
 	
-	f = popen(cmd, 0);
-	
-	num = 0;
-	read, f, format="%d", num;
-	
-	if(!num)
-		return [];
+	if(!is_void(plug_in)) { // Use built-in methods under Yorick 1.6
+		a = lsdir(dir);
+		list = a(where(strglob("*.raw", a, case=0)));
+		list = dir + list;
+	} else { // Use system commands under Yorick 1.5
+		cmd = "find " + dir + " -iname '*.raw' ";
+		cmd = "( " + cmd + " ) | wc -l ; " + cmd;
+		
+		f = popen(cmd, 0);
+		
+		num = 0;
+		read, f, format="%d", num;
+		
+		if(!num)
+			return [];
 
-	list = array(string, num);
-	read, f, format="%s", list;
-	close, f;
+		list = array(string, num);
+		read, f, format="%s", list;
+		close, f;
+	}
 	
 	return list;
 }
@@ -889,36 +898,54 @@ func exif_extract_time(dir, &fn, &sod) {
 
 		n/a
 */
-	cmd = "find " + dir + " -iname '*.jpg' ";
-	cmd = cmd + "| wc -l; " + cmd + "-exec exiflist -o l -c t -f file-name,gps-time \\\{} \\\;"
+	if(!is_void(plug_in)) { // Use built-in commands for Yorick 1.6
+		a = lsdir(dir);
+		fn = a(where(strglob("*.jpg", a, case=0)));
 
-	if(DEBUG) write, " cmd=%s\n", cmd;
+		sod = array(double, numberof(fn));
+		
+		for(i = 1; i <= numberof(fn); i++) {
+			f = popen("exiflist -o l -c t -f file-name,gps-time "+dir+fn(i), 0);
+			fname = "";
+			h = m = s = 0;
+			read, f, format="%s %d:%d:%d", fname, h, m, s;
+			close, f;
+			sod(i) = hms2sod(h * 10000 + m * 100 + s);
+		}
+		
+	} else { // Use system commands for Yorick 1.5
+		cmd = "find " + dir + " -iname '*.jpg' ";
+		cmd = cmd + "| wc -l; " + cmd + "-exec exiflist -o l -c t -f file-name,gps-time \\\{} \\\;"
+
+		if(DEBUG) write, " cmd=%s\n", cmd;
+		
+		f = popen(cmd, 0);
+
+		num = 0;
+		read, f, format="%d", num;
+		if(DEBUG) write, " num=%i\n", num;
+
+		if(! num) {
+			fn = [];
+			sod = [];
+			return;
+		}
+
+		fn = array(string, num);
+		h = m = s = array(int, num);
+
+		read, f, format="%s %d:%d:%d", fn, h, m, s;
+		close, f;
 	
-	f = popen(cmd, 0);
+		h  =  h(where(fn));
+		m  =  m(where(fn));
+		s  =  s(where(fn));
+		fn = fn(where(fn));
 
-	num = 0;
-	read, f, format="%d", num;
-	if(DEBUG) write, " num=%i\n", num;
-
-	if(! num) {
-		fn = [];
-		sod = [];
-		return;
+		sod = hms2sod(h * 10000 + m * 100 + s);
+	
 	}
-
-	fn = array(string, num);
-	h = m = s = array(int, num);
-
-	read, f, format="%s %d:%d:%d", fn, h, m, s;
-	close, f;
 	
-	h  =  h(where(fn));
-	m  =  m(where(fn));
-	s  =  s(where(fn));
-	fn = fn(where(fn));
-
-	sod = hms2sod(h * 10000 + m * 100 + s);
-
 	idx = sort(sod);
 
 	sod = sod(idx);

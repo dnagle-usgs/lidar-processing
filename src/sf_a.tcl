@@ -86,6 +86,8 @@ set mark(0) 0       ;# Array of marked images
 set mark_range_inc 1;# Increment for ranges
 set range_touched 0 ;# Have fcin or lcin been set but not used?
 
+set show_fname 0    ;# Show the file name?
+
 set camtype $params(camtype) ;# Camera type -- may be overridden by .lst commands
 set tarname ""      ;# Tar file to access - may be changed by .lst commands
 
@@ -206,7 +208,7 @@ proc curzone { zone } {
 }
 
 # timern_write is used in a variable trace to keep
-# .cf3.entry up to date when .cf3.option changes
+# .alps.entry up to date when .alps.option changes
 proc timern_write { name1 name2 op } {
 	global ci
 	show_img $ci
@@ -240,6 +242,27 @@ proc cur_mark_write { name1 name2 op } {
 	global cur_mark mark ci
 
 	catch { set mark($ci) $cur_mark }
+}
+
+proc toolbar_status_write { name1 name2 op } {
+	global $name1
+	set bar [lindex [split $name1 "_"] 2]
+	if { [set $name1] } {
+		grid .$bar
+	} else {
+		grid remove .$bar
+	}
+}
+
+proc scrollbar_status_write { name1 name2 op } {
+	global $name1
+	if { [set $name1] } {
+		grid .canf.xscroll
+		grid .canf.yscroll
+	} else {
+		grid remove .canf.xscroll
+		grid remove .canf.yscroll
+	}
 }
 
 
@@ -624,8 +647,8 @@ proc plotRaster {} {
 	set thetime 0
 	if {$timern == "hms"} {
 		puts "Plotting raster using Mode Value: $hms"
-		.cf3.entry delete 0 end
-		.cf3.entry insert insert $hms
+		.alps.entry delete 0 end
+		.alps.entry insert insert $hms
 		if { [ytk_exists] == 1 } {
 			send_ytk set themode $timern
 			send_ytk set thetime $sod
@@ -634,8 +657,8 @@ proc plotRaster {} {
 	}
 	if {$timern == "sod"} {
 		puts "Plotting raster using Mode Value: $sod"
-		.cf3.entry delete 0 end
-		.cf3.entry insert insert $sod
+		.alps.entry delete 0 end
+		.alps.entry insert insert $sod
 		if { [ytk_exists] == 1 } {
 			send_ytk set themode $timern
 			send_ytk set thetime $sod
@@ -644,8 +667,8 @@ proc plotRaster {} {
 	}
 	if {$timern == "cin"} {
 		puts "Plotting raster using Mode Value: $cin"
-		.cf3.entry delete 0 end
-		.cf3.entry insert insert $cin
+		.alps.entry delete 0 end
+		.alps.entry insert insert $cin
 		if { [ytk_exists] == 1 } {
 			send_ytk set themode $timern
 			send_ytk set thetime $sod
@@ -722,7 +745,7 @@ proc show_img { n } {
 	global fna nfiles img run ci data imgtime dir img_opts \
 	       lat lon alt ew ns pdop nsat seconds_offset hms sod timern cin hsr \
 			 frame_off llat llon pitch roll head yes_head zoom \
-			 camtype DEBUG_SF mogrify_pref mogrify_exists tarname 
+			 camtype DEBUG_SF mogrify_pref mogrify_exists tarname show_fname
 
 	set cin $n
 
@@ -868,9 +891,12 @@ proc show_img { n } {
 				set data "hms:$hms sod:$sod  No GPS Data"
 			}
 		} elseif { $camtype == 2 } {
-			if { [ catch { set data "$hms ($sod) $lat(hms$hms) $lon(hms$hms) $alt(hms$hms)"} ] } {
+			if { [ catch { set data "hms:$hms sod:$sod lat:$lat(hms$hms) lon:$lon(hms$hms) depth:$alt(hms$hms)"} ] } {
 				set data "hms:$hms sod:$sod  No GPS Data"
 			}
+		}
+		if { $show_fname } {
+			set data "$data\n$fna($n)"
 		}
 
 		if { $timern == "cin" } { set hsr $cin }
@@ -1131,7 +1157,7 @@ proc mark_range { } {
 proc enable_controls { } {
 	global mogrify_exists mogrify_pref camtype
 
-	.cf2.mark configure            -state normal
+	.speedgamma.mark configure            -state normal
 	.mb entryconfigure File        -state normal
 	.mb entryconfigure Archive     -state normal
 	.mb entryconfigure Options     -state normal
@@ -1150,6 +1176,17 @@ proc enable_controls { } {
 }
 
 proc atris_init { } {
+	
+	global scrollbar_status toolbar_status_gps  toolbar_status_slider toolbar_status_vcr \
+		toolbar_status_speedgamma toolbar_status_alps
+
+	set scrollbar_status 1
+	set toolbar_status_gps 1
+	set toolbar_status_slider 1
+	set toolbar_status_vcr 1
+	set toolbar_status_speedgamma 1
+	set toolbar_status_alps 1
+
    menu .mb.tools
 	.mb insert "Archive" cascade -label "Tools" -underline 0 -menu .mb.tools -state disabled
 	.mb.tools add command -label "Vessel Track" -underline 0 \
@@ -1504,9 +1541,9 @@ proc rewind { } {
 
 ### [ Frames
 frame .canf -borderwidth 5 -relief sunken
-frame .cf1  -borderwidth 5 -relief raised
-frame .cf2  -borderwidth 5 -relief raised
-frame .cf3  -borderwidth 5 -relief raised
+frame .vcr  -borderwidth 5 -relief raised
+frame .speedgamma  -borderwidth 5 -relief raised
+frame .alps  -borderwidth 5 -relief raised
 ### ] /Frames
 
 ### [ Menubar
@@ -1560,68 +1597,35 @@ menu .mb.zoom
 
 ##### ][ Options Menu
 
-.mb.options add command  -label "VCR Controls..." -underline 1  -command {
-	if { [ catch { pack info .cf1 } ] } {
-		pack .cf1 -side top -in . -fill x
-		wm geometry . ""
-	} else {
-		pack forget .cf1
-		wm geometry . ""
-	}
-}
-.mb.options add command  -label "GPS Info..." -underline 1  -command {
-	if { [ catch { pack info .gps } ] } {
-		pack .gps    -side top -in . -anchor nw
-#		pack_gps
-		wm geometry . ""
-	} else {
-		pack forget .gps
-		wm geometry . ""
-	}
-}
-.mb.options add command  -label "Image slider..." -underline 1  -command {
-	if { [ catch { pack info .slider } ] } {
-		pack .slider -side top -in . -fill x
-		wm geometry . ""
-	} else {
-		pack forget .slider
-		wm geometry . ""
-	}
-}
-.mb.options add command  -label "ALPS Interface..." -underline 1  -command {
-	if { [ catch { pack info .cf3 } ] } {
-		pack .cf3    -side top -in . -fill x
-		pack .cf1.plotpos -side left -in .cf1 -expand 1 -fill x
-		wm geometry . ""
-	} else {
-		pack forget .cf3 .cf1.plotpos
-		wm geometry . ""
-	}
-}
-.mb.options add command  -label "Speed, Gamma..." -underline 1  -command {
-	if { [ catch { pack info .cf2 } ] } {
-		pack .cf2 -side top -fill x
-		wm geometry . ""
-	} else {
-		pack forget .cf2
-		wm geometry . ""
-	}
-}
-.mb.options add command  -label "Hide/Show Scroll bars..." -underline 1  -command {
-	if { [ catch { pack info .canf.xscroll } ] } {
-		pack .canf.yscroll -side right  -fill y -before .canf.can
-		pack .canf.xscroll -side bottom -fill x -before .canf.can
-		wm geometry . ""
-	} else {
-		pack forget .canf.xscroll
-		pack forget .canf.yscroll
-		wm geometry . ""
-	}
-}
+.mb.options add checkbutton -label "Scroll Bars" -underline 1 \
+	-onvalue 1 -offvalue 0 -variable scrollbar_status
+
+.mb.options add checkbutton -label "GPS Info" -underline 1 \
+	-onvalue 1 -offvalue 0 -variable toolbar_status_gps
+
+.mb.options add checkbutton -label "Image slider" -underline 1 \
+	-onvalue 1 -offvalue 0 -variable toolbar_status_slider
+
+.mb.options add checkbutton -label "VCR Controls" -underline 1 \
+	-onvalue 1 -offvalue 0 -variable toolbar_status_vcr
+
+.mb.options add checkbutton -label "Speed, Gamma, etc." -underline 1 \
+	-onvalue 1 -offvalue 0 -variable toolbar_status_speedgamma
+
+.mb.options add checkbutton -label "ALPS Interface" -underline 1 \
+	-onvalue 1 -offvalue 0 -variable toolbar_status_alps
+
+.mb.options add command     -label "Resize window to fit controls" -underline 1 \
+	-command { wm geometry . "" }
+
+.mb.options add separator
 
 .mb.options add checkbutton -label "Include Heading" -underline 8 -onvalue 1 \
 	-offvalue 0 -variable inhd \
 	-command { include_heading }
+
+.mb.options add checkbutton -label "Display Image File Name" -underline 1 -onvalue 1 \
+	-offvalue 0 -variable show_fname -command { show_img $ci }
 
 .mb.options add separator
 
@@ -1673,7 +1677,7 @@ menu .mb.options.mogrify
 
 # Toplevel .
 
-label .gps -textvariable data
+label .gps -textvariable data -justify left
 
 scale .slider -orient horizontal -from 1 -to 1 -variable ci
 
@@ -1700,84 +1704,74 @@ David Nagle dnagle@usgs.gov\n\
 
 .canf.can create text 25 80 -text $me -tag tx -anchor nw 
 
-# Frame .cf1
+# Frame .vcr
 
-ArrowButton .cf1.prev  -relief raised -type button -width 40 \
+ArrowButton .vcr.prev  -relief raised -type button -width 40 \
 	-dir left  -height 25 -helptext "Click for Previous Image. Keep Mouse Button Pressed to Repeat Command" \
 	-repeatdelay 1000 -repeatinterval 500 \
 	-armcommand { step_img $step -1 }
 
-ArrowButton .cf1.next  -relief raised -type button -width 40 \
+ArrowButton .vcr.next  -relief raised -type button -width 40 \
 	-dir right  -height 25 -helptext "Click for Next Image. Keep Mouse Button Pressed to Repeat Command" \
 	-repeatdelay 1000 -repeatinterval 500 \
 	-armcommand { step_img $step 1 }
 
-ArrowButton .cf1.playr  -arrowrelief raised -type arrow -arrowbd 2 -width 40 \
+ArrowButton .vcr.playr  -arrowrelief raised -type arrow -arrowbd 2 -width 40 \
 	-dir left -height 25 -helptext "Click to play backwards (YalP) through images." \
 	-clean 0 -command { play -1 }
 
-Button .cf1.stop  -text "Stop" -helptext "Stop Playing Through Images" \
+Button .vcr.stop  -text "Stop" -helptext "Stop Playing Through Images" \
 	-command { set run 0 }
 
-ArrowButton .cf1.play  -arrowrelief raised -type arrow -arrowbd 2 -width 40 \
+ArrowButton .vcr.play  -arrowrelief raised -type arrow -arrowbd 2 -width 40 \
 	-dir right  -height 25 -helptext "Click To play forward through images." \
 	-clean 0 -command { play 1 }
 
-Button .cf1.rewind -text "Rewind" -helptext "Rewind to First Image" -command { rewind }
+Button .vcr.rewind -text "Rewind" -helptext "Rewind to First Image" -command { rewind }
 
-Button .cf1.plotpos  \
+Button .vcr.plotpos  \
 	-text "Plot" -helptext "Plot position on Yorick-6\nunder the eaarl.ytk program." \
 	-command { plotpos }
 
-# Frame .cf2
-tk_optionMenu .cf2.speed speed Fast 100ms 250ms 500ms 1s \
+# Frame .speedgamma
+tk_optionMenu .speedgamma.speed speed Fast 100ms 250ms 500ms 1s \
 	1.5s 2s 4s 5s 7s 10s
 
-label .cf2.lbl -text "Step"
+label .speedgamma.lbl -text "Step"
 
-tk_optionMenu .cf2.step step 1 2 5 10 20 30 60 100
+tk_optionMenu .speedgamma.step step 1 2 5 10 20 30 60 100
 
-scale .cf2.gamma -orient horizontal -from 0.01 -to 2.00 -resolution 0.01 \
+scale .speedgamma.gamma -orient horizontal -from 0.01 -to 2.00 -resolution 0.01 \
 	-bigincrement .1 -variable gamma -command set_gamma \
 	-length 60 -sliderlength 15
 
-SpinBox .cf2.offset \
+SpinBox .speedgamma.offset \
 	-helptext "Offset: Enter the frames to be offset here."\
 	-justify center \
 	-range {-300 300 1}\
 	-width 5 \
 	-textvariable frame_off;
 
-checkbutton .cf2.mark \
+checkbutton .speedgamma.mark \
 	-state disabled \
 	-variable cur_mark \
 	-text "Mk"
 
-pack	\
-		.cf2.speed \
-		.cf2.lbl \
-		.cf2.step \
-		.cf2.gamma \
-		.cf2.offset \
-		.cf2.mark \
-	-side left -in .cf2 -expand 1 -fill x -padx 3
+# Frame .alps
 
-
-# Frame .cf3
-
-Entry .cf3.entry -width 8 -relief sunken -bd 2 \
+Entry .alps.entry -width 8 -relief sunken -bd 2 \
 	-helptext "Click to Enter Value" -textvariable hsr
 
-tk_optionMenu .cf3.option timern hms sod cin 
+tk_optionMenu .alps.option timern hms sod cin 
 
-Button .cf3.button -text "Raster" \
+Button .alps.button -text "Raster" \
 	-helptext "Click to Examine EAARL Rasters.  Must have drast.ytk running." \
 	-command {
 		if { [no_file_selected $nfiles] } { return }
 		send_ytk "exp_send \"sfsod_to_rn, $sod;\\n\";"
 	}
 
-Button .cf3.cirbutton -text "cir" \
+Button .alps.cirbutton -text "cir" \
 	-helptext "Click to show CIR image" \
 	-command {
 		if { [no_file_selected $nfiles] } { return }
@@ -1787,7 +1781,7 @@ Button .cf3.cirbutton -text "cir" \
 		}
 	}
 
-SpinBox .cf3.zoom \
+SpinBox .alps.zoom \
 	-helptext "Zoom: Select a zooming factor."\
 	-justify center \
 	-range {$zoom_min $zoom_max 1} \
@@ -1799,44 +1793,52 @@ SpinBox .cf3.zoom \
 ### ] /Frame Contents
 
 ### [ Pack
+grid .canf.xscroll -in .canf -column 0 -row 1 -sticky "ew"
+grid .canf.yscroll -in .canf -column 1 -row 0 -sticky "ns"
+grid .canf.can     -in .canf -column 0 -row 0 -sticky "ewns"
 
-pack .canf.xscroll -side bottom -fill x              -in .canf
-pack .canf.yscroll -side right  -fill y              -in .canf
-pack .canf.can     -anchor nw   -fill both -expand 1 -in .canf
-
-pack \
-	.cf1.prev \
-	.cf1.next \
-	.cf1.playr \
-	.cf1.stop \
-	.cf1.play \
-	.cf1.rewind \
-	-side left -in .cf1 -expand 1 -fill x
-
+grid rowconfigure .canf 0 -weight 1
+grid columnconfigure .canf 0 -weight 1
 
 pack \
-	.cf3.entry \
-	.cf3.option \
-	.cf3.button \
-	.cf3.cirbutton \
-	.cf3.zoom \
-	-side left -in .cf3 -expand 1 -fill x
+	.vcr.prev \
+	.vcr.next \
+	.vcr.playr \
+	.vcr.stop \
+	.vcr.play \
+	.vcr.rewind \
+	.vcr.plotpos \
+	-side left -in .vcr -expand 1 -fill x
 
-pack .canf   -side top -in . -fill both -expand 1
+pack	\
+		.speedgamma.speed \
+		.speedgamma.lbl \
+		.speedgamma.step \
+		.speedgamma.gamma \
+		.speedgamma.offset \
+		.speedgamma.mark \
+	-side left -in .speedgamma -expand 1 -fill x -padx 3
 
-# Toolbar Packing
+pack \
+	.alps.entry \
+	.alps.option \
+	.alps.button \
+	.alps.cirbutton \
+	.alps.zoom \
+	-side left -in .alps -expand 1 -fill x
 
-.mb.options invoke "GPS Info..."
-if {$camtype == 2} { .mb.options invoke "Image slider..." }
-.mb.options invoke "VCR Controls..."
+grid .canf  -in . -column 0 -row 0 -sticky "nsew"
 
+set i 0
+grid .gps         -in . -column 0 -row [incr i] -sticky "w"
+grid .slider      -in . -column 0 -row [incr i] -sticky "ew"
+grid .vcr         -in . -column 0 -row [incr i] -sticky "ew"
+grid .speedgamma  -in . -column 0 -row [incr i] -sticky "ew"
+grid .alps        -in . -column 0 -row [incr i] -sticky "ew"
+unset i
 
-#proc pack_gps { } {
-#  pack .gps    -side top -in . -anchor nw
-#}
-#pack_gps
-#pack .cf1    -side top -in . -fill x
-#pack .cf2    -side top -in . -fill x
+grid rowconfigure    . 0 -weight 1
+grid columnconfigure . 0 -weight 1
 
 ### ] /Pack
 
@@ -1851,15 +1853,43 @@ bind . <Key-Home>  { rewind }
 bind . <Control-Key-equal> { incr zoom }
 bind . <Control-Key-plus>  { incr zoom }
 bind . <Control-Key-minus> { incr zoom -1 }
-.cf3.zoom bind <Key-Return>    {show_img $ci}
-.cf3.zoom bind <Key-KP_Enter>  {show_img $ci}
-bind .cf3.entry <Key-Return>   {gotoImage}
-bind .cf3.entry <Key-KP_Enter> {gotoImage}
+.alps.zoom bind <Key-Return>    {show_img $ci}
+.alps.zoom bind <Key-KP_Enter>  {show_img $ci}
+bind .alps.entry <Key-Return>   {gotoImage}
+bind .alps.entry <Key-KP_Enter> {gotoImage}
 bind .slider <ButtonRelease> { show_img $ci }
 
 ### ] /Bindings
 
 # ] End GUI Initialization #########################
+
+# [ Variable Traces ################################
+
+if { [catch {package require Tcl 8.4}] } {
+   eval trace variable timern                     w timern_write
+	eval trace variable ci                         w ci_write
+	eval trace variable zoom                       w zoom_write
+	eval trace variable cur_mark                   w cur_mark_write
+	eval trace variable scrollbar_status           w scrollbar_status_write
+	eval trace variable toolbar_status_gps         w toolbar_status_write
+	eval trace variable toolbar_status_slider      w toolbar_status_write
+	eval trace variable toolbar_status_vcr         w toolbar_status_write
+	eval trace variable toolbar_status_speedgamma  w toolbar_status_write
+	eval trace variable toolbar_status_alps        w toolbar_status_write
+} else {
+	eval trace add variable timern                     write timern_write
+	eval trace add variable ci                         write ci_write
+	eval trace add variable zoom                       write zoom_write
+	eval trace add variable cur_mark                   write cur_mark_write
+	eval trace add variable scrollbar_status           write scrollbar_status_write
+	eval trace add variable toolbar_status_gps         write toolbar_status_write
+	eval trace add variable toolbar_status_slider      write toolbar_status_write
+	eval trace add variable toolbar_status_vcr         write toolbar_status_write
+	eval trace add variable toolbar_status_speedgamma  write toolbar_status_write
+	eval trace add variable toolbar_status_alps        write toolbar_status_write
+}
+
+# ] End Variable Traces ############################
 
 # [ Select defaults ################################
 
@@ -1875,28 +1905,18 @@ if { $mogrify_exists } {
 	set mogrify_pref "only tcl"
 }
 
+if { $DEBUG_SF } { enable_controls }
+set scrollbar_status 0
+set toolbar_status_gps 1
+set toolbar_status_slider 0
+set toolbar_status_vcr 1
+set toolbar_status_speedgamma 0
+set toolbar_status_alps 0
+
 send_comm_id
 send_ytk init_sf
 
-if { $DEBUG_SF } { enable_controls }
-
 # ] End Select defaults ############################
-
-# [ Variable Traces ################################
-
-if { [catch {package require Tcl 8.4}] } {
-   eval trace variable timern w timern_write
-	eval trace variable ci w ci_write
-	eval trace variable zoom w zoom_write
-	eval trace variable cur_mark w cur_mark_write
-} else {
-	eval trace add variable timern write timern_write
-	eval trace add variable ci write ci_write
-	eval trace add variable zoom write zoom_write
-	eval trace add variable cur_mark write cur_mark_write
-}
-
-# ] End Variable Traces ############################
 
 # [ Display necessary notices ######################
 
