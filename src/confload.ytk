@@ -116,7 +116,7 @@ proc write_conf { } {
 	
 	Button .write.6.opsbrowse -text "Browse..." -helptext "Open dialog to select ops_conf file" \
       -command {
-		set ops [tk_getOpenFile -title "set ops_conf file" -filetypes {{{ops_conf files} {.conf}}}]
+		set ops [tk_getOpenFile -title "set ops_conf file" -filetypes {{{ops_conf files} {.conf} } {{ops_conf file} {.i}} }]
       }
 
 	label .write.7.batl -text "Bathy settings: "	
