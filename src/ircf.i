@@ -220,6 +220,8 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
     rcf'd data array of the same type as the 'eaarl' data array.
 
 */
+
+ savewindow = window();
  tmr1 = tmr2 = array(double, 3);
  timer, tmr1;
  extern tag_eaarl;
@@ -774,6 +776,7 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
  timer, tmr2;
  tmr = tmr2-tmr1;
  write, format="Total time taken to filter this section: %4.2f minutes\n",tmr(3)/60.;
+ window, savewindow;
  return new_eaarl_all;
 	 
 }
