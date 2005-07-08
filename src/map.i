@@ -246,3 +246,61 @@ for (i=0; i<100000; i++) {
 }
 
 
+func make_submap(utmzone, filename) {
+/* DOCUMENT make_submap(utmzone, filename)
+Lance Mosher 20050708
+This function pulls a submap of the current dllmap variable and saves the output to filename. 
+The current dllmap must be plotted in UTM in the current window
+*/
+
+extern dllmap
+
+//in case you ever want to use the GGA limits...
+/*extern gga
+latmin = min(gga.lat);
+latmax = max(gga.lat);
+lonmin = min(gga.lon);
+lonmax = max(gga.lon);
+llarr = fll2utm([latmin, latmax],[lonmin, lonmax]);
+emin = llarr(2,1);
+emax = llarr(2,2);
+nmin = llarr(1,1);
+nmax = llarr(1,2);
+*/
+
+  a = mouse(1,1, "Hold the left mouse button down, select a region:");
+  emin = min( [ a(1), a(3) ] );
+  emax = max( [ a(1), a(3) ] );
+  nmin = min( [ a(2), a(4) ] );
+  nmax = max( [ a(2), a(4) ] );
+
+  sz = numberof(dllmap);
+  smap = array(pointer, sz);
+  for (i=1; i<=sz; i++ ) {
+    a = *dllmap(i);
+    u = fll2utm(a(,1),a(,2));
+    zone = u(3,);
+    idxcurzone = where(zone == utmzone);
+    if (is_array(idxcurzone)) {
+        u = u(1:2,idxcurzone);
+        a = transpose(u);
+//      if (a(,1)(max) >= 4200000) lance();
+//      plmk, a(,1), a(,2), marker=4, msize=0.6, width=10, color="cyan"
+        boxidx = data_box(a(,2),a(,1),emin,emax,nmin,nmax)
+        if (is_array(boxidx)) {
+   	  a = a(boxidx,1:2);
+	  utm = utm2ll(a(,1), a(,2), utmzone);
+	  a = [utm(,2), utm(,1)];
+      	  smap(i) = &a;
+        }
+    }
+  }
+  dllmap = smap(where(smap));
+  if (is_array(dllmap)) {
+    f = createb(filename);
+    save, f, dllmap;
+    close, f;
+  } else {
+    write, "Could not find data from dllmap within selected region!";
+  }
+}
