@@ -32,8 +32,8 @@ proc write_conf { } {
       -command {
 		set fname [tk_getSaveFile -title "set conf file" \
 			-filetypes {
-				{{.i files}   {.i}	} 
 				{{Conf files} {.conf}	}
+				{{.i files}   {.i}	} 
 				{{ALL files}  {}	}
 			}]         
       }
@@ -116,7 +116,7 @@ proc write_conf { } {
 	
 	Button .write.6.opsbrowse -text "Browse..." -helptext "Open dialog to select ops_conf file" \
       -command {
-		set ops [tk_getOpenFile -title "set ops_conf file" -filetypes {{{ops_conf files} {.conf} } {{ops_conf file} {.i}} }]
+		set ops [tk_getOpenFile -title "set ops_conf file" -filetypes {{{ops_conf file} {.i}} {{ops_conf files} {.conf} }}]
       }
 
 	label .write.7.batl -text "Bathy settings: "	
