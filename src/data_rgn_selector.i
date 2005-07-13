@@ -552,3 +552,90 @@ func getPoly_add_buffer(buf,origdata=,windw=) {
     return 0;
  }
 }
+
+func save_data_tiles_from_array(iarray, outpath, buf=,file_string=) {
+/* DOCUMENT save_data_tiles_from_array(indextile, outpath, buf=, mf=)
+    This function saves 2km data tiles in the correct output format from
+a data array.  This function is very useful when manually filtering a large 
+data array spanning several data tiles and writing the output in the data tile file format in the correct directory format.
+  INPUT: iarray = manually filtered array, usually an index tile (but not 
+ 		necessarily).
+	 outpath = output path where the files are to be written.  The files will
+		be written in the standard output file and directory format.
+	 buf = buffer around each data tile to be included.  Defaults to 200m.
+	 file_string = file string that includes all you want to add to the filename
+		for e.g.: "w84_v_b700_w50_n3_merged_ircf_mf", then an example tile
+		file name will be "t_e350000_n3346000_w84_v_b700_w50_n3_merged_ircf_mf.pbd"
+*/
+
+
+  if (is_void(buf)) buf = 200; // defaults to 200m
+  // check to see if any points are zero
+  idx = where(iarray.east != 0)
+  iarray = iarray(idx);
+  // find easting northing limits of iarray
+  mineast = min(iarray.east)/100.;
+  maxeast = max(iarray.east)/100.;
+  minnorth = min(iarray.north)/100.;
+  maxnorth = max(iarray.north)/100.;
+
+  // we add 2000m to the northing because we want the upper left corner
+  first_tile = tile_location([mineast,minnorth]);
+  last_tile = tile_location([maxeast,maxnorth+2000]);
+  
+  ntilesx = (last_tile(2)-first_tile(2))/2000 + 1;
+  ntilesy = (last_tile(1)-first_tile(1))/2000 + 1;
+
+  eastarr = span(first_tile(2), last_tile(2), ntilesx)*100;
+  northarr = span(first_tile(1), last_tile(1), ntilesy)*100;
+
+  buf *= 100;
+  
+  for (i=1;i<=ntilesx-1;i++) {
+    idx=idx1=outdata=[];
+    idx = where(iarray.east >= eastarr(i)-buf);
+    if (!is_array(idx)) continue;
+    idx1 = where(iarray.east(idx) <= eastarr(i+1)+buf);
+    if (!is_array(idx1)) continue;
+    idx = idx(idx1);
+    outdata = iarray(idx);
+    idx=idx1=[];
+    for (j=1;j<=ntilesy-1;j++) {
+	ll = [eastarr(i),eastarr(i+1),northarr(j),northarr(j+1)]/100.;
+	d = 2000;
+        dgrid, 5, ll, d, [170,170,170], 2;
+	idx = where(outdata.north >= northarr(j)-buf);
+    	if (!is_array(idx)) continue;
+	idx1 = where(outdata.north(idx) <= northarr(j+1)+buf);
+	if (!is_array(idx1)) continue;
+        idx = idx(idx1);
+        outdata1 = outdata(idx);
+	window, 5; display_veg, outdata1, win=5, cmin=-33.5, cmax = -15.7, size = 1.0,edt=1, felv = 0, lelv=1, fint=0, lint=0, cht = 0, marker=1, skip=1;
+	idx = [];
+	// check if outdata has any data in the actual tile
+	idx = data_box(outdata1.east, outdata1.north, eastarr(i), eastarr(i+1), northarr(j), northarr(j+1));
+	pause, 1000
+	if (!is_array(idx)) continue;
+	idx = [];
+	// write this data out to file
+	// determine file name
+	t = *pointer(outpath);
+  	if (t(-1) != '/') outpath += '/';
+	split_outpath = split_path(outpath, -1);
+	t = *pointer(split_outpath(2));
+	t(1) = 't';
+	t = t(1:-2);
+	zone = string(&t(-1:0));
+	tiledir = swrite(format="t_e%d_n%d_%s",long(eastarr(i)/100.), long(northarr(j+1)/100.), zone);
+	outfname = tiledir+"_"+file_string+".pbd";
+	outfile = outpath+tiledir+"/"+outfname;
+	vname = "outdata1";
+	save, createb(outfile), vname, outdata1;
+        dgrid, 5, ll, d, [100,100,100], 4;
+	write, format="Data written out to %s\n",outfile;
+	outdata1 = [];
+    }
+  }
+	
+ return   
+}
