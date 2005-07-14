@@ -553,8 +553,8 @@ func getPoly_add_buffer(buf,origdata=,windw=) {
  }
 }
 
-func save_data_tiles_from_array(iarray, outpath, buf=,file_string=) {
-/* DOCUMENT save_data_tiles_from_array(indextile, outpath, buf=, mf=)
+func save_data_tiles_from_array(iarray, outpath, buf=,file_string=, plot=, win=) {
+/* DOCUMENT save_data_tiles_from_array(indextile, outpath, buf=, file_string=, plot=, win=)
     This function saves 2km data tiles in the correct output format from
 a data array.  This function is very useful when manually filtering a large 
 data array spanning several data tiles and writing the output in the data tile file format in the correct directory format.
@@ -564,8 +564,11 @@ data array spanning several data tiles and writing the output in the data tile f
 		be written in the standard output file and directory format.
 	 buf = buffer around each data tile to be included.  Defaults to 200m.
 	 file_string = file string that includes all you want to add to the filename
+	plot= set to 1 if you want to draw the tile boundaries in window, win.
+	win= set the window number to plot tile boundaries.  
 		for e.g.: "w84_v_b700_w50_n3_merged_ircf_mf", then an example tile
 		file name will be "t_e350000_n3346000_w84_v_b700_w50_n3_merged_ircf_mf.pbd"
+  	Original: Amar Nayegandhi July 12-14, 2005
 */
 
 
@@ -573,6 +576,8 @@ data array spanning several data tiles and writing the output in the data tile f
   // check to see if any points are zero
   idx = where(iarray.east != 0)
   iarray = iarray(idx);
+
+  if (plot && is_void(win)) win = 5; // defaults to window, 5
   // find easting northing limits of iarray
   mineast = min(iarray.east)/100.;
   maxeast = max(iarray.east)/100.;
@@ -581,7 +586,7 @@ data array spanning several data tiles and writing the output in the data tile f
 
   // we add 2000m to the northing because we want the upper left corner
   first_tile = tile_location([mineast,minnorth]);
-  last_tile = tile_location([maxeast,maxnorth+2000]);
+  last_tile = tile_location([maxeast+2000,maxnorth+2000]);
   
   ntilesx = (last_tile(2)-first_tile(2))/2000 + 1;
   ntilesy = (last_tile(1)-first_tile(1))/2000 + 1;
@@ -603,14 +608,13 @@ data array spanning several data tiles and writing the output in the data tile f
     for (j=1;j<=ntilesy-1;j++) {
 	ll = [eastarr(i),eastarr(i+1),northarr(j),northarr(j+1)]/100.;
 	d = 2000;
-        dgrid, 5, ll, d, [170,170,170], 2;
+        if (plot) dgrid, win, ll, d, [170,170,170], 2;
 	idx = where(outdata.north >= northarr(j)-buf);
     	if (!is_array(idx)) continue;
 	idx1 = where(outdata.north(idx) <= northarr(j+1)+buf);
 	if (!is_array(idx1)) continue;
         idx = idx(idx1);
         outdata1 = outdata(idx);
-	window, 5; display_veg, outdata1, win=5, cmin=-33.5, cmax = -15.7, size = 1.0,edt=1, felv = 0, lelv=1, fint=0, lint=0, cht = 0, marker=1, skip=1;
 	idx = [];
 	// check if outdata has any data in the actual tile
 	idx = data_box(outdata1.east, outdata1.north, eastarr(i), eastarr(i+1), northarr(j), northarr(j+1));
@@ -630,8 +634,12 @@ data array spanning several data tiles and writing the output in the data tile f
 	outfname = tiledir+"_"+file_string+".pbd";
 	outfile = outpath+tiledir+"/"+outfname;
 	vname = "outdata1";
+        if (plot) dgrid, win, ll, d, [100,100,100], 4;
+	if (catch(0x02)) {
+	   continue;
+	}
 	save, createb(outfile), vname, outdata1;
-        dgrid, 5, ll, d, [100,100,100], 4;
+        if (plot) dgrid, win, ll, d, [10,10,10], 6;
 	write, format="Data written out to %s\n",outfile;
 	outdata1 = [];
     }
