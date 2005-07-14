@@ -596,6 +596,7 @@ data array spanning several data tiles and writing the output in the data tile f
 
   buf *= 100;
   
+  mem_ans = [];
   for (i=1;i<=ntilesx-1;i++) {
     idx=idx1=outdata=[];
     idx = where(iarray.east >= eastarr(i)-buf);
@@ -635,6 +636,25 @@ data array spanning several data tiles and writing the output in the data tile f
 	outfile = outpath+tiledir+"/"+outfname;
 	vname = "outdata1";
         if (plot) dgrid, win, ll, d, [100,100,100], 4;
+	// check if file exists
+	if (open(outfile, "r",1)) {
+	 if (mem_ans == "NoAll") continue;
+	 if (mem_ans != "YesAll") {
+	   ans = "";
+	   n = read(prompt="File Exists.  Overwrite? Yes/No/YesAll/NoAll:  ", format="%s", ans);
+	   if (ans == "No" || ans == "no" || ans == "n" || ans == "N") {
+		continue;
+	   }
+	   if (ans == "NoAll" || ans == "NOALL" || ans == "noall") {
+		mem_ans = "NoAll";
+		continue;
+	   }
+	   if (ans == "YesAll" || ans == "YESALL" || ans == "yesall") {
+		mem_ans = "YesAll";
+	   }
+	 }
+	}
+
 	if (catch(0x02)) {
 	   continue;
 	}
