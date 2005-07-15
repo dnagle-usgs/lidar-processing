@@ -2204,7 +2204,7 @@ proc removing_proc {} {
             -message "Drag a Rectangular Box in Window $win_no to define region." \
             -type okcancel -title "Message"]
             if {$selection == "ok"} {
-               exp_send "croppeddata=[];$curvar = sel_data_rgn($curvar, $remove_type, mode=2, win=$win_no, exclude=1)\r"
+               exp_send "croppeddata=\[\];$curvar = sel_data_rgn($curvar, $remove_type, mode=2, win=$win_no, exclude=1)\r"
                expect ">"
             }
          }
@@ -2213,7 +2213,7 @@ proc removing_proc {} {
             -message "Draw a Polygon in Window $win_no to define a region using a series of left mouse clicks.  To complete the polygon, middle mouse click OR <Ctrl> and left mouse click." \
             -type okcancel -title "Message" ]
             if {$selection == "ok"} { 
-	    exp_send "croppeddata=[];$curvar = sel_data_rgn($curvar, $remove_type, mode=3, win=$win_no, exclude=1)\r"
+	    exp_send "croppeddata=\[\];$curvar = sel_data_rgn($curvar, $remove_type, mode=3, win=$win_no, exclude=1)\r"
             expect ">"
             }
          }
@@ -2222,7 +2222,7 @@ proc removing_proc {} {
             -message "Select points to remove from window $win_no" \
             -type okcancel -title "Message"]
            if {$selection == "ok"} {
-             exp_send "croppeddata=[];$curvar = select_points($curvar, win=$win_no, exclude=1);\r"
+             exp_send "croppeddata=\[\];$curvar = select_points($curvar, win=$win_no, exclude=1);\r"
              expect ">"
 	   }
          }
