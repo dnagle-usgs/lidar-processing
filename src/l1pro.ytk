@@ -2204,7 +2204,7 @@ proc removing_proc {} {
             -message "Drag a Rectangular Box in Window $win_no to define region." \
             -type okcancel -title "Message"]
             if {$selection == "ok"} {
-               exp_send "$curvar = sel_data_rgn($curvar, $remove_type, mode=2, win=$win_no, exclude=1)\r"
+               exp_send "croppeddata=[];$curvar = sel_data_rgn($curvar, $remove_type, mode=2, win=$win_no, exclude=1)\r"
                expect ">"
             }
          }
@@ -2213,7 +2213,7 @@ proc removing_proc {} {
             -message "Draw a Polygon in Window $win_no to define a region using a series of left mouse clicks.  To complete the polygon, middle mouse click OR <Ctrl> and left mouse click." \
             -type okcancel -title "Message" ]
             if {$selection == "ok"} { 
-	    exp_send "$curvar = sel_data_rgn($curvar, $remove_type, mode=3, win=$win_no, exclude=1)\r"
+	    exp_send "croppeddata=[];$curvar = sel_data_rgn($curvar, $remove_type, mode=3, win=$win_no, exclude=1)\r"
             expect ">"
             }
          }
@@ -2222,7 +2222,7 @@ proc removing_proc {} {
             -message "Select points to remove from window $win_no" \
             -type okcancel -title "Message"]
            if {$selection == "ok"} {
-             exp_send "$curvar = select_points($curvar, win=$win_no, exclude=1);\r"
+             exp_send "croppeddata=[];$curvar = select_points($curvar, win=$win_no, exclude=1);\r"
              expect ">"
 	   }
          }
@@ -2236,12 +2236,16 @@ proc removing_proc {} {
       Button .rem.3 -width 8 -text "Cancel" -command {
 	 destroy .rem
       }
+      Button .rem.4 -width 8 -text "Undo Last\nRemove" -command {
+	 exp_send "if (is_array(croppeddata)) $curvar = grow($curvar,croppeddata);\r"
+	 expect ">"
+      }
 
      
       pack .rem.05.varname .rem.05.varlist -side left -padx 5
       pack .rem.06.typetext .rem.06.type -side left
       pack .rem.05 .rem.06 .rem.1 -pady 8
-      pack .rem.2 .rem.3 -side left -padx 5 -pady 5
+      pack .rem.2 .rem.3 .rem.4 -side left -padx 5 -pady 5
    }
 
 proc keep_proc {} {

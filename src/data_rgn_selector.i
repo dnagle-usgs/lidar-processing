@@ -134,10 +134,10 @@ func sel_data_rgn(data, type, mode=,win=, exclude=, rgn=, make_workdata=, origda
 	
  }
  if (exclude) {
+     croppeddata = data(indx);
      if (make_workdata) {
 	if (!is_void(origdata)) {
 	   workdata = origdata(origindx);
-	   croppeddata = data(indx);
 	} else {
            workdata = data(indx);
  	}

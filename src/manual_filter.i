@@ -95,6 +95,7 @@ func select_points(celldata, exclude=, win=) {
   // amar nayegandhi 11/21/03
 
 
+  extern croppeddata;
   celldata = test_and_clean( celldata );
 
 if (is_void(exclude)) {
@@ -196,6 +197,7 @@ if (is_void(exclude)) {
  write, format="Total waveforms examined = %d; Total points selected = %d\n",clicks, selclicks;
 
  if (exclude) {
+    croppeddata = rtn_data;
     rtn_data = exclude_region(celldata, rtn_data);
  }
    
