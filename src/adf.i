@@ -160,7 +160,7 @@ func adf_generate(imgdir, hypackdir, ofname, progress=, adaptprog=, gps_src=, ca
 	files = hypack_list_raw(hypackdir);
 
 	progcnt = 5.0 + numberof(files) * 3.0;
-	progcur = 1;
+	progcur = 1.0;
 
 	// Read file names and times
 	status = "Generating list of image file names and times...";
@@ -180,7 +180,7 @@ func adf_generate(imgdir, hypackdir, ofname, progress=, adaptprog=, gps_src=, ca
 			status = swrite(format="RAW file %i of %i: Parsing...", i, numberof(files));
 			if(adaptprog) adapt_send_progress, status, progcur++/progcnt;
 			if(progress) write, status;
-
+			
 			hypack_parse_raw, files(i), raw, pos, ec1, ec2, cap, gyr, Hcp;
 
 			if(! numberof(cap) || gps_src == "RAW") {
@@ -198,7 +198,11 @@ func adf_generate(imgdir, hypackdir, ofname, progress=, adaptprog=, gps_src=, ca
 			if(adaptprog) adapt_send_progress, status, progcur++/progcnt;
 			if(progress) write, status;
 
-			gps_data = adf_interp_data(hms2sod(hyp_gps.time), hyp_gps, ec1, gyr, Hcp);
+			if(numberof(hyp_gps)) {
+				gps_data = adf_interp_data(hms2sod(hyp_gps.time), hyp_gps, ec1, gyr, Hcp);
+			} else {
+				gps_data = [];
+			}
 			gps_tracks(i) = &gps_data;
 			gps_num += numberof(gps_data);
 			
@@ -323,39 +327,89 @@ func adf_interp_data(sod, raw, ec, gyr, Hcp) {
 		raw_where = where(sod >= raw_utm_sod(1) & sod <= raw_utm_sod(0));
 
 		if(numberof(raw_where)) {
-			data(raw_where).lat = deg2dm(interp(ddm2deg(raw.lat), raw_utm_sod, sod(raw_where)));
-			data(raw_where).lon = deg2dm(interp(ddm2deg(raw.lon), raw_utm_sod, sod(raw_where)));
+			if(numberof(raw_utm_sod) > 1) {
+				data(raw_where).lat = deg2dm(interp(ddm2deg(raw.lat), raw_utm_sod, sod(raw_where)));
+				data(raw_where).lon = deg2dm(interp(ddm2deg(raw.lon), raw_utm_sod, sod(raw_where)));
+			} else if(numberof(raw_utm_sod) == 1 && numberof(raw_where) == 1 && raw_utm_sod(1) == sod(raw_where)(1)) {
+				data(raw_where).lat = deg2dm(ddm2deg(raw.lat));
+				data(raw_where).lon = deg2dm(ddm2deg(raw.lon));
+			} else {
+				data(raw_where).lat = 0;
+				data(raw_where).lon = 0;
+			}
 
 			if(numberof(ec)) {
 				ec  = ec (where( ec.sod >= raw.sod(1) &  ec.sod <= raw.sod(0)));
 				if(numberof(ec)) {
-					ec_utm_sod  = interp(raw_utm_sod, raw.sod, ec.sod);
-					ec_where  = where(sod >=  ec_utm_sod(1) & sod <=  ec_utm_sod(0));
+					if(numberof(raw) > 1) {
+						ec_utm_sod = interp(raw_utm_sod, raw.sod, ec.sod);
+					} else if(numberof(raw) == 1 && numberof(ec) == 1 && ec.sod(1) == raw.sod(1)) {
+						ec_utm_sod = raw_utm_sod;
+					} else {
+						ec_utm_sod = 0;
+					}
+					ec_where  = where(sod >= ec_utm_sod(1) & sod <=  ec_utm_sod(0));
 					
-					if(numberof(ec_where))
-						data(ec_where).depth = interp(ec.depth, ec_utm_sod, sod(ec_where));
+					if(numberof(ec_where)) {
+						if(numberof(ec) > 1) {
+							data(ec_where).depth = interp(ec.depth, ec_utm_sod, sod(ec_where));
+						} else if(numberof(ec) == 1 && numberof(ec_where) == 1 && ec_utm_sod(1) == sod(ec_where)(1)) {
+							data(ec_where).depth = ec.depth;
+						} else {
+							data(ec_where).depth = 0;
+						}
+					}
 				}
 			}
 			if(numberof(gyr)) {
 				gyr = gyr(where(gyr.sod >= raw.sod(1) & gyr.sod <= raw.sod(0)));
 				if(numberof(gyr)) {
-					gyr_utm_sod = interp(raw_utm_sod, raw.sod, gyr.sod);
+					if(numberof(raw) > 1) {
+						gyr_utm_sod = interp(raw_utm_sod, raw.sod, gyr.sod);
+					} else if(numberof(raw) == 1 && numberof(ec) == 1 && gyr.sod(1) == raw.sod(1)) {
+						gyr_utm_sod = raw_utm_sod;
+					} else {
+						gyr_utm_sod = 0;
+					}
 					gyr_where = where(sod >= gyr_utm_sod(1) & sod <= gyr_utm_sod(0));
 					
-					if(numberof(gyr_where))
-						data(gyr_where).heading = interp_periodic(gyr.heading, gyr_utm_sod, sod(gyr_where), 0, 360);
+					if(numberof(gyr_where)) {
+						if(numberof(gyr) > 1) {
+							data(gyr_where).heading = interp_periodic(gyr.heading, gyr_utm_sod, sod(gyr_where), 0, 360);
+						} else if(numberof(gyr) == 1 && numberof(gyr_where) == 1 && gyr_utm_sod(1) == sod(gyr_where)(1)) {
+							data(gyr_where).heading = gyr.heading;
+						} else {
+							data(gyr_where).depth = 0;
+						}
+					}
 				}
 			}
 			if(numberof(Hcp)) {
 				Hcp = Hcp(where(Hcp.sod >= raw.sod(1) & Hcp.sod <= raw.sod(0)));
 				if(numberof(Hcp)) {
-					Hcp_utm_sod = interp(raw_utm_sod, raw.sod, Hcp.sod);
+					if(numberof(raw) > 1) {
+						Hcp_utm_sod = interp(raw_utm_sod, raw.sod, Hcp.sod);
+					} else if(numberof(raw) == 1 && numberof(ec) == 1 && Hcp.sod(1) == raw.sod(1)) {
+						Hcp_utm_sod = raw_utm_sod;
+					} else {
+						Hcp_utm_sod = 0;
+					}
 					Hcp_where = where(sod >= Hcp_utm_sod(1) & sod <= Hcp_utm_sod(0));
 
 					if(numberof(Hcp_where)) {
-						data(Hcp_where).heave = interp(Hcp.heave, Hcp_utm_sod, sod(Hcp_where));
-						data(Hcp_where).roll  = interp(Hcp.roll , Hcp_utm_sod, sod(Hcp_where));
-						data(Hcp_where).pitch = interp(Hcp.pitch, Hcp_utm_sod, sod(Hcp_where));
+						if(numberof(Hcp) > 1) {
+							data(Hcp_where).heave = interp(Hcp.heave, Hcp_utm_sod, sod(Hcp_where));
+							data(Hcp_where).roll  = interp(Hcp.roll , Hcp_utm_sod, sod(Hcp_where));
+							data(Hcp_where).pitch = interp(Hcp.pitch, Hcp_utm_sod, sod(Hcp_where));
+						} else if(numberof(Hcp) == 1 && numberof(Hcp_where) == 1 && Hcp_utm_sod(1) == sod(Hcp_where)(1)) {
+							data(Hcp_where).heave = Hcp.heave;
+							data(Hcp_where).roll  = Hcp.roll;
+							data(Hcp_where).pitch = Hcp.pitch;
+						} else {
+							data(Hcp_where).heave = 0;
+							data(Hcp_where).roll  = 0;
+							data(Hcp_where).pitch = 0;
+						}
 					}
 				}
 			}
@@ -905,12 +959,18 @@ func exif_extract_time(dir, &fn, &sod) {
 		sod = array(double, numberof(fn));
 		
 		for(i = 1; i <= numberof(fn); i++) {
-			f = popen("exiflist -o l -c t -f file-name,gps-time "+dir+fn(i), 0);
-			fname = "";
+			f = popen("exiflist -o l -c t -f gps-time "+dir+fn(i), 0);
 			h = m = s = 0;
-			read, f, format="%s %d:%d:%d", fname, h, m, s;
+			read, f, format="%d:%d:%d", h, m, s;
 			close, f;
 			sod(i) = hms2sod(h * 10000 + m * 100 + s);
+			if(!sod(i)) {
+				f = popen("exiflist -o l -c t -f date-taken "+dir+fn(i), 0);
+				dy = dm = dd = h = m = s = 0;
+				read, f, format="%d:%d:%d %d:%d:%d", dy, dm, dd, h, m, s;
+				close, f;
+				sod(i) = hms2sod(h * 10000 + m * 100 + s);
+			}
 		}
 		
 	} else { // Use system commands for Yorick 1.5

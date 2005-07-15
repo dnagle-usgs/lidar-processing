@@ -305,7 +305,24 @@ func interp_periodic(y, x, xp, ps, pe) {
 	if(double(numberof(x)) * double(numberof(xp)) > 16000000.0 && numberof(xp) > 1) {
 		yp = array(structof(y(1)), numberof(xp));
 		for(i = 1; i <= numberof(yp); i++) {
-			yp(i) = interp_periodic(y, x, [xp(i)], ps, pe);
+			x_eq = where(x == xp(i));
+			if(numberof(x_eq) == 1) {
+				yp(i) = y(x_eq);
+			} else {
+				x_lo = where(x <= xp(i));
+				x_hi = where(x >= xp(i));
+				if(numberof(x_lo) > 0) {
+					if(numberof(x_hi) > 0) {
+						yp(i) = interp_periodic(y(x_lo(0):x_hi(1)), x(x_lo(0):x_hi(1)), [xp(i)], ps, pe);
+					} else {
+						yp(i) = y(x_lo(0));
+					}
+				} else {
+					if(numberof(x_hi) > 0) {
+						yp(i) = y(x_hi(1));
+					}
+				}
+			}
 		}
 		return yp;
 	}
