@@ -134,7 +134,8 @@ set ytk_PLMK_marker(Inverted-Triangle) 	7
 proc save_options { } {
  global _ytk
  set fn "~/.ytkrc"
- if { [ file exists $fn ] } {
+# allow this to create a new .ytkrc file
+# if { [ file exists $fn ] } {
    if { [ catch { set f [ open $fn "w+" ] } err ] } {
      tk_messageBox -icon error -message $err -type ok
    } else { 
@@ -146,9 +147,9 @@ proc save_options { } {
      close $f
      tk_messageBox -icon info -message "Options saved to: $fn" -type ok
    }
- } else {
-     tk_messageBox -icon error -message "There's no .ytkrc file in your home dir" -type ok
- }
+# } else {
+#     tk_messageBox -icon error -message "There's no .ytkrc file in your home dir" -type ok
+# }
 }
 
 
@@ -156,12 +157,12 @@ proc save_options { } {
 
 # Check for a .ytkrc file in the users home dir.
  if { [ file exists "~/.ytkrc" ] } {
-   puts "Found .ytk...."
+   puts "Found .ytkrc...."
    if { [ catch { source "~/.ytkrc" } err ] } {
      puts "Problem in ~/.ytkrc: $err "
    }
  } else {			;# No ~.ytkrc found, so use defaults
-   puts "No  ~/.ytk found, using defaults"
+   puts "No  ~/.ytkrc found, using defaults"
  }
 
 
@@ -431,6 +432,20 @@ proc ytk_kick_off_editor { editor fn } {
 .mb.edit add separator
 .mb.edit add command -label "Save Options" -command  save_options;
 .mb.edit add command -label "Restore Defaults" -command  restore_defaults;
+.mb.edit add separator
+.mb.edit add command -label "Yorick executable ..." -command {
+   set _ytk(yorick_executable) [ tk_getOpenFile \
+        -initialdir [file dirname $_ytk(yorick_executable)] \
+        -initialfile [file tail $_ytk(yorick_executable)] ]
+}
+.mb.edit add command -label "Splash GIF ..." -command {
+   set _ytk(splash_gif) [ tk_getOpenFile \
+        -initialdir [file dirname $_ytk(splash_gif)] \
+        -initialfile [file tail $_ytk(splash_gif)] ]
+}
+set _ytk(splash_gif)			/usr/local/src/yorick-1.5/contrib/ytk.gif
+.mb.edit add checkbutton -label "Use rlterm" -onvalue Yes -offvalue No -variable _ytk(use_rlterm)
+.mb.edit add checkbutton -label "Use rlwrap" -onvalue Yes -offvalue No -variable _ytk(use_rlwrap)
 
 
 .mb.debug add command \
