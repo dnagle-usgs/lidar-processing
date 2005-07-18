@@ -1273,7 +1273,11 @@ proc atris_init { } {
 					set old_aid $adapt_image_dir
 					set adapt_image_dir $tmp_path
 					set tmp_path [split $adapt_image_dir /]
-					set tmp_end [lindex $tmp_path end].adf
+					set tmp_dn [lindex $tmp_path end]
+					if { [string equal "images" $tmp_dn] } {
+						set tmp_dn [lindex $tmp_path end-1]
+					}
+					set tmp_end [set tmp_dn].adf
 					if { [string equal ".adf" $tmp_end] } {
 						set tmp_end [lindex $tmp_path end-1].adf
 					}
@@ -1281,7 +1285,11 @@ proc atris_init { } {
 						set adapt_ofname $tmp_end
 					} elseif { ![string equal $old_aid ""] } {
 						set old_aid_sp [split $old_aid /]
-						set old_aid [lindex $old_aid_sp end].adf
+						set old_aid_dn [lindex $old_aid_sp end]
+						if { [string equal "images" $old_aid_dn] } {
+							set old_aid_dn [lindex $old_aid_sp end-1]
+						}
+						set old_aid [set old_aid_dn].adf
 						if { [string equal ".adf" $old_aid] } {
 							set old_aid [lindex $old_aid_sp end-1].adf
 						}
@@ -1338,11 +1346,13 @@ proc atris_init { } {
 
 		grid $opt.cboSrc  -in $opt -column 1 -row 3 -sticky "ew" -columnspan 2
 
-		grid $adj         -in $opt -column 1 -row 4 -sticky "w"
+		grid $adj         -in $opt -column 1 -row 4 -sticky "w"  -columnspan 2
 
 		grid $opt.butImg  -in $opt -column 2 -row 0 -sticky "ew"
 		grid $opt.butRaw  -in $opt -column 2 -row 1 -sticky "ew"
-		grid $opt.butAdj  -in $opt -column 2 -row 4 -sticky "ew"
+
+# temporarily removed since it doesn't work at present
+#		grid $opt.butAdj  -in $opt -column 2 -row 4 -sticky "ew"
 		
 		grid columnconfigure $opt 0 -weight 0
 		grid columnconfigure $opt 1 -weight 1 -minsize 250

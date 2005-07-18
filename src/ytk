@@ -260,7 +260,7 @@ update
   } 
  } else {
  if { [ info exists rlwrap ] && [ string equal $_ytk(use_rlwrap) "Yes" ]  } {
- if { [ catch  { spawn $rlwrap -c  $_ytk(yorick_executable) } ] } {
+ if { [ catch  { spawn $rlwrap -c -b \(\)\{\}\[\].,+=\&^%\$#@\\\;\|\`  $_ytk(yorick_executable) } ] } {
    puts "Could't find Yorick.  Please edit \"ytk\" and set \"_ytk(yorick_executable)\" to \
    your Yorick location"
    file delete $ytk_fifo_name
