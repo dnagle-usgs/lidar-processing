@@ -1203,7 +1203,7 @@ write,"*************************************************************************
 }
 
 
-func hist_depth( depth_all, win=, dtyp= ) {
+func hist_depth( depth_all, win=, dtyp=, dofma=, binsize= ) {
 /* DOCUMENT hist_depth(depth_all)
 
    Return the histogram of the good depths.  The input depth_all 
@@ -1213,6 +1213,8 @@ elevation was found. The elevations are binned to 1-meter.
   Inputs: 
 	depth_all   An array of "GEOALL" structures.  
 	dytp = display type (water surface or bathymetry)
+	dofma= set to 0 if you do not want to clear the screen. Defaults to 1
+	binsize= size of the histogram bin in cm. Default=100cm.
 
  amar nayegandhi 10/6/2002.  similar to hist_fs by W. Wright
 
@@ -1222,6 +1224,10 @@ See also: GEOALL
 
   if ( is_void(win) ) 
 	win = 7;
+
+  if (is_void(dofma)) dofma=1;
+
+  if (is_void(binsize)) binsize=100;
 
 // build an edit array indicating where values are between -60 meters
 // and 3000 meters.  Thats enough to encompass any EAARL data than
@@ -1246,7 +1252,7 @@ maxx = (depth_all.elevation(q)+depth_all.depth(q))(max);
 
 
 // make a histogram of the data indexed by q.
-  h = histogram( (depthy / 100) + 1 );
+  h = histogram( (depthy / int(binsize)) + 1 );
   hind = where(h == 0);
   if (is_array(hind)) 
     h(hind) = 1;

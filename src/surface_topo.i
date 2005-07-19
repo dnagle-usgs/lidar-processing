@@ -567,6 +567,9 @@ See also: R
   if ( is_void(win) ) 
 	win = 0;
 
+  if ( is_void(dofma) ) 
+	dofma = 1;
+
   if ( is_void(lst)) 
      lst = where(fs_all.elevation);
 

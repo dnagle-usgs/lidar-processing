@@ -1710,6 +1710,7 @@ See also: VEG_ALL_, CVEG_ALL
 	veg_all = clean_cveg_all(veg_all);
   }
   if (!type) type = 2;
+  if (is_void(dofma)) dofma=1;
 
   if ( is_void(lst)) {
      if (type == 1) {
