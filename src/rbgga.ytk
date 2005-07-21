@@ -86,9 +86,9 @@ proc rbgga_menu { {mode "eaarl"} } {
       set utm 0
    }
    if { [string equal $rbgga_file_mode "adapt"] } {
-    exp_send "show_vessel_track, color=\"$gga(linecolor)\", skip=$gga(skip)$marker, msize=$gga(msize), utm=$utm, win=$_map(window); \n\r" 
+    exp_send "show_vessel_track, color=\"$gga(linecolor)\", skip=$gga(skip)$marker, msize=$gga(msize), utm=$utm, win=$_map(window), width=$gga(linewidth); \n\r" 
    } else {
-    exp_send "show_gga_track, color=\"$gga(linecolor)\", skip=$gga(skip)$marker,msize=$gga(msize), utm=$utm, win=$_map(window); \n\r" 
+    exp_send "show_gga_track, color=\"$gga(linecolor)\", skip=$gga(skip)$marker,msize=$gga(msize), utm=$utm, win=$_map(window), width=$gga(linewidth); \n\r" 
    }
     expect ">"
     exp_send "\n"
