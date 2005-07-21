@@ -842,7 +842,8 @@ func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset
 		2
 	fset=	
 		0
-        bconst= set to 1 to show the bathy waveform with constants
+        bconst= set to 1 to show the bathy waveform with constants,
+		set to 2 to show both waveforms (with and without constants).
 
   Returns:
 	An "FS" structure.  type "FS" at the Yorick prompt to see 
@@ -1008,15 +1009,18 @@ write,"============================================================="
                              marker=4
 	} else
         if ((disp_type == 1) || (disp_type == 2))  {
-	 if (is_array(edb)) {
-         if (bconst) {
+	if (is_array(edb)) {
+        if (bconst) {
 	  a = [];
           irg_a = irg(rasterno,rasterno,usecentroid=1);
           ex_bath, rasterno, pulseno, win=0, graph=1;
          } else {
           show_wf, *wfa, pulseno(1), win=0, cb=7, raster=rasterno(1);
          }
+	 if (bconst == 2) {
+          show_wf, *wfa, pulseno(1), win=7, cb=7, raster=rasterno(1);
 	 }
+        }
           
          if ( mindata.depth == 0 ) {
             msz = 1.0; mkr = 6;
