@@ -263,13 +263,13 @@ indx = where(x >= xmin);
  } else return;
 }
 
-func sel_rgn_from_datatiles(rgn=, data_dir=,lmap=, win=, mode=, search_str=, skip=, noplot=,  pip=, pidx=) {
-/* DOCUMENT  sel_rgn_from_datatiles(rgn=, data_dir=,lmap=, win=, mode=, search_str=,  skip=, noplot=,  pip=, pidx=) 
+func sel_rgn_from_datatiles(rgn=, data_dir=,lmap=, win=, mode=, search_str=, skip=, noplot=,  pip=, pidx=, uniq=) {
+/* DOCUMENT  sel_rgn_from_datatiles(rgn=, data_dir=,lmap=, win=, mode=, search_str=,  skip=, noplot=,  pip=, pidx=, uniq=) 
 
   This function selects data from a series of processed data tiles.
   The processed data tiles must have the min easting and max northing in their filename.
   INPUT:
-   rgn = array [min_e,max_e,min_n,max_n] that defines the region to be selected.  If rgn is not defined, the function will prompt to drag a rectangular region on window win.
+   rgn = array [min_e,max_e,min_n,max_n] that defines the region to be selected.  If rgn is not defined, the function will prompt to drag a rectangular region on window win OR use points in polygin if pip=1.
    data_dir = directory where all the data tiles are located.
    lmap = set to prompt for the map.
    win = window number that will be used to drag the rectangular region.  defaults to current window.
@@ -278,6 +278,7 @@ func sel_rgn_from_datatiles(rgn=, data_dir=,lmap=, win=, mode=, search_str=, ski
    pip = set to 1 if pip is to be used to define the region.
    pidx = the array of a previously clicked polygon. Set to lpidx if this function 
 	  is previously used.
+   uniq= set to 1 if you want the output array to contain only the unique records.
   original Brendan Penney
   modified amar nayegandhi April 2005
 */
@@ -417,6 +418,25 @@ func sel_rgn_from_datatiles(rgn=, data_dir=,lmap=, win=, mode=, search_str=, ski
 
      }
    }
+
+   if (uniq) {
+    write, "Finding unique elements in array..."
+    // sort the elements by soe
+    idx = sort(sel_eaarl.soe);
+    if (!is_array(idx)) {
+     write, "No Records found.";
+     return
+    }
+    sel_eaarl = sel_eaarl(idx);
+    // now use the unique function with ret_sort=1
+    idx = unique(sel_eaarl.soe, ret_sort=1);
+    if (!is_array(idx)) {
+      write, "No Records found.";
+      return
+    }
+    sel_eaarl = sel_eaarl(idx);
+   }
+ 
          
    write, format = "Total Number of selected points = %d\n", numberof(sel_eaarl);
 
