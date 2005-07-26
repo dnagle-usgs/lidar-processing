@@ -17,12 +17,14 @@ local adf_i;
 		adf_merge_data
 		adf_interp_data
 		adf_output
+		adf_input
 		adf_input_vessel_track
 
 	Functions for working with Hypack files:
 	
 		hypack_list_raw
 		hypack_parse_raw
+		hypack_parse_tgt
 		hypack_determine_cap_adj
 		hypack_raw_time_diff
 		hypack_raw_adjust_time
@@ -793,6 +795,84 @@ func hypack_parse_raw(ifname, &raw, &pos, &ec1, &ec2, &cap, &gyr, &Hcp) {
 	else
 		Hcp = [];
 }
+
+func hypack_parse_tgt(ifname, &name, &utm) {
+/* DOCUMENT hypack_parse_tgt(ifname, &name, &utm)
+
+	Extracts data from a Hypack .tgt (target) file.
+
+	Parameters:
+		
+		ifname: The full path and file name of the .tgt file.
+	
+	Output parameters:
+
+		&name: An array of strings containing the descriptive name for
+			each location.
+
+		&utm: An array of doubles containing the UTM coordinates for
+			each location.	utm(1,) = Northings, utm(2,) = Eastings
+	
+		* Note: name(i) corresponds to utm(,i)
+
+	Returns:
+
+		n/a
+	
+	See also: boat_read_csv_waypoints
+*/
+
+	
+	f = open(ifname, "r");
+	lines = rdfile(f);
+	close, f;
+
+	name = array(string, numberof(lines));
+	utm = array(double, 2, numberof(lines));
+
+	for(i = 1; i <= numberof(lines); i++) {
+		l = strchar(lines(i));
+
+		if(l(0) == 0) l = l(1:-1);
+		for(j = 1; j <= 2; j++) {
+			if(l(0) == '\r') l = l(1:-1);
+			if(l(0) == '\n') l = l(1:-1);
+		}
+		
+		linesp = l == ' ';
+		linequ = l == '"';
+		
+		qust_a = linesp(1:-1) + linequ(2:0) == 2;
+		quen_a = linesp(2:0) + linequ(1:-1) == 2;
+
+		if(linequ(1) == 1) qust_a(0) = 1;
+		if(linequ(0) == 1) quen_a(0) = 1;
+		
+		qust = where(qust_a) + 1;
+		quen = where(quen_a);
+
+		if(numberof(where(qust > numberof(linesp))))
+			qust(where(qust > numberof(linesp))) = 1;
+		
+		if(numberof(qust) == numberof(quen)) {
+			for(j = 1; j <= numberof(qust); j++) {
+				linesp(qust(j):quen(j)) = 0;
+			}
+		} else {
+			write, "******* Error! *******";
+			write, "Returning null data!!!";
+			return;
+		}
+		
+		delim = where(linesp);
+		linesp = linequ = qust = quen = [];
+
+		name(i) = strpart(lines(i), delim(1)+1:delim(2)-1);
+		utm(1,i) = atod(strpart(lines(i), delim(2)+1:delim(3)-1));
+		utm(2,i) = atod(strpart(lines(i), delim(3)+1:delim(4)-1));
+	}
+}
+
 
 func hypack_determine_cap_adj(dir, progress=, adaptprog=) {
 /* DOCUMENT hypack_determine_cap_adj(dir, progress=, adaptprog=)
