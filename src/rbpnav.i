@@ -194,7 +194,7 @@ extern gga;
     pnav_filename = ifn;
     ff = split_path( ifn, -1 );
     path = ff(1);
-    data_path = path;
+    //data_path = path;
     if ( !strmatch(pnav_filename,"-p-") ) {
       precision_warning;
     }
