@@ -27,10 +27,19 @@ func depth_profile( data_file ) {
 	window, wsav;
 }
 
-func plot_waypoints_file( fname ) {
-	require, "boat.i";
-	ways = boat_read_csv_waypoints(fname);
-	plmk, ways.target_north, ways.target_east, marker=5, msize=0.5, color="magenta";
+func plot_waypoints_file( fname, type ) {
+	if(type == "csv" || type == "CSV") {
+		require, "boat.i";
+		ways = boat_read_csv_waypoints(fname);
+		n = ways.target_north;
+		e = ways.target_east;
+	} else if(type == "tgt" || type == "TGT") {
+		require, "adf.i";
+		hypack_parse_tgt, fname, name, utm;
+		n = utm(1,);
+		e = utm(2,);
+	}
+	plmk, n, e, marker=5, msize=0.5, color="magenta";
 }
 
 func adapt_send_progress(txt, per) {

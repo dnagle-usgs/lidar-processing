@@ -80,8 +80,8 @@ proc depth_profile { data_file } {
 	exp_send "depth_profile, \"$data_file\"\n"
 }
 
-proc plot_waypoints_file { fname } {
-	exp_send "plot_waypoints_file, \"$fname\"\n"
+proc plot_waypoints_file { fname type } {
+	exp_send "plot_waypoints_file, \"$fname\", \"$type\"\n"
 }
 
 proc adapt_process { imgdir hypdir ofname gps_src adj_h adj_m adj_s } {

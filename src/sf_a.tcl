@@ -1207,7 +1207,15 @@ proc atris_init { } {
 			global base_dir
 			set f [ tk_getOpenFile -filetypes { {{CSV files} {.csv}} } -initialdir $base_dir ];
 			if { $f != "" } {
-				send_ytk plot_waypoints_file $f
+				send_ytk plot_waypoints_file $f "csv"
+			}
+		}
+	.mb.tools add command -label "Load and Plot Target File (UTM)" -underline 18 \
+		-command {
+			global base_dir
+			set f [ tk_getOpenFile -filetypes { {{Target files} {.tgt}} } -initialdir $base_dir ];
+			if { $f != "" } {
+				send_ytk plot_waypoints_file $f "tgt"
 			}
 		}
 	.mb.file insert "Exit" command -label "Generate ADF File" -underline 0 \

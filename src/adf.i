@@ -868,8 +868,8 @@ func hypack_parse_tgt(ifname, &name, &utm) {
 		linesp = linequ = qust = quen = [];
 
 		name(i) = strpart(lines(i), delim(1)+1:delim(2)-1);
-		utm(1,i) = atod(strpart(lines(i), delim(2)+1:delim(3)-1));
-		utm(2,i) = atod(strpart(lines(i), delim(3)+1:delim(4)-1));
+		utm(1,i) = atod(strpart(lines(i), delim(3)+1:delim(4)-1));
+		utm(2,i) = atod(strpart(lines(i), delim(2)+1:delim(3)-1));
 	}
 }
 
