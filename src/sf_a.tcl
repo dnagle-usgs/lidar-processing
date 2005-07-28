@@ -883,14 +883,15 @@ proc show_img { n } {
 			set sod [ expr $h*3600 + $m*60 + $s + $seconds_offset - $frame_off]
 			set hms [ clock format $sod -format "%H%M%S" -gmt 1   ] 
 
-		catch { set llat $lat(hms$hms) }
-		catch { set llon $lon(hms$hms) }
-
 		if { $camtype == 1 } {
+			catch { set llat $ns(hms$hms)$lat(hms$hms) }
+			catch { set llon $ew(hms$hms)$lon(hms$hms) }
 			if { [ catch { set data "$hms ($sod) $ns(hms$hms)$lat(hms$hms) $ew(hms$hms)$lon(hms$hms) $alt(hms$hms)M $pdop(hms$hms) $nsat(hms$hms)"} ]  } { 
 				set data "hms:$hms sod:$sod  No GPS Data"
 			}
 		} elseif { $camtype == 2 } {
+			catch { set llat $lat(hms$hms) }
+			catch { set llon $lon(hms$hms) }
 			if { [ catch { set data "hms:$hms sod:$sod lat:$lat(hms$hms) lon:$lon(hms$hms) depth:$alt(hms$hms)"} ] } {
 				set data "hms:$hms sod:$sod  No GPS Data"
 			}
