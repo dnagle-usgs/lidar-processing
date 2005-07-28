@@ -36,8 +36,13 @@ Original: Lance Mosher
 	if(!(is_array(alwaysdrawmap))){alwaysdrawmap=1;}   
 	if ((!is_array(getcolor)) && ((!min_elv) && (!max_elv))) getcolor=1;
 	if (!is_array(datum)) datum = "WGS84";
+        if (datum == "NAVD88") {
+            datum = "n88";
+        } else {
+            datum = "w84";
+        }
 	if(!onlymerged) onlymerged=0;
-   
+
 	if (mode == 2) {
 		ss = "b";
 		if (!min_elv) min_elv = -28.0;
@@ -162,6 +167,7 @@ Original: Lance Mosher
 	strzone = rdline( prompt="Enter Zone Number: ");
 	sread, strzone, format="%d",curzone;
 	show_map, dllmap, utm=1, width=4, zone=curzone;
+	show_map, dllmap, utm=1, width=4;
 	limits, save_lmt;
 	if (is_void(bpexist)) {
 		hcp_file, bigpicname;
@@ -209,10 +215,10 @@ Original: Lance Mosher
 	        idx_nmax = 0;
         	sread(strpart(dir_list(i), (nn+3):(nn+8)), format="%d", idx_emin);
 	        sread(strpart(dir_list(i), (nn+11):(nn+17)), format="%d", idx_nmax);
-		searchstr = "*_"+ss+".pbd"; 	//Excludes filtered
-		if (rcfmode == 1)  searchstr = "*_"+ss+"*_rcf.pbd";
-		if (rcfmode == 2)  searchstr = "*_"+ss+"*_ircf.pbd";
-		if (rcfmode == 3)  searchstr = "*_"+ss+"*_ircf_mf.pbd";
+		searchstr = "*_"+datum+"*_"+ss+".pbd"; 	//Excludes filtered
+		if (rcfmode == 1)  searchstr = "*_"+datum+"*_"+ss+"*_rcf.pbd";
+		if (rcfmode == 2)  searchstr = "*_"+datum+"*_"+ss+"*_ircf.pbd";
+		if (rcfmode == 3)  searchstr = "*_"+datum+"*_"+ss+"*_ircf_mf.pbd";
 
 
 //-----If file already exists continue loop
@@ -333,11 +339,10 @@ Original: Lance Mosher
 
 //-----Load data in the bounding box and save the plot
 			winkill,4;window,4,dpi=100,style="landscape11x85.gs", width=1100, height=850;		//Set up the window
-			if(mode==1){fixmode = 3;}else{fixmode=mode;}	
-
-			if (rcfmode == 1) search_str = "*_rcf.pbd";
-			if (rcfmode == 2) search_str = "*_ircf.pbd";
-			if (rcfmode == 3) search_str = "*_ircf_mf.pbd";
+			if(mode==1){fixmode = 3;}else{fixmode=mode;}
+			if (rcfmode == 1) search_str = "*_"+datum+"*_"+ss+"*_rcf.pbd";
+			if (rcfmode == 2) search_str = "*_"+datum+"*_"+ss+"*_ircf.pbd";
+			if (rcfmode == 3) search_str = "*_"+datum+"*_"+ss+"*_ircf_mf.pbd";
 			data_sel = sel_rgn_from_datatiles(rgn=rgn, data_dir=data_dir,mode=fixmode, win=5, search_str=search_str);
 			if (!is_array(data_sel)) {write, "bad \n"; continue;}
 			if ((mode == 1) && (!skipthis)) {
@@ -349,7 +354,7 @@ Original: Lance Mosher
 			}
 			if (mode == 2) {
 				elv = data_sel(where((data_sel.elevation >= -50000) & (data_sel.elevation <=50000)));
-				if (getcolor) elvs=stdev_min_max((elv.elevation+elv.depth)/100., N_facotor=1.5);
+				if (getcolor) elvs=stdev_min_max((elv.elevation+elv.depth)/100., N_factor=1.5);
 				plot_bathy, data_sel, win=4, ba=1, fs = 0, de = 0 , fint = 0, lint = 0, cmin=elvs(1), cmax=elvs(2), msize = 1.0, marker=1, skip=1;
 				pltitle, swrite(format="t!_e%6.0f!_n%7.0f bathy", float(emin), float(nmax));
 				xytitles, "UTM easting (M)", "UTM northing (M)";
