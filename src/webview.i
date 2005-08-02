@@ -396,7 +396,7 @@ Original: Lance Mosher
 	write, "Webview complete!\n";
 }
 
-func plot_fltlines(fltdir, win=, color=, utm=, width=, scalecolor=, indir=) {
+func plot_fltlines(fltdir, win=, color=, utm=, width=, scalecolor=, indir=,wait=) {
 /* DOCUMENT plot_flightlines(fltdir, win=, color=, utm=, width=, scalecolor=, indir=)
 This function plots flightline of all gga files from the fltdir.
 Generall fltdir is the EAARL mission directory (e.g. /data/0/tampa_bay04/) such that gga
@@ -412,8 +412,11 @@ utm= Set to 1 if viewing UTM vs lat/lon
 width= The width of the line
 scalecolor= Scales the flightlines along a particular shade. 0=cyan, 1=red, 2=green, 3=blue, 4=yellow, 5=magenta
 indir= Set to 1 if fltdir itself contains the gga files to plot.
+wait= Set to 1 if you would like the function to pause between each plotted flight line and allow zooming and
+      navigating in the plot window.  Enter a letter at the prompt to plot the next flight line.
 
 Original: Lance Mosher
+Modified by: Jeremy Bracone
 */
 
 //-----Find gga files
@@ -457,6 +460,11 @@ Original: Lance Mosher
 		if (!color) col_list(i,) = col;
 		if (color) col = color;
 		show_gga_track, color=col, skip=0,marker=0,msize=.1, width=width, utm=utm;
+		write(format="gga: %s\n color:red=%g,green=%g,blue=%g\n--------------------\n\n",gga_list(i),col(1),col(2),col(3));
+		if(wait == 1) {
+			write, "When ready, enter any letter to continue.\n";
+			rd="y";rd=read(rd);
+		}
 	}
 	return;
 }
