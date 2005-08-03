@@ -108,7 +108,7 @@ func remove_digitizer(data_dir, digi, mode, datum=) {
 func split_flightlines(data_arr) {
  indx_soe = sort(data_arr.soe);
  if (numberof(data_arr) >= 2) {
-	diffs = where((data_arr.soe(indx_soe))(dif) >= 10);
+	diffs = where((data_arr.soe(indx_soe))(dif) >= 100);
 	if (is_array(diffs)) {
 	   diff = array(long, numberof(diffs)+1); 
 	   diff(1) = 1; 
@@ -361,7 +361,15 @@ for (i=1; i<=numberof(fn_all); i++) {
 }
 }
 
-func isolate_flightline(data, pt=, win=) {
+func isolate_flightline(data, pt=, win=, min_elev=, max_elev=) {
+/*DOCUMENT isolate_flightline(data, pt=, win=, min_elev=, max_elev=)
+
+This function returns the minimum and maximum soe value for a selected flightline.
+
+min_elev & max_elev:  If these are both set, the flightlines plotted if more than
+	one are found will use the cmin and cmax entered (must be in meters).
+
+*/
    data = data(sort(data.soe));
    if (!win) win=5;
    windold = window();
@@ -435,7 +443,11 @@ func isolate_flightline(data, pt=, win=) {
 	   show = this_data(idx(fl1):idx(fl2)-1);
 	}
 	daelv = stdev_min_max(this_data.elevation/100.0 + this_data.depth/100.0);
-	plot_bathy, show, win=3, ba=1, fs = 0, de = 0 , fint = 0, lint = 0, cmin=daelv(1), cmax=daelv(2), msize = 1.0, marker=1, skip=1;
+	if ((is_array(min_elev)) && (is_array(max_elev))) {
+           plot_bathy, show, win=3, ba=1, fs = 0, de = 0, fint = 0, lint = 0, cmin=min_elev, cmax=max_elev, msize = 1.0, marker=1, skip=1;
+        }else{
+	   plot_bathy, show, win=3, ba=1, fs = 0, de = 0 , fint = 0, lint = 0, cmin=daelv(1), cmax=daelv(2), msize = 1.0, marker=1, skip=1;
+        }
 	limits, square=1;
 	limits;
 	write, "Correct Flightline? (Y for yes, any other key to quit)";
@@ -463,9 +475,15 @@ func isolate_flightline(data, pt=, win=) {
 	this_data.east=this_data.east+(offset);
 	lasteast = max(this_data.east)+50000;
 	daelv = stdev_min_max(this_data.elevation/100.0 + this_data.depth/100.0);
-	plot_bathy, this_data, win=3, ba=1, fs = 0, de = 0 , fint = 0, lint = 0, cmin=daelv(1), cmax=daelv(2), msize = 1.0, marker=1, skip=1;
+        if ((is_array(min_elev)) && (is_array(max_elev))) {
+            plot_bathy, this_data, win=3, ba=1, fs = 0, de = 0 , fint = 0, lint = 0, cmin=min_elev, cmax=max_elev, msize = 1.0, marker=1, skip=1;
+        } else {
+	    plot_bathy, this_data, win=3, ba=1, fs = 0, de = 0 , fint = 0, lint = 0, cmin=daelv(1), cmax=daelv(2), msize = 1.0, marker=1, skip=1;
+        }
 	plt, swrite(format="%d", i), this_data.east(min)/100.0, this_data.north(max)/100.0+200, tosys=1;
    }
+   limits,square=1;
+   limits;
    swrite, format="From left to right flightlines are numbered 1 to %d", numberof(soes)/2;
    write, "Type the number of the flightline to select";
    rd = "blah";
@@ -490,7 +508,11 @@ func isolate_flightline(data, pt=, win=) {
 	show = this_data(idx(fl1):idx(fl2)-1);
    }
    daelv = stdev_min_max(this_data.elevation/100.0 + this_data.depth/100.0);
-   plot_bathy, show, win=3, ba=1, fs = 0, de = 0 , fint = 0, lint = 0, cmin=daelv(1), cmax=daelv(2), msize = 1.0, marker=1, skip=1;
+   if ((is_array(min_elev)) && (is_array(max_elev))) {
+       plot_bathy, show, win=3, ba=1, fs = 0, de = 0 , fint = 0, lint = 0, cmin=min_elev, cmax=max_elev, msize = 1.0, marker=1, skip=1;
+   } else {
+       plot_bathy, show, win=3, ba=1, fs = 0, de = 0 , fint = 0, lint = 0, cmin=daelv(1), cmax=daelv(2), msize = 1.0, marker=1, skip=1;
+   }
    write, "Correct Flightline? (Y for yes, any other key to quit)";
    cor = "blah";
    read(cor);
