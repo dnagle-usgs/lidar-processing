@@ -38,6 +38,7 @@ func sel_file( ss=, path= )  {
 		// blah
 		list = lsdir(path);
 		s = list(where(strglob(ss, list, case=0)));
+		fi = 0;
 
 	} else {
 	

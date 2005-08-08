@@ -231,19 +231,20 @@ menu .l1wid.mb.post
 	LabelEntry .l1write.2.varname -width 10 -relief sunken -bd 3 -label "Variable Name: " -helptext "Enter Name of Variable to Write to file"  -textvariable var_type -text $var_type
 	LabelEntry .l1write.2.plyname -width 10 -relief sunken -bd 3 -label "PLY Name: " -helptext "Enter ply name to Write to file; Leave it empty if you don't want to write out ply data"  -textvariable ply_type -text ""
 	LabelEntry .l1write.2.qname -width 10 -relief sunken -bd 3 -label "GGA(q) Name: " -helptext "Enter q name to Write to file; Leave it empty if you don't want to write out gga data"  -textvariable q_type -text ""
-    Button .l1write.3.ok -text "OK" -width 5 -command {
+    Button .l1write.3.ok -text "Write File" -width 5 -command {
 	if { $ofname != "" }  {
          switch [ file extension $ofname ] {
           ".pbd" {
  	      if {($ply_type == "") && ($q_type == "")} {
 		exp_send "vname=\"$var_type\"; save, createb(\"$ofname\"), vname, $var_type; \r";
-	      }
- 	      if {($ply_type == "") && !($q_type == "")} {
+	      } elseif {($ply_type == "") && !($q_type == "")} {
 		exp_send "vname=\"$var_type\"; qname = \"$q_type\"; save, createb(\"$ofname\"), vname, $var_type, qname, $q_type; \r";
-	      }
- 	      if {!($ply_type == "") && !($q_type == "")} {
+	      } elseif {!($ply_type == "") && !($q_type == "")} {
 		exp_send "vname=\"$var_type\"; qname = \"$q_type\"; plyname = \"$ply_type\"; save, createb(\"$ofname\"), vname, $var_type, qname, $q_type, plyname, $ply_type; \r";
+	      } else { ;# !($ply_type == "") && ($q_type == "")
+		exp_send "vname=\"$var_type\"; plyname = \"$ply_type\"; save, createb(\"$ofname\"), vname, $var_type, plyname, $ply_type; \r";
 	      }
+	      destroy .l1write
           }
           ".bin" - 
           ".edf" {
@@ -258,17 +259,15 @@ menu .l1wid.mb.post
  	       exp_send "write_topo, \"$opath\", \"$ofname\", fs_some; \r";
 	       expect ">"
 	     }  
-	    }
- 	    if {$ptype == 1} {
+	    } elseif {$ptype == 1} {
 	     if {$write_some == 0} {
       	       exp_send "write_bathy, \"$opath\", \"$ofname\", $var_type; \r";
 	       expect ">"
 	     } else {
       	       exp_send "write_bathy, \"$opath\", \"$ofname\", depth_some; \r";
 	       expect ">"
-   	     }	
-	    }
- 	    if {$ptype == 2} {
+   	     }
+	    } elseif {$ptype == 2} {
 	     if {$write_some == 0} {
       	       exp_send "write_veg, \"$opath\", \"$ofname\", $var_type; \r";
 	       expect ">"
@@ -276,8 +275,7 @@ menu .l1wid.mb.post
       	       exp_send "write_veg, \"$opath\", \"$ofname\", veg_some; \r";
 	       expect ">"
    	     }	
-	    }
- 	    if {$ptype == 3} {
+	    } elseif {$ptype == 3} {
 	     if {$write_some == 0} {
       	       exp_send "write_multipeak_veg, $var_type, opath=\"$opath\", ofname=\"$ofname\"; \r";
 	       expect ">"
@@ -293,7 +291,16 @@ menu .l1wid.mb.post
           }
 	  set write_some 0
         }
+        default {
+          tk_messageBox -icon warning \
+          -message "You need to specify an output file with a valid file extension (pbd, bin, or edf)" \
+          -type ok
+        }
        }
+      } else {
+       	    tk_messageBox  -icon warning \
+            -message "You need to specify an output file name" \
+            -type ok
       }
    }
    Button .l1write.3.cancel -text "Cancel" -width 5 -command {
@@ -748,11 +755,11 @@ menu .l1wid.mb.post
 	   pack .l1wid-opts.f3.label .l1wid-opts.f3.inc -side left -fill x
 	   pack .l1wid-opts.f1 .l1wid-opts.f2 .l1wid-opts.f3 -side top -anchor e
          }
-.l1wid.mb.options add checkbutton -label "Log Historgrams" -underline 0 \
+.l1wid.mb.options add checkbutton -label "Log Histograms" -underline 0 \
 	-variable hist_log \
 	-command hist_linlog 
 
-.l1wid.mb.options add command -label "Plot/Write Indvidual Flightlines..." -underline 0 \
+.l1wid.mb.options add command -label "Plot/Write Individual Flightlines..." -underline 0 \
  -command {
     global list lrnindx
     destroy .l1plot
@@ -816,8 +823,8 @@ proc varlist_plot {} {
     wm title .varplot "List"
     frame .varplot.1
     frame .varplot.2
-    listbox .varplot.1.lb -selectmode single -width 12 -xscrollcommand ".varplot.xscroll set" -yscrollcommand ".varplot.1.yscroll set" 
-    scrollbar .varplot.xscroll -orient horizontal -command [list .varplot.1.lb xview]
+    listbox .varplot.1.lb -selectmode single -width 12 -xscrollcommand ".varplot.1.xscroll set" -yscrollcommand ".varplot.1.yscroll set"
+    scrollbar .varplot.1.xscroll -orient horizontal -command [list .varplot.1.lb xview]
     scrollbar .varplot.1.yscroll -command [list .varplot.1.lb yview]
     for {set i 0} { $i < [llength $varlist] } {incr i} { 
        .varplot.1.lb insert end [lindex $varlist $i]
@@ -858,9 +865,14 @@ proc varlist_plot {} {
     Button .varplot.2.dismiss -text "Dismiss" -width 8 -command {
           destroy .varplot
     }
-    pack .varplot.1.lb .varplot.1.yscroll -side left -fill y 
     pack .varplot.2.select .varplot.2.add .varplot.2.delete .varplot.2.dismiss -side top -fill x
-    pack .varplot.1 .varplot.xscroll .varplot.2 -side top -fill x
+    grid .varplot.1.lb      -in .varplot.1 -column 0 -row 0 -sticky "nswe"
+    grid .varplot.1.yscroll -in .varplot.1 -column 1 -row 0 -sticky "ns"
+    grid .varplot.1.xscroll -in .varplot.1 -column 0 -row 1 -sticky "ew"
+    grid columnconfigure .varplot.1 0 -weight 1
+    grid rowconfigure    .varplot.1 0 -weight 1
+    pack .varplot.1 -in .varplot -side top -fill both -expand 1
+    pack .varplot.2 -in .varplot -side top -fill x
   }
 
 proc append_varlist {newvar} {
@@ -1117,10 +1129,10 @@ proc rcf_region {} {
 	-label "Output Variable:" -helptext "Define output variable" \
 	-textvariable outvar -text "rcf_$curvar" -width 10
 
-    LabelEntry .rcf.5.premin -relief sunken -label "Pre-filter Elevations (cm): Min" -helptext "Use this minimum elevation (in cm) before applying RCF. Leave blank for no value" \
+    LabelEntry .rcf.5.premin -relief sunken -label "Pre-filter Elevations (m): Min" -helptext "Use this minimum elevation (in m) before applying RCF. Leave blank for no value" \
 	-textvariable prefilter_min -text "" -width 4
    
-    LabelEntry .rcf.5.premax -relief sunken -label "Max" -helptext "Use this maximum elevation (in cm) before applying RCF. Leave blank for no value" \
+    LabelEntry .rcf.5.premax -relief sunken -label "Max" -helptext "Use this maximum elevation (in m) before applying RCF. Leave blank for no value" \
 	-textvariable prefilter_max -text "" -width 4
 
     LabelEntry .rcf.5.tai -relief sunken -label "No. of iterations" -helptext "Number of RCF iterations to perform (default = 3)" \
@@ -1846,6 +1858,7 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
 		    }
 			
 		}
+	set ymin 1
         checkbutton .l1clip.2.ymax -variable ymax \
 		-command {
 		    if {$ymax == 1} {
@@ -1863,7 +1876,8 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
 			.l1clip.2.max.sc configure -state disabled
 		    }
  		}
-        checkbutton .l1clip.3.yrange -variable yrange \
+	set ymax 1
+        checkbutton .l1clip.3.yrange -variable yrange -state disabled \
 		 -command {
 			set yrange_elv 0
 ##		    if {$yrange == 1} {
@@ -1885,6 +1899,7 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
 ##			.l1clip.3.range.sc configure -state disabled
 ##		    }
 		 }
+
         sst .l1clip.2.max   max_elv   "Maximum Elevation:"  { -100 5000.0 0.1  }
         sst .l1clip.1.min   min_elv   "Minimum Elevation:"  { -100 5000.0 0.1  }
         sst .l1clip.3.range   range_elv   "Vertical Range:"  { 0 300.0 0.1  }
@@ -1897,7 +1912,7 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
         LabelEntry .l1clip.35 -relief sunken -label "Output Variable:" -helptext "Define output variable" \
 	-textvariable outvar -text "$curvar"
 
-	Button .l1clip.4.ok -text "OK" -width 5 -command {
+	Button .l1clip.4.ok -text "Clip Data" -width 5 -command {
 	  
 	  global outvar curvar
 	    
@@ -2019,11 +2034,7 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
 	    destroy .l1clip
           }
  
- 	Button .l1clip.4.cancel -text "Cancel" -width 5 -command {
-	   destroy .l1clip
- 	}
-
- 	Button .l1clip.4.dismiss -text "Dismiss" -width 5 -command {
+ 	Button .l1clip.4.dismiss -text "Close" -width 5 -command {
 	   destroy .l1clip
  	}
 
@@ -2032,7 +2043,7 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
 	pack .l1clip.2.ymax .l1clip.2.max -side left -padx 5
 	pack .l1clip.3.yrange .l1clip.3.range -side left -fill x
 	
-	pack .l1clip.4.ok .l1clip.4.cancel .l1clip.4.dismiss -side left -padx 5
+	pack .l1clip.4.ok .l1clip.4.dismiss -side left -padx 5
 	pack .l1clip.05 .l1clip.1 .l1clip.2 .l1clip.3 .l1clip.35 .l1clip.4 -side top -pady 5	
 
 	.l1clip.3.range.sb configure -state disabled
@@ -2685,10 +2696,14 @@ trace variable cmax   w ud
 
 trace variable tilefname w ud
 
- sst .l1wid.bf45.sc.1.cmax   cmax   "  Cmax:"	  { -50 5000.0 0.1  }
- sst .l1wid.bf45.sc.1.cmin   cmin   "  Cmin:"	  { -100 5000.0 0.1  }
+ sst .l1wid.bf45.sc.1.cmax   cmax   "Cmax:"	  { -50 5000.0 0.1  }
+ sst .l1wid.bf45.sc.1.cmin   cmin   "Cmin:"	  { -100 5000.0 0.1  }
  sst .l1wid.bf45.sc.1.cdelta cdelta "Cdelta:"  { 0.0  2000.0 0.1 }
- pack .l1wid.bf45.sc.1.cmax .l1wid.bf45.sc.1.cdelta .l1wid.bf45.sc.1.cmin -side top
+ grid .l1wid.bf45.sc.1.cmax   -in .l1wid.bf45.sc.1 -column 0 -row 0 -sticky "e"
+ grid .l1wid.bf45.sc.1.cdelta -in .l1wid.bf45.sc.1 -column 0 -row 1 -sticky "e"
+ grid .l1wid.bf45.sc.1.cmin   -in .l1wid.bf45.sc.1 -column 0 -row 2 -sticky "e"
+
+# pack .l1wid.bf45.sc.1.cmax .l1wid.bf45.sc.1.cdelta .l1wid.bf45.sc.1.cmin -side top
 
 
 LabelFrame  .l1wid.bf45.sc.f -relief sunken -borderwidth 3 -text "Marker:"
@@ -3014,7 +3029,7 @@ proc limits_tool { } {
   toplevel .limitstool
   wm title .limitstool "Limits Tool"
   frame .limitstool.1 -relief groove -bd 4
-  label .limitstool.1.t1 -text "Set limits from window "
+  label .limitstool.1.t1 -text "Apply limits from window "
   ComboBox .limitstool.1.c1 -text "0" -width 2 -editable 0 \
         -values { 0 1 2 3 4 5 6 7 } \
         -takefocus 0

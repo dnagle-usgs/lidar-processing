@@ -2,15 +2,17 @@
 	require, "bathy_filter.i"
 
 func webview(data_dir, webdir, mode, rcfmode=, min_elv=, max_elv=, getcolor=, datum=, update=, fltdir=, indir=, nohtml=, title=, alwaysdrawmap=) {
-/* DOCUMENT webview(data_dir, webdir, mode, num_reef, reeffile, onlymerged=, min_elv, max_elv, pres, getcolor, update)
+/* DOCUMENT webview(data_dir, webdir, mode, rcfmode=, min_elv=, max_elv=, getcolor=, datum=, update=, fltdir=, indir=, nohtml=, title=, alwaysdrawmap=)
 This program searches through data_dir for all i_e######_n####### folders runs through various plotting options for each one.
 The user may save the plain image with a title, an image w/ a grid of named datatiles, and choose several individual data
 tiles to display in full resolution. The user may also choose to run the qaqc flightline analysis on the data tile level and 
 display coral reef boxes if they have been defined. It stores images in webdir in a format which is then used by a perl script to generate a webpage.
 
-Options: data_dir = string for directory containing index tile directories created using batch_process
-webdir=where images and associated directory structure is placed.
-mode = Display mode, 1 = first surface (from veg), 2 = bathymertry 3 = veg (bare earth)
+Parameters:
+data_dir: string for directory containing index tile directories created using batch_process
+webdir: where images and associated directory structure is placed.
+mode: Display mode, 1 = first surface (from veg), 2 = bathymetry 3 = veg (bare earth)
+Options:
 rcfmode= Set to 1 for RCF or 2 for IRCF or 3 for ircf_mf (manually filtered)
 min_elv/max_elv = the min and max elevations to be displayed. The default is -40 to -28 for bathy or -30 to 0 for veg (wgs84). 
 getcolor = if one,automatically selects a color bar that covers a certain number of standard deviations of the data
@@ -22,7 +24,7 @@ nohtml = Only create images, do not generate the webpage
 title = The title of the web page. e.g. title="Tampa Bay 2004"
 alwaysdrawmap = If 1, will draw the coastline map on every image. Default is 1.
 
-To make updates simply place the new data in a folder broken down into the normal indextile/datatile/data file sturcture and run the command
+To make updates simply place the new data in a folder broken down into the normal indextile/datatile/data file structure and run the command
 
 Original: Lance Mosher
 */
