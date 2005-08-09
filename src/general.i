@@ -302,116 +302,47 @@ func interp_periodic(y, x, xp, ps, pe) {
 
 	See also: interp
 */
-	if(double(numberof(x)) * double(numberof(xp)) > 16000000.0 && numberof(xp) > 1) {
-		yp = array(structof(y(1)), numberof(xp));
-		for(i = 1; i <= numberof(yp); i++) {
-			x_eq = where(x == xp(i));
-			if(numberof(x_eq) == 1) {
-				yp(i) = y(x_eq);
-			} else {
-				x_lo = where(x <= xp(i));
-				x_hi = where(x >= xp(i));
-				if(numberof(x_lo) > 0) {
-					if(numberof(x_hi) > 0) {
-						yp(i) = interp_periodic(y(x_lo(0):x_hi(1)), x(x_lo(0):x_hi(1)), [xp(i)], ps, pe);
-					} else {
-						yp(i) = y(x_lo(0));
+	yp = array(double, numberof(xp));
+	pl = pe - ps;
+	for(i = 1; i <= numberof(yp); i++) {
+		x_eq = where(x == xp(i));
+		if(numberof(x_eq) == 1) {
+			yp(i) = y(x_eq);
+		} else {
+			x_lo = where(x <= xp(i));
+			x_hi = where(x >= xp(i));
+			if(numberof(x_lo) > 0) {
+				if(numberof(x_hi) > 0) {
+					length = abs(x(x_hi(1)) - x(x_lo(0)));
+					ratio = abs(xp(i) - x(x_lo(0)))/length;
+
+					diff = y(x_hi(1)) - y(x_lo(0));
+					if(abs(diff) > 0.5*pl) {
+						if(diff < 0) {
+							diff += pl;
+						} else {
+							diff -= pl;
+						}
+					}
+					
+					yp(i) = y(x_lo(0)) + diff * ratio;
+
+					while(yp(i) > pe) {
+						yp(i) -= pl;
+					}
+					while(yp(i) < ps) {
+						yp(i) += pl;
 					}
 				} else {
-					if(numberof(x_hi) > 0) {
-						yp(i) = y(x_hi(1));
-					}
+					yp(i) = y(x_lo(0));
+				}
+			} else {
+				if(numberof(x_hi) > 0) {
+					yp(i) = y(x_hi(1));
 				}
 			}
 		}
-		return yp;
 	}
-
-	pl = pe - ps;
-	ph = pl * 0.5;
-
-	yd = array(0.0, numberof(y));
-	yd(:-1) = abs(y(dif));
-
-	diff = x(-:1:numberof(xp),) - xp(,-:1:numberof(x));
-	gt = diff > 0;
-	eq = diff == 0;
-
-	too_lo = where(gt(,sum) == numberof(x));
-	too_hi = where(gt(,sum) == 0);
-
-	gtd = gt(,dif);
-
-	wgtd = where(gtd);
-	weq = where(eq);
-
-	i = indgen(numberof(xp))(,-:1:numberof(x));
-	v = indgen(numberof(x))(-:1:numberof(xp),);
-
-	gtr = array(0.0, numberof(xp));
-	eqr = gtr;
-	
-	if(numberof(wgtd))
-		gtr(i(wgtd)) = v(wgtd);
-	if(numberof(weq))
-		eqr(i(weq)) = v(weq);
-
-	idx_lo = array(0, numberof(xp));
-	idx_hi = idx_lo;
-	val_lo = array(0.0, numberof(xp));
-	val_hi = val_lo;
-	ref_lo = ref_hi = val_lo;
-	yd_lo = val_lo;
-
-	if(numberof(where(eqr))) {
-		idx_lo(where(eqr)) = eqr(where(eqr));
-		idx_hi(where(eqr)) = eqr(where(eqr));
-	}
-
-	if(numberof(where(! idx_lo)))
-		idx_lo(where(! idx_lo)) = gtr(where(! idx_lo));
-	if(numberof(where(! idx_hi)))
-		idx_hi(where(! idx_hi)) = gtr(where(! idx_hi)) + 1;
-	if(numberof(where(idx_hi == 1)))
-		idx_hi(where(idx_hi == 1)) = 0;
-
-	wl = where(idx_lo);
-	wh = where(idx_hi);
-
-	if(numberof(wl)) {
-		ref_lo(wl) =  x(idx_lo(wl));
-		val_lo(wl) =  y(idx_lo(wl));
-		yd_lo(wl)  = yd(idx_lo(wl));
-	}
-	if(numberof(wh)) {
-		ref_hi(wh) = x(idx_hi(wh));
-		val_hi(wh) = y(idx_hi(wh));
-	}
-
-	yp = array(0.0, numberof(xp));
-	we = where(idx_lo > 0 & ref_hi == ref_lo);
-	wd_bn = where(idx_lo > 0 & ref_hi != ref_lo & yd_lo <= ph);
-	wd_by_al = where(idx_lo > 0 & ref_hi != ref_lo & yd_lo > ph & val_lo < val_hi);
-	wd_by_ah = where(idx_lo > 0 & ref_hi != ref_lo & yd_lo > ph & val_lo > val_hi);
-	wd = where(idx_lo > 0 & ref_hi != ref_lo);
-	if(numberof(we))
-		yp(we) = val_lo(we);
-	if(numberof(wd_bn))
-		yp(wd_bn) = 1.0 * (xp(wd_bn) - ref_lo(wd_bn))/(ref_hi(wd_bn) - ref_lo(wd_bn)) * val_hi(wd_bn) +
-					  1.0 * (ref_hi(wd_bn) - xp(wd_bn))/(ref_hi(wd_bn) - ref_lo(wd_bn)) * val_lo(wd_bn);
-	if(numberof(wd_by_al))
-		yp(wd_by_al) = (( 1.0 * (xp(wd_by_al) - ref_lo(wd_by_al))/(ref_hi(wd_by_al) - ref_lo(wd_by_al)) * val_hi(wd_by_al) +
-						     1.0 * (ref_hi(wd_by_al) - xp(wd_by_al))/(ref_hi(wd_by_al) - ref_lo(wd_by_al)) * (val_lo(wd_by_al) + pl)
-						   ) - ps ) % pl + ps;
-	if(numberof(wd_by_ah))
-		yp(wd_by_ah) = (( 1.0 * (xp(wd_by_ah) - ref_lo(wd_by_ah))/(ref_hi(wd_by_ah) - ref_lo(wd_by_ah)) * (val_hi(wd_by_ah) + pl) +
-						     1.0 * (ref_hi(wd_by_ah) - xp(wd_by_ah))/(ref_hi(wd_by_ah) - ref_lo(wd_by_ah)) * val_lo(wd_by_ah)
-							) - ps ) % pl + ps;
-	if(numberof(too_lo))
-		yp(too_lo) = y(1);
-	if(numberof(too_hi))
-		yp(too_hi) = y(0);
-	
 	return yp;
 }
 

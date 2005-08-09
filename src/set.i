@@ -41,7 +41,15 @@ func set_intersection(A, B, idx=) {
 */
 	if(! numberof(A) || ! numberof(B))
 		return [];
-	index = where((A(,-:1:numberof(B)) == B(-:1:numberof(A),))(,sum));
+	C = array(0, numberof(A));
+	for(i = 1; i <= numberof(A); i++) {
+		for(j = 1; j <= numberof(B); j++) {
+			if(A(i) == B(j)) {
+				C(i) = 1;
+			}
+		}
+	}
+	index = where(C);
 	if(idx)
 		return index;
 	if(numberof(index))
@@ -71,7 +79,16 @@ func set_difference(A, B, idx=) {
 */
 	if(! numberof(A) || ! numberof(B))
 		return A;
-	index = where(!((A(,-:1:numberof(B)) == B(-:1:numberof(A),))(,sum)));
+	C = array(1, numberof(A));
+	for(i = 1; i <= numberof(A); i++) {
+		for(j = 1; j <= numberof(B); j++) {
+			if(A(i) == B(j)) {
+				C(i) = 0;
+			}
+		}
+	}
+	index = where(C);
+
 	if(idx)
 		return index;
 	if(numberof(index))
