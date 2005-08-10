@@ -31,7 +31,7 @@ to recall the one before last, use:
 
 */
 
-func mtransect( fs, iwin=,owin=, w=, connect=, recall=, color=, xfma=, rcf_parms=, rtn= ) {
+func mtransect( fs, iwin=,owin=, w=, connect=, recall=, color=, xfma=, rcf_parms=, rtn=, show= ) {
 /* DOCUMENT mtransect( fs, iwin=,owin=, w=, connect=, recall=, color=, xfma= )
 
   mtransect allows you to "drag out" a line wihin an ALPS topo display
@@ -59,6 +59,7 @@ the one before that, etc. etc.
             0 first return
             1 veg last return
 	    2 submerged topo
+  show=     set to 1 if you want to plot the transect in window, win.
 
 Examples:
 
@@ -100,6 +101,8 @@ See also: transect, _transect_history
  if ( is_void(recall) ) {
 // get the line coords with the mouse and convert to cm
   l = mouse(1, 2, "")(1:4)*100.0;
+  if (show)
+    plg, [l(2),l(4)]/100., [l(1),l(3)]/100., width=2.0, color="red";
   grow, _transect_history, [l]
  } else {
   if ( numberof(_transect_history) == 0 ) {
