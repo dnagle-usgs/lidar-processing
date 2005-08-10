@@ -1,0 +1,296 @@
+
+write, "$Id$";
+
+/* This function requires the yutils library.  See http://www.maumae.net/yorick/doc/yutils/index.php  to obtain the yutils package.
+*/
+
+   
+require, "poly.i"
+
+func polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, w=, gridmode= ) {
+  /* DOCUMENT polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, wbuf= ) 
+   This function creates a 3rd order magnitude polynomial fit within the give data region and introduces random points within the selected region based on the polynomial surface. The points within the region are replaced by these random points.  The region can be defined in an array (boxlist=), or if gridmode is set to 1, the entire input data is considered for smoothing.  A window (size wslide x wslide) slides through the data array, and all points within the window + buffer (wbuf) are considered for deriving the surface.  
+ 
+ amar nayegandhi August 5, 2005.
+
+  INPUT:
+  eaarl : data array to be smoothed.  
+  wslide = window size that slides through the data array.
+  mode =
+   mode = 1; //for first surface
+   mode = 2; //for bathymetry (default)
+   mode = 3; // for bare earth vegetation
+   gridmode= set to 1 to work in a grid mode. All data will be fitted to a polynomial within the defined wslide range and buffer distance (wbuf).
+   boxlist = list of regions (x,y bounding box) where the poly fit function is to be applied.  All data within that region will be removed, and fitted with data within some wbuf buffer distance.
+   wbuf = buffer distance (cm) around the selected region.  Default = 0
+   OUTPUT:
+    data array of the same type as the 'eaarl' data array.
+
+*/
+
+ tmr1 = tmr2 = array(double, 3);
+ timer, tmr1;
+ if (!mode) mode = 2;
+
+
+ eaarl = test_and_clean(eaarl);
+
+
+ a = structof(eaarl(1));
+ new_eaarl = array(a, numberof(eaarl) );
+ count = 0;
+ new_count = numberof(eaarl);
+
+
+ if (!is_array(eaarl)) return;
+
+ indx = [];
+ if (mode == 3) {
+     eaarl = eaarl(sort(eaarl.least)); // for bare_earth
+ } else {
+     eaarl = eaarl(sort(eaarl.east)); // for first surface and bathy
+ }
+
+ eaarl_orig = eaarl;
+
+ // define a bounding box
+  bbox = array(float, 4);
+ if (mode != 3) {
+  bbox(1) = min(eaarl.east);
+  bbox(2) = max(eaarl.east);
+  bbox(3) = min(eaarl.north);
+  bbox(4) = max(eaarl.north);
+ } else {
+  bbox(1) = min(eaarl.least);
+  bbox(2) = max(eaarl.least);
+  bbox(3) = min(eaarl.lnorth);
+  bbox(4) = max(eaarl.lnorth);
+ }
+
+
+  if (!wslide) wslide = 1500; //in centimeters
+
+  //now make a grid in the bbox
+  if (gridmode) {
+    ngridx = int(ceil((bbox(2)-bbox(1))/wslide));
+  } else {
+    ngridx = numberof(boxlist(,1)); // number of regions where poly fit will be needed.
+  }
+  ngridy = int(ceil((bbox(4)-bbox(3))/wslide));
+  
+  if (gridmode) {
+   if (ngridx > 1) {
+    xgrid = bbox(1)+span(0, wslide*(ngridx-1), ngridx);
+   } else {
+    xgrid = [bbox(1)];
+   }
+  }
+ 
+ 
+  if (ngridy > 1) {
+    ygrid = bbox(3)+span(0, wslide*(ngridy-1), ngridy);
+  } else {
+    ygrid = [bbox(3)];
+  }
+
+
+  if ( _ytk && (ngridy>1)) {
+    tkcmd,"destroy .polyfit; toplevel .polyfit; set progress 0;"
+    tkcmd,swrite(format="ProgressBar .polyfit.pb \
+	-fg blue \
+	-troughcolor white \
+	-relief raised \
+	-maximum %d \
+	-variable progress \
+	-height 30 \
+	-width 400", int(ngridy) );
+    tkcmd,"pack .polyfit.pb; update; center_win .polyfit;"
+  }
+
+
+  //timer, t0
+
+  origdata = [];
+  if (!gridmode) {
+   maxblistall = max(max(boxlist(*,2),boxlist(*,4)));
+   minblistall = min(min(boxlist(,2),boxlist(,4)));
+  }
+  for (i = 1; i <= ngridy; i++) {
+	if (!gridmode) {
+	 // check to see if ygrid is within the boxlist region
+	 yi = ygrid(i)/100.;
+	 yib = (ygrid(i) + wslide)/100.;
+	 if ((yi > maxblistall) || (yi < minblistall) || (yib > maxblistall) || (yib < minblistall)) continue;
+	}
+   q = [];
+   if (mode == 3) {
+    q = where(eaarl.lnorth >= ygrid(i)-wbuf);
+    if (is_array(q)) {
+       qq = where(eaarl.lnorth(q) <= ygrid(i)+wslide+wbuf);
+       if (is_array(qq)) {
+          q = q(qq);
+       } else q = []
+    }
+   } else {
+    q = where (eaarl.north >= ygrid(i)-wbuf);
+    if (is_array(q)) {
+       qq = where(eaarl.north(q) <= ygrid(i)+wslide+wbuf);
+       if (is_array(qq)){
+	   q = q(qq);
+       } else q = [];
+    }
+   }
+   if (!(is_array(q))) continue;
+      
+    for (j = 1; j <= ngridx; j++) {
+	if (!gridmode) {
+	 // check to see if ygrid is within the boxlist region
+	 maxblist = max(boxlist(j,2),boxlist(j,4));
+	 minblist = min(boxlist(j,2),boxlist(j,4));
+	 if ((yi > maxblist) || (yi < minblist) || (yib > maxblist) || (yib < minblist)) continue;
+	}
+      //define the extent of the strip to fit
+      m = array(double, 4); // in meters
+      if (!gridmode) {
+      	m(1) = min(boxlist(j,1),boxlist(j,3))-wbuf/100.;
+      	m(3) = max(boxlist(j,1),boxlist(j,3))+wbuf/100.;
+      } else {
+	m(1) = (xgrid(j)-wbuf)/100.;
+	m(3) = (xgrid(j) + wslide+wbuf)/100.;
+      }
+      m(2) = ygrid(i)/100.;
+      m(4) = (ygrid(i) + wslide)/100.;
+      indx = [];
+      if (is_array(q)) {
+       if (mode == 3) {
+        indx = where(eaarl.least(q) >= m(1)*100.);
+	if (is_array(indx)) {
+           iindx = where(eaarl.least(q)(indx) <= m(3)*100.);
+	   if (is_array(iindx)) {
+             indx = indx(iindx);
+             indx = q(indx);
+           } else indx = [];
+        }
+       } else {
+        indx = where(eaarl.east(q) >= m(1)*100);
+	if (is_array(indx)) {
+           iindx = where(eaarl.east(q)(indx) <= m(3)*100);
+	   if (is_array(iindx)) {
+             indx = indx(iindx);
+             indx = q(indx);
+           } else indx = [];
+        }
+       }
+      }
+      if (numberof(indx) > 5) {
+       // this is the data inside the box
+	// tag these points in the original data array, so that we can remove them later.
+	eaarl(indx).rn = 0;
+       if (mode==3) {
+         be_elv = eaarl.lelv(indx);
+       }
+       if (mode==2) {
+         be_elv = eaarl.elevation(indx)+eaarl.depth(indx);
+       }
+       if (mode==1) {
+         be_elv = eaarl.elevation(indx);
+       }
+	e1 = eaarl(indx);
+	// now find the 2-D polynomial fit for these points using order 3.
+	c = poly2_fit(be_elv/100., e1.east/100., e1.north/100., 3);
+	// define a random set of points in that area selected to apply this fit
+	narea = abs((m(3)-m(1))*(m(4)-m(2))); //this is the area of the region in m^2.
+	narea = int(narea);
+	a1 = [m(1),m(2)];
+	a2 = [m(3), m(4)];
+	ss = span(a1,a2,narea);
+	
+ 	nrand = int(narea/15) + 1;
+	rr1 = random(nrand);
+	iidx1 = int(rr1*narea)+1;
+	rr2 = random(nrand);
+	iidx2 = int(rr2*narea)+1;
+	elvall = array(double, nrand);
+	for (k=1;k<=nrand;k++) {
+	  x = ss(iidx1(k),1); 
+	  y = ss(iidx2(k),2);
+	  elvall(k) = c(1)+c(2)*x+c(3)*y+c(4)*x^2+c(5)*x*y + c(6)*y^2 + c(7)*x^3 + c(8)*x^2*y + c(9)*x*y^2 + c(10)*y^3;
+	}
+	new_pts = array(GEO,nrand);
+	new_pts.east = int(ss(iidx1,1)*100);
+	new_pts.north = int(ss(iidx2,2)*100);
+	if (mode == 3) {
+	  new_pts.least = int(ss(iidx1,1)*100);
+	  new_pts.lnorth = int(ss(iidx2,2)*100);
+	}
+	if (mode == 2) {
+	  new_pts.elevation = -10;
+	  new_pts.depth = int(elvall*100 + 10);
+        }
+	if (mode == 3) {
+	  new_pts.lelv = int(elvall*100);
+	}
+   	if (mode == 1) {
+	  new_pts.elevation = int(elvall*100);
+	}
+	new_pts.rn = span(count+1,count+nrand,nrand);
+	if ((count+nrand) > numberof(new_eaarl)) {
+	  new_eaarl1 = new_eaarl(1:count);
+	  new_count += numberof(new_eaarl);
+	  new_eaarl = array(GEO, new_count);
+	  new_eaarl(1:count) = new_eaarl1;
+	  new_eaarl1 = [];
+	}
+	new_eaarl(count+1:count+nrand) = new_pts;
+	count += nrand;
+
+      }
+	
+    }
+    
+    if (_ytk && (ngridy>1)) 
+       tkcmd, swrite(format="set progress %d", i)
+  }
+  if (_ytk) {
+   tkcmd, "destroy .polyfit"
+  } 
+  // remove points from eaarl_orig, that were tagged with rn = 0 in eaarl;
+  rnidx = [];
+  if (!gridmode) {
+    rnidx = grow(rnidx, where(eaarl.rn != 0));
+    new_eaarl = grow(new_eaarl, eaarl(rnidx));
+  }
+
+  new_eaarl = new_eaarl(1:count);
+  return new_eaarl;
+
+}
+
+
+func make_boxlist(win) {
+ // amar nayegandhi Aug 08, 2005
+
+ window, win;
+
+ boxlist = array(double, 10, 4);
+ count = 1;
+ contadd = 1;
+ icount = 1;
+ ans = 'n';
+ while (contadd) {
+   m = mouse(1,1,"select region: ");
+   plg, [m(2),m(2),m(4),m(4),m(2)], [m(1),m(3),m(3),m(1),m(1)], color="red", width=1.5;
+   if ((count % 10) == 0) {
+     icount++;
+     boxlist1 = boxlist;
+     boxlist = array(double, 10*icount,4);
+     boxlist(1:count,) = boxlist1;
+   }
+   boxlist(count++,) = m(1:4);
+   n = read(prompt="Continue? (y/n):", format="%c",ans);
+   if (ans != 'y' ) contadd = 0;
+ }
+
+ boxlist = boxlist(1:count-1,);
+ return boxlist;
+}
