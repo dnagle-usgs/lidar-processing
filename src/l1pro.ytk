@@ -2165,10 +2165,13 @@ ComboBox .l1wid.bf45.r.7 -text " Filter tools..." -width 16\
              }
           } 
 proc removing_proc {} {
-       global varlist curvar
+       global varlist curvar cmin cmax
        destroy .rem
        toplevel .rem
        frame .rem.05
+       frame .rem.07 -relief raised -bd 1
+       frame .rem.08 -relief raised -bd 1
+       frame .rem.09
        wm title .rem "Remove Points Using..."
        Label .rem.05.varname -text "Input Variable:"
        ComboBox .rem.05.varlist  -values \
@@ -2187,22 +2190,68 @@ proc removing_proc {} {
        set curvar [lindex $varlist $curidx]
        .rem.05.varlist setvalue @$curidx
 
-       frame .rem.06
+       frame .rem.06 
        Label .rem.06.typetext -text "Data type:"
+### IMPORTANT NOTE: Do not change the order of GEO and VEG__ for the values of the ComboBox below.
+### A function parameter for the pipthresh function for this gui is dependent on the index number of the selection.
        ComboBox .rem.06.type -textvariable remove_type -editable 1 -width 8\
          -values {\
 	          GEO\
                   VEG__\
                  }
-       set remove_type "VEG__"
+      .rem.06.type setvalue @0
 
        ComboBox .rem.1 -text "Remove points using..." -width 16\
    	 -values { \
 	 	Rubberband\ Box \
 	  	Points\ in\ Polygon \
 		Single\ Pixel\
+		PIP-Thresh\
 		} \
-	 -helptext "Remove points from \'workdata\' using any of the following methods:\n Rubberband Box\n Points in Polygon\n Single Pixel" -editable 0 
+	 -helptext "Remove points from \'workdata\' using any of the following methods:\n Rubberband Box\n Points in Polygon\n Single Pixel" -editable 0\
+	 -modifycmd {
+		set removemode [.rem.1 getvalue]
+		if {$removemode == 3} {
+		  pack forget .rem.2 .rem.3 .rem.4
+		  pack .rem.07 .rem.08
+		  pack .rem.07.a .rem.07.min .rem.07.minthresh -side left 
+		  pack .rem.08.a .rem.08.max .rem.08.maxthresh -side left
+		  pack .rem.09 .rem.09.a
+                  pack .rem.2 .rem.3 -side left -padx 5 -pady 5
+		} else {
+		  pack forget .rem.2 .rem.3 .rem.4
+		  pack forget .rem.07 .rem.08 .rem.09
+		  pack .rem.2 .rem.3 .rem.4 -side left -padx 5 -pady 5
+		}
+	   } 
+       Label .rem.07.a -text "Min. Threshold:"
+       Label .rem.08.a -text "Max. Threshold:"
+       Label .rem.09.a -text "WARNING: Cannot undo action." -justify center
+       checkbutton .rem.07.min -variable min\
+		-command {
+		   if {$min == 1} {
+			.rem.07.minthresh configure -state normal
+		   }
+		   if {$min == 0} {
+			.rem.07.minthresh configure -state disabled
+		   }
+		}
+       checkbutton .rem.08.max -variable max\
+		-command {
+		   if {$max == 1} {
+			.rem.08.maxthresh configure -state normal
+		   }
+		   if {$max == 0} {
+			.rem.08.maxthresh configure -state disabled
+		   }
+		}
+       SpinBox .rem.07.minthresh -range {-100.0 100.0 0.1} -textvariable min_thresh 
+       SpinBox .rem.08.maxthresh -range {-50.0 100.0 0.1} -textvariable max_thresh 
+       set min 1
+       set max 1
+       .rem.07.min select
+       .rem.08.max select
+
        Button .rem.2 -width 8 -text "Go" \
        -command {
          global varlist outvar selr curvar
@@ -2237,14 +2286,26 @@ proc removing_proc {} {
              expect ">"
 	   }
          }
+         if {$selr == 3} {
+		set val [.rem.06.type getvalue] 
+		if { $min == 0 && $max == 0 } {
+		   tk_messageBox -icon warning -message "You have not set any threshold limits!" -type ok -title "ERROR!"
+		} elseif { $min == 0 } {
+		   exp_send "croppeddata=\[\];$curvar = pipthresh($curvar, maxthresh=$max_thresh, mode=$val + 2);\r"
+		} elseif { $max == 0 } {
+		   exp_send "croppeddata=\[\];$curvar = pipthresh($curvar, minthresh=$min_thresh, mode=$val + 2);\r"
+		} else {
+		   exp_send "croppeddata=\[\];$curvar = pipthresh($curvar, minthresh=$min_thresh, maxthresh=$max_thresh, mode=$val + 2);\r"
+		}
+	 }
          if {$selr == -1} {
 	   error "Please Define Region."
          } else {
            append_varlist $curvar
-	   destroy .rem
+#	   destroy .rem
          }
       } 
-      Button .rem.3 -width 8 -text "Cancel" -command {
+      Button .rem.3 -width 8 -text "Dismiss" -command {
 	 destroy .rem
       }
       Button .rem.4 -width 8 -text "Undo Last\nRemove" -command {
@@ -2256,6 +2317,7 @@ proc removing_proc {} {
       pack .rem.05.varname .rem.05.varlist -side left -padx 5
       pack .rem.06.typetext .rem.06.type -side left
       pack .rem.05 .rem.06 .rem.1 -pady 8
+      pack .rem.08 .rem.07 .rem.09
       pack .rem.2 .rem.3 .rem.4 -side left -padx 5 -pady 5
    }
 
