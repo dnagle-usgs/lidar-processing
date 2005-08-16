@@ -1409,7 +1409,7 @@ func clean_lfpw (lfpw, beimg=, thresh=, min_elv=, max_elv=) {
      // filter points above max_elv and below min_elv
      // add 1 m for trailing/leading edge of waveform
      elidx = where((elvs > (min_elv-1)) & (elvs < (max_elv+1)));
-     if (is_array(elidx)) {
+     if (numberof(elidx) > 1) {
         elvs = elvs(elidx);
         lfprx = lfprx(elidx);
         npixels = npixels(elidx);
@@ -1418,7 +1418,7 @@ func clean_lfpw (lfpw, beimg=, thresh=, min_elv=, max_elv=) {
      }
      //find peaks in the waveform above a specific threshold
      lfpdif = where(lfprx(dif) <= -thresh);
-     if (!is_array(lfpdif)) {
+     if (numberof(lfpdif) < 2) {
         continue;
      }
      // now find the start and stop waveform points to remove noise
@@ -1435,6 +1435,7 @@ func clean_lfpw (lfpw, beimg=, thresh=, min_elv=, max_elv=) {
      elvs = elvs(zidx);
      npixels = npixels(zidx);
 
+     if (numberof(elvs) < 2) continue;
      // test to see where elvs(dif) > 1.5m
      ezidx = where(elvs(dif) > 1.5);
      if (is_array(ezidx)) {
