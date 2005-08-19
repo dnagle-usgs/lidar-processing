@@ -2998,13 +2998,13 @@ proc plot_fltlines {sel} {
           if {$changed_dpi == 1} {
            switch  $plot_dpi  {
   	   "75" {
-	      exp_send "winkill, $win_no; window,$win_no,dpi=$plot_dpi,width=450, height=450, style=\"work.gs\"; fma;limits, square=1;\r";
+	      exp_send "winkill, $win_no; window,$win_no,dpi=$plot_dpi,width=450, height=450, style=\"work.gs\"; fma;limits, square=1;window, $win_no, width=0, height=0;\r";
 	    }
   	   "100" {
-	      exp_send "winkill, $win_no; window,$win_no,dpi=$plot_dpi,width=600, height=600, style=\"work.gs\"; fma; limits, square=1;\r";
+	      exp_send "winkill, $win_no; window,$win_no,dpi=$plot_dpi,width=600, height=600, style=\"work.gs\"; fma; limits, square=1;window, $win_no, width=0, height=0;\r"
 	    }
 	   "1100" {
-	      exp_send "winkill, $win_no; window, $win_no, dpi=100, width=1100, height=850, style=\"landscape11x85.gs\";fma; limits, square=1;\r";
+	      exp_send "winkill, $win_no; window, $win_no, dpi=100, width=1100, height=850, style=\"landscape11x85.gs\";fma; limits, square=1;window, $win_no, width=0, height=0;\r"
               expect ">"
 	    }
            }
@@ -3028,14 +3028,17 @@ proc plot_fltlines {sel} {
        set cmin1 [expr $cmin*100.]
        if {$disp_type == 0} {
          if {$sel == 0} {
-           exp_send "window, $win_no; display, $var_type, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1;\r"
+	   # using display_veg instead of display since it plots faster and works with the skip keyword.
+           exp_send "window, $win_no; display_veg, $var_type, win=$win_no, cmin=$cmin, cmax = $cmax, size = $msize, edt=1, felv = $fs, lelv=$lelv, fint=$fint, lint=$lint, cht = $cht, marker=$markerv, skip=$skip;\r"
+           #exp_send "window, $win_no; display, $var_type, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1;\r"
          } else {
            exp_send "window, $win_no; display, fs_some, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1;\r"
          }
          expect ">"
        } elseif { $disp_type == 4 } {
          if {$sel == 0} {
-           exp_send "window, $win_no; display, $var_type, mode=\"intensity\", win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv;\r"
+           exp_send "window, $win_no; display_veg, $var_type, win=$win_no, cmin=$cmin, cmax = $cmax, size = $msize, edt=1, felv = $fs, lelv=$lelv, fint=$fint, lint=$lint, cht = $cht, marker=$markerv, skip=$skip;\r"
+           #exp_send "window, $win_no; display, $var_type, mode=\"intensity\", win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv;\r"
          } else {
            exp_send "window, $win_no; display, fs_some, mode=\"intensity\", win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv;\r"
          }
