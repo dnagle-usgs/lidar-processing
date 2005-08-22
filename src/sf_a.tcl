@@ -1158,7 +1158,7 @@ proc mark_range { } {
 proc enable_controls { } {
 	global mogrify_exists mogrify_pref camtype
 
-	.speedgamma.mark configure            -state normal
+	.speedgamma.mark configure     -state normal
 	.mb entryconfigure File        -state normal
 	.mb entryconfigure Archive     -state normal
 	.mb entryconfigure Options     -state normal
@@ -1204,23 +1204,28 @@ proc atris_init { } {
 #		}
 	.mb.tools add command -label "Load and Plot CSV Waypoints (UTM)" -underline 18 \
 		-command {
-			global base_dir
+			global base_dir adapt_way_show_name
 			set f [ tk_getOpenFile -filetypes { {{CSV files} {.csv}} } -initialdir $base_dir ];
 			if { $f != "" } {
-				send_ytk plot_waypoints_file $f "csv"
+				send_ytk plot_waypoints_file $f "csv" $adapt_way_show_name
 			}
 		}
 	.mb.tools add command -label "Load and Plot Target File (UTM)" -underline 18 \
 		-command {
-			global base_dir
+			global base_dir adapt_way_show_name
 			set f [ tk_getOpenFile -filetypes { {{Target files} {.tgt}} } -initialdir $base_dir ];
 			if { $f != "" } {
-				send_ytk plot_waypoints_file $f "tgt"
+				send_ytk plot_waypoints_file $f "tgt" $adapt_way_show_name
 			}
 		}
 	.mb.file insert "Exit" command -label "Generate ADF File" -underline 0 \
 		-command { adapt_process }
-		
+	.mb.options insert "Image manipulation" checkbutton -label "Display Waypoint/Target Names" \
+		-underline 8 -onvalue 1 -offvalue 0 -variable adapt_way_show_name
+	.mb.options insert "Image manipulation" separator
+
+	set adapt_way_show_name 0
+	
 	proc adapt_process { } {
 		global adapt_gps_src
 		set w .adp
@@ -1616,25 +1621,25 @@ menu .mb.zoom
 
 ##### ][ Options Menu
 
-.mb.options add checkbutton -label "Scroll Bars" -underline 1 \
+.mb.options add checkbutton -label "Scroll Bars" -underline 0 \
 	-onvalue 1 -offvalue 0 -variable scrollbar_status
 
-.mb.options add checkbutton -label "GPS Info" -underline 1 \
+.mb.options add checkbutton -label "GPS Info" -underline 0 \
 	-onvalue 1 -offvalue 0 -variable toolbar_status_gps
 
-.mb.options add checkbutton -label "Image slider" -underline 1 \
+.mb.options add checkbutton -label "Image slider" -underline 0 \
 	-onvalue 1 -offvalue 0 -variable toolbar_status_slider
 
-.mb.options add checkbutton -label "VCR Controls" -underline 1 \
+.mb.options add checkbutton -label "VCR Controls" -underline 0 \
 	-onvalue 1 -offvalue 0 -variable toolbar_status_vcr
 
 .mb.options add checkbutton -label "Speed, Gamma, etc." -underline 1 \
 	-onvalue 1 -offvalue 0 -variable toolbar_status_speedgamma
 
-.mb.options add checkbutton -label "ALPS Interface" -underline 1 \
+.mb.options add checkbutton -label "ALPS Interface" -underline 0 \
 	-onvalue 1 -offvalue 0 -variable toolbar_status_alps
 
-.mb.options add command     -label "Resize window to fit controls" -underline 1 \
+.mb.options add command     -label "Resize window to fit controls" -underline 0 \
 	-command { wm geometry . "" }
 
 .mb.options add separator
@@ -1643,7 +1648,7 @@ menu .mb.zoom
 	-offvalue 0 -variable inhd \
 	-command { include_heading }
 
-.mb.options add checkbutton -label "Display Image File Name" -underline 1 -onvalue 1 \
+.mb.options add checkbutton -label "Display Image File Name" -underline 14 -onvalue 1 \
 	-offvalue 0 -variable show_fname -command { show_img $ci }
 
 .mb.options add separator

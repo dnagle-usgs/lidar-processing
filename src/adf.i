@@ -603,11 +603,12 @@ func adf_input_vessel_track(fname, &tn, &d) {
 func hypack_list_raw(dir) {
 /* DOCUMENT hypack_list_raw(dir)
 
-	Generates a list of .RAW files in a directory.
+	Generates a list of .RAW files in a directory. If no .RAW files are found,
+	.dat files are searched for instead.
 
 	Parameters:
 
-		dir: The directory in which to find the .RAW files.
+		dir: The directory in which to find the .RAW or .dat files.
 	
 	Returns:
 
@@ -619,6 +620,7 @@ func hypack_list_raw(dir) {
 	if(!is_void(plug_in)) { // Use built-in methods under Yorick 1.6
 		a = lsdir(dir);
 		list = a(where(strglob("*.raw", a, case=0)));
+		if (!is_array(list)) list = a(where(strglob("*.dat", a, case=0)));
 		list = dir + list;
 	} else { // Use system commands under Yorick 1.5
 		cmd = "find " + dir + " -iname '*.raw' ";

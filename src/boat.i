@@ -61,9 +61,6 @@ local boat_i;
 
 		BOAT_PICS
 		BOAT_WAYPOINTS
-		HYPACK_RAW
-		HYPACK_POS
-		HYPACK_EC
 */
 
 struct BOAT_PICS {

@@ -80,8 +80,8 @@ proc depth_profile { data_file } {
 	exp_send "depth_profile, \"$data_file\"\n"
 }
 
-proc plot_waypoints_file { fname type } {
-	exp_send "plot_waypoints_file, \"$fname\", \"$type\"\n"
+proc plot_waypoints_file { fname type showname } {
+	exp_send "plot_waypoints_file, \"$fname\", \"$type\", showname=$showname\n"
 }
 
 proc adapt_process { imgdir hypdir ofname gps_src adj_h adj_m adj_s } {
@@ -95,7 +95,8 @@ proc adapt_process_progress { progress_txt progress_per } {
 }
 
 proc open_vessel_track { fn } {
-	global gga utm _map
+	global gga utm _map rbgga_file_mode
+	set rbgga_file_mode "adapt"
 	set gga(llu) utm
 	set utm 1
 	exp_send "gga=open_vessel_track(ifn=\"$fn\")\n"
