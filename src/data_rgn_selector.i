@@ -573,7 +573,7 @@ func getPoly_add_buffer(buf,origdata=,windw=) {
  }
 }
 
-func save_data_tiles_from_array(iarray, outpath, buf=,file_string=, plot=, win=) {
+func save_data_tiles_from_array(iarray, outpath, buf=,file_string=, plot=, win=, samepath=) {
 /* DOCUMENT save_data_tiles_from_array(indextile, outpath, buf=, file_string=, plot=, win=)
     This function saves 2km data tiles in the correct output format from
 a data array.  This function is very useful when manually filtering a large 
@@ -588,6 +588,7 @@ data array spanning several data tiles and writing the output in the data tile f
 	win= set the window number to plot tile boundaries.  
 		for e.g.: "w84_v_b700_w50_n3_merged_ircf_mf", then an example tile
 		file name will be "t_e350000_n3346000_w84_v_b700_w50_n3_merged_ircf_mf.pbd"
+	samepath = set to 1 if you want to write the data out to the outpath with no index/data paths.
   	Original: Amar Nayegandhi July 12-14, 2005
 */
 
@@ -651,9 +652,13 @@ data array spanning several data tiles and writing the output in the data tile f
 	t(1) = 't';
 	t = t(1:-2);
 	zone = string(&t(-1:0));
-	tiledir = swrite(format="t_e%d_n%d_%s",long(eastarr(i)/100.), long(northarr(j+1)/100.), zone);
-	outfname = tiledir+"_"+file_string+".pbd";
-	outfile = outpath+tiledir+"/"+outfname;
+	 tiledir = swrite(format="t_e%d_n%d_%s",long(eastarr(i)/100.), long(northarr(j+1)/100.), zone);
+	 outfname = tiledir+"_"+file_string+".pbd";
+  	if (!samepath) {
+	 outfile = outpath+tiledir+"/"+outfname;
+        } else {
+	 outfile = outpath+outfname;
+	}
 	vname = "outdata1";
         if (plot) dgrid, win, ll, d, [100,100,100], 4;
 	// check if file exists

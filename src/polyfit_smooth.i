@@ -7,7 +7,7 @@ write, "$Id$";
    
 require, "poly.i"
 
-func polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, w=, gridmode= ) {
+func polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, wbuf=, gridmode=, ndivide= ) {
   /* DOCUMENT polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, wbuf= ) 
    This function creates a 3rd order magnitude polynomial fit within the give data region and introduces random points within the selected region based on the polynomial surface. The points within the region are replaced by these random points.  The region can be defined in an array (boxlist=), or if gridmode is set to 1, the entire input data is considered for smoothing.  A window (size wslide x wslide) slides through the data array, and all points within the window + buffer (wbuf) are considered for deriving the surface.  
  
@@ -23,6 +23,7 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, w=, gridmode= ) {
    gridmode= set to 1 to work in a grid mode. All data will be fitted to a polynomial within the defined wslide range and buffer distance (wbuf).
    boxlist = list of regions (x,y bounding box) where the poly fit function is to be applied.  All data within that region will be removed, and fitted with data within some wbuf buffer distance.
    wbuf = buffer distance (cm) around the selected region.  Default = 0
+  ndivide= factor used to determine the number of random points to be added within each grid cell.  ( total area of the selected region is divided by ndivide). Default = 8;
    OUTPUT:
     data array of the same type as the 'eaarl' data array.
 
@@ -35,6 +36,7 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, w=, gridmode= ) {
 
  eaarl = test_and_clean(eaarl);
 
+ if (is_void(ndivide)) ndivide = 8;
 
  a = structof(eaarl(1));
  new_eaarl = array(a, numberof(eaarl) );
@@ -182,7 +184,7 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, w=, gridmode= ) {
         }
        }
       }
-      if (numberof(indx) > 5) {
+      if (numberof(indx) > 3) {
        // this is the data inside the box
 	// tag these points in the original data array, so that we can remove them later.
 	eaarl(indx).rn = 0;
@@ -196,6 +198,9 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, w=, gridmode= ) {
          be_elv = eaarl.elevation(indx);
        }
 	e1 = eaarl(indx);
+	//find min and max for be_elv
+	mn_be_elv = min(be_elv);
+	mx_be_elv = max(be_elv);
 	// now find the 2-D polynomial fit for these points using order 3.
 	c = poly2_fit(be_elv/100., e1.east/100., e1.north/100., 3);
 	// define a random set of points in that area selected to apply this fit
@@ -205,7 +210,7 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, w=, gridmode= ) {
 	a2 = [m(3), m(4)];
 	ss = span(a1,a2,narea);
 	
- 	nrand = int(narea/15) + 1;
+ 	nrand = int(narea/ndivide) + 1;
 	rr1 = random(nrand);
 	iidx1 = int(rr1*narea)+1;
 	rr2 = random(nrand);
@@ -234,6 +239,17 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, w=, gridmode= ) {
 	  new_pts.elevation = int(elvall*100);
 	}
 	new_pts.rn = span(count+1,count+nrand,nrand);
+	new_pts.soe = span(count+1,count+nrand,nrand);
+
+        // remove any points that are not within the elevation boundaries of the original points
+  	xidx = where(((new_pts.elevation+new_pts.depth) > mn_be_elv) & ((new_pts.elevation+new_pts.depth) < mx_be_elv));
+	if (is_array(xidx)) {
+	   new_pts = new_pts(xidx);
+	} else {
+	   new_pts = []; nrand=0; continue;
+	}
+	xidx = [];
+
 	if ((count+nrand) > numberof(new_eaarl)) {
 	  new_eaarl1 = new_eaarl(1:count);
 	  new_count += numberof(new_eaarl);
@@ -294,3 +310,117 @@ func make_boxlist(win) {
  boxlist = boxlist(1:count-1,);
  return boxlist;
 }
+
+
+func batch_polyfit_smooth(bdata, iwin=, wslide=, mode=, boxlist=, wbuf=, gridmode=, ndivide= ) {
+/* DOCUMENT batch_polyfit_smooth(idata, iwin=, wslide=, mode=, boxlist=, wbuf=, gridmode=, ndivide= )
+   Also see: polyfit_eaarl_pts for explanation of input parameters
+   amar nayegandhi 08/12/05
+*/
+   
+
+  if (is_void(iwin)) iwin = 5;
+  window, iwin;
+  // ensure there are no 0 east or north values in bdata
+  idx = where(bdata.east != 0);
+  bdata = bdata(idx);
+  idx = where(bdata.north != 0);
+  bdata = bdata(idx);
+
+  n_bdata = numberof(bdata);
+  if (mode == 1) 
+    outdata = array(FS, n_bdata);
+  if (mode == 2) 
+    outdata = array(GEO, n_bdata);
+  if (mode == 3) 
+    outdata = array(VEG__, n_bdata);
+
+  ncount = 0;
+  nt_bdata = 1;
+
+  // find boundaries of bdata
+  mineast = min(bdata.east)/100.;
+  maxeast = max(bdata.east)/100.;
+  minnorth = min(bdata.north)/100.;
+  maxnorth = max(bdata.north)/100.;
+  
+  ind_e_min = 2000 * (int((mineast/2000)));
+  ind_e_max = 2000 * (1+int((maxeast/2000)));
+  if ((maxeast % 2000) == 0) ind_e_max = maxeast;
+  ind_n_min = 2000 * (int((minnorth/2000)));
+  ind_n_max = 2000 * (1+int((maxnorth/2000)));
+  if ((maxnorth % 2000) == 0) ind_n_max = maxnorth;
+
+  n_east = (ind_e_max - ind_e_min)/2000;
+  n_north = (ind_n_max - ind_n_min)/2000;
+  n = n_east * n_north;
+  
+  min_e = array(float, n);
+  max_e = array(float, n);
+  min_n = array(float, n);
+  max_n = array(float, n);
+
+  i = 1;
+  for (e=ind_e_min; e<=(ind_e_max-2000); e=e+2000) {
+     for(north=(ind_n_min+2000); north<=ind_n_max; north=north+2000) {
+         min_e(i) = e;
+         max_e(i) = e+2000;
+         min_n(i) = north-2000;
+         max_n(i) = north;
+         i++;
+      }
+  } 
+
+  pldj, min_e, min_n, min_e, max_n, color="green"
+  pldj, min_e, min_n, max_e, min_n, color="green"
+  pldj, max_e, min_n, max_e, max_n, color="green"
+  pldj, max_e, max_n, min_e, max_n, color="green"
+
+  for (i=1;i<=n;i++) { 
+     write, format="Processing Region %d of %d\r",i,n;
+     dt_idx  = data_box(bdata.east/100., bdata.north/100., min_e(i)-100, max_e(i)+100, min_n(i)-100, max_n(i)+100);
+
+     if (!is_array(dt_idx)) continue;
+     dtdata = bdata(dt_idx);
+
+     dtdp = polyfit_eaarl_pts(dtdata, wslide=wslide, mode=mode, wbuf=wbuf, gridmode=gridmode);
+    
+     if (!is_array(dtdp)) continue;
+
+     didx  = data_box(dtdp.east/100., dtdp.north/100., min_e(i), max_e(i), min_n(i), max_n(i));
+
+     if (!is_array(didx)) continue;
+     dtdp = dtdp(didx);
+
+     n_dtdp = numberof(dtdp);
+     if ((ncount+n_dtdp) > n_bdata) {
+  	// increase the output data array
+	nt_bdata++;
+	if (nt_bdata==1) 
+	  write, format="Warning... Output data array is bigger than input data array...\n"
+        outdata1 = outdata(1:ncount);
+        outdata = array(GEO,ncount+n_dtdp);
+        outdata(1:ncount) = outdata1;
+	outdata1 = [];
+     }
+         
+     outdata(ncount+1:ncount+n_dtdp) = dtdp;
+     ncount += n_dtdp;
+     pldj, min_e(i), min_n(i), min_e(i), max_n(i), color="black"
+     pldj, min_e, min_n(i), max_e, min_n(i), color="black"
+     pldj, max_e, min_n(i), max_e, max_n(i), color="black"
+     pldj, max_e(i), max_n(i), min_e(i), max_n(i), color="black"
+  }
+
+  outdata = outdata(1:ncount);
+
+  // change the rn and soe values of outdata so that they are unique
+  outdata.rn = span(1,ncount,ncount);
+  outdata.soe = span(1,ncount,ncount);
+  return outdata;
+
+}
+
+         
+
+     
