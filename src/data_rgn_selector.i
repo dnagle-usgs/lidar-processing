@@ -4,8 +4,8 @@
    Orginal by Amar Nayegandhi
    */
 
-func sel_data_rgn(data, type, mode=,win=, exclude=, rgn=, make_workdata=, origdata=) {
-  /* DOCUMENT sel_data_rgn(data,type, mode=, win=, exclude=, rgn=)
+func sel_data_rgn(data, type=, mode=,win=, exclude=, rgn=, make_workdata=, origdata=) {
+  /* DOCUMENT sel_data_rgn(data,type=, mode=, win=, exclude=, rgn=)
   this function selects a region (limits(), rubberband, pip) and returns data within that region.
    Don't use this function for batch.  Use el_rgn_from_datatiles instead.
  INPUT: data = input data array e.g. fs_all
@@ -24,6 +24,7 @@ func sel_data_rgn(data, type, mode=,win=, exclude=, rgn=, make_workdata=, origda
   //	or points selected by the getPoly() method (for a polygon).
  */
 
+  if (is_void(type)) type = nameof(structof(data));
   extern q, workdata, croppeddata;
   data = test_and_clean( data );
   if (is_void(data)) return [];
@@ -408,7 +409,7 @@ func sel_rgn_from_datatiles(rgn=, data_dir=,lmap=, win=, mode=, search_str=, ski
   	    }
           } else {
             data_out = [];
-	    data_out = sel_data_rgn(eaarl, type, mode=3, rgn=pidx);
+	    data_out = sel_data_rgn(eaarl, mode=3, rgn=pidx);
             if (is_array(data_out)) {
               sel_eaarl=grow(sel_eaarl, data_out);
             } else {
@@ -565,7 +566,7 @@ func getPoly_add_buffer(buf,origdata=,windw=) {
  if (is_void(window)) window=5; 
  buf_points = getPoly();
  temp_rgn = add_buffer_rgn(buf_points, buf, mode=2);
- workdata = sel_data_rgn(origdata, GEO, mode=4, win=windw, rgn=temp_rgn);
+ workdata = sel_data_rgn(origdata, mode=4, win=windw, rgn=temp_rgn);
  if (!is_void(workdata)) {
     return 1;
  } else {

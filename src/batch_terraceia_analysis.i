@@ -227,7 +227,7 @@ func batch_rgn_anal(eaarl, kings_arrays=, analpath=, type=, win=, buf=, date=, s
 	  count++;
           if (type == VEG__) {
 	   if (!selall) {
-            eaarl1 = sel_data_rgn(eaarl, VEG__, mode=3, win=win)
+            eaarl1 = sel_data_rgn(eaarl, mode=3, win=win)
 	   } else {
     	    if (is_array(kings_arrays)) {
 		e1 = data_box(eaarl.east/100., eaarl.north/100., min(kings(1,))-5, max(kings(1,))+5, min(kings(2,))-5, max(kings(2,))+5);
@@ -243,7 +243,7 @@ func batch_rgn_anal(eaarl, kings_arrays=, analpath=, type=, win=, buf=, date=, s
           } 
           if (type == FS) {
 	   if (!selall) {
-            eaarl1 = sel_data_rgn(eaarl, FS, mode=3, win=win)
+            eaarl1 = sel_data_rgn(eaarl, mode=3, win=win)
            } else {
               if (is_array(kings_arrays)) {
                 e1 = data_box(eaarl.east/100., eaarl.north/100., min(kings(1,))-5, max(kings(1,))+5, min(kings(2,))-5, max(kings(2,))+5);
