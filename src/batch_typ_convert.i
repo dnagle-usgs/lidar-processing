@@ -60,12 +60,12 @@ return
 }
 
 
-func batch_pbd2edf(dirname, rcfmode=, n88=, w84=) {
+func batch_pbd2edf(dirname, rcfmode=, onlymf=,n88=, w84=) {
 /* DOCUMENT batch_pbd2edf(dirname, rcfmode=, n88=, w84=)
         Created by Lance Mosher, June 12, 2003
         This function converts *.pbd files to *.edf files in batch mode.
-        If onlymerged is defined (set to 1) then only files that have been
-        merged using batch_rcf will be merged.
+        rcfmode=1: rcf'd files
+        rcfmode=2: ircf'd files
 */
     require, "read_yfile.i"
     require, "dir.i"
