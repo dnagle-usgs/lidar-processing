@@ -249,6 +249,7 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, wbuf=, gridmode=, ndivid
 	   new_pts = []; nrand=0; continue;
 	}
 	xidx = [];
+	nrand = numberof(new_pts);
 
 	if ((count+nrand) > numberof(new_eaarl)) {
 	  new_eaarl1 = new_eaarl(1:count);
