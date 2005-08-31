@@ -60,31 +60,38 @@ return
 }
 
 
-func batch_pbd2edf(dirname, rcfmode=, onlymf=,n88=, w84=) {
+func batch_pbd2edf(dirname, rcfmode=, onlymf=,n88=, w84=,searchstr=) {
 /* DOCUMENT batch_pbd2edf(dirname, rcfmode=, n88=, w84=)
         Created by Lance Mosher, June 12, 2003
         This function converts *.pbd files to *.edf files in batch mode.
         rcfmode=1: rcf'd files
         rcfmode=2: ircf'd files
+	searchstr="<string>" :  Use this instead of rcfmode, onlymf, n88, w84
+		Can take wildcard characters.
 */
     require, "read_yfile.i"
     require, "dir.i"
        s = array(string, 100000);
        ss = ["*.pbd"];
-       if (rcfmode == 1) ss = ["*_rcf*.pbd"];
-       if (rcfmode == 2) ss = ["*_ircf*.pbd"];
-       if ((rcfmode == 2) && (onlymf)) ss = ["*_ircf_mf*.pbd"];
-       if (n88) {
-	 n88s = "n88";
-       } else n88s = "";
-       if (w84) {
-	 w84s = "w84";
-       } else w84s = "";
-       if ((n88) && (w84)) {
-	 w84s="";
-	 n88s="";
+       if (is_array(searchstr)) {
+           ss = [searchstr];
+           scmd = swrite(format = "find %s -name '*%s*'",dirname,ss);
+       } else {
+          if (rcfmode == 1) ss = ["*_rcf*.pbd"];
+          if (rcfmode == 2) ss = ["*_ircf*.pbd"];
+          if ((rcfmode == 2) && (onlymf)) ss = ["*_ircf_mf*.pbd"];
+          if (n88) {
+             n88s = "n88";
+          } else n88s = "";
+          if (w84) {
+             w84s = "w84";
+          } else w84s = "";
+          if ((n88) && (w84)) {
+	     w84s="";
+	     n88s="";
+          }
+          scmd = swrite(format = "find %s -name '*%s*%s*%s'",dirname, n88s, w84s, ss);
        }
-       scmd = swrite(format = "find %s -name '*%s*%s*%s'",dirname, n88s, w84s, ss);
        fp = 1; lp = 0;
        for (i=1; i<=numberof(scmd); i++) {
          f=popen(scmd(i), 0);
