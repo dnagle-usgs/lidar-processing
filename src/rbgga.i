@@ -807,7 +807,7 @@ func show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, wid
 	if (is_array(zd)) {
 	  write, "Selected flightline crosses UTM Zones."
 	  if (curzone) {
-	     write, format="Using currently selected zone number: %d\n",curzone;
+	     write, format="Using currently selected zone number: %d\n",int(curzone);
 	  } else {
 	     read, prompt="Enter Zone Number: ",curzone;
 	  }
