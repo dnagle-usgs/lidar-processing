@@ -1,4 +1,4 @@
-func histogram1 (list,binsize=, plot=, width=, color=, type=, win=) {
+func histogram1 (list,binsize=, plot=, width=, color=, type=, win=, dofma=) {
 /* DOCUMENT histogram1 (list,binsize=, plot=, width=, color=, type=)
   This function computes the histogram by counting the number of 
   occurences of each element of the input index LIST.  The element can

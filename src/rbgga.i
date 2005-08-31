@@ -263,9 +263,10 @@ func mark_time_pos( sod ) {
  sf_a.tcl via eaarl.ytk
 
 */
+  win = window();
   extern utm;
   q = where( gga.sod == sod )
-  window,6
+  window,win;
   if (utm) {
    ll2utm, gga.lat(q), gga.lon(q) 
    plmk, UTMNorthing, UTMEasting, marker=5, color="red", msize=0.6

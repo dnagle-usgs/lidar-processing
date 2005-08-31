@@ -429,6 +429,7 @@ func plot_slfw(outveg, cmets=, ipath=, outwin=, indx=, dofma=, color=, interacti
 // normalize = 1 by default
 // if outveg is [] search for the waveform in the files define by searchstr
 
+extern curzone;
 
 w = window();
 if (is_void(outwin)) outwin = 7;
@@ -513,7 +514,7 @@ if (!is_void(interactive)) {
      tilee = tile(2);
      itilee = tilee/10000 * 10000;
      itilen = tilen/10000 * 10000 + 10000;
-     fname = swrite(format="%si_e%d_n%d_18s/t_e%d_n%d_18s/t_e%d_n%d_18s_n88_20020911_v_energy.pbd",ipath, itilee, itilen, tilee, tilen+2000, tilee, tilen+2000);
+     fname = swrite(format="%si_e%d_n%d_17/t_e%d_n%d_17/t_e%d_n%d_17_n88_20040305_v_energy.pbd",ipath, itilee, itilen, tilee, tilen+2000, tilee, tilen+2000);
      write, format="Opening File %s\n",fname;
      f = openb(fname);
      restore, f;
@@ -1321,6 +1322,9 @@ func make_begrid_from_bexyz(bexyz, binsize=, intdist=, lfpveg=) {
   for (i=1;i<=numberof(centz);i++) {
      imgx = int(ceil((centx(i)-ll(1))/binsize));
      imgy = int(ceil((centy(i)-ll(2))/binsize));
+     // continue if outside of the array bounds
+     if ((imgx <= 0) || (imgy <= 0)) continue;
+     if ((imgx > ngridx) || (imgy > ngridy)) continue;
      if (img(imgx,imgy) == -1000) {
         img(imgx,imgy) = centz(i);
      } else {
@@ -1346,6 +1350,9 @@ func make_begrid_from_bexyz(bexyz, binsize=, intdist=, lfpveg=) {
   for (i=1;i<=numberof(idx);i++) {
      imgx = idx(i) % dimg(2);
      imgy = idx(i) / dimg(2) +1;
+     // continue if outside of the array bounds
+     if ((imgx <= 0) || (imgy <= 0)) continue;
+     if ((imgx > ngridx) || (imgy > ngridy)) continue;
      mindistx = min(intdist,imgx-1);
      maxdistx = min(intdist,dimg(2)-imgx-1);
      mindisty = min(intdist,imgy-1);
@@ -1527,10 +1534,20 @@ func compare_mets(outveg1, mets1, outveg2, mets2, idx=, outwin=, inwin=, mselect
   idx2 = where((outveg2.east > mineast) & (outveg2.east < maxeast) & (outveg2.north > minnorth) & (outveg2.north < maxnorth));
 
   if (numberof(idx1) == numberof(idx2)) {
-    outmets = mets1(,idx1) - mets2(,idx2);
-  } else {
-     amar();
+    mets1 = mets1(,idx1);
+    mets2 = mets2(,idx2);
   }
+  //outmets = array(double, 5, numberof(idx1));
+  // remove all with mets1(1,) == -1000;
+  idx = where(mets1(1,) != -1000);
+  mets1 = mets1(,idx);
+  mets2 = mets2(,idx);
+     
+  idx = where(mets2(1,) != -1000);
+  mets1 = mets1(,idx);
+  mets2 = mets2(,idx);
+
+  outmets = mets1 - mets2;
  /*
   if (mineast != mineast1) {
     sxidx1 = (mineast-mineast1)/xbin;
@@ -1569,4 +1586,274 @@ func compare_mets(outveg1, mets1, outveg2, mets2, idx=, outwin=, inwin=, mselect
  */
 
   return outmets;
+}
+
+
+func plot_compared_metrics(outmets, mets1, mets2, nelems1=, nelems2=, nelems_min=, idx=, win=, lmts=, title=, write_file=) {
+/* DOCUMENT plot_compared_metrics
+    INPUT:
+	outmets = compared metrics array
+	mets1 = metrics array of 1st data set, usually (mets(,idx1))... where idx1 is the extern data array from the compare_mets function
+	mets2 = metrics array of 2nd data set, usually (mets(,idx2))... where idx2 is the extern data array from the compare_mets function
+	nelems1= number of pulses in each composite waveform for 1st data set, usually (outveg1(,idx1))
+	nelems2= number of pulses in each composite waveform for 2nd data set, usually (outveg1(,idx2))
+	nelems_min = minimum number of pulses in each waveform required for the metric to be used in comparison
+	idx = index of the metric to be used (1 = CH, 2=BE, 3=GRR, 4=CRR, 5=HOME)
+	lmts = [min,max] limits to be used in the comparison.  see below for defaults.
+
+
+  // amar nayegandhi 08/25/05
+
+*/
+  
+  if (is_void(idx)) idx = 1;
+
+  if (is_void(lmts)) {
+     if (idx==1) lmts = [-5,30];   // Canopy Height
+     if (idx==2) lmts = [-5,30];   // Bare earth
+     if (idx==3) lmts = [0.01,0.99]; //GRR
+     if (idx==4) lmts = [0.01,0.99];  // CRR
+     if (idx==5) lmts = [-1,30]; // HOME
+  }
+  
+  idxa = where(mets1(idx,) != 0);
+  if (is_array(idxa)) {
+      mets1 = mets1(,idxa);
+      mets2 = mets2(,idxa);
+      if (is_array(nelems1)) nelems1 = nelems1(idxa);
+      if (is_array(nelems2)) nelems2 = nelems2(idxa);
+  }
+  idxa = where(mets2(idx,) != 0);
+  if (is_array(idxa)) {
+      mets1 = mets1(,idxa);
+      mets2 = mets2(,idxa);
+      if (is_array(nelems1)) nelems1 = nelems1(idxa);
+      if (is_array(nelems2)) nelems2 = nelems2(idxa);
+  }
+  idxa = where((mets1(idx,) > lmts(1)) & (mets1(idx,) < lmts(2)));
+  if (is_array(idxa)) {
+      mets1 = mets1(,idxa);
+      mets2 = mets2(,idxa);
+      if (is_array(nelems1)) nelems1 = nelems1(idxa);
+      if (is_array(nelems2)) nelems2 = nelems2(idxa);
+  }
+
+  idxa = [];
+  idxa = where((mets2(idx,) > lmts(1)) & (mets2(idx,) < lmts(2)));
+  if (is_array(idxa)) {
+      mets1 = mets1(,idxa);
+      mets2 = mets2(,idxa);
+      if (is_array(nelems1)) nelems1 = nelems1(idxa);
+      if (is_array(nelems2)) nelems2 = nelems2(idxa);
+  }
+
+  if (is_array(nelems_min) & is_array(nelems1)) {
+     idxa = where(nelems1 >= nelems_min);
+     if (is_array(idxa)) {
+        mets1 = mets1(,idxa);
+        mets2 = mets2(,idxa);
+        if (is_array(nelems1)) nelems1 = nelems1(idxa);
+        if (is_array(nelems2)) nelems2 = nelems2(idxa);
+     }
+  }
+  if (is_array(nelems_min) & is_array(nelems2)) {
+     idxa = where(nelems2 >= nelems_min);
+     if (is_array(idxa)) {
+        mets1 = mets1(,idxa);
+        mets2 = mets2(,idxa);
+        if (is_array(nelems1)) nelems1 = nelems1(idxa);
+        if (is_array(nelems2)) nelems2 = nelems2(idxa);
+     }
+  }
+
+  diff1 = (mets2(idx,)-mets1(idx,));
+  rmse = diff1(rms);
+  avge = diff1(avg);
+  mede = median(diff1);
+  write, format="rmse = %5.2f\n",rmse;
+  write, format="avge = %5.2f\n",avge;
+  write, format="mede = %5.2f\n",mede;
+  write, format="number of comparisons = %d\n", numberof(diff1);
+  xp = [min(mets1(idx,)), max(mets1(idx,))];
+  yp = fitlsq(mets2(idx,), mets1(idx,), xp);
+  // find m and c for the lsfit straight line y = mx + c;
+  m = (yp(2)-yp(1))/(xp(2)-xp(1));
+  c = yp(1) - m*xp(1);
+  // computing correlation coefficient r squared (rsq)
+  ydash = m*mets1(idx,) + c;
+  xmean = avg(mets1(idx,));
+  ymean = avg(mets2(idx,));
+  //rsq = (sum((mets1(idx,)-xmean)*(mets2(idx,)-ymean)))^2/((sum((mets1(idx,)-xmean)^2))*(sum((mets2(idx,)-ymean)^2)));
+  rsq = (sum((ydash-ymean)^2))/(sum((mets1(idx,)-ymean)^2));
+  write, format="rsq = %5.2f\n",rsq;
+  rmslsq = (ydash-mets1(idx,))(rms);
+  rsqleg = swrite(format="R^2^ = %4.3f\n", rsq);
+  write(format="RMSE_lsq_ = %4.2f cm\n",rmslsq*100);
+
+  // find standard deviation
+  std1 = sqrt(sum((diff1-avge)^2)/(numberof(diff1)-1));
+  write, format="standard deviation of mean = %5.3f\n", std1;
+  window, win; fma;
+  plmk, mets1(idx,), mets2(idx,), marker=4, msize=0.05, color="blue";
+  plg, lmts, lmts, width=4, type=2;
+  plg, yp, xp, color="red", width=4.0;
+  plg, lmts+2*std1, lmts, type=2, width=3.5
+  plg, lmts-2*std1, lmts, type=2, width=3.5
+  xytitles, "TB 20020212 Data ", "TB 20020211 Data ";
+  pltitle, title;
+  limits, lmts(1), lmts(2), lmts(1), lmts(2);
+
+ if (write_file) {
+  f = open("/obelix/EAARL/TB_03_04_veg_analyses/for_publication/day_to_day/results_082905.txt", "a");
+  write, f, "*********************************************************\n";
+  write, f, title;
+  write, f, format="rmse = %5.2f\n",rmse;
+  write, f, format="avge = %5.2f\n",avge;
+  write, f, format="mede = %5.2f\n",mede;
+  write, f, format="RMSE_lsq_ = %4.2f cm\n",rmslsq*100;
+  write, f, format="number of comparisons = %d\n", numberof(diff1);
+  write, f, format="standard deviation of mean = %5.3f\n", std1;
+  write, f, "*********************************************************\n\n\n";
+  close, f;
+ }
+
+
+  return diff1;
+}
+
+
+func compare_waveform_divergence(outveg1, outveg2, outwin=, inwin=, mselect=, min_npix=) {
+/* DOCUMENT compare_waveform_divergence(outveg1, outveg2, inwin=)
+   This function compares the composite vegetation waveformsfrom 2 diff surveys. using the Jenson Shannon divergence.
+	amar nayegandhi 08/29/05.
+   INPUT:
+	outveg1 = lfpw array for mission 1
+	outveg2 = lfpw array for mission 2
+	outwin = window number to plot the difference
+ 	inwin = input window number to select region
+	mselect = set to 1 to select the region in window inwin.
+
+   OUTPUT:
+	Array outmets that contains the difference in the selected / overlapping region.
+*/
+
+  extern idx1, idx2;
+  if (is_void(idx)) idx = 1;
+  if (is_void(win)) win = 1;
+
+  if (is_void(min_npix)) min_npix = 10;
+  
+  // make sure the grid cells are the same size
+  xbin1 = outveg1(2,1).east - outveg1(1,1).east;
+  ybin1 = outveg1(1,2).north - outveg1(1,1).north;
+
+  xbin2= outveg2(2,1).east - outveg2(1,1).east;
+  ybin2 = outveg2(1,2).north - outveg2(1,1).north;
+
+  if (xbin1 != xbin2) {
+    write, "X Grid cell size not same... cannot compare... goodbye!"
+    return
+  }
+  if (ybin1 != ybin2) {
+    write, "Y Grid cell size not same... cannot compare... goodbye!"
+    return
+  }
+  xbin = xbin1; ybin = ybin1;
+  if (xbin == ybin) bin = xbin;
+
+  if (mselect) {
+   // select rectangular region in window, inwin;
+   window, inwin;
+   m = mouse(-1,1);
+   m(1:4) *= 100;
+   mineast = min(m(1),m(3));
+   maxeast = max(m(1),m(3));
+   minnorth = min(m(2),m(4));
+   maxnorth = max(m(2),m(4));
+  } else { 
+   
+  // now find the common area for both missions
+  mineast1 = min(outveg1.east);
+  minnorth1 = min(outveg1.north);
+  maxeast1 = max(outveg1.east);
+  maxnorth1 = max(outveg1.north);
+  
+  mineast2 = min(outveg2.east);
+  minnorth2 = min(outveg2.north);
+  maxeast2 = max(outveg2.east);
+  maxnorth2 = max(outveg2.north);
+
+  mineast = max(mineast1,mineast2);
+  maxeast = min(maxeast1,maxeast2);
+  minnorth = max(minnorth1,minnorth2);
+  maxnorth = min(maxnorth1, maxnorth2);
+  }
+
+  idx1 = where((outveg1.east > mineast) & (outveg1.east < maxeast) & (outveg1.north > minnorth) & (outveg1.north < maxnorth));
+  idx2 = where((outveg2.east > mineast) & (outveg2.east < maxeast) & (outveg2.north > minnorth) & (outveg2.north < maxnorth));
+
+  oveg1 = outveg1(idx1);
+  oveg2 = outveg2(idx2);
+
+  count = 0;
+  distKL = array(double, numberof(idx1));
+  distJS = array(double, numberof(idx1));
+  for (i=1;i<=numberof(idx1);i++) {
+	if ((oveg1.npix(i) < min_npix) || (oveg2.npix(i) < min_npix)) continue;
+	a1 = *oveg1.rx(i);
+	a1n = *oveg1.npixels(i);
+	a2 = *oveg1.elevation(i);
+
+	b1 = *oveg2.rx(i);
+	b1n = *oveg2.npixels(i);
+	b2 = *oveg2.elevation(i);
+
+  	// remove any elvs below -2m and above 30m
+	idxa = where((a2 > -2) & (a2 < 30));
+	if (!is_array(idxa)) continue;
+	a1 = a1(idxa); 
+	a1n = a1n(idxa);
+	a2 = a2(idxa);
+
+	idxb = where((b2 > -2) & (b2 < 30));
+	if (!is_array(idxb)) continue;
+	b1 = b1(idxb); 
+	b1n = b1n(idxb);
+	b2 = b2(idxb);
+
+
+   	minelv = max(min(a2),min(b2)); // take the max of the 2 min elevs.
+   	maxelv = min(max(a2),max(b2)); // take the min of the 2 max elevs.
+
+	idxa = where((a2 >= (minelv-0.25)) & (a2 <= (maxelv+0.25)));
+	idxb = where((b2 >= (minelv-0.25)) & (b2 <= (maxelv+0.25)));
+
+ 	if (numberof(idxa) != numberof(idxb)) continue;
+
+	a1 = a1(idxa); 
+	a1n = a1n(idxa);
+	a2 = a2(idxa);
+
+	b1 = b1(idxb); 
+	b1n = b1n(idxb);
+	b2 = b2(idxb);
+
+	// now compare using JS divergence
+	a = a1*1.0/a1n;
+	b = b1*1.0/b1n;
+	c = (a+b);
+        idx = where(c != 0);
+        a = a(idx);
+        b = b(idx);
+        c = c(idx);
+        idxa = where(a == 0);
+	if (is_array(idxa)) continue;
+        idxb = where(b == 0);
+	if (is_array(idxb)) continue;
+	distKL(i) = sum(a*log10(a/b));
+        distJS(i) = ((sum(b*log(b/c)))+(sum(a*log(a/c))))/2.0;
+
+  }
+
+  return [distKL, distJS];
 }

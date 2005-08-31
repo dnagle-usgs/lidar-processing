@@ -114,7 +114,7 @@ func batch_veg_lfpw(ipath, opath, fname=, searchstr=, onlyupdate=,binsize=, norm
  return
 }
 
-func batch_veg_metrics(ipath, opath, fname=,searchstr=, plotclasses=, thresh=, min_elv=, outwin=, onlyplot=, dofma=, use_be=, cl_lfpw=) {
+func batch_veg_metrics(ipath, opath, fname=,searchstr=, plotclasses=, thresh=, min_elv=, outwin=, onlyplot=, dofma=, use_be=, cl_lfpw=, onlyupdate=) {
 /* DOCUMENT batch_veg_metrics(ipath, opath, searchstr=, plot=, plotclasses=)
    amar nayegandhi 10/01/04
    use_be = use bare earth data (in *ircf or *mf files).
@@ -131,6 +131,24 @@ func batch_veg_metrics(ipath, opath, fname=,searchstr=, plotclasses=, thresh=, m
        window, outwin; 
        if (dofma) fma;
    }
+
+   if (onlyupdate) {
+      // find all *_mets*.pbd files
+      s = array(string,10000);
+      old_fn = array(string,1000);
+      ss = "*_mets.pbd"
+      scmd = swrite(format = "find %s -name '%s'",ipath, ss);
+      fp = 1; lp = 0;
+      for (i=1; i<=numberof(scmd); i++) {
+        f=popen(scmd(i), 0);
+        n = read(f,format="%s", s );
+        close, f;
+        lp = lp + n;
+        if (n) old_fn = s(fp:lp);
+        fp = fp + n;
+      }
+    } 
+
 
    if (is_void(fname)) {
      s = array(string,10000);
@@ -154,12 +172,15 @@ func batch_veg_metrics(ipath, opath, fname=,searchstr=, plotclasses=, thresh=, m
     write, format="Total number of veg energy files to process  = %d\n",nfiles;
 
     for (i=1;i<=nfiles;i++) {
-	write, format="Processing %d of %d\r", i, nfiles;
+	write, format="Processing %d of %d\n", i, nfiles;
         fn_split = split_path(fn_all(i), 1, ext=1);
         eaarl = [];
         vnametag = [];
         fnametag = "_mets";
         new_fn = fn_split(1)+fnametag+fn_split(2);
+        if (onlyupdate) {
+           if (is_array(where(old_fn == new_fn))) continue;
+	}
         if (opath) {
            fn_split = split_path(fn_all(i), 0);
 	   fn1 = fn_split(2);
@@ -171,7 +192,7 @@ func batch_veg_metrics(ipath, opath, fname=,searchstr=, plotclasses=, thresh=, m
 	   fn_split = split_path(fn_all(i),0);
 	   // find ircf and/or mf files
      	   s = array(string,10000);
-           ss = "*n88_*ircf*";
+           ss = "*n88*_v*ircf*";
            scmd = swrite(format = "find %s -name '%s'",fn_split(1), ss);
            fp = 1; lp = 0;
            f=popen(scmd, 0);
