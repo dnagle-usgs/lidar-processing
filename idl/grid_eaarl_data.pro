@@ -1,6 +1,6 @@
 pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygrid=ygrid, $
 	z_max = z_max, z_min=z_min, missing = missing, limits=limits, $
-	area_threshold=area_threshold, dist_threshold = dist_threshold
+	area_threshold=area_threshold, dist_threshold = dist_threshold, datamode=datamode
   ; this procedure does tinning / gridding on eaarl data
   ; amar nayegandhi 5/14/03.
   ; INPUT KEYWORDS:
@@ -13,6 +13,7 @@ pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygri
 	; z_max = Maximum z value to consider during gridding
 	; z_min = Minimum z value to consider during gridding, default = -100m
 	; missing = Missing value for no data points during gridding, default = -100m
+	; datamode = set to 1 if you want to use the function on non-standard input format
 
 
   if (not keyword_set(cell)) then cell = 1  
@@ -20,6 +21,10 @@ pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygri
   if (not keyword_set(missing)) then missing = -100L
   if (not keyword_set(area_threshold)) then area_threshold = 100
   if (not keyword_set(dist_threshold)) then dist_threshold = 20
+  if (not keyword_set(limits)) then begin
+	; get the limits from the input data set
+	limits = [min(data.east),min(data.north),max(data.east),max(data.north)]/100.
+  endif
 
   print, "    triangulating..."
   if ((mode eq 1) OR (mode eq 2)) then begin
@@ -73,9 +78,11 @@ pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygri
     end
   endcase
 
-  zgrid = zgrid(100:2099, 100:2099)
-  xgrid = xgrid(100:2099)
-  ygrid = ygrid(100:2099)
+  if (not keyword_set(datamode)) then begin
+     zgrid = zgrid(100:2099, 100:2099)
+     xgrid = xgrid(100:2099)
+     ygrid = ygrid(100:2099)
+  endif
 
 return
 end
