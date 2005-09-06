@@ -55,7 +55,7 @@ func ll2utm( lat, lon, retarr= ) {
 
    See also: fll2utm.
 */
-extern UTMEasting, UTMNorthing, ZoneNumber;
+extern UTMEasting, UTMNorthing, ZoneNumber, fixedzone, curzone;
 //       earth      
 //       radius     ecc
 wgs84 = [6378137, 0.00669438];
@@ -69,6 +69,10 @@ eccPrimeSquared = double(eccSquared)/(1-eccSquared);
 //Make sure the longitude is between -180.00 .. 179.9
 lonTemp = (lon+180)-int((lon+180)/360)*360-180;
 ZoneNumber = int((lonTemp + 180)/6) + 1;
+if (is_array(fixedzone)) {
+    ZoneNumber(*) = fixedzone; // set to fixedzone when set.. this is useful when data crosses utm zones.
+    curzone=fixedzone;
+}
 
 latRad = double(lat*deg2rad);
 lonRad = double(lonTemp*deg2rad);
