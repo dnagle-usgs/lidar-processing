@@ -322,6 +322,7 @@ func batch_polyfit_smooth(bdata, iwin=, wslide=, mode=, boxlist=, wbuf=, gridmod
 
   if (is_void(iwin)) iwin = 5;
   window, iwin;
+  if (is_void(mode)) mode = 2;
   // ensure there are no 0 east or north values in bdata
   idx = where(bdata.east != 0);
   bdata = bdata(idx);
@@ -384,7 +385,7 @@ func batch_polyfit_smooth(bdata, iwin=, wslide=, mode=, boxlist=, wbuf=, gridmod
      if (!is_array(dt_idx)) continue;
      dtdata = bdata(dt_idx);
 
-     dtdp = polyfit_eaarl_pts(dtdata, wslide=wslide, mode=mode, wbuf=wbuf, gridmode=gridmode);
+     dtdp = polyfit_eaarl_pts(dtdata, wslide=wslide, mode=mode, wbuf=wbuf, gridmode=gridmode,ndivide=ndivide);
     
      if (!is_array(dtdp)) continue;
 
