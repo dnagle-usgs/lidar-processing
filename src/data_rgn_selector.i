@@ -574,7 +574,7 @@ func getPoly_add_buffer(buf,origdata=,windw=) {
  }
 }
 
-func save_data_tiles_from_array(iarray, outpath, buf=,file_string=, plot=, win=, samepath=) {
+func save_data_tiles_from_array(iarray, outpath, buf=,file_string=, plot=, win=, samepath=,zone_nbr=) {
 /* DOCUMENT save_data_tiles_from_array(indextile, outpath, buf=, file_string=, plot=, win=)
     This function saves 2km data tiles in the correct output format from
 a data array.  This function is very useful when manually filtering a large 
@@ -590,6 +590,7 @@ data array spanning several data tiles and writing the output in the data tile f
 		for e.g.: "w84_v_b700_w50_n3_merged_ircf_mf", then an example tile
 		file name will be "t_e350000_n3346000_w84_v_b700_w50_n3_merged_ircf_mf.pbd"
 	samepath = set to 1 if you want to write the data out to the outpath with no index/data paths.
+        zone_nbr = the zone number to put into the filename.  If not set, it uses a number from the variable name.
   	Original: Amar Nayegandhi July 12-14, 2005
 */
 
@@ -652,7 +653,11 @@ data array spanning several data tiles and writing the output in the data tile f
 	t = *pointer(split_outpath(2));
 	t(1) = 't';
 	t = t(1:-2);
-	zone = string(&t(-1:0));
+        if (is_void(zone_nbr)) {
+	   zone = string(&t(-1:0));
+        } else {
+           zone = zone_nbr;
+        }
 	 tiledir = swrite(format="t_e%d_n%d_%s",long(eastarr(i)/100.), long(northarr(j+1)/100.), zone);
 	 outfname = tiledir+"_"+file_string+".pbd";
   	if (!samepath) {

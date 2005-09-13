@@ -4,7 +4,7 @@ require, "veg.i"
 require, "geo_bath.i"
 require, "datum_converter.i"
 
-func batch_datum_convert(con_dir,  tonad83=, tonavd88=, rcfmode=, onlymf=, searchstr=)
+func batch_datum_convert(con_dir,  tonad83=, tonavd88=, rcfmode=, onlymf=, searchstr=, zone_nbr=)
 {
 /* DOCUMENT batch_datum_convert(dir, tonad83=, tonavd88=, rcfmode=) This takes all of the data files for the index tiles in CON_DIR 
 and converts them into nad83 or navd88, storing the converted data in  a new pdf
@@ -14,6 +14,7 @@ INPUT: con_dir = input directory where the files are stored.
 	tonavd88 = set to convert to NAVD88 reference datum.
 	rcfmode = set to 1 to convert RCF'd files or 2 to convert IRCF'd files.
         searchstr = define your own search string instead of using rcfmode
+	zone_nbr = set to zone number.  If not set, the zone number will be set from the information in the file name.
 requires "maps.i", "dir.i" and "datum_converter.i"
 see also: datum_converter.i
 -Brendan Penney, 7/18/03
@@ -54,9 +55,13 @@ for(i=1; i<=numfiles; i++)
    files3 = files2(2);
    t= *pointer(files3); 
    n = where(t== '_'); 
-   zonel =1;
-   zone = string( &t(n(3)+1:n(3)+2)) 
+   if (is_void(zone_nbr)) {
+   	zonel =1;
+   	zone = string( &t(n(3)+1:n(3)+2)) 
    e= sread(zone, format="%d", zonel); 
+   } else {
+	zonel = zone_nbr;
+   }
    firstbit = string( &t(1 : n(4)-1));
    secondbit = string( &t(n(5)+1:0));
    
