@@ -655,10 +655,11 @@ data array spanning several data tiles and writing the output in the data tile f
 	t = t(1:-2);
         if (is_void(zone_nbr)) {
 	   zone = string(&t(-1:0));
+           tiledir = swrite(format="t_e%d_n%d_%s",long(eastarr(i)/100.), long(northarr(j+1)/100.), zone);
         } else {
            zone = zone_nbr;
+           tiledir = swrite(format="t_e%d_n%d_%d",long(eastarr(i)/100.), long(northarr(j+1)/100.), zone);
         }
-	 tiledir = swrite(format="t_e%d_n%d_%s",long(eastarr(i)/100.), long(northarr(j+1)/100.), zone);
 	 outfname = tiledir+"_"+file_string+".pbd";
   	if (!samepath) {
 	 outfile = outpath+tiledir+"/"+outfname;
