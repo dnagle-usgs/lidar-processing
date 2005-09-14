@@ -4,8 +4,12 @@ pro batch_grid, path, filename=filename, rcfmode=rcfmode, cell=cell, mode=mode, 
 	zbuf_scale=zbuf_scale, $
 	plot_grids = plot_grids, max_elv_limit=max_elv_limit, min_elv_limit = min_elv_limit, $
 	scale_down_by = scale_down_by, save_grid_plots = save_grid_plots, $
-	write_geotiffs=write_geotiffs, utmzone = utmzone
+	write_geotiffs=write_geotiffs, utmzone = utmzone, datamode=datamode
    ; this procedure does gridding in a batch mode
+   ; Set datamode to run batch grid on a set of files that are not divided into the 
+   ;    traditional index/data tile format.  Setting this will override and disable the
+   ;    creation of gridplots and zbuf plots however. To use the traditional batch grid
+   ;    function, do not set datamode at all.
    ; amar nayegandhi 05/14/03
 
 start_time = systime(1)
@@ -42,18 +46,27 @@ for i = 0, n_elements(fn_arr)-1 do begin
    print, 'File name: '+fname_arr
 
    data_arr = read_yfile(path, fname_arr=fname_arr)
+   print, 'Data should be loaded. Continuing...'
 
    if (n_elements(*data_arr[0]) le 10) then continue
    
-   ; find the corner points for the data tile
-   spfn = strsplit(fname_arr, "_", /extract)
-   we = long( strmid(spfn(1), 1))+1
-   no = long(strmid(spfn(2), 1))
-   print, 'Grid locations: West:'+strcompress(string(we))+'  North:'+strcompress(string(no))
+   if not keyword_set(datamode) then begin
+     ; find the corner points for the data tile
+     spfn = strsplit(fname_arr, "_", /extract)
+     we = long( strmid(spfn(1), 1))+1
+     no = long(strmid(spfn(2), 1))
+     print, 'Grid locations: West:'+strcompress(string(we))+'  North:'+strcompress(string(no))
+   endif
    ;call gridding procedure
-   grid_eaarl_data, *data_arr[0], cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygrid=ygrid, $
+   if keyword_set(datamode) then begin
+      grid_eaarl_data, *data_arr[0],cell=cell,mode=mode,zgrid=zgrid,xgrid=xgrid,ygrid=ygrid, $
+        z_max = z_grid_max, z_min=z_grid_min, missing = missing, $
+        area_threshold = area_threshold,datamode=datamode
+   endif else begin
+      grid_eaarl_data, *data_arr[0], cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygrid=ygrid, $
 	z_max = z_grid_max, z_min=z_grid_min, missing = missing, limits=[we-100,no-2099,we+2099,no+100], $
 	area_threshold = area_threshold
+   endelse
 
    ptr_free, data_arr
 
@@ -64,7 +77,9 @@ for i = 0, n_elements(fn_arr)-1 do begin
 	colin = 0
 	continue
    endif
-
+   if keyword_set(datamode) then begin
+      print, "Cannot batch plot grids with datamode=1..."
+   endif else begin
    if (keyword_set(plot_grids)) then begin
 	if not keyword_set(scale_down_by) then scale_down_by = 4
 	if keyword_set(save_grid_plots) then begin
@@ -82,7 +97,11 @@ for i = 0, n_elements(fn_arr)-1 do begin
 			min_elv_limit = min_elv_limit, num=scale_down_by
 	endelse
    endif
+   endelse
 
+   if keyword_set(datamode) then begin
+      print, "Cannot batch plot zbuf plots with datamode=1"
+   endif else begin
    if (keyword_set(zbuf_plot)) then begin
 	if not keyword_set(zbuf_scale) then zbuf_scale = 1
 	if keyword_set(save_zbuf_plots) then begin
@@ -99,6 +118,7 @@ for i = 0, n_elements(fn_arr)-1 do begin
 			min_elv_limit = min_elv_limit, num=zbuf_scale
 	endelse
    endif
+   endelse
 
 
    if (keyword_set(write_geotiffs)) then begin
