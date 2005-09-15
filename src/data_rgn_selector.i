@@ -699,3 +699,157 @@ data array spanning several data tiles and writing the output in the data tile f
 	
  return   
 }
+
+func select_datatiles(data_dir,out_dir=, win=, mode=, search_str=, noplot=,  pidx=) {
+/* DOCUMENT  select_datatiles(data_dir,out_dir=, win=, mode=, search_str=, noplot=,  pidx=) 
+
+  This function selects data tiles from a directory and writes it out to out_dir
+  The processed data tiles must have the min easting and max northing in their filename.
+  INPUT:
+   data_dir = directory where all the data tiles are located.
+   out_dir = if set the selected files will be copied to out_dir
+   win = window number that will be used to select the region.  defaults to current window.
+   mode = 1 for using current window limits to select region
+	= 2 for using the rectangular box to select region
+	= 3 for using the points in polygon (pip) to select region
+
+   search_str= define search string for file names to select
+   pidx = the array of a previously clicked polygon. Set to lpidx if this function 
+	  is previously used.
+  original: amar nayegandhi September 2005
+*/
+
+   extern lpidx; // this takes the values of the polygon selected by user. 
+   w = window();
+   if (is_void(win)) win = w;
+   window, win;
+   if (!mode) mode = 2; // defaults to defining rectangular region
+
+   if (mode == 1) {
+        rgn = array(float, 4);
+	ll = limits();
+	rgn(1) = min(ll(1), ll(3));
+	rgn(2) = max(ll(1), ll(3));
+	rgn(3) = min(ll(2), ll(4));
+	rgn(4) = max(ll(2), ll(4));
+   }
+   if (mode==2) {
+      rgn = array(float, 4);
+      a = mouse(1,1, "select region: ");
+              rgn(1) = min( [ a(1), a(3) ] );
+              rgn(2) = max( [ a(1), a(3) ] );
+              rgn(3) = min( [ a(2), a(4) ] );
+              rgn(4) = max( [ a(2), a(4) ] );
+   }
+   if (mode == 3) {
+      // use pip to define region
+      if (!is_array(pidx)) {
+           pidx = getPoly();
+           pidx = grow(pidx,pidx(,1));
+      }
+      lpidx = pidx;
+            
+      rgn = array(float,4);
+      rgn(1) = min(pidx(1,));
+      rgn(2) = max(pidx(1,));
+      rgn(3) = min(pidx(2,));
+      rgn(4) = max(pidx(2,));
+    }
+    
+   /* plot a window over selected region */
+   a_x=[rgn(1), rgn(2), rgn(2), rgn(1), rgn(1)];
+   a_y=[rgn(3), rgn(3), rgn(4), rgn(4), rgn(3)];
+   if (!noplot) plg, a_y, a_x;
+   
+   ind_e_min = 2000 * (int((rgn(1)/2000)));
+   ind_e_max = 2000 * (1+int((rgn(2)/2000)));
+   if ((rgn(2) % 2000) == 0) ind_e_max = rgn(2);
+   ind_n_min = 2000 * (int((rgn(3)/2000)));
+   ind_n_max = 2000 * (1+int((rgn(4)/2000)));
+   if ((rgn(4) % 2000) == 0) ind_n_max = rgn(4);
+   n_east = (ind_e_max - ind_e_min)/2000;
+   n_north = (ind_n_max - ind_n_min)/2000;
+   n = n_east * n_north;
+   n = long(n); 
+   min_e = array(float, n);
+   max_e = array(float, n);
+   min_n = array(float, n);
+   max_n = array(float, n);
+   i = 1;
+   for (e=ind_e_min; e<=(ind_e_max-2000); e=e+2000) {
+      for (north=(ind_n_min+2000); north<=ind_n_max; north=north+2000) {
+          min_e(i) = e;
+          max_e(i) = e+2000;
+          min_n(i) = north-2000;
+          max_n(i) = north;
+          i++;
+       }
+    }
+    
+   //find data tiles
+   
+   n_i_east =( n_east/5)+1;
+   n_i_north =( n_north/5)+1;
+   n_i=n_i_east*n_i_north;
+   min_e = long(min_e);
+   max_n = long(max_n);
+   
+   if (!noplot) {
+   	pldj, min_e, min_n, min_e, max_n, color="green"
+   	pldj, min_e, min_n, max_e, min_n, color="green"
+   	pldj, max_e, min_n, max_e, max_n, color="green"
+   	pldj, max_e, max_n, min_e, max_n, color="green"
+   }
+   
+   if (is_void(search_str)) {
+      file_ss = "*.pbd";
+   } else {
+      file_ss = search_str;
+   }
+  
+   files =  array(string, 10000);
+   floc = array(long, 2, 10000);
+   ffp = 1; flp = 0;
+   for(i=1; i<=n; i++) {
+        fp = 1; lp=0;
+   	s = array(string,100);
+   	command = swrite(format="find  %s -name '*%d*%d*%s'", data_dir, min_e(i), max_n(i), file_ss); 
+   	f = popen(command, 0); 
+   	nn = read(f, format="%s",s);
+	close,f
+	lp +=  nn;
+	flp += nn;
+	if (nn) {
+  	  files(ffp:flp) = s(fp:lp);
+	  floc(1,ffp:flp) = long(min_e(i));
+	  floc(2,ffp:flp) = long(max_n(i));
+        }
+	ffp = flp+1;	
+   }
+   files =  files(where(files));
+   if (!noplot) write, files;
+   floc = floc(,where(files));
+   if (is_array(out_dir)) {
+     if (numberof(files) > 0) {
+      write, format="%d files selected.\n",numberof(files)
+      // now copy these files to out_dir
+   	s = array(string,100);
+        command = swrite(format="cp -dprv %s %s",files, out_dir);
+   	f = popen(command, 0); 
+   	nn = read(f, format="%s",s);
+	close,f
+	lp +=  nn;
+	flp += nn;
+	if (nn) {
+  	  files(ffp:flp) = s(fp:lp);
+	  floc(1,ffp:flp) = long(min_e(i));
+	  floc(2,ffp:flp) = long(max_n(i));
+        }
+	ffp = flp+1;	
+     }
+   }
+
+  window, w;
+  return files;
+   
+}
