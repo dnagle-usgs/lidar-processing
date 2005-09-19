@@ -745,7 +745,9 @@ proc show_img { n } {
 	global fna nfiles img run ci data imgtime dir img_opts \
 	       lat lon alt ew ns pdop nsat seconds_offset hms sod timern cin hsr \
 			 frame_off llat llon pitch roll head yes_head zoom \
-			 camtype DEBUG_SF mogrify_pref mogrify_exists tarname show_fname
+			 camtype DEBUG_SF mogrify_pref mogrify_exists tarname show_fname \
+			 mog_normalize mog_inc_contrast mog_dec_contrast mog_despeckle \
+			 mog_enhance mog_equalize mog_monochrome
 
 	set cin $n
 
@@ -821,19 +823,43 @@ proc show_img { n } {
 		}
 		
 		# Mogrify process image before loading
-		
+	
 		if {! $only_tcl} {
+
+			set extra_opts ""
+			
+			if { $mog_normalize } {
+				set extra_opts "$extra_opts -normalize "
+			}
+			if { $mog_equalize } {
+				set extra_opts "$extra_opts -equalize "
+			}
+			if { $mog_inc_contrast } {
+				set extra_opts "$extra_opts -contrast "
+			}
+			if { $mog_dec_contrast } {
+				set extra_opts "$extra_opts +contrast "
+			}
+			if { $mog_despeckle } {
+				set extra_opts "$extra_opts -despeckle "
+			}
+			if { $mog_enhance } {
+				set extra_opts "$extra_opts -enhance "
+			}
+			if { $mog_monochrome } {
+				set extra_opts "$extra_opts -monochrome "
+			}
 		
 			if {$rotate_amount != 0 && (!$prefer_tcl || $rotate_amount != 180) } {
 				if {$zoom != 100 && (!$prefer_tcl || !$zoom_even)} {
-					exec mogrify -sample $zoom_percent -rotate $rotate_amount $fn
+					eval exec mogrify $extra_opts -sample $zoom_percent -rotate $rotate_amount $fn
 										if { $DEBUG_SF } { puts "mogrified: rotate and zoom" }
 				} else {
-					exec mogrify -rotate $rotate_amount $fn
+					eval exec mogrify $extra_opts -rotate $rotate_amount $fn
 										if { $DEBUG_SF } { puts "mogrified: rotate" }
 				}
 			} elseif {$zoom != 100 && (!$prefer_tcl || !$zoom_even)} {
-				exec mogrify -sample $zoom_percent $fn
+				eval exec mogrify $extra_opts -sample $zoom_percent $fn
 										if { $DEBUG_SF } { puts "mogrified: zoom" }
 			}
 
@@ -1220,9 +1246,9 @@ proc atris_init { } {
 		}
 	.mb.file insert "Exit" command -label "Generate ADF File" -underline 0 \
 		-command { adapt_process }
-	.mb.options insert "Image manipulation" checkbutton -label "Display Waypoint/Target Names" \
+	.mb.options insert "Image manipulation method" checkbutton -label "Display Waypoint/Target Names" \
 		-underline 8 -onvalue 1 -offvalue 0 -variable adapt_way_show_name
-	.mb.options insert "Image manipulation" separator
+	.mb.options insert "Image manipulation method" separator
 
 	set adapt_way_show_name 0
 	
@@ -1654,7 +1680,7 @@ menu .mb.zoom
 .mb.options add separator
 
 menu .mb.options.mogrify
-.mb.options add cascade -label "Image manipulation" -menu .mb.options.mogrify -underline 0
+.mb.options add cascade -label "Image manipulation method" -menu .mb.options.mogrify -underline 0
 
 .mb.options.mogrify add radiobutton -label "Prefer mogrify over native Tcl" -underline 7 \
 	-variable mogrify_pref -value "prefer mogrify" -command { enable_mog_message }
@@ -1664,6 +1690,30 @@ menu .mb.options.mogrify
 
 .mb.options.mogrify add radiobutton -label "Disable mogrify completely"   -underline 0 \
 	-variable mogrify_pref -value "only tcl" -command { mog_message }
+
+menu .mb.options.mogopt
+.mb.options add cascade -label "Mogrify options" -menu .mb.options.mogopt -underline 0
+
+.mb.options.mogopt add checkbutton -label "Increase Contrast" -underline 0 \
+	-onvalue 1 -offvalue 0 -variable mog_inc_contrast -command { show_img $ci }
+
+.mb.options.mogopt add checkbutton -label "Decrease Contrast" -underline 0 \
+	-onvalue 1 -offvalue 0 -variable mog_dec_contrast -command { show_img $ci }
+
+.mb.options.mogopt add checkbutton -label "Despeckle" -underline 0 \
+	-onvalue 1 -offvalue 0 -variable mog_despeckle -command { show_img $ci }
+
+.mb.options.mogopt add checkbutton -label "Enhance" -underline 0 \
+	-onvalue 1 -offvalue 0 -variable mog_enhance -command { show_img $ci }
+
+.mb.options.mogopt add checkbutton -label "Equalize" -underline 0 \
+	-onvalue 1 -offvalue 0 -variable mog_equalize -command { show_img $ci }
+
+.mb.options.mogopt add checkbutton -label "Monochrome" -underline 0 \
+	-onvalue 1 -offvalue 0 -variable mog_monochrome -command { show_img $ci }
+
+.mb.options.mogopt add checkbutton -label "Normalize" -underline 0 \
+	-onvalue 1 -offvalue 0 -variable mog_normalize -command { show_img $ci }
 
 ##### ][ Zoom Menu
 
