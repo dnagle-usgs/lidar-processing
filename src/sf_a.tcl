@@ -852,14 +852,14 @@ proc show_img { n } {
 		
 			if {$rotate_amount != 0 && (!$prefer_tcl || $rotate_amount != 180) } {
 				if {$zoom != 100 && (!$prefer_tcl || !$zoom_even)} {
-					eval exec mogrify $extra_opts -sample $zoom_percent -rotate $rotate_amount $fn
+					eval exec mogrify -sample $zoom_percent -rotate $rotate_amount $extra_opts $fn
 										if { $DEBUG_SF } { puts "mogrified: rotate and zoom" }
 				} else {
-					eval exec mogrify $extra_opts -rotate $rotate_amount $fn
+					eval exec mogrify -rotate $rotate_amount $extra_opts $fn
 										if { $DEBUG_SF } { puts "mogrified: rotate" }
 				}
 			} elseif {$zoom != 100 && (!$prefer_tcl || !$zoom_even)} {
-				eval exec mogrify $extra_opts -sample $zoom_percent $fn
+				eval exec mogrify -sample $zoom_percent $extra_opts $fn
 										if { $DEBUG_SF } { puts "mogrified: zoom" }
 			}
 
