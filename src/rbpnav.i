@@ -183,8 +183,8 @@ extern gga;
 
  if ( _ytk ) {
     // path = data_path + "/gps/"
-    //path = data_path + "/trajectories/"
-    path = data_path;
+    path = data_path + "/trajectories/"
+    // path = data_path;
     tkcmd, "path_exists "+path
     // ifn  = get_openfn( initialdir=data_path, filetype="*pnav.ybin" );
     ifn  = get_openfn( initialdir=path, filetype="*pnav.ybin" );
