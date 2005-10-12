@@ -246,6 +246,13 @@ proc cur_mark_write { name1 name2 op } {
 	catch { set mark($ci) $cur_mark }
 }
 
+proc adapt_classtool_cname_palette_write { name1 name2 op } {
+	catch {
+		adapt_classtool_hide_cname_palette
+		adapt_classtool_show_cname_palette
+	}
+}
+
 proc cur_class_write { name1 name2 op } {
 	global cur_class class ci
 
@@ -941,6 +948,19 @@ proc show_img { n } {
 	}
 }
 
+proc hms2sod { hms {seconds_offset 0} {frame_off 0} } {
+	scan $hms "%02d%02d%02d" h m s 
+	set sod [ expr {$h*3600 + $m*60 + $s + $seconds_offset - $frame_off}]
+	return $sod
+}
+
+proc sod2hms { sod } {
+	set h [expr {int($sod) / 3600}]
+	set m [expr {(int($sod) - $h * 3600)/60}]
+	set s [expr {int($sod) - $h * 3600 - $m * 60}]
+	return [format "%02d%02d%02d" $h $m $s]
+}
+
 proc archive_save_marked { type } {
 	global mark fna dir range_touched imgtime \
 		gt lat lon ew ns pdop alt nsat camtype nfiles
@@ -1494,48 +1514,87 @@ proc atris_init { } {
 
 	proc adapt_classification_tool { } {
 		proc adapt_classtool_create_button_row { str } {
-			global adapt_classtool_var_lastindex
+			global adapt_classtool_var_lastindex adapt_classtool_cname_palette
 			
 			incr adapt_classtool_var_lastindex
 			set idx $adapt_classtool_var_lastindex
-
+			
 			set lst .adclasstool.classlist
 
 			adapt_classtool_move_deladd_buttons
 
 			radiobutton $lst.rad$idx -value $str -text $str -variable cur_class -indicatoron 0 \
 				-padx 2.5m -pady 1.5m
-			grid $lst.rad$idx -in $lst -column 0 -row $idx -sticky "ewsn" -padx .5m
-			
 			Button $lst.butEdit$idx -text "Edit" -command [list adapt_classtool_edit $idx] -padx 0 -pady 0
-			grid $lst.butEdit$idx -in $lst -column 1 -row $idx -padx .5m -sticky "w"
-			
 			if { $idx > 0 } {
-				grid $lst.butDown[expr $idx - 1] -in $lst -column 3 -row [expr $idx - 1] -padx .5m \
-					-sticky "w"
-			
 				Button $lst.butUp$idx -text "Up" -command [list adapt_classtool_up $idx] -padx 0 -pady 0
-				grid $lst.butUp$idx -in $lst -column 2 -row $idx -padx .5m -sticky "w"
 			}
-			
 			Button $lst.butDown$idx -text "Down" -command [list adapt_classtool_down $idx] -padx 0 -pady 0
-			grid $lst.butDown$idx -in $lst -column 3 -row $idx -padx .5m -sticky "w"
-			grid remove $lst.butDown$idx
+
+			grid $lst.rad$idx -in $lst -column 0 -row $idx -sticky "ewsn" -padx .5m
+
+			if { $adapt_classtool_cname_palette } {
+				grid $lst.butEdit$idx -in $lst -column 1 -row $idx -padx .5m -sticky "w"
+				if { $idx > 0 } {
+					grid $lst.butDown[expr $idx - 1] -in $lst -column 3 -row [expr $idx - 1] -padx .5m \
+						-sticky "w"
+					grid $lst.butUp$idx -in $lst -column 2 -row $idx -padx .5m -sticky "w"
+				}
+			}
 		}
 
 		proc adapt_classtool_move_deladd_buttons { } {
-			global adapt_classtool_var_lastindex
+			global adapt_classtool_var_lastindex adapt_classtool_cname_palette
 			set idx $adapt_classtool_var_lastindex
 			set lst .adclasstool.classlist
+			
+			if { $adapt_classtool_cname_palette } {
+				grid $lst.butDel -in $lst -column 3 -row $idx -padx .5m -sticky "w"
+				grid $lst.butAdd -in $lst -column 1 -row [expr $idx + 1] -sticky "w" -columnspan 3 -padx .5m
+			}
+		}
 
-			grid $lst.butDel -in $lst -column 3 -row $idx -padx .5m -sticky "w"
-			grid $lst.butAdd -in $lst -column 1 -row [expr $idx + 1] -sticky "w" -columnspan 3 -padx .5m
+		proc adapt_classtool_show_cname_palette { } {
+			global adapt_classtool_var_lastindex adapt_classtool_cname_palette
+			set li $adapt_classtool_var_lastindex
+			set lst .adclasstool.classlist
+
+			if { $adapt_classtool_cname_palette } {
+				adapt_classtool_move_deladd_buttons
+				for {set idx 0} {$idx <= $li} {incr idx} {
+					grid $lst.butEdit$idx -in $lst -column 1 -row $idx -padx .5m -sticky "w"
+					if { $idx > 0 } {
+						grid $lst.butDown[expr $idx - 1] -in $lst -column 3 -row [expr $idx - 1] -padx .5m \
+							-sticky "w"
+						grid $lst.butUp$idx -in $lst -column 2 -row $idx -padx .5m -sticky "w"
+					}
+				}
+			}
+		}
+
+		proc adapt_classtool_hide_cname_palette { } {
+			global adapt_classtool_var_lastindex adapt_classtool_cname_palette
+			set li $adapt_classtool_var_lastindex
+			set lst .adclasstool.classlist
+
+			if { ! $adapt_classtool_cname_palette } {
+				grid remove $lst.butDel
+				grid remove $lst.butAdd
+				for {set idx 0} {$idx <= $li} {incr idx} {
+					grid remove $lst.butEdit$idx
+					if { $idx > 0 } {
+						grid remove $lst.butDown[expr $idx - 1]
+						grid remove $lst.butUp$idx
+					}
+				}
+			}
 		}
 
 		# adapt_classification_tool
 
-		global adapt_classtool_var_lastindex
+		global adapt_classtool_var_lastindex adapt_classtool_cname_palette
 		set adapt_classtool_var_lastindex -1
+		set adapt_classtool_cname_palette 0
 	
 		set w .adclasstool
 		toplevel $w
@@ -1553,40 +1612,36 @@ proc atris_init { } {
 		grid columnconfigure $lst 0 -weight 1
 
 		grid $lst -in $w -column 0 -row 0 -sticky "nwe" -pady 1m -padx .5m
-		grid columnconfigure $w 0 -weight 1
+		grid columnconfigure $w 0 -weight 1 -minsize 150
 		grid rowconfigure		$w 0 -weight 1
 
 		Separator $w.sep1
 		grid $w.sep1 -in $w -column 0 -row 2 -sticky "ew" -pady .5m
 
-		set fr $w.commands
-		frame $fr
+		$w configure -menu $w.mb
+		menu $w.mb
 
-		Label $fr.lblNames -text "Classification Names"
-		Button $fr.importNames -text "Import" -command adapt_classtool_command_imp_names
-		Button $fr.exportNames -text "Export" -command adapt_classtool_command_exp_names
-		Separator $fr.sep1
-		Label $fr.lblClass -text "Classification Data"
-		Button $fr.importClass -text "Import" -command adapt_classtool_command_imp_class
-		Button $fr.exportClass -text "Export" -command adapt_classtool_command_exp_class
+		# Menubar
+		menu $w.mb.file
+		menu $w.mb.options
 
-		set row 0
-		grid $fr.lblNames -in $fr -column 1 -row $row -columnspan 2
-		incr row
-		grid $fr.importNames -in $fr -column 1 -row $row
-		grid $fr.exportNames -in $fr -column 2 -row $row
-		incr row
-		grid $fr.sep1 -in $fr -column 0 -row $row -columnspan 4 -pady 1m -sticky "ew"
-		incr row
-		grid $fr.lblClass -in $fr -column 1 -row $row -columnspan 2
-		incr row
-		grid $fr.importClass -in $fr -column 1 -row $row
-		grid $fr.exportClass -in $fr -column 2 -row $row
+		$w.mb add cascade -label "File" -underline 0 -menu $w.mb.file
+		$w.mb add cascade -label "Options" -underline 0 -menu $w.mb.options
 
-		grid columnconfigure $fr 0 -weight 1
-		grid columnconfigure $fr 3 -weight 1
+		$w.mb.file add command -label "Import Classification Names" -underline 0 \
+			-command adapt_classtool_command_imp_names
+		$w.mb.file add command -label "Export Classification Names" -underline 0 \
+			-command adapt_classtool_command_exp_names
+		$w.mb.file add separator
+		$w.mb.file add command -label "Import Classification Data" -underline 0 \
+			-command adapt_classtool_command_imp_class
+		$w.mb.file add command -label "Export Classification Data" -underline 0 \
+			-command adapt_classtool_command_exp_class
+		$w.mb.file add separator
+		$w.mb.file add command -label "Close" -underline 0 -command { destroy .adclasstool }
 
-		grid $fr -in $w -column 0 -row 3 -sticky "nwe" -pady 1m -padx .5m
+		$w.mb.options add checkbutton -label "Show classification editing palette" -underline 0 \
+			-onvalue 1 -offvalue 0 -variable adapt_classtool_cname_palette
 
 		# /adapt_classification_tool
 
@@ -1717,43 +1772,43 @@ proc atris_init { } {
 		}
 
 		proc adapt_classtool_gather_classifications { } {
-			global class cur_class nfiles
+			global class cur_class nfiles imgtime
 			set current $class(1)
-			lappend c_ind 1
+			lappend c_sod [hms2sod $imgtime(idx1)]
 			lappend c_nam $current
 			for {set i 2} {$i <= $nfiles} {incr i} {
 				if {![string equal $current $class($i)]} {
 					set current $class($i)
-					lappend c_ind $i
+					lappend c_sod [hms2sod $imgtime(idx$i)]
 					lappend c_nam $current
 				}
 			}
-			return [list $c_ind $c_nam]
+			return [list $c_sod $c_nam]
 		}
 
-		proc adapt_classtool_apply_classifications { ind nam } {
-			global class cur_class nfiles
-			set len [llength $ind]
-			set c_min [lindex $ind 0]
+		proc adapt_classtool_apply_classifications { sod nam } {
+			global class cur_class nfiles imgtime
+			set len [llength $sod]
+			set c_min [lindex $sod 0]
 			set c_nam [lindex $nam 0]
 			for {set i 1} {$i < $len} {incr i} {
-				set c_max [lindex $ind $i]
-				for {set j $c_min} {$j < $c_max} {incr j} {
+				set c_max [lindex $sod $i]
+				for {set j $imgtime(hms[sod2hms $c_min])} {$j < $imgtime(hms[sod2hms $c_max])} {incr j} {
 					set class($j) $c_nam
 				}
 				set c_min $c_max
 				set c_nam [lindex $nam $i]
 			}
-			for {set j $c_min} {$j <= $nfiles} {incr j} {
+			for {set j $imgtime(hms[sod2hms $c_min])} {$j <= $nfiles} {incr j} {
 				set class($j) $c_nam
 			}
 		}
 
-		proc adapt_classtool_write_classifications { fn ind nam } {
+		proc adapt_classtool_write_classifications { fn sod nam } {
 			if { [ catch {set of [ open $fn "w" ] } ] == 0 } {
-				set len [llength $ind]
+				set len [llength $sod]
 				for {set i 0} {$i < $len} {incr i} {
-					puts $of "[lindex $ind $i] [lindex $nam $i]"
+					puts $of "[lindex $sod $i] [lindex $nam $i]"
 				}
 				close $of
 			}
@@ -1765,13 +1820,13 @@ proc atris_init { } {
 					set line [gets $f]
 					if { $line != "" } {
 						set list [split $line " "]
-						lappend c_ind [lindex $list 0]
+						lappend c_sod [lindex $list 0]
 						lappend c_nam [join [lrange $list 1 [expr [llength $list] - 1]]]
 					}
 				}
 				close $f
 			}
-			return [list $c_ind $c_nam]
+			return [list $c_sod $c_nam]
 		}
 
 		proc adapt_classtool_gather_names { } {
@@ -2327,29 +2382,31 @@ bind .slider <ButtonRelease> { show_img $ci }
 # [ Variable Traces ################################
 
 if { [catch {package require Tcl 8.4}] } {
-	eval trace variable timern                     w timern_write
-	eval trace variable ci                         w ci_write
-	eval trace variable zoom                       w zoom_write
-	eval trace variable cur_mark                   w cur_mark_write
-	eval trace variable cur_class                  w cur_class_write
-	eval trace variable scrollbar_status           w scrollbar_status_write
-	eval trace variable toolbar_status_gps         w toolbar_status_write
-	eval trace variable toolbar_status_slider      w toolbar_status_write
-	eval trace variable toolbar_status_vcr         w toolbar_status_write
-	eval trace variable toolbar_status_speedgamma  w toolbar_status_write
-	eval trace variable toolbar_status_alps        w toolbar_status_write
+	eval trace variable timern                         w timern_write
+	eval trace variable ci                             w ci_write
+	eval trace variable zoom                           w zoom_write
+	eval trace variable cur_mark                       w cur_mark_write
+	eval trace variable cur_class                      w cur_class_write
+	eval trace variable adapt_classtool_cname_palette  w adapt_classtool_cname_palette_write
+	eval trace variable scrollbar_status               w scrollbar_status_write
+	eval trace variable toolbar_status_gps             w toolbar_status_write
+	eval trace variable toolbar_status_slider          w toolbar_status_write
+	eval trace variable toolbar_status_vcr             w toolbar_status_write
+	eval trace variable toolbar_status_speedgamma      w toolbar_status_write
+	eval trace variable toolbar_status_alps            w toolbar_status_write
 } else {
-	eval trace add variable timern                     write timern_write
-	eval trace add variable ci                         write ci_write
-	eval trace add variable zoom                       write zoom_write
-	eval trace add variable cur_mark                   write cur_mark_write
-	eval trace add variable cur_class                  write cur_class_write
-	eval trace add variable scrollbar_status           write scrollbar_status_write
-	eval trace add variable toolbar_status_gps         write toolbar_status_write
-	eval trace add variable toolbar_status_slider      write toolbar_status_write
-	eval trace add variable toolbar_status_vcr         write toolbar_status_write
-	eval trace add variable toolbar_status_speedgamma  write toolbar_status_write
-	eval trace add variable toolbar_status_alps        write toolbar_status_write
+	eval trace add variable timern                         write timern_write
+	eval trace add variable ci                             write ci_write
+	eval trace add variable zoom                           write zoom_write
+	eval trace add variable cur_mark                       write cur_mark_write
+	eval trace add variable cur_class                      write cur_class_write
+	eval trace add variable adapt_classtool_cname_palette  write adapt_classtool_cname_palette_write
+	eval trace add variable scrollbar_status               write scrollbar_status_write
+	eval trace add variable toolbar_status_gps             write toolbar_status_write
+	eval trace add variable toolbar_status_slider          write toolbar_status_write
+	eval trace add variable toolbar_status_vcr             write toolbar_status_write
+	eval trace add variable toolbar_status_speedgamma      write toolbar_status_write
+	eval trace add variable toolbar_status_alps            write toolbar_status_write
 }
 
 # ] End Variable Traces ############################
