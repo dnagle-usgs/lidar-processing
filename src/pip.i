@@ -29,25 +29,27 @@ Returns:    ply - array of polygon vertices
 */
 { 
  extern _ply;	// global copy of most recently defined ply
- prompt = "Left mouse generates a vertice. Ctl-Left to end and close polygon."
+ prompt = "Left mouse generates a vertice. Ctl-Left or middle mouse click to end and close polygon."
 	ply = array(float, 2, 1)     // array that contains polygon vertices
   	result = mouse(1, 0, prompt)
   	ply(1, 1) = result(1)	     // x coordinate of the first vertex
   	ply(2, 1) = result(2)	     // y coordinate of the first vertex
   	//fma;
- 	plmk, ply(2, 0), ply(1, 0), marker = 4, msize = .5, width = 10
+ 	plmk, ply(2, 0), ply(1, 0), marker = 4, msize = .4, width = 10, color="red"
 		
+        prompt = swrite("Ctl-left or middle mouse click to close polygon.");
+ 	write, prompt;
   	while((!((result(10)== 1)   && 
                  (result(11)== 4))) && 
                  (!(result(10)==2))) 	// while !(CTRL && left mouse) loop
   	{		
-          prompt = "Ctl-left mouse to close polygon."
-   	 	result = mouse(1, 2, prompt)		
+   	 	result = mouse(1, 2,"")		
     	grow, ply, result(3:4)				// make room for new vertex
-    	plmk, ply(2, 0), ply(1, 0), marker = 4, msize = .5, width = 10
+    	plmk, ply(2, 0), ply(1, 0), marker = 4, msize = .3, width = 10
     	plg, [ply(2,-1), ply(2,0)],  
              [ply(1,-1), ply(1,0)], marks = 0; //connect current and previous						
   	}
+	write, "PIP region selected.  Please wait..."
   	plg, [ply(2,1), ply(2,0)],  
              [ply(1,1), ply(1,0)], marks = 0;  //connect first and last vertex
         _ply = ply;
