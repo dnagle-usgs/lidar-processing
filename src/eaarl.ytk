@@ -222,6 +222,7 @@ proc scap { } {
 # that file to any number of different formats.  Once the image
 # has been stored in the desired format, the /tmp/*.xwd file
 # is deleted.
+#  global capture_path data_path capture_name _ytk
  global capture_path data_path capture_name
   if { [ info exists capture_path ] == 0 } {
     if { [ info exists data_path ] } {
@@ -251,7 +252,9 @@ click OK, and then click on the desired window.}
       set fn "[ file rootname $fn ].png"
     }
     update
-    exec /usr/X11R6/bin/convert /tmp/junk.xwd $fn
+    # Require the user to get their unix path right.
+    exec convert /tmp/junk.xwd $fn
+    # exec $_ytk(convert) /tmp/junk.xwd $fn
     file delete -force /tmp/junk.xwd
   }
 }
@@ -639,5 +642,4 @@ $w.mb.nav entryconfigure 1 -state normal
 $w.mb.images entryconfigure 5 -state disabled
 $w.mb.images entryconfigure 6 -state disabled
 $w.mb.images entryconfigure 7 -state disabled
-
 
