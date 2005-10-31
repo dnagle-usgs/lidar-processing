@@ -111,23 +111,55 @@ func sel_data_rgn(data, type=, mode=,win=, exclude=, rgn=, make_workdata=, origd
      box = boundBox(ply);
      if ( type == VEG__ ) {
          box_pts = ptsInBox(box*100., data.least, data.lnorth);
-         if (!is_array(box_pts)) return [];
+         if (!is_array(box_pts)) {
+	    if (exclude) {
+	      write, "No points removed."
+	      return data;
+	    } else {
+	      write, "No points selected."
+	      return [];
+	    }
+	 }
          poly_pts = testPoly(ply*100., data.least(box_pts), data.lnorth(box_pts));
          indx = box_pts(poly_pts);
          if (!is_void(origdata)) {
             orig_box_pts = ptsInBox(box*100., origdata.least, origdata.lnorth);
-            if (!is_array(orig_box_pts)) return [];
+            if (!is_array(orig_box_pts)) {
+	      if (exclude) {
+	        write, "No points removed."
+	        return data;
+	      } else {
+	        write, "No points selected."
+	        return [];
+	      }
+	    }
             orig_poly_pts = testPoly(ply*100., origdata.least(orig_box_pts), origdata.lnorth(orig_box_pts));
             origindx = orig_box_pts(orig_poly_pts);
          }
      } else {
          box_pts = ptsInBox(box*100., data.east, data.north);
-         if (!is_array(box_pts)) return [];
+         if (!is_array(box_pts)) {
+	   if (exclude) {
+	     write, "No points removed."
+	     return data;
+	   } else {
+	     write, "No points selected."
+	     return [];
+	   }
+ 	 }
          poly_pts = testPoly(ply*100., data.east(box_pts), data.north(box_pts));
          indx = box_pts(poly_pts);
          if (!is_void(origdata)) {
             orig_box_pts = ptsInBox(box*100., origdata.east, origdata.north);
-            if (!is_array(orig_box_pts)) return [];
+            if (!is_array(orig_box_pts)) {
+	      if (exclude) {
+	        write, "No points removed."
+	        return data;
+	      } else {
+	        write, "No points selected."
+	        return [];
+	      }
+	    }
             orig_poly_pts = testPoly(ply*100., origdata.east(orig_box_pts), origdata.north(orig_box_pts));
             origindx = orig_box_pts(orig_poly_pts);
          }
@@ -144,7 +176,9 @@ func sel_data_rgn(data, type=, mode=,win=, exclude=, rgn=, make_workdata=, origd
  	}
      }
      iindx = array(int,numberof(data.rn));
-     if (is_array(indx)) iindx(indx) = 1;
+     if (is_array(indx)) {
+	iindx(indx) = 1;
+     } 
      indx = where(iindx == 0);
      write, format="%d of %d data points removed.\n",numberof(iindx)-numberof(indx), numberof(iindx);
  } else {
