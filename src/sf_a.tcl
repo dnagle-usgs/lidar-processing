@@ -1234,7 +1234,8 @@ proc enable_controls { } {
 		.mb.options.mogrify entryconfigure "Prefer native Tcl over mogrify" -state disabled
 		.mb.options.mogrify entryconfigure "Disable mogrify completely"   -state normal
 	}
-	catch { .mb entryconfigure Tools -state normal }
+	after 100 [list catch { .mb entryconfigure Tools -state normal }]
+	after 5000 [list catch { .mb entryconfigure Tools -state normal }]
 }
 
 proc atris_init { } {
@@ -1521,19 +1522,29 @@ proc atris_init { } {
 		}
 		
 		proc adapt_classtool_bind_code { code } {
+			set c [string toupper $code]
 			if {[string length $code] == 1} {
-				if {[string length [bind . <Key-$code>]] == 0} {
-					bind . <Key-$code> "[list set cur_class $code]\nadapt_classtool_advance"
+				if {[string length [bind . <Key-$c>]] == 0} {
+					bind . <Key-$c> "[list set cur_class $code]\nadapt_classtool_advance"
+				}
+				if {![string equal [string tolower $code] $c]} {
+					set c [string tolower $code]
+					if {[string length [bind . <Key-$c>]] == 0} {
+						bind . <Key-$c> "[list set cur_class $code]\nadapt_classtool_advance"
+					}
 				}
 			}
 		}
 
 		proc adapt_classtool_unbind_code { code } {
-			set binding [bind . <Key-$code>]
-			regsub "set cur_class $code" $binding "" binding
-			set binding [string trim \
-				[string map {"adapt_classtool_advance" ""} $binding] ]
-			bind . <Key-$code> $binding
+			foreach { c } [list [string toupper $code] [string tolower $code]] {
+				set binding [bind . <Key-$c>]
+				regsub "set cur_class $code" $binding "" binding
+				set binding [string trim \
+					[string map {"adapt_classtool_advance" ""} $binding] ]
+				bind . <Key-$c> $binding
+			}
+
 		}
 	
 		proc adapt_classtool_create_button_row { code str } {
@@ -1577,8 +1588,13 @@ proc atris_init { } {
 			set idx $adapt_classtool_var_lastindex
 			set lst .adclasstool.classlist
 			
-			if { $adapt_classtool_cname_palette } {
+			if { $adapt_classtool_cname_palette && $idx >= 0 } {
 				grid $lst.butDel -in $lst -column 3 -row $idx -padx .5m -sticky "w"
+				grid $lst.butAdd -in $lst -column 1 -row [expr $idx + 1] -sticky "w" -columnspan 3 -padx .5m
+			}
+
+			if { $adapt_classtool_cname_palette && $idx == -1 } {
+				grid remove $lst.butDel
 				grid $lst.butAdd -in $lst -column 1 -row [expr $idx + 1] -sticky "w" -columnspan 3 -padx .5m
 			}
 		}
@@ -1618,65 +1634,6 @@ proc atris_init { } {
 				}
 			}
 		}
-
-		# adapt_classification_tool
-
-		global adapt_classtool_var_lastindex adapt_classtool_cname_palette
-		set adapt_classtool_var_lastindex -1
-		set adapt_classtool_cname_palette 0
-		set adapt_classtool_class_advance 0
-	
-		set w .adclasstool
-		toplevel $w
-		wm title $w "Classification Tool"
-
-		set lst $w.classlist
-		frame $lst
-		
-		Button $lst.butDel -text "Delete" -command adapt_classtool_delete -foreground red -padx 0 -pady 0
-		Button $lst.butAdd -text "Add New" -command adapt_classtool_addnew -padx 0 -pady 0
-
-		foreach {j k} {0 Unclassified 1 Sand 2 "Hardground/Algae/Turf" 3 Seagrass 4 "Hard Corals" \
-			5 "Soft Corals" 6 Zoanthids 7 "Dense Mixed Reef" 8 "Sparse Mixed Reef" 9 "Dead Coral"} {
-			adapt_classtool_create_button_row $j $k
-		}
-		grid columnconfigure $lst 0 -weight 1
-
-		grid $lst -in $w -column 0 -row 0 -sticky "nwe" -pady 1m -padx .5m
-		grid columnconfigure $w 0 -weight 1 -minsize 150
-		grid rowconfigure		$w 0 -weight 1
-
-		Separator $w.sep1
-		grid $w.sep1 -in $w -column 0 -row 2 -sticky "ew" -pady .5m
-
-		$w configure -menu $w.mb
-		menu $w.mb
-
-		# Menubar
-		menu $w.mb.file
-		menu $w.mb.options
-
-		$w.mb add cascade -label "File" -underline 0 -menu $w.mb.file
-		$w.mb add cascade -label "Options" -underline 0 -menu $w.mb.options
-
-		$w.mb.file add command -label "Import Classification Names" -underline 0 \
-			-command adapt_classtool_command_imp_codes -state disabled
-		$w.mb.file add command -label "Export Classification Names" -underline 0 \
-			-command adapt_classtool_command_exp_codes -state disabled
-		$w.mb.file add separator
-		$w.mb.file add command -label "Import Classification Data" -underline 0 \
-			-command adapt_classtool_command_imp_class -state disabled
-		$w.mb.file add command -label "Export Classification Data" -underline 0 \
-			-command adapt_classtool_command_exp_class -state disabled
-		$w.mb.file add separator
-		$w.mb.file add command -label "Close" -underline 0 -command { destroy .adclasstool }
-
-		$w.mb.options add checkbutton -label "Show classification editing palette" -underline 0 \
-			-onvalue 1 -offvalue 0 -variable adapt_classtool_cname_palette
-		$w.mb.options add checkbutton -label "Advance image upon classification" -underline 0 \
-			-onvalue 1 -offvalue 0 -variable adapt_classtool_class_advance
-
-		# /adapt_classification_tool
 
 		proc adapt_classtool_command_imp_codes { } {
 			global base_dir
@@ -1772,8 +1729,10 @@ proc atris_init { } {
 		}
 
 		proc adapt_classtool_addnew { } {
-			if {[tk_getString .adclasstool.temp j "Add Classification Text" "Please enter the text for the new classification."]} {
-				adapt_classtool_create_button_row $j
+			if {[tk_getString .adclasstool.temp code "Add Classification" "Please enter the code for the new classification."]} {
+				if {[tk_getString .adclasstool.temp str "Add Classification" "Please enter the text for the new classification."]} {
+					adapt_classtool_create_button_row $code $str
+				}
 			}
 		}
 		
@@ -1787,12 +1746,12 @@ proc atris_init { } {
 			destroy $lst.rad$i
 			grid remove $lst.butEdit$i
 			destroy $lst.butEdit$i
-			grid remove $lst.butUp$i
-			destroy $lst.butUp$i
 			grid remove $lst.butDown$i
 			destroy $lst.butDown$i
 			
 			if { $i > 0 } {
+				grid remove $lst.butUp$i
+				destroy $lst.butUp$i
 				grid remove $lst.butDown[expr $i - 1]
 			}
 
@@ -1800,6 +1759,7 @@ proc atris_init { } {
 			destroy $lst.unbind$i
 
 			incr adapt_classtool_var_lastindex -1
+
 			adapt_classtool_move_deladd_buttons
 		}
 
@@ -1858,9 +1818,9 @@ proc atris_init { } {
 				for { set i 0 } { ![ eof $f ] } { incr i } { 
 					set line [gets $f]
 					if { $line != "" } {
-						set list [split $line " "]
-						lappend c_sod [lindex $list 0]
-						lappend c_nam [join [lrange $list 1 [expr [llength $list] - 1]]]
+						set lst [split $line " "]
+						lappend c_sod [lindex $lst 0]
+						lappend c_nam [join [lrange $lst 1 [expr [llength $lst] - 1]]]
 					}
 				}
 				close $f
@@ -1873,21 +1833,24 @@ proc atris_init { } {
 			set li $adapt_classtool_var_lastindex
 
 			for {set i 0} {$i <= $li} {incr i} {
-				lappend names [.adclasstool.classlist.rad$i cget -text]
+				set lst [split [string map [list ": " \0] [.adclasstool.classlist.rad$i cget -text]] \0]
+				set codes([lindex $lst 0]) [lindex $lst 1]
 			}
-			return $names
+			return [array get codes]
 		}
 
-		proc adapt_classtool_apply_codes { names } {
-			foreach n $names {
-				adapt_classtool_create_button_row $n
+		proc adapt_classtool_apply_codes { codeslst } {
+			array set codes $codeslst
+			foreach {key} [lsort -dictionary [array names codes]] {
+				adapt_classtool_create_button_row $key $codes($key)
 			}
 		}
 
-		proc adapt_classtool_write_codes { fn names } {
+		proc adapt_classtool_write_codes { fn codeslst } {
+			array set codes $codeslst
 			if { [ catch {set of [ open $fn "w" ] } ] == 0 } {
-				foreach n $names {
-					puts $of $n
+				foreach {key} [lsort -dictionary [array names codes]] {
+					puts $of "$key: $codes($key)"
 				}
 				close $of
 			}
@@ -1895,14 +1858,80 @@ proc atris_init { } {
 
 		proc adapt_classtool_read_codes { fn } {
 			if { [ catch {set f [ open $fn "r" ] } ] == 0 } {
-				for { set i 0 } { ![ eof $f ] } { incr i } { 
-					lappend names [gets $f]
+				for { set i 0 } { ![ eof $f ] } { incr i } {
+					set str [gets $f]
+					if {[string length $str] > 0} {
+						set dat [split [string map [list ": " \0] $str] \0]
+						set codes([lindex $dat 0]) [lindex $dat 1]
+					}
 				}
 				close $f
 			}
-			return $names
+			return [array get codes]
 		}
+	
+		# adapt_classification_tool [
+
+		global adapt_classtool_var_lastindex adapt_classtool_cname_palette
+		set adapt_classtool_var_lastindex -1
+		set adapt_classtool_cname_palette 0
+		set adapt_classtool_class_advance 0
+	
+		set w .adclasstool
+		toplevel $w
+		wm title $w "Classification Tool"
+
+		set lst $w.classlist
+		frame $lst
+		
+		Button $lst.butDel -text "Delete" -command adapt_classtool_delete -foreground red -padx 0 -pady 0
+		Button $lst.butAdd -text "Add New" -command adapt_classtool_addnew -padx 0 -pady 0
+
+		adapt_classtool_apply_codes [list 0 Unclassified 1 Sand 2 "Hardground/Algae/Turf" 3 Seagrass 4 "Hard Corals" \
+			5 "Soft Corals" 6 Zoanthids 7 "Dense Mixed Reef" 8 "Sparse Mixed Reef" 9 "Dead Coral"]
+		
+		grid columnconfigure $lst 0 -weight 1
+
+		grid $lst -in $w -column 0 -row 0 -sticky "nwe" -pady 1m -padx .5m
+		grid columnconfigure $w 0 -weight 1 -minsize 150
+		grid rowconfigure		$w 0 -weight 1
+
+		Separator $w.sep1
+		grid $w.sep1 -in $w -column 0 -row 2 -sticky "ew" -pady .5m
+
+		$w configure -menu $w.mb
+		menu $w.mb
+
+		# Menubar
+		menu $w.mb.file
+		menu $w.mb.options
+
+		$w.mb add cascade -label "File" -underline 0 -menu $w.mb.file
+		$w.mb add cascade -label "Options" -underline 0 -menu $w.mb.options
+
+		$w.mb.file add command -label "Import Classification Codes" -underline 0 \
+			-command adapt_classtool_command_imp_codes ;#-state disabled
+		$w.mb.file add command -label "Export Classification Codes" -underline 0 \
+			-command adapt_classtool_command_exp_codes ;#-state disabled
+		$w.mb.file add separator
+		$w.mb.file add command -label "Import Classification Data" -underline 0 \
+			-command adapt_classtool_command_imp_class -state disabled
+		$w.mb.file add command -label "Export Classification Data" -underline 0 \
+			-command adapt_classtool_command_exp_class -state disabled
+		$w.mb.file add separator
+		$w.mb.file add command -label "Close" -underline 0 -command { destroy .adclasstool }
+
+		$w.mb.options add checkbutton -label "Show classification editing palette" -underline 0 \
+			-onvalue 1 -offvalue 0 -variable adapt_classtool_cname_palette
+		$w.mb.options add checkbutton -label "Advance image upon classification" -underline 0 \
+			-onvalue 1 -offvalue 0 -variable adapt_classtool_class_advance
+
+		bind .adclasstool <Destroy> { global adapt_classtool_class_advance; set adapt_classtool_class_advance 0 }
+
+		# /adapt_classification_tool ]
+
 	}
+
 }
 
 proc select_file { } {
