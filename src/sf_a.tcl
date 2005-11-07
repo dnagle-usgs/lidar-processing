@@ -1522,15 +1522,16 @@ proc atris_init { } {
 		}
 		
 		proc adapt_classtool_bind_code { code } {
+			set qen .adclasstool.quickentry.ent
 			set c [string toupper $code]
 			if {[string length $code] == 1} {
-				if {[string length [bind . <Key-$c>]] == 0} {
-					bind . <Key-$c> "[list set cur_class $code]\nadapt_classtool_advance"
+				if {[string length [bind $qen <Key-$c>]] == 0} {
+					bind $qen <Key-$c> "[list set cur_class $code]\nadapt_classtool_advance"
 				}
 				if {![string equal [string tolower $code] $c]} {
 					set c [string tolower $code]
-					if {[string length [bind . <Key-$c>]] == 0} {
-						bind . <Key-$c> "[list set cur_class $code]\nadapt_classtool_advance"
+					if {[string length [bind $qen <Key-$c>]] == 0} {
+						bind $qen <Key-$c> "[list set cur_class $code]\nadapt_classtool_advance"
 					}
 				}
 			}
@@ -1538,13 +1539,21 @@ proc atris_init { } {
 
 		proc adapt_classtool_unbind_code { code } {
 			foreach { c } [list [string toupper $code] [string tolower $code]] {
-				set binding [bind . <Key-$c>]
+				set binding [bind $qen <Key-$c>]
 				regsub "set cur_class $code" $binding "" binding
 				set binding [string trim \
 					[string map {"adapt_classtool_advance" ""} $binding] ]
-				bind . <Key-$c> $binding
+				bind $qen <Key-$c> $binding
 			}
 
+		}
+
+		proc adapt_classtool_set_time_gap { } {
+			global adapt_classtool_time_gap
+
+			if {[tk_getString .adclasstool.temp newval "Set time gap" "Please enter an integer value for the time gap you want to use for\nexporting classification data. The time gap is the maximum amount of\ntime allowed between two images in order for them to be considered\ncontiguous. A value of 0 indicates that no images should be considered\ncontiguous. The default is 1. The current value is: $adapt_classtool_time_gap"]} {
+				set adapt_classtool_time_gap $newval
+			}
 		}
 
 		proc adapt_classtool_create_unclassified { } {
@@ -1678,8 +1687,8 @@ proc atris_init { } {
 			
 			if { $fn != "" } {
 				set data [adapt_classtool_read_classifications $fn]
-				adapt_classtool_apply_classifications [lindex $data 0] [lindex $data 1]
-				ci_write {} {} {}
+				adapt_classtool_apply_classifications [lindex $data 0] [lindex $data 1] [lindex $data 2]
+				ci_write " " " " " "
 			}
 		}
 
@@ -1841,21 +1850,26 @@ proc atris_init { } {
 			return [list $code $start $end]
 		}
 
-		proc adapt_classtool_apply_classifications { sod nam } {
+		proc adapt_classtool_apply_classifications { code start end } {
 			global class cur_class nfiles imgtime
-			set len [llength $sod]
-			set c_min [lindex $sod 0]
-			set c_nam [lindex $nam 0]
-			for {set i 1} {$i < $len} {incr i} {
-				set c_max [lindex $sod $i]
-				for {set j $imgtime(hms[sod2hms $c_min])} {$j < $imgtime(hms[sod2hms $c_max])} {incr j} {
-					set class($j) $c_nam
+
+			set len [llength $code]
+
+			set i 1
+			set j 0
+
+			while {$i < $nfiles && $j < $len } {
+				set t [hms2sod $imgtime(idx$i)]
+				if { [lindex $start $j] <= $t && $t <= [lindex $end $j] } {
+					set class($i) [lindex $code $j]
+					incr i
+				} else {
+					if { [lindex $start $j] > $t } {
+						incr i
+					} else {
+						incr j
+					}
 				}
-				set c_min $c_max
-				set c_nam [lindex $nam $i]
-			}
-			for {set j $imgtime(hms[sod2hms $c_min])} {$j <= $nfiles} {incr j} {
-				set class($j) $c_nam
 			}
 		}
 
@@ -1877,13 +1891,14 @@ proc atris_init { } {
 					set line [gets $f]
 					if { $line != "" } {
 						set lst [split $line " "]
-						lappend c_sod [lindex $lst 0]
-						lappend c_nam [join [lrange $lst 1 [expr [llength $lst] - 1]]]
+						lappend code [lindex $lst 0]
+						lappend start [lindex $lst 1]
+						lappend end [lindex $lst 2]
 					}
 				}
 				close $f
 			}
-			return [list $c_sod $c_nam]
+			return [list $code $start $end]
 		}
 
 		proc adapt_classtool_gather_codes { } {
@@ -1936,11 +1951,22 @@ proc atris_init { } {
 		set adapt_classtool_var_firstindex 1
 		set adapt_classtool_cname_palette 0
 		set adapt_classtool_class_advance 0
-		set adapt_classtool_time_gap 5
+		set adapt_classtool_time_gap 1
 	
 		set w .adclasstool
 		toplevel $w
 		wm title $w "Classification Tool"
+
+		set qen $w.quickentry
+		frame $qen
+		
+		Label $qen.lbl -text "Quick Entry:"
+		Entry $qen.ent
+
+		grid $qen.lbl -in $qen -column 0 -row 0 -sticky "ew" -padx 0 -pady 0
+		grid $qen.ent -in $qen -column 1 -row 0 -sticky "ew" -padx 0 -pady 0
+
+		grid columnconfigure $qen 1 -weight 1
 
 		set lst $w.classlist
 		frame $lst
@@ -1955,11 +1981,9 @@ proc atris_init { } {
 		grid columnconfigure $lst 0 -weight 1
 
 		grid $lst -in $w -column 0 -row 0 -sticky "nwe" -pady 1m -padx .5m
+		grid $qen -in $w -column 0 -row 1 -sticky "ew" -pady 1m -padx .5m
 		grid columnconfigure $w 0 -weight 1 -minsize 150
 		grid rowconfigure		$w 0 -weight 1
-
-		Separator $w.sep1
-		grid $w.sep1 -in $w -column 0 -row 2 -sticky "ew" -pady .5m
 
 		$w configure -menu $w.mb
 		menu $w.mb
@@ -1971,15 +1995,15 @@ proc atris_init { } {
 		$w.mb add cascade -label "File" -underline 0 -menu $w.mb.file
 		$w.mb add cascade -label "Options" -underline 0 -menu $w.mb.options
 
-		$w.mb.file add command -label "Import Classification Codes" -underline 0 \
-			-command adapt_classtool_command_imp_codes
-		$w.mb.file add command -label "Export Classification Codes" -underline 0 \
-			-command adapt_classtool_command_exp_codes
-		$w.mb.file add separator
 		$w.mb.file add command -label "Import Classification Data" -underline 0 \
-			-command adapt_classtool_command_imp_class -state disabled
+			-command adapt_classtool_command_imp_class
 		$w.mb.file add command -label "Export Classification Data" -underline 0 \
-			-command adapt_classtool_command_exp_class ;#-state disabled
+			-command adapt_classtool_command_exp_class
+		$w.mb.file add separator
+		$w.mb.file add command -label "Import Classification Codes" -underline 1 \
+			-command adapt_classtool_command_imp_codes
+		$w.mb.file add command -label "Export Classification Codes" -underline 1 \
+			-command adapt_classtool_command_exp_codes
 		$w.mb.file add separator
 		$w.mb.file add command -label "Close" -underline 0 -command { destroy .adclasstool }
 
@@ -1987,8 +2011,18 @@ proc atris_init { } {
 			-onvalue 1 -offvalue 0 -variable adapt_classtool_cname_palette
 		$w.mb.options add checkbutton -label "Advance image upon classification" -underline 0 \
 			-onvalue 1 -offvalue 0 -variable adapt_classtool_class_advance
+		$w.mb.options add separator
+		$w.mb.options add command -label "Set time gap for classification exports" \
+			-underline 9 -command adapt_classtool_set_time_gap
 
 		bind .adclasstool <Destroy> { global adapt_classtool_class_advance; set adapt_classtool_class_advance 0 }
+
+		set quick .adclasstool.quickentry.ent
+		bind $quick <Escape> { .adclasstool.quickentry.ent configure -text "" }
+		bind $quick <Left> { step_img $step -1 }
+		bind $quick <KP_Left> { step_img $step -1 }
+		bind $quick <Right> { step_img $step 1 }
+		bind $quick <KP_Right> { step_img $step 1 }
 
 		# /adapt_classification_tool ]
 
