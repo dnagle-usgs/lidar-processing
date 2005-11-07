@@ -1995,14 +1995,14 @@ proc atris_init { } {
 		$w.mb add cascade -label "File" -underline 0 -menu $w.mb.file
 		$w.mb add cascade -label "Options" -underline 0 -menu $w.mb.options
 
-		$w.mb.file add command -label "Import Classification Data" -underline 0 \
+		$w.mb.file add command -label "Load Classification Data" -underline 0 \
 			-command adapt_classtool_command_imp_class
-		$w.mb.file add command -label "Export Classification Data" -underline 0 \
+		$w.mb.file add command -label "Save Classification Data" -underline 0 \
 			-command adapt_classtool_command_exp_class
 		$w.mb.file add separator
-		$w.mb.file add command -label "Import Classification Codes" -underline 1 \
+		$w.mb.file add command -label "Load Classification Codes" -underline 1 \
 			-command adapt_classtool_command_imp_codes
-		$w.mb.file add command -label "Export Classification Codes" -underline 1 \
+		$w.mb.file add command -label "Save Classification Codes" -underline 1 \
 			-command adapt_classtool_command_exp_codes
 		$w.mb.file add separator
 		$w.mb.file add command -label "Close" -underline 0 -command { destroy .adclasstool }
