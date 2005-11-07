@@ -1546,9 +1546,22 @@ proc atris_init { } {
 			}
 
 		}
+
+		proc adapt_classtool_create_unclassified { } {
+			set lst .adclasstool.classlist
+			set idx 0
+
+			radiobutton $lst.rad$idx -value "" -text "Unclassified" \
+				-variable cur_class \
+				-indicatoron 0 -padx 2.5m -pady 1.5m -justify left -anchor c \
+				-command adapt_classtool_advance
+
+			grid $lst.rad$idx -in $lst -column 0 -row $idx -sticky "ewsn" -padx .5m
+		}
 	
 		proc adapt_classtool_create_button_row { code str } {
-			global adapt_classtool_var_lastindex adapt_classtool_cname_palette
+			global adapt_classtool_var_lastindex adapt_classtool_cname_palette \
+				adapt_classtool_var_firstindex
 			
 			incr adapt_classtool_var_lastindex
 			set idx $adapt_classtool_var_lastindex
@@ -1575,7 +1588,7 @@ proc atris_init { } {
 
 			if { $adapt_classtool_cname_palette } {
 				grid $lst.butEdit$idx -in $lst -column 1 -row $idx -padx .5m -sticky "w"
-				if { $idx > 0 } {
+				if { $idx > $adapt_classtool_var_firstindex } {
 					grid $lst.butDown[expr $idx - 1] -in $lst -column 3 -row [expr $idx - 1] -padx .5m \
 						-sticky "w"
 					grid $lst.butUp$idx -in $lst -column 2 -row $idx -padx .5m -sticky "w"
@@ -1584,31 +1597,32 @@ proc atris_init { } {
 		}
 
 		proc adapt_classtool_move_deladd_buttons { } {
-			global adapt_classtool_var_lastindex adapt_classtool_cname_palette
+			global adapt_classtool_var_lastindex adapt_classtool_cname_palette \
+				adapt_classtool_var_firstindex
 			set idx $adapt_classtool_var_lastindex
 			set lst .adclasstool.classlist
 			
-			if { $adapt_classtool_cname_palette && $idx >= 0 } {
-				grid $lst.butDel -in $lst -column 3 -row $idx -padx .5m -sticky "w"
+			if { $adapt_classtool_cname_palette } {
 				grid $lst.butAdd -in $lst -column 1 -row [expr $idx + 1] -sticky "w" -columnspan 3 -padx .5m
-			}
-
-			if { $adapt_classtool_cname_palette && $idx == -1 } {
-				grid remove $lst.butDel
-				grid $lst.butAdd -in $lst -column 1 -row [expr $idx + 1] -sticky "w" -columnspan 3 -padx .5m
+				if { $idx > $adapt_classtool_var_firstindex - 1 } {
+					grid $lst.butDel -in $lst -column 3 -row $idx -padx .5m -sticky "w"
+				} else {
+					grid remove $lst.butDel
+				}
 			}
 		}
 
 		proc adapt_classtool_show_cname_palette { } {
-			global adapt_classtool_var_lastindex adapt_classtool_cname_palette
+			global adapt_classtool_var_lastindex adapt_classtool_cname_palette \
+				adapt_classtool_var_firstindex
 			set li $adapt_classtool_var_lastindex
 			set lst .adclasstool.classlist
 
 			if { $adapt_classtool_cname_palette } {
 				adapt_classtool_move_deladd_buttons
-				for {set idx 0} {$idx <= $li} {incr idx} {
+				for {set idx $adapt_classtool_var_firstindex} {$idx <= $li} {incr idx} {
 					grid $lst.butEdit$idx -in $lst -column 1 -row $idx -padx .5m -sticky "w"
-					if { $idx > 0 } {
+					if { $idx > $adapt_classtool_var_firstindex } {
 						grid $lst.butDown[expr $idx - 1] -in $lst -column 3 -row [expr $idx - 1] -padx .5m \
 							-sticky "w"
 						grid $lst.butUp$idx -in $lst -column 2 -row $idx -padx .5m -sticky "w"
@@ -1618,16 +1632,17 @@ proc atris_init { } {
 		}
 
 		proc adapt_classtool_hide_cname_palette { } {
-			global adapt_classtool_var_lastindex adapt_classtool_cname_palette
+			global adapt_classtool_var_lastindex adapt_classtool_cname_palette \
+				adapt_classtool_var_firstindex
 			set li $adapt_classtool_var_lastindex
 			set lst .adclasstool.classlist
 
 			if { ! $adapt_classtool_cname_palette } {
 				grid remove $lst.butDel
 				grid remove $lst.butAdd
-				for {set idx 0} {$idx <= $li} {incr idx} {
+				for {set idx $adapt_classtool_var_firstindex } {$idx <= $li} {incr idx} {
 					grid remove $lst.butEdit$idx
-					if { $idx > 0 } {
+					if { $idx > $adapt_classtool_var_firstindex } {
 						grid remove $lst.butDown[expr $idx - 1]
 						grid remove $lst.butUp$idx
 					}
@@ -1676,7 +1691,7 @@ proc atris_init { } {
 			
 			if { $fn != "" } {
 				set data [adapt_classtool_gather_classifications]
-				adapt_classtool_write_classifications $fn [lindex $data 0] [lindex $data 1]
+				adapt_classtool_write_classifications $fn [lindex $data 0] [lindex $data 1] [lindex $data 2]
 			}
 		}
 
@@ -1737,7 +1752,7 @@ proc atris_init { } {
 		}
 		
 		proc adapt_classtool_delete { } {
-			global adapt_classtool_var_lastindex
+			global adapt_classtool_var_lastindex adapt_classtool_var_firstindex
 			set i $adapt_classtool_var_lastindex
 			set w .adclasstool
 			set lst $w.classlist
@@ -1748,10 +1763,10 @@ proc atris_init { } {
 			destroy $lst.butEdit$i
 			grid remove $lst.butDown$i
 			destroy $lst.butDown$i
-			
-			if { $i > 0 } {
-				grid remove $lst.butUp$i
-				destroy $lst.butUp$i
+			grid remove $lst.butUp$i
+			destroy $lst.butUp$i
+
+			if { $i > $adapt_classtool_var_firstindex } {
 				grid remove $lst.butDown[expr $i - 1]
 			}
 
@@ -1764,25 +1779,66 @@ proc atris_init { } {
 		}
 
 		proc adapt_classtool_delete_all { } {
-			global adapt_classtool_var_lastindex
-			while { $adapt_classtool_var_lastindex >= 0 } {
+			global adapt_classtool_var_lastindex adapt_classtool_var_firstindex
+			while { $adapt_classtool_var_lastindex >= $adapt_classtool_var_firstindex } {
 				adapt_classtool_delete
 			}
 		}
 
 		proc adapt_classtool_gather_classifications { } {
-			global class cur_class nfiles imgtime
-			set current $class(1)
-			lappend c_sod [hms2sod $imgtime(idx1)]
-			lappend c_nam $current
-			for {set i 2} {$i <= $nfiles} {incr i} {
-				if {![string equal $current $class($i)]} {
-					set current $class($i)
-					lappend c_sod [hms2sod $imgtime(idx$i)]
-					lappend c_nam $current
+			global class cur_class nfiles imgtime adapt_classtool_time_gap
+			set gap $adapt_classtool_time_gap
+
+			set i 1
+			while {$i < $nfiles && [catch {set imgtime(idx$i)}]} { incr i }
+			
+			set open 1
+			set curr $class($i)
+			set prev [hms2sod $imgtime(idx$i)]
+			
+			lappend code $curr
+			lappend start $prev
+
+			set upd 0
+
+			incr i
+			while {$i < $nfiles} {
+				if { $open } {
+					if {
+						[catch {set imgtime(idx$i)}] ||
+						[expr {[hms2sod $imgtime(idx$i)] - $prev}] > $gap ||
+						![string equal $curr $class($i)]
+					} {
+						lappend end $prev
+
+						if { [catch {set imgtime(idx$i)}] } {
+							set open 0
+						} else {
+							set upd 1
+						}
+					}
+				} else {
+					if { ![catch {set imgtime(idx$i)}] } {
+						set open 1
+						set upd 1
+					}
 				}
+				catch { set prev [hms2sod $imgtime(idx$i)] }
+				if { $upd } {
+					set upd 0
+					set curr $class($i)
+					lappend code $curr
+					lappend start $prev
+				}
+				
+				incr i
 			}
-			return [list $c_sod $c_nam]
+
+			if { $open } {
+				lappend end $prev
+			}
+
+			return [list $code $start $end]
 		}
 
 		proc adapt_classtool_apply_classifications { sod nam } {
@@ -1803,11 +1859,13 @@ proc atris_init { } {
 			}
 		}
 
-		proc adapt_classtool_write_classifications { fn sod nam } {
+		proc adapt_classtool_write_classifications { fn code start end } {
 			if { [ catch {set of [ open $fn "w" ] } ] == 0 } {
-				set len [llength $sod]
+				set len [llength $code]
 				for {set i 0} {$i < $len} {incr i} {
-					puts $of "[lindex $sod $i] [lindex $nam $i]"
+					if {[string length [lindex $code $i]] > 0} {
+						puts $of "[lindex $code $i] [lindex $start $i] [lindex $end $i]"
+					}
 				}
 				close $of
 			}
@@ -1829,10 +1887,9 @@ proc atris_init { } {
 		}
 
 		proc adapt_classtool_gather_codes { } {
-			global adapt_classtool_var_lastindex
-			set li $adapt_classtool_var_lastindex
+			global adapt_classtool_var_lastindex adapt_classtool_var_firstindex
 
-			for {set i 0} {$i <= $li} {incr i} {
+			for {set i $adapt_classtool_var_firstindex} {$i <= $adapt_classtool_var_lastindex} {incr i} {
 				set lst [split [string map [list ": " \0] [.adclasstool.classlist.rad$i cget -text]] \0]
 				set codes([lindex $lst 0]) [lindex $lst 1]
 			}
@@ -1872,10 +1929,14 @@ proc atris_init { } {
 	
 		# adapt_classification_tool [
 
-		global adapt_classtool_var_lastindex adapt_classtool_cname_palette
-		set adapt_classtool_var_lastindex -1
+		global adapt_classtool_var_lastindex adapt_classtool_var_firstindex \
+			adapt_classtool_cname_palette adapt_classtool_class_advance \
+			adapt_classtool_time_gap
+		set adapt_classtool_var_lastindex 0
+		set adapt_classtool_var_firstindex 1
 		set adapt_classtool_cname_palette 0
 		set adapt_classtool_class_advance 0
+		set adapt_classtool_time_gap 5
 	
 		set w .adclasstool
 		toplevel $w
@@ -1887,6 +1948,7 @@ proc atris_init { } {
 		Button $lst.butDel -text "Delete" -command adapt_classtool_delete -foreground red -padx 0 -pady 0
 		Button $lst.butAdd -text "Add New" -command adapt_classtool_addnew -padx 0 -pady 0
 
+		adapt_classtool_create_unclassified
 		adapt_classtool_apply_codes [list 0 Unclassified 1 Sand 2 "Hardground/Algae/Turf" 3 Seagrass 4 "Hard Corals" \
 			5 "Soft Corals" 6 Zoanthids 7 "Dense Mixed Reef" 8 "Sparse Mixed Reef" 9 "Dead Coral"]
 		
@@ -1910,14 +1972,14 @@ proc atris_init { } {
 		$w.mb add cascade -label "Options" -underline 0 -menu $w.mb.options
 
 		$w.mb.file add command -label "Import Classification Codes" -underline 0 \
-			-command adapt_classtool_command_imp_codes ;#-state disabled
+			-command adapt_classtool_command_imp_codes
 		$w.mb.file add command -label "Export Classification Codes" -underline 0 \
-			-command adapt_classtool_command_exp_codes ;#-state disabled
+			-command adapt_classtool_command_exp_codes
 		$w.mb.file add separator
 		$w.mb.file add command -label "Import Classification Data" -underline 0 \
 			-command adapt_classtool_command_imp_class -state disabled
 		$w.mb.file add command -label "Export Classification Data" -underline 0 \
-			-command adapt_classtool_command_exp_class -state disabled
+			-command adapt_classtool_command_exp_class ;#-state disabled
 		$w.mb.file add separator
 		$w.mb.file add command -label "Close" -underline 0 -command { destroy .adclasstool }
 
