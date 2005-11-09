@@ -82,6 +82,7 @@ set lcin 0          ;# Last index for range
 set yes_head 0      ;# Use heading
 set head 0          ;# Heading
 set inhd_count 0    ;#
+set step_marked 0   ;# Step through marked items only?
 set mark(0) 0       ;# Array of marked images
 set class(0) ""	  ;# Array of classification data
 set mark_range_inc 1;# Increment for ranges
@@ -712,8 +713,9 @@ proc play { dir } {
 
 	while { $run == 1 } {
 		if { (($dir > 0) && ($ci < $nfiles)) || (($dir < 0) && ($ci > 1)) } {
-			incr ci [expr $step * $dir]
-			show_img $ci
+			if {[step_img $step $dir]} {set run 0}
+#			incr ci [expr $step * $dir]
+#			show_img $ci
 			set u [ expr $rate($speed) / 100 ]
 			for { set ii 0; } { $ii < $u } { incr ii } { 
 				after 100; update; 
@@ -725,11 +727,30 @@ proc play { dir } {
 }
 
 proc step_img { inc dir } {
-	global ci nfiles
+	global ci nfiles step_marked mark DEBUG_SF
 	if { [no_file_selected $nfiles] } { return }
-	set n [ incr ci [ expr $inc * $dir] ]
+	set o $ci
+	set n $ci
+	if { $step_marked } {
+		set rem $inc
+		set j $ci
+		incr j $dir
+		while {$rem && $j <= $nfiles && $j >= 0 } {
+			if {$mark($j)} {
+				set n $j
+				incr rem -1
+				if {$DEBUG_SF} { puts "step_img: using step_marked, n is at $n" }
+			}
+			incr j $dir
+		}
+	} else {
+		incr n [ expr $inc * $dir]
+		if {$DEBUG_SF} { puts "step_img: not using step_marked, n is at $n" }
+	}
 	if { $n < 0 } { set n 0; } elseif { $n > $nfiles } { set n $nfiles; }
+	set ci $n
 	show_img $n
+	return [expr $o == $n]
 }
 
 ######################################
@@ -1941,6 +1962,30 @@ proc atris_init { } {
 			}
 			return [array get codes]
 		}
+
+		proc adapt_classtool_ask_mark_class { } {
+			if {[tk_getString .adclasstool.temp code "Mark a Classification" "Please enter the class code that you would like marked."]} {
+				adapt_classtool_mark_class $code
+			}
+		}
+
+		proc adapt_classtool_mark_class { code } {
+			global mark class nfiles
+			for { set i 1 } { $i <= $nfiles } { incr i } {
+				if { $class($i) == $code } {
+					set mark($i) 1
+				}
+			}
+		}
+
+		proc adapt_classtool_mark_all_classes { } {
+			global mark class nfiles
+			for { set i 1 } { $i <= $nfiles } { incr i } {
+				if { $class($i) != "" } {
+					set mark($i) 1
+				}
+			}
+		}
 	
 		# adapt_classification_tool [
 
@@ -1990,9 +2035,11 @@ proc atris_init { } {
 
 		# Menubar
 		menu $w.mb.file
+		menu $w.mb.utility
 		menu $w.mb.options
 
 		$w.mb add cascade -label "File" -underline 0 -menu $w.mb.file
+		$w.mb add cascade -label "Utilities" -underline 0 -menu $w.mb.utility
 		$w.mb add cascade -label "Options" -underline 0 -menu $w.mb.options
 
 		$w.mb.file add command -label "Load Classification Data" -underline 0 \
@@ -2006,6 +2053,13 @@ proc atris_init { } {
 			-command adapt_classtool_command_exp_codes
 		$w.mb.file add separator
 		$w.mb.file add command -label "Close" -underline 0 -command { destroy .adclasstool }
+
+		$w.mb.utility add command -label "Mark all classified images" -underline 5 \
+			-command adapt_classtool_mark_all_classes
+		$w.mb.utility add command -label "Mark images with a specific classification" -underline 5 \
+			-command adapt_classtool_ask_mark_class
+		$w.mb.utility add command -label "Clear all marks" -underline 0 \
+			-command clear_marks
 
 		$w.mb.options add checkbutton -label "Show classification editing palette" -underline 0 \
 			-onvalue 1 -offvalue 0 -variable adapt_classtool_cname_palette
@@ -2282,6 +2336,9 @@ menu .mb.zoom
 
 .mb.options add checkbutton -label "Display Image File Name" -underline 14 -onvalue 1 \
 	-offvalue 0 -variable show_fname -command { show_img $ci }
+
+.mb.options add checkbutton -label "Step through only marked images" -underline 21 \
+	-onvalue 1 -offvalue 0 -variable step_marked
 
 .mb.options add separator
 
