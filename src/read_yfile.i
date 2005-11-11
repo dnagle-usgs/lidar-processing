@@ -672,7 +672,7 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
   return data;
 }
   
-func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, delimit=, zclip=, pstruc=, rn=, soe=, noheader=, latlon=, zone=, ESRI=) {
+func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, delimit=, zclip=, pstruc=, rn=, soe=, noheader=, latlon=, zone=, ESRI=, footer=) {
   /* DOCUMENT this function writes out an ascii file containing x,y,z,intensity information.
     amar nayegandhi 04/25/02
     Keywords:
@@ -693,12 +693,14 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
     latlon= set to 1 to convert xy locations to latlon (from utm)
     zone = utm zone number (if not set it will check for variable curzone). Reqd only if latlon=1
     ESRI = Forces ESRI compatibility. Removes ()'s from header and forces header = indx = 1
+    footer = "set to a string to be the last line in the output file"
     modified 12/30/02 amar nayegandhi to :
       write out x,y,z (first surface elevation) data for type=1
       to split at 1 million points and write to another file
     modified 01/30/03 to optionally split at 1 million points
     modified 10/06/03 to add rn and soe and correct the output format for different delimiters.
     modified 10/09/03 to add latlon conversion capability
+    
     */
 
   extern curzone
@@ -929,6 +931,9 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
 
     if ( (i % 1000) == 0 ) edfrstat, i, numberof(data_arr);
   } 
+ }
+ if (footer) {
+  write, f, footer;
  }
  close, f;
 
