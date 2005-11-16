@@ -1043,7 +1043,7 @@ proc archive_save_marked { type } {
 						exec ls -1 > filelist; 
 						exec tar -cvf $sf  -T filelist --exclude filelist;
 					} elseif {[string equal "zip" $type]} {
-						eval exec zip $sf [glob *.jpg] *.gga;
+						eval exec zip $sf [glob *.{jpg,gga}];
 					}
 
 
