@@ -251,7 +251,10 @@ set idxfn [ file join $path index.kml ]
 set idxof [ open $idxfn "w" ]
 
 open_status
-
+if { $total_files == 0 } { 
+	puts "No files selected"
+	exit 0
+}
 puts $idxof [ kmlheader ]
    foreach fn $fnlst {
       incr i
