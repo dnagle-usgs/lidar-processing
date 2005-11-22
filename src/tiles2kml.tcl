@@ -216,10 +216,15 @@ set rv [ tk_messageBox 	 -icon info \
 }
 
 proc sign_off {} {
-   tk_messageBox \
+   set rv [ tk_messageBox \
    -icon info \
    -type ok   \
-   -message {All done.}
+   -message {All done.} ]
+   return $rv
+}
+
+proc pause { {msg "Continue"} } {
+	tk_messageBox -type ok -message $msg
 }
 
 proc open_status {} {
@@ -230,20 +235,34 @@ proc open_status {} {
    wm deiconify .
 }
 
+proc get_file_list {} {
+	set dir F:/data/projects/Katrina/dems/tmp/transparent/
+	set cygwin [ regexp {(cygwin)} [info nameofexecutable] ]
+	if { $cygwin } {
+		set dir [ tk_chooseDirectory -initialdir $dir ]	
+		set fnlst [lsort -increasing -unique [ glob -type f -directory $dir -- *.png *.PNG ] ]
+	} else {
+set fnlst [ tk_getOpenFile \
+         -filetypes {{ {png files} {*.png *.PNG } }}  \
+         -multiple 1 \
+         -initialdir $dir  ]
+}
+ return $fnlst
+}
+
 
 ####################################################
 # main starts here.
 ####################################################
+
 package require Tk
 wm withdraw .
 #source nav.tcl
+#console show
+puts "tcl_version: $tcl_version"
 
 sign_on
-set fnlst [ tk_getOpenFile \
-         -filetypes {{ {png files} {*.png *.PNG } }}  \
-         -multiple 1 \
-         -initialdir F:/data/projects/Katrina/dems/tmp/transparent/  ]
-
+set fnlst [ get_file_list ]
 set total_files [ llength $fnlst ]
 set   i 0
 set path  [ file dirname [ lindex $fnlst 0 ] ]
@@ -252,9 +271,13 @@ set idxof [ open $idxfn "w" ]
 
 open_status
 if { $total_files == 0 } { 
-	puts "No files selected"
+	pause {No files Selected}
 	exit 0
 }
+
+.lf configure -text "Status: $total_files files selected"
+update
+
 puts $idxof [ kmlheader ]
    foreach fn $fnlst {
       incr i
@@ -267,6 +290,4 @@ puts $idxof [ kmlfooter ]
 close $idxof
 .lf.state configure -text "Process completed, last file:[file tail $fn]"
 sign_off
-
 exit 0
-
