@@ -18,6 +18,7 @@ local adf_i;
 		adf_interp_data
 		adf_output
 		adf_input
+		adf_input_image_files
 		adf_input_vessel_track
 
 	Functions for working with Hypack files:
@@ -28,6 +29,11 @@ local adf_i;
 		hypack_determine_cap_adj
 		hypack_raw_time_diff
 		hypack_raw_adjust_time
+	
+	Functions for working with other files:
+
+		convert_adf_to_asc
+		export_track_asc
 
 	Functions for working JPEG EXIF data:
 
@@ -550,6 +556,56 @@ func adf_input(ifname, section) {
 	return output;
 }
 
+func adf_input_image_files(fname, &in, &d) {
+/* DOCUMENT adf_input_image_files(fname, &in, &d)
+	
+	Reads an ADF file and returns the image file data.
+
+	Parameter:
+
+		fname: The full path and file name to read.
+
+	Output parameters:
+
+		&in: The file names (an array of strings).
+
+		&d: The GPS data (an array of ADF_DATA).
+	
+	Returns:
+		
+		n/a
+*/
+	f = open(fname, "r");
+
+	cont = 1;
+	while((line = rdline(f)) && cont) {
+		key = ""; lcnt = 0;
+		sread, line, key, lcnt;
+
+		if(key == "image-files") {
+			tn = array(string, lcnt);
+			d = array(ADF_DATA, lcnt);
+			hms = lat = lon = depth = heading = heave = rll = pitch = array(double, lcnt);
+			read, f, in, hms, lat, lon, depth, heading, heave, rll, pitch;
+			d.hms = hms;
+			d.lat = lat;
+			d.lon = lon;
+			d.depth = depth;
+			d.heading = heading;
+			d.heave = heave;
+			d.roll = rll;
+			d.pitch = pitch;
+			cont = 0;
+		} else {
+			for(i = 1; i <= lcnt; i++) {
+				line = rdline(f);
+			}
+		}
+	}
+
+	close, f;
+}
+
 func adf_input_vessel_track(fname, &tn, &d) {
 /* DOCUMENT adf_input_vessel_track(fname, &tn, &d)
 	
@@ -1012,6 +1068,88 @@ func hypack_raw_adjust_time(dat, h, m, s) {
 	d = dat;
 	d.time = sod2hms(hms2sod(d.time) + (h * 60 + m) * 60 + s, noary=1);
 	return d;
+}
+
+func convert_adf_to_asc(ifname, date, type, ofname) {
+/* DOCUMENT convert_adf_to_asc(ifname, date, type, ofname)
+
+	Extracts data from an ADF file and writes to an ASC file.
+
+	Parameter:
+
+		ifname: An array of ADF files. (Full path and file names.)
+
+		date: An array of the dates that correspond to each ADF file. Should
+			be an array of integers formatted as YYYYMMDD.
+
+		type: An array of strings that indicate what kind of data should be
+			used from each ADF file. This should be either "vessel-track" or
+			"image-files"; any other value will cause the ADF file to be
+			disregarded.
+
+		ofname: The full path and file name of the ASC file to create.
+	
+	Output parameters:
+
+		n/a
+
+	Returns:
+
+		n/a
+*/
+	data = dates = [];
+	for(i = 1; i <= numberof(ifname); i++) {
+		a = b = [];
+		if("vessel-track" == type) {
+			adf_input_vessel_track, ifname(i), a, b;
+		} else if("image-files" == type) {
+			adf_input_image_files, ifname(i), a, b;
+		}
+		c = array(date(i), numberof(b));
+		grow, data, b;
+		grow, dates, c;
+	}
+
+	utm = fll2utm(dm2deg(data.lat), dm2deg(data.lon));
+	
+	export_track_asc, ofname, utm(2,), utm(1,), int(utm(3,)), int(data.hms), dates;
+}
+
+func export_track_asc(ofname, east, north, zone, time, date) {
+/* DOCUMENT export_track_asc(ofname, east, north, zone, time, date)
+
+	Outputs a vessel track (or other sequence of similar data) to an ASC file.
+	Each of the input parameters must be of the same array size.
+
+	Parameter:
+
+		ofname: The full path and file name to where the data will be saved. This
+			file should have an ".asc" extension.
+
+		east: The eastings of the data, in UTM. Array of doubles.
+
+		north: The northings of the data, in UTM. Array of doubles.
+
+		zone: The zones of the data, in UTM. Array of integers.
+
+		time: The times in HHMMSS.SSS of the data. Array of integers.
+
+		data: The dates in YYYYMMDD of the data. Array of integers.
+	
+	Output parameters:
+
+		n/a
+
+	Returns:
+
+		n/a
+*/
+	f = open(ofname, "w");
+	write, f, format="%s\n", "FID,Easting,Northing,Zone,Time,Date";
+	fid = indgen(1:numberof(east));
+	write, f, format="%d,%.7f,%.7f,%d,%d,%d\n",
+		fid, east, north, zone, time, date;
+	close, f;
 }
 
 func exif_extract_time(dir, &fn, &sod) {
