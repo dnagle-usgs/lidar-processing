@@ -4,7 +4,6 @@
 exec wish "$0" ${1+"$@"}
 
 
-lappend auto_path "c:/cygwin/home/wright/lidar-processing/src/tcllib"
 ####################################################
 #
 #   ***** Be sure to do auto_mkindex dir  *****
@@ -236,11 +235,15 @@ proc open_status {} {
 }
 
 proc get_file_list {} {
+	set rv [tk_dialog .y \
+		Title "How do you want to select the files for processing?" \
+		questhead 0 \
+		"Entire directory" \
+		"Just a few selected files" ]
 	set dir F:/data/projects/Katrina/dems/tmp/transparent/
-	set cygwin [ regexp {(cygwin)} [info nameofexecutable] ]
-	if { $cygwin } {
+	if { $rv == 0 } {
 		set dir [ tk_chooseDirectory -initialdir $dir ]	
-		set fnlst [lsort -increasing -unique [ glob -type f -directory $dir -- *.png *.PNG ] ]
+		set fnlst [lsort -increasing -unique [ glob -nocomplain -type f -directory $dir -- *.png *.PNG ] ]
 	} else {
 set fnlst [ tk_getOpenFile \
          -filetypes {{ {png files} {*.png *.PNG } }}  \
@@ -254,12 +257,14 @@ set fnlst [ tk_getOpenFile \
 ####################################################
 # main starts here.
 ####################################################
+set debug 0
+if { $debug} { console show }
 
+lappend auto_path "[file join [ file dirname [info script]] tcllib ]"
 package require Tk
 wm withdraw .
-#source nav.tcl
-#console show
-puts "tcl_version: $tcl_version"
+if {$debug} { puts "tcl_version: $tcl_version" }
+
 
 sign_on
 set fnlst [ get_file_list ]
@@ -268,10 +273,12 @@ set   i 0
 set path  [ file dirname [ lindex $fnlst 0 ] ]
 set idxfn [ file join $path index.kml ]
 set idxof [ open $idxfn "w" ]
+set cvtfn [ file join $path Mktransparent.sh ]
+set cvtof [ open $cvtfn "w" ]
 
 open_status
 if { $total_files == 0 } { 
-	pause {No files Selected}
+#	pause {No files Selected}
 	exit 0
 }
 
@@ -283,6 +290,8 @@ puts $idxof [ kmlheader ]
       incr i
       .lf configure -text "Status: ($i of $total_files)"
       .lf.state configure -text "Processing: [file tail $fn]"
+ 	puts $cvtof "echo -e -n \"\\r$i of $total_files\""
+ 	puts $cvtof "convert -transparent \"#ffffce\" [file tail $fn] [file tail $fn]"
       update
       puts $idxof [placeMark $fn]
    }
