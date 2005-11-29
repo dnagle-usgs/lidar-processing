@@ -260,7 +260,10 @@ set fnlst [ tk_getOpenFile \
 set debug 0
 if { $debug} { console show }
 
-lappend auto_path "[file join [ file dirname [info script]] tcllib ]"
+lappend auto_path "[file join [ file dirname [info script]] ../src/tcllib  ]"
+lappend auto_path "[file join [ file dirname [info script]] ../tcllib  ]"
+lappend auto_path "[file join [ file dirname [info script]] tcllib  ]"
+lappend auto_path "[file join [ file dirname [info script]] ]"
 package require Tk
 wm withdraw .
 if {$debug} { puts "tcl_version: $tcl_version" }
