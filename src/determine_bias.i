@@ -1,9 +1,40 @@
 //This document contains functions that can determine bias corrections 
+// $Id$
+// Original: ?????
+//  Added guessrollbias, WW/RM 2005/11/29
 require, "qaqc_fns.i"
 require, "compare_transects.i"
 
 func updatebias {
 	tkcmd, swrite(format="set bias %f", ops_conf.roll_bias);
+}
+
+func guessrollbias {
+/* DOCUMENT 
+  Help guess the best roll bias value.   Assumes you already have:
+   1) a transect in current window
+  
+   Click on a point on the left side of the transect data and then
+   on a point on the right side of the transect that you think is 
+   actually at the same elevation.
+
+   Returns:
+     Prints out suggested roll bias values and stats.
+
+
+*/
+ xy = (mouse() - mouse()); 
+ if ( xy(1) == 0.0 ) {
+    write, "No bias correction required!"
+    return
+ }
+ da = atan( xy(2)/xy(1) )*rad2deg                         
+ write,format="Elevation error due to roll bias error: %4.1f cm over %5.1f meters\n", xy(2)*100.0, abs(xy(1))
+ write,format="Current ops_conf.roll_bias = %5.3f, Estimated roll bias error: %6.3f deg\n", 
+   ops_conf.roll_bias, da
+ write,format="Try setting ops_conf.roll_bias = %5.3f or %5.3f\n", 
+   ops_conf.roll_bias + da, 
+   ops_conf.roll_bias - da
 }
 
 func selgoodflightlines(data, win=) {
