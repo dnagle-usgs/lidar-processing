@@ -3133,6 +3133,6 @@ proc limits_tool { } {
 }
 
 source "$src_path/bathctl.ytk"; 
-.l1wid.mb.options entryconfigure 3 -state disabled
+#.l1wid.mb.options entryconfigure 3 -state disabled
 
 
