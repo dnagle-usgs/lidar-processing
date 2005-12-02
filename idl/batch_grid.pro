@@ -1,15 +1,17 @@
 pro batch_grid, path, filename=filename, rcfmode=rcfmode, cell=cell, mode=mode, $
 	z_grid_max = z_grid_max, z_grid_min=z_grid_min, area_threshold=area_threshold, $
 	missing = missing, zbuf_plot=zbuf_plot, save_zbuf_plots = save_zbuf_plots, $
-	zbuf_scale=zbuf_scale, $
+	zbuf_scale=zbuf_scale, maxelv = maxelv, minelv = minelv, $
 	plot_grids = plot_grids, max_elv_limit=max_elv_limit, min_elv_limit = min_elv_limit, $
 	scale_down_by = scale_down_by, save_grid_plots = save_grid_plots, $
-	write_geotiffs=write_geotiffs, utmzone = utmzone, datamode=datamode
+	write_geotiffs=write_geotiffs, GE_plots=GE_plots, utmzone = utmzone, datamode=datamode
    ; this procedure does gridding in a batch mode
    ; Set datamode to run batch grid on a set of files that are not divided into the 
    ;    traditional index/data tile format.  Setting this will override and disable the
    ;    creation of gridplots and zbuf plots however. To use the traditional batch grid
    ;    function, do not set datamode at all.
+   ; added 11/14/2005:
+   ; GE_plots = GE_plots set to 1 to make maps for Google Earth 
    ; amar nayegandhi 05/14/03
 
 start_time = systime(1)
@@ -34,6 +36,7 @@ endif else begin
     fn_arr = path+filename
 endelse
 
+;noaa = read_noaa_records('/home/anayegan/lidar-processing/noaa/bathy_data_keys_0_40m_min_max.txt')
 print, 'Number of files to grid: '+strcompress(string(n_elements(fn_arr)))
 for i = 0, n_elements(fn_arr)-1 do begin
    ;read one file at a time
@@ -69,11 +72,13 @@ for i = 0, n_elements(fn_arr)-1 do begin
    endelse
 
    ptr_free, data_arr
+   
+  ; add_noaa_to_eaarl_grid, zgrid=zgrid, xgrid=xgrid, ygrid=ygrid, noaa=noaa
 
 ; Make sure grid_eaarl_data returned a grid..
 
    if not (keyword_set(xgrid)) then begin
-	print, "No grids found, continueing to next file..."
+	print, "No grids found, continuing to next file..."
 	colin = 0
 	continue
    endif
@@ -112,10 +117,12 @@ for i = 0, n_elements(fn_arr)-1 do begin
 	  if (mode eq 3) then $
 	    pfname = path+(strsplit(fname_arr, '.', /extract))[0]+"_be_zbuf_gridplot.tif"
 	  plot_zbuf_eaarl_grids, xgrid, ygrid, zgrid, max_elv_limit=max_elv_limit, $
-		min_elv_limit = min_elv_limit, save_grid_plot = pfname, num=zbuf_scale
+		min_elv_limit = min_elv_limit, save_grid_plot = pfname, num=zbuf_scale, $
+		minelv = minelv, maxelv = maxelv
 	endif else begin
 	    plot_zbuf_eaarl_grids, xgrid, ygrid, zgrid, max_elv_limit=max_elv_limit, $
-			min_elv_limit = min_elv_limit, num=zbuf_scale
+			min_elv_limit = min_elv_limit, num=zbuf_scale, $
+			minelv = minelv, maxelv = maxelv
 	endelse
    endif
    endelse
@@ -133,6 +140,21 @@ for i = 0, n_elements(fn_arr)-1 do begin
 	write_geotiff, tfname, xgrid, ygrid, zgrid, utmzone, cell
    endif
 
+  if (keyword_set(GE_plots)) then begin
+	; make plots for Google Earth
+	if (not keyword_set(GE_scale)) then GE_scale=2
+	if (not keyword_set(filetype)) then filetype="png"
+	if (mode eq 1) then $
+	    pfname = path+(strsplit(fname_arr, '.', /extract))[0]+"_fs_GE."+filetype
+	if (mode eq 2) then $
+	    pfname = path+(strsplit(fname_arr, '.', /extract))[0]+"_ba_GE."+filetype
+	if (mode eq 3) then $
+	    pfname = path+(strsplit(fname_arr, '.', /extract))[0]+"_be_GE."+filetype
+	make_GE_plots, xgrid=xgrid, ygrid=ygrid, zgrid=zgrid, max_elv_limit=max_elv_limit, $
+		min_elv_limit = min_elv_limit, save_grid_plot = pfname, num=GE_scale, $
+		minelv = minelv, maxelv = maxelv, filetype=filetype, topmax=1, botmin=1 
+  endif
+
 endfor
 
 print, "Batch Gridding Complete.  Adios!"
@@ -141,4 +163,35 @@ run_time = (end_time - start_time)/60
 print, 'Elapsed Time in minutes = ',strcompress(run_time, /remove_all)
 
 return
+end
+
+pro batch_make_GE_plots, path, filename=filename, searchstr=searchstr, $ 
+	max_elv_limit=max_elv_limit, min_elv_limit = min_elv_limit, num=num, $
+	save_grid_plot=save_grid_plot, maxelv = maxelv, minelv = minelv, filetype=filetype,$
+	topmax=topmax, botmin=botmin, settrans=settrans
+
+; amar nayegandhi 11/16/2005
+
+if (not keyword_set(searchstr)) then searchstr="*geotif*.tif"
+if (not keyword_set(filename))  then begin
+  spawn, 'find '+path+' -name "'+searchstr+'" ', fn_arr1
+endif else begin
+  fn_arr1 = path+filename
+endelse
+
+nfn = n_elements(fn_arr1)
+
+print, 'Number of files to convert to GE plots: '+strcompress(string(nfn))
+for i = 0, nfn-1 do begin
+   ;read one file at a time
+   print, "converting file "+strcompress(string(i+1))+" of "+strcompress(string(nfn)) 
+   make_GE_plots, geotif_file=fn_arr1(i), $
+   	max_elv_limit=max_elv_limit, min_elv_limit = min_elv_limit, num=num, $
+	save_grid_plot=save_grid_plot, maxelv = maxelv, minelv = minelv, filetype=filetype,$
+	topmax=topmax, botmin=botmin, settrans=settrans
+endfor
+   
+print, "Batch conversion complete."
+
+return 
 end
