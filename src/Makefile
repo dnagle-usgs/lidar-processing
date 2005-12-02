@@ -99,13 +99,40 @@ BIN = ../bin
 ../bin/shapefile_filter:	shapefile_filter.pl
 	install -m uog+rx  $<	$@
 
+<<<<<<< destination
+=======
+../bin/showdays:	showdays
+	install -m uog+rx  $<	$@
+
+../bin/mk_opsconf:	mk_opsconf
+	install -m uog+rx  $<	$@
+
+../bin/wrsync:	wrsync
+	install -m uog+rx  $<	$@
+
+# It is very hard to make make make a #
+../bin/comment:	comment
+	install -m uog+rx  $<	$@
+	ln ../bin/comment ../bin/\#
+
+>>>>>>> evolving
 ###############################################################################
 # all  Builds all the "C" programs in this directory that need it.  You can force
 ###############################################################################
+<<<<<<< destination
 all:		../bin/efdb ../bin/gga2bin ../bin/mkidx ../bin/pnav2ybin \
 		../bin/tans2bin ../bin/rdmars ../bin/dmars2iex           \
 		../bin/dmarscat2iex ../bin/checksys                      \
 		../bin/shapefile_filter
+=======
+all:		../bin/efdb ../bin/erange ../bin/gga2bin ../bin/mkidx    \
+		../bin/pnav2ybin ../bin/tans2bin ../bin/fix-dos-crlf-ash \
+		../bin/rdmars ../bin/dmars2iex ../bin/dmarscat2iex       \
+		../bin/check_to_archive ../bin/checksys                  \
+		../bin/shapefile_filter                                  \
+		../bin/showdays ../bin/mk_opsconf ../bin/wrsync \
+		../bin/comment
+>>>>>>> evolving
 
 
 ###############################################################################
