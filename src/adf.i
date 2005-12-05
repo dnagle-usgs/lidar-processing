@@ -586,6 +586,7 @@ func adf_input_image_files(fname, &in, &d) {
 			tn = array(string, lcnt);
 			d = array(ADF_DATA, lcnt);
 			hms = lat = lon = depth = heading = heave = rll = pitch = array(double, lcnt);
+			in = array(string, lcnt);
 			read, f, in, hms, lat, lon, depth, heading, heave, rll, pitch;
 			d.hms = hms;
 			d.lat = lat;
