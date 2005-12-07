@@ -79,9 +79,11 @@ pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygri
   endcase
 
   if (not keyword_set(datamode)) then begin
-     zgrid = zgrid(100:2099, 100:2099)
-     xgrid = xgrid(100:2099)
-     ygrid = ygrid(100:2099)
+     c1 = 100/cell
+     c2 = 2000/cell + 100/cell 
+     zgrid = zgrid(c1:c2, c1:c2)
+     xgrid = xgrid(c1:c2)
+     ygrid = ygrid(c1:c2)
   endif
 
 return
@@ -330,7 +332,8 @@ pro make_GE_plots, xgrid=xgrid, ygrid=ygrid, zgrid=zgrid, geotif_file=geotif_fil
     min_elv = minelv
   endelse
 
-  xsize = 2000/num & ysize=2000/num
+  xsize = 2000/(celldim*num) + 1 
+  ysize=2000/(celldim*num) + 1
   device, set_resolution=[xsize,ysize]
 
   if (keyword_set (topmax)) then begin
@@ -345,7 +348,7 @@ pro make_GE_plots, xgrid=xgrid, ygrid=ygrid, zgrid=zgrid, geotif_file=geotif_fil
     if count ne 0 then zgrid[idx[idxmin]] = min_elv
   endif
 
-  zgrid_i = bytscl(zgrid, max=max_elv, min=min_elv, top=255)
+  zgrid_i = bytscl(zgrid, max=max_elv+0.1, min=min_elv-0.1, top=255)
 
   ; make missing values white
   if (idx1[0] ne -1) then zgrid_i[idx1] = 255
