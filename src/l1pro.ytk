@@ -2518,7 +2518,7 @@ proc replace_proc {} {
 		      exp_send "$keep_var = $curvar;\r"
 		      #For eval purposes, success stores if getPoly_add_buffer command was successful
 		      #The yorick variables buf_points, temp_rgn, and workdata are made
-		      exp_send "success = getPoly_add_buffer($rcf_buf_rgn, origdata=$origvar, window=$win_no);\r"
+		      exp_send "success = getPoly_add_buffer($rcf_buf_rgn, origdata=$origvar, windw=$win_no);\r"
 		      expect ">"
 		   }
 		} elseif {$defr == 2} {
