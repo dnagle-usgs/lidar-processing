@@ -1071,8 +1071,8 @@ func hypack_raw_adjust_time(dat, h, m, s) {
 	return d;
 }
 
-func convert_adf_to_asc(ifname, date, type, ofname) {
-/* DOCUMENT convert_adf_to_asc(ifname, date, type, ofname)
+func convert_adf_to_asc(ifname, date, type, ofname, sod=) {
+/* DOCUMENT convert_adf_to_asc(ifname, date, type, ofname, sod=)
 
 	Extracts data from an ADF file and writes to an ASC file.
 
@@ -1089,6 +1089,8 @@ func convert_adf_to_asc(ifname, date, type, ofname) {
 			disregarded.
 
 		ofname: The full path and file name of the ASC file to create.
+
+		sod: Set this to add the seconds of the day column to the output file
 	
 	Output parameters:
 
@@ -1112,11 +1114,15 @@ func convert_adf_to_asc(ifname, date, type, ofname) {
 	}
 
 	utm = fll2utm(dm2deg(data.lat), dm2deg(data.lon));
-	
-	export_track_asc, ofname, utm(2,), utm(1,), int(utm(3,)), int(data.hms), dates;
+	if (is_array(sod)) {
+	   sod_1 = hms2sod(data.hms);
+	   export_track_asc, ofname, utm(2,), utm(1,), int(utm(3,)), int(data.hms), dates, sod=sod_1;
+	}else{
+	   export_track_asc, ofname, utm(2,), utm(1,), int(utm(3,)), int(data.hms), dates;
+	}
 }
 
-func export_track_asc(ofname, east, north, zone, time, date) {
+func export_track_asc(ofname, east, north, zone, time, date, sod=) {
 /* DOCUMENT export_track_asc(ofname, east, north, zone, time, date)
 
 	Outputs a vessel track (or other sequence of similar data) to an ASC file.
@@ -1136,6 +1142,8 @@ func export_track_asc(ofname, east, north, zone, time, date) {
 		time: The times in HHMMSS.SSS of the data. Array of integers.
 
 		data: The dates in YYYYMMDD of the data. Array of integers.
+		
+		sod:  Optional.  This is for the seconds of the day
 	
 	Output parameters:
 
@@ -1146,10 +1154,18 @@ func export_track_asc(ofname, east, north, zone, time, date) {
 		n/a
 */
 	f = open(ofname, "w");
-	write, f, format="%s\n", "FID,Easting,Northing,Zone,Time,Date";
+	if (is_array(sod)) {
+	    write, f, format="%s\n", "FID,Easting,Northing,Zone,Time,Date,SOD";
+	}else{
+	    write, f, format="%s\n", "FID,Easting,Northing,Zone,Time,Date";
+	}
 	fid = indgen(1:numberof(east));
-	write, f, format="%d,%.7f,%.7f,%d,%d,%d\n",
+	if (is_array(sod)) {
+	    write, f, format="%d,%.7f,%.7f,%d,%d,%d,%d\n", fid, east, north, zone, time, date, sod;
+	}else{
+	    write, f, format="%d,%.7f,%.7f,%d,%d,%d\n",
 		fid, east, north, zone, time, date;
+	}
 	close, f;
 }
 
