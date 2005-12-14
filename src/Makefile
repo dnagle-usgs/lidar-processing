@@ -110,6 +110,9 @@ BIN = ../bin
 ../bin/wrsync:	wrsync
 	install -m uog+rx  $<	$@
 
+../bin/mktrajfiles:	mktrajfiles
+	install -m uog+rx  $<	$@
+
 # It is very hard to make make make a #
 ../bin/comment:	comment
 	install -m uog+rx  $<	$@
@@ -130,7 +133,8 @@ all:		../bin/efdb ../bin/erange ../bin/gga2bin ../bin/mkidx    \
 		../bin/rdmars ../bin/dmars2iex ../bin/dmarscat2iex       \
 		../bin/check_to_archive ../bin/checksys                  \
 		../bin/shapefile_filter                                  \
-		../bin/showdays ../bin/mk_opsconf ../bin/wrsync \
+		../bin/showdays ../bin/mk_opsconf ../bin/wrsync          \
+		../bin/mktrajfiles                                       \
 		../bin/comment
 >>>>>>> evolving
 

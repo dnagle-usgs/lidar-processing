@@ -1,0 +1,120 @@
+#!/usr/bin/perl -w
+
+# $Id$
+# $Source$
+# This should be run from a YYYY/trajectories directory.
+# It will then take each zip file and look for the proper place to put it.
+
+
+require 'newgetopt.pl' || die "Unable to require newgetopt.pl\n";
+
+undef $opt_help;    # just to quiet the warning message
+undef $junk;        # same
+undef $opt_where;   # same
+
+sub showusage {
+  print <<EOF;
+
+  $0
+
+  run from a YYYY/trajectories directory.
+  It finds where each zip file should be unzipped, unzips it, and runs pnav2ybin
+  as necessary.
+
+  Each zip file is displayed as it is processed, regardless of the options used.
+
+  -norun    : don't execute anything, just show what would have been done.
+  -verbose  : show more diagnostics
+  -where    : force showing where it'll put the file, even if already installed
+
+EOF
+  exit(0);
+}
+
+
+sub get_cli_opts {
+  &showusage unless
+  &NGetOpt(
+  "help",     # help
+  "norun",    # don't execute anything, just show what would have been done.
+  "verbose",  # show more diagnostics
+  "where",    # force showing where it'll put the file, even if already installed
+  "myint=i",
+  "myfloat=f",
+  );
+  &showusage() if defined($opt_help);
+}
+
+
+############################################################
+
+&get_cli_opts();
+
+printf("myint   = %d\n", $opt_myint  ) if ( $opt_myint  );
+printf("myfloat = %f\n", $opt_myfloat) if ( $opt_myfloat);
+
+$LS_CMD = "ls *.zip|";
+
+
+############################################################
+
+$startdir = `pwd`;
+chop $startdir;
+
+open(LS, $LS_CMD) || die("Unable to run $LS_CMD\n");
+while ( $file = <LS> ) {
+  chop $file;
+
+  ($m, $d, $y, $junk) = split(/-/, $file, 4);
+
+  $y =~ s/[a-zA-Z]//g;   # force it into being a numeric when VR misses a "-"
+  $y += 2000 if ( $y < 20 );
+  $y += 1900 if ( $y < 100);
+
+  $YYYYMMDD = sprintf("%04d%02d%02d", $y, $m, $d);
+
+  printf("%s\t%s\n", $YYYYMMDD, $file);
+
+  open(FIND1, "find .. -name $YYYYMMDD|") || die("Unable to run find1\n");
+  while ( $dir = <FIND1> ) {
+    chop $dir;
+    $tmp = $dir . "/trajectories";
+    $dir = $tmp;
+
+    printf("\t%s\tdestination\n", $dir) if ( $opt_where );
+    if ( ! -d $dir ) {
+      printf("\t%s\tdestination\n", $dir) if ( ! $opt_where );  # don't show twice
+      printf("$dir does not exist, creating\n");
+      mkdir ( $dir ) if ( ! $opt_norun );
+    }
+    chdir($dir );
+
+    ###### Leave the zip file where it is, but expand it in the new location.
+
+    $zipdir =  $file;
+    $zipdir =~ s/\.zip//;
+
+    if ( ! -d $zipdir ) {
+      printf("\tmaking %s/%s\n", $dir,$zipdir);
+      mkdir ( $zipdir ) if ( ! $opt_norun );
+      chdir ( $zipdir );
+      printf("\tunzip ../%s\n", $zipdir) if ( $opt_verbose );
+      system("unzip $startdir/" . $zipdir) if ( ! $opt_norun );
+
+      # Check to see if this was a gps trajectory
+      open(FIND2, "find . -name  \"\*cmb-pnav.txt\"|")
+        || die ("Unable to run find2\n");
+      while ( $txt = <FIND2> ) {
+        chop $txt;
+        printf("\tpnav2ybin $txt\n")  if ( $opt_verbose );
+        system("pnav2ybin $txt") if ( ! $opt_norun );
+      }
+    }
+
+    chdir ($startdir);     # go back to our starting directory
+
+  }
+  close (FIND1);
+
+}
+close (LS);
