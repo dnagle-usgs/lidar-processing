@@ -196,6 +196,7 @@ func show_grid_location(w,m) {
           [9, 10, 11, 12],
           [13,14, 15, 16]
          ];
+  window, w;
   if ( is_void(m) ) 
       m = mouse();
   tilefname = set_tile_filename(m, nodata=1);
