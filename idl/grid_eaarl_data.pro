@@ -241,7 +241,8 @@ end
 pro make_GE_plots, xgrid=xgrid, ygrid=ygrid, zgrid=zgrid, geotif_file=geotif_file, $
 		max_elv_limit=max_elv_limit, min_elv_limit = min_elv_limit, num=num, $
 		save_grid_plot=save_grid_plot, maxelv = maxelv, minelv = minelv, filetype=filetype,$
-		topmax=topmax, botmin=botmin, settrans=settrans
+		topmax=topmax, botmin=botmin, settrans=settrans, $
+		colorbar_plot=colorbar_plot
   ; this procedure will make a color coded plot of the grid without any boundary lines and coordinates
   ; this procedure uses the Z Buffer... no actual image will be plotted on the window
   ; very useful for making gifs that will be used in Google Earth
@@ -262,6 +263,7 @@ pro make_GE_plots, xgrid=xgrid, ygrid=ygrid, zgrid=zgrid, geotif_file=geotif_fil
   ; topmax = set to 1 to set the elevations values beyond maxelv = maxelv
   ; botmin = set to 1 to set the elvations lower than minelv = minelv
   ; settrans = set to 1 to include transparency in gif images.  Transparency will take place only when missing value is greater than 5% of image.
+  ; colorbar_plot = set to 1 to write out a file that contains the colorbar with min and max values
 
 
   ; set current device to z buffer
@@ -287,7 +289,7 @@ pro make_GE_plots, xgrid=xgrid, ygrid=ygrid, zgrid=zgrid, geotif_file=geotif_fil
   if (not keyword_set (max_elv_limit)) then max_elv_limit = 100000L
   if (not keyword_set (min_elv_limit)) then min_elv_limit = -100000L 
   if (not keyword_set (num)) then num = 1
-  if (not keyword_set (filetype)) then filetype = "gif"
+  if (not keyword_set (filetype)) then filetype = "png"
 
   if (keyword_set (xgrid)) then begin
     grid_we_limit = xgrid[0]
@@ -385,8 +387,17 @@ pro make_GE_plots, xgrid=xgrid, ygrid=ygrid, zgrid=zgrid, geotif_file=geotif_fil
     		endif
 	   endif
 	  end
-    "jpg": write_jpg, outfile, tvrd(), r,g,b
-    "tif": write_tif, outfile, tvrd(/order), red=r,green=g,blue=b
+    "jpg": begin
+	   img = tvrd()
+	   ximg = n_elements(img(*,0))
+	   yimg = n_elements(img(0,*))
+	   imgRGB = bytarr(3, ximg, yimg)
+	   imgRGB[0, *, *] = r[img]  
+	   imgRGB[1, *, *] = g[img]
+	   imgRGB[2, *, *] = b[img]
+	   write_jpeg, outfile, imgRGB, true=1
+	   end
+    "tif": write_tiff, outfile, tvrd(/order), red=r,green=g,blue=b
     "png": begin
 	   write_png, outfile, tvrd(), r,g,b
 	   spawn, "convert -transparent gray100 "+ outfile+ " "+outfile
@@ -394,6 +405,12 @@ pro make_GE_plots, xgrid=xgrid, ygrid=ygrid, zgrid=zgrid, geotif_file=geotif_fil
   endcase
  
   set_plot, thisdevice
+
+  if (keyword_set(colorbar_plot)) then begin
+	; define file name
+	cb_outfile = strmid(geotif_file,0,file_ext_pos-1)+"_cb."+filetype
+	save_colorbar_plot, min_elv, max_elv, cb_outfile
+  endif
 
 return
 end

@@ -168,7 +168,7 @@ end
 pro batch_make_GE_plots, path, filename=filename, searchstr=searchstr, $ 
 	max_elv_limit=max_elv_limit, min_elv_limit = min_elv_limit, num=num, $
 	save_grid_plot=save_grid_plot, maxelv = maxelv, minelv = minelv, filetype=filetype,$
-	topmax=topmax, botmin=botmin, settrans=settrans
+	topmax=topmax, botmin=botmin, settrans=settrans, make_colorbar_plot=make_colorbar_plot
 
 ; amar nayegandhi 11/16/2005
 
@@ -188,7 +188,7 @@ for i = 0, nfn-1 do begin
    make_GE_plots, geotif_file=fn_arr1(i), $
    	max_elv_limit=max_elv_limit, min_elv_limit = min_elv_limit, num=num, $
 	save_grid_plot=save_grid_plot, maxelv = maxelv, minelv = minelv, filetype=filetype,$
-	topmax=topmax, botmin=botmin, settrans=settrans
+	topmax=topmax, botmin=botmin, settrans=settrans, make_colorbar_plot=make_colorbar_plot
 endfor
    
 print, "Batch conversion complete."
