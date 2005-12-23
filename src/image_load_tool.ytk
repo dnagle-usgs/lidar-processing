@@ -1,0 +1,283 @@
+
+exp_send "#include \"jpeg_support.i\"\n"
+
+proc ytk_image_load_tool { } {
+  
+	global imgftypes imgwldftypes img_win img_dofma img_winsize img_coords img_filename img_coords_exist imgwldfilename
+
+	set imgftypes {
+		{ {jpg}		{.jpg .jpeg} }
+		{ {png}		{.png} }
+		{ {gif}		{.gif} }
+		{ {tif}		{.tif .tiff} }
+		{ {All Files}	*		 }
+	}
+	set imgwldftypes {
+		{ {jpg world file}	{.jgw} }
+		{ {png world file}	{.pgw} }
+		{ {gif world file}	{.gfw} }
+		{ {tif world file}	{.tfw} }
+		{ {All Files}	*		 }
+	}
+
+	set lw .loadimage
+	set img_filename "~/"
+	set imgwldfilename "~/"
+	set img_win 6
+	set img_dofma 0
+	set img_coords_exist 0
+	set img_wld_file 0
+
+	array set img_coords { x0 0 y0 0 x1 0 y1 0 }
+	toplevel $lw
+	wm title $lw "Load Image in Yorick"
+
+	frame $lw.1;			# image filename
+	frame $lw.2;			# load / cancel
+	frame $lw.4;			# define image location
+	frame $lw.6;			# image world file location
+	frame $lw.3;			# image location
+	frame $lw.3.type
+	frame $lw.3.utmeast
+	frame $lw.3.utmnorth
+	LabelFrame $lw.5 -text "Yorick Window:" -justify left;	# yorick window, fma
+
+	LabelEntry $lw.1.filename  -width 30 -relief sunken -bd 3 \
+		-label "Image File Name: " -helptext "Enter image location here" \
+		-textvariable img_filename 
+	Button $lw.1.browse -text "Browse..." -width 10 -command {
+		global imgwldfilename
+		set lw .loadimage
+		set img_filename [ tk_getOpenFile -filetypes $imgftypes -defaultextension ".jpg" ]
+		if [ file exists $img_filename ] {
+			set rtn [ search_world_file  $img_filename  ]
+			if { $img_wld_file == 1 } {
+				pack forget $lw.2 $lw.3
+				pack $lw.6 $lw.2 -pady 4
+			} 
+		}
+	}
+
+	Button $lw.2.ok -text "Load Image" -command {
+		load_image $img_filename $imgwldfilename
+	}
+
+	Button $lw.2.cancel -text "Dismiss" -command {
+		set lw .loadimage
+		destroy $lw
+	}
+
+	checkbutton $lw.4.addcoords -variable img_coords_exist \
+				-text "Define Image Location" \
+				-command {
+					set lw .loadimage
+					if { $img_coords_exist == 1 } {
+						set img_wld_file 0
+						pack forget $lw.2 $lw.6
+						pack $lw.3 $lw.2 -pady 4
+					} else {
+						pack forget $lw.3
+					}
+				}
+
+	checkbutton $lw.4.wldfile -variable img_wld_file \
+				-text "Use Image World File" \
+				-command {
+					set lw .loadimage
+					if { $img_wld_file == 1 } {
+						set img_coords_exist 0
+						pack forget $lw.2 $lw.3
+						pack $lw.6 $lw.2 -pady 4
+					} else {
+						pack forget $lw.6
+					}
+				}
+
+	ComboBox $lw.3.type.sys -text "Coordinate System" -width 18 -values "LatLon UTM" \
+		-helptext "Select the Coordinate System." -editable 0 -state disabled 
+
+	LabelEntry $lw.3.type.zone -width 6 -relief sunken  \
+		-label "UTM Zone: " -helptext "Enter UTM Zone Here" \
+		-textvariable img_utmzone 
+
+	Label $lw.3.type.originlabel -text "Image Origin:"
+	tk_optionMenu $lw.3.type.origin img_origin NW SW NE SE
+
+	LabelEntry $lw.3.utmnorth.min -width 12 -relief sunken -label "Min UTM Northing: " \
+		-helptext "Enter min UTM Northing in meters Here"\
+		-textvariable img_coords(y0)
+	LabelEntry $lw.3.utmnorth.max -width 12 -relief sunken -label "Max UTM Northing: " \
+		-helptext "Enter max UTM Northing in meters Here"\
+		-textvariable img_coords(y1)
+
+	LabelEntry $lw.3.utmeast.min -width 12 -relief sunken -label "Min UTM Easting: " \
+		-helptext "Enter minimum UTM Easting in meters Here"\
+		-textvariable img_coords(x0)
+	LabelEntry $lw.3.utmeast.max -width 12 -relief sunken -label "Max UTM Easting: " \
+		-helptext "Enter maximum UTM Easting in meters Here"\
+		-textvariable img_coords(x1)
+
+	Label $lw.5.img_win -text "Number:"
+	SpinBox $lw.5.img_winno -width 3 \
+		-range {0 7 1} \
+		-helptext "Select the Yorick window number to plot" \
+		-textvariable img_win
+	
+	Label $lw.5.img_winsizelabel -text "Size:" 
+	tk_optionMenu $lw.5.img_winsize img_winsize small medium large huge
+	
+	checkbutton $lw.5.dofma \
+		-text "Clear Plot (fma)" \
+		-variable img_dofma
+	
+	LabelEntry $lw.6.wldfile  -width 30 -relief sunken -bd 3 \
+		-label "Image World File Name: " -helptext "Enter image world file location here" \
+		-textvariable imgwldfilename 
+	Button $lw.6.browse -text "Browse..." -width 10 -command {
+		set imgwldfilename [ tk_getOpenFile -filetypes $imgwldftypes -defaultextension ".jgw" ]
+	}
+
+	pack $lw.1.filename \
+		 $lw.1.browse \
+		 -side left -padx 5
+
+	pack $lw.2.ok \
+		 $lw.2.cancel \
+		 -side left -padx 10
+
+	pack $lw.3.utmeast.min \
+		 $lw.3.utmeast.max \
+		 -side left -padx 5
+
+	pack $lw.3.utmnorth.min \
+		 $lw.3.utmnorth.max \
+		 -side left -padx 5
+
+	pack $lw.3.type.sys \
+		 $lw.3.type.zone \
+		 $lw.3.type.originlabel \
+		 $lw.3.type.origin \
+		 -side left -padx 3 
+
+	pack $lw.4.addcoords \
+		 $lw.4.wldfile \
+		 -side left -padx 10
+
+	pack $lw.3.type \
+		 $lw.3.utmeast \
+		 $lw.3.utmnorth \
+		 -side top \
+		 -pady 4
+
+	pack $lw.5.img_win \
+		 $lw.5.img_winno \
+		 $lw.5.img_winsizelabel \
+		 $lw.5.img_winsize \
+		 $lw.5.dofma \
+		 -side left \
+		 -padx 2
+
+	pack $lw.6.wldfile \
+		 $lw.6.browse \
+		 -side left -padx 5
+
+	pack $lw.1 \
+		 $lw.5 \
+		 $lw.4 \
+		 $lw.3 \
+		 $lw.2 \
+		 -side top \
+		 -pady 4
+	
+	if { $img_coords_exist == 0 } { pack forget $lw.3 }
+}
+
+proc load_image { img_filename imgwldfilename} {
+
+	global img_win img_dofma img_winsize img_origin img_coords img_coords_exist img_wld_file 
+
+	if { [string equal $img_origin "NW"] } {
+		set img_coords1(x0) $img_coords(x0)
+		set img_coords1(x1) $img_coords(x1)
+		set img_coords1(y0) $img_coords(y1)
+		set img_coords1(y1) $img_coords(y0)
+	}
+
+	if { [string equal $img_origin "SW"] } {
+		set img_coords1(x0) $img_coords(x0)
+		set img_coords1(x1) $img_coords(x1)
+		set img_coords1(y0) $img_coords(y0)
+		set img_coords1(y1) $img_coords(y1)
+	}
+
+	if { [string equal $img_origin "NE"] } {
+		set img_coords1(x0) $img_coords(x1)
+		set img_coords1(x1) $img_coords(x0)
+		set img_coords1(y0) $img_coords(y0)
+		set img_coords1(y1) $img_coords(y1)
+	}
+
+	if { [string equal $img_origin "SE"] } {
+		set img_coords1(x0) $img_coords(x1)
+		set img_coords1(x1) $img_coords(x0)
+		set img_coords1(y0) $img_coords(y1)
+		set img_coords1(y1) $img_coords(y0)
+	}
+
+	# define window size
+	if { [string equal $img_winsize "small"] } {
+		set winsize 1
+	}
+	if { [string equal $img_winsize "medium"] } {
+		set winsize 2
+	}
+	if { [string equal $img_winsize "large"] } {
+		set winsize 3
+	}
+	if { [string equal $img_winsize "huge"] } {
+		set winsize 4
+	}
+
+	if { $img_coords_exist } {
+		exp_send "load_and_plot_image, \"$img_filename\", location=\[$img_coords1(x0), $img_coords1(y0), $img_coords1(x1), $img_coords1(y1)\], win=$img_win, winsize=$winsize, dofma=$img_dofma \n"
+		expect ">"
+	} else {
+		if { $img_wld_file } {
+		exp_send "load_and_plot_image, \"$img_filename\", img_world_filename=\"$imgwldfilename\", win=$img_win, winsize = $winsize, dofma=$img_dofma \n"
+		} else {
+			exp_send "load_and_plot_image, \"$img_filename\", win=$img_win, winsize = $winsize, dofma=$img_dofma \n"
+		}
+		expect ">"
+	}
+
+}
+
+proc search_world_file { img_filename } {
+
+	global imgwldfilename img_wld_file
+
+	set imgextn [file ext $img_filename]
+	set filesplit [split $img_filename .]
+	if { [ string equal $imgextn ".jpg" ] } {
+		set imgwldfilename [ join [lreplace $filesplit end end "jgw"] . ]
+	}
+	if { [ string equal $imgextn ".png" ] } {
+		set imgwldfilename [ join [lreplace $filesplit end end "pgw"] . ]
+	}
+	if { [ string equal $imgextn ".gif" ] } {
+		set imgwldfilename [ join [lreplace $filesplit end end "gfw"] . ]
+	}
+	if { [ string equal $imgextn ".tif" ] } {
+		set imgwldfilename [ join [lreplace $filesplit end end "tfw"] . ]
+	}
+
+	.loadimage.6.wldfile configure -text $imgwldfilename
+
+	if { ![file exists $imgwldfilename] } {
+		set img_wld_file 0
+	} else {
+		set img_wld_file 1
+	}
+
+	return 1
+}

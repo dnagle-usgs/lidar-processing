@@ -531,6 +531,10 @@ proc load_edb {} {
 #############
 #   Images
 #############
+ $w.mb.images add command -label "Load Images in Yorick..." -command {
+ 	source "$src_path/image_load_tool.ytk"
+ 	ytk_image_load_tool 
+ }
  $w.mb.images add command -label "Capture a display..." -command {
     scap
  }
@@ -639,7 +643,7 @@ proc load_edb {} {
 
 ## disabled unused menu options
 $w.mb.nav entryconfigure 1 -state normal
-$w.mb.images entryconfigure 5 -state disabled
 $w.mb.images entryconfigure 6 -state disabled
 $w.mb.images entryconfigure 7 -state disabled
+$w.mb.images entryconfigure 8 -state disabled
 
