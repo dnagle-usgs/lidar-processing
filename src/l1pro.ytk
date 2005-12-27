@@ -88,6 +88,11 @@
   set plot_dpi 75
   array set cbvc {cmin cmin cmax cmax msize msize mtype mtype}
 
+  set cbvc(cmin) -40.0
+  set cbvc(cmax) 40.0
+  set cbvc(msize) 1
+  set cbvc(mtype) 1
+
 exp_send "#include \"$src_path/l1pro.i\"\r";   #load all yorick support functions
 expect ">";
 
@@ -121,6 +126,14 @@ menu .l1wid.mb.post
 .l1wid.mb   add cascade -label File -underline 0 -menu .l1wid.mb.file
 
 .l1wid.mb.file add command -label "Read Binary Data file..." -underline 0 -command {
+  global cbv cmin cmax cdelta cbvc
+  if {$cbv == 1} {
+	set cbvc(cmin) $cmin
+	set cbvc(cmax) $cmax
+	set cbvc(msize) $msize
+	set cbvc(mtype) $markerv 
+  } 
+
   set _ytk_fn [ tk_getOpenFile -filetypes \
 	{  
            {{Yorick PBD file} {.pbd}  }
@@ -146,17 +159,20 @@ menu .l1wid.mb.post
 	    update
             set var_type [lindex $varlist [expr {[llength $varlist] -1}]]
 	    update
-            exp_send "set_read_yorick, $var_type \r"
- 	    puts $var_type
-            expect ">"
+	    if { $cbv == 0 } {
+              exp_send "set_read_yorick, $var_type \r"
+              expect ">"
+	    }
             destroy .stby
-	    save_plot_settings [expr {[llength $varlist]-1}]
  	    if {$cbv == 1} {
 		set cmin $cbvc(cmin)
+		set cdelta [expr {$cbvc(cmax)-$cbvc(cmin)} ]
 		set cmax $cbvc(cmax)
 		set msize $cbvc(msize)
 		set markerv $cbvc(mtype) 
-	    }
+	    } 
+	    update
+	    save_plot_settings [expr {[llength $varlist]-1}]
            }
      ".edf" -
      ".bin" {
@@ -1670,6 +1686,7 @@ proc retrieve_plot_settings {pvar_no} {
 }
 
 proc cbar_tool { } {
+  global cbvc
   set w .cbartool
   destroy $w
   toplevel $w
@@ -1680,6 +1697,7 @@ proc cbar_tool { } {
                      clicking in the histogram window" \
          -command {
           exp_send "set_cbar, \"both\" \r"
+	  expect ">"
          }
   Button $w.cmax -text "Cmax" \
          -helptext "Interactively set Cmax by \
@@ -1743,6 +1761,7 @@ ComboBox .l1wid.bf45.p.5 -text "Display Type" -width 20 -values { \
 Button .l1wid.bf45.q.2 -text "Histogram\nElevations" \
   -helptext "Generate and display a histogram of all the first return elevations" \
   -command {
+      global cbvc cmin cmax
       set ptype [.l1wid.bf4.1.p getvalue]
       set disp_type [.l1wid.bf45.p.5 getvalue]
       set var_no [.l1wid.bf45.p.15 getvalue]
@@ -1770,6 +1789,8 @@ Button .l1wid.bf45.q.2 -text "Histogram\nElevations" \
       }
      }
      cbar_tool
+     set cbvc(cmin) $cmin
+     set cbvc(cmax) $cmax
   }
 
 Button .l1wid.bf45.q.1 -text "Pixel\nWaveform" \
@@ -2218,6 +2239,8 @@ proc removing_proc {} {
 		  pack .rem.08.a .rem.08.max .rem.08.maxthresh -side left
 		  pack .rem.09 .rem.09.a
                   pack .rem.2 .rem.3 -side left -padx 5 -pady 5
+		  set min_thresh $cmin
+		  set max_thresh $cmax
 		} else {
 		  pack forget .rem.2 .rem.3 .rem.4
 		  pack forget .rem.07 .rem.08 .rem.09
@@ -2245,12 +2268,14 @@ proc removing_proc {} {
 			.rem.08.maxthresh configure -state disabled
 		   }
 		}
-       SpinBox .rem.07.minthresh -range {-100.0 100.0 0.1} -textvariable min_thresh 
-       SpinBox .rem.08.maxthresh -range {-50.0 100.0 0.1} -textvariable max_thresh 
+       SpinBox .rem.07.minthresh -range {-100.0 5000.0 0.1} -textvariable min_thresh 
+       SpinBox .rem.08.maxthresh -range {-100.0 5000.0 0.1} -textvariable max_thresh 
        set min 1
        set max 1
        .rem.07.min select
        .rem.08.max select
+	set min_thresh $cmin
+	set max_thresh $cmax
 
        Button .rem.2 -width 8 -text "Go" \
        -command {
@@ -2512,7 +2537,7 @@ proc replace_proc {} {
 		   }
 		} elseif {$defr == 1} {
 		   set result [tk_messageBox -icon info \
-		   -message "Draw a Polygon in Window $_map(window) to define a region using a series of left mouse clicks.  To complete the polygon, middle mouse click OR <Ctrl> and left mouse click." \
+		   -message "Draw a Polygon in Window $win_no to define a region using a series of left mouse clicks.  To complete the polygon, middle mouse click OR <Ctrl> and left mouse click." \
                    -type okcancel -title "Message"]
                    if {$result == "ok"} {
 		      exp_send "$keep_var = $curvar;\r"
@@ -2544,7 +2569,7 @@ proc replace_proc {} {
     	   	}
     	   	if {$defr == 1} {
        	           set result [tk_messageBox  -icon info \
-        	   -message "Draw a Polygon in Window $_map(window) to define a region using a series of left mouse clicks.  To complete the polygon, middle mouse click OR <Ctrl> and left mouse click." \
+        	   -message "Draw a Polygon in Window $win_no to define a region using a series of left mouse clicks.  To complete the polygon, middle mouse click OR <Ctrl> and left mouse click." \
         	   -type okcancel -title "Message"]
         	   if {$result == "ok"} {
 	              exp_send "$keep_var = sel_data_rgn($curvar, mode=3, win=$win_no, exclude=1, make_workdata=1, origdata=$origvar);\r"

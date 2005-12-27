@@ -182,7 +182,7 @@ func sel_data_rgn(data, type=, mode=,win=, exclude=, rgn=, make_workdata=, origd
      indx = where(iindx == 0);
      write, format="%d of %d data points removed.\n",numberof(iindx)-numberof(indx), numberof(iindx);
  } else {
-     write, format="%d of %d data points selected.\n",numberof(indx), numberof(iindx);
+     write, format="%d of %d data points selected.\n",numberof(indx), numberof(data);
  }
     
     
