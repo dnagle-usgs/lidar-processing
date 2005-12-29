@@ -2765,11 +2765,15 @@ proc sst  { w var lbl rg } {
 }
 
 proc ud { a b c } {
-global cmax cmin cdelta
+global cmax cmin cdelta min_thresh max_thresh
   switch $a {
    cmax   { set cdelta [ expr $cmax - $cmin ];  }
    cmin   { set cmax   [ expr $cmin + $cdelta ]; } 
    cdelta { set cmax   [ expr $cmin + $cdelta ]; }
+  }
+  if { [ winfo exists .rem ] } {
+	set min_thresh $cmin
+	set max_thresh $cmax
   }
 }
 
