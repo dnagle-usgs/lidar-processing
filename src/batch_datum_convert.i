@@ -1,3 +1,5 @@
+write,"$Id$"
+
 require, "map.i"
 require, "dir.i" 
 require, "veg.i"
@@ -6,17 +8,27 @@ require, "datum_converter.i"
 
 func batch_datum_convert(con_dir,  tonad83=, tonavd88=, rcfmode=, onlymf=, searchstr=, zone_nbr=)
 {
-/* DOCUMENT batch_datum_convert(dir, tonad83=, tonavd88=, rcfmode=) This takes all of the data files for the index tiles in CON_DIR 
-and converts them into nad83 or navd88, storing the converted data in  a new pdf
-file with the same name and location as the last, but with the datum tag changed.
-INPUT: con_dir = input directory where the files are stored.
-  	tonad83= set to convert to NAD83 reference datum
-	tonavd88 = set to convert to NAVD88 reference datum.
-	rcfmode = set to 1 to convert RCF'd files or 2 to convert IRCF'd files.
-        searchstr = define your own search string instead of using rcfmode
-	zone_nbr = set to zone number.  If not set, the zone number will be set from the information in the file name.
-requires "maps.i", "dir.i" and "datum_converter.i"
+/* DOCUMENT batch_datum_convert(dir, tonad83=, tonavd88=,
+rcfmode=) This takes all of the data files for the index tiles
+in CON_DIR and converts them into nad83 or navd88, storing
+the converted data in a new pdb file with the same name and
+location as the last, but with the datum tag changed.
+
+INPUT:
+  con_dir   = input directory where the files are stored.
+  tonad83   = set to convert to NAD83 reference datum
+  tonavd88  = set to convert to NAVD88 reference datum.
+  rcfmode   = set to 1 to convert RCF'd files
+              set to 2 to convert IRCF'd files.
+  searchstr = define your own search string instead of
+              using rcfmode
+  zone_nbr  = set to zone number.
+              If not set, the zone number will be set
+	      from the information in the file name.
+
+requires: "maps.i", "dir.i", "datum_converter.i"
 see also: datum_converter.i
+
 -Brendan Penney, 7/18/03
 */
 
