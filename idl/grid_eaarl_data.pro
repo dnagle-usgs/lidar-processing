@@ -296,6 +296,7 @@ pro make_GE_plots, xgrid=xgrid, ygrid=ygrid, zgrid=zgrid, geotif_file=geotif_fil
     grid_ea_limit = xgrid[n_elements(xgrid)-1]
     grid_so_limit = ygrid[0]
     grid_no_limit = ygrid[n_elements(ygrid)-1]
+    celldim = xgrid[1]-xgrid[0]
     idx = where(zgrid ne -100, complement=idx1)
     xn = n_elements(zgrid[0,*]);
     yn = n_elements(zgrid[*,0]); 
@@ -408,7 +409,8 @@ pro make_GE_plots, xgrid=xgrid, ygrid=ygrid, zgrid=zgrid, geotif_file=geotif_fil
 
   if (keyword_set(colorbar_plot)) then begin
 	; define file name
-	cb_outfile = strmid(geotif_file,0,file_ext_pos-1)+"_cb."+filetype
+	file_ext_pos = strpos(outfile,".", /reverse_search)
+	cb_outfile = strmid(outfile,0,file_ext_pos-1)+"_cb."+filetype
 	save_colorbar_plot, min_elv, max_elv, cb_outfile
   endif
 

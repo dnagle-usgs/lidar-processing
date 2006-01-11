@@ -1,40 +1,82 @@
-pro batch_grid, path, filename=filename, rcfmode=rcfmode, cell=cell, mode=mode, $
+pro batch_grid, path, filename=filename, rcfmode=rcfmode, searchstr=searchstr, $
+	cell=cell, mode=mode, $
 	z_grid_max = z_grid_max, z_grid_min=z_grid_min, area_threshold=area_threshold, $
 	missing = missing, zbuf_plot=zbuf_plot, save_zbuf_plots = save_zbuf_plots, $
 	zbuf_scale=zbuf_scale, maxelv = maxelv, minelv = minelv, $
 	plot_grids = plot_grids, max_elv_limit=max_elv_limit, min_elv_limit = min_elv_limit, $
 	scale_down_by = scale_down_by, save_grid_plots = save_grid_plots, $
-	write_geotiffs=write_geotiffs, GE_plots=GE_plots, utmzone = utmzone, datamode=datamode
+	write_geotiffs=write_geotiffs, GE_plots=GE_plots, colorbar_plot = colorbar_plot, $
+	utmzone = utmzone, datamode=datamode
    ; this procedure does gridding in a batch mode
    ; Set datamode to run batch grid on a set of files that are not divided into the 
    ;    traditional index/data tile format.  Setting this will override and disable the
    ;    creation of gridplots and zbuf plots however. To use the traditional batch grid
    ;    function, do not set datamode at all.
    ; added 11/14/2005:
+   ; path: Path name where edf files are present
+   ; filename = filename array if only 1 or a group of files are to be gridded. 
+   ; rcfmode = (DEPRECATED) use keyword searchstr= instead
+   ;		set to 0 to search for all edf or bin files
+   ;		set to 1 to search for only rcf'd files
+   ;		set to 2 to search for only ircf'd files 
+   ; searchstr = search string for file search.  Default="*.edf"
+   ; cell = grid cell dimension (default = 1m)
+   ; mode = Type of EAARL data.  1 = Surface Topography, 2 = Bathymetry, 3 = Bare Earth under Vegetation
+   ; z_grid_max = Maximum z value to consider during gridding
+   ; z_grid_min = Minimum z value to consider during gridding, default = -100m
+   ; area_threshold = maximum allowable area of a triangulated facet.  
+   ;		This keyword ensures that large gaps are not gridded. Default = 100m
+   ; missing = Missing value for no data points during gridding, default = -100m
+   ; zbuf_plot = set to 1 to create the 'Z' buffer tif plots.
+   ; save_zbuf_plots = set to 1 to save the tif plot to a file
+   ; zbuf_scale = the scale of the zbuf plot.  Defaults to 1 (same scale as original grid).
    ; GE_plots = GE_plots set to 1 to make maps for Google Earth 
+   ; max_elv_limit = the maximum elevation limit for the output (GE and zbuf) plot
+   ; min_elv_limit = the minimum elevation limit for the output (GE and zbuf) plot
+   ; scale_down_by = the value by which the output image will be scaled down by.
+   ;		  if num=2, image is half the size. Default num=2.
+   ; save_grid_plot = the output file name to which the image should be saved. 
+   ; 		if geotif_file is set and save_grid_plot not set, 
+   ;		then the filename is the same as geotif_file with a different extension (e.g. .gif).
+   ; maxelv = the maximum elevation for the output (GE and zbuf) plot (overrides max_elv_limit)
+   ; minelv = the minimum elevation for the output (GE and zbuf) plot (overrides min_elv_limit)
+   ; colorbar_plot = set to 1 to write out a file that contains the colorbar with min and max values
+   ;	
+
+
    ; amar nayegandhi 05/14/03
 
 start_time = systime(1)
-if not keyword_set(rcfmode) then rcfmode = 0
+if ((not keyword_set(rcfmode)) and (not keyword_set(searchstr))) then searchstr="*.edf"
 if not keyword_set(filename) then begin
-   ;search in the directory path to find all files with .bin or .edf extension
-   if (rcfmode eq 0) then begin
-    spawn, 'find '+path+' -name "*.bin"', fn_arr
-    spawn, 'find '+path+' -name "*.edf"', fn_arr1
-   endif
-   if (rcfmode eq 1) then begin 
-    spawn, 'find '+path+' -name "*_rcf*.bin"', fn_arr
-    spawn, 'find '+path+' -name "*_rcf*.edf"', fn_arr1
-   endif
-   if (rcfmode eq 2) then begin
-    spawn, 'find '+path+' -name "*_ircf*.bin"', fn_arr
-    spawn, 'find '+path+' -name "*_ircf*.edf"', fn_arr1
-   endif
-    fn_arr_new = fn_arr+fn_arr1
-    fn_arr = fn_arr_new
+   if not keyword_set (searchstr) then begin
+     if not keyword_set(rcfmode) then rcfmode = 0
+     ;search in the directory path to find all files with .bin or .edf extension
+     if (rcfmode eq 0) then begin
+	   spawn, 'find '+path+' -name "*.bin"', fn_arr
+	   spawn, 'find '+path+' -name "*.edf"', fn_arr1
+     endif
+     if (rcfmode eq 1) then begin 
+     	   spawn, 'find '+path+' -name "*_rcf*.bin"', fn_arr
+    	   spawn, 'find '+path+' -name "*_rcf*.edf"', fn_arr1
+     endif
+     if (rcfmode eq 2) then begin
+	   spawn, 'find '+path+' -name "*_ircf*.bin"', fn_arr
+	   spawn, 'find '+path+' -name "*_ircf*.edf"', fn_arr1
+     endif
+     fn_arr_new = fn_arr+fn_arr1
+     fn_arr = fn_arr_new
+   endif else begin
+	spawn, 'find '+path+' -name "'+searchstr+'"', fn_arr
+   endelse
 endif else begin
     fn_arr = path+filename
 endelse
+
+if ((fn_arr[0] eq "") or (n_elements(fn_arr) eq 0)) then begin
+	print, "No files selected to grid.  Goodbye."
+	return
+endif
 
 ;noaa = read_noaa_records('/home/anayegan/lidar-processing/noaa/bathy_data_keys_0_40m_min_max.txt')
 print, 'Number of files to grid: '+strcompress(string(n_elements(fn_arr)))
@@ -152,7 +194,8 @@ for i = 0, n_elements(fn_arr)-1 do begin
 	    pfname = path+(strsplit(fname_arr, '.', /extract))[0]+"_be_GE."+filetype
 	make_GE_plots, xgrid=xgrid, ygrid=ygrid, zgrid=zgrid, max_elv_limit=max_elv_limit, $
 		min_elv_limit = min_elv_limit, save_grid_plot = pfname, num=GE_scale, $
-		minelv = minelv, maxelv = maxelv, filetype=filetype, topmax=1, botmin=1 
+		minelv = minelv, maxelv = maxelv, filetype=filetype, topmax=1, botmin=1,$
+		colorbar_plot = colorbar_plot
   endif
 
 endfor
@@ -168,7 +211,7 @@ end
 pro batch_make_GE_plots, path, filename=filename, searchstr=searchstr, $ 
 	max_elv_limit=max_elv_limit, min_elv_limit = min_elv_limit, num=num, $
 	save_grid_plot=save_grid_plot, maxelv = maxelv, minelv = minelv, filetype=filetype,$
-	topmax=topmax, botmin=botmin, settrans=settrans, make_colorbar_plot=make_colorbar_plot
+	topmax=topmax, botmin=botmin, settrans=settrans, colorbar_plot=colorbar_plot
 
 ; amar nayegandhi 11/16/2005
 
@@ -188,7 +231,7 @@ for i = 0, nfn-1 do begin
    make_GE_plots, geotif_file=fn_arr1(i), $
    	max_elv_limit=max_elv_limit, min_elv_limit = min_elv_limit, num=num, $
 	save_grid_plot=save_grid_plot, maxelv = maxelv, minelv = minelv, filetype=filetype,$
-	topmax=topmax, botmin=botmin, settrans=settrans, make_colorbar_plot=make_colorbar_plot
+	topmax=topmax, botmin=botmin, settrans=settrans, colorbar_plot=colorbar_plot
 endfor
    
 print, "Batch conversion complete."
