@@ -1,0 +1,9 @@
+$Id$
+
+20051102
+  These are utilities for unpacking the CIR and CAM tar files and then
+  putting the images into subdirectories that Wayne can use for a website.
+
+	fixup.pl  - rename CIR images by removing the -NNN- portion of the name.
+	makecir.pl- unzip each tar file into a directory in the form:
+              YYYYMMDD/photos/HHMM
