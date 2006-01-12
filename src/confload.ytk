@@ -166,7 +166,7 @@ proc write_conf { } {
 	
 	Button .write.7.batfbrowse -text "Browse..." -helptext "Open dialog to select bathy settings file" \
       -command {
-		set batfs [tk_getOpenFile -title "set bathy settings file" -filetypes {{{bathy settings files} {.conf}}}]
+		set batfs [tk_getOpenFile -title "set bathy settings file" -filetypes {{{bathy settings files} {.conf .bctl}}}]
       }
 				
 	.write.7.batf configure -state disabled
