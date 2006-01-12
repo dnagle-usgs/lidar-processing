@@ -6,7 +6,7 @@ require, "veg.i"
 require, "geo_bath.i"
 require, "datum_converter.i"
 
-func batch_datum_convert(con_dir,  tonad83=, tonavd88=, rcfmode=, onlymf=, searchstr=, zone_nbr=)
+func batch_datum_convert(con_dir,  tonad83=, tonavd88=, rcfmode=, onlymf=, searchstr=, zone_nbr=, geoid_version=)
 {
 /* DOCUMENT batch_datum_convert(dir, tonad83=, tonavd88=,
 rcfmode=) This takes all of the data files for the index tiles
@@ -25,11 +25,16 @@ INPUT:
   zone_nbr  = set to zone number.
               If not set, the zone number will be set
 	      from the information in the file name.
+  geoid_version = set to "GEOID99" to use GEOID99 model
+  				  set to "GEOID03" to use GEOID03 model
+				  defaults to "GEOID03"
+				  if GEOID03 binary files are not available, the user will be warned.
 
 requires: "maps.i", "dir.i", "datum_converter.i"
 see also: datum_converter.i
 
 -Brendan Penney, 7/18/03
+modified by amar nayegandhi 01/12/06 to use GEOID03 model
 */
 
 if(is_void(tonad83)) tonad83=1;

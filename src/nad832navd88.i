@@ -9,9 +9,11 @@
 
 func geoid_data_to_pbd(gfname=,pbdfname=, initialdir=) {
    /*DOCUMENT geoid_data_to_pbd(gfname,pbdfname)
-    converts GEOID99 ascii data files to pbd.  The ascii data files are available on the NGS website:
+    converts GEOIDxx ascii data files to pbd.  The ascii data files are available on the NGS website:
     http://www.ngs.noaa.gov/GEOID/GEOID99/dnldgeo99ot1.html
+	http://www.ngs.noaa.gov/GEOID/GEOID03/download.html
     amar nayegandhi 07/10/03.
+	modified 01/12/06 -- amar nayegandhi to add GEOID03
    */
 
    if (!gfname) {
@@ -47,21 +49,30 @@ func geoid_data_to_pbd(gfname=,pbdfname=, initialdir=) {
    return data;
 }
    
-func nad832navd88(data_in, gdata_dir=) {
+func nad832navd88(data_in, gdata_dir=, geoid_version=) {
  /*DOCUMENT nad832navd88(data_in)
    This function converts nad83 data to NAVD88 data using the GEOID99 model.
    INPUT:  data_in = a 2 dimensional array (3,n) in the format (lon, lat, alt).
  	   gdata_dir = location where geoid data resides.  Defaults to
-			~/lidar-processing/GEOID99/pbd_data/
+			~/lidar-processing/GEOID03/pbd_data/
+			Set gdata_dir to ~/lidar-processing/GEOID99/pbd_data/ to use GEOID99.
    OUTPUT: data_out = NAVD88 referenced data in the same format as the input format (3,n).
    amar nayegandhi 07/10/03
 */
-  if (!gdata_dir) {
+  if ((!gdata_dir) && (!geoid_version)) {
        cwd = get_cwd();
-       gdata_dir = split_path(cwd,-1)(1)+"GEOID99/pbd_data/";
+       gdata_dir = split_path(cwd,-1)(1)+"GEOID03/pbd_data/";
+  }
+  if ((!gdata_dir) && (strmatch(geoid_version,"GEOID99",1))) {
+    cwd = get_cwd();
+  	gdata_dir = split_path(cwd,-1)(1)+"GEOID99/pbd_data/";
+  }
+  if ((!gdata_dir) && (strmatch(geoid_version,"GEOID03",1))) {
+    cwd = get_cwd();
+  	gdata_dir = split_path(cwd,-1)(1)+"GEOID03/pbd_data/";
   }
   
-  //read the header values for each geoid99 pbd data file.
+  //read the header values for each geoid99 or geoid03 pbd data file.
   scmd = swrite(format="ls -1 %s*.pbd | wc -l",gdata_dir);
   f = popen(scmd,0);
   s = ""; npbd = 0;

@@ -5,7 +5,7 @@
   
 require, "wgs842nad83.i"
 require, "nad832navd88.i"
-func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, type=) {
+func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, geoid_version=, type=) {
 /* DOCUMENT data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, type=)
      This function converts eaarl data of structure type 'type' to nad83 and navd88.
      INPUT:
@@ -13,6 +13,10 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, type=) {
 	utmzone: current utm zone number
 	tonad83= set to 1 to convert to nad83 horizontal datum, else set to 0 (default 1)
 	tonavd88= set to 1 to convert to navd88 vertical datum using GEOID99 model, else set to 0 (default = 1).
+	geoid_version = set to "GEOID99" to use GEOID99
+					set to "GEOID03" to use GEOID03. 
+					Defaults to GEOID03
+				    if GEOID03 binary files are not available, the user will be warned, and GEOID99 will be used.
 	type= type of input data array (e.g. FS, VEG__, GEO)
      OUTPUT:
 	returned data array after conversion.
@@ -23,7 +27,30 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, type=) {
 
    if (is_void(tonad83)) tonad83=1;
    if (is_void(tonavd88)) tonavd88=1;
+   if (is_void(geoid_version)) {
+   	geoid_version="GEOID03";
+   }
+   if (strmatch(geoid_version,"GEOID03",1)) {
+    cwd = get_cwd();
+	gdata_dir = split_path(cwd,-1)(1)+"GEOID03/pbd_data/";
+	gfiles = lsdir(gdata_dir);
+	if (gfiles != 0) {
+		gfiles_pbd = strmatch(gfiles, ".pbd");
+	}
+	if (numberof(where(gfiles_pbd)) < 1) {
+		write, "GEOID03 binary (pbd) files not available."
+		ans = "";
+		n = read(prompt="Use GEOID99 files instead? yes/no: ", format="%s",ans);
+		if (ans=="yes" || ans=="y") {
+			geoid_version = "GEOID99"
+		} else {
+			write, "Nothing to do."
+			return
+		}
+    }
+   }
 
+   write, format="Using GEOID version: %s\n", geoid_version;
    data = test_and_clean(wdata);
    type = structof(data(1));
    if (!utmzone) {
@@ -54,7 +81,7 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, type=) {
    }
    if (tonavd88) {
      write, "Converting to NAVD88..."
-     data_out = nad832navd88(data_in);
+     data_out = nad832navd88(data_in, geoid_version=geoid_version);
    }
    // convert data back to utm
    write, "Converting data back to UTM..."
@@ -79,7 +106,7 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, type=) {
    }
    if (tonavd88) {
      write, "Converting to NAVD88..."
-     data_out = nad832navd88(data_in);
+     data_out = nad832navd88(data_in, geoid_version=geoid_version);
    }
    // convert data back to utm
    write, "Converting data back to UTM..."
@@ -106,7 +133,7 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, type=) {
       }
       if (tonavd88) {
         write, "Converting to NAVD88..."
-        data_out = nad832navd88(data_in);
+        data_out = nad832navd88(data_in, geoid_version=geoid_version);
       }
       // convert data back to utm
       write, "Converting data back to UTM..."
@@ -120,7 +147,7 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, type=) {
 }
 
 
-func pnav_datum_converter(tonad83=, tonavd88=, wpnav=,pnavfile=,outfile=,outfilename=) {
+func pnav_datum_converter(tonad83=, tonavd88=, wpnav=,pnavfile=,outfile=,outfilename=, geoid_version=) {
   /* DOCUMENT pnav_w842n83(pnav=,pnavfile=,outfile=,outfilename=)
      This function converts pnav data referenced to wgs84 to nad83 and navd88.
      amar nayegandhi 07/15/03.
@@ -136,7 +163,7 @@ func pnav_datum_converter(tonad83=, tonavd88=, wpnav=,pnavfile=,outfile=,outfile
    if (tonad83) 
      data_out = wgs842nad83(data_in);
    if (tonavd88)
-     data_out = nad832navd88(data_out);
+     data_out = nad832navd88(data_out, geoid_version=geoid_version);
    npnav = wpnav;
    npnav.lon = data_out(1,);
    npnav.lat = data_out(2,);
