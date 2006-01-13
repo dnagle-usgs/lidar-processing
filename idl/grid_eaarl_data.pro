@@ -19,8 +19,8 @@ pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygri
   if (not keyword_set(cell)) then cell = 1  
   if (not keyword_set(z_min)) then z_min = -100L
   if (not keyword_set(missing)) then missing = -100L
-  if (not keyword_set(area_threshold)) then area_threshold = 100
-  if (not keyword_set(dist_threshold)) then dist_threshold = 20
+  if (not keyword_set(area_threshold)) then area_threshold = 200
+  if (not keyword_set(dist_threshold)) then dist_threshold = 50
   if (not keyword_set(limits)) then begin
 	; get the limits from the input data set
 	limits = [min(data.east),min(data.north),max(data.east),max(data.north)]/100.

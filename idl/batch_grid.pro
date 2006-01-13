@@ -1,6 +1,6 @@
 pro batch_grid, path, filename=filename, rcfmode=rcfmode, searchstr=searchstr, $
-	cell=cell, mode=mode, $
-	z_grid_max = z_grid_max, z_grid_min=z_grid_min, area_threshold=area_threshold, $
+	cell=cell, mode=mode, z_grid_max = z_grid_max, z_grid_min=z_grid_min, $
+	area_threshold=area_threshold, dist_threshold=dist_threshold, $
 	missing = missing, zbuf_plot=zbuf_plot, save_zbuf_plots = save_zbuf_plots, $
 	zbuf_scale=zbuf_scale, maxelv = maxelv, minelv = minelv, $
 	plot_grids = plot_grids, max_elv_limit=max_elv_limit, min_elv_limit = min_elv_limit, $
@@ -25,7 +25,9 @@ pro batch_grid, path, filename=filename, rcfmode=rcfmode, searchstr=searchstr, $
    ; z_grid_max = Maximum z value to consider during gridding
    ; z_grid_min = Minimum z value to consider during gridding, default = -100m
    ; area_threshold = maximum allowable area of a triangulated facet.  
-   ;		This keyword ensures that large gaps are not gridded. Default = 100m
+   ;		This keyword ensures that large gaps are not gridded. Default = 200m^2
+   ; dist_threshold = maximum allowable distance between 2 vertices of triangulated facet.
+   ;			Default = 50m.  Increase this value to reduce "holes" in the data.
    ; missing = Missing value for no data points during gridding, default = -100m
    ; zbuf_plot = set to 1 to create the 'Z' buffer tif plots.
    ; save_zbuf_plots = set to 1 to save the tif plot to a file
@@ -106,11 +108,11 @@ for i = 0, n_elements(fn_arr)-1 do begin
    if keyword_set(datamode) then begin
       grid_eaarl_data, *data_arr[0],cell=cell,mode=mode,zgrid=zgrid,xgrid=xgrid,ygrid=ygrid, $
         z_max = z_grid_max, z_min=z_grid_min, missing = missing, $
-        area_threshold = area_threshold,datamode=datamode
+        area_threshold = area_threshold, dist_threshold=dist_threshold, datamode=datamode
    endif else begin
       grid_eaarl_data, *data_arr[0], cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygrid=ygrid, $
 	z_max = z_grid_max, z_min=z_grid_min, missing = missing, limits=[we-100,no-2099,we+2099,no+100], $
-	area_threshold = area_threshold
+	area_threshold = area_threshold, dist_threshold=dist_threshold
    endelse
 
    ptr_free, data_arr
