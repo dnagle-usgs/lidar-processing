@@ -113,6 +113,10 @@ BIN = ../bin
 ../bin/mktrajfiles:	mktrajfiles
 	install -m uog+rx  $<	$@
 
+../bin/xyz2track:	xyz2track.pl
+	install -m uog+rx  $<	$@
+
+
 # It is very hard to make make make a #
 ../bin/comment:	comment
 	install -m uog+rx  $<	$@
@@ -135,6 +139,7 @@ all:		../bin/efdb ../bin/erange ../bin/gga2bin ../bin/mkidx    \
 		../bin/shapefile_filter                                  \
 		../bin/showdays ../bin/mk_opsconf ../bin/wrsync          \
 		../bin/mktrajfiles                                       \
+		../bin/xyz2track                                         \
 		../bin/comment
 >>>>>>> evolving
 
