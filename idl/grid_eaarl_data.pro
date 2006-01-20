@@ -227,7 +227,7 @@ pro plot_zbuf_eaarl_grids, xgrid, ygrid, zgrid, max_elv_limit=max_elv_limit, $
         position = [199,199,(n_elements(xgrid)/num)+200,(n_elements(ygrid)/num)+200], /device, $
         ytickformat = '(I10)', ycharsize = 1.5, xtickformat = '(I10)', xcharsize = 1.5, background = 255
   tv, zgrid_i_sb2, 200,200
-  plot_colorbar, [min_elv, max_elv], "!3 NAVD88 !3", type1="!3 Elevations !3", "!3 meters !3", $
+  plot_colorbar, [min_elv, max_elv], "!3 NAVD88 Elevations!3", "!3 meters !3", $
 		xx= 0.95, yy=0.2, textcharsize=2.0, rangecharsize=1.6
   if keyword_set(save_grid_plot) then begin
    tvlct, r,g,b,/get
