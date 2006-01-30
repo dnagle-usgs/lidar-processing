@@ -50,7 +50,7 @@ the one before that, etc. etc.
    fs       fs_all structure. 
   owin=     desired Yorick output graph window. Default 3.
   iwin=     Source window for transect Default 5.
-   w=       search distance from line in centimeters. Default 100cm.
+   w=       search distance from line in centimeters. Default 150cm.
   connect=  set to 1 to connect the points.
   recall=    Used to recall a previously generated transact line.
   color=    The starting color 0:7
