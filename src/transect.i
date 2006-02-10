@@ -162,9 +162,12 @@ func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=, rcf_p
 
 // compute the rotation angle needed to make the selected line
 // run east west
-  angle = atan( (l(2)-l(4)) / (l(1)-l(3)) ) ;
-  angle ;
-  [n,s,e,w]
+  dnom = l(1)-l(3);
+  if ( dnom != 0.0 ) 
+    angle = atan( (l(2)-l(4)) / dnom ) ;
+  else angle = pi/2.0;
+//  angle ;
+//  [n,s,e,w]
 
 
 // build a matrix to select only the data withing the bounding box
@@ -208,7 +211,9 @@ func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=, rcf_p
   window,owin
   window,wait=1;
 ///  fma
+  where( abs(fs.soe(glst(llst))(dif)) > 5.0 );
   segs = where( abs(fs.soe(glst(llst))(dif)) > 5.0 );
+  segs = segs(where( abs(segs(dif)) > 1.0 ));
  nsegs = numberof(segs)+1;
  ss = [0];
 //// nsegs
@@ -222,9 +227,11 @@ func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=, rcf_p
       t = soe2time( soeb );
      tb = fs.soe(*)(glst(llst)(ss(i)+1))%86400;
      te = fs.soe(*)(glst(llst)(ss(i+1)))%86400;
+ //debug/    mb = ss(i)+1;
+ //debug/    me = ss(i+1);
      td = abs(te - tb);
      hms = sod2hms( tb );
-     write, format="%d:%d sod = %6.2f:%-10.2f(%-4.2f) utc=%2d:%02d:%02d %s\n",
+     write, format="%d:%d sod = %6.2f:%-10.2f(%8.4f) utc=%2d:%02d:%02d %s\n",
                     t(1),t(2), tb, te, td, hms(1,), hms(2,), hms(3,), clr(c);
 
      if ( xtime ) {
