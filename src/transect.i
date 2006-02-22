@@ -211,12 +211,18 @@ func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=, rcf_p
   window,owin
   window,wait=1;
 ///  fma
-  where( abs(fs.soe(glst(llst))(dif)) > 5.0 );
   segs = where( abs(fs.soe(glst(llst))(dif)) > 5.0 );
-  segs = segs(where( abs(segs(dif)) > 1.0 ));
- nsegs = numberof(segs)+1;
+  nsegs = numberof(segs)+1;
+  if ( nsegs > 1 ) {
+    ss = [];
+    grow, ss,segs,[0];
+    segs = ss;
+    
+    segs = segs(where( abs(segs(dif)) > 1.0 ));
+    nsegs = numberof(segs)+1;
+  }
+
  ss = [0];
-//// nsegs
  if ( nsegs > 1 ) { 
    grow, ss,segs,[0]
 ///   ss
@@ -227,8 +233,6 @@ func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=, rcf_p
       t = soe2time( soeb );
      tb = fs.soe(*)(glst(llst)(ss(i)+1))%86400;
      te = fs.soe(*)(glst(llst)(ss(i+1)))%86400;
- //debug/    mb = ss(i)+1;
- //debug/    me = ss(i+1);
      td = abs(te - tb);
      hms = sod2hms( tb );
      write, format="%d:%d sod = %6.2f:%-10.2f(%8.4f) utc=%2d:%02d:%02d %s\n",
