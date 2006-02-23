@@ -217,16 +217,17 @@ func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=, rcf_p
     ss = [];
     grow, ss,segs,[0];
     segs = ss;
-    
+
     segs = segs(where( abs(segs(dif)) > 1.0 ));
     nsegs = numberof(segs)+1;
   }
 
  ss = [0];
  if ( nsegs > 1 ) { 
-   grow, ss,segs,[0]
-///   ss
+   grow, ss,segs
 
+// "ss";ss
+// "nsegs";nsegs
    for (i=1; i<numberof(ss); i++ ) {
       c = (color+i)&7;
    soeb = fs.soe(*)(glst(llst)(ss(i)+1));
