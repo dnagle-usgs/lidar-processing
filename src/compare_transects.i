@@ -1,13 +1,35 @@
+write,"$Id$"
+
 func compare_trans(year, month, mode, edateinfo, data=, data_dir=, static=, dotlines=, datum=, rawircf=, RMSE=) {
-/* DOCUMENT compare_trans(year, month, mode, edateinfo, data=, data_dir=, static=, dotlines=, datum=)
-	This function creates profile-view maps of EAARL data and ground survey data from ASIS.
-	year and month should be set to the year and month of the desired ground survey to compare
-	mode should be 1 to compare first surface, 3 for veg or 4 for both (on the same plot)
-	edateinfo is the date string for the EAARL array. E.g. "20020911"
-	data= and data_dir= specify either the array or directory, respectively, where EAARL data is located.
-	satatic= 1 will set the limits of the plots to be hard-coded values
-	dotlines= will plot using dotted lines
-	datum= sets the shortened data string. Set to either "n88" or "w84". Default is "n88"
+/* DOCUMENT compare_trans(year, month, mode, edateinfo,
+                          data=, data_dir=, static=, dotlines=, datum=)
+
+Function creates profile-view maps of EAARL data and ground survey data from ASIS.
+
+INPUT:
+  year      :  Year  of desired ground survey to compare
+
+  month     :  Month of desired ground survey to compare
+
+  mode      :  Data to compare
+               1 first surface
+               3 veg
+               4 both (on the same plot)
+
+  edateinfo :  Date string for the EAARL array. E.g. "20020911"
+
+  data=     :  Specifies the array     where EAARL data is located
+
+  data_dir= :  Specifies the directory where EAARL data is located
+
+  satatic=  :  Set to 1 sets the limits of the plots to be hard-coded values
+
+  dotlines= :  Set to 1 plots using dotted lines
+
+  datum=    :  Sets the shortened data string.
+               Set to either "n88" or "w84".
+               Default is "n88"
+
 */
   if (!datum) datum="n88";
   f = openb("/home/lmosher/ASIS/profiles.pbd");
@@ -80,7 +102,7 @@ func compare_trans(year, month, mode, edateinfo, data=, data_dir=, static=, dotl
                 save, f, vname;
                 close, f;
 	}
-	
+
 	if ((mode == 3) || (mode == 4)) bestats = comparelines(this_prof.east, this_prof.elv, data.east/100.0, data.lelv/100.0);
 	if ((mode == 1) || (mode == 4)) fsstats = comparelines(this_prof.east, this_prof.elv, data.east/100.0, data.elevation/100.0);
 //	winkill, 5; window,5,dpi=100,width=600, height=600, style="work.gs"; fma; limits, square=1;
@@ -173,7 +195,7 @@ func compare_trans(year, month, mode, edateinfo, data=, data_dir=, static=, dotl
 
 func show_all_profs {
 /* DOCUMENT show_all_profs
-	This function runs compare_trans for each day and year of the ASIS transects.
+Function runs compare_trans for each day and year of the ASIS transects.
 */
   f = openb("/home/lmosher/ASIS/profiles.pbd");
   restore, f, profs;
@@ -190,12 +212,12 @@ func show_all_profs {
 		compare_trans(long(yrs(i)), long(mons(j)), 0, "20020911 and 20020912", static=1, dotlines=1);
 	}
   }
-}		
+}
 
 
 func show_trans {
 /* DOCUMENT show_trans
-	show_trans plots a map-view of each ASIS transect.
+Function plots a map-view of each ASIS transect.
 */
   f = openb("/home/lmosher/ASIS/profiles.pbd");
   restore, f, profs;
@@ -247,11 +269,26 @@ func show_trans {
 
 func plot_all_trans(junk, mapview=, profview=, nostats=, plotavg=) {
 /* DOCUMENT plot_all_trans(junk, mapview=, profview=, nostats=, plotavg=)
-	This program plots transect data from all surveys on one plot. It performs horizontal or vertical error analysis (average radius^2 from the average line), depending on whether mapview=1 or profview=1 (don't set both at the same time...). Profile view plots the elevation vs the distance from the starting point. The program chooses the easternmost point as the starting point in this case.
-	junk any value. Required since there are no default options. 
-	mapview= and profview= set whether to plot transects in profile or map view. If mapview=1 is set, a coastline must be loaded.
-	nostats= does not calculate vertical statistics in proview=1 mode.
-	plotavg= plots the average line used to find the radius^2 values in profview=1 mode.
+
+Function plots transect data from all surveys on one plot.  Performs
+horizontal or vertical error analysis (average radius^2 from the average line),
+depending on whether mapview=1 or profview=1 (don't set both at the same time...).
+Profile view plots the elevation vs the distance from the starting point.
+Function chooses the easternmost point as the starting point in this case.
+
+Input:
+  junk      :  Any value.
+               Required since there are no default options.
+
+  mapview=  :  Set to 1 to plot transects in map view
+               If mapview=1 is set, a coastline must be loaded
+
+  profview= :  Set to 1 to plot transects in profile  view
+
+  nostats=  :  Does not calculate vertical statistics in proview=1 mode.
+
+  plotavg=  :  Plots the average line used to find the radius^2 values
+               in profview=1 mode.
 */
 	winkill,6;window,6,dpi=100,style="landscape11x85.gs",legends=0,width=1100,height=850;
 	f = openb("/home/lmosher/ASIS/profiles.pbd");
@@ -433,7 +470,7 @@ func plot_all_trans(junk, mapview=, profview=, nostats=, plotavg=) {
 		rd = "";
 //		read(rd);
 //		if (rd == "s") lance();
-		
+
 		hcp_file, "/home/lmosher/ASIS/plots/alltrans_"+fn+"/"+fname;
 		hcp;
 	}
@@ -441,7 +478,26 @@ func plot_all_trans(junk, mapview=, profview=, nostats=, plotavg=) {
 
 func linear_regression(x, y, m=, b=, plotline=) {
 /* DOCUMENT linear_regression(x, y, m=, b=)
-	This program performs a linear regression on the points x,y and outputs m (slope), b (y-isept), rsq (statistical r squared), rad (average physical radius from the points to the avg. line, squared). If m= or b= is set, the program uses that value instead of the statistical value. This allows one to force b=0, or by setting m and b, one can find the average radius squared to the some other line (specified by m and b.
+
+Function performs a linear regression on the points x,y.
+
+Inputs:
+  x   : X value
+  y   : Y value
+
+  m=  :
+  b=  :
+         If m= or b= is set, use that value instead of the statistical value.
+         This allows one to force b=0, or
+         by setting m and b, one can find the average radius squared
+         to the some other line (specified by m and b.
+
+Ouptuts:
+  m (slope),
+  b (y-isept),
+  rsq (statistical r squared),
+  rad (average physical radius from the points to the avg. line, squared).
+
 */
 	x = double(x);
 	y = double(y);
@@ -473,9 +529,21 @@ func linear_regression(x, y, m=, b=, plotline=) {
 
 func avgline(x, y, step=) {
 /* DOCUMENT avgline(x, y, step=)
-	This program finds the moving-average line of an x-y scatter. The program moves along the x direction and replaces every step= points with the average x and average y in that bin. The output is a new array [newx, newy] of the average line.
-	x and y are the points to be averaged
-	step= is the number of points to bin for one average point. Default is set to 10. For faster changing, but less noisy lines this should be reduced. 
+
+Function finds the moving-average line of an x-y scatter.
+Function moves along the x direction and replaces every step= points with
+the average x and average y in that bin.
+
+Input:
+  x and y are the points to be averaged
+
+  step=    : Number of points to bin for one average point.
+             Default is 10.
+             For faster changing, but less noisy lines this should be reduced.
+
+Output:
+  new array [newx, newy] of the average line.
+
 */
 	if (!step) step= 10;
 	num = numberof(x);
@@ -495,16 +563,20 @@ func avgline(x, y, step=) {
 		}
 	}
 	return [newx, newy];
-	end	
+	end
 }
 
 func comparelines(x, y, a, b, start=, stop=) {
 /* DOCUMENT comaparelines(x, y, a, b, start=, stop=)
-	This function returns the average y-distance between points (a,b) and line (x, y). 
-	x, y is the reference, or zero line.
-	a, b is the line to be compared to x, y.
-	start= is the x value to start the analysis.
-	stop= is the x value to stop the analysis.
+
+Function returns the average y-distance between points (a,b) and line (x, y).
+
+Input:
+  x, y is the reference, or zero line.
+  a, b is the line to be compared to x, y.
+
+  start=    :  X value to start the analysis.
+  stop=     :  X value to stop the analysis.
 */
 	x = x(sort(x));
 	y = y(sort(x));

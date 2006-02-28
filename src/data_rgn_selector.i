@@ -5,24 +5,45 @@
    */
 
 func sel_data_rgn(data, type=, mode=,win=, exclude=, rgn=, make_workdata=, origdata=) {
-  /* DOCUMENT sel_data_rgn(data,type=, mode=, win=, exclude=, rgn=)
-  this function selects a region (limits(), rubberband, pip) and returns data within that region.
-   Don't use this function for batch.  Use el_rgn_from_datatiles instead.
- INPUT: data = input data array e.g. fs_all
-  // if mode = 1, limits() function is used to define the region.
-  // if mode = 2, a rubberband box is used to define the region.
-  // if mode = 3, the points-in-polygon technique is used to define the region.
-  // if mode = 4, use rgn= to define a rubberband box.
-  // type = type of data (R, FS, GEO, VEG_, etc.)
-  // set exclude =1 if you want to exclude the selected region and return the rest of the data.
-  // make_workdata = 1 if you want to write a workdata array that contains the selected region and the output array contains the rest of the data (must be used with exclude=1).
-  // origdata = this should be the name of the original data array from which workdata will be extracted.  This is useful when re-filtering a certain section of the filtered data set.  Orig data should be the non-filtered data array which will be refiltered.  
-  //amar nayegandhi 11/26/02.
-  //
-  //Modified by Jeremy Bracone 5/9/05 - when using mode 4 and sending points through rgn,
-  //	you can either send points selected by the mouse(1,1) method (this is is a rectangle)
-  //	or points selected by the getPoly() method (for a polygon).
- */
+/* DOCUMENT sel_data_rgn(data, type=, mode=, win=, exclude=, rgn=)
+
+Function selects a region (limits(), rubberband, pip)
+and returns data within that region.
+
+Don't use this function for batch.  Use sel_rgn_from_datatiles instead.
+
+INPUT:
+  data       : Input data array e.g. fs_all
+
+  type=      : Type of data (R, FS, GEO, VEG_, etc.)
+
+  mode=      : Method for defining the region
+               1  limits() function
+               2  rubberband box
+               3  points-in-polygon technique
+               4  use rgn= to define a rubberband box
+
+  exclude=   : Inverts selection (boolean)
+               1  exclude the selected region, return the rest of the data.
+
+  make_workdata= : (boolean)
+               1  write a workdata array containing the selected region
+                  and an output array containing the rest of the data
+                  (must be used with exclude=1).
+
+  origdata=  : Name of the original non-filtered data array from which
+               workdata will be extracted and refiltered.
+               Useful when re-filtering a certain section of the filtered
+               data set.
+
+  amar nayegandhi 11/26/02.
+
+  Modified by Jeremy Bracone 5/9/05
+    when using mode 4 and sending points through rgn,
+    you can either send points selected by the:
+      mouse(1,1) method (this is is a rectangle),
+      getPoly() method (for a polygon).
+*/
 
   if (is_void(type)) type = nameof(structof(data));
   extern q, workdata, croppeddata;
@@ -65,7 +86,7 @@ func sel_data_rgn(data, type=, mode=,win=, exclude=, rgn=, make_workdata=, origd
      a_x=[rgn(1), rgn(2), rgn(2), rgn(1), rgn(1)];
      a_y=[rgn(3), rgn(3), rgn(4), rgn(4), rgn(3)];
      plg, a_y, a_x;
-     
+
      //write, int(rgn*100);
   }
 
@@ -84,22 +105,22 @@ func sel_data_rgn(data, type=, mode=,win=, exclude=, rgn=, make_workdata=, origd
            origindx = origq(origindx);
         }
     } else {
-        q = where((data.east >= rgn(1)*100.)   & 
+        q = where((data.east >= rgn(1)*100.)   &
                (data.east <= rgn(2)*100.)) ;
         //write, numberof(q);
-        indx = where(((data.north(q) >= rgn(3)*100) & 
+        indx = where(((data.north(q) >= rgn(3)*100) &
                (data.north(q) <= rgn(4)*100)));
         //write, numberof(indx);
         indx = q(indx);
         if (!is_void(origdata)) {
-           origq = where((origdata.east >= rgn(1)*100.)   & 
+           origq = where((origdata.east >= rgn(1)*100.)   &
                (origdata.east <= rgn(2)*100.)) ;
-           origindx = where(((origdata.north(origq) >= rgn(3)*100) & 
+           origindx = where(((origdata.north(origq) >= rgn(3)*100) &
                (origdata.north(origq) <= rgn(4)*100)));
            origindx = origq(origindx);
         }
     } //end if/else for type
-  }   
+  }
 
   if (mode == 3) {
      window, win;
@@ -164,7 +185,7 @@ func sel_data_rgn(data, type=, mode=,win=, exclude=, rgn=, make_workdata=, origd
             origindx = orig_box_pts(orig_poly_pts);
          }
     }//end if/else for type
-	
+
  }
  if (exclude) {
      croppeddata = data(indx);
@@ -178,18 +199,18 @@ func sel_data_rgn(data, type=, mode=,win=, exclude=, rgn=, make_workdata=, origd
      iindx = array(int,numberof(data.rn));
      if (is_array(indx)) {
 	iindx(indx) = 1;
-     } 
+     }
      indx = where(iindx == 0);
      write, format="%d of %d data points removed.\n",numberof(iindx)-numberof(indx), numberof(iindx);
  } else {
      write, format="%d of %d data points selected.\n",numberof(indx), numberof(data);
  }
-    
-    
+
+
 
  window, w;
 
- if (is_array(indx)) 
+ if (is_array(indx))
    data_out = data(indx);
 
  return data_out;
@@ -197,20 +218,33 @@ func sel_data_rgn(data, type=, mode=,win=, exclude=, rgn=, make_workdata=, origd
 }
 
 func sel_data_ptRadius(data, point=, radius=, win=, msize=, retindx=, silent=) {
-/* DOCUMENT sel_data_ptRadius(data, point, radius=) 
-  	This function selects data given a point (in latlon or utm) and a radius.
-	INPUT:  data:  Data array
-		point = Center point
-		radius = radius in same units as data/point
-		win = window to click point if point= not defined (defaults to 5)
-		msize = size of the marker plotted on window, win.
-		retindx = set to 1 to return the index values instead of the data array.
-		silent = set to 1 if you dont want output to screen
-	OUTPUT:
-		if retindx = 0; data array for region selected is returned
-		if retindx = 1; indices of data array returned.
- 	amar nayegandhi 06/26/03.
-  */
+/* DOCUMENT sel_data_ptRadius(data, point, radius=)
+
+Function selects data given a point (in latlon or utm) and a radius.
+
+INPUT:
+  data     :  Data array
+
+  point=   :  Center point
+
+  radius=  :  Radius in same units as data/point
+
+  win=     :  Window to click point, if point= not defined
+              (default is 5)
+
+  msize=   :  Size of the marker plotted on window, win.
+
+  retindx= :  Set to 1 to return the index values instead of the data array.
+
+  silent=  :  Set to 1 to disable output to screen
+
+
+OUTPUT:
+  if retindx = 0; data array for region selected is returned
+  if retindx = 1; indices of data array returned.
+
+amar nayegandhi 06/26/03.
+*/
 
   extern utm
   if (!win) win = 5;
@@ -221,7 +255,7 @@ func sel_data_ptRadius(data, point=, radius=, win=, msize=, retindx=, silent=) {
      result = mouse(1, 0, prompt);
      point = [result(1), result(2)];
   }
-    
+
   data = test_and_clean(data);
   window, win;
 //  plmk, point(2), point(1), color="black", msize=msize, marker=2
@@ -264,7 +298,7 @@ func sel_data_ptRadius(data, point=, radius=, win=, msize=, retindx=, silent=) {
   } else {
   	return data(indx)(iindx);
   }
-  
+
 }
 
 func write_sel_rgn_stats(data, type) {
@@ -286,9 +320,12 @@ func write_sel_rgn_stats(data, type) {
 
 func data_box(x, y, xmin, xmax, ymin, ymax) {
 /* DOCUMENT data_box(x, y, xmin, xmax, ymin, ymax)
-	Program takes the arrays (of equal dimension) x and y and returns 
-	the indicies of the arrays that fit inside the box defined by xmin, xmax, ymin, ymax
+
+Function takes the arrays (of equal dimension) x and y,
+returns the indicies of the arrays that fit inside the box
+defined by xmin, xmax, ymin, ymax
 */
+
 indx = where(x >= xmin);
  if (is_array(indx)) {
     indx1 = where(x(indx) <= xmax);
@@ -303,26 +340,47 @@ indx = where(x >= xmin);
 }
 
 func sel_rgn_from_datatiles(rgn=, data_dir=,lmap=, win=, mode=, search_str=, skip=, noplot=,  pip=, pidx=, uniq=) {
-/* DOCUMENT  sel_rgn_from_datatiles(rgn=, data_dir=,lmap=, win=, mode=, search_str=,  skip=, noplot=,  pip=, pidx=, uniq=) 
+/* DOCUMENT  sel_rgn_from_datatiles(rgn=, data_dir=, lmap=, win=, mode=,
+                                    search_str=,  skip=, noplot=,  pip=,
+				    pidx=, uniq=)
 
-  This function selects data from a series of processed data tiles.
-  The processed data tiles must have the min easting and max northing in their filename.
-  INPUT:
-   rgn = array [min_e,max_e,min_n,max_n] that defines the region to be selected.  If rgn is not defined, the function will prompt to drag a rectangular region on window win OR use points in polygin if pip=1.
-   data_dir = directory where all the data tiles are located.
-   lmap = set to prompt for the map.
-   win = window number that will be used to drag the rectangular region.  defaults to current window.
-   mode = set to 1 for first surface, 2 for bathymetry, 3 for bare earth vegetation
-   search_str= define search string for file name
-   pip = set to 1 if pip is to be used to define the region.
-   pidx = the array of a previously clicked polygon. Set to lpidx if this function 
-	  is previously used.
-   uniq= set to 1 if you want the output array to contain only the unique records.
-  original Brendan Penney
-  modified amar nayegandhi April 2005
+Function selects data from a series of processed data tiles.
+The processed data tiles must have the min easting and max northing
+in their filename.
+
+INPUT:
+   rgn=        :  Array [min_e,max_e,min_n,max_n] that defines the region
+                  to be selected.
+                  If not defined, the function will prompt to drag
+                  a rectangular region on window win
+                  OR use points in polygin if pip=1.
+
+   data_dir=   :  Directory where all the data tiles are located
+
+   lmap=       :  Set to prompt for the map.
+
+   win=        :  Window number to use to drag the rectangular region
+                  (default is current window)
+
+   mode=       :  Set to
+                  1  first surface
+                  2  bathymetry
+                  3  bare earth vegetation
+
+   search_str= :  Define search string for file name
+
+   pip=        :  Set to 1 to use pip to define the region
+
+   pidx=       :  Array of a previously clicked polygon.
+                  Set to lpidx if this function is previously used.
+
+   uniq=       :  set to 1 for output array to contain only unique records
+
+original Brendan Penney
+modified amar nayegandhi April 2005
 */
 
-   extern lpidx; // this takes the values of the polygon selected by user. 
+   extern lpidx; // this takes the values of the polygon selected by user.
    w = window();
    if(!(data_dir)) data_dir =  "/quest/data/EAARL/TB_FEB_02/";
    if (is_void(win)) win = w;
@@ -345,7 +403,7 @@ func sel_rgn_from_datatiles(rgn=, data_dir=,lmap=, win=, mode=, search_str=, ski
            pidx = grow(pidx,pidx(,1));
       }
       lpidx = pidx;
-            
+
       rgn = array(float,4);
       rgn(1) = min(pidx(1,));
       rgn(2) = max(pidx(1,));
@@ -353,12 +411,12 @@ func sel_rgn_from_datatiles(rgn=, data_dir=,lmap=, win=, mode=, search_str=, ski
       rgn(4) = max(pidx(2,));
     }
    }
-    
+
    /* plot a window over selected region */
    a_x=[rgn(1), rgn(2), rgn(2), rgn(1), rgn(1)];
    a_y=[rgn(3), rgn(3), rgn(4), rgn(4), rgn(3)];
    if (!noplot) plg, a_y, a_x;
-   
+
    ind_e_min = 2000 * (int((rgn(1)/2000)));
    ind_e_max = 2000 * (1+int((rgn(2)/2000)));
    if ((rgn(2) % 2000) == 0) ind_e_max = rgn(2);
@@ -368,7 +426,7 @@ func sel_rgn_from_datatiles(rgn=, data_dir=,lmap=, win=, mode=, search_str=, ski
    n_east = (ind_e_max - ind_e_min)/2000;
    n_north = (ind_n_max - ind_n_min)/2000;
    n = n_east * n_north;
-   n = long(n); 
+   n = long(n);
    min_e = array(float, n);
    max_e = array(float, n);
    min_n = array(float, n);
@@ -383,22 +441,22 @@ func sel_rgn_from_datatiles(rgn=, data_dir=,lmap=, win=, mode=, search_str=, ski
           i++;
        }
     }
-    
+
    //find data tiles
-   
+
    n_i_east =( n_east/5)+1;
    n_i_north =( n_north/5)+1;
    n_i=n_i_east*n_i_north;
    min_e = long(min_e);
    max_n = long(max_n);
-   
+
    if (!noplot) {
    	pldj, min_e, min_n, min_e, max_n, color="green"
    	pldj, min_e, min_n, max_e, min_n, color="green"
    	pldj, max_e, min_n, max_e, max_n, color="green"
    	pldj, max_e, max_n, min_e, max_n, color="green"
    }
-   
+
    if (is_void(search_str)) {
       if (mode == 1) file_ss = "_v.pbd";
       if (mode == 2) file_ss = "_b.pbd";
@@ -406,15 +464,15 @@ func sel_rgn_from_datatiles(rgn=, data_dir=,lmap=, win=, mode=, search_str=, ski
    } else {
       file_ss = search_str;
    }
-  
+
    files =  array(string, 10000);
    floc = array(long, 2, 10000);
    ffp = 1; flp = 0;
    for(i=1; i<=n; i++) {
         fp = 1; lp=0;
    	s = array(string,100);
-   	command = swrite(format="find  %s -name '*%d*%d*%s'", data_dir, min_e(i), max_n(i), file_ss); 
-   	f = popen(command, 0); 
+   	command = swrite(format="find  %s -name '*%d*%d*%s'", data_dir, min_e(i), max_n(i), file_ss);
+   	f = popen(command, 0);
    	nn = read(f, format="%s",s);
 	close,f
 	lp +=  nn;
@@ -424,7 +482,7 @@ func sel_rgn_from_datatiles(rgn=, data_dir=,lmap=, win=, mode=, search_str=, ski
 	  floc(1,ffp:flp) = long(min_e(i));
 	  floc(2,ffp:flp) = long(max_n(i));
         }
-	ffp = flp+1;	
+	ffp = flp+1;
    }
    sel_eaarl = [];
    files =  files(where(files));
@@ -475,22 +533,25 @@ func sel_rgn_from_datatiles(rgn=, data_dir=,lmap=, win=, mode=, search_str=, ski
     }
     sel_eaarl = sel_eaarl(idx);
    }
- 
-         
+
+
    write, format = "Total Number of selected points = %d\n", numberof(sel_eaarl);
 
   window, w;
   return sel_eaarl;
-   
+
 }
 
 
 func exclude_region(origdata, seldata) {
-/*DOCUMENT exclude_region(origdata, seldata)
- This function excludes the data points in seldata from the original data array
- (origdata).
- The returned data array contains all points within origdata that are not in seldata.
- amar nayegandhi 11/24/03.
+/* DOCUMENT exclude_region(origdata, seldata)
+Function excludes the data points in seldata from the original data array
+(origdata).
+
+The returned data array contains all points within origdata that are
+not in seldata.
+
+amar nayegandhi 11/24/03.
 */
 
  unitarr = array(char, numberof(origdata));
@@ -503,13 +564,13 @@ func exclude_region(origdata, seldata) {
 
 }
 
-  
+
 
 func make_GEO_from_VEG(veg_arr) {
-/*
-  this function converts an array processed for vegetation into a bathy (GEO)
- array.
- amar nayegandhi 06/07/04.
+/* DOCUMENT make_GEO_from_VEG( veg_arr )
+Function converts an array processed for vegetation into a bathy (GEO) array.
+
+amar nayegandhi 06/07/04.
 */
 
  geoarr = array(GEO, numberof(veg_arr));
@@ -530,16 +591,26 @@ return geoarr;
 }
 
 func add_buffer_rgn(points, buffer, mode=) {
-/*DOCUMENT add_buffer_rgn(points,buffer,mode=1)
-  This function takes an area around of points, creates a buffer region around them, then
-  returns the buffer region.
-  INPUTS:  points = the array of points
-           buffer = the amount of buffer in m
-           mode = 1: input array of points are for a rectangle
-           mode = 2: input array of points are for a polygon
-	   mode = 3: input array of points is already a defined region (like from the limits() function)
-  OUTPUT:  rgn:  the expanded rgn defined the a new array of points (will always be a rectangle)
-  --Jeremy Bracone 5/9/05--
+/* DOCUMENT add_buffer_rgn(points, buffer, mode=1)
+Function takes an area around of points,
+creates a buffer region around them,
+then returns the buffer region.
+
+INPUTS:
+  points       :  Array of points
+
+  buffer       :  Amount of buffer in m
+
+  mode=        :  Input array of points are for a:
+                  1  rectangle
+                  2  polygon
+                  3  already defined region (like from the limits() function)
+
+OUTPUT:
+  rgn          :  The expanded rgn defines the new array of points
+                  (will always be a rectangle)
+
+--Jeremy Bracone 5/9/05--
 */
  rgn = array(float, 4);
  if (mode == 1) {
@@ -584,24 +655,36 @@ func add_buffer_rgn(points, buffer, mode=) {
 }
 
 func getPoly_add_buffer(buf,origdata=,windw=) {
-/*DOCUMENT getPoly_add_buffer()
-  This is a function was necessary to combine the following commands into one:
-	getPoly()
-	add_buffer_rgn()
-	sel_data_rgn()
-  INPUTS:	buffer = the size of the buffer region in meters
-		origdata = the unfiltered data for the call in sel_data_rgn()
-		win = the current window number
-  OUTPUTS:	buf_points = the array of points returned by getPoly that represents the actual region selected
-		temp_rgn = the returned buffer region returned by add_buffer_rgn (array(float,4) = points of rectangle)
-		workdata = the selected points within the buffer region
+/* DOCUMENT getPoly_add_buffer( buf, origdata=, window= )
+Function was necessary to combine the following commands into one:
+  getPoly()
+  add_buffer_rgn()
+  sel_data_rgn()
+
+INPUTS:
+  buf       :  Size of the buffer region in meters
+
+  origdata= :  Unfiltered data for the call in sel_data_rgn()
+
+  win=      :  Current window number
+
+OUTPUTS:
+  buf_points  :  Array of points returned by getPoly that represents
+                 the actual region selected
+
+  temp_rgn    :  Buffer region returned by add_buffer_rgn
+                 (array(float,4) = points of rectangle)
+
+  workdata    :  Selected points within the buffer region
+
   **FUNCTION RETURNS 1 IF SUCCESSFUL AND 2 IF UNSUCCESSFUL**
-  --Jeremy Bracone 5/11/05--
+
+--Jeremy Bracone 5/11/05--
 */
  extern buf_points,workdata;
  workdata=[];
  if (is_void(origdata)) return 0;
- if (is_void(window)) window=5; 
+ if (is_void(window)) window=5;
  buf_points = getPoly();
  temp_rgn = add_buffer_rgn(buf_points, buf, mode=2);
  workdata = sel_data_rgn(origdata, mode=4, win=windw, rgn=temp_rgn);
@@ -613,23 +696,42 @@ func getPoly_add_buffer(buf,origdata=,windw=) {
 }
 
 func save_data_tiles_from_array(iarray, outpath, buf=,file_string=, plot=, win=, samepath=,zone_nbr=) {
-/* DOCUMENT save_data_tiles_from_array(indextile, outpath, buf=, file_string=, plot=, win=)
-    This function saves 2km data tiles in the correct output format from
-a data array.  This function is very useful when manually filtering a large 
-data array spanning several data tiles and writing the output in the data tile file format in the correct directory format.
-  INPUT: iarray = manually filtered array, usually an index tile (but not 
- 		necessarily).
-	 outpath = output path where the files are to be written.  The files will
-		be written in the standard output file and directory format.
-	 buf = buffer around each data tile to be included.  Defaults to 200m.
-	 file_string = file string that includes all you want to add to the filename
-	plot= set to 1 if you want to draw the tile boundaries in window, win.
-	win= set the window number to plot tile boundaries.  
-		for e.g.: "w84_v_b700_w50_n3_merged_ircf_mf", then an example tile
-		file name will be "t_e350000_n3346000_w84_v_b700_w50_n3_merged_ircf_mf.pbd"
-	samepath = set to 1 if you want to write the data out to the outpath with no index/data paths.
-        zone_nbr = the zone number to put into the filename.  If not set, it uses a number from the variable name.
-  	Original: Amar Nayegandhi July 12-14, 2005
+/* DOCUMENT save_data_tiles_from_array(iarray, outpath, buf=,
+                                       file_string=, plot=, win=)
+
+Function saves 2km data tiles in the correct output format from
+a data array.  This is very useful when manually filtering a large
+data array spanning several data tiles and writing the output in the
+data tile file format in the correct directory format.
+
+INPUT:
+  iarray     :  Manually filtered array, usually an index tile
+                (but not necessarily).
+
+  outpath    :  Path where the files are to be written.
+                The files will be written in the standard output file
+                and directory format.
+
+  buf=       :  Buffer around each data tile to be included
+                (default is 200m)
+
+  file_string=  :  file string to add to the filename
+
+                Example: "w84_v_b700_w50_n3_merged_ircf_mf",
+                then an example tile file name will be
+                "t_e350000_n3346000_w84_v_b700_w50_n3_merged_ircf_mf.pbd"
+
+  plot=      :  Set to 1 to draw the tile boundaries in window, win.
+
+  win=       :  Set the window number to plot tile boundaries.
+
+  samepath=  :  Set to 1 to write the data out to the outpath with no
+                index/data paths.
+
+  zone_nbr=  :  Zone number to put into the filename.
+                If not set, it uses a number from the variable name.
+
+Original: Amar Nayegandhi July 12-14, 2005
 */
 
 
@@ -648,7 +750,7 @@ data array spanning several data tiles and writing the output in the data tile f
   // we add 2000m to the northing because we want the upper left corner
   first_tile = tile_location([mineast,minnorth]);
   last_tile = tile_location([maxeast+2000,maxnorth+2000]);
-  
+
   ntilesx = (last_tile(2)-first_tile(2))/2000 + 1;
   ntilesy = (last_tile(1)-first_tile(1))/2000 + 1;
 
@@ -656,7 +758,7 @@ data array spanning several data tiles and writing the output in the data tile f
   northarr = span(first_tile(1), last_tile(1), ntilesy)*100;
 
   buf *= 100;
-  
+
   mem_ans = [];
   for (i=1;i<=ntilesx-1;i++) {
     idx=idx1=outdata=[];
@@ -734,30 +836,41 @@ data array spanning several data tiles and writing the output in the data tile f
 	outdata1 = [];
     }
   }
-	
- return   
+
+ return
 }
 
 func select_datatiles(data_dir,out_dir=, win=, mode=, search_str=, noplot=,  pidx=) {
-/* DOCUMENT  select_datatiles(data_dir,out_dir=, win=, mode=, search_str=, noplot=,  pidx=) 
+/* DOCUMENT  select_datatiles(data_dir, out_dir=, win=, mode=, search_str=,
+                              noplot=,  pidx=)
 
-  This function selects data tiles from a directory and writes it out to out_dir
-  The processed data tiles must have the min easting and max northing in their filename.
-  INPUT:
-   data_dir = directory where all the data tiles are located.
-   out_dir = if set the selected files will be copied to out_dir
-   win = window number that will be used to select the region.  defaults to current window.
-   mode = 1 for using current window limits to select region
-	= 2 for using the rectangular box to select region
-	= 3 for using the points in polygon (pip) to select region
+Function selects data tiles from a directory and writes it out to out_dir
 
-   search_str= define search string for file names to select
-   pidx = the array of a previously clicked polygon. Set to lpidx if this function 
-	  is previously used.
-  original: amar nayegandhi September 2005
+The processed data tiles must have the min easting and max northing
+in their filename.
+
+INPUT:
+  data_dir     :  Directory where all the data tiles are located
+
+  out_dir=     :  If set the selected files will be copied to out_dir
+
+  win=         :  Window number that will be used to select the region
+                  (default is current window)
+
+  mode=        :  Method to select region
+                  1  current window limits
+                  2  rectangular box
+                  3  points in polygon (pip)
+
+  search_str=  :  Define search string for file names to select
+
+  pidx=        :  Array of a previously clicked polygon
+                  Set to lpidx if this function is previously used
+
+original: amar nayegandhi September 2005
 */
 
-   extern lpidx; // this takes the values of the polygon selected by user. 
+   extern lpidx; // this takes the values of the polygon selected by user.
    w = window();
    if (is_void(win)) win = w;
    window, win;
@@ -786,19 +899,19 @@ func select_datatiles(data_dir,out_dir=, win=, mode=, search_str=, noplot=,  pid
            pidx = grow(pidx,pidx(,1));
       }
       lpidx = pidx;
-            
+
       rgn = array(float,4);
       rgn(1) = min(pidx(1,));
       rgn(2) = max(pidx(1,));
       rgn(3) = min(pidx(2,));
       rgn(4) = max(pidx(2,));
     }
-    
+
    /* plot a window over selected region */
    a_x=[rgn(1), rgn(2), rgn(2), rgn(1), rgn(1)];
    a_y=[rgn(3), rgn(3), rgn(4), rgn(4), rgn(3)];
    if (!noplot) plg, a_y, a_x;
-   
+
    ind_e_min = 2000 * (int((rgn(1)/2000)));
    ind_e_max = 2000 * (1+int((rgn(2)/2000)));
    if ((rgn(2) % 2000) == 0) ind_e_max = rgn(2);
@@ -808,7 +921,7 @@ func select_datatiles(data_dir,out_dir=, win=, mode=, search_str=, noplot=,  pid
    n_east = (ind_e_max - ind_e_min)/2000;
    n_north = (ind_n_max - ind_n_min)/2000;
    n = n_east * n_north;
-   n = long(n); 
+   n = long(n);
    min_e = array(float, n);
    max_e = array(float, n);
    min_n = array(float, n);
@@ -823,36 +936,36 @@ func select_datatiles(data_dir,out_dir=, win=, mode=, search_str=, noplot=,  pid
           i++;
        }
     }
-    
+
    //find data tiles
-   
+
    n_i_east =( n_east/5)+1;
    n_i_north =( n_north/5)+1;
    n_i=n_i_east*n_i_north;
    min_e = long(min_e);
    max_n = long(max_n);
-   
+
    if (!noplot) {
    	pldj, min_e, min_n, min_e, max_n, color="green"
    	pldj, min_e, min_n, max_e, min_n, color="green"
    	pldj, max_e, min_n, max_e, max_n, color="green"
    	pldj, max_e, max_n, min_e, max_n, color="green"
    }
-   
+
    if (is_void(search_str)) {
       file_ss = "*.pbd";
    } else {
       file_ss = search_str;
    }
-  
+
    files =  array(string, 10000);
    floc = array(long, 2, 10000);
    ffp = 1; flp = 0;
    for(i=1; i<=n; i++) {
         fp = 1; lp=0;
    	s = array(string,100);
-   	command = swrite(format="find  %s -name '*%d*%d*%s'", data_dir, min_e(i), max_n(i), file_ss); 
-   	f = popen(command, 0); 
+   	command = swrite(format="find  %s -name '*%d*%d*%s'", data_dir, min_e(i), max_n(i), file_ss);
+   	f = popen(command, 0);
    	nn = read(f, format="%s",s);
 	close,f
 	lp +=  nn;
@@ -862,7 +975,7 @@ func select_datatiles(data_dir,out_dir=, win=, mode=, search_str=, noplot=,  pid
 	  floc(1,ffp:flp) = long(min_e(i));
 	  floc(2,ffp:flp) = long(max_n(i));
         }
-	ffp = flp+1;	
+	ffp = flp+1;
    }
    files =  files(where(files));
    if (!noplot) write, files;
@@ -873,7 +986,7 @@ func select_datatiles(data_dir,out_dir=, win=, mode=, search_str=, noplot=,  pid
       // now copy these files to out_dir
    	s = array(string,100);
         command = swrite(format="cp -dprv %s %s",files, out_dir);
-   	f = popen(command, 0); 
+   	f = popen(command, 0);
    	nn = read(f, format="%s",s);
 	close,f
 	lp +=  nn;
@@ -883,11 +996,11 @@ func select_datatiles(data_dir,out_dir=, win=, mode=, search_str=, noplot=,  pid
 	  floc(1,ffp:flp) = long(min_e(i));
 	  floc(2,ffp:flp) = long(max_n(i));
         }
-	ffp = flp+1;	
+	ffp = flp+1;
      }
    }
 
   window, w;
   return files;
-   
+
 }

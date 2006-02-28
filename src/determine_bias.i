@@ -1,4 +1,4 @@
-//This document contains functions that can determine bias corrections 
+//This document contains functions that can determine bias corrections
 // $Id$
 // Original: ?????
 //  Added guessrollbias, WW/RM 2005/11/29
@@ -10,30 +10,31 @@ func updatebias {
 }
 
 func guessrollbias {
-/* DOCUMENT 
-  Help guess the best roll bias value.   Assumes you already have:
-   1) a transect in current window
-  
-   Click on a point on the left side of the transect data and then
-   on a point on the right side of the transect that you think is 
-   actually at the same elevation.
+/* DOCUMENT guessrollbias()
+Help guess the best roll bias value.
 
-   Returns:
-     Prints out suggested roll bias values and stats.
+Assumes you already have:
+  - a transect in current window
 
+Click on a point on the left side of the transect data and then
+on a point on the right side of the transect that you think is
+actually at the same elevation.
+
+Returns:
+  Prints out suggested roll bias values and stats.
 
 */
- xy = (mouse() - mouse()); 
+ xy = (mouse() - mouse());
  if ( xy(1) == 0.0 ) {
     write, "No bias correction required!"
     return
  }
- da = atan( xy(2)/xy(1) )*rad2deg                         
+ da = atan( xy(2)/xy(1) )*rad2deg
  write,format="Elevation error due to roll bias error: %4.1f cm over %5.1f meters\n", xy(2)*100.0, abs(xy(1))
- write,format="Current ops_conf.roll_bias = %5.3f, Estimated roll bias error: %6.3f deg\n", 
+ write,format="Current ops_conf.roll_bias = %5.3f, Estimated roll bias error: %6.3f deg\n",
    ops_conf.roll_bias, da
- write,format="Try setting ops_conf.roll_bias = %5.3f or %5.3f\n", 
-   ops_conf.roll_bias + da, 
+ write,format="Try setting ops_conf.roll_bias = %5.3f or %5.3f\n",
+   ops_conf.roll_bias + da,
    ops_conf.roll_bias - da
 }
 
@@ -76,14 +77,14 @@ func selgoodflightlines(data, win=) {
 	   if(i==k)col="red";
 	   plmk,data.elevation(idx(i):idx(i+1)-1)/100.0,dist(idx(i):idx(i+1)-1)/100.0,color=col,width=10,marker=3;
            slopes(i) = linear_regression(dist(idx(i):idx(i+1)-1)/100.0, data.elevation(idx(i):idx(i+1)-1)/100.0, plotline=1)(1);
-	   plt, swrite(format="%2.2f", slopes(i)), min(dist(idx(i):idx(i+1)-1))/100.0, max(data.elevation(idx(i):idx(i+1)-1)/100.0)+1, color=col, tosys=1;   
+	   plt, swrite(format="%2.2f", slopes(i)), min(dist(idx(i):idx(i+1)-1))/100.0, max(data.elevation(idx(i):idx(i+1)-1)/100.0)+1, color=col, tosys=1;
 	}
 
 	yn = "";
 	write, "Keep red flightline?"
 	read(yn);
 	if (strmatch(yn, "b")) lance();
-	if (!strmatch(yn, "y")) { 
+	if (!strmatch(yn, "y")) {
 		gooddata(k) = -1;
 		plmk,data.elevation(idx(k):idx(k+1)-1)/100.0,dist(idx(k):idx(k+1)-1)/100.0,color="yellow",width=10,marker=3;
 		plt, "N", avg(dist(idx(k):idx(k+1)-1))/100.0, max(data.elevation(idx(k):idx(k+1)-1)/100.0)+0.2, color="yellow", tosys=1;
@@ -128,19 +129,20 @@ func plot_flightline_transect(data, win) {
 	   if(i%2==0)col="green";
 	   plmk,data.elevation(idx(i):idx(i+1)-1)/100.0,dist(idx(i):idx(i+1)-1)/100.0,color=col,width=10,marker=3;
            slopes(i) = linear_regression(dist(idx(i):idx(i+1)-1)/100.0, data.elevation(idx(i):idx(i+1)-1)/100.0, plotline=1)(1);
-	   plt, swrite(format="%2.2f", slopes(i)), min(dist(idx(i):idx(i+1)-1))/100.0, max(data.elevation(idx(i):idx(i+1)-1)/100.0)+1, color=col, tosys=1;   
+	   plt, swrite(format="%2.2f", slopes(i)), min(dist(idx(i):idx(i+1)-1))/100.0, max(data.elevation(idx(i):idx(i+1)-1)/100.0)+1, color=col, tosys=1;
 	}
 
 	window, winold;
 }
 
 func get_transect(data, win=, width=, update=) {
-/* DOCUMENT get_transect(data,win=)
- This function prompts the user to drag a line over plotted EAARL data 
-      in win= and returns the data within width= meters from this line.
- To visually remove outliers the program plots the transect in window 0,
-      prompts the user to select good visual limits and then prompts 
-      the user to drag a box around the good transect data.
+/* DOCUMENT get_transect(data, win=)
+Function prompts the user to drag a line over plotted EAARL data
+in win= and returns the data within width= meters from this line.
+
+To visually remove outliers the program plots the transect in window 0,
+prompts the user to select good visual limits and then prompts
+the user to drag a box around the good transect data.
 */
 	if (!is_array(width)) width=5.0;
 	winold = window();
@@ -158,7 +160,7 @@ func get_transect(data, win=, width=, update=) {
 	if (m==0){y=x;x=0;}
 	if (m < 0) pts = [[pt(1,1)-x,pt(2,1)-y],[pt(1,1)+x,pt(2,1)+y],[pt(1,2)+x, pt(2,2)+y],[pt(1,2)-x, pt(2,2)-y]];
 	if (m > 0) pts = [[pt(1,1)+x,pt(2,1)+y],[pt(1,1)-x,pt(2,1)-y],[pt(1,2)-x, pt(2,2)-y],[pt(1,2)+x, pt(2,2)+y]];
-	
+
         plmk, pts(2,), pts(1,), marker=2, msize=0.3, color="blue";
         box = boundBox(pts);
 	box_pts = ptsInBox(box*100., data.east, data.north);
@@ -188,21 +190,30 @@ func get_transect(data, win=, width=, update=) {
 
 func find_roll_bias(data, typ, inout, startbias=, threshold=, update=) {
 /* DOCUMENT find_roll_bias(data, typ, inout, startbias=, threshold=)
- This function attempts to determine the best ops_conf.roll_bias by minimizing 
-    the average of the slopes of each flightline in the data array. In order
-    for proper operation, the data must be comprised of parallel flightline 
-    transects from the same mission traveling the SAME direction. The EAARL
-    mission data must be loaded. The program returns the optimum roll_bias.
+Function attempts to determine the best ops_conf.roll_bias by minimizing
+the average of the slopes of each flightline in the data array. In order
+for proper operation, the data must be comprised of parallel flightline
+transects from the same mission traveling the SAME direction. The EAARL
+mission data must be loaded. The program returns the optimum roll_bias.
 
 Usage: goodroll = find_roll_bias(data, typ, inout, startbias=, threshold=)
-	data =  EAARL data array
-	typ = data type to check for bias. 0 for fs, 1 for bathy, 2 for veg
-	inout = The modifier for the direction of the plane with respect to
-		the transect. If the plane is moving INto the screen on the
-		transect view, set inout = 1. If the plane is moving out of
-		the screen, set inout= -1.
-	startbias = The starting bias (default uses ops_conf.roll_bias)
-	threshold = The threshold for proper flatness. Default = 0.0005
+
+Input:
+data       :  EAARL data array
+
+typ        :  Data type to check for bias.
+              0  fs
+              1  bathy
+              2  veg
+
+inout      :  Modifier for the direction of the plane with respect to
+              the transect.
+              1  Plane is moving IN  to the screen on the transect view
+             -1  Plane is moving OUT of the screen on the transect view
+
+startbias= :  The starting bias (default uses ops_conf.roll_bias)
+
+threshold= :  The threshold for proper flatness. Default = 0.0005
 
 */
 	if (!inout) inout = 1;
@@ -239,9 +250,15 @@ Usage: goodroll = find_roll_bias(data, typ, inout, startbias=, threshold=)
 
 func find_transect_slope(data, typ) {
 /* DOCUMENT find_transect_slope(data, typ)
-    This function returns the average of the slopes of each 
-    flightline in data. Set type to 0 for fs (preferred)
-    1 for bathy and 2 for veg.
+Function returns the average of the slopes of each flightline in data.
+
+Input:
+  data  :
+
+  typ   :  Type of data
+           0  fs (preferered)
+           1  bathy
+           2  veg
 
 */
 	data = reprocess_data(data, typ);
@@ -275,20 +292,28 @@ func find_transect_slope(data, typ) {
 	slopes = slopes(where( (slopes >= 0) | (slopes <= 0)));
 	return avg(slopes);
 }
-	
+
 //	for (i=1;i<=numberof(idx)-1;i++) {col="blue";if (i%2 == 0) col="red";plmk, data.elevation(idx(i):idx(i+1)-1)/100.0, dist(idx(i):idx(i+1)-1)/100.0, color=col;}
 
 func reprocess_data(data, typ) {
-/* DOCUMENT reprocess_data(data,typ)
-    This function reprocesses and returns the exact input data array.
-    Set typ to 0 for fs, 1 for bathy and 2 for veg. For fs use function
-    reprocess_fs_data, which is slightly faster for small datasets.
+/* DOCUMENT reprocess_data(data, typ)
+Function reprocesses and returns the exact input data array.
+
+Input:
+  data  :
+
+  typ   :  Type of data
+           0  fs (*)
+           1  bathy
+           2  veg
+
+(*) For fs use reprocess_fs_data, which is slightly faster for small datasets.
 
 
-   ***WARNING*** This function re-processes each flight segment in the 
-	input data and then goes through each point in the input data 
-	array and finds the corresponding reprocessed point.
-	This will be tremendously slow for large data sets.
+   ***WARNING*** This function re-processes each flight segment in the
+        input data and then goes through each point in the input data
+        array and finds the corresponding reprocessed point.
+        This will be tremendously slow for large data sets.
 */
 	extents = [data.east(min)/100.0-75, data.east(max)/100.0+75, data.north(min)/100.0-175, data.north(max)/100.0+75];
 	utm=1;
@@ -319,12 +344,12 @@ func reprocess_data(data, typ) {
 
 func reprocess_fs_data(data) {
 /* DOCUMENT reprocess_fs_data(data)
-    This function reprocesses and returns the exact fs input data array.
+Function reprocesses and returns the exact fs input data array.
 
    ***WARNING*** This function re-processes each raster in the input
-	data and then goes through each point in the input data array
-       and finds the corresponding reprocessed point.
-	This will be tremendously slow for large data sets.
+        data and then goes through each point in the input data array
+        and finds the corresponding reprocessed point.
+        This will be tremendously slow for large data sets.
 */
 	data = data(sort(data.rn&0xffffff));
 	rnidx = unique(data.rn&0xffffff);
@@ -349,12 +374,12 @@ func reprocess_fs_data(data) {
 
 func reprocess_bathy_data(data) {
 /* DOCUMENT reprocess_bathy_data(data)
-    This function reprocesses and returns the exact bathy input data array.
+Function reprocesses and returns the exact bathy input data array.
 
    ***WARNING*** This function re-processes each raster in the input
-	data and then goes through each point in the input data array
-       and finds the corresponding reprocessed point.
-	This will be tremendously slow for large data sets.
+        data and then goes through each point in the input data array
+        and finds the corresponding reprocessed point.
+        This will be tremendously slow for large data sets.
 */
 	data = data(sort(data.rn&0xffffff));
 	rnidx = unique(data.rn&0xffffff);
@@ -403,11 +428,11 @@ func reprocess_bathy_flightline(data) {
 	cdepth_ptr = compute_depth(data_ptr=&depth);
 	depth = *cdepth_ptr(1);
 	rasters = depth.rn(1,)&0xffffff;
-	
+
 	for (i=1;i<=numberof(rnidx)-1;i++) {
 		raster = data.rn(rnidx(i))&0xffffff
 		thisrast = geoall_to_geo(depth(where(rasters == raster)));
-		thisdata = data(rnidx(i):rnidx(i+1)-1); 
+		thisdata = data(rnidx(i):rnidx(i+1)-1);
 		write, format="Saving good points from raster %i...\n", i;
 		idx = array(int, numberof(thisrast));
 		for (j=1;j<=numberof(thisdata);j++) {
