@@ -239,6 +239,10 @@ time_rec(FILE *f, int pass) {
   fread( &tv, sizeof(tv), 1, idf);
   if ( time_recs == 0 ) {
      tarray[0].secs = tv.tv_sec + gps_time_offset ;
+ 
+     if ( tarray[0].secs > 1136073600 )
+        hdr.dTimeTagBias        =  14.0;
+
      tm = gmtime( (time_t *)&tarray[0].secs );
        sod = tarray[0].secs % 86400;
      bsowe = tarray[0].secs - sod - tm->tm_wday*86400;
