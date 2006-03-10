@@ -1272,7 +1272,7 @@ func subsample_pbd_data (fname=, skip=,output_to_file=, ofname=) {
 
   //read pbd file
   if (!fname) {
-   if (is_void(initialdir)) initialdir = "/data/0/";
+   if (is_void(initialdir)) initialdir = "/data/";
    fname  = get_openfn( initialdir=initialdir, filetype="*.pbd", title="Open PBD Data File" );
   }
   

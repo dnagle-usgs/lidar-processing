@@ -234,22 +234,22 @@ fileevent $ytk_fifo readable {
 
 
 ############# Show a signon spash window
-if { [ catch { set _ytk_splash_img [ image create photo -file "$_ytk(splash_gif)" ] } err ] } {
-  puts "Cant't find $_ytk(splash_gif)";
-  tk_messageBox -icon error -message $err -type ok
-  set _ytk_splash_img [ image create photo ]
-}
+#if { [ catch { set _ytk_splash_img [ image create photo -file "$_ytk(splash_gif)" ] } err ] } {
+#  puts "Cant't find $_ytk(splash_gif)";
+#  tk_messageBox -icon error -message $err -type ok
+#  set _ytk_splash_img [ image create photo ]
+#}
 
-toplevel .splash
-label .splash.yorickimg -image $_ytk_splash_img -relief raised -borderwidth 4
-pack .splash.yorickimg -side top
-update
-set sz [ wm maxsize . ]
-set cx [ expr [ lindex $sz 0 ]/2 - [winfo width .splash ]/2];  
-set cy [ expr [ lindex $sz 1 ] / 2 - [winfo height .splash ]/2 ]
-set about_geo "+$cx+$cy"
-wm geometry .splash $about_geo 
-update
+#toplevel .splash
+#label .splash.yorickimg -image $_ytk_splash_img -relief raised -borderwidth 4
+#pack .splash.yorickimg -side top
+#update
+#set sz [ wm maxsize . ]
+#set cx [ expr [ lindex $sz 0 ]/2 - [winfo width .splash ]/2];  
+#set cy [ expr [ lindex $sz 1 ] / 2 - [winfo height .splash ]/2 ]
+#set about_geo "+$cx+$cy"
+#wm geometry .splash $about_geo 
+#update
 
  if { [ info exists rlterm ] && [ string equal $_ytk(use_rlterm) "Yes" ]  } {
  if { [ catch  { spawn $rlterm $_ytk(yorick_executable) } ] } {
@@ -308,22 +308,22 @@ puts $spawn_id
 match_max -i $spawn_id 32768
 
 
-label .splash.signon -justify center \
-   -text "$ytk_version
-Yorick Version: $yorick_version
-Tcl $tcl_version, Tk $tk_version, ExpectK [exp_version]" 
+#label .splash.signon -justify center \
+#   -text "$ytk_version
+#Yorick Version: $yorick_version
+#Tcl $tcl_version, Tk $tk_version, ExpectK [exp_version]" 
 
-button .splash.start -text "Get Started" \
-	-state normal \
-	-command { set run_ytk 1 }
-pack .splash.signon .splash.start -side top -fill x
-update
-after 2000 { set run_ytk 1 }
-vwait run_ytk
-pack forget .splash.yorickimg
-pack forget .splash.signon
-pack forget .splash.start
-destroy .splash
+#button .splash.start -text "Get Started" \
+#	-state normal \
+#	-command { set run_ytk 1 }
+#pack .splash.signon .splash.start -side top -fill x
+#update
+#after 2000 { set run_ytk 1 }
+#vwait run_ytk
+#pack forget .splash.yorickimg
+#pack forget .splash.signon
+#pack forget .splash.start
+#destroy .splash
 ##################### End of spash
 
 

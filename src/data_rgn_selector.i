@@ -978,7 +978,7 @@ original: amar nayegandhi September 2005
 	ffp = flp+1;
    }
    files =  files(where(files));
-   if (!noplot) write, files;
+   //if (!noplot) write, files;
    floc = floc(,where(files));
    if (is_array(out_dir)) {
      if (numberof(files) > 0) {

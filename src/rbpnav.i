@@ -164,7 +164,7 @@ func rbpnav (junk, fn=) {
 */
 // extern pn;
 extern pnav_filename;		// so we can show which trajectory was used
-extern data_path
+extern data_path, gps_time_correction
 extern gga;
  if ( !is_void( fn ) ) {
     ifn = fn;
@@ -226,6 +226,7 @@ _read, idf,  0, n
 ///  pnav = array( double, 12, n);
 pn   = array( PNAV, n);
 _read(idf, 4, pn );
+
 
 // check for time roll-over, and correct it
   q = where( pn.sod(dif) < 0 );

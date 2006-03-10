@@ -476,6 +476,9 @@ proc load_edb {} {
    menu $w.mb.new
    menu $w.mb.help
 
+ exp_send "require, \"rbgga.i\"\r"
+ source rbgga.ytk
+
  $w.mb add cascade -label File     -underline 0 -menu $w.mb.file
  $w.mb add cascade -label "Maps/Nav"     -underline 0 -menu $w.mb.nav
  $w.mb add cascade -label "Settings"     -underline 0 -menu $w.mb.attitude
@@ -485,25 +488,16 @@ proc load_edb {} {
  $w.mb add cascade -label New      -underline 0 -menu $w.mb.new
  $w.mb add cascade -label Help     -underline 0 -menu $w.mb.help
 
- $w.mb.file add command -label "Load EAARL Database Index (Edb)..." -command { load_edb } \
-	-underline 5
- $w.mb.file add command -label "Load EAARL from Conf..." -command { source "$src_path/confload.ytk" } -underline 16
-
- exp_send "require, \"rbgga.i\"\r"
- source rbgga.ytk
- $w.mb.file add command -label "Coastlines & Flight tracks"   -underline 13 \
-	-command rbgga_menu
- $w.mb.file add command -label "Load DMARS Attitude data..."   -underline 5 \
-   -command  load_dmars;
- $w.mb.file add command -label "Load Tans Attitude data..."   -underline 5 \
-   -command { exp_send "require, \"rbtans.i\"\r"
-   	      expect ">"
-    	      exp_send "tans = rbtans() \r" }
- $w.mb.file add command -label "Load GPS PNAV data..."   -underline 9 \
-   -command { exp_send "require, \"rbpnav.i\"\r"
+ $w.mb.file add command -label "Load EAARL Database Index (Edb)..." -command { load_edb }  -underline 5
+ $w.mb.file add command -label "Load GPS PNAV data..."   -underline 9 -command { exp_send "require, \"rbpnav.i\"\r"
     	      expect ">"
      	      exp_send "pnav = rbpnav() \r" }
-
+ $w.mb.file add command -label "Load EAARL from Conf..." -command { source "$src_path/confload.ytk" } -underline 16
+ $w.mb.file add command -label "Load DMARS Attitude data..."   -underline 5 -command  load_dmars;
+ $w.mb.file add command -label "Load Tans Attitude data..."   -underline 5 -command { exp_send "require, \"rbtans.i\"\r"
+   	      expect ">"
+    	      exp_send "tans = rbtans() \r" }
+ $w.mb.file add command -label "Coastlines & Flight tracks"   -underline 13  -command rbgga_menu
   $w.mb.file add separator
 
  $w.mb.file add command -label "Edb Status" -command  edb_status 

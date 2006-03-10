@@ -55,4 +55,4 @@ func send_tans_to_sf( somd, pitch, roll, heading ) {
   }
 
 
-
+write,format="gps_time_correction = %f\n", gps_time_correction
