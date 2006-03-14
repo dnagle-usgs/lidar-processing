@@ -18,6 +18,19 @@ exec wish "$0" ${1+"$@"}
 # Generate kml for a directory of ALPS 2k by 2k tile
 # files placing the resulting kml in the same
 # directory.
+# Modified by Amar Nayegandhi Dec 2005
+  -- added ability to define configuration file.
+    The format for the config file is as follows:
+idx <path and file name of index file to be generated>
+be  <path to where bare earth files reside>
+fs  <path to where first surface files reside>
+ba  <path to where submerged topography files reside>
+
+Below is a sample config file for Colonial National Park:
+colo.cfg:
+idx C:/google_earth/COLO/COLO_index.kml
+be C:/google_earth/COLO/veg_pngs/
+fs C:/google_earth/COLO/veg_fs_pngs/
 ####################################################
 
 
@@ -35,16 +48,25 @@ set tile2GroundOverlay_data(rx) {t_(e|w)(\d+)_(n|s)(\d+)_(\d+)}
 # 3) Compute the required rotation angle.
 # 4) Compute the left,right, top, bottom
 ####################################################
-proc tile2GroundOverlay { rv fullpath } {
- global tile2GroundOverlay_data
+proc tile2GroundOverlay { rv fullpath mkkml } {
+ global tile2GroundOverlay_data cbfn
  upvar $rv rvL
  
+ if { $mkkml } {
    set pngfn [ file tail $fullpath ]
    set kmlfn "[ file rootname $fullpath ].kml"
+   set path [ file dirname $fullpath ]
+   if { [ file exists $path/colorbar.jpg ] } {
+   	set cbfn "$path/colorbar.jpg"
+   } 
    set kmlof [ open $kmlfn "w" ]
    set rvL(kmlFn) $kmlfn
    set n [ regexp $tile2GroundOverlay_data(rx) \
           $pngfn match ew easting ns northing zone ]
+ } else {
+   set n [ regexp $tile2GroundOverlay_data(rx) \
+          $fullpath match ew easting ns northing zone ]
+ }
 
 ####################################################
 # Compute the placemark name field
@@ -76,35 +98,37 @@ proc tile2GroundOverlay { rv fullpath } {
    set rvL(east)  $east
    set rvL(west)  $west
    
-   set LookAt "\
- <LookAt>
-  <longitude>$cll(lon)</longitude>
-  <latitude>$cll(lat)</latitude>
-  <range>4000.0</range>
- </LookAt>
- "
-   set latLonBox "\
- <LatLonBox>
-   <north>$north</north>
-   <west>$west</west>
-   <south>$south</south>
-   <east>$east</east>
-   <rotation>$rotation</rotation>\
- </LatLonBox>"
+   if { $mkkml } {
+	set LookAt "\
+ 	<LookAt>
+  	<longitude>$cll(lon)</longitude>
+  	<latitude>$cll(lat)</latitude>
+  	<range>4000.0</range>
+ 	</LookAt>
+ 	"
+   	set latLonBox "\
+	<LatLonBox>
+	<north>$north</north>
+	<west>$west</west>
+   	<south>$south</south>
+   	<east>$east</east>
+   	<rotation>$rotation</rotation>\
+ 	</LatLonBox>"
  
-   set rvL(kml) "\
-<GroundOverlay><name>$rvL(name)</name>
- $LookAt
- <Icon>
-  <href>
-   $fullpath
-  </href>
- </Icon>
- $latLonBox
-</GroundOverlay>
- "
-   puts $kmlof $rvL(kml)
-   close $kmlof
+   	set rvL(kml) "\
+	<GroundOverlay><name>$rvL(name)</name>
+ 	$LookAt
+ 	<Icon>
+  	<href>
+   	$fullpath
+  	</href>
+ 	</Icon>
+ 	$latLonBox
+	</GroundOverlay>
+ 	"
+   	puts $kmlof $rvL(kml)
+   	close $kmlof
+   }
    return
 }
 
@@ -142,20 +166,100 @@ proc kmlfooter { } {
 ####################################################
 #
 ####################################################
-proc placeMark { fn } {
-    tile2GroundOverlay rv $fn
+proc placeMark { fn befn fsfn bafn } {
+
+    tile2GroundOverlay rv $fn 0 
     set e $rv(east)
     set w $rv(west)
     set n $rv(north)
     set s $rv(south)
-   return "<Placemark>
+
+    set yesbe 0
+    set yesfs 0
+    set yesba 0
+
+    if { [ string length $befn ] > 0 } {
+   	set bekml "[ file rootname $befn ].kml"
+	set becb  "[ file dirname $befn ]/colorbar.jpg"
+	set yesbe 1
+    }
+    if { [ string length $fsfn ] > 0 } {
+   	set fskml "[ file rootname $fsfn ].kml"
+	set fscb  "[ file dirname $fsfn ]/colorbar.jpg"
+	set yesfs 1
+    } 
+    if { [ string length $bafn ] > 0 } {
+   	set bakml "[ file rootname $bafn ].kml"
+	set bacb  "[ file dirname $bafn ]/colorbar.jpg"
+	set yesba 1
+    }
+
+   set rtnstmt "<Placemark>
   <styleUrl>#lidarTile</styleUrl>
   <description><!\[CDATA\[
-   <ul>UTM: $rv(name)
-    <li><a href=$rv(kmlFn)>Bare Earth DEM Image.</a>
-    <li>32 bit Geotiff Bare Earth DEM
-    <li>ASCII xyz point cloud data
-   </ul>
+   <ul><STRONG>UTM: $rv(name)</STRONG>
+   <table border = \"5\">
+   <tr>"
+
+   if { $yesbe } {
+   	set rtnstmt "$rtnstmt\n<th>Bare Earth Data</th>"
+   }
+   if { $yesfs } {
+   	set rtnstmt "$rtnstmt\n<th>First Surface Data</th>"
+   }
+   if { $yesba } {
+   	set rtnstmt "$rtnstmt\n<th>Submerged Topography Data</th>"
+   }
+
+   set rtnstmt "$rtnstmt\n</tr>\n<tr>"
+
+   if { $yesbe } {
+    set rtnstmt "$rtnstmt\n<td><a href=$bekml>DEM Image</a></td>"
+   }
+   if { $yesfs } {
+    set rtnstmt "$rtnstmt\n<td><a href=$fskml>DEM Image</a></td>"
+   }
+   if { $yesba } {
+    set rtnstmt "$rtnstmt\n<td><a href=$bakml>DEM Image</a></td>"
+   }
+
+   set rtnstmt "$rtnstmt\n</tr>\n<tr>"
+
+   if { $yesbe } {
+    set rtnstmt "$rtnstmt\n<td>32 bit Geotiff DEM</td>"
+   }
+   if { $yesfs } {
+    set rtnstmt "$rtnstmt\n<td>32 bit Geotiff DEM</td>"
+   }
+   if { $yesba } {
+    set rtnstmt "$rtnstmt\n<td>32 bit Geotiff DEM</td>"
+   }
+
+   set rtnstmt "$rtnstmt\n</tr>\n<tr>"
+
+   if { $yesbe } {
+    set rtnstmt "$rtnstmt\n<td>ASCII xyz point cloud data</td>"
+   }
+   if { $yesfs } {
+    set rtnstmt "$rtnstmt\n<td>ASCII xyz point cloud data</td>"
+   }
+   if { $yesba } {
+    set rtnstmt "$rtnstmt\n<td>ASCII xyz point cloud data</td>"
+   }
+
+   set rtnstmt "$rtnstmt\n<tr>"
+
+   if { $yesbe } {
+    set rtnstmt "$rtnstmt\n<td><a href=$becb>Elevation Colorbar.</a></td>"
+   }
+   if { $yesfs } {
+    set rtnstmt "$rtnstmt\n<td><a href=$fscb>Elevation Colorbar.</a></td>"
+   }
+   if { $yesba } {
+    set rtnstmt "$rtnstmt\n<td><a href=$bacb>Elevation Colorbar.</a></td>"
+   }
+
+   set rtnstmt "$rtnstmt
   \]\]></description>
   <styleUrl>#lidarTile</styleUrl>
   <MultiGeometry>
@@ -168,6 +272,7 @@ proc placeMark { fn } {
   <Point><coordinates>$w,$n,0</coordinates></Point>
    </MultiGeometry></Placemark>
    "
+   return $rtnstmt
 }
 
 ###################################################
@@ -239,18 +344,99 @@ proc get_file_list {} {
 		Title "How do you want to select the files for processing?" \
 		questhead 0 \
 		"Entire directory" \
-		"Just a few selected files" ]
+		"Just a few selected files" \
+		"Configuration file" ]
 	set dir F:/data/projects/Katrina/dems/tmp/transparent/
 	if { $rv == 0 } {
 		set dir [ tk_chooseDirectory -initialdir $dir ]	
 		set fnlst [lsort -increasing -unique [ glob -nocomplain -type f -directory $dir -- *.png *.PNG ] ]
-	} else {
-set fnlst [ tk_getOpenFile \
+	} 
+	if {$rv == 1} {
+	set fnlst [ tk_getOpenFile \
          -filetypes {{ {png files} {*.png *.PNG } }}  \
          -multiple 1 \
          -initialdir $dir  ]
-}
+	}
+	if {$rv == 2} {
+	set fnlst [ tk_getOpenFile \
+         -filetypes {{ {configuartion files} {*.cfg} }}  \
+         -multiple 0 \
+         -initialdir $dir  ]
+ 	}
  return $fnlst
+}
+
+proc make_kml { belst fslst balst } {
+
+	global idxfn tilelst tile2GroundOverlay_data
+	set fnlst [concat $belst $fslst $balst]
+	set total_files [ llength $fnlst ]
+	set   i 0
+	set path  [ file dirname [ lindex $fnlst 0 ] ]
+	set cvtfn [ file join $path Mktransparent.sh ]
+	set cvtof [ open $cvtfn "w" ]
+
+	open_status
+	if { $total_files == 0 } { 
+	   #	pause {No files Selected}
+	   exit 0
+	}
+
+	.lf configure -text "Status: $total_files files selected"
+	update
+	list tilelst
+
+   	foreach fn $fnlst {
+      	    incr i
+	    set fnfile [file tail $fnlst]
+    	    tile2GroundOverlay rv $fn 1
+      	    .lf configure -text "Status: Making kml files: ($i of $total_files)"
+      	    .lf.state configure -text "Processing: [file tail $fn]"
+ 	    puts $cvtof "echo -e -n \"\\r$i of $total_files\""
+ 	    puts $cvtof "convert -transparent \"#ffffce\" [file tail $fn] [file tail $fn]"
+            update
+	    # make unique indx_file_list
+    	    set n [regexp $tile2GroundOverlay_data(rx) $fn match ew easting ns northing zone] 
+    	    if { $n } {
+		lappend tilelst "t_$ew$easting\_$ns$northing\_$zone"
+	    }
+
+      	    set path [ file dirname $fn ]
+      	    # check if fn is a colorbar image
+      	    if { [ string match [ file tail $fn ] "*colorbar*" ] } {
+	 	set cbfn $fn
+	 	continue
+      	    }
+      	    if { [ string match [ file tail $fn ] "*_cb*" ] } {
+   		set cbfn $fn
+		continue
+      	    }
+	}
+	.lf.state configure -text "Process completed, last file:[file tail $fn]"
+}
+
+proc make_indx_file { belst fslst balst } {
+	global idxfn tilelst 
+	set idxof [ open $idxfn "w" ]
+
+	set tilelst [ lsort -unique $tilelst ]
+	set total_files [llength $tilelst]
+
+	if { $total_files == 0 } {
+		# pause {No files Selected}
+		exit 0
+	}
+	update
+	
+	puts $idxof [ kmlheader ]
+	foreach tn $tilelst {
+	   set befn [ lindex $belst [ lsearch $belst "*/$tn*" ] ]
+	   set fsfn [ lindex $fslst [ lsearch $fslst "*/$tn*" ] ]
+	   set bafn [ lindex $balst [ lsearch $balst "*/$tn*" ] ]
+   	   puts $idxof [placeMark $tn $befn $fsfn $bafn]
+	}
+	puts $idxof [ kmlfooter ]
+	close $idxof
 }
 
 
@@ -268,38 +454,50 @@ package require Tk
 wm withdraw .
 if {$debug} { puts "tcl_version: $tcl_version" }
 
+global idxfn tilelst 
 
 sign_on
 set fnlst [ get_file_list ]
-set total_files [ llength $fnlst ]
-set   i 0
-set path  [ file dirname [ lindex $fnlst 0 ] ]
-set idxfn [ file join $path index.kml ]
-set idxof [ open $idxfn "w" ]
-set cvtfn [ file join $path Mktransparent.sh ]
-set cvtof [ open $cvtfn "w" ]
-
-open_status
-if { $total_files == 0 } { 
-#	pause {No files Selected}
-	exit 0
+# check if selected file is a config file
+if { [string match "*.cfg" [file tail $fnlst] ] } {
+  # read config file
+  set rdcfg [ open $fnlst "r" ]
+  set cfglines [read $rdcfg]
+  close $rdcfg
+  puts $cfglines
+  set cfg 1
+  set cfglines [split $cfglines "\n"]
+  set belst ""
+  set fslst ""
+  set balst ""
+  foreach line $cfglines {
+	set wds [split $line " "]
+	if { [string match "idx" [lindex $wds 0] ] } {
+		set idxfn [lindex $wds 1]
+	}
+	if { [string match [lindex $wds 0] "be" ] } {
+		set dir [lindex $wds 1]
+		set belst [lsort -increasing -unique [ glob -nocomplain -type f -directory $dir -- *.png *.PNG ] ]
+	}
+	if { [string match [lindex $wds 0] "fs" ] } {
+		set dir [lindex $wds 1]
+		set fslst [lsort -increasing -unique [ glob -nocomplain -type f -directory $dir -- *.png *.PNG ] ]
+	}
+	if { [string match [lindex $wds 0] "ba" ] } {
+		set dir [lindex $wds 1]
+		set balst [lsort -increasing -unique [ glob -nocomplain -type f -directory $dir -- *.png *.PNG ] ]
+	} 
+  }
+  make_kml $belst $fslst $balst
+  make_indx_file $belst $fslst $balst
+} else {
+  set cfg 0
+  set path  [ file dirname [ lindex $fnlst 0 ] ]
+  set idxfn [ file join $path index.kml ]
+  make_kml $fnlst "" ""
+  make_indx_file $fnlst "" "" 
 }
 
-.lf configure -text "Status: $total_files files selected"
-update
 
-puts $idxof [ kmlheader ]
-   foreach fn $fnlst {
-      incr i
-      .lf configure -text "Status: ($i of $total_files)"
-      .lf.state configure -text "Processing: [file tail $fn]"
- 	puts $cvtof "echo -e -n \"\\r$i of $total_files\""
- 	puts $cvtof "convert -transparent \"#ffffce\" [file tail $fn] [file tail $fn]"
-      update
-      puts $idxof [placeMark $fn]
-   }
-puts $idxof [ kmlfooter ]
-close $idxof
-.lf.state configure -text "Process completed, last file:[file tail $fn]"
 sign_off
 exit 0
