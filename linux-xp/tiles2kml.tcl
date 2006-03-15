@@ -19,18 +19,18 @@ exec wish "$0" ${1+"$@"}
 # files placing the resulting kml in the same
 # directory.
 # Modified by Amar Nayegandhi Dec 2005
-  -- added ability to define configuration file.
-    The format for the config file is as follows:
-idx <path and file name of index file to be generated>
-be  <path to where bare earth files reside>
-fs  <path to where first surface files reside>
-ba  <path to where submerged topography files reside>
-
-Below is a sample config file for Colonial National Park:
-colo.cfg:
-idx C:/google_earth/COLO/COLO_index.kml
-be C:/google_earth/COLO/veg_pngs/
-fs C:/google_earth/COLO/veg_fs_pngs/
+#  -- added ability to define configuration file.
+#    The format for the config file is as follows:
+# idx <path and file name of index file to be generated>
+# be  <path to where bare earth files reside>
+# fs  <path to where first surface files reside>
+# ba  <path to where submerged topography files reside>
+#
+# Below is a sample config file for Colonial National Park:
+# colo.cfg:
+# idx C:/google_earth/COLO/COLO_index.kml
+# be C:/google_earth/COLO/veg_pngs/
+# fs C:/google_earth/COLO/veg_fs_pngs/
 ####################################################
 
 
