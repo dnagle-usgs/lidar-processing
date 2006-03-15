@@ -6,6 +6,9 @@ exec wish "$0" ${1+"$@"}
 # $Id$
 # Original: C. W. Wright charles.w.wright@nasa.gov
 # 10/04/2005
+# Modified: Amar Nayegandhi anayegandhi@usgs.gov
+#	    03/15/2006
+#	    Added option to convert only pnav file (no ins, cir or cam1 stuff)
 #  Generate GM readable ascii x/y/z/attribute files for GM so GM can
 #  make kmz file for GE.
 #
@@ -338,24 +341,34 @@ set v [ tk_messageBox \
 	 -type okcancel    \
 	 -message { \
 This program:
- 1) Reads an INS attitude file
- 2) Reads Grafnav/EAARL pnav files and transforms them into:
-   a) text point files for GlobalMapper
-   b) Kml files for GoogleEarth
+ 1) Reads Grafnav/EAARL pnav files and transforms them into:
+   a) Kml files for GoogleEarth
+ Optionally, this program
+ 2) Reads an INS attitude file
+ 3) Creates directory structure for minute and second Placemarks
+ 	for cir and cam1 images.
 
-Please now select the files you wish
-to transform and click Ok to begin.
+Click Ok to begin.
  } ]
 
 if { $v == "cancel" } exit;
 
-load_ins_file
+set rv [tk_dialog .y \
+	Title "What do you want to convert?" \
+	questhead 0 \
+	"pnav file(s) only" \
+	"pnav & ins files for cam1/cir images" ]
+
+if { $rv == 1 } {
+	load_ins_file
+}
 
 set fins [ tk_getOpenFile \
-		  -title "Select the Pnav file to use" \
+		  -title "Select the Pnav file(s) to use" \
 		  -multiple 1 \
-		  -initialdir f:/data/projects/Katrina/gps-trajectories \
-		  -filetypes {{ {Pnav files} {pnav.txt } }} ]
+		  -initialdir c:/ \
+		  -filetypes {{ {Pnav files} {*pnav.txt } }
+			      { {all} {*} } } ]
 
 if { $fins == "" } {
 	 exit 0
@@ -400,8 +413,12 @@ foreach f $fins {
 ####################################################
 # Create the output directory for kml.
 ####################################################
-   set settings(outpath) "$ipath/[clock format $mission(utcStartSoe) -format %Y%m%d/ ]"
-   file mkdir $settings(outpath)
+   if { $rv == 1 } {
+	   set settings(outpath) "$ipath/[clock format $mission(utcStartSoe) -format %Y%m%d/ ]"
+   	   file mkdir $settings(outpath)
+   } else {
+	   set settings(outpath) $ipath
+   }
     
   .fn configure -text "Reading: $fnin"; update
   set fnkmlout "[ file rootname $fnin ].kml"
@@ -528,9 +545,11 @@ while { [ expr ( [ gets $fin istr ] >= 0) && $run ] } {
             incr validLineNumber;
             set epoch(kmlMinutePath) "$settings(outpath)/$epoch(timeHHMM)/"
             set epoch(jpgMinutePath) "$settings(cam1_base_url)/$mission(dateYYYYMMDD)/photos/$epoch(timeHHMM)"
-            if { ![ file exists $epoch(kmlMinutePath) ] } {
-               file mkdir $epoch(kmlMinutePath)
-            }
+	    if { $rv == 1 } {
+              if { ![ file exists $epoch(kmlMinutePath) ] } {
+               	file mkdir $epoch(kmlMinutePath)
+              }
+    	    }
          set epoch(gsMeters) [ format %5.2f [ expr {hypot($epoch(veast), $epoch(vnorth))} ] ]
          set epoch(gsKnots)  [ format %5.1f [ expr { $epoch(gsMeters) * $meters2knotsGs } ] ]
          set epoch(track)    [ compute_track $epoch(veast) $epoch(vnorth) ]
@@ -555,11 +574,12 @@ Pitch:[format %4.2f $pitch] Roll:[format %4.2f $roll] Heading:[format %5.2f $hea
       
          if { $epoch(gsKnots) > 1.0 } {
             if { [ expr { $epoch(milliseconds) } ] == 0 } {
-                 set ns [ string map { N "" S - } $epoch(ns) ]
-                 set ew [ string map { E "" W - } $epoch(ew) ]
-                  set epoch(lat) $ns$epoch(lat)
-                  set epoch(lon) $ew$epoch(lon)
-                  puts $fkmlout " $epoch(lon),$epoch(lat),$epoch(elev)"
+                set ns [ string map { N "" S - } $epoch(ns) ]
+                set ew [ string map { E "" W - } $epoch(ew) ]
+                set epoch(lat) $ns$epoch(lat)
+                set epoch(lon) $ew$epoch(lon)
+                puts $fkmlout " $epoch(lon),$epoch(lat),$epoch(elev)"
+		if { $rv == 1 } {
                   if { 1 } {
                     emit_cam1_kml
                     emit_cir_kml
@@ -570,19 +590,23 @@ Pitch:[format %4.2f $pitch] Roll:[format %4.2f $roll] Heading:[format %5.2f $hea
                      emit_cir_kml
                      generateMinutePlaceMark
                   }
-               }
+	  	}
+            }
          }
       }
    }
    puts $fkmlout "</coordinates></LineString></Placemark>"
-   openMinuteFolder 
-   for { set i 1}  { $i < $minute_records(nrecs)} { incr i } {
-      .state configure -text "Processing $i of $minute_records(nrecs)"
-      update
-      puts $fkmlout $minute_records($i)
+   if { $rv == 1 } {
+   	openMinuteFolder 
+   	for { set i 1}  { $i < $minute_records(nrecs)} { incr i } {
+      	  .state configure -text "Processing $i of $minute_records(nrecs)"
+      	  update
+      	  puts $fkmlout $minute_records($i)
+   	}
+  	set minute_records(nrecs) 0
+  	puts $fkmlout "</Folder>"
    }
-  set minute_records(nrecs) 0
-  puts $fkmlout "</Folder></Document></kml>"
+  puts $fkmlout "</Document></kml>"
   close $fin
   close $fkmlout
 }
