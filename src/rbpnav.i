@@ -238,6 +238,7 @@ _read(idf, 4, pn );
   pn.sod += gps_time_correction;
   
 
+gps_time_correction = float(gps_time_correction)
 write,format="Applied GPS time correction of %f\n", gps_time_correction
 write,format="%s", 
               "               Min          Max\n"
