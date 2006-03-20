@@ -222,8 +222,10 @@ Input:
 ///  fma
   segs = where( abs(fs.soe(glst(llst))(dif)) > 5.0 );
   nsegs = numberof(segs)+1;
+//segs
+//nsegs
   if ( nsegs > 1 ) {
-    ss = [];
+    ss = [0];
     grow, ss,segs,[0];
     segs = ss;
 
