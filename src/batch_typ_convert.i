@@ -60,7 +60,7 @@ return
 }
 
 
-func batch_pbd2edf(dirname, rcfmode=, onlymf=,n88=, w84=,searchstr=) {
+func batch_pbd2edf(dirname, rcfmode=, onlymf=,n88=, w84=,searchstr=, update=) {
 /* DOCUMENT batch_pbd2edf(dirname, rcfmode=, n88=, w84=)
         Created by Lance Mosher, June 12, 2003
         This function converts *.pbd files to *.edf files in batch mode.
@@ -68,9 +68,12 @@ func batch_pbd2edf(dirname, rcfmode=, onlymf=,n88=, w84=,searchstr=) {
         rcfmode=2: ircf'd files
 	searchstr="<string>" :  Use this instead of rcfmode, onlymf, n88, w84
 		Can take wildcard characters.
+	update = set to 1 to skip files that have already been converted. 
+		useful when starting from where you left off.
 */
     require, "read_yfile.i"
     require, "dir.i"
+    if (is_void(update)) update = 0;
        s = array(string, 100000);
        ss = ["*.pbd"];
        if (is_array(searchstr)) {
@@ -105,8 +108,24 @@ func batch_pbd2edf(dirname, rcfmode=, onlymf=,n88=, w84=,searchstr=) {
     write, format="Total number of files to Convert to EDF = %d\n",nfiles;
 
     for (i=1;i<=nfiles;i++) {
+	if (update) {
+  	   // check if file exists
+	   newfile = split_path(fn_all,0,ext=1)(1)+".edf";
+	   nfiledir = split_path(newfile,0);
+           scmd = swrite(format = "find %s -name '%s'",nfiledir(1), nfiledir(2));
+           nf = 0;
+           sss = array(string, 1);
+           f = popen(scmd(1),0);
+           nf = read(f, format="%s",sss);
+           close, f;
+           if (nf) {
+              write, format="File %s already exists...\n",newfile;
+              continue;
+           }
+        }
+
         write, format="Converting file %d of %d\n", i, nfiles;
         pbd_to_yfile, fn_all(i);
-        }
+    }
 return
 }
