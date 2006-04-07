@@ -6,10 +6,11 @@ require, "veg.i"
 require, "geo_bath.i"
 require, "datum_converter.i"
 
-func batch_datum_convert(con_dir,  tonad83=, tonavd88=, rcfmode=, onlymf=, searchstr=, zone_nbr=, geoid_version=)
+func batch_datum_convert(con_dir,  tonad83=, tonavd88=, rcfmode=, onlymf=, searchstr=, zone_nbr=, geoid_version=, update=)
 {
-/* DOCUMENT batch_datum_convert(dir, tonad83=, tonavd88=,
-rcfmode=) This takes all of the data files for the index tiles
+/* DOCUMENT batch_datum_convert(con_dir,  tonad83=, tonavd88=, 
+rcfmode=, onlymf=, searchstr=, zone_nbr=, geoid_version=, update=)
+ This takes all of the data files for the index tiles
 in CON_DIR and converts them into nad83 or navd88, storing
 the converted data in a new pdb file with the same name and
 location as the last, but with the datum tag changed.
@@ -29,6 +30,9 @@ INPUT:
   				  set to "GEOID03" to use GEOID03 model
 				  defaults to "GEOID03"
 				  if GEOID03 binary files are not available, the user will be warned.
+  update= set to 1 if you want to only do the conversion for tiles that
+	 have not yet been converted.  Useful when the user 
+	 wants to resume conversion. 
 
 requires: "maps.i", "dir.i", "datum_converter.i"
 see also: datum_converter.i
@@ -40,6 +44,7 @@ modified by amar nayegandhi 01/12/06 to use GEOID03 model
 if(is_void(tonad83)) tonad83=1;
 if(is_void(tonavd88)) tonavd88=1;
 if(is_void(rcfmode)) rcfmode = 0;
+if(is_void(update)) update = 0;
 
  if (!searchstr) {
    if(rcfmode == 1) rcftag = "_rcf";
@@ -85,6 +90,21 @@ for(i=1; i<=numfiles; i++)
    if (tonad83==1) newdat = "n83";
    if (tonavd88==1)newdat = "n88"; 
    newfile = swrite(format="%s/%s_%s_%s", files2(1), firstbit, newdat, secondbit);
+   if (update) {
+	// check if file exists
+	nfiledir = split_path(newfile,0);
+	scmd = swrite(format = "find %s -name '%s'",nfiledir(1), nfiledir(2));
+	nf = 0;
+	sss = array(string, 1);
+	f = popen(scmd(1),0);
+	nf = read(f, format="%s",sss);
+	close, f;
+	if (nf) {
+	    write, format="File %s already exists...\n",newfile;
+	    continue;
+	}
+   }
+
 
    type = string(&t (n(5)+1));
    if (type == "2"){
