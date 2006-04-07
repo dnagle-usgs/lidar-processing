@@ -110,7 +110,7 @@ func batch_pbd2edf(dirname, rcfmode=, onlymf=,n88=, w84=,searchstr=, update=) {
     for (i=1;i<=nfiles;i++) {
 	if (update) {
   	   // check if file exists
-	   newfile = split_path(fn_all,0,ext=1)(1)+".edf";
+	   newfile = split_path(fn_all(i),0,ext=1)(1)+".edf";
 	   nfiledir = split_path(newfile,0);
            scmd = swrite(format = "find %s -name '%s'",nfiledir(1), nfiledir(2));
            nf = 0;
