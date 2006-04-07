@@ -136,14 +136,23 @@ func nad832navd88(data_in, gdata_dir=, geoid_version=) {
   } else return [];
  
   if (numberof(data_wpbd) > 1) {
-     if (is_array(where(data_wpbd(dif) > 0))) {
+     // diff for which pbd files to use
+     wpbd_diff = where(data_wpbd(dif) > 0); 
+     if (is_array(wpbd_diff)) {
        // data required 2 geoid pbd file... 
-       uidx = unique(data_wpbd);
+      // find the locations of the dif and the one before it
+	// that way we will have all the unique ids in wpbd_idx
+       wpbd_idx = grow(data_wpbd(wpbd_diff), data_wpbd(wpbd_diff-1));
+       uidx = unique(wpbd_idx, ret_sort=1);
      } else uidx = [1];
   } else uidx = [1];
   
   for (i=1;i<=numberof(uidx);i++) {
-    ik = data_wpbd(uidx(i));
+    if (is_array(wpbd_idx)) {
+	ik = wpbd_idx(uidx(i));
+    } else {
+	ik = data_wpbd(uidx(i));
+    }
     // find the row/col of the nearest point to the data_in lat/lon points
     irown = int((data_in(2,) - aglamn(ik)) / adla(ik))+1;
     icoln = int((data_in(1,) - aglomn(ik)) / adlo(ik))+1;
