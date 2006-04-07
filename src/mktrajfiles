@@ -109,7 +109,18 @@ while ( $file = <LS> ) {
         printf("\tpnav2ybin $txt\n")  if ( $opt_verbose );
         system("pnav2ybin $txt") if ( ! $opt_norun );
       }
+
+      # Check to see if this was a gps trajectory
+      open(FIND2, "find . -name  \"\*ins.txt\"|")
+        || die ("Unable to run find2\n");
+      while ( $txt = <FIND2> ) {
+        chop $txt;
+	$txt =~ s/\.\///;
+        printf("\tiex_ascii2pbd $txt\n")  if ( $opt_verbose );
+        system("iex_ascii2pbd `pwd`/$txt") if ( ! $opt_norun );
+      }
     }
+
 
     chdir ($startdir);     # go back to our starting directory
 

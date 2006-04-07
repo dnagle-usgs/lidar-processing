@@ -1,0 +1,17 @@
+#!/opt/eaarl/bin/yorick -batch
+#include "/opt/eaarl/lidar-processing/src/dmars.i"
+
+// $Id$
+
+cmdline = get_argv();  /* strips -batch cmdline.i */
+if (numberof(cmdline) == 2) {
+  /* convert from ascii to pdb binary format */
+  cmdline(1);
+  cmdline(2);
+  iex_ascii2pbd, cmdline(2);
+} else {
+  write, "Usage: yorick -batch cmdline.i infile ";
+}
+
+quit;
+
