@@ -116,6 +116,9 @@ BIN = ../bin
 ../bin/iex_ascii2pbd:	iex_ascii2pbd
 	install -m uog+rx  $<	$@
 
+../bin/mkeidx:	mkeidx
+	install -m uog+rx  $<	$@
+
 ../bin/xyz2track:	xyz2track.pl
 	install -m uog+rx  $<	$@
 
@@ -142,6 +145,7 @@ all:		../bin/efdb ../bin/erange ../bin/gga2bin ../bin/mkidx    \
 		../bin/shapefile_filter                                  \
 		../bin/showdays ../bin/mk_opsconf ../bin/wrsync          \
 		../bin/mktrajfiles                                       \
+		../bin/mkeidx                                            \
 		../bin/iex_ascii2pbd                                     \
 		../bin/xyz2track                                         \
 		../bin/comment
