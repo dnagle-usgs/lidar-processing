@@ -225,7 +225,9 @@ Input:
 //segs
 //nsegs
   if ( nsegs > 1 ) {
-    ss = [0];
+    // 20060425:  setting ss to [0] causes bizaar behavior where lines appear to get
+    // merged.
+    ss = [];
     grow, ss,segs,[0];
     segs = ss;
 
@@ -235,7 +237,7 @@ Input:
 
  ss = [0];
  if ( nsegs > 1 ) {
-   grow, ss,segs
+   grow, ss,segs,[0];
 
 // "ss";ss
 // "nsegs";nsegs
@@ -273,6 +275,16 @@ Input:
          si = si(moving_rcf(yy(si), rcf_parms(1), int(rcf_parms(2) )));
   plmk, yy(si),xx(si), color=clr(color), msize=msize, marker=1
   if ( connect ) plg, yy(si), xx(si),color=clr(color)
+
+  c    = (color+0)&7;
+  soeb = fs.soe(*)(glst(llst)(1));
+  t    = soe2time( soeb);
+  tb   = fs.soe(*)(glst(llst)(1))%86400;
+  te   = fs.soe(*)(glst(llst)(0))%86400;
+  td   = abs(te - tb);
+  hms = sod2hms( tb );
+  write, format="%d:%d sod = %6.2f:%-10.2f(%8.4f) utc=%2d:%02d:%02d %s\n",
+                    t(1),t(2), tb, te, td, hms(1,), hms(2,), hms(3,), clr(c);
  }
 // limits
 // limits,,, cbar.cmin, cbar.cmax
