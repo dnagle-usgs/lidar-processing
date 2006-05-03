@@ -290,7 +290,9 @@ expect "\r*>"
 #set Y_SITE  [ lindex [ split [ string trim $expect_out(0,string) "\r\n" ] "\"" ] 1 ]
 set Y_SITE /[join [lrange [split $_ytk(splash_gif) \/ ] 1 end-2] \/]
 
+set p ""
 if { [ file exists "$Y_SITE//contrib/ytk.i" ] == 0 } {
+  if { [ file exists "/opt/eaarl/lidar-processing/src/ytk.i" ] == 0 } {
   tk_messageBox -icon error \
      -message "Can't find ytk.i. \n\
  Find the ytk.i file from the Ytk  from the distribution \n\
@@ -298,8 +300,9 @@ and put it somewhere in your Yorick path."  -type ok
    file delete $ytk_fifo_name
    file delete $tky_fifo_name
  exit
+ } else { set p "/opt/eaarl/lidar-processing/src" ; }
 }
-exp_send "#include \"ytk.i\"\r"
+exp_send "#include \"$p/ytk.i\"\r"
 expect ">"
 exp_send "open_tkcmd_fifo, \"$ytk_fifo_name\"\r"
 set indoc 0
