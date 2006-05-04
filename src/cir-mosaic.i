@@ -156,6 +156,7 @@ func cir_gref_photo( somd=, ioff=, offset=,ggalst=, skip=, drift=, date=, win= )
 
 
 ////////////////////////////////////////////////////////////////////////
+// ls | awk -F- '{h = substr($2,1,2); m = substr($2,3,2); s=substr($2,5,2); print h*3600+m*60+s" "$3}' > cir.mask
 ////////////////////////////////////////////////////////////////////////
 
 func load_cir_mask( fn ) {
