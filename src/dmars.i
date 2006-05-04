@@ -175,7 +175,7 @@ write,"$Id$"
 
 // This is designed to be driven by ytk.
 func load_iexpbd( fn ) {
-  extern _ytk_pbd_f, iex_nav1hz, utmx,
+  extern _ytk_pbd_f, iex_nav1hz, gps_time_offset,
         tans,
         iex_head,
         iex_nav, iex_nav1hz,
@@ -191,7 +191,7 @@ func load_iexpbd( fn ) {
   tmp.somd = tmp.somd % 86400;
   utmx = fll2utm(tmp.lat, tmp.lon);
   iex_nav1hz = array(IEX_ATTITUDEUTM, dimsof(utmx)(3));
-  iex_nav1hz.somd = tmp.somd;
+  iex_nav1hz.somd = tmp.somd + gps_time_offset;
   iex_nav1hz.lat = tmp.lat;
   iex_nav1hz.lon = tmp.lon;
   iex_nav1hz.alt = tmp.alt;
