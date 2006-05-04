@@ -23,7 +23,7 @@ Use pli to display the image.
    SEE ALSO: pnm_display, pnm_write
  */
 {
-   cmd = swrite(format="convert %s /tmp/etmp.pnm", filename); 
+   cmd = swrite(format="convert %s /tmp/etmp.pnm", filename);
    f = popen( cmd, 0);
    close,f;
    return pnm_read( "/tmp/etmp.pnm");
@@ -152,6 +152,113 @@ func cir_gref_photo( somd=, ioff=, offset=,ggalst=, skip=, drift=, date=, win= )
 	     pitch = pitch + ops_conf.pitch_bias + cam1_pitch_bias,
 	     offset = [ northing, easting ], win=win;
  }
+}
+
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+func gen_jgw( somd ) {
+/* DOCUMENT gen_jgw(junk)
+
+Written by Jason Woolard, NOAA, August 17, 1999
+Updated by Jon Sellars and Bang Le, NOAA, December, 2005
+Updated by Jon Sellars and Chris Parrish to Read CSV files 
+  to create JGW world files for DSS Images April 2006
+
+Converted to Yorick for EAARL CIR jgw generation, W. Wright and Jon Sellars 5/4/06
+*/
+extern iex_nav1hz;	// INS data dumbed down to 1hz
+
+// determine the seconds of the day... this needs changed to somd sometime
+somd %= 86400
+insI = where( iex_nav1hz.somd == somd )(1);
+somd
+insI
+ins
+if ( is_void(insI) ) return 0;
+ins = iex_nav1hz(insI);
+
+Z = ins.alt;
+X = ins.easting;
+Y = ins.northing; 
+P = ins.pitch; 
+R = ins.roll; 
+H = ins.heading; 
+
+// ******************************************************
+// Fixed variables
+// ******************************************************
+// CCD_X = along track meters
+// CCD_Y = across track meters
+// CCD_XY pixel size on CCD array meters
+// Estimate for project area
+// BS_PRH are adjustments from the boresite in degrees
+     FL=0.01325
+ CCD_X = 0.00888
+ CCD_Y = 0.01184
+CCD_XY = 0.0000074
+ Geoid = -24
+  BS_P = 1.75
+  BS_R = 0.5
+  BS_H = 0.5
+
+ // Calculate pixel size based on flying height
+    FH=Z + (-1 * Geoid)
+    PixSz=(FH*CCD_XY)/FL
+
+
+    // Convert heading to - clockwise and + CCW for 1st rotation matrix
+    if (H >= 180) 
+       H2= 360 - (H + BS_H);
+    else 
+      H2 = -((H + BS_H) * 1);
+
+
+    // Convert degress to radians (using * d2r <pi/180 ~= 0.01745>) ****Note H2 is set above******
+    Prad = (P + BS_P) * d2r
+    Rrad = (R + BS_R) * d2r
+    Hrad = (H + BS_H) * d2r
+    H2rad = H2 * d2r
+
+    // Create Rotation Coeff's
+    Term1 = cos(H2rad)
+    Term2= -1* (sin(H2rad))
+    Term3 = sin(H2rad)
+
+    // Create first four lines of world file
+    // Resolution times rotation coeff's
+    A=PixSz * Term1
+    B=-1*(PixSz * Term2)
+    C=(PixSz * Term3)
+    D=-1*(PixSz *Term1)
+
+    // Calculate s_inv
+	s_inv = 1/(FL/FH)
+
+	// Create terms for the M matrix
+	M11 = cos(Prad)*sin(Hrad)
+	M12 = -cos(Hrad)*cos(Rrad)-sin(Hrad)*sin(Prad)*sin(Rrad)
+	M13 = cos(Hrad)*sin(Rrad)-sin(Hrad)*sin(Prad)*cos(Rrad)
+	M21 = cos(Prad)*cos(Hrad)
+	M22 = sin(Hrad)*cos(Rrad)-(cos(Hrad)*sin(Prad)*sin(Rrad))
+	M23 = (-sin(Hrad)*sin(Rrad))-(cos(Hrad)*sin(Prad)*cos(Rrad))
+	M31 = sin(Prad)
+	M32 = cos(Prad)*sin(Rrad)
+	M33 = cos(Prad)*cos(Rrad)
+
+	// Define p matrix (+X direction of flight along track, +Y left wing across track, -FL)
+	Xi = CCD_X/2
+	Yi = CCD_Y/2
+	FLneg = -1 * FL
+
+	// s_inv * M * p + T(GPSxyz)
+	UL_X = (s_inv *(M11* Xi + M12 * Yi + M13 * FLneg)) + X
+	UL_Y = (s_inv *(M21* Xi + M22 * Yi + M23 * FLneg)) + Y
+	UL_Z = (s_inv *(M31* Xi + M32 * Yi + M33 * FLneg)) + Z
+
+// write, format="A=%f B=%f C=%f D=%f ULX=%f ULY=%f\n", A, B, C, D, UL_X, UL_Y
+ return [A,B,C,D,UL_X, UL_Y];
 }
 
 

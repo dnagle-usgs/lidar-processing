@@ -175,10 +175,10 @@ write,"$Id$"
 
 // This is designed to be driven by ytk.
 func load_iexpbd( fn ) {
-  extern _ytk_pbd_f,
+  extern _ytk_pbd_f, iex_nav1hz, utmx,
         tans,
         iex_head,
-        iex_nav,
+        iex_nav, iex_nav1hz,
         ops_conf,
         ops_IMU2_default;
   _ytk_pbd_f = openb(fn)
@@ -186,6 +186,23 @@ func load_iexpbd( fn ) {
   show, _ytk_pbd_f;
   iex2tans;
   ops_conf = ops_IMU2_default;
+  startIndex = where( (iex_nav(1:200).somd % 1) == 0.0 )(1);
+  tmp = iex_nav(startIndex:0:200);	
+  tmp.somd = tmp.somd % 86400;
+  utmx = fll2utm(tmp.lat, tmp.lon);
+  iex_nav1hz = array(IEX_ATTITUDEUTM, dimsof(utmx)(3));
+  iex_nav1hz.somd = tmp.somd;
+  iex_nav1hz.lat = tmp.lat;
+  iex_nav1hz.lon = tmp.lon;
+  iex_nav1hz.alt = tmp.alt;
+  iex_nav1hz.roll = tmp.roll;
+  iex_nav1hz.pitch = tmp.pitch;
+  iex_nav1hz.heading = tmp.heading;
+  iex_nav1hz.northing = utmx(1,);
+  iex_nav1hz.easting = utmx(2,);
+  iex_nav1hz.zone = utmx(3,);
+
+  write, format="%20.6f\n", iex_nav(startIndex).somd
   write, "Using default DMARS mounting bias and lever arms.(ops_IMU2_default)"
 }
 
@@ -442,6 +459,20 @@ fn = "/data/6/2003/asis/12-18-03/dmars/121803133617-dmars-eaarliex-x146y51z48.as
   double somd   
   double lat
   double lon
+  float  alt
+  float  roll
+  float  pitch
+  float  heading
+};
+
+
+ struct IEX_ATTITUDEUTM {
+  double somd   
+  double lat
+  double lon
+  double northing
+  double easting
+  double zone
   float  alt
   float  roll
   float  pitch
