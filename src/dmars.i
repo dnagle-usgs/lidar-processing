@@ -191,7 +191,7 @@ func load_iexpbd( fn ) {
   tmp.somd = tmp.somd % 86400;
   utmx = fll2utm(tmp.lat, tmp.lon);
   iex_nav1hz = array(IEX_ATTITUDEUTM, dimsof(utmx)(3));
-  iex_nav1hz.somd = tmp.somd + gps_time_offset;
+  iex_nav1hz.somd = tmp.somd + gps_time_correction;
   iex_nav1hz.lat = tmp.lat;
   iex_nav1hz.lon = tmp.lon;
   iex_nav1hz.alt = tmp.alt;

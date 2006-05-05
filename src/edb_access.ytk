@@ -57,6 +57,7 @@ button .edb_load -text "Load EAARL Data set index" -command {
   exp_send "load_edb\r"
   expect ">"
   edb_status
+  wm title . "Eaarl:$edb(path)"
 }
 
 button .edb_plt_sod -text "Plot SOD" -command {

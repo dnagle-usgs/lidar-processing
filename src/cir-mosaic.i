@@ -217,7 +217,8 @@ Updated by Jon Sellars and Bang Le, NOAA, December, 2005
 Updated by Jon Sellars and Chris Parrish to Read CSV files 
   to create JGW world files for DSS Images April 2006
 
-Converted to Yorick for EAARL CIR jgw generation, W. Wright and Jon Sellars 5/4/06
+Converted to Yorick for EAARL CIR jgw generation, 
+W. Wright and Jon Sellars 5/4/06
 */
 extern iex_nav1hz;	// INS data dumbed down to 1hz
 

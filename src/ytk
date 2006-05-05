@@ -290,7 +290,7 @@ expect "\r*>"
 #set Y_SITE  [ lindex [ split [ string trim $expect_out(0,string) "\r\n" ] "\"" ] 1 ]
 set Y_SITE /[join [lrange [split $_ytk(splash_gif) \/ ] 1 end-2] \/]
 
-set p ""
+set p "./"
 if { [ file exists "$Y_SITE//contrib/ytk.i" ] == 0 } {
   if { [ file exists "/opt/eaarl/lidar-processing/src/ytk.i" ] == 0 } {
   tk_messageBox -icon error \

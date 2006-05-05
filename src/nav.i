@@ -257,7 +257,7 @@ func mdist ( none, nodraw=, units=, win=, redrw= ) {
   Returns:
 	Distance in meters. 
 
-  See also:  sdist, lldist, plrect
+  See also:  sdist, lldist, plrect, pip_fp
 
 */
 
