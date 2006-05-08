@@ -306,6 +306,7 @@ Original W. Wright 5/6/06
 // Camera mounting bias values.
 // 
  struct CIR_MOUNTING_BIAS {
+  string name;		// Aircraft id (N-Number).
   float pitch;		// +nose up
   float roll;		// +cw (roll to the right)
   float heading;	// +cw (right turn)
@@ -318,22 +319,30 @@ cir_mounting_bias = CIR_MOUNTING_BIAS(); // Create a mounting bias variable
 cir_mounting_bias_n111x = CIR_MOUNTING_BIAS();
 cir_mounting_bias_n48rf = CIR_MOUNTING_BIAS();
 
-// For N111x. Calibrated using 3/14/2006 Ocean Springs, Ms. runway passes.
+//=================================================
+// For N111x. Calibrated using 3/14/2006 
+// Ocean Springs, Ms. runway passes.
+//=================================================
+cir_mounting_bias_n111x.name = "n111x";
 cir_mounting_bias_n111x.pitch  = 1.655;	 // Now, set the bias values.
 cir_mounting_bias_n111x.roll   =-0.296;
-cir_mounting_bias_n111x.heading= 0.0;  -1.12;    // 1.59;
+cir_mounting_bias_n111x.heading= 0.0; 
 
-// For N48rf 4/11/2006 KSPG
+//=================================================
+// For N48rf calibrated using 4/11/2006 KSPG
+//=================================================
+cir_mounting_bias_n48rf.name = "n48rf";
 cir_mounting_bias_n48rf.pitch  = 1.00;	 // Now, set the bias values.
 cir_mounting_bias_n48rf.roll   = 0.50;
 cir_mounting_bias_n48rf.heading= 0.75;
 
 cir_mounting_bias = cir_mounting_bias_n111x;
 
-///////////////////////////////////////////
+//=================================================
 // Camera specifications.
-///////////////////////////////////////////
+//=================================================
 struct CAMERA_SPECS {
+  string name;			// Camera name;
   float focal_length;		// focal length in meters
   float ccd_x;			// detector x dim in meters.  Along fuselage.
   float ccd_y; 			// detector y dim in meters.  Across the fuselage.;
@@ -346,6 +355,7 @@ camera_specs = CAMERA_SPECS();
 // MS4000 info
 ///////////////////////////////////////////
 ms4000_specs = CAMERA_SPECS();
+ms4000_specs.name = "ms4000";
 ms4000_specs.focal_length = 0.01325;
 ms4000_specs.ccd_x        = 0.00888;
 ms4000_specs.ccd_y        = 0.01184;
@@ -353,6 +363,9 @@ ms4000_specs.ccd_xy       = 0.0000074;
 ms4000_specs.trigger_delay= 0.120;		// Delay (seconds) from trigger to capture.
 
  camera_specs = ms4000_specs;
+
+camera_specs;
+cir_mounting_bias;
 
 func gen_jgw( somd ) {
 /* DOCUMENT gen_jgw(somd)
