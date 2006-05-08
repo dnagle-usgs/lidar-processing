@@ -186,7 +186,17 @@ func load_iexpbd( fn ) {
   show, _ytk_pbd_f;
   iex2tans;
   ops_conf = ops_IMU2_default;
+  gen_cir_nav( 0 );
+  write, "Using default DMARS mounting bias and lever arms.(ops_IMU2_default)"
+}
+
+
+func gen_cir_nav( msoffset ) {
+  extern iex_nav, iex_nav1hz;
+  if ( is_void( iex_nav) ) return -8;
+  iticks = int(msoffset/5.0);
   startIndex = where( (iex_nav(1:200).somd % 1) == 0.0 )(1);
+  startIndex += iticks;
   tmp = iex_nav(startIndex:0:200);	
   tmp.somd = tmp.somd % 86400;
   utmx = fll2utm(tmp.lat, tmp.lon);
@@ -201,12 +211,9 @@ func load_iexpbd( fn ) {
   iex_nav1hz.northing = utmx(1,);
   iex_nav1hz.easting = utmx(2,);
   iex_nav1hz.zone = utmx(3,);
-
-  write, format="%20.6f\n", iex_nav(startIndex).somd
-  write, "Using default DMARS mounting bias and lever arms.(ops_IMU2_default)"
+  write, format="%d %d %20.6f\n", startIndex, iticks, iex_nav(startIndex).somd
+  return 1;
 }
-
-
 
 
 func load_raw_dmars(fn=) {
