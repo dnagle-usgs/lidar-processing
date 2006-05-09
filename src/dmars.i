@@ -186,15 +186,16 @@ func load_iexpbd( fn ) {
   show, _ytk_pbd_f;
   iex2tans;
   ops_conf = ops_IMU2_default;
-  gen_cir_nav( 0 );
+  gen_cir_nav( 0.120 );
   write, "Using default DMARS mounting bias and lever arms.(ops_IMU2_default)"
 }
 
 
-func gen_cir_nav( msoffset ) {
+func gen_cir_nav( offset_secs ) {
   extern iex_nav, iex_nav1hz;
   if ( is_void( iex_nav) ) return -8;
-  iticks = int(msoffset/5.0);
+  ins_rate = iex_nav(1:2).somd(dif)(1)
+  iticks = int(offset_secs*1000.0/int(ins_rate*1000.0001));		
   startIndex = where( (iex_nav(1:200).somd % 1) == 0.0 )(1);
   startIndex += iticks;
   tmp = iex_nav(startIndex:0:200);	

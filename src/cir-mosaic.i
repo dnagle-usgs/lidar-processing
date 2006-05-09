@@ -178,17 +178,23 @@ func load_cir_mask( fn ) {
 
  Original: W. Wright 5/4/2006
 
+031006-214859-332-cir.jpg
+
 */
  extern cir_mask
  cir_mask = array(short, 86400); 
  tmp = array(long,86400*2);
+ ds = ""; ts=""; ms = int(0); hh = int(0); mm=int(0); ss=int(0); 
  f = open( fn, "r");
- n = read(f,format="%d", tmp );
- write,format="Read %d CIR file names from: %s\n", n, fn
- close,f
- for (i=1; i<= n; i+=2 ) {
-   cir_mask(tmp(i)) = tmp(i+1);
+ for (i=1; i<86400; i++ ) {
+  n = read(f,format="%06s-%02d%02d%02d-%d", ds,hh,mm,ss,ms );
+  if ( n == 0 ) break;
+    sod = hh*3600+mm*60+ss;
+    cir_mask(sod) = ms;
  }
+ write,format="Read %d CIR file names from: %s\n", i-1, fn
+ close,f
+ return 1;
 }
 
 func gen_jgw_files( somd_list ) {
@@ -202,13 +208,14 @@ tar --remove-files -cvzf jgwfiles.tgz -T junk
 
 Original W. Wright 5/6/06
 */
- extern jgwinfo
+ extern jgwinfo, camera_specs
   n = numberof( somd_list );
 n
   if ( is_void( jgwinfo ) ) {
    write,"Operation aborted.  The jgwinfo array must be set first.  try: help, jgwinfo"
   }
  write,""
+ gen_cir_nav(camera_specs.trigger_delay);
   for (i=1; i<= n; i++ ) {
      e = gen_jgw_file( somd_list(i));		// Generate each jgw file.
      if ( e != 1 ) {
@@ -332,22 +339,22 @@ cir_mounting_bias_n111x.heading= 0.0;
 // For N48rf calibrated using 4/11/2006 KSPG
 //=================================================
 cir_mounting_bias_n48rf.name = "n48rf";
-cir_mounting_bias_n48rf.pitch  = 1.00;	 // Now, set the bias values.
-cir_mounting_bias_n48rf.roll   = 0.50;
-cir_mounting_bias_n48rf.heading= 0.75;
+cir_mounting_bias_n48rf.pitch  = -0.10 + 0.03;	 // Now, set the bias values.
+cir_mounting_bias_n48rf.roll   = 0.50 - .28 + 0.03;
+cir_mounting_bias_n48rf.heading= 0.375;
 
-cir_mounting_bias = cir_mounting_bias_n111x;
+cir_mounting_bias = cir_mounting_bias_n48rf;
 
 //=================================================
 // Camera specifications.
 //=================================================
 struct CAMERA_SPECS {
   string name;			// Camera name;
-  float focal_length;		// focal length in meters
-  float ccd_x;			// detector x dim in meters.  Along fuselage.
-  float ccd_y; 			// detector y dim in meters.  Across the fuselage.;
-  float ccd_xy;			// Detector pixel size in meters.
-  float trigger_delay;		// Time from trigger to photo (seconds).
+  double focal_length;		// focal length in meters
+  double ccd_x;			// detector x dim in meters.  Along fuselage.
+  double ccd_y; 			// detector y dim in meters.  Across the fuselage.;
+  double ccd_xy;			// Detector pixel size in meters.
+  double trigger_delay;		// Time from trigger to photo (seconds).
 }
 camera_specs = CAMERA_SPECS();
 
@@ -359,11 +366,12 @@ ms4000_specs.name = "ms4000";
 ms4000_specs.focal_length = 0.01325;
 ms4000_specs.ccd_x        = 0.00888;
 ms4000_specs.ccd_y        = 0.01184;
-ms4000_specs.ccd_xy       = 0.0000074;
+ms4000_specs.ccd_xy       = 7.40e-6;
 ms4000_specs.trigger_delay= 0.120;		// Delay (seconds) from trigger to capture.
 
  camera_specs = ms4000_specs;
 
+// Printout the values below.
 camera_specs;
 cir_mounting_bias;
 
