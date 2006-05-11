@@ -339,11 +339,10 @@ cir_mounting_bias_n111x.heading= 0.0;
 // For N48rf calibrated using 4/11/2006 KSPG
 //=================================================
 cir_mounting_bias_n48rf.name = "n48rf";
-cir_mounting_bias_n48rf.pitch  = -0.10 + 0.03;	 // Now, set the bias values.
-cir_mounting_bias_n48rf.roll   = 0.50 - .28 + 0.03;
-cir_mounting_bias_n48rf.heading= 0.375;
+cir_mounting_bias_n48rf.pitch  = -0.10 + 0.03 + 0.5 -0.5;	 // Now, set the bias values.
+cir_mounting_bias_n48rf.roll   = 0.50 - .28 + 0.03 + 0.75 - 0.14 -0.7;
+cir_mounting_bias_n48rf.heading= 0.375 - 0.156 + 0.1;
 
-cir_mounting_bias = cir_mounting_bias_n48rf;
 
 //=================================================
 // Camera specifications.
@@ -366,10 +365,11 @@ ms4000_specs.name = "ms4000";
 ms4000_specs.focal_length = 0.01325;
 ms4000_specs.ccd_x        = 0.00888;
 ms4000_specs.ccd_y        = 0.01184;
-ms4000_specs.ccd_xy       = 7.40e-6;
+ms4000_specs.ccd_xy       = 7.40e-6 * 1.02;
 ms4000_specs.trigger_delay= 0.120;		// Delay (seconds) from trigger to capture.
 
  camera_specs = ms4000_specs;
+ cir_mounting_bias = cir_mounting_bias_n48rf;
 
 // Printout the values below.
 camera_specs;
@@ -431,13 +431,24 @@ CCD_Y = camera_specs.ccd_y;
 CCD_XY= camera_specs.ccd_xy;
     FL= camera_specs.focal_length;
 
-//     FL=0.01325;		// focal length
+//Angle from camera to edges of image WRT X along track Y across track
+
+//Ang_X = 18.559 * d2r
+//Ang_Y = 24.116 * d2r
+
+//Principle Point Offsets
+//ppX = 0.000
+//ppY = 0.000
+
+
+
+//     FL=0.013255;		// focal length
 // CCD_X = 0.00888
 // CCD_Y = 0.01184
 // CCD_XY = 0.0000074
 
-// THe following should be determined by the lidar elevation.
- Geoid = -24.0;			// Elevation offset from ground to nad83 ell.
+// THe following should be determined by the lidar elevation. Right now it is the ITRF elev offset to the airfield
+ Geoid = -21.28   // -24.0;	// Elevation offset from ground to nad83 ell.
 
 // Load the local vars for mounting bias.
   BS_P =  cir_mounting_bias.pitch;
@@ -450,7 +461,7 @@ CCD_XY= camera_specs.ccd_xy;
     PixSz=(FH*CCD_XY)/FL
 
 
-// Convert heading to - clockwise and + CCW for 1st rotation matrix
+// Convert heading to - clockwise and + CCW for 1st and 3rd rotation matrix
     if (H >= 180.0) 
        H2= 360.0 - (H + BS_H);
     else 
@@ -462,13 +473,13 @@ CCD_XY= camera_specs.ccd_xy;
     Hrad = (H + BS_H) * d2r
     H2rad = H2 * d2r
 
-// Create Rotation Coeff's
+// Create Rotation Coeff
     Term1 = cos(H2rad)
     Term2= -1.0* (sin(H2rad))
     Term3 = sin(H2rad)
 
 // Create first four lines of world file
-// Resolution times rotation coeff's
+// Resolution times rotation coeffs
     A=PixSz * Term1
     B=-1.0*(PixSz * Term2)
     C=(PixSz * Term3)
@@ -488,17 +499,51 @@ CCD_XY= camera_specs.ccd_xy;
     M32 = cos(Prad)*sin(Rrad)
     M33 = cos(Prad)*cos(Rrad)
 
-// Define p matrix (+X direction of flight along track, +Y left wing across track, -FL)
-    Xi = CCD_X/2.0
-    Yi = CCD_Y/2.0
+// Upper Left Corner Define p matrix (+X direction of flight along track, +Y left wing across track, -FL)
+//    Xi = (CCD_X/2.0) - ppX
+//    Yi = (CCD_Y/2.0) - ppY
+//    FLneg = -1.0 * FL
+
+// Center Pixel UL Define p matrix (+X direction of flight along track, +Y left wing across track, -FL) eventually we should use the principle point as the center
+    Xi = 0.0000074
+    Yi = 0.0000074
     FLneg = -1.0 * FL
 
-// s_inv * M * p + T(GPSxyz)
-    UL_X = (s_inv *(M11* Xi + M12 * Yi + M13 * FLneg)) + X
-    UL_Y = (s_inv *(M21* Xi + M22 * Yi + M23 * FLneg)) + Y
-    UL_Z = (s_inv *(M31* Xi + M32 * Yi + M33 * FLneg)) + Z
+// s_inv * M * p + T(GPSxyz) CENTER PIX (Used to be UL_X, UL_Y, UL_Z)
+    CP_X = (s_inv *(M11* Xi + M12 * Yi + M13 * FLneg)) + X
+    CP_Y = (s_inv *(M21* Xi + M22 * Yi + M23 * FLneg)) + Y
+    CP_Z = (s_inv *(M31* Xi + M32 * Yi + M33 * FLneg)) + FH
 
- return [A,B,C,D,UL_X, UL_Y];
+//Calculate Upper left corner (from center) in mapping space, rotate, apply to center coords in mapping space
+Yoff0 = PixSz * 600
+Xoff0 = PixSz *(-1 *  800)
+
+
+Xoff1 = (Term1 * Xoff0) + (Term2 * Yoff0)
+Yoff1 = (Term3 * Xoff0) +(Term1 * Yoff0)
+
+NewX = Xoff1 + CP_X
+NewY = Yoff1 + CP_Y
+
+//Calculate offset to move corner to the ground "0" wont need this agian until we start doing orthos
+//Xoff0 = (tan(Ang_X + Prad)) * UL_Z
+//Yoff0 = (tan(Ang_Y + Rrad)) * UL_Z
+
+//Rotate offset to cartesian (+ y up +x right), rotate to mapping frame, apply to mapping frame
+//Xoff1 = -1.00 * Yoff0
+//Yoff1 = Xoff0
+
+//Xoff2 = (Term1 * Xoff1) + (Term2 * Yoff1)
+//Yoff2 = (Term3 * Xoff1) +(Term1 * Yoff1)
+
+//NewX = UL_X + Xoff2
+//NewY = UL_Y + Yoff2
+ 
+
+
+ return [A,B,C,D,NewX,NewY];
+
+
 }
 
 
