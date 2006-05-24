@@ -740,6 +740,7 @@ Original: Amar Nayegandhi July 12-14, 2005
 
 
   if (is_void(buf)) buf = 200; // defaults to 200m
+  if (is_array(iarray)) iarray = test_and_clean(iarray);
   if (!samepath && is_void(create_tiledirs)) create_tiledirs=1;
   // check to see if any points are zero
   idx = where(iarray.east != 0)
