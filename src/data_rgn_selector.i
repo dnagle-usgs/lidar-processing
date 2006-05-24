@@ -754,7 +754,7 @@ Original: Amar Nayegandhi July 12-14, 2005
   maxnorth = max(iarray.north)/100.;
 
   // we add 2000m to the northing because we want the upper left corner
-  first_tile = tile_location([mineast,minnorth]);
+  first_tile = tile_location([mineast-2000,minnorth-2000]);
   last_tile = tile_location([maxeast+2000,maxnorth+2000]);
 
   ntilesx = (last_tile(2)-first_tile(2))/2000 + 1;
@@ -821,9 +821,10 @@ Original: Amar Nayegandhi July 12-14, 2005
 	// check if file exists
 	if (open(outfile, "r",1)) {
 	 if (mem_ans == "NoAll") continue;
-	 if (mem_ans != "YesAll") {
+	 if ((mem_ans != "YesAll") && (mem_ans != "AppendAll")) {
 	   ans = "";
-	   n = read(prompt="File Exists.  Overwrite? Yes/No/YesAll/NoAll:  ", format="%s", ans);
+	   prompt = swrite(format="File %s Exists. \n Overwrite? Yes/No/Append/YesAll/NoAll/AppendAll:  ",outfile);
+	   n = read(prompt=prompt, format="%s", ans);
 	   if (ans == "No" || ans == "no" || ans == "n" || ans == "N") {
 		continue;
 	   }
@@ -834,6 +835,9 @@ Original: Amar Nayegandhi July 12-14, 2005
 	   if (ans == "YesAll" || ans == "YESALL" || ans == "yesall") {
 		mem_ans = "YesAll";
 	   }
+	   if (ans == "AppendAll" || ans == "APPENDALL" || ans == "appendall") {
+		mem_ans = "AppendAll";
+	   }
 	 }
 	}
 
@@ -842,6 +846,25 @@ Original: Amar Nayegandhi July 12-14, 2005
 	}
 	
 	
+	close, f;
+	if (mem_ans == "AppendAll" || ans == "Append") {
+		//open file to read if exists
+	    if (is_stream(outfile)) {
+		f = openb(outfile);
+		restore, f, vname;
+    		if (get_member(f,vname) == 0) continue;
+    		outdata1 = grow(outdata1, get_member(f,vname));
+		write, "Finding unique elements in array..."
+   		// sort the elements by soe
+   		uidx = sort(outdata1.soe);
+		outdata1 = outdata1(uidx);
+		// now use the unique function with ret_sort=1
+   		uidx = unique(outdata1.soe, ret_sort=1);
+		outdata1 = outdata1(uidx);
+	    }
+	}
+	close, f;
+
 	save, createb(outfile), vname, outdata1;
         if (plot) dgrid, win, ll, d, [10,10,10], 6;
 	write, format="Data written out to %s\n",outfile;
