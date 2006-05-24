@@ -65,11 +65,20 @@ open(LS, $LS_CMD) || die("Unable to run $LS_CMD\n");
 while ( $file = <LS> ) {
   chop $file;
 
-  ($m, $d, $y, $junk) = split(/-/, $file, 4);
+  ($a, $b, $c, $junk) = split(/-/, $file, 4);
+  if ( $a < 1990 ) {
+    $m = $a;
+    $d = $b;
+    $y = $c;
 
-  $y =~ s/[a-zA-Z]//g;   # force it into being a numeric when VR misses a "-"
-  $y += 2000 if ( $y < 20 );
-  $y += 1900 if ( $y < 100);
+    $y =~ s/[a-zA-Z]//g;   # force it into being a numeric when VR misses a "-"
+    $y += 2000 if ( $y < 20 );
+    $y += 1900 if ( $y < 100);
+  } else {
+    $y = $a;
+    $m = $b;
+    $d = $c;
+  }
 
   $YYYYMMDD = sprintf("%04d%02d%02d", $y, $m, $d);
 
