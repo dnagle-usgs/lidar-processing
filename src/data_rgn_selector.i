@@ -728,6 +728,10 @@ INPUT:
   samepath=  :  Set to 1 to write the data out to the outpath with no
                 index/data paths.
 
+  create_tiledirs= : Set to 1 if you want to create the tile directory 
+		if it does not exist.  Use only if samepath is not set.
+		Defaults to 1.
+
   zone_nbr=  :  Zone number to put into the filename.
                 If not set, it uses a number from the variable name.
 
@@ -736,6 +740,7 @@ Original: Amar Nayegandhi July 12-14, 2005
 
 
   if (is_void(buf)) buf = 200; // defaults to 200m
+  if (!samepath && is_void(create_tiledirs)) create_tiledirs=1;
   // check to see if any points are zero
   idx = where(iarray.east != 0)
   iarray = iarray(idx);
@@ -802,6 +807,10 @@ Original: Amar Nayegandhi July 12-14, 2005
         }
 	 outfname = tiledir+"_"+file_string+".pbd";
   	if (!samepath) {
+	 if (create_tiledirs) {
+	   // make directory if does not exist
+	   e = mkdir(outpath+tiledir);
+	 }
 	 outfile = outpath+tiledir+"/"+outfname;
         } else {
 	 outfile = outpath+outfname;
@@ -830,6 +839,8 @@ Original: Amar Nayegandhi July 12-14, 2005
 	if (catch(0x02)) {
 	   continue;
 	}
+	
+	
 	save, createb(outfile), vname, outdata1;
         if (plot) dgrid, win, ll, d, [10,10,10], 6;
 	write, format="Data written out to %s\n",outfile;
