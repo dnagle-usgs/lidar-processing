@@ -449,7 +449,9 @@ Examples using the result data:
        break;		
     }
     rx = array(char, rxlen, 4);	// get all four return waveform bias values
-    rx(,1) = r(wa: wa + rxlen-1 );	// get first waveform
+    rxr = r(wa: wa + rxlen -1);
+    if (numberof(rxr) != numberof(rx(,1))) break;
+    rx(,1) = rxr;	// get first waveform
     wa += rxlen;			// update wa pointer to next
     rxlen = i16(r,wa); wa += 2;
     if (rxlen <=0) {
@@ -457,7 +459,9 @@ Examples using the result data:
               rasternbr, rxlen, wa, i ;
        break;
     }
-    rx(,2) = r(wa: wa + rxlen-1 );
+    rxr = r(wa: wa + rxlen -1);
+    if (numberof(rxr) != numberof(rx(,2))) break;
+    rx(,2) = rxr;	// get first waveform
     wa += rxlen;
     rxlen = i16(r,wa); wa += 2;
     if (rxlen <=0) {
@@ -465,7 +469,9 @@ Examples using the result data:
               rasternbr, rxlen, wa, i ;
        break;
     }
-    rx(,3) = r(wa: wa + rxlen-1 );
+    rxr = r(wa: wa + rxlen -1);
+    if (numberof(rxr) != numberof(rx(,3))) break;
+    rx(,3) = rxr;	// get first waveform
    return_raster.tx(i) = &txwf;
    return_raster.rx(i,1) = &rx(,1);
    return_raster.rx(i,2) = &rx(,2);
