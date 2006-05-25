@@ -11,6 +11,8 @@ $OS = $ENV{"OSTYPE"};
 
 # printf("OS: %s\n", $OS);
 
+$ZIP   = "/usr/bin/zip";
+
 if ( $OS eq "darwin" ) {      # looks like OS X
   $GZCAT = "/usr/bin/gzcat";
   $BZCAT = "/usr/bin/bzcat";
@@ -50,7 +52,8 @@ The  output file is written into the current directory in the form: YYYYMMDD.kml
   "elev=i",   # multiplier for elevation to make it more dramatic. (default: $opt_elev)
   "poles=i",  # [0|1] turn on drawing a line to the ground         (default: $opt_poles)
   "width=i",  # set line width                                     (default: $opt_width)
-  "colndx=x", # set starting index into color table                (default: $opt_colndx))
+  "colndx=x", # set starting index into color table                (default: $opt_colndx)
+  "kml"       # create kml files instead of kmz
 
 EOF
 
@@ -69,6 +72,7 @@ sub get_cli_opts {
   "poles=i",  # turn on drawing a line to the ground
   "width=i",  # set line width
   "colndx=i", # set starting index into color table
+  "kml",      # create kml files instead of kmz
   );
   &showusage() if defined($opt_help);
 }
@@ -140,6 +144,8 @@ $opt_skip =  4;
 $opt_elev =  1;   # set a default value
 $opt_width=  1;
 $opt_colndx = 0;  # set the starting index value into the color array
+$opt_kml  =  0;
+
 &get_cli_opts();
 
 printf("myint   = %d\n", $opt_myint  ) if ( $opt_myint  );
@@ -209,4 +215,11 @@ for ( $argc=0; $argc<=$#ARGV; ++$argc) {
 
   close(OUT);
   close(IN);
+
+  # Convert the file to a .kmz if reqested
+  if ( ! $opt_kml ) {
+    $koutfile = $outfile;
+    $koutfile =~ s/kml/kmz/;
+    system("$ZIP -m $koutfile $outfile");
+  }
 }
