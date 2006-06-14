@@ -34,7 +34,9 @@ exec wish "$0" ${1+"$@"}
 ####################################################
 
 
+set modeidx 0
 
+set idxtile2GroundOverlay_data(rx) {i_(e|w)(\d+)_(n|s)(\d+)_(\d+)}
 set tile2GroundOverlay_data(rx) {t_(e|w)(\d+)_(n|s)(\d+)_(\d+)}
 ####################################################
 # File name string to parse:
@@ -49,7 +51,7 @@ set tile2GroundOverlay_data(rx) {t_(e|w)(\d+)_(n|s)(\d+)_(\d+)}
 # 4) Compute the left,right, top, bottom
 ####################################################
 proc tile2GroundOverlay { rv fullpath mkkml } {
- global tile2GroundOverlay_data cbfn
+ global tile2GroundOverlay_data cbfn modeidx idxtile2GroundOverlay_data
  upvar $rv rvL
  
  if { $mkkml } {
@@ -63,9 +65,20 @@ proc tile2GroundOverlay { rv fullpath mkkml } {
    set rvL(kmlFn) $kmlfn
    set n [ regexp $tile2GroundOverlay_data(rx) \
           $pngfn match ew easting ns northing zone ]
+   if {!$n} {
+   	set n [ regexp $idxtile2GroundOverlay_data(rx) \
+          $pngfn match ew easting ns northing zone ]
+  	set modeidx 1
+   }
+	   
  } else {
    set n [ regexp $tile2GroundOverlay_data(rx) \
           $fullpath match ew easting ns northing zone ]
+   if {!n} {
+   	set n [ regexp $idxtile2GroundOverlay_data(rx) \
+          $fullpath match ew easting ns northing zone ]
+  	set modeidx 1
+   }
  }
 
 ####################################################
@@ -75,18 +88,33 @@ proc tile2GroundOverlay { rv fullpath mkkml } {
    regexp -expanded {([0-9]{4})}  $northing m N
    set rvL(name) "$ew${E}k $ns${N}k Z$zone"
    
-   set ce [  expr {$easting  + 1000.0} ]
-   set cn [  expr {$northing - 1000.0} ]
-   utm2ll a  [ expr {$cn + 1000}]      $ce $zone
-   utm2ll b  [ expr {$cn - 1000}]      $ce $zone
+   if { $modeidx } {
+   	set ce [  expr {$easting  + 5000.0} ]
+     	set cn [  expr {$northing - 5000.0} ]
+   	utm2ll a  [ expr {$cn + 5000}]      $ce $zone
+   	utm2ll b  [ expr {$cn - 5000}]      $ce $zone
+   } else {
+   	set ce [  expr {$easting  + 1000.0} ]
+     	set cn [  expr {$northing - 1000.0} ]
+   	utm2ll a  [ expr {$cn + 1000}]      $ce $zone
+   	utm2ll b  [ expr {$cn - 1000}]      $ce $zone
+   }
+	
 
    utm2ll cll $cn $ce $zone
 
    set rotation [ expr { -[llcourse $b(lat) $b(lon) $a(lat) $a(lon) ] } ]
-   utm2ll leftLL   $cn [expr {$ce-1000.0}]      $zone
-   utm2ll rightLL  $cn [expr {$ce+1000.0}]      $zone
-   utm2ll topLL    [ expr {$cn+1000.0}] $ce     $zone
-   utm2ll bottomLL [ expr {$cn-1000.0}] $ce     $zone
+   if { $modeidx } {
+   	utm2ll leftLL   $cn [expr {$ce-5000.0}]      $zone
+   	utm2ll rightLL  $cn [expr {$ce+5000.0}]      $zone
+   	utm2ll topLL    [ expr {$cn+5000.0}] $ce     $zone
+   	utm2ll bottomLL [ expr {$cn-5000.0}] $ce     $zone
+   } else {
+   	utm2ll leftLL   $cn [expr {$ce-1000.0}]      $zone
+   	utm2ll rightLL  $cn [expr {$ce+1000.0}]      $zone
+   	utm2ll topLL    [ expr {$cn+1000.0}] $ce     $zone
+   	utm2ll bottomLL [ expr {$cn-1000.0}] $ce     $zone
+   }
    
    set east   $rightLL(lon)
    set west    $leftLL(lon)
@@ -368,7 +396,7 @@ proc get_file_list {} {
 
 proc make_kml { belst fslst balst } {
 
-	global idxfn tilelst tile2GroundOverlay_data
+	global idxfn tilelst tile2GroundOverlay_data modeidx idxtile2GroundOverlay_data 
 	set fnlst [concat $belst $fslst $balst]
 	set total_files [ llength $fnlst ]
 	set   i 0
@@ -397,8 +425,17 @@ proc make_kml { belst fslst balst } {
             update
 	    # make unique indx_file_list
     	    set n [regexp $tile2GroundOverlay_data(rx) $fn match ew easting ns northing zone] 
+    	    if {!$n} {
+    	    	set n [regexp $idxtile2GroundOverlay_data(rx) $fn match ew easting ns northing zone] 
+	    }
+
     	    if { $n } {
-		lappend tilelst "t_$ew$easting\_$ns$northing\_$zone"
+		if {$modeidx} {
+			lappend tilelst "i_$ew$easting\_$ns$northing\_$zone"
+		} else {
+			lappend tilelst "t_$ew$easting\_$ns$northing\_$zone"
+		}
+
 	    }
 
       	    set path [ file dirname $fn ]
