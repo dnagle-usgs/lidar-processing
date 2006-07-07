@@ -9,6 +9,8 @@
 $NETWORK = "192.168.1",
 $NETMASK = "255";
 
+$NETWORK = $ARGV[0] if ( $#ARGV == 0 );
+
 open(PING, "ping -b $NETWORK.$NETMASK|") || die("Unable to ping\n");
 
 $done = 0;
@@ -25,16 +27,18 @@ $t = time();
 
 open(HOSTS, "/etc/hosts") || die ("Unable to open /etc/hosts\n");
 @hosttable = <HOSTS>;
+printf("%d entries in hosttable\n", $#hosttable);
 close(HOSTS);
 
 for ($i=1; $i<=255; ++$i) {
   if ( $hosts[$i] >0 ) {
-    $ip = sprintf("^%s.%d ", $NETWORK, $i);
+    $ip = sprintf("^%s.%d[ 	]", $NETWORK, $i);
+# printf("searching %d: [%s]\n", $#hosttable, $ip);
     @list = grep ( /$ip/, @hosttable);
     if ( $#list == 0 ) {    # we got one hit
       ($junk1, $name, $junk2) = split(/\s+/, $list[0], 3);
     } else {
-      $name = "UnKnown";
+      $name = "UnKnown $#list";
     }
     
 
