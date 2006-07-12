@@ -1,6 +1,7 @@
 pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygrid=ygrid, $
 	z_max = z_max, z_min=z_min, missing = missing, limits=limits, $
-	area_threshold=area_threshold, dist_threshold = dist_threshold, datamode=datamode
+	area_threshold=area_threshold, dist_threshold = dist_threshold, $
+	datamode=datamode
   ; this procedure does tinning / gridding on eaarl data
   ; amar nayegandhi 5/14/03.
   ; INPUT KEYWORDS:
@@ -13,7 +14,8 @@ pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygri
 	; z_max = Maximum z value to consider during gridding
 	; z_min = Minimum z value to consider during gridding, default = -100m
 	; missing = Missing value for no data points during gridding, default = -100m
-	; datamode = set to 1 if you want to use the function on non-standard input format
+	; datamode = set to 2 if you want to use the function in index tile mode
+	;	     set to 1 if you want to use the function in non-data or non-index tile mode
 
 
   if (not keyword_set(cell)) then cell = 1  
@@ -86,11 +88,19 @@ pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygri
      ygrid = ygrid(c1:c2)
   endif
 
+  if (datamode eq 2) then begin
+     c1 = 100/cell
+     c2 = 10000/cell + 100/cell
+     zgrid = zgrid(c1:c2, c1:c2)
+     xgrid = xgrid(c1:c2)
+     ygrid = ygrid(c1:c2)
+  endif
 return
 end
 
 pro plot_eaarl_grids, xgrid, ygrid, zgrid, max_elv_limit=max_elv_limit, $
-		      min_elv_limit = min_elv_limit, num=num, save_grid_plot=save_grid_plot
+		      min_elv_limit = min_elv_limit, num=num, save_grid_plot=save_grid_plot, $
+		      datamode=datamode
   ; this procedure will make a color coded grid plot
   ; amar nayegandhi 5/14/03
   thisdevice = !d.name
@@ -335,8 +345,8 @@ pro make_GE_plots, xgrid=xgrid, ygrid=ygrid, zgrid=zgrid, geotif_file=geotif_fil
     min_elv = minelv
   endelse
 
-  xsize = 2000/(celldim*num) + 1 
-  ysize=2000/(celldim*num) + 1
+  xsize = 2000/(num) + 1 
+  ysize=2000/(num) + 1
   device, set_resolution=[xsize,ysize]
 
   if (keyword_set (topmax)) then begin
