@@ -11,7 +11,7 @@ pro batch_index_grid, path, searchstr=searchstr, $
    ; this procedure does gridding of index tiles in a batch mode
    ; path: Input Path name to all index tiles
    ; searchstr = search string for file search.  Default="*.edf"
-   ; cell = grid cell dimension (default = 4m)
+   ; cell = grid cell dimension (default = 5m)
    ; mode = Type of EAARL data.  1 = Surface Topography, 2 = Bathymetry, 3 = Bare Earth under Vegetation
    ; z_grid_max = Maximum z value to consider during gridding
    ; z_grid_min = Minimum z value to consider during gridding, default = -100m
@@ -42,6 +42,7 @@ pro batch_index_grid, path, searchstr=searchstr, $
 
 start_time = systime(1)
 if (not keyword_set(searchstr)) then searchstr="*.edf"
+if (not keyword_set(cell)) then cell = 5
 ; find the number of index tile directories in the input directory
 idirs = file_search(path, "i_e*", /test_directory)
 
@@ -59,60 +60,57 @@ for i=0, n_elements(idirs)-1 do begin
       print, "No data tile files found in this index directory"
       continue;
    endif
+   
    ; read one file at a time
    fname_arr = file_basename(tfiles);
    fname_dirs = file_dirname(tfiles);
    fname_tile_dir = file_basename(fname_dirs);
    fname_arr = fname_tile_dir+"/"+fname_arr;
 
-   data_arr = read_yfile(idirs(i)+'/', fname_arr=fname_arr)
+   ; find number of records in the index tile
+   nsamples = read_nrecords(idirs(i)+'/', fname_arr=fname_arr)
+   
+   if nsamples le 10 then continue;
+
+   if nsamples lt 1000000 then begin
+	ndim = 1
+   endif else begin
+        ndim = nsamples/1000000
+   endelse
+
+   data_arr = read_yfile(idirs(i)+'/', fname_arr=fname_arr, ndim=ndim)
 
    print, 'Data should be loaded. Continuing...'
 
    itile = file_basename(idirs(i));
    iname_arr = idirs(i)+"/"+itile+".pbd"
-   nsamples = 0;
+
+   nsamples_orig = nsamples
+
+   nsamples = 0
+
    for j=0, n_elements(data_arr)-1 do begin
       nsamples += n_elements(*data_arr[j]);
    endfor
 
-   if (nsamples le 10) then continue
 
-   ndim=1;
    str_data_arr = (*data_arr[0])[0];
-   nsamples_orig = nsamples
-   while (nsamples gt 1000000) do begin
-      ndim++;
-      data_all = replicate(str_data_arr, (nsamples_orig/ndim)+n_elements(data_arr));
-      dall_beg = 0;
-      for j=0, n_elements(data_arr)-1 do begin
+  
+   data_all = replicate(str_data_arr, nsamples);
+   dall_beg = 0;
+   for j=0, n_elements(data_arr)-1 do begin
          ndata = n_elements(*data_arr(j))
-         datan = *data_arr[j];
-         datan = datan[0:n_elements(datan)-1:ndim];
-         dall_end = dall_beg + n_elements(datan) -1;
-         data_all(dall_beg:dall_end) = datan;
-         dall_beg += n_elements(datan);
-      endfor
-      data_all = data_all[0:dall_end];
-      nsamples = n_elements(data_all);
-   endwhile
-
-   dall_beg = 0
-   dall_end = 0
-   if nsamples_orig le 1000000 then begin
-      data_all = replicate(str_data_arr, (nsamples_orig)+n_elements(data_arr));
-      for j=0, n_elements(data_arr)-1 do begin
-	 ndata = n_elements(*data_arr(j))
          datan = *data_arr[j];
          datan = datan[0:n_elements(datan)-1];
          dall_end = dall_beg + n_elements(datan) -1;
          data_all(dall_beg:dall_end) = datan;
          dall_beg += n_elements(datan);
-      endfor
-      data_all = data_all[0:dall_end];
-      nsamples = n_elements(data_all);
-   endif
-   
+   endfor
+   data_all = data_all[0:dall_end];
+   nsamples = n_elements(data_all);
+
+   ptr_free, data_arr
+
    ; find the corner points for the index tile
    spfn = strsplit(itile, "_", /extract)
    we = long( strmid(spfn(1), 1))+1
