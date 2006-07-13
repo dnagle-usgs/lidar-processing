@@ -74,7 +74,7 @@ proc tile2GroundOverlay { rv fullpath mkkml } {
  } else {
    set n [ regexp $tile2GroundOverlay_data(rx) \
           $fullpath match ew easting ns northing zone ]
-   if {!n} {
+   if {!$n} {
    	set n [ regexp $idxtile2GroundOverlay_data(rx) \
           $fullpath match ew easting ns northing zone ]
   	set modeidx 1
