@@ -81,10 +81,11 @@ while ( $file = <LS> ) {
   }
 
   $YYYYMMDD = sprintf("%04d%02d%02d", $y, $m, $d);
+  $YYYY_MM_DD = sprintf("%04d-%02d-%02d", $y, $m, $d);
 
   printf("%s\t%s\n", $YYYYMMDD, $file);
 
-  open(FIND1, "find .. -name $YYYYMMDD|") || die("Unable to run find1\n");
+  open(FIND1, "find .. -name $YYYYMMDD -or -name $YYYY_MM_DD |") || die("Unable to run find1\n");
   while ( $dir = <FIND1> ) {
     chop $dir;
     $tmp = $dir . "/trajectories";
