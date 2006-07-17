@@ -14,7 +14,8 @@ pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygri
 	; z_max = Maximum z value to consider during gridding
 	; z_min = Minimum z value to consider during gridding, default = -100m
 	; missing = Missing value for no data points during gridding, default = -100m
-	; datamode = set to 2 if you want to use the function in index tile mode
+	; datamode = set to 3 if you want to use the function in index tile mode
+	;	     set to 2 if you want to use the function in data tile mode 	
 	;	     set to 1 if you want to use the function in non-data or non-index tile mode
 
 
@@ -80,7 +81,9 @@ pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygri
     end
   endcase
 
-  if (not keyword_set(datamode)) then begin
+  if (not keyword_set(datamode)) then datamode = 2  
+
+  if (datamode eq 2) then begin
      c1 = 100/cell
      c2 = 2000/cell + 100/cell 
      zgrid = zgrid(c1:c2, c1:c2)
@@ -88,7 +91,7 @@ pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygri
      ygrid = ygrid(c1:c2)
   endif
 
-  if (datamode eq 2) then begin
+  if (datamode eq 3) then begin
      c1 = 100/cell
      c2 = 10000/cell + 100/cell
      zgrid = zgrid(c1:c2, c1:c2)
