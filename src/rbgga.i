@@ -75,15 +75,15 @@ struct GGA {
 
 
 
-extern gga
-/* DOCUMENT gga
+extern pnav
+/* DOCUMENT pnav
 
-  gga is a structure containing:
+  pnav is a structure containing:
 
-   gga.sod      Seconds of the day.  
-   gga.lat 	Latitude in degrees
-   gga.lon	Longitude in degrees ( negative values for west )
-   gga.alt 	Altitude in meters
+   pnav.sod      Seconds of the day.  
+   pnav.lat 	Latitude in degrees
+   pnav.lon	Longitude in degrees ( negative values for west )
+   pnav.alt 	Altitude in meters
 
    See also:  
      rbgga	Reads ybin files into Yorick.
@@ -96,8 +96,8 @@ func rbgga( x, plt=, color=, map=, utm=, ifn= ) {
 
    The rbgga function reads converted NMEA GPGGA gps message data.  
  The data are produced by the gga2bin.c program.  The data from the file 
- is read into the global variable gga.  Many functions in this 
- package work with the default gga variable.  This function returns an
+ is read into the global variable pnav.  Many functions in this 
+ package work with the default pnav variable.  This function returns an
  array of GGA structures.
 
  To look at some data, try the following at the Yorick prompt:
@@ -113,7 +113,7 @@ func rbgga( x, plt=, color=, map=, utm=, ifn= ) {
 
 */
 
- extern gga, pnav, data_path;
+ extern pnav, data_path;
  
 
 if (!ifn) {
@@ -549,8 +549,8 @@ func gga_find_times( q, win=, plt= ) {
  
   // start of each line is at qq+1
   // end of each line is at qq
-  startggasod = gga.sod( lq(startptlist));
-   stopggasod = gga.sod( lq(endptlist) );
+  startggasod = pnav.sod( lq(startptlist));
+   stopggasod = pnav.sod( lq(endptlist) );
 
 // The startggasod and stopggasod have bogus values at the beginning
 // and end so we want to fix that and also copy the proper start/stop
@@ -568,7 +568,7 @@ func gga_find_times( q, win=, plt= ) {
       win=6
     window,win;
     fma; 
-    plmk, gga.sod( q),q;		// plot the selected times
+    plmk, pnav.sod( q),q;		// plot the selected times
     plmk, startggasod(1:-1), lq(startptlist(1:-1)), color="green", msize=.3
     plmk, stopggasod(2:0)-1, lq(startptlist(2:0)-1), color="red", msize=.3
     limits;
@@ -796,8 +796,8 @@ func show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, wid
   if ( is_void( lines ) ) 
      lines = 1;
   if ( is_void( x ) ) {
-        x = gga.lon;
-        y = gga.lat;
+        x = pnav.lon;
+        y = pnav.lat;
   }
   if (utm == 1) {
   	/* convert latlon to utm */
@@ -840,7 +840,7 @@ func show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, wid
     }
 }
 
-func plot_no_raster_fltlines (gga, edb) {
+func plot_no_raster_fltlines (pnav, edb) {
   /* Document no_raster_flightline (gga, edb)
       This function overplots the flight lines having no rasters with a different color.
 */
@@ -864,23 +864,23 @@ func plot_no_raster_fltlines (gga, edb) {
 
     for (i = 1; i <= numberof(f_norast); i++) {
      if (l_norast(i) >= f_norast(i)) {
-      indx1 = where((gga.sod >= f_norast(i)) & (gga.sod <= l_norast(i)));
+      indx1 = where((pnav.sod >= f_norast(i)) & (pnav.sod <= l_norast(i)));
       if (is_array(indx1)) 
-        show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1),  marker=4, skip=50,  color = "yellow", utm=utm;
+        show_gga_track, x = pnav.lon(indx1), y = pnav.lat(indx1),  marker=4, skip=50,  color = "yellow", utm=utm;
      }
     } 
   }
   // also plot over region before the system is initially started.
-  indx1 = where(gga.sod < sod_edb(1));
+  indx1 = where(pnav.sod < sod_edb(1));
   if (is_array(indx1)) 
-    show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1), marker=4, skip=50,  color = "yellow", utm=utm;
+    show_gga_track, x = pnav.lon(indx1), y = pnav.lat(indx1), marker=4, skip=50,  color = "yellow", utm=utm;
 
   //also plot over region before first good raster
   lindx = where(sod_edb < 0);
   if (is_array(lindx)) 
-    indx1 = where(gga.sod <= sod_edb(lindx(0)+2));
+    indx1 = where(pnav.sod <= sod_edb(lindx(0)+2));
   if (is_array(indx1)) 
-    show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1), marker=4, skip=50,  color = "yellow", utm=utm;
+    show_gga_track, x = pnav.lon(indx1), y = pnav.lat(indx1), marker=4, skip=50,  color = "yellow", utm=utm;
 
   window, w;
 
@@ -888,8 +888,8 @@ func plot_no_raster_fltlines (gga, edb) {
 }
 
   
-func plot_no_tans_fltlines (tans, gga) {
-  /* Document no_raster_flightline (gga, edb)
+func plot_no_tans_fltlines (tans, pnav) {
+  /* Document no_raster_flightline (pnav, edb)
       This function overplots the flight lines having no rasters with a different color.
 */
 
@@ -911,19 +911,19 @@ func plot_no_tans_fltlines (tans, gga) {
     write, format="number of locations with bad tans data = %d\n", numberof(f_notans);
 
     for (i = 1; i <= numberof(f_notans); i++) {
-      indx1 = where(gga.sod >= f_notans(i));
+      indx1 = where(pnav.sod >= f_notans(i));
       if (is_array(indx1)) {
-        q = where(gga.sod(indx1) <= l_notans(i));
+        q = where(pnav.sod(indx1) <= l_notans(i));
 	if (is_array(q)) {
 	  indx1 = indx1(q);
-          show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1),  marker = 5, color = "magenta", skip=50, msize=0.2, utm=utm, width=width;
+          show_gga_track, x = pnav.lon(indx1), y = pnav.lat(indx1),  marker = 5, color = "magenta", skip=50, msize=0.2, utm=utm, width=width;
 	}
       }
     } 
   }
   // also plot over region before the tans system is initially started.
-  indx1 = where(gga.sod < tans.somd(1));
-  show_gga_track, x = gga.lon(indx1), y = gga.lat(indx1),  marker=5, color = "magenta", skip=1, msize=0.2, utm=utm, width=width;
+  indx1 = where(pnav.sod < tans.somd(1));
+  show_gga_track, x = pnav.lon(indx1), y = pnav.lat(indx1),  marker=5, color = "magenta", skip=1, msize=0.2, utm=utm, width=width;
 
  window, w;
 
