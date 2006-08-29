@@ -50,7 +50,8 @@ for ($i=1; $i<=255; ++$i) {
         /gps145/ ||
         /gps207/ ||
         /eaarl/  ||
-        /cam1/
+        /kiwi/   ||
+        /cir/
       ) && do {
          printf("%3d (%2d): %d  # %s\t",
            $i, $count[$i], $t-$hosts[$i], $name);
