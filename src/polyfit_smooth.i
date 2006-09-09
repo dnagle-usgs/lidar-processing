@@ -221,7 +221,10 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, wbuf=, gridmode=, ndivid
 	  y = ss(iidx2(k),2);
 	  elvall(k) = c(1)+c(2)*x+c(3)*y+c(4)*x^2+c(5)*x*y + c(6)*y^2 + c(7)*x^3 + c(8)*x^2*y + c(9)*x*y^2 + c(10)*y^3;
 	}
-	new_pts = array(GEO,nrand);
+	if (mode == 2) 
+		new_pts = array(GEO,nrand);
+	if (mode == 3) 
+		new_pts = array(VEG__,nrand);
 	new_pts.east = int(ss(iidx1,1)*100);
 	new_pts.north = int(ss(iidx2,2)*100);
 	if (mode == 3) {
@@ -242,7 +245,12 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, wbuf=, gridmode=, ndivid
 	new_pts.soe = span(count+1,count+nrand,nrand);
 
         // remove any points that are not within the elevation boundaries of the original points
-  	xidx = where(((new_pts.elevation+new_pts.depth) > mn_be_elv) & ((new_pts.elevation+new_pts.depth) < mx_be_elv));
+	if (mode==1) 
+  	   xidx = where(((new_pts.elevation) > mn_be_elv) & ((new_pts.elevation) < mx_be_elv));
+	if (mode==2) 
+  	   xidx = where(((new_pts.elevation+new_pts.depth) > mn_be_elv) & ((new_pts.elevation+new_pts.depth) < mx_be_elv));
+	if (mode==3) 
+  	   xidx = where(((new_pts.lelv) > mn_be_elv) & ((new_pts.lelv) < mx_be_elv));
 	if (is_array(xidx)) {
 	   new_pts = new_pts(xidx);
 	} else {
@@ -254,7 +262,10 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, wbuf=, gridmode=, ndivid
 	if ((count+nrand) > numberof(new_eaarl)) {
 	  new_eaarl1 = new_eaarl(1:count);
 	  new_count += numberof(new_eaarl);
-	  new_eaarl = array(GEO, new_count);
+	  if (mode==1 || mode ==3) 
+	     new_eaarl = array(VEG__, new_count);
+	  if (mode==2) 
+	     new_eaarl = array(GEO, new_count);
 	  new_eaarl(1:count) = new_eaarl1;
 	  new_eaarl1 = [];
 	}
