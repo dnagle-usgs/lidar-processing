@@ -103,6 +103,8 @@ set frame_off 0     ;# Frame offset
 set data "No GPS data"  ;#
 set img    [ image create photo -gamma $gamma ] ;
 
+set last_tar ""
+
 set rate(Fast)       0
 set rate(100ms)    100
 set rate(250ms)    250
@@ -780,27 +782,65 @@ proc show_img { n } {
 		frame_off llat llon pitch roll head yes_head zoom \
 		camtype DEBUG_SF mogrify_pref mogrify_exists tarname show_fname \
 		mog_normalize mog_inc_contrast mog_dec_contrast mog_despeckle \
-		mog_enhance mog_equalize mog_monochrome
+		mog_enhance mog_equalize mog_monochrome img img0 last_tar tar \
+		cam1_flst 
 
 	set cin $n
-
-	if { [info exists fna($n)] == 1 } {
+	
+	if { [array size fna] == 1 } {
+		## this is in the new tar format
+		if { $DEBUG_SF } {
+			puts "in here"
+		}
+		set h 0
+		set m 0
+		set s 0
+		set hms [indx2hms $cin]
+		scan $hms "%02d%02d%02d" h m s 
+		set tarname [hms2tarpath $hms]
+		if { $DEBUG_SF } {
+			puts "hms=$hms"
+			puts "tarname: $tarname"
+		}
+		if {$tarname ne $last_tar } {
+			if { [ catch { vfs::tar::Mount "$tarname" tar } ] } {
+				tk_messageBox -message "No file found\nFile: $tarname" -icon error
+			} else {
+				set last_tar $tarname
+			}
+		}
 		
-		# Some shorthand variables
-		if { [string equal $mogrify_pref "only tcl"      ] } { set only_tcl       1 } else { set only_tcl       0 }
-		if { [string equal $mogrify_pref "prefer tcl"    ] } { set prefer_tcl     1 } else { set prefer_tcl     0 }
-		if { [string equal $mogrify_pref "prefer mogrify"] } { set prefer_mogrify 1 } else { set prefer_mogrify 0 }
+		set pat "tar/mnt/ramdisk/2/cam147_*$hms*.jpg"
+		if { [ catch { set fn [ glob $pat ] } ] } {
+			puts "No file: $pat"
+		} 
+	
+	} else {
 
 		if { [string length $tarname] > 0 } {
 			if { [ catch { vfs::tar::Mount "$dir/$tarname" tar } ] } {
 				tk_messageBox -message "File not found: $tarname" -icon error
 				error "File not found: $tarname"
 			} else {
-				set fn tar/$fna($n)
+				if { [info exists fna($n)] == 0 } {	
+					set pat "tar/mnt/ramdisk/2/cam147_*.jpg"
+					set fnm [ glob $pat ]
+					set fn [ lindex $fnm $s ]
+				} else {
+					set fn tar/$fna($n)
+				}
 			}
 		} else {
 			set fn $dir/$fna($n)
 		}
+	}
+
+		
+		# Some shorthand variables
+		if { [string equal $mogrify_pref "only tcl"      ] } { set only_tcl       1 } else { set only_tcl       0 }
+		if { [string equal $mogrify_pref "prefer tcl"    ] } { set prefer_tcl     1 } else { set prefer_tcl     0 }
+		if { [string equal $mogrify_pref "prefer mogrify"] } { set prefer_mogrify 1 } else { set prefer_mogrify 0 }
+
 										if { $DEBUG_SF } { puts "fn: $fn" }
 
 		# Copy the file to a temp file, to protect the original from changes
@@ -937,7 +977,9 @@ proc show_img { n } {
 		.canf.can itemconfigure tx -text ""
 			set lst [ split $fn "_" ]
 			set data "$n  [ lindex $lst 3 ]"
-			set hms  $imgtime(idx$n);
+			if { [array size fna] > 1 } {
+				set hms  $imgtime(idx$n);
+			}
 			scan $hms "%02d%02d%02d" h m s 
 			set sod [ expr $h*3600 + $m*60 + $s + $seconds_offset - $frame_off]
 			set hms [ clock format $sod -format "%H%M%S" -gmt 1   ] 
@@ -966,7 +1008,7 @@ proc show_img { n } {
 		.canf.can config -scrollregion "0 0 [image width $img] [image height $img]"
 		update
 
-	}
+
 }
 
 proc hms2sod { hms {seconds_offset 0} {frame_off 0} } {
@@ -2145,6 +2187,120 @@ proc select_file { } {
 	}
 }
 
+proc select_path { path } {
+	global cam1_flst img tarname start_hms dir nfiles DEBUG_SF
+
+	if { $path == "" } {
+		set path [ tk_chooseDirectory -initialdir $path ]
+	} else {
+		if { [ catch { [glob $path/cam147_*.tar 0] } ] } {
+			set path [ tk_chooseDirectory -initialdir $path -title \
+			"Select Data Path for RGB Images" ]
+		} 
+	}
+
+	if { $DEBUG_SF } { 
+		puts "Path: $path "
+	}
+
+	set dir $path
+
+	wm title . $dir
+	puts "Using VFS mounting to load tar files...";
+	open_loader_window "VFS Mounting\n$path\nThis will take only a few seconds"
+	.loader.ok configure -state disabled
+	update 
+
+	set cam1_flst [ lsort [glob $path/cam147_*.tar 0 ] ] 
+	set cfg_file [ lindex $cam1_flst 0 ]
+
+	if { $DEBUG_SF } { 
+		puts "cfg_file: $cfg_file"
+	}
+
+	# find the first and last hms timestamp in the tar file
+	set tf [ lindex $cam1_flst 0]
+	vfs::tar::Mount $tf tar
+	set pat "tar/mnt/ramdisk/2/cam147_*.jpg"
+	set fnm [lsort [ glob $pat ] ]
+	set fnm1 [lindex $fnm 0 ]
+	set hms [ lindex [ split [ file tail $fnm1 ] "_" ] 2 ]
+	scan $hms "%02d%02d%02d" h m s
+	set start_hms [format "%02d%02d%02d" $h $m $s]
+	
+	set tf [ lindex $cam1_flst end]
+	vfs::tar::Mount $tf tar
+	set pat "tar/mnt/ramdisk/2/cam147_*.jpg"
+	set fnm [lsort [ glob $pat ] ]
+	set fnm1 [lindex $fnm end]
+	set hms [ lindex [ split [ file tail $fnm1 ] "_" ] 2 ]
+	scan $hms "%02d%02d%02d" h m s
+	set end_hms [format "%02d%02d%02d" $h $m $s]
+
+	if { $DEBUG_SF } { 
+		puts "Start: $start_hms End: $end_hms"
+	}
+
+	set nfiles [ expr { [hms2sod $end_hms] - [hms2sod $start_hms] } ]
+	set tarname [ lindex $cam1_flst 0 ]
+
+	set base_dir [ file dirname $tarname ]
+
+	if { $DEBUG_SF } { 
+		puts "Mounted.."
+	}
+
+	.loader.status1 configure -text "$base_dir\nis mounted."
+	.loader.ok configure -state normal
+	update
+
+	enable_controls
+	.slider configure -to $nfiles
+	set ci 1
+	clear_marks
+	clear_class
+	show_img $ci
+	after 3500 {destroy .loader}
+
+}
+
+proc tarpath2hms { fn } {
+	# extracts the hms from tar path name
+	set h 0; set m 0
+	set hm [lindex [ split [ file tail $fn ] "_" ] 2 ]
+	scan $hm "%02d%02d" h m
+	set rv [ format %02d%02d00 $h $m ]
+	return $rv
+}
+
+proc hms2tarpath { hms } {
+	global dir
+	# finds the tar file for given hms value
+	set h 0; set m 0
+	scan $hms "%02d%02d" h m
+	set hm [format "%02d%02d" $h $m ]
+	set fn [glob $dir/cam147_*$hm\.tar 0 ]  
+	return $fn
+}
+
+proc hms2indx { hms } {
+	global cam1_flst start_hms end_hms
+	#set start_hms [ tarpath2hms [ lindex $cam1_flst 0 ] ]
+	set sod [ hms2sod $hms ]
+	set start_sod [ hms2sod $start_hms ]
+	set indx [ expr { $sod - $start_sod + 1} ]
+	return $indx
+}
+	
+proc indx2hms { indx } {
+	global cam1_flst start_hms
+	#set start_hms [ tarpath2hms [ lindex $cam1_flst 0 ] ]
+	set start_sod [hms2sod $start_hms]
+	set sod [ expr { $start_sod + $indx -1 } ]
+	set hms [sod2hms $sod]
+	return $hms
+}
+
 proc plotpos { } {
 	global nfiles llat llon sod
 	if { [no_file_selected $nfiles] } { return }
@@ -2276,6 +2432,9 @@ menu .mb.zoom
 
 .mb.file add command -label "Select File.." -underline 0 \
 	-command { select_file }
+
+.mb.file add command -label "Select Path.." -underline 0 \
+	-command { select_path "/home/anayegan/eaarl_stuff/cam1_tar_changes/" }
 
 .mb.file add command -label "Exit" -underline 1 -command { exit }
 
