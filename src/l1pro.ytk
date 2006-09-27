@@ -2215,12 +2215,16 @@ proc removing_proc {} {
        Label .rem.06.typetext -text "Data type:"
 ### IMPORTANT NOTE: Do not change the order of GEO and VEG__ for the values of the ComboBox below.
 ### A function parameter for the pipthresh function for this gui is dependent on the index number of the selection.
-       ComboBox .rem.06.type -textvariable remove_type -editable 1 -width 8\
+       ComboBox .rem.06.type -textvariable remove_type -editable 1 -width 12\
          -values {\
-	          GEO\
-                  VEG__\
+	          GEO\ or\ VEG__\
+                  FS\
                  }
-      .rem.06.type setvalue @0
+      if {[.l1wid.bf45.p.5 getvalue] == 0} {
+	.rem.06.type setvalue @1
+      } else {
+	.rem.06.type setvalue @0
+      }
 
        ComboBox .rem.1 -text "Remove points using..." -width 16\
    	 -values { \
@@ -2312,15 +2316,19 @@ proc removing_proc {} {
 	   }
          }
          if {$selr == 3} {
-		set val [.rem.06.type getvalue] 
+		if {[.rem.06.type getvalue] == 1} {
+ 			set val [.rem.06.type getvalue] 
+		} else {
+			set val " "
+		} 
 		if { $min == 0 && $max == 0 } {
 		   tk_messageBox -icon warning -message "You have not set any threshold limits!" -type ok -title "ERROR!"
 		} elseif { $min == 0 } {
-		   exp_send "croppeddata=\[\];$curvar = pipthresh($curvar, maxthresh=$max_thresh, mode=$val + 2);\r"
+		   exp_send "croppeddata=\[\];$curvar = pipthresh($curvar, maxthresh=$max_thresh, mode=$val);\r"
 		} elseif { $max == 0 } {
-		   exp_send "croppeddata=\[\];$curvar = pipthresh($curvar, minthresh=$min_thresh, mode=$val + 2);\r"
+		   exp_send "croppeddata=\[\];$curvar = pipthresh($curvar, minthresh=$min_thresh, mode=$val);\r"
 		} else {
-		   exp_send "croppeddata=\[\];$curvar = pipthresh($curvar, minthresh=$min_thresh, maxthresh=$max_thresh, mode=$val + 2);\r"
+		   exp_send "croppeddata=\[\];$curvar = pipthresh($curvar, minthresh=$min_thresh, maxthresh=$max_thresh, mode=$val);\r"
 		}
 	 }
          if {$selr == -1} {
