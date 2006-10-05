@@ -10,6 +10,19 @@
 */
 
 
+// ATM2 structure has been designed to mimic the VEG__ structure.
+// this allows most of the EAARL functions to work with ATM2.
+struct ATM2 {
+   long north;
+   long east;
+   long elevation;
+   short fint; // intensity
+   long least // passive channel latitude
+   long lnorth // passive channel longitude
+   double lint // passive intensity
+   double soe // timestamp (may not be in soe format)
+}
+
 func load {
 /* DOCUMENT load
 */
@@ -65,3 +78,123 @@ func show_frame (b, n, cmin=, cmax=, marker=, msize= ){
 }
 
 
+func atm_rq_ascii_to_pbd(ipath, ifname=, columns=, searchstr=, opath=) {
+  // amar nayegandhi
+  // 10/05/2006
+
+  if (is_void(ifname)) {
+    s = array(string, 10000);
+    if (searchstr) {
+     ss = searchstr;
+    } else {
+      ss = ["*.txt", "*.xyz"];
+    }
+    scmd = swrite(format = "find %s -name '%s'",ipath, ss);
+    fp = 1; lp = 0;
+    for (i=1; i<=numberof(scmd); i++) {
+      f=popen(scmd(i), 0);
+      n = read(f,format="%s", s );
+      close, f;
+      lp = lp + n;
+      if (n) fn_arr = s(fp:lp);
+      fp = fp + n;
+    }
+  } else {
+    fn_arr = ipath+ifname;
+    n = numberof(ifname);
+  }
+
+  write, format="Number of files to read = %d \n", n
+
+  for (i=1;i<=n;i++) {
+    // read ascii file
+    write, format="Reading file %d of %d\n",i,n;
+    fn_split = split_path(fn_arr(i),0);
+    asc_out = read_ascii_xyz(ipath=fn_split(1),ifname=fn_split(2),columns=columns);
+    ncount = numberof(asc_out(1,));
+    atm_out = array(ATM2,ncount);
+    // convert lat lon to utm
+    e_utm = fll2utm(asc_out(1,), asc_out(2,));
+    atm_out.east = long(e_utm(2,)*100);
+    atm_out.north = long(e_utm(1,)*100);
+    atm_out.elevation = long(asc_out(3,)*100);
+    atm_out.fint = short(asc_out(4,));
+    e_utm = fll2utm(asc_out(5,), asc_out(5,));
+    atm_out.least = long(e_utm(2,)*100);
+    atm_out.lnorth = long(e_utm(1,)*100);
+    atm_out.lint = short(asc_out(7,));
+    atm_out.soe = asc_out(8,);
+    // write atm_out to a pbd file
+    ofn_split = split_path(fn_arr(i),0);
+    ofn_split1 = split_path(ofn_split(2),0,ext=1)
+    ofn = ofn_split1(1)+".pbd"
+    write, format="Writing file %s\n",ofn;
+    if (opath) {
+    	f = createb(opath+ofn);
+    } else {
+	f = createb(ofn_split(1)+ofn);
+    }
+    save, f, atm_out;
+    close, f
+    
+  }
+    
+    
+return
+}
+
+  
+
+func rcf_atm_pbds(ipath, ifname=, searchstr=, buf=, w=, opath=) {
+  // amar nayegandhi
+  // 10/05/2006
+
+  if (is_void(buf)) buf = 1000;
+  if (is_void(w)) w = 2000;
+  if (is_void(ifname)) {
+    s = array(string, 10000);
+    if (searchstr) {
+     ss = searchstr;
+    } else {
+      ss = ["*.pbd"];
+    }
+    scmd = swrite(format = "find %s -name '%s'",ipath, ss);
+    fp = 1; lp = 0;
+    for (i=1; i<=numberof(scmd); i++) {
+      f=popen(scmd(i), 0);
+      n = read(f,format="%s", s );
+      close, f;
+      lp = lp + n;
+      if (n) fn_arr = s(fp:lp);
+      fp = fp + n;
+    }
+  } else {
+    fn_arr = ipath+ifname;
+    n = numberof(ifname);
+  }
+
+  write, format="Number of files to read = %d \n", n
+
+  for (i=1;i<=n;i++) {
+    // read pbd file
+    f = openb(fn_arr(i))
+    restore, f;
+    info, atm_out;
+    close, f;
+    atm_rcf = rcfilter_eaarl_pts(atm_out, buf=buf, w=w, mode=1);
+    
+    // write atm_rcf to a pbd file
+    ofn_split = split_path(fn_arr(i),0);
+    ofn_split1 = split_path(ofn_split(2),0,ext=1)
+    ofn = ofn_split1(1)+"_rcf.pbd"
+    write, format="Writing file %s\n",ofn;
+    if (opath) {
+    	f = createb(opath+ofn);
+    } else {
+	f = createb(ofn_split(1)+ofn);
+    }
+    save, f, atm_rcf;
+    close, f
+  }
+
+}

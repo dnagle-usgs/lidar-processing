@@ -940,44 +940,39 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
  write, format="Total records written to ascii file = %d\n", totw;
 }
 
-func read_ascii_xyz(ipath=,ifname=,type=, no_lines=){
- /* this function reads in an xyz ascii file and returns a 3-d array.
+func read_ascii_xyz(ipath=,ifname=, no_lines=, header=, columns=){
+ /* this function reads in an xyz ascii file and returns a n-d array.
     amar nayegandhi 05/01/02
+    modified 10/05/06 to make it faster and read more columns
+   ** ALL COLUMNS MUST BE INTEGERS OR FLOATING POINT.. NO STRINGS ALLOWED**
+	ipath = input path name
+	ifname = input file name
+	no_lines = number of lines in file
+	header = set to 1 if header line is present
+	columns = number of columns in file (only needed if > 3)
     */
 
-    fn = ipath+ifname
-    /* open file to read */
-    f = open(fn, "r");
-    x=0.0;y=0.0;z=0.0;
-    a = rdline(f);
-    count = 0;
-    if (is_array(no_lines)) {
-       arr = array(double, 3, no_lines)
-    }
+    fn = ipath+ifname;
+    if (is_void(columns)) columns = 3;
+    if (is_void(no_lines)) {
+	cmd = "cat "+ipath+ifname+" | wc -l"
+	f = popen(cmd,0);
+	no_lines = 0;
+	read, f, no_lines;
+	close,f;
+   }
     
-    while ((a > "")) {
-     sread, a, x,y,z;
-     if (!no_lines) {
-      if (count == 0) {
-        arr = array(double, 3, 1);
-	arr(1,1) = x;
-	arr(2,1) = y;
-	arr(3,1) = z;
-	} else {
-        grow, arr, [x,y,z];
-      }
-      count++;
-     } else {
-       count++;
-       arr(1,count) = x;
-       arr(2,count) = y;
-       arr(3,count) = z;
-     }
-       
-     a=rdline(f);
-    }
+   f = open(fn, "r");
+   if (header) {
+	hd = rdline(f);
+	no_lines--;
+   }
+   arr = array(double, columns, no_lines);
+   
+   read, f, arr;
+ 
+   return arr;
 
-  return arr
 }
 
 func read_pointer_yfile(data_ptr, mode=) {
