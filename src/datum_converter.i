@@ -1,6 +1,7 @@
 /*
   $Id: datum_converter.i
   original amar nayegandhi 07/15/03
+  modified charlene sullivan 09/25/06
 */
   
 require, "wgs842nad83.i"
@@ -13,14 +14,16 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, geoid_version=, 
 	utmzone: current utm zone number
 	tonad83= set to 1 to convert to nad83 horizontal datum, else set to 0 (default 1)
 	tonavd88= set to 1 to convert to navd88 vertical datum using GEOID99 model, else set to 0 (default = 1).
-	geoid_version = set to "GEOID99" to use GEOID99
-					set to "GEOID03" to use GEOID03. 
-					Defaults to GEOID03
-				    if GEOID03 binary files are not available, the user will be warned, and GEOID99 will be used.
+	geoid_version = set to "GEOID96" to use GEOID96,
+ 			set to "GEOID99" to use GEOID99,
+			set to "GEOID03" to use GEOID03. 
+			Defaults to GEOID03
+			If GEOID03 binary files are not available, the user will be warned, and GEOID99 will be used.
 	type= type of input data array (e.g. FS, VEG__, GEO)
      OUTPUT:
 	returned data array after conversion.
-     amar nayegandhi 07/15/03.
+     amar nayegandhi 07/15/03, original datum_converter.i,
+     charlene sullivan 09/25/06, modified form of datum_converter.i that can use Geoid96 model
 */
    
    extern curzone;
@@ -30,24 +33,34 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, geoid_version=, 
    if (is_void(geoid_version)) {
    	geoid_version="GEOID03";
    }
-   if (strmatch(geoid_version,"GEOID03",1)) {
+
+   if (strmatch(geoid_version,"GEOID96",1)) {
     cwd = get_cwd();
-	gdata_dir = split_path(cwd,-1)(1)+"GEOID03/pbd_data/";
-	gfiles = lsdir(gdata_dir);
-	if (gfiles != 0) {
-		gfiles_pbd = strmatch(gfiles, ".pbd");
-	}
-	if (numberof(where(gfiles_pbd)) < 1) {
-		write, "GEOID03 binary (pbd) files not available."
-		ans = "";
-		n = read(prompt="Use GEOID99 files instead? yes/no: ", format="%s",ans);
-		if (ans=="yes" || ans=="y") {
-			geoid_version = "GEOID99"
-		} else {
-			write, "Nothing to do."
-			return
+        gdata_dir = split_path(cwd,-1)(1)+"GEOID96/pbd_data/";
+        gfiles = lsdir(gdata_dir);
+        if (gfiles != 0) {
+                gfiles_pbd = strmatch(gfiles, ".pbd");
+        }
+   } else {
+   	if (strmatch(geoid_version,"GEOID03",1)) {
+    		cwd = get_cwd();
+		gdata_dir = split_path(cwd,-1)(1)+"GEOID03/pbd_data/";
+		gfiles = lsdir(gdata_dir);
+		if (gfiles != 0) {
+			gfiles_pbd = strmatch(gfiles, ".pbd");
 		}
-    }
+		if (numberof(where(gfiles_pbd)) < 1) {
+			write, "GEOID03 binary (pbd) files not available."
+			ans = "";
+			n = read(prompt="Use GEOID99 files instead? yes/no: ", format="%s",ans);
+			if (ans=="yes" || ans=="y") {
+				geoid_version = "GEOID99"
+			} else {
+				write, "Nothing to do."
+				return
+			}
+	    }
+   	}
    }
 
    write, format="Using GEOID version: %s\n", geoid_version;

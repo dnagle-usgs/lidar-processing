@@ -1,24 +1,27 @@
 /* 
    $Id: nad832navd88.i
-    amar nayegandhi
+    amar nayegandhi, original nad832navd88.i
+    charlene sullivan, modified form of nad832navd88.i for use of GEOID 96 model
     The following code has been adapted from the GEOID 99 model available at
     http://www.ngs.noaa.gov/GEOID/GEOID99/
     The original DISCLAIMER applies to this as well.
 */
 
 
-func geoid_data_to_pbd(gfname=,pbdfname=, initialdir=) {
-   /*DOCUMENT geoid_data_to_pbd(gfname,pbdfname)
+func geoid_data_to_pbd(gfname=, pbdfname=, initialdir=, geoid_version=) {
+   /*DOCUMENT geoid_data_to_pbd(gfname,pbdfname,initialdir,geoid_version)
     converts GEOIDxx ascii data files to pbd.  The ascii data files are available on the NGS website:
-    http://www.ngs.noaa.gov/GEOID/GEOID99/dnldgeo99ot1.html
-	http://www.ngs.noaa.gov/GEOID/GEOID03/download.html
+       ftp://ftp.ngs.noaa.gov/pub/pcsoft/geoid96
+       http://www.ngs.noaa.gov/GEOID/GEOID99/dnldgeo99ot1.html
+       http://www.ngs.noaa.gov/GEOID/GEOID03/download.html
     amar nayegandhi 07/10/03.
 	modified 01/12/06 -- amar nayegandhi to add GEOID03
+        modified 09/25/06 -- charlene sullivan to add GEOID96
    */
 
    if (!gfname) {
       if (is_void(initialdir)) initialdir = "/dload/geoid99_data/";
-      gfname  = get_openfn( initialdir=initialdir, filetype="*.asc", title="Open GEOID99 Ascii Data File" );
+      gfname  = get_openfn( initialdir=initialdir, filetype="*.asc", title="Open GEOIDxx Ascii Data File" );
    }
 
    // split path and file name
@@ -34,9 +37,18 @@ func geoid_data_to_pbd(gfname=,pbdfname=, initialdir=) {
    gf = open(gfname, "r");
    // read header data off the geoid data file
    glamn = glomn = dla = dlo = 0.0;
-   nrows = ncols = itype = 0;
-   read, gf, glamn, glomn, dla, dlo;
-   read, gf, nrows, ncols, itype;
+   nrows = ncols = itype =dla1 = dlo1 = 0;
+   if (strmatch(geoid_version,"GEOID96",1)) {
+       read, gf, ncols, nrows, itype, glomn, dlo, glamn, dla;
+       // account for loss of precision in GEOID96 grid file headers
+       dla1 = int(dla*3600.0) + 1;
+       dlo1 = int(dlo*3600.0) + 1;
+       dla = double(dla1)/3600.0;
+       dlo = double(dlo1)/3600.0;
+   } else {
+       read, gf, glamn, glomn, dla, dlo;
+       read, gf, nrows, ncols, itype;
+   }
    data = array(double,ncols,nrows);
    read, gf, data;
    write, "writing geoid pbd data";
@@ -51,17 +63,23 @@ func geoid_data_to_pbd(gfname=,pbdfname=, initialdir=) {
    
 func nad832navd88(data_in, gdata_dir=, geoid_version=) {
  /*DOCUMENT nad832navd88(data_in)
-   This function converts nad83 data to NAVD88 data using the GEOID99 model.
+   This function converts nad83 data to NAVD88 data using the GEOIDxx model.
    INPUT:  data_in = a 2 dimensional array (3,n) in the format (lon, lat, alt).
  	   gdata_dir = location where geoid data resides.  Defaults to
 			~/lidar-processing/GEOID03/pbd_data/
 			Set gdata_dir to ~/lidar-processing/GEOID99/pbd_data/ to use GEOID99.
+                        Set gdata_dir to ~/lidar-processing/GEOID96/pbd_data/ to use GEOID96.
    OUTPUT: data_out = NAVD88 referenced data in the same format as the input format (3,n).
-   amar nayegandhi 07/10/03
+   amar nayegandhi 07/10/03, original nad832navd88
+   charlene sullivan 09/21/06, modified for use of GEOID96 model
 */
   if ((!gdata_dir) && (!geoid_version)) {
        cwd = get_cwd();
        gdata_dir = split_path(cwd,-1)(1)+"GEOID03/pbd_data/";
+  }
+  if ((!gdata_dir) && (strmatch(geoid_version,"GEOID96",1))) {
+    cwd = get_cwd();
+        gdata_dir = split_path(cwd,-1)(1)+"GEOID96/pbd_data/";
   }
   if ((!gdata_dir) && (strmatch(geoid_version,"GEOID99",1))) {
     cwd = get_cwd();
@@ -72,7 +90,7 @@ func nad832navd88(data_in, gdata_dir=, geoid_version=) {
   	gdata_dir = split_path(cwd,-1)(1)+"GEOID03/pbd_data/";
   }
   
-  //read the header values for each geoid99 or geoid03 pbd data file.
+  //read the header values for each GEOIDxx pbd data file.
   scmd = swrite(format="ls -1 %s*.pbd | wc -l",gdata_dir);
   f = popen(scmd,0);
   s = ""; npbd = 0;
@@ -83,7 +101,7 @@ func nad832navd88(data_in, gdata_dir=, geoid_version=) {
         return;
   }
   close, f;
-  
+
   if (data_in(1,1) < 0) data_in(1,) += 360.0;
 
   // now we know the number of geoid pbd data files in directory gdata_dir
@@ -95,11 +113,11 @@ func nad832navd88(data_in, gdata_dir=, geoid_version=) {
   anrows = ancols = aitype =  array(int, npbd);
   avname = array(string, npbd);
 
-
   // open each pbd file and extract the header
   for (i = 1; i <= npbd; i++) {
      f = openb(apbdfile(i));
      restore, f, glamn, glomn, dla, dlo, nrows, ncols, itype, vname;
+     // did I ? YES YOU DID
      aglamn(i) = glamn;
      aglomn(i) = glomn;
      adla(i) = dla;
@@ -110,7 +128,7 @@ func nad832navd88(data_in, gdata_dir=, geoid_version=) {
      avname(i) = vname;
      close, f;
    }
-     
+
   // now find which geoid pbd file to use
   aglomx = aglomn+dlo*ncols-dlo;
   aglamx = aglamn+dla*nrows-dla;
@@ -146,6 +164,7 @@ func nad832navd88(data_in, gdata_dir=, geoid_version=) {
        uidx = unique(wpbd_idx, ret_sort=1);
      } else uidx = [1];
   } else uidx = [1];
+
   
   for (i=1;i<=numberof(uidx);i++) {
     if (is_array(wpbd_idx)) {
@@ -181,16 +200,17 @@ func nad832navd88(data_in, gdata_dir=, geoid_version=) {
     mxirown = max(irown)+1;
     mnicoln = min(icoln)-1;
     mxicoln = max(icoln)+1;
-
+   
     if (mxirown > nrows) mxirown = nrows;
     if (mxicoln > ncols) mxicoln = ncols;
-    
+
     // extracting the geoid data
+    write, format="grid file = %s\n", apbdfile(ik)
     f = openb(apbdfile(ik));
     restore,f,vname;
     gdata = get_member(f,vname)(mnicoln:mxicoln, mnirown:mxirown);
     close, f;
-    
+
     if (mxirown >= nrows) {
         gdata1 = array(double, numberof(gdata(,1)), max(irown)+1-mnirown+1);
    	gdata1(,1:numberof(gdata(1,))) = gdata;
@@ -205,12 +225,12 @@ func nad832navd88(data_in, gdata_dir=, geoid_version=) {
     }
     xx = (data_in(1,)-(aglomn(ik)+(icoln-2)*adlo(ik)))/ adlo(ik);
     yy = (data_in(2,)-(aglamn(ik)+(irown-2)*adla(ik)))/ adla(ik)
-    
+
     // finding the 3x3 grid points for the interpolation
     f1=f2=f3=f4=f5=f6=f7=f8=f9=array(double, numberof(xx));
     for (j=1;j<numberof(xx);j++) {
          f1(j) = gdata(icoln(j)-mnicoln,irown(j)-mnirown);
-       	 f2(j) = gdata(icoln(j)-mnicoln+1,irown(j)-mnirown);
+         f2(j) = gdata(icoln(j)-mnicoln+1,irown(j)-mnirown);
          f3(j) = gdata(icoln(j)-mnicoln+2,irown(j)-mnirown);
          f4(j) = gdata(icoln(j)-mnicoln,irown(j)-mnirown+1);
          f5(j) = gdata(icoln(j)-mnicoln+1,irown(j)-mnirown+1);
@@ -219,18 +239,18 @@ func nad832navd88(data_in, gdata_dir=, geoid_version=) {
          f8(j) = gdata(icoln(j)-mnicoln+1,irown(j)-mnirown+2);
          f9(j) = gdata(icoln(j)-mnicoln+2,irown(j)-mnirown+2);
     }
-       
-    
+
     fx1 = qfit(xx,f1,f2,f3);
     fx2 = qfit(xx,f4,f5,f6);
     fx3 = qfit(xx,f7,f8,f9);
+
     data_out = qfit(yy,fx1,fx2,fx3);
 
   }
 
   data_out = [data_in(1,)-360, data_in(2,), data_in(3,)-data_out];
   data_out = transpose(data_out);
-  
+ 
   return data_out;
 } 
 

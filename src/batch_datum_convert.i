@@ -26,10 +26,11 @@ INPUT:
   zone_nbr  = set to zone number.
               If not set, the zone number will be set
 	      from the information in the file name.
-  geoid_version = set to "GEOID99" to use GEOID99 model
-  				  set to "GEOID03" to use GEOID03 model
-				  defaults to "GEOID03"
-				  if GEOID03 binary files are not available, the user will be warned.
+  geoid_version = set to "GEOID96" to use GEOID96 model, 
+                         "GEOID99" to use GEOID99 model,
+  	                 "GEOID03" to use GEOID03 model.
+	                 defaults to "GEOID03"
+		         if GEOID03 binary files are not available, the user will be warned.
   update= set to 1 if you want to only do the conversion for tiles that
 	 have not yet been converted.  Useful when the user 
 	 wants to resume conversion. 
@@ -39,6 +40,7 @@ see also: datum_converter.i
 
 -Brendan Penney, 7/18/03
 modified by amar nayegandhi 01/12/06 to use GEOID03 model
+modified by charlene sullivan 09/25/06 to use GEOID96 model
 */
 
 if(is_void(tonad83)) tonad83=1;
