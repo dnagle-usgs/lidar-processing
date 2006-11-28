@@ -565,9 +565,9 @@ func display_veg(veg_arr, felv=, lelv=,  fint=, lint=, cmin=, cmax=, size=, win=
      if ( is_void( cmax )) cmax = max(veg_all.lelv)/100.;
   }
   if (cht) {
-     elv = (veg_arr.lelv-veg_arr.elevation)/100.;
-     if ( is_void( cmin )) cmin = min(veg_all.lelv-veg_all.elevation)/100.;
-     if ( is_void( cmax )) cmax = max(veg_all.lelv-veg_all.elevation)/100.;
+     elv = (veg_arr.elevation-veg_arr.lelv)/100.;
+     if ( is_void( cmin )) cmin = min(veg_all.elevation-veg_all.lelv)/100.;
+     if ( is_void( cmax )) cmax = max(veg_all.elevation-veg_all.lelv)/100.;
   }
   if (fint) {
      elv = veg_arr.fint;
