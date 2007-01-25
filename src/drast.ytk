@@ -150,7 +150,7 @@ proc dus { n e o } {
     exp_send "ytk_rast,$rn; redraw\r" 
   }
  } else {
-  exp_send "geo_rast( $rn, fsmarks=1, eoffset=$elevation_offset );\r"
+  exp_send "geo_rast( $rn, fsmarks=0, eoffset=$elevation_offset );\r"
  }
 }
 

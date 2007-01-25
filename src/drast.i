@@ -353,28 +353,29 @@ func show_geo_wf( r, pix, win=, nofma=, cb=, c1=, c2=, c3=, raster= ) {
 
   elv = fs(1).elevation(pix)/100.;
 
+  //elvspan = elv-span(-3,246,250)*0.15;
   elvspan = elv-span(-3,246,250)*0.11;
   
   if ( !is_void(c1) ) {
-    plg,elvspan,r(,pix,1), marker=0, color="black";    
-    plmk,elvspan,r(,pix,1),msize=.2,marker=1,color="black"
+    plg,elvspan,255-r(,pix,1), width=2.8,marker=0, color="black";    
+    plmk,elvspan,255-r(,pix,1),msize=.15,width=10,marker=1,color="black"
   }
   if ( !is_void(c2) ) {
-    plg,elvspan,r(,pix,2), marker=0, color="red";    
-    plmk,elvspan,r(,pix,2),msize=.2,marker=1,color="red"
+    plg,elvspan,255-r(,pix,2), width=2.7,marker=0, color="red";    
+    plmk,elvspan,255-r(,pix,2),msize=.1,width=10,marker=1,color="red"
   }
   if ( !is_void(c3) ) {
-    plg,elvspan,r(,pix,3), marker=0, color="blue";    
-    plmk,elvspan,r(,pix,3),msize=.2,marker=1,color="blue"
+    plg,elvspan,255-r(,pix,3), marker=0,width=2.5, color="blue";    
+    plmk,elvspan,255-r(,pix,3),msize=.1,width=10,marker=1,color="blue"
   }
   if ( is_void( raster ) ) {
      xytitles,swrite(format="Pix:%d   Digital Counts", pix),
-     "Height (m)"; 
+     "Elevation (m)"; 
   } else {
      xytitles,swrite(format="Raster:%d Pix:%d   Digital Counts", raster, pix),
-     " Height (m)";
+     " Elevation (m)";
   }
-  pltitle, data_path
+  //pltitle, data_path
 }
 
 func geo_rast(rn, fsmarks=, eoffset=   )  {
@@ -400,27 +401,54 @@ func geo_rast(rn, fsmarks=, eoffset=   )  {
 fs = first_surface( start=rn, stop=rn+1, north=1); 
 fma; 
 sp = fs.elevation(, 1)/ 100.0;
-xm = -(fs.east(,1) - fs.meast(1,1))/100.0;
+xm = (fs.east(,1) - fs.meast(1,1))/100.0;
+// prepare background
+// assuming the range gate will not allow the width to exceed 50 m
+// we use w = 50 in the rcf function below.
+sp_idx = rcf(sp, 50, mode=2);
+sp_f = sp(*sp_idx(1));
+
+// add blue background for +/- 30 m of the min and max elevs in raster
+max_sp_f = max(sp_f) + 30;
+min_sp_f = min(sp_f) - 30;
+
+yrange = int(max_sp_f-min_sp_f);
+xrange = int(max(xm)-min(xm));
+
+bg = array(char,xrange,yrange);
+bg(*) = char(9);
+pli, bg,min(xm),min_sp_f,max(xm),max_sp_f;
+
 rst = decode_raster( get_erast( rn=rn ) )
 for (i=1; i<120; i++ ) {
   //if (fs(1).elevation(i) <= 0.4*fs(1).melevation(i)) {
     zz = array(245, 255);
     z = (*rst(1).rx(i));
     n = numberof( z )
-    if ( n > 0 ) {
+   if ( n > 0 ) {
       zz(1:n) = z;
    // }  
     C = .15;		// in air
     x = array( xm(i), 255);
     y = span(  sp(i)+eoffset, sp(i)-255*C+eoffset , 255 );
-    plcm, 255-zz,y,x, cmin=0, cmax=255, msize=2.0;
+    plcm, 254-zz,y,x, cmin=0, cmax=255, msize=2.0;
   }
+/*
+  zz2= array(245, 255);
+  z2 = (*rst.rx(i,2));
+  n2 = numberof(z2);
+  if (n>0) {
+	zz2(1:n2) = z2;
+	plcm, 255-zz2,y,x,cmin=0,cmax=255,msize=2.0;
+  }
+*/
 }
-  if ( !is_void( fsmarks) ) {
+  if ( ( fsmarks) ) {
      indx = where(fs(1).elevation <= 0.4*(fs(1).melevation));
      plmk, sp(indx)+eoffset, xm(indx), marker=4, msize=.1, color="magenta"
   }
 
+  xytitles, "Relative distance across raster (m)", "Height (m)"
   window(winsave);
 }
 
