@@ -1,3 +1,5 @@
+/* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent: */
+
 /**********************************************************************
 
   $Id$
@@ -291,3 +293,127 @@ Input:
  return glst(llst);
 }
 
+
+func extract_transect_info(tlst, fs, &coords, &segtimes, rtn=) {
+/* DOCUMENT extract_transect_info(tlst, fs)
+  Amar Nayegandhi Nov 2006
+  This function saves relevant transect information.
+  INPUT:
+	tlst: returned from the mtransect function. list of indices of the fs array that fall along the transect.
+	fs : the original data array (can be of type FS, VEG, or GEO)
+	rtn = defaults to 0.  
+			Select return type where:
+			0 first return
+			1 veg last return
+			2 submerged topo
+*/
+
+	if (is_void(rtn)) rtn=0;
+	// find the min and max easting and northing of the transect
+	if (rtn == 0 || rtn == 2) {
+		mxeast = max(fs.east(tlst));
+		mneast = min(fs.east(tlst));
+		mxnorth = max(fs.north(tlst));
+		mnnorth = min(fs.north(tlst));
+	}
+	if (rtn == 1) {
+		mxeast = max(fs.least(tlst));
+		mneast = min(fs.least(tlst));
+		mxnorth = max(fs.lnorth(tlst));
+		mnnorth = min(fs.lnorth(tlst));
+	}
+
+	coords = [mneast/100., mnnorth/100., mxeast/100., mxnorth/100.];
+	coords = double(coords);
+
+	write, format="Transect coordinates:\n NE: %8.2f m, %7.2f m\n SW: %8.2f m, %7.2f m\n",coords(4), coords(3), coords(2), coords(1);
+
+	tlength = sqrt((coords(1)-coords(3))^2 + (coords(2)-coords(4))^2);
+
+	write, format="Transect Length = %4.2f m\n",tlength;
+		
+	// find the start and stop time
+	// find number of flightline  segments
+	segs = where( abs(fs.soe(tlst)(dif)) > 5.0 );
+	nsegs = numberof(segs)+1;
+	segtimes = array(long,2,nsegs);
+	ss = [0];
+	if ( nsegs > 1 ) {
+		grow, ss,segs,[0]
+		write, "Flightline Segments:"
+		write, "Year:DayofYear\t SODbegin:SODend\t Time(s) "
+		for (i=1; i<numberof(ss); i++ ) {
+			soeb = fs.soe(*)(tlst(ss(i)+1));
+			t = soe2time( soeb );
+			tb = fs.soe(*)(tlst(ss(i)+1))%86400;
+			te = fs.soe(*)(tlst(ss(i+1)))%86400;
+			td = abs(te - tb);
+			hms = sod2hms( tb );
+			segtimes(1,i) = long(tb-1);
+			segtimes(2,i) = long(te+1);
+
+			write, format="%d:%d\t\t %6.2f:%-10.2f\t %-4.2f\n",
+					      t(1),t(2), tb, te, td;
+		}
+	}
+
+	return 1;
+}
+
+func append_transect_list(tlst, fs, rtn=) {
+/* DOCUMENT append_transect_list(tlst, fs, rtn=)
+  Amar Nayegandhi Nov 2006
+  This function appends the transect coordinates and time of day to the global variables coords_all and transect_all array.
+  INPUT:
+	tlst: returned from the mtransect function. list of indices of the fs array that fall along the transect.
+	fs : the original data array (can be of type FS, VEG, or GEO)
+	rtn = defaults to 0.  
+			Select return type where:
+			0 first return
+			1 veg last return
+			2 submerged topo
+*/
+	
+	extern transect_all, coords_all;
+
+	success = extract_transect_info(tlst,fs,coords,segtimes,rtn=rtn);
+
+	transect_all = grow(transect_all, segtimes);
+	coords_all = grow(coords_all, coords);
+
+}
+
+
+func reprocess_data_along_transect(segtimes,new_pnav=) {
+/* DOCUMENT reprocess_data_along_transect(segtimes,new_pnav=)
+ Amar Nayegandhi Nov 2006
+ This function reprocesses data along the transects defined by the transect_all array.
+ INPUT:
+	segtimes = the start and stop time of day for each flightline segment along the transects. Usually the global variable transect_all
+	new_pnav = set to 1 if you want to use a new pnav file.  The user will be allowed to select the new pnav file.
+
+*/
+	
+	extern gga, pnav
+
+	if (!is_void(new_pnav)) {
+		gga = pnav = new_pnav;
+	}
+
+	nsegs = numberof(segtimes(1,));
+	q = [];
+
+	for (i=1;i<=nsegs;i++) {
+		idx = where((gga.sod >= segtimes(1,i)) & (gga.sod <= segtimes(2,i)));
+		q = grow(q,idx);
+	}
+
+	if (rtn == 0) {
+		fs_all_re = make_fs(latutm=1, q=q, ext_bad_att=1, usecentroid=1);
+	}
+
+	if (rtn == 1) {
+		depth_all_re = make_bathy(latutm=1, q=q, ext_bad_depth=1, ext_bad_att=1, avg_surf=0);
+	}
+
+}
