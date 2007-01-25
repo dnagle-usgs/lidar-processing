@@ -46,12 +46,13 @@ modified by charlene sullivan 09/25/06 to use GEOID96 model
 if(is_void(tonad83)) tonad83=1;
 if(is_void(tonavd88)) tonavd88=1;
 if(is_void(rcfmode)) rcfmode = 0;
+rcftag = "";
 if(is_void(update)) update = 0;
 
  if (!searchstr) {
    if(rcfmode == 1) rcftag = "_rcf";
    if(rcfmode == 2) rcftag = "_ircf";
-   if(onlymf) rcftag = rcftag+="_mf";
+   if(onlymf) rcftag += "_mf.pbd";
 
    if (!rcftag) rcftag = "";
 

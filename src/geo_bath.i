@@ -510,10 +510,13 @@ See also: make_fs_bath, write_geoall, read_yfile, make_bathy
         dratio = float(irg_a(i).irange(idx)+nsdepth(idx)+irg_a(i).fs_rtn_centroid(idx))/float(irg_a(i).irange(idx)+irg_a(i).fs_rtn_centroid(idx));
         ndiff = data(i).mnorth-data(i).north;
         ediff = data(i).meast-data(i).east;
-        bnorth = int(data(i).mnorth(idx)-dratio*ndiff(idx));
-        beast = int(data(i).meast(idx)-dratio*ediff(idx));
-        data(i).north(idx) = bnorth;
-        data(i).east(idx) = beast;
+        bnorth = (data(i).mnorth(idx)-dratio*ndiff(idx));
+        beast = (data(i).meast(idx)-dratio*ediff(idx));
+	idxx = where((data(i).north(idx) != 0) &
+		     (data(i).east(idx) != 0) );
+	if (!is_array(idx(idxx))) continue;
+        data(i).north(idx(idxx)) = int(bnorth(idxx));
+        data(i).east(idx(idxx)) = int(beast(idxx));
       }
 
       if (!is_void(ofname)) {
