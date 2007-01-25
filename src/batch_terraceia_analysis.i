@@ -64,11 +64,15 @@ func batch_analysis(path, kings=, plot=, ext=, out_txt_results_file=, elv=) {
        
 }
 require, "fitlsq.i"
-func plot_be_kings_elv(file_name, ps_ofname=,pse=,out_txt_file=, win=, saveplot=, head_anal=, pdop_anal=, n_data=, path=, donotplot=) {
+func plot_be_kings_elv(file_name, ps_ofname=,pse=,out_txt_file=, win=, saveplot=, head_anal=, pdop_anal=, n_data=, path=, donotplot=, cl=, plotcl=) {
+
+// cl = confidence level
+// plotcl = set to 1 if you want to plot using the cl value. Otherwise, it only write the RMSE value based on the cl.
 
   w = window();
   if (is_void(win)) window, 4;
   if (!pse) pse = 1;
+  if (is_void(cl)) cl = 0.95 // defaults to 95% cl
   extern i, n, be, kings_elv, diff1, edb, tans, pnav, pdop_val;
   
   if (path) {
@@ -100,6 +104,14 @@ func plot_be_kings_elv(file_name, ps_ofname=,pse=,out_txt_file=, win=, saveplot=
     if (!file_name) file_name = s(ai);
     read_txt_anal_file, file_name, pdop=pdop;
     diff1(rms);
+/*
+    idx0 = where(kings_elv > 0);
+    i = i(idx0);  be_elv = be_elv(idx0); be = be(idx0); kings_elv = kings_elv(idx0);
+    diff1 = diff1(idx0);
+    idx0 = where(be > 0);
+    i = i(idx0);  be = be(idx0); kings_elv = kings_elv(idx0);
+    diff1 = diff1(idx0);
+  */  
     if (pdop_anal) {
    	//pdop_ret = pdop_analysis(pnav, edb, i=i);
         //pidx = where(pdop_ret <= pdop_anal+0.01);
@@ -109,21 +121,26 @@ func plot_be_kings_elv(file_name, ps_ofname=,pse=,out_txt_file=, win=, saveplot=
 	kings_elv = kings_elv(pidx);
     }
     n_orig = numberof(diff1);
-    // at 95% confidence level
-    noc = .95*numberof(diff1);
-    for (cli=2.0;cli>0;) {
+    // at confidence level
+    noc = cl*numberof(diff1);
+    clmx = max(abs(diff1));
+    for (cli=clmx;cli>0;) {
       iindx = where(abs(diff1) < cli);
       if (numberof(iindx) <= noc) break;
       cli -= 0.01;
     }
-    write, format="At 95%% confidence level, number of points = %d, within %f m\n",numberof(iindx), cli
-    diff1 = diff1(iindx);
-    kings_elv = kings_elv(iindx);
-    be = be(iindx);
+    write, format="At %2d%% confidence level, number of points = %d, within %f m\n",int(cl*100),numberof(iindx), cli
+    if (plotcl) {
+      diff1 = diff1(iindx);
+      kings_elv = kings_elv(iindx);
+      be = be(iindx);
+      i = i(iindx);
+    }
     fma;
     if (!donotplot) {
-    plmk, be, kings_elv, width=10, marker=4, msize=0.2, color="blue";
+    plmk, be, kings_elv, width=10, marker=4, msize=0.1, color="black";
     limits, square=1;
+    limits, -1,3,-1,3
     xytitles, "Ground Survey Elevations (m)", "Lidar Elevations (m)";
     //pltitle, (split_path(file_name(ai), -1))(2);
     }
@@ -135,13 +152,19 @@ func plot_be_kings_elv(file_name, ps_ofname=,pse=,out_txt_file=, win=, saveplot=
     //nleg = swrite(format="n = %d, Outliers = %d", numberof(diff1), numberof(diff1) - numberof(iindx)); 
     //} else {
     mae = sum(abs(be-kings_elv))/numberof(be);
-    rleg = swrite(format="RMSE = %4.2f cm", diff1(rms)*100); 
-    aleg = swrite(format="ME = %4.2f cm", diff1(avg)*100);
+    if (cl) {
+      //rleg = swrite(format="RMSE_%2d%%_ = %4.1f cm", int(cl*100), diff1(iindx)(rms)*100); 
+      rleg = swrite(format="RMSE = %4.1f cm", diff1(rms)*100); 
+    } else {
+      rleg = swrite(format="RMSE = %4.1f cm", diff1(iindx)(rms)*100); 
+    }
+    aleg = swrite(format="ME = %4.1f cm", diff1(avg)*100);
     nleg = swrite(format="n = %d", numberof(diff1));
     maeleg = swrite(format="MAE = %4.2f cm", mae*100);
     //}
     // least squares fit line
     xp = [min(kings_elv), max(kings_elv)];
+    //xp = [-1,3]
     yp = fitlsq(be, kings_elv, xp);
     // find m and c for the lsfit straight line y = mx + c;
     m = (yp(2)-yp(1))/(xp(2)-xp(1));
@@ -158,13 +181,13 @@ func plot_be_kings_elv(file_name, ps_ofname=,pse=,out_txt_file=, win=, saveplot=
     rmslsqleg = swrite(format="RMSE_lsq_ = %4.2f cm",rmslsq*100);
     if (pdop_anal) pdopleg = swrite(format="PDOP <= %3.1f",double(pdop_anal));
     if (!donotplot) {
-    plg, [mx_x, mx_y], [mx_x, mx_y], width=5, type=2;
-    plg, yp, xp, color="red", width=5.0;
-    plt, rleg, 0.2, 0.84;
-    plt, aleg, 0.2, 0.82;
-    plt, maeleg, 0.2, 0.80;
+    plg, [mx_x, mx_y], [mx_x, mx_y], width=3.0, type=2;
+    plg, yp, xp, color="black", width=3.0;
+    plt, rleg, 0.2, 0.82;
+    plt, aleg, 0.2, 0.8;
+    //plt, maeleg, 0.2, 0.80;
     plt, rsqleg, 0.2, 0.78;
-    plt, rmslsqleg, 0.2, 0.76;
+    //plt, rmslsqleg, 0.2, 0.76;
     if (pdop_anal) {
       plt, pdopleg, 0.2, 0.74
       plt, nleg, 0.2, 0.72;
