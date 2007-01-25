@@ -32,7 +32,7 @@ to recall the one before last, use:
 
 */
 
-func mtransect( fs, iwin=, owin=, w=, connect=, recall=, color=, xfma=, rcf_parms=, rtn=, show= ) {
+func mtransect( fs, iwin=, owin=, w=, connect=, recall=, color=, xfma=, rcf_parms=, rtn=, show=, msize= ) {
 /* DOCUMENT mtransect( fs, iwin= ,owin=, w=, connect=, recall=, color=, xfma= )
 
 Mouse selected transect
@@ -117,7 +117,7 @@ See also: transect, _transect_history
   if ( recall > 0 ) recall = -recall;
   l = _transect_history(, recall);
  }
-  glst = transect( fs, l, connect=connect, color=color,xfma=xfma, rcf_parms=rcf_parms,rtn=rtn, owin=owin, lw=w );
+  glst = transect( fs, l, connect=connect, color=color,xfma=xfma, rcf_parms=rcf_parms,rtn=rtn, owin=owin, lw=w, msize=msize );
   if ( is_void(recall) ) {
         limits
 	limits,,, cbar.cmin, cbar.cmax
@@ -254,7 +254,7 @@ Input:
 
      if ( xtime ) {
      plmk, elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0,
-           fs.soe(*)(llst)(ss(i)+1:ss(i+1))/100.0,color=clr(c), msize=msize
+           fs.soe(*)(llst)(ss(i)+1:ss(i+1))/100.0,color=clr(c), msize=msize, width=10;
        if ( connect ) plg, elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0,
                 fs.soe(*)(llst)(ss(i)+1:ss(i+1))/100.0,color=clr(c)
      } else {
@@ -263,7 +263,7 @@ Input:
      yy = elevation(glst(llst)(ss(i)+1:ss(i+1)))/100.0;
      if ( !is_void(rcf_parms) )
          si = si(moving_rcf(yy(si), rcf_parms(1), int(rcf_parms(2) )));
-     plmk, yy(si), xx(si),color=clr(c), msize=msize
+     plmk, yy(si), xx(si),color=clr(c), msize=msize, width=10;
        if ( connect ) plg, yy(si), xx(si),color=clr(c)
     }
    }
@@ -273,7 +273,7 @@ Input:
    si = sort(xx);
    if ( !is_void(rcf_parms) )
          si = si(moving_rcf(yy(si), rcf_parms(1), int(rcf_parms(2) )));
-  plmk, yy(si),xx(si), color=clr(color), msize=msize, marker=1
+  plmk, yy(si),xx(si), color=clr(color), msize=msize, marker=1, width=10;
   if ( connect ) plg, yy(si), xx(si),color=clr(color)
 
   c    = (color+0)&7;
