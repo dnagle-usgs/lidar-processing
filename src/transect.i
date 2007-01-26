@@ -158,6 +158,7 @@ Input:
  if ( is_void(lw)    )    lw = 150;		// search width, cm
  if ( is_void(color) ) color = 0;		// 0 is first color
  if ( is_void(owin)   )   owin = 3;
+ if ( is_void(msize) ) msize = 0.1;
  window,wait=1;
  window, owin;
  if ( !is_void(xfma) ) {
@@ -323,10 +324,10 @@ func extract_transect_info(tlst, fs, &coords, &segtimes, rtn=) {
 		mnnorth = min(fs.lnorth(tlst));
 	}
 
-	coords = [mneast/100., mnnorth/100., mxeast/100., mxnorth/100.];
+	coords = [[mneast/100., mnnorth/100., mxeast/100., mxnorth/100.]];
 	coords = double(coords);
 
-	write, format="Transect coordinates:\n NE: %8.2f m, %7.2f m\n SW: %8.2f m, %7.2f m\n",coords(4), coords(3), coords(2), coords(1);
+	write, format="Transect coordinates:\n NE: %8.2f m, %7.2f m\n SW: %8.2f m, %7.2f m\n",coords(4,1), coords(3,1), coords(2,1), coords(1,1);
 
 	tlength = sqrt((coords(1)-coords(3))^2 + (coords(2)-coords(4))^2);
 
@@ -360,6 +361,21 @@ func extract_transect_info(tlst, fs, &coords, &segtimes, rtn=) {
 	return 1;
 }
 
+func delete_transect_list(junk) {
+   extern coords_all, transect_all;
+   coords_all = transect_all = [];
+   return 1
+}
+
+func save_transect_list(filename) {
+   extern coords_all, transect_all;
+   f = createb(filename);
+   save, f, coords_all, transect_all;
+   close, f;
+   return 1
+}
+
+
 func append_transect_list(tlst, fs, rtn=) {
 /* DOCUMENT append_transect_list(tlst, fs, rtn=)
   Amar Nayegandhi Nov 2006
@@ -384,22 +400,43 @@ func append_transect_list(tlst, fs, rtn=) {
 }
 
 
-func reprocess_data_along_transect(segtimes,new_pnav=) {
-/* DOCUMENT reprocess_data_along_transect(segtimes,new_pnav=)
- Amar Nayegandhi Nov 2006
+func reprocess_data_along_transect(new_pnav, outdir=, ofname_tag=, rtn= ) {
+/* DOCUMENT reprocess_data_along_transect(new_pnav, outdir=, ofname_tag= )
+ Amar Nayegandhi Jan 2006
  This function reprocesses data along the transects defined by the transect_all array.
  INPUT:
-	segtimes = the start and stop time of day for each flightline segment along the transects. Usually the global variable transect_all
-	new_pnav = set to 1 if you want to use a new pnav file.  The user will be allowed to select the new pnav file.
+	new_pnav : the new pnav data array.  The global variables gga and pnav will be assigned to this new_pnav
+   outdir = String.  The output directory where the pbd files will be written to.
+   ofname_tag = String.  Define tag name to the output filename that will help differentiate between data processed using different trajectories.  Usually name_tag will include the base station names used to processed the trajectory new_pnav. e.g. name_tag = "kwal_hg63" indicates trajectory processed using the Wallops Island base and the Hangar base station.
+	rtn = defaults to 0.  
+			Select return type where:
+			0 first return
+			1 veg last return
+			2 submerged topo
+   The file name will also include the trajectory number.
 
 */
 	
-	extern gga, pnav
+	extern gga, pnav, coords_all, transect_all, _transect_history
 
 	if (!is_void(new_pnav)) {
 		gga = pnav = new_pnav;
 	}
 
+   _transect_history = coords_all*100.;
+
+
+   if (is_void(outdir)) {
+      write, "output directory not defined. Writing to home directory"
+      outdir = "~/";
+   }
+
+   if (is_void(save_data)) save_data = 1;
+   if (is_void(save_transect_output)) save_transect_output = 1;
+   if (is_void(ofname_tag)) ofname_tag = "base";
+   if (is_void(rtn)) rtn = 0;
+
+   segtimes = transect_all;
 	nsegs = numberof(segtimes(1,));
 	q = [];
 
@@ -409,11 +446,37 @@ func reprocess_data_along_transect(segtimes,new_pnav=) {
 	}
 
 	if (rtn == 0) {
-		fs_all_re = make_fs(latutm=1, q=q, ext_bad_att=1, usecentroid=1);
+		data_re = make_fs(latutm=1, q=q, ext_bad_att=1, usecentroid=1);
+	}
+
+	if (rtn == 2) {
+		data_re = make_bathy(latutm=1, q=q, ext_bad_depth=1, ext_bad_att=1, avg_surf=0);
 	}
 
 	if (rtn == 1) {
-		depth_all_re = make_bathy(latutm=1, q=q, ext_bad_depth=1, ext_bad_att=1, avg_surf=0);
+		data_re = make_veg(latutm=1, q=q, ext_bad_att=1, ext_bad_veg=1, use_centroid=1);
 	}
+
+   data_re = test_and_clean(data_re);
+   idx = sort(data_re.soe);
+   data_re = data_re(idx);
+   idx = unique(data_re.soe, ret_sort=1);
+   data_re = data_re(idx);
+   for (j=1;j<=numberof(coords_all(1,));j++) {
+      // run the mtransect function on the each transect
+      trans_output = mtransect(data_re, rtn=rtn,recall=1-j);
+      if (is_array(trans_output)) {
+         // write out to a file
+         // define output file name
+         ofname = swrite(format="T%d_%s.pbd",j,ofname_tag);
+         coords = coords_all(,j);
+         tdata = data_re(trans_output);
+         f = createb(outdir+ofname);
+         save, f, tdata, coords;
+         close, f;
+       }
+    }
+
+return 1;
 
 }
