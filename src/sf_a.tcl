@@ -627,7 +627,8 @@ proc gotoImage {} {
 		set x 0
 		set test_hms $hms
 									if { $DEBUG_SF } { puts " testing hms:$test_hms" }
-		if {
+		if { [array exists imgtime] } {
+			if {
 			[catch {
 				while { [catch {set i $imgtime(hms$test_hms)}] } {
 					if {$x == 30} {
@@ -648,12 +649,19 @@ proc gotoImage {} {
 			set ci [expr $i+$frame_off]
 									if { $DEBUG_SF } { puts " ci:$ci" }
 		}
+	  } else {
+									if { $DEBUG_SF } { puts " the images are in the tarred format" }
+			set ci [hms2indx $hms]
+									if { $DEBUG_SF } { puts " ci:$ci" }
+			
+		}
+
 	}
 	if {$timern == "cin"} {
-		######     puts "Showing Camera Image with Index value = $hsr \n"
 		set cin $hsr
 		set ci $cin
 	}
+									if { $DEBUG_SF } { puts "Showing Camera Image with Index value = $ci \n" }
 	show_img $ci
 }
 
@@ -790,7 +798,7 @@ proc show_img { n } {
 	if { [array size fna] == 1 } {
 		## this is in the new tar format
 		if { $DEBUG_SF } {
-			puts "in here"
+			puts "Finding tar file for cin = $cin"
 		}
 		set h 0
 		set m 0
@@ -988,7 +996,7 @@ proc show_img { n } {
 			catch { set llat $ns(hms$hms)$lat(hms$hms) }
 			catch { set llon $ew(hms$hms)$lon(hms$hms) }
 			if { [ catch { set data "$hms ($sod) $ns(hms$hms)$lat(hms$hms) $ew(hms$hms)$lon(hms$hms) $alt(hms$hms)M $pdop(hms$hms) $nsat(hms$hms)"} ]  } { 
-				set data "hms:$hms sod:$sod  No GPS Data"
+				set data "hms:$hms sod:$sod  "
 			}
 		} elseif { $camtype == 2 } {
 			catch { set llat $lat(hms$hms) }
@@ -2424,9 +2432,9 @@ menu .mb.options
 menu .mb.zoom
 
 .mb add cascade -label "File" -underline 0 -menu .mb.file
-.mb add cascade -label "Archive" -underline 0 -menu .mb.archive -state disabled
-.mb add cascade -label "Options" -underline 0 -menu .mb.options -state disabled
-.mb add cascade -label "Zoom" -underline 0 -menu .mb.zoom -state disabled
+.mb add cascade -label "Archive" -underline 0 -menu .mb.archive 
+.mb add cascade -label "Options" -underline 0 -menu .mb.options 
+.mb add cascade -label "Zoom" -underline 0 -menu .mb.zoom 
 
 #####  [ File Menu
 
@@ -2434,7 +2442,7 @@ menu .mb.zoom
 	-command { select_file }
 
 .mb.file add command -label "Select Path.." -underline 0 \
-	-command { select_path "/home/anayegan/eaarl_stuff/cam1_tar_changes/" }
+	-command { select_path $dir }
 
 .mb.file add command -label "Exit" -underline 1 -command { exit }
 
@@ -2590,11 +2598,11 @@ canvas .canf.can -height 240 -width 350 \
 .canf.can create image 0 0 -tags img -image $img -anchor nw 
 
 set me "\
-EAARL and ATRIS Image/Data Animator\n\
+EAARL RGB Image/Data Animator\n\
 $version\n\
 $revdate\n\
 C. W. Wright charles.w.wright@nasa.gov\n\
-Amar Nayegandhi anayegan@usgs.gov\n\
+Amar Nayegandhi anayegandhi@usgs.gov\n\
 David Nagle dnagle@usgs.gov\n\
 "
 
@@ -2808,10 +2816,10 @@ if { $mogrify_exists } {
 if { $DEBUG_SF } { enable_controls }
 set scrollbar_status 0
 set toolbar_status_gps 1
-set toolbar_status_slider 0
+set toolbar_status_slider 1
 set toolbar_status_vcr 1
-set toolbar_status_speedgamma 0
-set toolbar_status_alps 0
+set toolbar_status_speedgamma 1
+set toolbar_status_alps 1
 
 send_comm_id
 send_ytk init_sf
