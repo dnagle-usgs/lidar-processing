@@ -256,23 +256,24 @@ func gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=, pmulti=) {
  return q;
 }
 
-func mark_time_pos( sod ) {
+func mark_time_pos( win, sod ) {
 /* DOCUMENT mark_time_pos, sod
 
-   Mark a lat/lon position on win 6 based on the sod.  Used from
+   Mark a lat/lon position on window, win  based on the sod.  Used from
  sf_a.tcl via eaarl.ytk
 
 */
-  win = window();
   extern utm;
+  current_win = window();
   q = where( gga.sod == sod )
   window,win;
   if (utm) {
    ll2utm, gga.lat(q), gga.lon(q) 
-   plmk, UTMNorthing, UTMEasting, marker=5, color="red", msize=0.6
+   plmk, UTMNorthing, UTMEasting, marker=5, color="blue", msize=0.6
   } else {
-   plmk, gga.lat(q), gga.lon(q), marker=5, color="red", msize=0.6
+   plmk, gga.lat(q), gga.lon(q), marker=5, color="blue", msize=0.6
   }
+  window, current_win;
 }
 
 func test_selection_size (q) {

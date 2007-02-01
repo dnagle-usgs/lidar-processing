@@ -181,7 +181,8 @@ proc request_heading {psf inhd_count sod} {
 }
 
 proc mark_time_pos { sod } {
-  exp_send "mark_time_pos, $sod\r"
+  global _map
+  exp_send "mark_time_pos, $_map(window), $sod\r"
 }
 
 
