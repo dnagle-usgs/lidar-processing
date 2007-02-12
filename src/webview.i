@@ -398,8 +398,8 @@ Original: Lance Mosher
 	write, "Webview complete!\n";
 }
 
-func plot_fltlines(fltdir, win=, color=, utm=, width=, scalecolor=, indir=,wait=) {
-/* DOCUMENT plot_flightlines(fltdir, win=, color=, utm=, width=, scalecolor=, indir=)
+func plot_fltlines(fltdir, win=, color=, utm=, width=, scalecolor=, indir=,wait=,pnav=) {
+/* DOCUMENT plot_flightlines(fltdir, win=, color=, utm=, width=, scalecolor=, indir=,pnav=)
 This function plots flightline of all gga files from the fltdir.
 Generall fltdir is the EAARL mission directory (e.g. /data/0/tampa_bay04/) such that gga
 files are located in "/data/0/tampa_bay04/ * / gps-* / *-gga.ybin"
@@ -416,6 +416,7 @@ scalecolor= Scales the flightlines along a particular shade. 0=cyan, 1=red, 2=gr
 indir= Set to 1 if fltdir itself contains the gga files to plot.
 wait= Set to 1 if you would like the function to pause between each plotted flight line and allow zooming and
       navigating in the plot window.  Enter a letter at the prompt to plot the next flight line.
+pnav= Set to 1 to Search for *-pnav.ybin files in the TRAJECTORIES folder instead of ggas in the gps.
 
 Original: Lance Mosher
 Modified by: Jeremy Bracone
@@ -424,7 +425,11 @@ Modified by: Jeremy Bracone
 //-----Find gga files
 	if (!width) width = 1.0;
    	s=array(string, 10000);
-   	scmd = swrite(format = "ls %s*/gps-*/*gga.ybin", fltdir);
+	if (pnav == 1) {
+		scmd = swrite(format = "ls %s*/trajectories/*pnav.ybin", fltdir);
+	} else {
+	   	scmd = swrite(format = "ls %s*/gps-*/*gga.ybin", fltdir);
+	}
    	if (indir) scmd = swrite(format = "ls %s*.ybin", fltdir);
    	fp = 1; lp = 0;
    	for (i=1; i<=numberof(scmd); i++) {
