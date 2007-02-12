@@ -466,7 +466,11 @@ Modified by: Jeremy Bracone
 		fil_list(i) = gga_list(i);
 		if (!color) col_list(i,) = col;
 		if (color) col = color;
-		show_gga_track, color=col, skip=0,marker=0,msize=.1, width=width, utm=utm;
+		if (win) {
+			show_gga_track, color=col, skip=0,marker=0,msize=.1, width=width, utm=utm,win=win;
+		} else {
+			show_gga_track, color=col, skip=0,marker=0,msize=.1, width=width, utm=utm;
+		}
 		write(format="gga: %s\n color:red=%g,green=%g,blue=%g\n--------------------\n\n",gga_list(i),col(1),col(2),col(3));
 		if(wait == 1) {
 			write, "When ready, enter any letter to continue.\n";
