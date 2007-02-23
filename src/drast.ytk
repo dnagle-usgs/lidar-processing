@@ -179,7 +179,7 @@ proc play {} {
         set rn 1;
      }
      if { $animate_georef } {
-        exp_send "ytk_rast,$rn; geo_rast,$rn, fsmarks=1, eoffset=0.0; \r" 
+        exp_send "ytk_rast,$rn; geo_rast,$rn, fsmarks=0, eoffset=0.0; \r" 
      } else {
         exp_send "ytk_rast,$rn\r" 
      }
@@ -374,7 +374,7 @@ set wfc3 4
          set rn $total_edb_records;
      } 
      if { $animate_georef } {
-         exp_send "ytk_rast, [expr $rn]; geo_rast, [expr $rn], fsmarks=1, eoffset=0.0; \r" 
+         exp_send "ytk_rast, [expr $rn]; geo_rast, [expr $rn], fsmarks=0, eoffset=0.0; \r" 
      } else {
          exp_send "ytk_rast,[expr $rn]\r" 
      }
@@ -387,7 +387,7 @@ set wfc3 4
          set rn 1;
      } 
      if { $animate_georef } {
-         exp_send "ytk_rast, [expr $rn]; geo_rast, [expr $rn], fsmarks=1, eoffset=0.0; \r" 
+         exp_send "ytk_rast, [expr $rn]; geo_rast, [expr $rn], fsmarks=0, eoffset=0.0; \r" 
      } else {
          exp_send "ytk_rast,[expr $rn]\r" 
      }
@@ -407,7 +407,7 @@ set wfc3 4
 bind .rslider.scale <ButtonRelease>  { 
  global rn 
 	if { $animate_georef } {
-           exp_send "ytk_rast, [expr $rn]; geo_rast, [expr $rn], fsmarks=1, eoffset=0.0; \r" 
+           exp_send "ytk_rast, [expr $rn]; geo_rast, [expr $rn], fsmarks=0, eoffset=0.0; \r" 
 	} else {
            exp_send "ytk_rast,[expr $rn]\r" 
 	}
@@ -433,7 +433,7 @@ set elevation_offset 0.0;
 
 button .rslider.bf2.georef -text "Geo Ref" -command {
   global rn elevation_offset;
-  exp_send "geo_rast( $rn, fsmarks=1, eoffset=$elevation_offset );\r"
+  exp_send "geo_rast( $rn, fsmarks=0, eoffset=$elevation_offset );\r"
 }
 
 checkbutton .rslider.bf2.angeo -text "Animate GeoRef" -variable animate_georef
@@ -481,7 +481,7 @@ tk_optionMenu .rslider.bf1.pint play_interval \
  bind .rslider.bf1.enter_rn <Return> { 
      if { $rn < $total_edb_records } {
 	if { $animate_georef } {
-           exp_send "ytk_rast, [expr $rn]; geo_rast, [expr $rn], fsmarks=1, eoffset=0.0; \r" 
+           exp_send "ytk_rast, [expr $rn]; geo_rast, [expr $rn], fsmarks=0, eoffset=0.0; \r" 
 	} else {
            exp_send "ytk_rast,[expr $rn]\r" 
 	}

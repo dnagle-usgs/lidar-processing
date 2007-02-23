@@ -65,13 +65,13 @@ proc rbgga_menu { {mode "eaarl"} } {
      set rbgga_file_mode "adapt"
    }
  }
- button $mw.f1.load -text "Load GGA" -command { 
+ button $mw.f1.load -text "Load PNAV" -command { 
    if {$gga(llu) == "utm"} {
       set utm 1
    } else {
       set utm 0
    }
-   exp_send "gga=rbgga()\r" 
+   exp_send "pnav=rbpnav();\r" 
    set rbgga_file_mode "eaarl"
  }
  button $mw.f1.plot -text "Plot" -command {

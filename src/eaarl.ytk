@@ -426,6 +426,7 @@ proc load_edb {} {
    exp_send "load_edb, update=0\r"
   expect "load_edb_completed"
   expect ">"
+  after 2000 {
   edb_status
   if { [sf_exists] } {
      send_sf "set dir $data_path"
@@ -439,6 +440,7 @@ proc load_edb {} {
       }
   }
   wm title .eaarl "Current Data: $data_path"
+  }
 }
 
 #####################################################################
