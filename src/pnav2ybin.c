@@ -25,8 +25,11 @@ char *changename( char *ostr, char *nstr, char *txt ) {
 
   strncpy(nstr, ostr, MAXNAMLEN-1); // make a copy
 
+  // if the file doesn't have an extension, we can still pick up
+  // (an incorrect) period from the start of the path when using
+  // 'find'.
   pstr = strrchr( nstr, '.');       // find the period
-  if ( !pstr ) {                    // no period,
+  if ( !pstr || pstr == nstr ) {    // no period,
     pstr = nstr;
     while ( *(++pstr) != '\0');     // find the end of the string
   }
