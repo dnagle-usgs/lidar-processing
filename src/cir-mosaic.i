@@ -309,7 +309,7 @@ Original W. Wright 5/6/06
  write,of,format="%9.6f \n", a(1:4)    
  write,of,format="%12.3f \n", a(5:6)    
  close,of
- ab = system("cp /data/1/EAARL/Processed_Data/JELA_06/cir_images/"+jpg_ofn+" "+jgwinfo(1)+"/"+jpg_ofn);
+ // ab = system("cp /data/1/EAARL/Processed_Data/JELA_06/cir_images/"+jpg_ofn+" "+jgwinfo(1)+"/"+jpg_ofn);
  return 1;
 }
 

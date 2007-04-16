@@ -1039,3 +1039,57 @@ original: amar nayegandhi September 2005
   return files;
 
 }
+
+func copy_tilefiles_to_indexdir(dir, index_dir, fname=, searchstr=) {
+/*DOCUMENT copy_tilefiles_to_indexdir(dir, index_dir, searchstr=)
+  This function finds all the 2k by 2k files in the directory and moves them to the corresponding location in the index directory format.
+  dir : directory where the 2k by 2k files are located
+  index_dir: index tiles directory 
+  fname = file name(s) (optional)
+  searchstr= search string .. defaults to "*.pbd"
+*/
+
+   if (is_void(searchstr)) searchstr="*.pbd"
+
+   if (is_void(fname)) {
+     s = array(string,10000);
+     scmd = swrite(format = "find %s -name '%s'",dir, searchstr);
+     fp = 1; lp = 0;
+     for (i=1; i<=numberof(scmd); i++) {
+        f=popen(scmd(i), 0);
+        n = read(f,format="%s", s );
+        close, f;
+        lp = lp + n;
+        if (n) fn_all = s(fp:lp);
+        fp = fp + n;
+     }
+   } else {
+        fn_all = ipath+fname;
+   }
+   nfiles = numberof(fn_all);
+
+   write, format="Total number of files to move = %d\n",nfiles;
+
+
+   for (i=1;i<=nfiles;i++) {
+     //find east and north values for each tile
+     teast = tnorth= zone = 0;
+     fn_split = split_path(fn_all(i),0);
+     sread, strpart(fn_split(2), 4:9), teast;
+     sread, strpart(fn_split(2), 12:18), tnorth;
+     sread, strpart(fn_split(2), 20:21), zone;
+     ieast = (teast/10000)*10000;
+     inorth = int(ceil(tnorth/10000.)*10000.);
+     idir = index_dir+swrite(format="i_e%d_n%d_%d/",ieast,inorth,zone);
+     tdir = idir+swrite(format="t_e%d_n%d_%d/",teast,tnorth,zone);
+     if (lsdir(tdir) != 0) {
+       cmd = swrite(format="cp %s %s",fn_all(i), tdir);
+       system(cmd);
+     } else {
+       write, format="Directory %s does not exist.  File %s not copied over.\n",tdir, fn_split(2);
+     }
+   }
+
+  return
+   
+}

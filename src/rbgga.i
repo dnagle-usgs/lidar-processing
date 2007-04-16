@@ -811,7 +811,8 @@ func show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, wid
 	  if (curzone) {
 	     write, format="Using currently selected zone number: %d\n",int(curzone);
 	  } else {
-	     read, prompt="Enter Zone Number: ",curzone;
+             curzone = 0;
+	     ans = read(prompt="Enter UTM Zone Number: ",curzone);
 	  }
 	  zidx = where(u(3,) == curzone);
 	  if (is_array(zidx)) {
