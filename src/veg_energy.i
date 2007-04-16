@@ -645,7 +645,7 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, normalize=) {
       lfpveg: large-footprint waveform array
       thresh= amplitude threshold to consider significan return
       img = 2d array of bare-earth data at same resolution
-      fill = ??
+      fill = set to 1 to fill in gaps in the data.  This will use the average value of the 3x3 neighbor to defien the value of the output metric. Those that are set to -1000 will be ignored.
       min_elv = minimum elevation (in meters) to consider for bare earth
       normalize = set to 0 if you do not want to normalize (default = 1).
   the output array will contain the following metrics:
@@ -672,7 +672,7 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, normalize=) {
 	lfprx = *lfpveg(i,j).rx;
 	lfpnpix = *lfpveg(i,j).npixels;
 	if (!is_array(lfprx)) {
-	  out(1,i,j) = -1000;
+	  out(,i,j) = -1000;
 	  continue;
         }
 	//normalize for number of pixels in each rx
@@ -748,7 +748,8 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, normalize=) {
 	} else {
 	    fgr = 1;
 	}
-	if (out(2,i,j) < 5.5) out(1,i,j) -= out(2,i,j); // assuming gnd is below 2.5 m
+	//if (out(2,i,j) < 5.5) out(1,i,j) -= out(2,i,j); // assuming gnd is below 2.5 m
+	out(1,i,j) -= out(2,i,j); 
       } else {
 	// correct the canopy height by subtracting the bare earth elevation
 	out(1,i,j) = out(1,i,j) - img(i,j);
@@ -803,7 +804,7 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, normalize=) {
     }
  }
 
- if (fill) {
+ if (fill) { // use this to fill in small gaps in the data.
    for (i=2;i<dims(2);i++) {
      for (j=2;j<dims(3);j++) {
 	if (out(1,i,j) == -1000) continue;
@@ -867,6 +868,7 @@ func plot_metrics(vmets, lfpveg, vmetsidx=, cmin=, cmax=, msize=, marker= ,win=,
  z = vmets(vmetsidx,);
  pli, z, lfpveg(1,1).east/100., lfpveg(1,1).north/100., lfpveg(0,1).east/100., lfpveg(1,0).north/100., cmin=cmin, cmax=cmax;
  //plcm, vmets(vmetsidx,idx), lfpveg.north(idx)/100.+ybias, lfpveg.east(idx)/100.+xbias, cmin=cmin, cmax = cmax, msize=msize, marker=marker;
+  colorbar, cmin, cmax;
 
 }
 
@@ -1335,7 +1337,9 @@ func make_begrid_from_bexyz(bexyz, binsize=, intdist=, lfpveg=) {
   }
 
   idx = where(imgcount != 0);
-  img(idx) = img(idx)/imgcount(idx);
+  if (is_array(idx)) {
+    img(idx) = img(idx)/imgcount(idx);
+  } 
 
   // now find those img locations that have not yet been assigned
   // check to see if the neighbors have any significant value else
@@ -1857,3 +1861,31 @@ func compare_waveform_divergence(outveg1, outveg2, outwin=, inwin=, mselect=, mi
 
   return [distKL, distJS];
 }
+
+
+func metrics_ascii_output(outveg, mets, ofname) {
+// amar nayegandhi
+// 20070308
+// this function writes out a comma delimited metrics file in the following format:
+// X,Y,FR,BE,CRR,HOME,N ... where N is the number of individual laser pulses in each waveform
+
+f = open(ofname,"w")
+nx = numberof(outveg(,1));
+ny = numberof(outveg(1,));
+
+write, f, "East(m), North(m), CH(m), BE(m), CRR, HOME(m), #Waveforms";
+
+for (i=1;i<=nx;i++) {
+     write, format="writing records %d of %d\r",i*ny,nx*ny;
+  for (j=1;j<=ny;j++) {
+     write, f, format="%10.3f, %10.3f,%5.2f,%5.2f,%5.3f,%5.2f,%3d\n",outveg(i,j).east/100., outveg(i,j).north/100., mets(1,i,j), mets(2,i,j), mets(4,i,j), mets(5,i,j), outveg(i,j).npix;
+  }
+}
+
+close, f;
+
+return
+
+}
+
+

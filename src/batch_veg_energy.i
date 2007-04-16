@@ -114,10 +114,13 @@ func batch_veg_lfpw(ipath, opath, fname=, searchstr=, onlyupdate=,binsize=, norm
  return
 }
 
-func batch_veg_metrics(ipath, opath, fname=,searchstr=, plotclasses=, thresh=, min_elv=, outwin=, onlyplot=, dofma=, use_be=, cl_lfpw=, onlyupdate=) {
+func batch_veg_metrics(ipath, opath, fname=,searchstr=, plotclasses=, thresh=, min_elv=, outwin=, onlyplot=, dofma=, use_be=, be_path=, be_ss=, cl_lfpw=, onlyupdate=) {
 /* DOCUMENT batch_veg_metrics(ipath, opath, searchstr=, plot=, plotclasses=)
    amar nayegandhi 10/01/04
    use_be = use bare earth data (in *ircf or *mf files).
+   be_path = path name to where bare earth files are located.  only useful if use_be=1
+   be_ss = search string for bare earth files, defaults to : 
+           be_ss = "*n88*_merged_*rcf*.pbd";
    cl_lfpw = set to 1 to reduce the noise in the large footprint waveform.
 */
 
@@ -189,11 +192,18 @@ func batch_veg_metrics(ipath, opath, fname=,searchstr=, plotclasses=, thresh=, m
         }
 	// look for bare earth files if use_be = 1
   	if (use_be) {
-	   fn_split = split_path(fn_all(i),0);
+           if (is_void(be_path)) {
+	      fn_split = split_path(fn_all(i),0);
+              be_dir = fn_split(1);
+           } else {
+              be_dir = be_path;
+           }
 	   // find ircf and/or mf files
      	   s = array(string,10000);
-           ss = "*n88*_v*ircf*";
-           scmd = swrite(format = "find %s -name '%s'",fn_split(1), ss);
+           if (is_void(be_ss)) {
+                be_ss = "*n88*_merged_*rcf*.pbd";
+           }
+           scmd = swrite(format = "find %s -name '%s'",be_dir, be_ss);
            fp = 1; lp = 0;
            f=popen(scmd, 0);
            n = read(f,format="%s", s );
@@ -201,14 +211,36 @@ func batch_veg_metrics(ipath, opath, fname=,searchstr=, plotclasses=, thresh=, m
            lp = lp + n;
            if (n) be_file = s(fp:lp);
            fp = fp + n;
+           // remove any "fs" rcfd files.
+           idx = where(!strmatch(be_file, "_fs"));
+           be_file = be_file(idx);
 	   if (numberof(be_file) > 1) {
-	      idx = where(strmatch(be_file, "mf"));
-              if (is_array(idx)) {
-		be_file = be_file(idx(1));
-	      } else {
-	        be_file = be_file(1);
+              // search for be_file for the same data tile
+              if (strmatch(fn_split(1), "t_e")) {
+                 teast_north = "";
+                 sread, strpart(fn_split(1),1:18), teast_north;
+	         idx = where(strmatch(be_file, teast_north)); 
+                 if (is_array(idx)) {
+                   be_file = be_file(idx);
+                 }
+              }
+	      if (numberof(be_file) > 1) {
+                 // now search for mf files
+	         idx = where(strmatch(be_file, "mf"));
+                 if (is_array(idx)) {
+		   be_file = be_file(idx(1));
+	         } 
 	      }
 	   }
+           if (numberof(be_file) > 1) {
+              print, "There are more than one bare earth files for this tile.  Please check code.  Cannot continue."
+              be_file;
+              amar();
+           }
+           if (numberof(be_file) == 0) {
+              print, "No Bare Earth file available for this tile.  No metrics created for this tile." 
+              continue;
+           }
         }
         fn_split = split_path(fn_all(i),0);
         s_east = strpart(fn_split(2), 4:9);
@@ -232,7 +264,7 @@ func batch_veg_metrics(ipath, opath, fname=,searchstr=, plotclasses=, thresh=, m
 	    bexyz = get_member(f,vname);
 	    close, f;
 	    write, "Converting bare earth xyz into a grid...";
-  	    img = make_begrid_from_bexyz(bexyz, binsize=binsize, intdist=5, lfpveg=outveg);
+  	    img = make_begrid_from_bexyz(bexyz, binsize=binsize, lfpveg=outveg);
 	  }
           if (cl_lfpw) {
 	   write, "cleaning composite waveform data array..."
@@ -303,7 +335,7 @@ func batch_veg_metrics(ipath, opath, fname=,searchstr=, plotclasses=, thresh=, m
    time = tb2-tb1;
 
    write, "BATCH PROCESS FOR METRICS COMPLETE!!"
-   write, format="Total time taken for batch process = %f hours\n",time(3)/3600.;
+   write, format="Total time taken for batch process = %f minutes\n",time(3)/60.;
    return
 }
 
@@ -406,7 +438,7 @@ func write_pbd_to_gdf(ipath=, opath=, fname=, searchstr=) {
    // start timer
    tb1=tb2=array(double, 3);
    timer, tb1;
-   if (is_void(searchstr)) searchstr = "*energy*mets.pbd";
+   if (is_void(searchstr)) searchstr = "*energy*mets*.pbd";
 
    if (is_void(curzone)) {
      curzone = 0L;
