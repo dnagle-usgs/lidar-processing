@@ -175,17 +175,26 @@ func plot_image(img, location, win=, dofma=, winsize=) {
 	if (_ytk_window_exists) 
 		w = window();
 
-	x0 = location(1);
-	y0 = location(2);
-	x1 = location(3);
-	y1 = location(4);
+   if ((dimsof(location))(1) == 1) {
+	   x0 = location(1);
+	   y0 = location(2);
+	   x1 = location(3);
+	   y1 = location(4);
+   } else {
+      x0=y0=x1=y1=[];
+   }
+      
 
 	if (_ytk_window_exists) w = window();
 
 	wset = change_window_size(win, winsize, dofma);
 
 	if (wset) {
-		pli, img, x0,y0,x1,y1;
+      if (is_array(x0)) {
+		   pli, img, x0,y0,x1,y1;
+      } else {
+         plf, img, location(2,,), location(1,,); 
+      }
 		window, win, width=0, height=0;
 		_ytk_window_exists=1;
 		window, w;
@@ -194,14 +203,14 @@ func plot_image(img, location, win=, dofma=, winsize=) {
 	return
 }
 
-func load_and_plot_image(filename, img_world_filename=, img=, location=, win=, winsize=, dofma=) {
+func load_and_plot_image(filename, img_world_filename=, img1=, location1=, win=, winsize=, dofma=) {
 /* DOCUMENT load_and_plot_image(filename, img=, location=, win=, dofma=, winsize=)
 	This function loads and plots an image in window, win.
 
 	INPUT:
 		filename: name of file to load including path.
 		img_world_filename: name of file containing the world coordinates (jgw, tfw, etc.)
-		img= image array to be plotted (usually (3,x,y))
+		img1= image array to be plotted (usually (3,x,y))
 		location= location coordinates of the image in the format (x0,y0,x1,y1)
 		win= window number to plot data. Default win=6;
 		winsize = size of window.  If window size has changed, then dofma must be set to 1. Default winsize=1 (small).
@@ -212,27 +221,30 @@ func load_and_plot_image(filename, img_world_filename=, img=, location=, win=, w
 	Orig: Amar Nayegandhi 12/08/2005.
 	*/
 
-	extern _ytk_window_exists, _ytk_window_size
-	if (is_void(img)) {
+	extern _ytk_window_exists, _ytk_window_size, img, location
+	if (is_void(img1)) {
 		img = read_image(filename);
-	}
+	} else {
+      img = img1;
+   }
 
 	if (!is_void(img_world_filename)) {
-		location = read_img_world_file(img_world_filename, img=img);
+		location1 = read_img_world_file(img_world_filename, img=img);
 	}
 
-	if (is_void(location)) {
+	if (is_void(location1)) {
 		loc = read_lidar_image_location(filename) 
 		if (is_array(loc)) 
 			plot_lidar_image, img, loc, win=win, winsize=winsize, dofma=dofma;
 	} else {
-		plot_image, img, location, win=win, winsize=winsize, dofma=dofma;
+		plot_image, img, location1, win=win, winsize=winsize, dofma=dofma;
 	}
 
+   location = location1;
 	return
 }
 
-func read_img_world_file(filename, img=, xsize=, ysize=) {
+func read_img_world_file(filename, img=, xsize=, ysize=, scale=) {
 /* DOCUMENT read_img_world_file(filename) 
 	This function reads the image world file name (jgw, tfw) and returns the boundary locations for the image.
 
@@ -241,6 +253,8 @@ func read_img_world_file(filename, img=, xsize=, ysize=) {
 		img= the image array
 		xsize = number of pixels in the image along x-direction
 		ysize = number of pixels in the image along y-direction
+
+      scale = scale down by factor (e.g. if scale=10, the image will be 1/10th of its size in each direction, i.e. 1/100th of its original size).
 		
 		Either img or [xsize,ysize] are needed (not both).
 	
@@ -252,6 +266,7 @@ func read_img_world_file(filename, img=, xsize=, ysize=) {
 
 	extern gw;
 
+   if (is_void(scale)) scale = 1;
    f = open(filename, "r");
 	if (catch(0x02)) {
 		print, "No file found"
@@ -289,8 +304,24 @@ func read_img_world_file(filename, img=, xsize=, ysize=) {
 	x0 = gw.xcoord;
 	y1 = gw.ycoord;
 
-	x1 = gw.xscale*xsize + gw.yrotn*ysize + gw.xcoord
-	y0 = gw.xrotn*xsize + gw.yscale*ysize + gw.ycoord
+   if (gw.xrotn == 0) {
+	   x1 = gw.xscale*xsize + gw.yrotn*ysize + gw.xcoord
+	   y0 = gw.xrotn*xsize + gw.yscale*ysize + gw.ycoord
 
-	return [x0,y1,x1,y0];
+	   return [x0,y1,x1,y0];
+   } else {
+      // the image is rotated; calculate the rotation for each pixel
+      sc_x = int(ceil(xsize*1.0/scale));
+      sc_y = int(ceil(ysize*1.0/scale));
+      xy_loc = array(double, 2, sc_x,sc_y);
+      for (i=1;i<=sc_x;i++) {
+         for (j=1;j<=sc_y;j++) {
+	         xy_loc(1,i,j) = gw.xscale*i*scale + gw.yrotn*j*scale + gw.xcoord;
+	         xy_loc(2,i,j) = gw.xrotn*i*scale + gw.yscale*scale*j + gw.ycoord;
+         }
+      }
+      return xy_loc;
+   }
+            
 }
+

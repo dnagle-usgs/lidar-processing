@@ -302,11 +302,14 @@ Original W. Wright 5/6/06
  hms = sod2hms(somd);
  ofn=swrite(format="%s/%s-%02d%02d%02d-%03d-cir.jgw", 
     jgwinfo(1),jgwinfo(2), hms(1),hms(2),hms(3), cir_mask(somd) );
+ jpg_ofn=swrite(format="%s-%02d%02d%02d-%03d-cir.jpg", 
+    jgwinfo(2), hms(1),hms(2),hms(3), cir_mask(somd) );
 // write,format="%s\n", ofn
  of = open(ofn,"w");
  write,of,format="%9.6f \n", a(1:4)    
  write,of,format="%12.3f \n", a(5:6)    
  close,of
+ ab = system("cp /data/1/EAARL/Processed_Data/JELA_06/cir_images/"+jpg_ofn+" "+jgwinfo(1)+"/"+jpg_ofn);
  return 1;
 }
 
