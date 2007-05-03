@@ -112,7 +112,7 @@ while ( $file = <LS> ) {
       system("unzip $startdir/" . $zipdir) if ( ! $opt_norun );
 
       # Check to see if this was a gps trajectory
-      open(FIND2, "find . -name  \"\*cmb-pnav\"|")
+      open(FIND2, "find . -name  \"\*cmb-pnav\" -or -name \"\*pnav.txt\"|")
         || die ("Unable to run find2\n");
       while ( $txt = <FIND2> ) {
         chop $txt;
