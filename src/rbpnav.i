@@ -249,10 +249,12 @@ write, format="  Lat:%14.3f %14.3f\n", pn.lat(min), pn.lat(max)
 write, format="  Lon:%14.3f %14.3f\n", pn.lon(min), pn.lon(max)
 write, format="  Alt:%14.3f %14.3f\n", pn.alt(min), pn.alt(max)
 write, format="  Rms:%14.3f %14.3f\n", pn.xrms(min), pn.xrms(max)
-  if ( is_void( gga ) ) {
+
+// assign new pnav array to gga even if gga is already set.
+ // if ( is_void( gga ) ) {
     gga = pn;
-    write,"**Note: Created gga from pnav"
-  }
+ //   write,"**Note: Created gga from pnav"
+ // }
 
  return pn;
 }
