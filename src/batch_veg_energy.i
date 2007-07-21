@@ -114,21 +114,37 @@ func batch_veg_lfpw(ipath, opath, fname=, searchstr=, onlyupdate=,binsize=, norm
  return
 }
 
-func batch_veg_metrics(ipath, opath, fname=,searchstr=, plotclasses=, thresh=, min_elv=, outwin=, onlyplot=, dofma=, use_be=, be_path=, be_ss=, cl_lfpw=, onlyupdate=) {
+func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, fill=, min_elv=, outwin=, onlyplot=, dofma=, use_be=, be_path=, be_ss=, cl_lfpw=, onlyupdate=) {
 /* DOCUMENT batch_veg_metrics(ipath, opath, searchstr=, plot=, plotclasses=)
    amar nayegandhi 10/01/04
-   use_be = use bare earth data (in *ircf or *mf files).
+   ipath = input path
+   opath = output path (optional). Defaults to ipath
+   fname = name of output file if converting only 1 file (optional). 
+   searchstr = search string for input files (defaults to "*energy_merged.pbd")
+   plotclass = set to 1 to plot pre-defined vegetation classes from the derived metrics
+   thresh= amplitude threshold to consider significan return
+   fill = set to 1 to fill in gaps in the data.  This will use the average value of the 3x3 neighbor to defien the value of the output metric. Those that are set to -1000 will be ignored. Default fill = 1.
+   min_elv = minimum elevation (in meters) to consider for bare earth
+
+   outwin = output window to plot to. (Default = 3)
+   onlyplot = only plot the results of the existing metrics. (Default: void)
+   dofma = clear the window before each plot during the iterative run.
+
+   use_be = use bare earth data (in *ircf or *mf files). (Default = void)
    be_path = path name to where bare earth files are located.  only useful if use_be=1
    be_ss = search string for bare earth files, defaults to : 
            be_ss = "*n88*_merged_*rcf*.pbd";
-   cl_lfpw = set to 1 to reduce the noise in the large footprint waveform.
+   cl_lfpw = set to 1 to reduce the noise in the large footprint waveform. (Default cl_lfpw=1)
+
+   onlyupdate = only make metrics files for those tiles that don't have the output metric files.  Useful when the function is re-started midway through a batch run.
 */
 
    // start timer
    tb1=tb2=array(double, 3);
    timer, tb1;
    if (is_void(outwin)) outwin = 3;
-   if (is_void(searchstr)) searchstr = "*energy.pbd";
+   if (is_void(searchstr)) searchstr = "*energy_merged.pbd";
+   if (is_void(cl_lfpw)) cl_lfpw = 1;
 
    if (plotclasses) {
        window, outwin; 
@@ -339,7 +355,7 @@ func batch_veg_metrics(ipath, opath, fname=,searchstr=, plotclasses=, thresh=, m
    return
 }
 
-func batch_merge_veg_energy(ipath, searchstr=) {
+func batch_merge_veg_energy(ipath, opath=, searchstr=) {
   // this function merges the *energy.pbd files for data tiles in a batch mode
   // amar nayegandhi 10/07/04
 
@@ -396,9 +412,10 @@ func batch_merge_veg_energy(ipath, searchstr=) {
     new_fn = fn_split(1)+fnametag+fn_split(2);
     if (opath) {
        fn_split = split_path(fn_all(1), 0);
-       fn_split1 = split_path(fn_split1(2), 1, ext=1);
+       fn_split1 = split_path(fn_split(2), 1, ext=1);
        new_fn = opath+fn_split1(1)+fnametag+fn_split1(2);
     }
+       
     while (fcount < numberof(fn_all)) {
         fcount++;
         f = openb(fn_all(fcount));
