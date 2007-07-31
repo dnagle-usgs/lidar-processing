@@ -693,12 +693,12 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, normalize=) {
 	   }
 	 }
 
-	lfpcum = (lfprx)(cum);
-	menergy = lfpcum(0)/2;
-	mindx = abs(lfpcum-menergy)(mnx);
-	out(5,i,j) = (lfpelv)(mindx); // this is HOME
-
       if (numberof(lfprx) < 2) continue;
+      lfpcum = (lfprx)(cum);
+      menergy = lfpcum(0)/2;
+      mindx = abs(lfpcum-menergy)(mnx);
+      out(5,i,j) = (lfpelv)(mindx); // this is HOME
+
       lfpdif = where(lfprx(dif) <= -thresh);
       if (!is_array(lfpdif)) continue;
       mnxcan = min(lfpdif(0)-3,numberof(lfprx));
@@ -752,7 +752,9 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, normalize=) {
 	out(1,i,j) -= out(2,i,j); 
       } else {
 	// correct the canopy height by subtracting the bare earth elevation
-	out(1,i,j) = out(1,i,j) - img(i,j);
+	if ((img(i,j) != -1000) && (img(i,j) < out(1,i,j))) {
+          out(1,i,j) = out(1,i,j) - img(i,j);
+        }
 	out(2,i,j) = img(i,j);
 	gidx = (abs(lfpelv - img(i,j)))(mnx);
 	if (abs(lfpelv(gidx)-img(i,j)) > 2) {
@@ -787,6 +789,9 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, normalize=) {
 	lfpcnpix = lfpnpix(lgr:);
 	lfpgsum = (lfpgnd)(sum);
 	lfpcsum = (lfpcpy)(sum);
+        /* ***************************************************************************
+        // THE CODE BELOW WILL WORK ONLY WHEN BARE EARTH ELEVS ARE CLOSE TO MEAN SEA LEVEL
+        ******************************************************************************/
 	if (abs(out(2,i,j)- out(1,i,j)) <= 0.5) { // return only from gnd
 	    out(1,i,j) = 0;
 	    out(3,i,j) = 1.0;
@@ -805,6 +810,7 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, normalize=) {
  }
 
  if (fill) { // use this to fill in small gaps in the data.
+   new_out = out;
    for (i=2;i<dims(2);i++) {
      for (j=2;j<dims(3);j++) {
 	if (out(1,i,j) == -1000) continue;
@@ -812,34 +818,36 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, normalize=) {
 	  data = out(4,i-1:i+1,j-1:j+1);
 	  idx = where(data != 0 & data != -1000);
           if (is_array(idx)) 
-	  out(4,i,j) = avg(data(idx));
+	  new_out(4,i,j) = avg(data(idx));
 	}
 	if (out(3,i,j) == 0) {
 	  data = out(3,i-1:i+1,j-1:j+1);
 	  idx = where(data != 0 & data != -1000);
           if (is_array(idx)) 
-	  out(3,i,j) = avg(data(idx));
+	  new_out(3,i,j) = avg(data(idx));
 	}
 	if (out(2,i,j) == 0) {
 	  data = out(2,i-1:i+1,j-1:j+1);
 	  idx = where(data != 0 & data != -1000);
           if (is_array(idx)) 
-	  out(2,i,j) = avg(data(idx));
+	  new_out(2,i,j) = avg(data(idx));
 	}
 	if (out(1,i,j) == 0) {
 	  data = out(1,i-1:i+1,j-1:j+1);
 	  idx = where(data != 0 & data != -1000);
           if (is_array(idx)) 
-	  out(1,i,j) = avg(data(idx));
+	  new_out(1,i,j) = avg(data(idx));
 	}
 	if (out(5,i,j) == 0) {
 	  data = out(5,i-1:i+1,j-1:j+1);
 	  idx = where(data != 0 & data != -1000);
           if (is_array(idx)) 
-	  out(5,i,j) = avg(data(idx));
+	  new_out(5,i,j) = avg(data(idx));
 	}
      }
    }
+   out = new_out;
+   new_out = [];
  }
 	     
 return out;
@@ -1397,7 +1405,7 @@ func clean_lfpw (lfpw, beimg=, thresh=, min_elv=, max_elv=) {
  if (is_void(thresh)) thresh = 5;
 
  if (is_void(min_elv)) min_elv = -1.0
- if (is_void(max_elv)) max_elv = 25.0;
+ if (is_void(max_elv)) max_elv = 35.0;
 
  lfpw_new = array(LFP_VEG,dims(2),dims(3));
 
@@ -1864,28 +1872,27 @@ func compare_waveform_divergence(outveg1, outveg2, outwin=, inwin=, mselect=, mi
 
 
 func metrics_ascii_output(outveg, mets, ofname) {
-// amar nayegandhi
-// 20070308
-// this function writes out a comma delimited metrics file in the following format:
-// X,Y,FR,BE,CRR,HOME,N ... where N is the number of individual laser pulses in each waveform
+  // amar nayegandhi
+  // 20070308
+  // this function writes out a comma delimited metrics file in the following format:
+  // X,Y,FR,BE,CRR,HOME,N ... where N is the number of individual laser pulses in each waveform
 
-f = open(ofname,"w")
-nx = numberof(outveg(,1));
-ny = numberof(outveg(1,));
+  f = open(ofname,"w")
+  nx = numberof(outveg(,1));
+  ny = numberof(outveg(1,));
 
-write, f, "East(m), North(m), CH(m), BE(m), CRR, HOME(m), #Waveforms";
+  write, f, "East(m), North(m), CH(m), BE(m), CRR, HOME(m), #Waveforms";
 
-for (i=1;i<=nx;i++) {
-     write, format="writing records %d of %d\r",i*ny,nx*ny;
-  for (j=1;j<=ny;j++) {
-     write, f, format="%10.3f, %10.3f,%5.2f,%5.2f,%5.3f,%5.2f,%3d\n",outveg(i,j).east/100., outveg(i,j).north/100., mets(1,i,j), mets(2,i,j), mets(4,i,j), mets(5,i,j), outveg(i,j).npix;
+  for (i=1;i<=nx;i++) {
+      write, format="writing records %d of %d\r",i*ny,nx*ny;
+      for (j=1;j<=ny;j++) {
+         write, f, format="%10.3f, %10.3f,%5.2f,%5.2f,%5.3f,%5.2f,%3d\n",outveg(i,j).east/100., outveg(i,j).north/100., mets(1,i,j), mets(2,i,j), mets(4,i,j), mets(5,i,j), outveg(i,j).npix;
+      }   
   }
+
+  close, f;
+
+  return
+
 }
-
-close, f;
-
-return
-
-}
-
 
