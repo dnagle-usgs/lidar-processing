@@ -208,6 +208,7 @@ func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, 
         }
 	// look for bare earth files if use_be = 1
   	if (use_be) {
+           be_file = [];
            if (is_void(be_path)) {
 	      fn_split = split_path(fn_all(i),0);
               be_dir = fn_split(1);
@@ -227,6 +228,10 @@ func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, 
            lp = lp + n;
            if (n) be_file = s(fp:lp);
            fp = fp + n;
+           if (numberof(be_file) == 0) {
+              print, "No Bare Earth file available for this tile.  No metrics created for this tile." 
+              continue;
+           }
            // remove any "fs" rcfd files.
            idx = where(!strmatch(be_file, "_fs"));
            be_file = be_file(idx);
@@ -435,7 +440,7 @@ func batch_merge_veg_energy(ipath, opath=, searchstr=) {
 
 }
 
-func write_pbd_to_gdf(ipath=, opath=, fname=, searchstr=) {
+func write_pbd_to_gdf(ipath=, opath=, fname=, searchstr=, remove_buffer=) {
 /* DOCUMENT write_pbd_to_gdf(ipath=, opath=, file=, searchstr=) 
     This function reads in a pbd file representing a "multi-dimensional" 
     grid and writes out a binary file known as "grid data format" (gdf).
@@ -446,12 +451,15 @@ func write_pbd_to_gdf(ipath=, opath=, fname=, searchstr=) {
 		blank if you want to write it to the same ipath directory.
 	fname= file name if you want to convert only one file.
 	searchstr = set to search for specific file(s) in ipath.
+        remove_buffer = set to 1 to remove the buffer around each tile.  The resulting gdf tile will contain only the data within the 2k by 2k tile.  All excess data will be removed. Defaults to 1.
       OUTPUT:
 	
         amar nayegandhi 03/30/05.
+        modified amar nayegandhi 07/21/2007 to remove buffer data around each tile.
 */
  
    extern curzone
+   if (is_void(remove_buffer)) remove_buffer = 1;
    // start timer
    tb1=tb2=array(double, 3);
    timer, tb1;
@@ -497,6 +505,50 @@ func write_pbd_to_gdf(ipath=, opath=, fname=, searchstr=) {
         } else {
 	  dim3 = dmets(2);
         }
+
+/*
+        if (remove_buffer) {
+           write, "Removing buffer data around tile..."
+           // conform the tile to the 2k by 2k format.
+           min_e = max_n = 0;
+           sread, strpart(split_path(fn_all(i), 0)(2), 4:9), min_e;
+           sread, strpart(split_path(fn_all(i), 0)(2), 12:18), max_n;
+           max_e = min_e + 2000;
+           min_n = max_n - 2000;
+           num = int(2000/binsize)+1;
+           mets_tile = array(double, dim3,num,num);
+           mets_tile(*) = -1000;
+           minx = int((min_e  - mets_pos(1,1)) / binsize);
+           maxx = int(dmets(3) - (mets_pos(1,2)-max_e) / binsize);
+           miny = int((min_n  - mets_pos(2,1)) / binsize);
+           maxy = int (dmets(4) - (mets_pos(2,2)-max_n) / binsize);
+           tminx = tminy = 1;
+           tmaxx = tmaxy = num;
+           if (minx < 0) {
+                // the data in this tile does not start from the beginning
+                tminx = int(-minx) + 1;
+                minx = 1;
+           }
+           if (miny < 0) {
+                // the data in this tile does not start from the beginning
+                tminy = int(-miny) + 1;
+                miny = 1;
+           } 
+          if ((maxx-minx) > num) {
+                // the data in this tile does not extend all the way to the end of the tile
+                tmaxx += int(maxx);
+                maxx = 0;
+          }
+          if ((maxy-miny) > num) {
+                // the data in this tile does not extend all the way to the end of the tile
+                tmaxy += int(maxy);
+                maxy = 0;
+          }
+          mets_tile(,tminx:tmaxx,tminy:tmaxy)  = mets(,minx:maxx,miny:maxy);
+          mets = mets_tile;
+          mets_pos = [[min_e, min_n],[max_e,max_n]];
+        }
+ */          
         fn_split = split_path(fn_all(i), 1, ext=1);
 	outf = fn_split(1)+".gdf";
         f = open(outf,"w+b");
@@ -518,3 +570,133 @@ func write_pbd_to_gdf(ipath=, opath=, fname=, searchstr=) {
    return
 }
       
+func batch_metrics_ascii_output(ipath, opath=, ofname=, energy_ss=, mets_ss=, remove_buffer =) {
+/* DOCUMENT
+   batch_metrics_ascii_output(ipath, opath=, ofname=, energy_ss=, mets_ss=, outveg=, mets=, remove_buffer =)
+   amar nayegandhi 20070308
+   modified amarn 20070726.
+   this function writes out a comma delimited metrics file in the following format:
+   X,Y,FR,BE,CRR,HOME,N ... where N is the number of individual laser pulses in each waveform
+   INPUT:
+   ipath:  input path to recursively search for input files.
+   opath = location where all output files will be placed.  If not set, output files be placed in corresponding input fipath.
+   ofname = output file name.  Used only when converting 1 input file.
+   energy_ss = search string for finding the composite footprint files,  Default = "*energy_merged.pbd"
+   mets_ss = search string for finding the metric files. Default = "*_mets.pbd"
+   remove_buffer = set to 1 if you want data only within the 2k by 2k tile (removes all buffer data). Defaults to 1.
+
+*/
+
+if (is_void(energy_ss)) energy_ss = "*energy_merged.pbd"
+if (is_void(mets_ss)) mets_ss = "*_mets.pbd"
+if (is_void(remove_buffer)) remove_buffer=1;
+
+  s = array(string,10000);
+  if (mets_ss) ss = mets_ss;
+  scmd = swrite(format = "find %s -name '%s'",ipath, ss);
+  fp = 1; lp = 0;
+  for (i=1; i<=numberof(scmd); i++) {
+      f=popen(scmd(i), 0);
+      n = read(f,format="%s", s );
+      close, f;
+      lp = lp + n;
+      if (n) fn_all = s(fp:lp);
+      fp = fp + n;
+  }
+  nfiles = numberof(fn_all);
+
+  write, format="Total number of veg metric files to convert = %d\n",nfiles;
+
+  for (i=1;i<=nfiles;i++) {
+     write, format="Converting %d of %d\n", i, nfiles;
+     fn_split = split_path(fn_all(i), 1, ext=1);
+
+     new_fn = fn_split(1)+"_asc.txt";
+
+     fn_split = split_path(fn_all(i),0);
+
+     if (opath) {
+        fn1 = fn_split(2);
+        fn_split = split_path(fn1, 1, ext=1);
+        new_fn = opath+fn_split(1)+"_asc.txt";
+     }
+     // find corresponding energy file
+     s = array(string,10000);
+     scmd = swrite(format = "find %s -name '%s'",fn_split(1), energy_ss);
+     fp = 1; lp = 0;
+     f=popen(scmd, 0);
+     n = read(f,format="%s", s );
+     close, f;
+     lp = lp + n;
+     if (n) energy_file = s(fp:lp);
+     fp = fp + n;
+     if (numberof(energy_file) > 1) {
+        // search for energy_file for the same data tile
+        if (strmatch(fn_split(1), "t_e")) {
+           teast_north = "";
+           sread, strpart(fn_split(1),1:18), teast_north;
+           idx = where(strmatch(energy_file, teast_north));
+           if (is_array(idx)) {
+             energy_file = energy_file(idx);
+           }
+        }
+        if (numberof(energy_file) > 1) {
+           // now search for merged files
+           idx = where(strmatch(energy_file, "merged"));
+           if (is_array(idx)) {
+             energy_file = energy_file(idx(1));
+           }
+        }
+     }
+     if (numberof(energy_file) > 1) {
+        print, "There are more than one composite footprint energy files for this tile.  Please check code.  Cannot continue."
+        energy_file;
+        error1();
+     }
+     if (numberof(energy_file) == 0) {
+         print, "No composite footprint energy file available for this tile.  No ascii metrics created for this tile."
+              error1();
+     }
+     fn_split = split_path(fn_all(i),0);
+     s_east = strpart(fn_split(2), 4:9);
+     s_north = strpart(fn_split(2), 12:18);
+     east = north = 0;
+     sread, s_east, format="%d",east;
+     sread, s_north, format="%d",north;
+     // open energy file
+     f = openb(energy_file(1));
+     restore, f, outveg;
+     close, f;
+     binsize = (outveg.east(2)-outveg.east(1))/100.;
+
+     // open metrics file
+     f = openb(fn_all(i));
+     restore, f, mets, mets_pos, binsize;
+     close, f;
+     nx = numberof(outveg(,1));
+     ny = numberof(outveg(1,));
+     if (remove_buffer) {
+        // remove points outside of the actual tile area
+        east = east*100;
+        north = north*100;
+        idx = where((outveg.east >= east) & (outveg.east <= east+200000));
+        if (is_array(idx)) {
+           iidx = where((outveg.north(idx) >= north-200000) & (outveg.north(idx) <= north));
+           fidx = idx(iidx);
+        }
+     } else {
+        fidx = where(outveg.east > 0);
+     }
+     f = open(new_fn,"w")
+     write, f, "East(m), North(m), CH(m), BE(m), CRR, HOME(m), #Waveforms";
+     //for (j=1;j<=numberof(fidx);j++) {
+        write, f, format="%10.3f, %10.3f,%5.2f,%5.2f,%5.3f,%5.2f,%3d\n",outveg(fidx).east/100., outveg(fidx).north/100., mets(1,fidx), mets(2,fidx), mets(4,fidx), mets(5,fidx), outveg(fidx).npix;
+      //  write, format="Writing %d of %d\r",i;
+     //}
+
+     close, f;
+ }
+
+
+ return
+}
