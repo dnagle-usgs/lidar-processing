@@ -126,13 +126,15 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, elv=, read_file=, pdop=, mode=
 	}
 	if (mode == 2) {
 	  be = (mineaarl.elevation+mineaarl.depth)/100.;
-	  ii = mineaarl.rn
+	  //ii = mineaarl.rn
+	  ii = i;
           be_elv = (minelveaarl.elevation+minelveaarl.depth)/100.;
  	}
 	if (mode == 3) {
           //be = mineaarl.elevation/100.-(mineaarl.lelv-mineaarl.felv)/100.;
           be = mineaarl.lelv/100.;
-	  ii = mineaarl.rn
+	  //ii = mineaarl.rn
+	  ii = i;
           //be_elv = minelveaarl.elevation/100.-(minelveaarl.lelv-minelveaarl.felv)/100.;
           be_elv = minelveaarl.lelv/100.;
 	}
@@ -393,8 +395,9 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fsmode=, wfs=) {
 }
 
 
-func extract_closest_pts(eaarl, kings, buf=, fname=) {
+func extract_closest_pts(eaarl, kings, buf=, fname=, invert=) {
   //this function returns a data set of the closest points
+  // if invert = 1, delete the closest points and return the rest of the array
 
   if (!(buf)) buf = 100; //default 1m buffer
 
@@ -418,6 +421,10 @@ func extract_closest_pts(eaarl, kings, buf=, fname=) {
      write, f, eaarl_out.rn;
      close, f
    }
+  if (invert) {
+	pts_to_keep = set_difference(eaarl.rn, eaarl_out.rn, idx=1);
+	eaarl_out = eaarl(pts_to_keep);
+  }
    return eaarl_out
 }
 
@@ -492,3 +499,30 @@ func subsample_data(data, subsample=, type=) {
   data_out = data_out(1:count);
   return data_out
 }
+
+
+func analyze_mirror_elevations(veg_all) {
+ // amar nayegandhi 20070307
+
+  nr = numberof(veg_all); // number of rasters
+  rsq_all = array(double, nr);
+  for (i=1;i<=nr;i++) {
+    xp = array(double, 2);
+    xp(1) = min(veg_all(i).meast)/100.;
+    xp(2) = max(veg_all(i).meast)/100.;
+    if (xp(1) <= 0) continue;
+    yp =  fitlsq(veg_all(i).mnorth/100., veg_all(i).meast/100., xp);
+    m = (yp(2)-yp(1))/(xp(2)-xp(1));
+    c = yp(1) - m*xp(1);
+    ymean = avg(veg_all(i).mnorth/100.);
+    xmean = avg(veg_all(i).meast/100.);
+    ydash = m*veg_all(i).meast/100. + c;
+    vmnorth_dif = (sum((veg_all(i).mnorth/100.-ymean)^2));
+    if (vmnorth_dif <= 0) continue;
+    rsq = (sum((ydash-ymean)^2))/vmnorth_dif;
+    rsq_all(i) = rsq;
+  }
+  return rsq_all;
+}
+
+    
