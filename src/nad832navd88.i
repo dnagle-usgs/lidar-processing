@@ -228,7 +228,7 @@ func nad832navd88(data_in, gdata_dir=, geoid_version=) {
 
     // finding the 3x3 grid points for the interpolation
     f1=f2=f3=f4=f5=f6=f7=f8=f9=array(double, numberof(xx));
-    for (j=1;j<numberof(xx);j++) {
+    for (j=1;j<=numberof(xx);j++) {
          f1(j) = gdata(icoln(j)-mnicoln,irown(j)-mnirown);
          f2(j) = gdata(icoln(j)-mnicoln+1,irown(j)-mnirown);
          f3(j) = gdata(icoln(j)-mnicoln+2,irown(j)-mnirown);
