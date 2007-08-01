@@ -1474,7 +1474,7 @@ func clean_lfpw (lfpw, beimg=, thresh=, min_elv=, max_elv=) {
   return lfpw_new
  }
 
-func compare_mets(outveg1, mets1, outveg2, mets2, idx=, outwin=, inwin=, mselect=) {
+func compare_mets(outveg1, mets1, outveg2, mets2, idx=, outwin=, inwin=, mselect=, interactive=) {
 /* DOCUMENT compare_mets(outveg1, mets1, outveg2, mets2, idx=, win=)
    This function compares the vegetation metrics from 2 diff surveys.
 	amar nayegandhi 03/25/05.
@@ -1494,7 +1494,8 @@ func compare_mets(outveg1, mets1, outveg2, mets2, idx=, outwin=, inwin=, mselect
 
   extern idx1, idx2;
   if (is_void(idx)) idx = 1;
-  if (is_void(win)) win = 1;
+  if (is_void(inwin)) inwin = window();
+   window, inwin;
   
   // make sure the grid cells are the same size
   xbin1 = outveg1(2,1).east - outveg1(1,1).east;
@@ -1514,7 +1515,7 @@ func compare_mets(outveg1, mets1, outveg2, mets2, idx=, outwin=, inwin=, mselect
   xbin = xbin1; ybin = ybin1;
   if (xbin == ybin) bin = xbin;
 
-  if (mselect) {
+  if (mselect==1) {
    // select rectangular region in window, inwin;
    window, inwin;
    m = mouse(-1,1);
@@ -1523,8 +1524,24 @@ func compare_mets(outveg1, mets1, outveg2, mets2, idx=, outwin=, inwin=, mselect
    maxeast = max(m(1),m(3));
    minnorth = min(m(2),m(4));
    maxnorth = max(m(2),m(4));
-  } else { 
+   idx1 = where((outveg1.east > mineast) & (outveg1.east < maxeast) & (outveg1.north > minnorth) & (outveg1.north < maxnorth));
+   idx2 = where((outveg2.east > mineast) & (outveg2.east < maxeast) & (outveg2.north > minnorth) & (outveg2.north < maxnorth));
+  } 
+
+  if (mselect==2) { // use pip
+    ply = getPoly();
+    box = boundBox(ply);
+    box_pts1 = ptsInBox(box*100., outveg1.east, outveg1.north);
+    if (!is_array(box_pts1)) return;
+    poly_pts1 = testPoly(ply*100., outveg1.east(box_pts1), outveg1.north(box_pts1));
+    idx1 = box_pts1(poly_pts1);
+    box_pts2 = ptsInBox(box*100., outveg2.east, outveg2.north);
+    if (!is_array(box_pts2)) return;
+    poly_pts2 = testPoly(ply*100., outveg2.east(box_pts2), outveg2.north(box_pts2));
+    idx2 = box_pts2(poly_pts2);
+  }
    
+  if (!mselect) { // use extents of data set as boundaries
   // now find the common area for both missions
   mineast1 = min(outveg1.east);
   minnorth1 = min(outveg1.north);
@@ -1540,10 +1557,10 @@ func compare_mets(outveg1, mets1, outveg2, mets2, idx=, outwin=, inwin=, mselect
   maxeast = min(maxeast1,maxeast2);
   minnorth = max(minnorth1,minnorth2);
   maxnorth = min(maxnorth1, maxnorth2);
-  }
-
   idx1 = where((outveg1.east > mineast) & (outveg1.east < maxeast) & (outveg1.north > minnorth) & (outveg1.north < maxnorth));
   idx2 = where((outveg2.east > mineast) & (outveg2.east < maxeast) & (outveg2.north > minnorth) & (outveg2.north < maxnorth));
+  }
+
 
   if (numberof(idx1) == numberof(idx2)) {
     mets1 = mets1(,idx1);
@@ -1705,13 +1722,16 @@ func plot_compared_metrics(outmets, mets1, mets2, nelems1=, nelems2=, nelems_min
   // find standard deviation
   std1 = sqrt(sum((diff1-avge)^2)/(numberof(diff1)-1));
   write, format="standard deviation of mean = %5.3f\n", std1;
+  // find percentage of data within 2 std devs of mean
+  nidx = numberof(where((diff1 >= -2*std1) & (diff1 <= 2*std1)));
+  write, format="Percentage of points within 2 standard deviations of mean = %4.2f\n",(100.0*nidx)/numberof(diff1);
   window, win; fma;
-  plmk, mets1(idx,), mets2(idx,), marker=4, msize=0.05, color="blue";
+  plmk, mets2(idx,), mets1(idx,), marker=4, msize=0.05, color="blue";
   plg, lmts, lmts, width=4, type=2;
   plg, yp, xp, color="red", width=4.0;
   plg, lmts+2*std1, lmts, type=2, width=3.5
   plg, lmts-2*std1, lmts, type=2, width=3.5
-  xytitles, "TB 20020212 Data ", "TB 20020211 Data ";
+  xytitles, "20030211 Data ", "20030212 Data ";
   pltitle, title;
   limits, lmts(1), lmts(2), lmts(1), lmts(2);
 
@@ -1842,6 +1862,7 @@ func compare_waveform_divergence(outveg1, outveg2, outwin=, inwin=, mselect=, mi
 
  	if (numberof(idxa) != numberof(idxb)) continue;
 
+
 	a1 = a1(idxa); 
 	a1n = a1n(idxa);
 	a2 = a2(idxa);
@@ -1849,6 +1870,11 @@ func compare_waveform_divergence(outveg1, outveg2, outwin=, inwin=, mselect=, mi
 	b1 = b1(idxb); 
 	b1n = b1n(idxb);
 	b2 = b2(idxb);
+
+ 	idx0 = where(a1n == 0);
+	if (is_array(idx0)) continue;
+ 	idx0 = where(b1n == 0);
+	if (is_array(idx0)) continue;
 
 	// now compare using JS divergence
 	a = a1*1.0/a1n;
