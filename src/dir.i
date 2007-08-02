@@ -1,6 +1,7 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
 write, "$Id$";
 require, "general.i";
+require, "string.i";
 
 func split_path( fn, idx, ext= ) {
 /* DOCUMENT split_path(fn,n, ext=);
@@ -59,7 +60,7 @@ func test_extension( fname, ext ) {
 func lsfiles(dir, glob=, ext=) {
 /* DOCUMENT lsfiles(directory_name, glob=, ext=)
    
-   List DIRECTORY_NAME. The return value FILES is an array of strings or "";
+   List DIRECTORY_NAME. The return value FILES is an array of strings or [];
    the order of the filenames is unspecified; it does not contain "." or "..";
    it does not contain the names of subdirectories.
    
@@ -83,7 +84,7 @@ func lsfiles(dir, glob=, ext=) {
       if(numberof(w))
          dirs = dirs(w);
       else
-         dirs = "";
+         dirs = [];
    }
    return dirs;
 }

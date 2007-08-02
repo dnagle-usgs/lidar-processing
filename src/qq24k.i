@@ -1,0 +1,387 @@
+/* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent expandtab: */
+write, "$Id$";
+require, "dir.i";
+require, "ll2utm.i";
+require, "set.i";
+
+local qq24k_i;
+/* DOCUMENT qq24k_i
+
+   Functions for the CLICK 24k Quarter-Quad tiling scheme.
+
+      calc24qq
+      get_conusqq_data
+      get_utm_qqcodes
+      qq_segment_pbds_recursively
+      qq_segment_pbd
+      qq_merge_pbds
+      batch_2k_to_qq
+
+   Structs defined:
+
+      CONUSQQ
+*/
+
+struct CONUSQQ {
+   string   codeqq;
+   double   lat;
+   double   lon;
+   string   name24k;
+   string   state24k;
+   string   code24k;
+   int      utmzone;
+   string   nedquad;
+}
+
+func calc24qq(lat, lon) {
+/* DOCUMENT qq = calc24qq(lat, lon)
+
+   Provides the 24k Quarter-Quad code as per the system used by CLICK. The lat
+   and lon values should be the southeast corner of the tile. Quarter-quads are
+   each 1/16 of a degree in width and height. They are referenced on the NAD83
+   Datum.
+
+   These codes have the following structure:
+
+      AAOOOaoq
+
+   Where
+   
+      AA is the positive whole number component of the latitude.
+
+      OOO is the positive whole number component of the longitude (zero-padded
+         to a width of 3).
+
+      a is an alpha character a-h designating which quad in the degree, where
+         a is closest to 0 minutes and h is closest to the next full degree.
+
+      o is a numeral 1-8 designating which quad in the degree, where 1 is
+         closest to 0 minutes and 8 is closest to the next full degree.
+
+      q is an alpha character a-d designating which quarter in the quad, where
+         a is SE, b is NE, c is NW, and d is SW.
+   
+   For example, 47104h2c means:
+
+      47 - 47 degrees latitude
+      104 - 104 degrees longitude
+      
+      The section is in the degree range starting 47N 104W.
+      
+      h - h is the 8th in sequence, so it's the last section and would start at
+         7/8 of a degree, or 0.875
+      2 - 2 is the 2nd in sequence, so it's the 2nd section and would start at
+         1/8 of a degree, or 0.125
+      
+      The quad's SE corner is 47.875N, 104.125W.
+
+      c - c is the NW corner, which means we must add 1/16 degree to both N and
+         W, or 0.0625 to each.
+
+      The quarter-quad's SE corner is 47.9375N, 104.1875W.
+
+   Correspondingly, calc24qq(24.9375, -104.1875) results in "47104h2c".
+
+   These codes are only valid for locations with positive latitude and negative
+      longitude.
+   
+   Parameters:
+
+      lat, lon: Must be in decimal degree format. May be a single value each or
+         an array of values each. Must be in the NAD83 projection, or
+         equivalent.
+
+   Returns:
+
+      A string or array of strings containing the codes.
+
+   See also: get_utm_qqcodes get_conusqq_data qq_segment_pbd
+*/
+   if(numberof(where(lat < 0)))
+      error, "Latitude values must be positive.";
+   if(numberof(where(lon > 0)))
+      error, "Longitude values must be negative.";
+   dlat = int(abs(lat));
+   dlon = int(abs(lon));
+   
+   flat = abs(lat) - dlat;
+   flon = abs(lon) - dlon;
+   
+   qlat = int(flat * 8.0) + 1;
+   qlon = int(flon * 8.0) + 1;
+
+   qq = int(2 * (flat * 16 % 2) + (flon * 16 % 2) + 1);
+   
+   alat = ["a", "b", "c", "d", "e", "f", "g", "h"];
+   aqq = ["a", "d", "b", "c"];
+
+   return swrite(format="%02d%03d%s%d%s", dlat, dlon, alat(qlat), qlon, aqq(qq));
+}
+
+func get_conusqq_data(void) {
+/* DOCUMENT get_conusqq_data()
+   
+   Loads and returns the CONUS quarter quad data from ../CONUSQQ/conusqq.pbd.
+   This file can be downloaded from
+
+      lidar.net:/mnt/alps/eaarl/tarfiles/CONUSQQ/conusqq.pbd
+
+   It should be placed in the directory eaarl/lidar-processing/CONUSQQ/, which
+   makes its relative path ../CONUSQQ/ from the perspective of Ytk (when run
+   from lidar-processing/src).
+
+   This data was collected from a shapefile provided by Jason Stoker of the
+   USGS.  It uses a quarter quad tile scheme as described in calc24qq. This
+   data provides additional information for each tile.
+
+   The return data is an array of CONUSQQ.
+
+   See also: calc24qq
+*/
+   fname = "../CONUSQQ/conusqq.pbd";
+   if(!open(fname,"r",1)) {
+      message = "The conus quarter-quad data is not available. Please download it from lidar.net:/mnt/alps/eaarl/tarfiles/CONUSQQ/conusqq.pbd and place it in the directory eaarl/lidar-processing/CONUSQQ/."
+      tkcmd, "MessageDlg .conusqqerror -type ok -icon error -title {Data not available} -message {" + message + "}"
+      write, format="%s\n", message;
+   } else {
+      restore, openb(fname), conusqq;
+      return conusqq;
+   }
+}
+
+func get_utm_qqcodes(north, east, zone) {
+/* DOCUMENT qq = get_utm_qqcodes(north, east, zone)
+
+   For a set of UTM northings, eastings, and zones, this will calculate
+   each coordinate's quarter-quad code name and return an array of strings
+   that correspond them.
+
+   See also: calc24qq qq_segment_pbd
+*/
+   // First, convert the coordinates to lat/lon
+   ll = utm2ll(north, east, zone);
+   lat = ll(,2);
+   lon = ll(,1);
+   ll = []; // free memory
+
+   // Then, find the quarter-quad corner for the points
+   lat = int(lat / .0625) * 0.0625;
+   lon = int(lon / .0625) * 0.0625;
+
+   // calc24qq does the rest
+   return calc24qq(lat, lon);
+}
+
+func qq_segment_pbds_recursively(sdir, odir, glob=, mode=) {
+/* DOCUMENT qq_segment_pbds_recursively, sdir, odir, glob=, mode=
+
+   Rescurses through sdir, finding all files that match glob, and segments each
+   one into odir.
+
+   Parameters:
+
+      sdir: The source directory containing pbd's. They must be in the standard
+         2k by 2k format (t_e###_n###_ZZ_etc.)
+
+      odir: The output directory, where the segmented files should go.
+
+   Options:
+
+      glob= Specifies which files to segment by a glob pattern. Defaults to
+         "*.pbd" (all pbds).
+
+      mode= The type of EAARL data being used. Must be 1, 2, or 3 as follows:
+         1 = first surface (default)
+         2 = bathy
+         3 = bare earth
+
+   See also: qq_segment_pbd batch_2k_to_qq qq_merge_pbds
+*/
+   default, mode, 1;
+   if(mode < 1 || mode > 3)
+      error, "Invalid mode.";
+   fix_dir, sdir;
+   fix_dir, odir;
+   default, glob, "*.pbd";
+
+   files = lsfiles(sdir, glob=glob);
+   for(i = 1; i<= numberof(files); i++)
+      qq_segment_pbd, sdir+files(i), odir, mode=mode;
+
+   dirs = lsdirs(sdir);
+   for(i = 1; i<= numberof(dirs); i++)
+      qq_segment_pbds_recursively, sdir+dirs(i), odir, glob=glob, mode=mode;
+}
+
+func qq_segment_pbd(fname, odir, zone=, mode=) {
+/* DOCUMENT qq_segment_pbd, fname, odir, zone=, mode=
+
+   The pbd given by fname will be segmented into separate files for each
+   quarter-quad present in the data.
+
+   The created files will have the same filename as fname, but with their
+   quarter-quad code prepended. So fname="file.pbd" might result in
+   "48117h4c_file.pbd".
+
+   Parameters:
+
+      fname: The *.pbd file to process, containing EAARL data.
+
+      odir: The output directory to which the segmented files will be written.
+
+   Options:
+   
+      zone: The UTM zone of the data. If not provided, it will parse it from
+         the filename (must be formatted as t_n###_e###_ZZ_etc where ZZ is the
+         zone.)
+
+      mode= The type of EAARL data being used. Must be 1, 2, or 3 as follows:
+         1 = first surface (default)
+         2 = bathy
+         3 = bare earth
+
+   See also: qq_segment_pbds_recursively qq_merge_pbds
+*/
+   default, mode, 1;
+   if(mode == 1 || mode == 2) {
+      east = "east";
+      north = "north";
+   } else if(mode == 3) {
+      east = "least";
+      north = "lnorth";
+   } else {
+      error, "Invalid mode.";
+   }
+
+   fix_dir, odir;
+   fn = split_path(fname, 0)(0);
+   default, zone, atoi(strpart(fn,strword(fn, "_", 5))(4));
+   fn = [];
+
+   f = openb(fname);
+   restore, f, vname;
+   if(get_member(f,vname) == 0) exit; //?
+   data = get_member(f,vname);
+   close, f;
+
+   basefile = split_path(fname, 0)(0);
+   
+   orig = vname;
+   
+   qq = get_utm_qqcodes(get_member(data, north)/100.0,
+      get_member(data, east)/100.0, zone);
+   qcodes = set_remove_duplicates(qq);
+   
+   i = 1;
+   for(i = i; i <= numberof(qcodes); i++) {
+      vname = swrite(format="qq%s-%s", qcodes(i), orig);
+      vdata = data(where(qq == qcodes(i)));
+      f = createb(odir + qcodes(i) + "_" + basefile);
+      add_variable, f, -1, vname, structof(vdata), dimsof(vdata);
+      get_member(f, vname) = vdata;
+      save, f, vname;
+      close, f;
+   }
+}
+
+func qq_merge_pbds(idir, odir) {
+/* DOCUMENT qq_merge_pbds, idir, odir
+
+   This merges the quarter-quad data files in idir and writes the results
+   to odir. This is intended to be used over the results of qq_segment_pbd
+   after having run over multiple files.
+
+   Output files will be the quarter-quad code + ".pdb".
+
+   Parameters:
+
+      idir: The input directory.
+
+      odir: The output directory.
+
+   See also: batch_2k_to_qq qq_segment_pbds_recursively
+*/
+   fix_dir, idir;
+   fix_dir, odir;
+   infiles = lsfiles(idir, ext=".pbd");
+   qfiles = strpart(infiles, 1:8);
+   qcodes = set_remove_duplicates(qfiles);
+
+   for(i = 1; i <= numberof(qcodes); i++) {
+      vfiles = infiles(where(qfiles == qcodes(i)));
+      vdata = [];
+      for(j = 1; j <= numberof(vfiles); j++) {
+         f = openb(idir + vfiles(j));
+         restore, f, vname;
+         grow, vdata, get_member(f, vname);
+         close, f;
+      }
+      vname = "qq" + qcodes(i);
+      f = createb(odir + qcodes(i) + ".pbd");
+      add_variable, f, -1, vname, structof(vdata), dimsof(vdata);
+      get_member(f, vname) = vdata;
+      save, f, vname;
+      close, f;
+   }
+}
+
+func batch_2k_to_qq(src_dir, dest_dir, mode, seg_dir=, glob=) {
+/* DOCUMENT batch_2k_to_qq, src_dir, dest_dir, mode, seg_dir=, glob=
+   
+   Crawls through a directory structure of 2km x 2km EAARL tiles to generate
+   the corresponding quarter-quad tiles. Input and output are both pbd files.
+
+   Parameters:
+   
+      src_dir: The source directory. This should be the root directory of the
+         directory structure containing the EAARL 2kx2k tiles in pbd format
+         that need to be converted into quarter quad tiles.
+
+      dest_dir: The destination directory. The quarter quad pbd's will be
+         written here.
+
+      mode: The type of EAARL data being used. Must be 1, 2, or 3 as follows:
+         1 = first surface
+         2 = bathy
+         3 = bare earth
+
+   Options:
+      
+      seg_dir= The segmented directory. If set, this directory will contain the
+         interim files. Each pbd in the src_dir is segmented into a series of
+         pbds corresponding to the quarter quads, which are later collated into
+         single quarter quad files. Normally, a temp directory is used and is
+         deleted at the end of the process.
+
+      glob= The glob string to use. Narrows the criteria for inclusion in
+         src_dir. Default is "*.pbd".
+
+   See also: get_conusqq_data qq_segment_pbds_recursively qq_merge_pbds
+*/
+   if(mode < 1 || mode > 3)
+      error, "Invalid mode.";
+   seg_tmp = 0;
+   if(is_void(seg_dir)) {
+      seg_dir = mktempdir("batch2ktoqq");
+      seg_tmp = 1;
+   }
+   fix_dir, src_dir;
+   fix_dir, dest_dir;
+   fix_dir, seg_dir;
+   default, glob, "*.pbd";
+   
+   write, "Segmenting PBDs.";
+   qq_segment_pbds_recursively, src_dir, seg_dir, glob=glob, mode=mode;
+   write, "Merging PBDs.";
+   qq_merge_pbds, seg_dir, dest_dir;
+   
+   if(seg_tmp) {
+      files = lsfiles(seg_dir);
+      for(i = 1; i <= numberof(files); i++) {
+         remove, seg_dir+files(i);
+      }
+      rmdir, seg_dir;
+   }
+}
+
+
