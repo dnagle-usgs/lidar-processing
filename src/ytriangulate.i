@@ -26,7 +26,7 @@ TRUE = 1;
 EPSILON = 1e-6;
 
 
-func triangulate_xyz(file=, savefile=, data=, plot=, mode=, win=, distthresh=, dolimits=) {
+func triangulate_xyz(file=, savefile=, data=, plot=, mode=, win=, distthresh=, dolimits=, pal=) {
 /*DOCUMENT prepare_xyz(file=, savefile=, data=, plot=, mode=) 
   amar nayegandhi 01/05/03.
  */
@@ -127,7 +127,8 @@ func triangulate_xyz(file=, savefile=, data=, plot=, mode=, win=, distthresh=, d
     zz = z(,sum); zz = zz/3;
     n = array(int,numberof(zz))
     n(*) = 3
-    window, win; fma; 
+    window, win; fma;
+    if(pal != "") palette, pal;
     if (dolimits) {
         limits, square=1;
 	limits;
@@ -144,7 +145,7 @@ func triangulate_xyz(file=, savefile=, data=, plot=, mode=, win=, distthresh=, d
   return v;
 }
 
-func plot_triag_mesh(tr,pxyz,edges=,win=,cmin=,cmax=) {
+func plot_triag_mesh(tr,pxyz,edges=,win=,cmin=,cmax=,pal=) {
 /*DOCUMENT plot_triag_mesh(tr,pxyz,edge=,win=)
   amar nayegandhi 01/09/04
 */
@@ -164,6 +165,7 @@ func plot_triag_mesh(tr,pxyz,edges=,win=,cmin=,cmax=) {
   n(*) = 3
 
   window, win; fma; plfp, zz, yy, xx, n, edges=edges, cmin=cmin, cmax=cmax;
+  if(pal != "") palette, pal;
   colorbar, min(zz), max(zz), units="m";
 }
 

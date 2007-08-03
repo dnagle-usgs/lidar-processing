@@ -6,7 +6,7 @@ write, "$Id$";
 require, "msort.i"
 require, "rcf.i"
 
-func rcf_triag_filter(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=, plottriag=, plottriagwin=, prefilter_min=, prefilter_max=, distthresh=, datawin=, wfs=) {
+func rcf_triag_filter(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=, plottriag=, plottriagwin=, prefilter_min=, prefilter_max=, distthresh=, datawin=, wfs=, plottriagpal=) {
   /* DOCUMENT rcf_triag_filter(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=)
  this function splits data sets into manageable portions and calls new_rcfilter_eaarl_pts that 
 uses the random consensus filter (rcf) and triangulation method to filter data.
@@ -31,6 +31,7 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
   tai = number of 'triangulation' iterations to be performed. Default = 3;
   plottriag = set to 1 to plot resulting triangulations for each iteration (default = 0)
   plottriagwin = windown number where triangulations should be plotted (default = 0)
+  plottriagpal = palette to use for the triangulation window
   distthresh = distance threshold that defines the max length of any side of a triangle 
 		(default: 100m) set to 0 if you don't want to use it.
   datawin = window number where unfiltered data is plotted (when interactive=1)
@@ -169,7 +170,7 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
        }
        if (!is_array(isp1)) continue;
        eaarl1 = eaarl(isp1);
-       xx = new_rcfilter_eaarl_pts(eaarl1, buf=buf, w=w, mode=mode, no_rcf=no_rcf, fbuf=fbuf, fw=fw, tw=tw, interactive=interactive, tai=tai, plottriag=plottriag, plottriagwin=plottriagwin);
+       xx = new_rcfilter_eaarl_pts(eaarl1, buf=buf, w=w, mode=mode, no_rcf=no_rcf, fbuf=fbuf, fw=fw, tw=tw, interactive=interactive, tai=tai, plottriag=plottriag, plottriagwin=plottriagwin, plottriagpal=plottriagpal);
        if (!is_array(xx)) continue;
        xx = xx(data_box(xx.east, xx.north,  spanx(k)*100, spanx(k+1)*100, spany(j)*100, spany(j+1)*100));
        eaarl_out(ecount+1:ecount+numberof(xx)) = xx;
@@ -177,7 +178,7 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
      }
    }
  } else {
-       eaarl_out = new_rcfilter_eaarl_pts(eaarl, buf=buf, w=w, mode=mode, no_rcf=no_rcf, fbuf=fbuf, fw=fw, tw=tw, interactive=interactive, tai=tai, plottriag=plottriag, plottriagwin=plottriagwin);
+       eaarl_out = new_rcfilter_eaarl_pts(eaarl, buf=buf, w=w, mode=mode, no_rcf=no_rcf, fbuf=fbuf, fw=fw, tw=tw, interactive=interactive, tai=tai, plottriag=plottriag, plottriagwin=plottriagwin, plottriagpal=plottriagpal);
        ecount = numberof(eaarl_out);
        if(! ecount) return;
  }
@@ -192,7 +193,7 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
  return eaarl_out;    
 }
    
-func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=, plottriag=, plottriagwin=) {
+func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=, plottriag=, plottriagwin=, plottriagpal=) {
   /* DOCUMENT new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=)
  this function uses the random consensus filter (rcf) and triangulation method to filter data.
  
@@ -216,6 +217,7 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
   tai = number of 'triangulation' iterations to be performed. Default = 3;
   plottriag = set to 1 to plot resulting triangulations for each iteration (default = 0)
   plottriagwin = windown number where triangulations should be plotted (default = 0)
+  plottriagpal = palette to use for plottriagwin (default: no palette command issued)
    OUTPUT:
     rcf'd data array of the same type as the 'eaarl' data array.
 
@@ -480,8 +482,9 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
   new_eaarl_all = grow(new_eaarl_all(dupidx),new_eaarl_all(0));
   //write, format="number of new_eaarl_all = %d when ai = %d\n",numberof(new_eaarl_all), ai;
 
-  verts = triangulate_xyz(data=new_eaarl_all, plot=plottriag, win=plottriagwin, mode=mode, distthresh=distthresh, dolimits=1);
   if (is_void(plottriagwin)) plottriagwin = 0;
+  if (is_void(plottriagpal)) plottriagpal = "";
+  verts = triangulate_xyz(data=new_eaarl_all, plot=plottriag, win=plottriagwin, pal=plottriagpal, mode=mode, distthresh=distthresh, dolimits=1);
  if (!is_array(verts)) continue;
 
   //endit;
@@ -497,6 +500,7 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
     if ((*pques)(1) == 's') return;
     while(((*pques)(1) == 'y') && (!done) && (!endit) ) {
       window, plottriagwin;
+      if(plottriagpal != "") palette, plottriagpal;
       m = mouse(1,0,"Left:Continue Selection; Middle=Pan/Zoom Mode; Right=Select similar; CTRL-Right=End Interactive Mode; CTRL-left=Retriangulate");
       while ((m(10) == 1) && (m(11) == 0)) {
  	tr = locate_triag_surface(pxyz, verts, win=plottriagwin, m=m, show=1);
@@ -585,7 +589,7 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
 	   }
 
   	   new_eaarl_all = new_eaarl_all(nea_idx);
-  	   verts = triangulate_xyz(data=new_eaarl_all, plot=plottriag, win=plottriagwin, mode=mode, distthresh=distthresh);
+  	   verts = triangulate_xyz(data=new_eaarl_all, plot=plottriag, win=plottriagwin, pal=plottriagpal, mode=mode, distthresh=distthresh);
 	   n = read(prompt="Continue Interactive Mode?(yes/no/done/end):",ques);
            pques = pointer(ques);
            if ((*pques)(1) == 'd') done = 1; //done iterating for this loop
@@ -605,7 +609,7 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
 	}
 
   	new_eaarl_all = new_eaarl_all(nea_idx);
-  	verts = triangulate_xyz(data=new_eaarl_all, plot=plottriag, win=plottriagwin, mode=mode, distthresh=distthresh);
+  	verts = triangulate_xyz(data=new_eaarl_all, plot=plottriag, win=plottriagwin, pal=plottriagpal, mode=mode, distthresh=distthresh);
      }
   }
 
@@ -664,6 +668,7 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
        isp1 = data_box(maybe_xyz(,1), maybe_xyz(,2),  spanx(k), spanx(k+1), spany(j), spany(j+1));
        if (plottriag) {
          window, plottriagwin;  plg, [spany(j), spany(j), spany(j+1), spany(j+1), spany(j)], [spanx(k), spanx(k+1), spanx(k+1), spanx(k), spanx(k)], color="red";
+         if(plottriagpal != "") palette, plottriagpal;
        }
        if (!is_array(isp1)) continue;
        maybe_sp = maybe_xyz(isp1,);
