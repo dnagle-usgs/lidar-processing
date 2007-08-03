@@ -57,6 +57,33 @@ func test_extension( fname, ext ) {
    return strglob(swrite(format="*%s", ext), fname);
 }
 
+func find(path, glob=) {
+/* DOCUMENT find(path, glob=)
+   
+   Finds all files in path that match the pattern(s) in glob. Glob defaults to
+   "*" and can be an array of patterns, in which case files that match any
+   pattern will be returned (it uses "or", not "and").
+
+   Full path and filename will be returned for each file.
+*/
+   fix_dir, path;
+   default, glob, "*";
+   glob=glob(:); // Seems to improve performance for some reason
+   results = subdirs = [];
+   files = lsdir(path, subdirs);
+   if(numberof(files)) {
+      idx = array(0, numberof(files));
+      for(i = 1; i <= numberof(glob); i++)
+         idx |= strglob(glob(i), files);
+      if(numberof(where(idx)))
+         results = path+files(where(idx));
+   }
+   if(numberof(subdirs))
+      for(i = 1; i <= numberof(subdirs); i++)
+         grow, results, find(path+subdirs(i), glob=glob(:));
+   return results;
+}
+
 func lsfiles(dir, glob=, ext=) {
 /* DOCUMENT lsfiles(directory_name, glob=, ext=)
    
@@ -79,7 +106,7 @@ func lsfiles(dir, glob=, ext=) {
    d = [];
    dirs = lsdir(dir);
    if(is_void(glob) && !is_void(ext)) glob = "*"+ext;
-   if(!is_void(glob)) {
+   if(!is_void(glob) && numberof(dirs)) {
       w = where(strglob(glob, dirs));
       if(numberof(w))
          dirs = dirs(w);

@@ -3,6 +3,7 @@ write, "$Id$";
 
 require, "data_rgn_selector.i";
 require, "spline.i";
+require, "ytime.i";
 
 local general_i;
 /* DOCUMENT general.i

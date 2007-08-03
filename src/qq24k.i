@@ -3,6 +3,7 @@ write, "$Id$";
 require, "dir.i";
 require, "ll2utm.i";
 require, "set.i";
+require, "general.i";
 
 local qq24k_i;
 /* DOCUMENT qq24k_i
@@ -12,7 +13,7 @@ local qq24k_i;
       calc24qq
       get_conusqq_data
       get_utm_qqcodes
-      qq_segment_pbds_recursively
+      qq_segment_pbds
       qq_segment_pbd
       qq_merge_pbds
       batch_2k_to_qq
@@ -172,8 +173,8 @@ func get_utm_qqcodes(north, east, zone) {
    return calc24qq(lat, lon);
 }
 
-func qq_segment_pbds_recursively(sdir, odir, glob=, mode=) {
-/* DOCUMENT qq_segment_pbds_recursively, sdir, odir, glob=, mode=
+func qq_segment_pbds(sdir, odir, glob=, mode=) {
+/* DOCUMENT qq_segment_pbds, sdir, odir, glob=, mode=
 
    Rescurses through sdir, finding all files that match glob, and segments each
    one into odir.
@@ -188,7 +189,8 @@ func qq_segment_pbds_recursively(sdir, odir, glob=, mode=) {
    Options:
 
       glob= Specifies which files to segment by a glob pattern. Defaults to
-         "*.pbd" (all pbds).
+         "*.pbd" (all pbds). May be an array of globs (any file matching any
+         glob will be used).
 
       mode= The type of EAARL data being used. Must be 1, 2, or 3 as follows:
          1 = first surface (default)
@@ -204,13 +206,14 @@ func qq_segment_pbds_recursively(sdir, odir, glob=, mode=) {
    fix_dir, odir;
    default, glob, "*.pbd";
 
-   files = lsfiles(sdir, glob=glob);
-   for(i = 1; i<= numberof(files); i++)
-      qq_segment_pbd, sdir+files(i), odir, mode=mode;
-
-   dirs = lsdirs(sdir);
-   for(i = 1; i<= numberof(dirs); i++)
-      qq_segment_pbds_recursively, sdir+dirs(i), odir, glob=glob, mode=mode;
+   files = find(sdir, glob=glob);
+   timer_init, tstamp;
+   for(i = 1; i<= numberof(files); i++) {
+      timer_tick, tstamp, i, numberof(files),
+         swrite(format=" * Segmenting %s [%i/%i]      ",
+         split_path(files(i),0)(0), i, numberof(files));
+      qq_segment_pbd, files(i), odir, mode=mode;
+   }
 }
 
 func qq_segment_pbd(fname, odir, zone=, mode=) {
@@ -240,7 +243,7 @@ func qq_segment_pbd(fname, odir, zone=, mode=) {
          2 = bathy
          3 = bare earth
 
-   See also: qq_segment_pbds_recursively qq_merge_pbds
+   See also: qq_segment_pbds qq_merge_pbds
 */
    default, mode, 1;
    if(mode == 1 || mode == 2) {
@@ -299,11 +302,11 @@ func qq_merge_pbds(idir, odir) {
 
       odir: The output directory.
 
-   See also: batch_2k_to_qq qq_segment_pbds_recursively
+   See also: batch_2k_to_qq qq_segment_pbds
 */
    fix_dir, idir;
    fix_dir, odir;
-   infiles = lsfiles(idir, ext=".pbd");
+   infiles = lsfiles(idir, glob="*.pbd");
    qfiles = strpart(infiles, 1:8);
    qcodes = set_remove_duplicates(qfiles);
 
@@ -316,6 +319,7 @@ func qq_merge_pbds(idir, odir) {
          grow, vdata, get_member(f, vname);
          close, f;
       }
+      vdata = vdata(sort(vdata.soe));
       vname = "qq" + qcodes(i);
       f = createb(odir + qcodes(i) + ".pbd");
       add_variable, f, -1, vname, structof(vdata), dimsof(vdata);
@@ -356,7 +360,7 @@ func batch_2k_to_qq(src_dir, dest_dir, mode, seg_dir=, glob=) {
       glob= The glob string to use. Narrows the criteria for inclusion in
          src_dir. Default is "*.pbd".
 
-   See also: get_conusqq_data qq_segment_pbds_recursively qq_merge_pbds
+   See also: get_conusqq_data qq_segment_pbds qq_merge_pbds
 */
    if(mode < 1 || mode > 3)
       error, "Invalid mode.";
@@ -371,7 +375,7 @@ func batch_2k_to_qq(src_dir, dest_dir, mode, seg_dir=, glob=) {
    default, glob, "*.pbd";
    
    write, "Segmenting PBDs.";
-   qq_segment_pbds_recursively, src_dir, seg_dir, glob=glob, mode=mode;
+   qq_segment_pbds, src_dir, seg_dir, glob=glob, mode=mode;
    write, "Merging PBDs.";
    qq_merge_pbds, seg_dir, dest_dir;
    
