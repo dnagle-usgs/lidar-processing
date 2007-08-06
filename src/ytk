@@ -286,9 +286,11 @@ expect ">"
 exp_send "_ytk = 1\r"
 expect ">"
 exp_send "Y_SITE\r"
-expect "\r*>"
+expect -re {"(.*)"}
+set Y_SITE $expect_out(1,string)
+expect ">"
 #set Y_SITE  [ lindex [ split [ string trim $expect_out(0,string) "\r\n" ] "\"" ] 1 ]
-set Y_SITE /[join [lrange [split $_ytk(splash_gif) \/ ] 1 end-2] \/]
+#set Y_SITE /[join [lrange [split $_ytk(splash_gif) \/ ] 1 end-2] \/]
 
 set p "./"
 if { [ file exists "$Y_SITE//contrib/ytk.i" ] == 0 } {
