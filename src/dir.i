@@ -2,9 +2,70 @@
 write, "$Id$";
 require, "general.i";
 require, "string.i";
+require, "yeti.i";
+require, "yeti_regex.i";
+
+func file_dirname(fn) {
+/* DOCUMENT file_dirname(fn)
+   Returns everything in the path except the last part. Similar to Tcl's "file
+   dirname". Works on arrays.
+
+   See also: file_tail file_extension file_rootname split_path
+*/
+   match = [];
+   regmatch, "(.*)/[^/]*", fn, , match;
+   return match;
+}
+
+func file_tail(fn) {
+/* DOCUMENT file_tail(fn)
+   Returns the last part of the path (the file's name). Similar to Tcl's "file
+   tail". Works on arrays.
+
+   See also: file_dirname file_extension file_rootname split_path
+*/
+   slash = match = [];
+   regmatch, ".*(/)([^/]*)", fn, , slash, match;
+   w = where(!strlen(match) & !strlen(slash));
+   if(numberof(w))
+      match(w) = fn(w);
+   return match;
+}
+
+func file_extension(fn) {
+/* DOCUMENT file_extension(fn)
+   Returns all characters in fn after and including the last dot in the last
+   element in name, or the empty string. Similar to Tcl's "file extension".
+   Works on arrays.
+
+   See also: file_dirname file_tail file_rootname split_path
+*/
+   match = [];
+   regmatch, ".*(\\..*)", file_tail(fn), , match;
+   return match;
+}
+
+func file_rootname(fn) {
+/* DOCUMENT file_rootname(fn)
+   Returns all characters in fn up to but not including the last "." character
+   in the last component of fn. If it doesn't contain a dot, then it returns
+   fn. Similar to Tcl's "file rootname". Works on arrays.
+
+   See also: dir_dirname file_tail file_extension split_path
+   */
+   match = dot = [];
+   regmatch, "(.*)(\\.)[^\\./]*", fn, , match, dot;
+   w = where(!strlen(match) & !strlen(dot));
+   if(numberof(w))
+      match(w) = fn(w);
+   return match;
+}
 
 func split_path( fn, idx, ext= ) {
 /* DOCUMENT split_path(fn,n, ext=);
+   Splits paths in various ways. Only works on scalars.
+
+   See also: file_tail file_dirname file_extension file_rootname
 
  Examples:
 
@@ -68,7 +129,8 @@ func find(path, glob=) {
 */
    fix_dir, path;
    default, glob, "*";
-   glob=glob(:); // Seems to improve performance for some reason
+   if(numberof(glob) > 1)
+      glob=glob(:); // Seems to improve performance for some reason
    results = subdirs = [];
    files = lsdir(path, subdirs);
    if(numberof(files)) {
@@ -80,7 +142,7 @@ func find(path, glob=) {
    }
    if(numberof(subdirs))
       for(i = 1; i <= numberof(subdirs); i++)
-         grow, results, find(path+subdirs(i), glob=glob(:));
+         grow, results, find(path+subdirs(i), glob=glob);
    return results;
 }
 
@@ -106,12 +168,14 @@ func lsfiles(dir, glob=, ext=) {
    d = [];
    dirs = lsdir(dir);
    if(is_void(glob) && !is_void(ext)) glob = "*"+ext;
-   if(!is_void(glob) && numberof(dirs)) {
+   if(!is_void(glob) && numberof(dirs) && typeof(dirs) == "string") {
       w = where(strglob(glob, dirs));
       if(numberof(w))
          dirs = dirs(w);
       else
          dirs = [];
+   } else {
+      dirs = [];
    }
    return dirs;
 }

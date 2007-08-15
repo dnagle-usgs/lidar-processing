@@ -1,5 +1,6 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
 write, "$Id$";
+require, "general.i";
 
 local set_i;
 /* DOCUMENT set_i
@@ -13,14 +14,14 @@ local set_i;
       set_cartesian_product
       set_remove_dupicates
    
-   Note that a set's complement can be obtained with set_difference
-   (see set_difference).
+   Note that a set's complement can be obtained with set_difference (see
+   set_difference).
 
-   All set functions assume that the arrays passed are one-dimensional
-   and have no repeated elements (except set_remove_duplicates, which
-   removes the repeated elements). The returned arrays will not have
-   any guaranteed ordering for the elements, except where noted. Empty
-   sets are permissible as [].
+   All set functions assume that the arrays passed are one-dimensional and have
+   no repeated elements (except set_remove_duplicates, which removes the
+   repeated elements). The returned arrays will not have any guaranteed
+   ordering for the elements, except where noted. Empty sets are permissible as
+   [].
 */
 
 func set_intersection(A, B, idx=) {
@@ -28,28 +29,33 @@ func set_intersection(A, B, idx=) {
 
    Returns the intersection of the sets represented by A and B.
 
-   The intersection of A and B is the set of all elements that occur
-   in A that also occur in B.
+   The intersection of A and B is the set of all elements that occur in A that
+   also occur in B.
 
-   The elements of set_intersection(a,b) and set_intersection(b,a)
-   will be the same, but the arrays will not be ordered the same.
+   The elements of set_intersection(a,b) and set_intersection(b,a) will be the
+   same, but the arrays will not be ordered the same.
 
    Options:
 
-      idx= Set to 1 and the index of the intersection set into A will
-         be returned instead of the elements.
+      idx= Set to 1 and the index of the intersection set into A will be
+         returned instead of the elements.
 */
+   default, idx, 0;
+
+   // Trivial cases
    if(! numberof(A) || ! numberof(B))
       return [];
+
+   // If A << B, then we'll get better performance if we switch the operands
+   // (But we can only do that if idx=0)
+   if(!idx && numberof(A) < numberof(B))
+      return set_intersection(B, A);
+
    C = array(0, numberof(A));
-   for(i = 1; i <= numberof(A); i++) {
-      for(j = 1; j <= numberof(B); j++) {
-         if(A(i) == B(j)) {
-            C(i) = 1;
-         }
-      }
-   }
+   for(i = 1; i <= numberof(B); i++)
+      C |= (A == B(i));
    index = where(C);
+
    if(idx)
       return index;
    if(numberof(index))
@@ -63,26 +69,31 @@ func set_difference(A, B, idx=) {
 
    Returns the difference of the sets represented by A and B.
    
-   The difference of A - B is the set of all elements that occur
-   in A that do not occur in B.
+   The difference of A - B is the set of all elements that occur in A that do
+   not occur in B.
 
-   The elements of set_difference(a,b) and set_difference(b,a)
-   will usually be completely different.
+   The elements of set_difference(a,b) and set_difference(b,a) will usually be
+   completely different.
 
-   To obtain a set S's complement when S is a subset of X,
-   use set_difference(X,S).
+   To obtain a set S's complement when S is a subset of X, use
+   set_difference(X,S).
 
    Options:
 
-      idx= Set to 1 and the index of the difference set into A will
-         be returned instead of the elements.
+      idx= Set to 1 and the index of the difference set into A will be returned
+         instead of the elements.
 */
-   if(! numberof(A) || ! numberof(B))
-      return A;
+   default, idx, 0;
+
+   // Trivial cases
+   if(! numberof(A))
+      return [];
+   if(! numberof(B))
+      return idx ? indgen(numberof(A)) : A;
+
    C = array(1, numberof(A));
-   for(i = 1; i <= numberof(B); i++) {
+   for(i = 1; i <= numberof(B); i++)
       C &= (A != B(i));
-   }
    index = where(C);
 
    if(idx)
@@ -98,26 +109,14 @@ func set_symmetric_difference(A, B) {
 
    Returns the symmetric difference of the sets represented by A and B.
 
-   The symmetric difference of A and B is all elements that occur in
-   A or that occur in B, but that do not occur in both A and B.
+   The symmetric difference of A and B is all elements that occur in A or that
+   occur in B, but that do not occur in both A and B.
    
    The elements of set_symmetric_difference(a,b) and
-   set_symmetric_difference(b,a) will be the same, but the arrays will not
-   be ordered the same.
+   set_symmetric_difference(b,a) will be the same, but the arrays may not be
+   ordered the same.
 */
-   AA = set_difference(A, B);
-   BB = set_difference(B, A);
-
-   if(! numberof(BB))
-      return AA;
-   if(! numberof(AA))
-      return BB;
-
-   AB = array(A(1), numberof(AA) + numberof(BB));
-   AB(:numberof(AA)) = AA;
-   AB(numberof(AA)+1:) = BB;
-
-   return AB;
+   return grow(set_difference(A, B), set_difference(B, A));
 }
 
 func set_union(A, B) {
@@ -125,25 +124,13 @@ func set_union(A, B) {
 
    Returns the union of the sets represented by A and B.
 
-   The union of A and B is the set of all elements that occur
-   in A or in B. (Elements are not duplicated.)
+   The union of A and B is the set of all elements that occur in A or in B.
+   (Elements are not duplicated.)
 
-   The elements of set_union(a,b) and set_union(b,a) will be
-   the same, but the arrays will not be ordered the same.
+   The elements of set_union(a,b) and set_union(b,a) will be the same, but the
+   arrays may not be ordered the same.
 */
-   sd = set_symmetric_difference(A, B);
-   i  = set_intersection(A, B);
-
-   if(! numberof(sd))
-      return i;
-   if(! numberof(i))
-      return sd;
-
-   u = array(A(1), numberof(sd) + numberof(i));
-   u(:numberof(sd)) = sd;
-   u(numberof(sd)+1:) = i;
-   
-   return u;
+   return set_remove_duplicates(grow(A, B));
 }
 
 func set_cartesian_product(A, B) {
@@ -151,8 +138,8 @@ func set_cartesian_product(A, B) {
 
    Returns the cartesian product of A and B.
 
-   The cartesian product of A and B is the set of all ordered
-   pairs [X,Y] where X is a member of A and Y is a member of B.
+   The cartesian product of A and B is the set of all ordered pairs [X,Y] where
+   X is a member of A and Y is a member of B.
    
    The returned array will be two-dimensional.
    
@@ -169,35 +156,85 @@ func set_cartesian_product(A, B) {
    return C;
 }
 
-func set_remove_duplicates(A) {
-/* DOCUMENT set_remove_duplicates(A)
+func set_remove_duplicates(A, idx=, orig_order=, ret_sort=) {
+/* DOCUMENT set_remove_duplicates(A, idx=, orig_order=, ret_sort=)
 
-   Returns the set A with its duplicate elements removed. The
-   returned list will also be sorted.
+   Returns the set A with its duplicate elements removed. The returned list
+   will also be sorted.
+
+   If idx=1, then the indices will be returned rather than the values.
+
+   If orig_order=1, the results will be in the original array's ordering (by
+   first occurence of each unique item). However, this is much more expensive,
+   so do not use it unless it's needed.
+
+   If ret_sort=1, the indexes returned will be indices into A(sort(A)). Note
+   that ret_sort=1 implies idx=1 and orig_order=0. This can on occasion be
+   expensive, especially with large arrays of strings. Using ret_sort=0 is
+   always more efficient than sorting externally, since it incorporates a sort.
+
+   See also: unique (in ALPS, bathy_filter.i)
 */
+   default, idx, 0;
+   default, orig_order, 0;
+   default, ret_sort, 0;
+   if(ret_sort) {
+      idx = 1;
+      orig_order = 0;
+   }
+
+   // Trivial cases
    if(! numberof(A))
       return [];
    if(numberof(A) == 1)
-      return A;
+      return idx ? [1] : A;
 
-   // If we have a largish amount, try to reduce it some by hoping that
-   // some of the duplicates are adjacent -- otherwise, sort might take
-   // a very long time.
-   if(numberof(A) > 1000) {
-      remove = where(A(:-1) == A(2:));
-      keep = array(1, numberof(A));
-      if(numberof(remove))
-         keep(remove) = 0;
-      A = A(where(keep));
+   // Eliminate any dimensionality
+   A = A(*);
+
+   // The normal sort is fast, but non-deterministic. If the original order is
+   // required, we have to use the slower msort.
+   if(orig_order) {
+      require, "msort.i";
+      sorter = msort;
+   } else {
+      sorter = sort;
    }
-   
-   sorted = A(sort(A));
-   if(numberof(A) == 1)
-      return A;
-   remove = where(sorted(:-1) == sorted(2:));
-   keep = array(1, numberof(sorted));
-   if(numberof(remove))
-      keep(remove) = 0;
-   return sorted(where(keep));
-}
 
+   // Eliminate duplicates in the initial sequence. Valuable when there are a
+   // large number of items that take a long time to sort, especially with
+   // strings.
+   seq = where(grow([1n], A(:-1) != A(2:)));
+
+   // If there's only one item, we're done!
+   if(numberof(seq) == 1)
+      return idx ? seq : A(seq);
+
+   // Sort them
+   srt = sorter(A(seq));
+
+   // Eliminate duplicates in the sorted sequence
+   unq = where(grow([1n], A(seq)(srt)(:-1) != A(seq)(srt)(2:)));
+
+   // If they want it in original order, we have to sort the indices
+   if(orig_order)
+      res = sort(indgen(numberof(A))(seq)(srt)(unq));
+   // ... otherwise, we dummy it with a sequential list
+   else
+      res = indgen(numberof(unq));
+
+   if(ret_sort) {
+      inv = std = sort(A);
+      inv(std) = indgen(numberof(inv));
+      idx = 0;
+      A = inv;
+   }
+
+   // If they want indices, we want to index into an index list instead of A
+   A = idx ? indgen(numberof(A)) : A;
+
+   // If they want them in order for A(sort(A))...
+   A = ret_sort ? inv : A;
+
+   return A(seq)(srt)(unq)(orig);
+}

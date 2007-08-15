@@ -1,5 +1,7 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent expandtab: */
 write, "$Id$";
+require, "yeti.i";
+require, "yeti_regex.i";
 require, "dir.i";
 require, "ll2utm.i";
 require, "set.i";
@@ -216,8 +218,8 @@ func qq_segment_pbds(sdir, odir, glob=, mode=) {
    }
 }
 
-func qq_segment_pbd(fname, odir, zone=, mode=) {
-/* DOCUMENT qq_segment_pbd, fname, odir, zone=, mode=
+func qq_segment_pbd(fname, odir, zone=, mode=, remove_buffers=) {
+/* DOCUMENT qq_segment_pbd, fname, odir, zone=, mode=, remove_buffers=
 
    The pbd given by fname will be segmented into separate files for each
    quarter-quad present in the data.
@@ -243,9 +245,14 @@ func qq_segment_pbd(fname, odir, zone=, mode=) {
          2 = bathy
          3 = bare earth
 
+      remove_buffers= If set to 1, the data from each source file will be
+         constrained to its tile size. Otherwise (if 0), it will include all
+         data present.  The default is 1.
+
    See also: qq_segment_pbds qq_merge_pbds
 */
    default, mode, 1;
+   default, remove_buffers, 1;
    if(mode == 1 || mode == 2) {
       east = "east";
       north = "north";
@@ -268,9 +275,26 @@ func qq_segment_pbd(fname, odir, zone=, mode=) {
    close, f;
 
    basefile = split_path(fname, 0)(0);
+
+   regmatch, "^t_e([0-9]*)_n([0-9]*)_([0-9]*)", basefile, , e, n, z;
+   n = atoi(n);
+   e = atoi(e);
+   z = atoi(z);
+
+   if(remove_buffers) {
+      mask  = get_member(data, north) >= (n - 2000.0) * 100.0;
+      mask &= get_member(data, north) <=  n           * 100.0;
+      mask &= get_member(data, east ) >=  e           * 100.0;
+      mask &= get_member(data, east ) <= (e + 2000.0) * 100.0;
+      data = data(where(mask));
+      if(numberof(data) == 0) {
+         write, format="\n Problem: No data found after buffers removed. File:\n %s\n", fname;
+         return;
+      }
+   }
    
    orig = vname;
-   
+
    qq = get_utm_qqcodes(get_member(data, north)/100.0,
       get_member(data, east)/100.0, zone);
    qcodes = set_remove_duplicates(qq);

@@ -1,5 +1,6 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent expandtab: */
 write, "$Id$";
+require, "yeti.i";
 require, "plcm.i";
 require, "sel_file.i";
 require, "ll2utm.i";
@@ -248,15 +249,15 @@ func atm_to_alps(atm_raw, ymd) {
       write, "Serious problem encountered: No lat/lon info!";
    }
    
-   atm.elevation = atm_raw.elev;
+   atm.elevation = atm_raw.elev/10.0;
    atm.fint = atm_raw.pulse_refl;
    
    write, "Converting ATM passive lat/lon to UTM";
    idx = where(atm_raw.plat != 0 & atm_raw.plon != 0);
    if(numberof(idx)) {
       u = fll2utm(atm_raw(idx).plat/1000000.0, atm_raw(idx).plon/-1000000.0);
-      atm(idx).lnorth = int(u(1,) * 100);
-      atm(idx).least = int(u(2,) * 100);
+      atm(idx).lnorth = u(1,) * 100;
+      atm(idx).least  = u(2,) * 100;
    }
    atm.lint = atm_raw.psig;
 
@@ -273,8 +274,8 @@ func atm_to_alps(atm_raw, ymd) {
    return atm;
 }
 
-func atm_create_tiles(atm, dir, name=) {
-/* DOCUMENT atm_create_tiles, atm, dir, name=
+func atm_create_tiles(atm, dir, name=, buffer=) {
+/* DOCUMENT atm_create_tiles, atm, dir, name=, buffer=
 
    For a given array of ATM data (atm), this creates tiles in directory dir.
 
@@ -290,9 +291,13 @@ func atm_create_tiles(atm, dir, name=) {
          written. Defaults to "atm_raw". All strings also get "_qi.pbd"
          appended as well.
 
+      buffer= A buffer to add around each tile, in centimeters. Default is
+         20000 cm (200 m). Use buffer=0 to disable.
+
    See also: qi_to_tiles merge_qi_tiles atm_to_alps
 */
    default, name, "atm_raw";
+   default, buffer, 20000;
    fix_dir, dir;
    mkdir, dir;
    bad = atm.north == 0 | atm.east == 0;
@@ -310,13 +315,13 @@ func atm_create_tiles(atm, dir, name=) {
          maxin = int(ceil(max(atm_z.north)/1000000.0)*1000000);
          // Segment data into itiles, by northing then easting
          for(in = minin; in <= maxin; in += 1000000) {
-            w = where(atm_z.north > in - 1000000 & atm_z.north <= in);
+            w = where(atm_z.north > in - 1000000 - buffer & atm_z.north <= in + buffer);
             if(numberof(w)) {
                atm_in = atm_z(w);
                minie = int(floor(min(atm_in.east)/1000000.0)*1000000);
                maxie = int(floor(max(atm_in.east)/1000000.0)*1000000);
                for(ie = minie; ie <= maxie; ie += 1000000) {
-                  w = where(atm_in.east >= ie & atm_in.east < ie + 1000000);
+                  w = where(atm_in.east >= ie - buffer & atm_in.east < ie + 1000000 + buffer);
                   if(numberof(w)) {
                      atm_ie = atm_in(w);
                      itile = swrite(format="i_e%d_n%d_%d", ie/100, in/100, z);
@@ -325,19 +330,19 @@ func atm_create_tiles(atm, dir, name=) {
                      maxtn = int(ceil(max(atm_ie.north)/200000.0)*200000);
                      // Segment data into tiles, by northing then easting
                      for(tn = mintn; tn <= maxtn; tn += 200000) {
-                        w = where(atm_ie.north > tn - 1000000 & atm_ie.north <= tn);
+                        w = where(atm_ie.north > tn - 1000000 - buffer & atm_ie.north <= tn + buffer);
                         if(numberof(w)) {
                            atm_tn = atm_ie(w);
                            minte = int(floor(min(atm_tn.east)/200000.0)*200000);
                            maxte = int(floor(max(atm_tn.east)/200000.0)*200000);
                            for(te = minte; te <= maxte; te += 200000) {
-                              w = where(atm_tn.east >= te & atm_tn.east < te + 200000);
+                              w = where(atm_tn.east >= te - buffer & atm_tn.east < te + 200000 + buffer);
                               if(numberof(w)) {
                                  atm_te = atm_tn(w);
                                  ttile = swrite(format="t_e%d_n%d_%d", te/100, tn/100, z);
                                  tpath = ipath + ttile + "/";
                                  // Need better names here.
-                                 vname = swrite(format="%s_%s", ttile, name);
+                                 vname = swrite(format="e%d_n%d_%d_%s", te/100000, tn/100000, z, name);
                                  tfile = swrite(format="%s_%s_qi.pbd", ttile, name);
                                  write, format=" * Creating %s\n", tfile;
                                  mkdir, ipath;

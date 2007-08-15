@@ -710,3 +710,16 @@ func timer_tick(&tstamp, cur, cnt, msg) {
       }
    }
 }
+
+func strjoin(lst, sep) {
+/* DOCUMENT strjoin(lst, sep)
+   Returns a string created by joining together the elements of lst with sep.
+
+   Example: strjoin(["a", "b", "c"], "--") will return "a--b--c".
+
+   See also: string
+*/
+   return transpose([lst, array(sep, numberof(lst))])(*)(:-1)(sum);
+}
+
+
