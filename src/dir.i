@@ -2,8 +2,6 @@
 write, "$Id$";
 require, "general.i";
 require, "string.i";
-require, "yeti.i";
-require, "yeti_regex.i";
 
 func file_dirname(fn) {
 /* DOCUMENT file_dirname(fn)
@@ -12,6 +10,7 @@ func file_dirname(fn) {
 
    See also: file_tail file_extension file_rootname split_path
 */
+   require, "yeti_regex.i";
    match = [];
    regmatch, "(.*)/[^/]*", fn, , match;
    return match;
@@ -24,6 +23,7 @@ func file_tail(fn) {
 
    See also: file_dirname file_extension file_rootname split_path
 */
+   require, "yeti_regex.i";
    slash = match = [];
    regmatch, ".*(/)([^/]*)", fn, , slash, match;
    w = where(!strlen(match) & !strlen(slash));
@@ -40,6 +40,7 @@ func file_extension(fn) {
 
    See also: file_dirname file_tail file_rootname split_path
 */
+   require, "yeti_regex.i";
    match = [];
    regmatch, ".*(\\..*)", file_tail(fn), , match;
    return match;
@@ -53,6 +54,7 @@ func file_rootname(fn) {
 
    See also: dir_dirname file_tail file_extension split_path
    */
+   require, "yeti_regex.i";
    match = dot = [];
    regmatch, "(.*)(\\.)[^\\./]*", fn, , match, dot;
    w = where(!strlen(match) & !strlen(dot));
