@@ -675,6 +675,7 @@ if (is_void(remove_buffer)) remove_buffer=1;
      close, f;
      nx = numberof(outveg(,1));
      ny = numberof(outveg(1,));
+     nbins = long(2000/binsize + 1);
      if (remove_buffer) {
         // remove points outside of the actual tile area
         east = east*100;
@@ -684,6 +685,33 @@ if (is_void(remove_buffer)) remove_buffer=1;
            iidx = where((outveg.north(idx) >= north-200000) & (outveg.north(idx) <= north));
            fidx = idx(iidx);
         }
+        if (numberof(fidx) < (nbins^2)) {
+          // make sure the tile is complete 2k by 2k grid format
+          // make complete data tile array
+          northm = north/100.;
+          eastm = east/100.;
+          tile_array_east = span(eastm, eastm+2000, 401)(,-:1:401);
+          outveg_new = array(LFP_VEG, nbins, nbins);
+          mets_new = array(double,5,nbins, nbins);
+          outveg_new.east = 100*span(eastm, eastm+2000, nbins)(,-:1:nbins);
+          for (j=1;j<=nbins;j++) {
+            outveg_new(,j).north = (northm-2000 + (j-1)*binsize)*100;
+          }
+          for (j=1;j<=numberof(fidx);j++) {
+             j_fidx = where((outveg_new.east == outveg(fidx(j)).east) & (outveg_new.north == outveg(fidx(j)).north));
+             if (j%1000 == 0) write, format="%d of %d\r",j,numberof(fidx);
+             if (numberof(j_fidx) > 0) {
+                outveg_new(j_fidx) = outveg(fidx(j));
+                mets_new(,j_fidx) = mets(,fidx(j));
+             }
+          }
+          outveg = outveg_new;
+          mets = mets_new;
+          m_idx = where(mets(1,,) == 0);
+          mets(,m_idx) = -1000;
+          fidx = where(outveg.east > 0);
+        }
+     
      } else {
         fidx = where(outveg.east > 0);
      }
