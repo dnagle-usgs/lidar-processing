@@ -1,6 +1,6 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent expandtab: */
 write, "$Id$";
-require, "yeti.i";
+//require, "yeti.i"; // Shouldn't be needed at present
 require, "plcm.i";
 require, "sel_file.i";
 require, "ll2utm.i";

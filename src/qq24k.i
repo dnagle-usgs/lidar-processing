@@ -7,6 +7,11 @@ require, "ll2utm.i";
 require, "set.i";
 require, "general.i";
 
+/*
+This file requires Eric Thiébaut's Yeti package, available from:
+http://www-obs.univ-lyon1.fr/~thiebaut/yeti.html
+*/
+
 local qq24k_i;
 /* DOCUMENT qq24k_i
 
