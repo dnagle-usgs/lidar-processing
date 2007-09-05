@@ -9,6 +9,7 @@ write,"$Id$"
 
 cd, src_path
 require,  "pip.i"
+require,  "set.i"
 require,  "geo_bath.i" 
 require,  "read_yfile.i" 
 require,  "veg.i" 
