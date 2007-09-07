@@ -400,7 +400,7 @@ func append_transect_list(tlst, fs, rtn=) {
 }
 
 
-func reprocess_data_along_transect(new_pnav, outdir=, ofname_tag=, rtn= ) {
+func reprocess_data_along_transect(new_pnav, outdir=, ofname_tag=, rtn=, w= ) {
 /* DOCUMENT reprocess_data_along_transect(new_pnav, outdir=, ofname_tag= )
  Amar Nayegandhi Jan 2006
  This function reprocesses data along the transects defined by the transect_all array.
@@ -464,7 +464,7 @@ func reprocess_data_along_transect(new_pnav, outdir=, ofname_tag=, rtn= ) {
    data_re = data_re(idx);
    for (j=1;j<=numberof(coords_all(1,));j++) {
       // run the mtransect function on the each transect
-      trans_output = mtransect(data_re, rtn=rtn,recall=1-j);
+      trans_output = mtransect(data_re, rtn=rtn,recall=1-j,w=w);
       if (is_array(trans_output)) {
          // write out to a file
          // define output file name

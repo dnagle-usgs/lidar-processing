@@ -561,6 +561,11 @@ elevation was found. The elevations are binned to 1-meter.
 See also: R
 */
 
+  if ( is_void(fs_all) ) {
+    "fs_all doesnt have any data in it."
+    return;
+  }
+
   if ( is_void(binsize))
 	binsize = 10.0;
 

@@ -52,9 +52,11 @@ See also: RAST, cent
 
  extern max_sfc_sat, chn2_range_bias, chn3_range_bias;
 
+ // if (is_void(chn2_range_bias)) chn2_range_bias=0.36;
+ // if (is_void(chn3_range_bias)) chn3_range_bias=0.23;
+
  if (is_void(chn2_range_bias)) chn2_range_bias=0.36;
  if (is_void(chn3_range_bias)) chn3_range_bias=0.23;
-
 
  rv = array(float,4);			// return values
  if ( n == 0 ) return [];

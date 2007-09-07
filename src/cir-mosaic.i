@@ -190,7 +190,7 @@ func load_cir_mask( fn ) {
   n = read(f,format="%06s-%02d%02d%02d-%d", ds,hh,mm,ss,ms );
   if ( n == 0 ) break;
     sod = hh*3600+mm*60+ss;
-    cir_mask(sod) = ms;
+    cir_mask(sod) = sod;
  }
  write,format="Read %d CIR file names from: %s\n", i-1, fn
  close,f
@@ -290,8 +290,9 @@ Original W. Wright 5/6/06
 */
  extern jgwinfo, jgwfndate, cir_mask
  somd %= 86400
+ somd = int(somd);
  if ( is_void( cir_mask ) ) return -1;
- if ( !cir_mask(somd) ) return -2;
+ if ( !cir_mask(somd))  return -2;
  if ( jgwinfo(1) =="") return -3;
  if ( jgwinfo(2) =="") return -4;
 
@@ -300,10 +301,10 @@ Original W. Wright 5/6/06
    return a;
  }
  hms = sod2hms(somd);
- ofn=swrite(format="%s/%s-%02d%02d%02d-%03d-cir.jgw", 
-    jgwinfo(1),jgwinfo(2), hms(1),hms(2),hms(3), cir_mask(somd) );
- jpg_ofn=swrite(format="%s-%02d%02d%02d-%03d-cir.jpg", 
-    jgwinfo(2), hms(1),hms(2),hms(3), cir_mask(somd) );
+ ofn=swrite(format="%s/%s-%02d%02d%02d-cir.jgw", 
+    jgwinfo(1),jgwinfo(2), hms(1),hms(2),hms(3));
+ jpg_ofn=swrite(format="%s-%02d%02d%02d-cir.jpg", 
+    jgwinfo(2), hms(1),hms(2),hms(3));
 // write,format="%s\n", ofn
  of = open(ofn,"w");
  write,of,format="%9.6f \n", a(1:4)    
