@@ -17,6 +17,7 @@ func batch_pbd2las(con_dir, searchstr=, proj_id=, v_maj=, v_min=, cday=, cyear=,
 
         typ, int, type of data set, 1 = first surface
                                     2 = bare earth
+                                    3 = bathymetry
 
         zone_nbr, int, UTM Zone number.  Vars nad83, wgs84N, wgs84S tell which datum the data is in.  Make
                 sure that you set whichever datum that it is in equal to 1.  It defaults to nad83 if a zone number
@@ -70,7 +71,7 @@ func pbd2las(fname, proj_id=, v_maj=, v_min=, cday=, cyear=, typ=, zone_nbr=, na
 
         typ, int, type of data set, 1 = first surface
                                     2 = bare earth
-
+                                    3 = bathymetry    
 
         zone_nbr, int, UTM Zone number.  Vars nad83, wgs84N, wgs84S tell which datum the data is in.  Make
                 sure that you set whichever datum that it is in equal to 1.  It defaults to nad83 if a zone number
@@ -274,6 +275,37 @@ if(wgs84S==1) zone_tag=32701+zone_nbr;
     _write, f1, byt_count, double(min(data.lelv));
     byt_count+=8;
 }
+
+  if (typ == 3) {
+     
+    _write, f1, byt_count, double(max(data.east));
+    byt_count+=8;
+
+    _write, f1, byt_count, double(min(data.east));
+    byt_count+=8;
+
+    _write, f1, byt_count, double(max(data.north));
+    byt_count+=8;
+
+    _write, f1, byt_count, double(min(data.north));
+    byt_count+=8;
+
+    _write, f1, byt_count, double(max(data.elevation + data.depth));
+    byt_count+=8;
+
+    _write, f1, byt_count, double(min(data.elevation + data.depth));
+    byt_count+=8;
+}
+
+
+
+}
+
+
+
+
+
+
 /* Start of variable length records */
  
   _write, f1, byt_count, short(00);
@@ -353,6 +385,18 @@ if(wgs84S==1) zone_tag=32701+zone_nbr;
                 byt_count+=4;
                 _write, f1, byt_count, short(data(i).lint);
                 byt_count+=2;
+        }
+        if (typ==3) {
+                
+                _write, f1, byt_count, long(data(i).east);
+                byt_count+=4;
+                _write, f1, byt_count, long(data(i).north);
+                byt_count+=4;
+                _write, f1, byt_count, long(data(i).elevation + data(i).depth);                
+                byt_count+=4;
+                _write, f1, byt_count, short(0);
+                byt_count+=2;
+
         }
        
        /* Determining positive or negative scan direction */
