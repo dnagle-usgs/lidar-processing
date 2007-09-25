@@ -103,7 +103,7 @@ sub write_header {
   printf OUT ("      <width>%s</width>\n", $opt_width);
   printf OUT ("    </LineStyle>\n");
   printf OUT ("    <PolyStyle>\n");
-  printf OUT ("      <color>7f00ff00</color>\n");
+  printf OUT ("      <color>ff00ff00</color>\n");
   printf OUT ("    </PolyStyle>\n");
   printf OUT ("  </Style>\n");
   printf OUT ("  <LineString>\n");
