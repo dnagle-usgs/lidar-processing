@@ -236,5 +236,5 @@ func set_remove_duplicates(A, idx=, orig_order=, ret_sort=) {
    // If they want them in order for A(sort(A))...
    A = ret_sort ? inv : A;
 
-   return A(seq)(srt)(unq)(orig);
+   return A(seq)(srt)(unq);
 }
