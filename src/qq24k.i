@@ -41,6 +41,58 @@ struct CONUSQQ {
    string   nedquad;
 }
 
+func qq2ll(qq, bbox=) {
+/* DOCUMENT ll = qq2ll(qq, bbox=)
+
+   Returns the latitude and longitude of the SE corner of the 24k Quarter-Quad
+   represented by the give code (or array of codes).
+
+   Return value is [lat, lon].
+
+   If bbox=1, then return value is [south, east, north, west].
+
+   See calc24qq for documentation on the 24k Quarter-Quad format.
+*/
+   default, bbox, 0;
+   len = strlen(qq);
+   if(numberof(where(len != 8))) {
+      write, "All input must be exactly 8 characters long. Aborting."
+      return;
+   }
+
+   AA    = atoi(strpart(qq, 1:2));
+   OOO   = atoi(strpart(qq, 3:5));
+   a     =      strpart(qq, 6:6);
+   o     = atoi(strpart(qq, 7:7));
+   q     =      strpart(qq, 8:8);
+
+   lat = AA;
+   lon = OOO;
+
+   a = strfind(a, "abcdefgh", case=0)(2) - 1;
+   a = a * 0.125;
+   lat += a;
+
+   o = o - 1;
+   o = o * 0.125;
+   lon += o;
+
+   q = strfind(q, "abcd", case=0)(2);
+   qa = (q == 2 | q == 3);
+   qo = (q >= 3);
+   
+   qa = qa * 0.0625;
+   qo = qo * 0.0625;
+   
+   lat += qa;
+   lon += qo;
+
+   if(bbox)
+      return [lat, -1 * lon, lat + 0.0625, -1 * (lon + 0.0625)];
+   else
+      return [lat, -1 * lon];
+}
+
 func calc24qq(lat, lon) {
 /* DOCUMENT qq = calc24qq(lat, lon)
 
@@ -88,7 +140,7 @@ func calc24qq(lat, lon) {
 
       The quarter-quad's SE corner is 47.9375N, 104.1875W.
 
-   Correspondingly, calc24qq(24.9375, -104.1875) results in "47104h2c".
+   Correspondingly, calc24qq(47.9375, -104.1875) results in "47104h2c".
 
    These codes are only valid for locations with positive latitude and negative
       longitude.
