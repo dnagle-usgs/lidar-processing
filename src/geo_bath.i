@@ -825,32 +825,35 @@ struct RASPULSESEARCH {
 func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset=, lmark=, bconst=) {
 /* DOCUMENT raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset=)
 
-  This function uses a mouse click on an EAARL image plot and finds the associated 
-  pulse and raster.
+  This function allows the user to click on an EAARL point cloud data plot and does the following:
+  (i) finds the processed xyz point nearest to the mouse click in the image plot
+  (ii) displays the corresponding rgb image (if available), raster, and waveform
+  (iii) displays detailed information about the selected laser pulse in the yorick terminal window  
+ 
+This function can be invoked from the 'Process EAARL Data' GUI by clicking the 'Pixel Waveform' Button.
 
   Inputs:
-	mouse click
-	data
+	mouse click on window, win.
+	data: input data array
 
   Options:
-	win=
-	buf=
-	cmin=
-	cmax=
-	msize=
-	disp_type=
-	ptype=
-		0
-		1
-		2
-	fset=	
+	win= input data window number 
+	buf= max. radial distance within which the nearest data point will be searched. Defaults to 10m. If no xyz point is located within this distance from the mouse click, the function will halt.
+	cmin= min. elevation for defining range to plot the selected data point.
+	cmax= max. elevation for defining range to plot the selected data point.
+	msize= marker size of the plotted data point. Default = 1.0
+	disp_type= type of data to display. Defaults to first surface (fs)
+	ptype= Type of processed data array.
+		0 = fs topo (default)
+		1 = bathymetry 
+		2 = tpop under veg.
+	fset=	DEFUNCT
 		0
         bconst= set to 1 to show the bathy waveform with constants,
 		set to 2 to show both waveforms (with and without constants).
 
   Returns:
-	An "FS" structure.  type "FS" at the Yorick prompt to see 
-        what constitutes the structure.
+	Array mindata.  mindata is an array of type 'ptype' that includes all the data points selected in this iteration.
 
  Original by:
     Amar Nayegandhi 06/11/02
@@ -1042,7 +1045,15 @@ write,"============================================================="
      	  if (is_array(edb)) {
 	    a = [];
             irg_a = irg(rasterno,rasterno,usecentroid=1);
-	    ex_veg, rasterno, pulseno,  last=250, graph=1, win=0, use_peak=1;
+	    if (bconst) {
+	      ex_veg, rasterno, pulseno,  last=250, graph=1, win=0, use_peak=1;
+	    } else {
+              show_wf, *wfa, pulseno(1), win=0, cb=7, raster=rasterno(1);
+	    }
+	    if (bconst == 2) {
+              show_wf, *wfa, pulseno(1), win=7, cb=7, raster=rasterno(1);
+	    }
+	      
             if ( _errno < 0 ) continue;
 	  }
 	  z = mindata.lelv/100.;
