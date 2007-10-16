@@ -269,6 +269,41 @@ Original W. Wright 5/6/06
  jgwinfo(2)=swrite(format="%02d%02d%02d", m-1,d,y);
 }
 
+func batch_gen_jgw_file(photo_dir, date) {
+/* DOCUMENT batch_gen_jgw_file, photo_dir, date
+
+   Generates jgw files for each image in photo_dir's subdirectories.  The
+   directory photo_dir should be constructed so that it has subdirectories for
+   each minute. Each minute subdir should hold up to sixty images, one for each
+   second.  The date argument should be "mmddyy" where mm is the month minus 1.
+   (So January is 0, and December is 11.)
+
+   The jgw file will be in the same directory as its associated jpg.
+*/
+   extern jgwinfo, cir_error;
+   fix_dir, photo_dir;
+   min_dirs = lsdirs(photo_dir);
+   if(!numberof(min_dirs)) {
+      write, "No minute-based subdirectories found.";
+      return;
+   }
+   for(i = 1; i <= numberof(min_dirs); i++) {
+      cur_dir = fix_dir(photo_dir + min_dirs(i));
+      write, format="Processing %s...\n", cur_dir;
+      jgwinfo = [cur_dir, date];
+      jpgs = lsfiles(cur_dir, glob="*.jpg");
+      for(j = 1; j <= numberof(jpgs); j++) {
+         somd = hms2sod(atoi(strpart(jpgs(j), 8:13)));
+         ret = gen_jgw_file(somd);
+         if(ret < 1) {
+            if(ret == 0) msg = "No file found.";
+            else msg = cir_error(ret);
+            write, format="Error for image %s: %s\n";
+         }
+      }
+   }
+}
+
 func gen_jgw_file( somd ) {
 /* DOCUMENT gen_jgw_file(somd)
 
