@@ -298,7 +298,7 @@ func batch_gen_jgw_file(photo_dir, date) {
          if(ret < 1) {
             if(ret == 0) msg = "No file found.";
             else msg = cir_error(ret);
-            write, format="Error for image %s: %s\n";
+            write, format="Error for image %s: %s\n", jpgs(i), msg;
          }
       }
    }
@@ -408,7 +408,7 @@ ms4000_specs.ccd_xy       = 7.40e-6 * 1.02;
 ms4000_specs.trigger_delay= 0.120;		// Delay (seconds) from trigger to capture.
 
  camera_specs = ms4000_specs;
- cir_mounting_bias = cir_mounting_bias_n48rf;
+ cir_mounting_bias = cir_mounting_bias_n111x;
 
 // Printout the values below.
 camera_specs;
@@ -438,6 +438,7 @@ Integrated with EAARL ALPS W. Wright 5/7/2006
 extern iex_nav1hz;	// INS data dumbed down to 1hz
 extern cir_mounting_bias;
 extern camera_specs;	// Camera specifications
+extern Geoid;
 
 // determine the seconds of the day... this needs changed to somd sometime
 timeBias = 1;		// the CIR acquisition times are off by exactly one second
@@ -487,6 +488,7 @@ CCD_XY= camera_specs.ccd_xy;
 // CCD_XY = 0.0000074
 
 // THe following should be determined by the lidar elevation. Right now it is the ITRF elev offset to the airfield
+if(is_void(Geoid))
  Geoid = -21.28   // -24.0;	// Elevation offset from ground to nad83 ell.
 
 // Load the local vars for mounting bias.
