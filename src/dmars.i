@@ -196,9 +196,9 @@ func gen_cir_nav( offset_secs ) {
   if ( is_void( iex_nav) ) return -8;
   ins_rate = iex_nav(1:2).somd(dif)(1)
   iticks = int(offset_secs*1000.0/int(ins_rate*1000.0001));		
-  startIndex = where( (iex_nav(1:200).somd % 1) == 0.0 )(1);
+  startIndex = where( (iex_nav(1:int(1/ins_rate)).somd % 1) == 0.0 )(1);
   startIndex += iticks;
-  tmp = iex_nav(startIndex:0:200);	
+  tmp = iex_nav(startIndex:0:int(1/ins_rate));
   tmp.somd = tmp.somd % 86400;
   utmx = fll2utm(tmp.lat, tmp.lon);
   iex_nav1hz = array(IEX_ATTITUDEUTM, dimsof(utmx)(3));

@@ -269,7 +269,7 @@ Original W. Wright 5/6/06
  jgwinfo(2)=swrite(format="%02d%02d%02d", m-1,d,y);
 }
 
-func batch_gen_jgw_file(photo_dir, date) {
+func batch_gen_jgw_file(photo_dir, date, dir_type=, progress=) {
 /* DOCUMENT batch_gen_jgw_file, photo_dir, date
 
    Generates jgw files for each image in photo_dir's subdirectories.  The
@@ -278,27 +278,51 @@ func batch_gen_jgw_file(photo_dir, date) {
    second.  The date argument should be "mmddyy" where mm is the month minus 1.
    (So January is 0, and December is 11.)
 
+   If dir_type is set to "tiles", then the directory structure is assumed to be
+   two-tiered with 10kx10k index tiles and 2kx2k tiles folders. (Default is that
+   dir_type = "sod" which gives the sod one-tiered behavior.)
+
+   If dir_type is set to "flat", then the directory structure is assumed to be
+   flat -- all files in one directory.
+
    The jgw file will be in the same directory as its associated jpg.
+
+   Set progress=0 to disable progress information.
 */
    extern jgwinfo, cir_error;
    fix_dir, photo_dir;
-   min_dirs = lsdirs(photo_dir);
-   if(!numberof(min_dirs)) {
-      write, "No minute-based subdirectories found.";
-      return;
+   default, dir_type, "sod";
+   default, progress, 1;
+   if(dir_type == "flat") {
+      sub_dirs = [""];
+   } else {
+      sub_dirs = lsdirs(photo_dir);
+      if(!numberof(sub_dirs)) {
+         write, "No subdirectories found.";
+         return;
+      }
    }
-   for(i = 1; i <= numberof(min_dirs); i++) {
-      cur_dir = fix_dir(photo_dir + min_dirs(i));
-      write, format="Processing %s...\n", cur_dir;
-      jgwinfo = [cur_dir, date];
-      jpgs = lsfiles(cur_dir, glob="*.jpg");
-      for(j = 1; j <= numberof(jpgs); j++) {
-         somd = hms2sod(atoi(strpart(jpgs(j), 8:13)));
-         ret = gen_jgw_file(somd);
-         if(ret < 1) {
-            if(ret == 0) msg = "No file found.";
-            else msg = cir_error(ret);
-            write, format="Error for image %s: %s\n", jpgs(i), msg;
+   for(i = 1; i <= numberof(sub_dirs); i++) {
+      parent_cur_dir = fix_dir(photo_dir + sub_dirs(i));
+      if(dir_type == "flat" || dir_type == "tiles") {
+         subsub_dirs = lsdirs(parent_cur_dir);
+      } else {
+         subsub_dirs = [""];
+      }
+      if(progress)
+         write, format="Processing %s...\n", cur_dir;
+      for(j = 1; j <= numberof(subsub_dirs); j++) {
+         cur_dir = fix_dir(parent_cur_dir + subsub_dirs(j));
+         jgwinfo = [cur_dir, date];
+         jpgs = lsfiles(cur_dir, glob="*.jpg");
+         for(k = 1; k <= numberof(jpgs); k++) {
+            somd = hms2sod(atoi(strpart(jpgs(k), 8:13)));
+            ret = gen_jgw_file(somd);
+            if(ret < 1) {
+               if(ret == 0) msg = "No file found.";
+               else msg = cir_error(ret);
+               write, format="Error for image %s: %s\n", jpgs(k), msg;
+            }
          }
       }
    }
