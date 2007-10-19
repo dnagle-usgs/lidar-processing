@@ -6,7 +6,7 @@ require, "veg.i"
 require, "geo_bath.i"
 require, "datum_converter.i"
 
-func batch_datum_convert(con_dir,  tonad83=, tonavd88=, rcfmode=, onlymf=, searchstr=, zone_nbr=, geoid_version=, update=)
+func batch_datum_convert(con_dir,  tonad83=, tonavd88=, rcfmode=, onlymf=, searchstr=, zone_nbr=, geoid_version=, update=, qq=)
 {
 /* DOCUMENT batch_datum_convert(con_dir,  tonad83=, tonavd88=, 
 rcfmode=, onlymf=, searchstr=, zone_nbr=, geoid_version=, update=)
@@ -34,6 +34,8 @@ INPUT:
   update= set to 1 if you want to only do the conversion for tiles that
 	 have not yet been converted.  Useful when the user 
 	 wants to resume conversion. 
+
+  qq= set to 1 if you are converting from  Quarter Quad tile format
 
 requires: "maps.i", "dir.i", "datum_converter.i"
 see also: datum_converter.i
@@ -80,19 +82,24 @@ for(i=1; i<=numfiles; i++)
    files3 = files2(2);
    t= *pointer(files3); 
    n = where(t== '_'); 
-   if (is_void(zone_nbr)) {
-   	zonel =1;
-   	zone = string( &t(n(3)+1:n(3)+2)) 
-   e= sread(zone, format="%d", zonel); 
-   } else {
-	zonel = zone_nbr;
-   }
-   firstbit = string( &t(1 : n(4)-1));
-   secondbit = string( &t(n(5)+1:0));
+      if(qq!=1) { 
+         if (is_void(zone_nbr)) {
+        	zonel =1;
+        	zone = string( &t(n(3)+1:n(3)+2)) 
+         e= sread(zone, format="%d", zonel); 
+         } else {
+        	zonel = zone_nbr;
+         }
+         firstbit = string( &t(1 : n(4)-1));
+         secondbit = string( &t(n(5)+1:0));
    
-   if (tonad83==1) newdat = "n83";
-   if (tonavd88==1)newdat = "n88"; 
-   newfile = swrite(format="%s/%s_%s_%s", files2(1), firstbit, newdat, secondbit);
+        if (tonad83==1) newdat = "n83";
+         if (tonavd88==1)newdat = "n88"; 
+         newfile = swrite(format="%s/%s_%s_%s", files2(1), firstbit, newdat, secondbit);
+        }
+
+        if(qq=1)
+                newfile= files2(1) + "n88_" + files3;
    if (update) {
 	// check if file exists
 	nfiledir = split_path(newfile,0);
@@ -108,10 +115,11 @@ for(i=1; i<=numfiles; i++)
 	}
    }
 
-
-   type = string(&t (n(5)+1));
-   if (type == "2"){
-     type = string( &t(n(6)+1));
+   if(qq!=1) {
+        type = string(&t (n(5)+1));
+        if (type == "2"){
+                type = string( &t(n(6)+1));
+        }
    }
 
    if (type=="v") {
