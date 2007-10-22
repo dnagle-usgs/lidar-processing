@@ -79,7 +79,7 @@ func cir_photo_orient( photo,
   c = cos(heading);
   dx = dimsof(p) (3)
   dy = dimsof(p) (4)
-  alt += 30.0;		// make it sealevel more or less
+  //alt += 30.0;		// make it sealevel more or less
   if ( alt ) { 
      xtk = 2.0 * tan( fov/2.0) * alt;
      scale(1) = scale(2) = xtk / dx;
@@ -609,6 +609,56 @@ NewY = Yoff1 + CP_Y
  return [A,B,C,D,NewX,NewY];
 
 
+}
+
+
+func gen_cir_tiles(gga, src, dest, copyjgw= ) {
+/* DOCUMENT gen_cir_tiles(gga, src, dest, copyjgw=)
+
+This function converts the cir image files (and corresponding world files)  from a "minute" directory into our regular 2k by 2k tiling format.
+
+ Inputs: 
+	gga:  "gps" or "pnav" data array for that mission day.
+ 	src : source directory where the cir files in the "minute" format  are stored.
+	dest: destination directory.
+	copyjgw = set to 1 to copy the corresponding jgw files along with the jpg files.  Set to 0 if you don't want the jgw files to be copied over. Default = 1.
+
+*/
+   fix_dir, src;
+   fix_dir, dest;
+   if (is_void(copyjgw)) copyjgw = 1;
+   files = find(src, glob="*.jpg");
+   files_sod = hms2sod(atoi(strpart(files, -13:-8)));
+   
+   utm_coords = fll2utm(gga.lat, gga.lon);
+   north = utm_coords(1,);
+   east = utm_coords(2,);
+   zone = utm_coords(3,);
+   utm_coords = [];
+
+   for(i = 1; i <= numberof(files); i++) {
+      w = where(gga.sod == files_sod(i));
+      if(numberof(w) == 1) {
+         w = w(1);
+         tte = int(east(w) / 2000.0) * 2000;
+         ite = int(east(w) / 10000.0) * 10000;
+         ttn = int(north(w) / 2000.0) * 2000 + 2000;
+         itn = int(north(w) / 10000.0) * 10000 + 10000;
+         ttile = swrite(format="t_e%d_n%d_%d/", tte, ttn, int(zone(i)));
+         itile = swrite(format="i_e%d_n%d_%d/", ite, itn, int(zone(i)));
+         fdir = dest + itile + ttile;
+         mkdirp, fdir;
+         system, "cp " + files(i) + " " + fdir; 
+         if (copyjgw) {
+            jgwfile = file_rootname(files(i))+"*.jgw";
+            if (file_exists(jgwfile)) {
+               system, "cp " + jgwfile + " " + fdir; 
+            }
+         }
+         write, format="%d of %d copied\r", i, numberof(files);
+            
+      }
+   }
 }
 
 

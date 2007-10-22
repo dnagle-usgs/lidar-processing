@@ -243,3 +243,19 @@ func mktempdir(name) {
    mkdir, dir;
    return dir;
 }
+
+func file_exists(filename) {
+/* DOCUMENT file_exists(filename) 
+
+   Checks if the file 'filename' exists.
+  
+   Returns '0' if the file does not exist, and '1' if the file exists
+
+*/
+
+   fdir = file_dirname(filename);
+   fname = file_tail(filename);
+   out = find(fdir, glob=fname);
+   return numberof(out);
+}
+
