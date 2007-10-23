@@ -269,61 +269,41 @@ Original W. Wright 5/6/06
  jgwinfo(2)=swrite(format="%02d%02d%02d", m-1,d,y);
 }
 
-func batch_gen_jgw_file(photo_dir, date, dir_type=, progress=) {
-/* DOCUMENT batch_gen_jgw_file, photo_dir, date
+func batch_gen_jgw_file(photo_dir, date, progress=) {
+/* DOCUMENT batch_gen_jgw_file, photo_dir, date, progress=
 
-   Generates jgw files for each image in photo_dir's subdirectories.  The
-   directory photo_dir should be constructed so that it has subdirectories for
-   each minute. Each minute subdir should hold up to sixty images, one for each
-   second.  The date argument should be "mmddyy" where mm is the month minus 1.
-   (So January is 0, and December is 11.)
-
-   If dir_type is set to "tiles", then the directory structure is assumed to be
-   two-tiered with 10kx10k index tiles and 2kx2k tiles folders. (Default is that
-   dir_type = "sod" which gives the sod one-tiered behavior.)
-
-   If dir_type is set to "flat", then the directory structure is assumed to be
-   flat -- all files in one directory.
+   Generates jgw files for each CIR image in photo_dir's subdirectories. Since
+   find is used, any directory structure will work. The date argument should be
+   "mmddyy" where mm is the month minus 1. (So January is 00, and December is
+   11.)
 
    The jgw file will be in the same directory as its associated jpg.
+
+   This function uses file_dirname, which requires yeti_regex.i. See dir.i
+   for more info.
 
    Set progress=0 to disable progress information.
 */
    extern jgwinfo, cir_error;
    fix_dir, photo_dir;
-   default, dir_type, "sod";
    default, progress, 1;
-   if(dir_type == "flat") {
-      sub_dirs = [""];
-   } else {
-      sub_dirs = lsdirs(photo_dir);
-      if(!numberof(sub_dirs)) {
-         write, "No subdirectories found.";
-         return;
-      }
+   jpgs = find(photo_dir, glob="*.jpg");
+   if(progress) {
+      tstamp = 0;
+      timer_init, tstamp;
+      write, format="Generating JGW's for %d files.\n", numberof(jpgs);
    }
-   for(i = 1; i <= numberof(sub_dirs); i++) {
-      parent_cur_dir = fix_dir(photo_dir + sub_dirs(i));
-      if(dir_type == "flat" || dir_type == "tiles") {
-         subsub_dirs = lsdirs(parent_cur_dir);
-      } else {
-         subsub_dirs = [""];
-      }
+   for(i = 1; i <= numberof(jpgs); i++) {
       if(progress)
-         write, format="Processing %s...\n", cur_dir;
-      for(j = 1; j <= numberof(subsub_dirs); j++) {
-         cur_dir = fix_dir(parent_cur_dir + subsub_dirs(j));
-         jgwinfo = [cur_dir, date];
-         jpgs = lsfiles(cur_dir, glob="*.jpg");
-         for(k = 1; k <= numberof(jpgs); k++) {
-            somd = hms2sod(atoi(strpart(jpgs(k), 8:13)));
-            ret = gen_jgw_file(somd);
-            if(ret < 1) {
-               if(ret == 0) msg = "No file found.";
-               else msg = cir_error(ret);
-               write, format="Error for image %s: %s\n", jpgs(k), msg;
-            }
-         }
+         timer_tick, tstamp, i, numberof(jpgs);
+      jgwinfo = [file_dirname(jpgs(i)), date];
+      somd = hms2sod(atoi(strpart(jpgs(i), -13:-8)));
+      ret = gen_jgw_file(somd);
+      if(ret < 1) {
+         if(progress) write, "";
+         if(ret == 0) msg = "No file found.";
+         else msg = cir_error(ret);
+         write, format="Error for image %s: %s\n", jpgs(k), msg;
       }
    }
 }
@@ -475,8 +455,8 @@ if ( is_void(iex_nav1hz) ) return -5;
 // by the trigger_delay.
 //================================================================================
 insI = where( int(iex_nav1hz.somd) == somd )(1) ;
-insI += timeBias;
 if ( is_void(insI) ) return -6;
+insI += timeBias;
 ins = iex_nav1hz(insI);
 
 // This is some debugging code.
@@ -590,7 +570,7 @@ Yoff1 = (Term3 * Xoff0) +(Term1 * Yoff0)
 NewX = Xoff1 + CP_X
 NewY = Yoff1 + CP_Y
 
-//Calculate offset to move corner to the ground "0" wont need this agian until we start doing orthos
+//Calculate offset to move corner to the ground "0" won't need this again until we start doing orthos
 //Xoff0 = (tan(Ang_X + Prad)) * UL_Z
 //Yoff0 = (tan(Ang_Y + Rrad)) * UL_Z
 
@@ -603,11 +583,8 @@ NewY = Yoff1 + CP_Y
 
 //NewX = UL_X + Xoff2
 //NewY = UL_Y + Yoff2
- 
-
 
  return [A,B,C,D,NewX,NewY];
-
 
 }
 
@@ -650,13 +627,12 @@ This function converts the cir image files (and corresponding world files)  from
          mkdirp, fdir;
          system, "cp " + files(i) + " " + fdir; 
          if (copyjgw) {
-            jgwfile = file_rootname(files(i))+"*.jgw";
+            jgwfile = file_rootname(files(i))+".jgw";
             if (file_exists(jgwfile)) {
                system, "cp " + jgwfile + " " + fdir; 
             }
          }
          write, format="%d of %d copied\r", i, numberof(files);
-            
       }
    }
 }

@@ -3,6 +3,11 @@ write, "$Id$";
 require, "general.i";
 require, "string.i";
 
+/*
+Certain functions in this file require Eric Thiébaut's Yeti package, available from:
+http://www-obs.univ-lyon1.fr/~thiebaut/yeti.html
+*/
+
 func file_dirname(fn) {
 /* DOCUMENT file_dirname(fn)
    Returns everything in the path except the last part. Similar to Tcl's "file
@@ -250,12 +255,10 @@ func file_exists(filename) {
    Checks if the file 'filename' exists.
   
    Returns '0' if the file does not exist, and '1' if the file exists
-
 */
-
    fdir = file_dirname(filename);
    fname = file_tail(filename);
-   out = find(fdir, glob=fname);
+   out = lsfiles(fdir, glob=fname);
    return numberof(out);
 }
 
