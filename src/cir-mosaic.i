@@ -269,8 +269,8 @@ Original W. Wright 5/6/06
  jgwinfo(2)=swrite(format="%02d%02d%02d", m-1,d,y);
 }
 
-func batch_gen_jgw_file(photo_dir, date, progress=) {
-/* DOCUMENT batch_gen_jgw_file, photo_dir, date, progress=
+func batch_gen_jgw_file(photo_dir, date, progress=, mask=) {
+/* DOCUMENT batch_gen_jgw_file, photo_dir, date, progress=, mask=
 
    Generates jgw files for each CIR image in photo_dir's subdirectories. Since
    find is used, any directory structure will work. The date argument should be
@@ -279,15 +279,25 @@ func batch_gen_jgw_file(photo_dir, date, progress=) {
 
    The jgw file will be in the same directory as its associated jpg.
 
-   This function uses file_dirname, which requires yeti_regex.i. See dir.i
-   for more info.
+   This function uses file_dirname, which requires yeti_regex.i. See dir.i for
+   more info.
 
    Set progress=0 to disable progress information.
+
+   If mask= is provided, it should be an array as array(short, 86400) that
+   indicates, for each SOD value, whether or not the image at that time should
+   have a JGW generated. 1 means generate, 0 means don't. The default is
+   mask=array(1, 86400), which means that all files get jgws.
+
+   Note: This will set the extern cir_mask to array(1, 86400) if it's void to
+   avoid error messages from gen_jgw_file.
 */
-   extern jgwinfo, cir_error;
+   extern jgwinfo, cir_error, cir_mask;
    fix_dir, photo_dir;
    default, progress, 1;
-   jpgs = find(photo_dir, glob="*.jpg");
+   default, cir_mask, array(short(1), 86400);
+   default, mask, array(short(1), 86400);
+   jpgs = find(photo_dir, glob="*-cir.jpg");
    if(progress) {
       tstamp = 0;
       timer_init, tstamp;
@@ -296,8 +306,9 @@ func batch_gen_jgw_file(photo_dir, date, progress=) {
    for(i = 1; i <= numberof(jpgs); i++) {
       if(progress)
          timer_tick, tstamp, i, numberof(jpgs);
-      jgwinfo = [file_dirname(jpgs(i)), date];
       somd = hms2sod(atoi(strpart(jpgs(i), -13:-8)));
+      if(!mask(somd)) continue;
+      jgwinfo = [file_dirname(jpgs(i)), date];
       ret = gen_jgw_file(somd);
       if(ret < 1) {
          if(progress) write, "";
@@ -589,8 +600,8 @@ NewY = Yoff1 + CP_Y
 }
 
 
-func gen_cir_tiles(gga, src, dest, copyjgw= ) {
-/* DOCUMENT gen_cir_tiles(gga, src, dest, copyjgw=)
+func gen_cir_tiles(gga, src, dest, copyjgw=, toscript= ) {
+/* DOCUMENT gen_cir_tiles, gga, src, dest, copyjgw=, toscript=
 
 This function converts the cir image files (and corresponding world files)  from a "minute" directory into our regular 2k by 2k tiling format.
 
@@ -599,11 +610,13 @@ This function converts the cir image files (and corresponding world files)  from
  	src : source directory where the cir files in the "minute" format  are stored.
 	dest: destination directory.
 	copyjgw = set to 1 to copy the corresponding jgw files along with the jpg files.  Set to 0 if you don't want the jgw files to be copied over. Default = 1.
-
+        toscript = set to a path/filename and a shell script will be generated to do the actual copying
 */
    fix_dir, src;
    fix_dir, dest;
-   if (is_void(copyjgw)) copyjgw = 1;
+   default, copyjgw, 1;
+   default, toscript, "";
+
    files = find(src, glob="*.jpg");
    files_sod = hms2sod(atoi(strpart(files, -13:-8)));
    
@@ -612,6 +625,11 @@ This function converts the cir image files (and corresponding world files)  from
    east = utm_coords(2,);
    zone = utm_coords(3,);
    utm_coords = [];
+
+   if(strlen(toscript)) {
+      f = open(toscript, "w");
+      write, f, format="%s\n", "#!/bin/bash";
+   }
 
    for(i = 1; i <= numberof(files); i++) {
       w = where(gga.sod == files_sod(i));
@@ -624,17 +642,31 @@ This function converts the cir image files (and corresponding world files)  from
          ttile = swrite(format="t_e%d_n%d_%d/", tte, ttn, int(zone(i)));
          itile = swrite(format="i_e%d_n%d_%d/", ite, itn, int(zone(i)));
          fdir = dest + itile + ttile;
-         mkdirp, fdir;
-         system, "cp " + files(i) + " " + fdir; 
+         if(strlen(toscript))
+         cmd = "cp " + files(i) + " " + fdir;
+         if(strlen(toscript)) {
+            write, f, format="\necho %s - %d of %d\nmkdir -p %s\n%s\n", file_tail(files(i)), i, numberof(files), fdir, cmd;
+         } else {
+            mkdirp, fdir;
+            system, cmd;
+         }
          if (copyjgw) {
             jgwfile = file_rootname(files(i))+".jgw";
             if (file_exists(jgwfile)) {
-               system, "cp " + jgwfile + " " + fdir; 
+               cmd = "cp " + jgwfile + " " + fdir; 
+               if(strlen(toscript))
+                  write, f, format="%s\n", cmd;
+               else
+                  system, cmd; 
             }
          }
-         write, format="%d of %d copied\r", i, numberof(files);
+         if(strlen(toscript) == 0 || ! (i % 100) || i == numberof(files))
+            write, format="%d of %d copied\r", i, numberof(files);
       }
    }
+   write, format="%s", "\n";
+   if(strlen(toscript))
+      close, f;
 }
 
 
