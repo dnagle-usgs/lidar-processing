@@ -669,5 +669,29 @@ This function converts the cir image files (and corresponding world files)  from
       close, f;
 }
 
+func copy_sod_cirs(sods, src, dest) {
+/* DOCUMENT copy_sod_cirs, sods, src, dest
 
+   Given an array of SOD values, this copies all corresponding CIR images
+   located in src to dest.
+*/
+   fix_dir, src;
+   fix_dir, dest;
+   files = find(src, glob=swrite(format="*-%d-cir.jpg", sod2hms(sods, noary=1)));
+   for(i = 1; i <= numberof(files); i++) {
+      cmd = "cp " + files(i) + " " + dest;
+      cmd;
+      system, cmd;
+   }
+}
 
+func copy_gga_cirs(q, src, dest) {
+/* DOCUMENT copy_gga_cirs, q, src, dest
+
+   Given a where query result q, this will copy CIR images located in src that
+   correspond to gga.sod(q) to the destination directory dest. This is useful
+   in conjunction with the return value of points in polygon and similar tools.
+*/
+   extern gga;
+   copy_sod_cirs, gga.sod(q), src, dest;
+}
