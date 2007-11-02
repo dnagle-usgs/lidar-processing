@@ -6,12 +6,22 @@
 # unpacks the cir tarfile and puts it into a new directory
 # structure that has images grouped into hhmm.
 
+# Usage:
+# makecir.pl SOURCEDIR
+# makecir.pl SOURCEDIR DESTDIR
+#
+# SOURCEDIR should be the directory containing the tar files.
+#
+# DESTDIR is the directory in which you want to create the photos/ subdirectory
+# that will contain the per-minute directories. If omitted, will default to
+# ./YYMMDD. A useful value might be . if you're creating the photos directory
+# in the same directory that has the tar files directory.
 
 $CC      = "20";      # Century
 $SUBDIR  = "/photos";
 $SRCDIR  = $ARGV[0];
 $GETLIST = "find $SRCDIR -name \*cir.tar|";
-
+$DESTDIR = $ARGV[1] ? $ARGV[1] : "";
 
 sub basename {
   local($long) = @_;
@@ -44,9 +54,16 @@ while ( $line = <LIST> ){
 
   $ndir = $CC . $YY . $MM . $DD;
 
+  if($DESTDIR ne "") {
+    $ndir = $DESTDIR;
+  }
+
   if ( ! -e $ndir ) {
     printf("Creating: %s\n", $ndir);
     mkdir($ndir);
+  }
+  if ( ! -e $ndir.$SUBDIR ) {
+    printf("Creating: %s\n", $ndir.$SUBDIR);
     mkdir($ndir. $SUBDIR);
   }
 
