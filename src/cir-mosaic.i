@@ -8,9 +8,9 @@
 
 */
 
-require, "pnm.i"
+require, "pnm.i";
 
-write,"$Id$"
+write,"$Id$";
 
 
 func jpg_read(filename)
@@ -694,4 +694,246 @@ func copy_gga_cirs(q, src, dest) {
 */
    extern gga;
    copy_sod_cirs, gga.sod(q), src, dest;
+}
+
+func tune_cir_parameters(photo_dir, date, fixed_roll=, fixed_pitch=, fixed_heading=, fixed_geoid=, mask=, start_temp=, min_temp=, cooling=, maxgen=, degrate=, params=, stdevs=, no_evolve=, pto_script=) {
+/* DOCUMENT tune_cir_parameters, photo_dir, date, fixed_roll=, fixed_pitch=,
+   fixed_heading=, fixed_geoid=, mask=, start_temp=, min_temp=, cooling=,
+   maxgen=, degrate=, params=, stdevs=, no_evolve=, pto_script=
+
+   Warning: This function is experimental!
+
+   This is used to tune the parameters used to make JGWs for CIR images: roll,
+   pitch, heading, and geoid. It tunes these parameters using an optimization
+   algorithm that is similar to simulated annealing or evolution strategy
+   (depending on the exact parameters used).
+
+   The approach is thus:
+
+      1. Find a subset of CIR images that overlap and contain several different
+         flightlines. Alternately, find several such subsets of images. Put
+         all of these images in a single directory. Try not to use more than
+         a few hundred images; certainly no more ~500 images in most cases. As
+         few as 20-30 can sometimes yeild results, though.
+
+      2. Take these images to a Windows machine. Use autopano to generate
+         control points for these images. You can find autopano here:
+            http://autopano.kolor.com/
+         Make sure you use autopano_v103 or later, as it is substantially
+         improved over previous versions. The command you want to use to make
+         control points is:
+            autopano.exe /project:hugin /size:800 /keys:8
+         You want to run that from within the image directory (from the Windows
+         command line). It will generate one or more *.pto files. You can try
+         different values for /size: and /keys:, but make sure /project:hugin
+         is always set. See autopano's documentation for more information
+         about that software.
+
+      3. Optionally, open up each PTO file in Hugin to make sure the control
+         points generated are good. You can find hugin here:
+            http://hugin.sourceforge.net/
+         You want to usually avoid having control points on bodies of waters,
+         because they are typically not stable. Control points on shadows or
+         vehicles or people are similarly not stable. Sometimes, good control
+         points are difficult to find due to distortion and parallax. You can
+         manually add and/or remove control points as desired, then save the
+         files.
+
+      3. Copy the *.pto files back to the linux machine and put them in a
+         directory.  This can be the same directory as the images, or it can be
+         a different directory. It doesn't matter.
+
+      4. Run this function.
+
+   You may have to try many different combinations of parameters to get good
+   results, and you may have to run the function repeatedly, starting it with
+   the last session's best result each time.
+
+   The procedure of tuning the CIR parameters is a trial-and-error approach
+   that may be trying to solve the wrong problem but still can yield improved
+   results.  As such, you may not get good results. The RMSD given by this
+   function for each set of parameters is a good guideline for how well the
+   images in the subset fit together, but may not represent the dataset as a
+   whole. Thus, it is important to test the tuned parameters against other
+   images outside of the subset, preferably from other flightlines in the same
+   mission day.
+
+   Note that this essentially speeds up what would be done manually. Normally,
+   you would tweak the four parameters manually, run the JGWs, then take a look
+   at them to see if it improved things. This function requires a bit more
+   setup time, but allows you to explore magnitudes more combinations of
+   parameters in a much shorter time period.
+
+   Sometimes, however, it does not work *AT ALL*. Sometimes, it will tell you
+   that the roll is 50 degrees and the pitch is -80 and the heading is 90
+   degrees.  This is your hint that you can't use the function to optimize
+   those paramters.  Try fixing them at the default and just optimize the
+   geoid. The geoid might be any value; it isn't usually the actual geoid
+   because (at present) cir-mosaic's other functions generate jgw's without
+   compensating for the actual elevation.  Eventually using the lidar data to
+   do so will probably partly or largely obsolete this function.
+
+   Parameters:
+      photo_dir: The directory to the CIR photo subset.
+      date: A string in MMDDYY format, where MM is the month minus 1.
+
+   Options:
+      fixed_roll= If specified, this forces the roll to the given fixed value.
+      fixed_pitch= If specified, this forces the pitch to the given fixed
+         value.
+      fixed_heading= If specified, this forces the heading to the given fixed
+         value.
+      fixed_geoid= If specified, this forces the geoid to the given fixed
+         value.
+      mask= An array that indicates whether the jgw for the image at any given
+         SOD should be generated (1) or not (0). The default is array(short(1),
+         86400), which specifies that all images can have jgws generated.
+      start_temp= The starting temperature. The temperature is multiplied by
+         the random adjustments, so higher temperatures search a larger space
+         more quickly but with less precision.
+      min_temp= The lowest temperature that is permissible. Defaults to 0.01.
+         If the temperature drops to low, then the adjustments become
+         negligible.
+      cooling= The rate at which the temperature cools. On each iteration, the
+         temperature will be multiplied by the cooling factor. A value of 1
+         disables cooling entirely. The default is 0.995.
+      maxgen= The maximum number of no-improvement generates that can be run
+         before termination. (When degrate is enabled, it's the number of
+         no-new-best generations.) The default is 10000. Normally, you will
+         probably use CTRL-C to interrupt the function long before it reaches
+         the maximum generation.
+      degrate= Specifies the degredation rate. If nonzero, this will allow the
+         parameters to occasionally go from a better result to a worse result.
+         The higher the degrate, the more likely this will happen. This might
+         be helpful in avoiding local minima, but it comes at the expense of a
+         much longer run time. The default is 0, which disables it.
+      params= If provided, this specifies the combination of parameters that
+         should be used at initialization. It should be an array of doubles as
+         [roll, pitch, heading, geoid]. The default is to use the n111x biases
+         for roll, pitch, and heading and to use -30.0 for the geoid. Using
+         fixed parameters (such as fixed_roll) will override that part of this
+         option.
+      stdevs= The standard deviations to use when generating random adjustments
+         for the parameters. This is an array of doubles that matches the
+         params, where each element is the standard deviation to use for that
+         parameter.  The random adjustments are generated from a standard
+         normal distribution with mean=0 and the given standard deviation. The
+         default is [0.25, 0.25, 0.25, 1.0].
+      no_evolve= If set to 1, then no optimization takes place. Instead, it
+         uses the given parameters to generate the jgws for the given photo
+         directory, then stops.
+      pto_script= The location of the script to use to determine the RMSM. The
+         default is "./pto_cir.pl".
+*/
+   extern cir_mounting_bias;
+   extern cir_mounting_bias_n111x;
+   extern Geoid;
+
+   default, start_temp, 1.0;
+   default, min_temp, 0.01;
+   default, cooling, 0.995;
+   default, maxgen, 10000;
+   default, degrate, 0.0;
+   default, mask, array(short(1), 86400);
+   default, stdevs, [0.25, 0.25, 0.25, 1.0];
+   default, no_evolve, 0;
+
+   default, pto_script, "./pto_cir.pl";
+
+   use_fixed_roll    = !is_void(fixed_roll);
+   use_fixed_pitch   = !is_void(fixed_pitch);
+   use_fixed_heading = !is_void(fixed_heading);
+   use_fixed_geoid   = !is_void(fixed_geoid);
+
+   default, fixed_roll,    cir_mounting_bias_n111x.roll;
+   default, fixed_pitch,   cir_mounting_bias_n111x.pitch;
+   default, fixed_heading, cir_mounting_bias_n111x.heading;
+   default, fixed_geoid,   -30.0;
+
+   default, params, [fixed_roll, fixed_pitch, fixed_heading, fixed_Geoid];
+
+   if(use_fixed_roll)
+      params(1) = fixed_roll;
+   cir_mounting_bias.roll = params(1);
+   if(use_fixed_pitch)
+      params(2) = fixed_pitch;
+   cir_mounting_bias.pitch = params(2);
+   if(use_fixed_heading)
+      params(3) = fixed_heading;
+   cir_mounting_bias.heading = params(3);
+   if(use_fixed_geoid)
+      params(4) = fixed_Geoid;
+   Geoid = params(4);
+
+   batch_gen_jgw_file, photo_dir, date, progress=no_evolve, mask=mask;
+
+   if(no_evolve) return;
+
+   cmd = pto_script + " " + photo_dir + " " + photo_dir + " ";
+   rmse = 0.0;
+   f = popen(cmd, 0);
+   read, f, rmse;
+   close, f;
+
+   best = grow(rmse, params);
+   write, "Initial state:";
+   write, format=" %.4f - [%.4f,%.4f,%.4f,%.4f]\n", best(1), best(2), best(3), best(4), best(5);
+   write, "";
+   curr = best;
+
+   stop = 0;
+   allgen = 0;
+   gen = 0;
+   temperature = start_temp;
+   do {
+      allgen++;
+      gen++;
+      params = best(2:) + random_n(numberof(stdevs)) * stdevs * temperature;
+      temperature *= cooling;
+      temperature = [temperature, min_temp](max);
+
+      if(use_fixed_roll)
+         params(1) = fixed_roll;
+      cir_mounting_bias.roll = params(1);
+      if(use_fixed_pitch)
+         params(2) = fixed_pitch;
+      cir_mounting_bias.pitch = params(2);
+      if(use_fixed_heading)
+         params(3) = fixed_heading;
+      cir_mounting_bias.heading = params(3);
+      if(use_fixed_geoid)
+         params(4) = fixed_Geoid;
+      Geoid = params(4);
+
+      batch_gen_jgw_file, photo_dir, date, progress=no_evolve, mask=mask;
+
+      write, format="%s", ".";
+      cmd = pto_script + " " + photo_dir + " " + photo_dir + " ";
+      f = popen(cmd, 0);
+      read, f, rmse;
+      close, f;
+
+      if(rmse < best(1)) {
+         best = grow(rmse, params);
+         gen = 0;
+         write, "";
+         write, "New best:";
+         write, format=" %.4f - [%.4f,%.4f,%.4f,%.4f]\n", best(1), best(2), best(3), best(4), best(5);
+      }
+      if(rmse < curr(1) || random() < (rmse/curr(1) * degrate)) {
+         if(deg_rate > 0) {
+            write, "";
+            if(rmse < curr(1))
+               write, "Improvement:";
+            else
+               write, "Degredation:";
+         }
+         curr = grow(rmse, params);
+         if(deg_rate > 0) {
+            write, format=" %.4f - [%.4f,%.4f,%.4f,%.4f]\n", curr(1), curr(2), curr(3), curr(4), curr(5);
+         }
+      }
+
+      if(gen >= maxgen) stop = 1;
+   } while (!stop);
 }
