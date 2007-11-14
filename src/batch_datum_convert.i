@@ -98,7 +98,7 @@ for(i=1; i<=numfiles; i++)
          newfile = swrite(format="%s/%s_%s_%s", files2(1), firstbit, newdat, secondbit);
         }
 
-        if(qq=1)
+        if(qq==1)
                 newfile= files2(1) + "n88_" + files3;
    if (update) {
 	// check if file exists
