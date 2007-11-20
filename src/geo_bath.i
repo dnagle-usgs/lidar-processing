@@ -138,9 +138,9 @@ for (i=1; i<=len; i=i+1) {
   geodepth(i).melevation = rrr(i).melevation;
   geodepth(i).soe = rrr(i).soe;
 
-  indx1 = where(geodepth(i).elevation > 0.7*geodepth(i).melevation);
-  if (is_array(indx1))
-    geodepth(i).north(indx1) = 0;
+  //indx1 = where(geodepth(i).elevation > 0.7*geodepth(i).melevation);
+  //if (is_array(indx1))
+  //  geodepth(i).north(indx1) = 0;
 
 
 } /* end for loop */

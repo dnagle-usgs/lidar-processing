@@ -6,8 +6,7 @@ require, "veg.i"
 require, "geo_bath.i"
 require, "datum_converter.i"
 
-func batch_datum_convert(con_dir,  tonad83=, tonavd88=, rcfmode=, onlymf=, searchstr=, zone_nbr=, geoid_version=, update=, qq=)
-{
+func batch_datum_convert(con_dir,  tonad83=, tonavd88=, rcfmode=, onlymf=, searchstr=, zone_nbr=, geoid_version=, update=, qq=) {
 /* DOCUMENT batch_datum_convert(con_dir,  tonad83=, tonavd88=, 
 rcfmode=, onlymf=, searchstr=, zone_nbr=, geoid_version=, update=)
  This takes all of the data files for the index tiles

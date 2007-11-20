@@ -951,7 +951,7 @@ proc append_varlist {newvar} {
 	    }
 	 }
 
-.l1wid.mb.options add checkbutton -label "Show bathy constants in Pixel Waveform" -variable bconst 
+.l1wid.mb.options add checkbutton -label "Show raw and processed waveforms when using Pixel Waveform" -variable bconst 
 
 proc make_selected_arrays {junk} {
     global lrnindx list
@@ -1797,6 +1797,9 @@ Button .l1wid.bf45.q.1 -text "Pixel\nWaveform" \
   -helptext "Click to jump to raster, pulse, and image for xyz point" \
   -command {
      global bconst
+     if {$bconst == 1} {
+	set bconst 2
+     }
      set ptype [.l1wid.bf4.1.p getvalue]
      set disp_type [.l1wid.bf45.p.5 getvalue]
      set var_no [.l1wid.bf45.p.15 getvalue]
@@ -1816,7 +1819,7 @@ Button .l1wid.bf45.q.1 -text "Pixel\nWaveform" \
         exp_send "mindata = raspulsearch($var_type, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype, lmark = lmark);\r"
      }
      if {$ptype == 3} {
-        exp_send "mindata = raspulsearch($var_type, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype, lmark = lmark);\r"
+        exp_send "mindata = raspulsearch($var_type, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype, lmark = lmark, bconst=$bconst );\r"
      }
    }
 	   
