@@ -62,33 +62,52 @@ func geoid_data_to_pbd(gfname=, pbdfname=, initialdir=, geoid_version=) {
 }
    
 func nad832navd88(data_in, gdata_dir=, geoid_version=) {
- /*DOCUMENT nad832navd88(data_in)
-   This function converts nad83 data to NAVD88 data using the GEOIDxx model.
-   INPUT:  data_in = a 2 dimensional array (3,n) in the format (lon, lat, alt).
- 	   gdata_dir = location where geoid data resides.  Defaults to
-			~/lidar-processing/GEOID03/pbd_data/
-			Set gdata_dir to ~/lidar-processing/GEOID99/pbd_data/ to use GEOID99.
-                        Set gdata_dir to ~/lidar-processing/GEOID96/pbd_data/ to use GEOID96.
-   OUTPUT: data_out = NAVD88 referenced data in the same format as the input format (3,n).
+/* DOCUMENT nad832navd88(data_in, gdata_dir=, geoid_version=)
+   Converts data from NAD83 to NAVD88. See nad832navd88offset for a description
+   of the parameters. Returns the data with the elevations modified.
+*/
+   offset = nad832navd88offset(data_in, gdata_dir=gdata_dir, geoid_version=geoid_version);
+   data_out = data_in;
+   data_out(3,) -= offset;
+   return data_out;
+}
+
+func navd882nad83(data_in, gdata_dir=, geoid_version=) {
+/* DOCUMENT nad832navd88(data_in, gdata_dir=, geoid_version=)
+   Converts data from NAVD88 to NAD83. See nad832navd88offset for a description
+   of the parameters. Returns the data with the elevations modified.
+*/
+   offset = nad832navd88offset(data_in, gdata_dir=gdata_dir, geoid_version=geoid_version);
+   data_out = data_in;
+   data_out(3,) += offset;
+   return data_out;
+}
+
+func nad832navd88offset(_data_in, gdata_dir=, geoid_version=) {
+/*DOCUMENT nad832navd88(data, gdata_dir=, geoid_version=)
+   This function provides the offset between NAD83 and NAVD88 data at a given
+   lat/lon location using the GEOIDxx model.
+
+   Input:
+      data: A two-dimensional array (3,n) in the format (lon, lat, alt).
+      gdata_dir= Location where geoid data resides. Defaults to
+         lidar-processing/GEOID03/pbd_data/.
+      geoid_version= Shortcut for specifying an alternate GEOID in the
+         default location. Will use lidar-processing/XXX/pbd_data/. This is
+         ignored if gdata_dir is provided.
+
+   Output:
+      An array of offsets between NAD83 and NAVD88 for each location. To
+      convert from NAD83 to NAVD88, use elevation - offset. To convert from
+      NAVD88 to NAD83, use elevation + offset.
+
    amar nayegandhi 07/10/03, original nad832navd88
    charlene sullivan 09/21/06, modified for use of GEOID96 model
+   david nagle 11/21/07, modified to provide offset to facilate 2-way
+      conversions
 */
-  if ((!gdata_dir) && (!geoid_version)) {
-       cwd = get_cwd();
-       gdata_dir = split_path(cwd,-1)(1)+"GEOID03/pbd_data/";
-  }
-  if ((!gdata_dir) && (strmatch(geoid_version,"GEOID96",1))) {
-    cwd = get_cwd();
-        gdata_dir = split_path(cwd,-1)(1)+"GEOID96/pbd_data/";
-  }
-  if ((!gdata_dir) && (strmatch(geoid_version,"GEOID99",1))) {
-    cwd = get_cwd();
-  	gdata_dir = split_path(cwd,-1)(1)+"GEOID99/pbd_data/";
-  }
-  if ((!gdata_dir) && (strmatch(geoid_version,"GEOID03",1))) {
-    cwd = get_cwd();
-  	gdata_dir = split_path(cwd,-1)(1)+"GEOID03/pbd_data/";
-  }
+   default, geoid_version, "GEOID03";
+   default, gdata_dir, split_path(get_cwd(),-1)(1)+geoid_version+"/pbd_data/";
   
   //read the header values for each GEOIDxx pbd data file.
   scmd = swrite(format="ls -1 %s*.pbd | wc -l",gdata_dir);
@@ -102,6 +121,7 @@ func nad832navd88(data_in, gdata_dir=, geoid_version=) {
   }
   close, f;
 
+  data_in = _data_in;
   if (data_in(1,1) < 0) data_in(1,) += 360.0;
 
   // now we know the number of geoid pbd data files in directory gdata_dir
@@ -245,12 +265,8 @@ func nad832navd88(data_in, gdata_dir=, geoid_version=) {
     fx3 = qfit(xx,f7,f8,f9);
 
     data_out = qfit(yy,fx1,fx2,fx3);
-
   }
 
-  data_out = [data_in(1,)-360, data_in(2,), data_in(3,)-data_out];
-  data_out = transpose(data_out);
- 
   return data_out;
 } 
 
