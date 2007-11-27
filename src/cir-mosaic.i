@@ -292,11 +292,17 @@ func batch_gen_jgw_file(photo_dir, date, progress=, mask=) {
    Note: This will set the extern cir_mask to array(1, 86400) if it's void to
    avoid error messages from gen_jgw_file.
 */
-   extern jgwinfo, cir_error, cir_mask;
+   extern jgwinfo, cir_error, cir_mask, iex_nav1hz;
    fix_dir, photo_dir;
    default, progress, 1;
    default, cir_mask, array(short(1), 86400);
-   default, mask, array(short(1), 86400);
+
+   // The default mask matches the time boundaries of iex_nav1hz
+   temp = array(short(0), 86400);
+   temp(int(ceil(iex_nav1hz.somd(min))):int(iex_nav1hz.somd(max))) = 1;
+   default, mask, temp;
+   temp = [];
+
    jpgs = find(photo_dir, glob="*-cir.jpg");
    if(progress) {
       tstamp = 0;
