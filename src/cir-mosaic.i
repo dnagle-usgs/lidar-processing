@@ -299,7 +299,7 @@ func batch_gen_jgw_file(photo_dir, date, progress=, mask=) {
 
    // The default mask matches the time boundaries of iex_nav1hz
    temp = array(short(0), 86400);
-   temp(int(ceil(iex_nav1hz.somd(min))):int(iex_nav1hz.somd(max))) = 1;
+   temp(int(ceil(iex_nav1hz.somd(min)))-1:int(iex_nav1hz.somd(max))-1) = 1;
    default, mask, temp;
    temp = [];
 
@@ -471,9 +471,9 @@ if ( is_void(iex_nav1hz) ) return -5;
 // for the search.  The actual time in the iex_nav1hz entry will already be offset
 // by the trigger_delay.
 //================================================================================
+somd += timeBias;
 insI = where( int(iex_nav1hz.somd) == somd )(1) ;
 if ( is_void(insI) ) return -6;
-insI += timeBias;
 ins = iex_nav1hz(insI);
 
 // This is some debugging code.
