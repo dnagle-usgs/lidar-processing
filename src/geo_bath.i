@@ -1300,9 +1300,12 @@ func clean_bathy(depth_all, rcf_width=) {
   idx = where(depth_all.depth != 0)
   if (is_array(idx)) 
     depth_all = depth_all(idx);
-  idx = where(depth_all.elevation < (0.75*depth_all.melevation));
-  if (is_array(idx))
-     depth_all = depth_all(idx);
+    // commented out section below because it would not work for high elevations.
+   /* 
+    idx = where(depth_all.elevation < (0.75*depth_all.melevation));
+    if (is_array(idx))
+    depth_all = depth_all(idx);
+  */
   if (is_array(rcf_width)) {
     write, "using rcf to clean data..."
     //run rcf on the entire data set
