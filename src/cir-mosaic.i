@@ -320,7 +320,7 @@ func batch_gen_jgw_file(photo_dir, date, progress=, mask=) {
          if(progress) write, "";
          if(ret == 0) msg = "No file found.";
          else msg = cir_error(ret);
-         write, format="Error for image %s: %s\n", jpgs(k), msg;
+         write, format="Error for image %s: %s\n", jpgs(i), msg;
       }
    }
 }
@@ -675,31 +675,52 @@ This function converts the cir image files (and corresponding world files)  from
       close, f;
 }
 
-func copy_sod_cirs(sods, src, dest) {
-/* DOCUMENT copy_sod_cirs, sods, src, dest
+func copy_sod_cirs(sods, src, dest, copyjgw=, progress=) {
+/* DOCUMENT copy_sod_cirs, sods, src, dest, copyjgw=, progress=
 
    Given an array of SOD values, this copies all corresponding CIR images
    located in src to dest.
+
+   Set copyjgw=0 to disable copying of the associated jgw files (enabled by
+   default). Set progress=0 to disable progress information (enabled by
+   default).
 */
    fix_dir, src;
    fix_dir, dest;
+   default, copyjgw, 1;
+   default, progress, 1;
+   mkdirp, dest;
    files = find(src, glob=swrite(format="*-%d-cir.jpg", sod2hms(sods, noary=1)));
    for(i = 1; i <= numberof(files); i++) {
       cmd = "cp " + files(i) + " " + dest;
-      cmd;
+      if(progress)
+         cmd;
       system, cmd;
+      if(copyjgw) {
+         jgwfile = file_rootname(files(i))+".jgw";
+         if(file_exists(jgwfile)) {
+            cmd = "cp " + jgwfile + " " + dest;
+            if(progress)
+               cmd;
+            system, cmd;
+         }
+      }
    }
 }
 
-func copy_gga_cirs(q, src, dest) {
-/* DOCUMENT copy_gga_cirs, q, src, dest
+func copy_gga_cirs(q, src, dest, copyjgw=, progress=) {
+/* DOCUMENT copy_gga_cirs, q, src, dest, copyjgw=, progress=
 
    Given a where query result q, this will copy CIR images located in src that
    correspond to gga.sod(q) to the destination directory dest. This is useful
    in conjunction with the return value of points in polygon and similar tools.
+
+   Set copyjgw=0 to disable copying of the associated jgw files (enabled by
+   default). Set progress=0 to disable progress information (enabled by
+   default).
 */
    extern gga;
-   copy_sod_cirs, gga.sod(q), src, dest;
+   copy_sod_cirs, gga.sod(q), src, dest, copyjgw=copyjgw, progress=progress;
 }
 
 func tune_cir_parameters(photo_dir, date, fixed_roll=, fixed_pitch=, fixed_heading=, fixed_geoid=, mask=, start_temp=, min_temp=, cooling=, maxgen=, degrate=, params=, stdevs=, no_evolve=, pto_script=) {
