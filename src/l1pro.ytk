@@ -2165,6 +2165,7 @@ ComboBox .l1wid.bf45.r.7 -text " Filter tools..." -width 16\
 		Replace \
 	  	RCF \
 		Re-Process \
+		Datum-Convert \
 		} \
 	 -helptext "Choose any of the following tools:" -editable 0 -modifycmd {
              global varlist
@@ -2184,6 +2185,9 @@ ComboBox .l1wid.bf45.r.7 -text " Filter tools..." -width 16\
              }
              if {$self == 4} {
              }
+	     if {$self == 5} {
+		datum_proc
+	     }
              if {$self == -1} {
 	        error "Please Define Region."
              }
@@ -2356,6 +2360,49 @@ proc removing_proc {} {
       pack .rem.08 .rem.07 .rem.09
       pack .rem.2 .rem.3 .rem.4 -side left -padx 5 -pady 5
    }
+
+
+proc datum_proc {} {
+       global varlist curvar
+       destroy .con
+       toplevel .con
+
+       wm title .con "Convert data from w84 to n88..."
+
+       frame .con.05
+
+       Label .con.05.varname -text "Input Variable:"
+       ComboBox .con.05.varlist  -values \
+        $varlist \
+        -helptext "Select any one of the following variables" \
+        -editable 0 \
+        -modifycmd {
+         global varlist curvar
+         set curvar [lindex $varlist [.con.05.varlist getvalue]]
+         set curidx [.con.05.varlist getvalue]
+         .l1wid.bf45.p.15 setvalue @$curidx
+         retrieve_plot_settings [expr ($curidx+1)]
+       }
+
+       set curidx [.l1wid.bf45.p.15 getvalue]
+       set curvar [lindex $varlist $curidx]
+
+       .con.05.varlist setvalue @$curidx
+
+	Label .con.02 -text "The converted variable is named n88_(currentvariablename) will not show up in variable list"
+	Button .con.1 -width 8 -text "Go" \
+        -command {
+		
+	       set convar "n88_$curvar" 
+               exp_send "$convar = data_datum_converter($curvar);\r"
+          	expect ">" 
+
+        }
+
+      pack .con.05.varname .con.05.varlist -side left -padx 5
+      pack .con.05 .con.02 .con.1  -side top -pady 10
+
+}
 
 proc keep_proc {} {
        global varlist curvar
