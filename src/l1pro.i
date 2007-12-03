@@ -29,6 +29,8 @@ require,  "ircf.i"
 require,  "dataexplore.i"
 require,  "determine_bias.i"
 require,  "webview.i"
+require,  "batch_datum_convert.i"
+
 include,  "rcf.i"
 
 func winlimits( win1, win2 ) {
