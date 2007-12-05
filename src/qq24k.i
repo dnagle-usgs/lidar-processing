@@ -112,14 +112,17 @@ func calc24qq(lat, lon) {
       OOO is the positive whole number component of the longitude (zero-padded
          to a width of 3).
 
-      a is an alpha character a-h designating which quad in the degree, where
-         a is closest to 0 minutes and h is closest to the next full degree.
+      a is an alpha character a-h designating which quad in the degree of
+         latitude, where a is closest to 0 minutes and h is closest to the next
+         full degree. Each represents 1/8 of a degree.
 
-      o is a numeral 1-8 designating which quad in the degree, where 1 is
-         closest to 0 minutes and 8 is closest to the next full degree.
+      o is a numeral 1-8 designating which quad in the degree of longitude,
+         where 1 is closest to 0 minutes and 8 is closest to the next full
+         degree. Each represents 1/8 of a degree.
 
       q is an alpha character a-d designating which quarter in the quad, where
-         a is SE, b is NE, c is NW, and d is SW.
+         a is SE, b is NE, c is NW, and d is SW. Each quarter-quad is 1/16 of
+         a degree in latitude and 1/16 of a degree in longitude.
    
    For example, 47104h2c means:
 
