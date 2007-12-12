@@ -1,5 +1,5 @@
 func batch_pbd2las(con_dir, searchstr=, proj_id=, v_maj=, v_min=, cday=, cyear=, typ=, zone_nbr=, nad83=, wgs84N=, wgs84S=) {
-/*DOCUMENT 
+/* DOCUMENT batch_pbd2las(con_dir, searchstr=, proj_id=, v_maj=, v_min=, cday=, cyear=, typ=, zone_nbr=, nad83=, wgs84N=, wgs84S=)
         dir, string, directory containing pbd files wanted for conversion
 
         searchstr, string, search string for the pbd files that you would like converted ( default = *.pbd ) 
@@ -52,7 +52,7 @@ func batch_pbd2las(con_dir, searchstr=, proj_id=, v_maj=, v_min=, cday=, cyear=,
 
 }
 func pbd2las(fname, proj_id=, v_maj=, v_min=, cday=, cyear=, typ=, zone_nbr=, nad83=, wgs84N=, wgs84S=) {
-/*DOCUMENT
+/* DOCUMENT pbd2las(fname, proj_id=, v_maj=, v_min=, cday=, cyear=, typ=, zone_nbr=, nad83=, wgs84N=, wgs84S=)
         
         Purpose:  This function creates a .las file that contains the LiDAR point records from a LiDAR data
                   variable in ALPS.  The .las binary file format has been determined by the ASPRS LiDAR
