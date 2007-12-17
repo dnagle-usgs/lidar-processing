@@ -677,6 +677,8 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
     amar nayegandhi 04/25/02
     Keywords:
     data_arr = Data Array.  can be fs_all (first surface), depth_all (bathymetry) or veg_all (vegetation).
+        veg_all=eaarl(1);
+        veg_all=eaarl(1);
     opath = Path for output file.
     ofname = File name of output file.
     type = Type of data to be written out. type = 1 for first surface, type = 2 for bathymetry,
@@ -1172,7 +1174,7 @@ func pbd_to_yfile(filename) {
 }
 
    
-func merge_data_pbds(filepath, write_to_file=, merged_filename=, vname=, uniq=, skip=, searchstring=) {
+func merge_data_pbds(filepath, write_to_file=, merged_filename=, nvname=, uniq=, skip=, searchstring=) {
  /*DOCUMENT merge_data_pbds(filename) 
    This function merges the EAARL processed pbd data files in the given filepath
    INPUT:
@@ -1230,18 +1232,21 @@ func merge_data_pbds(filepath, write_to_file=, merged_filename=, vname=, uniq=, 
  if (write_to_file) {
    // write merged data out to merged_filename
    if (!merged_filename) merged_filename = filepath+"data_merged.pbd";
-   if (!vname) {
+   if (!nvname) {
      // create variable vname if required
      a = eaarl(1);
      b = structof(a);
-     if (a == FS) vname = "fst_merged";
-     if (a == GEO) vname = "bat_merged";
-     if (a == VEG__) vname = "bet_merged";
-     if (a == CVEG_ALL) vname = "mvt_merged";
+     if (a == FS) nvname = "fst_merged";
+     if (a == GEO) nvname = "bat_merged";
+     if (a == VEG__) nvname = "bet_merged";
+     if (a == CVEG_ALL) nvname = "mvt_merged";
    }
+   vname=nvname
    f = createb(merged_filename);
    add_variable, f, -1, vname, structof(eaarl), dimsof(eaarl);
-   get_member(f,vname) = veg_all;
+   get_member(f,vname) = eaarl;
+   save, f, vname;
+   close, f;
  }
 
 
