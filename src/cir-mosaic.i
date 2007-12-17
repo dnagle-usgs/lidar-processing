@@ -964,3 +964,39 @@ func tune_cir_parameters(photo_dir, date, fixed_roll=, fixed_pitch=, fixed_headi
       if(gen >= maxgen) stop = 1;
    } while (!stop);
 }
+
+func subsample_lines(q, skip=) {
+/* DOCUMENT subsample_lines(q, skip=)
+
+   Given an array of indices q into a flightline, this subsamples the
+   flightlines. In other worse, it returns only selected lines in the set. You
+   can use skip= to control this behavior. The default, skip=2, returns every
+   other flightline. Using skip=1 just returns all data. Using skip=3 returns
+   every third, etc.
+
+   This will ONLY work if q is the original indices returned from Points in
+   Polygon or similar. If you've subsampled it (ie, q = q(::2)), this function
+   will not function correctly. It'll effectively subsample *within* the
+   flightlines.
+
+   Original: David Nagle 2007-12-17
+*/
+   if(!numberof(q))
+      return;
+   default, skip, 2;
+   qdif = q(dif);
+   boundaries = where(q(dif) > 1);
+   if(!numberof(boundaries))
+      return q;
+   boundaries = grow(0, boundaries, numberof(q));
+   starts = boundaries(:-1) + 1;
+   ends = boundaries(2:);
+   starts = starts(::skip);
+   ends = ends(::skip);
+   filter = array(0, numberof(q));
+   qq = [];
+   for(i = 1; i <= numberof(starts); i++) {
+      grow, qq, q(starts(i):ends(i));
+   }
+   return qq;
+}
