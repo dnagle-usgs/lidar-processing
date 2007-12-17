@@ -2389,7 +2389,7 @@ proc datum_proc {} {
 
        .con.05.varlist setvalue @$curidx
 
-	Label .con.02 -text "The converted variable is named n88_(currentvariablename) will not show up in variable list"
+	Label .con.02 -text "The converted variable is named n88_(currentvariablename)"
 	Button .con.1 -width 8 -text "Go" \
         -command {
 		
@@ -2401,6 +2401,8 @@ proc datum_proc {} {
 
       pack .con.05.varname .con.05.varlist -side left -padx 5
       pack .con.05 .con.02 .con.1  -side top -pady 10
+
+      append_varlist "n88_$curvar"
 
 }
 
