@@ -559,7 +559,10 @@ note:  This function only uses the regular rcf filter because ATM data
       } else {
          f = createb(ofn_split(1)+ofn);
       }
-      save, f, atm_rcf;
+      
+      add_variable, f, -1, vname, structof(atm_rcf), dimsof(atm_rcf);
+      get_member(f, vname) = atm_rcf;
+      save, f, vname;
       close, f
    }
 }
