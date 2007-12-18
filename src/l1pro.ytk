@@ -1058,6 +1058,10 @@ proc hist_linlog {} {
 
 .l1wid.mb   add cascade -label PostProcessing -underline 0 -menu .l1wid.mb.post
 
+.l1wid.mb.post add command -label "Datum Convert" -underline 0 -command {
+   datum_proc    
+}
+
 .l1wid.mb.post add command -label "RCF Region Filter" -underline 0 -command {
     rcf_region
 }
