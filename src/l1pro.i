@@ -31,6 +31,8 @@ require,  "determine_bias.i"
 require,  "webview.i"
 require,  "batch_datum_convert.i"
 require,  "pbd2las.i"
+require,  "atm.i"
+
 
 include,  "rcf.i"
 
