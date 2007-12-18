@@ -494,7 +494,7 @@ func atm_rq_ascii_to_pbd(ipath, ifname=, columns=, searchstr=, opath=) {
    }
 }
 
-func rcf_atm_pbds(ipath, ifname=, searchstr=, buf=, w=, opath=) {
+func rcf_atm_pbds(ipath, ifname=, searchstr=, buf=, w=, opath=, meta=) {
 /* DOCUMENT rcf_atm_pbds, ipath, ifname=, searchstr=, buf=, w=, opath=
 ipath = string, pathname of the directory containing the atm pbd files
 ifname = string, pathname of an individual file that you would like to filter
@@ -502,13 +502,16 @@ buf= the buf variable for the rcf filter
 w = the w variable for the rcf filter
 opath = output path for the files (defaults to the same directory where
          the originals are.
+meta = set to 1 if you want the filtering parameters in the filename set
+       to 0 if otherwise (defaults to 1)
+
 
 note:  This function only uses the regular rcf filter because ATM data
        contains only first surface points.
 
 */
   // Original: Amar Nayegandhi, 10/05/2006
-
+   if (is_void(meta)) meta=1;
    default, buf, 1000;
    default, w, 2000;
    if (is_void(ifname)) {
@@ -544,7 +547,12 @@ note:  This function only uses the regular rcf filter because ATM data
       // write atm_rcf to a pbd file
       ofn_split = split_path(fn_arr(i),0);
       ofn_split1 = split_path(ofn_split(2),0,ext=1);
-      ofn = ofn_split1(1)+"_rcf.pbd";
+      
+      if(meta!=1) { 
+         ofn = ofn_split1(1)+"_rcf.pbd";
+      } else {
+         ofn = ofn_split1(1)+swrite(format = "_b%d_w%d_rcf.pbd", buf, w)
+      }
       write, format="Writing file %s\n",ofn;
       if (opath) {
          f = createb(opath+ofn);
