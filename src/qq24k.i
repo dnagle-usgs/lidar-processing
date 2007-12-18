@@ -394,13 +394,15 @@ func qq_merge_pbds(idir, odir) {
    qfiles = strpart(infiles, 1:8);
    qcodes = set_remove_duplicates(qfiles);
 
+   timer_init, tstamp;
    for(i = 1; i <= numberof(qcodes); i++) {
+      timer_tick, tstamp, i, numberof(qcodes),
+         swrite(format=" * Merging for %s [%i/%i]", qcodes(i), i, numberof(qcodes));
       vfiles = infiles(where(qfiles == qcodes(i)));
       vdata = [];
       for(j = 1; j <= numberof(vfiles); j++) {
          f = openb(idir + vfiles(j));
-         restore, f, vname;
-         grow, vdata, get_member(f, vname);
+         grow, vdata, get_member(f, get_member(f, "vname"));
          close, f;
       }
       vdata = vdata(sort(vdata.soe));
