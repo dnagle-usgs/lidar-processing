@@ -535,7 +535,8 @@ note:  This function only uses the regular rcf filter because ATM data
    for (i=1; i<=n; i++) {
       // read pbd file
       f = openb(fn_arr(i));
-      restore, f;
+      restore, f, vname;
+      atm_out=get_member(f, vname);
       info, atm_out;
       close, f;
       atm_rcf = rcfilter_eaarl_pts(atm_out, buf=buf, w=w, mode=1);
