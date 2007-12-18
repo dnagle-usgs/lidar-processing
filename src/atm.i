@@ -496,6 +496,16 @@ func atm_rq_ascii_to_pbd(ipath, ifname=, columns=, searchstr=, opath=) {
 
 func rcf_atm_pbds(ipath, ifname=, searchstr=, buf=, w=, opath=) {
 /* DOCUMENT rcf_atm_pbds, ipath, ifname=, searchstr=, buf=, w=, opath=
+ipath = string, pathname of the directory containing the atm pbd files
+ifname = string, pathname of an individual file that you would like to filter
+buf= the buf variable for the rcf filter
+w = the w variable for the rcf filter
+opath = output path for the files (defaults to the same directory where
+         the originals are.
+
+note:  This function only uses the regular rcf filter because ATM data
+       contains only first surface points.
+
 */
   // Original: Amar Nayegandhi, 10/05/2006
 
