@@ -579,7 +579,6 @@ See also: R
      lst = where(fs_all.elevation);
 
   elev = fs_all.elevation(lst);
- melev = fs_all.melevation(lst);
 // build an edit array indicating where values are between -60 meters
 // and 3000 meters.  Thats enough to encompass any EAARL data than
 // can ever be taken.
@@ -588,7 +587,10 @@ See also: R
 // Now kick out values which are within 1-meter of the mirror. Some
 // functions will set the elevation to the mirror value if they cant
 // process it.
-  gidx &= (elev < (melev-1));
+ if(nameof(structof(fs_all)) != "ATM2") { 
+        melev = fs_all.melevation(lst);
+        gidx &= (elev < (melev-1));
+}
 
 
 // Now generate a list of where the good values are.
