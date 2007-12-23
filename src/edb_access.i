@@ -100,6 +100,7 @@ func load_edb (  fn=, update= ) {
  extern soe_day_start;
  extern eaarl_time_offset;
  extern tans, pnav;
+ extern gps_time_correction
  _ecfidx = 0;
 
 ///// if ( is_void( data_path ) ) 
@@ -129,6 +130,7 @@ if ( _ytk ) {
 
   _edb_fd = idf = open(fn, filemode );
   edb_filename = fn;			// 
+  
 
 // get the first three 32 bit integers from the file. They describe
 // things in the file as follows:
@@ -237,6 +239,9 @@ if ( _ytk ) {
   if ( !is_void(update) ) 
     write,"******NOTE: The file(s) are open for updating\n"
 
+  if (determine_gps_time_correction(edb_filename)) {
+    write, format= "****** NOTE: gps_time_correction is now set to %3.1f ******\n",gps_time_correction; 
+  }
 
   total_edb_records = numberof(edb);
 /* if we're using ytk, then set a var over in tcl to indicate the total
