@@ -238,7 +238,7 @@ proc scap { } {
 	-message {Raise the window you want to capture, \
 click OK, and then click on the desired window.}
   update
-  exec /usr/X11R6/bin/xwd -out /tmp/junk.xwd;
+  exec /usr/bin/xwd -out /tmp/junk.xwd;
   set fn [tk_getSaveFile  -initialdir $capture_path \
 	-defaultextension .png \
 	-initialfile $capture_name \
@@ -465,7 +465,7 @@ proc load_edb {} {
    global w
    destroy  $w
    toplevel $w
-   frame $w.f -width 450
+   frame $w.f -width 470
    pack $w.f
 
   $w configure -menu $w.mb
@@ -485,10 +485,10 @@ proc load_edb {} {
  $w.mb add cascade -label File     -underline 0 -menu $w.mb.file
  $w.mb add cascade -label "Maps/Nav"     -underline 0 -menu $w.mb.nav
  $w.mb add cascade -label "Settings"     -underline 0 -menu $w.mb.attitude
- $w.mb add cascade -label Rasters  -underline 0 -menu $w.mb.rasters
- $w.mb add cascade -label Images   -underline 0 -menu $w.mb.images
+ $w.mb add cascade -label "Lidar"  -underline 0 -menu $w.mb.rasters
+ $w.mb add cascade -label Imagery   -underline 0 -menu $w.mb.images
  $w.mb add cascade -label Time     -underline 0 -menu $w.mb.time
- $w.mb add cascade -label New      -underline 0 -menu $w.mb.new
+ $w.mb add cascade -label "CmdLine" -underline 0 -menu $w.mb.new
  $w.mb add cascade -label Help     -underline 0 -menu $w.mb.help
 
  $w.mb.file add command -label "Load EAARL Database Index (Edb)..." -command { load_edb }  -underline 5
@@ -519,10 +519,13 @@ proc load_edb {} {
  restore_eaarl_options "map.options" _map
 
 #############
-#   Rasters
+#  Lidar / Rasters 
 #############
- $w.mb.rasters add command -label "Examine Rasters..." -command {
+ $w.mb.rasters add command -label "Examine Lidar Rasters..." -command {
    source "$src_path/drast.ytk"
+ }
+ $w.mb.rasters add command -label "Process Lidar Data..." -command {
+    source "$src_path/l1pro.ytk"
  }
 
 #############
@@ -611,13 +614,28 @@ proc load_edb {} {
  }
 
 #############
-#   New
+#  Command Line Function HELP 
 #############
  $w.mb.new add command -label "mtransect"     -command {  
       exp_send "require,\"transect.i\"; help,mtransect\r" 
  }
  $w.mb.new add command -label "batch_process" -command {  
       exp_send "require, \"batch_process.i\"; help,batch_process\r" 
+ }
+ $w.mb.new add command -label "batch_rcf(Filter)" -command {  
+      exp_send "require, \"batch_process.i\"; help,batch_rcf\r" 
+ }
+ $w.mb.new add command -label "batch_datum_convert" -command {  
+      exp_send "require, \"batch_datum_convert.i\"; help,batch_datum_convert\r" 
+ }
+ $w.mb.new add command -label "batch_veg_lfpw" -command {  
+      exp_send "require, \"batch_veg_energy.i\"; help,batch_veg_lfpw\r" 
+ }
+ $w.mb.new add command -label "batch_pbd2las" -command {  
+      exp_send "require, \"pbd2las.i\"; help,batch_pbd2las\r" 
+ }
+ $w.mb.new add command -label "batch_write_xyz" -command {  
+      exp_send "require, \"batch_process.i\"; help,batch_write_xyz\r" 
  }
 
 #############
