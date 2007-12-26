@@ -123,6 +123,7 @@ menu .l1wid.mb.load
 menu .l1wid.mb.options
 menu .l1wid.mb.graph
 menu .l1wid.mb.post
+menu .l1wid.mb.cmd 
 .l1wid.mb   add cascade -label File -underline 0 -menu .l1wid.mb.file
 
 .l1wid.mb.file add command -label "Read Binary Data file..." -underline 0 -command {
@@ -1080,6 +1081,7 @@ proc hist_linlog {} {
 
 .l1wid.mb   add cascade -label PostProcessing -underline 0 -menu .l1wid.mb.post
 
+
 .l1wid.mb.post add command -label "Datum Convert" -underline 0 -command {
    datum_proc    
 }
@@ -1087,6 +1089,30 @@ proc hist_linlog {} {
 .l1wid.mb.post add command -label "RCF Region Filter" -underline 0 -command {
     rcf_region
 }
+
+.l1wid.mb add cascade -label CmdLine -underline 1 -menu .l1wid.mb.cmd
+
+.l1wid.mb.cmd add command -label "mtransect" -command {
+      exp_send "require,\"transect.i\"; help,mtransect\r" 
+}
+ .l1wid.mb.cmd add command -label "batch_process" -command {  
+      exp_send "require, \"batch_process.i\"; help,batch_process\r" 
+ }
+ .l1wid.mb.cmd add command -label "batch_rcf(Filter)" -command {  
+      exp_send "require, \"batch_process.i\"; help,batch_rcf\r" 
+ }
+ .l1wid.mb.cmd add command -label "batch_datum_convert" -command {  
+      exp_send "require, \"batch_datum_convert.i\"; help,batch_datum_convert\r" 
+ }
+ .l1wid.mb.cmd add command -label "batch_veg_lfpw" -command {  
+      exp_send "require, \"batch_veg_energy.i\"; help,batch_veg_lfpw\r" 
+ }
+ .l1wid.mb.cmd add command -label "batch_pbd2las" -command {  
+      exp_send "require, \"pbd2las.i\"; help,batch_pbd2las\r" 
+ }
+ .l1wid.mb.cmd add command -label "batch_write_xyz" -command {  
+      exp_send "require, \"batch_process.i\"; help,batch_write_xyz\r" 
+ }
 
 proc rcf_region {} {
     global varlist l1pro_data

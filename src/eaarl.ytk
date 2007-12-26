@@ -465,7 +465,7 @@ proc load_edb {} {
    global w
    destroy  $w
    toplevel $w
-   frame $w.f -width 470
+   frame $w.f -width 440
    pack $w.f
 
   $w configure -menu $w.mb
@@ -488,7 +488,7 @@ proc load_edb {} {
  $w.mb add cascade -label "Lidar"  -underline 0 -menu $w.mb.rasters
  $w.mb add cascade -label Imagery   -underline 0 -menu $w.mb.images
  $w.mb add cascade -label Time     -underline 0 -menu $w.mb.time
- $w.mb add cascade -label "CmdLine" -underline 0 -menu $w.mb.new
+ #$w.mb add cascade -label "CmdLine" -underline 0 -menu $w.mb.new
  $w.mb add cascade -label Help     -underline 0 -menu $w.mb.help
 
  $w.mb.file add command -label "Load EAARL Database Index (Edb)..." -command { load_edb }  -underline 5
@@ -616,27 +616,27 @@ proc load_edb {} {
 #############
 #  Command Line Function HELP 
 #############
- $w.mb.new add command -label "mtransect"     -command {  
-      exp_send "require,\"transect.i\"; help,mtransect\r" 
- }
- $w.mb.new add command -label "batch_process" -command {  
-      exp_send "require, \"batch_process.i\"; help,batch_process\r" 
- }
- $w.mb.new add command -label "batch_rcf(Filter)" -command {  
-      exp_send "require, \"batch_process.i\"; help,batch_rcf\r" 
- }
- $w.mb.new add command -label "batch_datum_convert" -command {  
-      exp_send "require, \"batch_datum_convert.i\"; help,batch_datum_convert\r" 
- }
- $w.mb.new add command -label "batch_veg_lfpw" -command {  
-      exp_send "require, \"batch_veg_energy.i\"; help,batch_veg_lfpw\r" 
- }
- $w.mb.new add command -label "batch_pbd2las" -command {  
-      exp_send "require, \"pbd2las.i\"; help,batch_pbd2las\r" 
- }
- $w.mb.new add command -label "batch_write_xyz" -command {  
-      exp_send "require, \"batch_process.i\"; help,batch_write_xyz\r" 
- }
+# $w.mb.new add command -label "mtransect"     -command {  
+#      exp_send "require,\"transect.i\"; help,mtransect\r" 
+# }
+# $w.mb.new add command -label "batch_process" -command {  
+#      exp_send "require, \"batch_process.i\"; help,batch_process\r" 
+# }
+# $w.mb.new add command -label "batch_rcf(Filter)" -command {  
+#      exp_send "require, \"batch_process.i\"; help,batch_rcf\r" 
+# }
+# $w.mb.new add command -label "batch_datum_convert" -command {  
+#      exp_send "require, \"batch_datum_convert.i\"; help,batch_datum_convert\r" 
+# }
+# $w.mb.new add command -label "batch_veg_lfpw" -command {  
+#      exp_send "require, \"batch_veg_energy.i\"; help,batch_veg_lfpw\r" 
+# }
+# $w.mb.new add command -label "batch_pbd2las" -command {  
+#      exp_send "require, \"pbd2las.i\"; help,batch_pbd2las\r" 
+# }
+# $w.mb.new add command -label "batch_write_xyz" -command {  
+#      exp_send "require, \"batch_process.i\"; help,batch_write_xyz\r" 
+# }
 
 #############
 #   help
@@ -645,8 +645,6 @@ proc load_edb {} {
    -label "Version:\$Id$"
  $w.mb.help add command -label "Yorick Graphics Window Use"
  $w.mb.help add command -label "0 Waveform Display"
- $w.mb.help add command -label "1 Laser Rasters"
- $w.mb.help add command -label "2 "
  $w.mb.help add command -label "3 "
  $w.mb.help add command -label "4 "
  $w.mb.help add command -label "5 Laser point plots"
