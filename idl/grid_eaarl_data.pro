@@ -13,7 +13,7 @@ pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygri
 	; ygrid = Returned ygrid array containing gridded y values in meters
 	; z_max = Maximum z value to consider during gridding
 	; z_min = Minimum z value to consider during gridding, default = -100m
-	; missing = Missing value for no data points during gridding, default = -100m
+	; missing = Missing value for no data points during gridding, default = -32767m
 	; datamode = set to 3 if you want to use the function in index tile mode
 	;	     set to 2 if you want to use the function in data tile mode 	
 	;	     set to 1 if you want to use the function in non-data or non-index tile mode
@@ -21,7 +21,7 @@ pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygri
 
   if (not keyword_set(cell)) then cell = 1  
   if (not keyword_set(z_min)) then z_min = -100L
-  if (not keyword_set(missing)) then missing = -100L
+  if (not keyword_set(missing)) then missing = -32767L
   if (not keyword_set(area_threshold)) then area_threshold = 200
   if (not keyword_set(dist_threshold)) then dist_threshold = 50
   if (not keyword_set(limits)) then begin
