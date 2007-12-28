@@ -34,6 +34,8 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, wbuf=, gridmode=, ndivid
  if (!mode) mode = 2;
 
 
+ if (is_void(wbuf)) wbuf = 0;
+ if (is_void(gridmode)) gridmode=1;
  eaarl = test_and_clean(eaarl);
 
  if (is_void(ndivide)) ndivide = 8;
