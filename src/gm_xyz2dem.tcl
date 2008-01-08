@@ -1,12 +1,11 @@
 #!/bin/sh
 # \
 exec tclsh "$0" ${1+"$@"}
-
-# Hint: Run this script with no arguments for help information.
-
 # vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 
-set overview {
+# Hint: For help information, run ./gm_xyz2dem.tcl -help
+
+set ::overview {
 Overview:
  This Tcl script generates a Global Mapper Script that will convert a directory
  of XYZ 3D elevation point files into corresponding GeoTiffs. Each XYZ file
@@ -15,15 +14,13 @@ Overview:
 
  This script must be run on the Windows machine where the Global Mapper Script
  will be executed, since it contains absolute path names.
-}
 
-package require cmdline
-package require fileutil
-package require struct::set
+ If run without any arguments, this will launch a GUI version of itself.
+}
 
 # PROCESS COMMAND LINE / SET GLOBALS
 
-set options {
+set ::options {
    {resolution.arg   1     "Desired spatial resolution. Short form: -r."}
    {r.arg.secret     0     "Shortcut for resolution."}
    {threshold.arg    5     "Threshold distance for no data points. Short form: -t."}
@@ -36,47 +33,143 @@ set options {
    {ow.secret              "Shortcut for overwrite."}
 }
 
-set usage "\n$overview\nUsage:\n [::cmdline::getArgv0] \[options] indir outdir \[scriptfile]\n\nOptions:"
+set ::usage "\n$::overview\nUsage:\n gm_xyz2dem.tcl \[options] indir outdir \[scriptfile]\n\nOptions:"
 
-if { [catch {array set params [::cmdline::getoptions argv $options $usage]}] || [llength $argv] < 2 || [llength $argv] > 3 } {
-   puts [::cmdline::usage $options $usage]
-   exit
+# Parse command-line parameters and set globals
+proc parse_params { } {
+   if { [catch {array set params [::cmdline::getoptions ::argv $::options $::usage]}] || [llength $::argv] < 2 || [llength $::argv] > 3 } {
+      puts [::cmdline::usage $::options $::usage]
+      exit
+   }
+
+   if { $params(r) > 0 } {
+      set params(resolution) $params(r)
+   }
+   set ::resolution $params(resolution)
+
+   if { $params(t) > 0 } {
+      set params(threshold) $params(t)
+   }
+   set ::threshold $params(threshold)
+
+   if { $params(z) > 0 } {
+      set params(zone) $params(z)
+   }
+   set ::zone_override $params(zone)
+
+   if { $params(ow) > 0 } {
+      set params(overwrite) $params(ow)
+   }
+   set ::overwrite $params(overwrite)
+
+   if { $params(wgs84) > 0 } {
+      set ::datum_mask 0
+   } else {
+      set ::datum_mask 1
+   }
+
+   set ::xyz_dir [string trim [lindex $::argv 0]]
+   set ::tiff_dir [string trim [lindex $::argv 1]]
+   if { [llength $::argv] == 3 } {
+      set ::outfile [string trim [lindex $::argv 2]]
+   } else {
+      set ::outfile ""
+   }
 }
 
-if { $params(r) > 0 } {
-   set params(resolution) $params(r)
-}
-set resolution $params(resolution)
+# GUI
 
-if { $params(t) > 0 } {
-   set params(threshold) $params(t)
-}
-set threshold $params(threshold)
+proc launch_gui { } {
+   package require Tk 8.4
+   package require BWidget
+   # resolution threshold zone_override overwrite datum_mask xyz_dir tiff_dir outfile
 
-if { $params(z) > 0 } {
-   set params(zone) $params(z)
-}
-set zone_override $params(zone)
+   set ::resolution 1
+   label .lblResolution -text "Resolution"
+   spinbox .spnResolution -from 0.1 -to 100.00 -increment 0.1 -format %.1f -width 5 \
+      -justify center -textvariable ::resolution
+   grid .lblResolution .spnResolution -
+   DynamicHelp::add .spnResolution -type balloon -text "The resolution of the DEM, in meters."
 
-if { $params(ow) > 0 } {
-   set params(overwrite) $params(ow)
-}
-set overwrite $params(overwrite)
+   set ::threshold 5
+   label .lblThreshold -text "Threshold"
+   spinbox .spnThreshold -from 0.0 -to 100.00 -increment 0.1 -format %.1f -width 5 \
+      -justify center -textvariable ::threshold
+   grid .lblThreshold .spnThreshold -
+   DynamicHelp::add .spnThreshold -type balloon -text "The threshold of the DEM, in meters. However, 0 means to use all data."
 
-if { $params(wgs84) > 0 } {
-   set datum_mask 0
-} else {
-   set datum_mask 1
+   set ::zone_override 0
+   label .lblZone -text "Zone"
+   spinbox .spnZone -from 0 -to 60 -increment 1 -format %.0f -width 5 \
+      -justify center -textvariable ::zone_override
+   grid .lblZone .spnZone -
+   DynamicHelp::add .spnZone -type balloon -text "The zone of the data. However, 0 means to determine from the file names (recommended)."
+
+   set ::overwrite 0
+   label .lblOverwrite -text "Overwrite?"
+   checkbutton .chkOverwrite -variable ::overwrite
+   grid .lblOverwrite .chkOverwrite -
+   DynamicHelp::add .chkOverwrite -type balloon -text "Specify whether existing files should be overwritten by Global Mapper."
+
+   set ::datum_mask 2
+   label .lblDatum -text "Datum"
+   radiobutton .radDatumA -value 2 -text "Auto Detect" -variable ::datum_mask
+   radiobutton .radDatumW -value 0 -text "WGS84" -variable ::datum_mask
+   radiobutton .radDatumN -value 1 -text "NAD83" -variable ::datum_mask
+   grid .lblDatum .radDatumA -
+   grid x .radDatumW - 
+   grid x .radDatumN -
+   foreach widget [list .radDatumA .radDatumW .radDatumN] {
+      DynamicHelp::add $widget -type balloon -text "Specify the dataset's datum. Auto Detect determines by file name, and is recommended."
+   }
+
+   label .lblXYZ -text "XYZ Directory"
+   entry .entXYZ -textvariable ::xyz_dir
+   button .butXYZ -text "Choose" -command { choose_directory "XYZ input" ::xyz_dir 1 }
+   grid .lblXYZ .entXYZ .butXYZ
+   foreach widget [list .entXYZ .butXYZ] {
+      DynamicHelp::add $widget -type balloon -text "Specify the XYZ file directory, as input."
+   }
+
+   label .lblTiff -text "GeoTiff Directory"
+   entry .entTiff -textvariable ::tiff_dir
+   button .butTiff -text "Choose" -command { choose_directory "GeoTiff output" ::tiff_dir 0 }
+   grid .lblTiff .entTiff .butTiff
+   foreach widget [list .entTiff .butTiff] {
+      DynamicHelp::add $widget -type balloon -text "Specify the directory where the GeoTiffs should be created."
+   }
+
+   label .lblOut -text "Script Destination"
+   entry .entOut -textvariable ::outfile
+   button .butOut -text "Choose" -command choose_file
+   grid .lblOut .entOut .butOut
+   foreach widget [list .entOut .butOut] {
+      DynamicHelp::add $widget -type balloon -text "Specify the Global Mapper script you would like to create."
+   }
+
+   foreach widget [lsearch -inline -all [winfo children .] .lbl*] {
+      grid $widget -sticky e
+   }
+   foreach widget [lsearch -inline -all -regexp [winfo children .] {^\.(spn|chk|rad|ent)}] {
+      grid $widget -sticky w
+   }
+
+   button .butRun -text "Create Script" -command gui_run
+   grid .butRun - -
 }
 
-set xyz_dir [string trim [lindex $argv 0]]
-set tiff_dir [string trim [lindex $argv 1]]
-if { [llength $argv] == 3 } {
-   set outfile [string trim [lindex $argv 2]]
-} else {
-   set outfile ""
+proc choose_directory { title pathVar mustexist } {
+   set temp [tk_chooseDirectory -initialdir [set $pathVar] -parent . \
+      -title "Choose the $title directory" -mustexist $mustexist]
+   if {[string length $temp]} { set $pathVar $temp }
 }
 
+proc choose_file { } {
+   set temp [tk_getSaveFile -title "Choose the GMS script destination" -parent . \
+      -initialdir [file dirname $::outfile] -initialfile $::outfile \
+      -filetypes {{"Global Mapper Script" *.gms}}]
+   if {[string length $temp]} { set ::outfile $temp }
+}
 
 # DEFINE TEMPLATES
 
@@ -143,6 +236,22 @@ proc ne_bounds { north east } {
 }
 
 # DEFINE OTHER PROCS
+
+# Nicely handles package requirements
+proc require_test { pkg {ver {}} } {
+   set flag 0
+   if {[string length $ver]} {
+      set flag [catch {package require $pkg $ver}]
+   } else {
+      set flag [catch {package require $pkg}]
+   }
+   if {$flag} {
+      puts "Error: Could not find required package $pkg $ver"
+      puts ""
+      puts [::cmdline::usage $::options $::usage]
+      exit
+   }
+}
 
 # Helper function that simplifies regsub calls
 proc template { varName key val } {
@@ -224,9 +333,46 @@ proc do_output { output } {
    }
 }
 
+proc gui_error { msg } {
+   tk_messageBox -icon error -message $msg -parent . -title "Error" -type ok
+}
+
+proc gui_run { } {
+   if {![string length $::xyz_dir]} {
+      gui_error "You must provide an input XYZ directory."
+   } elseif {![string length $::tiff_dir]} {
+      gui_error "You must provide an output GeoTiff directory."
+   } elseif {![string length $::outfile]} {
+      gui_error "You must provide an output script file."
+   } else {
+      wm withdraw .
+      set ::datum_mask [expr {$::datum_mask > 0}]
+      cmd_run
+      tk_messageBox -icon info -type ok -parent . -message "Your script has been created."
+      exit
+   }
+}
+
 # Wrapper to generate the script and output it
-proc run { } {
+proc cmd_run { } {
    do_output [generate_gms]
+   file mkdir $::tiff_dir
+}
+
+proc run { } {
+   require_test cmdline
+   require_test fileutil
+   require_test struct::set
+
+   # Can't just test length of argv since it sometimes has a list of just \r
+   if {[string length [string trim [lindex $::argv 0]]]} {
+      parse_params
+      cmd_run
+   } else {
+      require_test Tk 8.4
+      require_test BWidget
+      launch_gui
+   }
 }
 
 run
