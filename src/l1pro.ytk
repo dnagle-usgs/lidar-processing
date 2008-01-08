@@ -1316,6 +1316,7 @@ ComboBox .l1wid.bf4.1.d -text "Define Region..." -width 15 -values \
        {
 	 Rubberband\ Box\
 	 Points\ in\ Polygon\
+	 Line\ Segment
 	 Rectangular\ Coords\
 	 Multiple\ PIPs\
        }\
