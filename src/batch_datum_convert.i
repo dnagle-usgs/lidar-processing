@@ -72,6 +72,11 @@ numfiles = numberof(s);
 newline = "\n"
 data=[];
 
+if (numfiles == 0) {
+        write, "No files were found";
+        return;
+}
+
 for(i=1; i<=numfiles; i++)
 
 {
