@@ -371,7 +371,7 @@ func qq_segment_pbd(fname, odir, zone=, mode=, remove_buffers=) {
    }
 }
 
-func qq_merge_pbds(idir, odir) {
+func qq_merge_pbds(idir, odir, mode, dir_struc=) {
 /* DOCUMENT qq_merge_pbds, idir, odir
 
    This merges the quarter-quad data files in idir and writes the results
@@ -385,6 +385,10 @@ func qq_merge_pbds(idir, odir) {
       idir: The input directory.
 
       odir: The output directory.
+
+      dir_struc: Creates a directory structure, in the output directory,
+                 of the Quarter-Quad tiles being put into their respective
+                 Quarter-Quad folders similar to the Index Tiles.
 
    See also: batch_2k_to_qq qq_segment_pbds
 */
@@ -407,7 +411,26 @@ func qq_merge_pbds(idir, odir) {
       }
       vdata = vdata(sort(vdata.soe));
       vname = "qq" + qcodes(i);
-      f = createb(odir + qcodes(i) + ".pbd");
+      
+      if(mode==3) {
+         endoffile="_be.pbd";
+      } if(mode==2) {
+         endoffile="_ba.pbd";
+      } if(mode==1) {
+         endoffile="_fs.pbd";
+      }
+
+
+      if(is_void(dir_struc)) {
+         f = createb(odir + qcodes(i) + endoffile);
+      } else {
+         filepath=odir + qcodes(i) +"/";
+         if(!file_exists(filepath)) {
+            command="mkdir " + filepath;
+            er=popen(command, 0);
+         }
+         f = createb(filepath  + qcodes(i) + endoffile);
+      }
       add_variable, f, -1, vname, structof(vdata), dimsof(vdata);
       get_member(f, vname) = vdata;
       save, f, vname;
@@ -415,7 +438,7 @@ func qq_merge_pbds(idir, odir) {
    }
 }
 
-func batch_2k_to_qq(src_dir, dest_dir, mode, seg_dir=, glob=) {
+func batch_2k_to_qq(src_dir, dest_dir, mode, seg_dir=, glob=, dir_struc=) {
 /* DOCUMENT batch_2k_to_qq, src_dir, dest_dir, mode, seg_dir=, glob=
    
    Crawls through a directory structure of 2km x 2km EAARL tiles to generate
@@ -446,6 +469,9 @@ func batch_2k_to_qq(src_dir, dest_dir, mode, seg_dir=, glob=) {
       glob= The glob string to use. Narrows the criteria for inclusion in
          src_dir. Default is "*.pbd".
 
+      dir_struc= creates a Quarter-Quad directory structure; similar to Index
+                 Tiles.
+
    See also: get_conusqq_data qq_segment_pbds qq_merge_pbds
 */
    if(mode < 1 || mode > 3)
@@ -463,7 +489,7 @@ func batch_2k_to_qq(src_dir, dest_dir, mode, seg_dir=, glob=) {
    write, "Segmenting PBDs.";
    qq_segment_pbds, src_dir, seg_dir, glob=glob, mode=mode;
    write, "Merging PBDs.";
-   qq_merge_pbds, seg_dir, dest_dir;
+   qq_merge_pbds, seg_dir, dest_dir,mode, dir_struc=dir_struc;
    
    if(seg_tmp) {
       files = lsfiles(seg_dir);
