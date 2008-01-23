@@ -53,7 +53,8 @@ The  output file is written into the current directory in the form: YYYYMMDD.kml
   "poles=i",  # [0|1] turn on drawing a line to the ground         (default: $opt_poles)
   "width=i",  # set line width                                     (default: $opt_width)
   "colndx=x", # set starting index into color table                (default: $opt_colndx)
-  "kml"       # create kml files instead of kmz
+  "kml",      # create kml files instead of kmz
+  "keepname"  # use the source file name instead of autonaming
 
 EOF
 
@@ -73,12 +74,13 @@ sub get_cli_opts {
   "width=i",  # set line width
   "colndx=i", # set starting index into color table
   "kml",      # create kml files instead of kmz
+  "keepname", # use the source file instead of autonaming
   );
   &showusage() if defined($opt_help);
 }
 
 sub write_header {
-  local($tfil, $oname, $latrng, $lonrng) = @_;
+  local($tfil, $oname) = @_;
 
   $opt_colndx = 0 if ( $opt_colndx > $#colors);
   $color = $colors[$opt_colndx++];
@@ -88,13 +90,6 @@ sub write_header {
   printf OUT ("<Placemark>\n");
   printf OUT ("  <description>%s</description>\n", $tfil );
   printf OUT ("  <name>%s</name>\n", $oname);
-  printf OUT ("  <LookAt>\n");
-  printf OUT ("    <longitude>%s</longitude>\n", $lonrng);
-  printf OUT ("    <latitude>%s</latitude>\n",   $latrng);
-  printf OUT ("    <range>3000000</range>\n");
-  printf OUT ("    <tilt>0.0</tilt>\n");
-  printf OUT ("    <heading>0.0</heading>\n");
-  printf OUT ("  </LookAt>\n");
   printf OUT ("  <visibility>1</visibility>\n");
   printf OUT ("  <open>0</open>\n");
   printf OUT ("  <Style>\n");
@@ -145,6 +140,7 @@ $opt_elev =  1;   # set a default value
 $opt_width=  1;
 $opt_colndx = 0;  # set the starting index value into the color array
 $opt_kml  =  0;
+$opt_keepname = 0;
 
 &get_cli_opts();
 
@@ -156,6 +152,9 @@ for ( $argc=0; $argc<=$#ARGV; ++$argc) {
   $infile = $ARGV[$argc];
 
   $tname = basename($infile);
+  if($opt_keepname) {
+    $YYYYMMDD = (split(/\./,(reverse split(/\//, $infile))[0]))[0];
+  } else {
   undef $junk;
   ($a, $b, $c, $junk) = split(/-/, $tname, 4);
   if ( $a < 1990 ) {
@@ -173,6 +172,7 @@ for ( $argc=0; $argc<=$#ARGV; ++$argc) {
   }
 
   $YYYYMMDD = sprintf("%04d%02d%02d", $y, $m, $d);
+  }
 
   printf("%s\t%s\n", $YYYYMMDD, $infile);
 
@@ -187,7 +187,7 @@ for ( $argc=0; $argc<=$#ARGV; ++$argc) {
   open(OUT, ">$outfile") || die("Unable to write $outfile\n");
 
   # write_header($outfile, $outfile, 38.3, -75.5  );
-  write_header($tname, $outfile, 37.5, -89  );
+  write_header($tname, $outfile);
 
   $cnt = 0;
   while ( $line = <IN> ) {
@@ -205,7 +205,7 @@ for ( $argc=0; $argc<=$#ARGV; ++$argc) {
       $lat *= -1 if ( $NS eq 'S');
       $lon *= -1 if ( $EW eq 'W');
 
-      printf OUT ("%10.5f,%9.5f,%8.2f ", $lon, $lat, $elev*$opt_elev)
+      printf OUT ("%.5f,%.5f,%.2f\n", $lon, $lat, $elev*$opt_elev)
         if ( $cnt%$opt_skip == 0 );
       ++$cnt;
     }
