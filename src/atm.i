@@ -127,6 +127,58 @@ func merge_qi_tiles(dir, glob=, srt=) {
    }
 }
 
+func batch_qi_to_tiles(con_dir, ymd, dir,searchstr=, name=) {
+/* DOCUMENT batch_qi_to_tiles, con_dir, ymd, dir,searchstr, name=
+
+   Loads the data from the files in fname and generates index tiles for them in
+   dir.
+
+   Parameters:
+
+      con_dir: File names of the qi files.
+
+      ymd: The year-month-date of the qi files. format YYYYMMDD
+
+      dir: The directory in which to create the Index Tiles.
+
+   Options:
+
+      searchstr: search string of files to search for   default:"*.pbd"
+
+      name= A name to use within the pbd file that gets generated. This
+         defaults to the first portion of the qi file's filename, up to the
+         first dot.
+
+   See also: load_atm_raw atm_create_tiles merge_qi_tiles
+
+*/
+
+   if(is_void(searchstr)) {
+          searchstr="*.qi"
+   }
+
+   command = swrite(format="find %s -name '%s'", con_dir, searchstr);
+
+   files = ""
+   s = array(string,10000);
+   f = popen(command, 0);
+   nn = read(f,format="%s",s);
+   s = s(where(s));
+   numfiles = numberof(s);
+   newline = "\n"
+   data=[];
+
+   for(i=1; i<=numfiles; i++) {
+
+      filename=s(i);
+      qi_to_tiles(filename, ymd, dir, name=)
+
+   }
+
+}
+
+
+
 func qi_to_tiles(fname, ymd, dir, name=) {
 /* DOCUMENT qi_to_tiles, fname, ymd, dir, name=
 
