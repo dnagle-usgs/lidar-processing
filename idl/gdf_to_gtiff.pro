@@ -6,7 +6,7 @@ pro gdf_to_gtiff, ipath, ifname=ifname, opath=opath, ofname=ofname, indx=indx, s
 ;INPUT KEYWORDS:
 ;	ipath = input path name where the gdf files reside
 ;	ifname = optional; input file name that needs to be converted
-;	opath = optional; writes output geotiff files to opath; defaults to the same path where input file
+;	opath = optional; writes output geotiff files to opath; defaults to mets_geotiff/ directory in input path
 ;	ofname = optional; output file name... should be used only when ifname is used
 ;	indx = optional; if grid is 3-D, then indx is the index to the grid.  
 ;		Can be an array for writing out more than 1 geotiff file. Defaults to indx=1.
@@ -37,6 +37,8 @@ endelse
 
 print, 'Number of files to grid: '+strcompress(string(n_elements(fn_arr)))
 
+if not keyword_set(indx) then $
+	indx = [0,1,3,4]
 
 for i = 0, n_elements(fn_arr)-1L do begin
     ; read 1 file at a time
@@ -47,8 +49,8 @@ for i = 0, n_elements(fn_arr)-1L do begin
     readu, rlun, binsize
     zone_val = 0L
     readu, rlun, zone_val
-    xn = (mets_pos(0,1)-mets_pos(0,0))/binsize + 1
-    yn = (mets_pos(1,1)-mets_pos(1,0))/binsize + 1
+    xn = (mets_pos(0,1)-mets_pos(0,0))/binsize +1
+    yn = (mets_pos(1,1)-mets_pos(1,0))/binsize +1
     dim3 = 0L; # of elements in 3rd dimension
     readu, rlun, dim3
     if (dim3 eq 0) then begin
@@ -61,7 +63,7 @@ for i = 0, n_elements(fn_arr)-1L do begin
     close, rlun
     for j = 0, n_elements(indx)-1L do begin
 	zgrid = reform(mets(indx(j),*,*))
-	print, "    writing geotiff for index j..."
+	print, "    writing geotiff for index "+string(j)+"..."
 	proj_cs_key = '269'+strcompress(string(zone_val), /remove_all)
 	proj_cs_key = fix(proj_cs_key)
 	proj_cit_key = 'PCS_NAD83_UTM_zone_'+strcompress(string(zone_val),/remove_all)+'N'
@@ -77,11 +79,17 @@ for i = 0, n_elements(fn_arr)-1L do begin
 	   fname = fnsplit(n_elements(fnsplit)-1)
 	endif else begin
 	   opath1 = opath
+	   fname = fnsplit(n_elements(fnsplit)-1)
 	endelse
 
 	if not keyword_set(ofname) then begin
 	   strindx = strcompress(string(indx(j)), /remove_all)
-	   ofname1 = (strsplit(fname, '.', /extract))[0]+"_"+strindx+".tif"
+	   if strindx eq 0 then idxcode = "ch"
+	   if strindx eq 1 then idxcode = "be"
+	   if strindx eq 2 then idxcode = "grr"
+	   if strindx eq 3 then idxcode = "crr"
+	   if strindx eq 4 then idxcode = "home" 
+	   ofname1 = (strsplit(fname, '.', /extract))[0]+"_"+idxcode+".tif"
  	endif else begin
 	   ofname1 = ofname
 	endelse
