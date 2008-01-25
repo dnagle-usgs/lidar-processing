@@ -2,78 +2,91 @@
 
 This file documents the steps needed to install ALPS and its required software
 on a Linux computer. In order to follow all of these instructions, you will
-need root or superuser access to the machine.
-
-Note that the path and file names given are examples and may vary.
+may need root or superuser access to the machine.
 
 Overview:
-1. Install ActiveTcl
-2. Install rlwrap
+1. Set up Directories
+2. Install ActiveTcl
+3. Install rlwrap
 4. Install Yorick
-4. Install Yorick-Z
-5. Install Yeti
-6. Install Ytk
-7. Install ALPS
+5. Install Yorick-Z
+6. Install Yeti
+7. Install Ytk
+8. Install ALPS
+9. Install GEOID files
+
+Set up Directories
+------------------
+1. Create the directories for the EAARL/ALPS system.
+
+	sudo mkdir -p /opt/eaarl
+	sudo chown `id -un`.`id -gn` /opt/eaarl
+	mkdir -p /opt/eaarl/packages/src
+	mkdir /opt/eaarl/bin
+
+2. Create the directory for the files you'll be downloaded in the rest of the
+document. Put all downloads in it.
+
+	mkdir /opt/eaarl/tarfiles
 
 ActiveTcl
 ---------
-1. Download the latest version of ActiveTcl.
+1. Download version 8.4.17 of ActiveTcl from their website. Select the
+"-x86_64.tar.gz" file if you have a 64 bit system. Otherwise, select the
+"-ix86.tar.gz" file (most people will use this one).
 
-	http://activestate.com/Products/activetcl/
+	http://downloads.activestate.com/ActiveTcl/Linux/8.4.17/
 
-2. Untar the tarball as a directory in /usr/local/src/.
+2. Untar the tarball as a directory in /opt/eaarl/packages/src/.
 
-	cd /usr/local/src
-	sudo tar zxvf /path/to/ActiveTcl-8.4.14-linux-ix86.tar.gz
-	sudo chown -R `whoami` ActiveTcl8.4.14
+	cd /opt/eaarl/packages/src
+	tar zxvf /opt/eaarl/tarfiles/ActiveTcl8.4.17-linux-ix86.tar.gz
 
 3. Run the install script for ActiveTcl. When it prompts for an installation
-location, choose /usr/local/ActiveTcl/.
+   location, choose /opt/eaarl/packages/ActiveTcl8.4.17.
 
-	cd ActiveTcl8.4.14
-	sudo ./install.sh
+	cd ActiveTcl8.4.17-linux-ix86
+	./install.sh
 
-4. Add links to ActiveTcl in /usr/local/bin
+4. Add links to ActiveTcl in /opt/eaarl/bin/.
 
-	cd /usr/local/bin
-	sudo ln -sf /usr/local/ActiveTcl/bin/page
-	sudo ln -sf /usr/local/ActiveTcl/bin/tclsh
-	sudo ln -sf /usr/local/ActiveTcl/bin/tclsh8.4
-	sudo ln -sf /usr/local/ActiveTcl/bin/teacup
-	sudo ln -sf /usr/local/ActiveTcl/bin/tkcon
-	sudo ln -sf /usr/local/ActiveTcl/bin/wish
-	sudo ln -sf /usr/local/ActiveTcl/bin/wish8.4
+	cd /opt/eaarl/bin
+	ln -sf /opt/eaarl/packages/ActiveTcl8.4.17/bin/page
+	ln -sf /opt/eaarl/packages/ActiveTcl8.4.17/bin/tclsh
+	ln -sf /opt/eaarl/packages/ActiveTcl8.4.17/bin/tclsh8.4
+	ln -sf /opt/eaarl/packages/ActiveTcl8.4.17/bin/teacup
+	ln -sf /opt/eaarl/packages/ActiveTcl8.4.17/bin/tkcon
+	ln -sf /opt/eaarl/packages/ActiveTcl8.4.17/bin/wish
+	ln -sf /opt/eaarl/packages/ActiveTcl8.4.17/bin/wish8.4
 
 rlwrap
 ------
-1. Download the latest version of rlwrap.
+1. Download the rlwrap from the lidar.net server.
 
-	http://utopia.knoware.nl/~hlub/rlwrap/
+	lidar.net:/mnt/alps/eaarl/tarfiles/rlwrap-0.21.tar.gz
 
-2. Untar the tarball as a directory in /usr/local/src/.
+2. Untar the tarball as a directory in /opt/eaarl/packages/src.
 
-	cd /usr/local/src
-	sudo tar zxvf /path/to/rlwrap-0.30.tar.gz
-	sudo chown -R `whoami` rlwrap-0.30
+	cd /opt/eaarl/packages/src
+	tar zxvf /opt/eaarl/tarfiles/rlwrap-0.21.tar.gz
 
 3. Compile and install.
 
-	cd rlwrap-0.30
-	./configure
+	cd rlwrap-0.21
+	./configure --prefix=/opt/eaarl
 	make
-	sudo make install
+	make install
 
 Yorick
 ------
-1. Download the latest version of Yorick.
+1. Download Yorick 2.1.04 from lidar.net:
 
-	http://sourceforge.net/project/showfiles.php?group_id=148451
+	lidar.net:/mnt/alps/eaarl/tarfiles/yorick-2.1.04.tgz
 
-2. Untar the tarball as a directory in /usr/local/src/.
+2. Untar the tarball as a directory in /opt/eaarl/packages/src/.
 
-	cd /usr/local/src
-	sudo tar zxvf /path/to/yorick-2.1.04.tgz
-	sudo chown -R `whoami` yorick-2.1.04
+	cd /opt/eaarl/packages/src
+	tar zxvf /opt/eaarl/tarfiles/yorick-2.1.04.tgz
 
 3. Build yorick.
 
@@ -82,27 +95,25 @@ Yorick
 
 4. Install yorick.
 
-	cd /usr/local
-	sudo tar zxvf /usr/local/src/yorick-2.1.04/yorick-2.1-04.tgz
-	sudo chown -R `whoami` yorick-2.1-04
+	cd /opt/eaarl/packages
+	tar zxvf /opt/eaarl/packages/src/yorick-2.1.04/yorick-2.1-04.tgz
 
-5. Add links to yorick in /usr/local/bin
+5. Add links to yorick in /opt/eaarl/bin
 
-	cd /usr/local/bin
-	sudo ln -sf /usr/local/yorick-2.1-04/bin/yorick
-	sudo ln -sf /usr/local/yorick-2.1-04/bin/gist
+	cd /opt/eaarl/bin
+	ln -sf /usr/local/yorick-2.1-04/bin/yorick
+	ln -sf /usr/local/yorick-2.1-04/bin/gist
 
 Yorick-Z
 --------
-1. Download the latest version of Yorick-Z.
+1. Download Yorick-Z 1.2 from lidar.net:
 
-	http://sourceforge.net/project/showfiles.php?group_id=148451
+	ldiar.net:/mnt/alps/eaarl/tarfiles/yorick-z-1.2.tgz
 
-2. Untar the tarball as a directory in /usr/local/src/.
+2. Untar the tarball as a directory in /opt/eaarl/packages/src/.
 
-	cd /usr/local/src
-	sudo tar zxvf /path/to/yorick-z-1.2.tgz
-	sudo chown -R `whoami` yorick-z-1.2
+	cd /opt/eaarl/packages/src
+	tar zxvf /opt/eaarl/tarfiles/yorick-z-1.2.tgz
 
 3. Compile and install.
 
@@ -110,61 +121,68 @@ Yorick-Z
 	./configure
 	make
 	make check
-	sudo make install
+	make install
 
 Yeti
 ----
-1. Download the latest version of Yeti.
+1. Download Yeti 6.2.1 from lidar.net:
 
-	http://www-obs.univ-lyon1.fr/labo/perso/eric.thiebaut/yeti_download.html
+	lidar.net:/mnt/alps/eaarl/tarfiles/yeti-6.2.1.tar.gz
 
-2. Untar the tarball as a directory in /usr/local/src
+2. Untar the tarball as a directory in /opt/eaarl/packages/src
 
-	cd /usr/local/src
-	sudo tar jxvf /path/to/yeti-6.2.1.tar.bz2
-	sudo chown -R `whoami` yeti-6.2.1
+	cd /opt/eaarl/packages/src
+	tar jxvf /opt/eaarl/tarfiles/yeti-6.2.1.tar.bz2
 
 3. Compile and install.
 
 	cd yeti-6.2.1
 	yorick -batch ./config.i
 	make
-	sudo make install
+	make install
 
 YTK
 ---
-1. Dowload version 1.0a of YTK (you must use exactly this version).
+1. Dowload YTK 1.0a from lidar.net:
 
-	https://sourceforge.net/project/showfiles.php?group_id=42998
+	lidar.net:/mnt/alps/eaarl/tarfiles/ytk-1.0a.tgz
 
-2. Untar the tarball as a directory in /usr/local/src
+2. Untar the tarball as a directory in /opt/eaarl/packages/src
 
-	cd /usr/local/src
-	sudo tar zxvf /path/to/ytk-1.0a.tgz
-	sudo chown -R `whoami` ytk-1.0a
+	cd /opt/eaarl/packages/src
+	tar zxvf /opt/eaarl/tarfiles/ytk-1.0a.tgz
 
 3. Copy the required files to their appropriate places.
 
 	cd ytk-1.0a
-	sudo mkdir /usr/local/yorick-2.1.04/contrib
-	sudo cp ytk.i /usr/local/yorick-2.1.04/contrib/
-	sudo cp ytk.gif /usr/local/yorick-2.1.04/contrib/
+	mkdir /opt/eaarl/packages/yorick-2.1.04/contrib
+	cp ytk.i /opt/eaarl/packages/yorick-2.1.04/contrib/
+	cp ytk.gif /opt/eaarl/packages/yorick-2.1.04/contrib/
 
 ALPS
 ----
 1. Obtain ALPS, either through CVS or as a tarball, and install as
 /opt/eaarl/lidar-processing. For the tarball:
 
-	cd /opt/
-	sudo mkdir eaarl
-	sudo chown -R `whoami` eaarl
-	cd eaarl
-	tar zxvf /path/to/alps.tar.gz
+	cd /opt/eaarl
+	tar zxvf /opt/eaarl/tarfiles/alps.tar.gz
 
 2. Build and install the ALPS yorick plugins.
 
 	cd /opt/eaarl/lidar-processing/yorick-extend/rcf
 	yorick -batch make.i
 	make
-	sudo make install
+	make install
 	make clean
+
+GEOID Files
+-----------
+1. Obtain the GEOID files from lidar.net:
+
+	lidar.net:/mnt/alps/eaarl/tarfiles/geoid03_pbdfiles.tgz
+
+2. Untar the tarball as a directory in /opt/eaarl/lidar-processing
+
+	cd /opt/eaarl/lidar-processing
+	tar zxvf /opt/eaarl/tarfiles/geoid03_pbdfiles.tgz
+
