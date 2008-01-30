@@ -108,7 +108,7 @@ Yorick-Z
 --------
 1. Download Yorick-Z 1.2 from lidar.net:
 
-	ldiar.net:/mnt/alps/eaarl/tarfiles/yorick-z-1.2.tgz
+	lidar.net:/mnt/alps/eaarl/tarfiles/yorick-z-1.2.tgz
 
 2. Untar the tarball as a directory in /opt/eaarl/packages/src/.
 
