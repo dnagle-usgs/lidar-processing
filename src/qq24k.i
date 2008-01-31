@@ -412,6 +412,11 @@ func qq_merge_pbds(idir, odir, mode, dir_struc=) {
       vdata = vdata(sort(vdata.soe));
       vname = "qq" + qcodes(i);
       
+      if(!is_void(dir_struc)) {
+         filepath=odir + qcodes(i) +"/";
+         mkdirp(filepath);
+      }
+
       if(mode==3) {
          endoffile="_be.pbd";
       } if(mode==2) {
@@ -421,16 +426,9 @@ func qq_merge_pbds(idir, odir, mode, dir_struc=) {
       }
 
 
-      if(is_void(dir_struc)) {
-         f = createb(odir + qcodes(i) + endoffile);
-      } else {
-         filepath=odir + qcodes(i) +"/";
-         if(!file_exists(filepath)) {
-            command="mkdir " + filepath;
-            er=popen(command, 0);
-         }
-         f = createb(filepath  + qcodes(i) + endoffile);
-      }
+      
+
+      f = createb(filepath  + qcodes(i) + endoffile);
       add_variable, f, -1, vname, structof(vdata), dimsof(vdata);
       get_member(f, vname) = vdata;
       save, f, vname;
