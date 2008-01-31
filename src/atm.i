@@ -290,9 +290,10 @@ func atm_to_alps(atm_raw, ymd) {
    idx = where(atm_raw.lat != 0 & atm_raw.lon != 0);
    if(numberof(idx)) {
       u = fll2utm(atm_raw(idx).lat/1000000.0, atm_raw(idx).lon/1000000.0);
-      atm(idx).north = int(u(1,) * 100);
-      atm(idx).east = int(u(2,) * 100);
-      zone = u(3,);
+      d=int(u);
+      atm(idx).north = (d(1,) * 100);
+      atm(idx).east = (d(2,) * 100);
+      zone = d(3,);
       write, "UTM Zone of data:"
       write, "Min:", min(zone);
       write, "Max:", max(zone);
