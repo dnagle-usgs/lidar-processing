@@ -144,7 +144,7 @@ proc bathctl { } {
 		.bathctl.first  \
 		.bathctl.last  \
 		.bathctl.maxsat  \
-		-side top
+		-side top -anchor e
 
 	  pack .bathctl.plot  .bathctl.cancel -side left
 }
