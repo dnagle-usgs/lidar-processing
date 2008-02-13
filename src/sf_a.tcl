@@ -1538,7 +1538,7 @@ proc atris_init { } {
 				destroy .adp
 				set f $adapt_image_dir/$adapt_ofname
 				set base_dir [ file dirname $f ]
-				wm title . $base_dir
+				wm title . "RGB: $base_dir"
 				open_loader_window "Loading files.\nThis will take a few seconds."
 				set split_dir [split $f /]
 				set dir [join [lrange $split_dir 0 end-1] /]
@@ -2138,7 +2138,7 @@ proc select_file { } {
 	}
 	if { $f != "" } {
 		set base_dir [ file dirname $f ]
-		wm title . $base_dir
+		wm title . "RGB: $base_dir"
 		if { [file extension $f ] == ".tar" } {
 			puts "It's a tar. VFS mounting it..";
 			open_loader_window "VFS Mounting\n$f.\nThis may take several seconds, even minutes! "
@@ -2189,7 +2189,7 @@ proc select_path { path } {
 
 	set dir $path
 
-	wm title . $dir
+	wm title . "RGB: $dir"
 	puts "Using VFS mounting to load tar files...";
 	open_loader_window "VFS Mounting\n$path\nThis will take only a few seconds"
 	.loader.ok configure -state disabled
@@ -2388,6 +2388,8 @@ proc tk_getString {w var title text {initial {}}} {
 # ] End Procedures #################################
 
 # [ GUI Initialization #############################
+
+wm title . "RGB"
 
 ### [ Frames
 frame .canf -borderwidth 5 -relief sunken

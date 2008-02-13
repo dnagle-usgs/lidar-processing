@@ -14,6 +14,8 @@ package require vfs::tar
 package require cmdline
 package require comm
 
+wm title . "CIR"
+
 set cir_options {
 	{parent.arg -1 "The comm port number for the application (usually ytk) calling this program. Default: -1 (disabled)"}
 	{sf.arg -1 "The comm port number for sf_a.tcl. Default: -1 (disabled)"}
@@ -167,7 +169,7 @@ proc resample { s } {
   }
   .canf.can configure \
 	-scrollregion  "0 0 [ image width   $img ] [image height $img] " 
-  wm title . "[ file tail $fn ] 1:$sample"
+  wm title . "CIR: [ file tail $fn ] 1:$sample"
   update
 }
 
@@ -216,12 +218,12 @@ puts "tar file: $tf"
   set pat "tar/$settings(file_date)-$hms-*-cir.jpg"
   if { [ catch { set fn [ glob $pat ] } ] }  {
     puts "No file: $pat"
-    wm title . "No Image 1:$sample"
+    wm title . "CIR: No Image 1:$sample"
     $img0 blank
     $img blank
     return 5
   } else {
-    wm title . "[ file tail $fn ] 1:$sample"
+    wm title . "CIR: [ file tail $fn ] 1:$sample"
     $img0 blank
     $img blank
     $img0 read $fn
@@ -393,6 +395,7 @@ proc prefs { } {
   global tar
   destroy .p
   toplevel .p
+  wm title .p "CIR Menu"
   menu .p.menubar
   .p configure -menu .p.mb
   menu .p.mb
