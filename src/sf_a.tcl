@@ -788,7 +788,7 @@ proc show_img { n } {
 # continued line as follows:
 	global fna nfiles img run ci data imgtime dir img_opts \
 		lat lon alt ew ns pdop nsat seconds_offset hms sod timern cin hsr \
-		frame_off llat llon pitch roll head yes_head zoom \
+		frame_off llat llon pitch roll head yes_head zoom inhd \
 		camtype DEBUG_SF mogrify_pref mogrify_exists tarname show_fname \
 		mog_normalize mog_inc_contrast mog_dec_contrast mog_despeckle \
 		mog_enhance mog_equalize mog_monochrome img img0 last_tar tar \
@@ -863,14 +863,14 @@ proc show_img { n } {
 
 		set rotate_amount 0
 		
-		if {$yes_head && $only_tcl} {
+		if {$inhd && $only_tcl} {
 			.mb.options invoke "Include Heading"
 			tk_messageBox  \
 				-message "Mogrify is disabled, so heading utilizations has been disabled." \
 				-type ok
 		}
 
-		if {$yes_head} {
+		if {$inhd} {
 			# include heading information...
 			get_heading 1
 			$img blank
@@ -881,7 +881,7 @@ proc show_img { n } {
 			set rotate_amount [expr ($rotate_amount + 180)]
 		}
 
-		set rotate_amount [expr {$rotate_amount % 360}]
+		set rotate_amount [expr {$rotate_amount > 360 ? $rotate_amount - 360 : $rotate_amount}]
 		
 
 		# Make zoom variables
@@ -1118,51 +1118,26 @@ proc archive_save_marked { type } {
 }
 
 proc get_heading {inhd} {
-	global yes_head img head inhd_count sod tansstr \
-		mogrify_pref mogrify_exists
-
-	## this procedure gets heading information from current data set
-	## amar nayegandhi 03/04/2002.
-	if {$inhd == 1} {
-		if { [ ytk_exists ] == 1 && ![string equal $mogrify_pref "only tcl"] } {
-			set yes_head 1;
-			## resize the canvas screen
-			.canf.can configure -height 420 -width 440
-			set psf [pid]
-			## the function request_heading is defined in eaarl.ytk
-			send_ytk request_heading $psf $inhd_count $sod
-			## tmp file is now saved as /tmp/tans_pkt.$psf"
-			if { [catch {set f [open "/tmp/tans_pkt.$psf" r] } ] } {
-				tk_messageBox -icon warning -message "Heading information is being loaded... Click OK to continue"
-			} else {
-				set tansstr [read $f]
-				set headidx [string last , $tansstr]
-				set head [string range $tansstr [expr {$headidx + 1 }] end]
-				close $f
-			}
-		} else {
-			if { !([ytk_exists] == 1) } {
-				tk_messageBox  \
-					-message "ytk isn\'t running. You must be running Ytk and the eaarl.ytk program to use this feature."  \
-					-type ok
-			} else {
-				if { !$mogrify_exists } {
-					tk_messageBox  \
-						-message "You do not have mogrify on your system, so images cannot be rotated."  \
-						-type ok
-				} else {
-					tk_messageBox  \
-						-message "Please enable mogrify to use this feature."  \
-						-type ok
-				}
-			}
-		}
-	} else {
-		## resize the canvas screen
-		.canf.can configure -height 240 -width 320
-		set head -180;
-		set yes_head 0
-	}
+   global sod tansstr head
+## this procedure gets the attitude information for the cir data
+## amar nayegandhi 12/28/04
+   if {$inhd == 1} {
+      .canf.can configure -height 420 -width 440
+      set psf [pid]
+## the function request_heading is defined in eaarl.ytk
+      send_ytk request_heading $psf $inhd $sod
+## tmp file is now saved as /tmp/tans_pkt.$psf
+      if { [catch {set f [open "/tmp/tans_pkt.$psf" r] } ] } {
+         tk_messageBox -icon warning -message "Heading information is being loaded... Click OK to continue"
+      } else {
+         set tansstr [read $f]
+         set headidx [string last , $tansstr]
+         set head [string range $tansstr [expr {$headidx + 1 }] end]
+         close $f
+      }
+   } else {
+      set head 0
+   }
 }
 
 proc apply_zoom_factor { percentage } {
