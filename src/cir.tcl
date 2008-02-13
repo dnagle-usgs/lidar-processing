@@ -228,12 +228,11 @@ puts "tar file: $tf"
     $img copy $img0 -subsample $sample
     if { $inhd == 1 } {
       	get_heading $inhd
-	file delete /tmp/cir_tmp.jpg
 	catch { [image delete $img1] }
 	set img1 [image create photo]
 	$img1 copy $img0 -subsample $sample
-	$img1 write /tmp/cir_tmp.jpg -format jpeg
-	set fn /tmp/cir_tmp.jpg
+	set fn /tmp/cir_tmp_[pid].jpg
+	$img1 write $fn -format jpeg
 	# puts "heading = $head \n"
 	exec mogrify -rotate [expr ($settings(head))] $fn
     	$img0 blank
@@ -241,6 +240,7 @@ puts "tar file: $tf"
 	$img read $fn
         .canf.can configure \
 	  -scrollregion  "0 0 [ image width   $img ] [image height $img] " 
+	file delete $fn
     }
   }
   update
