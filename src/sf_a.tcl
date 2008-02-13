@@ -47,12 +47,13 @@ if { ![catch {package require cmdline}] } {
 		{camtype.arg 1 "The type of photography to be viewed. 1 for EAARL photography; 2 for ADAPT photography. Default: 1"}
 		{parent.arg -1 "The comm port number for the application (usually ytk) calling this program. Default: -1 (disabled)"}
 		{cir.arg -1 "The comm port number for cir.tcl. Default: -1 (disabled)"}
+      {path.arg "/data/" "The initial path to use. Default: /data/"}
 	}
 	set sf_usage "\nUsage:\n sf_a.tcl \[options]\nOptions:\n"
 
 	array set params [::cmdline::getoptions argv $sf_options $sf_usage]
 } else {
-	array set params { camtype 1 parent -1 cir -1 }
+	array set params { camtype 1 parent -1 cir -1 path "/data/"}
 }
 # ] End Command Line Options #######################
 
@@ -74,7 +75,7 @@ set step 1          ;# Step by thru images
 set run 0           ;#
 set ci  0           ;# Current image; glued to .slider
 set nfiles 0        ;# Number of files
-set dir "/data/0/"  ;# Base directory
+set dir $params(path)  ;# Base directory
 set base_dir $dir
 set timern "hms"    ;# "hms" "sod" "cin"
 set fcin 0          ;# First index for range

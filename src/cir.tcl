@@ -17,6 +17,7 @@ package require comm
 set cir_options {
 	{parent.arg -1 "The comm port number for the application (usually ytk) calling this program. Default: -1 (disabled)"}
 	{sf.arg -1 "The comm port number for sf_a.tcl. Default: -1 (disabled)"}
+   {path.arg "/data/" "Initial path to use. Default: /data/"}
 }
 set cir_usage "\nUsage:\n sf_a.tcl \[options]\nOptions:\n"
 
@@ -24,7 +25,7 @@ array set params [::cmdline::getoptions argv $cir_options $cir_usage]
 set ytk_id  $params(parent) ;# Comm id for ytk
 set sf_a_id $params(sf)     ;# Comm id for sf_a
 
-set settings(path) 	"/data"
+set settings(path) 	$params(path)
 set settings(step)  	1
 set settings(sample) 	7
 set settings(gamma) 	1.0
