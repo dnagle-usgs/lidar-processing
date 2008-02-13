@@ -1316,7 +1316,6 @@ ComboBox .l1wid.bf4.1.d -text "Define Region..." -width 15 -values \
        {
 	 Rubberband\ Box\
 	 Points\ in\ Polygon\
-	 Line\ Segment
 	 Rectangular\ Coords\
 	 Multiple\ PIPs\
        }\
@@ -1344,10 +1343,6 @@ ComboBox .l1wid.bf4.1.d -text "Define Region..." -width 15 -values \
         }
     }
     if {$defr == 2} {
-       exp_send "q = gga_click_sel(1, win=$_map(window));\r"
-       expect ">"
-    }
-    if {$defr == 3} {
         destroy .l1widc
         toplevel .l1widc
 	frame .l1widc.lon
@@ -1394,7 +1389,7 @@ ComboBox .l1wid.bf4.1.d -text "Define Region..." -width 15 -values \
 
 
    }
-   if {$defr == 4} {
+   if {$defr == 3} {
         exp_send "q = \[\]\r"
         expect ">"
 	multi_pip_sel {}
