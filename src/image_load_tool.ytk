@@ -1,7 +1,7 @@
 
 exp_send "#include \"jpeg_support.i\"\n"
 
-proc ytk_image_load_tool { } {
+proc ytk_image_load_tool { {start_dir "~/"} } {
   
 	global imgftypes imgwldftypes img_win img_dofma img_winsize img_coords img_filename img_coords_exist imgwldfilename
 
@@ -21,8 +21,8 @@ proc ytk_image_load_tool { } {
 	}
 
 	set lw .loadimage
-	set img_filename "~/"
-	set imgwldfilename "~/"
+	set img_filename $start_dir
+	set imgwldfilename $start_dir
 	set img_win 6
 	set img_dofma 0
 	set img_coords_exist 0
