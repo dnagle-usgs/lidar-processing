@@ -7,7 +7,7 @@ require, "comparison_fns.i"
 func dataReg(data1, data2, win=, plot=, ucmin=, ucmax=, data1plot=, data2plot=, filename=, rwin=, splot=, 
 regionresultpbd=, regionresulttxt=, oply=) {
 
-/* Authors: Jim Lebonitte                       created on: June 20, 2007
+/* DOCUMENT Authors: Jim Lebonitte                       created on: June 20, 2007
             Amar Nayegandhi  
 
 This function compares two datasets to see if an area that should be "unchanged"
@@ -147,8 +147,8 @@ is the same
       xyzdata=xyzdata/100;   
 
       compare_pts(eaarldata, xyzdata, fname=filename, mode=3);
-      plot_be_kings_elv(filename, win=rwin )
-
+      plot_be_kings_elv(filename, win=rwin );
+      window, rwin;
 
 /* Data has been extracted into data1 and data2 */
      numpointsdata1=numberof(data1);
@@ -175,6 +175,8 @@ is the same
      write, f1, numpointsdata1(0),   avgdata1(0), meddata1(0);
      write, f1, numpointsdata2(0),   avgdata2(0), meddata2(0);
 
+      close, f;
+      close, f1;
 }
 
 func computeMeanErr(dir) {
