@@ -280,37 +280,46 @@ if { $load_on_start != "" } {
 }
 
 proc yorick {}  {
-	global _ytk
-	global interact_out indoc hwin 
-	global str
-	global Y_SITE
-	upvar  spawn_id spawn_id
-	expect ">"
-	set n 0;
-	interact   {
-		-o
-		-re "/\\* DOCUMENT.*\\*/"   { 
-			regsub -all "\r" $interact_out(0,string) "" str
-				if { $_ytk(separate_help_win) == "Yes" } {
-					incr hwin
-					set wintitle [ lindex [ split $str "\n" ] 0 ]
-					toplevel .docwin$hwin
-					set cmd "scrollbar .docwin$hwin.sb -command {.docwin$hwin.doc yview }"
-					eval $cmd
+   global _ytk
+   global interact_out indoc hwin
+   global str
+   global Y_SITE
+   upvar  spawn_id spawn_id
+   expect ">"
+   set n 0;
+   interact   {
+      -o
+      -nobuffer
+      -re "/\\* DOCUMENT.*\n" {
+         regsub -all "\r" $interact_out(0,string) "" str
+         if { $_ytk(separate_help_win) == "Yes" } {
+            interact {
+               -o
+               -re ".*\\*/" {
+                  regsub -all "\r" $interact_out(0,string) "" str2
+                  set str "$str$str2"
+                  incr hwin
+                  set wintitle [ lindex [ split $str "\n" ] 0 ]
+                  toplevel .docwin$hwin
+                  set cmd "scrollbar .docwin$hwin.sb -command {.docwin$hwin.doc yview }"
+                  eval $cmd
 
-					set cmd "text .docwin$hwin.doc  -height 25 \
-						-yscrollcommand {  .docwin$hwin.sb set }"
-					eval $cmd
-					.docwin$hwin.doc insert end $str
-					pack .docwin$hwin.doc -side left -fill both -expand 1
-					pack .docwin$hwin.sb -side left -fill y -expand 0
-					wm title .docwin$hwin $wintitle
-				} else {
-					send_user $str
-				}
-		}
-	}
+                  set cmd "text .docwin$hwin.doc  -height 25 \
+                     -yscrollcommand {  .docwin$hwin.sb set }"
+                  eval $cmd
+                  .docwin$hwin.doc insert end $str
+                  pack .docwin$hwin.doc -side left -fill both -expand 1
+                  pack .docwin$hwin.sb -side left -fill y -expand 0
+                  wm title .docwin$hwin $wintitle
+                  return
+               }
+               timeout 1 return
+            }
+         }
+      }
+   }
 }
+
 wm withdraw .
 yorick
 file delete $ytk_fifo_name
