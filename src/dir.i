@@ -262,3 +262,33 @@ func file_exists(filename) {
    return numberof(out);
 }
 
+func file_copy(src, dest, force=) {
+/* DOCUMENT file_copy, src, dest, force=
+   
+   Will copy file src to dest. dest must be a full path and filename, and the
+   directory to contain the destination must already exist. If the file already
+   exists as dest, it will be overwritten.
+
+   If ytk is running, this will use Tcl to copy the file. Otherwise, it will
+   use native Yorick commands, which are noticeably slower. Both methods are
+   drastically faster than using 'system, "cp src dest"'.
+*/
+   extern _ytk;
+   if(_ytk) {
+      default, force, 1;
+      cmd = "file copy";
+      if(force)
+         cmd = cmd + " -force";
+      cmd = cmd + " -- " + src + " " + dest + ";\r";
+      tkcmd, cmd;
+   } else {
+      fs = open(src, "rb");
+      c = array(char, sizeof(fs));
+      _read, fs, 0, c;
+      close, fs;
+      fd = open(dest, "wb");
+      _write, fd, 0, c;
+      close, fd;
+      remove, dest + "L";
+   }
+}

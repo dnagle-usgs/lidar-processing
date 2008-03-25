@@ -196,7 +196,7 @@ fileevent $ytk_fifo readable {
 		send_user "*** Ytk Error in:$ycmdstr"
 		incr tkcmd_line
 	}
-	update
+	update idletasks
 }
 
 set noyorick 0

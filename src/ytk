@@ -229,7 +229,7 @@ fileevent $ytk_fifo readable {
   }  
   .tx.doc yview  moveto 1.0;
   .tx.doc delete  1.0  "end - 100 lines"
-  update
+  update idletasks
 }
 
 

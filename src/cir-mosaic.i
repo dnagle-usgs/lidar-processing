@@ -605,9 +605,8 @@ NewY = Yoff1 + CP_Y
 
 }
 
-
-func gen_cir_tiles(gga, src, dest, copyjgw=, toscript= ) {
-/* DOCUMENT gen_cir_tiles, gga, src, dest, copyjgw=, toscript=
+func gen_cir_tiles(gga, src, dest, copyjgw=) {
+/* DOCUMENT gen_cir_tiles, gga, src, dest, copyjgw=
 
 This function converts the cir image files (and corresponding world files)  from a "minute" directory into our regular 2k by 2k tiling format.
 
@@ -616,13 +615,12 @@ This function converts the cir image files (and corresponding world files)  from
  	src : source directory where the cir files in the "minute" format  are stored.
 	dest: destination directory.
 	copyjgw = set to 1 to copy the corresponding jgw files along with the jpg files.  Set to 0 if you don't want the jgw files to be copied over. Default = 1.
-        toscript = set to a path/filename and a shell script will be generated to do the actual copying
 */
    fix_dir, src;
    fix_dir, dest;
    default, copyjgw, 1;
-   default, toscript, "";
 
+   write, "Generating a list of all images...";
    files = find(src, glob="*.jpg");
    files_sod = hms2sod(atoi(strpart(files, -13:-8)));
    
@@ -631,12 +629,9 @@ This function converts the cir image files (and corresponding world files)  from
    east = utm_coords(2,);
    zone = utm_coords(3,);
    utm_coords = [];
-
-   if(strlen(toscript)) {
-      f = open(toscript, "w");
-      write, f, format="%s\n", "#!/bin/bash";
-   }
-
+   
+   tstamp = [];
+   timer_init, tstamp;
    for(i = 1; i <= numberof(files); i++) {
       w = where(gga.sod == files_sod(i));
       if(numberof(w) == 1) {
@@ -648,31 +643,17 @@ This function converts the cir image files (and corresponding world files)  from
          ttile = swrite(format="t_e%d_n%d_%d/", tte, ttn, int(zone(i)));
          itile = swrite(format="i_e%d_n%d_%d/", ite, itn, int(zone(i)));
          fdir = dest + itile + ttile;
-         if(strlen(toscript))
-         cmd = "cp " + files(i) + " " + fdir;
-         if(strlen(toscript)) {
-            write, f, format="\necho %s - %d of %d\nmkdir -p %s\n%s\n", file_tail(files(i)), i, numberof(files), fdir, cmd;
-         } else {
-            mkdirp, fdir;
-            system, cmd;
-         }
+         mkdirp, fdir;
+         file_copy, files(i), fdir + file_tail(files(i));
          if (copyjgw) {
             jgwfile = file_rootname(files(i))+".jgw";
             if (file_exists(jgwfile)) {
-               cmd = "cp " + jgwfile + " " + fdir; 
-               if(strlen(toscript))
-                  write, f, format="%s\n", cmd;
-               else
-                  system, cmd; 
+               file_copy, jgwfile, fdir + file_tail(jgwfile);
             }
          }
-         if(strlen(toscript) == 0 || ! (i % 100) || i == numberof(files))
-            write, format="%d of %d copied\r", i, numberof(files);
+         timer_tick, tstamp, i, numberof(files);
       }
    }
-   write, format="%s", "\n";
-   if(strlen(toscript))
-      close, f;
 }
 
 func copy_sod_cirs(sods, src, dest, copyjgw=, progress=) {
