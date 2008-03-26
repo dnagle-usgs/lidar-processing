@@ -6,11 +6,12 @@ local ytime_i;
 
    Functions to manipulate 32 bit time of day values.  These functions convert
    to/from soe, sod, and hms.  Hms is hours-minutes-seconds, soe is
-   seconds-of-epoch (since midnight, jan 1, 1970), and sod is seconds-of-day.
+   seconds-of-epoch (since midnight, Jan 1, 1970), and sod is seconds-of-day.
    There are 86400 seconds in a day.
 
    See also:
-      soe2sod soe2time hms2sod sod2hms time2soe
+      getsod soe2sod soe2time hms2sod sod2hms time2soe time_correct is_leap
+      year_cum_months soe2ymd ymd2doy time_plot time_diff
 */
 
 extern _ys;

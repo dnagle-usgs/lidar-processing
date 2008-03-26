@@ -711,6 +711,82 @@ func timer_tick(&tstamp, cur, cnt, msg) {
    }
 }
 
+func strsplit(str, sep) {
+/* DOCUMENT strsplit(str, sep)
+
+   Given an input string (or array of strings), this will split the string(s)
+   into arrays at each instance of the separator.
+
+   A pair of separators with nothing between them results in "". If some of the
+   strings in an array have more fields than others, the shorter-fielded ones
+   will be padded with (nil).
+
+   This will work only on one-dimensional arrays and scalar strings.
+
+   Examples:
+
+   > strsplit("hello,world", ",")
+   ["hello","world"]
+
+   > strsplit("foo,,bar", ",")
+   ["foo","","bar"]
+
+   > strsplit(["a b c", "1 2 3 4"], " ")
+   [["a","1"],["b","2"],["c","3"],[(nil), "4"]]
+
+   > strsplit("anythingSPLITcanSPLITseparate", "SPLIT")
+   ["anything", "can", "separate"]
+
+   In a one-dimensional array: If res is the result, then res(1,) contains the
+   substrings for the first element, and res(,1) contains the first field of
+   all elements.
+
+   Original David Nagle
+*/
+   str = str;
+   match = [];
+   parts = array(string, dimsof(str), 1);
+   res = regmatch(sep, str, match, indices=1);
+   while(numberof(where(res))) {
+      new = array(string, dimsof(str));
+      w = where(match(1,) > 1 & res);
+      if(numberof(w)) {
+         idx = array(0, 2, numberof(w));
+         idx(2,) = match(1,w) - 1;
+         new(w) = strpart(str(w), idx);
+         idx = array(0, 2, numberof(w));
+         idx(1,) = match(2,w) - 1;
+         idx(2,) = strlen(str(w));
+         str(w) = strpart(str(w), idx);
+      }
+      w = where(match(1,) <= 1 & res);
+      if(numberof(w)) {
+         new(w) = "";
+         idx = array(0, 2, numberof(w));
+         idx(1,) = match(2,w) - 1;
+         idx(2,) = strlen(str(w));
+         str(w) = strpart(str(w), idx);
+      }
+      w = where(strlen(str) > 0 & !res);
+      if(numberof(w)) {
+         new(w) = str(w);
+         str(w) = string(0);
+      }
+      grow, parts, new;
+      res = regmatch(sep, str, match, indices=1);
+   }
+   w = where(strlen(str) > 0);
+   if(numberof(w)) {
+      new = array(string, dimsof(str));
+      new(w) = str(w);
+      grow, parts, new;
+   }
+   if(dimsof(parts)(1) > 1)
+      return parts(,2:);
+   else
+      return parts(2:);
+}
+
 func strjoin(lst, sep) {
 /* DOCUMENT strjoin(lst, sep)
    Returns a string created by joining together the elements of lst with sep.
@@ -722,4 +798,17 @@ func strjoin(lst, sep) {
    return transpose([lst, array(sep, numberof(lst))])(*)(:-1)(sum);
 }
 
+func quartiles(ary) {
+/* DOCUMENT quartiles(ary)
+   Returns the first, second, and third quartiles for the array.
 
+   See also: median
+
+   Original David Nagle 2008-03-26
+*/
+   ary = ary(sort(ary));
+   q1 = median(ary(:numberof(ary)/2));
+   q2 = median(ary);
+   q3 = median(ary(::-1)(:numberof(ary)/2));
+   return [q1, q2, q3];
+}
