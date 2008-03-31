@@ -64,7 +64,7 @@ func batch_analysis(path, kings=, plot=, ext=, out_txt_results_file=, elv=) {
        
 }
 require, "fitlsq.i"
-func plot_be_kings_elv(file_name, ps_ofname=,pse=,out_txt_file=, win=, saveplot=, head_anal=, pdop_anal=, n_data=, path=, donotplot=, cl=, plotcl=) {
+func plot_be_kings_elv(file_name, ps_ofname=,pse=,out_txt_file=, win=, saveplot=, head_anal=, pdop_anal=, n_data=, path=, donotplot=, cl=, plotcl=, xtitle=, ytitle=) {
 
 // cl = confidence level
 // plotcl = set to 1 if you want to plot using the cl value. Otherwise, it only write the RMSE value based on the cl.
@@ -73,6 +73,9 @@ func plot_be_kings_elv(file_name, ps_ofname=,pse=,out_txt_file=, win=, saveplot=
   if (is_void(win)) window, 4;
   if (!pse) pse = 1;
   if (is_void(cl)) cl = 0.95 // defaults to 95% cl
+  if (is_void(xtitle)) xtitle = "Ground Truth Data (m)"
+  if (is_void(ytitle)) ytitle = "Lidar Data (m)"
+  
   extern i, n, be, kings_elv, diff1, edb, tans, pnav, pdop_val;
   
   if (path) {
@@ -140,8 +143,10 @@ func plot_be_kings_elv(file_name, ps_ofname=,pse=,out_txt_file=, win=, saveplot=
     if (!donotplot) {
     plmk, be, kings_elv, width=10, marker=4, msize=0.1, color="black";
     limits, square=1;
-    limits, -1,3,-1,3
-    xytitles, "Ground Survey Elevations (m)", "Lidar Elevations (m)";
+  //  limits, -1,3,-1,3
+   // limits, max(be), min(be), max(kings_elv), min(kings_elv)
+    limits;
+    xytitles, xtitle, ytitle;
     //pltitle, (split_path(file_name(ai), -1))(2);
     }
     mx_y = min(max(be), max(kings_elv));
@@ -198,8 +203,8 @@ func plot_be_kings_elv(file_name, ps_ofname=,pse=,out_txt_file=, win=, saveplot=
     pause, pse;
     }
     if (saveplot) {
-      system("/usr/X11R6/bin/xwd -out "+file_name(ai)+".xwd");
-      system("/usr/X11R6/bin/convert "+file_name(ai)+".xwd "+file_name(ai)+".png");
+      system("/usr/bin/xwd -out "+file_name(ai)+".xwd");
+      system("/usr/bin/convert "+file_name(ai)+".xwd "+file_name(ai)+".png");
       system("\\rm "+file_name(ai)+".xwd");
     }
     if (out_txt_file) {
