@@ -178,10 +178,11 @@ end
 
 pro plot_zbuf_eaarl_grids, xgrid, ygrid, zgrid, max_elv_limit=max_elv_limit, $
 		      min_elv_limit = min_elv_limit, num=num, save_grid_plot=save_grid_plot, $
-			maxelv = maxelv, minelv = minelv
+			maxelv = maxelv, minelv = minelv, missing=missing
   ; this procedure will make a color coded grid plot
   ; amar nayegandhi 5/14/03
 
+   if (not keyword_set(missing)) then missing = -32767
   ; set current device to z buffer
   thisdevice = !D.name
   set_plot, 'Z', /copy
@@ -203,13 +204,13 @@ pro plot_zbuf_eaarl_grids, xgrid, ygrid, zgrid, max_elv_limit=max_elv_limit, $
   grid_ea_limit = xgrid[n_elements(xgrid)-1]
   grid_so_limit = ygrid[0]
   grid_no_limit = ygrid[n_elements(ygrid)-1]
-  idx = where(zgrid ne -100, complement=idx1)
+  idx = where(zgrid ne missing, complement=idx1)
   if ((not keyword_set (maxelv)) and (not keyword_set (minelv))) then begin
     if idx[0] ne -1 then begin
       max_elv = max(zgrid[idx], min = min_elv)
     endif else begin
-       max_elv = -100
-       min_elv = -100
+       max_elv = missing
+       min_elv = missing
     endelse
     if max_elv gt max_elv_limit then max_elv = max_elv_limit
     if min_elv lt min_elv_limit then min_elv = min_elv_limit
@@ -255,7 +256,7 @@ pro make_GE_plots, xgrid=xgrid, ygrid=ygrid, zgrid=zgrid, geotif_file=geotif_fil
 		max_elv_limit=max_elv_limit, min_elv_limit = min_elv_limit, num=num, $
 		save_grid_plot=save_grid_plot, maxelv = maxelv, minelv = minelv, filetype=filetype,$
 		topmax=topmax, botmin=botmin, settrans=settrans, $
-		colorbar_plot=colorbar_plot
+		colorbar_plot=colorbar_plot, missing=missing
   ; this procedure will make a color coded plot of the grid without any boundary lines and coordinates
   ; this procedure uses the Z Buffer... no actual image will be plotted on the window
   ; very useful for making gifs that will be used in Google Earth
@@ -278,7 +279,7 @@ pro make_GE_plots, xgrid=xgrid, ygrid=ygrid, zgrid=zgrid, geotif_file=geotif_fil
   ; settrans = set to 1 to include transparency in gif images.  Transparency will take place only when missing value is greater than 5% of image.
   ; colorbar_plot = set to 1 to write out a file that contains the colorbar with min and max values
 
-
+  if (not keyword_set(missing)) then missing = -32767
   ; set current device to z buffer
   thisdevice = !D.name
   set_plot, 'Z', /copy
@@ -300,7 +301,7 @@ pro make_GE_plots, xgrid=xgrid, ygrid=ygrid, zgrid=zgrid, geotif_file=geotif_fil
   loadct, 39 
   print, "    plotting gridded data in Z Buffer ..."
   if (not keyword_set (max_elv_limit)) then max_elv_limit = 100000L
-  if (not keyword_set (min_elv_limit)) then min_elv_limit = -100000L 
+  if (not keyword_set (min_elv_limit)) then min_elv_limit = missing 
   if (not keyword_set (num)) then num = 1
   if (not keyword_set (filetype)) then filetype = "png"
 
@@ -310,7 +311,7 @@ pro make_GE_plots, xgrid=xgrid, ygrid=ygrid, zgrid=zgrid, geotif_file=geotif_fil
     grid_so_limit = ygrid[0]
     grid_no_limit = ygrid[n_elements(ygrid)-1]
     celldim = xgrid[1]-xgrid[0]
-    idx = where(zgrid ne -100, complement=idx1)
+    idx = where(zgrid ne missing, complement=idx1)
     xn = n_elements(zgrid[0,*]);
     yn = n_elements(zgrid[*,0]); 
   endif 
@@ -325,7 +326,7 @@ pro make_GE_plots, xgrid=xgrid, ygrid=ygrid, zgrid=zgrid, geotif_file=geotif_fil
     yn = n_elements(zgrid[*,0]); 
     grid_ea_limit = grid_we_limit + xn*celldim
     grid_so_limit = grid_no_limit - yn*celldim
-    idx = where(zgrid ne -100, complement=idx1)
+    idx = where(zgrid ne missing, complement=idx1)
   endif
 
   if (idx[0] eq -1) then begin
@@ -338,8 +339,8 @@ pro make_GE_plots, xgrid=xgrid, ygrid=ygrid, zgrid=zgrid, geotif_file=geotif_fil
     if idx[0] ne -1 then begin
       max_elv = max(zgrid[idx], min = min_elv)
     endif else begin
-       max_elv = -100
-       min_elv = -100
+       max_elv = missing
+       min_elv = missing
     endelse
     if max_elv gt max_elv_limit then max_elv = max_elv_limit
     if min_elv lt min_elv_limit then min_elv = min_elv_limit
