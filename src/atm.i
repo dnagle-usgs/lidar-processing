@@ -214,11 +214,13 @@ func qi_to_tiles(fname, ymd, dir, name=) {
    for(i = 1; i <= numberof(fname); i++) {
       write, format=" Loading %s\n", fname(i);
       atm_raw = load_atm_raw(fname(i));
-      atm = atm_to_alps(atm_raw, ymd(i));
-      atm_raw = [];
-      atm_create_tiles, atm, dir, name=name(i);
-      atm = [];
-      write, format="%s", "\n";
+      if (!is_void(atm_raw)){
+         atm = atm_to_alps(atm_raw, ymd(i));
+         atm_raw = [];
+         atm_create_tiles, atm, dir, name=name(i), buffer=0;
+         atm = [];
+         write, format="%s", "\n";
+      }
    }
 }
 
@@ -268,6 +270,39 @@ func load_atm_raw(fname) {
 
    atm_raw = array(ATM_RAW, rec_num);
    _read, f, data_offset, atm_raw;
+   
+  /* 
+   bad = atm_raw.lat < 0 ; 
+   
+   write, format=" There %i (of %i, %.2f%%) unusable points with bad lat coordinates.\n",
+      numberof(where(bad)), numberof(atm_raw), 1.0*numberof(where(bad))/numberof(atm_raw);
+   
+   if (numberof(where(bad == 1)) == numberof(atm_raw))
+      atm_raw= [];
+   
+
+   if (where(bad)==1 != 0) 
+      if(!is_void(atm_raw)) 
+         atm_raw=atm_raw(where(bad == 0 ));
+   
+   if(!is_void(atm_raw)) {
+      bad = [];
+      bad = atm_raw.lon > 0 ; 
+      write, format=" There %i (of %i, %.2f%%) unusable points with bad lon coordinates.\n",
+      numberof(where(bad)), numberof(atm_raw), 1.0*numberof(where(bad))/numberof(atm_raw);
+   
+      if (numberof(where(bad == 1)) == numberof(atm_raw))
+         atm_raw= [];
+      
+      if (!is_void(bad)) 
+          if(!is_void(atm_raw)) 
+             atm_raw=atm_raw(where(bad == 0));
+      
+      bad = [];
+  } 
+  jim();
+  */
+
    return atm_raw;
 }
 
@@ -354,6 +389,7 @@ func atm_create_tiles(atm, dir, name=, buffer=) {
    default, buffer, 20000;
    fix_dir, dir;
    mkdir, dir;
+   
    bad = atm.north == 0 | atm.east == 0;
    write, format=" There %i (of %i, %.2f%%) unusable points without north/east coords.\n",
       numberof(where(bad)), numberof(atm), 1.0*numberof(where(bad))/numberof(atm);
@@ -613,10 +649,13 @@ note:  This function only uses the regular rcf filter because ATM data
       } else {
          f = createb(ofn_split(1)+ofn);
       }
-      
-      add_variable, f, -1, vname, structof(atm_rcf), dimsof(atm_rcf);
-      get_member(f, vname) = atm_rcf;
-      save, f, vname;
-      close, f
+      if(atm_rcf!=[]) {
+         add_variable, f, -1, vname, structof(atm_rcf), dimsof(atm_rcf);
+         get_member(f, vname) = atm_rcf;
+         save, f, vname;
+         close, f
+      } else {
+         close, f
+      }
    }
 }
