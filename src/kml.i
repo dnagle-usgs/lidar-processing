@@ -131,6 +131,7 @@ func kml_downsample(&lat, &lon, &elv, threshold=) {
    e = utm(2,);
 
    do {
+      if(numberof(n) < 2) break;
       dist = sqrt(n(dif)^2 + e(dif)^2);
       w = where(dist < threshold);
       if(numberof(w)) {
@@ -157,6 +158,7 @@ func kml_segment(lat, lon, threshold=) {
 */
    default, threshold, 1000;
    seg = array(0, numberof(lat));
+   if(numberof(n) < 2) return seg;
 
    utm = fll2utm(lat, lon);
    dist = sqrt(utm(1,)(dif)^2 + utm(2,)(dif)^2);
