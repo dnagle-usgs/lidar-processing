@@ -644,12 +644,13 @@ note:  This function only uses the regular rcf filter because ATM data
          ofn = ofn_split1(1)+swrite(format = "_b%d_w%d_rcf.pbd", buf, w)
       }
       write, format="Writing file %s\n",ofn;
-      if (opath) {
-         f = createb(opath+ofn);
-      } else {
-         f = createb(ofn_split(1)+ofn);
-      }
       if(atm_rcf!=[]) {
+         
+         if (opath) {
+          f = createb(opath+ofn);
+         } else {
+          f = createb(ofn_split(1)+ofn);
+         }
          add_variable, f, -1, vname, structof(atm_rcf), dimsof(atm_rcf);
          get_member(f, vname) = atm_rcf;
          save, f, vname;
