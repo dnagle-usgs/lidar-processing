@@ -196,7 +196,7 @@ INPUT:
            workdata = data(indx);
  	}
      }
-     iindx = array(int,numberof(data.rn));
+     iindx = array(int,numberof(data));
      if (is_array(indx)) {
 	iindx(indx) = 1;
      }
