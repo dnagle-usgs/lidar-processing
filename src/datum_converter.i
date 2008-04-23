@@ -64,8 +64,10 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, geoid_version=, 
    }
 
    write, format="Using GEOID version: %s\n", geoid_version;
-   data = test_and_clean(wdata);
    type = structof(data(1));
+   if (type != LFP_VEG) {
+        data = test_and_clean(wdata);
+   }
    if (!utmzone) {
      if (curzone) {
        utmzone = curzone;
@@ -78,7 +80,9 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, geoid_version=, 
    }
    // since all the data sets will have data.east, data.north and data.elevation
    // and data.meast, data.mnorth and data.melevation; do the conversion without testing for type.
+   // not any more ... do not do conversion if type=LFP_VEG
 
+  if (type != LFP_VEG) {
    //convert data to latlon
    write, "***  Converting First Surface Location  ***"
    write, "Converting data to lat/long..."
@@ -106,7 +110,8 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, geoid_version=, 
 
    //convert miror location data 
    write, "***  Converting Mirror Location  ***"
-   m_idx = where(data.mnorth != 0);
+   if(type != ATM2) {     
+      m_idx = where(data.mnorth != 0);
    if (is_array(m_idx)) {
       write, "Converting data to lat/long..."
       data_in = utm2ll(data.mnorth/100., data.meast/100., utmzone);
@@ -133,6 +138,8 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, geoid_version=, 
    } else {
       write, "No mirror location available"
    }
+  }
+}
     
    // now look at type for the special case of veg
    if (type == VEG__) {
@@ -161,6 +168,46 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, geoid_version=, 
       data.least = int(utmdata_out(2,)*100);
       data.lelv = int(data_out(3,)*100);
    }
+
+   // when data type is composite waveform (LFP_VEG)
+   if (type==LFP_VEG) {
+      fdata_out = data
+      write, "***  Converting composite waveform datum ***"
+      write, "Converting data to lat/long..."
+      //convert data to latlon
+      data_in = utm2ll(data.north/100., data.east/100., utmzone);
+      // convert...
+      // put data in correct format for conversion
+      for (i=1;i<=numberof(data_in(,1,1));i++) {
+        for (j=1;j<=numberof(data_in(1,,1));j++) {
+          data_elv = *data.elevation(i,j);
+          if (is_void(data_elv)) continue;
+          npts = numberof(data_elv);
+          data_in1 = array(double,3,npts);
+          data_in1(1,*) = data_in(i,j,1);
+          data_in1(2,*) = data_in(i,j,2);
+          data_in1(3,) = data_elv;
+          if (tonad83) {
+            write, "Converting to NAD83..."
+            data_out = wgs842nad83(data_in1);
+            if (tonavd88) 
+             data_in1 = data_out;
+          }
+          if (tonavd88) {
+            write, "Converting to NAVD88..."
+            data_out = nad832navd88(data_in1, geoid_version=geoid_version);
+          }
+          utmdata_out = fll2utm(data_out(2,), data_out(1,));
+          fdata_out(i,j).east = int(utmdata_out(2,1)*100);
+          fdata_out(i,j).north = int(utmdata_out(1,1)*100);
+          data_elv_out = data_out(3,);
+          fdata_out(i,j).elevation = &data_elev_out;
+        }
+       }
+       data = fdata_out;
+          
+   }
+
    return data
 }
 
