@@ -1,11 +1,12 @@
 /*
-  $Id: datum_converter.i
+  $Id$
   original amar nayegandhi 07/15/03
   modified charlene sullivan 09/25/06
 */
-  
-require, "wgs842nad83.i"
-require, "nad832navd88.i"
+
+write, "$Id$";
+require, "wgs842nad83.i";
+require, "nad832navd88.i";
 func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, geoid_version=, type=) {
 /* DOCUMENT data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, type=)
      This function converts eaarl data of structure type 'type' to nad83 and navd88.
@@ -64,10 +65,10 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, geoid_version=, 
    }
 
    write, format="Using GEOID version: %s\n", geoid_version;
-   type = structof(data(1));
-   if (type != LFP_VEG) {
+   if (structof(wdata(1)) != LFP_VEG) {
         data = test_and_clean(wdata);
    }
+   type = structof(data(1));
    if (!utmzone) {
      if (curzone) {
        utmzone = curzone;
