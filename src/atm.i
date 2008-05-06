@@ -135,17 +135,17 @@ func batch_qi_to_tiles(con_dir, ymd, dir,searchstr=, name=) {
 
    Parameters:
 
-      con_dir: File names of the qi files.
+      con_dir, string: File names of the qi files.
 
       ymd: The year-month-date of the qi files. format YYYYMMDD
 
-      dir: The directory in which to create the Index Tiles.
+      dir, string: The directory in which to create the Index Tiles.
 
    Options:
 
-      searchstr: search string of files to search for   default:"*.pbd"
+      searchstr, string: search string of files to search for   default:"*.pbd"
 
-      name= A name to use within the pbd file that gets generated. This
+      name, string= A name to use within the pbd file that gets generated. This
          defaults to the first portion of the qi file's filename, up to the
          first dot.
 
