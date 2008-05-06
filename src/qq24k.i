@@ -440,7 +440,7 @@ func qq_merge_pbds(idir, odir, mode, dir_struc=) {
 }
 
 func batch_2k_to_qq(src_dir, dest_dir, mode, seg_dir=, searchstr=, dir_struc=) {
-/* DOCUMENT batch_2k_to_qq, src_dir, dest_dir, mode, seg_dir=, glob=
+/* DOCUMENT batch_2k_to_qq, src_dir, dest_dir, mode, seg_dir=, searchstr=, dir_struc=
    
    Crawls through a directory structure of 2km x 2km EAARL tiles to generate
    the corresponding quarter-quad tiles. Input and output are both pbd files.
