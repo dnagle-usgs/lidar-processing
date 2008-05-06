@@ -415,8 +415,11 @@ func qq_merge_pbds(idir, odir, mode, dir_struc=) {
       if(!is_void(dir_struc)) {
          filepath=odir + qcodes(i) +"/";
          mkdirp(filepath);
+      } else {
+         filepath=odir;
       }
 
+      
       if(mode==3) {
          endoffile="_be.pbd";
       } if(mode==2) {
@@ -426,7 +429,7 @@ func qq_merge_pbds(idir, odir, mode, dir_struc=) {
       }
 
 
-      
+
 
       f = createb(filepath  + qcodes(i) + endoffile);
       add_variable, f, -1, vname, structof(vdata), dimsof(vdata);
@@ -436,7 +439,7 @@ func qq_merge_pbds(idir, odir, mode, dir_struc=) {
    }
 }
 
-func batch_2k_to_qq(src_dir, dest_dir, mode, seg_dir=, glob=, dir_struc=) {
+func batch_2k_to_qq(src_dir, dest_dir, mode, seg_dir=, searchstr=, dir_struc=) {
 /* DOCUMENT batch_2k_to_qq, src_dir, dest_dir, mode, seg_dir=, glob=
    
    Crawls through a directory structure of 2km x 2km EAARL tiles to generate
@@ -464,7 +467,7 @@ func batch_2k_to_qq(src_dir, dest_dir, mode, seg_dir=, glob=, dir_struc=) {
          single quarter quad files. Normally, a temp directory is used and is
          deleted at the end of the process.
 
-      glob= The glob string to use. Narrows the criteria for inclusion in
+      searchstr= The glob string to use. Narrows the criteria for inclusion in
          src_dir. Default is "*.pbd".
 
       dir_struc= creates a Quarter-Quad directory structure; similar to Index
@@ -482,10 +485,10 @@ func batch_2k_to_qq(src_dir, dest_dir, mode, seg_dir=, glob=, dir_struc=) {
    fix_dir, src_dir;
    fix_dir, dest_dir;
    fix_dir, seg_dir;
-   default, glob, "*.pbd";
+   default, searchstr, "*.pbd";
    
    write, "Segmenting PBDs.";
-   qq_segment_pbds, src_dir, seg_dir, glob=glob, mode=mode;
+   qq_segment_pbds, src_dir, seg_dir, glob=searchstr, mode=mode;
    write, "Merging PBDs.";
    qq_merge_pbds, seg_dir, dest_dir,mode, dir_struc=dir_struc;
    
