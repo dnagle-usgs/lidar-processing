@@ -174,7 +174,10 @@ for i = 0, n_elements(fn_arr)-1 do begin
 
    if (keyword_set(write_geotiffs)) then begin
    	; make geotiff file name
-	if not keyword_set(utmzone) then utmzone = 17
+	if not keyword_set(utmzone) then begin
+		print, "UTM Zone Number not defined"
+		return
+	endif
       if (mode eq 1) then $
         tfname = path+(strsplit(fname_arr, '.', /extract))[0]+"_fs_geotiff.tif"
       if (mode eq 2) then $
