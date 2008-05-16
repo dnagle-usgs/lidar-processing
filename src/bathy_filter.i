@@ -270,21 +270,27 @@ func test_bathy(null) {
 }
 
 
-func remove_bow_effect(data, factor=) {
-/* DOCUMENT func remove_bow_effect(data, factor=) 
+func remove_bow_effect(data, factor=, mode=) {
+/* DOCUMENT func remove_bow_effect(data, factor=, mode=) 
    amar nayegandhi 08/01/2005
    This function tries to remove the bow effect seen in shallow and turbid bathy data by modelling a sin curve on the data.
   INPUT:
 	data = input data array (of type GEO)
 	factor= scale factor in cm (default = 15 cm)
+        mode = 2 (for bathymetry - default).
+             = 3 (for bare earth under topo).
   OUTPUT:
 	outdata = corrected data array
 */
 
   extern pi
   if (is_void(factor)) factor = 15;
+  if (is_void(mode)) factor = 2;
   data = test_and_clean(data);
-  data.depth -= factor*sin(((data.rn/0xffffff)/120.)*pi);
+  if (mode == 2) 
+        data.depth -= factor*sin(((data.rn/0xffffff)/120.)*pi);
+  if (mode == 3)
+        data.lelv -= factor*sin(((data.rn/0xffffff)/120.)*pi);
   return data
 }
 
