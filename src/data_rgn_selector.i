@@ -225,9 +225,9 @@ Function selects data given a point (in latlon or utm) and a radius.
 INPUT:
   data     :  Data array
 
-  point=   :  Center point
+  point=   :  Center point in meters
 
-  radius=  :  Radius in same units as data/point
+  radius=  :  Radius in meters
 
   win=     :  Window to click point, if point= not defined
               (default is 5)
