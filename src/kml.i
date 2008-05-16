@@ -10,6 +10,7 @@ local kml_i;
       ll_to_kml
       kml_downsample
       kml_segment
+      kml_pnav
 
    Original by David Nagle, imported/modified from ADAPT
 */
@@ -28,7 +29,7 @@ func kml_write_line(dest, lat, lon, elv, name=, description=, visibility=,
       dest: Destination file for created KML.
       lat: Array of latitude coordinates.
       lon: Array of longitude coordinates.
-      elv: Array of elevation values.
+      elv: Array of elevation values, in meters.
    Options:
       name= A name for the linestring. Defaults to dest's filename.
       description= A description for the linestring. Defaults to name's value.
@@ -103,15 +104,32 @@ func kml_write_line(dest, lat, lon, elv, name=, description=, visibility=,
    close, f;
 }
 
-func ll_to_kml(lat, lon, elv, output) {
-/* DOCUMENT ll_to_kml, lat, lon, elv, kml_file
+func ll_to_kml(lat, lon, elv, output, name=, description=, linecolor=,
+   sample_thresh=, segment_thresh=) {
+/* DOCUMENT ll_to_kml, lat, lon, elv, kml_file, name=, description=,
+      linecolor=, sample_thresh=, segment_thresh=
    Creates kml_file for the given lat/lon/elv info.
+
+   Parameters:
+      lat, lon, elv: The XYZ data to generate the KML with. Elv should be in
+         meters.
+      output: Path/filename to a destination .kml file.
+
+   Options:
+      name= A name for the kml linestring. Defaults to the output filename.
+      description= A description for the kmkl linestring. Defaults to name's
+         value.
+      sample_thresh= The distance threshold to use to downsample the line.
+      segment_threshold= The distance threshold to use to segment a line.
+      linecolor= The color of the line, in AABBGGRR format
+         (alpha-blue-green-red).
 
    Original David Nagle 2008-03-26
 */
    kml_downsample, lat, lon, elv, threshold=sample_thresh;
    seg = kml_segment(lat, lon, threshold=segment_thresh);
-   kml_write_line, output, lat, lon, elv, segment=seg;
+   kml_write_line, output, lat, lon, elv, segment=seg, name=name,
+      description=description, linecolor=linecolor;
 }
 
 func kml_downsample(&lat, &lon, &elv, threshold=) {
@@ -189,6 +207,8 @@ func kml_pnav(input, output, name=, description=, linecolor=, sample_thresh=, se
          value.
       sample_thresh= The distance threshold to use to downsample the line.
       segment_threshold= The distance threshold to use to segment a line.
+      linecolor= The color of the line, in AABBGGRR format
+         (alpha-blue-green-red).
 
    Original David Nagle 2008-03-26
 */
@@ -199,14 +219,7 @@ func kml_pnav(input, output, name=, description=, linecolor=, sample_thresh=, se
       return;
    }
 
-   lat = pnav.lat;
-   lon = pnav.lon;
-   elv = pnav.alt;
-
-   kml_downsample, lat, lon, elv, threshold=sample_thresh;
-   seg = kml_segment(lat, lon, threshold=segment_thresh);
-
-   kml_write_line, output, lat, lon, elv, segment=seg, name=name,
-      description=description, linecolor=linecolor;
+   ll_to_kml, pnav.lat, pnav.lon, pnav.alt, output, name=name,
+      description=description, sample_thresh=sample_thresh,
+      segment_threshold=segment_threshold, linecolor=linecolor;
 }
-
