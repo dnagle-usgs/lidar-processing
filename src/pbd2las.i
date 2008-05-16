@@ -400,13 +400,17 @@ if(wgs84S==1) zone_tag=32701+zone_nbr;
         }
        
        /* Determining positive or negative scan direction */
- 
-        s_dir=data(i).rn%(0xffffff); 
-
-        if( (s_dir%2) == 0) {
-                s_dir=1;
+        if(structof(data) == ATM2) {
+               s_dir = []; // Making a guess on this, since it wasn't
+                           // previously defined.
         } else {
-                s_dir=0;
+               s_dir=data(i).rn%(0xffffff); 
+
+               if( (s_dir%2) == 0) {
+                         s_dir=1;
+               } else {
+                         s_dir=0;
+               }
         }
 
 
