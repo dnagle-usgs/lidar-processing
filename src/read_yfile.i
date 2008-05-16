@@ -707,7 +707,7 @@ func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, de
 
   extern curzone
   if (ESRI) {
-	header = 1;
+	noheader = 0;
 	indx = 1;
   }
 // default delimit to ","
