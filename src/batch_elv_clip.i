@@ -1,3 +1,5 @@
+write, "$Id$";
+
 func batch_elv_clip(con_dir, searchstr=, emax=, emin=, typ=) {
 /*DOCUMENT 
         dir, string, directory containing pbd files wanted for conversion
@@ -73,19 +75,19 @@ func elv_clip(fname, emax=, emin=, typ=) {
   if(typ==3)
         newdata=data(where((data.elevation+data.depth) > emin & (data.elevation+data.depth) < emax))
   
-   nfname=strpart(fname, 1:(strlen(fname)-4))
-   newfname=nfname+"_clip.pbd"
-
-
-   f2=createb(newfname);
-
    
-   add_variable, f2, -1, vname, structof(newdata), dimsof(newdata)
+   if(!is_void(newdata)) {
+        nfname=strpart(fname, 1:(strlen(fname)-4))
+        newfname=nfname+"_clip.pbd"
+
+        f2=createb(newfname);
+   
+         add_variable, f2, -1, vname, structof(newdata), dimsof(newdata)
   
-   get_member(f2, vname) = newdata;
-   save, f2, vname; 
-   
+        get_member(f2, vname) = newdata;
+        save, f2, vname; 
+        close, f2
+   } 
    close, f1
-   close, f2
 
 } 
