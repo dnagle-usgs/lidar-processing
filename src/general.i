@@ -354,9 +354,9 @@ func atoi(str) {
 
       An integer value.
 */
-   i = array(int, dimsof(str));
-   sread, str, format="%i", i;
-   return i;
+   i = array(float, dimsof(str));
+   sread, str, format="%f", i;
+   return int(i);
 }
 
 func atof(str) {
