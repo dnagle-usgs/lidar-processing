@@ -386,9 +386,11 @@ func qq_merge_pbds(idir, odir, mode, dir_struc=) {
 
       odir: The output directory.
 
-      dir_struc: Creates a directory structure, in the output directory,
-                 of the Quarter-Quad tiles being put into their respective
-                 Quarter-Quad folders similar to the Index Tiles.
+      dir_struc= If set to 1, the quarter quad data files will be organized
+         into a directory structure in the output directory. Each tile will get
+         a directory named after it. If not set (which is the default), all
+         files will go into the output directory as is, without any
+         subdirectory organization.
 
    See also: batch_2k_to_qq qq_segment_pbds
 */
@@ -470,8 +472,11 @@ func batch_2k_to_qq(src_dir, dest_dir, mode, seg_dir=, searchstr=, dir_struc=) {
       searchstr= The glob string to use. Narrows the criteria for inclusion in
          src_dir. Default is "*.pbd".
 
-      dir_struc= creates a Quarter-Quad directory structure; similar to Index
-                 Tiles.
+      dir_struc= If set to 1, the quarter quad data files will be organized
+         into a directory structure in the output directory. Each tile will get
+         a directory named after it. If not set (which is the default), all
+         files will go into the output directory as is, without any
+         subdirectory organization.
 
    See also: get_conusqq_data qq_segment_pbds qq_merge_pbds
 */
