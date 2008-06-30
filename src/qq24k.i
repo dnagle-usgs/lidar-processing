@@ -307,7 +307,7 @@ func qq_segment_pbd(fname, odir, zone=, mode=, remove_buffers=) {
 
       remove_buffers= If set to 1, the data from each source file will be
          constrained to its tile size. Otherwise (if 0), it will include all
-         data present.  The default is 1.
+         data present. The default is 1.
 
    See also: qq_segment_pbds qq_merge_pbds
 */
@@ -371,8 +371,8 @@ func qq_segment_pbd(fname, odir, zone=, mode=, remove_buffers=) {
    }
 }
 
-func qq_merge_pbds(idir, odir, mode, dir_struc=) {
-/* DOCUMENT qq_merge_pbds, idir, odir
+func qq_merge_pbds(idir, odir, mode=, dir_struc=) {
+/* DOCUMENT qq_merge_pbds, idir, odir, mode=, dir_struct=
 
    This merges the quarter-quad data files in idir and writes the results
    to odir. This is intended to be used over the results of qq_segment_pbd
@@ -385,6 +385,11 @@ func qq_merge_pbds(idir, odir, mode, dir_struc=) {
       idir: The input directory.
 
       odir: The output directory.
+
+      mode= The type of EAARL data being used. Must be 1, 2, or 3 as follows:
+         1 = first surface
+         2 = bathy
+         3 = bare earth
 
       dir_struc= If set to 1, the quarter quad data files will be organized
          into a directory structure in the output directory. Each tile will get
@@ -421,17 +426,10 @@ func qq_merge_pbds(idir, odir, mode, dir_struc=) {
          filepath=odir;
       }
 
-      
-      if(mode==3) {
-         endoffile="_be.pbd";
-      } if(mode==2) {
-         endoffile="_ba.pbd";
-      } if(mode==1) {
-         endoffile="_fs.pbd";
+      endoffile = "";
+      if(mode >= 0 && mode <= 3) {
+         endoffile = "_" + ["fs", "ba", "be"](mode) + ".pbd";
       }
-
-
-
 
       f = createb(filepath  + qcodes(i) + endoffile);
       add_variable, f, -1, vname, structof(vdata), dimsof(vdata);
@@ -441,8 +439,9 @@ func qq_merge_pbds(idir, odir, mode, dir_struc=) {
    }
 }
 
-func batch_2k_to_qq(src_dir, dest_dir, mode, seg_dir=, searchstr=, dir_struc=) {
-/* DOCUMENT batch_2k_to_qq, src_dir, dest_dir, mode, seg_dir=, searchstr=, dir_struc=
+func batch_2k_to_qq(src_dir, dest_dir, mode, seg_dir=, searchstr=, dir_struc=, cleanup=, ignore_nonempty=) {
+/* DOCUMENT batch_2k_to_qq, src_dir, dest_dir, mode, seg_dir=, searchstr=,
+   dir_struc=, cleanup=
    
    Crawls through a directory structure of 2km x 2km EAARL tiles to generate
    the corresponding quarter-quad tiles. Input and output are both pbd files.
@@ -478,14 +477,31 @@ func batch_2k_to_qq(src_dir, dest_dir, mode, seg_dir=, searchstr=, dir_struc=) {
          files will go into the output directory as is, without any
          subdirectory organization.
 
+      cleanup= If set to 1, the seg_dir will be emptied after processing.  If
+         set to 0, the seg_dir's contents will be left behind. Default is 1.
+
+      ignore_nonempty= If set to 1, it will use the provided seg_dir even if
+         it's not empty. Default is to abort if it encounters a non-empty
+         seg_dir.
+
    See also: get_conusqq_data qq_segment_pbds qq_merge_pbds
 */
    if(mode < 1 || mode > 3)
       error, "Invalid mode.";
+   default, cleanup, 1;
+   default, ignore_nonempty, 0;
    seg_tmp = 0;
    if(is_void(seg_dir)) {
       seg_dir = mktempdir("batch2ktoqq");
       seg_tmp = 1;
+      cleanup = 1;
+   } else {
+      if(!dir_empty(seg_dir) && !ignore_nonempty) {
+         write, "*** ABORTING ***";
+         write, "The provided seg_dir is not empty. Please manually delete its contents or set";
+         write, "the ignore_nonempty option.";
+         return;
+      }
    }
    fix_dir, src_dir;
    fix_dir, dest_dir;
@@ -495,15 +511,15 @@ func batch_2k_to_qq(src_dir, dest_dir, mode, seg_dir=, searchstr=, dir_struc=) {
    write, "Segmenting PBDs.";
    qq_segment_pbds, src_dir, seg_dir, glob=searchstr, mode=mode;
    write, "Merging PBDs.";
-   qq_merge_pbds, seg_dir, dest_dir,mode, dir_struc=dir_struc;
+   qq_merge_pbds, seg_dir, dest_dir, mode=mode, dir_struc=dir_struc;
    
-   if(seg_tmp) {
+   if(cleanup) {
       files = lsfiles(seg_dir);
       for(i = 1; i <= numberof(files); i++) {
          remove, seg_dir+files(i);
       }
-      rmdir, seg_dir;
+      if(seg_tmp) {
+         rmdir, seg_dir;
+      }
    }
 }
-
-

@@ -292,3 +292,14 @@ func file_copy(src, dest, force=) {
       remove, dest + "L";
    }
 }
+
+func dir_empty(dir) {
+/* DOCUMENT dir_empty(dir)
+   Tests to see if a directory is empty. Returns 1 if yes, 0 if no.
+*/
+   files = lsfiles(dir, glob="*");
+   subds = lsdirs(dir);
+   found = numberof(files) + numberof(subds);
+   found = found ? 0 : 1;
+   return found;
+}
