@@ -361,11 +361,9 @@ if(wgs84S==1) zone_tag=32701+zone_nbr;
 
   for(i=0; i<(numberof(data)); i++) {
         
-        message = swrite(format="Point %i out of %i", i, numberof(data));
-        write, message;
+        message = swrite(format="Point %i out of %i\r", i, numberof(data));
  
         if (typ==1) {
-                write, "type == 1"
                 _write, f1, byt_count, long(data(i).east);
                 byt_count+=4;
                 _write, f1, byt_count, long(data(i).north);
@@ -376,7 +374,6 @@ if(wgs84S==1) zone_tag=32701+zone_nbr;
                 byt_count+=2;
         }
         if (typ==2) {
-                write, "typ ==2"
                 _write, f1, byt_count, long(data(i).least);
                 byt_count+=4;
                 _write, f1, byt_count, long(data(i).lnorth);
@@ -398,6 +395,8 @@ if(wgs84S==1) zone_tag=32701+zone_nbr;
                 byt_count+=2;
 
         }
+
+        if (i%1000 == 0) write, message;
        
        /* Determining positive or negative scan direction */
         if(structof(data) == ATM2) {
@@ -416,36 +415,46 @@ if(wgs84S==1) zone_tag=32701+zone_nbr;
 
         /*Determing pulse number in the raster scan*/
 
-        s_num=data(i).rn/(0xffffff); 
-  
-        if(s_dir == 0 && (s_num != 1 || s_num != 120)) {
+        if (structof(data) != ATM2) {
+          s_num=data(i).rn/(0xffffff); 
+          if(s_dir == 0 && (s_num != 1 || s_num != 120)) {
                 fl_data=char(10010000);
                 _write, f1, byt_count, fl_data;
                 byt_count++;
-        } else if(s_dir == 1 && (s_num != 1 || s_num != 120)) {
+          } else if(s_dir == 1 && (s_num != 1 || s_num != 120)) {
                 fl_data=char(10010010);
                 _write, f1, byt_count, fl_data;
                 byt_count++;
-        } else if(s_dir == 1 && (s_num == 1 || s_num == 120)) {
+          } else if(s_dir == 1 && (s_num == 1 || s_num == 120)) {
                 fl_data=char(10010011);
                 _write, f1, byt_count, fl_data;
                 byt_count++;
-        } else if(s_dir == 0 && (s_num == 1 || s_num == 120)) {
+          } else if(s_dir == 0 && (s_num == 1 || s_num == 120)) {
                 fl_data=char(10010001);
                 _write, f1, byt_count, fl_data;
                 byt_count++;
-        } else {
+          } else {
                 fl_data=char(00000000);
                 _write, f1, byt_count, fl_data;
                 byt_count++;
+          } 
+        } else {
+                // scan direction flag
+                _write, f1, byt_count, char(0);
+                byt_count++;
         }
 
+        // classification 
         _write, f1, byt_count, char(0);
         byt_count++;
 
-        scan_ang=((s_num-60)*.375)
-       
-        _write, f1, byt_count, char(scan_ang);
+        // scan angle rank
+        if (structof(data) != ATM2) {
+                scan_ang=((s_num-60)*.375)
+                _write, f1, byt_count, char(scan_ang);
+        } else {
+                _write, f1, byt_count, char(0);
+        }
         byt_count++;
 
         _write, f1, byt_count, char(0);
