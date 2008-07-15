@@ -41,6 +41,34 @@ struct CONUSQQ {
    string   nedquad;
 }
 
+func qq2uz(qq, centroid=) {
+/* DOCUMENT qq2uz(qq)
+   
+   Returns the UTM zone that the given quarter quad is expected to fall in.
+   Since UTM zones are exactly six degrees longitude in width and have
+   boundaries that coincide with full degrees of longitude, and since the
+   quarter quad scheme is based on fractions of degrees longitude, any given
+   quarter quad is guaranteed to fall in exactly one UTM zone.
+
+   In practical terms, however, numbers sometimes do not computer properly.
+   Occasionally a few points along the border will get placed wrong. Also,
+   it is possible that the UTM coordinates may have been forcibly projected
+   in an alternate UTM zone. So proceed with caution.
+
+   If set to 1, the centroid= option will return the UTM coordinates of the
+   center of the quarter quad rather than just the zone. This may be useful
+   if trying to determine whether the expected zone corresponds to the data
+   on hand.
+*/
+   default, centroid, 0;
+   bbox = qq2ll(qq, bbox=1);
+   u = fll2utm( bbox([1,3])(avg), bbox([2,4])(avg) );
+   if(centroid)
+      return u(,1);
+   else
+      return u(3,1);
+}
+
 func qq2ll(qq, bbox=) {
 /* DOCUMENT ll = qq2ll(qq, bbox=)
 
