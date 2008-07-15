@@ -69,6 +69,7 @@ func ll2utm(lat, lon, retarr=) {
    //ZoneNumber = int((lonTemp + 180)/6) + 1;
    // Simplified (more efficient):
    if (is_array(fixedzone)) {
+      ZoneNumber = array(double, numberof(lon));
       ZoneNumber(*) = fixedzone; // set to fixedzone when set.. this is useful when data crosses utm zones.
       curzone=fixedzone;
    } else {
