@@ -19,8 +19,8 @@ deg2rad = pi / 180.0;
 rad2deg = 180.0 / pi;
 FOURTHPI = pi / 4.0;
 
-func fll2utm( lat, lon ) {
-/* DOCUMENT  u=fll2utm(lat, lon)
+func fll2utm( lat, lon, force_zone= ) {
+/* DOCUMENT  u=fll2utm(lat, lon, force_zone=)
   
    Convert latitude and longitude pairs to utm and return 
    a 3xn  array of values where:
@@ -29,9 +29,13 @@ func fll2utm( lat, lon ) {
    u(2,)   is Easting
    u(3,)   is Zone
 
+   If a zone is provided by the option force_zone= or by the extern fixedzone,
+   the coordinates will be forced to that zone. If both are set, then
+   force_zone takes precedence.
+
    See also:  ll2utm.
 */
-   n=ll2utm(lat, lon);
+   n=ll2utm(lat, lon, force_zone=force_zone);
    u = array( double, 3, n);
    u(1, ) = UTMNorthing;
    u(2, ) = UTMEasting;
@@ -39,14 +43,18 @@ func fll2utm( lat, lon ) {
    return u;
 }
 
-func ll2utm(lat, lon, retarr=) {
-/* DOCUMENT  ll2utm(lat, lon)
+func ll2utm(lat, lon, retarr=, force_zone=) {
+/* DOCUMENT  ll2utm(lat, lon, retarr=, force_zone=)
 
    Convert lat/lon pairs to UTM.  Returns values in
    the global arrays UTMNorthing, UTMEasting, and UTMZone;
 
    If retarr=1, then [UTMNorthing, UTMEasting] are returned.
    Otherwise, numberof(UTMEasting) is returned.
+
+   If a zone is provided by the option force_zone= or by the extern fixedzone,
+   the coordinates will be forced to that zone. If both are set, then
+   force_zone takes precedence.
 
    See also: fll2utm.
 */
@@ -68,7 +76,10 @@ func ll2utm(lat, lon, retarr=) {
    // Original:
    //ZoneNumber = int((lonTemp + 180)/6) + 1;
    // Simplified (more efficient):
-   if (is_array(fixedzone)) {
+   if (!is_void(force_zone)) {
+      ZoneNumber = array(double, numberof(lon));
+      ZoneNumber(*) = force_zone;
+   } else if (is_array(fixedzone)) {
       ZoneNumber = array(double, numberof(lon));
       ZoneNumber(*) = fixedzone; // set to fixedzone when set.. this is useful when data crosses utm zones.
       curzone=fixedzone;
@@ -119,8 +130,6 @@ func ll2utm(lat, lon, retarr=) {
       return [UTMEasting, UTMNorthing];
    }  
 }
-
-
 
 func utm2ll( UTMNorthing, UTMEasting, UTMZone) {
 /* DOCUMENT  utm2ll( UTMNorthing, UTMEasting, UTMZone)
@@ -350,4 +359,88 @@ func deg2dms(coord, arr=) {
       return sign(coord) * [d, m, s];
    else
       return dms;
+}
+
+func rezone_data_utm(&idata, src_zone, dest_zone) {
+/* DOCUMENT rezone_data_utm(data, src_zone, dest_zone)
+   rezone_data_utm, data, src_zone, dest_zone
+
+   Converts an array of data from one UTM zone (src_zone) to another UTM zone
+   (dest_zone). Currently will detect and convert the following struct members:
+   - "long east;" and "long north;"
+   - "long least;" and "long lnorth;"
+
+   If used as a function, it will return a modified array of data with
+   coordinates rezoned. However, the original data array will be left
+   untouched.
+
+   If used as a subroutine, the original array will be updated with the new
+   rezoned coordinates.
+*/
+/*
+   Original David Nagle 2008-07-17
+*/
+   if(is_void(idata)) return;
+   data = idata;
+   __rezone_data_utm, data, src_zone, dest_zone,
+      "  long east;", "  long north;", 0.01;
+   __rezone_data_utm, data, src_zone, dest_zone,
+      "  long least;", "  long lnorth;", 0.01;
+   if(am_subroutine())
+      idata = data;
+   return data;
+}
+
+func __rezone_data_utm(&data, src_zone, dest_zone, east, north, factor) {
+/* DOCUMENT __rezone_data_utm, &data, src_zone, dest_zone, east, north, factor
+   Utility function for rezone_data_utm to avoid code repetition.
+   data - array of data to be modified in place
+   src_zone - zone to convert from
+   dest_zone - zone to convert to
+   east - string; the struct member that has eastings
+   north - string; the struct member that has northings
+   factor - the eastings/northings should be multiplied by this to get meters
+
+   If east/north do not exist in data, then this is a no-op.
+
+   Original David Nagle 2008-07-17
+*/
+   fields = print(structof(data))(2:-1);
+   if(numberof(where(fields==east)) && numberof(where(fields==north))) {
+      fields = [east, north];
+      fields = regsub("^ +", fields);
+      fields = regsub(";$", fields);
+      fields = strsplit(fields, " ")(,2);
+      east = fields(1);
+      north = fields(2);
+      u = rezone_utm(get_member(data, north) * factor, get_member(data, east) * factor, src_zone, dest_zone);
+      get_member(data, north) = u(1,) / factor;
+      get_member(data, east) = u(2,) / factor;
+   }
+}
+
+func rezone_utm(&north, &east, src_zone, dest_zone) {
+/* DOCUMENT rezone_utm(north, east, src_zone, dest_zone)
+   rezone_utm, north, east, src_zone, dest_zone
+
+   Rezones the data represented by north, east, and src_zone to be in the zone
+   dest_zone.
+
+   If used as a function, it will return an array u where:
+      u(1,) is Northing
+      u(2,) is Easting
+      u(3,) is Zone
+   The original data arrays will be left untouched.
+
+   If used as a subroutine, it will modify north and east in place.
+
+   Original David Nagle 2008-07-17
+*/
+   ll = utm2ll(north, east, src_zone);
+   u = fll2utm(ll(*,2), ll(*,1), force_zone=dest_zone);
+   if(am_subroutine()) {
+      north = u(1,);
+      east = u(2,);
+   }
+   return u;
 }
