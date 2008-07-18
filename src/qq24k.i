@@ -17,13 +17,26 @@ local qq24k_i;
 
    Functions for the CLICK 24k Quarter-Quad tiling scheme.
 
+      qq2uz
+      extract_for_qq
+      qq2ll
       calc24qq
+      extract_qq
       get_conusqq_data
       get_utm_qqcodes
+      batch_2k_to_qq
+      pbd_append
+      draw_qq
+      draw_q
+      draw_ll_box
+      draw_qq_grid
+
+   Deprecated functions:
+
       qq_segment_pbds
       qq_segment_pbd
       qq_merge_pbds
-      batch_2k_to_qq
+      old_batch_2k_to_qq
 
    Structs defined:
 
@@ -42,7 +55,7 @@ struct CONUSQQ {
 }
 
 func qq2uz(qq, centroid=) {
-/* DOCUMENT qq2uz(qq)
+/* DOCUMENT qq2uz(qq, centroid=)
    
    Returns the UTM zone that the given quarter quad is expected to fall in.
    Since UTM zones are exactly six degrees longitude in width and have
@@ -59,6 +72,8 @@ func qq2uz(qq, centroid=) {
    center of the quarter quad rather than just the zone. This may be useful
    if trying to determine whether the expected zone corresponds to the data
    on hand.
+
+   Original David Nagle 2008-07-15
 */
    default, centroid, 0;
    bbox = qq2ll(qq, bbox=1);
@@ -67,6 +82,43 @@ func qq2uz(qq, centroid=) {
       return u(,1);
    else
       return u(3,1);
+}
+
+func extract_for_qq(north, east, qq, buffer=) {
+/* DOCUMENT extract_for_qq(north, east, qq, buffer=)
+
+   This will return an index into north/east of all coordinates that fall
+   within the bounds of the given quarter quad, which should be the string name
+   of the quarter quad.
+
+   The buffer= option specifies a buffer (in meters) to extend the quarter
+   quad's boundaries by. By default, it is 100 meters.
+
+   Note that this will ALWAYS add a small buffer, even if buffer=0. This is
+   because the quarter quad scheme is based on lat/lon whereas these
+   coordinates are in UTM. The index is determined based on a UTM bounding box
+   around that quarter quad. If you need to extract only the points that lie
+   within the quarter quad, then this function will not work for you safely.
+
+   Original David Nagle 2008-07-17
+*/
+   default, buffer, 100;
+   bbox = qq2ll(qq, bbox=1);
+   // When the QQ is projected into UTM, its edges might be slightly curved.
+   // Normally, a simple bounding box should probably suffice. However, just in
+   // case a side bows out such that the middle is further out than the
+   // corners, we sample five points along each edge to help ensure full
+   // coverage. The most extreme points in each direction are then used.
+   lats = span(bbox(1), bbox(3), 5);
+   lons = span(bbox(2), bbox(4), 5);
+   min_n = fll2utm(array(lats(1), 5), lons)(1, min) - buffer;
+   max_n = fll2utm(array(lats(5), 5), lons)(1, max) + buffer;
+   min_e = fll2utm(lats, array(lons(5), 5))(2, max) - buffer;
+   max_e = fll2utm(lats, array(lons(1), 5))(2, min) + buffer;
+   return where(
+      min_n <= north & north <= max_n &
+      min_e <= east  & east  <= max_e
+   );
 }
 
 func qq2ll(qq, bbox=) {
@@ -209,6 +261,28 @@ func calc24qq(lat, lon) {
    return swrite(format="%02d%03d%s%d%s", dlat, dlon, alat(qlat), qlon, aqq(qq));
 }
 
+func extract_qq(text) {
+/* DOCUMENT extract_qq(text)
+
+   Extract the quarter quad string from a text string. The text string will
+   probably be a filename or similar. The expected rules it will follow:
+
+   - The QQ name may be optionally preceeded by other text, but must be
+     separated by an underscore if so.
+   - The QQ name may be optionally followed by other text, but must be
+     separated by either an underscore or a period if so.
+   - The QQ name must be exactly 8 characters in length, and must use lowercase
+     alpha instead of uppercase alpha where relevant.
+
+   This function will work on scalars or arrays. The returned result will be
+   the quarter quad name(s).
+
+   Original David Nagle 2008-07-17
+*/
+   regmatch, "(^|_)([0-9][0-9][0-1][0-9][0-9][a-h][1-8][a-d])(\.|_|$)", text, , , qq;
+   return qq;
+}
+
 func get_conusqq_data(void) {
 /* DOCUMENT get_conusqq_data()
    
@@ -266,6 +340,8 @@ func get_utm_qqcodes(north, east, zone) {
 func qq_segment_pbds(sdir, odir, glob=, mode=) {
 /* DOCUMENT qq_segment_pbds, sdir, odir, glob=, mode=
 
+   DEPRECATED
+
    Rescurses through sdir, finding all files that match glob, and segments each
    one into odir.
 
@@ -308,6 +384,8 @@ func qq_segment_pbds(sdir, odir, glob=, mode=) {
 
 func qq_segment_pbd(fname, odir, zone=, mode=, remove_buffers=) {
 /* DOCUMENT qq_segment_pbd, fname, odir, zone=, mode=, remove_buffers=
+
+   DEPRECATED
 
    The pbd given by fname will be segmented into separate files for each
    quarter-quad present in the data.
@@ -402,6 +480,8 @@ func qq_segment_pbd(fname, odir, zone=, mode=, remove_buffers=) {
 func qq_merge_pbds(idir, odir, mode=, dir_struc=) {
 /* DOCUMENT qq_merge_pbds, idir, odir, mode=, dir_struct=
 
+   DEPRECATED
+
    This merges the quarter-quad data files in idir and writes the results
    to odir. This is intended to be used over the results of qq_segment_pbd
    after having run over multiple files.
@@ -467,9 +547,11 @@ func qq_merge_pbds(idir, odir, mode=, dir_struc=) {
    }
 }
 
-func batch_2k_to_qq(src_dir, dest_dir, mode, seg_dir=, searchstr=, dir_struc=, cleanup=, ignore_nonempty=) {
-/* DOCUMENT batch_2k_to_qq, src_dir, dest_dir, mode, seg_dir=, searchstr=,
+func old_batch_2k_to_qq(src_dir, dest_dir, mode, seg_dir=, searchstr=, dir_struc=, cleanup=, ignore_nonempty=) {
+/* DOCUMENT old_batch_2k_to_qq, src_dir, dest_dir, mode, seg_dir=, searchstr=,
    dir_struc=, cleanup=
+
+   DEPRECATED
    
    Crawls through a directory structure of 2km x 2km EAARL tiles to generate
    the corresponding quarter-quad tiles. Input and output are both pbd files.
@@ -550,4 +632,339 @@ func batch_2k_to_qq(src_dir, dest_dir, mode, seg_dir=, searchstr=, dir_struc=, c
          rmdir, seg_dir;
       }
    }
+}
+
+func batch_2k_to_qq(src_dir, dest_dir, mode, searchstr=, dir_struc=, prefix=,
+suffix=, remove_buffers=, buffer=) {
+/* DOCUMENT batch_2k_to_qq, src_dir, dest_dir, mode, searchstr=, dir_struc=,
+   prefix=, suffix=, move_buffers=, buffer=
+
+   Crawls through a directory structure of 2km x 2km EAARL tiles to generate
+   the corresponding quarter-quad tiles. Input and output are both pbd files.
+
+   Parameters:
+   
+      src_dir: The source directory. This should be the root directory of the
+         directory structure containing the EAARL 2kx2k tiles in pbd format
+         that need to be converted into quarter quad tiles.
+
+      dest_dir: The destination directory. The quarter quad pbd's will be
+         written here.
+
+      mode: The type of EAARL data being used. Must be 1, 2, or 3 as follows:
+         1 = first surface
+         2 = bathy
+         3 = bare earth
+
+   Options:
+      
+      searchstr= The glob string to use. Narrows the criteria for inclusion in
+         src_dir. Default is "*.pbd".
+
+      dir_struc= If set to 1, the quarter quad data files will be organized
+         into a directory structure in the output directory. Each tile will get
+         a directory named after it. If not set (which is the default), all
+         files will go into the output directory as is, without any
+         subdirectory organization.
+
+      prefix= A string to prefix at the beginning of each quarter quad file
+         name. By default, there is no prefix (prefix=""). If using a prefix,
+         it can optionally include a trailing "_" (if not present, it will be
+         added).
+
+      suffix= A string to suffix at the end of each quarter quad file name. By
+         default, this is two letters based on the mode: 1="fs", 2="ba",
+         3="be". This can optionally include a trailing ".pbd" (if not present,
+         it will be added) and can optionally be preceded by a leading "_" (if
+         not present, it will be added). To suppress the suffix, use suffix="".
+
+      remove_buffers= If 1, this will clip each 2k pbd's data to the file's 2k
+         extent, removing any buffer regions that may be present. If 0, then
+         all data from the file will be used regardless of where it's actually
+         located. The defaults to 1.
+
+      buffer= Specifies a buffer in meters to add around each quarter quad
+         tile. The buffer is a minimum, see extract_for_qq for details. Default
+         is buffer=100. Use buffer=0 to suppress the buffer.
+
+   Original David Nagle 2008-07-16
+*/
+   fix_dir, src_dir;
+   fix_dir, dest_dir;
+   default, searchstr, "*.pbd";
+   default, remove_buffers, 1;
+   default, buffer, 100;
+
+   // Depending on mode, set east/north to the right struct members
+   if(mode == 1 || mode == 2) {
+      east = "east";
+      north = "north";
+   } else if(mode == 3) {
+      east = "least";
+      north = "lnorth";
+   } else {
+      error, "Invalid mode.";
+   }
+
+   // Default a prefix that is empty
+   default, prefix, "";
+   if(strlen(prefix) && strpart(prefix, 0:0) != "_")
+      prefix = prefix + "_";
+   
+   // Default a suffix that specifies data type
+   default, suffix, "_" + ["fs", "ba", "be"](mode) + ".pbd";
+   if(strlen(suffix)) {
+      if(strpart(suffix, -3:0) != ".pbd")
+         suffix = suffix + ".pbd";
+      if(strpart(suffix, 1:1) != "_")
+         suffix = "_" + suffix;
+   }
+
+   // Source files
+   files = find(src_dir, glob=searchstr);
+
+   // Iterate over the source files to determine the qq tiles
+   qqcodes = [];
+   stamp = 0;
+   timer_init, tstamp;
+   write, "Scanning source files to generate list of QQ tiles...";
+   for(i = 1; i<= numberof(files); i++) {
+      timer_tick, tstamp, i, numberof(files);
+      basefile = split_path(files(i), 0)(0);
+      e = n = z = []; // prevents the next line from making them externs
+      regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)(_|\\.|$)", basefile, , , e, , n, , z;
+      n = atoi(n + "000");
+      e = atoi(e + "000");
+      z = atoi(z);
+      
+      // Load data
+      f = openb(files(i));
+      data = get_member(f, get_member(f, "vname"));
+      close, f;
+
+      // Get a list of the quarter quad codes represented by the data
+      new_qqcodes = get_utm_qqcodes(get_member(data, north)/100.0,
+         get_member(data, east)/100.0, z);
+      grow, new_qqcodes, qqcodes;
+      qqcodes = set_remove_duplicates(new_qqcodes);
+   }
+   write, format=" %i QQ tiles will be generated\n", numberof(qqcodes);
+   
+   // Iterate over each source file to actually partition data
+   write, "Scanning source files to generate QQ files:";
+   for(i = 1; i<= numberof(files); i++) {
+      // Extract UTM coordinates for data tile
+      basefile = split_path(files(i), 0)(0);
+      regmatch, "^t_e([0-9]*)_n([0-9]*)_([0-9]*)", basefile, , e, n, z;
+      n = atoi(n);
+      e = atoi(e);
+      z = atoi(z);
+
+      write, format=" * Scanning %s\n", basefile;
+      
+      // Load data
+      f = openb(files(i));
+      data = get_member(f, get_member(f, "vname"));
+      close, f;
+      
+      // Restrict data to tile boundaries if remove_buffers = 1
+      if(remove_buffers) {
+         mask  = get_member(data, north) >= (n - 2000.0) * 100.0;
+         mask &= get_member(data, north) <=  n           * 100.0;
+         mask &= get_member(data, east ) >=  e           * 100.0;
+         mask &= get_member(data, east ) <= (e + 2000.0) * 100.0;
+         data = data(where(mask));
+         if(numberof(data) == 0) {
+            write, "  Problem: No data found after buffers removed.";
+            continue;
+         }
+      }
+
+      // Iterate through each qq
+      for(j = 1; j <= numberof(qqcodes); j++) {
+         // Try to extract data for the qq
+         idx = extract_for_qq(get_member(data, north)/100.0, get_member(data, east)/100.0, qqcodes(j), buffer=buffer);
+         if(!numberof(idx)) // skip if no data
+            continue;
+         vdata = data(idx);
+
+         write, format="   - Writing for %s\n", qqcodes(j);
+
+         // variable name is qqcode preceeded by "qq"
+         vname = swrite(format="qq%s", qqcodes(j));
+
+         // determine and create output directory
+         outpath = dest_dir;
+         if(dir_struc)
+            outpath = outpath + qqcodes(j) + "/";
+         mkdirp, outpath;
+
+         // write data
+         pbd_append, outpath + prefix + qqcodes(j) + suffix, vname, vdata;
+      }
+   }
+
+}
+
+func pbd_append(file, vname, data, uniq=) {
+/* DOCUMENT pbd_append, file, vname, data, uniq=
+   
+   This creates or appends "data" in the pbd "file" using the variable name
+   "vname". If appending, it will merge "data" with whatever data is pointed to
+   by the existing pbd's vname variable. However, when writing, the vname will
+   be set to "vname".
+
+   By default, the option uniq= is set to 1 which will ensure that all merged
+   data points are unique by eliminating duplicate data points with the same
+   soe. If duplicate data should not be eliminated based on soe, then set
+   uniq=0.
+
+   Note that if "file" already exists, then the struct of its data must match
+   the struct of "data".
+
+   Original David Nagle 2008-07-16
+*/
+   default, uniq, 1;
+   if(file_exists(file)) {
+      f = openb(file);
+      grow, data, get_member(f, get_member(f, "vname"));
+      close, f;
+      if(uniq)
+         data = data(set_remove_duplicates(data.soe, idx=1));
+   }
+   f = createb(file);
+   add_variable, f, -1, vname, structof(data), dimsof(data);
+   get_member(f, vname) = data;
+   save, f, vname;
+   close, f;
+}
+
+func draw_qq(qq, win, pts=) {
+/* DOCUMENT draw_qq, qq, win, pts=
+   Draws a grey box for the given quarter quad(s) in the given window.
+
+   If given pts= specifies how many points to drop along each side of the
+   quarter quad between corners. Default is pts=3. Minimum is pts=1.
+
+   Original David Nagle 2008-07-18
+*/
+   if(is_void(win)) return;
+   default, pts, 3;
+   if(pts < 1) pts = 1;
+   for(i = 1; i <= numberof(qq); i++) {
+      bbox = qq2ll(qq(i), bbox=1);
+      draw_ll_box, bbox, win, pts=pts, color=[120,120,120];
+   }
+}
+
+func draw_q(qq, win, pts=) {
+/* DOCUMENT draw_qq, qq, win, pts=
+   For the given quarter quad(s), red boxes will be drawn for the quads and
+   grey boxes will be drawn inside for the quarter quads, in the given window.
+
+   If given pts= specifies how many points to drop along each side of the
+   quarter quad between corners. Default is pts=3. Minimum is pts=1.
+
+   Original David Nagle 2008-07-18
+*/
+   if(is_void(win)) return;
+   default, pts, 3;
+   if(pts < 1) pts = 1;
+   q = set_remove_duplicates(strpart(qq, 1:-1));
+   for(i = 1; i <= numberof(q); i++) {
+      draw_qq, q(i) + ["a","b","c","d"], win, pts=pts;
+      q_a = qq2ll(q(i)+"a", bbox=1);
+      q_c = qq2ll(q(i)+"c", bbox=1);
+      bbox = [q_a(1), q_a(2), q_c(3), q_c(4)];
+      draw_ll_box, bbox, win, pts=pts*2+1, color=[250,20,20];
+   }
+}
+
+func draw_ll_box(bbox, win, pts=, color=) {
+/* DOCUMENT draw_ll_box, bbox, win, pts=, color=
+   Given a lat/lon bounding box (as [south, east, north, west]), this will
+   draw it in utm in the given window.
+
+   If given pts= specifies how many points to drop along each side of the
+   box between corners. Default is pts=3. Minimum is pts=1.
+
+   If given color= specifies the color to draw with. Default is black.
+
+   Original David Nagle 2008-07-18
+*/
+   if(is_void(win)) return;
+   default, pts, 3;
+   if(pts < 1) pts = 1;
+   default, color, "black";
+   ll_x = grow(
+      array(bbox(2), pts+1), span(bbox(2), bbox(4), pts+2),
+      array(bbox(4), pts), span(bbox(4), bbox(2), pts+2) );
+   ll_y = grow(
+      span(bbox(1), bbox(3), pts+2), array(bbox(3), pts),
+      span(bbox(3), bbox(1), pts+2), array(bbox(1), pts+1) );
+   utm = fll2utm(ll_y, ll_x);
+   u_x = utm(2,);
+   u_y = utm(1,);
+
+   old_win = window();
+   window, win;
+   plg, u_y, u_x, color=color;
+   window, old_win;
+}
+
+func draw_qq_grid(win, pts=) {
+/* DOCUMENT draw_qq_grid, win, pts=
+   Draws a quarter quad grid for the given window. This will draw all quads and
+   quarter quads that fall within the visible region in the given window.
+
+   Quads are in red, quarter quads in grey.
+
+   If given pts= specifies how many points to drop along each side of the
+   quarter quad between corners. Default is pts=3. Minimum is pts=1.
+
+   KNOWN ISSUE:
+   - If using over a large area, you should click on the plot to manually set
+     the limits before using this. Otherwise, it'll automatically adjust the
+     window limits after each quarter quad is drawn, which dramatically
+     increases the time it takes to plot the grid.
+
+   Original David Nagle 2008-07-18
+*/
+   if(is_void(win)) return;
+   extern curzone;
+   if(is_void(curzone)) {
+      write, "Please define curzone. draw_qq_grid aborting";
+      return;
+   }
+   
+   old_win = window();
+   window, win;
+   lims = limits();
+
+   // Pull utm into directional variables
+   w = lims(1);
+   e = lims(2);
+   s = lims(3);
+   n = lims(4);
+   
+   // Get lat/lon coords for each corner
+   ne = utm2ll(n, e, curzone);
+   nw = utm2ll(n, w, curzone);
+   se = utm2ll(s, e, curzone);
+   sw = utm2ll(s, w, curzone);
+
+   // Re-assign the directional variables to lat/lon extremes
+   w = min(nw(1), sw(1));
+   e = max(ne(1), se(1));
+   s = min(sw(2), se(2));
+   n = max(nw(2), ne(2));
+
+   ew = 0.125 * indgen(int(floor(w*8.0)):int(ceil(e*8.0)));
+   ns = 0.125 * indgen(int(floor(s*8.0)):int(ceil(n*8.0)));
+
+   llgrid = [ew(-,), ns(,-)];
+   qq = calc24qq(llgrid(*,2), llgrid(*,1));
+
+   draw_q, qq, win, pts=pts;
+   window, old_win;
 }
