@@ -15,8 +15,16 @@ http://www-obs.univ-lyon1.fr/~thiebaut/yeti.html
 local qq24k_i;
 /* DOCUMENT qq24k_i
 
-   Functions for the CLICK 24k Quarter-Quad tiling scheme.
+   Functions for the CLICK 24k Quarter-Quad tiling scheme and the 2k tiling
+   scheme.
 
+   Conversions:
+
+      batch_2k_to_qq
+      batch_qq_to_2k
+
+   Quarter-quad processing:
+   
       qq2uz
       extract_for_qq
       qq2ll
@@ -24,12 +32,27 @@ local qq24k_i;
       extract_qq
       get_conusqq_data
       get_utm_qqcodes
-      batch_2k_to_qq
-      pbd_append
+
+   Quarter-quad plotting:
+
       draw_qq
       draw_q
       draw_ll_box
       draw_qq_grid
+
+   2k data tile processing:
+
+      extract_for_dt
+      get_utm_dtcodes
+      get_dt_itcodes
+      get_utm_dtcode_candidates
+      dt_short
+      dt2utm
+      it2utm
+
+   Miscellaneous:
+
+      pbd_append
 
    Deprecated functions:
 
@@ -115,6 +138,31 @@ func extract_for_qq(north, east, qq, buffer=) {
    max_n = fll2utm(array(lats(5), 5), lons)(1, max) + buffer;
    min_e = fll2utm(lats, array(lons(5), 5))(2, max) - buffer;
    max_e = fll2utm(lats, array(lons(1), 5))(2, min) + buffer;
+   return where(
+      min_n <= north & north <= max_n &
+      min_e <= east  & east  <= max_e
+   );
+}
+
+func extract_for_dt(north, east, dt, buffer=) {
+/* DOCUMENT extract_for_dt(north, east, dt, buffer=)
+   
+   This will return an index into north/east of all coordinates that fall
+   within the bounds of the given 2k data tile dt, which should be the string
+   name of the data tile.
+
+   The buffer= option specifies a buffer in meters to extend the quarter quad's
+   boundaries by. By default, it is 100 meters. Setting buffer=0 will constrain
+   the data to the exact tile boundaries.
+
+   Original David Nagle 2008-07-21
+*/
+   default, buffer, 100;
+   bbox = dt2utm(dt, bbox=1);
+   min_n = bbox(1) - buffer;
+   max_n = bbox(3) + buffer;
+   min_e = bbox(4) - buffer;
+   max_e = bbox(2) + buffer;
    return where(
       min_n <= north & north <= max_n &
       min_e <= east  & east  <= max_e
@@ -319,7 +367,7 @@ func get_utm_qqcodes(north, east, zone) {
 
    For a set of UTM northings, eastings, and zones, this will calculate
    each coordinate's quarter-quad code name and return an array of strings
-   that correspond them.
+   that correspond to them.
 
    See also: calc24qq qq_segment_pbd
 */
@@ -335,6 +383,111 @@ func get_utm_qqcodes(north, east, zone) {
 
    // calc24qq does the rest
    return calc24qq(lat, lon);
+}
+
+func get_utm_dtcodes(north, east, zone) {
+/* DOCUMENT dt = get_utm_dtcodes(north, east, zone)
+   
+   For a set of UTM northings, eastings, and zones, this will calculate each
+   coordinate's data tile name and return an array of strings that correspond
+   to them.
+
+   Original David Nagle 2008-07-21
+*/
+   east  = floor(east /2000.0)*2000;
+   north = ceil (north/2000.0)*2000;
+   return swrite(format="t_e%.0f_n%.0f_%d", east, north, int(zone));
+}
+
+func get_dt_itcodes(dtcodes) {
+/* DOCUMENT it = get_dt_itcodes(dtcodes)
+   For an array of data tile codes, this will return the corresponding index
+   tile codes.
+
+   Original David Nagle 2008-07-21
+*/
+   east  = floor(atoi(strpart(dtcodes, 4:6))  /10.0)*10;
+   north = ceil (atoi(strpart(dtcodes, 12:15))/10.0)*10;
+   zone  = strpart(dtcodes, 20:21);
+   return swrite(format="i_e%.0f000_n%.0f000_%s", east, north, zone);
+}
+
+func get_utm_dtcode_candidates(north, east, zone, buffer) {
+/* DOCUMENT dtcodes = get_utm_dtcode_candidates(north, east, zone, buffer)
+   
+   Quickly generates a list of data tiles that might be contained within the
+   given northings, eastings, and zones using the given buffer.
+
+   The returned dtcodes are NOT guaranteed to all exist within the data.
+   However, it is guaranteed that the array of dtcodes will contain all dtcodes
+   that are covered in the data.
+
+   Original David Nagle 2008-07-21
+*/
+   e_min = floor((east (min)-buffer)/2000.0)*2000;
+   e_max = ceil ((east (max)+buffer)/2000.0)*2000;
+   n_min = floor((north(min)-buffer)/2000.0)*2000;
+   n_max = ceil ((north(max)+buffer)/2000.0)*2000;
+   es = indgen(int(e_min):int(e_max):2000);
+   ns = indgen(int(n_min):int(n_max):2000);
+   coords = [es(*,),ns(,*)];
+   return swrite(format="t_e%d_n%d_%d", coords(*,1), coords(*,2), int(zone));
+}
+
+func dt_short(dtcodes) {
+/* DOCUMENT shortnames = dt_short(dtcodes)
+   Returns abbreviated names for an array of data tile codes.
+
+   Example:
+
+      > dt_short("t_e466000_n3354000_16")
+      "e466_n3354_16"
+
+   Original David Nagle 2008-07-21
+*/
+   w = n = z = []; // prevents the next line from making them externs
+   regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)(_|\\.|$)", dtcodes, , , w, , n, , z;
+   return swrite(format="e%s_n%s_%s", w, n, z);
+}
+
+func dt2utm(dtcodes, bbox=) {
+/* DOCUMENT dt2utm(dtcodes, bbox=)
+
+   Returns the northwest coordinates for the given dtcodes as an array of
+   [north, west, zone].
+
+   If bbox=1, then it instead returns the bounding boxes, as an array of
+   [south, east, north, west, zone].
+
+   Original David Nagle 2008-07-21
+*/
+   w = n = z = []; // prevents the next line from making them externs
+   regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)(_|\\.|$)", dtcodes, , , w, , n, , z;
+   n = atoi(n + "000");
+   w = atoi(w + "000");
+   z = atoi(z);
+
+   if(bbox)
+      return [n - 2000, w + 2000, n, w, z];
+   else
+      return [n, w, z];
+}
+
+func it2utm(itcodes, bbox=) {
+/* DOCUMENT it2utm(itcodes, bbox=)
+   Returns the northwest coordinates for the given itcodes as an array of
+   [north, west, zone].
+
+   If bbox=1, then it instead returns the bounding boxes, as an array of
+   [south, east, north, west, zone].
+
+   Original David Nagle 2008-07-21
+*/
+   u = dt2utm(itcodes);
+   if(bbox)
+      return [u(,1) - 10000, u(,2) + 10000, u(,1), u(,2), u(,3)];
+   else
+      return u;
 }
 
 func qq_segment_pbds(sdir, odir, glob=, mode=) {
@@ -769,11 +922,9 @@ suffix=, remove_buffers=, buffer=) {
       
       // Restrict data to tile boundaries if remove_buffers = 1
       if(remove_buffers) {
-         mask  = get_member(data, north) >= (n - 2000.0) * 100.0;
-         mask &= get_member(data, north) <=  n           * 100.0;
-         mask &= get_member(data, east ) >=  e           * 100.0;
-         mask &= get_member(data, east ) <= (e + 2000.0) * 100.0;
-         data = data(where(mask));
+         idx = extract_for_dt(get_member(data, north)/100.0,
+            get_member(data, east)/100.0, basefile, buffer=0);
+         data = data(idx);
          if(numberof(data) == 0) {
             write, "  Problem: No data found after buffers removed.";
             continue;
@@ -801,6 +952,161 @@ suffix=, remove_buffers=, buffer=) {
 
          // write data
          pbd_append, outpath + prefix + qqcodes(j) + suffix, vname, vdata;
+      }
+   }
+
+}
+
+func batch_qq_to_2k(src_dir, dest_dir, mode, searchstr=, suffix=,
+remove_buffers=, buffer=) {
+/* DOCUMENT batch_2k_to_qq, src_dir, dest_dir, mode, searchstr=, suffix=,
+   remove_buffers=, buffer=
+
+   Crawls through a directory structure of quarter quad tiles to generate the
+   corresponding 2km x 2km EAARL tiles. Input and output are both pbd files.
+
+   The output directory will contain a directory structure of index tile
+   directories that contain data tile directories that contain data tile files.
+
+   Parameters:
+   
+      src_dir: The source directory. This should be the root directory of the
+         directory structure containing the quarter quad tiles in pbd format
+         that need to be converted into 2km tiles.
+
+      dest_dir: The destination directory. The index tiles (containing data
+         tiles) will be written here.
+
+      mode: The type of EAARL data being used. Must be 1, 2, or 3 as follows:
+         1 = first surface
+         2 = bathy
+         3 = bare earth
+
+   Options:
+      
+      searchstr= The glob string to use. Narrows the criteria for inclusion in
+         src_dir. Default is "*.pbd".
+
+      suffix= A string to suffix at the end of each data tile file name. By
+         default, this is two letters based on the mode: 1="fs", 2="ba",
+         3="be". This can optionally include a trailing ".pbd" (if not present,
+         it will be added) and can optionally be preceded by a leading "_" (if
+         not present, it will be added). To suppress the suffix, use suffix="".
+
+      remove_buffers= If 1, this will clip each qq pbd's data to the file's qq
+         extent, removing any buffer regions that may be present. If 0, then
+         all data from the file will be used regardless of where it's actually
+         located. The defaults to 1.
+
+      buffer= Specifies a buffer in meters to add around each data tile.
+         Default is buffer=100. Use buffer=0 to suppress the buffer.
+
+   Original David Nagle 2008-07-18
+*/
+   fix_dir, src_dir;
+   fix_dir, dest_dir;
+   default, searchstr, "*.pbd";
+   default, remove_buffers, 1;
+   default, buffer, 100;
+
+   // Depending on mode, set east/north to the right struct members
+   if(mode == 1 || mode == 2) {
+      east = "east";
+      north = "north";
+   } else if(mode == 3) {
+      east = "least";
+      north = "lnorth";
+   } else {
+      error, "Invalid mode.";
+   }
+
+   // Default a suffix that specifies data type
+   default, suffix, "_" + ["fs", "ba", "be"](mode) + ".pbd";
+   if(strlen(suffix)) {
+      if(strpart(suffix, -3:0) != ".pbd")
+         suffix = suffix + ".pbd";
+      if(strpart(suffix, 1:1) != "_")
+         suffix = "_" + suffix;
+   }
+
+   // Source files
+   files = find(src_dir, glob=searchstr);
+
+   // Iterate over the source files to determine the 2k tiles
+   dtcodes = [];
+   stamp = 0;
+   timer_init, tstamp;
+   write, "Scanning source files to generate list of data tiles...";
+   for(i = 1; i<= numberof(files); i++) {
+      timer_tick, tstamp, i, numberof(files);
+      basefile = split_path(files(i), 0)(0);
+      z = qq2uz(extract_qq(basefile));
+      
+      // Load data
+      f = openb(files(i));
+      data = get_member(f, get_member(f, "vname"));
+      close, f;
+
+      // Get a list of the 2k data tile codes represented by the data
+      new_dtcodes = get_utm_dtcodes(get_member(data, north)/100.0,
+         get_member(data, east)/100.0, z);
+      grow, new_dtcodes, dtcodes;
+      dtcodes = set_remove_duplicates(new_dtcodes);
+
+   }
+   write, format=" %i data tiles will be generated\n", numberof(dtcodes);
+
+   // Iterate over each source file to actually partition data
+   write, "Scanning source files to generate data files:";
+   for(i = 1; i<= numberof(files); i++) {
+      // Extract UTM coordinates for data tile
+      basefile = split_path(files(i), 0)(0);
+      qq = extract_qq(basefile);
+      z = qq2uz(qq);
+
+      write, format=" * [%d/%d] Scanning %s\n", i, numberof(files), basefile;
+      
+      // Load data
+      f = openb(files(i));
+      data = get_member(f, get_member(f, "vname"));
+      close, f;
+      
+      // Restrict data to tile boundaries if remove_buffers = 1
+      if(remove_buffers) {
+         qq_list = get_utm_qqcodes(get_member(data, north)/100.0,
+            get_member(data, east)/100.0, z);
+         data = data(where(qq == qq_list));
+         if(numberof(data) == 0) {
+            write, "  Problem: No data found after buffers removed.";
+            continue;
+         }
+      }
+
+      // Make list of possible dtcodes for this tile, to speed up iterations
+      qq_dtcodes = get_utm_dtcode_candidates(get_member(data, north)/100.0,
+         get_member(data, east)/100.0, z, buffer);
+      qq_dtcodes = set_intersection(qq_dtcodes, dtcodes);
+      qq_itcodes = get_dt_itcodes(qq_dtcodes);
+
+      // Iterate through each dt
+      for(j = 1; j <= numberof(qq_dtcodes); j++) {
+         idx = extract_for_dt(get_member(data, north)/100.0,
+            get_member(data, east)/100.0, qq_dtcodes(j), buffer=buffer);
+         if(!numberof(idx)) // skip if no data
+            continue;
+         vdata = data(idx);
+
+         write, format="   - Writing for %s\n", qq_dtcodes(j);
+
+         // variable name is short dtcode
+         vname = dt_short(qq_dtcodes(j));
+
+         // determine and create output directory
+         outpath = dest_dir + qq_itcodes(j) + "/" + qq_dtcodes(j) + "/";
+         mkdirp, outpath;
+
+         // write data
+         pbd_append, outpath + qq_dtcodes(j) + suffix, vname, vdata;
       }
    }
 
