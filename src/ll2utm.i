@@ -369,6 +369,7 @@ func rezone_data_utm(&idata, src_zone, dest_zone) {
    (dest_zone). Currently will detect and convert the following struct members:
    - "long east;" and "long north;"
    - "long least;" and "long lnorth;"
+   - "long meast;" and "long mnorth;"
 
    If used as a function, it will return a modified array of data with
    coordinates rezoned. However, the original data array will be left
@@ -386,6 +387,8 @@ func rezone_data_utm(&idata, src_zone, dest_zone) {
       "  long east;", "  long north;", 0.01;
    __rezone_data_utm, data, src_zone, dest_zone,
       "  long least;", "  long lnorth;", 0.01;
+   __rezone_data_utm, data, src_zone, dest_zone,
+      "  long meast;", "  long mnorth;", 0.01;
    if(am_subroutine())
       idata = data;
    return data;
