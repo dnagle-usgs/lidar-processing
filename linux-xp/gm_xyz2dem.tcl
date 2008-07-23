@@ -300,8 +300,8 @@ proc generate_conversions { } {
       regexp {^t_e(\d*)_n(\d*)_(\d\d)_} [file tail $xyz] - east north zone
       set zone [expr {$::zone_override ? $::zone_override : $zone}]
       set new_c $::gms_conversion
-      template new_c FILEIN      [file nativename $xyz]
-      template new_c FILEOUT     [file nativename [file join [file normalize $::tiff_dir] [file rootname [file tail $xyz]]_dem.tif]]
+      template new_c FILEIN      [string map {\\ \\\\} [file nativename $xyz]]
+      template new_c FILEOUT     [string map {\\ \\\\} [file nativename [file join [file normalize $::tiff_dir] [file rootname [file tail $xyz]]_dem.tif]]]
       template new_c NDDM        $nddm
       template new_c RES         $::resolution
       template new_c PROJ        [zone_datum_projname $zone $datum]
