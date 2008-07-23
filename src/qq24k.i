@@ -526,6 +526,7 @@ func qq_segment_pbds(sdir, odir, glob=, mode=) {
    default, glob, "*.pbd";
 
    files = find(sdir, glob=glob);
+   tstamp = 0;
    timer_init, tstamp;
    for(i = 1; i<= numberof(files); i++) {
       timer_tick, tstamp, i, numberof(files),
@@ -666,6 +667,7 @@ func qq_merge_pbds(idir, odir, mode=, dir_struc=) {
    qfiles = strpart(infiles, 1:8);
    qcodes = set_remove_duplicates(qfiles);
 
+   tstamp = 0;
    timer_init, tstamp;
    for(i = 1; i <= numberof(qcodes); i++) {
       timer_tick, tstamp, i, numberof(qcodes),
@@ -878,12 +880,12 @@ suffix=, remove_buffers=, buffer=) {
 
    // Iterate over the source files to determine the qq tiles
    qqcodes = [];
-   stamp = 0;
+   tstamp = 0;
    timer_init, tstamp;
    write, "Scanning source files to generate list of QQ tiles...";
    for(i = 1; i<= numberof(files); i++) {
       timer_tick, tstamp, i, numberof(files);
-      basefile = split_path(files(i), 0)(0);
+      basefile = file_tail(files(i));
       e = n = z = []; // prevents the next line from making them externs
       regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)(_|\\.|$)", basefile, , , e, , n, , z;
       n = atoi(n + "000");
@@ -907,7 +909,7 @@ suffix=, remove_buffers=, buffer=) {
    write, "Scanning source files to generate QQ files:";
    for(i = 1; i<= numberof(files); i++) {
       // Extract UTM coordinates for data tile
-      basefile = split_path(files(i), 0)(0);
+      basefile = file_tail(files(i));
       regmatch, "^t_e([0-9]*)_n([0-9]*)_([0-9]*)", basefile, , e, n, z;
       n = atoi(n);
       e = atoi(e);
@@ -1039,7 +1041,7 @@ remove_buffers=, buffer=) {
    write, "Scanning source files to generate list of data tiles...";
    for(i = 1; i<= numberof(files); i++) {
       timer_tick, tstamp, i, numberof(files);
-      basefile = split_path(files(i), 0)(0);
+      basefile = file_tail(files(i));
       z = qq2uz(extract_qq(basefile));
       
       // Load data
@@ -1060,7 +1062,7 @@ remove_buffers=, buffer=) {
    write, "Scanning source files to generate data files:";
    for(i = 1; i<= numberof(files); i++) {
       // Extract UTM coordinates for data tile
-      basefile = split_path(files(i), 0)(0);
+      basefile = file_tail(files(i));
       qq = extract_qq(basefile);
       z = qq2uz(qq);
 
@@ -1273,4 +1275,168 @@ func draw_qq_grid(win, pts=) {
 
    draw_q, qq, win, pts=pts;
    window, old_win;
+}
+
+func qqtiff_gms_prep(tif_dir, pbd_dir, mode, outfile, tif_glob=, pbd_glob=) {
+/* DOCUMENT qqtiff_gms_prep(tif_dir, pbd_dir, mode, outfile, tif_glob=, pdf_glob=
+   
+   Creates a data tcl file that can be used by gm_tiff2ktoqq.tcl to generate a
+   Global Mapper script that can be used to convert 2k data tile geotiffs into
+   quarter quad geotiffs.
+
+   Parameters:
+   
+      tif_dir: The directory containing the 2k tiled geotiffs.
+
+      pbd_dir: The directory containing quarter quad pbds that contain the same
+         source data points used to make the 2k data tiles repartitioned.
+
+      mode: The type of EAARL data being used. Must be 1, 2, or 3 as follows:
+         1 = first surface
+         2 = bathy
+         3 = bare earth
+
+      outfile: The full path and filename to the output file to generate. This
+         will be taken to Windows for use with gm_tiff2ktoqq.tcl.
+   
+   Options:
+   
+      tif_glob= A file glob that can be used to more specifically select the
+         tiff files from their directory. Default is *.tif.
+
+      pbd_glob= A file glob that can be used to more specifically select the
+         pbd files from their directory. Default is *.pbd.
+*/
+   fix_dir, tif_dir;
+   fix_dir, pbd_dir;
+
+   default, tif_glob, "*.tif";
+   default, pbd_glob, "*.pbd";
+
+   // Depending on mode, set east/north to the right struct members
+   if(mode == 1 || mode == 2) {
+      east = "east";
+      north = "north";
+   } else if(mode == 3) {
+      east = "least";
+      north = "lnorth";
+   } else {
+      error, "Invalid mode.";
+   }
+
+   // Source files
+   files = find(tif_dir, glob=tif_glob);
+
+   // Scan pbds for exents
+   extents = calculate_qq_extents(pbd_dir, glob=pbd_glob);
+
+   qqcodes = h_new();
+
+   // Iterate over the source files to determine the qq tiles
+   write, "Scanning source files to generate list of QQ tiles...";
+   for(i = 1; i<= numberof(files); i++) {
+      basefile = file_tail(files(i));
+      bbox = dt2utm(basefile, bbox=1);
+
+      // Get four-corner qqcodes
+      tile_qqcodes = set_remove_duplicates(
+         get_utm_qqcodes(bbox([1,3,1,3]),
+            bbox([2,2,4,4]), bbox([5,5,5,5]))
+      );
+
+      // Only keep qqcodes that are in extents
+      tile_qqcodes = set_intersection(tile_qqcodes, h_keys(extents));
+
+      for(j = 1; j <= numberof(tile_qqcodes); j++) {
+         qlist = [];
+         if(h_has(qqcodes, tile_qqcodes(j))) {
+            qlist = grow(qqcodes(tile_qqcodes(j)), basefile);
+         } else {
+            qlist = [basefile];
+         }
+         h_set, qqcodes, tile_qqcodes(j), qlist;
+      }
+   }
+
+   write, "Creating TCL input...";
+   qqkeys = h_keys(qqcodes);
+   f = open(outfile, "w");
+   write, f, format="%s\n", "set ::qqtiles {";
+   for(i = 1; i <= numberof(qqkeys); i++) {
+      bbox = h_get(extents, qqkeys(i));
+      write, f, format="  { {%s}\n", qqkeys(i);
+      write, f, format="    {%.10f,%.10f,%.10f,%.10f}\n",
+         bbox.w, bbox.s, bbox.e, bbox.n;
+      for(j = 1; j <= numberof(qqcodes(qqkeys(i))); j++) {
+         write, f, format="    {%s}\n", qqcodes(qqkeys(i))(j);
+      }
+      write, f, format="  }%s", "\n";
+   }
+   write, f, format="%s\n", "}";
+}
+
+func calculate_qq_extents(qqdir, glob=, remove_buffers=) {
+/* DOCUMENT calculate_qq_extents(qqdir, glob=, remove_buffers=)
+   Calculates the lat/lon extents for a each quarter quad using the given
+   directory of qq pbd files. Returns a Yeti hash with the results.
+*/
+   fix_dir, qqdir;
+   default, glob, "*.pbd";
+   default, remove_buffers, 1;
+
+   // Depending on mode, set east/north to the right struct members
+   if(mode == 1 || mode == 2) {
+      east = "east";
+      north = "north";
+   } else if(mode == 3) {
+      east = "least";
+      north = "lnorth";
+   } else {
+      error, "Invalid mode.";
+   }
+
+   // Source files
+   files = find(qqdir, glob=glob);
+
+   qqs = h_new();
+
+   // Iterate over the source files to determine the 2k tiles
+   stamp = 0;
+   timer_init, tstamp;
+   write, "Scanning quarter quad data to determine extents...";
+   for(i = 1; i<= numberof(files); i++) {
+      timer_tick, tstamp, i, numberof(files);
+      basefile = file_tail(files(i));
+      qq = extract_qq(basefile);
+      z = qq2uz(qq);
+      
+      // Load data
+      f = openb(files(i));
+      data = get_member(f, get_member(f, "vname"));
+      close, f;
+
+      // Restrict data to tile boundaries if remove_buffers = 1
+      if(remove_buffers) {
+         qq_list = get_utm_qqcodes(get_member(data, north)/100.0,
+            get_member(data, east)/100.0, z);
+         data = data(where(qq == qq_list));
+         if(numberof(data) == 0) {
+            write, "  Problem: No data found after buffers removed.";
+            continue;
+         }
+      }
+
+      // Convert data to lat/lon
+      ll = utm2ll(get_member(data, north)/100.0,
+         get_member(data, east)/100.0, z);
+
+      // Find extents
+      h_set, qqs, qq, h_new(
+         "n", ll(max,2),
+         "s", ll(min,2),
+         "e", ll(max,1),
+         "w", ll(min,1)
+      );
+   }
+   return qqs;
 }
