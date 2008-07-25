@@ -431,15 +431,33 @@ pro make_GE_plots, xgrid=xgrid, ygrid=ygrid, zgrid=zgrid, geotif_file=geotif_fil
 return
 end
 
-pro write_geotiff, fname, xgrid, ygrid, zgrid, zone_val, cell_dim
+pro write_geotiff, fname, xgrid, ygrid, zgrid, zone_val, cell_dim, datum_type=datum_type
     ; this procedure write a geotiff for the array zgrid
     ; amar nayegandhi 05/14/03
+    ; datum_type = 1 (default) for NAD83/NAVD88
+    ; datum_type = 2 for WGS84/ITRF
+    ; datum_type = 3 for NAD83/ITRF
    
+    if not keyword_set(datum_type) then datum_type = 1
+
     print, "    writing geotiff..."
     proj_cs_key = '269'+strcompress(string(zone_val), /remove_all)
     proj_cs_key = fix(proj_cs_key)
-    proj_cit_key = 'PCS_NAD83_UTM_zone_'+strcompress(string(zone_val), /remove_all)+'N'
 
+    if (datum_type eq 1) then begin
+    	proj_cit_key = 'PCS_NAD83_UTM_zone_'+strcompress(string(zone_val), /remove_all)+'N'
+	vertcitgeokey = 'NAVD88'
+    endif
+ 
+    if (datum_type eq 2) then begin
+	proj_cit_key = 'PCS_WGS84_UTM_zone_'+strcompress(string(zone_val), /remove_all)+'N'
+	vertcitgeokey = 'WGS84'
+    endif
+
+    if (datum_type eq 3) then begin
+    	proj_cit_key = 'PCS_NAD83_UTM_zone_'+strcompress(string(zone_val), /remove_all)+'N'
+	vertcitgeokey = 'WGS84'
+    endif
 
     MODELPIXELSCALETAG = [cell_dim, cell_dim, 1]
     
@@ -464,7 +482,7 @@ pro write_geotiff, fname, xgrid, ygrid, zgrid, zone_val, cell_dim
                         PCSCITATIONGEOKEY: proj_cit_key, $
                         PROJLINEARUNITSGEOKEY: 9001, $
                         VERTICALCSTYPEGEOKEY: 5103, $
-                        VERTICALCITATIONGEOKEY: 'NAVD88' $
+                        VERTICALCITATIONGEOKEY: vertcitgeokey $
                         }
 
 return
