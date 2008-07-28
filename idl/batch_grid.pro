@@ -6,7 +6,7 @@ pro batch_grid, path, filename=filename, rcfmode=rcfmode, searchstr=searchstr, $
 	plot_grids = plot_grids, max_elv_limit=max_elv_limit, min_elv_limit = min_elv_limit, $
 	scale_down_by = scale_down_by, save_grid_plots = save_grid_plots, $
 	write_geotiffs=write_geotiffs, GE_plots=GE_plots, colorbar_plot = colorbar_plot, $
-	utmzone = utmzone, datamode=datamode
+	utmzone = utmzone, datamode=datamode, datum_type=datum_type
    ; this procedure does gridding in a batch mode
    ; Set datamode to run batch grid on a set of files that are not divided into the 
    ;    traditional index/data tile format.  Setting this will override and disable the
@@ -43,7 +43,11 @@ pro batch_grid, path, filename=filename, rcfmode=rcfmode, searchstr=searchstr, $
    ; maxelv = the maximum elevation for the output (GE and zbuf) plot (overrides max_elv_limit)
    ; minelv = the minimum elevation for the output (GE and zbuf) plot (overrides min_elv_limit)
    ; colorbar_plot = set to 1 to write out a file that contains the colorbar with min and max values
-   ;	
+   ; datum_type = data datum type 
+   	; datum_type = 1 (default) for NAD83/NAVD88
+   	; datum_type = 2 for WGS84/ITRF
+   	; datum_type = 3 for NAD83/ITRF
+   
 
 
    ; amar nayegandhi 05/14/03
@@ -184,7 +188,7 @@ for i = 0, n_elements(fn_arr)-1 do begin
 	tfname = path+(strsplit(fname_arr, '.', /extract))[0]+"_ba_geotiff.tif"
       if (mode eq 3) then $
 	tfname = path+(strsplit(fname_arr, '.', /extract))[0]+"_be_geotiff.tif"
-	write_geotiff, tfname, xgrid, ygrid, zgrid, utmzone, cell
+	write_geotiff, tfname, xgrid, ygrid, zgrid, utmzone, cell, datum_type=datum_type
    endif
 
   if (keyword_set(GE_plots)) then begin
