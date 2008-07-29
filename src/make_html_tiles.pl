@@ -119,7 +119,7 @@ foreach my $tile (@tiles) {
    print "$current/$total - $tile\n";
    my $dest = File::Spec->catfile($dest_dir, "$tile.html");
    my $content = $template_content;
-   $content =~ s/$pattern/$1$tile$3/g;
+   $content =~ s/$token/$tile/g;
    $f->write_file(
       file => File::Spec->catfile($dest_dir, "$tile.html"),
       content => $content,
