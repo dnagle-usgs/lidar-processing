@@ -1,6 +1,11 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
 write, "$Id$";
 
+require, "rbpnav.i";
+require, "dir.i";
+require, "ll2utm.i";
+require, "set.i";
+
 local kml_i;
 /* DOCUMENT kml_i
 
@@ -221,5 +226,5 @@ func kml_pnav(input, output, name=, description=, linecolor=, sample_thresh=, se
 
    ll_to_kml, pnav.lat, pnav.lon, pnav.alt, output, name=name,
       description=description, sample_thresh=sample_thresh,
-      segment_threshold=segment_threshold, linecolor=linecolor;
+      segment_thresh=segment_threshold, linecolor=linecolor;
 }
