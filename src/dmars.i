@@ -528,7 +528,9 @@ func iex_ascii2pbd( fn ) {
  iex_temp = array(IEX_ATTITUDE, BSZ);
  temp = array(double, 7, BSZ);
  i = 0;
- ofn = strtok(fn, ".")(1) + ".pbd";
+ t = *pointer(fn);
+ n = (where(t=='.'))-1;
+ ofn = string(&t(1:n(0))) + ".pbd";
  f = open(fn);
  of = createb(ofn);
  iex_head=rdline(f, 24);
