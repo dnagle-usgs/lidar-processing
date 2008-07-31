@@ -15,6 +15,8 @@ __ZONE_STRUCTS = h_new(
       east - The name of the easting for this.
       north - The name of the northing for this.
       factor - What we multiple north/east by to get meters. Normally, 0.01.
+
+   Original David Nagle 2008-07-31
 */
    "surface", h_new(
       match="  long east;",
@@ -52,8 +54,7 @@ func rezone_data_utm(&idata, src_zone, dest_zone, keys=) {
 
    If keys= is provided, then it will only change the struct elements dictated
    by the array of keys given. They must be keys into __ZONE_STRUCTS.
-*/
-/*
+
    Original David Nagle 2008-07-17
 */
    extern __ZONE_STRUCTS;
@@ -105,4 +106,174 @@ func rezone_utm(&north, &east, src_zone, dest_zone) {
       east = u(2,);
    }
    return u;
+}
+
+func batch_fix_dt_zones(dir) {
+/* DOCUMENT batch_fix_dt_zones, dir
+   This will scan through all data tile pbds in a directory structure and
+   ensure that the coordinates in each tile are properly zoned.
+
+   If a data tile has a very low easting value in its name but contains some
+   points with very high eastings, those points will be rezoned from the prior
+   zone to the current zone.
+
+   If a data tile has a very high easting value in its name but contains some
+   points with very low eastings, those points will be rezoned from the next
+   zone to the current zone.
+
+   This operates on the data in-place. It will overwrite the pbd files with
+   corrected versions of themselves. This should be safe, but if you're wary,
+   make a backup first.
+
+   This function is safe to run repeatedly. If there's nothing to fix, then
+   nothing will be changed.
+
+   Original David Nagle 2008-07-31
+*/
+   extern __ZONE_STRUCTS;
+   keys = h_keys(__ZONE_STRUCTS);
+
+   files = find(dir, glob="*.pbd");
+   files = files(sort(file_tail(files)));
+   for(i = 1; i <= numberof(files); i++) {
+      basefile = file_tail(files(i));
+      n = e = z = [];
+      dt2utm, basefile, n, e, z;
+
+      // I assume that any data tile between 300,000 and 700,000 is "good".
+      // Those values may need to be modified when working with datasets
+      // further north, as the UTM zone gets narrower towards the poles.
+      if(e < 300000 || e > 700000) {
+         write, format="%s: ", basefile;
+         f = openb(files(i));
+         vname = f.vname;
+         data = get_member(f, vname);
+         close, f;
+         write, format="%d points\n", numberof(data);
+
+         fields = print(structof(data))(2:-1);
+         modified = 0;
+
+         // Rather than having two blocks of code that differ only in the most
+         // trivial of ways, I factored out the two differences here.
+         if(e < 300000) {
+            comparison = gt;
+            badzone = z - 1;
+         } else {
+            comparison = lt;
+            badzone = z + 1;
+         }
+
+         for(j = 1; j <= numberof(keys); j++) {
+            key = __ZONE_STRUCTS(keys(j));
+            if(numberof(where(fields==key.match))) {
+               idx = where(comparison(
+                  get_member(data, key.east) * key.factor, 500000));
+               if(numberof(idx)) {
+                  modified = 1;
+                  data(idx) = rezone_data_utm(data(idx), badzone, z,
+                     keys=[keys(j)]);
+                  write, format="  Found %d outliers for %s, zone %d -> %d\n",
+                     numberof(idx), keys(j), badzone, z;
+               }
+            }
+         }
+         if(!modified) continue;
+         
+         write, format="  Saving corrected pbd.%s", "\n";
+
+         f = createb(files(i));
+         add_variable, f, -1, vname, structof(data), dimsof(data);
+         get_member(f, vname) = data;
+         save, f, vname;
+         close, f;
+      }
+   }
+}
+
+func zoneload_dt_pbd(file, zone, skip=) {
+/* DOCUMENT zoneload_dt_pbd(file, zone, skip=)
+   Will load the given data tile pbd file, coercing its data into the given
+   zone. If skip is provided, the data will be subsampled accordingly.
+
+   Original David Nagle 2008-07-31
+*/
+   dtzone = [];
+   dt2utm, file_tail(file), , , dtzone;
+   return load_rezone_pbd(file, dtzone, zone, skip=skip);
+}
+
+func zoneload_qq_pbd(file, zone, skip=) {
+/* DOCUMENT zoneload_qq_pbd(file, zone, skip=)
+   Will load the given quarter quad pbd file, coercing its data into the given
+   zone. If skip is provided, the data will be subsampled accordingly.
+
+   Original David Nagle 2008-07-31
+*/
+   qqzone = qq2uz(file_tail(file));
+   return load_rezone_pbd(file, qqzone, zone, skip=skip);
+}
+
+func load_rezone_pbd(file, src_zone, dest_zone, skip=) {
+/* DOCUMENT load_rezone_pbd(file, src_zone, dest_zone, skip=)
+   Will load the given pbd file, coercing its data from src_zone to dest_zone
+   (which is a no-op if they are the same). If skip is provided, the data will
+   be subsampled accordingly.
+
+   Original David Nagle 2008-07-31
+*/
+   default, skip, 1;
+   f = openb(file);
+   data = get_member(f, f.vname);
+   close, f;
+   if(skip > 1)
+      data = data(::skip);
+   if(src_zone != dest_zone)
+      rezone_data_utm, data, src_zone, dest_zone;
+   return data;
+}
+
+func zoneload_dt_dir(dir, zone, skip=, glob=) {
+/* DOCUMENT zoneload_dt_dir(dir, zone, skip=, glob=)
+   Will load and merge all data tile pbds that match the given glob (or "*.pbd"
+   if none is given), subsampling by skip (if specified). All data will be
+   coerced to the given zone.
+
+   Original David Nagle 2008-07-31
+*/
+   return __load_rezone_dir(dir, zone, zoneload_dt_pbd, skip=skip, glob=glob);
+}
+
+func zoneload_qq_dir(dir, zone, skip=, glob=) {
+/* DOCUMENT zoneload_qq_dir(dir, zone, skip=, glob=)
+   Will load and merge all quarter quad pbds that match the given glob (or
+   "*.pbd" if none is given), subsampling by skip (if specified). All data will
+   be coerced to the given zone.
+
+   Original David Nagle 2008-07-31
+*/
+   return __load_rezone_dir(dir, zone, zoneload_qq_pbd, skip=skip, glob=glob);
+}
+
+func __load_rezone_dir(dir, zone, fnc, skip=, glob=) {
+/* DOCUMENT __load_rezone_dir(dir, zone, fnc, skip=, glob=
+   Private function for zoneload_dt_dir and zoneload_qq_dir.
+   dir: dir to load
+   zone: zone to coerce to
+   fnc: function used to load a file
+   skip: skip factor
+   glob: glob to find by
+
+   Original David Nagle 2008-07-31
+*/
+   default, glob, "*.pbd";
+   files = find(dir, glob=glob);
+   data = [];
+   tstamp = [];
+   timer_init, tstamp;
+   for(i = 1; i <= numberof(files); i++) {
+      timer_tick, tstamp, i, numberof(files);
+      grow, data, fnc(files(i), zone, skip=skip);
+   }
+   return data;
 }
