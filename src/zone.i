@@ -1,15 +1,47 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
 write, "$Id$";
 
-func rezone_data_utm(&idata, src_zone, dest_zone) {
+require, "ll2utm.i";
+require, "mathop.i";
+require, "yeti.i";
+
+__ZONE_STRUCTS = h_new(
+/* DOCUMENT __ZONE_STRUCTS
+   Yeti hash with info on the struct elements for northings/eastings.
+   There are three keys into it: surface, bottom, mirror.
+   Each hash member contains the following fields:
+      match - A string that will appear in the struct definition if this is
+         present.
+      east - The name of the easting for this.
+      north - The name of the northing for this.
+      factor - What we multiple north/east by to get meters. Normally, 0.01.
+*/
+   "surface", h_new(
+      match="  long east;",
+      east="east",
+      north="north",
+      factor=0.01
+   ),
+   "bottom", h_new(
+      match="  long least;",
+      east="least",
+      north="lnorth",
+      factor=0.01
+   ),
+   "mirror", h_new(
+      match="  long meast;",
+      east="meast",
+      north="mnorth",
+      factor=0.01
+   )
+);
+
+func rezone_data_utm(&idata, src_zone, dest_zone, keys=) {
 /* DOCUMENT rezone_data_utm(data, src_zone, dest_zone)
    rezone_data_utm, data, src_zone, dest_zone
 
    Converts an array of data from one UTM zone (src_zone) to another UTM zone
-   (dest_zone). Currently will detect and convert the following struct members:
-   - "long east;" and "long north;"
-   - "long least;" and "long lnorth;"
-   - "long meast;" and "long mnorth;"
+   (dest_zone).
 
    If used as a function, it will return a modified array of data with
    coordinates rezoned. However, the original data array will be left
@@ -18,47 +50,29 @@ func rezone_data_utm(&idata, src_zone, dest_zone) {
    If used as a subroutine, the original array will be updated with the new
    rezoned coordinates.
 
+   If keys= is provided, then it will only change the struct elements dictated
+   by the array of keys given. They must be keys into __ZONE_STRUCTS.
+*/
+/*
    Original David Nagle 2008-07-17
 */
-   if(is_void(idata)) return;
+   extern __ZONE_STRUCTS;
+   default, keys, h_keys(__ZONE_STRUCTS);
+   if(is_void(idata)||is_void(src_zone)||is_void(dest_zone)) return;
    data = idata;
-   __rezone_data_utm, data, src_zone, dest_zone,
-      "  long east;", "  long north;", 0.01;
-   __rezone_data_utm, data, src_zone, dest_zone,
-      "  long least;", "  long lnorth;", 0.01;
-   __rezone_data_utm, data, src_zone, dest_zone,
-      "  long meast;", "  long mnorth;", 0.01;
+   fields = print(structof(data))(2:-1);
+   for(i = 1; i <= numberof(keys); i++) {
+      key = __ZONE_STRUCTS(keys(i));
+      if(numberof(where(fields==key.match))) {
+         u = rezone_utm(get_member(data, key.north)*key.factor,
+            get_member(data, key.east)*key.factor, src_zone, dest_zone);
+         get_member(data, key.north) = u(1,) / key.factor;
+         get_member(data, key.east)  = u(2,) / key.factor;
+      }
+   }
    if(am_subroutine())
       idata = data;
    return data;
-}
-
-func __rezone_data_utm(&data, src_zone, dest_zone, east, north, factor) {
-/* DOCUMENT __rezone_data_utm, &data, src_zone, dest_zone, east, north, factor
-   Utility function for rezone_data_utm to avoid code repetition.
-   data - array of data to be modified in place
-   src_zone - zone to convert from
-   dest_zone - zone to convert to
-   east - string; the struct member that has eastings
-   north - string; the struct member that has northings
-   factor - the eastings/northings should be multiplied by this to get meters
-
-   If east/north do not exist in data, then this is a no-op.
-
-   Original David Nagle 2008-07-17
-*/
-   fields = print(structof(data))(2:-1);
-   if(numberof(where(fields==east)) && numberof(where(fields==north))) {
-      fields = [east, north];
-      fields = regsub("^ +", fields);
-      fields = regsub(";$", fields);
-      fields = strsplit(fields, " ")(,2);
-      east = fields(1);
-      north = fields(2);
-      u = rezone_utm(get_member(data, north) * factor, get_member(data, east) * factor, src_zone, dest_zone);
-      get_member(data, north) = u(1,) / factor;
-      get_member(data, east) = u(2,) / factor;
-   }
 }
 
 func rezone_utm(&north, &east, src_zone, dest_zone) {
@@ -67,6 +81,12 @@ func rezone_utm(&north, &east, src_zone, dest_zone) {
 
    Rezones the data represented by north, east, and src_zone to be in the zone
    dest_zone.
+
+   north and east must be arrays of equivalent dimensions.
+
+   src_zone may be a scalar or an array of dimensions matching north.
+
+   dest_zone may be a scalar or an array of dimensions matching north.
 
    If used as a function, it will return an array u where:
       u(1,) is Northing
