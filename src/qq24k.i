@@ -107,7 +107,7 @@ func qq2uz(qq, centroid=) {
       return u(3,1);
 }
 
-func extract_for_qq(north, east, qq, buffer=) {
+func extract_for_qq(north, east, zone, qq, buffer=) {
 /* DOCUMENT extract_for_qq(north, east, qq, buffer=)
 
    This will return an index into north/east of all coordinates that fall
@@ -138,6 +138,26 @@ func extract_for_qq(north, east, qq, buffer=) {
    max_n = fll2utm(array(lats(5), 5), lons)(1, max) + buffer;
    min_e = fll2utm(lats, array(lons(5), 5))(2, max) - buffer;
    max_e = fll2utm(lats, array(lons(1), 5))(2, min) + buffer;
+   qqz = qq2uz(qq);
+   
+   if(qqz != zone) {
+      // It's expensive to convert the entire data array. So instead, we just
+      // convert the bounding box and check to see if the data stands a chance
+      // at being in the right spot. I put a 2000 meter buffer around it, which
+      // is probably bigger than is needed but will ensure that all good data
+      // is kept while avoiding the need to check most data tiles
+      ubb = rezone_utm([north(min), north(min), north(max), north(max)],
+         [east(min), east(max), east(max), east(min)], zone, qqz);
+      chk_n = [ubb(1,min), ubb(1,max)];
+      chk_e = [ubb(2,min), ubb(2,max)];
+      if(max_e + 2000 > chk_e(min) && min_e - 2000 < chk_e(max) &&
+         max_n + 2000 > chk_n(min) && min_n - 2000 < chk_n(max) ) {
+         rezone_utm, north, east, zone, qqz;
+      } else {
+         return [];
+      }
+   }
+
    return where(
       min_n <= north & north <= max_n &
       min_e <= east  & east  <= max_e
@@ -182,9 +202,9 @@ func qq2ll(qq, bbox=) {
    See calc24qq for documentation on the 24k Quarter-Quad format.
 */
    default, bbox, 0;
-   len = strlen(qq);
-   if(numberof(where(len != 8))) {
-      write, "All input must be exactly 8 characters long. Aborting."
+   qq = extract_qq(qq);
+   if(numberof(where(strlen(qq) != 8))) {
+      write, "Not all input contained valid quarter quads. Aborting."
       return;
    }
 
@@ -373,8 +393,8 @@ func get_utm_qqcodes(north, east, zone) {
 */
    // First, convert the coordinates to lat/lon
    ll = utm2ll(north, east, zone);
-   lat = ll(,2);
-   lon = ll(,1);
+   lat = ll(*,2);
+   lon = ll(*,1);
    ll = []; // free memory
 
    // Then, find the quarter-quad corner for the points
@@ -450,14 +470,18 @@ func dt_short(dtcodes) {
    return swrite(format="e%s_n%s_%s", w, n, z);
 }
 
-func dt2utm(dtcodes, bbox=) {
+func dt2utm(dtcodes, &north, &east, &zone, bbox=) {
 /* DOCUMENT dt2utm(dtcodes, bbox=)
+   dt2utm, dtcodes, &north, &east, &zone
 
    Returns the northwest coordinates for the given dtcodes as an array of
    [north, west, zone].
 
    If bbox=1, then it instead returns the bounding boxes, as an array of
    [south, east, north, west, zone].
+
+   If called as a subroutine, it sets the northwest coordinates of the given
+   output variables.
 
    Original David Nagle 2008-07-21
 */
@@ -466,6 +490,12 @@ func dt2utm(dtcodes, bbox=) {
    n = atoi(n + "000");
    w = atoi(w + "000");
    z = atoi(z);
+
+   if(am_subroutine()) {
+      north = n;
+      east = w;
+      zone = z;
+   }
 
    if(bbox)
       return [n - 2000, w + 2000, n, w, z];
@@ -877,6 +907,7 @@ suffix=, remove_buffers=, buffer=) {
 
    // Source files
    files = find(src_dir, glob=searchstr);
+   files = files(sort(file_tail(files)));
 
    // Iterate over the source files to determine the qq tiles
    qqcodes = [];
@@ -886,16 +917,21 @@ suffix=, remove_buffers=, buffer=) {
    for(i = 1; i<= numberof(files); i++) {
       timer_tick, tstamp, i, numberof(files);
       basefile = file_tail(files(i));
-      e = n = z = []; // prevents the next line from making them externs
-      regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)(_|\\.|$)", basefile, , , e, , n, , z;
-      n = atoi(n + "000");
-      e = atoi(e + "000");
-      z = atoi(z);
+      n = e = z = [];
+      dt2utm, basefile, n, e, z;
       
       // Load data
       f = openb(files(i));
       data = get_member(f, get_member(f, "vname"));
       close, f;
+
+      // Restrict data to tile boundaries if remove_buffers = 1
+      if(remove_buffers) {
+         idx = extract_for_dt(get_member(data, north)/100.0,
+            get_member(data, east)/100.0, basefile, buffer=0);
+         data = data(idx);
+         if(numberof(data) == 0) continue;
+      }
 
       // Get a list of the quarter quad codes represented by the data
       new_qqcodes = get_utm_qqcodes(get_member(data, north)/100.0,
@@ -904,22 +940,22 @@ suffix=, remove_buffers=, buffer=) {
       qqcodes = set_remove_duplicates(new_qqcodes);
    }
    write, format=" %i QQ tiles will be generated\n", numberof(qqcodes);
-   
+
+   qqcodes = qqcodes(sort(qqcodes));
+
    // Iterate over each source file to actually partition data
    write, "Scanning source files to generate QQ files:";
    for(i = 1; i<= numberof(files); i++) {
       // Extract UTM coordinates for data tile
       basefile = file_tail(files(i));
-      regmatch, "^t_e([0-9]*)_n([0-9]*)_([0-9]*)", basefile, , e, n, z;
-      n = atoi(n);
-      e = atoi(e);
-      z = atoi(z);
+      n = e = z = [];
+      dt2utm, basefile, n, e, z;
 
       write, format=" * Scanning %s\n", basefile;
       
       // Load data
       f = openb(files(i));
-      data = get_member(f, get_member(f, "vname"));
+      data = get_member(f, f.vname);
       close, f;
       
       // Restrict data to tile boundaries if remove_buffers = 1
@@ -936,10 +972,18 @@ suffix=, remove_buffers=, buffer=) {
       // Iterate through each qq
       for(j = 1; j <= numberof(qqcodes); j++) {
          // Try to extract data for the qq
-         idx = extract_for_qq(get_member(data, north)/100.0, get_member(data, east)/100.0, qqcodes(j), buffer=buffer);
+         idx = extract_for_qq(get_member(data, north)/100.0,
+            get_member(data, east)/100.0, z, qqcodes(j), buffer=buffer);
          if(!numberof(idx)) // skip if no data
             continue;
          vdata = data(idx);
+
+         // Make sure the data's zone matches the qq's zone
+         qqzone = qq2uz(qqcodes(j));
+         if(qqzone != z) {
+            write, format="   - %s: Rezoning data %d -> %d\n", qqcodes(j), int(z), int(qqzone);
+            rezone_data_utm, vdata, z, qqzone;
+         }
 
          write, format="   - Writing for %s\n", qqcodes(j);
 
@@ -1033,6 +1077,7 @@ remove_buffers=, buffer=) {
 
    // Source files
    files = find(src_dir, glob=searchstr);
+   files = files(sort(file_tail(files)));
 
    // Iterate over the source files to determine the 2k tiles
    dtcodes = [];
@@ -1057,6 +1102,8 @@ remove_buffers=, buffer=) {
 
    }
    write, format=" %i data tiles will be generated\n", numberof(dtcodes);
+
+   dtcodes = dtcodes(sort(dtcodes));
 
    // Iterate over each source file to actually partition data
    write, "Scanning source files to generate data files:";
@@ -1135,7 +1182,7 @@ func pbd_append(file, vname, data, uniq=) {
    default, uniq, 1;
    if(file_exists(file)) {
       f = openb(file);
-      grow, data, get_member(f, get_member(f, "vname"));
+      grow, data, get_member(f, f.vname);
       close, f;
       if(uniq)
          data = data(set_remove_duplicates(data.soe, idx=1));
@@ -1230,7 +1277,9 @@ func draw_qq_grid(win, pts=) {
    If given pts= specifies how many points to drop along each side of the
    quarter quad between corners. Default is pts=3. Minimum is pts=1.
 
-   KNOWN ISSUE:
+   If the current plot crosses UTM zone boundaries, please set fixedzone.
+
+   KNOWN ISSUES:
    - If using over a large area, you should click on the plot to manually set
      the limits before using this. Otherwise, it'll automatically adjust the
      window limits after each quarter quad is drawn, which dramatically
