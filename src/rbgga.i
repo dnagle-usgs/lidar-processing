@@ -335,6 +335,20 @@ func gga_multi_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=, multi
  return q;
 }
 
+func gga_from_utm_bbox(north, west, south, east, zone) {
+/* DOCUMENT gga_from_utm_bbox(north, west, south, east, zone)
+   Returns an index into gga for the given UTM bounding box.
+*/
+   minll = utm2ll(south, west, zone);
+   maxll = utm2ll(north, east, zone);
+   minlat = minll(2);
+   maxlat = maxll(2);
+   minlon = minll(1);
+   maxlon = maxll(1);
+   q = where(gga.lon >= minlon & gga.lon <= maxlon & gga.lat >= minlat & gga.lat <= maxlat);
+   return q;
+}
+
 func gga_win_sel( show, win=, color=, msize=, skip= , latutm=, llarr=, _batch=) {
 /* DOCUMENT gga_win_sel( show, color=, msize=, skip= )
 
@@ -399,7 +413,7 @@ properly to the zoom buttons.
    if ( is_void( skip  ) ) skip  = 10;
    plmk, gga.lat( q(1:0:skip)), gga.lon( q(1:0:skip)), msize=msize, color=color;
  }
-   
+
  if (!_batch) test_selection_size,q;
  return q;
 }

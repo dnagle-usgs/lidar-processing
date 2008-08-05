@@ -9,6 +9,7 @@
 */
 
 require, "pnm.i";
+require, "qq24k.i";
 
 write,"$Id$";
 
@@ -636,13 +637,9 @@ This function converts the cir image files (and corresponding world files)  from
       w = where(gga.sod == files_sod(i));
       if(numberof(w) == 1) {
          w = w(1);
-         tte = int(east(w) / 2000.0) * 2000;
-         ite = int(east(w) / 10000.0) * 10000;
-         ttn = int(north(w) / 2000.0) * 2000 + 2000;
-         itn = int(north(w) / 10000.0) * 10000 + 10000;
-         ttile = swrite(format="t_e%d_n%d_%d/", tte, ttn, int(zone(i)));
-         itile = swrite(format="i_e%d_n%d_%d/", ite, itn, int(zone(i)));
-         fdir = dest + itile + ttile;
+         dt=get_utm_dtcodes(north(w), east(w), zone(w));
+         it=get_dt_itcodes(dt);
+         fdir = swrite(format="%s/%s/%s/", dest, it, dt);
          mkdirp, fdir;
          file_copy, files(i), fdir + file_tail(files(i));
          if (copyjgw) {
