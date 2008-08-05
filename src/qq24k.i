@@ -486,10 +486,13 @@ func dt2utm(dtcodes, &north, &east, &zone, bbox=) {
    Original David Nagle 2008-07-21
 */
    w = n = z = []; // prevents the next line from making them externs
-   regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)(_|\\.|$)", dtcodes, , , w, , n, , z;
-   n = atoi(n + "000");
-   w = atoi(w + "000");
-   z = atoi(z);
+   if(regmatch("(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)(_|\\.|$)", dtcodes, , , w, , n, , z)) {
+      n = atoi(n + "000");
+      w = atoi(w + "000");
+      z = atoi(z);
+   } else {
+      w = n = z = [];
+   }
 
    if(am_subroutine()) {
       north = n;
@@ -497,7 +500,9 @@ func dt2utm(dtcodes, &north, &east, &zone, bbox=) {
       zone = z;
    }
 
-   if(bbox)
+   if(is_void(z))
+      return [];
+   else if(bbox)
       return [n - 2000, w + 2000, n, w, z];
    else
       return [n, w, z];

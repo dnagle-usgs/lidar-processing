@@ -108,7 +108,7 @@ func rezone_utm(&north, &east, src_zone, dest_zone) {
    return u;
 }
 
-func batch_fix_dt_zones(dir) {
+func batch_fix_dt_zones(dir, glob=) {
 /* DOCUMENT batch_fix_dt_zones, dir
    This will scan through all data tile pbds in a directory structure and
    ensure that the coordinates in each tile are properly zoned.
@@ -128,17 +128,25 @@ func batch_fix_dt_zones(dir) {
    This function is safe to run repeatedly. If there's nothing to fix, then
    nothing will be changed.
 
+   The glob= option can be used to provide a search pattern; the default is
+   "*.pbd".
+
    Original David Nagle 2008-07-31
 */
    extern __ZONE_STRUCTS;
    keys = h_keys(__ZONE_STRUCTS);
+   default, glob, "*.pbd";
 
-   files = find(dir, glob="*.pbd");
+   files = find(dir, glob=glob);
    files = files(sort(file_tail(files)));
    for(i = 1; i <= numberof(files); i++) {
       basefile = file_tail(files(i));
       n = e = z = [];
       dt2utm, basefile, n, e, z;
+      if(is_void(z)) {
+         write, format="%s: Unable to parse UTM zone.\n", basefile;
+         continue;
+      }
 
       // I assume that any data tile between 300,000 and 700,000 is "good".
       // Those values may need to be modified when working with datasets
