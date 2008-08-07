@@ -109,7 +109,7 @@ func rezone_utm(&north, &east, src_zone, dest_zone) {
 }
 
 func batch_fix_dt_zones(dir, glob=) {
-/* DOCUMENT batch_fix_dt_zones, dir
+/* DOCUMENT batch_fix_dt_zones, dir, glob=
    This will scan through all data tile pbds in a directory structure and
    ensure that the coordinates in each tile are properly zoned.
 
@@ -183,6 +183,102 @@ func batch_fix_dt_zones(dir, glob=) {
                      keys=[keys(j)]);
                   write, format="  Found %d outliers for %s, zone %d -> %d\n",
                      numberof(idx), keys(j), badzone, z;
+               }
+            }
+         }
+         if(!modified) continue;
+         
+         write, format="  Saving corrected pbd.%s", "\n";
+
+         f = createb(files(i));
+         add_variable, f, -1, vname, structof(data), dimsof(data);
+         get_member(f, vname) = data;
+         save, f, vname;
+         close, f;
+      }
+   }
+}
+
+func batch_fix_qq_zones(dir, glob=) {
+/* DOCUMENT batch_fix_qq_zones, dir, glob=
+   This will scan through all quarter quad pbds in a directory structure and
+   ensure that the coordinates in each tile are properly zoned. The zone for
+   each quarter quad is based on its centroid.
+
+   If a quarter quad should have very low easting values but contains some
+   points with very high eastings, those points will be rezoned from the prior
+   zone to the current zone.
+
+   If a quarter quad should have very high easting values but contains some
+   points with very low eastings, those points will be rezoned from the next
+   zone to the current zone.
+
+   This operates on the data in-place. It will overwrite the pbd files with
+   corrected versions of themselves. This should be safe, but if you're wary,
+   make a backup first.
+
+   This function is safe to run repeatedly. If there's nothing to fix, then
+   nothing will be changed.
+
+   The glob= option can be used to provide a search pattern; the default is
+   "*.pbd".
+
+   Original David Nagle 2008-07-31
+*/
+   extern __ZONE_STRUCTS;
+   keys = h_keys(__ZONE_STRUCTS);
+   default, glob, "*.pbd";
+
+   files = find(dir, glob=glob);
+   files = files(sort(file_tail(files)));
+   for(i = 1; i <= numberof(files); i++) {
+      basefile = file_tail(files(i));
+      qq = extract_qq(basefile);
+      if(!strlen(qq)) {
+         write, format="%s: Unable to parse quarter quad.\n", basefile;
+         continue;
+      }
+      centroid = qq2uz(qq, centroid=1);
+      n = centroid(1);
+      e = centroid(2);
+      z = centroid(3);
+
+      // I assume that any center easting between 300,000 and 700,000 is
+      // "good".  Those values may need to be modified when working with
+      // datasets further north, as the UTM zone gets narrower towards the
+      // poles.
+      if(e < 300000 || e > 700000) {
+         write, format="%s: ", basefile;
+         f = openb(files(i));
+         vname = f.vname;
+         data = get_member(f, vname);
+         close, f;
+         write, format="%d points\n", numberof(data);
+
+         fields = print(structof(data))(2:-1);
+         modified = 0;
+
+         // Rather than having two blocks of code that differ only in the most
+         // trivial of ways, I factored out the two differences here.
+         if(e < 300000) {
+            comparison = gt;
+            badzone = z - 1;
+         } else {
+            comparison = lt;
+            badzone = z + 1;
+         }
+
+         for(j = 1; j <= numberof(keys); j++) {
+            key = __ZONE_STRUCTS(keys(j));
+            if(numberof(where(fields==key.match))) {
+               idx = where(comparison(
+                  get_member(data, key.east) * key.factor, 500000));
+               if(numberof(idx)) {
+                  modified = 1;
+                  data(idx) = rezone_data_utm(data(idx), badzone, z,
+                     keys=[keys(j)]);
+                  write, format="  Found %d outliers for %s, zone %d -> %d\n",
+                     numberof(idx), keys(j), int(badzone), int(z);
                }
             }
          }

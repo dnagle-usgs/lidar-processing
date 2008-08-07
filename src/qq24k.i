@@ -53,13 +53,8 @@ local qq24k_i;
    Miscellaneous:
 
       pbd_append
-
-   Deprecated functions:
-
-      qq_segment_pbds
-      qq_segment_pbd
-      qq_merge_pbds
-      old_batch_2k_to_qq
+      qqtiff_gms_prep
+      calculate_qq_extents
 
    Structs defined:
 
@@ -391,18 +386,11 @@ func get_utm_qqcodes(north, east, zone) {
 
    See also: calc24qq qq_segment_pbd
 */
-   // First, convert the coordinates to lat/lon
-   ll = utm2ll(north, east, zone);
-   lat = ll(*,2);
-   lon = ll(*,1);
-   ll = []; // free memory
-
-   // Then, find the quarter-quad corner for the points
-   lat = int(lat / .0625) * 0.0625;
-   lon = int(lon / .0625) * 0.0625;
-
-   // calc24qq does the rest
-   return calc24qq(lat, lon);
+   // Convert the coordinates to lat/lon, coercing them into their quarter-quad
+   // corner points
+   ll = int(utm2ll(north, east, zone)/0.0625) * 0.0625;
+   // Then feed to calc24qq
+   return calc24qq(ll(*,2), ll(*,1));
 }
 
 func get_utm_dtcodes(north, east, zone) {
@@ -414,9 +402,10 @@ func get_utm_dtcodes(north, east, zone) {
 
    Original David Nagle 2008-07-21
 */
-   east  = floor(east /2000.0)*2000;
-   north = ceil (north/2000.0)*2000;
-   return swrite(format="t_e%.0f_n%.0f_%d", east, north, int(zone));
+   return swrite(format="t_e%.0f000_n%.0f000_%d",
+      floor(east /2000.0)*2,
+      ceil (north/2000.0)*2,
+      int(zone));
 }
 
 func get_dt_itcodes(dtcodes) {
@@ -468,6 +457,22 @@ func dt_short(dtcodes) {
    w = n = z = []; // prevents the next line from making them externs
    regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)(_|\\.|$)", dtcodes, , , w, , n, , z;
    return swrite(format="e%s_n%s_%s", w, n, z);
+}
+
+func dt_long(dtcodes) {
+/* DOCUMENT longnames = dt_long(dtcodes)
+   Returns full names for an array of data tile codes.
+
+   Example:
+
+      > dt_long("e466_n3354_16")
+      "t_e466000_n3354000_16"
+   
+   Original David Nagle 2008-08-07
+*/
+   w = n = z = []; // prevents the next line from making them externs
+   regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)(_|\\.|$)", dtcodes, , , w, , n, , z;
+   return swrite(format="t_e%s000_n%s000_%s", w, n, z);
 }
 
 func dt2utm(dtcodes, &north, &east, &zone, bbox=) {
@@ -657,7 +662,7 @@ suffix=, remove_buffers=, buffer=) {
       n = e = z = [];
       dt2utm, basefile, n, e, z;
 
-      write, format=" * Scanning %s\n", basefile;
+      write, format=" * [%d/%d] Scanning %s\n", i, numberof(files), basefile;
       
       // Load data
       f = openb(files(i));
@@ -706,7 +711,6 @@ suffix=, remove_buffers=, buffer=) {
          pbd_append, outpath + prefix + qqcodes(j) + suffix, vname, vdata;
       }
    }
-
 }
 
 func batch_qq_to_2k(src_dir, dest_dir, mode, searchstr=, suffix=,
@@ -785,43 +789,16 @@ remove_buffers=, buffer=) {
    files = find(src_dir, glob=searchstr);
    files = files(sort(file_tail(files)));
 
-   // Iterate over the source files to determine the 2k tiles
    dtcodes = [];
-   stamp = 0;
-   timer_init, tstamp;
-   write, "Scanning source files to generate list of data tiles...";
+   dtfiles = [];
+   write, format="Batch converting quarter quads into data tiles:%s", "\n";
    for(i = 1; i<= numberof(files); i++) {
-      timer_tick, tstamp, i, numberof(files);
       basefile = file_tail(files(i));
-      z = qq2uz(extract_qq(basefile));
-      
-      // Load data
-      f = openb(files(i));
-      data = get_member(f, get_member(f, "vname"));
-      close, f;
-
-      // Get a list of the 2k data tile codes represented by the data
-      new_dtcodes = get_utm_dtcodes(get_member(data, north)/100.0,
-         get_member(data, east)/100.0, z);
-      grow, new_dtcodes, dtcodes;
-      dtcodes = set_remove_duplicates(new_dtcodes);
-
-   }
-   write, format=" %i data tiles will be generated\n", numberof(dtcodes);
-
-   dtcodes = dtcodes(sort(dtcodes));
-
-   // Iterate over each source file to actually partition data
-   write, "Scanning source files to generate data files:";
-   for(i = 1; i<= numberof(files); i++) {
-      // Extract UTM coordinates for data tile
-      basefile = file_tail(files(i));
+      write, format="[%d/%d] %s     \r", i, numberof(files), basefile;
       qq = extract_qq(basefile);
-      z = qq2uz(qq);
-
-      write, format=" * [%d/%d] Scanning %s\n", i, numberof(files), basefile;
+      qqzone = qq2uz(qq);
       
-      // Load data
+      // load qq tile
       f = openb(files(i));
       data = get_member(f, get_member(f, "vname"));
       close, f;
@@ -829,29 +806,36 @@ remove_buffers=, buffer=) {
       // Restrict data to tile boundaries if remove_buffers = 1
       if(remove_buffers) {
          qq_list = get_utm_qqcodes(get_member(data, north)/100.0,
-            get_member(data, east)/100.0, z);
+            get_member(data, east)/100.0, qqzone);
          data = data(where(qq == qq_list));
-         if(numberof(data) == 0) {
-            write, "  Problem: No data found after buffers removed.";
-            continue;
-         }
+         if(numberof(data) == 0) continue;
       }
 
-      // Make list of possible dtcodes for this tile, to speed up iterations
+      // determine which data tiles are covered by dataset
+      //   - note them as good
+      new_dtcodes = get_utm_dtcodes(get_member(data, north)/100.0,
+         get_member(data, east)/100.0, qqzone);
+      dtcodes = set_union(new_dtcodes, dtcodes);
+      
+      // determine possible dtcodes (for buffer included)
       qq_dtcodes = get_utm_dtcode_candidates(get_member(data, north)/100.0,
-         get_member(data, east)/100.0, z, buffer);
-      qq_dtcodes = set_intersection(qq_dtcodes, dtcodes);
+         get_member(data, east)/100.0, qqzone, buffer);
       qq_itcodes = get_dt_itcodes(qq_dtcodes);
 
-      // Iterate through each dt
+      // for each possible dtcode:
       for(j = 1; j <= numberof(qq_dtcodes); j++) {
+         // extract relevant data
          idx = extract_for_dt(get_member(data, north)/100.0,
             get_member(data, east)/100.0, qq_dtcodes(j), buffer=buffer);
          if(!numberof(idx)) // skip if no data
             continue;
          vdata = data(idx);
-
-         write, format="   - Writing for %s\n", qq_dtcodes(j);
+         
+         // make sure zones match; if not, rezone
+         dtzone = [];
+         dt2utm, qq_dtcodes(j), , , dtzone;
+         if(dtzone != qqzone) 
+            rezone_data_utm, vdata, dtzone, qqzone;
 
          // variable name is short dtcode
          vname = dt_short(qq_dtcodes(j));
@@ -862,9 +846,19 @@ remove_buffers=, buffer=) {
 
          // write data
          pbd_append, outpath + qq_dtcodes(j) + suffix, vname, vdata;
+
+         // note as created
+         dtfiles = set_union(dtfiles, [outpath + qq_dtcodes(j) + suffix]);
       }
    }
 
+   // iterate through created files and remove the ones not in the good list
+   write, format="\nDeleting extraneous files...                            %s", "\n";
+   dtfilecodes = dt_long(file_tail(dtfiles));
+   removeidx = set_difference(dtfilecodes, dtcodes, idx=1);
+   for(i = 1; i <= numberof(removeidx); i++) {
+      remove, dtfiles(removeidx(i));
+   }
 }
 
 func pbd_append(file, vname, data, uniq=) {

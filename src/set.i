@@ -227,14 +227,13 @@ func set_remove_duplicates(A, idx=, orig_order=, ret_sort=) {
       inv = std = sort(A);
       inv(std) = indgen(numberof(inv));
       idx = 0;
-      A = inv;
    }
 
    // If they want indices, we want to index into an index list instead of A
-   A = idx ? indgen(numberof(A)) : A;
+   if(idx) A = indgen(numberof(A));
 
    // If they want them in order for A(sort(A))...
-   A = ret_sort ? inv : A;
+   if(ret_sort) A = inv;
 
    return A(seq)(srt)(unq);
 }
