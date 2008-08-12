@@ -129,30 +129,11 @@ func extract_for_qq(north, east, zone, qq, buffer=) {
    // coverage. The most extreme points in each direction are then used.
    lats = span(bbox(1), bbox(3), 5);
    lons = span(bbox(2), bbox(4), 5);
-   min_n = fll2utm(array(lats(1), 5), lons)(1, min) - buffer;
-   max_n = fll2utm(array(lats(5), 5), lons)(1, max) + buffer;
-   min_e = fll2utm(lats, array(lons(5), 5))(2, max) - buffer;
-   max_e = fll2utm(lats, array(lons(1), 5))(2, min) + buffer;
-   qqz = qq2uz(qq);
+   min_n = fll2utm(array(lats(1), 5), lons, force_zone=zone)(1, min) - buffer;
+   max_n = fll2utm(array(lats(5), 5), lons, force_zone=zone)(1, max) + buffer;
+   min_e = fll2utm(lats, array(lons(5), 5), force_zone=zone)(2, max) - buffer;
+   max_e = fll2utm(lats, array(lons(1), 5), force_zone=zone)(2, min) + buffer;
    
-   if(qqz != zone) {
-      // It's expensive to convert the entire data array. So instead, we just
-      // convert the bounding box and check to see if the data stands a chance
-      // at being in the right spot. I put a 2000 meter buffer around it, which
-      // is probably bigger than is needed but will ensure that all good data
-      // is kept while avoiding the need to check most data tiles
-      ubb = rezone_utm([north(min), north(min), north(max), north(max)],
-         [east(min), east(max), east(max), east(min)], zone, qqz);
-      chk_n = [ubb(1,min), ubb(1,max)];
-      chk_e = [ubb(2,min), ubb(2,max)];
-      if(max_e + 2000 > chk_e(min) && min_e - 2000 < chk_e(max) &&
-         max_n + 2000 > chk_n(min) && min_n - 2000 < chk_n(max) ) {
-         rezone_utm, north, east, zone, qqz;
-      } else {
-         return [];
-      }
-   }
-
    return where(
       min_n <= north & north <= max_n &
       min_e <= east  & east  <= max_e
