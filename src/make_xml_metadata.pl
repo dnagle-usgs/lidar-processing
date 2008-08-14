@@ -327,6 +327,11 @@ sub apply_template {
    setnode($doc, [qw/gridsys utm utmzone/], $utm->[4]);
    setnode($doc, [qw/refSysInfo identCode/], 'NAD_1983_UTM_Zone_' . $utm->[4]);
 
+   setnode($doc, [qw/spdom bounding southbc/], $utm->[0]);
+   setnode($doc, [qw/spdom bounding eastbc/ ], $utm->[1]);
+   setnode($doc, [qw/spdom bounding northbc/], $utm->[2]);
+   setnode($doc, [qw/spdom bounding westbc/ ], $utm->[3]);
+
    setnode($doc, [qw/spdom lboundng bottombc/], $utm->[0]);
    setnode($doc, [qw/spdom lboundng rightbc/ ], $utm->[1]);
    setnode($doc, [qw/spdom lboundng topbc/   ], $utm->[2]);
