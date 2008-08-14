@@ -64,8 +64,8 @@ func set_intersection(A, B, idx=) {
       return [];
 }
 
-func set_difference(A, B, idx=) {
-/* DOCUMENT set_difference(A, B, idx=)
+func set_difference(A, B, idx=, delta=) {
+/* DOCUMENT set_difference(A, B, idx=, delta=)
 
    Returns the difference of the sets represented by A and B.
    
@@ -82,8 +82,12 @@ func set_difference(A, B, idx=) {
 
       idx= Set to 1 and the index of the difference set into A will be returned
          instead of the elements.
+
+      delta= If provided, this provides the range over which values are
+         considered equal, useful when dealing with floats and doubles.
 */
    default, idx, 0;
+   default, delta, 0;
 
    // Trivial cases
    if(! numberof(A))
@@ -92,8 +96,12 @@ func set_difference(A, B, idx=) {
       return idx ? indgen(numberof(A)) : A;
 
    C = array(1, numberof(A));
-   for(i = 1; i <= numberof(B); i++)
-      C &= (A != B(i));
+   if(delta)
+      for(i = 1; i <= numberof(B); i++)
+         C &= (abs(A - B(i)) > delta);
+   else
+      for(i = 1; i <= numberof(B); i++)
+         C &= (A != B(i));
    index = where(C);
 
    if(idx)
@@ -104,8 +112,8 @@ func set_difference(A, B, idx=) {
       return [];
 }
 
-func set_symmetric_difference(A, B) {
-/* DOCUMENT set_symmetric_difference(A, B)
+func set_symmetric_difference(A, B, delta=) {
+/* DOCUMENT set_symmetric_difference(A, B, delta=)
 
    Returns the symmetric difference of the sets represented by A and B.
 
@@ -115,8 +123,14 @@ func set_symmetric_difference(A, B) {
    The elements of set_symmetric_difference(a,b) and
    set_symmetric_difference(b,a) will be the same, but the arrays may not be
    ordered the same.
+   
+   Options:
+
+      delta= If provided, this provides the range over which values are
+         considered equal, useful when dealing with floats and doubles.
 */
-   return grow(set_difference(A, B), set_difference(B, A));
+   default, delta, 0;
+   return grow(set_difference(A, B, delta=delta), set_difference(B, A, delta=delta));
 }
 
 func set_union(A, B) {

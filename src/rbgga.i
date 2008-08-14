@@ -945,7 +945,6 @@ func plot_no_tans_fltlines (tans, pnav) {
 
 }
 
-
 func select_any_region(xdata, ydata, mode=, win=) {
   /*DOCUMENT  select_any_region(xdata, ydata, mode=, win=)
    this function allows the user to select a region on an xy image plot.
@@ -1009,11 +1008,60 @@ func select_any_region(xdata, ydata, mode=, win=) {
   window, w;
 
   return indx;
+}
 
+func gga_limits(utm=) {
+/* DOCUMENT gga_limits(utm=)
+   This will set the limits of the current window to constrain it to the
+   gga data. Resulting limits will be similar as those attained if you use
+   "limits, square=1; limits" when there is only gga data plotted, but
+   unlike those commands, this will give those results even if there are
+   other data or images plotted to the window. It will even work if the
+   gga data isn't plotted at all.
+*/
+   temp = viewport()(dif)(1:3:2);
+   plot_aspect = temp(1)/temp(2);
+
+   latmin = gga.lat(min);
+   latmax = gga.lat(max);
+   lonmin = gga.lon(min);
+   lonmax = gga.lon(max);
+   
+   if (utm) {
+      u = fll2utm(latmin, lonmin);
+      x0 = u(2);
+      y0 = u(1);
+      u = fll2utm(latmax, lonmax);
+      x1 = u(2);
+      y1 = u(1);
+   } else {
+      x0 = lonmin;
+      x1 = lonmax;
+      y0 = latmin;
+      y1 = latmax;
+   }
+
+   // Expand ranges by 2% to make sure things fit well on the plot
+   xdif = (x1 - x0)/100;
+   ydif = (y1 - y0)/100;
+   x0 -= xdif;
+   x1 += xdif;
+   y0 -= ydif;
+   y1 += ydif;
+   
+   data_aspect = (x1-x0)/(y1-y0);
+
+   limits, square=1
+   if (data_aspect < plot_aspect) {
+      // use vertical for limits
+      x = [x0,x1](avg) - (y1-y0)*plot_aspect/2;
+      limits, x, "e", y0, y1;
+   } else {
+      // use horizontal for limits
+      y = [y0,y1](avg) - (x1-x0)/plot_aspect/2;
+      limits, x0, x1, y, "e";
+   }
 }
 
 if ( is_void(_ytk) ) 
-	help, rbgga_help
-
-
-
+   help, rbgga_help;

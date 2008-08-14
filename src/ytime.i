@@ -50,13 +50,14 @@ func soe2sod(soe) {
 /* DOCUMENT soe2sod(soe)   
             soe2somd(soe)
 
-   Convert a soe time to an sod.
+   Convert a soe time to an sod. Data type of return value is the same as
+   the data type of soe.
 
    See also:
       soe2sod soe2time hms2sod sod2hms time2soe
 
 */
-   return int(soe) % 86400;
+   return soe % 86400;
 }
 
 // Alias
@@ -110,18 +111,18 @@ func soe2time( soe ) {
 func hms2sod ( t ) {
 /* DOCUMENT hms2sod( t ) 
   
-   Convert an HMS value to sod (seconds-of-day).  The HMS is in int form such
-   as 120000 for 12 hours, 0 minutes, and 0 seconds.
+   Convert an HMS value to sod (seconds-of-day).  The HMS is in a form such
+   as 120000 for 12 hours, 0 minutes, and 0 seconds. The type of the return
+   value will match the type of the argument passed.
 
    See also:
       soe2sod soe2time hms2sod sod2hms time2soe
 */
-   t = int(t);
-   h = int (t / 10000);
-   m = (t - int(h*10000)) / 100;
+   h = int(int(t) / 10000);
+   m = (int(t) - int(h*10000)) / 100;
    s = t - (h*10000+m*100);
    sod = h*3600 + m*60 + s;
-   return sod
+   return sod;
 }
 
 func sod2hms( a, noary= ) {
@@ -134,19 +135,22 @@ func sod2hms( a, noary= ) {
       qq = where ((hms(3,) (dif) ) != 0 );
       write,format="cam1/cam1_2001_0714_%d%d%d_01.jpg\n", hms(1,),hms(2,),hms(3,)
  
-   to generate EAARL digital camera photo reference file names from the
-   gps data.
+   to generate EAARL digital camera photo reference file names from the gps
+   data.
 
    A non-zero value for noary= will cause the values to be returned as a
-   integers such that 120000 is 12 hours, 0 minutes, and 0 seconds.
+   floats such that 120000 is 12 hours, 0 minutes, and 0 seconds.
+
+   Return values are double, without regard for the type of the passed
+   argument.
 
    See also:
       soe2sod soe2time hms2sod sod2hms time2soe
       rbgga.i: gga_find_times
 */
-   hms = array(int, 3, numberof(a));
+   hms = array(double, 3, numberof(a));
    hms(1,) = int(a/3600);     // find hours
-   hms(2,) = (a - hms(1,)*3600)/60;
+   hms(2,) = int((a - int(hms(1,))*3600)/60);
    hms(3,) = a % 60;
    if(noary)
       return (hms*[10^4,10^2,1])(sum,);
@@ -178,21 +182,19 @@ func time2soe( a ) {
 
    Original: W. Wright wright@lidar.wff.nasa.gov
 */
-   idx = a(1) - 1969;      // convert to index
-   a(2)--;                 // convert to zero-based day number
-   if (a(3) == 0)
-      sod = (a(4:6) * [3600,60,1])(sum);
-   else 
-      sod = a(3);
-   soe = _ys(idx) + a(2)*86400 + sod; 
-   return soe;
+   idx = int(a(*,1)) - 1969;  // convert to index
+   a(*,2)--;                  // convert to zero-based day number
+   usehms = a(*,3) == 0;
+   if(numberof(where(usehms)))
+      a(*,3)(where(usehms)) = (a(*,4:6)(where(usehms)) * [3600,60,1])(sum);
+   return _ys(idx) + a(*,2)*86400 + a(*,3);
 }
 
 func time_correct (path) {
-   extern tca, edb ;
+   extern tca, edb;
    fname = path+"tca.pbd";
    if (catch(0x02)) {
-    return
+      return;
    }
    f = openb(fname);
    restore, f, tca;
@@ -254,11 +256,11 @@ func ymd2doy(y, m, d) {
    If three arguments are given, they should be year, month, day.
 */
    if(is_void(m) && is_void(d)) {
-      ymd = y;
       if(typeof(ymd) == "string") {
          y = m = d = 0;
          sread, format="%4d%2d%2d", y, m, d;
       } else {
+         ymd = int(y);
          md = ymd % 10000;
          d = md % 100;
          m = (md - d) / 100;
@@ -270,6 +272,44 @@ func ymd2doy(y, m, d) {
    months = year_cum_months(y);
 
    return months(m) + d;
+}
+
+extern _leap_dates;
+/* DOCUMENT _leap_dates
+   Array of strings representing the dates on which leap seconds were added to UTC.
+*/
+_leap_dates = [
+   "1981-06-30", "1982-06-30", "1983-06-30", "1985-06-30", "1987-12-31",
+   "1989-12-31", "1990-12-31", "1992-06-30", "1993-06-30", "1994-06-30",
+   "1995-12-31", "1997-06-30", "1998-12-31", "2005-12-31"
+];
+
+func gps2utc(date, sod) {
+/* DOCUMENT gps2utc(date, sod)
+   Given a date (formatted as "YYYY-MM-DD") and a GPS time sod, this converts
+   it to UTC time sod by applying the leap seconds offset.
+*/
+   return sod - gps_utc_offset(date);
+}
+
+func utc2gps(date, sod) {
+/* DOCUMENT utc2gps(date, sod)
+   Given a date (formatted as "YYYY-MM-DD") and a GPS time sod, this converts
+   it to UTC time sod by applying the leap seconds offset.
+*/
+   return sod + gps_utc_offset(date);
+}
+
+func gps_utc_offset(date) {
+/* DOCUMENT gps_utc_offset(date)
+   Calculates the leap seconds offset between GPS and UTC for a given date.
+*/
+   extern _leap_dates;
+   res = (_leap_dates(*,) < date)(,sum);
+   if(dimsof(date)(1))
+      return res;
+   else
+      return res(1);
 }
 
 /*******************************************************************************

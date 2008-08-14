@@ -2,11 +2,8 @@
 write, "$Id$";
 require, "general.i";
 require, "string.i";
-
-/*
-Certain functions in this file require Eric Thiébaut's Yeti package, available from:
-http://www-obs.univ-lyon1.fr/~thiebaut/yeti.html
-*/
+require, "yeti.i";
+require, "yeti_regex.i";
 
 func file_dirname(fn) {
 /* DOCUMENT file_dirname(fn)
@@ -15,7 +12,6 @@ func file_dirname(fn) {
 
    See also: file_tail file_extension file_rootname split_path
 */
-   require, "yeti_regex.i";
    match = [];
    regmatch, "(.*)/[^/]*", fn, , match;
    return match;
@@ -28,7 +24,6 @@ func file_tail(fn) {
 
    See also: file_dirname file_extension file_rootname split_path
 */
-   require, "yeti_regex.i";
    slash = match = [];
    regmatch, ".*(/)([^/]*)", fn, , slash, match;
    w = where(!strlen(match) & !strlen(slash));
@@ -45,7 +40,6 @@ func file_extension(fn) {
 
    See also: file_dirname file_tail file_rootname split_path
 */
-   require, "yeti_regex.i";
    match = [];
    regmatch, ".*(\\..*)", file_tail(fn), , match;
    return match;
@@ -59,7 +53,6 @@ func file_rootname(fn) {
 
    See also: dir_dirname file_tail file_extension split_path
    */
-   require, "yeti_regex.i";
    match = dot = [];
    regmatch, "(.*)(\\.)[^\\./]*", fn, , match, dot;
    w = where(!strlen(match) & !strlen(dot));
@@ -153,8 +146,8 @@ func find(path, glob=) {
    return results;
 }
 
-func lsfiles(dir, glob=, ext=) {
-/* DOCUMENT lsfiles(directory_name, glob=, ext=)
+func lsfiles(dir, glob=, ext=, case=, regex=) {
+/* DOCUMENT lsfiles(directory_name, glob=, ext=, case=, regex=)
    
    List DIRECTORY_NAME. The return value FILES is an array of strings or [];
    the order of the filenames is unspecified; it does not contain "." or "..";
@@ -170,25 +163,56 @@ func lsfiles(dir, glob=, ext=) {
       glob= A glob pattern to use, such as glob="*.c" or glob="foo*.conf".
          Wildcards will work with this (they are passed to strglob).
    
+      case= When used with glob, indicates whether the glob should be case
+         sensitive.  Default is 0, case insensitive.
+
+      regex= A regular expression to use to search against. Specifying
+         this will cause glob and ext to be ignored.
+   
    SEE ALSO: cd, mkdir, rmdir, get_cwd, get_home, lsdir
 */
-   d = [];
-   dirs = lsdir(dir);
-   if(is_void(glob) && !is_void(ext)) glob = "*"+ext;
-   if(!is_void(glob) && numberof(dirs) && typeof(dirs) == "string") {
-      w = where(strglob(glob, dirs));
-      if(numberof(w))
-         dirs = dirs(w);
-      else
-         dirs = [];
-   } else {
-      dirs = [];
+   fix_dir, dir;
+   default, case, 0;
+   files = lsdir(dir);
+   if(numberof(files) && typeof(files) == "string") {
+      if(!is_void(regex)) {
+         w = where(regmatch(regex, files, icase=!case));
+         if(numberof(w))
+            return files(w);
+      } else {
+         if(is_void(glob) && !is_void(ext)) glob = "*"+ext;
+         if(is_void(glob))
+            return files;
+         if(!is_void(glob)) {
+            w = where(strglob(glob, files, case=case));
+            if(numberof(w))
+               return files(w);
+         }
+      }
    }
-   return dirs;
+   return [];
 }
 
-func lsdirs( start ) {
-   lsdir, start, subdirs;
+func lsdirs(dir, glob=) {
+/* DOCUMENT lsdirs(dir, glob=)
+
+   List the subdirectories of dir. The return value is an array of strings or
+   []. The order of the directories is unspecified.
+
+   Options:
+   
+      glob= A glob pattern to use, suitable for strglob.
+
+   SEE ALSO: lsfiles, lsdir
+*/
+   lsdir, dir, subdirs;
+   if(!is_void(glob)) {
+      w = where(strglob(glob, subdirs));
+      if(numberof(w))
+         subdirs = subdirs(w);
+      else
+         subdirs = [];
+   }
    return subdirs;
 }
 
@@ -210,9 +234,16 @@ func fix_dir(&idir) {
    The first form will update the variable dir in-place. The second form
    will return the validated directory, but will not clobber the original.
 */
+   if(is_void(idir)) return;
    dir = idir;
-   if("/" != strpart(dir, strlen(dir):strlen(dir)))
-      dir = dir + "/";
+   if(numberof(dir) == 1) {
+      if(strlen(dir) && "/" != strpart(dir, strlen(dir):strlen(dir)))
+         dir = dir + "/";
+   } else {
+      w = where(strlen(dir) > 0 & !regmatch("/$", dir));
+      if(numberof(w))
+         dir(w) = dir(w) + "/";
+   }
    if(am_subroutine())
       idir = dir;
    return dir;
