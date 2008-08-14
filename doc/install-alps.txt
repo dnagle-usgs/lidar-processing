@@ -132,7 +132,7 @@ Yeti
 2. Untar the tarball as a directory in /opt/eaarl/packages/src
 
 	cd /opt/eaarl/packages/src
-	tar jxvf /opt/eaarl/tarfiles/yeti-6.2.1.tar.bz2
+	tar zxvf /opt/eaarl/tarfiles/yeti-6.2.1.tar.gz
 
 3. Compile and install.
 
