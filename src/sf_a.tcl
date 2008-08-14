@@ -44,7 +44,7 @@ package require comm
 
 if { ![catch {package require cmdline}] } {
 	set sf_options {
-		{camtype.arg 1 "The type of photography to be viewed. 1 for EAARL photography; 2 for ADAPT photography. Default: 1"}
+		{camtype.arg 1 "Deprecated and ignored."}
 		{parent.arg -1 "The comm port number for the application (usually ytk) calling this program. Default: -1 (disabled)"}
 		{cir.arg -1 "The comm port number for cir.tcl. Default: -1 (disabled)"}
       {path.arg "/data/" "The initial path to use. Default: /data/"}
@@ -91,13 +91,10 @@ set range_touched 0 ;# Have fcin or lcin been set but not used?
 
 set show_fname 0    ;# Show the file name?
 
-set camtype $params(camtype) ;# Camera type -- may be overridden by .lst commands
 set tarname ""      ;# Tar file to access - may be changed by .lst commands
 
 set ytk_id $params(parent) ;# Comm id for ytk
 set cir_id $params(cir)    ;# Comm id for cir
-
-set atris_mode 0    ;# By default, we're not in Atris mode
 
 set frame_off 0     ;# Frame offset
 
@@ -250,13 +247,6 @@ proc cur_mark_write { name1 name2 op } {
 	catch { set mark($ci) $cur_mark }
 }
 
-proc adapt_classtool_cname_palette_write { name1 name2 op } {
-	catch {
-		adapt_classtool_hide_cname_palette
-		adapt_classtool_show_cname_palette
-	}
-}
-
 proc cur_class_write { name1 name2 op } {
 	global cur_class class ci
 
@@ -304,112 +294,17 @@ proc open_loader_window { m1 } {
 	center_win .loader
 }
 
-proc load_file_list_adf { f } {
-# Parameters
-#   f - filename of a list of files to be loaded
-
-	# Bring in Globals
-	global ci fna imgtime dir base_dir atris_mode cur_fname \
-			nsat pdop ns ew lat lon alt seconds_offset timern frame_off \
-			DEBUG_SF camtype tarname mogrify_exists mogrify_pref nfiles
-
-	# Reset defaults
-	set camtype 2
-	set tarname ""
-	set nfiles 0
-
-	# Initialize variables
-	# hour minute seconds
-	set h 0
-	set m 0
-	set s 0
-
-	set fname $f
-	set cur_fname $f
-# Set time ticker, for use in updating the displays - 0 to make 
-# sure something displays immediately
-	set ticker 0
-# Set the seconds_offset back to 0 by default
-	set seconds_offset 0
-
-	set need_data 1
-	if { [ catch {set dataf [ open $fname "r" ] } ] == 0 } {
-		while { ![ eof $dataf ] && $need_data } { 
-			set heads [ gets $dataf ]
-			set headlst [ split $heads " " ];
-			set dataset [ lindex $headlst 0 ];
-			set datanum [ lindex $headlst 1 ];
-
-			if { [string equal $dataset "image-files"] } {
-				set nfiles $datanum
-			}
-
-			for { set i 1 } { $i <= $datanum } { incr i } {
-				set datas [ gets $dataf ]
-				set datalst [ split $datas " " ]
-
-				if { [string equal $dataset "image-files"] } {
-					set fn  [lindex $datalst 0]
-					set hms [lindex $datalst 1]
-					
-					set fna($i) "$fn"
-					
-					scan $hms "%02d%02d%02d" h m s
-					set thms [ format "%02d:%02d:%02d" $h $m $s ]
-					set sod [ expr $h*3600 + $m*60 + $s ]
-					set hms [ clock format $sod -format "%H%M%S" -gmt 1 ]
-					set imgtime(idx$i) $hms;
-					set imgtime(hms$hms) $i;
-					
-					set lat(hms$hms) [lindex $datalst 2]
-					set lon(hms$hms) [lindex $datalst 3]
-					set alt(hms$hms) [lindex $datalst 4]M
-
-					set heading(hms$hms) [lindex $datalst 5]
-
-					if { [expr int([clock clicks -milliseconds] / 200)] - $ticker > 0 } {
-						set ticker [expr int([clock clicks -milliseconds] / 200)]
-						.loader.status1 configure -text "Loaded $i records\r"
-						update
-					}
-				}
-			}
-			if { [string equal $dataset "image-files"] } {
-				set need_data 0
-			}
-		}
-	}
-	set ci 0
-	
-	.loader.status1 configure -text "$nfiles photos loaded,\nYou may begin..."
-	.loader.ok configure -text "OK" 
-	after 3500 {destroy .loader}
-	
-	if { $mogrify_exists } {
-		set mogrify_pref "prefer mogrify"
-	} else {
-		set mogrify_pref "only tcl"
-	}
-
-	return $nfiles
-}
-
 proc load_file_list { f method } {
 # Parameters
 #   f - filename of a list of files to be loaded
 #   method - lst|tar
 
 	# Bring in Globals
-	global ci fna imgtime dir base_dir atris_mode \
+	global ci fna imgtime dir base_dir \
 			nsat pdop ns ew lat lon alt seconds_offset timern frame_off \
-			DEBUG_SF camtype tarname mogrify_exists mogrify_pref
+			DEBUG_SF tarname mogrify_exists mogrify_pref
 
 	# Reset defaults
-	if { $atris_mode } {
-		set camtype 2
-	} else {
-		set camtype 1
-	}
 	set tarname ""
 
 	# Initialize variables
@@ -467,13 +362,7 @@ proc load_file_list { f method } {
 		#                           ANYTHING_YYYY-MM-DD_HHMMSS_NNNN.jpg
 		set lst [ split $fn "_" ]
 		# Grab the HMS section
-		set hms ""
-		if { $camtype == 1 } {
-			set hms [ lindex $lst 3 ]
-		}
-		if { $camtype == 2 } {
-			set hms [ lindex $lst end-1 ]
-		}
+      set hms [ lindex $lst 3 ]
 		if { [ string equal $hms "" ] == 0 && [ string equal -nocase -length 3 $fn "set" ] == 0 } {
 			# Put the filename in the fna array
 			set fna($j) "$fn"
@@ -505,102 +394,63 @@ proc load_file_list { f method } {
 	set nfiles $nbr_photos
 	set ci 0
 
-	if { $camtype == 1 } {
-		# read gga data
-		set ggafn bike.gga
-		#set ggafn 010614-102126.nmea
-		#set ggafn  "/gps/165045-195-2001-laptop-ttyS0C-111X.gga"
-		set ggafn  "gga"
-		puts "Attempting to load gps from: $base_dir/$ggafn"
+   # read gga data
+   set ggafn bike.gga
+   #set ggafn 010614-102126.nmea
+   #set ggafn  "/gps/165045-195-2001-laptop-ttyS0C-111X.gga"
+   set ggafn  "gga"
+   puts "Attempting to load gps from: $base_dir/$ggafn"
 # Look around for some ascii gga data.
-		set have_gps 0; 
-		if { [ catch {set ggaf [ open "tarmount/gps.gga" "r" ] } ] == 0 } {
-			puts "loaded gps.gga from within tar file.";
-			set have_gps 1;
-		} elseif { [ catch {set ggaf [ open $base_dir/$ggafn "r" ] } ] == 0 } {
-			puts "loaded gps..";
-			set have_gps 1;
-		}
-		if { $have_gps } {
-			for { set i 0 } { ![ eof $ggaf ] } { incr i } { 
-				set ggas [ gets $ggaf ]  
-				if { [string length $ggas] == 0 } { break }	;# This cuz eof doesn't seem to work
-																			;# with vfs mounted files at the moment..
-				if { [ string index $ggas 13 ] == "0" } {
-					set gt [ string range $ggas 6 11 ];
-					set hrs [ expr [ string range $gt 0 1 ]  ];
-					set ms  [ string range $gt 2 5 ]
-					set gt $hrs$ms;
-					set hms "$ms"
-					if { [expr int([clock clicks -milliseconds] / 200)] - $ticker > 0 } {
-						set ticker [expr int([clock clicks -milliseconds] / 200)]
-						.loader.status1 configure -text "Loaded $i GPS records\r"
-						update
-					}
-					#puts -nonewline "  $gt\r"
-					if { [ catch { set tmp $imgtime(hms$gt) } ] == 0 } {
-						set lst [ split $ggas "," ];
-						set lat(hms$gt)  [ lindex $lst 2 ]
-						set ns(hms$gt)   [lindex $lst  3 ]
-						set lon(hms$gt)  [ lindex $lst 4 ]
-						set ew(hms$gt)   [ lindex $lst 5 ]
-						set pdop(hms$gt) [ lindex $lst 8 ]
-						set nsat(hms$gt) [ lindex $lst 7 ]
-						scan [ lindex $lst 9 ] "%d" a
-						set alt(hms$gt) $a
+   set have_gps 0; 
+   if { [ catch {set ggaf [ open "tarmount/gps.gga" "r" ] } ] == 0 } {
+      puts "loaded gps.gga from within tar file.";
+      set have_gps 1;
+   } elseif { [ catch {set ggaf [ open $base_dir/$ggafn "r" ] } ] == 0 } {
+      puts "loaded gps..";
+      set have_gps 1;
+   }
+   if { $have_gps } {
+      for { set i 0 } { ![ eof $ggaf ] } { incr i } { 
+         set ggas [ gets $ggaf ]  
+         if { [string length $ggas] == 0 } { break }	;# This cuz eof doesn't seem to work
+                                                      ;# with vfs mounted files at the moment..
+         if { [ string index $ggas 13 ] == "0" } {
+            set gt [ string range $ggas 6 11 ];
+            set hrs [ expr [ string range $gt 0 1 ]  ];
+            set ms  [ string range $gt 2 5 ]
+            set gt $hrs$ms;
+            set hms "$ms"
+            if { [expr int([clock clicks -milliseconds] / 200)] - $ticker > 0 } {
+               set ticker [expr int([clock clicks -milliseconds] / 200)]
+               .loader.status1 configure -text "Loaded $i GPS records\r"
+               update
+            }
+            #puts -nonewline "  $gt\r"
+            if { [ catch { set tmp $imgtime(hms$gt) } ] == 0 } {
+               set lst [ split $ggas "," ];
+               set lat(hms$gt)  [ lindex $lst 2 ]
+               set ns(hms$gt)   [lindex $lst  3 ]
+               set lon(hms$gt)  [ lindex $lst 4 ]
+               set ew(hms$gt)   [ lindex $lst 5 ]
+               set pdop(hms$gt) [ lindex $lst 8 ]
+               set nsat(hms$gt) [ lindex $lst 7 ]
+               scan [ lindex $lst 9 ] "%d" a
+               set alt(hms$gt) $a
 
 # GPGGA,131234.00,3820.089266,N,07531.209274,W,1,07,01.0,00023.239,M,-036.306,M,,*5A
 #						puts "hms$gt: GPGGA,$gt,$lat(hms$gt),$ns(hms$gt),$lon(hms$gt),$ew(hms$gt),1,$nsat(hms$gt),$pdop(hms$gt),$alt(hms$gt),M,$alt(hms$gt),M";
-					} 
-				}
-			}
-			.loader.status1 configure -text "Loaded $i GPS records\r"
-		}
-	}
-	
-	if { $camtype == 2 } {
-									if { $DEBUG_SF } { puts "fname: $fname" }
-		set datafn [string range $fname 0 end-3]txt
-									if { $DEBUG_SF } { puts "datafn: $datafn" }
-		if { [ catch {set dataf [ open $datafn "r" ] } ] == 0 } {
-			for { set i 0 } { ![ eof $dataf ] } { incr i } { 
-									if { $DEBUG_SF } { puts "$i:" }
-				set datas [ gets $dataf ]
-									if { $DEBUG_SF } { puts "    $datas" }
-				set datalst [ split $datas "," ];
-				set hms [ lindex $datalst 0 ]
-									if { $DEBUG_SF } { puts "    hms $hms" }
-				if { [ catch { set tmp $imgtime(hms$hms) } ] == 0 } {
-					set lat(hms$hms)  [ lindex $datalst 1 ]
-										if { $DEBUG_SF } { puts "    lat $lat(hms$hms)" }
-					set lon(hms$hms)  [ lindex $datalst 2 ]
-										if { $DEBUG_SF } { puts "    lon $lon(hms$hms)" }
-					set alt(hms$hms) [ lindex $datalst 3 ]M
-										if { $DEBUG_SF } { puts "    depth $alt(hms$hms)" }
-				}
-				if { [expr int([clock clicks -milliseconds] / 200)] - $ticker > 0 } {
-					set ticker [expr int([clock clicks -milliseconds] / 200)]
-					.loader.status1 configure -text "Loaded $i GPS records\r"
-					update
-				}
-			}
-			.loader.status1 configure -text "Loaded $i GPS records\r"
-			update
-		}
-	}
+            } 
+         }
+      }
+      .loader.status1 configure -text "Loaded $i GPS records\r"
+   }
 
 	.loader.status1 configure -text "$nbr_photos photos loaded,\nYou may begin..."
 	.loader.ok configure -text "OK" 
 	after 3500 {destroy .loader}
 
 	if { $mogrify_exists } {
-		if { $camtype == 1 } {
-			set mogrify_pref "prefer tcl"
-		} elseif { $camtype == 2 } {
-			set mogrify_pref "prefer mogrify"
-		} else {
-			set mogrify_pref "prefer tcl"
-		}
+      set mogrify_pref "prefer tcl"
 	} else {
 		set mogrify_pref "only tcl"
 	}
@@ -789,7 +639,7 @@ proc show_img { n } {
 	global fna nfiles img run ci data imgtime dir img_opts \
 		lat lon alt ew ns pdop nsat seconds_offset hms sod timern cin hsr \
 		frame_off llat llon pitch roll head yes_head zoom inhd \
-		camtype DEBUG_SF mogrify_pref mogrify_exists tarname show_fname \
+		DEBUG_SF mogrify_pref mogrify_exists tarname show_fname \
 		mog_normalize mog_inc_contrast mog_dec_contrast mog_despeckle \
 		mog_enhance mog_equalize mog_monochrome img img0 last_tar tar \
 		cam1_flst 
@@ -877,9 +727,7 @@ proc show_img { n } {
 			set rotate_amount [expr ($rotate_amount + $head)]
 		}
 		
-		if {$camtype == 1} {
-			set rotate_amount [expr ($rotate_amount + 180)]
-		}
+      set rotate_amount [expr ($rotate_amount + 180)]
 
 		set rotate_amount [expr {$rotate_amount > 360 ? $rotate_amount - 360 : $rotate_amount}]
 		
@@ -984,28 +832,20 @@ proc show_img { n } {
 		file delete $fn
 
 		.canf.can itemconfigure tx -text ""
-			set lst [ split $fn "_" ]
-			set data "$n  [ lindex $lst 3 ]"
-			if { [array size fna] > 1 } {
-				set hms  $imgtime(idx$n);
-			}
-			scan $hms "%02d%02d%02d" h m s 
-			set sod [ expr $h*3600 + $m*60 + $s + $seconds_offset - $frame_off]
-			set hms [ clock format $sod -format "%H%M%S" -gmt 1   ] 
+      set lst [ split $fn "_" ]
+      set data "$n  [ lindex $lst 3 ]"
+      if { [array size fna] > 1 } {
+         set hms  $imgtime(idx$n);
+      }
+      scan $hms "%02d%02d%02d" h m s 
+      set sod [ expr $h*3600 + $m*60 + $s + $seconds_offset - $frame_off]
+      set hms [ clock format $sod -format "%H%M%S" -gmt 1   ] 
 
-		if { $camtype == 1 } {
-			catch { set llat $ns(hms$hms)$lat(hms$hms) }
-			catch { set llon $ew(hms$hms)$lon(hms$hms) }
-			if { [ catch { set data "$hms ($sod) $ns(hms$hms)$lat(hms$hms) $ew(hms$hms)$lon(hms$hms) $alt(hms$hms)M $pdop(hms$hms) $nsat(hms$hms)"} ]  } { 
-				set data "hms:$hms sod:$sod  "
-			}
-		} elseif { $camtype == 2 } {
-			catch { set llat $lat(hms$hms) }
-			catch { set llon $lon(hms$hms) }
-			if { [ catch { set data "hms:$hms sod:$sod lat:$lat(hms$hms) lon:$lon(hms$hms) depth:$alt(hms$hms)"} ] } {
-				set data "hms:$hms sod:$sod  No GPS Data"
-			}
-		}
+      catch { set llat $ns(hms$hms)$lat(hms$hms) }
+      catch { set llon $ew(hms$hms)$lon(hms$hms) }
+      if { [ catch { set data "$hms ($sod) $ns(hms$hms)$lat(hms$hms) $ew(hms$hms)$lon(hms$hms) $alt(hms$hms)M $pdop(hms$hms) $nsat(hms$hms)"} ]  } { 
+         set data "hms:$hms sod:$sod  "
+      }
 		if { $show_fname } {
 			set data "$data\n$fna($n)"
 		}
@@ -1035,7 +875,7 @@ proc sod2hms { sod } {
 
 proc archive_save_marked { type } {
 	global mark fna dir range_touched imgtime \
-		gt lat lon ew ns pdop alt nsat camtype nfiles
+		gt lat lon ew ns pdop alt nsat nfiles
 	
 	if {!([string equal "zip" $type] || [string equal "tar" $type])} {
 		tk_messageBox -type ok -icon error \
@@ -1071,7 +911,7 @@ proc archive_save_marked { type } {
 				set mark_count 0
 				set start 1;
 				set stop  $nfiles;
-				if { $camtype == 1 && [ info exists lat ] } {
+				if { [ info exists lat ] } {
 					set of [ open "$tmpdir/gps.gga" "w+" ]
 					for { set i $start } { $i <= $stop } { incr i } {
 						set gt  $imgtime(idx$i);
@@ -1264,7 +1104,7 @@ proc mark_range { } {
 }
 
 proc enable_controls { } {
-	global mogrify_exists mogrify_pref camtype
+	global mogrify_exists mogrify_pref
 
 	.speedgamma.mark configure     -state normal
 	.mb entryconfigure File        -state normal
@@ -1285,857 +1125,14 @@ proc enable_controls { } {
 	after 5000 [list catch { .mb entryconfigure Tools -state normal }]
 }
 
-proc atris_init { } {
-	
-	global scrollbar_status toolbar_status_gps  toolbar_status_slider toolbar_status_vcr \
-		toolbar_status_speedgamma toolbar_status_alps
-
-	set scrollbar_status 1
-	set toolbar_status_gps 1
-	set toolbar_status_slider 1
-	set toolbar_status_vcr 1
-	set toolbar_status_speedgamma 1
-	set toolbar_status_alps 1
-
-	menu .mb.tools
-	.mb insert "Archive" cascade -label "Tools" -underline 0 -menu .mb.tools -state disabled
-	.mb.tools add command -label "Vessel Track" -underline 0 \
-		-command {
-			send_ytk rbgga_menu adapt
-			send_ytk open_vessel_track $cur_fname
-		}
-#	.mb.tools add command -label "Depth Profile" -underline 0 \
-#		-command {
-#			global split_dir
-#			set temp_f [join [lrange [split [join [lrange $split_dir 0 end] /] .] 0 end-1] .].pbd
-#			send_ytk depth_profile $temp_f
-#			unset temp_f
-#		}
-	.mb.tools add command -label "Load and Plot CSV Waypoints (UTM)" -underline 18 \
-		-command {
-			global base_dir adapt_way_show_name
-			set f [ tk_getOpenFile -filetypes { {{CSV files} {.csv}} } -initialdir $base_dir ];
-			if { $f != "" } {
-				send_ytk plot_waypoints_file $f "csv" $adapt_way_show_name
-			}
-		}
-	.mb.tools add command -label "Load and Plot Target File (UTM)" -underline 18 \
-		-command {
-			global base_dir adapt_way_show_name
-			set f [ tk_getOpenFile -filetypes { {{Target files} {.tgt}} } -initialdir $base_dir ];
-			if { $f != "" } {
-				send_ytk plot_waypoints_file $f "tgt" $adapt_way_show_name
-			}
-		}
-	.mb.tools add command -label "Classification Tool" -underline 0 -command adapt_classification_tool
-	.mb.file insert "Exit" command -label "Generate ADF File" -underline 0 \
-		-command { adapt_process }
-	.mb.options insert "Image manipulation method" checkbutton -label "Display Waypoint/Target Names" \
-		-underline 8 -onvalue 1 -offvalue 0 -variable adapt_way_show_name
-	.mb.options insert "Image manipulation method" separator
-
-	set adapt_way_show_name 0
-	
-	proc adapt_process { } {
-		global adapt_gps_src
-		set w .adp
-		toplevel $w
-		wm title $w "ADAPT Processing"
-
-		set opt $w.fraOptions
-		frame $opt
-
-		Label $opt.lblImg  -text "Images directory"
-		Label $opt.lblRaw  -text "Hypack RAW directory"
-		Label $opt.lblFile -text "Target file name"
-		Label $opt.lblSrc  -text "GPS source"
-		Label $opt.lblAdj  -text "CAP time adjustment"
-
-		Entry $opt.entImg  -textvariable adapt_image_dir \
-			-helptext "The absolute path to the directory containing the images."
-		Entry $opt.entRaw  -textvariable adapt_raw_dir \
-			-helptext "The absolute path to the directory containing the Hypack RAW files for the above\n images."
-		Entry $opt.entFile -textvariable adapt_ofname \
-			-helptext "The file name to use for the created ADF file. This files will be placed in the\n'Images directory'. This file's extension should be '.adf' unless there's a\ncompelling reason to use something else."
-		
-		ComboBox $opt.cboSrc -values {Auto-select RAW CAP} -textvariable adapt_gps_src -editable 0 \
-			-helptext "The Hypack source to use from the RAW files. Auto-select will use CAP if it is\npresent, otherwise it will use RAW. RAW or CAP will try to force those choices.\nIf you select CAP and it isn't present, then RAW will be used instead."
-
-		if { [$opt.cboSrc getvalue] == -1 } {
-			$opt.cboSrc setvalue first
-		}
-		
-		set adj $opt.fraAdj
-		frame $adj
-
-		Label   $adj.lblH -text "Hours"
-		Label   $adj.lblM -text "Minutes"
-		Label   $adj.lblS -text "Seconds"
-
-		SpinBox $adj.spbH -textvariable adapt_cap_adj_h -range {-23 23 1} -width 5 -justify right
-		SpinBox $adj.spbM -textvariable adapt_cap_adj_m -range {-59 59 1} -width 5 -justify right
-		SpinBox $adj.spbS -textvariable adapt_cap_adj_s -range {-59 59 1} -width 5 -justify right
-
-		if { ! ([$adj.spbH getvalue] || [$adj.spbM getvalue] || [$adj.spbS getvalue]) } {
-			$adj.spbH setvalue @23
-			$adj.spbM setvalue @59
-			$adj.spbS setvalue @59
-		}
-
-		Button $opt.butImg -text "Choose" \
-			-helptext "Dialog to choose the images directory." \
-			-command {
-				if { ![string equal "" $adapt_image_dir] } {
-					set tmp_path $adapt_image_dir
-				} elseif { ![string equal "" $adapt_raw_dir] } {
-					set tmp_path $adapt_raw_dir
-				} else {
-					set tmp_path $dir
-				}
-				set tmp_path [tk_chooseDirectory -initialdir $tmp_path -parent .adp -title "Select the Images Directory" -mustexist 1]
-				if { ![string equal $tmp_path ""] } {
-					set old_aid $adapt_image_dir
-					set adapt_image_dir $tmp_path
-					set tmp_path [split $adapt_image_dir /]
-					set tmp_dn [lindex $tmp_path end]
-					if { [string equal "images" $tmp_dn] } {
-						set tmp_dn [lindex $tmp_path end-1]
-					}
-					set tmp_end [set tmp_dn].adf
-					if { [string equal ".adf" $tmp_end] } {
-						set tmp_end [lindex $tmp_path end-1].adf
-					}
-					if { [string equal $adapt_ofname ""] } {
-						set adapt_ofname $tmp_end
-					} elseif { ![string equal $old_aid ""] } {
-						set old_aid_sp [split $old_aid /]
-						set old_aid_dn [lindex $old_aid_sp end]
-						if { [string equal "images" $old_aid_dn] } {
-							set old_aid_dn [lindex $old_aid_sp end-1]
-						}
-						set old_aid [set old_aid_dn].adf
-						if { [string equal ".adf" $old_aid] } {
-							set old_aid [lindex $old_aid_sp end-1].adf
-						}
-						if { [string equal $old_aid $adapt_ofname] } {
-							set adapt_ofname $tmp_end
-						}
-					}
-				}
-			}
-		Button $opt.butRaw -text "Choose" \
-			-helptext "Dialog to choose the Hypack RAW directory." \
-			-command {
-				if { ![string equal "" $adapt_raw_dir] } {
-					set tmp_path $adapt_raw_dir
-				} elseif { ![string equal "" $adapt_image_dir] } {
-					set tmp_path $adapt_image_dir
-				} else {
-					set tmp_path $dir
-				}
-				set tmp_path [tk_chooseDirectory -initialdir $tmp_path -parent .adp -title "Select the Hypack RAW Files Directory" -mustexist 1]
-				if { ![string equal $tmp_path ""] } {
-					set adapt_raw_dir $tmp_path
-				}
-			}
-		Button $opt.butAdj -text "Calculate" \
-			-helptext "Analyzes the RAW files and determines the best median adjustment to make the CAP\ndata agree with the RAW data." \
-			-command {
-				if {![string equal "" $adapt_raw_dir]} {
-					ProgressDlg .adp.prog -textvariable progress_txt -variable progress_per -parent .adp -title "Processing Progress"
-					send_ytk atris_cap_time_diff $adapt_raw_dir
-				} else {
-					MessageDlg .adp.adjerr -parent .adp -type ok -icon error -title "Error" \
-						-message "A value must be given for the Hypack RAW Directory."
-				}
-			}
-
-		grid $adj.lblH    -in $adj -column 1 -row 0 -sticky "ew"
-		grid $adj.lblM    -in $adj -column 3 -row 0 -sticky "ew"
-		grid $adj.lblS    -in $adj -column 5 -row 0 -sticky "ew"
-
-		grid $adj.spbH    -in $adj -column 0 -row 0 -sticky "ew"
-		grid $adj.spbM    -in $adj -column 2 -row 0 -sticky "ew"
-		grid $adj.spbS    -in $adj -column 4 -row 0 -sticky "ew"
-
-		grid $opt.lblImg  -in $opt -column 0 -row 0 -sticky "e"
-		grid $opt.lblRaw  -in $opt -column 0 -row 1 -sticky "e"
-		grid $opt.lblFile -in $opt -column 0 -row 2 -sticky "e"
-		grid $opt.lblSrc  -in $opt -column 0 -row 3 -sticky "e"
-		grid $opt.lblAdj  -in $opt -column 0 -row 4 -sticky "e"
-
-		grid $opt.entImg  -in $opt -column 1 -row 0 -sticky "ew"
-		grid $opt.entRaw  -in $opt -column 1 -row 1 -sticky "ew"
-		grid $opt.entFile -in $opt -column 1 -row 2 -sticky "ew" -columnspan 2
-
-		grid $opt.cboSrc  -in $opt -column 1 -row 3 -sticky "ew" -columnspan 2
-
-		grid $adj         -in $opt -column 1 -row 4 -sticky "w"  -columnspan 2
-
-		grid $opt.butImg  -in $opt -column 2 -row 0 -sticky "ew"
-		grid $opt.butRaw  -in $opt -column 2 -row 1 -sticky "ew"
-
-# temporarily removed since it doesn't work at present
-#		grid $opt.butAdj  -in $opt -column 2 -row 4 -sticky "ew"
-		
-		grid columnconfigure $opt 0 -weight 0
-		grid columnconfigure $opt 1 -weight 1 -minsize 250
-		grid columnconfigure $opt 2 -weight 0
-
-		set ctl $w.fraControl
-		frame $ctl
-
-		Button $ctl.butProcess -text "Process Data" \
-			-command {
-				if { [string equal $adapt_image_dir ""] } {
-					MessageDlg .adp.err -parent .adp -type ok -icon error -title "Error" \
-						-message "A value must be given for the Images Directory."
-				} elseif { [string equal $adapt_raw_dir ""] } {
-					MessageDlg .adp.err -parent .adp -type ok -icon error -title "Error" \
-						-message "A value must be given for the Hypack RAW Directory."
-				} elseif { [string equal $adapt_ofname ""] } {
-					MessageDlg .adp.err -parent .adp -type ok -icon error -title "Error" \
-						-message "A value must be given for the Created Files Basename."
-				} else {
-					array unset adapt_gps_src
-					ProgressDlg .adp.prog -textvariable progress_txt -variable progress_per -parent .adp -title "Processing Progress"
-					set tmp_src $adapt_gps_src
-					if { [string equal "Auto-select" $tmp_src] } {
-						set tmp_src "auto"
-					}
-					send_ytk adapt_process $adapt_image_dir $adapt_raw_dir $adapt_ofname $tmp_src $adapt_cap_adj_h $adapt_cap_adj_m $adapt_cap_adj_s
-				}
-			}
-		Button $ctl.butClose   -text "Close" \
-			-command {
-				destroy .adp
-			}
-
-		grid $ctl.butProcess -in $ctl -column 0 -row 0
-		grid $ctl.butClose   -in $ctl -column 1 -row 0
-
-		grid $opt -in $w -column 0 -row 0 -sticky "ews"
-		grid $ctl -in $w -column 0 -row 1 -sticky "ewn"
-
-		grid columnconfigure $w 0 -weight 1
-	}
-
-	proc adapt_process_done { } {
-		global adapt_image_dir adapt_ofname split_dir base_dir dir nfiles ci adapt_gps_used
-		catch { destroy .adp.prog }
-
-		set sources [join [array names adapt_gps_used] " "]
-		
-		set next .adp.next
-		Dialog $next -parent .adp -side right -title "Processing Complete"
-		$next add -text "Process more data" -width 40 \
-			-command {
-				destroy .adp.next
-			}
-		$next add -text "View the images that were just processed" -width 40 \
-			-command {
-				destroy .adp.next
-				destroy .adp
-				set f $adapt_image_dir/$adapt_ofname
-				set base_dir [ file dirname $f ]
-				wm title . "RGB: $base_dir"
-				open_loader_window "Loading files.\nThis will take a few seconds."
-				set split_dir [split $f /]
-				set dir [join [lrange $split_dir 0 end-1] /]
-				set nfiles [load_file_list_adf $f]
-				enable_controls
-				.slider configure -to $nfiles
-				set ci 1
-				clear_marks
-				clear_class
-				show_img $ci
-			}
-		$next add -text "Return to the image browser" -width 40 \
-			-command {
-				destroy .adp.next
-				destroy .adp
-			}
-		label $next.lbl -text "Processing is complete.\nThese source(s) were used for GPS data: $sources \nWhat would you like to do next?"
-		pack $next.lbl -in $next -side left
-		$next draw
-	}
-
-	proc adapt_classification_tool { } {
-		proc adapt_classtool_advance { } {
-			global adapt_classtool_class_advance
-			if {$adapt_classtool_class_advance == 1} {
-				step_img 1 1
-			}
-		}
-		
-		proc adapt_classtool_bind_code { code } {
-			set qen .adclasstool.quickentry.ent
-			set c [string toupper $code]
-			if {[string length $code] == 1} {
-				if {[string length [bind $qen <Key-$c>]] == 0} {
-					bind $qen <Key-$c> "[list set cur_class $code]\nadapt_classtool_advance"
-				}
-				if {![string equal [string tolower $code] $c]} {
-					set c [string tolower $code]
-					if {[string length [bind $qen <Key-$c>]] == 0} {
-						bind $qen <Key-$c> "[list set cur_class $code]\nadapt_classtool_advance"
-					}
-				}
-			}
-		}
-
-		proc adapt_classtool_unbind_code { code } {
-			foreach { c } [list [string toupper $code] [string tolower $code]] {
-				set binding [bind $qen <Key-$c>]
-				regsub "set cur_class $code" $binding "" binding
-				set binding [string trim \
-					[string map {"adapt_classtool_advance" ""} $binding] ]
-				bind $qen <Key-$c> $binding
-			}
-
-		}
-
-		proc adapt_classtool_set_time_gap { } {
-			global adapt_classtool_time_gap
-
-			if {[tk_getString .adclasstool.temp newval "Set time gap" "Please enter an integer value for the time gap you want to use for\nexporting classification data. The time gap is the maximum amount of\ntime allowed between two images in order for them to be considered\ncontiguous. A value of 0 indicates that no images should be considered\ncontiguous. The default is 1. The current value is: $adapt_classtool_time_gap"]} {
-				set adapt_classtool_time_gap $newval
-			}
-		}
-
-		proc adapt_classtool_create_unclassified { } {
-			set lst .adclasstool.classlist
-			set idx 0
-
-			radiobutton $lst.rad$idx -value "" -text "Unclassified" \
-				-variable cur_class \
-				-indicatoron 0 -padx 2.5m -pady 1.5m -justify left -anchor c \
-				-command adapt_classtool_advance
-
-			grid $lst.rad$idx -in $lst -column 0 -row $idx -sticky "ewsn" -padx .5m
-		}
-	
-		proc adapt_classtool_create_button_row { code str } {
-			global adapt_classtool_var_lastindex adapt_classtool_cname_palette \
-				adapt_classtool_var_firstindex
-			
-			incr adapt_classtool_var_lastindex
-			set idx $adapt_classtool_var_lastindex
-			
-			set lst .adclasstool.classlist
-
-			adapt_classtool_move_deladd_buttons
-
-			adapt_classtool_bind_code $code
-
-			label $lst.unbind$idx -text [list adapt_classtool_unbind_code $code]
-
-			radiobutton $lst.rad$idx -value $code -text "$code: $str" -variable cur_class \
-				-indicatoron 0 -padx 2.5m -pady 1.5m -justify left -anchor w \
-				-command adapt_classtool_advance
-			Button $lst.butEdit$idx -text "Edit" -command [list adapt_classtool_edit $idx] \
-				-padx 0 -pady 0
-			if { $idx > 0 } {
-				Button $lst.butUp$idx -text "Up" -command [list adapt_classtool_up $idx] -padx 0 -pady 0
-			}
-			Button $lst.butDown$idx -text "Down" -command [list adapt_classtool_down $idx] -padx 0 -pady 0
-
-			grid $lst.rad$idx -in $lst -column 0 -row $idx -sticky "ewsn" -padx .5m
-
-			if { $adapt_classtool_cname_palette } {
-				grid $lst.butEdit$idx -in $lst -column 1 -row $idx -padx .5m -sticky "w"
-				if { $idx > $adapt_classtool_var_firstindex } {
-					grid $lst.butDown[expr $idx - 1] -in $lst -column 3 -row [expr $idx - 1] -padx .5m \
-						-sticky "w"
-					grid $lst.butUp$idx -in $lst -column 2 -row $idx -padx .5m -sticky "w"
-				}
-			}
-		}
-
-		proc adapt_classtool_move_deladd_buttons { } {
-			global adapt_classtool_var_lastindex adapt_classtool_cname_palette \
-				adapt_classtool_var_firstindex
-			set idx $adapt_classtool_var_lastindex
-			set lst .adclasstool.classlist
-			
-			if { $adapt_classtool_cname_palette } {
-				grid $lst.butAdd -in $lst -column 1 -row [expr $idx + 1] -sticky "w" -columnspan 3 -padx .5m
-				if { $idx > $adapt_classtool_var_firstindex - 1 } {
-					grid $lst.butDel -in $lst -column 3 -row $idx -padx .5m -sticky "w"
-				} else {
-					grid remove $lst.butDel
-				}
-			}
-		}
-
-		proc adapt_classtool_show_cname_palette { } {
-			global adapt_classtool_var_lastindex adapt_classtool_cname_palette \
-				adapt_classtool_var_firstindex
-			set li $adapt_classtool_var_lastindex
-			set lst .adclasstool.classlist
-
-			if { $adapt_classtool_cname_palette } {
-				adapt_classtool_move_deladd_buttons
-				for {set idx $adapt_classtool_var_firstindex} {$idx <= $li} {incr idx} {
-					grid $lst.butEdit$idx -in $lst -column 1 -row $idx -padx .5m -sticky "w"
-					if { $idx > $adapt_classtool_var_firstindex } {
-						grid $lst.butDown[expr $idx - 1] -in $lst -column 3 -row [expr $idx - 1] -padx .5m \
-							-sticky "w"
-						grid $lst.butUp$idx -in $lst -column 2 -row $idx -padx .5m -sticky "w"
-					}
-				}
-			}
-		}
-
-		proc adapt_classtool_hide_cname_palette { } {
-			global adapt_classtool_var_lastindex adapt_classtool_cname_palette \
-				adapt_classtool_var_firstindex
-			set li $adapt_classtool_var_lastindex
-			set lst .adclasstool.classlist
-
-			if { ! $adapt_classtool_cname_palette } {
-				grid remove $lst.butDel
-				grid remove $lst.butAdd
-				for {set idx $adapt_classtool_var_firstindex } {$idx <= $li} {incr idx} {
-					grid remove $lst.butEdit$idx
-					if { $idx > $adapt_classtool_var_firstindex } {
-						grid remove $lst.butDown[expr $idx - 1]
-						grid remove $lst.butUp$idx
-					}
-				}
-			}
-		}
-
-		proc adapt_classtool_command_imp_codes { } {
-			global base_dir
-
-			set fn [tk_getOpenFile -initialdir $base_dir]
-
-			if { $fn != "" } {
-				adapt_classtool_apply_codes [adapt_classtool_read_codes $fn]
-			}
-		}
-
-		proc adapt_classtool_command_exp_codes { } {
-			global base_dir
-
-			set fn [tk_getSaveFile -initialdir $base_dir]
-			
-			if { $fn != "" } {
-				adapt_classtool_write_codes $fn [adapt_classtool_gather_codes]
-			}
-		}
-
-		proc adapt_classtool_command_imp_class { } {
-			global base_dir
-
-			set fn [tk_getOpenFile -initialdir $base_dir]
-			# -message "Please select a file that contains classification data for this set of images."
-			
-			if { $fn != "" } {
-				set data [adapt_classtool_read_classifications $fn]
-				adapt_classtool_apply_classifications [lindex $data 0] [lindex $data 1] [lindex $data 2]
-				ci_write " " " " " "
-			}
-		}
-
-		proc adapt_classtool_command_exp_class { } {
-			global base_dir
-
-			set fn [tk_getSaveFile -initialdir $base_dir]
-			# -message "Please select the file to which you would like to save the classification data for this set of images."
-			
-			if { $fn != "" } {
-				set data [adapt_classtool_gather_classifications]
-				adapt_classtool_write_classifications $fn [lindex $data 0] [lindex $data 1] [lindex $data 2]
-			}
-		}
-
-		proc adapt_classtool_edit { i } {
-			set w .adclasstool
-			set lst $w.classlist
-
-			set orig [$lst.rad$i cget -text]
-			
-			if {[tk_getString $w.temp repl "Edit Classification Text" "Please update the text for this classification." $orig]} {
-				$lst.rad$i configure -value $repl
-				$lst.rad$i configure -text $repl
-
-				set upd $w.temp
-				Dialog $upd -parent $w -side bottom -modal local -title "Change classified images?"
-				$upd add -text "Change '$orig' to '$repl' (recommended)" \
-					-command "destroy $upd"
-				$upd add -text "Do not change anything" \
-					-command "destroy $upd"
-				label $upd.lbl -text "The text label has been changed. Would you also like to change all items classified as '$orig' to '$repl'?"
-				pack $upd.lbl -in $upd -side top
-				$upd draw
-
-			}
-		}
-		
-		proc adapt_classtool_up { i } {
-			set w .adclasstool
-			set lst $w.classlist
-			set temp [$lst.rad$i cget -text]
-			$lst.rad$i configure -text [$lst.rad[expr $i - 1] cget -text]
-			$lst.rad$i configure -value [$lst.rad[expr $i - 1] cget -text]
-			$lst.rad[expr $i - 1] configure -text $temp
-			$lst.rad[expr $i - 1] configure -value $temp
-		}
-		
-		proc adapt_classtool_down { i } {
-			set w .adclasstool
-			set lst $w.classlist
-
-			set temp [$lst.rad$i cget -text]
-			$lst.rad$i configure -text [$lst.rad[expr $i + 1] cget -text]
-			$lst.rad$i configure -value [$lst.rad[expr $i + 1] cget -text]
-			$lst.rad[expr $i + 1] configure -text $temp
-			$lst.rad[expr $i + 1] configure -value $temp
-			
-			set temp [$lst.unbind$i cget -text]
-			$lst.unbind$i configure -text [$lst.unbind[expr $i + 1] cget -text]
-			$lst.unbind[expr $i + 1] configure -text $temp
-		}
-
-		proc adapt_classtool_addnew { } {
-			if {[tk_getString .adclasstool.temp code "Add Classification" "Please enter the code for the new classification."]} {
-				if {[tk_getString .adclasstool.temp str "Add Classification" "Please enter the text for the new classification."]} {
-					adapt_classtool_create_button_row $code $str
-				}
-			}
-		}
-		
-		proc adapt_classtool_delete { } {
-			global adapt_classtool_var_lastindex adapt_classtool_var_firstindex
-			set i $adapt_classtool_var_lastindex
-			set w .adclasstool
-			set lst $w.classlist
-			
-			grid remove $lst.rad$i
-			destroy $lst.rad$i
-			grid remove $lst.butEdit$i
-			destroy $lst.butEdit$i
-			grid remove $lst.butDown$i
-			destroy $lst.butDown$i
-			grid remove $lst.butUp$i
-			destroy $lst.butUp$i
-
-			if { $i > $adapt_classtool_var_firstindex } {
-				grid remove $lst.butDown[expr $i - 1]
-			}
-
-			eval [$lst.unbind$i cget -text]
-			destroy $lst.unbind$i
-
-			incr adapt_classtool_var_lastindex -1
-
-			adapt_classtool_move_deladd_buttons
-		}
-
-		proc adapt_classtool_delete_all { } {
-			global adapt_classtool_var_lastindex adapt_classtool_var_firstindex
-			while { $adapt_classtool_var_lastindex >= $adapt_classtool_var_firstindex } {
-				adapt_classtool_delete
-			}
-		}
-
-		proc adapt_classtool_gather_classifications { } {
-			global class cur_class nfiles imgtime adapt_classtool_time_gap
-			set gap $adapt_classtool_time_gap
-
-			set i 1
-			while {$i < $nfiles && [catch {set imgtime(idx$i)}]} { incr i }
-			
-			set open 1
-			set curr $class($i)
-			set prev [hms2sod $imgtime(idx$i)]
-			
-			lappend code $curr
-			lappend start $prev
-
-			set upd 0
-
-			incr i
-			while {$i < $nfiles} {
-				if { $open } {
-					if {
-						[catch {set imgtime(idx$i)}] ||
-						[expr {[hms2sod $imgtime(idx$i)] - $prev}] > $gap ||
-						![string equal $curr $class($i)]
-					} {
-						lappend end $prev
-
-						if { [catch {set imgtime(idx$i)}] } {
-							set open 0
-						} else {
-							set upd 1
-						}
-					}
-				} else {
-					if { ![catch {set imgtime(idx$i)}] } {
-						set open 1
-						set upd 1
-					}
-				}
-				catch { set prev [hms2sod $imgtime(idx$i)] }
-				if { $upd } {
-					set upd 0
-					set curr $class($i)
-					lappend code $curr
-					lappend start $prev
-				}
-				
-				incr i
-			}
-
-			if { $open } {
-				lappend end $prev
-			}
-
-			return [list $code $start $end]
-		}
-
-		proc adapt_classtool_apply_classifications { code start end } {
-			global class cur_class nfiles imgtime
-
-			set len [llength $code]
-
-			set i 1
-			set j 0
-
-			while {$i < $nfiles && $j < $len } {
-				set t [hms2sod $imgtime(idx$i)]
-				if { [lindex $start $j] <= $t && $t <= [lindex $end $j] } {
-					set class($i) [lindex $code $j]
-					incr i
-				} else {
-					if { [lindex $start $j] > $t } {
-						incr i
-					} else {
-						incr j
-					}
-				}
-			}
-		}
-
-		proc adapt_classtool_write_classifications { fn code start end } {
-			if { [ catch {set of [ open $fn "w" ] } ] == 0 } {
-				set len [llength $code]
-				for {set i 0} {$i < $len} {incr i} {
-					if {[string length [lindex $code $i]] > 0} {
-						puts $of "[lindex $code $i] [lindex $start $i] [lindex $end $i]"
-					}
-				}
-				close $of
-			}
-		}
-
-		proc adapt_classtool_read_classifications { fn } {
-			if { [ catch {set f [ open $fn "r" ] } ] == 0 } {
-				for { set i 0 } { ![ eof $f ] } { incr i } { 
-					set line [gets $f]
-					if { $line != "" } {
-						set lst [split $line " "]
-						lappend code [lindex $lst 0]
-						lappend start [lindex $lst 1]
-						lappend end [lindex $lst 2]
-					}
-				}
-				close $f
-			}
-			return [list $code $start $end]
-		}
-
-		proc adapt_classtool_gather_codes { } {
-			global adapt_classtool_var_lastindex adapt_classtool_var_firstindex
-
-			for {set i $adapt_classtool_var_firstindex} {$i <= $adapt_classtool_var_lastindex} {incr i} {
-				set lst [split [string map [list ": " \0] [.adclasstool.classlist.rad$i cget -text]] \0]
-				set codes([lindex $lst 0]) [lindex $lst 1]
-			}
-			return [array get codes]
-		}
-
-		proc adapt_classtool_apply_codes { codeslst } {
-			array set codes $codeslst
-			foreach {key} [lsort -dictionary [array names codes]] {
-				adapt_classtool_create_button_row $key $codes($key)
-			}
-		}
-
-		proc adapt_classtool_write_codes { fn codeslst } {
-			array set codes $codeslst
-			if { [ catch {set of [ open $fn "w" ] } ] == 0 } {
-				foreach {key} [lsort -dictionary [array names codes]] {
-					puts $of "$key: $codes($key)"
-				}
-				close $of
-			}
-		}
-
-		proc adapt_classtool_read_codes { fn } {
-			if { [ catch {set f [ open $fn "r" ] } ] == 0 } {
-				for { set i 0 } { ![ eof $f ] } { incr i } {
-					set str [gets $f]
-					if {[string length $str] > 0} {
-						set dat [split [string map [list ": " \0] $str] \0]
-						set codes([lindex $dat 0]) [lindex $dat 1]
-					}
-				}
-				close $f
-			}
-			return [array get codes]
-		}
-
-		proc adapt_classtool_ask_mark_class { } {
-			if {[tk_getString .adclasstool.temp code "Mark a Classification" "Please enter the class code that you would like marked."]} {
-				adapt_classtool_mark_class $code
-			}
-		}
-
-		proc adapt_classtool_mark_class { code } {
-			global mark class nfiles
-			for { set i 1 } { $i <= $nfiles } { incr i } {
-				if { $class($i) == $code } {
-					set mark($i) 1
-				}
-			}
-		}
-
-		proc adapt_classtool_mark_all_classes { } {
-			global mark class nfiles
-			for { set i 1 } { $i <= $nfiles } { incr i } {
-				if { $class($i) != "" } {
-					set mark($i) 1
-				}
-			}
-		}
-	
-		# adapt_classification_tool [
-
-		global adapt_classtool_var_lastindex adapt_classtool_var_firstindex \
-			adapt_classtool_cname_palette adapt_classtool_class_advance \
-			adapt_classtool_time_gap
-		set adapt_classtool_var_lastindex 0
-		set adapt_classtool_var_firstindex 1
-		set adapt_classtool_cname_palette 0
-		set adapt_classtool_class_advance 0
-		set adapt_classtool_time_gap 1
-	
-		set w .adclasstool
-		toplevel $w
-		wm title $w "Classification Tool"
-
-		set qen $w.quickentry
-		frame $qen
-		
-		Label $qen.lbl -text "Quick Entry:"
-		Entry $qen.ent
-
-		grid $qen.lbl -in $qen -column 0 -row 0 -sticky "ew" -padx 0 -pady 0
-		grid $qen.ent -in $qen -column 1 -row 0 -sticky "ew" -padx 0 -pady 0
-
-		grid columnconfigure $qen 1 -weight 1
-
-		set lst $w.classlist
-		frame $lst
-		
-		Button $lst.butDel -text "Delete" -command adapt_classtool_delete -foreground red -padx 0 -pady 0
-		Button $lst.butAdd -text "Add New" -command adapt_classtool_addnew -padx 0 -pady 0
-
-		adapt_classtool_create_unclassified
-		adapt_classtool_apply_codes [list 0 Unclassified 1 Sand 2 "Hardground/Algae/Turf" 3 Seagrass 4 "Hard Corals" \
-			5 "Soft Corals" 6 Zoanthids 7 "Dense Mixed Reef" 8 "Sparse Mixed Reef" 9 "Dead Coral"]
-		
-		grid columnconfigure $lst 0 -weight 1
-
-		grid $lst -in $w -column 0 -row 0 -sticky "nwe" -pady 1m -padx .5m
-		grid $qen -in $w -column 0 -row 1 -sticky "ew" -pady 1m -padx .5m
-		grid columnconfigure $w 0 -weight 1 -minsize 150
-		grid rowconfigure		$w 0 -weight 1
-
-		$w configure -menu $w.mb
-		menu $w.mb
-
-		# Menubar
-		menu $w.mb.file
-		menu $w.mb.utility
-		menu $w.mb.options
-
-		$w.mb add cascade -label "File" -underline 0 -menu $w.mb.file
-		$w.mb add cascade -label "Utilities" -underline 0 -menu $w.mb.utility
-		$w.mb add cascade -label "Options" -underline 0 -menu $w.mb.options
-
-		$w.mb.file add command -label "Load Classification Data" -underline 0 \
-			-command adapt_classtool_command_imp_class
-		$w.mb.file add command -label "Save Classification Data" -underline 0 \
-			-command adapt_classtool_command_exp_class
-		$w.mb.file add separator
-		$w.mb.file add command -label "Load Classification Codes" -underline 1 \
-			-command adapt_classtool_command_imp_codes
-		$w.mb.file add command -label "Save Classification Codes" -underline 1 \
-			-command adapt_classtool_command_exp_codes
-		$w.mb.file add separator
-		$w.mb.file add command -label "Close" -underline 0 -command { destroy .adclasstool }
-
-		$w.mb.utility add command -label "Mark all classified images" -underline 5 \
-			-command adapt_classtool_mark_all_classes
-		$w.mb.utility add command -label "Mark images with a specific classification" -underline 5 \
-			-command adapt_classtool_ask_mark_class
-		$w.mb.utility add command -label "Clear all marks" -underline 0 \
-			-command clear_marks
-
-		$w.mb.options add checkbutton -label "Show classification editing palette" -underline 0 \
-			-onvalue 1 -offvalue 0 -variable adapt_classtool_cname_palette
-		$w.mb.options add checkbutton -label "Advance image upon classification" -underline 0 \
-			-onvalue 1 -offvalue 0 -variable adapt_classtool_class_advance
-		$w.mb.options add separator
-		$w.mb.options add command -label "Set time gap for classification exports" \
-			-underline 9 -command adapt_classtool_set_time_gap
-
-		bind .adclasstool <Destroy> { global adapt_classtool_class_advance; set adapt_classtool_class_advance 0 }
-
-		set quick .adclasstool.quickentry.ent
-		bind $quick <Escape> { .adclasstool.quickentry.ent configure -text "" }
-		bind $quick <Left> { step_img $step -1 }
-		bind $quick <KP_Left> { step_img $step -1 }
-		bind $quick <Right> { step_img $step 1 }
-		bind $quick <KP_Right> { step_img $step 1 }
-
-		# /adapt_classification_tool ]
-
-	}
-
-}
-
 proc select_file { } {
-	global camtype f base_dir tf nfiles split_dir dir ci lst atris_mode
-	if { $camtype == 2 } {
-		if { $atris_mode } {
-			set f [ tk_getOpenFile  -filetypes { 
-				{ {ADAPT files} {.adf} }
-				{ {All files  } { *  } }
-				} -initialdir $base_dir ];
-		} else {
-			set f [ tk_getOpenFile  -filetypes { 
-				{ {ADAPT files} {.adf} }
-				{ {List files } {.lst} }
-				{ {Tar files  } {.tar} } 
-				{ {Zip files  } {.zip} }
-				{ {All files  } { *  } }
-				} -initialdir $base_dir ];
-		}
-	} else {
-		set f [ tk_getOpenFile  -filetypes { 
-			{ {Tar files  } {.tar} } 
-			{ {List files } {.lst} }
-			{ {Zip files  } {.zip} }
-			{ {ADAPT files} {.adf} }
-			{ {All files  } { *  } }
-			} -initialdir $base_dir ];
-	}
+	global f base_dir tf nfiles split_dir dir ci lst
+   set f [ tk_getOpenFile  -filetypes { 
+      { {Tar files  } {.tar} } 
+      { {List files } {.lst} }
+      { {Zip files  } {.zip} }
+      { {All files  } { *  } }
+      } -initialdir $base_dir ];
 	if { $f != "" } {
 		set base_dir [ file dirname $f ]
 		wm title . "RGB: $base_dir"
@@ -2150,11 +1147,6 @@ proc select_file { } {
 			.loader.ok configure -state normal
 			update
 			set nfiles [ load_file_list  $f tar ];
-		} elseif { [file extension $f] == ".adf" } {
-			open_loader_window "Loading files.\nThis will take a few seconds."
-			set split_dir [split $f /]
-			set dir [join [lrange $split_dir 0 end-1] /]
-			set nfiles [ load_file_list_adf $f ];
 		} else {
 			open_loader_window "Loading files.\nThis will take a few seconds."
 			;# Do this if we have a .lst file
@@ -2753,7 +1745,6 @@ if { [catch {package require Tcl 8.4}] } {
 	eval trace variable zoom                           w zoom_write
 	eval trace variable cur_mark                       w cur_mark_write
 	eval trace variable cur_class                      w cur_class_write
-	eval trace variable adapt_classtool_cname_palette  w adapt_classtool_cname_palette_write
 	eval trace variable scrollbar_status               w scrollbar_status_write
 	eval trace variable toolbar_status_gps             w toolbar_status_write
 	eval trace variable toolbar_status_slider          w toolbar_status_write
@@ -2766,7 +1757,6 @@ if { [catch {package require Tcl 8.4}] } {
 	eval trace add variable zoom                           write zoom_write
 	eval trace add variable cur_mark                       write cur_mark_write
 	eval trace add variable cur_class                      write cur_class_write
-	eval trace add variable adapt_classtool_cname_palette  write adapt_classtool_cname_palette_write
 	eval trace add variable scrollbar_status               write scrollbar_status_write
 	eval trace add variable toolbar_status_gps             write toolbar_status_write
 	eval trace add variable toolbar_status_slider          write toolbar_status_write
@@ -2780,13 +1770,7 @@ if { [catch {package require Tcl 8.4}] } {
 # [ Select defaults ################################
 
 if { $mogrify_exists } {
-	if { $camtype == 1 } {
-		set mogrify_pref "prefer tcl"
-	} elseif { $camtype == 2 } {
-		set mogrify_pref "prefer mogrify"
-	} else {
-		set mogrify_pref "prefer tcl"
-	}
+   set mogrify_pref "prefer tcl"
 } else {
 	set mogrify_pref "only tcl"
 }
