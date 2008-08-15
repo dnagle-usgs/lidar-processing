@@ -102,7 +102,8 @@ if(! scalar @files) {
    exit 1;
 }
 
-my @tiles = uniq sort map { /$pattern/; $2 } grep { /$pattern/ } @files;
+my @tiles = uniq sort map { /$pattern/; $2 } grep { /$pattern/ }
+   map { (File::Spec->splitpath($_))[2] } @files;
 
 my $total = scalar @tiles;
 if(! scalar @tiles) {
