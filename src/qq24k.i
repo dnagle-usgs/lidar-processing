@@ -696,7 +696,7 @@ suffix=, remove_buffers=, buffer=) {
 
 func batch_qq_to_2k(src_dir, dest_dir, mode, searchstr=, suffix=,
 remove_buffers=, buffer=) {
-/* DOCUMENT batch_2k_to_qq, src_dir, dest_dir, mode, searchstr=, suffix=,
+/* DOCUMENT batch_qq_to_2k, src_dir, dest_dir, mode, searchstr=, suffix=,
    remove_buffers=, buffer=
 
    Crawls through a directory structure of quarter quad tiles to generate the
