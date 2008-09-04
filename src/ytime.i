@@ -125,8 +125,8 @@ func hms2sod ( t ) {
    return sod;
 }
 
-func sod2hms( a, noary= ) {
-/* DOCUMENT sod2hms(a, noary=)
+func sod2hms( a, noary=, decimal= ) {
+/* DOCUMENT sod2hms(a, noary=, decimal=)
    Convert an sod (second-of-day) time value to a three element
    array consisting of hours, minutes, and seconds.  This can be used
    where you need hours-minutes-seconds.  For example, you can use:
@@ -141,8 +141,8 @@ func sod2hms( a, noary= ) {
    A non-zero value for noary= will cause the values to be returned as a
    floats such that 120000 is 12 hours, 0 minutes, and 0 seconds.
 
-   Return values are double, without regard for the type of the passed
-   argument.
+   If decimal is set to 1, then the return values will be doubles. Otherwise,
+   they will be integers.
 
    See also:
       soe2sod soe2time hms2sod sod2hms time2soe
@@ -152,6 +152,8 @@ func sod2hms( a, noary= ) {
    hms(1,) = int(a/3600);     // find hours
    hms(2,) = int((a - int(hms(1,))*3600)/60);
    hms(3,) = a % 60;
+   if(!decimal)
+      hms = int(hms);
    if(noary)
       return (hms*[10^4,10^2,1])(sum,);
    else
