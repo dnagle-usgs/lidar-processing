@@ -657,6 +657,10 @@ proc show_img { n } {
 		set hms [indx2hms $cin]
 		scan $hms "%02d%02d%02d" h m s 
 		set tarname [hms2tarpath $hms]
+		if {![file exists $tarname]} {
+			set tarname $last_tar
+		}
+
 		if { $DEBUG_SF } {
 			puts "hms=$hms"
 			puts "tarname: $tarname"
@@ -692,6 +696,13 @@ proc show_img { n } {
 		} else {
 			set fn $dir/$fna($n)
 		}
+	}
+
+   if {![info exists fn]} {
+		tk_messageBox  \
+			-message "Image does not exist." \
+			-type ok
+	  return
 	}
 
 		
@@ -1255,8 +1266,10 @@ proc hms2tarpath { hms } {
 	set h 0; set m 0
 	scan $hms "%02d%02d" h m
 	set hm [format "%02d%02d" $h $m ]
-	set fn [glob $dir/cam147_*$hm\.tar 0 ]  
-	return $fn
+	set fn [ glob -nocomplain $dir/cam147_*$hm\.tar 0 ]  
+	if {[file exists $fn]} {
+	 return $fn
+	} 
 }
 
 proc hms2indx { hms } {
