@@ -201,8 +201,8 @@ sub file2coords {
 sub whatkind {
    my $file = shift;
    my $qq = 1 & $file =~ /\d\d\d\d\d[a-h][1-8][a-d]/;
-   my $kts = 1 & $file =~ /_e\d\d\d000_n\d\d\d\d000_\d\d_/;
-   my $ktl = 1 & $file =~ /(^|_)e\d\d\d_n\d\d\d\d_z?\d\d(\.|_)/;
+   my $kts = 1 & $file =~ /_e\d\d\d000_n\d\d\d\d000_\d\d[a-zA-Z]?_/;
+   my $ktl = 1 & $file =~ /(^|_)e\d\d\d_n\d\d\d\d_z?\d\d[a-zA-Z]?(\.|_)/;
    my $kt = $kts || $ktl;
    if($qq == $kt) {
       print " !! Unable to parse $file to determine QQ versus 2k tile\n";
@@ -244,7 +244,7 @@ sub qq2ll {
 # Fatal error if the passed filename isn't parseable as a 2km tile
 sub kt2utm {
    my $kt = shift;
-   die("invalid 2km") unless ($kt =~ /(^|_)e(\d\d\d)(000)?_n(\d\d\d\d)(000)?_z?(\d\d)(\.|_)/);
+   die("invalid 2km") unless ($kt =~ /(^|_)e(\d\d\d)(000)?_n(\d\d\d\d)(000)?_z?(\d\d)[a-zA-Z]?(\.|_)/);
    my $east = $2 * 1000;
    my $north = $4 * 1000;
    my $zone = $6;
