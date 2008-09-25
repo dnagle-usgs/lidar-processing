@@ -18,7 +18,8 @@
 #include <string.h>
 #include "math.h"
 #include <time.h>
-#include <dirent.h>     // for changename(argv[1], nfname, ".imu");
+#include <dirent.h>     // for changename(argv[1], nfname, ".imr");
+#include <stdlib.h>
 
 #define I8   char
 #define UI8  unsigned I8
@@ -396,7 +397,7 @@ process_options( int argc, char *argv[] ) {
       exit(1);
     }
 		if ( flag ) {     //  user used -O
-			changename(argv[optind], nfname, ".imu");
+			changename(argv[optind], nfname, ".imr");
 			if ( (odf=fopen(nfname,"w+")) == NULL ) {
 				fprintf(stderr,"Can't open %s\n", nfname);
 				exit(1);
