@@ -1,6 +1,8 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
 write, "$Id$"
 
+require, "zone.i";
+
 /*
    Lat/Lon to UTM converter in Yorick
    Converted from C++ program found at: 

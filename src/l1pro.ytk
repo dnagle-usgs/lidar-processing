@@ -2284,6 +2284,15 @@ Button .l1wid.bf45.q.45 -text "Show\nGrid Name" -command {
   exp_send "show_grid_location, $win_no\r"
 }
 
+frame .l1wid.bf45.q.f46
+Button .l1wid.bf45.q.f46.1 -text "QQ Grid" -command {
+   exp_send "draw_qq_grid, $win_no\r"
+} -font {Helvetica -8}
+
+Button .l1wid.bf45.q.f46.2 -text "QQ Name" -command {
+   exp_send "show_qq_grid_location, $win_no\r"
+} -font {Helvetica -8}
+
 ##.l1wid.bf45.q.4 configure -state disabled
 
 
@@ -3187,6 +3196,12 @@ pack \
 	.l1wid.bf45.r.5 \
 	.l1wid.bf45.r.6 \
 	-side left
+
+pack \
+   .l1wid.bf45.q.f46.1 \
+   .l1wid.bf45.q.f46.2 \
+   -side top
+
 pack \
 	.l1wid.bf45.q.1 \
 	.l1wid.bf45.q.2  \
@@ -3194,6 +3209,7 @@ pack \
 	.l1wid.bf45.q.4  \
 	.l1wid.bf45.q.44 \
 	.l1wid.bf45.q.45 \
+   .l1wid.bf45.q.f46 \
 	-side left 
 
 ##	.l1wid.bf45.p.fma 

@@ -3,7 +3,6 @@ write, "$Id$";
 require, "yeti.i";
 require, "yeti_regex.i";
 require, "dir.i";
-require, "ll2utm.i";
 require, "set.i";
 require, "general.i";
 
@@ -946,6 +945,23 @@ func draw_ll_box(bbox, win, pts=, color=) {
    window, win;
    plg, u_y, u_x, color=color;
    window, old_win;
+}
+
+func show_qq_grid_location(w, m) {
+   extern curzone;
+   default, w, 5;
+   window, w;
+   if(is_void(m))
+      m = mouse();
+   if(!curzone) {
+      zone = "void";
+      write, "Please enter the current UTM zone:\n";
+      read(zone);
+      curzone = 0;
+      sread(zone, format="%d", curzone);
+   }
+   qq = get_utm_qqcodes(m(2), m(1), curzone);
+   write, format="Quarter Quad: %s\n", qq(1);
 }
 
 func draw_qq_grid(win, pts=) {
