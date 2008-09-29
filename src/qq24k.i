@@ -511,7 +511,7 @@ func it2utm(itcodes, bbox=) {
 }
 
 func batch_2k_to_qq(src_dir, dest_dir, mode, searchstr=, dir_struc=, prefix=,
-suffix=, remove_buffers=, buffer=) {
+suffix=, remove_buffers=, buffer=, uniq=) {
 /* DOCUMENT batch_2k_to_qq, src_dir, dest_dir, mode, searchstr=, dir_struc=,
    prefix=, suffix=, move_buffers=, buffer=
 
@@ -562,6 +562,11 @@ suffix=, remove_buffers=, buffer=) {
       buffer= Specifies a buffer in meters to add around each quarter quad
          tile. The buffer is a minimum, see extract_for_qq for details. Default
          is buffer=100. Use buffer=0 to suppress the buffer.
+
+      uniq= Specifies whether data points should be contrained to only unique
+         points by sod when saved to the pbd file. Default is 1. Set uniq=0 to
+         avoid this constraint. (This is necessary with ATM data, which may
+         have unreliable sod values.)
 
    Original David Nagle 2008-07-16
 */
@@ -688,13 +693,13 @@ suffix=, remove_buffers=, buffer=) {
          mkdirp, outpath;
 
          // write data
-         pbd_append, outpath + prefix + qqcodes(j) + suffix, vname, vdata;
+         pbd_append, outpath + prefix + qqcodes(j) + suffix, vname, vdata, uniq=uniq;
       }
    }
 }
 
 func batch_qq_to_2k(src_dir, dest_dir, mode, searchstr=, suffix=,
-remove_buffers=, buffer=) {
+remove_buffers=, buffer=, uniq=) {
 /* DOCUMENT batch_qq_to_2k, src_dir, dest_dir, mode, searchstr=, suffix=,
    remove_buffers=, buffer=
 
@@ -736,6 +741,11 @@ remove_buffers=, buffer=) {
 
       buffer= Specifies a buffer in meters to add around each data tile.
          Default is buffer=100. Use buffer=0 to suppress the buffer.
+
+      uniq= Specifies whether data points should be contrained to only unique
+         points by sod when saved to the pbd file. Default is 1. Set uniq=0 to
+         avoid this constraint. (This is necessary with ATM data, which may
+         have unreliable sod values.)
 
    Original David Nagle 2008-07-18
 */
@@ -825,7 +835,7 @@ remove_buffers=, buffer=) {
          mkdirp, outpath;
 
          // write data
-         pbd_append, outpath + qq_dtcodes(j) + suffix, vname, vdata;
+         pbd_append, outpath + qq_dtcodes(j) + suffix, vname, vdata, uniq=uniq;
 
          // note as created
          dtfiles = set_union(dtfiles, [outpath + qq_dtcodes(j) + suffix]);
