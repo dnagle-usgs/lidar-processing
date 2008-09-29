@@ -108,8 +108,8 @@ func rezone_utm(&north, &east, src_zone, dest_zone) {
    return u;
 }
 
-func batch_fix_dt_zones(dir, glob=) {
-/* DOCUMENT batch_fix_dt_zones, dir, glob=
+func batch_fix_dt_zones(dir, glob=, ignore_zeros=) {
+/* DOCUMENT batch_fix_dt_zones, dir, glob=, ignore_zeroes=
    This will scan through all data tile pbds in a directory structure and
    ensure that the coordinates in each tile are properly zoned.
 
@@ -131,11 +131,15 @@ func batch_fix_dt_zones(dir, glob=) {
    The glob= option can be used to provide a search pattern; the default is
    "*.pbd".
 
+   If ignore_zeroes= is set to 1, then any points with an easting of zero will
+   be ignored.
+
    Original David Nagle 2008-07-31
 */
    extern __ZONE_STRUCTS;
    keys = h_keys(__ZONE_STRUCTS);
    default, glob, "*.pbd";
+   default, ignore_zeroes, 0;
 
    files = find(dir, glob=glob);
    files = files(sort(file_tail(files)));
@@ -175,7 +179,12 @@ func batch_fix_dt_zones(dir, glob=) {
          for(j = 1; j <= numberof(keys); j++) {
             key = __ZONE_STRUCTS(keys(j));
             if(numberof(where(fields==key.match))) {
-               idx = where(comparison(
+               if(ignore_zeroes) {
+                  filter = get_member(data, key.east) != 0;
+               } else {
+                  filter = array(1, numberof(data));
+               }
+               idx = where(filter & comparison(
                   get_member(data, key.east) * key.factor, 500000));
                if(numberof(idx)) {
                   modified = 1;
