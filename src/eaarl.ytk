@@ -582,6 +582,9 @@ proc load_edb {} {
 
  exp_send "require, \"rbgga.i\"\r"
  menu $w.mb.nav.rbgga
+ $w.mb.nav add command -label "Plotting tool" -underline 0 \
+   -command ::plot::menu
+ source [file join $src_path plot.tcl]
  $w.mb.nav add command -label "Flight Tracks & Coastlines..."   -underline 0 \
 	-command rbgga_menu
  $w.mb.nav add command -label "Load Tans Attitude data..."   -underline 5 \

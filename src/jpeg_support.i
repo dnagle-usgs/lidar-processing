@@ -223,7 +223,7 @@ func load_and_plot_image(filename, img_world_filename=, img=, location=, win=, w
 	Orig: Amar Nayegandhi 12/08/2005.
 */
 
-   extern _ytk_window_exists, _ytk_window_size, img, location;
+   extern _ytk_window_exists, _ytk_window_size;
    if (is_void(img)) {
       img = read_image(filename);
    }

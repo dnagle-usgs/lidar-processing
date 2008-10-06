@@ -1295,9 +1295,9 @@ proc plotpos { } {
 	if { [no_file_selected $nfiles] } { return }
 	if { [ ytk_exists ] == 1 } {
 		if { [ info exists llat ] } {
-			send_ytk mark_pos $llat $llon
+			send_ytk ::plot::mark_pos $llat $llon
 		} else {
-			send_ytk mark_time_pos $sod
+			send_ytk ::plot::mark_time_pos $sod
 		}
 	} else {
 		tk_messageBox  \

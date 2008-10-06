@@ -256,7 +256,7 @@ func gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=, pmulti=) {
  return q;
 }
 
-func mark_time_pos( win, sod ) {
+func mark_time_pos(win, sod, msize=, marker=, color=) {
 /* DOCUMENT mark_time_pos, sod
 
    Mark a lat/lon position on window, win  based on the sod.  Used from
@@ -264,14 +264,17 @@ func mark_time_pos( win, sod ) {
 
 */
   extern utm;
+  default, marker, 5;
+  default, color, "blue";
+  default, msize, 0.6;
   current_win = window();
   q = where( gga.sod == sod )
   window,win;
   if (utm) {
    ll2utm, gga.lat(q), gga.lon(q) 
-   plmk, UTMNorthing, UTMEasting, marker=5, color="blue", msize=0.6
+   plmk, UTMNorthing, UTMEasting, marker=marker, color=color, msize=msize;
   } else {
-   plmk, gga.lat(q), gga.lon(q), marker=5, color="blue", msize=0.6
+   plmk, gga.lat(q), gga.lon(q), marker=marker, color=color, msize=msize;
   }
   window, current_win;
 }
@@ -811,8 +814,12 @@ func show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, wid
   if ( is_void( lines ) ) 
      lines = 1;
   if ( is_void( x ) ) {
-        x = pnav.lon;
-        y = pnav.lat;
+     if(is_void(pnav)) {
+        write, "No pnav/gga data available... aborting.";
+        return;
+     }
+     x = pnav.lon;
+     y = pnav.lat;
   }
   if (utm == 1) {
   	/* convert latlon to utm */
