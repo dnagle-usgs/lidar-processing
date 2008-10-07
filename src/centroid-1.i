@@ -107,10 +107,12 @@ See also: RAST, cent
         cv(1) += y;
      }
   } else if ( numberof(where(  ((*rast.rx(n,2))(1:np)) == 0 )) <= max_sfc_sat ) {
-     cv = cent( *rast.rx(n, 2 ) ) + chn2_range_bias;
+     cv = cent( *rast.rx(n, 2 ) ); 
+     cv(1:2) += chn2_range_bias;
      cv(3) += 300;
   } else {
-     cv = cent( *rast.rx(n, 3 ) ) + chn3_range_bias;
+     cv = cent( *rast.rx(n, 3 ) ); 
+     cv(1:2) += chn3_range_bias;
      cv(3) += 600;
   }
 
