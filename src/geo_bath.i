@@ -822,7 +822,7 @@ struct RASPULSESEARCH {
  
 
 
-func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset=, lmark=, bconst=) {
+func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset=, lmark=, bconst=, xyz_data=) {
 /* DOCUMENT raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset=)
 
   This function allows the user to click on an EAARL point cloud data plot and does the following:
@@ -851,6 +851,8 @@ This function can be invoked from the 'Process EAARL Data' GUI by clicking the '
 		0
         bconst= set to 1 to show the bathy waveform with constants,
 		set to 2 to show both waveforms (with and without constants).
+        xyz_data = 3-d (x,y,z) data array representing ground truth data.  If this array is present, the function will search for the nearest xyz ground truth data point and print out the difference between the selected pixel and the ground truth point.  The search for the nearest ground truth point will be only within 5m of the selected point.
+
 
   Returns:
 	Array mindata.  mindata is an array of type 'ptype' that includes all the data points selected in this iteration.
@@ -1202,6 +1204,38 @@ write,"============================================================="
 // can do stats or whatever on them.
    grow, rtn_data, mindata;
 
+  // if ground truth data are available...
+  if (is_array(xyz_data)) {
+        if (is_void(xyz_buf)) xyz_buf = 2;
+        n_xyz = numberof(xyz_data(1,));
+        xyz_fs = array(FS,n_xyz);
+        xyz_fs.east = long(xyz_data(1,)*100);
+        xyz_fs.north = long(xyz_data(2,)*100);
+        xyz_fs.elevation = long(xyz_data(3,)*100);
+
+        point = [mindata.east,mindata.north,mindata.elevation]/100.;
+
+        indx_xyz = sel_data_ptRadius(xyz_fs, point=point, radius=xyz_buf, msize=0.2, retindx=1, silent=1)
+        // now find nearest point
+        mindist = xyz_buf*sqrt(2);
+        for (j = 1; j <= numberof(indx_xyz); j++) {
+          x1 = (xyz_fs(indx_xyz(j)).east)/100.0;
+          y1 = (xyz_fs(indx_xyz(j)).north)/100.0;
+          dist = sqrt((point(1)-x1)^2 + (point(2)-y1)^2);
+          if (dist <= mindist) {
+            mindist = dist;
+            minxyz_fs = xyz_fs(indx_xyz(j));
+            minindx_xyz = indx_xyz(j);
+          }
+        }
+        xyz_diff = point(3) - minxyz_fs.elevation/100.;
+        write, "Comparing with XYZ Ground Truth Data..."
+        write, format="Nearest XYZ point to selected point is %3.2f m away\n",dist;
+        write, format="Elevation difference between selected point and ground truth data point = %3.2f\n",xyz_diff;
+        write, "===================================================="
+
+  }
+        
 
 } while ( mouse_button != right_mouse );
 
