@@ -1,7 +1,7 @@
 // Original by Amar Nayegandhi
 write, "$Id$";
 
-func sel_data_rgn(data, type=, mode=,win=, exclude=, rgn=, make_workdata=, origdata=) {
+func sel_data_rgn(data, type=, mode=,win=, exclude=, rgn=, make_workdata=, origdata=, retindx =, silent=) {
 /* DOCUMENT sel_data_rgn(data, type=, mode=, win=, exclude=, rgn=)
 
 Function selects a region (limits(), rubberband, pip)
@@ -33,6 +33,9 @@ INPUT:
                Useful when re-filtering a certain section of the filtered
                data set.
 
+  retindx= :  Set to 1 to return the index values instead of the data array.
+
+  silent=    : works in silent mode.  no output to screen.
   amar nayegandhi 11/26/02.
 
   Modified by Jeremy Bracone 5/9/05
@@ -42,6 +45,9 @@ INPUT:
       getPoly() method (for a polygon).
 */
    if (is_void(type)) type = nameof(structof(data));
+   if (is_void(silent)) silent = 0;
+   if (is_void(retindx)) retindx = 0;
+
    extern q, workdata, croppeddata;
    data = test_and_clean( data );
    if (is_void(data)) return [];
@@ -121,10 +127,10 @@ INPUT:
          box_pts = ptsInBox(box*100., data.least, data.lnorth);
          if (!is_array(box_pts)) {
             if (exclude) {
-               write, "No points removed.";
+               if (!silent) write, "No points removed.";
                return data;
             } else {
-               write, "No points selected.";
+               if (!silent) write, "No points selected.";
                return [];
             }
          }
@@ -134,10 +140,10 @@ INPUT:
             orig_box_pts = ptsInBox(box*100., origdata.least, origdata.lnorth);
             if (!is_array(orig_box_pts)) {
                if (exclude) {
-                  write, "No points removed.";
+                  if (!silent) write, "No points removed.";
                   return data;
                } else {
-                  write, "No points selected.";
+                  if (!silent) write, "No points selected.";
                   return [];
                }
             }
@@ -148,10 +154,10 @@ INPUT:
          box_pts = ptsInBox(box*100., data.east, data.north);
          if (!is_array(box_pts)) {
             if (exclude) {
-               write, "No points removed.";
+               if (!silent) write, "No points removed.";
                return data;
             } else {
-               write, "No points selected.";
+               if (!silent) write, "No points selected.";
                return [];
             }
          }
@@ -161,10 +167,10 @@ INPUT:
             orig_box_pts = ptsInBox(box*100., origdata.east, origdata.north);
             if (!is_array(orig_box_pts)) {
                if (exclude) {
-                  write, "No points removed.";
+                  if (!silent) write, "No points removed.";
                   return data;
                } else {
-                  write, "No points selected.";
+                  if (!silent) write, "No points selected.";
                   return [];
                }
             }
@@ -188,17 +194,25 @@ INPUT:
          iindx(indx) = 1;
       }
       indx = where(iindx == 0);
-      write, format="%d of %d data points removed.\n",numberof(iindx)-numberof(indx), numberof(iindx);
+      if (!silent) {
+         write, format="%d of %d data points removed.\n",numberof(iindx)-numberof(indx), numberof(iindx);
+      }
    } else {
-      write, format="%d of %d data points selected.\n",numberof(indx), numberof(data);
+      if (!silent) {
+         write, format="%d of %d data points selected.\n",numberof(indx), numberof(data);
+      }
    }
 
    window, w;
 
-   if (is_array(indx))
-      data_out = data(indx);
-
-   return data_out;
+   if (is_array(indx)) {
+      if (retindx) {
+        return indx
+      } else {
+        data_out = data(indx);
+        return data_out;
+      }
+   }
 }
 
 func sel_data_ptRadius(data, point=, radius=, win=, msize=, retindx=, silent=) {
