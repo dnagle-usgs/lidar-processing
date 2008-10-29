@@ -1,5 +1,8 @@
-func batch_pbd2las(con_dir, searchstr=, proj_id=, v_maj=, v_min=, cday=, cyear=, typ=, zone_nbr=, nad83=, wgs84N=, wgs84S=) {
-/* DOCUMENT batch_pbd2las(con_dir, searchstr=, proj_id=, v_maj=, v_min=, cday=, cyear=, typ=, zone_nbr=, nad83=, wgs84N=, wgs84S=)
+write, "$Id$";
+require, "qq24k.i";
+
+func batch_pbd2las(con_dir, searchstr=, proj_id=, v_maj=, v_min=, cday=, cyear=, typ=, zone_nbr=, nad83=, wgs84N=, wgs84S=, buffer=, qq=) {
+/* DOCUMENT batch_pbd2las(con_dir, searchstr=, proj_id=, v_maj=, v_min=, cday=, cyear=, typ=, zone_nbr=, nad83=, wgs84N=, wgs84S=, buffer=, qq=, atm=)
         dir, string, directory containing pbd files wanted for conversion
 
         searchstr, string, search string for the pbd files that you would like converted ( default = *.pbd ) 
@@ -23,10 +26,16 @@ func batch_pbd2las(con_dir, searchstr=, proj_id=, v_maj=, v_min=, cday=, cyear=,
                 sure that you set whichever datum that it is in equal to 1.  It defaults to nad83 if a zone number
                 is input without selecting a datum.
 
+        buffer, specifies a buffer in meters to apply to tile boundary; if set to -1 (the default), the data will be used as-is
+
+        qq, if 1 it specifies that the data is in quarter-quad format instead of 2k tile format; if 0, it specifies that the data is in 2k tile format (this is the default)
+
         created by Jim Lebonitte
         last edited on 8/29/07 by Jim Lebonitte
+        modified 2008-10-29 by David Nagle to add buffer=, qq=
 */
-
+  default, buffer, -1;
+  default, qq, 0;
   if(is_void(searchstr)) {
           searchstr="*.pbd"
   } 
@@ -46,13 +55,13 @@ func batch_pbd2las(con_dir, searchstr=, proj_id=, v_maj=, v_min=, cday=, cyear=,
   for(i=1; i<=numfiles; i++) {
         
          filename=s(i);
-         pbd2las(filename, proj_id=proj_id, v_maj=v_maj, v_min=v_min, cday=cday, cyear=cyear, typ=typ, zone_nbr=zone_nbr, nad83=nad83, wgs84N=wgs84N, wgs84S=wgs84S) 
+         pbd2las(filename, proj_id=proj_id, v_maj=v_maj, v_min=v_min, cday=cday, cyear=cyear, typ=typ, zone_nbr=zone_nbr, nad83=nad83, wgs84N=wgs84N, wgs84S=wgs84S, buffer=buffer, qq=qq) 
 
   }
 
 }
-func pbd2las(fname, proj_id=, v_maj=, v_min=, cday=, cyear=, typ=, zone_nbr=, nad83=, wgs84N=, wgs84S=) {
-/* DOCUMENT pbd2las(fname, proj_id=, v_maj=, v_min=, cday=, cyear=, typ=, zone_nbr=, nad83=, wgs84N=, wgs84S=)
+func pbd2las(fname, proj_id=, v_maj=, v_min=, cday=, cyear=, typ=, zone_nbr=, nad83=, wgs84N=, wgs84S=, buffer=, qq=) {
+/* DOCUMENT pbd2las(fname, proj_id=, v_maj=, v_min=, cday=, cyear=, typ=, zone_nbr=, nad83=, wgs84N=, wgs84S=, buffer=, qq=)
         
         Purpose:  This function creates a .las file that contains the LiDAR point records from a LiDAR data
                   variable in ALPS.  The .las binary file format has been determined by the ASPRS LiDAR
@@ -77,11 +86,18 @@ func pbd2las(fname, proj_id=, v_maj=, v_min=, cday=, cyear=, typ=, zone_nbr=, na
                 sure that you set whichever datum that it is in equal to 1.  It defaults to nad83 if a zone number
                 is input without selecting a datum.
 
+        buffer, specifies a buffer in meters to apply to tile boundary; if set to -1 (the default), the data will be used as-is
+
+        qq, if 1 it specifies that the data is in quarter-quad format instead of 2k tile format; if 0, it specifies that the data is in 2k tile format (this is the default)
+
 
         created by Jim Lebonitte
         last edited on 8/29/07 by Jim Lebonitte
+        modified 2008-10-29 by David Nagle to add buffer=, qq=
 */
 
+default, buffer, -1;
+default, qq, 0;
 
 if (is_void(proj_id)) {
   proj_id=array(char, 8)
@@ -124,6 +140,38 @@ if(wgs84S==1) zone_tag=32701+zone_nbr;
   data=get_member(f1, vname);
   close, f1;
   dvname=vname;
+
+  // Restrict to a buffer
+  if(buffer >= 0) {
+    n = e = [];
+    if(typ == 1 || typ == 2) {
+      n = data.north;
+      e = data.east;
+    } else if(typ == 3) {
+      n = data.lnorth;
+      e = data.least;
+    } else {
+      error, "Invalid typ " + typ;
+    }
+    tail = file_tail(fname);
+    idx = [];
+    n = n/100.;
+    e = e/100.;
+    if(qq) {
+      idx = extract_for_qq(n, e, qq2uz(tail), tail, buffer=buffer);
+    } else {
+      idx = extract_for_dt(n, e, tail, buffer=buffer);
+    }
+    n = e = tail = [];
+    if(numberof(idx)) {
+      data = data(idx);
+      idx = [];
+    } else {
+      data = [];
+      write, "No data within buffer, skipping " + file_tail(fname);
+      return;
+    }
+  }
 
 /*Creating .las file */
 
