@@ -128,6 +128,9 @@ BIN = ../bin
 ../bin/xyz2track:	xyz2track.pl
 	install -m uog+rx  $<	$@
 
+../bin/whatsnew:	whatsnew.pl
+	install -m uog+rx  $<	$@
+
 
 # It is very hard to make make make a #
 ../bin/comment:	comment
@@ -156,6 +159,7 @@ all:		../bin/efdb ../bin/erange ../bin/gga2bin ../bin/mkidx    \
 		../bin/mkeidx                                            \
 		../bin/iex_ascii2pbd                                     \
 		../bin/xyz2track                                         \
+		../bin/whatsnew                                          \
 		../bin/comment
 >>>>>>> evolving
 
