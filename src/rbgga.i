@@ -24,6 +24,7 @@ local rbgga_help
  gga_click_times  Mouse selected area data sod start/stop times.
  gga_find_times   Finds sod start/stop times using results from gga_win_sel.
  show_gga_track   Displays lat/lon data.  
+ show_track(pnav) Displays arbitrary pnav data
  mk_photo_list    Generates a list of photo files for sf.tcl.
 
 Externs: 
@@ -759,9 +760,16 @@ date
 
 
 
+func show_gga_track (x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, width=, win=   )  {
+
+  show_track ( pnav, x=x, y=y, color=color,  skip=skip, msize=msize, marker=marker, lines=lines, utm=utm, width=width, win=win   ) ;
+}
 
 
-func show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, width=, win=   )  {
+// 2008-11-06: just like show_gga_track, but the user specifies the pnav to plot
+// results are ugly when called just as show_track(pnav), needs to be:
+// show_track(pnav, color="red", skip=0, utm=1)
+func show_track ( pn, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, width=, win=   )  {
 /* DOCUMENT show_gga_track, x=,y=, color=, skip=, msize=, marker=, lines=
 
    Plot the GPS gga position lat/lon data in the current window.
@@ -776,7 +784,7 @@ func show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, wid
   Examples:
    show_gga_track
    Plots the track with default values which are red lines and 
-   red square markers.  By default it skips 20 points.  For quicker
+   red square markers.  By default it skips 50 points.  For quicker
    plots, turn off the markers with marker=0;
 
    show_gga_track,color="magenta",msize=0.2,skip=10,marker=1
@@ -814,12 +822,12 @@ func show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, wid
   if ( is_void( lines ) ) 
      lines = 1;
   if ( is_void( x ) ) {
-     if(is_void(pnav)) {
+     if(is_void(pn)) {
         write, "No pnav/gga data available... aborting.";
         return;
      }
-     x = pnav.lon;
-     y = pnav.lat;
+     x = pn.lon;
+     y = pn.lat;
   }
   if (utm == 1) {
   	/* convert latlon to utm */
@@ -848,6 +856,7 @@ func show_gga_track ( x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, wid
 	}
   }
 
+ // when will this ever be true?  code above sets skip to 50 if is_void - rwm
  if ( skip == 0 ) 
 	skip = 1;
 
