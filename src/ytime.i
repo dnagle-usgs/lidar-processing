@@ -247,6 +247,26 @@ func soe2ymd(soe) {
    return int([y,m,d]);
 }
 
+func ymd2soe(y, m, d, sod) {
+/* DOCUMENT soe = ymd2soe(y, m, d)
+   soe = ymd2soe(y, m, d, sod)
+
+   Converts a year, month, day, and sod into a seconds of the epoch value.
+
+   If sod is not specified, it defaults to 0. This can be useful to determine
+   the offset to add to a set of sod values to convert them all to soe values
+   when they all share the same date.
+
+   The values y, m, and d should all be scalar integers. If provided, sod can
+   be either a scalar or an array.
+*/
+// Original David Nagle 2008-11-07
+   default, sod, 0;
+   doy = ymd2doy(y, m, d);
+   soe = time2soe([y, doy, sod, 0, 0, 0]);
+   return soe;
+}
+
 func ymd2doy(y, m, d) {
 /* DOCUMENT ymd2doy(y, m, d)
             ymd2doy(ymd)
