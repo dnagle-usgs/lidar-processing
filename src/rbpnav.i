@@ -274,6 +274,29 @@ func rbpnav (junk, ifn=) {
  return pn;
 }
 
+func load_pnav2FS(junk, ifn=) {
+  extern gtpnav;
+  extern pnav_filename;
+
+  gtpnav = load_pnav(junk, fn=ifn);
+
+  if ( is_void(ifn) ) {
+    ifn = pnav_filename;
+  }
+
+  myfn = file_tail(ifn);     // get the actual filename
+
+  yr = atoi(strpart(myfn, 1:4) );   // strip out the date
+  mo = atoi(strpart(myfn, 6:7) );
+  dy = atoi(strpart(myfn, 9:10));
+
+  soe = ymd2soe(yr, mo, dy, gtpnav.sod);
+  // soe = gtpnav.sod;
+  fs = pnav2fs(gtpnav, soe=soe);
+
+  return fs;
+}
+
 func determine_gps_time_correction(fn) {
 /* DOCUMENT determine_gps_time_correction(fn)
   This function determines the gps_time_correction automatically based on the year of the survey. 

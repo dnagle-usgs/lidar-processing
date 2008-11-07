@@ -591,14 +591,22 @@ proc load_edb {} {
    -command { exp_send "require, \"rbtans.i\"\r"
    	      expect ">"
     	      exp_send "tans = rbtans() \r" }
+
  $w.mb.nav add command -label "Load GPS PNAV data..."   -underline 9 \
    -command { exp_send "require, \"rbpnav.i\"\r"
     	      expect ">"
      	      exp_send "pnav = rbpnav() \r" }
- $w.mb.nav add command -label "Load Ground PNAV (gtpnav) data..."   -underline 9 \
+
+ $w.mb.nav add command -label "Load Ground PNAV (gtpnav) data..."   -underline 12 \
    -command { exp_send "require, \"rbpnav.i\"\r"
     	      expect ">"
      	      exp_send "gtpnav = load_pnav() \r" }
+
+ $w.mb.nav add command -label "Load Ground PNAV2FS (gt_fs) data..."   -underline 12 \
+   -command { exp_send "require, \"rbpnav.i\"\r"
+    	      expect ">"
+     	      exp_send "gt_fs = load_pnav2FS() \r" }
+
  $w.mb.nav add command -label "Load DMARS data..."   -underline 5 \
    -command load_dmars
 

@@ -22,6 +22,7 @@ require, "dmars.i"
 require, "batch_process.i"
 require, "transect.i"
 require, "large_window.i"
+require, "groundtruth.i"
 if(!is_void(plug_in)) {
 	require, "triangle.i";
 	require, "rcf_triangulate.i";

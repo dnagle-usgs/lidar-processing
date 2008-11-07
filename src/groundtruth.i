@@ -6,11 +6,12 @@
   The "Process EAARL Data" window must also be open or FS isn't
   available.
 */
-func pnav2fs(pn) {
+func pnav2fs(pn, soe=) {
 
   retarr = 1;
+  if ( is_void(soe)) soe = pn.sod ;
   x   = ll2utm( pn.lat, pn.lon, force_zone=curzone );
-  xyz = [ x(,1), x(,2), pn.alt ];
+  xyz = [ x(,1), x(,2), pn.alt, soe ];
   gd  = transpose(xyz);
 
   N   = numberof(gd(1,));
@@ -18,6 +19,7 @@ func pnav2fs(pn) {
   fs.east      = long(gd(1,) * 100. );
   fs.north     = long(gd(2,) * 100. );
   fs.elevation = long(gd(3,) * 100. );
+  fs.soe       = long(gd(4,));
 
   return(fs);
 
