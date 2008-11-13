@@ -262,9 +262,9 @@ write, format="  Rms:%14.3f %14.3f\n", pn.xrms(min), pn.xrms(max)
 
 
 
-func rbpnav (junk, ifn=) {
+func rbpnav (junk, fn=) {
   extern gga;
-  pn = load_pnav(junk, fn=ifn);
+  pn = load_pnav(junk, fn=fn);
 // assign new pnav array to gga even if gga is already set.
  // if ( is_void( gga ) ) {
     gga = pn;
@@ -275,10 +275,10 @@ func rbpnav (junk, ifn=) {
 }
 
 func load_pnav2FS(junk, ifn=) {
-  extern gtpnav;
+  extern gt_pnav;
   extern pnav_filename;
 
-  gtpnav = load_pnav(junk, fn=ifn);
+  gt_pnav = load_pnav(junk, fn=ifn);
 
   if ( is_void(ifn) ) {
     ifn = pnav_filename;
@@ -290,9 +290,9 @@ func load_pnav2FS(junk, ifn=) {
   mo = atoi(strpart(myfn, 6:7) );
   dy = atoi(strpart(myfn, 9:10));
 
-  soe = ymd2soe(yr, mo, dy, gtpnav.sod);
-  // soe = gtpnav.sod;
-  fs = pnav2fs(gtpnav, soe=soe);
+  soe = ymd2soe(yr, mo, dy, gt_pnav.sod);
+  // soe = gt_pnav.sod;
+  fs = pnav2fs(gt_pnav, soe=soe);
 
   return fs;
 }
