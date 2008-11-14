@@ -765,6 +765,10 @@ func show_gga_track (x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, widt
   show_track ( pnav, x=x, y=y, color=color,  skip=skip, msize=msize, marker=marker, lines=lines, utm=utm, width=width, win=win   ) ;
 }
 
+func show_fstrack ( fs, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, width=, win=   )  {
+  pn = fs2pnav(fs);
+  show_track, pn, x=x, y=y, color=color,  skip=skip, msize=msize, marker=marker, lines=lines, utm=utm, width=width, win=win;
+}
 
 // 2008-11-06: just like show_gga_track, but the user specifies the pnav to plot
 // results are ugly when called just as show_track(pnav), needs to be:
@@ -805,6 +809,7 @@ func show_track ( pn, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, wid
 
 */
   extern curzone;
+
   if ( is_void( win ) ) {
 	win = 6; 
   }
@@ -829,6 +834,7 @@ func show_track ( pn, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, wid
      x = pn.lon;
      y = pn.lat;
   }
+
   if (utm == 1) {
   	/* convert latlon to utm */
 	u = fll2utm(y, x);
@@ -855,7 +861,6 @@ func show_track ( pn, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, wid
 	  y = u(1,);
 	}
   }
-
  // when will this ever be true?  code above sets skip to 50 if is_void - rwm
  if ( skip == 0 ) 
 	skip = 1;
@@ -864,13 +869,13 @@ func show_track ( pn, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, wid
     if (is_array(x) && is_array(y)) 
       plg, y(1:0:skip), x(1:0:skip), color=color, marks=0, width=width;
      }
-
  if ( marker ) {
     if (is_array(x) && is_array(y)) 
       plmk,y(1:0:skip), x(1:0:skip), 
     color=color, msize=msize, marker=marker, width=width;
     }
 }
+
 
 func plot_no_raster_fltlines (pnav, edb) {
   /* Document no_raster_flightline (gga, edb)

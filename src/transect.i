@@ -120,6 +120,10 @@ See also: transect, _transect_history
   l = _transect_history(, recall);
  }
   glst = transect( fs, l, connect=connect, color=color,xfma=xfma, rcf_parms=rcf_parms,rtn=rtn, owin=owin, lw=w, msize=msize );
+   // plot the actual points selected onto the input window
+   if (show == 2 )
+     show_fstrack,fs(glst), utm=1, skip=0, color="red", lines=0, win=iwin;
+  window,owin;
   if ( is_void(recall) ) {
         limits
 	limits,,, cbar.cmin, cbar.cmax
@@ -152,6 +156,7 @@ Input:
  See also: mtransact, _transect_history
 
 */
+  extern rx, elevation, glst, llst;
 
 
  if ( is_void(rtn)   )    rtn = 0;		// default is first return
@@ -201,14 +206,19 @@ Input:
   }
 
 
+  // XYZZY - this is the last place we see fs being used for x
   y = fs.north(*)(glst) - l(2);
   x = fs.east(*)(glst)  - l(1);
 
   ca = cos(-angle); sa = sin(-angle);
 
+  // XYZZY - rx is used to plot x
+  // XYZZY - would the rx element give us the glst element to use?
   rx = x*ca - y*sa
   ry = y*ca + x*sa
 
+  // XYZZY - y is computed from elevation
+  // XYZZY - lw is the search width
   llst = where( abs(ry) < lw );
   if ( rtn == 0 )
 	  elevation = fs.elevation(*);
@@ -245,6 +255,7 @@ Input:
 // "ss";ss
 // "nsegs";nsegs
    c = color;
+   msum=0;
    for (i=1; i<numberof(ss); i++ ) {
       if ( c > 0 ) c = (color+i)&7;
    soeb = fs.soe(*)(glst(llst)(ss(i)+1));
@@ -267,6 +278,7 @@ Input:
      yy = elevation(glst(llst)(ss(i)+1:ss(i+1)))/100.0;
      if ( !is_void(rcf_parms) )
          si = si(moving_rcf(yy(si), rcf_parms(1), int(rcf_parms(2) )));
+     // XYZZY - this is where the points get plotted
      plmk, yy(si), xx(si),color=clr(abs(c)), msize=msize, width=10;
        if ( connect ) plg, yy(si), xx(si),color=clr(abs(c))
     }
@@ -294,7 +306,6 @@ Input:
 // limits,,, cbar.cmin, cbar.cmax
  return glst(llst);
 }
-
 
 func extract_transect_info(tlst, fs, &coords, &segtimes, rtn=) {
 /* DOCUMENT extract_transect_info(tlst, fs)
