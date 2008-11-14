@@ -56,7 +56,7 @@ Input:
   w=         :  Search distance from line in centimeters. Default is 150cm
   connect=   :  Set to 1 to connect the points.
   recall=    :  Used to recall a previously generated transact line.
-  color=     :  The starting color 0:7
+  color=     :  The starting color 0:7, use negative to use only 1 color
   xfma=      :  Set to 1 to auto fma.
   rtn=       :  Select return type where:
                 0  first return
@@ -139,7 +139,7 @@ Input:
   xtime=     :  Set to 1 to plot against time (sod)
   xfma=      :  Set to 1 to clear screen
   owin=      :  Set output window
-  color=     :  Select starting color, 0-7
+  color=     :  Select starting color, 0-7, use negative to use only 1 color
   rcf_parms= :  [fw,np]  RCF the data where:
                 fw is the width of the filter
                 np is the number of points on either side of the index
@@ -244,8 +244,9 @@ Input:
 
 // "ss";ss
 // "nsegs";nsegs
+   c = color;
    for (i=1; i<numberof(ss); i++ ) {
-      c = (color+i)&7;
+      if ( c > 0 ) c = (color+i)&7;
    soeb = fs.soe(*)(glst(llst)(ss(i)+1));
       t = soe2time( soeb );
      tb = fs.soe(*)(glst(llst)(ss(i)+1))%86400;
@@ -253,21 +254,21 @@ Input:
      td = abs(te - tb);
      hms = sod2hms( tb );
      write, format="%d:%d sod = %6.2f:%-10.2f(%8.4f) utc=%2d:%02d:%02d %s\n",
-                    t(1),t(2), tb, te, td, hms(1,), hms(2,), hms(3,), clr(c);
+                    t(1),t(2), tb, te, td, hms(1,), hms(2,), hms(3,), clr(abs(c));
 
      if ( xtime ) {
      plmk, elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0,
-           fs.soe(*)(llst)(ss(i)+1:ss(i+1))/100.0,color=clr(c), msize=msize, width=10;
+           fs.soe(*)(llst)(ss(i)+1:ss(i+1))/100.0,color=clr(abs(c)), msize=msize, width=10;
        if ( connect ) plg, elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0,
-                fs.soe(*)(llst)(ss(i)+1:ss(i+1))/100.0,color=clr(c)
+                fs.soe(*)(llst)(ss(i)+1:ss(i+1))/100.0,color=clr(abs(c))
      } else {
      xx = rx(llst)(ss(i)+1:ss(i+1))/100.0;
      si = sort(xx);
      yy = elevation(glst(llst)(ss(i)+1:ss(i+1)))/100.0;
      if ( !is_void(rcf_parms) )
          si = si(moving_rcf(yy(si), rcf_parms(1), int(rcf_parms(2) )));
-     plmk, yy(si), xx(si),color=clr(c), msize=msize, width=10;
-       if ( connect ) plg, yy(si), xx(si),color=clr(c)
+     plmk, yy(si), xx(si),color=clr(abs(c)), msize=msize, width=10;
+       if ( connect ) plg, yy(si), xx(si),color=clr(abs(c))
     }
    }
  } else {
