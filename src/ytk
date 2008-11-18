@@ -229,10 +229,10 @@ proc spawn_yorick {} {
    catch { set rlwrap [ exec which rlwrap ] }
    set result 1
    if { $result && [info exists rlterm] && $_ytk(use_rlterm) eq "Yes" } {
-      set result [spawner {spawn $rlterm $_ytk(yorick_executable)}]
+      set result [spawner [list spawn $rlterm $_ytk(yorick_executable)]]
    }
    if { $result && [info exists rlwrap] && $_ytk(use_rlwrap) eq "Yes" } {
-      set result [spawner {spawn $rlwrap -c -b \t\n\r\ \(\)\{\}\[\],+=\&^%\$#@\\\"\;\|  $_ytk(yorick_executable)}]
+      set result [spawner [list spawn $rlwrap -c -b {\t\n\r\ \(\)\{\}\[\],+=\&^%\$#@\\\"\;\|} $_ytk(yorick_executable)]]
    }
    if { $result } {
       set result [spawner {spawn $_ytk(yorick_executable)}]
