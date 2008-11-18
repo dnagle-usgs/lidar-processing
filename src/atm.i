@@ -659,3 +659,14 @@ note:  This function only uses the regular rcf filter because ATM data
       }
    }
 }
+
+func write_atm(opath, ofname, atm_all, type=) {
+// David Nagle 2008-08-28
+   fs_all = array(FS, numberof(atm_all));
+   fs_all.north = atm_all.north;
+   fs_all.east = atm_all.east;
+   fs_all.elevation = atm_all.elevation;
+   fs_all.intensity = atm_all.fint;
+   fs_all.soe = atm_all.soe;
+   write_topo, opath, ofname, fs_all;
+}

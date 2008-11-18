@@ -1170,7 +1170,8 @@ func pbd_to_yfile(filename) {
         write_veg, path, file, data;
      if (b == CVEG_ALL) 
         write_multipeak_veg, data, opath=path, ofname=file;
-
+     if (b == ATM2)
+        write_atm, path, file, data;
 }
 
    
