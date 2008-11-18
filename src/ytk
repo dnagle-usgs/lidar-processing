@@ -232,7 +232,9 @@ proc spawn_yorick {} {
       set result [spawner [list spawn $rlterm $_ytk(yorick_executable)]]
    }
    if { $result && [info exists rlwrap] && $_ytk(use_rlwrap) eq "Yes" } {
-      set result [spawner [list spawn $rlwrap -c -b {\t\n\r\ \(\)\{\}\[\],+=\&^%\$#@\\\"\;\|} $_ytk(yorick_executable)]]
+      set result [spawner [list spawn $rlwrap -c -b {'(){}[],+=&^%$#@;|"} $_ytk(yorick_executable)]]
+      # "
+      # ^ needed to fix rendering bug in Vim
    }
    if { $result } {
       set result [spawner {spawn $_ytk(yorick_executable)}]
