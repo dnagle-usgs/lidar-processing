@@ -5,6 +5,7 @@ require, "yeti_regex.i";
 require, "dir.i";
 require, "set.i";
 require, "general.i";
+require, "geometry.i";
 
 /*
 This file requires Eric Thiébaut's Yeti package, available from:
@@ -111,32 +112,24 @@ func extract_for_qq(north, east, zone, qq, buffer=) {
    The buffer= option specifies a buffer (in meters) to extend the quarter
    quad's boundaries by. By default, it is 100 meters.
 
-   Note that this will ALWAYS add a small buffer, even if buffer=0. This is
-   because the quarter quad scheme is based on lat/lon whereas these
-   coordinates are in UTM. The index is determined based on a UTM bounding box
-   around that quarter quad. If you need to extract only the points that lie
-   within the quarter quad, then this function will not work for you safely.
-
    Original David Nagle 2008-07-17
 */
    default, buffer, 100;
    bbox = qq2ll(qq, bbox=1);
-   // When the QQ is projected into UTM, its edges might be slightly curved.
-   // Normally, a simple bounding box should probably suffice. However, just in
-   // case a side bows out such that the middle is further out than the
-   // corners, we sample five points along each edge to help ensure full
-   // coverage. The most extreme points in each direction are then used.
-   lats = span(bbox(1), bbox(3), 5);
-   lons = span(bbox(2), bbox(4), 5);
-   min_n = fll2utm(array(lats(1), 5), lons, force_zone=zone)(1, min) - buffer;
-   max_n = fll2utm(array(lats(5), 5), lons, force_zone=zone)(1, max) + buffer;
-   min_e = fll2utm(lats, array(lons(5), 5), force_zone=zone)(2, max) - buffer;
-   max_e = fll2utm(lats, array(lons(1), 5), force_zone=zone)(2, min) + buffer;
-   
-   return where(
-      min_n <= north & north <= max_n &
-      min_e <= east  & east  <= max_e
-   );
+
+   ll = utm2ll(north, east, zone);
+   orig_lon = ll(,1);
+   orig_lat = ll(,2);
+
+   comp_lon = bound(orig_lon, bbox(4), bbox(2));
+   comp_lat = bound(orig_lat, bbox(1), bbox(3));
+
+   comp_utm = fll2utm(comp_lat, comp_lon, force_zone=zone);
+   comp_north = comp_utm(1,);
+   comp_east = comp_utm(2,);
+
+   dist = ppdist([east, north], [comp_east, comp_north], tp=1);
+   return where(dist <= buffer);
 }
 
 func extract_for_dt(north, east, dt, buffer=) {

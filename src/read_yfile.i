@@ -671,275 +671,246 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
   }
   return data;
 }
-  
-func write_ascii_xyz(data_arr, opath,ofname,type=, indx=, split=, intensity=, delimit=, zclip=, pstruc=, rn=, soe=, noheader=, latlon=, zone=, ESRI=, footer=) {
-  /* DOCUMENT this function writes out an ascii file containing x,y,z,intensity information.
-    amar nayegandhi 04/25/02
-    Keywords:
-    data_arr = Data Array.  can be fs_all (first surface), depth_all (bathymetry) or veg_all (vegetation).
-        veg_all=eaarl(1);
-        veg_all=eaarl(1);
-    opath = Path for output file.
-    ofname = File name of output file.
-    type = Type of data to be written out. type = 1 for first surface, type = 2 for bathymetry,
-           type = 3 for vegetation (bare earth), type = 4 for depth.
-    indx = set to 1 to write out the index number of each record in the output file.
-    split = set split to 1 if you want the output file to be split into chunks of 1 million points
-    intensity = set to 1 if you want to additionally include the intensity value in the output file
-    delimit =  a string containing a single character to delimit ascii output with.
-    zclip = [ lower, upper] Clip out, and don't write values outside the range given in the
-            zclip array. These lower and upper values are in centimeters.
-    rn = Unique Raster/pulse number
-    soe = seconds of the epoch 
-    noheader = set to 1 to not include the header in the ascii data file.
-    latlon= set to 1 to convert xy locations to latlon (from utm)
-    zone = utm zone number (if not set it will check for variable curzone). Reqd only if latlon=1
-    ESRI = Forces ESRI compatibility. Removes ()'s from header and forces header = indx = 1
-    footer = "set to a string to be the last line in the output file"
-    modified 12/30/02 amar nayegandhi to :
-      write out x,y,z (first surface elevation) data for type=1
-      to split at 1 million points and write to another file
-    modified 01/30/03 to optionally split at 1 million points
-    modified 10/06/03 to add rn and soe and correct the output format for different delimiters.
-    modified 10/09/03 to add latlon conversion capability
-    
-    */
 
-  extern curzone
-  if (ESRI) {
-	noheader = 0;
-	indx = 1;
-  }
-// default delimit to ","
-  if ( is_void( delimit ) ) {
-    delimit = ",";
-  }   
-  delimit = ((*pointer( delimit ))(1))
-  if ( !is_array( zclip ) ) 
-     zclip = [ -600.0, 30000.0 ];
-  zclip *= 100.0;
-  
- if (latlon && !zone) { 
-    zone = curzone;
-    if (!zone) {
+func write_ascii_xyz(data_arr, opath, ofname, type=, ESRI=, header=, footer=, delimit=, intensity=, rn=, soe=, indx=, zclip=, latlon=, split=, zone=, pstruc=) {
+/* DOCUMENT write_ascii_xyz, data_arr, opath, ofname, type=, ESRI=, header=,
+   footer=, delimit=, intensity=, rn=, soe=, indx=, zclip=, latlon=, split=,
+   zone=, pstruc=
+
+   Creates an ascii file containing information from the data array.
+
+   Required parameters and options:
+
+      data_arr     : Data array. Can be first surface (fs_all), bathymetry
+                     (depth_all), or vegetation (veg_all).
+
+      opath        : Path for output file.
+
+      ofname       : File name for output file.
+
+      type=        : Type of data to be written out.
+                        1 - first surface
+                        2 - bathymetry
+                        3 - vegetation (bare earth)
+                        4 - depth
+                        5 - (unknown?)
+
+   Options that affect output file content:
+
+      ESRI=        : Forces ESRI compatibility.  Removes ()'s from header and
+                     forces index number.
+
+      header=      : Set to 1 to add a header line to each ascii file
+
+      footer=      : Set to a "string" to put at the last line of the output
+                     file
+
+      delimit=     : Define the delimeter between fields in an output line,
+                     such as " ", ",", or ";". Default is a single space.
+
+      intensity=   : Set to 1 to include the laser backscatter intensity in the
+                     output files.
+
+      rn=          : Set to 1 to include the raster/pulse number in the output
+                     files.
+
+      soe=         : Set to 1 to include the unique timestamp in the output
+                     files.
+
+      indx=        : Set to 1 to include the index number for each record in
+                     the output files.
+
+      zclip=       : [minz,maxz] Min and max elevation values in cm to be used
+                     as a 'clipper'. Values outside of this range will be
+                     excluded.
+
+      latlon=      : Set to 1 to convert utm values to latlon.
+
+   Miscellaneous options:
+      
+      split=       : Set to the number of maximum lines to put in a file. If
+                     specified, multiple files may be created. If set to 0,
+                     then only one file will be created. (Default: split=0)
+
+      zone=        : UTM zone number. Only required if latlon=1. Defaults to
+                     extern curzone if not supplied.
+
+      pstruc=      : Specifies a structure that suggests how the data should be
+                     cleaned, if cleaning is necessary.
+                        FS - convert FS_ALL to FS using clean_fs
+                        GEO - convert GEOALL to GEO using clean_bathy
+                        VEG__ - convert veg_all_ to veg using clean_veg
+
+   amar nayegandhi 04/25/02
+   modified 12/30/02 amar nayegandhi to :
+   write out x,y,z (first surface elevation) data for type=1
+   to split at 1 million points and write to another file
+   modified 01/30/03 to optionally split at 1 million points
+   modified 10/06/03 to add rn and soe and correct the output format for different delimiters.
+   modified 10/09/03 to add latlon conversion capability
+
+   Refactored and modified by David Nagle 2008-11-18
+*/
+
+   extern curzone;
+   default, ESRI, 0;
+   default, header, 0;
+   default, indx, 0;
+   default, delimit, " ";
+   default, zclip, [-600., 30000.];
+   default, latlon, 0;
+   default, footer, [];
+
+   default, mode, 1;
+
+   if (ESRI) {
+      header = 1;
+      indx = 1;
+   }
+
+   default, zone, curzone;
+   if (latlon && !zone) { 
       szone = "";
       zone = 0;
       f = read(prompt="Enter UTM Zone Number:", szone);
       sread, szone, zone;
       curzone = zone;
-    }
- }
+   }
 
-  fn = opath+ofname;
+   fn = opath+ofname;
 
-  /* open file to read/write (it will overwrite any previous file with same name) */
-  f = open(fn, "w");
-  if (numberof(data_arr) != numberof(data_arr.north)) {
-     if (pstruc == FS) { //convert FS_ALL to FS
-        data_arr = clean_fs(data_arr);
-     }
-     if (pstruc == GEO) { //Convert GEOALL to GEO 
-       data_arr = clean_bathy(data_arr);
-     }
-     if (pstruc == VEG__) {  //clean veg_all_ and convert to veg__
-       data_arr = clean_veg(data_arr);
-     }
-  }
-
-  totw = 0;
-  num_valid = numberof(data_arr.north);
-  xx = 0;
-  if (intensity) {
-    if (type == 1) {
-      if (pstruc == FS) {
-        data_intensity = data_arr.intensity;
+   if (numberof(data_arr) != numberof(data_arr.north)) {
+      if (pstruc == FS) { //convert FS_ALL to FS
+         data_arr = clean_fs(data_arr);
       }
-      if (pstruc == GEO) {
-        data_intensity = data_arr.first_peak;
+      if (pstruc == GEO) { //Convert GEOALL to GEO 
+         data_arr = clean_bathy(data_arr);
       }
-      if (pstruc == VEG__) {
-        data_intensity = data_arr.fint;
+      if (pstruc == VEG__) {  //clean veg_all_ and convert to veg__
+         data_arr = clean_veg(data_arr);
       }
-    }
-    if ((type == 2) || (type == 4)) {
-      if (pstruc == GEO) {
-        data_intensity = data_arr.bottom_peak;
+   }
+
+   hline = [];
+   if (header) {
+      if (indx)
+         grow, hline, (ESRI ? "id" : "Index");
+      grow, hline, (ESRI
+         ? ["utm_x", "utm_y", "z_meters"]
+         : ["UTMX(m)", "UTMY(m)", "cZ(m)"]);
+      if (intensity)
+         grow, hline, (ESRI ? "intensity_counts" : "Intensity(counts)");
+      if (rn)
+         grow, hline, (ESRI ? "raster_pulse" : "Raster/Pulse");
+      if (soe)
+         grow, hline, (ESRI ? "soe" : "SOE");
+      hline = strjoin(hline, delimit);
+   }
+
+   if (type == 1) {
+      z = data_arr.elevation/100.;
+   } else if (type == 2) {
+      z = (data_arr.elevation + data_arr.depth)/100.;
+   } else if ((type == 3) || (type == 5)) {
+      z = data_arr.lelv/100.;
+   } else if (type == 4) {
+      z = data_arr.depth/100.;
+   }
+   zvalid = where( (z > zclip(1)) & (z < zclip(2)) );
+   if(numberof(zvalid)) {
+      z = z(zvalid);
+      data_arr = data_arr(zvalid);
+      if (numberof(where(type == [1,2,4,5]))) {
+         east = data_arr.east/100.;
+         north = data_arr.north/100.;
+      } else if (type == 3) {
+         east = data_arr.least/100.;
+         north = data_arr.lnorth/100.;
       }
-    }
-    if ((type == 3) || (type == 5)) {
-      if (pstruc == VEG__) {
-        data_intensity = data_arr.lint;
+      if (latlon) {
+         ldat = utm2ll(north,east,zone);
+         east = ldat(1);
+         north = ldat(2);
+         east = swrite(format="%3.7f", east);
+         north = swrite(format="%3.7f", north);
+      } else {
+         east = swrite(format="%8.2f", east);
+         north = swrite(format="%9.2f", north);
       }
-    }
-  }
-  if (indx) {
-       hline = swrite(format="Index%cUTMX(m)%cUTMY(m)%cZ(m)",delimit,delimit,delimit);
-       if (ESRI) hline = swrite(format="id%cutm_x%cutm_y%cz_meters",delimit,delimit,delimit);
-  } else {
-       hline = swrite(format="UTMX(m)%cUTMY(m)%cZ(m)",delimit,delimit);
-       if (ESRI) hline = swrite(format="utm_x%cutm_y%cz_meters",delimit,delimit);
-  }
-  if (intensity) {
-       if (!ESRI) hline = swrite(format="%s%cIntensity(counts)",hline,delimit);
-       else hline = swrite(format="%s%cintensity_counts",hline,delimit);
-  }
-  if (rn) {
-       if (!ESRI) hline = swrite(format="%s%cRaster/Pulse",hline,delimit);
-       else hline = swrite(format="%s%craster_pulse",hline,delimit);
-  }
-  if (soe) {
-       if (!ESRI) hline = swrite(format="%s%cSOE",hline,delimit);
-       else hline = swrite(format="%s%csoe",hline,delimit);
-  }
-  if (!noheader) {
-   write, f, hline;
-  }
+      if (intensity) {
+         data_intensity = [];
+         if (type == 1) {
+            if (pstruc == FS) {
+               data_intensity = data_arr.intensity;
+            }
+            if (pstruc == GEO) {
+               data_intensity = data_arr.first_peak;
+            }
+            if (pstruc == VEG__) {
+               data_intensity = data_arr.fint;
+            }
+         } else if ((type == 2) || (type == 4)) {
+            if (pstruc == GEO) {
+               data_intensity = data_arr.bottom_peak;
+            }
+         } else if ((type == 3) || (type == 5)) {
+            if (pstruc == VEG__) {
+               data_intensity = data_arr.lint;
+            }
+         }
+         if(is_void(data_intensity))
+            intensity = 0;
+         else
+            data_intensity = swrite(format="%d", data_intensity);
+      }
+      totw = indgen(numberof(north));
 
-  if (type == 1) {
-    zvalid = ( (data_arr.elevation) > zclip(1) ) & (data_arr.elevation  < zclip(2) );
-  }
-  if (type == 2) {
-    zvalid = ( (data_arr.elevation+data_arr.depth) > zclip(1) ) & ((data_arr.elevation+data_arr.depth)  < zclip(2) );
-  }
-  if ((type == 3) || (type == 5)) {
-    zvalid = ( (data_arr.lelv) > zclip(1) ) & (data_arr.lelv  < zclip(2) );
-  }
-  if (type == 4) {
-    zvalid = ( (data_arr.depth) > zclip(1) ) & (data_arr.depth  < zclip(2) );
-  }
-  for (i=1;i<=num_valid;i++) {
-    if (zvalid(i) ) {
-    totw++;
-    if ((totw == split) && split) {
-      xx++;
-      close, f
-      write, format="Total records written to ascii file = %d\n", totw;
-      fn_new = split_path( fn, 1, ext=1);
-      sxx = swrite(format="%1d",xx);
-      fn_new = fn_new(1)+"_"+sxx+fn_new(2);
-      f = open(fn_new, "w")
+      totw = swrite(format="%d", totw);
+      z = swrite(format="%4.2f", z);
 
-      if (!noheader) write, f, hline;
-      totw = 1;
-    }
-    if (type == 1) {
-        z = data_arr.elevation(i)/100.;
-	east = data_arr.east(i)/100.;
-	north = data_arr.north(i)/100.;
-        if (latlon) {
-         ldat = utm2ll(north,east,zone);
-	 east = ldat(1);
-	 north = ldat(2);
-        }
-    }
-    if (type == 2) {
-        z = (data_arr.elevation(i) + data_arr.depth(i))/100.;
-	east = data_arr.east(i)/100.;
-	north = data_arr.north(i)/100.;
-        if (latlon) {
-         ldat = utm2ll(north,east,zone);
-	 east = ldat(1);
-	 north = ldat(2);
-        }
-    }
-    if (type == 3) {
-        z = data_arr.lelv(i)/100.;
-	east = data_arr.least(i)/100.;
-	north = data_arr.lnorth(i)/100.;
-        if (latlon) {
-         ldat = utm2ll(north,east,zone);
-	 east = ldat(1);
-	 north = ldat(2);
-        }
-    }
-    if (type == 4) {
-        z = data_arr.depth(i)/100.;
-	east = data_arr.east(i)/100.;
-	north = data_arr.north(i)/100.;
-        if (latlon) {
-         ldat = utm2ll(north,east,zone);
-	 east = ldat(1);
-	 north = ldat(2);
-        }
-    }
-    if (type == 5) {
-        z = data_arr.lelv(i)/100.;
-	east = data_arr.east(i)/100.;
-	north = data_arr.north(i)/100.;
-        if (latlon) {
-         ldat = utm2ll(north,east,zone);
-	 east = ldat(1);
-	 north = ldat(2);
-        }
-    }
+      // indx is deferred to output section...
+      curline = [east, north, z];
+      if (intensity) grow, curline, data_intensity;
+      if (rn) grow, curline, swrite(format="%d", data_arr.rn);
+      if (soe) grow, curline, swrite(format="%12.3f", data_arr.soe);
 
-    if (indx) {
-     if (!latlon) {
-       curline = swrite(format="%d%c%8.2f%c%9.2f%c%4.2f", 
-	 totw,
-	 delimit,
-	 east,
-	 delimit,
-	 north,
-	 delimit,
-	 z);
-     } else {
-       curline = swrite(format="%d%c%3.7f%c%3.7f%c%4.2f", 
-	 totw,
-	 delimit,
-	 east,
-	 delimit,
-	 north,
-	 delimit,
-	 z);
-     } 
-    } else {
-     if (!latlon) {
-       curline = swrite(format="%8.2f%c%9.2f%c%4.2f", 
-	 east,
-	 delimit,
-	 north,
-	 delimit,
-	 z);
-     } else {
-       curline = swrite(format="%3.7f%c%3.7f%c%4.2f", 
-	 east,
-	 delimit,
-	 north,
-	 delimit,
-	 z);
-     }
+      if(split) {
+         fn_base = file_rootname(fn);
+         fn_ext = file_extension(fn);
+         fn_num = 0;
+         for(i = 1; i <= numberof(data_arr); i += split) {
+            fn_num++;
+            cur_fn = swrite(format="%s_%d.%s", fn_base, fn_num, fn_ext);
+            max_idx = min(i + split, numberof(data_arr));
+            __write_ascii_xyz_helper, fn=cur_fn, lines=curline(i:max_idx),
+               header=hline, footer=footer, indx=indx, delimit=delimit;
+         }
+      } else {
+         __write_ascii_xyz_helper, fn=fn, lines=curline,
+            header=hline, footer=footer, indx=indx, delimit=delimit;
+      }
+   }
+}
 
-    }
-    if (intensity) {
-       curline = swrite(format="%s%c%d", 
-	 curline,
-	 delimit,
-	 data_intensity(i));
-    }
-    if (rn) {
-       curline = swrite(format="%s%c%d",
-	 curline,
-	 delimit,
-	 data_arr.rn(i));
-    }
-    if (soe) {
-       curline = swrite(format="%s%c%12.3f",
-	 curline,
-	 delimit,
-	 data_arr.soe(i));
-    } 
-    write, f, curline;
-
-    if ( (i % 1000) == 0 ) edfrstat, i, numberof(data_arr);
-  } 
- }
- if (footer) {
-  write, f, footer;
- }
- close, f;
-
- write, format="Total records written to ascii file = %d\n", totw;
+func __write_ascii_xyz_helper(void, fn=, lines=, header=, footer=, indx=, delimit=) {
+   f = open(fn, "w");
+   if (header)
+      write, f, format="%s\n", header;
+   if (indx) {
+      totw = swrite(format="%d", indgen(numberof(lines(,1))));
+      lines = grow([totw], lines);
+   }
+   // The next line juggles lines around to...
+   //   reorient the matrix to be rows of fields rather than columns of fields
+   //   insert delimiters between pairs of tokens
+   //   remove the final delimiter (which is extra and shouldn't be there)
+   //   merge each line into a single string
+   lines = transpose([lines, delimit])(*,)(:-1,)(sum,);
+   write, f, format="%s\n", lines;
+   if (footer)
+      write, f, format="%s\n", footer;
+   close, f;
+   write, format="Total records written to ascii file = %d\n", numberof(lines(,1));
 }
 
 func read_ascii_xyz(ipath=,ifname=, no_lines=, header=, columns=){

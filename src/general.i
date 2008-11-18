@@ -239,12 +239,24 @@ func quartiles(ary) {
    Returns the first, second, and third quartiles for the array.
 
    See also: median
-
-   Original David Nagle 2008-03-26
 */
+// Original David Nagle 2008-03-26
    ary = ary(sort(ary));
    q1 = median(ary(:numberof(ary)/2));
    q2 = median(ary);
    q3 = median(ary(::-1)(:numberof(ary)/2));
    return [q1, q2, q3];
+}
+
+func bound(val, bmin, bmax) {
+/* bound(val, bmin, bmax)
+   Constrains a value to a set of bounds. Note that val can have any
+   dimensions.
+   
+   If bmin <= val <= bmax, then returns val
+   If val < bmin, then returns bmin
+   if bmax < val, then returns bmax
+*/
+// Original David Nagle 2008-11-18
+   return min(bmax, max(bmin, val));
 }

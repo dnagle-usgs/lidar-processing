@@ -662,31 +662,25 @@ namespace eval l1dir {
 	    } 
 	   
 
- 	    if {$ptype == 0} {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=FS, rn=$rnidx, soe=$soeindx, noheader=!$hline, latlon=$latlon; \r";
-	       expect ">"
-	    }
- 	    if {$ptype == 1} {
-	      if {$dtype == 0} {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=GEO, rn=$rnidx, soe=$soeindx, noheader=!$hline, latlon=$latlon; \r";
-	      } else {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=2, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=GEO, rn=$rnidx, soe=$soeindx, noheader=!hline, latlon=$latlon; \r";
-	      }
-	       expect ">"
-	    } 
- 	    if {$ptype == 2} {
-	      if {$dtype == 0} {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=VEG__, rn=$rnidx, soe=$soeindx, noheader=!$hline, latlon=$latlon; \r";
-	      } else {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=3, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=VEG__, rn=$rnidx, soe=$soeindx, noheader=!$hline, latlon=$latlon; \r";
-	      } 
-
-	      expect ">"
-	    }
- 	    if {$ptype == 3} {
- 	       exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=1, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=CVEG_ALL, rn=$rnidx, soe=$soeindx, noheader=!$hline, latlon=$latlon; \r";
-	       expect ">"
-	    }
+      set wtype ""
+      set pstruc ""
+      if {$ptype == 0} {
+         set wtype 1
+         set pstruc FS
+      } elseif {$ptype == 1} {
+         set wtype [expr {$dtype ? 2 : 1}]
+         set pstruc GEO
+      } elseif {$ptype == 2} {
+         set wtype [expr {$dtype ? 3 : 1}]
+         set pstruc VEG__
+      } elseif {$ptype == 3} {
+         set wtype 1
+         set pstruc CVEG_ALL
+      }
+      if { $wtype ne "" && $pstruc ne "" } {
+         exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=$wtype, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=$pstruc, rn=$rnidx, soe=$soeindx, header=$hline, latlon=$latlon;\r"
+         expect ">"
+      }
 	    #destroy .l1asc
 	  set write_some 0
 	 }
