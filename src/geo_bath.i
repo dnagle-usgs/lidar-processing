@@ -19,6 +19,7 @@ require, "rbgga.i"
 require, "drast.i"
 require, "nav.i"
 require, "rcf.i"
+require, "info.i"
 
 /* 
   This program is used to process bathymetry data  using the 
@@ -822,7 +823,7 @@ struct RASPULSESEARCH {
  
 
 
-func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset=, lmark=, bconst=, xyz_data=) {
+func raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset=, lmark=, bconst=, xyz_data=, tx=) {
 /* DOCUMENT raspulsearch(data,win=,buf=, cmin=, cmax=, msize=, disp_type=, ptype=, fset=)
 
   This function allows the user to click on an EAARL point cloud data plot and does the following:
@@ -853,6 +854,7 @@ This function can be invoked from the 'Process EAARL Data' GUI by clicking the '
 		set to 2 to show both waveforms (with and without constants).
         xyz_data = 3-d (x,y,z) data array representing ground truth data.  If this array is present, the function will search for the nearest xyz ground truth data point and print out the difference between the selected pixel and the ground truth point.  The search for the nearest ground truth point will be only within 5m of the selected point.
 
+  tx= display 10 transmit waveform if non-zero, starting with the supplied value.
 
   Returns:
 	Array mindata.  mindata is an array of type 'ptype' that includes all the data points selected in this iteration.
@@ -1101,10 +1103,27 @@ write,"============================================================="
  if (is_array(edb)) {
    somd = edb(mindata.rn&0xffffff ).seconds % 86400; 
    rast  = decode_raster(get_erast( rn=rasterno ));
+   
+// XYZZY rwm 2008-11-10
+// plot tx waveform.
+   if ( tx > 0 ) {
+      window,2
+      fma;
+      for (j = tx; j <= tx+10; j++) {
+         plg,*rast.tx(j);
+      }
+      limits, 0, 16, 0, 255
+   }
+// end XYZZY
+
    fsecs = rast.offset_time - edb(mindata.rn&0xffffff ).seconds ;
    ztime = soe2time( somd );
    zdt   = soe2time( abs(edb( mindata.rn&0xffffff ).seconds - _last_soe) );
  }
+
+if ( 1 ) {
+   dump_info, edb, mindata, minindx, last=_last_rastpulse, ref=_rastpulse_reference;
+} else {   //  STARTBLOCK
  if (is_array(tans) && is_array(pnav)) {
    pnav_idx = abs( pnav.sod - somd)(mnx);
    tans_idx = abs( tans.somd - somd)(mnx);
@@ -1113,6 +1132,7 @@ write,"============================================================="
                  3600.0/abs(pnav(pnav_idx+1).sod - pnav(pnav_idx).sod);
  }
 
+// XYZZY - Start of text dump
  write,format="        Indx: %4d Raster/Pulse: %d/%d UTM: %7.1f, %7.1f\n", 
  	       blockindx,
                mindata.rn&0xffffff,
@@ -1163,6 +1183,9 @@ write,"============================================================="
 		mindata.lelv/100.,
 		mindata.lelv/100.-_last_rastpulse(4)/100.
  }
+
+// XYZZY - end of text dump
+}  // ENDBLOCK - if dump_info works, this block can be removed.
 
    if ( (mouse_button == center_mouse)  ) {
      _rastpulse_reference = array(double, 4);
