@@ -30,8 +30,13 @@ func fs2pnav(fs) {
   N = numberof(fs);
   pn = array(PNAV, N);
   ll = utm2ll(fs.north/100., fs.east/100., curzone);
-  pn.lat = ll(,2);
-  pn.lon = ll(,1);
+  if ( N > 1 ) {
+    pn.lat = ll(,2);
+    pn.lon = ll(,1);
+  } else {
+    pn.lat = ll(2,);
+    pn.lon = ll(1,);
+  }
 
   return(pn);
 

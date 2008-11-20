@@ -839,6 +839,7 @@ func show_track ( pn, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, wid
   	/* convert latlon to utm */
 	u = fll2utm(y, x);
 	// check to see if data crosses utm zones
+  if ( numberof(pn) > 1 )
 	zd = where(abs(u(3,)(dif)) > 0);
 	//if (is_void(curzone)) curzone = 0;
 	if (is_array(zd)) {
