@@ -90,6 +90,7 @@ See also: transect, _transect_history
 */
 
  extern _transect_history;
+ extern transect_line;
 
 
  if ( is_void(rtn)   )    rtn = 0;		// default is first return
@@ -107,7 +108,8 @@ See also: transect, _transect_history
  window,iwin;
  if ( is_void(recall) ) {
 // get the line coords with the mouse and convert to cm
-  l = mouse(1, 2, "")(1:4)*100.0;
+  transect_line = mouse(1, 2, "")(1:4)*100.0;
+  l = transect_line;   // just to keep the equations short;
   if (show)
     plg, [l(2),l(4)]/100., [l(1),l(3)]/100., width=2.0, color="red";
   grow, _transect_history, [l]
@@ -123,6 +125,10 @@ See also: transect, _transect_history
    // plot the actual points selected onto the input window
    if (show == 2 )
      show_fstrack,fs(glst), utm=1, skip=0, color="red", lines=0, win=iwin;
+  if (show == 3 ) {   // this only redraws the last transect selected.
+    window,iwin;
+    plg, [transect_line(2),transect_line(4)]/100., [transect_line(1),transect_line(3)]/100., width=2.0, color="red";
+  }
   window,owin;
   if ( is_void(recall) ) {
         limits
@@ -156,7 +162,7 @@ Input:
  See also: mtransact, _transect_history
 
 */
-  extern rx, elevation, glst, llst;
+  extern rx, elevation, glst, llst, segs;
 
 
  if ( is_void(rtn)   )    rtn = 0;		// default is first return
