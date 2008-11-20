@@ -180,15 +180,13 @@ proc initialize_globals {} {
 }
 
 proc establish_fifos {} {
-   global ytk_fifo_name tky_fifo_name rn tkcmd_line
+   global ytk_fifo_name tky_fifo_name rn tkcmd_line ytk_fifo tky_fifo
    # fifo name for data coming from yorick.
    set ytk_fifo_name "/tmp/ytkfifo.[pid]"
 
    # fifo name for special data going to yorick.
    set tky_fifo_name "/tmp/tkyfifo.[pid]"
-
    set rn 1
-
    set tkcmd_line 0
 
    # Establish fifo for communications from Yorick ---> tcl/tk
@@ -209,7 +207,7 @@ proc establish_fifos {} {
 }
 
 proc ytk_fifo_fileevent {} {
-   global tkcmd_line
+   global tkcmd_line ytk_fifo
    incr tkcmd_line
    set ycmdstr [gets $ytk_fifo]
    .tx.doc insert end "$tkcmd_line:$ycmdstr\n"
