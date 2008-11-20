@@ -72,6 +72,7 @@ func ndrast( r, units= ) {
 
   aa = array( short(255), 250, 120, 3);
 
+
  npix = r.npixels(1) 
  somd = (rr.soe - soe_day_start)(1);
  hms = sod2hms(somd);
@@ -112,7 +113,7 @@ func ndrast( r, units= ) {
 
  } else if ( units == "meters" ) {
     pli, -transpose(aa(,,1)), 1,4*CNSH2O2X, 121, -244 * CNSH2O2X
-    xytitles,swrite(format="Somd:%7d HMS:%2d%2d%2d Rn:%d  Pixel #", somd,hms(1),hms(2),hms(3),rn), 
+    xytitles,swrite(format="Somd:%7d HMS:%2d%02d%02d Rn:%d  Pixel #", somd,hms(1),hms(2),hms(3),rn), 
         "Water depth (meters)"
 
  } else if ( units == "feet" ) {
