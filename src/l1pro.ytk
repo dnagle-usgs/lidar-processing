@@ -124,6 +124,7 @@ menu .l1wid.mb.options
 menu .l1wid.mb.graph
 menu .l1wid.mb.post
 menu .l1wid.mb.cmd 
+menu .l1wid.mb.diag 
 .l1wid.mb   add cascade -label File -underline 0 -menu .l1wid.mb.file
 
 .l1wid.mb.file add command -label "Read Binary Data file..." -underline 0 -command {
@@ -1255,6 +1256,13 @@ proc hist_linlog {} {
  .l1wid.mb.cmd add command -label "batch_write_xyz" -command {  
       exp_send "require, \"batch_process.i\"; help,batch_write_xyz\r" 
  }
+
+
+.l1wid.mb add cascade -label Diagnostics -underline 0 -menu .l1wid.mb.diag
+
+.l1wid.mb.diag add command -label "transrch" -command {
+       source "$src_path/transrch.ytk"
+}
 
 proc rcf_region {} {
     global varlist l1pro_data
