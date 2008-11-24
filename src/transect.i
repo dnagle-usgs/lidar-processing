@@ -56,7 +56,7 @@ Input:
   w=         :  Search distance from line in centimeters. Default is 150cm
   connect=   :  Set to 1 to connect the points.
   recall=    :  Used to recall a previously generated transact line.
-  color=     :  The starting color 0:7, use negative to use only 1 color
+  color=     :  The starting color 1:7, use negative to use only 1 color
   xfma=      :  Set to 1 to auto fma.
   rtn=       :  Select return type where:
                 0  first return
@@ -100,8 +100,9 @@ See also: transect, _transect_history
  if ( is_void(iwin))       iwin = 5;
  if ( is_void(msize))     msize = 0.1;
  if ( is_void(xfma))        xfma= 0;
- if ( is_void(color))      color= 1;
+ if ( is_void(color))      color= 2;  // start at red, not black
  if ( is_void(rcf_parms))   rcf_parms = [];
+
 
  window,owin;
  lmts = limits();
@@ -121,6 +122,7 @@ See also: transect, _transect_history
   if ( recall > 0 ) recall = -recall;
   l = _transect_history(, recall);
  }
+  // if ( color > 0 ) --color;  // XYZZY adjust for nsegs starting at 1
   glst = transect( fs, l, connect=connect, color=color,xfma=xfma, rcf_parms=rcf_parms,rtn=rtn, owin=owin, lw=w, msize=msize );
    // plot the actual points selected onto the input window
    if (show == 2 )
@@ -149,7 +151,7 @@ Input:
   xtime=     :  Set to 1 to plot against time (sod)
   xfma=      :  Set to 1 to clear screen
   owin=      :  Set output window
-  color=     :  Select starting color, 0-7, use negative to use only 1 color
+  color=     :  Select starting color, 1-7, use negative to use only 1 color
   rcf_parms= :  [fw,np]  RCF the data where:
                 fw is the width of the filter
                 np is the number of points on either side of the index
@@ -167,7 +169,7 @@ Input:
 
  if ( is_void(rtn)   )    rtn = 0;		// default is first return
  if ( is_void(lw)    )    lw = 150;		// search width, cm
- if ( is_void(color) ) color = 0;		// 0 is first color
+ if ( is_void(color) ) color = 1;		// 1 is first color
  if ( is_void(owin)   )   owin = 3;
  if ( is_void(msize) ) msize = 0.1;
  window,wait=1;
@@ -263,7 +265,8 @@ Input:
    c = color;
    msum=0;
    for (i=1; i<numberof(ss); i++ ) {
-      if ( c > 0 ) c = (color+i)&7;
+      if ( c >= 0 ) c = ((color+(i-1))%7);
+//    write, format="%d: %d %2d %2d %d  ", c, color, i, color+i, ((color+i)%7);
    soeb = fs.soe(*)(glst(llst)(ss(i)+1));
       t = soe2time( soeb );
      tb = fs.soe(*)(glst(llst)(ss(i)+1))%86400;
