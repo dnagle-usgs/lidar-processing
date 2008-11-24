@@ -10,6 +10,7 @@ func confload(path) {
 		if (n) fn_all = s(fp:lp);
 		fp = fp + n;
 	}
+
 	if (!is_array(fn_all)) {write, "set conflist \"No Files Found\"";return;}
 	if (split_path(fn_all(1), -1)(2) != split_path(fn_all(1), 2)(2)) {
 		tkcmd, "set conflist \""+split_path(fn_all(1), -1)(2)+"\"";
@@ -89,7 +90,7 @@ func load_this_conf(confile) {
 		}
 		limits, mine, maxe, minn, maxn;
 	} else limits;
-	show_gga_track, color="blue", skip=0,marker=0,msize=.1, utm=1, win=6;
+	show_gga_track, color="red", skip=0,marker=0,msize=.1, utm=1, win=6;
 	utm=1;
 	write, "***** LOADING OPS_CONF SETTINGS";
 	include, fn_ops;
