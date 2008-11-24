@@ -45,6 +45,8 @@ transrch, cln_fs, fs, llst
 */
 
    extern mindata;
+   extern _last_transrch;
+   if ( is_void(_last_transrch ) ) _last_transrch = [0.0, 0.0, 0.0, 0.0];
 
    window,3;  // xyzzy - this assumes the default iwin for transect;
    // m is the result from mtransect();
