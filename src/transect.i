@@ -34,7 +34,7 @@ to recall the one before last, use:
 
 */
 
-func mtransect( fs, iwin=, owin=, w=, connect=, recall=, color=, xfma=, rcf_parms=, rtn=, show=, msize= ) {
+func mtransect( fs, iwin=, owin=, w=, connect=, recall=, color=, xfma=, rcf_parms=, rtn=, show=, msize=, exp= ) {
 /* DOCUMENT mtransect( fs, iwin= ,owin=, w=, connect=, recall=, color=, xfma= )
 
 Mouse selected transect
@@ -137,6 +137,8 @@ See also: transect, _transect_history
 	limits,,, cbar.cmin, cbar.cmax
   } else
 	limits(lmts(1),lmts(2), lmts(3), lmts(4));
+   if ( ! is_void ( exp ) )
+      write, format="%s\n", "END mtransect:";
   return glst;
 }
 
