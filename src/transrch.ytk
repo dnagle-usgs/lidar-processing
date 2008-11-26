@@ -263,10 +263,10 @@ proc run_mt { id } {
    set fma_var [subst \$trans_xfma$id]
 #  set fma_var [lindex $fma_list      [$tw.f2$id.fmaval    getvalue]]
 
-   puts "m=mtransect( $src_var, xfma=$fma_var show=$shw_var, w=$wdt_var, recall=$rcl_var, color=$col_var )"
-#  exp_send "m$id=mtransect( $src_var, xfma=$fma_var, show=$shw_var, w=$wdt_var, recall=$rcl_var, color=$col_var, exp=1 )\r"
-#  expect "END mtransect:"
-#  exp_send "llst$id=llst;rx$id=rx;elevation$id=elevation\r"
+#   puts "m=mtransect( $src_var, xfma=$fma_var show=$shw_var, w=$wdt_var, recall=$rcl_var, color=$col_var )"
+   exp_send "m$id=mtransect( $src_var, xfma=$fma_var, show=$shw_var, w=$wdt_var, recall=$rcl_var, color=$col_var, exp=1 )\r"
+   expect "END mtransect:"
+   exp_send "llst$id=llst;rx$id=rx;elevation$id=elevation\r"
 }
 
 proc create_transbuttons { cnt } {
