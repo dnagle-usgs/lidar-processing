@@ -2,10 +2,9 @@
 #
 # $Id$
 #
-# 2008-11-21:  Interface to mtransect mtransrch
+# 2008-11-21:  Interface to mtransect, mtransrch, and show_fstrack
 #
 
-# XYZZY uncomment this later
 exp_send "require, \"transrch.i\"\r"
 
 ############################################################
@@ -15,6 +14,7 @@ set  width_list   { 50 100 150 200 250 300 }
 set  color_list   {-7 -6 -5 -4 -3 -2 -1  1 2 3 4 5 6 7 }
 set recall_list   { "" 0 1 2 3 }
 set   show_list   { "" 1 2 3 }
+set    fma_list   { 0 1 }
 
 set fstrack_list  { gt_fs gt_fsall }
 set     utm_list  { 0 1 }
@@ -25,24 +25,18 @@ set   cname_list  { "black" "red" "blue" "green" "yellow" "magenta" "cyan" }
 
 global varlist;
 
-set var_no       1
-set trans_var_no 1
-set trans_xfma   1
+# number of mtransect frames to generate
+set Xcnt         3
 
-############################################################
-
-
-# Center window
-proc center_win { win } {
-   set lx [ expr [winfo screenwidth  $win]/2 - [winfo width  $win]/2 ]
-   set ly [ expr [winfo screenheight $win]/2 - [winfo height $win]/2 ]
-   wm geometry $win "+$lx+$ly"
-   wm deiconify $win
-   update
+proc create_vars { cnt } {
+   global Xcnt
+   for { set i 1 } { $i <= $Xcnt } { incr i 1 } {
+      set var_no$i       1
+      set trans_var_no$i 1
+      set trans_xfma$i   1
+   }
 }
-
-
-############################################################
+create_vars $Xcnt
 
 proc show_trans_varlist {} {
    global    tv              # window name, must be declared global before setting
@@ -66,17 +60,17 @@ proc show_trans_varlist {} {
 
 
    listbox $tv.f1.lb -selectmode single -width 12 \
-    -xscrollcommand "$tv.f1.xscroll set" \
-    -yscrollcommand "$tv.f1.yscroll set"
+      -xscrollcommand "$tv.f1.xscroll set" \
+      -yscrollcommand "$tv.f1.yscroll set"
    scrollbar $tv.f1.xscroll -orient horizontal -command [list $tv.f1.lb xview]
    scrollbar $tv.f1.yscroll -command [list $tv.f1.lb yview]
    for { set i 0 } { $i<[llength $trans_varlist] } {incr i} {
-    $tv.f1.lb insert end [lindex $trans_varlist $i]
+      $tv.f1.lb insert end [lindex $trans_varlist $i]
    }
 
    Button $tv.f2.select -text "Select" -command {
     set trans_var [lindex $trans_varlist [$tv.f1.lb curselection]]
-    $tw.f2.cln_vars setvalue @[$tv.f1.lb curselection]
+    $tw.f21.cln_vars setvalue @[$tv.f1.lb curselection]
    }
 
    Button $tv.f2.dismiss -text "Dismiss" -command {
@@ -93,26 +87,31 @@ proc show_trans_varlist {} {
 }
 
 proc append_trans_varlist {newvar} {
-  global tw tv trans_varlist plist
+   global tw tv trans_varlist plist Xcnt
 
-  ## save previous variable's constants in plist
-  set curvar  [lindex $trans_varlist [$tw.f2.cln_vars getvalue]]
-  set lslth [expr ([lsearch -exact $trans_varlist $curvar] + 1)]
+   ## save previous variable's constants in plist
+   for { set i 1 } { $i <= $Xcnt } { incr i 1 } {
+      set curvar  [lindex $trans_varlist [$tw.f2$i.cln_vars getvalue]]
+   }
+   set lslth [expr ([lsearch -exact $trans_varlist $curvar] + 1)]
 
-  if {[lsearch -exact $trans_varlist $newvar] == -1} {
+   if {[lsearch -exact $trans_varlist $newvar] == -1} {
       lappend trans_varlist $newvar
       ## save current constants to $newvar
       set lslth [expr ( [llength $trans_varlist] -1 )]
-      $tw.f2.cln_vars configure -values $trans_varlist
+      for { set i 1 } { $i <= $Xcnt } { incr i 1 } {
+         $tw.f2$i.cln_vars configure -values $trans_varlist
+      }
       # 2008-11-24: this line started to cause problems and it
       # seems to work without it, but that could be an artifact
-      # of something else.
-      # $tv.f1.lb insert end $newvar
-  } else {
-     ## save current constants to $newvar even if it exists
-     set lslth [expr ([lsearch -exact $trans_varlist $newvar] + 0)]
-  }
-  return $lslth
+      # of something else. - works again and is needed to manually
+      # add variables
+      $tv.f1.lb insert end $newvar
+   } else {
+      ## save current constants to $newvar even if it exists
+      set lslth [expr ([lsearch -exact $trans_varlist $newvar] + 0)]
+   }
+   return $lslth
 }
 
 
@@ -120,9 +119,10 @@ proc append_trans_varlist {newvar} {
 # main
 ############################################################
 
-set data_path "/data/0"
+# set data_path "/data/0"
 set src_path [ file dirname [ info script ] ]
-cd $src_path
+source "$src_path/gui_procs.ytk";
+# cd $src_path
 
 # Main Window
 set      mw .trans
@@ -130,24 +130,41 @@ global   mw
 destroy $mw
 
 toplevel $mw
-   wm title $mw "Transect Processing"
+wm title $mw "Transect Processing"
 
-# Transect frame
-set        tw  .trans.tw
-   frame  $tw  -relief groove -borderwidth 3
-   frame  $tw.f1
-   frame  $tw.f2
+set    tw  .trans.tw
+destroy $tw
+frame  $tw  -relief groove -borderwidth 3
+frame  $tw.f1
+
+proc create_transframes { cnt } {
+
+   global tw
+   # Transect frame
+   for { set i 1 } { $i <= $cnt } { incr i 1 } {
+      frame  $tw.f2$i
+   }
    frame  $tw.f3
    frame  $tw.f4
-# -relief groove -borderwidth 3
+   # -relief groove -borderwidth 3
 
-pack          \
-   $tw        \
-   $tw.f1     \
-   $tw.f2     \
-   $tw.f3     \
-   $tw.f4     \
-   -side top -fill x -padx 2
+   pack          \
+      $tw        \
+      $tw.f1     \
+      -side top -fill x -padx 2
+
+   for { set i 1 } { $i <= $cnt } { incr i 1 } {
+      pack        \
+         $tw.f2$i \
+         -side top -fill x -padx 2
+   }
+   pack          \
+      $tw.f4     \
+      $tw.f3     \
+      -side top -fill x -padx 2
+}
+create_transframes  $Xcnt
+
 
 # plot track frame
 set       pf   .trans.pf
@@ -164,44 +181,49 @@ pack          \
 
 ############################################################
 # Menu Bar
-$mw configure -menu $mw.mb
-   menu $mw.mb
-   menu $mw.mb.file
-   menu $mw.mb.process
+proc create_menubar {} {
+   $mw configure -menu $mw.mb
+      menu $mw.mb
+      menu $mw.mb.file
+      menu $mw.mb.process
 
 #####################
-$mw.mb add cascade -label File -underline 0 -menu $mw.mb.file
+   $mw.mb add cascade -label File -underline 0 -menu $mw.mb.file
 
-$mw.mb.file add command -label "Load" -command {
-   puts "load something"
-}
+   $mw.mb.file add command -label "Load" -command {
+      puts "load something"
+   }
 
-$mw.mb.file add command -label "Save" -command {
-   puts "save something"
-}
+   $mw.mb.file add command -label "Save" -command {
+      puts "save something"
+   }
 
-$mw.mb.file add command -label "Dismiss" -command {
-   destroy $mw
-}
+   $mw.mb.file add command -label "Dismiss" -command {
+      destroy $mw
+   }
 #####################
-$mw.mb add cascade -label Process -underline 0 -menu $mw.mb.process
+   $mw.mb add cascade -label Process -underline 0 -menu $mw.mb.process
 
-$mw.mb.process add command -label "Run" -command {
-   puts "Process something"
+   $mw.mb.process add command -label "Run" -command {
+      puts "Process something"
+   }
 }
+
+
 
 ############################################################
 # Transect Frame / Frame 1
-Button $tw.f1.clean -text "      Clean:" -command {
+Button $tw.f1.clean -text "      Clean:" -activebackground grey -command {
 
     set src_var [lindex $varlist [$tw.f1.src_vars getvalue]]
     set dst_var "cln_$src_var"
     set rv [append_trans_varlist $dst_var]
 
    exp_send "$dst_var = test_and_clean( $src_var )\r"
-   $tw.f2.cln_vars setvalue @$rv
+   $tw.f21.cln_vars setvalue @$rv
 }
 pack $tw.f1.clean -side left -fill x -padx 2
+setTooltip $tw.f1.clean "Data must be converted\nto FS before using\nwith the functions below"
 
 
 ComboBox $tw.f1.src_vars -values \
@@ -210,20 +232,18 @@ ComboBox $tw.f1.src_vars -values \
    -editable 0 \
    -width 10 \
    -modifycmd {
-      global cbv
-      set var_no   [ $tw.f1.src_vars getvalue ]
+      set var_no1   [ $tw.f1.src_vars getvalue ]
       # set var_type [lindex $varlist $var_no ]
    } \
    -postcommand {
-      global cbv
-      set var_no   [ $tw.f1.src_vars getvalue ]
+      set var_no1   [ $tw.f1.src_vars getvalue ]
       # set var_type [ lindex $varlist $var_no ]
    }
    $tw.f1.src_vars setvalue first
 pack $tw.f1.src_vars -side left -fill x -padx 2
 
 
-Button $tw.f1.toVarMenu -text "mtransect variables" -command {
+Button $tw.f1.toVarMenu -text "mtransect variables" -activebackground grey -command {
    show_trans_varlist
 }
 pack $tw.f1.toVarMenu -side left -fill x -padx 2
@@ -232,94 +252,138 @@ pack $tw.f1.toVarMenu -side left -fill x -padx 2
 ############################################################
 # Transect Frame / Frame 2
 
-Button $tw.f2.process -text "mtransect" -command {
+proc run_mt { id } {
+   global tw trans_varlist fma_list show_list width_list color_list recall_list trans_xfma$id
 
-   set src_var [lindex $trans_varlist [$tw.f2.cln_vars  getvalue]]
-   set shw_var [lindex $show_list     [$tw.f2.showval   getvalue]]
-   set wdt_var [lindex $width_list    [$tw.f2.widthval  getvalue]]
-   set col_var [lindex $color_list    [$tw.f2.colorval  getvalue]]
-   set rcl_var [lindex $recall_list   [$tw.f2.recallval getvalue]]
+   set src_var [lindex $trans_varlist [$tw.f2$id.cln_vars  getvalue]]
+   set shw_var [lindex $show_list     [$tw.f2$id.showval   getvalue]]
+   set wdt_var [lindex $width_list    [$tw.f2$id.widthval  getvalue]]
+   set col_var [lindex $color_list    [$tw.f2$id.colorval  getvalue]]
+   set rcl_var [lindex $recall_list   [$tw.f2$id.recallval getvalue]]
+   set fma_var [subst \$trans_xfma$id]
+#  set fma_var [lindex $fma_list      [$tw.f2$id.fmaval    getvalue]]
 
-   exp_send "m=mtransect( $src_var, xfma=$trans_xfma, show=$shw_var, w=$wdt_var, recall=$rcl_var, color=$col_var )\r"
+   puts "m=mtransect( $src_var, xfma=$fma_var show=$shw_var, w=$wdt_var, recall=$rcl_var, color=$col_var )"
+#  exp_send "m$id=mtransect( $src_var, xfma=$fma_var, show=$shw_var, w=$wdt_var, recall=$rcl_var, color=$col_var, exp=1 )\r"
+#  expect "END mtransect:"
+#  exp_send "llst$id=llst;rx$id=rx;elevation$id=elevation\r"
 }
-pack $tw.f2.process -side left -fill x -padx 2
+
+proc create_transbuttons { cnt } {
+   global tw trans_varlist fma_list show_list width_list color_list recall_list
+
+   for { set tbi 1 } { $tbi <= $cnt } { incr tbi 1 } {
+
+      if { $tbi == 1 } {
+         Button $tw.f2$tbi.process -text "mtransect $tbi" -command "run_mt $tbi" \
+            -bg azure3 -activebackground azure4
+         setTooltip $tw.f2$tbi.process "This transect can be\nqueried using the\ntransrch and mtransrch\nbuttons below"
+      } else {
+         Button $tw.f2$tbi.process -text "mtransect $tbi" -command "run_mt $tbi" \
+         -activebackground grey
+      }
+
+      pack $tw.f2$tbi.process -side left -fill x -padx 2
 
 
-ComboBox $tw.f2.cln_vars -values \
-   $trans_varlist \
-   -helptext "Select any one o fthe following variables" \
-   -editable 0 \
-   -width 10 \
-   -modifycmd {
-      global cbv
-      set trans_var_no   [ $tw.f2.cln_vars getvalue ]
-      # set var_type [lindex $trans_varlist $trans_var_no ]
-   } \
-   -postcommand {
-      global cbv
-      set trans_var_no   [ $tw.f2.cln_vars getvalue ]
-      # set var_type [ lindex $trans_varlist $trans_var_no ]
-   }
-   $tw.f2.cln_vars setvalue first
-pack $tw.f2.cln_vars -side left -fill x -padx 2
+      ComboBox $tw.f2$tbi.cln_vars -values \
+         $trans_varlist \
+         -helptext "Select any one of the following variables" \
+         -editable 0 \
+         -width 10 \
+         -modifycmd {
+            # set trans_var_no1   [ $tw.f21.cln_vars getvalue ]
+            # set var_type [lindex $trans_varlist $trans_var_no ]
+         } \
+         -postcommand {
+            # set trans_var_no1   [ $tw.f21.cln_vars getvalue ]
+            # set var_type [ lindex $trans_varlist $trans_var_no ]
+            # puts "trans_var_no = $trans_var_no1"
+         }
+      $tw.f2$tbi.cln_vars setvalue @1
+      pack $tw.f2$tbi.cln_vars -side left -fill x -padx 2
 
-checkbutton $tw.f2.fma -text "xfma" -variable trans_xfma
-pack $tw.f2.fma -side left -fill x -padx 2
-
-
-Label $tw.f2.show -text "show="
-ComboBox $tw.f2.showval -values $show_list \
-   -helptext " : No display\n1: Display User selection\n2: Display found points" \
-   -editable 0 \
-   -width 2
-   $tw.f2.showval setvalue @1
-pack $tw.f2.show $tw.f2.showval -side left -fill x -padx 2
+      west checkbutton $tw.f2$tbi.fma -text "xfma" -variable trans_xfma$tbi
+      pack $tw.f2$tbi.fma -side left -fill x -padx 2
 
 
-Label $tw.f2.width -text "w="
-ComboBox $tw.f2.widthval -values $width_list \
-   -helptext "Select swath width" \
-   -editable 0 \
-   -width 3
-   $tw.f2.widthval setvalue @1
-pack $tw.f2.width $tw.f2.widthval -side left -fill x -padx 2
+#     Label $tw.f2$tbi.fma -text "xfma="
+#     ComboBox $tw.f2$tbi.fmaval -values $fma_list \
+#        -helptext "0: overwrite graph\n1: clear window" \
+#        -editable 0 \
+#        -width 1
+#        $tw.f2$tbi.fmaval setvalue @1
+#     pack $tw.f2$tbi.fma $tw.f2$tbi.fmaval -side left -fill x -padx 2
 
-Label $tw.f2.recall -text "recall="
-ComboBox $tw.f2.recallval -values $recall_list \
-   -helptext "0: Recall previous transect\n1: recall transect before that" \
-   -editable 0 \
-   -width 2
-   $tw.f2.recallval setvalue first
-pack $tw.f2.recall $tw.f2.recallval -side left -fill x -padx 2
+      Label $tw.f2$tbi.show -text "show="
+      ComboBox $tw.f2$tbi.showval -values $show_list \
+         -helptext " : No display\n1: Display User selection\n2: Display found points" \
+         -editable 0 \
+         -width 2
+         $tw.f2$tbi.showval setvalue @1
+      pack $tw.f2$tbi.show $tw.f2$tbi.showval -side left -fill x -padx 2
 
-Label $tw.f2.color -text "color="
-ComboBox $tw.f2.colorval -values $color_list \
-   -helptext "-2: All Red\n-1: All Black\n0: Black First\n1: Red First\n2: Blue First\n3: Green First\n4: Yellow First\n5: Magenta First\n6: Cyan First\n" \
-   -editable 0 \
-   -width 2
-   $tw.f2.colorval setvalue @8
-pack $tw.f2.color $tw.f2.colorval -side left -fill x -padx 2
+
+      Label $tw.f2$tbi.width -text "w="
+      ComboBox $tw.f2$tbi.widthval -values $width_list \
+         -helptext "Select swath width" \
+         -editable 0 \
+         -width 3
+         $tw.f2$tbi.widthval setvalue @1
+      pack $tw.f2$tbi.width $tw.f2$tbi.widthval -side left -fill x -padx 2
+
+      Label $tw.f2$tbi.recall -text "recall="
+      ComboBox $tw.f2$tbi.recallval -values $recall_list \
+         -helptext "0: Recall previous transect\n1: recall transect before that" \
+         -editable 0 \
+         -width 2
+         $tw.f2$tbi.recallval setvalue first
+      pack $tw.f2$tbi.recall $tw.f2$tbi.recallval -side left -fill x -padx 2
+
+      Label $tw.f2$tbi.color -text "color="
+      ComboBox $tw.f2$tbi.colorval -values $color_list \
+         -helptext "-2: All Red\n-1: All Black\n0: Black First\n1: Red First\n2: Blue First\n3: Green First\n4: Yellow First\n5: Magenta First\n6: Cyan First\n" \
+         -editable 0 \
+         -width 2
+         $tw.f2$tbi.colorval setvalue @8
+      pack $tw.f2$tbi.color $tw.f2$tbi.colorval -side left -fill x -padx 2
+  }
+}
+
+create_transbuttons $Xcnt
 
 ############################################################
 # Transect Frame / Frame 3
 
-Button $tw.f3.transrch -text "   transrch" -command {
-   set  fs_var [lindex $trans_varlist     [$tw.f2.cln_vars   getvalue]]
-   exp_send "transrch, $fs_var, m, llst\r"
+Button $tw.f3.transrch -text "   transrch" -bg azure3 -activebackground azure4 -command {
+   set  fs_var [lindex $trans_varlist     [$tw.f21.cln_vars   getvalue]]
+   exp_send "transrch, $fs_var, m1, llst1, _rx=rx1, _el=elevation1\r"
 }
 pack $tw.f3.transrch -side left -fill x -padx 2
+setTooltip $tw.f3.transrch  {
+Click on a point in the transect plot window.
 
-Button $tw.f3.mtransrch -text "mtransrch" -command {
-   set  fs_var [lindex $trans_varlist     [$tw.f2.cln_vars   getvalue]]
-   exp_send "mtransrch, $fs_var, m, llst\r"
+Displays information on a point from the
+mtransect 1 plot.
+}
+
+Button $tw.f3.mtransrch -text "mtransrch" -bg azure3 -activebackground azure4 -command {
+   set  fs_var [lindex $trans_varlist     [$tw.f21.cln_vars   getvalue]]
+   exp_send "mtransrch, $fs_var, m1, llst1, _rx=rx1, _el=elevation1\r"
 }
 pack $tw.f3.mtransrch -side left -fill x -padx 2
+setTooltip $tw.f3.mtransrch {
+Click on points in the transect plot window.
+
+Display information on multiple points from
+the mtransect 1 plot.
+}
 
 
 ############################################################
 # Plot Frame / Frame 1
 
-Button $pf.f1.show_fstrack -text "show_fstrack" -command {
+Button $pf.f1.show_fstrack -text "show_fstrack" -activebackground grey -command {
    set  fs_var [lindex $fstrack_list     [$pf.f1.fsval   getvalue]]
    set utm_var [lindex   $utm_list        [$pf.f1.utmval  getvalue]]
    set skp_var [lindex  $skip_list        [$pf.f1.skipval  getvalue]]
@@ -331,6 +395,7 @@ Button $pf.f1.show_fstrack -text "show_fstrack" -command {
    
 }
 pack $pf.f1.show_fstrack -side left -fill x -padx 2
+setTooltip $pf.f1.show_fstrack "Displays positions from\ndata in specified window"
 
 
 Label $pf.f1.fs -text "FS:"
