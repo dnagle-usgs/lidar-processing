@@ -17,7 +17,7 @@
   clr = ["black", "red", "blue", "green", "magenta", "yellow", "cyan" ];
 
 
-func transrch( fs, m, llst, spot= ) {
+func transrch( fs, m, llst, _rx=, _el=, spot= ) {
 /* DOCUMENT  transrch(fs, m)
 Searches for the point in the transect plot window (3) nearest to where
 the user clicks. 
@@ -46,7 +46,9 @@ transrch, cln_fs, fs, llst
 
    extern mindata;
    extern _last_transrch;
-   if ( is_void(_last_transrch ) ) _last_transrch = [0.0, 0.0, 0.0, 0.0];
+   if ( ! is_void( _rx ) ) rx = _rx;
+   if ( ! is_void( _el ) ) elevation = _el;
+   if ( is_void( _last_transrch ) ) _last_transrch = [0.0, 0.0, 0.0, 0.0];
 
    window,3;  // xyzzy - this assumes the default iwin for transect;
    // m is the result from mtransect();
@@ -108,7 +110,9 @@ plg, y, x, width=9.0, color="blue";
    // redraw it in that color.
 
    // Made segs extern in transect.i
-   // segs = where(abs(fs.soe(m)(dif)) > 5.0 );
+   // 2008-11-25: wonder why i did that.  must be computed here so we can
+   // have multiple transects - rwm
+   segs = where(abs(fs.soe(m)(dif)) > 5.0 );
    for (i=1, col=0; i<=numberof(segs); ++i) {     // there must be a better way.
      if (segs(i) < minindx )
        col = i;
@@ -152,7 +156,7 @@ plg, y, x, width=9.0, color="blue";
 
 }
 
-func mtransrch( fs, m, llst ) {
+func mtransrch( fs, m, llst, _rx=, _el=, spot= ) {
 /* DOCUMENT  mtransrch( fs, m, llst )
   Call transrch repeatedly until the user clicks the right mouse button.
   Should work similar to Pixel Waveform
@@ -208,7 +212,7 @@ mtransrch, cln_fs, fs, llst
           ++nsaved;
       }
 
-      transrch, fs, m, llst, spot=spot;
+      transrch, fs, m, llst, _rx=_rx, _el=_el, spot=spot;
 
       if ( mouse_button == center_mouse || mouse_button == shift_mouse ) {
         _transrch_reference = array(double, 4);
