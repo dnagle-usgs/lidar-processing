@@ -761,19 +761,6 @@ date
 
 
 func show_gga_track (x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, width=, win=   )  {
-
-  show_track ( pnav, x=x, y=y, color=color,  skip=skip, msize=msize, marker=marker, lines=lines, utm=utm, width=width, win=win   ) ;
-}
-
-func show_fstrack ( fs, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, width=, win=   )  {
-  pn = fs2pnav(fs);
-  show_track, pn, x=x, y=y, color=color,  skip=skip, msize=msize, marker=marker, lines=lines, utm=utm, width=width, win=win;
-}
-
-// 2008-11-06: just like show_gga_track, but the user specifies the pnav to plot
-// results are ugly when called just as show_track(pnav), needs to be:
-// show_track(pnav, color="red", skip=0, utm=1)
-func show_track ( pn, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, width=, win=   )  {
 /* DOCUMENT show_gga_track, x=,y=, color=, skip=, msize=, marker=, lines=
 
    Plot the GPS gga position lat/lon data in the current window.
@@ -805,10 +792,40 @@ func show_track ( pn, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, wid
    several missions and retain one in the global gga array.
    
 
-   See also: plmk, plg, color
+   See also: plmk, plg, color, show_track, show_pnav_track
+
+   This was the original function name, it now just calls show_pnav_track
 
 */
-  extern curzone;
+ 
+  show_pnav_track ( pnav, x=x, y=y, color=color,  skip=skip, msize=msize, marker=marker, lines=lines, utm=utm, width=width, win=win   ) ;
+}
+
+func show_track ( fs, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, width=, win=   )  {
+/* DOCUMENT show_track, fs, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, width=, win= 
+  fs can either be an FS or PNAV
+
+  See show_gga_track
+*/
+   a = structof(fs)
+  if ( a == FS) pn = fs2pnav(fs);
+  if ( a == PNAV) pn = fs;
+
+  show_pnav_track, pn, x=x, y=y, color=color,  skip=skip, msize=msize, marker=marker, lines=lines, utm=utm, width=width, win=win;
+}
+
+// 2008-11-06: this was the original show_gga_track, but added which data to plot as pn
+// results are ugly when called just as show_track(pnav), needs to be:
+// show_pnav_track(pnav, color="red", skip=0, utm=1)
+func show_pnav_track ( pn, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, width=, win=   )  {
+/* DOCUMENT func show_pnav_track, pn, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, width=, win= 
+
+  This was the original show_gga_track, but added which data to plot as the
+  first argument
+
+   See show_gga_track()
+*/
+ extern curzone;
 
   if ( is_void( win ) ) {
 	win = 6; 
