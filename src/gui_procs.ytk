@@ -1,0 +1,73 @@
+# vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent expandtab:
+#
+# $Id$
+#
+# 2008-11-26:  little procs to improve the interface
+
+
+############################################################
+# from: http://wiki.tcl.tk/1420
+# when using a checkbox or radio button, display the text on
+# the west side of the button instead of the east as is the default
+proc west {type w args} {
+   frame $w
+   set pos [lsearch $args -text]
+   if {$pos == -1} {
+      set text ""
+   } else {
+      set text [lindex $args [expr $pos+1]]
+      set args [lreplace $args $pos [incr pos]]
+   }
+   eval $type $w.r $args [list -text ""] -pady 0
+   label $w.t -text $text -pady 0
+   pack $w.t $w.r -side left -pady 0 -padx 0 -fill x -anchor e
+   set w
+} ;# RS
+
+############################################################
+# from: http://wiki.tcl.tk/1954
+# display popup tooltips.  this uses a bigger font and is more readable
+# than the default -helptext.
+proc setTooltip {widget text} {
+        if { $text != "" } {
+                # 2) Adjusted timings and added key and button bindings. These seem to
+                # make artifacts tolerably rare.
+                bind $widget <Any-Enter>    [list after 2500 [list showTooltip %W $text]]
+                bind $widget <Any-Leave>    [list after  500 [list destroy %W.tooltip]]
+                bind $widget <Any-KeyPress> [list after  500 [list destroy %W.tooltip]]
+                bind $widget <Any-Button>   [list after  500 [list destroy %W.tooltip]]
+        }
+ }
+ proc showTooltip {widget text} {
+        global tcl_platform
+        if { [string match $widget* [winfo containing  [winfo pointerx .] [winfo pointery .]] ] == 0  } {
+                return
+        }
+
+        catch { destroy $widget.tooltip }
+
+        set scrh [winfo screenheight $widget]    ; # 1) flashing window fix
+        set scrw [winfo screenwidth $widget]     ; # 1) flashing window fix
+        set tooltip [toplevel $widget.tooltip -bd 1 -bg black]
+        wm geometry $tooltip +$scrh+$scrw        ; # 1) flashing window fix
+        wm overrideredirect $tooltip 1
+
+        if {$tcl_platform(platform) == {windows}} { ; # 3) wm attributes...
+                wm attributes $tooltip -topmost 1   ; # 3) assumes...
+        }                                           ; # 3) Windows
+        pack [label $tooltip.label -bg lightyellow -fg black -text $text -justify left]
+
+        set width [winfo reqwidth $tooltip.label]
+        set height [winfo reqheight $tooltip.label]
+
+        set positionX [winfo pointerx .]
+        set positionY [expr [winfo pointery .] + 25]
+
+        wm geometry $tooltip [join  "$width x $height + $positionX + $positionY" {}]
+        raise $tooltip
+
+        # 2) Kludge: defeat rare artifact by passing mouse over a tooltip to destroy it.
+        bind $widget.tooltip <Any-Enter> {destroy %W}
+        bind $widget.tooltip <Any-Leave> {destroy %W}
+ }
+############################################################
