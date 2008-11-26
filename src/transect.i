@@ -123,6 +123,7 @@ See also: transect, _transect_history
   l = _transect_history(, recall);
  }
   // if ( color > 0 ) --color;  // XYZZY adjust for nsegs starting at 1
+  fs = test_and_clean(fs);
   glst = transect( fs, l, connect=connect, color=color,xfma=xfma, rcf_parms=rcf_parms,rtn=rtn, owin=owin, lw=w, msize=msize );
    // plot the actual points selected onto the input window
    if (show == 2 )
