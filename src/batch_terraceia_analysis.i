@@ -1,6 +1,7 @@
+require, "eaarl.i";
+require, "fitlsq.i";
+write, "$Id$";
 
-require, "comparison_fns.i"
-require, "dir.i"
 func read_file_list(path, fname=, ext=) {
   /* DOCUMENT read_file_list(path, fname=, ext=)
      This function reads the files in the path defined by the ext keyword and writes the list of files onto an array. 
@@ -63,7 +64,7 @@ func batch_analysis(path, kings=, plot=, ext=, out_txt_results_file=, elv=) {
 
        
 }
-require, "fitlsq.i"
+
 func plot_be_kings_elv(file_name, ps_ofname=,pse=,out_txt_file=, win=, saveplot=, head_anal=, pdop_anal=, n_data=, path=, donotplot=, cl=, plotcl=, xtitle=, ytitle=) {
 
 // cl = confidence level

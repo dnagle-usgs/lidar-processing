@@ -1,6 +1,6 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
+require, "eaarl.i";
 write, "$Id$"
-require, "general.i";
 
 local geometry_i;
 /* DOCUMENT geometry.i

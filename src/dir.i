@@ -1,9 +1,6 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
+require, "eaarl.i";
 write, "$Id$";
-require, "general.i";
-require, "string.i";
-require, "yeti.i";
-require, "yeti_regex.i";
 
 func file_dirname(fn) {
 /* DOCUMENT file_dirname(fn)

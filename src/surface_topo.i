@@ -1,25 +1,13 @@
+require, "l1pro.i";
+require, "scanflatmirror2_direct_vector.i";
+write,"$Id$";
+
 /*
-   $Id$
-
-
    W. Wright
 
    7/7/02 WW
 	Added north= to first_surface. 
-   
 */
-
-write,"$Id$"
-
-require, "eaarl_constants.i"
-require, "eaarl_mounting_bias.i"
-require, "edb_access.i"
-require, "rbpnav.i"
-require, "rbtans.i"
-require, "scanflatmirror2_direct_vector.i"
-require, "plcm.i"
-require, "ll2utm.i"
-require, "irg.i"
 
 /*
    the a array has an array of RTRS structures;

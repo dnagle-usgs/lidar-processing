@@ -1,17 +1,5 @@
-
-/*
-   $Id$
-*/
-
-
-require, "edb_access.i"
-require, "string.i"
-require, "sel_file.i"
-require, "ytime.i"
-require, "rlw.i"
-require, "eaarl_constants.i"
-require, "surface_topo.i"
-
+require, "l1pro.i";
+write, "$Id$";
 
 func set_depth_scale ( u ) {
  extern depth_display_units, depth_scale;
@@ -24,8 +12,6 @@ func set_depth_scale ( u ) {
   } else depth_scale = -1;
   depth_display_units  = u;
 }
-
-write,"$Id$"
 
 local wfa;	// decoded waveform array
 

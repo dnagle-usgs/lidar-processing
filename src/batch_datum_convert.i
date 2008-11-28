@@ -1,10 +1,5 @@
-write,"$Id$"
-
-require, "map.i"
-require, "dir.i" 
-require, "veg.i"
-require, "geo_bath.i"
-require, "datum_converter.i"
+require, "l1pro.i";
+write,"$Id$";
 
 func batch_datum_convert(con_dir,  tonad83=, tonavd88=, rcfmode=, onlymf=, searchstr=, zone_nbr=, geoid_version=, update=, qq=) {
 /* DOCUMENT batch_datum_convert(con_dir,  tonad83=, tonavd88=, 
@@ -36,7 +31,6 @@ INPUT:
 
   qq= set to 1 if you are converting from  Quarter Quad tile format
 
-requires: "maps.i", "dir.i", "datum_converter.i"
 see also: datum_converter.i
 
 -Brendan Penney, 7/18/03

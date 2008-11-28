@@ -1,9 +1,7 @@
-/* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent expandtab: */
+// vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent expandtab:
+require, "eaarl.i";
+write,"$Id$";
 /*
-  rbpnav.i
-
-  $Id$ 
-
 History:
     9/20/02  -ww Fixed problem where data_path was being overwritten
              when the pnav file was not located in "gps".
@@ -61,12 +59,6 @@ struct EGGNAV {
  float pdop;
  float hdop;
 }
-
-
-
-require, "sel_file.i"
-require, "ytime.i"
-write,"$Id$"
 
 plmk_default,msize=.1
 pldefault,marks=0

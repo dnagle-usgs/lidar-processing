@@ -506,8 +506,6 @@ func iex2tans( junk ) {
  tans.somd  += gps_time_correction;
 }
 
-if ( is_void( gps_time_correction) ) gps_time_correction = -13.0
-
 func iex_ascii2pbd( fn ) {
 /* DOCUMENT load_iex,fn
 

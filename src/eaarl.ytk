@@ -342,7 +342,8 @@ proc load_cmd { start_dir } {
             set ycode_dir [ file dirname $_ytk_fn ]
             cd $ycode_dir;
             exp_send "cd, \"$ycode_dir\"\r"
-            exp_send "load_cmd, \"$_ytk_fn\"\r"
+            exp_send "#include \"$_ytk_fn\"\r"
+            exp_send "cd, src_path\r"
            }
 
     }

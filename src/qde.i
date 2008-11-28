@@ -1,11 +1,7 @@
-
-require, "rcf.i"
-require, "eaarl_constants.i"
-require, "eaarl_mounting_bias.i"
+require, "eaarl.i";
+write, "$Id$";
 
 /*
-     $Id$
-
   Orginal: 8/17/2002 C. Wayne Wright  wright@lidar.wff.nasa.gov
   
   Compute approximate elevation data for quick and dirty uses
@@ -16,9 +12,6 @@ require, "eaarl_mounting_bias.i"
                 input.
  
 */
-
-write, "$Id$"
- 
  
 // The line interpolating heading needs to be done using x/y from a
 // unit circle to work for norther headings.

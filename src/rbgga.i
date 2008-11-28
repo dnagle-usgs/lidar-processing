@@ -1,15 +1,5 @@
-/*
-   $Id$
-*/
-
-
-require, "dir.i"
-require, "sel_file.i"
-require, "ytime.i"
-require, "map.i"
-require, "string.i"
-require, "pip.i"
-require, "gridr.i"
+require, "eaarl.i";
+write,"$Id$";
 
 local rbgga_help 
 /* DOCUMENT rbgga_help
@@ -62,8 +52,6 @@ Functions:
 
 */
 
-
-write,"$Id$"
 
 plmk_default,msize=.1
 

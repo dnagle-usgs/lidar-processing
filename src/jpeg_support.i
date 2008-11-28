@@ -1,8 +1,6 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
+require, "eaarl.i";
 write, "$Id$";
-
-require, "jpeg.i";
-require, "change_window_size.i";
 
 struct IMG_WORLD_FILE {
 	double xscale; // x-scale 

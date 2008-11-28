@@ -1,6 +1,6 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
+require, "eaarl.i";
 write, "$Id$";
-require, "general.i";
 
 local set_i;
 /* DOCUMENT set_i
@@ -209,7 +209,6 @@ func set_remove_duplicates(A, idx=, orig_order=, ret_sort=) {
    // The normal sort is fast, but non-deterministic. If the original order is
    // required, we have to use the slower msort.
    if(orig_order) {
-      require, "msort.i";
       sorter = msort;
    } else {
       sorter = sort;

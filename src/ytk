@@ -638,7 +638,8 @@ proc show_colorbar {w} {
 }
 
 proc launch_gui {} {
-   global Y_SITE _ytk _ytk_fn yorick_version tcl_version tk_version
+   global Y_SITE _ytk _ytk_fn yorick_version tcl_version tk_version \
+      _ytk_mrl_idx
 
    wm deiconify .
    wm minsize . 350 1

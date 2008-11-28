@@ -1,12 +1,6 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
-
-require, "string.i";
-require, "sel_file.i";
-require, "ll2utm.i";
-require, "data_rgn_selector.i";
-require, "general.i";
-
-write,"$Id$"
+require, "eaarl.i";
+write, "$Id$";
 
 func load_map( ffn=, color=,utm=) {
 /* DOCUMENT load_map(ffn=, color=)

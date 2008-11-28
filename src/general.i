@@ -1,7 +1,6 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
+require, "eaarl.i";
 write, "$Id$";
-require, "yeti_regex.i";
-require, "ytime.i";
 
 local general_i;
 /* DOCUMENT general.i

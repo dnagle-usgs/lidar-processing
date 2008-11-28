@@ -1,16 +1,6 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent expandtab: */
+require, "eaarl.i";
 write, "$Id$";
-require, "yeti.i";
-require, "yeti_regex.i";
-require, "dir.i";
-require, "set.i";
-require, "general.i";
-require, "geometry.i";
-
-/*
-This file requires Eric Thiébaut's Yeti package, available from:
-http://www-obs.univ-lyon1.fr/~thiebaut/yeti.html
-*/
 
 local qq24k_i;
 /* DOCUMENT qq24k_i

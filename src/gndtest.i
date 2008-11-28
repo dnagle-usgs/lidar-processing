@@ -1,12 +1,6 @@
-/*
-   $Id$
-*/
-
-require, "edb_access.i"
-require, "eaarl_constants.i"
-
-#include "centroid-1.i"
-
+require, "eaarl.i";
+require, "centroid-1.i";
+write, "$Id$";
 
 write, "\n\n\n ***** type: \"load_edb\" to load a ground test data file, and then"+
        "  \"pgt, start, stop\"  to examine it.\n\n"

@@ -1,5 +1,5 @@
-	require, "dir.i"
-	require, "bathy_filter.i"
+require, "eaarl.i";
+write, "$Id$";
 
 func webview(data_dir, webdir, mode, rcfmode=, min_elv=, max_elv=, getcolor=, datum=, update=, fltdir=, indir=, nohtml=, title=, alwaysdrawmap=) {
 /* DOCUMENT webview(data_dir, webdir, mode, rcfmode=, min_elv=, max_elv=, getcolor=, datum=, update=, fltdir=, indir=, nohtml=, title=, alwaysdrawmap=)

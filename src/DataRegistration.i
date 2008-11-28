@@ -1,8 +1,5 @@
-write," DataRegistration.i                                      jlebonit Jun 21, 2007"
-
-require, "batch_terraceia_analysis.i"
-require, "comparison_fns.i"
-
+require, "batch_terraceia_analysis.i";
+write, "$Id$";
  
 func dataReg(data1, data2, win=, plot=, ucmin=, ucmax=, data1plot=, data2plot=, filename=, rwin=, splot=, 
 regionresultpbd=, regionresulttxt=, oply=) {
@@ -178,13 +175,3 @@ is the same
       close, f;
       close, f1;
 }
-
-func computeMeanErr(dir) {
-/* Jim Lebonitte
-        This function reads in all the point comparison text files and computes the mean error for the whole region.
-
-
-*/
-
-
-} 

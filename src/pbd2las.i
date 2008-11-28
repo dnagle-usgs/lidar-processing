@@ -1,5 +1,5 @@
+require, "eaarl.i";
 write, "$Id$";
-require, "qq24k.i";
 
 func batch_pbd2las(con_dir, searchstr=, proj_id=, v_maj=, v_min=, cday=, cyear=, typ=, zone_nbr=, nad83=, wgs84N=, wgs84S=, buffer=, qq=) {
 /* DOCUMENT batch_pbd2las(con_dir, searchstr=, proj_id=, v_maj=, v_min=, cday=, cyear=, typ=, zone_nbr=, nad83=, wgs84N=, wgs84S=, buffer=, qq=, atm=)
@@ -344,14 +344,6 @@ if(wgs84S==1) zone_tag=32701+zone_nbr;
     _write, f1, byt_count, double(min(data.elevation + data.depth));
     byt_count+=8;
 }
-
-
-
-
-
-
-
-
 
 
 /* Start of variable length records */

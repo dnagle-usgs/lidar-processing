@@ -1,7 +1,20 @@
 /*
    $Id$
 */
-write, "$Id$" 
+write, "$Id$";
+
+/* DOCUMENT CBAR
+   Struct for colorbar values.
+   The values from l1pro.ytk can be sent to the cbar variable by executing
+   tkcmd, ycbar from within a yorick program.
+*/
+struct CBAR {
+   float cmax;
+   float cmin;
+   float cdelta;
+}
+
+if(is_void(cbar)) cbar = CBAR();
 
 
 func set_cbar( bar,w= ) {

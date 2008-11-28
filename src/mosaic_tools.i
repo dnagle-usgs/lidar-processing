@@ -1,7 +1,5 @@
 write, "$Id$";
-
 require, "cir-mosaic.i";
-require, "set.i";
 
 local gga_segmenting;
 /* DOCUMENT gga_segmenting

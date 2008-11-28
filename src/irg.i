@@ -1,5 +1,7 @@
+require, "l1pro.i";
+write, "$Id$";
+
 /*
-   $Id$
    W. Wright
 
    8/23/02 WW Minor additions to irg to permit giving an initial
@@ -12,18 +14,7 @@
    7/6/02 WW
 	Minor changes to omit progress bar when fewer then 10
 	rasters to process.
-
-
-
- test...
 */
-
-require, "eaarl_constants.i"
-require, "edb_access.i"
-require, "centroid-1.i"
-
-write,"$Id$"
-
 
 // RTRS = Raster/Time/Range/ScanAngle
 /* DOCUMENT RTRS

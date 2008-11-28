@@ -1,30 +1,14 @@
+require, "l1pro.i";
+write, "$Id$";
 /*
-   $Id$
-
    Orginal by Amar Nayegandhi
-
 
    7/6/02 WW
 	Minor changes and additions made to many DOCUMENTS, comments,
         and a couple of divide by zero error checks made.
 
-*/
-write, "$Id$"
-require, "surface_topo.i"
-require, "bathy.i"
-require, "eaarl_constants.i"
-require, "colorbar.i"
-require, "read_yfile.i"
-require, "rbgga.i"
-require, "drast.i"
-require, "nav.i"
-require, "rcf.i"
-require, "info.i"
-
-/* 
-  This program is used to process bathymetry data  using the 
+  This program is used to process bathymetry data using the 
   topographic georectification.
-
 */
 
 

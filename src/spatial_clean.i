@@ -1,9 +1,5 @@
-/*
-   $Id$
-      */
-    write, "$Id$"
-require, "plcm.i"
-require, "colorbar.i"
+require, "eaarl.i";
+write, "$Id$";
 
 func plot_yfile_data(data_ptr_arr, cmin =, cmax=, size=, win= ) {
  /* DOCUMENT plot_yfile_data(data_ptr_arr)

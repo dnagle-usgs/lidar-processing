@@ -1,18 +1,11 @@
-/*
+require, "eaarl.i";
+write,"$Id$";
 
-   $Id$
- 
+/*
   Functions to work with the EAARL Axis digital camera.  
 
   Orginal W. Wright, 5-6-03 while in San Juan, Pr.
-
 */
-
-require, "pnm.i";
-require, "qq24k.i";
-
-write,"$Id$";
-
 
 func jpg_read(filename)
 /* DOCUMENT image= jpg_read(filename)

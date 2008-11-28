@@ -1,13 +1,5 @@
-/*
-   $Id$
-*/
-
-require, "string.i"
-require, "dir.i"
-require, "sel_file.i"
-require, "ytime.i"
-require, "rlw.i"
-require, "ytk.i"
+require, "eaarl.i";
+write, "$Id$";
 
  struct EAARL_INDEX {
    int seconds;
@@ -502,5 +494,4 @@ Examples using the result data:
 
 
 pldefault,marks=0
-write,"$Id$"
 

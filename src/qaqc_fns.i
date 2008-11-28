@@ -1,4 +1,5 @@
-require, "ytime.i"
+require, "eaarl.i";
+write, "$Id$";
 
 func split_digitizer(data, mdate, edblocation=, digi0=) {
 	if (!edblocation) edblocation = "/data/";

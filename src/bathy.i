@@ -1,8 +1,6 @@
-
+require, "l1pro.i";
+write, "$Id$";
 /*
-
-    $Id$
-   
     W. Wright 
 
    10/3/02
@@ -28,14 +26,6 @@
 	changes and the required threshold change.
 
  */
-
- write,"$Id$" 
-
-require, "ytime.i"
-require, "rlw.i"
-require, "string.i"
-require, "sel_file.i"
-require, "eaarl_constants.i"
 
 struct BATHPIX {
   int rastpix;		// raster + pulse << 24

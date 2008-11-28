@@ -1,22 +1,11 @@
-
-
-
+require, "l1pro.i";
+write, "$Id$";
 /*
-   $Id$
-
   W. Wright
-
-  ts_check.i 
 
   Functions to verify that the lidar time is in sync with the
   GPS time.
-
 */
-
-
-require, "irg.i"
-require, "edb_access.i"
-require, "rbgga.i"
 
 // load_edb
 // gga = rbgga();
@@ -40,8 +29,3 @@ func irg_replot ( temp_time_offset=, range_offset= ) {
   pltitle,data_path
   write,"irg_replot_complete"
 }
-
-
-
-
-

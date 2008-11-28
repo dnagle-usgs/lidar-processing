@@ -1,10 +1,6 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
+require, "eaarl.i";
 write, "$Id$";
-
-require, "rbpnav.i";
-require, "dir.i";
-require, "ll2utm.i";
-require, "set.i";
 
 local kml_i;
 /* DOCUMENT kml_i

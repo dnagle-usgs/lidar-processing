@@ -1,4 +1,6 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent: */
+require, "eaarl.i";
+write, "$Id$";
 
 /**********************************************************************
 
@@ -13,10 +15,6 @@
 
 
 *********************************************************************/
-
-require, "rcf.i"
-
-write, "$Id$"
 
 extern _transect_history;
 /* DOCUMENT _transect_history

@@ -1,16 +1,10 @@
-
-require, "eaarl_constants.i"
-
+require, "eaarl.i";
+write, "$Id$";
 /*
-   $Id$
-
   Orginal W. Wright
 
   9/20/02 Added pcr function.
 */
-
-
-
 
 func pcr(rast, n) {
 /* DOCUMENT pcr(rast,n)

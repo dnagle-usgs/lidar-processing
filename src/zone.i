@@ -1,9 +1,6 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
+require, "eaarl.i";
 write, "$Id$";
-
-require, "mathop.i";
-require, "yeti.i";
-require, "qq24k.i";
 
 __ZONE_STRUCTS = h_new(
 /* DOCUMENT __ZONE_STRUCTS

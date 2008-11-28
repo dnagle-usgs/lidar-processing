@@ -1,12 +1,6 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent expandtab: */
+require, "l1pro.i";
 write, "$Id$";
-//require, "yeti.i"; // Shouldn't be needed at present
-require, "plcm.i";
-require, "sel_file.i";
-require, "ll2utm.i";
-require, "ytime.i";
-require, "general.i";
-require, "dir.i";
 
 // Yorick functions for ATM data.
 

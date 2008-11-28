@@ -11,7 +11,7 @@
 
 *********************************************************************/
 
-#include "info.i"
+require, "info.i";
 
 //            1      2       3        4          5         6       7
   clr = ["black", "red", "blue", "green", "magenta", "yellow", "cyan" ];
