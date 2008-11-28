@@ -66,7 +66,13 @@ while ( $file = <LS> ) {
   chop $file;
 
   ($a, $b, $c, $junk) = split(/-/, $file, 4);
-  if ( $a < 1990 ) {
+  if ($a =~ /^(\d{4})(\d{2})(\d{2})/) {
+    $y = $1;
+    $m = $2;
+    $d = $3;
+  } elsif ( $a =~ /\D/ ) {
+    $y = $m = $d = 0;
+  } elsif ( $a < 1990 ) {
     $m = $a;
     $d = $b;
     $y = $c;
@@ -74,10 +80,12 @@ while ( $file = <LS> ) {
     $y =~ s/[a-zA-Z]//g;   # force it into being a numeric when VR misses a "-"
     $y += 2000 if ( $y < 20 );
     $y += 1900 if ( $y < 100);
-  } else {
+  } elsif(length($a) < 5) {
     $y = $a;
     $m = $b;
     $d = $c;
+  } else {
+    $y = $m = $d = 0;
   }
 
   $YYYYMMDD = sprintf("%04d%02d%02d", $y, $m, $d);
