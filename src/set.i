@@ -24,6 +24,18 @@ local set_i;
    [].
 */
 
+func set_contains(A, b) {
+/* DOCUMENT set_contains(A, b)
+   Returns an array of boolean values indicating which values in b are
+   contained in A.
+*/
+   idx = set_intersection(b, A, idx=1);
+   result = array(0, numberof(b));
+   if(numberof(idx))
+      result(idx) = 1;
+   return result;
+}
+
 func set_intersection(A, B, idx=) {
 /* DOCUMENT set_intersection(A, B, idx=)
 
