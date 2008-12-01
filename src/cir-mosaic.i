@@ -1,4 +1,6 @@
 require, "eaarl.i";
+require, "random.i";
+require, "evolve.i";
 write,"$Id$";
 
 /*
@@ -479,7 +481,7 @@ func gen_jgw_sod( somd ) {
    // Apply biases
    ins.pitch += cir_mounting_bias.pitch;
    ins.roll += cir_mounting_bias.roll;
-   heading += cir_mounting_bias.heading;
+   ins.heading += cir_mounting_bias.heading;
 
 
    // THe following should be determined by the lidar elevation. Right now it
@@ -709,10 +711,12 @@ func copy_pnav_cirs(q, src, dest, copyjgw=, progress=) {
    copy_sod_cirs, pnav.sod(q), src, dest, copyjgw=copyjgw, progress=progress;
 }
 
-func tune_cir_parameters(photo_dir, date, fixed_roll=, fixed_pitch=, fixed_heading=, fixed_geoid=, mask=, start_temp=, min_temp=, cooling=, maxgen=, degrate=, params=, stdevs=, no_evolve=, pto_script=) {
-/* DOCUMENT tune_cir_parameters, photo_dir, date, fixed_roll=, fixed_pitch=,
-   fixed_heading=, fixed_geoid=, mask=, start_temp=, min_temp=, cooling=,
-   maxgen=, degrate=, params=, stdevs=, no_evolve=, pto_script=
+func tune_cir_parameters(photo_dir, date, fixed_roll=, fixed_pitch=,
+fixed_heading=, fixed_geoid=, mask=, maxgen=, initial_biases=, initial_geoid=,
+stdevs=, no_evolve=, pto_script=, win=) {
+/* DOCUMENT tune_cir_parameters(photo_dir, date, fixed_roll=, fixed_pitch=,
+   fixed_heading=, fixed_geoid=, mask=, maxgen=, initial_biases=,
+   initial_geoid=, stdevs=, no_evolve=, pto_script=, win=)
 
    Warning: This function is experimental!
 
@@ -801,31 +805,10 @@ func tune_cir_parameters(photo_dir, date, fixed_roll=, fixed_pitch=, fixed_headi
       mask= An array that indicates whether the jgw for the image at any given
          SOD should be generated (1) or not (0). The default is array(short(1),
          86400), which specifies that all images can have jgws generated.
-      start_temp= The starting temperature. The temperature is multiplied by
-         the random adjustments, so higher temperatures search a larger space
-         more quickly but with less precision.
-      min_temp= The lowest temperature that is permissible. Defaults to 0.01.
-         If the temperature drops to low, then the adjustments become
-         negligible.
-      cooling= The rate at which the temperature cools. On each iteration, the
-         temperature will be multiplied by the cooling factor. A value of 1
-         disables cooling entirely. The default is 0.995.
-      maxgen= The maximum number of no-improvement generates that can be run
-         before termination. (When degrate is enabled, it's the number of
-         no-new-best generations.) The default is 10000. Normally, you will
-         probably use CTRL-C to interrupt the function long before it reaches
-         the maximum generation.
-      degrate= Specifies the degredation rate. If nonzero, this will allow the
-         parameters to occasionally go from a better result to a worse result.
-         The higher the degrate, the more likely this will happen. This might
-         be helpful in avoiding local minima, but it comes at the expense of a
-         much longer run time. The default is 0, which disables it.
-      params= If provided, this specifies the combination of parameters that
-         should be used at initialization. It should be an array of doubles as
-         [roll, pitch, heading, geoid]. The default is to use the n111x biases
-         for roll, pitch, and heading and to use -30.0 for the geoid. Using
-         fixed parameters (such as fixed_roll) will override that part of this
-         option.
+      maxgen= The maximum number of generations that will be run before
+         termination. The default is 10000.
+      initial_biases= Defaults to cir_mounting_bias_n111x.
+      initial_geoid= Defaults to -30.
       stdevs= The standard deviations to use when generating random adjustments
          for the parameters. This is an array of doubles that matches the
          params, where each element is the standard deviation to use for that
@@ -842,113 +825,96 @@ func tune_cir_parameters(photo_dir, date, fixed_roll=, fixed_pitch=, fixed_headi
    extern cir_mounting_bias_n111x;
    extern Geoid;
 
-   default, start_temp, 1.0;
-   default, min_temp, 0.01;
-   default, cooling, 0.995;
    default, maxgen, 10000;
-   default, degrate, 0.0;
    default, mask, array(short(1), 86400);
    default, stdevs, [0.25, 0.25, 0.25, 1.0];
    default, no_evolve, 0;
-
+   default, initial_biases, cir_mounting_bias_n111x;
+   default, initial_geoid, -30.0;
    default, pto_script, "./pto_cir.pl";
 
-   use_fixed_roll    = !is_void(fixed_roll);
-   use_fixed_pitch   = !is_void(fixed_pitch);
-   use_fixed_heading = !is_void(fixed_heading);
-   use_fixed_geoid   = !is_void(fixed_geoid);
+   state = h_new(
+      photo_dir=photo_dir, date=date, mask=mask, pto_script=pto_script,
+      roll=initial_biases.roll,
+      pitch=initial_biases.pitch,
+      heading=initial_biases.heading,
+      geoid=initial_geoid
+   );
 
-   default, fixed_roll,    cir_mounting_bias_n111x.roll;
-   default, fixed_pitch,   cir_mounting_bias_n111x.pitch;
-   default, fixed_heading, cir_mounting_bias_n111x.heading;
-   default, fixed_geoid,   -30.0;
+   if(!is_void(win)) {
+      h_set, state, "window", win;
+      window, win;
+      plg, [0,0], [0, maxgen];
+   }
 
-   default, params, [fixed_roll, fixed_pitch, fixed_heading, fixed_Geoid];
+   if(!is_void(fixed_roll))
+      h_set, state, "fixed_roll", fixed_roll;
+   if(!is_void(fixed_pitch))
+      h_set, state, "fixed_pitch", fixed_pitch;
+   if(!is_void(fixed_heading))
+      h_set, state, "fixed_heading", fixed_heading;
+   if(!is_void(fixed_geoid))
+      h_set, state, "fixed_geoid", fixed_geoid;
 
-   if(use_fixed_roll)
-      params(1) = fixed_roll;
-   cir_mounting_bias.roll = params(1);
-   if(use_fixed_pitch)
-      params(2) = fixed_pitch;
-   cir_mounting_bias.pitch = params(2);
-   if(use_fixed_heading)
-      params(3) = fixed_heading;
-   cir_mounting_bias.heading = params(3);
-   if(use_fixed_geoid)
-      params(4) = fixed_Geoid;
-   Geoid = params(4);
+   fields = ["roll", "pitch", "heading", "geoid"];
+   for(i = 1; i <= numberof(fields); i++) {
+      h_set, state, "stdev_" + fields(i), stdevs(i);
+      if(h_has(state, "fixed_" + fields(i)))
+         h_set, state, fields(i), h_get(state, "fixed_" + fields(i));
+   }
 
-   batch_gen_jgw_file, photo_dir, date, progress=no_evolve, mask=mask;
+   state = simulated_annealing(state, maxgen, 0.01,
+      __tcpsa_energy, __tcpsa_neighbor, __tcpsa_temperature,
+      show_status=__tcpsa_status);
 
-   if(no_evolve) return;
+   return state;
+}
 
-   cmd = pto_script + " " + photo_dir + " " + photo_dir + " ";
-   rmse = 0.0;
+func __tcpsa_energy(state) {
+   extern cir_mounting_bias;
+   extern Geoid;
+
+   cir_mounting_bias.roll = state.roll;
+   cir_mounting_bias.pitch = state.pitch;
+   cir_mounting_bias.heading = state.heading;
+   Geoid = state.geoid;
+
+   batch_gen_jgw_file, state.photo_dir, state.date, progress=0, mask=state.mask;
+
+   cmd = state.pto_script + " " + state.photo_dir + " " + state.photo_dir + " ";
    f = popen(cmd, 0);
+   rmse = 0.0;
    read, f, rmse;
    close, f;
 
-   best = grow(rmse, params);
-   write, "Initial state:";
-   write, format=" %.4f - [%.4f,%.4f,%.4f,%.4f]\n", best(1), best(2), best(3), best(4), best(5);
-   write, "";
-   curr = best;
+   return rmse;
+}
 
-   stop = 0;
-   allgen = 0;
-   gen = 0;
-   temperature = start_temp;
-   do {
-      allgen++;
-      gen++;
-      params = best(2:) + random_n(numberof(stdevs)) * stdevs * temperature;
-      temperature *= cooling;
-      temperature = [temperature, min_temp](max);
-
-      if(use_fixed_roll)
-         params(1) = fixed_roll;
-      cir_mounting_bias.roll = params(1);
-      if(use_fixed_pitch)
-         params(2) = fixed_pitch;
-      cir_mounting_bias.pitch = params(2);
-      if(use_fixed_heading)
-         params(3) = fixed_heading;
-      cir_mounting_bias.heading = params(3);
-      if(use_fixed_geoid)
-         params(4) = fixed_Geoid;
-      Geoid = params(4);
-
-      batch_gen_jgw_file, photo_dir, date, progress=no_evolve, mask=mask;
-
-      write, format="%s", ".";
-      cmd = pto_script + " " + photo_dir + " " + photo_dir + " ";
-      f = popen(cmd, 0);
-      read, f, rmse;
-      close, f;
-
-      if(rmse < best(1)) {
-         best = grow(rmse, params);
-         gen = 0;
-         write, "";
-         write, "New best:";
-         write, format=" %.4f - [%.4f,%.4f,%.4f,%.4f]\n", best(1), best(2), best(3), best(4), best(5);
+func __tcpsa_neighbor(state) {
+   state = h_copy(state);
+   fields = ["roll", "pitch", "heading", "geoid"];
+   for(i = 1; i <= numberof(fields); i++) {
+      if(h_has(state, "fixed_" + fields(i))) {
+         h_set, state, fields(i), h_get(state, "fixed_" + fields(i));
+      } else {
+         val = h_get(state, fields(i));
+         dev = h_get(state, "stdev_" + fields(i));
+         h_set, state, fields(i), val + random_n() * dev;
       }
-      if(rmse < curr(1) || random() < (rmse/curr(1) * degrate)) {
-         if(deg_rate > 0) {
-            write, "";
-            if(rmse < curr(1))
-               write, "Improvement:";
-            else
-               write, "Degredation:";
-         }
-         curr = grow(rmse, params);
-         if(deg_rate > 0) {
-            write, format=" %.4f - [%.4f,%.4f,%.4f,%.4f]\n", curr(1), curr(2), curr(3), curr(4), curr(5);
-         }
-      }
+   }
+   return state;
+}
 
-      if(gen >= maxgen) stop = 1;
-   } while (!stop);
+func __tcpsa_temperature(time) {
+   return 0.995 ^ (1 + time * 999);
+}
+
+func __tcpsa_status(status) {
+   write, format="%d/%d: %.3f\n", status.iteration, status.max_iterations, status.energy;
+   if(h_has(status.state, "window")) {
+      window, h_get(status.state, "window");
+      plmk, status.energy, status.iteration, msize=0.1, marker=1;
+   }
 }
 
 func subsample_lines(q, skip=) {
