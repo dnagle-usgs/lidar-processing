@@ -1541,18 +1541,26 @@ ComboBox .l1wid.bf4.1.d -text "Define Region..." -width 15 -values \
     set defr [.l1wid.bf4.1.d getvalue]
     puts $defr
     if {$defr == 0} {
+      if { $_ytk(annoying_help) == "Yes" } {
        	set result [tk_messageBox  -icon info \
         -message "Drag a Rectangular Box in Window $_map(window) to define region." \
         -type okcancel -title "Message"]
+      } else {
+        set result "ok"
+      }
         if {$result == "ok"} {
          exp_send "q = gga_win_sel(2, win=$_map(window));\r"
          expect ">"
         }
     }
     if {$defr == 1} {
+      if { $_ytk(annoying_help) == "Yes" } {
        	set result [tk_messageBox  -icon info \
         -message "Draw a Polygon in Window $_map(window) to define a region using a series of left mouse clicks.  To complete the polygon, middle mouse click OR <Ctrl> and left mouse click." \
         -type okcancel -title "Message"]
+      } else {
+        set result "ok"
+      }
         if {$result == "ok"} {
          exp_send "q = gga_pip_sel(1, win=$_map(window));\r"
          expect ">"
