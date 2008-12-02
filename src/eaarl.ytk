@@ -606,6 +606,8 @@ proc load_edb {} {
               exp_send "\r"
      	        expect ">"
      	        exp_send "gt_fs = load_pnav2FS(); grow, gt_fsall, gt_fs\r"
+              append_varlist gt_fs
+              append_varlist gt_fsall
             }
 
  $w.mb.nav add command -label "Load DMARS data..."   -underline 5 \

@@ -125,7 +125,7 @@ See also: transect, _transect_history
   glst = transect( fs, l, connect=connect, color=color,xfma=xfma, rcf_parms=rcf_parms,rtn=rtn, owin=owin, lw=w, msize=msize );
    // plot the actual points selected onto the input window
    if (show == 2 )
-     show_fstrack,fs(glst), utm=1, skip=0, color="red", lines=0, win=iwin;
+     show_track,fs(glst), utm=1, skip=0, color="red", lines=0, win=iwin;
   if (show == 3 ) {   // this only redraws the last transect selected.
     window,iwin;
     plg, [transect_line(2),transect_line(4)]/100., [transect_line(1),transect_line(3)]/100., width=2.0, color="red";
@@ -324,7 +324,7 @@ func extract_transect_info(tlst, fs, &coords, &segtimes, rtn=) {
   INPUT:
 	tlst: returned from the mtransect function. list of indices of the fs array that fall along the transect.
 	fs : the original data array (can be of type FS, VEG, or GEO)
-	rtn = defaults to 0.  
+	rtn = defaults to 0.
 			Select return type where:
 			0 first return
 			1 veg last return
@@ -405,7 +405,7 @@ func append_transect_list(tlst, fs, rtn=) {
   INPUT:
 	tlst: returned from the mtransect function. list of indices of the fs array that fall along the transect.
 	fs : the original data array (can be of type FS, VEG, or GEO)
-	rtn = defaults to 0.  
+	rtn = defaults to 0.
 			Select return type where:
 			0 first return
 			1 veg last return
@@ -430,7 +430,7 @@ func reprocess_data_along_transect(new_pnav, outdir=, ofname_tag=, rtn=, w= ) {
 	new_pnav : the new pnav data array.  The global variables gga and pnav will be assigned to this new_pnav
    outdir = String.  The output directory where the pbd files will be written to.
    ofname_tag = String.  Define tag name to the output filename that will help differentiate between data processed using different trajectories.  Usually name_tag will include the base station names used to processed the trajectory new_pnav. e.g. name_tag = "kwal_hg63" indicates trajectory processed using the Wallops Island base and the Hangar base station.
-	rtn = defaults to 0.  
+	rtn = defaults to 0.
 			Select return type where:
 			0 first return
 			1 veg last return

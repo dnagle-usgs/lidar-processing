@@ -21,6 +21,7 @@ set     utm_list  { 0 1 }
 set    skip_list  { 0 5 10 20 50 }
 set    swin_list  { 5 6 }
 set    lwin_list  { 1 2 3 4 5 7 8 9 }
+set     rtn_list  { 0 1 2 }
 set   msize_list  { .1 .3 .5 .7 1.0 1.5 }
 set   cname_list  { "black" "red" "blue" "green" "yellow" "magenta" "cyan" }
 
@@ -141,27 +142,28 @@ proc create_menubar {} {
 # Transect Frame / Frame 2
 
 proc run_mt { id } {
-   global tw trans_varlist fma_list show_list width_list \
-   global color_list recall_list trans_xfma$id lwin_list
+   global tw trans_varlist varlist fma_list show_list width_list \
+   global color_list recall_list trans_xfma$id lwin_list rtn_list
 
-   set src_var [lindex $trans_varlist [$tw.f2$id.cln_vars  getvalue]]
+   set src_var [lindex $varlist [$tw.f2$id.cln_vars  getvalue]]
    set shw_var [lindex $show_list     [$tw.f2$id.showval   getvalue]]
    set wdt_var [lindex $width_list    [$tw.f2$id.widthval  getvalue]]
    set col_var [lindex $color_list    [$tw.f2$id.colorval  getvalue]]
    set rcl_var [lindex $recall_list   [$tw.f2$id.recallval getvalue]]
    set win_var [lindex $lwin_list     [$tw.f2$id.winval    getvalue]]
+   set rtn_var [lindex $rtn_list      [$tw.f2$id.rtnval    getvalue]]
    set fma_var [subst \$trans_xfma$id]
 #  set fma_var [lindex $fma_list      [$tw.f2$id.fmaval    getvalue]]
 
 #   puts "m=mtransect( $src_var, xfma=$fma_var show=$shw_var, w=$wdt_var, recall=$rcl_var, color=$col_var )"
-   exp_send "m$id=mtransect( $src_var, xfma=$fma_var, show=$shw_var, w=$wdt_var, recall=$rcl_var, color=$col_var, owin=$win_var, exp=1 )\r"
+   exp_send "m$id=mtransect( $src_var, xfma=$fma_var, show=$shw_var, w=$wdt_var, recall=$rcl_var, color=$col_var, owin=$win_var, exp=1,rtn=$rtn_var )\r"
    expect "END mtransect:"
    exp_send "llst$id=llst;rx$id=rx;elevation$id=elevation\r"
 }
 
 proc create_transbuttons { cnt } {
-   global tw trans_varlist fma_list show_list width_list
-   global color_list recall_list lwin_list
+   global tw trans_varlist varlist fma_list show_list width_list
+   global color_list recall_list lwin_list rtn_list
 
    for { set tbi 1 } { $tbi <= $cnt } { incr tbi 1 } {
 
@@ -178,7 +180,7 @@ proc create_transbuttons { cnt } {
 
 
       ComboBox $tw.f2$tbi.cln_vars -values \
-         $trans_varlist \
+         $varlist \
          -helptext "Select any one of the following variables" \
          -editable 0 \
          -width 10 \
@@ -247,6 +249,15 @@ proc create_transbuttons { cnt } {
          $tw.f2$tbi.winval setvalue @2
       pack $tw.f2$tbi.win $tw.f2$tbi.winval -side left -fill x -padx 2
 
+
+      Label $tw.f2$tbi.rtn -text "rtn="
+      ComboBox $tw.f2$tbi.rtnval -values $rtn_list \
+         -helptext "Type of return\n0 first return\n1 veg\n2 submerged" \
+         -editable 0 \
+         -width 1 
+         $tw.f2$tbi.rtnval setvalue @0
+      pack $tw.f2$tbi.rtn $tw.f2$tbi.rtnval -side left -fill x -padx 2
+
   }
 }
 
@@ -257,7 +268,7 @@ create_transbuttons $Xcnt
 
 Button $tw.f3.mtransrch -text "Transect Pixel Waveform" \
    -bg azure3 -activebackground azure4 -command {
-   set  fs_var [lindex $trans_varlist     [$tw.f21.cln_vars   getvalue]]
+   set  fs_var [lindex $varlist     [$tw.f21.cln_vars   getvalue]]
    exp_send "mtransrch, $fs_var, m1, llst1, _rx=rx1, _el=elevation1\r"
 }
 pack $tw.f3.mtransrch -side left -fill x -padx 2
@@ -268,6 +279,14 @@ Display information on multiple points from
 the mtransect 1 plot.
 }
 
+Button $tw.f3.reload -text "Reload Variables" \
+   -activebackground grey -command {
+   global Xcnt
+   for { set i 1 } { $i <= $Xcnt } { incr i 1 } {
+      $tw.f2$i.cln_vars configure -values $varlist
+   }
+}
+pack $tw.f3.reload
 
 ############################################################
 # Plot Frame / Frame 1
