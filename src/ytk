@@ -99,9 +99,30 @@ set Y_SITE ""
 
 ########## PROCEDURES ##########
 
+##
+# yorick_executable
+#  Attempts to determine the yorick executable file. It will use the following,
+#  in order of priority:
+#     1. The value of _ytk(yorick_executable), if it exists and is a file.
+#     2. The result of the system call 'which yorick'.
+#     3. A user supplied value (acquired through a GUI prompt).
+# 
+# Arguments:
+#  None
+#
+# Returns:
+#  A string representing the path+filename to the Yorick executable. If no
+#  executable is available, an empty string is returned.
+#
+# Side effects:
+#  None
+##
 proc yorick_executable {} {
+   global _ytk
    set yor_ex ""
+   # See if we can determine a Yorick from the system
    catch {set yor_ex [exec which yorick]}
+   # See if we have a user-configured Yorick; if so, this takes precedence
    if {
       [info exists _ytk(yorick_executable)]
       && [file isfile $_ytk(yorick_executable)] 
@@ -109,6 +130,8 @@ proc yorick_executable {} {
       set yor_ex $_ytk(yorick_executable)
    }
    set flag yes
+   # If we do not have a valid Yorick, query the user for one until they give
+   # us one or give up.
    while { ![file exists $yor_ex] && $flag eq "yes" } {
       set flag [tk_messageBox -icon error -type yesno \
          -message "Ytk cannot locate Yorick, which it needs to function. Would you like to manually locate a Yorick? (If you answer no, Ytk will exit.)"]
@@ -119,6 +142,19 @@ proc yorick_executable {} {
    return $yor_ex
 }
 
+##
+# restore_defaults
+#  Restores default values to the _ytk global.
+#
+# Arguments:
+#  None
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  Unsets the global _ytk, the defines it to a set of default values.
+##
 proc restore_defaults { } {
    global _ytk
    array unset _ytk *
@@ -138,6 +174,21 @@ proc restore_defaults { } {
    set _ytk(annoying_help)       No
 }
 
+##
+# save_options
+#  Saves the user's _ytk options to a file for later retrieval.
+#
+# Arguments:
+#  None
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  Creates the file ~/.ytkrc and stores the contents of global _ytk to it.
+#  Afterwards, the user will receive a GUI messagebox indicating whether it
+#  succeeded or not.
+##
 proc save_options {} {
    global _ytk
    set fn "~/.ytkrc"
@@ -152,6 +203,22 @@ proc save_options {} {
    }
 }
 
+##
+# load_options
+#  Loads the user's _ytk options from a file previously saved via save_options.
+#
+# Arguments:
+#  None
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  Restores the default values for _ytk (as defined by restore_defaults). Then
+#  sources ~/.ytkrc, which presumbly updates some of the _ytk values with the
+#  user's preferences. However, the sourcing is not done safely so this could
+#  have virtually any side effect.
+##
 proc load_options {} {
    # Restore defaults -- in case .ytkrc doesn't specify everything
    restore_defaults
@@ -160,7 +227,7 @@ proc load_options {} {
       puts "Found .ytkrc..."
       # TODO:
       # This should really be done inside a safe interp instead
-      if { [catch {uplevel #0 [list  source "~/.ytkrc"]} err] } {
+      if { [catch {uplevel #0 [list source "~/.ytkrc"]} err] } {
          puts "Problem in ~/.ytkrc: $err "
       }
    } else {
@@ -168,8 +235,26 @@ proc load_options {} {
    }
 }
 
+##
+# initialize_globals
+#  Initializes the values of global variables that are not initialized
+#  elsewhere:
+#     ytk_PLMK_marker: A constant array matching marker names to numbers.
+#     markers: A constant list of marker names.
+#     _ytk_mrl: The most recently used file list.
+#     _ytk_mrl_idx: The current index into _ytk_mrl.
+#
+# Arguments:
+#  None
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  Sets the values for the globals ytk_PLMK_marker and markers.
+##
 proc initialize_globals {} {
-   global ytk_PLMK_marker
+   global ytk_PLMK_marker markers _ytk_mrl_idx _ytk_mrl
 
    set _markers [list \
       None Square Cross Triangle Circle Diamond Cross45 Inverted-Triangle]
@@ -177,83 +262,244 @@ proc initialize_globals {} {
       set ytk_PLMK_marker([lindex $_markers $i]) $i
    }
    set markers "square cross triangle circle diamond cross45 inverted_triangle"
+
+   set _ytk_mrl_idx 1
+   for { set i 1 } { $i <= 8 } { incr i } {
+      set _ytk_mrl($i) ""
+   }
 }
 
+##
+# establish_fifos
+#  Creates and configures the fifos needed for communication between Yorick and
+#  Tcl (in both directions).
+#
+# Arguments:
+#  None
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  Establishes the following global variables:
+#     ytk_fifo_name: The filename of the Yorick->Tcl fifo.
+#     tky_fifo_name: The filename of the Tcl->Yorick fifo.
+#     ytk_fifo: The filehandle for the Yorick->Tcl fifo.
+#     tky_fifo: The filehandle for the Tcl->Yorick fifo.
+#     tkcmd_line: Set to 0.
+#  Also configures ytk_fifo to call ytk_fifo_fileevent for the readable
+#  fileevent.
+##
 proc establish_fifos {} {
-   global ytk_fifo_name tky_fifo_name rn tkcmd_line ytk_fifo tky_fifo
-   # fifo name for data coming from yorick.
-   set ytk_fifo_name "/tmp/ytkfifo.[pid]"
+   global ytk_fifo_name tky_fifo_name tkcmd_line ytk_fifo tky_fifo
 
-   # fifo name for special data going to yorick.
-   set tky_fifo_name "/tmp/tkyfifo.[pid]"
-   set rn 1
    set tkcmd_line 0
 
-   # Establish fifo for communications from Yorick ---> tcl/tk
-   if { ![file exists $ytk_fifo_name] } {
-      exec mkfifo -m uog+rw $ytk_fifo_name
-   }
-   set ytk_fifo [open $ytk_fifo_name "r+"]
-   fconfigure $ytk_fifo -buffering line -blocking 0
+   # Establish fifo for communications, Yorick ---> tcl/tk
+   set ytk_fifo_name "/tmp/ytkfifo.[pid]"
+   set ytk_fifo [create_fifo $ytk_fifo_name]
 
-   # Establish fifo for communications to Yorick <---- tcl/tk
-   if { ![file exists $tky_fifo_name] } {
-      exec mkfifo -m uog+rw "$tky_fifo_name"
-   }
-   set tky_fifo [open $tky_fifo_name "r+"]
-   fconfigure $tky_fifo -buffering line -blocking 0
+   # Establish fifo for communications, tcl/tk ---> Yorick
+   set tky_fifo_name "/tmp/tkyfifo.[pid]"
+   set tky_fifo [create_fifo $tky_fifo_name]
 
    fileevent $ytk_fifo readable ytk_fifo_fileevent
 }
 
-proc ytk_fifo_fileevent {} {
-   global tkcmd_line ytk_fifo
-   incr tkcmd_line
-   set ycmdstr [gets $ytk_fifo]
-   .tx.doc insert end "$tkcmd_line:$ycmdstr\n"
-   if { [catch { eval $ycmdstr } errcode] } {
-      send_user "*** Ytk Error in:$ycmdstr"
-      incr tkcmd_line
-      .tx.doc insert end "**ERROR:  $errcode\n"
+##
+# create_fifo fifo_file
+#  Creates a fifo using the filename specified, opens it, and returns its
+#  filehandle.
+#
+# Arguments:
+#  fifo_file: A string indicating the path and filename to use for the fifo.
+#
+# Returns:
+#  The filehandle for the open fifo.
+#
+# Side effects:
+#  The fifo is created and opened, but otherwise none.
+##
+proc create_fifo {fifo_file} {
+   if { ![file exists $fifo_file]} {
+      exec mkfifo -m uog+rw "$fifo_file"
    }
-   .tx.doc yview moveto 1.0
-   .tx.doc delete 1.0 "end - 100 lines"
-   update idletasks
+   set fifo [open $fifo_file "r+"]
+   fconfigure $fifo -buffering line -blocking 0
+   return $fifo
 }
 
+##
+# ytk_fifo_filevent
+#  Processes a command received on the Yorick->Tcl fifo. This is invoked by the
+#  fileevent readable on $ytk_fifo.
+#
+# Arguments:
+#  None
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  This will evaluate the first string found on the fifo $ytk_fifo. If .tx.doc
+#  exists, it will be updated accordingly. If an error is encountered, the user
+#  is notified via expect as well as on .tx.doc.
+#
+#  If there isn't a complete line available on the fifo, this does nothing.
+##
+proc ytk_fifo_fileevent {} {
+   global tkcmd_line ytk_fifo
+
+   set ycmdstr [gets $ytk_fifo]
+
+   # If a full line isn't available, gets will return ""
+   if {[string length $ycmdstr]} {
+      incr tkcmd_line
+      tx_doc "$tkcmd_line:$ycmdstr\n"
+
+      if { [catch { uplevel #0 $ycmdstr } errcode] } {
+         send_user "*** Ytk Error in:$ycmdstr\n"
+         tx_doc "**ERROR:  $errcode\n"
+      }
+
+      # Disabling this update for now, as it shouldn't be necessary and because
+      # update is often a source of bugs.
+      update idletasks
+   }
+}
+
+##
+# tx_doc message
+#  Updates .tx.doc with the given message. If .tx.doc does not exist, this is a
+#  no-op.
+#
+# Arguments:
+#  A list that comprises valid arguments to .tx.doc.
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  Inserts $message at the end of .tx.doc; scrolls to the bottom; and deletes
+#  all but the last 100 lines.
+##
+proc tx_doc {message} {
+   if {[winfo exists .tx.doc]} {
+      .tx.doc insert end $message
+      .tx.doc yview moveto 1.0
+      .tx.doc delete 1.0 "end - 100 lines"
+   }
+}
+
+##
+# spawn_yorick
+#  Attempts to spawn Yorick. If rlterm or rlwrap are available on the system
+#  path, they will be used if the user has enabled them (rlterm takes
+#  precedence over rlwrap if both exist and are enabled).
+#
+# Arguments:
+#  None
+#
+# Returns:
+#  0 if the spawn succeeded; 1 if it did not.
+#
+# Side effects:
+#  If successful, then expect does whatever it does when spawn works (including
+#  setting various expect-related variables), in the global scope.
+##
 proc spawn_yorick {} {
    global _ytk
-   catch { set rlterm [ exec which rlterm ] }
-   catch { set rlwrap [ exec which rlwrap ] }
+
+   # This is 1 until we successfully spawn a Yorick
    set result 1
+
+   # Attempt to spawn using rlterm
+   catch { set rlterm [exec which rlterm] }
    if { $result && [info exists rlterm] && $_ytk(use_rlterm) eq "Yes" } {
       set result [spawner [list spawn $rlterm $_ytk(yorick_executable)]]
    }
+
+   # Attempt to spawn using rlwrap
+   catch { set rlwrap [exec which rlwrap] }
    if { $result && [info exists rlwrap] && $_ytk(use_rlwrap) eq "Yes" } {
-      set result [spawner [list spawn $rlwrap -c -b {'(){}[],+=&^%$#@;|"} $_ytk(yorick_executable)]]
-      # "
-      # ^ needed to fix rendering bug in Vim
+      set result [spawner [list spawn $rlwrap -c -b "'(){}\[],+=&^%$#@;|\"" $_ytk(yorick_executable)]]
    }
+
+   # Attempt to spawn without any wrapper
    if { $result } {
       set result [spawner {spawn $_ytk(yorick_executable)}]
    }
+
    return $result
 }
 
+##
+# spawner cmd
+#  Executes the given command in the global scope. This is intended to be used
+#  solely for spawn commands.
+#
+#  The global scoping is required because of the various variables expect sets
+#  when the spawn command is used. It needs those variables accessible when
+#  using other commands, and running the spawn command at the global scope is a
+#  sure way to ensure they are not lost at the end of the procedure's scope.
+#
+# Arguments:
+#  A string or list representing the spawn command to evaluate.
+#
+# Returns:
+#  0 if the spawn succeeded; 1 if it did not.
+#
+# Side effects:
+#  If successful, then expect does whatever it does when spawn works (including
+#  setting various expect-related variables), in the global scope.
+##
 proc spawner {cmd} {
    return [catch {uplevel #0 $cmd}]
 }
 
+##
+# ytk_exit code
+#  Exits Yorick with the given code after performing cleanup (which consists of
+#  closing and deleting the fifos).
+#
+# Arguments:
+#  code: A integer in the range 0-127, which will be returned as the exit code.
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  The fifos are closed and their corresponding files deleted. Then the
+#  application terminates with the given exit $code.
+##
 proc ytk_exit {code} {
-   global ytk_fifo_name tky_fifo_name
+   global ytk_fifo_name tky_fifo_name ytk_fifo tky_fifo
+
+   catch [list close $ytk_fifo]
    file delete $ytk_fifo_name
+
+   catch [list close $tky_fifo]
    file delete $tky_fifo_name
+
    exit $code
 }
 
+##
+# ytk_About
+#  Displays an "About" GUI window, creating it if it doesn't already exist.
+#
+# Arguments:
+#  None
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  None
+##
 proc ytk_About {} {
-   global _ytk_splash_img tcl_version tk_version yorick_version ytk_version \
-      about_geo tk_patchLevel tcl_patchLevel
+   global _ytk_splash_img yorick_version ytk_version about_geo tk_patchLevel
+
    set w .about
    if {[winfo exists $w]} {
       wm deiconify $w
@@ -264,17 +510,33 @@ proc ytk_About {} {
       label $w.img -image $_ytk_splash_img -relief raised -borderwidth 4
       label $w.text -bd 1 -text \
 "Yorick-Tcl-tK (and Expect)\n\
-$ytk_version\n\
+YTK $ytk_version (fork)\n\
 Yorick $yorick_version\n\
-Tcl v$tcl_version,   Tk v$tk_version,   Expect [exp_version]"
+Tcl [info patchlevel], Tk $tk_patchLevel, Expect [exp_version]"
       pack $w.img -side top
       pack $w.text -fill both -side top -expand 1
       pack $w.b -fill x -side bottom
-      wm  geometry $w $about_geo
+      wm geometry $w $about_geo
       update
    }
 }
 
+##
+# ytk_kick_off_editor editor fn
+#  Launches the requested editor to edit the specified file. If $fn is an empty
+#  string, this is a no-op. If $editor is not recognized, this is a no-op.
+#
+# Arguments:
+#  editor: The name of the editor to use. Should be one of:
+#     vim vi kedit kwrite emacs gedit gvim xedit nedit xemacs
+#  fn: A string indicating the filename and path to the file to be edited.
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  Launches the given editor with the given file, provided a file is given.
+##
 proc ytk_kick_off_editor { editor fn } {
    if { $fn != "" } {
       switch $editor {
@@ -296,15 +558,42 @@ proc ytk_kick_off_editor { editor fn } {
    }
 }
 
+##
+# ytk_run_demo n
+#  Instructs Yorick to run the demo named by $n.
+#
+# Arguments:
+#  n: The name of a demo to run.
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  The file "$n.i" will be #included into Yorick, then the command $n will be
+#  run in Yorick.
+##
 proc ytk_run_demo { n } {
    exp_send "#include \"$n.i\"\r"
    expect ">"
    exp_send "$n\r"
 }
 
+##
+# select_for_edit start_dir
+#  Launches the "Open File" dialog in the given $start_dir directory, then
+#  returns the file selected by the user.
+#
+# Arguments:
+#  start_dir: The directory to open up in.
+#
+# Returns:
+#  The filename that was selected.
+#
+# Side effects:
+#  None
+##
 proc select_for_edit { start_dir } {
-   global _ytk_fn y_codedir ytk_codedir
-   set _ytk_fn [tk_getOpenFile \
+   return [tk_getOpenFile \
       -initialdir $start_dir \
       -filetypes {
          {{Yorick Programs, files} {.i .gp .gs}  }
@@ -312,48 +601,152 @@ proc select_for_edit { start_dir } {
          {{Tcl/Tk Programs} {.tcl .tk} }
          {{All Files}       {*}   }
       }]
-   return $_ytk_fn
 }
 
-proc most_recent_loaded {} {
-   global _ytk_mrl _ytk_mrl_idx
+##
+# select_then_edit_from directory
+#  Prompts the user to select a file from $directory, then lets them edit it
+#  using the editor defined in $_ytk(editor).
+#
+# Arguments:
+#  directory: The directory from which the user should start browsing from to
+#     select their file.
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  Global _ytk_fn is set to the file that is selected.
+##
+proc select_then_edit_from {directory} {
+   global _ytk_fn _ytk
+   set _ytk_fn [select_for_edit $directory]
+   ytk_kick_off_editor $_ytk(editor) $_ytk_fn
+}
 
-   toplevel .most_recent
-   wm transient .most_recent .
-   listbox .most_recent.lb -height 0 -width 0
-   button .most_recent.dismiss -text "Dismiss" -command { destroy .most_recent }
-   pack   .most_recent.lb \
-      .most_recent.dismiss \
-      -side top -fill x
+##
+# most_recent_loaded
+#  Creates a GUI window that lists the most recently loaded files, as defined
+#  in _ytk_mrl. Double-clicking an entry will cause it to be sourced via
+#  most_recent_lb_dbl_clk.
+#
+# Arguments:
+#  None
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  None
+##
+proc most_recent_loaded {} {
+   global _ytk_mrl
+
+   set w .most_recent
+
+   destroy $w
+   toplevel $w
+   wm transient $w .
+
+   listbox $w.lb -height 0 -width 0
+   button $w.dismiss -text "Dismiss" -command [list destroy $w]
+   pack   $w.lb $w.dismiss -side top -fill x
    for { set i 1 } { $i <= 8 } { incr i } {
       if { $_ytk_mrl($i) != "" } {
-         .most_recent.lb insert end "$i [ file tail $_ytk_mrl($i)  ]"
+         $w.lb insert end "$i [file tail $_ytk_mrl($i)]"
       }
    }
 
-   bind .most_recent.lb <Double-Button-1> most_recent_lb_dbl_clk
+   bind $w.lb <Double-Button-1> most_recent_lb_dbl_clk
 }
 
+##
+# most_recent_lb_dbl_clk
+#  Used by the binding of <Double-Button-1> on .most_recent (created in
+#  most_recent_loaded). This sources the code file represented by that entry in
+#  the list box.
+#
+# Arguments:
+#  None
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  Global _ytk_fn is set to the filename represented by the listbox selection.
+#  If _ytk_fn ends with .i, then global ycode_dir is set to match _ytk_fn's
+#  directory.
+#
+#  If _ytk_fn ends with .tcl, .tk, or .ytk, it is sourced at the global level
+#  and could have any effect. If ytk_fn ends with .i, it is sourced into Yorick
+#  and could have any effect; also, Tcl's and Yorick's current directories are
+#  changed to ycode_dir.
+##
 proc most_recent_lb_dbl_clk {} {
-   global ycode_dir _ytk_fn
-   set idx [ lindex [ selection get ] 0 ]
+   global _ytk_fn _ytk_mrl
+
+   set idx [lindex [selection get] 0]
    set _ytk_fn $_ytk_mrl($idx)
 
-   switch [ file extension $_ytk_fn ] {
+   source_ytk_file $_ytk_fn
+}
+
+##
+# source_ytk_file filename
+#  Sources the file defined by $filename -- in Yorick if it's a .i file, in Tcl
+#  if it's a .ytk, .tk, or .tcl file.
+#
+# Arguments:
+#  None
+#
+# Returns:
+#  1 if the file is one of .i, .ytk, .tk, or .tcl; 0 otherwise.
+#
+# Side effects:
+#  The file is sourced (in either Yorick or Tcl), which could have any effect
+#  depending on the code in question.
+#
+#  If the file is a .i file, then global ycode_dir is set to its containing
+#  directory and both Tcl and Yorick have their working directory updated to
+#  match it.
+##
+proc source_ytk_file {filename} {
+   global ycode_dir
+   switch [file extension $filename] {
       ".tcl" -
       ".tk"  -
       ".ytk" {
-         uplevel #0 { source $_ytk_fn }
+         uplevel #0 [list source $filename]
+         return 1
       }
       ".i" {
-         set ycode_dir [ file dirname $_ytk_fn ]
-         cd $ycode_dir;
+         set ycode_dir [file dirname $filename]
+         cd $ycode_dir
          exp_send "cd, \"$ycode_dir\"\r"
-         exp_send "#include \"$_ytk_fn\"\r"
+         exp_send "#include \"$filename\"\r"
+         return 1
+      }
+      default {
+         return 0
       }
    }
 }
 
+##
+# ytk_mr_enqueue filename
+#  Addes a file to the "most recently loaded" files list.
+#
+# Arguments:
+#  filename: The name of a file to put in the most recent files list.
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  Stores $filename in global _ytk_mrl in the index specified by global
+#  _ytk_mrl_idx, then increments _ytk_mrl_idx (but sets it to 1 if it exceeds
+#  8).
+##
 proc ytk_mr_enqueue { f } {
    global _ytk_mrl _ytk_mrl_idx
    set _ytk_mrl($_ytk_mrl_idx) $f
@@ -361,8 +754,30 @@ proc ytk_mr_enqueue { f } {
    if { $_ytk_mrl_idx > 8 } { set _ytk_mrl_idx 1 }
 }
 
+##
+# select_ytk_fn start_dir
+#  Prompts the user to select a file to source (with starting directory
+#  $start_dir), the sources it.
+#
+# Arguments:
+#  start_dir: String indicating the directory to start in when prompting for a
+#     file.
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  Global _ytk_fn is set to the selected file's name.
+#
+#  The file is sourced at the global scope, which could have any effect; see
+#  source_ytk_file.
+#
+#  If the file is recognized as a valid kind of file by source_ytk_file, then
+#  it's added to the "most recent files" list by way of ytk_mr_enqueue.
+##
 proc select_ytk_fn { start_dir } {
-   global _ytk_fn y_codedir ytk_codedir _ytk_mrl _ytk_mrl_idx
+   global _ytk_fn
+
    set _ytk_fn [tk_getOpenFile \
       -initialdir $start_dir -filetypes {
          {{Yorick Specfic Tcl/Tk Programs} {.ytk} }
@@ -371,69 +786,178 @@ proc select_ytk_fn { start_dir } {
          {{Tcl/Tk Programs} {.tcl .tk} }
          {{All Files}       {*}   }
       }]
-   if { $_ytk_fn != "" } {
-      switch [ file extension $_ytk_fn ] {
-         ".tcl" -
-         ".tk"  -
-         ".ytk" {
-            uplevel { source $_ytk_fn }
-            ytk_mr_enqueue $_ytk_fn
-         }
-         ".i" {
-            ytk_mr_enqueue $_ytk_fn
-            set ycode_dir [ file dirname $_ytk_fn ]
-            cd $ycode_dir;
-            exp_send "cd, \"$ycode_dir\"\r"
-            exp_send "#include \"$_ytk_fn\"\r"
-         }
-      }
+
+   if {[source_ytk_file $_ytk_fn]} {
+      ytk_mr_enqueue $_ytk_fn
    }
 }
 
+##
+# winopen n
+#  Opens a Yorick plot window, taking these steps:
+#  1. Kills the specified window
+#  2. Opens the specified window with its dpi set to _ytk(plot_dpi) and its
+#     style set to _ytk(plot_style).gs.
+#
+# Arguments:
+#  n: An integer indicating the window to open.
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  None
+##
 proc winopen {n} {
    global _ytk
    exp_send "winkill,$n;window,$n,dpi=$_ytk(plot_dpi),style=\"$_ytk(plot_style).gs\"\r"
 }
 
+##
+# winkill n
+#  Kills a Yorick plot window (via the Yorick winkill command).
+#
+# Arguments:
+#  n: An integer indicating the window to kill.
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  None
+##
 proc winkill {n} {
    exp_send "winkill, $n;\r"
 }
 
+##
+# winsel n
+#  Selects a Yorick plot window (via the Yorick window command).
+#
+# Arguments:
+#  n: An integer indicating the window to select.
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  None
+##
 proc winsel {n} {
    exp_send "window, $n;\r"
 }
 
-# kill window based on plot array
+##
+# pa_winkill n
+#  Kills a Yorick plot window (via the Yorick winkill command) associated with
+#  the plot_array global.
+#
+# Arguments:
+#  n: A string indicating the index into plot_array that represents the
+#     window to kill.
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  None
+##
 proc pa_winkill {n} {
    global plot_array
    winkill $plot_array(window$n)
 }
 
+##
+# pa_fma n
+#  Issues a Yorick frame advance (fma) to a Yorick plot window associated with
+#  the plot_array global.
+#
+# Arguments:
+#  n: A string indicating the index into plot_array that represents the
+#     window to receive the frame advance.
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  None
+##
 proc pa_fma {n} {
    global plot_array
    exp_send "window, $plot_array(window$n); fma;\r"
 }
 
+##
+# pa_limits n
+#  Issues a Yorick limits command to a Yorick plot window associated with the
+#  plot_array global.
+#
+# Arguments:
+#  n: A string indicating the index into plot_array that represents the
+#     window to receive the limits command.
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  None
+##
 proc pa_limits {n} {
    global plot_array
    exp_send "window, $plot_array(window$n); limits;\r"
 }
 
-proc setpalette { a b c } {
+##
+# setpalette args
+#  Issues a Yorick palette command to load the palette defined by
+#  _ytk(plot_palette).
+#
+# Arguments:
+#  This can accept any number of arguments, but they are all disregarded. (This
+#  makes it useable by variable traces.)
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  None
+##
+proc setpalette {args} {
    global _ytk
    exp_send "palette, \"$_ytk(plot_palette).gp\"\r"
 }
 
+##
+# plot_cmd cmd n
+#  Issues the given command $cmd with index n. Only works when $cmd is plg or
+#  plmk. Uses the settings defined in plot_array and the data stored in _ytk_x
+#  and _ytk_y (all globals).
+#
+#  This is used within the GUI created by ytk_plot.
+#
+# Arguments:
+#  cmd: String indicating the command to use. Should be one of: plg plmk
+#  n: The index of the command, which should be unique.
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  Globals _ytk_x and _ytk_y are set to the values in pot_array that correspond
+#  to the given command/index.
+##
 proc plot_cmd { cmd n } {
-   global plot_array markers
-   set idx    "$cmd$n"
-   set win    "window($plot_array(window$idx));"
-   set fma    "$plot_array(fma$idx);"
-   if { $fma ne "fma;" } { set fma  "" }
+   global plot_array markers _ytk_x _ytk_y
+
+   set idx "$cmd$n"
+   set win "window($plot_array(window$idx));"
+   set fma "$plot_array(fma$idx);"
+   if {$fma ne "fma;"} {set fma ""}
    set color  "$plot_array(color$idx)"
    set _ytk_x      "$plot_array(x$idx)"
    set _ytk_y      "$plot_array(y$idx)"
    set lwidth "width=$plot_array(lwidth$idx)"
+
    switch $cmd {
       plg {
          set marks  "$plot_array(marks$idx)"
@@ -446,22 +970,53 @@ proc plot_cmd { cmd n } {
             $marks,type=\"$type\",$lwidth,color=\"$color\"\r"
       }
       plmk {
-         set marker "$plot_array(marker$idx)"
-         set marker [ expr [ lsearch $markers $marker ] +1 ]
-         set msize  "$plot_array(msize$idx)"
+         set marker [expr [lsearch $markers $plot_array(marker$idx)] + 1]
+         set msize $plot_array(msize$idx)
          exp_send "$win$fma$cmd,$_ytk_y,$_ytk_x,\
             marker=$marker,$lwidth,msize=$msize,color=\"$color\"\r"
       }
    }
 }
 
-proc ytk_plot { pt } {
-   global rn markers expect_out plot_array _ytk_x _ytk_y
+##
+# ytk_plot plot_type
+#  Creates a GUI to facilitate plotting. This GUI provides the following:
+#     * The user can specify which variables to plot, for x and for y (stored
+#     in plot_array).
+#     * The user can specify a window to plot in, the color to plot with, the
+#     marker to use (if relevant), the width to use, line style, and various
+#     other settings (all stored in plot_array).
+#     * The plot can be executed via a provided button (which uses plot_cmd).
+#     * Buttons are provided for fma and limits.
+#
+# Arguments:
+#  plot_type: One of plg or plmk.
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  Sets up the values of global plot_array using a unique index, for later
+#  reference.
+#
+#  Increments global _ytk_plot_num -- or sets to 1 if it does not exist yet.
+#
+#  Sets the yorick variables _ytk_x and _ytk_y to test data.
+##
+proc ytk_plot {plot_type} {
+   global _ytk_plot_num markers expect_out plot_array _ytk_x _ytk_y
+
+   if {[info exists _ytk_plot_num]} {
+      incr _ytk_plot_num
+   } else {
+      set _ytk_plot_num 1
+   }
+
    set fma 1
-   set w $pt$rn;
+   set w $plot_type$_ytk_plot_num
    set plot_array(x$w) _ytk_x
    set plot_array(y$w) _ytk_y
-   toplevel ".$w"
+   toplevel .$w
 
    # Determine the present window by asking Yorick with a window() command
    # We'll keep the information and use it to insure we're plotting in the
@@ -488,7 +1043,7 @@ proc ytk_plot { pt } {
    tk_optionMenu .$w.lwidth plot_array(lwidth$w) \
       0.5 1.0 1.5 2.0 2.5 3 5 7 10 15 20 25
 
-   switch $pt {
+   switch $plot_type {
       plg {
          checkbutton .$w.marks -text Marks \
             -variable plot_array(marks$w) \
@@ -504,7 +1059,7 @@ proc ytk_plot { pt } {
    }
 
    frame .$w.c -relief raised -borderwidth 3
-   button .$w.c.plot -text "Execute Plot" -command [list plot_cmd $pt $rn]
+   button .$w.c.plot -text "Execute Plot" -command [list plot_cmd $plot_type $_ytk_plot_num]
    button .$w.c.fma -text Fma -command [list pa_fma $w]
    button .$w.c.limits -text Limits -command [list pa_limits $w]
 
@@ -517,22 +1072,40 @@ proc ytk_plot { pt } {
    pack .$w.fma -side top
    pack .$w.color -side top
    pack .$w.lwidth -side top
-   switch $pt {
-   plg {
-      pack .$w.marks -side top
-      pack .$w.type -side top
+   switch $plot_type {
+      plg {
+         pack .$w.marks -side top
+         pack .$w.type -side top
       }
-   plmk {
-      pack .$w.marker -side top
-      pack .$w.msize -side top
+      plmk {
+         pack .$w.marker -side top
+         pack .$w.msize -side top
       }
    }
    pack .$w.x .$w.y -side top
    pack .$w.c -side bottom -expand 1 -fill x
-   incr rn
 }
 
-proc yorick {}  {
+##
+# start_yorick
+#  Starts the main Yorick loop. This primarily watches for DOCUMENT strings and
+#  will catch them to display in GUI form if configured to do so.
+#
+# Arguments:
+#  None
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  If configured to spawn documentation for Yorick via Tcl, this will watch
+#  Yorick's output and attempt to intercept DOCUMENT statements. Otherwise, it
+#  lets everything else pass through as-is.
+#
+#  In order to avoid hanging, this will only catch DOCUMENT statements that are
+#  received within an interval of a single second.
+##
+proc start_yorick {}  {
    global _ytk interact_out indoc hwin str Y_SITE
    upvar spawn_id spawn_id
    expect ">"
@@ -542,7 +1115,7 @@ proc yorick {}  {
       -nobuffer
       -re "/\\* DOCUMENT.*\n" {
          regsub -all "\r" $interact_out(0,string) "" str
-         if { $_ytk(separate_help_win) == "Yes" } {
+         if { $_ytk(separate_help_win) eq "Yes" } {
             interact {
                -o
                -re ".*\\*/" {
@@ -569,42 +1142,71 @@ proc yorick {}  {
    }
 }
 
+##
+# load_and_run fn
+#  Attempts to load and run the given file $fn. If it fails, the program aborts
+#  after notifying the user.
+#
+#  This is only used when starting Ytk with a command-line file argument.
+#
+# Arguments:
+#  fn: A string indicating the path/filename to try to load.
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  If it fails, the program terminates.
+#
+#  If it succeeds, almost any side effect could happen since it is sourcing
+#  external code. See source_ytk_file for more info on side effects.
+##
 proc load_and_run { fn } {
    if { ![file exists $fn] } {
       tk_messageBox -icon error -message "$fn not found" -type ok
       exit 1
    }
-   switch [file extension $fn] {
-      ".tcl" -
-      ".tk"  -
-      ".ytk" {
-         if { [catch {uplevel #0 [list source $fn]} err] } {
-            tk_messageBox -icon error -type ok -message "Error parsing $fn:\n$err"
-            exit 1
-         }
-      }
-      ".i"   {
-         set ycode_dir [file dirname $fn]
-         cd $ycode_dir
-         exp_send "cd, \"$ycode_dir\"\r"
-         exp_send "#include \"$fn\"\r"
-      }
-      default {
+
+   if {[catch {source_ytk_file $fn} result]} {
+      # Error
+      tk_messageBox -icon error -type ok -message "Error parsing $fn:\n$err"
+      exit 1
+   } else {
+      if {! $result} {
+         # Wrong kind of file
          tk_messageBox -icon error -message "Don't know how to handle $fn" -type ok
          exit 1
       }
    }
 }
 
+##
+# restore_pbd
+#  The user is prompted for a pbd file. If one is provided, it is restored.
+#
+# Arguments:
+#  None
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  Global _ytk_fn is set to the selected file.
+#
+#  Within Yorick, any variables stored in the pbd are restored in the global
+#  scope. Also, _ytk_pbd_f is set to an open filehandle to the pbd file.
+##
 proc restore_pbd {} {
+   global _ytk_fn
+
    set _ytk_fn [tk_getOpenFile -filetypes {
       {{Yorick PBD file} {.pbd}}
       {{All Files}       {*}   }
    }]
+
    if { $_ytk_fn ne "" } {
       switch [file extension $_ytk_fn] {
          ".pbd" {
-            set ytk_pbd_dir [ file dirname $_ytk_fn ]
             exp_send "_ytk_pbd_f = openb(\"$_ytk_fn\"); restore, _ytk_pbd_f;\r"
             exp_send "show, _ytk_pbd_f\r"
             toplevel .stby
@@ -627,6 +1229,20 @@ proc restore_pbd {} {
    }
 }
 
+##
+# show_colorbar w
+#  Clears the given window $w then draws a colorbar in it for the current
+#  palette. Also, the user receives a notice that this has been done.
+#
+# Argument:
+#  w: The window into which the colorbar should be drawn.
+#
+# Returns:
+#  Nothing.
+#
+# Side effects:
+#  Yorick variable _ytk_z is set with the values needed to draw the colorbar.
+##
 proc show_colorbar {w} {
    exp_send "winkill,$w;window,$w;\r"
    exp_send "_ytk_z = char(span(1,240,240)) (,-:1:10);pli,_ytk_z\r"
@@ -637,9 +1253,21 @@ proc show_colorbar {w} {
       color bar you want to see. "
 }
 
+##
+# launch_gui
+#  Sets up the core GUI for Ytk.
+#
+# Arguments:
+#  None
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  Adds a trace on _ytk(plot_palette) that calls setpalette on writes.
+##
 proc launch_gui {} {
-   global Y_SITE _ytk _ytk_fn yorick_version tcl_version tk_version \
-      _ytk_mrl_idx
+   global Y_SITE _ytk yorick_version tk_patchLevel
 
    wm deiconify .
    wm minsize . 350 1
@@ -667,29 +1295,26 @@ proc launch_gui {} {
    .mb add cascade -label Demos -underline 2 -menu .mb.demo
    .mb add cascade -label Help  -underline 0 -menu .mb.help
 
-   .mb.edit add command -label "Y_SITE ..." -command {
-      set _ytk_fn [ select_for_edit $Y_SITE ]
-      ytk_kick_off_editor $_ytk(editor) $_ytk_fn
-   }
+   .mb.edit add command -label "Y_SITE ..." \
+      -command [list select_then_edit_from $Y_SITE]
 
-   .mb.edit add command -label "~/Yorick ..." -command {
-      set _ytk_fn [ select_for_edit "~/Yorick/" ]
-      ytk_kick_off_editor $_ytk(editor) $_ytk_fn
-   }
+   .mb.edit add command -label "~/Yorick ..." \
+      -command [list select_then_edit_from "~/Yorick/"]
 
-   .mb.edit add command -label "~/lidar-processing ..." -command {
-      set _ytk_fn [ select_for_edit "~/lidar-processing/" ]
-      ytk_kick_off_editor $_ytk(editor) $_ytk_fn
-   }
+   .mb.edit add command -label "~/lidar-processing ..." \
+      -command [list select_then_edit_from "~/lidar-processing/"]
 
    .mb.edit add separator
    .mb.edit add cascade -label "Editor" -underline 0 -menu .mb.edit.editor
+
    set editors [list vi vim gvim emacs xemacs kedit nedit kwrite gedit xedit]
    set underlines [list 0 0 2 0 0 2 0 1 0 4]
    foreach editor $editors underline $underlines {
       .mb.edit.editor add radiobutton -label $editor -value $editor \
          -variable _ytk(editor) -underline $underline
    }
+   unset editors underlines
+
    .mb.edit add separator
    .mb.edit add command -label "Save Options" -command save_options
    .mb.edit add command -label "Restore Defaults" -command restore_defaults
@@ -720,30 +1345,28 @@ proc launch_gui {} {
    .mb.tkcon add checkbutton -label "Tkcmd window"  \
       -onvalue "wm deiconify .tx" \
       -offvalue "wm withdraw .tx" \
-      -variable tkcmdvalue  -underline 1 -command {
-      eval $tkcmdvalue
-   }
+      -variable tkcmdvalue  -underline 1 -command {eval $tkcmdvalue}
 
-   .mb.demo add command -label "demo 1  sliding sine wave" -command { ytk_run_demo demo1  }
-   .mb.demo add command -label "demo 2  drum head simulation" -command { ytk_run_demo demo2  }
-   .mb.demo add command -label "demo 3  mechanical arms swinging around" -command { ytk_run_demo demo3  }
-   .mb.demo add command -label "demo 4  Air flow around an airfoil section" -command { ytk_run_demo demo4  }
-   .mb.demo add command -label "demo 5  3D graphics and 3D slicing" -command { ytk_run_demo demo5  }
-   .mb.demo add command -label "testg   Graphics performance test" -command { ytk_run_demo testg  }
-   .mb.demo add command -label "testlp  Test linear algebra functions" -command { ytk_run_demo testlp  }
-   .mb.demo add command -label "testm   Test Fft, LU, QR, and SVD" -command { ytk_run_demo testm  }
-   .mb.demo add command -label "test1" -command { ytk_run_demo test1  }
-   .mb.demo add command -label "test2" -command { ytk_run_demo test2  }
-   .mb.demo add command -label "test3" -command { ytk_run_demo test3  }
-   .mb.demo add command -label "testb   Test I/O stuff" -command { ytk_run_demo testb  }
-   .mb.demo add command -label "testfull Runs a complete test of Yorick" -command { ytk_run_demo testfull  }
+   .mb.demo add command -label "demo 1  sliding sine wave" -command { ytk_run_demo demo1 }
+   .mb.demo add command -label "demo 2  drum head simulation" -command { ytk_run_demo demo2 }
+   .mb.demo add command -label "demo 3  mechanical arms swinging around" -command { ytk_run_demo demo3 }
+   .mb.demo add command -label "demo 4  Air flow around an airfoil section" -command { ytk_run_demo demo4 }
+   .mb.demo add command -label "demo 5  3D graphics and 3D slicing" -command { ytk_run_demo demo5 }
+   .mb.demo add command -label "testg   Graphics performance test" -command { ytk_run_demo testg }
+   .mb.demo add command -label "testlp  Test linear algebra functions" -command { ytk_run_demo testlp }
+   .mb.demo add command -label "testm   Test Fft, LU, QR, and SVD" -command { ytk_run_demo testm }
+   .mb.demo add command -label "test1" -command { ytk_run_demo test1 }
+   .mb.demo add command -label "test2" -command { ytk_run_demo test2 }
+   .mb.demo add command -label "test3" -command { ytk_run_demo test3 }
+   .mb.demo add command -label "testb   Test I/O stuff" -command { ytk_run_demo testb }
+   .mb.demo add command -label "testfull Runs a complete test of Yorick" -command { ytk_run_demo testfull }
 
    .mb.help add checkbutton -label "Help goes in new window" \
       -onvalue Yes -offvalue No -variable _ytk(separate_help_win)
    .mb.help add checkbutton -label "Help PopUp" \
       -onvalue Yes -offvalue No -variable _ytk(annoying_help) \
       -command {
-         if { $_ytk(annoying_help) == "Yes" } {
+         if { $_ytk(annoying_help) eq "Yes" } {
             wm state .ytk_dynamic_help normal
          }  else {
             wm state .ytk_dynamic_help withdrawn
@@ -754,7 +1377,7 @@ proc launch_gui {} {
    .mb.help add command -label "Y_SITE: $Y_SITE"
    .mb.help add command -label "Yorick Version: $yorick_version"
    .mb.help add command -label "Yorick location: $_ytk(yorick_executable)"
-   .mb.help add command -label "Tcl $tcl_version, Tk $tk_version, ExpectK [exp_version]"
+   .mb.help add command -label "Tcl [info patchlevel], Tk $tk_patchLevel, Expect [exp_version]"
    .mb.help add command -label "Yorick" -command { exp_send "help\r" }
    .mb.help add separator
 
@@ -767,12 +1390,7 @@ proc launch_gui {} {
       .mb.help add command -label $help_command \
          -command [list exp_send "help, $help_command\r"]
    }
-
-   # clear the most recent file queue
-   set _ytk_mrl_idx 1
-   for { set i 1 } { $i <= 8 } { incr i } {
-      set _ytk_mrl($i) ""
-   }
+   unset help_command help_commands
 
    .mb.file add command -label "Load a Yorick/ytk program file ..." \
       -command { select_ytk_fn $ytkcode_dir }
@@ -808,7 +1426,7 @@ proc launch_gui {} {
    pack .ytk_dynamic_help.lhelp .ytk_dynamic_help.dismiss \
       -side top -expand 1 -fill both
 
-   if { $_ytk(annoying_help) == "No" } {
+   if { $_ytk(annoying_help) eq "No" } {
       wm state .ytk_dynamic_help withdrawn
    }
 
@@ -1048,6 +1666,7 @@ proc launch_gui {} {
       .mb.graph add radiobutton -label $plot_style -value $plot_style \
          -variable _ytk(plot_style) -underline 1
    }
+   unset plot_style plot_styles
 
    .mb.graph add separator
    .mb.graph add command -label "Show color bar in window 0" \
@@ -1058,6 +1677,7 @@ proc launch_gui {} {
       .mb.graph add radiobutton -label $plot_palette -value $plot_palette \
          -variable _ytk(plot_palette) -underline 1
    }
+   unset plot_palette plot_palettes
 
    for {set w 0} {$w < 8} {incr w} {
       .mb.graph.open add command -label "Window $w" -command [list winopen $w]
@@ -1177,6 +1797,6 @@ if { $load_on_start != "" } {
    load_and_run $load_on_start
 }
 
-yorick
+start_yorick
 
 ytk_exit 0

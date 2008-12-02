@@ -146,7 +146,6 @@ menu .l1wid.mb.diag
   if { $_ytk_fn != "" } {
     switch [ file extension $_ytk_fn ] {
     ".pbd" {  
-	    set ytk_pbd_dir [ file dirname $_ytk_fn ]
             exp_send "_ytk_pbd_f = openb(\"$_ytk_fn\"); restore, _ytk_pbd_f;\r"
             exp_send "show, _ytk_pbd_f\r"
  	       toplevel .stby
