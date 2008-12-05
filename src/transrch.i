@@ -131,7 +131,7 @@ plg, y, x, width=9.0, color="blue";
       rasterno, pulseno,
       mindata.north/100.0,
       mindata.east /100.0;
-   show_fstrack, mindata, utm=1, skip=0, color=clr(col), win=5, msize=.5;
+   show_track, mindata, utm=1, skip=0, color=clr(col), win=5, msize=.5;
    // show_fstrack,fs(m(minindx)), utm=1, skip=0, color="blue", win=5, msize=.5;
    window, 1, wait=1; fma;
    // this is getting done by show_wf
