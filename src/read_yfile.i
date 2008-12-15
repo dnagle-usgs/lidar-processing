@@ -829,8 +829,8 @@ func write_ascii_xyz(data_arr, opath, ofname, type=, ESRI=, header=, footer=, de
       }
       if (latlon) {
          ldat = utm2ll(north,east,zone);
-         east = ldat(1);
-         north = ldat(2);
+         east = ldat(,1);
+         north = ldat(,2);
          east = swrite(format="%3.7f", east);
          north = swrite(format="%3.7f", north);
       } else {
