@@ -676,7 +676,11 @@ proc show_img { n } {
 		set pat "tar/mnt/ramdisk/2/cam147_*$hms*.jpg"
 		if { [ catch { set fn [ glob $pat ] } ] } {
 			puts "No file: $pat"
-		} 
+		} else {
+         if { [llength $fn] > 1 } {
+            set fn [lindex $fn 0]
+         }
+      }
 	
 	} else {
 
@@ -699,10 +703,9 @@ proc show_img { n } {
 	}
 
    if {![info exists fn]} {
-		tk_messageBox  \
-			-message "Image does not exist." \
-			-type ok
-	  return
+      $img blank
+      .canf.can itemconfigure tx -text "Image does not exist."
+      return
 	}
 
 		
