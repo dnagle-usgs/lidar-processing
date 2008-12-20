@@ -19,7 +19,7 @@ func dump_info(edb, mindata, minindx, last=, ref=) {
    _last_soe = edb( mindata.rn&0xffffff ).seconds;
 
    somd = edb(mindata.rn&0xffffff ).seconds % 86400;
-   rast  = decode_raster(get_erast( rn=rn ));
+   rast  = decode_raster(get_erast( rn=rasterno ));
 
    fsecs = rast.offset_time - edb(mindata.rn&0xffffff ).seconds ;
    ztime = soe2time( somd );

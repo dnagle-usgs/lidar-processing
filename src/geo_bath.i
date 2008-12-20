@@ -860,6 +860,7 @@ This function can be invoked from the 'Process EAARL Data' GUI by clicking the '
  if (!(fset))                          fset = 0
  if (typeof(data)=="pointer")          data = *data(1);
  if (!buf)                              buf = 1000; // 10 meters  
+ if (is_void(tx))                       tx = 0;
 
  window, win;
 
@@ -1091,7 +1092,7 @@ write,"============================================================="
 // XYZZY rwm 2008-11-10
 // plot tx waveform.
    if ( tx > 0 ) {
-      window,2
+      window,2;
       fma;
       for (j = tx; j <= tx+10; j++) {
          plg,*rast.tx(j);
