@@ -1250,6 +1250,7 @@ proc select_path { path } {
 	clear_marks
 	clear_class
 	show_img $ci
+	apply_zoom_factor -1 
 	after 3500 {destroy .loader}
 
 }
