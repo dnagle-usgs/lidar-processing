@@ -80,15 +80,33 @@ series of matrix multipications as follows:
 
 Rz, Rx, and Ry are the matrixes used to rotate about the z-axis, x-axis, and y-axis respectively. They are defined as follows:
 
-     / 1 0   0  \        /  cy 0 sy \        / cz -sz 0 \
-Rx = | 0 cx -sx |   Ry = |  0  1 0  |   Rz = | sz  cz 0 |
-     \ 0 sx  cx /        \ -sy 0 cy /        \ 0   0  1 /
+        / 1 0   0  \        /  cy 0 sy \        / cz -sz 0 \
+   Rx = | 0 cx -sx |   Ry = |  0  1 0  |   Rz = | sz  cz 0 |
+        \ 0 sx  cx /        \ -sy 0 cy /        \ 0   0  1 /
 
 If we multiply the three matrices together, the result is the following:
 
-/ A B C \   / (cy*cz - sx*sy*sz) (-cx*sz) (sy*cz + sx*cy*sz) \
-| D E F | = | (cy*sz + sx*sy*cz) (cx*cz)  (sy*sz - sx*cy*sz) |
-\ G H I /   \ (-cs*sy)           (sx)     (cx*cy)            /
+                  / cz -sz 0 \   / 1 0   0  \   /  cy 0 sy \
+   Rz * Rx * Ry = | sz  cz 0 | * | 0 cx -sx | * |  0  1 0  |
+                  \ 0   0  1 /   \ 0 sx  cx /   \ -sy 0 cy /
+
+                  / cz -sz 0 \   / (cy)     (0)  (sy)     \
+                = | sz  cz 0 | * | (sx*sy)  (cx) (-sx*cy) |
+                  \ 0   0  1 /   \ (-cx*sy) (sx) (cx*cy)  /
+
+                  / (cy*cz - sx*sy*sz) (-cx*sz) (sy*cz + sx*cy*sz) \
+                = | (cy*sz + sx*sy*cz) (cx*cz)  (sy*sz - sx*cy*cz) |
+                  \ (-cx*sy)           (sx)     (cx*cy)            /
+
+                   / A B C \
+                -> | D E F |
+                   \ G H I /
+
+As indicated, we store the matrix elements in the variables A through I.
+
+   / A B C \   / (cy*cz - sx*sy*sz) (-cx*sz) (sy*cz + sx*cy*sz) \
+   | D E F | = | (cy*sz + sx*sy*cz) (cx*cz)  (sy*sz - sx*cy*sz) |
+   \ G H I /   \ (-cs*sy)           (sx)     (cx*cy)            /
 
 Note: In the above, sin(x), sin(y), cos(z), etc. are abbreviated as sx, sy, cz,
 etc.
@@ -157,7 +175,64 @@ sca  = sin(ca);
 cma  = cos(ma);
 sma  = sin(ma);
 
-// Following needs to be documented yet
+/*
+Here we compensate for rotation of the laser beam (the vector between the
+mirror and the ground point).
+
+Let x be the rotation about the x axis (refered to as la in the yorick code).
+Let z be the rotation about the z axis (refered to as pa in the yorick code).
+Our y axis is defined as the laser vector itself; thus, there is no rotation
+about the y axis.
+
+Let Rx be the rotation matrix about the x axis and Rz be the rotation matrix
+about the z axis. Then Rx and Rz are:
+
+        / 1 0   0  \        / cz -sz 0 \
+   Rx = | 0 cx -sx |   Rz = | sz  cz 0 |
+        \ 0 sx  cx /        \ 0   0  1 /
+
+The composite rotation matrix R is thus:
+
+                 / (cz)      (sz)    (0)  \
+   R = Rx * Rz = | (-cx*sz) (cx*cz)  (sz) |
+                 \ (sx*sz)  (-sx*cz) (cx) /
+
+Our laser vector is defined solely by a magnitude in the y direction. This
+magitude is represented in yorick as the variable 'mag'. If we call our laser
+distance vector D, then:
+
+       /  0  \
+   D = | mag |
+       \  0  /
+
+Now, the above rotation matrix R is to transform from the laser beam's
+inertial reference to the plane intertial reference. We then have to transform
+from the plane's intertial reference to the real world's inertial reference.
+Thus, we need the matrix defined by yorick variables A through I further up
+above.
+
+Let Rlp be the rotation matrix to transform from the laser to the plane. Let
+Rpg be the rotation matrix to transform from the plane to the real world (gps).
+Then to transform D into a real-world displacement vector, we need to do the
+following:
+
+                   / A B C \   / (cz)      (sz)    (0)  \   /  0  \
+   Rpg * Rlp * D = | D E F | * | (-cx*sz) (cx*cz)  (sz) | * | mag | 
+                   \ G H I /   \ (sx*sz)  (-sx*cz) (cx) /   \  0  /
+
+                   / A B C \   / (sz * mag)       \
+                 = | D E F | * | (cx * cz * mag)  |
+                   \ G H I /   \ (-sx * cz * mag) /
+
+It appears that the vector 'a' defined below is the second row of the above
+matrix, multiplied by the magnitude vector in the 'y' direction.
+
+The maginitude vector is [0,mag,0]. We omit the first and third rows because
+they'll always be zero.
+
+The magnitude vector is a coordinate in "mirror space". This converts it to a
+coordinate in plane space. -- ?
+*/
 
 // mag is the magnitude of the vector in the y direction
 a1 = ((-A*spa+B*cpa)*cla+C*sla)*mag;	// Move incident vector with
