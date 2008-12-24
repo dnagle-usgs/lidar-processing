@@ -63,13 +63,6 @@ struct EGGNAV {
 plmk_default,msize=.1
 pldefault,marks=0
 
-
-if ( is_void( gps_time_correction ) )
-  gps_time_correction = -13.0
-
-
-
-
 func raeggnav (junk) {  
 /* DOCUMENT raeggnav 
    Read ASCII EGG precision navigation file.  This reads nav trajectories
@@ -234,10 +227,11 @@ _read(idf, 4, pn );
     pn.sod(rng) += 86400;
   }
 
+  if(is_void(gps_time_correction))
+    determine_gps_time_correction, ifn;
   pn.sod += gps_time_correction;
   
 
-gps_time_correction = float(gps_time_correction)
 write,format="Applied GPS time correction of %f\n", gps_time_correction
 write,format="%s", 
               "               Min          Max\n"
@@ -288,51 +282,3 @@ func load_pnav2FS(junk, ifn=) {
 
   return fs;
 }
-
-func determine_gps_time_correction(fn) {
-/* DOCUMENT determine_gps_time_correction(fn)
-  This function determines the gps_time_correction automatically based on the year of the survey. 
-  If survey date is before year 2006, gps_time_correction = -13.
-  If survey date is after year 2006, gps_time_correction = -14.
-  The survey date is read from the fn input variable which can either be the global data_path variable or the edb file name when the eaarl database is loaded.
-  It is assumed that the data set mission day directory has the following naming convention: yyyy-mm-dd or yyyymmdd.
-  If extern gps_time_correction is set, the function returns 1, else returns 0.
-
-  Amar Nayegandhi, 12/23/2007.
-*/
-
-   success = 0; 
-   yyyy = [];
-   extern gps_time_correction
-
-   // find year from file name
-   dname = file_dirname(fn);
-   qdate = file_tail(dname);
-   if (qdate == "eaarl" || qdate == "dmars" || qdate == "gps") {
-      dname = file_dirname(dname);
-      qdate = file_tail(dname);
-   }
-   if (strglob("[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]",qdate)) {
-      // string is in yyyy-mm-dd format
-      yyyy = strpart(qdate, 1:4);
-   }
-   if (strglob("[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]",qdate)) {
-      // string is in yyyymmdd format
-      yyyy = strpart(qdate, 1:4);
-   }
-   
-   if (is_array(yyyy)) {
-      num_yyyy = 0;
-      sread, yyyy, num_yyyy;
-
-      if (num_yyyy < 2006) gps_time_correction = -13.0;
-      if (num_yyyy >= 2006) gps_time_correction = -14.0;
-      success = 1;
-   } 
-
-
-   return success;
-}
-
-
-

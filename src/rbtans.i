@@ -89,6 +89,8 @@ _read(idf, 4, tans);
   }
 ******/
 
+if(is_void(gps_time_correction))
+ determine_gps_time_correction, ifn;
 
 write,format="Using %f seconds to correct time-of-day\n", gps_time_correction
 write,format="%s", 

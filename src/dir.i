@@ -58,6 +58,90 @@ func file_rootname(fn) {
    return match;
 }
 
+func file_split(fn) {
+/* DOCUMENT file_split(fn)
+   Splits a path into its component parts and returns them as an array.
+
+   If the path is an absolute path, the first array element will be "/".
+
+   Only works on scalar strings.
+*/
+   // David Nagle 2008-12-24
+   parts = strsplit(fn, "/");
+   if(strpart(fn, 1:1) == "/")
+      parts(1) = "/";
+   return parts;
+}
+
+func file_join(parts, ..) {
+/* DOCUMENT file_join(part1, part2, part3)
+            file_join([part1, part2, part3])
+   Joins a list of component parts into a valid path. Returns a single string.
+
+   This properly handles arbitrarily complicated paths as noted:
+      .. is recognized and discards a path component when appropriate
+      . is recognized and is discarded
+      / (and /foo) is recognized and will result in all prior parts being
+         ignored
+*/
+   // David Nagle 2008-12-24
+   if(numberof(parts) == 1 && more_args()) {
+      list = [parts(1)];
+      while(more_args())
+         grow, list, next_arg();
+      return file_join(list);
+   } else {
+      expanded = [];
+      // Component paths might not be single components. We have to split them
+      // up to handle special cases like .. or /foo
+      for(i = 1; i <= numberof(parts); i++) {
+         grow, expanded, file_split(parts(i));
+      }
+      parts = expanded;
+      expanded = cleaned = [];
+      for(i = 1; i <= numberof(parts); i++) {
+         part = parts(i);
+         if(part == "/") {
+            // / indicates that the path is restarting; everything prior gets
+            // thrown out
+            cleaned = ["/"];
+         } else if(part == ".") {
+            // . doesn't change the path, so we can throw it out
+         } else if (part == "") {
+            // the empty string also can be discarded
+         } else if(part == "..") {
+            // .. is complicated, depending on what preceeds it
+            // If the path ends with a .., then we need to add this ..
+            // If the path does not end with a .., then we get rid of the last
+            //   element
+            // If the path is empty, then we stat the path out with ..
+            // If the path is ["/"], then we simply ignore ..
+            if(numberof(cleaned)) {
+               if(cleaned(0) == "..") {
+                  grow, cleaned, "..";
+               } else if(cleaned(0) == "/") {
+                  // do nothing
+               } else {
+                  cleaned = cleaned(:-1);
+               }
+            } else {
+               cleaned = [".."];
+            }
+         } else {
+            // Anything else just gets added to the list
+            grow, cleaned, part;
+         }
+      }
+      parts = cleaned;
+      cleaned = [];
+      joined = strjoin(parts, "/");
+      if(parts(1) == "/") {
+         joined = strpart(joined, 2:);
+      }
+      return joined;
+   }
+}
+
 func split_path( fn, idx, ext= ) {
 /* DOCUMENT split_path(fn,n, ext=);
    Splits paths in various ways. Only works on scalars.

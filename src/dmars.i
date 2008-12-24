@@ -175,7 +175,7 @@ write,"$Id$"
 
 // This is designed to be driven by ytk.
 func load_iexpbd( fn ) {
-  extern _ytk_pbd_f, iex_nav1hz, gps_time_offset,
+  extern _ytk_pbd_f, iex_nav1hz, gps_time_correction,
         tans,
         iex_head,
         iex_nav, iex_nav1hz,
@@ -184,6 +184,12 @@ func load_iexpbd( fn ) {
   _ytk_pbd_f = openb(fn)
   restore, _ytk_pbd_f;
   show, _ytk_pbd_f;
+  close, _ytk_pbd_f;
+
+  if(is_void(gps_time_correction))
+    determine_gps_time_correction, fn;
+  iex_nav.somd += gps_time_correction;
+
   iex2tans;
   ops_conf = ops_IMU2_default;
   gen_cir_nav( 0.120 );
@@ -202,7 +208,7 @@ func gen_cir_nav( offset_secs ) {
   tmp.somd = tmp.somd % 86400;
   utmx = fll2utm(tmp.lat, tmp.lon);
   iex_nav1hz = array(IEX_ATTITUDEUTM, dimsof(utmx)(3));
-  iex_nav1hz.somd = tmp.somd + gps_time_correction;
+  iex_nav1hz.somd = tmp.somd;
   iex_nav1hz.lat = tmp.lat;
   iex_nav1hz.lon = tmp.lon;
   iex_nav1hz.alt = tmp.alt;
@@ -493,9 +499,8 @@ func iex2tans( junk ) {
   Convert an iex_nav variable to a tans variable.  This procedure:
  1) Creates a tans structure.  If it exists, it overwrites it.
  2) Fills it with iex_data
- 3) Adjusts the iex_time from gps to utc
 */
- extern tans, iex_nav, gps_time_correction;
+ extern tans, iex_nav;
  day_start = int(iex_nav.somd(1) / 86400) * 86400; 
  tans = array( IEX_ATTITUDE, dimsof(iex_nav)(2));
  tans.somd   = iex_nav.somd;
@@ -503,7 +508,6 @@ func iex2tans( junk ) {
  tans.pitch  = iex_nav.pitch;
  tans.heading= iex_nav.heading;
  tans.somd  =  iex_nav.somd - day_start;
- tans.somd  += gps_time_correction;
 }
 
 func iex_ascii2pbd( fn ) {

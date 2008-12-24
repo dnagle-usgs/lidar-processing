@@ -231,9 +231,7 @@ if ( _ytk ) {
   if ( !is_void(update) ) 
     write,"******NOTE: The file(s) are open for updating\n"
 
-  if (determine_gps_time_correction(edb_filename)) {
-    write, format= "****** NOTE: gps_time_correction is now set to %3.1f ******\n",gps_time_correction; 
-  }
+  determine_gps_time_correction, edb_filename;
 
   total_edb_records = numberof(edb);
 /* if we're using ytk, then set a var over in tcl to indicate the total
