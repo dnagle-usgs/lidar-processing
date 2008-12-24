@@ -11,15 +11,15 @@
 
 *********************************************************************/
 
-require, "info.i";
+require, "raspulsearch.i";
 
 //            1      2       3        4          5         6       7
   clr = ["black", "red", "blue", "green", "magenta", "yellow", "cyan" ];
 
 
-func transrch( fs, m, llst, _rx=, _el=, spot= ) {
+func transrch( fs, m, llst, _rx=, _el=, spot=, iwin=, disp_type= ) {
 /* DOCUMENT  transrch(fs, m)
-Searches for the point in the transect plot window (3) nearest to where
+Searches for the point in the transect plot window iwin (default 3) nearest to where
 the user clicks. 
 
 The selected point is highlighted red in the transect window and as a
@@ -37,7 +37,7 @@ Input:
 
 To use, first generate a transect with these steps:
 
-cln_fs = test_and_clean(fs_all)
+cln_fs = test_and_clean(fs)
 m = mtransect(cln_fs, show=1);
 
 transrch, cln_fs, fs, llst
@@ -49,8 +49,9 @@ transrch, cln_fs, fs, llst
    if ( ! is_void( _rx ) ) rx = _rx;
    if ( ! is_void( _el ) ) elevation = _el;
    if ( is_void( _last_transrch ) ) _last_transrch = [0.0, 0.0, 0.0, 0.0];
+	if ( is_void(iwin)) iwin = 3;
 
-   window,3;  // xyzzy - this assumes the default iwin for transect;
+   window,iwin;  // xyzzy - this assumes the default iwin for transect;
    // m is the result from mtransect();
    xx = rx(llst)     / 100.;     // llst is an extern from transect()
    yy = elevation(m) / 100.;
@@ -125,7 +126,7 @@ plg, y, x, width=9.0, color="blue";
    rasterno = mindata.rn&0xFFFFFF;
    pulseno  = mindata.rn/0xFFFFFF
    hms= sod2hms(soe2sod(mindata.soe));
-   write, format="Indx  : %6d HMS: %02d%02d%02d  Raster/Pulse: %d/%d UTM: %7.1f, %7.1f\n",
+   write, format="Indx  : %6d HMS: %02d%02d%02d  Raster/Pulse: %d/%d FS UTM: %7.1f, %7.1f\n",
       minindx,
       hms(1), hms(2),hms(3),
       rasterno, pulseno,
@@ -150,13 +151,11 @@ plg, y, x, width=9.0, color="blue";
 
    dump_info, edb, mindata, minindx, last=_last_transrch, ref=_transrch_reference
 
-   _last_transrch(1) = mindata.north;
-   _last_transrch(2) = mindata.east;
-   _last_transrch(3) = mindata.elevation;
+   _last_transrch = get_east_north_elv(mindata,disp_type=disp_type);
 
 }
 
-func mtransrch( fs, m, llst, _rx=, _el=, spot= ) {
+func mtransrch( fs, m, llst, _rx=, _el=, spot=, iwin=, disp_type=,ptype=, fset= ) {
 /* DOCUMENT  mtransrch( fs, m, llst )
   Call transrch repeatedly until the user clicks the right mouse button.
   Should work similar to Pixel Waveform
@@ -175,14 +174,13 @@ mtransrch, cln_fs, fs, llst
 
    if ( is_void(_last_transrch ) ) _last_transrch = [0.0, 0.0, 0.0, 0.0];
    if ( is_void(_last_soe) )        _last_soe = 0;
-   if (!(iwin))                          iwin = 3;
-   if (!(owin))                          owin = 5;
-   if (!(disp_type))                disp_type = 0; //default fs topo
-   if (!(ptype))                        ptype = 0; //default fs topo
-   if (!(msize))                        msize = 1.0
-   if (!(fset))                          fset = 0
+   if (is_void(iwin))                          iwin = 3;
+   if (is_void(disp_type))                disp_type = 0; //default fs topo
+   if (is_void(ptype))                        ptype = 0; //default fs topo
+   if (is_void(msize))                        msize = 1.0
+   if (is_void(fset))                          fset = 0
    if (typeof(data)=="pointer")          data = *data(1);
-   if (!buf)                              buf = 1000; // 10 meters  
+   if (is_void(buf))                              buf = 1000; // 10 meters  
 
    left_mouse =  1;
    center_mouse =  2;
@@ -212,23 +210,70 @@ mtransrch, cln_fs, fs, llst
           ++nsaved;
       }
 
-      transrch, fs, m, llst, _rx=_rx, _el=_el, spot=spot;
+      transrch, fs, m, llst, _rx=_rx, _el=_el, spot=spot, iwin=iwin;
 
       if ( mouse_button == center_mouse || mouse_button == shift_mouse ) {
-        _transrch_reference = array(double, 4);
-        _transrch_reference(1) = mindata.north;
-        _transrch_reference(2) = mindata.east;
-        _transrch_reference(3) = mindata.elevation;
+        _transrch_reference = get_east_north_elv(mindata, disp_type=disp_type);
       }
+
+ 
+	   mdata = get_east_north_elv(mindata, disp_type = disp_type);
 
       if ( is_void( _transrch_reference ) ) {
          write, "No Reference Point Set";
       } else {
-         write, format="   Ref. Dist: %8.2fm  Elev diff: %7.2fm\n",
-            sqrt(double(mindata.north - _transrch_reference(1))^2 +
-                 double(mindata.east  - _transrch_reference(2))^2)/100.0,
-            (mindata.elevation/100.0  - _transrch_reference(3)/100);
+		   if (disp_type == 0) {
+           write, format="   Ref. Dist: %8.2fm  Elev diff: %7.2fm\n",
+            sqrt(double(mdata(1,) - _transrch_reference(1))^2 +
+                 double(mdata(2,)  - _transrch_reference(2))^2)/100.0,
+            (mdata(3,)/100.0  - _transrch_reference(3)/100);
+			}
+		   if ((disp_type == 1) (disp_type == 2)) {
+           write, format="   Ref. Dist: %8.2fm  Last Elev diff: %7.2fm\n",
+            sqrt(double(mdata(1,) - _transrch_reference(1))^2 +
+                 double(mdata(2,)  - _transrch_reference(2))^2)/100.0,
+            (mdata(4,)/100.0  - _transrch_reference(4)/100);
+			}
       }
 
    } while ( mouse_button != right_mouse );
+}
+
+
+
+func get_east_north_elv(mindata, disp_type=) {
+ /* DOCUMENT get_east_north_elv(mindata, disp_type=)
+    This function returns array containing the easting and northing values based on the type of data being used, i.e.
+	 for disp_type = 
+	 0: first surface - it returns (east, north, elevation, 0)
+	 1: last surface - it returns (least, lnorth, elevation, lelv);
+	 2: bathymetry - it returns (east, north, elevation, elv+depth);
+	
+	  INPUT:
+	   mindata - eaarl n-data array (1 element)
+		disp_type - type of data to be displayed.
+	  OUTPUT:
+	   (4,n) array consisting of east, north, elevation, lelv/depth values based on the display type.
+*/
+
+
+	if (is_void(disp_type)) disp_type = 0; // defaults to first return
+	mindata = test_and_clean(mindata); 
+	n = numberof(mindata);
+	mdata = array(double, 4,n);
+	if ((disp_type == 0) || (disp_type == 2)) {
+		mdata(1,n) = mindata.north;
+		mdata(2,n) = mindata.east;
+	}
+		mdata(3,n) = mindata.elevation;
+	if (disp_type == 2) {
+		mdata(4,n) = mindata.elevation+mindata.depth;
+	}
+	if ((disp_type == 1)) {
+		mdata(1,n) = mindata.lnorth;
+		mdata(2,n) = mindata.least;
+		mdata(4,n) = mindata.lelv;
+	}
+
+	return mdata
 }

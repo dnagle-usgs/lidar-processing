@@ -1259,9 +1259,14 @@ proc hist_linlog {} {
 
 .l1wid.mb add cascade -label Diagnostics -underline 0 -menu .l1wid.mb.diag
 
-.l1wid.mb.diag add command -label "transrch" -command {
+.l1wid.mb.diag add command -label "Transect Tool" -command {
        source "$src_path/transrch.ytk"
 }
+
+.l1wid.mb.diag add command -label "Flightline Analysis Tool" -command {
+}
+
+.l1wid.mb.diag entryconfigure 2 -state disabled
 
 proc rcf_region {} {
     global varlist l1pro_data
