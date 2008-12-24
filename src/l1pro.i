@@ -18,7 +18,6 @@ if(is_void(__l1pro_includes_included__)) {
    require, "determine_bias.i";
    require, "drast.i";
    require, "geo_bath.i";
-   require, "info.i";
    require, "ircf.i";
    require, "irg.i";
    require, "manual_filter.i";
@@ -26,6 +25,7 @@ if(is_void(__l1pro_includes_included__)) {
    require, "pbd2las.i";
    require, "plcm.i";
    require, "qaqc_fns.i";
+   require, "raspulsearch.i";
    require, "surface_topo.i";
    require, "veg.i";
    require, "webview.i";

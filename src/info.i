@@ -71,18 +71,60 @@ func dump_info(edb, mindata, minindx, last=, ref=) {
       mindata.melevation/100.0,
       aoi, hy/100.0;
 
-   write,format="Surface elev: %8.2fm Delta: %7.2fm\n",
+   // find out which channel was used to compute the range
+   fs_chn_used = 0;
+   be_chn_used = 0;
+
+   if (structof(mindata(1)) == FS) {
+     if (mindata.intensity < 255) fs_chn_used=1;
+     if ((mindata.intensity >= 300) && (mindata.intensity < 600)) fs_chn_used=2;
+     if ((mindata.intensity >= 600) && (mindata.intensity < 900)) fs_chn_used=3;
+   }
+
+   if (structof(mindata(1)) == VEG__) {
+     if (mindata.fint < 255) fs_chn_used=1;
+     if ((mindata.fint >= 300) && (mindata.fint < 600)) fs_chn_used=2;
+     if ((mindata.fint >= 600) && (mindata.fint < 900)) fs_chn_used=3;
+     if (mindata.lint < 255) be_chn_used=1;
+     if ((mindata.lint >= 300) && (mindata.lint < 600)) be_chn_used=2;
+     if ((mindata.lint >= 600) && (mindata.lint < 900)) be_chn_used=3;
+   }
+
+   if (structof(mindata(1)) == GEO) {
+     if (mindata.first_peak < 255) fs_chn_used=1;
+     if ((mindata.first_peak >= 300) && (mindata.first_peak < 600)) fs_chn_used=2;
+     if ((mindata.first_peak >= 600) && (mindata.first_peak < 900)) fs_chn_used=3;
+     if (mindata.bottom_peak < 255) be_chn_used=1;
+     if ((mindata.bottom_peak >= 300) && (mindata.bottom_peak < 600)) be_chn_used=2;
+     if ((mindata.bottom_peak >= 600) && (mindata.bottom_peak < 900)) be_chn_used=3;
+   }
+
+   write,format="First Surface elev: %8.2fm Delta: %7.2fm\n",
       mindata.elevation/100.0,
       mindata.elevation/100.0 - last(3)/100.0
+   if (structof(mindata(1)) == FS) {
+      write,format="First Surface channel / intensity: %d / %3d\n",
+      fs_chn_used, mindata.intensity;
+   }
    if (structof(mindata(1)) == GEO) {
       write, format="Bottom elev: %8.2fm Delta: %7.2fm\n",
          (mindata.elevation+mindata.depth)/100.,
-         (mindata.elevation+mindata.depth)/100.-_last_rastpulse(4)/100.
+         (mindata.elevation+mindata.depth)/100.-_last_rastpulse(4)/100.;
+      write, format="First/Bottom return elv DIFF: %8.2fm",mindata.depth/100.;
+      write,format="Surface channel-intensity: %d-%3d\n",
+      fs_chn_used, mindata.first_peak;
+      write,format="Bottom channel / intensity: %d-%3d\n",
+      be_chn_used, mindata.last_peak;
    }
    if (structof(mindata(1)) == VEG__) {
       write, format="Last return elev: %8.2fm Delta: %7.2fm\n",
          mindata.lelv/100.,
          mindata.lelv/100.-last(4)/100.
+      write, format="First/Last return elv DIFF: %8.2fm\n",(mindata.elevation-mindata.lelv)/100.;
+      write,format="First Surface channel-intensity: %d-%3d\n",
+         fs_chn_used, mindata.fint;
+      write,format="Last Surface channel-intensity: %d-%3d\n",
+         be_chn_used, mindata.lint;
    }
 
    write,"=============================================================\n";
