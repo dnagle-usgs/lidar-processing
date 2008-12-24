@@ -500,6 +500,9 @@ proc ::plot::menu { } {
 }
 
 proc ::plot::replot_all { } {
+   if {$g::coordType == "UTM"} {
+      ::plot::curzone
+   }
    ::plot::fma
    # Plot images first
    if { $g::enable_plot_images } {
