@@ -8,8 +8,7 @@
  range values were averaged and then the actual slope distance to 
  the target subtracted to yield the range_biasM.  The rms noise on 
  the range values used to compute the range_biasM was 3.19cm
-   range_biasM is the measured range bias in Meters, and range_biasNS 
- is the same bias expressed in Nanoseconds.
+   range_biasM is the measured range bias in Meters
 ***********************************************************************/
 
 write,"$Id$"
@@ -26,7 +25,9 @@ struct mission_constants {
   float yaw_bias;    // Instrument yaw (heading) mounting bias
   float scan_bias;   // Scan encoder mechanical offset from zero 
   float range_biasM; //  Laser range measurement bias.
-  float range_biasNS; // range_biasM / NS2MAIR;
+  float range_biasNS; //  Laser range measurement bias in NS
+  float chn2_range_bias; // range bias for channel 2
+  float chn3_range_bias; // range bias for channel 3
 }
 
 
@@ -69,7 +70,6 @@ for the angle biases and the x,y and z offsets.
 *************************************************************/
  ops_tans = ops_default = ops_conf = array(mission_constants);
  ops_default.range_biasM =   0.7962;         // Laser range measurement bias.
- ops_default.range_biasNS=  ops_default.range_biasM / NS2MAIR;
 
  ops_tans.varname    = "ops_tans"
  ops_tans.name       = "Tans Default Values"
@@ -82,7 +82,6 @@ for the angle biases and the x,y and z offsets.
                                         // measurement of IMU to laser point
  ops_tans.scan_bias  =  0.0;
  ops_tans.range_biasM = 0.7962;         // Laser range measurement bias.
- ops_tans.range_biasNS=  ops_default.range_biasM / NS2MAIR;
 
 // Now, copy the default values to the operating values.
  ops_conf = ops_default = ops_tans;
@@ -137,7 +136,6 @@ func display_mission_constants( m, ytk= ) {
         m.yaw_bias,
         m.scan_bias,
         m.range_biasM,
-        m.range_biasNS,
         m.x_offset,
         m.y_offset,
         m.z_offset );
@@ -152,7 +150,6 @@ func display_mission_constants( m, ytk= ) {
         m.yaw_bias,
         m.scan_bias,
         m.range_biasM,
-        m.range_biasNS,
         m.x_offset,
         m.y_offset,
         m.z_offset

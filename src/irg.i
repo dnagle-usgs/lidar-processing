@@ -75,23 +75,6 @@ local XRTRS
                                   // from the depth idx to get true depth.
 }
 
-func open_irg_status_bar {
-  if ( use_ytk && (len != 0) ) {
-    tkcmd,"destroy .irg; toplevel .irg; set progress 0;"
-    tkcmd,swrite(format="ProgressBar .irg.pb \
-	-fg green \
-	-troughcolor red \
-	-relief raised \
-	-maximum %d \
-	-variable progress \
-	-height 30 \
-	-width 400", len );
-    tkcmd,"pack .irg.pb; update;" 
-    tkcmd,"center_win .irg;"
-  }
-}
-
-
 
 
 func irg( b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo= ) {
@@ -138,7 +121,6 @@ func irg( b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo= ) {
   else
 	use_ytk = 0;
 
-  open_irg_status_bar;
 
 
   for ( di=1, si=b; si<=e; di++, si++ ) {
@@ -198,7 +180,7 @@ func irg( b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo= ) {
     a(di).sa  = rp.sa;
     if ( (di % 10) == 0  )
       if ( use_ytk ) {
-        tkcmd,swrite(format="set progress %d", di)
+        tkcmd,swrite(format="set progress %d", di*100/len);
       } else 
         write,format="  %d/%d     \r", di, len
   }
@@ -208,8 +190,6 @@ func irg( b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo= ) {
     a.rpitch= interp( tans.pitch*d2r,   tans.somd, atime );
     a.alt   = interp( pnav.alt,   pnav.sod,  atime );
   }
-  if ( use_ytk ) 
-    tkcmd,"destroy .irg";
 
   return a;
 }

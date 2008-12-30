@@ -395,6 +395,22 @@ for ( ; i< j; i += step){
 
 }
 
+func open_seg_process_status_bar {
+  if ( _ytk  ) {
+    tkcmd,"destroy .seg; toplevel .seg; set progress 0;wm title .seg \"Flight Segment Progress Bar\""
+    tkcmd,swrite(format="ProgressBar .seg.pb \
+	-fg cyan \
+	-troughcolor blue \
+	-relief raised \
+	-maximum %d \
+	-variable progress \
+	-height 30 \
+	-width 400", 100 );
+    tkcmd,"pack .seg.pb; update;" 
+    tkcmd,"center_win .seg;"
+  }
+}
+
 func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
   /* DOCUMENT make_fs(latutm=, q=, ext_bad_att=)
      This function prepares data to write/plot first surface topography 
@@ -439,6 +455,7 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
    ba_count = 0;
    fcount = 0;
 
+   open_seg_process_status_bar;
    for (i=1;i<=no_t;i++) {
       if ((rn_arr(1,i) != 0)) {
        fcount ++;
@@ -449,6 +466,9 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
        tot_count += numberof(rrr.elevation);
       }
     }
+
+    if ( _ytk ) 
+      tkcmd,"destroy .seg";
 
    /* if ext_bad_att is set, find all points having elevation = 70% of ht 
        of airplane 
@@ -489,18 +509,16 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
 
 
     write, "\nStatistics: \r";
-    write, format="Total number of records processed = %d\n",tot_count;
-    write, format="Total number of records with false first "+
-                   "returns data = %d\n",ba_count;
-    write, format="Total number of GOOD data points = %d \n",
-                   (tot_count-ba_count);
+    write, format="Total records processed = %d\n",tot_count;
+    write, format="Total records with inconclusive first surface"+
+                   "return range = %d\n",ba_count;
 
     if ( tot_count != 0 ) {
        pba = float(ba_count)*100.0/tot_count;
        write, format = "%5.2f%% of the total records had "+
-                       "false first returns! \n",pba;
+                       "inconclusive first surface return ranges \n",pba;
     } else 
-	write, "No good returns found"
+	write, "No first surface returns found"
 
     no_append = 0;
 

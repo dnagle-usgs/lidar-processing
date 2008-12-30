@@ -2290,13 +2290,21 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
 #        exp_send "window,5,style=\"landscape11x85.gs\"\r";
 # }
 
-Button .l1wid.bf45.q.44 -text "Overlay\nGrid" -command {
-  exp_send "draw_grid, $win_no\r"
+Button .l1wid.bf45.q.44 -text "Test and \nClean" -command {
+  global varlist
+  set var_no [.l1wid.bf45.p.15 getvalue]
+  set curvar [lindex $varlist $var_no]
+  exp_send "$curvar = test_and_clean($curvar)\r"
 }
 
-Button .l1wid.bf45.q.45 -text "Show\nGrid Name" -command {
+frame .l1wid.bf45.q.f45
+Button .l1wid.bf45.q.f45.1 -text "2K Grid" -command {
+  exp_send "draw_grid, $win_no\r"
+} -font {Helvetica -8}
+
+Button .l1wid.bf45.q.f45.2 -text "2K Name" -command {
   exp_send "show_grid_location, $win_no\r"
-}
+} -font {Helvetica -8}
 
 frame .l1wid.bf45.q.f46
 Button .l1wid.bf45.q.f46.1 -text "QQ Grid" -command {
@@ -3153,7 +3161,7 @@ Button .l1wid.bf45.sc.pl -text "Plot" -width 6 -height 2 -bd 5 -command {
 	   .l1wid.bf45.p.15 setvalue @2
 	 }
 	 if {$ptype == 3} {
-	    exp_send "cveg_all = make_veg(latutm=1, q=q, use_peak=$usecentroid, multi_peaks=1);\r"
+	    exp_send "cveg_all = make_veg(latutm=1, q=q, use_be_peak=$usecentroid, multi_peaks=1);\r"
 	    expect ">"
 	   .l1wid.bf45.p.15 setvalue @3
  	 } 
@@ -3212,6 +3220,11 @@ pack \
 	-side left
 
 pack \
+   .l1wid.bf45.q.f45.1 \
+   .l1wid.bf45.q.f45.2 \
+   -side top
+
+pack \
    .l1wid.bf45.q.f46.1 \
    .l1wid.bf45.q.f46.2 \
    -side top
@@ -3222,7 +3235,7 @@ pack \
 	.l1wid.bf45.q.3 \
 	.l1wid.bf45.q.4  \
 	.l1wid.bf45.q.44 \
-	.l1wid.bf45.q.45 \
+	.l1wid.bf45.q.f45 \
    .l1wid.bf45.q.f46 \
 	-side left 
 

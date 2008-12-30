@@ -92,6 +92,7 @@ func run_bath( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) 
  //if ( graph != 0 ) 
 //	animate,1;
 
+/*
   if ( _ytk && (len != 0) ) {
     tkcmd,"destroy .bathy; toplevel .bathy; set progress 0;"
     tkcmd,swrite(format="ProgressBar .bathy.pb \
@@ -104,6 +105,8 @@ func run_bath( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) 
 	-width 400", len );
     tkcmd,"pack .bathy.pb; update; center_win .bathy;"
   }
+
+*/
 
  if ( is_void(last) ) 
 	last = 250;
@@ -118,7 +121,7 @@ func run_bath( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) 
    for ( j=1; j<= len; j++ ) {
      if ( (!(j % udi))  || ( j==len)) 
         if ( _ytk) 
-  	  tkcmd,swrite(format="set progress %d", j)
+  	  tkcmd,swrite(format="set progress %d", j*100/len)
 	else
 	  write, format="%5d of %5d rasters completed \r",j,len;
 /////     if (j == len) write, format= "%5d of %5d rasters completed \r",j,len;
@@ -131,11 +134,13 @@ func run_bath( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse= ) 
  //if ( graph != 0 ) 
 //	animate,0;
 
+/*
   if ( _ytk) 
 	tkcmd, "destroy .bathy";
   else
         write,"\n"
  
+*/
   return depths;
 }
 

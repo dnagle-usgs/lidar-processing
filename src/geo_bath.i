@@ -607,6 +607,8 @@ See define_bath_ctl()
   if (is_array(rn_arr)) {
    no_t = numberof(rn_arr(1,));
 
+  open_seg_process_status_bar;
+
     for (i=1;i<=no_t;i++) {
       if ((rn_arr(1,i) != 0)) {
        fcount ++;
@@ -629,6 +631,8 @@ See define_bath_ctl()
        tot_count += numberof(depth.elevation);
       }
     }
+
+    if (_ytk) tkcmd, "destroy .seg";
 
     /* if ext_bad_att is set, find all points having elevation = ht 
         of airplane 

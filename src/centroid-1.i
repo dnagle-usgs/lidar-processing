@@ -91,7 +91,7 @@ See also: RAST, cent
   if ( is_void( max_sfc_sat) ) 
        max_sfc_sat = 2;	// The maximum number of saturated surface values
 
-  if ( (nsat1 = numberof(where(  ((*rast.rx(n,1))(1:np)) == 0 ))) <= max_sfc_sat ) {
+  if ( (nsat1 = numberof(where(  ((*rast.rx(n,1))(1:np)) < 5 ))) <= max_sfc_sat ) {
      cv = cent( *rast.rx(n, 1 ) );
 //     if ( nsat1 > 1 ) cv(1) = cv(1) - (nsat1 -1 ) * .1 ;    // See Note 1 above
      if ( cv(3) < -90 ) {	   // Must be water column only return.  
@@ -100,7 +100,7 @@ See also: RAST, cent
         y = slope * x;
         cv(1) += y;
      }
-  } else if ( numberof(where(  ((*rast.rx(n,2))(1:np)) == 0 )) <= max_sfc_sat ) {
+  } else if ( numberof(where(  ((*rast.rx(n,2))(1:np)) < 5 )) <= max_sfc_sat ) {
      cv = cent( *rast.rx(n, 2 ) ); 
      cv(1:2) += chn2_range_bias;
      cv(3) += 300;
@@ -114,8 +114,9 @@ See also: RAST, cent
   rv(1) = float(rast.irange(n)) - ctx(1) + cv(1);
   rv(2) = cv(3);
   rv(3) = rast.irange(n);
-  if ( cv(1) > 300.0) rv(4) = 0;
-  else 
+
+ // if ( cv(1) > 300.0) rv(4) = 0;
+ // else 
       rv(4) = cv(1);		// This will be needed to compute true depth
  return rv;
 }
