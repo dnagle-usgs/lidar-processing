@@ -371,12 +371,15 @@ properly to the zoom buttons.
  if (latutm) {
    tkcmd, swrite(format="send_latlon_to_l1pro %7.3f %7.3f %7.3f %7.3f %d\n", minlon, maxlon, minlat, maxlat, utm);
  }
+
  if (show == 2) {
    /* plot a window over selected region */
    a_x=[minlon, maxlon, maxlon, minlon, minlon];
    a_y=[minlat, minlat, maxlat, maxlat, minlat];
-   plg, a_y, a_x, color=color;
+   // Do this later, after we determine if there is data or not
+   // plg, a_y, a_x, color=color;
  }
+
  if (utm == 1) {
      minll = utm2ll(minlat, minlon, curzone);
      maxll = utm2ll(maxlat, maxlon, curzone);
@@ -397,6 +400,9 @@ properly to the zoom buttons.
  }
  if (is_array(q)) {
    qq = where( gga.lat(q) < maxlat ); q = q(qq);
+ }
+ if (is_array(q)) {
+     plg, a_y, a_x, color="black";
  }
  write,format="%d GGA records found\n", numberof(q);
  if ( (show != 0) && (show != 2)  ) {
