@@ -11,7 +11,7 @@ write, "$Id$";
 
 func package_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n= ) {
 
-   path = swrite(format="/tmp/batch/job-t_e%6.0f_n%7.0f_%s.cmd", min_e, max_n, zone_s);
+   path = swrite(format="/tmp/batch/jobs/job-t_e%6.0f_n%7.0f_%s.cmd", min_e, max_n, zone_s);
    save_vars(path, tile=1);
 }
 
@@ -19,10 +19,10 @@ func save_vars (filename, tile=) {
    f = createb( filename );
    if ( ! get_typ ) get_typ = 0;
    if ( tile == 1 ) {
-      info, get_typ;
-      info, auto;
-      save_dir;
-      zone_s;
+      // info, get_typ;
+      // info, auto;
+      // save_dir;
+      // zone_s;
 
       save,  f, user_pc_NAME;
       save,  f, q, r, min_e, max_e, min_n, max_n;
@@ -341,7 +341,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n= ) {
    }
 }
 
-func mbatch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=, onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=, only_veg=, update=, avg_surf=,conf_file=) {
+func mbatch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=, onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=, only_veg=, update=, avg_surf=,conf_file=, now=) {
 /* DOCUMENT batch_process
 func batch_process(typ=, save_dir=, shem=, zone=, dat_tag=,
                    cmdfile=, n=, onlyplot=, mdate=, pbd=, edf=,
@@ -429,6 +429,9 @@ amar nayegandhi started (10/04/02) Lance Mosher
    write, format="Start Time: %f\n", t0(3);
    if (is_void(win)) win = 6;
    window, win;
+
+   // Create output directory for tile cmd files:
+   system, "mkdir -p /tmp/batch/jobs";
 
    // Get username and pc name of person running batch_process
    system, "uname -n > ~/temp.123456789";
@@ -593,10 +596,12 @@ amar nayegandhi started (10/04/02) Lance Mosher
    }
 
 
-   pldj, min_e, min_n, min_e, max_n, color="green"
-   pldj, min_e, min_n, max_e, min_n, color="green"
-   pldj, max_e, min_n, max_e, max_n, color="green"
-   pldj, max_e, max_n, min_e, max_n, color="green"
+   // ok, show a quick grid, but in yellow or something light
+   pldj, min_e, min_n, min_e, max_n, color="yellow"
+   pldj, min_e, min_n, max_e, min_n, color="yellow"
+   pldj, max_e, min_n, max_e, max_n, color="yellow"
+   pldj, max_e, max_n, min_e, max_n, color="yellow"
+
    if (onlyplot == 1) return
 
    indx_path = array(string,n);
@@ -668,10 +673,21 @@ amar nayegandhi started (10/04/02) Lance Mosher
       }
       write, format = "Selecting Region %d of %d\n",i,n;
       q = gga_win_sel(2, win=win, llarr=[min_e(i)-200.0, max_e(i)+200.0, min_n(i)-200.0, max_n(i)+200.0], _batch=1);
-      r = gga_win_sel(2, win=win, color="green", llarr=[min_e(i), max_e(i), min_n(i), max_n(i)], _batch=1);
+      if ( ! is_void(q) ) {
+         r = gga_win_sel(2, win=win, color="green", llarr=[min_e(i), max_e(i), min_n(i), max_n(i)], _batch=1);
+         if ( ! is_void(r) ) {
+            pldj, min_e(i), min_n(i), min_e(i), max_n(i), color="green"
+            pldj, min_e(i), min_n(i), max_e(i), min_n(i), color="green"
+            pldj, max_e(i), min_n(i), max_e(i), max_n(i), color="green"
+            pldj, max_e(i), max_n(i), min_e(i), max_n(i), color="green"
 
-      package_tile(q=q, r=r, typ=typ, min_e=min_e(i), max_e=max_e(i), min_n=min_n(i), max_n=max_n(i) )
-      // process_tile(q=q, r=r, typ=typ, min_e=min_e(i), max_e=max_e(i), min_n=min_n(i), max_n=max_n(i) )
+            if ( is_void( now ) ) {
+               package_tile(q=q, r=r, typ=typ, min_e=min_e(i), max_e=max_e(i), min_n=min_n(i), max_n=max_n(i) )
+            } else {
+               process_tile(q=q, r=r, typ=typ, min_e=min_e(i), max_e=max_e(i), min_n=min_n(i), max_n=max_n(i) )
+            }
+         }
+      }
    }
    // stop the timer
    write, format="start Time: %f\n", t0(3);
