@@ -259,3 +259,36 @@ func bound(val, bmin, bmax) {
 // Original David Nagle 2008-11-18
    return min(bmax, max(bmin, val));
 }
+
+func assign(ary, &v1, &v2, &v3, &v4, &v5, &v6, &v7, &v8, &v9, &v10) {
+/* DOCUMENT assign, ary, v1, v2, v3, v4, v5, .., v10
+
+   Assigns the values in an array to the specified variables. For example:
+
+      > assign, [2, 4, 6], a, b, c
+      > a
+      2
+      > b
+      4
+      > c
+      6
+*/
+// Original David Nagle 2008-12-29
+   __assign, ary, 1, v1;
+   __assign, ary, 2, v2;
+   __assign, ary, 3, v3;
+   __assign, ary, 4, v4;
+   __assign, ary, 5, v5;
+   __assign, ary, 6, v6;
+   __assign, ary, 7, v7;
+   __assign, ary, 8, v8;
+   __assign, ary, 9, v9;
+   __assign, ary, 10, v10;
+}
+
+func __assign(&ary, &idx, &var) {
+/* DOCUMENT __assign, &ary, &idx, &var
+   Helper function for assign.
+*/
+   if(numberof(ary) >= idx) var = ary(idx);
+}

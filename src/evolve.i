@@ -49,8 +49,8 @@ func simulated_annealing(initial_state, max_iterations, max_energy, calculate_en
    best_state = state;
    best_energy = energy;
 
-   iteration = 0;
-   while(iteration < max_iterations && energy > max_energy) {
+   iteration = 1;
+   while(iteration <= max_iterations && energy > max_energy) {
       new_state = neighbor(state);
       new_energy = calculate_energy(new_state);
       if(new_energy < best_energy) {

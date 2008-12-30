@@ -7,6 +7,11 @@ if(is_void(__eaarl_includes_included__)) {
 
    write,"$Id$";
 
+   // roll is a yorick function but often gets overwritten, so copy it to yroll
+   // so that it doesn't get lost
+   if(is_void(yroll))
+      yroll = roll;
+
    // Built-in and plugin includes
    require, "jpeg.i";
    require, "msort.i";
