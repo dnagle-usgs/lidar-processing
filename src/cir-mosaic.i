@@ -1,102 +1,44 @@
 require, "eaarl.i";
+require, "photo.i";
 require, "random.i";
 require, "evolve.i";
 write,"$Id$";
 
 /*
-  Functions to work with the EAARL Axis digital camera.  
+   Functions to work with the EAARL Axis digital camera.  
 
-  Orginal W. Wright, 5-6-03 while in San Juan, Pr.
+   Orginal W. Wright, 5-6-03 while in San Juan, Pr.
 */
 
-func jpg_read(filename)
-/* DOCUMENT image= jpg_read(filename)
-
-     read a jpg image from FILENAME.  Converts to pnm using the commandline
-program convert to convert the image to a pnm file in the /tmp/directory.
-Use pli to display the image.
-
-   SEE ALSO: pnm_display, pnm_write
- */
-{
-   cmd = swrite(format="convert %s /tmp/etmp.pnm", filename);
-   f = popen( cmd, 0);
-   close,f;
-   return pnm_read( "/tmp/etmp.pnm");
-}
+cam1_roll_bias = 0.0;
+cam1_pitch_bias  = 0.0;
+fov = 50.0 * pi/180.0;   // camera FOV
 
 
-  cam1_roll_bias = 0.0;
-  cam1_yaw_bias  = 0;
-  cam1_pitch_bias  = 0.0;
-  fov = 50.0 * pi/180.0;   // camera FOV
+func cir_photo_orient(photo, heading=, pitch=, roll=, alt=, center=, offset=,
+scale=, win=) {
+/* DOCUMENT cir_photo_orient, photo, heading=, pitch=, roll=, alt=, center=,
+   offset=, scale=, win=
+   
+   Orient and display EAARL cir photos.
 
-
-func cir_photo_orient( photo,
-        heading=,
-   pitch=,
-   roll=,
-   alt=,
-   center=,
-   offset=,
-   scale=,
-   win=
-) {
-/* DOCUMENT photo_orient( p,
-   heading=, pitch=, roll= , center=, offset=, scale=
-  )
-
-   Orient and display EAARL cam1 photos.  Where:
-   p     The photo array.
+   photo:   The photo array. An array of rgb values with dims [3, 3, width,
+            height].
    heading= Aircraft heading in degrees.
-   pitch=       Aircraft pitch (deg).
-   roll=        Aircraft roll (deg).
-   alt=         Aircraft AGL altitude in meters.
-   center=
-   offset=
-   scale=
-   win=         The window to display photo mosaic in.
+   pitch=   Aircraft pitch (deg).
+   roll=    Aircraft roll (deg).
+   alt=     Aircraft AGL altitude in meters.
+   center=  Manually specify the center of the image. [y,x]
+   offset=  Offset [y,x] to apply to image when plotting.
+   scale=   Manually provide scaling info if the alt is unavailable.
+   win=     The window to display photo mosaic in. If this is not provided, the
+            image will not be displayed.
 
-
-
+   If biases/adjustments are to be applied to the heading, pitch, roll, and/or
+   alt, they should be done to the values before they are passed to this
+   function.
 */
-
-  if ( is_void( scale  ) ) scale  = [1.0, 1.0];
-  if ( is_void( offset ) ) offset = [0.0, 0.0];
-  if ( is_void(heading)  ) heading = 0.0;
-  if ( is_void(win    )  ) win = 7;
-  if ( is_void(roll   )  ) roll = 0.0;
-  p = photo;
-////  p(, , -15:0) = 0;    // zeros the time in the image
-  //p = photo(,, 1:-16);      // removes the time image
-  //heading = (-heading + cam1_yaw_bias  - 180.0) * pi / 180.0;
-  heading = (-heading +cam1_yaw_bias)*pi/180.;
-  s = sin(heading);
-  c = cos(heading);
-  dx = dimsof(p) (3)
-  dy = dimsof(p) (4)
-  //alt += 30.0;     // make it sealevel more or less
-  if ( alt ) {
-     xtk = 2.0 * tan( fov/2.0) * alt;
-     scale(1) = scale(2) = xtk / dx;
-   }
-///////////////////print, "xtk", xtk, scale
-  if ( is_void(center) ) {
-    center = array( int, 2);
-    center(2) = dx / 2.0;
-    center(1) = dy / 2.0;
-  }
-  roll_offset = tan( roll * pi/180.0) * alt;
- pitch_offset = tan( pitch * pi/180.0) * alt;
-   x = span(-center(2), dx-center(2), dx+1 ) (,-:1:dy+1);
-   x += roll_offset;
-   y = span(-center(1), dy-center(1), dy+1 ) (-:1:dx+1, );
-   y += pitch_offset;
-   xx =   (x * c - y * s) * scale(2);
-   yy =   (x * s + y * c) * scale(1);
-  window,win; plf, p, yy+offset(1), xx+offset(2), edges=0;
-  return [xx, yy ];
-
+   return photo_orient(photo, heading=heading, pitch=pitch, roll=roll, center=center, offset=offset, scale=scale, win=win, mounting_biases=[0.0, 0.0, 0.0]);
 }
 
 func cir_gref_photo( somd=, ioff=, offset=,pnavlst=, skip=, drift=, date=, win= ) {
@@ -105,52 +47,57 @@ func cir_gref_photo( somd=, ioff=, offset=,pnavlst=, skip=, drift=, date=, win= 
     smod=  A time in SOMD, or a list of times.
     ioff= Integer offset
   offset=
-  pnavlst=
+  pnavlst= An index into pnav specifying which images are of interest.
     skip= Images to skip
    drift= Clock drift to add
-
-
 */
+   extern pnav;
 
- extern aa, aa2;
- if ( is_void(ioff) ) ioff = 0;
- if ( is_void(drift) ) drift = 0.0;
- if ( is_void(offset)) offset = 1.2;
- if (is_array(pnavlst)) somd = int(pnav.sod(pnavlst(unique(int(pnav.sod(pnavlst))))))
- if (skip)  somd = somd(1:0:skip);
- write, somd
- for ( i = 1; i <=numberof(somd); i++ ) {
-  sd = somd(i) + ioff;
-  csomd = sd + offset + i * drift;
-  heading = interp( tans.heading, tans.somd, csomd);
-  roll    = interp( tans.roll   , tans.somd, csomd);
-  roll = 0;
-  pitch   = interp( tans.pitch  , tans.somd, csomd);
-  pitch = 0;
-  lat     = interp( pnav.lat, pnav.sod, csomd);
-  lon     = interp( pnav.lon, pnav.sod, csomd);
-  galt    = interp( pnav.alt, pnav.sod, csomd);
-  ll2utm, lat, lon;
-  northing = UTMNorthing;
-  easting  = UTMEasting;
-  zone     = UTMZone;
-  hms = sod2hms( int(sd ) );
-  tkcmd, swrite(format="send cir.tcl tmp_image sod %d",int(sd));
-  pause, 500;
-  if (i==1) write, "heading, northing, easting, roll, pitch, galt, hms"
-  print, heading, northing, easting, roll, pitch, galt, hms
-  pname = "/tmp/tmp.jpg";
-  photo = jpg_read( pname );
-  cir_photo_orient, photo,
-           alt= galt,
-       heading= heading,
-          roll= roll + ops_conf.roll_bias + cam1_roll_bias,
-        pitch = pitch + ops_conf.pitch_bias + cam1_pitch_bias,
-        offset = [ northing, easting ], win=win;
- }
+   default, somd, [];
+   default, ioff, 0;
+   default, offset, 1.2;
+   default, pnavlst, [];
+   default, skip, 0;
+   default, drift, 0.0;
+   default, date, [];
+   default, win, [];
+
+   if(is_array(pnavlst))
+      somd = set_remove_duplicates(int(pnav.sod(pnavlst)));
+
+   if(skip)
+      somd = somd(::skip);
+
+   for ( i = 1; i <=numberof(somd); i++ ) {
+      sd = somd(i) + ioff;
+      csomd = sd + offset + i * drift;
+      heading = interp( tans.heading, tans.somd, csomd);
+      roll    = interp( tans.roll   , tans.somd, csomd);
+      roll = 0;
+      pitch   = interp( tans.pitch  , tans.somd, csomd);
+      pitch = 0;
+      lat     = interp( pnav.lat, pnav.sod, csomd);
+      lon     = interp( pnav.lon, pnav.sod, csomd);
+      galt    = interp( pnav.alt, pnav.sod, csomd);
+      ll2utm, lat, lon;
+      northing = UTMNorthing;
+      easting  = UTMEasting;
+      zone     = UTMZone;
+      hms = sod2hms( int(sd ) );
+      tkcmd, swrite(format="send cir.tcl tmp_image sod %d",int(sd));
+      pause, 500;
+      if (i==1) write, "heading, northing, easting, roll, pitch, galt, hms";
+      print, heading, northing, easting, roll, pitch, galt, hms;
+      pname = "/tmp/tmp.jpg";
+      photo = jpg_read(pname);
+      cir_photo_orient, photo,
+         alt= galt,
+         heading= heading,
+         roll= roll + ops_conf.roll_bias + cam1_roll_bias,
+         pitch = pitch + ops_conf.pitch_bias + cam1_pitch_bias,
+         offset = [ northing, easting ], win=win;
+   }
 }
-
-
 
 // Possible error messages from cir code.
 cir_error = array(string,100);

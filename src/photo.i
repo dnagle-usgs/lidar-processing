@@ -8,123 +8,168 @@
 
 */
 
-require, "pnm.i"
+require, "eaarl.i";
 
 write,"$Id$"
 
+cam1_roll_bias = 9.0;
+cam1_yaw_bias  = -3.5 - 180.0;
+cam1_pitch_bias  = 0.0;
+fov = 43.0 * pi/180.0;	// camera FOV
 
-func jpg_read(filename)
+func jpg_read(filename) {
 /* DOCUMENT image= jpg_read(filename)
 
-     read a jpg image from FILENAME.  Converts to pnm using the commandline
-program convert to convert the image to a pnm file in the /tmp/directory.  
-Use pli to display the image.
+   Reads the JPG image specified by filename and returns an array of RGB values
+   that represent the image. The array will have dims [3, 3, width, height].
 
-   SEE ALSO: pnm_display, pnm_write
- */
-{
-   cmd = swrite(format="convert %s /tmp/etmp.pnm", filename); 
-   f = popen( cmd, 0);
-   close,f;
-   return pnm_read( "/tmp/etmp.pnm");
-}
+   Internally, this uses the command line program convert to translate the file
+   into a pnm, which it then reads.
 
+   Use pli to display the image.
 
-  cam1_roll_bias = 9.0;
-  cam1_yaw_bias  = -3.5;
-  cam1_pitch_bias  = 0.0;
-  fov = 43.0 * pi/180.0;	// camera FOV
-
-
-func photo_orient( photo, 
-        heading=, 
-	pitch=, 
-	roll=, 
-	alt=, 
-	center=, 
-	offset=, 
-	scale=, 
-	win= 
-) {
-/* DOCUMENT photo_orient( p, 
-	heading=, pitch=, roll= , center=, offset=, scale= 
-  )
-
-   Orient and display EAARL cam1 photos.  Where:
-   p		The photo array.
-   heading=	Aircraft heading in degrees.
-   pitch=       Aircraft pitch (deg).
-   roll=        Aircraft roll (deg).
-   alt=         Aircraft AGL altitude in meters.
-   center=
-   offset=
-   scale=
-   win=         The window to display photo mosaic in.
-
-   
-
+   SEE ALSO: pnm_display, pnm_write, pnm_read
 */
+   // Rewritten 2008-12-29 David Nagle
+   temp_dir = mktempdir();
+   pnm_file = file_join(temp_dir, "image.pnm");
 
-  if ( is_void( scale  ) ) scale  = [1.0, 1.0];
-  if ( is_void( offset ) ) offset = [0.0, 0.0];
-  if ( is_void(heading)  ) heading = 0.0;
-  if ( is_void(win    )  ) win = 7;
-  if ( is_void(roll   )  ) roll = 0.0;
-  p = photo;
-////  p(, , -15:0) = 0;		// zeros the time in the image
-  p = photo(,, 1:-16);		// removes the time image
-  heading = (-heading + cam1_yaw_bias  - 180.0) * pi / 180.0;
-  s = sin(heading);
-  c = cos(heading);
-  dx = dimsof(p) (3)
-  dy = dimsof(p) (4)
-  alt += 40.0;		// make it sealevel more or less
-  if ( alt ) { 
-     xtk = 2.0 * tan( fov/2.0) * alt;
-     scale(1) = scale(2) = xtk / dx;
-   }
-///////////////////print, "xtk", xtk, scale
-  if ( is_void(center) ) {
-    center = array( int, 2);
-    center(2) = dx / 2.0;
-    center(1) = dy / 2.0;  
-  }
-  roll_offset = tan( roll * pi/180.0) * alt;
- pitch_offset = tan( pitch * pi/180.0) * alt;
-   x = span(-center(2), dx-center(2), dx+1 ) (,-:1:dy+1); 
-   x += roll_offset;
-   y = span(-center(1), dy-center(1), dy+1 ) (-:1:dx+1, ); 
-   y += pitch_offset;
-   xx =   (x * c - y * s) * scale(2);
-   yy =   (x * s + y * c) * scale(1);
- window,win; plf, p, yy+offset(1), xx+offset(2), edges=0;
-  return [xx, yy ];
+   system, swrite(format="convert %s %s", filename, pnm_file); 
+   pnm_data = pnm_read(pnm_file);
 
+   remove, pnm_file;
+   rmdir, temp_dir;
+
+   return pnm_data;
 }
 
+func cam_photo_orient(photo, heading=, pitch=, roll=, alt=, center=, offset=,
+scale=, win=) {
+/* DOCUMENT cam_photo_orient(photo, heading=, pitch=, roll=, alt=, center=, offset=,
+scale=, win=)
+   Orient and display cam RGB photos. See photo_orient for information on
+   parameters.
 
+   This extends photo_orient by doing the following:
+      * The last 16 rows of image data are discarded (to remove the black line).
+      * The altitude has 40 meters added.
+      * The default cam1 biases are applied.
+*/
+   extern cam1_roll_bias, cam1_yaw_bias, cam1_pitch_bias;
+   alt += 40.0;
+   photo = photo(,,:-16);
+   biases = [cam1_roll_bias, cam1_yaw_bias, cam1_pitch_bias];
+   return photo_orient(photo, heading=heading, pitch=pitch, roll=roll, alt=alt,
+      center=center, offset=offset, scale=scale, win=win,
+      mounting_biases=biases);
+}
 
+func photo_orient(photo, heading=, pitch=, roll=, alt=, center=, offset=,
+scale=, win=, mounting_biases=) {
+/* DOCUMENT coordinates = photo_orient(photo, heading=, pitch=, roll=, alt=,
+   center=, offset=, scale=, win=, mounting_biases=)
+
+   Orient and display EAARL photos.
+
+   photo:   The photo array. An array of rgb values with dims [3, 3, width,
+            height].
+   heading= Aircraft heading in degrees.
+   pitch=   Aircraft pitch in degrees.
+   roll=    Aircraft roll in degrees.
+   alt=     Aircraft above-ground-level altitude in meters.
+   center=  Manually specify the center of the image (as [y,x]).
+   offset=  Offset [y,x] to apply to image when plotting.
+   scale=   Manually specify scaling info if alt is unavailable.
+   win=     The window to display the photo in. If not provided, no image will
+            be plotted.
+   mounting_biases=  An array [roll, pitch, yaw] of values in degrees to apply
+            to the roll, pitch, and heading of the aircraft to adjust for
+            mounting biases of the camera.
+*/
+// Rewritten David B. Nagle 2008-12-29
+
+   extern fov;
+
+   default, heading, 0.0;
+   default, pitch, 0.0;
+   default, roll, 0.0;
+   default, alt, 0.0;
+   default, offset, [0.0, 0.0];
+   default, scale, [1.0, 1.0];
+   default, win, 7;
+   default, mounting_biases, [0.0, 0.0, 0.0];
+
+   assign, mounting_baises, roll_bias, pitch_bias, yaw_bias;
+
+   roll += roll_bias;
+   pitch += pitch_bias;
+   heading += yaw_bias;
+
+   // Convert aeronautical heading (clockwise, degrees) to mathematical heading
+   // (counter-clockwise, radians)
+   heading *= -pi / 180.0;
+
+   // Convert roll and pitch from degrees to radians
+   roll *= pi/180.0;
+   pitch *= pi/180.0;
+
+   // dx and dy are the width/height of image
+   dx = dimsof(photo)(3);
+   dy = dimsof(photo)(4);
+
+   if (alt) { 
+      xtk = 2.0 * tan(fov/2.0) * alt;
+      scale(1) = scale(2) = xtk / dx;
+   }
+
+   if(is_void(center))
+      center = int([dy, dx]/2.0);
+
+   x = span(-center(2), dx-center(2), dx+1)(,-:1:dy+1); 
+   y = span(-center(1), dy-center(1), dy+1)(-:1:dx+1,); 
+
+   roll_offset = tan(roll) * alt;
+   pitch_offset = tan(pitch) * alt;
+
+   x += roll_offset;
+   y += pitch_offset;
+
+   s = sin(heading);
+   c = cos(heading);
+   rotated_x = (x * c - y * s) * scale(2);
+   rotated_y = (x * s + y * c) * scale(1);
+
+   if(! is_void(win)) {
+      window, win;
+      plf, photo, rotated_y+offset(1), rotated_x+offset(2), edges=0;
+   }
+
+   return [rotated_x, rotated_y];
+}
+
+// TODO: DEPRECATED
 func pref (junk) {
 /* DOCUMENT pref 
-
+   
+   2008-12-29: This function appears unused.  It will be removed at a future
+   time if nobody removes this note and explains its utility. -DBN
 */
-  lst = [];
-  m  = array( long, 11 );
+   lst = [];
+   m  = array( long, 11 );
    while ( m(10) != 3 ) {
-     window,5;
-     m = mouse();
-     if ( numberof(m) < 2 ) {
-       lst = m(1:2);  
-     } else {
-       grow, lst, m(1:2);
-     } 
-     window,7;
-     plmk, m(2), m(1),msize=.3,marker=2
-     print, m(1:2);
-  }
- return lst;
+      window,5;
+      m = mouse();
+      if ( numberof(m) < 2 ) {
+         lst = m(1:2);  
+      } else {
+         grow, lst, m(1:2);
+      } 
+      window,7;
+      plmk, m(2), m(1),msize=.3,marker=2;
+      print, m(1:2);
+   }
+   return lst;
 }
-
 
 func gref_photo( somd=, ioff=, offset=,ggalst=, skip=, drift=, date=, win= ) {
 /* DOCUMENT gref_photo, somd=, ioff=, offset=, ggalst=, skip=
@@ -192,6 +237,4 @@ func gref_photo( somd=, ioff=, offset=,ggalst=, skip=, drift=, date=, win= ) {
 	     offset = [ northing, easting ], win=win;
  }
 }
-
-
 
