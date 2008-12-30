@@ -407,3 +407,173 @@ func ppdist(p1, p2, tp=) {
       dist = transpose(dist);
    return dist;
 }
+
+/*
+--- Explanation of math involved for Tait-Bryan rotations ---
+
+Tait-Bryan rotations (which are the standard aerospace sequence of rotations)
+are applied in the order yaw-pitch-roll. The variable 'rotation' is an array
+[roll, pitch, yaw]. For purposes of notation, let X, Y, and Z be the angles of
+rotation about the x, y, and z axes, corresponding to pitch, roll, and yaw.
+
+The math involved uses the sine and consine of each of the angles X, Y, and Z
+extensively. For ease of notation, I will abbreviate sine(X) as sx and
+cosine(X) as cs, and similar abbreviations for Y and Z.
+
+Following, we define a 3x3 matrix that will transform coordinates from the
+plane's frame of reference to the GPS (world) frame of reference. The
+deriviation of this matrix is as follows.
+
+We have values for roll, pitch, and heading, which are the angular rotations
+performed to transform between the two frames of reference. These correspond to
+angular transforms about the y-axiz, x-axis, and z-axis, in that order. To
+tranform a coordinate vector P in plane coordinates [Px,Py,Pz] to the
+equivalent gps coordinate G in gps coordinates [Gx,Gy,Gz], we need to perform a
+series of matrix multipications as follows:
+
+   Rz * Rx * Ry * P -> G
+
+Rz, Rx, and Ry are the matrixes used to rotate about the z-axis, x-axis, and
+y-axis respectively. They are defined as follows:
+
+        / 1 0   0  \        /  cy 0 sy \        / cz -sz 0 \
+   Rx = | 0 cx -sx |   Ry = |  0  1 0  |   Rz = | sz  cz 0 |
+        \ 0 sx  cx /        \ -sy 0 cy /        \ 0   0  1 /
+
+If we multiply the three matrices together, the result is the following:
+
+                  / cz -sz 0 \   / 1 0   0  \   /  cy 0 sy \
+   Rz * Rx * Ry = | sz  cz 0 | * | 0 cx -sx | * |  0  1 0  |
+                  \ 0   0  1 /   \ 0 sx  cx /   \ -sy 0 cy /
+
+                  / cz -sz 0 \   / (cy)     (0)  (sy)     \
+                = | sz  cz 0 | * | (sx*sy)  (cx) (-sx*cy) |
+                  \ 0   0  1 /   \ (-cx*sy) (sx) (cx*cy)  /
+
+                  / (cy*cz - sx*sy*sz) (-cx*sz) (sy*cz + sx*cy*sz) \
+                = | (cy*sz + sx*sy*cz) (cx*cz)  (sy*sz - sx*cy*cz) |
+                  \ (-cx*sy)           (sx)     (cx*cy)            /
+
+Note: In the above, sin(x), sin(y), cos(z), etc. are abbreviated as sx, sy, cz,
+etc.
+*/
+
+func transform_delta_rotation(reference_point, delta, rotation) {
+/* DOCUMENT transform_delta_rotation(reference_point, delta, rotation)
+
+   This function will return an array of points with equivalent dimensions to
+   reference_point that represent the location defined by the given delta and
+   rotation with respect to the reference point.
+
+   The arguments are:
+
+      reference_point: An array of points in the form [x,y,z] that represents a
+         point whose location is known in the target coordinate system.
+
+      delta: An array of deltas in the form [dx,dy,dz] that represents the
+         distance vector between the known reference point and the unknown
+         target point whose location we wish to determine.
+
+      rotation: An array of Tait-Bryan rotations in the form [roll, pitch,
+         heading], in degrees, that represent the rotations required to
+         transform the reference axis system of the delta measurements to the
+         reference axis system of the reference_point.
+
+   A practical example for this function would be to determine the location of
+   a camera mounted on an airplace. Our input data would be:
+
+      reference_point: Data obtained from a GPS unit.
+
+      delta: Manually acquired measurments that define where the camera is in
+         relation to the GPS unit.
+
+      rotation: Data obtained from an INS unit.
+
+   All arrays should be for a single point.
+*/
+// Original David Nagle 2008-12-30
+
+   // Given:
+   //    A reference point whose real-world coordinates we know
+   //       Defined as reference_point (array of [x,y,z])
+   //    A target point whose location is defined by a displacement vector with
+   //       respect to the reference point
+   //       Defined as delta (array of [dx, dy, dz])
+   //    A set of yaw-pitch-roll angles that define the inertial difference
+   //       between the local system's x-y-z axes and the real world's x-y-z axes
+   //       Defined as rotation (array of [roll, pitch, heading])
+
+   // Derive the rotation matrix
+   R = tbr_to_matrix(rotation);
+
+   // To determine the real-world location of our target point, we convert its
+   // delta into a real-world delta, then apply that delta to the reference
+   // points coordinates
+
+   return R(+,) * delta(+) + reference_point;
+}
+
+func tbr_to_matrix(r, p, h) {
+/* DOCUMENT R = tbr_to_matrix(roll, pitch, heading)
+            R = tbr_to_matrix([roll, pitch, heading])
+   Given a roll, pitch, and heading from a series of Tait-Bryan rotations, this
+   will return the corresponding 3x3 matrix.
+
+   See also: matrix_to_tbr
+*/
+// Original David Nagle 2008-12-30
+
+   if(is_void(p)) {
+      tbr = r;
+   } else {
+      tbr = [r, p, h];
+   }
+
+   // Convert to radians
+   tbr *= pi / 180.0;
+
+   // Rename the angles by the coordinate they rotate around
+   assign, tbr, Y, X, Z;
+      
+   // The rotation matrix we'll be making will use sin and cos on these a lot.
+   // We make shorthand variables to make the matrix more readable and the code
+   // more efficient.
+   assign, cos([X,Y,Z]), cx, cy, cz;
+   assign, sin([X,Y,Z]), sx, sy, sz;
+
+   R = [ [(cy*cz - sx*sy*sz), (-cx*sz), (sy*cz + sx*cy*sz) ],
+         [(cy*sz + sx*sy*cz), (cx*cz) , (sy*sz - sx*cy*cz) ],
+         [(-cx*sy)          , (sx)    , (cx*cy)            ] ];
+
+   return R;
+}
+
+func matrix_to_tbr(R) {
+/* DOCUMENT matrix_to_tbr(R)
+   Given a 3x3 matrix that can be used to apply a series of Tait-Bryan
+   rotations, this will return the [roll, pitch, heading] corresponding to the
+   matrix. This ONLY works if the matrix is guaranteed to correspond to such a
+   series of rotations.
+
+   Return value is an array [roll, pitch, heading] in degrees.
+
+   See also: tbr_to_matrix
+*/
+// Original David Nagle 2008-12-30
+
+   // R(2,3) is sin(x)
+   X = asin(R(2,3));
+
+   // R(1,3) is -cx*sy and R(3,3) is cx*cy
+   // -cx*sy / cx*cy = -sy/cy = -tan(y)
+   Y = atan(-1 * R(1,3), R(3,3));
+
+   // R(2,1) is -cx*sz and R(2,2) is cx*cz
+   // -cx*sz / cx*cz = -sz/cz = -tan(z)
+   Z = atan(-1 * R(2,1), R(2,2));
+   
+   // Convert to degrees
+   tbr = [Y,X,Z] * 180. / pi;
+
+   return tbr;
+}
