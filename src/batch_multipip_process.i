@@ -23,7 +23,7 @@ func batch_multipip_process (pip_var, data_var, fname_var, ptype_var, qname_var,
 	   //tkcmd, swrite(format="expect \">\"");
          }
 	 if (ptype_var(i) == 3)  {
-	   cveg_all = make_veg(latutm=1, q=*pip_var(i), use_peak=1, multi_peaks=1);
+	   cveg_all = make_veg(latutm=1, q=*pip_var(i), use_be_peak=1, multi_peaks=1);
 	   write, format="processing for region %d complete\n",i;
 	   //tkcmd, swrite(format="exp_send \"%s = cveg_all \\r\\n\"",data_var(i));
          }

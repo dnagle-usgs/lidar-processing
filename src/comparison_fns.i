@@ -195,7 +195,7 @@ func plot_veg_result_points(i, pse=) {
   rn = rnp & 0xffffff; p = rnp / 0xffffff
   nx_indx = [];
   for (j=1; j<=numberof(rnp); j++) {
-    depth = ex_veg(rn(j), p(j), last=250, graph=1, use_peak=1, pse=pse);
+    depth = ex_veg(rn(j), p(j), last=250, graph=1, use_be_peak=1, pse=pse);
     if (depth.nx > 1) grow, nx_indx, j
   }
 }

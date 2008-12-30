@@ -1,5 +1,22 @@
-require, "l1pro.i";
-write, "$Id$";
+
+/*
+
+    $Id$
+   
+    W. Wright 
+
+ test..
+
+ */
+
+ write,"$Id$" 
+
+require, "ytime.i"
+require, "rlw.i"
+require, "string.i"
+require, "sel_file.i"
+require, "eaarl_constants.i"
+require, "colorbar.i"
 
 struct VEG_CONF { 	// Veg configuration parameters
   float thresh;		// threshold
@@ -9,9 +26,9 @@ struct VEG_CONF { 	// Veg configuration parameters
 struct VEGPIX {
   int rastpix;		// raster + pulse << 24
   short sa;		// scan angle  
-  short mx1;		// first pulse index
+  float mx1;		// first pulse index
   short mv1;		// first pulse peak value
-  short mx0;		// last pulse index
+  float mx0;		// last pulse index
   short mv0;		// last pulse peak value
   char  nx;		// number of return pulses found
 };
@@ -110,7 +127,7 @@ rn
 }
 
 
-func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, use_centroid=,use_peak= ) {
+func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, use_be_centroid=,use_be_peak=, hard_surface= ) {
 // depths = array(float, 3, 120, len );
   if (is_void(graph)) graph=0;
 
@@ -131,8 +148,9 @@ func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, us
      
    
  depths = array(VEGPIX, 120, len );
+/*
   if ( _ytk && (len != 0) ) {
-    tkcmd,"destroy .veg; toplevel .veg; set progress 0;"
+    tkcmd,"toplevel .veg; set progress 0;"
     tkcmd,swrite(format="ProgressBar .veg.pb \
 	-fg yellow \
 	-troughcolor blue \
@@ -143,6 +161,7 @@ func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, us
 	-width 400", len );
     tkcmd,"pack .veg.pb; update; center_win .veg;"
   }
+*/
  if ( graph != 0 ) 
 	animate,1;
 
@@ -152,27 +171,24 @@ func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, us
 	graph = 0;
    for ( j=1; j< len; j++ ) {
      if (_ytk) 
-       tkcmd, swrite(format="set progress %d", j)
+       tkcmd, swrite(format="set progress %d", j*100/len)
      else {
      if ( (j % 10)  == 0 ) 
         write, format="   %d of %d   \r", j,  len
      }
      for (i=1; i<119; i++ ) {
-       depths(i,j) = ex_veg( rn+j, i, last = last, graph=graph, use_centroid=use_centroid,use_peak=use_peak);
+       depths(i,j) = ex_veg( rn+j, i, last = last, graph=graph, use_be_centroid=use_be_centroid,use_be_peak=use_be_peak, hard_surface=hard_surface);
        if ( !is_void(pse) ) 
 	  pause, pse;
      }
    }
  if ( graph != 0 ) 
 	animate,0;
- if (_ytk) {
-   tkcmd, "destroy .veg"
-   } else write, "\n"; 
   return depths;
 }
 
 
-func ex_veg( rn, i,  last=, graph=, win=, use_centroid=, use_peak=, pse= ) {
+func ex_veg( rn, i,  last=, graph=, win=, use_be_centroid=, use_be_peak=, hard_surface=,  pse= ) {
 /* DOCUMENT ex_veg(raster_number, pulse_index)
 
 
@@ -181,40 +197,22 @@ func ex_veg( rn, i,  last=, graph=, win=, use_centroid=, use_peak=, pse= ) {
 
  This function returns an array of VEGPIX structures. 
 
-	[ rp.sa(i), mx, a(mx,i,1) ];
  
-*/
 
-/*
- The following developed using 8-25-01 data at rn = 239269 data. 
- Check waveform samples to see how many samples are
- saturated. 
- The function checks the following conditions so far:
-  1) Saturated surface return - locates last saturated sample
-  2) Non-saturated surface with saturated bottom signal
-  3) Non saturated surface with non-saturated bottom
-  4) Bottom signal above specified threshold
- We'll used this infomation to develope the threshold
- array for this waveform.
- We come out of this with the last_surface_sat set to the last
- saturated value of surface return.
- The 12 represents the last place a surface can be found
  Variables: 
-    last              The last point in the waveform to consider.
-    nsat 	      A list of saturated pixels in this waveform
-    numsat	      Number of saturated pixels in this waveform
-    last_surface_sat  The last pixel saturated in the surface region of the
-                      Waveform.
-    escale	      The maximum value of the exponential pulse decay. 
-    laser_decay	      The primary exponential decay array which mostly describes
-                      the surface return laser event.
-    da                The return waveform with the computed exponentials 
-                      substracted
-    db                The return waveform equalized by agc and tilted by bias.
+	rn - raster number
+	i - pulse number
+	last = 
+	graph = plot graph showing results
+	win = window number where graph will be plotted
+	use_be_centroid = set to 1 to determine the range to the last surface using the "centroid" algorithm.  This algorithm finds the centroid of the trailing edge of the last return in the waveform.  The range determined using this method will be the "lowest".  Use this method only if the waveforms are from wetland environments with a grasses/herbaceous veg on the ground.  Do not use this algorithm for finding range to hard surfaces.
+	use_be_peak = set to 1 to determine the range to the peak of the trailing edge of the last inflection. This algorithm is used by default and is the most optimal algorithm to use in a place of mixed "hard" and "soft" targets. "Soft" targets include bare earth under grass/herb. veg., marshlands, etc.
+	hard_surface = set to 1 if the data are mostly coming from hard surfaces such as runways, roads, parking lots, etc. This algorithm will treat all waveforms with only 1 inflection as a "first surface" return, and will not apply any "trailing edge" algorithm to the data with only 1 inflection.  For more than 1 inflection, the algorithm defined by use_be_peak (default) or use_be_centroid are used.
+	pse = time (in ms) to pause between each waveform plot.
 
 */
 
- extern veg_conf;
+ extern veg_conf, chn2_range_bias, chn3_range_bias, n_all3sat, max_sfc_sat;
  if ( is_void(veg_conf)) {
    veg_conf = VEG_CONF();
    veg_conf.thresh = 4.0;
@@ -222,6 +220,9 @@ func ex_veg( rn, i,  last=, graph=, win=, use_centroid=, use_peak=, pse= ) {
    veg_conf.max_sat(2) = max_sfc_sat;
    veg_conf.max_sat(3) = max_sfc_sat;
  }
+ if (is_void(chn2_range_bias)) chn2_range_bias=0.36;
+ if (is_void(chn3_range_bias)) chn3_range_bias=0.23;
+
  extern ex_bath_rn, ex_bath_rp, a, irg_a, _errno
   _errno = 0;		// If not specifically set, preset to assume no errors.
   if ( (rn == 0 ) && ( i == 0 ) ) {
@@ -229,8 +230,13 @@ func ex_veg( rn, i,  last=, graph=, win=, use_centroid=, use_peak=, pse= ) {
      _errno = -1;
      return ;
   }
-  irange = irg_a(where(rn==irg_a.raster)).irange(i);
-  intensity = irg_a(where(rn==irg_a.raster)).intensity(i);
+  // check if global variable irg_a contains the current raster number (rn)
+  if (!is_array(where(irg_a.raster == rn))) {
+     irg_a = irg(rn,rn, usecentroid=1);
+  }
+  this_irg = irg_a(where(rn==irg_a.raster));
+  irange = this_irg.irange(i);
+  intensity = this_irg.intensity(i);
   rv = VEGPIX();			// setup the return struct
   rv.rastpix = rn + (i<<24);
   if (irange < 0) return rv;
@@ -258,14 +264,16 @@ func ex_veg( rn, i,  last=, graph=, win=, use_centroid=, use_peak=, pse= ) {
 	return rv;
   }
 
-  w  = *rp.rx(i, 1);  aa(1:n, i) = float( (~w+1) - (~w(1)+1) );
+  ai = 1; // set to first channel
+  w  = *rp.rx(i, ai);  aa(1:n, i) = float( (~w+1) - (~w(1)+1) );
 ///////  w2 = *rp.rx(i, 2);  aa(1:n, i,2) = float( (~w2+1) - (~w2(1)+1) );
 
+  /*
  if (!(use_centroid)) {
    nsat = where( w == 0 );			// Create a list of saturated samples 
    numsat = numberof(nsat);			// Count how many are saturated
    if ( (numsat > 1)  && ( nsat(1) <= 12)   ) {
-      if (  nsat(dif) (max) == 1 ) { 		// only surface saturated
+      if (  nsat(dif) (max) == 1 ) { 		// surface saturated
           last_surface_sat = nsat(0);		// so use last one
           escale = 255;				
       } else {					// bottom must be saturated too
@@ -280,9 +288,47 @@ func ex_veg( rn, i,  last=, graph=, win=, use_centroid=, use_peak=, pse= ) {
    }
 
  }
+*/
 
-  da = aa(1:n,i,1);
-  dd = aa(1:n, i, 1) (dif);
+  nsat = where( w < 5 );			// Create a list of saturated samples 
+  numsat = numberof(nsat);			// Count how many are saturated
+  if (numsat > veg_conf.max_sat(ai)) {
+     ai = 2;					// try 2nd channel
+     w  = *rp.rx(i, ai);  aa(1:n, i) = float( (~w+1) - (~w(1)+1) );
+     nsat = where( w == 0 );			// Create a list of saturated samples 
+     numsat = numberof(nsat);			// Count how many are saturated
+     if (numsat > veg_conf.max_sat(ai)) {
+     	ai = 3;					// try 3rd channel
+     	w  = *rp.rx(i, ai);  aa(1:n, i) = float( (~w+1) - (~w(1)+1) );
+     	nsat = where( w == 0 );			// Create a list of saturated samples 
+     	numsat = numberof(nsat);		// Count how many are saturated
+     }
+  }
+  
+  if ( numsat > veg_conf.max_sat(ai) ) {
+	  n_all3sat++;
+          //write, format="all 3 channels saturated... , rn=%d, i=%d\n",rn,i
+          ai = 0;
+  }
+
+  if (!ai) {
+        rv.sa = rp.sa(i);
+  	rv.mx0 = -1;
+	rv.mv0 = -10;
+   	rv.mx1 = -1;
+	rv.mv1 = -11;
+	rv.nx  = -1;
+	_errno = 0;
+        return rv
+  }
+
+  wflen = numberof(w);
+  if ( wflen > 12 ) wflen = 12;
+  last_surface_sat =  w(1:wflen) (mnx) ;
+  escale = 255 - w(1:wflen) (min);
+
+  da = aa(1:n,i);
+  dd = aa(1:n, i) (dif);
 
 /******************************************
    xr(1) will be the first pulse edge
@@ -291,6 +337,17 @@ func ex_veg( rn, i,  last=, graph=, win=, use_centroid=, use_peak=, pse= ) {
 //  xr = where( dd  > veg_conf.thresh ) ;	// find the hits
   xr = where(  ((dd >= veg_conf.thresh) (dif)) == 1 ) 	//
   nxr = numberof(xr);
+
+   if (numberof(xr) == 0) {
+        rv.sa = rp.sa(i);
+   	rv.mx0 = -1;
+	rv.mv0 = aa(max,i,1);
+   	rv.mx1 = -1;
+	rv.mv1 = rv.mv0;
+	rv.nx  = numberof(xr);
+	_errno = 0;
+	return rv;
+   }
 
 if (is_void(win)) win = 4;
 /*
@@ -314,37 +371,48 @@ write, format="rn=%d; i = %d\n",rn,i
   if ( n > last ) 		
 	n = last;
 
+  // find the length of the section of the waveform that represents the last return (starting from xr(0)
+  //assume 12ns to be the longest duration for a complete bottom return
+  retdist = 12; 
+  // if 12 is too long, then cut it short based on the length of the waveform.
+  if (xr(0)+retdist+1 > n) retdist = n - xr(0)-1;
 
-  if ( numberof(xr) > 0  ) {
-    if (use_centroid || use_peak) {
-       //assume 12ns to be the longest duration for a complete bottom return
+  // if there are more than 1 significant inflection (above threshold) in the waveform, then we may be able to use any of the channels to determine the last return.  In fact, there may be more information in a waveform that is saturated if it contains multiple inflections.
+
+/*
+  if ( numberof(xr) > 1  ) {
+    if (use_be_centroid || use_be_peak) {
        retdist = 12;
        ai = 1; //channel number
        if (xr(0)+retdist+1 > n) retdist = n - xr(0)-1;
        // check for saturation
-       if ( numberof(where((w(xr(0):xr(0)+retdist)) == 0 )) > veg_conf.max_sat(ai) ) {
+       if ( numberof(where((w(xr(0):xr(0)+retdist)) < 5 )) > veg_conf.max_sat(ai) ) {
            // goto second channel
             ai = 2;
            // write, format="trying channel 2, rn = %d, i = %d\n",rn, i
             w  = *rp.rx(i, ai);  aa(1:n, i,ai) = float( (~w+1) - (~w(1)+1) );
             da = aa(1:n,i,ai);
             dd = aa(1:n, i, ai) (dif);
-            if ( numberof(where((w(xr(0):xr(0)+retdist)) == 0 )) > veg_conf.max_sat(ai) ) {
+            if ( numberof(where((w(xr(0):xr(0)+retdist)) < 5 )) > veg_conf.max_sat(ai) ) {
               // goto third channel
             //  write, format="trying channel 3, rn = %d, i = %d\n",rn, i
               ai = 3;
               w  = *rp.rx(i, ai);  aa(1:n, i,ai) = float( (~w+1) - (~w(1)+1) );
               da = aa(1:n,i,ai);
               dd = aa(1:n, i, ai) (dif);
-              if ( numberof(where((w(xr(0):xr(0)+retdist)) == 0 )) > veg_conf.max_sat(ai) ) {
-                 write, format="all 3 channels saturated... giving up!, rn=%d, i=%d\n",rn,i
+              if ( numberof(where((w(xr(0):xr(0)+retdist)) < 5 )) > veg_conf.max_sat(ai) ) {
+                 write, format="all 3 channels saturated for the last return in multiple returns... giving up!, rn=%d, i=%d\n",rn,i
                  ai = 0;
               }
 	    }
 	}
+    }
+   }
 
-       if (retdist < 5) ai = 0; // this eliminates possible noise pulses.
-       if (!ai) {
+*/
+
+   if (retdist < 5) ai = 0; // this eliminates possible noise pulses.
+   if (!ai) {
         rv.sa = rp.sa(i);
    	rv.mx0 = -1;
 	rv.mv0 = -10;
@@ -353,22 +421,24 @@ write, format="rn=%d; i = %d\n",rn,i
 	rv.nx  = -1;
 	_errno = 0;
         return rv
-       }
-       if (pse) pause, pse;
+    }
+    if (pse) pause, pse;
 
-       if ( (graph==1) ) {
+    if ( (graph==1) ) {
          window,win; fma;
-         plmk, aa(1:n,i,ai), msize=.2, marker=1, color="yellow";
-         plg, aa(1:n,i,ai), color="yellow";
-         plmk, da, msize=.2, marker=1, color="yellow";
-         plg, da, color="yellow";
+         //plmk, aa(1:n,i,ai), msize=.2, marker=1, color="yellow";
+         //plg, aa(1:n,i,ai), color="yellow";
+         plmk, da+(ai-1)*300, msize=.2, marker=1, color="magenta";
+         plg, da+(ai-1)*300, color="magenta";
          plg, dd-100, color="blue"
 	 pltit = swrite(format="ai = %d\n", ai);
 	 pltitle, pltit;
-       }
-       
-     if (use_centroid && !use_peak) {
+    }
 
+    // now process the trailing edge of the last inflection in the waveform
+    if (use_be_centroid || use_be_peak) {
+       
+     if (use_be_centroid && !use_be_peak) {
       
        // find where the bottom return pulse changes direction after its trailing edge
        idx = where(dd(xr(0)+1:xr(0)+retdist) > 0);
@@ -389,15 +459,15 @@ write, format="rn=%d; i = %d\n",rn,i
            //compute centroid
           if (b(sum) != 0) {
            c = float(b*indgen(1:retdist)) (sum) / (b(sum));
-           mx0 = xr(0)+c;
-           if (ai == 1) mv0 = aa(int(mx0),i,ai);
+           mx0 = irange + xr(0) + c - ctx(1);
+           if (ai == 1) mv0 = aa(int(xr(0)+c),i,ai);
            if (ai == 2) {
-	       mx0 = mx0 + 0.36;
-	       mv0 = aa(int(mx0),i,ai)+300;
+	       mx0 = mx0 + chn2_range_bias; // in cm
+	       mv0 = aa(int(xr(0)+c),i,ai)+300;
 	   }
            if (ai == 3) {
-	       mx0 = mx0 + 0.23;
-	       mv0 = aa(int(mx0),i,ai)+600;
+	       mx0 = mx0 + chn3_range_bias; // in cm
+	       mv0 = aa(int(xr(0)+c),i,ai)+600;
 	   }
           } else {
            mx0 = -10;
@@ -410,7 +480,7 @@ write, format="rn=%d; i = %d\n",rn,i
        } 
     }
     
-    if (!use_centroid && use_peak) {
+    if (!use_be_centroid && use_be_peak) {
        // if within 3 ns from xr(0) we find a peak, we can assume this to be noise related and try again using xr(0) from the first positive difference after the last negative difference.
        nidx = where(dd(xr(0):xr(0)+3) < 0);
        if (is_array(nidx)) {
@@ -434,9 +504,19 @@ write, format="rn=%d; i = %d\n",rn,i
 	ftrail = idx1(1);
 	ltrail = retdist;
 	//halftrail = 0.5*(ltrail - ftrail);
-	mx0 = irange+xr(0)+idx1(1)-ctx(1);
+	if (ai == 1) {
+	  mx0 = irange+xr(0)+idx1(1)-ctx(1);
+	  mv0 = aa(int(xr(0)+idx1(1)),i,ai);
+	}
+	if (ai == 2) {
+	  mx0 = irange+xr(0)+idx1(1)-ctx(1)+chn2_range_bias; // in cm
+	  mv0 = aa(int(xr(0)+idx1(1)),i,ai)+300;
+	}
+	if (ai == 3) {
+	  mx0 = irange+xr(0)+idx1(1)-ctx(1)+chn3_range_bias; // in cm
+	  mv0 = aa(int(xr(0)+idx1(1)),i,ai)+600;
+	}
 	//mx0 = irange+xr(0)+idx1(1)-irg_a.fs_rtn_centroid(i);
-	mv0 = aa(int(xr(0)+idx1(1)),i,ai);
        } else {
         mx0 = -10;
 	mv0 = -10;
@@ -450,7 +530,7 @@ write, format="rn=%d; i = %d\n",rn,i
     }
     // stuff below is for mx1 (first surface in veg).
 
-    if (use_centroid || use_peak) {
+    if (use_be_centroid || use_be_peak) {
        np = numberof ( *rp.rx(i,1) );      // find out how many waveform points
                                         // are in the primary (most sensitive)
                                         // receiver channel.
@@ -461,13 +541,13 @@ write, format="rn=%d; i = %d\n",rn,i
        }
 
        if ( np > 12 ) np = 12;               // use no more than 12
-       if ( numberof(where(  ((*rp.rx(i,1))(1:np)) == 0 )) <= 2 ) {
+       if ( numberof(where(  ((*rp.rx(i,1))(1:np)) < 5 )) <= max_sfc_sat ) {
          cv = cent( *rp.rx(i, 1 ) );
-       } else if ( numberof(where(  ((*rp.rx(i,2))(1:np)) == 0 )) <= 2 ) {
-         cv = cent( *rp.rx(i, 2 ) ) + 0.36;
+       } else if ( numberof(where(  ((*rp.rx(i,2))(1:np)) < 5 )) <= max_sfc_sat ) {
+         cv = cent( *rp.rx(i, 2 ) ) + chn2_range_bias;
          cv(3) += 300;
        } else {
-         cv = cent( *rp.rx(i, 3 ) ) + 0.23;
+         cv = cent( *rp.rx(i, 3 ) ) + chn3_range_bias;
          cv(3) += 600;
        }
 
@@ -489,32 +569,45 @@ write, format="rn=%d; i = %d\n",rn,i
     irange *= el;
     //mx1 = irange;
     //mv1 = intensity;
+    if (pse) pause, pse;
+    rv.sa = rp.sa(i);
+    rv.mx0 = mx0;
+    rv.mv0 = mv0;
+    rv.mx1 = mx1;
+    rv.mv1 = mv1;
+    rv.nx  = numberof(xr);
+    _errno = 0;
+    if (hard_surface) {
+	// check to see if there is only 1 inflection 
+	if (nxr == 1) {
+	  //use first surface algorithm data to define range
+	  rv.sa = rp.sa(i);
+	  rv.mx0 = mx1;
+	  rv.mv0 = mv1;
+	}
+    }
     if ( graph ) {
 	window, win;
-	mx1;mv1;mx0;mv0;
-        plmk, mv1, irg_a.fs_rtn_centroid(i), msize=.5, marker=7, color="blue", width=1
-        plmk, mv0, mx0-irange+irg_a.fs_rtn_centroid(i), msize=.5, marker=7, color="red", width=1
+	rv.mx1;rv.mv1;rv.mx0;rv.mv0;
+        /*
+	if (mv1 > 600) {
+	  mx_start = irg_a.fs_rtn_centroid(i) + chn3_range_bias;
+	} 
+	if ((mv1 > 300) && (mv1 < 600)) {
+	    mx_start = irg_a.fs_rtn_centroid(i) + chn2_range_bias;
+	} 
+	if (mv1 < 300) {
+	    mx_start = irg_a.fs_rtn_centroid(i);
+	}
+	*/
+	    
+	mx_start = irg_a.fs_rtn_centroid(i);
+        plmk, mv1, mx_start, msize=.5, marker=7, color="green", width=1
+        plmk, mv1, mx1-irange+mx_start, msize=.5, marker=7, color="blue", width=1
+        plmk, mv0, mx0-irange+mx_start, msize=.5, marker=7, color="red", width=1
     }
-    if (pse) pause, pse;
-        rv.sa = rp.sa(i);
-   	rv.mx0 = mx0;
-	rv.mv0 = mv0;
-   	rv.mx1 = mx1;
-	rv.mv1 = mv1;
-	rv.nx  = numberof(xr);
-	_errno = 0;
-	return rv;
-  }
-  else {
-        rv.sa = rp.sa(i);
-   	rv.mx0 = -1;
-	rv.mv0 = aa(max,i,1);
-   	rv.mx1 = -1;
-	rv.mv1 = rv.mv0;
-	rv.nx  = numberof(xr);
-	_errno = 0;
-	return rv;
-  }
+
+    return rv;
 }
 
 
@@ -636,7 +729,7 @@ for (i=1; i<=len; i=i+1) {
   geoveg(i).meast = rrr(i).meast
   geoveg(i).melevation = rrr(i).melevation;
   geoveg(i).soe = rrr(i).soe;
-  geoveg(i).fint = d(,i).mv1;
+  geoveg(i).fint = rrr(i).intensity;
  // find actual ground surface elevation using simple trig (similar triangles)
   elvdiff = rrr(i).melevation - rrr(i).elevation;
   ndiff = rrr(i).mnorth - rrr(i).north;
@@ -661,7 +754,7 @@ for (i=1; i<=len; i=i+1) {
 return geoveg;
 }
 
-func make_veg(latutm=, q=, ext_bad_att=, ext_bad_veg=, use_centroid=, use_peak=, use_highelv_echo=, multi_peaks=) {
+func make_veg(latutm=, q=, ext_bad_att=, ext_bad_veg=, use_centroid=, use_highelv_echo=, multi_peaks=) {
 /* DOCUMENT make_veg(opath=,ofname=,ext_bad_att=, ext_bad_veg=)
 
  This function allows a user to define a region on the gga plot 
@@ -687,14 +780,21 @@ Returns:
       See also: first_surface, run_veg, make_fs_veg 
 */
    
-   extern edb, soe_day_start, tans, pnav, utm, veg_all, rn_arr, rn_arr_idx, ba_veg, bd_veg;
+   extern edb, soe_day_start, tans, pnav, utm, veg_all, rn_arr, rn_arr_idx, ba_veg, bd_veg, n_all3sat;
    veg_all = [];
+/************
+   Currently, we are setting the following as defaults for last_surface determination algorithm:
+   hard_surface = 1; all returns with only 1 inflection will be treated as first surface returns and will use the same fs algorithm using centroid to determine the range to the last surface.  
+   use_peak = 1; this is used for all waveforms with more than 1 inflection... the bare earth is determined by the peak of the trailing edge of the last inflection in the waveform.
+*********/
+
    if (use_centroid == 1) {
-           use_centroid = 0;
-	   use_peak = 1;
+           use_be_centroid = 0;
+	   use_be_peak = 1;
+	   hard_surface=1;
    }
 
-   if (use_peak) write, "Using peak of last return to find bare earth...";
+   if (use_be_peak) write, "Using peak of last return to find bare earth...";
    
    
    /* check to see if required parameters have been initialized */
@@ -730,24 +830,24 @@ Returns:
    ba_count = 0;
    bd_count = 0;
    fcount = 0;
+   n_all3sat = 0;
 
+   open_seg_process_status_bar;
     for (i=1;i<=no_t;i++) {
       if ((rn_arr(1,i) != 0)) {
        fcount ++;
        write, "Processing for first_surface...";
-       if (use_peak) use_centroid = 1;
        rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=use_centroid, use_highelv_echo=use_highelv_echo); 
-       if (use_peak) use_centroid = 0;
        write, format="Processing segment %d of %d for vegetation\n", i, no_t;
        if (!multi_peaks) {
-         d = run_veg(start=rn_arr(1,i), stop=rn_arr(2,i),use_centroid=use_centroid,use_peak=use_peak);
+         d = run_veg(start=rn_arr(1,i), stop=rn_arr(2,i),use_be_centroid=use_be_centroid, use_be_peak=use_be_peak, hard_surface=hard_surface);
          a=[];
          write, "Using make_fs_veg for vegetation...";
          veg = make_fs_veg(d,rrr);
          grow, veg_all, veg;
          tot_count += numberof(veg.elevation);
        } else {
-         d = run_veg_all(start=rn_arr(1,i), stop=rn_arr(2,i),use_peak=use_peak);
+         d = run_veg_all(start=rn_arr(1,i), stop=rn_arr(2,i),use_be_peak=use_be_peak);
  	 a = [];
 	 write, "Using make_fs_veg_all (multiple peaks!) for vegetation..."
 	 veg = make_fs_veg_all(d, rrr);
@@ -756,6 +856,10 @@ Returns:
 	}
      }
     }
+
+    if (_ytk) {
+       tkcmd, "destroy .seg"
+    } else write, "\n"; 
 
     /* if ext_bad_att is set, find all points having elevation = ht 
         of airplane 
@@ -799,7 +903,7 @@ Returns:
         write, "Extracting false bald earth returns ";
         /* compare veg_all.lelv with 0 */
         bd_indx = where(veg_all.lelv == 0);
-	bd_count += numberof(ba_indx);
+	bd_count += numberof(bd_indx);
 	bd_veg = veg_all;
 	deast = veg_all.east;
 	deast(bd_indx) = 0;
@@ -821,18 +925,16 @@ Returns:
 
 
     write, "\nStatistics: \r";
-    write, format="Total number of records processed = %d\n",tot_count;
-    write, format="Total number of records with false first "+
-                   "returns data = %d\n",ba_count;
-    write, format = "Total number of records with false veg data = %d\n",
+    write, format="Total records processed = %d\n",tot_count;
+    write, format = "Total records with all 3 channels saturated = %d\n", n_all3sat;
+    write, format="Total records with inconclusive first surface range = %d\n", ba_count;
+    write, format = "Total records with inconclusive last surface range = %d\n",
                     bd_count;
-    write, format="Total number of GOOD data points = %d \n",
-                   (tot_count-ba_count-bd_count);
 
     if ( tot_count != 0 ) {
        pba = float(ba_count)*100.0/tot_count;
        write, format = "%5.2f%% of the total records had "+
-                       "false first returns! \n",pba;
+                       "inconclusive first return range\n",pba;
     } else 
 	write, "No good returns found"
 
@@ -841,10 +943,10 @@ Returns:
        if (diff_count) {
       pbd = float(bd_count)*100.0/diff_count;
       write, format = "%5.2f%% of total records with good "+
-                      "first returns had false veg data! \n",pbd; 
+                      "first return had inconclusive last return range \n",pbd; 
 	}
     } else 
-	write, "No veg records found"
+	write, "No records processed for Topo under veg"
     no_append = 0;
     if (numberof(rn_arr)>2) {
       rn_arr_idx = (rn_arr(dif,)(,cum)+1)(*);	
@@ -1039,7 +1141,7 @@ func test_veg(veg_all,  fname=, pse=, graph=) {
   tot_count = 0;
 
   for (i = 1; i <= numberof(rasters); i++) {
-    depth = ex_veg(rasters(i), pulses(i),last=250, graph=graph, use_peak=1, pse=pse)    
+    depth = ex_veg(rasters(i), pulses(i),last=250, graph=graph, use_be_peak=1, pse=pse)    
     if (veg_all(i).rn == depth.rastpix) {
       if (depth.mx1 == -10) {
        veg_all(i).felv = -10;
@@ -1153,8 +1255,8 @@ func clean_veg(veg_all, rcf_width=, type=) {
 
 
 
-func ex_veg_all( rn, i,  last=, graph=, use_centroid=, use_peak=, pse=, thresh= ) {
-/* DOCUMENT ex_veg_all(rn, i,  last=, graph=, use_centroid=, use_peak=, pse= ) {
+func ex_veg_all( rn, i,  last=, graph=, use_be_centroid=, use_be_peak=, pse=, thresh= ) {
+/* DOCUMENT ex_veg_all(rn, i,  last=, graph=, use_be_centroid=, use_be_peak=, pse= ) {
 
 
 
@@ -1218,7 +1320,7 @@ func ex_veg_all( rn, i,  last=, graph=, use_centroid=, use_peak=, pse=, thresh= 
 
   w  = *rp.rx(i, 1);  aa(1:n, i) = float( (~w+1) - (~w(1)+1) );
 
- if (!(use_centroid) && !(use_peak)) {
+ if (!(use_be_centroid) && !(use_be_peak)) {
    nsat = where( w == 0 );			// Create a list of saturated samples 
    numsat = numberof(nsat);			// Count how many are saturated
    if ( (numsat > 1)  && ( nsat(1) <= 12)   ) {
@@ -1352,7 +1454,7 @@ func ex_veg_all( rn, i,  last=, graph=, use_centroid=, use_peak=, pse=, thresh= 
  return rv
 }
 
-func run_veg_all( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, use_centroid=,use_peak= ) {
+func run_veg_all( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, use_be_centroid=,use_be_peak= ) {
 // depths = array(float, 3, 120, len );
   if (is_void(graph)) graph=0;
 
@@ -1373,8 +1475,9 @@ func run_veg_all( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=
      
    
  depths = array(VEGPIXS, 120, len );
+/*
   if ( _ytk && (len != 0) ) {
-    tkcmd,"destroy .veg; toplevel .veg; set progress 0;"
+    tkcmd,"toplevel .veg; set progress 0;"
     tkcmd,swrite(format="ProgressBar .veg.pb \
 	-fg yellow \
 	-troughcolor blue \
@@ -1385,6 +1488,7 @@ func run_veg_all( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=
 	-width 400", len );
     tkcmd,"pack .veg.pb; update; center_win .veg;"
   }
+*/
  if ( graph != 0 ) 
 	animate,1;
 
@@ -1394,22 +1498,19 @@ func run_veg_all( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=
 	graph = 0;
    for ( j=1; j<= len; j++ ) {
      if (_ytk) 
-       tkcmd, swrite(format="set progress %d", j)
+       tkcmd, swrite(format="set progress %d", j*100/len)
      else {
      if ( (j % 10)  == 0 ) 
         write, format="   %d of %d   \r", j,  len
      }
      for (i=1; i<=120; i++ ) {
-       depths(i,j) = ex_veg_all( rn+j, i, last = last, graph=graph, use_centroid=use_centroid,use_peak=use_peak);
+       depths(i,j) = ex_veg_all( rn+j, i, last = last, graph=graph, use_be_centroid=use_be_centroid,use_be_peak=use_be_peak);
        if ( !is_void(pse) ) 
 	  pause, pse;
      }
    }
  if ( graph != 0 ) 
 	animate,0;
- if (_ytk) {
-   tkcmd, "destroy .veg"
-   } else write, "\n"; 
   return depths;
 }
 

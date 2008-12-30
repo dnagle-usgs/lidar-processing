@@ -231,7 +231,7 @@ write,"============================================================="
 	    a = [];
             irg_a = irg(rasterno,rasterno,usecentroid=1);
 	    if (bconst) {
-	      ex_veg, rasterno, pulseno,  last=250, graph=1, win=0, use_peak=1;
+	      ex_veg, rasterno, pulseno,  last=250, graph=1, win=0, use_be_peak=1;
 	    } else {
               show_wf, *wfa, pulseno(1), win=0, cb=7, raster=rasterno(1);
 	    }
