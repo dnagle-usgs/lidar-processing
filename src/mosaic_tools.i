@@ -163,14 +163,14 @@ func write_cir_gpsins(imgdir, outfile) {
 
    f = open(outfile, "w");
    for(i = 1; i <= numberof(files); i++) {
-      hms = strsplit(files(i), "-")(2);
-      hms = atoi(hms);
-      sod = hms2sod(hms) + 1;
+      hms = atoi(strsplit(files(i), "-")(2));
+      sod = int(hms2sod(hms) % 86400);
       data = get_img_info(sod);
+      u = fll2utm(data(2), data(1));
       if(!is_void(data)) {
          write, f, format="%s %.10f %.10f %.4f %.4f %.4f %.4f\n",
             files(i),
-            data(1), data(2), data(3), data(4), data(5), data(6);
+            u(2), u(1), data(3), data(4), data(5), data(6);
       }
    }
    close, f;
@@ -183,10 +183,10 @@ func get_img_info(sod, offset=) {
    extern iex_nav;
    extern pnav;
 
-   default, offset, 0.12
+   default, offset, 1.12;
 
-   //if(pnav.sod(max) < sod || sod < pnav.sod(min))
-   //   return [];
+   sod += offset;
+
    if(iex_nav.somd(max) < sod || sod < iex_nav.somd(min))
       return [];
 
@@ -628,4 +628,37 @@ func __atcpsa_status(status) {
    }
 }
 
+func new_gen_jgws(dir, elev=) {
+   extern camera_specs;
+   jpgs = find(photo_dir, glob="*-cir.jpg");
+   for(i = 1; i <= numberof(jpgs); i++) {
+      somd = hms2sod(atoi(strpart(jpgs(i), -13:-8)));
+      sod = int(somd % 86400);
+      //jgw_data = gen_jgw_sod(somd);
+      ins = 0;
+      ins = IEX_ATTITUDEUTM();
+      raw_ins = get_img_info(sod);
+      u = fll2utm(raw_ins(2), raw_ins(1));
+      // raw_ins(1:2) = u(1:2);
+      ins.somd = sod;
+      ins.northing = u(1);
+      ins.easting = u(2);
+      ins.zone = u(3);
+      ins.lat = raw_ins(2);
+      ins.lon = raw_ins(1);
+      ins.alt = raw_ins(3);
+      ins.roll = raw_ins(4);
+      ins.pitch = raw_ins(5);
+      ins.heading = raw_ins(6);
 
+         file_tail(jpgs(i));
+         raw_ins;
+         ins;
+      jgw_data = gen_jgw(ins, camera_specs, elev);
+      jgw_file = file_rootname(jpgs(i)) + ".jgw";
+      f = open(jgw_file, "w");
+      write, f, format="%.6f\n", jgw_data(1:4);
+      write, f, format="%.3f\n", jgw_data(5:6);
+      close, f;
+   }
+}
