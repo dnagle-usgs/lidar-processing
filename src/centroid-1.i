@@ -46,21 +46,6 @@ See also: RAST, cent
 
  extern ops_conf;
 
- // if (is_void(chn2_range_bias)) chn2_range_bias=0.36;
- // if (is_void(chn3_range_bias)) chn3_range_bias=0.23;
-
- // if all 3 chn_range_bias settings are not set in ops_conf then use the default settings
- if (ops_conf.chn2_range_bias == ops_conf.chn3_range_bias == ops_conf.chn1_range_bias == 0) {
-    ops_conf.chn1_range_bias = 0.;
-    ops_conf.chn2_range_bias = 0.36;
-    ops_conf.chn3_range_bias = 0.23;
- }
-
- // check if max_sfc_sat has been defined from the ops_conf.i file.  The default value is -1, so if it is the default value, then set it to 2, otherwise use the ops_conf.max_sfc_sat value
-  if (ops_conf.max_sfc_sat == -1) {
-     ops_conf.max_sfc_sat = 2;
-  }
-
  rv = array(float,4);			// return values
  if ( n == 0 ) return [];
 

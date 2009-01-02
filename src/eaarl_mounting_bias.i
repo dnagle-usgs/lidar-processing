@@ -73,10 +73,12 @@ for the angle biases and the x,y and z offsets.
 *************************************************************/
  ops_default = array(mission_constants);
  ops_default.range_biasM =   0.7962;         // Laser range measurement bias.
- ops_default.chn1_range_bias = 0;
- ops_default.chn2_range_bias = 0.36;
- ops_default.chn3_range_bias = 0.23;
 
+// chn range bias and max_sfc_sat settings are set by default to the values below to allow backward compatibility.  The older ops_conf.i files did not have these values set.  If these values remain -999 and -1 by default, then the functions that use them will change it to the expected value (0,0.36,0.23 for chn range biases and 2 for max_sfc_sat
+
+ ops_default.chn1_range_bias = -999;
+ ops_default.chn2_range_bias = -999;
+ ops_default.chn3_range_bias = -999;
  ops_default.max_sfc_sat = -1;
 
  ops_tans = array(mission_constants);

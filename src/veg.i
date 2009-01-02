@@ -128,6 +128,26 @@ rn
 
 
 func run_veg( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, use_be_centroid=,use_be_peak=, hard_surface= ) {
+
+extern ops_conf, veg_conf;
+
+ if (ops_conf.max_sfc_sat == -1) {
+	ops_conf.max_sfc_sat == 2;  // default it to 2 if not set
+ }
+
+ if (ops_conf.chn1_range_bias == -999) 
+    ops_conf.chn1_range_bias = 0.;
+ if (ops_conf.chn2_range_bias == -999) 
+    ops_conf.chn2_range_bias = 0.36;
+ if (ops_conf.chn3_range_bias == -999) 
+    ops_conf.chn3_range_bias = 0.23;
+
+ if ( is_void(veg_conf)) {
+   veg_conf = VEG_CONF();
+   veg_conf.thresh = 4.0;
+   veg_conf.max_sat(*) = ops_conf.max_sfc_sat;
+ }
+
 // depths = array(float, 3, 120, len );
   if (is_void(graph)) graph=0;
 
@@ -213,23 +233,8 @@ func ex_veg( rn, i,  last=, graph=, win=, use_be_centroid=, use_be_peak=, hard_s
 */
 
  extern veg_conf, ops_conf, n_all3sat;
- if (ops_conf.max_sfc_sat == -1) {
-	ops_conf.max_sfc_sat == 2;  // default it to 2 if not set
- }
-
- if ( is_void(veg_conf)) {
-   veg_conf = VEG_CONF();
-   veg_conf.thresh = 4.0;
-   veg_conf.max_sat(*) = ops_conf.max_sfc_sat;
- }
-
- if (ops_conf.chn2_range_bias == ops_conf.chn3_range_bias == ops_conf.chn1_range_bias == 0) {
-    ops_conf.chn1_range_bias = 0.;
-    ops_conf.chn2_range_bias = 0.36;
-    ops_conf.chn3_range_bias = 0.23;
- }
-
  extern ex_bath_rn, ex_bath_rp, a, irg_a, _errno
+
   _errno = 0;		// If not specifically set, preset to assume no errors.
   if ( (rn == 0 ) && ( i == 0 ) ) {
      write,format="Are you clicking in window %d?,  No data was found.\n",win
@@ -920,15 +925,17 @@ Returns:
       /* if ext_bad_veg is set, find all points having veg = 0 
       */
       if ((ext_bad_veg==1) && (is_array(veg_all)))  {
-        write, "Extracting false bald earth returns ";
+        write, "Extracting false last surface returns ";
         /* compare veg_all.lelv with 0 */
-        bd_indx = where(veg_all.lelv == 0);
+        bd_indx = where((veg_all.lelv == 0));
 	bd_count += numberof(bd_indx);
 	bd_veg = veg_all;
 	deast = veg_all.east;
 	deast(bd_indx) = 0;
 	dnorth = veg_all.north;
 	dnorth(bd_indx) = 0;
+	bd_indx = where(veg_all.lelv == veg_all.melevation);
+ 	bd_count += numberof(bd_indx);
 
 	/* compute array for bad veg (bd_veg) */
 	bd_indx_r = where(bd_veg.lelv != 0);

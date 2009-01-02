@@ -96,6 +96,21 @@ func irg( b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo= ) {
 
 */
 
+  extern ops_conf;
+
+ // if the 3 chn_range_bias settings are not set in ops_conf then use the default settings
+ if (ops_conf.chn1_range_bias == -999) 
+    ops_conf.chn1_range_bias = 0.;
+ if (ops_conf.chn2_range_bias == -999) 
+    ops_conf.chn2_range_bias = 0.36;
+ if (ops_conf.chn3_range_bias == -999) 
+    ops_conf.chn3_range_bias = 0.23;
+
+ // check if max_sfc_sat has been defined from the ops_conf.i file.  The default value is -1, so if it is the default value, then set it to 2, otherwise use the ops_conf.max_sfc_sat value
+  if (ops_conf.max_sfc_sat == -1) {
+     ops_conf.max_sfc_sat = 2;
+  }
+
   if ( !is_void( delta ) ) {
      e = b + delta;
      b = b - delta;
