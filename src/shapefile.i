@@ -2,6 +2,27 @@
 write, "$Id$";
 
 func read_ascii_shapefile(filename) {
+/* DOCUMENT read_ascii_shapefile(filename)
+   Reads an ASCII shapefile as created by Global Mapper (using export Simple
+   ASCII Shapefile) or by Yorick (using write_ascii_shapefile).
+
+   The shapefile will be returned as an array of pointers. Each pointer points
+   to an array of x,y points. (*shp(i))(1,) are the x-coordinates for the i-th
+   segment. (*shp(i))(2,) are the y-coordinates for the i-th segment.
+
+   == File Format ==
+
+   The shapefile consists of one or more segments, which are separated in the
+   file by one or more blank lines.
+
+   Each segment is comprised of a series of point coordinates. The coordinates
+   should be comma-delimited x,y or x,y,z values, one per line, in sequence.
+
+   Each segment may optionally be preceeded by attribute information. Each
+   attribute must be written as "KEY=VALUE". There may be any arbitrary number
+   of attributes.
+*/
+// Original David Nagle 2008-10-06
    f = open(filename, "r");
    shp = array(pointer, 8);
    shp_idx = 0;
@@ -69,6 +90,16 @@ func read_ascii_shapefile(filename) {
 }
 
 func write_ascii_shapefile(shp, filename, meta=) {
+/* DOCUMENT write_ascii_shapefile, shp, filename, meta=
+   Creates an ASCII shapefile using the given data.
+
+   See read_ascii_shapefile for details on the format of the data array and file.
+
+   If meta= is provided, it should be an array of strings. Each string must be
+   terminated with a newline. They will be written as-is preceeding each
+   segment.
+*/
+// Original David Nagle 2008-10-06
    f = open(filename, "w");
    for(i = 1; i <= numberof(shp); i++) {
       if(!is_void(meta)) {
@@ -81,12 +112,24 @@ func write_ascii_shapefile(shp, filename, meta=) {
 }
 
 func plot_shape(shp, color=, width=) {
+/* DOCUMENT plot_shape, shp, color=, width=
+   Plots a shapefile. See read_ascii_shapefile for details on the format of
+   shp.
+*/
+// Original David Nagle 2008-10-06
    for(i = 1; i <= numberof(shp); i++) {
       plg, (*shp(i))(2,), (*shp(i))(1,), marks=0, color=color, width=width;
    }
 }
 
 func shape_stats(shp) {
+/* DOCUMENT shape_stats, shp
+   Displays basic statistics for the shapefile: number of polygons and number
+   of points.
+   
+   See read_ascii_shapefile for details on the format of shp.
+*/
+// Original David Nagle 2008-10-06
    write, format="Number of polys: %d\n", numberof(shp);
    points = 0;
    for(i = 1; i <= numberof(shp); i++) {
@@ -97,6 +140,14 @@ func shape_stats(shp) {
 }
 
 func print_shape(shp, idx) {
+/* DOCUMENT print_shape, shp
+            print_shape, shp, idx
+   Displays the contents of the shapefile (on stdout). If idx is specified,
+   then only that polygon in the shapefile will be displayed.
+   
+   See read_ascii_shapefile for details on the format of shp.
+*/
+// Original David Nagle 2008-10-06
    if(idx) {
       write, format="%.2f, %.2f\n", (*shp(idx))(1,), (*shp(idx))(2,);
    } else {
@@ -109,6 +160,13 @@ func print_shape(shp, idx) {
 }
 
 func add_shapefile(filename) {
+/* DOCUMENT add_shapefile, filename
+   Loads the specified ASCII shapefile and stores in private variables for
+   later use.
+
+   Primarily intended for transparent use from the Plotting Tool GUI.
+*/
+// Original David Nagle 2008-10-06
    extern _shp_polys;
    extern _shp_files;
 
@@ -125,6 +183,12 @@ func add_shapefile(filename) {
 }
 
 func plot_shapefiles(void) {
+/* DOCUMENT plot_shapefiles
+   Plots the shapefiles stored in private variables.
+
+   Primarily intended for transparent use from the Plotting Tool GUI.
+*/
+// Original David Nagle 2008-10-06
    extern _shp_polys;
    if(is_void(_shp_polys))
       return;
@@ -134,6 +198,12 @@ func plot_shapefiles(void) {
 }
 
 func remove_shapefile(filename) {
+/* DOCUMENT remove_shapefile, filename
+   Removes the shapefile specified from the data stored in private variables.
+
+   Primarily intended for transparent use from the Plotting Tool GUI.
+*/
+// Original David Nagle 2008-10-06
    extern _shp_polys;
    extern _shp_files;
 
@@ -152,6 +222,12 @@ func remove_shapefile(filename) {
 }
 
 func shapefile_limits(void) {
+/* DOCUMENT shapefile_limits
+   Sets the limits of the window to match the extent of the loaded shapefiles.
+
+   Primarily intended for transparent use from the Plotting Tool GUI.
+*/
+// Original David Nagle 2008-10-06
    extern _shp_polys;
    minx = miny =  1e+100;
    maxx = maxy = -1e+100;
@@ -189,6 +265,12 @@ func shapefile_limits(void) {
 }
 
 func polygon_acquire(closed) {
+/* DOCUMENT poly = polygon_acquire(closed)
+   Allows the user to define a polygon or polyline using the mouse to click on
+   a Yorick window. Closed specified whether it's a polygon (closed=1) or
+   polyline (closed=0).
+*/
+// Original David Nagle 2008-10-06
    if(closed)
       type = "polygon";
    else
@@ -220,6 +302,12 @@ func polygon_acquire(closed) {
 
 
 func polygon_add(poly, name) {
+/* DOCUMENT polygon_add, poly, name
+   Adds the specified polygon to private variables for later use.
+
+   Primarily intended for transparent use from the Plotting Tool GUI.
+*/
+// Original David Nagle 2008-10-06
    extern _poly_polys;
    extern _poly_names;
 
@@ -238,6 +326,12 @@ func polygon_add(poly, name) {
 }
 
 func polygon_remove(name) {
+/* DOCUMENT polygon_remove, name
+   Removes the specified polygon from private variables.
+
+   Primarily intended for transparent use from the Plotting Tool GUI.
+*/
+// Original David Nagle 2008-10-06
    extern _poly_polys;
    extern _poly_names;
 
@@ -256,6 +350,12 @@ func polygon_remove(name) {
 }
 
 func polygon_plot(void) {
+/* DOCUMENT polygon_plot
+   Plots the polygons currently defined in private variables.
+
+   Primarily intended for transparent use from the Plotting Tool GUI.
+*/
+// Original David Nagle 2008-10-06
    extern _poly_polys;
    if(is_void(_poly_polys))
       return;
@@ -263,6 +363,13 @@ func polygon_plot(void) {
 }
 
 func polygon_write(filename) {
+/* DOCUMENT polygon_write, filename
+   Saves the currently defined polygons to a file as an ASCII shapefile. See
+   write_ascii_shapefile and read_ascii_shapefile for details.
+
+   Primarily intended for transparent use from the Plotting Tool GUI.
+*/
+// Original David Nagle 2008-10-06
    extern _poly_polys;
    extern _poly_names;
    meta = _poly_names;

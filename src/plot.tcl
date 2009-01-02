@@ -3,7 +3,6 @@
 package require BWidget
 package require Iwidgets
 package require struct::list
-package require jpeg
 
 if {![namespace exists ::plot]} {
    namespace eval ::plot {
@@ -106,9 +105,9 @@ proc ::plot::menu { } {
    set nb $w.nb
    NoteBook $nb
    
+   $nb insert end settings -text "Settings"
    $nb insert end interact -text "Interact"
    $nb insert end poly -text "Polygons"
-   $nb insert end settings -text "Settings"
    $nb insert end pnav -text "PNAV"
    $nb insert end img -text "Image"
    $nb insert end shp -text "Shapefile"
@@ -118,7 +117,7 @@ proc ::plot::menu { } {
    grid $nb -sticky news
    grid rowconfigure $w 0 -weight 1
    grid columnconfigure $w 0 -weight 1
-   $nb raise interact
+   $nb raise settings
 
    set pane [$nb getframe interact]
 
@@ -126,7 +125,10 @@ proc ::plot::menu { } {
    frame $f
    grid $f -sticky ewn
 
-   Button $f.butReplot -text "Replot" -command ::plot::replot_all
+   Button $f.butPlot -text "Plot" -command ::plot::plot_all
+   grid $f.butPlot -sticky ew
+
+   Button $f.butReplot -text "Clear and Plot" -command ::plot::replot_all
    grid $f.butReplot -sticky ew
    
    Button $f.butJump -text "SF Jump" -command ::plot::jump
@@ -500,10 +502,14 @@ proc ::plot::menu { } {
 }
 
 proc ::plot::replot_all { } {
+   ::plot::fma
+   ::plot::plot_all
+}
+
+proc ::plot::plot_all { } {
    if {$g::coordType == "UTM"} {
       ::plot::curzone
    }
-   ::plot::fma
    # Plot images first
    if { $g::enable_plot_images } {
       ::plot::image_plot
@@ -1054,10 +1060,14 @@ proc ::plot::dlg::worldfile::prompt { } {
       return
    }
 
-   foreach {dimx dimy} [::jpeg::dimensions $v::image] {}
+   foreach {dimx dimy} [::plot::image_dimensions $v::image] {}
    foreach {x0 y0 x1 y1} [::jgw::coords $v::world $dimx $dimy] {}
 
    return [list $v::image $x0 $y0 $x1 $y1]
+}
+
+proc ::plot::image_dimensions {filename} {
+   return [exec identify -format "%w %h" "$filename"]
 }
 
 proc ::plot::dlg::worldfile::choose_image { } {
