@@ -175,7 +175,7 @@ proc load_ops_conf {} {
                update
             expect ">"
                destroy .stby
-           }
+         }
     }
   }
 }

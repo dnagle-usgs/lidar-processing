@@ -775,7 +775,7 @@ func clean_fs(fs_all, rcf_width=) {
 
 
   // remove points that have been assigned mirror elevation values
-  indx = where(fs_all.elevation < (0.75*fs_all.melevation))
+  indx = where(fs_all.elevation != fs_all.melevation)
   if (is_array(indx)) {
     fs_all = fs_all(indx);
   } else {

@@ -212,16 +212,22 @@ func ex_veg( rn, i,  last=, graph=, win=, use_be_centroid=, use_be_peak=, hard_s
 
 */
 
- extern veg_conf, chn2_range_bias, chn3_range_bias, n_all3sat, max_sfc_sat;
+ extern veg_conf, ops_conf, n_all3sat;
+ if (ops_conf.max_sfc_sat == -1) {
+	ops_conf.max_sfc_sat == 2;  // default it to 2 if not set
+ }
+
  if ( is_void(veg_conf)) {
    veg_conf = VEG_CONF();
    veg_conf.thresh = 4.0;
-   veg_conf.max_sat(1) = max_sfc_sat;
-   veg_conf.max_sat(2) = max_sfc_sat;
-   veg_conf.max_sat(3) = max_sfc_sat;
+   veg_conf.max_sat(*) = ops_conf.max_sfc_sat;
  }
- if (is_void(chn2_range_bias)) chn2_range_bias=0.36;
- if (is_void(chn3_range_bias)) chn3_range_bias=0.23;
+
+ if (ops_conf.chn2_range_bias == ops_conf.chn3_range_bias == ops_conf.chn1_range_bias == 0) {
+    ops_conf.chn1_range_bias = 0.;
+    ops_conf.chn2_range_bias = 0.36;
+    ops_conf.chn3_range_bias = 0.23;
+ }
 
  extern ex_bath_rn, ex_bath_rp, a, irg_a, _errno
   _errno = 0;		// If not specifically set, preset to assume no errors.
@@ -449,7 +455,7 @@ write, format="rn=%d; i = %d\n",rn,i
 	 //write, format="this happens!! rn = %d; i = %d\n",rn,i;
          retdist = idx(0);
         }
-       } else 
+       } else  
        write, format="idx/idx1 is nuller for rn=%d, i=%d    \r",rn, i  
        //now check to see if it it passes intensity test
        mxmint = aa(xr(0)+1:xr(0)+retdist,i,ai)(max);
@@ -460,13 +466,16 @@ write, format="rn=%d; i = %d\n",rn,i
           if (b(sum) != 0) {
            c = float(b*indgen(1:retdist)) (sum) / (b(sum));
            mx0 = irange + xr(0) + c - ctx(1);
-           if (ai == 1) mv0 = aa(int(xr(0)+c),i,ai);
+           if (ai == 1) {
+	       mx0 += ops_conf.chn1_range_bias;
+	       mv0 = aa(int(xr(0)+c),i,ai);
+	   }
            if (ai == 2) {
-	       mx0 = mx0 + chn2_range_bias; // in cm
+	       mx0 += ops_conf.chn2_range_bias; 
 	       mv0 = aa(int(xr(0)+c),i,ai)+300;
 	   }
            if (ai == 3) {
-	       mx0 = mx0 + chn3_range_bias; // in cm
+	       mx0 += ops_conf.chn3_range_bias; // in cm
 	       mv0 = aa(int(xr(0)+c),i,ai)+600;
 	   }
           } else {
@@ -505,15 +514,15 @@ write, format="rn=%d; i = %d\n",rn,i
 	ltrail = retdist;
 	//halftrail = 0.5*(ltrail - ftrail);
 	if (ai == 1) {
-	  mx0 = irange+xr(0)+idx1(1)-ctx(1);
+	  mx0 = irange+xr(0)+idx1(1)-ctx(1)+ops_conf.chn1_range_bias;
 	  mv0 = aa(int(xr(0)+idx1(1)),i,ai);
 	}
 	if (ai == 2) {
-	  mx0 = irange+xr(0)+idx1(1)-ctx(1)+chn2_range_bias; // in cm
+	  mx0 = irange+xr(0)+idx1(1)-ctx(1)+ops_conf.chn2_range_bias; // in cm
 	  mv0 = aa(int(xr(0)+idx1(1)),i,ai)+300;
 	}
 	if (ai == 3) {
-	  mx0 = irange+xr(0)+idx1(1)-ctx(1)+chn3_range_bias; // in cm
+	  mx0 = irange+xr(0)+idx1(1)-ctx(1)+ops_conf.chn3_range_bias; // in cm
 	  mv0 = aa(int(xr(0)+idx1(1)),i,ai)+600;
 	}
 	//mx0 = irange+xr(0)+idx1(1)-irg_a.fs_rtn_centroid(i);
@@ -541,13 +550,16 @@ write, format="rn=%d; i = %d\n",rn,i
        }
 
        if ( np > 12 ) np = 12;               // use no more than 12
-       if ( numberof(where(  ((*rp.rx(i,1))(1:np)) < 5 )) <= max_sfc_sat ) {
+       if ( numberof(where(  ((*rp.rx(i,1))(1:np)) < 5 )) <= ops_conf.max_sfc_sat ) {
          cv = cent( *rp.rx(i, 1 ) );
-       } else if ( numberof(where(  ((*rp.rx(i,2))(1:np)) < 5 )) <= max_sfc_sat ) {
-         cv = cent( *rp.rx(i, 2 ) ) + chn2_range_bias;
+	 cv(1) += ops_conf.chn1_range_bias;
+       } else if ( numberof(where(  ((*rp.rx(i,2))(1:np)) < 5 )) <= ops_conf.max_sfc_sat ) {
+         cv = cent( *rp.rx(i, 2 ) ); 
+	 cv(1) += ops_conf.chn2_range_bias;
          cv(3) += 300;
        } else {
-         cv = cent( *rp.rx(i, 3 ) ) + chn3_range_bias;
+         cv = cent( *rp.rx(i, 3 ) ); 
+	 cv(1) += ops_conf.chn3_range_bias;
          cv(3) += 600;
        }
 
@@ -591,13 +603,13 @@ write, format="rn=%d; i = %d\n",rn,i
 	rv.mx1;rv.mv1;rv.mx0;rv.mv0;
         /*
 	if (mv1 > 600) {
-	  mx_start = irg_a.fs_rtn_centroid(i) + chn3_range_bias;
+	  mx_start = irg_a.fs_rtn_centroid(i) + ops_conf.chn3_range_bias;
 	} 
 	if ((mv1 > 300) && (mv1 < 600)) {
-	    mx_start = irg_a.fs_rtn_centroid(i) + chn2_range_bias;
+	    mx_start = irg_a.fs_rtn_centroid(i) + ops_conf.chn2_range_bias;
 	} 
 	if (mv1 < 300) {
-	    mx_start = irg_a.fs_rtn_centroid(i);
+	    mx_start = irg_a.fs_rtn_centroid(i) + ops_conf.chn1_range_bias;
 	}
 	*/
 	    
@@ -741,8 +753,16 @@ for (i=1; i<=len; i=i+1) {
    geoveg(i).lelv(eindx) = int(rrr(i).melevation(eindx) - eratio * elvdiff(eindx));
    geoveg(i).lnorth(eindx) = int(rrr(i).mnorth(eindx) - eratio * ndiff(eindx));
    geoveg(i).least(eindx) = int(rrr(i).meast(eindx) - eratio * ediff(eindx));
+   // assign east,north values from rrr for those array elements within the raster that did not have a valid mx0 value;
+   cf0idx = where(geoveg(i).lnorth == 0);
+   geoveg(i).lnorth(cf0idx) = rrr(i).north(cf0idx);
+   geoveg(i).least(cf0idx) = rrr(i).east(cf0idx);
+   geoveg(i).lelv(cf0idx) = rrr(i).melevation(cf0idx);
   } else {
-   geoveg(i).lelv = 0;
+   geoveg(i).lnorth = geoveg(i).north;
+   geoveg(i).least  = geoveg(i).east;
+   // assign mirror elevation values to lelv to clearly indicate that the last elevation values are incorrect
+   geoveg(i).lelv = rrr(i).melevation;
   }
   geoveg(i).lint = d(,i).mv0;
   geoveg(i).nx = d(,i).nx;
@@ -1200,8 +1220,9 @@ func clean_veg(veg_all, rcf_width=, type=) {
   
   write, "cleaning data...";
 
-  // remove pts that had bare earth elevations assigned to 0
-  indx = where(veg_all.lelv != 0);
+
+  // remove pts that have both bare earth and first return elevations assigned to melevation
+  indx = where((veg_all.lelv != veg_all.melevation) | (veg_all.elevation != veg_all.melevation));
   if (is_array(indx)) {
     veg_all = veg_all(indx);
   } else {
@@ -1228,6 +1249,7 @@ func clean_veg(veg_all, rcf_width=, type=) {
    }
   }
 
+ /*
   // remove points that have been assigned mirror elevation values
   indx = where((veg_all.melevation - veg_all.elevation) > 14000)
   if (is_array(indx)) {
@@ -1236,6 +1258,7 @@ func clean_veg(veg_all, rcf_width=, type=) {
     veg_all = [];
     return veg_all
   }
+*/
 
   if (is_array(rcf_width)) {
     write, "using rcf filter to clean veg data..."

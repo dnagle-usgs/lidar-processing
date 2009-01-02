@@ -44,13 +44,22 @@ Channel 1 is the most sensitive and channel 3 the least.
 See also: RAST, cent  
 */
 
- extern max_sfc_sat, chn2_range_bias, chn3_range_bias;
+ extern ops_conf;
 
  // if (is_void(chn2_range_bias)) chn2_range_bias=0.36;
  // if (is_void(chn3_range_bias)) chn3_range_bias=0.23;
 
- if (is_void(chn2_range_bias)) chn2_range_bias=0.36;
- if (is_void(chn3_range_bias)) chn3_range_bias=0.23;
+ // if all 3 chn_range_bias settings are not set in ops_conf then use the default settings
+ if (ops_conf.chn2_range_bias == ops_conf.chn3_range_bias == ops_conf.chn1_range_bias == 0) {
+    ops_conf.chn1_range_bias = 0.;
+    ops_conf.chn2_range_bias = 0.36;
+    ops_conf.chn3_range_bias = 0.23;
+ }
+
+ // check if max_sfc_sat has been defined from the ops_conf.i file.  The default value is -1, so if it is the default value, then set it to 2, otherwise use the ops_conf.max_sfc_sat value
+  if (ops_conf.max_sfc_sat == -1) {
+     ops_conf.max_sfc_sat = 2;
+  }
 
  rv = array(float,4);			// return values
  if ( n == 0 ) return [];
@@ -88,10 +97,8 @@ See also: RAST, cent
         for each aturated point.
 
 **********************************************************************/
-  if ( is_void( max_sfc_sat) ) 
-       max_sfc_sat = 2;	// The maximum number of saturated surface values
 
-  if ( (nsat1 = numberof(where(  ((*rast.rx(n,1))(1:np)) < 5 ))) <= max_sfc_sat ) {
+  if ( (nsat1 = numberof(where(  ((*rast.rx(n,1))(1:np)) < 5 ))) <= ops_conf.max_sfc_sat ) {
      cv = cent( *rast.rx(n, 1 ) );
 //     if ( nsat1 > 1 ) cv(1) = cv(1) - (nsat1 -1 ) * .1 ;    // See Note 1 above
      if ( cv(3) < -90 ) {	   // Must be water column only return.  
@@ -100,13 +107,14 @@ See also: RAST, cent
         y = slope * x;
         cv(1) += y;
      }
-  } else if ( numberof(where(  ((*rast.rx(n,2))(1:np)) < 5 )) <= max_sfc_sat ) {
+     cv(1:2) += ops_conf.chn1_range_bias;
+  } else if ( numberof(where(  ((*rast.rx(n,2))(1:np)) < 5 )) <= ops_conf.max_sfc_sat ) {
      cv = cent( *rast.rx(n, 2 ) ); 
-     cv(1:2) += chn2_range_bias;
+     cv(1:2) += ops_conf.chn2_range_bias;
      cv(3) += 300;
   } else {
      cv = cent( *rast.rx(n, 3 ) ); 
-     cv(1:2) += chn3_range_bias;
+     cv(1:2) += ops_conf.chn3_range_bias;
      cv(3) += 600;
   }
 

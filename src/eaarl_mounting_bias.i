@@ -1,3 +1,4 @@
+/* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent: */
 /***********************************************************************
  $Id$
 
@@ -26,8 +27,10 @@ struct mission_constants {
   float scan_bias;   // Scan encoder mechanical offset from zero 
   float range_biasM; //  Laser range measurement bias.
   float range_biasNS; //  Laser range measurement bias in NS
+  float chn1_range_bias; // range bias for channel 1
   float chn2_range_bias; // range bias for channel 2
   float chn3_range_bias; // range bias for channel 3
+  int max_sfc_sat;	// maximum saturation allowed for first return
 }
 
 
@@ -68,9 +71,16 @@ for the angle biases and the x,y and z offsets.
 
  
 *************************************************************/
- ops_tans = ops_default = ops_conf = array(mission_constants);
+ ops_default = array(mission_constants);
  ops_default.range_biasM =   0.7962;         // Laser range measurement bias.
+ ops_default.chn1_range_bias = 0;
+ ops_default.chn2_range_bias = 0.36;
+ ops_default.chn3_range_bias = 0.23;
 
+ ops_default.max_sfc_sat = -1;
+
+ ops_tans = array(mission_constants);
+ ops_tans = ops_default;
  ops_tans.varname    = "ops_tans"
  ops_tans.name       = "Tans Default Values"
  ops_tans.roll_bias  = -1.40;        // carefully tweaked on 2-18-03 data
@@ -84,7 +94,7 @@ for the angle biases and the x,y and z offsets.
  ops_tans.range_biasM = 0.7962;         // Laser range measurement bias.
 
 // Now, copy the default values to the operating values.
- ops_conf = ops_default = ops_tans;
+ ops_conf = ops_tans;
 
  func opscpy( d, s ) {
 /* DOCUMENT opscpy( d, s ) 
@@ -128,7 +138,7 @@ for the angle biases and the x,y and z offsets.
 
 func display_mission_constants( m, ytk= ) {
   if ( ytk ) {
-  cmd = swrite( format="display_mission_constants { Name {%s} VarName %s Roll %4.2f  Pitch %4.2f Yaw %4.2f Scanner %5.3f {Range M} %5.3f {Range NS} %5.3f {X offset} %5.2f {Y offset} %5.2f {Z offset} %5.2f }", 
+  cmd = swrite( format="display_mission_constants { Name {%s} VarName %s Roll %4.2f  Pitch %4.2f Yaw %4.2f Scanner %5.3f {Range M} %5.3f {X offset} %5.2f {Y offset} %5.2f {Z offset} %5.2f {Chn1 range bias} %5.2f {Chn 2 Range bias} %5.2f {Chn3 Range bias} %5.2f {Max sfc sat} %2d }", 
         m.name,
 	m.varname,
         m.roll_bias,
@@ -138,24 +148,31 @@ func display_mission_constants( m, ytk= ) {
         m.range_biasM,
         m.x_offset,
         m.y_offset,
-        m.z_offset );
+        m.z_offset, 
+		  m.chn1_range_bias,
+		  m.chn2_range_bias,
+		  m.chn3_range_bias,
+		  m.max_sfc_sat);
       tkcmd, cmd
   } else {
   write,format="\nMounting Bias Values: %s\n", m.name
-  write, "____________________BIAS__________________     _____Offsets_____"
-  write, "Roll Pitch Heading Scanner  RangeM RangeNS      X     Y     Z"
-  write, format="%4.2f  %4.2f    %4.2f  %5.3f    %5.3f   %5.3f    %5.2f %5.2f %5.2f\n",
+  write, "____________________BIAS__________________________   _____Offsets_____"
+  write, "Roll Pitch Heading Scanner  RangeM  Chn1   Chn2   Chn3     X     Y     Z Max_Sfc_Sat"
+  write, format="%4.2f  %4.2f    %4.2f  %5.3f  %5.3f %5.3f %5.3f    %5.2f %5.2f %5.2f   %3d\n",
         m.roll_bias,
         m.pitch_bias,
         m.yaw_bias,
         m.scan_bias,
         m.range_biasM,
+		  m.chn1_range_bias,
+		  m.chn2_range_bias,
+		  m.chn3_range_bias,
         m.x_offset,
         m.y_offset,
-        m.z_offset
+        m.z_offset,
+		  m.max_sfc_sat
 
   write,""
   }
 }
-
 
