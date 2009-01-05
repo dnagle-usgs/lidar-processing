@@ -193,7 +193,7 @@ proc create_transbuttons { cnt } {
             # set var_type [ lindex $trans_varlist $trans_var_no ]
             # puts "trans_var_no = $trans_var_no1"
          }
-      $tw.f2$tbi.cln_vars setvalue @1
+      $tw.f2$tbi.cln_vars setvalue @0
       pack $tw.f2$tbi.cln_vars -side left -fill x -padx 2
 
       west checkbutton $tw.f2$tbi.fma -text "xfma" -variable trans_xfma$tbi
