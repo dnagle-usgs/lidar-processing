@@ -9,25 +9,25 @@
 set ofname ""
 set curvar ""
 set outvar ""
-set win_no    5
-set msize     1.0
-set markerv   1
-set usecentroid     1
-set hist_log    1
-set cmax    40
-set cdelta    80
-set cmin    -40
+set win_no 5
+set msize 1.0
+set markerv 1
+set usecentroid 1
+set hist_log 1
+set cmax 40
+set cdelta 80
+set cmin -40
 
-set cmax_max    5000
-set cmin_min    -100
-set cmax_inc    0.1
+set cmax_max 5000
+set cmin_min -100
+set cmax_inc 0.1
 
-set list    {}
-set lrnindx   {}
-set write_some  0
+set list {}
+set lrnindx {}
+set write_some 0
 set ssvar "*.pbd"
-set changed_dpi   0
-set avg_surf    1
+set changed_dpi 0
+set avg_surf 1
 set rcf_buf_rgn 0; #Used in proc replace_proc
 
 array set _mpipx {
@@ -38,12 +38,12 @@ array set _mpipx {
   0,4 Processing_Type
   0,5 GGA_Array
 }
-global varc
+
 set varc 0
-if {[info exists varname]} {unset varlist}
 set varlist {fs_all depth_all veg_all cveg_all workdata}
-if {[info exists plist]} { unset plist }
-array set plist {idx1 idx1, cmin $cmin cmax $cmax ptype 0 dtype 0 msize $msize mtype $markerv}
+
+array unset plist
+
 set plist(idx1,cmin) $cmin
 set plist(idx1,cmax) $cmax
 set plist(idx1,ptype) 0
@@ -89,8 +89,9 @@ set cbvc(cmax) 40.0
 set cbvc(msize) 1
 set cbvc(mtype) 1
 
-exp_send "#include \"$src_path/l1pro.i\"\r";   #load all yorick support functions
-expect ">";
+#load all yorick support functions
+exp_send "#include \"$src_path/l1pro.i\"\r"
+expect ">"
 
 package require BWidget
 package require Tktable
@@ -123,140 +124,163 @@ menu .l1wid.mb.cmd
 menu .l1wid.mb.diag
 .l1wid.mb   add cascade -label File -underline 0 -menu .l1wid.mb.file
 
-.l1wid.mb.file add command -label "Read Binary Data file..." -underline 0 -command {
-  global cbv cmin cmax cdelta cbvc
-  if {$cbv == 1} {
-    set cbvc(cmin) $cmin
-    set cbvc(cmax) $cmax
-    set cbvc(msize) $msize
-    set cbvc(mtype) $markerv
-  }
+.l1wid.mb.file add command -label "Read Binary Data file..." -underline 0 \
+  -command {
+    global cbv cmin cmax cdelta cbvc
+    if {$cbv == 1} {
+      set cbvc(cmin) $cmin
+      set cbvc(cmax) $cmax
+      set cbvc(msize) $msize
+      set cbvc(mtype) $markerv
+    }
 
-  set _ytk_fn [ tk_getOpenFile -filetypes \
-  {
-    {{Yorick PBD file} {.pbd}  }
-    {{IDL Binary file} {.bin}  }
-    {{IDL Binary file} {.edf}  }
-    {{All Files}       {*}   }
-  }  ]
-  if { $_ytk_fn != "" } {
-    switch [ file extension $_ytk_fn ] {
-      ".pbd" {
-        exp_send "_ytk_pbd_f = openb(\"$_ytk_fn\"); restore, _ytk_pbd_f;\r"
-        exp_send "show, _ytk_pbd_f\r"
-        toplevel .stby
-        exp_send "\r"
-        label .stby.lbl -text "Loading\n$_ytk_fn\nplease wait.."
-        pack .stby.lbl
-        expect ">"
-        update
-        exp_send "set_read_tk \r"
-        expect "Tk updated"
-        expect ">"
-        update
-        set var_type [lindex $varlist [expr {[llength $varlist] -1}]]
-        update
-        if { $cbv == 0 } {
-          exp_send "set_read_yorick, $var_type \r"
+    set _ytk_fn [ tk_getOpenFile -filetypes \
+    {
+      {{Yorick PBD file} {.pbd}  }
+      {{IDL Binary file} {.bin}  }
+      {{IDL Binary file} {.edf}  }
+      {{All Files}       {*}   }
+    }  ]
+    if { $_ytk_fn != "" } {
+      switch [ file extension $_ytk_fn ] {
+        ".pbd" {
+          exp_send "_ytk_pbd_f = openb(\"$_ytk_fn\"); restore, _ytk_pbd_f;\r"
+          exp_send "show, _ytk_pbd_f\r"
+          toplevel .stby
+          exp_send "\r"
+          label .stby.lbl -text "Loading\n$_ytk_fn\nplease wait.."
+          pack .stby.lbl
           expect ">"
+          update
+          exp_send "set_read_tk \r"
+          expect "Tk updated"
+          expect ">"
+          update
+          set var_type [lindex $varlist [expr {[llength $varlist] -1}]]
+          update
+          if { $cbv == 0 } {
+            exp_send "set_read_yorick, $var_type \r"
+            expect ">"
+          }
+          destroy .stby
+          if {$cbv == 1} {
+            set cmin $cbvc(cmin)
+            set cdelta [expr {$cbvc(cmax)-$cbvc(cmin)} ]
+            set cmax $cbvc(cmax)
+            set msize $cbvc(msize)
+            set markerv $cbvc(mtype)
+          }
+          update
+          save_plot_settings [expr {[llength $varlist]-1}]
         }
-        destroy .stby
-        if {$cbv == 1} {
-          set cmin $cbvc(cmin)
-          set cdelta [expr {$cbvc(cmax)-$cbvc(cmin)} ]
-          set cmax $cbvc(cmax)
-          set msize $cbvc(msize)
-          set markerv $cbvc(mtype)
+        ".edf" -
+        ".bin" {
+          set ytk_bin_dir [ file dirname $_ytk_fn ]/
+          set ytk_bin_file [ file tail $_ytk_fn ]
+          exp_send "data_ptr = read_yfile(\"$ytk_bin_dir\",\
+            fname_arr=\"$ytk_bin_file\"); \r"
+          expect ">"
+          exp_send "read_pointer_yfile, data_ptr, mode=1; \r"
+          expect ">"
+          set ptype [.l1wid.bf4.1.p getvalue]
         }
-        update
-        save_plot_settings [expr {[llength $varlist]-1}]
-      }
-      ".edf" -
-      ".bin" {
-        set ytk_bin_dir [ file dirname $_ytk_fn ]/
-        set ytk_bin_file [ file tail $_ytk_fn ]
-        exp_send "data_ptr = read_yfile(\"$ytk_bin_dir\", fname_arr=\"$ytk_bin_file\"); \r"
-        expect ">"
-        exp_send "read_pointer_yfile, data_ptr, mode=1; \r"
-        expect ">"
-        set ptype [.l1wid.bf4.1.p getvalue]
       }
     }
   }
-}
 
-.l1wid.mb.file add command -label "Write Binary Data File..." -underline 0 -command {
-  global write_some data_file_path
-  if { [info exists data_file_path ] == 0 } {
-    set data_file_path "~/"
-  }
-  destroy .l1write
-  toplevel .l1write
-  frame .l1write.1
-  frame .l1write.2
-  frame .l1write.3
-  set ftypes {
-    {{For pbd}       {.pbd}        }
-    {{IDL bin}       {.bin}        }
-    {{IDL edf}       {.edf}        }
-    {{All Files}            *      }
-  }
-  set ptype [.l1wid.bf4.1.p getvalue]
-  set var_no [.l1wid.bf45.p.15 getvalue]
-  set var_type [lindex $varlist $var_no]
-  LabelEntry .l1write.1.path  -width 30 -relief sunken -bd 3 -label "Output Path:  " -helptext "Enter Output Data Path Here" \
-    -textvariable ofname -text $data_file_path
-  Button .l1write.1.browse -text "Browse..." -width 10 -command {
-    set ofname [ tk_getSaveFile -filetypes $ftypes -defaultextension ".pbd" ]
-    write_binary_file $ofname
-  }
-  LabelEntry .l1write.2.varname -width 10 -relief sunken -bd 3 -label "Variable Name: " -helptext "Enter Name of Variable to Write to file"  -textvariable var_type -text $var_type
-  LabelEntry .l1write.2.plyname -width 10 -relief sunken -bd 3 -label "PLY Name: " -helptext "Enter ply name to Write to file; Leave it empty if you don't want to write out ply data"  -textvariable ply_type -text ""
-  LabelEntry .l1write.2.qname -width 10 -relief sunken -bd 3 -label "GGA(q) Name: " -helptext "Enter q name to Write to file; Leave it empty if you don't want to write out gga data"  -textvariable q_type -text ""
-  Button .l1write.3.ok -text "Write File" -width 5 -command {
-    global ofname
-    write_binary_file $ofname
-  }
-  Button .l1write.3.cancel -text "Cancel" -width 5 -command {
+.l1wid.mb.file add command -label "Write Binary Data File..." -underline 0 \
+  -command {
+    global write_some data_file_path
+    if { [info exists data_file_path ] == 0 } {
+      set data_file_path "~/"
+    }
     destroy .l1write
+    toplevel .l1write
+    frame .l1write.1
+    frame .l1write.2
+    frame .l1write.3
+    set ftypes {
+      {{For pbd}       {.pbd}        }
+      {{IDL bin}       {.bin}        }
+      {{IDL edf}       {.edf}        }
+      {{All Files}            *      }
+    }
+    set ptype [.l1wid.bf4.1.p getvalue]
+    set var_no [.l1wid.bf45.p.15 getvalue]
+    set var_type [lindex $varlist $var_no]
+    LabelEntry .l1write.1.path  -width 30 -relief sunken -bd 3 \
+      -label "Output Path:  " -helptext "Enter Output Data Path Here" \
+      -textvariable ofname -text $data_file_path
+    Button .l1write.1.browse -text "Browse..." -width 10 \
+      -command {
+        set ofname [tk_getSaveFile -filetypes $ftypes \
+          -defaultextension ".pbd"]
+        write_binary_file $ofname
+      }
+    LabelEntry .l1write.2.varname -width 10 -relief sunken -bd 3 \
+      -label "Variable Name: " \
+      -helptext "Enter Name of Variable to Write to file"  \
+      -textvariable var_type -text $var_type
+    LabelEntry .l1write.2.plyname -width 10 -relief sunken -bd 3 \
+      -label "PLY Name: " \
+      -helptext "Enter ply name to Write to file; Leave it empty if you\
+        don't want to write out ply data" \
+      -textvariable ply_type -text ""
+    LabelEntry .l1write.2.qname -width 10 -relief sunken -bd 3 \
+      -label "GGA(q) Name: " \
+      -helptext "Enter q name to Write to file; Leave it empty if you\
+        don't want to write out gga data" \
+      -textvariable q_type -text ""
+    Button .l1write.3.ok -text "Write File" -width 5 \
+      -command {
+        global ofname
+        write_binary_file $ofname
+      }
+    Button .l1write.3.cancel -text "Cancel" -width 5 \
+      -command {
+        destroy .l1write
+      }
+    pack .l1write.1.path .l1write.1.browse -side left -padx 5
+    pack .l1write.2.varname .l1write.2.plyname .l1write.2.qname \
+      -side left -padx 5
+    pack .l1write.3.ok .l1write.3.cancel -side left -padx 5
+    pack .l1write.1 .l1write.2 .l1write.3
   }
-  pack .l1write.1.path .l1write.1.browse -side left -padx 5
-  pack .l1write.2.varname .l1write.2.plyname .l1write.2.qname -side left -padx 5
-  pack .l1write.3.ok .l1write.3.cancel -side left -padx 5
-  pack .l1write.1 .l1write.2 .l1write.3
-}
 
-.l1wid.mb.file add command -label "Read SubSampled Data File..." -underline 0 -command {
-  global data_file_path
-  set ofn [ tk_getOpenFile -filetypes \
-  {
-    {{Yorick PBD file} {.pbd}  }
-    {{All Files}       {*}   }
-  }  ]
-  destroy .l1ss
-  toplevel .l1ss
-  wm title .l1ss "Read SubSampled Data File"
-  LabelFrame .l1ss.1 -relief groove -borderwidth 3 -text "Points to skip:"
-  frame .l1ss.2
-  SpinBox .l1ss.1.sk \
-    -range {1 1000 1} \
-    -textvariable skipl \
-    -helptext "Enter points to skip (Subsample)" \
-    -width 5
-  LabelEntry .l1ss.1.mvar -label "Variable Name: " -width 10 -bd 3 \
-    -helptext "Enter Variable Name of Data array after merging" \
-    -textvariable mvar
-  Button .l1ss.2.ok -text "OK" -width 5 -command {
-    exp_send "$mvar = subsample_pbd_data(fname=\"$ofn\", skip = $skipl);\r"
+.l1wid.mb.file add command -label "Read SubSampled Data File..." -underline 0 \
+  -command {
+    global data_file_path
+    set ofn [ tk_getOpenFile -filetypes \
+      {
+        {{Yorick PBD file} {.pbd}  }
+        {{All Files}       {*}   }
+      } ]
     destroy .l1ss
+    toplevel .l1ss
+    wm title .l1ss "Read SubSampled Data File"
+    LabelFrame .l1ss.1 -relief groove -borderwidth 3 -text "Points to skip:"
+    frame .l1ss.2
+    SpinBox .l1ss.1.sk \
+      -range {1 1000 1} \
+      -textvariable skipl \
+      -helptext "Enter points to skip (Subsample)" \
+      -width 5
+    LabelEntry .l1ss.1.mvar -label "Variable Name: " -width 10 -bd 3 \
+      -helptext "Enter Variable Name of Data array after merging" \
+      -textvariable mvar
+    Button .l1ss.2.ok -text "OK" -width 5 \
+      -command {
+        exp_send "$mvar = subsample_pbd_data(fname=\"$ofn\", skip = $skipl);\r"
+        destroy .l1ss
+      }
+    Button .l1ss.2.cancel -text "Cancel" -width 5 \
+      -command {
+        destroy .l1ss
+      }
+    pack .l1ss.1.sk .l1ss.1.mvar -side left -padx 5
+    pack .l1ss.2.ok .l1ss.2.cancel -side left -padx 5
+    pack .l1ss.1 .l1ss.2 -pady 5
   }
-  Button .l1ss.2.cancel -text "Cancel" -width 5 -command {
-    destroy .l1ss
-  }
-  pack .l1ss.1.sk .l1ss.1.mvar -side left -padx 5
-  pack .l1ss.2.ok .l1ss.2.cancel -side left -padx 5
-  pack .l1ss.1 .l1ss.2 -pady 5
-}
 
 .l1wid.mb.file add command -label "Read Data Directory..." \
   -underline 10 -command ::l1dir::gui
@@ -281,7 +305,7 @@ namespace eval l1dir {
     variable tiletype $tile_dt
   }
 
-  proc gui { } {
+  proc gui {} {
     set win $v::window
     destroy $win
     toplevel $win
@@ -339,7 +363,8 @@ namespace eval l1dir {
     makesticky e [list $fra.lblMerged $fra.lblTiles \
     $fra.lblUnique $fra.lblFixed $fra.lblSubsample $fra.lblZone]
     makesticky w [list $fra.chkUnique $fra.chkFixed]
-    makesticky ew [list $fra.spnSubsample $fra.spnZone $fra.entMerged $fra.cboTiles]
+    makesticky ew [list $fra.spnSubsample $fra.spnZone $fra.entMerged \
+      $fra.cboTiles]
 
     set fra $win.fraEmpty
     frame $fra
@@ -369,7 +394,7 @@ namespace eval l1dir {
     datatype_changes
   }
 
-  proc makesticky { sticky widgets } {
+  proc makesticky {sticky widgets} {
     foreach widget $widgets {
       grid $widget -sticky $sticky
     }
@@ -378,7 +403,7 @@ namespace eval l1dir {
   trace add variable [namespace which -variable v::datatype] write \
     [namespace code datatype_changes]
 
-  proc datatype_changes { {n1 {}} {n2 {}} {op {}} } {
+  proc datatype_changes {{n1 {}} {n2 {}} {op {}}} {
     set state [lindex {disabled normal} \
       [string equal $v::datatype $v::type_pbd]]
     foreach widget [winfo children $v::window.fraPBD] {
@@ -390,7 +415,7 @@ namespace eval l1dir {
   trace add variable [namespace which -variable v::fixedzone] write \
     [namespace code tiletype_changes]
 
-  proc tiletype_changes { {n1 {}} {n2 {}} {op {}} } {
+  proc tiletype_changes {{n1 {}} {n2 {}} {op {}}} {
     set fra $v::window.fraPBD
     if {[$fra.lblFixed cget -state] == "normal"} {
       set state [lindex {disabled normal} $v::fixedzone]
@@ -401,7 +426,7 @@ namespace eval l1dir {
     }
   }
 
-  proc butPath_cmd { } {
+  proc butPath_cmd {} {
     set temp_path [ tk_chooseDirectory -initialdir $::data_file_path \
       -mustexist 1 -title "Read data directory" ]
     if {$temp_path != ""} {
@@ -409,7 +434,7 @@ namespace eval l1dir {
     }
   }
 
-  proc butLoad_cmd { } {
+  proc butLoad_cmd {} {
     if { ! [file isdirectory $::data_file_path] } {
       error "The data path provided is not a real directory: $::data_file_path"
     }
@@ -433,22 +458,21 @@ namespace eval l1dir {
             default {
               error "Invalid tile type provided: $v::tiletype"
             }
-          exp_send [join [list \
-            "require, \"zone.i\"; require, \"qq24k.i\"; " \
-            "$v::merged = ${cmd}(\"$::data_file_path\", " \
-            "$v::zone, skip=$v::skip, unique=$v::unique, " \
-            "glob=\"$search\");\r" \
-            ] {}]
+          exp_send "require, \"zone.i\";\
+            require, \"qq24k.i\";\
+            $v::merged = ${cmd}(\"$::data_file_path\",\
+              $v::zone, skip=$v::skip, unique=$v::unique,\
+              glob=\"$search\");\r"
         } else {
           wm withdraw $v::window
-          exp_send [join [list \
-            "$v::merged = merge_data_pbds(\"$::data_file_path\", " \
-            "skip=$v::skip, uniq=$v::unique, " \
-            "searchstring=\"$search\");\r" \
-            ] {}]
+          exp_send "$v::merged = merge_data_pbds(\"$::data_file_path\",\
+            skip=$v::skip, uniq=$v::unique,\
+            searchstring=\"$search\");\r"
         }
         expect ">"
-        exp_send "vname=\"$v::merged\";set_read_tk;set_read_yorick,$v::merged\r"
+        exp_send "vname=\"$v::merged\";\
+          set_read_tk;\
+          set_read_yorick, $v::merged\r"
         expect ">"
         exp_send "\r"
       } \
@@ -458,7 +482,8 @@ namespace eval l1dir {
           set search "\[\]"
         }
         wm withdraw $v::window
-        exp_send "data_ptr = read_yfile(\"$::data_file_path\", searchstring=\"$search\");\r"
+        exp_send "data_ptr = read_yfile(\"$::data_file_path\",\
+          searchstring=\"$search\");\r"
         expect ">"
         exp_send "read_pointer_yfile, data_ptr, mode=1;\r"
         expect ">"
@@ -470,7 +495,7 @@ namespace eval l1dir {
     destroy $v::window
   }
 
-  proc butCancel_cmd { } {
+  proc butCancel_cmd {} {
     destroy $v::window
   }
 }
@@ -532,7 +557,8 @@ namespace eval l1dir {
         .l1dir.1.ok configure -state disabled
         set dtype [.l1dir.3.dtype getvalue]
         if {$dtype == 0}  {
-          exp_send "$mvar = merge_data_pbds(\"$path\", skip = $skipl, uniq = $uniq, searchstring=\"$ssvar\"); \r"
+          exp_send "$mvar = merge_data_pbds(\"$path\", skip = $skipl,\
+            uniq = $uniq, searchstring=\"$ssvar\"); \r"
           destroy .l1dir
         }
         if {$dtype == 1 || $dtype == 2} {
@@ -559,9 +585,9 @@ namespace eval l1dir {
 
 .l1wid.mb.file add command -label "Ascii output ..." -underline 0 \
   -command {
-    global cmin cmax  opath ofile data_path
+    global cmin cmax opath ofile data_path
     global write_asc_some
-    if { [ info exists data_path ]  == 0} {
+    if {[info exists data_path] == 0} {
       set data_path "~/"
     }
     set delimit "space"
@@ -576,10 +602,10 @@ namespace eval l1dir {
     set zmin $cmin
     set zmax $cmax
     set ftypes {
-      {{For QTViewer}       {.xyz}        }
-      {{Generic ASCII}      {.asc}        }
-      {{Simple txt}         {.txt}      TEXT}
-      {{All Files}            *             }
+      {{For QTViewer}  {.xyz} }
+      {{Generic ASCII} {.asc} }
+      {{Simple txt}    {.txt} TEXT}
+      {{All Files}       *    }
     }
 
     destroy .l1asc
@@ -588,55 +614,67 @@ namespace eval l1dir {
     $w configure -menu $w.mb
     menu $w.mb
     menu $w.mb.file
-    $w.mb add cascade -label File     -underline 0 -menu $w.mb.file
+    $w.mb add cascade -label File -underline 0 -menu $w.mb.file
     $w.mb.file add command -label "File..." \
       -command {
-        set ofname [ tk_getSaveFile \
+        set ofname [tk_getSaveFile \
           -filetypes $ftypes \
           -initialdir $data_path \
           -defaultextension .xyz \
-        ];
+        ]
         if { $ofname != "" } {
-          set opath  "[ file dirname $ofname ]/";
-          set ofname [ file tail    $ofname ];
-          set data_path $opath;
+          set opath "[file dirname $ofname]/"
+          set ofname [file tail $ofname]
+          set data_path $opath
 
           set ptype [.l1wid.bf4.1.p getvalue]
           set dtype [.l1wid.bf45.p.5 getvalue]
           set var_no [.l1wid.bf45.p.15 getvalue]
           set var_type [lindex $varlist $var_no]
 
-          if {$utmll == "UTM"} {set latlon 0}
-          if {$utmll == "LATLON"} {set latlon 1}
-          if {$zclip == 0} { set zclips  "\[\]" }
-          if {$zclip == 1} { set zclips "\[$zmin, $zmax\]"}
-          if {$delimit == "space"} {
-            set de "\" \""
+          if {$zclip} {
+            set zclips "\[$zmin, $zmax\]"
+          } else {
+            set zclips "\[\]"
           }
-          if {$delimit == "comma"} {
-            set de "\",\""
+          switch -- $utmll {
+            UTM     {set latlon 0}
+            LATLON  {set latlon 1}
+            default {set latlon 0}
           }
-          if {$delimit == "semicolon"} {
-            set de "\";\""
+          switch -- $delimit {
+            space     {set de "\" \""}
+            comma     {set de "\",\""}
+            semicolon {set de "\";\""}
+            default   {set de "\"\""}
           }
-
-          set wtype ""
-          set pstruc ""
-          if {$ptype == 0} {
-            set wtype 1
-            set pstruc FS
-          } elseif {$ptype == 1} {
-            set wtype [expr {$dtype ? 2 : 1}]
-            set pstruc GEO
-          } elseif {$ptype == 2} {
-            set wtype [expr {$dtype ? 3 : 1}]
-            set pstruc VEG__
-          } elseif {$ptype == 3} {
-            set wtype 1
-            set pstruc CVEG_ALL
+          switch -- $ptype {
+            0 {
+              set wtype 1
+              set pstruc FS
+            }
+            1 {
+              set wtype [expr {$dtype ? 2 : 1}]
+              set pstruc GEO
+            }
+            2 {
+              set wtype [expr {$dtype ? 3 : 1}]
+              set pstruc VEG__
+            }
+            3 {
+              set wtype 1
+              set pstruc CVEG_ALL
+            }
+            default {
+              set wtype ""
+              set pstruc ""
+            }
           }
           if { $wtype ne "" && $pstruc ne "" } {
-            exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\", type=$wtype, indx=$indx, split=$split, intensity=$intensity, delimit=$de, zclip=$zclips, pstruc=$pstruc, rn=$rnidx, soe=$soeindx, header=$hline, latlon=$latlon;\r"
+            exp_send "write_ascii_xyz, $var_type, \"$opath\", \"$ofname\",\
+              type=$wtype, indx=$indx, split=$split, intensity=$intensity,\
+              delimit=$de, zclip=$zclips, pstruc=$pstruc, rn=$rnidx,\
+              soe=$soeindx, header=$hline, latlon=$latlon;\r"
             expect ">"
           }
           set write_some 0
@@ -645,10 +683,12 @@ namespace eval l1dir {
       }
 
     wm title .l1asc "Write Ascii Data"
-    LabelFrame .l1asc.ops -justify center -relief groove -borderwidth 3 -text "Options:"
+    LabelFrame .l1asc.ops -justify center -relief groove -borderwidth 3 \
+      -text "Options:"
     set utmll "UTM"
     tk_optionMenu .l1asc.ops.0 utmll UTM LATLON
-    LabelFrame .l1asc.ops.1 -justify center -relief groove -borderwidth 3 -text "Include:"
+    LabelFrame .l1asc.ops.1 -justify center -relief groove -borderwidth 3 \
+      -text "Include:"
     frame .l1asc.ops.2 -relief groove -borderwidth 3
     frame .l1asc.fn -relief groove -borderwidth 3
     frame .l1asc.cmd -relief groove -borderwidth 3
@@ -678,31 +718,32 @@ namespace eval l1dir {
     label .l1asc.ops.2.dl -text "Delimiter: "
     tk_optionMenu .l1asc.ops.2.d delimit comma semicolon space
 
-    LabelEntry .l1asc.ops.2.split -width 7 -bd 3 -label "Max number of lines/file" \
-      -helptext "Enter maximum number of lines in each file; enter 0 to write all data in 1 file" \
+    LabelEntry .l1asc.ops.2.split -width 7 -bd 3 \
+      -label "Max number of lines/file" \
+      -helptext "Enter maximum number of lines in each file; enter 0 to write\
+        all data in 1 file" \
       -textvariable split
 
     Separator .l1asc.ops.2.s2 -orient vertical -bg black -relief groove
 
     checkbutton .l1asc.ops.2.zclip -text "Z Clipper:" -variable zclip \
       -command {
-        if {$zclip == 1} {
-          .l1asc.ops.2.zmin configure -state normal
-          .l1asc.ops.2.zmax configure -state normal
-        }
-        if {$zclip == 0} {
-          .l1asc.ops.2.zmin configure -state disabled
-          .l1asc.ops.2.zmax configure -state disabled
-        }
+        set state [lindex {disabled normal} $zclip]
+        .l1asc.ops.2.zmin configure -state $state
+        .l1asc.ops.2.zmax configure -state $state
       }
     LabelEntry .l1asc.ops.2.zmin -width 5 -bd 3 -label "Zmin" \
       -textvariable zmin -state disabled
     LabelEntry .l1asc.ops.2.zmax -width 5 -bd 3 -label "Zmax" \
       -textvariable zmax -state disabled
 
-    pack .l1asc.ops.1.s0 .l1asc.ops.1.indx .l1asc.ops.1.s1 .l1asc.ops.1.rn .l1asc.ops.1.s2 .l1asc.ops.1.int .l1asc.ops.1.s3  .l1asc.ops.1.soe  .l1asc.ops.1.s4 .l1asc.ops.1.header .l1asc.ops.1.s5 -side left -fill both -padx 3
-
-    pack .l1asc.ops.2.dl .l1asc.ops.2.d .l1asc.ops.2.s1 .l1asc.ops.2.split .l1asc.ops.2.s2 .l1asc.ops.2.zclip .l1asc.ops.2.zmin .l1asc.ops.2.zmax -side left -padx 3 -fill both
+    pack .l1asc.ops.1.s0 .l1asc.ops.1.indx .l1asc.ops.1.s1 .l1asc.ops.1.rn \
+      .l1asc.ops.1.s2 .l1asc.ops.1.int .l1asc.ops.1.s3 .l1asc.ops.1.soe \
+      .l1asc.ops.1.s4 .l1asc.ops.1.header .l1asc.ops.1.s5 \
+      -side left -fill both -padx 3
+    pack .l1asc.ops.2.dl .l1asc.ops.2.d .l1asc.ops.2.s1 .l1asc.ops.2.split \
+      .l1asc.ops.2.s2 .l1asc.ops.2.zclip .l1asc.ops.2.zmin .l1asc.ops.2.zmax \
+      -side left -padx 3 -fill both
     pack .l1asc.ops.0 .l1asc.ops.1 .l1asc.ops.2 -side top
 
     Button .l1asc.cmd.cancel -text "Cancel" -width 5 -command {
@@ -716,7 +757,8 @@ namespace eval l1dir {
     pack .l1asc.ops .l1asc.fn .l1asc.cmd -side top
   }
 
-.l1wid.mb.file add command -label "Load EAARL data from map limits" -underline 21 \
+.l1wid.mb.file add command -label "Load EAARL data from map limits" \
+  -underline 21 \
   -command {
     global data_file_path path
     set skipb 0
@@ -739,20 +781,22 @@ namespace eval l1dir {
       -label "Path:  " -width 70 -helptext "Enter path to processed data" \
       -textvariable data_file_path -text $data_file_path
 
-    Button .l1map.1.pathbutton -text "Browse..." -helptext "Open dialog to select path" \
+    Button .l1map.1.pathbutton -text "Browse..." \
+      -helptext "Open dialog to select path" \
       -command {
         global data_file_path
-        set data_file_path [ tk_chooseDirectory -initialdir $data_file_path -mustexist 1 -title "Processed Data Directory" ]/
+        set data_file_path [ tk_chooseDirectory -initialdir $data_file_path \
+          -mustexist 1 -title "Processed Data Directory" ]/
       }
 
     ComboBox .l1map.2.mode -text "Data Type..." -width 10 \
       -helptext "Select Data Type" \
       -editable 0 \
-      -values { FirstSurface Bathy BareEarth } \
+      -values {FirstSurface Bathy BareEarth} \
       -takefocus 0 \
       -modifycmd {
         set mode [.l1map.2.mode getvalue]
-        set modes [ expr $mode + 1 ]
+        set modes [expr $mode + 1]
       }
 
     Label .l1map.2.winl -text "Win:"
@@ -761,12 +805,8 @@ namespace eval l1dir {
 
     checkbutton .l1map.2.skipb -text "Use This Skip:" -variable skipb \
       -command {
-        if {$skipb == 1} {
-          .l1map.2.skip configure -state normal
-        }
-        if {$skipb == 0} {
-          .l1map.2.skip configure -state disabled
-        }
+        set state [lindex {disabled normal} $skipb]
+        .l1map.2.skip configure -state $state
       }
 
     LabelEntry .l1map.2.skip -width 5 -bd 3 -label "Skip" \
@@ -780,48 +820,50 @@ namespace eval l1dir {
         append_varlist "exploredata"
         set mvar "exploredata"
         set curvar "exploredata"
-        if {$skipb == 1} {
-          exp_send "explorestart, \"$data_file_path\", $modes, win=$win_no, search_str=\"$search\", forceskip=$skipl\r"
-          expect ">"
+        set ycmd "explorestart, \"$data_file_path\", $modes, win=$win_no,\
+            search_str=\"$search\""
+        if {$skipb} {
+          set ycmd "$ycmd, forceskip=$skipl"
         }
-        if {$skipb == 0} {
-          exp_send "explorestart, \"$data_file_path\", $modes, win=$win_no, search_str=\"$search\"\r"
-          expect ">"
-        }
+        exp_send "$ycmd\r"
+        expect ">"
       }
     pack .l1map.1.path .l1map.1.pathbutton -side left -padx 5
-    pack .l1map.2.mode .l1map.2.winl .l1map.2.win .l1map.2.skipb .l1map.2.skip .l1map.2.search .l1map.2.go -side left -padx 5
+    pack .l1map.2.mode .l1map.2.winl .l1map.2.win .l1map.2.skipb \
+      .l1map.2.skip .l1map.2.search .l1map.2.go -side left -padx 5
   }
 
 
-.l1wid.mb       add cascade -label "Load" -underline 0 -menu .l1wid.mb.load
-.l1wid.mb.file  add command -label "Dismiss" -underline 0 -command {destroy .l1wid}
-.l1wid.mb.load  add command -label "Load TANS Data .. " -underline 5 \
+.l1wid.mb add cascade -label "Load" -underline 0 -menu .l1wid.mb.load
+.l1wid.mb.file add command -label "Dismiss" -underline 0 \
+  -command {destroy .l1wid}
+.l1wid.mb.load add command -label "Load TANS Data .. " -underline 5 \
   -command {
     exp_send "tans = rbtans();\r"
     expect ">"
   }
 .l1wid.mb.load  add command -label "Load DMARS PBD Data .. " -underline 5 \
-  -command load_dmars;
+  -command load_dmars
 
 .l1wid.mb.load add command -label "Load PNAV Data .. " -underline 5 \
-  -command { exp_send "pnav = rbpnav(); \r" }
+  -command {exp_send "pnav = rbpnav(); \r"}
 
  .l1wid.mb.load add command -label "Load Ops_conf Settings..." -underline 5 \
   -command load_ops_conf
 
 .l1wid.mb.load add command -label "Load Bathymetry Settings .." -underline 21 \
-  -command { bathctl }
+  -command bathctl
 
 
 .l1wid.mb add cascade -label Options -underline 0 -menu .l1wid.mb.options
 
 
-.l1wid.mb.options add command -label "Configure elevation scale limits..." -underline 0 \
+.l1wid.mb.options add command -label "Configure elevation scale limits..." \
+  -underline 0 \
   -command {
     destroy  .l1wid-opts
     toplevel .l1wid-opts
-        wm title .l1wid-opts "Set Elevation Scale limits"
+    wm title .l1wid-opts "Set Elevation Scale limits"
     frame .l1wid-opts.f1
     frame .l1wid-opts.f2
     frame .l1wid-opts.f3
@@ -830,23 +872,27 @@ namespace eval l1dir {
     Label .l1wid-opts.f1.label -text "Set Max Cmax scale to:"
     Label .l1wid-opts.f2.label -text "Set Min Cmin scale to:"
     Label .l1wid-opts.f3.label -text "Set Increment to:"
-    SpinBox  .l1wid-opts.f1.max -range { -10000. 50000. 10. } -width 10 \
+    SpinBox  .l1wid-opts.f1.max -range {-10000. 50000. 10.} -width 10 \
       -textvariable cmax_max
-    SpinBox  .l1wid-opts.f2.min -range { -10000. 50000. 10. } -width 10 \
+    SpinBox  .l1wid-opts.f2.min -range {-10000. 50000. 10.} -width 10 \
       -textvariable cmax_min
     SpinBox  .l1wid-opts.f3.inc -width 10 \
-      -values { 0.1 0.2 .25 .5 .75 1.0 1.5 2.0 2.5 3 4 5 6 7 8 9 10 15 20 25 }  \
+      -values [list 0.1 0.2 .25 .5 .75 1.0 1.5 2.0 2.5 3 4 5 6 7 8 9 10 15 \
+        20 25] \
       -textvariable cmax_inc
 
     Button .l1wid-opts.f4.go -text "Go" -width 10 -command {
       set rg [list $cmax_min $cmax_max $cmax_inc]
-      .l1wid.bf45.sc.1.cmin.sc configure -from $cmax_min -to $cmax_max -resolution $cmax_inc
+      .l1wid.bf45.sc.1.cmin.sc configure -from $cmax_min -to $cmax_max \
+        -resolution $cmax_inc
       .l1wid.bf45.sc.1.cmin.sb configure -range $rg
-      .l1wid.bf45.sc.1.cmax.sc configure -from $cmax_min -to $cmax_max -resolution $cmax_inc
+      .l1wid.bf45.sc.1.cmax.sc configure -from $cmax_min -to $cmax_max \
+        -resolution $cmax_inc
       .l1wid.bf45.sc.1.cmax.sb configure -range $rg
       set cmax_delta [expr $cmax_max - $cmax_min]
       set cdel_rg [list 0 $cmax_delta $cmax_inc]
-      .l1wid.bf45.sc.1.cdelta.sc configure -from 0 -to $cmax_delta -resolution $cmax_inc
+      .l1wid.bf45.sc.1.cdelta.sc configure -from 0 -to $cmax_delta \
+        -resolution $cmax_inc
       .l1wid.bf45.sc.1.cdelta.sb configure -range $cdel_rg
     }
 
@@ -858,27 +904,33 @@ namespace eval l1dir {
     pack .l1wid-opts.f2.label .l1wid-opts.f2.min -side left -fill x
     pack .l1wid-opts.f3.label .l1wid-opts.f3.inc -side left -fill x
     pack .l1wid-opts.f4.go .l1wid-opts.f4.dis -side left -fill x
-    pack .l1wid-opts.f1 .l1wid-opts.f2 .l1wid-opts.f3 .l1wid-opts.f4 -side top -anchor e -pady 5
+    pack .l1wid-opts.f1 .l1wid-opts.f2 .l1wid-opts.f3 .l1wid-opts.f4 \
+      -side top -anchor e -pady 5
   }
 .l1wid.mb.options add checkbutton -label "Log Histograms" -underline 0 \
   -variable hist_log \
   -command hist_linlog
 
-.l1wid.mb.options add command -label "Plot/Write Individual Flightlines..." -underline 0 \
+.l1wid.mb.options add command -label "Plot/Write Individual Flightlines..." \
+  -underline 0 \
   -command {
     global list lrnindx
     destroy .l1plot
     toplevel .l1plot
     wm title .l1plot "Plot / Write Selected Flightlines"
     frame .l1plot.1
-    listbox .l1plot.1.lb -selectmode extended -width 50 -xscrollcommand ".l1plot.xscroll set" -yscrollcommand ".l1plot.1.yscroll set"
-    scrollbar .l1plot.xscroll -orient horizontal -command [list .l1plot.1.lb xview]
+    listbox .l1plot.1.lb -selectmode extended -width 50 \
+      -xscrollcommand ".l1plot.xscroll set" \
+      -yscrollcommand ".l1plot.1.yscroll set"
+    scrollbar .l1plot.xscroll -orient horizontal \
+      -command [list .l1plot.1.lb xview]
     scrollbar .l1plot.1.yscroll -command [list .l1plot.1.lb yview]
     for {set i 0} { $i < [llength $lrnindx] } {incr i} {
       set e [lindex $lrnindx $i]
       set rnf [lindex $list [expr ($i*2)]]
       set rnl [lindex $list [expr ($i*2+1)]]
-      .l1plot.1.lb insert end "Flightline $i. Rasters $rnf to $rnl. Start Index = $e"
+      .l1plot.1.lb insert end \
+        "Flightline $i. Rasters $rnf to $rnl. Start Index = $e"
     }
 
     Button .l1plot.sall -text "Select All" -width 10 -command {
@@ -901,20 +953,24 @@ namespace eval l1dir {
 
     pack .l1plot.1.lb .l1plot.1.yscroll -side left -fill y
     pack .l1plot.1 .l1plot.xscroll -side top -fill x
-    pack .l1plot.sall .l1plot.clear .l1plot.plot .l1plot.write -side left -fill x
+    pack .l1plot.sall .l1plot.clear .l1plot.plot .l1plot.write \
+      -side left -fill x
   }
 
-.l1wid.mb.options add command -label "Show Flightlines with No Raster Data..." -underline 25 \
+.l1wid.mb.options add command \
+  -label "Show Flightlines with No Raster Data..." -underline 25 \
   -command {
     exp_send "plot_no_raster_fltlines(gga, edb);\r"
   }
 
-.l1wid.mb.options add command -label "Show Flightlines with No TANS Data..." -underline 25 \
+.l1wid.mb.options add command -label "Show Flightlines with No TANS Data..." \
+  -underline 25 \
   -command {
     exp_send "plot_no_tans_fltlines(tans, gga);\r"
   }
 
-.l1wid.mb.options add command -label "List Plot Variables..." -underline 10 -command { varlist_plot }
+.l1wid.mb.options add command -label "List Plot Variables..." -underline 10 \
+  -command varlist_plot
 
 proc varlist_plot {} {
   global varlist
@@ -923,8 +979,11 @@ proc varlist_plot {} {
   wm title .varplot "List"
   frame .varplot.1
   frame .varplot.2
-  listbox .varplot.1.lb -selectmode single -width 12 -xscrollcommand ".varplot.1.xscroll set" -yscrollcommand ".varplot.1.yscroll set"
-  scrollbar .varplot.1.xscroll -orient horizontal -command [list .varplot.1.lb xview]
+  listbox .varplot.1.lb -selectmode single -width 12 \
+    -xscrollcommand ".varplot.1.xscroll set" \
+    -yscrollcommand ".varplot.1.yscroll set"
+  scrollbar .varplot.1.xscroll -orient horizontal \
+    -command [list .varplot.1.lb xview]
   scrollbar .varplot.1.yscroll -command [list .varplot.1.lb yview]
   for {set i 0} { $i < [llength $varlist] } {incr i} {
     .varplot.1.lb insert end [lindex $varlist $i]
@@ -933,7 +992,8 @@ proc varlist_plot {} {
     set plot_var [lindex $varlist [.varplot.1.lb curselection]]
     .l1wid.bf45.p.15 setvalue @[.varplot.1.lb curselection]
   }
-  LabelEntry .varplot.2.add -width 8 -relief sunken -label "Add:" -helptext "Add variable name to list" \
+  LabelEntry .varplot.2.add -width 8 -relief sunken -label "Add:" \
+    -helptext "Add variable name to list" \
     -textvariable addvar
   .varplot.2.add bind <Return> {
     global varlist
@@ -965,7 +1025,8 @@ proc varlist_plot {} {
   Button .varplot.2.dismiss -text "Dismiss" -width 8 -command {
     destroy .varplot
   }
-  pack .varplot.2.select .varplot.2.add .varplot.2.delete .varplot.2.dismiss -side top -fill x
+  pack .varplot.2.select .varplot.2.add .varplot.2.delete .varplot.2.dismiss \
+    -side top -fill x
   grid .varplot.1.lb      -in .varplot.1 -column 0 -row 0 -sticky "nswe"
   grid .varplot.1.yscroll -in .varplot.1 -column 1 -row 0 -sticky "ns"
   grid .varplot.1.xscroll -in .varplot.1 -column 0 -row 1 -sticky "ew"
@@ -1035,7 +1096,9 @@ proc append_varlist {newvar} {
     }
   }
 
-.l1wid.mb.options add checkbutton -label "Show raw and processed waveforms when using Pixel Waveform" -variable bconst
+.l1wid.mb.options add checkbutton \
+  -label "Show raw and processed waveforms when using Pixel Waveform" \
+  -variable bconst
 
 proc make_selected_arrays {junk} {
   global lrnindx list
@@ -1138,18 +1201,16 @@ proc hist_linlog {} {
   -command {
     set changed_dpi 1
   }
-.l1wid.mb.graph add command -label "Open the Limits Tool" -underline 0 -command { limits_tool }
+.l1wid.mb.graph add command -label "Open the Limits Tool" -underline 0 \
+  -command limits_tool
 
-.l1wid.mb   add cascade -label PostProcessing -underline 0 -menu .l1wid.mb.post
+.l1wid.mb add cascade -label PostProcessing -underline 0 -menu .l1wid.mb.post
 
+.l1wid.mb.post add command -label "Datum Convert" -underline 0 \
+  -command datum_proc
 
-.l1wid.mb.post add command -label "Datum Convert" -underline 0 -command {
-  datum_proc
-}
-
-.l1wid.mb.post add command -label "RCF Region Filter" -underline 0 -command {
-  rcf_region
-}
+.l1wid.mb.post add command -label "RCF Region Filter" -underline 0 \
+  -command rcf_region
 
 .l1wid.mb add cascade -label CmdLine -underline 1 -menu .l1wid.mb.cmd
 
@@ -1175,15 +1236,13 @@ proc hist_linlog {} {
   exp_send "require, \"batch_process.i\"; help,batch_write_xyz\r"
 }
 
-
 .l1wid.mb add cascade -label Diagnostics -underline 0 -menu .l1wid.mb.diag
 
 .l1wid.mb.diag add command -label "Transect Tool" -command {
   source "$src_path/transrch.ytk"
 }
 
-.l1wid.mb.diag add command -label "Flightline Analysis Tool" -command {
-}
+.l1wid.mb.diag add command -label "Flightline Analysis Tool" -command {}
 
 .l1wid.mb.diag entryconfigure 2 -state disabled
 
@@ -1224,7 +1283,9 @@ proc rcf_region {} {
       set rcfmode [.rcf.0.mode getvalue]
       if {$rcfmode == -1} {
         tk_messageBox  -icon info \
-          -message "Select one of the filtering methods in the drop down menu.  Click Help on each selection to learn more about the filtering method" \
+          -message "Select one of the filtering methods in the drop down\
+            menu. Click Help on each selection to learn more about the\
+            filtering method" \
           -type ok -title "Select RCF Type -- Help"
       }
       if {$rcfmode == 0} {
@@ -1236,15 +1297,19 @@ proc rcf_region {} {
     }
 
 
-  LabelEntry .rcf.1.buf -width 4 -relief sunken -label "Input Window (cm):" -helptext "The input window size that will slide through the data set (in centimeters)" \
+  LabelEntry .rcf.1.buf -width 4 -relief sunken -label "Input Window (cm):" \
+    -helptext "The input window size that will slide through the data set (in\
+      centimeters)" \
     -textvariable buf -text 500
-  LabelEntry .rcf.1.w -width 4 -relief sunken -label "Elevation width (cm):" -helptext "The vertical extent or range of the filter (in centimeters)" \
+  LabelEntry .rcf.1.w -width 4 -relief sunken -label "Elevation width (cm):" \
+    -helptext "The vertical extent or range of the filter (in centimeters)" \
     -textvariable w -text 20
-  LabelEntry .rcf.1.no -width 4 -relief sunken -label "Minimum winners:" -helptext "The minimum number of winners" \
+  LabelEntry .rcf.1.no -width 4 -relief sunken -label "Minimum winners:" \
+    -helptext "The minimum number of winners" \
     -textvariable no_rcf -text 3
 
   Label .rcf.2.varname -text "Input Variable:"
-  ComboBox .rcf.2.varlist  -values \
+  ComboBox .rcf.2.varlist -values \
     $varlist \
     -helptext "Select any one of the following variables to RCF" \
     -editable 0 -width 10 \
@@ -1271,16 +1336,24 @@ proc rcf_region {} {
     -label "Output Variable:" -helptext "Define output variable" \
     -textvariable outvar -text "rcf_$curvar" -width 10
 
-  LabelEntry .rcf.5.premin -relief sunken -label "Pre-filter Elevations (m): Min" -helptext "Use this minimum elevation (in m) before applying RCF. Leave blank for no value" \
+  LabelEntry .rcf.5.premin -relief sunken \
+    -label "Pre-filter Elevations (m): Min" \
+    -helptext "Use this minimum elevation (in m) before applying RCF. Leave\
+      blank for no value" \
     -textvariable prefilter_min -text "" -width 4
 
-  LabelEntry .rcf.5.premax -relief sunken -label "Max" -helptext "Use this maximum elevation (in m) before applying RCF. Leave blank for no value" \
+  LabelEntry .rcf.5.premax -relief sunken -label "Max" \
+    -helptext "Use this maximum elevation (in m) before applying RCF. Leave\
+      blank for no value" \
     -textvariable prefilter_max -text "" -width 4
 
-  LabelEntry .rcf.5.tai -relief sunken -label "No. of iterations" -helptext "Number of RCF iterations to perform (default = 3)" \
+  LabelEntry .rcf.5.tai -relief sunken -label "No. of iterations" \
+    -helptext "Number of RCF iterations to perform (default = 3)" \
     -textvariable tai -text 3 -width 2
 
-  LabelEntry .rcf.5.tw -relief sunken -label "TIN elev width (cm)" -helptext "Vertical range (in cm) used in each iteration to densify the point cloud after triangulating" \
+  LabelEntry .rcf.5.tw -relief sunken -label "TIN elev width (cm)" \
+    -helptext "Vertical range (in cm) used in each iteration to densify the\
+      point cloud after triangulating" \
     -textvariable tw -text 20 -width 4
 
   checkbutton .rcf.6.inter -text "Interactive?" -variable interactive \
@@ -1291,21 +1364,25 @@ proc rcf_region {} {
     }
   set interactive 0
 
-  LabelEntry .rcf.6.triagwin -relief sunken -label "Plot TIN in win:" -helptext "Plot TIN during each iteration in this window number.  Leave blank to not plot the TINs.  If interactive is set, default window is 4" \
+  LabelEntry .rcf.6.triagwin -relief sunken -label "Plot TIN in win:" \
+    -helptext "Plot TIN during each iteration in this window number. Leave\
+      blank to not plot the TINs. If interactive is set, default window is 4." \
     -textvariable plottriagwin -width 4
 
   LabelEntry .rcf.6.distthresh -relief sunken -label "Distance Threshold (m):" \
     -textvariable distthresh -text 100  -width 4 \
-    -helptext "Enter distance threshold (in meters) that sets the maximum allowable length of any side of a triangle in the TIN model.  Set to 0 if you don't want to use it.  Defaults to 100m."
+    -helptext "Enter distance threshold (in meters) that sets the maximum\
+      allowable length of any side of a triangle in the TIN model.  Set to 0\
+      if you don't want to use it.  Defaults to 100m."
 
   Button .rcf.3.go -width 8 -text "Go" \
     -command {
       global varlist outvar
       set curvar [lindex $varlist [.rcf.2.varlist getvalue]]
       switch [.rcf.2.disp getvalue] {
-        "0" { set mode 1}
-        "1" { set mode 2}
-        "2" { set mode 3}
+        "0" {set mode 1}
+        "1" {set mode 2}
+        "2" {set mode 3}
       }
       append_varlist $outvar
       set rcfmode [.rcf.0.mode getvalue]
@@ -1316,11 +1393,15 @@ proc rcf_region {} {
           set plottriag ""
         }
         set datawin [.l1wid.bf45.p.3 getvalue]
-        exp_send "$outvar = rcf_triag_filter($curvar, buf=$buf, w=$w, no_rcf=$no_rcf, mode=$mode, tw=$tw, interactive=$interactive, tai=$tai, plottriag=$plottriag, plottriagwin=$plottriagwin, prefilter_min=$prefilter_min, prefilter_max=$prefilter_max, distthresh=$distthresh, datawin=$datawin );\r\n"
+        exp_send "$outvar = rcf_triag_filter($curvar, buf=$buf, w=$w,\
+          no_rcf=$no_rcf, mode=$mode, tw=$tw, interactive=$interactive,\
+          tai=$tai, plottriag=$plottriag, plottriagwin=$plottriagwin,\
+          prefilter_min=$prefilter_min, prefilter_max=$prefilter_max,\
+          distthresh=$distthresh, datawin=$datawin );\r\n"
       } else {
-        exp_send "$outvar = rcfilter_eaarl_pts($curvar, buf=$buf, w=$w, no_rcf=$no_rcf, mode=$mode);\r\n"
+        exp_send "$outvar = rcfilter_eaarl_pts($curvar, buf=$buf, w=$w,\
+          no_rcf=$no_rcf, mode=$mode);\r\n"
       }
-
       destroy .rcf
     }
   Button .rcf.3.cancel -text "Cancel" -width 8 -command {
@@ -1340,7 +1421,6 @@ proc rcf_region {} {
   pack .rcf.0 .rcf.1 .rcf.2 .rcf.5 .rcf.6 .rcf.3 -side top -pady 10
   pack forget .rcf.5 .rcf.6
 }
-
 
 .l1wid.mb.post add command -label "Determine Roll Bias" -underline 0 \
   -command {
@@ -1373,12 +1453,15 @@ proc rcf_region {} {
       -textvariable var -text $var
 
     Label .l1bias.1.winl -text "in window:"
-    SpinBox .l1bias.1.win -justify center -range {0 7 1} -width 2 -textvariable win_no
+    SpinBox .l1bias.1.win -justify center -range {0 7 1} -width 2 \
+      -textvariable win_no
 
     Label .l1bias.1.transl -text "Then click"
-    Button .l1bias.1.transbutton -text "Get Transect" -helptext "Click to get transect" \
+    Button .l1bias.1.transbutton -text "Get Transect" \
+      -helptext "Click to get transect" \
       -command {
-        exp_send "transdata = get_transect($var, win=$win_no, update=1, width=$width)\r"
+        exp_send "transdata = get_transect($var, win=$win_no, update=1,\
+          width=$width)\r"
         expect ">"
         .l1bias.3.plot configure -state normal
         .l1bias.3.winl configure -state normal
@@ -1390,8 +1473,23 @@ proc rcf_region {} {
 
     Button .l1bias.1.help -text "Help!" -helptext "Click for directions" \
       -command {
-        tk_messageBox  -icon warning \
-          -message "1) Start with data array plotted in a window and raw EAARL data loaded. Set the variable and window and click Get Transect.\r2) Drag a line perpendicular to the flightlines you wish to examine. In the window that appears, zoom into the top, type something, and hit enter. Now drag a box over the section of the transect you wish to keep.\r3) Click the plot button to display the loaded transect. In order to determine the bias automatically all flightlines must be traveling the same direction, so you'll need to remove whichever direction is the minority.\r4) Click 'select flightlines' and simply type 'y' or 'n' to keep or remove each flightline. Now you have a set of flightlines going the same direction.\r5) Finally, determine whether the flightlines are going into or out of the screen. If they are going INTO the screen, check the box." \
+        tk_messageBox -icon warning \
+          -message "1) Start with data array plotted in a window and raw EAARL\
+            data loaded. Set the variable and window and click Get Transect.\
+            \r2) Drag a line perpendicular to the flightlines you wish to\
+            examine. In the window that appears, zoom into the top, type\
+            something, and hit enter. Now drag a box over the section of the\
+            transect you wish to keep.\
+            \r3) Click the plot button to display the loaded transect. In\
+            order to determine the bias automatically all flightlines must be\
+            traveling the same direction, so you'll need to remove whichever\
+            direction is the minority.\
+            \r4) Click 'select flightlines' and simply type 'y' or 'n' to keep\
+            or remove each flightline. Now you have a set of flightlines going\
+            the same direction.\
+            \r5) Finally, determine whether the flightlines are going into or\
+            out of the screen. If they are going INTO the screen, check the\
+            box." \
           -type ok
       }
 
@@ -1407,7 +1505,8 @@ proc rcf_region {} {
       -label "Current Slope:" -helptext "Current slope" \
       -textvariable slope -text $slope
 
-    Button .l1bias.3.plot -text "Plot" -helptext "Click to plot flightline transect" \
+    Button .l1bias.3.plot -text "Plot" \
+      -helptext "Click to plot flightline transect" \
       -command {
         exp_send "plot_flightline_transect(transdata, $flwin)\r"
         expect ">"
@@ -1417,7 +1516,8 @@ proc rcf_region {} {
     SpinBox .l1bias.3.win -justify center -range {0 7 1} \
       -width 2 -textvariable flwin
 
-    Button .l1bias.3.pick -text "Select Flightlines" -helptext "Click to select which flightlines to keep" \
+    Button .l1bias.3.pick -text "Select Flightlines" \
+      -helptext "Click to select which flightlines to keep" \
       -command {
         exp_send "transdata=selgoodflightlines(transdata, win=$flwin)\r"
         expect ">"
@@ -1425,30 +1525,25 @@ proc rcf_region {} {
 
     checkbutton .l1bias.3.inout -text "in/out:" -variable iob \
       -command {
-        if {$iob == 1} {
-          set inout -1
-        }
-        if {$iob == 0} {
-          set inout 1
-        }
+        set inout [lindex {1 -1} $iob]
       }
 
-    Button .l1bias.3.auto -text "Determine bias" -helptext "Click to automatically determine roll bias" \
+    Button .l1bias.3.auto -text "Determine bias" \
+      -helptext "Click to automatically determine roll bias" \
       -command {
         exp_send "goodroll=find_roll_bias(transdata,0,$inout,update=1)\r"
         expect ">"
       }
 
-    pack .l1bias.1.var .l1bias.1.winl .l1bias.1.win .l1bias.1.transl .l1bias.1.transbutton .l1bias.1.help -side left
+    pack .l1bias.1.var .l1bias.1.winl .l1bias.1.win .l1bias.1.transl \
+      .l1bias.1.transbutton .l1bias.1.help -side left
     pack .l1bias.2.width .l1bias.2.bias .l1bias.2.slope -side left
-    pack .l1bias.3.plot .l1bias.3.winl .l1bias.3.win .l1bias.3.pick .l1bias.3.inout .l1bias.3.auto -side left
-    .l1bias.3.plot configure -state disabled
-    .l1bias.3.winl configure -state disabled
-    .l1bias.3.win configure -state disabled
-    .l1bias.3.pick configure -state disabled
-    .l1bias.3.inout configure -state disabled
-    .l1bias.3.auto configure -state disabled
+    pack .l1bias.3.plot .l1bias.3.winl .l1bias.3.win .l1bias.3.pick \
+      .l1bias.3.inout .l1bias.3.auto -side left
 
+    foreach w {plot winl win pick inout auto} {
+      .l1bias.3.$w configure -state disabled
+    }
   }
 
 ComboBox .l1wid.bf4.1.d -text "Define Region..." -width 15 -values \
@@ -1458,14 +1553,16 @@ ComboBox .l1wid.bf4.1.d -text "Define Region..." -width 15 -values \
     Rectangular\ Coords\
     Multiple\ PIPs\
   }\
-  -helptext "Select region to process using any of the following methods" -editable 0 \
+  -helptext "Select region to process using any of the following methods" \
+  -editable 0 \
   -modifycmd {
     set defr [.l1wid.bf4.1.d getvalue]
     puts $defr
     if {$defr == 0} {
       if { $_ytk(annoying_help) == "Yes" } {
         set result [tk_messageBox  -icon info \
-          -message "Drag a Rectangular Box in Window $_map(window) to define region." \
+          -message "Drag a Rectangular Box in Window $_map(window) to define\
+            the region." \
           -type okcancel -title "Message"]
       } else {
         set result "ok"
@@ -1478,7 +1575,9 @@ ComboBox .l1wid.bf4.1.d -text "Define Region..." -width 15 -values \
     if {$defr == 1} {
       if { $_ytk(annoying_help) == "Yes" } {
         set result [tk_messageBox  -icon info \
-          -message "Draw a Polygon in Window $_map(window) to define a region using a series of left mouse clicks.  To complete the polygon, middle mouse click OR <Ctrl> and left mouse click." \
+          -message "Draw a Polygon in Window $_map(window) to define a region\
+            using a series of left mouse clicks. To complete the polygon,\
+            middle mouse click OR <Ctrl> and left mouse click." \
           -type okcancel -title "Message"]
       } else {
         set result "ok"
@@ -1494,33 +1593,45 @@ ComboBox .l1wid.bf4.1.d -text "Define Region..." -width 15 -values \
       frame .l1widc.lon
       frame .l1widc.1
       frame .l1widc.utm
-      ComboBox .l1widc.utm.1 -text "Coordinate System" -width 18 -values "LatLon UTM" \
-        -helptext "Select the Coordinate System." -editable 0
-      LabelEntry .l1widc.utm.2 -width 6 -relief sunken  -label "UTM Zone: " -helptext "Enter UTM Zone Here" \
+      ComboBox .l1widc.utm.1 -text "Coordinate System" -width 18 \
+        -values "LatLon UTM" -editable 0 \
+        -helptext "Select the Coordinate System."
+      LabelEntry .l1widc.utm.2 -width 6 -relief sunken -label "UTM Zone: " \
+        -helptext "Enter UTM Zone Here" \
         -textvariable zone
 
-      LabelEntry .l1widc.lat1 -width 12 -relief sunken -label "NorthLat/Max.Northing " \
-        -helptext "Enter Maximum Latitude in degrees or Maximum UTM Northing in meters Here"\
+      LabelEntry .l1widc.lat1 -width 12 -relief sunken \
+        -label "NorthLat/Max.Northing " \
+        -helptext "Enter Maximum Latitude in degrees or Maximum UTM Northing\
+          in meters Here"\
         -textvariable mxlat
-      LabelEntry .l1widc.lat2 -width 12 -relief sunken -label "SouthLat/Min.Northing  " \
-        -helptext "Enter Minimum Latitude in degrees or Minimum UTM Northing in meters Here"\
+      LabelEntry .l1widc.lat2 -width 12 -relief sunken \
+        -label "SouthLat/Min.Northing " \
+        -helptext "Enter Minimum Latitude in degrees or Minimum UTM Northing\
+          in meters Here"\
         -textvariable mnlat
 
-      LabelEntry .l1widc.lon.mn -width 12 -relief sunken -label "WestLon/Min.Easting  " \
-        -helptext "Enter Westernmost Longitude in degrees or Minimum UTM Easting in meters Here"\
+      LabelEntry .l1widc.lon.mn -width 12 -relief sunken \
+        -label "WestLon/Min.Easting " \
+        -helptext "Enter Westernmost Longitude in degrees or Minimum UTM\
+          Easting in meters Here"\
         -textvariable mnlon
-      LabelEntry .l1widc.lon.mx -width 12 -relief sunken -label "EastLon/Max.Easting " \
-        -helptext "Enter Easternmost Longitude in degrees or Maximum UTM Easting in meters Here"\
+      LabelEntry .l1widc.lon.mx -width 12 -relief sunken \
+        -label "EastLon/Max.Easting " \
+        -helptext "Enter Easternmost Longitude in degrees or Maximum UTM\
+          Easting in meters Here"\
         -textvariable mxlon
       Button .l1widc.1.ok -text "OK" -width 5 -command {
         set utm [.l1widc.utm.1 getvalue]
-        exp_send "utm = $utm; q = gga_win_sel(2, win=$_map(window), llarr=\[$mnlon, $mxlon, $mnlat, $mxlat\]);\r"
+        exp_send "utm = $utm;\
+          q = gga_win_sel(2, win=$_map(window),\
+            llarr=\[$mnlon, $mxlon, $mnlat, $mxlat\]);\r"
         destroy .l1widc
       }
       Button .l1widc.1.box -text "Plot Region" -width 7 -command {
         exp_send "a_x=\[$mnlon, $mxlon, $mxlon, $mnlon, $mnlon\];\r"
         exp_send "a_y=\[$mnlat, $mnlat, $mxlat, $mxlat, $mnlat\];\r"
-        exp_send "window, $_map(window); plg, a_y, a_x;\r";
+        exp_send "window, $_map(window); plg, a_y, a_x;\r"
       }
 
       Button .l1widc.1.cancel -text "Cancel" -width 5 -command {
@@ -1602,21 +1713,24 @@ proc multi_pip_sel {junk} {
       set cidx [string first "," $curs]
       set cursr [string range $curs 0 [expr ($cidx-1)]]
       set cursc [string range $curs [expr ($cidx+1)] end]
-      if { ([info exists _mpipx($cursr,2) ] == 0) || ($_mpipx($cursr,2)=="") } {
+      if {(! [info exists _mpipx($cursr,2)]) || ($_mpipx($cursr,2)=="")} {
         set _mpipx($cursr,2) "ply_$cursr"
         set _mpipx($cursr,5) "q_$cursr"
       }
-      if { [info exists _mpipx($cursr,1) ] == 0 } {
+      if {! [info exists _mpipx($cursr,1)]} {
         set _mpipx($cursr,1) "var_$_mpipx($cursr,2)"
       }
-      if { [info exists _mpipx($cursr,5) ] == 0 } {
+      if {! [info exists _mpipx($cursr,5)]} {
         set _mpipx($cursr,5) "q_$_mpipx($cursr,2)"
       }
       set pcurs $curs
-      exp_send "$_mpipx($cursr,5) = gga_pip_sel(1, win=$_map(window)); $_mpipx($cursr,2) = ply; \r"
+      exp_send "$_mpipx($cursr,5) = gga_pip_sel(1, win=$_map(window));\
+        $_mpipx($cursr,2) = ply; \r"
       expect ">"
     } \
-    -helptext "Draw a Polygon in Window 6 to define a region using a series of left mouse clicks.  To complete the polygon, middle mouse click OR <Ctrl> and left mouse click."
+    -helptext "Draw a Polygon in Window 6 to define a region using a series of\
+      left mouse clicks.  To complete the polygon, middle mouse click OR\
+      <Ctrl> and left mouse click."
   $tpath window configure 1,2 -window $tpath.pip -sticky news
 
   Button $tpath.fbutton -text "Browse..." \
@@ -1624,12 +1738,12 @@ proc multi_pip_sel {junk} {
       global tpath
       set curs [$tpath curselection]
       set ftypes {
-        {{For pbd}       {.pbd}        }
-        {{IDL bin}       {.bin}        }
-        {{IDL edf}       {.edf}        }
-        {{All Files}            *      }
+        {{For pbd}   {.pbd} }
+        {{IDL bin}   {.bin} }
+        {{IDL edf}   {.edf} }
+        {{All Files}   *    }
       }
-      set ofname [ tk_getSaveFile -filetypes $ftypes -defaultextension ".pbd" ]
+      set ofname [tk_getSaveFile -filetypes $ftypes -defaultextension ".pbd"]
       set _mpipx($curs) $ofname
       puts $curs
     }
@@ -1681,7 +1795,8 @@ proc multi_pip_sel {junk} {
       set ptype_var [string replace $ptype_var end end "\]"]
       set ply_var [string replace $ply_var end end "\]"]
       set plyname_var [string replace $plyname_var end end "\]"]
-      exp_send "batch_multipip_process, $pip_var, $data_var, $fname_var, $ptype_var, $qname_var, $ply_var, $plyname_var \r\n"
+      exp_send "batch_multipip_process, $pip_var, $data_var, $fname_var,\
+        $ptype_var, $qname_var, $ply_var, $plyname_var \r\n"
       expect ">"
     }
 
@@ -1737,8 +1852,11 @@ Label .l1wid.bf4.1.lw -text "in Win:"
 SpinBox .l1wid.bf4.1.sw -justify center -range {0 7 1} \
   -width 2 -textvariable _map(window)
 
-checkbutton .l1wid.bf4.2.cen -text "Correct Range \nWalk with Centroid" -variable usecentroid
-checkbutton .l1wid.bf4.2.surf -text "Use Fresnel reflections\nto determine water surface" -variable avg_surf
+checkbutton .l1wid.bf4.2.cen -variable usecentroid \
+  -text "Correct Range\nWalk with Centroid"
+
+checkbutton .l1wid.bf4.2.surf -variable avg_surf \
+  -text "Use Fresnel reflections\nto determine water surface"
 
 .l1wid.bf4.2.surf configure -state disabled
 
@@ -1857,7 +1975,8 @@ ComboBox .l1wid.bf45.p.5 -text "Display Type" -width 20 \
 .l1wid.bf45.p.5 setvalue first
 
 Button .l1wid.bf45.q.2 -text "Histogram\nElevations" \
-  -helptext "Generate and display a histogram of all the first return elevations" \
+  -helptext "Generate and display a histogram of all the first return\
+    elevations" \
   -command {
     global cbvc cmin cmax
     set ptype [.l1wid.bf4.1.p getvalue]
@@ -1866,7 +1985,8 @@ Button .l1wid.bf45.q.2 -text "Histogram\nElevations" \
     set var_type [lindex $varlist $var_no]
     if {$disp_type == -1} {
       tk_messageBox  -icon warning \
-        -message "You need to specify the type of data before using this function!" \
+        -message "You need to specify the type of data before using this\
+          function!" \
         -type ok
     }
     if {$ptype == 0} {
@@ -1904,27 +2024,28 @@ Button .l1wid.bf45.q.1 -text "Pixel\nWaveform" \
     set var_type [lindex $varlist $var_no]
     if {$disp_type == -1} {
       tk_messageBox  -icon warning \
-        -message "You need to specify the type of data before using this function!" \
+        -message "You need to specify the type of data before using this\
+          function!" \
         -type ok
     }
-    if {$ptype == 0} {
-      exp_send "mindata = raspulsearch($var_type, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype, lmark = lmark);\r"
+
+    # Only ptypes 1 and 3 use bconst, so by default it is void
+    set bconstarg ""
+    if {$ptype == 1 || $ptype == 3} {
+      set bconstarg $bconst
     }
-    if {$ptype == 1} {
-      exp_send "mindata = raspulsearch($var_type, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype, lmark = lmark, bconst=$bconst );\r"
-    }
-    if {$ptype == 2} {
-      exp_send "mindata = raspulsearch($var_type, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype, lmark = lmark);\r"
-    }
-    if {$ptype == 3} {
-      exp_send "mindata = raspulsearch($var_type, win=$win_no, cmin=$cmin, cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype, lmark = lmark, bconst=$bconst );\r"
+
+    if {[lindex {0 1 2 3} $ptype] >= 0} {
+      exp_send "mindata = raspulsearch($var_type, win=$win_no, cmin=$cmin,\
+        cmax=$cmax, msize=$msize, disp_type=$disp_type, ptype=$ptype,\
+        lmark=lmark, bconst=$bconstarg);\r"
     }
   }
 
 Button .l1wid.bf45.q.3 -text "Color\nBar" \
   -command {
     global win_no
-    exp_send "window, $win_no; colorbar, $cmin, $cmax, drag=1\r";
+    exp_send "window, $win_no; colorbar, $cmin, $cmax, drag=1\r"
   }
 Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
   -command {
@@ -1995,16 +2116,17 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
         set yrange_elv 0
       }
 
-    sst .l1clip.2.max   max_elv   "Maximum Elevation:"  { -100 5000.0 0.1  }
-    sst .l1clip.1.min   min_elv   "Minimum Elevation:"  { -100 5000.0 0.1  }
-    sst .l1clip.3.range   range_elv   "Vertical Range:"  { 0 300.0 0.1  }
+    sst .l1clip.2.max max_elv "Maximum Elevation:" {-100 5000.0 0.1}
+    sst .l1clip.1.min min_elv "Minimum Elevation:" {-100 5000.0 0.1}
+    sst .l1clip.3.range range_elv "Vertical Range:" {0 300.0 0.1}
 
     set max_elv $cmax
     set min_elv $cmin
     set range_elv $cdelta
 
     set curvar  [lindex $varlist [.l1clip.05.varlist getvalue]]
-    LabelEntry .l1clip.35 -relief sunken -label "Output Variable:" -helptext "Define output variable" \
+    LabelEntry .l1clip.35 -relief sunken -label "Output Variable:" \
+      -helptext "Define output variable" \
       -textvariable outvar -text "$curvar"
 
     Button .l1clip.4.ok -text "Clip Data" -width 5 -command {
@@ -2015,20 +2137,25 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
       if {$ptype == 0} {
         ##for surface topography
         if {$ymin == 1 && $ymax == 1} {
-          exp_send "$outvar = $curvar\(where(($curvar.elevation >= $min_elv*100) & ($curvar.elevation <= $max_elv*100)));\r"
+          exp_send "$outvar = $curvar\(where(\
+            ($curvar.elevation >= $min_elv*100) &\
+            ($curvar.elevation <= $max_elv*100)));\r"
           expect ">"
         } else {
           if {$ymin == 1} {
-            exp_send "$outvar = $curvar\(where($curvar.elevation >= $min_elv*100));\r"
+            exp_send "$outvar = $curvar\(where(\
+              $curvar.elevation >= $min_elv*100));\r"
             expect ">"
           }
           if {$ymax == 1} {
-            exp_send "$outvar = $curvar\(where($curvar.elevation <= $max_elv*100));\r"
+            exp_send "$outvar = $curvar\(where(\
+              $curvar.elevation <= $max_elv*100));\r"
             expect ">"
           }
         }
         if {$yrange == 1} {
-          exp_send "sel_ptr = rcf($curvar.elevation,$range_elv*100,mode=2); $outvar = $curvar(*sel_ptr(1));\r"
+          exp_send "sel_ptr = rcf($curvar.elevation,$range_elv*100,mode=2);\
+            $outvar = $curvar(*sel_ptr(1));\r"
           expect ">"
         }
       }
@@ -2036,56 +2163,72 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
         ##for bathymetry
         if {$dtype == 1} {
           if {$ymin == 1 && $ymax == 1} {
-            exp_send "$outvar = $curvar\(where(($curvar.elevation+$curvar.depth >= $min_elv*100) & ($curvar.elevation+$curvar.depth <= $max_elv*100)));\r"
+            exp_send "$outvar = $curvar\(where(\
+              ($curvar.elevation+$curvar.depth >= $min_elv*100) &\
+              ($curvar.elevation+$curvar.depth <= $max_elv*100) ));\r"
             expect ">"
           } else {
             if {$ymin == 1} {
-              exp_send "$outvar = $curvar\(where(($curvar.elevation+$curvar.depth) >= $min_elv\*100));\r"
+              exp_send "$outvar = $curvar\(where((\
+                $curvar.elevation+$curvar.depth) >= $min_elv\*100));\r"
               expect ">"
             }
             if {$ymax == 1} {
-              exp_send "$outvar = $curvar\(where(($curvar.elevation+$curvar.depth) <= $max_elv*100));\r"
+              exp_send "$outvar = $curvar\(where((\
+                $curvar.elevation+$curvar.depth) <= $max_elv*100));\r"
               expect ">"
             }
           }
           if {$yrange == 1} {
-            exp_send "sel_ptr = rcf(($curvar.elevation+$curvar.depth),$range_elv*100,mode=2); $outvar = $curvar\(*sel_ptr(1));\r"
+            exp_send "sel_ptr = rcf(($curvar.elevation+$curvar.depth),\
+                $range_elv*100, mode=2);\
+              $outvar = $curvar\(*sel_ptr(1));\r"
             expect ">"
           }
         }
         if {$dtype == 0} {
           if {$ymin == 1 && $ymax == 1} {
-            exp_send "$outvar = $curvar\(where(($curvar.elevation >= $min_elv*100) & ($curvar.elevation <= $max_elv*100)));\r"
+            exp_send "$outvar = $curvar\(where(\
+              ($curvar.elevation >= $min_elv*100) &\
+              ($curvar.elevation <= $max_elv*100) ));\r"
             expect ">"
           } else {
             if {$ymin == 1} {
-              exp_send "$outvar = $curvar\(where($curvar.elevation >= $min_elv*100));\r"
+              exp_send "$outvar = $curvar\(where(\
+                $curvar.elevation >= $min_elv*100));\r"
               expect ">"
             }
             if {$ymax == 1} {
-              exp_send "$outvar = $curvar\(where($curvar.elevation <= $max_elv*100));\r"
+              exp_send "$outvar = $curvar\(where(\
+                $curvar.elevation <= $max_elv*100));\r"
               expect ">"
             }
           }
           if {$yrange == 1} {
-            exp_send "sel_ptr = rcf($curvar.elevation,$range_elv*100,mode=2); $outvar = $curvar\(*sel_ptr(1));\r"
+            exp_send "sel_ptr = rcf($curvar.elevation,$range_elv*100,mode=2);\
+              $outvar = $curvar\(*sel_ptr(1));\r"
             expect ">"
           }
         }
         if {$dtype == 2} {
           if {$ymin == 1 && $ymax == 1} {
-            exp_send "$outvar = $curvar\(where(($curvar.depth >= $min_elv*100) & ($curvar.depth <= $max_elv*100)));\r"
+            exp_send "$outvar = $curvar\(where(\
+              ($curvar.depth >= $min_elv*100) &\
+              ($curvar.depth <= $max_elv*100) ));\r"
             expect ">"
           } else {
             if {$ymin == 1} {
-              exp_send "$outvar = $curvar\(where($curvar.depth >= $min_elv*100));\r"
+              exp_send "$outvar = $curvar\(where(\
+                $curvar.depth >= $min_elv*100));\r"
             }
             if {$ymax == 1} {
-              exp_send "$outvar = $curvar\(where($curvar.depth <= $max_elv*100));\r"
+              exp_send "$outvar = $curvar\(where(\
+                $curvar.depth <= $max_elv*100));\r"
             }
           }
           if {$yrange == 1} {
-            exp_send "sel_ptr = rcf($curvar.depth,$range_elv*100,mode=2); $outvar = $curvar\(*sel_ptr(1));\r"
+            exp_send "sel_ptr = rcf($curvar.depth,$range_elv*100,mode=2);\
+              $outvar = $curvar\(*sel_ptr(1));\r"
           }
         }
       }
@@ -2093,34 +2236,44 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
         ##for vegetation
         if {$dtype == 0} {
           if {$ymin == 1 && $ymax == 1} {
-            exp_send "$outvar = $curvar\(where(($curvar.elevation >= $min_elv*100) & ($curvar.elevation <= $max_elv*100)));\r"
+            exp_send "$outvar = $curvar\(where(\
+              ($curvar.elevation >= $min_elv*100) &\
+              ($curvar.elevation <= $max_elv*100)));\r"
             expect ">"
           } else {
             if {$ymin == 1} {
-              exp_send "$outvar = $curvar(where\($curvar.elevation >= $min_elv*100));\r"
+              exp_send "$outvar = $curvar(where\(\
+                $curvar.elevation >= $min_elv*100));\r"
             }
             if {$ymax == 1} {
-              exp_send "$outvar = $curvar(where\($curvar.elevation <= $max_elv*100));\r"
+              exp_send "$outvar = $curvar(where\(\
+                $curvar.elevation <= $max_elv*100));\r"
             }
           }
           if {$yrange == 1} {
-            exp_send "sel_ptr = rcf($curvar.elevation,$range_elv*100,mode=2); $outvar = $curvar\(*sel_ptr(1));\r"
+            exp_send "sel_ptr = rcf($curvar.elevation,$range_elv*100,mode=2);\
+              $outvar = $curvar\(*sel_ptr(1));\r"
           }
         }
         if {$dtype == 3} {
           if {$ymin == 1 && $ymax == 1} {
-            exp_send "$outvar = $curvar\(where(($curvar.lelv >= $min_elv*100) & ($curvar.lelv <= $max_elv*100)));\r"
+            exp_send "$outvar = $curvar\(where(\
+              ($curvar.lelv >= $min_elv*100) &\
+              ($curvar.lelv <= $max_elv*100) ));\r"
             expect ">"
           } else {
             if {$ymin == 1} {
-              exp_send "$outvar = $curvar\(where($curvar.lelv >= $min_elv*100));\r"
+              exp_send "$outvar = $curvar\(where(\
+                $curvar.lelv >= $min_elv*100));\r"
             }
             if {$ymax == 1} {
-              exp_send "$outvar = $curvar\(where($curvar.lelv <= $max_elv*100));\r"
+              exp_send "$outvar = $curvar\(where(\
+                $curvar.lelv <= $max_elv*100));\r"
             }
           }
           if {$yrange == 1} {
-            exp_send "sel_ptr = rcf($curvar.lelv,$range_elv*100,mode=2); $outvar = $curvar\(*sel_ptr(1));\r"
+            exp_send "sel_ptr = rcf($curvar.lelv,$range_elv*100,mode=2);\
+              $outvar = $curvar\(*sel_ptr(1));\r"
           }
         }
       }
@@ -2145,7 +2298,7 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
     set range_elv 0
   }
 
-Button .l1wid.bf45.q.44 -text "Test and \nClean" -command {
+Button .l1wid.bf45.q.44 -text "Test and\nClean" -command {
   global varlist
   set var_no [.l1wid.bf45.p.15 getvalue]
   set curvar [lindex $varlist $var_no]
@@ -2153,22 +2306,22 @@ Button .l1wid.bf45.q.44 -text "Test and \nClean" -command {
 }
 
 frame .l1wid.bf45.q.f45
-Button .l1wid.bf45.q.f45.1 -text "2K Grid" -command {
+Button .l1wid.bf45.q.f45.1 -text "2K Grid" -font {Helvetica -8} -command {
   exp_send "draw_grid, $win_no\r"
-} -font {Helvetica -8}
+}
 
-Button .l1wid.bf45.q.f45.2 -text "2K Name" -command {
+Button .l1wid.bf45.q.f45.2 -text "2K Name" -font {Helvetica -8} -command {
   exp_send "show_grid_location, $win_no\r"
-} -font {Helvetica -8}
+}
 
 frame .l1wid.bf45.q.f46
-Button .l1wid.bf45.q.f46.1 -text "QQ Grid" -command {
+Button .l1wid.bf45.q.f46.1 -text "QQ Grid" -font {Helvetica -8} -command {
   exp_send "draw_qq_grid, $win_no\r"
-} -font {Helvetica -8}
+}
 
-Button .l1wid.bf45.q.f46.2 -text "QQ Name" -command {
+Button .l1wid.bf45.q.f46.2 -text "QQ Name" -font {Helvetica -8} -command {
   exp_send "show_qq_grid_location, $win_no\r"
-} -font {Helvetica -8}
+}
 
 
 checkbutton .l1wid.bf45.q.5 -text "Set Plot Limits" -variable usecentroid
@@ -2182,7 +2335,11 @@ ComboBox .l1wid.bf45.r.1 -text "Copy points using..." -width 16\
     Single\ Pixel\
     Select\ Cell\/Quad\/Tile \
   } \
-  -helptext "Copy points to \'workdata\' using any of the following methods:\n Rubberband Box\n Points in Polygon\n Single Pixel" -editable 0 \
+  -helptext "Copy points to \'workdata\' using any of the following methods:\
+    \n Rubberband Box\
+    \n Points in Polygon\
+    \n Single Pixel" \
+  -editable 0 \
   -modifycmd {
     global varlist
 
@@ -2190,7 +2347,7 @@ ComboBox .l1wid.bf45.r.1 -text "Copy points using..." -width 16\
     if {$selr == 0} {
       set var_no [.l1wid.bf45.p.15 getvalue]
       set var_type [lindex $varlist $var_no]
-      set selection [tk_messageBox  -icon info \
+      set selection [tk_messageBox -icon info \
         -message "Drag a Rectangular Box in Window $win_no to define region." \
         -type okcancel -title "Message"]
       if {$selection == "ok"} {
@@ -2199,8 +2356,10 @@ ComboBox .l1wid.bf45.r.1 -text "Copy points using..." -width 16\
       }
     }
     if {$selr == 1} {
-      set selection  [tk_messageBox  -icon info \
-        -message "Draw a Polygon in Window $win_no to define a region using a series of left mouse clicks.  To complete the polygon, middle mouse click OR <Ctrl> and left mouse click." \
+      set selection  [tk_messageBox -icon info \
+        -message "Draw a Polygon in Window $win_no to define a region using a\
+          series of left mouse clicks.  To complete the polygon, middle mouse\
+          click OR <Ctrl> and left mouse click." \
         -type okcancel -title "Message" ]
       if {$selection == "ok"} {
         exp_send "workdata = sel_data_rgn($var_type, mode=3, win=$win_no)\r"
@@ -2212,8 +2371,9 @@ ComboBox .l1wid.bf45.r.1 -text "Copy points using..." -width 16\
       expect ">"
     }
     if {$selr == 3} {
-      set selection  [tk_messageBox  -icon info \
-        -message "Select a cell (250m by 250m) region by dragging a region in window $win_no within the required cell."\
+      set selection [tk_messageBox -icon info \
+        -message "Select a cell (250m by 250m) region by dragging a region in\
+          window $win_no within the required cell."\
         -type okcancel -title "Message" ]
       if {$selection == "ok"} {
         exp_send "workdata = select_region($var_type, win=$win_no, plot=1);\r"
@@ -2226,7 +2386,7 @@ ComboBox .l1wid.bf45.r.1 -text "Copy points using..." -width 16\
     append_varlist workdata
   }
 
-ComboBox .l1wid.bf45.r.7 -text " Filter tools..." -width 16\
+ComboBox .l1wid.bf45.r.7 -text "Filter tools..." -width 16 \
   -values { \
     Keep \
     Remove \
@@ -2289,8 +2449,9 @@ proc removing_proc {} {
 
   frame .rem.06
   Label .rem.06.typetext -text "Data type:"
-  ### IMPORTANT NOTE: Do not change the order of GEO and VEG__ for the values of the ComboBox below.
-  ### A function parameter for the pipthresh function for this gui is dependent on the index number of the selection.
+  # IMPORTANT NOTE: Do not change the order of GEO and VEG__ for the values of
+  # the ComboBox below. A function parameter for the pipthresh function for
+  # this gui is dependent on the index number of the selection.
   ComboBox .rem.06.type -textvariable remove_type -editable 1 -width 12\
     -values {\
       GEO\ or\ VEG__\
@@ -2309,7 +2470,12 @@ proc removing_proc {} {
       Single\ Pixel\
       PIP-Thresh\
     } \
-    -helptext "Remove points from \'workdata\' using any of the following methods:\n Rubberband Box\n Points in Polygon\n Single Pixel" -editable 0\
+    -helptext "Remove points from \'workdata\' using any of the following \
+      methods:\
+      \n Rubberband Box\
+      \n Points in Polygon\
+      \n Single Pixel"
+    -editable 0 \
     -modifycmd {
       set removemode [.rem.1 getvalue]
       if {$removemode == 3} {
@@ -2330,23 +2496,15 @@ proc removing_proc {} {
   Label .rem.07.a -text "Min. Threshold:"
   Label .rem.08.a -text "Max. Threshold:"
   Label .rem.09.a -text "WARNING: Cannot undo action." -justify center
-  checkbutton .rem.07.min -variable min\
+  checkbutton .rem.07.min -variable min \
     -command {
-      if {$min == 1} {
-        .rem.07.minthresh configure -state normal
-      }
-      if {$min == 0} {
-        .rem.07.minthresh configure -state disabled
-      }
+      set state [lindex {disabled normal} $min]
+      .rem.07.minthresh configure -state $state
     }
-  checkbutton .rem.08.max -variable max\
+  checkbutton .rem.08.max -variable max \
     -command {
-      if {$max == 1} {
-        .rem.08.maxthresh configure -state normal
-      }
-      if {$max == 0} {
-        .rem.08.maxthresh configure -state disabled
-      }
+      set state [lindex {disabled normal} $max]
+      .rem.08.maxthresh configure -state $state
     }
   SpinBox .rem.07.minthresh -range {-100.0 5000.0 0.1} -textvariable min_thresh
   SpinBox .rem.08.maxthresh -range {-100.0 5000.0 0.1} -textvariable max_thresh
@@ -2365,20 +2523,25 @@ proc removing_proc {} {
       if {$selr == 0} {
         set var_no [.l1wid.bf45.p.15 getvalue]
         set var_type [lindex $varlist $var_no]
-        set selection [tk_messageBox  -icon info \
-          -message "Drag a Rectangular Box in Window $win_no to define region." \
+        set selection [tk_messageBox -icon info \
+          -message "Drag a Rectangular Box in Window $win_no to define a\
+            region." \
           -type okcancel -title "Message"]
         if {$selection == "ok"} {
-          exp_send "croppeddata=\[\];$curvar = sel_data_rgn($curvar, mode=2, win=$win_no, exclude=1)\r"
+          exp_send "croppeddata=\[\];\
+            $curvar = sel_data_rgn($curvar, mode=2, win=$win_no, exclude=1)\r"
           expect ">"
         }
       }
       if {$selr == 1} {
         set selection  [tk_messageBox  -icon info \
-          -message "Draw a Polygon in Window $win_no to define a region using a series of left mouse clicks.  To complete the polygon, middle mouse click OR <Ctrl> and left mouse click." \
+          -message "Draw a Polygon in Window $win_no to define a region using\
+            a series of left mouse clicks. To complete the polygon, middle\
+            mouse click OR <Ctrl> and left mouse click." \
           -type okcancel -title "Message" ]
         if {$selection == "ok"} {
-          exp_send "croppeddata=\[\];$curvar = sel_data_rgn($curvar, mode=3, win=$win_no, exclude=1)\r"
+          exp_send "croppeddata=\[\];\
+            $curvar = sel_data_rgn($curvar, mode=3, win=$win_no, exclude=1)\r"
           expect ">"
         }
       }
@@ -2387,7 +2550,8 @@ proc removing_proc {} {
           -message "Select points to remove from window $win_no" \
           -type okcancel -title "Message"]
         if {$selection == "ok"} {
-          exp_send "croppeddata=\[\];$curvar = select_points($curvar, win=$win_no, exclude=1);\r"
+          exp_send "croppeddata=\[\];\
+            $curvar = select_points($curvar, win=$win_no, exclude=1);\r"
           expect ">"
         }
       }
@@ -2395,16 +2559,19 @@ proc removing_proc {} {
         if {[.rem.06.type getvalue] == 1} {
           set val [.rem.06.type getvalue]
         } else {
-          set val " "
+          set val ""
         }
         if { $min == 0 && $max == 0 } {
-          tk_messageBox -icon warning -message "You have not set any threshold limits!" -type ok -title "ERROR!"
-        } elseif { $min == 0 } {
-          exp_send "croppeddata=\[\];$curvar = pipthresh($curvar, maxthresh=$max_thresh, mode=$val);\r"
-        } elseif { $max == 0 } {
-          exp_send "croppeddata=\[\];$curvar = pipthresh($curvar, minthresh=$min_thresh, mode=$val);\r"
+          tk_messageBox -icon warning \
+            -message "You have not set any threshold limits!" \
+            -type ok -title "ERROR!"
         } else {
-          exp_send "croppeddata=\[\];$curvar = pipthresh($curvar, minthresh=$min_thresh, maxthresh=$max_thresh, mode=$val);\r"
+          # If we don't want to use a threshhold, we set it to void
+          set min_arg [expr {$min ? $min_thresh ? ""}]
+          set max_arg [expr {$max ? $max_thresh ? ""}]
+          exp_send "croppeddata=\[\];\
+            $curvar = pipthresh($curvar, mode=$val,\
+              minthresh=$min_arg, maxthresh=$max_arg);\r"
         }
       }
       if {$selr == -1} {
@@ -2417,7 +2584,7 @@ proc removing_proc {} {
     destroy .rem
   }
   Button .rem.4 -width 8 -text "Undo Last\nRemove" -command {
-    exp_send "if (is_array(croppeddata)) $curvar = grow($curvar,croppeddata);\r"
+    exp_send "if(is_array(croppeddata)) $curvar = grow($curvar,croppeddata);\r"
     expect ">"
   }
 
@@ -2456,7 +2623,8 @@ proc datum_proc {} {
 
   .con.05.varlist setvalue @$curidx
 
-  Label .con.02 -text "The converted variable is named n88_(currentvariablename)"
+  Label .con.02 -text "The converted variable is named\
+    n88_(currentvariablename)"
   Button .con.1 -width 8 -text "Go" \
     -command {
       set convar "n88_$curvar"
@@ -2511,10 +2679,15 @@ proc keep_proc {} {
       set keep_var $curvar
     }
   } \
-  -helptext "Keep points from \'workdata\' using any of the following methods:\n Rubberband Box\n Points in Polygon\n Single Pixel" -editable 0
+  -helptext "Keep points from \'workdata\' using any of the following methods:\
+    \n Rubberband Box\
+    \n Points in Polygon\
+    \n Single Pixel" \
+  -editable 0
 
   checkbutton .sel.grow -text "Grow output variable" -variable grow_keep
-  LabelEntry .sel.15 -relief sunken -label "Output Variable:" -helptext "Define output variable" \
+  LabelEntry .sel.15 -relief sunken -label "Output Variable:" \
+    -helptext "Define output variable" \
     -textvariable keep_var -text "workdata"
 
   Button .sel.2 -width 8 -text "Go" \
@@ -2526,28 +2699,33 @@ proc keep_proc {} {
         set var_no [.l1wid.bf45.p.15 getvalue]
         set var_type [lindex $varlist $var_no]
         set selection [tk_messageBox  -icon info \
-          -message "Drag a Rectangular Box in Window $win_no to define region." \
+          -message "Drag a Rectangular Box in Window $win_no to define\
+            region." \
           -type okcancel -title "Message"]
         if {$selection == "ok"} {
           if {$grow_keep == 0} {
             exp_send "$keep_var = sel_data_rgn($curvar, mode=2, win=$win_no)\r"
             expect ">"
           } else {
-            exp_send "$keep_var = grow($keep_var, sel_data_rgn($curvar, mode=2, win=$win_no));\r"
+            exp_send "$keep_var = grow($keep_var,\
+              sel_data_rgn($curvar, mode=2, win=$win_no));\r"
             expect ">"
           }
         }
       }
       if {$sels == 1} {
         set selection  [tk_messageBox  -icon info \
-          -message "Draw a Polygon in Window $win_no to define a region using a series of left mouse clicks.  To complete the polygon, middle mouse click OR <Ctrl> and left mouse click." \
+          -message "Draw a Polygon in Window $win_no to define a region using\
+            a series of left mouse clicks.To complete the polygon, middle\
+            mouse click OR <Ctrl> and left mouse click." \
           -type okcancel -title "Message" ]
         if {$selection == "ok"} {
           if {$grow_keep == 0} {
             exp_send "$keep_var = sel_data_rgn($curvar, mode=3, win=$win_no)\r"
             expect ">"
           } else {
-            exp_send "$keep_var = grow($keep_var, sel_data_rgn($curvar, mode=3, win=$win_no));\r"
+            exp_send "$keep_var = grow($keep_var,\
+              sel_data_rgn($curvar, mode=3, win=$win_no));\r"
             expect ">"
           }
         }
@@ -2561,7 +2739,8 @@ proc keep_proc {} {
             exp_send "$keep_var = select_points($curvar, win=$win_no);\r"
             expect ">"
           } else {
-            exp_send "$keep_var = grow($keep_var, select_points($curvar, win=$win_no));\r"
+            exp_send "$keep_var = grow($keep_var,\
+              select_points($curvar, win=$win_no));\r"
             expect ">"
           }
         }
@@ -2612,7 +2791,8 @@ proc replace_proc {} {
   Label .rep.005.varname -text "Original Data Variable:"
   ComboBox .rep.005.varlist  -values \
     $varlist \
-    -helptext "This variable should contain the original data that will be refiltered" \
+    -helptext "This variable should contain the original data that will be\
+      refiltered" \
     -editable 0 \
     -modifycmd {
       global outvar varlist origvar
@@ -2624,15 +2804,23 @@ proc replace_proc {} {
   set origvar [lindex $varlist $curidx]
   .rep.005.varlist setvalue @$origidx
 
-  #Note: In code below, the yorick variables "croppeddata" and "workdata" are created through sel_data_rgn
-  #      croppeddata = (selected filtered points);    workdata = (selected original data points);
+  # Note: In code below, the yorick variables "croppeddata" and "workdata" are
+  # created through sel_data_rgn
+  #   croppeddata = (selected filtered points);
+  #   workdata = (selected original data points);
   ComboBox .rep.1 -text "Select points to replace using..." -width 28 \
     -values { \
       Rubberband\ Box \
       Points\ in\ Polygon \
       Window\ Limits \
     } \
-    -helptext "Select points to replace using any of the following methods:\n Rubberband Box\n Points in Polygon\n Window Limits.\nSelected points from the original data array will be written to variable \"workdata\"" -editable 0 \
+    -helptext "Select points to replace using any of the following methods:\
+      \n Rubberband Box\
+      \n Points in Polygon\
+      \n Window Limits.\
+      \nSelected points from the original data array will be written to\
+      variable \"workdata\"" \
+    -editable 0 \
     -modifycmd {
       set curidx [.rep.05.varlist getvalue]
       set curvar [lindex $varlist $curidx]
@@ -2643,33 +2831,44 @@ proc replace_proc {} {
       if {$rcf_buf_rgn > 0} {
         if {$defr == 0} {
           set result [tk_messageBox  -icon info \
-            -message "Drag a Rectangular Box in Window $win_no to define region." \
+            -message "Drag a Rectangular Box in Window $win_no to define\
+              region." \
             -type okcancel -title "Message"]
           if {$result == "ok"} {
             exp_send "$keep_var = $curvar;\r"
-            exp_send "$sel_points = mouse(1,1,\"Hold the left mouse button down, select a region:\");"
+            exp_send "$sel_points = mouse(1,1,\
+              \"Hold the left mouse button down, select a region:\");"
             expect ">"
-            exp_send "temp_rgn = add_buffer_rgn($sel_points,$rcf_buf_rgn,mode=1);\r"
+            exp_send "temp_rgn = add_buffer_rgn($sel_points,\
+              $rcf_buf_rgn, mode=1);\r"
             expect ">"
-            exp_send "workdata = sel_data_rgn($origvar, mode=4, win=$win_no, rgn=temp_rgn);\r"
+            exp_send "workdata = sel_data_rgn($origvar, mode=4, win=$win_no,\
+              rgn=temp_rgn);\r"
             expect ">"
           }
         } elseif {$defr == 1} {
           set result [tk_messageBox -icon info \
-            -message "Draw a Polygon in Window $win_no to define a region using a series of left mouse clicks.  To complete the polygon, middle mouse click OR <Ctrl> and left mouse click." \
+            -message "Draw a Polygon in Window $win_no to define a region\
+              using a series of left mouse clicks. To complete the polygon,\
+              middle mouse click OR <Ctrl> and left mouse click." \
             -type okcancel -title "Message"]
           if {$result == "ok"} {
             exp_send "$keep_var = $curvar;\r"
-            #For eval purposes, success stores if getPoly_add_buffer command was successful
-            #The yorick variables buf_points, temp_rgn, and workdata are made
-            exp_send "success = getPoly_add_buffer($rcf_buf_rgn, origdata=$origvar, windw=$win_no);\r"
+            # For eval purposes, success stores if getPoly_add_buffer command
+            # was successful. The yorick variables buf_points, temp_rgn, and
+            # workdata are made.
+            exp_send "success = getPoly_add_buffer($rcf_buf_rgn,\
+              origdata=$origvar, windw=$win_no);\r"
             expect ">"
           }
         } elseif {$defr == 2} {
             exp_send "$keep_var = $curvar;\r"
-            exp_send "window,$win_no;$sel_points=limits()(1:4);temp_rgn = add_buffer_rgn($sel_points,$rcf_buf_rgn,mode=3);\r"
+            exp_send "window, $win_no;\
+              $sel_points=limits()(1:4);\
+              temp_rgn = add_buffer_rgn($sel_points,$rcf_buf_rgn,mode=3);\r"
             expect ">"
-            exp_send "workdata = sel_data_rgn($origvar, mode=4, win=$win_no, rgn=temp_rgn);\r"
+            exp_send "workdata = sel_data_rgn($origvar, mode=4, win=$win_no,\
+              rgn=temp_rgn);\r"
             expect ">"
           }
           set have_replaced 0
@@ -2677,10 +2876,12 @@ proc replace_proc {} {
         } else {
           if {$defr == 0} {
             set result [tk_messageBox  -icon info \
-              -message "Drag a Rectangular Box in Window $win_no to define region." \
+              -message "Drag a Rectangular Box in Window $win_no to define\
+                region." \
               -type okcancel -title "Message"]
             if {$result == "ok"} {
-              exp_send "$keep_var = sel_data_rgn($curvar, mode=2, win=$win_no, exclude=1, make_workdata=1, origdata=$origvar);\r"
+              exp_send "$keep_var = sel_data_rgn($curvar, mode=2, win=$win_no,\
+                exclude=1, make_workdata=1, origdata=$origvar);\r"
               expect ">"
               set have_replaced 0
               set have_undone 0
@@ -2688,17 +2889,21 @@ proc replace_proc {} {
           }
           if {$defr == 1} {
             set result [tk_messageBox  -icon info \
-              -message "Draw a Polygon in Window $win_no to define a region using a series of left mouse clicks.  To complete the polygon, middle mouse click OR <Ctrl> and left mouse click." \
+              -message "Draw a Polygon in Window $win_no to define a region\
+                using a series of left mouse clicks. To complete the polygon,\
+                middle mouse click OR <Ctrl> and left mouse click." \
               -type okcancel -title "Message"]
             if {$result == "ok"} {
-              exp_send "$keep_var = sel_data_rgn($curvar, mode=3, win=$win_no, exclude=1, make_workdata=1, origdata=$origvar);\r"
+              exp_send "$keep_var = sel_data_rgn($curvar, mode=3, win=$win_no,\
+                exclude=1, make_workdata=1, origdata=$origvar);\r"
               expect ">"
               set have_replaced 0
               set have_undone 0
             }
           }
           if {$defr == 2} {
-            exp_send "$keep_var = sel_data_rgn($curvar, mode=1, win=$win_no, exclude=1, make_workdata=1, origdata=$origvar);\r"
+            exp_send "$keep_var = sel_data_rgn($curvar, mode=1, win=$win_no,\
+              exclude=1, make_workdata=1, origdata=$origvar);\r"
             set have_replaced 0
             set have_undone 0
           }
@@ -2708,7 +2913,8 @@ proc replace_proc {} {
 
   Button .rep.type -text "Filter selected points" -width 15 -bd 5 \
     -command {
-      global curvar have_replaced have_undone croppeddata outvar rcf_buf_rgn sel_points
+      global curvar have_replaced have_undone croppeddata outvar rcf_buf_rgn \
+        sel_points
       if {$have_undone == 1} {
         if {$rcf_buf_rgn > 0} {
           exp_send "workdata = tempdata;\r"
@@ -2730,7 +2936,8 @@ proc replace_proc {} {
       set have_undone 0
     }
 
-  LabelEntry .rep.15.1 -relief sunken -label "Output Variable:" -helptext "Define output variable" \
+  LabelEntry .rep.15.1 -relief sunken -label "Output Variable:" \
+    -helptext "Define output variable" \
     -textvariable keep_var -text "finaldata"
   checkbutton .rep.15.2 -text "Same as input variable" -variable sameinput \
     -command {
@@ -2738,38 +2945,50 @@ proc replace_proc {} {
         set keep_var $curvar
       }
     }
-  LabelEntry .rep.15.3 -relief sunken -label "Buffer Region (m):" -width 5 -helptext "Define the amount of buffer used in filtering for the selected points" \
+  LabelEntry .rep.15.3 -relief sunken -label "Buffer Region (m):" -width 5 \
+    -helptext "Define the amount of buffer used in filtering for the selected\
+      points" \
     -textvariable rcf_buf_rgn -text "0"
 
   Button .rep.15.4 -text "Click \[HERE\] for info" -bd 0 \
     -command {
       tk_messageBox -icon info \
-        -message "Points in the buffer region will be used for filtering, but will not be replaced into the output array." \
+        -message "Points in the buffer region will be used for filtering, but\
+          will not be replaced into the output array." \
         -type ok -title "Use a buffer region help"
     }
 
 # Significant change made by Jeremy Bracone 4/4/05
-# Do No Replace as been fixed and now acts as an undo while Replace acts as a redo
-# Replace will put filtered data into output array, "Do Not Replace" will put original data into output array
-# If a replace or "Do Not Replace" has already been done, hitting replace or Do not will have no effect
-# If replace or "Do Not Replace" has already been done, hitting one will undo the action of the other and perform
-#            the expected operation; i.e. Replace was done, now hit Do Not Replace and it will take out the data
-#            inserted in the Replace and put in the original data.  Same is true for opposite situation.
+# Do No Replace as been fixed and now acts as an undo while Replace acts as a
+# redo. Replace will put filtered data into output array, "Do Not Replace" will
+# put original data into output array. If a replace or "Do Not Replace" has
+# already been done, hitting replace or Do not will have no effect. If replace
+# or "Do Not Replace" has already been done, hitting one will undo the action
+# of the other and perform the expected operation; i.e. Replace was done, now
+# hit Do Not Replace and it will take out the data inserted in the Replace and
+# put in the original data. Same is true for opposite situation.
   Button .rep.2 -width 8 -text "Replace..." -bd 5 \
     -command {
-      global varlist outvar reps keep_var curvar origvar have_replaced have_undone croppeddata
+      global varlist outvar reps keep_var curvar origvar have_replaced \
+        have_undone croppeddata
       set selection [tk_messageBox -icon question \
         -message "Append array $outvar to $keep_var?" \
         -type yesno -title "Warning" ]
       if {$selection == "yes" && $have_replaced == 0 && $have_undone == 0} {
         if {$rcf_buf_rgn > 0} {
-          #have to save workdata since sel_data_rgn with exclude set to 1 will over-write it
+          # have to save workdata since sel_data_rgn with exclude set to 1 will
+          # over-write it
           set $outvar rcf_workdata
           exp_send "tempdata = workdata;\r"
-          exp_send "$keep_var = sel_data_rgn($keep_var,mode=4,rgn=$sel_points,win=$win_no,exclude=1,make_workdata=1,origdata=$origvar);\r"
+          exp_send "$keep_var = sel_data_rgn($keep_var, mode=4,\
+            rgn=$sel_points, win=$win_no, exclude=1, make_workdata=1,\
+            origdata=$origvar);\r"
           expect ">"
-          # This is kind of confusing, but $outvar = rcf_workdata (love this confuciated variable hiding)
-          exp_send "workdata=tempdata;$outvar = sel_data_rgn($outvar, mode=4, win=$win_no, rgn=$sel_points);\r"
+          # This is kind of confusing, but $outvar = rcf_workdata (love this
+          # confuciated variable hiding)
+          exp_send "workdata = tempdata;\
+            $outvar = sel_data_rgn($outvar, mode=4, win=$win_no,\
+              rgn=$sel_points);\r"
         }
         exp_send "$keep_var = grow($keep_var,$outvar);\r"
       }
@@ -2790,12 +3009,17 @@ proc replace_proc {} {
       if {$selection == "yes"} {
         if {$have_replaced == 0 && $have_undone == 0} {
           if {$rcf_buf_rgn > 0} {
-            #have to save workdata since sel_data_rgn with exclude set to 1 will over-write it
+            # have to save workdata since sel_data_rgn with exclude set to 1
+            # will over-write it
             set $outvar rcf_workdata
             exp_send "tempdata = workdata;\r"
-            exp_send "$keep_var = sel_data_rgn($keep_var,mode=4,rgn=$sel_points,win=$win_no,exclude=1,make_workdata=1,origdata=$origvar);\r"
+            exp_send "$keep_var = sel_data_rgn($keep_var, mode=4,\
+              rgn=$sel_points, win=$win_no, exclude=1, make_workdata=1,\
+              origdata=$origvar);\r"
             expect ">"
-            exp_send "workdata=tempdata;$outvar = sel_data_rgn($outvar, mode=4, win=$win_no, rgn=$sel_points);\r"
+            exp_send "workdata = tempdata;\
+              $outvar = sel_data_rgn($outvar, mode=4, win=$win_no,\
+                rgn=$sel_points);\r"
           }
           exp_send "$keep_var = grow($keep_var,croppeddata);\r"
         }
@@ -2814,13 +3038,16 @@ proc replace_proc {} {
 
   Button .rep.5 -width 3 -text "Help" -command {
     tk_messageBox -icon info \
-      -message "Hitting replace adds new filtered array to the output array which Do Not Replace adds the original data back in." \
+      -message "Hitting replace adds new filtered array to the output array\
+        which Do Not Replace adds the original data back in." \
       -type ok -title "Info 1 of 3"
     tk_messageBox -icon info \
-      -message "Once a replace or Do Not Replace has been done, the effects of one can be replaced by the other." \
+      -message "Once a replace or Do Not Replace has been done, the effects of\
+        one can be replaced by the other." \
       -type ok -title "Info 2 of 3"
     tk_messageBox -icon info \
-      -message "Example: Hit replace and insert filtered data, then hit DO NOT REPLACE, and inserted data is taken out and original put in." \
+      -message "Example: Hit replace and insert filtered data, then hit DO NOT\
+        REPLACE, and inserted data is taken out and original put in." \
       -type ok -title "Info 3 of 3"
   }
 
@@ -2846,7 +3073,8 @@ Button .l1wid.bf45.r.6 -text "Save Tile" -command {
   global tilefname initialpath
 
   if {[info exists initialpath] == 0} {set initialpath "~/"}
-  exp_send "if (is_void(curzone)) curzone = 17; tilefname = set_tile_filename(win=$win_no);\r"
+  exp_send "if (is_void(curzone)) curzone = 17;\
+    tilefname = set_tile_filename(win=$win_no);\r"
   expect ">"
   if {[info exists tilefname] == 0} {
     set tilefname ""
@@ -2856,25 +3084,25 @@ Button .l1wid.bf45.r.6 -text "Save Tile" -command {
     -initialfile $tilefname \
   ]
   if {$ofname != ""} {
-    exp_send "$tilename = ifinaldata; vname=tilename; save, createb(\"$ofname\"), vname, $tilename;\r"
+    exp_send "$tilename = ifinaldata;\
+      vname=tilename;\
+      save, createb(\"$ofname\"), vname, $tilename;\r"
     expect ">"
   }
 }
 
 
-## This procedure builds a widget composed of a
-## Label, a Spinbox, and a scale so one can enter
-## values by direct entry, the spin clicks, or
-## the scale.
-proc sst  { w var lbl rg } {
+# This procedure builds a widget composed of a Label, a Spinbox, and a scale so
+# one can enter values by direct entry, the spin clicks, or the scale.
+proc sst {w var lbl rg} {
   frame $w
   SpinBox $w.sb -textvariable $var \
     -range $rg \
     -width 6
   scale $w.sc -showvalue 0 -orient horizontal  \
     -variable $var \
-    -from [ lindex $rg 0 ] \
-    -to   [ lindex $rg 1 ] \
+    -from [lindex $rg 0] \
+    -to   [lindex $rg 1] \
     -resolution [ lindex $rg 2 ]
   label $w.lb -text $lbl
   pack $w.lb $w.sb $w.sc -side left -fill x -expand 1
@@ -2884,8 +3112,8 @@ proc sst  { w var lbl rg } {
 proc ud { a b c } {
   global cmax cmin cdelta min_thresh max_thresh
   switch $a {
-    cmax   { set cdelta [ expr $cmax - $cmin ];  }
-    cmin   { set cdelta [ expr $cmax - $cmin ];  }
+    cmax {set cdelta [expr $cmax - $cmin]}
+    cmin {set cdelta [expr $cmax - $cmin]}
   }
   if { [ winfo exists .rem ] } {
     set min_thresh $cmin
@@ -2955,25 +3183,30 @@ Button .l1wid.bf4.2.proc -text "Process Now" -width 20 -bd 5\
     set defr [.l1wid.bf4.1.d getvalue]
     exp_send "ptype = $ptype\n\r"
     if {$defr == 3} {
-      exp_send "q = gga_win_sel(2, win=6, llarr=\[$mnlon, $mxlon, $mnlat, $mxlat\]);\r"
+      exp_send "q = gga_win_sel(2, win=6,\
+        llarr=\[$mnlon, $mxlon, $mnlat, $mxlat\]);\r"
     }
     if {$ptype == 0} {
-      exp_send "fs_all = make_fs(latutm=1, q=q, ext_bad_att=1, usecentroid=$usecentroid);\r"
+      exp_send "fs_all = make_fs(latutm=1, q=q, ext_bad_att=1,\
+        usecentroid=$usecentroid);\r"
       expect ">"
       .l1wid.bf45.p.15 setvalue @0
     }
     if {$ptype == 1} {
-      exp_send "depth_all = make_bathy(latutm = 1, q = q, ext_bad_depth=1, ext_bad_att=1, avg_surf=$avg_surf);\r"
+      exp_send "depth_all = make_bathy(latutm = 1, q = q, ext_bad_depth=1,\
+        ext_bad_att=1, avg_surf=$avg_surf);\r"
       expect ">"
       .l1wid.bf45.p.15 setvalue @1
     }
     if {$ptype == 2} {
-      exp_send "veg_all = make_veg(latutm=1, q=q, ext_bad_att=1, ext_bad_veg=1, use_centroid=$usecentroid);\r"
+      exp_send "veg_all = make_veg(latutm=1, q=q, ext_bad_att=1,\
+        ext_bad_veg=1, use_centroid=$usecentroid);\r"
       expect ">"
       .l1wid.bf45.p.15 setvalue @2
     }
     if {$ptype == 3} {
-      exp_send "cveg_all = make_veg(latutm=1, q=q, use_be_peak=$usecentroid, multi_peaks=1);\r"
+      exp_send "cveg_all = make_veg(latutm=1, q=q, use_be_peak=$usecentroid,\
+        multi_peaks=1);\r"
       expect ">"
       .l1wid.bf45.p.15 setvalue @3
     }
@@ -3080,8 +3313,8 @@ proc send_rnarr_to_l1pro {bstart bstop brnindx} {
 
 
 proc plot_fltlines {sel} {
-  global l1pro_fma win_no cmin cmax cdelta msize markerv varlist skip plot_dpi setll \
-    changed_dpi
+  global l1pro_fma win_no cmin cmax cdelta msize markerv varlist skip \
+    plot_dpi setll changed_dpi
   #fill in later using what to plot
   set fs 0
   set ba 0
@@ -3108,26 +3341,45 @@ proc plot_fltlines {sel} {
   set ptype [.l1wid.bf4.1.p getvalue]
   if {$ptype == -1} {
     tk_messageBox  -icon warning \
-      -message "You need to specify the type of processed data i.e. topo, bathy or veg!" \
+      -message "You need to specify the type of processed data i.e. topo,\
+        bathy or veg!" \
       -type ok
   } else {
     if { $l1pro_fma } {
       if {$changed_dpi == 1} {
-        switch  $plot_dpi  {
-          "75" {
-            exp_send "winkill, $win_no; window,$win_no,dpi=$plot_dpi,width=450, height=450, style=\"work.gs\"; fma;limits, square=1;window, $win_no, width=0, height=0;\r";
+        switch -- $plot_dpi {
+          75  {
+            set width_arg 450
+            set height_arg 450
+            set dpi_arg 75
+            set style_arg work.gs
           }
-          "100" {
-            exp_send "winkill, $win_no; window,$win_no,dpi=$plot_dpi,width=600, height=600, style=\"work.gs\"; fma; limits, square=1;window, $win_no, width=0, height=0;\r"
+          100 {
+            set width_arg 600
+            set height_arg 600
+            set dpi_arg 100
+            set style_arg work.gs
           }
-          "1100" {
-            exp_send "winkill, $win_no; window, $win_no, dpi=100, width=1100, height=850, style=\"landscape11x85.gs\";fma; limits, square=1;window, $win_no, width=0, height=0;\r"
-            expect ">"
+          1100 {
+            set width_arg 1100
+            set height_arg 850
+            set dpi_arg 100
+            set style_arg landscape11x85.gs
           }
+        }
+        if {[lindex {75 100 1100} $plot_dpi] >= 0} {
+          exp_send "winkill, $win_no;\
+            window, $win_no, dpi=$dpi_arg,\
+              width=$width_arg, height=$height_arg,\
+              style=\"$style_arg\";\
+            fma;\
+            limits, square=1;\
+            window, $win_no, width=0, height=0;\r"
+          expect ">"
         }
         set changed_dpi 0
       } else {
-        exp_send "window, $win_no; fma;\r";
+        exp_send "window, $win_no; fma;\r"
         expect ">"
       }
     }
@@ -3137,41 +3389,66 @@ proc plot_fltlines {sel} {
     }
   }
 
-  ycbar;   ;# Set the color bar values in yorick
+  # Set the color bar values in yorick
+  ycbar
+
   if {$ptype == 0} {
     set cmax1 [expr $cmax*100.]
     set cmin1 [expr $cmin*100.]
     if {$disp_type == 0} {
       if {$sel == 0} {
-        # using display_veg instead of display since it plots faster and works with the skip keyword.
-        exp_send "window, $win_no; display_veg, $var_type, win=$win_no, cmin=$cmin, cmax = $cmax, size = $msize, edt=1, felv = $fs, lelv=$lelv, fint=$fint, lint=$lint, cht = $cht, marker=$markerv, skip=$skip;\r"
+        # using display_veg instead of display since it plots faster and works
+        # with the skip keyword.
+        exp_send "window, $win_no;\
+          display_veg, $var_type, win=$win_no, cmin=$cmin, cmax=$cmax,\
+            size=$msize, edt=1, felv=$fs, lelv=$lelv, fint=$fint, lint=$lint,\
+            cht=$cht, marker=$markerv, skip=$skip;\r"
       } else {
-        exp_send "window, $win_no; display, fs_some, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1;\r"
+        exp_send "window, $win_no;\
+          display, fs_some, win=$win_no, cmin=$cmin1, cmax=$cmax1,\
+            size=$msize, marker=$markerv, edt=1;\r"
       }
       expect ">"
     } elseif { $disp_type == 4 } {
       if {$sel == 0} {
-        exp_send "window, $win_no; display_veg, $var_type, win=$win_no, cmin=$cmin, cmax = $cmax, size = $msize, edt=1, felv = $fs, lelv=$lelv, fint=$fint, lint=$lint, cht = $cht, marker=$markerv, skip=$skip;\r"
+        exp_send "window, $win_no;\
+          display_veg, $var_type, win=$win_no, cmin=$cmin, cmax=$cmax, \
+            size=$msize, edt=1, felv=$fs, lelv=$lelv, fint=$fint, lint=$lint,\
+            cht=$cht, marker=$markerv, skip=$skip;\r"
       } else {
-        exp_send "window, $win_no; display, fs_some, mode=\"intensity\", win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv;\r"
+        exp_send "window, $win_no;\
+          display, fs_some, mode=\"intensity\", win=$win_no, cmin=$cmin1,\
+            cmax=$cmax1, size=$msize, marker=$markerv;\r"
       }
       expect ">"
     }
   }
   if {$ptype == 1} {
     if {$sel == 0} {
-      exp_send "window, $win_no; plot_bathy, $var_type, win=$win_no, ba=$ba, fs = $fs, de = $de , fint = $fint, lint = $lint, cmin=$cmin, cmax=$cmax, msize = $msize, marker=$markerv, skip=$skip; \r"
+      exp_send "window, $win_no;\
+        plot_bathy, $var_type, win=$win_no, ba=$ba, fs=$fs, de=$de,\
+          fint=$fint, lint=$lint, cmin=$cmin, cmax=$cmax, msize=$msize,\
+          marker=$markerv, skip=$skip; \r"
     } else {
-      exp_send "window, $win_no; plot_bathy, depth_some, win=$win_no, ba=$ba, fs = $fs, de = $de , fint = $fint, lint = $lint, cmin=$cmin, cmax=$cmax, msize = $msize, marker=$markerv, skip=$skip; \r"
+      exp_send "window, $win_no;\
+        plot_bathy, depth_some, win=$win_no, ba=$ba, fs=$fs, de=$de,\
+          fint=$fint, lint=$lint, cmin=$cmin, cmax=$cmax, msize=$msize,\
+          marker=$markerv, skip=$skip; \r"
     }
     expect ">"
     exp_send "\r"
   }
   if {$ptype == 2} {
     if {$sel == 0} {
-      exp_send "window, $win_no; display_veg, $var_type, win=$win_no, cmin=$cmin, cmax = $cmax, size = $msize, edt=1, felv = $fs, lelv=$lelv, fint=$fint, lint=$lint, cht = $cht, marker=$markerv, skip=$skip;\r"
+      exp_send "window, $win_no;\
+        display_veg, $var_type, win=$win_no, cmin=$cmin, cmax=$cmax,\
+          size=$msize, edt=1, felv=$fs, lelv=$lelv, fint=$fint, lint=$lint,\
+          cht=$cht, marker=$markerv, skip=$skip;\r"
     } else {
-      exp_send "window, $win_no; display_veg, veg_some, win=$win_no, cmin=$cmin, cmax = $cmax, size = $msize, edt=1, felv = $fs, lelv=$lelv, fint=$fint, lint=$lint, cht = $cht, marker=$markerv, skip=$skip;\r"
+      exp_send "window, $win_no;\
+        display_veg, veg_some, win=$win_no, cmin=$cmin, cmax=$cmax,\
+          size=$msize, edt=1, felv=$fs, lelv=$lelv, fint=$fint, lint=$lint,\
+          cht=$cht, marker=$markerv, skip=$skip;\r"
     }
     expect ">"
     exp_send "\r"
@@ -3181,17 +3458,21 @@ proc plot_fltlines {sel} {
     set cmin1 [expr $cmin*100.]
     if {$disp_type == 0} {
       if {$sel == 0} {
-        exp_send "display, $var_type, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1, skip=$skip;\r"
+        exp_send "display, $var_type, win=$win_no, cmin=$cmin1, cmax=$cmax1,\
+          size=$msize, marker=$markerv, edt=1, skip=$skip;\r"
       } else {
-        exp_send "display, cveg_some, win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, edt=1, skip=$skip;\r"
+        exp_send "display, cveg_some, win=$win_no, cmin=$cmin1, cmax=$cmax1,\
+          size=$msize, marker=$markerv, edt=1, skip=$skip;\r"
       }
       expect ">"
       exp_send "\r"
     } elseif { $disp_type == 4 } {
       if {$sel == 0} {
-        exp_send "display, $var_type, mode=\"intensity\", win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, skip=$skip;\r"
+        exp_send "display, $var_type, mode=\"intensity\", win=$win_no,\
+          cmin=$cmin1, cmax=$cmax1, size=$msize, marker=$markerv, skip=$skip;\r"
       } else {
-        exp_send "display, cveg_some, mode=\"intensity\", win=$win_no, cmin=$cmin1, cmax = $cmax1, size = $msize, marker=$markerv, skip=$skip;\r"
+        exp_send "display, cveg_some, mode=\"intensity\", win=$win_no,\
+          cmin=$cmin1, cmax=$cmax1, size=$msize, marker=$markerv, skip=$skip;\r"
       }
       expect ">"
       exp_send "\r"
@@ -3199,10 +3480,11 @@ proc plot_fltlines {sel} {
   }
 }
 
-proc limits_tool { } {
-  #Added by Jeremy Bracone 4/15/05
-  #Opens a limits tool that makes a few functions a little quicker to perform.
-  #The main function it provides is to set the limits from one window equal to another.
+proc limits_tool {} {
+  # Added by Jeremy Bracone 4/15/05
+  # Opens a limits tool that makes a few functions a little quicker to perform.
+  # The main function it provides is to set the limits from one window equal to
+  # another.
   destroy .limitstool
   toplevel .limitstool
   wm title .limitstool "Limits Tool"
@@ -3218,7 +3500,9 @@ proc limits_tool { } {
     -takefocus 0
 
   Button .limitstool.1.limits -text "Set Limits" \
-    -helptext "Set Limits in window from box 2 equal to limits in window from box 1\n i.e. make the second window look like the first" \
+    -helptext "Set Limits in window from box 2 equal to limits in window from\
+      box 1.\
+      \ni.e. Make the second window look like the first." \
     -command {
       set window1 [.limitstool.1.c1 getvalue]
       set window2 [.limitstool.1.c2 getvalue]
@@ -3239,7 +3523,8 @@ proc limits_tool { } {
     destroy .limitstool
   }
   pack .limitstool.1 -side top
-  pack .limitstool.1.t1 .limitstool.1.c1 .limitstool.1.t2 .limitstool.1.c2 .limitstool.1.limits -side left -fill both
+  pack .limitstool.1.t1 .limitstool.1.c1 .limitstool.1.t2 .limitstool.1.c2 \
+    .limitstool.1.limits -side left -fill both
   pack .limitstool.2 -side right
   pack .limitstool.2.dismiss .limitstool.2.l -padx 4 -side right
 }
@@ -3250,51 +3535,63 @@ proc write_binary_file { ofname } {
     switch [ file extension $ofname ] {
       ".pbd" {
         if {($ply_type == "") && ($q_type == "")} {
-          exp_send "vname=\"$var_type\"; save, createb(\"$ofname\"), vname, $var_type; \r";
+          exp_send "vname=\"$var_type\";\
+            save, createb(\"$ofname\"), vname, $var_type; \r"
         } elseif {($ply_type == "") && !($q_type == "")} {
-          exp_send "vname=\"$var_type\"; qname = \"$q_type\"; save, createb(\"$ofname\"), vname, $var_type, qname, $q_type; \r";
+          exp_send "vname=\"$var_type\";\
+            qname=\"$q_type\";\
+            save, createb(\"$ofname\"), vname, $var_type, qname, $q_type; \r"
         } elseif {!($ply_type == "") && !($q_type == "")} {
-          exp_send "vname=\"$var_type\"; qname = \"$q_type\"; plyname = \"$ply_type\"; save, createb(\"$ofname\"), vname, $var_type, qname, $q_type, plyname, $ply_type; \r";
+          exp_send "vname=\"$var_type\";\
+            qname=\"$q_type\";\
+            plyname=\"$ply_type\";\
+            save, createb(\"$ofname\"), vname, $var_type, qname, $q_type,\
+              plyname, $ply_type; \r"
         } else { ;# !($ply_type == "") && ($q_type == "")
-          exp_send "vname=\"$var_type\"; plyname = \"$ply_type\"; save, createb(\"$ofname\"), vname, $var_type, plyname, $ply_type; \r";
+          exp_send "vname=\"$var_type\";\
+            plyname=\"$ply_type\";\
+            save, createb(\"$ofname\"), vname, $var_type, plyname,\
+              $ply_type; \r"
         }
         destroy .l1write
       }
       ".bin" -
       ".edf" {
-        set opath  "[ file dirname $ofname ]/";
-        set ofname [ file tail    $ofname ];
+        set opath  "[ file dirname $ofname ]/"
+        set ofname [ file tail    $ofname ]
         if { ![ string equal  "" $ofname ] } {
           if {$ptype == 0} {
             if {$write_some == 0} {
-              exp_send "write_topo, \"$opath\", \"$ofname\", $var_type; \r";
+              exp_send "write_topo, \"$opath\", \"$ofname\", $var_type; \r"
               expect ">"
             } else {
-              exp_send "write_topo, \"$opath\", \"$ofname\", fs_some; \r";
+              exp_send "write_topo, \"$opath\", \"$ofname\", fs_some; \r"
               expect ">"
             }
           } elseif {$ptype == 1} {
             if {$write_some == 0} {
-              exp_send "write_bathy, \"$opath\", \"$ofname\", $var_type; \r";
+              exp_send "write_bathy, \"$opath\", \"$ofname\", $var_type; \r"
               expect ">"
             } else {
-              exp_send "write_bathy, \"$opath\", \"$ofname\", depth_some; \r";
+              exp_send "write_bathy, \"$opath\", \"$ofname\", depth_some; \r"
               expect ">"
             }
           } elseif {$ptype == 2} {
             if {$write_some == 0} {
-              exp_send "write_veg, \"$opath\", \"$ofname\", $var_type; \r";
+              exp_send "write_veg, \"$opath\", \"$ofname\", $var_type; \r"
               expect ">"
             } else {
-              exp_send "write_veg, \"$opath\", \"$ofname\", veg_some; \r";
+              exp_send "write_veg, \"$opath\", \"$ofname\", veg_some; \r"
               expect ">"
             }
           } elseif {$ptype == 3} {
             if {$write_some == 0} {
-              exp_send "write_multipeak_veg, $var_type, opath=\"$opath\", ofname=\"$ofname\"; \r";
+              exp_send "write_multipeak_veg, $var_type, opath=\"$opath\",\
+                ofname=\"$ofname\"; \r"
               expect ">"
             } else {
-              exp_send "write_multipeak_veg, cveg_some, opath=\"$opath\", ofname=\"$ofname\"; \r";
+              exp_send "write_multipeak_veg, cveg_some, opath=\"$opath\",\
+                ofname=\"$ofname\"; \r"
               expect ">"
             }
           }
@@ -3307,7 +3604,8 @@ proc write_binary_file { ofname } {
       }
       default {
         tk_messageBox -icon warning \
-          -message "You need to specify an output file with a valid file extension (pbd, bin, or edf)" \
+          -message "You need to specify an output file with a valid file\
+            extension (pbd, bin, or edf)" \
           -type ok
       }
     }
@@ -3317,4 +3615,4 @@ proc write_binary_file { ofname } {
     -type ok
   }
 }
-source "$src_path/bathctl.ytk";
+source "$src_path/bathctl.ytk"
