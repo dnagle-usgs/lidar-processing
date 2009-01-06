@@ -1,0 +1,172 @@
+# $Id$
+# vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
+
+package require Tk
+package require Iwidgets
+package require Itcl
+
+option add *SegmentedDataWindow.title "Data Segments" widgetDefault
+
+if {[info commands SegmentedDataWindow] eq ""} {
+   itcl::class SegmentedDataWindow {
+      inherit iwidgets::Shell
+
+      constructor {args} {}
+      destructor {}
+
+      # All options should be treated as read-only after creation
+      # Variable containing the list of variables
+      itk_option define -varlistvariable varlistVariable Variable ""
+      # Variable containing list of valid windows
+      itk_option define -winlistvariable winlistVariable Variable ""
+      # Variable containing list of variables to populate interface with
+      itk_option define -segmentvariables segmentVariables VariableList ""
+
+      method refresh_times {} {}
+      method set_time {idx time} {}
+      method plot_segment {args} {}
+      method plot_selected {args} {}
+      method merge_selected {args} {}
+      method launch_stats {args} {}
+      method define_region {} {}
+      method new_segment_window {} {}
+
+      # Holds per-segment data
+      variable _segment
+      # The window to plot selected items in jointly
+      variable _ywindow 0
+      # The variable to merge data into
+      variable _merge_var merged_segments
+      # How many items does the interface hold?
+      variable _count
+   }
+}
+
+itcl::body SegmentedDataWindow::constructor {args} {
+   wm protocol $itk_component(hull) WM_DELETE_WINDOW \
+      [itcl::code itcl::delete object $this]
+   eval itk_initialize $args
+
+   set w $itk_interior
+
+   set f $w.fraVariables
+
+   labelframe $f -text "Variables"
+   label $f.lblHeadingVariables -text "Variable"
+   button $f.btnHeadingTime -text "Time Frame (refresh)" \
+      -state disabled
+   label $f.lblHeadingPlot -text "Plot Segment"
+
+   grid configure x $f.lblHeadingVariables $f.btnHeadingTime \
+      $f.lblHeadingPlot - -sticky ew
+
+   set _count [llength $itk_option(-segmentvariables)]
+   set idx 0
+   foreach segment $itk_option(-segmentvariables) {
+      incr idx
+
+      if {[lsearch [set $itk_option(-varlistvariable)] $segment] < 0} {
+         lappend $itk_option(-varlistvariable) $segment
+      }
+      set _segment($idx,var) $segment
+      set _segment($idx,use) 1
+      set _segment($idx,time) "..."
+      set _segment($idx,win) 0
+
+      checkbutton $f.chk$idx \
+         -variable [itcl::scope _segment($idx,use)]
+
+      iwidgets::combobox $f.cbo$idx \
+         -textvariable [itcl::scope _segment($idx,var)] \
+         -editable false
+      $f.cbo$idx component list configure \
+         -listvariable $itk_option(-varlistvariable)
+
+      label $f.lbl$idx \
+         -textvariable [itcl::scope _segment($idx,time)]
+
+      button $f.btnPlot$idx -text "Plot in:" \
+         -state disabled
+
+      iwidgets::combobox $f.cboWin$idx \
+         -textvariable [itcl::scope _segment($idx,win)] \
+         -editable false -width 7
+      $f.cboWin$idx component list configure \
+         -listvariable $itk_option(-winlistvariable)
+
+      grid $f.chk$idx $f.cbo$idx $f.lbl$idx \
+         $f.btnPlot$idx $f.cboWin$idx \
+         -sticky ew
+      grid columnconfigure $f 1 -weight 1
+   }
+   unset idx
+
+   set f $w.fraBottom1
+   frame $f
+   button $f.btnMerge -text "Merge to:" \
+      -state disabled
+   entry $f.entMergeVar \
+      -textvariable [itcl::scope _merge_var]
+
+   button $f.btnPlot -text "Plot in:" \
+      -state disabled
+
+   iwidgets::combobox $f.cboWin \
+      -textvariable [itcl::scope _ywindow] \
+      -editable false -width 7
+   $f.cboWin component list configure \
+      -listvariable $itk_option(-winlistvariable)
+
+   button $f.btnStats -text "Statistics" \
+      -state disabled
+
+   grid $f.btnMerge $f.entMergeVar x $f.btnPlot $f.cboWin \
+      x $f.btnStats \
+      -sticky we
+   grid columnconfigure $f 1 -weight 2
+   grid columnconfigure $f [list 2 5] -weight 1
+
+   set f $w.fraBottom2
+   frame $f
+   button $f.btnDefine -text "Define Region to Process" \
+      -state disabled
+   button $f.btnNew -text "New Segment Window" \
+      -state disabled
+
+   grid $f.btnDefine x $f.btnNew -sticky we
+   grid columnconfigure $f 1 -weight 1
+
+   grid $w.fraVariables -sticky we
+   grid $w.fraBottom1 -sticky we
+   grid $w.fraBottom2 -sticky we
+   grid columnconfigure $w 0 -weight 1
+}
+
+itcl::body SegmentedDataWindow::refresh_times {} {
+   for {set i 1} {$i <= $_count} {incr i} {
+      send_yorick time_command [itcl::scope $this] $i
+      # Yorick: tkcmd, "$this set_time $idx time"
+   }
+}
+
+itcl::body SegmentedDataWindow::set_time {idx time} {
+   set _segment($idx,time) $time
+}
+
+itcl::body SegmentedDataWindow::plot_segment {idx} {
+}
+
+itcl::body SegmentedDataWindow::plot_selected {args} {
+}
+
+itcl::body SegmentedDataWindow::merge_selected {args} {
+}
+
+itcl::body SegmentedDataWindow::launch_stats {args} {
+}
+
+itcl::body SegmentedDataWindow::define_region {} {
+}
+
+itcl::body SegmentedDataWindow::new_segment_window {} {
+}
