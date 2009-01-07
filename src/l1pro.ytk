@@ -2474,7 +2474,7 @@ proc removing_proc {} {
       methods:\
       \n Rubberband Box\
       \n Points in Polygon\
-      \n Single Pixel"
+      \n Single Pixel" \
     -editable 0 \
     -modifycmd {
       set removemode [.rem.1 getvalue]
