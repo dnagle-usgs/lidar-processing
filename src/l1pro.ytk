@@ -3367,7 +3367,7 @@ proc plot_fltlines {sel} {
             set style_arg landscape11x85.gs
           }
         }
-        if {[lindex {75 100 1100} $plot_dpi] >= 0} {
+        if {[lsearch {75 100 1100} $plot_dpi] >= 0} {
           exp_send "winkill, $win_no;\
             window, $win_no, dpi=$dpi_arg,\
               width=$width_arg, height=$height_arg,\
