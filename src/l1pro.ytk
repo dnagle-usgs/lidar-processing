@@ -134,13 +134,14 @@ menu .l1wid.mb.diag
       set cbvc(mtype) $markerv
     }
 
-    set _ytk_fn [ tk_getOpenFile -filetypes \
-    {
-      {{Yorick PBD file} {.pbd}  }
-      {{IDL Binary file} {.bin}  }
-      {{IDL Binary file} {.edf}  }
-      {{All Files}       {*}   }
-    }  ]
+    set _ytk_fn [ tk_getOpenFile -parent .l1wid \
+      -initialdir $::data_path \
+      -filetypes {
+        {{Yorick PBD file} {.pbd}  }
+        {{IDL Binary file} {.bin}  }
+        {{IDL Binary file} {.edf}  }
+        {{All Files}       {*}   }
+      }]
     if { $_ytk_fn != "" } {
       switch [ file extension $_ytk_fn ] {
         ".pbd" {
