@@ -1795,7 +1795,9 @@ if {$gui_enabled} {
 }
 
 if { $load_on_start != "" } {
-   load_and_run $load_on_start
+   foreach file_to_load $load_on_start {
+      load_and_run $file_to_load
+   }
 }
 
 start_yorick
