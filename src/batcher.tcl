@@ -184,7 +184,7 @@ proc client'read sock {
          }
          set doall list
          puts $sock "status $args"
-         catch { exec /opt/eaarl/lidar-processing/src/cmdline_test $wdir/$args } res
+         catch { exec /opt/eaarl/lidar-processing/src/cmdline_batch $wdir/$args } res
          if { $res > "" } {
             puts "res : $res"
          }

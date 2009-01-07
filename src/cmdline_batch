@@ -1,0 +1,26 @@
+#!/opt/eaarl/bin/yorick -batch
+
+// _ytk = 1;
+src_path = "/opt/eaarl/lidar-processing/src";
+
+
+#include "/opt/eaarl/lidar-processing/src/l1pro.i"
+#include "/opt/eaarl/lidar-processing/src/veg.i"
+#include "/opt/eaarl/lidar-processing/src/batch_process.i"
+
+// $Id$
+
+cmdline = get_argv();  /* strips -batch cmdline.i */
+if (numberof(cmdline) == 2) {
+  /* convert from ascii to pdb binary format */
+  cmdline(1);
+  cmdline(2);
+  write, format="cmd1:%s\ncmd2:%s\n", cmdline(1), cmdline(2);
+  unpackage_tile(fn=cmdline(2));
+  call_process_tile;
+} else {
+  write, "Usage: yorick -batch cmdline.i infile ";
+}
+
+quit;
+
