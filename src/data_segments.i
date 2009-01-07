@@ -1,4 +1,4 @@
-/* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent: */
+/* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
 
 /**********************************************************************
 
@@ -26,8 +26,13 @@ func split_by_fltline(data) {
    data = data(sort(data.soe));
    n_data = numberof(data);
    tidx = where(data.soe(dif) > 180); // assume flightlines are split by at least 180 seconds (3 mins)
-   n_lines = numberof(tidx) + 1; // total number of flightline segments in data
-   segs_idx = grow(1,tidx+1,1); // create segment list array.
+   if(numberof(tidx)) {
+      n_lines = numberof(tidx) + 1; // total number of flightline segments in data
+      segs_idx = grow(1,tidx+1,1); // create segment list array.
+   } else {
+      n_lines = 1;
+      segs_idx = [1, 1];
+   }
    write, format="Total flightline segments = %3d\n",n_lines;
    fptr = array(pointer, n_lines);
    for (i=1;i<=n_lines;i++) {
@@ -181,8 +186,12 @@ func create_fltline_seg_stats(fptr, indx=) {
    }
 }
 
-      
-
-
-
+func tk_sdw_send_times(obj, idx, data) {
+   mintime = soe2iso8601(data.soe(min));
+   maxtime = soe2iso8601(data.soe(max));
    
+   cmd = swrite(format="%s set_time %d {%s} {%s}",
+      obj, idx, mintime, maxtime);
+
+   tkcmd, cmd;
+}

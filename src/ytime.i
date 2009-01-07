@@ -67,7 +67,7 @@ func soe2time( soe ) {
 /* DOCUMENT soe2time( soe )
    This function converts a time/date seconds value such as used by Unix and
    DOS system into a return array consisting of:
-      t(1)   Year
+      t(1)  Year
       t(2)  Day of Year
       t(3)  Seconds of the day
       t(4)  Hour 
@@ -87,7 +87,7 @@ func soe2time( soe ) {
    Usage Example:   soe2time( 992779200 )
       returns the array [2001,167,43200,12,0,0]  giving the year, year-day,
       seconds-of-day, hour, minutes, seconds.  The 992779200 value corresponds
-      to July 17, 2001 at 12am GMT.  You can easily generate time values with
+      to June 17, 2001 at 12am GMT.  You can easily generate time values with
       tcl clock scan. For example:
       clock scan "6/17/2001 12:00" -gmt 1
       returns 992779200
@@ -430,4 +430,20 @@ func determine_gps_time_correction(fn, silent=) {
    }
 
    return success;
+}
+
+func soe2iso8601(soe) {
+/* DOCUMENT soe2iso8601(soe)
+   Converts a seconds-of-the-epoch value into a date-time string that's
+   compatible with ISO 8601:
+
+      YYYY-MM-DD HH:MM:SS
+
+   See also: soe2sod soe2time soe2ymd
+*/
+// Original David Nagle 2009-01-07
+   ymd = int(soe2ymd(soe));
+   time = int(soe2time(soe));
+   return swrite(format="%04d-%02d-%02d %02d:%02d:%02d",
+      ymd(1), ymd(2), ymd(3), time(4), time(5), time(6));
 }

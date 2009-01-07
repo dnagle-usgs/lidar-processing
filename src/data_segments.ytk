@@ -23,7 +23,8 @@ if {[info commands SegmentedDataWindow] eq ""} {
       itk_option define -segmentvariables segmentVariables VariableList ""
 
       method refresh_times {} {}
-      method set_time {idx time} {}
+      method set_time {idx time_start time_end} {}
+      method clear_time {idx} {}
       method plot_segment {args} {}
       method plot_selected {args} {}
       method merge_selected {args} {}
@@ -54,7 +55,7 @@ itcl::body SegmentedDataWindow::constructor {args} {
    labelframe $f -text "Variables"
    label $f.lblHeadingVariables -text "Variable"
    button $f.btnHeadingTime -text "Time Frame (refresh)" \
-      -state disabled
+      -command [itcl::code $this refresh_times]
    label $f.lblHeadingPlot -text "Plot Segment"
 
    grid configure x $f.lblHeadingVariables $f.btnHeadingTime \
@@ -78,7 +79,8 @@ itcl::body SegmentedDataWindow::constructor {args} {
 
       iwidgets::combobox $f.cbo$idx \
          -textvariable [itcl::scope _segment($idx,var)] \
-         -editable false
+         -editable false \
+         -selectioncommand [itcl::code $this clear_time $idx]
       $f.cbo$idx component list configure \
          -listvariable $itk_option(-varlistvariable)
 
@@ -120,11 +122,10 @@ itcl::body SegmentedDataWindow::constructor {args} {
    button $f.btnStats -text "Statistics" \
       -state disabled
 
-   grid $f.btnMerge $f.entMergeVar x $f.btnPlot $f.cboWin \
-      x $f.btnStats \
+   grid $f.btnPlot $f.cboWin x $f.btnStats x $f.btnMerge $f.entMergeVar \
       -sticky we
-   grid columnconfigure $f 1 -weight 2
-   grid columnconfigure $f [list 2 5] -weight 1
+   grid columnconfigure $f 6 -weight 2
+   grid columnconfigure $f [list 2 4] -weight 1
 
    set f $w.fraBottom2
    frame $f
@@ -140,17 +141,24 @@ itcl::body SegmentedDataWindow::constructor {args} {
    grid $w.fraBottom1 -sticky we
    grid $w.fraBottom2 -sticky we
    grid columnconfigure $w 0 -weight 1
+
+   refresh_times
 }
 
 itcl::body SegmentedDataWindow::refresh_times {} {
    for {set i 1} {$i <= $_count} {incr i} {
-      send_yorick time_command [itcl::scope $this] $i
-      # Yorick: tkcmd, "$this set_time $idx time"
+      exp_send "tk_sdw_send_times, \"[itcl::scope $this]\", $i,\
+         $_segment($i,var);\r"
+      expect ">"
    }
 }
 
-itcl::body SegmentedDataWindow::set_time {idx time} {
-   set _segment($idx,time) $time
+itcl::body SegmentedDataWindow::set_time {idx time_start time_end} {
+   set _segment($idx,time) "$time_start - $time_end"
+}
+
+itcl::body SegmentedDataWindow::clear_time {idx} {
+   set _segment($idx,time) "..."
 }
 
 itcl::body SegmentedDataWindow::plot_segment {idx} {
