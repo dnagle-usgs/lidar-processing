@@ -11,15 +11,16 @@ src_path = "/opt/eaarl/lidar-processing/src";
 // $Id$
 
 cmdline = get_argv();  /* strips -batch cmdline.i */
-if (numberof(cmdline) == 2) {
+if (numberof(cmdline) == 3) {
   /* convert from ascii to pdb binary format */
   cmdline(1);
   cmdline(2);
-  write, format="cmd1:%s\ncmd2:%s\n", cmdline(1), cmdline(2);
-  unpackage_tile(fn=cmdline(2));
+  cmdline(3);
+  write, format="cmd1:%s\ncmd2:%s:%s\n", cmdline(1), cmdline(2), cmdline(3);
+  unpackage_tile(fn=cmdline(2), host=cmdline(3));
   call_process_tile;
 } else {
-  write, "Usage: yorick -batch cmdline.i infile ";
+  write, "Usage: yorick -batch cmdline.i infile hostname";
 }
 
 quit;

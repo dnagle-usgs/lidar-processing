@@ -42,13 +42,27 @@ func save_vars (filename, tile=) {
    return;
 }
 
-func unpackage_tile (fn= ) {
+func unpackage_tile (fn=,host= ) {
    extern gga;
-   write, format="Unpackage_tile: %s\n", fn;
+   write, format="Unpackage_tile: %s %s\n", fn, host;
    f = openb(fn);
    restore, f;
    close, f;
    gga = pnav;
+   write, format="Checking %s\n", host;
+   if ( ! strmatch(host, "localhost") ) {
+      afn  = swrite(format="%s.files", fn);
+      af = open(afn, "w");
+      write, af, format="%s\n", data_path;
+      for(myi=1; myi<=numberof(edb_files); ++myi) {
+         write, af, format="%s\n", edb_files(myi).name;
+      }
+
+      close,af;
+      cmd = swrite(format="/opt/eaarl/lidar-processing/src/check_for_tlds.pl %s %s", afn, host);
+      system, cmd;
+      write, format="Unpackage_Tile: %s: done\n", cmd;
+   }
 }
 
 // An easier hook for someone restoring a previous session.
@@ -57,26 +71,26 @@ func load_vars(fn) {
 }
 
 func call_process_tile( junk= ) {
-   write, format="Processing tile: %s\n", "test";
-   save_dir;
-   zone_s;
-   auto;
-   get_typ;
-   min_e;
-   write, format="t_e%6.0f_n%7.0f_%s\n", min_e, max_n, zone_s;
-   dat_tag;
-   mdate;
-   mtdt_file;
-   i;
+   // write, format="Processing tile: %s\n", "test";
+   // save_dir;
+   // zone_s;
+   // auto;
+   // get_typ;
+   // min_e;
+   // write, format="t_e%6.0f_n%7.0f_%s\n", min_e, max_n, zone_s;
+   // dat_tag;
+   // mdate;
+   // mtdt_file;
+   // i;
    process_tile(q=q, r=r, typ=typ, min_e=min_e, max_e=max_e, min_n=min_n, max_n=max_n )
 }
 
 
 func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n= ) {
-   info,q;
-   info,r;
-   info,get_typ;
-   info,auto;
+   // info,q;
+   // info,r;
+   // info,get_typ;
+   // info,auto;
    if (is_array(r)) {
       if (get_typ) {
          typ=[]
@@ -90,8 +104,8 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n= ) {
          idx_n = long(10000 * long(1+(max_n / 10000)));
          if ((max_n % 10000) == 0) idx_n = long(max_n);
          ofn = array(string, 2);
-         idx_e;
-         idx_n;
+         // idx_e;
+         // idx_n;
          ofn(1) = swrite(format="%si_e%d_n%d_%s/t_e%6.0f_n%7.0f_%s/", save_dir, idx_e, idx_n, zone_s, min_e, max_n, zone_s);
          ofn(2) = swrite(format="t_e%6.0f_n%7.0f_%s_%s_%s", min_e, max_n, zone_s, dat_tag, mdate);
          if (edf) ofn(2) = ofn(2) + ".edf";
@@ -125,7 +139,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n= ) {
          mkdir, swrite(format="%si_e%d_n%d_%s", save_dir, idx_e, idx_n, zone_s);
          mkdir, swrite(format="%si_e%d_n%d_%s/t_e%6.0f_n%7.0f_%s", save_dir, idx_e, idx_n, zone_s, min_e, max_n, zone_s);
          indx_num = where(mtdt_path == swrite(format="%si_e%d_n%d_%s/", save_dir, idx_e, idx_n, zone_s));
-         mtdt_path;
+         // mtdt_path;  // XYZZY
          indx_number = indx_num(1);
          if (bool_arr(indx_number) != 1) {
             f = open(mtdt_file(indx_number),"a");
@@ -165,14 +179,11 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n= ) {
       }
       // write metadata
       for (ij = 1; ij <=numberof(iidx_path); ij++) {
+
          write, format="RWM: IJ(%d): %d / %d: %s\n", i, ij, numberof(iidx_path), indx_path(i);
-         write, format="RWM: typ=%d\n", 6;
-         write, format="RWM: typ=%d\n", typ;
-         write, format="RWM: typ=%d\n", 6;
          if (mtdt_path(ij) == indx_path(i)) {
             f = open(mtdt_file(ij), "a");
             if (cmdfile) write, f, format="Processed Data Tile %9.2f %9.2f %9.2f %9.2f\n",min_e, max_e, min_n, max_n;
-            write, format="RWM: typ=%d\n", typ;
             if (auto) {
                if (typ == 0) typtag="First Surface";
                if (typ == 1) typtag="Bathy";

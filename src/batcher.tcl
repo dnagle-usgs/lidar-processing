@@ -51,7 +51,7 @@ proc Service { sock addr } {
       set cmd  [ lindex $lst 0 ]
       set args [ lrange $lst 1 end ]
 
-      # Process command from client
+      # SERVER: Process command from client
       switch $cmd {
          list {
             get_file $sock $addr
@@ -69,19 +69,38 @@ proc Service { sock addr } {
             set status($sock) $args
          }
 
+         mv {
+            set src [lindex $lst 1 ]
+            set dst [lindex $lst 2 ]
+            puts "MV: $src $dst"
+            catch { exec $cmd $src $dst} res
+            puts "$cmd->$res";      # local logging
+            puts $sock "$cmd->$res"
+         }
+
          default {
             if { [llength $lst] == 1 } {
                puts "length = 1"
                catch { exec $cmd } res
-               puts $cmd->$res         # local logging
-               puts $sock $cmd->$res
+               puts "$cmd->$res";         # Local logging
+               puts $sock "$cmd->$res"
             } else {
                puts "length > 1"
+               set all []
                foreach arg $args {
-                  catch { exec $cmd $arg } res
-                  puts $cmd->$res      # local logging
-                  puts $sock $cmd->$res
+                  set all [concat $all $arg]
                }
+               puts "all: $all"
+               catch { exec $cmd $all } res
+               puts "$cmd->$res";      # local logging
+               puts $sock "$cmd->$res"
+
+
+               # foreach arg $args {
+               #    catch { exec $cmd $arg } res
+               #    puts "$cmd->$res";      # local logging
+               #    puts $sock "$cmd->$res"
+               # }
             }
          }
       }
@@ -144,20 +163,31 @@ proc open_server { port } {
 }
 
 #-----------------------------------------------------
-
-puts "ARGV:  [lindex $argv 0]"
-# invoke as: $0 server
-
-if { $host eq "server"} {
+proc make_dirs {} {
+   global jdir fdir wdir ddir;
    catch { exec mkdir -p $jdir }
    catch { exec mkdir -p $fdir }
    catch { exec mkdir -p $wdir }
    catch { exec mkdir -p $ddir }
+}
+
+#-----------------------------------------------------
+
+puts "ARGV:  [lindex $argv 0]"
+# invoke as: $0 server
+
+if { $host eq "server" } {
    signal trap  [ list ALRM ] check_for_files
+   make_dirs
    alarm 5
    open_server $port
 } else {    # start as client
    # set sock [socket $host $port]
+   set remote 0
+   if { $host ne "localhost" } {
+      set remote 1
+      make_dirs
+   }
    set sock [socket $host $port]
    fconfigure $sock -buffering line
    fileevent $sock readable [list client'read $sock]
@@ -168,7 +198,7 @@ if { $host eq "server"} {
 #---------------- CLIENT Code-------------------------
 
 proc client'read sock {
-   global jdir wdir fdir ddir doall
+   global jdir wdir fdir ddir doall host remote
    if {[eof $sock]} {close $sock; exit}
    gets $sock line
    set lst [ split $line " "]
@@ -178,15 +208,25 @@ proc client'read sock {
       file: {
          puts "line(file): $line"
          puts "args: $args"
+         if { $remote == 1 } {
+            catch { exec rsync -PHavR $host:/$fdir/$args / } res
+            # puts "rsync: $res"
+         }
+         if { $remote == 1 } {
+            puts $sock "mv $fdir/$args $wdir"
+         }
          catch { exec mv $fdir/$args $wdir } res
          if { $res > "" } {
             puts "res : $res"
          }
          set doall list
          puts $sock "status $args"
-         catch { exec /opt/eaarl/lidar-processing/src/cmdline_batch $wdir/$args } res
+         catch { exec /opt/eaarl/lidar-processing/src/cmdline_batch $wdir/$args $host } res
          if { $res > "" } {
             puts "res : $res"
+         }
+         if { $remote == 1 } {
+            puts $sock "mv $wdir/$args $ddir"
          }
          catch { exec mv $wdir/$args $ddir } res
          if { $doall > "" } {
@@ -207,7 +247,7 @@ proc client'read sock {
 }
 
 proc client'send sock {
-   global wdir doall
+   global wdir doall remote host
    gets stdin line
 
    switch $line {
@@ -222,6 +262,9 @@ proc client'send sock {
          set doall list
          puts "cmd: $doall"
          puts $sock $doall
+      }
+      remote {
+         puts "Remote: $remote: $host"
       }
       default {
          puts $sock $line
