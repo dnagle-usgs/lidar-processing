@@ -1753,6 +1753,7 @@ if { ![file exists $_ytk(yorick_executable)] } {
 
 puts "e: $_ytk(yorick_executable)"
 
+initialize_globals
 establish_fifos
 
 if { [spawn_yorick] } {
