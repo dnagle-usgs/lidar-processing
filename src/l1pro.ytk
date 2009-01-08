@@ -30,6 +30,8 @@ set changed_dpi 0
 set avg_surf 1
 set rcf_buf_rgn 0; #Used in proc replace_proc
 
+set show_pro_gui 1
+
 array set _mpipx {
   0,0 Selector
   0,1 Data_Variable
@@ -157,7 +159,7 @@ menu .l1wid.mb.diag
           expect "Tk updated"
           expect ">"
           update
-          set var_type [lindex $varlist [expr {[llength $varlist] -1}]]
+          set var_type [lindex $varlist end]
           update
           if { $cbv == 0 } {
             exp_send "set_read_yorick, $var_type \r"
@@ -1101,6 +1103,17 @@ proc append_varlist {newvar} {
   -label "Show raw and processed waveforms when using Pixel Waveform" \
   -variable bconst
 
+.l1wid.mb.options add checkbutton \
+  -label "Show Processing section of GUI" \
+  -variable show_pro_gui \
+  -command {
+    if {$show_pro_gui} {
+      grid .l1wid.bf4
+    } else {
+      grid remove .l1wid.bf4
+    }
+  }
+
 proc make_selected_arrays {junk} {
   global lrnindx list
   set curlist [.l1plot.1.lb curselection]
@@ -1655,12 +1668,12 @@ ComboBox .l1wid.bf4.1.d -text "Define Region..." -width 15 -values \
     }
   }
 
-set l1pro_data(processing_mode)  {\
-  First\ Return\ Topo\
-  Submerged\ Topo\
-  Topo\ Under\ Veg \
-  Multi\ Peak\ Veg \
-  Direct.\ Wave\ Spectra \
+set l1pro_data(processing_mode) {
+  "First Return Topo"
+  "Submerged Topo"
+  "Topo Under Veg"
+  "Multi Peak Veg"
+  "Direct. Wave Spectra"
 }
 
 proc multi_pip_sel {junk} {
@@ -3227,14 +3240,17 @@ pack \
   -padx 5
 
 pack  .l1wid.bf4.2.cen .l1wid.bf4.2.surf .l1wid.bf4.2.proc -side left -padx 10
-pack .l1wid.bf4.1 .l1wid.bf4.2 -side top -pady 10
 
-pack \
-  .l1wid.bf1 \
-  .l1wid.bf2 \
-  .l1wid.bf3 \
-  .l1wid.bf4 \
-  -side top -expand 1 -fill both
+grid .l1wid.bf4.1 -pady 10
+grid .l1wid.bf4.2
+#pack .l1wid.bf4.1 .l1wid.bf4.2 -side top -pady 10
+
+#pack \
+#  .l1wid.bf1 \
+#  .l1wid.bf2 \
+#  .l1wid.bf3 \
+#  .l1wid.bf4 \
+#  -side top -expand 1 -fill both
 
 pack .l1wid.bf45.sc.1  -side left  -padx 3
 pack .l1wid.bf45.sc.f .l1wid.bf45.sc.g .l1wid.bf45.sc.pl -side left -padx 5
@@ -3282,10 +3298,17 @@ pack \
   .l1wid.bf45.r \
   -side top -fill x -expand 1
 
-pack \
-  .l1wid.bf5 \
-  .l1wid.bf45 \
-  -side top -pady 3 -fill x
+grid .l1wid.bf1
+grid .l1wid.bf2
+grid .l1wid.bf3
+grid .l1wid.bf4
+grid .l1wid.bf5 -pady 3
+grid .l1wid.bf45 -pady 3
+
+#pack \
+#  .l1wid.bf5 \
+#  .l1wid.bf45 \
+#  -side top -pady 3 -fill x
 
 
 proc send_latlon_to_l1pro {minlon maxlon minlat maxlat utm} {
