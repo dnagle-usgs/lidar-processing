@@ -137,7 +137,6 @@ menu .l1wid.mb.diag
     }
 
     set _ytk_fn [ tk_getOpenFile -parent .l1wid \
-      -initialdir $::data_path \
       -filetypes {
         {{Yorick PBD file} {.pbd}  }
         {{IDL Binary file} {.bin}  }
