@@ -13,6 +13,7 @@ if(is_void(__l1pro_includes_included__)) {
    require, "bathy.i";
    require, "centroid-1.i";
    require, "compare_transects.i";
+   require, "data_segments.i";
    require, "dataexplore.i";
    require, "datum_converter.i";
    require, "determine_bias.i";

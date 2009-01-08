@@ -971,8 +971,8 @@ func read_pointer_yfile(data_ptr, mode=) {
       tkcmd, swrite(format=".l1wid.bf45.p.5 setvalue @%d",0);
       cmin = min(fs_all.elevation)/100.;
       cmax = max(fs_all.elevation)/100.;
-      tkcmd, swrite(format="set cmin %f", cmin);
-      tkcmd, swrite(format="set cmax %f", cmax);
+      tkcmd, swrite(format="set plot_settings(cmin) %f", cmin);
+      tkcmd, swrite(format="set plot_settings(cmax) %f", cmax);
     }
   }
   if (a == GEO) {
@@ -983,8 +983,8 @@ func read_pointer_yfile(data_ptr, mode=) {
       tkcmd, swrite(format=".l1wid.bf45.p.5 setvalue @%d",1);
       cmin = min(depth_all.depth+depth_all.elevation)/100.;
       cmax = max(depth_all.depth+depth_all.elevation)/100.;
-      tkcmd, swrite(format="set cmin %f", cmin);
-      tkcmd, swrite(format="set cmax %f", cmax);
+      tkcmd, swrite(format="set plot_settings(cmin) %f", cmin);
+      tkcmd, swrite(format="set plot_settings(cmax) %f", cmax);
     }
   }
   if (a == VEG || a == VEG_ || a == VEG__) {
@@ -995,8 +995,8 @@ func read_pointer_yfile(data_ptr, mode=) {
       tkcmd, swrite(format=".l1wid.bf45.p.5 setvalue @%d",3);
       cmin = min(veg_all.lelv)/100.;
       cmax = max(veg_all.lelv)/100.;
-      tkcmd, swrite(format="set cmin %f", cmin);
-      tkcmd, swrite(format="set cmax %f", cmax);
+      tkcmd, swrite(format="set plot_settings(cmin) %f", cmin);
+      tkcmd, swrite(format="set plot_settings(cmax) %f", cmax);
     }
   }
   if (a == CVEG_ALL) {
@@ -1007,8 +1007,8 @@ func read_pointer_yfile(data_ptr, mode=) {
       tkcmd, swrite(format=".l1wid.bf45.p.5 setvalue @%d",0);
       cmin = min(cveg_all.elevation)/100.;
       cmax = max(cveg_all.elevation)/100.;
-      tkcmd, swrite(format="set cmin %f", cmin);
-      tkcmd, swrite(format="set cmax %f", cmax);
+      tkcmd, swrite(format="set plot_settings(cmin) %f", cmin);
+      tkcmd, swrite(format="set plot_settings(cmax) %f", cmax);
     }
   }
 
@@ -1043,8 +1043,8 @@ func set_read_yorick(vname) {
       cminmax = stdev_min_max(vname.elevation)/100.;
       cmin = cminmax(1);
       cmax = cminmax(2);
-      tkcmd, swrite(format="set cmin %f", cmin);
-      tkcmd, swrite(format="set cmax %f", cmax);
+      tkcmd, swrite(format="set plot_settings(cmin) %f", cmin);
+      tkcmd, swrite(format="set plot_settings(cmax) %f", cmax);
     }
   }
   if (ab == GEO || ab == GEOALL) {
@@ -1054,8 +1054,8 @@ func set_read_yorick(vname) {
       cminmax = stdev_min_max(vname.depth+vname.elevation)/100.;
       cmin = cminmax(1);
       cmax = cminmax(2);
-      tkcmd, swrite(format="set cmin %f", cmin);
-      tkcmd, swrite(format="set cmax %f", cmax);
+      tkcmd, swrite(format="set plot_settings(cmin) %f", cmin);
+      tkcmd, swrite(format="set plot_settings(cmax) %f", cmax);
     }
   }
   if (ab == VEG || ab == VEG_ || ab == VEG__ || ab == VEGALL || ab == VEG_ALL || ab == VEG_ALL_) {
@@ -1065,8 +1065,8 @@ func set_read_yorick(vname) {
       cminmax = stdev_min_max(vname.lelv)/100.;
       cmin = cminmax(1);
       cmax = cminmax(2);
-      tkcmd, swrite(format="set cmin %f", cmin);
-      tkcmd, swrite(format="set cmax %f", cmax);
+      tkcmd, swrite(format="set plot_settings(cmin) %f", cmin);
+      tkcmd, swrite(format="set plot_settings(cmax) %f", cmax);
     }
   }
   if (ab == CVEG_ALL) {
@@ -1076,8 +1076,8 @@ func set_read_yorick(vname) {
       cminmax = stdev_min_max(vname.elevation)/100.;
       cmin = cminmax(1);
       cmax = cminmax(2);
-      tkcmd, swrite(format="set cmin %f", cmin);
-      tkcmd, swrite(format="set cmax %f", cmax);
+      tkcmd, swrite(format="set plot_settings(cmin) %f", cmin);
+      tkcmd, swrite(format="set plot_settings(cmax) %f", cmax);
     }
   }
   
@@ -1085,9 +1085,10 @@ func set_read_yorick(vname) {
   tkcmd, swrite("set pvar_no [expr {$var_no + 1}]");
   tkcmd, swrite("puts $pvar_no");
   tkcmd, swrite("save_plot_settings $pvar_no");
-  tkcmd, swrite("if {$cbv == 1} {set cmin $cbvc(cmin)}");
-  tkcmd, swrite("if {$cbv == 1} {set cmin $cbvc(cmax)}");
-  tkcmd, swrite("if {$cbv == 1} {set cmin $cbvc(msize)}");
+  tkcmd, swrite("if {$cbv == 1} {set plot_settings(cmin) $cbvc(cmin)}");
+  tkcmd, swrite("if {$cbv == 1} {set plot_settings(cmax) $cbvc(cmax)}");
+  tkcmd, swrite("if {$cbv == 1} {set plot_settings(msize) $cbvc(msize)}");
+  tkcmd, swrite("if {$cbv == 1} {set plot_settings(mtype) $cbvc(mtype)}");
   
 }
   

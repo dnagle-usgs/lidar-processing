@@ -61,19 +61,6 @@ proc center_win { win } {
  update
 }
 
-
-# Load
-proc ycbar { } {
-  global cmax cmin cdelta
-  if { ![ info exists cmax ] } {
-    set cmax 0;
-    set cmin 0;
-    set cdelta 0;
-  }
-  exp_send "cbar.cmax=$cmax; cbar.cmin=$cmin; cbar.cdelta=$cdelta\r"
-}
-
-
 proc display_mission_constants { l } {
   global w1
   array set ary $l
