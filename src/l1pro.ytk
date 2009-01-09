@@ -42,15 +42,6 @@ set rcf_buf_rgn 0; #Used in proc replace_proc
 
 set show_pro_gui 1
 
-array set _mpipx {
-  0,0 Selector
-  0,1 Data_Variable
-  0,2 PIP_Variable
-  0,3 File_Name
-  0,4 Processing_Type
-  0,5 GGA_Array
-}
-
 set varc 0
 set varlist {fs_all depth_all veg_all cveg_all workdata}
 
@@ -990,7 +981,7 @@ namespace eval l1dir {
     }
 
     Button .l1plot.plot -text "Plot" -width 6 -command {
-      make_selected_arrays {junk}
+      make_selected_arrays
       plot_fltlines 1
     }
 
@@ -1162,7 +1153,7 @@ proc append_varlist {newvar} {
     }
   }
 
-proc make_selected_arrays {junk} {
+proc make_selected_arrays {} {
   global lrnindx list
   set curlist [.l1plot.1.lb curselection]
   set ptype [.l1wid.bf4.1.p getvalue]
@@ -1613,7 +1604,6 @@ ComboBox .l1wid.bf4.1.d -text "Define Region..." -width 15 -values \
     Rubberband\ Box\
     Points\ in\ Polygon\
     Rectangular\ Coords\
-    Multiple\ PIPs\
   }\
   -helptext "Select region to process using any of the following methods" \
   -editable 0 \
@@ -1706,11 +1696,6 @@ ComboBox .l1wid.bf4.1.d -text "Define Region..." -width 15 -values \
       pack .l1widc.1 -side top
 
     }
-    if {$defr == 3} {
-      exp_send "q = \[\]\r"
-      expect ">"
-      multi_pip_sel {}
-    }
     if {$defr == -1} {
       error "Please Define Region."
     }
@@ -1722,171 +1707,6 @@ set l1pro_data(processing_mode) {
   "Topo Under Veg"
   "Multi Peak Veg"
   "Direct. Wave Spectra"
-}
-
-proc multi_pip_sel {junk} {
-  global _map tpath l1pro_data
-  destroy .mpip
-  toplevel .mpip
-  frame .mpip.1
-  frame .mpip.2
-
-  global row
-  set row 20
-  set tpath .mpip.1.table
-  table $tpath \
-    -rows $row \
-    -cols 6 \
-    -variable _mpipx \
-    -titlerows 2 \
-    -titlecols 0 \
-    -yscrollcommand [list ".mpip.1.sy" set] \
-    -xscrollcommand [list ".mpip.1.sx" set] \
-    -coltagcommand colorize \
-    -flashmode 1 \
-    -selectmode extended \
-    -width 5 -height 8 \
-    -colwidth 15 \
-    -multiline 0 \
-    -sparsearray 0 \
-    -browsecommand {set table(current) %S}
-  $tpath tag configure active \
-    -fg blue \
-    -relief sunken
-
-  $tpath width 0 7
-  $tpath width 3 25
-  $tpath height 1 2
-
-  scrollbar .mpip.1.sy -command [list $tpath yview]
-  scrollbar .mpip.1.sx -command [list $tpath xview] -orient horizontal
-
-  Button $tpath.pip -text "PIP Selector" \
-    -command {
-      global tpath varc _map pcurs
-      set curs [$tpath curselection]
-      if { [info exists curs] == 0 } {
-        if { [info exists pcurs] == 1 } {
-          set curs $pcurs
-        } else {
-          set curs "2,1"
-        }
-      }
-      set cidx [string first "," $curs]
-      set cursr [string range $curs 0 [expr ($cidx-1)]]
-      set cursc [string range $curs [expr ($cidx+1)] end]
-      if {(! [info exists _mpipx($cursr,2)]) || ($_mpipx($cursr,2)=="")} {
-        set _mpipx($cursr,2) "ply_$cursr"
-        set _mpipx($cursr,5) "q_$cursr"
-      }
-      if {! [info exists _mpipx($cursr,1)]} {
-        set _mpipx($cursr,1) "var_$_mpipx($cursr,2)"
-      }
-      if {! [info exists _mpipx($cursr,5)]} {
-        set _mpipx($cursr,5) "q_$_mpipx($cursr,2)"
-      }
-      set pcurs $curs
-      exp_send "$_mpipx($cursr,5) = gga_pip_sel(1, win=$_map(window));\
-        $_mpipx($cursr,2) = ply; \r"
-      expect ">"
-    } \
-    -helptext "Draw a Polygon in Window 6 to define a region using a series of\
-      left mouse clicks.  To complete the polygon, middle mouse click OR\
-      <Ctrl> and left mouse click."
-  $tpath window configure 1,2 -window $tpath.pip -sticky news
-
-  Button $tpath.fbutton -text "Browse..." \
-    -command {
-      global tpath
-      set curs [$tpath curselection]
-      set ftypes {
-        {{For pbd}   {.pbd} }
-        {{IDL bin}   {.bin} }
-        {{IDL edf}   {.edf} }
-        {{All Files}   *    }
-      }
-      set ofname [tk_getSaveFile -filetypes $ftypes -defaultextension ".pbd"]
-      set _mpipx($curs) $ofname
-      puts $curs
-    }
-  $tpath window configure 1,3 -window $tpath.fbutton -sticky news
-
-  ComboBox $tpath.ptype -text "Process For..." -width 16 \
-    -helptext "Process Data for any of the following" \
-    -editable 0 \
-    -values $l1pro_data(processing_mode) \
-    -takefocus 0 \
-    -modifycmd {
-      global tpath
-      set curs [$tpath curselection]
-      set _mpipx($curs) [$tpath.ptype getvalue]
-    }
-
-  $tpath window configure 1,4 -window $tpath.ptype -sticky news
-
-  for {set seli 2} { $seli < $row } {incr seli} {
-    checkbutton $tpath.sel$seli -variable _mpipx($seli,0)
-    $tpath window configure $seli,0 -window $tpath.sel$seli -sticky news
-  }
-
-  Button .mpip.2.process -text "Process Now" -width 20 -bd 5 \
-    -command {
-      global tpath _mpipx usecentroid data_var pip_var fname_var ptype_var
-      set data_var "\["
-      set pip_var "\["
-      set qname_var "\["
-      set fname_var "\["
-      set ptype_var "\["
-      set ply_var "\["
-      set plyname_var "\["
-      for {set seli 2} { $seli < $row } {incr seli} {
-        if { $_mpipx($seli,0) == 1 } {
-          append pip_var "&$_mpipx($seli,5),"
-          append qname_var "\"$_mpipx($seli,5)\","
-          append data_var "\"$_mpipx($seli,1)\","
-          append fname_var "\"$_mpipx($seli,3)\","
-          append ptype_var "$_mpipx($seli,4),"
-          append ply_var "&$_mpipx($seli,2),"
-          append plyname_var "\"$_mpipx($seli,2)\","
-        }
-      }
-      set pip_var [string replace $pip_var end end "\]"]
-      set qname_var [string replace $qname_var end end "\]"]
-      set data_var [string replace $data_var end end "\]"]
-      set fname_var [string replace $fname_var end end "\]"]
-      set ptype_var [string replace $ptype_var end end "\]"]
-      set ply_var [string replace $ply_var end end "\]"]
-      set plyname_var [string replace $plyname_var end end "\]"]
-      exp_send "batch_multipip_process, $pip_var, $data_var, $fname_var,\
-        $ptype_var, $qname_var, $ply_var, $plyname_var \r\n"
-      expect ">"
-    }
-
-  Button .mpip.2.delete -text "Delete Rows" -width 20 -bd 5 \
-    -command {
-      global tpath _mpipx row
-      for {set seli 2} { $seli < $row } {incr seli} {
-        if { $_mpipx($seli,0) == 1 } {
-          set _mpipx($seli,0) 0
-          $tpath delete rows $seli
-          set row [expr {$row - 1}]
-        }
-      }
-    }
-  .mpip.2.delete configure -state disabled
-  Button .mpip.2.insert -text "Add Row" -width 20 -bd 5 \
-    -command {
-      global tpath _mpipx row
-        $tpath insert rows  [expr {$row-1}]
-        set row [expr {$row + 1}]
-      }
-  .mpip.2.insert configure -state disabled
-
-  pack .mpip.1.sx -side bottom -fill x
-  pack .mpip.1.sy -side right -fill y
-  pack .mpip.2.process .mpip.2.insert .mpip.2.delete -side left -padx 5
-  pack $tpath -side left
-  pack .mpip.1 .mpip.2 -side top
 }
 
 ComboBox .l1wid.bf4.1.p -text "Process For..." -width 16 \
