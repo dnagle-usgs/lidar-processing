@@ -1214,9 +1214,8 @@ proc hist_linlog {} {
   source "$src_path/transrch.ytk"
 }
 
-.l1wid.mb.diag add command -label "Flightline Analysis Tool" -command {}
-
-.l1wid.mb.diag entryconfigure 2 -state disabled
+.l1wid.mb.diag add command -label "Flightline Segments" \
+  -command [list eval segment_by_flightlines \$::pro_var]
 
 proc rcf_region {} {
   global varlist l1pro_data pro_var rcf_var

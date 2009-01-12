@@ -22,12 +22,14 @@ if {[info commands SegmentedDataWindow] eq ""} {
       # Variable containing list of variables to populate interface with
       itk_option define -segmentvariables segmentVariables VariableList ""
 
+      itk_option define -windowvariable windowVariable Variable ""
+
       method refresh_times {} {}
       method set_time {idx time_start time_end} {}
       method clear_time {idx} {}
       method plot_segment {args} {}
-      method plot_selected {args} {}
-      method merge_selected {args} {}
+      method plot_selected {} {}
+      method merge_selected {} {}
       method launch_stats {args} {}
       method define_region {} {}
       method new_segment_window {} {}
@@ -88,7 +90,7 @@ itcl::body SegmentedDataWindow::constructor {args} {
          -textvariable [itcl::scope _segment($idx,time)]
 
       button $f.btnPlot$idx -text "Plot in:" \
-         -state disabled
+         -command [itcl::code $this plot_segment $idx]
 
       spinbox $f.spnWin$idx \
          -textvariable [itcl::scope _segment($idx,win)] \
@@ -104,15 +106,15 @@ itcl::body SegmentedDataWindow::constructor {args} {
    set f $w.fraBottom1
    frame $f
    button $f.btnMerge -text "Merge to:" \
-      -state disabled
+      -command [itcl::code $this merge_selected]
    entry $f.entMergeVar \
       -textvariable [itcl::scope _merge_var]
 
    button $f.btnPlot -text "Plot in:" \
-      -state disabled
+      -command [itcl::code $this plot_selected]
 
    spinbox $f.spnWin \
-      -textvariable [itcl::scope _ywindow] \
+      -textvariable $itk_option(-windowvariable) \
       -from 0 -to $itk_option(-maxwin) -width 2
 
    button $f.btnStats -text "Statistics" \
@@ -128,7 +130,7 @@ itcl::body SegmentedDataWindow::constructor {args} {
    button $f.btnDefine -text "Define Region to Process" \
       -state disabled
    button $f.btnNew -text "New Segment Window" \
-      -state disabled
+      -command [itcl::code $this new_segment_window]
 
    grid $f.btnDefine x $f.btnNew -sticky we
    grid columnconfigure $f 1 -weight 1
@@ -158,12 +160,52 @@ itcl::body SegmentedDataWindow::clear_time {idx} {
 }
 
 itcl::body SegmentedDataWindow::plot_segment {idx} {
+   global pro_var win_no
+
+   set win_bkp $win_no
+   set var_bkp $pro_var
+
+   set win_no $_segment($idx,win)
+   set pro_var $_segment($idx,var)
+   plot_fltlines 0
+
+   set win_no $win_bkp
+   set pro_var $var_bkp
 }
 
-itcl::body SegmentedDataWindow::plot_selected {args} {
+itcl::body SegmentedDataWindow::plot_selected {} {
+   global pro_var l1pro_fma
+
+   set fma_bkp $l1pro_fma
+   set var_bkp $pro_var
+
+   for {set idx 1} {$idx <= $_count} {incr idx} {
+      if {$_segment($idx,use)} {
+         set pro_var $_segment($idx,var)
+         plot_fltlines 0
+         set l1pro_fma 0
+      }
+   }
+
+   set l1pro_fma $fma_bkp
+   set pro_var $var_bkp
 }
 
-itcl::body SegmentedDataWindow::merge_selected {args} {
+itcl::body SegmentedDataWindow::merge_selected {} {
+   global pro_var
+
+   exp_send "$_merge_var = \[\];\r"
+   expect ">"
+
+   for {set idx 1} {$idx <= $_count} {incr idx} {
+      if {$_segment($idx,use)} {
+         exp_send "grow, $_merge_var, $_segment($idx,var) ;\r"
+         expect ">"
+      }
+   }
+
+   append_varlist $_merge_var
+   set _merge_var ""
 }
 
 itcl::body SegmentedDataWindow::launch_stats {args} {
@@ -173,6 +215,26 @@ itcl::body SegmentedDataWindow::define_region {} {
 }
 
 itcl::body SegmentedDataWindow::new_segment_window {} {
+   set seg_vars [list]
+   for {set idx 1} {$idx <= $_count} {incr idx} {
+      if {$_segment($idx,use)} {
+         lappend seg_vars $_segment($idx,var)
+      }
+   }
+
+   if {[llength $seg_vars]} {
+      set sdw [SegmentedDataWindow .#auto \
+         -varlistvariable ::varlist \
+         -maxwin 64 \
+         -segmentvariables $seg_vars \
+         -windowvariable ::win_no]
+
+      $sdw activate
+   } else {
+      tk_messageBox -icon warning \
+         -message "No variables were selected." \
+         -type ok
+   }
 }
 
 proc segment_by_flightlines {yvar} {
@@ -212,7 +274,9 @@ proc _segment_by_flightlines_post {yvar count_var} {
       set sdw [SegmentedDataWindow .#auto \
          -varlistvariable ::varlist \
          -maxwin 64 \
-         -segmentvariables $seg_vars]
+         -segmentvariables $seg_vars \
+         -windowvariable ::win_no \
+         -title "Flightline Segments for $yvar"]
 
       $sdw activate
    }
