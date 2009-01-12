@@ -31,19 +31,19 @@ func set_cbar( bar,w= ) {
   if ( bar == "cmax" ) {
     write, "Select a point to use as Cmax from window,7"
     m = mouse();
-    cmd = swrite(format="set cmax %f", m(1) );
+    cmd = swrite(format="set plot_settings(cmax) %f", m(1) );
   } else if ( bar == "cmin" ) {
     write, format="Select a point to use as Cmin from window,%d",w
     m = mouse();
-    cmd = swrite(format="set cmin %f", m(1) );
+    cmd = swrite(format="set plot_settings(cmin) %f", m(1) );
   } else if ( bar == "both" ) {
     write, format="Select Cmin and Cmax from window, %d",w
     m = mouse()(1);
     n = mouse()(1);
-    cmd = swrite(format="set cmin %f; set cmax %f; destroy .cbartool", min(m,n), max(m,n) );
+    cmd = swrite(format="set plot_settings(cmin) %f; set plot_settings(cmax) %f; destroy .cbartool", min(m,n), max(m,n) );
   } else
       return;
-  tkcmd, cmd
+  tkcmd, cmd;
 }
 
 func colorbar(cmin, cmax, drag=, delta=, landscape=, units=, datum=)
