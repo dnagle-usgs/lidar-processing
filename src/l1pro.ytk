@@ -9,24 +9,30 @@
 # plot_settings
 # var_settings
 
+set l1pro_data(processing_mode) [list \
+  "First Return Topo" \
+  "Submerged Topo" \
+  "Topo Under Veg" \
+  "Multi Peak Veg" \
+  "Direct. Wave Spectra" \
+]
+
+set l1pro_data(display_types) [list \
+  "First Return Topography" \
+  "Submerged Topography" \
+  "Water Depth" \
+  "Bare Earth Topography" \
+  "Surface Amplitude" \
+  "Bottom Amplitude" \
+  "Canopy Height" \
+]
+
 set ofname ""
 set curvar ""
 set outvar ""
 set win_no 5
 set usecentroid 1
 set hist_log 1
-
-set cdelta 80
-set plot_settings(cmin) -40
-set plot_settings(cmax) 40
-set plot_settings(msize) 1.0
-set plot_settings(mtype) 1
-# .l1wid.bf45.p.15
-set plot_settings(var) fs_all
-# .l1wid.bf4.1.p
-set plot_settings(processing_mode) 0
-# .l1wid.bf45.p.5
-set plot_settings(display_type) 0
 
 set cmax_max 5000
 set cmin_min -100
@@ -42,82 +48,43 @@ set rcf_buf_rgn 0; #Used in proc replace_proc
 
 set show_pro_gui 1
 
-set varc 0
 set varlist {fs_all depth_all veg_all cveg_all workdata}
 
-array unset plist
-
+set cdelta 80
 set var_common [list \
-  cmin $plot_settings(cmin) \
-  cmax $plot_settings(cmax) \
-  msize $plot_settings(msize) \
-  mtype $plot_settings(mtype)]
+  cmin -40 \
+  cmax 40 \
+  msize 1.0 \
+  mtype 1]
 
-set plist(idx1,cmin) $plot_settings(cmin)
-set plist(idx1,cmax) $plot_settings(cmax)
-set plist(idx1,ptype) 0
-set plist(idx1,dtype) 0
-set plist(idx1,msize) $plot_settings(msize)
-set plist(idx1,mtype) $plot_settings(mtype)
-
-set var_settings(fs_all) [eval list $var_common \
+set var_settings(fs_all) [linsert $var_common end \
   var fs_all \
-  processing_mode 0 \
-  display_type 0]
+  processing_mode "First Return Topo" \
+  display_type "First Return Topography"]
 
-set plist(idx2,cmin) $plot_settings(cmin)
-set plist(idx2,cmax) $plot_settings(cmax)
-set plist(idx2,ptype) 1
-set plist(idx2,dtype) 1
-set plist(idx2,msize) $plot_settings(msize)
-set plist(idx2,mtype) $plot_settings(mtype)
-
-set var_settings(depth_all) [eval list $var_common \
+set var_settings(depth_all) [linsert $var_common end \
   var depth_all \
-  processing_mode 1 \
-  display_type 1]
+  processing_mode "Submerged Topo" \
+  display_type "Submerged Topography"]
 
-set plist(idx3,cmin) $plot_settings(cmin)
-set plist(idx3,cmax) $plot_settings(cmax)
-set plist(idx3,ptype) 2
-set plist(idx3,dtype) 3
-set plist(idx3,msize) $plot_settings(msize)
-set plist(idx3,mtype) $plot_settings(mtype)
-
-# veg_all
-set var_settings(veg_all) [eval list $var_common \
+set var_settings(veg_all) [linsert $var_common end \
   var veg_all \
-  processing_mode 2 \
-  display_type 3]
+  processing_mode "Topo Under Veg" \
+  display_type "Bare Earth Topography"]
 
-set plist(idx4,cmin) $plot_settings(cmin)
-set plist(idx4,cmax) $plot_settings(cmax)
-set plist(idx4,ptype) 3
-set plist(idx4,dtype) 0
-set plist(idx4,msize) $plot_settings(msize)
-set plist(idx4,mtype) $plot_settings(mtype)
-
-# cveg_all
-set var_settings(cveg_all) [eval list $var_common \
+set var_settings(cveg_all) [linsert $var_common end \
   var cveg_all \
-  processing_mode 3 \
-  display_type 0]
+  processing_mode "Multi Peak Veg" \
+  display_type "First Return Topography"]
 
-set plist(idx5,cmin) $plot_settings(cmin)
-set plist(idx5,cmax) $plot_settings(cmax)
-set plist(idx5,ptype) 1
-set plist(idx5,dtype) 1
-set plist(idx5,msize) $plot_settings(msize)
-set plist(idx5,mtype) $plot_settings(mtype)
-
-# workdata
-set var_settings(workdata) [eval list $var_common \
+set var_settings(workdata) [linsert $var_common end \
   var workdata \
-  processing_mode 1 \
-  display_type 1]
+  processing_mode "Submerged Topo" \
+  display_type "Submerged Topography"]
 
-set var_no 1
-set pvar_no 1
+set pro_var fs_all
+array set plot_settings $var_settings($pro_var)
+
 set plot_dpi 75
 array set cbvc {cmin cmin cmax cmax msize msize mtype mtype}
 
@@ -163,7 +130,7 @@ menu .l1wid.mb.diag
 
 .l1wid.mb.file add command -label "Read Binary Data file..." -underline 0 \
   -command {
-    global cbv cdelta cbvc plot_settings
+    global cbv cdelta cbvc plot_settings pro_var
     if {$cbv == 1} {
       set cbvc(cmin) $plot_settings(cmin)
       set cbvc(cmax) $plot_settings(cmax)
@@ -193,7 +160,7 @@ menu .l1wid.mb.diag
           expect "Tk updated"
           expect ">"
           update
-          set var_type [lindex $varlist end]
+          set var_type $pro_var
           update
           if { $cbv == 0 } {
             exp_send "set_read_yorick, $var_type \r"
@@ -208,7 +175,6 @@ menu .l1wid.mb.diag
             set plot_settings(mtype) $cbvc(mtype)
           }
           update
-          save_plot_settings [expr {[llength $varlist]-1}]
         }
         ".edf" -
         ".bin" {
@@ -219,7 +185,7 @@ menu .l1wid.mb.diag
           expect ">"
           exp_send "read_pointer_yfile, data_ptr, mode=1; \r"
           expect ">"
-          set ptype [.l1wid.bf4.1.p getvalue]
+          set ptype [processing_mode]
         }
       }
     }
@@ -227,7 +193,7 @@ menu .l1wid.mb.diag
 
 .l1wid.mb.file add command -label "Write Binary Data File..." -underline 0 \
   -command {
-    global write_some data_file_path
+    global write_some data_file_path pro_var
     if { [info exists data_file_path ] == 0 } {
       set data_file_path "~/"
     }
@@ -242,9 +208,8 @@ menu .l1wid.mb.diag
       {{IDL edf}       {.edf}        }
       {{All Files}            *      }
     }
-    set ptype [.l1wid.bf4.1.p getvalue]
-    set var_no [.l1wid.bf45.p.15 getvalue]
-    set var_type [lindex $varlist $var_no]
+    set ptype [processing_mode]
+    set var_type $pro_var
     LabelEntry .l1write.1.path  -width 30 -relief sunken -bd 3 \
       -label "Output Path:  " -helptext "Enter Output Data Path Here" \
       -textvariable ofname -text $data_file_path
@@ -356,9 +321,9 @@ namespace eval l1dir {
       -command [namespace code butPath_cmd]
 
     label $win.lblType -text "Data Type:"
-    ComboBox $win.cboType -editable 0 \
-      -values [list $v::type_pbd $v::type_yfile] \
+    iwidgets::combobox $win.cboType -editable false \
       -textvariable [namespace which -variable v::datatype]
+    $win.cboType insert list 0 $v::type_pbd $v::type_yfile
 
     label $win.lblSearch -text "Search String:"
     entry $win.entSearch -width 8 \
@@ -388,9 +353,9 @@ namespace eval l1dir {
       -textvariable [namespace which -variable v::zone]
 
     label $fra.lblTiles -text "Tile Type:"
-    ComboBox $fra.cboTiles -editable 0 \
-      -textvariable [namespace which -variable v::tiletype] \
-      -values [list $v::tile_dt $v::tile_qq]
+    iwidgets::combobox $fra.cboTiles -editable false \
+      -textvariable [namespace which -variable v::tiletype]
+    $fra.lblTiles insert list 0 [list $v::tile_dt $v::tile_qq]
 
     grid $fra.lblMerged - $fra.entMerged -
     grid $fra.lblUnique $fra.chkUnique $fra.lblSubsample $fra.spnSubsample
@@ -603,7 +568,7 @@ namespace eval l1dir {
           expect ">"
           exp_send "read_pointer_yfile, data_ptr, mode=1; \r"
           expect ">"
-          set ptype [.l1wid.bf4.1.p getvalue]
+          set ptype [processing_mode]
           destroy .l1dir
         }
       }
@@ -622,8 +587,7 @@ namespace eval l1dir {
 
 .l1wid.mb.file add command -label "Ascii output ..." -underline 0 \
   -command {
-    global opath ofile data_path plot_settings
-    global write_asc_some
+    global opath ofile data_path plot_settings pro_var write_asc_some
     if {[info exists data_path] == 0} {
       set data_path "~/"
     }
@@ -664,10 +628,9 @@ namespace eval l1dir {
           set ofname [file tail $ofname]
           set data_path $opath
 
-          set ptype [.l1wid.bf4.1.p getvalue]
-          set dtype [.l1wid.bf45.p.5 getvalue]
-          set var_no [.l1wid.bf45.p.15 getvalue]
-          set var_type [lindex $varlist $var_no]
+          set ptype [processing_mode]
+          set dtype [display_type]
+          set var_type $pro_var
 
           if {$zclip} {
             set zclips "\[$zmin, $zmax\]"
@@ -729,9 +692,8 @@ namespace eval l1dir {
     frame .l1asc.ops.2 -relief groove -borderwidth 3
     frame .l1asc.fn -relief groove -borderwidth 3
     frame .l1asc.cmd -relief groove -borderwidth 3
-    set ptype [.l1wid.bf4.1.p getvalue]
-    set var_no [.l1wid.bf45.p.15 getvalue]
-    set var_type [lindex $varlist $var_no]
+    set ptype [processing_mode]
+    set var_type $pro_var
 
     Separator .l1asc.ops.1.s0 -orient vertical -bg black -relief groove
     Separator .l1asc.ops.1.s1 -orient vertical -bg black -relief groove
@@ -1018,23 +980,21 @@ proc varlist_plot {} {
   frame .varplot.2
   listbox .varplot.1.lb -selectmode single -width 12 \
     -xscrollcommand ".varplot.1.xscroll set" \
-    -yscrollcommand ".varplot.1.yscroll set"
+    -yscrollcommand ".varplot.1.yscroll set" \
+    -listvariable varlist
   scrollbar .varplot.1.xscroll -orient horizontal \
     -command [list .varplot.1.lb xview]
   scrollbar .varplot.1.yscroll -command [list .varplot.1.lb yview]
-  for {set i 0} { $i < [llength $varlist] } {incr i} {
-    .varplot.1.lb insert end [lindex $varlist $i]
-  }
   Button .varplot.2.select -text "Select" -command {
-    set plot_var [lindex $varlist [.varplot.1.lb curselection]]
-    .l1wid.bf45.p.15 setvalue @[.varplot.1.lb curselection]
+    set pro_var [lindex $varlist [.varplot.1.lb curselection]]
   }
   LabelEntry .varplot.2.add -width 8 -relief sunken -label "Add:" \
     -helptext "Add variable name to list" \
     -textvariable addvar
   .varplot.2.add bind <Return> {
-    global varlist
+    global varlist addvar
     append_varlist $addvar
+    set addvar {}
   }
   Button .varplot.2.delete -width 8 -text "Delete" \
     -command {
@@ -1052,9 +1012,7 @@ proc varlist_plot {} {
         if {$choice == "yes"} {
           set new_varlist1 [lrange $varlist 0 [expr ($del_no-1)]]
           set new_varlist2 [lrange $varlist [expr ($del_no+1)] end]
-          .varplot.1.lb delete $del_no $del_no
           set varlist [concat $new_varlist1 $new_varlist2]
-          .l1wid.bf45.p.15 configure -values $varlist
           exp_send "$del_var = \[\];\r"
         }
       }
@@ -1074,48 +1032,9 @@ proc varlist_plot {} {
 }
 
 proc append_varlist {newvar} {
-  global varlist plist plot_settings var_settings
-  set ptype [.l1wid.bf4.1.p getvalue]
-  set dtype [.l1wid.bf45.p.5 getvalue]
-
-  ## save previous variable's constants in plist
-  set curvar  [lindex $varlist [.l1wid.bf45.p.15 getvalue]]
-  set var_settings($plot_settings(var)) [array get plot_settings]
-
-  set lslth [expr ([lsearch -exact $varlist $curvar] + 1)]
-  set plist(idx$lslth,cmin) $plot_settings(cmin)
-  set plist(idx$lslth,cmax) $plot_settings(cmax)
-  set plist(idx$lslth,ptype) $ptype
-  set plist(idx$lslth,dtype) $dtype
-  set plist(idx$lslth,msize) $plot_settings(msize)
-  set plist(idx$lslth,mtype) $plot_settings(mtype)
-
-  set plot_settings(var) $newvar
-  set var_settings($plot_settings(var)) [array get plot_settings]
-
+  global varlist
   if {[lsearch -exact $varlist $newvar] == -1} {
     lappend varlist $newvar
-    ## save current constants to $newvar
-    set lslth [llength $varlist]
-    set plist(idx$lslth,cmin) $plot_settings(cmin)
-    set plist(idx$lslth,cmax) $plot_settings(cmax)
-    set plist(idx$lslth,ptype) $ptype
-    set plist(idx$lslth,dtype) $dtype
-    set plist(idx$lslth,msize) $plot_settings(msize)
-    set plist(idx$lslth,mtype) $plot_settings(mtype)
-    .l1wid.bf45.p.15 configure -values $varlist
-    varlist_plot
-    .varplot.1.lb insert end $newvar
-    varlist_plot
-  } else {
-    ## save current constants to $newvar even if it exists
-    set lslth [expr ([lsearch -exact $varlist $newvar] + 1)]
-    set plist(idx$lslth,cmin) $plot_settings(cmin)
-    set plist(idx$lslth,cmax) $plot_settings(cmax)
-    set plist(idx$lslth,ptype) $ptype
-    set plist(idx$lslth,dtype) $dtype
-    set plist(idx$lslth,msize) $plot_settings(msize)
-    set plist(idx$lslth,mtype) $plot_settings(mtype)
   }
 }
 
@@ -1156,7 +1075,7 @@ proc append_varlist {newvar} {
 proc make_selected_arrays {} {
   global lrnindx list
   set curlist [.l1plot.1.lb curselection]
-  set ptype [.l1wid.bf4.1.p getvalue]
+  set ptype [processing_mode]
   if {$ptype == 0} {
     exp_send "fs_some = \[\];\r"
     expect ">"
@@ -1300,7 +1219,7 @@ proc hist_linlog {} {
 .l1wid.mb.diag entryconfigure 2 -state disabled
 
 proc rcf_region {} {
-  global varlist l1pro_data
+  global varlist l1pro_data pro_var rcf_var
   destroy .rcf
   destroy .ircf
   toplevel .rcf
@@ -1362,18 +1281,17 @@ proc rcf_region {} {
     -textvariable no_rcf -text 3
 
   Label .rcf.2.varname -text "Input Variable:"
-  ComboBox .rcf.2.varlist -values \
-    $varlist \
-    -helptext "Select any one of the following variables to RCF" \
-    -editable 0 -width 10 \
-    -modifycmd {
-      global outvar varlist
-      set curvar [lindex $varlist [.rcf.2.varlist getvalue]]
-      set outvar "rcf_$curvar"
-    }
 
-  set curvar [.l1wid.bf45.p.15 getvalue]
-  .rcf.2.varlist setvalue @$curvar
+  iwidgets::combobox .rcf.2.varlist \
+    -textvariable rcf_var \
+    -editable false -width 10 \
+    -selectioncommand {
+      set outvar "rcf_$rcf_var"
+    }
+  .rcf.2.varlist component list configure \
+    -listvariable varlist
+
+  set rcf_var $pro_var
 
   Label .rcf.2.dispname -text "Mode:"
   ComboBox .rcf.2.disp -width 20 \
@@ -1381,13 +1299,12 @@ proc rcf_region {} {
     -helptext "Select any one of the following" \
     -editable 0
 
-  set curproc [.l1wid.bf4.1.p getvalue]
+  set curproc [processing_mode]
   .rcf.2.disp setvalue @$curproc
 
-  set curvar  [lindex $varlist [.rcf.2.varlist getvalue]]
   LabelEntry .rcf.2.outvar -relief sunken \
     -label "Output Variable:" -helptext "Define output variable" \
-    -textvariable outvar -text "rcf_$curvar" -width 10
+    -textvariable outvar -text "rcf_$rcf_var" -width 10
 
   LabelEntry .rcf.5.premin -relief sunken \
     -label "Pre-filter Elevations (m): Min" \
@@ -1431,7 +1348,6 @@ proc rcf_region {} {
   Button .rcf.3.go -width 8 -text "Go" \
     -command {
       global varlist outvar
-      set curvar [lindex $varlist [.rcf.2.varlist getvalue]]
       switch [.rcf.2.disp getvalue] {
         "0" {set mode 1}
         "1" {set mode 2}
@@ -1446,13 +1362,13 @@ proc rcf_region {} {
           set plottriag ""
         }
         set datawin [.l1wid.bf45.p.3 getvalue]
-        exp_send "$outvar = rcf_triag_filter($curvar, buf=$buf, w=$w,\
+        exp_send "$outvar = rcf_triag_filter($rcf_var, buf=$buf, w=$w,\
           no_rcf=$no_rcf, mode=$mode, tw=$tw, interactive=$interactive,\
           tai=$tai, plottriag=$plottriag, plottriagwin=$plottriagwin,\
           prefilter_min=$prefilter_min, prefilter_max=$prefilter_max,\
           distthresh=$distthresh, datawin=$datawin );\r\n"
       } else {
-        exp_send "$outvar = rcfilter_eaarl_pts($curvar, buf=$buf, w=$w,\
+        exp_send "$outvar = rcfilter_eaarl_pts($rcf_var, buf=$buf, w=$w,\
           no_rcf=$no_rcf, mode=$mode);\r\n"
       }
       destroy .rcf
@@ -1477,7 +1393,7 @@ proc rcf_region {} {
 
 .l1wid.mb.post add command -label "Determine Roll Bias" -underline 0 \
   -command {
-    global win_no plot_var varlist curvar bias
+    global win_no varlist bias pro_var
 
     destroy .l1bias
     toplevel .l1bias
@@ -1499,7 +1415,7 @@ proc rcf_region {} {
     set inout 1
     set width 5
     set flwin 4
-    set var [lindex $varlist [.l1wid.bf45.p.15 getvalue]]
+    set var $pro_var
 
     LabelEntry .l1bias.1.var -relief sunken -borderwidth 3 -width 10 \
       -label "Variable:" -helptext "EAARL source data" \
@@ -1701,34 +1617,63 @@ ComboBox .l1wid.bf4.1.d -text "Define Region..." -width 15 -values \
     }
   }
 
-set l1pro_data(processing_mode) {
-  "First Return Topo"
-  "Submerged Topo"
-  "Topo Under Veg"
-  "Multi Peak Veg"
-  "Direct. Wave Spectra"
+proc processing_mode {} {
+  global plot_settings
+  switch -- $plot_settings(processing_mode) {
+    "First Return Topo" {
+      return 0
+    }
+    "Submerged Topo" {
+      return 1
+    }
+    "Topo Under Veg" {
+      return 2
+    }
+    "Multi Peak Veg" {
+      return 3
+    }
+    "Direct. Wave Spectra" {
+      return 4
+    }
+    default {
+      return -1
+    }
+  }
 }
 
-ComboBox .l1wid.bf4.1.p -text "Process For..." -width 16 \
-  -helptext "Process Data for any of the following" \
-  -editable 0 \
-  -values $l1pro_data(processing_mode) \
-  -modifycmd {
-    set curs [.l1wid.bf4.1.p getvalue]
+proc processing_mode_changed {a b c} {
+  global curs
+  if {$b eq "processing_mode"} {
+    set curs [processing_mode]
     if {$curs == 1} {
       .l1wid.bf4.2.surf configure -state active
     } else {
       .l1wid.bf4.2.surf configure -state disabled
     }
   }
-.l1wid.bf4.1.p setvalue first
+}
+
+trace remove \
+  variable plot_settings(processing_mode) write processing_mode_changed
+trace add \
+  variable plot_settings(processing_mode) write processing_mode_changed
+
+iwidgets::combobox .l1wid.bf4.1.p \
+  -textvariable plot_settings(processing_mode) \
+  -editable false
+eval .l1wid.bf4.1.p insert list end $l1pro_data(processing_mode)
+
+proc processing_mode_by_index {index} {
+  global plot_settings l1pro_data
+  set plot_settings(processing_mode) \
+    [lindex $l1pro_data(processing_mode) $index]
+}
 
 ComboBox .l1wid.bf4.1.m -text "Method"  \
   -width 7 \
   -helptext "Batch or single processing" \
   -editable 0 \
   -values "Batch Single"
-.l1wid.bf4.1.p setvalue first
 
 Label .l1wid.bf4.1.lw -text "in Win:"
 SpinBox .l1wid.bf4.1.sw -justify center -range {0 7 1} \
@@ -1751,40 +1696,27 @@ Button .l1wid.bf45.p.1 -text "Plot" -command {
 Button .l1wid.bf45.p.14 -text "Variable:" -command {
   varlist_plot
 }
-ComboBox .l1wid.bf45.p.15  -values \
-  $varlist \
-  -helptext "Select any one of the following variables " \
-  -editable 0 \
-  -modifycmd {
-    global cbv
-    set var_no [.l1wid.bf45.p.15 getvalue]
-    set var_type [lindex $varlist $var_no]
-    if {$cbv == 0} {
-      retrieve_plot_settings $var_no
-    }
-  } \
-  -postcommand {
-    global cbv
-    set var_no [.l1wid.bf45.p.15 getvalue]
-    set var_type [lindex $varlist $var_no]
-    if {$cbv == 0} {
-      save_plot_settings  $var_no
+
+proc pro_var_changed {a b c} {
+  global var_settings plot_settings pro_var cbv
+  if {$cbv == 0} {
+    set var_settings($plot_settings(var)) [array get plot_settings]
+    if {[info exists var_settings($pro_var)]} {
+      array set plot_settings $var_settings($pro_var)
+    } else {
+      set plot_settings(var) $pro_var
     }
   }
-.l1wid.bf45.p.15 setvalue first
-
-proc retrieve_plot_settings {pvar_no} {
-  global var_type plist plot_settings var_settings
-  incr pvar_no
-  set plot_settings(cmin) $plist(idx$pvar_no,cmin)
-  set plot_settings(cmax) $plist(idx$pvar_no,cmax)
-  set plot_settings(msize) $plist(idx$pvar_no,msize)
-  set plot_settings(mtype) $plist(idx$pvar_no,mtype)
-  .l1wid.bf4.1.p setvalue @$plist(idx$pvar_no,ptype)
-  .l1wid.bf45.p.5 setvalue @$plist(idx$pvar_no,dtype)
-
-  #array set plot_settings $var_settings($pvar)
 }
+
+trace remove variable pro_var write pro_var_changed
+trace add variable pro_var write pro_var_changed
+
+iwidgets::combobox .l1wid.bf45.p.15 \
+  -textvariable pro_var \
+  -editable false
+.l1wid.bf45.p.15 component list configure \
+  -listvariable varlist
 
 proc cbar_tool { } {
   global cbvc
@@ -1825,49 +1757,60 @@ proc cbar_tool { } {
 }
 
 
-proc save_plot_settings {pvar_no} {
-  global var_type plist plot_settings var_settings
-  incr pvar_no
-  set ptype [.l1wid.bf4.1.p getvalue]
-  set dtype [.l1wid.bf45.p.5 getvalue]
-  set plist(idx$pvar_no,cmin) $plot_settings(cmin)
-  set plist(idx$pvar_no,cmax) $plot_settings(cmax)
-  set plist(idx$pvar_no,msize) $plot_settings(msize)
-  set plist(idx$pvar_no,mtype) $plot_settings(mtype)
-  set plist(idx$pvar_no,ptype) $ptype
-  set plist(idx$pvar_no,dtype) $dtype
-  set var_settings($plot_settings(var)) [array get plot_settings]
-}
-
 Label .l1wid.bf45.p.2 -text "in Win:"
 SpinBox .l1wid.bf45.p.3 -justify center -range {0 7 1} \
   -width 2 -textvariable win_no
 
-Label .l1wid.bf45.p.25 -text "Mode:"
-ComboBox .l1wid.bf45.p.5 -text "Display Type" -width 20 \
-  -values {
-    "First Return Topography"
-    "Submerged Topography"
-    "Water Depth"
-    "Bare Earth Topography"
-    "Surface Amplitude"
-    "Bottom Amplitude"
-    "Canopy Height"
-  } \
-  -helptext "Select any one of the following" \
-  -editable 0
+proc display_type {} {
+  global plot_settings
+  switch -- $plot_settings(display_type) {
+    "First Return Topography" {
+      return 0
+    }
+    "Submerged Topography" {
+      return 1
+    }
+    "Water Depth" {
+      return 2
+    }
+    "Bare Earth Topography" {
+      return 3
+    }
+    "Surface Amplitude" {
+      return 4
+    }
+    "Bottom Amplitude" {
+      return 5
+    }
+    "Canopy Height" {
+      return 6
+    }
+    default {
+      return -1
+    }
+  }
+}
 
-.l1wid.bf45.p.5 setvalue first
+Label .l1wid.bf45.p.25 -text "Mode:"
+iwidgets::combobox .l1wid.bf45.p.5 \
+  -textvariable plot_settings(display_type) \
+  -editable false
+eval .l1wid.bf45.p.5 insert list end $l1pro_data(display_types)
+
+proc display_type_by_index {index} {
+  global plot_settings l1pro_data
+  set plot_settings(display_type) \
+    [lindex $l1pro_data(display_types) $index]
+}
 
 Button .l1wid.bf45.q.2 -text "Histogram\nElevations" \
   -helptext "Generate and display a histogram of all the first return\
     elevations" \
   -command {
     global cbvc plot_settings
-    set ptype [.l1wid.bf4.1.p getvalue]
-    set disp_type [.l1wid.bf45.p.5 getvalue]
-    set var_no [.l1wid.bf45.p.15 getvalue]
-    set var_type [lindex $varlist $var_no]
+    set ptype [processing_mode]
+    set disp_type [display_type]
+    set var_type $pro_var
     if {$disp_type == -1} {
       tk_messageBox  -icon warning \
         -message "You need to specify the type of data before using this\
@@ -1899,14 +1842,13 @@ Button .l1wid.bf45.q.2 -text "Histogram\nElevations" \
 Button .l1wid.bf45.q.1 -text "Pixel\nWaveform" \
   -helptext "Click to jump to raster, pulse, and image for xyz point" \
   -command {
-    global bconst plot_settings
+    global bconst plot_settings pro_var
     if {$bconst == 1} {
       set bconst 2
     }
-    set ptype [.l1wid.bf4.1.p getvalue]
-    set disp_type [.l1wid.bf45.p.5 getvalue]
-    set var_no [.l1wid.bf45.p.15 getvalue]
-    set var_type [lindex $varlist $var_no]
+    set ptype [processing_mode]
+    set disp_type [display_type]
+    set var_type $pro_var
     if {$disp_type == -1} {
       tk_messageBox  -icon warning \
         -message "You need to specify the type of data before using this\
@@ -1945,23 +1887,19 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
     frame .l1clip.2
     frame .l1clip.3
     frame .l1clip.4
-    set ptype [.l1wid.bf4.1.p getvalue]
+    set ptype [processing_mode]
     Label .l1clip.05.varname -text "Input Variable:"
-    ComboBox .l1clip.05.varlist  -values \
-      $varlist \
-      -helptext "Select any one of the following variables" \
-      -editable 0 \
-      -modifycmd {
-        global outvar varlist
-        set curvar [lindex $varlist [.l1clip.05.varlist getvalue]]
-        set outvar $curvar
-        set curidx [.l1clip.05.varlist getvalue]
-        .l1wid.bf45.p.15 setvalue @$curidx
-        retrieve_plot_settings [expr ($curidx+1)]
-      }
 
-    set curvar [.l1wid.bf45.p.15 getvalue]
-    .l1clip.05.varlist setvalue @$curvar
+    iwidgets::combobox .l1clip.05.varlist \
+      -textvariable pro_var -editable false \
+      -selectioncommand {
+        global pro_var outvar curvar
+        set curvar $pro_var
+        set outvar $pro_var
+      }
+    .l1clip.05.varlist component list configure \
+      -listvariable ::varlist
+
     checkbutton .l1clip.1.ymin -variable ymin \
       -command {
         if {$ymin == 1} {
@@ -2019,8 +1957,8 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
     Button .l1clip.4.ok -text "Clip Data" -width 5 -command {
       global outvar curvar
 
-      set ptype [.l1wid.bf4.1.p getvalue]
-      set dtype [.l1wid.bf45.p.5 getvalue]
+      set ptype [processing_mode]
+      set dtype [display_type]
       if {$ptype == 0} {
         ##for surface topography
         if {$ymin == 1 && $ymax == 1} {
@@ -2186,9 +2124,8 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
   }
 
 Button .l1wid.bf45.q.44 -text "Test and\nClean" -command {
-  global varlist
-  set var_no [.l1wid.bf45.p.15 getvalue]
-  set curvar [lindex $varlist $var_no]
+  global varlist pro_var
+  set curvar $pro_var
   exp_send "$curvar = test_and_clean($curvar)\r"
 }
 
@@ -2228,12 +2165,11 @@ ComboBox .l1wid.bf45.r.1 -text "Copy points using..." -width 16\
     \n Single Pixel" \
   -editable 0 \
   -modifycmd {
-    global varlist
+    global varlist pro_var
 
     set selr [.l1wid.bf45.r.1 getvalue]
     if {$selr == 0} {
-      set var_no [.l1wid.bf45.p.15 getvalue]
-      set var_type [lindex $varlist $var_no]
+      set var_type $pro_var
       set selection [tk_messageBox -icon info \
         -message "Drag a Rectangular Box in Window $win_no to define region." \
         -type okcancel -title "Message"]
@@ -2309,7 +2245,7 @@ ComboBox .l1wid.bf45.r.7 -text "Filter tools..." -width 16 \
     }
   }
 proc removing_proc {} {
-  global varlist curvar plot_settings
+  global varlist curvar plot_settings pro_var
   destroy .rem
   toplevel .rem
   frame .rem.05
@@ -2318,21 +2254,15 @@ proc removing_proc {} {
   frame .rem.09
   wm title .rem "Remove Points Using..."
   Label .rem.05.varname -text "Input Variable:"
-  ComboBox .rem.05.varlist  -values \
-    $varlist \
-    -helptext "Select any one of the following variables" \
-    -editable 0 \
-    -modifycmd {
-      global varlist curvar
-      set curvar [lindex $varlist [.rem.05.varlist getvalue]]
-      set curidx [.rem.05.varlist getvalue]
-      .l1wid.bf45.p.15 setvalue @$curidx
-      retrieve_plot_settings [expr ($curidx+1)]
-    }
 
-  set curidx [.l1wid.bf45.p.15 getvalue]
-  set curvar [lindex $varlist $curidx]
-  .rem.05.varlist setvalue @$curidx
+  iwidgets::combobox .rem.05.varlist \
+    -textvariable ::pro_var -editable false \
+    -selectioncommand {
+      global curvar pro_var
+      set curvar $pro_var
+    }
+  .rem.05.varlist component list configure \
+    -listvariable ::varlist
 
   frame .rem.06
   Label .rem.06.typetext -text "Data type:"
@@ -2344,7 +2274,7 @@ proc removing_proc {} {
       GEO\ or\ VEG__\
       FS\
     }
-  if {[.l1wid.bf45.p.5 getvalue] == 0} {
+  if {[display_type] == 0} {
     .rem.06.type setvalue @1
   } else {
     .rem.06.type setvalue @0
@@ -2404,12 +2334,11 @@ proc removing_proc {} {
 
   Button .rem.2 -width 8 -text "Go" \
     -command {
-      global varlist outvar selr curvar
+      global varlist outvar selr curvar pro_var
 
       set selr [.rem.1 getvalue]
       if {$selr == 0} {
-        set var_no [.l1wid.bf45.p.15 getvalue]
-        set var_type [lindex $varlist $var_no]
+        set var_type $pro_var
         set selection [tk_messageBox -icon info \
           -message "Drag a Rectangular Box in Window $win_no to define a\
             region." \
@@ -2484,7 +2413,7 @@ proc removing_proc {} {
 
 
 proc datum_proc {} {
-  global varlist curvar
+  global varlist curvar pro_var
   destroy .con
   toplevel .con
 
@@ -2493,22 +2422,14 @@ proc datum_proc {} {
   frame .con.05
 
   Label .con.05.varname -text "Input Variable:"
-  ComboBox .con.05.varlist  -values \
-    $varlist \
-    -helptext "Select any one of the following variables" \
-    -editable 0 \
-    -modifycmd {
-      global varlist curvar
-      set curvar [lindex $varlist [.con.05.varlist getvalue]]
-      set curidx [.con.05.varlist getvalue]
-      .l1wid.bf45.p.15 setvalue @$curidx
-      retrieve_plot_settings [expr ($curidx+1)]
+  iwidgets::combobox .con.05.varlist \
+    -textvariable ::pro_var -editable false \
+    -selectioncommand {
+      global curvar pro_var
+      set curvar $pro_var
     }
-
-  set curidx [.l1wid.bf45.p.15 getvalue]
-  set curvar [lindex $varlist $curidx]
-
-  .con.05.varlist setvalue @$curidx
+  .con.05.varlist component list configure \
+    -listvariable ::varlist
 
   Label .con.02 -text "The converted variable is named\
     n88_(currentvariablename)"
@@ -2526,29 +2447,19 @@ proc datum_proc {} {
 }
 
 proc keep_proc {} {
-  global varlist curvar
+  global varlist curvar pro_var
   destroy .sel
   toplevel .sel
   wm title .sel "Keep Points Using..."
   frame .sel.05
 
   Label .sel.05.varname -text "Input Variable:"
-  ComboBox .sel.05.varlist  -values \
-  $varlist \
-    -helptext "Select any one of the following variables" \
-    -editable 0 \
-    -modifycmd {
-      global outvar varlist curvar
-      set curvar [lindex $varlist [.sel.05.varlist getvalue]]
-      set curidx [.sel.05.varlist getvalue]
-      .l1wid.bf45.p.15 setvalue @$curidx
-      retrieve_plot_settings [expr ($curidx+1)]
+  iwidgets::combobox .sel.05.varlist \
+    -textvariable ::pro_var -editable false \
+    -selectioncommand {
+      global curvar pro_var
+      set curvar $pro_var
     }
-
-  set curidx [.l1wid.bf45.p.15 getvalue]
-  set curvar [lindex $varlist $curidx]
-
-  .sel.05.varlist setvalue @$curidx
 
   ComboBox .sel.1 -text "Keep points using..." -width 16\
     -values { \
@@ -2556,21 +2467,22 @@ proc keep_proc {} {
       Points\ in\ Polygon \
       Single\ Pixel\
     } \
-  -modifycmd {
-    global sels keep_var
-    set sels [.sel.1 getvalue]
-    if {$sels == 2} {
-      set grow_keep 1
-      set keep_var "finaldata"
-    } else {
-      set keep_var $curvar
-    }
-  } \
-  -helptext "Keep points from \'workdata\' using any of the following methods:\
-    \n Rubberband Box\
-    \n Points in Polygon\
-    \n Single Pixel" \
-  -editable 0
+    -modifycmd {
+      global sels keep_var
+      set sels [.sel.1 getvalue]
+      if {$sels == 2} {
+        set grow_keep 1
+        set keep_var "finaldata"
+      } else {
+        set keep_var $curvar
+      }
+    } \
+    -helptext "Keep points from \'workdata\' using any of the following\
+      methods:\
+      \n Rubberband Box\
+      \n Points in Polygon\
+      \n Single Pixel" \
+    -editable 0
 
   checkbutton .sel.grow -text "Grow output variable" -variable grow_keep
   LabelEntry .sel.15 -relief sunken -label "Output Variable:" \
@@ -2579,12 +2491,11 @@ proc keep_proc {} {
 
   Button .sel.2 -width 8 -text "Go" \
     -command {
-      global varlist outvar sels keep_var curvar
+      global varlist outvar sels keep_var curvar pro_var
 
       set sels [.sel.1 getvalue]
       if {$sels == 0} {
-        set var_no [.l1wid.bf45.p.15 getvalue]
-        set var_type [lindex $varlist $var_no]
+        set var_type $pro_var
         set selection [tk_messageBox  -icon info \
           -message "Drag a Rectangular Box in Window $win_no to define\
             region." \
@@ -2648,7 +2559,8 @@ proc keep_proc {} {
 }
 
 proc replace_proc {} {
-  global varlist curvar croppeddata have_replaced have_undone rcf_buf_rgn
+  global varlist curvar croppeddata have_replaced have_undone rcf_buf_rgn \
+    pro_var origvar
   set have_undone 0
   set have_replaced 0
   destroy .rep
@@ -2660,36 +2572,24 @@ proc replace_proc {} {
 
   set sameinput 0
   Label .rep.05.varname -text "Input Variable:"
-  ComboBox .rep.05.varlist  -values \
-    $varlist \
-    -helptext "Select any one of the following variables" \
-    -editable 0 \
-    -modifycmd {
-      global outvar varlist curvar
-      set curvar [lindex $varlist [.rep.05.varlist getvalue]]
-      set curidx [.rep.05.varlist getvalue]
-      .l1wid.bf45.p.15 setvalue @$curidx
-    }
 
-  set curidx [.l1wid.bf45.p.15 getvalue]
-  set curvar [lindex $varlist $curidx]
-  .rep.05.varlist setvalue @$curidx
+  iwidgets::combobox .rep.05.varlist \
+    -textvariable pro_var -editable false \
+    -selectioncommand {
+      global curvar pro_var
+      set curvar $pro_var
+    }
+  .rep.05.varlist component list configure \
+    -listvariable ::varlist
 
   Label .rep.005.varname -text "Original Data Variable:"
-  ComboBox .rep.005.varlist  -values \
-    $varlist \
-    -helptext "This variable should contain the original data that will be\
-      refiltered" \
-    -editable 0 \
-    -modifycmd {
-      global outvar varlist origvar
-      set origvar [lindex $varlist [.rep.005.varlist getvalue]]
-      set origidx [.rep.005.varlist getvalue]
-      .l1wid.bf45.p.15 setvalue @$origidx
-    }
-  set origidx [.l1wid.bf45.p.15 getvalue]
-  set origvar [lindex $varlist $curidx]
-  .rep.005.varlist setvalue @$origidx
+
+  iwidgets::combobox .rep.005.varlist \
+    -textvariable origvar -editable false
+  .rep.005.varlist component list configure \
+    -listvariable ::varlist
+
+  set origvar $pro_var
 
   # Note: In code below, the yorick variables "croppeddata" and "workdata" are
   # created through sel_data_rgn
@@ -2947,7 +2847,7 @@ proc replace_proc {} {
   pack .rep.5 -side left -pady 5
 }
 Button .l1wid.bf45.r.5 -text "Append2Tile" -command {
-  set curvar  [lindex $varlist [.l1wid.bf45.p.15 getvalue]]
+  set curvar  $pro_var
   set selection  [tk_messageBox  -icon question \
     -message "Append \'$curvar\' array to final data array?" \
     -type yesno -title "Warning" ]
@@ -3064,11 +2964,11 @@ pack \
 
 Button .l1wid.bf4.2.proc -text "Process Now" -width 20 -bd 5\
   -command {
-    global list lrnindx
+    global list lrnindx pro_var varlist
     set list {}
     set lrnindx {}
     exp_send "utm = $utm\n"
-    set ptype [.l1wid.bf4.1.p getvalue]
+    set ptype [processing_mode]
     set defr [.l1wid.bf4.1.d getvalue]
     exp_send "ptype = $ptype\n\r"
     if {$defr == 3} {
@@ -3079,25 +2979,25 @@ Button .l1wid.bf4.2.proc -text "Process Now" -width 20 -bd 5\
       exp_send "fs_all = make_fs(latutm=1, q=q, ext_bad_att=1,\
         usecentroid=$usecentroid);\r"
       expect ">"
-      .l1wid.bf45.p.15 setvalue @0
+      set pro_var [lindex $varlist 0]
     }
     if {$ptype == 1} {
       exp_send "depth_all = make_bathy(latutm = 1, q = q, ext_bad_depth=1,\
         ext_bad_att=1, avg_surf=$avg_surf);\r"
       expect ">"
-      .l1wid.bf45.p.15 setvalue @1
+      set pro_var [lindex $varlist 1]
     }
     if {$ptype == 2} {
       exp_send "veg_all = make_veg(latutm=1, q=q, ext_bad_att=1,\
         ext_bad_veg=1, use_centroid=$usecentroid);\r"
       expect ">"
-      .l1wid.bf45.p.15 setvalue @2
+      set pro_var [lindex $varlist 2]
     }
     if {$ptype == 3} {
       exp_send "cveg_all = make_veg(latutm=1, q=q, use_be_peak=$usecentroid,\
         multi_peaks=1);\r"
       expect ">"
-      .l1wid.bf45.p.15 setvalue @3
+      set pro_var [lindex $varlist 3]
     }
     if { $ptype == 4 }  {
       exp_send "process_for_dws,q\r"
@@ -3213,7 +3113,7 @@ proc send_rnarr_to_l1pro {bstart bstop brnindx} {
 
 proc plot_fltlines {sel} {
   global l1pro_fma win_no cdelta varlist skip \
-    plot_dpi setll changed_dpi plot_settings
+    plot_dpi setll changed_dpi plot_settings pro_var
   #fill in later using what to plot
   set fs 0
   set ba 0
@@ -3222,9 +3122,8 @@ proc plot_fltlines {sel} {
   set fint 0
   set lint 0
   set cht 0
-  set disp_type [.l1wid.bf45.p.5 getvalue]
-  set var_no [.l1wid.bf45.p.15 getvalue]
-  set var_type [lindex $varlist $var_no]
+  set disp_type [display_type]
+  set var_type $pro_var
   if {$disp_type == -1} {
     tk_messageBox  -icon warning \
       -message "You need to specify the type of data to display!" \
@@ -3237,7 +3136,7 @@ proc plot_fltlines {sel} {
   if {$disp_type == 4} { set fint 1}
   if {$disp_type == 5} { set lint 1}
   if {$disp_type == 6} { set cht 1}
-  set ptype [.l1wid.bf4.1.p getvalue]
+  set ptype [processing_mode]
   if {$ptype == -1} {
     tk_messageBox  -icon warning \
       -message "You need to specify the type of processed data i.e. topo,\

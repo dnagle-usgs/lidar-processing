@@ -966,9 +966,9 @@ func read_pointer_yfile(data_ptr, mode=) {
   if (a == FS) {
     fs_all = data_out;
     if (_ytk) {
-      tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",0);
-      tkcmd, swrite(format=".l1wid.bf45.p.15 setvalue @%d",0);
-      tkcmd, swrite(format=".l1wid.bf45.p.5 setvalue @%d",0);
+      tkcmd, "set pro_var fs_all";
+      tkcmd, "processing_mode_by_index 0";
+      tkcmd, "display_type_by_index 0";
       cmin = min(fs_all.elevation)/100.;
       cmax = max(fs_all.elevation)/100.;
       tkcmd, swrite(format="set plot_settings(cmin) %f", cmin);
@@ -978,9 +978,9 @@ func read_pointer_yfile(data_ptr, mode=) {
   if (a == GEO) {
     depth_all = data_out;
     if (_ytk) {
-      tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",1);
-      tkcmd, swrite(format=".l1wid.bf45.p.15 setvalue @%d",1);
-      tkcmd, swrite(format=".l1wid.bf45.p.5 setvalue @%d",1);
+      tkcmd, "set pro_var depth_all";
+      tkcmd, "processing_mode_by_index 1";
+      tkcmd, "display_type_by_index 1";
       cmin = min(depth_all.depth+depth_all.elevation)/100.;
       cmax = max(depth_all.depth+depth_all.elevation)/100.;
       tkcmd, swrite(format="set plot_settings(cmin) %f", cmin);
@@ -990,9 +990,9 @@ func read_pointer_yfile(data_ptr, mode=) {
   if (a == VEG || a == VEG_ || a == VEG__) {
     veg_all = data_out;
     if (_ytk) {
-      tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",2);
-      tkcmd, swrite(format=".l1wid.bf45.p.15 setvalue @%d",2);
-      tkcmd, swrite(format=".l1wid.bf45.p.5 setvalue @%d",3);
+      tkcmd, "set pro_var veg_all";
+      tkcmd, "processing_mode_by_index 2";
+      tkcmd, "display_type_by_index 3";
       cmin = min(veg_all.lelv)/100.;
       cmax = max(veg_all.lelv)/100.;
       tkcmd, swrite(format="set plot_settings(cmin) %f", cmin);
@@ -1002,9 +1002,9 @@ func read_pointer_yfile(data_ptr, mode=) {
   if (a == CVEG_ALL) {
     cveg_all = data_out;
     if (_ytk) {
-      tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",3);
-      tkcmd, swrite(format=".l1wid.bf45.p.15 setvalue @%d",3);
-      tkcmd, swrite(format=".l1wid.bf45.p.5 setvalue @%d",0);
+      tkcmd, "set pro_var veg_all";
+      tkcmd, "processing_mode_by_index 3";
+      tkcmd, "display_type_by_index 0";
       cmin = min(cveg_all.elevation)/100.;
       cmax = max(cveg_all.elevation)/100.;
       tkcmd, swrite(format="set plot_settings(cmin) %f", cmin);
@@ -1024,7 +1024,7 @@ func set_read_tk(junk) {
    extern vname
    tkcmd, swrite(format="append_varlist %s",vname);
    tkcmd, "varlist_plot";
-   tkcmd, ".l1wid.bf45.p.15 setvalue @[expr {[llength $varlist]-1}]"
+   tkcmd, swrite(format="set pro_var %s", vname);
    write, "Tk updated \r";
 
 }
@@ -1038,8 +1038,8 @@ func set_read_yorick(vname) {
   ab = structof(vname);
   if (ab == FS || ab == R) {
     if (_ytk) {
-      tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",0);
-      tkcmd, swrite(format=".l1wid.bf45.p.5 setvalue @%d",0);
+      tkcmd, "processing_mode_by_index 0";
+      tkcmd, "display_type_by_index 0";
       cminmax = stdev_min_max(vname.elevation)/100.;
       cmin = cminmax(1);
       cmax = cminmax(2);
@@ -1049,8 +1049,8 @@ func set_read_yorick(vname) {
   }
   if (ab == GEO || ab == GEOALL) {
     if (_ytk) {
-      tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",1);
-      tkcmd, swrite(format=".l1wid.bf45.p.5 setvalue @%d",1);
+      tkcmd, "processing_mode_by_index 1";
+      tkcmd, "display_type_by_index 1";
       cminmax = stdev_min_max(vname.depth+vname.elevation)/100.;
       cmin = cminmax(1);
       cmax = cminmax(2);
@@ -1060,8 +1060,8 @@ func set_read_yorick(vname) {
   }
   if (ab == VEG || ab == VEG_ || ab == VEG__ || ab == VEGALL || ab == VEG_ALL || ab == VEG_ALL_) {
     if (_ytk) {
-      tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",2);
-      tkcmd, swrite(format=".l1wid.bf45.p.5 setvalue @%d",3);
+      tkcmd, "processing_mode_by_index 2";
+      tkcmd, "display_type_by_index 3";
       cminmax = stdev_min_max(vname.lelv)/100.;
       cmin = cminmax(1);
       cmax = cminmax(2);
@@ -1071,8 +1071,7 @@ func set_read_yorick(vname) {
   }
   if (ab == CVEG_ALL) {
     if (_ytk) {
-      tkcmd, swrite(format=".l1wid.bf4.1.p setvalue @%d",3);
-      tkcmd, swrite(format=".l1wid.bf45.p.5 setvalue @%d",0);
+      tkcmd, "processing_mode_by_index 0";
       cminmax = stdev_min_max(vname.elevation)/100.;
       cmin = cminmax(1);
       cmax = cminmax(2);
@@ -1081,10 +1080,6 @@ func set_read_yorick(vname) {
     }
   }
   
-  tkcmd, swrite("set var_no [.l1wid.bf45.p.15 getvalue]");
-  tkcmd, swrite("set pvar_no [expr {$var_no + 1}]");
-  tkcmd, swrite("puts $pvar_no");
-  tkcmd, swrite("save_plot_settings $pvar_no");
   tkcmd, swrite("if {$cbv == 1} {set plot_settings(cmin) $cbvc(cmin)}");
   tkcmd, swrite("if {$cbv == 1} {set plot_settings(cmax) $cbvc(cmax)}");
   tkcmd, swrite("if {$cbv == 1} {set plot_settings(msize) $cbvc(msize)}");
