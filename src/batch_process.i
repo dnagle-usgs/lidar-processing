@@ -14,7 +14,12 @@ func package_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n= ) {
 }
 
 func save_vars (filename, tile=) {
-   f = createb( filename );
+   myi   = strchr( filename, '/', last=1);  // get filename only
+   pt  = strpart( filename, 0:myi);
+   fn  = strpart( filename, myi+1:0 );
+   tfn = swrite(format="%s.%s", pt, fn);
+   cmd = swrite(format="mv %s %s", tfn, filename);
+   f = createb( tfn );
    if ( ! get_typ ) get_typ = 0;
    if ( tile == 1 ) {
       // info, get_typ;
@@ -31,6 +36,11 @@ func save_vars (filename, tile=) {
       save,  f, iidx_path, indx_path, bool_arr, mtdt_path, mtdt_file;
       save,  f, i, n;
       save,  f, pbd;
+      save,  f, update;
+      // XYZZY - we need to save the batch_rcf parameters too!!
+      if ( b_rcf == 1 ) {
+         save,  f, b_rcf, buf, w, no_rcf, mode, merge, clean, rcfmode;
+      }
    }
    save,  f, pnav_filename;
    save,  f, tans, pnav, edb, edb_files;
@@ -39,11 +49,23 @@ func save_vars (filename, tile=) {
    save,  f, ops_conf;
    save,  f, curzone;
    close, f;
+   // This makes sure the file is completely written before batcher.tcl has a chance
+   // to grab it.
+   system, cmd;
    return;
 }
 
+func get_tld_names( q ) {
+   myrar = sel_region(q);
+   myedb = edb(myrar).file_number;           // get list of file numbers for region
+   myedb = myedb(unique(myedb));             // get unique file numbers
+
+   return ( edb_files(myedb).name );        // return list of names
+ }
+
 func unpackage_tile (fn=,host= ) {
    extern gga;
+   if ( is_void(host) ) host="localhost"
    write, format="Unpackage_tile: %s %s\n", fn, host;
    f = openb(fn);
    restore, f;
@@ -54,15 +76,23 @@ func unpackage_tile (fn=,host= ) {
       afn  = swrite(format="%s.files", fn);
       af = open(afn, "w");
       write, af, format="%s\n", data_path;
-      for(myi=1; myi<=numberof(edb_files); ++myi) {
-         write, af, format="%s\n", edb_files(myi).name;
-      }
+
+     // Get list of edb_files just for this tile
+     mytld = get_tld_names(q);
+     for(myi=1; myi<=numberof(mytld); ++myi) {
+         write, af, format="%s\n", mytld(myi);
+     }
+     // for(myi=1; myi<=numberof(myedb); ++myi) {
+     //     write, af, format="%s\n", edb_files(myedb(myi)).name;
+     // }
 
       close,af;
       cmd = swrite(format="/opt/eaarl/lidar-processing/src/check_for_tlds.pl %s %s", afn, host);
+      write, cmd;
       system, cmd;
-      write, format="Unpackage_Tile: %s: done\n", cmd;
+      write, format="Unpackage_Tile(%s): %s: done\n", host, cmd;
    }
+   write, format="Unpackage_Tile(%s): %s: done\n", host, fn;
 }
 
 // An easier hook for someone restoring a previous session.
@@ -70,7 +100,7 @@ func load_vars(fn) {
   unpackage_tile, fn=fn  // this avoids returning an array to the cmdline
 }
 
-func call_process_tile( junk= ) {
+func call_process_tile( junk=, host= ) {
    // write, format="Processing tile: %s\n", "test";
    // save_dir;
    // zone_s;
@@ -82,16 +112,54 @@ func call_process_tile( junk= ) {
    // mdate;
    // mtdt_file;
    // i;
-   process_tile(q=q, r=r, typ=typ, min_e=min_e, max_e=max_e, min_n=min_n, max_n=max_n )
+   uber_process_tile,q=q, r=r, typ=typ, min_e=min_e, max_e=max_e, min_n=min_n, max_n=max_n, host=host;
 }
 
 
-func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n= ) {
+func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host= ) {
+   extern ofn;
+   if (is_array(r)) {
+
+      process_tile (q=q, r=r, typ=typ, min_e=min_e, max_e=max_e, min_n=min_n, max_n=max_n, host=host );
+
+      mypath = ofn(1);
+      if ( b_rcf ) {
+         write, format="RCF Processing for %s\n", mypath;
+         if ( ! strmatch(host, "localhost") ) {
+            // Here we do need to make sure that we have all of the files
+            // so they can be processed together.
+            // XYZZY - This will result in errors from rsync when the
+            // files don't exist on the server (probably most of the time)
+            write, format="RCF: rsyncing %s:%s\n", host, mypath;
+            cmd = swrite(format="rsync -PHaqR %s:%s .", host, mypath);
+            write,  cmd;
+            system, cmd;
+            write, "rsync complete";
+         }
+         batch_rcf( mypath, buf=buf, w=w, no_rcf=no_rcf, mode=mode, merge=merge, clean=clean, rcfmode=rcfmode, onlyupdate=update );
+      }
+
+      if ( ! strmatch(host, "localhost") ) {
+         write, format="FINISH: rsyncing %s to %s\n", mypath, host;
+         cmd = swrite(format="rsync -PHaqR %s %s:/", mypath, host);
+         write, cmd;
+         system, cmd;
+         write, "rsync complete";
+      }
+
+   } else {
+      write, "No Flightlines found in this block."
+   }
+}
+
+func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host= ) {
    // info,q;
    // info,r;
    // info,get_typ;
    // info,auto;
-   if (is_array(r)) {
+   extern ofn;
+   if ( is_void(host) ) host="localhost";
+   if (is_array(r)) {      // XYZZY - we don't need this check anymore - 2009-01-12, rwm
       if (get_typ) {
          typ=[]
          typ_idx = where(tile.min_e == min_e);
@@ -104,15 +172,30 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n= ) {
          idx_n = long(10000 * long(1+(max_n / 10000)));
          if ((max_n % 10000) == 0) idx_n = long(max_n);
          ofn = array(string, 2);
-         // idx_e;
-         // idx_n;
-         ofn(1) = swrite(format="%si_e%d_n%d_%s/t_e%6.0f_n%7.0f_%s/", save_dir, idx_e, idx_n, zone_s, min_e, max_n, zone_s);
-         ofn(2) = swrite(format="t_e%6.0f_n%7.0f_%s_%s_%s", min_e, max_n, zone_s, dat_tag, mdate);
+         ofn(1) = swrite(format="%si_e%d_n%d_%s/t_e%6.0f_n%7.0f_%s/",
+            save_dir,
+            idx_e, idx_n, zone_s,
+            min_e, max_n, zone_s);
+         ofn(2) = swrite(format="t_e%6.0f_n%7.0f_%s_%s_%s",
+            min_e, max_n, zone_s,
+            dat_tag, mdate);
          if (edf) ofn(2) = ofn(2) + ".edf";
          if (pbd) ofn(2) = ofn(2) + ".pbd";
          pofn = ofn(1) + ofn(2);
+
+
          // if update = 1, check to see if file exists
          if (update) {
+
+            // Get files from server
+            if ( ! strmatch(host, "localhost") ) {
+               write, format="rsyncing %s:%s\n", host, ofn(1);
+               cmd = swrite(format="rsync -PHaqR %s:%s .", host, ofn(1));
+               write, cmd;
+               system, cmd;
+               write, "rsyncing finished";
+            }
+
             if (typ == 0)
                new_file = split_path(pofn,0,ext=1)(1)+"_f.pbd";
             if (typ == 1)
@@ -132,14 +215,13 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n= ) {
                write, format="File %s already exists...\n", new_file;
                // continue; // RWM
                return;
-
             }
          }
 
+         // if ( udpate ) {}
          mkdir, swrite(format="%si_e%d_n%d_%s", save_dir, idx_e, idx_n, zone_s);
          mkdir, swrite(format="%si_e%d_n%d_%s/t_e%6.0f_n%7.0f_%s", save_dir, idx_e, idx_n, zone_s, min_e, max_n, zone_s);
          indx_num = where(mtdt_path == swrite(format="%si_e%d_n%d_%s/", save_dir, idx_e, idx_n, zone_s));
-         // mtdt_path;  // XYZZY
          indx_number = indx_num(1);
          if (bool_arr(indx_number) != 1) {
             f = open(mtdt_file(indx_number),"a");
@@ -180,6 +262,8 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n= ) {
       // write metadata
       for (ij = 1; ij <=numberof(iidx_path); ij++) {
 
+         // if you get an error here, it is most likely because you decided to use 'i'
+         // elsewhere.
          write, format="RWM: IJ(%d): %d / %d: %s\n", i, ij, numberof(iidx_path), indx_path(i);
          if (mtdt_path(ij) == indx_path(i)) {
             f = open(mtdt_file(ij), "a");
@@ -349,6 +433,28 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n= ) {
             }
          }
       }
+      // XYZZY - Processing is complete, we need to rsync the output files
+      // XYZZY - back to the server.
+      // XYZZY -
+      // XYZZY - This is also the place to call batch_rcf using ofn(1) as
+      // XYZZY - the path to be processed.  That will limit the processing
+      // XYZZY - to just the current tile, which we know has just changed.
+
+      /*
+      if ( b_rcf ) {
+         write, format="RCF Processing for %s\n", ofn(1);
+         batch_rcf( ofn(1), buf=buf, w=w, no_rcf=no_rcf, mode=mode, merge=merge, clean=clean, rcfmode=rcfmode );
+      }
+
+      if ( ! strmatch(host, "localhost") ) {
+         write, format="rsyncing %s to %s\n", ofn(1), host;
+         cmd = swrite(format="rsync -PHaqR %s %s:/", ofn(1), host);
+         write, cmd;
+         system, cmd;
+         write, "rsync complete";
+      }
+      */
+
    } else {
       write, "No Flightlines found in this block."
    }
@@ -357,13 +463,14 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n= ) {
 // show progress of jobs completed.
 func show_progress(color=) {
    if ( is_void(color) ) color= "red";
-   system, "./show_tiles.pl /tmp/batch/done > /tmp/batch/.tiles";
+   // XYZZY: We need to trap somehow that the system didn't work, or we'll fail on the open
+   system, "./show_tiles.pl -rm /tmp/batch/done > /tmp/batch/.tiles";
    f = open("/tmp/batch/.tiles");
 
    col1= col2= col3= col4= array(0, 1000 /* max rows per column */ );
    read, f, col1, col2, col3, col4;
    close,f;
-   system, "rm /tmp/batch/.tiles";
+   // system, "rm /tmp/batch/.tiles";
 
    col1 = col1(where(col1));  // Throw away nulls
    col2 = col2(where(col2));  // Throw away nulls
@@ -379,6 +486,20 @@ func show_progress(color=) {
    window,6;  // seems to help in getting the sgtatus plot updated.
 }
 
+// Check space in batch area
+func check_space(wmark=, dir=) {
+   // XYZZY: need to trap somehow that system didn't work, or we'll fail on the open
+   cmd = swrite(format="./waiter.pl -noloop %d %s > /tmp/batch/.space", wmark, dir );
+   system, cmd;
+   f = open("/tmp/batch/.space");
+
+   space= fc= array(0, 1 /* max rows per column */ );
+   read, f, space, fc
+   close,f;
+   // system, "rm /tmp/batch/.space";
+   return ([space, fc]);
+}
+
 func batch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=, onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=, only_veg=, update=, avg_surf=,conf_file=, now=) {
 /* DOCUMENT batch_process
    See: mbatch_process
@@ -386,7 +507,7 @@ func batch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=, onlypl
    mbatch_process(typ=typ, save_dir=save_dir, shem=shem, zone=zone, dat_tag=dat_tag, cmdfile=cmdfile, n=n, onlyplot=onlyplot, mdate=mdate, pbd=pdb, edf=edf, win=win, auto=auto, pick=pick, get_typ=get_typ, only_bathy=only_bathy, only_veg=only_veg, update=update, avg_surf=avg_surv,conf_file=conf_file, now=1);
 }
 
-func mbatch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=, onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=, only_veg=, update=, avg_surf=,conf_file=, now=) {
+func mbatch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=, onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=, only_veg=, update=, avg_surf=,conf_file=, now=, b_rcf=, buf=, w=, no_rcf=, mode=, merge=, clean=, rcfmode=) {
 /* DOCUMENT mbatch_process
 func batch_process(typ=, save_dir=, shem=, zone=, dat_tag=,
                    cmdfile=, n=, onlyplot=, mdate=, pbd=, edf=,
@@ -466,6 +587,19 @@ are REQUIRED:
                files.  Set to be the path of the .conf file used
                in quotes.
 
+  b_rcf=     : 1 - invokes batch_rcf after normal batch processing
+
+The following are pass thru variables needed for batch_rcf
+  buf=       :
+  w=         :
+  no_rcf=    :
+  mode=      :
+  merge=     :
+  clean=     :
+  rcfmode=   :
+
+
+
 Ex: curzone=18
     batch_process,typ=2,save_dir="/data/3/2004/bombay-hook/output/",
                   mdate="20040209",zone=18,pick=1
@@ -498,12 +632,13 @@ amar nayegandhi started (10/04/02) Lance Mosher
 
    if (zone) zone_s = swrite(format="%d", zone);
    //if (zone) pick=1;
-   if (!pbd && !edf) pbd = 1;
-   if (is_void(typ)) get_typ=1;
-   if (!dat_tag) dat_tag = "w84";
-   if (is_void(update)) update = 0;
+   if (!pbd && !edf)      pbd      = 1;
+   if (is_void(typ))      get_typ  = 1;
+   if (!dat_tag)          dat_tag  = "w84";
+   if (is_void(update))   update   = 0;
    if (is_void(avg_surf)) avg_surf = 1;
-   if (!cmdfile && !auto) auto=1;
+   if (is_void(b_rcf))    b_rcf    = 0;
+   if (!cmdfile && !auto) auto     = 1;
    if (cmdfile) {
       path = array(string, n);
       min_e = array(float, n);
@@ -739,25 +874,28 @@ amar nayegandhi started (10/04/02) Lance Mosher
                system, "./waiter.pl 250000 /tmp/batch/jobs"
                package_tile(q=q, r=r, typ=typ, min_e=min_e(i), max_e=max_e(i), min_n=min_n(i), max_n=max_n(i) )
             } else {
-               process_tile(q=q, r=r, typ=typ, min_e=min_e(i), max_e=max_e(i), min_n=min_n(i), max_n=max_n(i) )
+               uber_process_tile(q=q, r=r, typ=typ, min_e=min_e(i), max_e=max_e(i), min_n=min_n(i), max_n=max_n(i) )
             }
          }
       }
-   }
+  }
    if ( is_void( now ) ) {
       // wait until no more jobs to be farmed out
       do {
-         system, "./waiter.pl -noloop 1024 /tmp/batch/jobs > /tmp/batch/.space"
-         f = open("/tmp/batch/.space");
+         mya1 = check_space(wmark=1024, dir="/tmp/batch/jobs");
+         if ( mya1(2) > 0 ) write,format="%d job(s) to be farmed out.\n", mya1(2);
 
-         space= fc= array(0, 1 /* max rows per column */ );
-         read, f, space, fc
-         close,f;
-         system, "rm /tmp/batch/.space";
-         if ( fc(1) > 0 ) write,format="%d job(s) to be farmed out.\n", fc(1);
          show_progress;   // , color="magenta";
+         mya2 = check_space (wmark=1024, dir="/tmp/batch/farm");
+         if ( mya2(2) != rj ) write,format="%d job(s) to be retreived.\n", mya2(2);
+
+         show_progress;   // , color="magenta";
+         mya3 = check_space (wmark=1024, dir="/tmp/batch/work");
+         if ( mya3(2) != rj ) write,format="%d job(s) to be finished.\n", mya3(2);
+         space = mya1(1) + mya2(1) + mya3(1);
       } while ( space(1) > 1024 );
       // wait until all jobs finished.
+      rj = 99;
       do {
          system, "./waiter.pl -noloop 1024 /tmp/batch/work > /tmp/batch/.space"
          f = open("/tmp/batch/.space");
@@ -765,8 +903,9 @@ amar nayegandhi started (10/04/02) Lance Mosher
          space= fc= array(0, 1 /* max rows per column */ );
          read, f, space, fc
          close,f;
-         system, "rm /tmp/batch/.space";
-         if ( fc(1) > 0 ) write,format="%d job(s) to be finished.\n", fc(1);
+         // system, "rm /tmp/batch/.space";
+         if ( fc(1) != rj ) write,format="%d job(s) to be finished.\n", fc(1);
+         rj = fc(1);
          show_progress;   // , color="blue";
       } while ( space(1) > 1024 );
    }
@@ -1012,7 +1151,7 @@ Original amar nayegandhi. Started 12/06/02.
    nfiles = numberof(fn_all);
    write, format="Total number of files to RCF = %d\n",nfiles;
 
-   if ( _ytk && (int(nfiles) != 0) ) {
+   if ( now == 1 && _ytk && (int(nfiles) != 0) ) {
       tkcmd,"destroy .batch_rcf; toplevel .batch_rcf; set progress 0;"
       tkcmd,swrite(format="ProgressBar .batch_rcf.pb \
       -fg black \
@@ -1298,11 +1437,11 @@ Original amar nayegandhi. Started 12/06/02.
             }
          }
       }
-      if (_ytk)
+      if (now == 1 && _ytk)
          tkcmd, swrite(format="set batch_progress %d", i)
    }
 
-   if (_ytk) {
+   if (now == 1 && _ytk) {
       tkcmd, "destroy .batch_rcf"
    }
    //batch_test_rcf(dirname, mode, datum=datum, testpbd=writepbd, testedf=writeedf, buf=buf, w=w, no_rcf=no_rcf);
