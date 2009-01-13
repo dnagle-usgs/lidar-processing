@@ -355,7 +355,7 @@ namespace eval l1dir {
     label $fra.lblTiles -text "Tile Type:"
     iwidgets::combobox $fra.cboTiles -editable false \
       -textvariable [namespace which -variable v::tiletype]
-    $fra.lblTiles insert list 0 [list $v::tile_dt $v::tile_qq]
+    $fra.cboTiles insert list 0 [list $v::tile_dt $v::tile_qq]
 
     grid $fra.lblMerged - $fra.entMerged -
     grid $fra.lblUnique $fra.chkUnique $fra.lblSubsample $fra.spnSubsample
