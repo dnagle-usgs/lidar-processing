@@ -2244,7 +2244,7 @@ ComboBox .l1wid.bf45.r.7 -text "Filter tools..." -width 16 \
     }
   }
 proc removing_proc {} {
-  global varlist curvar plot_settings pro_var
+  global varlist rmv_var plot_settings pro_var
   destroy .rem
   toplevel .rem
   frame .rem.05
@@ -2255,13 +2255,10 @@ proc removing_proc {} {
   Label .rem.05.varname -text "Input Variable:"
 
   iwidgets::combobox .rem.05.varlist \
-    -textvariable ::pro_var -editable false \
-    -selectioncommand {
-      global curvar pro_var
-      set curvar $pro_var
-    }
+    -textvariable ::rmv_var -editable false
   .rem.05.varlist component list configure \
     -listvariable ::varlist
+  set rmv_var $pro_var
 
   frame .rem.06
   Label .rem.06.typetext -text "Data type:"
@@ -2333,7 +2330,7 @@ proc removing_proc {} {
 
   Button .rem.2 -width 8 -text "Go" \
     -command {
-      global varlist outvar selr curvar pro_var
+      global varlist outvar selr rmv_var pro_var
 
       set selr [.rem.1 getvalue]
       if {$selr == 0} {
@@ -2344,7 +2341,7 @@ proc removing_proc {} {
           -type okcancel -title "Message"]
         if {$selection == "ok"} {
           exp_send "croppeddata=\[\];\
-            $curvar = sel_data_rgn($curvar, mode=2, win=$win_no, exclude=1)\r"
+            $rmv_var = sel_data_rgn($rmv_var, mode=2, win=$win_no, exclude=1)\r"
           expect ">"
         }
       }
@@ -2356,7 +2353,7 @@ proc removing_proc {} {
           -type okcancel -title "Message" ]
         if {$selection == "ok"} {
           exp_send "croppeddata=\[\];\
-            $curvar = sel_data_rgn($curvar, mode=3, win=$win_no, exclude=1)\r"
+            $rmv_var = sel_data_rgn($rmv_var, mode=3, win=$win_no, exclude=1)\r"
           expect ">"
         }
       }
@@ -2366,7 +2363,7 @@ proc removing_proc {} {
           -type okcancel -title "Message"]
         if {$selection == "ok"} {
           exp_send "croppeddata=\[\];\
-            $curvar = select_points($curvar, win=$win_no, exclude=1);\r"
+            $rmv_var = select_points($rmv_var, win=$win_no, exclude=1);\r"
           expect ">"
         }
       }
@@ -2385,21 +2382,22 @@ proc removing_proc {} {
           set min_arg [expr {$min ? $min_thresh ? ""}]
           set max_arg [expr {$max ? $max_thresh ? ""}]
           exp_send "croppeddata=\[\];\
-            $curvar = pipthresh($curvar, mode=$val,\
+            $rmv_var = pipthresh($rmv_var, mode=$val,\
               minthresh=$min_arg, maxthresh=$max_arg);\r"
         }
       }
       if {$selr == -1} {
         error "Please Define Region."
       } else {
-        append_varlist $curvar
+        append_varlist $rmv_var
       }
     }
   Button .rem.3 -width 8 -text "Dismiss" -command {
     destroy .rem
   }
   Button .rem.4 -width 8 -text "Undo Last\nRemove" -command {
-    exp_send "if(is_array(croppeddata)) $curvar = grow($curvar,croppeddata);\r"
+    exp_send "if(is_array(croppeddata))\
+      $rmv_var = grow($rmv_var,croppeddata);\r"
     expect ">"
   }
 
@@ -2412,7 +2410,7 @@ proc removing_proc {} {
 
 
 proc datum_proc {} {
-  global varlist curvar pro_var
+  global varlist datum_var pro_var
   destroy .con
   toplevel .con
 
@@ -2422,31 +2420,29 @@ proc datum_proc {} {
 
   Label .con.05.varname -text "Input Variable:"
   iwidgets::combobox .con.05.varlist \
-    -textvariable ::pro_var -editable false \
-    -selectioncommand {
-      global curvar pro_var
-      set curvar $pro_var
-    }
+    -textvariable ::datum_var -editable false
   .con.05.varlist component list configure \
     -listvariable ::varlist
+  set datum_var $pro_var
 
   Label .con.02 -text "The converted variable is named\
     n88_(currentvariablename)"
   Button .con.1 -width 8 -text "Go" \
     -command {
-      set convar "n88_$curvar"
-      exp_send "$convar = data_datum_converter($curvar);\r"
+      set convar "n88_$datum_var"
+
+      exp_send "$convar = data_datum_converter($datum_var);\r"
       expect ">"
+
+      append_varlist $convar
     }
 
   pack .con.05.varname .con.05.varlist -side left -padx 5
   pack .con.05 .con.02 .con.1  -side top -pady 10
-
-  append_varlist "n88_$curvar"
 }
 
 proc keep_proc {} {
-  global varlist curvar pro_var
+  global varlist keep_in_var keep_out_var pro_var
   destroy .sel
   toplevel .sel
   wm title .sel "Keep Points Using..."
@@ -2454,11 +2450,10 @@ proc keep_proc {} {
 
   Label .sel.05.varname -text "Input Variable:"
   iwidgets::combobox .sel.05.varlist \
-    -textvariable ::pro_var -editable false \
-    -selectioncommand {
-      global curvar pro_var
-      set curvar $pro_var
-    }
+    -textvariable ::keep_in_var -editable false
+  .sel.05.varlist component list configure \
+    -listvariable ::varlist
+  set keep_in_var $pro_var
 
   ComboBox .sel.1 -text "Keep points using..." -width 16\
     -values { \
@@ -2467,13 +2462,13 @@ proc keep_proc {} {
       Single\ Pixel\
     } \
     -modifycmd {
-      global sels keep_var
+      global sels keep_in_var keep_out_var grow_keep
       set sels [.sel.1 getvalue]
       if {$sels == 2} {
         set grow_keep 1
-        set keep_var "finaldata"
+        set keep_out_var "finaldata"
       } else {
-        set keep_var $curvar
+        set keep_out_var $keep_in_var
       }
     } \
     -helptext "Keep points from \'workdata\' using any of the following\
@@ -2486,11 +2481,11 @@ proc keep_proc {} {
   checkbutton .sel.grow -text "Grow output variable" -variable grow_keep
   LabelEntry .sel.15 -relief sunken -label "Output Variable:" \
     -helptext "Define output variable" \
-    -textvariable keep_var -text "workdata"
+    -textvariable keep_out_var -text "workdata"
 
   Button .sel.2 -width 8 -text "Go" \
     -command {
-      global varlist outvar sels keep_var curvar pro_var
+      global varlist outvar sels keep_in_var keep_out_var pro_var
 
       set sels [.sel.1 getvalue]
       if {$sels == 0} {
@@ -2501,11 +2496,12 @@ proc keep_proc {} {
           -type okcancel -title "Message"]
         if {$selection == "ok"} {
           if {$grow_keep == 0} {
-            exp_send "$keep_var = sel_data_rgn($curvar, mode=2, win=$win_no)\r"
+            exp_send "$keep_out_var =\
+              sel_data_rgn($keep_in_var, mode=2, win=$win_no)\r"
             expect ">"
           } else {
-            exp_send "$keep_var = grow($keep_var,\
-              sel_data_rgn($curvar, mode=2, win=$win_no));\r"
+            exp_send "grow, $keep_out_var,\
+              sel_data_rgn($keep_in_var, mode=2, win=$win_no);\r"
             expect ">"
           }
         }
@@ -2518,11 +2514,12 @@ proc keep_proc {} {
           -type okcancel -title "Message" ]
         if {$selection == "ok"} {
           if {$grow_keep == 0} {
-            exp_send "$keep_var = sel_data_rgn($curvar, mode=3, win=$win_no)\r"
+            exp_send "$keep_out_var =\
+              sel_data_rgn($keep_in_var, mode=3, win=$win_no)\r"
             expect ">"
           } else {
-            exp_send "$keep_var = grow($keep_var,\
-              sel_data_rgn($curvar, mode=3, win=$win_no));\r"
+            exp_send "grow, $keep_out_var,\
+              sel_data_rgn($keep_in_var, mode=3, win=$win_no);\r"
             expect ">"
           }
         }
@@ -2533,11 +2530,12 @@ proc keep_proc {} {
           -type okcancel -title "Message"]
         if {$selection == "ok"} {
           if {$grow_keep == 0} {
-            exp_send "$keep_var = select_points($curvar, win=$win_no);\r"
+            exp_send "$keep_out_var =\
+              select_points($keep_in_var, win=$win_no);\r"
             expect ">"
           } else {
-            exp_send "$keep_var = grow($keep_var,\
-              select_points($curvar, win=$win_no));\r"
+            exp_send "grow, $keep_out_var,\
+              select_points($keep_in_var, win=$win_no));\r"
             expect ">"
           }
         }
@@ -2545,7 +2543,7 @@ proc keep_proc {} {
       if {$sels == -1} {
         error "Please Define Region."
       } else {
-        append_varlist $curvar
+        append_varlist $keep_out_var
       }
     }
   Button .sel.3 -width 8 -text "Dismiss" -command {
@@ -2558,8 +2556,8 @@ proc keep_proc {} {
 }
 
 proc replace_proc {} {
-  global varlist curvar croppeddata have_replaced have_undone rcf_buf_rgn \
-    pro_var origvar
+  global varlist croppeddata have_replaced have_undone rcf_buf_rgn \
+    pro_var replace_in_var replace_orig_var replace_out_var
   set have_undone 0
   set have_replaced 0
   destroy .rep
@@ -2573,22 +2571,18 @@ proc replace_proc {} {
   Label .rep.05.varname -text "Input Variable:"
 
   iwidgets::combobox .rep.05.varlist \
-    -textvariable pro_var -editable false \
-    -selectioncommand {
-      global curvar pro_var
-      set curvar $pro_var
-    }
+    -textvariable replace_in_var -editable false
   .rep.05.varlist component list configure \
     -listvariable ::varlist
+  set replace_in_var $pro_var
 
   Label .rep.005.varname -text "Original Data Variable:"
 
   iwidgets::combobox .rep.005.varlist \
-    -textvariable origvar -editable false
+    -textvariable replace_orig_var -editable false
   .rep.005.varlist component list configure \
     -listvariable ::varlist
-
-  set origvar $pro_var
+  set replace_orig_var $pro_var
 
   # Note: In code below, the yorick variables "croppeddata" and "workdata" are
   # created through sel_data_rgn
@@ -2608,8 +2602,6 @@ proc replace_proc {} {
       variable \"workdata\"" \
     -editable 0 \
     -modifycmd {
-      set curidx [.rep.05.varlist getvalue]
-      set curvar [lindex $varlist $curidx]
       set defr [.rep.1 getvalue]
       set sel_points buf_points
       set buffered_var bufferdata
@@ -2621,15 +2613,15 @@ proc replace_proc {} {
               region." \
             -type okcancel -title "Message"]
           if {$result == "ok"} {
-            exp_send "$keep_var = $curvar;\r"
+            exp_send "$replace_out_var = $replace_in_var;\r"
             exp_send "$sel_points = mouse(1,1,\
               \"Hold the left mouse button down, select a region:\");"
             expect ">"
             exp_send "temp_rgn = add_buffer_rgn($sel_points,\
               $rcf_buf_rgn, mode=1);\r"
             expect ">"
-            exp_send "workdata = sel_data_rgn($origvar, mode=4, win=$win_no,\
-              rgn=temp_rgn);\r"
+            exp_send "workdata = sel_data_rgn($replace_orig_var, mode=4,\
+              win=$win_no, rgn=temp_rgn);\r"
             expect ">"
           }
         } elseif {$defr == 1} {
@@ -2639,96 +2631,102 @@ proc replace_proc {} {
               middle mouse click OR <Ctrl> and left mouse click." \
             -type okcancel -title "Message"]
           if {$result == "ok"} {
-            exp_send "$keep_var = $curvar;\r"
+            exp_send "$replace_out_var = $replace_in_var;\r"
             # For eval purposes, success stores if getPoly_add_buffer command
             # was successful. The yorick variables buf_points, temp_rgn, and
             # workdata are made.
             exp_send "success = getPoly_add_buffer($rcf_buf_rgn,\
-              origdata=$origvar, windw=$win_no);\r"
+              origdata=$replace_origvar, windw=$win_no);\r"
             expect ">"
           }
         } elseif {$defr == 2} {
-            exp_send "$keep_var = $curvar;\r"
-            exp_send "window, $win_no;\
-              $sel_points=limits()(1:4);\
-              temp_rgn = add_buffer_rgn($sel_points,$rcf_buf_rgn,mode=3);\r"
+          exp_send "$replace_out_var = $replace_in_var;\r"
+          exp_send "window, $win_no;\
+            $sel_points=limits()(1:4);\
+            temp_rgn = add_buffer_rgn($sel_points, $rcf_buf_rgn, mode=3);\r"
+          expect ">"
+          exp_send "workdata = sel_data_rgn($replace_orig_var, mode=4,\
+            win=$win_no, rgn=temp_rgn);\r"
+          expect ">"
+        }
+        set have_replaced 0
+        set have_undone 0
+      } else {
+        if {$defr == 0} {
+          set result [tk_messageBox  -icon info \
+            -message "Drag a Rectangular Box in Window $win_no to define\
+              region." \
+            -type okcancel -title "Message"]
+          if {$result == "ok"} {
+            exp_send "$replace_out_var = sel_data_rgn($replace_in_var,\
+              mode=2, win=$win_no, exclude=1, make_workdata=1,\
+              origdata=$replace_orig_var);\r"
             expect ">"
-            exp_send "workdata = sel_data_rgn($origvar, mode=4, win=$win_no,\
-              rgn=temp_rgn);\r"
-            expect ">"
-          }
-          set have_replaced 0
-          set have_undone 0
-        } else {
-          if {$defr == 0} {
-            set result [tk_messageBox  -icon info \
-              -message "Drag a Rectangular Box in Window $win_no to define\
-                region." \
-              -type okcancel -title "Message"]
-            if {$result == "ok"} {
-              exp_send "$keep_var = sel_data_rgn($curvar, mode=2, win=$win_no,\
-                exclude=1, make_workdata=1, origdata=$origvar);\r"
-              expect ">"
-              set have_replaced 0
-              set have_undone 0
-            }
-          }
-          if {$defr == 1} {
-            set result [tk_messageBox  -icon info \
-              -message "Draw a Polygon in Window $win_no to define a region\
-                using a series of left mouse clicks. To complete the polygon,\
-                middle mouse click OR <Ctrl> and left mouse click." \
-              -type okcancel -title "Message"]
-            if {$result == "ok"} {
-              exp_send "$keep_var = sel_data_rgn($curvar, mode=3, win=$win_no,\
-                exclude=1, make_workdata=1, origdata=$origvar);\r"
-              expect ">"
-              set have_replaced 0
-              set have_undone 0
-            }
-          }
-          if {$defr == 2} {
-            exp_send "$keep_var = sel_data_rgn($curvar, mode=1, win=$win_no,\
-              exclude=1, make_workdata=1, origdata=$origvar);\r"
             set have_replaced 0
             set have_undone 0
           }
-        #end if/else rcf_buf_rgn
         }
+        if {$defr == 1} {
+          set result [tk_messageBox  -icon info \
+            -message "Draw a Polygon in Window $win_no to define a region\
+              using a series of left mouse clicks. To complete the polygon,\
+              middle mouse click OR <Ctrl> and left mouse click." \
+            -type okcancel -title "Message"]
+          if {$result == "ok"} {
+            exp_send "$replace_out_var = sel_data_rgn($replace_in_var,\
+              mode=3, win=$win_no, exclude=1, make_workdata=1,\
+              origdata=$replace_orig_var);\r"
+            expect ">"
+            set have_replaced 0
+            set have_undone 0
+          }
+        }
+        if {$defr == 2} {
+          exp_send "$replace_out_var = sel_data_rgn($replace_in_var,\
+            mode=1, win=$win_no, exclude=1, make_workdata=1,\
+            origdata=$replace_orig_var);\r"
+          set have_replaced 0
+          set have_undone 0
+        }
+      #end if/else rcf_buf_rgn
+      }
     }
 
   Button .rep.type -text "Filter selected points" -width 15 -bd 5 \
     -command {
       global curvar have_replaced have_undone croppeddata outvar rcf_buf_rgn \
         sel_points
+      set outvar rcf_workdata
       if {$have_undone == 1} {
         if {$rcf_buf_rgn > 0} {
           exp_send "workdata = tempdata;\r"
         } else {
-          exp_send "$keep_var = $keep_var (1: - numberof(croppeddata));\r"
+          exp_send "$replace_out_var =\
+            $replace_out_var (1: - numberof(croppeddata));\r"
         }
       } elseif {$have_replaced == 1} {
         if {$rcf_buf_rgn > 0} {
           exp_send "workdata = tempdata;\r"
         } else {
-          exp_send "$keep_var = $keep_var (1: - numberof($outvar));\r"
+          exp_send "$replace_out_var = $replace_out_var (1: - numberof($outvar));\r"
         }
       }
       rcf_region
-      .rcf.2.varlist setvalue @4
-      set curvar [.rcf.2.varlist getvalue]
-      set outvar rcf_workdata
+      set rcf_var [lindex $varlist 4]
       set have_replaced 0
       set have_undone 0
     }
 
   LabelEntry .rep.15.1 -relief sunken -label "Output Variable:" \
     -helptext "Define output variable" \
-    -textvariable keep_var -text "finaldata"
+    -textvariable replace_out_var -text "finaldata"
   checkbutton .rep.15.2 -text "Same as input variable" -variable sameinput \
     -command {
       if {$sameinput == 1} {
-        set keep_var $curvar
+        set replace_out_var $replace_in_var
+        .rep.15.1 configure -state disabled
+      } else {
+        .rep.15.1 configure -state normal
       }
     }
   LabelEntry .rep.15.3 -relief sunken -label "Buffer Region (m):" -width 5 \
@@ -2757,18 +2755,18 @@ proc replace_proc {} {
     -command {
       global varlist outvar reps keep_var curvar origvar have_replaced \
         have_undone croppeddata
+      set $outvar rcf_workdata
       set selection [tk_messageBox -icon question \
-        -message "Append array $outvar to $keep_var?" \
+        -message "Append array $outvar to $replace_out_var?" \
         -type yesno -title "Warning" ]
       if {$selection == "yes" && $have_replaced == 0 && $have_undone == 0} {
         if {$rcf_buf_rgn > 0} {
           # have to save workdata since sel_data_rgn with exclude set to 1 will
           # over-write it
-          set $outvar rcf_workdata
           exp_send "tempdata = workdata;\r"
-          exp_send "$keep_var = sel_data_rgn($keep_var, mode=4,\
-            rgn=$sel_points, win=$win_no, exclude=1, make_workdata=1,\
-            origdata=$origvar);\r"
+          exp_send "$replace_out_var = sel_data_rgn($replace_out_var,\
+            mode=4, rgn=$sel_points, win=$win_no, exclude=1, make_workdata=1,\
+            origdata=$replace_orig_var);\r"
           expect ">"
           # This is kind of confusing, but $outvar = rcf_workdata (love this
           # confuciated variable hiding)
@@ -2776,11 +2774,12 @@ proc replace_proc {} {
             $outvar = sel_data_rgn($outvar, mode=4, win=$win_no,\
               rgn=$sel_points);\r"
         }
-        exp_send "$keep_var = grow($keep_var,$outvar);\r"
+        exp_send "$replace_out_var = grow($replace_out_var, $outvar);\r"
       }
       if {$selection == "yes" && $have_replaced == 0 && $have_undone == 1} {
-        exp_send "$keep_var = $keep_var (1: - numberof(croppeddata));\r"
-        exp_send "$keep_var = grow($keep_var, $outvar);\r"
+        exp_send "$replace_out_var = $replace_out_var\
+          (1: - numberof(croppeddata));\r"
+        exp_send "$replace_out_var = grow($replace_out_var, $outvar);\r"
         set have_undone 0
       }
       expect ">"
@@ -2788,9 +2787,10 @@ proc replace_proc {} {
     }
   Button .rep.4 -width 10 -text "Do Not Replace..." -bd 5 \
     -command {
-      global varlist outvar reps keep_var curvar origvar
+      global varlist outvar reps replace_out_var curvar origvar
       set selection [tk_messageBox -icon question \
-        -message "Append ORIGINAL cropped array croppeddata to $keep_var?" \
+        -message "Append ORIGINAL cropped array croppeddata to\
+          $replace_out_var?" \
         -type yesno -title "Warning" ]
       if {$selection == "yes"} {
         if {$have_replaced == 0 && $have_undone == 0} {
@@ -2799,28 +2799,27 @@ proc replace_proc {} {
             # will over-write it
             set $outvar rcf_workdata
             exp_send "tempdata = workdata;\r"
-            exp_send "$keep_var = sel_data_rgn($keep_var, mode=4,\
-              rgn=$sel_points, win=$win_no, exclude=1, make_workdata=1,\
-              origdata=$origvar);\r"
+            exp_send "$replace_out_var = sel_data_rgn($replace_out_var,\
+              mode=4, rgn=$sel_points, win=$win_no, exclude=1,\
+              make_workdata=1, origdata=$replace_orig_var);\r"
             expect ">"
             exp_send "workdata = tempdata;\
               $outvar = sel_data_rgn($outvar, mode=4, win=$win_no,\
                 rgn=$sel_points);\r"
           }
-          exp_send "$keep_var = grow($keep_var,croppeddata);\r"
+          exp_send "$replace_out_var = grow($replace_out_var, croppeddata);\r"
         }
         if {$have_replaced == 1 && $have_undone == 0} {
-          exp_send "$keep_var = $keep_var (1: - numberof($outvar));\r"
-          exp_send "$keep_var = grow($keep_var, croppeddata);\r"
+          exp_send "$replace_out_var = $replace_out_var\
+            (1: - numberof($outvar));\r"
+          exp_send "$replace_out_var = grow($replace_out_var, croppeddata);\r"
         }
         expect ">"
         set have_undone 1
         set have_replaced 0
       }
     }
-  Button .rep.3 -width 8 -text "Close" -command {
-    destroy .rep
-  }
+  Button .rep.3 -width 8 -text "Close" -command [list destroy .rep]
 
   Button .rep.5 -width 3 -text "Help" -command {
     tk_messageBox -icon info \
@@ -2846,12 +2845,11 @@ proc replace_proc {} {
   pack .rep.5 -side left -pady 5
 }
 Button .l1wid.bf45.r.5 -text "Append2Tile" -command {
-  set curvar  $pro_var
   set selection  [tk_messageBox  -icon question \
-    -message "Append \'$curvar\' array to final data array?" \
-    -type yesno -title "Warning" ]
+    -message "Append \'$pro_var\' array to final data array?" \
+    -type yesno -title "Warning"]
   if {$selection == "yes"} {
-    exp_send "finaldata = grow(finaldata,$curvar);\r"
+    exp_send "grow, finaldata, $pro_var;\r"
     expect ">"
   }
 }
