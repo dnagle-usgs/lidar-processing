@@ -1096,5 +1096,6 @@ func gga_limits(utm=) {
    }
 }
 
-if ( is_void(_ytk) ) 
-   help, rbgga_help;
+// 2009-01-13: why do we need this?  rwm
+// if ( is_void(_ytk) )
+//    help, rbgga_help;
