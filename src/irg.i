@@ -136,6 +136,9 @@ func irg( b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo= ) {
   else
 	use_ytk = 0;
 
+  update_freq = 10;
+  if ( len >= 200 ) update_freq = 20;
+  if ( len >= 400 ) update_freq = 50;
 
 
   for ( di=1, si=b; si<=e; di++, si++ ) {
@@ -193,7 +196,7 @@ func irg( b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo= ) {
 ****************/
     }
     a(di).sa  = rp.sa;
-    if ( (di % 10) == 0  )
+    if ( (di % update_freq ) == 0  )
       if ( use_ytk ) {
         tkcmd,swrite(format="set progress %d", di*100/len);
       } else 
