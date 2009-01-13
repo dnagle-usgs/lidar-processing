@@ -19,7 +19,7 @@ set ddir /tmp/batch/done
 #-----------------------------------------------------
 
 proc get_file { sock addr } {
-   global jdir fdir
+   global jdir fdir status
 
    catch { exec ls $jdir } res
    # puts [llength $res]
@@ -27,6 +27,7 @@ proc get_file { sock addr } {
    if { [ llength $res] > 0 } {
       catch { exec mv $jdir/$fn $fdir } res
       puts "sending file: ($fdir) $fn"
+      set status($sock) "Sent $fn"
       puts $sock "file: $fn"
       alarm 3
 #   } else {
@@ -226,6 +227,8 @@ proc client'read sock {
             puts "res : $res"
          }
          set doall list
+         # check status sent
+         puts "status $args"
          puts $sock "status $args"
          catch { exec /opt/eaarl/lidar-processing/src/cmdline_batch $wdir/$args $host } res
          puts "cmdline_batch: completed"
