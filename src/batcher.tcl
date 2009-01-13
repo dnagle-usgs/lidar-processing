@@ -19,7 +19,7 @@ set ddir /tmp/batch/done
 #-----------------------------------------------------
 
 proc get_file { sock addr } {
-   global jdir fdir 
+   global jdir fdir
 
    catch { exec ls $jdir } res
    # puts [llength $res]
@@ -29,9 +29,9 @@ proc get_file { sock addr } {
       puts "sending file: ($fdir) $fn"
       puts $sock "file: $fn"
       alarm 3
-   } else {
-      puts "DONE: $addr $sock"
-      puts $sock "done:"
+#   } else {
+      # puts "DONE: $addr $sock"
+#      puts $sock "done:"
    }
 }
 
@@ -41,7 +41,7 @@ proc Service { sock addr } {
    # puts "Service: $sock $addr"
    if { [eof $sock] || [ catch { gets $sock line } ]} {
       close $sock
-      puts "Close echo($addr,$sock)"
+      # puts "Close echo($addr,$sock)"
       unset echo($addr,$sock)
    } else {
       # puts "Open echo($addr,$sock)"
@@ -72,10 +72,9 @@ proc Service { sock addr } {
          mv {
             set src [lindex $lst 1 ]
             set dst [lindex $lst 2 ]
-            puts "MV: $src $dst"
             catch { exec $cmd $src $dst} res
-            puts "$cmd->$res";      # local logging
-            puts $sock "$cmd->$res"
+            puts "Result: $cmd $src $dst->$res";      # local logging
+            puts $sock "Result: $cmd $src $dst->$res"
          }
 
          default {
@@ -90,10 +89,12 @@ proc Service { sock addr } {
                foreach arg $args {
                   set all [concat $all $arg]
                }
+               puts "cmd: $cmd"
                puts "all: $all"
-               catch { exec $cmd $all } res
-               puts "$cmd->$res";      # local logging
-               puts $sock "$cmd->$res"
+               # we don't really need to run anything received, except when testing
+               # catch { exec $cmd $all } res
+               # puts "$cmd->$res";      # local logging
+               # puts $sock "$cmd->$res"
 
 
                # foreach arg $args {
@@ -117,14 +118,17 @@ proc check_for_files { } {
 
    # puts "echo :  [lindex $echo 0]"
    if  { [array exists echo] } {
-      set sz [array size echo ];
-      puts "We have $sz connections!"
-      set elem [ array startsearch echo ]
-      for { set i 1 } { $i <= $sz } { incr i } {
-         # puts "Search : $elem"
-         set child [ array nextelement echo $elem ]
-         # puts "child :  $child"
-         set lst [ split $child ","]
+      set sz [array size echo ]
+      puts "We have $sz connection(s)!"
+
+      # 120.0 addresses should sort before 192.168 addresses,
+      # thus giving preference to localhost.  If you are on
+      # a different network, your mileage may vary.
+      set byaddr [ lsort [array names echo ]]
+
+      foreach entry  $byaddr {
+         # puts "Search : $entry"
+         set lst [ split $entry ","]
          set addr [ lindex $lst 0 ]
          set sock [ lindex $lst 1 ]
          puts "ADDR: $addr $sock -> $status($sock)"
@@ -133,18 +137,17 @@ proc check_for_files { } {
          }
       }
    }
-
 }
 #------------------------------------------------------
 
 proc server {sock addr port} {
-   global jdir echo 
+   global jdir echo
 
    # Record client's information
 
    puts "Accept connection $sock from $addr on port $port"
    set echo($addr,$sock) [ list $addr $port ]
-   puts "Open echo($addr, $sock)"
+   # puts "Open echo($addr, $sock)"
    puts $sock "Open echo($addr, $sock)"
 
    fconfigure $sock -buffering line
@@ -204,13 +207,16 @@ proc client'read sock {
    set lst [ split $line " "]
    set cmd [ lindex $lst 0 ]
    set args [ lrange $lst 1 end ]
+   set myt [ clock format [clock seconds] -format "%H:%M:%S"]
+   puts "$myt CMD: $cmd: $args"
    switch $cmd {
       file: {
          puts "line(file): $line"
          puts "args: $args"
          if { $remote == 1 } {
-            catch { exec rsync -PHavR $host:/$fdir/$args / } res
-            # puts "rsync: $res"
+            puts "batcher.tcl: rsyncing $host:/$fdir/$args"
+            catch { exec rsync -PHaqR $host:/$fdir/$args / } res
+            puts "batcher.tcl: rsync complete"
          }
          if { $remote == 1 } {
             puts $sock "mv $fdir/$args $wdir"
@@ -222,13 +228,17 @@ proc client'read sock {
          set doall list
          puts $sock "status $args"
          catch { exec /opt/eaarl/lidar-processing/src/cmdline_batch $wdir/$args $host } res
+         puts "cmdline_batch: completed"
          if { $res > "" } {
             puts "res : $res"
          }
+         catch { exec mv $wdir/$args $ddir } res
          if { $remote == 1 } {
             puts $sock "mv $wdir/$args $ddir"
+            puts "COMPLETED: $ddir/$args, removing"
+            catch { exec rm  $ddir/$args } res
+            puts         "rm $ddir/$args: $res"
          }
-         catch { exec mv $wdir/$args $ddir } res
          if { $doall > "" } {
             puts $sock $doall
          }
@@ -240,8 +250,11 @@ proc client'read sock {
          set doall ""
          puts "line(done): $line"
       }
+      Result: {
+         # we don't need to do anything.
+      }
       default {
-         puts "line(default): $line."
+         puts "line(default): $line"
       }
    }
 }

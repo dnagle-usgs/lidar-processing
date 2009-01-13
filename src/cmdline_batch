@@ -17,8 +17,8 @@ if (numberof(cmdline) == 3) {
   cmdline(2);
   cmdline(3);
   write, format="cmd1:%s\ncmd2:%s:%s\n", cmdline(1), cmdline(2), cmdline(3);
-  unpackage_tile(fn=cmdline(2), host=cmdline(3));
-  call_process_tile;
+  unpackage_tile,fn=cmdline(2), host=cmdline(3);
+  call_process_tile,host=cmdline(3);
 } else {
   write, "Usage: yorick -batch cmdline.i infile hostname";
 }
