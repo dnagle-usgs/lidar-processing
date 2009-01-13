@@ -21,9 +21,10 @@ if {[info commands SegmentedDataWindow] eq ""} {
       itk_option define -maxwin maxWin MaxWin 64
       # Variable containing list of variables to populate interface with
       itk_option define -segmentvariables segmentVariables VariableList ""
-
       itk_option define -windowvariable windowVariable Variable ""
+      itk_option define -fmavariable fmaVariable Variable ""
 
+      method init_opt_var {opt default} {}
       method refresh_times {} {}
       method set_time {idx time_start time_end} {}
       method clear_time {idx} {}
@@ -32,6 +33,11 @@ if {[info commands SegmentedDataWindow] eq ""} {
       method merge_selected {} {}
       method launch_stats {args} {}
       method define_region {} {}
+      method define_region_not_possible {} {}
+      method define_region_is_possible {} {}
+      method define_region_successful {} {}
+      method define_region_mismatch {} {}
+      method define_region_multilines {} {}
       method new_segment_window {} {}
 
       # Holds per-segment data
@@ -42,6 +48,17 @@ if {[info commands SegmentedDataWindow] eq ""} {
       variable _merge_var merged_segments
       # How many items does the interface hold?
       variable _count
+      # Do we frame advance prior to plots?
+      variable _fma
+      # For holding private GUI variables (array)
+      variable _private
+   }
+}
+
+itcl::body SegmentedDataWindow::init_opt_var {opt default} {
+   if {![string length $itk_option($opt)]} {
+      set itk_option($opt) [itcl::scope _private($opt)]
+      set $itk_option($opt) $default
    }
 }
 
@@ -49,6 +66,11 @@ itcl::body SegmentedDataWindow::constructor {args} {
    wm protocol $itk_component(hull) WM_DELETE_WINDOW \
       [itcl::code itcl::delete object $this]
    eval itk_initialize $args
+
+   init_opt_var -varlistvariable \
+      [list fs_all depth_all veg_all cveg_all workdata]
+   init_opt_var -windowvariable 0
+   init_opt_var -fmavariable 0
 
    set w $itk_interior
 
@@ -60,8 +82,8 @@ itcl::body SegmentedDataWindow::constructor {args} {
       -command [itcl::code $this refresh_times]
    label $f.lblHeadingPlot -text "Plot Segment"
 
-   grid configure x $f.lblHeadingVariables $f.btnHeadingTime \
-      $f.lblHeadingPlot - -sticky ew
+   grid configure x $f.lblHeadingVariables \
+      $f.lblHeadingPlot - $f.btnHeadingTime -sticky ew
 
    set _count [llength $itk_option(-segmentvariables)]
    set idx 0
@@ -86,9 +108,6 @@ itcl::body SegmentedDataWindow::constructor {args} {
       $f.cbo$idx component list configure \
          -listvariable $itk_option(-varlistvariable)
 
-      label $f.lbl$idx \
-         -textvariable [itcl::scope _segment($idx,time)]
-
       button $f.btnPlot$idx -text "Plot in:" \
          -command [itcl::code $this plot_segment $idx]
 
@@ -96,14 +115,19 @@ itcl::body SegmentedDataWindow::constructor {args} {
          -textvariable [itcl::scope _segment($idx,win)] \
          -from 0 -to $itk_option(-maxwin) -width 2
 
-      grid $f.chk$idx $f.cbo$idx $f.lbl$idx \
-         $f.btnPlot$idx $f.spnWin$idx \
+      label $f.lbl$idx \
+         -textvariable [itcl::scope _segment($idx,time)]
+
+      grid $f.chk$idx $f.cbo$idx \
+         $f.btnPlot$idx $f.spnWin$idx $f.lbl$idx \
          -sticky ew
       grid columnconfigure $f 1 -weight 1
    }
    unset idx
 
-   set f $w.fraBottom1
+   labelframe $w.fraWithSelected -text "With selected variables..."
+
+   set f $w.fraWithSelected.fraBottom1
    frame $f
    button $f.btnMerge -text "Merge to:" \
       -command [itcl::code $this merge_selected]
@@ -125,19 +149,26 @@ itcl::body SegmentedDataWindow::constructor {args} {
    grid columnconfigure $f 6 -weight 2
    grid columnconfigure $f [list 2 4] -weight 1
 
-   set f $w.fraBottom2
+   set f $w.fraWithSelected.fraBottom2
    frame $f
    button $f.btnDefine -text "Define Region to Process" \
-      -state disabled
+      -command [itcl::code $this define_region]
    button $f.btnNew -text "New Segment Window" \
       -command [itcl::code $this new_segment_window]
 
-   grid $f.btnDefine x $f.btnNew -sticky we
-   grid columnconfigure $f 1 -weight 1
+   checkbutton $f.chkFma \
+      -text "Auto Fma" \
+      -variable $itk_option(-fmavariable)
+
+   grid $f.btnDefine x $f.btnNew x $f.chkFma -sticky we
+   grid columnconfigure $f [list 1 3] -weight 1
+
+   grid $w.fraWithSelected.fraBottom1 -sticky we
+   grid $w.fraWithSelected.fraBottom2 -sticky we
+   grid columnconfigure $w.fraWithSelected 0 -weight 1
 
    grid $w.fraVariables -sticky we
-   grid $w.fraBottom1 -sticky we
-   grid $w.fraBottom2 -sticky we
+   grid $w.fraWithSelected -sticky we
    grid columnconfigure $w 0 -weight 1
 
    refresh_times
@@ -160,15 +191,18 @@ itcl::body SegmentedDataWindow::clear_time {idx} {
 }
 
 itcl::body SegmentedDataWindow::plot_segment {idx} {
-   global pro_var win_no
+   global pro_var win_no l1pro_fma
 
+   set fma_bkp $l1pro_fma
    set win_bkp $win_no
    set var_bkp $pro_var
 
+   set l1pro_fma [set $itk_option(-fmavariable)]
    set win_no $_segment($idx,win)
    set pro_var $_segment($idx,var)
    plot_fltlines 0
 
+   set l1pro_fma $fma_bkp
    set win_no $win_bkp
    set pro_var $var_bkp
 }
@@ -179,6 +213,7 @@ itcl::body SegmentedDataWindow::plot_selected {} {
    set fma_bkp $l1pro_fma
    set var_bkp $pro_var
 
+   set l1pro_fma [set $itk_option(-fmavariable)]
    for {set idx 1} {$idx <= $_count} {incr idx} {
       if {$_segment($idx,use)} {
          set pro_var $_segment($idx,var)
@@ -212,6 +247,57 @@ itcl::body SegmentedDataWindow::launch_stats {args} {
 }
 
 itcl::body SegmentedDataWindow::define_region {} {
+   exp_send "tk_swd_define_region_possible, \"[itcl::scope $this]\";\r"
+}
+
+itcl::body SegmentedDataWindow::define_region_not_possible {} {
+   tk_messageBox -icon error -type ok -parent .l1wid \
+      -message "It is not possible to define a region. You must ensure\
+         that you have loaded pnav and edb data first."
+}
+
+itcl::body SegmentedDataWindow::define_region_is_possible {} {
+   set region_list [list]
+   for {set idx 1} {$idx <= $_count} {incr idx} {
+      if {$_segment($idx,use)} {
+         lappend region_list $_segment($idx,var)
+      }
+   }
+   if {[llength $region_list]} {
+      set region_list [join $region_list ", "]
+      exp_send "tk_sdw_define_region_variables,\
+         \"[itcl::scope $this]\", $region_list;\r"
+   } else {
+      tk_messageBox -icon error -type ok -parent .l1wid \
+         -message "You must select at least one variable in order to define\
+            a region."
+   }
+}
+
+itcl::body SegmentedDataWindow::define_region_successful {} {
+   tk_messageBox -icon info -type ok -parent .l1wid \
+      -message "The region has been defined."
+}
+
+itcl::body SegmentedDataWindow::define_region_mismatch {} {
+   tk_messageBox -icon error -type ok -parent .l1wid \
+      -message "One or more of the selected data variables do not match the\
+         loaded data. Please only select data variables whose time frame falls\
+         within the loaded edb and pnav data."
+}
+
+itcl::body SegmentedDataWindow::define_region_multilines {} {
+   # Prompt for action
+   set response [tk_messageBox -icon question -type yesno -parent .l1wid \
+      -message "One or more of the selected data variables appears to contain\
+         merged data from multiple flightlines. Do you still want to define\
+         the region?"]
+   if {$response eq "yes"} {
+      exp_send "q = _tk_swd_region;\r"
+      expect ">"
+      tk_messageBox -icon info -type ok -parent .l1wid \
+         -message "The region has been defined."
+   }
 }
 
 itcl::body SegmentedDataWindow::new_segment_window {} {
@@ -223,13 +309,15 @@ itcl::body SegmentedDataWindow::new_segment_window {} {
    }
 
    if {[llength $seg_vars]} {
-      set sdw [SegmentedDataWindow .#auto \
-         -varlistvariable ::varlist \
+      select_data_segments $seg_vars
+      #set sdw [SegmentedDataWindow .#auto \
+         -varlistvariable $itk_option(-varlistvariable) \
          -maxwin 64 \
          -segmentvariables $seg_vars \
-         -windowvariable ::win_no]
+         -windowvariable $itk_option(-windowvariable) \
+         -fmavariable $itk_option(-fmavariable)]
 
-      $sdw activate
+      #$sdw activate
    } else {
       tk_messageBox -icon warning \
          -message "No variables were selected." \
@@ -270,12 +358,14 @@ proc _segment_by_flightlines_post {yvar count_var} {
          expect ">"
          lappend seg_vars $seg_var
       }
+      exp_send "fptr = \[\];\r"
 
       set sdw [SegmentedDataWindow .#auto \
          -varlistvariable ::varlist \
          -maxwin 64 \
          -segmentvariables $seg_vars \
          -windowvariable ::win_no \
+         -fmavariable ::l1pro_fma \
          -title "Flightline Segments for $yvar"]
 
       $sdw activate
@@ -286,3 +376,42 @@ proc idle {cmd} {
    after idle [list after 0 $cmd]
 }
 
+proc select_data_segments {{selected {}}} {
+   global varlist
+
+   set d [iwidgets::dialog .#auto -title "Select variables" \
+      -master .l1wid \
+      -modality application]
+   $d hide Apply
+   $d hide Help
+
+   set w [$d childsite]
+
+   iwidgets::disjointlistbox $w.djlVariables \
+      -lhslabeltext "Available variables" \
+      -rhslabeltext "Selected variables" \
+      -lhsbuttonlabel "Add >>" \
+      -rhsbuttonlabel "<< Remove"
+
+   pack $w.djlVariables -fill both -expand true
+   $w.djlVariables setlhs $varlist
+
+   if {[llength $selected]} {
+      $w.djlVariables setrhs $selected
+   }
+
+   if {[$d activate]} {
+      set selected [$w.djlVariables getrhs]
+      if {[llength $selected]} {
+         set sdw [SegmentedDataWindow .#auto \
+            -varlistvariable ::varlist \
+            -maxwin 64 \
+            -segmentvariables $selected \
+            -windowvariable ::win_no \
+            -fmavariable ::l1pro_fma]
+         $sdw activate
+      }
+   }
+
+   destroy $d
+}

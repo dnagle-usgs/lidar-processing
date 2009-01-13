@@ -1217,6 +1217,9 @@ proc hist_linlog {} {
 .l1wid.mb.diag add command -label "Flightline Segments" \
   -command [list eval segment_by_flightlines \$::pro_var]
 
+.l1wid.mb.diag add command -label "Select Data Segments" \
+  -command select_data_segments
+
 proc rcf_region {} {
   global varlist l1pro_data pro_var rcf_var
   destroy .rcf

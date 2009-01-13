@@ -12,7 +12,7 @@ local set_i;
       set_difference
       set_symmetric_difference
       set_cartesian_product
-      set_remove_dupicates
+      set_remove_duplicates
    
    Note that a set's complement can be obtained with set_difference (see
    set_difference).

@@ -8,85 +8,46 @@
 
 *********************************************************************/
 
-func split_by_fltline(data) {
-/* DOCUMENT split_by_fltline(data)
+func split_by_fltline(data, timediff=) {
+/* DOCUMENT fptr = split_by_fltline(data, timediff=)
    This function splits the data by flightline.
    orig: amar nayegandhi 12/26/08.
    INPUT:
-      data = input data array of type (R,FS,GEO,VEG__, ATM, etc.)
+      data: input data array of type (R,FS,GEO,VEG__, ATM, etc.)
+      timediff= minimum time difference between segments, in seconds; defaults
+         to 180 seconds
    OUTPUT:
       fptr = array of pointers pointing to the flight segments
-      for e.g. - f1 = *fptr(1) is the first flight line segment
+      for e.g. - f1 = *fptr(1) is the 1st flight line segment
                  f2 = *fptr(2) is the 2nd flight line segment
-                 fn = *fptr(n) is the nth flight line segment.
+                 fn = *fptr(n) is the nth flight line segment
 */
-   // convert data to point format (if in raster format) and clean
+   default, timediff, 180;
+
+   // Convert data to point format (if in raster format) and clean
    data = test_and_clean(data);
-   // sort data by time
+
+   // Needs to be sorted in order for time diffing to work
    data = data(sort(data.soe));
-   n_data = numberof(data);
-   tidx = where(data.soe(dif) > 180); // assume flightlines are split by at least 180 seconds (3 mins)
-   if(numberof(tidx)) {
-      n_lines = numberof(tidx) + 1; // total number of flightline segments in data
-      segs_idx = grow(1,tidx+1,1); // create segment list array.
+
+   // Find indexes where the time exceeds the threshold
+   time_idx = where(data.soe(dif) > timediff);
+   if(numberof(time_idx)) {
+      num_lines = numberof(time_idx) + 1;
+      segs_idx = grow(1,time_idx+1,1);
    } else {
-      n_lines = 1;
+      num_lines = 1;
       segs_idx = [1, 1];
    }
-   write, format="Total flightline segments = %3d\n",n_lines;
-   fptr = array(pointer, n_lines);
-   for (i=1;i<=n_lines;i++) {
+
+   // Create array of pointers to each segment
+   fptr = array(pointer, num_lines);
+   for (i = 1; i<=num_lines; i++) {
      fltseg = data(segs_idx(i):segs_idx(i+1)-1);
      fptr(i) = &fltseg;
    }
    return fptr;
 }
-
-func find_numberof_segments(data) {
-/* DOCUMENT find_numberof_segments(data)
-   This function outputs the number of segments in data
-   orig: amar nayegandhi 12/26/08.
-   INPUT:
-      data = input data array of type (R,FS,GEO,VEG__, ATM, etc.)
-   OUTPUT:
-      n_lines = number of flightline segments
-*/
-   
-    // convert data to point format (if in raster format) and clean
-    data = test_and_clean(data);
-    // sort data by time
-    data = data(sort(data.soe));
-    n_data = numberof(data);
-    tidx = where(data.soe(dif) > 180); // assume flightlines are split by at least 180 seconds (3 mins)
-    n_lines = numberof(tidx) + 1; // total number of flightline segments in data
-
-    return n_lines;
-}
-
-func merge_fltline_segments(fptr, indx=) {
-/* DOCUMENT merge_fltline_segments(fptr, indx=)
-   This function merges the flightline segments.
-   orig: amar nayegandhi 12/26/08.
-   INPUT:
-      fptr = pointer array returned by the split_by_fltline function
-      indx = array of fltline segments to be merged, e.g. [1,2,5] will merge the 1st, 2nd and 5th fltline segment in fptr.
-   OUTPUT:
-      merged_segs = merged array
-*/
-
-   if (is_void(indx)) indx = [1];
-   merged_segs = [];
-   n_indx = numberof(indx);
-   if (is_pointer(fptr)) {
-      for (i=1;i<=n_indx;i++) {
-         varname = *fptr(indx(i));
-         merged_segs = grow(merged_segs, varname);
-      }
-   }
-
-   return merged_segs;
-}
-         
 
 func create_fltline_seg_stats(fptr, indx=) {  
 /* DOCUMENT create_fltline_seg_stats(fptr, indx=)   
@@ -195,3 +156,58 @@ func tk_sdw_send_times(obj, idx, data) {
 
    tkcmd, cmd;
 }
+
+func tk_swd_define_region_possible(obj) {
+   if(is_void(edb) || is_void(pnav)) {
+      tkcmd, swrite(format="%s define_region_not_possible", obj);
+   } else {
+      tkcmd, swrite(format="%s define_region_is_possible", obj);
+   }
+}
+
+func tk_sdw_define_region_variables(obj, ..) {
+   extern _tk_swd_region, pnav, edb, q;
+   _tk_swd_region = [];
+
+   avail_min = edb.seconds(min);
+   avail_max = edb.seconds(max);
+
+   multi_flag = 0;
+
+   while(more_args()) {
+      data = next_arg();
+      ptr = split_by_fltline(data);
+      if(numberof(ptr) > 1) {
+         multi_flag = 1;
+      }
+      for(i = 1; i <= numberof(ptr); i++) {
+         segment = *ptr(i);
+         smin = segment.soe(min);
+         smax = segment.soe(max);
+         
+         if(smin < avail_min || smax > avail_max) {
+            tkcmd, swrite(format="%s define_region_mismatch", obj);
+            _tk_swd_region = [];
+            return;
+         }
+
+         smin = soe2sod(smin);
+         smax = soe2sod(smax);
+         while(smin < pnav.sod(min)) smin += 86400;
+         while(smax < pnav.sod(min)) smax += 86400;
+
+         idx = where(smin <= pnav.sod & pnav.sod <= smax);
+         if(numberof(idx)) {
+            grow, _tk_swd_region, idx;
+         }
+      }
+   }
+   _tk_swd_region = set_remove_duplicates(_tk_swd_region);
+   if(multi_flag) {
+      tkcmd, swrite(format="%s define_region_multilines", obj);
+   } else {
+      q = _tk_swd_region;
+      tkcmd, swrite(format="%s define_region_successful", obj);
+   }
+}
+
