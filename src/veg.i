@@ -164,9 +164,10 @@ extern ops_conf, veg_conf;
     }
  }
 
+ update_freq = 10;
+ if ( len >= 200 ) update_freq = 20;
+ if ( len >= 400 ) update_freq = 50;
 
-     
-   
  depths = array(VEGPIX, 120, len );
 /*
   if ( _ytk && (len != 0) ) {
@@ -193,8 +194,8 @@ extern ops_conf, veg_conf;
      if (_ytk) 
        tkcmd, swrite(format="set progress %d", j*100/len)
      else {
-     if ( (j % 10)  == 0 ) 
-        write, format="   %d of %d   \r", j,  len
+     if ( (j % update_freq)  == 0 ) 
+        write, format="   %d Of %d   \r", j,  len
      }
      for (i=1; i<119; i++ ) {
        depths(i,j) = ex_veg( rn+j, i, last = last, graph=graph, use_be_centroid=use_be_centroid,use_be_peak=use_be_peak, hard_surface=hard_surface);
@@ -978,7 +979,14 @@ Returns:
     if (numberof(rn_arr)>2) {
       rn_arr_idx = (rn_arr(dif,)(,cum)+1)(*);	
 
-      tkcmd, swrite(format="send_rnarr_to_l1pro %d %d %d\n", rn_arr(1,), rn_arr(2,), rn_arr_idx(1:-1))
+      str=swrite(format="send_rnarr_to_l1pro %d %d %d\n", rn_arr(1,), rn_arr(2,), rn_arr_idx(1:-1))
+      if (_ytk) {
+        tkcmd, str;
+      } else {
+        // XYZZY - is there any reason to show this?
+        // XYZZY - we get here via mbatch_process()
+        write, str;
+      }
     }
 
     return veg_all;
@@ -1501,9 +1509,10 @@ func run_veg_all( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=
     }
  }
 
+ update_freq = 10;
+ if ( len >= 200 ) update_freq = 20;
+ if ( len >= 400 ) update_freq = 50;
 
-     
-   
  depths = array(VEGPIXS, 120, len );
 /*
   if ( _ytk && (len != 0) ) {
@@ -1530,7 +1539,7 @@ func run_veg_all( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=
      if (_ytk) 
        tkcmd, swrite(format="set progress %d", j*100/len)
      else {
-     if ( (j % 10)  == 0 ) 
+     if ( (j % update_freq)  == 0 ) 
         write, format="   %d of %d   \r", j,  len
      }
      for (i=1; i<=120; i++ ) {
