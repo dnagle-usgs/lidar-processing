@@ -2382,8 +2382,8 @@ proc removing_proc {} {
             -type ok -title "ERROR!"
         } else {
           # If we don't want to use a threshhold, we set it to void
-          set min_arg [expr {$min ? $min_thresh ? ""}]
-          set max_arg [expr {$max ? $max_thresh ? ""}]
+          set min_arg [expr {$min ? $min_thresh : ""}]
+          set max_arg [expr {$max ? $max_thresh : ""}]
           exp_send "croppeddata=\[\];\
             $rmv_var = pipthresh($rmv_var, mode=$val,\
               minthresh=$min_arg, maxthresh=$max_arg);\r"
