@@ -3,7 +3,8 @@
 require, "eaarl.i";
 write, "$Id$";
 /*
-   Original: Richard Mitchell
+   Original: Amar Nayegandhi
+   mbatch_process: Richard Mitchell
 */
 
 
@@ -101,17 +102,7 @@ func load_vars(fn) {
 }
 
 func call_process_tile( junk=, host= ) {
-   // write, format="Processing tile: %s\n", "test";
-   // save_dir;
-   // zone_s;
-   // auto;
-   // get_typ;
-   // min_e;
    // write, format="t_e%6.0f_n%7.0f_%s\n", min_e, max_n, zone_s;
-   // dat_tag;
-   // mdate;
-   // mtdt_file;
-   // i;
    uber_process_tile,q=q, r=r, typ=typ, min_e=min_e, max_e=max_e, min_n=min_n, max_n=max_n, host=host;
 }
 
@@ -153,13 +144,9 @@ func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host= ) {
 }
 
 func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host= ) {
-   // info,q;
-   // info,r;
-   // info,get_typ;
-   // info,auto;
    extern ofn;
    if ( is_void(host) ) host="localhost";
-   if (is_array(r)) {      // XYZZY - we don't need this check anymore - 2009-01-12, rwm
+   // if (is_array(r)) {      // XYZZY - we don't need this check anymore - 2009-01-12, rwm
       if (get_typ) {
          typ=[]
          typ_idx = where(tile.min_e == min_e);
@@ -433,31 +420,9 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host= ) {
             }
          }
       }
-      // XYZZY - Processing is complete, we need to rsync the output files
-      // XYZZY - back to the server.
-      // XYZZY -
-      // XYZZY - This is also the place to call batch_rcf using ofn(1) as
-      // XYZZY - the path to be processed.  That will limit the processing
-      // XYZZY - to just the current tile, which we know has just changed.
-
-      /*
-      if ( b_rcf ) {
-         write, format="RCF Processing for %s\n", ofn(1);
-         batch_rcf( ofn(1), buf=buf, w=w, no_rcf=no_rcf, mode=mode, merge=merge, clean=clean, rcfmode=rcfmode );
-      }
-
-      if ( ! strmatch(host, "localhost") ) {
-         write, format="rsyncing %s to %s\n", ofn(1), host;
-         cmd = swrite(format="rsync -PHaqR %s %s:/", ofn(1), host);
-         write, cmd;
-         system, cmd;
-         write, "rsync complete";
-      }
-      */
-
-   } else {
-      write, "No Flightlines found in this block."
-   }
+   // } else {
+   //    write, "No Flightlines found in this block."
+   // }
 }
 
 // show progress of jobs completed.
@@ -563,7 +528,9 @@ Input:
                  Set to 0, requires running one "batcher.tcl server" AND
                  one or more "batcher.tcl localhost".  This is the default
                  for mbatch_process and allows for multiple cpus/cores to
-                 be used to process the data.
+                 be used to process the data.  To run the client on a
+                 separate computer, "batcher.tcl HOST" where host is the
+                 name of the server computer.
 
 If using the automatic region creation, the following options
 are REQUIRED:
@@ -606,6 +573,7 @@ Ex: curzone=18
 
 
 amar nayegandhi started (10/04/02) Lance Mosher
+Added server/client support (2009-01) Richard Mitchell
 */
 
    extern pnav_filenam, bath_ctl
@@ -617,7 +585,7 @@ amar nayegandhi started (10/04/02) Lance Mosher
    if (is_void(win)) win = 6;
    window, win;
 
-   // Create output directory for tile cmd files:
+   // Create output directory for tilekkk cmd files:
    system, "mkdir -p /tmp/batch/jobs";
 
    // Get username and pc name of person running batch_process
@@ -862,13 +830,14 @@ amar nayegandhi started (10/04/02) Lance Mosher
       if ( ! is_void(q) ) {
          r = gga_win_sel(2, win=win, color="green", llarr=[min_e(i), max_e(i), min_n(i), max_n(i)], _batch=1);
          if ( ! is_void(r) ) {
-            pldj, min_e(i), min_n(i), min_e(i), max_n(i), color="green"
-            pldj, min_e(i), min_n(i), max_e(i), min_n(i), color="green"
-            pldj, max_e(i), min_n(i), max_e(i), max_n(i), color="green"
-            pldj, max_e(i), max_n(i), min_e(i), max_n(i), color="green"
+            // Show the tile that is being prepared to be processed.
+            pldj, min_e(i), min_n(i), min_e(i), max_n(i), color="blue"
+            pldj, min_e(i), min_n(i), max_e(i), min_n(i), color="blue"
+            pldj, max_e(i), min_n(i), max_e(i), max_n(i), color="blue"
+            pldj, max_e(i), max_n(i), min_e(i), max_n(i), color="blue"
 
             if ( is_void( now ) ) {
-               show_progress;
+               show_progress, color="green";
 
                // make sure we have space before creating more files
                system, "./waiter.pl 250000 /tmp/batch/jobs"
@@ -885,11 +854,11 @@ amar nayegandhi started (10/04/02) Lance Mosher
          mya1 = check_space(wmark=1024, dir="/tmp/batch/jobs");
          if ( mya1(2) > 0 ) write,format="%d job(s) to be farmed out.\n", mya1(2);
 
-         show_progress;   // , color="magenta";
+         show_progress, color="green";
          mya2 = check_space (wmark=1024, dir="/tmp/batch/farm");
-         if ( mya2(2) != rj ) write,format="%d job(s) to be retreived.\n", mya2(2);
+         if ( mya2(2) != rj ) write,format="%d job(s) to be retrieved.\n", mya2(2);
 
-         show_progress;   // , color="magenta";
+         show_progress, color="green";
          mya3 = check_space (wmark=1024, dir="/tmp/batch/work");
          if ( mya3(2) != rj ) write,format="%d job(s) to be finished.\n", mya3(2);
          space = mya1(1) + mya2(1) + mya3(1);
@@ -906,7 +875,7 @@ amar nayegandhi started (10/04/02) Lance Mosher
          // system, "rm /tmp/batch/.space";
          if ( fc(1) != rj ) write,format="%d job(s) to be finished.\n", fc(1);
          rj = fc(1);
-         show_progress;   // , color="blue";
+         show_progress, color="green";
       } while ( space(1) > 1024 );
    }
 
@@ -2001,10 +1970,10 @@ Input:
    }
    rcfdata = rcfdata(data_box(rcfdata.east/100.0, rcfdata.north/100.0, rgn(1), rgn(2), rgn(3), rgn(4)));
    if (plotbox) {
-      pldj, rgn(1), rgn(3), rgn(1), rgn(4), color="red";
-      pldj, rgn(1), rgn(4), rgn(2), rgn(4), color="red";
-      pldj, rgn(2), rgn(4), rgn(2), rgn(3), color="red";
-      pldj, rgn(2), rgn(3), rgn(1), rgn(3), color="red";
+      pldj, rgn(1), rgn(3), rgn(1), rgn(4), color="blue";
+      pldj, rgn(1), rgn(4), rgn(2), rgn(4), color="blue";
+      pldj, rgn(2), rgn(4), rgn(2), rgn(3), color="blue";
+      pldj, rgn(2), rgn(3), rgn(1), rgn(3), color="blue";
    }
    if (!is_array(keepdata)) {
       write, "All old points were discarded!";

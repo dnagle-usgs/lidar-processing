@@ -19,16 +19,21 @@ set ddir /tmp/batch/done
 #-----------------------------------------------------
 
 proc get_file { sock addr } {
-   global jdir fdir status
+   global jdir fdir status assigned completed delta start
 
    catch { exec ls $jdir } res
    # puts [llength $res]
    set fn [ lindex $res 0 ]
    if { [ llength $res] > 0 } {
       catch { exec mv $jdir/$fn $fdir } res
-      puts "sending file: ($fdir) $fn"
-      set status($sock) "Sent $fn"
+      puts "send: $addr $sock ($fdir) $fn"
+      set status($sock) "Sent: $fn"
       puts $sock "file: $fn"
+
+      # client stats
+      set start($sock) [clock seconds]
+      incr assigned($sock)
+
       alarm 3
 #   } else {
       # puts "DONE: $addr $sock"
@@ -37,7 +42,7 @@ proc get_file { sock addr } {
 }
 
 proc Service { sock addr } {
-   global fdir jdir echo status
+   global fdir jdir echo status assigned completed delta start stop updated
 
    # puts "Service: $sock $addr"
    if { [eof $sock] || [ catch { gets $sock line } ]} {
@@ -46,6 +51,7 @@ proc Service { sock addr } {
       unset echo($addr,$sock)
    } else {
       # puts "Open echo($addr,$sock)"
+      set updated 1
       puts "RCVD: $addr $sock: $line"
       # puts "got $line"
       set lst  [ split $line " " ]
@@ -65,9 +71,18 @@ proc Service { sock addr } {
             unset echo($addr,$sock)
          }
 
-         status {
+         Status {
             puts "Received status from $addr $sock: $args\n"
             set status($sock) $args
+         }
+
+         Completed {
+            # client stats
+            set stop($sock) [clock seconds]
+            incr completed($sock)
+            set tdelta [ expr $stop($sock) - $start($sock)]
+            incr delta($sock) $tdelta
+            puts "Received completed on $args from $addr $sock after $tdelta\n"
          }
 
          mv {
@@ -111,10 +126,10 @@ proc Service { sock addr } {
 
 #------------------------------------------------------
 proc check_for_files { } {
-   global echo sock status
+   global echo sock status assigned completed delta start stop updated
 
    set myt [ clock format [clock seconds] -format "%H:%M:%S"]
-   puts -nonewline "\n$myt: Timer expired: "
+   puts -nonewline "$myt: Timer expired: "
    alarm 10 ; # reset the clock
 
    # puts "echo :  [lindex $echo 0]"
@@ -132,17 +147,29 @@ proc check_for_files { } {
          set lst [ split $entry ","]
          set addr [ lindex $lst 0 ]
          set sock [ lindex $lst 1 ]
-         puts "ADDR: $addr $sock -> $status($sock)"
+         if { $updated } {
+            if { $status($sock) ne "ready" } {
+               puts "ADDR: $addr $sock -> $status($sock)"
+            }
+            set avg 0
+            if { $completed($sock) > 0 } {
+               set avg [ expr $delta($sock) / $completed($sock)]
+            }
+            puts "STAT: $addr $sock -> A:$assigned($sock)  C:$completed($sock)  T:$delta($sock)  a:$avg"
+         }
          if { $status($sock) eq "ready" } {
             get_file $sock $addr
          }
       }
+   } else {
+      puts "We have 0 connections"
    }
+   set updated 0
 }
 #------------------------------------------------------
 
 proc server {sock addr port} {
-   global jdir echo
+   global jdir echo completed assigned delta start stop
 
    # Record client's information
 
@@ -150,6 +177,11 @@ proc server {sock addr port} {
    set echo($addr,$sock) [ list $addr $port ]
    # puts "Open echo($addr, $sock)"
    puts $sock "Open echo($addr, $sock)"
+   set completed($sock) 0
+   set assigned($sock)  0
+   set delta($sock)     0
+   set start($sock)     0
+   set stop($sock)      0
 
    fconfigure $sock -buffering line
 
@@ -161,8 +193,17 @@ proc server {sock addr port} {
 }
 
 proc open_server { port } {
+   global updated
+
    puts "Server started on port $port...\n"
+   puts "STAT line shows:"
+   puts "   A:  number of jobs Assigned"
+   puts "   C:  number of jobs Completed"
+   puts "   T:  total Time spent processing (in seconds)"
+   puts "   a:  Average time spent processing each job\n"
+
    set s [ socket -server server $port ]
+   set updated 1
    vwait forever
 }
 
@@ -196,13 +237,13 @@ if { $host eq "server" } {
    fconfigure $sock -buffering line
    fileevent $sock readable [list client'read $sock]
    fileevent stdin readable [list client'send $sock]
-   puts $sock "status ready"
+   puts $sock "Status ready"
 }
 
 #---------------- CLIENT Code-------------------------
 
 proc client'read sock {
-   global jdir wdir fdir ddir doall host remote
+   global jdir wdir fdir ddir doall host remote assigned completed delta
    if {[eof $sock]} {close $sock; exit}
    gets $sock line
    set lst [ split $line " "]
@@ -214,22 +255,25 @@ proc client'read sock {
       file: {
          puts "line(file): $line"
          puts "args: $args"
+
+         # check status sent
+         puts "status $args"
+         puts $sock "Status $args"
+
          if { $remote == 1 } {
             puts "batcher.tcl: rsyncing $host:/$fdir/$args"
             catch { exec rsync -PHaqR $host:/$fdir/$args / } res
             puts "batcher.tcl: rsync complete"
-         }
-         if { $remote == 1 } {
             puts $sock "mv $fdir/$args $wdir"
          }
+
          catch { exec mv $fdir/$args $wdir } res
+
          if { $res > "" } {
             puts "res : $res"
          }
+
          set doall list
-         # check status sent
-         puts "status $args"
-         puts $sock "status $args"
          catch { exec /opt/eaarl/lidar-processing/src/cmdline_batch $wdir/$args $host } res
          puts "cmdline_batch: completed"
          if { $res > "" } {
@@ -242,11 +286,13 @@ proc client'read sock {
             catch { exec rm  $ddir/$args } res
             puts         "rm $ddir/$args: $res"
          }
+         puts $sock "Completed $args"
+         puts $sock "Status ready"
+         puts "Completed $args\n"
+
          if { $doall > "" } {
             puts $sock $doall
          }
-         puts $sock "status ready"
-         puts "Completed $args\n"
       }
 
       done: {
