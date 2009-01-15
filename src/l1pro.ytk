@@ -1880,7 +1880,7 @@ Button .l1wid.bf45.q.3 -text "Color\nBar" \
   }
 Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
   -command {
-    global varlist plot_settings
+    global varlist plot_settings clip_in_var clip_out_var pro_var
     destroy .l1clip
     toplevel .l1clip
     wm title .l1clip "Elevation Clipper"
@@ -1893,14 +1893,13 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
     Label .l1clip.05.varname -text "Input Variable:"
 
     iwidgets::combobox .l1clip.05.varlist \
-      -textvariable pro_var -editable false \
+      -textvariable clip_in_var -editable false \
       -selectioncommand {
-        global pro_var outvar curvar
-        set curvar $pro_var
-        set outvar $pro_var
+        set clip_out_var $clip_in_var
       }
     .l1clip.05.varlist component list configure \
       -listvariable ::varlist
+    set clip_in_var $pro_var
 
     checkbutton .l1clip.1.ymin -variable ymin \
       -command {
@@ -1951,38 +1950,39 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
     set min_elv $plot_settings(cmin)
     set range_elv $cdelta
 
-    set curvar  [lindex $varlist [.l1clip.05.varlist getvalue]]
     LabelEntry .l1clip.35 -relief sunken -label "Output Variable:" \
       -helptext "Define output variable" \
-      -textvariable outvar -text "$curvar"
+      -textvariable clip_out_var
+    set clip_out_var $clip_in_var
 
     Button .l1clip.4.ok -text "Clip Data" -width 5 -command {
-      global outvar curvar
+      global clip_in_var clip_out_var
 
       set ptype [processing_mode]
       set dtype [display_type]
       if {$ptype == 0} {
         ##for surface topography
         if {$ymin == 1 && $ymax == 1} {
-          exp_send "$outvar = $curvar\(where(\
-            ($curvar.elevation >= $min_elv*100) &\
-            ($curvar.elevation <= $max_elv*100)));\r"
+          exp_send "$clip_out_var = $clip_in_var\(where(\
+            ($clip_in_var.elevation >= $min_elv*100) &\
+            ($clip_in_var.elevation <= $max_elv*100)));\r"
           expect ">"
         } else {
           if {$ymin == 1} {
-            exp_send "$outvar = $curvar\(where(\
-              $curvar.elevation >= $min_elv*100));\r"
+            exp_send "$clip_out_var = $clip_in_var\(where(\
+              $clip_in_var.elevation >= $min_elv*100));\r"
             expect ">"
           }
           if {$ymax == 1} {
-            exp_send "$outvar = $curvar\(where(\
-              $curvar.elevation <= $max_elv*100));\r"
+            exp_send "$clip_out_var = $clip_in_var\(where(\
+              $clip_in_var.elevation <= $max_elv*100));\r"
             expect ">"
           }
         }
         if {$yrange == 1} {
-          exp_send "sel_ptr = rcf($curvar.elevation,$range_elv*100,mode=2);\
-            $outvar = $curvar(*sel_ptr(1));\r"
+          exp_send "sel_ptr = rcf($clip_in_var.elevation, $range_elv*100,\
+              mode=2);\
+            $clip_out_var = $clip_in_var(*sel_ptr(1));\r"
           expect ">"
         }
       }
@@ -1990,72 +1990,74 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
         ##for bathymetry
         if {$dtype == 1} {
           if {$ymin == 1 && $ymax == 1} {
-            exp_send "$outvar = $curvar\(where(\
-              ($curvar.elevation+$curvar.depth >= $min_elv*100) &\
-              ($curvar.elevation+$curvar.depth <= $max_elv*100) ));\r"
+            exp_send "$clip_out_var = $clip_in_var\(where(\
+              ($clip_in_var.elevation+$clip_in_var.depth >= $min_elv*100) &\
+              ($clip_in_var.elevation+$clip_in_var.depth <= $max_elv*100) ));\r"
             expect ">"
           } else {
             if {$ymin == 1} {
-              exp_send "$outvar = $curvar\(where((\
-                $curvar.elevation+$curvar.depth) >= $min_elv\*100));\r"
+              exp_send "$clip_out_var = $clip_in_var\(where((\
+                $clip_in_var.elevation+$clip_in_var.depth) >= $min_elv\*100));\r"
               expect ">"
             }
             if {$ymax == 1} {
-              exp_send "$outvar = $curvar\(where((\
-                $curvar.elevation+$curvar.depth) <= $max_elv*100));\r"
+              exp_send "$clip_out_var = $clip_in_var\(where((\
+                $clip_in_var.elevation+$clip_in_var.depth) <= $max_elv*100));\r"
               expect ">"
             }
           }
           if {$yrange == 1} {
-            exp_send "sel_ptr = rcf(($curvar.elevation+$curvar.depth),\
+            exp_send "sel_ptr = rcf(\
+                ($clip_in_var.elevation+$clip_in_var.depth),\
                 $range_elv*100, mode=2);\
-              $outvar = $curvar\(*sel_ptr(1));\r"
+              $clip_out_var = $clip_in_var\(*sel_ptr(1));\r"
             expect ">"
           }
         }
         if {$dtype == 0} {
           if {$ymin == 1 && $ymax == 1} {
-            exp_send "$outvar = $curvar\(where(\
-              ($curvar.elevation >= $min_elv*100) &\
-              ($curvar.elevation <= $max_elv*100) ));\r"
+            exp_send "$clip_out_var = $clip_in_var\(where(\
+              ($clip_in_var.elevation >= $min_elv*100) &\
+              ($clip_in_var.elevation <= $max_elv*100) ));\r"
             expect ">"
           } else {
             if {$ymin == 1} {
-              exp_send "$outvar = $curvar\(where(\
-                $curvar.elevation >= $min_elv*100));\r"
+              exp_send "$clip_out_var = $clip_in_var\(where(\
+                $clip_in_var.elevation >= $min_elv*100));\r"
               expect ">"
             }
             if {$ymax == 1} {
-              exp_send "$outvar = $curvar\(where(\
-                $curvar.elevation <= $max_elv*100));\r"
+              exp_send "$clip_out_var = $clip_in_var\(where(\
+                $clip_in_var.elevation <= $max_elv*100));\r"
               expect ">"
             }
           }
           if {$yrange == 1} {
-            exp_send "sel_ptr = rcf($curvar.elevation,$range_elv*100,mode=2);\
-              $outvar = $curvar\(*sel_ptr(1));\r"
+            exp_send "sel_ptr = rcf($clip_in_var.elevation, $range_elv*100,\
+                mode=2);\
+              $clip_out_var = $clip_in_var\(*sel_ptr(1));\r"
             expect ">"
           }
         }
         if {$dtype == 2} {
           if {$ymin == 1 && $ymax == 1} {
-            exp_send "$outvar = $curvar\(where(\
-              ($curvar.depth >= $min_elv*100) &\
-              ($curvar.depth <= $max_elv*100) ));\r"
+            exp_send "$clip_out_var = $clip_in_var\(where(\
+              ($clip_in_var.depth >= $min_elv*100) &\
+              ($clip_in_var.depth <= $max_elv*100) ));\r"
             expect ">"
           } else {
             if {$ymin == 1} {
-              exp_send "$outvar = $curvar\(where(\
-                $curvar.depth >= $min_elv*100));\r"
+              exp_send "$clip_out_var = $clip_in_var\(where(\
+                $clip_in_var.depth >= $min_elv*100));\r"
             }
             if {$ymax == 1} {
-              exp_send "$outvar = $curvar\(where(\
-                $curvar.depth <= $max_elv*100));\r"
+              exp_send "$clip_out_var = $clip_in_var\(where(\
+                $clip_in_var.depth <= $max_elv*100));\r"
             }
           }
           if {$yrange == 1} {
-            exp_send "sel_ptr = rcf($curvar.depth,$range_elv*100,mode=2);\
-              $outvar = $curvar\(*sel_ptr(1));\r"
+            exp_send "sel_ptr = rcf($clip_in_var.depth,$range_elv*100,mode=2);\
+              $clip_out_var = $clip_in_var\(*sel_ptr(1));\r"
           }
         }
       }
@@ -2063,47 +2065,48 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
         ##for vegetation
         if {$dtype == 0} {
           if {$ymin == 1 && $ymax == 1} {
-            exp_send "$outvar = $curvar\(where(\
-              ($curvar.elevation >= $min_elv*100) &\
-              ($curvar.elevation <= $max_elv*100)));\r"
+            exp_send "$clip_out_var = $clip_in_var\(where(\
+              ($clip_in_var.elevation >= $min_elv*100) &\
+              ($clip_in_var.elevation <= $max_elv*100)));\r"
             expect ">"
           } else {
             if {$ymin == 1} {
-              exp_send "$outvar = $curvar(where\(\
-                $curvar.elevation >= $min_elv*100));\r"
+              exp_send "$clip_out_var = $clip_in_var(where\(\
+                $clip_in_var.elevation >= $min_elv*100));\r"
             }
             if {$ymax == 1} {
-              exp_send "$outvar = $curvar(where\(\
-                $curvar.elevation <= $max_elv*100));\r"
+              exp_send "$clip_out_var = $clip_in_var(where\(\
+                $clip_in_var.elevation <= $max_elv*100));\r"
             }
           }
           if {$yrange == 1} {
-            exp_send "sel_ptr = rcf($curvar.elevation,$range_elv*100,mode=2);\
-              $outvar = $curvar\(*sel_ptr(1));\r"
+            exp_send "sel_ptr = rcf($clip_in_var.elevation,$range_elv*100,mode=2);\
+              $clip_out_var = $clip_in_var\(*sel_ptr(1));\r"
           }
         }
         if {$dtype == 3} {
           if {$ymin == 1 && $ymax == 1} {
-            exp_send "$outvar = $curvar\(where(\
-              ($curvar.lelv >= $min_elv*100) &\
-              ($curvar.lelv <= $max_elv*100) ));\r"
+            exp_send "$clip_out_var = $clip_in_var\(where(\
+              ($clip_in_var.lelv >= $min_elv*100) &\
+              ($clip_in_var.lelv <= $max_elv*100) ));\r"
             expect ">"
           } else {
             if {$ymin == 1} {
-              exp_send "$outvar = $curvar\(where(\
-                $curvar.lelv >= $min_elv*100));\r"
+              exp_send "$clip_out_var = $clip_in_var\(where(\
+                $clip_in_var.lelv >= $min_elv*100));\r"
             }
             if {$ymax == 1} {
-              exp_send "$outvar = $curvar\(where(\
-                $curvar.lelv <= $max_elv*100));\r"
+              exp_send "$clip_out_var = $clip_in_var\(where(\
+                $clip_in_var.lelv <= $max_elv*100));\r"
             }
           }
           if {$yrange == 1} {
-            exp_send "sel_ptr = rcf($curvar.lelv,$range_elv*100,mode=2);\
-              $outvar = $curvar\(*sel_ptr(1));\r"
+            exp_send "sel_ptr = rcf($clip_in_var.lelv,$range_elv*100,mode=2);\
+              $clip_out_var = $clip_in_var\(*sel_ptr(1));\r"
           }
         }
       }
+      append_varlist $clip_out_var
       destroy .l1clip
     }
 
@@ -2127,8 +2130,7 @@ Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
 
 Button .l1wid.bf45.q.44 -text "Test and\nClean" -command {
   global varlist pro_var
-  set curvar $pro_var
-  exp_send "$curvar = test_and_clean($curvar)\r"
+  exp_send "$pro_var = test_and_clean($pro_var)\r"
 }
 
 frame .l1wid.bf45.q.f45
