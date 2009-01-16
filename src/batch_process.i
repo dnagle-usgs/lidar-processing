@@ -58,6 +58,9 @@ func save_vars (filename, tile=) {
 
 func get_tld_names( q ) {
    myrar = sel_region(q);
+   // next line is an attempt to avoid problem seen when sel_region
+   // returned [0,0] as first array value
+   myrar = myrar(where(myrar>0));            // remove 0 indexes
    myedb = edb(myrar).file_number;           // get list of file numbers for region
    myedb = myedb(unique(myedb));             // get unique file numbers
 
@@ -582,6 +585,8 @@ Added server/client support (2009-01) Richard Mitchell
    timer, t0;
    myt0 = t0(3);
    write, format="Start Time: %f\n", t0(3);
+   if (is_void(host)) host="localhost";
+   if (is_void(now)) now=0;
    if (is_void(win)) win = 6;
    window, win;
 
@@ -827,28 +832,30 @@ Added server/client support (2009-01) Richard Mitchell
       }
       write, format = "Selecting Region %d of %d\n",i,n;
       q = gga_win_sel(2, win=win, llarr=[min_e(i)-200.0, max_e(i)+200.0, min_n(i)-200.0, max_n(i)+200.0], _batch=1);
-      if ( ! is_void(q) ) {
+      // 2009-01-15: came across odd bug where q was:  <nuller>:
+      // To avoid, check for numberof as well.
+      if ( ! is_void(q) && numberof(q) > 0 ) {
          r = gga_win_sel(2, win=win, color="green", llarr=[min_e(i), max_e(i), min_n(i), max_n(i)], _batch=1);
-         if ( ! is_void(r) ) {
+         if ( ! is_void(r) && numberof(r) > 0 ) {
             // Show the tile that is being prepared to be processed.
             pldj, min_e(i), min_n(i), min_e(i), max_n(i), color="blue"
             pldj, min_e(i), min_n(i), max_e(i), min_n(i), color="blue"
             pldj, max_e(i), min_n(i), max_e(i), max_n(i), color="blue"
             pldj, max_e(i), max_n(i), min_e(i), max_n(i), color="blue"
 
-            if ( is_void( now ) ) {
+            if ( now == 0 ) {
                show_progress, color="green";
 
                // make sure we have space before creating more files
                system, "./waiter.pl 250000 /tmp/batch/jobs"
                package_tile(q=q, r=r, typ=typ, min_e=min_e(i), max_e=max_e(i), min_n=min_n(i), max_n=max_n(i) )
             } else {
-               uber_process_tile(q=q, r=r, typ=typ, min_e=min_e(i), max_e=max_e(i), min_n=min_n(i), max_n=max_n(i) )
+               uber_process_tile(q=q, r=r, typ=typ, min_e=min_e(i), max_e=max_e(i), min_n=min_n(i), max_n=max_n(i), host=host )
             }
          }
       }
   }
-   if ( is_void( now ) ) {
+   if ( now == 0 ) {
       // wait until no more jobs to be farmed out
       do {
          mya1 = check_space(wmark=1024, dir="/tmp/batch/jobs");
@@ -1057,6 +1064,10 @@ Original amar nayegandhi. Started 12/06/02.
       }
    }
    write, numberof(fn_all);
+
+   if (!is_array(fn_all))
+      exit,"No input files found.  Goodbye.";
+
    if ((onlyupdate == 1) && (rcfmode == 1)) {
       mgd_mode = strmatch(fn_all, "_rcf",1);
       oldfiles = fn_all(where(mgd_mode));
