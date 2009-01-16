@@ -4,6 +4,8 @@ exec tclsh "$0" ${1+"$@"}
 # exec /opt/eaarl/bin/tclsh "$0" ${1+"$@"}
 # vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 
+# $Id$
+
 package require Tclx
 
 # set host localhost
@@ -238,6 +240,15 @@ if { $host eq "server" } {
    fileevent $sock readable [list client'read $sock]
    fileevent stdin readable [list client'send $sock]
    puts $sock "Status ready"
+   if { $remote == 1 } {
+      puts "\nThis will create a copy of the tld files on the server for the"
+      puts "necesary tiles using the exact same pathing.  Please verify that"
+      puts "the base path is writable on this system."
+      puts "\nPlease make sure to create any output directories as specified on"
+      puts "the mbatch_process() cmdline.  The pathing must be EXACTLY the same"
+      puts "as used on the server."
+      puts "\nMost rsync warnings and errors can be ignored."
+   }
 }
 
 #---------------- CLIENT Code-------------------------
