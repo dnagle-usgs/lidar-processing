@@ -26,6 +26,7 @@ if {[info commands SegmentedDataWindow] eq ""} {
 
       method init_opt_var {opt default} {}
       method refresh_times {} {}
+      method configure_times {} {}
       method set_time {idx time_start time_end} {}
       method clear_time {idx} {}
       method plot_segment {args} {}
@@ -52,6 +53,8 @@ if {[info commands SegmentedDataWindow] eq ""} {
       variable _fma
       # For holding private GUI variables (array)
       variable _private
+      # The format to use for time
+      variable _timeformat full
    }
 }
 
@@ -67,6 +70,9 @@ itcl::body SegmentedDataWindow::constructor {args} {
       [itcl::code itcl::delete object $this]
    eval itk_initialize $args
 
+   wm resizable $itk_component(hull) 1 0
+   wm minsize $itk_component(hull) 460 100
+
    init_opt_var -varlistvariable \
       [list fs_all depth_all veg_all cveg_all workdata]
    init_opt_var -windowvariable 0
@@ -78,12 +84,13 @@ itcl::body SegmentedDataWindow::constructor {args} {
 
    labelframe $f -text "Variables"
    label $f.lblHeadingVariables -text "Variable"
-   button $f.btnHeadingTime -text "Time Frame (refresh)" \
+   button $f.btnHeadingTime -text "Times (refresh)" \
       -command [itcl::code $this refresh_times]
    label $f.lblHeadingPlot -text "Plot Segment"
 
    grid configure x $f.lblHeadingVariables \
-      $f.lblHeadingPlot - $f.btnHeadingTime -sticky ew
+      $f.lblHeadingPlot - $f.btnHeadingTime \
+      -sticky ew
 
    set _count [llength $itk_option(-segmentvariables)]
    set idx 0
@@ -121,9 +128,9 @@ itcl::body SegmentedDataWindow::constructor {args} {
       grid $f.chk$idx $f.cbo$idx \
          $f.btnPlot$idx $f.spnWin$idx $f.lbl$idx \
          -sticky ew
-      grid columnconfigure $f 1 -weight 1
    }
    unset idx
+   grid columnconfigure $f 1 -weight 1 -minsize 80
 
    labelframe $w.fraWithSelected -text "With selected variables..."
 
@@ -146,7 +153,7 @@ itcl::body SegmentedDataWindow::constructor {args} {
 
    grid $f.btnPlot $f.spnWin x $f.btnStats x $f.btnMerge $f.entMergeVar \
       -sticky we
-   grid columnconfigure $f 6 -weight 2
+   grid columnconfigure $f 6 -weight 2 -minsize 80
    grid columnconfigure $f [list 2 4] -weight 1
 
    set f $w.fraWithSelected.fraBottom2
@@ -156,19 +163,29 @@ itcl::body SegmentedDataWindow::constructor {args} {
    button $f.btnNew -text "New Segment Window" \
       -command [itcl::code $this new_segment_window]
 
-   checkbutton $f.chkFma \
-      -text "Auto Fma" \
-      -variable $itk_option(-fmavariable)
-
-   grid $f.btnDefine x $f.btnNew x $f.chkFma -sticky we
-   grid columnconfigure $f [list 1 3] -weight 1
+   grid $f.btnDefine x $f.btnNew -sticky we
+   grid columnconfigure $f 1 -weight 1
 
    grid $w.fraWithSelected.fraBottom1 -sticky we
    grid $w.fraWithSelected.fraBottom2 -sticky we
    grid columnconfigure $w.fraWithSelected 0 -weight 1
 
-   grid $w.fraVariables -sticky we
-   grid $w.fraWithSelected -sticky we
+   set f $w.fraOptions
+   labelframe $f -text "Options"
+
+   checkbutton $f.chkFma \
+      -text "Auto Fma" \
+      -variable $itk_option(-fmavariable)
+
+   button $f.btnTimeConfig -text "Time Format" \
+      -command [itcl::code $this configure_times]
+
+   grid $f.chkFma -sticky w
+   grid $f.btnTimeConfig -sticky we
+   grid columnconfigure $f 0 -weight 1
+
+   grid $w.fraVariables - -sticky wens
+   grid $w.fraWithSelected $w.fraOptions -sticky wens
    grid columnconfigure $w 0 -weight 1
 
    refresh_times
@@ -182,8 +199,84 @@ itcl::body SegmentedDataWindow::refresh_times {} {
    }
 }
 
+itcl::body SegmentedDataWindow::configure_times {} {
+   set dlg [iwidgets::dialog .#auto \
+      -title "Configure Time Format" \
+      -modality application]
+
+   $dlg hide Help
+   $dlg hide Apply
+
+   set w [$dlg childsite]
+
+   set f $w.fraChoices
+   labelframe $f -text "Select a format:"
+
+   pack $f -fill both -expand yes
+
+   set options [list \
+      full "2004-01-10 12:00:00 - 2004-01-15 14:00:00" \
+      short "01-10 12:00 - 01-15 14:00" \
+      date "2004-01-10 - 2004-01-15" \
+      time "12:00:00 - 14:00:00" \
+      startfull "2004-01-10 12:00:00" \
+      starttime "12:00:00"]
+
+   foreach {tag desc} $options {
+      grid [radiobutton $f.rdb$tag -value $tag \
+         -text $desc \
+         -variable [itcl::scope _timeformat]] \
+         -sticky w
+   }
+
+   set backup_format $_timeformat
+
+   if {[$dlg activate]} {
+      refresh_times
+   } else {
+      set _timeformat $backup_format
+   }
+}
+
 itcl::body SegmentedDataWindow::set_time {idx time_start time_end} {
-   set _segment($idx,time) "$time_start - $time_end"
+   set start [clock scan $time_start]
+   set end [clock scan $time_end]
+   switch -- $_timeformat {
+      full {
+         set format "%Y-%m-%d %H:%M:%S"
+         set s [clock format $start -format $format]
+         set e [clock format $end -format $format]
+         set _segment($idx,time) "$s - $e"
+      }
+      short {
+         set format "%m-%d %H:%M"
+         set s [clock format $start -format $format]
+         set e [clock format $end -format $format]
+         set _segment($idx,time) "$s - $e"
+      }
+      date {
+         set format "%Y-%m-%d"
+         set s [clock format $start -format $format]
+         set e [clock format $end -format $format]
+         set _segment($idx,time) "$s - $e"
+      }
+      time {
+         set format "%H:%M:%S"
+         set s [clock format $start -format $format]
+         set e [clock format $end -format $format]
+         set _segment($idx,time) "$s - $e"
+      }
+      startfull {
+         set format "%Y-%m-%d %H:%M:%S"
+         set s [clock format $start -format $format]
+         set _segment($idx,time) "$s"
+      }
+      starttime {
+         set format "%H:%M:%S"
+         set s [clock format $start -format $format]
+         set _segment($idx,time) "$s"
+      }
+   }
 }
 
 itcl::body SegmentedDataWindow::clear_time {idx} {
@@ -310,14 +403,6 @@ itcl::body SegmentedDataWindow::new_segment_window {} {
 
    if {[llength $seg_vars]} {
       select_data_segments $seg_vars
-      #set sdw [SegmentedDataWindow .#auto \
-         -varlistvariable $itk_option(-varlistvariable) \
-         -maxwin 64 \
-         -segmentvariables $seg_vars \
-         -windowvariable $itk_option(-windowvariable) \
-         -fmavariable $itk_option(-fmavariable)]
-
-      #$sdw activate
    } else {
       tk_messageBox -icon warning \
          -message "No variables were selected." \
@@ -360,20 +445,25 @@ proc _segment_by_flightlines_post {yvar count_var} {
       }
       exp_send "fptr = \[\];\r"
 
-      set sdw [SegmentedDataWindow .#auto \
-         -varlistvariable ::varlist \
-         -maxwin 64 \
-         -segmentvariables $seg_vars \
-         -windowvariable ::win_no \
-         -fmavariable ::l1pro_fma \
-         -title "Flightline Segments for $yvar"]
-
-      $sdw activate
+      launch_segmenteddatawindow $seg_vars \
+         -title "Flightline Segments for $yvar"
    }
 }
 
 proc idle {cmd} {
    after idle [list after 0 $cmd]
+}
+
+proc launch_segmenteddatawindow {segments args} {
+   set sdw [eval \
+      [list SegmentedDataWindow .#auto \
+         -varlistvariable ::varlist \
+         -maxwin 64 \
+         -segmentvariables $segments \
+         -windowvariable ::win_no \
+         -fmavariable ::l1pro_fma] \
+      $args]
+   $sdw activate
 }
 
 proc select_data_segments {{selected {}}} {
@@ -403,13 +493,7 @@ proc select_data_segments {{selected {}}} {
    if {[$d activate]} {
       set selected [$w.djlVariables getrhs]
       if {[llength $selected]} {
-         set sdw [SegmentedDataWindow .#auto \
-            -varlistvariable ::varlist \
-            -maxwin 64 \
-            -segmentvariables $selected \
-            -windowvariable ::win_no \
-            -fmavariable ::l1pro_fma]
-         $sdw activate
+         launch_segmenteddatawindow $selected
       }
    }
 
