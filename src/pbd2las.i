@@ -2,7 +2,7 @@ require, "eaarl.i";
 write, "$Id$";
 
 func batch_pbd2las(con_dir, searchstr=, proj_id=, v_maj=, v_min=, cday=, cyear=, typ=, zone_nbr=, nad83=, wgs84N=, wgs84S=, buffer=, qq=) {
-/* DOCUMENT batch_pbd2las(con_dir, searchstr=, proj_id=, v_maj=, v_min=, cday=, cyear=, typ=, zone_nbr=, nad83=, wgs84N=, wgs84S=, buffer=, qq=, atm=)
+/* DOCUMENT batch_pbd2las(con_dir, searchstr=, proj_id=, v_maj=, v_min=, cday=, cyear=, typ=, zone_nbr=, nad83=, wgs84N=, wgs84S=, buffer=, qq=)
         dir, string, directory containing pbd files wanted for conversion
 
         searchstr, string, search string for the pbd files that you would like converted ( default = *.pbd ) 
