@@ -258,10 +258,11 @@ func get_img_pnav(sod) {
    return pnav(pnav_idx);
 }
 
-func segment_cir_dir(srcdir, destdir, gpsins, buffer=) {
+func segment_cir_dir(srcdir, destdir, gpsins, buffer=, threshold=) {
    fix_dir, srcdir;
    fix_dir, destdir;
    default, buffer, 175;
+   default, threshold, 600;
    tile_size = 256000;
 
    write, "Generating file list...";
@@ -301,11 +302,10 @@ func segment_cir_dir(srcdir, destdir, gpsins, buffer=) {
    files = [];
 
    write, format=" Number of files: %d\n", numberof(data(,1));
-   __subdivide_cir, data, destdir, buffer;
+   __subdivide_cir, data, destdir, buffer, threshold, 1;
 }
 
-func __subdivide_cir(data, dest, buffer) {
-   threshold = 600
+func __subdivide_cir(data, dest, buffer, threshold, depth) {
    bound_e = ceil(atod(data(,2))(max) / 10.) * 10;
    bound_w = floor(atod(data(,2))(min) / 10.) * 10;
    bound_n = ceil(atod(data(,3))(max) / 10.) * 10;
@@ -321,10 +321,10 @@ func __subdivide_cir(data, dest, buffer) {
          bbox_w = [bound_n, bound_mid - 5, bound_s, bound_w];
          idxlist_e = get_bounds_idxlist(data, bbox_e, buffer);
          idxlist_w = get_bounds_idxlist(data, bbox_w, buffer);
-         write, format=" - Subdividing east (%d) and west (%d)\n",
-            numberof(idxlist_e), numberof(idxlist_w);
-         __subdivide_cir, data(idxlist_e,), dest, buffer;
-         __subdivide_cir, data(idxlist_w,), dest, buffer;
+         write, format="%s- Split east (%d) / west (%d)\n",
+            array(" ", depth)(sum), numberof(idxlist_e), numberof(idxlist_w);
+         __subdivide_cir, data(idxlist_e,), dest, buffer, threshold, depth+1;
+         __subdivide_cir, data(idxlist_w,), dest, buffer, threshold, depth+1;
       } else {
          // Split north/south
          bound_mid = median(atod(data(,3)));
@@ -332,18 +332,18 @@ func __subdivide_cir(data, dest, buffer) {
          bbox_s = [bound_mid - 5, bound_e, bound_s, bound_w];
          idxlist_n = get_bounds_idxlist(data, bbox_n, buffer);
          idxlist_s = get_bounds_idxlist(data, bbox_s, buffer);
-         write, format=" - Subdividing north (%d) and south (%d)\n",
-            numberof(idxlist_n), numberof(idxlist_s);
-         __subdivide_cir, data(idxlist_n,), dest, buffer;
-         __subdivide_cir, data(idxlist_s,), dest, buffer;
+         write, format="%s- Split north (%d) / south (%d)\n",
+            array(" ", depth)(sum), numberof(idxlist_n), numberof(idxlist_s);
+         __subdivide_cir, data(idxlist_n,), dest, buffer, threshold, depth+1;
+         __subdivide_cir, data(idxlist_s,), dest, buffer, threshold, depth+1;
       }
    } else {
       tile = swrite(format="e%d0n%d0",
          int(bound_w/10), int(bound_s/10));
       bbox = [bound_n, bound_e, bound_s, bound_w];
       if(numberof(data(,1)) && numberof(get_bounds_idxlist(data, bbox, 0)) > 0) {
-         write, format=" * Copying %d files to %s\n",
-            numberof(data(,1)), tile;
+         write, format="%s* %s: %d files\n",
+            array(" ", depth)(sum), tile, numberof(data(,1));
          dest_dir = dest + tile + "/";
          mkdirp, dest_dir;
          for(i = 1; i <= numberof(data(,1)); i++) {
@@ -518,37 +518,46 @@ func __atcpsa_status(status) {
    }
 }
 
-func new_gen_jgws(dir, elev=) {
+func new_gen_jgws(photo_dir, elev=, glob=) {
    extern camera_specs;
-   jpgs = find(photo_dir, glob="*-cir.jpg");
-   for(i = 1; i <= numberof(jpgs); i++) {
-      somd = hms2sod(atoi(strpart(jpgs(i), -13:-8)));
-      sod = int(somd % 86400);
-      //jgw_data = gen_jgw_sod(somd);
-      ins = 0;
-      ins = IEX_ATTITUDEUTM();
-      raw_ins = get_img_info(sod);
-      u = fll2utm(raw_ins(2), raw_ins(1));
-      // raw_ins(1:2) = u(1:2);
-      ins.somd = sod;
-      ins.northing = u(1);
-      ins.easting = u(2);
-      ins.zone = u(3);
-      ins.lat = raw_ins(2);
-      ins.lon = raw_ins(1);
-      ins.alt = raw_ins(3);
-      ins.roll = raw_ins(4);
-      ins.pitch = raw_ins(5);
-      ins.heading = raw_ins(6);
+   default, elev, 0;
+   default, glob, "*-cir.jpg";
+   jpgs = find(photo_dir, glob=glob);
 
-         file_tail(jpgs(i));
-         raw_ins;
-         ins;
-      jgw_data = gen_jgw(ins, camera_specs, elev);
-      jgw_file = file_rootname(jpgs(i)) + ".jgw";
-      f = open(jgw_file, "w");
-      write, f, format="%.6f\n", jgw_data(1:4);
-      write, f, format="%.3f\n", jgw_data(5:6);
-      close, f;
+   files = file_tail(file_rootname(jpgs));
+
+   hms = atoi(strsplit(files, "-")(,2));
+   sod = int(hms2sod(hms) % 86400);
+   raw_ins = get_img_info(sod);
+   u = fll2utm(raw_ins(3,), raw_ins(2,));
+   w = where(raw_ins(1,));
+
+   tstamp = [];
+   if(numberof(w)) {
+      timer_init, tstamp;
+      for(j = 1; j <= numberof(w); j++) {
+         timer_tick, tstamp, j, numberof(w);
+         i = w(j);
+
+         ins = IEX_ATTITUDEUTM();
+         ins.somd = sod(i);
+         ins.northing = u(1,i);
+         ins.easting = u(2,i);
+         ins.zone = u(3,i);
+         ins.lat = raw_ins(3,i);
+         ins.lon = raw_ins(2,i);
+         ins.alt = raw_ins(4,i);
+         ins.roll = raw_ins(5,i);
+         ins.pitch = raw_ins(6,i);
+         ins.heading = raw_ins(7,i);
+
+         jgw_data = gen_jgw(ins, camera_specs, elev);
+         jgw_file = file_rootname(jpgs(i)) + ".jgw";
+         f = open(jgw_file, "w");
+         write, f, format="%.6f\n", jgw_data(1:4);
+         write, f, format="%.3f\n", jgw_data(5:6);
+         close, f;
+
+      }
    }
 }
