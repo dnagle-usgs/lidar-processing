@@ -16,7 +16,7 @@ func package_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n= ) {
 
 func save_vars (filename, tile=) {
    myi   = strchr( filename, '/', last=1);  // get filename only
-   pt  = strpart( filename, 0:myi);
+   pt  = strpart( filename, 1:myi);
    fn  = strpart( filename, myi+1:0 );
    tfn = swrite(format="%s.%s", pt, fn);
    cmd = swrite(format="mv %s %s", tfn, filename);
@@ -125,7 +125,7 @@ func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host= ) {
             // XYZZY - This will result in errors from rsync when the
             // files don't exist on the server (probably most of the time)
             write, format="RCF: rsyncing %s:%s\n", host, mypath;
-            cmd = swrite(format="rsync -PHaqR %s:%s .", host, mypath);
+            cmd = swrite(format="rsync -PHaqR %s:%s /", host, mypath);
             write,  cmd;
             system, cmd;
             write, "rsync complete";
@@ -180,7 +180,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host= ) {
             // Get files from server
             if ( ! strmatch(host, "localhost") ) {
                write, format="rsyncing %s:%s\n", host, ofn(1);
-               cmd = swrite(format="rsync -PHaqR %s:%s .", host, ofn(1));
+               cmd = swrite(format="rsync -PHaqR %s:%s /", host, ofn(1));
                write, cmd;
                system, cmd;
                write, "rsyncing finished";
@@ -520,6 +520,7 @@ Input:
   update=      : Set to 1 to process for only those files where the
                  output does not exist.  Useful when the program halts,
                  and you want to resume processing.
+                 Set to 2 to only process for rcf.
 
   avg_surf=    : Set to 1 to use the average of the water surface
                  reflections when processing for bathymetry (typ=1).
