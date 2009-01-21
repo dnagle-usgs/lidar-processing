@@ -565,8 +565,56 @@ func iex_ascii2pbd( fn ) {
  close,of
 }
 
+func autoselect_iexpbd(dir) {
+/* DOCUMENT iexpbd_file = autoselect_iexpbd(dir)
 
+   This function attempts to determine an appropriate iexpbd file to load for a
+   dataset.
 
+   The dir parameter should be either the path to the mission day or the path
+   to the mission day's trajectories subdirectory.
 
+   The function will find all *-ins.pbd files underneath the trajectories
+   directory. If there are more than one, then it selects based on what kind of
+   file it is with the following priorities (high to low): *-p-*, *-b-*, *-r-*,
+   and *-u-*. If there are still multiple matches, then it prefers
+   *-fwd-ins.pbd if present. If there are still multiple matches, it sorts them
+   then returns the last one -- in many cases, this will result in the most
+   recently created file being chosen.
 
+   If no matches are found, [] is returned.
+
+   This function is not guaranteed to return the best or most appropriate
+   iexpbd file. It is a convenience function that should only be used when you
+   know it's safe to be used.
+*/
+// Original David Nagle 2009-01-21
+   dir = file_join(dir);
+   if(file_tail(dir) != "trajectories") {
+      if(file_exists(file_join(dir, "trajectories"))) {
+         dir = file_join(dir, "trajectories");
+      }
+   }
+   candidates = find(dir, glob="*-ins.pbd");
+   if(!numberof(candidates)) return [];
+   patterns = [
+      "*-p-*-fwd-ins.pbd",
+      "*-p-*-ins.pbd",
+      "*-b-*-fwd-ins.pbd",
+      "*-b-*-ins.pbd",
+      "*-r-*-fwd-ins.pbd",
+      "*-r-*-ins.pbd",
+      "*-u-*-fwd-ins.pbd",
+      "*-u-*-ins.pbd"
+   ];
+   for(i = 1; i <= numberof(patterns); i++) {
+      w = where(strglob(patterns(i), candidates));
+      if(numberof(w)) {
+         candidates = candidates(w);
+         candidates = candidates(sort(candidates));
+         return candidates(0);
+      }
+   }
+   return [];
+}
 
