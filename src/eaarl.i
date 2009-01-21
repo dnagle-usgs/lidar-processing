@@ -51,6 +51,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "ll2utm.i";
    require, "map.i";
    require, "mathop.i";
+   require, "nad832navd88.i";
    require, "nav.i";
    require, "pip.i";
    require, "qq24k.i";
@@ -64,6 +65,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "set.i";
    require, "transect.i";
    require, "waves.i";
+   require, "wgs842nad83.i";
    require, "ytime.i";
    require, "zone.i";
 }

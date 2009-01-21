@@ -370,8 +370,47 @@ func file_exists(filename) {
 */
    fdir = file_dirname(filename);
    fname = file_tail(filename);
-   out = lsfiles(fdir, glob=fname);
-   return numberof(out);
+   if(dimsof(filename)(1)) {
+      result = array(0, dimsof(filename));
+      for(i = 1; i <= numberof(filename); i++) {
+         result(i) = numberof(lsfiles(fdir(i), glob=fname(i)));
+      }
+      return result;
+   } else {
+      return numberof(lsfiles(fdir, glob=fname));
+   }
+}
+
+func file_isdir(filename) {
+/* DOCUMENT file_isdir(filename)
+
+   Checks if the file 'filename' is a directory.
+
+   Return 1 if it is, or 0 if it is not.
+*/
+// Original David Nagle 2009-01-21
+   if(dimsof(filename)(1)) {
+      result = array(0, dimsof(filename));
+      for(i = 1; i <= numberof(filename); i++) {
+         result(i) = 0 != lsdir(filename(i));
+      }
+      return result;
+   } else {
+      return 0 != lsdir(filename);
+   }
+}
+
+func file_isfile(filename) {
+/* DOCUMENT file_isfile(filename)
+
+   Checks if the file 'filename' is a file.
+
+   Return 1 if it is, or 0 if it is not.
+*/
+// Original David Nagle 2009-01-21
+   f_exists = file_exists(filename);
+   f_isdir = file_isdir(filename);
+   return f_exists & ! f_isdir;
 }
 
 func file_copy(src, dest, force=) {

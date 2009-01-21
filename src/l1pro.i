@@ -22,7 +22,6 @@ if(is_void(__l1pro_includes_included__)) {
    require, "ircf.i";
    require, "irg.i";
    require, "manual_filter.i";
-   require, "nad832navd88.i";
    require, "pbd2las.i";
    require, "plcm.i";
    require, "qaqc_fns.i";
@@ -30,6 +29,5 @@ if(is_void(__l1pro_includes_included__)) {
    require, "surface_topo.i";
    require, "veg.i";
    require, "webview.i";
-   require, "wgs842nad83.i";
    require, "ytriangulate.i";
 }
