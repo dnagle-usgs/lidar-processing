@@ -114,7 +114,8 @@ func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host= ) {
    extern ofn;
    if (is_array(r)) {
 
-      process_tile (q=q, r=r, typ=typ, min_e=min_e, max_e=max_e, min_n=min_n, max_n=max_n, host=host );
+      // proceess_tile will return a 0 if the tile needs to be updated
+      update = process_tile (q=q, r=r, typ=typ, min_e=min_e, max_e=max_e, min_n=min_n, max_n=max_n, update=update, host=host );
 
       mypath = ofn(1);
       if ( b_rcf ) {
@@ -146,7 +147,7 @@ func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host= ) {
    }
 }
 
-func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host= ) {
+func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= ) {
    extern ofn;
    if ( is_void(host) ) host="localhost";
    // if (is_array(r)) {      // XYZZY - we don't need this check anymore - 2009-01-12, rwm
@@ -204,8 +205,9 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host= ) {
             if (nf) {
                write, format="File %s already exists...\n", new_file;
                // continue; // RWM
-               return;
+               return update;
             }
+            update=0;  // if the tile was updated, force rcf to process.
          }
 
          // if ( udpate ) {}
@@ -426,6 +428,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host= ) {
    // } else {
    //    write, "No Flightlines found in this block."
    // }
+   return update;
 }
 
 // show progress of jobs completed.
