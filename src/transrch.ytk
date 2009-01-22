@@ -145,18 +145,19 @@ proc run_mt { id } {
    global tw trans_varlist varlist fma_list show_list width_list \
    global color_list recall_list trans_xfma$id lwin_list rtn_list
 
-   set src_var [lindex $varlist [$tw.f2$id.cln_vars  getvalue]]
+   set src_var [lindex $varlist       [$tw.f2$id.cln_vars  getvalue]]
    set shw_var [lindex $show_list     [$tw.f2$id.showval   getvalue]]
    set wdt_var [lindex $width_list    [$tw.f2$id.widthval  getvalue]]
    set col_var [lindex $color_list    [$tw.f2$id.colorval  getvalue]]
    set rcl_var [lindex $recall_list   [$tw.f2$id.recallval getvalue]]
-   set win_var [lindex $lwin_list     [$tw.f2$id.winval    getvalue]]
+   set iwn_var [lindex $lwin_list     [$tw.f2$id.iwnval    getvalue]]
+   set own_var [lindex $lwin_list     [$tw.f2$id.ownval    getvalue]]
    set rtn_var [lindex $rtn_list      [$tw.f2$id.rtnval    getvalue]]
    set fma_var [subst \$trans_xfma$id]
 #  set fma_var [lindex $fma_list      [$tw.f2$id.fmaval    getvalue]]
 
 #   puts "m=mtransect( $src_var, xfma=$fma_var show=$shw_var, w=$wdt_var, recall=$rcl_var, color=$col_var )"
-   exp_send "m$id=mtransect( $src_var, xfma=$fma_var, show=$shw_var, w=$wdt_var, recall=$rcl_var, color=$col_var, owin=$win_var, exp=1,rtn=$rtn_var )\r"
+   exp_send "m$id=mtransect( $src_var, xfma=$fma_var, show=$shw_var, w=$wdt_var, recall=$rcl_var, color=$col_var, iwin=$iwn_var, owin=$own_var, exp=1,rtn=$rtn_var )\r"
    expect "END mtransect:"
    exp_send "llst$id=llst;rx$id=rx;elevation$id=elevation\r"
 }
@@ -241,13 +242,21 @@ proc create_transbuttons { cnt } {
          $tw.f2$tbi.colorval setvalue @8
       pack $tw.f2$tbi.color $tw.f2$tbi.colorval -side left -fill x -padx 2
 
-      Label $tw.f2$tbi.win -text "owin="
-      ComboBox $tw.f2$tbi.winval -values $lwin_list \
+      Label $tw.f2$tbi.iwin -text "iwin="
+      ComboBox $tw.f2$tbi.iwnval -values $lwin_list \
+         -helptext "window to get data" \
+         -editable 0 \
+         -width 1 
+         $tw.f2$tbi.iwnval setvalue @4
+      pack $tw.f2$tbi.iwin $tw.f2$tbi.iwnval -side left -fill x -padx 2
+
+      Label $tw.f2$tbi.owin -text "owin="
+      ComboBox $tw.f2$tbi.ownval -values $lwin_list \
          -helptext "window to plot data" \
          -editable 0 \
          -width 1 
-         $tw.f2$tbi.winval setvalue @2
-      pack $tw.f2$tbi.win $tw.f2$tbi.winval -side left -fill x -padx 2
+         $tw.f2$tbi.ownval setvalue @2
+      pack $tw.f2$tbi.owin $tw.f2$tbi.ownval -side left -fill x -padx 2
 
 
       Label $tw.f2$tbi.rtn -text "rtn="
@@ -269,9 +278,10 @@ create_transbuttons $Xcnt
 Button $tw.f3.mtransrch -text "Transect Pixel Waveform" \
    -bg azure3 -activebackground azure4 -command {
    set  fs_var [lindex $varlist     [$tw.f21.cln_vars   getvalue]]
-   set win_var [lindex $lwin_list     [$tw.f21.winval    getvalue]]
+   set iwn_var [lindex $lwin_list     [$tw.f21.iwnval    getvalue]]
+   set own_var [lindex $lwin_list     [$tw.f21.ownval    getvalue]]
    set rtn_var [lindex $rtn_list      [$tw.f21.rtnval    getvalue]]
-   exp_send "mtransrch, $fs_var, m1, llst1, _rx=rx1, _el=elevation1, iwin=$win_var, disp_type=$rtn_var\r"
+   exp_send "mtransrch, $fs_var, m1, llst1, _rx=rx1, _el=elevation1, owin=$own_var, iwin=$iwn_var, disp_type=$rtn_var\r"
 }
 pack $tw.f3.mtransrch -side left -fill x -padx 2
 setTooltip $tw.f3.mtransrch {
