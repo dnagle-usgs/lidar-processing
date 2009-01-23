@@ -278,7 +278,7 @@ create_transbuttons $Xcnt
 Button $tw.f3.mtransrch -text "Transect Pixel Waveform" \
    -bg azure3 -activebackground azure4 -command {
    set  fs_var [lindex $varlist     [$tw.f21.cln_vars   getvalue]]
-   set iwn_var [lindex $lwin_list     [$tw.f21.iwnval    getvalue]]
+   set iwn_var [lindex $lwin_list     [$tw.f21.ownval    getvalue]]
    set rtn_var [lindex $rtn_list      [$tw.f21.rtnval    getvalue]]
    exp_send "mtransrch, $fs_var, m1, llst1, _rx=rx1, _el=elevation1, iwin=$iwn_var, disp_type=$rtn_var\r"
 }
