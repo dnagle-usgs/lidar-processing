@@ -15,19 +15,22 @@ set jdir /tmp/batch/jobs
 set fdir /tmp/batch/farm
 set wdir /tmp/batch/work
 set ddir /tmp/batch/done
+set ldir /tmp/batch/logs
 
 # global echo
 
 #-----------------------------------------------------
 
 proc get_file { sock addr } {
-   global jdir fdir status assigned completed delta start
+   global jdir fdir status assigned completed delta start log
 
    catch { exec ls $jdir } res
    # puts [llength $res]
    set fn [ lindex $res 0 ]
    if { [ llength $res] > 0 } {
+      set myt [ clock format [clock seconds] -format "%H:%M:%S"]
       catch { exec mv $jdir/$fn $fdir } res
+      puts $log "$myt send: $addr $sock ($fdir) $fn"; flush $log;
       puts "send: $addr $sock ($fdir) $fn"
       set status($sock) "Sent: $fn"
       puts $sock "file: $fn"
@@ -44,7 +47,8 @@ proc get_file { sock addr } {
 }
 
 proc Service { sock addr } {
-   global fdir jdir echo status assigned completed delta start stop updated
+   global fdir jdir echo status assigned completed delta start stop updated log
+   set myt [ clock format [clock seconds] -format "%H:%M:%S"]
 
    # puts "Service: $sock $addr"
    if { [eof $sock] || [ catch { gets $sock line } ]} {
@@ -69,6 +73,7 @@ proc Service { sock addr } {
          quit {
             puts "got close request on $sock"
             close $sock
+            puts $log "$myt Close echo($addr,$sock)"; flush $log;
             puts "Close echo($addr,$sock)"
             unset echo($addr,$sock)
          }
@@ -84,6 +89,7 @@ proc Service { sock addr } {
             incr completed($sock)
             set tdelta [ expr $stop($sock) - $start($sock)]
             incr delta($sock) $tdelta
+            puts $log "$myt Received completed on $args from $addr $sock after $tdelta\n"; flush $log;
             puts "Received completed on $args from $addr $sock after $tdelta\n"
          }
 
@@ -211,11 +217,12 @@ proc open_server { port } {
 
 #-----------------------------------------------------
 proc make_dirs {} {
-   global jdir fdir wdir ddir;
+   global jdir fdir wdir ddir ldir;
    catch { exec mkdir -p $jdir }
    catch { exec mkdir -p $fdir }
    catch { exec mkdir -p $wdir }
    catch { exec mkdir -p $ddir }
+   catch { exec mkdir -p $ldir }
 }
 
 #-----------------------------------------------------
@@ -227,6 +234,13 @@ if { $host eq "server" } {
    signal trap  [ list ALRM ] check_for_files
    make_dirs
    alarm 5
+   set myd [ clock format [clock seconds] -format "%Y-%m-%d_%H:%M:%S"]
+   puts $myd
+   if { [catch { set log [open "/tmp/batch/logs/$myd.log" w] } ] } {
+      puts "Failed to create $myd logfile"
+   } else {
+      puts $log "Ouptut created"; flush $log
+   }
    open_server $port
 } else {    # start as client
    # set sock [socket $host $port]
