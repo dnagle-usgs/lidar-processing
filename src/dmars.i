@@ -1,3 +1,5 @@
+// vim: set tabstop=2 softtabstop=2 shiftwidth=2 autoindent shiftround expandtab:
+write, "$Id$";
 
 extern dmars_i
 /* DOCUMENT dmars_i
@@ -130,11 +132,9 @@ pitch/roll/heading and other information.
   
 */ 
 
-
- G = 9.80665;
- gs = 90.0/double(2^15); 
- as = (19.6/double(2^15)); 
-
+G = 9.80665;
+gs = 90.0/double(2^15); 
+as = (19.6/double(2^15)); 
 
 /*
    The sensor array is as follows:
@@ -147,19 +147,16 @@ pitch/roll/heading and other information.
     6     Z Acces ( this one is very close to gravity)
 */ 
 
-
-
 struct IEX {
   double sow;
-  int  sensors(6);
+  int sensors(6);
 };
 
- struct RAW_DMARS_IMU {
-   int tspo;		// time since power on
-   char status;		// status byte
-   short sensor(6);	// IMU sensor data
- };
-
+struct RAW_DMARS_IMU {
+  int tspo;    // time since power on
+  char status;   // status byte
+  short sensor(6); // IMU sensor data
+};
 
 /*
    This data is in engineering units of degrees/second
@@ -170,25 +167,21 @@ struct ENGR_DMARS {
   float sensor(6);
 };
 
-
-write,"$Id$"
-
 // This is designed to be driven by ytk.
-func load_iexpbd( fn ) {
-  extern _ytk_pbd_f, iex_nav1hz, gps_time_correction,
-        tans,
-        iex_head,
-        iex_nav, iex_nav1hz,
-        ops_conf,
-        ops_IMU2_default;
-  _ytk_pbd_f = openb(fn)
-  restore, _ytk_pbd_f;
-  show, _ytk_pbd_f;
-  close, _ytk_pbd_f;
+func load_iexpbd(fn) {
+/* DOCUMENT load_iexpbd(fn)
+  Loads INS (IMU/IEX/DMARS) data into the global variables iex_nav and
+  iex_head, which are refered to throughout the rest of the software.
 
-  if(is_void(gps_time_correction))
-    determine_gps_time_correction, fn;
-  iex_nav.somd += gps_time_correction;
+  Also, this converts the data to tans as well as generating a CIR version of
+  the data.
+
+  See also: load_ins
+*/
+  extern _ytk_pbd_f, iex_nav1hz, gps_time_correction, tans, iex_head, iex_nav,
+      iex_nav1hz, ops_conf, ops_IMU2_default;
+
+  iex_nav = load_ins(fn, iex_head);
 
   iex2tans;
   ops_conf = ops_IMU2_default;
@@ -196,12 +189,32 @@ func load_iexpbd( fn ) {
   write, "Using default DMARS mounting bias and lever arms.(ops_IMU2_default)"
 }
 
+func load_ins(fn, &head) {
+/* DOCUMENT nav = load_ins(fn, &head)
+  Loads INS (IMU/IEX/DMARS) data. Returns the array of IEX_ATTITUDE data stored
+  in iex_nav; head is set to the iex_head array.
+
+  The somd information is corrected using gps_time_correction before being
+  returned.
+
+  See also: load_iexpbd
+*/
+  extern gps_time_correction;
+  f = openb(fn);
+  head = f.iex_head;
+  nav = f.iex_nav;
+  close, f;
+  if(is_void(gps_time_correction))
+    determine_gps_time_correction, fn;
+  nav.somd += gps_time_correction;
+  return nav;
+}
 
 func gen_cir_nav( offset_secs ) {
   extern iex_nav, iex_nav1hz;
   if ( is_void( iex_nav) ) return -8;
   ins_rate = iex_nav(1:2).somd(dif)(1)
-  iticks = int(offset_secs*1000.0/int(ins_rate*1000.0001));		
+  iticks = int(offset_secs*1000.0/int(ins_rate*1000.0001));   
   startIndex = where( (iex_nav(1:int(1/ins_rate)).somd % 1) == 0.0 )(1);
   startIndex += iticks;
   tmp = iex_nav(startIndex:0:int(1/ins_rate));
@@ -228,7 +241,7 @@ func load_raw_dmars(fn=) {
  extern dmars_ntptime;
  extern stime;
  extern tdiff;
- bsz = 400000;		// nominal buffer size for reading
+ bsz = 400000;    // nominal buffer size for reading
 
 // Create a "buffer" array to load values to
  raw = array(RAW_DMARS_IMU,bsz);
@@ -237,11 +250,11 @@ func load_raw_dmars(fn=) {
  systime = array( int, 3, bsz );
  stime = []; 
 
- t = char();	// type is either 0x7d or 0x7e
+ t = char();  // type is either 0x7d or 0x7e
  f = open(fn, "rb");
  p = 0;
- i = 1;		// index for dmars data
- j = 1; 	// index for system time
+ i = 1;   // index for dmars data
+ j = 1;   // index for system time
  total_dmars = 0;
  total_time  = 0;
  loop = 1;
@@ -349,13 +362,6 @@ plg, dmars_ntptime(r) - (stime(3,r)/200.0+tdiff),
       color="red", 
       width=6.0
 }
-
-
-// fn = "/data/6/2003/asis/12-18-03/dmars/121803133617-dmars.bin";
-//  dmars = convert_raw_dmars_2_engr(load_raw_dmars(fn=fn));
-
-
-fn = "/data/6/2003/asis/12-18-03/dmars/121803133617-dmars.imu"
 
 struct IEX_HEADER {
   char   szheader(8);
@@ -466,10 +472,7 @@ load_raw_dmars function.
   write,format="Variable \"iex\", %dmb, is ready\n", int(sizeof(iex)/1e6)
 }
 
-fn = "/data/6/2003/asis/12-18-03/dmars/121803133617-dmars-eaarliex-x146y51z48.ascii"
-
-
- struct IEX_ATTITUDE {
+struct IEX_ATTITUDE {
   double somd   
   double lat
   double lon
@@ -480,7 +483,7 @@ fn = "/data/6/2003/asis/12-18-03/dmars/121803133617-dmars-eaarliex-x146y51z48.as
 };
 
 
- struct IEX_ATTITUDEUTM {
+struct IEX_ATTITUDEUTM {
   double somd   
   double lat
   double lon
@@ -589,32 +592,32 @@ func autoselect_iexpbd(dir) {
    know it's safe to be used.
 */
 // Original David Nagle 2009-01-21
-   dir = file_join(dir);
-   if(file_tail(dir) != "trajectories") {
-      if(file_exists(file_join(dir, "trajectories"))) {
-         dir = file_join(dir, "trajectories");
-      }
-   }
-   candidates = find(dir, glob="*-ins.pbd");
-   if(!numberof(candidates)) return [];
-   patterns = [
-      "*-p-*-fwd-ins.pbd",
-      "*-p-*-ins.pbd",
-      "*-b-*-fwd-ins.pbd",
-      "*-b-*-ins.pbd",
-      "*-r-*-fwd-ins.pbd",
-      "*-r-*-ins.pbd",
-      "*-u-*-fwd-ins.pbd",
-      "*-u-*-ins.pbd"
-   ];
-   for(i = 1; i <= numberof(patterns); i++) {
-      w = where(strglob(patterns(i), candidates));
-      if(numberof(w)) {
-         candidates = candidates(w);
-         candidates = candidates(sort(candidates));
-         return candidates(0);
-      }
-   }
-   return [];
+  dir = file_join(dir);
+  if(file_tail(dir) != "trajectories") {
+    if(file_exists(file_join(dir, "trajectories"))) {
+      dir = file_join(dir, "trajectories");
+    }
+  }
+  candidates = find(dir, glob="*-ins.pbd");
+  if(!numberof(candidates)) return [];
+  patterns = [
+    "*-p-*-fwd-ins.pbd",
+    "*-p-*-ins.pbd",
+    "*-b-*-fwd-ins.pbd",
+    "*-b-*-ins.pbd",
+    "*-r-*-fwd-ins.pbd",
+    "*-r-*-ins.pbd",
+    "*-u-*-fwd-ins.pbd",
+    "*-u-*-ins.pbd"
+      ];
+  for(i = 1; i <= numberof(patterns); i++) {
+    w = where(strglob(patterns(i), candidates));
+    if(numberof(w)) {
+      candidates = candidates(w);
+      candidates = candidates(sort(candidates));
+      return candidates(0);
+    }
+  }
+  return [];
 }
 
