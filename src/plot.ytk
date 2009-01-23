@@ -64,7 +64,7 @@ if {![namespace exists ::plot]} {
          variable markShape [lindex $::plot::c::markerShapes 1]
          variable markSize .5
          # _map(window)
-         variable window 6
+         #variable window 6
          variable zone 17
          variable pnav_file {}
          variable enable_plot_images 1
@@ -268,7 +268,7 @@ proc ::plot::menu { } {
    grid $f -sticky wen
 
    label $f.labWindow -text "In Window:"
-   SpinBox $f.spnWindow -justify center -range {0 7 1} -textvariable ::plot::g::window
+   SpinBox $f.spnWindow -justify center -range {0 7 1} -textvariable ::_map(window)
    grid $f.labWindow $f.spnWindow
    grid $f.labWindow -sticky e
 
@@ -573,7 +573,7 @@ proc ::plot::track_plot { } {
       set ::utm 0
    }
 
-   exp_send "show_gga_track, color=\"$g::trackLineColor\", skip=$g::trackSkip, marker=$marker, msize=$g::trackMarkerSize, utm=$::utm, win=$g::window, width=$g::trackLineWidth\r"
+   exp_send "show_gga_track, color=\"$g::trackLineColor\", skip=$g::trackSkip, marker=$marker, msize=$g::trackMarkerSize, utm=$::utm, win=$::_map(window), width=$g::trackLineWidth\r"
    expect {>}
    exp_send "\r\n"
    expect {>}
@@ -585,7 +585,7 @@ proc ::plot::fma { } {
    ::plot::window_set
    exp_send "fma\r"
    set size [expr {[lsearch $c::windowSizes $g::windowSize] + 1}]
-   exp_send "change_window_size, $g::window, $size, 1\r"
+   exp_send "change_window_size, $::_map(window), $size, 1\r"
 }
 
 proc ::plot::jump { } {
@@ -628,7 +628,7 @@ proc ::plot::copy_limits {} {
 }
 
 proc ::plot::window_set { } {
-   exp_send "window, $g::window\r"
+   exp_send "window, $::_map(window)\r"
 }
 
 proc ::plot::window_store { } {
@@ -645,26 +645,26 @@ proc ::plot::window_restore { } {
 
 proc ::plot::utm_grid_overlay { } {
    ::plot::curzone
-   exp_send "draw_grid, $g::window\r"
+   exp_send "draw_grid, $::_map(window)\r"
 }
 
 proc ::plot::utm_grid_show_name { } {
    ::plot::curzone
-   exp_send "show_grid_location, $g::window\r"
+   exp_send "show_grid_location, $::_map(window)\r"
 }
 
 proc ::plot::qq_grid_overlay {} {
-   exp_send "draw_qq_grid, $g::window\r"
+   exp_send "draw_qq_grid, $::_map(window)\r"
 }
 
 proc ::plot::qq_grid_show_name {} {
-   exp_send "show_qq_grid_location, $g::window\r"
+   exp_send "show_qq_grid_location, $::_map(window)\r"
 }
 
 proc ::plot::mark_time_pos { sod } {
    # TODO: adapt mark_time_pos to accept settings arguments
    set marker [lsearch $c::markerShapes $g::markShape]
-   exp_send "mark_time_pos, $g::window, $sod, msize=$g::markSize, marker=$marker, color=\"$g::markColor\"\r"
+   exp_send "mark_time_pos, $::_map(window), $sod, msize=$g::markSize, marker=$marker, color=\"$g::markColor\"\r"
 }
 
 proc ::plot::mark_pos { lat lon } {
