@@ -333,7 +333,8 @@ itcl::body SegmentedDataWindow::merge_selected {} {
    }
 
    append_varlist $_merge_var
-   set _merge_var ""
+   tk_messageBox -icon info -type ok -parent $itk_component(hull) \
+      -message "The selected variables have been merged to $_merge_var."
 }
 
 itcl::body SegmentedDataWindow::launch_stats {args} {
