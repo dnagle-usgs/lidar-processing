@@ -233,7 +233,11 @@ func ex_veg( rn, i,  last=, graph=, win=, use_be_centroid=, use_be_peak=, hard_s
 
 */
 
+
+
+
  extern veg_conf, ops_conf, n_all3sat;
+
  extern ex_bath_rn, ex_bath_rp, a, irg_a, _errno
 
   _errno = 0;		// If not specifically set, preset to assume no errors.
@@ -477,12 +481,17 @@ write, format="rn=%d; i = %d\n",rn,i
 	       mv0 = aa(int(xr(0)+c),i,ai);
 	   }
            if (ai == 2) {
+
 	       mx0 += ops_conf.chn2_range_bias; 
 	       mv0 = aa(int(xr(0)+c),i,ai)+300;
+
 	   }
            if (ai == 3) {
+
+
 	       mx0 += ops_conf.chn3_range_bias; // in cm
 	       mv0 = aa(int(xr(0)+c),i,ai)+600;
+
 	   }
           } else {
            mx0 = -10;
@@ -558,14 +567,20 @@ write, format="rn=%d; i = %d\n",rn,i
        if ( np > 12 ) np = 12;               // use no more than 12
        if ( numberof(where(  ((*rp.rx(i,1))(1:np)) < 5 )) <= ops_conf.max_sfc_sat ) {
          cv = cent( *rp.rx(i, 1 ) );
+
+
 	 cv(1) += ops_conf.chn1_range_bias;
        } else if ( numberof(where(  ((*rp.rx(i,2))(1:np)) < 5 )) <= ops_conf.max_sfc_sat ) {
          cv = cent( *rp.rx(i, 2 ) ); 
 	 cv(1) += ops_conf.chn2_range_bias;
+
          cv(3) += 300;
        } else {
+
+      
          cv = cent( *rp.rx(i, 3 ) ); 
 	 cv(1) += ops_conf.chn3_range_bias;
+
          cv(3) += 600;
        }
 
@@ -709,7 +724,7 @@ func display_veg(veg_arr, felv=, lelv=,  fint=, lint=, cmin=, cmax=, size=, win=
   write,format="Draw complete. %d rasters drawn. %s", len, "\n"
 }
 
-func make_fs_veg (d, rrr) {  
+func make_fs_veg (d, rrr) {
 /* DOCUMENT make_fs_veg (d, rrr) 
 
  This function makes a veg data array using the 
@@ -750,9 +765,12 @@ for (i=1; i<=len; i=i+1) {
   geoveg(i).fint = rrr(i).intensity;
  // find actual ground surface elevation using simple trig (similar triangles)
   elvdiff = rrr(i).melevation - rrr(i).elevation;
+  // check where the first surface algo assigned the first return elevation to the mirror elevation. The values may not exactly be the same because of the range bias -- we will check for where the melevation is within 10 m of the elevation
+  edidx = where((abs(rrr(i).melevation - rrr(i).elevation) < 1000));
   ndiff = rrr(i).mnorth - rrr(i).north;
   ediff = rrr(i).meast - rrr(i).east;
 
+  geo_raster = geoveg(i).rn(1) & 0xffffff
   eindx = where(d(,i).mx1 > 0 & d(,i).mx0 > 0);
   if (is_array(eindx)) {
    eratio = float(d(,i).mx0(eindx))/float(d(,i).mx1(eindx));
@@ -761,15 +779,31 @@ for (i=1; i<=len; i=i+1) {
    geoveg(i).least(eindx) = int(rrr(i).meast(eindx) - eratio * ediff(eindx));
    // assign east,north values from rrr for those array elements within the raster that did not have a valid mx0 value;
    cf0idx = where(geoveg(i).lnorth == 0);
+   /*
    geoveg(i).lnorth(cf0idx) = rrr(i).north(cf0idx);
    geoveg(i).least(cf0idx) = rrr(i).east(cf0idx);
-   geoveg(i).lelv(cf0idx) = rrr(i).melevation(cf0idx);
+   geoveg(i).lelv(cf0idx) = rrr(i).elevation(cf0idx);
+   */
+   geoveg(i).lnorth(cf0idx) = 0;
+   geoveg(i).least(cf0idx) = 0;
+   geoveg(i).lelv(cf0idx) = 0;
+   geoveg(i).north(cf0idx) = 0;
+   geoveg(i).east(cf0idx) = 0;
+   geoveg(i).elevation(cf0idx) = 0;
   } else {
    geoveg(i).lnorth = geoveg(i).north;
    geoveg(i).least  = geoveg(i).east;
    // assign mirror elevation values to lelv to clearly indicate that the last elevation values are incorrect
    geoveg(i).lelv = rrr(i).melevation;
   }
+
+  // now go back to the edidx which contains the elements that have first return elevations assigned to the mirror elevation
+  if (is_array(edidx)) {
+   geoveg(i).lnorth(edidx) = rrr(i).north(edidx);
+   geoveg(i).least(edidx) = rrr(i).east(edidx);
+   geoveg(i).lelv(edidx) = rrr(i).elevation(edidx);
+  }
+   
   geoveg(i).lint = d(,i).mv0;
   geoveg(i).nx = d(,i).nx;
 
@@ -898,15 +932,21 @@ Returns:
 	ba_count += numberof(ba_indx);
 	ba_veg = veg_all;
 	deast = veg_all.east;
+	dleast = veg_all.least;
    	if ((is_array(ba_indx))) {
 	  deast(ba_indx) = 0;
+	  dleast(ba_indx) = 0;
         }
 	 dnorth = veg_all.north;
+	 dlnorth = veg_all.lnorth;
    	if ((is_array(ba_indx))) {
 	 dnorth(ba_indx) = 0;
+	 dlnorth(ba_indx) = 0;
 	}
 	veg_all.east = deast;
 	veg_all.north = dnorth;
+	veg_all.least = dleast;
+	veg_all.lnorth = dlnorth;
 
 	/* compute array for bad attitude (ba_veg) to write to a file */
 	ba_indx_r = where(ba_veg.elevation < elv_thresh);
