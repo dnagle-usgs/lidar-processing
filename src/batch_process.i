@@ -40,7 +40,7 @@ func save_vars (filename, tile=) {
       save,  f, update;
       // XYZZY - we need to save the batch_rcf parameters too!!
       if ( b_rcf == 1 ) {
-         save,  f, b_rcf, buf, w, no_rcf, mode, merge, clean, rcfmode;
+         save,  f, b_rcf, buf, w, no_rcf, mode, merge, clean, rcfmode, write_merge;
       }
    }
    save,  f, pnav_filename;
@@ -131,7 +131,7 @@ func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host= ) {
             system, cmd;
             write, "rsync complete";
          }
-         batch_rcf( mypath, buf=buf, w=w, no_rcf=no_rcf, mode=mode, merge=merge, clean=clean, rcfmode=rcfmode, onlyupdate=update );
+         batch_rcf( mypath, buf=buf, w=w, no_rcf=no_rcf, mode=mode, merge=merge, clean=clean, rcfmode=rcfmode, onlyupdate=update, write_merge=write_merge );
       }
 
       if ( ! strmatch(host, "localhost") ) {
@@ -478,7 +478,7 @@ func batch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=, onlypl
    mbatch_process(typ=typ, save_dir=save_dir, shem=shem, zone=zone, dat_tag=dat_tag, cmdfile=cmdfile, n=n, onlyplot=onlyplot, mdate=mdate, pbd=pdb, edf=edf, win=win, auto=auto, pick=pick, get_typ=get_typ, only_bathy=only_bathy, only_veg=only_veg, update=update, avg_surf=avg_surv,conf_file=conf_file, now=1);
 }
 
-func mbatch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=, onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=, only_veg=, update=, avg_surf=,conf_file=, now=, b_rcf=, buf=, w=, no_rcf=, mode=, merge=, clean=, rcfmode=) {
+func mbatch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=, onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=, only_veg=, update=, avg_surf=,conf_file=, now=, b_rcf=, buf=, w=, no_rcf=, mode=, merge=, clean=, rcfmode=, write_merge=) {
 /* DOCUMENT mbatch_process
 func batch_process(typ=, save_dir=, shem=, zone=, dat_tag=,
                    cmdfile=, n=, onlyplot=, mdate=, pbd=, edf=,
@@ -564,13 +564,14 @@ are REQUIRED:
   b_rcf=     : 1 - invokes batch_rcf after normal batch processing
 
 The following are pass thru variables needed for batch_rcf
-  buf=       :
-  w=         :
-  no_rcf=    :
-  mode=      :
-  merge=     :
-  clean=     :
-  rcfmode=   :
+  buf=         :
+  w=           :
+  no_rcf=      :
+  mode=        :
+  merge=       :
+  clean=       :
+  rcfmode=     :
+  write_merge= :
 
 
 
