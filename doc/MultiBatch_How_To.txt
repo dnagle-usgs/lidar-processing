@@ -1,0 +1,141 @@
+$Id$
+
+Multi Batch Processing                              Richard Mitchell 2009-01-27
+================================================================================
+
+Purpose
+-------
+
+mbatch_process() allows multiple 2K tiles to be processed simultaneously
+by utilizing multiple CPUs.  As computer speeds have reached somewhat of a
+plateau, chip makers have turned to adding multiple cores to a single
+processor.  This is very much like adding multiple CPUs to a single
+computer.  The computer can now do more work because it can run different
+tasks on each core.  The downside is any individual job/task/process is only
+going to be as fast as one core or CPU.
+
+mbatch_process() gets around this by using multiple jobs to process the
+tiles with each job working on a different tile.  This allows ALPS to use
+more of the cores/CPUs that are available.  It can also run across multiple
+computers.  Remote computers will not be able to process tiles as fast as
+the computer running ALPS due to the need to copy the data between
+systems, but they will still contribute to getting the overall job completed.
+
+
+Implementation
+--------------
+
+mbatch_process() breaks the task of processing data into three parts.
+
+The first part is started by calling mbatch_process() inside an active
+ALPS session.   The arguments are a superset (more on this later) of
+the same arguments to batch_process.  The difference is that mbatch_process()
+does not process the tiles but instead creates a file with enough information
+that a separate Yorick process can process the tile.
+
+A "server" process (the second part) waits for these files to appear.  When
+they do, the server tells the next available "client" where to get the file.
+The server also waits for a message from the client to know that it has
+completed a tile, which it then indicates back to ALPS.  ALPS can then
+update the map display to show which tiles have been completed.
+
+"Client" processes (the third part) are started for each core available
+for processing ALPS data.  The clients get the files from the server,
+copies the data as necessary, processes the tile, and reports back to the
+server on completion.  The client is then ready to process the next tile
+as it becomes ready.
+
+The server and clients currently must be started manually by the ALPS user.
+This gives the user control over how many core to to use on a system and
+which systems can be used.
+
+
+How-To
+======
+
+Starting the Server and Clients
+-------------------------------
+
+NOTE: You will need to have a separate TERMINAL session for each
+server and client.
+
+It is not necessary to start the server and clients before issuing an
+mbatch_process() command in ALPS, but no tiles will be processed until
+they are.  The server and clients can also be left running once started
+as long as there is some anticipated need.  Their load on the system
+when not processing tiles should be minuscule.
+
+The server must be started before starting any clients and all clients
+will end when the server stops.  To start a server, go to the
+"lidar-processing/src" directory and run "./batcher.tcl server".  The
+server will then start and be ready to accept connections from the clients.
+Your screen will display something similar to:
+
+  ./batcher.tcl server
+  ARGV:  server
+  2009-01-27_17:18:06
+  Server started on port 9900...
+
+  STAT line shows:
+     A:  number of jobs Assigned
+     C:  number of jobs Completed
+     T:  total Time spent processing (in seconds)
+     a:  Average time spent processing each job
+
+
+A client needs to know how to contact the server which is indicated by
+the first argument.  To start a client on the same system running ALPS,
+use "localhost".  For a remote client, supply the hostname of the system
+running ALPS.  The command to start the client is also "./batcher.tcl".
+Thus the command to start a client would be "./batcher.tcl localhost" or
+"./batcher.tcl SERVER_HOSTNAME".
+
+After starting a couple of clients, the server will display:
+
+  Accept connection sock5 from 127.0.0.1 on port 58771
+  RCVD: 127.0.0.1 sock5: Status ready
+  Received status from 127.0.0.1 sock5: ready
+
+  Accept connection sock6 from 127.0.0.1 on port 58772
+  RCVD: 127.0.0.1 sock6: Status ready
+  Received status from 127.0.0.1 sock6: ready
+
+  17:18:11: Timer expired: We have 2 connection(s)!
+  STAT: 127.0.0.1 sock5 -> A:0  C:0  T:0  a:0
+  STAT: 127.0.0.1 sock6 -> A:0  C:0  T:0  a:0
+
+Each time a message is received from a client, the server will display
+the intent of that message.  The first two pair of three lines show
+the server received two client requests to connect and are ready for
+accepting jobs.
+
+The last set of three lines is the result of a periodic display of the
+status of each client.  In this case it shows that both clients have
+accepted and completed 0 jobs.
+
+
+ALPS
+----
+
+ALPS is used to create the jobs for the server to distribute to the clients
+to process through the mbatch_process() command.  mbatch_process() accepts the
+same arguments as batch_process() and also a few options from batch_rcf().
+The latter addition allows a tile to have the rcf processing done in the
+same step as the normal batch processing.  A typical command could look
+like:
+
+  mbatch_process,typ=2,save_dir="/data/1/output/20081002/",mdate="20081002",zone=18,pick=1,b_rcf=1, buf=700,w=200,no_rcf=3, mode=3, merge=1,clean=1,rcfmode=1, update=1
+
+The new option, b_rcf, indicates that we want to include the rcf processing.
+The options that come after are standard batch_rcf() options.
+
+In the above example, the user will then be prompted to drag out a bounding
+box to indicate the area to be processed.  A yellow grid will indicate the
+total 2K squares that have been selected for processing.  As ALPS generates
+a file for each tile, a blue border will be drawn inside the tile and will
+be replaced with green after processing completes.  To keep from generating
+tiles too quickly and filling available hard drive space, the number of
+pending (not yet assigned to a client by the server) jobs is limited.  As
+jobs are completed, new tiles will turn blue until all tiles are done.
+Only tiles that are occupied with a portion of the flight line will be
+processed, all other (empty) tiles will remain yellow.
