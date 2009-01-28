@@ -371,7 +371,7 @@ func rereference_angle(ang, fdir, fref, tdir, tref, rad=) {
    return ang;
 }
 
-func ppdist(p1, p2, tp=) {
+func ppdist(&p1, &p2, tp=) {
 /* ppdist(p1, p2)
    Generalized point-to-point distance function. p1 and p2 must have
    conformable dimensions. This works with points of any dimension (2d, 3d,
@@ -397,15 +397,13 @@ func ppdist(p1, p2, tp=) {
       [5,13,85]
 */
 // Original David Nagle 2008-11-18
+// p1 and p2 are passed by reference to save memory, DO NOT modify!
    default, tp, 0;
    if(tp) {
-      p1 = transpose(p1);
-      p2 = transpose(p2);
+      return transpose(ppdist(transpose(p1), transpose(p2)));
+   } else {
+      return sqrt(((p1 - p2) ^ 2)(sum,));
    }
-   dist = sqrt(((p1 - p2) ^ 2)(sum,));
-   if(tp)
-      dist = transpose(dist);
-   return dist;
 }
 
 /*

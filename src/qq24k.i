@@ -92,7 +92,7 @@ func qq2uz(qq, centroid=) {
       return u(3,1);
 }
 
-func extract_for_qq(north, east, zone, qq, buffer=) {
+func extract_for_qq(&north, &east, zone, qq, buffer=) {
 /* DOCUMENT extract_for_qq(north, east, qq, buffer=)
 
    This will return an index into north/east of all coordinates that fall
@@ -101,28 +101,26 @@ func extract_for_qq(north, east, zone, qq, buffer=) {
 
    The buffer= option specifies a buffer (in meters) to extend the quarter
    quad's boundaries by. By default, it is 100 meters.
-
-   Original David Nagle 2008-07-17
 */
+   // Original David Nagle 2008-07-17
+   // north and east are passed by reference to save memory, DO NOT modify!
    default, buffer, 100;
    bbox = qq2ll(qq, bbox=1);
 
+   // ll(,1) is lon, ll(,2) is lat
    ll = utm2ll(north, east, zone);
-   orig_lon = ll(,1);
-   orig_lat = ll(,2);
 
-   comp_lon = bound(orig_lon, bbox(4), bbox(2));
-   comp_lat = bound(orig_lat, bbox(1), bbox(3));
+   comp_lon = bound(ll(,1), bbox(4), bbox(2));
+   comp_lat = bound(ll(,2), bbox(1), bbox(3));
 
+   // comp_utm(1,) is north, (2,) is east
    comp_utm = fll2utm(comp_lat, comp_lon, force_zone=zone);
-   comp_north = comp_utm(1,);
-   comp_east = comp_utm(2,);
 
-   dist = ppdist([east, north], [comp_east, comp_north], tp=1);
+   dist = ppdist([east, north], [comp_utm(2,), comp_utm(1,)], tp=1);
    return where(dist <= buffer);
 }
 
-func extract_for_dt(north, east, dt, buffer=) {
+func extract_for_dt(&north, &east, dt, buffer=) {
 /* DOCUMENT extract_for_dt(north, east, dt, buffer=)
    
    This will return an index into north/east of all coordinates that fall
@@ -133,8 +131,9 @@ func extract_for_dt(north, east, dt, buffer=) {
    boundaries by. By default, it is 100 meters. Setting buffer=0 will constrain
    the data to the exact tile boundaries.
 
-   Original David Nagle 2008-07-21
 */
+   // Original David Nagle 2008-07-21
+   // north and east are passed by reference to save memory, DO NOT modify!
    default, buffer, 100;
    bbox = dt2utm(dt, bbox=1);
    min_n = bbox(1) - buffer;

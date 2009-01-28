@@ -4,9 +4,12 @@
 
 if(is_void(__l1pro_includes_included__)) {
    __l1pro_includes_included__ = 1;
+   if(!is_void(src_path))
+      cd, src_path;
+
    require, "eaarl.i";
+
    write,"$Id$";
-   cd, src_path;
    require, "atm.i";
    require, "batch_datum_convert.i";
    require, "batch_multipip_process.i";

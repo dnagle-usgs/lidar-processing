@@ -146,32 +146,15 @@ func batch_qi_to_tiles(con_dir, ymd, dir,searchstr=, name=) {
    See also: load_atm_raw atm_create_tiles merge_qi_tiles
 
 */
+// Original Jim Lebonitte 2008-01-23
+// Rewritten David Nagle 2009-01-27
+   default, searchstr, "*.qi";
+   files = find(con_dir, glob=search_str);
 
-   if(is_void(searchstr)) {
-          searchstr="*.qi"
+   for(i = 1; i<=numberof(files); i++) {
+      qi_to_tiles(files(i), ymd, dir, name=)
    }
-
-   command = swrite(format="find %s -name '%s'", con_dir, searchstr);
-
-   files = ""
-   s = array(string,10000);
-   f = popen(command, 0);
-   nn = read(f,format="%s",s);
-   s = s(where(s));
-   numfiles = numberof(s);
-   newline = "\n"
-   data=[];
-
-   for(i=1; i<=numfiles; i++) {
-
-      filename=s(i);
-      qi_to_tiles(filename, ymd, dir, name=)
-
-   }
-
 }
-
-
 
 func qi_to_tiles(fname, ymd, dir, name=) {
 /* DOCUMENT qi_to_tiles, fname, ymd, dir, name=

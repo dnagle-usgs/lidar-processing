@@ -1585,6 +1585,7 @@ Refactored and modified by David Nagle 2008-11-04
 
       fn_all = find(dirname, glob=ss);
    }
+   ss = [];
 
    if (!is_array(fn_all))
       exit,"No input files found.  Goodbye.";
@@ -1595,6 +1596,7 @@ Refactored and modified by David Nagle 2008-11-04
       if(!numberof(w))
          exit, "No RCF'd input files found.  Goodbye.";
       fn_all = fn_all(w);
+      w = [];
    }
 
    if(!numberof(where(mode == [1,2,3])))
@@ -1608,13 +1610,12 @@ Refactored and modified by David Nagle 2008-11-04
       if(!numberof(w))
          exit, "No input files found for mode.  Goodbye.";
       fn_all = fn_all(w);
+      w = [];
    }
 
    for (i=1; i<=numberof(fn_all); i++) {
       fn_tail = file_tail(fn_all(i));
       fn_path = file_dirname(fn_all(i));
-
-
       fn_ext = ESRI ? ".txt" : ".xyz";
       out_tail = file_rootname(fn_tail) + "_" + out + fn_ext;
       out_path = strlen(outdir) ? outdir : fn_path;
@@ -1672,7 +1673,7 @@ Refactored and modified by David Nagle 2008-11-04
       }
       pstruc = structof(eaarl(1));
       write, format="Writing ascii file %d of %d\n",i,numberof(fn_all);
-      write_ascii_xyz, eaarl, out_path, out_tail, type=mode, indx=indx,
+      write_ascii_xyz, unref(eaarl), out_path, out_tail, type=mode, indx=indx,
          intensity=intensity, delimit=delimit, zclip=zclip, pstruc=pstruc,
          rn=rn, soe=soe, header=header, latlon=latlon, zone=zone,
          ESRI=ESRI, footer=footer;

@@ -64,3 +64,27 @@ func winlimits( win1, win2 ) {
   limits,lm(1),lm(2),lm(3),lm(4);
   window, win1;
 }
+
+func window2image(file, win=) {
+/* window2image, filename, win=
+   Creates an image from the specified window.
+
+   file: The destination filename, such as /path/to/file.png
+   win= The window to dump (if not provided will use current window)
+
+   Caveats:
+      * This will only work if xwd is on your path.
+      * This will only work if convert is on your path.
+      * This will only work if the Yorick window is named "Yorick 0" or
+        similar. If you have multiple Yoricks running and this one's windows
+        are named "Yorick 0 <2>" or similar, this will grab the wrong window.
+*/
+   // Original David Nagle 2009-01-28
+   default, win, window();
+   dir = mktempdir();
+   xwdfile = file_join(dir, "temp.xwd");
+   system, swrite(format="xwd -out %s -name 'Yorick %d'", xwdfile, win);
+   system, swrite(format="convert %s %s", xwdfile, file);
+   remove, xwdfile;
+   rmdir, dir;
+}

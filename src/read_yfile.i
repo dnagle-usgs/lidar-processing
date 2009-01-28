@@ -751,7 +751,6 @@ func write_ascii_xyz(data_arr, opath, ofname, type=, ESRI=, header=, footer=, de
 
    Refactored and modified by David Nagle 2008-11-18
 */
-
    extern curzone;
    default, ESRI, 0;
    default, header, 0;
@@ -779,15 +778,15 @@ func write_ascii_xyz(data_arr, opath, ofname, type=, ESRI=, header=, footer=, de
 
    fn = opath+ofname;
 
-   if (numberof(data_arr) != numberof(data_arr.north)) {
+   if (numberof(data_arr) != numberof(where(data_arr.north))) {
       if (pstruc == FS) { //convert FS_ALL to FS
-         data_arr = clean_fs(data_arr);
+         data_arr = clean_fs(unref(data_arr));
       }
       if (pstruc == GEO) { //Convert GEOALL to GEO 
-         data_arr = clean_bathy(data_arr);
+         data_arr = clean_bathy(unref(data_arr));
       }
       if (pstruc == VEG__) {  //clean veg_all_ and convert to veg__
-         data_arr = clean_veg(data_arr);
+         data_arr = clean_veg(unref(data_arr));
       }
    }
 
@@ -863,9 +862,6 @@ func write_ascii_xyz(data_arr, opath, ofname, type=, ESRI=, header=, footer=, de
          else
             data_intensity = swrite(format="%d", data_intensity);
       }
-      totw = indgen(numberof(north));
-
-      totw = swrite(format="%d", totw);
       z = swrite(format="%4.2f", z);
 
       // indx is deferred to output section...
@@ -886,7 +882,8 @@ func write_ascii_xyz(data_arr, opath, ofname, type=, ESRI=, header=, footer=, de
                header=hline, footer=footer, indx=indx, delimit=delimit;
          }
       } else {
-         __write_ascii_xyz_helper, fn=fn, lines=curline,
+         data_arr = [];
+         __write_ascii_xyz_helper, fn=fn, lines=unref(curline),
             header=hline, footer=footer, indx=indx, delimit=delimit;
       }
    }
@@ -900,12 +897,9 @@ func __write_ascii_xyz_helper(void, fn=, lines=, header=, footer=, indx=, delimi
       totw = swrite(format="%d", indgen(numberof(lines(,1))));
       lines = grow([totw], lines);
    }
-   // The next line juggles lines around to...
-   //   reorient the matrix to be rows of fields rather than columns of fields
-   //   insert delimiters between pairs of tokens
-   //   remove the final delimiter (which is extra and shouldn't be there)
-   //   merge each line into a single string
-   lines = transpose([lines, delimit])(*,)(:-1,)(sum,);
+   // Put delimiters in place and merge line elements into single strings
+   lines(,:-1) += delimit;
+   lines = unref(lines)(,sum);
    write, f, format="%s\n", lines;
    if (footer)
       write, f, format="%s\n", footer;
