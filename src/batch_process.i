@@ -1613,6 +1613,23 @@ Refactored and modified by David Nagle 2008-11-04
    for (i=1; i<=numberof(fn_all); i++) {
       fn_tail = file_tail(fn_all(i));
       fn_path = file_dirname(fn_all(i));
+
+
+      fn_ext = ESRI ? ".txt" : ".xyz";
+      out_tail = file_rootname(fn_tail) + "_" + out + fn_ext;
+      out_path = strlen(outdir) ? outdir : fn_path;
+      fix_dir, out_path;
+
+      // 2009-01-28: if we're going to skip because the file already exists,
+      // lets skip quickly before loading any data - rwm
+      if(update && file_exists(out_path + out_tail)) {
+         // 2009-01-28: this should really check to see if the file size is > 0.
+         // if yorick runs out of memory during the write process, the file will
+         // exist but be empty. - rwm
+         write, format="%3d: Skipping %s: output file already exists\n", i, fn_tail;
+         continue;
+      }
+
       if(strglob("*.pbd", fn_tail)) {
          f = openb(fn_all(i));
          eaarl = get_member(f, f.vname);
@@ -1623,14 +1640,6 @@ Refactored and modified by David Nagle 2008-11-04
       } else {
          write, format="Skipping %s: unrecognized file extension\n", fn_tail;
          continue;
-      }
-
-      fn_ext = ESRI ? ".txt" : ".xyz";
-      out_tail = file_rootname(fn_tail) + "_" + out + fn_ext;
-      out_path = strlen(outdir) ? outdir : fn_path;
-      fix_dir, out_path;
-      if(update && file_exists(out_path + out_tail)) {
-         write, format="Skipping %s: output file already exists\n", fn_tail;
       }
 
       if(buffer >= 0) {
