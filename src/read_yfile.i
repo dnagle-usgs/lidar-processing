@@ -1163,10 +1163,16 @@ func merge_data_pbds(filepath, write_to_file=, merged_filename=, nvname=, uniq=,
     close, f;
     lp = lp + n;
     if (n) fn_all = s(fp:lp);
+
+    // 2009-01-29: added to remove output file from the list to be merged
+    mgd_idx = strmatch(fn_all,"merged",1);
+    fn_all = fn_all(where(!mgd_idx));
+    n = numberof(fn_all);
+
     fp = fp + n;
  }
  for (i=1;i<=numberof(fn_all); i++) {
-    write, format="Merging File %d of %d, skip = %d\r",i,numberof(fn_all), skip;
+    write, format="Merging File %d of %d, skip = %d: %s\r",i,numberof(fn_all), skip, fn_all(i);
     f = openb(fn_all(i));
     restore, f, vname;
     if (get_member(f,vname) == 0) continue;
