@@ -628,7 +628,7 @@ maxx = elev(q)(max);
   if ( numberof(zero_list) )
   	h( zero_list ) = 1;
   e = span( minn, maxx, numberof(h) )  ; 
-  w = window();
+  w = current_window();
   window,win; 
   if ( dofma ) 
   	fma; 
@@ -642,7 +642,7 @@ maxx = elev(q)(max);
   //limits
   hst = [e,h];
   window, win; limits,,,,hst(max,2) * 1.5
-  window(w);
+  window_select, w;
   return hst;
 }
 

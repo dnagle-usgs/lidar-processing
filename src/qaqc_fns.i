@@ -373,7 +373,7 @@ min_elev & max_elev:  If these are both set, the flightlines plotted if more tha
 */
    data = data(sort(data.soe));
    if (!win) win=5;
-   windold = window();
+   windold = current_window();
 //Get first and last points
    if (!pt) {
 	window, win;
@@ -455,7 +455,7 @@ min_elev & max_elev:  If these are both set, the flightlines plotted if more tha
 	cor = "blah";
 	read(cor);
 	if (cor != "y") return;
-	window, windold;
+	window_select, windold;
 	return [this_data.soe(idx(fl1)), this_data.soe(idx(fl2)-1)];
    }
    window, 3; fma;
@@ -518,7 +518,7 @@ min_elev & max_elev:  If these are both set, the flightlines plotted if more tha
    cor = "blah";
    read(cor);
    if (cor != "y") return;
-   window, windold;
+   window_select, windold;
    return [this_data.soe(idx(fl1)), this_data.soe(idx(fl2)-1)];
 }
 
@@ -597,7 +597,7 @@ func mod_flightline(data, data_dir, soes=, pt=, win=, clipmax=, clipmin=, alsome
 	if (clipmin) bad_data = bad_data(where( (bad_data.depth+bad_data.elevation) >= clipmin*100));
 	if (repocess)bad_data = reprocess_bathy_flightline(bad_data); 
 	if (!is_array(bad_data)) {write, "No bad points in flightline... continueing"; continue;}
-	windold = window();
+	windold = current_window();
 	window, 3; fma;
 	belv = stdev_min_max(bad_data.elevation/100.0 + bad_data.depth/100.0, N_factor=0.3);
 	plot_bathy, bad_data, win=3, ba=1, fs = 0, de = 0 , fint = 0, lint = 0, cmin=belv(1), cmax=belv(2), msize = 2.0, marker=1, skip=1;
@@ -649,5 +649,5 @@ func mod_flightline(data, data_dir, soes=, pt=, win=, clipmax=, clipmin=, alsome
         close, f;
 	}
    }
-   window, windold;
+   window_select, windold;
 }

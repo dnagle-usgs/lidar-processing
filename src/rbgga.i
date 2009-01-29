@@ -256,7 +256,7 @@ func mark_time_pos(win, sod, msize=, marker=, color=) {
   default, marker, 5;
   default, color, "blue";
   default, msize, 0.6;
-  current_win = window();
+  current_win = current_window();
   q = where( gga.sod == sod )
   window,win;
   if (utm) {
@@ -265,7 +265,7 @@ func mark_time_pos(win, sod, msize=, marker=, color=) {
   } else {
    plmk, gga.lat(q), gga.lon(q), marker=marker, color=color, msize=msize;
   }
-  window, current_win;
+  window_select, current_win;
 }
 
 func test_selection_size (q) {
@@ -898,7 +898,7 @@ func plot_no_raster_fltlines (pnav, edb) {
 
   extern soe_day_start, utm;
 
-  w = window();
+  w = current_window();
   window, 6;
 
   sod_edb = edb.seconds - soe_day_start;
@@ -931,7 +931,7 @@ func plot_no_raster_fltlines (pnav, edb) {
   if (is_array(indx1)) 
     show_gga_track, x = pnav.lon(indx1), y = pnav.lat(indx1), marker=4, skip=50,  color = "yellow", utm=utm;
 
-  window, w;
+  window_select, w;
 
 
 }
@@ -946,7 +946,7 @@ func plot_no_tans_fltlines (tans, pnav) {
 
   extern soe_day_start, utm;
 
-  w = window();
+  w = current_window();
   window, 6;
   if (is_void(width)) width = 5.0;
 
@@ -974,7 +974,7 @@ func plot_no_tans_fltlines (tans, pnav) {
   indx1 = where(pnav.sod < tans.somd(1));
   show_gga_track, x = pnav.lon(indx1), y = pnav.lat(indx1),  marker=5, color = "magenta", skip=1, msize=0.2, utm=utm, width=width;
 
- window, w;
+ window_select, w;
 
 }
 
@@ -992,7 +992,7 @@ func select_any_region(xdata, ydata, mode=, win=) {
   if (!win) win = 5;
   if (!mode) mode = 1;
   
-  w = window();
+  w = current_window();
 
   if (mode == 1) {
      window, win
@@ -1038,7 +1038,7 @@ func select_any_region(xdata, ydata, mode=, win=) {
      indx = box_pts(poly_pts);
   }
 
-  window, w;
+  window_select, w;
 
   return indx;
 }

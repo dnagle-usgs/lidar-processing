@@ -118,7 +118,7 @@ func triangulate_xyz(file=, savefile=, data=, plot=, mode=, win=, distthresh=, d
   }
 
   if (plot) {
-    w = window();
+    w = current_window();
     x = [pxyz(1,(v(1,))), pxyz(1,(v(2,))), pxyz(1,(v(3,)))]
     y = [pxyz(2,(v(1,))), pxyz(2,(v(2,))), pxyz(2,(v(3,)))]
     z = [pxyz(3,(v(1,))), pxyz(3,(v(2,))), pxyz(3,(v(3,)))]
@@ -135,7 +135,7 @@ func triangulate_xyz(file=, savefile=, data=, plot=, mode=, win=, distthresh=, d
     }
     plfp, zz, yy, xx, n, edges=0
     colorbar, min(zz), max(zz), units="m";
-    window, w;
+    window_select, w;
   }
 
 

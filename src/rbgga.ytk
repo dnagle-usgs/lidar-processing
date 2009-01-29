@@ -99,11 +99,11 @@ proc rbgga_menu { {mode "eaarl"} } {
  button $mw.f1.info -text "Info"
  button $mw.f1.fma -text "Fma" -command { exp_send "window,$_map(window); fma\r\n" }
  button $mw.f1.jump -text "Jump" -command { 
-   exp_send "wsav=window();window,$_map(window); gga_click_start_isod()\n" 
+   exp_send "wsav=current_window();window,$_map(window); gga_click_start_isod()\n" 
    #tk_messageBox  -message "Click using left mouse button over a section 
  #of a flightline in Yorick window-6."  -type ok
    expect "region_selected"
-   exp_send "window(wsav)\r"
+   exp_send "window_select,wsav\r"
  }
  button $mw.f1.limits -text "Limits" \
 	-command { exp_send "window,$_map(window); limits\r\n" }
@@ -208,11 +208,11 @@ proc mark_pos { lat lon } {
 	  }
   }
   if {$utm == 0} {
-  exp_send "wsav=window();window,$_map(window); plmk, $lat, $lon, msize=.5, marker=1, color=\"red\"; window,wsav\r"
+  exp_send "wsav=current_window();window,$_map(window); plmk, $lat, $lon, msize=.5, marker=1, color=\"red\"; window_select,wsav\r"
   } else {
   exp_send "ll2utm, $lat, $lon; \r"
   expect ">"
-  exp_send "wsav=window();window,$_map(window); plmk, UTMNorthing, UTMEasting, msize=.5, marker=1, color=\"red\"; window,wsav\r"
+  exp_send "wsav=current_window();window,$_map(window); plmk, UTMNorthing, UTMEasting, msize=.5, marker=1, color=\"red\"; window_select,wsav\r"
   }
 }
 

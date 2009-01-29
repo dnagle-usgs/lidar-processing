@@ -67,7 +67,7 @@ INPUT:
       }
    }
 
-   w = window();
+   w = current_window();
 
    if (mode == 1) {
       window, win;
@@ -203,7 +203,7 @@ INPUT:
       }
    }
 
-   window, w;
+   window_select, w;
 
    if (is_array(indx)) {
       if (retindx) {
@@ -357,7 +357,7 @@ original Brendan Penney
 modified amar nayegandhi April 2005
 */
    extern lpidx; // this takes the values of the polygon selected by user.
-   w = window();
+   w = current_window();
    if(!(data_dir)) data_dir =  "/quest/data/EAARL/TB_FEB_02/";
    if (is_void(win)) win = w;
    window, win;
@@ -512,7 +512,7 @@ modified amar nayegandhi April 2005
 
    write, format = "Total Number of selected points = %d\n", numberof(sel_eaarl);
 
-   window, w;
+   window_select, w;
    return sel_eaarl;
 }
 
@@ -850,7 +850,7 @@ INPUT:
 original: amar nayegandhi September 2005
 */
    extern lpidx; // this takes the values of the polygon selected by user.
-   w = window();
+   w = current_window();
    if (is_void(win)) win = w;
    window, win;
    if (!mode) mode = 2; // defaults to defining rectangular region
@@ -978,7 +978,7 @@ original: amar nayegandhi September 2005
       }
    }
 
-   window, w;
+   window_select, w;
    return files;
 }
 

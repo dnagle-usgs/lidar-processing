@@ -123,8 +123,7 @@ func plot_lidar_image(img, location, win=, winsize=, dofma=) {
       _ytk_window_size = array(int, 64);
    }
    if (is_void(winsize)) winsize = 1; // defaults to smallest window
-   if (_ytk_window_exists) 
-      w = window();
+   w = current_window();
 
    x0 = location(1);
    y0 = location(2);
@@ -137,7 +136,7 @@ func plot_lidar_image(img, location, win=, winsize=, dofma=) {
       pli, img, x0,y0,x1,y1;
       window, win, width=0, height=0;
       _ytk_window_exists=1;
-      window, w;
+      window_select, w;
    }
 
    return;
@@ -168,8 +167,7 @@ func plot_image(img, location, win=, dofma=, winsize=, nocws=) {
    }
    if (is_void(winsize)) winsize = 1; // defaults to smallest window
    if (is_void(nocws)) nocws = 0;
-   if (_ytk_window_exists) 
-      w = window();
+   w = current_window();
 
    if ((dimsof(location))(1) == 1) {
       x0 = location(1);
@@ -184,8 +182,6 @@ func plot_image(img, location, win=, dofma=, winsize=, nocws=) {
       pli, img, x0,y0,x1,y1;
       _ytk_window_exists=1;
    } else {
-      if (_ytk_window_exists) w = window();
-
       wset = change_window_size(win, winsize, dofma);
 
       if (wset) {
@@ -196,7 +192,7 @@ func plot_image(img, location, win=, dofma=, winsize=, nocws=) {
          }
          window, win, width=0, height=0;
          _ytk_window_exists=1;
-         window, w;
+         window_select, w;
       }
 
    }

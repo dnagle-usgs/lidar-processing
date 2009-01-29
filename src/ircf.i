@@ -158,10 +158,10 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
     for (k=1;k<numberof(spanx);k++) {
        isp1 = data_box(eaarl.east, eaarl.north,  spanx(k)*100-5000, spanx(k+1)*100+5000, spany(j)*100-5000, spany(j+1)*100+5000);
        if (interactive) {
-         wi = window();
+         wi = current_window();
          window, datawin; 
 	 plg, [spany(j)-50, spany(j)-50, spany(j+1)+50, spany(j+1)+50, spany(j)-50], [spanx(k)-50, spanx(k+1)+50, spanx(k+1)+50, spanx(k)-50, spanx(k)-50], color="red";
-	 window, wi;
+	 window_select, wi;
        }
        if (!is_array(isp1)) continue;
        eaarl1 = eaarl(isp1);
@@ -218,7 +218,7 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
 
 */
 
- savewindow = window();
+ savewindow = current_window();
  tmr1 = tmr2 = array(double, 3);
  timer, tmr1;
  extern tag_eaarl;
@@ -776,7 +776,7 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
  timer, tmr2;
  tmr = tmr2-tmr1;
  write, format="Total time taken to filter this section: %4.2f minutes\n",tmr(3)/60.;
- window, savewindow;
+ window_select, savewindow;
  return new_eaarl_all;
 	 
 }

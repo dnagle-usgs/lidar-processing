@@ -1158,8 +1158,8 @@ if {[winfo exists .l1wid]} {
 
   proc hist_linlog {} {
     global hist_log
-    exp_send "_win=window();window,0;\
-      logxy,0,$hist_log; range,$hist_log;window,_win \r"
+    exp_send "_win=current_window();window,0;\
+      logxy,0,$hist_log; range,$hist_log;window_select,_win \r"
   }
 
 

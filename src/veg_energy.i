@@ -431,7 +431,6 @@ func plot_slfw(outveg, cmets=, ipath=, outwin=, indx=, dofma=, color=, interacti
 
 extern curzone;
 
-w = window();
 if (is_void(outwin)) outwin = 7;
 if (is_void(inwin)) inwin = 5;
 if (is_void(color)) color="black";
@@ -1180,7 +1179,6 @@ func plot_fcht_histograms(fcht, binsize=, scale=, win=, color=, width=, dofma=, 
       }
  }
  //hist = hist(where(hist(,1) != 0));
- w = window();
  window, win;
  if (dofma) fma;
  minz = min(fcht);

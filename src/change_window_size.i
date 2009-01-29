@@ -80,7 +80,7 @@ func window2image(file, win=) {
         are named "Yorick 0 <2>" or similar, this will grab the wrong window.
 */
    // Original David Nagle 2009-01-28
-   default, win, window();
+   default, win, max(current_window(), 0);
    dir = mktempdir();
    xwdfile = file_join(dir, "temp.xwd");
    system, swrite(format="xwd -out %s -name 'Yorick %d'", xwdfile, win);

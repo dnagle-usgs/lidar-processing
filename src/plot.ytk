@@ -633,13 +633,13 @@ proc ::plot::window_set { } {
 
 proc ::plot::window_store { } {
    if {$c::windows_track} {
-      exp_send "wsav=window()\r"
+      exp_send "wsav=current_window()\r"
    }
 }
 
 proc ::plot::window_restore { } {
    if {$c::windows_track} {
-      exp_send "window(wsav)\r"
+      exp_send "window_select, wsav\r"
    }
 }
 

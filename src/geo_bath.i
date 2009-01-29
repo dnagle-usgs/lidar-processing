@@ -852,11 +852,11 @@ maxx = (depth_all.elevation(q)+depth_all.depth(q))(max);
   if (is_array(hind)) 
     h(hind) = 1;
   e = span( minn, maxx, numberof(h) ) + 1 ; 
-  w = window();
+  w = current_window();
   window,win; fma; plg,h,e;
   pltitle(swrite( format="Depth Histogram %s", data_path));
   xytitles,"Depth Elevation (meters)", "Number of measurements"
-  window(w);
+  window_select, w;
   return [e,h];
 }
 

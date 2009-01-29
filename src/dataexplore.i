@@ -2,7 +2,7 @@
 func explorestart(dir, mode, win=, search_str=, rgn=,forceskip=) {
 	extern exploredata, datadir, zoomoutdata;
 	datadir = dir;
-	winold = window();
+	winold = current_window();
 	if (!is_array(win)) win = window();
 	window, win;
 	if ((is_void(fullsample)) && (is_void(rgn))) {
@@ -28,5 +28,5 @@ func explorestart(dir, mode, win=, search_str=, rgn=,forceskip=) {
 	}
 //	exploredata = exploredata(sort(-exploredata.elevation));
 	zoomoutdata = exploredata;
-	window, winold;
+	window_select, winold;
 }

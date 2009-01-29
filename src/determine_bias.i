@@ -38,7 +38,7 @@ Returns:
 }
 
 func selgoodflightlines(data, win=) {
-   winold = window();
+   winold = current_window();
    if (!is_array(win)) win=window();
    window, win;
    winkill,4;window,4,dpi=100,style="work.gs";
@@ -97,12 +97,12 @@ func selgoodflightlines(data, win=) {
 	if (gooddata(i) == 1) grow, outdata, data(idx(i):idx(i+1)-1);
 	if (gooddata(i) == 0) lance();
    }
-   window, winold
+   window_select, winold
    return outdata;
 }
 
 func plot_flightline_transect(data, win) {
-	winold = window();
+	winold = current_window();
 	winkill,win;window,win,dpi=100,style="work.gs";
 
 	data = data(sort(data.soe));
@@ -131,7 +131,7 @@ func plot_flightline_transect(data, win) {
 	   plt, swrite(format="%2.2f", slopes(i)), min(dist(idx(i):idx(i+1)-1))/100.0, max(data.elevation(idx(i):idx(i+1)-1)/100.0)+1, color=col, tosys=1;
 	}
 
-	window, winold;
+	window_select, winold;
 }
 
 func get_transect(data, win=, width=, update=) {
@@ -144,7 +144,7 @@ prompts the user to select good visual limits and then prompts
 the user to drag a box around the good transect data.
 */
 	if (!is_array(width)) width=5.0;
-	winold = window();
+	winold = current_window();
 	if (win) window, win;
 
 	if (update) updatebias;
@@ -183,7 +183,7 @@ the user to drag a box around the good transect data.
         rgn(3) = min( [ a(2), a(4) ] );
         rgn(4) = max( [ a(2), a(4) ] );
 	data = data(data_box(data.east/100.0, data.elevation, rgn(1), rgn(2), rgn(3), rgn(4)));
-	window, winold;
+	window_select, winold;
 	return data;
 }
 

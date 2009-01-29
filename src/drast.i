@@ -281,7 +281,7 @@ func show_wf( r, pix, win=, nofma=, cb=, c1=, c2=, c3=, raster= ) {
 *******************************************************/
  extern depth_scale, depth_display_units, data_path, fs, a;
   if ( !is_void(win) ) {
-     oldwin = window();
+     oldwin = current_window();
      window,win;
   }
   if ( is_void( nofma ) ) 
@@ -316,7 +316,7 @@ func show_wf( r, pix, win=, nofma=, cb=, c1=, c2=, c3=, raster= ) {
   
 
   if ( !is_void(win) ) {
-    window, oldwin ;
+    window_select, oldwin ;
   }
 }
 
@@ -327,7 +327,7 @@ func show_geo_wf( r, pix, win=, nofma=, cb=, c1=, c2=, c3=, raster= ) {
  
  elvdiff = fs(1).melevation(pix)-fs(1).elevation(pix);
   if ( !is_void(win) ) {
-     oldwin = window();
+     oldwin = current_window();
      window,win;
   }
   if ( is_void( nofma ) ) 
@@ -382,7 +382,7 @@ func geo_rast(rn, fsmarks=, eoffset=   )  {
 */
 
  extern xm, fs;
- winsave = window();
+ winsave = current_window();
  window,2
  animate,2;
 fs = first_surface( start=rn, stop=rn+1, north=1); 
@@ -436,7 +436,7 @@ for (i=1; i<120; i++ ) {
   }
 
   xytitles, "Relative distance across raster (m)", "Height (m)"
-  window(winsave);
+  window_select, winsave;
 }
 
 

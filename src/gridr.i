@@ -29,7 +29,7 @@ func draw_grid( w ) {
 */
    c = [200,200,200];
    if ( is_void(w) ) w = 5;
-   old_w = window();
+   old_w = current_window();
    window, w;
    ll = int(limits()/2000) * 2000;
    ll(2) +=2000;
@@ -47,7 +47,7 @@ func draw_grid( w ) {
    } else {
       dgrid, w, ll, 2000,[250,140,140],5;
    }
-   window(old_w);
+   window_select, old_w;
 }
 
 func tile_file_name(m) {
@@ -207,7 +207,7 @@ func show_grid_location(w,m) {
 func sel_grid_area( r ) {
 /* DOCUMENT sel_grid_area( r ) 
  */
-   w = window();
+   w = current_window();
    window,5; 
    res=mouse(, 1);
    x = int(res(1:3:2));
@@ -245,6 +245,6 @@ func sel_grid_area( r ) {
       timer_tick, tstamp, i, numberof(x);
    }
 
-   window,w;
+   window_select,w;
    return [&ll, &ur, &img ]
 }

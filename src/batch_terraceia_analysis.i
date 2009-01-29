@@ -70,7 +70,7 @@ func plot_be_kings_elv(file_name, ps_ofname=,pse=,out_txt_file=, win=, saveplot=
 // cl = confidence level
 // plotcl = set to 1 if you want to plot using the cl value. Otherwise, it only write the RMSE value based on the cl.
 
-  w = window();
+  w = current_window();
   if (is_void(win)) window, 4;
   if (!pse) pse = 1;
   if (is_void(cl)) cl = 0.95 // defaults to 95% cl
@@ -214,7 +214,7 @@ func plot_be_kings_elv(file_name, ps_ofname=,pse=,out_txt_file=, win=, saveplot=
   }
   close, f1
 
-  window, w;
+  window_select, w;
   return
 
 }

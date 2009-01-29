@@ -268,7 +268,7 @@ func mdist ( none, nodraw=, units=, win=, redrw= ) {
  }
 
  if ( !is_void(win) ) {
-	winSave = window();
+	winSave = current_window();
 	window(win);
  }
  
@@ -329,7 +329,7 @@ func mdist ( none, nodraw=, units=, win=, redrw= ) {
    //rv = dist;
  }
   if ( !is_void(win) )		// restore orginal window
-        window,winSave;
+        window_select,winSave;
  return rv;
 }                                                     
 
@@ -484,7 +484,7 @@ res
   zone = ZoneNumber(1);		// they are all the same cuz we translated
 
 
-  w = window();
+  w = current_window();
   if (mode == 4) {
     if (debug) {
        window, 5; fma;
@@ -589,7 +589,7 @@ res
       write, "plotted extended points in red"
       plmk, UTMNorthing(1), UTMEasting(1), marker=4, msize=0.3, color="red", width=10;
       plmk, UTMNorthing(2), UTMEasting(2), marker=4, msize=0.3, color="red", width=10;
-      window, w;
+      window_select, w;
     }
     if (slope > 0) {
       mode = 1;
@@ -834,7 +834,7 @@ window is 6, and color is magenta.
   } else {
     idx = [1,2];
   }
-  w = window();
+  w = current_window();
   window,win;
   for (i=1;i<numberof(idx);i++) {
       fpx = fp(idx(i):idx(i+1)-1);
@@ -855,7 +855,7 @@ window is 6, and color is magenta.
   }
   //pldj, fpx.lon1(1),fpx.lat1(1),fpx.lon2(1),fpx.lat2(1),color="green", width=2*width;
       
-  window(w);
+  window_select, w;
 }
 
 
