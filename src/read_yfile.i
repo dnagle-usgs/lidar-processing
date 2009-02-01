@@ -1164,15 +1164,18 @@ func merge_data_pbds(filepath, write_to_file=, merged_filename=, nvname=, uniq=,
     lp = lp + n;
     if (n) fn_all = s(fp:lp);
 
+/*
     // 2009-01-29: added to remove output file from the list to be merged
+    // THIS CANNOT BE UNIVERSALLY APPLIED... an output file can contain "merged" in its filename and be a valid file to merge.
     mgd_idx = strmatch(fn_all,"merged",1);
     fn_all = fn_all(where(!mgd_idx));
     n = numberof(fn_all);
+*/
 
     fp = fp + n;
  }
  for (i=1;i<=numberof(fn_all); i++) {
-    write, format="Merging File %d of %d, skip = %d: %s\r",i,numberof(fn_all), skip, fn_all(i);
+    write, format="Merging File %d of %d \r",i,numberof(fn_all);
     f = openb(fn_all(i));
     restore, f, vname;
     if (get_member(f,vname) == 0) continue;
@@ -1217,6 +1220,7 @@ func merge_data_pbds(filepath, write_to_file=, merged_filename=, nvname=, uniq=,
    close, f;
  }
 
+ write, format="Merged %d files, skip = %d \n", numberof(fn_all), skip;
 
 
  return eaarl
