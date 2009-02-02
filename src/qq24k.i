@@ -1016,7 +1016,7 @@ func draw_qq_grid(win, pts=) {
 }
 
 func qqtiff_gms_prep(tif_dir, pbd_dir, mode, outfile, tif_glob=, pbd_glob=) {
-/* DOCUMENT qqtiff_gms_prep(tif_dir, pbd_dir, mode, outfile, tif_glob=, pdf_glob=
+/* DOCUMENT qqtiff_gms_prep, tif_dir, pbd_dir, mode, outfile, tif_glob=, pdb_glob=
    
    Creates a data tcl file that can be used by gm_tiff2ktoqq.tcl to generate a
    Global Mapper script that can be used to convert 2k data tile geotiffs into

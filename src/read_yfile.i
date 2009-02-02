@@ -778,7 +778,7 @@ func write_ascii_xyz(data_arr, opath, ofname, type=, ESRI=, header=, footer=, de
 
    fn = opath+ofname;
 
-   if (numberof(data_arr) != numberof(where(data_arr.north))) {
+   if (numberof(data_arr) != numberof(data_arr.north)) {
       if (pstruc == FS) { //convert FS_ALL to FS
          data_arr = clean_fs(unref(data_arr));
       }
