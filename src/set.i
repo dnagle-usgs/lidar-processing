@@ -29,7 +29,7 @@ func set_contains(A, b) {
    Returns an array of boolean values indicating which values in b are
    contained in A.
 */
-   idx = set_intersection(b, A, idx=1);
+   idx = set_intersection(b, unref(A), idx=1);
    result = array(0, numberof(b));
    if(numberof(idx))
       result(idx) = 1;
@@ -61,7 +61,7 @@ func set_intersection(A, B, idx=) {
    // If A << B, then we'll get better performance if we switch the operands
    // (But we can only do that if idx=0)
    if(!idx && numberof(A) < numberof(B))
-      return set_intersection(B, A);
+      return set_intersection(unref(B), unref(A));
 
    C = array(0, numberof(A));
    for(i = 1; i <= numberof(B); i++)
@@ -156,7 +156,7 @@ func set_union(A, B) {
    The elements of set_union(a,b) and set_union(b,a) will be the same, but the
    arrays may not be ordered the same.
 */
-   return set_remove_duplicates(grow(A, B));
+   return set_remove_duplicates(grow(unref(A), unref(B)));
 }
 
 func set_cartesian_product(A, B) {
@@ -182,49 +182,34 @@ func set_cartesian_product(A, B) {
    return C;
 }
 
-func set_remove_duplicates(A, idx=, orig_order=, ret_sort=) {
-/* DOCUMENT set_remove_duplicates(A, idx=, orig_order=, ret_sort=)
+func set_remove_duplicates(A, idx=, ret_sort=) {
+/* DOCUMENT set_remove_duplicates(A, idx=, ret_sort=)
 
    Returns the set A with its duplicate elements removed. The returned list
    will also be sorted.
 
    If idx=1, then the indices will be returned rather than the values.
 
-   If orig_order=1, the results will be in the original array's ordering (by
-   first occurence of each unique item). However, this is much more expensive,
-   so do not use it unless it's needed.
-
-   If ret_sort=1, the indexes returned will be indices into A(sort(A)). Note
-   that ret_sort=1 implies idx=1 and orig_order=0. This can on occasion be
+   If ret_sort=1, then indexes will be returned into A(sort(A)). This is
+   equivalent to (and in fact, calls) the unique function. This can be
    expensive, especially with large arrays of strings. Using ret_sort=0 is
    always more efficient than sorting externally, since it incorporates a sort.
 
    See also: unique (in ALPS, bathy_filter.i)
 */
    default, idx, 0;
-   default, orig_order, 0;
    default, ret_sort, 0;
-   if(ret_sort) {
-      idx = 1;
-      orig_order = 0;
-   }
+   if(ret_sort)
+      return unique(unref(A), ret_sort=1);
 
-   // Trivial cases
+   // Trivial/edge cases
    if(! numberof(A))
       return [];
    if(numberof(A) == 1)
       return idx ? [1] : A;
 
    // Eliminate any dimensionality
-   A = A(*);
-
-   // The normal sort is fast, but non-deterministic. If the original order is
-   // required, we have to use the slower msort.
-   if(orig_order) {
-      sorter = msort;
-   } else {
-      sorter = sort;
-   }
+   A = unref(A)(*);
 
    // Eliminate duplicates in the initial sequence. Valuable when there are a
    // large number of items that take a long time to sort, especially with
@@ -236,29 +221,13 @@ func set_remove_duplicates(A, idx=, orig_order=, ret_sort=) {
       return idx ? seq : A(seq);
 
    // Sort them
-   srt = sorter(A(seq));
+   srt = sort(A(seq));
 
    // Eliminate duplicates in the sorted sequence
    unq = where(grow([1n], A(seq)(srt)(:-1) != A(seq)(srt)(2:)));
 
-   // If they want it in original order, we have to sort the indices
-   if(orig_order)
-      res = sort(indgen(numberof(A))(seq)(srt)(unq));
-   // ... otherwise, we dummy it with a sequential list
-   else
-      res = indgen(numberof(unq));
-
-   if(ret_sort) {
-      inv = std = sort(A);
-      inv(std) = indgen(numberof(inv));
-      idx = 0;
-   }
-
    // If they want indices, we want to index into an index list instead of A
-   if(idx) A = indgen(numberof(A));
-
-   // If they want them in order for A(sort(A))...
-   if(ret_sort) A = inv;
+   if(idx) A = indgen(numberof(unref(A)));
 
    return A(seq)(srt)(unq);
 }

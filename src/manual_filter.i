@@ -83,10 +83,10 @@ if ( is_void(data) ) {
 ***************************************************************/
  if ( numberof( dimsof( data.north )) >2 )  {
      a = structof(data(1));
-     if (a == GEOALL) data = clean_bathy(data);  
-     if (a == VEG_ALL_) data = clean_veg(data);
-     if (a == R) data = clean_fs(data);
-     if (a == ATM2) data = clean_fs(data);
+     if (a == GEOALL) data = clean_bathy(unref(data));  
+     if (a == VEG_ALL_) data = clean_veg(unref(data));
+     if (a == R) data = clean_fs(unref(data));
+     if (a == ATM2) data = clean_fs(unref(data));
  }
 
  return data
