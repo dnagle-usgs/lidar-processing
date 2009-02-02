@@ -508,6 +508,10 @@ if {[winfo exists .l1wid]} {
     }
   }
 
+  ### DEPRECATED 2009-02-02 ###
+  # This menu entry and its code are deprecated. They have been replaced by the
+  # code in namespace l1dir (above), which is invoked from the non-deprecated
+  # "Read Data Directory..." menu entry above it.
   .l1wid.mb.file add command -label "Read Data Directory... (deprecated)" \
     -command {
       global data_file_path

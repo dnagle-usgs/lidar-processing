@@ -25,6 +25,11 @@ if(is_void(__eaarl_includes_included__)) {
    http://www-obs.univ-lyon1.fr/~thiebaut/yeti.html
    */
 
+   // Replace built-in median with Yeti's median which is much faster
+   if(is_void(ymedian))
+      ymedian = median;
+   median = quick_median;
+
    // ALPS plugin requires
    require, "rcf_triangulate.i";
    require, "rcf_utils.i";

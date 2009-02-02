@@ -487,7 +487,9 @@ proc load_edb {} {
  $w.mb.file add command -label "Load Tans Attitude data..."   -underline 5 -command { exp_send "require, \"rbtans.i\"\r"
    	      expect ">"
     	      exp_send "tans = rbtans() \r" }
- $w.mb.file add command -label "Coastlines & Flight tracks"   -underline 13  -command rbgga_menu
+ ### DEPRECATED 2009-02-02 ###
+ $w.mb.file add command -label "Coastlines & Flight tracks (deprecated)" \
+   -underline 13  -command rbgga_menu
   $w.mb.file add separator
 
  $w.mb.file add command -label "Edb Status" -command  edb_status 
@@ -572,7 +574,9 @@ proc load_edb {} {
  $w.mb.nav add command -label "Plotting tool" -underline 0 \
    -command ::plot::menu
  source [file join $src_path plot.ytk]
- $w.mb.nav add command -label "Flight Tracks & Coastlines..."   -underline 0 \
+ ### DEPRECATED 2009-02-02 ###
+ $w.mb.nav add command -label "Flight Tracks & Coastlines... (deprecated)" \
+   -underline 0 \
 	-command rbgga_menu
  $w.mb.nav add command -label "Load Tans Attitude data..."   -underline 5 \
    -command { exp_send "require, \"rbtans.i\"\r"
