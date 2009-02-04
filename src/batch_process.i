@@ -11,7 +11,36 @@ write, "$Id$";
 func package_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n= ) {
 
    path = swrite(format="/tmp/batch/jobs/job-t_e%6.0f_n%7.0f_%s.cmd", min_e, max_n, zone_s);
-   save_vars(path, tile=1);
+   save_vars, path, tile=1;
+}
+
+
+func package_rcf (ofn) {
+   ofn_tail = file_tail(ofn(1));
+   path = swrite(format="/tmp/batch/jobs/job-%s.cmd", ofn_tail);
+   rcf_only = 1;
+   b_rcf    = 1;
+
+   if (is_void( update     )  ) update      = 0;
+   if (is_void( onlyupdate )  ) onlyupdate  = update;
+   if (is_void( write_merge ) ) write_merge = 0;
+   update = onlyupdate;  // this ensures that both are the same if either are set.
+
+   /*
+   write, format="path        = %s\n", path;
+   write, format="OFN         = %s\n", ofn(1);
+   write, format="buf         = %d\n", buf;
+   write, format="w           = %d\n", w;
+   write, format="no_rcf      = %d\n", no_rcf;
+   write, format="mode        = %d\n", mode;
+   write, format="merge       = %d\n", merge;
+   write, format="clean       = %d\n", clean;
+   write, format="rcfmode     = %d\n", rcfmode;
+   write, format="onlyupdate  = %d\n", onlyupdate;
+   write, format="write_merge = %d\n", write_merge;
+   */
+
+   save_vars, path, tile=2;
 }
 
 func save_vars (filename, tile=) {
@@ -28,27 +57,41 @@ func save_vars (filename, tile=) {
       // save_dir;
       // zone_s;
 
-      save,  f, user_pc_NAME;
-      save,  f, q, r, min_e, max_e, min_n, max_n;
-      save,  f, get_typ, typ, auto;
-      save,  f, save_dir;
-      save,  f, zone_s;
-      save,  f, dat_tag, mdate;
-      save,  f, iidx_path, indx_path, bool_arr, mtdt_path, mtdt_file;
-      save,  f, i, n;
-      save,  f, pbd;
-      save,  f, update;
-      // XYZZY - we need to save the batch_rcf parameters too!!
-      if ( b_rcf == 1 ) {
-         save,  f, b_rcf, buf, w, no_rcf, mode, merge, clean, rcfmode, write_merge;
-      }
+      save, f, user_pc_NAME;
+      save, f, q, r, min_e, max_e, min_n, max_n;
+      save, f, get_typ, typ, auto;
+      save, f, save_dir;
+      save, f, zone_s;
+      save, f, dat_tag, mdate;
+      save, f, iidx_path, indx_path, bool_arr, mtdt_path, mtdt_file;
+      save, f, i, n;
+      save, f, pbd;
+      save, f, update;
    }
-   save,  f, pnav_filename;
-   save,  f, tans, pnav, edb, edb_files;
-   save,  f, data_path;
-   save,  f, soe_day_start, eaarl_time_offset;
-   save,  f, ops_conf;
-   save,  f, curzone;
+   if ( tile == 2 ) {
+      save, f, rcf_only;   // flag value for uber_process_tile
+      save, f, ofn;
+      save, f, buf, w, no_rcf;
+      save, f, mode;
+      save, f, merge, clean;
+      save, f, rcfmode;
+      save, f, update;    // process_tile changes this back to onlyupdate
+      save, f, write_merge;
+
+   } else {
+
+      save, f, pnav_filename;
+      save, f, tans, pnav, edb, edb_files;
+      save, f, data_path;
+      save, f, soe_day_start, eaarl_time_offset;
+      save, f, ops_conf;
+      save, f, curzone;
+   }
+   // XYZZY - we need to save the batch_rcf parameters too!!
+   if ( b_rcf == 1 ) {
+      save,  f, b_rcf, buf, w, no_rcf, mode, merge, clean, rcfmode, write_merge;
+   }
+
    close, f;
    // This makes sure the file is completely written before batcher.tcl has a chance
    // to grab it.
@@ -75,7 +118,6 @@ func unpackage_tile (fn=,host= ) {
    restore, f;
    close, f;
    gga = pnav;
-   write, format="Checking %s\n", host;
    if ( ! strmatch(host, "localhost") ) {
       afn  = swrite(format="%s.files", fn);
       af = open(afn, "w");
@@ -106,20 +148,23 @@ func load_vars(fn) {
 
 func call_process_tile( junk=, host= ) {
    // write, format="t_e%6.0f_n%7.0f_%s\n", min_e, max_n, zone_s;
-   uber_process_tile,q=q, r=r, typ=typ, min_e=min_e, max_e=max_e, min_n=min_n, max_n=max_n, host=host;
+   uber_process_tile,q=q, r=r, typ=typ, min_e=min_e, max_e=max_e, min_n=min_n, max_n=max_n, host=host, rcf_only=rcf_only;
 }
 
 
-func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host= ) {
+func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, rcf_only= ) {
    extern ofn;
-   if (is_array(r)) {
+   if ( is_void( rcf_only) ) rcf_only = 0;
+   if (is_array(r) || rcf_only == 1 ) {
 
-      // proceess_tile will return a 0 if the tile needs to be updated
-      update = process_tile (q=q, r=r, typ=typ, min_e=min_e, max_e=max_e, min_n=min_n, max_n=max_n, update=update, host=host );
+      if ( rcf_only == 0 ) {
+         // proceess_tile will return a 0 if the tile needs to be updated
+         update = process_tile (q=q, r=r, typ=typ, min_e=min_e, max_e=max_e, min_n=min_n, max_n=max_n, update=update, host=host );
+      }
 
-      mypath = ofn(1);
+         mypath = ofn(1);
       if ( b_rcf ) {
-         write, format="RCF Processing for %s\n", mypath;
+         write, format="RCF path: %s\n", mypath;
          if ( ! strmatch(host, "localhost") ) {
             // Here we do need to make sure that we have all of the files
             // so they can be processed together.
@@ -131,7 +176,7 @@ func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host= ) {
             system, cmd;
             write, "rsync complete";
          }
-         batch_rcf( mypath, buf=buf, w=w, no_rcf=no_rcf, mode=mode, merge=merge, clean=clean, rcfmode=rcfmode, onlyupdate=update, write_merge=write_merge );
+         batch_rcf, mypath, buf=buf, w=w, no_rcf=no_rcf, mode=mode, merge=merge, clean=clean, rcfmode=rcfmode, onlyupdate=update, write_merge=write_merge;
       }
 
       if ( ! strmatch(host, "localhost") ) {
@@ -207,6 +252,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
                // continue; // RWM
                return update;
             }
+            write, format="Generating tile: %s\n", new_file;
             update=0;  // if the tile was updated, force rcf to process.
          }
 
@@ -459,7 +505,6 @@ func show_progress(color=) {
 
 // Check space in batch area
 func check_space(wmark=, dir=) {
-   // XYZZY: need to trap somehow that system didn't work, or we'll fail on the open
    cmd = swrite(format="./waiter.pl -noloop %d %s > /tmp/batch/.space", wmark, dir );
    system, cmd;
    f = open("/tmp/batch/.space");
@@ -616,6 +661,7 @@ Added server/client support (2009-01) Richard Mitchell
    if (is_void(update))   update   = 0;
    if (is_void(avg_surf)) avg_surf = 1;
    if (is_void(b_rcf))    b_rcf    = 0;
+   if (is_void(write_merge))    write_merge    = 0;
    if (!cmdfile && !auto) auto     = 1;
    if (cmdfile) {
       path = array(string, n);
@@ -865,30 +911,39 @@ Added server/client support (2009-01) Richard Mitchell
       do {
          mya1 = check_space(wmark=1024, dir="/tmp/batch/jobs");
          if ( mya1(2) > 0 ) write,format="%d job(s) to be farmed out.\n", mya1(2);
-
          show_progress, color="green";
+
          mya2 = check_space (wmark=1024, dir="/tmp/batch/farm");
-         if ( mya2(2) != rj ) write,format="%d job(s) to be retrieved.\n", mya2(2);
-
+         if ( mya2(2) > 0 ) write,format="%d job(s) to be retrieved.\n", mya2(2);
          show_progress, color="green";
+
          mya3 = check_space (wmark=1024, dir="/tmp/batch/work");
-         if ( mya3(2) != rj ) write,format="%d job(s) to be finished.\n", mya3(2);
-         space = mya1(1) + mya2(1) + mya3(1);
-      } while ( space(1) > 1024 );
+         if ( mya3(2) > 0 ) write,format="%d job(s) to be finished.\n", mya3(2);
+         cnt = mya1(2) + mya2(2) + mya3(2);
+
+      } while ( cnt(1) > 0 );
+
+      /*
       // wait until all jobs finished.
       rj = 99;
       do {
-         system, "./waiter.pl -noloop 1024 /tmp/batch/work > /tmp/batch/.space"
-         f = open("/tmp/batch/.space");
+         mya1 = check_space(wmark=1024, dir="/tmp/batch/work");
 
-         space= fc= array(0, 1 /* max rows per column */ );
-         read, f, space, fc
-         close,f;
+         // XYZZY - Can we replace this with check_space?  2009-01-29
+         // system, "./waiter.pl -noloop 1024 /tmp/batch/work > /tmp/batch/.space"
+         // f = open("/tmp/batch/.space");
+
+         // space= fc= array(0, 1 ); // max rows per column 
+         // read, f, space, fc
+         // close,f;
          // system, "rm /tmp/batch/.space";
-         if ( fc(1) != rj ) write,format="%d job(s) to be finished.\n", fc(1);
-         rj = fc(1);
+         // CHANGED fc(1) to mya1(2)
+         // CHANGED space(1) to mya1(1)
+         if ( mya1(2) != rj ) write,format="%d job(s) to be finished.\n", mya1(2);
+         rj = mya1(2);
          show_progress, color="green";
-      } while ( space(1) > 1024 );
+      } while ( mya1(1) > 1024 );
+      */
    }
 
    // stop the timer
@@ -911,6 +966,104 @@ Added server/client support (2009-01) Richard Mitchell
 
 }
 
+// process an output directory instead of a flightline.
+// this will mostly be used for batch_rcf.
+
+func mbatch_process_dir( dirname, buf=, w=, no_rcf=, mode=, merge=, clean=, rcfmode=, update=, onlyupdate=, write_merge=, searchstr=, selectmode=, win= ) {
+/* DOCUMENT
+func mbatch_process_dir( dirname, buf=, w=, no_rcf=, mode=, merge=, clean=,
+                         rcfmode=, update=, onlyupdate=, write_merge=,
+                         searchstr=, selectmode=, win= )
+
+Uses the multi batch processing routines to process the files in a
+sub-directory instead of using a bounding box in a map window.
+Currently (2009-02) this is only useful for doing a batch_rcf(),
+but could be expanded to other functions in the future.
+
+All current options are from batch_rcf.
+*/
+
+   if ( !readedf  && !readpbd ) readpbd  = 1;
+   if ( !writeedf && !writepbd) writepbd = 1;
+
+   if ( !is_void(selectmode) ) {
+      fn_all = select_datatiles(dirname, search_str=searchstr, mode=selectmode+1, win=win );
+   } else {
+write, format="Searching: %s\n", dirname;
+      s = array(string, 10000);
+      if ( is_array( searchstr ) ) {
+         ss = searchstr;
+      } else {
+         if (readedf) {
+            if (datum) {
+               ss = ["*"+datum+"*.bin", "*"+datum+"*.edf"];
+            } else {
+               ss = ["*.bin", "*.edf"];
+            }
+         }
+         if (readpbd) {
+            if (datum) {
+               ss = ["*"+datum+"*.pbd"];
+            } else {
+               ss = ["*.pbd"];
+            }
+         }
+      }
+write,format="For      : %s\n", ss;
+      scmd = swrite(format = "find %s -name '%s'", dirname, ss);
+      fp = 1; lp = 0;
+      for ( i=1; i<=numberof(scmd); i++) {
+         write,format="scmd(%d) = %s\n", i, scmd(i);
+         f = popen(scmd(i), 0);
+         n = read(f, format="%s", s);
+         close, f;
+         lp += n;
+         if ( n ) fn_all = s(fp:lp);
+         fp = fp + n;
+      }
+
+   }
+   write, format="Found: %3d\n", numberof(fn_all);
+
+   // XYZZY: we have a list of files, now we just want the dirnames they are in.
+   dn_all = file_dirname(fn_all);
+   dn_all = dn_all(unique(dn_all));
+   n      = numberof(dn_all);
+   write, format="Dirs : %3d\n", n;
+
+   // loop to generate batch jobs
+   for ( i=1; i<=n; ++i ) {
+      // make sure we have space
+      system, "./waiter.pl 25000 /tmp/batch/jobs"
+      package_rcf, dn_all(i);
+      show_progress, color="green";
+   }
+
+   // loop to wait until all jobs are done.
+   do {
+      mya1 = check_space(wmark=8, dir="/tmp/batch/jobs");
+      if ( mya1(2) > 0 ) write,format="%3d job(s) to be farmed out for rcf.\n", mya1(2);
+      show_progress, color="green";
+
+      mya2 = check_space(wmark=8, dir="/tmp/batch/farm");
+      if ( mya2(2) > 0 ) write,format="%3d job(s) to be retrieved for rcf.\n", mya2(2);
+
+      mya3 = check_space(wmark=8, dir="/tmp/batch/work");
+      if ( mya3(2) > 0 ) write,format="%3d job(s) in progress for rcf.\n", mya3(2);
+
+      cnt   = mya1(2) + mya2(2) + mya3(2);
+   } while ( cnt(1) > 0 );
+
+   write,"Batch RCF Process Complete.";
+}
+
+// a simple routine to display a list of file names for debugging.
+func show_files(files=, str=) {
+  n = numberof(files);
+  for ( i=1; i<=n; ++i ) {
+    write, format="FILES(%s): %2d/%2d: %s\n", str, i, n, files(i);
+  }
+}
 
 func batch_rcf(dirname, fname=, buf=, w=, tw=, fbuf=, fw=, no_rcf=, mode=, meta=, prefilter_min=, prefilter_max=, clean=, compare_noaa=, merge=, write_merge=, readedf=, readpbd=, writeedf=, writepbd=, rcfmode=, datum=, fsmode=, wfs=, searchstr=, bmode=, interactive=, onlyupdate=, selectmode=) {
 /* DOCUMENT
@@ -989,7 +1142,7 @@ Input:
              elevations when fsmode is set to 4 in METERS.
              Default is 25m.
 
-  searchstr= : Search string for the file names. Default = "*.pbd"
+  searchstr= : Search string for the file names. Default = "*_v.pbd"
                e.g. "*n88*_v.pbd".
                Do not use datum= keyword when using searchstr.
 
@@ -1028,6 +1181,7 @@ Original amar nayegandhi. Started 12/06/02.
    if (is_void(rcfmode)) rcfmode=2;
    if (interactive) {plottriag = 1; datawin=5;}
    if (is_void(merge)) merge=1;
+   //if (is_void(searchstr)) searchstr="*_v.pbd";
    if (is_void(searchstr)) searchstr="*.pbd";
 
 
@@ -1056,6 +1210,7 @@ Original amar nayegandhi. Started 12/06/02.
                }
             }
          }
+         // write, format="DIRNAME: %s%s\n", dirname, ss;
          scmd = swrite(format = "find %s -name '%s'",dirname, ss);
          fp = 1; lp = 0;
          for (i=1; i<=numberof(scmd); i++) {
@@ -1068,7 +1223,6 @@ Original amar nayegandhi. Started 12/06/02.
          }
       }
    }
-   write, numberof(fn_all);
 
    if (!is_array(fn_all))
       exit,"No input files found.  Goodbye.";
@@ -1102,16 +1256,19 @@ Original amar nayegandhi. Started 12/06/02.
    }
    */
 
-   write, numberof(fn_all);
-
-
    if (merge) {
       // do not include merged files
       mgd_idx = strmatch(fn_all,"merged",1);
       fn_all = fn_all(where(!mgd_idx));
+      fn_arr = fn_all;
+      // show_files, files=fn_all, str="FIRST";
+
+   nfiles = numberof(fn_all);
+   write, format="Total number of files to RCF = %d\n",nfiles;
+
       // merge files within each data tile
-      tile_dir = array(string, numberof(fn_all));
-      all_dir = array(string, numberof(fn_all));
+      tile_dir   = array(string, numberof(fn_all));
+      all_dir    = array(string, numberof(fn_all));
       tile_fname = array(string, numberof(fn_all));
       for (ti = 1; ti <= numberof(fn_all); ti++) {
          tile_split = split_path(fn_all(ti), -1);
@@ -1134,7 +1291,7 @@ Original amar nayegandhi. Started 12/06/02.
    }
 
    nfiles = numberof(fn_all);
-   write, format="Total number of files to RCF = %d\n",nfiles;
+   // write, format="Total number of files to RCF = %d\n",nfiles;
 
    if ( now == 1 && _ytk && (int(nfiles) != 0) ) {
       tkcmd,"destroy .batch_rcf; toplevel .batch_rcf; set progress 0;"
@@ -1208,10 +1365,13 @@ Original amar nayegandhi. Started 12/06/02.
          }
          if (readpbd) {
             write, format="merging eaarl pbd data in directory %s\n",fn_split(1);
+            // show_files(files=fn_arr, str="Merge");
             if (datum) {
-               eaarl = merge_data_pbds(fn_split(1), searchstring="*"+datum+"*"+searchstr+".pbd");
+               // eaarl = merge_data_pbds(fn_split(1), searchstring="*"+datum+"*"+searchstr+".pbd");
+               eaarl = merge_data_pbds(fn_split(1), fn_all=fn_arr);
             } else {
-               eaarl = merge_data_pbds(fn_split(1), searchstring="*"+searchstr+"*");
+               // eaarl = merge_data_pbds(fn_split(1), searchstring="*"+searchstr+"*");
+               eaarl = merge_data_pbds(fn_split(1), fn_all=fn_arr);
             }
          }
       } else {
