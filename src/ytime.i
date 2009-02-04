@@ -394,29 +394,10 @@ func determine_gps_time_correction(fn, silent=) {
    success = 0; 
 
    parts = file_split(file_dirname(fn));
-
-   // The year may be in the range 1970 to 2099.
-   yreg = "19[789][0-9]|20[0-9][0-9]";
-   // The month may be in the range 01 to 12.
-   mreg = "0[1-9]|1[0-2]";
-   // The day may be in the range 01 to 31.
-   dreg = "0[1-9]|[12][0-9]|3[01]";
-   // Characteristics of what we may match:
-   //    * The date must be at the beginning of the string.
-   //    * The date may be in YYYY-MM-DD or YYYYMMDD format. (But cannot be in
-   //      YYYY-MMDD or YYYYMM-DD format.)
-   //    * If there are any characters following the date, the first must not
-   //      be a number. (So 20020101pm is okay but 200201019 is not.)
-   full_reg = swrite(format="^(%s)(-?)(%s)\\2(%s)($|[^0-9])", yreg, mreg, dreg);
-   
-   // Look to see which segments match. We'll use the last one in the path if
-   // we find matches.
-   w = where(regmatch(full_reg, parts));
+   dates = get_date(parts);
+   w = where(dates);
    if(numberof(w)) {
-      w = w(0);
-      regmatch, full_reg, parts(w), m_full, m_year, m_dash, m_month, m_day;
-      ymd = swrite(format="%s-%s-%s", m_year, m_month, m_day);
-
+      ymd = dates(w(0));
       gps_time_correction = gps_utc_offset(ymd) * -1.0;
       success = 1;
 
