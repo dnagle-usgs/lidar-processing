@@ -214,6 +214,8 @@ func find(path, glob=) {
       glob=glob(:); // Seems to improve performance for some reason
    results = subdirs = [];
    files = lsdir(path, subdirs);
+   if(files == 0)
+      return [];
    if(numberof(files)) {
       idx = array(0, numberof(files));
       for(i = 1; i <= numberof(glob); i++)
