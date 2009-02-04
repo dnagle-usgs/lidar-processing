@@ -59,6 +59,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "nad832navd88.i";
    require, "nav.i";
    require, "pip.i";
+   require, "parse.i";
    require, "qq24k.i";
    require, "rbgga.i";
    require, "rbpnav.i";

@@ -292,3 +292,38 @@ func __assign(&ary, &idx, &var) {
 */
    if(numberof(ary) >= idx) var = ary(idx);
 }
+
+func pbd_append(file, vname, data, uniq=) {
+/* DOCUMENT pbd_append, file, vname, data, uniq=
+   
+   This creates or appends "data" in the pbd "file" using the variable name
+   "vname". If appending, it will merge "data" with whatever data is pointed to
+   by the existing pbd's vname variable. However, when writing, the vname will
+   be set to "vname".
+
+   By default, the option uniq= is set to 1 which will ensure that all merged
+   data points are unique by eliminating duplicate data points with the same
+   soe. If duplicate data should not be eliminated based on soe, then set
+   uniq=0.
+
+   Note that if "file" already exists, then the struct of its data must match
+   the struct of "data".
+
+   Original David Nagle 2008-07-16
+*/
+   default, uniq, 1;
+   if(file_exists(file)) {
+      f = openb(file);
+      grow, data, get_member(f, f.vname);
+      close, f;
+      if(uniq)
+         data = data(set_remove_duplicates(data.soe, idx=1));
+   }
+   f = createb(file);
+   add_variable, f, -1, vname, structof(data), dimsof(data);
+   get_member(f, vname) = data;
+   save, f, vname;
+   close, f;
+}
+
+
