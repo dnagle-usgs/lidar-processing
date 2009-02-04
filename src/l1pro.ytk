@@ -37,6 +37,7 @@ if {[winfo exists .l1wid]} {
   set curvar ""
   set outvar ""
   set win_no 5
+  set win_load 6;    # used by EAARL Data Loader
   set usecentroid 1
   set hist_log 1
 
@@ -810,7 +811,7 @@ if {[winfo exists .l1wid]} {
 
       Label .l1map.2.winl -text "Win:"
       SpinBox .l1map.2.win -justify center -range {0 7 1} \
-        -width 2 -textvariable win_no
+        -width 2 -textvariable win_load
 
       checkbutton .l1map.2.skipb -text "Use This Skip:" -variable skipb \
         -command {
@@ -829,7 +830,7 @@ if {[winfo exists .l1wid]} {
           append_varlist "exploredata"
           set mvar "exploredata"
           set curvar "exploredata"
-          set ycmd "explorestart, \"$data_file_path\", $modes, win=$win_no,\
+          set ycmd "explorestart, \"$data_file_path\", $modes, win=$win_load,\
               search_str=\"$search\""
           if {$skipb} {
             set ycmd "$ycmd, forceskip=$skipl"
