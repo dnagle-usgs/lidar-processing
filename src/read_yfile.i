@@ -1126,7 +1126,7 @@ func pbd_to_yfile(filename) {
 }
 
    
-func merge_data_pbds(filepath, write_to_file=, merged_filename=, nvname=, uniq=, skip=, searchstring=) {
+func merge_data_pbds(filepath, write_to_file=, merged_filename=, nvname=, uniq=, skip=, searchstring=, fn_all=) {
  /*DOCUMENT merge_data_pbds(filename) 
    This function merges the EAARL processed pbd data files in the given filepath
    INPUT:
@@ -1142,17 +1142,19 @@ func merge_data_pbds(filepath, write_to_file=, merged_filename=, nvname=, uniq=,
  if (!skip) skip = 1;
  eaarl = [];
  // find all the pbd files in filepath
- s = array(string, 10000);
- if (searchstring) ss = [searchstring];
- if (!searchstring) ss = ["*.pbd"];
- scmd = swrite(format="find %s -name '%s'", filepath, ss);
- fp = 1; lp = 0;
- for (i=1; i<=numberof(scmd); i++) {
-    f=popen(scmd(i), 0);
-    n = read(f,format="%s", s );
-    close, f;
-    lp = lp + n;
-    if (n) fn_all = s(fp:lp);
+
+  if ( is_void(fn_all) ) {
+    s = array(string, 10000);
+    if (searchstring) ss = [searchstring];
+    if (!searchstring) ss = ["*.pbd"];
+    scmd = swrite(format="find %s -name '%s'", filepath, ss);
+    fp = 1; lp = 0;
+    for (i=1; i<=numberof(scmd); i++) {
+        f=popen(scmd(i), 0);
+        n = read(f,format="%s", s );
+        close, f;
+        lp = lp + n;
+        if (n) fn_all = s(fp:lp);
 
 /*
     // 2009-01-29: added to remove output file from the list to be merged
@@ -1162,8 +1164,10 @@ func merge_data_pbds(filepath, write_to_file=, merged_filename=, nvname=, uniq=,
     n = numberof(fn_all);
 */
 
-    fp = fp + n;
- }
+        fp = fp + n;
+    }
+  }
+
  for (i=1;i<=numberof(fn_all); i++) {
     write, format="Merging File %d of %d \r",i,numberof(fn_all);
     f = openb(fn_all(i));
