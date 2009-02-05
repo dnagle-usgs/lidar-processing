@@ -12,6 +12,10 @@ if(is_void(__eaarl_includes_included__)) {
    if(is_void(yroll))
       yroll = roll;
 
+   // merge is another yorick function that sometimes gets overwritten
+   if(is_void(ymerge))
+      ymerge = merge;
+
    // Built-in and plugin includes
    require, "jpeg.i";
    require, "msort.i";

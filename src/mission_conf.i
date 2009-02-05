@@ -41,13 +41,13 @@ if(is_void(mission_conf))
     mission_conf = h_new();
 
 if(is_void(mission_date))
-    mission_date = "";
+    mission_date = string(0);
 
 if(is_void(__mission_cache))
     __mission_cache = h_new();
 
 if(is_void(__mission_settings))
-    __mission_settings = h_new("use cache", 0);
+    __mission_settings = h_new("use cache", 0, "ytk", 0);
 
 func mission_get(key, date=) {
 /* DOCUMENT mission_get(key, date=)
@@ -64,21 +64,27 @@ func mission_get(key, date=) {
     return h_get(obj, key);
 }
 
-func mission_set(key, value, date=) {
-/* DOCUMENT mission_set, key, value, date=
+func mission_set(key, value, date=, sync=) {
+/* DOCUMENT mission_set, key, value, date=, sync=
     Sets the value for the given key to the value given for the current mission
     day, or for the mission day specified by date= if present.
-*/
-    extern mission_conf, mission_date;
-    default, date, mission_date;
 
-    if(date == "")
+    This will sync with Tcl unless sync= or __mission_settings("ytk") = 0.
+*/
+    extern mission_conf, mission_date, __mission_settings;
+    default, date, mission_date;
+    default, sync, 1;
+
+    if(!date)
         error, "Please provide date= or set mission_date.";
 
     if(!h_has(mission_conf, date))
         h_set, mission_conf, date, h_new();
     obj = h_get(mission_conf, date);
     h_set, obj, key, value;
+
+    if(__mission_settings("ytk") && sync)
+        tkcmd, swrite(format="mission_set {%s} {%s} {%s} 0", key, value, date);
 }
 
 func mission_has(key, date=) {
@@ -115,29 +121,41 @@ func mission_dates(void) {
     return dates(sort(dates));
 }
 
-func mission_delete(key, date=) {
-/* DOCUMENT mission_delete, key, date=
+func mission_delete(key, date=, sync=) {
+/* DOCUMENT mission_delete, key, date=, sync=
     Deletes the value for the specified key for the current mission day, or the
     mission day specified by date= if present.
-*/
-    extern mission_conf, mission_date;
-    default, date, mission_date;
 
-    if(date == "")
+    This will sync with Tcl unless sync= or __mission_settings("ytk") = 0.
+*/
+    extern mission_conf, mission_date, __mission_settings;
+    default, date, mission_date;
+    default, sync, 1;
+
+    if(!date)
         error, "Please provide date= or set mission_date.";
 
     if(h_has(mission_conf, date)) {
         obj = h_get(mission_conf, date);
         h_pop, obj, key;
     }
+
+    if(__mission_settings("ytk") && sync)
+        tkcmd, swrite(format="mission_delete {%s} {%s} 0", key, date);
 }
 
-func mission_delete_date(date) {
-/* DOCUMENT mission_delete_date, date
+func mission_delete_date(date, sync=) {
+/* DOCUMENT mission_delete_date, date, sync=
     Deletes the specified mission day.
+
+    This will sync with Tcl unless sync= or __mission_settings("ytk") = 0.
 */
-    extern mission_conf;
+    extern mission_conf, __mission_settings;
+    default, sync, 1;
     h_pop, mission_conf, date;
+
+    if(__mission_settings("ytk") && sync)
+        tkcmd, swrite(format="mission_delete_date {%s} 0", date);
 }
 
 func mission_json_export(void) {
@@ -148,12 +166,16 @@ func mission_json_export(void) {
     return yorick2json(mission_conf);
 }
 
-func mission_json_import(json) {
-/* DOCUMENT mission_json_import, json
+func mission_json_import(json, sync=) {
+/* DOCUMENT mission_json_import, json, sync=
     Loads the mission configuration defined in the given json string.
 */
-    extern mission_conf;
+    extern mission_conf, __mission_settings;
+    default, sync, 1;
     mission_conf = json2yorick(json);
+
+    if(__mission_settings("ytk") && sync)
+        mission_send;
 }
 
 func mission_save(filename) {
@@ -186,7 +208,7 @@ func mission_send(void) {
 */
     extern mission_conf, mission_date;
     json = mission_json_export();
-    tkcmd, swrite(format="mission_json_import {%s}", json);
+    tkcmd, swrite(format="mission_json_import {%s} 0", json);
     tkcmd, swrite(format="set mission_date {%s}", mission_date);
 }
 
@@ -195,6 +217,245 @@ func mission_receive(void) {
     Asks Tcl to update Yorick with the mission configuration as defined in Tcl.
 */
     tkcmd, "after idle [list after 0 mission_send]";
+}
+
+func missiondata_cache(action) {
+/* DOCUMENT missiondata_cache, action
+    Does something cache related, depending on the action specified.
+
+        clear   - Clears the cache
+        enable  - Enables the use of the cache
+        disable - Disabled the use of the cache (but does not clear it)
+        preload - Preloads the cache with each mission day's data
+*/
+    extern mission_conf, mission_date, __mission_cache, __mission_settings;
+    if(action == "clear") {
+        __mission_cache = h_new();
+    } else if(action == "enable") {
+        h_set, __mission_settings, "use cache", 1;
+    } else if(action == "disable") {
+        h_set, __mission_settings, "use cache", 0;
+    } else if(action == "preload") {
+        dates = mission_dates();
+        missiondata_cache, "clear";
+        missiondata_cache, "enable";
+        environment_backup = missiondata_wrap("all");
+        for(i = 1; i <= numberof(dates); i++) {
+            missiondata_load, "all", date=dates(i);
+        }
+        missiondata_unwrap, "all", environment_backup;
+    }
+}
+
+func missiondata_wrap(type) {
+/* DOCUMENT missiondata_wrap(type)
+    Wraps currently loaded data in Yorick extern variables into a Yeti hash,
+    suitable for restoring later with missiondata_unwrap.
+
+    The type should be one of:
+        all - includes all of the others
+        edb
+        pnav
+        dmars
+        ops_conf
+*/
+    if(is_void(type)) {
+        error, "No type was provided.";
+    } else if(type == "all") {
+        return h_new(
+            "edb", missiondata_wrap("edb"),
+            "pnav", missiondata_wrap("pnav"),
+            "dmars", missiondata_wrap("dmars"),
+            "ops_conf", missiondata_wrap("ops_conf")
+        );
+    } else if(type == "edb") {
+        extern edb, edb_filename, edb_files, _ecfidx, total_edb_records,
+            soe_day_start, eaarl_time_offset, data_path;
+        return h_new(
+            "edb", edb,
+            "edb_filename", edb_filename,
+            "edb_files", edb_files,
+            "total_edb_records", total_edb_records,
+            "soe_day_start", soe_day_start,
+            "eaarl_time_offset", eaarl_time_offset,
+            "data_path", data_path
+        );
+    } else if(type == "pnav") {
+        extern pnav, gga;
+        return h_new(
+            "pnav", pnav,
+            "gga", gga
+        );
+    } else if(type == "dmars") {
+        extern iex_nav, iex_head, iex_nav1hz, tans;
+        // ops_conf ?
+        return h_new(
+            "iex_nav", iex_nav,
+            "iex_head", iex_head,
+            "iex_nav1hz", iex_nav1hz,
+            "tans", tans
+        );
+    } else if(type == "ops_conf") {
+        extern ops_conf;
+        return h_new(
+            "ops_conf", ops_conf
+        );
+    } else {
+        error, swrite(format="Unknown type provided: %s", type);
+    }
+}
+
+func missiondata_unwrap(type, data) {
+/* DOCUMENT missiondata_unwrap, type, data
+    Updates Yorick extern variables by unwrapping data that was wrapped using
+    missiondata_wrap.
+
+    The type should be one of:
+        all - includes all of the others
+        edb
+        pnav
+        dmars
+        ops_conf
+*/
+    if(is_void(type)) {
+        error, "No type was provided.";
+    } else if(type == "all") {
+        missiondata_unwrap, "edb", data("edb");
+        missiondata_unwrap, "pnav", data("pnav");
+        missiondata_unwrap, "dmars", data("dmars");
+        missiondata_unwrap, "ops_conf", data("ops_conf");
+    } else if(type == "edb") {
+        extern edb, edb_filename, edb_files, _ecfidx, total_edb_records,
+            soe_day_start, eaarl_time_offset, data_path;
+        // _edb_fd -- file handle??? also, _ecfidx
+        // gps_time_correction -- shouldn't change
+        edb = data.edb;
+        edb_filename = data.edb_filename;
+        edb_files = data.edb_files;
+        total_edb_records = data.total_edb_records;
+        soe_day_start = data.soe_day_start;
+        eaarl_time_offset = data.eaarl_time_offset;
+        data_path = data.data_path;
+        _ecfidx = 0; //?
+    } else if(type == "pnav") {
+        extern pnav, gga;
+        pnav = data.pnav;
+        gga = data.gga;
+    } else if(type == "dmars") {
+        extern iex_nav, iex_head, iex_nav1hz, tans;
+        // ops_conf ?
+        iex_nav = data.iex_nav;
+        iex_head = data.iex_head;
+        iex_nav1hz = data.iex_nav1hz;
+        tans = data.tans;
+    } else if(type == "ops_conf") {
+        extern ops_conf;
+        ops_conf = data.ops_conf;
+    } else {
+        error, swrite(format="Unknown type provided: %s", type);
+    }
+}
+
+func missiondata_load(type, date=) {
+/* DOCUMENT missiondata_load, type, date=
+    Loads mission data for the current date, or for date= if specified.
+
+    The type should be one of:
+        all - will load all defined data
+        edb
+        pnav
+        dmars
+        ops_conf
+*/
+    extern mission_conf, mission_date, __mission_cache, __mission_settings;
+    default, date, mission_date;
+
+    if(!date)
+        error, "Please provide date= or set mission_date.";
+
+    if(type == "all") {
+        if(mission_has("edb file", date=date))
+            missiondata_load, "edb", date=date;
+        if(mission_has("pnav file", date=date))
+            missiondata_load, "pnav", date=date;
+        if(mission_has("dmars file", date=date))
+            missiondata_load, "dmars", date=date;
+        if(mission_has("ops_conf file", date=date))
+            missiondata_load, "ops_conf", date=date;
+        return;
+    }
+
+    cache_enabled = __mission_settings("use cache");
+
+    if(cache_enabled) {
+        if(! h_has(__mission_cache, date)) {
+            h_set, __mission_cache, date, h_new();
+        }
+        cache = __mission_cache(date);
+    } else {
+        cache = h_new();
+    }
+
+    if(is_void(type)) {
+        error, "No type was provided.";
+    } else if(type == "edb") {
+        if(cache_enabled && h_has(cache, "edb")) {
+            missiondata_unwrap, "edb", cache("edb");
+        } else {
+            if(mission_has("edb file", date=date)) {
+                extern data_path;
+                if(mission_has("data_path", date=date))
+                    data_path = mission_get("data_path", date=date);
+                load_edb, fn=mission_get("edb file", date=date);
+                if(cache_enabled) {
+                    h_set, cache, "edb", missiondata_wrap("edb");
+                }
+            } else {
+                error, "Could not load edb data: no edb file defined";
+            }
+        }
+    } else if(type == "pnav") {
+        if(cache_enabled && h_has(cache, "pnav")) {
+            missiondata_unwrap, "pnav", cache("pnav");
+        } else {
+            if(mission_has("pnav file", date=date)) {
+                pnav = rbpnav(fn=mission_get("pnav file", date=date));
+                if(cache_enabled) {
+                    h_set, cache, "pnav", missiondata_wrap("pnav");
+                }
+            } else {
+                error, "Could not load pnav data: no pnav file defined";
+            }
+        }
+    } else if(type == "dmars") {
+        if(cache_enabled && h_has(cache, "dmars")) {
+            missiondata_unwrap, "dmars", cache("dmars");
+        } else {
+            if(mission_has("dmars file", date=date)) {
+                load_iexpbd, mission_get("dmars file", date=date);
+                if(cache_enabled) {
+                    h_set, cache, "dmars", missiondata_wrap("dmars");
+                }
+            } else {
+                error, "Could not load dmars data: no dmars file defined";
+            }
+        }
+    } else if(type == "ops_conf") {
+        if(cache_enabled && h_has(cache, "ops_conf")) {
+            missiondata_unwrap, "ops_conf", cache("ops_conf");
+        } else {
+            if(mission_has("ops_conf file", date=date)) {
+                include, mission_get("ops_conf file", date=date);
+                if(cache_enabled) {
+                    h_set, cache, "ops_conf", missiondata_wrap("ops_conf");
+                }
+            } else {
+                error, "Could not load ops_conf: no ops_conf file defined";
+            }
+        }
+    } else {
+        error, swrite(format="Unknown type provided: %s", type);
+    }
 }
 
 func mission_initialize_from_path(mission_path) {
@@ -218,6 +479,8 @@ func mission_initialize_from_path(mission_path) {
     for(i = 1; i <= numberof(dates); i++) {
         mission_date = dates(i);
         dir = file_join(mission_path, dirs(i));
+
+        mission_set, "data_path", dir;
 
         edb_file = autoselect_edb(dir);
         if(!edb_file)
