@@ -97,20 +97,41 @@ if(!$total) {
 print "Processing $total files:\n";
 
 my $current = 0;
+my $status;
 foreach my $file (@files) {
    $current++;
    print "$current/$total - " . (File::Spec->splitpath($file))[2] . "\n";
-   apply_template($template, $file);
+   $status = apply_template($template, $file);
 }
 
 print "\n";
 print "Processing complete.\n";
 
+my @missing = sort grep { ! $status->{$_} } keys %$status;
+my @present = sort grep { $status->{$_} } keys %$status;
+
+if (scalar @present) {
+   print "\n";
+   print "The nodes with the following paths were found and updated:\n";
+   foreach my $node (sort @present) {
+      print "  $node\n";
+   }
+}
+
+if (scalar @missing) {
+   print "\n";
+   print "The nodes with the following paths were not found in the template:\n";
+   foreach my $node (sort @missing) {
+      print "  $node\n";
+   }
+}
+
 
 ##### SUBROUTINES #####
 
-# setnode($node, $tags, $text)
+# setnode($node, $status, $tags, $text)
 #   $node - a LibXML node, usually the document tree
+#   $status - a reference to a hash of tag statuses
 #   $tags - either a scalar or array ref of tags to find
 #   $text - the replacement text for the final tag in $tags
 # This searches through the tree referred to by $node by finding the $tags as
@@ -118,6 +139,7 @@ print "Processing complete.\n";
 # The final node's textual content will be replaced by $text.
 sub setnode {
    my $node = shift;
+   my $status = shift;
    my $tags = shift;
    my $text = shift;
    my @tags;
@@ -136,19 +158,22 @@ sub setnode {
    };
 
    if ($@) {
-      print " !! Unable to locate node with path:\n";
-      print "    " . join("->", '(doc)', @tags) . "\n";
+      $status->{join("->", '(doc)', @tags)} = 0;
+   } else {
+      $status->{join("->", '(doc)', @tags)} = 1;
    }
 }
 
-# dropnode($node, $tags)
+# dropnode($node, $status, $tags)
 #   $node - a LibXML node, usually the document tree
+#   $status - a reference to a hash of tag statuses
 #   $tags - either a scalar or array ref of tags to find
 # This searches through the tree referred to by $node by finding the $tags as
 # nodes within it; each successive tag must be a descendent node of the prior.
 # The final node will be pruned from the tree.
 sub dropnode {
    my $node = shift;
+   my $status = shift;
    my $tags = shift;
    my @tags;
 
@@ -166,8 +191,9 @@ sub dropnode {
    };
 
    if ($@) {
-      print " !! Unable to locate node with path:\n";
-      print "    " . join("->", '(doc)', @tags) . "\n";
+      $status->{join("->", '(doc)', @tags)} = 0;
+   } else {
+      $status->{join("->", '(doc)', @tags)} = 1;
    }
 }
 
@@ -304,11 +330,31 @@ sub utm2ll {
    return [min(@lat), min(@lon), max(@lat), max(@lon)];
 }
 
+# format_number($number)
+#   $number - the number to format properly
+# Given a number, this will reformat it to be FGDC and mp complaint.
+# For example, this:
+#   763374.700047304
+# Will become:
+#   7.63374700047304 E+5
+sub format_number {
+   my $number = shift;
+
+   my $length = length($number) - 2;
+
+   $number = sprintf("%.${length}E", $number);
+   $number =~ s/E/ E/;
+   $number =~ s/\+0/+/;
+
+   return $number;
+}
+
 # apply_template($template, $file)
 #   $template - full path and file name to an XML template file
 #   $file     - full path and file name to a file to create metadata for
 # Given the above info, this creates an XML metadata file for a data file. The
 # metadata file will be named by appending '.xml' to $file.
+# It returns a reference to a hash of tag statuses.
 sub apply_template {
    my $template = shift;
    my $file = shift;
@@ -318,37 +364,42 @@ sub apply_template {
    return if(!defined($ll));
 
    my $doc = $parser->parse_file($template);
+   my $status = {};
 
    # Filename
-   setnode($doc, [qw/citation ftname/], $filename);
-   setnode($doc, [qw/dataIdInfo resTitle/], $filename);
+   setnode($doc, $status, [qw/citation ftname/], $filename);
+   setnode($doc, $status, [qw/dataIdInfo resTitle/], $filename);
 
    # UTM
-   setnode($doc, [qw/gridsys utm utmzone/], $utm->[4]);
-   setnode($doc, [qw/refSysInfo identCode/], 'NAD_1983_UTM_Zone_' . $utm->[4]);
+   setnode($doc, $status, [qw/gridsys utm utmzone/], $utm->[4]);
+   setnode($doc, $status, [qw/refSysInfo identCode/], 'NAD_1983_UTM_Zone_' . $utm->[4]);
 
-   setnode($doc, [qw/spdom bounding southbc/], $utm->[0]);
-   setnode($doc, [qw/spdom bounding eastbc/ ], $utm->[1]);
-   setnode($doc, [qw/spdom bounding northbc/], $utm->[2]);
-   setnode($doc, [qw/spdom bounding westbc/ ], $utm->[3]);
+   setnode($doc, $status, [qw/spdom bounding southbc/], format_number($utm->[0]));
+   setnode($doc, $status, [qw/spdom bounding eastbc/ ], format_number($utm->[1]));
+   setnode($doc, $status, [qw/spdom bounding northbc/], format_number($utm->[2]));
+   setnode($doc, $status, [qw/spdom bounding westbc/ ], format_number($utm->[3]));
 
-   setnode($doc, [qw/spdom lboundng bottombc/], $utm->[0]);
-   setnode($doc, [qw/spdom lboundng rightbc/ ], $utm->[1]);
-   setnode($doc, [qw/spdom lboundng topbc/   ], $utm->[2]);
-   setnode($doc, [qw/spdom lboundng leftbc/  ], $utm->[3]);
+   # The following are all commented out because they're no longer in use:
 
-   setnode($doc, [qw/dataIdInfo GeoBndBox southBL/], $utm->[0]);
-   setnode($doc, [qw/dataIdInfo GeoBndBox eastBL/ ], $utm->[1]);
-   setnode($doc, [qw/dataIdInfo GeoBndBox northBL/], $utm->[2]);
-   setnode($doc, [qw/dataIdInfo GeoBndBox westBL/ ], $utm->[3]);
+   setnode($doc, $status, [qw/spdom lboundng bottombc/], format_number($utm->[0]));
+   setnode($doc, $status, [qw/spdom lboundng rightbc/ ], format_number($utm->[1]));
+   setnode($doc, $status, [qw/spdom lboundng topbc/   ], format_number($utm->[2]));
+   setnode($doc, $status, [qw/spdom lboundng leftbc/  ], format_number($utm->[3]));
+
+   setnode($doc, $status, [qw/dataIdInfo GeoBndBox southBL/], format_number($utm->[0]));
+   setnode($doc, $status, [qw/dataIdInfo GeoBndBox eastBL/ ], format_number($utm->[1]));
+   setnode($doc, $status, [qw/dataIdInfo GeoBndBox northBL/], format_number($utm->[2]));
+   setnode($doc, $status, [qw/dataIdInfo GeoBndBox westBL/ ], format_number($utm->[3]));
 
    # Lat/lon
-   setnode($doc, [qw/dataIdInfo geoBox southBL/], $ll->[0]);
-   setnode($doc, [qw/dataIdInfo geoBox eastBL/ ], $ll->[1]);
-   setnode($doc, [qw/dataIdInfo geoBox northBL/], $ll->[2]);
-   setnode($doc, [qw/dataIdInfo geoBox westBL/ ], $ll->[3]);
+   setnode($doc, $status, [qw/dataIdInfo geoBox southBL/], format_number($ll->[0]));
+   setnode($doc, $status, [qw/dataIdInfo geoBox eastBL/ ], format_number($ll->[1]));
+   setnode($doc, $status, [qw/dataIdInfo geoBox northBL/], format_number($ll->[2]));
+   setnode($doc, $status, [qw/dataIdInfo geoBox westBL/ ], format_number($ll->[3]));
 
-   dropnode($doc, [qw/distInfo onLineSrc/]);
+   dropnode($doc, $status, [qw/distInfo onLineSrc/]);
 
    $doc->toFile("$file.xml", 0);
+
+   return $status;
 }
