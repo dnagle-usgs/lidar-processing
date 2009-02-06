@@ -38,6 +38,14 @@ ycmd h_set [list __mission_settings [ystr ytk] 1]
 # Please refer to mission_conf.i for documentation on any procedure without
 # documentation here.
 
+proc mission_clear {{sync 1}} {
+    global __mission_conf
+    set __mission_conf [dict create]
+    if {$sync} {
+        ycmd mission_clear [list] [list sync 0]
+    }
+}
+
 proc mission_get {key {date -}} {
     global __mission_conf __mission_date __mission_settings __mission_path
     default date $__mission_date
@@ -204,7 +212,7 @@ proc mission_load {filename} {
 
 proc mission_send {} {
     global __mission_date
-    ycmd mission_json_import [list [ystr [mission_json_import]]] [list sync 0]
+    ycmd mission_json_import [list [ystr [mission_json_export]]] [list sync 0]
     yset __mission_date = [ystr $__mission_date]
 }
 
@@ -270,6 +278,14 @@ proc default {varName value} {
     }
 }
 
+proc curry {new args} {
+    eval [list interp alias {} $new {}] $args
+}
+
+proc uncurry {name} {
+    interp alias {} $name {}
+}
+
 # json_stringify raw_val
 # Sanitizes a string using JSON conventions.
 proc json_stringify {raw_val} {
@@ -283,5 +299,186 @@ proc json_stringify {raw_val} {
         \r  \\r     \
         \t  \\t     \
     ] $raw_val]
+}
+
+### GUI CODE
+
+namespace eval mission {
+    namespace eval v {
+        variable toplevel .mission_conf
+        variable dateframe ""
+        variable modify_commands [list mission_set missiondate_current \
+            mission_delete missiondate_add missiondate_delete \
+            mission_json_import mission_path mission_clear]
+        variable filetypes [list \
+            [list JSON .json] \
+            [list "All files" *] \
+        ]
+        variable currentfile ""
+    }
+
+    proc launch_gui {} {
+        if {[winfo exists $v::toplevel]} {
+            wm deiconify $v::toplevel
+            register_traces
+        } else {
+            create_gui
+        }
+    }
+    
+    proc create_gui {} {
+        set win $v::toplevel
+        destroy $win
+
+        toplevel $win
+        wm resizable $win 0 0
+        wm title $win "Mission Configuration"
+
+        set mb $win.mb
+        menu $mb
+        $win configure -menu $mb
+
+        curry @ namespace code
+
+        menu $mb.file
+        $mb add cascade -label File -underline 0 -menu $mb.file
+
+        $mb.file add command -label "New" -command [@ menu_new]
+        $mb.file add command -label "Open" -command [@ menu_open]
+        $mb.file add command -label "Save" -command [@ menu_save]
+        $mb.file add command -label "Save As" -command [@ menu_save_as]
+        $mb.file add separator
+        $mb.file add command -label "Close" -command [@ menu_close]
+
+        menu $mb.act
+        $mb add cascade -label Actions -underline 0 -menu $mb.act
+
+        $mb.act add command -label "Initialize from mission directory" \
+            -command [@ menu_initialize_from_mission_dir]
+
+        set f $win.fraDates
+        set v::dateframe $f
+        frame $f
+
+        pack $f -expand 1 -fill x
+
+        button $win.btnAdd -text "Add new mission day..." \
+            -padx 2m -pady 1m \
+            -state disabled \
+            -command [@ date_add]
+        pack $win.btnAdd -anchor w
+
+        wm protocol $win WM_DELETE_WINDOW [@ menu_close]
+
+        uncurry @
+
+        register_traces
+
+        update_gui
+    }
+
+    proc register_traces {} {
+        foreach cmd $v::modify_commands {
+            trace add execution $cmd leave [namespace code update_gui]
+        }
+    }
+
+    proc unregister_traces {} {
+        foreach cmd $v::modify_commands {
+            trace remove execution $cmd leave [namespace code update_gui]
+        }
+    }
+
+    proc menu_new {} {
+        mission_clear
+    }
+
+    proc menu_open {} {
+        set filename [tk_getOpenFile \
+            -parent $v::toplevel \
+            -title "Select the mission configuration file to load" \
+            -filetypes $v::filetypes]
+        if {$filename ne ""} {
+            mission_load $filename
+        }
+        set v::currentfile $filename
+    }
+
+    proc menu_save {} {
+        if {$v::currentfile ne ""} {
+            mission_save $v::currentfile
+        } else {
+            menu_save_as
+        }
+    }
+
+    proc menu_save_as {} {
+        set filename [tk_getSaveFile \
+            -initialdir [mission_path] \
+            -parent $v::toplevel \
+            -title "Enter the filename for the mission configuration file" \
+            -filetypes $v::filetypes]
+        if {$filename ne ""} {
+            set v::currentfile $filename
+            menu_save
+        }
+    }
+
+    proc menu_close {} {
+        unregister_traces
+        wm withdraw $v::toplevel
+    }
+
+    proc menu_initialize_from_mission_dir {} {
+        set dir [tk_chooseDirectory \
+            -parent $v::toplevel \
+            -title "Select the mission directory" \
+            -mustexist 1]
+        if {$dir ne ""} {
+            mission_initialize_from_path $dir
+            update_gui
+        }
+    }
+
+    proc update_gui {args} {
+        set f $v::dateframe
+        foreach w [winfo children $f] {
+            destroy $w
+        }
+        curry @ namespace code
+        foreach date [missiondate_list] {
+            label $f.lbl$date -text $date
+            button $f.btnConfig$date -text config \
+                -padx 1m -pady 0m \
+                -state disabled \
+                -command [@ [list date_config $date]]
+            button $f.btnDelete$date -text delete \
+                -padx 1m -pady 0m \
+                -command [@ [list date_delete $date]]
+            button $f.btnLoad$date -text load \
+                -padx 1m -pady 0m \
+                -command [@ [list date_load $date]]
+            grid $f.lbl$date $f.btnConfig$date $f.btnDelete$date $f.btnLoad$date
+        }
+        uncurry @
+    }
+
+    proc date_config {date} {
+
+    }
+
+    proc date_delete {date} {
+        missiondate_delete $date
+        update_gui
+    }
+
+    proc date_load {date} {
+        missiondate_current $date
+        missiondata_load all
+    }
+
+    proc date_add {} {
+
+    }
 }
 

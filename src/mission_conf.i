@@ -66,6 +66,19 @@ if(is_void(__mission_settings))
             "ops_conf file"]
     );
 
+func mission_clear(void, sync=) {
+/* DOCUMENT mission_clear(sync=)
+    Clears all data for the mission configuration.
+
+    This will sync with Tcl unless sync=0 or __mission_settings("ytk") = 0.
+*/
+    extern __mission_conf, __mission_date, __mission_settings, __mission_path;
+    default, sync, 1;
+    __mission_conf = h_new();
+    if(__mission_settings("ytk") && sync)
+        tkcmd, "mission_clear 0";
+}
+
 func mission_get(key, date=) {
 /* DOCUMENT mission_get(key, date=)
     Retrieves the value corresponding key for the current mission day, or for
@@ -647,8 +660,7 @@ func mission_initialize_from_path(path) {
     extern __mission_conf, __mission_date;
     default, path, mission_path();
 
-    __mission_conf = h_new();
-    tkcmd, "set __mission_conf [dict create]";
+    mission_clear;
     mission_path, path;
 
     dirs = lsdirs(path);
