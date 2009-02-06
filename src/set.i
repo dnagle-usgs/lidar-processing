@@ -30,7 +30,7 @@ func set_contains(A, b) {
    contained in A.
 */
    idx = set_intersection(b, unref(A), idx=1);
-   result = array(0, numberof(b));
+   result = array(0, dimsof(b));
    if(numberof(idx))
       result(idx) = 1;
    return result;
@@ -63,7 +63,7 @@ func set_intersection(A, B, idx=) {
    if(!idx && numberof(A) < numberof(B))
       return set_intersection(unref(B), unref(A));
 
-   C = array(0, numberof(A));
+   C = array(0, dimsof(A));
    for(i = 1; i <= numberof(B); i++)
       C |= (A == B(i));
    index = where(C);
