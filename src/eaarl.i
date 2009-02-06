@@ -23,6 +23,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "string.i";
    require, "yeti.i";
    require, "yeti_regex.i";
+   require, "yeti_yhdf.i";
    require, "ytk.i";
    /*
    The Yeti package is available from:

@@ -142,6 +142,57 @@ func file_join(parts, ..) {
    }
 }
 
+func file_pathtype(path) {
+/* DOCUMENT file_pathtype(path)
+   Returns "relative" or "absolute" for each path, depending on whether the
+   path is relative or absolute. This works on both scalars and arrays.
+
+   Absolute paths are defined as those that begin with / or ~. All other paths
+   are relative.
+*/
+// Original David Nagle 2009-02-06
+   result = array("relative", dimsof(path));
+   w = where(strpart(path, 1:1) == "/");
+   if(numberof(w))
+      result(w) = "absolute";
+   w = where(strpart(path, 1:1) == "~");
+   if(numberof(w))
+      result(w) = "absolute";
+   return result;
+}
+
+func file_relative(base, dest) {
+/* DOCUMENT file_relative(base, dest)
+   Returns a relative path for dest as referenced against base.
+*/
+// Original David Nagle 2009-02-06, adapted from fileutil::relative in Tcllib
+   if(file_pathtype(base) != file_pathtype(dest))
+      error, "Unable to compute relation for paths of different path types.";
+
+   base = file_split(base);
+   dest = file_split(dest);
+
+   while(base(1) == dest(1)) {
+      base = numberof(base) > 1 ? base(2:) : [];
+      dest = numberof(dest) > 1 ? dest(2:) : [];
+      if(!numberof(dest) || !numberof(base)) break;
+   }
+
+   if(numberof(base) == 0 && numberof(dest) == 0) {
+      // Case 1: base == dest
+      return ".";
+   } else {
+      // Case 2: base is base/sub = sub
+      //         dest is base     = {}
+      // Case 3: base is base     = {}
+      //         dest is base/sub = sub
+   
+      if(numberof(base))
+         dest = grow(array("..", numberof(base)), dest);
+      return file_join(dest);
+   }
+}
+
 func split_path( fn, idx, ext= ) {
 /* DOCUMENT split_path(fn,n, ext=);
    Splits paths in various ways. Only works on scalars.

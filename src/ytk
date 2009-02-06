@@ -100,6 +100,106 @@ set Y_SITE ""
 ########## PROCEDURES ##########
 
 ##
+# ystr val [quoted]
+#  Sanitizes a string so that it can be safely sent to Yorick. Things like
+#  quotes, newlines, and tabs will be escaped.
+#
+# Arguments:
+#  val - The string to sanitize
+#  quoted - Optional. By default, the returned string will be surrounded in
+#     quotes. Set this to 0 to omit the quotes.
+#
+# Returns:
+#  A sanitized string suitable for Yorick.
+#
+# Side effects:
+#  None
+##
+proc ystr {val {quoted 1}} {
+   set yval [string map [list \
+      \\ \\\\  \
+      \" \\\"  \
+      \n \\n   \
+      \b \\b   \
+      \f \\f   \
+      \r \\r   \
+      \t \\t   \
+   ] $val]
+   if {$quoted} {
+      set yval "\"$yval\""
+   }
+   return $yval
+}
+
+##
+# ycmd command params options
+#  Sends a command to Yorick. This is meant to simplify sending straightforward
+#  commands to Yorick, rather than having to manually construct the command and
+#  send/expect it.
+#
+# Arguments:
+#  command - The command to execute.
+#  params - The positional parameters to use. Should be a list. Optional.
+#  options - The keyword arguments to use. Should be a dict. Optional.
+#
+# Returns:
+#  Nothing
+#
+# Side effects:
+#  None
+##
+proc ycmd {command {params {}} {options {}}} {
+   set ycommand $command
+   foreach param $params {
+      append ycommand ", $param"
+   }
+   dict for {key val} $options {
+      append ycommand ", $key=$val"
+   }
+   append ycommand ";\r"
+   exp_send $ycommand
+   expect ">"
+}
+
+##
+# yset var = val
+# yset var command params options
+#  Sends a command to Yorick that sets a variable. This is meant to simplify
+#  sending straightforward assignments to Yorick, rather than having to
+#  manually contruct the command and send/expect it.
+#
+#  The first form is used to set a variable to a known value -- either a
+#  constant or another Yorick variable. The equal sign is mandatory.
+#
+#  The second form is used to set a variable to the result of a function call.
+#
+# Arguments, first form:
+#  var - The Yorick variable that is being assigned.
+#  val - The value to assign to the variable.
+#
+# Arguments, second form:
+#  var - The Yorick variable that is being assigned.
+#  command - The command to execute.
+#  params - The positional parameters to use. Should be a list. Optional.
+#  options - The keyword arguments to use. Should be a dict. Optional.
+##
+proc yset {var command {params {}} {options {}}} {
+   if {$command eq "="} {
+      exp_send "$var = $params;\r"
+      expect ">"
+   } else {
+      set ycommand "$var = $command\("
+      dict for {key val} $options {
+         lappend params "$key=$val"
+      }
+      append ycommand [join $params ", "]
+      append ycommand ");\r"
+      exp_send $ycommand
+      expect ">"
+   }
+}
+
+##
 # yorick_executable
 #  Attempts to determine the yorick executable file. It will use the following,
 #  in order of priority:
