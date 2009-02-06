@@ -4,97 +4,162 @@
 
 package require dict
 package require json
+package require struct::set
+package require fileutil
 
-if {![info exists mission_conf]} {
-    array set mission_conf [list]
+### INITIALIZATION
+
+if {![info exists __mission_conf]} {
+    set __mission_conf [dict create]
 }
-if {![info exists mission_date]} {
-    set mission_date ""
+if {![info exists __mission_date]} {
+    set __mission_date ""
 }
 
-exp_send "require, \"mission_conf.i\";\r"
-expect ">"
-exp_send "h_set, __mission_settings, \"ytk\", 1;\r"
-expect ">"
+if {![info exists __mission_path]} {
+    set __mission_path ""
+}
+
+# __mission_cache -- not needed
+
+if {![info exists __mission_settings]} {
+    set __mission_settings [dict create \
+        "relative paths" [list "data_path" "edb file" "pnav file" \
+            "dmars file" "ops_conf file"] \
+    ]
+}
+
+ycmd require [list [ystr mission_conf.i]]
+ycmd h_set [list __mission_settings [ystr ytk] 1]
+
+### COMMON WITH YORICK
 
 # The procedures in this file are largely identical to those in mission_conf.i.
 # Please refer to mission_conf.i for documentation on any procedure without
 # documentation here.
 
 proc mission_get {key {date -}} {
-    global mission_conf mission_date
-    default date $mission_date
+    global __mission_conf __mission_date __mission_settings __mission_path
+    default date $__mission_date
     if {[mission_has $key $date]} {
-        return $mission_conf([list $date $key])
+        set result [dict get $__mission_conf $date $key]
+        set rel_paths [dict get $__mission_settings "relative paths"]
+        if {[::struct::set contains $rel_paths $key]} {
+            set result [file join $__mission_path $result]
+        }
+        return $result
     } else {
         return
     }
 }
 
 proc mission_set {key value {date -} {sync 1}} {
-    global mission_conf mission_date
-    default date $mission_date
+    global __mission_conf __mission_date __mission_settings __mission_path
+    default date $__mission_date
     if {![string length $date]} {
-        error "Please provide a date or set mission_date."
+        error "Please provide a date or set __mission_date."
     }
-    set mission_conf([list $date $key]) $value
     if {$sync} {
-        set ykey [yorick_stringify $key]
-        set yvalue [yorick_stringify $value]
-        set ydate [yorick stringify $date]
-        exp_send "mission_set, \"$ykey\", \"$yvalue\", date=\"$ydate\", sync=0;\r"
-        expect ">"
+        ycmd mission_set \
+            [list [ystr $key] [ystr $value]] \
+            [list date [ystr $date] sync 0]
     }
+    set rel_paths [dict get $__mission_settings "relative paths"]
+    if {[::struct::set contains $rel_paths $key]} {
+        set value [::fileutil::relative $__mission_path $value]
+    }
+    dict set __mission_conf $date $key $value
 }
 
 proc mission_has {key {date -}} {
-    global mission_conf mission_date
-    default date $mission_date
-    return [info exists mission_conf([list $date $key])]
+    global __mission_conf __mission_date
+    default date $__mission_date
+    return [dict exists $__mission_conf $date $key]
 }
 
-proc mission_dates {} {
-    global mission_conf
-    set dates [list]
-    foreach key [array names mission_conf] {
-        lappend dates [lindex $key 0]
+proc missiondate_current {{date NODATEPROVIDED} {sync 1}} {
+    global __mission_date
+    if {$date ne "NODATEPROVIDED"} {
+        set __mission_date $date
+        if {$sync} {
+            ycmd missiondate_current [list [ystr $date]] [list sync 0]
+        }
     }
-    return [lsort -unique $dates]
+    return $__mission_date
+}
+
+proc missiondate_list {} {
+    global __mission_conf
+    set dates [list]
+    return [lsort [dict keys $__mission_conf]]
 }
 
 proc mission_delete {key {date -} {sync 1}} {
-    global mission_conf mission_date
-    default date $mission_date
+    global __mission_conf __mission_date
+    default date $__mission_date
     if {![string length $date]} {
-        error "Please provide a date or set mission_date."
+        error "Please provide a date or set __mission_date."
     }
-    array unset mission_conf [list $date $key]
+    dict unset __mission_conf $date $key
     if {$sync} {
-        set ykey [yorick_stringify $key]
-        set ydate [yorick stringify $date]
-        exp_send "mission_delete, \"$ykey\", date=\"$ydate\", sync=0;\r"
-        expect ">"
+        ycmd mission_delete [list [ystr $key]] [list date [ystr $date] sync 0]
     }
 }
 
-proc mission_delete_date {date {sync 1}} {
-    global mission_conf
-    array unset mission_conf [list $date *]
+proc missiondate_add {date {sync 1}} {
+    global __mission_conf
+    dict set __mission_conf $date [dict create]
     if {$sync} {
-        set ydate [yorick_stingify $date]
-        exp_send "mission_delete_date, \"$ydate\", sync=0;\r"
-        expect ">"
+        ycmd missiondate_add [list [ystr $date]] [list sync 0]
+    }
+}
+
+proc missiondate_delete {date {sync 1}} {
+    global __mission_conf
+    dict unset __mission_conf $date
+    if {$sync} {
+        ycmd missiondate_delete [list [ystr $date]] [list sync 0]
+    }
+}
+
+proc missiondate_exists {{date -}} {
+    global __mission_conf __mission_date
+    default date $__mission_date
+    if {![string length $date]} {
+        error "Please provide a date or set __mission_date."
+    }
+    return [dict exists $__mission_conf $date]
+}
+
+proc missiondate_set {hash {date -}} {
+    global __mission_conf __mission_date
+    default date $__mission_date
+    if {![string length $date]} {
+        error "Please provide a date or set __mission_date."
+    }
+    dict set __mission_conf $date $hash
+    if {$sync} {
+        mission_send;
+    }
+}
+
+proc missiondate_get {{date -}} {
+    global __mission_conf __mission_date
+    default date $__mission_date
+    if {![string length $date]} {
+        error "Please provide a date or set __mission_date."
+    }
+    if {[missiondate_exists $date]} {
+        return [dict get $__mission_conf $date]
+    } else {
+        return
     }
 }
 
 proc mission_json_export {} {
-    global mission_conf
-    set data [dict create]
-    foreach key [array names mission_conf] {
-        dict set data [lindex $key 0] [lindex $key 1] $mission_conf($key)
-    }
+    global __mission_conf
     set json_list [list]
-    dict for {date date_data} $data {
+    dict for {date date_data} $__mission_conf {
         set date_list [list]
         dict for {key value} $date_data {
             set json_key [json_stringify $key]
@@ -116,14 +181,8 @@ proc mission_json_export {} {
 }
 
 proc mission_json_import {json {sync 1}} {
-    global mission_conf
-    set data [::json::json2dict $json]
-    array unset mission_conf
-    dict for {date date_data} $data {
-        dict for {key value} $date_data {
-            set mission_conf([list $date $key]) $value
-        }
-    }
+    global __mission_conf
+    set __mission_conf [::json::json2dict $json]
     if {$sync} {
         mission_send
     }
@@ -144,40 +203,54 @@ proc mission_load {filename} {
 }
 
 proc mission_send {} {
-    global mission_date
-    set data [yorick_stringify [mission_json_export]]
-    exp_send "mission_json_import, \"$data\", sync=0;\r"
-    expect ">"
-    set yor_date [yorick_stringify $mission_date]
-    exp_send "mission_date = \"$yor_date\";\r"
-    expect ">"
+    global __mission_date
+    ycmd mission_json_import [list [ystr [mission_json_import]]] [list sync 0]
+    yset __mission_date = [ystr $__mission_date]
 }
 
 proc mission_receive {} {
-    exp_send, "mission_send;\r"
-    expect ">"
+    ycmd mission_send
 }
 
 proc missiondata_cache {action} {
-    exp_send "missiondata_cache, \"$action\";\r"
-    expect ">"
+    ycmd missiondata_cache [list [ystr $action]]
 }
 
 # missiondata_wrap
 # missiondata_unwrap
 
 proc missiondata_load {type {date -}} {
-    global mission_date
-    default date $mission_date
+    global __mission_date
+    default date $__mission_date
 
-    exp_send "missiondata_load, \"$type\", date=\"$date\";\r"
-    expect ">"
+    ycmd missiondata_load [list [ystr $type]] [list date [ystr $date]]
+}
+
+proc missiondata_read {filename} {
+    ycmd missiondata_read [list [ystr $filename]]
+}
+
+proc missiondata_write {filename type {overwrite 1}} {
+    ycmd missiondata_write [list [ystr $filename] [ystr $type]] \
+        [list overwrite $overwrite]
+}
+
+proc mission_path {{path NOPATHPROVIDED} {sync 1}} {
+    global __mission_path
+    if {$path ne "NOPATHPROVIDED"} {
+        set __mission_path $path
+        if {$sync} {
+            ycmd mission_path [list [ystr $path]] [list sync 0]
+        }
+    }
+    return $__mission_path
 }
 
 proc mission_initialize_from_path {mission_path} {
-    exp_send "missiondata_initialize_from_path, \"$mission_path\";\r"
-    expect ">"
+    ycmd mission_initialize_from_path [list [ystr $mission_path]]
 }
+
+### UTILITY
 
 # default varName value
 # This is used within a procedure to specify a default value for a parameter.
@@ -212,16 +285,3 @@ proc json_stringify {raw_val} {
     ] $raw_val]
 }
 
-# yorick_stringify
-# Sanitizes a string so that it can be safely sent to Yorick.
-proc yorick_stringify {raw_val} {
-    return [string map [list \
-        \\  \\\\    \
-        \"  \\\"    \
-        \n  \\n     \
-        \b  \\b     \
-        \f  \\f     \
-        \r  \\r     \
-        \t  \\t     \
-    ] $raw_val]
-}

@@ -3,23 +3,32 @@ require, "eaarl.i";
 require, "json.i";
 write, "$Id$";
 
-local mission_conf;
-/* DOCUMENT mission_conf
+local __mission_conf;
+/* DOCUMENT __mission_conf
     This global variable contains the data representing the current mission's
     configuration.
 
     The various mission_* functions in mission_conf.i interact and use
-    mission_conf behind the scenes. Users are recommended to use those
-    functions instead of interacting with mission_conf directly.
+    __mission_conf behind the scenes. Users are recommended to use those
+    functions instead of interacting with __mission_conf directly.
 */
 
-local mission_date;
-/* DOCUMENT mission_date
+local __mission_date;
+/* DOCUMENT __mission_date
     This global variable is a scalar string representing the mission date
     that's currently of interest.
 
     The various mission_* functions in mission_conf.i use this as the default
     for their date= parameters, when applicable.
+*/
+
+local __mission_path;
+/* DOCUMENT __mission_path
+    This global variable is a scalar string representing the mission's path.
+    The paths in __mission_conf are all intended to be relative to this path.
+
+    This is used internally by the mission_* functions and probably shouldn't
+    be used directly.
 */
 
 local __mission_cache;
@@ -37,31 +46,42 @@ local __mission_settings;
     shouldn't interact with it directly.
 */
 
-if(is_void(mission_conf))
-    mission_conf = h_new();
+if(is_void(__mission_conf))
+    __mission_conf = h_new();
 
-if(is_void(mission_date))
-    mission_date = string(0);
+if(is_void(__mission_date))
+    __mission_date = string(0);
+
+if(is_void(__mission_path))
+    __mission_path = string(0);
 
 if(is_void(__mission_cache))
     __mission_cache = h_new();
 
 if(is_void(__mission_settings))
-    __mission_settings = h_new("use cache", 0, "ytk", 0);
+    __mission_settings = h_new(
+        "use cache", 1,
+        "ytk", 0,
+        "relative paths", ["data_path", "edb file", "pnav file", "dmars file",
+            "ops_conf file"]
+    );
 
 func mission_get(key, date=) {
 /* DOCUMENT mission_get(key, date=)
     Retrieves the value corresponding key for the current mission day, or for
     the mission day specified by date= if present.
 */
-    extern mission_conf, mission_date;
-    default, date, mission_date;
-    if(!h_has(mission_conf, date))
+    extern __mission_conf, __mission_date, __mission_settings, __mission_path;
+    default, date, __mission_date;
+    if(!h_has(__mission_conf, date))
         return [];
-    obj = h_get(mission_conf, date);
+    obj = h_get(__mission_conf, date);
     if(!h_has(obj, key))
         return [];
-    return h_get(obj, key);
+    result = h_get(obj, key);
+    if(set_contains(__mission_settings("relative paths"), key))
+        result = file_join(__mission_path, result);
+    return result;
 }
 
 func mission_set(key, value, date=, sync=) {
@@ -69,22 +89,25 @@ func mission_set(key, value, date=, sync=) {
     Sets the value for the given key to the value given for the current mission
     day, or for the mission day specified by date= if present.
 
-    This will sync with Tcl unless sync= or __mission_settings("ytk") = 0.
+    This will sync with Tcl unless sync=0 or __mission_settings("ytk") = 0.
 */
-    extern mission_conf, mission_date, __mission_settings;
-    default, date, mission_date;
+    extern __mission_conf, __mission_date, __mission_settings, __mission_path;
+    default, date, __mission_date;
     default, sync, 1;
 
     if(!date)
-        error, "Please provide date= or set mission_date.";
-
-    if(!h_has(mission_conf, date))
-        h_set, mission_conf, date, h_new();
-    obj = h_get(mission_conf, date);
-    h_set, obj, key, value;
+        error, "Please provide date= or set __mission_date.";
 
     if(__mission_settings("ytk") && sync)
         tkcmd, swrite(format="mission_set {%s} {%s} {%s} 0", key, value, date);
+
+    if(set_contains(__mission_settings("relative paths"), key))
+        value = file_relative(__mission_path, value);
+
+    if(!h_has(__mission_conf, date))
+        h_set, __mission_conf, date, h_new();
+    obj = h_get(__mission_conf, date);
+    h_set, obj, key, value;
 }
 
 func mission_has(key, date=) {
@@ -92,11 +115,11 @@ func mission_has(key, date=) {
     Returns boolean indicating whether the current mission day (or the mission
     day specified by date=, if present) has a value for the specified key.
 */
-    extern mission_conf, mission_date;
-    default, date, mission_date;
-    if(!h_has(mission_conf, date))
+    extern __mission_conf, __mission_date;
+    default, date, __mission_date;
+    if(!h_has(__mission_conf, date))
         return 0;
-    obj = h_get(mission_conf, date);
+    obj = h_get(__mission_conf, date);
     return h_has(obj, key);
 }
 
@@ -105,20 +128,11 @@ func mission_keys(void, date=) {
     Returns a list of the keys defined for the current mission day, or the
     mission day specified by date= if present.
 */
-    extern mission_conf, mission_date;
-    default, date, mission_date;
-    if(!h_has(mission_conf, date))
+    extern __mission_conf, __mission_date;
+    default, date, __mission_date;
+    if(!h_has(__mission_conf, date))
         return [];
-    return h_keys(h_get(mission_conf, date));
-}
-
-func mission_dates(void) {
-/* DOCUMENT mission_dates()
-    Returns an array of the mission dates currently defined.
-*/
-    extern mission_conf;
-    dates = h_keys(mission_conf);
-    return dates(sort(dates));
+    return h_keys(h_get(__mission_conf, date));
 }
 
 func mission_delete(key, date=, sync=) {
@@ -126,17 +140,17 @@ func mission_delete(key, date=, sync=) {
     Deletes the value for the specified key for the current mission day, or the
     mission day specified by date= if present.
 
-    This will sync with Tcl unless sync= or __mission_settings("ytk") = 0.
+    This will sync with Tcl unless sync=0 or __mission_settings("ytk") = 0.
 */
-    extern mission_conf, mission_date, __mission_settings;
-    default, date, mission_date;
+    extern __mission_conf, __mission_date, __mission_settings;
+    default, date, __mission_date;
     default, sync, 1;
 
     if(!date)
-        error, "Please provide date= or set mission_date.";
+        error, "Please provide date= or set __mission_date.";
 
-    if(h_has(mission_conf, date)) {
-        obj = h_get(mission_conf, date);
+    if(h_has(__mission_conf, date)) {
+        obj = h_get(__mission_conf, date);
         h_pop, obj, key;
     }
 
@@ -144,35 +158,131 @@ func mission_delete(key, date=, sync=) {
         tkcmd, swrite(format="mission_delete {%s} {%s} 0", key, date);
 }
 
-func mission_delete_date(date, sync=) {
-/* DOCUMENT mission_delete_date, date, sync=
-    Deletes the specified mission day.
+func missiondate_current(date, sync=) {
+/* DOCUMENT missiondate_current, date, sync=
+    missiondate_current()
 
-    This will sync with Tcl unless sync= or __mission_settings("ytk") = 0.
+    Returns the current mission date. If a date is passed, the mission date
+    will be updated with that value.
+
+    If the date is set, this will sync with Tcl unless sync=0 or
+    __mission_settings("ytk") = 0.
 */
-    extern mission_conf, __mission_settings;
+    extern __mission_date, __mission_settings;
     default, sync, 1;
-    h_pop, mission_conf, date;
+    if(!is_void(date)) {
+        __mission_date = date
+        if(__mission_settings("ytk") && sync)
+            tkcmd, swrite(format="missiondate_current {%s} 0", date);
+    }
+    return __mission_date;
+}
+
+func missiondate_list(void) {
+/* DOCUMENT missiondate_list()
+    Returns an array of the mission dates currently defined.
+*/
+    extern __mission_conf;
+    dates = h_keys(__mission_conf);
+    return dates(sort(dates));
+}
+
+func missiondate_add(date, sync=) {
+/* DOCUMENT missiondate_add(date, sync=)
+    Creates an entry for the specified date. This isn't usually needed since
+    dates are automatically created when setting a key for them.
+
+    This will sync with Tcl unless sync=0 or __mission_settings("ytk") = 0.
+*/
+    extern __mission_conf, __mission_settings;
+    default, sync, 1;
+
+    if(! h_has(__mission_conf, date))
+        h_set, __mission_conf, date, h_new();
 
     if(__mission_settings("ytk") && sync)
-        tkcmd, swrite(format="mission_delete_date {%s} 0", date);
+        tkcmd, swrite(format="missiondate_add {%} 0", date);
+}
+
+func missiondate_delete(date, sync=) {
+/* DOCUMENT missiondate_delete, date, sync=
+    Deletes the specified mission day.
+
+    This will sync with Tcl unless sync=0 or __mission_settings("ytk") = 0.
+*/
+    extern __mission_conf, __mission_settings;
+    default, sync, 1;
+    h_pop, __mission_conf, date;
+
+    if(__mission_settings("ytk") && sync)
+        tkcmd, swrite(format="missiondate_delete {%s} 0", date);
+}
+
+func missiondate_exists(void, date=) {
+/* DOCUMENT missiondate_exists(date=)
+    Returns 1 if the current mission date (or date=, if specified) exists.
+    Otherwise, returns 0.
+*/
+    extern __mission_conf, __mission_date;
+    default, date, __mission_date;
+
+    if(!date)
+        error, "Please provide date= or set __mission_date.";
+ 
+    return h_has(__mission_conf, date);
+}
+
+func missiondate_set(hash, date=, sync=) {
+/* DOCUMENT missiondate_set, hash, date=, sync=
+    Sets the data for the current mission date (or date=, if specified) to the
+    data in the specified Yeti hash.
+
+    This will sync with Tcl unless sync=0 or __mission_settings("ytk") = 0.
+*/
+    extern __mission_conf, __mission_date, __mission_settings;
+    default, date, __mission_date;
+    default, sync, 1;
+
+    if(!date)
+        error, "Please provide date= or set __mission_date.";
+    
+    h_set, __mission_conf, date, hash;
+
+    if(__mission_settings("ytk") && sync)
+        mission_send;
+}
+
+func missiondate_get(void, date=) {
+/* DOCUMENT missiondate_get(date=)
+    Returns the Yeti hash for the current date, or date= if specified.
+*/
+    extern __mission_conf, __mission_date;
+    default, date, __mission_date;
+
+    if(!date)
+        error, "Please provide date= or set __mission_date.";
+    
+    if(missiondate_exists(date=date))
+        return __mission_conf(date);
+    else
+        return [];
 }
 
 func mission_json_export(void) {
 /* DOCUMENT mission_json_export()
     Returns a json string that represents the current mission configuration.
 */
-    extern mission_conf;
-    return yorick2json(mission_conf);
+    extern __mission_conf;
+    return yorick2json(__mission_conf);
 }
 
 func mission_json_import(json, sync=) {
 /* DOCUMENT mission_json_import, json, sync=
     Loads the mission configuration defined in the given json string.
 */
-    extern mission_conf, __mission_settings;
+    extern __mission_conf, __mission_settings;
     default, sync, 1;
-    mission_conf = json2yorick(json);
+    __mission_conf = json2yorick(json);
 
     if(__mission_settings("ytk") && sync)
         mission_send;
@@ -183,7 +293,7 @@ func mission_save(filename) {
     Writes the current mission configuration to the specified file, in JSON
     format.
 */
-    extern mission_conf;
+    extern __mission_conf;
     json = mission_json_export();
     f = open(filename, "w");
     write, f, format="%s\n", json;
@@ -195,7 +305,7 @@ func mission_load(filename) {
     Loads a mission configuration from the given filename, which must be in
     JSON format.
 */
-    extern mission_conf;
+    extern __mission_conf;
     f = open(filename, "r");
     json = rdfile(f)(sum);
     close, f;
@@ -206,10 +316,10 @@ func mission_send(void) {
 /* DOCUMENT mission_send
     Sends the mission configuration as defined in Yorick to Tcl.
 */
-    extern mission_conf, mission_date;
+    extern __mission_conf, __mission_date;
     json = mission_json_export();
     tkcmd, swrite(format="mission_json_import {%s} 0", json);
-    tkcmd, swrite(format="set mission_date {%s}", mission_date);
+    tkcmd, swrite(format="set __mission_date {%s}", __mission_date);
 }
 
 func mission_receive(void) {
@@ -228,7 +338,7 @@ func missiondata_cache(action) {
         disable - Disabled the use of the cache (but does not clear it)
         preload - Preloads the cache with each mission day's data
 */
-    extern mission_conf, mission_date, __mission_cache, __mission_settings;
+    extern __mission_conf, __mission_date, __mission_cache, __mission_settings;
     if(action == "clear") {
         __mission_cache = h_new();
     } else if(action == "enable") {
@@ -236,14 +346,14 @@ func missiondata_cache(action) {
     } else if(action == "disable") {
         h_set, __mission_settings, "use cache", 0;
     } else if(action == "preload") {
-        dates = mission_dates();
+        dates = missiondate_list();
         missiondata_cache, "clear";
         missiondata_cache, "enable";
         environment_backup = missiondata_wrap("all");
         for(i = 1; i <= numberof(dates); i++) {
             missiondata_load, "all", date=dates(i);
         }
-        missiondata_unwrap, "all", environment_backup;
+        missiondata_unwrap, environment_backup;
     }
 }
 
@@ -263,6 +373,7 @@ func missiondata_wrap(type) {
         error, "No type was provided.";
     } else if(type == "all") {
         return h_new(
+            "__type", "all",
             "edb", missiondata_wrap("edb"),
             "pnav", missiondata_wrap("pnav"),
             "dmars", missiondata_wrap("dmars"),
@@ -272,6 +383,7 @@ func missiondata_wrap(type) {
         extern edb, edb_filename, edb_files, _ecfidx, total_edb_records,
             soe_day_start, eaarl_time_offset, data_path;
         return h_new(
+            "__type", "edb",
             "edb", edb,
             "edb_filename", edb_filename,
             "edb_files", edb_files,
@@ -283,6 +395,7 @@ func missiondata_wrap(type) {
     } else if(type == "pnav") {
         extern pnav, gga;
         return h_new(
+            "__type", "pnav",
             "pnav", pnav,
             "gga", gga
         );
@@ -290,6 +403,7 @@ func missiondata_wrap(type) {
         extern iex_nav, iex_head, iex_nav1hz, tans;
         // ops_conf ?
         return h_new(
+            "__type", "dmars",
             "iex_nav", iex_nav,
             "iex_head", iex_head,
             "iex_nav1hz", iex_nav1hz,
@@ -298,6 +412,7 @@ func missiondata_wrap(type) {
     } else if(type == "ops_conf") {
         extern ops_conf;
         return h_new(
+            "__type", "ops_conf",
             "ops_conf", ops_conf
         );
     } else {
@@ -305,25 +420,21 @@ func missiondata_wrap(type) {
     }
 }
 
-func missiondata_unwrap(type, data) {
-/* DOCUMENT missiondata_unwrap, type, data
+func missiondata_unwrap(data) {
+/* DOCUMENT missiondata_unwrap, data
     Updates Yorick extern variables by unwrapping data that was wrapped using
     missiondata_wrap.
-
-    The type should be one of:
-        all - includes all of the others
-        edb
-        pnav
-        dmars
-        ops_conf
 */
-    if(is_void(type)) {
-        error, "No type was provided.";
-    } else if(type == "all") {
-        missiondata_unwrap, "edb", data("edb");
-        missiondata_unwrap, "pnav", data("pnav");
-        missiondata_unwrap, "dmars", data("dmars");
-        missiondata_unwrap, "ops_conf", data("ops_conf");
+    if(h_has(data, "__type"))
+        type = data.__type;
+    else
+        error, "Data does not define its type.";
+
+    if(type == "all") {
+        missiondata_unwrap, data.edb;
+        missiondata_unwrap, data.pnav;
+        missiondata_unwrap, data.dmars;
+        missiondata_unwrap, data.ops_conf;
     } else if(type == "edb") {
         extern edb, edb_filename, edb_files, _ecfidx, total_edb_records,
             soe_day_start, eaarl_time_offset, data_path;
@@ -367,11 +478,11 @@ func missiondata_load(type, date=) {
         dmars
         ops_conf
 */
-    extern mission_conf, mission_date, __mission_cache, __mission_settings;
-    default, date, mission_date;
+    extern __mission_conf, __mission_date, __mission_cache, __mission_settings;
+    default, date, __mission_date;
 
     if(!date)
-        error, "Please provide date= or set mission_date.";
+        error, "Please provide date= or set __mission_date.";
 
     if(type == "all") {
         if(mission_has("edb file", date=date))
@@ -400,7 +511,7 @@ func missiondata_load(type, date=) {
         error, "No type was provided.";
     } else if(type == "edb") {
         if(cache_enabled && h_has(cache, "edb")) {
-            missiondata_unwrap, "edb", cache("edb");
+            missiondata_unwrap, cache("edb");
         } else {
             if(mission_has("edb file", date=date)) {
                 extern data_path;
@@ -416,7 +527,7 @@ func missiondata_load(type, date=) {
         }
     } else if(type == "pnav") {
         if(cache_enabled && h_has(cache, "pnav")) {
-            missiondata_unwrap, "pnav", cache("pnav");
+            missiondata_unwrap, cache("pnav");
         } else {
             if(mission_has("pnav file", date=date)) {
                 pnav = rbpnav(fn=mission_get("pnav file", date=date));
@@ -429,7 +540,7 @@ func missiondata_load(type, date=) {
         }
     } else if(type == "dmars") {
         if(cache_enabled && h_has(cache, "dmars")) {
-            missiondata_unwrap, "dmars", cache("dmars");
+            missiondata_unwrap, cache("dmars");
         } else {
             if(mission_has("dmars file", date=date)) {
                 load_iexpbd, mission_get("dmars file", date=date);
@@ -442,7 +553,7 @@ func missiondata_load(type, date=) {
         }
     } else if(type == "ops_conf") {
         if(cache_enabled && h_has(cache, "ops_conf")) {
-            missiondata_unwrap, "ops_conf", cache("ops_conf");
+            missiondata_unwrap, cache("ops_conf");
         } else {
             if(mission_has("ops_conf file", date=date)) {
                 include, mission_get("ops_conf file", date=date);
@@ -458,18 +569,89 @@ func missiondata_load(type, date=) {
     }
 }
 
-func mission_initialize_from_path(mission_path) {
-/* DOCUMENT mission_initialize_from_path, mission_path
+func missiondata_read(filename) {
+/* DOCUMENT missiondata_read, filename
+    data = missiondata_read(filename)
 
-    This will clear mission_conf and attempt to initialize it automatically.
+    Reads a Yeti YHD file. If used as a subroutine, the data will be unwrapped
+    (via missiondata_unwrap). If used as a function, the data will be returned
+    instead (and will not be unwrapped).
+*/
+    if(!file_exists(filename)) {
+        error, "File does not exist";
+    } else if(!yhd_check(filename)) {
+        error, "File is not a Yeti YHD file";
+    } else {
+        if(am_subroutine())
+            missiondata_unwrap, yhd_restore(filename);
+        else
+            return yhd_restore(filename);
+    }
+}
+
+func missiondata_write(filename, input, overwrite=) {
+/* DOCUMENT missiondata_write, filename, type, overwrite=
+    missiondata_write, filename, wrapped_data, overwrite=
+
+    Writes out a Yeti YHD file containing wrapped data.
+
+    If passed a type, it must be a string suitable for passing to
+    missiondata_wrap.
+
+    If passed wrapped_data, it must be a Yeti hash.
+
+    By default, filename will be overwritten if it exists. Set overwrite=0 to
+    prevent that (it will trigger a Yorick error though if the file exists).
+*/
+    default, overwrite, 1;
+    if(typeof(input) == "string") {
+        data = missiondata_wrap(input);
+    } else if(typeof(input) == "hash_table") {
+        data = input;
+    } else {
+        error, "Unknown input type";
+    }
+    yhd_save, filename, data, overwrite=overwite,
+        comment="Restore using missiondata_read in mission_conf.i";
+}
+
+func mission_path(path, sync=) {
+/* DOCUMENT mission_path, path, sync=
+    mission_path()
+
+    Returns the mission path. If a path is passed, the mission path will be
+    updated with that value.
+
+    If the path is set, this will sync with Tcl unless sync=0 or
+    __mission_settings("ytk") = 0.
+*/
+    extern __mission_path, __mission_settings;
+    default, sync, 1;
+    if(!is_void(path)) {
+        __mission_path = path;
+        if(__mission_settings("ytk") && sync)
+            tkcmd, swrite(format="mission_path {%s} 0", path);
+    }
+    return __mission_path;
+}
+
+func mission_initialize_from_path(path) {
+/* DOCUMENT mission_initialize_from_path, path
+
+    This will clear __mission_conf and attempt to initialize it automatically.
     For each mission day in the mission path (identified by those directories
     whose names contain a date string), it will attempt to locate and define a
     pnav file, dmars file, ops_conf.i file, and edb file.
 */
 // Original David Nagle 2009-02-04
-    extern mission_conf, mission_date;
-    mission_conf = h_new();
-    dirs = lsdirs(mission_path);
+    extern __mission_conf, __mission_date;
+    default, path, mission_path();
+
+    __mission_conf = h_new();
+    tkcmd, "set __mission_conf [dict create]";
+    mission_path, path;
+
+    dirs = lsdirs(path);
     dates = get_date(dirs);
     w = where(dates);
     if(!numberof(w))
@@ -477,14 +659,13 @@ func mission_initialize_from_path(mission_path) {
     dirs = dirs(w);
     dates = dates(w);
     for(i = 1; i <= numberof(dates); i++) {
-        mission_date = dates(i);
-        dir = file_join(mission_path, dirs(i));
-
-        mission_set, "data_path", dir;
+        __mission_date = dates(i);
+        dir = file_join(path, dirs(i));
 
         edb_file = autoselect_edb(dir);
         if(!edb_file)
             continue;
+        mission_set, "data_path", dir;
         mission_set, "edb file", edb_file;
 
         pnav_file = autoselect_pnav(dir);
