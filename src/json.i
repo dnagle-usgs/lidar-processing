@@ -191,14 +191,14 @@ func __json2yorick(&text) {
          str = strpart(str, 2:-1);
 
          // backslash substition
-         str = regsub("\\\\\"", str, "\"");
-         str = regsub("\\\\\\\\", str, "\\\\");
-         str = regsub("\\\\/", str, "/");
-         str = regsub("\\\\b", str, "\b");
-         str = regsub("\\\\f", str, "\f");
-         str = regsub("\\\\n", str, "\n");
-         str = regsub("\\\\r", str, "\r");
-         str = regsub("\\\\t", str, "\t");
+         str = regsub("\\\\\\\\", str, "\\\\", all=1);
+         str = regsub("\\\\\"", str, "\"", all=1);
+         str = regsub("\\\\/", str, "/", all=1);
+         str = regsub("\\\\b", str, "\b", all=1);
+         str = regsub("\\\\f", str, "\f", all=1);
+         str = regsub("\\\\n", str, "\n", all=1);
+         str = regsub("\\\\r", str, "\r", all=1);
+         str = regsub("\\\\t", str, "\t", all=1);
 
          // NOTE: Does not handle unicode sequences, \x####
          
