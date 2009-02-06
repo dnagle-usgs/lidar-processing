@@ -143,7 +143,63 @@ func unpackage_tile (fn=,host= ) {
 
 // An easier hook for someone restoring a previous session.
 func load_vars(fn) {
-  unpackage_tile, fn=fn  // this avoids returning an array to the cmdline
+   unpackage_tile, fn=fn  // this avoids returning an array to the cmdline
+   if ( _ytk ) {
+      tkcmd, swrite(format="set data_file_path \"%s\" \n",data_path);
+
+///////////////////
+      eaarl_time_offset = 0;	// need this first, cuz get_erast uses it.
+      eaarl_time_offset = edb(1).seconds - decode_raster( get_erast(rn=1) ).soe;
+
+
+
+// locate the first time value that appears to be set to the gps
+      q = where( edb.seconds > time2soe( [2000,0,0,0,0,0] )) ;
+
+// If valid soe time then do this.
+      if ( numberof(q) > 0 ) {
+         write,"*****  TIME contains date information ********"
+//////  edb.seconds += eaarl_time_offset ;	// adjust time to gps
+         data_begins = q(1);
+         data_ends   = q(0);
+         year = soe2time( edb(data_begins).seconds ) (1);
+         day  = soe2time( edb(data_begins).seconds ) (2);
+         soe_start = 0;
+         soe_stop  = 0;
+         soe_start = edb(data_begins).seconds;
+         soe_stop  = edb(data_ends).seconds;
+// change the time record to seconds of the day
+//   edb.seconds -= time2soe( [ year, day, 0, 0,0,0 ] );
+         soe_day_start = time2soe( [ year, day, 0, 0,0,0 ] ); 
+         mission_duration = ( edb.seconds(q(0)) - edb.seconds(q(1)))/ 3600.0 ;
+      } else {
+         soe_day_start = 0;
+         data_begins = 1;
+         data_ends   = 0;
+         soe_start = edb(data_begins).seconds;
+         soe_stop  = edb(data_ends).seconds;
+         year = 0;
+         day  = 0;
+         mission_duration = (edb.seconds(0) - edb.seconds(1)) / 3600.0 ;
+      }
+
+///////////////////
+
+      tkcmd,swrite(format="set edb(gb) %6.3f\n", 
+         float(edb.raster_length)(sum)*1.0e-9);
+
+      tkcmd,swrite(format="set edb(number_of_files) %d", numberof(edb_files) );
+      tkcmd, swrite(format="set edb(year) %d", year);
+      tkcmd, swrite(format="set edb(day)  %d",  day);
+      tkcmd, swrite(format="set edb(data_begins)  %d",  data_begins);
+      tkcmd, swrite(format="set edb(data_ends)    %d",  data_ends);
+      tkcmd, swrite(format="set edb(mission_duration)  %f",  mission_duration);
+      tkcmd, swrite(format="set edb(soe)  %d",  soe_day_start);
+      tkcmd, swrite(format="set edb(eaarl_time_offset)  %d",  eaarl_time_offset);
+      tkcmd, swrite(format="set edb(path)  %s",  data_path);
+      tkcmd, swrite(format="set edb(idx_file)  %s",  fn);
+      tkcmd, swrite(format="set edb(nbr_rasters)  %d",  numberof(edb) );
+   }
 }
 
 func call_process_tile( junk=, host= ) {
