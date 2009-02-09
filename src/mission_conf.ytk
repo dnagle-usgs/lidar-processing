@@ -142,7 +142,7 @@ proc missiondate_exists {{date -}} {
     return [dict exists $__mission_conf $date]
 }
 
-proc missiondate_set {hash {date -}} {
+proc missiondate_set {hash {date -} {sync 1}} {
     global __mission_conf __mission_date
     default date $__mission_date
     if {![string length $date]} {
@@ -292,6 +292,7 @@ namespace eval mission {
             [list "All files" *] \
         ]
         variable currentfile ""
+        variable config_temp
     }
 
     proc launch_gui {} {
@@ -341,7 +342,6 @@ namespace eval mission {
 
         button $win.btnAdd -text "Add new mission day..." \
             -padx 2m -pady 1m \
-            -state disabled \
             -command [@ date_add]
         pack $win.btnAdd -anchor w
 
@@ -355,15 +355,12 @@ namespace eval mission {
     }
 
     proc register_traces {} {
-        foreach cmd $v::modify_commands {
-            trace add execution $cmd leave [namespace code update_gui]
-        }
+        global __mission_conf
+        trace add variable __mission_conf {write unset} [namespace code update_gui]
     }
 
     proc unregister_traces {} {
-        foreach cmd $v::modify_commands {
-            trace remove execution $cmd leave [namespace code update_gui]
-        }
+        trace remove variable __mission_conf {write unset} [namespace code update_gui]
     }
 
     proc menu_new {} {
@@ -377,8 +374,9 @@ namespace eval mission {
             -filetypes $v::filetypes]
         if {$filename ne ""} {
             mission_load $filename
+            set v::currentfile $filename
+            mission_path [file dirname $filename]
         }
-        set v::currentfile $filename
     }
 
     proc menu_save {} {
@@ -427,7 +425,6 @@ namespace eval mission {
             label $f.lbl$date -text $date
             button $f.btnConfig$date -text config \
                 -padx 1m -pady 0m \
-                -state disabled \
                 -command [@ [list date_config $date]]
             button $f.btnDelete$date -text delete \
                 -padx 1m -pady 0m \
@@ -441,7 +438,95 @@ namespace eval mission {
     }
 
     proc date_config {date} {
+        set dlg [iwidgets::dialog $v::toplevel.#auto \
+            -title "Mission day: $date" \
+            -modality application]
+        $dlg hide Help
+        $dlg hide Apply
 
+        curry % list $dlg
+        curry @ namespace code
+        curry & namespace which -variable
+
+        $dlg buttonconfigure OK -command [@ [list $dlg deactivate 1]]
+        $dlg buttonconfigure Cancel -command [@ [list $dlg deactivate 0]]
+
+        set v::config_temp([% data_path]) [mission_get data_path $date]
+        set v::config_temp([% "edb file"]) [mission_get "edb file" $date]
+        set v::config_temp([% "pnav file"]) [mission_get "pnav file" $date]
+        set v::config_temp([% "dmars file"]) [mission_get "dmars file" $date]
+        set v::config_temp([% "ops_conf file"]) [mission_get "ops_conf file" $date]
+
+        set w [$dlg childsite]
+        
+        iwidgets::entryfield $w.entPath \
+            -labeltext "Data path:" \
+            -textvariable [& v::config_temp]([% data_path])
+        iwidgets::entryfield $w.entEdb \
+            -labeltext "EAARL Database Index (edb) file:" \
+            -textvariable [& v::config_temp]([% "edb file"])
+        iwidgets::entryfield $w.entPnav \
+            -labeltext "GPS PNAV data file:" \
+            -textvariable [& v::config_temp]([% "pnav file"])
+        iwidgets::entryfield $w.entDmars \
+            -labeltext "DMARS attitude data file:" \
+            -textvariable [& v::config_temp]([% "dmars file"])
+        iwidgets::entryfield $w.entOps \
+            -labeltext "ops_conf.i file:" \
+            -textvariable [& v::config_temp]([% "ops_conf file"])
+
+        iwidgets::Labeledwidget::alignlabels \
+            $w.entPath $w.entEdb $w.entPnav $w.entDmars $w.entOps
+
+        pack \
+            $w.entPath $w.entEdb $w.entPnav $w.entDmars $w.entOps \
+            -side top -pady 5 -padx 10 -fill x -expand yes
+
+        set prompt_user 1
+        while {$prompt_user} {
+            set missing_needed 0
+            set prompt_user 0
+            if {[$dlg activate]} {
+                set temp_data [dict create]
+                set keys [list data_path "edb file" "pnav file" "dmars file" \
+                    "ops_conf file"]
+                foreach key $keys {
+                    if {[string length $v::config_temp([% $key])]} {
+                        dict set temp_data $key $v::config_temp([% $key])
+                    }
+                }
+                if {[llength [dict keys $temp_data]]} {
+                    if {
+                        [dict exists $temp_data data_path] &&
+                        [dict exists $temp_data "edb file"]
+                    } {
+                        missiondate_set $temp_data $date
+                    } else {
+                        set missing_needed 1
+                    }
+                } else {
+                    set missing_needed 1
+                }
+            }
+            if {$missing_needed} {
+                set response [tk_messageBox \
+                    -icon warning -parent $dlg -type yesno \
+                    -message "A mission day must have a data path and EAARL\
+                        edb file at a minimum. Do you want to return to the\
+                        form to enter this information? (Answering 'No'\
+                        will abort changes to the entry entirely.)"]
+                switch -- $response {
+                    yes {set prompt_user 1}
+                    no  {set prompt_user 0}
+                }
+            }
+        }
+
+        uncurry %
+        uncurry @
+        uncurry &
+
+        destroy $dlg
     }
 
     proc date_delete {date} {
@@ -455,7 +540,27 @@ namespace eval mission {
     }
 
     proc date_add {} {
-
+        set dlg [iwidgets::promptdialog $v::toplevel.#auto \
+            -modality application \
+            -title "Add new mission day" \
+            -labeltext "Please enter the mission date as YYYY-MM-DD:"]
+        $dlg hide Help
+        $dlg hide Apply
+        focus [$dlg component prompt component entry]
+        $dlg center
+        if {[$dlg activate]} {
+            set date [$dlg get]
+            if {[missiondate_exists $date]} {
+                tk_messageBox \
+                    -icon warning -parent $dlg -type ok \
+                    -message "That mission date already exists. If you want to\
+                        modify, please use the mission date's configure\
+                        button."
+            } else {
+                after idle [list after 0 [namespace code [list date_config $date]]]
+            }
+        }
+        destroy $dlg
     }
 }
 

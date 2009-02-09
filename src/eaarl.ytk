@@ -445,6 +445,8 @@ proc load_edb {} {
 
    exp_send "#include \"eaarl.i\"\r"
 
+   source [file join $src_path mission_conf.ytk]
+
 ####   exp_send "#include \"edb_access.i\"\r"
 ####   exp_send "#include \"map.i\"\r"
 
@@ -490,7 +492,11 @@ proc load_edb {} {
  ### DEPRECATED 2009-02-02 ###
  $w.mb.file add command -label "Coastlines & Flight tracks (deprecated)" \
    -underline 13  -command rbgga_menu
-  $w.mb.file add separator
+
+$w.mb.file add separator
+$w.mb.file add command -label "Mission configuration manager" \
+   -underline 0 -command ::mission::launch_gui
+$w.mb.file add separator
 
  $w.mb.file add command -label "Edb Status" -command  edb_status 
 
