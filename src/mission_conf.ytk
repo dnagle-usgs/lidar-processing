@@ -321,17 +321,19 @@ namespace eval mission {
         menu $mb.file
         $mb add cascade -label File -underline 0 -menu $mb.file
 
-        $mb.file add command -label "New" -command [@ menu_new]
-        $mb.file add command -label "Open" -command [@ menu_open]
-        $mb.file add command -label "Save" -command [@ menu_save]
-        $mb.file add command -label "Save As" -command [@ menu_save_as]
+        $mb.file add command -label "New" -command [@ menu_new] -underline 0
+        $mb.file add command -label "Open" -command [@ menu_open] -underline 0
+        $mb.file add command -label "Save" -command [@ menu_save] -underline 0
+        $mb.file add command -label "Save As" -command [@ menu_save_as] \
+            -underline 5
         $mb.file add separator
-        $mb.file add command -label "Close" -command [@ menu_close]
+        $mb.file add command -label "Close" -command [@ menu_close] -underline 0
 
         menu $mb.act
         $mb add cascade -label Actions -underline 0 -menu $mb.act
 
         $mb.act add command -label "Initialize from mission directory" \
+            -underline 0 \
             -command [@ menu_initialize_from_mission_dir]
 
         set f $win.fraDates
@@ -423,16 +425,16 @@ namespace eval mission {
         curry @ namespace code
         foreach date [missiondate_list] {
             label $f.lbl$date -text $date
-            button $f.btnConfig$date -text config \
-                -padx 1m -pady 0m \
+            button $f.btnConfig$date -text Configure \
+                -padx 2m -pady 1m \
                 -command [@ [list date_config $date]]
-            button $f.btnDelete$date -text delete \
-                -padx 1m -pady 0m \
-                -command [@ [list date_delete $date]]
-            button $f.btnLoad$date -text load \
-                -padx 1m -pady 0m \
+            button $f.btnLoad$date -text Load \
+                -padx 2m -pady 1m \
                 -command [@ [list date_load $date]]
-            grid $f.lbl$date $f.btnConfig$date $f.btnDelete$date $f.btnLoad$date
+            button $f.btnDelete$date -text X \
+                -padx 2m -pady 1m \
+                -command [@ [list date_delete $date]]
+            grid $f.lbl$date $f.btnConfig$date $f.btnLoad$date $f.btnDelete$date
         }
         uncurry @
     }
@@ -465,7 +467,7 @@ namespace eval mission {
             -parent $dlg \
             -textvariable [& v::config_temp]([% data_path])
         GUI::FileEntryButton $w.entEdb \
-            -labeltext "EAARL Database Index (edb) file:" \
+            -labeltext "EDB file:" \
             -actiontype open \
             -filetypes {
                 {{EAARL Database Index files} {.idx}}
@@ -474,7 +476,7 @@ namespace eval mission {
             -parent $dlg \
             -textvariable [& v::config_temp]([% "edb file"])
         GUI::FileEntryButton $w.entPnav \
-            -labeltext "GPS PNAV data file:" \
+            -labeltext "PNAV file:" \
             -actiontype open \
             -filetypes {
                 {{PNAV files} {.ybin}}
@@ -483,7 +485,7 @@ namespace eval mission {
             -parent $dlg \
             -textvariable [& v::config_temp]([% "pnav file"])
         GUI::FileEntryButton $w.entDmars \
-            -labeltext "DMARS attitude data file:" \
+            -labeltext "DMARS file:" \
             -actiontype open \
             -filetypes {
                 {{pbd files} {.pbd}}
@@ -500,6 +502,11 @@ namespace eval mission {
             } \
             -parent $dlg \
             -textvariable [& v::config_temp]([% "ops_conf file"])
+
+        foreach ent [list Path Edb Pnav Dmars Ops] {
+            [$w.ent$ent component entry] configure \
+                -width 60
+        }
 
         iwidgets::Labeledwidget::alignlabels \
             $w.entPath $w.entEdb $w.entPnav $w.entDmars $w.entOps
