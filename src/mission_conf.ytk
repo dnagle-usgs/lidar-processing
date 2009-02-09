@@ -458,21 +458,47 @@ namespace eval mission {
         set v::config_temp([% "ops_conf file"]) [mission_get "ops_conf file" $date]
 
         set w [$dlg childsite]
-        
-        iwidgets::entryfield $w.entPath \
+
+        GUI::FileEntryButton $w.entPath \
             -labeltext "Data path:" \
+            -actiontype dir \
+            -parent $dlg \
             -textvariable [& v::config_temp]([% data_path])
-        iwidgets::entryfield $w.entEdb \
+        GUI::FileEntryButton $w.entEdb \
             -labeltext "EAARL Database Index (edb) file:" \
+            -actiontype open \
+            -filetypes {
+                {{EAARL Database Index files} {.idx}}
+                {{All files} *}
+            } \
+            -parent $dlg \
             -textvariable [& v::config_temp]([% "edb file"])
-        iwidgets::entryfield $w.entPnav \
+        GUI::FileEntryButton $w.entPnav \
             -labeltext "GPS PNAV data file:" \
+            -actiontype open \
+            -filetypes {
+                {{PNAV files} {.ybin}}
+                {{All files} *}
+            } \
+            -parent $dlg \
             -textvariable [& v::config_temp]([% "pnav file"])
-        iwidgets::entryfield $w.entDmars \
+        GUI::FileEntryButton $w.entDmars \
             -labeltext "DMARS attitude data file:" \
+            -actiontype open \
+            -filetypes {
+                {{pbd files} {.pbd}}
+                {{All files} *}
+            } \
+            -parent $dlg \
             -textvariable [& v::config_temp]([% "dmars file"])
-        iwidgets::entryfield $w.entOps \
+        GUI::FileEntryButton $w.entOps \
             -labeltext "ops_conf.i file:" \
+            -actiontype open \
+            -filetypes {
+                {{Yorick files} {.i}}
+                {{All files} *}
+            } \
+            -parent $dlg \
             -textvariable [& v::config_temp]([% "ops_conf file"])
 
         iwidgets::Labeledwidget::alignlabels \
