@@ -224,7 +224,7 @@ proc scap { } {
 	-message {Raise the window you want to capture, \
 click OK, and then click on the desired window.}
   update
-  exec /usr/bin/xwd -out /tmp/junk.xwd;
+  exec xwd -out /tmp/junk.xwd;
   set fn [tk_getSaveFile  -initialdir $capture_path \
 	-defaultextension .png \
 	-initialfile $capture_name \
