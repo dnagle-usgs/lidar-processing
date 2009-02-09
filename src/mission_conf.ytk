@@ -7,6 +7,9 @@ package require json
 package require struct::set
 package require fileutil
 
+source [file join $src_path gui_procs.ytk]
+source [file join $src_path misc.ytk]
+
 ### INITIALIZATION
 
 if {![info exists __mission_conf]} {
@@ -259,32 +262,6 @@ proc mission_initialize_from_path {mission_path} {
 }
 
 ### UTILITY
-
-# default varName value
-# This is used within a procedure to specify a default value for a parameter.
-# This is useful when the default value is dynamic.
-proc default {varName value} {
-    upvar $varName var
-    set caller [info level -1]
-    set caller_args [info args [lindex $caller 0]]
-    set arg_index [lsearch -exact $caller_args $varName]
-    incr arg_index
-    if {$arg_index > 0} {
-        if {[llength $caller] <= $arg_index} {
-            set var $value
-        }
-    } else {
-        error "Calling function does not have parameter $varName"
-    }
-}
-
-proc curry {new args} {
-    eval [list interp alias {} $new {}] $args
-}
-
-proc uncurry {name} {
-    interp alias {} $name {}
-}
 
 # json_stringify raw_val
 # Sanitizes a string using JSON conventions.

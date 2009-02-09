@@ -1,0 +1,259 @@
+# vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
+# $Id$
+
+# This makes sure the file doesn't get sourced multiple times, since it might
+# be called from several files. If you DO need to resource it, just 'unset
+# __misc_ytk_loaded' first.
+if {[info exists __misc_ytk_loaded]} {
+   return
+}
+set __misc_ytk_loaded 1
+
+package require struct::list
+
+##############################################################################
+
+# copied from ADAPT: lib/misc.tcl
+
+# rangefor - Shorthand for a for loop over a range of values
+# Usage:
+#   rangefor var start stop body
+#   rangefor var start stop step body
+proc rangefor {varName start stop p1 {p2 {}}} {
+   if { [string length $p2] } {
+      set step $p1
+      set body $p2
+   } else {
+      set step [expr {2 * ($start < $stop) - 1}]
+      set body $p1
+   }
+   if { $step > 0 } {
+      set cond { $i <= $stop }
+   } else {
+      set cond { $i >= $stop }
+   }
+   upvar $varName i
+   for { set i $start } { [expr $cond] } { incr i $step } {
+      uplevel $body
+   }
+}
+
+# lassign - alias to ::struct::list assign
+if {[info commands lassign] eq ""} {
+   interp alias {} lassign {} ::struct::list assign
+}
+
+# indent - Applies indentation to each line in a string
+# Usage:
+#   indent string_value
+#   indent string_value indentation_value
+# Returns indented string
+# Examples:
+#   % indent "foo\nbar\nbaz"
+#     foo\n  bar\n  baz
+#   % indent "foo\n bar\n  baz" " "
+#    foo\n  bar\n   baz
+proc indent {str {ind "  "}} {
+   return [string trimright "$ind[string map [list "\n" "\n$ind"] $str]" " "]
+}
+
+# idle - wrapper around after to run a command when idle
+# Usage:
+#   idle command
+proc idle {cmd} {
+   after idle [list after 0 $cmd]
+}
+
+# next_unused - finds an unused name
+# type: one of: command namespace variable widget window
+# base: any string
+# For example, [next_unused variable foo] will check to see if a variable foo0
+# exists. If it does, it checks to see if foo1 exists. It keeps incrementing
+# until it finds a variable that doesn't exist, then returns that variable
+# name.
+proc next_unused {type base} {
+   set num 0
+   while {
+      [switch -- $type {
+         command -
+         -command {
+            expr {[uplevel info commands $base$num] ne ""}
+         }
+         namespace -
+         -namespace {
+            uplevel namespace exists $base$num
+         }
+         variable -
+         -variable {
+            uplevel info exists $base$num
+         }
+         widget -
+         -widget -
+         window -
+         -window {
+            uplevel winfo exists $base$num
+         }
+         default {
+            error "Type must be one of: command, window, widget, variable"
+         }
+      }]
+   } {
+      incr num
+   }
+   return $base$num
+}
+
+# listify converts a stringy list into a real list. This isn't normally needed,
+# as Tcl normally can interpret a string list just fine. But sometimes, they
+# make eval choke.
+#
+# This:
+#     listify {
+#        -foo "Hello world"
+#        -bar "This is a test"
+#     }
+#
+# Will return:
+#     -foo {Hello world} -bar {This is a test}
+#
+# The first version would choke a call to eval because of the newlines; the
+# second would not.
+proc listify { str } {
+   return [lrange $str 0 end]
+}
+
+# default_opts - provides defaults to an options variable
+# This is intended to be used where one of the arguments to a proc is a
+# dictionary contianing option-value pairs. It makes sure that any dictionary
+# keys in the defaults list that are not present in the passed variable get
+# supplied with default values.
+proc default_opts { optVar args } {
+   upvar $optVar opt
+   set opt [dict merge $args $opt]
+}
+
+# list_to_comma_and - converts a list to a string with commas
+# list_to_comma_and {a} -> a
+# list_to_comma_and {a b} -> a and b
+# list_to_comma_and {a b c} -> a, b, and c
+# list_to_comma_and {a b c d} -> a, b, c, and d
+# etc.
+proc list_to_comma_and { lst } {
+   if { ! [llength $lst] } {
+      return
+   } elseif { [llength $lst] == 1 } {
+      return [lindex $lst 0]
+   } elseif { [llength $lst] == 2 } {
+      return [join $lst { and }]
+   } else {
+      return "[join [lrange $lst 0 end-1] {, }], and [lindex $lst end]"
+   }
+}
+
+##############################################################################
+
+# See http://wiki.tcl.tk/_search?S=curry for an explanation of the ideas behind
+# currying. Basically, curry makes a shorthand alias for a command.
+
+# Suppose we have a function like this:
+# proc mult {a b} {expr $a*$b}
+
+# Then, this:
+#   curry double mult 2
+# Lets us call this:
+#   double 5
+# Which returns 10
+
+# double is shorthand for "call mult with its first argument as 2"
+
+# This can dramatically shorten code where you have lots of excess repeated
+# verbiage, especially if you can condense some key phrases down to something
+# like a single punctuation command.
+
+# All curried aliases are at the global scope, as they use interp aliases. If a
+# curry is intended for short-term use, you can uncurry it using the uncurry
+# command. The curry/uncurry commands keep track of what's been curried. If you
+# curry something that has already been curried, then the next uncurry command
+# will restore the previous curry.
+
+# Uncurrying something that's not curried is a no-op. Uncurry won't work with
+# any arbitrary interp alias; it will only work with those interp aliases set
+# through curry.
+
+proc curry {new args} {
+    global __curry
+    dict lappend __curry $new $args
+    eval [list interp alias {} $new {}] $args
+}
+
+proc uncurry {name} {
+    global __curry
+    if {[info exists __curry] && [dict exists $__curry $name]} {
+        if {[llength [dict get $__curry $name]]} {
+            dict set __curry $name [lrange [dict get $__curry $name] 0 end-1]
+        }
+        if {[llength [dict get $__curry $name]]} {
+            eval [list interp alias {} $name {}] [lindex [dict get $__curry $name] end]
+        } else {
+            interp alias {} $name {}
+            dict unset __curry $name
+        }
+    }
+}
+
+# default varName value
+# This is used within a procedure to specify a default value for a parameter.
+# This is useful when the default value is dynamic.
+proc default {varName value} {
+    upvar $varName var
+    set caller [info level -1]
+    set caller_args [info args [lindex $caller 0]]
+    set arg_index [lsearch -exact $caller_args $varName]
+    incr arg_index
+    if {$arg_index > 0} {
+        if {[llength $caller] <= $arg_index} {
+            set var $value
+        }
+    } else {
+        error "Calling function does not have parameter $varName"
+    }
+}
+
+##############################################################################
+
+# copied from ADAPT: lib/combinators.tcl
+
+##
+# S -- the S combinator
+#
+# SYNOPSIS
+#   [S <f> <g> <x>]
+#
+# DESCRIPTION
+#   One of the two fundamental functional operators. Sometimes shows up
+#   in code from @http://wiki.tcl.tk/(the Tcler's Wiki).
+#
+#   For information, consult:
+#     * @(http://wiki.tcl.tk/1892)
+#
+#   See also: $K
+##
+proc S {f g x} {$f $x [$g $x]}
+
+##
+# K -- the K combinator
+#
+# SYNOPSIS
+#   [K <x> <y>]
+#
+# DESCRIPTION
+#   One of the two fundamental functional operators. Sometimes shows up
+#   in code from @http://wiki.tcl.tk/(the Tcler's Wiki).
+#
+#   For information, consult:
+#     * @(http://wiki.tcl.tk/1923)
+#
+#   See also: $S
+##
+proc K {x y} {set x}
+proc K* {x args} {set x}

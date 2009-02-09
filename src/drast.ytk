@@ -246,9 +246,8 @@ frame .rslider.bf2
 .rslider.mb.file add command -label "Reload drast.i" -command {
   exp_send "#include \"drast.i\"\r"
 }
- .rslider.mb.file add command -label "Reload drast.ytk" -command {
-  source "~/lidar-processing/src/drast.ytk"
-}
+.rslider.mb.file add command -label "Reload drast.ytk" \
+   -command [list source [file join $src_path drast.ytk]]
 
 .rslider.mb.file add separator 
 .rslider.mb.file add command -label "Dismiss" -command { destroy .rslider }

@@ -5,6 +5,8 @@ package require Tk
 package require Iwidgets
 package require Itcl
 
+source [file join $src_path misc.ytk]
+
 option add *SegmentedDataWindow.title "Data Segments" widgetDefault
 
 if {[info commands SegmentedDataWindow] eq ""} {
@@ -449,10 +451,6 @@ proc _segment_by_flightlines_post {yvar count_var} {
       launch_segmenteddatawindow $seg_vars \
          -title "Flightline Segments for $yvar"
    }
-}
-
-proc idle {cmd} {
-   after idle [list after 0 $cmd]
 }
 
 proc launch_segmenteddatawindow {segments args} {
