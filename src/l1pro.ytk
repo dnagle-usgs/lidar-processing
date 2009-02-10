@@ -830,6 +830,7 @@ if {[winfo exists .l1wid]} {
           append_varlist "exploredata"
           set mvar "exploredata"
           set curvar "exploredata"
+          set pro_var "exploredata";   # set as the variable to plot
           set ycmd "explorestart, \"$data_file_path\", $modes, win=$win_load,\
               search_str=\"$search\""
           if {$skipb} {
