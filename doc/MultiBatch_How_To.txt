@@ -3,6 +3,12 @@ $Id$
 Multi Batch Processing                              Richard Mitchell 2009-01-27
 ================================================================================
 
+Topics
+------
+mbatch_process()
+mbatch_process_dir()
+
+
 Purpose
 -------
 
@@ -46,7 +52,7 @@ server on completion.  The client is then ready to process the next tile
 as it becomes ready.
 
 The server and clients currently must be started manually by the ALPS user.
-This gives the user control over how many core to to use on a system and
+This gives the user control over how many core to use on a system and
 which systems can be used.
 
 
@@ -61,7 +67,7 @@ server and client.
 
 It is not necessary to start the server and clients before issuing an
 mbatch_process() command in ALPS, but no tiles will be processed until
-they are.  The server and clients can also be left running once started
+they are.  The server and clients can be left running once started
 as long as there is some anticipated need.  Their load on the system
 when not processing tiles should be minuscule.
 
@@ -117,8 +123,8 @@ accepted and completed 0 jobs.
 ALPS
 ----
 
-ALPS is used to create the jobs for the server to distribute to the clients
-to process through the mbatch_process() command.  mbatch_process() accepts the
+ALPS creates the jobs for the server to distribute to the clients to
+process through the mbatch_process() command.  mbatch_process() accepts the
 same arguments as batch_process() and also a few options from batch_rcf().
 The latter addition allows a tile to have the rcf processing done in the
 same step as the normal batch processing.  A typical command could look
@@ -129,7 +135,7 @@ like:
 The new option, b_rcf, indicates that we want to include the rcf processing.
 The options that come after are standard batch_rcf() options.
 
-In the above example, the user will then be prompted to drag out a bounding
+In the above example the user will then be prompted to drag out a bounding
 box to indicate the area to be processed.  A yellow grid will indicate the
 total 2K squares that have been selected for processing.  As ALPS generates
 a file for each tile, a blue border will be drawn inside the tile and will
@@ -139,3 +145,21 @@ pending (not yet assigned to a client by the server) jobs is limited.  As
 jobs are completed, new tiles will turn blue until all tiles are done.
 Only tiles that are occupied with a portion of the flight line will be
 processed, all other (empty) tiles will remain yellow.
+
+
+mbatch_process_dir()
+====================
+
+mbatch_process_dir() works basically the same as mbatch_process() in terms
+of distributing the processing to be done.  The difference is that
+mbatch_process_dir() processes the files in an existing output directory.
+This is to allow mbatch_process() to be run for multiple days without doing
+batch_rcf().  When all of the days have been completed, mbatch_process_dir()
+is then run on the output directory to batch_rcf() the data.
+
+Example:
+
+  mbatch_process_dir, "/data/1/output/20081002/", searchstr="*v.pbd", buf=700,w=200,no_rcf=3, mode=3, merge=1,clean=1,rcfmode=1, onlyupdate=1
+
+
+
