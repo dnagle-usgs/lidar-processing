@@ -51,12 +51,7 @@ func save_vars (filename, tile=) {
    cmd = swrite(format="mv %s %s", tfn, filename);
    f = createb( tfn );
    if ( ! get_typ ) get_typ = 0;
-   if ( tile == 1 ) {
-      // info, get_typ;
-      // info, auto;
-      // save_dir;
-      // zone_s;
-
+   if ( tile == 1 ) {      // stuff for batch_process
       save, f, user_pc_NAME;
       save, f, q, r, min_e, max_e, min_n, max_n;
       save, f, get_typ, typ, auto;
@@ -68,7 +63,7 @@ func save_vars (filename, tile=) {
       save, f, pbd;
       save, f, update;
    }
-   if ( tile == 2 ) {
+   if ( tile == 2 ) {      // stuff for batch_rcf only;
       save, f, rcf_only;   // flag value for uber_process_tile
       save, f, ofn;
       save, f, buf, w, no_rcf;
@@ -80,8 +75,9 @@ func save_vars (filename, tile=) {
 
    } else {
 
-      save, f, pnav_filename;
-      save, f, tans, pnav, edb, edb_files;
+      save, f, edb_filename, pnav_filename, ins_filename;
+      // save, f, tans, pnav, edb;    // save filenames instead
+      save, f, edb_files;
       save, f, data_path;
       save, f, soe_day_start, eaarl_time_offset;
       save, f, ops_conf;
@@ -111,18 +107,42 @@ func get_tld_names( q ) {
  }
 
 func unpackage_tile (fn=,host= ) {
-   extern gga;
+   extern gga, pnav;
    if ( is_void(host) ) host="localhost"
    write, format="Unpackage_tile: %s %s\n", fn, host;
    f = openb(fn);
    restore, f;
    close, f;
-   gga = pnav;
+   // gga = pnav;
    if ( ! strmatch(host, "localhost") ) {
+      // We need to rsync the edb, pnav, and ins files from the server
+
+      cmd = swrite(format="rsync -PHaqR %s:%s /", host, edb_filename);
+      write, cmd;
+      system, cmd;
+
+      cmd = swrite(format="rsync -PHaqR %s:%s /", host, pnav_filename);
+      write, cmd;
+      system, cmd;
+
+      cmd = swrite(format="rsync -PHaqR %s:%s /", host, ins_filename);
+      write, cmd;
+      system, cmd;
+
       afn  = swrite(format="%s.files", fn);
       af = open(afn, "w");
       write, af, format="%s\n", data_path;
+   }
 
+   oc = ops_conf;    // this gets wiped out when loading files
+
+   load_edb,  fn=edb_filename;
+   pnav = rbpnav( fn=pnav_filename);
+   load_iexpbd,  ins_filename;
+
+   ops_conf = oc;
+
+   if ( ! strmatch(host, "localhost") ) {
      // Get list of edb_files just for this tile
      mytld = get_tld_names(q);
      for(myi=1; myi<=numberof(mytld); ++myi) {
@@ -145,7 +165,8 @@ func unpackage_tile (fn=,host= ) {
 func load_vars(fn) {
    unpackage_tile, fn=fn  // this avoids returning an array to the cmdline
    if ( _ytk ) {
-      tkcmd, swrite(format="set data_file_path \"%s\" \n",data_path);
+      tkcmd, swrite(format="set data_file_path \"%s\" \n",data_path); // for all else
+      tkcmd, swrite(format="set data_path \"%s\" \n",data_path);      // for dmars
 
 ///////////////////
       eaarl_time_offset = 0;	// need this first, cuz get_erast uses it.
@@ -170,7 +191,7 @@ func load_vars(fn) {
          soe_stop  = edb(data_ends).seconds;
 // change the time record to seconds of the day
 //   edb.seconds -= time2soe( [ year, day, 0, 0,0,0 ] );
-         soe_day_start = time2soe( [ year, day, 0, 0,0,0 ] ); 
+         soe_day_start = time2soe( [ year, day, 0, 0,0,0 ] );
          mission_duration = ( edb.seconds(q(0)) - edb.seconds(q(1)))/ 3600.0 ;
       } else {
          soe_day_start = 0;
@@ -185,7 +206,7 @@ func load_vars(fn) {
 
 ///////////////////
 
-      tkcmd,swrite(format="set edb(gb) %6.3f\n", 
+      tkcmd,swrite(format="set edb(gb) %6.3f\n",
          float(edb.raster_length)(sum)*1.0e-9);
 
       tkcmd,swrite(format="set edb(number_of_files) %d", numberof(edb_files) );
@@ -965,41 +986,19 @@ Added server/client support (2009-01) Richard Mitchell
    if ( now == 0 ) {
       // wait until no more jobs to be farmed out
       do {
-         mya1 = check_space(wmark=1024, dir="/tmp/batch/jobs");
+         mya1 = check_space(wmark=8, dir="/tmp/batch/jobs");
          if ( mya1(2) > 0 ) write,format="%d job(s) to be farmed out.\n", mya1(2);
          show_progress, color="green";
 
-         mya2 = check_space (wmark=1024, dir="/tmp/batch/farm");
-         if ( mya2(2) > 0 ) write,format="%d job(s) to be retrieved.\n", mya2(2);
+         mya2 = check_space (wmark=8, dir="/tmp/batch/farm");
+         if ( mya2(2) > 0 ) write,format="%d job(s) to be retrieved.\n",  mya2(2);
          show_progress, color="green";
 
-         mya3 = check_space (wmark=1024, dir="/tmp/batch/work");
-         if ( mya3(2) > 0 ) write,format="%d job(s) to be finished.\n", mya3(2);
+         mya3 = check_space (wmark=8, dir="/tmp/batch/work");
+         if ( mya3(2) > 0 ) write,format="%d job(s) to be finished.\n",   mya3(2);
          cnt = mya1(2) + mya2(2) + mya3(2);
 
       } while ( cnt(1) > 0 );
-
-      /*
-      // wait until all jobs finished.
-      rj = 99;
-      do {
-         mya1 = check_space(wmark=1024, dir="/tmp/batch/work");
-
-         // XYZZY - Can we replace this with check_space?  2009-01-29
-         // system, "./waiter.pl -noloop 1024 /tmp/batch/work > /tmp/batch/.space"
-         // f = open("/tmp/batch/.space");
-
-         // space= fc= array(0, 1 ); // max rows per column 
-         // read, f, space, fc
-         // close,f;
-         // system, "rm /tmp/batch/.space";
-         // CHANGED fc(1) to mya1(2)
-         // CHANGED space(1) to mya1(1)
-         if ( mya1(2) != rj ) write,format="%d job(s) to be finished.\n", mya1(2);
-         rj = mya1(2);
-         show_progress, color="green";
-      } while ( mya1(1) > 1024 );
-      */
    }
 
    // stop the timer

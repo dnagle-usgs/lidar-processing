@@ -200,6 +200,10 @@ func load_ins(fn, &head) {
   See also: load_iexpbd
 */
   extern gps_time_correction;
+  extern ins_filename; // so we can use it with mbatch_process
+
+  if ( !is_void( fn ) ) ins_filename = fn;
+
   f = openb(fn);
   head = f.iex_head;
   nav = f.iex_nav;
