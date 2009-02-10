@@ -70,7 +70,7 @@ func save_vars (filename, tile=) {
       save, f, mode;
       save, f, merge, clean;
       save, f, rcfmode;
-      save, f, update;    // process_tile changes this back to onlyupdate
+      save, f, update;     // process_tile changes this back to onlyupdate
       save, f, write_merge;
 
    } else {
@@ -103,7 +103,7 @@ func get_tld_names( q ) {
    myedb = edb(myrar).file_number;           // get list of file numbers for region
    myedb = myedb(unique(myedb));             // get unique file numbers
 
-   return ( edb_files(myedb).name );        // return list of names
+   return ( edb_files(myedb).name );         // return list of names
  }
 
 func unpackage_tile (fn=,host= ) {
@@ -113,7 +113,6 @@ func unpackage_tile (fn=,host= ) {
    f = openb(fn);
    restore, f;
    close, f;
-   // gga = pnav;
    if ( ! strmatch(host, "localhost") ) {
       // We need to rsync the edb, pnav, and ins files from the server
 
@@ -134,7 +133,7 @@ func unpackage_tile (fn=,host= ) {
       write, af, format="%s\n", data_path;
    }
 
-   oc = ops_conf;    // this gets wiped out when loading files
+   oc = ops_conf;    // this gets wiped out by load_iexpbd, save now to restore later
 
    load_edb,  fn=edb_filename;
    pnav = rbpnav( fn=pnav_filename);
@@ -143,7 +142,7 @@ func unpackage_tile (fn=,host= ) {
    ops_conf = oc;
 
    if ( ! strmatch(host, "localhost") ) {
-     // Get list of edb_files just for this tile
+     // Get list of edb_files for this tile
      mytld = get_tld_names(q);
      for(myi=1; myi<=numberof(mytld); ++myi) {
          write, af, format="%s\n", mytld(myi);
@@ -164,63 +163,6 @@ func unpackage_tile (fn=,host= ) {
 // An easier hook for someone restoring a previous session.
 func load_vars(fn) {
    unpackage_tile, fn=fn  // this avoids returning an array to the cmdline
-   if ( _ytk ) {
-      tkcmd, swrite(format="set data_file_path \"%s\" \n",data_path); // for all else
-      tkcmd, swrite(format="set data_path \"%s\" \n",data_path);      // for dmars
-
-///////////////////
-      eaarl_time_offset = 0;	// need this first, cuz get_erast uses it.
-      eaarl_time_offset = edb(1).seconds - decode_raster( get_erast(rn=1) ).soe;
-
-
-
-// locate the first time value that appears to be set to the gps
-      q = where( edb.seconds > time2soe( [2000,0,0,0,0,0] )) ;
-
-// If valid soe time then do this.
-      if ( numberof(q) > 0 ) {
-         write,"*****  TIME contains date information ********"
-//////  edb.seconds += eaarl_time_offset ;	// adjust time to gps
-         data_begins = q(1);
-         data_ends   = q(0);
-         year = soe2time( edb(data_begins).seconds ) (1);
-         day  = soe2time( edb(data_begins).seconds ) (2);
-         soe_start = 0;
-         soe_stop  = 0;
-         soe_start = edb(data_begins).seconds;
-         soe_stop  = edb(data_ends).seconds;
-// change the time record to seconds of the day
-//   edb.seconds -= time2soe( [ year, day, 0, 0,0,0 ] );
-         soe_day_start = time2soe( [ year, day, 0, 0,0,0 ] );
-         mission_duration = ( edb.seconds(q(0)) - edb.seconds(q(1)))/ 3600.0 ;
-      } else {
-         soe_day_start = 0;
-         data_begins = 1;
-         data_ends   = 0;
-         soe_start = edb(data_begins).seconds;
-         soe_stop  = edb(data_ends).seconds;
-         year = 0;
-         day  = 0;
-         mission_duration = (edb.seconds(0) - edb.seconds(1)) / 3600.0 ;
-      }
-
-///////////////////
-
-      tkcmd,swrite(format="set edb(gb) %6.3f\n",
-         float(edb.raster_length)(sum)*1.0e-9);
-
-      tkcmd,swrite(format="set edb(number_of_files) %d", numberof(edb_files) );
-      tkcmd, swrite(format="set edb(year) %d", year);
-      tkcmd, swrite(format="set edb(day)  %d",  day);
-      tkcmd, swrite(format="set edb(data_begins)  %d",  data_begins);
-      tkcmd, swrite(format="set edb(data_ends)    %d",  data_ends);
-      tkcmd, swrite(format="set edb(mission_duration)  %f",  mission_duration);
-      tkcmd, swrite(format="set edb(soe)  %d",  soe_day_start);
-      tkcmd, swrite(format="set edb(eaarl_time_offset)  %d",  eaarl_time_offset);
-      tkcmd, swrite(format="set edb(path)  %s",  data_path);
-      tkcmd, swrite(format="set edb(idx_file)  %s",  fn);
-      tkcmd, swrite(format="set edb(nbr_rasters)  %d",  numberof(edb) );
-   }
 }
 
 func call_process_tile( junk=, host= ) {
@@ -235,7 +177,7 @@ func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, rcf
    if (is_array(r) || rcf_only == 1 ) {
 
       if ( rcf_only == 0 ) {
-         // proceess_tile will return a 0 if the tile needs to be updated
+         // process_tile will return 0 if the tile needs to be updated
          update = process_tile (q=q, r=r, typ=typ, min_e=min_e, max_e=max_e, min_n=min_n, max_n=max_n, update=update, host=host );
       }
 
@@ -272,7 +214,6 @@ func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, rcf
 func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= ) {
    extern ofn;
    if ( is_void(host) ) host="localhost";
-   // if (is_array(r)) {      // XYZZY - we don't need this check anymore - 2009-01-12, rwm
       if (get_typ) {
          typ=[]
          typ_idx = where(tile.min_e == min_e);
@@ -333,7 +274,6 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
             update=0;  // if the tile was updated, force rcf to process.
          }
 
-         // if ( udpate ) {}
          mkdir, swrite(format="%si_e%d_n%d_%s", save_dir, idx_e, idx_n, zone_s);
          mkdir, swrite(format="%si_e%d_n%d_%s/t_e%6.0f_n%7.0f_%s", save_dir, idx_e, idx_n, zone_s, min_e, max_n, zone_s);
          indx_num = where(mtdt_path == swrite(format="%si_e%d_n%d_%s/", save_dir, idx_e, idx_n, zone_s));
@@ -548,23 +488,18 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
             }
          }
       }
-   // } else {
-   //    write, "No Flightlines found in this block."
-   // }
    return update;
 }
 
 // show progress of jobs completed.
 func show_progress(color=) {
    if ( is_void(color) ) color= "red";
-   // XYZZY: We need to trap somehow that the system didn't work, or we'll fail on the open
    system, "./show_tiles.pl -rm /tmp/batch/done > /tmp/batch/.tiles";
    f = open("/tmp/batch/.tiles");
 
    col1= col2= col3= col4= array(0, 1000 /* max rows per column */ );
    read, f, col1, col2, col3, col4;
    close,f;
-   // system, "rm /tmp/batch/.tiles";
 
    col1 = col1(where(col1));  // Throw away nulls
    col2 = col2(where(col2));  // Throw away nulls
@@ -577,7 +512,7 @@ func show_progress(color=) {
       pldj, col2, col3, col2, col4, color=color
       pldj, col2, col4, col1, col4, color=color
    }
-   window,6;  // seems to help in getting the sgtatus plot updated.
+   window,6;  // seems to help in getting the status plot updated.
 }
 
 // Check space in batch area
@@ -589,7 +524,6 @@ func check_space(wmark=, dir=) {
    space= fc= array(0, 1 /* max rows per column */ );
    read, f, space, fc
    close,f;
-   // system, "rm /tmp/batch/.space";
    return ([space, fc]);
 }
 
@@ -717,7 +651,7 @@ Added server/client support (2009-01) Richard Mitchell
    if (is_void(win)) win = 6;
    window, win;
 
-   // Create output directory for tilekkk cmd files:
+   // Create output directory for tile cmd files:
    system, "mkdir -p /tmp/batch/jobs";
 
    // Get username and pc name of person running batch_process
@@ -1236,7 +1170,6 @@ Original amar nayegandhi. Started 12/06/02.
    if (is_void(rcfmode)) rcfmode=2;
    if (interactive) {plottriag = 1; datawin=5;}
    if (is_void(merge)) merge=1;
-   //if (is_void(searchstr)) searchstr="*_v.pbd";
    if (is_void(searchstr)) searchstr="*.pbd";
 
 
