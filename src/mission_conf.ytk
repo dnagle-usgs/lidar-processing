@@ -3,9 +3,13 @@
 # $Id$
 
 package require dict
-package require json
 package require struct::set
 package require fileutil
+
+if {[catch [list package require json]]} {
+    puts "No JSON"
+    return
+}
 
 source [file join $src_path gui_procs.ytk]
 source [file join $src_path misc.ytk]
