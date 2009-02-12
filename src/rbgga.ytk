@@ -50,7 +50,7 @@ proc rbgga_menu { {mode "eaarl"} } {
 
  set _map(window) 6
  Label $mw.g1.owinlbl -text "in Win:"
- SpinBox $mw.g1.owin -justify center -range {0 7 1} \
+ SpinBox $mw.g1.owin -justify center -range {0 63 1} \
          -width 2 -textvariable _map(window)
 
  grid $mw.g1.owinlbl $mw.g1.owin -sticky ew

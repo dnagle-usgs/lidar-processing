@@ -192,10 +192,10 @@ proc ::plot::menu { } {
    grid $f -sticky ewn
 
    label $f.labWinFrom -text "From:"
-   SpinBox $f.spnWinFrom -justify center -range {0 7 1} -width 5 \
+   SpinBox $f.spnWinFrom -justify center -range {0 63 1} -width 5 \
       -textvariable ::plot::g::limits_copy_from
    label $f.labWinTo -text "To:"
-   SpinBox $f.spnWinTo -justify center -range {0 7 1} -width 5 \
+   SpinBox $f.spnWinTo -justify center -range {0 63 1} -width 5 \
       -textvariable ::plot::g::limits_copy_to
    Button $f.butApply -text "Apply" -command ::plot::copy_limits
 
@@ -268,7 +268,7 @@ proc ::plot::menu { } {
    grid $f -sticky wen
 
    label $f.labWindow -text "In Window:"
-   SpinBox $f.spnWindow -justify center -range {0 7 1} -textvariable ::_map(window)
+   SpinBox $f.spnWindow -justify center -range {0 63 1} -textvariable ::_map(window)
    grid $f.labWindow $f.spnWindow
    grid $f.labWindow -sticky e
 

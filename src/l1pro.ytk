@@ -810,7 +810,7 @@ if {[winfo exists .l1wid]} {
         }
 
       Label .l1map.2.winl -text "Win:"
-      SpinBox .l1map.2.win -justify center -range {0 7 1} \
+      SpinBox .l1map.2.win -justify center -range {0 63 1} \
         -width 2 -textvariable win_load
 
       checkbutton .l1map.2.skipb -text "Use This Skip:" -variable skipb \
@@ -1436,7 +1436,7 @@ if {[winfo exists .l1wid]} {
         -textvariable var -text $var
 
       Label .l1bias.1.winl -text "in window:"
-      SpinBox .l1bias.1.win -justify center -range {0 7 1} -width 2 \
+      SpinBox .l1bias.1.win -justify center -range {0 63 1} -width 2 \
         -textvariable win_no
 
       Label .l1bias.1.transl -text "Then click"
@@ -1496,7 +1496,7 @@ if {[winfo exists .l1wid]} {
         }
 
       Label .l1bias.3.winl -text "in win:"
-      SpinBox .l1bias.3.win -justify center -range {0 7 1} \
+      SpinBox .l1bias.3.win -justify center -range {0 63 1} \
         -width 2 -textvariable flwin
 
       Button .l1bias.3.pick -text "Select Flightlines" \
@@ -1690,7 +1690,7 @@ if {[winfo exists .l1wid]} {
     -values "Batch Single"
 
   Label .l1wid.bf4.1.lw -text "in Win:"
-  SpinBox .l1wid.bf4.1.sw -justify center -range {0 7 1} \
+  SpinBox .l1wid.bf4.1.sw -justify center -range {0 63 1} \
     -width 2 -textvariable _map(window)
 
   checkbutton .l1wid.bf4.2.cen -variable usecentroid \
@@ -1772,7 +1772,7 @@ if {[winfo exists .l1wid]} {
 
 
   Label .l1wid.bf45.p.2 -text "in Win:"
-  SpinBox .l1wid.bf45.p.3 -justify center -range {0 7 1} \
+  SpinBox .l1wid.bf45.p.3 -justify center -range {0 63 1} \
     -width 2 -textvariable win_no
 
   proc display_type {} {
