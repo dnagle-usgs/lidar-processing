@@ -919,20 +919,7 @@ Added server/client support (2009-01) Richard Mitchell
   }
    if ( now == 0 ) {
       // wait until no more jobs to be farmed out
-      do {
-         mya1 = check_space(wmark=8, dir="/tmp/batch/jobs");
-         if ( mya1(2) > 0 ) write,format="%d job(s) to be farmed out.\n", mya1(2);
-         show_progress, color="green";
-
-         mya2 = check_space (wmark=8, dir="/tmp/batch/farm");
-         if ( mya2(2) > 0 ) write,format="%d job(s) to be retrieved.\n",  mya2(2);
-         show_progress, color="green";
-
-         mya3 = check_space (wmark=8, dir="/tmp/batch/work");
-         if ( mya3(2) > 0 ) write,format="%d job(s) to be finished.\n",   mya3(2);
-         cnt = mya1(2) + mya2(2) + mya3(2);
-
-      } while ( cnt(1) > 0 );
+      batch_cleanup;
    }
 
    // stop the timer
@@ -953,6 +940,29 @@ Added server/client support (2009-01) Richard Mitchell
    write, format="Time Statistics in minutes: \n CPU    :%12.4f \n System :%12.4f \n Wall   :%12.4f\n",t(1), t(2), t(3);
    write, format="Walltime: %f: %f - %f\n", myt1-myt0, myt1, myt0;
 
+}
+
+// This is called after mbatch_process() mbatch_process_dir() generates
+// all of the tiles and then monitors the status of the work completed,
+// coloring completed tiles green.
+// This can also be called manually if ALPS gets restarted.
+func batch_cleanup ( junk ) {
+   // wait until no more jobs to be farmed out
+   do {
+      mya1 = check_space(wmark=8, dir="/tmp/batch/jobs");
+      if ( mya1(2) > 0 ) write,format="%d job(s) to be farmed out.\n", mya1(2);
+      show_progress, color="green";
+
+      mya2 = check_space (wmark=8, dir="/tmp/batch/farm");
+      if ( mya2(2) > 0 ) write,format="%d job(s) to be retrieved.\n",  mya2(2);
+      show_progress, color="green";
+
+      mya3 = check_space (wmark=8, dir="/tmp/batch/work");
+      if ( mya3(2) > 0 ) write,format="%d job(s) to be finished.\n",   mya3(2);
+      cnt = mya1(2) + mya2(2) + mya3(2);
+
+   } while ( cnt(1) > 0 );
+   write, "No batch jobs available.";
 }
 
 // process an output directory instead of a flightline.
@@ -1029,20 +1039,7 @@ write,format="For      : %s\n", ss;
    }
 
    // loop to wait until all jobs are done.
-   do {
-      mya1 = check_space(wmark=8, dir="/tmp/batch/jobs");
-      if ( mya1(2) > 0 ) write,format="%3d job(s) to be farmed out for rcf.\n", mya1(2);
-      show_progress, color="green";
-
-      mya2 = check_space(wmark=8, dir="/tmp/batch/farm");
-      if ( mya2(2) > 0 ) write,format="%3d job(s) to be retrieved for rcf.\n", mya2(2);
-
-      mya3 = check_space(wmark=8, dir="/tmp/batch/work");
-      if ( mya3(2) > 0 ) write,format="%3d job(s) in progress for rcf.\n", mya3(2);
-
-      cnt   = mya1(2) + mya2(2) + mya3(2);
-   } while ( cnt(1) > 0 );
-
+   batch_cleanup;
    write,"Batch RCF Process Complete.";
 }
 
