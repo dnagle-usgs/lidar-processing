@@ -310,6 +310,9 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
             write, f, format="yaw_bias: %f\n",ops_conf.yaw_bias;
             write, f, format="scan_bias: %f\n",ops_conf.scan_bias;
             write, f, format="range_biasM: %f\n",ops_conf.range_biasM;
+            write, f, format="chn1_range_bias: %f\n", ops_conf.chn1_range_bias;
+            write, f, format="chn2_range_bias: %f\n", ops_conf.chn2_range_bias;
+            write, f, format="chn3_range_bias: %f\n", ops_conf.chn3_range_bias;
 
             close, f;
          }
@@ -319,7 +322,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
 
          // if you get an error here, it is most likely because you decided to use 'i'
          // elsewhere.
-         write, format="RWM: IJ(%d): %d / %d: %s\n", i, ij, numberof(iidx_path), indx_path(i);
+         // write, format="RWM: IJ(%d): %d / %d: %s\n", i, ij, numberof(iidx_path), indx_path(i);
          if (mtdt_path(ij) == indx_path(i)) {
             f = open(mtdt_file(ij), "a");
             if (cmdfile) write, f, format="Processed Data Tile %9.2f %9.2f %9.2f %9.2f\n",min_e, max_e, min_n, max_n;
@@ -872,6 +875,10 @@ Added server/client support (2009-01) Richard Mitchell
          write, f, format="yaw_bias: %f\n",ops_conf.yaw_bias;
          write, f, format="scan_bias: %f\n",ops_conf.scan_bias;
          write, f, format="range_biasM: %f\n",ops_conf.range_biasM;
+         write, f, format="chn1_range_bias: %f\n", ops_conf.chn1_range_bias;
+         write, f, format="chn2_range_bias: %f\n", ops_conf.chn2_range_bias;
+         write, f, format="chn3_range_bias: %f\n", ops_conf.chn3_range_bias;
+
          close, f;
       }
    }
