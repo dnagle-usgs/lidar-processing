@@ -190,7 +190,7 @@ func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, rcf
             // XYZZY - This will result in errors from rsync when the
             // files don't exist on the server (probably most of the time)
             write, format="RCF: rsyncing %s:%s\n", host, mypath;
-            cmd = swrite(format="rsync -PHaqR %s:%s /", host, mypath);
+            cmd = swrite(format="rsync -PHauqR %s:%s /", host, mypath);
             write,  cmd;
             system, cmd;
             write, "rsync complete";
@@ -491,6 +491,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
             }
          }
       }
+
    return update;
 }
 
