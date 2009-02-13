@@ -211,3 +211,196 @@ func tk_sdw_define_region_variables(obj, ..) {
    }
 }
 
+func gather_data_stats(data) {
+   stats = h_new();
+
+   // First, pull stats out of the data itself:
+
+   // elevation
+   stat_temp = h_new();
+   qs = quartiles(data.elevation);
+   h_set, stat_temp, "q1", qs(1)/100.;
+   h_set, stat_temp, "med", qs(2)/100.;
+   h_set, stat_temp, "q3", qs(3)/100.;
+   h_set, stat_temp, "min", data.elevation(min)/100.;
+   h_set, stat_temp, "max", data.elevation(max)/100.;
+   h_set, stat_temp, "avg", data.elevation(avg)/100.;
+   h_set, stat_temp, "rms", data.elevation(rms)/100.;
+   h_set, stats, "elevation", stat_temp;
+
+   if(structof(data) == GEO) {
+      temp_data = data.elevation + data.depth;
+      stat_temp = h_new();
+      qs = quartiles(temp_data.elevation);
+      h_set, stat_temp, "q1", qs(1)/100.;
+      h_set, stat_temp, "med", qs(2)/100.;
+      h_set, stat_temp, "q3", qs(3)/100.;
+      h_set, stat_temp, "min", temp_data.elevation(min)/100.;
+      h_set, stat_temp, "max", temp_data.elevation(max)/100.;
+      h_set, stat_temp, "avg", temp_data.elevation(avg)/100.;
+      h_set, stat_temp, "rms", temp_data.elevation(rms)/100.;
+      h_set, stats, "bathy", stat_temp;
+   }
+
+   if(structof(data) == VEG__) {
+      stat_temp = h_new();
+      qs = quartiles(data.lelv);
+      h_set, stat_temp, "q1", qs(1)/100.;
+      h_set, stat_temp, "med", qs(2)/100.;
+      h_set, stat_temp, "q3", qs(3)/100.;
+      h_set, stat_temp, "min", data.lelv(min)/100.;
+      h_set, stat_temp, "max", data.lelv(max)/100.;
+      h_set, stat_temp, "avg", data.lelv(avg)/100.;
+      h_set, stat_temp, "rms", data.lelv(rms)/100.;
+      h_set, stats, "bathy", stat_temp;
+   }
+
+   // Now attempt to extract from tans
+   working_tans = tk_dsw_get_data(data, "dmars", "tans", "somd");
+   if(numberof(working_tans)) {
+      // roll
+      stat_temp = h_new();
+      qs = quartiles(working_tans.roll);
+      h_set, stat_temp, "q1", qs(1);
+      h_set, stat_temp, "med", qs(2);
+      h_set, stat_temp, "q3", qs(3);
+      h_set, stat_temp, "min", working_tans.roll(min);
+      h_set, stat_temp, "max", working_tans.roll(max);
+      h_set, stat_temp, "avg", working_tans.roll(avg);
+      h_set, stat_temp, "rms", working_tans.roll(rms);
+      h_set, stats, "roll", stat_temp;
+
+      // pitch
+      stat_temp = h_new();
+      qs = quartiles(working_tans.pitch);
+      h_set, stat_temp, "q1", qs(1);
+      h_set, stat_temp, "med", qs(2);
+      h_set, stat_temp, "q3", qs(3);
+      h_set, stat_temp, "min", working_tans.pitch(min);
+      h_set, stat_temp, "max", working_tans.pitch(max);
+      h_set, stat_temp, "avg", working_tans.pitch(avg);
+      h_set, stat_temp, "rms", working_tans.pitch(rms);
+      h_set, stats, "pitch", stat_temp;
+
+      // heading?
+   }
+
+   // Now attempt to extract from pnav
+   working_pnav = tk_dsw_get_data(data, "pnav", "pnav", "sod");
+   if(numberof(working_pnav)) {
+      // pdop
+      stat_temp = h_new();
+      qs = quartiles(working_pnav.pdop);
+      h_set, stat_temp, "q1", qs(1);
+      h_set, stat_temp, "med", qs(2);
+      h_set, stat_temp, "q3", qs(3);
+      h_set, stat_temp, "min", working_pnav.pdop(min);
+      h_set, stat_temp, "max", working_pnav.pdop(max);
+      h_set, stat_temp, "avg", working_pnav.pdop(avg);
+      h_set, stat_temp, "rms", working_pnav.pdop(rms);
+      h_set, stats, "pdop", stat_temp;
+
+      // alt
+      stat_temp = h_new();
+      qs = quartiles(working_pnav.alt);
+      h_set, stat_temp, "q1", qs(1);
+      h_set, stat_temp, "med", qs(2);
+      h_set, stat_temp, "q3", qs(3);
+      h_set, stat_temp, "min", working_pnav.alt(min);
+      h_set, stat_temp, "max", working_pnav.alt(max);
+      h_set, stat_temp, "avg", working_pnav.alt(avg);
+      h_set, stat_temp, "rms", working_pnav.alt(rms);
+      h_set, stats, "alt", stat_temp;
+   }
+
+   return stats;
+}
+
+func tk_dsw_send_stats(obj, var, data) {
+   stats = gather_data_stats(data);
+   json = yorick2json(stats);
+   tkcmd, swrite(format="%s set_stats {%s} {%s}", obj, var, json);
+}
+
+func tk_dsw_get_data(data, type, var, sod_field) {
+// Extract either tans or pnav data for a set of mission days for a given data
+// tk_dsw_get_data(data, "dmars", "tans");
+// tk_dsw_get_data(data, "pnav", "pnav");
+   extern tans, pnav;
+
+   // First, we need to figure out what date or dates are represented by the data
+   segment_ptrs = split_by_fltline(data);
+   dates = [];
+   for(i = 1; i <= numberof(segment_ptrs); i++) {
+      temp = *segment_ptrs(i);
+      ymd = soe2ymd(temp.soe(min));
+      grow, dates, swrite(format="%04d-%02d-%02d", ymd(1), ymd(2), ymd(3));
+      ymd = soe2ymd(temp.soe(max));
+      grow, dates, swrite(format="%04d-%02d-%02d", ymd(1), ymd(2), ymd(3));
+   }
+   dates = set_remove_duplicates(dates);
+
+   // Now, we backup tans-related variables, then get stats for each mission day
+   env_backup = missiondata_wrap(type);
+   // heading gets handled specially
+   working = [];
+   for(i = 1; i <= numberof(dates); i++) {
+      if(mission_has(type + " file", date=dates(i))) {
+         missiondata_load, type, date=dates(i);
+         if(! numberof(symbol_def(var)))
+            continue;
+         for(j = 1; j <= numberof(segment_ptrs); j++) {
+            temp = *segment_ptrs(j);
+
+            // Make sure we're only working with data that matches the current dmars
+            ymd = soe2ymd(temp.soe(min));
+            datemin = swrite(format="%04d-%02d-%02d", ymd(1), ymd(2), ymd(3));
+            ymdmin = ymd;
+            ymd = soe2ymd(temp.soe(max));
+            datemax = swrite(format="%04d-%02d-%02d", ymd(1), ymd(2), ymd(3));
+            ymdmax = ymd;
+
+            if(datemin == dates(i) || datemax == dates(i)) {
+               if(datemin == datemax) {
+                  // temp is fine! do nothing
+               } else {
+                  // only part of temp is good
+                  break_point = ymd2soe(ymdmax(1), ymdmax(2), ymdmax(3));
+                  if(datemin == dates(i)) {
+                     // early part is good
+                     w = where(temp.soe < break_point);
+                     temp = temp(w);
+                  } else {
+                     // later part is good
+                     w = where(break_point <= temp.soe);
+                     temp = temp(w);
+                  }
+               }
+            } else {
+               // completely wrong day
+               temp = [];
+            }
+
+            if(!numberof(temp))
+               continue;
+
+            // At this points, temp's data should fall within dmars' range
+
+            sodmin = soe2sod(temp.soe(min));
+            sodmax = soe2sod(temp.soe(max));
+            ex_data = symbol_def(var);
+            w = where(
+               (sodmin <= get_member(ex_data, sod_field)) &
+               (get_member(ex_data, sod_field) <= sodmax)
+            );
+            if(!numberof(w))
+               continue;
+
+            grow, working, ex_data(w);
+         }
+      }
+   }
+   missiondata_unwrap, env_backup;
+
+   return working;
+}

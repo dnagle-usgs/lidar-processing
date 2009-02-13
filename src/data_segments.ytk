@@ -6,6 +6,7 @@ package require Iwidgets
 package require Itcl
 
 source [file join $src_path misc.ytk]
+source [file join $src_path data_stats.ytk]
 
 option add *SegmentedDataWindow.title "Data Segments" widgetDefault
 
@@ -151,7 +152,7 @@ itcl::body SegmentedDataWindow::constructor {args} {
       -from 0 -to $itk_option(-maxwin) -width 2
 
    button $f.btnStats -text "Statistics" \
-      -state disabled
+      -command [itcl::code $this launch_stats]
 
    grid $f.btnPlot $f.spnWin x $f.btnStats x $f.btnMerge $f.entMergeVar \
       -sticky we
@@ -340,6 +341,20 @@ itcl::body SegmentedDataWindow::merge_selected {} {
 }
 
 itcl::body SegmentedDataWindow::launch_stats {args} {
+   set seg_vars [list]
+   for {set idx 1} {$idx <= $_count} {incr idx} {
+      if {$_segment($idx,use)} {
+         lappend seg_vars $_segment($idx,var)
+      }
+   }
+
+   if {[llength $seg_vars]} {
+      launch_datastatswindow $seg_vars
+   } else {
+      tk_messageBox -icon warning \
+         -message "No variables were selected." \
+         -type ok
+   }
 }
 
 itcl::body SegmentedDataWindow::define_region {} {

@@ -543,7 +543,8 @@ func missiondata_load(type, date=) {
             missiondata_unwrap, cache("pnav");
         } else {
             if(mission_has("pnav file", date=date)) {
-                pnav = rbpnav(fn=mission_get("pnav file", date=date));
+                extern pnav;
+                pnav = rbpnav(fn=mission_get("pnav file", date=date), verbose=0);
                 if(cache_enabled) {
                     h_set, cache, "pnav", missiondata_wrap("pnav");
                 }
@@ -556,7 +557,7 @@ func missiondata_load(type, date=) {
             missiondata_unwrap, cache("dmars");
         } else {
             if(mission_has("dmars file", date=date)) {
-                load_iexpbd, mission_get("dmars file", date=date);
+                load_iexpbd, mission_get("dmars file", date=date), verbose=0;
                 if(cache_enabled) {
                     h_set, cache, "dmars", missiondata_wrap("dmars");
                 }

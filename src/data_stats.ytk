@@ -1,0 +1,165 @@
+# $Id$
+# vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
+
+package require Tk
+package require Iwidgets
+package require Itcl
+
+source [file join $src_path misc.ytk]
+
+option add *DataStatsWindow.title "Data Statistics" widgetDefault
+
+if {[info commands DataStatsWindow] eq ""} {
+   itcl::class DataStatsWindow {
+      inherit iwidgets::Shell
+
+      constructor {args} {}
+      destructor {}
+
+      # All options should be treated as read-only after creation
+      # Variable containing list of valid windows
+      itk_option define -maxwin maxWin MaxWin 64
+      # Variable containing list of variables to populate interface with
+      itk_option define -segmentvariables dataVariables VariableList ""
+
+      method get_stats {} {}
+      method set_stats {var json} {}
+      method refresh_fields {} {}
+      method plot_segment {idx} {}
+      method query {} {}
+
+      variable _segment
+      variable _statistic
+      variable _stat_mapping [dict create \
+         PDOP        pdop \
+         Altitude    alt \
+         Roll        roll \
+         Pitch       pitch \
+         Heading     heading \
+         Elevation   elevation \
+         Bathymetry  bathy \
+      ]
+      variable _stat_data [dict create]
+      variable _count
+   }
+}
+
+itcl::body DataStatsWindow::constructor {args} {
+   wm protocol $itk_component(hull) WM_DELETE_WINDOW \
+      [itcl::code itcl::delete object $this]
+   eval itk_initialize $args
+
+   #wm resizable $itk_component(hull) 1 0
+   #wm minsize $itk_component(hull) 460 100
+
+   set w $itk_interior
+
+   set f $w.fraHead
+   frame $f
+   iwidgets::combobox $f.cboStatistic \
+      -textvariable [itcl::scope _statistic] \
+      -editable false \
+      -selectioncommand [itcl::code $this refresh_fields]
+   eval $f.cboStatistic insert list end [dict keys $_stat_mapping]
+
+   grid $f.cboStatistic
+
+   set f $w.fraVariables
+
+   labelframe $f -text "Statistics"
+
+   foreach field [list Variable Min Q1 Median Q3 Max Mean RMS] {
+      label $f.lblHeading$field -text $field
+   }
+   label $f.lblHeadingPlot -text "Plot Segment"
+
+   grid $f.lblHeadingPlot - $f.lblHeadingVariable \
+      $f.lblHeadingMin $f.lblHeadingQ1 $f.lblHeadingMedian \
+      $f.lblHeadingQ3 $f.lblHeadingMax \
+      $f.lblHeadingMean $f.lblHeadingRMS \
+      -sticky ew
+
+   set _count [llength $itk_option(-segmentvariables)]
+   set idx 0
+   foreach segment $itk_option(-segmentvariables) {
+      incr idx
+
+      set _segment($idx,win) 10
+      set _segment($idx,var) $segment
+      set _segment($idx,min) "..."
+      set _segment($idx,q1) "..."
+      set _segment($idx,med) "..."
+      set _segment($idx,q3) "..."
+      set _segment($idx,max) "..."
+      set _segment($idx,avg) "..."
+      set _segment($idx,rms) "..."
+
+      button $f.btnPlot$idx -text "Plot in:" \
+         -state disabled \
+         -command [itcl::code $this plot_segment $idx]
+
+      spinbox $f.spnWin$idx \
+         -textvariable [itcl::scope _segment($idx,win)] \
+         -from 0 -to $itk_option(-maxwin) -width 2
+
+      foreach field [list var min q1 med q3 max avg rms] {
+         label $f.lbl$field$idx \
+            -textvariable [itcl::scope _segment($idx,$field)]
+      }
+
+      grid $f.btnPlot$idx $f.spnWin$idx $f.lblvar$idx \
+         $f.lblmin$idx $f.lblq1$idx $f.lblmed$idx $f.lblq3$idx $f.lblmax$idx \
+         $f.lblavg$idx $f.lblrms$idx \
+         -sticky ew
+   }
+   unset idx
+   grid columnconfigure $f 1 -weight 1
+   #-minsize 80
+
+   grid $w.fraHead -sticky wens
+   grid $w.fraVariables -sticky wens
+   grid columnconfigure $w 0 -weight 1
+
+   get_stats
+}
+
+itcl::body DataStatsWindow::query {} {
+   return $_stat_data
+}
+
+itcl::body DataStatsWindow::get_stats {} {
+   foreach var $itk_option(-segmentvariables) {
+      ycmd tk_dsw_send_stats \
+         [list [ystr [itcl::scope $this]] [ystr $var] $var]
+   }
+}
+
+itcl::body DataStatsWindow::set_stats {var json} {
+   dict set _stat_data $var [::json::json2dict $json]
+}
+
+itcl::body DataStatsWindow::refresh_fields {} {
+   set statistic [dict get $_stat_mapping $_statistic]
+   for {set i 1} {$i <= $_count} {incr i} {
+      set var $_segment($i,var)
+      foreach field [list min q1 med q3 max avg rms] {
+         if {[dict exists $_stat_data $var $statistic]} {
+            set _segment($i,$field) [dict get $_stat_data $var $statistic $field]
+         } else {
+            set _segment($i,$field) -
+         }
+      }
+   }
+}
+
+itcl::body DataStatsWindow::plot_segment {idx} {
+}
+
+proc launch_datastatswindow {variables args} {
+   set dsw [eval \
+      [list DataStatsWindow .#auto \
+         -maxwin 64 \
+         -segmentvariables $variables] \
+      $args]
+   $dsw activate
+}

@@ -168,7 +168,7 @@ struct ENGR_DMARS {
 };
 
 // This is designed to be driven by ytk.
-func load_iexpbd(fn) {
+func load_iexpbd(fn, verbose=) {
 /* DOCUMENT load_iexpbd(fn)
   Loads INS (IMU/IEX/DMARS) data into the global variables iex_nav and
   iex_head, which are refered to throughout the rest of the software.
@@ -180,13 +180,17 @@ func load_iexpbd(fn) {
 */
   extern _ytk_pbd_f, iex_nav1hz, gps_time_correction, tans, iex_head, iex_nav,
       iex_nav1hz, ops_conf, ops_IMU2_default;
+  default, verbose, 1;
 
   iex_nav = load_ins(fn, iex_head);
 
   iex2tans;
   ops_conf = ops_IMU2_default;
-  gen_cir_nav( 0.120 );
-  write, "Using default DMARS mounting bias and lever arms.(ops_IMU2_default)"
+  gcn_val = gen_cir_nav( 0.120, verbose=verbose );
+  if(verbose) {
+  gcn_val;
+  write, "Using default DMARS mounting bias and lever arms.(ops_IMU2_default)";
+  }
 }
 
 func load_ins(fn, &head) {
@@ -214,8 +218,9 @@ func load_ins(fn, &head) {
   return nav;
 }
 
-func gen_cir_nav( offset_secs ) {
+func gen_cir_nav( offset_secs, verbose= ) {
   extern iex_nav, iex_nav1hz;
+  default, verbose, 1;
   if ( is_void( iex_nav) ) return -8;
   ins_rate = iex_nav(1:2).somd(dif)(1)
   iticks = int(offset_secs*1000.0/int(ins_rate*1000.0001));   
@@ -235,7 +240,9 @@ func gen_cir_nav( offset_secs ) {
   iex_nav1hz.northing = utmx(1,);
   iex_nav1hz.easting = utmx(2,);
   iex_nav1hz.zone = utmx(3,);
-  write, format="%d %d %20.6f\n", startIndex, iticks, iex_nav(startIndex).somd
+  if(verbose) {
+    write, format="%d %d %20.6f\n", startIndex, iticks, iex_nav(startIndex).somd;
+  }
   return 1;
 }
 
