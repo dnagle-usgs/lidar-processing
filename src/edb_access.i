@@ -67,7 +67,7 @@ func get_total_edb_records(junk ) {
   return total_edb_records;
 }
 
-func load_edb (  fn=, update= ) {
+func load_edb (  fn=, update=, verbose= ) {
 /* DOCUMENT load_edb, fn=
 
   This function reads the index file produced by the
@@ -96,6 +96,7 @@ func load_edb (  fn=, update= ) {
  _ecfidx = 0;
 
 ///// if ( is_void( data_path ) ) 
+ default, verbose, 1;
 
 if (is_void(fn)) {
 if ( _ytk ) {
@@ -216,6 +217,7 @@ if ( _ytk ) {
   soe2time( soe_start );
   soe2time( soe_stop );
 
+  if ( verbose ) {
   write,format="  Database contains: %6.3f GB across %d files.\n", 
          float(edb.raster_length)(sum)*1.0e-9, n(3)
   write,format="          Year, day: %d, %d\n", year, day
@@ -230,6 +232,7 @@ if ( _ytk ) {
    to see a raster\n","\n"
   if ( !is_void(update) ) 
     write,"******NOTE: The file(s) are open for updating\n"
+  }
 
   determine_gps_time_correction, edb_filename;
 
