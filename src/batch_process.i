@@ -21,9 +21,10 @@ func package_rcf (ofn) {
    rcf_only = 1;
    b_rcf    = 1;
 
-   if (is_void( update     )  ) update      = 0;
-   if (is_void( onlyupdate )  ) onlyupdate  = update;
-   if (is_void( write_merge ) ) write_merge = 0;
+   default, update, 0;
+   default, onlyupdate, update;
+   default, write_merge, 0;
+
    update = onlyupdate;  // this ensures that both are the same if either are set.
 
    /*
@@ -108,7 +109,7 @@ func get_tld_names( q ) {
 
 func unpackage_tile (fn=,host= ) {
    extern gga, pnav;
-   if ( is_void(host) ) host="localhost"
+   default, host, "localhost";
    write, format="Unpackage_tile: %s %s\n", fn, host;
    f = openb(fn);
    restore, f;
@@ -135,9 +136,9 @@ func unpackage_tile (fn=,host= ) {
 
    oc = ops_conf;    // this gets wiped out by load_iexpbd, save now to restore later
 
-   load_edb,  fn=edb_filename;
-   pnav = rbpnav( fn=pnav_filename);
-   load_iexpbd,  ins_filename;
+   load_edb,  fn=edb_filename, verbose=0;
+   pnav = rbpnav( fn=pnav_filename, verbose=0);
+   load_iexpbd,  ins_filename, verbose=0;
 
    ops_conf = oc;
 
@@ -173,7 +174,7 @@ func call_process_tile( junk=, host= ) {
 
 func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, rcf_only= ) {
    extern ofn;
-   if ( is_void( rcf_only) ) rcf_only = 0;
+   default, rcf_only, 0;
    if (is_array(r) || rcf_only == 1 ) {
 
       if ( rcf_only == 0 ) {
@@ -213,7 +214,7 @@ func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, rcf
 
 func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= ) {
    extern ofn;
-   if ( is_void(host) ) host="localhost";
+   default, host, "locahost";
       if (get_typ) {
          typ=[]
          typ_idx = where(tile.min_e == min_e);
@@ -497,7 +498,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
 
 // show progress of jobs completed.
 func show_progress(color=) {
-   if ( is_void(color) ) color= "red";
+   default, color, "red";
    system, "./show_tiles.pl -rm /tmp/batch/done > /tmp/batch/.tiles";
    f = open("/tmp/batch/.tiles");
 
@@ -650,9 +651,9 @@ Added server/client support (2009-01) Richard Mitchell
    timer, t0;
    myt0 = t0(3);
    write, format="Start Time: %f\n", t0(3);
-   if (is_void(host)) host="localhost";
-   if (is_void(now)) now=0;
-   if (is_void(win)) win = 6;
+   default, host, "localhost";
+   default, now,  0;
+   default, win,  6;
    window, win;
 
    // Create output directory for tile cmd files:
@@ -671,12 +672,14 @@ Added server/client support (2009-01) Richard Mitchell
    if (zone) zone_s = swrite(format="%d", zone);
    //if (zone) pick=1;
    if (!pbd && !edf)      pbd      = 1;
-   if (is_void(typ))      get_typ  = 1;
-   if (!dat_tag)          dat_tag  = "w84";
-   if (is_void(update))   update   = 0;
-   if (is_void(avg_surf)) avg_surf = 1;
-   if (is_void(b_rcf))    b_rcf    = 0;
-   if (is_void(write_merge))    write_merge    = 0;
+
+   default, typ,         1;
+   default, dat_tag, "w84";
+   default, update,      0;
+   default, avg_surf,    1;
+   default, write_merge, 0;
+   default, b_rcf,       0;
+
    if (!cmdfile && !auto) auto     = 1;
    if (cmdfile) {
       path = array(string, n);
@@ -1168,14 +1171,14 @@ Original amar nayegandhi. Started 12/06/02.
    if (!no_rcf) no_rcf = 3;
    if (!meta) meta = 1;
    if (!clean) clean = 1;
-   if (is_void(dorcf)) dorcf = 1;
+   default, dorcf, 1;
    if (compare_noaa && is_void(datum)) datum = "n88";
    if (!mode) mode=2;
-   if (is_void(bmode)) bmode = 1;
-   if (is_void(rcfmode)) rcfmode=2;
+   default, bmode,   1;
+   default, rcfmode, 2;
+   default, merge,   1;
+   default, searchstr, "*.pbd";
    if (interactive) {plottriag = 1; datawin=5;}
-   if (is_void(merge)) merge=1;
-   if (is_void(searchstr)) searchstr="*.pbd";
 
 
    if (!is_void(fname)) {
