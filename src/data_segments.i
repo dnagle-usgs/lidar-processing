@@ -211,7 +211,89 @@ func tk_sdw_define_region_variables(obj, ..) {
    }
 }
 
-func gather_data_stats(data) {
+func plot_statistically(y, x, title=, xtitle=, ytitle=, nofma=, win=) {
+   default, nofma, 0;
+   default, win, max([current_window(), 0]);
+   default, xtitle, "red: mean, deviations; blue: median and quartiles";
+
+   w = current_window();
+   window, win;
+
+   if(! nofma)
+      fma;
+
+   count = numberof(y);
+   default, x, indgen(count);
+   qs = quartiles(y);
+   plg, array(qs(2), count), x, color="blue", width=1;
+   plg, array(qs(1), count), x, color="blue", width=1, type="dash";
+   plg, array(qs(3), count), x, color="blue", width=1, type="dash";
+   ymin = y(min);
+   ymax = y(max);
+   yavg = y(avg);
+   yrms = y(rms);
+   plg, array(ymin, count), x, color="blue", width=1;
+   plg, array(ymax, count), x, color="blue", width=1;
+   plg, array(yavg, count), x, color="red", width=1, width=4;
+   plg, array(yavg-yrms, count), x, color="red", width=1, type="dashdot";
+   if(yavg-2*yrms > ymin)
+      plg, array(yavg-2*yrms, count), x, color="red", width=1, type="dashdotdot";
+   if(yavg-3*yrms > ymin)
+      plg, array(yavg-3*yrms, count), x, color="red", width=1, type="dot";
+   plg, array(yavg+yrms, count), x, color="red", width=1, type="dashdot";
+   if(yavg+2*yrms < ymax)
+      plg, array(yavg+2*yrms, count), x, color="red", width=1, type="dashdotdot";
+   if(yavg+3*yrms < ymax)
+      plg, array(yavg+3*yrms, count), x, color="red", width=1, type="dot";
+   plg, y, x, color="black", marks=0, width=1;
+
+   if(title)
+      pltitle, title;
+   if(xtitle)
+      xytitles, xtitle;
+   if(ytitle)
+      xytitles, , ytitle;
+
+   window_select, w;
+}
+
+func tk_dsw_plot_stats(var, data, type, win) {
+   title = var + " " + type;
+   title = regsub("_", title, "!_", all=1);
+   x = y = [];
+   if(type == "elevation") {
+      y = data.elevation;
+      x = data.soe;
+   } else if(type == "bathy") {
+      if(structof(data) == GEO) {
+         y = data.elevation + data.depth;
+         x = data.soe;
+      } else if(structof(data) == VEG__) {
+         y = data.lelv;
+         x = data.soe;
+      }
+   } else if(type == "roll") {
+      working_tans = tk_dsw_get_data(data, "dmars", "tans", "somd");
+      y = working_tans.roll;
+      x = working_tans.somd;
+   } else if(type == "pitch") {
+      working_tans = tk_dsw_get_data(data, "dmars", "tans", "somd");
+      y = working_tans.pitch;
+      x = working_tans.somd;
+   } else if(type == "pdop") {
+      working_pnav = tk_dsw_get_data(data, "pnav", "pnav", "sod");
+      y = working_pnav.pdop;
+      x = working_pnav.sod;
+   } else if(type == "alt") {
+      working_pnav = tk_dsw_get_data(data, "pnav", "pnav", "sod");
+      y = working_pnav.alt;
+      x = working_pnav.sod;
+   }
+   plot_statistically, y, x, title=title, win=win;
+}
+
+
+func gather_data_stats(data, &working_tans, &working_pnav) {
    stats = h_new();
 
    // First, pull stats out of the data itself:
@@ -395,6 +477,10 @@ func tk_dsw_get_data(data, type, var, sod_field) {
             );
             if(!numberof(w))
                continue;
+
+            ymd = soe2ymd(temp.soe(min));
+            soe_base = ymd2soe(ymd(1), ymd(2), ymd(3));
+            get_member(ex_data, sod_field) += soe_base;
 
             grow, working, ex_data(w);
          }

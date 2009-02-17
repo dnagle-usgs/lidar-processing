@@ -95,7 +95,6 @@ itcl::body DataStatsWindow::constructor {args} {
       set _segment($idx,rms) "..."
 
       button $f.btnPlot$idx -text "Plot in:" \
-         -state disabled \
          -command [itcl::code $this plot_segment $idx]
 
       spinbox $f.spnWin$idx \
@@ -153,6 +152,11 @@ itcl::body DataStatsWindow::refresh_fields {} {
 }
 
 itcl::body DataStatsWindow::plot_segment {idx} {
+   set var $_segment($idx,var)
+   set win $_segment($idx,win)
+   set type [dict get $_stat_mapping $_statistic]
+   ycmd tk_dsw_plot_stats \
+      [list [ystr $var] $var [ystr $type] $win]
 }
 
 proc launch_datastatswindow {variables args} {
