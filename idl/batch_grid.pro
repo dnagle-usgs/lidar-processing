@@ -28,7 +28,7 @@ pro batch_grid, path, filename=filename, rcfmode=rcfmode, searchstr=searchstr, $
    ;		This keyword ensures that large gaps are not gridded. Default = 200m^2
    ; dist_threshold = maximum allowable distance between 2 vertices of triangulated facet.
    ;			Default = 50m.  Increase this value to reduce "holes" in the data.
-   ; missing = Missing value for no data points during gridding, default = -100m
+   ; missing = Missing value for no data points during gridding, default = -32767m
    ; zbuf_plot = set to 1 to create the 'Z' buffer tif plots.
    ; save_zbuf_plots = set to 1 to save the tif plot to a file
    ; zbuf_scale = the scale of the zbuf plot.  Defaults to 1 (same scale as original grid).

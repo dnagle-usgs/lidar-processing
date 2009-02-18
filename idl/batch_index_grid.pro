@@ -19,7 +19,7 @@ pro batch_index_grid, path, searchstr=searchstr, $
    ;		This keyword ensures that large gaps are not gridded. Default = 200m^2
    ; dist_threshold = maximum allowable distance between 2 vertices of triangulated facet.
    ;			Default = 50m.  Increase this value to reduce "holes" or "holidays" in the data.
-   ; missing = Missing value for no data points during gridding, default = -100m
+   ; missing = Missing value for no data points during gridding, default = -32767m
    ; GE_indx_plots = set to 1 to make png files for index tiles that can be used in Google Earth 
    ; max_elv_limit = the maximum elevation limit for the output (GE) plot
    ; min_elv_limit = the minimum elevation limit for the output (GE) plot
