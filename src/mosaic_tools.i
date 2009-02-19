@@ -144,6 +144,42 @@ func plot_all(pnav_idxlist) {
    plmk, pnav(pnav_idxlist).lat, pnav(pnav_idxlist).lon, marker=4, msize=0.2, color="blue";
 }
 
+func batch_load_and_write_cir_gpsins(img_dirs, globs, mission_dirs=, pnav_files=, ins_files=, dest_dir=) {
+   for(i = 1; i <= numberof(globs); i++) {
+      if(numberof(mission_dirs) && is_void(pnav_files)) {
+         pnav_file = autoselect_pnav(mission_dirs(i));
+      } else {
+         pnav_file = pnav_files(i);
+      }
+
+      if(numberof(mission_dirs) && is_void(ins_files)) {
+         ins_file = autoselect_iexpbd(mission_dirs(i));
+      } else {
+         ins_file = ins_files(i);
+      }
+
+      dest_name = file_tail(mission_dirs(i));
+
+      load_and_write_cir_gpsins,
+         pnav_file, ins_file, img_dirs, globs(i), dest_dir=dest_dir, dest_name=dest_name;
+   }
+}
+
+func load_and_write_cir_gpsins(pnav_file, ins_file, img_dirs, glob, dest_dir=, dest_name=) {
+   extern pnav;
+   load_iexpbd, ins_file;
+   pnav = rbpnav(fn=pnav_file);
+   for(i = 1; i <= numberof(img_dirs); i++) {
+      dest = file_join(img_dirs(i));
+      if(dest_name)
+         dest += "_" + dest_name;
+      dest += ".gpsins";
+      if(!is_void(dest_dir))
+         dest = file_join(dest_dir, file_tail(dest));
+      write_cir_gpsins, img_dirs(i), dest, glob=glob;
+   }
+}
+
 func write_cir_gpsins(imgdir, outfile, glob=) {
 /* DOCUMENT write_cir_gpsins, imgdir, outfile
    
@@ -160,13 +196,30 @@ func write_cir_gpsins(imgdir, outfile, glob=) {
 
    files = find(imgdir, glob=glob);
 
+   if(!numberof(files)) {
+      write, "No files were found.";
+      return;
+   }
+
    files = file_tail(files);
    files = file_rootname(files);
+   files = set_remove_duplicates(files);
 
    hms = atoi(strsplit(files, "-")(,2));
    sod = int(hms2sod(hms) % 86400);
    data = get_img_info(sod);
-   u = fll2utm(data(3,), data(2,));
+   //u = fll2utm(data(3,), data(2,));
+   /*
+      data(1,) - 1 if we interpolated data; 0 if not
+      data(2,) - lon
+      data(3,) - lat
+      data(4,) - alt
+   */
+
+   nad83 = wgs842nad83([data(2:4,)]);
+   navd88 = nad832navd88(nad83);
+   u = fll2utm(navd88(2,), navd88(1,));
+   data(4,) = navd88(3,);
 
    w = where(data(1,));
    
@@ -258,10 +311,98 @@ func get_img_pnav(sod) {
    return pnav(pnav_idx);
 }
 
+func make_cir_index_tiles(srcdir, destdir, gpsins, zone, buffer=) {
+/* DOCUMENT gen_cir_tiles, pnav, src, dest, copyjgw=, abbr=
+
+This function converts the cir image files (and corresponding world files)  from a "minute" directory into our regular 2k by 2k tiling format.
+
+ Inputs:
+   pnav:  "gps" or "pnav" data array for that mission day.
+   src : source directory where the cir files in the "minute" format  are stored.
+   dest: destination directory.
+   copyjgw = set to 1 to copy the corresponding jgw files along with the jpg
+      files.  Set to 0 if you don't want the jgw files to be copied over.
+      Default = 1.
+   abbr = set to 1 to use an "abbreviated" naming scheme for the directories.
+      Instead of having a nested index tile/data tile format like normal EAARL
+      data, this will create a single tier of directories named as
+      e###_n####_##. Default = 0.
+*/
+   fix_dir, src;
+   fix_dir, dest;
+   default, buffer, 250;
+
+   write, "Generating file list...";
+   files = find(srcdir, glob="*.jpg");
+   files = files(sort(file_tail(files)));
+
+   write, "Loading data...";
+   f = open(gpsins);
+   lines = rdfile(f);
+   close, f;
+   data = strsplit(lines, " ")(,1:3);
+   data(,1) += ".jpg";
+   lines = [];
+
+   // We need to now merge files and data
+
+   file_names = file_tail(files);
+   data_names = data(,1);
+
+   file_idx = set_intersection(file_names, data_names, idx=1);
+   data_idx = set_intersection(data_names, file_names, idx=1);
+   file_names = data_names = [];
+
+   if(numberof(file_idx) < 1 || numberof(data_idx) < 1) {
+      write, "Data problem, aborting...";
+      return;
+   }
+
+   files = files(file_idx);
+   data = data(data_idx,);
+   file_idx = data_idx = [];
+
+   files = files(sort(file_tail(files)));
+   data = data(sort(data(,1)),);
+
+   data(,1) = files;
+   files = [];
+
+   itcodes = get_dt_itcodes(get_utm_dtcodes(atod(data(,3)), atod(data(,2)), zone));
+   itcodes = set_remove_duplicates(itcodes);
+
+   tstamp = [];
+   timer_init, tstamp;
+   for(i = 1; i <= numberof(itcodes); i++) {
+      bbox = it2utm(itcodes(i), bbox=1);
+      min_n = bbox(1) - buffer;
+      max_n = bbox(3) + buffer;
+      min_e = bbox(4) - buffer;
+      max_e = bbox(2) + buffer;
+      w = where(
+         min_n <= atod(data(,3)) & atod(data(,3)) <= max_n &
+         min_e <= atod(data(,2)) & atod(data(,2)) <= max_e
+      );
+      if(numberof(w)) {
+         short_name = dt_short(itcodes(i));
+         dest_path = file_join(destdir, short_name, "images");
+         mkdirp, dest_path;
+         write, format="[%d/%d] Creating %s with %d files\n",
+            i, numberof(itcodes), short_name, numberof(w);
+         for(j = 1; j <= numberof(data(w,1)); j++) {
+            file_copy, data(w(j),1), file_join(dest_path, file_tail(data(w(j),1)));
+            timer_tick, tstamp, j, numberof(w);
+         }
+      } else {
+         write, format="Skipping %s, no files found\n", short_name;
+      }
+   }
+}
+
 func segment_cir_dir(srcdir, destdir, gpsins, buffer=, threshold=) {
    fix_dir, srcdir;
    fix_dir, destdir;
-   default, buffer, 175;
+   default, buffer, 250;
    default, threshold, 600;
    tile_size = 256000;
 

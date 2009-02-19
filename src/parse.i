@@ -107,7 +107,7 @@ func it2utm(itcodes, bbox=) {
 */
     u = dt2utm(itcodes);
     if(bbox)
-        return [u(,1) - 10000, u(,2) + 10000, u(,1), u(,2), u(,3)];
+        return [u(..,1) - 10000, u(..,2) + 10000, u(..,1), u(..,2), u(..,3)];
     else
         return u;
 }
