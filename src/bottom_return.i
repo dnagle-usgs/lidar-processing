@@ -261,6 +261,7 @@ if (is_void(append)) {
   will not be written.*/
   f = open(fn, "r+b");
 }
+i86_primitives, f;
 
 if (is_void(append)) {
   /* write header information only if append keyword not set */

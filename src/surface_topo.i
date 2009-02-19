@@ -654,6 +654,7 @@ fn = opath+ofname;
 
 /* open file to read/write (it will overwrite any previous file with same name) */
 f = open(fn, "w+b");
+i86_primitives, f;
 
 nwpr = long(9);
 
