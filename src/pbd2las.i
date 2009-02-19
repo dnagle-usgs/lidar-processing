@@ -179,6 +179,7 @@ if(wgs84S==1) zone_tag=32701+zone_nbr;
   b=split_path(a(1), 0)
   las_fname=b(1)+b(2)+".las"
   f1=open(las_fname, "wb");
+  i86_primitives, f1;
   bad_binary=las_fname+"L";
   popen("rm -rf "+ bad_binary, 0);
 

@@ -552,6 +552,7 @@ func write_pbd_to_gdf(ipath=, opath=, fname=, searchstr=, remove_buffer=) {
         fn_split = split_path(fn_all(i), 1, ext=1);
 	outf = fn_split(1)+".gdf";
         f = open(outf,"w+b");
+        i86_primitives, f;
 	byt_pos=0;
 	_write, f, byt_pos, mets_pos; // xy position information in input file
 	byt_pos = 16;
