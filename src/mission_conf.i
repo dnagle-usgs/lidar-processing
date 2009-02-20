@@ -374,10 +374,15 @@ func mission_save(filename) {
     format.
 */
     extern __mission_conf;
-    json = mission_json_export();
-    f = open(filename, "w");
-    write, f, format="%s\n", json;
-    close, f;
+    if(__mission_settings("ytk")) {
+        mission_send;
+        tkcmd, swrite(format="mission_save {%s}", filename);
+    } else {
+        json = mission_json_export();
+        f = open(filename, "w");
+        write, f, format="%s\n", json;
+        close, f;
+    }
 }
 
 func mission_load(filename) {
