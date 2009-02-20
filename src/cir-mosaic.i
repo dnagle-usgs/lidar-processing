@@ -868,7 +868,7 @@ func subsample_lines(q, skip=) {
 /* DOCUMENT subsample_lines(q, skip=)
 
    Given an array of indices q into a flightline, this subsamples the
-   flightlines. In other worse, it returns only selected lines in the set. You
+   flightlines. In other words, it returns only selected lines in the set. You
    can use skip= to control this behavior. The default, skip=2, returns every
    other flightline. Using skip=1 just returns all data. Using skip=3 returns
    every third, etc.
