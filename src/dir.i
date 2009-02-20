@@ -11,6 +11,16 @@ func file_dirname(fn) {
 */
    match = [];
    regmatch, "(.*)/[^/]*", fn, , match;
+   wnull = where(match == string(0));
+   wroot = where(strpart(fn, 1:1) == "/");
+   if(numberof(wnull)) {
+      wdot = set_difference(wnull, wroot);
+      wslash = set_intersection(wnull, wroot);
+      if(numberof(wdot))
+         match(wdot) = ".";
+      if(numberof(wslash))
+         match(wslash) = "/";
+   }
    return match;
 }
 
@@ -73,9 +83,9 @@ func file_split(fn) {
    return parts;
 }
 
-func file_join(parts, ..) {
-/* DOCUMENT file_join(part1, part2, part3)
-            file_join([part1, part2, part3])
+func file_join(..) {
+/* DOCUMENT file_join(part1, part2, part3, ...)
+            file_join([part1, part2, part3, ...])
    Joins a list of component parts into a valid path. Returns a single string.
 
    This properly handles arbitrarily complicated paths as noted:
@@ -83,15 +93,34 @@ func file_join(parts, ..) {
       . is recognized and is discarded
       / (and /foo) is recognized and will result in all prior parts being
          ignored
+
+   If passed multiple arguments, each argument may be either a scalar or an
+   array of strings. If more than one argument is an array of strings, then
+   each such argument must have equivalent dimensions. Other than that, arrays
+   and scalars may be mixed freely.
 */
    // David Nagle 2008-12-24
-   if(numberof(parts) == 1 && more_args()) {
-      list = [parts(1)];
-      while(more_args())
-         grow, list, next_arg();
-      return file_join(list);
-   } else {
+   parts = array(pointer, 4);
+   arrays = array(short, 4);
+   idx = 0;
+   while(more_args()) {
+      idx++;
+      if(idx > numberof(parts)) {
+         grow, parts, parts;
+         grow, arrays, arrays;
+      }
+      parts(idx) = &next_arg();
+      arrays(idx) = dimsof(*parts(idx))(0) > 0;
+   }
+   parts = parts(:idx);
+   arrays = arrays(:idx);
+
+   result = [];
+
+   if(numberof(parts) == 1) {
+      // Current format!
       expanded = [];
+      parts = *parts(1);
       // Component paths might not be single components. We have to split them
       // up to handle special cases like .. or /foo
       for(i = 1; i <= numberof(parts); i++) {
@@ -114,7 +143,7 @@ func file_join(parts, ..) {
             // If the path ends with a .., then we need to add this ..
             // If the path does not end with a .., then we get rid of the last
             //   element
-            // If the path is empty, then we stat the path out with ..
+            // If the path is empty, then we start the path out with ..
             // If the path is ["/"], then we simply ignore ..
             if(numberof(cleaned)) {
                if(cleaned(0) == "..") {
@@ -122,7 +151,10 @@ func file_join(parts, ..) {
                } else if(cleaned(0) == "/") {
                   // do nothing
                } else {
-                  cleaned = cleaned(:-1);
+                  if(numberof(cleaned) > 1)
+                     cleaned = cleaned(:-1);
+                  else
+                     cleaned = [];
                }
             } else {
                cleaned = [".."];
@@ -138,8 +170,49 @@ func file_join(parts, ..) {
       if(parts(1) == "/") {
          joined = strpart(joined, 2:);
       }
-      return joined;
+      result = joined;
+   } else {
+      // more than one argument: need to coalesce into arrays
+
+      // See if there are any arrays among the arguments
+      w = where(arrays);
+      if(numberof(w)) {
+         // Make sure all the arrays have equivalent dimensions
+         dimlist = dimsof(*parts(w(1)));
+         for(i = 1; i <= numberof(w); i++) {
+            curdims = dimsof(*parts(w(i)));
+            if(numberof(dimlist) != numberof(curdims))
+               error, "Non-conformable arrays were passed.";
+            if(numberof(dimlist) != numberof(where(dimlist==curdims)))
+               error, "Non-conformable arrays were passed.";
+         }
+         // Broadcast any scalars to match the arrays
+         w = where(!arrays);
+         if(numberof(w)) {
+            for(i = 1; i <= numberof(w); i++) {
+               parts(w(i)) = &array(*parts(w(i)), dimlist);
+            }
+         }
+         // Now iterate through and join each one
+         result = array(string, dimlist);
+         for(i = 1; i <= numberof(*parts(1)); i++) {
+            temp = [];
+            for(j = 1; j <= numberof(parts); j++) {
+               grow, temp, (*parts(j))(i);
+            }
+            result(i) = file_join(temp);
+         }
+      } else {
+         // No arrays were found
+         new_parts = [];
+         for(i = 1; i <= numberof(parts); i++) {
+            grow, new_parts, *parts(i);
+         }
+         result = file_join(new_parts);
+      }
    }
+
+   return result;
 }
 
 func file_pathtype(path) {
@@ -164,33 +237,62 @@ func file_pathtype(path) {
 func file_relative(base, dest) {
 /* DOCUMENT file_relative(base, dest)
    Returns a relative path for dest as referenced against base.
+
+   Works with scalars and arrays. If base and dest are both arrays, they must
+   have the same dimensions.
 */
 // Original David Nagle 2009-02-06, adapted from fileutil::relative in Tcllib
-   if(file_pathtype(base) != file_pathtype(dest))
-      error, "Unable to compute relation for paths of different path types.";
-
-   base = file_split(base);
-   dest = file_split(dest);
-
-   while(base(1) == dest(1)) {
-      base = numberof(base) > 1 ? base(2:) : [];
-      dest = numberof(dest) > 1 ? dest(2:) : [];
-      if(!numberof(dest) || !numberof(base)) break;
-   }
-
-   if(numberof(base) == 0 && numberof(dest) == 0) {
-      // Case 1: base == dest
-      return ".";
+   bdims = dimsof(base);
+   ddims = dimsof(dest);
+   result = [];
+   if(numberof(base) > 1) {
+      result = array(string, bdims);
+      if(numberof(dest) > 1) {
+         if(numberof(bdims) != numberof(ddims))
+            error, "Non-conformable arrays were passed.";
+         if(numberof(bdims) != numberof(where(bdims==ddims)))
+            error, "Non-conformable arrays were passed.";
+         for(i = 1; i <= numberof(base); i++) {
+            result(i) = file_relative(base(i), dest(i));
+         }
+      } else {
+         for(i = 1; i <= numberof(base); i++) {
+            result(i) = file_relative(base(i), dest);
+         }
+      }
+   } else if(numberof(dest) > 1) {
+      result = array(string, ddims);
+      for(i = 1; i <= numberof(dest); i++) {
+         result(i) = file_relative(base, dest(i));
+      }
    } else {
-      // Case 2: base is base/sub = sub
-      //         dest is base     = {}
-      // Case 3: base is base     = {}
-      //         dest is base/sub = sub
-   
-      if(numberof(base))
-         dest = grow(array("..", numberof(base)), dest);
-      return file_join(dest);
+      if(file_pathtype(base) != file_pathtype(dest))
+         error, "Unable to compute relation for paths of different path types.";
+
+      base = file_split(base);
+      dest = file_split(dest);
+
+      while(base(1) == dest(1)) {
+         base = numberof(base) > 1 ? base(2:) : [];
+         dest = numberof(dest) > 1 ? dest(2:) : [];
+         if(!numberof(dest) || !numberof(base)) break;
+      }
+
+      if(numberof(base) == 0 && numberof(dest) == 0) {
+         // Case 1: base == dest
+         result = ".";
+      } else {
+         // Case 2: base is base/sub = sub
+         //         dest is base     = {}
+         // Case 3: base is base     = {}
+         //         dest is base/sub = sub
+      
+         if(numberof(base))
+            dest = grow(array("..", numberof(base)), dest);
+         result = file_join(dest);
+      }
    }
+   return result;
 }
 
 func split_path( fn, idx, ext= ) {
