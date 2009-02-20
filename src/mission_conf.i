@@ -3,6 +3,73 @@ require, "eaarl.i";
 require, "json.i";
 write, "$Id$";
 
+// Original David Nagle 2009-02-03
+
+local mission_conf;
+local mission_conf_i;
+/* DOCUMENT mission_conf.i
+
+    This file defines functionality for managing a mission configuration. A
+    mission configuration defines the files used to load the data for each
+    mission day in a mission.
+
+    Most of the functions present in mission_conf.i for Yorick are also present
+    in mission_conf.ytk for Tcl. The two sides attempt to stay in sync with
+    each other. Thus, using a given function on one side is equivalent to using
+    it on the other: both sides will receive the change.
+
+    Functions for working with a mission configuration:
+    
+        ## Functions that alter the configuration
+        mission_set, key, value, date=, sync=
+        mission_clear, sync=
+        mission_delete, key, date=, sync=
+        mission_path, path, sync=
+
+        ## Functions that retrieve existing information
+        mission_get(key, date=)
+        mission_has(key, date=)
+        mission_keys(date=)
+        mission_path()
+
+    Functions for working with mission dates:
+
+        ## Functions that alter the configuration
+        missiondate_add, date, sync=
+        missiondate_delete, date, sync=
+        missiondate_set, hash, date=, sync=
+
+        ## Functions that retrieve existing information
+        missiondate_current(date, sync=)
+        missiondate_exists(date=)
+        missiondate_get(date=)
+        missiondate_list()
+
+    Functions for working with the environment and cache:
+
+        missiondata_cache, action
+        missiondata_wrap(type)
+        missiondata_unwrap, data
+        missiondata_load, type, date=
+        missiondata_read(filename) -or- missiondata_read, filename
+        missiondata_write, filename, input, overwrite=
+
+    Functions for saving/loading/transmitting the configuration:
+
+        mission_json_export()
+        mission_json_import, json, sync=
+        mission_save, filename
+        mission_load, filename
+        mission_send
+        mission_receive
+
+    Miscellaneous:
+
+        mission_initialize_from_path, path, strict=
+        autoselect_ops_conf(dir)
+        autoselect_edb(dir)
+*/
+
 local __mission_conf;
 /* DOCUMENT __mission_conf
     This global variable contains the data representing the current mission's
@@ -649,17 +716,22 @@ func mission_path(path, sync=) {
     return __mission_path;
 }
 
-func mission_initialize_from_path(path) {
-/* DOCUMENT mission_initialize_from_path, path
+func mission_initialize_from_path(path, strict=) {
+/* DOCUMENT mission_initialize_from_path, path, strict=
 
     This will clear __mission_conf and attempt to initialize it automatically.
     For each mission day in the mission path (identified by those directories
     whose names contain a date string), it will attempt to locate and define a
     pnav file, dmars file, ops_conf.i file, and edb file.
+
+    If strict is 1 (which it is by default), then a mission date will not be
+    initialized unless an edf file is present. If strict is 0, then that
+    restriction is lifted.
 */
 // Original David Nagle 2009-02-04
     extern __mission_conf, __mission_date;
     default, path, mission_path();
+    default, strict, 1;
 
     mission_clear;
     mission_path, path;
@@ -676,10 +748,12 @@ func mission_initialize_from_path(path) {
         dir = file_join(path, dirs(i));
 
         edb_file = autoselect_edb(dir);
-        if(!edb_file)
+        if(edb_file) {
+            mission_set, "edb file", edb_file;
+        } else if(strict) {
             continue;
+        }
         mission_set, "data_path", dir;
-        mission_set, "edb file", edb_file;
 
         pnav_file = autoselect_pnav(dir);
         if(pnav_file)
