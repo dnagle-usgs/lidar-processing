@@ -108,19 +108,28 @@ func soe2time( soe ) {
    return t;
 }
 
-func hms2sod ( t ) {
-/* DOCUMENT hms2sod( t ) 
+func hms2sod (h, m, s) {
+/* DOCUMENT hms2sod(hms)
+   hms2sod(h, m, s)
   
-   Convert an HMS value to sod (seconds-of-day).  The HMS is in a form such
-   as 120000 for 12 hours, 0 minutes, and 0 seconds. The type of the return
-   value will match the type of the argument passed.
+   Convert an HMS value to sod (seconds-of-day). The HMS can be provided in two
+   ways:
+
+      hms2sod(hms), where hms is in the format 1200000 for 12:00:00.
+      hms2sod(h,m,s), where h, m, and s are 12, 00, and 00 for 12:00:00.
+
+   The return value will have the same type and dimensions as the input
+   value(s). If h, m, and s are arrays, they must be conformable.
 
    See also:
       soe2sod soe2time hms2sod sod2hms time2soe
 */
-   h = int(int(t) / 10000);
-   m = (int(t) - int(h*10000)) / 100;
-   s = t - (h*10000+m*100);
+   if(is_void(m)) {
+      t = h;
+      h = int(int(t) / 10000);
+      m = (int(t) - int(h*10000)) / 100;
+      s = t - (h*10000+m*100);
+   }
    sod = h*3600 + m*60 + s;
    return sod;
 }
