@@ -4,9 +4,6 @@
 $Id     = '$Id$';
 $Source = '$Source$';
 
-# Given the path to the cmd files created by mbatch_process, returns
-# the tile coordinates.  This is used to color the completed tiles.
-#
 
 use Getopt::Long;
 
@@ -23,8 +20,11 @@ $Source
 
 $0 [-[no]help]
 
-Check back again later
-[-nohelp]: better than nothing
+Used by batch_process.i.
+Given the path to the cmd files created by mbatch_process, returns
+the tile coordinates.  This is used to color the completed tiles.
+
+[-nohelp]: may show cmdline options that did not get added here.
 
 EOF
 
@@ -41,10 +41,6 @@ printf("\n%s\n", $options) if ( $opt_help == 0 );
 $options = <<END;
 \$getopt = GetOptions (
   'help!'      => \\( \$opt_help = -1   ),  # use -nohelp to show this
-  'myint:i'    => \\( \$myint    = -1   ),  # example optional int
-  'myfloat=f'  => \\( \$myfloat  = 1.5  ),  # example floaat
-  'mystr=s'    => \\( \$mystr    = "foo"),  # example string
-  'verbose!'   => \\( \$verbose  = -1   ),  # example bool with negate option
   'rm!'        => \\( \$rm       =  0   ),  # if set, remove files
 );
 &showusage() if (\$opt_help >= 0);

@@ -1,6 +1,4 @@
 #!/usr/bin/perl -W
-# waiter: given a size and path, waits until the path is less than size (in K)
-#         before exiting.  Reports current size while waiting.
 
 $Id     = '$Id$';
 $Source = '$Source$';
@@ -18,8 +16,13 @@ $Source
 
 $0 [-[no]help]
 
-Check back again later
-[-nohelp]: better than nothing
+Used by batch_process.i.
+Given a size and path, waits until the path is less than size (in K)
+before exiting.  Reports current size while waiting.
+This is used to ensure that mbatch_process does not generate more
+tiles than there is available space.
+
+[-nohelp]: may show cmdline options that did not get added here.
 
 EOF
 
@@ -36,10 +39,6 @@ printf("\n%s\n", $options) if ( $opt_help == 0 );
 $options = <<END;
 \$getopt = GetOptions (
   'help!'      => \\( \$opt_help = -1   ),  # use -nohelp to show this
-  'myint:i'    => \\( \$myint    = -1   ),  # example optional int
-  'myfloat=f'  => \\( \$myfloat  = 1.5  ),  # example floaat
-  'mystr=s'    => \\( \$mystr    = "foo"),  # example string
-  'verbose!'   => \\( \$verbose  = -1   ),  # example bool with negate option
   'noloop!'    => \\( \$noloop   =  0   ),  # don't wait for size before exiting
 );
 &showusage() if (\$opt_help >= 0);

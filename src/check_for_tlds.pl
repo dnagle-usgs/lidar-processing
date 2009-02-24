@@ -16,8 +16,16 @@ $Source
 
 $0 [-[no]help]
 
-Check back again later
-[-nohelp]: better than nothing
+Used by batch_process.i.
+unpackage_tile() creates a file with the names of the .tld files
+needed for the current tile.  This program then reads that file
+to determine which .tld files are still needed from the server.
+rsync is then invoked to transfer only those files.
+
+If all the files are already on the client (where this is being run)
+then this avoids any calls to rsync to the server.
+
+[-nohelp]: may show cmdline options that did not get added here.
 
 EOF
 
@@ -34,10 +42,6 @@ printf("\n%s\n", $options) if ( $opt_help == 0 );
 $options = <<END;
 \$getopt = GetOptions (
   'help!'      => \\( \$opt_help = -1   ),  # use -nohelp to show this
-  'myint:i'    => \\( \$myint    = -1   ),  # example optional int
-  'myfloat=f'  => \\( \$myfloat  = 1.5  ),  # example floaat
-  'mystr=s'    => \\( \$mystr    = "foo"),  # example string
-  'verbose!'   => \\( \$verbose  = -1   ),  # example bool with negate option
 );
 &showusage() if (\$opt_help >= 0);
 END
@@ -73,20 +77,15 @@ while ( $file=<IN> ) {
   chop $file;
   $fqn = $path . "eaarl/" . $file;
   if ( ! -e $fqn ) {
-    # printf("NEED: %s\n", $fqn);
+    printf("NEED: %s\n", $fqn);
     $fqn = $host . ":" . $fqn;     # prepend the hostname
     $list .= $fqn;
+    system("echo rsync -PHaqR $fqn /");
     system("rsync -PHaqR $fqn /");
-    $list .= " "; 
+    $list .= " ";
   } else {
     # printf("have: %s\n", $fqn);
   }
-}
-
-if ( 0 && length($list) > 0 ) {
-  printf("GET: %s###\n", $list);
-  system("echo rsync -PHavR $list /");
-  system("rsync -PHaqR $list / >& /dev/null");
 }
 
 exit(0);
