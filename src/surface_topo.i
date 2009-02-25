@@ -747,8 +747,8 @@ func  r_to_fs(data) {
         data_new.melevation = data.melevation(indx);
         data_new.intensity = data.intensity(indx);
         data_new.soe = data.soe(indx);
-  } else data_new = data;
-  return data_new
+  } else data_new = unref(data);
+  return data_new;
 }
 
 func clean_fs(fs_all, rcf_width=) {
@@ -763,7 +763,7 @@ func clean_fs(fs_all, rcf_width=) {
   if (numberof(fs_all) != numberof(fs_all.north)) {
       // convert R to FS
       write, "converting raster structure (R) to point structure (FS)";
-      fs_all = r_to_fs(fs_all);
+      fs_all = r_to_fs(unref(fs_all));
   }
   
   write, "cleaning data...";
@@ -772,20 +772,20 @@ func clean_fs(fs_all, rcf_width=) {
   // remove pts that had north values assigned to 0
   indx = where(fs_all.north != 0);
   if (is_array(indx)) {
-     fs_all = fs_all(indx);
+     fs_all = unref(fs_all)(indx);
   } else {
       fs_all = [];
-      return fs_all
+      return fs_all;
   }
 
 
   // remove points that have been assigned mirror elevation values
   indx = where(fs_all.elevation != fs_all.melevation)
   if (is_array(indx)) {
-    fs_all = fs_all(indx);
+    fs_all = unref(fs_all)(indx);
   } else {
     fs_all = [];
-    return fs_all
+    return fs_all;
   }
 
   if (is_array(rcf_width)) {
@@ -793,7 +793,7 @@ func clean_fs(fs_all, rcf_width=) {
     //run rcf on the entire data set
     ptr = rcf(fs_all.elevation, rcf_width*100, mode=2);
     if (*ptr(2) > 3) {
-        fs_all = fs_all(*ptr(1));
+        fs_all = unref(fs_all)(*ptr(1));
     } else {
         fs_all = [];
     }
