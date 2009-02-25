@@ -1140,6 +1140,7 @@ func merge_data_pbds(filepath, write_to_file=, merged_filename=, nvname=, uniq=,
    */
 
  if (!skip) skip = 1;
+ skip = int(skip);
  eaarl = [];
  // find all the pbd files in filepath
 
@@ -1168,13 +1169,45 @@ func merge_data_pbds(filepath, write_to_file=, merged_filename=, nvname=, uniq=,
     }
   }
 
- for (i=1;i<=numberof(fn_all); i++) {
-    write, format="Merging File %d of %d \r",i,numberof(fn_all);
-    f = openb(fn_all(i));
-    restore, f, vname;
-    if (get_member(f,vname) == 0) continue;
-    grow, eaarl, get_member(f,vname)(1:0:skip);
- }   
+  if(numberof(fn_all)) {
+     eaarl_size = 0;
+     eaarl_struct = [];
+     for(i = 1; i <= numberof(fn_all); i++) {
+        write, format="Getting size of file %d of %d\r", i, numberof(fn_all);
+        f = openb(fn_all(i));
+        if(get_member(f, f.vname) != 0) {
+           // The next line deliberately uses integer math, which truncates
+           eaarl_size += (numberof(get_member(f, f.vname))+skip-1)/skip;
+           // The above should be faster than
+           // numberof(get_member(f,f.vname)(::skip)) because it doesn't need
+           // to actually load the data into memory
+           if(is_void(eaarl_struct)) {
+              // The "obvious" way to do this would be:
+              //    eaarl_struct = structof(get_member(f, f.vname)(1))
+              // However, that results in a structure definition that is tied
+              // to the file, which is not usuable when we try to create an
+              // array with it. Using the temporary variable avoids that issue.
+              temp = get_member(f, f.vname)(1);
+              eaarl_struct = structof(temp);
+              temp = [];
+           }
+        }
+        close, f;
+     }
+     write, format="\nAllocating data array of size %d...\n", eaarl_size;
+     eaarl = array(eaarl_struct, eaarl_size);
+     idx = 1;
+     for(i = 1; i <= numberof(fn_all); i++) {
+        write, format="Merging file %d of %d\r", i, numberof(fn_all);
+        f = openb(fn_all(i));
+        if(get_member(f, f.vname) != 0) {
+           idx_upper = idx + (numberof(get_member(f, f.vname))+skip-1)/skip - 1;
+           eaarl(idx:idx_upper) = get_member(f, f.vname)(::skip);
+           idx = idx_upper + 1;
+        }
+        close, f;
+     }
+  }
 
  if (uniq) {
    write, "Finding unique elements in array..."

@@ -1180,6 +1180,7 @@ Original amar nayegandhi. Started 12/06/02.
    default, searchstr, "*.pbd";
    if (interactive) {plottriag = 1; datawin=5;}
 
+   // Gather list of filenames
 
    if (!is_void(fname)) {
       fn_all = dirname+fname;
@@ -1192,36 +1193,23 @@ Original amar nayegandhi. Started 12/06/02.
             ss = searchstr;
          } else {
             if (readedf) {
-               if (datum) {
-                  ss = ["*"+datum+"*.bin", "*"+datum+"*.edf"];
-               } else {
-                  ss = ["*.bin", "*.edf"];
-               }
+               ss = ["*.bin", "*.edf"];
             }
             if (readpbd) {
-               if (datum) {
-                  ss = ["*"+datum+"*.pbd"];
-               } else {
-                  ss = ["*.pbd"];
-               }
+               ss = ["*.pbd"];
+            }
+            if(datum) {
+               ss = "*" + datum + ss;
             }
          }
          // write, format="DIRNAME: %s%s\n", dirname, ss;
-         scmd = swrite(format = "find %s -name '%s'",dirname, ss);
-         fp = 1; lp = 0;
-         for (i=1; i<=numberof(scmd); i++) {
-            f=popen(scmd(i), 0);
-            n = read(f,format="%s", s );
-            close, f;
-            lp = lp + n;
-            if (n) fn_all = s(fp:lp);
-            fp = fp + n;
-         }
+         fn_all = find(dirname, glob=ss);
       }
    }
-
    if (!is_array(fn_all))
       exit,"No input files found.  Goodbye.";
+
+   // Determine existing files; filter file list by type
 
    if ((onlyupdate == 1) && (rcfmode == 1)) {
       mgd_mode = strmatch(fn_all, "_rcf",1);
@@ -1259,8 +1247,8 @@ Original amar nayegandhi. Started 12/06/02.
       fn_arr = fn_all;
       // show_files, files=fn_all, str="FIRST";
 
-   nfiles = numberof(fn_all);
-   write, format="Total number of files to RCF = %d\n",nfiles;
+      nfiles = numberof(fn_all);
+      write, format="Total number of files to RCF = %d\n",nfiles;
 
       // merge files within each data tile
       tile_dir   = array(string, numberof(fn_all));
@@ -1284,6 +1272,23 @@ Original amar nayegandhi. Started 12/06/02.
          fname(ti) = string(&t(1:n(-1)-1))+string(&t(n(0):));
       }
       fn_all = ndirname+fname;
+
+      if (readpbd) {
+         write, "merging all eaarl pbd data";
+         // show_files(files=fn_arr, str="Merge");
+         all_eaarl = merge_data_pbds(fn_all=fn_arr);
+         if (!(is_void(clean))) {
+            if (mode == 1) {
+               all_eaarl = clean_fs(unref(all_eaarl));
+            }
+            if (mode == 2) {
+               all_eaarl = clean_bathy(unref(all_eaarl));
+            }
+            if (mode == 3) {
+               all_eaarl = clean_veg(unref(all_eaarl));
+            }
+         }
+      }
    }
 
    nfiles = numberof(fn_all);
@@ -1360,14 +1365,14 @@ Original amar nayegandhi. Started 12/06/02.
             }
          }
          if (readpbd) {
-            write, format="merging eaarl pbd data in directory %s\n",fn_split(1);
-            // show_files(files=fn_arr, str="Merge");
-            if (datum) {
-               // eaarl = merge_data_pbds(fn_split(1), searchstring="*"+datum+"*"+searchstr+".pbd");
-               eaarl = merge_data_pbds(fn_split(1), fn_all=fn_arr);
-            } else {
-               // eaarl = merge_data_pbds(fn_split(1), searchstring="*"+searchstr+"*");
-               eaarl = merge_data_pbds(fn_split(1), fn_all=fn_arr);
+            if (bmode == 1) {
+               fmeast = fmnorth = 0;
+               sread, strpart(fn_split(2), 4:9), fmeast;
+               sread, strpart(fn_split(2), 12:18), fmnorth;
+               didx = data_box(all_eaarl.east/100., all_eaarl.north/100., fmeast-350, fmeast+2350, fmnorth-2350, fmnorth+350);
+               if (is_array(didx)) {
+                  eaarl = all_eaarl(didx);
+               } else continue;
             }
          }
       } else {
@@ -1385,19 +1390,19 @@ Original amar nayegandhi. Started 12/06/02.
             grow, eaarl, (*data_ptr(j));
          }
       }
-      if (!(is_void(clean))) {
+      if (!(is_void(clean)) && ! (merge && readpbd)) {
          if (mode == 1) {
-            eaarl = clean_fs(eaarl);
+            eaarl = clean_fs(unref(eaarl));
          }
          if (mode == 2) {
-            eaarl = clean_bathy(eaarl);
+            eaarl = clean_bathy(unref(eaarl));
          }
          if (mode == 3) {
-            eaarl = clean_veg(eaarl);
+            eaarl = clean_veg(unref(eaarl));
          }
       }
       data_ptr = [];
-      if (bmode == 1) {
+      if (bmode == 1 && ! (merge && readpbd)) {
          fmeast = fmnorth = 0;
          sread, strpart(fn_split(2), 4:9), fmeast;
          sread, strpart(fn_split(2), 12:18), fmnorth;
