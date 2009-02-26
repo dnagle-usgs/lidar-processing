@@ -7,6 +7,8 @@
     The original DISCLAIMER applies to this as well.
 */
 
+require, "eaarl.i";
+write, "$Id$";
 
 func geoid_data_to_pbd(gfname=, pbdfname=, initialdir=, geoid_version=) {
    /*DOCUMENT geoid_data_to_pbd(gfname,pbdfname,initialdir,geoid_version)
@@ -67,8 +69,8 @@ func nad832navd88(data_in, gdata_dir=, geoid_version=) {
    of the parameters. Returns the data with the elevations modified.
 */
    offset = nad832navd88offset(data_in, gdata_dir=gdata_dir, geoid_version=geoid_version);
-   data_out = data_in;
-   data_out(3,) -= offset;
+   data_out = unref(data_in);
+   data_out(3,) -= unref(offset);
    return data_out;
 }
 
@@ -78,8 +80,8 @@ func navd882nad83(data_in, gdata_dir=, geoid_version=) {
    of the parameters. Returns the data with the elevations modified.
 */
    offset = nad832navd88offset(data_in, gdata_dir=gdata_dir, geoid_version=geoid_version);
-   data_out = data_in;
-   data_out(3,) += offset;
+   data_out = unref(data_in);
+   data_out(3,) += unref(offset);
    return data_out;
 }
 
@@ -260,11 +262,11 @@ func nad832navd88offset(_data_in, gdata_dir=, geoid_version=) {
          f9(j) = gdata(icoln(j)-mnicoln+2,irown(j)-mnirown+2);
     }
 
-    fx1 = qfit(xx,f1,f2,f3);
-    fx2 = qfit(xx,f4,f5,f6);
-    fx3 = qfit(xx,f7,f8,f9);
+    fx1 = qfit(xx,unref(f1),unref(f2),unref(f3));
+    fx2 = qfit(xx,unref(f4),unref(f5),unref(f6));
+    fx3 = qfit(unref(xx),unref(f7),unref(f8),unref(f9));
 
-    data_out = qfit(yy,fx1,fx2,fx3);
+    data_out = qfit(unref(yy),unref(fx1),unref(fx2),unref(fx3));
   }
 
   return data_out;
@@ -277,12 +279,19 @@ func qfit(x,f0,f1,f2) {
    and returning the value qfit = f(x) where 0<=x<=2.
    adapted from GEOID99 model.
 */
-
+/* Original:
   df0 = f1 - f0;
   df1 = f2 - f1;
   d2f0 = df1 - df0;
 
   qfitval = f0 + x*df0 + 0.5*x*(x-1)*d2f0;
+*/
+// Rewrote by David Nagle 2009-02-26 to reduce memory impact
 
-  return qfitval
+  t1 = f1 - f0;
+  x2 = 0.5 * x * (x-1);
+  t2 = unref(f2) - 2 * unref(f1) + f0;
+  qfitval = unref(f0) + unref(x) * unref(t1) + unref(x2) * unref(t2);
+
+  return qfitval;
 }

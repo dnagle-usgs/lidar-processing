@@ -70,7 +70,7 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, geoid_version=, 
    if (!utmzone) {
      if (curzone) {
        utmzone = curzone;
-       write, "Using Current UTM Zone = %d\n",curzone;
+       write, format="Using Current UTM Zone = %d\n",curzone;
      } else {
        utmzone = 0;
        f = read(prompt="Enter UTM Zone Number:", utmzone);
