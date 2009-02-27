@@ -517,6 +517,9 @@ func iex2tans( junk ) {
  extern tans, iex_nav;
  day_start = int(iex_nav.somd(1) / 86400) * 86400; 
  tans = array( IEX_ATTITUDE, dimsof(iex_nav)(2));
+ tans.lat    = iex_nav.lat;
+ tans.lon    = iex_nav.lon;
+ tans.alt    = iex_nav.alt;
  tans.somd   = iex_nav.somd;
  tans.roll   = iex_nav.roll;
  tans.pitch  = iex_nav.pitch;

@@ -394,6 +394,7 @@ func mission_load(filename) {
     f = open(filename, "r");
     json = rdfile(f)(sum);
     close, f;
+    mission_path, file_dirname(filename);
     mission_json_import, json;
 }
 
