@@ -275,7 +275,7 @@ Input:
      td = abs(te - tb);
      hms = sod2hms( tb );
      write, format="%d:%d sod = %6.2f:%-10.2f(%8.4f) utc=%2d:%02d:%02d %s\n",
-                    t(1),t(2), tb, te, td, hms(1,), hms(2,), hms(3,), clr(abs(c));
+                    t(1),t(2), tb, te, td, hms(1), hms(2), hms(3), clr(abs(c));
 
      if ( xtime ) {
      plmk, elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0,
@@ -310,7 +310,7 @@ Input:
   td   = abs(te - tb);
   hms = sod2hms( tb );
   write, format="%d:%d sod = %6.2f:%-10.2f(%8.4f) utc=%2d:%02d:%02d %s\n",
-                    t(1),t(2), tb, te, td, hms(1,), hms(2,), hms(3,), clr(c);
+                    t(1),t(2), tb, te, td, hms(1), hms(2), hms(3), clr(c);
  }
 // limits
 // limits,,, cbar.cmin, cbar.cmax

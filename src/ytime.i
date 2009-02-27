@@ -11,14 +11,14 @@ local ytime_i;
 
    See also:
       getsod soe2sod soe2time hms2sod sod2hms time2soe time_correct is_leap
-      year_cum_months soe2ymd ymd2doy time_plot time_diff
+      soe2ymd ymd2doy time_plot time_diff soe2iso8601
 */
 
 extern _ys;
 /* DOCUMENT _ys
-   Array of integers representing the seconds of the year at midnight, Jan 1,
+   Array of integers representing the seconds of the epoch at midnight, Jan 1,
    in GMT for all years covered by a 32 bit seconds counter starting on Jan 1,
-   1970 at midnight GMT. _ys(0) is for 1970, etc.
+   1970 at midnight GMT. _ys(1) is for 1970, etc.
 */
 /* Older versions generated _ys externally with the following Tcl code, then
    copied/pasted the full data array into this file.
@@ -34,6 +34,8 @@ _ys = array(365*24*60*60, numberof(__years));
 _ys(where(__years % 4 == 0)) += 24 * 60 * 60;
 _ys = _ys(cum)(:-1);
 __years = [];
+
+__months = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
 func getsod(void) {
 /* DOCUMENT getsod()
@@ -63,16 +65,16 @@ func soe2sod(soe) {
 // Alias
 soe2somd = soe2sod;
 
-func soe2time( soe ) {
-/* DOCUMENT soe2time( soe )
+func soe2time(soe) {
+/* DOCUMENT soe2time(soe)
    This function converts a time/date seconds value such as used by Unix and
    DOS system into a return array consisting of:
-      t(1)  Year
-      t(2)  Day of Year
-      t(3)  Seconds of the day
-      t(4)  Hour 
-      t(5)  Minute
-      t(6)  Seconds
+      t(..,1)  Year
+      t(..,2)  Day of Year
+      t(..,3)  Seconds of the day
+      t(..,4)  Hour 
+      t(..,5)  Minute
+      t(..,6)  Seconds
 
    For more information, try:
       man n clock
@@ -97,15 +99,21 @@ func soe2time( soe ) {
    See also:
       soe2sod soe2time hms2sod sod2hms time2soe
 */
-   t = array(int, 6 );
-   t(1) = where ( soe >= _ys ) (0);          // Find starting seconds-of-year index
-   t(2) = (soe - _ys( t(1) ) ) / 86400 + 1;  // Compute day-of-year ( Julian day??)
-   t(3) = (soe - _ys( t(1) ) ) % 86400;      // Compute seconds-of-the-day
-   t(1) += 1969;                             // Convert index into year
-   t(4) = t(3) / 3600;                       // hours
-   t(5) = (t(3) - (t(4)*3600))/60;           // Minutes
-   t(6) = t(3) % 60;                         // Seconds
-   return t;
+   yd = soe2yd(soe);
+   sod = soe2sod(soe);
+   hms = sod2hms(sod);
+   return grow(unref(yd), sod(..,-), unref(hms));
+}
+
+func soe2yd(soe) {
+/* DOCUMENT soe2yd(soe)
+   Converts a seconds-of-the-epoch value into year, day-of-year values.
+*/
+   extern _ys;
+   y = digitize(soe, _ys) - 1;
+   d = int((soe - _ys(y)) / 86400 + 1);
+   y += 1969;
+   return [y, d];
 }
 
 func hms2sod (h, m, s) {
@@ -134,8 +142,22 @@ func hms2sod (h, m, s) {
    return sod;
 }
 
-func sod2hms( a, noary=, decimal= ) {
-/* DOCUMENT sod2hms(a, noary=, decimal=)
+func sod2hms(sod, noary=, decimal=, str=) {
+/* DOCUMENT sod2hms(sod, noary=, decimal=, str=)
+
+   Converts a second-of-the-day time value to a hours-minutes-seconds value.
+
+   With no options specified, it will return an array conformable with sod,
+   adding a final dimension of length 3, as such:
+
+      [hours, minutes, seconds]
+
+   If decimal is 0 (or omitted) the values will be long integers; otherwise,
+   doubles.
+
+   If noary=1, an array of equivalent dimensions to sod will be returned with
+   numerical values in the format HHMMSS (or if decimal=1, HHMMSS.SSS).
+
    Convert an sod (second-of-day) time value to a three element
    array consisting of hours, minutes, and seconds.  This can be used
    where you need hours-minutes-seconds.  For example, you can use:
@@ -157,20 +179,30 @@ func sod2hms( a, noary=, decimal= ) {
       soe2sod soe2time hms2sod sod2hms time2soe
       rbgga.i: gga_find_times
 */
-   hms = array(double, 3, numberof(a));
-   hms(1,) = int(a/3600);     // find hours
-   hms(2,) = int((a - int(hms(1,))*3600)/60);
-   hms(3,) = a % 60;
-   if(!decimal)
-      hms = int(hms);
-   if(noary)
-      return (hms*[10^4,10^2,1])(sum,);
+   default, noary, 0;
+   default, decimal, 0;
+   default, str, 0;
+
+   if(str)
+      return swrite(format="%06d", sod2hms(unref(sod), noary=1));
+
+   hours = int(sod/3600);
+   minutes = int((sod - hours*3600)/60);
+   seconds = unref(sod) % 60;
+
+   if(decimal)
+      seconds = double(unref(seconds));
    else
-      return hms;
+      seconds = long(unref(seconds));
+
+   if(noary)
+      return hours * 1000 + minutes * 100 + seconds;
+   else
+      return [hours, minutes, seconds];
 }
 
 func time2soe( a ) {
-/* DOCUMENT time2sie( a ) 
+/* DOCUMENT time2soe( a ) 
    Converts an array of date/time values to a Unix/DOS seconds of the 
    Epoch value (SOE).
 
@@ -193,6 +225,7 @@ func time2soe( a ) {
 
    Original: W. Wright wright@lidar.wff.nasa.gov
 */
+   extern _ys;
    idx = int(a(*,1)) - 1969;  // convert to index
    a(*,2)--;                  // convert to zero-based day number
    usehms = a(*,3) == 0;
@@ -217,22 +250,8 @@ func is_leap(y) {
 /* DOCUMENT is_leap(year)
    Returns 1 if year is a leap year, 0 otherwise.
 */
-   if(y % 4 != 0) leap = 0;
-   else {
-      if(y % 100 == 0 && y % 400 != 0) leap = 0;
-      else leap = 1;
-   }
+   leap = ((y % 4 == 0) & (y % 100 != 0)) | (y % 400 == 0);
    return leap;
-}
-
-func year_cum_months(year) {
-/* DOCUMENT year_cum_months(year)
-   For a given year, return the cumulative days for each month. (Includes
-   leap days.)
-*/
-   months = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-   months(2) += is_leap(year);
-   return months(cum);
 }
 
 func soe2ymd(soe) {  
@@ -242,18 +261,38 @@ func soe2ymd(soe) {
    Input: soe
 
    Output is 3-value array where:
-      array(1) = year
-      array(2) = month
-      array(3) = day
+      array(..,1) = year
+      array(..,2) = month
+      array(..,3) = day
 */
-   timevals = soe2time(soe);
-   y = timevals(1);
-   doy = timevals(2);
-   
-   months = year_cum_months(y);
-   m = digitize(doy, months(2:)+1);
-   d = doy - months(m);
-   return int([y,m,d]);
+   extern __months;
+
+   yd = soe2yd(soe);
+   year = yd(..,1);
+   doy = yd(..,2);
+   yd = [];
+
+   leaps = is_leap(year);
+   wy = where(leaps);
+   wn = where(!leaps);
+
+   my = dy = mn = dn = [];
+   if(numberof(wy)) {
+      months = __months;
+      months(2) += 1;
+      months = months(cum);
+      my = digitize(doy(wy), months(2:)+1);
+      dy = doy(wy) - months(my);
+   }
+   if(numberof(wn)) {
+      months = __months(cum);
+      mn = digitize(doy(wn), months(2:)+1);
+      dn = doy(wn) - months(mn);
+   }
+   month = merge(my, mn, leaps);
+   day = merge(dy, dn, leaps);
+
+   return [year, month, day];
 }
 
 func ymd2soe(y, m, d, sod) {
@@ -276,7 +315,7 @@ func ymd2soe(y, m, d, sod) {
    return soe;
 }
 
-func ymd2doy(y, m, d) {
+func ymd2doy(year, month, day) {
 /* DOCUMENT ymd2doy(y, m, d)
             ymd2doy(ymd)
 
@@ -284,25 +323,45 @@ func ymd2doy(y, m, d) {
 
    If one argument is given, it should be in the form YYYYMMDD.
 
-   If three arguments are given, they should be year, month, day.
+   If three arguments are given, they should be year, month, day. Year, month,
+   and day must be conformable.
+
+   Output will be conformable with input.
 */
-   if(is_void(m) && is_void(d)) {
-      if(typeof(ymd) == "string") {
-         y = m = d = 0;
-         sread, format="%4d%2d%2d", y, m, d;
+   extern __months;
+
+   if(is_void(month) && is_void(day)) {
+      if(typeof(year) == "string") {
+         ymd = year;
+         year = month = day = array(int, dimsof(ymd));
+         sread, ymd, format="%4d%2d%2d", year, month, day;
       } else {
-         ymd = int(y);
+         ymd = int(year);
          md = ymd % 10000;
-         d = md % 100;
-         m = (md - d) / 100;
-         y = (ymd - md) / 10000;
+         day = md % 100;
+         month = (md - day) / 100;
+         year = (ymd - md) / 10000;
       }
    }
 
-   // The lengths of each month
-   months = year_cum_months(y);
+   leaps = is_leap(year);
+   wy = where(leaps);
+   wn = where(!leaps);
 
-   return months(m) + d;
+   my = dy = mn = dn = [];
+   if(numberof(wy)) {
+      months = __months;
+      months(2) += 1;
+      months = months(cum);
+      doyy = months(long(month(wy))) + day(wy);
+   }
+   if(numberof(wn)) {
+      months = __months(cum);
+      doyn = months(long(month(wn))) + day(wn);
+   }
+   doy = merge(doyy, doyn, leaps);
+
+   return doy;
 }
 
 extern _leap_dates;
@@ -435,5 +494,5 @@ func soe2iso8601(soe) {
    ymd = int(soe2ymd(soe));
    time = int(soe2time(soe));
    return swrite(format="%04d-%02d-%02d %02d:%02d:%02d",
-      ymd(1), ymd(2), ymd(3), time(4), time(5), time(6));
+      ymd(..,1), ymd(..,2), ymd(..,3), time(..,4), time(..,5), time(..,6));
 }

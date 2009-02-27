@@ -727,8 +727,7 @@ func mk_photo_list( q, ofn= ) {
    for ( i = 1; i < dimsof(ssl)(3); i++ ) 
 	grow, t, indgen( int(ssl(1,i)):int(ssl(2,i)));
   
-   hms = sod2hms( t );
-   pfn = array( string, numberof(hms) );
+   hms = sod2hms(t, str=1);
    if ( is_void( ofn ) == 0 ) {
       s = array(string, 100 );
       scmd = swrite(format="/bin/ls -1 %s | head", data_path + "/cam1/"  ) ;
@@ -741,14 +740,14 @@ year
 date
 
       f = open( ofn, "w" );
-      n = write( f, format="cam1/cam1_%s_%s_%02d%02d%02d_01.jpg\n", 
+      n = write( f, format="cam1/cam1_%s_%s_%s_01.jpg\n", 
         year, date,
-        hms(1,),hms(2,),hms(3,) ); 
-      write,format="%d photos written to %s\n", dimsof(hms)(3), ofn;
+        hms ); 
+      write,format="%d photos written to %s\n", numberof(hms), ofn;
       close,f;
    }
-      pfn = swrite( format="cam1/cam1_2001_0714_%02d%02d%02d_01.jpg", 
-        hms(1,),hms(2,),hms(3,) );
+      pfn = swrite( format="cam1/cam1_2001_0714_%s_01.jpg", 
+        hms );
    return pfn;
 }
 

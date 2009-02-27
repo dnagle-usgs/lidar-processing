@@ -300,11 +300,11 @@ Original W. Wright 5/6/06
    if (numberof(jgw_data) == 1) { // an error is one element long, return it now.
       return jgw_data;
    }
-   hms = sod2hms(somd);
-   ofn = swrite(format="%s/%s-%02d%02d%02d-cir.jgw",
-         jgwinfo(1), jgwinfo(2), hms(1),hms(2),hms(3));
-   jpg_ofn=swrite(format="%s-%02d%02d%02d-cir.jpg",
-         jgwinfo(2), hms(1),hms(2),hms(3));
+   hms = sod2hms(somd, str=1);
+   ofn = swrite(format="%s/%s-%s-cir.jgw",
+         jgwinfo(1), jgwinfo(2), hms;
+   jpg_ofn=swrite(format="%s-%s-cir.jpg",
+         jgwinfo(2), hms);
    of = open(ofn,"w");
    write, of, format="%.6f\n", jgw_data(1:4);
    write, of, format="%.3f\n", jgw_data(5:6);
@@ -625,7 +625,7 @@ func copy_sod_cirs(sods, src, dest, copyjgw=, progress=) {
    default, copyjgw, 1;
    default, progress, 1;
    mkdirp, dest;
-   files = find(src, glob=swrite(format="*-%d-cir.jpg", sod2hms(sods, noary=1)));
+   files = find(src, glob=swrite(format="*-%s-cir.jpg", sod2hms(sods, str=1)));
    for(i = 1; i <= numberof(files); i++) {
       cmd = "cp " + files(i) + " " + dest;
       if(progress)

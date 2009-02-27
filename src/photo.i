@@ -221,11 +221,11 @@ func gref_photo( somd=, ioff=, offset=,ggalst=, skip=, drift=, date=, win= ) {
   northing = UTMNorthing;
   easting  = UTMEasting;
   zone     = UTMZone;
-  hms = sod2hms( int(sd ) );   
-  pname = swrite(format="%s%s%02d%02d%02d%s", 
+  hms = sod2hms(sd, str=1);
+  pname = swrite(format="%s%s%s%s", 
          data_path + "cam1/", 
          fn1,
-         hms(1), hms(2), hms(3),
+         hms,
 	 fn2 ); 
   print, heading, northing, easting, roll, pitch, galt, hms
   photo = jpg_read( pname );
