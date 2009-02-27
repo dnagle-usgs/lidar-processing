@@ -120,22 +120,48 @@ func extract_for_qq(&north, &east, zone, qq, buffer=) {
    return where(dist <= buffer);
 }
 
-func extract_for_dt(&north, &east, dt, buffer=) {
+func extract_for_dt(north, east, dt, buffer=) {
 /* DOCUMENT extract_for_dt(north, east, dt, buffer=)
    
    This will return an index into north/east of all coordinates that fall
    within the bounds of the given 2k data tile dt, which should be the string
    name of the data tile.
 
-   The buffer= option specifies a buffer in meters to extend the quarter quad's
+   The buffer= option specifies a buffer in meters to extend the tile's
    boundaries by. By default, it is 100 meters. Setting buffer=0 will constrain
    the data to the exact tile boundaries.
-
 */
    // Original David Nagle 2008-07-21
-   // north and east are passed by reference to save memory, DO NOT modify!
    default, buffer, 100;
    bbox = dt2utm(dt, bbox=1);
+   return extract_for_bbox(unref(north), unref(east), bbox, buffer);
+}
+
+func extract_for_it(north, east, it, buffer=) {
+/* DOCUMENT extract_for_it(north, east, it, buffer=)
+   
+   This will return an index into north/east of all coordinates that fall
+   within the bounds of the given 10k index tile it, which should be the string
+   name of the index tile.
+
+   The buffer= option specifies a buffer in meters to extend the tile's
+   boundaries by. By default, it is 100 meters. Setting buffer=0 will constrain
+   the data to the exact tile boundaries.
+*/
+   default, buffer, 100;
+   bbox = it2utm(it, bbox=1);
+   return extract_for_bbox(unref(north), unref(east), bbox, buffer);
+}
+
+func extract_for_bbox(north, east, bbox, buffer) {
+/* DOCUMENT extract_for_bbox(north, east, bbox, buffer)
+   
+   This will return an index into north/east of all coordinates that fall
+   within the bounds of the given bounding box bbox.
+
+   The buffer argument specifies a buffer in meters to extend the bbox's
+   boundaries by.
+*/
    min_n = bbox(1) - buffer;
    max_n = bbox(3) + buffer;
    min_e = bbox(4) - buffer;

@@ -302,7 +302,7 @@ Original W. Wright 5/6/06
    }
    hms = sod2hms(somd, str=1);
    ofn = swrite(format="%s/%s-%s-cir.jgw",
-         jgwinfo(1), jgwinfo(2), hms;
+         jgwinfo(1), jgwinfo(2), hms);
    jpg_ofn=swrite(format="%s-%s-cir.jpg",
          jgwinfo(2), hms);
    of = open(ofn,"w");

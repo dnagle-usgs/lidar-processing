@@ -295,6 +295,36 @@ func soe2ymd(soe) {
    return [year, month, day];
 }
 
+func ymd2date(year, month, day) {
+/* DOCUMENT date = ymd2date(year, month, day);
+   date = ymd2date(ymd);
+
+   Converts ymd format to date format. Input can either be an array of [year,
+   moth, day] or can be three separate arrays of year, month, day (which must
+   all have the same dimensions). Output will be conformable with input.
+
+   The output is in string format as "YYYY-MM-DD".
+*/
+   if(is_void(month)) {
+      ymd = year;
+      year = ymd(..,1);
+      month = ymd(..,2);
+      day = ymd(..,3);
+      ymd = [];
+   }
+
+   return swrite(format="%04d-%02d-%02d",
+      unref(year), unref(month), unref(day));
+}
+
+func soe2date(soe) {
+/* DOCUMENT date = soe2date(soe)
+   Given a seconds-of-the-epoch value, returns the date as "YYYY-MM-DD". Output
+   will have same dimensions as input.
+*/
+   return ymd2date(soe2ymd(unref(soe)));
+}
+
 func ymd2soe(y, m, d, sod) {
 /* DOCUMENT soe = ymd2soe(y, m, d)
    soe = ymd2soe(y, m, d, sod)
