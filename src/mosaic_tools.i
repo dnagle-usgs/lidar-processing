@@ -185,13 +185,18 @@ func plot_all(pnav_idxlist) {
 */
 
 func prepare_cir_for_inpho(conf_file, photo_dir, xyz_file, inpho_dir,
-   downsample=, tile_buffer=, xyz_buffer=, defn_buffer=
+   downsample=, tile_buffer=, xyz_buffer=, defn_buffer=,
+   make_xyz=, make_gpsins=, make_defn=, make_images=
 ) {
 // Original David Nagle 2009-03-03
    default, downsample, 2;
    default, tile_buffer, 250;
    default, xyz_buffer, 750;
    default, defn_buffer, 100;
+   default, make_xyz, 1;
+   default, make_gpsins, 1;
+   default, make_defn, 1;
+   default, make_images, 1;
    extern tans;
 
    // Step 1: Load in conf file and figure out which images we're working with.
@@ -285,72 +290,79 @@ func prepare_cir_for_inpho(conf_file, photo_dir, xyz_file, inpho_dir,
       write, format=" - %d: %s\n", i, itcode;
 
       // Step 4: ... copy images
-      write, format="   * Copying %d images...\n", numberof(idx);
-      dest_dir = file_join(itdir, "images");
-      mkdirp, dest_dir;
-      for(j = 1; j <= numberof(idx); j++) {
-         current_file = photo_files(idx(j));
-         file_copy, current_file,
-            file_join(dest_dir, file_tail(current_file));
+      if(make_images) {
+         write, format="   * Copying %d images...\n", numberof(idx);
+         dest_dir = file_join(itdir, "images");
+         mkdirp, dest_dir;
+         for(j = 1; j <= numberof(idx); j++) {
+            current_file = photo_files(idx(j));
+            file_copy, current_file,
+               file_join(dest_dir, file_tail(current_file));
+         }
       }
 
       // Step 5: ... generate .gpsins files
-      write, format="   * Generating .gpsins file...%s", "\n";
-      mkdirp, file_join(itdir, "data");
-      gpsins_file = file_join(itdir, "data", "merged.gpsins");
-      f = open(gpsins_file, "w");
-      write, f, linesize=2000, format="%s %.10f %.10f %.4f %.4f %.4f %.4f\n",
-         file_rootname(file_tail(photo_files(idx))),
-         photo_tans.lon(idx), photo_tans.lat(idx), photo_tans.alt(idx),
-         photo_tans.roll(idx), photo_tans.pitch(idx), photo_tans.heading(idx);
-      close, f;
+      if(make_gpsins) {
+         write, format="   * Generating .gpsins file...%s", "\n";
+         mkdirp, file_join(itdir, "data");
+         gpsins_file = file_join(itdir, "data", "merged.gpsins");
+         f = open(gpsins_file, "w");
+         write, f, linesize=2000, format="%s %.3f %.3f %.3f %.4f %.4f %.4f\n",
+            file_rootname(file_tail(photo_files(idx))),
+            photo_tans.easting(idx), photo_tans.northing(idx), photo_tans.alt(idx),
+            photo_tans.roll(idx), photo_tans.pitch(idx), photo_tans.heading(idx);
+         close, f;
+      }
 
       // Step 6: ... generate .xyz files
-      write, format="   * Generating .xyz file...%s", "\n";
-      bbox = it2utm(itcode, bbox=1);
-      min_n = bbox(1) - xyz_buffer;
-      max_n = bbox(3) + xyz_buffer;
-      min_e = bbox(4) - xyz_buffer;
-      max_e = bbox(2) + xyz_buffer;
-      fin = open(xyz_file, "r");
-      mkdirp, file_join(itdir, "xyz");
-      fout = open(file_join(itdir, "xyz", "merged.xyz"), "w");
-      tstamp = lc = 0;
-      timer_init, tstamp;
-      for(;;) {
-         lc++;
-         timer_tick, tstamp, lc, lc+1, swrite(format="     + Processing line %d...", lc);
-         line = rdline(fin);
-         if(!line) break;
-         east = north = alt = double(0);
-         sread, line, east, north, alt;
-         if(
-            min_n <= north & north <= max_n &
-            min_e <= east  & east  <= max_e
-         ) {
-            write, fout, format="%.2f %.2f %.2f\n", east, north, alt;
+      if(make_xyz) {
+         write, format="   * Generating .xyz file...%s", "\n";
+         bbox = it2utm(itcode, bbox=1);
+         min_n = bbox(1) - xyz_buffer;
+         max_n = bbox(3) + xyz_buffer;
+         min_e = bbox(4) - xyz_buffer;
+         max_e = bbox(2) + xyz_buffer;
+         fin = open(xyz_file, "r");
+         mkdirp, file_join(itdir, "xyz");
+         fout = open(file_join(itdir, "xyz", "merged.xyz"), "w");
+         tstamp = lc = 0;
+         timer_init, tstamp;
+         for(;;) {
+            lc++;
+            timer_tick, tstamp, lc, lc+1, swrite(format="     + Processing line %d...", lc);
+            line = rdline(fin);
+            if(!line) break;
+            east = north = alt = double(0);
+            sread, line, east, north, alt;
+            if(
+               min_n <= north & north <= max_n &
+               min_e <= east  & east  <= max_e
+            ) {
+               write, fout, format="%.2f %.2f %.2f\n", east, north, alt;
+            }
          }
+         close, fin;
+         close, fout;
+         write, format="%s", "\n";
       }
-      close, fin;
-      close, fout;
-      write, format="%s", "\n";
 
       // Step 7: ... generate tile definitions
-      dtcodes = get_utm_dtcodes(
-         photo_tans.northing(idx), photo_tans.easting(idx), photo_tans.zone(idx));
-      dtcodes = dt_short(set_remove_duplicates(dtcodes));
-      write, format="   * Generating tile definitions for %d data tiles...\n", numberof(dtcodes);
-      f = open(file_join(itdir, "data", "tile_defns.txt"), "w");
-      for(j = 1; j <= numberof(dtcodes); j++) {
-         write, format="     + %d: %s\n", j, dtcodes(j);
-         bbox = dt2utm(dtcodes(j), bbox=1);
-         write, f, format="%c%s%c %d %d %d %d\n", 0x22, dtcodes(j), 0x22,
-            int(bbox(3) + defn_buffer), int(bbox(4) - defn_buffer),
-            int(bbox(1) - defn_buffer), int(bbox(2) + defn_buffer);
+      if(make_defn) {
+         dtcodes = get_utm_dtcodes(
+            photo_tans.northing(idx), photo_tans.easting(idx), photo_tans.zone(idx));
+         dtcodes = dt_short(set_remove_duplicates(dtcodes));
+         write, format="   * Generating tile definitions for %d data tiles...\n", numberof(dtcodes);
+         f = open(file_join(itdir, "data", "tile_defns.txt"), "w");
+         for(j = 1; j <= numberof(dtcodes); j++) {
+            write, format="     + %d: %s\n", j, dtcodes(j);
+            bbox = dt2utm(dtcodes(j), bbox=1);
+            write, f, format="%c%s%c %d %d %d %d\n", 0x22, dtcodes(j), 0x22,
+               int(bbox(3) + defn_buffer), int(bbox(4) - defn_buffer),
+               int(bbox(1) - defn_buffer), int(bbox(2) + defn_buffer);
+         }
+         close, f;
       }
-      close, f;
 
-      // Step 8: ... sub-segment ??
    }
 
 }
