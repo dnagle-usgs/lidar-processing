@@ -144,6 +144,217 @@ func plot_all(pnav_idxlist) {
    plmk, pnav(pnav_idxlist).lat, pnav(pnav_idxlist).lon, marker=4, msize=0.2, color="blue";
 }
 
+/*
+
+   Things we need to prepare in Yorick for Inpho:
+
+      * Divide the images up into 10km index tiles. (If necessary, sub-segment tiles.)
+      * Create gpsins files for each tile using pnav + ins.
+      * Create tile definitions for each tile.
+      * Create an xyz file for each tile with the tile's FS point cloud.
+
+   Each tile has the following directory/file structure:
+
+   Y  e640_n4500_18/
+   Y  +- data/
+   Y  |  +- merged.gpsins
+   Y  |  +- (200?-??-??.gpsins - per-date gpsins files)
+   Y  |  +- tile_defns.txt
+   Y  +- segments/
+   Y  |  +- 01_e642480n4498010/
+   Y  |  |  +- images/
+   Y  |  |  |  +- (0?????-??????-cir.jpg - CIR images)
+   I  |  |  +- project/
+   I  |  |  |  +- (inpho project files)
+   Y  +- images/
+   Y  |  +- (0?????-??????-cir.jpg - CIR images)
+   I  +- project/
+   I  |  +- (inpho project files - merged, if there were segments)
+   Y  +- xyz/
+   Y  |  +- merged.xyz
+   Y  |  +- (t_e..._n88_..._merged_fs_rcf_mf_fs.xyz - fs xyz files)
+   I  |  +- (inpho converted DEM)
+   I  +- orthos/
+   I  |  +- full/
+   I  |  |  +- (full ortho images, high resolution)
+   I  |  +- clipped/
+   I  |  |  +- (clipped ortho images, mosaic resolution)
+   I  +- mosaic/
+   I  |  +- (mosaic images)
+
+*/
+
+func prepare_cir_for_inpho(conf_file, photo_dir, xyz_file, inpho_dir,
+   downsample=, tile_buffer=, xyz_buffer=, defn_buffer=
+) {
+// Original David Nagle 2009-03-03
+   default, downsample, 2;
+   default, tile_buffer, 250;
+   default, xyz_buffer, 750;
+   default, defn_buffer, 100;
+   extern tans;
+
+   // Step 1: Load in conf file and figure out which images we're working with.
+
+   write, format="Loading conf file...%s", "\n";
+   mission_load, conf_file;
+
+   write, format="Locating images...%s", "\n";
+   photo_files = find(photo_dir, glob="*.jpg");
+   if(!numberof(photo_files))
+      error, "No files found.";
+
+   write, format="Found %d images\n", numberof(photo_files);
+   write, format="Determining second-of-epoch values...%s", "\n";
+   photo_soes = cir_to_soe(file_tail(photo_files));
+   if(downsample > 1) {
+      write, format="Downsampling images...%s", "\r";
+      w = where(int(photo_soes) % downsample == 0);
+      if(numberof(w)) {
+         photo_files = photo_files(w);
+         photo_soes = photo_soes(w);
+         write, format="Downsampled to %d images\n", numberof(w);
+      } else {
+         error, "Downsampling eliminated all images.";
+      }
+   }
+
+   write, format="Calculating dates...%s", "\n";
+   photo_dates = soe2date(photo_soes);
+   date_list = set_remove_duplicates(photo_dates);
+
+   // Step 2: Load tans data for images
+   write, format="Calculating tans data for %d dates...\n", numberof(date_list);
+   photo_tans = array(IEX_ATTITUDEUTM, dimsof(photo_soes));
+   for(i = 1; i <= numberof(date_list); i++)  {
+      write, format=" - %d: Interpolating for %s...\n", i, date_list(i);
+      missiondate_current, date_list(i);
+      missiondata_load, "dmars";
+
+      w = where(photo_dates == missiondate_current());
+      
+      photo_tans(w).somd = soe2sod(photo_soes(w));
+      photo_tans(w).lat = interp(tans.lat, tans.somd, photo_tans(w).somd);
+      photo_tans(w).lon = interp(tans.lon, tans.somd, photo_tans(w).somd);
+      photo_tans(w).alt = interp(tans.alt, tans.somd, photo_tans(w).somd);
+      photo_tans(w).roll = interp(tans.roll, tans.somd, photo_tans(w).somd);
+      photo_tans(w).pitch = interp(tans.pitch, tans.somd, photo_tans(w).somd);
+      photo_tans(w).heading = interp_angles(tans.heading, tans.somd, photo_tans(w).somd);
+   }
+   
+   write, format="Converting WGS84 to NAD83 to NAVD88...%s", "\n";
+   wgs = transpose([photo_tans.lon, photo_tans.lat, photo_tans.alt]);
+   nad = wgs842nad83(unref(wgs));
+   navd = nad832navd88(unref(nad));
+   photo_tans.lon = navd(1,);
+   photo_tans.lat = navd(2,);
+   photo_tans.alt = navd(3,);
+
+   write, format="Converting lat/lon to UTM...%s", "\n";
+   utm = fll2utm(photo_tans.lat, photo_tans.lon);
+   photo_tans.northing = utm(1,);
+   photo_tans.easting = utm(2,);
+   photo_tans.zone = utm(3,);
+   utm = [];
+
+   // Step 3: Partition images.
+   dtcodes = get_utm_dtcodes(photo_tans.northing,
+      photo_tans.easting, photo_tans.zone);
+   itcodes = dt_short(set_remove_duplicates(get_dt_itcodes(dtcodes)));
+   dtcodes = [];
+
+   itiles = h_new();
+   write, format="Partitioning images into %d index tiles...\n", numberof(itcodes);
+   for(i = 1; i <= numberof(itcodes); i++) {
+      write, format=" - %d: %s\n", i, itcodes(i);
+      z = it2utm(itcodes(i))(3);
+      w = where(photo_tans.zone == z);
+      idx = extract_for_it(photo_tans(w).northing, photo_tans(w).easting,
+         itcodes(i), buffer=tile_buffer);
+      if(numberof(idx))
+         h_set, itiles, itcodes(i), w(idx);
+   }
+   itcodes = h_keys(itiles);
+   write, format="Found %d total index tiles, processing...\n", numberof(itcodes);
+
+   // Iterate through image directories and...
+   for(i = 1; i <= numberof(itcodes); i++) {
+      itcode = itcodes(i);
+      itdir = file_join(inpho_dir, itcode);
+      idx = itiles(itcode);
+      write, format=" - %d: %s\n", i, itcode;
+
+      // Step 4: ... copy images
+      write, format="   * Copying %d images...\n", numberof(idx);
+      dest_dir = file_join(itdir, "images");
+      mkdirp, dest_dir;
+      for(j = 1; j <= numberof(idx); j++) {
+         current_file = photo_files(idx(j));
+         file_copy, current_file,
+            file_join(dest_dir, file_tail(current_file));
+      }
+
+      // Step 5: ... generate .gpsins files
+      write, format="   * Generating .gpsins file...%s", "\n";
+      mkdirp, file_join(itdir, "data");
+      gpsins_file = file_join(itdir, "data", "merged.gpsins");
+      f = open(gpsins_file, "w");
+      write, f, linesize=2000, format="%s %.10f %.10f %.4f %.4f %.4f %.4f\n",
+         file_rootname(file_tail(photo_files(idx))),
+         photo_tans.lon(idx), photo_tans.lat(idx), photo_tans.alt(idx),
+         photo_tans.roll(idx), photo_tans.pitch(idx), photo_tans.heading(idx);
+      close, f;
+
+      // Step 6: ... generate .xyz files
+      write, format="   * Generating .xyz file...%s", "\n";
+      bbox = it2utm(itcode, bbox=1);
+      min_n = bbox(1) - xyz_buffer;
+      max_n = bbox(3) + xyz_buffer;
+      min_e = bbox(4) - xyz_buffer;
+      max_e = bbox(2) + xyz_buffer;
+      fin = open(xyz_file, "r");
+      mkdirp, file_join(itdir, "xyz");
+      fout = open(file_join(itdir, "xyz", "merged.xyz"), "w");
+      tstamp = lc = 0;
+      timer_init, tstamp;
+      for(;;) {
+         lc++;
+         timer_tick, tstamp, lc, lc+1, swrite(format="     + Processing line %d...", lc);
+         line = rdline(fin);
+         if(!line) break;
+         east = north = alt = double(0);
+         sread, line, east, north, alt;
+         if(
+            min_n <= north & north <= max_n &
+            min_e <= east  & east  <= max_e
+         ) {
+            write, fout, format="%.2f %.2f %.2f\n", east, north, alt;
+         }
+      }
+      close, fin;
+      close, fout;
+      write, format="%s", "\n";
+
+      // Step 7: ... generate tile definitions
+      dtcodes = get_utm_dtcodes(
+         photo_tans.northing(idx), photo_tans.easting(idx), photo_tans.zone(idx));
+      dtcodes = set_remove_duplicates(dtcodes);
+      write, format="   * Generating tile definitions for %d data tiles...\n", numberof(dtcodes);
+      f = open(file_join(itdir, "data", "tile_defns.txt"), "w");
+      for(j = 1; j <= numberof(dtcodes); j++) {
+         write, format="     + %d: %s\n", j, dtcodes(j);
+         bbox = dt2utm(dtcodes(j), bbox=1);
+         write, f, format="%c%s%c %d %d %d %d\n", 0x22, dtcodes(j), 0x22,
+            int(bbox(3) + defn_buffer), int(bbox(4) - defn_buffer),
+            int(bbox(1) - defn_buffer), int(bbox(2) + defn_buffer);
+      }
+      close, f;
+
+      // Step 8: ... sub-segment ??
+   }
+
+}
+
 func batch_load_and_write_cir_gpsins(img_dirs, globs, mission_dirs=, pnav_files=, ins_files=, dest_dir=) {
    for(i = 1; i <= numberof(globs); i++) {
       if(numberof(mission_dirs) && is_void(pnav_files)) {
@@ -314,19 +525,16 @@ func get_img_pnav(sod) {
 func make_cir_index_tiles(srcdir, destdir, gpsins, zone, buffer=) {
 /* DOCUMENT gen_cir_tiles, pnav, src, dest, copyjgw=, abbr=
 
-This function converts the cir image files (and corresponding world files)  from a "minute" directory into our regular 2k by 2k tiling format.
+   This function partitions images into 10k by 10k index tiles.
 
- Inputs:
-   pnav:  "gps" or "pnav" data array for that mission day.
-   src : source directory where the cir files in the "minute" format  are stored.
-   dest: destination directory.
-   copyjgw = set to 1 to copy the corresponding jgw files along with the jpg
-      files.  Set to 0 if you don't want the jgw files to be copied over.
-      Default = 1.
-   abbr = set to 1 to use an "abbreviated" naming scheme for the directories.
-      Instead of having a nested index tile/data tile format like normal EAARL
-      data, this will create a single tier of directories named as
-      e###_n####_##. Default = 0.
+   Parameters:
+      srcdir:  Path to full set of images
+      destdir: Path to place index tiles
+      gpsins:  Path to gpsins file with all gpsins data
+      zone:    UTM zone of data
+
+   Options:
+      buffer=  Buffer to include around tile; default 250km
 */
    fix_dir, src;
    fix_dir, dest;
