@@ -338,7 +338,7 @@ func prepare_cir_for_inpho(conf_file, photo_dir, xyz_file, inpho_dir,
       // Step 7: ... generate tile definitions
       dtcodes = get_utm_dtcodes(
          photo_tans.northing(idx), photo_tans.easting(idx), photo_tans.zone(idx));
-      dtcodes = set_remove_duplicates(dtcodes);
+      dtcodes = dt_short(set_remove_duplicates(dtcodes));
       write, format="   * Generating tile definitions for %d data tiles...\n", numberof(dtcodes);
       f = open(file_join(itdir, "data", "tile_defns.txt"), "w");
       for(j = 1; j <= numberof(dtcodes); j++) {
