@@ -575,3 +575,109 @@ func matrix_to_tbr(R) {
 
    return tbr;
 }
+
+func poly_area(x1, y1) {
+/* DOCUMENT poly_area(x, y)
+   poly_area(ply)
+
+   Calculates and returns the area of a polygon.
+   
+   The polygon can be defined in one of two ways:
+      x, y -- the x and y points of the polygon
+      ply -- x,y points in an array where dimsof(ply) == [2,2,n]
+
+   For simple (non-intersecting) polygons, the area is the area covered by
+   the polygon in its plane.
+
+   For self-intersecting polygons, the area is affected by regional densities
+   due to crossings. For example:
+      * The central convex pentagon within a pentagram has a density of 2.
+        Its area counts twice.
+      * A cross-quadrilateral (such as [[0,0],[0,1],[1,0],[1,1]]) will have
+        two triangular regions of opposite-signed densities. The total area
+        will thus be less than the area covered by the polygon in its plane
+        (and can even be zero, as in the example given).
+*/
+// Original David B. Nagle 2009-03-10
+// Using math and explanation as found from Wikipedia:
+// http://en.wikipedia.org/w/index.php?title=Polygon&oldid=271086171
+   if(is_void(y1)) {
+      y1 = x1(2,);
+      x1 = x1(1,);
+   }
+   x2 = yroll(x1,-1);
+   y2 = yroll(y1,-1);
+   area = 0.5 * (x1*y2 - x2*y1)(sum);
+   return abs(area);
+}
+
+func convex_hull(x, y) {
+/* DOCUMENT hull = convex_hull(x, y)
+   Returns the polygon that represents the convex hull of the given points.
+
+   dimsof(hull) == [2,2,n]
+   hull(1,) == x's
+   hull(2,) == y's
+*/
+// Original David B. Nagle 2009-03-10
+// Adapted from algorithm found on Wikipedia:
+// http://en.wikipedia.org/w/index.php?title=Graham_scan&oldid=274508758
+   srt = sort(x);
+   x = x(srt);
+   y = y(srt);
+
+   // L - lower; U - upper
+   L = U = [[x(1),y(1)],[x(2),y(2)]];
+   for(i = 3; i <= numberof(x); i++) {
+      while(
+         dimsof(L)(3) >= 2 &&
+         cross_product_sign(L(1,-1),L(2,-1),L(1,0),L(2,0),x(i),y(i)) <= 0
+      ) {
+         L = L(,:-1);
+      }
+      grow, L, [x(i), y(i)];
+
+      while(
+         dimsof(U)(3) >= 2 &&
+         cross_product_sign(U(1,-1),U(2,-1),U(1,0),U(2,0),x(i),y(i)) >= 0
+      ) {
+         U = U(,:-1);
+      }
+      grow, U, [x(i), y(i)];
+   }
+   LU = grow(L(,:-1), U(,2:)(,::-1));
+   return LU;
+}
+
+func cross_product_sign(x1, y1, x2, y2, x3, y3) {
+/* DOCUMENT handed = cross_product_sign(x1, y1, x2, y2, x3, y3)
+   Returns a value whose sign indicates the "handedness" of the cross
+   product. Primarily intended for use within convex_hull.
+
+   handed < 0 -- "right turn"
+   handed > 0 -- "left turn"
+   handed == 0 -- collinear
+*/
+// Original David B. Nagle 2009-03-10
+// Using math from Wikipedia:
+// http://en.wikipedia.org/w/index.php?title=Graham_scan&oldid=274508758
+   return (x2-x1)*(y3-y1)-(y2-y1)*(x3-x1);
+}
+
+func triangle_areas(x1, y1, x2, y2, x3, y3) {
+/* DOCUMENT area = triangle_areas(x1, y1, x2, y2, x3, y3)
+   Returns the areas of the triangles defined by the points given. Each value
+   may be array or scalar, but all values must be conformable with one
+   another.
+*/
+// Original David B. Nagle 2009-03-10
+   yd1 = y2 - y3;
+   yd2 = unref(y3) - y1;
+   yd3 = unref(y1) - unref(y2);
+   area = 0.5 * (
+      unref(x1) * unref(yd1) +
+      unref(x2) * unref(yd2) +
+      unref(x3) * unref(yd3)
+   );
+   return area;
+}

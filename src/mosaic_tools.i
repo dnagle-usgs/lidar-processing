@@ -184,8 +184,8 @@ func plot_all(pnav_idxlist) {
 
 */
 
-func prepare_cir_for_inpho(conf_file, photo_dir, xyz_file, inpho_dir,
-   downsample=, tile_buffer=, xyz_buffer=, defn_buffer=,
+func prepare_cir_for_inpho(conf_file, photo_dir, pbd_dir, inpho_dir,
+   downsample=, tile_buffer=, xyz_buffer=, defn_buffer=, pbd_glob=,
    make_xyz=, make_gpsins=, make_defn=, make_images=
 ) {
 // Original David Nagle 2009-03-03
@@ -230,37 +230,7 @@ func prepare_cir_for_inpho(conf_file, photo_dir, xyz_file, inpho_dir,
 
    // Step 2: Load tans data for images
    write, format="Calculating tans data for %d dates...\n", numberof(date_list);
-   photo_tans = array(IEX_ATTITUDEUTM, dimsof(photo_soes));
-   for(i = 1; i <= numberof(date_list); i++)  {
-      write, format=" - %d: Interpolating for %s...\n", i, date_list(i);
-      missiondate_current, date_list(i);
-      missiondata_load, "dmars";
-
-      w = where(photo_dates == missiondate_current());
-      
-      photo_tans(w).somd = soe2sod(photo_soes(w));
-      photo_tans(w).lat = interp(tans.lat, tans.somd, photo_tans(w).somd);
-      photo_tans(w).lon = interp(tans.lon, tans.somd, photo_tans(w).somd);
-      photo_tans(w).alt = interp(tans.alt, tans.somd, photo_tans(w).somd);
-      photo_tans(w).roll = interp(tans.roll, tans.somd, photo_tans(w).somd);
-      photo_tans(w).pitch = interp(tans.pitch, tans.somd, photo_tans(w).somd);
-      photo_tans(w).heading = interp_angles(tans.heading, tans.somd, photo_tans(w).somd);
-   }
-   
-   write, format="Converting WGS84 to NAD83 to NAVD88...%s", "\n";
-   wgs = transpose([photo_tans.lon, photo_tans.lat, photo_tans.alt]);
-   nad = wgs842nad83(unref(wgs));
-   navd = nad832navd88(unref(nad));
-   photo_tans.lon = navd(1,);
-   photo_tans.lat = navd(2,);
-   photo_tans.alt = navd(3,);
-
-   write, format="Converting lat/lon to UTM...%s", "\n";
-   utm = fll2utm(photo_tans.lat, photo_tans.lon);
-   photo_tans.northing = utm(1,);
-   photo_tans.easting = utm(2,);
-   photo_tans.zone = utm(3,);
-   utm = [];
+   photo_tans = mosaic_gather_tans(date_list, photo_soes, progress=1);
 
    // Step 3: Partition images.
    dtcodes = get_utm_dtcodes(photo_tans.northing,
@@ -304,67 +274,182 @@ func prepare_cir_for_inpho(conf_file, photo_dir, xyz_file, inpho_dir,
       // Step 5: ... generate .gpsins files
       if(make_gpsins) {
          write, format="   * Generating .gpsins file...%s", "\n";
-         mkdirp, file_join(itdir, "data");
-         gpsins_file = file_join(itdir, "data", "merged.gpsins");
-         f = open(gpsins_file, "w");
-         write, f, linesize=2000, format="%s %.3f %.3f %.3f %.4f %.4f %.4f\n",
-            file_rootname(file_tail(photo_files(idx))),
-            photo_tans.easting(idx), photo_tans.northing(idx), photo_tans.alt(idx),
-            photo_tans.roll(idx), photo_tans.pitch(idx), photo_tans.heading(idx);
-         close, f;
+         mosaic_gen_gpsins,
+            file_join(itdir, "data", "merged.gpsins"),
+            photo_files=photo_files, photo_tans=photo_tans;
       }
 
       // Step 6: ... generate .xyz files
       if(make_xyz) {
          write, format="   * Generating .xyz file...%s", "\n";
-         bbox = it2utm(itcode, bbox=1);
-         min_n = bbox(1) - xyz_buffer;
-         max_n = bbox(3) + xyz_buffer;
-         min_e = bbox(4) - xyz_buffer;
-         max_e = bbox(2) + xyz_buffer;
-         fin = open(xyz_file, "r");
-         mkdirp, file_join(itdir, "xyz");
-         fout = open(file_join(itdir, "xyz", "merged.xyz"), "w");
-         tstamp = lc = 0;
-         timer_init, tstamp;
-         for(;;) {
-            lc++;
-            timer_tick, tstamp, lc, lc+1, swrite(format="     + Processing line %d...", lc);
-            line = rdline(fin);
-            if(!line) break;
-            east = north = alt = double(0);
-            sread, line, east, north, alt;
-            if(
-               min_n <= north & north <= max_n &
-               min_e <= east  & east  <= max_e
-            ) {
-               write, fout, format="%.2f %.2f %.2f\n", east, north, alt;
-            }
-         }
-         close, fin;
-         close, fout;
-         write, format="%s", "\n";
+         mosaic_gen_xyz,
+            file_join(itdir, "xyz", "merged.xyz"),
+            itcode, pbd_dir, pbd_glob, buffer=xyz_buffer, progress=1;
       }
 
       // Step 7: ... generate tile definitions
       if(make_defn) {
-         dtcodes = get_utm_dtcodes(
-            photo_tans.northing(idx), photo_tans.easting(idx), photo_tans.zone(idx));
-         dtcodes = dt_short(set_remove_duplicates(dtcodes));
-         write, format="   * Generating tile definitions for %d data tiles...\n", numberof(dtcodes);
-         f = open(file_join(itdir, "data", "tile_defns.txt"), "w");
-         for(j = 1; j <= numberof(dtcodes); j++) {
-            write, format="     + %d: %s\n", j, dtcodes(j);
-            bbox = dt2utm(dtcodes(j), bbox=1);
-            write, f, format="%c%s%c %d %d %d %d\n", 0x22, dtcodes(j), 0x22,
-               int(bbox(3) + defn_buffer), int(bbox(4) - defn_buffer),
-               int(bbox(1) - defn_buffer), int(bbox(2) + defn_buffer);
-         }
-         close, f;
+         write, format="   * Generating tile definitions...%s", "\n";
+         mosaic_gen_tile_defns,
+            file_join(itdir, "data", "tile_defns.txt"),
+            buffer=defn_buffer, photo_tans=photo_tans;
       }
-
    }
+}
 
+func mosaic_gather_tans(date_list, photo_soes, progress=) {
+   default, progress, 1;
+   photo_tans = array(IEX_ATTITUDEUTM, dimsof(photo_soes));
+   for(i = 1; i <= numberof(date_list); i++)  {
+      if(progress)
+         write, format=" - %d: Interpolating for %s...\n", i, date_list(i);
+      missiondate_current, date_list(i);
+      missiondata_load, "dmars";
+
+      w = where(photo_dates == missiondate_current());
+      
+      photo_tans(w).somd = soe2sod(photo_soes(w));
+      photo_tans(w).lat = interp(tans.lat, tans.somd, photo_tans(w).somd);
+      photo_tans(w).lon = interp(tans.lon, tans.somd, photo_tans(w).somd);
+      photo_tans(w).alt = interp(tans.alt, tans.somd, photo_tans(w).somd);
+      photo_tans(w).roll = interp(tans.roll, tans.somd, photo_tans(w).somd);
+      photo_tans(w).pitch = interp(tans.pitch, tans.somd, photo_tans(w).somd);
+      photo_tans(w).heading = interp_angles(tans.heading, tans.somd, photo_tans(w).somd);
+   }
+   
+   if(progress)
+      write, format="Converting WGS84 to NAD83 to NAVD88...%s", "\n";
+   wgs = transpose([photo_tans.lon, photo_tans.lat, photo_tans.alt]);
+   nad = wgs842nad83(unref(wgs));
+   navd = nad832navd88(unref(nad));
+   photo_tans.lon = navd(1,);
+   photo_tans.lat = navd(2,);
+   photo_tans.alt = navd(3,);
+   navd = [];
+
+   if(progress)
+      write, format="Converting lat/lon to UTM...%s", "\n";
+   utm = fll2utm(photo_tans.lat, photo_tans.lon);
+   photo_tans.northing = utm(1,);
+   photo_tans.easting = utm(2,);
+   photo_tans.zone = utm(3,);
+   utm = [];
+
+   return photo_tans;
+}
+
+func mosaic_gen_gpsins(dest_file, photo_files=, photo_tans=) {
+   dest_path = file_dirname(dest_file);
+   if(!file_isdir(dest_path))
+      mkdirp, dest_path;
+   f = open(dest_file, "w");
+   write, f, linesize=2000, format="%s %.3f %.3f %.3f %.4f %.4f %.4f\n",
+      file_rootname(file_tail(photo_files(idx))),
+      photo_tans.easting(idx), photo_tans.northing(idx), photo_tans.alt(idx),
+      photo_tans.roll(idx), photo_tans.pitch(idx), photo_tans.heading(idx);
+   close, f;
+}
+
+func mosaic_gen_xyz(dest_file, itcode, pbd_dir, pbd_glob, buffer=, progress=) {
+   it_centroid = it2utm(itcode, centroid=1);
+   it_n = it_centroid(1);
+   it_e = it_centroid(2);
+   it_z = it_centroid(3);
+
+   pbd_files = find(pbd_dir, glob=pbd_glob);
+   pbd_centroid = dt2utm(file_tail(pbd_files), centroid=1);
+   pbd_n = pbd_centroid(1);
+   pbd_e = pbd_centroid(2);
+   pbd_z = pbd_centroid(3);
+
+   // range <= 5000  --> this index tile's data tiles
+   // range <= 6000  --> adds the data tiles bordering the index tiles
+   // range <  6500  --> makes sure we avoid floating point problems
+   w = where(
+      abs(it_n - pbd_n) < 6500 &
+      abs(it_e - pbd_e) < 6500 &
+      it_z == pbd_z
+   );
+
+   if(!numberof(w))
+      error, "No data found!";
+
+   data = merge_data_pbds(fn_all=pbd_files(w));
+   w = extract_for_it(data.north/100., data.east/100., itcode, buffer=buffer);
+   if(!numberof(w))
+      error, "No data found!";
+   data = data(w);
+
+   dest_path = file_dirname(dest_file);
+   if(!file_isdir(dest_path))
+      mkdirp, dest_path;
+   f = open(dest_file, "w");
+   write, f, format="%.2f %.2f %.2f\n", data.east/100., data.north/100.,
+      data.elevation/100.;
+   close, f;
+}
+
+func old_mosaic_gen_xyz(dest_file, itcode, xyz_file, buffer=, progress=) {
+   // xyz_buffer -> buffer
+   // itdir
+   default, buffer, 750;
+   default, progress, 1;
+
+   bbox = it2utm(itcode, bbox=1);
+   min_n = bbox(1) - buffer;
+   max_n = bbox(3) + buffer;
+   min_e = bbox(4) - buffer;
+   max_e = bbox(2) + buffer;
+   fin = open(xyz_file, "r");
+   dest_path = file_dirname(dest_file);
+   if(!file_isdir(dest_path))
+      mkdirp, dest_path;
+   fout = open(dest_file, "w");
+   tstamp = lc = 0;
+   timer_init, tstamp;
+   for(;;) {
+      lc++;
+      if(progress)
+         timer_tick, tstamp, lc, lc+1, swrite(format="     + Processing line %d...", lc);
+      line = rdline(fin);
+      if(!line) break;
+      east = north = alt = double(0);
+      sread, line, east, north, alt;
+      if(
+         min_n <= north & north <= max_n &
+         min_e <= east  & east  <= max_e
+      ) {
+         write, fout, format="%.2f %.2f %.2f\n", east, north, alt;
+      }
+   }
+   close, fin;
+   close, fout;
+   if(progress)
+      write, format="%s", "\n";
+}
+
+func mosaic_gen_tile_defns(dest_file, buffer=, photo_tans=) {
+   default, buffer, 100;
+   default, photo_tans, [];
+
+   if(!numberof(photo_tans))
+      error, "No tans data available.";
+
+   dtcodes = get_utm_dtcodes(
+      photo_tans.northing(idx), photo_tans.easting(idx), photo_tans.zone(idx));
+   dtcodes = dt_short(set_remove_duplicates(dtcodes));
+
+   dest_path = file_dirname(dest_file);
+   if(!file_isdir(dest_path))
+      mkdirp, dest_path;
+   f = open(file_join(dest_file), "w");
+   for(j = 1; j <= numberof(dtcodes); j++) {
+      bbox = dt2utm(dtcodes(j), bbox=1);
+      write, f, format="%c%s%c %d %d %d %d\n", 0x22, dtcodes(j), 0x22,
+         int(bbox(3) + buffer), int(bbox(4) - buffer),
+         int(bbox(1) - buffer), int(bbox(2) + buffer);
+   }
+   close, f;
 }
 
 func batch_load_and_write_cir_gpsins(img_dirs, globs, mission_dirs=, pnav_files=, ins_files=, dest_dir=) {
