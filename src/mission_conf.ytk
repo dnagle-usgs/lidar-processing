@@ -351,6 +351,11 @@ namespace eval mission {
             -command [@ date_add]
         pack $win.btnAdd -anchor w
 
+        button $win.btnPath -text "Specify mission path..." \
+            -padx 2m -pady 1m \
+            -command [@ set_mission_path]
+        pack $win.btnPath -anchor w
+
         wm protocol $win WM_DELETE_WINDOW [@ menu_close]
 
         uncurry @
@@ -443,6 +448,12 @@ namespace eval mission {
         uncurry @
     }
 
+    proc __date_config_path_helper {w var dlg} {
+        foreach child [list Edb Pnav Dmars Ops] {
+            $w.ent$child configure -initialdir [set [set var]([list $dlg data_path])]
+        }
+    }
+
     proc date_config {date} {
         set dlg [iwidgets::dialog $v::toplevel.#auto \
             -title "Mission day: $date" \
@@ -469,6 +480,8 @@ namespace eval mission {
             -labeltext "Data path:" \
             -actiontype dir \
             -parent $dlg \
+            -initialdir [mission_path] \
+            -updatecommand [@ [list __date_config_path_helper $w [& v::config_temp] $dlg]] \
             -textvariable [& v::config_temp]([% data_path])
         GUI::FileEntryButton $w.entEdb \
             -labeltext "EDB file:" \
@@ -599,5 +612,43 @@ namespace eval mission {
         }
         destroy $dlg
     }
-}
 
+    proc set_mission_path {} {
+        set continue yes
+        if {[llength [missiondate_list]] > 0} {
+            set continue [tk_messageBox \
+                -icon warning -parent $dlg -type yesno \
+                -message "Changing the mission path will clear all currently\
+                    defined mission days. Are you sure you want to continue?"]
+        }
+        if {$continue eq "yes"} {
+            set dlg [iwidgets::fileselectiondialog $v::toplevel.#auto \
+                -title "Specify mission path" \
+                -modality application \
+                -fileson 0]
+
+            #$dlg hide 1 ;# Filter
+            #$dlg default 0
+            #$dlg center
+            if {[$dlg activate]} {
+                set path [$dlg get]
+                if {[file isdirectory $path]} {
+                    if {$path eq [mission_path]} {
+                        tk_messageBox \
+                            -icon warning -parent $dlg -type ok \
+                            -message "The path you selected is identical to the\
+                                path already in use. No change made."
+                    } else {
+                        mission_clear
+                        mission_path $path
+                    }
+                } else {
+                    tk_messageBox \
+                        -icon warning -parent $dlg -type ok \
+                        -message "The directory you entered does not exist;\
+                            aborting."
+                }
+            }
+        }
+    }
+}
