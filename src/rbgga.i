@@ -791,7 +791,7 @@ func show_gga_track (x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, widt
 
 */
  
-  show_pnav_track ( pnav, x=x, y=y, color=color,  skip=skip, msize=msize, marker=marker, lines=lines, utm=utm, width=width, win=win   ) ;
+  show_pnav_track, pnav, x=x, y=y, color=color,  skip=skip, msize=msize, marker=marker, lines=lines, utm=utm, width=width, win=win;
 }
 
 func show_track ( fs, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, width=, win=   )  {
@@ -1095,6 +1095,39 @@ func gga_limits(utm=) {
    }
 }
 
-// 2009-01-13: why do we need this?  rwm
-// if ( is_void(_ytk) )
-//    help, rbgga_help;
+func show_mission_pnav_tracks(void, color=, skip=, msize=, marker=, lines=,
+utm=, width=, win=) {
+/* DOCUMENT show_mission_pnav_tracks, color=, skip=, msize=, marker=, lines=,
+   utm=, width=, win=
+
+   Displays the pnav tracks for all mission days (as defined in the loaded
+   mission configuration).
+
+   See show_gga_track for an explanation of options; most are passed as-is to
+   it.
+
+   One exception: if color is not specified, each day's trackline will get a
+   different color.
+
+   See also: show_gga_track, mission_conf
+*/
+// Original David B. Nagle 2009-03-12
+   default, width, 1;
+   default, msize, 0.1;
+   default, marker, 0;
+   env_bkp = missiondata_wrap("pnav");
+   dates = missiondate_list();
+   color_tracker = -4;
+   for(i = 1; i <= numberof(dates); i++) {
+      if(mission_has("pnav file", date=dates(i))) {
+         color_tracker--;
+         cur_color = is_void(color) ? color_tracker : color;
+         missiondata_load, "pnav", date=dates(i);
+         show_gga_track, color=cur_color, skip=skip, msize=msize,
+            marker=marker, lines=lines, utm=utm, width=width, win=win;
+      }
+   }
+   missiondata_unwrap, env_bkp;
+}
+
+
