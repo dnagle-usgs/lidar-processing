@@ -357,10 +357,13 @@ original Brendan Penney
 modified amar nayegandhi April 2005
 */
    extern lpidx; // this takes the values of the polygon selected by user.
+   if(is_void(data_dir))
+      error, "You must provide data_dir=";
+
    w = current_window();
-   if(!(data_dir)) data_dir =  "/quest/data/EAARL/TB_FEB_02/";
    if (is_void(win)) win = w;
-   window, win;
+   if(!noplot)
+      window, win;
    if (lmap) load_map(utm=1);
    if (!mode) mode = 2; // defaults to bathymetry
 
@@ -492,7 +495,7 @@ modified amar nayegandhi April 2005
          }
    }
 
-   if (uniq) {
+   if (uniq && numberof(sel_eaarl)) {
       write, "Finding unique elements in array...";
       // sort the elements by soe
       idx = sort(sel_eaarl.soe);
@@ -509,8 +512,8 @@ modified amar nayegandhi April 2005
       }
       sel_eaarl = sel_eaarl(idx);
    }
-
-   write, format = "Total Number of selected points = %d\n", numberof(sel_eaarl);
+   if(!noplot)
+      write, format = "Total Number of selected points = %d\n", numberof(sel_eaarl);
 
    window_select, w;
    return sel_eaarl;
