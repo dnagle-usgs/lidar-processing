@@ -244,6 +244,9 @@ time_rec(FILE *f, int pass) {
      if ( tarray[0].secs > 1136073600 )
         hdr.dTimeTagBias        =  14.0;
 
+     if ( tarray[0].secs > 1230699600 )
+        hdr.dTimeTagBias        =  15.0;
+
      tm = gmtime( (time_t *)&tarray[0].secs );
        sod = tarray[0].secs % 86400;
      bsowe = tarray[0].secs - sod - tm->tm_wday*86400;
