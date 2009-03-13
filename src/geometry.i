@@ -613,6 +613,7 @@ func poly_area(x1, y1) {
 
 func convex_hull(x, y) {
 /* DOCUMENT hull = convex_hull(x, y)
+   hull = convex_hull(ply)
    Returns the polygon that represents the convex hull of the given points.
 
    dimsof(hull) == [2,2,n]
@@ -622,9 +623,13 @@ func convex_hull(x, y) {
 // Original David B. Nagle 2009-03-10
 // Adapted from algorithm found on Wikipedia:
 // http://en.wikipedia.org/w/index.php?title=Graham_scan&oldid=274508758
+   if(is_void(y)) {
+      y = x(2,);
+      x = x(1,);
+   }
    srt = sort(x);
-   x = x(srt);
-   y = y(srt);
+   x = double(x(srt));
+   y = double(y(srt));
 
    // L - lower; U - upper
    L = U = [[x(1),y(1)],[x(2),y(2)]];
@@ -645,7 +650,7 @@ func convex_hull(x, y) {
       }
       grow, U, [x(i), y(i)];
    }
-   LU = grow(L(,:-1), U(,2:)(,::-1));
+   LU = grow(L(,:-1), U(,2:)(,::-1), L(,1));
    return LU;
 }
 
@@ -680,4 +685,35 @@ func triangle_areas(x1, y1, x2, y2, x3, y3) {
       unref(x3) * unref(yd3)
    );
    return area;
+}
+
+func buffer_hull(ply, buffer, pts=) {
+/* DOCUMENT buffer_hull(ply, buffer)
+   Given a convex hull, this will add a buffer around it.
+
+   In order to calculate the buffered hull, each point in the input hull is
+   treated as the center of a circle. Points are sampled along the
+   circumference of the circle at equal intervals and added to a new point
+   cloud. Then, the convex hull of the new point cloud is returned.
+
+   ply - Should be a polygon. Normally this is a polygon returned by
+      convex_hull, however, any polygon can be passed (though the returned
+      result will be a convex hull around it if it's not a convex hull).
+
+   buffer - The amount of buffer to be applied around the hull.
+
+   pts= This is the number of sample points around each input point that should
+      be added to the polygon before recreating its convex hull. It defaults to
+      8. This needs to be at least 1. Higher numbers result in a smoother
+      buffered hull, but will also result in a hull with more data points. Very
+      low values (under 4) may result in unsatisfactory results.
+*/
+// Original David B. Nagle 2009-03-13
+   default, pts, 8;
+   mixed_points = ply;
+   angles = span(0, 2*pi, pts+1)(:-1);
+   for(i = 1; i <= numberof(angles); i++) {
+      grow, mixed_points, ply + (buffer * [cos(angles(i)), sin(angles(i))]);
+   }
+   return convex_hull(mixed_points(1,), mixed_points(2,));
 }
