@@ -189,7 +189,7 @@ if {[winfo exists .l1wid]} {
             }
             destroy .stby
             if {$cbv == 1} {
-              set plot_settings(cmin) $cbvc(min)
+              set plot_settings(cmin) $cbvc(cmin)
               set cdelta [expr {$cbvc(cmax)-$cbvc(cmin)} ]
               set plot_settings(cmax) $cbvc(cmax)
               set plot_settings(msize) $cbvc(msize)
