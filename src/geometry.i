@@ -227,8 +227,7 @@ func interp_angles(ang, i, ip, rad=) {
       rad= Set to 1 if the angles are in radians. By default, this assumes
          degrees.
 */
-   if(is_void(rad)) rad = 0;
-   if(is_void(linear)) linear = 0;
+   default, rad, 0;
    
    angp = array(double, numberof(ip));
    
@@ -716,4 +715,76 @@ func buffer_hull(ply, buffer, pts=) {
       grow, mixed_points, ply + (buffer * [cos(angles(i)), sin(angles(i))]);
    }
    return convex_hull(mixed_points(1,), mixed_points(2,));
+}
+
+func angular_range(ang, rad=) {
+/* DOCUMENT [min, max, span] = angular_range(ang, rad=)
+   Returns metrics on the angular range of the given array of angles.
+
+   Angles may be in degrees or radians. Default is degrees. Use rad=1 if they
+   are in radians. The return value will have the same kind of angles as the
+   input.
+
+   This finds the bounding angles for a set of angles and returns the minimum
+   and maximum angles and the distance between those angles.
+
+   Examples:
+
+   > angular_range([4,6,12])
+   [4,12,8]
+   > angular_range([0,2,4,6,8,9,7,5,3,1])
+   [0,9,9]
+   > angular_range([0,10,20,340,350])
+   [-20,20,40]
+   > angular_range([175,180,185])
+   [175,185,10]
+*/
+// Original David B. Nagle 2009-03-16
+   default, rad, 0;
+
+   ang = set_remove_duplicates(ang);
+   if(!rad) ang *= pi/180.;
+
+   // normalize them
+   ang = atan(sin(ang),cos(ang));
+
+   amin = ang(min);
+   amax = ang(max);
+
+   inner = numberof(where(amin < ang & ang < amax));
+   outer = numberof(where(amin > ang | ang > amax));
+
+   result = [];
+   if(outer > inner) {
+      result = [amax, amin, 2 * pi - (amax - amin)];
+   } else {
+      result = [amin, amax, amax - amin];
+   }
+
+   w = where(ang < 0);
+   if(numberof(w)) {
+      ang(w) += 2 * pi;
+      amin = ang(min);
+      amax = ang(max);
+
+      inner = numberof(where(amin < ang & ang < amax));
+      outer = numberof(where(amin > ang | ang > amax));
+
+      if(outer > inner) {
+         rng = 2 * pi - (amax - amin);
+         if(rng < result(3)) {
+            result = [amax, amin, 2 * pi - (amax - amin)];
+         }
+      } else {
+         rng = amax - amin;
+         if(rng < result(3)) {
+            result = [amin, amax, amax - amin];
+         }
+      }
+
+   }
+
+   if(!rad) result *= 180./pi;
+
+   return result;
 }

@@ -364,7 +364,27 @@ func gather_data_stats(data, &working_tans, &working_pnav) {
       h_set, stat_temp, "rms", working_tans.pitch(rms);
       h_set, stats, "pitch", stat_temp;
 
-      // heading?
+      // heading
+      angrng = angular_range(working_tans.heading);
+      if(angrng(3) < 90) {
+         stat_temp = h_new();
+         h_set, stat_temp, "min", angrng(1);
+         h_set, stat_temp, "max", angrng(2);
+         amin = angrng(1);
+         htemp = working_tans.heading;
+         htemp *= pi / 180.;
+         htemp = atan(sin(htemp),cos(htemp));
+         htemp *= 180. / pi;
+         htemp -= amin;
+         qs = quartiles(htemp) + amin;
+         h_set, stat_temp, "q1", qs(1);
+         h_set, stat_temp, "med", qs(2);
+         h_set, stat_temp, "q3", qs(3);
+         h_set, stat_temp, "avg", amin + htemp(avg);
+         h_set, stat_temp, "rms", htemp(rms);
+         amin = htemp = [];
+         h_set, stats, "heading", stat_temp;
+      }
    }
 
    // Now attempt to extract from pnav

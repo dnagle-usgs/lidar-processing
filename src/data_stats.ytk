@@ -143,10 +143,16 @@ itcl::body DataStatsWindow::refresh_fields {} {
       set var $_segment($i,var)
       foreach field [list min q1 med q3 max avg rms] {
          if {[dict exists $_stat_data $var $statistic]} {
-            set _segment($i,$field) [dict get $_stat_data $var $statistic $field]
+            set _segment($i,$field) \
+               [format "%.2f" [dict get $_stat_data $var $statistic $field]]
          } else {
             set _segment($i,$field) -
          }
+      }
+      if {$statistic eq "heading"} {
+         $itk_interior.fraVariables.btnPlot$i configure -state disabled
+      } else {
+         $itk_interior.fraVariables.btnPlot$i configure -state normal
       }
    }
 }
