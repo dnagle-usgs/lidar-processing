@@ -52,8 +52,21 @@ if {[winfo exists .l1wid]} {
   set changed_dpi 0
   set avg_surf 1
   set rcf_buf_rgn 0; #Used in proc replace_proc
+  set autoclean_after_process 0
 
   set show_pro_gui 1
+
+  proc show_pro_gui_update {a b c} {
+    global show_pro_gui
+    if {$show_pro_gui} {
+      grid .l1wid.bf4
+    } else {
+      grid remove .l1wid.bf4
+    }
+  }
+
+  trace remove variable show_pro_gui write show_pro_gui_update
+  trace add variable show_pro_gui write show_pro_gui_update
 
   set varlist {fs_all depth_all veg_all cveg_all workdata}
 
@@ -129,6 +142,7 @@ if {[winfo exists .l1wid]} {
   menu .l1wid.mb.file
   menu .l1wid.mb.load
   menu .l1wid.mb.options
+  menu .l1wid.mb.options.processing
   menu .l1wid.mb.graph
   menu .l1wid.mb.post
   menu .l1wid.mb.cmd
@@ -868,6 +882,22 @@ if {[winfo exists .l1wid]} {
 
   .l1wid.mb add cascade -label Options -underline 0 -menu .l1wid.mb.options
 
+  .l1wid.mb.options add cascade -label "Processing options..." -underline 2 \
+    -menu .l1wid.mb.options.processing
+
+  .l1wid.mb.options.processing add checkbutton -variable usecentroid \
+    -label "Correct range walk with centroid"
+
+  .l1wid.mb.options.processing add checkbutton -variable avg_surf \
+    -label "Use Fresnel reflections to determine water surface (submerged only)"
+
+  .l1wid.mb.options.processing add checkbutton \
+    -variable autoclean_after_process \
+    -label "Automatically test and clean after processing"
+
+  .l1wid.mb.options.processing add checkbutton \
+    -label "Show Processing section of GUI" \
+    -variable show_pro_gui
 
   .l1wid.mb.options add command -label "Configure elevation scale limits..." \
     -underline 0 \
@@ -1072,17 +1102,6 @@ if {[winfo exists .l1wid]} {
   .l1wid.mb.options add checkbutton \
     -label "Show raw and processed waveforms when using Pixel Waveform" \
     -variable bconst
-
-  .l1wid.mb.options add checkbutton \
-    -label "Show Processing section of GUI" \
-    -variable show_pro_gui \
-    -command {
-      if {$show_pro_gui} {
-        grid .l1wid.bf4
-      } else {
-        grid remove .l1wid.bf4
-      }
-    }
 
   proc make_selected_arrays {} {
     global lrnindx list
@@ -2978,44 +2997,57 @@ if {[winfo exists .l1wid]} {
 
   Button .l1wid.bf4.2.proc -text "Process Now" -width 20 -bd 5\
     -command {
-      global list lrnindx pro_var varlist
+      global list lrnindx pro_var varlist autoclean_after_process
       set list {}
       set lrnindx {}
       exp_send "utm = $utm\n"
       set ptype [processing_mode]
       set defr [.l1wid.bf4.1.d getvalue]
       exp_send "ptype = $ptype\n\r"
-      if {$defr == 3} {
-        exp_send "q = gga_win_sel(2, win=6,\
-          llarr=\[$mnlon, $mxlon, $mnlat, $mxlat\]);\r"
+
+      # Deprecated as of 2009-03-16 by DBN
+      # The widget .l1wid.bf4.1.d currently will never have a value of 3, so
+      # the following code is obsolete. I've commented it out for now, but it
+      # should be removed eventually.
+      #
+      #if {$defr == 3} {
+      #  exp_send "q = gga_win_sel(2, win=6,\
+      #    llarr=\[$mnlon, $mxlon, $mnlat, $mxlat\]);\r"
+      #}
+
+      switch -- $ptype {
+        0 {
+          exp_send "fs_all = make_fs(latutm=1, q=q, ext_bad_att=1,\
+            usecentroid=$usecentroid);\r"
+          expect ">"
+          set pro_var fs_all
+        }
+        1 {
+          exp_send "depth_all = make_bathy(latutm = 1, q = q, ext_bad_depth=1,\
+            ext_bad_att=1, avg_surf=$avg_surf);\r"
+          expect ">"
+          set pro_var depth_all
+        }
+        2 {
+          exp_send "veg_all = make_veg(latutm=1, q=q, ext_bad_att=1,\
+            ext_bad_veg=1, use_centroid=$usecentroid);\r"
+          expect ">"
+          set pro_var veg_all
+        }
+        3 {
+          exp_send "cveg_all = make_veg(latutm=1, q=q, use_be_peak=$usecentroid,\
+            multi_peaks=1);\r"
+          expect ">"
+          set pro_var cveg_all
+        }
+        4 {
+          exp_send "process_for_dws,q\r"
+          expect ">"
+        }
       }
-      if {$ptype == 0} {
-        exp_send "fs_all = make_fs(latutm=1, q=q, ext_bad_att=1,\
-          usecentroid=$usecentroid);\r"
-        expect ">"
-        set pro_var [lindex $varlist 0]
-      }
-      if {$ptype == 1} {
-        exp_send "depth_all = make_bathy(latutm = 1, q = q, ext_bad_depth=1,\
-          ext_bad_att=1, avg_surf=$avg_surf);\r"
-        expect ">"
-        set pro_var [lindex $varlist 1]
-      }
-      if {$ptype == 2} {
-        exp_send "veg_all = make_veg(latutm=1, q=q, ext_bad_att=1,\
-          ext_bad_veg=1, use_centroid=$usecentroid);\r"
-        expect ">"
-        set pro_var [lindex $varlist 2]
-      }
-      if {$ptype == 3} {
-        exp_send "cveg_all = make_veg(latutm=1, q=q, use_be_peak=$usecentroid,\
-          multi_peaks=1);\r"
-        expect ">"
-        set pro_var [lindex $varlist 3]
-      }
-      if { $ptype == 4 }  {
-        exp_send "process_for_dws,q\r"
-        expect ">"
+
+      if {$autoclean_after_process} {
+        yset $pro_var test_and_clean [list $pro_var]
       }
     }
 
