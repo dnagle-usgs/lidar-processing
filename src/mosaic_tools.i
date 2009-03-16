@@ -297,6 +297,144 @@ func prepare_cir_for_inpho(conf_file, photo_dir, pbd_dir, inpho_dir,
    }
 }
 
+func gather_cir_data(photo_dir, conf_file, downsample=) {
+   default, downsample, 0;
+   mission_load, conf_file;
+
+   write, format="Locating images...%s", "\n";
+   photo_files = find(photo_dir, glob="*.jpg");
+   if(!numberof(photo_files))
+      error, "No files found.";
+
+   write, format="Found %d images\n", numberof(photo_files);
+   write, format="Determining second-of-epoch values...%s", "\n";
+   photo_soes = cir_to_soe(file_tail(photo_files));
+   if(downsample > 1) {
+      write, format="Downsampling images...%s", "\r";
+      w = where(int(photo_soes) % downsample == 0);
+      if(numberof(w)) {
+         photo_files = photo_files(w);
+         photo_soes = photo_soes(w);
+         write, format="Downsampled to %d images\n", numberof(w);
+      } else {
+         error, "Downsampling eliminated all images.";
+      }
+   }
+
+   write, format="Calculating dates...%s", "\n";
+   photo_dates = soe2date(photo_soes);
+   date_list = set_remove_duplicates(photo_dates);
+
+   // Step 2: Load tans data for images
+   write, format="Calculating tans data for %d dates...\n", numberof(date_list);
+   photo_tans = mosaic_gather_tans(date_list, photo_soes, progress=1);
+
+   data = h_new(
+      "files", photo_files,
+      "soes", photo_soes,
+      "tans", photo_tans,
+      "dates", photo_dates,
+      "date_list", date_list,
+      "photo_dir", photo_dir,
+      "conf_file", conf_file
+   );
+
+   return data;
+}
+
+func save_cir_data(data, dest) {
+   yhd_save, dest, data, overwrite=1;
+   f = createb(dest + ".pbd");
+   add_variable, f, -1, "tans", structof(data.tans), dimsof(data.tans);
+   f.tans = data.tans;
+   close, f;
+}
+
+func load_cir_data(src) {
+   data = yhd_restore(src);
+   f = openb(src + ".pbd");
+   h_set, data, "tans", f.tans(1:0);
+   close, f;
+   return data;
+}
+
+func calculate_jgw_matrices(cirdata, camera=, elev=, pbd_dir=, verbose=, debug=) {
+   extern ms4000_specs;
+   default, camera, ms4000_specs;
+   default, elev, 0;
+   default, verbose, 1;
+   jgws = array(double, [2, 6, numberof(cirdata.files)]);
+   if(!is_void(pbd_dir)) {
+      pbd_data = merge_data_pbds(pbd_dir, uniq=1, skip=25);
+   }
+   tstamp = [];
+   timer_init, tstamp;
+   for(i = 1; i <= numberof(cirdata.files); i++) {
+      if(verbose && !debug)
+         timer_tick, tstamp, i, numberof(cirdata.files);
+      if(debug) {
+         write, format="%d: %s\n", i, file_tail(cirdata.files(i));
+         write, "Acquiring jgw";
+      }
+      jgw = gen_jgw(cirdata.tans(i), camera, elev);
+      if(! is_void(pbd_data)) {
+         if(debug)
+            write, "Calculating poly";
+         //ply = jgw_poly(jgw, camera=camera);
+         if(debug)
+            write, "Finding internal points";
+         //ply_idx = testPoly2(ply * 100, pbd_data.east, pbd_data.north);
+         bbox = jgw_bbox(jgw, camera=camera);
+         bbox_idx = data_box(pbd_data.east, pbd_data.north,
+            bbox(1)*100., bbox(2)*100., bbox(3)*100., bbox(4)*100.);
+         if(numberof(bbox_idx)) {
+            if(debug)
+               write, "Finding old center";
+            old_center = jgw_center(jgw, camera=camera);
+            if(debug)
+               write, "Finding median elevation";
+            elev = median(pbd_data(bbox_idx).elevation)/100.;
+            if(debug)
+               write, format="   -- Median elevation: %.2f\n", elev;
+            if(debug)
+               write, "Acquiring revised jgw";
+            jgw = gen_jgw(cirdata.tans(i), camera, elev);
+            if(debug)
+               write, "Finding new center";
+            new_center = jgw_center(jgw, camera=camera);
+            moved = sqrt(([old_center,new_center](,dif)^2)(sum));
+            if(debug)
+               write, format="PBD data adjusted center point by %.2f meters.\n", moved;
+         }
+         jgws(,i) = jgw;
+      }
+   }
+   h_set, cirdata, "jgw", jgws;
+}
+
+func jgw_bbox(jgw, camera=) {
+   ply = jgw_poly(jgw, camera=camera);
+   return [ply(min,1), ply(max,1), ply(min,2), ply(max,2)];
+}
+
+func jgw_poly(jgw, camera=) {
+   extern ms4000_specs;
+   default, camera, ms4000_specs;
+   x = [0., 0, camera.sensor_width, camera.sensor_width, 0];
+   y = [0., camera.sensor_height, camera.sensor_height, 0, 0];
+   affine_transform, x, y, jgw;
+   return transpose([x, y]);
+}
+
+func jgw_center(jgw, camera=) {
+   extern ms4000_specs;
+   default, camera, ms4000_specs;
+   x = [camera.sensor_width / 2.0];
+   y = [camera.sensor_height / 2.0];
+   affine_transform, x, y, jgw;
+   return [x(1), y(1)];
+}
+
 func mosaic_gather_tans(date_list, photo_soes, progress=) {
    default, progress, 1;
    photo_tans = array(IEX_ATTITUDEUTM, dimsof(photo_soes));
@@ -357,10 +495,13 @@ func mosaic_gen_xyz(dest_file, itcode, pbd_dir, pbd_glob, buffer=, progress=) {
    it_z = it_centroid(3);
 
    pbd_files = find(pbd_dir, glob=pbd_glob);
-   pbd_centroid = dt2utm(file_tail(pbd_files), centroid=1);
-   pbd_n = pbd_centroid(1);
-   pbd_e = pbd_centroid(2);
-   pbd_z = pbd_centroid(3);
+   pbd_n = pbd_e = pbd_z = array(long, numberof(pbd_files));
+   for(i = 1; i <= numberof(pbd_files); i++) {
+      pbd_centroid = dt2utm(file_tail(pbd_files(i)), centroid=1);
+      pbd_n(i) = pbd_centroid(1);
+      pbd_e(i) = pbd_centroid(2);
+      pbd_z(i) = pbd_centroid(3);
+   }
 
    // range <= 5000  --> this index tile's data tiles
    // range <= 6000  --> adds the data tiles bordering the index tiles
@@ -1005,5 +1146,101 @@ func new_gen_jgws(photo_dir, elev=, glob=) {
          close, f;
 
       }
+   }
+}
+
+func plot_cir_flightline(cirdata, flt, color=) {
+   for(i = 1; i <= numberof(flt); i++) {
+      idx = *( cirdata.flightlines(flt(i)) );
+      plot_jgw_data, cirdata.jgw(,idx), color=color;
+   }
+}
+
+func plot_jgw_data(jgws, color=) {
+   for(i = 1; i <= numberof(jgws(1,)); i++) {
+      ply = jgw_poly(jgws(,i));
+      plg, ply(2,), ply(1,), marks=0, color=color;
+   }
+}
+
+func pbd_data_hull(pbd_dir, glob=, buffer=, skip=) {
+   default, glob, "*.pbd";
+   default, buffer, 750;
+   default, skip, 10;
+   pbd_files = find(pbd_dir, glob=glob);
+   piece_hull = [];
+   tstamp = [];
+   timer_init, tstamp;
+   for(i = 1; i <= numberof(pbd_files); i++) {
+      timer_tick, tstamp, i, numberof(pbd_files);
+      f = openb(pbd_files(i));
+      grow, piece_hull, convex_hull(
+         get_member(f, f.vname).east(1:0:skip),
+         get_member(f, f.vname).north(1:0:skip)
+      );
+      close, f;
+   }
+   full_hull = buffer_hull(piece_hull, int(buffer * 100));
+   return full_hull / 100.;
+}
+
+func filter_cirdata_by_flightlines(cirdata, flts) {
+   idx = [];
+   for(i = 1; i <= numberof(flts); i++) {
+      grow, idx, *( cirdata.flightlines(flts(i)) );
+   }
+   return filter_cirdata_by_index(cirdata, idx);
+}
+
+func filter_cirdata_by_hull(cirdata, hull) {
+   idx = testPoly2(hull, cirdata.tans.easting, cirdata.tans.northing);
+   return filter_cirdata_by_index(cirdata, idx);
+}
+
+func filter_cirdata_by_index(cirdata, idx) {
+   newdata = [];
+   if(numberof(idx)) {
+      idx = idx(sort(cirdata.soes(idx)));
+      newdata = h_new(
+         "files", cirdata.files(idx),
+         "soes", cirdata.soes(idx),
+         "tans", cirdata.tans(idx),
+         "dates", cirdata.dates(idx),
+         "date_list", cirdata.data_list
+      );
+      if(h_has(cirdata, "jgw")) {
+         h_set, newdata, "jgw", cirdata.jgw(,idx);
+      }
+   }
+   return newdata;
+}
+
+func split_cir_by_fltline(cirdata, timediff=) {
+   default, timediff, 180;
+   time_idx = where(cirdata.soes(dif) > timediff);
+   if(numberof(time_idx)) {
+      num_lines = numberof(time_idx) + 1;
+      segs_idx = grow(1, time_idx+1, numberof(cirdata.soes)+1);
+   } else {
+      num_lines = 1;
+      segs_idx = [1, numberof(cirdata.soes)+1];
+   }
+
+   ptr = array(pointer, num_lines);
+   for(i = 1; i <= num_lines; i++) {
+      fltseg = indgen(segs_idx(i):segs_idx(i+1)-1);
+      ptr(i) = &fltseg;
+   }
+   h_set, cirdata, "flightlines", ptr;
+}
+
+func copy_cirdata_images(cirdata, dest) {
+   numfiles = numberof(cirdata.files);
+   tstamp = [];
+   timer_init, tstamp;
+   for(i = 1; i <= numfiles; i++) {
+      timer_tick, tstamp, i, numfiles;
+      cmd = "cp " + cirdata.files(i) + " " + dest;
+      system, cmd;
    }
 }
