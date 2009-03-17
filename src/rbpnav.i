@@ -129,7 +129,7 @@ write, format="  Alt:%14.3f %14.3f\n", egg.alt(min), egg.alt(max)
 
 func precision_warning {
    extern silence_precision_warning;
-   if(! silence_precision_warning) {
+   if(! silence_precision_warning && _ytk ) {
       tkcmd, "tk_messageBox -icon warning -message { \
          The pnav file you have selected does not appear to be a precision \
          trajectory.  It should not be used in the production of final data \
