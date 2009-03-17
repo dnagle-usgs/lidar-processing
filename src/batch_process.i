@@ -63,6 +63,7 @@ func save_vars (filename, tile=) {
       save, f, i, n;
       save, f, pbd;
       save, f, update;
+      save, f, eaarl_time_offset;
    }
    if ( tile == 2 ) {      // stuff for batch_rcf only;
       save, f, rcf_only;   // flag value for uber_process_tile
@@ -136,18 +137,18 @@ func unpackage_tile (fn=,host= ) {
 
    oc = ops_conf;    // this gets wiped out by load_iexpbd, save now to restore later
 
-   load_edb,  fn=edb_filename, verbose=0;
+   load_edb,  fn=edb_filename, verbose=0, override_offset = eaarl_time_offset;
    pnav = rbpnav( fn=pnav_filename, verbose=0);
    load_iexpbd,  ins_filename, verbose=0;
 
    ops_conf = oc;
 
    if ( ! strmatch(host, "localhost") ) {
-     // Get list of edb_files for this tile
-     mytld = get_tld_names(q);
-     for(myi=1; myi<=numberof(mytld); ++myi) {
+      // Get list of edb_files for this tile
+      mytld = get_tld_names(q);
+      for(myi=1; myi<=numberof(mytld); ++myi) {
          write, af, format="%s\n", mytld(myi);
-     }
+      }
      // for(myi=1; myi<=numberof(myedb); ++myi) {
      //     write, af, format="%s\n", edb_files(myedb(myi)).name;
      // }
@@ -214,7 +215,7 @@ func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, rcf
 
 func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= ) {
    extern ofn;
-   default, host, "locahost";
+   default, host, "localhost";
       if (get_typ) {
          typ=[]
          typ_idx = where(tile.min_e == min_e);
@@ -655,6 +656,10 @@ Added server/client support (2009-01) Richard Mitchell
    default, now,  0;
    default, win,  6;
    window, win;
+
+   eaarl_time_offset = 0;	// need this first, cuz get_erast uses it.
+   eaarl_time_offset = edb(1).seconds - decode_raster( get_erast(rn=1) ).soe;
+
 
    // Create output directory for tile cmd files:
    system, "mkdir -p /tmp/batch/jobs";

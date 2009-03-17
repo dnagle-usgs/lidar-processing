@@ -67,7 +67,7 @@ func get_total_edb_records(junk ) {
   return total_edb_records;
 }
 
-func load_edb (  fn=, update=, verbose= ) {
+func load_edb (  fn=, update=, verbose=, override_offset= ) {
 /* DOCUMENT load_edb, fn=
 
   This function reads the index file produced by the
@@ -177,9 +177,11 @@ if ( _ytk ) {
  The eaarl_time_offset can be safely used from decode_raster to correct time
  valuse as the rasters are read in.
  */
- eaarl_time_offset = 0;	// need this first, cuz get_erast uses it.
- eaarl_time_offset = edb(1).seconds - decode_raster( get_erast(rn=1) ).soe;
-
+  eaarl_time_offset = 0;	// need this first, cuz get_erast uses it.
+  if ( is_void(override_offset) ) 
+    eaarl_time_offset = edb(1).seconds - decode_raster( get_erast(rn=1) ).soe;
+  else
+    eaarl_time_offset = override_offset;
 
 
 // locate the first time value that appears to be set to the gps
@@ -333,7 +335,7 @@ See also:
    i = strchr( edb_files( fidx ).name, '/', last=1);   // strip out filename only
    fn = strpart( edb_files( fidx ).name, i+1:0 );
 
-   if ( is_void(timeonly) ) 
+   if ( is_void(timeonly) )
         omode = "rb";
    else 
         omode = "r+b";
