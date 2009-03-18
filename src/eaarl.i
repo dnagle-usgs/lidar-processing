@@ -41,7 +41,6 @@ if(is_void(__eaarl_includes_included__)) {
    require, "triangle.i";
 
    // ALPS requires
-   require, "alpsrc.i";
    require, "batch_process.i";
    require, "bathy_filter.i";
    require, "change_window_size.i";
@@ -80,6 +79,10 @@ if(is_void(__eaarl_includes_included__)) {
    require, "wgs842nad83.i";
    require, "ytime.i";
    require, "zone.i";
+
+   // Must come last, because it depends on some of the above (it actually runs
+   // something instead of only defining functions)
+   require, "alpsrc.i";
 }
 
 
