@@ -110,7 +110,7 @@ func __json2yorick(&text) {
       // Merges with no space:
       //text = text(sum);
       // Merges with space:
-      text = ([text, "\n"])(,sum)(sum);
+      text = (text + "\n")(sum);
    }
    // No text = no json
    if(strlen(text) < 1) {

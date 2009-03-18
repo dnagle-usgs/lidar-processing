@@ -108,29 +108,22 @@ func nad832navd88offset(_data_in, gdata_dir=, geoid_version=) {
    david nagle 11/21/07, modified to provide offset to facilate 2-way
       conversions
 */
+   extern alpsrc;
    default, geoid_version, "GEOID03";
-   default, gdata_dir, split_path(get_cwd(),-1)(1)+geoid_version+"/pbd_data/";
+   default, gdata_dir, file_join(alpsrc.geoid_data_root, geoid_version, "pbd_data");
   
-  //read the header values for each GEOIDxx pbd data file.
-  scmd = swrite(format="ls -1 %s*.pbd | wc -l",gdata_dir);
-  f = popen(scmd,0);
-  s = ""; npbd = 0;
-  n = read(f,format="%s", s );
-  if (n) sread, s, format="%d", npbd;
-  if (!n) { 
-	write, "No GEOID PBD Data files.  Quitting. ";
-        return;
-  }
-  close, f;
-
   data_in = _data_in;
   if (data_in(1,1) < 0) data_in(1,) += 360.0;
 
+  //read the header values for each GEOIDxx pbd data file.
+  apbdfile = find(gdata_dir, glob="*.pbd");
+  npbd = numberof(apbdfile);
+  if(!npbd) {
+     write, "No GEOID PBD Data files. Quitting.";
+     return;
+  }
+
   // now we know the number of geoid pbd data files in directory gdata_dir
-  apbdfile = array(string, npbd);
-  scmd = swrite(format="ls -1 %s*.pbd", gdata_dir);
-  f = popen(scmd,0); 
-  n = read(f,format="%s",apbdfile);
   aglamn = aglomn = adla = adlo = array(double, npbd);
   anrows = ancols = aitype =  array(int, npbd);
   avname = array(string, npbd);

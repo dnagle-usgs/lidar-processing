@@ -41,6 +41,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "triangle.i";
 
    // ALPS requires
+   require, "alpsrc.i";
    require, "batch_process.i";
    require, "bathy_filter.i";
    require, "change_window_size.i";

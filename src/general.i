@@ -247,6 +247,38 @@ func quartiles(ary) {
    return [q1, q2, q3];
 }
 
+func h_merge(..) {
+/* DOCUMENT h_merge(objA, objB, objC, ...)
+   Merges all of its arguments into a single hash. They must all be Yeti hash
+   tables.
+
+   If two objects share a key and both values are hashes, then the result will
+   merge those two hashes together to set the value of that key (using h_merge,
+   recursively).
+
+   If two objects share a key and either of the two values are not a hash, then
+   the latter object's value will overwrite the earlier object's value in the
+   resulting hash.
+*/
+// Original David Nagle 2008-09-10
+   obj = h_new();
+   while(more_args()) {
+      src = next_arg();
+      keys = h_keys(src);
+      for(i = 1; i <= numberof(keys); i++) {
+         if(h_has(obj, keys(i))) {
+            if(typeof(src(keys(i))) == "hash_table"
+                  && typeof(obj(keys(i))) == "hash_table") {
+               h_set, obj, keys(i), h_merge(obj(keys(i)), src(keys(i)));
+               continue;
+            }
+         }
+         h_set, obj, keys(i), src(keys(i));
+      }
+   }
+   return obj;
+}
+
 func bound(val, bmin, bmax) {
 /* bound(val, bmin, bmax)
    Constrains a value to a set of bounds. Note that val can have any
