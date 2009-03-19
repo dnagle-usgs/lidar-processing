@@ -440,7 +440,7 @@ func gen_jgw_sod( somd ) {
 }
 
 
-func gen_jgw(ins, camera, elev) {
+func gen_jgw(ins, camera, elev, spatial_offset=) {
 /* DOCUMENT gen_jgw(ins, camera, elev)
    Generates the JGW matrix for the data represented by the ins data, the
    camera specs, and the terrain elevation given.
@@ -455,6 +455,7 @@ func gen_jgw(ins, camera, elev) {
       A 6-element array of doubles, corresponding to the contents of the JGW
       file that should be created for the image.
 */
+   default, spatial_offset, [-0.180, 0.170, 0.310];
 
    X = ins.easting;
    Y = ins.northing;
@@ -517,9 +518,18 @@ func gen_jgw(ins, camera, elev) {
    FLneg = -1.0 * FL;
 
    // s_inv * M * p + T(GPSxyz) CENTER PIX (Used to be UL_X, UL_Y, UL_Z)
-   CP_X = (s_inv *(M11* Xi + M12 * Yi + M13 * FLneg)) + X;
-   CP_Y = (s_inv *(M21* Xi + M22 * Yi + M23 * FLneg)) + Y;
-   CP_Z = (s_inv *(M31* Xi + M32 * Yi + M33 * FLneg)) + FH;
+   CP_X =
+      M11 * spatial_offset(1) + M12 * spatial_offset(2) +
+      M13 * spatial_offset(3) +
+      (s_inv *(M11* Xi + M12 * Yi + M13 * FLneg)) + X;
+   CP_Y =
+      M21 * spatial_offset(1) + M22 * spatial_offset(2) +
+      M23 * spatial_offset(3) +
+      (s_inv *(M21* Xi + M22 * Yi + M23 * FLneg)) + Y;
+   CP_Z =
+      M31 * spatial_offset(1) + M32 * spatial_offset(2) +
+      M33 * spatial_offset(3) +
+      (s_inv *(M31* Xi + M32 * Yi + M33 * FLneg)) + FH;
 
    //Calculate Upper left corner (from center) in mapping space, rotate, apply
    //to center coords in mapping space

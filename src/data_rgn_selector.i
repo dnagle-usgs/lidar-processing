@@ -1,7 +1,7 @@
 // Original by Amar Nayegandhi
 write, "$Id$";
 
-func sel_data_rgn(data, type=, mode=,win=, exclude=, rgn=, make_workdata=, origdata=, retindx =, silent=) {
+func sel_data_rgn(data, type=, mode=,win=, exclude=, rgn=, make_workdata=, origdata=, retindx=, silent=, noplot=) {
 /* DOCUMENT sel_data_rgn(data, type=, mode=, win=, exclude=, rgn=)
 
 Function selects a region (limits(), rubberband, pip)
@@ -44,14 +44,15 @@ INPUT:
       mouse(1,1) method (this is is a rectangle),
       getPoly() method (for a polygon).
 */
-   if (is_void(type)) type = nameof(structof(data));
-   if (is_void(silent)) silent = 0;
-   if (is_void(retindx)) retindx = 0;
+   if (is_void(data)) return [];
+   data = test_and_clean(data);
+
+   default, type, nameof(structof(data));
+   default, silent, 0;
+   default, retindx, 0;
+   default, win, 5;
 
    extern q, workdata, croppeddata;
-   data = test_and_clean( data );
-   if (is_void(data)) return [];
-   if (is_void(win)) win = 5;
    if (!mode) mode = 1;
    if ( (!is_void(rgn)) && (mode == 4) ) {
       //mouse (1,1) always returns a size 11 array while getPoly() always sends an even number of points with the lowest being 6
@@ -122,7 +123,7 @@ INPUT:
       } else {
          ply = rgn;
       }
-      box = boundBox(ply);
+      box = boundBox(ply, noplot=noplot);
       if ( type == VEG__ ) {
          box_pts = ptsInBox(box*100., data.least, data.lnorth);
          if (!is_array(box_pts)) {
@@ -325,7 +326,7 @@ ymax
    } else return;
 }
 
-func sel_rgn_from_datatiles(rgn=, data_dir=,lmap=, win=, mode=, search_str=, skip=, noplot=,  pip=, pidx=, uniq=) {
+func sel_rgn_from_datatiles(rgn=, data_dir=,lmap=, win=, mode=, search_str=, skip=, noplot=,  pip=, pidx=, uniq=, silent=) {
 /* DOCUMENT sel_rgn_from_datatiles(rgn=, data_dir=, lmap=, win=, mode=,
    search_str=, skip=, noplot=, pip=, pidx=, uniq=)
 
@@ -453,8 +454,8 @@ modified amar nayegandhi April 2005
       command = swrite(format="find  %s -name '*%d*%d*%s'", data_dir, min_e(i), max_n(i), file_ss);
       f = popen(command, 0);
       nn = read(f, format="%s",s);
-      close,f
-         lp +=  nn;
+      close,f;
+      lp +=  nn;
       flp += nn;
       if (nn) {
          files(ffp:flp) = s(fp:lp);
@@ -464,14 +465,16 @@ modified amar nayegandhi April 2005
       ffp = flp+1;
    }
    sel_eaarl = [];
-   files =  files(where(files));
+   files = files(where(files));
    if (!noplot) write, files;
    floc = floc(,where(files));
    if (numberof(files) > 0) {
-      write, format="%d files selected.\n",numberof(files)
+      if(!silent)
+         write, format="%d files selected.\n",numberof(files)
          // now open these files one at at time and select only the region defined
          for (i=1;i<=numberof(files);i++) {
-            write, format="Searching File %d of %d\r",i,numberof(files);
+            if(!silent)
+               write, format="Searching File %d of %d\r",i,numberof(files);
             f = openb(files(i));
             restore, f, vname;
             eaarl = get_member(f,vname)(1:0:skip);
@@ -484,7 +487,7 @@ modified amar nayegandhi April 2005
                }
             } else {
                data_out = [];
-               data_out = sel_data_rgn(eaarl, mode=3, rgn=pidx);
+               data_out = sel_data_rgn(eaarl, mode=3, rgn=pidx, noplot=noplot, silent=silent);
                if (is_array(data_out)) {
                   sel_eaarl=grow(sel_eaarl, data_out);
                } else {
@@ -496,7 +499,8 @@ modified amar nayegandhi April 2005
    }
 
    if (uniq && numberof(sel_eaarl)) {
-      write, "Finding unique elements in array...";
+      if(silent)
+         write, "Finding unique elements in array...";
       // sort the elements by soe
       idx = sort(sel_eaarl.soe);
       if (!is_array(idx)) {
@@ -507,12 +511,13 @@ modified amar nayegandhi April 2005
       // now use the unique function with ret_sort=1
       idx = unique(sel_eaarl.soe, ret_sort=1);
       if (!is_array(idx)) {
-         write, "No Records found.";
+         if(!silent)
+            write, "No Records found.";
          return;
       }
       sel_eaarl = sel_eaarl(idx);
    }
-   if(!noplot)
+   if(!silent)
       write, format = "Total Number of selected points = %d\n", numberof(sel_eaarl);
 
    window_select, w;
@@ -649,7 +654,6 @@ OUTPUTS:
    extern buf_points,workdata;
    workdata=[];
    if (is_void(origdata)) return 0;
-   if (is_void(window)) window=5;
    buf_points = getPoly();
    temp_rgn = add_buffer_rgn(buf_points, buf, mode=2);
    workdata = sel_data_rgn(origdata, mode=4, win=windw, rgn=temp_rgn);

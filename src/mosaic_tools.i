@@ -1,5 +1,6 @@
 write, "$Id$";
 require, "cir-mosaic.i";
+require, "shapefile.i";
 
 local pnav_segmenting;
 /* DOCUMENT pnav_segmenting
@@ -435,8 +436,10 @@ func jgw_center(jgw, camera=) {
    return [x(1), y(1)];
 }
 
-func mosaic_gather_tans(date_list, photo_soes, progress=) {
+func mosaic_gather_tans(date_list, photo_soes, progress=, mounting_bias=) {
+   extern cir_mounting_bias;
    default, progress, 1;
+   default, mounting_bias, cir_mounting_bias;
    photo_tans = array(IEX_ATTITUDEUTM, dimsof(photo_soes));
    for(i = 1; i <= numberof(date_list); i++)  {
       if(progress)
@@ -450,9 +453,12 @@ func mosaic_gather_tans(date_list, photo_soes, progress=) {
       photo_tans(w).lat = interp(tans.lat, tans.somd, photo_tans(w).somd);
       photo_tans(w).lon = interp(tans.lon, tans.somd, photo_tans(w).somd);
       photo_tans(w).alt = interp(tans.alt, tans.somd, photo_tans(w).somd);
-      photo_tans(w).roll = interp(tans.roll, tans.somd, photo_tans(w).somd);
-      photo_tans(w).pitch = interp(tans.pitch, tans.somd, photo_tans(w).somd);
-      photo_tans(w).heading = interp_angles(tans.heading, tans.somd, photo_tans(w).somd);
+      photo_tans(w).roll = interp(tans.roll, tans.somd, photo_tans(w).somd) +
+         mounting_bias.roll;
+      photo_tans(w).pitch = interp(tans.pitch, tans.somd, photo_tans(w).somd) +
+         mounting_bias.pitch;
+      photo_tans(w).heading = interp_angles(tans.heading, tans.somd, photo_tans(w).somd) +
+         mounting_bias.heading;
    }
    
    if(progress)
@@ -1105,6 +1111,131 @@ func __atcpsa_status(status) {
    }
 }
 
+func gen_jgws_init(photo_dir, conf_file, elev=) {
+   extern camera_specs;
+   default, elev, 0;
+
+   cirdata = gather_cir_data(photo_dir, conf_file, downsample=1);
+
+   tstamp = [];
+   timer_init, tstamp;
+   for(i = 1; i <= numberof(cirdata.files); i++) {
+      timer_tick, tstamp, i, numberof(cirdata.files);
+      jgw_data = gen_jgw(cirdata.tans(i), camera_specs, elev);
+      jgw_file = file_rootname(cirdata.files(i)) + ".jgw";
+      write_jgw, jgw_file, jgw_data;
+   }
+}
+
+func gen_jgws_improved(photo_dir, conf_file, pbd_dir, elev=) {
+   extern camera_specs;
+   default, elev, 0;
+
+   cirdata = gather_cir_data(photo_dir, conf_file, downsample=1);
+
+   tstamp = [];
+   timer_init, tstamp;
+   poly_all = [];
+   for(i = 1; i <= numberof(cirdata.files); i++) {
+      timer_tick, tstamp, i, numberof(cirdata.files);
+      jgw_data = gen_jgw(cirdata.tans(i), camera_specs, elev);
+      jgw_file = file_rootname(cirdata.files(i)) + ".jgw";
+      write_jgw, jgw_file, jgw_data;
+      grow, poly_all, jgw_poly(jgw_data);
+   }
+   bounds = convex_hull(unref(poly_all));
+   bounds = buffer_hull(bounds, 100, pts=16);
+
+   pbd_data = sel_rgn_from_datatiles(data_dir=pbd_dir, noplot=1, silent=1,
+      uniq=1, pip=1, pidx=bounds, mode=1, search_str=".pbd");
+
+   pbdx = pbd_data.east/100.;
+   pbdy = pbd_data.north/100.;
+   pbdz = pbd_data.elevation/100.;
+   pbdzavg = pbdz(avg);
+   write, format="Adjusting average elevation from %.3f to %.3f m\n",
+      double(elev), pbdzavg;
+   elev_used = adjustments = array(double, numberof(cirdata.files));
+   for(i = 1; i <= numberof(cirdata.files); i++) {
+      orig_data = gen_jgw(cirdata.tans(i), camera_specs, elev);
+      cur_elev = pbdzavg;
+      jgw_data = gen_jgw(cirdata.tans(i), camera_specs, cur_elev);
+      j = 0;
+      comparison = 1;
+      while(j++ < 10 && comparison > 0.001) {
+         idx = testPoly2(jgw_poly(jgw_data), pbdx, pbdy);
+         if(numberof(idx)) {
+            old_data = jgw_data;
+            /*
+            tz = pbdz(idx);
+            tz = tz(sort(tz));
+            tz = tz(int(1+numberof(tz)*.25):int(numberof(tz)*-.25));
+            cur_elev = tz(avg);
+            */
+            cur_elev = pbdz(idx)(avg);
+            //cur_elev = median(pbdz(idx));
+            jgw_data = gen_jgw(cirdata.tans(i), camera_specs, cur_elev);
+            comparison = jgw_compare(old_data, jgw_data, camera=camera_specs);
+         } else {
+            comparison = 0;
+            j--;
+         }
+      }
+      jgw_file = file_rootname(cirdata.files(i)) + ".jgw";
+      write_jgw, jgw_file, jgw_data;
+      comparison = jgw_compare(orig_data, jgw_data, camera=camera_specs);
+      write, format="Image %d: %d adjustments to elevation %.3f resulting in %.3f m change\n",
+         i, j, cur_elev, comparison;
+      adjustments(i) = comparison;
+      elev_used(i) = cur_elev;
+   }
+   write, " ";
+   w = where(adjustments > 0);
+   write, format="Made %d out of %d adjustments; min/mean/max = %.3f / %.3f / %.3f m\n",
+      numberof(w), numberof(adjustments),
+      adjustments(w)(min), adjustments(w)(avg), adjustments(w)(max);
+   write, format="Mean elevation used for images was %.3f m\n", elev_used(avg);
+}
+
+func gen_cir_region_shapefile(photo_dir, conf_file, shapefile, elev=) {
+   extern camera_specs;
+   default, elev, 0;
+
+   cirdata = gather_cir_data(photo_dir, conf_file, downsample=1);
+
+   tstamp = [];
+   timer_init, tstamp;
+   poly_all = [];
+   for(i = 1; i <= numberof(cirdata.files); i++) {
+      timer_tick, tstamp, i, numberof(cirdata.files);
+      jgw_data = gen_jgw(cirdata.tans(i), camera_specs, elev);
+      grow, poly_all, jgw_poly(jgw_data);
+   }
+   bounds = convex_hull(unref(poly_all));
+   bounds = buffer_hull(bounds, 250, pts=16);
+   write_ascii_shapefile, &bounds, shapefile;
+}
+
+func jgw_compare(jgw1, jgw2, camera=) {
+   extern ms4000_specs;
+   default, camera, ms4000_specs;
+   x1 = x2 = [0., 0, camera.sensor_width, camera.sensor_width, 0,
+      camera.sensor_width / 2.0];
+   y1 = y2 = [0., camera.sensor_height, camera.sensor_height, 0, 0,
+      camera.sensor_height / 2.0];
+   affine_transform, x1, y1, jgw1;
+   affine_transform, x2, y2, jgw2;
+   dist = sqrt( (x1 - x2)^2 + (y1 - y2)^2 );
+   return dist(avg);
+}
+
+func write_jgw(jgw_file, jgw_data) {
+   f = open(jgw_file, "w");
+   write, f, format="%.6f\n", jgw_data(1:4);
+   write, f, format="%.3f\n", jgw_data(5:6);
+   close, f;
+}
+
 func new_gen_jgws(photo_dir, elev=, glob=) {
    extern camera_specs;
    default, elev, 0;
@@ -1242,5 +1373,37 @@ func copy_cirdata_images(cirdata, dest) {
       timer_tick, tstamp, i, numfiles;
       cmd = "cp " + cirdata.files(i) + " " + dest;
       system, cmd;
+   }
+}
+
+func split_cir_dir_by_flightline(dir_in, dir_out, timediff=) {
+   default, timediff, 30;
+   files = find(dir_in, glob="*.jpg");
+   soes = cir_to_soe(file_tail(photo_files));
+   idx = sort(soes);
+   files = files(idx);
+   soes = soes(idx);
+
+   time_idx = where(soes(dif) > timediff);
+   if(numberof(time_idx)) {
+      num_lines = numberof(time_idx) + 1;
+      segs_idx = grow(1, time_idx+1, numberof(soes)+1);
+   } else {
+      num_lines = 1;
+      segs_idx = [1, numberof(soes)+1];
+   }
+   ptr = array(pointer, num_lines);
+   for(i = 1; i <= num_lines; i++) {
+      fltseg = indgen(segs_idx(i):segs_idx(i+1)-1);
+      ptr(i) = &fltseg;
+   }
+   places = int(log10(num_lines)) + 1;
+   for(i = 1; i <= num_lines; i++) {
+      fltdir = file_join(dir_out, swrite(format="flt_%" + places + "d", i));
+      mkdirp, fltdir;
+      curfiles = *ptr(i);
+      for(j = 1; j <= numberof(curfiles); j++) {
+         cmd = "cp " + curfiles(j) + " " + file_join(fltdir, file_tail(curfiles(j)));
+      }
    }
 }
