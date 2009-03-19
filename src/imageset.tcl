@@ -127,20 +127,20 @@ itcl::body ImageSetRGBDir::constructor {target_path args} {
 	# find the first  hms timestamp in the tar file
 	set tf [ lindex $cam1_flst 0]
 	
-	vfs::tar::Mount $tf $this
+	set mounted [vfs::tar::Mount $tf $this]
 	set pat "$this/mnt/ramdisk/2/cam147_*.jpg"
 	set fnm [lsort [ glob $pat ] ]
 	set fnm1 [lindex $fnm 0 ]
 	set hms [ lindex [ split [ file tail $fnm1 ] "_" ] 2 ]
 	scan $hms "%02d%02d%02d" h m s
 	set start_hms [format "%02d%02d%02d" $h $m $s]
-	vfs::filesystem unmount $this
+	vfs::tar::Unmount $mounted $this
 
 	set init_sod [hms2sod $start_hms]
 	
 	set i 1
 	foreach tf $cam1_flst {
-		vfs::tar::Mount $tf $this
+		set mounted [vfs::tar::Mount $tf $this]
 		set pat "$this/mnt/ramdisk/2/cam147_*.jpg"
 		set img_list [lsort [glob $pat]]
 		foreach img_fl $img_list {
@@ -153,21 +153,20 @@ itcl::body ImageSetRGBDir::constructor {target_path args} {
 			incr i
 		}
 
-		vfs::filesystem unmount $this
+		vfs::tar::Unmount $mounted $this
 	}
 
 	set nfiles [array size file_list]
-	set mounted 0
+	set mounted -1
 }
 
 itcl::body ImageSetRGBDir::get_img {idx} {
 	set img_name $file_list($idx)
 	set tarname [img2tarpath $img_name]
-	if {$mounted == 1} {
-		vfs::filesystem unmount $this
+	if {$mounted != -1} {
+		vfs::tar::Unmount $mounted $this
 	}
-	vfs::tar::Mount $tarname $this
-	set mounted 1
+	set mounted [vfs::tar::Mount $tarname $this]
 	if {[file exists $img_name]} {
 		return $img_name
 	}
@@ -271,7 +270,7 @@ itcl::body ImageSetCIR::constructor {target_path args} {
 	set tf [ lindex $flst 0]
 	puts $tf
 	
-	vfs::tar::Mount $tf $this
+	set mounted [vfs::tar::Mount $tf $this]
 	set pat "$this/*.jpg"
 	set fnm [lsort [ glob $pat ] ]
 	set fnm1 [lindex $fnm 0 ]
@@ -279,18 +278,18 @@ itcl::body ImageSetCIR::constructor {target_path args} {
 	scan $hms "%02d%02d%02d" h m s
 	set start_hms [format "%02d%02d%02d" $h $m $s]
 	set init_sod [hms2sod $start_hms]
-	vfs::filesystem unmount $this
+	vfs::tar::Unmount $mounted $this
 	
 	set i 1
 	set flist {}
 	foreach tf $flst {
-		vfs::tar::Mount $tf $this
+		set mounted [vfs::tar::Mount $tf $this]
 		set img_list [lsort [glob "$this/*.jpg"]]
 		set flist [concat $flist $img_list]
 		foreach img_fl $img_list {
 			set file2tar_map($img_fl) $tf
 		}
-		vfs::filesystem unmount $this
+		vfs::tar::Unmount $mounted $this
 	}
 	set flist [lsort $flist]
 	foreach fl $flist {
@@ -307,18 +306,17 @@ itcl::body ImageSetCIR::constructor {target_path args} {
 	}
 
 	set nfiles [array size file_list]
-	set mounted 0
+	set mounted -1
 
 }
 
 itcl::body ImageSetCIR::get_img {idx} {
 	set fn $file_list($idx)
 	set tarname $file2tar_map($fn)
-	if {$mounted == 1} {
-		vfs::filesystem unmount $this
+	if {$mounted != -1} {
+		vfs::tar::Unmount $mounted $this
 	}
-	vfs::tar::Mount $tarname $this
-	set mounted 1
+	set mounted [vfs::tar::Mount $tarname $this]
 	if {[file exists $fn]} {
 		return $fn
 	}
