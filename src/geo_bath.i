@@ -25,7 +25,8 @@ struct GEOALL {
   long melevation(120);	//mirror elevation
   short bottom_peak(120);//peak amplitude of the bottom return signal
   short first_peak(120);//peak amplitude of the first surface return signal
-  short depth(120);     //water depth in centimeters 
+  // 2009-03-21: depth was short: rwm
+  int  depth(120);     //water depth in centimeters 
   double soe(120);     //Seconds of the Epoch
 }
 
@@ -109,7 +110,8 @@ for (i=1; i<=len; i=i+1) {
     } else {
       fs_rtn_cent = rrr(i).fs_rtn_centroid(indx);
     }
-    geodepth(i).depth(indx) = short((-d(,i).idx(indx) + fs_rtn_cent ) * CNSH2O2X *100.-0.5);
+    // 2009-03-16: rwm: changed:  = short() to: = int()
+    geodepth(i).depth(indx) = int((-d(,i).idx(indx) + fs_rtn_cent ) * CNSH2O2X *100.-0.5);
     bath_arr(indx,i) = long(((-d(,i).idx(indx)+fs_rtn_cent ) * CNSH2O2X *100) + rrr(i).elevation(indx));
     geodepth(i).sr2(indx) =short((d(,i).idx(indx) - fs_rtn_cent)*10); 
   }
