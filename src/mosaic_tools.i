@@ -1,6 +1,7 @@
 write, "$Id$";
 require, "cir-mosaic.i";
 require, "shapefile.i";
+require, "mission_conf.i";
 
 local pnav_segmenting;
 /* DOCUMENT pnav_segmenting
@@ -1152,7 +1153,7 @@ func gen_jgws_improved(photo_dir, conf_file, pbd_dir, elev=) {
    pbdx = pbd_data.east/100.;
    pbdy = pbd_data.north/100.;
    pbdz = pbd_data.elevation/100.;
-   pbdzavg = pbdz(avg);
+   pbdzavg = median(pbdz);
    write, format="Adjusting average elevation from %.3f to %.3f m\n",
       double(elev), pbdzavg;
    elev_used = adjustments = array(double, numberof(cirdata.files));
@@ -1172,8 +1173,8 @@ func gen_jgws_improved(photo_dir, conf_file, pbd_dir, elev=) {
             tz = tz(int(1+numberof(tz)*.25):int(numberof(tz)*-.25));
             cur_elev = tz(avg);
             */
-            cur_elev = pbdz(idx)(avg);
-            //cur_elev = median(pbdz(idx));
+            //cur_elev = pbdz(idx)(avg);
+            cur_elev = median(pbdz(idx));
             jgw_data = gen_jgw(cirdata.tans(i), camera_specs, cur_elev);
             comparison = jgw_compare(old_data, jgw_data, camera=camera_specs);
          } else {
@@ -1371,8 +1372,8 @@ func copy_cirdata_images(cirdata, dest) {
    timer_init, tstamp;
    for(i = 1; i <= numfiles; i++) {
       timer_tick, tstamp, i, numfiles;
-      cmd = "cp " + cirdata.files(i) + " " + dest;
-      system, cmd;
+      file_copy, cirdata.files(i), file_join(dest, file_tail(cirdata.files(i))),
+         force=1;
    }
 }
 
@@ -1405,5 +1406,32 @@ func split_cir_dir_by_flightline(dir_in, dir_out, timediff=) {
       for(j = 1; j <= numberof(curfiles); j++) {
          cmd = "cp " + curfiles(j) + " " + file_join(fltdir, file_tail(curfiles(j)));
       }
+   }
+}
+
+func cir_pull_pbd_images(conf_file, photo_dir, pbd_dir, dest_dir, buffer=, glob=) {
+   default, glob, "*.pbd";
+   default, buffer, 750;
+
+   cirdata = gather_cir_data(photo_dir, conf_file, downsample=2);
+
+   pbd_files = find(pbd_dir, glob=glob);
+   if(!numberof(pbd_files))
+      error, "No pbd files found.";
+
+   write, "Copying files for each pbd";
+   tstamp = [];
+   timer_init, tstamp;
+   for(i = 1; i <= numberof(pbd_files); i++) {
+      write, format="%d/%d %s\n", i, numberof(pbd_files), file_tail(pbd_files(i));
+      f = openb(pbd_files(i));
+      hull = convex_hull(
+         get_member(f, f.vname).east(1:0),
+         get_member(f, f.vname).north(1:0)
+      ) / 100.;
+      close, f;
+      tiledata = filter_cirdata_by_hull(cirdata, hull);
+      if(tiledata)
+         copy_cirdata_images, tiledata, dest_dir;
    }
 }
