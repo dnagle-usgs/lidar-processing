@@ -12,14 +12,14 @@ if {[info commands ImageSet] eq ""} {
 		# get number of images
 		method size {} {}
 
-		method initial_sod {} {}
+		method initial_somd {} {}
 
-		method sod2idx {sod} {}
-		method idx2sod {idx} {}
-		method sod2hms {sod} {}
-		method hms2sod {hms {seconds_offset 0} {frame_off 0}} {}
+		method somd2idx {somd} {}
+		method idx2somd {idx} {}
+		method somd2hms {somd} {}
+		method hms2somd {hms} {}
 		method idx2hms {idx} {}
-		method hms2idx {hms {seconds_offset 0} {frame_off 0}} {}
+		method hms2idx {hms} {}
 		
 		# get path of current image.
 		# mounts if necessary
@@ -27,12 +27,23 @@ if {[info commands ImageSet] eq ""} {
 		# idx defined over [1, size)
 		method get_img {idx} {}
 
+		method base_rotation {} {
+			return 0
+		}
+
+		method get_offset {idx} {}
+
+		# if setting a range, begin to end_range is inclusive
+		# otherwise, offset is applied to all
+		method set_offset {offset {begin ""} {end ""}} {}
+
 		# number of files accessible using data path
 		variable nfiles
 
 		variable path ;# path of target dir or file we're getting images from
-		variable init_sod ;# sod of first image
-		variable sod2idx_map
+		variable init_somd ;# somd of first image
+		variable somd2idx_map ;# corrected somd -> idx
+		variable offsets ;# idx -> offset
 		variable file_list
 		variable mounted
 	}
@@ -45,50 +56,78 @@ itcl::body ImageSet::size {} {
 	return $nfiles
 }
 
-itcl::body ImageSet::initial_sod {} {
-	return $init_sod
+itcl::body ImageSet::initial_somd {} {
+	return $init_somd
 }
 
-itcl::body ImageSet::sod2idx {sod} {
-	if {[info exists sod2idx_map($sod)]} {
-		puts "found $sod at $sod2idx_map($sod)"
-		return $sod2idx_map($sod)
+itcl::body ImageSet::get_offset {idx} {
+	return $offsets($idx)
+}
+
+itcl::body ImageSet::set_offset {offset {begin ""} {end ""}} {
+	if {$end == ""} {
+		set end $nfiles
+	}
+	
+	if {$begin == ""} {
+		set begin 1
+	}
+
+	for {set i $begin} {$i <= $end} {incr i} {
+		set offsets($i) $offset
+	}
+
+	array unset somd2idx_map
+
+	for {set i 1} {$i <= $nfiles} {incr i} {
+		set somd [idx2somd $i]
+		set somd2idx_map($somd) $i
+	}
+}	
+		
+
+itcl::body ImageSet::somd2idx {somd} {
+	if {[info exists somd2idx_map($somd)]} {
+		puts "found $somd at $somd2idx_map($somd)"
+		return $somd2idx_map($somd)
 	}
 	
 	set offset 1
 	for {set i 0} {$i < 20} {incr i} {
-		set key [expr $sod + $offset]
-		if {[info exists sod2idx_map($key)]} {
-			return $sod2idx_map($key)
+		set key [expr $somd + $offset]
+		if {[info exists somd2idx_map($key)]} {
+			return $somd2idx_map($key)
 		}
-		# reverse sign of offset and move away from sod by 1
+		# reverse sign of offset and move away from somd by 1
 		set offset [expr ($offset + ($offset / abs ($offset))) * -1]
 	}
 
 	return -1
 }
 
-itcl::body ImageSet::hms2idx {hms {seconds_offset 0} {frame_off 0}} {
-	set sod [hms2sod $hms $seconds_offset $frame_off]
-	set idx [sod2idx $sod]
+itcl::body ImageSet::hms2idx {hms} {
+	set somd [hms2somd $hms]
+	set idx [somd2idx $somd]
 	return $idx
 }
 
-itcl::body ImageSet::idx2sod {idx} {return [hms2sod [idx2hms $idx]]}
+itcl::body ImageSet::idx2hms {idx} {
+	return [somd2hms [idx2somd $idx]]
+}
 
-itcl::body ImageSet::sod2hms { sod } {
-	set h [expr {int($sod) / 3600}]
-	set m [expr {(int($sod) % 3600) / 60}]
-	set s [expr {int($sod) % 60}]
+itcl::body ImageSet::somd2hms { somd } {
+	set h [expr {int($somd) / 3600}]
+	set m [expr {(int($somd) % 3600) / 60}]
+	set s [expr {int($somd) % 60}]
 	return [format "%02d%02d%02d" $h $m $s]
 }
 
-itcl::body ImageSet::hms2sod {hms {seconds_offset 0} {frame_off 0}} {
+itcl::body ImageSet::hms2somd {hms} {
 	set h 0
 	set m 0
 	set s 0
 	scan $hms "%02d%02d%02d" h m s
-	return [expr {$h * 3600 + $m * 60 + $s + $seconds_offset - $frame_off}]
+	return [expr {$h * 3600 + $m * 60 + $s}]
 }
 
 
@@ -111,7 +150,10 @@ if {[info commands ImageSetRGBDir] eq ""} {
 		method get_img {idx} {}
 		
 		method img2tarpath {img} {}
-		method idx2hms {idx} {}
+		method idx2somd {idx} {}
+		method base_rotation {} {
+			return 180
+		}
 	}
 }
 
@@ -136,9 +178,10 @@ itcl::body ImageSetRGBDir::constructor {target_path args} {
 	set start_hms [format "%02d%02d%02d" $h $m $s]
 	vfs::tar::Unmount $mounted $this
 
-	set init_sod [hms2sod $start_hms]
+	set init_somd [hms2somd $start_hms]
 	
 	set i 1
+	set file_list [list "dummy"] ;# dummy entry so list index starts at 1
 	foreach tf $cam1_flst {
 		set mounted [vfs::tar::Mount $tf $this]
 		set pat "$this/mnt/ramdisk/2/cam147_*.jpg"
@@ -147,21 +190,24 @@ itcl::body ImageSetRGBDir::constructor {target_path args} {
 			set hms [ lindex [ split [ file tail $img_fl ] "_" ] 2 ]
 			scan $hms "%02d%02d%02d" h m s
 			set hms [format "%02d%02d%02d" $h $m $s]
-			set sod [hms2sod $hms]
-			set sod2idx_map($sod) $i
-			set file_list($i) $img_fl
+			set somd [hms2somd $hms]
+			set somd2idx_map($somd) $i
+			lappend file_list $img_fl
 			incr i
 		}
 
 		vfs::tar::Unmount $mounted $this
 	}
 
-	set nfiles [array size file_list]
+	set nfiles [llength $file_list]
 	set mounted -1
+	for {set i 1} {$i <= $nfiles} {incr i} {
+		set offsets($i) 0
+	}
 }
 
 itcl::body ImageSetRGBDir::get_img {idx} {
-	set img_name $file_list($idx)
+	set img_name [lindex $file_list $idx]
 	set tarname [img2tarpath $img_name]
 	if {$mounted != -1} {
 		vfs::tar::Unmount $mounted $this
@@ -172,14 +218,15 @@ itcl::body ImageSetRGBDir::get_img {idx} {
 	}
 }
 
-itcl::body ImageSetRGBDir::idx2hms {idx} {
-	set img_name $file_list($idx)
+itcl::body ImageSetRGBDir::idx2somd {idx} {
+	set img_name [lindex $file_list $idx]
 	set h 0
 	set m 0
 	set s 0
 	set hms [ lindex [ split [ file tail $img_name ] "_" ] 2 ]
 	scan $hms "%02d%02d%02d" h m s
-	return [format "%02d%02d%02d" $h $m $s]
+	set somd [expr $h * 60 * 60 + $m * 60 + $s + $offsets($idx)]
+	return $somd
 }
 
 	
@@ -202,6 +249,8 @@ if {[info commands ImageSetRGBTar] eq ""} {
 
 		constructor {target_path args} {}
 		method get_img {idx} {}
+		method idx2somd {idx} {}
+		method base_rotation {} {return 180}
 		variable mnt_path
 	}
 
@@ -217,10 +266,9 @@ itcl::body ImageSetRGBTar::constructor {target_path args} {
 			"*.jpg" ]}]} {
 			set file_lst [lsort -increasing $file_lst]
 			set i 1
-			foreach file $file_lst {
-				set file_list($i) $file
-				incr i
-			}
+			set file_list [list "dummy"]
+			lappend file_list $file_lst
+			
 			if {[string equal p ""] == 0} {
 				set mnt_path $this/$p
 			} else {
@@ -230,16 +278,19 @@ itcl::body ImageSetRGBTar::constructor {target_path args} {
 			break
 		}
 	}
-	set nfiles [array size file_list]
+	set nfiles [llength $file_list]
 	
-	# get initial sod
+	# get initial somd
 	set fn $file_list(0)
 	set hms [lindex [split $fn "_"] 3]
-	set init_sod [hms2sod $hms]
+	set init_somd [hms2somd $hms]
+	for {set i 1} {$i <= $nfiles} {incr i} {
+		set offsets($i) 0
+	}
 }
 
 itcl::body ImageSetRGBTar::get_img {idx} {
-	set fn $mnt_path/$file_list($idx)
+	set fn $mnt_path/[lindex $file_list $idx]
 	if {[file exists $fn]} {
 		return $fn
 	}
@@ -252,7 +303,7 @@ if {[info commands ImageSetCIR] eq ""} {
 		constructor {target_paths args} {}
 		
 		method get_img {idx} {}
-		method idx2hms {idx} {}
+		method idx2somd {idx} {}
 		variable file2tar_map
 	}
 }
@@ -277,21 +328,23 @@ itcl::body ImageSetCIR::constructor {target_path args} {
 	set hms [ lindex [ split [ file tail $fnm1 ] "-" ] 1 ]
 	scan $hms "%02d%02d%02d" h m s
 	set start_hms [format "%02d%02d%02d" $h $m $s]
-	set init_sod [hms2sod $start_hms]
+	set init_somd [hms2somd $start_hms]
 	vfs::tar::Unmount $mounted $this
 	
-	set i 1
-	set flist {}
+	set flist ""
 	foreach tf $flst {
 		set mounted [vfs::tar::Mount $tf $this]
 		set img_list [lsort [glob "$this/*.jpg"]]
-		set flist [concat $flist $img_list]
+		lappend $flist $img_list
 		foreach img_fl $img_list {
 			set file2tar_map($img_fl) $tf
 		}
 		vfs::tar::Unmount $mounted $this
 	}
 	set flist [lsort $flist]
+	set file_list [list "dummy"]
+	lappend $file_list $flist
+	set i 1
 	foreach fl $flist {
 		set h 0
 		set m 0
@@ -299,19 +352,20 @@ itcl::body ImageSetCIR::constructor {target_path args} {
 		set hms [ lindex [ split [ file tail $fl ] "-" ] 1 ]
 		scan $hms "%02d%02d%02d" h m s
 		set hms [format "%02d%02d%02d" $h $m $s]
-		set sod [hms2sod $hms]
-		set sod2idx_map($sod) $i
-		set file_list($i) $fl
+		set somd [hms2somd $hms]
+		set somd2idx_map($somd) $i
 		incr i
 	}
 
-	set nfiles [array size file_list]
+	set nfiles [llength $file_list]
 	set mounted -1
-
+	for {set i 1} {$i <= $nfiles} {incr i} {
+		set offsets($i) 0
+	}
 }
 
 itcl::body ImageSetCIR::get_img {idx} {
-	set fn $file_list($idx)
+	set fn [lindex $file_list $idx]
 	set tarname $file2tar_map($fn)
 	if {$mounted != -1} {
 		vfs::tar::Unmount $mounted $this
@@ -322,15 +376,15 @@ itcl::body ImageSetCIR::get_img {idx} {
 	}
 }
 
-itcl::body ImageSetCIR::idx2hms {idx} {
-	set fn $file_list($idx)
+itcl::body ImageSetCIR::idx2somd {idx} {
+	set fn [lindex $file_list $idx]
 	set h 0
 	set m 0
 	set s 0
 	set hms [ lindex [ split [ file tail $fn ] "-" ] 1 ]
 	scan $hms "%02d%02d%02d" h m s
-	set hms [format "%02d%02d%02d" $h $m $s]
-	return $hms
+	set somd [expr $h * 60 * 60 + $m * 60 + $s + $offsets($idx)]
+	return $somd
 }
 	
 
