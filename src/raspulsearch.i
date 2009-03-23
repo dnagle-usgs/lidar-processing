@@ -568,7 +568,7 @@ func dump_info(edb, mindata, minindx, last=, ref=) {
       write,format="Surface channel-intensity: %d-%3d\n",
       fs_chn_used, mindata.first_peak;
       write,format="Bottom channel / intensity: %d-%3d\n",
-      be_chn_used, mindata.last_peak;
+      be_chn_used, mindata.bottom_peak;
    }
    if (structof(mindata(1)) == VEG__) {
       write, format="Last return elev: %8.2fm Delta: %7.2fm\n",
@@ -577,8 +577,9 @@ func dump_info(edb, mindata, minindx, last=, ref=) {
       write, format="First/Last return elv DIFF: %8.2fm\n",(mindata.elevation-mindata.lelv)/100.;
       write,format="First Surface channel-intensity: %d-%3d\n",
          fs_chn_used, mindata.fint;
-      write,format="Last Surface channel-intensity: %d-%3d\n",
-         be_chn_used, mindata.lint;
+      if ( mindata == VEG )
+         write,format="Last Surface channel-intensity: %d-%3d\n",
+            be_chn_used, mindata.lint;
    }
 
    write,"=============================================================\n";
