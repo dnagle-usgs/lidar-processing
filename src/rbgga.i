@@ -187,62 +187,67 @@ write, format="Lon:%14.3f %14.3f\n", gga(3,min), gga(3,max)
 }
 
 func gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=, pmulti=) {
- /* DOCUMENT gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=)
- This function uses the 'points in polygon' technique to select a region in the gga window.
- Also see: getPoly, plotPoly, testPoly, gga_win_sel
- */
- extern ZoneNumber, utm, ply, q, curzone
- if (!(pmulti)) q = [];
- if ( is_void(win) ) 
-	win = 6;
- window, win;
- if (!is_array(llarr)) {
-     ply = getPoly();
-     box = boundBox(ply);
-     if (utm) {
-        //xx = fll2utm(gga.lat, gga.lon);
-        //zidx = (xx(2,)-box(1,1))(mnx);
-	if (is_void(curzone)) {
-	  curzone = ZoneNumber(1);
-	}
-        ZN = curzone;
-        box = transpose(utm2ll(box(2,), box(1,), ZN));
-	ply = transpose(utm2ll(ply(2,), ply(1,), ZN));
-	show = 0;
-     }
-     box_pts = ptsInBox(box, gga.lon, gga.lat);
-     poly_pts = testPoly(ply, gga.lon(box_pts), gga.lat(box_pts));
-     if (!(pmulti)) {
-       q = box_pts(poly_pts);
-     } else {
-       v = box_pts(poly_pts);
-       ino = dimsof(q);
-       if ((is_array(ino)) && (ino(1) > 1)) {
-          w = q;
-          q = array(long, ino(2)+1, max(ino(2),numberof(v)));
-	  q(1:numberof(w(,1)),1:dimsof(w)(0)) = w;
-	  q(0,1:dimsof(v)(0)) = v;
-       } else {
-	  if (is_array(ino)) {
- 	     q = array(long, 2, max(ino(2),numberof(v)));
-	     q(1,1:dimsof(w)(0)) = w;
-	     q(2,1:dimsof(v)(0)) = v;
-          } else {
-	     q = v;
-          }
-       }
-     }
-	  
- }
- write,format="%d GGA records found\n", numberof(q);
- if ( (show != 0) && (show != 2)  ) {
-   if ( is_void( msize ) ) msize = 0.1;
-   if ( is_void( color ) ) color = "red";
-   if ( is_void( skip  ) ) skip  = 10;
-   plmk, gga.lat( q(1:0:skip)), gga.lon( q(1:0:skip)), msize=msize, color=color;
- }
- test_selection_size,q;
- return q;
+/* DOCUMENT gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=)
+This function uses the 'points in polygon' technique to select a region in the gga window.
+Also see: getPoly, plotPoly, testPoly, gga_win_sel
+*/
+   extern ZoneNumber, utm, ply, q, curzone;
+   if (!(pmulti)) q = [];
+   default, win, 6;
+   window, win;
+   if (!is_array(llarr)) {
+      if(utm && is_void(curzone)) {
+         if(is_void(ZoneNumber)) {
+            message = "Points in Polygon requires that you set curzone if utm=1. Aborting.";
+            if(!is_void(_ytk))
+               tk_messageBox, message, "ok";
+            error, message;
+         } else {
+            curzone = ZoneNumber(1);
+         }   
+      }
+      ply = getPoly();
+      box = boundBox(ply);
+      if (utm) {
+         //xx = fll2utm(gga.lat, gga.lon);
+         //zidx = (xx(2,)-box(1,1))(mnx);
+         ZN = curzone;
+         box = transpose(utm2ll(box(2,), box(1,), ZN));
+         ply = transpose(utm2ll(ply(2,), ply(1,), ZN));
+         show = 0;
+      }
+      box_pts = ptsInBox(box, gga.lon, gga.lat);
+      poly_pts = testPoly(ply, gga.lon(box_pts), gga.lat(box_pts));
+      if (!(pmulti)) {
+         q = box_pts(poly_pts);
+      } else {
+         v = box_pts(poly_pts);
+         ino = dimsof(q);
+         if ((is_array(ino)) && (ino(1) > 1)) {
+            w = q;
+            q = array(long, ino(2)+1, max(ino(2),numberof(v)));
+            q(1:numberof(w(,1)),1:dimsof(w)(0)) = w;
+            q(0,1:dimsof(v)(0)) = v;
+         } else {
+            if (is_array(ino)) {
+               q = array(long, 2, max(ino(2),numberof(v)));
+               q(1,1:dimsof(w)(0)) = w;
+               q(2,1:dimsof(v)(0)) = v;
+            } else {
+               q = v;
+            }
+         }
+      }
+   }
+   write,format="%d GGA records found\n", numberof(q);
+   if ( (show != 0) && (show != 2)  ) {
+      if ( is_void( msize ) ) msize = 0.1;
+      if ( is_void( color ) ) color = "red";
+      if ( is_void( skip  ) ) skip  = 10;
+      plmk, gga.lat( q(1:0:skip)), gga.lon( q(1:0:skip)), msize=msize, color=color;
+   }
+   test_selection_size,q;
+   return q;
 }
 
 func mark_time_pos(win, sod, msize=, marker=, color=) {
