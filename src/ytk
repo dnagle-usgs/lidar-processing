@@ -200,6 +200,81 @@ proc yset {var command {params {}} {options {}}} {
 }
 
 ##
+# y_messageBox message type title
+#  Displays a messagebox, waits for the user to click a button, then returns
+#  their response to Yorick. This is used by tk_messageBox in Yorick.
+#
+#  The primary reason for using this over the native tk_messageBox is to ensure
+#  that the dialog is visible to the user. The normal tk_messageBox does not
+#  raise above other windows, which means it's often not seen right away.
+#
+# Arguments:
+#  message - A string to show in the box.
+#  type - The type of message box, identical to tk_messageBox -type options.
+#  title - The title for the message box window.
+##
+proc y_messageBox {message type title} {
+   set dlg [iwidgets::messagedialog .#auto -title $title \
+      -modality application -text $message]
+
+   switch -- $type {
+      abortretryignore {
+         $dlg buttonconfigure 0 \
+            -text "Abort" -command [list $dlg deactivate abort]
+         $dlg buttonconfigure 1 \
+            -text "Retry" -command [list $dlg deactivate retry]
+         $dlg buttonconfigure 2 \
+            -text "Ignore" -command [list $dlg deactivate ignore]
+         $dlg hide 3
+      }
+      ok {
+         $dlg buttonconfigure 0 \
+            -text "OK" -command [list $dlg deactivate ok]
+         $dlg hide 1
+         $dlg hide 2
+         $dlg hide 3
+      }
+      okcancel {
+         $dlg buttonconfigure 0 \
+            -text "OK" -command [list $dlg deactivate ok]
+         $dlg buttonconfigure 1 \
+            -text "Cancel" -command [list $dlg deactivate cancel]
+         $dlg hide 2
+         $dlg hide 3
+      }
+      retrycancel {
+         $dlg buttonconfigure 0 \
+            -text "Retry" -command [list $dlg deactivate retry]
+         $dlg buttonconfigure 1 \
+            -text "Cancel" -command [list $dlg deactivate cancel]
+         $dlg hide 2
+         $dlg hide 3
+      }
+      yesno {
+         $dlg buttonconfigure 0 \
+            -text "Yes" -command [list $dlg deactivate yes]
+         $dlg buttonconfigure 1 \
+            -text "No" -command [list $dlg deactivate no]
+         $dlg hide 2
+         $dlg hide 3
+      }
+      yesnocancel {
+         $dlg buttonconfigure 0 \
+            -text "Yes" -command [list $dlg deactivate yes]
+         $dlg buttonconfigure 1 \
+            -text "No" -command [list $dlg deactivate no]
+         $dlg buttonconfigure 2 \
+            -text "Cancel" -command [list $dlg deactivate cancel]
+         $dlg hide 3
+      }
+   }
+
+   $dlg center
+   after 1 raise $dlg
+   exp_send "[$dlg activate]\r"
+}
+
+##
 # yorick_executable
 #  Attempts to determine the yorick executable file. It will use the following,
 #  in order of priority:
@@ -1829,6 +1904,7 @@ restore_defaults     ;# begin with the default settings
 ############################################################
 
 package require BWidget
+package require Iwidgets
 package require fileutil
 
 set ytk_version "Ytk version 1.0  as of 1/3/2002"

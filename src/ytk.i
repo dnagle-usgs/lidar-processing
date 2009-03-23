@@ -183,26 +183,19 @@ func get_savefn( null, initialdir=, defaultextension=, title=, filetypes=, filet
 
 func tk_messageBox( message, type, title= ) {
 /* DOCUMENT tk_messageBox( message, type, title= )
-
-  tk_messageBox pops up a message box.  This Yorick function
- merely invokes tk_messageBox in the Tcl/Tk part of ytk program. 
- For details on this command, try  man n tk_messageBox.
-
+  tk_messageBox pops up a message box. The Tcl/Tk side is implemented in
+  y_messageBox.
 */
- extern _ytk;
-  if ( is_void( _ytk ) ) {
-        ytk_not_present;
-	return; 
-  }
-  cmdargs = "";
-  cmdargs = swrite(format=" -message {%s}", message);
-  cmdargs = cmdargs + swrite(format=" -type {%s}", type);
-  if ( !is_void( title  ) ) 
-    cmdargs = swrite(format=" -title {%s}", title );
-  write,ytkfifo,format="exp_send [ tk_messageBox  %s ]\\r \n", cmdargs
-  fflush,ytkfifo;
-  rv =  rdline(prompt="");  
-  return rv;
+   extern _ytk;
+   if ( is_void( _ytk ) ) {
+      ytk_not_present;
+      return; 
+   }
+   default, title, "";
+   tkcmd, swrite(format="y_messageBox {%s} {%s} {%s}",
+      message, type, title);
+   rv =  rdline(prompt="");  
+   return rv;
 }
 
 func source( fn ) {
