@@ -1,10 +1,10 @@
 require, "batch_terraceia_analysis.i";
 write, "$Id$";
  
-func dataReg(data1, data2, win=, plot=, ucmin=, ucmax=, data1plot=, data2plot=, filename=, rwin=, splot=, 
-regionresultpbd=, regionresulttxt=, oply=) {
-
-/* DOCUMENT Authors: Jim Lebonitte                       created on: June 20, 2007
+func dataReg(data1, data2, win=, plot=, ucmin=, ucmax=, data1plot=, data2plot=,
+filename=, rwin=, regionresultpbd=, regionresulttxt=, oply=, data1title=,
+data2title=) {
+/*DOCUMENT Authors: Jim Lebonitte                       created on: June 20, 2007
             Amar Nayegandhi  
 
 This function compares two datasets to see if an area that should be "unchanged"
@@ -37,49 +37,38 @@ is the same
                           area in different data sets.
 */
 
-    
-    if(is_void(regionresultpbd)) {
-        regionresultpbd="/home/jlebonit/THESIS/g2gresults.pbd"
-    }
-    if(is_void(regionresulttxt)) {
-        regionresulttxt="/home/jlebonit/THESIS/g2gresults.txt"
-    }
-    if(is_void(splot)) {
-        splot="~/resultsplot"
-    }
-    if(is_void(rwin)) {
-        rwin=3
-    }
-    if(is_void(filename)) {
-        filename="/home/jlebonit/THESIS/p2presults.txt";
-    } 
-    if(is_void(win)) {
-        win=5;
-    }
+   if(is_void(regionresultpbd)) {
+      error, "Please specify regionresultpbd=";
+   }
+   if(is_void(regionresulttxt)) {
+      error, "Please specify regionresulttxt=";
+   }
+   if(is_void(filename)) {
+      error, "Please specify filename=";
+   }
 
-    if(is_void(data1plot)) {
-        data1plot=1;
-    }
+   default, data1title, "data1";
+   default, data2title, "data2";
+   default, rwin, 3;
+   default, win, 5;
+   default, data1plot, 1;
+   default, data2plot, 2;
 
-    if (is_void(data2plot)) {
-        data2plot=2;
-    }
-    
-    window, win;    
-    count=1;
-    type= nameof(structof(data));
-  if(is_void(oply)){
-     ply = getPoly();
-     box = boundBox(ply);
-  } else {
-     ply=oply;
-     box = boundBox(ply);
-  }
-  while ( count < 3 ) {   
+   window, win;    
+   count=1;
+   type=nameof(structof(data));
+   if(is_void(oply)){
+      ply = getPoly();
+      box = boundBox(ply);
+   } else {
+      ply=oply;
+      box = boundBox(ply);
+   }
+   while ( count < 3 ) {   
       if ( count == 1 ) {
-	data=data1;
+         data=data1;
       } else {    
-	data=data2; 
+         data=data2; 
       }
   
       if ( type == "VEG__" ) {
@@ -89,10 +78,10 @@ is the same
          if (!is_void(origdata)) {
             orig_box_pts = ptsInBox(box*100., origdata.least, origdata.lnorth);
             if (!is_array(orig_box_pts)) {
-            orig_poly_pts = testPoly(ply*100., origdata.least(orig_box_pts), origdata.lnorth(orig_box_pts));
-            origindx = orig_box_pts(orig_poly_pts);
+               orig_poly_pts = testPoly(ply*100., origdata.least(orig_box_pts), origdata.lnorth(orig_box_pts));
+               origindx = orig_box_pts(orig_poly_pts);
+            }
          }
-        }
       } else {
          box_pts = ptsInBox(box*100., data.east, data.north);
          poly_pts = testPoly(ply*100., data.east(box_pts), data.north(box_pts));
@@ -104,74 +93,79 @@ is the same
          }
       }
 
-
-	if (count == 1) {		
-	   data1 = data(indx);
-	}
-	else {
-	   data2 = data(indx);
-	}
-	 count++;
+      if (count == 1) {		
+         data1 = data(indx);
       }
-
-      if(plot) {
-        window, data1plot; fma; 
-        display_veg(data1, win=data1plot, cmin=ucmin, cmax=ucmax, size=1, marker=1);  
-        window, data2plot; fma;
-        display_veg(data2, win=data2plot, cmin=ucmin, cmax=ucmax, size=1, marker=1); 
+      else {
+         data2 = data(indx);
       }
+      count++;
+   }
 
-/* Making xyz variable from the smaller variable */
+   if(plot) {
+      window, data1plot; fma; 
+      display_veg, data1, win=data1plot, cmin=ucmin, cmax=ucmax, size=1, marker=1; 
+      xytitles, "",data1title;
+      window, data2plot; fma;
+      display_veg, data2, win=data2plot, cmin=ucmin, cmax=ucmax, size=1, marker=1; 
+      xytitles, "",data2title;
+   }
 
-      if(numberof(data1) < numberof(data2)) {
-         xyzdatavar = data1;
-         eaarldata = data2;
-         write, "data1 is smaller"
-      } else {
-         xyzdatavar = data2;
-         eaarldata = data1;
-         write, "data2 is smaller"
-      }
+   // Making xyz variable from the smaller variable
 
-      xyzdata=array(float,3,numberof(xyzdatavar));
+   if(numberof(data1) < numberof(data2)) {
+      xyzdatavar = data1;
+      eaarldata = data2;
+      eaarldatatitle=data2title; 
+      xyztitle=data1title; 
+      write, "data1 is smaller"
+   } else {
+      xyzdatavar = data2;
+      eaarldata = data1;
+      eaarldatatitle=data1title; 
+      xyztitle=data2title; 
+      write, "data2 is smaller"
+   }
 
-      xyzdata(1,)=xyzdatavar.least;
-      xyzdata(2,)=xyzdatavar.lnorth;
-      xyzdata(3,)=xyzdatavar.lelv;  
-      
-/* Converting centimeters to meters */
+   xyzdata=array(float,3,numberof(xyzdatavar));
 
-      xyzdata=xyzdata/100;   
+   xyzdata(1,)=xyzdatavar.least;
+   xyzdata(2,)=xyzdatavar.lnorth;
+   xyzdata(3,)=xyzdatavar.lelv;  
 
-      compare_pts(eaarldata, xyzdata, fname=filename, mode=3);
-      plot_be_kings_elv(filename, win=rwin );
-      window, rwin;
+   // Converting centimeters to meters
 
-/* Data has been extracted into data1 and data2 */
-     numpointsdata1=numberof(data1);
-     numpointsdata2=numberof(data2); 
+   xyzdata=xyzdata/100;   
 
-     avgdata1 = avg(data1.lelv); 
-     avgdata2 = avg(data2.lelv);   
+   compare_pts(eaarldata, xyzdata, fname=filename, mode=3);
+   plot_be_kings_elv(filename, win=rwin,xtitle=xyztitle,ytitle=eaarldatatitle );
+   window, rwin;
+
+   // Data has been extracted into data1 and data2
+   numpointsdata1=numberof(data1);
+   numpointsdata2=numberof(data2); 
+
+   avgdata1 = avg(data1.lelv); 
+   avgdata2 = avg(data2.lelv);   
 
 
-     meddata1 = median(data1.lelv);
-     meddata2 = median(data2.lelv);
-     
+   meddata1 = median(data1.lelv);
+   meddata2 = median(data2.lelv);
 
-     write, "                                  data1 statistics      data2 statistics"
-     write, "" 
-     write, "Number Of Points:                 ", numpointsdata1(0),"      ", numpointsdata2(0) 
-     write, "Average Elevation Of Region:    ", avgdata1(0),  avgdata2(0)
-     write, "Median Elevation Of Region:     ", meddata1(0), meddata2(0)
 
-     f=createb(regionresultpbd);
-     f1=open(regionresulttxt, "w");
-     save, f, data1, data2, ply  
-     write, f1, "Number Of Point     Average Elevation    Median Elevation";
-     write, f1, numpointsdata1(0),   avgdata1(0), meddata1(0);
-     write, f1, numpointsdata2(0),   avgdata2(0), meddata2(0);
+   write, "                                  data1 statistics      data2 statistics"
+      write, "" 
+      write, "Number Of Points:                 ", numpointsdata1(0),"      ", numpointsdata2(0) 
+      write, "Average Elevation Of Region:    ", avgdata1(0),  avgdata2(0)
+      write, "Median Elevation Of Region:     ", meddata1(0), meddata2(0)
 
-      close, f;
-      close, f1;
+      f=createb(regionresultpbd);
+   f1=open(regionresulttxt, "w");
+   save, f, data1, data2, ply  
+      write, f1, "Number Of Point     Average Elevation    Median Elevation";
+   write, f1, numpointsdata1(0),   avgdata1(0), meddata1(0);
+   write, f1, numpointsdata2(0),   avgdata2(0), meddata2(0);
+
+   close, f;
+   close, f1;
 }
