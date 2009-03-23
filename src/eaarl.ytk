@@ -340,7 +340,7 @@ proc load_cmd { start_dir } {
 
 proc start_sf {} {
  global cir_id data_path
-    exec ./sf.ytk -parent [::comm::comm self] -cir $cir_id -path $data_path &
+    exec ./sf_a.tcl -parent [::comm::comm self] -cir $cir_id -path $data_path &
 }
 
 proc init_sf {} {
