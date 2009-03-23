@@ -84,4 +84,43 @@ func plot_histogram (hst, win=, dots=, titlexy=, titlepl=, mean=, cl=, diff1=) {
  
 }
 
- 
+// Following function was found on asterix:/opt/eaarl/lidar-processing/src
+// I don't know who originally wrote it. I cleaned it up a bit for efficiency.
+// I'm not 100% sure what it's purpose is, but it seems to create a mapping
+// from one color's palette to another's? I think it's incomplete, though; at
+// present, it's only working with the near-red band.
+// -- DBN 2009-03-23
+func histogram_match(img1, img2) {
+   // img1 is the image to be matched
+   // img2 is the image you want to match to.
+   img1++;
+   nr1  = histogram(img1(1,,));
+   //r1  = histogram(img1(2,,));
+   //g1  = histogram(img1(3,,));
+   img1_size = numberof(img1(1,,));
+   img1 = [];
+
+   img2++;
+   nr2  = histogram(img2(1,,));
+   //r2  = histogram(img2(2,,));
+   //g2  = histogram(img2(3,,));
+   img2_size = numberof(img2(1,,));
+   img2 = [];
+
+   s = array(float, 256);
+   v = array(float, 256);
+   for (k=1;k<=256;k++) {
+      v(k) = sum(nr1(1:k)*1.0/img1_size);
+      s(k) = sum(nr2(1:k)*1.0/img2_size);
+   }
+
+   z = array(int(0), 256);
+   for (k=1;k<=256;k++) {
+      idx = where(v < s(k));
+      if (numberof(idx) > 0) {
+         z(k) = idx(0);
+      }
+   }
+
+   return z;
+}
