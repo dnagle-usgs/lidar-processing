@@ -961,157 +961,6 @@ func get_bounds_idxlist(data, bbox, buffer) {
    );
 }
 
-func cir_tuner(state) {
-   extern iex_nav;
-
-   iex_nav.somd %= 86400;
-   // cir_mounting_bias
-   // GEoid
-   // batch_gen_jgw_file
-   // calls gen_jgw_file(somd) for each file
-   //   somd %= 86400
-   // calls gen_jgw_sod(somd)
-   //   somd += 1
-   //   looks up in iex_nav1hz to get PRH
-   //   PRH += cir_mounting_bias
-   //   pulls in Geoid
-   // calls gen_jgw(ins, cam, Geoid)
-   //   where ins is IEX_ATTITUDEUTM with
-   //       easting northing alt pitch roll heading
-   //   and Geoid is elevation
-
-   // Test offsets to:
-   //    easting northing alt pitch roll heading elevation time
-
-   generations = 10000;
-   target_rmse = 0.01;
-/*
-   state = h_new(
-      offset_time=0.0, dev_time=0.0067, bmin_time=-3.0, bmax_time=3.0,
-      offset_northing=0.0, dev_northing=0.0033, bmin_northing=-4.0, bmax_northing=4.0,
-      offset_easting=0.0, dev_easting=0.0033, bmin_easting=-4.0, bmax_easting=4.0,
-      offset_alt=0.0, dev_alt=0.0033, bmin_alt=-4.0, bmax_alt=4.0,
-      offset_pitch=0.0, dev_pitch=0.0033, bmin_pitch=-180.0, bmax_pitch=180.0,
-      offset_roll=0.0, dev_roll=0.0033, bmin_roll=-180.0, bmax_roll=180.0,
-      offset_heading=0.0, dev_heading=0.0033, bmin_heading=-180.0, bmax_heading=180.0,
-      offset_elevation=-20.0, dev_elevation=0.0333, bmin_elevation=-60.0, bmax_elevation=20.0,
-      directory=photo_dir, camera=camera_specs, window=1,
-      files=find(photo_dir, glob="*.jpg")
-   );
-   */
-   h_set, state, "files", find(state.directory, glob="*.jpg");
-
-   if(h_has(state, "window")) {
-      window, state.window;
-      fma;
-      plg, [0,0], [0, generations], color="black";
-   }
-
-   state = simulated_annealing(state, generations, target_rmse, __atcpsa_energy, __atcpsa_neighbor, __atcpsa_temperature, show_status=__atcpsa_status);
-   write, " ";
-   write, "Best result:";
-   h_show, state;
-   return state;
-}
-
-func __atcpsa_energy(state) {
-   jpgs = state.files;
-   for(i = 1; i <= numberof(jpgs); i++) {
-      somd = hms2sod(atoi(strpart(jpgs(i), -13:-8)));
-      somd += state.offset_time;
-      data = get_img_info(somd);
-
-      u = fll2utm(data(2), data(1));
-      ins = IEX_ATTITUDEUTM();
-      ins.northing = u(1);
-      ins.easting = u(2);
-      ins.alt = data(3);
-      ins.roll = data(4);
-      ins.pitch = data(5);
-      ins.heading = data(6);
-
-      // Move location from INS to camera
-      reference_point = [ins.easting, ins.northing, ins.alt];
-      delta = [state.offset_x, state.offset_y, state.offset_z];
-      rotation = [ins.roll, ins.pitch, ins.heading];
-      new_loc = transform_delta_rotation(reference_point, delta, rotation);
-      ins.easting = new_loc(1);
-      ins.northing = new_loc(2);
-      ins.alt = new_loc(3);
-
-      // Combine offset and INS to get camera attitude
-      ins_M = tbr_to_matrix(ins.roll, ins.pitch, ins.heading);
-      off_M = tbr_to_matrix(state.offset_roll, state.offset_pitch, state.offset_heading);
-      //joint_M = ins_M(+,) * off_M(,+);
-      joint_M = off_M(+,) * ins_M(,+);
-      joint_tbr = matrix_to_tbr(joint_M);
-      // Convert rotations from INS to camera
-      ins.roll = joint_tbr(1);
-      ins.pitch = joint_tbr(2);
-      ins.heading = joint_tbr(3);
-
-      jgw_data = gen_jgw(ins, state.camera, state.offset_elevation);
-
-      jgw_file = file_rootname(jpgs(i)) + ".jgw";
-      f = open(jgw_file, "w");
-      write, f, format="%.6f\n", jgw_data;
-      close, f;
-   }
-
-   cmd = "./pto_cir.pl " + state.directory + " " + state.directory;
-   rmse = atod(popen_rdfile(cmd)(1));
-
-   return rmse;
-}
-
-func __atcpsa_neighbor(state) {
-   state = h_copy(state);
-
-   fields = strsplit("time x y z roll pitch heading elevation", " ");
-
-   for(i = 1; i <= numberof(fields); i++) {
-      field = fields(i);
-      val = h_get(state, "offset_" + field);
-      dev = h_get(state, "dev_" + field);
-      bmin = h_get(state, "bmin_" + field);
-      bmax = h_get(state, "bmax_" + field);
-      val = val + random_n() * dev;
-      val = bound(val, bmin, bmax);
-      h_set, state, "offset_" + field, val;
-   }
-
-   return state;
-}
-
-func __atcpsa_temperature(time) {
-   //upper = 1.4427; // 50% probability for 1m difference  = approx -1 / log(.5)
-   //upper = 0.33381; // 5% probability for 1m difference = approx -1 / log(.05)
-   upper = 0.021715; // 1% probability for 10cm difference = approx -0.1 / log(.01)
-   //lower = 0.0144; // 50% probability for 1cm difference = approx -.01 / log(.5)
-   //lower = 0.00334; // 5% probability for 1cm difference = approx -.01 / log(.05)
-   lower = 0.000217; // 1% probability for 1mm difference = approx -.001 / log(.01)
-   return upper - (upper - lower) * time;
-}
-
-func __atcpsa_status(status) {
-   if(status.iteration % 5 == 0) {
-      write, format="%d/%d: %.3f\n", status.iteration, status.max_iterations, status.energy;
-      write, format="  Current best: %.3f\n", status.best_energy;
-      state = status.best_state;
-      fields = strsplit("time x y z roll pitch heading elevation", " ");
-      for(i = 1; i <= numberof(fields); i++) {
-         write, format="    %10s= %.3f\n", fields(i), h_get(state, "offset_" + fields(i));
-      }
-      if(h_has(state, "window")) {
-         window, state.window;
-         plmk, status.best_energy, status.iteration, msize=0.1, marker=1, color="blue";
-         plmk, status.energy, status.iteration, msize=0.1, marker=1, color="red";
-         limits;
-      }
-      write, " ";
-   }
-}
-
 func gen_jgws_init(photo_dir, conf_file, elev=) {
    extern camera_specs;
    default, elev, 0;
@@ -1380,7 +1229,7 @@ func copy_cirdata_images(cirdata, dest) {
 func split_cir_dir_by_flightline(dir_in, dir_out, timediff=) {
    default, timediff, 30;
    files = find(dir_in, glob="*.jpg");
-   soes = cir_to_soe(file_tail(photo_files));
+   soes = cir_to_soe(file_tail(files));
    idx = sort(soes);
    files = files(idx);
    soes = soes(idx);
@@ -1399,12 +1248,13 @@ func split_cir_dir_by_flightline(dir_in, dir_out, timediff=) {
       ptr(i) = &fltseg;
    }
    places = int(log10(num_lines)) + 1;
+   formatstr = swrite(format="flt_%%%dd", places);
    for(i = 1; i <= num_lines; i++) {
-      fltdir = file_join(dir_out, swrite(format="flt_%" + places + "d", i));
+      fltdir = file_join(dir_out, swrite(format=formatstr, i));
       mkdirp, fltdir;
-      curfiles = *ptr(i);
+      curfiles = files(*ptr(i));
       for(j = 1; j <= numberof(curfiles); j++) {
-         cmd = "cp " + curfiles(j) + " " + file_join(fltdir, file_tail(curfiles(j)));
+         file_copy, curfiles(j), file_join(fltdir, file_tail(curfiles(j)));
       }
    }
 }
