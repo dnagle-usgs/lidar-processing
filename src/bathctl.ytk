@@ -123,7 +123,7 @@ proc bathctl { } {
           sst .bathctl.last    bath_ctl(last)    "   Last:"  { 0 300 1  }
           sst .bathctl.maxsat  bath_ctl(maxsat)  "Max Sat:"  { 0 10  1  }
  		   
-         foreach n [ array names bath_ctl ] {
+         foreach n [list laser water agc thresh first last] {
            trace vdelete  bath_ctl($n) w set_bath_ctl
            trace variable bath_ctl($n) w set_bath_ctl
          }
