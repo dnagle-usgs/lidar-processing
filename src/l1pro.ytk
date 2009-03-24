@@ -1777,13 +1777,21 @@ if {[winfo exists .l1wid]} {
       -command {
         exp_send "set_cbar, \"cmin\" \r"
       }
-    Button $w.dismiss -text "Dismiss" -command {
+    Button $w.bothdismiss -text "Both/Dismiss" \
+      -helptext "Interactively set Cmin, Cmax by \
+        clicking in the histogram window" \
+      -command {
+        exp_send "set_cbar, \"both\", opt=\"dismiss\" \r"
+        expect ">"
+      }
+     Button $w.dismiss -text "Dismiss" -command {
       destroy .cbartool
     }
     pack \
       $w.both \
       $w.cmax \
       $w.cmin \
+      $w.bothdismiss \
       $w.dismiss \
       -side top \
       -fill both

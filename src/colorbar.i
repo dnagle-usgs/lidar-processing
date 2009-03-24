@@ -17,7 +17,7 @@ struct CBAR {
 if(is_void(cbar)) cbar = CBAR();
 
 
-func set_cbar(bar,w=) {
+func set_cbar(bar,w=, opt=) {
 /* DOCUMENT set_cbar(bar, w=)
    Lets the user interactively set the colorbar using a histogram.
 */
@@ -39,6 +39,10 @@ func set_cbar(bar,w=) {
       tkcmd, swrite(format="set plot_settings(cmax) %f", max(m,n));
    } else {
       write, "set_cbar was called with an unknown option: " + bar;
+   }
+   if ( opt == "dismiss" ) {
+    tkcmd, swrite(format="destroy %s", ".cbartool");
+    winkill, w;
    }
 }
 
