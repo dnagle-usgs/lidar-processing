@@ -594,8 +594,8 @@ func mosaic_gen_tile_defns(dest_file, buffer=, photo_tans=) {
    for(j = 1; j <= numberof(dtcodes); j++) {
       bbox = dt2utm(dtcodes(j), bbox=1);
       write, f, format="%c%s%c %d %d %d %d\n", 0x22, dtcodes(j), 0x22,
-         int(bbox(3) + buffer), int(bbox(4) - buffer),
-         int(bbox(1) - buffer), int(bbox(2) + buffer);
+         int(bbox(4) - buffer), int(bbox(3) + buffer),
+         int(bbox(2) + buffer), int(bbox(1) - buffer);
    }
    close, f;
 }
