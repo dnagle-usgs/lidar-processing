@@ -231,7 +231,7 @@ msz = .3
 sres = array(float,11);
 dd = array(float, 1);
 
-func mdist ( none, nodraw=, units=, win=, redrw= ) {
+func mdist ( none, nodraw=, units=, win=, redrw=, nox= ) {
 /* DOCUMENT mdist
 
   Measure the distance between two points clicked on by the mouse
@@ -253,6 +253,9 @@ func mdist ( none, nodraw=, units=, win=, redrw= ) {
 		"cm" for Centimeters
 		"mm" for Millimeters
 		"ll" for lat/lon in decimal degrees 
+         nox=   Remove X from the calculation.  This is useful in a
+                transect window to get height differences.
+
 
   Returns:
 	Distance in meters. 
@@ -299,7 +302,10 @@ func mdist ( none, nodraw=, units=, win=, redrw= ) {
  }
 
  if ( (units=="mm") || (units=="cm") || (units=="m") ) {
-    dx = res(3) - res(1);
+    if ( nox == 1 )
+      dx = 0;
+    else 
+      dx = res(3) - res(1);
     dy = res(4) - res(2);
        if ( units == "m" )  div =    1.0;
   else if ( units == "cm" ) div =  100.0;
