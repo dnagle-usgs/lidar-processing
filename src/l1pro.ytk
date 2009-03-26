@@ -827,7 +827,13 @@ if {[winfo exists .l1wid]} {
       SpinBox .l1map.2.win -justify center -range {0 63 1} \
         -width 2 -textvariable win_load
 
-      checkbutton .l1map.2.skipb -text "Use This Skip:" -variable skipb \
+#      west checkbutton $tw.f2$tbi.fma -text "xfma" -variable trans_xfma$tbi
+#      pack $tw.f2$tbi.fma -side left -fill x -padx 2
+
+
+      west checkbutton .l1map.2.uniqb -text "Sort:" -variable uniqb 
+
+      west checkbutton .l1map.2.skipb -text "Force Skip:" -variable skipb \
         -command {
           set state [lindex {disabled normal} $skipb]
           .l1map.2.skip configure -state $state
@@ -850,12 +856,15 @@ if {[winfo exists .l1wid]} {
           if {$skipb} {
             set ycmd "$ycmd, forceskip=$skipl"
           }
+          if {$uniqb} {
+            set ycmd "$ycmd, uniq=1"
+          }
           exp_send "$ycmd\r"
           expect ">"
         }
-      pack .l1map.1.path .l1map.1.pathbutton -side left -padx 5
-      pack .l1map.2.mode .l1map.2.winl .l1map.2.win .l1map.2.skipb \
-        .l1map.2.skip .l1map.2.search .l1map.2.go -side left -padx 5
+      pack .l1map.1.path .l1map.1.pathbutton -side left -padx 2
+      pack .l1map.2.mode .l1map.2.winl .l1map.2.win .l1map.2.uniqb .l1map.2.skipb \
+        .l1map.2.skip .l1map.2.search .l1map.2.go -side left -padx 2
     }
 
 

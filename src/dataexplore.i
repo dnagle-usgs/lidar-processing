@@ -1,5 +1,5 @@
 
-func explorestart(dir, mode, win=, search_str=, rgn=,forceskip=) {
+func explorestart(dir, mode, win=, search_str=, rgn=,forceskip=, uniq=) {
 	extern exploredata, datadir, zoomoutdata;
 	datadir = dir;
 	winold = current_window();
@@ -14,7 +14,7 @@ func explorestart(dir, mode, win=, search_str=, rgn=,forceskip=) {
 		write, swrite(format="Using skip = %d", skip);
 		if (skip == 0) skip = [];
 		if (is_void(skip)) write, "VIEWING FULL SAMPLE DATA";
-		exploredata = sel_rgn_from_datatiles( rgn=lmt(1:4), data_dir=datadir, mode=mode, skip=skip, search_str=search_str, noplot=1);
+		exploredata = sel_rgn_from_datatiles( rgn=lmt(1:4), data_dir=datadir, mode=mode, skip=skip, search_str=search_str, noplot=1, uniq=uniq);
 	}
 	if (rgn) {
 		area = (rgn(2)-rgn(1))*(rgn(4)-rgn(3));
