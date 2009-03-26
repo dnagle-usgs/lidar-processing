@@ -645,7 +645,7 @@ write, format="rn=%d; i = %d\n",rn,i
 
 
 
-func display_veg(veg_arr, felv=, lelv=,  fint=, lint=, cmin=, cmax=, size=, win=, dofma=, edt=, cht=, marker=, skip= ) {
+func display_veg(veg_arr, felv=, lelv=,  fint=, lint=, cmin=, cmax=, size=, win=, dofma=, edt=, cht=, marker=, skip=, quiet= ) {
   /* DOCUMENT display_veg(veg_arr, fr=, lr=,  cmin=, cmax=, size=, win=, dofma=, edt=, marker= )
  This function displays a veg plot using the veg array from functin run_veg, 
  and the georeferencing from the first_surface function.   If fr = 1, the 
@@ -660,7 +660,8 @@ func display_veg(veg_arr, felv=, lelv=,  fint=, lint=, cmin=, cmax=, size=, win=
   window,win; 
   if ( !is_void( dofma ) )
       fma;
-  write,"Please wait while drawing..........\r"
+  if ( ! quiet )
+    write,"Please wait while drawing..........\r"
   if ( is_void( size )) size = 1.4;
   len = numberof(veg_arr);
   if (felv) {
@@ -721,7 +722,8 @@ func display_veg(veg_arr, felv=, lelv=,  fint=, lint=, cmin=, cmax=, size=, win=
   }
 
   //colorbar, cmin, cmax;
-  write,format="Draw complete. %d rasters drawn. %s", len, "\n"
+  if ( ! quiet )
+    write,format="Draw complete. %d rasters drawn. %s", len, "\n"
 }
 
 func make_fs_veg (d, rrr) {
