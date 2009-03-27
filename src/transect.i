@@ -274,8 +274,17 @@ Input:
      te = fs.soe(*)(glst(llst)(ss(i+1)))%86400;
      td = abs(te - tb);
      hms = sod2hms( tb );
-     write, format="%d:%d sod = %6.2f:%-10.2f(%8.4f) utc=%2d:%02d:%02d %s\n",
-                    t(1),t(2), tb, te, td, hms(1), hms(2), hms(3), clr(abs(c));
+
+     // This grabs the heading from the tans data nearest the end point.
+     // This really only works when looking at "just processed" data and
+     // not batch processed data.
+     hd = 0.0;
+     foo = where ( abs(tans.somd-te) < .010 );
+     if ( numberof(foo) > 0 )
+        hd = tans.heading(foo(1));
+
+     write, format="%d:%d sod = %6.2f:%-10.2f(%10.4f) utc=%2d:%02d:%02d %5.1f %s\n",
+                    t(1),t(2), tb, te, td, hms(1), hms(2), hms(3), hd, clr(abs(c));
 
      if ( xtime ) {
      plmk, elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0,
@@ -308,9 +317,10 @@ Input:
   tb   = fs.soe(*)(glst(llst)(1))%86400;
   te   = fs.soe(*)(glst(llst)(0))%86400;
   td   = abs(te - tb);
-  hms = sod2hms( tb );
-  write, format="%d:%d sod = %6.2f:%-10.2f(%8.4f) utc=%2d:%02d:%02d %s\n",
-                    t(1),t(2), tb, te, td, hms(1), hms(2), hms(3), clr(c);
+  hms  = sod2hms( tb );
+  hd   = tans.heading(*)(int(te));
+  write, format="%d:%d sod = %6.2f:%-10.2f(%10.4f) utc=%2d:%02d:%02d %5.1f %s\n",
+                    t(1),t(2), tb, te, td, hms(1), hms(2), hms(3), hd, clr(c);
  }
 // limits
 // limits,,, cbar.cmin, cbar.cmax
