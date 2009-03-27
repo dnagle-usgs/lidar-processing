@@ -119,6 +119,7 @@ plg, y, x, width=9.0, color="blue";
        col = i;
    }
    col += 2;   // just is.
+   col = col%7;
    write, format="color=%s\n", clr(col);
    plg, y, x, width=10.0, color=clr(col);    // highlight selected point in iwin
  
