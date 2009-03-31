@@ -14,6 +14,104 @@ cam1_roll_bias = 0.0;
 cam1_pitch_bias  = 0.0;
 fov = 50.0 * pi/180.0;   // camera FOV
 
+// Possible error messages from cir code.
+cir_error = array(string,100);
+cir_error( 1) = "Operation completed normally.";
+cir_error(-1) = "The cir_mask array is void.";
+cir_error(-2) = "No CIR photo exists at the requested SOD value.";
+cir_error(-3) = "The jgwinfo(1) path isn't set. See set_jgwinfo.";
+cir_error(-4) = "The jgwinfo(2) date isn't set. See set_jgwinfo.";
+cir_error(-5) = "The structure iex_nav1hz is void. Load a DMARS dataset to correct this problem.";
+cir_error(-6) = "No attitude data found for that time.";
+cir_error(-8) = "The iex_nav data variable is void.";
+cir_error(-9) = "";
+cir_error(-10)= "";
+cir_error(-12)= "";
+cir_error(-13)= "";
+cir_error(-14)= "";
+cir_error(-15)= "";
+
+// Set the jgwinfo array to two "" strings.
+if ( is_void( jgwinfo) ) {
+  jgwinfo = array(string,2);
+  jgwinfo(1) = jgwinfo(2) = "";
+}
+
+// Camera mounting bias values.
+struct CIR_MOUNTING_BIAS {
+   string name;   // Aircraft id (N-Number).
+   float pitch;   // +nose up
+   float roll;    // +cw (roll to the right)
+   float heading; // +cw (right turn)
+   float x;       // Offset from Camera to IMU along the fuselage toward the nose
+   float y;       // Offset across the fueslage, positive toward the right wing
+   float z;       // Offset +up
+}
+
+cir_mounting_bias_n111x = CIR_MOUNTING_BIAS();
+cir_mounting_bias_n48rf = CIR_MOUNTING_BIAS();
+
+//=================================================
+// For N111x. Calibrated using 3/14/2006
+// Ocean Springs, Ms. runway passes.
+//=================================================
+cir_mounting_bias_n111x.name    = "n111x";
+cir_mounting_bias_n111x.pitch   =  1.655;
+cir_mounting_bias_n111x.roll    = -0.296;
+cir_mounting_bias_n111x.heading =  0.0;
+// Measurements taken by Richard Mitchell 2008-11-13:
+// 31 cm from the top of the camera UP to the midpoint of the IMU
+// 18 cm from the middle of the camera BACK to the middle of the mirror
+// 17 cm from the middle of the camera LEFT to the midpoint of the IMU
+// The camera body is ~16cm tall, with the lens on the opposite end of the
+// measurements
+cir_mounting_bias_n111x.x = -0.180;
+cir_mounting_bias_n111x.y =  0.170;
+cir_mounting_bias_n111x.z =  0.310;
+
+//=================================================
+// For N48rf calibrated using 4/11/2006 KSPG
+//=================================================
+cir_mounting_bias_n48rf.name = "n48rf";
+cir_mounting_bias_n48rf.pitch  = -0.10 + 0.03 + 0.5 -0.5;    // Now, set the bias values.
+cir_mounting_bias_n48rf.roll   = 0.50 - .28 + 0.03 + 0.75 - 0.14 -0.7;
+cir_mounting_bias_n48rf.heading= 0.375 - 0.156 + 0.1;
+
+
+//=================================================
+// Camera specifications.
+//=================================================
+struct CAMERA_SPECS {
+  string name;          // Camera name;
+  double focal_length;  // focal length in meters
+  double ccd_x;         // detector x dim in meters.  Along fuselage.
+  double ccd_y;         // detector y dim in meters.  Across the fuselage.;
+  double ccd_xy;        // Detector pixel size in meters.
+  double trigger_delay; // Time from trigger to photo capture in seconds.
+  double sensor_width;  // width of sensor in pixels
+  double sensor_height; // height of sensor in pixels
+  double pix_x;         // pixel size on sensor in meters
+  double pix_y;         // pixel size on sensor in meters
+}
+
+///////////////////////////////////////////
+// MS4000 info
+///////////////////////////////////////////
+ms4000_specs = CAMERA_SPECS();
+ms4000_specs.name = "ms4000";
+ms4000_specs.focal_length = 0.01325;
+ms4000_specs.ccd_x = 0.00888;
+ms4000_specs.ccd_y = 0.01184;
+ms4000_specs.ccd_xy = 7.40e-6 * 1.02;
+ms4000_specs.trigger_delay = 0.120;
+ms4000_specs.sensor_width = 1600;
+ms4000_specs.sensor_height = 1199;
+ms4000_specs.pix_x = 7.4e-6; // 7.4 micron
+ms4000_specs.pix_y = 7.4e-6; // 7.4 micron
+
+// Defaults for CIR imagery
+camera_specs = ms4000_specs;
+cir_mounting_bias = cir_mounting_bias_n111x;
 
 func cir_photo_orient(photo, heading=, pitch=, roll=, alt=, center=, offset=,
 scale=, win=) {
@@ -38,7 +136,9 @@ scale=, win=) {
    alt, they should be done to the values before they are passed to this
    function.
 */
-   return photo_orient(photo, heading=heading, pitch=pitch, roll=roll, center=center, offset=offset, scale=scale, win=win, mounting_biases=[0.0, 0.0, 0.0]);
+   return photo_orient(photo, heading=heading, pitch=pitch, roll=roll,
+      center=center, offset=offset, scale=scale, win=win,
+      mounting_biases=[0.0, 0.0, 0.0]);
 }
 
 func cir_gref_photo( somd=, ioff=, offset=,pnavlst=, skip=, drift=, date=, win= ) {
@@ -99,23 +199,6 @@ func cir_gref_photo( somd=, ioff=, offset=,pnavlst=, skip=, drift=, date=, win= 
    }
 }
 
-// Possible error messages from cir code.
-cir_error = array(string,100);
-cir_error( 1) = "Operation completed normally.";
-cir_error(-1) = "The cir_mask array is void.";
-cir_error(-2) = "No CIR photo exists at the requested SOD value.";
-cir_error(-3) = "The jgwinfo(1) path isn't set. See set_jgwinfo.";
-cir_error(-4) = "The jgwinfo(2) date isn't set. See set_jgwinfo.";
-cir_error(-5) = "The structure iex_nav1hz is void. Load a DMARS dataset to correct this problem.";
-cir_error(-6) = "No attitude data found for that time.";
-cir_error(-8) = "The iex_nav data variable is void.";
-cir_error(-9) = "";
-cir_error(-10)= "";
-cir_error(-12)= "";
-cir_error(-13)= "";
-cir_error(-14)= "";
-cir_error(-15)= "";
-
 func load_cir_mask( fn ) {
 /* DOCUMENT load_cir_mask( fn )
 
@@ -124,20 +207,20 @@ func load_cir_mask( fn ) {
 031006-214859-332-cir.jpg
 
 */
- extern cir_mask
- cir_mask = array(short, 86400);
- tmp = array(long,86400*2);
- ds = ""; ts=""; ms = int(0); hh = int(0); mm=int(0); ss=int(0);
- f = open( fn, "r");
- for (i=1; i<86400; i++ ) {
-  n = read(f,format="%06s-%02d%02d%02d-%d", ds,hh,mm,ss,ms );
-  if ( n == 0 ) break;
-    sod = hh*3600+mm*60+ss;
-    cir_mask(sod) = sod;
- }
- write,format="Read %d CIR file names from: %s\n", i-1, fn
- close,f
- return 1;
+   extern cir_mask;
+   cir_mask = array(short, 86400);
+   tmp = array(long,86400*2);
+   ds = ""; ts=""; ms = int(0); hh = int(0); mm=int(0); ss=int(0);
+   f = open( fn, "r");
+   for (i=1; i<86400; i++ ) {
+      n = read(f,format="%06s-%02d%02d%02d-%d", ds,hh,mm,ss,ms );
+      if ( n == 0 ) break;
+      sod = hh*3600+mm*60+ss;
+      cir_mask(sod) = sod;
+   }
+   write,format="Read %d CIR file names from: %s\n", i-1, fn;
+   close,f;
+   return 1;
 }
 
 func gen_jgw_files( somd_list ) {
@@ -151,31 +234,23 @@ tar --remove-files -cvzf jgwfiles.tgz -T junk
 
 Original W. Wright 5/6/06
 */
- extern jgwinfo, camera_specs
-  n = numberof( somd_list );
-n
-  if ( is_void( jgwinfo ) ) {
-   write,"Operation aborted.  The jgwinfo array must be set first.  try: help, jgwinfo"
-  }
- write,""
- gen_cir_nav(camera_specs.trigger_delay);
-  for (i=1; i<= n; i++ ) {
-     e = gen_jgw_file( somd_list(i));     // Generate each jgw file.
-     if ( e != 1 ) {
-       write,format="Error %d for sod:%d\n", e, i;
-     }
-     if ( (i % 100) == 0  ) write, format=" Generated: %d of %d (%3.0f%%) jgw files\r", i, n, (i*100.0/n);
-  }
+   extern jgwinfo, camera_specs;
+   n = numberof( somd_list );
+   if ( is_void( jgwinfo ) ) {
+      write, "Operation aborted. The jgwinfo array must be set first. try: help, jgwinfo";
+   }
+   gen_cir_nav, camera_specs.trigger_delay;
+   for (i=1; i<= n; i++ ) {
+      e = gen_jgw_file(somd_list(i));     // Generate each jgw file.
+      if(e != 1)
+         write,format="Error %d for sod:%d\n", e, i;
+      if((i % 100) == 0)
+         write, format=" Generated: %d of %d (%3.0f%%) jgw files\r", i, n, (i*100.0/n);
+   }
    i--;
    write, format=" Generated: %d of %d (%3.0f%%) jgw files\r", i, n, (i*100.0/n);
-   write,"\nOperation completed.\n"
-  return 1;
-}
-
-// Set the jgwinfo array to two "" strings.
-if ( is_void( jgwinfo) ) {
-  jgwinfo = array(string,2);
-  jgwinfo(1) = jgwinfo(2) = "";
+   write,"\nOperation completed.\n";
+   return 1;
 }
 
 func set_jgw_info( dir, m, d, y ) {
@@ -205,11 +280,11 @@ func set_jgw_info( dir, m, d, y ) {
 
 Original W. Wright 5/6/06
 */
- extern jgwinfo
- if ( is_void(dir) ) return jgwinfo;
- if ( y > 2000) y -= 2000;
- jgwinfo(1) = dir;
- jgwinfo(2)=swrite(format="%02d%02d%02d", m-1,d,y);
+   extern jgwinfo;
+   if (is_void(dir)) return jgwinfo;
+   if (y > 2000) y -= 2000;
+   jgwinfo(1) = dir;
+   jgwinfo(2) = swrite(format="%02d%02d%02d", m-1,d,y);
 }
 
 func batch_gen_jgw_file(photo_dir, date, progress=, mask=) {
@@ -312,73 +387,6 @@ Original W. Wright 5/6/06
    return 1;
 }
 
-// Camera mounting bias values.
-//
-struct CIR_MOUNTING_BIAS {
-   string name;   // Aircraft id (N-Number).
-   float pitch;   // +nose up
-   float roll;    // +cw (roll to the right)
-   float heading; // +cw (right turn)
-   float x;       // Offset from Camera to IMU along the fuselage toward the nose
-   float y;       // Offset across the fueslage, positive toward the right wing
-   float z;       // Offset +up
-}
-
-cir_mounting_bias_n111x = CIR_MOUNTING_BIAS();
-cir_mounting_bias_n48rf = CIR_MOUNTING_BIAS();
-
-//=================================================
-// For N111x. Calibrated using 3/14/2006
-// Ocean Springs, Ms. runway passes.
-//=================================================
-cir_mounting_bias_n111x.name = "n111x";
-cir_mounting_bias_n111x.pitch  = 1.655;    // Now, set the bias values.
-cir_mounting_bias_n111x.roll   =-0.296;
-cir_mounting_bias_n111x.heading= 0.0;
-
-//=================================================
-// For N48rf calibrated using 4/11/2006 KSPG
-//=================================================
-cir_mounting_bias_n48rf.name = "n48rf";
-cir_mounting_bias_n48rf.pitch  = -0.10 + 0.03 + 0.5 -0.5;    // Now, set the bias values.
-cir_mounting_bias_n48rf.roll   = 0.50 - .28 + 0.03 + 0.75 - 0.14 -0.7;
-cir_mounting_bias_n48rf.heading= 0.375 - 0.156 + 0.1;
-
-
-//=================================================
-// Camera specifications.
-//=================================================
-struct CAMERA_SPECS {
-  string name;          // Camera name;
-  double focal_length;  // focal length in meters
-  double ccd_x;         // detector x dim in meters.  Along fuselage.
-  double ccd_y;         // detector y dim in meters.  Across the fuselage.;
-  double ccd_xy;        // Detector pixel size in meters.
-  double trigger_delay; // Time from trigger to photo capture in seconds.
-  double sensor_width;  // width of sensor in pixels
-  double sensor_height; // height of sensor in pixels
-  double pix_x;         // pixel size on sensor in meters
-  double pix_y;         // pixel size on sensor in meters
-}
-
-///////////////////////////////////////////
-// MS4000 info
-///////////////////////////////////////////
-ms4000_specs = CAMERA_SPECS();
-ms4000_specs.name = "ms4000";
-ms4000_specs.focal_length = 0.01325;
-ms4000_specs.ccd_x = 0.00888;
-ms4000_specs.ccd_y = 0.01184;
-ms4000_specs.ccd_xy = 7.40e-6 * 1.02;
-ms4000_specs.trigger_delay = 0.120;
-ms4000_specs.sensor_width = 1600;
-ms4000_specs.sensor_height = 1199;
-ms4000_specs.pix_x = 7.4e-6; // 7.4 micron
-ms4000_specs.pix_y = 7.4e-6; // 7.4 micron
-
-camera_specs = ms4000_specs;
-cir_mounting_bias = cir_mounting_bias_n111x;
-
 /*
    The original gen_jgw function was a composite of the following functions
    gen_jgw_sod and gen_jgw. It was split into those two functions by David
@@ -455,7 +463,9 @@ func gen_jgw(ins, camera, elev, spatial_offset=) {
       A 6-element array of doubles, corresponding to the contents of the JGW
       file that should be created for the image.
 */
-   default, spatial_offset, [-0.180, 0.170, 0.310];
+   extern cir_mounting_bias;
+   default, spatial_offset,
+      [cir_mounting_bias.x, cir_mounting_bias.y, cir_mounting_bias.z];
 
    X = ins.easting;
    Y = ins.northing;
@@ -666,40 +676,4 @@ func copy_pnav_cirs(q, src, dest, copyjgw=, progress=) {
 */
    extern pnav;
    copy_sod_cirs, pnav.sod(q), src, dest, copyjgw=copyjgw, progress=progress;
-}
-
-func subsample_lines(q, skip=) {
-/* DOCUMENT subsample_lines(q, skip=)
-
-   Given an array of indices q into a flightline, this subsamples the
-   flightlines. In other words, it returns only selected lines in the set. You
-   can use skip= to control this behavior. The default, skip=2, returns every
-   other flightline. Using skip=1 just returns all data. Using skip=3 returns
-   every third, etc.
-
-   This will ONLY work if q is the original indices returned from Points in
-   Polygon or similar. If you've subsampled it (ie, q = q(::2)), this function
-   will not function correctly. It'll effectively subsample *within* the
-   flightlines.
-
-   Original: David Nagle 2007-12-17
-*/
-   if(!numberof(q))
-      return;
-   default, skip, 2;
-   qdif = q(dif);
-   boundaries = where(q(dif) > 1);
-   if(!numberof(boundaries))
-      return q;
-   boundaries = grow(0, boundaries, numberof(q));
-   starts = boundaries(:-1) + 1;
-   ends = boundaries(2:);
-   starts = starts(::skip);
-   ends = ends(::skip);
-   filter = array(0, numberof(q));
-   qq = [];
-   for(i = 1; i <= numberof(starts); i++) {
-      grow, qq, q(starts(i):ends(i));
-   }
-   return qq;
 }

@@ -64,6 +64,64 @@ scale=, win=)
       mounting_biases=biases);
 }
 
+func photo_orient_jgw(photo, jgw, win=) {
+/* DOCUMENT photo_orient_jgw, photo, jgw, win=
+   [x, y] = photo_orient_jgw(photo, jgw, win=)
+
+   Orients and optionally plots an image with a jgw.
+
+   Parameters:
+      photo - A three-dimensional array of type char, as returned by
+         jpeg_read.
+      jgw - A six-element array that defines the JGW affine matrix for the
+         image. See affine_transform for an explanation of what formats the
+         matrix may be in.
+
+   Options:
+      win= The window number to plot the image in. If omitted or set to -1, no
+         plotting will occur.
+
+   Returns:
+      An array [x, y]. Each of x and y are two-dimensional arrays that match
+      photo's dimensions. These define the mesh that photo should be plotted
+      to, as such:
+
+         plf, photo, y, x, edges=0;
+*/
+// Original David B. Nagle 2009-03-25
+   default, win, -1;
+
+   // Image dimensions
+   xd = dimsof(photo)(3);
+   yd = dimsof(photo)(4);
+
+   // Generate the indices for each axes, then recast them so that each pixel
+   // of photo is bounded
+   x = indgen(0:xd);
+   y = indgen(0:yd);
+   xy = [unref(x)(,-), unref(y)(-,)];
+   x = xy(..,1);
+   y = xy(..,2);
+
+   // affine_transform only works on one dimensional arrays, so we have to
+   // reform to 1d and then back to 2d
+   x = reform(unref(x), [1, (xd+1)*(yd+1)]);
+   y = reform(unref(y), [1, (xd+1)*(yd+1)]);
+   affine_transform, x, y, jgw;
+   x = reform(unref(x), [2, xd+1, yd+1]);
+   y = reform(unref(y), [2, xd+1, yd+1]);
+
+   if(win >= 0) {
+      old_win = current_window();
+      window, win;
+      plf, photo, y, x, edges=0;
+      window_select, old_win;
+   }
+
+   if(!am_subroutine())
+      return [x, y];
+}
+
 func photo_orient(photo, heading=, pitch=, roll=, alt=, center=, offset=,
 scale=, win=, mounting_biases=) {
 /* DOCUMENT coordinates = photo_orient(photo, heading=, pitch=, roll=, alt=,
