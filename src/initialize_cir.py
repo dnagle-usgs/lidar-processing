@@ -15,7 +15,7 @@ try:
 except ImportError as err:
     SSH_AVAIL = False
 
-CIR_RE = None
+COMPILED_RE = {}
 
 class Error(Exception):
     pass
@@ -34,6 +34,8 @@ class InvalidArgCount(Error):
 
 class BaseFS:
     """Base class for representing a file system."""
+    def __del__(self):
+        pass
     def exists(self, path):
         """Does the path exist?"""
         pass
@@ -48,13 +50,6 @@ class BaseFS:
         pass
     def open(self, path, mode='r'):
         """Opens a file"""
-        pass
-    def close(self):
-        """Closes the filesystem.
-
-        Always call this when you are finished with the object. It ensures
-        that all cleanup is properly handled.
-        """
         pass
     def mkdir(self, path):
         """Creates a directory"""
@@ -115,7 +110,7 @@ class LocalFS(BaseFS):
                 print "Unexpected error:", sys.exc_info()[0]
                 raise
 
-class RemoteFS:
+class RemoteFS(BaseFS):
     """Represents a remote filesystem accessed via SSH."""
     def __init__(self, host):
         self.host = host
@@ -123,6 +118,10 @@ class RemoteFS:
         self.client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.client.connect(self.host)
         self.sftp = self.client.open_sftp()
+
+    def __del__(self):
+        self.sftp.close()
+        self.client.close()
 
     def exists(self, path):
         result = True
@@ -174,22 +173,19 @@ class RemoteFS:
             self.makedirs(os.path.dirname(path))
             self.mkdir(path)
 
-    def close(self):
-        self.sftp.close()
-        self.client.close()
-
 def open_fs(path):
     """Parses the path and returns an appropriate filesystem object."""
     result = re.search("^([a-zA-Z.0-9]+):(.*)", path)
     if result:
         if SSH_AVAIL:
             server = result.group(1)
+            path = result.group(2)
             fs = RemoteFS(server)
         else:
             raise NoSSHError()
     else:
         fs = LocalFS()
-    return fs
+    return fs, path
 
 def sync(fs_a, path_a, fs_b, path_b):
     """Syncs the first location to the second location.
@@ -220,10 +216,9 @@ def cirfile_re():
 
     The pattern is similar to ######-######-###-cir.jpg.
     """
-    # Hack for efficiency's sake
-    global CIR_RE
-    if CIR_RE is not None:
-        return CIR_RE
+    global COMPILED_RE
+    if 'cirfile' in COMPILED_RE:
+        return COMPILED_RE['cirfile']
 
     dmreg = r"0[0-9]|1[01]"
     ddreg = r"0[1-9]|[12][0-9]|3[01]"
@@ -239,44 +234,57 @@ def cirfile_re():
     full_reg = "^(?P<date>{0})-(?P<time>{1})-{2}-cir.jpg$".format(
         date_reg, time_reg, msreg)
 
-    CIR_RE = re.compile(full_reg)
-    return CIR_RE
+    COMPILED_RE['cirfile'] = re.compile(full_reg)
+    return COMPILED_RE['cirfile']
+
+def tarfile_re():
+    """Creates and returns a regular expression object for tar files.
+
+    This matches *.tar, *.tar.gz, and *.tar.bz2.
+    """
+    global COMPILED_RE
+    if 'tarfile' in COMPILED_RE:
+        return COMPILED_RE['tarfile']
+
+    COMPILED_RE['tarfile'] = re.compile('\.tar(\.bz2|\.gz)?$')
+    return COMPILED_RE['tarfile']
 
 def handle_mission(src, dst):
     """Initialize dst with the mission found in src."""
-    src_fs = open_fs(src)
-    dst_fs = open_fs(dst)
-    for missionday in src_fs.listdir(src):
-        mday_dir = os.path.join(src, missionday)
-        if src_fs.isdir(mday_dir):
-            print "Testing", missionday
-            mday_cir = None
-            mday_traj = None
-            for name in src_fs.listdir(mday_dir):
-                if name[:3] == 'cir':
-                    if mday_cir is None:
-                        mday_cir = os.path.join(mday_dir, name)
-                    else:
-                        raise MultipleCirError()
-                elif name == 'trajectories':
-                    mday_traj = os.path.join(mday_dir, name)
-            if mday_cir and mday_traj:
-                # copy images
-                dst_cir = os.path.join(dst, missionday, 'photos')
-                extract_all_tars(src_fs, mday_cir, dst_fs, dst_cir)
-                # copy trajectories
-                dst_traj = os.path.join(dst, missionday, 'trajectories')
-                sync(src_fs, mday_traj, dst_fs, dst_traj)
-        elif src_fs.isfile(mday_dir):
-            if re.search("\.json$", missionday):
-                json_file_src = mday_dir
-                json_file_dst = os.path.join(dst, missionday)
-                # copy
-                fobj = src_fs.open(json_file_src, "rb")
-                dst_fs.writefileobj(fobj, json_file_dst)
-                fobj.close()
-    src_fs.close()
-    dst_fs.close()
+    src_fs, src = open_fs(src)
+    dst_fs, dst = open_fs(dst)
+    if not src_fs.isdir(src):
+        print "Source path is not a valid directory. Aborting."
+    else:
+        for missionday in src_fs.listdir(src):
+            mday_dir = os.path.join(src, missionday)
+            if src_fs.isdir(mday_dir):
+                print "Testing", missionday
+                mday_cir = None
+                mday_traj = None
+                for name in src_fs.listdir(mday_dir):
+                    if name[:3] == 'cir':
+                        if mday_cir is None:
+                            mday_cir = os.path.join(mday_dir, name)
+                        else:
+                            raise MultipleCirError()
+                    elif name == 'trajectories':
+                        mday_traj = os.path.join(mday_dir, name)
+                if mday_cir and mday_traj:
+                    # copy images
+                    dst_cir = os.path.join(dst, missionday, 'photos')
+                    extract_all_tars(src_fs, mday_cir, dst_fs, dst_cir)
+                    # copy trajectories
+                    dst_traj = os.path.join(dst, missionday, 'trajectories')
+                    sync(src_fs, mday_traj, dst_fs, dst_traj)
+            elif src_fs.isfile(mday_dir):
+                if re.search("\.json$", missionday):
+                    json_file_src = mday_dir
+                    json_file_dst = os.path.join(dst, missionday)
+                    # copy
+                    fobj = src_fs.open(json_file_src, "rb")
+                    dst_fs.writefileobj(fobj, json_file_dst)
+                    fobj.close()
 
 def extract_all_tars(src_fs, src_dir, dest_fs, dest_dir):
     """Extract CIR images from tar files."""
@@ -298,9 +306,10 @@ def extract_all_tars(src_fs, src_dir, dest_fs, dest_dir):
 
 def generate_tarlist(fs, src_dir):
     """Finds candidate tar files."""
+    tar_re = tarfile_re()
     for root, dirs, files in fs.walk(src_dir):
         for name in files:
-            if os.path.splitext(name)[1] == '.tar':
+            if tar_re.search(name):
                 full_name = os.path.join(root, name)
                 fobj = fs.open(full_name, "rb")
                 yield (name, fobj)
