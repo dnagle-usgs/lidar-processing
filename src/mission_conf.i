@@ -264,7 +264,9 @@ func missiondate_list(void) {
 */
     extern __mission_conf;
     dates = h_keys(__mission_conf);
-    return dates(sort(dates));
+    if(numberof(dates))
+        dates = dates(sort(dates));
+    return dates;
 }
 
 func missiondate_add(date, sync=) {
