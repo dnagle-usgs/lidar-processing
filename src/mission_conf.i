@@ -830,3 +830,56 @@ func autoselect_edb(dir) {
     else
         return string(0);
 }
+
+func auto_mission_conf(dir, strict=, load=, autoname=) {
+/* DOCUMENT json_file = auto_mission_conf(dir, strict=, load=, autoname=)
+    This automatically gets a mission configuration defined for the dataset
+    living at the specified dir. It then returns the name of the JSON file
+    that was automatically determined.
+
+    If there is no JSON file in dir, then one will be created using
+    mission_initialize_from_path. It will be saved using the value of
+    autoname=, which is "auto_mission_conf.json" by default.
+
+    If there is exactly one *.json file in the dir, then that file's name will
+    be returned.
+
+    If there are multiple *.json files in the dir, then the list of files is
+    sorted and the first is returned.
+
+    The JSON file will be just the filename, which will be relative to dir.
+
+    By default, the JSON file found or created will also be loaded. If you'd
+    rather it not be, use load=0 to keep any existing mission_conf in effect.
+
+    If mission_initialize_from_path is used, the strict= option is passed
+    through to it untouched. See that function for information on how it's
+    used and what its default is.
+*/
+// Original David B. Nagle 2009-04-03
+    default, load, 1;
+    default, autoname, "auto_mission_conf.json";
+
+    json_files = lsfiles(dir, glob="*.json");
+    if(numberof(json_files)) {
+        json_files = json_files(sort(json_files));
+        json_file = json_files(1);
+    } else {
+        backup_path = mission_path();
+        backup_conf = mission_json_export();
+
+        mission_initialize_from_path, dir, strict=strict;
+        json_file = autoname;
+        mission_save, file_join(dir, json_file);
+
+        mission_path, backup_path;
+        mission_json_import, backup_conf;
+    }
+
+    if(load) {
+        pause, 20;
+        mission_load, file_join(dir, json_file);
+    }
+
+    return json_file;
+}
