@@ -4,6 +4,7 @@
 
 */
 
+require, "eaarl.i";
 write,"$Id$"
 
 func select_region(data, win=, plot=) {

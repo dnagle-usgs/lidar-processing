@@ -59,6 +59,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "jpeg_support.i";
    require, "lines.i";
    require, "ll2utm.i";
+   require, "manual_filter.i";
    require, "map.i";
    require, "mathop.i";
    require, "nad832navd88.i";

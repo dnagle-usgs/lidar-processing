@@ -1,4 +1,5 @@
 // Original by Amar Nayegandhi
+require, "eaarl.i";
 write, "$Id$";
 
 func sel_data_rgn(data, type=, mode=,win=, exclude=, rgn=, make_workdata=, origdata=, retindx=, silent=, noplot=) {
@@ -476,20 +477,20 @@ modified amar nayegandhi April 2005
             if(!silent)
                write, format="Searching File %d of %d\r",i,numberof(files);
             f = openb(files(i));
-            restore, f, vname;
-            eaarl = get_member(f,vname)(1:0:skip);
+            eaarl = get_member(f, f.vname)(1:0:skip);
+            close, f;
             if (!pip) {
                idx = data_box(eaarl.east/100., eaarl.north/100., rgn(1), rgn(2), rgn(3), rgn(4));
                if (is_array(idx)) {
                   iidx = data_box(eaarl.east(idx)/100., eaarl.north(idx)/100., floc(1,i), floc(1,i)+2000, floc(2,i)-2000, floc(2,i));
                   if (is_array(iidx))
-                     grow, sel_eaarl, eaarl(idx(iidx));
+                     grow, sel_eaarl, unref(eaarl)(idx(iidx));
                }
             } else {
                data_out = [];
-               data_out = sel_data_rgn(eaarl, mode=3, rgn=pidx, noplot=noplot, silent=silent);
+               data_out = sel_data_rgn(unref(eaarl), mode=3, rgn=pidx, noplot=noplot, silent=silent);
                if (is_array(data_out)) {
-                  sel_eaarl=grow(sel_eaarl, data_out);
+                  grow, sel_eaarl, unref(data_out);
                } else {
                   data_out = [];
                }
@@ -499,23 +500,10 @@ modified amar nayegandhi April 2005
    }
 
    if (uniq && numberof(sel_eaarl)) {
-      if(silent)
+      if(!silent)
          write, "Finding unique elements in array...";
-      // sort the elements by soe
-      idx = sort(sel_eaarl.soe);
-      if (!is_array(idx)) {
-         write, "No Records found.";
-         return;
-      }
-      sel_eaarl = sel_eaarl(idx);
-      // now use the unique function with ret_sort=1
-      idx = unique(sel_eaarl.soe, ret_sort=1);
-      if (!is_array(idx)) {
-         if(!silent)
-            write, "No Records found.";
-         return;
-      }
-      sel_eaarl = sel_eaarl(idx);
+      idx = set_remove_duplicates(sel_eaarl.soe, idx=1);
+      sel_eaarl = unref(sel_eaarl)(idx);
    }
    if(!silent)
       write, format = "Total Number of selected points = %d\n", numberof(sel_eaarl);
