@@ -370,8 +370,8 @@ func rereference_angle(ang, fdir, fref, tdir, tref, rad=) {
    return ang;
 }
 
-func ppdist(&p1, &p2, tp=) {
-/* ppdist(p1, p2)
+func ppdist(p1, p2, tp=) {
+/* DOCUMENT ppdist(p1, p2, tp=)
    Generalized point-to-point distance function. p1 and p2 must have
    conformable dimensions. This works with points of any dimension (2d, 3d,
    or higher).
@@ -396,12 +396,11 @@ func ppdist(&p1, &p2, tp=) {
       [5,13,85]
 */
 // Original David Nagle 2008-11-18
-// p1 and p2 are passed by reference to save memory, DO NOT modify!
    default, tp, 0;
    if(tp) {
-      return transpose(ppdist(transpose(p1), transpose(p2)));
+      return transpose(ppdist(transpose(unref(p1)), transpose(unref(p2))));
    } else {
-      return sqrt(((p1 - p2) ^ 2)(sum,));
+      return sqrt(((unref(p1) - unref(p2)) ^ 2)(sum,));
    }
 }
 
@@ -626,30 +625,46 @@ func convex_hull(x, y) {
       y = x(2,);
       x = x(1,);
    }
+   x = x(*);
+   y = y(*);
+
    srt = sort(x);
    x = double(x(srt));
    y = double(y(srt));
 
    // L - lower; U - upper
-   L = U = [[x(1),y(1)],[x(2),y(2)]];
+   Lx = Ly = Ux = Uy = array(double, numberof(x));
+   Lx([1,2]) = Ux([1,2]) = x([1,2]);
+   Ly([1,2]) = Uy([1,2]) = y([1,2]);
+   Li = Ui = 2;
    for(i = 3; i <= numberof(x); i++) {
       while(
-         dimsof(L)(3) >= 2 &&
-         cross_product_sign(L(1,-1),L(2,-1),L(1,0),L(2,0),x(i),y(i)) <= 0
+         Li >= 2 &&
+         cross_product_sign(Lx(Li-1), Ly(Li-1), Lx(Li), Ly(Li), x(i), y(i)) <= 0
       ) {
-         L = L(,:-1);
+         Li--;
       }
-      grow, L, [x(i), y(i)];
+      Li++;
+      Lx(Li) = x(i);
+      Ly(Li) = y(i);
 
       while(
-         dimsof(U)(3) >= 2 &&
-         cross_product_sign(U(1,-1),U(2,-1),U(1,0),U(2,0),x(i),y(i)) >= 0
+         Ui >= 2 &&
+         cross_product_sign(Ux(Ui-1), Uy(Ui-1), Ux(Ui), Uy(Ui), x(i), y(i)) >= 0
       ) {
-         U = U(,:-1);
+         Ui--;
       }
-      grow, U, [x(i), y(i)];
+      Ui++;
+      Ux(Ui) = x(i);
+      Uy(Ui) = y(i);
    }
-   LU = grow(L(,:-1), U(,2:)(,::-1), L(,1));
+   Lx = unref(Lx)(:Li-1);
+   Ly = unref(Ly)(:Li-1);
+   Ux = unref(Ux)(:Ui)(::-1);
+   Uy = unref(Uy)(:Ui)(::-1);
+   LUx = grow(unref(Lx),unref(Ux));
+   LUy = grow(unref(Ly),unref(Uy));
+   LU = transpose([unref(LUx), unref(LUy)]);
    return LU;
 }
 
@@ -665,7 +680,11 @@ func cross_product_sign(x1, y1, x2, y2, x3, y3) {
 // Original David B. Nagle 2009-03-10
 // Using math from Wikipedia:
 // http://en.wikipedia.org/w/index.php?title=Graham_scan&oldid=274508758
-   return (x2-x1)*(y3-y1)-(y2-y1)*(x3-x1);
+   x2x1 = unref(x2) - x1;
+   y3y1 = unref(y3) - y1;
+   y2y1 = unref(y2) - unref(y1);
+   x3x1 = unref(x3) - unref(x1);
+   return unref(x2x1)*unref(y3y1)-unref(y2y1)*unref(x3x1);
 }
 
 func triangle_areas(x1, y1, x2, y2, x3, y3) {
