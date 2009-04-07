@@ -206,19 +206,76 @@ func strsplit(str, sep) {
       return parts(2:);
 }
 
-func strjoin(lst, sep) {
-/* DOCUMENT strjoin(lst, sep)
+func strjoin(lst, sep, stripnil=) {
+/* DOCUMENT strjoin(lst, sep, stripnil=)
 
    Given an input array of strings, this will join the strings into a single
    string, using the separator between each array item. If the array is not
    one-dimensional, it will be collapsed as str(*).
 
+   If stripnil=1, then any nil values will be removed prior to joining.
+
    Example: strjoin(["a", "b", "c"], "--") will return "a--b--c".
 
    See also: string
 */
-   if(!numberof(lst)) return;
-   return transpose([lst(*), sep])(*)(:-1)(sum);
+   default, stripnil, 0;
+   if(!numberof(lst)) return string(0);
+   if(stripnil) {
+      w = where(lst);
+      if(!numberof(w))
+         return string(0);
+      lst = lst(w);
+   }
+   if(numberof(lst) > 1) {
+      lst = lst(*);
+      lst(indgen(numberof(lst)-1)) += sep;
+   }
+   return lst(sum);
+}
+
+func strwrap(str, space=, newline=, paragraph=, width=) {
+/* DOCUMENT wrapped = strwrap(str, space=, newline=, paragraph=, width=)
+   Performs word-wrapping on the string defined by str.
+
+   Options:
+      space= Defaults to " ". This represets the string that delimits words.
+      newline= Defaults to "\n". This represents the string the delimits lines.
+      paragraph= Defaults to "\n\n". This represents the string the delimits
+         paragraphs.
+      width= Defaults 72. Specifies the maximum width for the wrapped text.
+*/
+// Original David B. Nagle 2009-04-03
+   default, space, " ";
+   default, newline, "\n";
+   default, paragraph, "\n\n";
+   default, width, 72;
+
+   result = string(0);
+   paragraphs = strsplit(str, paragraph);
+   for(i = 1; i <= numberof(paragraphs); i++) {
+      this_paragraph = string(0);
+      this_line = string(0);
+      lines = strsplit(paragraphs(i), newline);
+      lines = strtrim(unref(lines));
+      for(j = 1; j <= numberof(lines); j++) {
+         words = strsplit(lines(j), space);
+         for(k = 1; k <= numberof(words); k++) {
+            trial_line = strjoin([this_line, words(k)], space, stripnil=1);
+            if(strlen(trial_line) <= width) {
+               this_line = trial_line;
+            } else {
+               this_paragraph = strjoin([this_paragraph, this_line], newline, stripnil=1);
+               this_line = words(k);
+            }
+         }
+      }
+      if(strlen(this_line)) {
+         this_paragraph = strjoin([this_paragraph, this_line], newline, stripnil=1);
+      }
+      result = strjoin([result, this_paragraph], paragraph, stripnil=1);
+   }
+   return result;
 }
 
 func popen_rdfile(cmd) {
