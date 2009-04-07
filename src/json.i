@@ -1,7 +1,6 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 
-require, "yeti.i";
-require, "yeti_regex.i";
+require, "eaarl.i";
 
 write, "$Id$";
 
@@ -95,7 +94,17 @@ func json2yorick(text) {
 
    The bare word "true" is converted to 1, "false" to 0, and "null" to [].
 */
-   return __json2yorick(text);
+   yor = __json2yorick(text);
+   if(strlen(text)) {
+      c = strpart(text, :1);
+      while(regmatch("^[ \t\r\n]+$", c)) {
+         __json_getc, text;
+         c = strpart(text, :1);
+      }
+      if(strlen(text))
+         error, "Unexpected trailing characters:\n" + text;
+   }
+   return yor;
 }
 
 func __json2yorick(&text) {
@@ -238,7 +247,7 @@ func __json2yorick(&text) {
          __json_dbug, state, c, "branch ]";
          // end of list
          __json_getc, text;
-         return listval;
+         return list2array(listval, strict=1);
 //      } else if(c == "/") {  // comments -- not implemented
       } else if(regmatch("[-0-9]", c)) {
          __json_dbug, state, c, "branch numeric";
@@ -259,8 +268,8 @@ func __json2yorick(&text) {
                num = temp_num;
                __json_dbug, state, c, "stored as double: " + swrite(format="%.16g", num), lvl=2;
             } else {
-               num = int(temp_num);
-               __json_dbug, state, c, "stored as int: " + swrite(format="%d", num), lvl=2;
+               num = long(temp_num);
+               __json_dbug, state, c, "stored as long: " + swrite(format="%d", num), lvl=2;
             }
             if(state == "TOP") {
                return num;
@@ -390,7 +399,7 @@ func __array2json_helper(ary) {
          ret(i) = __array2json_helper(ary(..,i));
       }
       ary = ret;
-   }   
+   }
    return "[" + strjoin(ary, ",") + "]";
 }
 
@@ -439,8 +448,8 @@ func struct2hash(data) {
    return hash;
 }
 
-func list2array(lst) {
-/* DOCUMENT list2array(lst)
+func list2array(lst, strict=, depth=) {
+/* DOCUMENT list2array(lst, strict=, depth=)
    Converts a Yorick list into a Yorick array, if possible. If not possible,
    will return the original list.
 
@@ -448,38 +457,79 @@ func list2array(lst) {
    the list contains a mixture, then it will cast everything in whatever
    can handle them all. (For example: a mix of int and double will be cast
    as double; a mix of int, float, and string will be cast as string.)
+
+   If strict=1, then it will not try to typecast numerical values as strings.
+
+   If depth is positive, this will recurse that many additional layers if it
+   finds nested lists. So, depth=1 will possibly return up to a two-dimensional
+   array and depth=5 can return up to a 6-dimensional array. If depth is
+   negative, it will recurse to any depth. By default, no recursion is done.
 */
+   default, strict, 0;
+   default, depth, 0;
+
+   // lists are always passed by reference. We make changes, and we don't want
+   // to propogate them.
+   lst = _cpy(lst);
+   orig_lst = _cpy(lst);
+   if(depth != 0) {
+      nextdepth = depth - 1;
+      for(i = 1; i <= _len(lst); i++) {
+         item = _car(lst, i);
+         if(typeof(item) == "list")
+            _car, lst, i, list2array(item, depth=nextdepth, strict=strict);
+      }
+   }
+
    types = ["char", "int", "long", "float", "double", "string"];
    cast = -1;
    count = _len(lst);
-   ary_l = array(long, count);
-   ary_d = array(double, count);
-   ary_s = array(string, count);
+   dims = dimsof(_car(lst, 1));
+   ary_l = array(long, dims, count);
+   ary_d = array(double, dims, count);
+   ary_s = array(string, dims, count);
+   has_num = 0;
+   has_str = 0;
    for(i = 1; i <= count; i++) {
       item = _car(lst, i);
+
+      // Check dimensionality
+      if(dimsof(item)(1) != dims(1)) return orig_lst;
+      if((dimsof(item) != dims)(sum) > 0) return orig_lst;
+
+      // Check type
       typ = where(typeof(item) == types);
       if(numberof(typ) != 1) {
-         // uh oh!
-         return lst;
+         // Unknown type!
+         return orig_lst;
       } else {
          typ = typ(1);
       }
+      if(typeof(item) == "string") {
+         has_str = 1;
+      } else {
+         has_num = 1;
+      }
+
+      // Check for strict violation
+      if(strict && has_str && has_num) return orig_lst;
+
       cast = max([cast, typ]);
       if(typ == 1) {
-         ary_l(i) = ary_d(i) = item;
-         ary_s(i) = swrite(format="%c", item);
+         ary_l(..,i) = ary_d(..,i) = item;
+         ary_s(..,i) = swrite(format="%c", item);
       } else if(typ <= 3) {
-         ary_l(i) = ary_d(i) = item;
-         ary_s(i) = swrite(format="%d", item);
+         ary_l(..,i) = ary_d(..,i) = item;
+         ary_s(..,i) = swrite(format="%d", item);
       } else if(typ <= 5) {
-         ary_d(i) = item;
-         ary_s(i) = swrite(format="%.16e", item);
+         ary_d(..,i) = item;
+         ary_s(..,i) = swrite(format="%.16e", item);
       } else {
-         ary_s(i) = item;
+         ary_s(..,i) = item;
       }
    }
    if(cast < 0) {
-      return lst;
+      return orig_lst;
    } else if(cast == 1) {
       return char(ary_l);
    } else if(cast == 2) {

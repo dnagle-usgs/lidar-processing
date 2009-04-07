@@ -57,6 +57,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "gridr.i";
    require, "groundtruth.i";
    require, "jpeg_support.i";
+   require, "json.i";
    require, "lines.i";
    require, "ll2utm.i";
    require, "manual_filter.i";
