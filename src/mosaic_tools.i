@@ -44,7 +44,8 @@ require, "mission_conf.i";
 
 func prepare_cir_for_inpho(conf_file, photo_dir, pbd_dir, inpho_dir,
    downsample=, tile_buffer=, xyz_buffer=, defn_buffer=, pbd_glob=,
-   make_xyz=, make_gpsins=, make_defn=, make_images=
+   make_xyz=, make_gpsins=, make_defn=, make_images=,
+   partition=
 ) {
 // Original David Nagle 2009-03-03
    default, downsample, 2;
@@ -55,6 +56,7 @@ func prepare_cir_for_inpho(conf_file, photo_dir, pbd_dir, inpho_dir,
    default, make_gpsins, 1;
    default, make_defn, 1;
    default, make_images, 1;
+   default, partition, "2k";
    extern tans;
 
    // Step 1: Load in conf file and figure out which images we're working with.
@@ -91,36 +93,26 @@ func prepare_cir_for_inpho(conf_file, photo_dir, pbd_dir, inpho_dir,
    photo_tans = mosaic_gather_tans(date_list, photo_soes, progress=1);
 
    // Step 3: Partition images.
-   dtcodes = get_utm_dtcodes(photo_tans.northing,
-      photo_tans.easting, photo_tans.zone);
-   itcodes = dt_short(set_remove_duplicates(get_dt_itcodes(dtcodes)));
-   dtcodes = [];
+   tiles = partition_by_tile_type(partition, photo_tans.northing,
+      photo_tans.easting, photo_tans.zone, buffer=tile_buffer, shorten=1);
 
-   itiles = h_new();
-   write, format="Partitioning images into %d index tiles...\n", numberof(itcodes);
-   for(i = 1; i <= numberof(itcodes); i++) {
-      write, format=" - %d: %s\n", i, itcodes(i);
-      z = it2utm(itcodes(i))(3);
-      w = where(photo_tans.zone == z);
-      idx = extract_for_it(photo_tans(w).northing, photo_tans(w).easting,
-         itcodes(i), buffer=tile_buffer);
-      if(numberof(idx))
-         h_set, itiles, itcodes(i), w(idx);
-   }
-   itcodes = h_keys(itiles);
-   write, format="Found %d total index tiles, processing...\n", numberof(itcodes);
+   tile_names = h_keys(tiles);
+   write, format="Found %d total tiles, processing...\n", numberof(tile_names);
 
    // Iterate through image directories and...
-   for(i = 1; i <= numberof(itcodes); i++) {
-      itcode = itcodes(i);
-      itdir = file_join(inpho_dir, itcode);
-      idx = itiles(itcode);
-      write, format=" - %d: %s\n", i, itcode;
+   for(i = 1; i <= numberof(tile_names); i++) {
+      curtile = tile_names(i);
+      //itcode = itcodes(i);
+      tiledir = file_join(inpho_dir, curtile);
+      //itdir = file_join(inpho_dir, itcode);
+      //idx = itiles(itcode);
+      idx = tiles(curtiles);
+      write, format=" - %d: %s\n", i, curtile;
 
       // Step 4: ... copy images
       if(make_images) {
          write, format="   * Copying %d images...\n", numberof(idx);
-         dest_dir = file_join(itdir, "images");
+         dest_dir = file_join(tiledir, "images");
          mkdirp, dest_dir;
          for(j = 1; j <= numberof(idx); j++) {
             current_file = photo_files(idx(j));
@@ -133,34 +125,39 @@ func prepare_cir_for_inpho(conf_file, photo_dir, pbd_dir, inpho_dir,
       if(make_gpsins) {
          write, format="   * Generating .gpsins file...%s", "\n";
          mosaic_gen_gpsins,
-            file_join(itdir, "data", "merged.gpsins"),
+            file_join(tiledir, "data", "merged.gpsins"),
             photo_files=photo_files, photo_tans=photo_tans;
       }
 
       // Step 6: ... generate .xyz files
+      /*
       if(make_xyz) {
          write, format="   * Generating .xyz file...%s", "\n";
          mosaic_gen_xyz,
-            file_join(itdir, "xyz", "merged.xyz"),
+            file_join(tiledir, "xyz", "merged.xyz"),
             itcode, pbd_dir, pbd_glob, buffer=xyz_buffer, progress=1;
       }
+      */
 
       // Step 7: ... generate tile definitions
+      /*
       if(make_defn) {
          write, format="   * Generating tile definitions...%s", "\n";
          mosaic_gen_tile_defns,
-            file_join(itdir, "data", "tile_defns.txt"),
+            file_join(tiledir, "data", "tile_defns.txt"),
             buffer=defn_buffer, photo_tans=photo_tans;
       }
+      */
    }
 }
 
-func gather_cir_data(photo_dir, conf_file, downsample=) {
+func gather_cir_data(photo_dir, conf_file=, downsample=) {
    default, downsample, 0;
-   mission_load, conf_file;
+   if(!is_void(conf_file))
+      mission_load, conf_file;
 
    write, format="Locating images...%s", "\n";
-   photo_files = find(photo_dir, glob="*.jpg");
+   photo_files = find(photo_dir, glob="*-cir.jpg");
    if(!numberof(photo_files))
       error, "No files found.";
 
@@ -193,8 +190,7 @@ func gather_cir_data(photo_dir, conf_file, downsample=) {
       "tans", photo_tans,
       "dates", photo_dates,
       "date_list", date_list,
-      "photo_dir", photo_dir,
-      "conf_file", conf_file
+      "photo_dir", photo_dir
    );
 
    return data;
@@ -817,11 +813,11 @@ func get_bounds_idxlist(data, bbox, buffer) {
    );
 }
 
-func gen_jgws_init(photo_dir, conf_file, elev=) {
+func gen_jgws_init(photo_dir, conf_file=, elev=) {
    extern camera_specs;
    default, elev, 0;
 
-   cirdata = gather_cir_data(photo_dir, conf_file, downsample=1);
+   cirdata = gather_cir_data(photo_dir, conf_file=conf_file, downsample=1);
 
    tstamp = [];
    timer_init, tstamp;
@@ -833,53 +829,24 @@ func gen_jgws_init(photo_dir, conf_file, elev=) {
    }
 }
 
-func gen_jgws_improved(photo_dir, conf_file, pbd_dir, elev=) {
+func gen_jgws_improved(photo_dir, pbd_dir, conf_file=, elev=) {
    extern camera_specs;
    default, elev, 0;
 
-   cirdata = gather_cir_data(photo_dir, conf_file, downsample=1);
-
-   tstamp = [];
-   timer_init, tstamp;
-   poly_all = [];
-   for(i = 1; i <= numberof(cirdata.files); i++) {
-      timer_tick, tstamp, i, numberof(cirdata.files);
-      jgw_data = gen_jgw(cirdata.tans(i), camera_specs, elev);
-      jgw_file = file_rootname(cirdata.files(i)) + ".jgw";
-      write_jgw, jgw_file, jgw_data;
-      grow, poly_all, jgw_poly(jgw_data);
-   }
-   bounds = convex_hull(unref(poly_all));
-   bounds = buffer_hull(bounds, 100, pts=16);
-
-   pbd_data = sel_rgn_from_datatiles(data_dir=pbd_dir, noplot=1, silent=1,
-      uniq=1, pip=1, pidx=bounds, mode=1, search_str=".pbd");
-
-   pbdx = pbd_data.east/100.;
-   pbdy = pbd_data.north/100.;
-   pbdz = pbd_data.elevation/100.;
-   pbdzavg = median(pbdz);
-   write, format="Adjusting average elevation from %.3f to %.3f m\n",
-      double(elev), pbdzavg;
+   cirdata = gather_cir_data(photo_dir, conf_file=conf_file, downsample=1);
    elev_used = adjustments = array(double, numberof(cirdata.files));
    for(i = 1; i <= numberof(cirdata.files); i++) {
-      orig_data = gen_jgw(cirdata.tans(i), camera_specs, elev);
-      cur_elev = pbdzavg;
-      jgw_data = gen_jgw(cirdata.tans(i), camera_specs, cur_elev);
+      cur_elev = elev;
+      orig_data = jgw_data = gen_jgw(cirdata.tans(i), camera_specs, cur_elev);
       j = 0;
       comparison = 1;
       while(j++ < 10 && comparison > 0.001) {
-         idx = testPoly2(jgw_poly(jgw_data), pbdx, pbdy);
-         if(numberof(idx)) {
+         pbd_data = sel_rgn_from_datatiles(data_dir=pbd_dir, noplot=1, silent=1,
+            uniq=1, pip=1, pidx=jgw_poly(jgw_data), mode=1, search_str=".pbd");
+         if(numberof(pbd_data)) {
             old_data = jgw_data;
-            /*
-            tz = pbdz(idx);
-            tz = tz(sort(tz));
-            tz = tz(int(1+numberof(tz)*.25):int(numberof(tz)*-.25));
-            cur_elev = tz(avg);
-            */
-            //cur_elev = pbdz(idx)(avg);
-            cur_elev = median(pbdz(idx));
+            cur_elev = median(pbd_data.elevation/100.);
+            pbd_data = [];
             jgw_data = gen_jgw(cirdata.tans(i), camera_specs, cur_elev);
             comparison = jgw_compare(old_data, jgw_data, camera=camera_specs);
          } else {
@@ -903,11 +870,28 @@ func gen_jgws_improved(photo_dir, conf_file, pbd_dir, elev=) {
    write, format="Mean elevation used for images was %.3f m\n", elev_used(avg);
 }
 
-func gen_cir_region_shapefile(photo_dir, conf_file, shapefile, elev=) {
+func jgw_remove_missing(dir, dryrun=) {
+   default, dryrun, 0;
+   jpg_files = find(dir, glob="*.jpg");
+   jgw_files = file_rootname(jpg_files) + ".jgw";
+   has_jgw = file_exists(unref(jgw_files));
+   w = where(! has_jgw);
+   if(numberof(w)) {
+      bad_jpgs = unref(jpg_files)(w);
+      for(i = 1; i <= numberof(bad_jpgs); i++) {
+         write, format="Removing %s\n", bad_jpgs(i);
+         if(!dryrun)
+            remove, bad_jpgs(i);
+      }
+      write, format="Removed a total of %d files.\n", numberof(bad_jpgs);
+   }
+}
+
+func gen_cir_region_shapefile(photo_dir, shapefile, conf_file=, elev=) {
    extern camera_specs;
    default, elev, 0;
 
-   cirdata = gather_cir_data(photo_dir, conf_file, downsample=1);
+   cirdata = gather_cir_data(photo_dir, conf_file=conf_file, downsample=1);
 
    tstamp = [];
    timer_init, tstamp;
@@ -1038,12 +1022,14 @@ func filter_cirdata_by_index(cirdata, idx) {
    newdata = [];
    if(numberof(idx)) {
       idx = idx(sort(cirdata.soes(idx)));
+      if(dimsof(idx)(1) < 1)
+         idx = [idx];
       newdata = h_new(
          "files", cirdata.files(idx),
          "soes", cirdata.soes(idx),
          "tans", cirdata.tans(idx),
          "dates", cirdata.dates(idx),
-         "date_list", cirdata.data_list
+         "date_list", cirdata.date_list
       );
       if(h_has(cirdata, "jgw")) {
          h_set, newdata, "jgw", cirdata.jgw(,idx);
@@ -1054,7 +1040,9 @@ func filter_cirdata_by_index(cirdata, idx) {
 
 func split_cir_by_fltline(cirdata, timediff=) {
    default, timediff, 180;
-   time_idx = where(cirdata.soes(dif) > timediff);
+   time_idx = [];
+   if(numberof(cirdata.soes) > 1)
+      time_idx = where(cirdata.soes(dif) > timediff);
    if(numberof(time_idx)) {
       num_lines = numberof(time_idx) + 1;
       segs_idx = grow(1, time_idx+1, numberof(cirdata.soes)+1);
@@ -1077,8 +1065,41 @@ func copy_cirdata_images(cirdata, dest) {
    timer_init, tstamp;
    for(i = 1; i <= numfiles; i++) {
       timer_tick, tstamp, i, numfiles;
+      mkdirp, dest;
       file_copy, cirdata.files(i), file_join(dest, file_tail(cirdata.files(i))),
          force=1;
+   }
+}
+
+func copy_cirdata_images_by_flightline(cirdata, dest_dir) {
+   split_cir_by_fltline, cirdata;
+   flightlines = cirdata.flightlines;
+   length = int(floor(log10(numberof(flightlines))+1));
+   fstr = swrite(format="%%0%dd", length);
+   for(i = 1; i <= numberof(flightlines); i++) {
+      curcirdata = filter_cirdata_by_index(cirdata, *flightlines(i));
+      fltdir = file_join(dest_dir, swrite(format=fstr, i));
+      copy_cirdata_images, curcirdata, fltdir;
+   }
+}
+
+func copy_cirdata_tiles(cirdata, tiles, dest_dir, split_fltlines=) {
+   tile_names = h_keys(tiles);
+
+   for(i = 1; i <= numberof(tile_names); i++) {
+      curtile = tile_names(i);
+      //itcode = itcodes(i);
+      tiledir = file_join(dest_dir, curtile);
+      //itdir = file_join(inpho_dir, itcode);
+      //idx = itiles(itcode);
+      idx = tiles(curtile);
+      write, format=" - %d: %s\n", i, curtile;
+
+      curcirdata = filter_cirdata_by_index(cirdata, idx);
+      if(split_fltlines)
+         copy_cirdata_images_by_flightline, curcirdata, tiledir;
+      else
+         copy_cirdata_images, curcirdata, tiledir;
    }
 }
 
@@ -1115,29 +1136,94 @@ func split_cir_dir_by_flightline(dir_in, dir_out, timediff=) {
    }
 }
 
-func cir_pull_pbd_images(conf_file, photo_dir, pbd_dir, dest_dir, buffer=, glob=) {
+func cir_pull_pbd_images(photo_dir, pbd_dir, dest_dir, conf_file=, buffer=, glob=) {
    default, glob, "*.pbd";
    default, buffer, 750;
 
-   cirdata = gather_cir_data(photo_dir, conf_file, downsample=2);
+   cirdata = gather_cir_data(photo_dir, conf_file=conf_file, downsample=2);
+
+   idx = extract_against_pbd_data(cirdata.tans.easting, cirdata.tans.northing,
+      pbd_dir, glob=glob, buffer=buffer);
+
+   if(!numberof(idx))
+      error, "No images found for pbd data.";
+
+   reduced = filter_cirdata_by_index(cirdata, idx);
+   copy_cirdata_images, cirdata, dest_dir;
+}
+
+func extract_against_pbd_data(easting, northing, pbd_dir, glob=, buffer=) {
+   default, glob, "*.pbd";
+   default, buffer, 750;
 
    pbd_files = find(pbd_dir, glob=glob);
    if(!numberof(pbd_files))
       error, "No pbd files found.";
 
-   write, "Copying files for each pbd";
-   tstamp = [];
+   idx = [];
+   tstamp = 0;
    timer_init, tstamp;
+   keep = array(0, numberof(easting));
    for(i = 1; i <= numberof(pbd_files); i++) {
-      write, format="%d/%d %s\n", i, numberof(pbd_files), file_tail(pbd_files(i));
+      timer_tick, tstamp, i, numberof(pbd_files);
       f = openb(pbd_files(i));
       hull = convex_hull(
-         get_member(f, f.vname).east(1:0),
-         get_member(f, f.vname).north(1:0)
+         get_member(f, f.vname).east(1:0:2),
+         get_member(f, f.vname).north(1:0:2)
       ) / 100.;
       close, f;
-      tiledata = filter_cirdata_by_hull(cirdata, hull);
-      if(tiledata)
-         copy_cirdata_images, tiledata, dest_dir;
+      idx = testPoly2(hull, easting, northing);
+      if(numberof(idx))
+         keep(idx) = 1;
    }
+   return where(keep);
+}
+
+func process_cir_level_a(raw_cir_dir, pbd_dir, processed_dir,
+   json_file=, downsample=, auto_conf_dest=, pbd_glob=, tile_buffer=,
+   partition=, flightlines=, elevation=
+) {
+   default, json_file, string(0);
+   default, downsample, 2;
+   default, auto_conf_dest, "";
+   default, pbd_glob, "*.pbd";
+   default, tile_buffer, 750;
+   default, partition, "10k";
+   default, flightlines, 1;
+   default, elevation, 0.0;
+
+   result = [];
+
+   // Load in conf
+   write, format="Loading configuration...%s", "\n";
+   if(json_file) {
+      mission_load, file_join(raw_cir_dir, json_file);
+   } else {
+      json_file = auto_mission_conf(raw_cir_dir, strict=0, autoname=auto_conf_dest);
+   }
+
+   // Find images
+   write, format="Gathering image data...%s", "\n";
+   cirdata = gather_cir_data(raw_cir_dir, downsample=downsample);
+
+   // Reduce images against pbd data
+   write, format="Restricting to PBD data region...%s", "\n";
+   idx = extract_against_pbd_data(cirdata.tans.easting, cirdata.tans.northing,
+      pbd_dir, glob=pbd_glob, buffer=tile_buffer);
+   cirdata = filter_cirdata_by_index(cirdata, idx);
+   idx = [];
+
+   // Partition images
+   write, format="Partitioning into tiles...%s", "\n";
+   tiles = partition_by_tile_type(partition,
+      cirdata.tans.northing, cirdata.tans.easting, cirdata.tans.zone,
+      buffer=tile_buffer, shorten=1);
+
+   // Copy each tile's images
+   write, format="Copying images...%s", "\n";
+   copy_cirdata_tiles, cirdata, tiles, processed_dir, split_fltlines=flightlines;
+
+   // Generate jgw files
+   write, format="Generating jgw files...%s", "\n";
+   gen_jgws_improved, processed_dir, pbd_dir, elev=elevation;
 }
