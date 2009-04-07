@@ -92,8 +92,8 @@ func qq2uz(qq, centroid=) {
       return u(3,1);
 }
 
-func extract_for_qq(&north, &east, zone, qq, buffer=) {
-/* DOCUMENT extract_for_qq(north, east, qq, buffer=)
+func extract_for_qq(north, east, zone, qq, buffer=) {
+/* DOCUMENT extract_for_qq(north, east, zone, qq, buffer=)
 
    This will return an index into north/east of all coordinates that fall
    within the bounds of the given quarter quad, which should be the string name
@@ -103,7 +103,6 @@ func extract_for_qq(&north, &east, zone, qq, buffer=) {
    quad's boundaries by. By default, it is 100 meters.
 */
    // Original David Nagle 2008-07-17
-   // north and east are passed by reference to save memory, DO NOT modify!
    default, buffer, 100;
    bbox = qq2ll(qq, bbox=1);
 
@@ -114,9 +113,9 @@ func extract_for_qq(&north, &east, zone, qq, buffer=) {
    comp_lat = bound(ll(,2), bbox(1), bbox(3));
 
    // comp_utm(1,) is north, (2,) is east
-   comp_utm = fll2utm(comp_lat, comp_lon, force_zone=zone);
+   comp_utm = fll2utm(unref(comp_lat), unref(comp_lon), force_zone=zone);
 
-   dist = ppdist([east, north], [comp_utm(2,), comp_utm(1,)], tp=1);
+   dist = ppdist([unref(east), unref(north)], [comp_utm(2,), comp_utm(1,)], tp=1);
    return where(dist <= buffer);
 }
 
@@ -1033,4 +1032,144 @@ func calculate_qq_extents(qqdir, glob=, remove_buffers=) {
       );
    }
    return qqs;
+}
+
+func partition_into_2k(north, east, zone, buffer=, shorten=) {
+/* DOCUMENT partition_into_2k(north, east, zone, buffer=, shorten=)
+   Given a set of points represented by northing, easting, and zone, this will
+   return a Yeti hash that partitions them into 2km data tiles.
+
+   Parameters:
+      north: Northing in meters
+      east: Easting in meters
+      zone: Zone (must be array conforming to north/east)
+
+   Options:
+      buffer= A buffer around the tile to include, in meters. Defaults to
+         100m. Set to 0 to constrain to exact tile boundaries.
+      shorten= If set to 1, the tile names will be in the short form
+         (e466_n3354_16). Default is long form (t_e466000_n3354000_16).
+
+   Returns:
+      A yeti hash. The keys are the tile names, the values are the indexes
+      into north/east/zone.
+*/
+// Original David B. Nagle 2009-04-01
+   default, buffer, 100;
+   default, shorten, 0;
+
+   dtcodes = get_utm_dtcodes(north, east, zone);
+   dtcodes = set_remove_duplicates(dtcodes);
+   if(shorten)
+      dtcodes = dt_short(dtcodes);
+
+   tiles = h_new();
+   for(i = 1; i <= numberof(dtcodes); i++) {
+      z = dt2utm(dtcodes(i))(3);
+      w = where(zone == z);
+      idx = extract_for_dt(north(w), east(w), dtcodes(i), buffer=buffer);
+      if(numberof(idx))
+         h_set, tiles, dtcodes(i), w(idx);
+   }
+   return tiles;
+}
+
+func partition_into_10k(north, east, zone, buffer=, shorten=) {
+/* DOCUMENT partition_into_10k(north, east, zone, buffer=, shorten=)
+   Given a set of points represented by northing, easting, and zone, this will
+   return a Yeti hash that partitions them into 10km index tiles.
+
+   Parameters:
+      north: Northing in meters
+      east: Easting in meters
+      zone: Zone (must be array conforming to north/east)
+
+   Options:
+      buffer= A buffer around the tile to include, in meters. Defaults to
+         100m. Set to 0 to constrain to exact tile boundaries.
+      shorten= If set to 1, the tile names will be in the short form
+         (e460_n3350_16). Default is long form (i_e460000_n3350000_16).
+
+   Returns:
+      A yeti hash. The keys are the tile names, the values are the indexes
+      into north/east/zone.
+*/
+// Original David B. Nagle 2009-04-01
+   default, buffer, 100;
+   default, shorten, 0;
+
+   dtcodes = get_utm_dtcodes(north, east, zone);
+   itcodes = get_dt_itcodes(dtcodes);
+   itcodes = set_remove_duplicates(itcodes);
+   if(shorten)
+      itcodes = dt_short(itcodes);
+
+   tiles = h_new();
+   for(i = 1; i <= numberof(itcodes); i++) {
+      z = it2utm(itcodes(i))(3);
+      w = where(zone == z);
+      idx = extract_for_it(north(w), east(w), itcodes(i), buffer=buffer);
+      if(numberof(idx))
+         h_set, tiles, itcodes(i), w(idx);
+   }
+   return tiles;
+}
+
+func partition_into_qq(north, east, zone, buffer=) {
+/* DOCUMENT partition_into_qq(north, east, zone, buffer=)
+   Given a set of points represented by northing, easting, and zone, this will
+   return a Yeti hash that partitions them into quarter quad tiles.
+
+   Parameters:
+      north: Northing in meters
+      east: Easting in meters
+      zone: Zone (must be array conforming to north/east)
+
+   Options:
+      buffer= A buffer around the tile to include, in meters. Defaults to
+         100m. Set to 0 to constrain to exact tile boundaries.
+
+   Returns:
+      A yeti hash. The keys are the tile names, the values are the indexes
+      into north/east/zone.
+*/
+// Original David B. Nagle 2009-04-01
+   default, buffer, 100;
+   qqcodes = get_utm_qqcodes(north, east, zone);
+   qqcodes = set_remove_duplicates(qqcodes);
+
+   tiles = h_new();
+   for(i = 1; i <= numberof(qqcodes); i++) {
+      w = extract_for_qq(north, east, zone, qqcodes(i), buffer=buffer);
+      if(numberof(w))
+         h_set, tiles, qqcodes(i), w;
+   }
+   return tiles;
+}
+
+func partition_by_tile_type(type, north, east, zone, buffer=, shorten=) {
+/* DOCUMENT partition_by_tile_type(type, north, east, zone, buffer=, shorten=)
+   This is a wrapper around other partition types that allows the user to call
+   the right one based on a type parameter.
+
+   There are three legal values for type. They are listed below along with the
+   functions each maps to.
+      qq --> partition_into_qq
+      2k --> partition_into_2k
+      10k --> partition_into_10k
+
+   Arguments and options are passed to the functions as is, as appropriate.
+*/
+// Original David B. Nagle 2009-04-01
+   if(type == "qq") {
+      return partition_into_qq(north, east, zone, buffer=buffer);
+   } else if(type == "2k") {
+      return partition_into_2k(north, east, zone, buffer=buffer,
+         shorten=shorten);
+   } else if(type == "10k") {
+      return partition_into_10k(north, east, zone, buffer=buffer,
+         shorten=shorten);
+   } else {
+      error, "Invalid type";
+   }
 }
