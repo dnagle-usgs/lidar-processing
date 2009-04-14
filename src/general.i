@@ -278,6 +278,15 @@ func strwrap(str, space=, newline=, paragraph=, width=) {
    return result;
 }
 
+func strindent(str, ind) {
+/* DOCUMENT newstr = strindent(str, ind);
+   Indents each line of str (as deliminted by newlines) with the indentation
+   given by ind.
+*/
+// Original David B. Nagle 2009-04-09
+   return regsub("^(.*)$", str, ind + "\\1", newline=1, all=1);
+}
+
 func popen_rdfile(cmd) {
 /* DOCUMENT popen_rdfile(cmd)
    This opens a pipe to the command given and reads its output, returning it as
