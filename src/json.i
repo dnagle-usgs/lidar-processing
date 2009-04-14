@@ -11,16 +11,19 @@ local json_i;
 
    json2yorick converts a JSON string to a Yorick data structure. Some
    important caveats:
-      - Lists are used instead of arrays. In JSON, an array can contain mixed
-        data types as well as hashes. See help, _lst.
+      - When a JSON array contains a mixture of items that cannot be
+        represented by a Yorick array, it will be represented by a Yorick list.
+        See help, _lst;
       - Yeti hashes are used instead of structs. Structs cannot be constructed
-        on the fly, plus they cannot hold complex or heirarchical data.
-      - If a number can be represented as an integer, it is. Otherwise, it's a
-        float.
+        on the fly, plus they cannot hold complex or hierarchical data.
+      - If a number can be represented as a long, it is. Otherwise, it's a
+        double.
 
    yorick2json converts a Yorick data structure to a JSON string.
 
    struct2hash converts data using a Yorick struct to a Yeti hash.
+
+   list2array converts data using a Yorick list to a Yorick array, if possible.
 
    Important note:
       If you round trip something through json2yorick and yorick2json (in
@@ -315,9 +318,14 @@ func __json2yorick(&text) {
    }
 }
 
-func yorick2json(data) {
-/* DOCUMENT yorick2json(date)
+func yorick2json(data, compact=) {
+/* DOCUMENT yorick2json(data, compact=)
    Given a Yorick variable, this will convert it to a JSON string.
+
+   If compact=1, then the resulting string will be compact--meaning, it will
+   contain no extraneous spaces or newlines. Otherwise (by default), it will be
+   laid out with spaces and newlines for easier reading. Both forms represent
+   the same data.
 */
    if(is_void(data))
       return "null";
@@ -332,7 +340,7 @@ func yorick2json(data) {
       data = struct2hash(data);
 
    if(numberof(data) && dimsof(data)(1))
-      return __array2json(data);
+      return __array2json(data, compact);
 
    if(typeof(data) == "short")
       return swrite(format="%d", data);
@@ -350,10 +358,10 @@ func yorick2json(data) {
       return __string2json(data);
 
    if(typeof(data) == "list")
-      return __list2json(data);
+      return __list2json(data, compact);
 
    if(typeof(data) == "hash_table")
-      return __hash2json(data);
+      return __hash2json(data, compact);
 }
 
 func __string2json(str) {
@@ -369,8 +377,8 @@ func __string2json(str) {
    return "\"" + str + "\"";
 }
 
-func __array2json(ary) {
-/* DOCUMENT __array2json(ary)
+func __array2json(ary, compact) {
+/* DOCUMENT __array2json(ary, compact)
    Handles conversion of arrays to json.
 */
    type = typeof(ary);
@@ -389,47 +397,72 @@ func __array2json(ary) {
    if(type == "string")
       ary = __string2json(ary);
 
-   return __array2json_helper(ary);
+   return __array2json_helper(ary, compact);
 }
 
-func __array2json_helper(ary) {
+func __json_join(elements, compact) {
+   if(compact) {
+      joined = strjoin(elements, ",");
+   } else {
+      joined = strjoin(elements, ", ");
+      if(strlen(joined) != strlen(strtrim(strindent(joined, " ")))) {
+         // contains newlines, thus, we should indent
+         joined = "\n" + strindent(strjoin(elements, ",\n"), "  ") + "\n";
+      } else if(strlen(joined) > 72) {
+         subarray = strpart(elements, :1) == "[";
+         subhash = strpart(elements, :1) == "{";
+         if(numberof(where(subarray | subhash))) {
+            joined = "\n" + strindent(strjoin(elements, ",\n"), "  ") + "\n";
+         } else {
+            joined = "\n" + strindent(strwrap(joined, width=68), "  ") + "\n";
+         }
+      }
+   }
+   return joined;
+}
+
+func __array2json_helper(ary, compact) {
    if(dimsof(ary)(1) > 1) {
       ret = array(string, dimsof(ary)(0));
       for(i = 1; i <= numberof(ret); i++) {
-         ret(i) = __array2json_helper(ary(..,i));
+         ret(i) = __array2json_helper(ary(..,i), compact);
       }
       ary = ret;
    }
-   return "[" + strjoin(ary, ",") + "]";
+   joined = __json_join(unref(ary), compact);
+   return "[" + joined + "]";
 }
 
-func __list2json(list) {
-/* DOCUMENT __list2json(list)
+func __list2json(list, compact) {
+/* DOCUMENT __list2json(list, compact)
    Handles conversion of lists to json.
 */
    out = array(string, _len(list));
    for(i = 1; i <= _len(list); i++) {
-      out(i) = yorick2json(_car(list, i));
+      out(i) = yorick2json(_car(list, i), compact=compact);
    }
-   return "[" + strjoin(out, ", ") + "]";
+   joined = __json_join(unref(out), compact);
+   return "[" + joined + "]";
 }
 
-func __hash2json(hash) {
-/* DOCUMENT __hash2json(hash)
+func __hash2json(hash, compact) {
+/* DOCUMENT __hash2json(hash, compact)
    Handles conversion of hashes to json.
 */
    keys = h_keys(hash);
    if(!numberof(keys))
-      return "{ }";
+      return compact ? "{}" : "{ }";
    keys = keys(sort(keys));
    out = array(string, numberof(keys));
+   fmt = compact ? "\"%s\":%s" : "\"%s\": %s";
    for(i = 1; i <= numberof(keys); i++) {
-      out(i) = swrite(format="\"%s\": %s",
+      out(i) = swrite(format=fmt,
          keys(i),
-         yorick2json(hash(keys(i)))
+         yorick2json(hash(keys(i)), compact=compact)
       );
    }
-   return "{" + strjoin(out, ", ") + "}";
+   joined = __json_join(unref(out), compact);
+   return "{" + joined + "}";
 }
 
 func struct2hash(data) {
