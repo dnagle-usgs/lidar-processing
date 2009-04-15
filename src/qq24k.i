@@ -1173,3 +1173,33 @@ func partition_by_tile_type(type, north, east, zone, buffer=, shorten=) {
       error, "Invalid type";
    }
 }
+
+func partition_type_summary(north, east, zone, buffer=) {
+/* DOCUMENT partition_type_summary, north, east, zone, buffer=
+   Displays a summary of what the results would be for each of the
+   partitioning schemes.
+*/
+// Original David B. Nagle 2009-04-07
+   schemes = ["10k", "qq", "2k"];
+   for(i = 1; i <= numberof(schemes); i++) {
+      tiles = partition_by_tile_type(schemes(i), north, east, zone,
+         buffer=buffer);
+      write, format="Summary for: %s\n", schemes(i);
+      tile_names = h_keys(tiles);
+      write, format="  Number of tiles: %d\n", numberof(tile_names);
+      counts = array(long, numberof(tile_names));
+      for(j = 1; j <= numberof(tile_names); j++) {
+         counts(j) = numberof(tiles(tile_names(j)));
+      }
+      qs = long(quartiles(counts));
+      write, format="  Images per tile:%s", "\n";
+      write, format="            Minimum: %d\n", counts(min);
+      write, format="    25th percentile: %d\n", qs(1);
+      write, format="    50th percentile: %d\n", qs(2);
+      write, format="    75th percentile: %d\n", qs(3);
+      write, format="            Maximum: %d\n", counts(max);
+      write, format="               Mean: %d\n", long(counts(avg));
+      write, format="                RMS: %.2f\n", counts(rms);
+      write, format="%s", "\n";
+   }
+}
