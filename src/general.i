@@ -229,7 +229,7 @@ func strjoin(lst, sep, stripnil=) {
    }
    if(numberof(lst) > 1) {
       lst = lst(*);
-      lst(indgen(numberof(lst)-1)) += sep;
+      lst(:-1) += sep;
    }
    return lst(sum);
 }
