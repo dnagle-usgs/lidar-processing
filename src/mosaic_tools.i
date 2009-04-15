@@ -152,6 +152,21 @@ func prepare_cir_for_inpho(conf_file, photo_dir, pbd_dir, inpho_dir,
 }
 
 func gather_cir_data(photo_dir, conf_file=, downsample=) {
+/* DOCUMENT gather_cir_data(photo_dir, conf_file=, downsample=)
+   This creates a Yeti hash that represents a set of CIR images, including
+   per-image data interpolated from tans.
+
+   photo_dir should be the directory that contains the images.
+
+   conf_file= should be the name of a JSON mission configuration file to load.
+   If none is provided, it will use the current mission configuration.
+
+   downsample= allows you to reduce the sampling interval of the images for a
+   sparser dataset. By default, all images are loaded into the hash. However,
+   downsample=2 means only half of them would be loaded. This only makes sense
+   to use against image directories that have *not* been downsampled already.
+*/
+// Original David B. Nagle 2009-03-15
    default, downsample, 0;
    if(!is_void(conf_file))
       mission_load, conf_file;
@@ -704,115 +719,6 @@ func make_cir_index_tiles(srcdir, destdir, gpsins, zone, buffer=) {
    }
 }
 
-func segment_cir_dir(srcdir, destdir, gpsins, buffer=, threshold=) {
-   fix_dir, srcdir;
-   fix_dir, destdir;
-   default, buffer, 250;
-   default, threshold, 600;
-   tile_size = 256000;
-
-   write, "Generating file list...";
-   files = find(srcdir, glob="*.jpg");
-   files = files(sort(file_tail(files)));
-
-   write, "Loading data...";
-   f = open(gpsins);
-   lines = rdfile(f);
-   close, f;
-   data = strsplit(lines, " ")(,1:3);
-   data(,1) += ".jpg";
-   lines = [];
-
-   // We need to now merge files and data
-
-   file_names = file_tail(files);
-   data_names = data(,1);
-
-   file_idx = set_intersection(file_names, data_names, idx=1);
-   data_idx = set_intersection(data_names, file_names, idx=1);
-   file_names = data_names = [];
-
-   if(numberof(file_idx) < 1 || numberof(data_idx) < 1) {
-      write, "Data problem, aborting...";
-      return;
-   }
-
-   files = files(file_idx);
-   data = data(data_idx,);
-   file_idx = data_idx = [];
-
-   files = files(sort(file_tail(files)));
-   data = data(sort(data(,1)),);
-
-   data(,1) = files;
-   files = [];
-
-   write, format=" Number of files: %d\n", numberof(data(,1));
-   __subdivide_cir, data, destdir, buffer, threshold, 1;
-}
-
-func __subdivide_cir(data, dest, buffer, threshold, depth) {
-   bound_e = ceil(atod(data(,2))(max) / 10.) * 10;
-   bound_w = floor(atod(data(,2))(min) / 10.) * 10;
-   bound_n = ceil(atod(data(,3))(max) / 10.) * 10;
-   bound_s = floor(atod(data(,3))(min) / 10.) * 10;
-   if(
-      numberof(data(,1)) > threshold
-      && (bound_e - bound_w > 10 || bound_n - bound_s > 10)
-   ) {
-      if(bound_e - bound_w > bound_n - bound_s) {
-         // Split east/west
-         bound_mid = median(atod(data(,2)));
-         bbox_e = [bound_n, bound_e, bound_s, bound_mid + 5];
-         bbox_w = [bound_n, bound_mid - 5, bound_s, bound_w];
-         idxlist_e = get_bounds_idxlist(data, bbox_e, buffer);
-         idxlist_w = get_bounds_idxlist(data, bbox_w, buffer);
-         write, format="%s- Split east (%d) / west (%d)\n",
-            array(" ", depth)(sum), numberof(idxlist_e), numberof(idxlist_w);
-         __subdivide_cir, data(idxlist_e,), dest, buffer, threshold, depth+1;
-         __subdivide_cir, data(idxlist_w,), dest, buffer, threshold, depth+1;
-      } else {
-         // Split north/south
-         bound_mid = median(atod(data(,3)));
-         bbox_n = [bound_n, bound_e, bound_mid + 5, bound_w];
-         bbox_s = [bound_mid - 5, bound_e, bound_s, bound_w];
-         idxlist_n = get_bounds_idxlist(data, bbox_n, buffer);
-         idxlist_s = get_bounds_idxlist(data, bbox_s, buffer);
-         write, format="%s- Split north (%d) / south (%d)\n",
-            array(" ", depth)(sum), numberof(idxlist_n), numberof(idxlist_s);
-         __subdivide_cir, data(idxlist_n,), dest, buffer, threshold, depth+1;
-         __subdivide_cir, data(idxlist_s,), dest, buffer, threshold, depth+1;
-      }
-   } else {
-      tile = swrite(format="e%d0n%d0",
-         int(bound_w/10), int(bound_s/10));
-      bbox = [bound_n, bound_e, bound_s, bound_w];
-      if(numberof(data(,1)) && numberof(get_bounds_idxlist(data, bbox, 0)) > 0) {
-         write, format="%s* %s: %d files\n",
-            array(" ", depth)(sum), tile, numberof(data(,1));
-         dest_dir = dest + tile + "/";
-         mkdirp, dest_dir;
-         for(i = 1; i <= numberof(data(,1)); i++) {
-            file_copy, data(i,1), dest_dir + file_tail(data(i,1));
-         }
-      } else {
-         write, format=" ! Skipping %s, no files within strict bounds\n",
-            tile;
-      }
-   }
-}
-
-func get_bounds_idxlist(data, bbox, buffer) {
-   max_n = bbox(1) + buffer;
-   max_e = bbox(2) + buffer;
-   min_n = bbox(3) - buffer;
-   min_e = bbox(4) - buffer;
-   return where(
-      min_n <= atod(data(,3)) & atod(data(,3)) <= max_n &
-      min_e <= atod(data(,2)) & atod(data(,2)) <= max_e
-   );
-}
-
 func gen_jgws_init(photo_dir, conf_file=, elev=) {
    extern camera_specs;
    default, elev, 0;
@@ -829,38 +735,72 @@ func gen_jgws_init(photo_dir, conf_file=, elev=) {
    }
 }
 
-func gen_jgws_improved(photo_dir, pbd_dir, conf_file=, elev=) {
+func gen_jgws_with_lidar(photo_dir, pbd_dir, conf_file=, elev=) {
+/* DOCUMENT gen_jgws_with_lidar, photo_dir, pbd_dir, conf_file=, elev=
+   This generates JGW files for a directory of JPG files, using the lidar data
+   in pbd_dir to correct the elevations used by the algorithm.
+
+   Arguments:
+      photo_dir: The directory containing JPG files.
+      pbd_dir: The directory containing PBD files.
+
+   Options:
+      conf_file= If specified, this JSON mission configuration file will be
+         loaded prior to gathering data on the images. It can be omitted if a
+         mission configuation is already defined.
+      elev= The initial elevation to use. It defaults to 0.0. This normally
+         shouldn't need to be changed.
+*/
+// Original David B. Nagle 2009-03-19
    extern camera_specs;
    default, elev, 0;
 
    cirdata = gather_cir_data(photo_dir, conf_file=conf_file, downsample=1);
    elev_used = adjustments = array(double, numberof(cirdata.files));
+   bad_spots = array(0, numberof(cirdata.files));
    for(i = 1; i <= numberof(cirdata.files); i++) {
-      cur_elev = elev;
+      cur_elev = double(elev);
       orig_data = jgw_data = gen_jgw(cirdata.tans(i), camera_specs, cur_elev);
       j = 0;
       comparison = 1;
-      while(j++ < 10 && comparison > 0.001) {
+      if(is_void(pbd_poly)) {
+         pbd_poly = buffer_hull(jgw_poly(jgw_data), 100., pts=16);
          pbd_data = sel_rgn_from_datatiles(data_dir=pbd_dir, noplot=1, silent=1,
-            uniq=1, pip=1, pidx=jgw_poly(jgw_data), mode=1, search_str=".pbd");
-         if(numberof(pbd_data)) {
+            uniq=1, pip=1, pidx=pbd_poly, mode=1, search_str=".pbd");
+      }
+      while(++j < 10 && comparison > 0.001) {
+         jgwp = jgw_poly(jgw_data);
+         if(numberof(testPoly2(pbd_poly, jgwp(1,), jgwp(2,))) != numberof(jgwp(1,))) {
+            pbd_poly = buffer_hull(jgw_poly(jgw_data), 100., pts=16);
+            pbd_data = sel_rgn_from_datatiles(data_dir=pbd_dir, noplot=1, silent=1,
+               uniq=1, pip=1, pidx=pbd_poly, mode=1, search_str=".pbd");
+         }
+         idx = [];
+         if(numberof(pbd_data))
+            idx = testPoly2(jgwp*100, pbd_data.east, pbd_data.north);
+         if(numberof(idx)) {
             old_data = jgw_data;
-            cur_elev = median(pbd_data.elevation/100.);
-            pbd_data = [];
+            cur_elev = median(pbd_data.elevation(idx)/100.);
+            //pbd_data = [];
             jgw_data = gen_jgw(cirdata.tans(i), camera_specs, cur_elev);
             comparison = jgw_compare(old_data, jgw_data, camera=camera_specs);
          } else {
             comparison = 0;
             j--;
+            bad_spots(i) = 1;
          }
       }
-      jgw_file = file_rootname(cirdata.files(i)) + ".jgw";
-      write_jgw, jgw_file, jgw_data;
-      comparison = jgw_compare(orig_data, jgw_data, camera=camera_specs);
-      write, format="Image %d: %d adjustments to elevation %.3f resulting in %.3f m change\n",
-         i, j, cur_elev, comparison;
-      adjustments(i) = comparison;
-      elev_used(i) = cur_elev;
+      if(bad_spots(i)) {
+         write, format="Image %d: skipped, no PBD data\n", i;
+      } else {
+         jgw_file = file_rootname(cirdata.files(i)) + ".jgw";
+         write_jgw, jgw_file, jgw_data;
+         comparison = jgw_compare(orig_data, jgw_data, camera=camera_specs);
+         write, format="Image %d: %d adjustments to elevation %.3f resulting in %.3f m change\n",
+            i, j, cur_elev, comparison;
+         adjustments(i) = comparison;
+         elev_used(i) = cur_elev;
+      }
    }
    write, " ";
    w = where(adjustments > 0);
@@ -871,19 +811,34 @@ func gen_jgws_improved(photo_dir, pbd_dir, conf_file=, elev=) {
 }
 
 func jgw_remove_missing(dir, dryrun=) {
+/* DOCUMENT jgw_remove_missing, dir, dryrun=
+   This will remove all jpg files in a directory that do not have corresponding
+   jgw files.
+
+   If dryrun=1, then it will provide a report of what it would do, but it won't
+   actually delete anything.
+*/
+// Original David B. Nagle 2009-04-07
    default, dryrun, 0;
    jpg_files = find(dir, glob="*.jpg");
    jgw_files = file_rootname(jpg_files) + ".jgw";
    has_jgw = file_exists(unref(jgw_files));
    w = where(! has_jgw);
    if(numberof(w)) {
+      if(dryrun)
+         write, "List of files that would be removed:";
+      else
+         write, "Removing files:";
       bad_jpgs = unref(jpg_files)(w);
       for(i = 1; i <= numberof(bad_jpgs); i++) {
-         write, format="Removing %s\n", bad_jpgs(i);
+         write, format=" - %s\n", bad_jpgs(i);
          if(!dryrun)
             remove, bad_jpgs(i);
       }
-      write, format="Removed a total of %d files.\n", numberof(bad_jpgs);
+      if(dryrun)
+         write, format=" Would remove a total of %d files.\n", numberof(bad_jpgs);
+      else
+         write, format=" Removed a total of %d files.\n", numberof(bad_jpgs);
    }
 }
 
@@ -907,6 +862,16 @@ func gen_cir_region_shapefile(photo_dir, shapefile, conf_file=, elev=) {
 }
 
 func jgw_compare(jgw1, jgw2, camera=) {
+/* DOCUMENT dist = jgw_compare(jgw1, jgw2, camera=)
+   This compares two JGW matrixes and returns a scalar measurement that
+   provides a metric for comparing how "close" the two are. It projects the
+   four corners and centroid of each image and calculates the average distance
+   between them. Returned value in is meters.
+
+   The camera= option can be used to specify a set of camera specs. It defaults
+   to ms4000_specs. It must be an instance of structure CAMERA_SPECS.
+*/
+// Original David B. Nagle 2009-03-19
    extern ms4000_specs;
    default, camera, ms4000_specs;
    x1 = x2 = [0., 0, camera.sensor_width, camera.sensor_width, 0,
@@ -920,6 +885,18 @@ func jgw_compare(jgw1, jgw2, camera=) {
 }
 
 func write_jgw(jgw_file, jgw_data) {
+/* DOCUMENT write_jgw, filename, matrix
+   Creates the specified jgw file with the data defined by matrix.
+
+   The jgw filename must be a fully qualified path and filename. Its enclosing
+   directory must exist.
+
+   The matrix must be a six element array of type double or float.
+
+   The precision of the output is only suitable for writing UTM JGW files at
+   present.
+*/
+// Original David B. Nagle 2009-03-19
    f = open(jgw_file, "w");
    write, f, format="%.6f\n", jgw_data(1:4);
    write, f, format="%.3f\n", jgw_data(5:6);
@@ -1005,6 +982,30 @@ func pbd_data_hull(pbd_dir, glob=, buffer=, skip=) {
    return full_hull / 100.;
 }
 
+func filter_cirdata_by_pbd_data(cirdata, pbd_dir, glob=, buffer=) {
+/* DOCUMENT newcirdata = filter_cirdata_by_pbd_data(cirdata, pbd_dir, glob=, buffer=)
+   This will reduce the dataset represented by cirdata by only keeping those
+   images that would fall in the areas covered by the lidar data in pbd_dir.
+
+   cirdata should be a Yeti hash object as returned by gather_cir_data.
+
+   pbd_dir should be the path to a directory of PBD files.
+
+   glob= specifies a search string to use for locating the right PBD files in
+   the directory.
+
+   buffer= specifies the buffer to apply around the PBD data. Images are
+   matched based on their tans coordinate. Applying a buffer helps include
+   images that partially overlap lidar data.
+
+   This will return a new cirdata Yeti hash.
+*/
+// Original David B. Nagle 2009-04-13
+   idx = extract_against_pbd_data(cirdata.tans.easting, cirdata.tans.northing,
+      pbd_dir, glob=glob, buffer=buffer);
+   return filter_cirdata_by_index(cirdata, idx);
+}
+
 func filter_cirdata_by_flightlines(cirdata, flts) {
    idx = [];
    for(i = 1; i <= numberof(flts); i++) {
@@ -1083,15 +1084,37 @@ func copy_cirdata_images_by_flightline(cirdata, dest_dir) {
    }
 }
 
-func copy_cirdata_tiles(cirdata, tiles, dest_dir, split_fltlines=) {
+func copy_cirdata_tiles(cirdata, scheme, dest_dir, split_fltlines=, buffer=) {
+/* DOCUMENT copy_cirdata_tiles, cirdata, scheme, dest_dir, split_fltlines=, buffer=
+   This copies the images represented by cirdata to dest_dir, but partitions
+   them using the specified partitioning scheme as it does.
+
+   Arguments:
+      cirdata: A Yeti hash, as returned by gather_cir_data.
+      scheme: One of "10k", "qq", or "2k". See partition_by_tile_type.
+      dest_dir: The directory that will contain the partition directories and
+         images.
+
+   Options:
+      split_fltlines= By default, each tile directory will contain
+         subdirectories for each flight line. If you'd rather all images be
+         directly in the tile directory, then set this to 0.
+      buffer= This specifies the buffer to apply around each tile. This
+         defaults to whatever the defaults are for the individual partitioning
+         functions (see partition_by_tile_type).
+
+   If buffer is not set to 0, then it's very likely that some images will get
+   copied into more than one directory.
+*/
+// Original David B. Nagle 2009-04-02
+   tiles = partition_by_tile_type(scheme,
+      cirdata.tans.northing, cirdata.tans.easting, cirdata.tans.zone,
+      buffer=buffer, shorten=1);
    tile_names = h_keys(tiles);
 
    for(i = 1; i <= numberof(tile_names); i++) {
       curtile = tile_names(i);
-      //itcode = itcodes(i);
       tiledir = file_join(dest_dir, curtile);
-      //itdir = file_join(inpho_dir, itcode);
-      //idx = itiles(itcode);
       idx = tiles(curtile);
       write, format=" - %d: %s\n", i, curtile;
 
@@ -1179,6 +1202,94 @@ func extract_against_pbd_data(easting, northing, pbd_dir, glob=, buffer=) {
    return where(keep);
 }
 
+func cir_tile_type_summary_from_raw(raw_cir_dir, pbd_dir, json_file=, downsample=, auto_conf_dest=, pbd_glob=, tile_buffer=) {
+   // Load in conf
+   write, format="Loading configuration...%s", "\n";
+   if(json_file) {
+      mission_load, file_join(raw_cir_dir, json_file);
+   } else {
+      json_file = auto_mission_conf(raw_cir_dir, strict=0, autoname=auto_conf_dest);
+   }
+
+   // Find images
+   write, format="Gathering image data...%s", "\n";
+   cirdata = gather_cir_data(raw_cir_dir, downsample=downsample);
+
+   // Reduce images against pbd data
+   write, format="Restricting to PBD data region...%s", "\n";
+   idx = extract_against_pbd_data(cirdata.tans.easting, cirdata.tans.northing,
+      pbd_dir, glob=pbd_glob, buffer=tile_buffer);
+   cirdata = filter_cirdata_by_index(cirdata, idx);
+   idx = [];
+
+   cir_tile_type_summary, cirdata, buffer=tile_buffer;
+}
+
+func cir_tile_type_summary(cirdata, buffer=) {
+/* DOCUMENT cir_tile_type_summary, cirdata, buffer=
+   This prints out a report that summarized what would happen if the data
+   represented by cirdata were partitioned using each of the three partitioning
+   schemes.
+
+   buffer= specifies the buffer to include around each tile.
+
+   Once a tiling scheme is chosen, use partition_by_tile_type to do the actual
+   partitioning.
+*/
+// Original David B. Nagle 2009-04-13
+   schemes = ["10k", "qq", "2k"];
+   for(i = 1; i <= numberof(schemes); i++) {
+      tiles = partition_by_tile_type(schemes(i), cirdata.tans.northing,
+         cirdata.tans.easting, cirdata.tans.zone, buffer=buffer);
+
+      tile_names = h_keys(tiles);
+      tile_counts = array(0, numberof(tile_names));
+      tile_flt_count = array(0, numberof(tile_names));
+      flt_idx_count = array(0, numberof(tile_names));
+      flt_idx_idx = 0;
+      for(j = 1; j <= numberof(tile_names); j++) {
+         tile_counts(j) = numberof(tiles(tile_names(j)));
+         tempcirdata = filter_cirdata_by_index(cirdata, tiles(tile_names(j)));
+         split_cir_by_fltline, tempcirdata;
+         ptr = tempcirdata.flightlines;
+         tile_flt_count(j) = numberof(ptr);
+         for(k = 1; k <= numberof(ptr); k++) {
+            flt_idx_idx++;
+            if(flt_idx_idx > numberof(flt_idx_count))
+               grow, flt_idx_count, flt_idx_count;
+            flt_idx_count(flt_idx_idx) = numberof(*ptr(k));
+         }
+      }
+      flt_idx_count = flt_idx_count(:flt_idx_idx);
+
+      qs_tc = long(quartiles(tile_counts));
+      qs_tfc = long(quartiles(tile_flt_count));
+      qs_fic = long(quartiles(flt_idx_count));
+      
+      write, format="============================== Summary for: %s =============================", schemes(i);
+      if(strlen(schemes(i)) < 3)
+         write, format="%s", "=";
+      write, format="%s", "\n";
+
+      write, format="      Number of tiles: %d\n", numberof(tile_counts);
+      write, format="Number of flightlines: %d\n", tile_flt_count(sum);
+      write, format="*****Images per tile*****|**Flightlines per tile***|**Images per flightline**%s", "\n";
+      write, format="         Minimum: %-6d |         Minimum: %-6d |         Minimum: %-6d\n", tile_counts(min), tile_flt_count(min), flt_idx_count(min);
+      write, format=" 25th percentile: %-6d | 25th percentile: %-6d | 25th percentile: %-6d\n", qs_tc(1), qs_tfc(1), qs_fic(1);
+      write, format=" 50th percentile: %-6d | 50th percentile: %-6d | 50th percentile: %-6d\n", qs_tc(2), qs_tfc(2), qs_fic(2);
+      write, format=" 75th percentile: %-6d | 75th percentile: %-6d | 75th percentile: %-6d\n", qs_tc(3), qs_tfc(3), qs_fic(3);
+      write, format="         Maximum: %-6d |         Maximum: %-6d |         Maximum: %-6d\n", tile_counts(max), tile_flt_count(max), flt_idx_count(max);
+      write, format="            Mean: %-6d |            Mean: %-6d |            Mean: %-6d\n", long(tile_counts(avg)), long(tile_flt_count(avg)), long(flt_idx_count(avg));
+      write, format="             RMS: %-6d |             RMS: %-6d |             RMS: %-6d\n", long(tile_counts(rms)), long(tile_flt_count(rms)), long(flt_idx_count(rms));
+      write, format="%s", "\n";
+   }
+
+   // Partition images
+//   write, format="Display partitioning summary...%s", "\n\n";
+//   partition_type_summary, cirdata.tans.northing, cirdata.tans.easting,
+//      cirdata.tans.zone, buffer=tile_buffer;
+}
+
 func process_cir_level_a(raw_cir_dir, pbd_dir, processed_dir,
    json_file=, downsample=, auto_conf_dest=, pbd_glob=, tile_buffer=,
    partition=, flightlines=, elevation=
@@ -1208,10 +1319,8 @@ func process_cir_level_a(raw_cir_dir, pbd_dir, processed_dir,
 
    // Reduce images against pbd data
    write, format="Restricting to PBD data region...%s", "\n";
-   idx = extract_against_pbd_data(cirdata.tans.easting, cirdata.tans.northing,
-      pbd_dir, glob=pbd_glob, buffer=tile_buffer);
-   cirdata = filter_cirdata_by_index(cirdata, idx);
-   idx = [];
+   cirdata = filter_cirdata_by_pbd_data(cirdata, pbd_dir, glob=pbd_glob,
+      buffer=tile_buffer);
 
    // Partition images
    write, format="Partitioning into tiles...%s", "\n";
@@ -1225,5 +1334,5 @@ func process_cir_level_a(raw_cir_dir, pbd_dir, processed_dir,
 
    // Generate jgw files
    write, format="Generating jgw files...%s", "\n";
-   gen_jgws_improved, processed_dir, pbd_dir, elev=elevation;
+   gen_jgws_with_lidar, processed_dir, pbd_dir, elev=elevation;
 }
