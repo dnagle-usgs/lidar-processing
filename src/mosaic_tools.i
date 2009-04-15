@@ -2,6 +2,7 @@ write, "$Id$";
 require, "cir-mosaic.i";
 require, "shapefile.i";
 require, "mission_conf.i";
+require, "mosaic_biases.i";
 
 /*
    Things we need to prepare in Yorick for Inpho:
@@ -211,84 +212,14 @@ func gather_cir_data(photo_dir, conf_file=, downsample=) {
    return data;
 }
 
-func save_cir_data(data, dest) {
-   yhd_save, dest, data, overwrite=1;
-   f = createb(dest + ".pbd");
-   add_variable, f, -1, "tans", structof(data.tans), dimsof(data.tans);
-   f.tans = data.tans;
-   close, f;
-}
-
-func load_cir_data(src) {
-   data = yhd_restore(src);
-   f = openb(src + ".pbd");
-   h_set, data, "tans", f.tans(1:0);
-   close, f;
-   return data;
-}
-
-func calculate_jgw_matrices(cirdata, camera=, elev=, pbd_dir=, verbose=, debug=) {
-   extern ms4000_specs;
-   default, camera, ms4000_specs;
-   default, elev, 0;
-   default, verbose, 1;
-   jgws = array(double, [2, 6, numberof(cirdata.files)]);
-   if(!is_void(pbd_dir)) {
-      pbd_data = merge_data_pbds(pbd_dir, uniq=1, skip=25);
-   }
-   tstamp = [];
-   timer_init, tstamp;
-   for(i = 1; i <= numberof(cirdata.files); i++) {
-      if(verbose && !debug)
-         timer_tick, tstamp, i, numberof(cirdata.files);
-      if(debug) {
-         write, format="%d: %s\n", i, file_tail(cirdata.files(i));
-         write, "Acquiring jgw";
-      }
-      jgw = gen_jgw(cirdata.tans(i), camera, elev);
-      if(! is_void(pbd_data)) {
-         if(debug)
-            write, "Calculating poly";
-         //ply = jgw_poly(jgw, camera=camera);
-         if(debug)
-            write, "Finding internal points";
-         //ply_idx = testPoly2(ply * 100, pbd_data.east, pbd_data.north);
-         bbox = jgw_bbox(jgw, camera=camera);
-         bbox_idx = data_box(pbd_data.east, pbd_data.north,
-            bbox(1)*100., bbox(2)*100., bbox(3)*100., bbox(4)*100.);
-         if(numberof(bbox_idx)) {
-            if(debug)
-               write, "Finding old center";
-            old_center = jgw_center(jgw, camera=camera);
-            if(debug)
-               write, "Finding median elevation";
-            elev = median(pbd_data(bbox_idx).elevation)/100.;
-            if(debug)
-               write, format="   -- Median elevation: %.2f\n", elev;
-            if(debug)
-               write, "Acquiring revised jgw";
-            jgw = gen_jgw(cirdata.tans(i), camera, elev);
-            if(debug)
-               write, "Finding new center";
-            new_center = jgw_center(jgw, camera=camera);
-            moved = sqrt(([old_center,new_center](,dif)^2)(sum));
-            if(debug)
-               write, format="PBD data adjusted center point by %.2f meters.\n", moved;
-         }
-         jgws(,i) = jgw;
-      }
-   }
-   h_set, cirdata, "jgw", jgws;
-}
-
 func jgw_bbox(jgw, camera=) {
    ply = jgw_poly(jgw, camera=camera);
    return [ply(min,1), ply(max,1), ply(min,2), ply(max,2)];
 }
 
 func jgw_poly(jgw, camera=) {
-   extern ms4000_specs;
-   default, camera, ms4000_specs;
+   extern camera_specs;
+   default, camera, camera_specs;
    x = [0., 0, camera.sensor_width, camera.sensor_width, 0];
    y = [0., camera.sensor_height, camera.sensor_height, 0, 0];
    affine_transform, x, y, jgw;
@@ -296,8 +227,8 @@ func jgw_poly(jgw, camera=) {
 }
 
 func jgw_center(jgw, camera=) {
-   extern ms4000_specs;
-   default, camera, ms4000_specs;
+   extern camera_specs;
+   default, camera, camera_specs;
    x = [camera.sensor_width / 2.0];
    y = [camera.sensor_height / 2.0];
    affine_transform, x, y, jgw;
@@ -305,9 +236,9 @@ func jgw_center(jgw, camera=) {
 }
 
 func mosaic_gather_tans(date_list, photo_soes, progress=, mounting_bias=) {
-   extern cir_mounting_bias;
+   extern camera_mounting_bias;
    default, progress, 1;
-   default, mounting_bias, cir_mounting_bias;
+   default, mounting_bias, camera_mounting_bias;
    photo_tans = array(IEX_ATTITUDEUTM, dimsof(photo_soes));
    for(i = 1; i <= numberof(date_list); i++)  {
       if(progress)
@@ -404,45 +335,6 @@ func mosaic_gen_xyz(dest_file, itcode, pbd_dir, pbd_glob, buffer=, progress=) {
    close, f;
 }
 
-func old_mosaic_gen_xyz(dest_file, itcode, xyz_file, buffer=, progress=) {
-   // xyz_buffer -> buffer
-   // itdir
-   default, buffer, 750;
-   default, progress, 1;
-
-   bbox = it2utm(itcode, bbox=1);
-   min_n = bbox(1) - buffer;
-   max_n = bbox(3) + buffer;
-   min_e = bbox(4) - buffer;
-   max_e = bbox(2) + buffer;
-   fin = open(xyz_file, "r");
-   dest_path = file_dirname(dest_file);
-   if(!file_isdir(dest_path))
-      mkdirp, dest_path;
-   fout = open(dest_file, "w");
-   tstamp = lc = 0;
-   timer_init, tstamp;
-   for(;;) {
-      lc++;
-      if(progress)
-         timer_tick, tstamp, lc, lc+1, swrite(format="     + Processing line %d...", lc);
-      line = rdline(fin);
-      if(!line) break;
-      east = north = alt = double(0);
-      sread, line, east, north, alt;
-      if(
-         min_n <= north & north <= max_n &
-         min_e <= east  & east  <= max_e
-      ) {
-         write, fout, format="%.2f %.2f %.2f\n", east, north, alt;
-      }
-   }
-   close, fin;
-   close, fout;
-   if(progress)
-      write, format="%s", "\n";
-}
-
 func mosaic_gen_tile_defns(dest_file, buffer=, photo_tans=) {
    default, buffer, 100;
    default, photo_tans, [];
@@ -465,258 +357,6 @@ func mosaic_gen_tile_defns(dest_file, buffer=, photo_tans=) {
          int(bbox(2) + buffer), int(bbox(1) - buffer);
    }
    close, f;
-}
-
-func batch_load_and_write_cir_gpsins(img_dirs, globs, mission_dirs=, pnav_files=, ins_files=, dest_dir=) {
-   for(i = 1; i <= numberof(globs); i++) {
-      if(numberof(mission_dirs) && is_void(pnav_files)) {
-         pnav_file = autoselect_pnav(mission_dirs(i));
-      } else {
-         pnav_file = pnav_files(i);
-      }
-
-      if(numberof(mission_dirs) && is_void(ins_files)) {
-         ins_file = autoselect_iexpbd(mission_dirs(i));
-      } else {
-         ins_file = ins_files(i);
-      }
-
-      dest_name = file_tail(mission_dirs(i));
-
-      load_and_write_cir_gpsins,
-         pnav_file, ins_file, img_dirs, globs(i), dest_dir=dest_dir, dest_name=dest_name;
-   }
-}
-
-func load_and_write_cir_gpsins(pnav_file, ins_file, img_dirs, glob, dest_dir=, dest_name=) {
-   extern pnav;
-   load_iexpbd, ins_file;
-   pnav = rbpnav(fn=pnav_file);
-   for(i = 1; i <= numberof(img_dirs); i++) {
-      dest = file_join(img_dirs(i));
-      if(dest_name)
-         dest += "_" + dest_name;
-      dest += ".gpsins";
-      if(!is_void(dest_dir))
-         dest = file_join(dest_dir, file_tail(dest));
-      write_cir_gpsins, img_dirs(i), dest, glob=glob;
-   }
-}
-
-func write_cir_gpsins(imgdir, outfile, glob=) {
-/* DOCUMENT write_cir_gpsins, imgdir, outfile
-   
-   This will create a file (specified by outfile) containing the GPS and INS
-   data for all the images found within imgdir. The GPS and INS data must be
-   already loaded globally.
-
-   This was written to facilitate the transference of this data into Inpho's
-   OrthoMaster software. It expects the outfile's extension to be .gps or
-   .gpsins.
-*/
-   // Original David Nagle 2008-10-28
-   default, glob, "*.jpg";
-
-   files = find(imgdir, glob=glob);
-
-   if(!numberof(files)) {
-      write, "No files were found.";
-      return;
-   }
-
-   files = file_tail(files);
-   files = file_rootname(files);
-   files = set_remove_duplicates(files);
-
-   hms = atoi(strsplit(files, "-")(,2));
-   sod = int(hms2sod(hms) % 86400);
-   data = get_img_info(sod);
-   //u = fll2utm(data(3,), data(2,));
-   /*
-      data(1,) - 1 if we interpolated data; 0 if not
-      data(2,) - lon
-      data(3,) - lat
-      data(4,) - alt
-   */
-
-   nad83 = wgs842nad83([data(2:4,)]);
-   navd88 = nad832navd88(nad83);
-   u = fll2utm(navd88(2,), navd88(1,));
-   data(4,) = navd88(3,);
-
-   w = where(data(1,));
-   
-   if(numberof(w)) {
-      f = open(outfile, "w");
-      write, f, linesize=2000, format="%s %.10f %.10f %.4f %.4f %.4f %.4f\n",
-         files(w),
-         u(2,w), u(1,w), data(4,w), data(5,w), data(6,w), data(7,w);
-      close, f;
-   } else {
-      write, "No files had data.";
-   }
-}
-
-func get_img_info(sod, offset=) {
-/* DOCUMENT data = get_img_info(sod)
-   Returns array of data:
-      data(1,) - 1 if we interpolated data; 0 if not
-      data(2,) - lon
-      data(3,) - lat
-      data(4,) - alt
-      data(5,) - roll
-      data(6,) - pitch
-      data(7,) - heading
-
-   return [lon, lat, alt, rol, pitch, heading];
-*/
-   extern iex_nav;
-   extern pnav;
-
-   default, offset, 1.12;
-
-   sod += offset;
-   iex_sod = iex_nav.somd % 86400;
-
-   result = array(double, 7, numberof(sod));
-   result(1,) = 0;
-
-   w = where(iex_sod(min) <= sod & sod <= iex_sod(max));
-   if(numberof(w)) {
-      result(1,w) = 1;
-      result(2,w) = interp(iex_nav.lon, iex_sod, sod(w));
-      result(3,w) = interp(iex_nav.lat, iex_sod, sod(w));
-      result(4,w) = interp(iex_nav.alt, iex_sod, sod(w));
-      result(5,w) = interp(iex_nav.roll, iex_sod, sod(w));
-      result(6,w) = interp(iex_nav.pitch, iex_sod, sod(w));
-      result(7,w) = interp_angles(iex_nav.heading, iex_sod, sod(w));
-   }
-
-   return result;
-}
-
-func get_img_ins(sod) {
-/* DOCUMENT ins = get_img_ins(sod)
-
-   Returns the ins data for the given sod value.
-
-   See also: write_cir_gpsins
-*/
-   // Original David Nagle 2008-10-28
-   extern iex_nav1hz;
-   extern cir_mounting_bias;
-   extern camera_specs;
-
-   if(is_void(iex_nav1hz)) return -5;
-
-   sod %= 86400;
-   w = where(int(iex_nav1hz.somd) == sod);
-   if(!numberof(w))
-      return -6;
-   ins_idx = w(1);
-
-   ins = iex_nav1hz(ins_idx)(1);
-
-   ins.roll    += cir_mounting_bias.roll;
-   ins.pitch   += cir_mounting_bias.pitch;
-   ins.heading += cir_mounting_bias.heading;
-   
-   return ins;
-}
-
-func get_img_pnav(sod) {
-   extern pnav;
-   if(is_void(pnav)) return -5;
-
-   pnav_idx = where(int(pnav.sod) == sod)(1);
-   if(is_void(pnav_idx)) return -6;
-   
-   return pnav(pnav_idx);
-}
-
-func make_cir_index_tiles(srcdir, destdir, gpsins, zone, buffer=) {
-/* DOCUMENT gen_cir_tiles, pnav, src, dest, copyjgw=, abbr=
-
-   This function partitions images into 10k by 10k index tiles.
-
-   Parameters:
-      srcdir:  Path to full set of images
-      destdir: Path to place index tiles
-      gpsins:  Path to gpsins file with all gpsins data
-      zone:    UTM zone of data
-
-   Options:
-      buffer=  Buffer to include around tile; default 250km
-*/
-   fix_dir, src;
-   fix_dir, dest;
-   default, buffer, 250;
-
-   write, "Generating file list...";
-   files = find(srcdir, glob="*.jpg");
-   files = files(sort(file_tail(files)));
-
-   write, "Loading data...";
-   f = open(gpsins);
-   lines = rdfile(f);
-   close, f;
-   data = strsplit(lines, " ")(,1:3);
-   data(,1) += ".jpg";
-   lines = [];
-
-   // We need to now merge files and data
-
-   file_names = file_tail(files);
-   data_names = data(,1);
-
-   file_idx = set_intersection(file_names, data_names, idx=1);
-   data_idx = set_intersection(data_names, file_names, idx=1);
-   file_names = data_names = [];
-
-   if(numberof(file_idx) < 1 || numberof(data_idx) < 1) {
-      write, "Data problem, aborting...";
-      return;
-   }
-
-   files = files(file_idx);
-   data = data(data_idx,);
-   file_idx = data_idx = [];
-
-   files = files(sort(file_tail(files)));
-   data = data(sort(data(,1)),);
-
-   data(,1) = files;
-   files = [];
-
-   itcodes = get_dt_itcodes(get_utm_dtcodes(atod(data(,3)), atod(data(,2)), zone));
-   itcodes = set_remove_duplicates(itcodes);
-
-   tstamp = [];
-   timer_init, tstamp;
-   for(i = 1; i <= numberof(itcodes); i++) {
-      bbox = it2utm(itcodes(i), bbox=1);
-      min_n = bbox(1) - buffer;
-      max_n = bbox(3) + buffer;
-      min_e = bbox(4) - buffer;
-      max_e = bbox(2) + buffer;
-      w = where(
-         min_n <= atod(data(,3)) & atod(data(,3)) <= max_n &
-         min_e <= atod(data(,2)) & atod(data(,2)) <= max_e
-      );
-      if(numberof(w)) {
-         short_name = dt_short(itcodes(i));
-         dest_path = file_join(destdir, short_name, "images");
-         mkdirp, dest_path;
-         write, format="[%d/%d] Creating %s with %d files\n",
-            i, numberof(itcodes), short_name, numberof(w);
-         for(j = 1; j <= numberof(data(w,1)); j++) {
-            file_copy, data(w(j),1), file_join(dest_path, file_tail(data(w(j),1)));
-            timer_tick, tstamp, j, numberof(w);
-         }
-      } else {
-         write, format="Skipping %s, no files found\n", short_name;
-      }
-   }
 }
 
 func gen_jgws_init(photo_dir, conf_file=, elev=) {
@@ -869,11 +509,11 @@ func jgw_compare(jgw1, jgw2, camera=) {
    between them. Returned value in is meters.
 
    The camera= option can be used to specify a set of camera specs. It defaults
-   to ms4000_specs. It must be an instance of structure CAMERA_SPECS.
+   to camera_specs. It must be an instance of structure CAMERA_SPECS.
 */
 // Original David B. Nagle 2009-03-19
-   extern ms4000_specs;
-   default, camera, ms4000_specs;
+   extern camera_specs;
+   default, camera, camera_specs;
    x1 = x2 = [0., 0, camera.sensor_width, camera.sensor_width, 0,
       camera.sensor_width / 2.0];
    y1 = y2 = [0., camera.sensor_height, camera.sensor_height, 0, 0,
@@ -901,50 +541,6 @@ func write_jgw(jgw_file, jgw_data) {
    write, f, format="%.6f\n", jgw_data(1:4);
    write, f, format="%.3f\n", jgw_data(5:6);
    close, f;
-}
-
-func new_gen_jgws(photo_dir, elev=, glob=) {
-   extern camera_specs;
-   default, elev, 0;
-   default, glob, "*-cir.jpg";
-   jpgs = find(photo_dir, glob=glob);
-
-   files = file_tail(file_rootname(jpgs));
-
-   hms = atoi(strsplit(files, "-")(,2));
-   sod = int(hms2sod(hms) % 86400);
-   raw_ins = get_img_info(sod);
-   u = fll2utm(raw_ins(3,), raw_ins(2,));
-   w = where(raw_ins(1,));
-
-   tstamp = [];
-   if(numberof(w)) {
-      timer_init, tstamp;
-      for(j = 1; j <= numberof(w); j++) {
-         timer_tick, tstamp, j, numberof(w);
-         i = w(j);
-
-         ins = IEX_ATTITUDEUTM();
-         ins.somd = sod(i);
-         ins.northing = u(1,i);
-         ins.easting = u(2,i);
-         ins.zone = u(3,i);
-         ins.lat = raw_ins(3,i);
-         ins.lon = raw_ins(2,i);
-         ins.alt = raw_ins(4,i);
-         ins.roll = raw_ins(5,i);
-         ins.pitch = raw_ins(6,i);
-         ins.heading = raw_ins(7,i);
-
-         jgw_data = gen_jgw(ins, camera_specs, elev);
-         jgw_file = file_rootname(jpgs(i)) + ".jgw";
-         f = open(jgw_file, "w");
-         write, f, format="%.6f\n", jgw_data(1:4);
-         write, f, format="%.3f\n", jgw_data(5:6);
-         close, f;
-
-      }
-   }
 }
 
 func plot_cir_flightline(cirdata, flt, color=) {
