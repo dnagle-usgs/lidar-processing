@@ -1,5 +1,4 @@
 write, "$Id$";
-require, "cir-mosaic.i";
 require, "shapefile.i";
 require, "mission_conf.i";
 require, "mosaic_biases.i";
@@ -209,7 +208,35 @@ func gather_cir_data(photo_dir, conf_file=, downsample=) {
       "photo_dir", photo_dir
    );
 
+   cirdata_correct_zoning, data;
+
    return data;
+}
+
+func cirdata_correct_zoning(cirdata) {
+   for(i = 1; i <= numberof(cirdata.files); i++) {
+      parts = file_split(cirdata.files(i));
+      qq = extract_qq(parts);
+      qq = qq(where(qq));
+      dt = dt_short(parts);
+      dt = dt(where(dt));
+      dest_zone = -1;
+      if(numberof(qq)) {
+         qq = qq(0);
+         dest_zone = qq2uz(qq)(1);
+      } else if(numberof(dt)) {
+         dt = dt(0);
+         dt2utm, dt, , , dest_zone;
+         dest_zone = dest_zone(1);
+      }
+      if(dest_zone > 0) {
+         utm = fll2utm(cirdata.tans(i).lat, cirdata.tans(i).lon, force_zone=dest_zone);
+         cirdata.tans(i).northing = utm(1,);
+         cirdata.tans(i).easting = utm(2,);
+         cirdata.tans(i).zone = utm(3,);
+         utm = [];
+      }
+   }
 }
 
 func jgw_bbox(jgw, camera=) {
@@ -240,6 +267,7 @@ func mosaic_gather_tans(date_list, photo_soes, progress=, mounting_bias=) {
    default, progress, 1;
    default, mounting_bias, camera_mounting_bias;
    photo_tans = array(IEX_ATTITUDEUTM, dimsof(photo_soes));
+   photo_dates = soe2date(photo_soes);
    for(i = 1; i <= numberof(date_list); i++)  {
       if(progress)
          write, format=" - %d: Interpolating for %s...\n", i, date_list(i);
@@ -359,8 +387,7 @@ func mosaic_gen_tile_defns(dest_file, buffer=, photo_tans=) {
    close, f;
 }
 
-func gen_jgws_init(photo_dir, conf_file=, elev=) {
-   extern camera_specs;
+func gen_jgws_init(photo_dir, conf_file=, elev=, camera=) {
    default, elev, 0;
 
    cirdata = gather_cir_data(photo_dir, conf_file=conf_file, downsample=1);
@@ -369,14 +396,17 @@ func gen_jgws_init(photo_dir, conf_file=, elev=) {
    timer_init, tstamp;
    for(i = 1; i <= numberof(cirdata.files); i++) {
       timer_tick, tstamp, i, numberof(cirdata.files);
-      jgw_data = gen_jgw(cirdata.tans(i), camera_specs, elev);
+      jgw_data = gen_jgw(cirdata.tans(i), elev, camera=camera);
       jgw_file = file_rootname(cirdata.files(i)) + ".jgw";
       write_jgw, jgw_file, jgw_data;
    }
 }
 
-func gen_jgws_with_lidar(photo_dir, pbd_dir, conf_file=, elev=) {
-/* DOCUMENT gen_jgws_with_lidar, photo_dir, pbd_dir, conf_file=, elev=
+func gen_jgws_with_lidar(photo_dir, pbd_dir, conf_file=, elev=, camera=,
+max_adjustments=, min_improvement=, buffer=) {
+/* DOCUMENT gen_jgws_with_lidar, photo_dir, pbd_dir, conf_file=, elev=,
+   camera=, max_adjustments=, min_improvement=, buffer=
+
    This generates JGW files for a directory of JPG files, using the lidar data
    in pbd_dir to correct the elevations used by the algorithm.
 
@@ -390,30 +420,41 @@ func gen_jgws_with_lidar(photo_dir, pbd_dir, conf_file=, elev=) {
          mission configuation is already defined.
       elev= The initial elevation to use. It defaults to 0.0. This normally
          shouldn't need to be changed.
+
+   Advanced options (these shouldn't need to be changed):
+      camera= Specifies the camera to use. Defaults to camera_specs.
+      max_adjustments= The maximum number of adjustments to attempt. Defaults to 10.
+      min_improvement= The minimum change that needs to be seen in order to
+         trigger further adjustment. Defaults to 0.001 meters.
+      buffer= The buffer to use when loading pbd data. Defaults to 75 meters.
 */
 // Original David B. Nagle 2009-03-19
-   extern camera_specs;
    default, elev, 0;
+   default, max_adjustments, 10;
+   default, min_improvement, 0.001;
+   default, buffer, 75.;
 
    cirdata = gather_cir_data(photo_dir, conf_file=conf_file, downsample=1);
    elev_used = adjustments = array(double, numberof(cirdata.files));
    bad_spots = array(0, numberof(cirdata.files));
    for(i = 1; i <= numberof(cirdata.files); i++) {
       cur_elev = double(elev);
-      orig_data = jgw_data = gen_jgw(cirdata.tans(i), camera_specs, cur_elev);
+      orig_data = jgw_data = gen_jgw(cirdata.tans(i), cur_elev, camera=camera);
       j = 0;
       comparison = 1;
-      if(is_void(pbd_poly)) {
-         pbd_poly = buffer_hull(jgw_poly(jgw_data), 100., pts=16);
+      if(is_void(pbd_bbox)) {
+         pbd_bbox = poly_bbox(jgw_poly(jgw_data)) + [-1,1,-1,1] * buffer;
+         //pbd_bbox = poly_bbox(buffer_hull(jgw_poly(jgw_data), 100., pts=16));
          pbd_data = sel_rgn_from_datatiles(data_dir=pbd_dir, noplot=1, silent=1,
-            uniq=1, pip=1, pidx=pbd_poly, mode=1, search_str=".pbd");
+            uniq=1, rgn=pbd_bbox, mode=1, search_str=".pbd");
       }
-      while(++j < 10 && comparison > 0.001) {
+      while(++j < max_adjustments && comparison > min_improvement) {
          jgwp = jgw_poly(jgw_data);
-         if(numberof(testPoly2(pbd_poly, jgwp(1,), jgwp(2,))) != numberof(jgwp(1,))) {
-            pbd_poly = buffer_hull(jgw_poly(jgw_data), 100., pts=16);
+         if(numberof(data_box(jgwp(1,), jgwp(2,), pbd_bbox)) != numberof(jgwp(1,))) {
+            pbd_bbox = poly_bbox(jgwp) + [-1,1,-1,1] * buffer;
+            //pbd_bbox = poly_bbox(buffer_hull(jgwp, 100., pts=16));
             pbd_data = sel_rgn_from_datatiles(data_dir=pbd_dir, noplot=1, silent=1,
-               uniq=1, pip=1, pidx=pbd_poly, mode=1, search_str=".pbd");
+               uniq=1, rgn=pbd_bbox, mode=1, search_str=".pbd");
          }
          idx = [];
          if(numberof(pbd_data))
@@ -422,8 +463,8 @@ func gen_jgws_with_lidar(photo_dir, pbd_dir, conf_file=, elev=) {
             old_data = jgw_data;
             cur_elev = median(pbd_data.elevation(idx)/100.);
             //pbd_data = [];
-            jgw_data = gen_jgw(cirdata.tans(i), camera_specs, cur_elev);
-            comparison = jgw_compare(old_data, jgw_data, camera=camera_specs);
+            jgw_data = gen_jgw(cirdata.tans(i), cur_elev, camera=camera);
+            comparison = jgw_compare(old_data, jgw_data, camera=camera);
          } else {
             comparison = 0;
             j--;
@@ -434,8 +475,10 @@ func gen_jgws_with_lidar(photo_dir, pbd_dir, conf_file=, elev=) {
          write, format="Image %d: skipped, no PBD data\n", i;
       } else {
          jgw_file = file_rootname(cirdata.files(i)) + ".jgw";
+         prj_file = file_rootname(jgw_file) + ".prj";
          write_jgw, jgw_file, jgw_data;
-         comparison = jgw_compare(orig_data, jgw_data, camera=camera_specs);
+         gen_prj_file, prj_file, cirdata.tans(i).zone, "n88";
+         comparison = jgw_compare(orig_data, jgw_data, camera=camera);
          write, format="Image %d: %d adjustments to elevation %.3f resulting in %.3f m change\n",
             i, j, cur_elev, comparison;
          adjustments(i) = comparison;
@@ -482,8 +525,7 @@ func jgw_remove_missing(dir, dryrun=) {
    }
 }
 
-func gen_cir_region_shapefile(photo_dir, shapefile, conf_file=, elev=) {
-   extern camera_specs;
+func gen_cir_region_shapefile(photo_dir, shapefile, conf_file=, elev=, camera=) {
    default, elev, 0;
 
    cirdata = gather_cir_data(photo_dir, conf_file=conf_file, downsample=1);
@@ -493,7 +535,7 @@ func gen_cir_region_shapefile(photo_dir, shapefile, conf_file=, elev=) {
    poly_all = [];
    for(i = 1; i <= numberof(cirdata.files); i++) {
       timer_tick, tstamp, i, numberof(cirdata.files);
-      jgw_data = gen_jgw(cirdata.tans(i), camera_specs, elev);
+      jgw_data = gen_jgw(cirdata.tans(i), elev, camera=camera);
       grow, poly_all, jgw_poly(jgw_data);
    }
    bounds = convex_hull(unref(poly_all));
@@ -672,6 +714,7 @@ func copy_cirdata_images_by_flightline(cirdata, dest_dir) {
    split_cir_by_fltline, cirdata;
    flightlines = cirdata.flightlines;
    length = int(floor(log10(numberof(flightlines))+1));
+   length = [length, 2](max);
    fstr = swrite(format="%%0%dd", length);
    for(i = 1; i <= numberof(flightlines); i++) {
       curcirdata = filter_cirdata_by_index(cirdata, *flightlines(i));
@@ -703,14 +746,23 @@ func copy_cirdata_tiles(cirdata, scheme, dest_dir, split_fltlines=, buffer=) {
    copied into more than one directory.
 */
 // Original David B. Nagle 2009-04-02
+   default, split_fltlines, 1;
    tiles = partition_by_tile_type(scheme,
       cirdata.tans.northing, cirdata.tans.easting, cirdata.tans.zone,
       buffer=buffer, shorten=1);
    tile_names = h_keys(tiles);
+   tile_zones = [];
+   if(scheme == "qq") {
+      tile_zones = long(qq2uz(tile_names));
+      tile_zones = swrite(format="zone_%d", tile_zones);
+   }
 
    for(i = 1; i <= numberof(tile_names); i++) {
       curtile = tile_names(i);
-      tiledir = file_join(dest_dir, curtile);
+      if(numberof(tile_zones))
+         tiledir = file_join(dest_dir, tile_zones(i), curtile);
+      else
+         tiledir = file_join(dest_dir, curtile);
       idx = tiles(curtile);
       write, format=" - %d: %s\n", i, curtile;
 
@@ -931,4 +983,184 @@ func process_cir_level_a(raw_cir_dir, pbd_dir, processed_dir,
    // Generate jgw files
    write, format="Generating jgw files...%s", "\n";
    gen_jgws_with_lidar, processed_dir, pbd_dir, elev=elevation;
+}
+
+func gen_jgw(ins, elev, camera=, mounting_bias=) {
+/* DOCUMENT gen_jgw(ins, elev, camera=, mounting_bias=)
+   Generates the JGW matrix for the data represented by the ins data, the
+   camera specs, and the terrain elevation given.
+
+   Parameters:
+      ins: Should be a single-value instance of IEX_ATTITUDEUTM. If
+         appropriate, biases should already be applied to it.
+      elev: Should be the terrain height at the location of the image.
+
+   Options:
+      camera= Should be a single-value instance of CAMERA_SPECS. Defaults to
+         the extern camera_specs.
+      mounting_bias= Should be a single-value instance of CAMERA_MOUNTING_BIAS.
+         Defaults to the extern camera_mounting_bias.
+
+   Returns:
+      A 6-element array of doubles, corresponding to the contents of the JGW
+      file that should be created for the image.
+*/
+   extern camera_specs;
+   extern camera_mounting_bias;
+   default, camera, camera_specs;
+   default, mounting_bias, camera_mounting_bias;
+
+   X = ins.easting;
+   Y = ins.northing;
+   Z = ins.alt;
+   P = ins.pitch;
+   R = ins.roll;
+   H = ins.heading;
+
+   CCD_X = camera_specs.ccd_x;
+   CCD_Y = camera_specs.ccd_y;
+   CCD_XY= camera_specs.ccd_xy;
+   FL= camera_specs.focal_length;
+   Xi = camera_specs.pix_x;
+   Yi = camera_specs.pix_y;
+   dimension_x = camera_specs.sensor_width;
+   dimension_y = camera_specs.sensor_height;
+
+   // Calculate pixel size based on flying height
+   FH = Z + (-1.0 * elev);
+   PixSz = (FH * CCD_XY)/FL;
+
+   // Convert heading to - clockwise and + CCW for 1st and 3rd rotation matrix
+   if (H >= 180.0)
+      H2 = 360.0 - H;
+   else
+      H2 = 0 - H;
+
+   Prad = P * d2r;
+   Rrad = R * d2r;
+   Hrad = H * d2r;
+   H2rad = H2 * d2r;
+
+   // Create Rotation Coeff
+   Term1 = cos(H2rad);
+   Term2 = -1.0 * (sin(H2rad));
+   Term3 = sin(H2rad);
+
+   // Create first four lines of world file
+   // Resolution times rotation coeffs
+   A = PixSz * Term1;
+   B = -1.0 * (PixSz * Term2);
+   C = (PixSz * Term3);
+   D = -1.0 * (PixSz * Term1);
+
+   // Calculate s_inv
+   s_inv = 1.0/(FL/FH);
+
+   // Create terms for the M matrix
+   M11 = cos(Prad)*sin(Hrad);
+   M12 = -cos(Hrad)*cos(Rrad)-sin(Hrad)*sin(Prad)*sin(Rrad);
+   M13 = cos(Hrad)*sin(Rrad)-sin(Hrad)*sin(Prad)*cos(Rrad);
+   M21 = cos(Prad)*cos(Hrad);
+   M22 = sin(Hrad)*cos(Rrad)-(cos(Hrad)*sin(Prad)*sin(Rrad));
+   M23 = (-sin(Hrad)*sin(Rrad))-(cos(Hrad)*sin(Prad)*cos(Rrad));
+   M31 = sin(Prad);
+   M32 = cos(Prad)*sin(Rrad);
+   M33 = cos(Prad)*cos(Rrad);
+
+   FLneg = -1.0 * FL;
+
+   // s_inv * M * p + T(GPSxyz) CENTER PIX (Used to be UL_X, UL_Y, UL_Z)
+   CP_X =
+      M11 * mounting_bias.x + M12 * mounting_bias.y +
+      M13 * mounting_bias.z +
+      (s_inv *(M11* Xi + M12 * Yi + M13 * FLneg)) + X;
+   CP_Y =
+      M21 * mounting_bias.x + M22 * mounting_bias.y +
+      M23 * mounting_bias.z +
+      (s_inv *(M21* Xi + M22 * Yi + M23 * FLneg)) + Y;
+   CP_Z =
+      M31 * mounting_bias.x + M32 * mounting_bias.y +
+      M33 * mounting_bias.z +
+      (s_inv *(M31* Xi + M32 * Yi + M33 * FLneg)) + FH;
+
+   //Calculate Upper left corner (from center) in mapping space, rotate, apply
+   //to center coords in mapping space
+   Yoff0 = PixSz * (dimension_y / 2.);
+   Xoff0 = PixSz * -1 * (dimension_x / 2.);
+
+   Xoff1 = (Term1 * Xoff0) + (Term2 * Yoff0);
+   Yoff1 = (Term3 * Xoff0) +(Term1 * Yoff0);
+
+   NewX = Xoff1 + CP_X;
+   NewY = Yoff1 + CP_Y;
+
+   //Calculate offset to move corner to the ground "0" won't need this again
+   //until we start doing orthos
+   //Xoff0 = (tan(Ang_X + Prad)) * UL_Z
+   //Yoff0 = (tan(Ang_Y + Rrad)) * UL_Z
+
+   //Rotate offset to cartesian (+ y up +x right), rotate to mapping frame,
+   //apply to mapping frame
+   //Xoff1 = -1.00 * Yoff0
+   //Yoff1 = Xoff0
+
+   //Xoff2 = (Term1 * Xoff1) + (Term2 * Yoff1)
+   //Yoff2 = (Term3 * Xoff1) + (Term1 * Yoff1)
+
+   //NewX = UL_X + Xoff2
+   //NewY = UL_Y + Yoff2
+
+   return [A,B,C,D,NewX,NewY];
+}
+
+func gen_prj_file(filename, zone, datum) {
+/* DOCUMENT gen_prj_file, filename, zone, datum
+   Calls gen_prj_string and writes its output to the given filename.
+*/
+// Original David B. Nagle 2009-04-15
+   f = open(filename, "w");
+   write, f, format="%s\n", gen_prj_string(zone, datum);
+   close, f;
+}
+
+func gen_prj_string(zone, datum) {
+/* DOCUMENT gen_prj_string(zone, datum)
+   Creates a WKT string that represents the spatial system in the given datum
+   and UTM zone.
+
+   zone: Must be an integer value representing the zone.
+   datum: Must be one of "n83", "n88", or "w84".
+
+   Caveats:
+      * The returned string only represents the horizontal datum, not the
+        vertical.
+      * This only works for the northern hemisphere.
+      * This only works for UTM coordinate systems.
+*/
+// Original David B. Nagle 2009-04-15
+   meridian = long( (-30.5 + zone) * 6 );
+   base_string =
+      "PROJCS[\"UTM Zone %d, Northern Hemisphere\",\n" +
+      "   GEOGCS[\"Geographic Coordinate System\",\n" +
+      "      DATUM[\"%s\",\n" +
+      "         SPHEROID[%s]],\n" +
+      "      PRIMEM[\"Greenwich\",0],\n" +
+      "      UNIT[\"degree\",0.0174532925199433]],\n" +
+      "   PROJECTION[\"Transverse_Mercator\"],\n" +
+      "   PARAMETER[\"latitude_of_origin\",0],\n" +
+      "   PARAMETER[\"central_meridian\",%d],\n" +
+      "   PARAMETER[\"scale_factor\",0.9996],\n" +
+      "   PARAMETER[\"false_easting\",500000],\n" +
+      "   PARAMETER[\"false_northing\",0],\n" +
+      "   UNIT[\"Meter\",1]]";
+   if(datum == "n83" || datum == "n88") {
+      spheroid = "\"GRS 1980\",6378137,298.2572220960423";
+      datum = "NAD83";
+   } else if(datum == "w84") {
+      spheroid = "\"WGS84\",6378137,298.257223560493";
+      datum = "WGS84";
+   } else {
+      error, "Unknown datum " + datum;
+   }
+   return swrite(format=base_string, int(zone), datum, spheroid, meridian);
 }
