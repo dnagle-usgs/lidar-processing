@@ -533,19 +533,35 @@ func check_space(wmark=, dir=) {
    return ([space, fc]);
 }
 
-func batch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=, onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=, only_veg=, update=, avg_surf=,conf_file=, now=) {
-/* DOCUMENT batch_process
-   See: mbatch_process
+func batch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=,
+onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=,
+only_veg=, update=, avg_surf=,conf_file=, now=) {
+/* DOCUMENT batch_process, typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=,
+   n=, onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=,
+   only_bathy=, only_veg=, update=, avg_surf=,conf_file=, now=
+
+   This function is a wrapper for mbatch_process. For information on what each
+   of the available options mean, see help, mbatch_process.
+
+   This function is meant to be used from an active ALPS session. Thus, now=
+   defaults to 1 (unlike mbatch_process, where it defaults to 0).
 */
-   mbatch_process(typ=typ, save_dir=save_dir, shem=shem, zone=zone, dat_tag=dat_tag, cmdfile=cmdfile, n=n, onlyplot=onlyplot, mdate=mdate, pbd=pdb, edf=edf, win=win, auto=auto, pick=pick, get_typ=get_typ, only_bathy=only_bathy, only_veg=only_veg, update=update, avg_surf=avg_surv,conf_file=conf_file, now=1);
+   default, now, 1;
+   mbatch_process, typ=typ, save_dir=save_dir, shem=shem, zone=zone,
+      dat_tag=dat_tag, cmdfile=cmdfile, n=n, onlyplot=onlyplot, mdate=mdate,
+      pbd=pdb, edf=edf, win=win, auto=auto, pick=pick, get_typ=get_typ,
+      only_bathy=only_bathy, only_veg=only_veg, update=update,
+      avg_surf=avg_surv,conf_file=conf_file, now=now;
 }
 
-func mbatch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=, onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=, only_veg=, update=, avg_surf=,conf_file=, now=, b_rcf=, buf=, w=, no_rcf=, mode=, merge=, clean=, rcfmode=, write_merge=) {
-/* DOCUMENT mbatch_process
-func batch_process(typ=, save_dir=, shem=, zone=, dat_tag=,
-                   cmdfile=, n=, onlyplot=, mdate=, pbd=, edf=,
-                   win=, auto=, pick=, get_typ=, only_bathy=,
-                   only_veg=, update=,conf_file=, now=)
+func mbatch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=,
+onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=,
+only_veg=, update=, avg_surf=,conf_file=, now=, b_rcf=, buf=, w=, no_rcf=,
+mode=, merge=, clean=, rcfmode=, write_merge=) {
+/* DOCUMENT mbatch_process, typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=,
+   n=, onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=,
+   only_bathy=, only_veg=, update=, avg_surf=,conf_file=, now=, b_rcf=, buf=,
+   w=, no_rcf=, mode=, merge=, clean=, rcfmode=, write_merge=
 
 This function is used to batch process several regions for a given
 data set.  The regions are either defined by a command file or

@@ -1232,6 +1232,9 @@ if {[winfo exists .l1wid]} {
   .l1wid.mb.cmd add command -label "batch_process" -command {
     exp_send "require, \"batch_process.i\"; help,batch_process\r"
   }
+  .l1wid.mb.cmd add command -label "mbatch_process" -command {
+    exp_send "require, \"batch_process.i\"; help,mbatch_process\r"
+  }
   .l1wid.mb.cmd add command -label "batch_rcf(Filter)" -command {
     exp_send "require, \"batch_process.i\"; help,batch_rcf\r"
   }
