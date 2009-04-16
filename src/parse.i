@@ -17,44 +17,52 @@ func extract_qq(text) {
       alpha instead of uppercase alpha where relevant.
 
     This function will work on scalars or arrays. The returned result will be
-    the quarter quad name(s).
-
-    Original David Nagle 2008-07-17
+    the quarter quad name(s). If there is no quarter quad to extract, it will
+    be string(0).
 */
+//  Original David Nagle 2008-07-17
     regmatch, "(^|_)([0-9][0-9][0-1][0-9][0-9][a-h][1-8][a-d])(\.|_|$)", text, , , qq;
     return qq;
 }
 
 func dt_short(dtcodes) {
 /* DOCUMENT shortnames = dt_short(dtcodes)
-    Returns abbreviated names for an array of data tile codes.
+    Returns abbreviated names for an array of data tile codes. Strings that
+    aren't data tile codes become string(0).
 
     Example:
 
         > dt_short("t_e466000_n3354000_16")
         "e466_n3354_16"
-
-    Original David Nagle 2008-07-21
 */
-    w = n = z = []; // prevents the next line from making them externs
-    regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)(_|\\.|$)", dtcodes, , , w, , n, , z;
-    return swrite(format="e%s_n%s_%s", w, n, z);
+//  Original David Nagle 2008-07-21
+    e = n = z = []; // prevents the next line from making them externs
+    regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)(_|\\.|$)", dtcodes, , , e, , n, , z;
+    w = where( !(!e) & !(!n) & !(!z) );
+    result = array(string(0), dimsof(dtcodes));
+    if(numberof(w))
+        result(w) = swrite(format="e%s_n%s_%s", e(w), n(w), z(w));
+    return result;
 }
 
 func dt_long(dtcodes) {
 /* DOCUMENT longnames = dt_long(dtcodes)
-    Returns full names for an array of data tile codes.
+    Returns full names for an array of data tile codes. Strings that aren't
+    data tile codes become string(0).
 
     Example:
 
         > dt_long("e466_n3354_16")
         "t_e466000_n3354000_16"
-    
-    Original David Nagle 2008-08-07
 */
-    w = n = z = []; // prevents the next line from making them externs
-    regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)(_|\\.|$)", dtcodes, , , w, , n, , z;
-    return swrite(format="t_e%s000_n%s000_%s", w, n, z);
+//  Original David Nagle 2008-08-07
+    e = n = z = []; // prevents the next line from making them externs
+    regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)(_|\\.|$)", dtcodes, , , e, , n, , z;
+    w = where( !(!e) & !(!n) & !(!z) );
+    result = array(string(0), dimsof(dtcodes));
+    if(numberof(w))
+        result(w) = swrite(format="t_e%s000_n%s000_%s", e(w), n(w), z(w));
+    return result;
 }
 
 func dt2utm(dtcodes, &north, &east, &zone, bbox=, centroid=) {
