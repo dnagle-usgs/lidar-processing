@@ -85,11 +85,11 @@ func qq2uz(qq, centroid=) {
 */
    default, centroid, 0;
    bbox = qq2ll(qq, bbox=1);
-   u = fll2utm( bbox([1,3])(avg), bbox([2,4])(avg) );
+   u = fll2utm( bbox(,[1,3])(,avg), bbox(,[2,4])(,avg) );
    if(centroid)
-      return u(,1);
+      return u;
    else
-      return u(3,1);
+      return u(3,);
 }
 
 func extract_for_qq(north, east, zone, qq, buffer=) {
@@ -199,15 +199,17 @@ func qq2ll(qq, bbox=) {
    lat = AA;
    lon = OOO;
 
-   a = strfind(a, "abcdefgh", case=0)(2) - 1;
-   a = a * 0.125;
+   // The following line converts a-h to 0-7
+   a = int(strchar(strcase(0,a))(1::2)) - int(strchar("a")(1));
+   a *= 0.125;
    lat += a;
 
    o = o - 1;
    o = o * 0.125;
    lon += o;
 
-   q = strfind(q, "abcd", case=0)(2);
+   // The following line converts a-d to 1-4
+   q = int(strchar(strcase(0,q))(1::2)) - int(strchar("a")(1)) + 1;
    qa = (q == 2 | q == 3);
    qo = (q >= 3);
    
@@ -1065,11 +1067,11 @@ func partition_into_2k(north, east, zone, buffer=, shorten=) {
 
    tiles = h_new();
    for(i = 1; i <= numberof(dtcodes); i++) {
-      z = dt2utm(dtcodes(i))(3);
-      w = where(zone == z);
-      idx = extract_for_dt(north(w), east(w), dtcodes(i), buffer=buffer);
+      this_zone = dt2utm(dtcodes(i))(3);
+      data = rezone_utm(north, east, zone, this_zone);
+      idx = extract_for_dt(data(1,), data(2,), dtcodes(i), buffer=buffer);
       if(numberof(idx))
-         h_set, tiles, dtcodes(i), w(idx);
+         h_set, tiles, dtcodes(i), idx;
    }
    return tiles;
 }
@@ -1106,11 +1108,11 @@ func partition_into_10k(north, east, zone, buffer=, shorten=) {
 
    tiles = h_new();
    for(i = 1; i <= numberof(itcodes); i++) {
-      z = it2utm(itcodes(i))(3);
-      w = where(zone == z);
-      idx = extract_for_it(north(w), east(w), itcodes(i), buffer=buffer);
+      this_zone = it2utm(itcodes(i))(3);
+      data = rezone_utm(north, east, zone, this_zone);
+      idx = extract_for_it(data(1,), data(2,), itcodes(i), buffer=buffer);
       if(numberof(idx))
-         h_set, tiles, itcodes(i), w(idx);
+         h_set, tiles, itcodes(i), idx;
    }
    return tiles;
 }
