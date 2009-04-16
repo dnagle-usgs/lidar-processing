@@ -310,10 +310,17 @@ func write_sel_rgn_stats(data, type) {
 
 func data_box(x, y, xmin, xmax, ymin, ymax) {
 /* DOCUMENT data_box(x, y, xmin, xmax, ymin, ymax)
+   data_box(x, y, bbox)
 Function takes the arrays (of equal dimension) x and y, returns the
 indicies of the arrays that fit inside the box defined by xmin, xmax, ymin,
 ymax
 */
+   if(is_void(xmax) && numberof(xmin) == 4) {
+      ymax = xmin(4);
+      ymin = xmin(3);
+      xmax = xmin(2);
+      xmin = xmin(1);
+   }
    indx = where(x >= xmin);
    if (is_array(indx)) {
       indx1 = where(x(indx) <= xmax);
