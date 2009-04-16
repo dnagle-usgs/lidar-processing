@@ -574,6 +574,22 @@ func matrix_to_tbr(R) {
    return tbr;
 }
 
+func poly_bbox(x, y) {
+/* DOCUMENT poly_bbox(x, y)
+   poly_bbox(ply)
+
+   Given a polygon, this returns its bounding box: [xmin, xmax, ymin, ymax].
+*/
+// Original David B. Nagle 2009-04-16
+   if(is_void(y)) {
+      y = x(2,);
+      x = x(1,);
+   }
+   x = x(*);
+   y = y(*);
+   return [x(min), x(max), y(min), y(max)];
+}
+
 func poly_area(x1, y1) {
 /* DOCUMENT poly_area(x, y)
    poly_area(ply)
