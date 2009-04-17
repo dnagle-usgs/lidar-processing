@@ -85,7 +85,8 @@ func qq2uz(qq, centroid=) {
 */
    default, centroid, 0;
    bbox = qq2ll(qq, bbox=1);
-   u = fll2utm( bbox(,[1,3])(,avg), bbox(,[2,4])(,avg) );
+   u = array(double, 3, dimsof(qq));
+   u(*) = fll2utm( bbox(..,[1,3])(..,avg), bbox(..,[2,4])(..,avg) );
    if(centroid)
       return u;
    else
@@ -200,7 +201,7 @@ func qq2ll(qq, bbox=) {
    lon = OOO;
 
    // The following line converts a-h to 0-7
-   a = int(strchar(strcase(0,a))(1::2)) - int(strchar("a")(1));
+   a = int(atoc(strcase(0,a))) - int(atoc("a"));
    a *= 0.125;
    lat += a;
 
@@ -209,7 +210,7 @@ func qq2ll(qq, bbox=) {
    lon += o;
 
    // The following line converts a-d to 1-4
-   q = int(strchar(strcase(0,q))(1::2)) - int(strchar("a")(1)) + 1;
+   q = int(atoc(strcase(0,q))) - int(atoc("a")) + 1;
    qa = (q == 2 | q == 3);
    qo = (q >= 3);
    
