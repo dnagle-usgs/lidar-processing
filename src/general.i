@@ -30,7 +30,7 @@ func atoi(str) {
    
    Converts a string representation of a number into an integer.
 
-   The following paramters are required:
+   The following parameters are required:
 
       str: A string representation of an integer.
    
@@ -66,7 +66,7 @@ func atod(str) {
    
    Converts a string representation of a number into a double.
 
-   The following paramters are required:
+   The following parameters are required:
 
       str: A string representation of a double.
    
@@ -77,6 +77,31 @@ func atod(str) {
    d = array(double, dimsof(str));
    sread, str, format="%f", d;
    return d;
+}
+
+func atoc(str) {
+/* DOCUMENT atoc(str)
+   
+   Converts a string representation of a char into a char.
+
+   The following parameters are required:
+
+      str: A string representation of a char.
+
+   Function returns:
+
+      A char value.
+
+   Caveat: Every string element must be exactly one character in length.
+*/
+// Original David B. Nagle 2009-04-17
+   if(numberof(where(strlen(str) != 1)))
+      error, "Input string elements must be exactly one character in length.";
+   c = array(char, dimsof(str));
+   for(i = 1; i <= numberof(str); i++) {
+      c(i) = strchar(str(i))(1);
+   }
+   return c;
 }
 
 func default(&var, val) {
