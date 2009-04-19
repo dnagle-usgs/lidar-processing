@@ -34,6 +34,7 @@
 I32 dmars_2_gps;
 I32 recs_written = 0;
 
+int seek_offset = 0;
 
 I32 gps_time_offset = 0;
 
@@ -153,9 +154,12 @@ display_header() {
  start_secs = tarray[0].secs;
  end_secs   = tarray[time_recs-1].secs;
  bsow = fmod(start_secs, SECS_WEEK);
+ fprintf(stderr, "bsow = %f\nbsowe = %f\n\n", bsow, bsowe);
  bsow = start_secs - bsowe;
  esow = end_secs - start_secs + bsow;
 ////  bsowe = (int)(start_secs/SECS_WEEK) * SECS_WEEK;
+ fprintf(stderr, "bsow = %f\nesow = %f\nbsowe = %f\nstart_secs = %f, end_secs = %f\n",
+     bsow, esow, bsowe, start_secs, end_secs);
  fprintf(stderr,
   "------------------------------------------------------------------\n"
  );
@@ -360,7 +364,7 @@ process_options( int argc, char *argv[] ) {
  extern int optind, opterr, optopt;
  char nfname[MAXNAMLEN];
  int c, flag=0;
-  while ( (c=getopt(argc,argv, "Oo:t:T:")) != EOF ) 
+  while ( (c=getopt(argc,argv, "l:Oo:t:T:")) != EOF ) 
    switch (c) {
     case 'O':       //  program will compute the output name
 		  flag = 1;
@@ -370,6 +374,14 @@ process_options( int argc, char *argv[] ) {
         fprintf(stderr,"Can't open %s\n", optarg);
         exit(1);
       }
+      break;
+
+    case 'l':
+      // 2009-04-18:  This option is to skip past the beginning
+      // of the file if the flight was started right before
+      // the beginning of the week, such as near midnight UTC
+      // on a Saturday.  rwm
+      sscanf(optarg, "%d", &seek_offset);
       break;
 
     case 'T':
@@ -399,6 +411,7 @@ process_options( int argc, char *argv[] ) {
       fprintf(stderr,"Can't open %s.\n", argv[optind] );
       exit(1);
     }
+    fseek(idf, seek_offset * sizeof(DMARS_DATA), SEEK_SET);
 		if ( flag ) {     //  user used -O
 			changename(argv[optind], nfname, ".imr");
 			if ( (odf=fopen(nfname,"w+")) == NULL ) {
@@ -415,8 +428,8 @@ process_options( int argc, char *argv[] ) {
 main( int argc, char *argv[] ) {
   UI32 idx;
   struct tm *tm;
- idf = stdin;
- odf = NULL;
+  idf = stdin;
+  odf = NULL;
 
   configure_header_defaults();
   fprintf(stderr,"$Id$\n");
@@ -450,6 +463,7 @@ sizeof(hdr): %-5d  sizeof(IEX_RECORD): %-7d\n",
   if ( odf == NULL ) 
 	exit(0);
   rewind(idf);
+  fseek(idf, seek_offset * sizeof(DMARS_DATA), SEEK_SET);
 
 
 // Now output the dmars records
