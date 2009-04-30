@@ -223,6 +223,11 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, wbuf=, gridmode=, ndivid
 	  y = ss(iidx2(k),2);
 	  elvall(k) = c(1)+c(2)*x+c(3)*y+c(4)*x^2+c(5)*x*y + c(6)*y^2 + c(7)*x^3 + c(8)*x^2*y + c(9)*x*y^2 + c(10)*y^3;
 	}
+	if (mode == 1) {
+	  	a = structof(eaarl(1));
+		if (a == FS) new_pts = array(R,nrand);
+		if (a == VEG__) new_pts = array(VEG__,nrand);
+	}
 	if (mode == 2) 
 		new_pts = array(GEO,nrand);
 	if (mode == 3) 
