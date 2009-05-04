@@ -106,7 +106,7 @@ func ndrast( r, units= ) {
     xytitles,swrite(format="Somd:%7d Rn:%d    Raster Pixel #", somd, rn), 
         "Water depth (feet)"
  }
- pltitle,swrite(format=" %s",data_path);
+ pltitle, regsub("_", data_path, "!_", all=1);
  return &aa
 }
 
@@ -311,7 +311,7 @@ func show_wf( r, pix, win=, nofma=, cb=, c1=, c2=, c3=, raster= ) {
      xytitles,swrite(format="Raster:%d Pix:%d   Digital Counts", raster, pix),
      swrite(format="Water depth (%s)", depth_display_units)
   }
-  pltitle, data_path
+  pltitle, regsub("_", data_path, "!_", all=1);
   
 
   if ( !is_void(win) ) {
