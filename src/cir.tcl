@@ -33,6 +33,7 @@ set settings(sample) 	7
 set settings(gamma) 	1.0
 set settings(step) 	1
 set settings(head) 	0
+set settings(rollover) 	0
 set secs 0
 set inhd 0
 
@@ -191,6 +192,33 @@ proc show { cmd t } {
    incr { 
          incr secs $t;
          set hms "[clock format $secs -format %H%M%S -gmt 1 ]"
+
+         # if secs rolls over to the next day, adjust the image filename - rwm 2009-05-05
+         # this still leaves an issue if the user keys in a value that switches
+         # which side the time is on, but corrected at the next "Next/Prev" click
+         if { $secs >= 86400 && $settings(rollover) == 0 } {
+           set settings(file_date) [ format "%02d%02d%02d" [ expr $settings(month) -1 ]\
+              [ expr $settings(day) +1 ] \
+              $settings(year) ]
+           set settings(tar_date) [ format "%02d%02d%02d" $settings(month) \
+              [ expr $settings(day) +1 ] \
+              $settings(year) ]
+           set settings(rollover) 	1
+           # puts "RWM $settings(tar_date)"
+         }
+
+         # or if it rolls back - rwm 2009-05-05
+         if { $secs < 86400 && $settings(rollover) == 1 } {
+           set settings(file_date) [ format "%02d%02d%02d" [ expr $settings(month) -1 ]\
+              [ expr $settings(day) +0 ] \
+              $settings(year) ]
+           set settings(tar_date) [ format "%02d%02d%02d" $settings(month) \
+              [ expr $settings(day) +0 ] \
+              $settings(year) ]
+           set settings(rollover) 	0
+           # puts "RWM $settings(tar_date)"
+         }
+
        }
    hms { 
          set secs [ clock scan "1/1/1970 $t" -gmt 1 ];
@@ -215,6 +243,7 @@ puts "tar file: $tf"
       set last_tar $tf
     }
   }
+
   set pat "tar/$settings(file_date)-$hms-*-cir.jpg"
   if { [ catch { set fn [ glob $pat ] } ] }  {
     puts "No file: $pat"
