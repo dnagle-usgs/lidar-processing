@@ -100,8 +100,8 @@ set chdir [ ::ftp::Cd $ftps /var/ftp/pub ]
 }
 }
 
-# fstat procedure prints the percentage transfered via ftp
 proc fstat { b } {
+# fstat procedure prints the percentage transfered via ftp
   set size [ file size $::f ]
   set pc [ expr $b * 100/$size ]
   .f1.t1 delete 1.0 1.end

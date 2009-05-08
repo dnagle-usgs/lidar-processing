@@ -180,9 +180,8 @@ set y [ lindex $slst 1 ]
 polydraw'add $w $x $y
 }
 
-
-# Load polygons, lines, settings, etc.
 proc load_data { } {
+# Load polygons, lines, settings, etc.
  global dims
  set fn [ tk_getOpenFile  -filetypes {
                                       {{List files} {.fpl } }
@@ -194,8 +193,8 @@ proc load_data { } {
  }
 }
 
-# Save polygons, lines, settings, etc. so they can be read in again. 
 proc save_data { } {
+# Save polygons, lines, settings, etc. so they can be read in again. 
  global dims
   set fn [ tk_getSaveFile -defaultextension ".fpl" ]
   if { $fn == "" } {
@@ -215,8 +214,8 @@ proc save_data { } {
 
 
 #
-# Save the polygons as a Yorick source file.
 proc output_polys { } {
+# Save the polygons as a Yorick source file.
   global dims
   set ofn "  "
   set omode [ lindex {utm latlon} \
@@ -258,10 +257,10 @@ proc output_polys { } {
 
 
 
+proc load_file { fn } {
 ###################################################################
 # Load an image file
 ###################################################################
-proc load_file { fn } {
  global img dims 
   puts "load file: $fn"
   set n [ split $fn "_." ]
@@ -425,11 +424,11 @@ set Long [ expr  $LongOrigin + $Long * $RAD2DEG];
 }
 
 
+proc load_nav_file { fn } {
 #################################################################
 # This procedure loads the arrays waypoints and segs with
 # fresh nav data.
 #################################################################
-proc load_nav_file { fn } {
 global waypoints segs dims
 set dims(fpidx) 0
 set f [ open $fn "r" ]
@@ -469,13 +468,13 @@ puts "ll=$ll"
  }
 }
 
+proc mkdm { ll } {
 #################################################################
 # mkdm "dlat dlon"
 # Converts a decimal lat/lon pair to a demimal string value.
 # Example:  38.5 -75.5 --> n3830.0 w7530.0
 # returns: a string of "lat lon"
 #################################################################
-proc mkdm { ll } {
   set dlat [ lindex $ll 0 ]
   set dlon [ lindex $ll 1 ]
   set f [ expr abs(($dlat - int($dlat)) *60.0) ]
@@ -498,11 +497,11 @@ proc mkdm { ll } {
  return "$lat $lon"
 }
 
+proc mkdeg { a } {
 #################################################################
 # convert {nsew}DDDMMM.M to +/-DDD.ddddd
 # Example: n3830.0  to 38.50
 #################################################################
-proc mkdeg { a } {
   set s [ string index $a 0 ]
   set a [ string range $a 1 end ]
 
@@ -530,11 +529,11 @@ global dims fpsegs
 }
 
 
+proc llseg { name start stop } {
 #================================================================
 # Install/append new flight segments to the flight plan list
 # This from hsi.tcl
 #================================================================
-proc llseg { name start stop } {
   global segidx fpsegs fpsegname fpsegstatus seg_list dims
 ### puts "llseg: $name $start $stop"
    llseg2canvas "$start $stop"
@@ -572,12 +571,12 @@ proc llseg2canvas { seg } {
 
 
 
+proc ll2utm { lat  lon } {
 #################################################################
 #
 # Convert a  lat/lon pair to UTM
 #
 #################################################################
-proc ll2utm { lat  lon } {
 #   Convert lat/lon pairs to UTM.  Returns values in
 #   UTMNorth, UTMEasting, and UTMZone;
 global DEG2RAD UTMEasting UTMNorthing ZoneNumber;
@@ -625,15 +624,15 @@ return "$UTMNorthing $UTMEasting $ZoneNumber";
 
 
 
-# convert screen x coords to UTM in the current zone
 proc scrx2utm { x } {
+# convert screen x coords to UTM in the current zone
  global dims
  set east  [expr  $dims(le) + $x*$dims(scrx2utm) ]; 
  return $east
 }
 
-# convert screen y coords to UTM in the current zone
 proc scry2utm { y } {
+# convert screen y coords to UTM in the current zone
  global dims
  set north [expr  $dims(ln) - $y*$dims(scry2utm) ];
  return $north

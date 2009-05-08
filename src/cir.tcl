@@ -177,13 +177,13 @@ proc resample { s } {
 
  resample 3
 
+proc show { cmd t } {
 #####################################################################
 #
 # show hms hhmmss
 # show sod sod
 # show inc +/-val
 #####################################################################
-proc show { cmd t } {
  global settings inhd
  global img img0 last_tar tar secs fn
   set sample $settings(sample)
@@ -279,9 +279,9 @@ puts "tar file: $tf"
 }
 
 proc get_heading {inhd} {
-  global img settings tansstr
   ## this procedure gets the attitude information for the cir data
   ## amar nayegandhi 12/28/04
+  global img settings tansstr
   if {$inhd == 1} {
 	set pcir [pid]
 	## the function request_heading is defined in eaarl.ytk

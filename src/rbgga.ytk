@@ -1,9 +1,9 @@
 exp_send "require, \"rbgga.i\"\r"
 
+proc rbgga_menu { {mode "eaarl"} } {
 ### DEPRECATED 2009-02-02 ###
 # The rbgga_menu code has been superseded by plot.ytk. It is possible, however,
 # that some of the other code in this file may still be in non-deprecated use.
-proc rbgga_menu { {mode "eaarl"} } {
  global ytk_PLMK_marker data_path _map _ytk utm rbgga_mode rbgga_file_mode
  set gga(null) ""
  set mw .rbgga

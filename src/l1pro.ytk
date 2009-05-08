@@ -2931,10 +2931,9 @@ if {[winfo exists .l1wid]} {
     }
   }
 
-
+  proc sst {w var lbl rg} {
   # This procedure builds a widget composed of a Label, a Spinbox, and a scale so
   # one can enter values by direct entry, the spin clicks, or the scale.
-  proc sst {w var lbl rg} {
     frame $w
     SpinBox $w.sb -textvariable $var \
       -range $rg \

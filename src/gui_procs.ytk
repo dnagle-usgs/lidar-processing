@@ -19,11 +19,10 @@ package require Iwidgets
 package require dict
 package require struct::set
 
-##############################################################################
+proc west {type w args} {
 # from: http://wiki.tcl.tk/1420
 # when using a checkbox or radio button, display the text on
 # the west side of the button instead of the east as is the default
-proc west {type w args} {
    frame $w
    set pos [lsearch $args -text]
    if {$pos == -1} {
@@ -38,11 +37,10 @@ proc west {type w args} {
    set w
 } ;# RS
 
-##############################################################################
+proc setTooltip {widget text} {
 # from: http://wiki.tcl.tk/1954
 # display popup tooltips.  this uses a bigger font and is more readable
 # than the default -helptext.
-proc setTooltip {widget text} {
    if { $text != "" } {
       # 2) Adjusted timings and added key and button bindings. These seem to
       # make artifacts tolerably rare.
@@ -89,8 +87,8 @@ proc showTooltip {widget text} {
 ##############################################################################
 # copied from ADAPT: lib/misc.tcl
 
-# Center a window.
 proc center_win { win } {
+# Center a window.
    set lx [ expr [winfo screenwidth  $win]/2 - [winfo width  $win]/2 ]
    set ly [ expr [winfo screenheight $win]/2 - [winfo height $win]/2 ]
    wm geometry $win "+$lx+$ly"
@@ -98,8 +96,8 @@ proc center_win { win } {
    update
 }
 
-# adapted from http://wiki.tcl.tk/9172
 proc tk_getString {w var title text {initial {}}} {
+# adapted from http://wiki.tcl.tk/9172
    variable ::tk::Priv
    upvar $var result
    catch {destroy $w}
@@ -156,11 +154,11 @@ namespace eval GUI::utils {
    proc getfile { args } { }
 }
 
+proc GUI::utils::getfile { args } {
 # getfile: pops up one of tk_chooseDirectory, tk_getOpenFile, or tk_getSaveFile
 # usage: Much like the above three. Pass the dashed options you want.
 # Note that -initialdirvariable can be used so that it updates an external
 # variable if the user changes directory
-proc GUI::utils::getfile { args } {
    default_opts args \
       -variable {} \
       -initialdir {} \

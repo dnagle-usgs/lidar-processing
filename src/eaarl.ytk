@@ -52,8 +52,8 @@ proc cir_exists { } {
 	return [expr {$cir_id != -1}]
 }
 
-# Center a window.
 proc center_win { win } {
+# Center a window.
  set lx [ expr [winfo screenwidth  $win]/2 - [winfo width  $win]/2 ]
  set ly [ expr [winfo screenheight $win]/2 - [winfo height $win]/2 ]
  wm geometry $win "+$lx+$ly"
@@ -185,10 +185,8 @@ proc send_tans_to_sf {somd p r h} {
 }
 
 
-#
-# Test if a path exists, and pop up warning if not.
-#
 proc path_exists { path } {
+# Test if a path exists, and pop up warning if not.
   if { [ file isdirectory $path ]  == 0 } {
     tk_messageBox \
 	-icon warning \
@@ -197,10 +195,9 @@ proc path_exists { path } {
   }
 }
 
-#
-# Do a screen capture of a mouse selected window.
 proc scap { } {
 # DOCUMENT scap
+# Do a screen capture of a mouse selected window.
 #
 # Capture a mouse selected window to an image file.  This proc
 # uses the xwd command to capture a selected window to an 

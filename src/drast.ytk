@@ -79,8 +79,8 @@ set blist { .rslider.bf1.stop    .rslider.bf1.play        .rslider.bf2.exwf \
 	    .rslider.bf1.inc \
           }
 
-##AN: added procedure sod2rn to convert sf sod value to rn
 proc sod2rn { sod } {
+##AN: added procedure sod2rn to convert sf sod value to rn
     global rn thetime rnf rnl 
 ###    set cmd "where(((edb.seconds - edb(1).seconds - 4*3600) + edb(1).seconds%86400) == $thetime)"
     set cmd "where(((edb.seconds - soe_day_start) ) == $thetime)"
@@ -154,8 +154,8 @@ proc dus { n e o } {
  }
 }
 
-## AN: added procedure sft to be used with the trace command for sf
 proc sft { n e o } {
+## AN: added procedure sft to be used with the trace command for sf
 	global thetime rnf rn
 	sod2rn $thetime
 	exp_send "ytk_rast, $rnf\r"
@@ -190,8 +190,8 @@ proc play {} {
 }
 
 
-##AN: added procedure photoplay to play all rasters within one sf photo
 proc photoplay {} {
+##AN: added procedure photoplay to play all rasters within one sf photo
  global tid play_interval rn inc play_dir play_flag total_edb_records rnf rnl
      if { $play_dir == "fwd" } {
        set rn [ expr $rn + $inc ] 

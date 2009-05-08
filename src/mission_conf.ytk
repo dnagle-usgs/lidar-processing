@@ -267,9 +267,9 @@ proc mission_initialize_from_path {mission_path} {
 
 ### UTILITY
 
+proc json_stringify {raw_val} {
 # json_stringify raw_val
 # Sanitizes a string using JSON conventions.
-proc json_stringify {raw_val} {
     return [string map [list \
         \\  \\\\    \
         \"  \\\"    \

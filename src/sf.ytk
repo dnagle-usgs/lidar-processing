@@ -489,8 +489,8 @@ itcl::body SFWindow::constructor {imageset args} {
 
 # [ Procedures #####################################
 
-# Center a window.
 itcl::body SFWindow::center_win { win } {
+# Center a window.
 	set lx [ expr [winfo screenwidth  $win]/2 - [winfo width  $win]/2 ]
 		set ly [ expr [winfo screenheight $win]/2 - [winfo height $win]/2 ]
 		wm geometry $win "+$lx+$ly"
@@ -546,25 +546,25 @@ itcl::body SFWindow::curzone { zone } {
 	send_ytk "exp_send \"curzone = $zone \\n\";"
 }
 
+itcl::body SFWindow::timern_write { name1 name2 op } {
 # timern_write is used in a variable trace to keep
 # .alps.entry up to date when .alps.option changes
-itcl::body SFWindow::timern_write { name1 name2 op } {
 # global ci
 	show_img
 }
 
+itcl::body SFWindow::ci_write { name1 name2 op } {
 # ci_write is  used in a variable trace to keep the
 # mark box up to date with the current image
-itcl::body SFWindow::ci_write { name1 name2 op } {
 # global mark ci cur_mark cur_class class
 
 	catch {set cur_mark $mark($ci)}
 	catch {set cur_class $class($ci)}
 }
 
+itcl::body SFWindow::zoom_write { name1 name2 op } {
 # zoom_write is used in a variable trace to keep zoom
 # within its proper range and to update the image shown
-itcl::body SFWindow::zoom_write { name1 name2 op } {
 # global zoom ci zoom_min zoom_max
 
 	if { $zoom < $zoom_min } { set zoom $zoom_min }
@@ -573,12 +573,12 @@ itcl::body SFWindow::zoom_write { name1 name2 op } {
 	show_img
 }
 
+itcl::body SFWindow::cur_mark_write { name1 name2 op } {
 # cur_mark_write updates mark($ci) to reflect the new
 # value of $cur_mark. Note that this will be called
 # whenever 'set cur_mark $mark($ci)' is used, but that
 # isn't a problem since mark($ci) is just set back to
 # it's current value.
-itcl::body SFWindow::cur_mark_write { name1 name2 op } {
 # global cur_mark mark ci
 
 	catch { set mark($ci) $cur_mark }
@@ -688,8 +688,8 @@ itcl::body SFWindow::no_file_selected { nfiles } {
 		return 1
 }
 
-#  Play displays successive images either forward or in reverse.
 itcl::body SFWindow::play { direc } {
+#  Play displays successive images either forward or in reverse.
 # global nfiles run ci speed rate step timern
 	set run 1
 		if { [no_file_selected $nfiles] } { return }
@@ -738,8 +738,8 @@ itcl::body SFWindow::step_img { direc } {
 }
 
 ######################################
-# commands executed from the lst file
 itcl::body SFWindow::title { t } {
+# commands executed from the lst file
 # global img
 	puts "Title command: $t"
 		$img blank ;

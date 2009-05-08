@@ -152,8 +152,8 @@ if {$mogrify_exists} {
 
 # [ Procedures #####################################
 
-# Center a window.
 proc center_win { win } {
+# Center a window.
 	set lx [ expr [winfo screenwidth  $win]/2 - [winfo width  $win]/2 ]
 	set ly [ expr [winfo screenheight $win]/2 - [winfo height $win]/2 ]
 	wm geometry $win "+$lx+$ly"
@@ -209,25 +209,25 @@ proc curzone { zone } {
 	send_ytk "exp_send \"curzone = $zone \\n\";"
 }
 
+proc timern_write { name1 name2 op } {
 # timern_write is used in a variable trace to keep
 # .alps.entry up to date when .alps.option changes
-proc timern_write { name1 name2 op } {
 	global ci
 	show_img $ci
 }
 
+proc ci_write { name1 name2 op } {
 # ci_write is  used in a variable trace to keep the
 # mark box up to date with the current image
-proc ci_write { name1 name2 op } {
 	global mark ci cur_mark cur_class class
 	
 	catch {set cur_mark $mark($ci)}
 	catch {set cur_class $class($ci)}
 }
 
+proc zoom_write { name1 name2 op } {
 # zoom_write is used in a variable trace to keep zoom
 # within its proper range and to update the image shown
-proc zoom_write { name1 name2 op } {
 	global zoom ci zoom_min zoom_max
 	
 	if { $zoom < $zoom_min } { set zoom $zoom_min }
@@ -236,12 +236,12 @@ proc zoom_write { name1 name2 op } {
 	show_img $ci
 }
 
+proc cur_mark_write { name1 name2 op } {
 # cur_mark_write updates mark($ci) to reflect the new
 # value of $cur_mark. Note that this will be called
 # whenever 'set cur_mark $mark($ci)' is used, but that
 # isn't a problem since mark($ci) is just set back to
-# it's current value.
-proc cur_mark_write { name1 name2 op } {
+# its current value.
 	global cur_mark mark ci
 
 	catch { set mark($ci) $cur_mark }
@@ -275,8 +275,8 @@ proc scrollbar_status_write { name1 name2 op } {
 }
 
 
-### Create loader GUI ###
 proc open_loader_window { m1 } {
+### Create loader GUI ###
 	if { ![ winfo exists .loader ] } {
 		toplevel .loader
 	}
@@ -566,8 +566,8 @@ proc no_file_selected { nfiles } {
 	return 0
 }
 
-#  Play displays successive images either forward or in reverse.
 proc play { dir } {
+#  Play displays successive images either forward or in reverse.
 	global nfiles run ci speed rate step timern
 	set run 1
 	if { [no_file_selected $nfiles] } { return }
@@ -615,8 +615,8 @@ proc step_img { inc dir } {
 }
 
 ######################################
-# commands executed from the lst file
 proc title { t } {
+# commands executed from the lst file
 	global img
 	puts "Title command: $t"
 	$img blank ;
@@ -972,9 +972,9 @@ proc archive_save_marked { type } {
 }
 
 proc get_heading {inhd} {
-   global sod tansstr head
 ## this procedure gets the attitude information for the cir data
 ## amar nayegandhi 12/28/04
+   global sod tansstr head
    if {$inhd == 1} {
       .canf.can configure -height 420 -width 440
       set psf [pid]
@@ -1343,8 +1343,8 @@ proc rewind { } {
 	set ci 0; show_img $ci 
 }
 
-# adapted from http://wiki.tcl.tk/9172
 proc tk_getString {w var title text {initial {}}} {
+# adapted from http://wiki.tcl.tk/9172
 	variable ::tk::Priv
 	upvar $var result
 	catch {destroy $w}
