@@ -32,7 +32,7 @@ if {![info exists __mission_path]} {
 if {![info exists __mission_settings]} {
     set __mission_settings [dict create \
         "relative paths" [list "data_path" "edb file" "pnav file" \
-            "dmars file" "ops_conf file"] \
+            "dmars file" "ops_conf file" "cir dir" "rgb dir" "rgb file"] \
     ]
 }
 
@@ -152,9 +152,9 @@ proc missiondate_set {hash {date -} {sync 1}} {
     if {![string length $date]} {
         error "Please provide a date or set __mission_date."
     }
-    dict set __mission_conf $date $hash
-    if {$sync} {
-        mission_send;
+    missiondate_delete $date $sync
+    dict for {key val} $hash {
+        mission_set $key $val $date $sync
     }
 }
 
@@ -449,7 +449,7 @@ namespace eval mission {
     }
 
     proc __date_config_path_helper {w var dlg} {
-        foreach child [list Edb Pnav Dmars Ops] {
+        foreach child [list Edb Pnav Dmars Ops Cir RgbDir RgbTar] {
             $w.ent$child configure -initialdir [set [set var]([list $dlg data_path])]
         }
     }
@@ -473,6 +473,9 @@ namespace eval mission {
         set v::config_temp([% "pnav file"]) [mission_get "pnav file" $date]
         set v::config_temp([% "dmars file"]) [mission_get "dmars file" $date]
         set v::config_temp([% "ops_conf file"]) [mission_get "ops_conf file" $date]
+        set v::config_temp([% "cir dir"]) [mission_get "cir dir" $date]
+        set v::config_temp([% "rgb dir"]) [mission_get "rgb dir" $date]
+        set v::config_temp([% "rgb file"]) [mission_get "rgb file" $date]
 
         set w [$dlg childsite]
 
@@ -519,17 +522,40 @@ namespace eval mission {
             } \
             -parent $dlg \
             -textvariable [& v::config_temp]([% "ops_conf file"])
+        GUI::FileEntryButton $w.entCir \
+            -labeltext "CIR path:" \
+            -actiontype dir \
+            -parent $dlg \
+            -textvariable [& v::config_temp]([% "cir dir"])
+        GUI::FileEntryButton $w.entRgbDir \
+            -labeltext "RGB path (newer datasets):" \
+            -actiontype dir \
+            -parent $dlg \
+            -textvariable [& v::config_temp]([% "rgb dir"])
+        GUI::FileEntryButton $w.entRgbTar \
+            -labeltext "RGB tar file (older datasets):" \
+            -actiontype open \
+            -filetypes {
+                {{tar files} {.tar}}
+                {{All files} *}
+            } \
+            -parent $dlg \
+            -textvariable [& v::config_temp]([% "rgb file"])
 
-        foreach ent [list Path Edb Pnav Dmars Ops] {
+        __date_config_path_helper $w [& v::config_temp] $dlg
+
+        foreach ent [list Path Edb Pnav Dmars Ops Cir RgbDir RgbTar] {
             [$w.ent$ent component entry] configure \
                 -width 60
         }
 
         iwidgets::Labeledwidget::alignlabels \
-            $w.entPath $w.entEdb $w.entPnav $w.entDmars $w.entOps
+            $w.entPath $w.entEdb $w.entPnav $w.entDmars $w.entOps \
+            $w.entCir $w.entRgbDir $w.entRgbTar
 
         pack \
             $w.entPath $w.entEdb $w.entPnav $w.entDmars $w.entOps \
+            $w.entCir $w.entRgbDir $w.entRgbTar \
             -side top -pady 5 -padx 10 -fill x -expand yes
 
         set prompt_user 1
@@ -539,7 +565,7 @@ namespace eval mission {
             if {[$dlg activate]} {
                 set temp_data [dict create]
                 set keys [list data_path "edb file" "pnav file" "dmars file" \
-                    "ops_conf file"]
+                    "ops_conf file" "cir dir" "rgb dir" "rgb file"]
                 foreach key $keys {
                     if {[string length $v::config_temp([% $key])]} {
                         dict set temp_data $key $v::config_temp([% $key])

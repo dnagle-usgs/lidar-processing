@@ -130,7 +130,7 @@ if(is_void(__mission_settings))
         "use cache", 1,
         "ytk", 0,
         "relative paths", ["data_path", "edb file", "pnav file", "dmars file",
-            "ops_conf file"]
+            "ops_conf file", "cir dir", "rgb dir", "rgb file"]
     );
 
 func mission_clear(void, sync=) {
