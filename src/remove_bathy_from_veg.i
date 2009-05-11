@@ -16,41 +16,43 @@ func remove_bathy_from_veg(veg, bathy, buf=) {
 
    */
 
+   rnb_idx = [];
+   rnbu_idx = [];
    // make sure bathy array has unique rn
    rnb_idx = sort(bathy.rn);
-   bathy = bathy(rnb_idx);
-   rnbu_idx = unique(bathy.rn, ret_sort=0);
-   bathy = bathy(rnbu_idx);
+   bathy1 = bathy(rnb_idx);
+   rnbu_idx = unique(bathy1.rn, ret_sort=0);
+   bathy1 = bathy1(rnbu_idx);
+    
+   rnv_idx = [];
+   rnvu_idx = [];
 
    //sort veg array as well and ensure uniqueness
    rnv_idx = sort(veg.rn);
-   veg = veg(rnv_idx);
-   rnvu_idx = unique(veg.rn, ret_sort=0);
-   veg = veg(rnvu_idx);
+   veg1 = veg(rnv_idx);
+   rnvu_idx = unique(veg1.rn, ret_sort=0);
+   veg1 = veg1(rnvu_idx);
 
 
-   num_rn_bathy = numberof(bathy.rn);
-   num_rn_veg = numberof(veg.rn);
+   num_rn_bathy = numberof(bathy1.rn);
+   num_rn_veg = numberof(veg1.rn);
    idx_all = array(long,num_rn_veg);
    idx_all(*) = 1;
    if (is_void(buf)) buf = 3;
    for (i=1;i<=num_rn_bathy;i++) {
+     idx = [];
+     box_idx = [];
      if ( (i % 100) == 0 ) write, format="%d of %d complete\r", i, num_rn_bathy ;
-      idx = where(veg.rn == bathy.rn(i));
-      if (is_array(idx)) {
-         idx_all(idx) = 0; 
-         // find all points within buf meters from this point
-         point = [veg.least(idx(1)),veg.lnorth(idx(1))]/100.
-         temp_rgn = [point(1)-buf,point(1)+buf, point(2)-buf, point(2)+buf];
-         box_idx = sel_data_rgn(veg, mode=4, rgn=temp_rgn, retindx=1, silent=1)
-         //rad_idx = sel_data_ptRadius(veg_box_data, point=point, radius=buf, retindx=1, silent=1) 
-         idx_all(box_idx) = 0;
-      }
+     point = [bathy1.east(i),bathy1.north(i)]/100.
+     temp_rgn = [point(1)-buf,point(1)+buf, point(2)-buf, point(2)+buf]*100.;
+     box_idx = data_box(veg1.least, veg1.lnorth,  temp_rgn(1), temp_rgn(2), temp_rgn(3), temp_rgn(4));
+     if (is_array(box_idx)) 
+           idx_all(box_idx) = 0;
    }
 
    // now remove from veg array
    veg_new_idx = where(idx_all);
-   veg_new = veg(veg_new_idx);
+   veg_new = veg1(veg_new_idx);
    
    // sort by northing
    nidx = sort(veg_new.lnorth);
