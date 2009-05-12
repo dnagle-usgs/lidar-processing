@@ -154,6 +154,7 @@ func load_pnav (junk, fn=, verbose=) {
 */
 extern pnav_filename; // so we can show which trajectory was used
 extern data_path, gps_time_correction;
+extern edb, soe_day_start;
 default, verbose, 1;
  if ( !is_void( fn ) ) {
     ifn = fn;
@@ -223,9 +224,11 @@ _read, idf, 4, pn;
     rng = q(1)+1:dimsof(pn.sod)(2);
     pn.sod(rng) += 86400;
     // correct soe_day_start if the tlds dont start until after midnight. -rwm
-    if ( (edb.seconds(0) - soe_day_start(1)) < pn.sod(1) ) {
-      soe_day_start -= 86400;
-      write, format="Correcting soe_day_start to %d", soe_day_start;
+    if(!is_void(edb) && !is_void(soe_day_start)) {
+      if ( (edb.seconds(0) - soe_day_start(1)) < pn.sod(1) ) {
+         soe_day_start -= 86400;
+         write, format="Correcting soe_day_start to %d\n", soe_day_start;
+      }
     }
   }
 
