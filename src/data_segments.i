@@ -420,7 +420,7 @@ func gather_data_stats(data, &working_tans, &working_pnav) {
 
 func tk_dsw_send_stats(obj, var, data) {
    stats = gather_data_stats(data);
-   json = yorick2json(stats);
+   json = yorick2json(stats, compact=1);
    tkcmd, swrite(format="%s set_stats {%s} {%s}", obj, var, json);
 }
 

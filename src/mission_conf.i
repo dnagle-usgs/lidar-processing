@@ -350,12 +350,14 @@ func missiondate_get(void, date=) {
         return [];
 }
 
-func mission_json_export(void) {
-/* DOCUMENT mission_json_export()
+func mission_json_export(void, compact=) {
+/* DOCUMENT mission_json_export(compact=)
     Returns a json string that represents the current mission configuration.
+
+    If compact=1, a compact form will be generated.
 */
     extern __mission_conf;
-    return yorick2json(__mission_conf);
+    return yorick2json(__mission_conf, compact=compact);
 }
 
 func mission_json_import(json, sync=) {
@@ -405,7 +407,7 @@ func mission_send(void) {
     Sends the mission configuration as defined in Yorick to Tcl.
 */
     extern __mission_conf, __mission_date;
-    json = mission_json_export();
+    json = mission_json_export(compact=1);
     tkcmd, swrite(format="mission_json_import {%s} 0", json);
     tkcmd, swrite(format="set __mission_date {%s}", __mission_date);
 }
