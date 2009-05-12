@@ -222,6 +222,11 @@ _read, idf, 4, pn;
   if ( numberof(q) ) {
     rng = q(1)+1:dimsof(pn.sod)(2);
     pn.sod(rng) += 86400;
+    // correct soe_day_start if the tlds dont start until after midnight. -rwm
+    if ( (edb.seconds(0) - soe_day_start(1)) < pn.sod(1) ) {
+      soe_day_start -= 86400;
+      write, format="Correcting soe_day_start to %d", soe_day_start;
+    }
   }
 
   if(is_void(gps_time_correction))
