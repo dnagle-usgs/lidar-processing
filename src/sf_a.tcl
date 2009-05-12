@@ -655,6 +655,9 @@ proc show_img { n } {
 		set m 0
 		set s 0
 		set hms [indx2hms $cin]
+      if { $hms >= 240000 } {
+         set hms [ expr $hms - 240000 ]
+      }
 		scan $hms "%02d%02d%02d" h m s 
 		set tarname [hms2tarpath $hms]
 		if {![file exists $tarname]} {
@@ -672,7 +675,7 @@ proc show_img { n } {
 				set last_tar $tarname
 			}
 		}
-		
+
 		set pat "tar/mnt/ramdisk/2/cam147_*$hms*.jpg"
 		if { [ catch { set fn [ glob $pat ] } ] } {
 			puts "No file: $pat"
@@ -1231,6 +1234,12 @@ proc select_path { path } {
 		puts "Start: $start_hms End: $end_hms"
 	}
 
+   # if start_hms > end_hms, we must have crossed over
+   # midnight utc.  add 240000 and all is happy -rwm
+   if { $start_hms > $end_hms } {
+      set end_hms [ expr [hms2sod $end_hms] + 240000 ]
+   }
+
 	set nfiles [ expr { [hms2sod $end_hms] - [hms2sod $start_hms] } ]
 	set tarname [ lindex $cam1_flst 0 ]
 
@@ -1268,7 +1277,24 @@ proc hms2tarpath { hms } {
 	global dir
 	# finds the tar file for given hms value
 	set h 0; set m 0
-	scan $hms "%02d%02d" h m
+
+   # rwm - typical string parsing doesn't work here
+   # because hms doesn't have leading zeros.  We must
+   # work from the end to get each component
+
+   # chop of the seconds, we don't need them.
+   set hms [string range $hms 0 end-2]
+   # get the minutes
+   set  m  [string range $hms end-1 end]
+   # chop off the minutes, anything left must be hours.
+   set h   [string range $hms 0 end-2]
+
+   # if there is a leading 0 on $m, we must get rid of it
+   # or tcl will think it is octal and then complain about
+   # 08 and 09.
+   set m  [string trimleft $m "0"]
+   if { $h == "" } { set h 0 };
+   if { $m == "" } { set m 0 };
 	set hm [format "%02d%02d" $h $m ]
 	set fn [ glob -nocomplain $dir/cam147_*$hm\.tar 0 ]  
 	if {[file exists $fn]} {
