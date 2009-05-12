@@ -4,6 +4,8 @@ require, "mission_conf.i";
 require, "mosaic_biases.i";
 
 /*
+   These notes are probably obsolete...
+
    Things we need to prepare in Yorick for Inpho:
 
       * Divide the images up into 10km index tiles. (If necessary, sub-segment tiles.)
@@ -730,7 +732,9 @@ func copy_cirdata_tiles(cirdata, scheme, dest_dir, split_fltlines=, buffer=) {
 
    Arguments:
       cirdata: A Yeti hash, as returned by gather_cir_data.
-      scheme: One of "10k", "qq", or "2k". See partition_by_tile_type.
+      scheme: One of "10k", "qq", "2k", or "10k2k". See partition_by_tile_type
+         for the first three. "10k2k" will divide into 2k tiles, but organize
+         them into 10k directories.
       dest_dir: The directory that will contain the partition directories and
          images.
 
@@ -747,6 +751,10 @@ func copy_cirdata_tiles(cirdata, scheme, dest_dir, split_fltlines=, buffer=) {
 */
 // Original David B. Nagle 2009-04-02
    default, split_fltlines, 1;
+
+   bilevel = scheme == "10k2k";
+   if(bilevel) scheme = "2k";
+   
    tiles = partition_by_tile_type(scheme,
       cirdata.tans.northing, cirdata.tans.easting, cirdata.tans.zone,
       buffer=buffer, shorten=1);
@@ -759,11 +767,17 @@ func copy_cirdata_tiles(cirdata, scheme, dest_dir, split_fltlines=, buffer=) {
 
    for(i = 1; i <= numberof(tile_names); i++) {
       curtile = tile_names(i);
+      idx = tiles(curtile);
+      if(bilevel) {
+         curtile = file_join(
+            swrite(format="i_%s", dt_short(get_dt_itcodes(curtile))),
+            swrite(format="t_%s", curtile)
+         );
+      }
       if(numberof(tile_zones))
          tiledir = file_join(dest_dir, tile_zones(i), curtile);
       else
          tiledir = file_join(dest_dir, curtile);
-      idx = tiles(curtile);
       write, format=" - %d: %s\n", i, curtile;
 
       curcirdata = filter_cirdata_by_index(cirdata, idx);
