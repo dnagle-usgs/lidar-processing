@@ -468,6 +468,7 @@ namespace eval mission {
         $dlg buttonconfigure OK -command [@ [list $dlg deactivate 1]]
         $dlg buttonconfigure Cancel -command [@ [list $dlg deactivate 0]]
 
+        set v::config_temp([% date]) [mission_get date $date]
         set v::config_temp([% data_path]) [mission_get data_path $date]
         set v::config_temp([% "edb file"]) [mission_get "edb file" $date]
         set v::config_temp([% "pnav file"]) [mission_get "pnav file" $date]
@@ -478,6 +479,10 @@ namespace eval mission {
         set v::config_temp([% "rgb file"]) [mission_get "rgb file" $date]
 
         set w [$dlg childsite]
+
+        iwidgets::Entryfield $w.entDate \
+            -labeltext "Date:" \
+            -textvariable [& v::config_temp]([% date])
 
         GUI::FileEntryButton $w.entPath \
             -labeltext "Data path:" \
@@ -544,16 +549,18 @@ namespace eval mission {
 
         __date_config_path_helper $w [& v::config_temp] $dlg
 
-        foreach ent [list Path Edb Pnav Dmars Ops Cir RgbDir RgbTar] {
+        foreach ent [list Date Path Edb Pnav Dmars Ops Cir RgbDir RgbTar] {
             [$w.ent$ent component entry] configure \
                 -width 60
         }
 
         iwidgets::Labeledwidget::alignlabels \
+            $w.entDate \
             $w.entPath $w.entEdb $w.entPnav $w.entDmars $w.entOps \
             $w.entCir $w.entRgbDir $w.entRgbTar
 
         pack \
+            $w.entDate \
             $w.entPath $w.entEdb $w.entPnav $w.entDmars $w.entOps \
             $w.entCir $w.entRgbDir $w.entRgbTar \
             -side top -pady 5 -padx 10 -fill x -expand yes
@@ -564,8 +571,9 @@ namespace eval mission {
             set prompt_user 0
             if {[$dlg activate]} {
                 set temp_data [dict create]
-                set keys [list data_path "edb file" "pnav file" "dmars file" \
-                    "ops_conf file" "cir dir" "rgb dir" "rgb file"]
+                set keys [list date data_path "edb file" "pnav file" \
+                    "dmars file" "ops_conf file" "cir dir" "rgb dir" \
+                    "rgb file"]
                 foreach key $keys {
                     if {[string length $v::config_temp([% $key])]} {
                         dict set temp_data $key $v::config_temp([% $key])

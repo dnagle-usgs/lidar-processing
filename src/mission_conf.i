@@ -328,10 +328,11 @@ func missiondate_set(hash, date=, sync=) {
     if(!date)
         error, "Please provide date= or set __mission_date.";
     
-    h_set, __mission_conf, date, hash;
-
-    if(__mission_settings("ytk") && sync)
-        mission_send;
+    missiondate_delete, date, sync=sync;
+    keys = h_keys(hash);
+    for(i = 1; i <= numberof(keys); i++) {
+        mission_set, keys(i), hash(keys(i)), date=date, sync=sync;
+    }
 }
 
 func missiondate_get(void, date=) {
@@ -754,7 +755,7 @@ func mission_initialize_from_path(path, strict=) {
     dirs = dirs(w);
     dates = dates(w);
     for(i = 1; i <= numberof(dates); i++) {
-        __mission_date = dates(i);
+        missiondate_current, dates(i);
         dir = file_join(path, dirs(i));
 
         edb_file = autoselect_edb(dir);
@@ -764,6 +765,7 @@ func mission_initialize_from_path(path, strict=) {
             continue;
         }
         mission_set, "data_path", dir;
+        mission_set, "date", dates(i);
 
         pnav_file = autoselect_pnav(dir);
         if(pnav_file)
@@ -776,6 +778,18 @@ func mission_initialize_from_path(path, strict=) {
         ops_conf_file = autoselect_ops_conf(dir);
         if(ops_conf_file)
             mission_set, "ops_conf file", ops_conf_file;
+
+        cir_dir = autoselect_cir_dir(dir);
+        if(cir_dir)
+            mission_set, "cir dir", cir_dir;
+
+        rbg_dir = autoselect_rgb_dir(dir);
+        if(rgb_dir)
+            mission_set, "rgb dir", rgb_dir;
+
+        rgb_tar = autoselect_rgb_tar(dir);
+        if(rgb_tar)
+            mission_set, "rgb file", rgb_tar;
     }
 }
 
@@ -820,7 +834,7 @@ func autoselect_edb(dir) {
 /* DOCUMENT edb_file = autoselect_edb(dir)
 
     This function attempts to determine the EAARL edb file to load for a
-    dataset. The dir paremeter should be the path to the mission day directory.
+    dataset. The dir parameter should be the path to the mission day directory.
 
     The function will return the first file (sorted) that matches
     dir/eaarl/*.idx. If no files match, string(0) is returned.
@@ -831,6 +845,60 @@ func autoselect_edb(dir) {
         return file_join(dir, "eaarl", files(sort(files))(1));
     else
         return string(0);
+}
+
+func autoselect_cir_dir(dir) {
+/* DOCUMENT cir_dir = autoselect_cir_dir(dir)
+    This function attempts to determine the EAARL cir directory to load for a
+    dataset. The dir parameter should be the path to the mission day directory.
+
+    If a subdirectory "cir" exists, it will be returned. Otherwise, string(0)
+    is returned.
+*/
+// Original David B. Nagle 2009-05-12
+    cir_dir = file_join(dir, "cir");
+    if(file_isdir(cir_dir))
+        return cir_dir;
+    else
+        return string(0);
+}
+
+func autoselect_rgb_dir(dir) {
+/* DOCUMENT rgb_dir = autoselect_rgb_dir(dir)
+    This function attempts to determine the EAARL rgb directory to load for a
+    dataset. The dir parameter should be the path to the mission day directory.
+
+    If a subdirectory "cam1" exists, it will be returned. Otherwise, string(0)
+    is returned.
+*/
+// Original David B. Nagle 2009-05-12
+    rgb_dir = file_join(dir, "cam1");
+    if(file_isdir(rgb_dir))
+        return rgb_dir;
+    else
+        return string(0);
+}
+
+func autoselect_rgb_tar(dir) {
+/* DOCUMENT rgb_tar = autoselect_rgb_tar(dir)
+    This function attempts to determine the EAARL rgb tar file to load for a
+    dataset. The dir parameter should be the path to the mission day directory.
+
+    Three patterns are checked, in this order: *-cam1.tar, cam1-*.tar, and
+    cam1.tar. The first pattern that matches any files will be used; if
+    multiple files match that pattern, then the files are sorted and the first
+    is returned. If no matches are found, string(0) is returned.
+*/
+// Original David B. Nagle 2009-05-12
+    globs = ["*-cam1.tar", "cam1-*.tar", "cam1.tar"];
+    for(i = 1; i <= numberof(globs); i++) {
+        files = lsfiles(dir, glob=globs(i));
+        if(numberof(files)) {
+            files = files(sort(files));
+            return file_join(dir, files(1));
+        }
+    }
+    return string(0);
 }
 
 func auto_mission_conf(dir, strict=, load=, autoname=) {
