@@ -37,6 +37,7 @@ struct VEGPIXS {
   int rastpix;		// raster + pulse << 24
   short sa;		// scan angle  
   short mx(10);		// range in ns of all return peaks from irange
+  short mr(10);		// range in ns of all return peaks from irange
   short mv(10);		// intensities of all return peaks (max 10)
   char  nx;		// number of return pulses found
 };
@@ -1370,8 +1371,14 @@ func ex_veg_all( rn, i,  last=, graph=, use_be_centroid=, use_be_peak=, pse=, th
     da                The return waveform with the computed exponentials substracted
 */
 
-  extern ex_bath_rn, ex_bath_rp, a
-  irange = a(where(rn==a.raster)).irange(i);
+ extern ex_bath_rn, ex_bath_rp, a, irg_a, _errno, pr
+  // check if global variable irg_a contains the current raster number (rn)
+  if (!is_array(where(irg_a.raster == rn))) {
+     irg_a = irg(rn,rn, usecentroid=1);
+  }
+  this_irg = irg_a(where(rn==irg_a.raster));
+  irange = this_irg.irange(i);
+  intensity = this_irg.intensity(i);
   //irange=0;
   //intensity = a(where(rn==a.raster)).intensity(i);
   rv = VEGPIXS();			// setup the return struct
@@ -1514,11 +1521,12 @@ func ex_veg_all( rn, i,  last=, graph=, use_be_centroid=, use_be_peak=, pse=, th
           noise++;
           continue; // no real leading edge
        } 
-    }
+   }
        ai = 1; //channel number
        
     
-	mx = irange+xr(j)+da(xr(j):er(j)-1)(mxx)-ctx(1);
+	mx = irange-1+xr(j)+da(xr(j):er(j)-1)(mxx)-ctx(1);
+ 	mr = xr(j)-1+da(xr(j):er(j)-1)(mxx);
 	mv = aa(int(xr(j)-1+da(xr(j):er(j)-1)(mxx)),i,ai);
         if ( graph ) {
          plmk, mv, xr(j)-1+da(xr(j):er(j)-1)(mxx), msize=.5, marker=7, color="blue", width=1
@@ -1528,6 +1536,7 @@ func ex_veg_all( rn, i,  last=, graph=, use_be_centroid=, use_be_peak=, pse=, th
     if (pse) pause, pse;
     rv.mx(j) = mx;
     rv.mv(j) = mv;
+    rv.mr(j) = mr;
   }
   nxr = nxr - noise;
   rv.nx = nxr;
