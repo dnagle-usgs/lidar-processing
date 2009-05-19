@@ -39,7 +39,7 @@ History:
 
 */
 
-write, "ytk.i as of 1/2/2002 loaded"
+write, "$Id$";
 
 // Establish the fifo so Yorick can send commands to tcl/tk. The name
 // should have been set by ytk already.

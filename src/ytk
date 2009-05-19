@@ -1972,17 +1972,7 @@ expect -re {"(.*)"}
 set Y_SITE $expect_out(1,string)
 expect ">"
 
-set p "./"
-if { [ file exists "$Y_SITE//contrib/ytk.i" ] == 0 } {
-   if { [ file exists "/opt/eaarl/lidar-processing/src/ytk.i" ] == 0 } {
-   tk_messageBox -icon error \
-      -message "Can't find ytk.i. \n\
-Find the ytk.i file from the Ytk  from the distribution \n\
-and put it somewhere in your Yorick path."  -type ok
-   ytk_exit 1
- } else { set p "/opt/eaarl/lidar-processing/src" ; }
-}
-exp_send "#include \"$p/ytk.i\"\r"
+exp_send "#include \"ytk.i\"\r"
 expect ">"
 exp_send "open_tkcmd_fifo, \"$ytk_fifo_name\"\r"
 set indoc 0
