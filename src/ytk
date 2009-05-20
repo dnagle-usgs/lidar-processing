@@ -71,6 +71,18 @@ exec wish "$0" ${1+"$@"}
 #
 #
 
+package require BWidget
+package require Iwidgets
+package require fileutil
+package require log
+
+wm withdraw .
+if { [ catch { package require Expect } err ]  } {
+   tk_messageBox -icon error \
+      -message "$err\n Ytk cannot function without ExpectK. Sorry." -type ok
+   exit
+}
+
 set gui_enabled 1
 if { ![catch {package require cmdline}] } {
    set ytk_cmdline_options {
@@ -1310,6 +1322,7 @@ proc start_yorick {}  {
    upvar spawn_id spawn_id
    expect ">"
    set n 0
+   logger info "Beginning Yorick interact loop."
    interact {
       -o
       -nobuffer
@@ -1537,7 +1550,8 @@ proc launch_gui {} {
    .mb.debug add command -label "dbinfo" -command { exp_send "dbinfo\r" }
    .mb.debug add command -label "dbskip" -command { exp_send "dbskip\r" }
    .mb.debug add command -label "dbup" -command { exp_send "dbup\r" }
-
+   
+   .mb.tkcon add command -label "Logger" -command [list wm deiconify .ytklogger]
    .mb.tkcon add command -label "Tkcon" -command {
       exec tkcon &
    }
@@ -1921,6 +1935,95 @@ proc launch_gui {} {
 
 ######## END PROCEDURES ########
 
+############ LOGGER ############
+
+proc ytk_logger_window {} {
+# Creates the logger window and initializes logging.
+   toplevel .ytklogger
+   wm protocol .ytklogger WM_DELETE_WINDOW [list wm withdraw .ytklogger]
+   wm withdraw .ytklogger
+
+   set mb .ytklogger.mb
+   iwidgets::messagebox $mb -maxlines 10000
+   pack $mb -fill both -expand true
+
+   foreach type [log::levels] {
+      $mb type add $type -background [log::lv2color $type] -font {Courier 8}
+   }
+
+   log::lvCmdForall ytk_logger_log
+
+   set menu [$mb component itemMenu]
+   $menu add separator
+   
+   foreach level [lsort -decreasing -command log::lvCompare [log::levels]] {
+      $menu add radiobutton -value $level -variable _ytk_log_level \
+         -command ytk_logger_level_set \
+         -label $level
+   }
+
+   set ::_ytk_log_level info
+   ytk_logger_level_set
+
+   logger info "Logger initialized."
+}
+
+proc ytk_logger_level_set {} {
+# Updates the suppressions for various log levels against _ytk_log_level.
+   foreach level [log::levels] {
+      log::lvSuppress $level [expr {[log::lvCompare $::_ytk_log_level $level] > 0}]
+   }
+}
+
+proc ytk_logger_log {level message} {
+# Logging command to use to put something in the logging window. Used by log::log.
+   set level [log::lv2longform $level]
+   .ytklogger.mb issue $message [log::lv2longform $level]
+}
+
+proc logger {level message} {
+# Use this to send a logging message to the logger window in your code. For example:
+#   logger error "Something bad happened."
+#   logger debug "foo = $foo"
+   __logger $level $message Tcl
+}
+
+set ::_ytk_logger_id -2
+proc logger_id {} {
+# Returns a unique identifier that can be used within logging output to
+# identify, for example, which procedure you're in. Always returns an even
+# number in parentheses as a string.
+#
+# For example, in a procedure named "foo", you might do this:
+#
+# set log_id [logger_id]
+# logger debug "$log_id Entering foo()"
+# ...
+# logger debug "$log_id i=$i"
+# ...
+# logger debug "$log_id Leaving foo"
+#
+# This lets you keep track of which function call is generating which output,
+# which is useful when you have debug output mixed together from a function
+# that calls a function that calls a function...
+   return "([incr ::_ytk_logger_id 2])"
+}
+
+proc ylogger {level message} {
+# Used by Yorick's logger command.
+   __logger $level $message Yor
+}
+
+proc __logger {level message type} {
+# Implementation for both logger and ylogger.
+   set tstamp [clock format [clock scan now] -format %T]
+   log::log $level "\[$type $tstamp\] $level$log::fill($level) : $message"
+}
+
+########## END LOGGER ##########
+
+ytk_logger_window
+
 restore_defaults     ;# begin with the default settings
 
 ############################################################
@@ -1928,20 +2031,10 @@ restore_defaults     ;# begin with the default settings
 # just porting to another system.
 ############################################################
 
-package require BWidget
-package require Iwidgets
-package require fileutil
 
 set ytk_version "Ytk version 1.0  as of 1/3/2002"
 
 load_options
-
-wm withdraw .
-if { [ catch { package require Expect } err ]  } {
-   tk_messageBox -icon error \
-      -message "$err\n Ytk cannot function without ExpectK. Sorry." -type ok
-   exit
-}
 
 ############# set _ytk(yorick_executable) junk
 if { ![file exists $_ytk(yorick_executable)] } {

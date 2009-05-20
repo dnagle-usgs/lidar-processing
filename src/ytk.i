@@ -208,3 +208,43 @@ func source( fn ) {
   fflush,ytkfifo;
 }
 
+func logger(level, message) {
+/* DOCUMENT logger, level, message
+   Sends a message to the logger.
+
+   level: Must be a string, one of: emergency, alert, critical, error, warning,
+      notice, info, debug.
+
+   message: Any text string to be displayed in the logger.
+
+   This is basically a wrapper around ytk's ylogger command.
+*/
+// Original David Nagle 2009-05-19
+   tkcmd, swrite(format="ylogger {%s} {%s}", level, message);
+}
+
+_ytk_logger_id = -1;
+func logger_id(void) {
+/* DOCUMENT logger_id()
+   Returns a unique identifier that can be used within logging output to
+   identify, for example, which function you're in. Always returns an odd
+   number in parentheses as a string.
+
+   For example, in a function named "foo", you might do this:
+
+   log_id = logger_id();
+   logger, "debug", log_id + " Entering foo()";
+   ...
+   logger, "debug", log_id + swrite(format=" i = %d", i);
+   ...
+   logger, "debug", log_id + " Leaving foo";
+
+   This lets you keep track of which function call is generating which output,
+   which is useful when you have debug output mixed together from a function
+   that calls a function that calls a function...
+*/
+// Original David Nagle 2009-05-20
+   extern _ytk_logger_id;
+   id = _ytk_logger_id += 2;
+   return swrite(format="(%d)", id);
+}
