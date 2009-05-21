@@ -297,6 +297,22 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, wbuf=, gridmode=, ndivid
   }
 
   new_eaarl = new_eaarl(1:count);
+
+  // add fake mirror east,north, and elevation values (assume AGL to be 300m)
+  new_eaarl.meast = new_eaarl.east;
+  new_eaarl.mnorth = new_eaarl.north;
+  new_eaarl.melevation = new_eaarl.elevation + 300*100;
+
+  if (mode == 1) {
+	a = structof(new_eaarl(1));
+	if (a == VEG__) {
+	  // make last elevations the same as first return elevations
+	  new_eaarl.lnorth = new_eaarl.east;
+	  new_eaarl.least = new_eaarl.east;
+	  new_eaarl.lelv = new_eaarl.elevation;
+        }
+  }
+ 
   return new_eaarl;
 
 }
