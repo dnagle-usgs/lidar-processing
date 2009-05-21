@@ -644,7 +644,7 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, normalize=) {
       lfpveg: large-footprint waveform array
       thresh= amplitude threshold to consider significan return
       img = 2d array of bare-earth data at same resolution
-      fill = set to 1 to fill in gaps in the data.  This will use the average value of the 3x3 neighbor to defien the value of the output metric. Those that are set to -1000 will be ignored.
+      fill = set to 1 to fill in gaps in the data.  This will use the average value of the 5x5 neighbor to defien the value of the output metric. Those that are set to -1000 will be ignored.
       min_elv = minimum elevation (in meters) to consider for bare earth
       normalize = set to 0 if you do not want to normalize (default = 1).
   the output array will contain the following metrics:
@@ -810,35 +810,39 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, normalize=) {
 
  if (fill) { // use this to fill in small gaps in the data.
    new_out = out;
-   for (i=2;i<dims(2);i++) {
-     for (j=2;j<dims(3);j++) {
+   for (i=3;i<dims(2)-1;i++) {
+     ilow=i-2;
+     ihigh=i+2;
+     for (j=3;j<dims(3)-1;j++) {
+        jlow=j-2;
+        jhigh=j+2;
 	if (out(1,i,j) == -1000) continue;
 	if (out(4,i,j) == 0) {
-	  data = out(4,i-1:i+1,j-1:j+1);
+	  data = out(4,ilow:ihigh,jlow:jhigh);
 	  idx = where(data != 0 & data != -1000);
           if (is_array(idx)) 
 	  new_out(4,i,j) = avg(data(idx));
 	}
 	if (out(3,i,j) == 0) {
-	  data = out(3,i-1:i+1,j-1:j+1);
+	  data = out(3,ilow:ihigh,jlow:jhigh);
 	  idx = where(data != 0 & data != -1000);
           if (is_array(idx)) 
 	  new_out(3,i,j) = avg(data(idx));
 	}
 	if (out(2,i,j) == 0) {
-	  data = out(2,i-1:i+1,j-1:j+1);
+	  data = out(2,ilow:ihigh,jlow:jhigh);
 	  idx = where(data != 0 & data != -1000);
           if (is_array(idx)) 
 	  new_out(2,i,j) = avg(data(idx));
 	}
 	if (out(1,i,j) == 0) {
-	  data = out(1,i-1:i+1,j-1:j+1);
+	  data = out(1,ilow:ihigh,jlow:jhigh);
 	  idx = where(data != 0 & data != -1000);
           if (is_array(idx)) 
 	  new_out(1,i,j) = avg(data(idx));
 	}
 	if (out(5,i,j) == 0) {
-	  data = out(5,i-1:i+1,j-1:j+1);
+	  data = out(5,ilow:ihigh,jlow:jhigh);
 	  idx = where(data != 0 & data != -1000);
           if (is_array(idx)) 
 	  new_out(5,i,j) = avg(data(idx));
@@ -1919,4 +1923,59 @@ func metrics_ascii_output(outveg, mets, ofname) {
   return
 
 }
+
+
+func phase2_jela_gnd_control_anal(data, ipath=) {
+
+//amar 1/25/2008
+
+if (is_void(ipath)) ipath = "/data/1/EAARL/Processed_Data/JELA_06_new/veg_analysis/";
+arr = read_ascii_xyz(ipath=ipath, ifname="Phase2_truncated.txt", columns=5);
+
+wf = open(ipath+"plot_mets_stats.txt", "a");
+for (i=1;i<=numberof(arr(1,));i++) {
+        write, format="%d of %d\r", i, numberof(arr(1,));
+        plot_data = sel_data_ptRadius(data, point=[arr(2,i),arr(3,i)], radius=10, win=5, silent=1);
+        if (is_void(plot_data)) continue;
+        outveg = make_single_lfpw(plot_data, normalize=1, plot=1);
+        if (is_void(outveg)) continue;
+        mets = lfp_metrics(outveg, min_elv=-2.0);
+        ofile = swrite(format="%s%d%s",ipath, i, "_plot.pbd");
+        f = createb(ofile);
+        save, f, plot_data, outveg, mets;
+        close, f;
+        write, wf,format="%d, %10.2f, %10.2f, %d, %4.2f, %4.2f, %4.2f, %4.2f, %4.2f\n", long(arr(1,i)), arr(2,i), arr(3,i), long(arr(5,i)), mets(1,1), mets(2,1), mets(3,1), mets(4,1), mets(5,1);
+}
+        
+close, wf;
+
+}
+
+
+func phase1_jela_gnd_control_anal(data, ipath=) {
+
+//amar 3/20/2008
+
+if (is_void(ipath)) ipath = "/data/1/EAARL/Processed_Data/JELA_06_new/veg_analysis/Phase1/";
+arr = read_ascii_xyz(ipath=ipath, ifname="Phase1_truncated.txt", columns=3);
+
+wf = open(ipath+"plot_mets_stats.txt", "a");
+for (i=1;i<=numberof(arr(1,));i++) {
+        write, format="%d of %d\r", i, numberof(arr(1,));
+        plot_data = sel_data_ptRadius(data, point=[arr(2,i),arr(3,i)], radius=10, win=5, silent=1);
+        if (is_void(plot_data)) continue;
+        outveg = make_single_lfpw(plot_data, normalize=1, plot=1);
+        if (is_void(outveg)) continue;
+        mets = lfp_metrics(outveg, min_elv=-2.0);
+        ofile = swrite(format="%s%d%s",ipath, i, "_plot.pbd");
+        f = createb(ofile);
+        save, f, plot_data, outveg, mets;
+        close, f;
+        write, wf,format="%d, %10.2f, %10.2f, %4.2f, %4.2f, %4.2f, %4.2f\n", long(arr(1,i)), arr(2,i), arr(3,i), mets(1,1), mets(2,1), mets(4,1), mets(5,1);
+}
+        
+close, wf;
+
+}
+
 
