@@ -56,7 +56,7 @@ local mission_conf_i;
 
     Functions for saving/loading/transmitting the configuration:
 
-        mission_json_export()
+        mission_json_export(compact=)
         mission_json_import, json, sync=
         mission_save, filename
         mission_load, filename
@@ -379,15 +379,11 @@ func mission_save(filename) {
     format.
 */
     extern __mission_conf;
-    if(__mission_settings("ytk")) {
-        mission_send;
-        tkcmd, swrite(format="mission_save {%s}", filename);
-    } else {
-        json = mission_json_export();
-        f = open(filename, "w");
-        write, f, format="%s\n", json;
-        close, f;
-    }
+    json = mission_json_export();
+    f = open(filename, "w");
+    write, f, format="%s\n", json;
+    close, f;
+    logger, "info", "Mission configuration saved to: " + filename;
 }
 
 func mission_load(filename) {
@@ -396,6 +392,7 @@ func mission_load(filename) {
     JSON format.
 */
     extern __mission_conf;
+    logger, "info", "Loading mission configuration: " + filename;
     f = open(filename, "r");
     json = rdfile(f)(sum);
     close, f;
@@ -946,10 +943,8 @@ func auto_mission_conf(dir, strict=, load=, autoname=) {
         mission_json_import, backup_conf;
     }
 
-    if(load) {
-        pause, 20;
+    if(load)
         mission_load, file_join(dir, json_file);
-    }
 
     return json_file;
 }

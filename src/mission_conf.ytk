@@ -208,9 +208,11 @@ proc mission_save {filename} {
     set f [open $filename "w"]
     puts -nonewline $f $json_out
     close $f
+    logger info "Mission configuration saved to: $filename"
 }
 
 proc mission_load {filename} {
+    logger info "Loading mission configuration: $filename"
     set f [open $filename "r"]
     set json_in [read $f]
     close $f
