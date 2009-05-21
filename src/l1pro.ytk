@@ -167,6 +167,7 @@ if {[winfo exists .l1wid]} {
           {{All Files}       {*}   }
         }]
       if { $_ytk_fn != "" } {
+        logger info "(l1pro) Read Binary Data file: $_ytk_fn"
         switch [ file extension $_ytk_fn ] {
           ".pbd" {
             exp_send "_ytk_pbd_f = openb(\"$_ytk_fn\"); restore, _ytk_pbd_f;\r"
@@ -1086,6 +1087,7 @@ if {[winfo exists .l1wid]} {
     global varlist
     if {[lsearch -exact $varlist $newvar] == -1} {
       lappend varlist $newvar
+      logger info "(l1pro) appended to varlist: $newvar"
     }
   }
 
