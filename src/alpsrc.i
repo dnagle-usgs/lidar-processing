@@ -42,6 +42,17 @@ func alpsrc_load(void) {
    __alpsrc_load_and_merge, alpsrc, "/etc/alpsrc";
    __alpsrc_load_and_merge, alpsrc, "~/.alpsrc";
    __alpsrc_load_and_merge, alpsrc, ".alpsrc";
+   alpsrc_apply;
+}
+
+func alpsrc_apply(void) {
+/* DOCUMENT alpsrc_apply;
+   Applies aplsrc settings. This primarily is used for cases where a setting in
+   the Tcl side is being defined in the alpsrc file.
+*/
+   extern alpsrc;
+   tkcmd, swrite(format="set ::_ytk_log_level {%s}", alpsrc.ytk_log_level);
+   tkcmd, "ytk_logger_level_set";
 }
 
 func __alpsrc_load_and_merge(&hash, fn) {
@@ -51,7 +62,8 @@ func __alpsrc_load_and_merge(&hash, fn) {
 }
 
 __alpsrc_defaults = h_new(
-   "geoid_data_root", file_join(get_cwd(), "..")
+   "geoid_data_root", file_join(get_cwd(), ".."),
+   "ytk_log_level", "info"
 );
 
 alpsrc_load;
