@@ -44,6 +44,54 @@ require, "mosaic_biases.i";
 
 */
 
+func prepare_inpho_tiles(cirdata, scheme, pbd_dir, inpho_dir,
+   defn_buffer=, file_thresh=) {
+   default, file_thresh, 350;
+   
+   tile_dirs = copy_cirdata_tiles(cirdata, scheme, inpho_dir, subdir="images",
+      split_fltlines=0);
+   
+   for(i = 1; i <= numberof(tile_dirs); i++) {
+      tile_dir = tile_dirs(i);
+      
+      imgdir = file_join(tile_dir, "images");
+      files = lsfiles(imgdir, glob="*.jpg");
+
+      num_dirs = int(ceil(double(numberof(files)) / file_thresh));
+      files = files(sort(files));
+      split_dirs = swrite(format="%d", indgen(num_dirs));
+      for(j = 1; j <= numberof(split_dirs); j++) {
+         mkdirp, file_join(imgdir, split_dirs(j));
+      }
+      files_per_dir = ceil(numberof(files) / double(num_dirs));
+      j = 1;
+      copied = 0;
+      for(k = 1; k <= numberof(files); k++) {
+         if(copied == files_per_dir) {
+            copied = 0;
+            j++;
+         }
+         rename, file_join(imgdir, files(k)),
+            file_join(imgdir, split_dirs(j), files(k));
+         copied++;
+      }
+      
+      tiledata = gather_cir_data(tile_dir, downsample=1);
+      
+      mosaic_gen_gpsins, file_join(tile_dir, "data", "merged.gpsins"),
+         photo_files=tiledata.files, photo_tans=tiledata.tans;
+      //mosaic_gen_xyz, file_join(tile_dir, "xyz", "merged.xyz"),
+      //   itcode, pbd_dir, pbd_glob, buffer=xyz_buffer, progress=1;
+      mosaic_gen_xyz_new, tiledata, pbd_dir, file_join(tile_dir, "xyz", "merged.xyz");
+      mosaic_gen_tile_defns, file_join(tile_dir, "data", "tile_defns.txt"),
+         buffer=defn_buffer, photo_tans=tiledata.tans;
+
+      mkdirp, file_join(tile_dir, "project");
+      mkdirp, file_join(tile_dir, "orthos");
+      mkdirp, file_join(tile_dir, "mosaics");
+   }
+}
+
 func prepare_cir_for_inpho(conf_file, photo_dir, pbd_dir, inpho_dir,
    downsample=, tile_buffer=, xyz_buffer=, defn_buffer=, pbd_glob=,
    make_xyz=, make_gpsins=, make_defn=, make_images=,
@@ -177,6 +225,10 @@ func gather_cir_data(photo_dir, conf_file=, downsample=) {
    photo_files = find(photo_dir, glob="*-cir.jpg");
    if(!numberof(photo_files))
       error, "No files found.";
+
+   // Remove duplicate files under different paths
+   idx = set_remove_duplicates(file_tail(photo_files), idx=1);
+   photo_files = photo_files(idx);
 
    write, format="Found %d images\n", numberof(photo_files);
    write, format="Determining second-of-epoch values...%s", "\n";
@@ -323,6 +375,23 @@ func mosaic_gen_gpsins(dest_file, photo_files=, photo_tans=) {
    close, f;
 }
 
+func mosaic_gen_xyz_new(cirdata, pbd_dir, dest_file) {
+   hull = cirdata_hull(cirdata);
+   data = sel_rgn_from_datatiles(data_dir=pbd_dir, noplot=1, silent=1,
+      uniq=1, rgn=poly_bbox(hull), mode=1, search_str=".pbd");
+
+   idx = testPoly2(hull, data.east/100., data.north/100.);
+   data = data(idx);
+
+   dest_path = file_dirname(dest_file);
+   if(!file_isdir(dest_path))
+      mkdirp, dest_path;
+   f = open(dest_file, "w");
+   write, f, format="%.2f %.2f %.2f\n", data.east/100., data.north/100.,
+      data.elevation/100.;
+   close, f;
+}
+
 func mosaic_gen_xyz(dest_file, itcode, pbd_dir, pbd_glob, buffer=, progress=) {
    it_centroid = it2utm(itcode, centroid=1);
    it_n = it_centroid(1);
@@ -382,11 +451,29 @@ func mosaic_gen_tile_defns(dest_file, buffer=, photo_tans=) {
    f = open(file_join(dest_file), "w");
    for(j = 1; j <= numberof(dtcodes); j++) {
       bbox = dt2utm(dtcodes(j), bbox=1);
-      write, f, format="%c%s%c %d %d %d %d\n", 0x22, dtcodes(j), 0x22,
+      write, f, format="%ct_%s%c %d %d %d %d\n", 0x22, dtcodes(j), 0x22,
          int(bbox(4) - buffer), int(bbox(3) + buffer),
          int(bbox(2) + buffer), int(bbox(1) - buffer);
    }
    close, f;
+}
+
+func cirdata_hull(cirdata, elev=, camera=, buffer=) {
+   default, elev, 0;
+   default, buffer, 250.0;
+
+   tstamp = [];
+   timer_init, tstamp;
+   poly_all = [];
+   for(i = 1; i <= numberof(cirdata.files); i++) {
+      timer_tick, tstamp, i, numberof(cirdata.files);
+      jgw_data = gen_jgw(cirdata.tans(i), elev, camera=camera);
+      grow, poly_all, jgw_poly(jgw_data);
+   }
+   bounds = convex_hull(unref(poly_all));
+   bounds = buffer_hull(bounds, buffer, pts=16);
+
+   return bounds;
 }
 
 func gen_jgws_init(photo_dir, conf_file=, elev=, camera=) {
@@ -529,19 +616,8 @@ func jgw_remove_missing(dir, dryrun=) {
 
 func gen_cir_region_shapefile(photo_dir, shapefile, conf_file=, elev=, camera=) {
    default, elev, 0;
-
    cirdata = gather_cir_data(photo_dir, conf_file=conf_file, downsample=1);
-
-   tstamp = [];
-   timer_init, tstamp;
-   poly_all = [];
-   for(i = 1; i <= numberof(cirdata.files); i++) {
-      timer_tick, tstamp, i, numberof(cirdata.files);
-      jgw_data = gen_jgw(cirdata.tans(i), elev, camera=camera);
-      grow, poly_all, jgw_poly(jgw_data);
-   }
-   bounds = convex_hull(unref(poly_all));
-   bounds = buffer_hull(bounds, 250, pts=16);
+   bounds = cirdata_hull(cirdata, elev=elev, camera=camera);
    write_ascii_shapefile, &bounds, shapefile;
 }
 
@@ -725,8 +801,8 @@ func copy_cirdata_images_by_flightline(cirdata, dest_dir) {
    }
 }
 
-func copy_cirdata_tiles(cirdata, scheme, dest_dir, split_fltlines=, buffer=) {
-/* DOCUMENT copy_cirdata_tiles, cirdata, scheme, dest_dir, split_fltlines=, buffer=
+func copy_cirdata_tiles(cirdata, scheme, dest_dir, split_fltlines=, buffer=, subdir=) {
+/* DOCUMENT copy_cirdata_tiles, cirdata, scheme, dest_dir, split_fltlines=, buffer=, subdir=
    This copies the images represented by cirdata to dest_dir, but partitions
    them using the specified partitioning scheme as it does.
 
@@ -745,12 +821,19 @@ func copy_cirdata_tiles(cirdata, scheme, dest_dir, split_fltlines=, buffer=) {
       buffer= This specifies the buffer to apply around each tile. This
          defaults to whatever the defaults are for the individual partitioning
          functions (see partition_by_tile_type).
+      subdir= If provided, images will be placed in a subdirectory of this
+         name. (If split_fltlines=1, the flightline directories will be in the
+         subdirectory.)
+
+   Returns:
+      An array of the tile directories created.
 
    If buffer is not set to 0, then it's very likely that some images will get
    copied into more than one directory.
 */
 // Original David B. Nagle 2009-04-02
    default, split_fltlines, 1;
+   default, subdir, string(0);
 
    bilevel = scheme == "10k2k";
    if(bilevel) scheme = "2k";
@@ -765,6 +848,7 @@ func copy_cirdata_tiles(cirdata, scheme, dest_dir, split_fltlines=, buffer=) {
       tile_zones = swrite(format="zone_%d", tile_zones);
    }
 
+   tile_dirs = array(string, numberof(tile_names));
    for(i = 1; i <= numberof(tile_names); i++) {
       curtile = tile_names(i);
       idx = tiles(curtile);
@@ -779,13 +863,20 @@ func copy_cirdata_tiles(cirdata, scheme, dest_dir, split_fltlines=, buffer=) {
       else
          tiledir = file_join(dest_dir, curtile);
       write, format=" - %d: %s\n", i, curtile;
+      tile_dirs(i) = tiledir;
 
       curcirdata = filter_cirdata_by_index(cirdata, idx);
+
+      if(subdir)
+         tiledir = file_join(tiledir, subdir);
+      
       if(split_fltlines)
          copy_cirdata_images_by_flightline, curcirdata, tiledir;
       else
          copy_cirdata_images, curcirdata, tiledir;
    }
+
+   return tile_dirs;
 }
 
 func split_cir_dir_by_flightline(dir_in, dir_out, timediff=) {
