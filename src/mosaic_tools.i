@@ -487,7 +487,9 @@ func gen_jgws_init(photo_dir, conf_file=, elev=, camera=) {
       timer_tick, tstamp, i, numberof(cirdata.files);
       jgw_data = gen_jgw(cirdata.tans(i), elev, camera=camera);
       jgw_file = file_rootname(cirdata.files(i)) + ".jgw";
+      prj_file = file_rootname(jgw_file) + ".prj";
       write_jgw, jgw_file, jgw_data;
+      gen_prj_file, prj_file, cirdata.tans(i).zone, "n88";
    }
 }
 
@@ -582,36 +584,48 @@ max_adjustments=, min_improvement=, buffer=) {
    write, format="Mean elevation used for images was %.3f m\n", elev_used(avg);
 }
 
-func jgw_remove_missing(dir, dryrun=) {
-/* DOCUMENT jgw_remove_missing, dir, dryrun=
+func jgw_remove_missing(dir, dryrun=, to_file=) {
+/* DOCUMENT jgw_remove_missing, dir, dryrun=, to_file=
    This will remove all jpg files in a directory that do not have corresponding
    jgw files.
 
    If dryrun=1, then it will provide a report of what it would do, but it won't
    actually delete anything.
+
+   If to_file= is set, it should be the name of an output file that the report
+   should be written to. If not provided, the report goes to the screen. (This
+   does NOT imply dryrun=1; if you omit dryrun=1, it will still do the
+   deletions.)
 */
 // Original David B. Nagle 2009-04-07
    default, dryrun, 0;
+   default, to_file, string(0);
+   if(to_file)
+      f = open(to_file, "w");
+   else
+      f = [];
    jpg_files = find(dir, glob="*.jpg");
    jgw_files = file_rootname(jpg_files) + ".jgw";
    has_jgw = file_exists(unref(jgw_files));
    w = where(! has_jgw);
    if(numberof(w)) {
       if(dryrun)
-         write, "List of files that would be removed:";
+         write, f, "List of files that would be removed:";
       else
-         write, "Removing files:";
+         write, f, "Removing files:";
       bad_jpgs = unref(jpg_files)(w);
       for(i = 1; i <= numberof(bad_jpgs); i++) {
-         write, format=" - %s\n", bad_jpgs(i);
+         write, f, format=" - %s\n", bad_jpgs(i);
          if(!dryrun)
             remove, bad_jpgs(i);
       }
       if(dryrun)
-         write, format=" Would remove a total of %d files.\n", numberof(bad_jpgs);
+         write, f, format=" Would remove a total of %d files.\n", numberof(bad_jpgs);
       else
-         write, format=" Removed a total of %d files.\n", numberof(bad_jpgs);
+         write, f, format=" Removed a total of %d files.\n", numberof(bad_jpgs);
    }
+   if(to_file)
+      close, f;
 }
 
 func gen_cir_region_shapefile(photo_dir, shapefile, conf_file=, elev=, camera=) {
