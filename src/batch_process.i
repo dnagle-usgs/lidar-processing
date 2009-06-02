@@ -89,6 +89,9 @@ func save_vars (filename, tile=) {
    if ( b_rcf == 1 ) {
       save,  f, b_rcf, buf, w, no_rcf, mode, merge, clean, rcfmode, write_merge;
    }
+   if ( ! is_void( bath_ctl ) ) {
+      save, f, bath_ctl;
+   }
 
    close, f;
    // This makes sure the file is completely written before batcher.tcl has a chance
@@ -341,7 +344,8 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
 
       if (typ == 0) {
          write, format = "Processing Region %d of %d for First Surface Only\n",i,n;
-         fs_all = make_fs(latutm = 1, q = q,  ext_bad_att=1, use_centroid=1);
+         // fs_all = make_fs(latutm = 1, q = q,  ext_bad_att=1, use_centroid=1);
+         fs_all = make_fs(latutm = 1, q = q,  ext_bad_att=1 );
          if (is_array(fs_all)) {
             fs_all = clean_fs(fs_all);
             if (is_array(fs_all)) {
