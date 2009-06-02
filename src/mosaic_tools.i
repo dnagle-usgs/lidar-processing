@@ -494,9 +494,9 @@ func gen_jgws_init(photo_dir, conf_file=, elev=, camera=) {
 }
 
 func gen_jgws_with_lidar(photo_dir, pbd_dir, conf_file=, elev=, camera=,
-max_adjustments=, min_improvement=, buffer=) {
+max_adjustments=, min_improvement=, buffer=, skip_existing=) {
 /* DOCUMENT gen_jgws_with_lidar, photo_dir, pbd_dir, conf_file=, elev=,
-   camera=, max_adjustments=, min_improvement=, buffer=
+   camera=, max_adjustments=, min_improvement=, buffer=, skip_existing=
 
    This generates JGW files for a directory of JPG files, using the lidar data
    in pbd_dir to correct the elevations used by the algorithm.
@@ -518,70 +518,91 @@ max_adjustments=, min_improvement=, buffer=) {
       min_improvement= The minimum change that needs to be seen in order to
          trigger further adjustment. Defaults to 0.001 meters.
       buffer= The buffer to use when loading pbd data. Defaults to 75 meters.
+      skip_existing= Set to 1 to skip existing files. (By default, overwrites.)
 */
 // Original David B. Nagle 2009-03-19
    default, elev, 0;
    default, max_adjustments, 10;
    default, min_improvement, 0.001;
    default, buffer, 75.;
+   default, skip_existing, 0;
 
    cirdata = gather_cir_data(photo_dir, conf_file=conf_file, downsample=1);
    elev_used = adjustments = array(double, numberof(cirdata.files));
    bad_spots = array(0, numberof(cirdata.files));
+   time_start = time_now = array(double, 3);
+   timer, time_start;
    for(i = 1; i <= numberof(cirdata.files); i++) {
-      cur_elev = double(elev);
-      orig_data = jgw_data = gen_jgw(cirdata.tans(i), cur_elev, camera=camera);
-      j = 0;
-      comparison = 1;
-      if(is_void(pbd_bbox)) {
-         pbd_bbox = poly_bbox(jgw_poly(jgw_data)) + [-1,1,-1,1] * buffer;
-         //pbd_bbox = poly_bbox(buffer_hull(jgw_poly(jgw_data), 100., pts=16));
-         pbd_data = sel_rgn_from_datatiles(data_dir=pbd_dir, noplot=1, silent=1,
-            uniq=1, rgn=pbd_bbox, mode=1, search_str=".pbd");
-      }
-      while(++j < max_adjustments && comparison > min_improvement) {
-         jgwp = jgw_poly(jgw_data);
-         if(numberof(data_box(jgwp(1,), jgwp(2,), pbd_bbox)) != numberof(jgwp(1,))) {
-            pbd_bbox = poly_bbox(jgwp) + [-1,1,-1,1] * buffer;
-            //pbd_bbox = poly_bbox(buffer_hull(jgwp, 100., pts=16));
+      jgw_file = file_rootname(cirdata.files(i)) + ".jgw";
+      prj_file = file_rootname(jgw_file) + ".prj";
+      if(skip_existing && file_exists(jgw_file) && file_exists(prj_file)) {
+         write, format="Image %d: skipped, already has JGW\n", i;
+      } else {
+         cur_elev = double(elev);
+         orig_data = jgw_data = gen_jgw(cirdata.tans(i), cur_elev, camera=camera);
+         j = 0;
+         comparison = 1;
+         if(is_void(pbd_bbox)) {
+            pbd_bbox = poly_bbox(jgw_poly(jgw_data)) + [-1,1,-1,1] * buffer;
+            //pbd_bbox = poly_bbox(buffer_hull(jgw_poly(jgw_data), 100., pts=16));
             pbd_data = sel_rgn_from_datatiles(data_dir=pbd_dir, noplot=1, silent=1,
                uniq=1, rgn=pbd_bbox, mode=1, search_str=".pbd");
          }
-         idx = [];
-         if(numberof(pbd_data))
-            idx = testPoly2(jgwp*100, pbd_data.east, pbd_data.north);
-         if(numberof(idx)) {
-            old_data = jgw_data;
-            cur_elev = median(pbd_data.elevation(idx)/100.);
-            //pbd_data = [];
-            jgw_data = gen_jgw(cirdata.tans(i), cur_elev, camera=camera);
-            comparison = jgw_compare(old_data, jgw_data, camera=camera);
+         while(++j < max_adjustments && comparison > min_improvement) {
+            jgwp = jgw_poly(jgw_data);
+            if(numberof(data_box(jgwp(1,), jgwp(2,), pbd_bbox)) != numberof(jgwp(1,))) {
+               pbd_bbox = poly_bbox(jgwp) + [-1,1,-1,1] * buffer;
+               //pbd_bbox = poly_bbox(buffer_hull(jgwp, 100., pts=16));
+               pbd_data = sel_rgn_from_datatiles(data_dir=pbd_dir, noplot=1, silent=1,
+                  uniq=1, rgn=pbd_bbox, mode=1, search_str=".pbd");
+            }
+            idx = [];
+            if(numberof(pbd_data))
+               idx = testPoly2(jgwp*100, pbd_data.east, pbd_data.north);
+            if(numberof(idx)) {
+               old_data = jgw_data;
+               cur_elev = median(pbd_data.elevation(idx)/100.);
+               //pbd_data = [];
+               jgw_data = gen_jgw(cirdata.tans(i), cur_elev, camera=camera);
+               comparison = jgw_compare(old_data, jgw_data, camera=camera);
+            } else {
+               comparison = 0;
+               j--;
+               bad_spots(i) = 1;
+            }
+         }
+         if(bad_spots(i)) {
+            write, format="Image %d: skipped, no PBD data\n", i;
          } else {
-            comparison = 0;
-            j--;
-            bad_spots(i) = 1;
+            write_jgw, jgw_file, jgw_data;
+            gen_prj_file, prj_file, cirdata.tans(i).zone, "n88";
+            comparison = jgw_compare(orig_data, jgw_data, camera=camera);
+            write, format="Image %d: %d adjustments to elevation %.3f resulting in %.3f m change\n",
+               i, j, cur_elev, comparison;
+            adjustments(i) = comparison;
+            elev_used(i) = cur_elev;
          }
       }
-      if(bad_spots(i)) {
-         write, format="Image %d: skipped, no PBD data\n", i;
-      } else {
-         jgw_file = file_rootname(cirdata.files(i)) + ".jgw";
-         prj_file = file_rootname(jgw_file) + ".prj";
-         write_jgw, jgw_file, jgw_data;
-         gen_prj_file, prj_file, cirdata.tans(i).zone, "n88";
-         comparison = jgw_compare(orig_data, jgw_data, camera=camera);
-         write, format="Image %d: %d adjustments to elevation %.3f resulting in %.3f m change\n",
-            i, j, cur_elev, comparison;
-         adjustments(i) = comparison;
-         elev_used(i) = cur_elev;
+
+      if(i % 10 == 0) {
+         timer, time_now;
+         elapsed = (time_now(3) - time_start(3)) / 60.;
+         remain = elapsed / double(i) * (numberof(cirdata.files) - i);
+         elapsed = int(elapsed + 0.5);
+         remain = int(remain + 0.5);
+         write, format="[ Finished %d of %d images in %d minutes; est. %d minutes remaining ]\n", i, numberof(cirdata.files), elapsed, remain;
       }
    }
    write, " ";
    w = where(adjustments > 0);
-   write, format="Made %d out of %d adjustments; min/mean/max = %.3f / %.3f / %.3f m\n",
-      numberof(w), numberof(adjustments),
-      adjustments(w)(min), adjustments(w)(avg), adjustments(w)(max);
-   write, format="Mean elevation used for images was %.3f m\n", elev_used(avg);
+   if(w > 0) {
+      write, format="Made %d out of %d adjustments; min/mean/max = %.3f / %.3f / %.3f m\n",
+         numberof(w), numberof(adjustments),
+         adjustments(w)(min), adjustments(w)(avg), adjustments(w)(max);
+      write, format="Mean elevation used for images was %.3f m\n", elev_used(avg);
+   } else {
+      write, format="Made 0 out of %d adjustments\n", numberof(adjustments);
+   }
 }
 
 func jgw_remove_missing(dir, dryrun=, to_file=) {
