@@ -44,6 +44,82 @@ require, "mosaic_biases.i";
 
 */
 
+func prepare_inpho_full(cirdata, pbd_dir, inpho_dir,
+   defn_buffer=, file_thresh=) {
+   default, file_thresh, 350;
+
+   dtiles = partition_by_tile_type("2k", cirdata.tans.northing,
+      cirdata.tans.easting, cirdata.tans.zone, buffer=defn_buffer, shorten=1);
+
+   dtile_names = h_keys(dtiles);
+   dtile_zones = int(dt2utm(dtile_names)(,3));
+   zones = set_remove_duplicates(dtile_zones);
+
+   write, format="Found %d zones.\n", numberof(zones);
+   for(i = 1; i <= numberof(zones); i++) {
+      write, format="== Processing zone %d (%d of %d) ==\n",
+         zones(i), i, numberof(zones);
+
+      zone_dir = file_join(inpho_dir, swrite(format="zone_%d", zones(i)));
+
+      zone_idx = [];
+      w = where(dtile_zones == zones(i));
+      for(j = 1; j <= numberof(w); j++) {
+         grow, zone_idx, dtiles(dtile_names(w(j)));
+      }
+      zone_idx = set_remove_duplicates(zone_idx);
+      zonedata = filter_cirdata_by_index(cirdata, zone_idx);
+
+      write, "Copying images...";
+      imgdir = file_join(zone_dir, "images");
+      num_dirs = int(ceil(double(numberof(zonedata.files)) / file_thresh));
+      split_dirs = swrite(format="%d", indgen(num_dirs));
+      files_per_dir = ceil(numberof(zonedata.files) / double(num_dirs));
+      for(j = 1; j <= num_dirs; j++) {
+         idx_max = int(min(j * files_per_dir, numberof(zonedata.files)));
+         idx_min = int((j - 1) * files_per_dir + 1);
+         idx = indgen(idx_min:idx_max);
+         subdata = filter_cirdata_by_index(zonedata, idx);
+         mkdirp, file_join(imgdir, split_dirs(j));
+         copy_cirdata_images, subdata, file_join(imgdir, split_dirs(j));
+      }
+      
+      write, "Generating GPS/INS file...";
+      mosaic_gen_gpsins, file_join(zone_dir, "data", "merged.gpsins"),
+         photo_files=zonedata.files, photo_tans=zonedata.tans;
+
+      write, "Generating XYZ file...";
+      mosaic_gen_xyz_new2, zonedata, pbd_dir, 
+         file_join(zone_dir, "xyz", "merged.xyz");
+
+      write, "Generating tile definition files...";
+      defn_file_1m = file_join(zone_dir, "data", "tile_defns_1m.txt");
+      defn_file_25cm = file_join(zone_dir, "data", "tile_defns_25cm.txt");
+
+      zone_dtiles = "t_" + dtile_names(w);
+      zone_dtiles = zone_dtiles(sort(zone_dtiles));
+      bbox = dt2utm(zone_dtiles, bbox=1);
+      mosaic_write_tile_defns, defn_file_25cm, zone_dtiles,
+         bbox(,1), bbox(,2), bbox(,3), bbox(,4), buffer=defn_buffer;
+
+      zone_itiles = "i_" + set_remove_duplicates(dt_short(
+         get_dt_itcodes(zone_dtiles)));
+      zone_itiles = zone_itiles(sort(zone_itiles));
+      bbox = it2utm(zone_itiles, bbox=1);
+      mosaic_write_tile_defns, defn_file_1m, zone_itiles,
+         bbox(,1), bbox(,2), bbox(,3), bbox(,4), buffer=defn_buffer;
+
+      write, "Creating supplementary directories...";
+      mkdirp, file_join(zone_dir, "project");
+      mkdirp, file_join(zone_dir, "orthos", "1m");
+      mkdirp, file_join(zone_dir, "orthos", "25cm");
+      mkdirp, file_join(zone_dir, "mosaics", "1m", "inpho");
+      mkdirp, file_join(zone_dir, "mosaics", "25cm", "inpho");
+      mkdirp, file_join(zone_dir, "mosaics", "1m", "gm");
+      mkdirp, file_join(zone_dir, "mosaics", "25cm", "gm");
+   }
+}
+
 func prepare_inpho_tiles(cirdata, scheme, pbd_dir, inpho_dir,
    defn_buffer=, file_thresh=) {
    default, file_thresh, 350;
@@ -369,9 +445,9 @@ func mosaic_gen_gpsins(dest_file, photo_files=, photo_tans=) {
       mkdirp, dest_path;
    f = open(dest_file, "w");
    write, f, linesize=2000, format="%s %.3f %.3f %.3f %.4f %.4f %.4f\n",
-      file_rootname(file_tail(photo_files(idx))),
-      photo_tans.easting(idx), photo_tans.northing(idx), photo_tans.alt(idx),
-      photo_tans.roll(idx), photo_tans.pitch(idx), photo_tans.heading(idx);
+      file_rootname(file_tail(photo_files)),
+      photo_tans.easting, photo_tans.northing, photo_tans.alt,
+      photo_tans.roll, photo_tans.pitch, photo_tans.heading;
    close, f;
 }
 
@@ -389,6 +465,42 @@ func mosaic_gen_xyz_new(cirdata, pbd_dir, dest_file) {
    f = open(dest_file, "w");
    write, f, format="%.2f %.2f %.2f\n", data.east/100., data.north/100.,
       data.elevation/100.;
+   close, f;
+}
+
+func mosaic_gen_xyz_new2(cirdata, pbd_dir, dest_file) {
+   files = find(pbd_dir, glob="*.pbd");
+   dest_path = file_dirname(dest_file);
+   if(!file_isdir(dest_path))
+      mkdirp, dest_path;
+   f = open(dest_file, "w");
+   for(i = 1; i <= numberof(files); i++) {
+      zone = int(dt2utm(file_tail(files(i)))(3));
+
+      g = openb(files(i));
+      data = get_member(g, g.vname);
+      close, g;
+
+      east = data.east/100.;
+      north = data.north/100.;
+      elev = data.elevation/100.;
+      data = [];
+      w = where(cirdata.tans.zone == zone &
+         cirdata.tans.easting > east(min) - 500 &
+         cirdata.tans.easting < east(max) + 500 &
+         cirdata.tans.northing > north(min) - 500 &
+         cirdata.tans.northing < north(max) + 500);
+      if(numberof(w)) {
+         cur_tans = cirdata.tans(w);
+         hull = convex_hull(cur_tans.easting, cur_tans.northing);
+         hull = buffer_hull(hull, 500, pts=16);
+         idx = testPoly2(hull, east, north);
+         if(numberof(idx)) {
+            write, f, format="%.2f %.2f %.2f\n",
+               east(idx), north(idx), elev(idx);
+         }
+      }
+   }
    close, f;
 }
 
@@ -434,26 +546,63 @@ func mosaic_gen_xyz(dest_file, itcode, pbd_dir, pbd_glob, buffer=, progress=) {
    close, f;
 }
 
-func mosaic_gen_tile_defns(dest_file, buffer=, photo_tans=) {
+func mosaic_write_tile_defns(dest_file, names, s, e, n, w, buffer=) {
+   default, buffer, 100;
+
+   dest_path = file_dirname(dest_file);
+   if(!file_isdir(dest_path))
+      mkdirp, dest_path;
+   w = int(floor(w - buffer));
+   s = int(floor(s - buffer));
+   n = int(ceil(n + buffer));
+   e = int(ceil(e + buffer));
+
+   f = open(file_join(dest_file), "w");
+   write, f, format="%c%s%c %d %d %d %d\n", 0x22, names, 0x22, w, n, e, s;
+   close, f;
+}
+
+func mosaic_gen_tile_defns(dest_file, scheme=, buffer=, photo_tans=) {
+   default, scheme, "2k";
    default, buffer, 100;
    default, photo_tans, [];
 
    if(!numberof(photo_tans))
       error, "No tans data available.";
 
-   dtcodes = get_utm_dtcodes(
-      photo_tans.northing(idx), photo_tans.easting(idx), photo_tans.zone(idx));
-   dtcodes = dt_short(set_remove_duplicates(dtcodes));
+   tiles = partition_by_tile_type(scheme, photo_tans.northing,
+      photo_tans.easting, photo_tans.zone, buffer=buffer, shorten=1);
+
+   codes = h_keys(tiles);
 
    dest_path = file_dirname(dest_file);
    if(!file_isdir(dest_path))
       mkdirp, dest_path;
    f = open(file_join(dest_file), "w");
-   for(j = 1; j <= numberof(dtcodes); j++) {
-      bbox = dt2utm(dtcodes(j), bbox=1);
-      write, f, format="%ct_%s%c %d %d %d %d\n", 0x22, dtcodes(j), 0x22,
-         int(bbox(4) - buffer), int(bbox(3) + buffer),
-         int(bbox(2) + buffer), int(bbox(1) - buffer);
+   for(j = 1; j <= numberof(codes); j++) {
+      tile = codes(j);
+      s = e = n = w = 0;
+      if(scheme == "2k") {
+         assign, dt2utm(tile, bbox=1), s, e, n, w;
+         tile = "t_" + tile;
+      } else if(scheme == "10k") {
+         assign, it2utm(tile, bbox=1), s, e, n, w;
+         tile = "i_" + tile;
+      } else {
+         idx = tiles(tile);
+         n = photo_tans(idx).northing(max);
+         s = photo_tans(idx).northing(min);
+         e = photo_tans(idx).easting(max);
+         w = photo_tans(idx).easting(min);
+      }
+      if(scheme == "2k" || scheme == "10k") {
+         n += buffer;
+         s -= buffer;
+         e += buffer;
+         w -= buffer;
+      }
+      write, f, format="%c%s%c %d %d %d %d\n", 0x22, tile, 0x22,
+         int(w), int(n), int(e), int(s);
    }
    close, f;
 }
