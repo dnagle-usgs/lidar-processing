@@ -60,6 +60,7 @@ if {![namespace exists ::plot]} {
          # gga(msize)
          variable trackMarkerSize .1
          variable mapLineColor black
+         variable shapeLineColor black
          variable markColor red
          variable markShape [lindex $::plot::c::markerShapes 1]
          variable markSize .5
@@ -355,20 +356,28 @@ proc ::plot::menu { } {
 
    iwidgets::scrolledlistbox $g::shpListBox \
       -hscrollmode dynamic -vscrollmode dynamic -height 5
-   grid $g::shpListBox -sticky news
+   grid $g::shpListBox - -sticky news
+
+   label $pane.labLineColor -text "Line Color:" -anchor e
+   ComboBox $pane.cboLineColor -values [concat randomize $::plot::c::colors] \
+      -textvariable ::plot::g::shapeLineColor -editable 0 \
+      -helptext "Specify the color to use for plotted lines."
+   grid $pane.labLineColor $pane.cboLineColor
+   grid $pane.labLineColor -sticky w
+   grid $pane.cboLineColor -sticky ew
 
    Button $pane.butAdd -text "Add ASCII shapefile" -command ::plot::shp_add
-   grid $pane.butAdd -sticky ew
+   grid $pane.butAdd - -sticky ew
 
    Button $pane.butRemove -text "Remove selected shapefile" \
       -command ::plot::shp_remove
-   grid $pane.butRemove -sticky ew
+   grid $pane.butRemove - -sticky ew
 
    Button $pane.butPlot -text "Plot shapefiles" -command ::plot::shp_plot
-   grid $pane.butPlot -sticky ew
+   grid $pane.butPlot - -sticky ew
 
    grid rowconfigure $pane 0 -weight 1
-   grid columnconfigure $pane 0 -weight 1
+   grid columnconfigure $pane 1 -weight 1
 
 
    set pane [$nb getframe pnav]
@@ -803,7 +812,11 @@ proc ::plot::shp_add {} {
 proc ::plot::shp_plot {} {
    ::plot::window_store
    ::plot::window_set
-   exp_send "plot_shapefiles;\r"
+   if { $g::shapeLineColor eq "randomize" } {
+      exp_send "plot_shapefiles, random_colors=1;\r"
+   } else {
+      exp_send "plot_shapefiles, color=\"$g::shapeLineColor\";\r"
+   }
    expect ">"
    ::plot::window_restore
 }
