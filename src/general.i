@@ -12,17 +12,28 @@ local general_i;
       atoi
       atof
       atod
+      atoc
+
+   Functions for working with strings:
+
+      strsplit
+      strjoin
+      strwrap
+      strindent
    
-   Utility functions:
+   Miscellaneous functions:
 
       default
       timer_init
       timer_tick
-      meta_init
-      meta_build
-      strsplit
-      strjoin
       popen_rdfile
+      quartiles
+      h_merge
+      bound
+      assign
+      pbd_append
+      get_user
+      get_host
 */
 
 func atoi(str) {
@@ -184,9 +195,8 @@ func strsplit(str, sep) {
    In a one-dimensional array: If res is the result, then res(1,) contains the
    substrings for the first element, and res(,1) contains the first field of
    all elements.
-
-   Original David Nagle
 */
+// Original David Nagle
    str = str;
    match = [];
    parts = array(string, dimsof(str), 1);
@@ -431,9 +441,8 @@ func pbd_append(file, vname, data, uniq=) {
 
    Note that if "file" already exists, then the struct of its data must match
    the struct of "data".
-
-   Original David Nagle 2008-07-16
 */
+// Original David Nagle 2008-07-16
    default, uniq, 1;
    if(file_exists(file)) {
       f = openb(file);
@@ -449,4 +458,21 @@ func pbd_append(file, vname, data, uniq=) {
    close, f;
 }
 
+func get_user(void) {
+/* DOCUMENT get_user()
+   Returns the current user's username. If not found, returns string(0).
+*/
+// Original David Nagle 2009-06-04
+   if(get_env("USER")) return get_env("USER");
+   return string(0);
+}
 
+func get_host(void) {
+/* DOCUMENT get_host()
+   Returns the current host's hostname. If not found, returns string(0).
+*/
+// Original David Nagle 2009-06-04
+   if(get_env("HOSTNAME")) return get_env("HOSTNAME");
+   if(get_env("HOST")) return get_env("HOST");
+   return string(0);
+}
