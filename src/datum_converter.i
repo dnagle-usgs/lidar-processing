@@ -24,31 +24,17 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, geoid_version=, 
      amar nayegandhi 07/15/03, original datum_converter.i,
      charlene sullivan 09/25/06, modified form of datum_converter.i that can use Geoid96 model
 */
-   
    extern curzone;
+   default, geoid_version, "GEOID03";
+   default, tonad83, 1;
+   default, tonavd88, 1;
 
-   if (is_void(tonad83)) tonad83=1;
-   if (is_void(tonavd88)) tonavd88=1;
-   if (is_void(geoid_version)) {
-   	geoid_version="GEOID03";
-   }
-
-   if (strmatch(geoid_version,"GEOID96",1)) {
-    cwd = get_cwd();
-        gdata_dir = split_path(cwd,-1)(1)+"GEOID96/pbd_data/";
-        gfiles = lsdir(gdata_dir);
-        if (gfiles != 0) {
-                gfiles_pbd = strmatch(gfiles, ".pbd");
-        }
-   } else {
-   	if (strmatch(geoid_version,"GEOID03",1)) {
-    		cwd = get_cwd();
-		gdata_dir = split_path(cwd,-1)(1)+"GEOID03/pbd_data/";
-		gfiles = lsdir(gdata_dir);
-		if (gfiles != 0) {
-			gfiles_pbd = strmatch(gfiles, ".pbd");
-		}
-		if (numberof(where(gfiles_pbd)) < 1) {
+   // If using GEOID03, test to see if exist; if not, GEOID99?
+   if(strmatch(geoid_version,"GEOID03",1)) {
+      gdata_dir = file_join(alpsrc.geoid_data_root, geoid_version, "pbd_data");
+      gfiles = lsdir(gdata_dir);
+      gfiles_pbd = (gfiles != 0) ? strmatch(gfiles, ".pbd") : [0];
+      if(numberof(where(gfiles_pbd)) < 1) {
 			write, "GEOID03 binary (pbd) files not available."
 			ans = "";
 			n = read(prompt="Use GEOID99 files instead? yes/no: ", format="%s",ans);
@@ -58,8 +44,7 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, geoid_version=, 
 				write, "Nothing to do."
 				return
 			}
-	    }
-   	}
+      }
    }
 
    write, format="Using GEOID version: %s\n", geoid_version;
