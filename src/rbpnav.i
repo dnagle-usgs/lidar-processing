@@ -127,9 +127,10 @@ write, format="  Alt:%14.3f %14.3f\n", egg.alt(min), egg.alt(max)
  return egg;
 }
 
-func precision_warning {
+func precision_warning(verbose) {
    extern silence_precision_warning;
-   if(! silence_precision_warning && _ytk ) {
+   default, verbose, 1;
+   if(! silence_precision_warning && verbose && _ytk ) {
       tkcmd, "tk_messageBox -icon warning -message { \
          The pnav file you have selected does not appear to be a precision \
          trajectory.  It should not be used in the production of final data \
@@ -162,7 +163,7 @@ default, verbose, 1;
     ff = split_path( ifn, -1 );
     path = ff(1);
     if ( !strmatch(pnav_filename,"-p-") ) {
-      precision_warning;
+      precision_warning, verbose;
     }
  } else {
  if ( is_void(data_path)  || data_path == "") {
@@ -186,7 +187,7 @@ default, verbose, 1;
     path = ff(1);
     //data_path = path;
     if ( !strmatch(pnav_filename,"-p-") ) {
-      precision_warning;
+      precision_warning, verbose;
     }
  } else {
   write,format="data_path=%s\n",path
