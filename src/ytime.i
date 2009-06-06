@@ -325,6 +325,25 @@ func soe2date(soe) {
    return ymd2date(soe2ymd(unref(soe)));
 }
 
+func date2soe(date, sod) {
+/* DOCUMENT soe = date2soe(date)
+   soe = date2soe(date, sod)
+
+   Converts a string date in YYYY-MM-DD format with an optional sod value into
+   a seconds of the epoch value.
+
+   If sod is not specified, it defaults to 0. This can be useful to determine
+   the offset to add to a set of sod values to convert them all to soe values
+   when they all share the same date.
+*/
+// Original David B. Nagle 2009-05-18
+   date = get_date(date);
+   y = atoi(strpart(date, 1:4));
+   m = atoi(strpart(date, 6:7));
+   d = atoi(strpart(date, 9:10));
+   return ymd2soe(y, m, d, sod);
+}
+
 func ymd2soe(y, m, d, sod) {
 /* DOCUMENT soe = ymd2soe(y, m, d)
    soe = ymd2soe(y, m, d, sod)
