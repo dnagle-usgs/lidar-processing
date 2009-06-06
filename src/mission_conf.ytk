@@ -171,33 +171,50 @@ proc missiondate_get {{date -}} {
     }
 }
 
+proc __json_key_str {key val} {
+    set val [json_stringify $val]
+    return [__json_key_val $key "\"$val\""]
+}
+
+proc __json_key_val {key val} {
+    set key [json_stringify $key]
+    return "\"$key\": $val"
+}
+
 proc mission_json_export {} {
     global __mission_conf
+
     set json_list [list]
-    dict for {date date_data} $__mission_conf {
-        set date_list [list]
-        dict for {key value} $date_data {
-            set json_key [json_stringify $key]
-            set json_val [json_stringify $value]
-            lappend date_list "    \"$json_key\": \"$json_val\""
+
+    # Build up __mission_conf's data
+    set conf_list [list]
+    dict for {day day_data} $__mission_conf {
+        set day_list [list]
+        dict for {key value} $day_data {
+            lappend day_list "      [__json_key_str $key $value]"
         }
-        set json_date [json_stringify $date]
-        set date_out ""
-        append date_out "  \"$json_date\": {\n"
-        append date_out [join $date_list ",\n"]
-        append date_out "\n  }"
-        lappend json_list $date_out
+        set day_val [join $day_list ",\n"]
+        set day_val "{\n$day_val\n    }"
+        lappend conf_list "    [__json_key_val $day $day_val]"
     }
-    set json_out ""
-    append json_out "{\n"
-    append json_out [join $json_list ",\n"]
-    append json_out "\n}\n"
+    set conf_val [join $conf_list ",\n"]
+    set conf_val "{\n$conf_val\n  }"
+    lappend json_list "  [__json_key_val days $conf_val]"
+
+    set json_out [join $json_list ",\n"]
+    set json_out "{\n$json_out\n}\n"
+    
     return $json_out
 }
 
 proc mission_json_import {json {sync 1}} {
     global __mission_conf
-    set __mission_conf [::json::json2dict $json]
+    set data [::json::json2dict $json]
+    if {[dict exists $data days]} {
+        set __mission_conf [dict get $data days]
+    } else {
+        set __mission_conf $data
+    }
     if {$sync} {
         mission_send
     }
@@ -212,11 +229,7 @@ proc mission_save {filename} {
 }
 
 proc mission_load {filename} {
-    logger info "Loading mission configuration: $filename"
-    set f [open $filename "r"]
-    set json_in [read $f]
-    close $f
-    mission_json_import $json_in
+    ycmd mission_load [list [ystr $filename]]
 }
 
 proc mission_send {} {
@@ -388,7 +401,6 @@ namespace eval mission {
         if {$filename ne ""} {
             mission_load $filename
             set v::currentfile $filename
-            mission_path [file dirname $filename]
         }
     }
 

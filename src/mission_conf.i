@@ -358,7 +358,20 @@ func mission_json_export(void, compact=) {
     If compact=1, a compact form will be generated.
 */
     extern __mission_conf;
-    return yorick2json(__mission_conf, compact=compact);
+    default, compact, 0;
+    data = h_new("days", __mission_conf);
+    if(!compact) {
+        soe_now = [];
+        timestamp, soe_now;
+        h_set, data, "save environment", h_new(
+            "path", mission_path(),
+            "user", get_user(),
+            "host", get_host(),
+            "platform", "Yorick",
+            "timestamp", soe2iso8601(soe_now)
+        )
+    }
+    return yorick2json(data, compact=compact);
 }
 
 func mission_json_import(json, sync=) {
@@ -367,7 +380,12 @@ func mission_json_import(json, sync=) {
 */
     extern __mission_conf, __mission_settings;
     default, sync, 1;
-    __mission_conf = json2yorick(json);
+    data = json2yorick(json);
+    if(h_has(data, "days")) {
+        __mission_conf = data("days");
+    } else {
+        __mission_conf = data;
+    }
 
     if(__mission_settings("ytk") && sync)
         mission_send;
