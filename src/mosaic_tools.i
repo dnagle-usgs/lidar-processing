@@ -328,7 +328,7 @@ func gather_cir_data(photo_dir, conf_file=, downsample=) {
    // Step 2: Load tans data for images
    write, format="Calculating tans data for %d dates...\n", numberof(date_list);
    photo_tans = mosaic_gather_tans(date_list, photo_soes, progress=1);
-
+   
    data = h_new(
       "files", photo_files,
       "soes", photo_soes,
@@ -337,6 +337,10 @@ func gather_cir_data(photo_dir, conf_file=, downsample=) {
       "date_list", date_list,
       "photo_dir", photo_dir
    );
+
+   w = where(photo_tans.lat != 0 & photo_tans.lon != 0);
+   if(numberof(w) < numberof(photo_tans))
+      data = filter_cirdata_by_index(data, w);
 
    cirdata_correct_zoning, data;
 
@@ -425,21 +429,25 @@ func mosaic_gather_tans(date_list, photo_soes, progress=, mounting_bias=) {
    
    if(progress)
       write, format="Converting WGS84 to NAD83 to NAVD88...%s", "\n";
-   wgs = transpose([photo_tans.lon, photo_tans.lat, photo_tans.alt]);
-   nad = wgs842nad83(unref(wgs));
-   navd = nad832navd88(unref(nad));
-   photo_tans.lon = navd(1,);
-   photo_tans.lat = navd(2,);
-   photo_tans.alt = navd(3,);
-   navd = [];
 
-   if(progress)
-      write, format="Converting lat/lon to UTM...%s", "\n";
-   utm = fll2utm(photo_tans.lat, photo_tans.lon);
-   photo_tans.northing = utm(1,);
-   photo_tans.easting = utm(2,);
-   photo_tans.zone = utm(3,);
-   utm = [];
+   w = where(photo_tans.lon != 0 & photo_tans.lat != 0);
+   if(numberof(w)) {
+      wgs = transpose([photo_tans(w).lon, photo_tans(w).lat, photo_tans(w).alt]);
+      nad = wgs842nad83(unref(wgs));
+      navd = nad832navd88(unref(nad));
+      photo_tans(w).lon = navd(1,);
+      photo_tans(w).lat = navd(2,);
+      photo_tans(w).alt = navd(3,);
+      navd = [];
+
+      if(progress)
+         write, format="Converting lat/lon to UTM...%s", "\n";
+      utm = fll2utm(photo_tans(w).lat, photo_tans(w).lon);
+      photo_tans(w).northing = utm(1,);
+      photo_tans(w).easting = utm(2,);
+      photo_tans(w).zone = utm(3,);
+      utm = [];
+   }
 
    return photo_tans;
 }
@@ -749,7 +757,7 @@ max_adjustments=, min_improvement=, buffer=, skip_existing=) {
    }
    write, " ";
    w = where(adjustments > 0);
-   if(w > 0) {
+   if(numberof(w) > 0) {
       write, format="Made %d out of %d adjustments; min/mean/max = %.3f / %.3f / %.3f m\n",
          numberof(w), numberof(adjustments),
          adjustments(w)(min), adjustments(w)(avg), adjustments(w)(max);
