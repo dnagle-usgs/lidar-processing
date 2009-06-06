@@ -1453,3 +1453,27 @@ func gen_prj_string(zone, datum) {
    }
    return swrite(format=base_string, int(zone), datum, spheroid, meridian);
 }
+
+func copy_files_to_tiles(src_dir, dst_dir, glob=, force=) {
+/* DOCUMENT copy_files_to_tiles, src_dir, dst_dir, glob=, force=
+   Copies the files in src_dir to dst_dir, splitting them up into index tile
+   directories. Files must be parseable as 2k or 10k tiles.
+
+   glob= is the search pattern to look for. For example, "*.png".
+   force= indicates whether files should be forcibly overwritten if they
+      already exist. Defaults to true.
+*/
+// Original David Nagle 2009-06-05
+   default, glob, "*";
+   files = find(src_dir, glob=glob);
+   timer_init, tstamp;
+   for(i = 1; i <= numberof(files); i++) {
+      timer_tick, tstamp, i, numberof(files);
+      src = files(i);
+      itcode = get_dt_itcodes(file_tail(src));
+      itcode = "i_" + dt_short(itcode);
+      dst = file_join(dst_dir, itcode, file_tail(src));
+      mkdirp, file_dirname(dst);
+      file_copy, src, dst, force=force;
+   }
+}
