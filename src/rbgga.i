@@ -1121,13 +1121,13 @@ utm=, width=, win=) {
    default, msize, 0.1;
    default, marker, 0;
    env_bkp = missiondata_wrap("pnav");
-   dates = missiondate_list();
+   days = missionday_list();
    color_tracker = -4;
-   for(i = 1; i <= numberof(dates); i++) {
-      if(mission_has("pnav file", date=dates(i))) {
+   for(i = 1; i <= numberof(days); i++) {
+      if(mission_has("pnav file", day=days(i))) {
          color_tracker--;
          cur_color = is_void(color) ? color_tracker : color;
-         missiondata_load, "pnav", date=dates(i);
+         missiondata_load, "pnav", day=days(i);
          show_gga_track, color=cur_color, skip=skip, msize=msize,
             marker=marker, lines=lines, utm=utm, width=width, win=win;
       }

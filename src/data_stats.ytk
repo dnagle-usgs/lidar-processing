@@ -49,6 +49,10 @@ itcl::body DataStatsWindow::constructor {args} {
       [itcl::code itcl::delete object $this]
    eval itk_initialize $args
 
+   set logid [logger_id]
+   logger debug "$logid Entering DataStatsWindow::constructor $args"
+   logger debug "$logid this = $this"
+
    #wm resizable $itk_component(hull) 1 0
    #wm minsize $itk_component(hull) 460 100
 
@@ -120,6 +124,8 @@ itcl::body DataStatsWindow::constructor {args} {
    grid columnconfigure $w 0 -weight 1
 
    get_stats
+
+   logger debug "$logid Exiting DataStatsWindow::constructor"
 }
 
 itcl::body DataStatsWindow::query {} {
@@ -127,10 +133,17 @@ itcl::body DataStatsWindow::query {} {
 }
 
 itcl::body DataStatsWindow::get_stats {} {
+   set logid [logger_id]
+   logger debug "$logid Entering DataStatsWindow::get_stats"
+   logger debug "$logid this = $this"
+
    foreach var $itk_option(-segmentvariables) {
+      logger debug "$logid Asking yorick to send $var"
       ycmd tk_dsw_send_stats \
          [list [ystr [itcl::scope $this]] [ystr $var] $var]
    }
+
+   logger debug "$logid Exiting DataStatsWindow::get_stats"
 }
 
 itcl::body DataStatsWindow::set_stats {var json} {

@@ -19,8 +19,8 @@ source [file join $src_path misc.ytk]
 if {![info exists __mission_conf]} {
     set __mission_conf [dict create]
 }
-if {![info exists __mission_date]} {
-    set __mission_date ""
+if {![info exists __mission_day]} {
+    set __mission_day ""
 }
 
 if {![info exists __mission_path]} {
@@ -53,11 +53,11 @@ proc mission_clear {{sync 1}} {
     }
 }
 
-proc mission_get {key {date -}} {
-    global __mission_conf __mission_date __mission_settings __mission_path
-    default date $__mission_date
-    if {[mission_has $key $date]} {
-        set result [dict get $__mission_conf $date $key]
+proc mission_get {key {day -}} {
+    global __mission_conf __mission_day __mission_settings __mission_path
+    default day $__mission_day
+    if {[mission_has $key $day]} {
+        set result [dict get $__mission_conf $day $key]
         set rel_paths [dict get $__mission_settings "relative paths"]
         if {[::struct::set contains $rel_paths $key]} {
             set result [file join $__mission_path $result]
@@ -68,104 +68,104 @@ proc mission_get {key {date -}} {
     }
 }
 
-proc mission_set {key value {date -} {sync 1}} {
-    global __mission_conf __mission_date __mission_settings __mission_path
-    default date $__mission_date
-    if {![string length $date]} {
-        error "Please provide a date or set __mission_date."
+proc mission_set {key value {day -} {sync 1}} {
+    global __mission_conf __mission_day __mission_settings __mission_path
+    default day $__mission_day
+    if {![string length $day]} {
+        error "Please provide a day or set __mission_day."
     }
     if {$sync} {
         ycmd mission_set \
             [list [ystr $key] [ystr $value]] \
-            [list date [ystr $date] sync 0]
+            [list day [ystr $day] sync 0]
     }
     set rel_paths [dict get $__mission_settings "relative paths"]
     if {[::struct::set contains $rel_paths $key]} {
         set value [::fileutil::relative $__mission_path $value]
     }
-    dict set __mission_conf $date $key $value
+    dict set __mission_conf $day $key $value
 }
 
-proc mission_has {key {date -}} {
-    global __mission_conf __mission_date
-    default date $__mission_date
-    return [dict exists $__mission_conf $date $key]
+proc mission_has {key {day -}} {
+    global __mission_conf __mission_day
+    default day $__mission_day
+    return [dict exists $__mission_conf $day $key]
 }
 
-proc missiondate_current {{date NODATEPROVIDED} {sync 1}} {
-    global __mission_date
-    if {$date ne "NODATEPROVIDED"} {
-        set __mission_date $date
+proc missionday_current {{day NODAYPROVIDED} {sync 1}} {
+    global __mission_day
+    if {$day ne "NODAYPROVIDED"} {
+        set __mission_day $day
         if {$sync} {
-            ycmd missiondate_current [list [ystr $date]] [list sync 0]
+            ycmd missionday_current [list [ystr $day]] [list sync 0]
         }
     }
-    return $__mission_date
+    return $__mission_day
 }
 
-proc missiondate_list {} {
+proc missionday_list {} {
     global __mission_conf
-    set dates [list]
+    set days [list]
     return [lsort [dict keys $__mission_conf]]
 }
 
-proc mission_delete {key {date -} {sync 1}} {
-    global __mission_conf __mission_date
-    default date $__mission_date
-    if {![string length $date]} {
-        error "Please provide a date or set __mission_date."
+proc mission_delete {key {day -} {sync 1}} {
+    global __mission_conf __mission_day
+    default day $__mission_day
+    if {![string length $day]} {
+        error "Please provide a day or set __mission_day."
     }
-    dict unset __mission_conf $date $key
+    dict unset __mission_conf $day $key
     if {$sync} {
-        ycmd mission_delete [list [ystr $key]] [list date [ystr $date] sync 0]
+        ycmd mission_delete [list [ystr $key]] [list day [ystr $day] sync 0]
     }
 }
 
-proc missiondate_add {date {sync 1}} {
+proc missionday_add {day {sync 1}} {
     global __mission_conf
-    dict set __mission_conf $date [dict create]
+    dict set __mission_conf $day [dict create]
     if {$sync} {
-        ycmd missiondate_add [list [ystr $date]] [list sync 0]
+        ycmd missionday_add [list [ystr $day]] [list sync 0]
     }
 }
 
-proc missiondate_delete {date {sync 1}} {
+proc missionday_delete {day {sync 1}} {
     global __mission_conf
-    dict unset __mission_conf $date
+    dict unset __mission_conf $day
     if {$sync} {
-        ycmd missiondate_delete [list [ystr $date]] [list sync 0]
+        ycmd missionday_delete [list [ystr $day]] [list sync 0]
     }
 }
 
-proc missiondate_exists {{date -}} {
-    global __mission_conf __mission_date
-    default date $__mission_date
-    if {![string length $date]} {
-        error "Please provide a date or set __mission_date."
+proc missionday_exists {{day -}} {
+    global __mission_conf __mission_day
+    default day $__mission_day
+    if {![string length $day]} {
+        error "Please provide a day or set __mission_day."
     }
-    return [dict exists $__mission_conf $date]
+    return [dict exists $__mission_conf $day]
 }
 
-proc missiondate_set {hash {date -} {sync 1}} {
-    global __mission_conf __mission_date
-    default date $__mission_date
-    if {![string length $date]} {
-        error "Please provide a date or set __mission_date."
+proc missionday_set {hash {day -} {sync 1}} {
+    global __mission_conf __mission_day
+    default day $__mission_day
+    if {![string length $day]} {
+        error "Please provide a day or set __mission_day."
     }
-    missiondate_delete $date $sync
+    missionday_delete $day $sync
     dict for {key val} $hash {
-        mission_set $key $val $date $sync
+        mission_set $key $val $day $sync
     }
 }
 
-proc missiondate_get {{date -}} {
-    global __mission_conf __mission_date
-    default date $__mission_date
-    if {![string length $date]} {
-        error "Please provide a date or set __mission_date."
+proc missionday_get {{day -}} {
+    global __mission_conf __mission_day
+    default day $__mission_day
+    if {![string length $day]} {
+        error "Please provide a day or set __mission_day."
     }
-    if {[missiondate_exists $date]} {
-        return [dict get $__mission_conf $date]
+    if {[missionday_exists $day]} {
+        return [dict get $__mission_conf $day]
     } else {
         return
     }
@@ -233,9 +233,9 @@ proc mission_load {filename} {
 }
 
 proc mission_send {} {
-    global __mission_date
+    global __mission_day
     ycmd mission_json_import [list [ystr [mission_json_export]]] [list sync 0]
-    yset __mission_date = [ystr $__mission_date]
+    yset __mission_day = [ystr $__mission_day]
 }
 
 proc mission_receive {} {
@@ -249,11 +249,11 @@ proc missiondata_cache {action} {
 # missiondata_wrap
 # missiondata_unwrap
 
-proc missiondata_load {type {date -}} {
-    global __mission_date
-    default date $__mission_date
+proc missiondata_load {type {day -}} {
+    global __mission_day
+    default day $__mission_day
 
-    ycmd missiondata_load [list [ystr $type]] [list date [ystr $date]]
+    ycmd missiondata_load [list [ystr $type]] [list day [ystr $day]]
 }
 
 proc missiondata_read {filename} {
@@ -303,9 +303,6 @@ namespace eval mission {
     namespace eval v {
         variable toplevel .mission_conf
         variable dateframe ""
-        variable modify_commands [list mission_set missiondate_current \
-            mission_delete missiondate_add missiondate_delete \
-            mission_json_import mission_path mission_clear]
         variable filetypes [list \
             [list JSON .json] \
             [list "All files" *] \
@@ -446,7 +443,7 @@ namespace eval mission {
             destroy $w
         }
         curry @ namespace code
-        foreach date [missiondate_list] {
+        foreach date [missionday_list] {
             label $f.lbl$date -text $date
             button $f.btnConfig$date -text Configure \
                 -padx 2m -pady 1m \
@@ -598,7 +595,7 @@ namespace eval mission {
                         [dict exists $temp_data data_path] &&
                         [dict exists $temp_data "edb file"]
                     } {
-                        missiondate_set $temp_data $date
+                        missionday_set $temp_data $date
                     } else {
                         set missing_needed 1
                     }
@@ -628,12 +625,12 @@ namespace eval mission {
     }
 
     proc date_delete {date} {
-        missiondate_delete $date
+        missionday_delete $date
         update_gui
     }
 
     proc date_load {date} {
-        missiondate_current $date
+        missionday_current $date
         missiondata_load all
     }
 
@@ -648,7 +645,7 @@ namespace eval mission {
         $dlg center
         if {[$dlg activate]} {
             set date [$dlg get]
-            if {[missiondate_exists $date]} {
+            if {[missionday_exists $date]} {
                 tk_messageBox \
                     -icon warning -parent $dlg -type ok \
                     -message "That mission date already exists. If you want to\
@@ -663,7 +660,7 @@ namespace eval mission {
 
     proc set_mission_path {} {
         set continue yes
-        if {[llength [missiondate_list]] > 0} {
+        if {[llength [missionday_list]] > 0} {
             set continue [tk_messageBox \
                 -icon warning -parent $dlg -type yesno \
                 -message "Changing the mission path will clear all currently\

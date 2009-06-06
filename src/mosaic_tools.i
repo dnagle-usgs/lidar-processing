@@ -397,14 +397,19 @@ func mosaic_gather_tans(date_list, photo_soes, progress=, mounting_bias=) {
    default, progress, 1;
    default, mounting_bias, camera_mounting_bias;
    photo_tans = array(IEX_ATTITUDEUTM, dimsof(photo_soes));
-   photo_dates = soe2date(photo_soes);
-   for(i = 1; i <= numberof(date_list); i++)  {
+
+   days = missionday_list();
+   for(i = 1; i <= numberof(days); i++) {
       if(progress)
-         write, format=" - %d: Interpolating for %s...\n", i, date_list(i);
-      missiondate_current, date_list(i);
+         write, format=" - %d: Interpolating for %s...\n", i, days(i);
+      missionday_current, days(i);
       missiondata_load, "dmars";
 
-      w = where(photo_dates == missiondate_current());
+      tans_soe = date2soe(mission_get("date"), tans.somd);
+      
+      w = where(tans_soe(min) <= photo_soes & photo_soes <= tans_soe(max));
+
+      if(!numberof(w)) continue;
       
       photo_tans(w).somd = soe2sod(photo_soes(w));
       photo_tans(w).lat = interp(tans.lat, tans.somd, photo_tans(w).somd);
@@ -414,8 +419,8 @@ func mosaic_gather_tans(date_list, photo_soes, progress=, mounting_bias=) {
          mounting_bias.roll;
       photo_tans(w).pitch = interp(tans.pitch, tans.somd, photo_tans(w).somd) +
          mounting_bias.pitch;
-      photo_tans(w).heading = interp_angles(tans.heading, tans.somd, photo_tans(w).somd) +
-         mounting_bias.heading;
+      photo_tans(w).heading = interp_angles(tans.heading, tans.somd, 
+         photo_tans(w).somd) + mounting_bias.heading;
    }
    
    if(progress)
