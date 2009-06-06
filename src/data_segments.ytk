@@ -223,6 +223,7 @@ itcl::body SegmentedDataWindow::configure_times {} {
       date "2004-01-10 - 2004-01-15" \
       time "12:00:00 - 14:00:00" \
       startfull "2004-01-10 12:00:00" \
+      startfulllen "2004-01-10 12:00:00 (05 min 13 sec)" \
       starttime "12:00:00"]
 
    foreach {tag desc} $options {
@@ -244,6 +245,7 @@ itcl::body SegmentedDataWindow::configure_times {} {
 itcl::body SegmentedDataWindow::set_time {idx time_start time_end} {
    set start [clock scan $time_start]
    set end [clock scan $time_end]
+   set diff [expr {$end - $start}]
    switch -- $_timeformat {
       full {
          set format "%Y-%m-%d %H:%M:%S"
@@ -273,6 +275,12 @@ itcl::body SegmentedDataWindow::set_time {idx time_start time_end} {
          set format "%Y-%m-%d %H:%M:%S"
          set s [clock format $start -format $format]
          set _segment($idx,time) "$s"
+      }
+      startfulllen {
+         set format "%Y-%m-%d %H:%M:%S"
+         set s [clock format $start -format $format]
+         set d [clock format $diff -format "(%M min %S sec)"]
+         set _segment($idx,time) "$s $d"
       }
       starttime {
          set format "%H:%M:%S"
