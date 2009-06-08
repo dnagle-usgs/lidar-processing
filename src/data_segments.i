@@ -15,14 +15,14 @@ func split_by_fltline(data, timediff=) {
    INPUT:
       data: input data array of type (R,FS,GEO,VEG__, ATM, etc.)
       timediff= minimum time difference between segments, in seconds; defaults
-         to 180 seconds
+         to 60 seconds
    OUTPUT:
       fptr = array of pointers pointing to the flight segments
       for e.g. - f1 = *fptr(1) is the 1st flight line segment
                  f2 = *fptr(2) is the 2nd flight line segment
                  fn = *fptr(n) is the nth flight line segment
 */
-   default, timediff, 180;
+   default, timediff, 60;
 
    // Convert data to point format (if in raster format) and clean
    data = test_and_clean(data);
