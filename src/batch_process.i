@@ -52,6 +52,7 @@ func save_vars (filename, tile=) {
    cmd = swrite(format="mv %s %s", tfn, filename);
    f = createb( tfn );
    if ( ! get_typ ) get_typ = 0;
+   default, initialdir, "/data/0";
    if ( tile == 1 ) {      // stuff for batch_process
       save, f, user_pc_NAME;
       save, f, q, r, min_e, max_e, min_n, max_n;
@@ -85,6 +86,8 @@ func save_vars (filename, tile=) {
       save, f, ops_conf;
       save, f, curzone;
    }
+   save, f, initialdir;
+
    // XYZZY - we need to save the batch_rcf parameters too!!
    if ( b_rcf == 1 ) {
       save,  f, b_rcf, buf, w, no_rcf, mode, merge, clean, rcfmode, write_merge;
@@ -140,9 +143,12 @@ func unpackage_tile (fn=,host= ) {
 
    oc = ops_conf;    // this gets wiped out by load_iexpbd, save now to restore later
 
-   load_edb,  fn=edb_filename, verbose=0, override_offset = eaarl_time_offset;
-   pnav = rbpnav( fn=pnav_filename, verbose=0);
-   load_iexpbd,  ins_filename, verbose=0;
+   // We don't need these if only doing rcf
+   if ( rcf_only == 0 ) {
+      load_edb,  fn=edb_filename, verbose=0, override_offset = eaarl_time_offset;
+      pnav = rbpnav( fn=pnav_filename, verbose=0);
+      load_iexpbd,  ins_filename, verbose=0;
+   }
 
    ops_conf = oc;
 
@@ -178,6 +184,7 @@ func call_process_tile( junk=, host= ) {
 
 func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, rcf_only= ) {
    extern ofn;
+   rcf_only;
    default, rcf_only, 0;
    if (is_array(r) || rcf_only == 1 ) {
 
@@ -1298,19 +1305,21 @@ Original amar nayegandhi. Started 12/06/02.
       }
       fn_all = ndirname+fname;
 
-      if (readpbd) {
-         write, "merging all eaarl pbd data";
-         // show_files(files=fn_arr, str="Merge");
-         all_eaarl = merge_data_pbds(fn_all=fn_arr);
-         if (!(is_void(clean))) {
-            if (mode == 1) {
-               all_eaarl = clean_fs(unref(all_eaarl));
-            }
-            if (mode == 2) {
-               all_eaarl = clean_bathy(unref(all_eaarl));
-            }
-            if (mode == 3) {
-               all_eaarl = clean_veg(unref(all_eaarl));
+      if ( b_rcf ) {
+         if (readpbd) {
+            write, "merging all eaarl pbd data";
+            show_files(files=fn_arr, str="Merge");
+            all_eaarl = merge_data_pbds(fn_all=fn_arr);
+            if (!(is_void(clean))) {
+               if (mode == 1) {
+                  all_eaarl = clean_fs(unref(all_eaarl));
+               }
+               if (mode == 2) {
+                  all_eaarl = clean_bathy(unref(all_eaarl));
+               }
+               if (mode == 3) {
+                  all_eaarl = clean_veg(unref(all_eaarl));
+               }
             }
          }
       }
@@ -1390,14 +1399,24 @@ Original amar nayegandhi. Started 12/06/02.
             }
          }
          if (readpbd) {
-            if (bmode == 1) {
-               fmeast = fmnorth = 0;
-               sread, strpart(fn_split(2), 4:9), fmeast;
-               sread, strpart(fn_split(2), 12:18), fmnorth;
-               didx = data_box(all_eaarl.east/100., all_eaarl.north/100., fmeast-350, fmeast+2350, fmnorth-2350, fmnorth+350);
-               if (is_array(didx)) {
-                  eaarl = all_eaarl(didx);
-               } else continue;
+            if ( b_rcf ) {
+               if (bmode == 1) {
+                  fmeast = fmnorth = 0;
+                  sread, strpart(fn_split(2), 4:9), fmeast;
+                  sread, strpart(fn_split(2), 12:18), fmnorth;
+                  didx = data_box(all_eaarl.east/100., all_eaarl.north/100., fmeast-350, fmeast+2350, fmnorth-2350, fmnorth+350);
+                  if (is_array(didx)) {
+                     eaarl = all_eaarl(didx);
+                  } else continue;
+               }
+            } else {
+               write, format="merging eaarl pbd data in directory %s\n",fn_split(1);
+               if (datum) {
+                  eaarl = merge_data_pbds(fn_split(1), searchstring="*"+datum+"*"+searchstr+".pbd");
+               } else {
+                  eaarl = merge_data_pbds(fn_split(1), searchstring="*"+searchstr+"*");
+               }
+            
             }
          }
       } else {
