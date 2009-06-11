@@ -384,6 +384,7 @@ proc restore_defaults {} {
    set _ytk(plmk_default_msize)  0.2
    set _ytk(plmk_default_width)  0.5
    set _ytk(annoying_help)       No
+   set _ytk(initialdir)          /data/0
 }
 
 proc save_options {} {
@@ -2083,6 +2084,7 @@ if { $load_on_start != "" } {
       load_and_run $file_to_load
    }
 }
+   exp_send "initialdir=\"$_ytk(initialdir)\"\r"
 
 start_yorick
 

@@ -92,7 +92,8 @@ func load_edb (  fn=, update=, verbose=, override_offset= ) {
  extern soe_day_start;
  extern eaarl_time_offset;
  extern tans, pnav;
- extern gps_time_correction
+ extern gps_time_correction;
+ extern initialdir;
  _ecfidx = 0;
 
 ///// if ( is_void( data_path ) ) 
@@ -100,14 +101,16 @@ func load_edb (  fn=, update=, verbose=, override_offset= ) {
 
 if (is_void(fn)) {
 if ( _ytk ) {
-    if (!fn) fn  = get_openfn( initialdir="/data/0/", filetype="*.idx" ); 
+    // if (!fn) fn  = get_openfn( initialdir="/data/0/", filetype="*.idx" ); 
+    if (!fn) fn  = get_openfn( initialdir=initialdir, filetype="*.idx" ); 
     if (strmatch(fn, "idx") == 0) {
        exit, "NO FILE CHOSEN, USING PREVIOUSLY DEFINED .idx FILE IF PRESENT";
     } 
     ff = split_path( fn, -1 );
     data_path = ff(1);
 } else {
-     data_path = get_dir(initialdir="/data/0/" );
+     // data_path = get_dir(initialdir="/data/0/" );
+     data_path = get_dir(initialdir=initialdir );
  if ( !is_void( data_path) )
      tldpath = data_path + "/eaarl/";
  if ( is_void( fn ) ) {
