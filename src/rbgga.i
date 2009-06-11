@@ -432,7 +432,7 @@ properly to the zoom buttons.
  extern ZoneNumber, utm, ply, curzone;
  if ( is_void(win) ) 
 	win = window();
- if (utm & !curzone) {
+ if (utm && !curzone) {
 	write, "Zone Number not defined.  Please set variable curzone to UTM Zone Number."
 	return
  }
