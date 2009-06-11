@@ -77,7 +77,7 @@ local XRTRS
 
 
 
-func irg( b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo= ) {
+func irg( b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo=, skip= ) {
 /* DOCUMENT irg(b, e, georef=) 
    Returns an array of irange values from record
    b to record e.  "e" can be left out and it will default to 1.  Don't
@@ -97,6 +97,7 @@ func irg( b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo= ) {
 */
 
   extern ops_conf;
+  if ( is_void(skip)) skip = 1;
 
  // if the 3 chn_range_bias settings are not set in ops_conf then use the default settings
  if (ops_conf.chn1_range_bias == -999) 
@@ -123,7 +124,7 @@ func irg( b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo= ) {
   if ( is_void(e) ) 
 	e = b + 1;
 
-  len = e - b;				// Compute the length of the return
+  len = (e - b) / skip;				// Compute the length of the return
 					// data.
   if ( is_void(georef) )		// if no georef, then return RTRS
   	a = array( RTRS,  len + 1 );
@@ -141,7 +142,8 @@ func irg( b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo= ) {
   if ( len >= 400 ) update_freq = 50;
 
 
-  for ( di=1, si=b; si<=e; di++, si++ ) {
+  skip;
+  for ( di=1, si=b; si<=e; di++, si += skip ) {
     rp = decode_raster( get_erast( rn=si )) ;	// decode a raster
     a(di).raster = si; 				// install the raster nbr
     a(di).soe = rp.offset_time ;		
