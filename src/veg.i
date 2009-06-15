@@ -1411,17 +1411,19 @@ func ex_veg_all( rn, i,  last=, graph=, use_be_centroid=, use_be_peak=, pse=, th
  if (!(use_be_centroid) && !(use_be_peak)) {
    nsat = where( w == 0 );			// Create a list of saturated samples 
    numsat = numberof(nsat);			// Count how many are saturated
-   if ( (numsat > 1)  && ( nsat(1) <= 12)   ) {
+   // allowing 3 saturated samples per inflection
+   if ( (numsat > 3)  && ( nsat(1) <= 12)   ) {
       if (  nsat(dif) (max) == 1 ) { 		// only surface saturated
           last_surface_sat = nsat(0);		// so use last one
           escale = 255;				
       } else {					// bottom must be saturated too
-          last_surface_sat = nsat(  where(nsat(dif) > 1 ) ) (1);   
+          // allowing 3 saturated samples per inflection
+          last_surface_sat = nsat(  where(nsat(dif) > 3 ) ) (1);   
           escale = 255;
       }
    } else { // surface not saturated
           wflen = numberof(w);
-          if ( wflen > 12 ) wflen = 12;
+                 if ( wflen > 12 ) wflen = 12;
 	  last_surface_sat =  w(1:wflen) (mnx) ;
           escale = 255 - w(1:wflen) (min);
    }
@@ -1436,19 +1438,35 @@ func ex_veg_all( rn, i,  last=, graph=, use_be_centroid=, use_be_peak=, pse=, th
    and xr(0) will be the last
 *******************************************/
   
-  if (is_void(thresh)) thresh = 6.0
+  if ( graph ) {
+    window,4; fma;limits
+    plmk, aa(1:n,i,1), msize=.2, marker=1, color="black";
+    plg, aa(1:n,i,1);
+    plmk, da, msize=.2, marker=1, color="black";
+    plg, da;
+    plg, dd-100, color="red"
+    write, format="rn=%d; i = %d\n",rn,i
+  }
+
+  //if (is_void(thresh) && !is_void(veg_conf) ) thresh = veg_conf.thresh
+  if (is_void(thresh)) thresh = 4.0
 //  xr = where( dd  > thresh ) ;	// find the hits
   xr = where(  ((dd >= thresh) (dif)) == 1 )  // this is the idx for start time for each 'layer'.
-  if (is_array(xr)) xr++;
-  pr = where(  ((dd(xr(1):) >= thresh) (dif)) == -1 ) 
-  if (is_array(pr)) pr += xr(1); // this is the idx for peak time for each 'layer'.
+  if (!is_array(xr)) return rv;
+  xr++;
+    if (xr(1) < numberof(dd) ) {
+      pr = where(  ((dd(xr(1):) >= thresh) (dif)) == -1 ) 
+    } else {
+      return rv;
+    }
+    if (is_array(pr)) pr += xr(1); // this is the idx for peak time for each 'layer'.
 
-  if (numberof(pr) < numberof(xr)) xr = xr(1:numberof(pr));
+    if (numberof(pr) < numberof(xr)) xr = xr(1:numberof(pr));
 
 
-  // for the idx for the end of the 'layer' (stop time) we consider the following:
-  // 1) first look for the next start point.  Mark the point before as the stop time.
-  // 2) look for the time when the trailing edge crosses the threshold.
+    // for the idx for the end of the 'layer' (stop time) we consider the following:
+    // 1) first look for the next start point.  Mark the point before as the stop time.
+    // 2) look for the time when the trailing edge crosses the threshold.
 
   if (numberof(xr) >=2 ) {
     er = grow(xr(2:),n);
@@ -1459,17 +1477,6 @@ func ex_veg_all( rn, i,  last=, graph=, use_be_centroid=, use_be_peak=, pse=, th
   nxr = numberof(xr);
 
 
-  if ( graph ) {
-    window,4; fma;limits
-    plmk, aa(1:n,i,1), msize=.2, marker=1, color="black";
-    plg, aa(1:n,i,1);
-    plmk, da, msize=.2, marker=1, color="black";
-    plg, da;
-    plg, dd-100, color="red"
-    write, format="rn=%d; i = %d\n",rn,i
-    ///if ( nxr > 0 ) 
-    ///	plmk, a( xr(0),i,1), xr(0),msize=.3,marker=3
-  }
 
   if ( is_void(last) ) 		// see if user specified the max veg
 	last = n;
@@ -1481,6 +1488,8 @@ func ex_veg_all( rn, i,  last=, graph=, use_be_centroid=, use_be_peak=, pse=, th
   rv.nx = nxr;
   if (nxr > 10) nxr = 10; //maximum number of peaks is limited to 10
   noise = 0;
+  if (numberof(pr) == 0) return rv
+  if (numberof(pr) != numberof(er)) return rv
   for (j=1;j<=nxr;j++) {
     pta = da(pr(j):er(j));
     idx = where(pta <= thresh);
@@ -1530,8 +1539,8 @@ func ex_veg_all( rn, i,  last=, graph=, use_be_centroid=, use_be_peak=, pse=, th
 	mv = aa(int(xr(j)-1+da(xr(j):er(j)-1)(mxx)),i,ai);
         if ( graph ) {
          plmk, mv, xr(j)-1+da(xr(j):er(j)-1)(mxx), msize=.5, marker=7, color="blue", width=1
-        }
         write, format= "xr = %d, pr = %d, er = %d\n",xr(j),pr(j),er(j);
+        }
 
     if (pse) pause, pse;
     rv.mx(j) = mx;
