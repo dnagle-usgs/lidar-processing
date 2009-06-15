@@ -694,6 +694,7 @@ func write_ascii_xyz(data_arr, opath, ofname, type=, ESRI=, header=, footer=, de
                         3 - vegetation (bare earth)
                         4 - depth
                         5 - (unknown?)
+                        6 - multi-peak veg
 
    Options that affect output file content:
 
@@ -796,7 +797,9 @@ func write_ascii_xyz(data_arr, opath, ofname, type=, ESRI=, header=, footer=, de
       hline = strjoin(hline, delimit);
    }
 
-   if (type == 1) {
+   if (pstruc == CVEG_ALL) type = 6;
+
+   if ( (type == 1) || (type == 6)) {
       z = data_arr.elevation/100.;
    } else if (type == 2) {
       z = (data_arr.elevation + data_arr.depth)/100.;
@@ -809,9 +812,12 @@ func write_ascii_xyz(data_arr, opath, ofname, type=, ESRI=, header=, footer=, de
    if(numberof(zvalid)) {
       z = z(zvalid);
       data_arr = data_arr(zvalid);
-      if (numberof(where(type == [1,2,4,5]))) {
+      if (numberof(where(type == [1,2,4,5,6]))) {
          east = data_arr.east/100.;
          north = data_arr.north/100.;
+         if ( type == 6 ) {
+           nx = data_arr.nx; 
+         }
       } else if (type == 3) {
          east = data_arr.least/100.;
          north = data_arr.lnorth/100.;
@@ -828,7 +834,7 @@ func write_ascii_xyz(data_arr, opath, ofname, type=, ESRI=, header=, footer=, de
       }
       if (intensity) {
          data_intensity = [];
-         if (type == 1) {
+         if ( (type == 1) || (type == 6 ) ) {
             if (pstruc == FS) {
                data_intensity = data_arr.intensity;
             }
@@ -859,6 +865,7 @@ func write_ascii_xyz(data_arr, opath, ofname, type=, ESRI=, header=, footer=, de
       if (intensity) grow, curline, data_intensity;
       if (rn) grow, curline, swrite(format="%d", data_arr.rn);
       if (soe) grow, curline, swrite(format="%12.3f", data_arr.soe);
+      if ( type == 6 ) grow, curline, swrite(format="%d", nx);
 
       if(split) {
          fn_base = file_rootname(fn);
