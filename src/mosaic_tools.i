@@ -46,7 +46,7 @@ require, "mosaic_biases.i";
 
 func prepare_inpho_full(cirdata, pbd_dir, inpho_dir,
    defn_buffer=, file_thresh=) {
-   default, file_thresh, 350;
+   default, file_thresh, 500;
 
    dtiles = partition_by_tile_type("2k", cirdata.tans.northing,
       cirdata.tans.easting, cirdata.tans.zone, buffer=defn_buffer, shorten=1);
@@ -93,7 +93,6 @@ func prepare_inpho_full(cirdata, pbd_dir, inpho_dir,
          file_join(zone_dir, "xyz", "merged.xyz");
 
       write, "Generating tile definition files...";
-      defn_file_1m = file_join(zone_dir, "data", "tile_defns_1m.txt");
       defn_file_25cm = file_join(zone_dir, "data", "tile_defns_25cm.txt");
 
       zone_dtiles = "t_" + dtile_names(w);
@@ -102,21 +101,11 @@ func prepare_inpho_full(cirdata, pbd_dir, inpho_dir,
       mosaic_write_tile_defns, defn_file_25cm, zone_dtiles,
          bbox(,1), bbox(,2), bbox(,3), bbox(,4), buffer=defn_buffer;
 
-      zone_itiles = "i_" + set_remove_duplicates(dt_short(
-         get_dt_itcodes(zone_dtiles)));
-      zone_itiles = zone_itiles(sort(zone_itiles));
-      bbox = it2utm(zone_itiles, bbox=1);
-      mosaic_write_tile_defns, defn_file_1m, zone_itiles,
-         bbox(,1), bbox(,2), bbox(,3), bbox(,4), buffer=defn_buffer;
-
       write, "Creating supplementary directories...";
       mkdirp, file_join(zone_dir, "project");
-      mkdirp, file_join(zone_dir, "orthos", "1m");
-      mkdirp, file_join(zone_dir, "orthos", "25cm");
-      mkdirp, file_join(zone_dir, "mosaics", "1m", "inpho");
-      mkdirp, file_join(zone_dir, "mosaics", "25cm", "inpho");
-      mkdirp, file_join(zone_dir, "mosaics", "1m", "gm");
-      mkdirp, file_join(zone_dir, "mosaics", "25cm", "gm");
+      mkdirp, file_join(zone_dir, "orthos");
+      mkdirp, file_join(zone_dir, "mosaics", "inpho");
+      mkdirp, file_join(zone_dir, "mosaics", "gm");
    }
 }
 
