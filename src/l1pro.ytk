@@ -3056,7 +3056,7 @@ if {[winfo exists .l1wid]} {
           set pro_var veg_all
         }
         3 {
-          exp_send "cveg_all = make_veg(latutm=1, q=q, use_be_peak=$usecentroid,\
+          exp_send "cveg_all = make_veg(latutm=1, q=q, use_centroid=$usecentroid,\
             multi_peaks=1);\r"
           expect ">"
           set pro_var cveg_all
