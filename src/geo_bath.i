@@ -113,7 +113,8 @@ for (i=1; i<=len; i=i+1) {
     // 2009-03-16: rwm: changed:  = short() to: = int()
     geodepth(i).depth(indx) = int((-d(,i).idx(indx) + fs_rtn_cent ) * CNSH2O2X *100.-0.5);
     bath_arr(indx,i) = long(((-d(,i).idx(indx)+fs_rtn_cent ) * CNSH2O2X *100) + rrr(i).elevation(indx));
-    geodepth(i).sr2(indx) =short((d(,i).idx(indx) - fs_rtn_cent)*10); 
+    // 2009-04-15: amar: change: short() to int()
+    geodepth(i).sr2(indx) =int((d(,i).idx(indx) - fs_rtn_cent)*10); 
   }
   geodepth(i).bottom_peak = d(,i).bottom_peak;
   geodepth(i).first_peak = d(,i).first_peak;
