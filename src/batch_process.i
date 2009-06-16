@@ -2215,3 +2215,140 @@ Input:
    data_out(numberof(keepdata)+1:0) = rcfdata;
    return data_out;
 }
+
+func batch_merge_veg_bathy(path, veg_ss=, bathy_ss=, file_suffix=, progress=,
+ignore_none_found=) {
+/* DOCUMENT batch_merge_veg_bathy, path, veg_ss=, bathy_ss=, file_suffix=,
+   progress=, ignore_none_found=
+   
+   Performs a batch merge on the veg and bathy files found in path, creating
+   seamless files.
+
+   For tiles that have both a veg and a bathy file, the data from each file
+   will be merged and a seamless file will be created. If only veg is present,
+   it is copied to the seamless file. If only bathy is present, it is converted
+   to VEG__ a seamless file will be created.
+
+   Parameters:
+      path: The path to the directory containing the veg and bathy files.
+         (Normally an Index_Tiles directory.)
+
+   Options:
+      veg_ss= The search string to use for the veg files. Defaults to
+         "*n88*mf_str.pbd".
+      bathy_ss= The search string to use for the bathy files. Defaults to
+         "*n88*_b_*mf.pbd"
+      file_suffix= Specifies how the files will be named. This is appended to
+         the tile's name to create a filename. Defaults to
+         "n88_merged_seamless.pbd".
+      progress= By default, progress is shown using a simple counter. Set
+         progress=0 to silence that output.
+      ignore_none_found= By default, the function will abort if it doesn't find
+         some of both kinds of files (veg and bathy). Setting
+         ignore_none_found=1 will force it to generate seamless files even if
+         only one kind is present.
+*/
+// Original David Nagle 2009-06-16
+   default, veg_ss, "*n88*mf_str.pbd";
+   default, bathy_ss, "*n88*_b_*mf.pbd";
+   default, file_suffix, "n88_merged_seamless.pbd";
+   default, ignore_none_found, 0;
+   default, progress, 1;
+
+   logid = logger_id();
+   logger, "debug", logid + swrite(
+      format=" Entering batch_merge_veg_bathy(\"%s\", veg_ss=\"%s\", bathy_ss=\"%s\", file_suffix=\"%s\", ignore_not_found=%d)",
+      path, veg_ss, bathy_ss, file_suffix, ignore_none_found);
+
+   v_files = find(path, glob=veg_ss);
+   b_files = find(path, glob=bathy_ss);
+
+   logger, "debug", logid + swrite(format=" Found %d veg and %d bathy files.",
+      numberof(v_files), numberof(b_files));
+
+   if(!numberof(v_files) && !numberof(b_files)) {
+      logger, "warning", "batch_merge_veg_bathy: No veg or bathy files found. Aborting.";
+      write, "No veg or bathy files found. Aborting.";
+      return;
+   } else if(!numberof(v_files) && !ignore_none_found) {
+      logger, "warning", "batch_merge_veg_bathy: No veg files found. Aborting.";
+      write, "No veg files found. Aborting.";
+      write, "Use ignore_none_found=1 to force.";
+      return;
+   } else if(!numberof(b_files) && !ignore_none_found) {
+      logger, "warning", "batch_merge_veg_bathy: No bathy files found. Aborting.";
+      write, "No bathy files found. Aborting.";
+      write, "Use ignore_none_found=1 to force.";
+      return;
+   }
+
+   v_dt = numberof(v_files) ? dt_long(file_tail(v_files)) : [];
+   b_dt = numberof(b_files) ? dt_long(file_tail(b_files)) : [];
+   s_dt = set_union(v_dt, b_dt);
+
+   tstamp = 0;
+   timer_init, tstamp;
+   for(i = 1; i <= numberof(s_dt); i++) {
+      if(progress)
+         timer_tick, tstamp, i, numberof(s_dt);
+      this_tile = s_dt(i);
+
+      logger, "debug", logid + swrite(format=" %d/%d: %s",
+         i, numberof(s_dt), this_tile);
+
+      seamless_file = string(0);
+
+      vw = where(v_dt == this_tile);
+      if(numberof(vw) == 1) {
+         vw = vw(1);
+         logger, "debug", logid + " Loading veg: " + v_files(vw);
+         f = openb(v_files(vw));
+         v_data = get_member(f, f.vname);
+         close, f;
+
+         seamless_file = file_join(
+            file_dirname(v_files(vw)),
+            this_tile + "_" + file_suffix
+         );
+      } else if(numberof(vw) > 1) {
+         logger, "error", "Found multiple veg files for tile " + this_tile;
+         error, "Found multiple veg files for tile " + this_tile;
+      } else {
+         v_data = [];
+      }
+      
+      bw = where(b_dt == this_tile);
+      if(numberof(bw) == 1) {
+         bw = bw(1);
+         logger, "debug", logid + " Loading bathy: " + b_files(bw);
+         f = openb(b_files(bw));
+         b_data = get_member(f, f.vname);
+         close, f;
+
+         if(!seamless_file)
+            seamless_file = file_join(
+               file_dirname(b_files(bw)),
+               this_tile + "_" + file_suffix
+            );
+      } else if(numberof(bw) > 1) {
+         logger, "error", "Found multiple bathy files for tile " + this_tile;
+         error, "Found multiple bathy files for tile " + this_tile;
+      } else {
+         b_data = [];
+      }
+
+      seamless_data = merge_veg_bathy(v_data, b_data);
+      vname = "smls_" + dt_short(this_tile);
+      
+      logger, "debug", logid + swrite(
+         format=" Writing %s to %s", vname, seamless_file);
+
+      f = createb(seamless_file);
+      save, f, vname;
+      add_variable, f, -1, vname, structof(seamless_data), dimsof(seamless_data);
+      get_member(f, vname) = seamless_data;
+      close, f;
+   }
+
+   logger, "debug", logid + " Leaving batch_merge_veg_bathy";
+}
