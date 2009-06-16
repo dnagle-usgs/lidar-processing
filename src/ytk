@@ -68,20 +68,20 @@ exec wish "$0" ${1+"$@"}
 #               to tcl/tk.  Also added /tmp/tky for sending stuff from
 #               tcl/tk to Yorick in cases where you want/need to avoid
 #               using the exp_send command.
-#
-#
+
+# Exit codes
+# 0 - Program ended normally
+# 1 - Problem encountered with one of the files passed to load on the command line
+# 2 - No Yorick found
+# 3 - Problem encountered while spawning Yorick
 
 package require BWidget
+package require Expect
 package require Iwidgets
 package require fileutil
 package require log
 
 wm withdraw .
-if { [ catch { package require Expect } err ]  } {
-   tk_messageBox -icon error \
-      -message "$err\n Ytk cannot function without ExpectK. Sorry." -type ok
-   exit
-}
 
 set gui_enabled 1
 if { ![catch {package require cmdline}] } {
@@ -101,7 +101,6 @@ if { ![catch {package require cmdline}] } {
 
 set load_on_start ""
 if { $argc != 0 } {
-  puts $argv
   set load_on_start $argv
 }
 
@@ -384,6 +383,8 @@ proc restore_defaults {} {
    set _ytk(plmk_default_msize)  0.2
    set _ytk(plmk_default_width)  0.5
    set _ytk(annoying_help)       No
+   set _ytk(log_file)            ""
+   set _ytk(log_level)           info
    set _ytk(initialdir)          /data/0
 }
 
@@ -433,18 +434,28 @@ proc load_options {} {
 #  user's preferences. However, the sourcing is not done safely so this could
 #  have virtually any side effect.
 ##
+   global _ytk
+
    # Restore defaults -- in case .ytkrc doesn't specify everything
    restore_defaults
-   # Check for a .ytkrc file in the users home dir.
-   if { [ file exists "~/.ytkrc" ] } {
-      puts "Found .ytkrc..."
-      # TODO:
-      # This should really be done inside a safe interp instead
-      if { [catch {uplevel #0 [list source "~/.ytkrc"]} err] } {
-         puts "Problem in ~/.ytkrc: $err "
+   
+   set ytkrc_paths [list /etc/ytkrc ~/.ytkrc .ytkrc]
+
+   foreach rc $ytkrc_paths {
+      if {[file exists $rc]} {
+         puts "Loading ytk configuration file: $rc"
+         set cnf [interp create -safe]
+         if {[catch [list interp invokehidden $cnf source $rc] err]} {
+            puts "Error encountered in configuration file: $err"
+         } else {
+            if {[interp eval $cnf array exists _ytk]} {
+               foreach key [interp eval $cnf array names _ytk] {
+                  set _ytk($key) [interp eval $cnf set _ytk($key)]
+               }
+            }
+         }
+         interp delete $cnf
       }
-   } else {
-      puts "No  ~/.ytkrc found, using defaults"
    }
 }
 
@@ -625,23 +636,29 @@ proc spawn_yorick {} {
 
    # This is 1 until we successfully spawn a Yorick
    set result 1
+   set cmd ""
 
    # Attempt to spawn using rlterm
    catch { set rlterm [exec which rlterm] }
    if { $result && [info exists rlterm] && $_ytk(use_rlterm) eq "Yes" } {
-      set result [spawner [list spawn $rlterm $_ytk(yorick_executable)]]
+      set cmd [list $rlterm $_ytk(yorick_executable)]
+      set result [spawner $cmd]
    }
 
    # Attempt to spawn using rlwrap
    catch { set rlwrap [exec which rlwrap] }
    if { $result && [info exists rlwrap] && $_ytk(use_rlwrap) eq "Yes" } {
-      set result [spawner [list spawn $rlwrap -c -b "'(){}\[],+=&^%$#@;|\"" $_ytk(yorick_executable)]]
+      set cmd [list $rlwrap -c -b "'(){}\[],+=&^%$#@;|\"" $_ytk(yorick_executable)]
+      set result [spawner $cmd]
    }
 
    # Attempt to spawn without any wrapper
    if { $result } {
-      set result [spawner {spawn $_ytk(yorick_executable)}]
+      set cmd [list $_ytk(yorick_executable)]
+      set result [spawner $cmd]
    }
+   
+   logger debug "Spawned yorick: $cmd"
 
    return $result
 }
@@ -667,6 +684,7 @@ proc spawner {cmd} {
 #  If successful, then expect does whatever it does when spawn works (including
 #  setting various expect-related variables), in the global scope.
 ##
+   set cmd [concat [list spawn -noecho] $cmd]
    return [catch {uplevel #0 $cmd}]
 }
 
@@ -689,10 +707,12 @@ proc ytk_exit {code} {
    global ytk_fifo_name tky_fifo_name ytk_fifo tky_fifo
 
    catch [list close $ytk_fifo]
-   file delete $ytk_fifo_name
+   catch [list file delete $ytk_fifo_name]
 
    catch [list close $tky_fifo]
-   file delete $tky_fifo_name
+   catch [list file delete $tky_fifo_name]
+
+   logger info "Exiting ytk (exit code: $code)"
 
    exit $code
 }
@@ -1354,6 +1374,7 @@ proc start_yorick {}  {
          }
       }
    }
+   logger info "Yorick interact loop terminated."
 }
 
 proc load_and_run {fn} {
@@ -1376,20 +1397,24 @@ proc load_and_run {fn} {
 #  If it succeeds, almost any side effect could happen since it is sourcing
 #  external code. See source_ytk_file for more info on side effects.
 ##
+   logger info "Loading on startup: $fn"
    if { ![file exists $fn] } {
+      logger error "File specified to load on start-up not found: $fn"
       tk_messageBox -icon error -message "$fn not found" -type ok
-      exit 1
+      ytk_exit 1
    }
 
    if {[catch {source_ytk_file $fn} result]} {
       # Error
+      logger error "Error parsing file during startup: $fn\n$err"
       tk_messageBox -icon error -type ok -message "Error parsing $fn:\n$err"
-      exit 1
+      ytk_exit 1
    } else {
       if {! $result} {
          # Wrong kind of file
+         logger error "Unknown file type specified to load at startup: $fn"
          tk_messageBox -icon error -message "Don't know how to handle $fn" -type ok
-         exit 1
+         ytk_exit 1
       }
    }
 }
@@ -1958,28 +1983,31 @@ proc ytk_logger_window {} {
    $menu add separator
    
    foreach level [lsort -decreasing -command log::lvCompare [log::levels]] {
-      $menu add radiobutton -value $level -variable _ytk_log_level \
+      $menu add radiobutton -value $level -variable _ytk(log_level) \
          -command ytk_logger_level_set \
          -label $level
    }
 
-   set ::_ytk_log_level info
    ytk_logger_level_set
 
    logger info "Logger initialized."
 }
 
 proc ytk_logger_level_set {} {
-# Updates the suppressions for various log levels against _ytk_log_level.
+# Updates the suppressions for various log levels against _ytk(log_level).
    foreach level [log::levels] {
-      log::lvSuppress $level [expr {[log::lvCompare $::_ytk_log_level $level] > 0}]
+      log::lvSuppress $level [expr {[log::lvCompare $::_ytk(log_level) $level] > 0}]
    }
 }
 
 proc ytk_logger_log {level message} {
 # Logging command to use to put something in the logging window. Used by log::log.
+   global _ytk
    set level [log::lv2longform $level]
    .ytklogger.mb issue $message [log::lv2longform $level]
+   if {$_ytk(log_file) ne ""} {
+      ::fileutil::appendToFile $_ytk(log_file) "\[[pid]\] $message\n"
+   }
 }
 
 proc logger {level message} {
@@ -2023,41 +2051,46 @@ proc __logger {level message type} {
 
 ########## END LOGGER ##########
 
-ytk_logger_window
-
 restore_defaults     ;# begin with the default settings
+load_options
+ytk_logger_window
 
 ############################################################
 # Stuff below here doesn't need to be changed if you are
 # just porting to another system.
 ############################################################
 
+logger debug "Started as: $argv0 $argv"
 
-set ytk_version "Ytk version 1.0  as of 1/3/2002"
-
-load_options
+set ytk_version {$Id$}
+logger debug "ytk version: $ytk_version"
+logger debug "info library: [info library]"
+logger debug "info nameofexecutable: [info nameofexecutable]"
+logger debug "info script: [info script]"
+logger debug "info patchlevel: [info patchlevel]"
 
 ############# set _ytk(yorick_executable) junk
 if { ![file exists $_ytk(yorick_executable)] } {
    set _ytk(yorick_executable) [yorick_executable]
    if { ![file exists $_ytk(yorick_executable)] } {
       puts stderr "No yorick found, aborting..."
-      exit 1
+      ytk_exit 2
    }
 }
 
-puts "e: $_ytk(yorick_executable)"
+logger debug "Yorick executable: $_ytk(yorick_executable)"
 
 initialize_globals
 establish_fifos
 
 if { [spawn_yorick] } {
    puts "Encountered problem starting yorick... please restart with a different yorick"
-   ytk_exit 1
+   ytk_exit 3
 }
 
 expect "Yorick * ready"
 set yorick_version [lindex [split $expect_out(0,string)] 1]
+logger debug "Yorick version: $yorick_version"
 expect ">"
 exp_send "_ytk = 1\r"
 expect ">"
@@ -2071,7 +2104,7 @@ expect ">"
 exp_send "open_tkcmd_fifo, \"$ytk_fifo_name\"\r"
 set indoc 0
 set hwin 0
-puts $spawn_id
+logger debug "Spawn id: $spawn_id"
 match_max -i $spawn_id 32768
 
 wm withdraw .
