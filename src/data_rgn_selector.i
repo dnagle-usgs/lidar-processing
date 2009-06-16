@@ -2,7 +2,7 @@
 require, "eaarl.i";
 write, "$Id$";
 
-func sel_data_rgn(data, type=, mode=,win=, exclude=, rgn=, make_workdata=, origdata=, retindx=, silent=, noplot=) {
+func sel_data_rgn(data, type=, mode=,win=, exclude=, rgn=, make_workdata=, origdata=, retindx=, silent=, noplot=, nosort=) {
 /* DOCUMENT sel_data_rgn(data, type=, mode=, win=, exclude=, rgn=)
 
 Function selects a region (limits(), rubberband, pip)
@@ -36,6 +36,8 @@ INPUT:
 
   retindx= :  Set to 1 to return the index values instead of the data array.
 
+  nosort=  :  Set to 1 if you don't want to sort the input data. Default=0.
+
   silent=    : works in silent mode.  no output to screen.
   amar nayegandhi 11/26/02.
 
@@ -45,8 +47,10 @@ INPUT:
       mouse(1,1) method (this is is a rectangle),
       getPoly() method (for a polygon).
 */
+
+   if (is_void(nosort)) nosort = 0;
    if (is_void(data)) return [];
-   data = test_and_clean(data);
+   if (!nosort) data = test_and_clean(data);
 
    default, type, nameof(structof(data));
    default, silent, 0;
