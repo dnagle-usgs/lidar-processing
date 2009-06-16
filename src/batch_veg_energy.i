@@ -1,11 +1,14 @@
 
 require, "veg_energy.i"
+require, "polyfit_smooth.i"
 
-func batch_veg_lfpw(ipath, opath, fname=, searchstr=, onlyupdate=,binsize=, normalize=, mode=, pse=, plot=, bin=) {
+func batch_veg_lfpw(ipath, opath, fname=, searchstr=, onlyupdate=, only_if_mf=, mf_ss=, binsize=, normalize=, mode=, pse=, plot=, bin=) {
   /* DOCUMENT batch_veg_lfpw(ipath, opath, binsize=, normalize=, mode=, pse=, plot=, bin=)
     This function makes large footprint waveforms in a batch mode. 
     See make_large_footprint_waveform in veg_energy.i
     onlyupdate = set to 1 if you want to continue from where you left off (at the file level).
+    only_if_mf = set to 1 if you want to only create those lfpw files that have a corresponding manually filtered file.
+    mf_ss = search string for manually filtered files.  defaults to: "*_mf.pbd".
     opath = do not set if you want to write the files out to the data tiles within the input directory. 
    amar nayegandhi 09/27/04
 */
@@ -36,6 +39,7 @@ func batch_veg_lfpw(ipath, opath, fname=, searchstr=, onlyupdate=,binsize=, norm
         fn_all = ipath+fname;
     }
     nfiles = numberof(fn_all);
+
     write, format="Total number of veg energy files to process  = %d\n",nfiles;
 
     if ( _ytk && (int(nfiles) != 0) ) {
@@ -73,8 +77,8 @@ func batch_veg_lfpw(ipath, opath, fname=, searchstr=, onlyupdate=,binsize=, norm
         vnametag = [];
         fnametag = "_energy";
         new_fn = fn_split(1)+fnametag+fn_split(2);
+        fn_split = split_path(fn_all(i), 0);
         if (opath) {
-           fn_split = split_path(fn_all(i), 0);
 	   fn1 = fn_split(2);
   	   fn_split = split_path(fn1, 1, ext=1);
  	   new_fn = opath+fn_split(1)+fnametag+fn_split(2);
@@ -83,6 +87,25 @@ func batch_veg_lfpw(ipath, opath, fname=, searchstr=, onlyupdate=,binsize=, norm
            if (is_array(where(old_fn == new_fn))) continue;
 	}
 	   
+       if (only_if_mf) {
+          // find corresponding mf files
+          mf_file = [];
+          if (is_void(mf_ss)) 
+                mf_ss = "*_mf.pbd"
+          s = array(string,10000);
+          scmd = swrite(format = "find %s -name '%s'",fn_split(1), mf_ss);
+          fp = 1; lp = 0;
+          f=popen(scmd, 0);
+          n = read(f,format="%s", s );
+          close, f;
+          lp = lp + n;
+          if (n) mf_file = s(fp:lp);
+          fp = fp + n;
+          if (is_void(mf_file)) {
+                write, "No corresponding mf file found... skipping";
+                continue;
+          }
+      } 
         f = openb(fn_all(i));
         restore, f, vname;
 	eaarl = get_member(f,vname);
@@ -123,7 +146,7 @@ func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, 
    searchstr = search string for input files (defaults to "*energy_merged.pbd")
    plotclass = set to 1 to plot pre-defined vegetation classes from the derived metrics
    thresh= amplitude threshold to consider significan return
-   fill = set to 1 to fill in gaps in the data.  This will use the average value of the 3x3 neighbor to defien the value of the output metric. Those that are set to -1000 will be ignored. Default fill = 1.
+   fill = set to 1 to fill in gaps in the data.  This will use the average value of the 5x5 neighbor to define the value of the output metric. Those that are set to -1000 will be ignored. Default fill = 1.
    min_elv = minimum elevation (in meters) to consider for bare earth
 
    outwin = output window to plot to. (Default = 3)
@@ -208,6 +231,12 @@ func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, 
         }
 	// look for bare earth files if use_be = 1
   	if (use_be) {
+           fn_split = split_path(fn_all(i),0);
+           s_east = strpart(fn_split(2), 4:9);
+           s_north = strpart(fn_split(2), 12:18);
+           east = north = 0;
+           sread, s_east, format="%d",east;
+           sread, s_north, format="%d",north;
            be_file = [];
            if (is_void(be_path)) {
 	      fn_split = split_path(fn_all(i),0);
@@ -220,7 +249,7 @@ func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, 
            if (is_void(be_ss)) {
                 be_ss = "*n88*_merged_*rcf*.pbd";
            }
-           scmd = swrite(format = "find %s -name '%s'",be_dir, be_ss);
+           scmd = swrite(format = "find %s -name '*t_e%d_n%d*%s'",be_dir, east, north, be_ss);
            fp = 1; lp = 0;
            f=popen(scmd, 0);
            n = read(f,format="%s", s );
@@ -279,13 +308,15 @@ func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, 
           close, f;
 	} else {
 	  if (use_be) {
-	    write, "Opening bare earth data file... ";
+	    write, format="Opening bare earth data file - %s\n ",be_file;
+            pause, 2000;
 	    f = openb(be_file(1));
 	    restore, f;
 	    bexyz = get_member(f,vname);
+            bexyz1 = polyfit_eaarl_pts(bexyz, gridmode=1, mode=3);
 	    close, f;
 	    write, "Converting bare earth xyz into a grid...";
-  	    img = make_begrid_from_bexyz(bexyz, binsize=binsize, lfpveg=outveg);
+  	    img = make_begrid_from_bexyz(bexyz1, binsize=binsize, lfpveg=outveg);
 	  }
           if (cl_lfpw) {
 	   write, "cleaning composite waveform data array..."
