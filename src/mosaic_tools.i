@@ -1479,3 +1479,31 @@ func copy_files_to_tiles(src_dir, dst_dir, glob=, force=) {
       file_copy, src, dst, force=force;
    }
 }
+
+func png_make_zips(src_dir, dst_dir, glob=) {
+/* DOCUMENT png_make_zips, src_dir, dst_dir, glob=
+   Searches for PNGs in the src_dir and creates zips for them in dst_dir.
+
+   Note that this assumes that all files are *.png (or *.PNG) and it also
+   assumes that each file has a *.prj and *.pgw alongside it.
+
+   glob= Defaults to "*.png".
+*/
+// Original David Nagle 2009-06-18
+   default, glob, "*.png";
+   files = find(src_dir, glob=glob);
+   timer_init, tstamp;
+   for(i = 1; i <= numberof(files); i++) {
+      timer_tick, tstamp, i, numberof(files);
+      png = files(i);
+      pgw = file_rootname(png) + ".pgw";
+      prj = file_rootname(png) + ".prj";
+      zip = file_join(dst_dir, file_tail(file_rootname(png)),
+         file_tail(file_rootname(png)) + ".zip");
+      mkdirp, file_dirname(zip);
+      tkcmd, "exec zip \"" + zip + "\" \"" + png + "\"";
+      tkcmd, "exec zip \"" + zip + "\" \"" + pgw + "\"";
+      tkcmd, "exec zip \"" + zip + "\" \"" + prj + "\"";
+   }
+   write, "Files queues for zipping... may take a few minutes to complete.";
+}
