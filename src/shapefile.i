@@ -1,8 +1,8 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
 write, "$Id$";
 
-func read_ascii_shapefile(filename) {
-/* DOCUMENT read_ascii_shapefile(filename)
+func read_ascii_shapefile(filename, &meta) {
+/* DOCUMENT read_ascii_shapefile(filename, &meta)
    Reads an ASCII shapefile as created by Global Mapper (using export Simple
    ASCII Shapefile) or by Yorick (using write_ascii_shapefile).
 
@@ -28,12 +28,18 @@ func read_ascii_shapefile(filename) {
    shp_idx = 0;
    state = "TOP";
    ary = [];
+   meta = h_new();
    while(1) {
       line = rdline(f);
       if(strglob("*=*", line)) {
          if(state == "TOP" || state == "ATTR") {
             // do nothing with the data
             state = "ATTR";
+            parts = strsplit(line, "=");
+            si = swrite(format="%d", shp_idx+1);
+            if(! h_has(meta, si))
+               h_set, meta, si, h_new();
+            h_set, meta(si), parts(1), parts(2);
          } else {
             // invalid
             error, "Unexpected attribution in " + state;
@@ -358,6 +364,60 @@ func polygon_remove(name) {
    }
 }
 
+func polygon_rename(old, new) {
+   extern _poly_names;
+   w = where(_poly_names == old);
+   if(numberof(w))
+      _poly_names(w) = new;
+   polygon_refresh_tcl;
+}
+
+func polygon_refresh_tcl(void) {
+   extern _poly_names;
+   tkcmd, "$::plot::g::polyListBox clear";
+   for(i = 1; i <= numberof(_poly_names); i++) {
+      tkcmd, "$::plot::g::polyListBox insert end {" + _poly_names(i) + "}";
+   }
+}
+
+func polygon_sort(void) {
+   extern _poly_names;
+   extern _poly_polys;
+
+   base = num = [];
+   regmatch, "^(.*[^0-9]|)([0-9]*)$", _poly_names, , base, num;
+   num = atoi(num);
+
+   srt = msort(base, num);
+   _poly_names = _poly_names(srt);
+   _poly_polys = _poly_polys(srt);
+
+   polygon_refresh_tcl;
+}
+
+func polygon_sanitize(void, recursed=) {
+   extern _poly_names;
+   default, recursed, 0;
+   names = set_remove_duplicates(_poly_names);
+   recurse = 0;
+   if(numberof(names) != numberof(_poly_names)) {
+      for(i = 1; i <= numberof(names); i++) {
+         name = names(i);
+         w = where(_poly_names == name);
+         if(numberof(w) > 1) {
+            for(j = 1; j <= numberof(w); j++) {
+               _poly_names(w(j)) += swrite(format="_%d", j);
+               recurse = 1;
+            }
+         }
+      }
+   }
+   if(recurse)
+      polygon_sanitize;
+   if(recurse && !recursed)
+      polygon_refresh_tcl;
+}
+
 func polygon_plot(void) {
 /* DOCUMENT polygon_plot
    Plots the polygons currently defined in private variables.
@@ -369,6 +429,13 @@ func polygon_plot(void) {
    if(is_void(_poly_polys))
       return;
    plot_shape, _poly_polys;
+}
+
+func polygon_highlight(name) {
+   extern _poly_names;
+   extern _poly_polys;
+   w = where(_poly_names == name);
+   plot_shape, _poly_polys(w), color="red";
 }
 
 func polygon_write(filename) {
@@ -384,4 +451,26 @@ func polygon_write(filename) {
    meta = _poly_names;
    meta = "NAME=" + meta + "\n";
    write_ascii_shapefile, _poly_polys, filename, meta=meta;
+}
+
+func polygon_read(filename) {
+   extern _poly_polys;
+   extern _poly_names;
+   new_polys = read_ascii_shapefile(filename, meta);
+   new_names = array(string(0), dimsof(new_polys));
+   for(i = 1; i <= numberof(new_polys); i++) {
+      si = swrite(format="%d", i);
+      if(h_has(meta, si)) {
+         this_meta = meta(si);
+         if(h_has(this_meta, "NAME")) {
+            new_names(i) = this_meta("NAME");
+         }
+      }
+   }
+   w = where(new_names);
+   grow, _poly_polys, new_polys(w);
+   grow, _poly_names, new_names(w);
+
+   polygon_sanitize;
+   polygon_refresh_tcl;
 }

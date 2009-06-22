@@ -315,11 +315,11 @@ proc ::plot::menu { } {
 
    iwidgets::scrolledlistbox $g::polyListBox \
       -hscrollmode dynamic -vscrollmode dynamic -height 5
-   grid $g::polyListBox -sticky news
+   grid $g::polyListBox - -sticky news
 
    set f $pane.fraNextName
    frame $f
-   grid $f -sticky wen
+   grid $f - -sticky wen
 
    label $f.labName -text "Next poly's name:" -anchor e
    Entry $f.entName -textvariable ::plot::g::poly_next_name
@@ -329,26 +329,44 @@ proc ::plot::menu { } {
 
    Button $pane.butAddGon -text "Add polygon" \
       -command [list ::plot::poly_add 1]
-   grid $pane.butAddGon -sticky ew
 
    Button $pane.butAddLine -text "Add polyline" \
       -command [list ::plot::poly_add 0]
-   grid $pane.butAddLine -sticky ew
+
+   grid $pane.butAddGon $pane.butAddLine -sticky ew
 
    Button $pane.butRemove -text "Remove poly" \
       -command ::plot::poly_remove
-   grid $pane.butRemove -sticky ew
+
+   Button $pane.butRename -text "Rename poly" \
+      -command ::plot::poly_rename
+
+   grid $pane.butRemove $pane.butRename -sticky ew
 
    Button $pane.butPlot -text "Plot polys" -command ::plot::poly_plot
-   grid $pane.butPlot -sticky ew
+
+   Button $pane.butHlite -text "Highlight poly" -command ::plot::poly_highlight
+
+   grid $pane.butPlot $pane.butHlite -sticky ew
+
+   Button $pane.butSort -text "Sort polys" -command ::plot::poly_sort
+
+   Button $pane.butClean -text "Clean/Sanitize" \
+      -command ::plot::poly_cleanup
+
+   grid $pane.butSort $pane.butClean -sticky ew
 
    Button $pane.butSave -text "Save ASCII shapefile" \
       -command ::plot::poly_write
-   grid $pane.butSave -sticky ew
+
+   Button $pane.butLoad -text "Load ASCII shapefile" \
+      -command ::plot::poly_read
+
+   grid $pane.butSave $pane.butLoad -sticky ew
 
    grid rowconfigure $pane 0 -weight 1
    grid columnconfigure $pane 0 -weight 1
-
+   grid columnconfigure $pane 1 -weight 1
 
    set pane [$nb getframe shp]
    
@@ -821,6 +839,16 @@ proc ::plot::shp_plot {} {
    ::plot::window_restore
 }
 
+proc ::plot::poly_sort {} {
+   exp_send "polygon_sort;\r"
+   expect ">"
+}
+
+proc ::plot::poly_cleanup {} {
+   exp_send "polygon_sanitize;\r"
+   expect ">"
+}
+
 proc ::plot::poly_add {closed} {
    exp_send "polygon_add, polygon_acquire($closed), \"$g::poly_next_name\"\r"
    expect "vertices"
@@ -843,9 +871,27 @@ proc ::plot::poly_remove {} {
    }
 }
 
+proc ::plot::poly_rename {} {
+   set item [$g::polyListBox getcurselection]
+   if {![string equal $item ""]} {
+      if {[tk_getString .plotmenu.polyrename new_name "New Name" "Please enter hte new name for this polygon/polyline." $item]} {
+         exp_send "polygon_rename, \"$item\", \"$new_name\";\r"
+         expect ">"
+      }
+   }
+}
+
 proc ::plot::poly_plot {} {
    exp_send "polygon_plot\r"
    expect ">"
+}
+
+proc ::plot::poly_highlight {} {
+   set item [$g::polyListBox getcurselection]
+   if {![string equal $item ""]} {
+      exp_send "polygon_highlight, \"$item\";\r"
+      expect ">"
+   }
 }
 
 proc ::plot::poly_write {} {
@@ -853,6 +899,15 @@ proc ::plot::poly_write {} {
       -filetypes $c::shape_file_types]
    if {$file ne ""} {
       exp_send "polygon_write, \"$file\"\r"
+      expect ">"
+   }
+}
+
+proc ::plot::poly_read {} {
+   set file [tk_getOpenFile -parent .plotmenu \
+      -filetypes $c::shape_file_types]
+   if {$file ne ""} {
+      exp_send "polygon_read, \"$file\";\r"
       expect ">"
    }
 }
