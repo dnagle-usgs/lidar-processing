@@ -873,9 +873,9 @@ func write_ascii_xyz(data_arr, opath, ofname, type=, ESRI=, header=, footer=, de
          fn_num = 0;
          for(i = 1; i <= numberof(data_arr); i += split) {
             fn_num++;
-            cur_fn = swrite(format="%s_%d.%s", fn_base, fn_num, fn_ext);
-            max_idx = min(i + split, numberof(data_arr));
-            __write_ascii_xyz_helper, fn=cur_fn, lines=curline(i:max_idx),
+            cur_fn = swrite(format="%s_%d%s", fn_base, fn_num, fn_ext);
+            max_idx = min(i + split, numberof(data_arr)+1);
+            __write_ascii_xyz_helper, fn=cur_fn, lines=curline(i:max_idx-1,),
                header=hline, footer=footer, indx=indx, delimit=delimit;
          }
       } else {
