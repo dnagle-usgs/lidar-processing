@@ -1640,11 +1640,11 @@ Original amar nayegandhi. Started 12/06/02.
 func batch_write_xyz(dirname, outdir=, fname=, selectmode=, ss=, readpbd=,
 readedf=, datum=, mode=, rcfmode=, ESRI=, header=, footer=, delimit=,
 intensity=, rn=, soe=, indx=, zclip=, latlon=, buffer=, zone=, update=, qq=,
-atm=) {
+atm=, seamless=) {
 /* DOCUMENT batch_write_xyz, dirname, outdir=, fname=, selectmode=, ss=,
    readpbd=, readedf=, datum=, mode=, rcfmode=, ESRI=, header=, footer=,
    delimit=, intensity=, rn=, soe=, indx=, zclip=, latlon=, buffer=, zone=,
-   update=, qq=, atm=
+   update=, qq=, atm=, seamless=
 
    Batch creates xyz files for specified files.
 
@@ -1754,6 +1754,8 @@ atm=) {
       atm=         : Set to 1 if you are converting ATM data. When this is
                      specified, filtering will not be done based on mode.
 
+      seamless=    : Set to 1 if you are converting seamless data.
+
 amar nayegandhi 10/06/03.
 Refactored and modified by David Nagle 2008-11-04
 */
@@ -1766,6 +1768,7 @@ Refactored and modified by David Nagle 2008-11-04
    default, qq, 0;
    default, atm, 0;
    default, outdir, "";
+   default, seamless, 0;
 
    if(!is_void(fname)) {
       fn_all = dirname + fname;
@@ -1807,22 +1810,26 @@ Refactored and modified by David Nagle 2008-11-04
    if(!numberof(where(mode == [1,2,3])))
       exit, "Please specify a mode (1, 2, or 3)";
 
-   modechar = ["_v", "_b", "_v"](mode);
-   out = ["fs", "ba", "be"](mode);
+   if(seamless) {
+      out = "";
+   } else {
+      modechar = ["_v", "_b", "_v"](mode);
+      out = "_" + ["fs", "ba", "be"](mode);
 
-   if(!qq && !atm) {
-      w = where(strmatch(fn_all, modechar, 1));
-      if(!numberof(w))
-         exit, "No input files found for mode.  Goodbye.";
-      fn_all = fn_all(w);
-      w = [];
+      if(!qq && !atm) {
+         w = where(strmatch(fn_all, modechar, 1));
+         if(!numberof(w))
+            exit, "No input files found for mode.  Goodbye.";
+         fn_all = fn_all(w);
+         w = [];
+      }
    }
 
    for (i=1; i<=numberof(fn_all); i++) {
       fn_tail = file_tail(fn_all(i));
       fn_path = file_dirname(fn_all(i));
       fn_ext = ESRI ? ".txt" : ".xyz";
-      out_tail = file_rootname(fn_tail) + "_" + out + fn_ext;
+      out_tail = file_rootname(fn_tail) + out + fn_ext;
       out_path = strlen(outdir) ? outdir : fn_path;
       fix_dir, out_path;
 
