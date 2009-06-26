@@ -124,7 +124,14 @@ func plot_shape(shp, color=, width=) {
 */
 // Original David Nagle 2008-10-06
    for(i = 1; i <= numberof(shp); i++) {
-      plg, (*shp(i))(2,), (*shp(i))(1,), marks=0, color=color, width=width;
+      ply = *shp(i);
+      if(numberof(ply(1,)) > 1) {
+         plg, ply(2,), ply(1,), marks=0, color=color, width=width;
+      } else if(numberof(ply(1,)) == 1) {
+         plmk, ply(2,), ply(1,), marker=1, color=color, msize=0.1;
+      } else {
+         write, "Skipping polygon with zero points."
+      }
    }
 }
 
