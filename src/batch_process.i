@@ -115,8 +115,9 @@ func get_tld_names( q ) {
  }
 
 func unpackage_tile (fn=,host= ) {
-   extern gga, pnav;
+   extern gga, pnav, tans;
    default, host, "localhost";
+   default, rcf_only, 0;
    write, format="Unpackage_tile: %s %s\n", fn, host;
    f = openb(fn);
    restore, f;
@@ -144,7 +145,7 @@ func unpackage_tile (fn=,host= ) {
    oc = ops_conf;    // this gets wiped out by load_iexpbd, save now to restore later
 
    // We don't need these if only doing rcf
-   if ( rcf_only == 0 ) {
+   if ( rcf_only != 1 ) {
       load_edb,  fn=edb_filename, verbose=0, override_offset = eaarl_time_offset;
       pnav = rbpnav( fn=pnav_filename, verbose=0);
       load_iexpbd,  ins_filename, verbose=0;
@@ -184,7 +185,6 @@ func call_process_tile( junk=, host= ) {
 
 func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, rcf_only= ) {
    extern ofn;
-   rcf_only;
    default, rcf_only, 0;
    if (is_array(r) || rcf_only == 1 ) {
 
