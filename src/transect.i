@@ -278,10 +278,13 @@ Input:
      // This grabs the heading from the tans data nearest the end point.
      // This really only works when looking at "just processed" data and
      // not batch processed data.
-     hd = 0.0;
+	  // AN - 20090629 -- Will now work with batch processed data as well.
+   hd = 0.0;
+	if (is_array(tans)) {
      foo = where ( abs(tans.somd-te) < .010 );
      if ( numberof(foo) > 0 )
         hd = tans.heading(foo(1));
+	}
 
      write, format="%d:%d sod = %6.2f:%-10.2f(%10.4f) utc=%2d:%02d:%02d %5.1f %s\n",
                     t(1),t(2), tb, te, td, hms(1), hms(2), hms(3), hd, clr(abs(c));
@@ -318,7 +321,11 @@ Input:
   te   = fs.soe(*)(glst(llst)(0))%86400;
   td   = abs(te - tb);
   hms  = sod2hms( tb );
-  hd   = tans.heading(*)(int(te));
+  if (is_array(tans)) {
+     hd   = tans.heading(*)(int(te));
+  } else {
+	  hd = 0.0;
+  }
   write, format="%d:%d sod = %6.2f:%-10.2f(%10.4f) utc=%2d:%02d:%02d %5.1f %s\n",
                     t(1),t(2), tb, te, td, hms(1), hms(2), hms(3), hd, clr(c);
  }
