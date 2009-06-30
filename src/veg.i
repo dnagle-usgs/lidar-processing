@@ -1,3 +1,4 @@
+/* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
 
 /*
 
@@ -490,7 +491,7 @@ write, format="rn=%d; i = %d\n",rn,i
            if (ai == 3) {
 
 
-	       mx0 += ops_conf.chn3_range_bias; // in cm
+	       mx0 += ops_conf.chn3_range_bias; // in ns -amar
 	       mv0 = aa(int(xr(0)+c),i,ai)+600;
 
 	   }
@@ -534,11 +535,11 @@ write, format="rn=%d; i = %d\n",rn,i
 	  mv0 = aa(int(xr(0)+idx1(1)),i,ai);
 	}
 	if (ai == 2) {
-	  mx0 = irange+xr(0)+idx1(1)-ctx(1)+ops_conf.chn2_range_bias; // in cm
+	  mx0 = irange+xr(0)+idx1(1)-ctx(1)+ops_conf.chn2_range_bias; // in ns - amar
 	  mv0 = aa(int(xr(0)+idx1(1)),i,ai)+300;
 	}
 	if (ai == 3) {
-	  mx0 = irange+xr(0)+idx1(1)-ctx(1)+ops_conf.chn3_range_bias; // in cm
+	  mx0 = irange+xr(0)+idx1(1)-ctx(1)+ops_conf.chn3_range_bias; // in ns - amar
 	  mv0 = aa(int(xr(0)+idx1(1)),i,ai)+600;
 	}
 	//mx0 = irange+xr(0)+idx1(1)-irg_a.fs_rtn_centroid(i);
