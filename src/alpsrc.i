@@ -1,3 +1,5 @@
+/* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab
+*/
 require, "dir.i";
 require, "json.i";
 require, "yeti.i";
@@ -51,8 +53,10 @@ func alpsrc_apply(void) {
    the Tcl side is being defined in the alpsrc file.
 */
    extern alpsrc;
-   tkcmd, swrite(format="set ::_ytk_log_level {%s}", alpsrc.ytk_log_level);
-   tkcmd, "ytk_logger_level_set";
+   if ( _ytk ) {
+      tkcmd, swrite(format="set ::_ytk_log_level {%s}", alpsrc.ytk_log_level);
+      tkcmd, "ytk_logger_level_set";
+   }
 }
 
 func __alpsrc_load_and_merge(&hash, fn) {
