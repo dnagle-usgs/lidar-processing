@@ -15,6 +15,12 @@ package require Tktable
 if {[winfo exists .l1wid]} {
   wm deiconify .l1wid
 } else {
+  # IMPORTANT:
+  # Do not change the ordering of the elements in l1pro_data(processing_mode)!
+  # Most of the l1pro code references things based on their index into this
+  # list, so changing the sequence would change the meaning of the items. It is
+  # safe to rename them, as long as the meaning does not change. It is also
+  # safe to add additional elements to the list, if needed in the future.
   set l1pro_data(processing_mode) [list \
     "First Return Topo" \
     "Submerged Topo" \
@@ -33,6 +39,7 @@ if {[winfo exists .l1wid]} {
     "Canopy Height" \
   ]
 
+  set _l1pro_processing_mode [lindex $l1pro_data(processing_mode) 0]
   set ofname ""
   set curvar ""
   set outvar ""
@@ -79,27 +86,22 @@ if {[winfo exists .l1wid]} {
 
   set var_settings(fs_all) [linsert $var_common end \
     var fs_all \
-    processing_mode "First Return Topo" \
     display_type "First Return Topography"]
 
   set var_settings(depth_all) [linsert $var_common end \
     var depth_all \
-    processing_mode "Submerged Topo" \
     display_type "Submerged Topography"]
 
   set var_settings(veg_all) [linsert $var_common end \
     var veg_all \
-    processing_mode "Topo Under Veg" \
     display_type "Bare Earth Topography"]
 
   set var_settings(cveg_all) [linsert $var_common end \
     var cveg_all \
-    processing_mode "Multi Peak Veg" \
     display_type "First Return Topography"]
 
   set var_settings(workdata) [linsert $var_common end \
     var workdata \
-    processing_mode "Submerged Topo" \
     display_type "Submerged Topography"]
 
   set pro_var fs_all
@@ -1665,54 +1667,34 @@ if {[winfo exists .l1wid]} {
     }
 
   proc processing_mode {} {
-    global plot_settings
-    switch -- $plot_settings(processing_mode) {
-      "First Return Topo" {
-        return 0
-      }
-      "Submerged Topo" {
-        return 1
-      }
-      "Topo Under Veg" {
-        return 2
-      }
-      "Multi Peak Veg" {
-        return 3
-      }
-      "Direct. Wave Spectra" {
-        return 4
-      }
-      default {
-        return -1
-      }
-    }
+    global l1pro_data _l1pro_processing_mode
+    return [lsearch -exact $l1pro_data(processing_mode) \
+      $_l1pro_processing_mode]
   }
 
   proc processing_mode_changed {a b c} {
     global curs
-    if {$b eq "processing_mode"} {
-      set curs [processing_mode]
-      if {$curs == 1} {
-        .l1wid.bf4.2.surf configure -state active
-      } else {
-        .l1wid.bf4.2.surf configure -state disabled
-      }
+    set curs [processing_mode]
+    if {$curs == 1} {
+      .l1wid.bf4.2.surf configure -state active
+    } else {
+      .l1wid.bf4.2.surf configure -state disabled
     }
   }
 
   trace remove \
-    variable plot_settings(processing_mode) write processing_mode_changed
+    variable _l1pro_processing_mode write processing_mode_changed
   trace add \
-    variable plot_settings(processing_mode) write processing_mode_changed
+    variable _l1pro_processing_mode write processing_mode_changed
 
   iwidgets::combobox .l1wid.bf4.1.p \
-    -textvariable plot_settings(processing_mode) \
+    -textvariable _l1pro_processing_mode \
     -editable false
   eval .l1wid.bf4.1.p insert list end $l1pro_data(processing_mode)
 
   proc processing_mode_by_index {index} {
     global plot_settings l1pro_data
-    set plot_settings(processing_mode) \
+    set _l1pro_processing_mode \
       [lindex $l1pro_data(processing_mode) $index]
   }
 
