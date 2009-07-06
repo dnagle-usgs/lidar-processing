@@ -86,7 +86,7 @@ func qq2uz(qq, centroid=) {
    default, centroid, 0;
    bbox = qq2ll(qq, bbox=1);
    u = array(double, 3, dimsof(qq));
-   u(*) = fll2utm( bbox(..,[1,3])(..,avg), bbox(..,[2,4])(..,avg) );
+   u(*) = fll2utm( bbox(..,[1,3])(..,avg), bbox(..,[2,4])(..,avg) )(*);
    if(centroid)
       return u;
    else
@@ -1068,7 +1068,7 @@ func partition_into_2k(north, east, zone, buffer=, shorten=) {
 
    tiles = h_new();
    for(i = 1; i <= numberof(dtcodes); i++) {
-      this_zone = dt2utm(dtcodes(i))(3);
+      this_zone = dt2uz(dtcodes(i));
       data = rezone_utm(north, east, zone, this_zone);
       idx = extract_for_dt(data(1,), data(2,), dtcodes(i), buffer=buffer);
       if(numberof(idx))
@@ -1109,7 +1109,7 @@ func partition_into_10k(north, east, zone, buffer=, shorten=) {
 
    tiles = h_new();
    for(i = 1; i <= numberof(itcodes); i++) {
-      this_zone = it2utm(itcodes(i))(3);
+      this_zone = dt2uz(itcodes(i));
       data = rezone_utm(north, east, zone, this_zone);
       idx = extract_for_it(data(1,), data(2,), itcodes(i), buffer=buffer);
       if(numberof(idx))
@@ -1204,5 +1204,150 @@ func partition_type_summary(north, east, zone, buffer=) {
       write, format="               Mean: %d\n", long(counts(avg));
       write, format="                RMS: %.2f\n", counts(rms);
       write, format="%s", "\n";
+   }
+}
+
+func save_data_to_tiles(data, zone, dest_dir, scheme=, north=, east=, mode=,
+suffix=, buffer=, shorten=, flat=, uniq=, overwrite=, verbose=, split_zones=) {
+/* DOCUMENT save_data_to_tiles, data, zone, dest_dir, scheme=, north=, east=,
+   mode=, suffix=, buffer=, shorten=, flat=, uniq=, overwrite=, verbose=,
+   split_zones=
+
+   Given an array of data (which must be in an ALPS data structure such as
+   VEG__) and a scalar or array of zone corresponding to it, this will create
+   PBD files in dest_dir partitioned using the given scheme.
+
+   Parameters:
+      data: Array of data in ALPS data struct
+      zone: Scalar or array of UTM zone of data
+      dest_dir: Destination directory for output pbd files
+
+   Options:
+      scheme= Should be one of the following; defaults to 10k2k.
+         qq - Quarter quad tiles
+         2k - 2-km data tiles
+         10k - 10-km index tiles
+         10k2k - Two-tiered index tile/data tile
+      north= The struct field in data containing the northings to use. Defaults
+         to "north".
+      east= The struct field in data containing the eastings to use. Defaults
+         to "east".
+      mode= If provided, will override north and east based on the data mode
+         specified. Must be one of the following:
+         1 = first surface
+         2 = bathy
+         3 = bare earth
+      suffix= Specifies the suffix to use when naming the files. By default,
+         files are named (tile-name).pbd. If suffix is provided, they will be
+         named (tile-name)_(suffix).pbd.
+      buffer= Specifies a buffer to include around each tile, in meters.
+         Defaults to 100.
+      shorten= By default, the long form of 2k, 10k, and 10k2k tile names will
+         be used. If shorten=1, the short forms will be used.
+      flat= If set to 1, then no directory structure will be created. Instead,
+         all files will be created directly into dest_dir.
+      uniq= With the default value of uniq=1, only unique data points will be
+         stored in the output pbd files; duplicates will be removed. Set uniq=0
+         to keep duplicate data points.
+      overwrite= By default, data will be appended to any existing pbd files.
+         Set overwrite=1 to clobber them instead.
+      verbose= By default, progress information will be provided. Set verbose=0
+         to silence it.
+      split_zones= This can be set to one of the following three values:
+         0 = Never split data out by zone. This is the default for most schemes.
+         1 = Split data out by zone if there are multiple zones present. This
+            is the default for the qq scheme.
+         2 = Always split data out by zone, even if only one zone is present.
+         (Note: If flat=1, split_zones is ignored.)
+*/
+// Original David Nagle 2009-07-06
+
+   default, scheme, "10k2k";
+   default, mode, [];
+   default, north, "north";
+   default, east, "east";
+   default, suffix, string(0);
+   default, buffer, 100;
+   default, shorten, 0;
+   default, flat, 0;
+   default, uniq, 1;
+   default, overwrite, 0;
+   default, verbose, 1;
+   default, split_zones, scheme == "qq";
+
+   bilevel = scheme == "10k2k";
+   if(bilevel) scheme = "2k";
+
+   // Depending on mode, set east/north to the right struct members
+   if(mode == 1 || mode == 2) {
+      east = "east";
+      north = "north";
+   } else if(mode == 3) {
+      east = "least";
+      north = "lnorth";
+   } else if(!is_void(mode)) {
+      error, "Invalid mode.";
+   }
+
+   if(numberof(zone) == 1)
+      zone = array(zone, dimsof(data));
+
+   if(verbose)
+      write, "Partitioning data...";
+   tiles = partition_by_tile_type(scheme, get_member(data, north)/100.,
+      get_member(data, east)/100., zone, buffer=buffer, shorten=shorten);
+
+   tile_names = h_keys(tiles);
+   tile_names = tile_names(sort(tile_names));
+
+   if(verbose)
+      write, format=" Creating files for %d tiles...\n", numberof(tile_names);
+   
+   tile_zones = (scheme == "qq") ? qq2uz(tile_names) : dt2uz(tile_names);
+   tile_zones = long(tile_zones);
+   uniq_zones = numberof(set_remove_duplicates(tile_zones));
+   if(uniq_zones == 1 && split_zones == 1)
+      split_zones = 0;
+   for(i = 1; i <= numberof(tile_names); i++) {
+      curtile = tile_names(i);
+      idx = tiles(curtile);
+      if(bilevel) {
+         if(shorten)
+            tiledir = file_join(
+               swrite(format="i_%s", dt_short(get_dt_itcodes(curtile))),
+               swrite(format="t_%s", curtile)
+            );
+         else
+            tiledir = file_join(get_dt_itcodes(curtile), curtile);
+      } else {
+         tiledir = curtile;
+      }
+      vdata = data(idx);
+      vzone = zone(idx);
+      vname = (scheme == "qq") ? curtile : dt_short(curtile);
+      tzone = tile_zones(i);
+
+      // Coerce zones
+      rezone_data_utm, vdata, vzone, tzone;
+
+      outpath = dest_dir;
+      if(!flat && split_zones)
+         outpath = file_join(outpath, swrite(format="zone_%d", tzone));
+      if(!flat && tiledir)
+         outpath = file_join(outpath, tiledir);
+      mkdirp, outpath;
+
+      outfile = curtile;
+      if(suffix) outfile += "_" + suffix;
+      outfile += ".pbd";
+
+      outdest = file_join(outpath, outfile);
+
+      if(overwrite && file_exists(outdest))
+         remove, outdest;
+      
+      pbd_append, outdest, vname, vdata, uniq=uniq;
+      if(verbose)
+         write, format=" %d: %s\n", i, outfile;
    }
 }
