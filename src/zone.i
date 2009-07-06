@@ -96,8 +96,16 @@ func rezone_utm(&north, &east, src_zone, dest_zone) {
 
    Original David Nagle 2008-07-17
 */
-   ll = utm2ll(north, east, src_zone);
-   u = fll2utm(ll(*,2), ll(*,1), force_zone=dest_zone);
+   u = transpose([north, east, src_zone]);
+   if(numberof(src_zone) == 1 && numberof(dest_zone) == 1 && src_zone == dest_zone)
+      return u;
+   if(numberof(src_zone) == 1) src_zone = array(src_zone, dimsof(north));
+   if(numberof(dest_zone) == 1) dest_zone = array(dest_zone, dimsof(north));
+   w = where(src_zone != dest_zone);
+   if(numberof(w)) {
+      ll = utm2ll(north(w), east(w), src_zone(w));
+      u(,w) = fll2utm(ll(*,2), ll(*,1), force_zone=dest_zone(w));
+   }
    if(am_subroutine()) {
       north = u(1,);
       east = u(2,);
