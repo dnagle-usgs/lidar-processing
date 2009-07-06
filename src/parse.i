@@ -65,6 +65,16 @@ func dt_long(dtcodes) {
     return result;
 }
 
+func dt2uz(dtcodes) {
+/* DOCUMENT dt2uz(dtcodes)
+    Returns the UTM zone(s) for the given dtcode(s).
+*/
+// Original David Nagle 2009-07-06
+    zone = [];
+    dt2utm, dtcodes, , , zone;
+    return zone;
+}
+
 func dt2utm(dtcodes, &north, &east, &zone, bbox=, centroid=) {
 /* DOCUMENT dt2utm(dtcodes, bbox=, centroid=)
     dt2utm, dtcodes, &north, &east, &zone
