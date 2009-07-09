@@ -361,6 +361,33 @@ func get_utm_qqcodes(north, east, zone) {
    return calc24qq(ll(*,2), ll(*,1));
 }
 
+func get_utm_qqcode_coverage(north, east, zone) {
+/* DOCUMENT qq = get_utm_qqcode_coverage(north, east, zone)
+    For a set of UTM northings, eastings, and zones, this will calculate the
+    set of quarter-quad tiles that encompass all the points.
+
+    This is equivalent to
+        qq = set_remove_duplicates(get_utm_qqcodes(north,east,zone))
+    but works much more efficiently (and faster).
+*/
+// Original David Nagle 2009-07-09
+   ll = utm2ll(north,east,zone);
+   lat = long(ll(*,2)/0.0625);
+   lon = long(ll(*,1)/0.0625);
+   ll = [];
+   lat += 3000;
+   lon += 3000;
+   code = long(unref(lat) * 10000 + unref(lon));
+   code = set_remove_duplicates(unref(code));
+   lat = code / 10000;
+   lon = unref(code) % 10000;
+   lat -= 3000;
+   lon -= 3000;
+   lat *= 0.0625;
+   lon *= 0.0625;
+   return calc24qq(lat, lon);
+}
+
 func get_utm_dtcode_candidates(north, east, zone, buffer) {
 /* DOCUMENT dtcodes = get_utm_dtcode_candidates(north, east, zone, buffer)
    
@@ -1037,8 +1064,8 @@ func calculate_qq_extents(qqdir, glob=, remove_buffers=) {
    return qqs;
 }
 
-func partition_into_2k(north, east, zone, buffer=, shorten=) {
-/* DOCUMENT partition_into_2k(north, east, zone, buffer=, shorten=)
+func partition_into_2k(north, east, zone, buffer=, shorten=, verbose=) {
+/* DOCUMENT partition_into_2k(north, east, zone, buffer=, shorten=, verbose=)
    Given a set of points represented by northing, easting, and zone, this will
    return a Yeti hash that partitions them into 2km data tiles.
 
@@ -1052,6 +1079,7 @@ func partition_into_2k(north, east, zone, buffer=, shorten=) {
          100m. Set to 0 to constrain to exact tile boundaries.
       shorten= If set to 1, the tile names will be in the short form
          (e466_n3354_16). Default is long form (t_e466000_n3354000_16).
+      verbose= Set to 1 to get progress output. Defaults to 0 (silent).
 
    Returns:
       A yeti hash. The keys are the tile names, the values are the indexes
@@ -1060,24 +1088,35 @@ func partition_into_2k(north, east, zone, buffer=, shorten=) {
 // Original David B. Nagle 2009-04-01
    default, buffer, 100;
    default, shorten, 0;
+   default, verbose, 0;
 
-   dtcodes = get_utm_dtcodes(north, east, zone);
-   dtcodes = set_remove_duplicates(dtcodes);
-   if(shorten)
-      dtcodes = dt_short(dtcodes);
+   if(verbose)
+      write, "- Calculating 2km tile names...";
+   dtcodes = get_utm_dtcode_coverage(north, east, zone);
+   if(shorten) {
+      if(verbose)
+         write, "- Shortening tile names...";
+      dtcodes = dt_short(unref(dtcodes));
+   }
 
    tiles = h_new();
+   if(verbose)
+      write, format=" - Calculating indices for %d tiles...\n", numberof(dtcodes);
    for(i = 1; i <= numberof(dtcodes); i++) {
+      if(verbose)
+         write, format="   * Processing %d/%d: %s\n", i, numberof(dtcodes), dtcodes(i);
       this_zone = dt2uz(dtcodes(i));
       data = rezone_utm(north, east, zone, this_zone);
       idx = extract_for_dt(data(1,), data(2,), dtcodes(i), buffer=buffer);
       if(numberof(idx))
          h_set, tiles, dtcodes(i), idx;
+      else if(verbose)
+         write, "    !! No points found, discarding tile!";
    }
    return tiles;
 }
 
-func partition_into_10k(north, east, zone, buffer=, shorten=) {
+func partition_into_10k(north, east, zone, buffer=, shorten=, verbose=) {
 /* DOCUMENT partition_into_10k(north, east, zone, buffer=, shorten=)
    Given a set of points represented by northing, easting, and zone, this will
    return a Yeti hash that partitions them into 10km index tiles.
@@ -1092,6 +1131,7 @@ func partition_into_10k(north, east, zone, buffer=, shorten=) {
          100m. Set to 0 to constrain to exact tile boundaries.
       shorten= If set to 1, the tile names will be in the short form
          (e460_n3350_16). Default is long form (i_e460000_n3350000_16).
+      verbose= Set to 1 to get progress output. Defaults to 0 (silent).
 
    Returns:
       A yeti hash. The keys are the tile names, the values are the indexes
@@ -1100,26 +1140,36 @@ func partition_into_10k(north, east, zone, buffer=, shorten=) {
 // Original David B. Nagle 2009-04-01
    default, buffer, 100;
    default, shorten, 0;
+   default, verbose, 0;
 
-   dtcodes = get_utm_dtcodes(north, east, zone);
-   itcodes = get_dt_itcodes(dtcodes);
-   itcodes = set_remove_duplicates(itcodes);
-   if(shorten)
-      itcodes = dt_short(itcodes);
+   if(verbose)
+      write, "- Calculating 10km tile names...";
+   itcodes = get_utm_itcode_coverage(north, east, zone);
+   if(shorten) {
+      if(verbose)
+         write, "- Shortening tile names...";
+      itcodes = dt_short(unref(itcodes));
+   }
 
    tiles = h_new();
+   if(verbose)
+      write, format=" - Calculating indices for %d tiles...\n", numberof(itcodes);
    for(i = 1; i <= numberof(itcodes); i++) {
+      if(verbose)
+         write, format="   * Processing %d/%d: %s\n", i, numberof(itcodes), itcodes(i);
       this_zone = dt2uz(itcodes(i));
       data = rezone_utm(north, east, zone, this_zone);
       idx = extract_for_it(data(1,), data(2,), itcodes(i), buffer=buffer);
       if(numberof(idx))
          h_set, tiles, itcodes(i), idx;
+      else if(verbose)
+         write, "    !! No points found, discarding tile!";
    }
    return tiles;
 }
 
-func partition_into_qq(north, east, zone, buffer=) {
-/* DOCUMENT partition_into_qq(north, east, zone, buffer=)
+func partition_into_qq(north, east, zone, buffer=, verbose=) {
+/* DOCUMENT partition_into_qq(north, east, zone, buffer=, verbose=)
    Given a set of points represented by northing, easting, and zone, this will
    return a Yeti hash that partitions them into quarter quad tiles.
 
@@ -1131,6 +1181,7 @@ func partition_into_qq(north, east, zone, buffer=) {
    Options:
       buffer= A buffer around the tile to include, in meters. Defaults to
          100m. Set to 0 to constrain to exact tile boundaries.
+      verbose= Set to 1 to get progress output. Defaults to 0 (silent).
 
    Returns:
       A yeti hash. The keys are the tile names, the values are the indexes
@@ -1138,20 +1189,28 @@ func partition_into_qq(north, east, zone, buffer=) {
 */
 // Original David B. Nagle 2009-04-01
    default, buffer, 100;
-   qqcodes = get_utm_qqcodes(north, east, zone);
-   qqcodes = set_remove_duplicates(qqcodes);
+   default, verbose, 0;
+   if(verbose)
+      write, "- Calculating quarter-quad tile names...";
+   qqcodes = get_utm_qqcode_coverage(north, east, zone);
 
    tiles = h_new();
+   if(verbose)
+      write, format=" - Calculating indices for %d tiles...\n", numberof(qqcodes);
    for(i = 1; i <= numberof(qqcodes); i++) {
+      if(verbose)
+         write, format="   * Processing %d/%d: %s\n", i, numberof(qqcodes), qqcodes(i);
       w = extract_for_qq(north, east, zone, qqcodes(i), buffer=buffer);
       if(numberof(w))
          h_set, tiles, qqcodes(i), w;
+      else if(verbose)
+         write, "    !! No points found, discarding tile!";
    }
    return tiles;
 }
 
-func partition_by_tile_type(type, north, east, zone, buffer=, shorten=) {
-/* DOCUMENT partition_by_tile_type(type, north, east, zone, buffer=, shorten=)
+func partition_by_tile_type(type, north, east, zone, buffer=, shorten=, verbose=) {
+/* DOCUMENT partition_by_tile_type(type, north, east, zone, buffer=, shorten=, verbose=)
    This is a wrapper around other partition types that allows the user to call
    the right one based on a type parameter.
 
@@ -1165,12 +1224,12 @@ func partition_by_tile_type(type, north, east, zone, buffer=, shorten=) {
 */
 // Original David B. Nagle 2009-04-01
    if(type == "qq") {
-      return partition_into_qq(north, east, zone, buffer=buffer);
+      return partition_into_qq(north, east, zone, buffer=buffer, verbose=verbose);
    } else if(type == "2k") {
-      return partition_into_2k(north, east, zone, buffer=buffer,
+      return partition_into_2k(north, east, zone, buffer=buffer, verbose=verbose,
          shorten=shorten);
    } else if(type == "10k") {
-      return partition_into_10k(north, east, zone, buffer=buffer,
+      return partition_into_10k(north, east, zone, buffer=buffer, verbose=verbose,
          shorten=shorten);
    } else {
       error, "Invalid type";
@@ -1295,7 +1354,8 @@ suffix=, buffer=, shorten=, flat=, uniq=, overwrite=, verbose=, split_zones=) {
    if(verbose)
       write, "Partitioning data...";
    tiles = partition_by_tile_type(scheme, get_member(data, north)/100.,
-      get_member(data, east)/100., zone, buffer=buffer, shorten=shorten);
+      get_member(data, east)/100., zone, buffer=buffer, shorten=shorten,
+      verbose=verbose);
 
    tile_names = h_keys(tiles);
    tile_names = tile_names(sort(tile_names));
