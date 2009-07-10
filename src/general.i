@@ -448,9 +448,9 @@ func pbd_append(file, vname, data, uniq=) {
       f = openb(file);
       grow, data, get_member(f, f.vname);
       close, f;
-      if(uniq)
-         data = data(set_remove_duplicates(data.soe, idx=1));
    }
+   if(uniq)
+      data = data(set_remove_duplicates(data.soe, idx=1));
    f = createb(file);
    add_variable, f, -1, vname, structof(data), dimsof(data);
    get_member(f, vname) = data;
