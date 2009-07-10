@@ -530,14 +530,11 @@ suffix=, remove_buffers=, buffer=, uniq=) {
       }
 
       // Get a list of the quarter quad codes represented by the data
-      new_qqcodes = get_utm_qqcodes(get_member(data, north)/100.0,
+      grow, qqcodes, get_utm_qqcode_coverage(get_member(data, north)/100.0,
          get_member(data, east)/100.0, z);
-      grow, new_qqcodes, qqcodes;
-      qqcodes = set_remove_duplicates(new_qqcodes);
    }
+   qqcodes = set_remove_duplicates(qqcodes);
    write, format=" %i QQ tiles will be generated\n", numberof(qqcodes);
-
-   qqcodes = qqcodes(sort(qqcodes));
 
    // Iterate over each source file to actually partition data
    write, "Scanning source files to generate QQ files:";
