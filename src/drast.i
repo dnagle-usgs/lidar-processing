@@ -381,6 +381,8 @@ func geo_rast(rn, fsmarks=, eoffset=   )  {
 */
 
  extern xm, fs;
+ if (is_void(fsmarks)) fsmarks=0;
+ if (is_void(eoffset)) eoffset = 0.;
  winsave = current_window();
  window,2
  animate,2;

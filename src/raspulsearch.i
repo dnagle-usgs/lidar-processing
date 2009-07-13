@@ -191,7 +191,7 @@ write,"============================================================="
                            msize = 0.4, marker = lmark, color = "red";
       } else {
         if (disp_type == 0) {
-	  if (is_array(edb)) show_wf, *wfa, pulseno(1), win=0, cb=7, raster=rasterno(1);
+	  if (is_array(edb)) show_geo_wf, *wfa, pulseno(1), win=0, cb=7, raster=rasterno(1);
           window, win; plcm, mindata.elevation/100., 
                              mindata.north/100., 
                              mindata.east/100., 
@@ -206,10 +206,10 @@ write,"============================================================="
           irg_a = irg(rasterno,rasterno,usecentroid=1);
           ex_bath, rasterno, pulseno, win=0, graph=1;
          } else {
-          show_wf, *wfa, pulseno(1), win=0, cb=7, raster=rasterno(1);
+          show_geo_wf, *wfa, pulseno(1), win=0, cb=7, raster=rasterno(1);
          }
 	 if (bconst == 2) {
-          show_wf, *wfa, pulseno(1), win=7, cb=7, raster=rasterno(1);
+          show_geo_wf, *wfa, pulseno(1), win=7, cb=7, raster=rasterno(1);
 	 }
         }
           
@@ -233,10 +233,10 @@ write,"============================================================="
 	    if (bconst) {
 	      ex_veg, rasterno, pulseno,  last=250, graph=1, win=0, use_be_peak=1;
 	    } else {
-              show_wf, *wfa, pulseno(1), win=0, cb=7, raster=rasterno(1);
+              show_geo_wf, *wfa, pulseno(1), win=0, cb=7, raster=rasterno(1);
 	    }
 	    if (bconst == 2) {
-              show_wf, *wfa, pulseno(1), win=7, cb=7, raster=rasterno(1);
+              show_geo_wf, *wfa, pulseno(1), win=7, cb=7, raster=rasterno(1);
 	    }
 	      
 	  }
@@ -252,7 +252,7 @@ write,"============================================================="
 	     z = mindata.first_peak;
 	  if (ptype == 2) 
 	     z = mindata.fint;
-          if (is_array(edb)) show_wf, *wfa, pulseno(1), win=0, cb=7, raster=rasterno(1);
+          if (is_array(edb)) show_geo_wf, *wfa, pulseno(1), win=0, cb=7, raster=rasterno(1);
           window, win; plcm, z, mindata.north/100., 
                              mindata.east/100., msize = msize*1.5, 
                              cmin= cmin, cmax = cmax, marker = 4
@@ -283,11 +283,12 @@ write,"============================================================="
  if (is_array(edb)) {
    somd = edb(mindata.rn&0xffffff ).seconds % 86400; 
    rast  = decode_raster(get_erast( rn=rasterno ));
+   geo_rast, rasterno;
    
 // XYZZY rwm 2008-11-10
 // plot tx waveform.
    if ( tx > 0 ) {
-      window,2;
+      window,3;
       fma;
       for (j = tx; j <= tx+10; j++) {
          plg,*rast.tx(j);
