@@ -239,7 +239,6 @@ write,"============================================================="
               show_wf, *wfa, pulseno(1), win=7, cb=7, raster=rasterno(1);
 	    }
 	      
-            if ( _errno < 0 ) continue;
 	  }
 	  z = mindata.lelv/100.;
           window, win; plcm, z, mindata.north/100., 
