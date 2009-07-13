@@ -205,11 +205,7 @@ func show_bath_constants {
     rn = mindata(0).rn&0xffffff;
   pulse= mindata(0).rn>>24;
     ex_bath, rn, pulse,win=0,xfma=1,graph=1
-  } else 
-    write, "That\'s meaningless without waveforms.\n"+
-           " Process a small segment for \'First Return Topo\' \n"+
-           " and then Use \'Pixel Waveform\' to examine the \n"+
-           " waveforms together with the settings." 
+  } 
 }
 
 

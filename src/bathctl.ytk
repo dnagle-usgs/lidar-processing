@@ -86,6 +86,7 @@ proc bathctl { } {
             set bath_ctl(thresh) 4.0
             set bath_ctl(first)  11
             set bath_ctl(last)   220
+            set bath_ctl(maxsat)  2 
           }
 
           $w.mb.file add command -label "  Bays" -command {
@@ -95,6 +96,7 @@ proc bathctl { } {
             set bath_ctl(thresh) 4.0
             set bath_ctl(first)  11
             set bath_ctl(last)   60
+            set bath_ctl(maxsat)  2 
           }
 
           $w.mb.file add command -label "  Crappy" -command {
@@ -104,6 +106,7 @@ proc bathctl { } {
             set bath_ctl(thresh) 2.0
             set bath_ctl(first)  11
             set bath_ctl(last)   60
+            set bath_ctl(maxsat)  2 
           }
 
           $w.mb.file add command -label "  Super shallow" -command {
@@ -113,8 +116,19 @@ proc bathctl { } {
             set bath_ctl(thresh) 4.0
             set bath_ctl(first)  9
             set bath_ctl(last)   30
+            set bath_ctl(maxsat)  2 
           }
           
+          $w.mb.file add command -label "  Shallow Riverine" -command {
+            set bath_ctl(laser) -4.7
+            set bath_ctl(water) -4.8
+            set bath_ctl(agc)   -3.3
+            set bath_ctl(thresh) 3.0
+            set bath_ctl(first)  11
+            set bath_ctl(last)   50
+            set bath_ctl(maxsat)  2 
+	  }
+
           sst .bathctl.laser   bath_ctl(laser)   "  Laser:"  { -5.0 -1.0 0.1  }
           sst .bathctl.water   bath_ctl(water)   "  Water:"  { -10 -0.1 0.1  }
           sst .bathctl.agc     bath_ctl(agc)     "    AGC:"  { -10 0.1 0.1  }
