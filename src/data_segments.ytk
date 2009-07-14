@@ -28,6 +28,7 @@ if {[info commands SegmentedDataWindow] eq ""} {
       itk_option define -fmavariable fmaVariable Variable ""
 
       method init_opt_var {opt default} {}
+      method size_optimally {} {}
       method refresh_times {} {}
       method configure_times {} {}
       method set_time {idx time_start time_end} {}
@@ -73,7 +74,7 @@ itcl::body SegmentedDataWindow::constructor {args} {
       [itcl::code itcl::delete object $this]
    eval itk_initialize $args
 
-   wm resizable $itk_component(hull) 1 0
+   wm resizable $itk_component(hull) 1 1
    wm minsize $itk_component(hull) 460 100
 
    init_opt_var -varlistvariable \
@@ -83,9 +84,15 @@ itcl::body SegmentedDataWindow::constructor {args} {
 
    set w $itk_interior
 
-   set f $w.fraVariables
+   set f1 $w.fraVariables
+   iwidgets::scrolledframe $f1 \
+      -vscrollmode dynamic \
+      -hscrollmode dynamic \
+      -relief groove
 
-   labelframe $f -text "Variables"
+   set f [$f1 childsite]
+   $f configure -padx 4
+
    label $f.lblHeadingVariables -text "Variable"
    button $f.btnHeadingTime -text "Times (refresh)" \
       -command [itcl::code $this refresh_times]
@@ -191,7 +198,79 @@ itcl::body SegmentedDataWindow::constructor {args} {
    grid $w.fraWithSelected $w.fraOptions -sticky wens
    grid columnconfigure $w 0 -weight 1
 
+   grid rowconfigure $w 0 -weight 1
+
    refresh_times
+   size_optimally
+   after idle [list after 250 [itcl::code $this size_optimally]]
+   after idle [list after 1000 [itcl::code $this size_optimally]]
+}
+
+itcl::body SegmentedDataWindow::size_optimally {} {
+   set hull $itk_component(hull)
+   set f $itk_interior.fraVariables
+
+   $f configure \
+      -vscrollmode none \
+      -hscrollmode none
+   
+   set offset [join [lrange [split [wm geometry $hull] +] 1 2] +]
+   wm geometry $hull ""
+
+   set hw [winfo width $hull]
+   set fsw [winfo width $f]
+   set frw [winfo reqwidth [$f childsite]]
+   set padw [expr {[[$f childsite] cget -padx] * 2}]
+   set nw [expr {$hw + ($frw - $fsw) + $padw + 4}]
+
+   set hh [winfo height $hull]
+   set fsh [winfo height $f]
+   set frh [winfo reqheight [$f childsite]]
+   set padh [expr {[[$f childsite] cget -pady] * 2}]
+   set nh [expr {$hh + ($frh - $fsh) + $padh + 4}]
+
+   set too_w 0
+   set sw [expr {[winfo screenwidth $hull] - 100}]
+   if {$nw > $sw} {
+      set nw $sw
+      set too_w 1
+   }
+
+   set too_h 0
+   set sh [expr {[winfo screenheight $hull] - 100}]
+   if {$nh > $sh} {
+      set nh $sh
+      set too_h 1
+   }
+
+   if {$too_w && ! $too_h} {
+      incr nh [expr {8 + [$f cget -sbwidth]}]
+   }
+
+   if {$too_h && ! $too_w} {
+      incr nw [expr {8 + [$f cget -sbwidth]}]
+   }
+
+   $f configure \
+      -vscrollmode dynamic \
+      -hscrollmode dynamic
+
+   wm geometry $hull "${nw}x${nh}+$offset"
+
+   $f configure \
+      -vscrollmode none \
+      -hscrollmode none
+   update idletasks
+   set xv [$f xview]
+   set yv [$f yview]
+   $f configure \
+      -vscrollmode dynamic \
+      -hscrollmode dynamic
+   update idletasks
+   eval [[$f component canvas] cget -xscrollcommand] $xv
+   eval [[$f component canvas] cget -yscrollcommand] $yv
+   eval [[$f component canvas] cget -xscrollcommand] [$f xview]
+   eval [[$f component canvas] cget -yscrollcommand] [$f yview]
 }
 
 itcl::body SegmentedDataWindow::refresh_times {} {
