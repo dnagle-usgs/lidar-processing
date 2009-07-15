@@ -208,6 +208,9 @@ func set_remove_duplicates(A, idx=, ret_sort=) {
    if(numberof(A) == 1)
       return idx ? [1] : A;
 
+   if(typeof(A) == "string")
+      return set_remove_duplicates_string(unref(A), idx=idx);
+
    // Eliminate any dimensionality
    A = unref(A)(*);
 
@@ -230,4 +233,41 @@ func set_remove_duplicates(A, idx=, ret_sort=) {
    if(idx) A = indgen(numberof(unref(A)));
 
    return A(seq)(srt)(unq);
+}
+
+func set_remove_duplicates_string(A, idx=) {
+/* DOCUMENT set_remove_duplicates_string(A, idx=)
+   Returns the set A with its duplicate elements removed. The returned list
+   will also be sorted.
+   
+   Note that A *must* be strings. Anything else will cause an error.
+
+   If idx=1, then the indices will be returned rather than the values.
+
+   See also: set_remove_duplicates
+*/
+// Original David Nagle 2009-07-15
+// Speed trials shows that this algorithm works much faster than the one in
+// set_remove_duplicates for strings, due to Yorick's slow performance with
+// string sorting.
+   default, idx, 0;
+   // Create a hash table that has a key for each unique item. Set the value to
+   // the first index we found it at.
+   set = h_new();
+   for(i = 1; i <= numberof(A); i++) {
+      if(! h_has(set, A(i)))
+         h_set, set, A(i), i;
+   }
+   A = [];
+   // Sort and return the list, if they do not want indexes.
+   keys = h_keys(set);
+   keys = keys(sort(keys));
+   if(! idx)
+      return keys;
+   // If they want indexes, we have to manually extract them from the hash.
+   idx = array(long, dimsof(keys));
+   for(i = 1; i <= numberof(keys); i++) {
+      idx(i) = set(keys(i));
+   }
+   return idx;
 }
