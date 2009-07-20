@@ -168,12 +168,12 @@ func get_utm_dtcode_coverage(north, east, zone) {
 // Original David Nagle 2009-07-09
     east = long(floor(unref(east)/2000.0));
     north = long(ceil(unref(north)/2000.0));
-    code = long(unref(zone)) * 1000000000 + unref(east) * 100000 + unref(north);
+    code = long(unref(zone)) * 1000 * 10000 + unref(east) * 10000 + unref(north);
     code = set_remove_duplicates(unref(code));
-    north = code % 100000;
-    code /= 100000;
-    east = code % 10000;
-    zone = code / 10000;
+    north = code % 10000;
+    code /= 10000;
+    east = code % 1000;
+    zone = code / 1000;
     return swrite(format="t_e%d000_n%d000_%d", east*2, north*2, zone);
 }
 
