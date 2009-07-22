@@ -2045,7 +2045,7 @@ proc ylogger {level message} {
 
 proc __logger {level message type} {
 # Implementation for both logger and ylogger.
-   set tstamp [clock format [clock scan now] -format %T]
+   set tstamp [clock format [clock seconds] -format %T]
    log::log $level "\[$type $tstamp\] $level$log::fill($level) : $message"
 }
 
