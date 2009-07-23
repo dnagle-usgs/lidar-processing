@@ -243,6 +243,7 @@ if { $host eq "server" } {
    }
    open_server $port
 } else {    # start as client
+   system sleep 2 # allow server to start when invoked from .screenrc
    # set sock [socket $host $port]
    set remote 0
    if { $host ne "localhost" } {
@@ -254,6 +255,7 @@ if { $host eq "server" } {
    fileevent $sock readable [list client'read $sock]
    fileevent stdin readable [list client'send $sock]
    puts $sock "Status ready"
+   puts "Status Ready:"
    if { $remote == 1 } {
       puts "\nThis will create a copy of the tld files on the server for the"
       puts "necesary tiles using the exact same pathing.  Please verify that"

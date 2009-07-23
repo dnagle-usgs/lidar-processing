@@ -11,6 +11,15 @@
 
 BIN = ../bin
 
+var:
+	@ echo 
+	@ echo "make programs    to compile all C programs"
+	@ echo "make scripts     to install all shell scripts"
+	@ echo "make all         to do everything above"
+	@ echo "make batch       setup the system for batch processing"
+	@ echo 
+
+
 ../bin/efdb:	efdb.o
 		mkdir -p  ../bin
 		cc -lm -o ../bin/efdb efdb.o
@@ -99,24 +108,10 @@ BIN = ../bin
 ../bin/shapefile_filter:	shapefile_filter.pl
 	install -m uog+rx  $<	$@
 
-<<<<<<< destination
-=======
-../bin/showdays:	showdays
-	install -m uog+rx  $<	$@
-
-../bin/mk_opsconf:	mk_opsconf
-	install -m uog+rx  $<	$@
-
-../bin/wrsync:	wrsync
-	install -m uog+rx  $<	$@
-
 ../bin/mktrajfiles:	mktrajfiles
 	install -m uog+rx  $<	$@
 
 ../bin/pnav2kml:	pnav2kml.pl
-	install -m uog+rx  $<	$@
-
-../bin/pnav2gm:	pnav2gm.pl
 	install -m uog+rx  $<	$@
 
 ../bin/iex_ascii2pbd:	iex_ascii2pbd
@@ -125,44 +120,51 @@ BIN = ../bin
 ../bin/mkeidx:	mkeidx
 	install -m uog+rx  $<	$@
 
-../bin/xyz2track:	xyz2track.pl
-	install -m uog+rx  $<	$@
-
 ../bin/whatsnew:	whatsnew.pl
 	install -m uog+rx  $<	$@
 
-
-# It is very hard to make make make a #
-../bin/comment:	comment
+ifeq (${USER}, root)
+/etc/init.d/batcher:  initd-batcher.sh
 	install -m uog+rx  $<	$@
-	ln ../bin/comment ../bin/\#
+	@echo
+	@echo "You may need to manually run:"
+	@echo "   ln -s /etc/init.d/batcher /etc/rc2.d/S99batcher"
+else
+/etc/init.d/batcher:  initd-batcher.sh
+	@echo
+	@echo "WARNING: need root priviledges!!"
+	@echo "   to install $@"
+	@echo "WARNING"
+	@echo 
+endif
 
->>>>>>> evolving
 ###############################################################################
 # all  Builds all the "C" programs in this directory that need it.  You can force
 ###############################################################################
-<<<<<<< destination
-all:		../bin/efdb ../bin/gga2bin ../bin/mkidx ../bin/pnav2ybin \
-		../bin/tans2bin ../bin/rdmars ../bin/dmars2iex           \
-		../bin/dmarscat2iex ../bin/checksys                      \
-		../bin/shapefile_filter
-=======
-all:		../bin/efdb ../bin/erange ../bin/gga2bin ../bin/mkidx    \
+programs:                                                    \
+  	../bin/efdb ../bin/erange ../bin/gga2bin ../bin/mkidx    \
 		../bin/pnav2ybin ../bin/tans2bin ../bin/fix-dos-crlf-ash \
 		../bin/rdmars ../bin/dmars2iex ../bin/dmarscat2iex       \
+
+scripts:                                                     \
 		../bin/check_to_archive ../bin/checksys                  \
 		../bin/shapefile_filter                                  \
 		../bin/showdays ../bin/mk_opsconf ../bin/wrsync          \
 		../bin/mktrajfiles                                       \
-		../bin/pnav2kml                                          \
-		../bin/pnav2gm                                           \
+		../bin/pnav2kml  ../bin/pnav2gm                          \
 		../bin/mkeidx                                            \
 		../bin/iex_ascii2pbd                                     \
 		../bin/xyz2track                                         \
 		../bin/whatsnew                                          \
-		../bin/comment
->>>>>>> evolving
+		../bin/comment                                           \
+		../bin/screen_batch                                      \
+		../bin/setup_batch                                       \
+		/etc/init.d/batcher                                      \
 
+batch:                                                       \
+		../bin/setup_batch
+
+all: programs scripts
 
 ###############################################################################
 # rebuildall  Force a rebuild of all the "C" programs here.
