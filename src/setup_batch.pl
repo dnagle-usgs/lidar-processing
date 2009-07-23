@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
-my $Id     = '$Id:';
-my $Source = '$Source:';
+my $Id     = '$Id$';
+my $Source = '$Source$';
 
 # Prompts for the hostname of the master ALPS server to use and then
 # creates the screenrc files to invoke both a master and slave sessions.

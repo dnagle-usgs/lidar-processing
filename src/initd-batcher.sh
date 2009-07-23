@@ -1,5 +1,6 @@
 #! /bin/sh
-# IN PROGRESS
+# $Id$
+# $Source$
 ### BEGIN INIT INFO
 # Provides:          ALPS batcher
 # Required-Start:    $remote_fs

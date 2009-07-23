@@ -138,6 +138,9 @@ else
 	@echo 
 endif
 
+../bin/setup_batch:	setup_batch.pl
+	install -m uog+rx  $<	$@
+
 ###############################################################################
 # all  Builds all the "C" programs in this directory that need it.  You can force
 ###############################################################################
@@ -157,7 +160,6 @@ scripts:                                                     \
 		../bin/xyz2track                                         \
 		../bin/whatsnew                                          \
 		../bin/comment                                           \
-		../bin/screen_batch                                      \
 		../bin/setup_batch                                       \
 		/etc/init.d/batcher                                      \
 
