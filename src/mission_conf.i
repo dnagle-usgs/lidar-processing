@@ -499,11 +499,12 @@ func missiondata_wrap(type) {
             "data_path", data_path
         );
     } else if(type == "pnav") {
-        extern pnav, gga;
+        extern pnav, gga, pnav_filename;
         return h_new(
             "__type", "pnav",
             "pnav", pnav,
-            "gga", gga
+            "gga", gga,
+            "pnav_filename", pnav_filename;
         );
     } else if(type == "dmars") {
         extern iex_nav, iex_head, iex_nav1hz, tans;
@@ -555,9 +556,10 @@ func missiondata_unwrap(data) {
         data_path = data.data_path;
         _ecfidx = 0; //?
     } else if(type == "pnav") {
-        extern pnav, gga;
+        extern pnav, gga, pnav_filename;
         pnav = data.pnav;
         gga = data.gga;
+        pnav_filename = data.pnav_filename;
     } else if(type == "dmars") {
         extern iex_nav, iex_head, iex_nav1hz, tans;
         // ops_conf ?
