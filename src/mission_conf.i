@@ -504,7 +504,7 @@ func missiondata_wrap(type) {
             "__type", "pnav",
             "pnav", pnav,
             "gga", gga,
-            "pnav_filename", pnav_filename;
+            "pnav_filename", pnav_filename
         );
     } else if(type == "dmars") {
         extern iex_nav, iex_head, iex_nav1hz, tans;
