@@ -666,7 +666,7 @@ func missiondata_load(type, day=) {
         } else {
             if(mission_has("ops_conf file", day=day)) {
                 extern ops_conf;
-                include, mission_get("ops_conf file", day=day);
+                include, mission_get("ops_conf file", day=day), 1;
                 if(cache_enabled) {
                     h_set, cache, "ops_conf", missiondata_wrap("ops_conf");
                 }
