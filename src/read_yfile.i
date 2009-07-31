@@ -1014,7 +1014,7 @@ func set_read_tk(junk) {
 
    extern vname
    tkcmd, swrite(format="append_varlist %s",vname);
-   tkcmd, "varlist_plot";
+   tkcmd, "varplot::gui";
    tkcmd, swrite(format="set pro_var %s", vname);
    write, "Tk updated \r";
 
