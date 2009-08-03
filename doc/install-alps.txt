@@ -12,8 +12,9 @@ Overview:
 5. Install Yorick
 6. Install Yorick-Z
 7. Install Yeti
-8. Install ALPS
-9. Install GEOID files
+8. Install Yutils
+9. Install ALPS
+10. Install GEOID files
 
 Set up Directories
 ------------------
@@ -159,6 +160,23 @@ Yeti
 	cd yeti-6.2.1
 	/opt/eaarl/bin/yorick -batch ./config.i
 	make
+	make install
+
+Yutils
+----
+1. Download Yutils 1.4.0 from lidar.net:
+
+	lidar.net:/mnt/alps/eaarl/tarfiles/yutils-1.4.0-src.tgz
+
+2. Untar the tarball as a directory in /opt/eaarl/packages/src
+
+	cd /opt/eaarl/packages/src
+	tar zxvf /opt/eaarl/tarfiles/yutils-1.4.0-src.tgz
+
+3. Compile and install.
+
+	cd yorick-yutils-1.4.0
+	/opt/eaarl/bin/yorick -batch make.i
 	make install
 
 ALPS
