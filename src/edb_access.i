@@ -75,15 +75,15 @@ func load_edb (  fn=, update=, verbose=, override_offset= ) {
   to an entire EAARL data set. This permits easy access
   to the data without regard to what file the data are
   located in.
-  
+
   Two variables are created by this load_edb: edb and
   edb_file.  edb is an array of structures of type
   EDB, and edb_file is an array of structures containing
-  the cross-referenced file names and the file status.  
-  To see whats in the edb structure, type EDB.  This will 
-  list the definition.  To see some actual edb data, type 
+  the cross-referenced file names and the file status.
+  To see whats in the edb structure, type EDB.  This will
+  list the definition.  To see some actual edb data, type
   edb(N) where N is the record number.
-  
+
 */
  extern edb_filename, edb;
  extern edb_files, _ecfidx, _edb_fd;
@@ -96,16 +96,16 @@ func load_edb (  fn=, update=, verbose=, override_offset= ) {
  extern initialdir;
  _ecfidx = 0;
 
-///// if ( is_void( data_path ) ) 
+///// if ( is_void( data_path ) )
  default, verbose, 1;
 
 if (is_void(fn)) {
 if ( _ytk ) {
-    // if (!fn) fn  = get_openfn( initialdir="/data/0/", filetype="*.idx" ); 
-    if (!fn) fn  = get_openfn( initialdir=initialdir, filetype="*.idx" ); 
+    // if (!fn) fn  = get_openfn( initialdir="/data/0/", filetype="*.idx" );
+    if (!fn) fn  = get_openfn( initialdir=initialdir, filetype="*.idx" );
     if (strmatch(fn, "idx") == 0) {
        exit, "NO FILE CHOSEN, USING PREVIOUSLY DEFINED .idx FILE IF PRESENT";
-    } 
+    }
     ff = split_path( fn, -1 );
     data_path = ff(1);
 } else {
@@ -121,12 +121,12 @@ if ( _ytk ) {
 
  filemode = "rb";
   if ( !is_void( update )  )
-     if ( update == 1 ) 
+     if ( update == 1 )
 	filemode = "r+b";
 
   _edb_fd = idf = open(fn, filemode );
-  edb_filename = fn;			// 
-  
+  edb_filename = fn;			//
+
 
 // get the first three 32 bit integers from the file. They describe
 // things in the file as follows:
@@ -161,17 +161,17 @@ if ( _ytk ) {
     os += len
   }
 
-  edb = array( EDB, n(2) ); 
+  edb = array( EDB, n(2) );
   _read(idf, 12, edb);
 
 
 
 /*
-   eaarl_time_offset is computed below.  It needs to be added to any soe values 
- read from the waveform database.  It is computed below by subtracting the time 
+   eaarl_time_offset is computed below.  It needs to be added to any soe values
+ read from the waveform database.  It is computed below by subtracting the time
  found in the first raster from the time in the first record of  edb.  This works
  because after we determine the time offset, we correct the edb and write out
- a new version of the idx file.  This makes the idx file differ from times in 
+ a new version of the idx file.  This makes the idx file differ from times in
  the waveform data base by eaarl_time_offset seconds.  If you read in an idx
  file which hasn't been time corrected, the eaarl_time_offset will become 0
  because there will be no difference in the time values in edb and the waveform
@@ -181,7 +181,7 @@ if ( _ytk ) {
  valuse as the rasters are read in.
  */
   eaarl_time_offset = 0;	// need this first, cuz get_erast uses it.
-  if ( is_void(override_offset) ) 
+  if ( is_void(override_offset) )
     eaarl_time_offset = edb(1).seconds - decode_raster( get_erast(rn=1) ).soe;
   else
     eaarl_time_offset = override_offset;
@@ -204,7 +204,7 @@ if ( _ytk ) {
    soe_stop  = edb(data_ends).seconds;
 // change the time record to seconds of the day
 //   edb.seconds -= time2soe( [ year, day, 0, 0,0,0 ] );
-   soe_day_start = time2soe( [ year, day, 0, 0,0,0 ] ); 
+   soe_day_start = time2soe( [ year, day, 0, 0,0,0 ] );
    mission_duration = ( edb.seconds(q(0)) - edb.seconds(q(1)))/ 3600.0 ;
  } else {
    soe_day_start = 0;
@@ -223,7 +223,7 @@ if ( _ytk ) {
   soe2time( soe_stop );
 
   if ( verbose ) {
-  write,format="  Database contains: %6.3f GB across %d files.\n", 
+  write,format="  Database contains: %6.3f GB across %d files.\n",
          float(edb.raster_length)(sum)*1.0e-9, n(3)
   write,format="          Year, day: %d, %d\n", year, day
   write,format="   SOE at day start: %d\n", soe_day_start
@@ -235,7 +235,7 @@ if ( _ytk ) {
     variables.  Type info,EDB to see the structure of edb.%s\n\
   Try: rn = 1000;   rp = get_erast(rn = rn ); fma; drast(rp); rn +=1\n\
    to see a raster\n","\n"
-  if ( !is_void(update) ) 
+  if ( !is_void(update) )
     write,"******NOTE: The file(s) are open for updating\n"
   }
 
@@ -246,7 +246,7 @@ if ( _ytk ) {
  number of records and the data path. */
  if ( _ytk ) {
 	get_total_edb_records;
-    tkcmd,swrite(format="set edb(gb) %6.3f\n", 
+    tkcmd,swrite(format="set edb(gb) %6.3f\n",
           float(edb.raster_length)(sum)*1.0e-9);
     tkcmd,swrite(format="set edb(number_of_files) %d", n(3) );
     tkcmd,swrite(format="set edb(year) %d", year);
@@ -270,7 +270,7 @@ if ( _ytk ) {
 
 func edb_update ( time_correction ) {
 /* DOCUMENT edb_update
-   
+
   Writes the memory version of edb back into the file.  Used to correct time
   of day problems.
 
@@ -288,12 +288,12 @@ func edb_update ( time_correction ) {
 
 
 func get_erast( rn=, sod=, hms=, timeonly= ) {
-/* DOCUMENT get_erast( rn=, sod=, hms= ) 
-   
+/* DOCUMENT get_erast( rn=, sod=, hms=, timeonly= )
+
    Returns the requested raster from the database.  The request can
 specify the raster either by raster number, sod (seconds-of-day), or
 hms ( hours-minutes-seconds). Hms values are integers such as
-123456 which is 12 hours, 34 minutes, and 56 seconds.  
+123456 which is 12 hours, 34 minutes, and 56 seconds.
 
    The returned data will be an array of characters which will vary in
 length depending on the complexity of the laser waveforms therein.
@@ -321,11 +321,11 @@ See also:
    } else if ( !is_void( hms ) ) {
      sod = hms2sod( hms );
      rn = where( edb.seconds == sod );
- rn 
+ rn
    }
    // just use the first record with this value
-   if ( numberof(rn) > 1 ) 
-	rn = rn(1); 
+   if ( numberof(rn) > 1 )
+	rn = rn(1);
  }
 
  fidx = edb(rn).file_number;
@@ -340,15 +340,15 @@ See also:
 
    if ( is_void(timeonly) )
         omode = "rb";
-   else 
+   else
         omode = "r+b";
 
-   _eidf = open( data_path+"/eaarl/"+fn, omode );    
+   _eidf = open( data_path+"/eaarl/"+fn, omode );
  }
 
 // _eidf now should point to our file
- 
- if ( is_void( timeonly ) ) { 
+
+ if ( is_void( timeonly ) ) {
    rast = array( char, edb(rn).raster_length);
    _read,_eidf, edb(rn).offset, rast
  } else {
@@ -362,22 +362,22 @@ See also:
 func decode_raster( r ) {
 /* DOCUMENT decode_raster(r)
    Inputs: 	r      ; r is an edb raster data variable
-   Returns:     
-     decode_raster returns a RAST array of data.  
+   Returns:
+     decode_raster returns a RAST array of data.
 
 Type RAST to see whats in the RAST structure.
 
-Usage: 
+Usage:
   r = get_erast(rn = rn );	// get a raster from the database
   rp = get_erast(rn = rn ); fma; drast(rp); rn +=1
-    
+
 Examples using the result data:
    Plot rx waveform 60 channel 1:  plg,(*p.rx(60)) (,1)
    Plot irange values:             plmk,p.irange(1:0)
    Plot sa values:                 plmk,p.sa(1:0)
 
 
- To extract waveform 1 from pixel 60 and assign to w:  
+ To extract waveform 1 from pixel 60 and assign to w:
    w = (*p.rx(60))(,1)
 
  To extract, convert to integer, and remove bias from pixel 60, ch 1 use:
@@ -385,13 +385,13 @@ Examples using the result data:
    w = int((~w+1) - (~w(1)+1));
 
  History:
-	2/7/02 ww Modified to check for short rasters and return an empty one if 
+	2/7/02 ww Modified to check for short rasters and return an empty one if
 	       short one was found.  The problem occured reading 9-7-01 data.  It
 		may have been caused by data system lockup.
-   
+
 */
  extern t0,t1
- extern eaarl_time_offset, tca; 
+ extern eaarl_time_offset, tca;
   timer,t0
   return_raster = array(RAST,1);
   irange = array(int, 120);
@@ -400,7 +400,7 @@ Examples using the result data:
   len = i24(r, 1);      		// raster length
   type= r(4);           		// raster type id (should be 5 )
   if ( type != 5 ) {
-        write,format="Raster %d has invalid type (%d) Len:%d\n", 
+        write,format="Raster %d has invalid type (%d) Len:%d\n",
         rasternbr, type, len
 	return return_raster;
   }
@@ -410,12 +410,12 @@ Examples using the result data:
 
   seconds = i32(r, 5);  		// raster seconds of the day
   seconds += eaarl_time_offset;		// correct for time set errors.
-  
+
 
   fseconds = i32(r, 9); 		// raster fractional seconds 1.6us lsb
   rasternbr = i32(r, 13); 		// raster number
   npixels   = i16(r, 17)&0x7fff;        // number of pixels
-  digitizer = (i16(r,17)>>15)&0x1;      // digitizer                          
+  digitizer = (i16(r,17)>>15)&0x1;      // digitizer
   a = 19;        			// byte starting point for waveform data
 // write,format="Raster: %d npixels: %d\n", rasternbr, npixels
 
@@ -424,7 +424,7 @@ Examples using the result data:
   if (npixels < 0) return return_raster;
   if (npixels > 120 ) return return_raster;
   if (seconds(1) < 0) return return_raster;
-  if ((!is_void(tca)) && (numberof(tca) > rasternbr) ) { 
+  if ((!is_void(tca)) && (numberof(tca) > rasternbr) ) {
      seconds = seconds+tca(rasternbr);
   }
 //write, format= "rasternbr = %d, seconds = %d\n", rasternbr, seconds;
@@ -439,15 +439,15 @@ Examples using the result data:
          a = a + plen;			// use plen to skip to next pulse
     txlen = r(wa); wa++;		// transmit len is 8 bits max
     if ( txlen <=0 ) {
-       write, format=" (txlen<=0) raster:%d edb_access.i:decode_raster(%d). Channel 1  Bad rxlen value (%d) i=%d\n", 
+       write, format=" (txlen<=0) raster:%d edb_access.i:decode_raster(%d). Channel 1  Bad rxlen value (%d) i=%d\n",
               rasternbr, txlen, wa, i ;
        break;		
     }
     txwf = r(wa:wa+txlen-1);		// get the transmit waveform
     wa += txlen;			// update waveform addres to first rx waveform
     rxlen = i16(r,wa); wa += 2;		// get the 1st waveform and update wa to next
-    if ( rxlen <= 0 ) { 
-       write, format=" (rxlen<-0)raster:%d edb_access.i:decode_raster(%d). Channel 1  Bad rxlen value (%d) i=%d\n", 
+    if ( rxlen <= 0 ) {
+       write, format=" (rxlen<-0)raster:%d edb_access.i:decode_raster(%d). Channel 1  Bad rxlen value (%d) i=%d\n",
               rasternbr, rxlen, wa, i ;
        break;		
     }
@@ -458,7 +458,7 @@ Examples using the result data:
     wa += rxlen;			// update wa pointer to next
     rxlen = i16(r,wa); wa += 2;
     if (rxlen <=0) {
-       write, format=" raster:%d edb_access.i:decode_raster(%d). Channel 2  Bad rxlen value (%d) i=%d\n", 
+       write, format=" raster:%d edb_access.i:decode_raster(%d). Channel 2  Bad rxlen value (%d) i=%d\n",
               rasternbr, rxlen, wa, i ;
        break;
     }
@@ -468,7 +468,7 @@ Examples using the result data:
     wa += rxlen;
     rxlen = i16(r,wa); wa += 2;
     if (rxlen <=0) {
-       write, format=" raster:%d edb_access.i:decode_raster(%d). Channel 3  Bad rxlen value (%d) i=%d\n", 
+       write, format=" raster:%d edb_access.i:decode_raster(%d). Channel 3  Bad rxlen value (%d) i=%d\n",
               rasternbr, rxlen, wa, i ;
        break;
     }
@@ -484,8 +484,8 @@ Examples using the result data:
 /*****
     write,format="\n%d %d %d %d %d %d",
         i, offset_time, sa(i), irange(i), txlen , rxlen		 */
-}                                                   
- return_raster.offset_time  = ((offset_time & 0x00ffffff) 
+}
+ return_raster.offset_time  = ((offset_time & 0x00ffffff)
                               + fseconds) * 1.6e-6 + seconds;
  return_raster.irange    = irange;
  return_raster.sa        = sa;
