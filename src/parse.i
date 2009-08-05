@@ -308,3 +308,11 @@ func cir_to_soe(filename, offset=) {
 
     return result;
 }
+
+func parse_rn(rn) {
+/* DOCUMENT parse_rn(rn)
+    Simple wrapper that returns [rasterno, pulseno] for the given rn.
+*/
+// Original David Nagle 2009-07-21
+    return [rn&0xffffff, rn/0xffffff];
+}
