@@ -288,3 +288,37 @@ itcl::body GUI::FileEntryButton::file_choose {args} {
 }
 
 ##############################################################################
+
+proc tie_iw_combobox_textvariable path {
+# Used to make a iwidgets::combobox's -textvariable push changes to the
+# combobox's listbox. The path must be a path to an iwidgets::combobox.
+   set var [$path cget -textvariable]
+   if {[string length $var]} {
+      trace add variable ::$var write [list __tie_iw_trace $path]
+   } else {
+      error "$path has no -textvariable"
+   }
+}
+
+proc __tie_iw_trace {path name1 name2 op} {
+# Used by tie_iw_combobox_textvariable
+   if {![winfo exists $path]} {
+      if {$name2 == ""} {
+         set name "::$name1"
+      } else {
+         set name "::${name1}($name2)"
+      }
+      foreach tracing [trace info variable $name] {
+         if {[lindex $tracing 1] eq "__tie_iw_trace $path"} {
+            trace remove variable $name [lindex $tracing 0] [lindex $tracing 1]
+         }
+      }
+   } else {
+      set idx [lsearch [$path component list get 0 end] \
+         [set ::[$path cget -textvariable]]]
+      if {$idx > -1} {
+         $path selection set $idx
+      }
+   }
+}
+
