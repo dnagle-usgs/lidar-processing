@@ -1,11 +1,39 @@
 write, "$Id$";
+
+local alps_windows;
+/* DOCUMENT alps_windows
+
+   This documents what windows are used for throughout ALPS.
+
+   window, 0
+      - Used to display a pixel waveform (drast.i, raspulsearch.i)
+
+   window, 1
+      - Used for the raster (drast.i)
+
+   window, 2
+      - Used for the georectified raster (drast.i)
+
+   window, 3
+      - Default window for transects (transect.i)
+
+   window, 4
+      - ? raspulsearch.i
+
+   window, 5
+      - Default window for plotting processed data in l1pro.ytk
+
+   window, 6
+      - Default window for plotting flightlines (pnav) in plot.tcl, etc.
+*/
+
 func change_window_size(win, winsize, dofma) {
 /* DOCUMENT change_window_size(win, winsize, dofma)
 	This function is used to change the size of the yorick window.
 	INPUT:
 		win: window number
 		winsize: window size (1=small, 2=medium, 3=large, 4=huge)
-		dofma: clear plot (fma).  must be set to 1 to change window size.  
+		dofma: clear plot (fma).  must be set to 1 to change window size.
 	OUTPUT:
 		wset: 1 if window size has been changed, 0 otherwise.
 
@@ -56,7 +84,7 @@ func change_window_size(win, winsize, dofma) {
 func winlimits( win1, win2 ) {
 /* DOCUMENT set_winlimits( window1, window2 )
     Convenient shortcut function to set the window limits in window2
-    equal to the limits in window1. i.e. make window2 look like window1. 
+    equal to the limits in window1. i.e. make window2 look like window1.
 */
   window, win1;
   lm=limits();
