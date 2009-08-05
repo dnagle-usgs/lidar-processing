@@ -49,6 +49,37 @@ func  open_tkcmd_fifo( fn ) {
   ytkfifo = open( fn, "r+");
 }
 
+func open_tky_fifo(fn) {
+   extern tkyfifo;
+   tkyfifo = spawn(["cat", fn], tky_stdout);
+}
+
+func hex_to_string(input) {
+   output = array(char, strlen(input)/2);
+   sread, input, format="%2x", output;
+   return strchar(output);
+}
+
+func tky_stdout(msg) {
+   extern tky_fragment;
+   lines = spawn_callback(tky_fragment, msg);
+   for(i = 1; i <= numberof(lines); i++) {
+      line = lines(i);
+      if(!line) {
+         // process has died! should probably handle this better...
+      } else {
+         cmd = strpart(msg, 1:3);
+         data = strpart(msg, 5:);
+         if(cmd == "bkg") {
+            data = hex_to_string(data);
+            logger, "debug", "Executing background command: " + data;
+            funcdef(data);
+         } else {
+            logger, "error", "Unknown command received by tky: " + line;
+         }
+      }
+   }
+}
 
 func tkcmd(s) {
   write,ytkfifo,s; fflush,ytkfifo;
@@ -220,7 +251,11 @@ func logger(level, message) {
    This is basically a wrapper around ytk's ylogger command.
 */
 // Original David Nagle 2009-05-19
-   tkcmd, swrite(format="ylogger {%s} {%s}", level, message);
+   parts = [string(0), message];
+   do {
+      parts = strtok(parts(2), "\n");
+      tkcmd, swrite(format="ylogger {%s} {%s}", level, parts(1));
+   } while(parts(2));
 }
 
 _ytk_logger_id = -1;
