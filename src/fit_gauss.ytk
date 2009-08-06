@@ -1,0 +1,290 @@
+# vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
+# $Id$
+
+################################################################################
+#                                Initialization                                #
+################################################################################
+if {![namespace exists ::fit_gauss]} {
+   ybkg require \"fit_gauss.i\"
+   namespace eval ::fit_gauss {
+      # Constants
+      namespace eval c {
+         variable win .fitgauss        ;# Toplevel window for GUI
+
+         variable raster_min 1         ;# Minimum value for raster
+         variable raster_max 100000000 ;# Maximum value for raster
+         variable pixel_min 1          ;# Minimum value for pixel
+         variable pixel_max 120        ;# Maximum value for pixel
+         variable add_peak_min 0       ;# Minimum value for add_peak=
+         variable add_peak_max 5       ;# Maximum value for add_peak=
+         variable limrange_min 0       ;# Minimum value for lims= range
+         variable limrange_max 100     ;# Maximum value for lims= range
+      }
+      # GUI variables
+      namespace eval g {
+         variable result_var "p"       ;# Destination for result of fit_gauss()
+         variable raster 1             ;# Corresponds to fit_gauss(raster, ?)
+         variable pixel 1              ;# Corresponds to fit_gauss(?, pixel)
+         variable add_peak 0           ;# Corresponds to fit_gauss(?,?,add_peak=)
+         variable graph 1              ;# Corresponds to fit_gauss(?,?,graph=)
+         variable verbose 0            ;# Corresponds to fit_gauss(?,?,verbose=)
+         variable lims 0               ;# Specifies whether to provide lims=
+         variable lims_x1 1            ;# Corresponds to fit_gauss(?,?,lims=[x1,?])
+         variable lims_x2 2            ;# Corresponds to fit_gauss(?,?,lims=[?,x2])
+      }
+      # Non-GUI variables
+      namespace eval v {
+         variable bkp_result_var       ;# Used to enforce valid result variable
+         variable bkp_raster           ;# Used to enforce numerical raster
+         variable bkp_pixel            ;# Used to enforce numerical pixel
+         variable bkp_add_peak         ;# Used to enforce numerical add_peak
+         variable bkp_lims_x1          ;# Used to enforce numerical lims_x1
+         variable bkp_lims_x2          ;# Used to enforce numerical lims_x2
+      }
+   }
+}
+
+################################################################################
+#                               Variable Traces                                #
+################################################################################
+
+proc ::fit_gauss::check_integer varName {
+# varName should be a variable in the g:: namespace that has a corresponding
+# backup variable in the v:: namespace. If it's an integer, then backup is set
+# to the variable's value. If it's not an integer, then the variable is
+# restored to the backup value.
+   set var "g::$varName"
+   set bkp "v::bkp_$varName"
+   if {![string is integer [set $var]]} {
+      set $var [set $bkp]
+   } else {
+      set $bkp [set $var]
+   }
+}
+
+proc ::fit_gauss::bound {varName min max} {
+# Utility function that constrains the value for varName to the bounds defined
+# by min and max.
+   upvar $varName var
+   set var [lindex [lsort -integer [list $var $min $max]] 1]
+}
+
+proc ::fit_gauss::trace_result_var {name1 name2 op} {
+# Enforces a valid variable name (or the empty string).
+   if {[regexp {^(?:(?:)|[[:alpha:]_][[:alnum:]_]*)$} $g::result_var]} {
+      set v::bkp_result_var $g::result_var
+   } else {
+      set g::result_var $v::bkp_result_var
+   }
+}
+trace add variable ::fit_gauss::g::result_var write ::fit_gauss::trace_result_var
+
+proc ::fit_gauss::trace_raster {name1 name2 op} {
+# Ensures that raster is an integer and is within its bounds.
+   check_integer raster
+   bound g::raster $c::raster_min $c::raster_max
+}
+trace add variable ::fit_gauss::g::raster write ::fit_gauss::trace_raster
+
+proc ::fit_gauss::trace_pixel {name1 name2 op} {
+# Ensures that pixel is an integer and is within its bounds.
+   check_integer pixel
+   bound g::pixel $c::pixel_min $c::pixel_max
+}
+trace add variable ::fit_gauss::g::pixel write ::fit_gauss::trace_pixel
+
+proc ::fit_gauss::trace_add_peak {name1 name2 op} {
+# Ensures that add_peak is an integer and is within its bounds.
+   check_integer add_peak
+   bound g::add_peak $c::add_peak_min $c::add_peak_max
+}
+trace add variable ::fit_gauss::g::add_peak write ::fit_gauss::trace_add_peak
+
+proc ::fit_gauss::trace_lims_x1 {name1 name2 op} {
+# Makes three checks:
+#   1. Ensure lims_x1 is an integer; if not, restore backup.
+#   2. Coerce limrange_min <= lims_x1 <= limrange_max by changing lims_x1 if
+#      necessary.
+#   3. Coerce lims_x1 <= lims_x2 by changing lims_x2 -> lims_x1 if necessary.
+   check_integer lims_x1
+   bound g::lims_x1 $c::limrange_min $c::limrange_max
+   if {$g::lims_x1 > $g::lims_x2} {
+      set g::lims_x2 $g::lims_x1
+   }
+}
+proc ::fit_gauss::trace_lims_x2 {name1 name2 op} {
+# Makes three checks:
+#   1. Ensure lims_x2 is an integer; if not, restore backup.
+#   2. Coerce limrange_min <= lims_x2 <= limrange_max by changing lims_x2 if
+#      necessary.
+#   3. Coerce lims_x1 <= lims_x2 by changing lims_x1 -> lims_x2 if necessary.
+   check_integer lims_x2
+   bound g::lims_x2 $c::limrange_min $c::limrange_max
+   if {$g::lims_x1 > $g::lims_x2} {
+      set g::lims_x1 $g::lims_x2
+   }
+}
+
+# Ensure that lims_x1 <= lims_x2 and limrange_min <= lims_x1/2 <= limrange_max
+trace add variable ::fit_gauss::g::lims_x1 write ::fit_gauss::trace_lims_x1
+trace add variable ::fit_gauss::g::lims_x2 write ::fit_gauss::trace_lims_x2
+
+proc ::fit_gauss::trace_lims_gui {name1 name2 op} {
+   if {[winfo exists $c::win]} {
+      set lim_vars [list]
+      foreach var [list g::lims_x1 g::lims_x2] {
+         lappend lim_vars [namespace which -variable $var]
+      }
+
+      set state [lindex [list disabled normal] $g::lims]
+      foreach widget [winfo_children_all $c::win] {
+         if {[lsearch -glob [$widget configure] -textvariable\ *] > -1} {
+            set var [namespace which -variable [$widget cget -textvariable]]
+            if {[lsearch $lim_vars $var] > -1} {
+               $widget configure -state $state
+            }
+         }
+      }
+   }
+}
+
+trace add variable ::fit_gauss::g::lims write ::fit_gauss::trace_lims_gui
+
+################################################################################
+#                               Core Procedures                                #
+################################################################################
+
+proc ::fit_gauss::create_gui {} {
+   set w $c::win
+
+   destroy $w
+   toplevel $w -padx 2 -pady 2
+   wm title $w "Fit Gauss"
+
+   # Raster #
+   # Pixel #
+   # graph= 1/0
+   # add_peak= 0,1,2,3...
+   # verbose= 1/0
+   # lims= [a,b] -- a=0,1,2,3... b=0,1,2,3... a <= b
+
+   set f $w.lfrSelection
+   labelframe $f -text "Pixel Selection"
+
+   label $f.lblRaster -text "Raster:"
+   spinbox $f.spnRaster \
+      -from $c::raster_min -to $c::raster_max -increment 1 \
+      -textvariable ::fit_gauss::g::raster
+
+   label $f.lblPixel -text "Pixel:"
+   spinbox $f.spnPixel \
+      -from $c::pixel_min -to $c::pixel_max -increment 1 \
+      -textvariable ::fit_gauss::g::pixel
+
+   grid $f.lblRaster $f.spnRaster x $f.lblPixel $f.spnPixel
+
+   grid $f
+   grid columnconfigure $f {1 4} -weight 1
+   grid columnconfigure $f 3 -pad 5
+
+   set f $w.lfrOptions
+   labelframe $f -text "Options"
+
+   label $f.lblAddPeak -text "Add Peaks:"
+   spinbox $f.spnAddPeak -from $c::add_peak_min -to $c::add_peak_max -increment 1 \
+      -textvariable ::fit_gauss::g::add_peak
+
+   grid $f.lblAddPeak $f.spnAddPeak - -
+
+   checkbutton $f.chkLims -variable ::fit_gauss::g::lims -text "Constrain Lims from"
+
+   spinbox $f.spnLimsX1 \
+      -from $c::limrange_min -to $c::limrange_max -increment 1 \
+      -textvariable ::fit_gauss::g::lims_x1
+
+   label $f.lblLimsX2 -text "to"
+   spinbox $f.spnLimsX2 \
+      -from $c::limrange_min -to $c::limrange_max -increment 1 \
+      -textvariable ::fit_gauss::g::lims_x2
+
+   grid $f.chkLims $f.spnLimsX1 $f.lblLimsX2 $f.spnLimsX2
+
+   grid $f
+   grid columnconfigure $f {1 3} -weight 1
+
+   set f $w.lfrOutput
+   labelframe $f -text "Output"
+
+   label $f.lblResultVar -text "Result variable:"
+   entry $f.entResultVar -textvariable ::fit_gauss::g::result_var
+
+   grid $f.lblResultVar $f.entResultVar
+
+   checkbutton $f.chkGraph -text "Graph" -variable ::fit_gauss::g::graph
+   checkbutton $f.chkVerbose -text "Verbose" -variable ::fit_gauss::g::verbose
+   button $f.btnFitGauss -text "Fit Gauss" -command ::fit_gauss::cmd_fit_gauss
+
+   grid $f.chkGraph $f.btnFitGauss
+   grid $f.chkVerbose ^
+
+   grid $f
+   grid columnconfigure $f 1 -weight 1
+
+   grid columnconfigure $w 0 -weight 1
+
+   foreach child [winfo_children_all $w] {
+      switch -- [string range [winfo name $child] 0 2] {
+         btn {
+            #grid configure $child -sticky news
+         }
+         chk {
+            grid configure $child -sticky w
+         }
+         ent {
+            grid configure $child -sticky ew
+         }
+         lbl {
+            grid configure $child -sticky e
+         }
+         lfr {
+            $child configure -pady 2 -padx 2
+            grid configure $child -sticky ew
+         }
+         spn {
+            $child configure -width 5
+            grid configure $child -sticky ew
+         }
+      }
+   }
+
+   # Initialize backup variables
+   foreach var [info vars v::bkp_*] {
+      set $var [set g::[string range [namespace tail $var] 4 end]]
+   }
+
+   # This triggers any traces on each GUI variable. Useful for ensuring that
+   # any necessary GUI updating is done.
+   foreach var [info vars g::*] {
+      set $var [set $var]
+   }
+}
+
+proc ::fit_gauss::cmd_fit_gauss {} {
+   set var $g::result_var
+   set command "fit_gauss"
+   set params [list $g::raster $g::pixel]
+   set options [list]
+   foreach setting [list graph add_peak verbose] {
+      if {[set g::$setting]} {
+         dict set options $setting [set g::$setting]
+      }
+   }
+   if {$g::lims} {
+      dict set options lims "\[$g::lims_x1, $g::lims_x2\]"
+   }
+   if {[string length $var]} {
+      yset $var $command $params $options
+   } else {
+      ycmd $command $params $options
+   }
+}
