@@ -94,30 +94,6 @@ fset=, lmark=, bconst=, xyz_data=, xyz_buf=, tx=) {
    if(typeof(data)=="pointer") data = *data(1);
    data = test_and_clean(data);
 
-   window, win;
-
-   /*
-   Mouse commands:
-
-   left            Examine a point
-   middle          Set reference point
-   right           Quit
-
-   shift-left      Append point
-   shift-middle
-   shift-right
-
-   control-left
-   control-middle
-   control-right
-   */
-
-   left_mouse  = 1;
-   center_mouse = 2;
-   right_mouse = 3;
-
-   ctl_left_mouse = 41;
-
    rtn_data = [];
    nsaved = 0;
    do {
@@ -125,11 +101,10 @@ fset=, lmark=, bconst=, xyz_data=, xyz_buf=, tx=) {
 
       window, win;
       spot = mouse(1, 1, "");
-      mouse_button = spot(10) + 10 * spot(11);
 
-      if(mouse_button == right_mouse) break;
+      if(mouse_click_is("right", spot)) break;
 
-      if(mouse_button == ctl_left_mouse) {
+      if(mouse_click_is("ctrl-left", spot)) {
          if(is_void(mindata)) {
             write, "\007You must first select a point before you can append it.";
             continue;
@@ -252,7 +227,7 @@ fset=, lmark=, bconst=, xyz_data=, xyz_buf=, tx=) {
 
       dump_info, edb, mindata, last=_last_rastpulse, ref=_rastpulse_reference;
 
-      if(mouse_button == center_mouse) {
+      if(mouse_click_is("center", spot)) {
          _rastpulse_reference = array(double, 4);
          _rastpulse_reference(1) = mindata.north;
          _rastpulse_reference(2) = mindata.east;
@@ -294,7 +269,7 @@ fset=, lmark=, bconst=, xyz_data=, xyz_buf=, tx=) {
       if(is_array(xyz_data))
          raspulsearch_groundtruth, mindata, xyz_data, xyz_buf;
 
-   } while(mouse_button != right_mouse);
+   } while(! mouse_click_is("right", spot));
 
    q = *(rcf( rtn_data.elevation, 1000.0, mode=2)(1));
    write, "*************************************************************************************";
