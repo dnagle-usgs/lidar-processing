@@ -197,30 +197,6 @@ func drast(r) {
    return &aa;
 }
 
-/*
-   In the following function, mouse click return values have the button and
-   modifiers combined as follows:
-
-      code = button + 10 * modifier
-
-   Or more correctly:
-
-      b = mouse()
-      code = b(10) + 10 * b(11);
-
-   This results in codes that can be deciphered as follows:
-
-                  left     middle   right
-   (no modifier)  1        2        3
-           shift  11       12       13
-         control  41       42       43
-      ctrl+shift  51       52       53
-        alt/meta  81       82       83
-       alt+shift  91       92       93
-        alt+ctrl  121      122      123
-  alt+ctrl+shift  131      132      133
-*/
-
 func msel_wf(w, cb=, geo=) {
 /* DOCUMENT msel_wf, w, cb=, geo=
    Use the mouse to select a pixel to display a waveform for.
@@ -242,7 +218,6 @@ func msel_wf(w, cb=, geo=) {
    if (geo == 1) win = 2; //use georectified raster
    window, win;
 
-   btn = 0;
    prompt = swrite(format="Window: %d. Left click: Examine Waveform. Middle click: Exit",win);
    while(1) {
       b = mouse(1,0,prompt);
@@ -256,8 +231,8 @@ func msel_wf(w, cb=, geo=) {
       if (win == 2)
          idx = (abs(b(1)-xm))(mnx);
 
-      btn = int(b(11)*10 + b(10));
-      if (btn == 2) break;
+      if(mouse_click_is("middle", b)) break;
+
       if (geo)
          show_geo_wf, *w, idx, win=0, cb=cb;
       else
