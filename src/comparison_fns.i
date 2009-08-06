@@ -40,7 +40,7 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, elv=, read_file=, pdop=, mode=
 
    extern i, no, be_avg_pts, be, kings_elv, be_elv, diff1, diff2, kings_indx, day123_pnav, eaarl2;
    kings_indx = [];
-   if (!buf) buf = 500 // default to 5 m buffer side.
+   if (!buf) buf = 100 // default to 1 m buffer side.
    if (is_void(mode)) mode = 3
    if (is_array(rgn)) {
      indx = where(((kings(1,) >= rgn(1)) &
