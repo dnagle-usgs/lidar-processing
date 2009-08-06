@@ -1,4 +1,5 @@
 require, "lmfit.i";
+write, "$Id$";
 
 func fit_gauss(rast, i, graph=, add_peak=, lims=, verbose=)
 /* DOCUMENT p=fit_gauss(<raster #>, <pixel #>, graph=, add_peak=, lims=, verbose=)
