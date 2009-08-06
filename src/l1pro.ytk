@@ -1299,6 +1299,14 @@ if {[winfo exists .l1wid]} {
   .l1wid.mb.diag add command -label "Select Data Segments" \
     -command select_data_segments
 
+  .l1wid.mb.diag add command -label "Open Fit Gaussian GUI" \
+    -command open_fit_gaussian_gui
+
+  proc open_fit_gaussian_gui {} {
+    source [file join $::src_path fit_gauss.ytk]
+    fit_gauss::create_gui
+  }
+
   proc rcf_region {} {
     global varlist l1pro_data pro_var rcf_var
     destroy .rcf
