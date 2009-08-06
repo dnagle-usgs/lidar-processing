@@ -1,6 +1,9 @@
-/* usage: p=fit_gauss(<raster #>, <pixel #>, );
-the returned array (p) contains a series of triples that represent the 
-mean, sigma and amplitude respectively of the fitted gaussians. 
+require, "lmfit.i";
+
+func fit_gauss(rast, i, graph=, add_peak=, lims=, verbose=)
+/* DOCUMENT p=fit_gauss(<raster #>, <pixel #>, graph=, add_peak=, lims=, verbose=)
+the returned array (p) contains a series of triples that represent the
+mean, sigma and amplitude respectively of the fitted gaussians.
 
 Optional inputs:
 add_peak = 1, will add an input that results in the biggest reduction of rmse
@@ -9,8 +12,7 @@ lims=[x1,x2], restricts the location of the new peak to within these limits
 
 **NOTE that only one additional peak is supported at this time**
 */
-
-func fit_gauss(rast, i, graph=, add_peak=, lims=, verbose=)
+// Original Christine Kranenburg 2009-08-06
 {
    if (is_void(graph)) graph=0
    rp = decode_raster(get_erast(rn=rast));
@@ -90,11 +92,12 @@ func fit_gauss(rast, i, graph=, add_peak=, lims=, verbose=)
    return a;
 }
 
-
-/* Function to return maxima and/or inflection points.
-   Currently set to return inflection points. return idx if maxima */
-
 func lclxtrem(w, thresh=)
+/* DOCUMENT lclxtrem(w, thresh=)
+   Function to return maxima and/or inflection points.
+   Currently set to return inflection points. return idx if maxima
+*/
+// Original Christine Kranenburg 2009-08-06
 {
    width=1
    if (!is_void(thresh)) w=((w-thresh)*(w-thresh > 0))
@@ -111,11 +114,12 @@ func lclxtrem(w, thresh=)
    return infx;
 }
 
-
-/* Function to return gaussian curve given mean, sigma and amplitude  
-   of gaussian as well as the independent variable */
-
 func gauss3(x, p)
+/* DOCUMENT guass3(x, p)
+   Function to return gaussian curve given mean, sigma and amplitude
+   of gaussian as well as the independent variable
+*/
+// Original Christine Kranenburg 2009-08-06
 {
    mu=p(1);
    s=p(2);
@@ -125,11 +129,12 @@ func gauss3(x, p)
    return f;
 }
 
-
-/* Wrapper function that gets everything in the right format for LM_fit 
-function to perform optimization. */
-
 func lmfitfun(x, a, f=)
+/* DOCUMENT lmfitfun(x, a, f=)
+Wrapper function that gets everything in the right format for LM_fit
+function to perform optimization.
+*/
+// Original Christine Kranenburg 2009-08-06
 {
    if (is_void(f)) f=0;
    for (i=0; i < numberof(a)/3; i++) {
