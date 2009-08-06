@@ -3177,12 +3177,13 @@ if {[winfo exists .l1wid]} {
   #  -side top -pady 3 -fill x
 
 
-  proc send_latlon_to_l1pro {minlon maxlon minlat maxlat utm} {
+  proc send_latlon_to_l1pro {minlon maxlon minlat maxlat utmarg} {
     global mnlon mxlon mnlat mxlat utm
     set mnlon $minlon
     set mxlon $maxlon
     set mnlat $minlat
     set mxlat $maxlat
+    set utm $armarg
   }
 
 
