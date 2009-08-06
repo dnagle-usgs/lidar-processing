@@ -63,6 +63,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "manual_filter.i";
    require, "map.i";
    require, "mathop.i";
+   require, "mouse.i";
    require, "nad832navd88.i";
    require, "nav.i";
    require, "pip.i";
