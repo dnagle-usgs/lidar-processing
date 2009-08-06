@@ -186,6 +186,10 @@ func call_process_tile( junk=, host= ) {
 func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, rcf_only= ) {
    extern ofn;
    default, rcf_only, 0;
+
+   // Make sure the output directory exits
+   mkdirp, save_dir;
+
    if (is_array(r) || rcf_only == 1 ) {
 
       if ( rcf_only == 0 ) {
@@ -700,6 +704,10 @@ Added server/client support (2009-01) Richard Mitchell
    user_pc_NAME(2) = rdline(f);
    close,f;
    system, "rm ~/temp.123456789";
+
+   // Make sure the output path ends in a /
+   if ( strpart(save_dir, 0:0) != "/" ) save_dir += "/";
+   // write, format="SAVE_DIR: %s\n", save_dir;
 
    if (zone) zone_s = swrite(format="%d", zone);
    //if (zone) pick=1;
