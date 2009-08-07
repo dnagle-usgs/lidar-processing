@@ -206,7 +206,9 @@ proc ybkg args {
 #  Also, do not send any input that includes newlines. It just doesn't work
 #  yet.
 ##
-   set cmd [string_to_hex [eval concat $args]]
+   set cmd [eval concat $args]
+   logger debug "Sending background command to Yorick: $cmd"
+   set cmd [string_to_hex $cmd]
    puts $::tky_fifo "bkg $cmd"
 }
 
