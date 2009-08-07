@@ -1374,7 +1374,7 @@ func ex_veg_all( rn, i,  last=, graph=, use_be_centroid=, use_be_peak=, pse=, th
 
  extern ex_bath_rn, ex_bath_rp, a, irg_a, _errno, pr
   // check if global variable irg_a contains the current raster number (rn)
-  if (!is_array(where(irg_a.raster == rn))) {
+  if (is_void(irg_a) || !is_array(where(irg_a.raster == rn))) {
      irg_a = irg(rn,rn, usecentroid=1);
   }
   this_irg = irg_a(where(rn==irg_a.raster));
