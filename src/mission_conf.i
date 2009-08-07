@@ -679,6 +679,52 @@ func missiondata_load(type, day=) {
     }
 }
 
+func missiondata_soe_load(soe) {
+/* DOCUMENT missiondata_soe_load, soe;
+    If a mission day exists that contains this soe in its edb data, it will be
+    loaded and 1 will be returned. Otherwise, 0 will be returned.
+*/
+// Original David Nagle 2009-08-07
+    day = missiondata_soe_query(soe);
+    if(day) {
+        missionday_current, day;
+        missiondata_load, "all";
+        return 1;
+    } else {
+        return 0;
+    }
+}
+
+func missiondata_soe_query(soe) {
+/* DOCUMENT day = missiondata_soe_query(soe)
+    If a mission day exists and contains this soe in its edb data, that day's
+    name will be returned. Otherwise, returns [];
+*/
+// Original David Nagle 2009-08-07
+    extern edb;
+    env_backup = missiondata_wrap("edb");
+
+    days = missionday_list();
+    result = [];
+    for(i = 1; i <= numberof(days); i++) {
+        if(mission_has("edb file", day=days(i))) {
+            missiondata_load, "edb", day=days(i);
+            w = where(edb.seconds > time2soe([2000,0,0,0,0,0]));
+            if(numberof(w)) {
+                soe_min = edb(w).seconds(min);
+                soe_max = edb(w).seconds(max);
+                if(soe_min <= soe && soe <= soe_max) {
+                    result = days(i);
+                    break;
+                }
+            }
+        }
+    }
+
+    missiondata_unwrap, env_backup;
+    return result;
+}
+
 func missiondata_read(filename) {
 /* DOCUMENT missiondata_read, filename
     data = missiondata_read(filename)
