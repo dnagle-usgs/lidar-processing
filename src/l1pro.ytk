@@ -1251,6 +1251,15 @@ if {[winfo exists .l1wid]} {
     }
   .l1wid.mb.graph add command -label "Open the Limits Tool" -underline 0 \
     -command limits_tool
+  .l1wid.mb.graph add separator
+  .l1wid.mb.graph add command -label "Change current window to 75 DPI / 450x450" \
+    -command [list ycmd change_window_size [list window() 1 0]]
+  .l1wid.mb.graph add command -label "Change current window to 100 DPI / 600x600" \
+    -command [list ycmd change_window_size [list window() 2 0]]
+  .l1wid.mb.graph add command -label "Change current window to 75 DPI / 825x638" \
+    -command [list ycmd change_window_size [list window() 3 0]]
+  .l1wid.mb.graph add command -label "Change current window to 100 DPI / 1100x850" \
+    -command [list ycmd change_window_size [list window() 4 0]]
 
   .l1wid.mb add cascade -label PostProcessing -underline 0 -menu .l1wid.mb.post
 
