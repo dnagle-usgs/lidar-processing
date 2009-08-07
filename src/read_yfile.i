@@ -1034,8 +1034,8 @@ func set_read_yorick(vname) {
       cminmax = stdev_min_max(vname.elevation)/100.;
       cmin = cminmax(1);
       cmax = cminmax(2);
-      tkcmd, swrite(format="set plot_settings(cmin) %f", cmin);
-      tkcmd, swrite(format="set plot_settings(cmax) %f", cmax);
+      tkcmd, swrite(format="set plot_settings(cmin) %.2f", cmin);
+      tkcmd, swrite(format="set plot_settings(cmax) %.2f", cmax);
     }
   }
   if (ab == GEO || ab == GEOALL) {
@@ -1045,8 +1045,8 @@ func set_read_yorick(vname) {
       cminmax = stdev_min_max(vname.depth+vname.elevation)/100.;
       cmin = cminmax(1);
       cmax = cminmax(2);
-      tkcmd, swrite(format="set plot_settings(cmin) %f", cmin);
-      tkcmd, swrite(format="set plot_settings(cmax) %f", cmax);
+      tkcmd, swrite(format="set plot_settings(cmin) %.2f", cmin);
+      tkcmd, swrite(format="set plot_settings(cmax) %.2f", cmax);
     }
   }
   if (ab == VEG || ab == VEG_ || ab == VEG__ || ab == VEGALL || ab == VEG_ALL || ab == VEG_ALL_) {
@@ -1056,8 +1056,8 @@ func set_read_yorick(vname) {
       cminmax = stdev_min_max(vname.lelv)/100.;
       cmin = cminmax(1);
       cmax = cminmax(2);
-      tkcmd, swrite(format="set plot_settings(cmin) %f", cmin);
-      tkcmd, swrite(format="set plot_settings(cmax) %f", cmax);
+      tkcmd, swrite(format="set plot_settings(cmin) %.2f", cmin);
+      tkcmd, swrite(format="set plot_settings(cmax) %.2f", cmax);
     }
   }
   if (ab == CVEG_ALL) {
@@ -1066,8 +1066,8 @@ func set_read_yorick(vname) {
       cminmax = stdev_min_max(vname.elevation)/100.;
       cmin = cminmax(1);
       cmax = cminmax(2);
-      tkcmd, swrite(format="set plot_settings(cmin) %f", cmin);
-      tkcmd, swrite(format="set plot_settings(cmax) %f", cmax);
+      tkcmd, swrite(format="set plot_settings(cmin) %.2f", cmin);
+      tkcmd, swrite(format="set plot_settings(cmax) %.2f", cmax);
     }
   }
   
