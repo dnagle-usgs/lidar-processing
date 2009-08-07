@@ -131,6 +131,8 @@ fset=, lmark=, bconst=, xyz_data=, xyz_buf=, tx=) {
       if(!is_void(mindata)) {
          rasterno = mindata.rn&0xffffff;
          pulseno = mindata.rn/0xffffff;
+         if(!is_void(missiondata_soe_load))
+            missiondata_soe_load, mindata.soe;
 
          if(_ytk) {
             if(strlen(data_path) > 0) {
