@@ -1,4 +1,5 @@
 write, "$Id$";
+require, "copy_plot.i";
 
 local alps_windows;
 /* DOCUMENT alps_windows
@@ -39,38 +40,43 @@ func change_window_size(win, winsize, dofma) {
 
 		Original: Amar Nayegandhi 12/12/2005.
 */
+	extern _ytk_window_size;
 
-	extern _ytk_window_size
+   default, dofma, 0;
+   default, _ytk_window_size, array(int, 64);
 
-	if (is_void(dofma)) dofma=0;
+   if(_ytk_window_size(win) != winsize) {
+      if(!dofma) {
+         // find unused window
+         bkpwin = 63;
+         while(bkpwin >= 0 && window_exists(bkpwin)) bkpwin -= 1;
+         if(bkpwin >= 0) {
+            replot_all, win, bkpwin;
+         } else {
+            bkpwin = [];
+         }
+      }
 
-	if (is_void(_ytk_window_size)) {
-		_ytk_window_size = array(int, 64);
-	}
+      winkill, win;
+      _ytk_window_size(win) = winsize;
+      if (_ytk_window_size(win) == 1) {
+         window, win, dpi=75, style="work.gs", width=450, height=450;
+      }
+      if (_ytk_window_size(win) == 2) {
+         window, win, dpi=100, style="work.gs", width=600, height=600;
+      }
+      if (_ytk_window_size(win) == 3) {
+         window, win, dpi=75, style="landscape11x85.gs", width=825, height=638;
+      }
+      if (_ytk_window_size(win) == 4) {
+         window, win, dpi=100, style="landscape11x85.gs", width=1100, height=850;
+      }
+      limits, square=1;
 
-	if (_ytk_window_size(win) != winsize) {
-		if (!dofma) {
-			msg = "Cannot change window size without performing fma. Please check the fma button and try again"
-			cmd = "tk_messageBox -icon warning -message {" + msg + "}\n"
-			tkcmd, cmd;
-			return 0;
-		} else {
-			winkill, win;
-			_ytk_window_size(win) = winsize;
-			if (_ytk_window_size(win) == 1) {
-				window, win, dpi=75;
-			}
-			if (_ytk_window_size(win) == 2) {
-				window, win, dpi=100;
-			}
-			if (_ytk_window_size(win) == 3) {
-				window, win, dpi=75, style="landscape11x85.gs", width=825, height=638;
-			}
-			if (_ytk_window_size(win) == 4) {
-				window, win, dpi=100, style="landscape11x85.gs", width=1100, height=850;
-			}
-			limits, square=1;
-		}
+      if(!is_void(bkpwin)) {
+         replot_all, bkpwin, win;
+         winkill, bkpwin;
+      }
 	} else {
 		if (dofma) {
 			window, win; fma; limits, square=1;
