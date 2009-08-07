@@ -31,6 +31,8 @@ if {![namespace exists ::fit_gauss]} {
          variable lims 0               ;# Specifies whether to provide lims=
          variable lims_x1 1            ;# Corresponds to fit_gauss(?,?,lims=[x1,?])
          variable lims_x2 2            ;# Corresponds to fit_gauss(?,?,lims=[?,x2])
+
+         variable mouse_mode 0         ;# Are we in mouse mode?
       }
       # Non-GUI variables
       namespace eval v {
@@ -150,6 +152,14 @@ proc ::fit_gauss::trace_lims_gui {name1 name2 op} {
 
 trace add variable ::fit_gauss::g::lims write ::fit_gauss::trace_lims_gui
 
+proc ::fit_gauss::trace_sync_tky_num {var name1 name2 op} {
+   ybkg h_set tky_fit_gauss_vars \"$var\" [set ::fit_gauss::g::$var]
+}
+
+proc ::fit_gauss::trace_sync_tky_str {var name1 name2 op} {
+   ybkg h_set tky_fit_gauss_vars \"$var\" \"[set ::fit_gauss::g::$var]\"
+}
+
 ################################################################################
 #                               Core Procedures                                #
 ################################################################################
@@ -181,11 +191,14 @@ proc ::fit_gauss::create_gui {} {
       -from $c::pixel_min -to $c::pixel_max -increment 1 \
       -textvariable ::fit_gauss::g::pixel
 
-   grid $f.lblRaster $f.spnRaster x $f.lblPixel $f.spnPixel
+   button $f.btnEnterMouse -text "Mouse Mode" \
+      -command ::fit_gauss::enter_mouse_mode
+
+   grid $f.lblRaster $f.spnRaster $f.btnEnterMouse
+   grid $f.lblPixel $f.spnPixel ^
 
    grid $f
-   grid columnconfigure $f {1 4} -weight 1
-   grid columnconfigure $f 3 -pad 5
+   grid columnconfigure $f 1 -weight 1
 
    set f $w.lfrOptions
    labelframe $f -text "Options"
@@ -270,21 +283,63 @@ proc ::fit_gauss::create_gui {} {
 }
 
 proc ::fit_gauss::cmd_fit_gauss {} {
-   set var $g::result_var
-   set command "fit_gauss"
-   set params [list $g::raster $g::pixel]
-   set options [list]
-   foreach setting [list graph add_peak verbose] {
-      if {[set g::$setting]} {
-         dict set options $setting [set g::$setting]
+   if {$g::mouse_mode} {
+      ybkg tky_fit_gauss_exec
+   } else {
+      set var $g::result_var
+      set command "fit_gauss"
+      set params [list $g::raster $g::pixel]
+      set options [list]
+      foreach setting [list graph add_peak verbose] {
+         if {[set g::$setting]} {
+            dict set options $setting [set g::$setting]
+         }
+      }
+      if {$g::lims} {
+         dict set options lims "\[$g::lims_x1, $g::lims_x2\]"
+      }
+      if {[string length $var]} {
+         yset $var $command $params $options
+      } else {
+         ycmd $command $params $options
       }
    }
-   if {$g::lims} {
-      dict set options lims "\[$g::lims_x1, $g::lims_x2\]"
+}
+
+proc ::fit_gauss::enter_mouse_mode {} {
+   set g::mouse_mode 1
+   enable_mouse_mode_traces
+   # This triggers all the traces that just got set, to make sure we start off
+   # with the right values
+   foreach var [info vars g::*] {
+      set $var [set $var]
    }
-   if {[string length $var]} {
-      yset $var $command $params $options
-   } else {
-      ycmd $command $params $options
+   ycmd tky_fit_gauss_interactive [list $::pro_var $::win_no]
+}
+
+proc ::fit_gauss::leave_mouse_mode {} {
+   set g::mouse_mode 0
+   disable_mouse_mode_traces
+}
+
+proc ::fit_gauss::enable_mouse_mode_traces {} {
+   foreach var [list raster pixel graph add_peak lims lims_x1 lims_x2 verbose] {
+      trace add variable ::fit_gauss::g::$var write \
+         [list ::fit_gauss::trace_sync_tky_num $var]
+   }
+   foreach var [list result_var] {
+      trace add variable ::fit_gauss::g::$var write \
+         [list ::fit_gauss::trace_sync_tky_str $var]
+   }
+}
+
+proc ::fit_gauss::disable_mouse_mode_traces {} {
+   foreach var [list raster pixel graph add_peak lims lims_x1 lims_x2 verbose] {
+      trace remove variable ::fit_gauss::g::$var write \
+         [list ::fit_gauss::trace_sync_tky_num $var]
+   }
+   foreach var [list result_var] {
+      trace remove variable ::fit_gauss::g::$var write \
+         [list ::fit_gauss::trace_sync_tky_str $var]
    }
 }
