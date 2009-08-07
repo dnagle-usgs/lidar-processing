@@ -576,7 +576,7 @@ proc ::plot::track_load { } {
 
    if { $g::pnav_file == "" } {
       set ifile ""
-      set idir $::data_path
+      set idir ""
    } else {
       set ifile [file tail $g::pnav_file]
       set idir [file dirname $g::pnav_file]
@@ -749,7 +749,7 @@ proc ::plot::plan_remove {} {
 }
 
 proc ::plot::plan_add {} {
-   set file [tk_getOpenFile -initialdir $::data_path \
+   set file [tk_getOpenFile \
       -filetypes {
          { {Flight plan files} {.fp} }
          { {All files} { *  } }
@@ -819,7 +819,7 @@ proc ::plot::shp_remove {} {
 
 proc ::plot::shp_add {} {
    set file [tk_getOpenFile -filetypes $c::shape_file_types \
-      -initialdir $::data_path -parent .plotmenu]
+      -parent .plotmenu]
    if {$file ne ""} {
       $g::shpListBox insert end $file
       exp_send "add_shapefile, \"$file\";\r"
@@ -895,7 +895,7 @@ proc ::plot::poly_highlight {} {
 }
 
 proc ::plot::poly_write {} {
-   set file [tk_getSaveFile -parent .plotmenu -initialdir $::data_path \
+   set file [tk_getSaveFile -parent .plotmenu \
       -filetypes $c::shape_file_types]
    if {$file ne ""} {
       exp_send "polygon_write, \"$file\"\r"
@@ -930,7 +930,7 @@ proc ::plot::image_add_location { } {
 
 proc ::plot::image_add_lidar { } {
    set file [tk_getOpenFile -filetypes $::plot::c::image_file_types \
-      -initialdir $::data_path -parent .plotmenu]
+      -parent .plotmenu]
    if { ![string equal "" $file] } {
       regexp -- {t_e([^_]+)_n([^_]+)_([^_]+).*} [file tail $file] - east north zone
       ::plot::_image_add [list $file $east $north \
@@ -1055,7 +1055,7 @@ proc ::plot::dlg::location::prompt { } {
 
 proc ::plot::dlg::location::choose_image { } {
    set file [tk_getOpenFile -filetypes $::plot::c::image_file_types \
-      -initialdir $::data_path -parent $v::dlg]
+      -parent $v::dlg]
    if { $file != "" } {
       set v::file $file
    }
@@ -1140,7 +1140,7 @@ proc ::plot::image_dimensions {filename} {
 
 proc ::plot::dlg::worldfile::choose_image { } {
    set file [tk_getOpenFile -filetypes $::plot::c::image_file_types \
-      -initialdir $::data_path -parent $v::dlg]
+      -parent $v::dlg]
    if { $file != "" } {
       set v::image $file
       ::plot::dlg::worldfile::predict_world
@@ -1151,7 +1151,7 @@ proc ::plot::dlg::worldfile::choose_world { } {
    if {![string equal "" $v::image]} {
       set dir [file dirname $v::image]
    } else {
-      set dir $::data_path
+      set dir ""
    }
    set file [tk_getOpenFile -filetypes $::plot::c::image_worldfile_types \
       -initialdir $dir -parent $v::dlg]
