@@ -1,5 +1,5 @@
 write, "$Id$";
-require, "copy_plot.i";
+require, "eaarl.i";
 
 local alps_windows;
 /* DOCUMENT alps_windows

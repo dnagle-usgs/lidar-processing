@@ -1,4 +1,4 @@
-require, "lmfit.i";
+require, "eaarl.i";
 write, "$Id$";
 
 func fit_gauss(rast, i, graph=, add_peak=, lims=, verbose=)

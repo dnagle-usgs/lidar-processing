@@ -84,6 +84,22 @@ if(is_void(__eaarl_includes_included__)) {
    require, "ytime.i";
    require, "zone.i";
 
+   // Check for yutils -- warn user if not present
+   // Yutils will put things in autoload, so we check for a few functions...
+   if(is_func(replot_all) && is_func(lmfit)) {
+      require, "lmfit.i";
+      require, "copy_plot.i";
+   } else {
+      write, "***********************************************************";
+      write, "* WARNING: Your system does not appear to have the yutils *";
+      write, "* package installed! Please download it from lidar.net at *";
+      write, "* /mnt/alps/eaarl/tarfiles and install into your Yorick.  *";
+      write, "* ALPS will continue, but you might encounter errors if   *";
+      write, "* you attempt to use yutils-derived functionality.        *";
+      write, "***********************************************************";
+      // yutils is hosted on the yorick SourceForge CVS as well: yorick.sf.net
+   }
+
    // Must come last, because it depends on some of the above (it actually runs
    // something instead of only defining functions)
    require, "alpsrc.i";
