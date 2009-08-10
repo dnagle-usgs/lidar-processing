@@ -341,10 +341,8 @@ func load_rezone_pbd(file, src_zone, dest_zone, skip=) {
 */
    default, skip, 1;
    f = openb(file);
-   data = get_member(f, f.vname);
+   data = get_member(f, f.vname) (::skip);
    close, f;
-   if(skip > 1)
-      data = data(::skip);
    if(src_zone != dest_zone)
       rezone_data_utm, data, src_zone, dest_zone;
    return data;
