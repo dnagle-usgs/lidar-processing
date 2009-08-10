@@ -34,8 +34,8 @@ if {![info exists __mission_settings]} {
     ]
 }
 
-ycmd require [list [ystr mission_conf.i]]
-ycmd h_set [list __mission_settings [ystr ytk] 1]
+ybkg require \"mission_conf.i\"
+ybkg h_set __mission_settings \"ytk\" 1
 
 ### COMMON WITH YORICK
 

@@ -1,4 +1,4 @@
-exp_send "require, \"rbgga.i\"\r"
+ybkg require \"rbgga.i\"
 
 proc rbgga_menu { {mode "eaarl"} } {
 ### DEPRECATED 2009-02-02 ###

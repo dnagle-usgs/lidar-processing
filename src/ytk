@@ -998,8 +998,9 @@ proc source_ytk_file {filename} {
       ".i" {
          set ycode_dir [file dirname $filename]
          cd $ycode_dir
-         exp_send "cd, \"$ycode_dir\"\r"
+         ybkg cd \"$ycode_dir\"
          exp_send "#include \"$filename\"\r"
+         expect "> "
          return 1
       }
       default {
@@ -2131,18 +2132,13 @@ if { [spawn_yorick] } {
 expect "Yorick * ready"
 set yorick_version [lindex [split $expect_out(0,string)] 1]
 logger debug "Yorick version: $yorick_version"
-expect ">"
-exp_send "_ytk = 1\r"
-expect ">"
-exp_send "Y_SITE\r"
-expect -re {"(.*)"}
-set Y_SITE $expect_out(1,string)
-expect ">"
 
+expect ">"
 exp_send "#include \"ytk.i\"\r"
 expect ">"
-exp_send "open_tkcmd_fifo, \"$ytk_fifo_name\"\r"
-exp_send "open_tky_fifo, \"$tky_fifo_name\"\r"
+exp_send "initialize_ytk, \"$ytk_fifo_name\", \"$tky_fifo_name\";\r"
+expect ">"
+
 set indoc 0
 set hwin 0
 logger debug "Spawn id: $spawn_id"
@@ -2158,7 +2154,9 @@ if { $load_on_start != "" } {
       load_and_run $file_to_load
    }
 }
-   exp_send "initialdir=\"$_ytk(initialdir)\"\r"
+
+ybkg funcset initialdir \"$_ytk(initialdir)\"
+ybkg funcset _ytk 1
 
 start_yorick
 

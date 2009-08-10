@@ -40,14 +40,28 @@ History:
 // Establish the fifo so Yorick can send commands to tcl/tk. The name
 // should have been set by ytk already.
 
-func  open_tkcmd_fifo( fn ) {  
- extern ytkfifo;
-  ytkfifo = open( fn, "r+");
+func initialize_ytk(ytk_fn, tky_fn) {
+   open_tkcmd_fifo, ytk_fn;
+   open_tky_fifo, tky_fn;
+   tkcmd, "set ::Y_SITE {" + Y_SITE + "}";
+}
+
+func open_tkcmd_fifo(fn) {
+   extern ytkfifo;
+   if(!is_void(ytkfifo) && typeof(ytkfifo) == "text_stream") {
+      error, "The tkcmd fifo is already open!";
+   } else {
+      ytkfifo = open( fn, "r+");
+   }
 }
 
 func open_tky_fifo(fn) {
    extern tkyfifo;
-   tkyfifo = spawn(["cat", fn], tky_stdout);
+   if(!is_void(tkyfifo) && typeof(tkyfifo) == "spawn-process") {
+      error, "The tky fifo is already open!";
+   } else {
+      tkyfifo = spawn(["cat", fn], tky_stdout);
+   }
 }
 
 func hex_to_string(input) {
@@ -64,8 +78,8 @@ func tky_stdout(msg) {
       if(!line) {
          // process has died! should probably handle this better...
       } else {
-         cmd = strpart(msg, 1:3);
-         data = strpart(msg, 5:);
+         cmd = strpart(line, 1:3);
+         data = strpart(line, 5:);
          if(cmd == "bkg") {
             data = hex_to_string(data);
             logger, "debug", "Executing background command: " + data;

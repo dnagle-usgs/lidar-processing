@@ -116,8 +116,7 @@ if {[winfo exists .l1wid]} {
   set cbvc(mtype) $plot_settings(mtype)
 
   #load all yorick support functions
-  exp_send "#include \"$src_path/l1pro.i\"\r"
-  expect ">"
+  ybkg require \"l1pro.i\"
 
   toplevel .l1wid
   wm protocol .l1wid WM_DELETE_WINDOW {

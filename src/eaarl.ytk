@@ -431,12 +431,11 @@ proc load_edb {} {
    set data_path "/data/"
    set src_path  [ file dirname [ info script ] ]
    cd $src_path
-   exp_send "cd, \"$src_path\"\r"
-   exp_send "src_path= \"$src_path\"\r"
+   ybkg cd \"$src_path\"
+   ybkg funcset src_path \"$src_path\"
    # send ytk process id to yorick global variable _pid.
-   exp_send "_pid = [pid]\r";
-
-   exp_send "#include \"eaarl.i\"\r"
+   ybkg funcset _pid [pid]
+   ybkg require \"eaarl.i\"
 
    source [file join $src_path mission_conf.ytk]
 
@@ -461,8 +460,8 @@ proc load_edb {} {
    menu $w.mb.new
    menu $w.mb.help
 
- exp_send "require, \"rbgga.i\"\r"
- source rbgga.ytk
+   ybkg require \"rbgga.i\"
+   source rbgga.ytk
 
  $w.mb add cascade -label File     -underline 0 -menu $w.mb.file
  $w.mb add cascade -label "Maps/Nav"     -underline 0 -menu $w.mb.nav
@@ -568,7 +567,6 @@ $w.mb.file add separator
 
  set gga_color black
 
- exp_send "require, \"rbgga.i\"\r"
  menu $w.mb.nav.rbgga
  $w.mb.nav add command -label "Plotting tool" -underline 0 \
    -command ::plot::menu
@@ -666,3 +664,7 @@ $w.mb.images entryconfigure 6 -state disabled
 $w.mb.images entryconfigure 7 -state disabled
 $w.mb.images entryconfigure 8 -state disabled
 
+# Since ybkg is used, some output may go to the console (especially Yeti), so
+# this gives the user back their prompt.
+exp_send \r
+expect ">"
