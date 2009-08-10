@@ -1,16 +1,10 @@
 /*
-
-   $Id$
- 
   Functions to work with the EAARL Axis digital camera.  
 
   Orginal W. Wright, 5-6-03 while in San Juan, Pr.
-
 */
 
 require, "eaarl.i";
-
-write,"$Id$"
 
 cam1_roll_bias = 9.0;
 cam1_yaw_bias  = -3.5 - 180.0;

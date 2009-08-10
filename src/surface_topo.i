@@ -1,6 +1,5 @@
 require, "l1pro.i";
 require, "scanflatmirror2_direct_vector.i";
-write,"$Id$";
 
 /*
    W. Wright

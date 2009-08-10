@@ -1,7 +1,3 @@
-/*
-   $Id$
-*/
-
 extern utm
 
 n = 255

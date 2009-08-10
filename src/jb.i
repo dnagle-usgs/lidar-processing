@@ -1,10 +1,4 @@
-/*
-   $Id$
-*/
-
 require, "fillin.i"
-
-write,"jb.i as of 12/9/01"
 
 CNSH2O2X = 0.11270393157;
 

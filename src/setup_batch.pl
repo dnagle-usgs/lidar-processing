@@ -1,6 +1,4 @@
 #!/usr/bin/perl -w
-my $Id     = '$Id$';
-my $Source = '$Source$';
 
 # Prompts for the hostname of the master ALPS server to use and then
 # creates the screenrc files to invoke both a master and slave sessions.
@@ -46,9 +44,6 @@ my $BOT;
 
 sub showusage {
   print <<eof;
-$Id
-$Source
-
 $0 [-[no]help]
 
 creates .screenrc files for both a master and slave alps batch sessions.

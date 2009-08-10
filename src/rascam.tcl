@@ -1,7 +1,6 @@
 #!/usr/local/bin/wish8.4
 #!/usr/bin/wish
 #
-# $Id$
 #tcl program to integrate the sf_a.tcl camera images with the yorick edb raster
 #amar nayegandhi started 11/14/01
 toplevel .t

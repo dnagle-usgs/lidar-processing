@@ -3,7 +3,6 @@
 exec wish "$0" ${1+"$@"}
 
 #####################################################################
-# $Id$
 # Original W. Wright 8/7/2004
 # This program displays images from the EAARL CIR camera while the
 # images are still in the tar file.

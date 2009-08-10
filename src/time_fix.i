@@ -1,7 +1,4 @@
 /*
-
- $Id$
-
  time_fix.i
  W. Wright 10-22-03
 
@@ -21,8 +18,6 @@
 *************************************************************************
 
 */
-
-write, "$Id$"
 
 func time_fix( b,e, deltat ) {
 /* DOCUMENT  time_fix( b,e, deltat )

@@ -4,13 +4,9 @@ require 'newgetopt.pl' || die "Unable to require newgetopt.pl\n";
 
 undef $opt_help;    # just to quiet the warning message
 
-$Id = '$Id$';
-$Source = '$Source$';
-
 sub showusage {
   print <<EOF;
 
-$Id
 Extract the antenna location from the -ins.txt files
 
 $0 [-gps] [-kml] File1 File2 FileN

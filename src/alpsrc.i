@@ -4,8 +4,6 @@ require, "dir.i";
 require, "json.i";
 require, "yeti.i";
 
-write, "$Id$";
-
 local alpsrc;
 /* DOCUMENT alpsrc
    Contains global ALPS configuration settings. These settings are initialized

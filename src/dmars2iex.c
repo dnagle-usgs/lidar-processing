@@ -1,7 +1,5 @@
 
 /********************************************************************
-   $Id$
-   $Rev$
    dmars2iex.c
 
    Converts DMARS IMU and system time data into Inertial Explorer
@@ -432,7 +430,6 @@ main( int argc, char *argv[] ) {
   odf = NULL;
 
   configure_header_defaults();
-  fprintf(stderr,"$Id$\n");
   process_options(argc, argv );
   pass1(idf);
   display_header();

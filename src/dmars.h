@@ -1,7 +1,6 @@
 
 /*
     Original is in the dmars CVS on kiwi
-   $Id$ 
     Original W. Wright
 */
 #define G 9.80665

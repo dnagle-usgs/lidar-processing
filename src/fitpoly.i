@@ -2,8 +2,6 @@
 /*
  * fitpoly.i
  * least squares fit of polynomial to data
-
-   $Id$
  */
 
 func fitpoly(n, x, y, w)

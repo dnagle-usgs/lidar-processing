@@ -1,9 +1,7 @@
 #
 #
 #
-#   $Id$
-#
-#   Orginal Makefile by W. Wright 7/21/2002
+#   Original Makefile by W. Wright 7/21/2002
 # 
 #
 #

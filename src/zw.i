@@ -1,8 +1,5 @@
 /*
-  $Id$
-
     Review EAARL waveform data.
-
 */
 
 

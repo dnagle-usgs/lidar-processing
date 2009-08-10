@@ -1,7 +1,3 @@
-/*
-   $Id$
-*/
-
 func list_reefs {
  write,format="%3d %20s %9.3f %9.3f %10s %10s\n", 
    indgen(1:n), shoals.name, shoals.lat, shoals.lon, 

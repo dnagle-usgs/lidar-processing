@@ -1,6 +1,5 @@
 #!/bin/gawk -f
 
-# $Id$
 # Orginal: W. Wright 9/27/2003
 # Read the output from ngs "htdp" program
 # See http://www.ngs.noaa.gov/TOOLS/Htdp/Htdp.html

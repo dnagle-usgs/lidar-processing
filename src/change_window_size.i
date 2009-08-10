@@ -1,4 +1,3 @@
-write, "$Id$";
 require, "eaarl.i";
 
 local alps_windows;

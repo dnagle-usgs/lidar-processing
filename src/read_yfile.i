@@ -1,8 +1,3 @@
-/*
-   $Id$
-   */
-   write, "$Id$"
-
 struct GEO {
      long rn;
      long north;

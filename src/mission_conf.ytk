@@ -1,7 +1,5 @@
 # vim: set tabstop=4 softtabstop=4 shiftwidth=4 autoindent shiftround expandtab:
 
-# $Id$
-
 package require dict
 package require struct::set
 package require fileutil

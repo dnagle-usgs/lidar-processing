@@ -1,5 +1,4 @@
 require, "l1pro.i";
-write, "$Id$";
 
 /*
    W. Wright

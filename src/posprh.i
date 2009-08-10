@@ -1,8 +1,6 @@
 
 /*
 
-   $Id$
-
   Original: W. Wright 8/7/2003
 
  Simple Yorick program to read in Applanix data as converted from
@@ -81,7 +79,6 @@ posprh_help;
 
 func posprh_help {
 write,""
-write,"$Id$"
 write,"Type: load_posprh                                      to load some data"
 write,"      plg,posprh_lat, posprh_lon,marks=0;              to see the flight track"
 write,"      plg,posprh_roll,posprh_somd,marks=0;             to see roll"

@@ -1,5 +1,3 @@
-write,"$Id$"
-
 func compare_trans(year, month, mode, edateinfo, data=, data_dir=, static=, dotlines=, datum=, rawircf=, RMSE=) {
 /* DOCUMENT compare_trans(year, month, mode, edateinfo,
                           data=, data_dir=, static=, dotlines=, datum=)

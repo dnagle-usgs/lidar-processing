@@ -13,7 +13,6 @@ require, "photo.i";
 require, "random.i";
 require, "evolve.i";
 require, "mosaic_biases.i";
-write,"$Id$";
 
 /*
    Functions to work with the EAARL Axis digital camera.  

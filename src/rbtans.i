@@ -1,5 +1,4 @@
 require, "eaarl.i";
-write,"$Id$";
 
 /*
   rbtans.i

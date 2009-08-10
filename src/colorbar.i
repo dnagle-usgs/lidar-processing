@@ -1,8 +1,3 @@
-/*
-   $Id$
-*/
-write, "$Id$";
-
 /* DOCUMENT CBAR
    Struct for colorbar values.
    The values from l1pro.ytk can be sent to the cbar variable by executing

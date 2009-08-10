@@ -1,5 +1,3 @@
-write, "$Id$"
-
 func add_time_record(data) {
 /* DOCUMENT add_time_record(data)
   amar nayegandhi 04/03/03.

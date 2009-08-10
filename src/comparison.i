@@ -1,7 +1,3 @@
-/*
-   $Id$
-         */
-    write, "$Id$"
 /* 
   Routines to compare sonar data with eaarl bathymetric data
   amar nayegandhi 05/03

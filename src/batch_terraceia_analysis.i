@@ -1,6 +1,5 @@
 require, "eaarl.i";
 require, "fitlsq.i";
-write, "$Id$";
 
 func read_file_list(path, fname=, ext=) {
   /* DOCUMENT read_file_list(path, fname=, ext=)

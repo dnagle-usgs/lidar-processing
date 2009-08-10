@@ -1,6 +1,5 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent expandtab: */
 require, "l1pro.i";
-write, "$Id$";
 
 // Yorick functions for ATM data.
 

@@ -1,6 +1,3 @@
-/*
-  $Id$
-*/
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/types.h>
@@ -9,8 +6,6 @@
 #include "eaarl.h"
 
 /************************************************************
-    $Id$
-
 6-20-02 
   modified to output ascii with correct argv parameters.  amar nayegandhi.
 6-27-01

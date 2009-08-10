@@ -1,6 +1,4 @@
 #!/usr/bin/perl
-# $Id$
-
 # Create ops_conf files from a batch_process output directory.
 # Run this from the directory that holds all of the data/missions.
 # It will then put a ops_conf file into each of the mission days

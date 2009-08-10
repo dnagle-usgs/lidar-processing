@@ -1,7 +1,3 @@
-/*
- $Id$
-*/
-
 func read_4wd_ascii(ipath, ifname, no_lines=) {
 /* DOCUMENT read_4wd_ascii(ipath, ifname, no_lines=)
     Original amar nayegandhi 02/28/03
@@ -314,9 +310,3 @@ func strip_flightline_edges(data, startpulse=, endpulse=) {
   idx = where((data.rn/0xffffff > startpulse) & (data.rn/0xffffff < endpulse));
   return idx
 }
-
- 
- write, "$Id$"
- 
-
-

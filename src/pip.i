@@ -1,7 +1,4 @@
 
-/*
-   $Id$
-*/
 /* DOCUMENT PointsInPolygon.i
 	************************** Points In Polygon ********************************
 	This program creates a polygon used to define an area of interest. Then
@@ -15,8 +12,6 @@
 	Original: Enils Bashi	
 	Last Modified: June 12, 2002
 *********************************************************************************/
-
-write, "$Id$"
 
 func getPoly(void)
 /* DOCUMENT function getPoly

@@ -1,9 +1,5 @@
 #!/bin/bash
 
-#
-# $Id$
-#
-
 
 #
 # Build a command file to generate md5sums for all files

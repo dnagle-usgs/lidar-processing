@@ -1,7 +1,3 @@
-/*
-   $Id$
-*/
-
 func plcm( z, y, x, cmin=, cmax=, sz=, shape= ) {
 /* DOCUMENT plmc   Plot markers z,y,x where z will be color coded
 

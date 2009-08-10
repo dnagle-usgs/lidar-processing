@@ -1,6 +1,5 @@
 /**********************************************************
 
-   $Id$ 
    W. Wright 6/30/2003
 
    This program locates and removes linefeed characters

@@ -1,17 +1,5 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
 
-/*
-
-    $Id$
-   
-    W. Wright 
-
- test..
-
- */
-
- write,"$Id$" 
-
 require, "ytime.i"
 require, "rlw.i"
 require, "string.i"

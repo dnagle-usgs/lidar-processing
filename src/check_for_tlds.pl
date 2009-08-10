@@ -1,9 +1,6 @@
 #!/usr/bin/perl -W
 # showdone:
 
-$Id     = '$Id$';
-$Source = '$Source$';
-
 use Getopt::Long;
 
 undef $opt_help;     # quiet the warning message
@@ -11,9 +8,6 @@ undef $getopt;       # quiet the warning message
 
 sub showusage {
   print <<EOF;
-$Id
-$Source
-
 $0 [-[no]help]
 
 Used by batch_process.i.

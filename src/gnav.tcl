@@ -1,7 +1,3 @@
-#
-# $Id$
-#
-
 # Enable ftp
 package require ftp 
 # Enable Bwidget 

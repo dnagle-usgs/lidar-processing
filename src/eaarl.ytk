@@ -1,8 +1,4 @@
 #
-# $Id$
-#
-#
-#
 #  eaarl.ytk 
 #
 # To Do
@@ -653,8 +649,6 @@ $w.mb.file add separator
 #############
 #   help
 #############
- $w.mb.help add command \
-   -label "Version:\$Id$"
  $w.mb.help add command -label "Yorick Graphics Window Use"
  $w.mb.help add command -label "0 Waveform Display"
  $w.mb.help add command -label "3 "

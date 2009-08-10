@@ -1,8 +1,6 @@
 local ytk
 /* DOCUMENT ytk
 
- $Id$
-   
    Ytk is a tcl/tk/expect program to glue Yorick and Tcl/Tk together 
  inorder to give Yorick programs  sliders, file selectors, a console of 
 sorts and other stuff to reduce what you need to remember and make
@@ -38,8 +36,6 @@ History:
           with Yorick-1.5 anyway.
 
 */
-
-write, "$Id$";
 
 // Establish the fifo so Yorick can send commands to tcl/tk. The name
 // should have been set by ytk already.

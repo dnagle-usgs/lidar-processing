@@ -1,5 +1,4 @@
 #!/usr/bin/perl -w
-# $Id$
 # Display the DOCUMENT sectins of .i files
 # Usage:  show_doc.pl file1 file2 ...fileN
 

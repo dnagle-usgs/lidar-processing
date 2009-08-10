@@ -1,5 +1,4 @@
 /***********************************************************************
- *  $Id$
  *  pospac2ybin.c
  *  Convert Applanix "pospac" data to a ybin file. 
  *  Original: W. Wright 8/7/2003

@@ -1,5 +1,4 @@
 /*
-  $Id$
   Convert a PNAV to FS.  Used when reading a ground truth
   gtpnav file and then displaying it with lidar data
   A check should probably be done to make sure curzone is set.

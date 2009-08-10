@@ -1,9 +1,3 @@
-/*
-   $Id$
-*/
-
-
-
 func gga_window ( ck ) {
 // Find all latitudes in the window
  q  = where( gga(2,) < ck(2) );

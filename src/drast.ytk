@@ -1,6 +1,3 @@
-#
-# $Id$
-
 ##AN: added global variable thetime sent from sf_a.tcl
 global rn tid blist depth_display_units total_edb_records thetime
 

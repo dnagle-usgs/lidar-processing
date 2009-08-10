@@ -1,6 +1,4 @@
 /* 
-      $Id$
-
    8-20-02 -ww Added to Document comment. Fixed spelling.
 */
 

@@ -1,5 +1,4 @@
 require, "eaarl.i";
-write, "$Id$";
 
  struct EAARL_INDEX {
    int seconds;

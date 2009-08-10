@@ -1,5 +1,4 @@
 require, "eaarl.i";
-write, "$Id$";
 
 func simulated_annealing(initial_state, max_iterations, max_energy, calculate_energy, neighbor, temperature, acceptance_probability=, show_status=) {
 /* DOCUMENT simulated_annealing(initial_state, max_iterations, max_energy,

@@ -1,23 +1,5 @@
 /*
-   $Id$
-*/
-
-write,"$Id$"
-
-
-
-/*
-
-$Revision$
-$Date$
-$Header$
-$Author$
-$Id$
-
-
-  Orginal W. Wright wright@lidar.wff.nasa.gov
-
-    
+  Original W. Wright wright@lidar.wff.nasa.gov
 */
 
 func plcm( z, y, x, cmin=, cmax=, marker=, msize=)

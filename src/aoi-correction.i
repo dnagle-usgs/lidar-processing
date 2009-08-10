@@ -1,8 +1,6 @@
 /********************************************************************
 
 
- $Id$
-
   Original by W. Wright 12/09/02
 
  This code is intended to correct EAARL water surface elevation data 
@@ -18,8 +16,6 @@
 
 
 *********************************************************************/
-
-write,"$Id$"
 
 
 func correct_fs( r, aoi= ) {

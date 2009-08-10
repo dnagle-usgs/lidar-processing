@@ -1,8 +1,6 @@
 #!/usr/bin/tcl
 #
 
-# $Id$
-#
 # Clean up ascii data from n43 
 #  -Wayne 10/25/2001
 #

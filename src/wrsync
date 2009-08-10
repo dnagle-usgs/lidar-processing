@@ -5,8 +5,6 @@
 # indicates the transfer timed out or never started, then the rsync is
 # re-issued.
 
-# $Id$
-
 $TIMEOUT = 3072;  # should be 30 according to man, but actual use returned this
 $NOSTART = 7680;  # discovered through use.
 

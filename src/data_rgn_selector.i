@@ -1,6 +1,5 @@
 // Original by Amar Nayegandhi
 require, "eaarl.i";
-write, "$Id$";
 
 func sel_data_rgn(data, type=, mode=,win=, exclude=, rgn=, make_workdata=, origdata=, retindx=, silent=, noplot=, nosort=) {
 /* DOCUMENT sel_data_rgn(data, type=, mode=, win=, exclude=, rgn=)

@@ -1,8 +1,6 @@
 extern processing_dmars
 /* DOCUMENT  processing_dmars
 
-  $Id$
-
  dmarsd -> *.bin -> 
                   dmars2iex.c -> *.imu -> 
                                       Iex -> *.ascii -> 
@@ -31,8 +29,6 @@ extern processing_dmars
 
 extern processing_dmars_cat
 /* DOCUMENT Processing DMARS cat files.
-
-  $Id$
 
   The DMARS "cat" files are raw dmars datafiles captured directly from the DMARS unit
   without any error checking, or time stamping at all.  These files can be manually

@@ -1,10 +1,8 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent: */
 require, "eaarl.i";
-write, "$Id$";
 
 /**********************************************************************
 
-  $Id$
    Transect.i
    Original W. Wright 9/21/2003
 

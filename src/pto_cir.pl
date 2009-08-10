@@ -1,6 +1,5 @@
 #!/usr/bin/perl
 # vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
-# $Id$
 
 ####
 # This script is used to determine the root mean square distance between pairs

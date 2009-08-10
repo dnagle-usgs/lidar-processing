@@ -3,8 +3,6 @@
 #              reports which systems are up,
 #              and which should be shutdown.               rwm
 
-# $Id$
-
 # Adjust here for your network.
 $NETWORK = "192.168.1",
 $NETMASK = "255";

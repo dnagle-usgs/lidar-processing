@@ -1,5 +1,4 @@
 require, "eaarl.i";
-write, "$Id$";
 /*
   Orginal W. Wright
 

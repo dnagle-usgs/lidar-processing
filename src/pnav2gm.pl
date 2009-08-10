@@ -1,7 +1,4 @@
 #!/usr/bin/perl -w
-$Id = '$Id$';
-$Source = '$Source$';
-
 require 'newgetopt.pl' || die "Unable to require newgetopt.pl\n";
 
 undef $opt_help;    # just to quiet the warning message
@@ -25,9 +22,6 @@ if ( $OS eq "darwin" ) {      # looks like OS X
 
 sub showusage {
   print <<EOF;
-# $Id
-# $Source
-
 $0 [-skip=N] file1 .... fileN
 
 Reads *-pnav.txt* files and creates .txt files for GlobalMapper.

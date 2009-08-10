@@ -1,7 +1,5 @@
 #!/bin/awk -f
 
-# $Id$
-
 BEGIN {
   FS=","
   mlat = 40

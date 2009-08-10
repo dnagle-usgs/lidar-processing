@@ -1,6 +1,3 @@
-/*
-  $Id$
-*/
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,8 +7,6 @@
 #include "eaarl.h"
 
 /************************************************************
-    $Id$
-
 
 3/12/01
   C. Wayne Wright 12/11/2000 wright@lidar.wff.nasa.gov

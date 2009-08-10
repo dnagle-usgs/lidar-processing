@@ -1,5 +1,4 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
-write, "$Id$";
 
 func raspulsearch(data, win=, buf=, cmin=, cmax=, msize=, disp_type=, ptype=,
 fset=, lmark=, bconst=, xyz_data=, xyz_buf=, tx=) {

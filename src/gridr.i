@@ -1,5 +1,4 @@
 require, "eaarl.i";
-write, "$Id$";
 
 func dgrid(w, ll, d, c, wd) {
    x0 = ll(1);

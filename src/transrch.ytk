@@ -1,7 +1,5 @@
 # vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent expandtab:
 #
-# $Id$
-#
 # 2008-11-21:  Interface to mtransect, mtransrch, and show_track
 #
 

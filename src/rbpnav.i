@@ -1,6 +1,5 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent expandtab:
 require, "eaarl.i";
-write,"$Id$";
 /*
 History:
     9/20/02  -ww Fixed problem where data_path was being overwritten

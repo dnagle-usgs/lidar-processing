@@ -1,4 +1,3 @@
 #!/bin/sh
-# $Id$
 # Doesn't do anything, which is useful for typing comments at the shell
 exit

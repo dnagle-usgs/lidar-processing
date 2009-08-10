@@ -1,7 +1,6 @@
 func scanflatmirror2_direct(yaw,pitch,roll,gx,gy,gz,dx,dy,dz,cyaw,lasang,mirang,curang,mag)
 {
 /*---------------------------------------------------------------
- $Id$
   This function computes a vector (M) of xyz points projected
   in 3D space from the origin...which in this case is the
   center of rotation of planar mirror rotated about the y-axis.  

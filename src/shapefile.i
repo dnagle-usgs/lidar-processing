@@ -1,5 +1,4 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
-write, "$Id$";
 
 func read_ascii_shapefile(filename, &meta) {
 /* DOCUMENT read_ascii_shapefile(filename, &meta)

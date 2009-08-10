@@ -1,6 +1,4 @@
 /*
-  $Id$
-
   2/25/02 ww changed to properly handle somd.
 */
 

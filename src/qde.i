@@ -1,5 +1,4 @@
 require, "eaarl.i";
-write, "$Id$";
 
 /*
   Orginal: 8/17/2002 C. Wayne Wright  wright@lidar.wff.nasa.gov

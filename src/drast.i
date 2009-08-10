@@ -1,6 +1,5 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 require, "l1pro.i";
-write, "$Id$";
 
 func set_depth_scale(new_units) {
 /* DOCUMENT set_depth_scale, new_units

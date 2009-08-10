@@ -1,5 +1,4 @@
 /* 
-   $Id: nad832navd88.i
     amar nayegandhi, original nad832navd88.i
     charlene sullivan, modified form of nad832navd88.i for use of GEOID 96 model
     The following code has been adapted from the GEOID 99 model available at
@@ -8,7 +7,6 @@
 */
 
 require, "eaarl.i";
-write, "$Id$";
 
 func geoid_data_to_pbd(gfname=, pbdfname=, initialdir=, geoid_version=) {
    /*DOCUMENT geoid_data_to_pbd(gfname,pbdfname,initialdir,geoid_version)

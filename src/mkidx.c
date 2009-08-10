@@ -1,5 +1,4 @@
 /*
-  $Id$
   Orginal C. W. Wright  wright@lidar.wff.nasa.gov
 */
 #include <unistd.h>

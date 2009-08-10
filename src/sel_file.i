@@ -1,7 +1,3 @@
-/*
-   $Id$
-*/
-
 func sel_file( ss=, path= )  {
 /* DOCUMENT  sel_file(ss=, path=)
  Select and return  a file name  from the current directory.

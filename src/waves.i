@@ -1,15 +1,10 @@
 
 /*
-   $Id$
-
    Functions for generating directional wave spectra of ocean
    waves.
 
    Original: Ed Walsh and Wayne Wright
-
 */
-
-write,"$Id$"
 
 struct WAVE_DATA {
    int x0(256,256); 

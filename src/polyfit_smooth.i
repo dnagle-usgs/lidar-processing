@@ -1,10 +1,3 @@
-
-write, "$Id$";
-
-/* This function requires the yutils library.  See http://www.maumae.net/yorick/doc/yutils/index.php  to obtain the yutils package.
-*/
-
-   
 require, "poly.i"
 
 func polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, wbuf=, gridmode=, ndivide= ) {

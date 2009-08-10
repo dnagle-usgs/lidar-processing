@@ -1,13 +1,5 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
 
-/**********************************************************************
-
-  $Id$
-  Original: Amar Nayegandhi 12/26/08
-  Contains:
-
-*********************************************************************/
-
 func split_by_fltline(data, timediff=) {
 /* DOCUMENT fptr = split_by_fltline(data, timediff=)
    This function splits the data by flightline.

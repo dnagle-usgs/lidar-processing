@@ -1,10 +1,4 @@
 
-/*
-   $Id$
-*/
-
-write, "$Id$"
-
 REV = 8000;             	// Counts for 360 degrees of scanner rotation
 d2r = pi/180.0;         	// Convert degrees to radians.
 

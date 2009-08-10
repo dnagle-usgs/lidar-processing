@@ -1,5 +1,3 @@
-write, "$Id$";
-
 /*
    Biases, offsets, calibration settings, and specifications for the cameras
    and equipment used for various forms of imagery. These settings are used by

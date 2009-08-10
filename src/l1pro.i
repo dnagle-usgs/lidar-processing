@@ -9,7 +9,6 @@ if(is_void(__l1pro_includes_included__)) {
 
    require, "eaarl.i";
 
-   write,"$Id$";
    require, "atm.i";
    require, "batch_datum_convert.i";
    require, "batch_multipip_process.i";

@@ -1,6 +1,5 @@
 #!/usr/bin/perl -w
 
-# $Id$
 # Original: David Nagle 2008-05-30
 
 use strict;

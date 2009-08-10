@@ -1,14 +1,7 @@
-#!/usr/bin/perl -w
-
-$Id    = '$Id$';
-$Source = '$Source$';
+#!/usr/bin/perl
 
 sub showusage {
   print <<EOF;
-
-# $Id
-# $Source
-#
 
 $0 : file1.txt [file2.txt filen.txt]
 

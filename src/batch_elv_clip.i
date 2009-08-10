@@ -1,5 +1,3 @@
-write, "$Id$";
-
 func batch_elv_clip(con_dir, searchstr=, emax=, emin=, typ=) {
 /*DOCUMENT 
         dir, string, directory containing pbd files wanted for conversion

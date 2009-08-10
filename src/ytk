@@ -8,8 +8,6 @@ exec wish "$0" ${1+"$@"}
 #
 # Original - C. W. Wright wwright@usgs.gov
 #
-# $Id$
-#
 # This program is copyrighted under the terms of
 # The GNU GENERAL PUBLIC LICENSE,  Version 2, June 1991.
 # A full copy can be found at: http://www.gnu.org/licenses/gpl.txt
@@ -776,7 +774,7 @@ proc ytk_About {} {
 # Side effects:
 #  None
 ##
-   global _ytk_splash_img yorick_version ytk_version about_geo tk_patchLevel
+   global _ytk_splash_img yorick_version about_geo tk_patchLevel
 
    set w .about
    if {[winfo exists $w]} {
@@ -788,7 +786,7 @@ proc ytk_About {} {
       label $w.img -image $_ytk_splash_img -relief raised -borderwidth 4
       label $w.text -bd 1 -text \
 "Yorick-Tcl-tK (and Expect)\n\
-YTK $ytk_version (fork)\n\
+YTK (fork)\n\
 Yorick $yorick_version\n\
 Tcl [info patchlevel], Tk $tk_patchLevel, Expect [exp_version]"
       pack $w.img -side top
@@ -2106,9 +2104,6 @@ ytk_logger_window
 ############################################################
 
 logger debug "Started as: $argv0 $argv"
-
-set ytk_version {$Id$}
-logger debug "ytk version: $ytk_version"
 logger debug "info library: [info library]"
 logger debug "info nameofexecutable: [info nameofexecutable]"
 logger debug "info script: [info script]"

@@ -1,5 +1,3 @@
-write, "$Id$";
-
 /*
    Modified 2008-12-05 David Nagle:
       I have gone through and added a lot of documentation to explain (as best

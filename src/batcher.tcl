@@ -4,8 +4,6 @@ exec tclsh "$0" ${1+"$@"}
 # exec /opt/eaarl/bin/tclsh "$0" ${1+"$@"}
 # vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 
-# $Id$
-
 package require Tclx
 
 # set host localhost

@@ -1,5 +1,4 @@
 require, "l1pro.i";
-write, "$Id$";
 
 struct BOTRET {
    long  rn;	//raster-pulse number

@@ -1,5 +1,4 @@
 /*
-  $Id$
    i32, i24, and i16.
 
    These functions each take a char array, and an index
@@ -67,6 +66,3 @@ func i16( ary, idx  ) {
   r = idx:idx+1
   return short( (ary(r) * _bitweights(1:2) ) (sum)  );
 }
-
-
-write,"$Id$"

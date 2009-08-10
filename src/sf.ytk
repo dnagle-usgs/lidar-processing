@@ -4,8 +4,6 @@
 
 # [ Header #########################################
 #
-# $Id$
-#
 # Web sources for components and modules used by sf.
 # Activetcl www.activestate.com
 # Jpg image module at:    http://mmbers1.chello.nl/~j.nijtmans/img.html
@@ -167,9 +165,6 @@ if {[info commands SFWindow] eq ""} {
 		variable show_mog_message 1
 		variable win	;#window	
 		variable menubar
-
-		variable version {$Revision$ }
-		variable revdate {$Date$}
 
 		variable mogrify_exists
 
@@ -1505,8 +1500,6 @@ itcl::body SFWindow::guiInit {} {
 
 	set me "\
 		EAARL RGB Image/Data Animator\n\
-		$version\n\
-		$revdate\n\
 		C. W. Wright charles.w.wright@nasa.gov\n\
 		Amar Nayegandhi anayegandhi@usgs.gov\n\
 		David Nagle dnagle@usgs.gov\n\

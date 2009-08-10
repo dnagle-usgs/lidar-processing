@@ -1,9 +1,3 @@
-/*
-   $Id$
-*/
-
-write,"$Id$"
-
 func eex_bath( rn, i, xfma= ) {
 /* DOCUMENT ex_bath(raster_number, pulse_index)
  

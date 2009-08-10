@@ -1,8 +1,3 @@
-/*
-     $Id$
-*/
-
-
 #ifndef EAARL_H
 #define EAARL_H
 

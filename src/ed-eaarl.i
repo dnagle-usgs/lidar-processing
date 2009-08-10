@@ -1,7 +1,3 @@
-/*
-   $Id$
-*/
-
 require, "eaarl_constants.i"
 require, "edb_access.i"
 require, "rbpnav.i"

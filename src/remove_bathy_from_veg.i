@@ -1,5 +1,4 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent expandtab: */
-write, "$Id$";
 
 func remove_bathy_from_veg(veg, bathy, buf=) {
 /* DOCUMENT remove_bathy_from_veg(veg, bathy, buf=) 

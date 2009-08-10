@@ -1,7 +1,5 @@
 
 /******************************************************************* 
-    $Id$
-
   fixdmars.c: 
    Based on dmarsd.c and dmars2iex.c.  
    This program is used to read the "cat" files captured on dmars145 

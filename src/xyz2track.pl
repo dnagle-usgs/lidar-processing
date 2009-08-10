@@ -1,17 +1,11 @@
 #!/usr/bin/perl -w
 
-$Id = '$Id$';
-$Source = '$Source$';
-
 require 'newgetopt.pl' || die "Unable to require newgetopt.pl\n";
 
 undef $opt_help;    # just to quiet the warning message
 
 sub showusage {
   print <<EOF;
-
-# $Id
-# $Source
 
 $0 File1 [File2] [FileN]
 

@@ -1,5 +1,4 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
-write, "$Id$";
 
 local ytime_i;
 /* DOCUMENT ytime.i

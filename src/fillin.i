@@ -1,6 +1,4 @@
 /*
-   $Id$
-
   Dave Munro wrote this stuff.
 */
 

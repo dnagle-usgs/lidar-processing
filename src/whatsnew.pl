@@ -1,8 +1,5 @@
 #!/usr/bin/perl -W
 
-$Id = '$Id$';
-$Source = '$Source$';
-
 use Getopt::Long;
 use File::Basename;
 
@@ -13,9 +10,6 @@ undef $getopt;
 
 sub showusage {
   print <<EOF;
-$Id
-$Source
-
 $0 [-local] [-verbose]
 
 When run from inside a directory maintained wth CVS, displays the

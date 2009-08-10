@@ -1,7 +1,5 @@
 # Gist work.gs drawing style
 
-# $Id$ 
-
 # Derived by W. Wright from work.gs 
 
 

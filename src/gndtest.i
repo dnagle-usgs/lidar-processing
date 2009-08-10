@@ -1,6 +1,5 @@
 require, "eaarl.i";
 require, "centroid-1.i";
-write, "$Id$";
 
 write, "\n\n\n ***** type: \"load_edb\" to load a ground test data file, and then"+
        "  \"pgt, start, stop\"  to examine it.\n\n"

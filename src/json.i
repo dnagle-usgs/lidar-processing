@@ -2,8 +2,6 @@
 
 require, "eaarl.i";
 
-write, "$Id$";
-
 local json_i;
 /* DOCUMENT json_i
    

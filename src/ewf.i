@@ -1,7 +1,3 @@
-/*
-   $Id$
-*/
-
 // 3/12/01am
 
 // read and display eaarl waveform data

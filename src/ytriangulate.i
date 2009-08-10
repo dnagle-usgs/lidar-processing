@@ -1,9 +1,3 @@
-/* 
-  $Id$
-*/
-
-write, "$Id$";
-  
 /* DELAUNAY TRIANGULATION procedure
   adapted from Paul Bourke's C source code available at
   http://astronomy.swin.edu.au/~pbourke/terrain/triangulate/

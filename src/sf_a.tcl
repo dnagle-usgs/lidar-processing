@@ -6,8 +6,6 @@ exec wish "$0" ${1+"$@"}
 
 # [ Header #########################################
 #
-# $Id$
-#
 # Web sources for components and modules used by sf.
 # Activetcl www.activestate.com
 # Jpg image module at:    http://members1.chello.nl/~j.nijtmans/img.html
@@ -17,9 +15,6 @@ exec wish "$0" ${1+"$@"}
 # ] End Header #####################################
 
 # [ Script Initialization ##########################
-
-set version {$Revision$ }
-set revdate {$Date$}
 
 # set path to be sure to check /usr/lib for the package
 set auto_path "$auto_path /usr/lib"
@@ -1612,8 +1607,6 @@ canvas .canf.can -height 240 -width 350 \
 
 set me "\
 EAARL RGB Image/Data Animator\n\
-$version\n\
-$revdate\n\
 C. W. Wright charles.w.wright@nasa.gov\n\
 Amar Nayegandhi anayegandhi@usgs.gov\n\
 David Nagle dnagle@usgs.gov\n\

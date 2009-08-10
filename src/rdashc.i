@@ -1,7 +1,3 @@
-/*
-   $Id$
-*/
-
 require, "sel_file.i"
 
 

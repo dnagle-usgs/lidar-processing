@@ -1,8 +1,3 @@
-/*
-   $Id$
-*/
-
-
 func find_bottom( r ) {
  extern tay;
  bathpeakposition = array(int,120);

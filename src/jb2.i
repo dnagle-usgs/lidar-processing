@@ -1,10 +1,4 @@
-/*
-   $Id$
-*/
-
 require, "plcm.i"
-
-write, "jb2.i as of 11/25/2001"
 
 func load {
 /* DOCUMENT load

@@ -1,5 +1,4 @@
 require, "eaarl.i";
-write,"$Id$";
 
 local rbgga_help 
 /* DOCUMENT rbgga_help
@@ -28,7 +27,6 @@ Other:
 
 
 /* DOCUMENT rbgga.i
-  $Id$
 
   This collection of functions and procedures manipulates and plots
   GPS NMEA GGA data. Before the data are can be read by these functions,

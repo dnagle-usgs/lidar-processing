@@ -1,7 +1,6 @@
 // vim: set tabstop=4 softtabstop=4 shiftwidth=4 autoindent shiftround expandtab:
 require, "eaarl.i";
 require, "json.i";
-write, "$Id$";
 
 // Original David Nagle 2009-02-03
 

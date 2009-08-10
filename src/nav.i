@@ -3,8 +3,6 @@
 
   Navigation functions for latitude/longitude data.
 
- $Id$
-
   W. Wright
 
  11/12/2002  Fixed problem with single width flight blocks.
@@ -13,8 +11,6 @@
 
 
 */
-
-write,"$Id$"
 
 func fb2fp( fb ) {
 /* DOCUMENT fb2fp(fb)

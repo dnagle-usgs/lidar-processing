@@ -1,5 +1,4 @@
 /*
-  $Id$
   These functions were originally written to compare eaarl data with ground survey(Kings) data.
   There are a few useful functions in this file:
 

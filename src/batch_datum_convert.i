@@ -1,5 +1,4 @@
 require, "l1pro.i";
-write,"$Id$";
 
 func batch_datum_convert(con_dir, tonad83=, tonavd88=, rcfmode=, onlymf=, searchstr=, zone_nbr=, geoid_version=, update=, qq=, excludestr=) {
 /* DOCUMENT batch_datum_convert, con_dir, tonad83=, tonavd88=, rcfmode=,

@@ -1,8 +1,5 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent: */
 /***********************************************************************
- $Id$
-
-
    Range_bias computed from 7-29-02 ground test.  The EAARL data 
  was taken from pulses 8716:10810 which was captured from a static 
  target at 101.1256 meters measured distance.  The EAARL centroid 
@@ -11,8 +8,6 @@
  the range values used to compute the range_biasM was 3.19cm
    range_biasM is the measured range bias in Meters
 ***********************************************************************/
-
-write,"$Id$"
 
 // Mission configuration data structure.
 struct mission_constants {

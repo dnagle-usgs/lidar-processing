@@ -1,5 +1,4 @@
 require, "batch_terraceia_analysis.i";
-write, "$Id$";
  
 func dataReg(data1, data2, win=, plot=, ucmin=, ucmax=, data1plot=, data2plot=,
 filename=, rwin=, regionresultpbd=, regionresulttxt=, oply=, data1title=,

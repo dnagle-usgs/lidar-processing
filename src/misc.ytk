@@ -1,5 +1,4 @@
 # vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
-# $Id$
 
 # This makes sure the file doesn't get sourced multiple times, since it might
 # be called from several files. If you DO need to resource it, just 'unset

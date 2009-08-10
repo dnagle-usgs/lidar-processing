@@ -1,5 +1,4 @@
 require, "eaarl.i";
-write, "$Id$";
 
 func batch_pbd2las(con_dir, searchstr=, proj_id=, v_maj=, v_min=, cday=, cyear=, typ=, zone_nbr=, nad83=, wgs84N=, wgs84S=, buffer=, qq=) {
 /* DOCUMENT batch_pbd2las(con_dir, searchstr=, proj_id=, v_maj=, v_min=, cday=, cyear=, typ=, zone_nbr=, nad83=, wgs84N=, wgs84S=, buffer=, qq=)

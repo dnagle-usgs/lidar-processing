@@ -1,7 +1,6 @@
 // vim: set tabstop=4 softtabstop=4 shiftwidth=4 autoindent expandtab:
 
 require, "eaarl.i";
-write, "$Id$";
 
 func extract_qq(text) {
 /* DOCUMENT extract_qq(text)

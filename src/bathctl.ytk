@@ -1,7 +1,3 @@
-#
-# $Id$
-#
-
 proc set_bath_ctl { a b c } {
  global bath_ctl
    exp_send "bath_ctl.$b = $bath_ctl($b); show_bath_constants; \r" 

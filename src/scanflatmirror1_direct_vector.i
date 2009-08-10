@@ -1,7 +1,3 @@
-/*
-   $Id$
-*/
-
 func scanflatmirror1_direct_vector(yaw,pitch,roll,gx,gy,gz,dx,dy,dz,lasang,mirang,curang,mag)
 {
 /*---------------------------------------------------------------

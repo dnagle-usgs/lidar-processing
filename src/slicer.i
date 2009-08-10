@@ -1,6 +1,5 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
 
-write, "$Id:";
 /*
    Original: Richard Mitchell 2009-03
 */

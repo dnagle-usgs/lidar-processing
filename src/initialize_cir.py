@@ -1,5 +1,4 @@
 """cir_initialize.py - Initialize a cir dataset for mosaic processing."""
-# $Id$
 # Original David B. Nagle 2009-03-31
 
 import optparse

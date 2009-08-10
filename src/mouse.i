@@ -1,5 +1,4 @@
 require, "yeti.i";
-write, "$Id$";
 
 func mouse_click_is(query, click) {
 /* DOCUMENT result = mouse_click_is(query, click)

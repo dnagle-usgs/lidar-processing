@@ -1,12 +1,9 @@
 // vim: set tabstop=2 softtabstop=2 shiftwidth=2 autoindent shiftround expandtab:
-write, "$Id$";
 
 require, "yeti_regex.i";
 
 extern dmars_i
 /* DOCUMENT dmars_i
-
-  $Id$
 
   Original: W. Wright
 
@@ -80,7 +77,6 @@ process the "cat" data.
 Below is an example of how to run dmars2iex to find the time difference.
  
 3:15 <129>% dmars2iex junk.bin
-$Id$
 Pass 1...
 ------------------------------------------------------------------
     Header: $IMURAW             Version: 2.000     Byte Order: Intel

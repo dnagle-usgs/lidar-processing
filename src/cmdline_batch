@@ -8,8 +8,6 @@ src_path = "/opt/eaarl/lidar-processing/src";
 #include "/opt/eaarl/lidar-processing/src/veg.i"
 #include "/opt/eaarl/lidar-processing/src/batch_process.i"
 
-// $Id$
-
 cmdline = get_argv();  /* strips -batch cmdline.i */
 if (numberof(cmdline) == 3) {
   /* convert from ascii to pdb binary format */
