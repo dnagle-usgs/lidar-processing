@@ -1000,15 +1000,15 @@ func batch_cleanup ( junk ) {
    // wait until no more jobs to be farmed out
    do {
       mya1 = check_space(wmark=8, dir="/tmp/batch/jobs");
-      if ( mya1(2) > 0 ) write,format="%d job(s) to be farmed out.\n", mya1(2);
+      if ( mya1(2) > 0 ) write,format="%3d job(s) queued.\n", mya1(2);
       show_progress, color="green";
 
       mya2 = check_space (wmark=8, dir="/tmp/batch/farm");
-      if ( mya2(2) > 0 ) write,format="%d job(s) to be retrieved.\n",  mya2(2);
+      if ( mya2(2) > 0 ) write,format="%3d job(s) transferring.\n",  mya2(2);
       show_progress, color="green";
 
       mya3 = check_space (wmark=8, dir="/tmp/batch/work");
-      if ( mya3(2) > 0 ) write,format="%d job(s) to be finished.\n",   mya3(2);
+      if ( mya3(2) > 0 ) write,format="%3d job(s) processing.\n",   mya3(2);
       cnt = mya1(2) + mya2(2) + mya3(2);
 
    } while ( cnt(1) > 0 );
