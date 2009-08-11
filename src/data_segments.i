@@ -214,14 +214,14 @@ func gather_data_stats(data, &working_tans, &working_pnav) {
       logger, "debug", logid + swrite(
          format=" found elevation data (GEO), %d points", numberof(temp_data));
       stat_temp = h_new();
-      qs = quartiles(temp_data.elevation);
+      qs = quartiles(temp_data);
       h_set, stat_temp, "q1", qs(1)/100.;
       h_set, stat_temp, "med", qs(2)/100.;
       h_set, stat_temp, "q3", qs(3)/100.;
-      h_set, stat_temp, "min", temp_data.elevation(min)/100.;
-      h_set, stat_temp, "max", temp_data.elevation(max)/100.;
-      h_set, stat_temp, "avg", temp_data.elevation(avg)/100.;
-      h_set, stat_temp, "rms", temp_data.elevation(rms)/100.;
+      h_set, stat_temp, "min", temp_data(min)/100.;
+      h_set, stat_temp, "max", temp_data(max)/100.;
+      h_set, stat_temp, "avg", temp_data(avg)/100.;
+      h_set, stat_temp, "rms", temp_data(rms)/100.;
       h_set, stats, "bathy", stat_temp;
    }
 
