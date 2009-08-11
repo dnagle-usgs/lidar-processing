@@ -424,15 +424,18 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
 
 
    if (!is_array(tans)) {
-     write, "TANS information not loaded.  Running function rbtans() ... \n";
-     tans = rbtans();
+     write, "INS information not loaded.  Running function load_iexpbd() ... \n";
+     // tans = rbtans();
+    x = ops_conf;        // save ops_conf before load_iexpbd trashes it.
+    load_iexpbd, ins_filename;
+    ops_conf = x;        // now set it back.
      write, "\n";
    }
    write, "TANS information LOADED. \n";
    if (!is_array(pnav)) {
      write, "Precision Navigation (PNAV) data not loaded."+ 
             "Running function rbpnav() ... \n";
-     pnav = rbpnav();
+     pnav = rbpnav(fn=pnav_filename);
    }
    write, "PNAV information LOADED. \n"
    write, "\n";
