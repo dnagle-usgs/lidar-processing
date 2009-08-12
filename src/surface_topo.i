@@ -1,3 +1,4 @@
+/* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
 require, "l1pro.i";
 require, "scanflatmirror2_direct_vector.i";
 
@@ -198,110 +199,140 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
   2 = start,  delta
 
 */
- extern roll, pitch, heading, palt, utm, northing, easting
- extern a, irg_a, _utm
+   extern roll, pitch, heading, palt, utm, northing, easting
+   extern a, irg_a, _utm
 
- if ( ops_conf_not_loaded(1) ) 
-	return;
+   if ( ops_conf_not_loaded(1) ) 
+      return;
 
- if ( !is_void( center ) ) {
-    if ( is_void(delta) ) 
-	delta = 100;
-    i = center - delta;
-    j = center + delta;
- } else if ( !is_void( start ) ) {
-          if ( !is_void( delta ) ) {
-    i = start;
-    j = start + delta;
+   if ( !is_void( center ) ) {
+      if ( is_void(delta) ) 
+         delta = 100;
+      i = center - delta;
+      j = center + delta;
+   } else if ( !is_void( start ) ) {
+      if ( !is_void( delta ) ) {
+         i = start;
+         j = start + delta;
    } else if ( !is_void( stop ) ) {
-    i = start;
-    j = stop;
+         i = start;
+         j = stop;
+      }
    }
- } 
 
- a = irg(i,j, usecentroid=usecentroid, use_highelv_echo=use_highelv_echo);		
- irg_a = a;
+   a = irg(i,j, usecentroid=usecentroid, use_highelv_echo=use_highelv_echo);		
+   irg_a = a;
 
-atime   = a.soe - soe_day_start;
+   atime   = a.soe - soe_day_start;
 
-if (!quiet) write, format="\n%cInterpolating: roll...", 0x20
-roll    =  interp( tans.roll,    tans.somd, atime ) 
+   if (!quiet) write, format="\n%cInterpolating: roll...", 0x20
+   roll    =  interp( tans.roll,    tans.somd, atime ) 
 
-if (!quiet) write,format="%cpitch...",0x20
-pitch   = interp( tans.pitch,   tans.somd, atime ) 
+   if (!quiet) write,format="%cpitch...",0x20
+   pitch   = interp( tans.pitch,   tans.somd, atime ) 
 
-if ( is_void( north ) ) {
- if (!quiet) write,format="%cheading...", 0x20
- hy = interp( sin( tans.heading*deg2rad), tans.somd, atime );
- hx = interp( cos( tans.heading*deg2rad), tans.somd, atime );
- heading = atan( hy, hx)/deg2rad;
-} else {
- if (!quiet) write,"interpolating North only..."
- heading = interp( array( 0.0, dimsof(tans)(2) ), tans.somd, atime ) 
+   if ( is_void( north ) ) {
+      if (!quiet) write,format="%cheading...", 0x20
+      hy = interp( sin( tans.heading*deg2rad), tans.somd, atime );
+      hx = interp( cos( tans.heading*deg2rad), tans.somd, atime );
+      heading = atan( hy, hx)/deg2rad;
+   } else {
+      if (!quiet) write,"interpolating North only..."
+      heading = interp( array( 0.0, dimsof(tans)(2) ), tans.somd, atime ) 
+   }
 
-}
+   if (!quiet) write,format="%caltitude...",0x20
+   palt  = interp( pnav.alt,   pnav.sod,  atime )
 
-if (!quiet) write,format="%caltitude...",0x20
-palt  = interp( pnav.alt,   pnav.sod,  atime )
+   if ( is_void( _utm ) ) {
+      if (!quiet) write,"Converting from lat/lon to UTM..."
+      _utm = fll2utm( pnav.lat, pnav.lon )
+   } else {
+      if ( dimsof(pnav)(2) != dimsof(pnav)(2) ) 
+      if (!quiet) write,"_utm has changed, re-converting from lat/lon to UTM..."
+      _utm = fll2utm( pnav.lat, pnav.lon )
+   }
 
-if ( is_void( _utm ) ) {
-   if (!quiet) write,"Converting from lat/lon to UTM..."
-   _utm = fll2utm( pnav.lat, pnav.lon )
-} else {
-  if ( dimsof(pnav)(2) != dimsof(pnav)(2) ) 
-   if (!quiet) write,"_utm has changed, re-converting from lat/lon to UTM..."
-   _utm = fll2utm( pnav.lat, pnav.lon )
-}
+   if (!quiet) write,format="%cnorthing/easting...\n", 0x20
+   northing = interp( _utm(1,), pnav.sod, atime )
+   easting  = interp( _utm(2,), pnav.sod, atime )
 
-if (!quiet) write,format="%cnorthing/easting...\n", 0x20
-northing = interp( _utm(1,), pnav.sod, atime )
-easting  = interp( _utm(2,), pnav.sod, atime )
+   sz = j - i + 1;
+   rrr = array(R, sz);
+   if ( is_void(step) ) 
+      step = 1;
+   dx = cyaw = gz = gx = gy = lasang = yaw = array( ops_conf.x_offset, 120);
 
-  sz = j - i + 1;
- rrr = array(R, sz);
- if ( is_void(step) ) 
-   step = 1;
-  dx = cyaw = gz = gx = gy = lasang = yaw = array( ops_conf.x_offset, 120);
+   dy = array( ops_conf.y_offset, 120);	// mirror offset along fuselage
+   dz = array( ops_conf.z_offset, 120);	// vertical mirror offset 
+   mirang = array(-22.5, 120);
+   lasang = array(45.0, 120);
 
-  dy = array( ops_conf.y_offset, 120);	// mirror offset along fuselage
-  dz = array( ops_conf.z_offset, 120);	// vertical mirror offset 
-  mirang = array(-22.5, 120);
-  lasang = array(45.0, 120);
+   if (!quiet) write,"Projecting to the surface..."
 
-if (!quiet) write,"Projecting to the surface..."
- for ( i=1; i< sz; i += step) { 
-   gx = easting(, i);
-   gy = northing(, i);
-   yaw = -heading(, i);
-   scan_ang = (360.0/8000.0)  * (a(i).sa + ops_conf.scan_bias);
+   if ( is_array(fix_sa1) ) {    // we'll assume both are set
+      write,"####################### MARK HERE ###################"
+      sb=array(0, sz);
+
+      // "MARK A"
+      info,a;
+
+      if ( a(1).sa(1) > a(1).sa(118) ) {
+         fix=fix_sa1(start:stop);
+      } else { 
+         fix=fix_sa2(start:stop);
+      }
+   }
+
+   for ( i=1; i< sz; i += step) {
+
+
+      gx  = easting (, i);
+      gy  = northing(, i);
+      yaw = -heading(, i);
+
+      if ( is_array(fix) ) {
+         // sb(i) = fix(i) - a(i).sa(1);
+         // "MARK B"
+         sb(i) = a(i).sa(1) - fix(i);
+
+         scan_ang = SAD * (a(i).sa + sb(i));
+         /*
+         fix = (a(i).sa(118) + sb(i));
+         */
+      } else
+         scan_ang = SAD * (a(i).sa + ops_conf.scan_bias);
 
 // edit out tx/rx dropouts
- el = ( int(a(i).irange) & 0xc000 ) == 0 ;
- a(i).irange *= el;
+      el = ( int(a(i).irange) & 0xc000 ) == 0 ;
+      a(i).irange *= el;
 
-   srm = (a(i).irange*NS2MAIR - ops_conf.range_biasM);
-   gz = palt(, i);
-  m = scanflatmirror2_direct_vector(yaw+ ops_conf.yaw_bias,
-	pitch(,i)+ ops_conf.pitch_bias,roll(,i)+ ops_conf.roll_bias,
+      srm = (a(i).irange*NS2MAIR - ops_conf.range_biasM);
+      gz = palt(, i);
+      // "MARK C"
+      m = scanflatmirror2_direct_vector(yaw+ ops_conf.yaw_bias,
+      pitch(,i)+ ops_conf.pitch_bias,roll(,i)+ ops_conf.roll_bias,
          gx,gy,gz,dx,dy,dz,cyaw, lasang, mirang, scan_ang, srm)
+      // "MARK D"
   
-  rrr(i).meast  =     m(,1) * 100.0;
-  rrr(i).mnorth =     m(,2) * 100.0;
-  rrr(i).melevation=  m(,3) * 100.0;
-  rrr(i).east   =     m(,4) * 100.0;
-  rrr(i).north  =     m(,5) * 100.0;
-  rrr(i).elevation =  m(,6) * 100.0;
-  rrr(i).rn = (a(i).raster&0xffffff);
-  rrr(i).intensity = a(i).intensity;
-  rrr(i).fs_rtn_centroid = a(i).fs_rtn_centroid;
-  rrr(i).rn += (indgen(120)*2^24);
-  rrr(i).soe = a(i).soe;
-  if ( (i % 100 ) == 0 ) { 
-    if (!quiet) write,format="%5d %8.1f %6.2f %6.2f %6.2f\n", 
-         i, (a(i).soe(60))%86400, palt(60,i), roll(60,i), pitch(60,i);
-  }
- }
- return rrr;
+      rrr(i).meast  =     m(,1) * 100.0;
+      rrr(i).mnorth =     m(,2) * 100.0;
+      rrr(i).melevation=  m(,3) * 100.0;
+      rrr(i).east   =     m(,4) * 100.0;
+      rrr(i).north  =     m(,5) * 100.0;
+      rrr(i).elevation =  m(,6) * 100.0;
+      rrr(i).rn = (a(i).raster&0xffffff);
+      rrr(i).intensity = a(i).intensity;
+      rrr(i).fs_rtn_centroid = a(i).fs_rtn_centroid;
+      rrr(i).rn += (indgen(120)*2^24);
+      rrr(i).soe = a(i).soe;
+      if ( (i % 100 ) == 0 ) { 
+         if (!quiet) write,format="%5d %8.1f %6.2f %6.2f %6.2f\n", 
+            i, (a(i).soe(60))%86400, palt(60,i), roll(60,i), pitch(60,i);
+      }
+   }
+
+   return rrr;
 }
 
 
@@ -321,7 +352,7 @@ for ( ; i< j; i += step) {
    gx = easting(, i);
    gy = northing(, i);
    yaw = -heading(, i);
-   scan_ang = (360.0/8000.0)  * a(i).sa + ops_conf.scan_bias;
+   scan_ang = SAD * a(i).sa + ops_conf.scan_bias;
    srm = (a(i).irange*NS2MAIR - ops_conf.range_biasM);
    gz = palt(, i);
   m = scanflatmirror2_direct_vector(yaw,pitch(,i),roll(,i)+ ops_conf.roll_bias,
@@ -370,7 +401,7 @@ animate,1;
 //    plmk, a(2,,i) * NS2MAIR, a.sa,msize=.1, marker=1; 
 for ( ; i< j; i += step){ 
    fma; 
-   croll = ((720.0/8000) * a(i).sa ) + roll(, i) + ops_conf.roll_bias;
+   croll = (SAD2 * a(i).sa ) + roll(, i) + ops_conf.roll_bias;
    rad_roll = roll * d2r; 
    cr = cos( rad_roll);
    srm = a(i).irange*NS2MAIR;

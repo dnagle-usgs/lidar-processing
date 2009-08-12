@@ -1,5 +1,7 @@
 
 REV = 8000;             	// Counts for 360 degrees of scanner rotation
+SAD = 360.0 / REV;        // Scan Angle Degrees
+SAD2= SAD * 2;            // 720.0 / REV
 d2r = pi/180.0;         	// Convert degrees to radians.
 
 CNS      = 0.299792458;         // speed of light/nanosecond in space
