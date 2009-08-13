@@ -53,12 +53,30 @@ func atoi(str) {
    return int(i);
 }
 
+func atol(str) {
+/* DOCUMENT atol(str)
+   
+   Converts a string representation of a number into a long integer.
+
+   The following parameters are required:
+
+      str: A string representation of an integer.
+   
+   Function returns:
+
+      An integer value.
+*/
+   i = array(float, dimsof(str));
+   sread, str, format="%f", i;
+   return long(i);
+}
+
 func atof(str) {
 /* DOCUMENT atof(str)
    
    Converts a string representation of a number into a float.
 
-   The following paramters are required:
+   The following parameters are required:
 
       str: A string representation of a float.
    
