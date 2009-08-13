@@ -70,49 +70,77 @@ func plotPoly(pl, oututm=, color=)
 	return pl
 }
 
-func testPoly(pl, ptx, pty)
-/* DOCUMEMT function test
-   	This function determines whether points from a given set
-	are inside or outside the polygon. The algorithm used calculates
-	the sum of the angles between two vectors that start at any point
-	and end at two consecutive polygon vertices. If the sum of angles 
-	is less then 2Pi the point is outside the polygon or inside otherwise.
-	The algorithm uses the cross and dot product to determine the inverse
-	tangent which will equal the angle between vectors. The angles are 
-	stored in a n x m array, where n = polygon vertices and m = points
-	
-	Parameters: pl - 2 x n array, contains vertices of the polygon
-		        ptx - 1 x n array, contains x-coordinates of points to be tested
-		        pty - 1 x n array, contains y-coordinates of points to be tested
-	 
-	Returns:    array of indexes of points that are inside the polygon
+func testPoly(pl, ptx, pty) {
+/* DOCUMENT idx = testPoly(pl, ptx, pty)
+   This function determines whether points from a given set are inside or
+   outside the polygon. The algorithm used calculates the sum of the angles
+   between two vectors that start at any point and end at two consecutive
+   polygon vertices. If the sum of angles is less then 2Pi the point is
+   outside the polygon; otherwise, it is inside.
+
+   Parameters:
+      pl: 2-dimensional array containing verticies of the polygon (dimsof(pl)
+         should be [2,2,?])
+      ptx: 1-dimensional array containing x-coordinates of points to be tested
+      pty: 1-dimensional array containing y-coordinates of points to be tested
+
+   ptx and pty must be conformable.
+
+   Returns:
+      Array of indices into ptx/pty for the points within the polygon.
+
+   See also: testPoly2 _testPoly
 */
-{
-  if ((is_void(ptx)) || (is_void(pty))) return [];
- // array of angles between vectors	
-  theta = array(float, dimsof(pl)(3), dimsof(ptx)(2)) 
-	
- // Loop n-times where n = number of vertices
-  for (i = 1; i < (dimsof(pl)(3)); i++)	{ 	
-    v1x0 = ptx	    // x-coordinate of beginning point of v1
-    v1y0 = pty	    // y-coordinate of beginning point of v1
-    v1x1 = pl(1,i)  // x-coordinate of ending point of v1
-    v1y1 = pl(2, i) // y-coordinate of ending point of v1
-    v2x0 = ptx	    // x-coordinate of beginning point of v2
-    v2y0 = pty	    // y-coordinate of beginning point of v2
-    v2x1 = pl(1,i+1) // x-coordinate of ending point of v2
-    v2y1 = pl(2,i+1) // y-coordinate of ending point of v2
-    v1x = v1x1 - v1x0 // x - coordinate of v1		
-    v1y = v1y1 - v1y0 // y - coordinate of v1
-    v2x = v2x1 - v2x0 // x - coordinate of v2
-    v2y = v2y1 - v2y0 // y - coordinate of v2
-		
-    dp = ((v1x * v2x) + (v1y * v2y))	// Dot-Product
-    cp = ((v1x * v2y) - (v1y * v2x))	// Cross-Product
-    theta(i, ) = atan(cp, dp)		// Theta equals tangent inverse
-  }
-  inout =(abs( theta(sum, )) < pi )
-  return ( where ( inout == 0 ) );
+   if(is_void(pl) || is_void(ptx) || is_void(pty)) return [];
+   w = data_box(ptx, pty, pl(1,min), pl(1,max), pl(2,min), pl(2,max));
+   if(numberof(w)) {
+      idx = _testPoly(unref(pl), unref(ptx)(w), unref(pty)(w));
+      return w(idx);
+   } else {
+      return [];
+   }
+}
+
+func _testPoly(pl, ptx, pty) {
+/* DOCUMENT idx = _testPoly(pl, ptx, pty)
+   This function is called by testPoly to do most of its work. The only thing
+   testPoly does that this does not is that testPoly first filters the points
+   to the bounding box of the polygon. In cases where there are lots of points,
+   this provides a huge performance increase.
+
+   See testPoly for further description of what the function does.
+
+   See also: testPoly testPoly2
+*/
+/*
+   The algorithm used calculates the sum of the angles between two vectors that
+   start at any point and end at two consecutive polygon vertices. If the sum
+   of angles is less then 2Pi the point is outside the polygon or inside
+   otherwise.  The algorithm uses the cross and dot product to determine the
+   inverse tangent which will equal the angle between vectors.
+*/
+   if(is_void(pl) || is_void(ptx) || is_void(pty)) return [];
+
+   // array of angle sums between vectors	
+   theta = array(double(0), dimsof(ptx));
+
+   // Loop n-times where n = number of vertices
+   for(i = 1; i < (dimsof(pl)(3)); i++) {
+      // Calculate the delta for each vector in both x and y
+      dx1 = pl(1,i) - ptx;
+      dy1 = pl(2,i) - pty;
+      dx2 = pl(1,i+1) - ptx;
+      dy2 = pl(2,i+1) - pty;
+
+      // Calculate dot product and cross product
+      dp = dx1 * dx2 + dy1 * dy2;
+      cp = unref(dx1) * unref(dy2) - unref(dy1) * unref(dx2);
+
+      // Theta is inverse tangent (keep a running sum)
+      theta += atan(unref(cp), unref(dp));
+   }
+
+   return where(abs(theta) >= pi);
 }
 
 func testPoly2(pl, ptx, pty, includevertices=) {
