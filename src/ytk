@@ -278,6 +278,27 @@ proc yset {var command {params {}} {options {}}} {
    }
 }
 
+proc tky_set {varName val} {
+   upvar $varName var
+
+   if {[string match {"*"} $val]} {
+      # Scalar string, need to eval to unescape newlines and lose quotes
+      eval set var $val
+   } elseif {[string match {\[*\]} $val]} {
+      if {[string match *\"* $val]} {
+         # Array of strings... cannot parse safely so we pass through
+         set var $val
+      } else {
+         # Array of non-strings, easy to convert to a list
+         set var [lindex [string map [list \[ \{ \] \} , " "] $val] 0]
+      }
+   } else {
+      # Anything else either doesn't require special handling, or requires
+      # special handling we cannot provide so we pass it through
+      set var $val
+   }
+}
+
 proc y_messageBox {message type title} {
 ##
 # y_messageBox message type title

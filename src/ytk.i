@@ -95,6 +95,34 @@ func tkcmd(s) {
   write,ytkfifo,s; fflush,ytkfifo;
 }
 
+func tksetval(tkvar, yval) {
+/* DOCUMENT tksetval, tkvar, yval
+   Given the name of a tcl variable (as a string) and an arbitrary Yorick
+   value, this will set the tcl variable to that value.
+*/
+// Original David Nagle 2009-08-13
+   tkcmd, swrite(format="tky_set %s {%s}", tkvar, print(yval)(sum));
+}
+
+func tksetsym(tkvar, ysym) {
+/* DOCUMENT tksetsym, tkvar, ysym
+   Given the name of a tcl variable (as a string) and the name of a Yorick
+   variable (as a string), this will set the tcl variable to the Yorick
+   variable's value.
+
+   This can handle dotted symbols, such as foo.bar.baz. They will be
+   dereferenced using get_member.
+*/
+// Original David Nagle 2009-08-13
+   parts = strtok(ysym, ".");
+   yval = symbol_def(parts(1));
+   while(parts(2)) {
+      parts = strtok(parts(2), ".");
+      yval = get_member(yval, parts(1));
+   }
+   tksetval, tkvar, yval;
+}
+
 func ytk_not_present {
         write,"Ytk not present. This function will not work \
  without the ytk program. "
