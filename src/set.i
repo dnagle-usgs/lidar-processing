@@ -35,8 +35,8 @@ func set_contains(A, b) {
    return result;
 }
 
-func set_intersection(A, B, idx=) {
-/* DOCUMENT set_intersection(A, B, idx=)
+func set_intersection(A, B, idx=, delta=) {
+/* DOCUMENT set_intersection(A, B, idx=, delta=)
 
    Returns the intersection of the sets represented by A and B.
 
@@ -50,8 +50,12 @@ func set_intersection(A, B, idx=) {
 
       idx= Set to 1 and the index of the intersection set into A will be
          returned instead of the elements.
+
+      delta= If provided, this provides the range over which values are
+         considered equal, useful when dealing with floats and doubles.
 */
    default, idx, 0;
+   default, delta, 0;
 
    // Trivial cases
    if(! numberof(A) || ! numberof(B))
@@ -63,8 +67,12 @@ func set_intersection(A, B, idx=) {
       return set_intersection(unref(B), unref(A));
 
    C = array(0, dimsof(A));
-   for(i = 1; i <= numberof(B); i++)
-      C |= (A == B(i));
+   if(delta)
+      for(i = 1; i <= numberof(B); i++)
+         C |= (abs(A - B(i)) < delta);
+   else
+      for(i = 1; i <= numberof(B); i++)
+         C |= (A == B(i));
    index = where(C);
 
    if(idx)
