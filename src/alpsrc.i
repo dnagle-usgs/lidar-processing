@@ -16,6 +16,11 @@ local alpsrc;
          conversions between NAD83 and NAVD88. It should contain
          subdirectories such as GEOID03.
 
+      maps_dir = ../maps
+         Defines the directory in which map files can be found. File reefs.i
+         will use this to find fla-reefs.dat, and plot.ytk will use it as a
+         default directory for the maps.
+
    See also: alpsrc_load
 */
 
@@ -42,19 +47,6 @@ func alpsrc_load(void) {
    __alpsrc_load_and_merge, alpsrc, "/etc/alpsrc";
    __alpsrc_load_and_merge, alpsrc, "~/.alpsrc";
    __alpsrc_load_and_merge, alpsrc, ".alpsrc";
-   alpsrc_apply;
-}
-
-func alpsrc_apply(void) {
-/* DOCUMENT alpsrc_apply;
-   Applies aplsrc settings. This primarily is used for cases where a setting in
-   the Tcl side is being defined in the alpsrc file.
-*/
-   extern alpsrc;
-   if ( _ytk ) {
-      tkcmd, swrite(format="set ::_ytk_log_level {%s}", alpsrc.ytk_log_level);
-      tkcmd, "ytk_logger_level_set";
-   }
 }
 
 func __alpsrc_load_and_merge(&hash, fn) {
@@ -65,7 +57,7 @@ func __alpsrc_load_and_merge(&hash, fn) {
 
 __alpsrc_defaults = h_new(
    "geoid_data_root", file_join(get_cwd(), ".."),
-   "ytk_log_level", "info"
+   "maps_dir", file_join(get_cwd(), "..", "maps")
 );
 
 alpsrc_load;

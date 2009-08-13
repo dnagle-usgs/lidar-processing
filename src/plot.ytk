@@ -12,7 +12,7 @@ if {![namespace exists ::plot]} {
             Diamond Cross45 Inverted-Triangle]
          variable markerSizes [list .1 .2 .3 .4 .5 .6 .7 1.0 1.5 2.0 2.5 \
             3.0 5.0 10.0]
-         variable mapPath "/opt/eaarl/lidar-processing/maps/"
+         variable mapPath "/data/"
          # Do we keep track of the currently set window, so that we don't
          # overwrite it?
          variable windows_track 0
@@ -92,6 +92,7 @@ if {![namespace exists ::plot]} {
       }
    }
 }
+ybkg tksetsym \"::plot::c::mapPath\" \"alpsrc.maps_dir\"
 
 proc ::plot::menu { } {
    exp_send "require, \"rbgga.i\"\r"
