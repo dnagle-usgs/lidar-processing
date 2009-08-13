@@ -34,33 +34,28 @@ func read_ascii_shapefile(filename, &meta) {
          if(state == "TOP" || state == "ATTR") {
             // do nothing with the data
             state = "ATTR";
-            parts = strsplit(line, "=");
+            parts = strtok(line, "=");
             si = swrite(format="%d", shp_idx+1);
             if(! h_has(meta, si))
                h_set, meta, si, h_new();
-            h_set, meta(si), parts(1), parts(2);
+            h_set, meta(si), parts(1), strtrim(parts(2), blank=" \t\r\n");
          } else {
             // invalid
             error, "Unexpected attribution in " + state;
          }
-      } else if(strglob("*,*", line)) {
+      } else if(regmatch("^ *(-?[0-9]+\.?[0-9]*)(, *|  *)(-?[0-9]+\.?[0-9]*)(,| |$)",
+         line, , x, , y)) {
          if(state == "TOP" || state == "ATTR" || state == "COORD") {
             // grow coordinates
-            if(regmatch("^ *(-?[0-9]+\.?[0-9]*), *(-?[0-9]+\.?[0-9]*)(,|$)",
-                  line, , x, y)) {
-               x = atod(x);
-               y = atod(y);
-               grow, ary, [[x,y]];
-               state = "COORD";
-            } else {
-               // invalid
-               error, "Unexpected non-coordinate in " + state;
-            }
+            x = atod(x);
+            y = atod(y);
+            grow, ary, [[x,y]];
+            state = "COORD";
          } else {
             // invalid
             error, "Unexpected coordinate in " + state;
          }
-      } else if(!line || regmatch("^[ \t\n\r]*$", line)) {
+      } else if(!line || regmatch("^[ \t\n\r]*?$", line)) {
          if(state == "COORD") {
             shp_idx++;
             if(shp_idx > numberof(shp)) {
