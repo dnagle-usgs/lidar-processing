@@ -278,7 +278,121 @@ proc yset {var command {params {}} {options {}}} {
    }
 }
 
+proc tky_tie {cmd type tkvar - yvar args} {
+##
+# Subcommands:
+#     tky_tie add broadcast tkvarName to yvarName [-initialize 1]
+#     tky_tie add sync tkvarName with yvarName [-initialize 1 -src tcl]
+#     tky_tie add read tkvarName from yvarName [-initialize 1]
+#     tky_tie remove broadcast tkvarName to yvarName
+#     tky_tie remove sync tkvarName with yvarName
+#     tky_tie remove read tkvarName from yvarName
+#
+# This adds or removes a tie between a Tcl variable and a Yorick variable.
+# There are two kinds of ties: broadcast and sync.
+#
+# broadcast
+#  With a broadcast tie, the Tcl variable will broadcast its value to Yorick
+#  whenever it gets set. However, Yorick will still remain free to change this
+#  value at will in between broadcasts. The broadcast only happens when the
+#  variable is set. You can force a new broadcast by doing this:
+#     set tkVar [set $tkVar]
+#
+#  The broadcast tie supports one optional setting. If you specify "-initialize
+#  1", then Yorick will be initialized with the Tcl variable's current value.
+#  Without this option, Yorick doesn't get update until the variable is
+#  assigned to next.
+#
+# sync
+#  With a sync tie, Tcl does its best to keep the same value in both Yorick and
+#  Tcl. When Tcl sets the variable to a new value, that value is broadcast to
+#  Yorick. When Tcl needs to retrieve the variable's value, it asks Yorick what
+#  the current value is. Thus, the Tcl variable effectively becomes an alias
+#  for the Yorick variable.
+#
+#  One major caveat: Changing the Yorick variable will not immediately provoke
+#  a change in the Tcl variable. For example, if you are using the Tcl variable
+#  in a GUI, the GUI will not immediately update. It won't update until Tcl
+#  next references that variable explicitly in some fashion.
+#
+#  You can force a sync by doing this:
+#     set tkVar
+#
+#  The sync tie supports two optional settings. If you specify "-initailize 1",
+#  then Yorick will be initialized with the Tcl variable's current value. If
+#  you additionally specify -src tcl, then the reverse will happen: Tcl will be
+#  initialized with the Yorick variable's current value.
+#
+# read
+#  With a read tie, the Tcl variable will ask Yorick for its value whenever it
+#  is acccessed. As with sync, this only occurs when the variable is explicitly
+#  checked.
+#
+#  When a read tie is in effect, it is still technically permissible to set the
+#  Tcl variable. However, the changes have no effect so this is not
+#  recommended.
+#
+#  The read tie supports one optional setting. If you specify "-initialize 1",
+#  then Tcl will be initialized with the Yorick variable's current value. This
+#  is useful if tying to a variable that is used in a GUI.
+##
+   array set opts $args
+   switch -- $cmd {
+      add - remove {}
+      default {
+         error "Unknown command: $cmd"
+      }
+   }
+   switch -- $type {
+      broadcast {
+         if {$cmd eq "add" && $opts(-initialize)} {
+            __tky_tie_write $tkvar $yvar - - -
+         }
+         trace $cmd variable $tkvar write [list __tky_tie_write $tkvar $yvar]
+      }
+      sync {
+         if {$cmd eq "add" && $opts(-initialize)} {
+            if {$opts(-src) eq "tcl"} {
+               __tky_tie_write $tkvar $yvar - - -
+            } else {
+               __tky_tie_read $tkvar $yvar - - -
+            }
+         }
+         trace $cmd variable $tkvar write [list __tky_tie_write $tkvar $yvar]
+         trace $cmd variable $tkvar read [list __tky_tie_read $tkvar $yvar]
+      }
+      read {
+         if {$cmd eq "add" && $opts(-initialize)} {
+            __tky_tie_read $tkvar $yvar - - -
+         }
+         trace $cmd variable $tkvar read [list __tky_tie_read $tkvar $yvar]
+      }
+      default {
+         error "Unknown type $type"
+      }
+   }
+   return
+}
+
+proc __tky_tie_write {tkvar yvar name1 name2 op} {
+# Used by tky_tie
+   ybkg var_expr_tkupdate \"$yvar\" \"[set $tkvar]\"
+}
+
+set ::__tky_tie_read_counter 0
+proc __tky_tie_read {tkvar yvar name1 name2 op} {
+# Used by tky_tie
+   set wait_var ::__tky_tie_tmp_[incr ::__tky_tie_read_counter]_[clock seconds]
+   set cancel [after 1000 [list set $wait_var {}]]
+   after 0 [list after idle [list ybkg tksetval \"$wait_var\" $yvar]]
+   vwait $wait_var
+   after cancel $cancel
+   set $tkvar [set $wait_var]
+   unset $wait_var
+}
+
 proc tky_set {varName val} {
+# Used by ytk.i's tksetval.
    upvar $varName var
 
    if {[string match {"*"} $val]} {
