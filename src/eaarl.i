@@ -14,6 +14,13 @@ if(is_void(__eaarl_includes_included__)) {
    if(is_void(ymerge))
       ymerge = merge;
 
+   // string.i replaces two built-ins, so we'll save them to avoid a warning
+   // message about them being freed
+   if(is_void(yis_scalar))
+      yis_scalar = is_scalar;
+   if(is_void(yis_vector))
+      yis_vector = is_vector;
+
    // Built-in and plugin includes
    require, "jpeg.i";
    require, "msort.i";
