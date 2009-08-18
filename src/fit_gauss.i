@@ -216,7 +216,7 @@ func tky_fit_gauss_interactive(data, win) {
                point.east/100., point.north/100.;
             dist = sqrt(
                (spot(1) - point.east/100.)^2 + (spot(2) - point.north/100.)^2);
-            write, format="  which is %.2f cm away\n", dist;
+            write, format="  which is %.2f m away\n", dist;
             write, format="  collected at soe %.2f (%s)\n", point.soe,
                soe2iso8601(point.soe);
 
