@@ -33,15 +33,6 @@ if {![namespace exists ::fit_gauss]} {
 
          variable mouse_mode 0         ;# Are we in mouse mode?
       }
-      # Non-GUI variables
-      namespace eval v {
-         variable bkp_result_var       ;# Used to enforce valid result variable
-         variable bkp_raster           ;# Used to enforce numerical raster
-         variable bkp_pixel            ;# Used to enforce numerical pixel
-         variable bkp_add_peak         ;# Used to enforce numerical add_peak
-         variable bkp_lims_x1          ;# Used to enforce numerical lims_x1
-         variable bkp_lims_x2          ;# Used to enforce numerical lims_x2
-      }
    }
 }
 
@@ -49,86 +40,47 @@ if {![namespace exists ::fit_gauss]} {
 #                               Variable Traces                                #
 ################################################################################
 
-proc ::fit_gauss::check_integer varName {
-# varName should be a variable in the g:: namespace that has a corresponding
-# backup variable in the v:: namespace. If it's an integer, then backup is set
-# to the variable's value. If it's not an integer, then the variable is
-# restored to the backup value.
-   set var "g::$varName"
-   set bkp "v::bkp_$varName"
-   if {![string is integer [set $var]]} {
-      set $var [set $bkp]
-   } else {
-      set $bkp [set $var]
-   }
-}
+namespace eval ::fit_gauss {
+   # Traces are applied in the order created, most recent first. Thus, we have
+   # to create them in reverse of the order we want them applied.
 
-proc ::fit_gauss::bound {varName min max} {
-# Utility function that constrains the value for varName to the bounds defined
-# by min and max.
-   upvar $varName var
-   set var [lindex [lsort -integer [list $var $min $max]] 1]
-}
+   # Keep Yorick updated
+   tky_tie add broadcast g::raster to tky_fit_gauss_vars.raster -initialize 1
+   tky_tie add broadcast g::pixel to tky_fit_gauss_vars.pixel -initialize 1
+   tky_tie add broadcast g::add_peak to tky_fit_gauss_vars.add_peak -initialize 1
+   tky_tie add broadcast g::graph to tky_fit_gauss_vars.graph -initialize 1
+   tky_tie add broadcast g::verbose to tky_fit_gauss_vars.verbose -initialize 1
+   tky_tie add broadcast g::lims to tky_fit_gauss_vars.lims -initialize 1
+   tky_tie add broadcast g::lims_x1 to tky_fit_gauss_vars.lims_x1 -initialize 1
+   tky_tie add broadcast g::lims_x2 to tky_fit_gauss_vars.lims_x2 -initialize 1
+   tky_tie add broadcast g::result_var to tky_fit_gauss_vars.result_var -initialize 1
 
-proc ::fit_gauss::trace_result_var {name1 name2 op} {
-# Enforces a valid variable name (or the empty string).
-   if {[regexp {^(?:(?:)|[[:alpha:]_][[:alnum:]_]*)$} $g::result_var]} {
-      set v::bkp_result_var $g::result_var
-   } else {
-      set g::result_var $v::bkp_result_var
-   }
-}
-trace add variable ::fit_gauss::g::result_var write ::fit_gauss::trace_result_var
+   # Make sure that x1 <= x2 remains true
+   validation_trace add g::lims_x1 {expr {%V > $::fit_gauss::g::lims_x2}} \
+      -invalidcmd [list set ::fit_gauss::g::lims_x2 {%V}]
+   validation_trace add g::lims_x2 {expr {%V < $::fit_gauss::g::lims_x1}} \
+      -invalidcmd [list set ::fit_gauss::g::lims_x1 {%V}]
 
-proc ::fit_gauss::trace_raster {name1 name2 op} {
-# Ensures that raster is an integer and is within its bounds.
-   check_integer raster
-   bound g::raster $c::raster_min $c::raster_max
-}
-trace add variable ::fit_gauss::g::raster write ::fit_gauss::trace_raster
+   # Enforce valid ranges
+   validation_trace add g::raster {expr 0} \
+      -invalidcmd [list constrain %v between $c::raster_min and $c::raster_max]
+   validation_trace add g::pixel {expr 0} \
+      -invalidcmd [list constrain %v between $c::pixel_min and $c::pixel_max]
+   validation_trace add g::add_peak {expr 0} \
+      -invalidcmd [list constrain %v between $c::add_peak_min and $c::add_peak_max]
+   validation_trace add g::lims_x1 {expr 0} \
+      -invalidcmd [list constrain %v between $c::limrange_min and $c::limrange_max]
+   validation_trace add g::lims_x2 {expr 0} \
+      -invalidcmd [list constrain %v between $c::limrange_min and $c::limrange_max]
 
-proc ::fit_gauss::trace_pixel {name1 name2 op} {
-# Ensures that pixel is an integer and is within its bounds.
-   check_integer pixel
-   bound g::pixel $c::pixel_min $c::pixel_max
+   # Enforce valid types
+   validation_trace add g::result_var {regexp {^(?:(?:)|[[:alpha:]_][[:alnum:]_]*)$} {%V}}
+   validation_trace add g::raster {string is integer {%V}}
+   validation_trace add g::pixel {string is integer {%V}}
+   validation_trace add g::add_peak {string is integer {%V}}
+   validation_trace add g::lims_x1 {string is integer {%V}}
+   validation_trace add g::lims_x2 {string is integer {%V}}
 }
-trace add variable ::fit_gauss::g::pixel write ::fit_gauss::trace_pixel
-
-proc ::fit_gauss::trace_add_peak {name1 name2 op} {
-# Ensures that add_peak is an integer and is within its bounds.
-   check_integer add_peak
-   bound g::add_peak $c::add_peak_min $c::add_peak_max
-}
-trace add variable ::fit_gauss::g::add_peak write ::fit_gauss::trace_add_peak
-
-proc ::fit_gauss::trace_lims_x1 {name1 name2 op} {
-# Makes three checks:
-#   1. Ensure lims_x1 is an integer; if not, restore backup.
-#   2. Coerce limrange_min <= lims_x1 <= limrange_max by changing lims_x1 if
-#      necessary.
-#   3. Coerce lims_x1 <= lims_x2 by changing lims_x2 -> lims_x1 if necessary.
-   check_integer lims_x1
-   bound g::lims_x1 $c::limrange_min $c::limrange_max
-   if {$g::lims_x1 > $g::lims_x2} {
-      set g::lims_x2 $g::lims_x1
-   }
-}
-proc ::fit_gauss::trace_lims_x2 {name1 name2 op} {
-# Makes three checks:
-#   1. Ensure lims_x2 is an integer; if not, restore backup.
-#   2. Coerce limrange_min <= lims_x2 <= limrange_max by changing lims_x2 if
-#      necessary.
-#   3. Coerce lims_x1 <= lims_x2 by changing lims_x1 -> lims_x2 if necessary.
-   check_integer lims_x2
-   bound g::lims_x2 $c::limrange_min $c::limrange_max
-   if {$g::lims_x1 > $g::lims_x2} {
-      set g::lims_x1 $g::lims_x2
-   }
-}
-
-# Ensure that lims_x1 <= lims_x2 and limrange_min <= lims_x1/2 <= limrange_max
-trace add variable ::fit_gauss::g::lims_x1 write ::fit_gauss::trace_lims_x1
-trace add variable ::fit_gauss::g::lims_x2 write ::fit_gauss::trace_lims_x2
 
 proc ::fit_gauss::trace_lims_gui {name1 name2 op} {
    if {[winfo exists $c::win]} {
@@ -150,14 +102,6 @@ proc ::fit_gauss::trace_lims_gui {name1 name2 op} {
 }
 
 trace add variable ::fit_gauss::g::lims write ::fit_gauss::trace_lims_gui
-
-proc ::fit_gauss::trace_sync_tky_num {var name1 name2 op} {
-   ybkg h_set tky_fit_gauss_vars \"$var\" [set ::fit_gauss::g::$var]
-}
-
-proc ::fit_gauss::trace_sync_tky_str {var name1 name2 op} {
-   ybkg h_set tky_fit_gauss_vars \"$var\" \"[set ::fit_gauss::g::$var]\"
-}
 
 ################################################################################
 #                               Core Procedures                                #
@@ -269,11 +213,6 @@ proc ::fit_gauss::create_gui {} {
       }
    }
 
-   # Initialize backup variables
-   foreach var [info vars v::bkp_*] {
-      set $var [set g::[string range [namespace tail $var] 4 end]]
-   }
-
    # This triggers any traces on each GUI variable. Useful for ensuring that
    # any necessary GUI updating is done.
    foreach var [info vars g::*] {
@@ -307,38 +246,9 @@ proc ::fit_gauss::cmd_fit_gauss {} {
 
 proc ::fit_gauss::enter_mouse_mode {} {
    set g::mouse_mode 1
-   enable_mouse_mode_traces
-   # This triggers all the traces that just got set, to make sure we start off
-   # with the right values
-   foreach var [info vars g::*] {
-      set $var [set $var]
-   }
    ycmd tky_fit_gauss_interactive [list $::pro_var $::win_no]
 }
 
 proc ::fit_gauss::leave_mouse_mode {} {
    set g::mouse_mode 0
-   disable_mouse_mode_traces
-}
-
-proc ::fit_gauss::enable_mouse_mode_traces {} {
-   foreach var [list raster pixel graph add_peak lims lims_x1 lims_x2 verbose] {
-      trace add variable ::fit_gauss::g::$var write \
-         [list ::fit_gauss::trace_sync_tky_num $var]
-   }
-   foreach var [list result_var] {
-      trace add variable ::fit_gauss::g::$var write \
-         [list ::fit_gauss::trace_sync_tky_str $var]
-   }
-}
-
-proc ::fit_gauss::disable_mouse_mode_traces {} {
-   foreach var [list raster pixel graph add_peak lims lims_x1 lims_x2 verbose] {
-      trace remove variable ::fit_gauss::g::$var write \
-         [list ::fit_gauss::trace_sync_tky_num $var]
-   }
-   foreach var [list result_var] {
-      trace remove variable ::fit_gauss::g::$var write \
-         [list ::fit_gauss::trace_sync_tky_str $var]
-   }
 }
