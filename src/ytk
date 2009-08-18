@@ -343,6 +343,7 @@ proc tky_tie {cmd type tkvar - yvar args} {
          error "Unknown command: $cmd"
       }
    }
+   set tkvar [uplevel [list namespace which -variable $tkvar]]
    switch -- $type {
       broadcast {
          if {$cmd eq "add" && $opts(-initialize)} {
