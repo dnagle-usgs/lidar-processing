@@ -280,3 +280,120 @@ proc K* {x args} {
 ##
    set x
 }
+
+namespace eval ::__validation_backups {}
+
+proc validation_trace {cmd varname valcmd args} {
+##
+# validation_trace add varname valcmd -invalidcmd {}
+# validation_trace remove varname valcmd -invalidcmd {}
+#
+#  Adds (or removes) a validation traces on the specified variable. When a
+#  validation fails, the variable remains unchanged.
+#
+#  Required arguments:
+#     cmd: Should be "add" or "remove"
+#     varname: The name of a variable. If this is not explicitly scoped, then
+#        it will be scoped to the current context.
+#     valcmd: The validation command. This will be evaluated at the global
+#        scope and will have percent-substitutions applied to it as described
+#        further below. This should evaluate to a boolean true or false. True
+#        indicates that the value is allowed. False indicates that the value
+#        should be rejected.
+#
+#  Optional arguments:
+#     -invalidcmd $cmd: A command to run when an attempt was made to set the
+#        variable to a value that resulted in a rejection. This is run at the
+#        global scope and also has percent-substitutions applied to it. If this
+#        is not provided, then a failure will result in the variable's value
+#        not changing. If this is provided, then the calling code must manually
+#        fix the variable's value itself.
+#
+#  Percent substitutions
+#     The following percent subtitutions can be included in your commands.
+#        %% - Substitutes to %.
+#        %B - Substitutes to the previous value for the variable. If the
+#             validation fails, this is what the variable will be reassigned
+#             to.
+#        %v - Substitutes to the name of the variable.
+#        %V - Substitutes to the current value for the variable. If the
+#             validation succeeds, this is what the variable will remain as.
+#
+#  Examples:
+#     % validation_trace add counter {string is integer {%V}}
+#     % set counter 5
+#     5
+#     % set counter -10
+#     -10
+#     % set counter "Random string"
+#     -10
+#
+#     % validation_trace add counter {expr {[string is integer {%V}] && {%V} < 20}}
+#     % set counter 5
+#     5
+#     % set counter 15
+#     15
+#     % set counter 25
+#     15
+#
+#     % validation_trace add counter {string is integer {%V}} \
+#        -invalidcmd {puts "You entered a bogus value!!"}
+#     % set counter 5
+#     5
+#     % set counter foo
+#     You entered a bogus value!!
+#     5
+##
+   array set opt [list -invalidcmd {}]
+   array set opt $args
+   switch -- $cmd {
+      add - remove {}
+      default {
+         error "Unknown command: $cmd"
+      }
+   }
+   # If the variable doesn't already exist, then setting a trace on it provokes
+   # an error. Thus, initialize to a null value if necessary.
+   if {![uplevel [list info exists $varname]]} {
+      uplevel [list set $varname {}]
+   }
+   set varname [uplevel [list namespace which -variable $varname]]
+   set data [list varname $varname valcmd $valcmd invalidcmd $opt(-invalidcmd)]
+   # Create namespace, if necessary
+   namespace eval ::__validation_backups[namespace qualifiers $varname] {}
+   set ::__validation_backups$varname [set $varname]
+   trace $cmd variable $varname write [list __validate_trace_worker $data]
+}
+
+proc __validate_trace_worker {data name1 name2 op} {
+   array set _ $data
+   set substitutions [list \
+      %% % \
+      %B [set ::__validation_backups$_(varname)] \
+      %v $_(varname) \
+      %V [set $_(varname)] ]
+   set cmd [string map $substitutions $_(valcmd)]
+   set valid [uplevel #0 $cmd]
+   if {$valid} {
+      set ::__validation_backups$_(varname) [set $_(varname)]
+   } else {
+      if {[string length $_(invalidcmd)]} {
+         set invalidcmd [string map $substitutions $_(invalidcmd)]
+         uplevel #0 $invalidcmd
+      } else {
+         set $_(varname) [set ::__validation_backups$_(varname)]
+      }
+   }
+}
+
+proc constrain {var between min and max} {
+# Constrain the given variable's value to the range of min and max. If it is
+# outside of that range, it is clipped to either min or max.
+   upvar $var v
+   if {$v < $min} {
+      set v $min
+   } elseif {$v > $max} {
+      set v $max
+   }
+   return
+}
