@@ -565,6 +565,7 @@ proc restore_defaults {} {
    set _ytk(log_file)            ""
    set _ytk(log_level)           info
    set _ytk(initialdir)          /data/0
+   set _ytk(rlwrap_nodupes)      1
 }
 
 proc save_options {} {
@@ -827,7 +828,10 @@ proc spawn_yorick {} {
    # Attempt to spawn using rlwrap
    catch { set rlwrap [exec which rlwrap] }
    if { $result && [info exists rlwrap] && $_ytk(use_rlwrap) eq "Yes" } {
-      set cmd [list $rlwrap -c -b "'(){}\[],+=&^%$#@;|\"" $_ytk(yorick_executable)]
+      set cmd [list $rlwrap -c \
+         -D $_ytk(rlwrap_nodupes) \
+         -b "'(){}\[],+=&^%$#@;|\"" \
+         $_ytk(yorick_executable)]
       set result [spawner $cmd]
    }
 
