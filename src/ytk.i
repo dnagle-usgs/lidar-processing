@@ -24,6 +24,7 @@ func initialize_ytk(ytk_fn, tky_fn) {
    open_tkcmd_fifo, ytk_fn;
    open_tky_fifo, tky_fn;
    tkcmd, "set ::Y_SITE {" + Y_SITE + "}";
+   write, "Ytk ready.  Yorick and Tcl/Tk communication pipes established.";
 }
 
 func open_tkcmd_fifo(fn) {
@@ -477,3 +478,18 @@ func logger_id(void) {
    id = _ytk_logger_id += 2;
    return swrite(format="(%d)", id);
 }
+
+func ytk_startup(void) {
+/* DOCUMENT ytk_startup;
+   When ytk.i is sourced, this function is called. It checks argv to see if it
+   looks like this was started from ytk with fifo arguments and, if so,
+   attempts to initialize the fifos.
+*/
+// Original David Nagle 2009-08-20
+   args = get_argv();
+   if(numberof(args) > 3 && args(-2) == "ytk.i") {
+      initialize_ytk, args(-1), args(0);
+   }
+}
+
+ytk_startup;

@@ -812,32 +812,31 @@ proc spawn_yorick {} {
 #  If successful, then expect does whatever it does when spawn works (including
 #  setting various expect-related variables), in the global scope.
 ##
-   global _ytk
+   global _ytk ytk_fifo_name tky_fifo_name
 
    # This is 1 until we successfully spawn a Yorick
    set result 1
    set cmd ""
+   set yor [list $_ytk(yorick_executable) -i ytk.i $ytk_fifo_name $tky_fifo_name]
 
    # Attempt to spawn using rlterm
    catch { set rlterm [exec which rlterm] }
    if { $result && [info exists rlterm] && $_ytk(use_rlterm) eq "Yes" } {
-      set cmd [list $rlterm $_ytk(yorick_executable)]
+      set cmd [concat [list $rlterm] $yor]
       set result [spawner $cmd]
    }
 
    # Attempt to spawn using rlwrap
    catch { set rlwrap [exec which rlwrap] }
    if { $result && [info exists rlwrap] && $_ytk(use_rlwrap) eq "Yes" } {
-      set cmd [list $rlwrap -c \
-         -D $_ytk(rlwrap_nodupes) \
-         -b "'(){}\[],+=&^%$#@;|\"" \
-         $_ytk(yorick_executable)]
+      set cmd [concat [list $rlwrap -c -D $_ytk(rlwrap_nodupes) \
+         -b "'(){}\[],+=&^%$#@;|\""] $yor]
       set result [spawner $cmd]
    }
 
    # Attempt to spawn without any wrapper
    if { $result } {
-      set cmd [list $_ytk(yorick_executable)]
+      set cmd $yor
       set result [spawner $cmd]
    }
    
@@ -2272,12 +2271,6 @@ if { [spawn_yorick] } {
 expect "Yorick * ready"
 set yorick_version [lindex [split $expect_out(0,string)] 1]
 logger debug "Yorick version: $yorick_version"
-
-expect ">"
-exp_send "#include \"ytk.i\"\r"
-expect ">"
-exp_send "initialize_ytk, \"$ytk_fifo_name\", \"$tky_fifo_name\";\r"
-expect ">"
 
 set indoc 0
 set hwin 0
