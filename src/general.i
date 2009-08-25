@@ -258,8 +258,8 @@ func strsplit(str, sep) {
       return parts(2:);
 }
 
-func strjoin(lst, sep, stripnil=) {
-/* DOCUMENT strjoin(lst, sep, stripnil=)
+func strjoin2(lst, sep, stripnil=) {
+/* DOCUMENT strjoin2(lst, sep, stripnil=)
 
    Given an input array of strings, this will join the strings into a single
    string, using the separator between each array item. If the array is not
@@ -267,7 +267,7 @@ func strjoin(lst, sep, stripnil=) {
 
    If stripnil=1, then any nil values will be removed prior to joining.
 
-   Example: strjoin(["a", "b", "c"], "--") will return "a--b--c".
+   Example: strjoin2(["a", "b", "c"], "--") will return "a--b--c".
 
    See also: string
 */
@@ -313,19 +313,19 @@ func strwrap(str, space=, newline=, paragraph=, width=) {
       for(j = 1; j <= numberof(lines); j++) {
          words = strsplit(lines(j), space);
          for(k = 1; k <= numberof(words); k++) {
-            trial_line = strjoin([this_line, words(k)], space, stripnil=1);
+            trial_line = strjoin2([this_line, words(k)], space, stripnil=1);
             if(strlen(trial_line) <= width) {
                this_line = trial_line;
             } else {
-               this_paragraph = strjoin([this_paragraph, this_line], newline, stripnil=1);
+               this_paragraph = strjoin2([this_paragraph, this_line], newline, stripnil=1);
                this_line = words(k);
             }
          }
       }
       if(strlen(this_line)) {
-         this_paragraph = strjoin([this_paragraph, this_line], newline, stripnil=1);
+         this_paragraph = strjoin2([this_paragraph, this_line], newline, stripnil=1);
       }
-      result = strjoin([result, this_paragraph], paragraph, stripnil=1);
+      result = strjoin2([result, this_paragraph], paragraph, stripnil=1);
    }
    return result;
 }
