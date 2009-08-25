@@ -28,9 +28,7 @@ func triangulate_xyz(file=, savefile=, data=, plot=) {
   
   extern xyz, pxyz, ntri;
   if (!is_void(file)) {
-     ipath = split_path(file,0)(1);
-     ifname = split_path(file,0)(2);
-     xyz = read_ascii_xyz(ipath=ipath,ifname=ifname);
+     xyz = read_ascii(file);
   }
 
   if (is_array(data)) {

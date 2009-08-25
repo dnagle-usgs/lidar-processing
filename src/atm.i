@@ -499,8 +499,8 @@ func show_frame (b, n, cmin=, cmax=, marker=, msize= ){
    plcm, iz(b:b+n), lat(b:b+n), lon(b:b+n), cmin=cmin, cmax=cmax, marker=1, msize=msize;
 }
 
-func atm_rq_ascii_to_pbd(ipath, ifname=, columns=, searchstr=, opath=) {
-/* DOCUMENT atm_rq_ascii_to_pbd, ipath, ifname=, columns=, searchstr=, opath=
+func atm_rq_ascii_to_pbd(ipath, ifname=, searchstr=, opath=) {
+/* DOCUMENT atm_rq_ascii_to_pbd, ipath, ifname=, searchstr=, opath=
    
    Converts an atm_rq_ascii(?) to a pbd, using struct ATM2.
 */
@@ -530,8 +530,7 @@ func atm_rq_ascii_to_pbd(ipath, ifname=, columns=, searchstr=, opath=) {
    for (i=1;i<=n;i++) {
       // read ascii file
       write, format="Reading file %d of %d\n",i,n;
-      fn_split = split_path(fn_arr(i),0);
-      asc_out = read_ascii_xyz(ipath=fn_split(1),ifname=fn_split(2),columns=columns);
+      asc_out = read_ascii(fn_arra(i));
       ncount = numberof(asc_out(1,));
       atm_out = array(ATM2,ncount);
       // convert lat lon to utm

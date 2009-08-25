@@ -1930,7 +1930,7 @@ func phase2_jela_gnd_control_anal(data, ipath=) {
 //amar 1/25/2008
 
 if (is_void(ipath)) ipath = "/data/1/EAARL/Processed_Data/JELA_06_new/veg_analysis/";
-arr = read_ascii_xyz(ipath=ipath, ifname="Phase2_truncated.txt", columns=5);
+arr = read_ascii(ipath+"Phase2_truncated.txt");
 
 wf = open(ipath+"plot_mets_stats.txt", "a");
 for (i=1;i<=numberof(arr(1,));i++) {
@@ -1957,7 +1957,7 @@ func phase1_jela_gnd_control_anal(data, ipath=) {
 //amar 3/20/2008
 
 if (is_void(ipath)) ipath = "/data/1/EAARL/Processed_Data/JELA_06_new/veg_analysis/Phase1/";
-arr = read_ascii_xyz(ipath=ipath, ifname="Phase1_truncated.txt", columns=3);
+arr = read_ascii(ipath+"Phase1_truncated.txt");
 
 wf = open(ipath+"plot_mets_stats.txt", "a");
 for (i=1;i<=numberof(arr(1,));i++) {
