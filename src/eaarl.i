@@ -92,8 +92,10 @@ if(is_void(__eaarl_includes_included__)) {
    // Check for yutils -- warn user if not present
    // Yutils will put things in autoload, so we check for a few functions...
    if(is_func(replot_all) && is_func(lmfit)) {
-      require, "lmfit.i";
       require, "copy_plot.i";
+      require, "lmfit.i";
+      require, "rdcols.i";
+      require, "utils.i";
    } else {
       write, "***********************************************************";
       write, "* WARNING: Your system does not appear to have the yutils *";
