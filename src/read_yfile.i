@@ -899,39 +899,196 @@ func __write_ascii_xyz_helper(void, fn=, lines=, header=, footer=, indx=, delimi
    write, format="Total records written to ascii file = %d\n", numberof(lines(,1));
 }
 
-func read_ascii_xyz(ipath=,ifname=, no_lines=, header=, columns=){
- /* this function reads in an xyz ascii file and returns a n-d array.
-    amar nayegandhi 05/01/02
-    modified 10/05/06 to make it faster and read more columns
-   ** ALL COLUMNS MUST BE INTEGERS OR FLOATING POINT.. NO STRINGS ALLOWED**
-	ipath = input path name
-	ifname = input file name
-	no_lines = number of lines in file
-	header = set to 1 if header line is present
-	columns = number of columns in file (only needed if > 3)
-    */
+func read_ascii_xyz(file, pstruc, delimit=, header=, ESRI=, intensity=, rn=,
+soe=, indx=, mapping=, columns=, types=) {
+/* DOCUMENT data = read_ascii_xyz(file, pstruc, header=, delimit=, ESRI=,
+   intensity=, rn=, soe=, indx=, mapping=, columns=, types=)
 
-    fn = ipath+ifname;
-    if (is_void(columns)) columns = 3;
-    if (is_void(no_lines)) {
-	cmd = "cat "+ipath+ifname+" | wc -l"
-	f = popen(cmd,0);
-	no_lines = 0;
-	read, f, no_lines;
-	close,f;
-   }
-    
-   f = open(fn, "r");
-   if (header) {
-	hd = rdline(f);
-	no_lines--;
-   }
-   arr = array(double, columns, no_lines);
-   
-   read, f, arr;
- 
-   return arr;
+   Reads an ASCII file and stores its data in the specified structure. This
+   function is optimized to read files created with write_ascii_xyz but has
+   also been designed with flexibility for other uses in mind.
 
+   If no options are provided, then the function will attempt to auto-detect
+   everything. This will usually work provided you created the file using
+   write_ascii_xyz. So if you created the file with write_ascii_xyz, you can
+   probably read it without any explicit options.
+
+   This fills in as many fields in the provided structure as it can, even if
+   doing so isn't "correct", in order to improve compatibility throughout ALPS.
+   For example, the mirror coordinates are filled in with the XYZ coordinates.
+
+   Required parameters:
+
+      file: The full path and file name of the ascii XYZ file to read.
+      pstruc: The structure to convert the data to.
+
+   Options:
+
+      delimit= The delimiter used. Defaults to " ".
+
+   These options will turn off auto-detect mode and correspond to options from
+   write_ascii_xyz. If you know what options were used when the file was
+   created and for some reason the file isn't parsing automatically, then
+   specify those same options here.
+
+      ESRI=
+      header=
+      intensity=
+      rn=
+      soe=
+      indx=
+
+   These options will turn off or alter certain aspects of auto-detect mode but
+   should only be used if you've read the function's source code and understand
+   what they do:
+
+      mapping=
+      columns=
+      types= (Note: This is NOT the same as the type= parameter in
+         write_ascii_xyz.)
+
+   The following options from write_ascii_xyz are NOT implemented, but affect
+   output when used. Thus, if these options were used on write_ascii_xyz, you
+   may not have success with read_ascii_xyz.
+
+      footer: If your file has a footer, you'll have to manually remove it.
+      latlon: Conversion from lat/lon to UTM is not implemented.
+      split: This can handle a file that was split, but it won't auto join
+         multiple copies.
+      type: If you used type=2, then be aware that the elevation written to
+         file was data.elevation + data.depth. There's no way to figure out
+         what those two values were. The output will set both data.elevation
+         AND data.depth to this value, which effectively doubles the value.
+*/
+// Original: David Nagle 2009-08-24
+   default, delimit, " ";
+   if(typeof(pstruc) == "string") pstruc = symbol_def(pstruc);
+
+   if(ESRI) {
+      header = 1;
+      indx = 1;
+   }
+
+   if(is_void(mapping)) {
+      // If you want to pass the mapping= option, then you'll need to create a
+      // Yeti hash that contains information similar to the following.
+      mapping = h_new();
+      // Field definitions
+      // id/Index has no destination in the struct, so it's omitted
+      h_set, mapping, "utm_x",
+         h_new(type=3, dest=["east","meast","least"], factor=100);
+      h_set, mapping, "utm_y",
+         h_new(type=3, dest=["north","mnorth","lnorth"], factor=100);
+      h_set, mapping, "z_meters",
+         h_new(type=3, dest=["elevation","lelv","depth","melevation"], factor=100);
+      h_set, mapping, "intensity_counts",
+         h_new(type=2, dest=["intensity","first_peak","fint","bottom_peak","lint"]);
+      h_set, mapping, "raster_pulse",
+         h_new(type=2, dest=["rn"]);
+      h_set, mapping, "soe",
+         h_new(type=3, dest=["soe"]);
+      // Equivalencies
+      h_set, mapping, "UTMX(m)", mapping("utm_x");
+      h_set, mapping, "UTMY(m)", mapping("utm_y");
+      h_set, mapping, "cZ(m)", mapping("z_meters");
+      h_set, mapping, "Intensity(counts)", mapping("intensity_counts");
+      h_set, mapping, "Raster/Pulse", mapping("raster_pulse");
+      h_set, mapping, "SOE", mapping("soe");
+   }
+
+   // If none of these were specified, then we should try to auto-detect
+   if(
+      is_void(columns) && is_void(indx) && is_void(intensity) && is_void(rn) &&
+      is_void(soe) && is_void(header) && is_void(ESRI)
+   ) {
+      f = open(file, "r");
+      line = rdline(f, 1)(1);
+      close, f;
+      fields = strsplit(line, delimit);
+
+      // Check for text field headers. The first field is always id or easting.
+      w = where(fields(1) == ["id","Index","utm_x","UTMX(m)"]);
+      if(numberof(w)) {
+         columns = fields;
+         header = 1;
+      } else {
+         // If there's no headers, then attempt to guess
+         cols = numberof(fields);
+         columns = [];
+         idx = 4;
+         // First column is either id or easting. Easting has a decimal
+         // point. Thus, lack of decimal means it's the id.
+         if(idx <= cols && !strglob("*.*", fields(1))) {
+            grow, columns, "id";
+            idx++;
+         }
+         // We always have east, north, and elevation
+         grow, columns, ["utm_x", "utm_y", "z_meters"];
+         // The rn and soe are both going to always be more than 65k,
+         // whereas intensity is always less than 65k.
+         if(idx <= cols && atoi(fields(idx)) < 65536) {
+            grow, columns, "intensity_counts";
+            idx++;
+         }
+         // The rn is a long, the soe is a double. Thus, we can diffentiate
+         // by checking for a decimal point.
+         if(idx <= cols && !strglob("*.*", fields(idx))) {
+            grow, columns, "raster_pulse";
+            idx++;
+         }
+         if(idx <= cols && strglob("*.*", fields(idx))) {
+            grow, columns, "soe";
+            idx++;
+         }
+         idx--;
+         // If the number of columns we thought we auto detected doesn't
+         // match the number of columns present, then we can't trust our
+         // auto detection.
+         if(idx != cols) {
+            columns = [];
+         } else {
+            header = 0;
+         }
+         cols = idx = [];
+      }
+   }
+   // If we still don't know the columns, then attempt to re-construct based on
+   // options passed.
+   if(is_void(columns)) {
+      // idx, intensity, rn, and soe are 0 by default in write_ascii_xyz
+      columns = [];
+      if(indx) grow, columns, "id";
+      grow, columns, ["utm_x", "utm_y", "z_meters"];
+      if(intensity) grow, columns, "intensity_counts";
+      if(rn) grow, columns, "raster_pulse";
+      if(soe) grow, columns, "soe";
+   }
+
+   if(is_void(types)) {
+      types = array(0, numberof(columns));
+      for(i = 1; i <= numberof(columns); i++) {
+         if(h_has(mapping, columns(i)))
+            types(i) = mapping(columns(i)).type;
+      }
+   }
+
+   nskip = (header ? 1 : 0);
+   cols = rdcols(file, numberof(columns), delim=delimit, type=types, nskip=nskip);
+
+   data = array(pstruc, numberof(*cols(1)));
+   for(i = 1; i <= numberof(columns); i++) {
+      if(h_has(mapping, columns(i))) {
+         map = mapping(columns(i));
+         factor = (h_has(map, "factor") ? h_get(map, "factor") : 1);
+         for(j = 1; j <= numberof(map.dest); j++) {
+            if(has_member(data, map.dest(j))) {
+               get_member(data, map.dest(j)) = *cols(i) * factor;
+            }
+         }
+      }
+   }
+
+   return data;
 }
 
 func read_pointer_yfile(data_ptr, mode=) {
