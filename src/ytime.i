@@ -195,7 +195,7 @@ func sod2hms(sod, noary=, decimal=, str=) {
       seconds = long(unref(seconds));
 
    if(noary)
-      return hours * 1000 + minutes * 100 + seconds;
+      return hours * 10000 + minutes * 100 + seconds;
    else
       return [hours, minutes, seconds];
 }
