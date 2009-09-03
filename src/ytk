@@ -80,6 +80,78 @@ package require fileutil
 package require log
 package require struct::list
 
+################################################################################
+#                        Iwidgets Combobox Improvements                        #
+################################################################################
+# The Iwidgets combobox provides a lot of nice benefits but has a cosmetic and
+# usability flaws. This section attempts to address a few of those flaws. It's
+# included here because these changes must happen before the combobox is used
+# anywhere.
+
+# Create a combobox widget and keep it around permanently for two reasons:
+#  * Forces the autoloading of the combobox code, so that we can then overwrite
+#    parts of it.
+#  * The uparrow/downarrow images are destroyed when all instances of the
+#    combobox widget are destroyed. Thus in order to replace the images, we
+#    must keep at least one alive at all times.
+::iwidgets::combobox .__iwcbo__donotdestroy
+
+# The default arrow images are 16x16. These slimmer versions take up less
+# space.
+image delete uparrow
+image create bitmap uparrow -data {
+   #define uparrow_width 10
+   #define uparrow_height 16
+   static unsigned char uparrow_bits[] = {
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x38, 0x00,
+      0x7c, 0x00, 0xfe, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+}
+image delete downarrow
+image create bitmap downarrow -data {
+   #define downarrow_width 10
+   #define downarrow_height 16
+   static unsigned char downarrow_bits[] = {
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0xfc, 0x01, 0xf8, 0x00, 0x70, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+}
+
+# The default background color for the entry field is a different color than
+# everything else. This overrides it to match.
+proc ::iwidgets::combobox {pathName args} {
+   uplevel ::iwidgets::Combobox $pathName $args
+   $pathName component entry configure -readonlybackground \
+      [$pathName cget -background]
+   return $pathName
+}
+
+# Updating the resizing method to reflect the arrows' new sizes.
+itcl::body iwidgets::Combobox::_resizeArrow {} {
+   # Overriding arrows to display similar to Bwidgets
+   set bw [expr {[$itk_component(arrowBtn) cget -borderwidth]+ \
+      [$itk_component(arrowBtn) cget -highlightthickness]}]
+   set newHeight [expr {[winfo reqheight $itk_component(entry)]-(2*$bw) - 2}]
+   set newWidth [expr {int($newHeight * 10 / 16)}]
+   $itk_component(arrowBtn) configure -width $newWidth -height $newHeight
+   _drawArrow
+}
+
+# Adding a binding to the dropdown bindings to allow the user to click on the
+# entry to post the list. Sine we always(?) use the combobox dropdown with the
+# entry as read-only, this should be safe.
+#
+# Rather than completely reproduce the body, use introspection to pull it out
+# and simply append our one additional binding.
+set __tmp__body [.__iwcbo__donotdestroy info body _dropdownBindings]
+append __tmp__body {
+   # Allow user to click on entry list to pop open list
+   bind $itk_component(entry) <ButtonRelease-1> [itcl::code $this _toggleList]
+}
+itcl::body iwidgets::Combobox::_dropdownBindings {} $__tmp__body
+unset __tmp__body
+################################################################################
+
 wm withdraw .
 
 set gui_enabled 1
@@ -107,7 +179,9 @@ set ycode_dir "."
 set ytkcode_dir "."
 set Y_SITE ""
 
-########## PROCEDURES ##########
+################################################################################
+#                                  Procedures                                  #
+################################################################################
 
 proc docstring {procname} {
 # Reports a proc's args and leading comments.
@@ -167,6 +241,9 @@ proc ystr {val {quoted 1}} {
 }
 
 proc string_to_hex input {
+# Converts input, which can be any arbitrar string of data, into hexadecimal
+# format. This is a simple form of ASCII-armoring and is used by ybkg to
+# protect newlines and other potentially troublesome characters.
    join [::struct::list mapfor c [split $input {}] {format %02x [scan $c %c]}] ""
 }
 
@@ -497,7 +574,7 @@ proc yorick_executable {} {
 #     1. The value of _ytk(yorick_executable), if it exists and is a file.
 #     2. The result of the system call 'which yorick'.
 #     3. A user supplied value (acquired through a GUI prompt).
-# 
+#
 # Arguments:
 #  None
 #
@@ -515,7 +592,7 @@ proc yorick_executable {} {
    # See if we have a user-configured Yorick; if so, this takes precedence
    if {
       [info exists _ytk(yorick_executable)]
-      && [file isfile $_ytk(yorick_executable)] 
+      && [file isfile $_ytk(yorick_executable)]
    } {
       set yor_ex $_ytk(yorick_executable)
    }
@@ -618,7 +695,7 @@ proc load_options {} {
 
    # Restore defaults -- in case .ytkrc doesn't specify everything
    restore_defaults
-   
+
    set ytkrc_paths [list /etc/ytkrc ~/.ytkrc .ytkrc]
 
    foreach rc $ytkrc_paths {
@@ -839,7 +916,7 @@ proc spawn_yorick {} {
       set cmd $yor
       set result [spawner $cmd]
    }
-   
+
    logger debug "Spawned yorick: $cmd"
 
    return $result
@@ -1759,7 +1836,7 @@ proc launch_gui {} {
    .mb.debug add command -label "dbinfo" -command { exp_send "dbinfo\r" }
    .mb.debug add command -label "dbskip" -command { exp_send "dbskip\r" }
    .mb.debug add command -label "dbup" -command { exp_send "dbup\r" }
-   
+
    .mb.tkcon add command -label "Logger" -command [list wm deiconify .ytklogger]
    .mb.tkcon add command -label "Tkcon" -command {
       exec tkcon &
@@ -1808,7 +1885,7 @@ proc launch_gui {} {
       array animate fft fma grow help hardcopy indgen interp limits numberof \
       plg plmk plsys print sort span where where2 write window viewport \
       get_dir get_openfn get_savefn tk_messageBox]
-   
+
    foreach help_command $help_commands {
       .mb.help add command -label $help_command \
          -command [list exp_send "help, $help_command\r"]
@@ -1823,7 +1900,7 @@ proc launch_gui {} {
       -command { select_ytk_fn $Y_SITE }
 
    .mb.file add command -label "Restore PBD Data file..." -command restore_pbd
-   
+
    .mb.file add separator
    .mb.file add command -label "Most recent loaded" -command most_recent_loaded
    .mb.file add separator
@@ -2164,7 +2241,7 @@ proc ytk_logger_window {} {
 
    set menu [$mb component itemMenu]
    $menu add separator
-   
+
    foreach level [lsort -decreasing -command log::lvCompare [log::levels]] {
       $menu add radiobutton -value $level -variable _ytk(log_level) \
          -command ytk_logger_level_set \
