@@ -56,21 +56,24 @@ namespace eval ::fit_gauss {
    tky_tie add broadcast g::result_var to tky_fit_gauss_vars.result_var -initialize 1
 
    # Make sure that x1 <= x2 remains true
-   validation_trace add g::lims_x1 {expr {%V > $::fit_gauss::g::lims_x2}} \
+   validation_trace add g::lims_x1 \
+      {expr {{%V} eq "" || {%V} < $::fit_gauss::g::lims_x2}} \
       -invalidcmd [list set ::fit_gauss::g::lims_x2 {%V}]
-   validation_trace add g::lims_x2 {expr {%V < $::fit_gauss::g::lims_x1}} \
+   validation_trace add g::lims_x2 \
+      {expr {{%V} eq "" || {%V} > $::fit_gauss::g::lims_x1}} \
       -invalidcmd [list set ::fit_gauss::g::lims_x1 {%V}]
 
    # Enforce valid ranges
-   validation_trace add g::raster {expr 0} \
+   validation_trace add g::raster {expr {{%V} eq ""}} \
       -invalidcmd [list constrain %v between $c::raster_min and $c::raster_max]
-   validation_trace add g::pixel {expr 0} \
+   validation_trace add g::pixel {expr {{%V} eq ""}} \
       -invalidcmd [list constrain %v between $c::pixel_min and $c::pixel_max]
-   validation_trace add g::add_peak {expr 0} \
+   validation_trace add g::add_peak {expr {{%V} eq ""}} \
       -invalidcmd [list constrain %v between $c::add_peak_min and $c::add_peak_max]
-   validation_trace add g::lims_x1 {expr 0} \
+
+   validation_trace add g::lims_x1 {expr {{%V} eq ""}} \
       -invalidcmd [list constrain %v between $c::limrange_min and $c::limrange_max]
-   validation_trace add g::lims_x2 {expr 0} \
+   validation_trace add g::lims_x2 {expr {{%V} eq ""}} \
       -invalidcmd [list constrain %v between $c::limrange_min and $c::limrange_max]
 
    # Enforce valid types
@@ -233,8 +236,8 @@ proc ::fit_gauss::cmd_fit_gauss {} {
             dict set options $setting [set g::$setting]
          }
       }
-      if {$g::lims} {
-         dict set options lims "\[$g::lims_x1, $g::lims_x2\]"
+      if {$g::add_peak == 1 && $g::lims} {
+         dict set options lims "\[\[$g::lims_x1, $g::lims_x2\]\]"
       }
       if {[string length $var]} {
          yset $var $command $params $options

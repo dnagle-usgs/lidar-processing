@@ -176,8 +176,8 @@ func tky_fit_gauss_exec(void) {
    // is over.
    win = current_window();
 
-   if(vars.lims)
-      lims = [vars.lims_x1, vars.lims_x2];
+   if(vars.add_peak == 1 && vars.lims)
+      lims = [[vars.lims_x1, vars.lims_x2]];
    else
       lims = [];
 
