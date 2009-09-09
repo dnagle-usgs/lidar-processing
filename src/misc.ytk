@@ -372,7 +372,7 @@ proc __validate_trace_worker {data name1 name2 op} {
       %B [set ::__validation_backups$_(varname)] \
       %v $_(varname) \
       %V [set $_(varname)] ]
-   set cmd [string map $substitutions $_(valcmd)]
+   set cmd [::struct::list map $_(valcmd) [list string map $substitutions]]
    set valid [uplevel #0 $cmd]
    if {$valid} {
       set ::__validation_backups$_(varname) [set $_(varname)]
