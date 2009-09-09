@@ -1278,32 +1278,28 @@ suffix=, buffer=, shorten=, flat=, uniq=, overwrite=, verbose=, split_zones=) {
       dest_dir: Destination directory for output pbd files
 
    Options:
-      scheme= Should be one of the following; defaults to 10k2k.
-         qq - Quarter quad tiles
-         2k - 2-km data tiles
-         10k - 10-km index tiles
-         10k2k - Two-tiered index tile/data tile
-      north= The struct field in data containing the northings to use. Defaults
-         to "north".
-      east= The struct field in data containing the eastings to use. Defaults
-         to "east".
-      mode= If provided, will override north and east based on the data mode
+      scheme= Should be one of the following; defaults to "10k2k".
+         "qq" - Quarter quad tiles
+         "2k" - 2-km data tiles
+         "10k" - 10-km index tiles
+         "10k2k" - Two-tiered index tile/data tile
+      mode= Specifies which north and east data to use based on the data mode
          specified. Must be one of the following:
          1 = first surface
          2 = bathy
          3 = bare earth
       suffix= Specifies the suffix to use when naming the files. By default,
          files are named (tile-name).pbd. If suffix is provided, they will be
-         named (tile-name)_(suffix).pbd.
+         named (tile-name)_(suffix).pbd. (Without the parentheses.)
       buffer= Specifies a buffer to include around each tile, in meters.
          Defaults to 100.
-      shorten= By default, the long form of 2k, 10k, and 10k2k tile names will
-         be used. If shorten=1, the short forms will be used.
+      shorten= By default (shorten=0), the long form of 2k, 10k, and 10k2k tile
+         names will be used. If shorten=1, the short forms will be used.
       flat= If set to 1, then no directory structure will be created. Instead,
          all files will be created directly into dest_dir.
-      uniq= With the default value of uniq=1, only unique data points will be
-         stored in the output pbd files; duplicates will be removed. Set uniq=0
-         to keep duplicate data points.
+      uniq= With the default value of uniq=1, only unique data points
+         (determined by soe) will be stored in the output pbd files; duplicates
+         will be removed. Set uniq=0 to keep duplicate data points.
       overwrite= By default, data will be appended to any existing pbd files.
          Set overwrite=1 to clobber them instead.
       verbose= By default, progress information will be provided. Set verbose=0
@@ -1314,6 +1310,12 @@ suffix=, buffer=, shorten=, flat=, uniq=, overwrite=, verbose=, split_zones=) {
             is the default for the qq scheme.
          2 = Always split data out by zone, even if only one zone is present.
          (Note: If flat=1, split_zones is ignored.)
+
+   Advanced options:
+      north= The struct field in data containing the northings to use. Defaults
+         to "north". (Ignored if mode= is provided.)
+      east= The struct field in data containing the eastings to use. Defaults
+         to "east". (Ignored if mode= is provided.)
 */
 // Original David Nagle 2009-07-06
 
