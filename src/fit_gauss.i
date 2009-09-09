@@ -8,9 +8,9 @@ mean, sigma and amplitude respectively of the fitted gaussians.
 Optional inputs:
 add_peak = 1, will add an input that results in the biggest reduction of rmse
 verbose = 1, for debugging.. prints all new peaks & corresponding rmses
-lims=[x1,x2], restricts the location of the new peak to within these limits
+lims=[[x1,x2]], restricts the location of the new peak to within these 
+limits. lims must be listed as an array of 2-value arrays.
 
-**NOTE that only one additional peak is supported at this time**
 */
 // Original Christine Kranenburg 2009-08-06
 {
@@ -40,7 +40,7 @@ lims=[x1,x2], restricts the location of the new peak to within these limits
 
 	if (is_void(add_peak)) add_peak=0;
 	if (add_peak) 
-	    {
+	{
 	    new_peaks=lclxtrem(w1, thresh=3);
 	    new_fit = array(float, 2, numberof(new_peaks))
 	    for (j=1; j<=numberof(new_peaks); j++)
@@ -50,36 +50,43 @@ lims=[x1,x2], restricts the location of the new peak to within these limits
 		if ((r1.niter == 200) && (verbose))
 		   write, format="%f failed to converge\n", a1(-2);
 		new_fit(j*2-1:j*2) = [a1(-2), r1.chi2_last]
+		if (a1(0) < 0) new_fit(j*2) = chi2_0+1		// eliminate -ve peaks
 		}
 	    if (verbose) print,new_fit
+
+	    p_count=1
+	    idx=array(1,numberof(new_peaks))
+	    while (p_count <= add_peak)
+	    {
+		if (!is_void(lims))
+		   {
+		   if (add_peak != (dimsof(lims)(3)))
+			exit, "Not the correct # of limits. Exiting..";
+// idx=any_in(lims(1,p_count), new_fit(1,), lims(2,p_count), mask)
+		   idx=((new_fit(1,) >= lims(1,p_count)) * (new_fit(1,) <= lims(2,p_count)))
+		   }
+
+		if (noneof(idx)) min_chi2 = chi2_0+1
+		else min_chi2 = min(new_fit(2,where(idx)));
+		min_chi2_idx = where(new_fit(2,) == min_chi2)
+//		if (!is_void(lims)) new_fit(2,where(idx)) = chi2_0+1
+
+		if (min_chi2 < chi2_0)
+		{
+		   new_fit(2,min_chi2_idx) = chi2_0+1
+		   min_chi2_idx=min_chi2_idx(1)
+		   a=grow(a,new_peaks(min_chi2_idx),1,w1(new_peaks(min_chi2_idx)))
+		   n_peaks = n_peaks+1
+		}
+		else print, "No useful peaks found within limits";
+
+		r1 = lmfit(lmfitfun,x,a,w1,1.0, itmax=200);
+		if ((r1.niter == 200) && (verbose))
+		   write, format="%f failed to converge\n", a(-2);
+
+		p_count++
+		if (verbose) print, chi2_0, r1.chi2_last 
 	    }
-
-	p_count=0
-	while (p_count < add_peak)
-	{
-	    if (!is_void(lims))
-		{
-		idx=((new_fit(1,*) >= lims(1)) * (new_fit(1,*) <= lims(2)))
-		new_fit(2,where(!idx)) = chi2_0+1
-		}
-
-	    min_chi2 = min(new_fit(2,*))
-	    min_chi2_idx = where2(new_fit(2,*) == min_chi2)
-
-	    if (min_chi2 < chi2_0)
-		{
-		min_chi2_idx=min_chi2_idx(1)
-		a=grow(a,new_peaks(min_chi2_idx),1,w1(new_peaks(min_chi2_idx)))
-		n_peaks = n_peaks+1
-		}
-	    else print, "No peaks found within limits";
-
-	    r1 = lmfit(lmfitfun,x,a,w1,1.0, itmax=200);
-	    if ((r1.niter == 200) && (verbose))
-		write, format="%f failed to converge\n", a(-2);
-
-	    p_count++
-	    if (verbose) print, chi2_0, r1.chi2_last
 	}
 	yfit = lmfitfun(x,a);
 
@@ -89,7 +96,15 @@ lims=[x1,x2], restricts the location of the new peak to within these limits
 		plg, gauss3(x,[a(j*3-2),a(j*3-1),a(j*3)]), color="blue"
 	   plg, yfit, color="magenta"
 	}
-   return a;
+
+
+   fwhm = sqrt(8*log(2)) * a(2::3)
+   ret = array(float, 4, numberof(fwhm))
+   a = reform(a, [2,3,numberof(a)/3])
+   ret(1:3,) = a(1:3,)
+   ret(4,) = fwhm
+   if (numberof(a) > 3) a = a(,sort(a(1,)))
+   return ret;
 }
 
 func lclxtrem(w, thresh=)
