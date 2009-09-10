@@ -62,28 +62,24 @@ func select_region(data, win=, plot=) {
 
 }
 
-func test_and_clean( data ) {
+func test_and_clean(data, verbose=) {
+   if(is_void(data)) {
+      tk_messageBox, "No data found in the variable you selected. Please select another one.", "ok", "";
+      return [];
+   }
 
-if ( is_void(data) ) {
-  tkcmd, "tk_messageBox -icon error "+
-     "-message \"No data found in the variable you selected."+
-     "Please select another one.\"   \r"
-  return [] ;
-}
+   /***************************************************************
+     Added to convert from raster format to cleaned linear format.
+    ***************************************************************/
+   if(numberof(dimsof(data.north)) > 2) {
+      a = structof(data(1));
+      if (a == GEOALL) data = clean_bathy(unref(data), verbose=verbose);
+      if (a == VEG_ALL_) data = clean_veg(unref(data), verbose=verbose);
+      if (a == R) data = clean_fs(unref(data), verbose=verbose);
+      if (a == ATM2) data = clean_fs(unref(data), verbose=verbose);
+   }
 
-
-/***************************************************************
-  Added to convert from raster format to cleaned linear format.
-***************************************************************/
- if ( numberof( dimsof( data.north )) >2 )  {
-     a = structof(data(1));
-     if (a == GEOALL) data = clean_bathy(unref(data));  
-     if (a == VEG_ALL_) data = clean_veg(unref(data));
-     if (a == R) data = clean_fs(unref(data));
-     if (a == ATM2) data = clean_fs(unref(data));
- }
-
- return data
+   return data;
 }
 
 func select_points(celldata, exclude=, win=) {
