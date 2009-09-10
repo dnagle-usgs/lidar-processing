@@ -45,8 +45,8 @@ func ytk_rast(rn) {
    }
 }
 
-func ndrast(r, units=) {
-/* DOCUMENT drast(r)
+func ndrast(r, units=, win=, graph=) {
+/* DOCUMENT drast(r, units=, win=, graph=)
    Displays raster waveform data for the given raster. Try this:
 
       > rn = 1000
@@ -56,15 +56,16 @@ func ndrast(r, units=) {
       > w = ndrast(rr)
 
    r should be a decoded raster. units= should be one of "ns", "meters", or
-   "feet" and defaults to "ns".
+   "feet" and defaults to "ns". win= defaults to the current window. graph=
+   defaults to 1; set graph=0 to disable plotting.
 
    Returns a pointer to a 250x120x4 array of all the decoded waveforms in this
    raster.
 
    Be sure to load a database file with load_edb first.
 */
-   extern aa, last_somd, rn, pkt_sf;
-   default, units, "ns";
+   extern aa, last_somd, pkt_sf;
+   default, graph, 1;
 
    aa = array(short(255), 250, 120, 3);
 
@@ -86,35 +87,46 @@ func ndrast(r, units=) {
       }
    }
 
-   lmts = limits();
-   if (r.digitizer(1)) {
-      mx = lmts(1:2)(min);
-      mn = lmts(1:2)(max);
-   } else {
-      mn = lmts(1:2)(min);
-      mx = lmts(1:2)(max);
-   }
+   if(graph) ndrast_graph, r, aa, somd, units=units, win=win;
 
-   limits, mn, mx;
-
-   if (units == "ns") {
-      pli, -transpose(aa(,,1)), 1,4, 121, -244;
-      xytitles, swrite(format="Somd:%6d Rn:%d Ras Pix#", somd, rn), "Nanoseconds";
-   } else if (units == "meters") {
-      pli, -transpose(aa(,,1)), 1,4*CNSH2O2X, 121, -244 * CNSH2O2X;
-      xytitles, swrite(format="Somd:%7d HMS:%s Rn:%d  Pixel #",
-         somd, sod2hms(somd, str=1), rn), "Water depth (meters)";
-   } else if (units == "feet") {
-      pli, -transpose(aa(,,1)), 1, 4*CNSH2O2XF,  121, -244 * CNSH2O2XF;
-      xytitles,swrite(format="Somd:%7d Rn:%d    Raster Pixel #", somd, rn),
-         "Water depth (feet)";
-   }
-   pltitle, regsub("_", data_path, "!_", all=1);
    return &aa;
 }
 
-func drast(r) {
-/* DOCUMENT drast(r)
+func ndrast_graph(r, aa, somd, units=, win=) {
+/* DOCUMENT ndrast_graph, r, aa, somd, units=, win=
+   Called by ndrast to handle its plotting.
+*/
+   extern rn, data_path;
+   default, units, "ns";
+   default, win, max(0, current_window());
+
+   settings = h_new(
+      ns=h_new(scale=1, title="Nanoseconds"),
+      meters=h_new(scale=CNSH2O2X, title="Water depth (meters)"),
+      feet=h_new(scale=CNSH2O2XF, title="Water depth (feet)")
+   );
+   units = h_has(settings, units) ? units : "ns";
+
+   win_bkp = current_window();
+   window, win;
+
+   pli, -transpose(aa(,,1)), 1, 4 * settings(units).scale, 121,
+      -244 * settings(units).scale;
+   xytitles, swrite(format="somd:%d hms:%s rn:%d   Pixel #",
+      somd, sod2hms(somd, str=1), rn), settings(units).title;
+   pltitle, regsub("_", data_path, "!_", all=1);
+
+   limits;
+   lmts = limits()(1:2);
+   mx = (r.digitizer(1) ? lmts(min) : lmts(max));
+   mn = (r.digitizer(1) ? lmts(max) : lmts(min));
+   limits, mn, mx;
+
+   window_select, win_bkp;
+}
+
+func drast(r, win=, graph=) {
+/* DOCUMENT drast(r, win=)
    Displays raster waveform data for the given raster. Try this:
 
       > rn = 1000
@@ -126,9 +138,12 @@ func drast(r) {
    Returns a pointer to a 250x120x4 array of all the decoded waveforms in this
    raster.
 
+   win= defaults to 1. graph= defaults to 1.
+
    Be sure to load a database file with load_edb first.
 */
    extern x, txwf, aa, irange, sa, x0, x1;
+   default, graph, 1;
 
    aa = array(short(255), 250, 120, 3);
    bb = array(255, 250, 120);
@@ -155,8 +170,7 @@ func drast(r) {
 
    // Display sod - 4 hours
    soe2time(seconds)(3) - (4 * 3600);
-   fma;
-   for (i=1; i<=npixels-1; i++ ) {
+   for(i=1; i<=npixels-1; i++ ) {
       offset_time = i32(r, a);   a += 4;
       txb = r(a);                a++;
       rxb = r(a:a+3);            a += 4;
@@ -178,22 +192,30 @@ func drast(r) {
       aa(1:rxlen, i, 2) = rx(2,);
       aa(1:rxlen, i, 3) = rx(3,);
    }
-   window, 1;
-   x = sa(-:1:250,) * (360.0/4000.0);
+
+   if(graph) drast_graph, aa, digitizer, win=win;
+
+   return &aa;
+}
+
+func drast_graph(aa, digitizer, win=) {
+/* DOCUMENT drast_graph, aa, digitizer, win=
+   Called by drast to handle its plotting.
+*/
+   default, win, 1;
+   win_bkp = current_window();
+
+   window, win;
    fma;
 
-   if (digitizer) {
-      x0 = int(1);
-      x1 = int(121);
-      lmt = limits();
-   } else {
-      x0 = int(121);
-      x1 = int(1);
-   }
+   x0 = (digitizer ? 1 : 121);
+   x1 = (digitizer ? 121 : 1);
+
    lmts = limits();
-   lmts = limits(lmts(2), lmts(1));
+   limits, lmts(2), lmts(1);
    pli, -transpose(aa(,,1)), x0, 255, x1, 0;
-   return &aa;
+
+   window_select, win_bkp;
 }
 
 func msel_wf(w, cb=, geo=) {
@@ -260,7 +282,7 @@ func show_wf(r, pix, win=, nofma=, cb=, c1=, c2=, c3=, raster=) {
          for the plot.
       nofma= Set to 1 to disable automatic fma.
       cb= Channel bitmask indicating which channels should be displayed. 1 is
-         channel 1, 2 is channel 2, 4 is channel 3. Defaults to 7 (all
+         channel 1, 2 is channel 2, 4 is channel 3. Defaults to 0 (no
          channels). This is additive to c1=, c2=, and c3= below.
       c1= Set to 1 to display channel 1.
       c2= Set to 1 to display channel 2.
@@ -372,8 +394,8 @@ func show_geo_wf(r, pix, win=, nofma=, cb=, c1=, c2=, c3=, raster=) {
    if(!is_void(win)) window_select, prev_win;
 }
 
-func geo_rast(rn, fsmarks=, eoffset=) {
-/* DOCUMENT get_rast, rn, fsmarks=, eoffset=
+func geo_rast(rn, fsmarks=, eoffset=, win=) {
+/* DOCUMENT get_rast, rn, fsmarks=, eoffset=, win=
 
    Plot a geo-referenced false color waveform image.
 
@@ -384,13 +406,15 @@ func geo_rast(rn, fsmarks=, eoffset=) {
          waveform.
       eoffset= The mount to offset the vertical scale, in meters. Default is 0.
       - Updates externs fs and xm
+      win= The window to plot in. Defaults to 2.
 */
    extern xm, fs;
    default, fsmarks, 0;
    default, eoffset, 0.;
+   default, win, 2;
 
    prev_win = current_window();
-   window, 2;
+   window, win;
    // animate, 2;
    fma;
 
@@ -430,7 +454,8 @@ func geo_rast(rn, fsmarks=, eoffset=) {
    }
    if (fsmarks) {
       indx = where(fs(1).elevation <= 0.4*(fs(1).melevation));
-      plmk, sp(indx)+eoffset, xm(indx), marker=4, msize=.1, color="magenta";
+      if(numberof(indx))
+         plmk, sp(indx)+eoffset, xm(indx), marker=4, msize=.1, color="magenta";
    }
 
    xytitles, "Relative distance across raster (m)", "Height (m)";
