@@ -1,6 +1,6 @@
 require, "eaarl.i";
 
-func fit_gauss(rast, i, graph=, add_peak=, lims=, verbose=)
+func fit_gauss(rast, i, graph=, add_peak=, lims=, verbose=, win=)
 /* DOCUMENT p=fit_gauss(<raster #>, <pixel #>, graph=, add_peak=, lims=, verbose=)
 the returned array (p) contains a series of triples that represent the
 mean, sigma and amplitude respectively of the fitted gaussians.
@@ -14,7 +14,8 @@ limits. lims must be listed as an array of 2-value arrays.
 */
 // Original Christine Kranenburg 2009-08-06
 {
-   if (is_void(graph)) graph=0
+   default, win, 4;
+   default, graph, 0;
    rp = decode_raster(get_erast(rn=rast));
 
 //   for (i=1; i<=119; i++) {
@@ -22,7 +23,7 @@ limits. lims must be listed as an array of 2-value arrays.
 	w1=max(w1)-w1;
 	x=indgen(numberof(w1));
 
-	ret = ex_veg_all(rast, i, use_be_peak=1, graph=graph, thresh=3)
+	ret = ex_veg_all(rast, i, use_be_peak=1, graph=graph, thresh=3, win=win)
 	mr = ret.mr(where(ret.mr))
 	mv = ret.mv(where(ret.mv))
 
@@ -92,9 +93,12 @@ limits. lims must be listed as an array of 2-value arrays.
 
 	if (graph)
 	{
+      winbkp = current_window();
+      window, win;
 	   for (j=1; j<=n_peaks; j++)
 		plg, gauss3(x,[a(j*3-2),a(j*3-1),a(j*3)]), color="blue"
 	   plg, yfit, color="magenta"
+      window_select, winbkp;
 	}
 
 
