@@ -866,17 +866,18 @@ maxx = (depth_all.elevation(q)+depth_all.depth(q))(max);
   return [e,h];
 }
 
-func clean_bathy(depth_all, rcf_width=) {
+func clean_bathy(depth_all, rcf_width=, verbose=) {
   /* DOCUMENT clean_bathy(depth_all, rcf_width=)
       This function cleans the bathy data.
       Optionally set rcf_width to the elevation width (in meters) to use the RCF filter on the entire data set.For e.g., if you know your data set can have a maximum extent of -1m to -25m, then set rcf_width to 25.  This will remove the outliers from the data set.
     amar nayegandhi 03/07/03
   */
+  default, verbose, 1;
   if (numberof(depth_all) != numberof(depth_all.north)) {
-      write, "converting GEOALL to GEO...";
+      if(verbose) write, "converting GEOALL to GEO...";
       depth_all = geoall_to_geo(depth_all);
   }
-  write, "cleaning geo data...";
+  if(verbose) write, "cleaning geo data...";
   idx = where(depth_all.north != 0);
   if (is_array(idx)) 
     depth_all = depth_all(idx);
@@ -890,7 +891,7 @@ func clean_bathy(depth_all, rcf_width=) {
     depth_all = depth_all(idx);
   */
   if (is_array(rcf_width)) {
-    write, "using rcf to clean data..."
+    if(verbose) write, "using rcf to clean data..."
     //run rcf on the entire data set
     ptr = rcf((depth_all.elevation+depth_all.depth), rcf_width*100, mode=2);
     if (*ptr(2) > 3) {
@@ -899,7 +900,7 @@ func clean_bathy(depth_all, rcf_width=) {
         depth_all = 0
     }
   }
-  write, "cleaning completed.";
+  if(verbose) write, "cleaning completed.";
   return depth_all
 }
 
