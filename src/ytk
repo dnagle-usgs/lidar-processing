@@ -247,6 +247,14 @@ proc string_to_hex input {
    join [::struct::list mapfor c [split $input {}] {format %02x [scan $c %c]}] ""
 }
 
+proc sleep {{ms 200}} {
+   set sleepvar "[namespace current]::__sleep[clock seconds][expr int(rand() * 1000)]__"
+   after $ms [list set $sleepvar 0]
+   vwait $sleepvar
+   unset $sleepvar
+}
+
+set __ybkg__wait 0
 proc ybkg args {
 ##
 # ybkg args
@@ -282,9 +290,11 @@ proc ybkg args {
 #  yet.
 ##
    set cmd [eval concat $args]
+   set ::__ybkg__wait 1
    logger debug "Sending background command to Yorick: $cmd"
    set cmd [string_to_hex $cmd]
    puts $::tky_fifo "bkg $cmd"
+   while {$::__ybkg__wait} {sleep 1}
 }
 
 proc ycmd {command {params {}} {options {}}} {
@@ -820,7 +830,7 @@ proc create_fifo {fifo_file} {
 # Side effects:
 #  The fifo is created and opened, but otherwise none.
 ##
-   if { ![file exists $fifo_file]} {
+   if {![file exists $fifo_file]} {
       exec mkfifo -m uog+rw "$fifo_file"
    }
    set fifo [open $fifo_file "r+"]

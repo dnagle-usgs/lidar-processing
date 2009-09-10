@@ -80,7 +80,7 @@ func tky_stdout(msg) {
    This is used internally by Ytk to handle messages sent to it via the tky
    pipe.
 */
-   extern tky_fragment;
+   extern tky_fragment, __ybkg_list;
    lines = spawn_callback(tky_fragment, msg);
    for(i = 1; i <= numberof(lines); i++) {
       line = lines(i);
@@ -91,13 +91,36 @@ func tky_stdout(msg) {
          data = strpart(line, 5:);
          if(cmd == "bkg") {
             data = hex_to_string(data);
-            logger, "debug", "Executing background command: " + data;
-            funcdef(data);
+            logger, "debug", "Queueing background command: " + data;
+            __ybkg_list = _cat(__ybkg_list, data);
+            tkcmd, "set ::__ybkg__wait 0"
          } else {
             logger, "error", "Unknown command received by tky: " + line;
          }
       }
    }
+   after, 0, tky_ybkg_handler;
+}
+
+func tky_ybkg_handler {
+   extern __ybkg_list;
+
+   if(_len(__ybkg_list)) {
+      // Using && to try to enforce atomic operation
+      temp = (f = _car(__ybkg_list, 1)) && (__ybkg_list = _cdr(__ybkg_list, 1));
+      logger, "debug", "Evaluating background command: " + f;
+      safe_run_funcdef, funcdef(f);
+
+      after, 0, tky_ybkg_handler;
+   }
+}
+
+func safe_run_funcdef(f) {
+   if(catch(-1)) {
+      return;
+   }
+   f;
+   return;
 }
 
 func tkcmd(s) {
