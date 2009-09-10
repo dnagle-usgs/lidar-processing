@@ -784,7 +784,7 @@ func  r_to_fs(data) {
   return data_new;
 }
 
-func clean_fs(fs_all, rcf_width=) {
+func clean_fs(fs_all, rcf_width=, verbose=) {
   /* DOCUMENT clean_fs(fs_all, rcf_width=)
    this function cleans the fs_all array
    amar nayegandhi 08/03/03
@@ -792,14 +792,15 @@ func clean_fs(fs_all, rcf_width=) {
           rcf_width	: The elevation width (m) to be used for the RCF filter.  If not set, rcf is not used.
    Output: Cleaned data array of type FS
   */
+  default, verbose, 1;
 
   if (numberof(fs_all) != numberof(fs_all.north)) {
       // convert R to FS
-      write, "converting raster structure (R) to point structure (FS)";
+      if(verbose) write, "converting raster structure (R) to point structure (FS)";
       fs_all = r_to_fs(unref(fs_all));
   }
   
-  write, "cleaning data...";
+  if(verbose) write, "cleaning data...";
 
 
   // remove pts that had north values assigned to 0
@@ -807,8 +808,8 @@ func clean_fs(fs_all, rcf_width=) {
   if (is_array(indx)) {
      fs_all = unref(fs_all)(indx);
   } else {
-      fs_all = [];
-      return fs_all;
+     fs_all = [];
+     return fs_all;
   }
 
 
@@ -822,7 +823,7 @@ func clean_fs(fs_all, rcf_width=) {
   }
 
   if (is_array(rcf_width)) {
-    write, "using rcf filter to clean fs data..."
+    if(verbose) write, "using rcf filter to clean fs data..."
     //run rcf on the entire data set
     ptr = rcf(fs_all.elevation, rcf_width*100, mode=2);
     if (*ptr(2) > 3) {
