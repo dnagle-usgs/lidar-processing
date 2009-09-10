@@ -21,17 +21,17 @@ func set_cbar(bar,w=, opt=) {
    if(bar == "cmax") {
       write, format="Select a point to use as cmax from window %d\n", w;
       m = mouse();
-      tkcmd, swrite(format="set plot_settings(cmax) %f", m(1));
+      tkcmd, swrite(format="set plot_settings(cmax) %.2f", m(1));
    } else if ( bar == "cmin" ) {
       write, format="Select a point to use as cmin from window %d\n", w;
       m = mouse();
-      tkcmd, swrite(format="set plot_settings(cmin) %f", m(1));
+      tkcmd, swrite(format="set plot_settings(cmin) %.2f", m(1));
    } else if ( bar == "both" ) {
       write, format="Select points to use as cmin and cmax from window %d\n", w;
       m = mouse()(1);
       n = mouse()(1);
-      tkcmd, swrite(format="set plot_settings(cmin) %f", min(m,n));
-      tkcmd, swrite(format="set plot_settings(cmax) %f", max(m,n));
+      tkcmd, swrite(format="set plot_settings(cmin) %.2f", min(m,n));
+      tkcmd, swrite(format="set plot_settings(cmax) %.2f", max(m,n));
    } else {
       write, "set_cbar was called with an unknown option: " + bar;
    }
