@@ -1,36 +1,5 @@
 require, "eaarl.i";
 
- struct EAARL_INDEX {
-   int seconds;
-   int fseconds;
-   int offset;
-   int raster_length;
-   short file_number;
-   char  pixels;
-   char  digitizer;
-} ;
-
-struct EDB_FILE {
-  string name;
-  char status;
-};
-
-
-struct RAST {
-  int soe;                      // seconds of the epoch
-  int rasternbr;                // raster number
-  int digitizer;                // digitizer
-  int npixels;                  // number of pixels actually in this raster
-  int irange(120);              // integer range values
-  int sa(120);                  // shaft angles
-  double offset_time(120);      // fractional offset seconds
-  int rxbias(120,4);            // receive waveform bias values
-  pointer tx(120);              // transmit waveforms
-  pointer rx(120,4);            // return waveforms
-};
-
-
-
 t0 = t1 = array(double,3)
 _ecfidx = 0;
 
