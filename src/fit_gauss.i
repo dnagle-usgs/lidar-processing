@@ -23,7 +23,7 @@ limits. lims must be listed as an array of 2-value arrays.
 	w1=max(w1)-w1;
 	x=indgen(numberof(w1));
 
-	ret = ex_veg_all(rast, i, use_be_peak=1, graph=graph, thresh=3, win=win)
+	ret = ex_veg_all(rast, i, use_be_peak=1, graph=graph, thresh=3, win=win, verbose=verbose)
 	mr = ret.mr(where(ret.mr))
 	mv = ret.mv(where(ret.mv))
 
