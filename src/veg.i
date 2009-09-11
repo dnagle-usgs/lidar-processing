@@ -215,9 +215,9 @@ use_be_centroid=, use_be_peak=, hard_surface=) {
 }
 
 func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=,
-hard_surface=, pse=) {
+hard_surface=, pse=, verbose=) {
 /* DOCUMENT rv = ex_veg(rn, i, last=, graph=, win=, use_be_centroid=,
-   use_be_peak=, hard_surface=, pse=)
+   use_be_peak=, hard_surface=, pse=, verbose=)
 
    This function returns an array of VEGPIX structures.
 
@@ -229,6 +229,8 @@ hard_surface=, pse=) {
       last= Max veg
       graph= If enabled (graph=1), plots a graph showing results. (Default:
          graph=0, disabled)
+      verbose= If enabled (verbose=1), displays some information to stdout.
+         (Default: verbose=graph)
       win= Window number where graph will be plotted. (Default: win=4)
       use_be_centroid= Set to 1 to determine the range to the last surface
          using the "centroid" algorithm. This algorithm finds the centroid of
@@ -255,6 +257,8 @@ hard_surface=, pse=) {
    define_veg_conf;
 
    default, win, 4;
+   default, graph, 0;
+   default, verbose, graph;
 
    default, ex_bath_rn, -1;
    default, aa, array(float, 256, 120, 4);
@@ -277,7 +281,8 @@ hard_surface=, pse=) {
    // setup the return struct
    rv = VEGPIX();
    rv.rastpix = rn + (i<<24);
-   if (irange < 0) return rv;
+   if (irange < 0)
+      return rv;
 
    // simple cache for raster data
    if (ex_bath_rn != rn) {
@@ -334,7 +339,7 @@ hard_surface=, pse=) {
       rv.mv0 = -10;
       rv.mx1 = -1;
       rv.mv1 = -11;
-      rv.nx  = -1;
+      rv.nx = -1;
       _errno = 0;
       return rv;
    }
@@ -344,7 +349,7 @@ hard_surface=, pse=) {
    escale = 255 - w(1:wflen)(min);
 
    da = aa(1:n,i);
-   dd = aa(1:n,i)(dif);
+   dd = da(dif);
 
    // xr(1) will be the first pulse edge and xr(0) will be the last
    xr = where((dd >= veg_conf.thresh)(dif) == 1);
@@ -362,8 +367,8 @@ hard_surface=, pse=) {
    }
 
    // see if user specified the max veg
-   if(is_void(last)) last = n;
-   n = min(n, last);
+   if(!is_void(last))
+      n = min(n, last);
 
    // Find the length of the section of the waveform that represents the last
    // return (starting from xr(0)). Assume 12ns to be the longest duration for
@@ -582,16 +587,19 @@ hard_surface=, pse=) {
       }
    }
    if (graph) {
+      winbkp = current_window();
       window, win;
-      rv.mx1;
-      rv.mv1;
-      rv.mx0;
-      rv.mv0;
-
       mx_start = irg_a.fs_rtn_centroid(i);
       plmk, mv1, mx_start, msize=.5, marker=7, color="green", width=1;
       plmk, mv1, mx1-irange+mx_start, msize=.5, marker=7, color="blue", width=1;
       plmk, mv0, mx0-irange+mx_start, msize=.5, marker=7, color="red", width=1;
+      window_select, winbkp;
+   }
+   if (verbose) {
+      rv.mx1;
+      rv.mv1;
+      rv.mx0;
+      rv.mv0;
    }
 
    return rv;
@@ -1282,7 +1290,7 @@ func clean_veg(veg_all, rcf_width=, type=, verbose=) {
    return veg_all;
 }
 
-func ex_veg_all(rn, i, last=, graph=, use_be_centroid=, use_be_peak=, pse=, thresh=, win=) {
+func ex_veg_all(rn, i, last=, graph=, use_be_centroid=, use_be_peak=, pse=, thresh=, win=, verbose=) {
 /* DOCUMENT ex_veg_all(rn, i,  last=, graph=, use_be_centroid=, use_be_peak=, pse= ) {
 
  This function returns an array of VEGPIX structures.
@@ -1312,9 +1320,13 @@ func ex_veg_all(rn, i, last=, graph=, use_be_centroid=, use_be_peak=, pse=, thre
                       Waveform.
     da                The return waveform with the computed exponentials substracted
 */
-   extern ex_bath_rn, ex_bath_rp, a, irg_a, _errno, pr;
+   extern ex_bath_rn, ex_bath_rp, a, irg_a, _errno, pr, aa;
    default, win, 4;
    default, graph, 0;
+   default, verbose, graph;
+   default, ex_bath_rn, -1;
+   default, aa, array(float, 256, 120, 4);
+   default, thresh, 4.0;
 
    // check if global variable irg_a contains the current raster number (rn)
    if (is_void(irg_a) || !is_array(where(irg_a.raster == rn))) {
@@ -1328,15 +1340,10 @@ func ex_veg_all(rn, i, last=, graph=, use_be_centroid=, use_be_peak=, pse=, thre
    rv = VEGPIXS();       // setup the return struct
    rv.rastpix = rn + (i<<24);
    if (irange < 1) return rv;
-   if ( is_void( ex_bath_rn ))
-      ex_bath_rn = -1;
 
-   if ( is_void(aa) )
-      aa  = array(float, 256, 120, 4);
-
-   if ( ex_bath_rn != rn ) {  // simple cache for raster data
-      r = get_erast( rn= rn );
-      rp = decode_raster( r );
+   if (ex_bath_rn != rn) {  // simple cache for raster data
+      r = get_erast(rn=rn);
+      rp = decode_raster(r);
       ex_bath_rn = rn;
       ex_bath_rp = rp;
    } else {
@@ -1345,37 +1352,38 @@ func ex_veg_all(rn, i, last=, graph=, use_be_centroid=, use_be_peak=, pse=, thre
 
    ctx = cent(*rp.tx(i));
 
-   n  = numberof(*rp.rx(i, 1));
+   n  = numberof(*rp.rx(i,1));
    rv.sa = rp.sa(i);
-   if ( n == 0 )
+   if (n == 0)
       return rv;
 
-   w  = *rp.rx(i, 1);  aa(1:n, i) = float( (~w+1) - (~w(1)+1) );
+   w = *rp.rx(i,1);
+   aa(1:n,i) = float((~w+1) - (~w(1)+1));
 
    if (!(use_be_centroid) && !(use_be_peak)) {
-      nsat = where( w == 0 );       // Create a list of saturated samples
-      numsat = numberof(nsat);         // Count how many are saturated
+      nsat = where(w == 0);               // Create a list of saturated samples
+      numsat = numberof(nsat);            // Count how many are saturated
       // allowing 3 saturated samples per inflection
-      if ( (numsat > 3)  && ( nsat(1) <= 12)   ) {
-         if (  nsat(dif) (max) == 1 ) {      // only surface saturated
-            last_surface_sat = nsat(0);     // so use last one
+      if ((numsat > 3) && (nsat(1) <= 12)) {
+         if (nsat(dif)(max) == 1) {       // only surface saturated
+            last_surface_sat = nsat(0);   // so use last one
             escale = 255;
-         } else {             // bottom must be saturated too
+         } else {                         // bottom must be saturated too
             // allowing 3 saturated samples per inflection
-            last_surface_sat = nsat(  where(nsat(dif) > 3 ) ) (1);
+            last_surface_sat = nsat(where(nsat(dif) > 3))(1);
             escale = 255;
          }
-      } else { // surface not saturated
+      } else {                            // surface not saturated
          wflen = numberof(w);
-         if ( wflen > 12 ) wflen = 12;
-         last_surface_sat =  w(1:wflen) (mnx);
-         escale = 255 - w(1:wflen) (min);
+         if (wflen > 12) wflen = 12;
+         last_surface_sat = w(1:wflen)(mnx);
+         escale = 255 - w(1:wflen)(min);
       }
 
    }
 
    da = aa(1:n,i,1);
-   dd = aa(1:n, i, 1) (dif);
+   dd = da(dif);
 
    /******************************************
      xr(1) will be the first pulse edge
@@ -1392,31 +1400,36 @@ func ex_veg_all(rn, i, last=, graph=, use_be_centroid=, use_be_peak=, pse=, thre
       plmk, da, msize=.2, marker=1, color="black";
       plg, da;
       plg, dd-100, color="red";
-      write, format="rn=%d; i = %d\n",rn,i;
       window_select, winbkp;
    }
+   if (verbose)
+      write, format="rn=%d; i = %d\n",rn,i;
 
-   //if (is_void(thresh) && !is_void(veg_conf) ) thresh = veg_conf.thresh
-   if (is_void(thresh)) thresh = 4.0
-      //  xr = where( dd  > thresh ) ; // find the hits
-      xr = where(  ((dd >= thresh) (dif)) == 1 ); // this is the idx for start time for each 'layer'.
-   if (!is_array(xr)) return rv;
+   // this is the idx for start time for each 'layer'.
+   xr = where(((dd >= thresh)(dif)) == 1); 
+   if (!is_array(xr))
+      return rv;
+
    xr++;
-   if (xr(1) < numberof(dd) ) {
-      pr = where(  ((dd(xr(1):) >= thresh) (dif)) == -1 );
+   if (xr(1) < numberof(dd)) {
+      pr = where(((dd(xr(1):) >= thresh)(dif)) == -1);
    } else {
       return rv;
    }
-   if (is_array(pr)) pr += xr(1); // this is the idx for peak time for each 'layer'.
 
-   if (numberof(pr) < numberof(xr)) xr = xr(1:numberof(pr));
+   // this is the idx for peak time for each 'layer'.
+   if (is_array(pr))
+      pr += xr(1);
+
+   if (numberof(pr) < numberof(xr))
+      xr = xr(1:numberof(pr));
 
 
    // for the idx for the end of the 'layer' (stop time) we consider the following:
    // 1) first look for the next start point.  Mark the point before as the stop time.
    // 2) look for the time when the trailing edge crosses the threshold.
 
-   if (numberof(xr) >=2 ) {
+   if (numberof(xr) >= 2) {
       er = grow(xr(2:),n);
    } else {
       er = [n];
@@ -1424,25 +1437,28 @@ func ex_veg_all(rn, i, last=, graph=, use_be_centroid=, use_be_peak=, pse=, thre
 
    nxr = numberof(xr);
 
-   if ( is_void(last) )     // see if user specified the max veg
-      last = n;
-
-   if ( n > last )
-      n = last;
+   // see if user specified the max veg
+   if(!is_void(last))
+      n = min(n, last);
 
    rv.nx = nxr;
-   if (nxr > 10) nxr = 10; //maximum number of peaks is limited to 10
+   //maximum number of peaks is limited to 10
+   nxr = min(nxr, 10);
    noise = 0;
-   if (numberof(pr) == 0) return rv;
-   if (numberof(pr) != numberof(er)) return rv;
-   for (j=1;j<=nxr;j++) {
+
+   if (numberof(pr) == 0)
+      return rv;
+   if (numberof(pr) != numberof(er))
+      return rv;
+
+   for (j = 1; j <= nxr; j++) {
       pta = da(pr(j):er(j));
       idx = where(pta <= thresh);
       if (is_array(idx)) {
-         if (pr(j)+idx(1) <= n) {
-            er(j) = pr(j)+idx(1);
+         if (pr(j) + idx(1) <= n) {
+            er(j) = pr(j) + idx(1);
          } else {
-            er(j) = pr(j)+idx(1)-1;
+            er(j) = pr(j) + idx(1) - 1;
          }
       }
 
@@ -1471,33 +1487,32 @@ func ex_veg_all(rn, i, last=, graph=, use_be_centroid=, use_be_peak=, pse=, thre
             er(j-1) = er(j);
             pta = da(pr(j-1):er(j-1)-1);
             idx = where(pta <= thresh);
-            if (is_array(idx)) er(j-1) = pr(j-1)+idx(1);
+            if (is_array(idx))
+               er(j-1) = pr(j-1)+idx(1);
             noise++;
             continue; // no real leading edge
          }
       }
       ai = 1; //channel number
 
+      rv.mx(j) = irange-1+xr(j)+da(xr(j):er(j)-1)(mxx)-ctx(1);
+      rv.mr(j) = xr(j)-1+da(xr(j):er(j)-1)(mxx);
+      rv.mv(j) = aa(int(xr(j)-1+da(xr(j):er(j)-1)(mxx)),i,ai);
 
-      mx = irange-1+xr(j)+da(xr(j):er(j)-1)(mxx)-ctx(1);
-      mr = xr(j)-1+da(xr(j):er(j)-1)(mxx);
-      mv = aa(int(xr(j)-1+da(xr(j):er(j)-1)(mxx)),i,ai);
       if (graph) {
          winbkp = current_window();
          window, win;
-         plmk, mv, xr(j)-1+da(xr(j):er(j)-1)(mxx), msize=.5, marker=7, color="blue", width=1;
-         write, format= "xr = %d, pr = %d, er = %d\n",xr(j),pr(j),er(j);
+         plmk, rv.mv(j), xr(j)-1+da(xr(j):er(j)-1)(mxx), msize=.5, marker=7, color="blue", width=1;
          window_select, winbkp;
       }
-
+      if (verbose)
+         write, format= "xr = %d, pr = %d, er = %d\n",xr(j),pr(j),er(j);
       if (pse) pause, pse;
-      rv.mx(j) = mx;
-      rv.mv(j) = mv;
-      rv.mr(j) = mr;
    }
+
    nxr = nxr - noise;
    rv.nx = nxr;
-   //if (is_array(xr) && is_array(pr) && is_array(er)) write, format= "xr = %d, pr = %d, er = %d\n",xr,pr,er;
+
    return rv;
 }
 
