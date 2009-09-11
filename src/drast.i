@@ -394,8 +394,8 @@ func show_geo_wf(r, pix, win=, nofma=, cb=, c1=, c2=, c3=, raster=) {
    if(!is_void(win)) window_select, prev_win;
 }
 
-func geo_rast(rn, fsmarks=, eoffset=, win=) {
-/* DOCUMENT get_rast, rn, fsmarks=, eoffset=, win=
+func geo_rast(rn, fsmarks=, eoffset=, win=, verbose=) {
+/* DOCUMENT get_rast, rn, fsmarks=, eoffset=, win=, verbose=
 
    Plot a geo-referenced false color waveform image.
 
@@ -407,18 +407,21 @@ func geo_rast(rn, fsmarks=, eoffset=, win=) {
       eoffset= The mount to offset the vertical scale, in meters. Default is 0.
       - Updates externs fs and xm
       win= The window to plot in. Defaults to 2.
+      verbose= Displays progress/info output if verbose=1; goes quiet if
+         verbose=0. Default is 1.
 */
    extern xm, fs;
    default, fsmarks, 0;
    default, eoffset, 0.;
    default, win, 2;
+   default, verbose, 1;
 
    prev_win = current_window();
    window, win;
    // animate, 2;
    fma;
 
-   fs = first_surface(start=rn, stop=rn+1, north=1);
+   fs = first_surface(start=rn, stop=rn+1, north=1, verbose=verbose);
    sp = fs.elevation(,1)/ 100.0;
    xm = (fs.east(,1) - fs.meast(1,1))/100.0;
 
