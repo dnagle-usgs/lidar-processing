@@ -172,7 +172,7 @@ func ops_conf_not_loaded(junk) {
 
 
 
-func first_surface(start=, stop=, center=, delta=, north=, usecentroid=, use_highelv_echo=, quiet=) {
+func first_surface(start=, stop=, center=, delta=, north=, usecentroid=, use_highelv_echo=, quiet=, verbose=) {
 /* DOCUMENT first_surface(start=, stop=, center=, delta=, north= )
 
    Project the EAARL threshold trigger point to the surface. 
@@ -198,9 +198,15 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
   1 = start,  stop 
   2 = start,  delta
 
+   verbose= By default, progress/info output is enabled (verbose=1). Set
+   verbose=0 to silence it. (For backwards compatibility, there is also a
+   quiet= option that works inversely to verbose=, but it is deprecated.)
+
 */
-   extern roll, pitch, heading, palt, utm, northing, easting
-   extern a, irg_a, _utm
+   extern roll, pitch, heading, palt, utm, northing, easting;
+   extern a, irg_a, _utm;
+   default, quiet, 0;
+   default, verbose, !quiet;
 
    if ( ops_conf_not_loaded(1) ) 
       return;
@@ -225,35 +231,35 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
 
    atime   = a.soe - soe_day_start;
 
-   if (!quiet) write, format="\n%cInterpolating: roll...", 0x20
+   if (verbose) write, format="\n%cInterpolating: roll...", 0x20
    roll    =  interp( tans.roll,    tans.somd, atime ) 
 
-   if (!quiet) write,format="%cpitch...",0x20
+   if (verbose) write,format="%cpitch...",0x20
    pitch   = interp( tans.pitch,   tans.somd, atime ) 
 
    if ( is_void( north ) ) {
-      if (!quiet) write,format="%cheading...", 0x20
+      if (verbose) write,format="%cheading...", 0x20
       hy = interp( sin( tans.heading*deg2rad), tans.somd, atime );
       hx = interp( cos( tans.heading*deg2rad), tans.somd, atime );
       heading = atan( hy, hx)/deg2rad;
    } else {
-      if (!quiet) write,"interpolating North only..."
+      if (verbose) write,"interpolating North only..."
       heading = interp( array( 0.0, dimsof(tans)(2) ), tans.somd, atime ) 
    }
 
-   if (!quiet) write,format="%caltitude...",0x20
+   if (verbose) write,format="%caltitude...",0x20
    palt  = interp( pnav.alt,   pnav.sod,  atime )
 
    if ( is_void( _utm ) ) {
-      if (!quiet) write,"Converting from lat/lon to UTM..."
+      if (verbose) write,"Converting from lat/lon to UTM..."
       _utm = fll2utm( pnav.lat, pnav.lon )
    } else {
       if ( dimsof(pnav)(2) != dimsof(pnav)(2) ) 
-      if (!quiet) write,"_utm has changed, re-converting from lat/lon to UTM..."
+      if (verbose) write,"_utm has changed, re-converting from lat/lon to UTM..."
       _utm = fll2utm( pnav.lat, pnav.lon )
    }
 
-   if (!quiet) write,format="%cnorthing/easting...\n", 0x20
+   if (verbose) write,format="%cnorthing/easting...\n", 0x20
    northing = interp( _utm(1,), pnav.sod, atime )
    easting  = interp( _utm(2,), pnav.sod, atime )
 
@@ -268,7 +274,7 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
    mirang = array(-22.5, 120);
    lasang = array(45.0, 120);
 
-   if (!quiet) write,"Projecting to the surface..."
+   if (verbose) write,"Projecting to the surface..."
 
    if ( is_array(fix_sa1) ) {    // we'll assume both are set
       write,"####################### MARK HERE ###################"
@@ -327,7 +333,7 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
       rrr(i).rn += (indgen(120)*2^24);
       rrr(i).soe = a(i).soe;
       if ( (i % 100 ) == 0 ) { 
-         if (!quiet) write,format="%5d %8.1f %6.2f %6.2f %6.2f\n", 
+         if (verbose) write,format="%5d %8.1f %6.2f %6.2f %6.2f\n",
             i, (a(i).soe(60))%86400, palt(60,i), roll(60,i), pitch(60,i);
       }
    }
