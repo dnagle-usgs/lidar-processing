@@ -76,7 +76,7 @@ local XRTRS
 
 
 
-func irg( b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo=, skip= ) {
+func irg( b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo=, skip=, verbose=) {
 /* DOCUMENT irg(b, e, georef=) 
    Returns an array of irange values from record
    b to record e.  "e" can be left out and it will default to 1.  Don't
@@ -96,7 +96,8 @@ func irg( b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo=, skip= ) 
 */
 
   extern ops_conf;
-  if ( is_void(skip)) skip = 1;
+  default, skip, 1;
+  default, verbose, 0;
 
  // if the 3 chn_range_bias settings are not set in ops_conf then use the default settings
  if (ops_conf.chn1_range_bias == -999) 
@@ -140,8 +141,8 @@ func irg( b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo=, skip= ) 
   if ( len >= 200 ) update_freq = 20;
   if ( len >= 400 ) update_freq = 50;
 
-
-  skip;
+  if (verbose)
+    skip;
   for ( di=1, si=b; si<=e; di++, si += skip ) {
     rp = decode_raster( get_erast( rn=si )) ;	// decode a raster
     a(di).raster = si; 				// install the raster nbr
@@ -200,7 +201,7 @@ func irg( b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo=, skip= ) 
     if ( (di % update_freq ) == 0  )
       if ( use_ytk ) {
         tkcmd,swrite(format="set progress %d", di*100/len);
-      } else 
+      } else if(verbose)
         write,format="  %d/%d     \r", di, len
   }
   if ( !is_void(georef) ) {
