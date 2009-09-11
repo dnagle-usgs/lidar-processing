@@ -1309,6 +1309,9 @@ if {[winfo exists .l1wid]} {
   .l1wid.mb.diag add command -label "Open Fit Gaussian GUI" \
     -command open_fit_gaussian_gui
 
+  .l1wid.mb.diag add command -label "Pixel Analysis" \
+    -command [list ::pixelwf::gui::launch_full_panel .pixelwf]
+
   proc open_fit_gaussian_gui {} {
     source [file join $::src_path fit_gauss.ytk]
     fit_gauss::create_gui
@@ -3552,3 +3555,4 @@ if {[winfo exists .l1wid]} {
 
 source "$src_path/bathctl.ytk"
 source "$src_path/data_segments.ytk"
+source "$src_path/pixelwf.ytk"
