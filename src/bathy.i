@@ -180,7 +180,7 @@ func show_bath_constants {
    }
 }
 
-func ex_bath(rn, i, last=, graph=, win=, xfma=) {
+func ex_bath(rn, i, last=, graph=, win=, xfma=, verbose=) {
 /* DOCUMENT ex_bath(raster_number, pulse_index)
    See run_bath for details on usage.
 
@@ -238,6 +238,8 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=) {
    extern ex_bath_rn, ex_bath_rp, a, db, bath_ctl;
    default, win, 4;
    default, ex_bath_rn, -1;
+   default, graph, 0;
+   default, verbose, graph;
 
    rv = BATHPIX();       // setup the return struct
    rv.rastpix = rn + (i<<24);
@@ -286,7 +288,6 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=) {
    if(numsat != 0)
       if(numsat >= bath_ctl.maxsat) {
          if(graph) {
-            write, format="Rejected: Saturation. numsat=%d\n", numsat;
             window, win;
             gridxy, 2, 2;
             if(xfma) fma;
@@ -297,6 +298,8 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=) {
                tosys=1,color="red";
             plot_bath_ctl, chn, n, i, last=last;
          }
+         if(verbose)
+            write, format="Rejected: Saturation. numsat=%d\n", numsat;
          return rv;
       }
 
@@ -395,7 +398,7 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=) {
             plmk, bath_ctl.a(mx,i,1)+1.5, mx+1,
                msize=1.0, marker=7, color="blue", width=10;
             plt, swrite(format="    %3dns\n     %3.0f sfc\n    %3.1f cnts\n     (%3.1fm)",
-                  mvi, mv1, mv, (mvi-7)*CNSH2O2X),
+               mvi, mv1, mv, (mvi-7)*CNSH2O2X),
                mx, bath_ctl.a(mx,i,1)+2.0, tosys=1, color="blue";
          }
          rv.sa = rp.sa(i);
@@ -406,20 +409,21 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=) {
          return rv;
       } else {
          if(graph) {
-            write,"Rejected: Pulse shape. \n";
             show_pulse_wings;
             plmk, bath_ctl.a(mvi,i,chn)+1.5, mvi+1,
                msize=1.0, marker=6, color="red", width=10;
             plt, "Bad pulse\n shape",
                mvi+2.0, bath_ctl.a(mvi,i,chn)+2.0, tosys=1, color="red";
          }
+         if(verbose)
+            write,"Rejected: Pulse shape. \n";
       }
    } else {
-      if(graph) {
+      if(graph)
          plt, "Below\nthreshold", mvi+2.0,
             bath_ctl.a(mvi,i,chn)+2.0, tosys=1,color="red";
-         write,"Rejected: below threshold \n";
-      }
+      if(verbose)
+         write, "Rejected: below threshold\n";
       rv.idx = 0;
       rv.bottom_peak = bath_ctl.a(mvi,i,chn);
       //new
