@@ -442,7 +442,11 @@ proc tky_tie {cmd type tkvar - yvar args} {
          error "Unknown command: $cmd"
       }
    }
-   set tkvar [uplevel [list namespace which -variable $tkvar]]
+   if {[regexp {^(.*?)(?:\((.*)\))$} $tkvar - var key]} {
+      set tkvar [uplevel [list namespace which -variable $var]]($key)
+   } else {
+      set tkvar [uplevel [list namespace which -variable $tkvar]]
+   }
    switch -- $type {
       broadcast {
          if {$cmd ne "remove" && $opts(-initialize)} {
@@ -1701,8 +1705,8 @@ proc load_and_run {fn} {
 
    if {[catch {source_ytk_file $fn} result]} {
       # Error
-      logger error "Error parsing file during startup: $fn\n$err"
-      tk_messageBox -icon error -type ok -message "Error parsing $fn:\n$err"
+      logger error "Error parsing file during startup: $fn\n$result"
+      tk_messageBox -icon error -type ok -message "Error parsing $fn:\n$result"
       ytk_exit 1
    } else {
       if {! $result} {
