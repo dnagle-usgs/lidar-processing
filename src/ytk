@@ -247,8 +247,15 @@ proc string_to_hex input {
    join [::struct::list mapfor c [split $input {}] {format %02x [scan $c %c]}] ""
 }
 
+# From http://wiki.tcl.tk/727
+proc intgen {{seed 0}} {
+   set self [lindex [info level 0] 0]
+   proc $self "{seed [incr seed]}" [info body $self]
+   set seed
+}
+
 proc sleep {{ms 200}} {
-   set sleepvar "[namespace current]::__sleep[clock seconds][expr int(rand() * 1000)]__"
+   set sleepvar "::__sleep_var_[intgen]__"
    after $ms [list set $sleepvar 0]
    vwait $sleepvar
    unset $sleepvar
