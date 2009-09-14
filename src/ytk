@@ -304,6 +304,22 @@ proc ybkg args {
    while {$::__ybkg__wait} {sleep 1}
 }
 
+proc yget yvar {
+##
+# set val [yget yvar]
+#  This retrieves the value of a yorick variable yvar.
+##
+   set wait_var ::__yvar_tmp_[intgen]__
+   set cancel [after 1000 [list set $wait_var {}]]
+   after 0 [list after idle [list ybkg tksetvar \"$wait_var\" \"$yvar\"]]
+   vwait $wait_var
+   after cancel $cancel
+   set result [set $wait_var]
+   unset $wait_var
+   return $result
+}
+
+
 proc ycmd {command {params {}} {options {}}} {
 ##
 # ycmd command params options
@@ -496,16 +512,9 @@ proc __tky_tie_write {tkvar yvar name1 name2 op} {
    ybkg var_expr_tkupdate \"$yvar\" \"[set $tkvar]\"
 }
 
-set ::__tky_tie_read_counter 0
 proc __tky_tie_read {tkvar yvar name1 name2 op} {
 # Used by tky_tie
-   set wait_var ::__tky_tie_tmp_[incr ::__tky_tie_read_counter]_[clock seconds]
-   set cancel [after 1000 [list set $wait_var {}]]
-   after 0 [list after idle [list ybkg tksetval \"$wait_var\" $yvar]]
-   vwait $wait_var
-   after cancel $cancel
-   set $tkvar [set $wait_var]
-   unset $wait_var
+   set $tkvar [yget $yvar]
 }
 
 proc tky_set {varName val} {

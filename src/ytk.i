@@ -137,9 +137,23 @@ func tksetval(tkvar, yval) {
 /* DOCUMENT tksetval, tkvar, yval
    Given the name of a tcl variable (as a string) and an arbitrary Yorick
    value, this will set the tcl variable to that value.
+
+   See also: tksetvar
 */
 // Original David Nagle 2009-08-13
    tkcmd, swrite(format="tky_set %s {%s}", tkvar, print(yval)(sum));
+}
+
+func tksetvar(tkvar, yvar) {
+/* DOCUMENT tksetvar, tkvar, yvar
+   Given the name of a tcl variable (as a string) and a Yorick variable
+   expression (as a string), this will set the tcl variable to the Yorick
+   variable's value.
+
+   See also: tksetval
+*/
+// Original David Nagle 2009-09-14
+   tksetval, tkvar, var_expr_get(yvar);
 }
 
 func tksetsym(tkvar, ysym) {
