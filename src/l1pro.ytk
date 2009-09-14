@@ -890,7 +890,7 @@ if {[winfo exists .l1wid]} {
     -command load_ops_conf
 
   .l1wid.mb.load add command -label "Load Bathymetry Settings .." -underline 21 \
-    -command bathctl
+    -command bathctl::gui
 
 
   .l1wid.mb add cascade -label Options -underline 0 -menu .l1wid.mb.options

@@ -1,163 +1,181 @@
-proc set_bath_ctl { a b c } {
- global bath_ctl
-   exp_send "bath_ctl.$b = $bath_ctl($b); show_bath_constants; \r" 
+package require dict
+package require msgcat
+
+# bath_ctl array -- tied to Yorick bath_ctl variable
+if {![info exists bath_ctl]} {
+   set bath_ctl(laser) -5.0
+   set bath_ctl(water) -10
+   set bath_ctl(agc) -10
+   set bath_ctl(thresh) 0
+   set bath_ctl(first) 0
+   set bath_ctl(last) 0
+   set bath_ctl(maxsat) 0
 }
 
-proc send_bathctl_to_l1pro {blaser bwater bagc bthresh bfirst blast bmaxsat} {
-   global bath_ctl
-   set bath_ctl(laser) $blaser   
-   set bath_ctl(water) $bwater
-   set bath_ctl(agc)   $bagc
-   set bath_ctl(thresh) $bthresh
-   set bath_ctl(first) $bfirst
-   set bath_ctl(last) $blast
-   set bath_ctl(maxsat) $bmaxsat
+foreach key [list laser water agc thresh first last maxsat] {
+   tky_tie add broadcast ::bath_ctl($key) to "bath_ctl.$key" -initialize 1
 }
+unset key
 
+namespace eval bathctl {
+   namespace import ::msgcat::mc
+   namespace import ::msgcat::mcset
 
-proc load_bath_ctl {  } {
- global data_path bath_ctl
-   set w $bath_ctl(w);
-   set fn [ tk_getOpenFile -initialdir "$data_path/processing/" \
-        -filetypes { \
-          {{ bctl Files} {.bctl} }
-          {{ All files} {*}    }
-         } ]
-   if { $fn != "" } {
-     source $fn
-     wm title $w "bathctl:[file tail $fn]"
+   mcset en laser Laser
+   mcset en water Water
+   mcset en agc AGC
+   mcset en thresh Thresh
+   mcset en first First
+   mcset en last Last
+   mcset en maxsat "Max Sat"
+
+   namespace forget ::msgcat::mcset
+
+   namespace eval v {
+      # Toplevel window for the GUI
+      variable win .bathctl
+      # Filetypes to use for open/save dialogs
+      variable filetypes {
+         {{bctl files} {.bctl}}
+         {{all files} {*}}
+      }
+      # Presets -- can be chosen through the menu
+      variable presets {
+         Clear {
+            laser -2.4 water -0.6 agc -0.3 thresh 4.0
+            first 11 last 220 maxsat 2
+         }
+         Bays {
+            laser -2.4 water -1.5 agc -3.0 thresh 4.0
+            first 11 last 60 maxsat 2
+         }
+         Crappy {
+            laser -2.4 water -3.5 agc -6.0 thresh 2.0
+            first 11 last 60 maxsat 2
+         }
+         {Super shallow} {
+            laser -2.4 water -2.4 agc -3.0 thresh 4.0
+            first 9 last 30 maxsat 2
+         }
+         {Shallow riverine} {
+            laser -4.7 water -4.8 agc -3.3 thresh 3.0
+            first 11 last 50 maxsat 2
+         }
+      }
+      # Valid ranges for variables, as well as recommended increment
+      variable ranges {
+         laser {-5.0 -1.0 0.1}
+         water {-10 0.1 0.1}
+         agc {-10 0.1 0.1}
+         thresh {0 50.0 0.1}
+         first {0 300 1}
+         last {0 300 1}
+         maxsat {0 10 1}
+      }
    }
 }
 
-proc save_bath_ctl { } {
- global data_path bath_ctl
-   set w $bath_ctl(w);
-   set fn [ tk_getSaveFile -initialdir "$data_path/processing/" \
-        -filetypes { \
-          {{ bctl Files} {.bctl} }
-          {{ All files} {*}    }
-         } ]
-  if { $fn != "" } { 
-    if { [ file extension $fn ] != ".bctl"  } {
-      set fn "$fn.bctl";
-    }
-    set of [ open $fn w ];
-      foreach n [ array names bath_ctl ] {
-       if { $n != "w" } { 
-          puts $of "set bath_ctl($n) $bath_ctl($n)"
-       }
-      }
-    tk_messageBox -icon info -message "bath_ctl settings saved to:[file tail $fn]"
-    close $of
-  }
+proc bathctl::load_preset preset {
+# Load a preset as defined in v::presets
+   dict for {key val} [dict get $v::presets $preset] {
+      set ::bath_ctl($key) $val
+   }
 }
 
-
-
-proc bathctl { } {
- global bath_ctl
-   	  # show constants in GUI
-          set w .bathctl
-          set bath_ctl(w) $w
-	  destroy $w
-	  toplevel $w
-          $w configure -menu $w.mb
-          menu $w.mb
-          menu $w.mb.file
-          $w.mb add cascade -label File -underline 0 -menu $w.mb.file
-          $w.mb.file add command -label "Load Bathy Parameters..." -command { 
-              load_bath_ctl 
-          }
-          $w.mb.file add command -label "Save Bathy Parameters..." -command { 
-              save_bath_ctl
-          }
-          $w.mb.file add separator 
-          $w.mb.file add command \
-	     -label "Generic water settings" \
-	     -background darkgray
-          $w.mb.file add command -label "  Clear" -command {
-            set bath_ctl(laser) -2.4
-            set bath_ctl(water) -0.6
-            set bath_ctl(agc)   -0.3
-            set bath_ctl(thresh) 4.0
-            set bath_ctl(first)  11
-            set bath_ctl(last)   220
-            set bath_ctl(maxsat)  2 
-          }
-
-          $w.mb.file add command -label "  Bays" -command {
-            set bath_ctl(laser) -2.4
-            set bath_ctl(water) -1.5
-            set bath_ctl(agc)   -3.0
-            set bath_ctl(thresh) 4.0
-            set bath_ctl(first)  11
-            set bath_ctl(last)   60
-            set bath_ctl(maxsat)  2 
-          }
-
-          $w.mb.file add command -label "  Crappy" -command {
-            set bath_ctl(laser) -2.4
-            set bath_ctl(water) -3.5
-            set bath_ctl(agc)   -6.0
-            set bath_ctl(thresh) 2.0
-            set bath_ctl(first)  11
-            set bath_ctl(last)   60
-            set bath_ctl(maxsat)  2 
-          }
-
-          $w.mb.file add command -label "  Super shallow" -command {
-            set bath_ctl(laser) -2.4
-            set bath_ctl(water) -2.4
-            set bath_ctl(agc)   -3.0
-            set bath_ctl(thresh) 4.0
-            set bath_ctl(first)  9
-            set bath_ctl(last)   30
-            set bath_ctl(maxsat)  2 
-          }
-          
-          $w.mb.file add command -label "  Shallow Riverine" -command {
-            set bath_ctl(laser) -4.7
-            set bath_ctl(water) -4.8
-            set bath_ctl(agc)   -3.3
-            set bath_ctl(thresh) 3.0
-            set bath_ctl(first)  11
-            set bath_ctl(last)   50
-            set bath_ctl(maxsat)  2 
-	  }
-
-          sst .bathctl.laser   bath_ctl(laser)   "  Laser:"  { -5.0 -1.0 0.1  }
-          sst .bathctl.water   bath_ctl(water)   "  Water:"  { -10 -0.1 0.1  }
-          sst .bathctl.agc     bath_ctl(agc)     "    AGC:"  { -10 0.1 0.1  }
-          sst .bathctl.thresh  bath_ctl(thresh)  " Thresh:"  { 0 50.0 0.1  }
-          sst .bathctl.first   bath_ctl(first)   "  First:"  { 0 300 1  }
-          sst .bathctl.last    bath_ctl(last)    "   Last:"  { 0 300 1  }
-          sst .bathctl.maxsat  bath_ctl(maxsat)  "Max Sat:"  { 0 10  1  }
- 		   
-         foreach n [list laser water agc thresh first last] {
-           trace vdelete  bath_ctl($n) w set_bath_ctl
-           trace variable bath_ctl($n) w set_bath_ctl
+proc bathctl::load_file fn {
+# Load the bath_ctl data defined in fn
+   if {[file readable $fn]} {
+      set cnf [interp create -safe]
+      if {[catch [list interp invokehidden $cnf source $fn] err]} {
+         puts "Error encountered when loading bath_ctl file: $err"
+      } else {
+         if {[interp eval $cnf array exists bath_ctl]} {
+            foreach key [interp eval $cnf array names bath_ctl] {
+               set ::bath_ctl($key) [interp eval $cnf set bath_ctl($key)]
+            }
          }
-	 
-	  Button .bathctl.cancel -text "Dismiss" -width 5 -command {
-	     destroy .bathctl
-	  }
-
-	  Button .bathctl.plot -text "Plot" -width 5 -command {
-            exp_send "show_bath_constants\r"
-	  }
-
-	  pack \
-		.bathctl.laser \
-		.bathctl.water \
-		.bathctl.agc  \
-		.bathctl.thresh \
-		.bathctl.first  \
-		.bathctl.last  \
-		.bathctl.maxsat  \
-		-side top -anchor e
-
-	  pack .bathctl.plot  .bathctl.cancel -side left
+      }
+      interp delete $cnf
+   }
 }
 
+proc bathctl::save_file fn {
+# Save the current bath_ctl to fn
+   set f [open $fn w]
+   foreach key [array names ::bath_ctl] {
+      puts $f [list set bath_ctl($key) $::bath_ctl($key)]
+   }
+   close $f
+}
 
+proc bathctl::gui_load {} {
+# Prompts user for a file to load
+   set fn [tk_getOpenFile -initialdir "$::data_path/processing/" \
+      -filetypes $v::filetypes]
+   if {$fn ne "" && [file readable $fn]} {
+      load_file $fn
+      wm title $v::win "bathctl:[file tail $fn]"
+   }
+}
 
+proc bathctl::gui_save {} {
+# Prompts user for a file to save to
+   set fn [tk_getSaveFile -initialdir "$::data_path/processing/" \
+      -filetypes $v::filetypes]
+   if {$fn ne ""} {
+      if {[file extension $fn] ne ".bctl"} {
+         append fn .bctl
+      }
+      save_file $fn
+      tk_messageBox -icon info -message "bath_ctl settings saved to:[file tail $fn]"
+   }
+}
+
+proc bathctl::gui {} {
+# Either creates or deiconifies the GUI
+   if {[winfo exists $v::win]} {
+      wm deiconify $v::win
+   } else {
+      bathctl::gui_launch
+   }
+}
+
+proc bathctl::gui_launch {} {
+# Creates the GUI
+   set w $v::win
+   destroy $w
+   toplevel $w
+
+   wm protocol $w WM_DELETE_WINDOW [list wm withdraw $w]
+   wm resizable $w 0 0
+
+   menu $w.mb
+   menu $w.mb.file
+   menu $w.mb.preset
+
+   $w.mb add cascade -label File -underline 0 -menu $w.mb.file
+   $w.mb.file add command -label "Load Bathy Parameters..." \
+      -command bathctl::gui_load
+   $w.mb.file add command -label "Save Bathy Parameters..." \
+      -command bathctl::gui_save
+   $w.mb.file add separator
+   $w.mb.file add command -label "Dismiss" -command [list wm withdraw $w]
+
+   $w.mb add cascade -label "Presets" -underline 0 -menu $w.mb.preset
+   foreach {preset -} $v::presets {
+      $w.mb.preset add command -label $preset \
+         -command [list bathctl::load_preset $preset]
+   }
+
+   $w configure -menu $w.mb
+
+   foreach {key range} $v::ranges {
+      sst $w.$key ::bath_ctl($key) [mc $key] $range
+      pack $w.$key -side top -anchor e
+   }
+
+   button $w.dismiss -text "Dismiss" -width 5 -command [list wm withdraw $w]
+   button $w.plot -text "Plot" -width 5 -command [list ycmd show_bath_constants]
+
+   pack $w.plot $w.dismiss -side left
+}
