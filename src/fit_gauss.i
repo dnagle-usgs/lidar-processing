@@ -27,7 +27,10 @@ limits. lims must be listed as an array of 2-value arrays.
 	mr = ret.mr(where(ret.mr))
 	mv = ret.mv(where(ret.mv))
 
-	if (is_void(mr) || is_void(mv)) exit, "NULL";
+	if (is_void(mr) || is_void(mv)) {
+      write, "NULL";
+      return;
+   }
 
 	n_peaks = numberof(mr);
 	a = array(float, n_peaks*3);
@@ -61,8 +64,10 @@ limits. lims must be listed as an array of 2-value arrays.
 	    {
 		if (!is_void(lims))
 		   {
-		   if (add_peak != (dimsof(lims)(3)))
-			exit, "Not the correct # of limits. Exiting..";
+		   if (add_peak != (dimsof(lims)(3))) {
+            write, "Not the correct # of limits. Exiting..";
+            return;
+         }
 // idx=any_in(lims(1,p_count), new_fit(1,), lims(2,p_count), mask)
 		   idx=((new_fit(1,) >= lims(1,p_count)) * (new_fit(1,) <= lims(2,p_count)))
 		   }
