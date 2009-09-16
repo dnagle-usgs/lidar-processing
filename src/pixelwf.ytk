@@ -60,7 +60,7 @@ if {![namespace exists ::pixelwf]} {
             variable radius 10.00
          }
          namespace eval fit_gauss {
-            variable enabled 1
+            variable enabled 0
             variable win 10
             variable add_peak 0
             variable lims 0
@@ -71,7 +71,7 @@ if {![namespace exists ::pixelwf]} {
             variable dest_variable ""
          }
          namespace eval ex_bath {
-            variable enabled 1
+            variable enabled 0
             variable win 7
             variable verbose 0
             variable dest_action 0
@@ -89,7 +89,7 @@ if {![namespace exists ::pixelwf]} {
             variable dest_variable ""
          }
          namespace eval show_wf {
-            variable enabled 1
+            variable enabled 0
             variable win 7
             variable c1 1
             variable c2 1
@@ -383,6 +383,7 @@ namespace eval ::pixelwf::gui {
       set name [namespace tail [namespace qualifiers \
          [uplevel namespace which -variable $v]]]
       dict lappend widgets_tied_to_enabled $name $w
+      idle [list ::pixelwf::gui::_trace_toggle_visibility $v]
    }
 
    proc _trace_toggle_visibility v {
@@ -507,6 +508,7 @@ namespace eval ::pixelwf::gui {
 
       label $f.lblRadius -text [mc radius]:
       helper_spinbox $f.spnRadius ${ns}::radius
+      setTooltip $f.spnRadius [mc "Search radius in meters"]
 
       label $f.lblVar -text [mc pro_var]:
       iwidgets::combobox $f.cboVar -textvariable ::pro_var -editable false -width 0
