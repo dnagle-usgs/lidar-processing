@@ -4,6 +4,7 @@
 #
 
 exp_send "require, \"transrch.i\"\r"
+package require struct::list
 
 ############################################################
 
@@ -17,8 +18,8 @@ set    fma_list   { 0 1 }
 set   track_list  { pnav fs_all gt_fs gt_fsall }
 set     utm_list  { 0 1 }
 set    skip_list  { 0 5 10 20 50 }
-set    swin_list  { 5 6 }
-set    lwin_list  { 1 2 3 4 5 7 8 9 }
+set    swin_list  [::struct::list iota 64]
+set    lwin_list  [::struct::list iota 64]
 set     rtn_list  { 0 1 2 }
 set   msize_list  { .1 .3 .5 .7 1.0 1.5 }
 set   cname_list  { "black" "red" "blue" "green" "yellow" "magenta" "cyan" }
@@ -244,7 +245,7 @@ proc create_transbuttons { cnt } {
       ComboBox $tw.f2$tbi.iwnval -values $lwin_list \
          -helptext "window to get data" \
          -editable 0 \
-         -width 1 
+         -width 2
          $tw.f2$tbi.iwnval setvalue @4
       pack $tw.f2$tbi.iwin $tw.f2$tbi.iwnval -side left -fill x -padx 2
 
@@ -252,7 +253,7 @@ proc create_transbuttons { cnt } {
       ComboBox $tw.f2$tbi.ownval -values $lwin_list \
          -helptext "window to plot data" \
          -editable 0 \
-         -width 1 
+         -width 2
          $tw.f2$tbi.ownval setvalue @2
       pack $tw.f2$tbi.owin $tw.f2$tbi.ownval -side left -fill x -padx 2
 
@@ -353,8 +354,8 @@ Label $pf.f1.win -text "win="
 ComboBox $pf.f1.winval -values $swin_list \
    -helptext "window to plot data" \
    -editable 0 \
-   -width 1 
-   $pf.f1.winval setvalue @1
+   -width 2
+   $pf.f1.winval setvalue @5
 pack $pf.f1.win $pf.f1.winval -side left -fill x -padx 2
 
 
