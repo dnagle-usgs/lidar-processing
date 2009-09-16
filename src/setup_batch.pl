@@ -26,6 +26,7 @@ my $SCREEN_start  = "$EAARL/lidar-processing/bin/screen_batch";
 my $NCPU          = `grep -c "^vendor" /proc/cpuinfo`;
 my $SCREEN        = "/usr/bin/screen";
 my $RUN="";
+my $LOG_PATH      = "/tmp/batch/screen";
 
 my $getopt;
 my $opt_help;
@@ -109,6 +110,8 @@ my $update = 1;
 
 printf("NCPU = %d\n", $NCPU ) if ( $verbose );
 
+system("mkdir -p $LOG_PATH");
+
 if ( -e $MASTER_file ) {
   $MSTR = `cat $MASTER_file`;
   if ( ! $initd ) {
@@ -171,7 +174,7 @@ HERE_TARGET
 $SERVER = <<HERE_TARGET;
 setenv SERVER localhost
 screen -t SERVER  ./batcher.tcl server
-logfile batcher.log
+logfile $LOG_PATH/foreman.log
 log on
 HERE_TARGET
 
@@ -206,6 +209,8 @@ if ( $update ) {
   print OUT $SERVER;
   for ( $i=1; $i <= $NCPU; ++$i ) {
     printf OUT ("screen -t sub%d ./batcher.tcl \$SERVER\n", $i);
+    printf OUT ("logfile $LOG_PATH/worker-%d.log\n", $i);
+    printf OUT ("log on\n");
   }
   print OUT $BOT;
   close(OUT)
@@ -224,6 +229,8 @@ if ( $update ) {
   print OUT $SLAVE;
   for ( $i=1; $i <= $NCPU; ++$i ) {
     printf OUT ("screen -t sub%d ./batcher.tcl \$SERVER\n", $i);
+    printf OUT ("logfile $LOG_PATH/worker-%d.log\n", $i);
+    printf OUT ("log on\n");
   }
   print OUT $BOT;
   close(OUT)
@@ -243,6 +250,10 @@ if ( $initd ) {
     printf("Starting master\n") if ( $verbose );
     print `$RUN $SCREEN -d -m -c $ETC/.screenrc-batch-master`;
   } else {
+    # !!!!!!! Check and wait for SERVER to become available
+    # #####################################################
+    # XYZZY
+    # #####################################################
     printf("Starting slave\n")  if ( $verbose );
     print `$RUN $SCREEN -d -m -c $ETC/.screenrc-batch-slave`;
   }
