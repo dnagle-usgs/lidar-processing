@@ -42,7 +42,7 @@ proc setTooltip {widget text} {
    if { $text != "" } {
       # 2) Adjusted timings and added key and button bindings. These seem to
       # make artifacts tolerably rare.
-      bind $widget <Any-Enter>    [list after 2500 [list showTooltip %W $text]]
+      bind $widget <Any-Enter>    [list after 1000 [list showTooltip %W $text]]
       bind $widget <Any-Leave>    [list after  500 [list destroy %W.tooltip]]
       bind $widget <Any-KeyPress> [list after  500 [list destroy %W.tooltip]]
       bind $widget <Any-Button>   [list after  500 [list destroy %W.tooltip]]
