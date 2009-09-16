@@ -64,13 +64,13 @@ if(is_void(pixelwfvars)) {
 }
 
 func pixelwf_plot(void) {
-   pixelwf_ex_bath;  //
-   pixelwf_ex_veg;   //
-   pixelwf_show_wf;  // win, 0?
-   pixelwf_geo_rast; // win, 2?
-   pixelwf_ndrast;   // win, 1?
+   extern pixelwfvars;
+   fns = ["ex_bath", "ex_veg", "show_wf", "geo_rast", "ndrast", "fit_gauss"];
 
-   pixelwf_fit_gauss;
+   for(i = 1; i <= numberof(fns); i++) {
+      if(pixelwfvars(fns(i)).enabled)
+         funcdef(swrite(format="pixelwf_%s", fns(i)));
+   }
 }
 
 func pixelwf_handle_result(vars, result) {
@@ -85,16 +85,14 @@ func pixelwf_fit_gauss(void) {
    pulse = pixelwfvars.selection.pulse;
    vars = pixelwfvars.fit_gauss;
 
-   if(vars.enabled) {
-      if(vars.lims)
-         lims = [vars.lims_x1, vars.lims_x2];
-      else
-         lims = [];
+   if(vars.lims)
+      lims = [vars.lims_x1, vars.lims_x2];
+   else
+      lims = [];
 
-      result = fit_gauss(raster, pulse, graph=1, add_peak=vars.add_peak,
-         lims=lims, verbose=vars.verbose, win=vars.win);
-      pixelwf_handle_result, vars, &result;
-   }
+   result = fit_gauss(raster, pulse, graph=1, add_peak=vars.add_peak,
+      lims=lims, verbose=vars.verbose, win=vars.win);
+   pixelwf_handle_result, vars, &result;
 }
 
 func pixelwf_ex_bath(void) {
@@ -103,13 +101,11 @@ func pixelwf_ex_bath(void) {
    pulse = pixelwfvars.selection.pulse;
    vars = pixelwfvars.ex_bath;
 
-   if(vars.enabled) {
-      win = current_window();
-      result = ex_bath(raster, pulse, win=vars.win, graph=1, xfma=1,
-         verbose=vars.verbose);
-      pixelwf_handle_result, vars, result;
-      window_select, win;
-   }
+   win = current_window();
+   result = ex_bath(raster, pulse, win=vars.win, graph=1, xfma=1,
+      verbose=vars.verbose);
+   pixelwf_handle_result, vars, result;
+   window_select, win;
 }
 
 func pixelwf_ex_veg(void) {
@@ -118,14 +114,12 @@ func pixelwf_ex_veg(void) {
    pulse = pixelwfvars.selection.pulse;
    vars = pixelwfvars.ex_veg;
 
-   if(vars.enabled) {
-      win = current_window();
-      result = ex_veg(raster, pulse, win=vars.win, graph=1, last=vars.last,
-         use_be_peak=vars.use_be_peak, use_be_centroid=vars.use_be_centroid,
-         hard_surface=vars.hard_surface, verbose=vars.verbose);
-      pixelwf_handle_result, vars, result;
-      window_select, win;
-   }
+   win = current_window();
+   result = ex_veg(raster, pulse, win=vars.win, graph=1, last=vars.last,
+      use_be_peak=vars.use_be_peak, use_be_centroid=vars.use_be_centroid,
+      hard_surface=vars.hard_surface, verbose=vars.verbose);
+   pixelwf_handle_result, vars, result;
+   window_select, win;
 }
 
 func pixelwf_show_wf(void) {
@@ -134,17 +128,15 @@ func pixelwf_show_wf(void) {
    pulse = pixelwfvars.selection.pulse;
    vars = pixelwfvars.show_wf;
 
-   if(vars.enabled) {
-      win = current_window();
+   win = current_window();
 
-      r = get_erast(rn=raster);
-      rr = decode_raster(r);
-      wfa = ndrast(rr, graph=0);
-      show_wf, *wfa, pulse, win=vars.win, raster=raster,
-         c1=vars.c1, c2=vars.c2, c3=vars.c3;
+   r = get_erast(rn=raster);
+   rr = decode_raster(r);
+   wfa = ndrast(rr, graph=0);
+   show_wf, *wfa, pulse, win=vars.win, raster=raster,
+      c1=vars.c1, c2=vars.c2, c3=vars.c3;
 
-      window_select, win;
-   }
+   window_select, win;
 }
 
 func pixelwf_geo_rast(void) {
@@ -153,12 +145,10 @@ func pixelwf_geo_rast(void) {
    pulse = pixelwfvars.selection.pulse;
    vars = pixelwfvars.geo_rast;
 
-   if(vars.enabled) {
-      r = get_erast(rn=raster);
-      rr = decode_raster(r);
-      geo_rast, raster, win=vars.win, fsmarks=vars.fsmarks,
-         eoffset=vars.eoffset, verbose=vars.verbose;
-   }
+   r = get_erast(rn=raster);
+   rr = decode_raster(r);
+   geo_rast, raster, win=vars.win, fsmarks=vars.fsmarks,
+      eoffset=vars.eoffset, verbose=vars.verbose;
 }
 
 func pixelwf_ndrast(void) {
@@ -167,17 +157,15 @@ func pixelwf_ndrast(void) {
    pulse = pixelwfvars.selection.pulse;
    vars = pixelwfvars.ndrast;
 
-   if(vars.enabled) {
-      win = current_window();
-      fma;
+   win = current_window();
+   fma;
 
-      r = get_erast(rn=raster);
-      rr = decode_raster(r);
-      result = ndrast(rr, graph=1, win=vars.win, units=vars.units);
-      pixelwf_handle_result, vars, result;
+   r = get_erast(rn=raster);
+   rr = decode_raster(r);
+   result = ndrast(rr, graph=1, win=vars.win, units=vars.units);
+   pixelwf_handle_result, vars, result;
 
-      window_select, win;
-   }
+   window_select, win;
 }
 
 func pixelwf_enter_interactive(void) {
