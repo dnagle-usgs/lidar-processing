@@ -9,8 +9,11 @@ require, "eaarl.i";
 
 func package_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n= ) {
 
-   path = swrite(format="/tmp/batch/jobs/job-t_e%6.0f_n%7.0f_%s.cmd", min_e, max_n, zone_s);
-   save_vars, path, tile=1;
+   ppath = swrite(format="/tmp/batch/prep/job-t_e%6.0f_n%7.0f_%s.cmd", min_e, max_n, zone_s);
+   jpath = swrite(format="%s", "/tmp/batch/jobs/");
+   save_vars, ppath, tile=1;
+   cmd = swrite(format="mv %s %s", ppath, jpath);
+   system, cmd;  // want the file to be fully there before the foreman sees it.
 }
 
 
@@ -692,6 +695,7 @@ Added server/client support (2009-01) Richard Mitchell
 
 
    // Create output directory for tile cmd files:
+   system, "mkdir -p /tmp/batch/prep";
    system, "mkdir -p /tmp/batch/jobs";
 
    // Get username and pc name of person running batch_process
@@ -2464,4 +2468,17 @@ ignore_none_found=) {
    }
 
    logger, "debug", logid + " Leaving batch_merge_veg_bathy";
+}
+
+func show_setup ( junk ) {
+   write, format="EDB\n  %s\n", edb_filename;
+
+   write, format="\n%s\n  %s\n  %s\n", "PNAV",
+      split_path(pnav_filename,0)(1);
+      split_path(pnav_filename,0)(0);
+   write, format="\n%s\n  %s\n  %s\n", "INS",
+      split_path(ins_filename,0)(1);
+      split_path(ins_filename,0)(0);
+   write, format="\nDATA PATH\n  %s\n", data_path;
+
 }
