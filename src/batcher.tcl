@@ -9,6 +9,7 @@ package require Tclx
 # set host localhost
 set host [lindex $argv 0]
 set port 9900
+set pdir /tmp/batch/prep
 set jdir /tmp/batch/jobs
 set fdir /tmp/batch/farm
 set wdir /tmp/batch/work
@@ -79,6 +80,15 @@ proc Service { sock addr } {
          Status {
             puts "Received status from $addr $sock: $args\n"
             set status($sock) $args
+         }
+
+         Skipping {
+            # client failed to process 
+            set stop($sock) [clock seconds]
+            set tdelta [ expr $stop($sock) - $start($sock)]
+            incr delta($sock) $tdelta
+            puts $log "$myt Received skip on $args from $addr $sock after $tdelta\n"; flush $log;
+            puts "Received skip on $args from $addr $sock after $tdelta\n"
          }
 
          Completed {
@@ -216,6 +226,7 @@ proc open_server { port } {
 #-----------------------------------------------------
 proc make_dirs {} {
    global jdir fdir wdir ddir ldir;
+   catch { exec mkdir -p $pdir }
    catch { exec mkdir -p $jdir }
    catch { exec mkdir -p $fdir }
    catch { exec mkdir -p $wdir }
@@ -285,38 +296,57 @@ proc client'read sock {
          puts "status $args"
          puts $sock "Status $args"
 
+         set res "";
          if { $remote == 1 } {
             puts "batcher.tcl: rsyncing $host:/$fdir/$args"
-            catch { exec rsync -PHaqR $host:/$fdir/$args / } res
-            puts "batcher.tcl: rsync complete"
-            puts $sock "mv $fdir/$args $wdir"
+            catch { exec rsync -PHaqR --no-t $host:/$fdir/$args / } res
+            if { $res > "" } {      # display errors
+               puts "res1: $res"
+               # retry once
+               system sleep 2
+               catch { exec rsync -PHaqR --no-t $host:/$fdir/$args / } res
+            }
          }
 
-         catch { exec mv $fdir/$args $wdir } res
+         if { $res > "" } {      # give the job back, don't do any processing
+                                 # we should only be here if the rsync failed
+            puts "RES1: $res"
+            puts $sock "mv $fdir/$args $jdir"
+            puts $sock "Skipping $args"
+            puts $sock "Status ready"
+         }  else {               # process the tile
 
-         if { $res > "" } {
-            puts "res : $res"
-         }
+            if { $remote == 1 } {# tell foreman we're working on it.
+               puts "batcher.tcl: rsync complete"
+               puts $sock "mv $fdir/$args $wdir"
+            }
 
-         set doall list
-         catch { exec /opt/eaarl/lidar-processing/src/cmdline_batch $wdir/$args $host } res
-         puts "cmdline_batch: completed"
-         if { $res > "" } {
-            puts "res : $res"
-         }
-         catch { exec mv $wdir/$args $ddir } res
-         if { $remote == 1 } {
-            puts $sock "mv $wdir/$args $ddir"
-            puts "COMPLETED: $ddir/$args, removing"
-            catch { exec rm  $ddir/$args } res
-            puts         "rm $ddir/$args: $res"
-         }
-         puts $sock "Completed $args"
-         puts $sock "Status ready"
-         puts "Completed $args\n"
+            catch { exec mv $fdir/$args $wdir } res
 
-         if { $doall > "" } {
-            puts $sock $doall
+            if { $res > "" } {
+               puts "res2: $res"
+            }
+
+            set doall list
+            catch { exec /opt/eaarl/lidar-processing/src/cmdline_batch $wdir/$args $host } res
+            puts "cmdline_batch: completed"
+            if { $res > "" } {
+               puts "res3: $res"
+            }
+            catch { exec mv $wdir/$args $ddir } res
+            if { $remote == 1 } {
+               puts $sock "mv $wdir/$args $ddir"
+               puts "COMPLETED: $ddir/$args, removing"
+               catch { exec rm  $ddir/$args } res
+               puts         "rm $ddir/$args: $res"
+            }
+            puts $sock "Completed $args"
+            puts $sock "Status ready"
+            puts "Completed $args\n"
+
+            if { $doall > "" } {
+               puts $sock $doall
+            }
          }
       }
 
