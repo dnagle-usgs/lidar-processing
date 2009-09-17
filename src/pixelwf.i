@@ -55,7 +55,6 @@ if(is_void(pixelwfvars)) {
          enabled=1,  //bool
          win=2,
          verbose=0,
-         fsmarks=0,  //?
          eoffset=0.  //?
       ),
       ndrast=h_new(
@@ -170,8 +169,7 @@ func pixelwf_geo_rast(void) {
 
    r = get_erast(rn=raster);
    rr = decode_raster(r);
-   geo_rast, raster, win=vars.win, fsmarks=vars.fsmarks,
-      eoffset=vars.eoffset, verbose=vars.verbose;
+   geo_rast, raster, win=vars.win, eoffset=vars.eoffset, verbose=vars.verbose;
 }
 
 func pixelwf_ndrast(void) {
@@ -217,6 +215,7 @@ func pixelwf_enter_interactive(void) {
             write, format="  corresponding to %s(%d)\n",
                pixelwfvars.selection.pro_var, nearest.index;
             pixelwf_set_point, nearest.point;
+            pixelwf_highlight_point, nearest.point;
             // Since the previous line triggers Tk to update Yorick, the
             // following line is wrapped in tkcmd+idle to ensure it happens
             // afterwards
@@ -226,6 +225,11 @@ func pixelwf_enter_interactive(void) {
          continue_interactive = 0;
       }
    }
+}
+
+func pixelwf_highlight_point(point) {
+   plmk, point.north/100., point.east/100., msize=0.004, color="red",
+      marker=[[0,1,0,1,0,-1,0,-1,0],[0,1,0,-1,0,-1,0,1,0]];
 }
 
 func pixelwf_set_point(point) {
