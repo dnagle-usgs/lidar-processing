@@ -57,6 +57,7 @@ if {![namespace exists ::pixelwf]} {
          namespace eval selection {
             variable raster 1
             variable pulse 1
+            variable missionday {}
             variable radius 10.00
          }
          namespace eval fit_gauss {
@@ -119,6 +120,7 @@ if {![namespace exists ::pixelwf]} {
             geo_rast {}
             ndrast {}
          }
+         variable missionday_list {}
       }
       namespace eval constants {
          # valid_ranges is a dict. It is used to apply bounding ranges on
@@ -148,7 +150,7 @@ if {![namespace exists ::pixelwf]} {
                fit_gauss {lims_x1 lims_x2}
             }
             {-1000 1000 0.01} {geo_rast eoffset}
-            {0.01 100 0.01} {selection radius}
+            {0.01 100 0.5} {selection radius}
          }
          # valid_values is a dict. It is used to restrict a variable's value to
          # a list of values.
@@ -222,18 +224,35 @@ if {![namespace exists ::pixelwf]} {
       # Universal
       mcset en win Window
       mcset en verbose Verbose
+      mcset en plot Plot
 
       # selection
       mcset en raster Raster
       mcset en pulse Pulse
+      mcset en radius Radius
+      mcset en pro_var Variable
+      mcset en missionday Day
 
       # fit_gauss
       mcset en "fit_gauss functionality" "Gaussian Deconvolution"
+
+      # ex_bath
+      mcset en "ex_bath functionality" "Bathy Functionality"
+
+      # ex_veg
+      mcset en "ex_veg functionality" "Topo Under Veg"
+      mcset en use_be_peak Peak
+      mcset en use_be_centroid Centroid
+      mcset en hard_surface "Hard Surface"
+
+      # show_wf
+      mcset en "show_wf functionality" "Original Waveform"
 
       # geo_rast
       mcset en "geo_rast functionality" "Georeferenced Raster"
 
       # ndrast
+      mcset en "ndrast functionality" "Unreferenced Raster"
       mcset en units Units
 
       namespace forget mcset
@@ -451,9 +470,27 @@ namespace eval ::pixelwf::gui {
       }
    }
 
+   proc set_default_enabled {} {
+      set ns ::pixelwf::vars
+      set ${ns}::fit_gauss::enabled 0
+      set ${ns}::show_wf::enabled 0
+      set ${ns}::geo_rast::enabled 1
+      set ${ns}::ndrast::enabled 1
+      if {$::plot_settings(display_type) eq "Submerged Topography"} {
+         set ${ns}::ex_bath::enabled 1
+         set ${ns}::ex_veg::enabled 0
+      } else {
+         set ${ns}::ex_bath::enabled 0
+         set ${ns}::ex_veg::enabled 1
+      }
+   }
+
    proc launch_full_panel w {
+      set_default_enabled
+
       if {[winfo exists $w]} {destroy $w}
       toplevel $w
+      wm title $w [mc "Pixel Analysis"]
 
       set mf $w
 
@@ -468,7 +505,7 @@ namespace eval ::pixelwf::gui {
       grid columnconfigure $f 0 -weight 1
       grid rowconfigure $f 0 -weight 1
 
-      foreach type [list fit_gauss ex_bath ex_veg show_wf geo_rast ndrast] {
+      foreach type [list fit_gauss ex_bath ex_veg show_wf ndrast geo_rast] {
          # Checkbox for frame
          set chk $mf.chk_$type
          checkbutton $chk -text [mc "Enable %s" [mc "$type functionality"]] \
@@ -492,9 +529,20 @@ namespace eval ::pixelwf::gui {
       grid columnconfigure $mf 0 -weight 1
    }
 
+   proc helper_update_days {} {
+      set ::pixelwf::gui::missionday_list [missionday_list]
+   }
+
    proc selection f {
       set ns ::pixelwf::vars::selection
       frame $f
+
+      label $f.lblDay -text [mc missionday]:
+      iwidgets::combobox $f.cboDay -textvariable ${ns}::missionday \
+         -editable false -width 0
+      $f.cboDay component list configure \
+         -listvariable ::pixelwf::gui::missionday_list
+      bind [$f.cboDay component list] <Map> +::pixelwf::gui::helper_update_days
 
       label $f.lblRaster -text [mc raster]:
       helper_spinbox $f.spnRaster ${ns}::raster
@@ -517,11 +565,13 @@ namespace eval ::pixelwf::gui {
       button $f.btnMouse -text [mc "Interactive"] \
          -command [list ycmd pixelwf_enter_interactive]
 
+      grid $f.lblDay $f.cboDay - -
       grid $f.lblRaster $f.spnRaster $f.lblPulse $f.spnPulse
       grid $f.lblWindow $f.spnWindow $f.lblVar $f.cboVar
       grid $f.lblRadius $f.spnRadius $f.btnMouse -
 
       default_sticky \
+         $f.lblDay $f.cboDay \
          $f.lblRaster $f.spnRaster $f.lblPulse $f.spnPulse \
          $f.lblWindow $f.spnWindow $f.lblVar $f.cboVar \
          $f.lblRadius $f.spnRadius $f.btnMouse
@@ -550,7 +600,7 @@ namespace eval ::pixelwf::gui {
       helper_output_dest $f.cboAction $f.entVariable $ns
 
       checkbutton $f.chkVerbose -text [mc verbose] -variable ${ns}::verbose
-      button $f.btnGraph -text [mc fit_gauss] -command [list ybkg pixelwf_fit_gauss]
+      button $f.btnGraph -text [mc plot] -command [list ybkg pixelwf_fit_gauss]
 
       grid $f.lblWindow $f.spnWindow $f.lblAddPeak $f.spnAddPeak
       #grid $f.chkLims $f.spnLimsX1 $f.lblLimsX2 $f.spnLimsX2
@@ -576,16 +626,24 @@ namespace eval ::pixelwf::gui {
       helper_output_dest $f.cboAction $f.entVariable $ns
 
       checkbutton $f.chkVerbose -text [mc verbose] -variable ${ns}::verbose
-      button $f.btnGraph -text [mc ex_bath] -command [list ybkg pixelwf_ex_bath]
+      button $f.btnBathctl -text [mc Settings] -command bathctl::gui
+      button $f.btnGraph -text [mc plot] -command [list ybkg pixelwf_ex_bath]
+
+      frame $f.fraBtns -padx 0 -pady 0
+      lower $f.fraBtns
+      grid $f.btnBathctl $f.btnGraph -in $f.fraBtns
+      grid columnconfigure $f.fraBtns 0 -weight 1
 
       grid $f.lblWindow $f.spnWindow
       grid $f.cboAction $f.entVariable
-      grid $f.chkVerbose $f.btnGraph
+      grid $f.chkVerbose $f.fraBtns
+
+      grid $f.fraBtns -sticky se
 
       default_sticky \
          $f.lblWindow $f.spnWindow \
          $f.cboAction $f.entVariable \
-         $f.chkVerbose $f.btnGraph
+         $f.chkVerbose $f.btnGraph $f.btnBathctl
 
       grid columnconfigure $f 1 -weight 1
    }
@@ -609,7 +667,7 @@ namespace eval ::pixelwf::gui {
       checkbutton $f.chkHardSf -text [mc hard_surface] \
          -variable ${ns}::hard_surface
 
-      button $f.btnGraph -text [mc ex_veg] -command [list ybkg pixelwf_ex_veg]
+      button $f.btnGraph -text [mc plot] -command [list ybkg pixelwf_ex_veg]
 
       checkbutton $f.chkVerbose -text [mc verbose] -variable ${ns}::verbose
 
@@ -620,8 +678,8 @@ namespace eval ::pixelwf::gui {
 
       grid $f.lblWindow $f.spnWindow $f.lblLast $f.spnLast
       grid $f.cboAction - $f.entVariable -
-      grid $f.fraChks - - $f.btnGraph
-      grid $f.chkVerbose - - ^
+      grid $f.fraChks - - -
+      grid $f.chkVerbose - $f.btnGraph -
 
       default_sticky \
          $f.lblWindow $f.spnWindow $f.lblLast $f.spnLast \
@@ -644,7 +702,7 @@ namespace eval ::pixelwf::gui {
       checkbutton $f.chkC2 -text [mc c2] -variable ${ns}::c2
       checkbutton $f.chkC3 -text [mc c3] -variable ${ns}::c3
 
-      button $f.btnGraph -text [mc show_wf] -command [list ybkg pixelwf_show_wf]
+      button $f.btnGraph -text [mc plot] -command [list ybkg pixelwf_show_wf]
 
       frame $f.fraC -padx 0 -pady 0
       lower $f.fraC
@@ -673,7 +731,7 @@ namespace eval ::pixelwf::gui {
 
       checkbutton $f.chkFSMarks -text [mc fsmarks] \
          -variable ${ns}::fsmarks
-      button $f.btnGraph -text [mc geo_rast] -command [list ybkg pixelwf_geo_rast]
+      button $f.btnGraph -text [mc plot] -command [list ybkg pixelwf_geo_rast]
 
       checkbutton $f.chkVerbose -text [mc verbose] -variable ${ns}::verbose
 
@@ -702,7 +760,7 @@ namespace eval ::pixelwf::gui {
 
       helper_output_dest $f.cboAction $f.entVariable $ns
 
-      button $f.btnGraph -text [mc ndrast] -command [list ybkg pixelwf_ndrast]
+      button $f.btnGraph -text [mc plot] -command [list ybkg pixelwf_ndrast]
 
       grid $f.lblWindow $f.spnWindow $f.lblUnits $f.cboUnits
       grid $f.cboAction - $f.entVariable -

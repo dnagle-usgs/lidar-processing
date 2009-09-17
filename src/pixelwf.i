@@ -3,9 +3,14 @@ require, "fit_gauss.i";
 
 if(is_void(pixelwfvars)) {
    pixelwfvars = h_new(
+      working=h_new(
+         loaded_day=string(0),
+         loaded_when=-50
+      ),
       selection=h_new(
          raster=1,
          pulse=1,
+         missionday="",
          radius=10.00,
          win=5,
          pro_var="fs_all"
@@ -79,11 +84,25 @@ func pixelwf_handle_result(vars, result) {
       funcdef(cmd + " " + vars.dest_variable + " result");
 }
 
+func pixelwf_load_data(void) {
+   extern pixelwfvars;
+   day = pixelwfvars.selection.missionday;
+   working = pixelwfvars.working;
+
+   // If the loaded day is the current day and it was loaded less than 5
+   // seconds ago, we can fairly safely assume that the data in memory is good
+   if(working.loaded_day != day || abs(working.loaded_when - getsod()) > 5) {
+      missiondata_load, "all", day=day;
+      h_set, working, loaded_day=day, loaded_when=getsod();
+   }
+}
+
 func pixelwf_fit_gauss(void) {
    extern pixelwfvars;
    raster = pixelwfvars.selection.raster;
    pulse = pixelwfvars.selection.pulse;
    vars = pixelwfvars.fit_gauss;
+   pixelwf_load_data;
 
    if(vars.lims)
       lims = [vars.lims_x1, vars.lims_x2];
@@ -100,6 +119,7 @@ func pixelwf_ex_bath(void) {
    raster = pixelwfvars.selection.raster;
    pulse = pixelwfvars.selection.pulse;
    vars = pixelwfvars.ex_bath;
+   pixelwf_load_data;
 
    win = current_window();
    result = ex_bath(raster, pulse, win=vars.win, graph=1, xfma=1,
@@ -113,6 +133,7 @@ func pixelwf_ex_veg(void) {
    raster = pixelwfvars.selection.raster;
    pulse = pixelwfvars.selection.pulse;
    vars = pixelwfvars.ex_veg;
+   pixelwf_load_data;
 
    win = current_window();
    result = ex_veg(raster, pulse, win=vars.win, graph=1, last=vars.last,
@@ -127,6 +148,7 @@ func pixelwf_show_wf(void) {
    raster = pixelwfvars.selection.raster;
    pulse = pixelwfvars.selection.pulse;
    vars = pixelwfvars.show_wf;
+   pixelwf_load_data;
 
    win = current_window();
 
@@ -144,6 +166,7 @@ func pixelwf_geo_rast(void) {
    raster = pixelwfvars.selection.raster;
    pulse = pixelwfvars.selection.pulse;
    vars = pixelwfvars.geo_rast;
+   pixelwf_load_data;
 
    r = get_erast(rn=raster);
    rr = decode_raster(r);
@@ -156,8 +179,10 @@ func pixelwf_ndrast(void) {
    raster = pixelwfvars.selection.raster;
    pulse = pixelwfvars.selection.pulse;
    vars = pixelwfvars.ndrast;
+   pixelwf_load_data;
 
    win = current_window();
+   window, vars.win;
    fma;
 
    r = get_erast(rn=raster);
@@ -180,16 +205,22 @@ func pixelwf_enter_interactive(void) {
       spot = mouse(1, 1, "");
 
       if(mouse_click_is("left", spot)) {
-         write, format="Location clicked: %.2f %.2f\n", spot(1), spot(2);
-         nearest = pixelwf_find_point(data, spot);
-         if(is_void(nearest)) {
-            write, format="No point found within search radius (%.2f).\n",
+         write, format="\nLocation clicked: %.2f %.2f\n", spot(1), spot(2);
+         nearest = pixelwf_find_point(spot);
+         if(is_void(nearest.point)) {
+            write, format="No point found within search radius (%.2fm).\n",
                pixelwfvars.selection.radius;
          } else {
-            write, format="Nearest point: %.2f %.2f, %.2f\n", nearest.east/100.,
-               nearest.north/100., nearest.elevation/100.;
-            pixelwf_set_point, nearest;
-            pixelwf_plot;
+            write, format="Nearest point:    %.2f %.2f (%.2fm away)\n",
+               nearest.point.east/100., nearest.point.north/100.,
+               nearest.distance;
+            write, format="  corresponding to %s(%d)\n",
+               pixelwfvars.selection.pro_var, nearest.index;
+            pixelwf_set_point, nearest.point;
+            // Since the previous line triggers Tk to update Yorick, the
+            // following line is wrapped in tkcmd+idle to ensure it happens
+            // afterwards
+            tkcmd, "idle {ybkg pixelwf_plot}";
          }
       } else {
          continue_interactive = 0;
@@ -198,31 +229,36 @@ func pixelwf_enter_interactive(void) {
 }
 
 func pixelwf_set_point(point) {
-   extern rn;
+   extern rn, pixelwfvars;
    missiondata_soe_load, point.soe;
+   h_set, pixelwfvars.working, loaded_day=missionday_current(), loaded_when=getsod();
    rp = parse_rn(point.rn);
    tksetval, "::pixelwf::vars::selection::raster", rp(1);
    tksetval, "::pixelwf::vars::selection::pulse", rp(2);
+   tksetval, "::pixelwf::vars::selection::missionday", missionday_current();
    rn = rp(1);
 }
 
-func pixelwf_find_point(data, spot) {
+func pixelwf_find_point(spot) {
    extern pixelwfvars;
    vars = pixelwfvars.selection;
    radius = vars.radius;
-   data = test_and_clean(var_expr_get(vars.pro_var));
+   data = test_and_clean(var_expr_get(vars.pro_var), verbose=0);
 
    bbox = spot([1,1,2,2]) + radius * [-1,1,-1,1];
    w = data_box(data.east, data.north, 100 * bbox);
 
-   nearest = [];
+   dist = index = nearest = [];
    if(numberof(w)) {
       x = data(w).east/100.;
       y = data(w).north/100.;
       d = sqrt((x-spot(1))^2 + (y-spot(2))^2);
-      if(d(min) <= radius)
-         nearest = data(w)(d(mnx));
+      if(d(min) <= radius) {
+         dist = d(min);
+         index = w(d(mnx));
+         nearest = data(index);
+      }
    }
 
-   return nearest;
+   return h_new(point=nearest, index=index, distance=dist);
 }
