@@ -10,6 +10,20 @@
 # for input are given, but the screenrc files are regenerated with the
 # current number of cpus available.  screen is then invoked and put into
 # the background
+#
+# WARNING:  too many simultaneous unauthenticated ssh/rsync connections
+# to the foreman may cause refused connections.  This will most likely
+# occur when all of the systems are initially trying to get their first
+# jobs.  To correct this problem, edit:
+#
+#   /etc/ssh/sshd_config   (or wherever it lives on your system)
+#
+# and look for the line:
+#   #MaxStartups 10:30:60
+# uncomment it and change it something like:
+#   MaxStartups 40:30:100
+# set the first number to be slightly greater than the number of expected
+# workers and the last number a couple times higher.
 
 use Getopt::Long;
 use strict;
