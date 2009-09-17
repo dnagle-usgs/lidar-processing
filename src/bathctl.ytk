@@ -173,9 +173,4 @@ proc bathctl::gui_launch {} {
       sst $w.$key ::bath_ctl($key) [mc $key] $range
       pack $w.$key -side top -anchor e
    }
-
-   button $w.dismiss -text "Dismiss" -width 5 -command [list wm withdraw $w]
-   button $w.plot -text "Plot" -width 5 -command [list ycmd show_bath_constants]
-
-   pack $w.plot $w.dismiss -side left
 }
