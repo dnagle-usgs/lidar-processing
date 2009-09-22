@@ -920,7 +920,11 @@ soe=, indx=, mapping=, columns=, types=) {
    Required parameters:
 
       file: The full path and file name of the ascii XYZ file to read.
-      pstruc: The structure to convert the data to.
+      pstruc: The structure to convert the data to. This must be a "clean"
+         structure such as VEG__ (anything that can come out of
+         test_and_clean).  Raw structures (such as R) will not work. If pstruc
+         is omitted, then the data will be returned as a 2-dimensional array of
+         doubles.
 
    Options:
 
@@ -1073,16 +1077,23 @@ soe=, indx=, mapping=, columns=, types=) {
    }
 
    nskip = (header ? 1 : 0);
-   cols = rdcols(file, numberof(columns), delim=delimit, type=types, nskip=nskip);
+   cols = rdcols(file, numberof(columns), marker=delimit, type=types, nskip=nskip);
 
-   data = array(pstruc, numberof(*cols(1)));
-   for(i = 1; i <= numberof(columns); i++) {
-      if(h_has(mapping, columns(i))) {
-         map = mapping(columns(i));
-         factor = (h_has(map, "factor") ? h_get(map, "factor") : 1);
-         for(j = 1; j <= numberof(map.dest); j++) {
-            if(has_member(data, map.dest(j))) {
-               get_member(data, map.dest(j)) = *cols(i) * factor;
+   if(is_void(pstruc)) {
+      data = array(double, numberof(columns), numberof(*cols(1)));
+      for(i = 1; i <= numberof(columns); i++) {
+         data(i,) = (typeof(*cols(i)) == "string") ? atod(*cols(i)) : *cols(i);
+      }
+   } else {
+      data = array(pstruc, numberof(*cols(1)));
+      for(i = 1; i <= numberof(columns); i++) {
+         if(h_has(mapping, columns(i))) {
+            map = mapping(columns(i));
+            factor = (h_has(map, "factor") ? h_get(map, "factor") : 1);
+            for(j = 1; j <= numberof(map.dest); j++) {
+               if(has_member(data, map.dest(j))) {
+                  get_member(data, map.dest(j)) = *cols(i) * factor;
+               }
             }
          }
       }
