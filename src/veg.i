@@ -431,8 +431,8 @@ hard_surface=, pse=, verbose=) {
       fma;
       plmk, da+(ai-1)*300, msize=.2, marker=1, color="magenta";
       plg, da+(ai-1)*300, color="magenta";
-      plg, dd-100, color="blue";
-      pltitle, swrite(format="ai = %d", ai);
+      //plg, dd-100, color="blue";
+      pltitle, swrite(format="Channel ID = %d", ai);
       window_select, winbkp;
    }
 
