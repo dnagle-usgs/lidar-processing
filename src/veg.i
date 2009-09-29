@@ -596,10 +596,7 @@ hard_surface=, pse=, verbose=) {
       window_select, winbkp;
    }
    if (verbose) {
-      rv.mx1;
-      rv.mv1;
-      rv.mx0;
-      rv.mv0;
+      write, format="Range between first and last return = %4.2f ns\n",(rv.mx0-rv.mx1);
    }
 
    return rv;
