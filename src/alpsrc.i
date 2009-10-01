@@ -21,6 +21,10 @@ local alpsrc;
          will use this to find fla-reefs.dat, and plot.ytk will use it as a
          default directory for the maps.
 
+      l1pro_startup = 0
+         Defines whether to display the l1pro GUI at startup. 0 is "no", 1 is
+         "yes". This takes effect when eaarl.ytk is sourced.
+
    See also: alpsrc_load
 */
 
@@ -57,7 +61,8 @@ func __alpsrc_load_and_merge(&hash, fn) {
 
 __alpsrc_defaults = h_new(
    "geoid_data_root", file_join(get_cwd(), ".."),
-   "maps_dir", file_join(get_cwd(), "..", "maps")
+   "maps_dir", file_join(get_cwd(), "..", "maps"),
+   "l1pro_startup", 0
 );
 
 alpsrc_load;

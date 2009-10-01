@@ -350,6 +350,10 @@ namespace eval mission {
             -underline 0 \
             -command [@ menu_initialize_from_mission_dir]
 
+        $mb.act add separator
+        $mb.act add command -label "Launch RGB" -command [@ menu_launch_rgb]
+        $mb.act add command -label "Launch CIR" -command [@ menu_launch_cir]
+
         set f $win.fraDates
         set v::dateframe $f
         frame $f
@@ -365,6 +369,16 @@ namespace eval mission {
             -padx 2m -pady 1m \
             -command [@ set_mission_path]
         pack $win.btnPath -anchor w
+
+        button $win.btnRgb -text "All RGB" \
+            -padx 2m -pady 1m \
+            -command [@ menu_launch_rgb]
+        pack $win.btnRgb -anchor w
+
+        button $win.btnCir -text "All Cir" \
+            -padx 2m -pady 1m \
+            -command [@ menu_launch_cir]
+        pack $win.btnCir -anchor w
 
         wm protocol $win WM_DELETE_WINDOW [@ menu_close]
 
@@ -435,6 +449,39 @@ namespace eval mission {
         }
     }
 
+    proc menu_launch_rgb {} {
+        set rgb_p [list]
+        set rgb_t [list]
+        foreach day [missionday_list] {
+            if {[mission_has "rgb dir" $day]} {
+                lappend rgb_p [mission_get "rgb dir" $day]
+            }
+            if {[mission_has "rgb file" $day]} {
+                lappend rgb_t [mission_get "rgb file" $day]
+            }
+        }
+        if {[llength $rgb_p]} {
+            set rgb [sf::controller %AUTO%]
+            $rgb load rgb::f2006::tarpaths -paths $rgb_p
+        } elseif {[llength $rgb_t]} {
+            set rgb [sf::controller %AUTO%]
+            $rgb load rgb::f2001::tarfiles -files $rgb_t
+        }
+    }
+
+    proc menu_launch_cir {} {
+        set paths [list]
+        foreach day [missionday_list] {
+            if {[mission_has "cir dir" $day]} {
+                lappend paths [mission_get "cir dir" $day]
+            }
+        }
+        if {[llength $paths]} {
+            set cir [sf::controller %AUTO%]
+            $cir load cir::tarpaths -paths $paths
+        }
+    }
+
     proc update_gui {args} {
         set f $v::dateframe
         foreach w [winfo children $f] {
@@ -449,10 +496,17 @@ namespace eval mission {
             button $f.btnLoad$date -text Load \
                 -padx 2m -pady 1m \
                 -command [@ [list date_load $date]]
+            button $f.btnRgb$date -text RGB \
+                -padx 2m -pady 1m \
+                -command [@ [list date_rgb $date]]
+            button $f.btnCir$date -text Cir \
+                -padx 2m -pady 1m \
+                -command [@ [list date_cir $date]]
             button $f.btnDelete$date -text X \
                 -padx 2m -pady 1m \
                 -command [@ [list date_delete $date]]
-            grid $f.lbl$date $f.btnConfig$date $f.btnLoad$date $f.btnDelete$date
+            grid $f.lbl$date $f.btnConfig$date $f.btnLoad$date \
+                $f.btnRgb$date $f.btnCir$date $f.btnDelete$date
         }
         uncurry @
     }
@@ -630,6 +684,23 @@ namespace eval mission {
     proc date_load {date} {
         missionday_current $date
         missiondata_load all
+    }
+
+    proc date_rgb {day} {
+        if {[mission_has "rgb dir" $day]} {
+            set rgb [sf::controller %AUTO%]
+            $rgb load rgb::f2006::tarpath -path [mission_get "rgb dir" $day]
+        } elseif {[mission_has "rgb file" $day]} {
+            set rgb [sf::controller %AUTO%]
+            $rgb load rgb::f2001::tarfiles -files [list [mission_get "rgb file" $day]]
+        }
+    }
+
+    proc date_cir {day} {
+        if {[mission_has "cir dir" $day]} {
+            set cir [sf::controller %AUTO%]
+            $cir load cir::tarpath -path [mission_get "cir dir" $day]
+        }
     }
 
     proc date_add {} {

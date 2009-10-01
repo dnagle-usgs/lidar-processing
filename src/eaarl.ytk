@@ -12,6 +12,25 @@
 #
 #
 
+proc app_root_dir {} {
+   # Copied from http://wiki.tcl.tk/1710
+   set originalPath [pwd]
+   set scriptPath   $::argv0
+   set workingPath  [file dirname $::argv0]
+   while {![catch {file readlink $scriptPath} result]} {
+      cd $workingPath
+      set scriptPath  [file join [pwd] $result]
+      set workingPath [file dirname $scriptPath]
+   }
+   cd [file dirname $scriptPath]
+   set scriptPath [pwd]
+   cd $originalPath
+   return $scriptPath
+}
+
+::tcl::tm::path add [file join [app_root_dir] tcllib]
+package require sf
+
 package require comm
 set sf_a_id -1
 set cir_id -1
@@ -169,6 +188,7 @@ proc send_sod_to_sf { somd } {
    send_sf set hsr $somd
    send_sf gotoImage
   }
+  ybkg sf_mediator_broadcast_somd $somd
 }
 
 proc send_tans_to_sf {somd p r h} {
@@ -512,7 +532,7 @@ $w.mb.file add separator
    source "$src_path/drast.ytk"
  }
  $w.mb.rasters add command -label "Process Lidar Data..." -command {
-    source "$src_path/l1pro.ytk"
+    wm deiconify .l1wid
  }
 
 #############
@@ -531,6 +551,8 @@ $w.mb.file add separator
  $w.mb.images add command -label "1-Hz CIR High-Res Images..." -command {
     start_cir
  }
+ $w.mb.images add command -label "Launch new SF viewer..." \
+   -command [list ::sf::controller %AUTO%]
  $w.mb.images add command -label "Process Lidar Data..." -command {
     source "$src_path/l1pro.ytk"
  }
@@ -668,3 +690,8 @@ $w.mb.images entryconfigure 8 -state disabled
 # this gives the user back their prompt.
 exp_send \r
 expect ">"
+
+source "$src_path/l1pro.ytk"
+if {[yget alpsrc.l1pro_startup]} {
+   wm deiconify .l1wid
+}

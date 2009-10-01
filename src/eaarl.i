@@ -83,6 +83,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "rlw.i";
    require, "sel_file.i";
    require, "set.i";
+   require, "sf.i";
    require, "transect.i";
    require, "waves.i";
    require, "wgs842nad83.i";
@@ -121,8 +122,10 @@ func send_sod_to_sf(somd) {
 /* DOCUMENT send_sod_to_sf, somd
    Wrapper around the Tcl command send_sod_to_sf
 */
-   extern last_somd;
+   extern last_somd, soe_day_start;
    tkcmd, swrite(format="send_sod_to_sf %d", somd);
+   soe = int(soe_day_start + somd);
+   tkcmd, swrite(format="::sf::mediator broadcast soe %d", soe);
    last_somd = somd;
 }
 

@@ -173,11 +173,12 @@ func pixelwf_geo_rast(void) {
 }
 
 func pixelwf_ndrast(void) {
-   extern pixelwfvars;
+   extern pixelwfvars, rn;
    raster = pixelwfvars.selection.raster;
    pulse = pixelwfvars.selection.pulse;
    vars = pixelwfvars.ndrast;
    pixelwf_load_data;
+   rn = raster;
 
    win = current_window();
    window, vars.win;

@@ -13,9 +13,7 @@ package require Tktable
 package require struct::list
 package require struct::set
 
-if {[winfo exists .l1wid]} {
-  wm deiconify .l1wid
-} else {
+if {![winfo exists .l1wid]} {
   set l1pro_data(processing_mode) [list \
     "First Return Topo" \
     "Submerged Topo" \
@@ -119,6 +117,7 @@ if {[winfo exists .l1wid]} {
   ybkg require \"l1pro.i\"
 
   toplevel .l1wid
+  wm withdraw .l1wid
   wm protocol .l1wid WM_DELETE_WINDOW {
     wm withdraw .l1wid
   }
