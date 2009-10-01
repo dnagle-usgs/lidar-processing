@@ -138,7 +138,7 @@ snit::type ::misc::file {
    typemethod common_base paths {
       set parts [list]
       foreach path $paths {
-         eval [list dict set parts] [file split [file normalize $path]] *
+         eval [list dict set parts] [::file split [::file normalize $path]] *
       }
       set common [list /]
       set continue 1
@@ -150,7 +150,7 @@ snit::type ::misc::file {
             set continue 1
          }
       }
-      return [eval [list file join] $common]
+      return [eval [list ::file join] $common]
    }
 }
 
