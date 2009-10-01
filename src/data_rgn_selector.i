@@ -51,7 +51,7 @@ INPUT:
    if (is_void(data)) return [];
    if (!nosort) data = test_and_clean(data);
 
-   default, type, nameof(structof(data));
+   default, type, structof(data);
    default, silent, 0;
    default, retindx, 0;
    default, win, 5;
@@ -97,7 +97,7 @@ INPUT:
    }
 
    if ((mode==1) || (mode==2) || (mode==4)) {
-      if ( type == VEG__ ) {
+      if ( structeq(type, VEG__) ) {
          q = where((data.least >= rgn(1)*100.) & (data.least <= rgn(2)*100.)) ;
          indx = where(((data.lnorth(q) >= rgn(3)*100) & (data.lnorth(q) <= rgn(4)*100)));
          indx = q(indx);
@@ -128,7 +128,7 @@ INPUT:
          ply = rgn;
       }
       box = boundBox(ply, noplot=noplot);
-      if ( type == VEG__ ) {
+      if ( structeq(type, VEG__) ) {
          box_pts = ptsInBox(box*100., data.least, data.lnorth);
          if (!is_array(box_pts)) {
             if (exclude) {
@@ -300,11 +300,11 @@ func write_sel_rgn_stats(data, type) {
    write, format="Number of Points Selected	= %6d \n",numberof(data.elevation);
    write, format="Average First Surface Elevation = %8.3f m\n",avg(data.elevation)/100.0;
    write, format="Median First Surface Elevation  = %8.3f m\n",median(data.elevation)/100.;
-   if (type == VEG__) {
+   if (structeq(type, VEG__)) {
       write, format="Avg. Bare Earth Elevation 	= %8.3f m\n", avg(data.lelv)/100.0;
       write, format="Median  Bare Earth Elevation	= %8.3f m\n", median(data.lelv)/100.0;
    }
-   if (type == GEO) {
+   if (structeq(type, GEO)) {
       write, format="Avg. SubAqueous Elevation 	= %8.3f m\n", avg(data.depth+data.elevation)/100.0;
       write, format="Median SubAqueous Elevation	= %8.3f m\n", avg(data.depth+data.elevation)/100.0;
    }

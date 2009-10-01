@@ -804,8 +804,8 @@ func show_track ( fs, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, wid
   See show_gga_track
 */
    a = structof(fs)
-  if ( a == FS) pn = fs2pnav(fs);
-  if ( a == PNAV) pn = fs;
+  if (structeq(a, FS)) pn = fs2pnav(fs);
+  if (structeq(a, PNAV)) pn = fs;
 
   show_pnav_track, pn, x=x, y=y, color=color,  skip=skip, msize=msize, marker=marker, lines=lines, utm=utm, width=width, win=win;
 }

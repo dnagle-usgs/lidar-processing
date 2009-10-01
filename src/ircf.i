@@ -54,8 +54,8 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
  // if data array is in raster format (R, GEOALL, VEGALL), then covert to 
  // non raster format (FS, GEO, VEG).
   eaarl = test_and_clean(eaarl);
- a = structof(eaarl(1));
 /*
+ a = structof(eaarl(1));
  if (a == R) {
      data_out = clean_fs(eaarl);
 3B
@@ -234,26 +234,7 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
 
  // if data array is in raster format (R, GEOALL, VEGALL), then covert to 
  // non raster format (FS, GEO, VEG).
- a = structof(eaarl(1));
- if (a == R) {
-     data_out = clean_fs(eaarl);
- }
-
- if (a == GEOALL) {
-     data_out = clean_bathy(eaarl);
- }
-
- if (a == VEG_ALL) {
-     data_out = clean_veg(eaarl);
- }
-
- if (a == VEG_ALL_) {
-     data_out = clean_veg(eaarl);
- }
-
- if (is_array(data_out)) eaarl = data_out;
- data_out = [];
-
+ eaarl = test_and_clean(unref(eaarl));
 
  a = structof(eaarl(1));
  new_eaarl = array(a, MAXSIZE);

@@ -493,3 +493,56 @@ func get_host(void) {
    if(get_env("HOST")) return get_env("HOST");
    return string(0);
 }
+
+func structeq(a, b) {
+/* DOCUMENT structeq(a, b)
+   Returns boolean indicating whether the given structures are the same.
+
+   The normal expectation is that the following sequence should always provide
+   consist results:
+
+   > test = array(GEOALL, 20);
+   > structof(test) == GEOALL
+   1
+
+   However, if the stucture GEOALL is redefined, the test fails:
+
+   > test = array(GEOALL, 20);
+   > #include "geo_bath.i"
+   > structof(test) == GEOALL
+   0
+
+   This function works around this unexpected result by comparing the string
+   representation of the respective structures if the structures themselves do
+   not appear to match.
+
+   > test = array(GEOALL, 20);
+   > #include "geo_bath.i"
+   > structeq(structof(test), GEOALL)
+   1
+*/
+// Original David Nagle 2009-10-01
+   if(a == b) return 1;
+   return print(a)(sum) == print(b)(sum);
+}
+
+func structeqany(a, ..) {
+/* DOCUMENT structeqany(a, s1, s2, s2, ...)
+   Returns boolean indicating whether the structure 'a' matches any of the
+   structures s1, s2, s3, etc. Any number of structures can be given. Returns 1
+   if it matches any, otherwise 0.
+
+   > test = array(GEOALL, 20);
+   > structeqany(structof(foo), VEG, VEG_, VEG__)
+   0
+   > test = array(VEG_, 20);
+   > structeqany(structof(foo), VEG, VEG_, VEG__)
+   1
+*/
+// Original David Nagle 2009-10-01
+   while(more_args()) {
+      if(structeq(a, next_arg()))
+         return 1;
+   }
+   return 0;
+}

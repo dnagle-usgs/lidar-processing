@@ -159,10 +159,10 @@ func tk_dsw_plot_stats(var, data, type, win) {
       y = data.elevation;
       x = data.soe;
    } else if(type == "bathy") {
-      if(structof(data) == GEO) {
+      if(structeq(structof(data), GEO)) {
          y = data.elevation + data.depth;
          x = data.soe;
-      } else if(structof(data) == VEG__) {
+      } else if(structeq(structof(data), VEG__)) {
          y = data.lelv;
          x = data.soe;
       }
@@ -209,7 +209,7 @@ func gather_data_stats(data, &working_tans, &working_pnav) {
    h_set, stat_temp, "rms", data.elevation(rms)/100.;
    h_set, stats, "elevation", stat_temp;
 
-   if(structof(data) == GEO) {
+   if(structeq(structof(data), GEO)) {
       temp_data = data.elevation + data.depth;
       logger, "debug", logid + swrite(
          format=" found elevation data (GEO), %d points", numberof(temp_data));
@@ -225,7 +225,7 @@ func gather_data_stats(data, &working_tans, &working_pnav) {
       h_set, stats, "bathy", stat_temp;
    }
 
-   if(structof(data) == VEG__) {
+   if(structeq(structof(data), VEG__)) {
       logger, "debug", logid + swrite(
          format=" found elevation data (VEG__), %d points", numberof(data));
       stat_temp = h_new();

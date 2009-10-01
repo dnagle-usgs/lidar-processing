@@ -233,9 +233,9 @@ fset=, lmark=, bconst=, xyz_data=, xyz_buf=, tx=) {
          _rastpulse_reference(1) = mindata.north;
          _rastpulse_reference(2) = mindata.east;
          _rastpulse_reference(3) = mindata.elevation;
-         if(structof(mindata(1)) == GEO)
+         if(structeq(structof(mindata(1)), GEO))
             _rastpulse_reference(4) = (mindata.elevation+mindata.depth)/100.;
-         if(structof(mindata(1)) == VEG__)
+         if(structeq(structof(mindata(1)), VEG__))
             _rastpulse_reference(4) = mindata.lelv/100.
       }
 
@@ -257,10 +257,10 @@ fset=, lmark=, bconst=, xyz_data=, xyz_buf=, tx=) {
       _last_rastpulse(1) = mindata.north;
       _last_rastpulse(2) = mindata.east;
 
-      if(structof(mindata(1)) == GEO)
+      if(structeq(structof(mindata(1)), GEO))
          _last_rastpulse(4) = (mindata.elevation+mindata.depth);
 
-      if(structof(mindata(1)) == VEG__)
+      if(structeq(structof(mindata(1)), VEG__))
          _last_rastpulse(4) = mindata.lelv;
       // Collect all the click-points and return them so the user
       // can do stats or whatever on them.
@@ -441,14 +441,14 @@ func dump_info(edb, mindata, minindx, last=, ref=) {
    write, format="First Surface elev: %8.2fm Delta: %7.2fm\n",
       mindata.elevation/100.0, mindata.elevation/100.0 - last(3)/100.0;
 
-   if(structof(mindata(1)) == FS) {
+   if(structeq(structof(mindata(1)), FS)) {
       fs_chn_used = intensity_channel(mindata.intensity);
 
       write, format="First Surface channel / intensity: %d / %3d\n",
          fs_chn_used, mindata.intensity;
    }
 
-   if(structof(mindata(1)) == VEG__) {
+   if(structeq(structof(mindata(1)), VEG__)) {
       fs_chn_used = intensity_channel(mindata.fint);
       be_chn_used = intensity_channel(mindata.lint);
 
@@ -462,7 +462,7 @@ func dump_info(edb, mindata, minindx, last=, ref=) {
          be_chn_used, mindata.lint;
    }
 
-   if(structof(mindata(1)) == GEO) {
+   if(structeq(structof(mindata(1)), GEO)) {
       fs_chn_used = intensity_channel(mindata.first_peak);
       be_chn_used = intensity_channel(mindata.bottom_peak);
 
@@ -489,9 +489,9 @@ func old_refjunk(void) {
       _rastpulse_reference(1) = mindata.north;
       _rastpulse_reference(2) = mindata.east;
       _rastpulse_reference(3) = mindata.elevation;
-      if(structof(mindata(1)) == GEO)
+      if(structeq(structof(mindata(1)), GEO))
          _rastpulse_reference(4) = (mindata.elevation+mindata.depth)/100.;
-      if(structof(mindata(1)) == VEG__)
+      if(structeq(structof(mindata(1)), VEG__))
          _rastpulse_reference(4) = mindata.lelv/100.;
    }
 

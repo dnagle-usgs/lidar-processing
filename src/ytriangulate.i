@@ -459,19 +459,19 @@ func grid_triag_data(eaarl, cell=, nlimit=) {
  // non raster format (FS, GEO, VEG).
  data_out = test_and_clean(eaarl);
  a = structof(eaarl(1));
- if (a == R) {
+ if (structeq(a, R)) {
      data_out = clean_fs(eaarl);
  }
 
- if (a == GEOALL) {
+ if (structeq(a, GEOALL)) {
      data_out = clean_bathy(eaarl);
  }
 
- if (a == VEG_ALL) {
+ if (structeq(a, VEG_ALL)) {
      data_out = clean_veg(eaarl);
  }
 
- if (a == VEG_ALL_) {
+ if (structeq(a, VEG_ALL_)) {
      data_out = clean_veg(eaarl);
  }
 

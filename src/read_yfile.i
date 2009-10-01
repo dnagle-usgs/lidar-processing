@@ -1117,7 +1117,7 @@ func read_pointer_yfile(data_ptr, mode=) {
     }
   }
   a = structof(data_out);
-  if (a == FS) {
+  if (structeq(a, FS)) {
     fs_all = data_out;
     if (_ytk) {
       tkcmd, "set pro_var fs_all";
@@ -1129,7 +1129,7 @@ func read_pointer_yfile(data_ptr, mode=) {
       tkcmd, swrite(format="set plot_settings(cmax) %f", cmax);
     }
   }
-  if (a == GEO) {
+  if (structeq(a, GEO)) {
     depth_all = data_out;
     if (_ytk) {
       tkcmd, "set pro_var depth_all";
@@ -1141,7 +1141,7 @@ func read_pointer_yfile(data_ptr, mode=) {
       tkcmd, swrite(format="set plot_settings(cmax) %f", cmax);
     }
   }
-  if (a == VEG || a == VEG_ || a == VEG__) {
+  if (structeqany(a, VEG, VEG_, VEG__)) {
     veg_all = data_out;
     if (_ytk) {
       tkcmd, "set pro_var veg_all";
@@ -1153,7 +1153,7 @@ func read_pointer_yfile(data_ptr, mode=) {
       tkcmd, swrite(format="set plot_settings(cmax) %f", cmax);
     }
   }
-  if (a == CVEG_ALL) {
+  if (structeq(a, CVEG_ALL)) {
     cveg_all = data_out;
     if (_ytk) {
       tkcmd, "set pro_var veg_all";
@@ -1189,8 +1189,8 @@ func set_read_yorick(vname) {
     amar nayegandhi 05/06/03
   */
 
-  ab = structof(vname);
-  if (ab == FS || ab == R) {
+  a = structof(vname);
+  if (structeqany(a, FS, R)) {
     if (_ytk) {
       tkcmd, "processing_mode_by_index 0";
       tkcmd, "display_type_by_index 0";
@@ -1201,7 +1201,7 @@ func set_read_yorick(vname) {
       tkcmd, swrite(format="set plot_settings(cmax) %.2f", cmax);
     }
   }
-  if (ab == GEO || ab == GEOALL) {
+  if (structeqany(a, GEO, GEOALL)) {
     if (_ytk) {
       tkcmd, "processing_mode_by_index 1";
       tkcmd, "display_type_by_index 1";
@@ -1212,7 +1212,7 @@ func set_read_yorick(vname) {
       tkcmd, swrite(format="set plot_settings(cmax) %.2f", cmax);
     }
   }
-  if (ab == VEG || ab == VEG_ || ab == VEG__ || ab == VEGALL || ab == VEG_ALL || ab == VEG_ALL_) {
+  if (structeqany(a, VEG, VEG_, VEG__, VEGALL, VEG_ALL, VEG_ALL_)) {
     if (_ytk) {
       tkcmd, "processing_mode_by_index 2";
       tkcmd, "display_type_by_index 3";
@@ -1223,7 +1223,7 @@ func set_read_yorick(vname) {
       tkcmd, swrite(format="set plot_settings(cmax) %.2f", cmax);
     }
   }
-  if (ab == CVEG_ALL) {
+  if (structeq(a, CVEG_ALL)) {
     if (_ytk) {
       tkcmd, "processing_mode_by_index 0";
       cminmax = stdev_min_max(vname.elevation)/100.;
@@ -1283,15 +1283,15 @@ func pbd_to_yfile(filename) {
      path = filepath(1);
      file = filepath(2);
 
-     if (b == FS) 
+     if (structeq(b, FS))
         write_topo, path, file, data;
-     if (b == GEO) 
+     if (structeq(b, GEO))
         write_bathy, path, file, data;
-     if (b == VEG__) 
+     if (structeq(b, VEG__))
         write_veg, path, file, data;
-     if (b == CVEG_ALL) 
+     if (structeq(b, CVEG_ALL))
         write_multipeak_veg, data, opath=path, ofname=file;
-     if (b == ATM2)
+     if (structeq(b, ATM2))
         write_atm, path, file, data;
 }
 
@@ -1404,10 +1404,10 @@ func merge_data_pbds(filepath, write_to_file=, merged_filename=, nvname=, uniq=,
      // create variable vname if required
      a = eaarl(1);
      b = structof(a);
-     if (a == FS) nvname = "fst_merged";
-     if (a == GEO) nvname = "bat_merged";
-     if (a == VEG__) nvname = "bet_merged";
-     if (a == CVEG_ALL) nvname = "mvt_merged";
+     if (structeq(a, FS)) nvname = "fst_merged";
+     if (structeq(a, GEO)) nvname = "bat_merged";
+     if (structeq(a, VEG__)) nvname = "bet_merged";
+     if (structeq(a, CVEG_ALL)) nvname = "mvt_merged";
    }
    vname=nvname
    f = createb(merged_filename);

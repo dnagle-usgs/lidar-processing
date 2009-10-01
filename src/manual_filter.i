@@ -73,10 +73,12 @@ func test_and_clean(data, verbose=) {
     ***************************************************************/
    if(numberof(dimsof(data.north)) > 2) {
       a = structof(data(1));
-      if (a == GEOALL) data = clean_bathy(unref(data), verbose=verbose);
-      if (a == VEG_ALL_) data = clean_veg(unref(data), verbose=verbose);
-      if (a == R) data = clean_fs(unref(data), verbose=verbose);
-      if (a == ATM2) data = clean_fs(unref(data), verbose=verbose);
+      if (structeq(a, GEOALL)) 
+         data = clean_bathy(unref(data), verbose=verbose);
+      if (structeqany(a, VEG_ALL_, VEG_ALL))
+         data = clean_veg(unref(data), verbose=verbose);
+      if (structeqany(a, R, ATM2))
+         data = clean_fs(unref(data), verbose=verbose);
    }
 
    return data;
@@ -235,10 +237,10 @@ Output:
 */
      //Automatically get mode if not set
    if (is_void(mode)) {
-      a = nameof(structof(data));
-      if (a == "FS") mode = 1;
-      if (a == "GEO") mode = 2;
-      if (a == "VEG__") mode = 3;
+      a = structof(data);
+      if (structeq(a, FS)) mode = 1;
+      if (structeq(a, GEO)) mode = 2;
+      if (structeq(a, VEG__)) mode = 3;
    }
    // convert maxthresh and minthresh to centimeters
    if (is_array(maxthresh)) maxthresh *= 100;

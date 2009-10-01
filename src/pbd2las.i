@@ -439,7 +439,7 @@ if(wgs84S==1) zone_tag=32701+zone_nbr;
         if (i%1000 == 0) write, message;
        
        /* Determining positive or negative scan direction */
-        if(structof(data) == ATM2) {
+        if(structeq(structof(data), ATM2)) {
                s_dir = []; // Making a guess on this, since it wasn't
                            // previously defined.
         } else {
@@ -455,7 +455,7 @@ if(wgs84S==1) zone_tag=32701+zone_nbr;
 
         /*Determing pulse number in the raster scan*/
 
-        if (structof(data) != ATM2) {
+        if (!structeq(structof(data), ATM2)) {
           s_num=data(i).rn/(0xffffff); 
           if(s_dir == 0 && (s_num != 1 || s_num != 120)) {
                 fl_data=char(10010000);
@@ -489,7 +489,7 @@ if(wgs84S==1) zone_tag=32701+zone_nbr;
         byt_count++;
 
         // scan angle rank
-        if (structof(data) != ATM2) {
+        if (!structeq(structof(data), ATM2)) {
                 scan_ang=((s_num-60)*.375)
                 _write, f1, byt_count, char(scan_ang);
         } else {

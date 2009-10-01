@@ -46,7 +46,7 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, geoid_version=, 
    }
 
    write, format="Using GEOID version: %s\n", geoid_version;
-   if (structof(wdata(1)) != LFP_VEG) {
+   if (!structeq(structof(wdata(1)), LFP_VEG)) {
         data = test_and_clean(wdata);
    }
    type = structof(data(1));
@@ -64,7 +64,7 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, geoid_version=, 
    // and data.meast, data.mnorth and data.melevation; do the conversion without testing for type.
    // not any more ... do not do conversion if type=LFP_VEG
 
-  if (type != LFP_VEG) {
+  if (!structeq(type, LFP_VEG)) {
    //convert data to latlon
    write, "***  Converting First Surface Location  ***"
    write, "Converting data to lat/long..."
@@ -92,7 +92,7 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, geoid_version=, 
 
    //convert miror location data 
    write, "***  Converting Mirror Location  ***"
-   if(type != ATM2) {     
+   if(!structeq(type, ATM2)) {
       m_idx = where(data.mnorth != 0);
    if (is_array(m_idx)) {
       write, "Converting data to lat/long..."
@@ -124,7 +124,7 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, geoid_version=, 
 }
     
    // now look at type for the special case of veg
-   if (type == VEG__) {
+   if (structeq(type, VEG__)) {
       write, "***  Converting Last Return Location  ***"
       write, "Converting data to lat/long..."
       //convert data to latlon
@@ -152,7 +152,7 @@ func data_datum_converter(wdata, utmzone=, tonad83=, tonavd88=, geoid_version=, 
    }
 
    // when data type is composite waveform (LFP_VEG)
-   if (type==LFP_VEG) {
+   if (structeq(type, LFP_VEG)) {
       fdata_out = data
       write, "***  Converting composite waveform datum ***"
       write, "Converting data to lat/long..."

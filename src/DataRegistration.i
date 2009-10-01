@@ -55,7 +55,7 @@ is the same
 
    window, win;    
    count=1;
-   type=nameof(structof(data));
+   type=structof(data);
    if(is_void(oply)){
       ply = getPoly();
       box = boundBox(ply);
@@ -70,7 +70,7 @@ is the same
          data=data2; 
       }
   
-      if ( type == "VEG__" ) {
+      if (structeq(type, VEG__)) {
          box_pts = ptsInBox(box*100., data.least, data.lnorth);
          poly_pts = testPoly(ply*100., data.least(box_pts), data.lnorth(box_pts));
          indx = box_pts(poly_pts);

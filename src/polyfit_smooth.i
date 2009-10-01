@@ -218,8 +218,8 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, wbuf=, gridmode=, ndivid
 	}
 	if (mode == 1) {
 	  	a = structof(eaarl(1));
-		if (a == FS) new_pts = array(R,nrand);
-		if (a == VEG__) new_pts = array(VEG__,nrand);
+      if (structeq(a, FS)) new_pts = array(R,nrand);
+      if (structeq(a, VEG__)) new_pts = array(VEG__,nrand);
 	}
 	if (mode == 2) 
 		new_pts = array(GEO,nrand);
@@ -297,8 +297,7 @@ func polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, wbuf=, gridmode=, ndivid
   new_eaarl.melevation = new_eaarl.elevation + 300*100;
 
   if (mode == 1) {
-	a = structof(new_eaarl(1));
-	if (a == VEG__) {
+   if (structeq(structof(new_eaarl), VEG__)) {
 	  // make last elevations the same as first return elevations
 	  new_eaarl.lnorth = new_eaarl.east;
 	  new_eaarl.least = new_eaarl.east;

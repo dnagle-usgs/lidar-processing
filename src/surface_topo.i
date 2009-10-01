@@ -636,7 +636,7 @@ See also: R
 // Now kick out values which are within 1-meter of the mirror. Some
 // functions will set the elevation to the mirror value if they cant
 // process it.
- if(nameof(structof(fs_all)) != "ATM2") { 
+ if(!structeq(structof(fs_all), "ATM2")) { 
         melev = fs_all.melevation(lst);
         gidx &= (elev < (melev-1));
 }
