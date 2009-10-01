@@ -38,8 +38,8 @@ snit::type ::sf::model::collection::tar::files {
    delegate option -offset to null
    delegate option -translator to null
    delegate option -name to null
-   delegate method {convert *} to null using "%c %M"
-   delegate method {translator *} to null using "%c %M"
+   delegate method convert to null
+   delegate method translator to null
 
    constructor args {
       install null using ::sf::model::collection::null %AUTO%
