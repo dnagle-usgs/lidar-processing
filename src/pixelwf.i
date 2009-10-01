@@ -204,27 +204,48 @@ func pixelwf_enter_interactive(void) {
       spot = mouse(1, 1, "");
 
       if(mouse_click_is("left", spot)) {
-         write, format="\nLocation clicked: %.2f %.2f\n", spot(1), spot(2);
+         write, format="\n-----\n\n%s", "";
          nearest = pixelwf_find_point(spot);
          if(is_void(nearest.point)) {
+            write, format="Location clicked: %9.2f %10.2f\n", spot(1), spot(2);
             write, format="No point found within search radius (%.2fm).\n",
                pixelwfvars.selection.radius;
          } else {
-            write, format="Nearest point:    %.2f %.2f (%.2fm away)\n",
-               nearest.point.east/100., nearest.point.north/100.,
-               nearest.distance;
-            write, format="  corresponding to %s(%d)\n",
-               pixelwfvars.selection.pro_var, nearest.index;
             pixelwf_set_point, nearest.point;
             pixelwf_highlight_point, nearest.point;
             // Since the previous line triggers Tk to update Yorick, the
             // following line is wrapped in tkcmd+idle to ensure it happens
             // afterwards
             tkcmd, "idle {ybkg pixelwf_plot}";
+            pixelwf_selected_info, nearest;
          }
       } else {
          continue_interactive = 0;
       }
+   }
+}
+
+func pixelwf_selected_info(nearest) {
+   extern pixelwfvars, soe_day_start;
+   point = nearest.point;
+   write, format="Location clicked: %9.2f %10.2f\n", spot(1), spot(2);
+   write, format="   Nearest point: %9.2f %10.2f (%.2fm away)\n",
+      point.east/100., point.north/100., nearest.distance;
+   write, format="    first return: %9.2f\n", point.elevation/100.;
+   if(has_member(point, "lelv")) {
+      write, format="     last return: %9.2f\n", point.lelv/100.;
+      write, format="    first - last: %9.2f\n", (point.elevation-point.lelv)/100.;
+   } else if(has_member(point, "depth")) {
+      write, format="   bottom return: %9.2f\n", (point.elevation+point.depth)/100.;
+      write, format="  first - bottom: %9.2f\n", point.depth/100.;
+   }
+   write, format="%s", "\n";
+   write, format="Timestamp: %s\n", soe2iso8601(point.soe);
+   write, format="Mission day: %s\n", missionday_current();
+   write, format="somd: %.4f  soe: %.4f\n", point.soe - soe_day_start, point.soe;
+   if((dimsof(get_member(var_expr_get(pixelwfvars.selection.pro_var),"soe"))(1)) == 1) {
+      write, format="Corresponds to %s(%d)\n",
+         pixelwfvars.selection.pro_var, nearest.index;
    }
 }
 

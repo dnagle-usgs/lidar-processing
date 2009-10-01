@@ -73,7 +73,7 @@ if {![namespace exists ::pixelwf]} {
          }
          namespace eval ex_bath {
             variable enabled 0
-            variable win 7
+            variable win 8
             variable verbose 0
             variable dest_action 0
             variable dest_variable ""
@@ -91,7 +91,7 @@ if {![namespace exists ::pixelwf]} {
          }
          namespace eval show_wf {
             variable enabled 0
-            variable win 7
+            variable win 9
             variable c1 1
             variable c2 1
             variable c3 1
