@@ -428,20 +428,8 @@ func geo_rast(rn, fsmarks=, eoffset=, win=, verbose=) {
    // prepare background
    // assuming the range gate will not allow the width to exceed 50 m
    // we use w = 50 in the rcf function below.
-   sp_idx = rcf(sp, 50, mode=2);
-   sp_f = sp(*sp_idx(1));
 
-   // add blue background for +/- 30 m of the min and max elevs in raster
-   max_sp_f = max(sp_f) + 30;
-   min_sp_f = min(sp_f) - 30;
-
-   yrange = int(max_sp_f-min_sp_f);
-   xrange = int(max(xm)-min(xm));
-
-   bg = array(char, xrange, yrange);
-   bg(*) = char(9);
-   pli, bg, min(xm), min_sp_f, max(xm), max_sp_f;
-
+   allz = ally = allx = [];
    rst = decode_raster(get_erast(rn=rn));
    for (i = 1; i < 120; i++) {
       zz = array(245, 255);
@@ -450,11 +438,14 @@ func geo_rast(rn, fsmarks=, eoffset=, win=, verbose=) {
       if (n > 0) {
          zz(1:n) = z;
          C = .15;  // in air
-         x = array(xm(i), 255);
-         y = span(sp(i)+eoffset, sp(i)-255*C+eoffset, 255);
-         plcm, 254-zz, y, x, cmin=0, cmax=255, msize=2.0;
+         grow, allx, array(xm(i), 255);
+         grow, ally, span(sp(i)+eoffset, sp(i)-255*C+eoffset, 255);
+         grow, allz, 254-zz;
       }
    }
+   bg = [[char(9)]];
+   pli, bg, min(allx), min(ally), max(allx), max(ally);
+   plcm, allz, ally, allx, cmin=0, cmax=255, msize=2.0;
    if (fsmarks) {
       indx = where(fs(1).elevation <= 0.4*(fs(1).melevation));
       if(numberof(indx))
@@ -462,6 +453,7 @@ func geo_rast(rn, fsmarks=, eoffset=, win=, verbose=) {
    }
 
    xytitles, "Relative distance across raster (m)", "Height (m)";
+   pltitle, swrite(format="Raster %d", rn);
    window_select, prev_win;
 }
 
