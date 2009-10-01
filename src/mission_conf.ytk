@@ -354,6 +354,17 @@ namespace eval mission {
         $mb.act add command -label "Launch RGB" -command [@ menu_launch_rgb]
         $mb.act add command -label "Launch CIR" -command [@ menu_launch_cir]
 
+        menu $mb.cache
+        $mb add cascade -label Cache -underline 0 -menu $mb.cache
+        $mb.cache add command -label "Enable cache" \
+            -command [list ybkg missiondata_cache \"enable\"]
+        $mb.cache add command -label "Disable cache" \
+            -command [list ybkg missiondata_cache \"disable\"]
+        $mb.cache add command -label "Preload cache" \
+            -command [list ybkg missiondata_cache \"preload\"]
+        $mb.cache add command -label "Clear cache" \
+            -command [list ybkg missiondata_cache \"clear\"]
+
         set f $win.fraDates
         set v::dateframe $f
         frame $f
