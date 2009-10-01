@@ -848,15 +848,8 @@ func draw_qq_grid(win, pts=) {
    quarter quad between corners. Default is pts=3. Minimum is pts=1.
 
    If the current plot crosses UTM zone boundaries, please set fixedzone.
-
-   KNOWN ISSUES:
-   - If using over a large area, you should click on the plot to manually set
-     the limits before using this. Otherwise, it'll automatically adjust the
-     window limits after each quarter quad is drawn, which dramatically
-     increases the time it takes to plot the grid.
-
-   Original David Nagle 2008-07-18
 */
+// Original David Nagle 2008-07-18
    if(is_void(win)) return;
    extern curzone;
    if(is_void(curzone)) {
@@ -873,6 +866,9 @@ func draw_qq_grid(win, pts=) {
    e = lims(2);
    s = lims(3);
    n = lims(4);
+
+   // Make the limits sticky to avoid repeated redraw performance hit
+   limits, w, e, s, n;
    
    // Get lat/lon coords for each corner
    ne = utm2ll(n, e, curzone);
