@@ -3,6 +3,7 @@
 package require Tk
 package require Iwidgets
 package require Itcl
+package require misc
 
 source [file join $src_path misc.ytk]
 
@@ -59,11 +60,11 @@ itcl::body DataStatsWindow::constructor {args} {
 
    set f $w.fraHead
    frame $f
-   iwidgets::combobox $f.cboStatistic \
+   ::misc::combobox $f.cboStatistic \
       -textvariable [itcl::scope _statistic] \
-      -editable false \
-      -selectioncommand [itcl::code $this refresh_fields]
-   eval $f.cboStatistic insert list end [dict keys $_stat_mapping]
+      -state readonly \
+      -modifycmd [itcl::code $this refresh_fields] \
+      -values [lsort [dict keys $_stat_mapping]]
 
    grid $f.cboStatistic
 
@@ -151,6 +152,9 @@ itcl::body DataStatsWindow::set_stats {var json} {
 
 itcl::body DataStatsWindow::refresh_fields {} {
    set statistic [dict get $_stat_mapping $_statistic]
+   if {$statistic eq ""} {
+      return
+   }
    for {set i 1} {$i <= $_count} {incr i} {
       set var $_segment($i,var)
       foreach field [list min q1 med q3 max avg rms] {

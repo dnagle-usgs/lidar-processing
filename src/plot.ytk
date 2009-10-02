@@ -3,6 +3,8 @@
 package require BWidget
 package require Iwidgets
 package require struct::list
+package require misc
+package require tooltip
 
 if {![namespace exists ::plot]} {
    namespace eval ::plot {
@@ -219,9 +221,10 @@ proc ::plot::menu { } {
    grid $f -sticky nwe
 
    label $f.labCoord -text "Coordinates:" -anchor e
-   ComboBox $f.cboCoord -values {"UTM" "Lat/Lon"} \
-      -textvariable ::plot::g::coordType -editable 0 \
-      -helptext "Specify what kind of coordinates you want to use."
+   ::misc::combobox $f.cboCoord -values {"UTM" "Lat/Lon"} \
+      -textvariable ::plot::g::coordType -state readonly
+   ::tooltip::tooltip $f.cboCoord \
+      "Specify what kind of coordinates you want to use."
    grid $f.labCoord $f.cboCoord
 
    label $f.labUTMZone -text "UTM Zone:" -anchor e
@@ -275,8 +278,8 @@ proc ::plot::menu { } {
    grid $f.labWindow -sticky e
 
    label $f.labWinSize -text "Window Size:"
-   ComboBox $f.cboWinSize -values $::plot::c::windowSizes \
-      -textvariable ::plot::g::windowSize -editable 0
+   ::misc::combobox $f.cboWinSize -values $::plot::c::windowSizes \
+      -textvariable ::plot::g::windowSize -state readonly
    grid $f.labWinSize $f.cboWinSize
    grid $f.labWinSize -sticky e
 
@@ -287,20 +290,20 @@ proc ::plot::menu { } {
    grid $f -sticky wen
 
    label $f.labColor -text "Color:" -anchor e
-   ComboBox $f.cboColor -values $::plot::c::colors \
-      -textvariable ::plot::g::markColor -editable 0
+   ::misc::combobox $f.cboColor -values $::plot::c::colors \
+      -textvariable ::plot::g::markColor -state readonly
    grid $f.labColor $f.cboColor
    grid $f.labColor -sticky e
 
    label $f.labShape -text "Shape:" -anchor e
-   ComboBox $f.cboShape -values $::plot::c::markerShapes \
-      -textvariable ::plot::g::markShape -editable 0
+   ::misc::combobox $f.cboShape -values $::plot::c::markerShapes \
+      -textvariable ::plot::g::markShape -state readonly
    grid $f.labShape $f.cboShape
    grid $f.labShape -sticky e
 
    label $f.labSize -text "Size:" -anchor e
-   ComboBox $f.cboSize -values $::plot::c::markerSizes \
-      -textvariable ::plot::g::markSize -editable 0
+   ::misc::combobox $f.cboSize -values $::plot::c::markerSizes \
+      -textvariable ::plot::g::markSize -state readonly
    grid $f.labSize $f.cboSize
    grid $f.labSize -sticky e
 
@@ -378,9 +381,11 @@ proc ::plot::menu { } {
    grid $g::shpListBox - -sticky news
 
    label $pane.labLineColor -text "Line Color:" -anchor e
-   ComboBox $pane.cboLineColor -values [concat randomize $::plot::c::colors] \
-      -textvariable ::plot::g::shapeLineColor -editable 0 \
-      -helptext "Specify the color to use for plotted lines."
+   ::misc::combobox $pane.cboLineColor \
+      -values [concat randomize $::plot::c::colors] \
+      -textvariable ::plot::g::shapeLineColor -state readonly
+   ::tooltip::tooltip $pane.cboLineColor \
+      "Specify the color to use for plotted lines."
    grid $pane.labLineColor $pane.cboLineColor
    grid $pane.labLineColor -sticky w
    grid $pane.cboLineColor -sticky ew
@@ -406,32 +411,42 @@ proc ::plot::menu { } {
    grid $f -sticky new
 
    label $f.labLineWidth -text "Line Width:" -anchor e
-   ComboBox $f.cboLineWidth -values {1 3 5 7 10 13 15 20 25} -textvariable ::plot::g::trackLineWidth \
-      -editable 0 -helptext "Specify how wide the vessel track line plots should be."
+   ::misc::combobox $f.cboLineWidth -values {1 3 5 7 10 13 15 20 25} \
+      -textvariable ::plot::g::trackLineWidth -state readonly
+   ::tooltip::tooltip $f.cboLineWidth \
+      "Specify how wide the vessel track line plots should be."
    grid $f.labLineWidth $f.cboLineWidth
    grid $f.labLineWidth -sticky e
 
    label $f.labLineColor -text "Line Color:" -anchor e
-   ComboBox $f.cboLineColor -values $::plot::c::colors \
-      -textvariable ::plot::g::trackLineColor -editable 0 -helptext "Specify the color to use for plotted lines."
+   ::misc::combobox $f.cboLineColor -values $::plot::c::colors \
+      -textvariable ::plot::g::trackLineColor -state readonly
+   ::tooltip::tooltip $f.cboLineColor "Specify the color to use for plotted lines."
    grid $f.labLineColor $f.cboLineColor
    grid $f.labLineColor -sticky e
 
    label $f.labSkip -text "Points to Skip:" -anchor e
-   ComboBox $f.cboSkip -values {0 1 2 5 10 15 20 25 50 75 100} -textvariable ::plot::g::trackSkip \
-      -editable 0 -helptext "Specify how many points to skip when plotting a vessel track. This subsamples the track, resulting in a faster but lower-resolution plot."
+   ::misc::combobox $f.cboSkip -values {0 1 2 5 10 15 20 25 50 75 100} \
+      -textvariable ::plot::g::trackSkip -state readonly
+   ::tooltip::tooltip $f.cboSkip \
+      "Specify how many points to skip when plotting a vessel track. This\
+      \nsubsamples the track, resulting in a faster but lower-resolution plot."
    grid $f.labSkip $f.cboSkip
    grid $f.labSkip -sticky e
    
    label $f.labMarkerShape -text "Marker Shape:" -anchor e
-   ComboBox $f.cboMarkerShape -values $::plot::c::markerShapes \
-      -textvariable ::plot::g::trackMarkerShape -editable 0 -helptext "Specify what shape to use for individual points in the vessel track."
+   ::misc::combobox $f.cboMarkerShape -values $::plot::c::markerShapes \
+      -textvariable ::plot::g::trackMarkerShape -state readonly
+   ::tooltip::tooltip $f.cboMarkerShape \
+      "Specify what shape to use for individual points in the vessel track."
    grid $f.labMarkerShape $f.cboMarkerShape
    grid $f.labMarkerShape -sticky e
 
    label $f.labMarkerSize -text "Marker size:" -anchor e
-   ComboBox $f.cboMarkerSize -values $::plot::c::markerSizes -textvariable ::plot::g::trackMarkerSize \
-      -editable 0 -helptext "Specify how large vessel track markers should be."
+   ::misc::combobox $f.cboMarkerSize -values $::plot::c::markerSizes \
+      -textvariable ::plot::g::trackMarkerSize -state readonly
+   ::tooltip::tooltip $f.cboMarkerSize \
+      "Specify how large vessel track markers should be."
    grid $f.labMarkerSize $f.cboMarkerSize
    grid $f.labMarkerSize -sticky e
 
@@ -488,8 +503,9 @@ proc ::plot::menu { } {
    grid $f -sticky new
 
    label $f.labLineColor -text "Line Color:" -anchor e
-   ComboBox $f.cboLineColor -values $::plot::c::colors \
-      -textvariable ::plot::g::mapLineColor -editable 0 -helptext "Specify the color to use for plotted lines."
+   ::misc::combobox $f.cboLineColor -values $::plot::c::colors \
+      -textvariable ::plot::g::mapLineColor -state readonly
+   ::tooltip::tooltip $f.cboLineColor "Specify the color to use for plotted lines."
    grid $f.labLineColor $f.cboLineColor
    grid $f.labLineColor -sticky e
 
@@ -1001,8 +1017,8 @@ proc ::plot::dlg::location::prompt { } {
    grid $f.butChoose $f.entChoose - - -sticky ew
 
    Label $f.labOrigin -text "Image Origin:"
-   ComboBox $f.cboOrigin -values {NW SW NE SE} -textvariable ::plot::dlg::location::v::origin \
-      -editable 0 -width 10
+   ::misc::combobox $f.cboOrigin -values {NW SW NE SE} -state readonly -width 10 \
+      -textvariable ::plot::dlg::location::v::origin
    grid $f.labOrigin $f.cboOrigin - -
    grid $f.labOrigin -sticky e
    grid $f.cboOrigin -sticky w

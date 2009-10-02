@@ -428,16 +428,15 @@ namespace eval ::pixelwf::gui {
    }
 
    proc helper_output_dest {cboAction entVariable ns} {
-      iwidgets::combobox $cboAction -editable false -width 0 \
-         -selectioncommand "set ${ns}::dest_action \[$cboAction curselection\]"
-
+      set vals [list]
       foreach item $::pixelwf::constants::output_possibilities {
-         $cboAction insert list end [mc $item]
+         lappend vals [mc $item]
       }
 
-      # Ugly little work-around to get an initial value set up
-      $cboAction selection set 0
-      eval [bind [$cboAction component popup] <Return>]
+      ::misc::combobox $cboAction -state readonly -width 0 \
+         -modifycmd "set ${ns}::dest_action \[$cboAction curselection\]" \
+         -values $vals
+      $cboAction setvalue first
 
       entry $entVariable -textvariable ${ns}::dest_variable -width 0
    }
@@ -450,14 +449,13 @@ namespace eval ::pixelwf::gui {
    }
 
    proc helper_combobox {w v} {
-      ::iwidgets::combobox $w -editable 0 -textvariable $v -width 0
-      eval [list $w insert list 0] [::pixelwf::util::valid_values $v]
-      tie_iw_combobox_textvariable $w
+      ::misc::combobox $w -state readonly -textvariable $v -width 0 \
+         -values [::pixelwf::util::valid_values $v]
    }
 
    proc default_sticky args {
       set stickiness [dict create Button es Checkbutton w Entry ew Combobox ew \
-         Label e Labelframe ew Frame ew Spinbox ew]
+         Label e Labelframe ew Frame ew Spinbox ew TCombobox ew]
       foreach slave $args {
          set class [winfo class $slave]
          if {[dict exists $stickiness $class]} {
@@ -537,11 +535,10 @@ namespace eval ::pixelwf::gui {
       frame $f
 
       label $f.lblDay -text [mc missionday]:
-      iwidgets::combobox $f.cboDay -textvariable ${ns}::missionday \
-         -editable false -width 0
-      $f.cboDay component list configure \
-         -listvariable ::pixelwf::gui::missionday_list
-      bind [$f.cboDay component list] <Map> +::pixelwf::gui::helper_update_days
+      ::misc::combobox $f.cboDay -textvariable ${ns}::missionday \
+         -state readonly -width 0 \
+         -listvariable ::pixelwf::gui::missionday_list \
+         -postcommand ::pixelwf::gui::helper_update_days
 
       label $f.lblRaster -text [mc raster]:
       helper_spinbox $f.spnRaster ${ns}::raster
@@ -558,8 +555,8 @@ namespace eval ::pixelwf::gui {
       setTooltip $f.spnRadius [mc "Search radius in meters"]
 
       label $f.lblVar -text [mc pro_var]:
-      iwidgets::combobox $f.cboVar -textvariable ::pro_var -editable false -width 0
-      $f.cboVar component list configure -listvariable ::varlist
+      ::misc::combobox $f.cboVar -textvariable ::pro_var -state readonly \
+         -width 0 -listvariable ::varlist
 
       button $f.btnMouse -text [mc "Interactive"] \
          -command [list ycmd pixelwf_enter_interactive]

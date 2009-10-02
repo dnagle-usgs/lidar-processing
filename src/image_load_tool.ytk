@@ -1,5 +1,7 @@
 
 exp_send "#include \"jpeg_support.i\"\n"
+package require misc
+package require tooltip
 
 proc ytk_image_load_tool { {start_dir "~/"} } {
   
@@ -93,8 +95,9 @@ proc ytk_image_load_tool { {start_dir "~/"} } {
 					}
 				}
 
-	ComboBox $lw.3.type.sys -text "Coordinate System" -width 18 -values "LatLon UTM" \
-		-helptext "Select the Coordinate System." -editable 0 -state disabled 
+   ::misc::combobox $lw.3.type.sys -text "Coordinate System" -width 18 \
+      -values [list LatLon UTM] -state disabled
+   ::tooltip::tooltip $lw.3.type.sys "Select the Coordinate System."
 
 	LabelEntry $lw.3.type.zone -width 6 -relief sunken  \
 		-label "UTM Zone: " -helptext "Enter UTM Zone Here" \

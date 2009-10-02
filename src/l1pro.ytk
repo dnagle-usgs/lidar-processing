@@ -12,6 +12,8 @@ package require BWidget
 package require Tktable
 package require struct::list
 package require struct::set
+package require misc
+package require tooltip
 
 if {![winfo exists .l1wid]} {
   set l1pro_data(processing_mode) [list \
@@ -343,10 +345,9 @@ if {![winfo exists .l1wid]} {
         -command [namespace code butPath_cmd]
 
       label $win.lblType -text "Data Type:"
-      iwidgets::combobox $win.cboType -editable false \
-        -textvariable [namespace which -variable v::datatype]
-      $win.cboType insert list 0 $v::type_pbd $v::type_yfile
-      tie_iw_combobox_textvariable $win.cboType
+      ::misc::combobox $win.cboType -state readonly \
+        -textvariable [namespace which -variable v::datatype] \
+        -values [list $v::type_pbd $v::type_yfile]
 
       label $win.lblSearch -text "Search String:"
       entry $win.entSearch -width 8 \
@@ -376,10 +377,9 @@ if {![winfo exists .l1wid]} {
         -textvariable [namespace which -variable v::zone]
 
       label $fra.lblTiles -text "Tile Type:"
-      iwidgets::combobox $fra.cboTiles -editable false \
-        -textvariable [namespace which -variable v::tiletype]
-      $fra.cboTiles insert list 0 [list $v::tile_dt $v::tile_qq]
-      tie_iw_combobox_textvariable $fra.cboTiles
+      ::misc::combobox $fra.cboTiles -state readonly \
+        -textvariable [namespace which -variable v::tiletype] \
+        -values [list $v::tile_dt $v::tile_qq]
 
       grid $fra.lblMerged - $fra.entMerged -
       grid $fra.lblUnique $fra.chkUnique $fra.lblSubsample $fra.spnSubsample
@@ -446,9 +446,11 @@ if {![winfo exists .l1wid]} {
       if {[$fra.lblFixed cget -state] == "normal"} {
         set state [lindex {disabled normal} $v::fixedzone]
         foreach widget [list $fra.lblZone $fra.spnZone \
-            $fra.lblTiles $fra.cboTiles] {
+            $fra.lblTiles] {
           $widget configure -state $state
         }
+        set state [lindex {disabled readonly} $v::fixedzone]
+        $fra.cboTiles configure -state $state
       }
     }
 
@@ -552,10 +554,9 @@ if {![winfo exists .l1wid]} {
         set data_file_path $path
       }
 
-      ComboBox .l1dir.3.dtype -text "Data Type..." -width 10 \
-        -helptext "Select Data File type" \
-        -editable 0 -takefocus 0 \
-        -values { pbd edf bin } \
+      ::misc::combobox .l1dir.3.dtype -text "Data Type..." -width 10 \
+        -state readonly -takefocus 0 \
+        -values [list pbd edf bin] \
         -modifycmd {
           set dtype [.l1dir.3.dtype getvalue]
           if {$dtype == 0} {
@@ -566,6 +567,7 @@ if {![winfo exists .l1wid]} {
             .l1dir.3.mvar configure -state disabled
           }
         }
+      ::tooltip::tooltip .l1dir.3.dtype "Select Data File type"
 
       LabelEntry .l1dir.3.mvar -label "Merged Variable Name: " \
         -width 8 -bd 3 -textvariable mvar \
@@ -816,15 +818,14 @@ if {![winfo exists .l1wid]} {
             -mustexist 1 -title "Processed Data Directory" ]/
         }
 
-      ComboBox .l1map.2.mode -text "Data Type..." -width 10 \
-        -helptext "Select Data Type" \
-        -editable 0 \
-        -values {FirstSurface Bathy BareEarth} \
+      ::misc::combobox .l1map.2.mode -text "Data Type..." -width 10 \
+        -state readonly -values [list FirstSurface Bathy BareEarth] \
         -takefocus 0 \
         -modifycmd {
           set mode [.l1map.2.mode getvalue]
           set modes [expr $mode + 1]
         }
+      ::tooltip::tooltip .l1map.2.mode "Select Data Type"
 
       Label .l1map.2.winl -text "Win:"
       SpinBox .l1map.2.win -justify center -range {0 63 1} \
@@ -1330,11 +1331,9 @@ if {![winfo exists .l1wid]} {
     frame .rcf.5
     frame .rcf.6
 
-    ComboBox .rcf.0.mode -text "Select RCF type" -width 18 \
-      -values {
-        RCF
-        Iterative\ RCF} \
-      -helptext "Select the type of RCF filter" -editable 0 \
+    ::misc::combobox .rcf.0.mode -text "Select RCF type" -width 18 \
+      -values [list RCF "Iterative RCF"] \
+      -state readonly \
       -modifycmd {
         set rcfmode [.rcf.0.mode getvalue]
         if {$rcfmode == -1} {
@@ -1347,6 +1346,7 @@ if {![winfo exists .l1wid]} {
           pack forget .rcf.5 .rcf.6
         }
       }
+    ::tooltip::tooltip .rcf.0.mode "Select the type of RCF filter"
 
     Button .rcf.0.help -text "Help" -width 8 -bd 5 \
       -command {
@@ -1380,23 +1380,20 @@ if {![winfo exists .l1wid]} {
 
     Label .rcf.2.varname -text "Input Variable:"
 
-    iwidgets::combobox .rcf.2.varlist \
+    ::misc::combobox .rcf.2.varlist \
       -textvariable rcf_var \
-      -editable false -width 10 \
-      -selectioncommand {
+      -listvariable varlist \
+      -state readonly -width 10 \
+      -modifycmd {
         set outvar "rcf_$rcf_var"
       }
-    .rcf.2.varlist component list configure \
-      -listvariable varlist
-    tie_iw_combobox_textvariable .rcf.2.varlist
 
     set rcf_var $pro_var
 
     Label .rcf.2.dispname -text "Mode:"
-    ComboBox .rcf.2.disp -width 20 \
-      -values $l1pro_data(processing_mode) \
-      -helptext "Select any one of the following" \
-      -editable 0
+    ::misc::combobox .rcf.2.disp -width 20 -state readonly \
+      -values $l1pro_data(processing_mode)
+    ::tooltip::tooltip .rcf.2.disp "Select any one of the following"
 
     set curproc [processing_mode]
     .rcf.2.disp setvalue @$curproc
@@ -1614,14 +1611,9 @@ if {![winfo exists .l1wid]} {
       }
     }
 
-  ComboBox .l1wid.bf4.1.d -text "Define Region..." -width 15 -values \
-    {
-      Rubberband\ Box\
-      Points\ in\ Polygon\
-      Rectangular\ Coords\
-    }\
-    -helptext "Select region to process using any of the following methods" \
-    -editable 0 \
+  ::misc::combobox .l1wid.bf4.1.d -text "Define Region..." -width 15 \
+    -values [list "Rubberband Box" "Points in Polygon" "Rectangular Coords"] \
+    -state readonly \
     -modifycmd {
       set defr [.l1wid.bf4.1.d getvalue]
       puts $defr
@@ -1660,9 +1652,9 @@ if {![winfo exists .l1wid]} {
         frame .l1widc.lon
         frame .l1widc.1
         frame .l1widc.utm
-        ComboBox .l1widc.utm.1 -text "Coordinate System" -width 18 \
-          -values "LatLon UTM" -editable 0 \
-          -helptext "Select the Coordinate System."
+        ::misc::combobox .l1widc.utm.1 -text "Coordinate System" -width 18 \
+          -values [list LatLon UTM] -state readonly
+        ::tooltip::tooltip .l1widc.utm.1 "Select the Coordinate System."
         LabelEntry .l1widc.utm.2 -width 6 -relief sunken -label "UTM Zone: " \
           -helptext "Enter UTM Zone Here" \
           -textvariable zone
@@ -1715,6 +1707,8 @@ if {![winfo exists .l1wid]} {
         error "Please Define Region."
       }
     }
+  ::tooltip::tooltip .l1wid.bf4.1.d \
+    "Select region to process using any of the following methods"
 
   proc processing_mode {} {
     global plot_settings l1pro_data
@@ -1739,11 +1733,10 @@ if {![winfo exists .l1wid]} {
   trace add \
     variable plot_settings(processing_mode) write processing_mode_changed
 
-  iwidgets::combobox .l1wid.bf4.1.p \
+  ::misc::combobox .l1wid.bf4.1.p \
     -textvariable plot_settings(processing_mode) \
-    -editable false
-  eval .l1wid.bf4.1.p insert list end $l1pro_data(processing_mode)
-  tie_iw_combobox_textvariable .l1wid.bf4.1.p
+    -state readonly \
+    -values $l1pro_data(processing_mode)
 
   proc processing_mode_by_index {index} {
     global plot_settings l1pro_data
@@ -1751,11 +1744,9 @@ if {![winfo exists .l1wid]} {
       [lindex $l1pro_data(processing_mode) $index]
   }
 
-  ComboBox .l1wid.bf4.1.m -text "Method"  \
-    -width 7 \
-    -helptext "Batch or single processing" \
-    -editable 0 \
-    -values "Batch Single"
+  ::misc::combobox .l1wid.bf4.1.m -text "Method" \
+    -width 7 -state readonly -values [list Batch Single]
+  ::tooltip::tooltip .l1wid.bf4.1.m "Batch or single processing"
 
   Label .l1wid.bf4.1.lw -text "in Win:"
   SpinBox .l1wid.bf4.1.sw -justify center -range {0 63 1} \
@@ -1792,12 +1783,10 @@ if {![winfo exists .l1wid]} {
   trace remove variable pro_var write pro_var_changed
   trace add variable pro_var write pro_var_changed
 
-  iwidgets::combobox .l1wid.bf45.p.15 \
+  ::misc::combobox .l1wid.bf45.p.15 \
     -textvariable pro_var \
-    -editable false
-  .l1wid.bf45.p.15 component list configure \
+    -state readonly \
     -listvariable varlist
-  tie_iw_combobox_textvariable .l1wid.bf45.p.15
 
   proc cbar_tool { } {
     global cbvc
@@ -1881,11 +1870,10 @@ if {![winfo exists .l1wid]} {
   }
 
   Label .l1wid.bf45.p.25 -text "Mode:"
-  iwidgets::combobox .l1wid.bf45.p.5 \
+  ::misc::combobox .l1wid.bf45.p.5 \
     -textvariable plot_settings(display_type) \
-    -editable false
-  eval .l1wid.bf45.p.5 insert list end $l1pro_data(display_types)
-  tie_iw_combobox_textvariable .l1wid.bf45.p.5
+    -state readonly \
+    -values $l1pro_data(display_types)
 
   proc display_type_by_index {index} {
     global plot_settings l1pro_data
@@ -1980,14 +1968,12 @@ if {![winfo exists .l1wid]} {
       set ptype [processing_mode]
       Label .l1clip.05.varname -text "Input Variable:"
 
-      iwidgets::combobox .l1clip.05.varlist \
-        -textvariable clip_in_var -editable false \
-        -selectioncommand {
+      ::misc::combobox .l1clip.05.varlist \
+        -textvariable clip_in_var -state readonly \
+        -listvariable ::varlist \
+        -modifycmd {
           set clip_out_var $clip_in_var
         }
-      tie_iw_combobox_textvariable .l1clip.05.varlist
-      .l1clip.05.varlist component list configure \
-        -listvariable ::varlist
       set clip_in_var $pro_var
 
       checkbutton .l1clip.1.ymin -variable ymin \
@@ -2245,18 +2231,10 @@ if {![winfo exists .l1wid]} {
 
   frame  .l1wid.bf45.sc.1
 
-  ComboBox .l1wid.bf45.r.1 -text "Copy points using..." -width 16\
-    -values { \
-      Rubberband\ Box \
-      Points\ in\ Polygon \
-      Single\ Pixel\
-      Select\ Cell\/Quad\/Tile \
-    } \
-    -helptext "Copy points to \'workdata\' using any of the following methods:\
-      \n Rubberband Box\
-      \n Points in Polygon\
-      \n Single Pixel" \
-    -editable 0 \
+  ::misc::combobox .l1wid.bf45.r.1 -text "Copy points using..." -width 16 \
+    -state readonly \
+    -values [list "Rubberband Box" "Points in Polygon" "Single Pixel" \
+      "Select Cell/Quad/Tile"] \
     -modifycmd {
       global varlist pro_var
 
@@ -2301,42 +2279,29 @@ if {![winfo exists .l1wid]} {
       }
       append_varlist workdata
     }
+  ::tooltip::tooltip .l1wid.bf45.r.1 \
+    "Copy points to 'workdata' using any of the following methods:\
+     \n  Rubberband Box\
+     \n  Points in Polygon\
+     \n  Single Pixel"
 
-  ComboBox .l1wid.bf45.r.7 -text "Filter tools..." -width 16 \
-    -values { \
-      Keep \
-      Remove \
-      Replace \
-      RCF \
-      Re-Process \
-      Datum-Convert \
-    } \
-    -helptext "Choose any of the following tools:" -editable 0 \
+  ::misc::combobox .l1wid.bf45.r.7 -text "Filter tools..." -width 16 \
+    -values [list Keep Remove Replace RCF Re-Process Datum-Convert] \
+    -state readonly \
     -modifycmd {
       global varlist
-
-      set self [.l1wid.bf45.r.7 getvalue]
-      if {$self == 0} {
-        keep_proc
-      }
-      if {$self == 1} {
-        removing_proc
-      }
-      if {$self == 2} {
-        replace_proc
-      }
-      if {$self == 3} {
-        rcf_region
-      }
-      if {$self == 4} {
-      }
-      if {$self == 5} {
-        datum_proc
-      }
-      if {$self == -1} {
-        error "Please Define Region."
+      switch -- [.l1wid.bf45.r.7 getvalue] {
+        0 keep_proc
+        1 removing_proc
+        2 replace_proc
+        3 rcf_region
+        4 {tk_messageBox -icon error -message "Not implemented" -type ok}
+        5 datum_proc
+        default {error "Please Define Region."}
       }
     }
+  ::tooltip::tooltip .l1wid.bf45.r.7 "Choose any of the following tools:"
+
   proc removing_proc {} {
     global varlist rmv_var plot_settings pro_var
     destroy .rem
@@ -2348,42 +2313,28 @@ if {![winfo exists .l1wid]} {
     wm title .rem "Remove Points Using..."
     Label .rem.05.varname -text "Input Variable:"
 
-    iwidgets::combobox .rem.05.varlist \
-      -textvariable ::rmv_var -editable false
-    .rem.05.varlist component list configure \
+    ::misc::combobox .rem.05.varlist \
+      -textvariable ::rmv_var -state readonly \
       -listvariable ::varlist
-    tie_iw_combobox_textvariable .rem.05.varlist
     set rmv_var $pro_var
 
     frame .rem.06
     Label .rem.06.typetext -text "Data type:"
     # IMPORTANT NOTE: Do not change the order of GEO and VEG__ for the values of
-    # the ComboBox below. A function parameter for the pipthresh function for
+    # the combobox below. A function parameter for the pipthresh function for
     # this gui is dependent on the index number of the selection.
-    ComboBox .rem.06.type -textvariable remove_type -editable 1 -width 12\
-      -values {\
-        GEO\ or\ VEG__\
-        FS\
-      }
+    ::misc::combobox .rem.06.type -textvariable remove_type -width 12 \
+      -values [list "GEO or VEG__" "FS"]
     if {[display_type] == 0} {
       .rem.06.type setvalue @1
     } else {
       .rem.06.type setvalue @0
     }
 
-    ComboBox .rem.1 -text "Remove points using..." -width 16\
-      -values { \
-        Rubberband\ Box \
-        Points\ in\ Polygon \
-        Single\ Pixel\
-        PIP-Thresh\
-      } \
-      -helptext "Remove points from \'workdata\' using any of the following \
-        methods:\
-        \n Rubberband Box\
-        \n Points in Polygon\
-        \n Single Pixel" \
-      -editable 0 \
+    ::misc::combobox .rem.1 -width 16 -state readonly \
+      -text "Remove points using..." \
+      -values [list "Rubberband Box" "Points in Polygon" "Single Pixel" \
+        "Pip-Thresh"] \
       -modifycmd {
         set removemode [.rem.1 getvalue]
         if {$removemode == 3} {
@@ -2401,6 +2352,11 @@ if {![winfo exists .l1wid]} {
           pack .rem.2 .rem.3 .rem.4 -side left -padx 5 -pady 5
         }
       }
+    ::tooltip::tooltip .rem.1 \
+      "Remove points from 'workdata' using any of the following methods:\
+      \n  Rubberband Box\
+      \n  Points in Polygon\
+      \n  Single Pixel"
     Label .rem.07.a -text "Min. Threshold:"
     Label .rem.08.a -text "Max. Threshold:"
     Label .rem.09.a -text "WARNING: Cannot undo action." -justify center
@@ -2514,11 +2470,10 @@ if {![winfo exists .l1wid]} {
     frame .con.05
 
     Label .con.05.varname -text "Input Variable:"
-    iwidgets::combobox .con.05.varlist \
-      -textvariable ::datum_var -editable false
-    .con.05.varlist component list configure \
+
+    ::misc::combobox .con.05.varlist \
+      -textvariable ::datum_var -state readonly \
       -listvariable ::varlist
-    tie_iw_combobox_textvariable .con.05.varlist
     set datum_var $pro_var
 
     Label .con.02 -text "The converted variable is named\
@@ -2545,19 +2500,14 @@ if {![winfo exists .l1wid]} {
     frame .sel.05
 
     Label .sel.05.varname -text "Input Variable:"
-    iwidgets::combobox .sel.05.varlist \
-      -textvariable ::keep_in_var -editable false
-    .sel.05.varlist component list configure \
+    ::misc::combobox .sel.05.varlist \
+      -textvariable ::keep_in_var -state readonly \
       -listvariable ::varlist
-    tie_iw_combobox_textvariable .sel.05.varlist
     set keep_in_var $pro_var
 
-    ComboBox .sel.1 -text "Keep points using..." -width 16\
-      -values { \
-        Rubberband\ Box \
-        Points\ in\ Polygon \
-        Single\ Pixel\
-      } \
+    ::misc::combobox .sel.1 -state readonly -width 16 \
+      -text "Keep points using..." \
+      -values [list "Rubberband Box" "Points in Polygon" "Single Pixel"] \
       -modifycmd {
         global sels keep_in_var keep_out_var grow_keep
         set sels [.sel.1 getvalue]
@@ -2567,13 +2517,12 @@ if {![winfo exists .l1wid]} {
         } else {
           set keep_out_var $keep_in_var
         }
-      } \
-      -helptext "Keep points from \'workdata\' using any of the following\
-        methods:\
-        \n Rubberband Box\
-        \n Points in Polygon\
-        \n Single Pixel" \
-      -editable 0
+      }
+    ::tooltip::tooltip .sel.1 \
+      "Keep points from 'workdata' using any of the following methods:\
+      \n  Rubberband Box\
+      \n  Points in Polygon\
+      \n  Single Pixel"
 
     checkbutton .sel.grow -text "Grow output variable" -variable grow_keep
     LabelEntry .sel.15 -relief sunken -label "Output Variable:" \
@@ -2667,39 +2616,25 @@ if {![winfo exists .l1wid]} {
     set sameinput 0
     Label .rep.05.varname -text "Input Variable:"
 
-    iwidgets::combobox .rep.05.varlist \
-      -textvariable replace_in_var -editable false
-    .rep.05.varlist component list configure \
+    ::misc::combobox .rep.05.varlist \
+      -textvariable replace_in_var -state readonly \
       -listvariable ::varlist
-    tie_iw_combobox_textvariable .rep.05.varlist
     set replace_in_var $pro_var
 
     Label .rep.005.varname -text "Original Data Variable:"
 
-    iwidgets::combobox .rep.005.varlist \
-      -textvariable replace_orig_var -editable false
-    .rep.005.varlist component list configure \
+    ::misc::combobox .rep.005.varlist \
+      -textvariable replace_orig_var -state readonly \
       -listvariable ::varlist
-    tie_iw_combobox_textvariable .rep.005.varlist
     set replace_orig_var $pro_var
 
     # Note: In code below, the yorick variables "croppeddata" and "workdata" are
     # created through sel_data_rgn
     #   croppeddata = (selected filtered points);
     #   workdata = (selected original data points);
-    ComboBox .rep.1 -text "Select points to replace using..." -width 28 \
-      -values { \
-        Rubberband\ Box \
-        Points\ in\ Polygon \
-        Window\ Limits \
-      } \
-      -helptext "Select points to replace using any of the following methods:\
-        \n Rubberband Box\
-        \n Points in Polygon\
-        \n Window Limits.\
-        \nSelected points from the original data array will be written to\
-        variable \"workdata\"" \
-      -editable 0 \
+    ::misc::combobox .rep.1 -state readonly -width 28 \
+      -text "Select points to replace using..." \
+      -values [list "Rubberband Box" "Points in Polygon" "Window Limits"] \
       -modifycmd {
         set defr [.rep.1 getvalue]
         set sel_points buf_points
@@ -2790,6 +2725,13 @@ if {![winfo exists .l1wid]} {
         #end if/else rcf_buf_rgn
         }
       }
+    ::tooltip::tooltip .rep.1 \
+      "Select points to replace using any of the following methods:\
+      \n Rubberband Box\
+      \n Points in Polygon\
+      \n Window Limits.\
+      \nSelected points from the original data array will be written\
+      \nto variable \"workdata\"."
 
     Button .rep.type -text "Filter selected points" -width 15 -bd 5 \
       -command {
@@ -3413,12 +3355,11 @@ if {![winfo exists .l1wid]} {
     wm title .limitstool "Limits Tool"
     frame .limitstool.1 -relief groove -bd 4
     label .limitstool.1.t1 -text "Apply limits from window "
-    ComboBox .limitstool.1.c1 -text "0" -width 2 -editable 0 \
+    ::misc::combobox .limitstool.1.c1 -text 0 -width 3 -state readonly \
       -values [::struct::list iota 64] \
       -takefocus 0
-
     label .limitstool.1.t2 -text " to window "
-    ComboBox .limitstool.1.c2 -text "0" -width 2 -editable 0 \
+    ::misc::combobox .limitstool.1.c2 -text 0 -width 3 -state readonly \
       -values [::struct::list iota 64] \
       -takefocus 0
 
@@ -3447,7 +3388,7 @@ if {![winfo exists .l1wid]} {
     }
     pack .limitstool.1 -side top
     pack .limitstool.1.t1 .limitstool.1.c1 .limitstool.1.t2 .limitstool.1.c2 \
-      .limitstool.1.limits -side left -fill both
+      .limitstool.1.limits -side left
     pack .limitstool.2 -side right
     pack .limitstool.2.dismiss .limitstool.2.l -padx 4 -side right
   }

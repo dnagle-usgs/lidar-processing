@@ -5,6 +5,8 @@
 
 exp_send "require, \"transrch.i\"\r"
 package require struct::list
+package require misc
+package require tooltip
 
 ############################################################
 
@@ -178,11 +180,8 @@ proc create_transbuttons { cnt } {
 
       pack $tw.f2$tbi.process -side left -fill x -padx 2
 
-
-      ComboBox $tw.f2$tbi.cln_vars -values \
-         $varlist \
-         -helptext "Select any one of the following variables" \
-         -editable 0 \
+      ::misc::combobox $tw.f2$tbi.cln_vars -listvariable ::varlist \
+         -state readonly \
          -width 10 \
          -modifycmd {
             # set trans_var_no1   [ $tw.f21.cln_vars getvalue ]
@@ -193,6 +192,8 @@ proc create_transbuttons { cnt } {
             # set var_type [ lindex $trans_varlist $trans_var_no ]
             # puts "trans_var_no = $trans_var_no1"
          }
+      ::tooltip::tooltip $tw.f2$tbi.cln_vars \
+         "Select any one of the following variables"
       $tw.f2$tbi.cln_vars setvalue @0
       pack $tw.f2$tbi.cln_vars -side left -fill x -padx 2
 
@@ -209,61 +210,64 @@ proc create_transbuttons { cnt } {
 #     pack $tw.f2$tbi.fma $tw.f2$tbi.fmaval -side left -fill x -padx 2
 
       Label $tw.f2$tbi.show -text "show="
-      ComboBox $tw.f2$tbi.showval -values $show_list \
-         -helptext " : No display\n1: Display User selection\n2: Display found points" \
-         -editable 0 \
+      ::misc::combobox $tw.f2$tbi.showval -values $show_list \
+         -state readonly \
          -width 2
-         $tw.f2$tbi.showval setvalue @1
+      $tw.f2$tbi.showval setvalue @1
+      ::tooltip::tooltip $tw.f2$tbi.showval \
+         " : No display\n1: Display User selection\n2: Display found points"
       pack $tw.f2$tbi.show $tw.f2$tbi.showval -side left -fill x -padx 2
 
 
       Label $tw.f2$tbi.width -text "w="
-      ComboBox $tw.f2$tbi.widthval -values $width_list \
-         -helptext "Select swath width" \
-         -editable 0 \
+      ::misc::combobox $tw.f2$tbi.widthval -values $width_list \
+         -state readonly \
          -width 3
-         $tw.f2$tbi.widthval setvalue @1
+      $tw.f2$tbi.widthval setvalue @1
+      ::tooltip::tooltip $tw.f2$tbi.widthval "Select swath width"
       pack $tw.f2$tbi.width $tw.f2$tbi.widthval -side left -fill x -padx 2
 
       Label $tw.f2$tbi.recall -text "recall="
-      ComboBox $tw.f2$tbi.recallval -values $recall_list \
-         -helptext "0: Recall previous transect\n1: recall transect before that" \
-         -editable 0 \
+      ::misc::combobox $tw.f2$tbi.recallval -values $recall_list \
+         -state readonly \
          -width 2
-         $tw.f2$tbi.recallval setvalue first
+      $tw.f2$tbi.recallval setvalue first
+      ::tooltip::tooltip $tw.f2$tbi.recallval \
+         "0: Recall previous transect\n1: recall transect before that"
       pack $tw.f2$tbi.recall $tw.f2$tbi.recallval -side left -fill x -padx 2
 
       Label $tw.f2$tbi.color -text "color="
-      ComboBox $tw.f2$tbi.colorval -values $color_list \
-         -helptext "-2: All Red\n-1: All Black\n0: Black First\n1: Red First\n2: Blue First\n3: Green First\n4: Yellow First\n5: Magenta First\n6: Cyan First\n" \
-         -editable 0 \
-         -width 2
-         $tw.f2$tbi.colorval setvalue @8
+      ::misc::combobox $tw.f2$tbi.colorval -values $color_list \
+         -state readonly \
+         -width 3
+      $tw.f2$tbi.colorval setvalue @8
+      ::tooltip::tooltip $tw.f2$tbi.colorval "Color:\n-2: All Red\n-1: All Black\n0: Black First\n1: Red First\n2: Blue First\n3: Green First\n4: Yellow First\n5: Magenta First\n6: Cyan First"
       pack $tw.f2$tbi.color $tw.f2$tbi.colorval -side left -fill x -padx 2
 
       Label $tw.f2$tbi.iwin -text "iwin="
-      ComboBox $tw.f2$tbi.iwnval -values $lwin_list \
-         -helptext "window to get data" \
-         -editable 0 \
-         -width 2
-         $tw.f2$tbi.iwnval setvalue @4
+      ::misc::combobox $tw.f2$tbi.iwnval -values $lwin_list \
+         -state readonly \
+         -width 3
+      $tw.f2$tbi.iwnval setvalue @4
+      ::tooltip::tooltip $tw.f2$tbi.iwnval "window to get data"
       pack $tw.f2$tbi.iwin $tw.f2$tbi.iwnval -side left -fill x -padx 2
 
       Label $tw.f2$tbi.owin -text "owin="
-      ComboBox $tw.f2$tbi.ownval -values $lwin_list \
-         -helptext "window to plot data" \
-         -editable 0 \
-         -width 2
-         $tw.f2$tbi.ownval setvalue @2
+      ::misc::combobox $tw.f2$tbi.ownval -values $lwin_list \
+         -state readonly \
+         -width 3
+      $tw.f2$tbi.ownval setvalue @2
+      ::tooltip::tooltip $tw.f2$tbi.ownval "window to plot data"
       pack $tw.f2$tbi.owin $tw.f2$tbi.ownval -side left -fill x -padx 2
 
 
       Label $tw.f2$tbi.rtn -text "rtn="
-      ComboBox $tw.f2$tbi.rtnval -values $rtn_list \
-         -helptext "Type of return\n0 first return\n1 veg\n2 submerged" \
-         -editable 0 \
-         -width 1 
-         $tw.f2$tbi.rtnval setvalue @0
+      ::misc::combobox $tw.f2$tbi.rtnval -values $rtn_list \
+         -state readonly \
+         -width 2
+      $tw.f2$tbi.rtnval setvalue @0
+      ::tooltip::tooltip $tw.f2$tbi.rtnval \
+         "Type of return\n0 first return\n1 veg\n2 submerged"
       pack $tw.f2$tbi.rtn $tw.f2$tbi.rtnval -side left -fill x -padx 2
 
   }
@@ -276,7 +280,7 @@ create_transbuttons $Xcnt
 
 Button $tw.f3.mtransrch -text "Transect Pixel Waveform" \
    -bg azure3 -activebackground azure4 -command {
-   set  fs_var [lindex $varlist     [$tw.f21.cln_vars   getvalue]]
+   set  fs_var [$tw.f21.cln_vars get]
    set iwn_var [lindex $lwin_list     [$tw.f21.ownval    getvalue]]
    set rtn_var [lindex $rtn_list      [$tw.f21.rtnval    getvalue]]
    exp_send "mtransrch, $fs_var, m1, llst1, _rx=rx1, _el=elevation1, iwin=$iwn_var, disp_type=$rtn_var\r"
@@ -288,15 +292,6 @@ Click on points in the transect plot window.
 Display information on multiple points from
 the mtransect 1 plot.
 }
-
-Button $tw.f3.reload -text "Reload Variables" \
-   -activebackground grey -command {
-   global Xcnt
-   for { set i 1 } { $i <= $Xcnt } { incr i 1 } {
-      $tw.f2$i.cln_vars configure -values $varlist
-   }
-}
-pack $tw.f3.reload
 
 ############################################################
 # Plot Frame / Frame 1
@@ -317,54 +312,54 @@ setTooltip $pf.f1.show_track "Displays positions from\ndata in specified window"
 
 
 Label $pf.f1.fs -text "FS:"
-ComboBox $pf.f1.fsval -values $track_list \
-   -helptext "FS variable to plot" \
-   -editable 0 \
+::misc::combobox $pf.f1.fsval -values $track_list \
+   -state readonly \
    -width 10 
-   $pf.f1.fsval setvalue @0
+$pf.f1.fsval setvalue @0
+::tooltip::tooltip $pf.f1.fsval "FS variable to plot"
 pack $pf.f1.fsval -side left -fill x -padx 2
 
 Label $pf.f1.utm -text "utm="
-ComboBox $pf.f1.utmval -values $utm_list \
-   -helptext "Plot data in UTM" \
-   -editable 0 \
-   -width 1 
-   $pf.f1.utmval setvalue @1
+::misc::combobox $pf.f1.utmval -values $utm_list \
+   -state readonly \
+   -width 2
+$pf.f1.utmval setvalue @1
+::tooltip::tooltip $pf.f1.utmval "Plot data in UTM"
 pack $pf.f1.utm $pf.f1.utmval -side left -fill x -padx 2
 
 
 Label $pf.f1.skip -text "skip="
-ComboBox $pf.f1.skipval -values $skip_list \
-   -helptext "Number of points to skip when plotting" \
-   -editable 0 \
+::misc::combobox $pf.f1.skipval -values $skip_list \
+   -state readonly \
    -width 2 
-   $pf.f1.skipval setvalue @1
+$pf.f1.skipval setvalue @1
+::tooltip::tooltip $pf.f1.skipval "Number of points to skip when plotting"
 pack $pf.f1.skip $pf.f1.skipval -side left -fill x -padx 2
 
 Label $pf.f1.color -text "color="
-ComboBox $pf.f1.colorval -values $cname_list \
-   -helptext "1: Black\n2: Red\n3: Blue\n4: Green\n5: Yellow\n6: Magenta\n7: Cyan\n" \
-   -editable 0 \
+::misc::combobox $pf.f1.colorval -values $cname_list \
+   -state readonly \
    -width 7
-   $pf.f1.colorval setvalue @2
+$pf.f1.colorval setvalue @2
+::tooltip::tooltip $pf.f1.colorval "1: Black\n2: Red\n3: Blue\n4: Green\n5: Yellow\n6: Magenta\n7: Cyan\n"
 pack $pf.f1.color $pf.f1.colorval -side left -fill x -padx 2
 
 
 Label $pf.f1.win -text "win="
-ComboBox $pf.f1.winval -values $swin_list \
-   -helptext "window to plot data" \
-   -editable 0 \
-   -width 2
-   $pf.f1.winval setvalue @5
+::misc::combobox $pf.f1.winval -values $swin_list \
+   -state readonly \
+   -width 3
+$pf.f1.winval setvalue @5
+::tooltip::tooltip $pf.f1.winval "window to plot data"
 pack $pf.f1.win $pf.f1.winval -side left -fill x -padx 2
 
 
 Label $pf.f1.msize -text "msize="
-ComboBox $pf.f1.msizeval -values $msize_list \
-   -helptext "size of point to plot" \
-   -editable 0 \
+::misc::combobox $pf.f1.msizeval -values $msize_list \
+   -state readonly \
    -width 3 
-   $pf.f1.msizeval setvalue @0
+$pf.f1.msizeval setvalue @0
+::tooltip::tooltip $pf.f1.msizeval "size of point to plot"
 pack $pf.f1.msize $pf.f1.msizeval -side left -fill x -padx 2
 
 

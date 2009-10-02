@@ -3,6 +3,7 @@
 package require Tk
 package require Iwidgets
 package require Itcl
+package require misc
 
 source [file join $src_path misc.ytk]
 source [file join $src_path data_stats.ytk]
@@ -117,11 +118,10 @@ itcl::body SegmentedDataWindow::constructor {args} {
       checkbutton $f.chk$idx \
          -variable [itcl::scope _segment($idx,use)]
 
-      iwidgets::combobox $f.cbo$idx \
+      ::misc::combobox $f.cbo$idx \
          -textvariable [itcl::scope _segment($idx,var)] \
-         -editable false \
-         -selectioncommand [itcl::code $this clear_time $idx]
-      $f.cbo$idx component list configure \
+         -state readonly \
+         -modifycmd [itcl::code $this clear_time $idx] \
          -listvariable $itk_option(-varlistvariable)
 
       button $f.btnPlot$idx -text "Plot in:" \
