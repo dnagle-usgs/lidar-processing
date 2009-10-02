@@ -720,6 +720,8 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, normalize=) {
 	out(2,i,j) = lfpelv(mxxgnd);
         // if out(2,i,j) is between -2 and 2m then this is bare earth
         // else try harder knowing that bare earth could be between -2 and 2m.
+        // commented out for non-coastal (high bare earth) data.
+        /*
         if (((out(2,i,j) < -5.0) || (out(2,i,j) > 5.0)) || (out(2,i,j) == 0)) {
             //find all returns between -2 and 2
 	    bidx = where((lfpelv >= -5.0) & (lfpelv <= 5.0))
@@ -734,6 +736,7 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, normalize=) {
                 }
             }
         }
+        */
 	lastgnd = min(numberof(lfpelv), mxxgnd+5);
 	if (lastgnd > mxxgnd) lgridx = where(lfprx(mxxgnd:lastgnd)(dif) > 0);
  	if (is_array(lgridx)) {
@@ -748,11 +751,13 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, normalize=) {
 	    fgr = 1;
 	}
 	//if (out(2,i,j) < 5.5) out(1,i,j) -= out(2,i,j); // assuming gnd is below 2.5 m
-	out(1,i,j) -= out(2,i,j); 
+	out(1,i,j) -= out(2,i,j); // correct CH for bare earth
+	out(5,i,j) -= out(2,i,j); // correct HOME for bare earth
       } else {
 	// correct the canopy height by subtracting the bare earth elevation
 	if ((img(i,j) != -1000) && (img(i,j) < out(1,i,j))) {
           out(1,i,j) = out(1,i,j) - img(i,j);
+          out(5,i,j) = out(5,i,j) - img(i,j);
         }
 	out(2,i,j) = img(i,j);
 	gidx = (abs(lfpelv - img(i,j)))(mnx);
@@ -791,12 +796,12 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, normalize=) {
         /* ***************************************************************************
         // THE CODE BELOW WILL WORK ONLY WHEN BARE EARTH ELEVS ARE CLOSE TO MEAN SEA LEVEL
         ******************************************************************************/
-	if (abs(out(2,i,j)- out(1,i,j)) <= 0.5) { // return only from gnd
+	if (abs(out(1,i,j)) <= 1.0) { // return only from gnd
 	    out(1,i,j) = 0;
 	    out(3,i,j) = 1.0;
 	    out(4,i,j) = 0.0;
         } else {
-	 if ((out(2,i,j) > -1.5) && (out(2,i,j) < 5.0)) {
+	 if ((out(2,i,j) > -1.5) && (out(2,i,j) < 300.0)) {
            out(3,i,j) = lfpgsum/(lfpgsum+lfpcsum);
 	   out(4,i,j) = lfpcsum/(lfpcsum+lfpgsum);
          } else { // all returns are from the canopy
@@ -805,6 +810,7 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, normalize=) {
          }
         }
 	
+
     }
  }
 
@@ -851,6 +857,14 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, normalize=) {
    }
    out = new_out;
    new_out = [];
+ }
+ for (i=1;i<=dims(2);i++) {
+    for (j=1;j<=dims(3);j++) {
+       if (out(5,i,j) < out(2,i,j)) {
+         // if HOME is lower than bare earth... make HOME = 0
+         out(5,i,j) = 0;
+       }
+    }
  }
 	     
 return out;
