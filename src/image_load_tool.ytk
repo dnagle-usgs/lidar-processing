@@ -104,7 +104,8 @@ proc ytk_image_load_tool { {start_dir "~/"} } {
 		-textvariable img_utmzone 
 
 	Label $lw.3.type.originlabel -text "Image Origin:"
-	tk_optionMenu $lw.3.type.origin img_origin NW SW NE SE
+   ::misc::combobox $lw.3.type.origin -state readonly -width 5 \
+      -textvariable img_origin -values [list NW SW NE SE]
 
 	LabelEntry $lw.3.utmnorth.min -width 12 -relief sunken -label "Min UTM Northing: " \
 		-helptext "Enter min UTM Northing in meters Here"\
@@ -121,13 +122,15 @@ proc ytk_image_load_tool { {start_dir "~/"} } {
 		-textvariable img_coords(x1)
 
 	Label $lw.5.img_win -text "Number:"
-	SpinBox $lw.5.img_winno -width 3 \
-		-range {0 63 1} \
-		-helptext "Select the Yorick window number to plot" \
+	spinbox $lw.5.img_winno -width 3 \
+      -from 0 -to 63 -increment 1 \
 		-textvariable img_win
+   ::tooltip::tooltip $lw.5.img_winno "Select the Yorick window number to plot"
 	
-	Label $lw.5.img_winsizelabel -text "Size:" 
-	tk_optionMenu $lw.5.img_winsize img_winsize small medium large huge
+	Label $lw.5.img_winsizelabel -text "Size:"
+   ::misc::combobox $lw.5.img_winsize -width 8 -state readonly \
+      -textvariable img_winsize -values [list small medium large huge]
+   set ::img_winsize small
 	
 	checkbutton $lw.5.dofma \
 		-text "Clear Plot (fma)" \

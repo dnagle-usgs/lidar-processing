@@ -434,13 +434,13 @@ button .rslider.bf2.georef -text "Geo Ref" -command {
 
 checkbutton .rslider.bf2.angeo -text "Animate GeoRef" -variable animate_georef
 
-SpinBox .rslider.bf2.elevation_offset \
-        -helptext "elevation_offset: Enter the elevation offset (in meters) here." \
+spinbox .rslider.bf2.elevation_offset \
         -justify center \
-        -range { -1000 1000 .5 } \
+        -from -1000 -to 1000 -increment 0.5 -format %.2f \
         -width 7 \
-        -textvariable elevation_offset;
-
+        -textvariable elevation_offset
+::tooltip::tooltip .rslider.bf2.elevation_offset \
+        "elevation_offset: Enter the elevation offset (in meters) here."
 
 button .rslider.bf1.stop -text "Stop" -command {
  global tid play_flag rnf 
@@ -468,9 +468,8 @@ button .rslider.bf1.play -text "Play->" -command {
  set tid [ after $play_interval  play ]
 }
 
-tk_optionMenu .rslider.bf1.pint play_interval \
-	 1 5 10 25 50 75 100 150 200 250 300 500 1000 2000 3000 
-
+spinbox .rslider.bf1.pint -textvariable play_interval \
+   -from 1 -to 3000 -increment 1 -width 5
 
  entry .rslider.bf1.enter_rn -width 7 -textvariable rn
 
@@ -499,9 +498,8 @@ bind .rslider  <p> {
 }
 
 
-
- tk_optionMenu .rslider.bf1.inc \
-	inc 1 2 3 4 5 8 10 15 20 25 40 50 75 100 150 200 250 300 500 1000
+spinbox .rslider.bf1.inc -textvariable inc \
+   -from 1 -to 1000 -increment 1 -width 5
 
 trace variable depth_display_units w dus
 trace variable total_edb_records   w ter

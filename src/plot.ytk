@@ -196,10 +196,12 @@ proc ::plot::menu { } {
    grid $f -sticky ewn
 
    label $f.labWinFrom -text "From:"
-   SpinBox $f.spnWinFrom -justify center -range {0 63 1} -width 5 \
+   spinbox $f.spnWinFrom -justify center -width 4 \
+      -from 0 -to 63 -increment 1 \
       -textvariable ::plot::g::limits_copy_from
    label $f.labWinTo -text "To:"
-   SpinBox $f.spnWinTo -justify center -range {0 63 1} -width 5 \
+   spinbox $f.spnWinTo -justify center -width 4 \
+      -from 0 -to 63 -increment 1 \
       -textvariable ::plot::g::limits_copy_to
    Button $f.butApply -text "Apply" -command ::plot::copy_limits
 
@@ -228,9 +230,11 @@ proc ::plot::menu { } {
    grid $f.labCoord $f.cboCoord
 
    label $f.labUTMZone -text "UTM Zone:" -anchor e
-   SpinBox $f.spnUTMZone -justify center -range {1 60 1} \
-      -textvariable ::plot::g::zone \
-      -helptext "This is only used when the Coordinates system is UTM."
+   spinbox $f.spnUTMZone -justify center \
+      -from 1 -to 60 -increment 1 \
+      -textvariable ::plot::g::zone
+   ::tooltip::tooltip $f.spnUTMZone \
+      "This is only used when the Coordinates system is UTM."
    grid $f.labUTMZone $f.spnUTMZone
 
    set f $pane.lfrData
@@ -273,7 +277,8 @@ proc ::plot::menu { } {
    grid $f -sticky wen
 
    label $f.labWindow -text "In Window:"
-   SpinBox $f.spnWindow -justify center -range {0 63 1} -textvariable ::_map(window)
+   spinbox $f.spnWindow -justify center -textvariable ::_map(window) \
+      -from 0 -to 63 -increment 1
    grid $f.labWindow $f.spnWindow
    grid $f.labWindow -sticky e
 

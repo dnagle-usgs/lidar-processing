@@ -68,44 +68,46 @@ If that's what you want, then click Ok.  Otherwise click Cancel." ] == "ok" } {
 
   Button  $f1.dismiss  -text Dismiss -command { destroy .ts_check }
 
-  SpinBox $f1.range_offset \
-	-helptext "range_offset: Enter the range offset (in meters) here." \
+  spinbox $f1.range_offset \
 	-justify center \
-	-range { -100 100 .5 } \
+   -from -100 -to -100 -increment 0.5 -format %.2f \
 	-width 5 \
-	-textvariable time_check(range_offset);
+	-textvariable time_check(range_offset)
+  ::tooltip::tooltip $f1.range_offset \
+   "range_offset: Enter the range offset (in meters) here."
 
-  Button  $f1.set_offset      -text "Set Time Correction" -command {
-  }
-
-  SpinBox $f1.hours_offset \
-	-helptext "hours_offset: Change the time correction by hour increments" \
+  spinbox $f1.hours_offset \
 	-justify center \
-	-range { -48 48 1 } \
+   -from -48 -to 48 -increment 1 \
 	-width 5 \
-	-textvariable time_check(hours_offset);
+	-textvariable time_check(hours_offset)
+  ::tooltip::tooltip $f1.hours_offset \
+	"hours_offset: Change the time correction by hour increments"
 
-  SpinBox $f1.seconds_offset \
-	-helptext "seconds_offset: Change time corrections by whole seconds.\
- 	    This is normally not required." \
+  spinbox $f1.seconds_offset \
 	-justify center \
-	-range { -30 30 1 } \
+   -from -30 -to 30 -increment 1 \
 	-width 5 \
-	-textvariable time_check(seconds_offset);
+	-textvariable time_check(seconds_offset)
+  ::tooltip::tooltip $f1.seconds_offset \
+	"seconds_offset: Change time corrections by whole seconds.\
+ 	    \nThis is normally not required."
 
-  SpinBox $f1.start_record \
-	-helptext "start_record: Beginning laser raster number used to extract range values." \
+  spinbox $f1.start_record \
 	-justify center \
-	-range { 1000 300000 1000 } \
+   -from 1000 -to 300000 -increment 1000 \
 	-width 7 \
-	-textvariable time_check(start_record);
+	-textvariable time_check(start_record)
+  ::tooltip::tooltip $f1.start_record \
+   "start_record: Beginning laser raster number used to extract range values."
 
-  SpinBox $f1.run_len \
-	-helptext "run_len: The number of laser rasters to use in the comparison with GPS altitude." \
+  spinbox $f1.run_len \
 	-justify center \
-	-range { 1000 20000 500 } \
+   -from 1000 -to 20000 -increment 500 \
 	-width 7 \
-	-textvariable time_check(run_len);
+	-textvariable time_check(run_len)
+  ::tooltip::tooltip $f1.run_len \
+   "run_len: The number of laser rasters to use in the comparison with GPS altitude."
 
   pack \
 	$f1.get_ird \
@@ -130,10 +132,5 @@ If that's what you want, then click Ok.  Otherwise click Cancel." ] == "ok" } {
 
 }
 
-
-  DynamicHelp::configure -bg yellow -delay 1000
-  exp_send "#include \"ts_check.i\"\r"
-  set_time_check_defaults
-
-
-
+ybkg require \"ts_check.i\"
+set_time_check_defaults

@@ -73,6 +73,7 @@ exec wish "$0" ${1+"$@"}
 # 2 - No Yorick found
 # 3 - Problem encountered while spawning Yorick
 
+package require Tk
 package require BWidget
 package require Expect
 package require Iwidgets
@@ -80,78 +81,7 @@ package require fileutil
 package require log
 package require struct::list
 
-################################################################################
-#                        Iwidgets Combobox Improvements                        #
-################################################################################
-# The Iwidgets combobox provides a lot of nice benefits but has a cosmetic and
-# usability flaws. This section attempts to address a few of those flaws. It's
-# included here because these changes must happen before the combobox is used
-# anywhere.
-
-# Create a combobox widget and keep it around permanently for two reasons:
-#  * Forces the autoloading of the combobox code, so that we can then overwrite
-#    parts of it.
-#  * The uparrow/downarrow images are destroyed when all instances of the
-#    combobox widget are destroyed. Thus in order to replace the images, we
-#    must keep at least one alive at all times.
-::iwidgets::combobox .__iwcbo__donotdestroy
-
-# The default arrow images are 16x16. These slimmer versions take up less
-# space.
-image delete uparrow
-image create bitmap uparrow -data {
-   #define uparrow_width 10
-   #define uparrow_height 16
-   static unsigned char uparrow_bits[] = {
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x38, 0x00,
-      0x7c, 0x00, 0xfe, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-}
-image delete downarrow
-image create bitmap downarrow -data {
-   #define downarrow_width 10
-   #define downarrow_height 16
-   static unsigned char downarrow_bits[] = {
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0xfc, 0x01, 0xf8, 0x00, 0x70, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00,
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-}
-
-# The default background color for the entry field is a different color than
-# everything else. This overrides it to match.
-proc ::iwidgets::combobox {pathName args} {
-   uplevel ::iwidgets::Combobox $pathName $args
-   $pathName component entry configure -readonlybackground \
-      [$pathName cget -background]
-   return $pathName
-}
-
-# Updating the resizing method to reflect the arrows' new sizes.
-itcl::body iwidgets::Combobox::_resizeArrow {} {
-   # Overriding arrows to display similar to Bwidgets
-   set bw [expr {[$itk_component(arrowBtn) cget -borderwidth]+ \
-      [$itk_component(arrowBtn) cget -highlightthickness]}]
-   set newHeight [expr {[winfo reqheight $itk_component(entry)]-(2*$bw) - 2}]
-   set newWidth [expr {int($newHeight * 10 / 16)}]
-   $itk_component(arrowBtn) configure -width $newWidth -height $newHeight
-   _drawArrow
-}
-
-# Adding a binding to the dropdown bindings to allow the user to click on the
-# entry to post the list. Sine we always(?) use the combobox dropdown with the
-# entry as read-only, this should be safe.
-#
-# Rather than completely reproduce the body, use introspection to pull it out
-# and simply append our one additional binding.
-set __tmp__body [.__iwcbo__donotdestroy info body _dropdownBindings]
-append __tmp__body {
-   # Allow user to click on entry list to pop open list
-   bind $itk_component(entry) <ButtonRelease-1> [itcl::code $this _toggleList]
-}
-itcl::body iwidgets::Combobox::_dropdownBindings {} $__tmp__body
-unset __tmp__body
-################################################################################
-
+option add *tearOff 0
 wm withdraw .
 
 set gui_enabled 1
@@ -1576,7 +1506,7 @@ proc ytk_plot {plot_type} {
    entry .$w.x -width 32 -textvariable plot_array(x$w)
    entry .$w.y -width 32 -textvariable plot_array(y$w)
 
-   button $w.a.kill -text Kill -command [list pa_winkill $w]
+   button .$w.a.kill -text Kill -command [list pa_winkill $w]
    tk_optionMenu .$w.color plot_array(color$w) \
       fg bg black white red green blue cyan magenta yellow
    checkbutton .$w.fma -text {Fma first} \

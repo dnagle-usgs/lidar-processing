@@ -286,11 +286,11 @@ if {![winfo exists .l1wid]} {
       wm title .l1ss "Read SubSampled Data File"
       LabelFrame .l1ss.1 -relief groove -borderwidth 3 -text "Points to skip:"
       frame .l1ss.2
-      SpinBox .l1ss.1.sk \
-        -range {1 1000 1} \
+      spinbox .l1ss.1.sk \
+        -from 1 -to 1000 -increment 1 \
         -textvariable skipl \
-        -helptext "Enter points to skip (Subsample)" \
         -width 5
+      ::tooltip::tooltip .l1ss.1.sk "Enter points to skip (Subsample)"
       LabelEntry .l1ss.1.mvar -label "Variable Name: " -width 10 -bd 3 \
         -helptext "Enter Variable Name of Data array after merging" \
         -textvariable mvar
@@ -575,8 +575,9 @@ if {![winfo exists .l1wid]} {
 
       Label .l1dir.3.skL -text "Subsample: "
 
-      SpinBox .l1dir.3.skip -range {1 1000 1} -width 3 -textvariable skipl \
-        -helptext "Enter plot points to skip"
+      spinbox .l1dir.3.skip \
+        -from 1 -to 1000 -increment 1 -width 3 -textvariable skipl
+      ::tooltip::tooltip .l1dir.3.skip "Enter plot points to skip"
 
       LabelEntry .l1dir.3.ssvar -label "Search String: " -width 8 -bd 3 \
         -helptext "Enter search string" \
@@ -716,7 +717,8 @@ if {![winfo exists .l1wid]} {
       LabelFrame .l1asc.ops -justify center -relief groove -borderwidth 3 \
         -text "Options:"
       set utmll "UTM"
-      tk_optionMenu .l1asc.ops.0 utmll UTM LATLON
+      ::misc::combobox .l1asc.ops.0 -textvariable utmll -state readonly \
+        -values [list UTM LATLON] -width 8
       LabelFrame .l1asc.ops.1 -justify center -relief groove -borderwidth 3 \
         -text "Include:"
       frame .l1asc.ops.2 -relief groove -borderwidth 3
@@ -745,7 +747,8 @@ if {![winfo exists .l1wid]} {
       Separator .l1asc.ops.2.s1 -orient vertical -bg black -relief groove
 
       label .l1asc.ops.2.dl -text "Delimiter: "
-      tk_optionMenu .l1asc.ops.2.d delimit comma semicolon space
+      ::misc::combobox .l1asc.ops.2.d -textvariable delimit -state readonly \
+        -values [list comma semicolon space] -width 10
 
       LabelEntry .l1asc.ops.2.split -width 7 -bd 3 \
         -label "Max number of lines/file" \
@@ -828,7 +831,8 @@ if {![winfo exists .l1wid]} {
       ::tooltip::tooltip .l1map.2.mode "Select Data Type"
 
       Label .l1map.2.winl -text "Win:"
-      SpinBox .l1map.2.win -justify center -range {0 63 1} \
+      spinbox .l1map.2.win -justify center \
+        -from 0 -to 63 -increment 1 \
         -width 2 -textvariable win_load
 
 #      west checkbutton $tw.f2$tbi.fma -text "xfma" -variable trans_xfma$tbi
@@ -926,11 +930,11 @@ if {![winfo exists .l1wid]} {
       Label .l1wid-opts.f1.label -text "Set Max Cmax scale to:"
       Label .l1wid-opts.f2.label -text "Set Min Cmin scale to:"
       Label .l1wid-opts.f3.label -text "Set Increment to:"
-      SpinBox  .l1wid-opts.f1.max -range {-10000. 50000. 10.} -width 10 \
-        -textvariable cmax_max
-      SpinBox  .l1wid-opts.f2.min -range {-10000. 50000. 10.} -width 10 \
-        -textvariable cmax_min
-      SpinBox  .l1wid-opts.f3.inc -width 10 \
+      spinbox  .l1wid-opts.f1.max -width 10 -format %.2f \
+        -textvariable cmax_max -from 10000 -to 50000 -increment 10
+      spinbox  .l1wid-opts.f2.min -width 10 -format %.2f \
+        -textvariable cmax_min -from 10000 -to 50000 -increment 10
+      spinbox  .l1wid-opts.f3.inc -width 10 \
         -values [list 0.1 0.2 .25 .5 .75 1.0 1.5 2.0 2.5 3 4 5 6 7 8 9 10 15 \
           20 25] \
         -textvariable cmax_inc
@@ -1518,8 +1522,8 @@ if {![winfo exists .l1wid]} {
         -textvariable var -text $var
 
       Label .l1bias.1.winl -text "in window:"
-      SpinBox .l1bias.1.win -justify center -range {0 63 1} -width 2 \
-        -textvariable win_no
+      spinbox .l1bias.1.win -justify center -width 2 \
+        -textvariable win_no -from 0 -to 63 -increment 1
 
       Label .l1bias.1.transl -text "Then click"
       Button .l1bias.1.transbutton -text "Get Transect" \
@@ -1578,8 +1582,8 @@ if {![winfo exists .l1wid]} {
         }
 
       Label .l1bias.3.winl -text "in win:"
-      SpinBox .l1bias.3.win -justify center -range {0 63 1} \
-        -width 2 -textvariable flwin
+      spinbox .l1bias.3.win -justify center \
+        -width 2 -textvariable flwin -from 0 -to 63 -increment 1
 
       Button .l1bias.3.pick -text "Select Flightlines" \
         -helptext "Click to select which flightlines to keep" \
@@ -1749,7 +1753,7 @@ if {![winfo exists .l1wid]} {
   ::tooltip::tooltip .l1wid.bf4.1.m "Batch or single processing"
 
   Label .l1wid.bf4.1.lw -text "in Win:"
-  SpinBox .l1wid.bf4.1.sw -justify center -range {0 63 1} \
+  spinbox .l1wid.bf4.1.sw -justify center -from 0 -to 63 -increment 1 \
     -width 2 -textvariable _map(window)
 
   checkbutton .l1wid.bf4.2.cen -variable usecentroid \
@@ -1836,7 +1840,7 @@ if {![winfo exists .l1wid]} {
 
 
   Label .l1wid.bf45.p.2 -text "in Win:"
-  SpinBox .l1wid.bf45.p.3 -justify center -range {0 63 1} \
+  spinbox .l1wid.bf45.p.3 -justify center -from 0 -to 63 -increment 1 \
     -width 2 -textvariable win_no
 
   proc display_type {} {
@@ -2331,7 +2335,7 @@ if {![winfo exists .l1wid]} {
       .rem.06.type setvalue @0
     }
 
-    ::misc::combobox .rem.1 -width 16 -state readonly \
+    ::misc::combobox .rem.1 -width 18 -state readonly \
       -text "Remove points using..." \
       -values [list "Rubberband Box" "Points in Polygon" "Single Pixel" \
         "Pip-Thresh"] \
@@ -2370,8 +2374,10 @@ if {![winfo exists .l1wid]} {
         set state [lindex {disabled normal} $max]
         .rem.08.maxthresh configure -state $state
       }
-    SpinBox .rem.07.minthresh -range {-100.0 5000.0 0.1} -textvariable min_thresh
-    SpinBox .rem.08.maxthresh -range {-100.0 5000.0 0.1} -textvariable max_thresh
+    spinbox .rem.07.minthresh -textvariable min_thresh -width 10 \
+      -from -100 -to 5000 -increment 0.1 -format %.2f
+    spinbox .rem.08.maxthresh -textvariable max_thresh -width 10 \
+      -from -100 -to 5000 -increment 0.1 -format %.2f
     set min 1
     set max 1
     .rem.07.min select
@@ -2917,12 +2923,12 @@ if {![winfo exists .l1wid]} {
   }
 
   proc sst {w var lbl rg} {
-  # This procedure builds a widget composed of a Label, a Spinbox, and a scale so
+  # This procedure builds a widget composed of a Label, a spinbox, and a scale so
   # one can enter values by direct entry, the spin clicks, or the scale.
     frame $w
-    SpinBox $w.sb -textvariable $var \
-      -range $rg \
-      -width 6
+    lassign $rg rmin rmax rinc
+    spinbox $w.sb -textvariable $var -format %.2f \
+      -from $rmin -to $rmax -increment $rinc -width 6
     scale $w.sc -showvalue 0 -orient horizontal  \
       -variable $var \
       -from [lindex $rg 0] \
@@ -2964,25 +2970,26 @@ if {![winfo exists .l1wid]} {
   .l1wid.bf45.sc.1.cdelta.sb configure -state disabled
 
   LabelFrame  .l1wid.bf45.sc.f -relief sunken -borderwidth 3 -text "Marker:"
-  SpinBox .l1wid.bf45.sc.f.msize \
-    -range {0.1 10.0 0.1}  \
+  spinbox .l1wid.bf45.sc.f.msize \
+    -from 0.1 -to 10.0 -increment 0.1 \
     -textvariable plot_settings(msize) \
-    -helptext "Enter Marker Size (msize)" \
     -width 5
+  ::tooltip::tooltip .l1wid.bf45.sc.f.msize "Enter Marker Size (msize)"
 
-  SpinBox .l1wid.bf45.sc.f.marker \
-    -range {0 9 1}  \
+  spinbox .l1wid.bf45.sc.f.marker \
+    -from 0 -to 9 -increment 1 \
     -textvariable plot_settings(mtype) \
-    -helptext "Enter Marker Type (See help, marker for more details)" \
     -width 5
+  ::tooltip::tooltip .l1wid.bf45.sc.f.marker \
+    "Enter Marker Type (See help, marker for more details)"
 
   frame .l1wid.bf45.sc.g
   LabelFrame .l1wid.bf45.sc.g.sk -relief groove -borderwidth 3 -text "Skip:"
-  SpinBox .l1wid.bf45.sc.g.sk.skip \
-    -range {1 1000 1} \
+  spinbox .l1wid.bf45.sc.g.sk.skip \
+    -from 1 -to 1000 -increment 1 \
     -textvariable skip \
-    -helptext "Enter plot points to skip" \
     -width 5
+  ::tooltip::tooltip .l1wid.bf45.sc.g.sk.skip "Enter plot points to skip"
 
   checkbutton .l1wid.bf45.sc.g.fma -text "Auto Fma" -variable l1pro_fma
 
