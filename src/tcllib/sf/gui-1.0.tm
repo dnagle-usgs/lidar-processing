@@ -9,7 +9,6 @@ package require Img
 package require Iwidgets
 package require snit
 package require tooltip
-package require tile
 
 namespace eval ::sf {}
 

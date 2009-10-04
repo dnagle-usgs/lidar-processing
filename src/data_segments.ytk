@@ -1,11 +1,9 @@
 # vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 
-package require Tk
 package require Iwidgets
 package require Itcl
 package require misc
 
-source [file join $src_path misc.ytk]
 source [file join $src_path data_stats.ytk]
 
 option add *SegmentedDataWindow.title "Data Segments" widgetDefault
@@ -530,12 +528,12 @@ proc segment_by_flightlines {yvar} {
    exp_send "tkcmd, swrite(format=\"set $var %d\", numberof(fptr));\r"
    expect ">"
 
-   idle [list _segment_by_flightlines_post $yvar $var]
+   ::misc::idle [list _segment_by_flightlines_post $yvar $var]
 }
 
 proc _segment_by_flightlines_post {yvar count_var} {
    if {[set $count_var] < 0} {
-      idle [list _segment_by_flightlines_post $yvar $count_var]
+      ::misc::idle [list _segment_by_flightlines_post $yvar $count_var]
    } else {
       set segment_count [set $count_var]
       unset $count_var

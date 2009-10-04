@@ -12,23 +12,6 @@
 #
 #
 
-proc app_root_dir {} {
-   # Copied from http://wiki.tcl.tk/1710
-   set originalPath [pwd]
-   set scriptPath   $::argv0
-   set workingPath  [file dirname $::argv0]
-   while {![catch {file readlink $scriptPath} result]} {
-      cd $workingPath
-      set scriptPath  [file join [pwd] $result]
-      set workingPath [file dirname $scriptPath]
-   }
-   cd [file dirname $scriptPath]
-   set scriptPath [pwd]
-   cd $originalPath
-   return $scriptPath
-}
-
-::tcl::tm::path add [file join [app_root_dir] tcllib]
 package require sf
 
 package require comm

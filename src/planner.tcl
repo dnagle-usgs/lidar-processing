@@ -40,7 +40,7 @@ exec wish "$0" ${1+"$@"}
         set polydraw(item$w) [$w create line $coords -fill red -tag poly0 -width 3]
     } else {
         set item $polydraw(item$w)
-        foreach {x0 y0} [$w coords $item] break
+        lassign [$w coords $item] x0 y0
         if {hypot($x-$x0,$y-$y0) < 5} {
             set coo [lrange [$w coords $item] 2 end]
             $w delete $item
@@ -76,8 +76,8 @@ proc polydraw'delete {w {all 0}} {
         regexp {at:([^ ]+)} $tags -> pos
         set coords [$w coords $poly]
         set pos2 [expr {$pos==0? [llength $coords]-2 : $pos-2}]
-        foreach {x0 y0} [lrange $coords $pos end] break
-        foreach {x1 y1} [lrange $coords $pos2 end] break
+        lassign [lrange $coords $pos end] x0 y0
+        lassign [lrange $coords $pos2 end] x1 y1
         set x [expr {($x0 + $x1) / 2}]
         set y [expr {($y0 + $y1) / 2}]
         $w coords $poly [linsert $coords $pos $x $y]
@@ -145,12 +145,12 @@ proc polydraw'markNodes {w item} {
 
 #--------------------------------------- more general routines
  proc canvas'center {w item} {
-    foreach {x0 y0 x1 y1} [$w bbox $item] break
+    lassign [$w bbox $item] x0 y0 x1 y1
     list [expr {($x0 + $x1) / 2.}] [expr {($y0 + $y1) / 2.}]
  }
  proc canvas'rotate {w item angle} {
     # This little code took me hours... but the Welch book saved me!
-    foreach {xm ym} [canvas'center $w $item] break
+    lassign [canvas'center $w $item] xm ym
     set coords {}
     foreach {x y} [$w coords $item] {
         set rad [expr {hypot($x-$xm, $y-$ym)}]

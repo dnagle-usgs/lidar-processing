@@ -1,4 +1,3 @@
-package require dict
 package require msgcat
 
 # bath_ctl array -- tied to Yorick bath_ctl variable

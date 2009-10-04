@@ -216,7 +216,7 @@ func pixelwf_enter_interactive(void) {
             // Since the previous line triggers Tk to update Yorick, the
             // following line is wrapped in tkcmd+idle to ensure it happens
             // afterwards
-            tkcmd, "idle {ybkg pixelwf_plot}";
+            tkcmd, "::misc::idle {ybkg pixelwf_plot}";
             pixelwf_selected_info, nearest;
          }
       } else {

@@ -3,8 +3,6 @@
 package provide misc 1.0
 
 package require snit
-package require dict
-package require tile
 
 namespace eval ::misc {
    namespace export soe
@@ -470,3 +468,283 @@ snit::widgetadaptor ::misc::combobox {
       return [$self get]
    }
 }
+
+# default varName value
+#     This is used within a procedure to specify a default value for a
+#     parameter. This is useful when the default value is dynamic.
+proc default {varName value} {
+    upvar $varName var
+    set caller [info level -1]
+    set caller_args [info args [lindex $caller 0]]
+    set arg_index [lsearch -exact $caller_args $varName]
+    incr arg_index
+    if {$arg_index > 0} {
+        if {[llength $caller] <= $arg_index} {
+            set var $value
+        }
+    } else {
+        error "Calling function does not have parameter $varName"
+    }
+}
+
+proc curry {new args} {
+# See http://wiki.tcl.tk/_search?S=curry for an explanation of the ideas behind
+# currying. Basically, curry makes a shorthand alias for a command.
+#
+# Suppose we have a function like this:
+# proc mult {a b} {expr $a*$b}
+#
+# Then, this:
+#   curry double mult 2
+# Lets us call this:
+#   double 5
+# Which returns 10
+#
+# double is shorthand for "call mult with its first argument as 2"
+#
+# This can dramatically shorten code where you have lots of excess repeated
+# verbiage, especially if you can condense some key phrases down to something
+# like a single punctuation command.
+#
+# All curried aliases are at the global scope, as they use interp aliases. If a
+# curry is intended for short-term use, you can uncurry it using the uncurry
+# command. The curry/uncurry commands keep track of what's been curried. If you
+# curry something that has already been curried, then the next uncurry command
+# will restore the previous curry.
+#
+# Uncurrying something that's not curried is a no-op. Uncurry won't work with
+# any arbitrary interp alias; it will only work with those interp aliases set
+# through curry.
+    global __curry
+    dict lappend __curry $new $args
+    eval [list interp alias {} $new {}] $args
+}
+
+proc uncurry {name} {
+# See curry
+    global __curry
+    if {[info exists __curry] && [dict exists $__curry $name]} {
+        if {[llength [dict get $__curry $name]]} {
+            dict set __curry $name [lrange [dict get $__curry $name] 0 end-1]
+        }
+        if {[llength [dict get $__curry $name]]} {
+            eval [list interp alias {} $name {}] [lindex [dict get $__curry $name] end]
+        } else {
+            interp alias {} $name {}
+            dict unset __curry $name
+        }
+    }
+}
+
+##############################################################################
+
+# copied from ADAPT: lib/combinators.tcl
+
+proc S {f g x} {
+##
+# S -- the S combinator
+#
+# SYNOPSIS
+#   [S <f> <g> <x>]
+#
+# DESCRIPTION
+#   One of the two fundamental functional operators. Sometimes shows up
+#   in code from @http://wiki.tcl.tk/(the Tcler's Wiki).
+#
+#   For information, consult:
+#     * @(http://wiki.tcl.tk/1892)
+#
+#   See also: $K
+##
+   $f $x [$g $x]
+}
+
+proc K {x y} {
+##
+# K -- the K combinator
+#
+# SYNOPSIS
+#   [K <x> <y>]
+#
+# DESCRIPTION
+#   One of the two fundamental functional operators. Sometimes shows up
+#   in code from @http://wiki.tcl.tk/(the Tcler's Wiki).
+#
+#   For information, consult:
+#     * @(http://wiki.tcl.tk/1923)
+#
+#   See also: $S
+##
+   set x
+}
+
+proc K* {x args} {
+##
+# K* -- the K combinator
+#
+# SYNOPSIS
+#   [K* <x> ...]
+#
+# DESCRIPTION
+#   One of the two fundamental functional operators. Sometimes shows up
+#   in code from @http://wiki.tcl.tk/(the Tcler's Wiki).
+#
+#   This variant of K can accept any number of arguments beyond the first.
+#
+#   For information, consult:
+#     * @(http://wiki.tcl.tk/1923)
+#
+#   See also: $S
+##
+   set x
+}
+
+# Helpers so that trace_* works
+proc trace_add args {uplevel [list trace add] $args}
+proc trace_remove args {uplevel [list trace remove] $args}
+proc trace_info args {uplevel [list trace info] $args}
+
+proc trace_append {type name ops prefix} {
+##
+# trace_append is intended to be equivalent to 'trace add', except that it
+# arranges that the new trace will be appended to the list of traces instead of
+# prepended. Traces added with 'trace add' are executed in reverse of the
+# order they were added; so the last trace added gets executed first. If
+# 'trace_append' is used, it puts the give trace to be executed last. Thus a
+# series of traces added with 'trace_append' will be executed in the order they
+# were added.
+##
+   # Get a list of the current traces
+   set traces [trace info $type $name]
+
+   # Remove all the existing traces
+   foreach trace $traces {
+      trace remove $type $name [lindex $trace 0] [lindex $trace 1]
+   }
+
+   # Add the trace we want to append
+   trace add $type $name $ops $prefix
+
+   # Re-add the original traces
+   foreach trace [struct::list reverse $traces] {
+      trace add $type $name [lindex $trace 0] [lindex $trace 1]
+   }
+}
+
+namespace eval ::__validation_backups {}
+
+proc validation_trace {cmd varname valcmd args} {
+##
+# validation_trace add varname valcmd -invalidcmd {}
+# validation_trace remove varname valcmd -invalidcmd {}
+#
+#  Adds (or removes) a validation traces on the specified variable. When a
+#  validation fails, the variable remains unchanged.
+#
+#  Required arguments:
+#     cmd: Should be "add" or "remove"
+#     varname: The name of a variable. If this is not explicitly scoped, then
+#        it will be scoped to the current context.
+#     valcmd: The validation command. This will be evaluated at the global
+#        scope and will have percent-substitutions applied to it as described
+#        further below. This should evaluate to a boolean true or false. True
+#        indicates that the value is allowed. False indicates that the value
+#        should be rejected.
+#
+#  Optional arguments:
+#     -invalidcmd $cmd: A command to run when an attempt was made to set the
+#        variable to a value that resulted in a rejection. This is run at the
+#        global scope and also has percent-substitutions applied to it. If this
+#        is not provided, then a failure will result in the variable's value
+#        not changing. If this is provided, then the calling code must manually
+#        fix the variable's value itself.
+#
+#  Percent substitutions
+#     The following percent subtitutions can be included in your commands.
+#        %% - Substitutes to %.
+#        %B - Substitutes to the previous value for the variable. If the
+#             validation fails, this is what the variable will be reassigned
+#             to.
+#        %v - Substitutes to the name of the variable.
+#        %V - Substitutes to the current value for the variable. If the
+#             validation succeeds, this is what the variable will remain as.
+#
+#  Examples:
+#     % validation_trace add counter {string is integer {%V}}
+#     % set counter 5
+#     5
+#     % set counter -10
+#     -10
+#     % set counter "Random string"
+#     -10
+#
+#     % validation_trace add counter {expr {[string is integer {%V}] && {%V} < 20}}
+#     % set counter 5
+#     5
+#     % set counter 15
+#     15
+#     % set counter 25
+#     15
+#
+#     % validation_trace add counter {string is integer {%V}} \
+#        -invalidcmd {puts "You entered a bogus value!!"}
+#     % set counter 5
+#     5
+#     % set counter foo
+#     You entered a bogus value!!
+#     5
+##
+   array set opt [list -invalidcmd {}]
+   array set opt $args
+   switch -- $cmd {
+      add - remove - append {}
+      default {
+         error "Unknown command: $cmd"
+      }
+   }
+   # If the variable doesn't already exist, then setting a trace on it provokes
+   # an error. Thus, initialize to a null value if necessary.
+   if {![uplevel [list info exists $varname]]} {
+      uplevel [list set $varname {}]
+   }
+   set varname [uplevel [list namespace which -variable $varname]]
+   set data [list varname $varname valcmd $valcmd invalidcmd $opt(-invalidcmd)]
+   # Create namespace, if necessary
+   namespace eval ::__validation_backups[namespace qualifiers $varname] {}
+   set ::__validation_backups$varname [set $varname]
+   trace_$cmd variable $varname write [list __validate_trace_worker $data]
+}
+
+proc __validate_trace_worker {data name1 name2 op} {
+   array set _ $data
+   set substitutions [list \
+      %% % \
+      %B [set ::__validation_backups$_(varname)] \
+      %v $_(varname) \
+      %V [set $_(varname)] ]
+   set cmd [::struct::list map $_(valcmd) [list string map $substitutions]]
+   set valid [uplevel #0 $cmd]
+   if {$valid} {
+      set ::__validation_backups$_(varname) [set $_(varname)]
+   } else {
+      if {[string length $_(invalidcmd)]} {
+         set invalidcmd [string map $substitutions $_(invalidcmd)]
+         uplevel #0 $invalidcmd
+      } else {
+         set $_(varname) [set ::__validation_backups$_(varname)]
+      }
+   }
+}
+
+proc constrain {var between min and max} {
+# Constrain the given variable's value to the range of min and max. If it is
+# outside of that range, it is clipped to either min or max.
+   upvar $var v
+   if {$v < $min} {
+      set v $min
+   } elseif {$v > $max} {
+      set v $max
+   }
+   return
+}
+

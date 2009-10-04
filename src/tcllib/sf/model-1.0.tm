@@ -82,7 +82,6 @@ package require sf
 package require snit
 package require tar
 package require fileutil
-package require dict
 package require imgops
 package require struct::set
 

@@ -10,12 +10,10 @@ if {[info exists __gui_procs_ytk_loaded]} {
 }
 set __gui_procs_ytk_loaded 1
 
-source [file join $src_path misc.ytk]
-
 package require Itcl
 package require Iwidgets
-package require dict
 package require struct::set
+package require misc
 
 proc west {type w args} {
 # from: http://wiki.tcl.tk/1420
@@ -157,14 +155,15 @@ proc GUI::utils::getfile { args } {
 # usage: Much like the above three. Pass the dashed options you want.
 # Note that -initialdirvariable can be used so that it updates an external
 # variable if the user changes directory
-   default_opts args \
+   set defaults [list \
       -variable {} \
       -initialdir {} \
       -initialdirvariable {} \
       -filetypes {
          { {All files} * }
       } \
-      -type open
+      -type open]
+   set args [dict merge $defaults $args]
 
    if { [dict get $args -variable] ne "" } {
       upvar [dict get $args -variable] filename

@@ -1,8 +1,8 @@
 # vim: set tabstop=4 softtabstop=4 shiftwidth=4 autoindent shiftround expandtab:
 
-package require dict
 package require struct::set
 package require fileutil
+package require misc
 
 if {[catch [list package require json]]} {
     puts "No JSON"
@@ -10,7 +10,6 @@ if {[catch [list package require json]]} {
 }
 
 source [file join $src_path gui_procs.ytk]
-source [file join $src_path misc.ytk]
 
 ### INITIALIZATION
 

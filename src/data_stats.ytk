@@ -1,11 +1,8 @@
 # vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 
-package require Tk
 package require Iwidgets
 package require Itcl
 package require misc
-
-source [file join $src_path misc.ytk]
 
 option add *DataStatsWindow.title "Data Statistics" widgetDefault
 

@@ -1,8 +1,8 @@
 # vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 
-package require dict
 package require struct::set
 package require msgcat
+package require misc
 
 ################################################################################
 #
@@ -316,8 +316,7 @@ if {![namespace exists ::pixelwf]} {
    # Enforce constrained ranges
    namespace eval ::pixelwf {
       dict for {range data} $constants::valid_ranges {
-         set range_min [lindex $range 0]
-         set range_max [lindex $range 1]
+         lassign $range range_min range_max
          dict for {ns vars} $data {
             foreach var $vars {
                validation_trace append vars::${ns}::$var \
@@ -401,7 +400,7 @@ namespace eval ::pixelwf::gui {
       set name [namespace tail [namespace qualifiers \
          [uplevel namespace which -variable $v]]]
       dict lappend widgets_tied_to_enabled $name $w
-      idle [list ::pixelwf::gui::_trace_toggle_visibility $v]
+      ::misc::idle [list ::pixelwf::gui::_trace_toggle_visibility $v]
    }
 
    proc _trace_toggle_visibility v {
@@ -444,8 +443,9 @@ namespace eval ::pixelwf::gui {
    proc helper_spinbox {w v} {
       set range [::pixelwf::util::valid_range $v]
       lappend range 1
+      lassign $range from to increment
       spinbox $w -textvariable $v -width 0 \
-         -from [lindex $range 0] -to [lindex $range 1] -increment [lindex $range 2]
+         -from $from -to $to -increment $increment
    }
 
    proc helper_combobox {w v} {

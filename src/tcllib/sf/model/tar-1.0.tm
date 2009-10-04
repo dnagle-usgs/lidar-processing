@@ -7,7 +7,6 @@ package require tar
 package require vfs::tar
 package require uuid
 package require fileutil
-package require dict
 package require imgops
 package require struct::set
 
@@ -99,8 +98,7 @@ snit::type ::sf::model::collection::tar::files {
 
    method retrieve {token args} {
       $self translator modify retrieve token args
-      set tar [lindex $token 0]
-      set file [lindex $token 1]
+      lassign $token tar file
       unset token
 
       set temp [file join [::fileutil::tempdir] [::uuid::uuid generate]]

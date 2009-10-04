@@ -88,10 +88,7 @@ snit::type ::imgops::transform {
          set resize_cmd [list -scale ${sw}x${sh}]
 
          # cw and ch are current images' dimensions
-         set size [$type File size $fn]
-         set cw [lindex $size 0]
-         set ch [lindex $size 1]
-         unset size
+         lassign [$type File size $fn] cw ch
 
          if {$cw > $sw || $ch > $sh} {
             # If either current dimension is bigger than the requested
