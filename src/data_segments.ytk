@@ -272,9 +272,8 @@ itcl::body SegmentedDataWindow::size_optimally {} {
 
 itcl::body SegmentedDataWindow::refresh_times {} {
    for {set i 1} {$i <= $_count} {incr i} {
-      exp_send "tk_sdw_send_times, \"[itcl::scope $this]\", $i,\
-         $_segment($i,var);\r"
-      expect ">"
+      after [expr {$i * 20}] [list \
+         ybkg tk_sdw_send_times \"[itcl::scope $this]\" $i $_segment($i,var)]
    }
 }
 
@@ -442,7 +441,7 @@ itcl::body SegmentedDataWindow::launch_stats {args} {
 }
 
 itcl::body SegmentedDataWindow::define_region {} {
-   exp_send "tk_swd_define_region_possible, \"[itcl::scope $this]\";\r"
+   ybkg tk_swd_define_region_possible \"[itcl::scope $this]\"
 }
 
 itcl::body SegmentedDataWindow::define_region_not_possible {} {
@@ -488,8 +487,7 @@ itcl::body SegmentedDataWindow::define_region_multilines {} {
          merged data from multiple flightlines. Do you still want to define\
          the region?"]
    if {$response eq "yes"} {
-      exp_send "q = _tk_swd_region;\r"
-      expect ">"
+      ybkg funcset q _tk_swd_region
       tk_messageBox -icon info -type ok -parent .l1wid \
          -message "The region has been defined."
    }
@@ -521,8 +519,6 @@ proc segment_by_flightlines {yvar} {
    set var $var_prefix$i
    set $var -1
 
-   exp_send "require, \"data_segments.i\";\r"
-   expect ">"
    exp_send "fptr = split_by_fltline($yvar);\r"
    expect ">"
    exp_send "tkcmd, swrite(format=\"set $var %d\", numberof(fptr));\r"

@@ -225,6 +225,9 @@ func time2soe( a ) {
    Original: W. Wright wright@lidar.wff.nasa.gov
 */
    extern _ys;
+   // Upcast to double if needed; soe values do not fit in floats
+   if(typeof(a) == "float")
+      a = double(a);
    idx = int(a(*,1)) - 1969;  // convert to index
    a(*,2)--;                  // convert to zero-based day number
    usehms = a(*,3) == 0;
