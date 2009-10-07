@@ -20,7 +20,7 @@ func sf_mediator_broadcast_somd(somd) {
    sync to a somd value. Converts the somd to an soe so SF can use it.
 */
    extern soe_day_start;
-   soe = int(soe_day_start + somd);
+   soe = long(soe_day_start + somd);
    tkcmd, swrite(format="::sf::mediator broadcast soe %d", soe);
 }
 
