@@ -350,7 +350,7 @@ snit::type ::sf::controller {
       install gui using ::sf::gui .sf%AUTO% -controller $self
       install model using ::sf::model::collection::null %AUTO%
       $self configurelist $args
-      ::sf::mediator register $self
+      ::sf::mediator register [mymethod sync soe]
    }
 
    # destructor
@@ -358,7 +358,7 @@ snit::type ::sf::controller {
    #     making sure there are no after events pending.
    destructor {
       after cancel $playcancel
-      catch [list ::sf::mediator unregister $self]
+      catch [list ::sf::mediator unregister [mymethod sync soe]]
       catch [list $gui destroy]
       catch [list $model destroy]
    }

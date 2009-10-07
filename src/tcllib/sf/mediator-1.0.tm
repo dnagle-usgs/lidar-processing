@@ -51,7 +51,7 @@ snit::type ::sf::mediator {
       }
 
       foreach recipient $recipients {
-         ::misc::idle [list $recipient sync soe $soe]
+         ::misc::idle [concat $recipient [list $soe]]
       }
    }
 
