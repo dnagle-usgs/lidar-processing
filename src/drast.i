@@ -45,8 +45,8 @@ func ytk_rast(rn) {
    }
 }
 
-func ndrast(r, units=, win=, graph=) {
-/* DOCUMENT drast(r, units=, win=, graph=)
+func ndrast(r, units=, win=, graph=, sfsync=) {
+/* DOCUMENT drast(r, units=, win=, graph=, sfsync=)
    Displays raster waveform data for the given raster. Try this:
 
       > rn = 1000
@@ -63,15 +63,18 @@ func ndrast(r, units=, win=, graph=) {
    raster.
 
    Be sure to load a database file with load_edb first.
+
+   By default, this will sync with SF. Set sfsync=0 to disable that behavior.
 */
    extern aa, last_somd, pkt_sf;
    default, graph, 1;
+   default, sfsync, 1;
 
    aa = array(short(255), 250, 120, 3);
 
    npix = r.npixels(1);
    somd = (rr.soe - soe_day_start)(1);
-   if (somd != last_somd) {
+   if (somd != last_somd && sfsync) {
       send_sod_to_sf, somd;
       if (!is_void(pkt_sf)) {
          idx = where((int)(pkt_sf.somd) == somd);
