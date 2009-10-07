@@ -3,6 +3,7 @@
 package require struct::set
 package require msgcat
 package require misc
+package require sf
 
 ################################################################################
 #
@@ -59,6 +60,7 @@ if {![namespace exists ::pixelwf]} {
             variable pulse 1
             variable missionday {}
             variable radius 10.00
+            variable sfsync 0
          }
          namespace eval fit_gauss {
             variable enabled 0
@@ -160,6 +162,7 @@ if {![namespace exists ::pixelwf]} {
          # applied.
          variable valid_values {
             {0 1} {
+               selection sfsync
                fit_gauss {enabled lims verbose}
                ex_bath {enabled verbose}
                ex_veg {enabled verbose use_be_peak use_be_centroid hard_surface}
@@ -558,19 +561,26 @@ namespace eval ::pixelwf::gui {
       ::misc::combobox $f.cboVar -textvariable ::pro_var -state readonly \
          -width 0 -listvariable ::varlist
 
+      checkbutton $f.chkSf -text [mc "SF Sync"] -variable ${ns}::sfsync
+
+      button $f.btnGraph -text "Plot" -command [list ybkg pixelwf_plot]
+
       button $f.btnMouse -text [mc "Interactive"] \
          -command [list ycmd pixelwf_enter_interactive]
 
       grid $f.lblDay $f.cboDay - -
       grid $f.lblRaster $f.spnRaster $f.lblPulse $f.spnPulse
       grid $f.lblWindow $f.spnWindow $f.lblVar $f.cboVar
-      grid $f.lblRadius $f.spnRadius $f.btnMouse -
+      grid $f.lblRadius $f.spnRadius $f.chkSf -
+      grid $f.btnMouse - $f.btnGraph -
 
       default_sticky \
          $f.lblDay $f.cboDay \
          $f.lblRaster $f.spnRaster $f.lblPulse $f.spnPulse \
-         $f.lblWindow $f.spnWindow $f.lblVar $f.cboVar \
-         $f.lblRadius $f.spnRadius $f.btnMouse
+         $f.lblWindow $f.spnWindow $f.lblVar $f.cboVar $f.chkSf \
+         $f.lblRadius $f.spnRadius $f.btnMouse $f.btnGraph
+
+      grid configure $f.btnMouse -sticky w
 
       grid columnconfigure $f {0 2} -weight 0 -uniform 2
       grid columnconfigure $f {1 3} -weight 1 -uniform 1
@@ -767,3 +777,20 @@ namespace eval ::pixelwf::gui {
       grid columnconfigure $f {1 3} -weight 1 -uniform 1
    }
 }
+
+namespace eval ::pixelwf::mediator {
+   proc jump_soe soe {
+      if {$::pixelwf::vars::selection::sfsync} {
+         ybkg pixelwf_set_soe $soe
+      }
+   }
+
+   proc broadcast_soe soe {
+      if {$::pixelwf::vars::selection::sfsync} {
+         ::sf::mediator broadcast soe $soe \
+            -exclude [list ::pixelwf::mediator::jump_soe]
+      }
+   }
+}
+
+::sf::mediator register [list ::pixelwf::mediator::jump_soe]

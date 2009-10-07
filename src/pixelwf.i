@@ -13,7 +13,8 @@ if(is_void(pixelwfvars)) {
          missionday="",
          radius=10.00,
          win=5,
-         pro_var="fs_all"
+         pro_var="fs_all",
+         sfsync=0
       ),
       fit_gauss=h_new(
          enabled=1,  //bool
@@ -68,13 +69,16 @@ if(is_void(pixelwfvars)) {
 }
 
 func pixelwf_plot(void) {
-   extern pixelwfvars;
+   extern pixelwfvars, edb;
    fns = ["ex_bath", "ex_veg", "show_wf", "geo_rast", "ndrast", "fit_gauss"];
 
    for(i = 1; i <= numberof(fns); i++) {
       if(pixelwfvars(fns(i)).enabled)
          funcdef(swrite(format="pixelwf_%s", fns(i)));
    }
+
+   tkcmd, swrite(format="::pixelwf::mediator::broadcast_soe %d",
+      edb.seconds(pixelwfvars.selection.raster));
 }
 
 func pixelwf_handle_result(vars, result) {
@@ -153,7 +157,7 @@ func pixelwf_show_wf(void) {
 
    r = get_erast(rn=raster);
    rr = decode_raster(r);
-   wfa = ndrast(rr, graph=0);
+   wfa = ndrast(rr, graph=0, sfsync=0);
    show_wf, *wfa, pulse, win=vars.win, raster=raster,
       c1=vars.c1, c2=vars.c2, c3=vars.c3;
 
@@ -186,7 +190,7 @@ func pixelwf_ndrast(void) {
 
    r = get_erast(rn=raster);
    rr = decode_raster(r);
-   result = ndrast(rr, graph=1, win=vars.win, units=vars.units);
+   result = ndrast(rr, graph=1, win=vars.win, units=vars.units, sfsync=0);
    pixelwf_handle_result, vars, result;
 
    window_select, win;
@@ -243,6 +247,8 @@ func pixelwf_selected_info(nearest) {
    write, format="Timestamp: %s\n", soe2iso8601(point.soe);
    write, format="Mission day: %s\n", missionday_current();
    write, format="somd: %.4f  soe: %.4f\n", point.soe - soe_day_start, point.soe;
+   rp = parse_rn(point.rn);
+   write, format="raster: %d  pulse: %d\n", rp(1), rp(2);
    if((dimsof(get_member(var_expr_get(pixelwfvars.selection.pro_var),"soe"))(1)) == 1) {
       write, format="Corresponds to %s(%d)\n",
          pixelwfvars.selection.pro_var, nearest.index;
@@ -288,3 +294,24 @@ func pixelwf_find_point(spot) {
 
    return h_new(point=nearest, index=index, distance=dist);
 }
+
+func pixelwf_set_soe(soe) {
+   extern edb, pixelwfvars;
+   vars = pixelwfvars.selection;
+   found = missiondata_soe_load(soe);
+   if(found) {
+      w = where(edb.seconds == long(soe));
+      if(numberof(w)) {
+         rn = w(1);
+         if(vars.raster <= numberof(edb)) {
+            if(edb.seconds(vars.raster) == edb.seconds(rn))
+               return 2;
+         }
+         tksetval, "::pixelwf::vars::selection::raster", rn;
+         tksetval, "::pixelwf::vars::selection::pulse", 1;
+         tksetval, "::pixelwf::vars::selection::missionday", missionday_current();
+      }
+   }
+   return found;
+}
+
