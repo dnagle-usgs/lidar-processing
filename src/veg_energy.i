@@ -100,7 +100,7 @@ func find_be_from_grid(veg_all, img, ll, ur) {
 }
 
 
-func make_large_footprint_waveform(eaarl, binsize=, digitizer=, normalize=, mode=, pse=, plot=, bin=) {
+func make_large_footprint_waveform(eaarl, binsize=, digitizer=, normalize=, mode=, pse=, plot=, bin=, min_elv=, max_elv=) {
 /* DOCUMENT make_large_footprint_waveform(eaarl, binsize=, digitizer=, 
 	normalize=, mode=, pse=, plot=, bin=)
    This function finds the return energy for a group of waveforms within a 
@@ -118,6 +118,8 @@ func make_large_footprint_waveform(eaarl, binsize=, digitizer=, normalize=, mode
 	pse		: pause interval when plot is selected (in milliseconds)
 	plot		: set to 1 to plot the synthesized waveform
 	bin		: vertical bin of resulting synthesized waveform (in cm)
+ 	min_elv		: the minimum possible elevation in the dataset (in cm). Default = -300
+	max_elv		: the maximum possible elevation in the dataset (in cm). Default = 50000, i.e. 500 m.
 */
 
   tm1 = tm2 = array(double, 3);
@@ -125,6 +127,8 @@ func make_large_footprint_waveform(eaarl, binsize=, digitizer=, normalize=, mode
   eaarl = clean_veg(eaarl);
   if (is_void(pse)) pse = 1000;
   if (is_void(bin)) bin = 50;
+  if (is_void(min_elv)) min_elv = -300;
+  if (is_void(max_elv)) max_elv = 50000;
   window, 5;
 
   if (is_void(mode)) mode = 3;
@@ -249,7 +253,7 @@ func make_large_footprint_waveform(eaarl, binsize=, digitizer=, normalize=, mode
   	         rr = decode_raster(get_erast(rn=rn));
 		 ai = irg(rn, inc=0, usecentroid=1);
 	     }
-	     if (v1.elevation < -300 || v1.elevation > 3500) continue;
+	     if (v1.elevation < min_elv || v1.elevation > max_elv) continue;
   	     elvdiff = v1.melevation - v1.elevation;
 	     rarr(1:numberof(*rr.rx(p,1)),k) = max(*rr.rx(p,1))-(*rr.rx(p,1));
  	     nrarr = span(1,numberof(*rr.rx(p,1)),numberof(*rr.rx(p,1)))+ai.irange(p);
@@ -311,7 +315,6 @@ func make_large_footprint_waveform(eaarl, binsize=, digitizer=, normalize=, mode
 	 outveg(j,i).rx = &rrarr;
 	 outveg(j,i).elevation = &errarr;
 	 outveg(j,i).npixels = &karr;
-	 //if (count == 59) amar();
       }
     }
     if ((i%5) == 0) write, format="%d of %d complete...\r",i, ngridy;
@@ -328,9 +331,12 @@ func make_large_footprint_waveform(eaarl, binsize=, digitizer=, normalize=, mode
 }
             
      
-func make_single_lfpw(eaarl,bin=,normalize=, plot=, correct_chp=, min_elv=){
+func make_single_lfpw(eaarl,bin=,normalize=, plot=, correct_chp=, min_elv=, max_elv=){
    // amar nayegandhi 04/23/04 
    if (!bin) bin = 50;
+   if (is_void(min_elv)) min_elv = -300;
+   if (is_void(max_elv)) max_elv = 50000;
+
     
    outveg = array(LFP_VEG, 1);
    outveg.north = long(avg(eaarl.north));
@@ -351,7 +357,7 @@ func make_single_lfpw(eaarl,bin=,normalize=, plot=, correct_chp=, min_elv=){
          rr = decode_raster(get_erast(rn=rn));
 	 ai = irg(rn, inc=0, usecentroid=1);
       }
-      if (v1.elevation < -300 || v1.elevation > 3500) continue;
+      if (v1.elevation < min_elv || v1.elevation > max_elv) continue;
       elvdiff = v1.melevation - v1.elevation;
       rarr(1:numberof(*rr.rx(p,1)),k) = max(*rr.rx(p,1))-(*rr.rx(p,1));
       nrarr = span(1,numberof(*rr.rx(p,1)),numberof(*rr.rx(p,1)))+ai.irange(p);
@@ -636,7 +642,7 @@ return home;
 }
 
 
-func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, normalize=) {
+func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, max_elv=, normalize=) {
 /* DOCUMENT lfp_metrics(lfpveg, thresh=)
   This function calculates the composite large footprint metrics.
   amar nayegandhi 04/19/04.
@@ -646,6 +652,7 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, normalize=) {
       img = 2d array of bare-earth data at same resolution
       fill = set to 1 to fill in gaps in the data.  This will use the average value of the 5x5 neighbor to defien the value of the output metric. Those that are set to -1000 will be ignored.
       min_elv = minimum elevation (in meters) to consider for bare earth
+      max_elv = maximum elevation (in meters) to consider for canopy top elev.
       normalize = set to 0 if you do not want to normalize (default = 1).
   the output array will contain the following metrics:
    cht;	//canopy height in meters
@@ -665,6 +672,8 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, normalize=) {
     dims = grow(dims,1);
  }
  if (is_void(thresh)) thresh = 5;
+ if (is_void(min_elv)) min_elv = -2;
+ if (is_void(max_elv)) max_elv = 300;
   
  for (i=1;i<=dims(2);i++) {
     for (j=1;j<=dims(3);j++) {
@@ -758,7 +767,7 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, normalize=) {
 	if ((img(i,j) != -1000) && (img(i,j) < out(1,i,j))) {
           out(1,i,j) = out(1,i,j) - img(i,j);
           out(5,i,j) = out(5,i,j) - img(i,j);
-        }
+        } 
 	out(2,i,j) = img(i,j);
 	gidx = (abs(lfpelv - img(i,j)))(mnx);
 	if (abs(lfpelv(gidx)-img(i,j)) > 2) {
@@ -793,15 +802,12 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, normalize=) {
 	lfpcnpix = lfpnpix(lgr:);
 	lfpgsum = (lfpgnd)(sum);
 	lfpcsum = (lfpcpy)(sum);
-        /* ***************************************************************************
-        // THE CODE BELOW WILL WORK ONLY WHEN BARE EARTH ELEVS ARE CLOSE TO MEAN SEA LEVEL
-        ******************************************************************************/
-	if (abs(out(1,i,j)) <= 1.0) { // return only from gnd
+	if (out(1,i,j) <= 1) { // return only from gnd
 	    out(1,i,j) = 0;
 	    out(3,i,j) = 1.0;
 	    out(4,i,j) = 0.0;
         } else {
-	 if ((out(2,i,j) > -1.5) && (out(2,i,j) < 300.0)) {
+	 if ((out(2,i,j) > min_elv) && (out(2,i,j) < max_elv)) {
            out(3,i,j) = lfpgsum/(lfpgsum+lfpcsum);
 	   out(4,i,j) = lfpcsum/(lfpcsum+lfpgsum);
          } else { // all returns are from the canopy
@@ -858,6 +864,7 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, normalize=) {
    out = new_out;
    new_out = [];
  }
+/*
  for (i=1;i<=dims(2);i++) {
     for (j=1;j<=dims(3);j++) {
        if (out(5,i,j) < out(2,i,j)) {
@@ -866,6 +873,7 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, normalize=) {
        }
     }
  }
+*/
 	     
 return out;
 }

@@ -2,7 +2,7 @@
 require, "veg_energy.i"
 require, "polyfit_smooth.i"
 
-func batch_veg_lfpw(ipath, opath, fname=, searchstr=, onlyupdate=, only_if_mf=, mf_ss=, binsize=, normalize=, mode=, pse=, plot=, bin=) {
+func batch_veg_lfpw(ipath, opath, fname=, searchstr=, onlyupdate=, only_if_mf=, mf_ss=, binsize=, normalize=, mode=, pse=, plot=, bin=, emin=, emax=) {
   /* DOCUMENT batch_veg_lfpw(ipath, opath, binsize=, normalize=, mode=, pse=, plot=, bin=)
     This function makes large footprint waveforms in a batch mode. 
     See make_large_footprint_waveform in veg_energy.i
@@ -10,12 +10,24 @@ func batch_veg_lfpw(ipath, opath, fname=, searchstr=, onlyupdate=, only_if_mf=, 
     only_if_mf = set to 1 if you want to only create those lfpw files that have a corresponding manually filtered file.
     mf_ss = search string for manually filtered files.  defaults to: "*_mf.pbd".
     opath = do not set if you want to write the files out to the data tiles within the input directory. 
-   amar nayegandhi 09/27/04
+	binsize		: size of the box (synthesized footprint) in meters 
+			  (default = 5m)
+	normalize	: if set, normalize the energy by the number of 
+			 waveforms in bin
+	mode		: currently works for only veg... when mode = 3 (default).
+	pse		: pause interval when plot is selected (in milliseconds)
+	plot		: set to 1 to plot the synthesized waveform
+	bin		: vertical bin of resulting synthesized waveform (in cm) Default = 50
+	emin		: minimum elevation value to be considered as valid in the data set (in cm) Default = -300
+	emax		: maximum elevation value to be considered as valid in the data set (in cm) Default = 50000;
 */
 
    // start timer
    tb1=tb2=array(double, 3);
    timer, tb1;
+
+  if (is_void(emin)) emin = -300;
+  if (is_void(emax)) emax = 50000;
 
    if (is_void(fname)) {
      s = array(string,10000);
@@ -111,14 +123,14 @@ func batch_veg_lfpw(ipath, opath, fname=, searchstr=, onlyupdate=, only_if_mf=, 
 	eaarl = get_member(f,vname);
         close, f;
 
-        display_veg, eaarl, felv=1, cmin=-2., cmax=15., win=5, dofma=1, skip=20;
+        display_veg, eaarl, felv=1, cmin=emin/100., cmax=emax/100., win=5, dofma=1, skip=20;
         limits, square=1;
 	limits;
         pause, 2000;
         ll = limits();
         limits, ll(1)-200, ll(2)+200, ll(3)-200, ll(4)+200;
 
-        outveg = make_large_footprint_waveform(eaarl, binsize=binsize, normalize=normalize,mode=mode, pse=pse, plot=plot, bin=bin);
+        outveg = make_large_footprint_waveform(eaarl, binsize=binsize, normalize=normalize,mode=mode, pse=pse, plot=plot, bin=bin, min_elv = emin, max_elv = emax);
 
         if (_ytk) 
 	  tkcmd, swrite(format="set batch_energy %d",i);
@@ -137,7 +149,7 @@ func batch_veg_lfpw(ipath, opath, fname=, searchstr=, onlyupdate=, only_if_mf=, 
  return
 }
 
-func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, fill=, min_elv=, outwin=, onlyplot=, dofma=, use_be=, be_path=, be_ss=, cl_lfpw=, onlyupdate=) {
+func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, fill=, min_elv=, max_elv=, outwin=, onlyplot=, dofma=, use_be=, be_path=, be_ss=, cl_lfpw=, onlyupdate=) {
 /* DOCUMENT batch_veg_metrics(ipath, opath, searchstr=, plot=, plotclasses=)
    amar nayegandhi 10/01/04
    ipath = input path
@@ -148,6 +160,7 @@ func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, 
    thresh= amplitude threshold to consider significan return
    fill = set to 1 to fill in gaps in the data.  This will use the average value of the 5x5 neighbor to define the value of the output metric. Those that are set to -1000 will be ignored. Default fill = 1.
    min_elv = minimum elevation (in meters) to consider for bare earth
+   max_elv = maximum elevation (in meters) to consider for canopy heights (default = 35)
 
    outwin = output window to plot to. (Default = 3)
    onlyplot = only plot the results of the existing metrics. (Default: void)
@@ -265,10 +278,11 @@ func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, 
            idx = where(!strmatch(be_file, "_fs"));
            be_file = be_file(idx);
 	   if (numberof(be_file) > 1) {
+	       fn_split = split_path(fn_all(i),0);
               // search for be_file for the same data tile
-              if (strmatch(fn_split(1), "t_e")) {
+              if (strmatch(fn_split(2), "t_e")) {
                  teast_north = "";
-                 sread, strpart(fn_split(1),1:18), teast_north;
+                 sread, strpart(fn_split(2),1:18), teast_north;
 	         idx = where(strmatch(be_file, teast_north)); 
                  if (is_array(idx)) {
                    be_file = be_file(idx);
@@ -291,6 +305,7 @@ func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, 
               print, "No Bare Earth file available for this tile.  No metrics created for this tile." 
               continue;
            }
+	   write,format="current be file is %s", be_file;
         }
         fn_split = split_path(fn_all(i),0);
         s_east = strpart(fn_split(2), 4:9);
