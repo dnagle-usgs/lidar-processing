@@ -31,6 +31,9 @@ namespace eval ::imgops {}
 #        If enabled, the image is normalized.
 #     -equalize <boolean>
 #        If enabled, the image is equalized. (Ignored if -normalize is enabled.)
+#     -channel <name>
+#        If specified, extracts a single channel to operate on. Name should be
+#        one of red, green, or blue (or R, G, or B).
 ##
 snit::type ::imgops::transform {
    pragma -hastypeinfo false
@@ -125,7 +128,15 @@ snit::type ::imgops::transform {
       # Perform requested enhancements before rotations, otherwise the
       # background color can alter results.
       # -normalize overrides -equalize
-      if {[dict exists $args -normalize] && [dict get $args -normalize]} {
+      # If a -channel is given, we operate on just that.
+      if {[dict exists $args -channel]} {
+         lappend cmd -channel [dict get $args -channel] -separate
+         if {[dict exists $args -normalize] && [dict get $args -normalize]} {
+            lappend cmd -normalize
+         } elseif {[dict exists $args -equalize] && [dict get $args -equalize]} {
+            lappend cmd -equalize
+         }
+      } elseif {[dict exists $args -normalize] && [dict get $args -normalize]} {
          lappend cmd -channel red -normalize
          lappend cmd -channel green -normalize
          lappend cmd -channel blue -normalize
