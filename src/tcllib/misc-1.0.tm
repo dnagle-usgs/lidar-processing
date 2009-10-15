@@ -210,38 +210,45 @@ snit::widgetadaptor ::misc::text::autoheight {
    delegate option * to hull
 
    destructor {
-      after cancel $cancel
+      catch {after cancel [mymethod AdjustHeight]}
+      catch {after cancel [list after 0 [mymethod AdjustHeight]]}
    }
 
-   variable cancel ""
-
    method Modified {} {
-      after cancel $cancel
-      set cancel [::misc::idle [mymethod AdjustHeight]]
+      ::misc::idle [mymethod AdjustHeight]
       $self edit modified 0
    }
 
    method Configure {} {
-      after cancel $cancel
-      set cancel [::misc::idle [mymethod AdjustHeight]]
+      ::misc::idle [mymethod AdjustHeight]
    }
 
    method AdjustHeight {} {
-      after cancel $cancel
-      set content [$self get 1.0 end]
+      after cancel [mymethod AdjustHeight]
+      after cancel [list after 0 [mymethod AdjustHeight]]
+      set height [::misc::text::calc_height $win]
+      $self configure -height $height
+   }
+}
+
+if {[package vcompare 8.5 [info tclversion]] == 1} {
+   # Backwards compatibility for Tcl 8.4, which doesn't have the "text count"
+   # method. However, this will only work if the 
+   proc ::misc::text::calc_height w {
+      set content [$w get 1.0 end]
       # Trim off a single trailing newline, if present
       if {[string index $content end] eq "\n"} {
          set content [string range $content 0 end-1]
       }
 
-      set bw [$self cget -borderwidth]
-      set ht [$self cget -highlightthickness]
-      set sw [$self cget -selectborderwidth]
-      set displaywidth [expr {1.0 * [winfo width $win] - 2 * ($bw + $ht + $sw)}]
+      set bw [$w cget -borderwidth]
+      set ht [$w cget -highlightthickness]
+      set sw [$w cget -selectborderwidth]
+      set displaywidth [expr {1.0 * [winfo width $w] - 2 * ($bw + $ht + $sw)}]
       unset bw ht
 
-      set font [$self cget -font]
-      set top [winfo toplevel $win]
+      set font [$w cget -font]
+      set top [winfo toplevel $w]
 
       set height 0
       foreach line [split $content \n] {
@@ -259,7 +266,21 @@ snit::widgetadaptor ::misc::text::autoheight {
          set height 1
       }
 
-      $self configure -height $height
+      return $height
+   }
+} else {
+   # Tcl 8.5 drastically simplifies things *and* makes them drastically more
+   # accurate by use of "text count".
+   proc ::misc::text::calc_height w {
+      set pixelheight [$w count -update -ypixels 1.0 end]
+      set font [$w cget -font]
+      set top [winfo toplevel $w]
+      set fontheight [font metrics $font -displayof $top -linespace]
+      set height [expr {int(ceil(double($pixelheight)/$fontheight))}]
+      if {$height < 1} {
+         set height 1
+      }
+      return $height
    }
 }
 
