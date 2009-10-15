@@ -438,6 +438,10 @@ snit::type ::sf::controller {
                dict set opts -equalize 1
             }
          }
+         set band [string index [string toupper [$gui cget -band]] 0]
+         if {$band ne "A"} {
+            dict set opts -channel $band
+         }
          eval [list $model retrieve [$gui cget -token]] $opts
       }
       $gui refresh canvas
