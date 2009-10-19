@@ -9,6 +9,7 @@ package require Img
 package require Iwidgets
 package require snit
 package require tooltip
+package require getstring
 
 namespace eval ::sf {}
 
@@ -157,6 +158,42 @@ snit::widget ::sf::gui {
    method {prompt directory} args {
       set opts [dict merge $args [list -parent $self]]
       return [eval tk_chooseDirectory $opts]
+   }
+
+   # prompt string <args>
+   #     Provides the ::getstring::tk_getString dialog. In addition to
+   #     tk_getString's options, the following options are also accepted:
+   #
+   #        -prompt <string>
+   #           If given, this is used for the prompt. Otherwise, a generic
+   #           message is shown instead.
+   #        -variable <varname>
+   #           If given, the result of the prompt will be stored in the given
+   #           variable and this will return a boolean indicating whether the
+   #           user clicked "OK" or "Cancel". (In the absence of this option,
+   #           the string result is returned and "Cancel" yields a null
+   #           string.)
+   method {prompt string} args {
+      if {[dict exists $args -prompt]} {
+         set prompt [dict get $args -prompt]
+         dict unset args -prompt
+      } else {
+         set prompt "Enter a string:"
+      }
+      if {[dict exists $args -variable]} {
+         upvar [dict get $args -variable] result
+         dict unset args -variable
+         set returnbool 1
+      } else {
+         set returnbool 0
+      }
+      set cmd [list ::getstring::tk_getString $win.gs result $prompt]
+      set pressedok [eval $cmd $args]
+      if {$returnbool} {
+         return $pressedok
+      } else {
+         return $result
+      }
    }
 
    # showbusy ?-title <text>? ?-message <text>? <script>
@@ -339,6 +376,9 @@ snit::widget ::sf::gui {
       $mb.file add command -label "Load CIR from path..." \
          -command [mymethod controller prompt load from path cir::tarpath]
 
+      $mb add cascade -label "Bookmarks" -menu [menu $mb.bookmarks]
+      $self refresh bookmarks {}
+
       if {$MenuStyle eq "menubar"} {
          $win configure -menu $mb
       } else {
@@ -423,6 +463,8 @@ snit::widget ::sf::gui {
       grid $f.f2 -sticky w
 
       grid columnconfigure $f 100 -weight 1
+
+      bind $f <Configure> [mymethod OnToolbarConfigure]
    }
 
    # Create toolbar vcr <f>
@@ -577,10 +619,48 @@ snit::widget ::sf::gui {
       }
    }
 
+   # refresh bookmarks <bookmarks>
+   #     Updates the bookmarks menu with the given bookmarks data, which should
+   #     be a list of alternating soe and name values. The values will be
+   #     displayed in the order given.
+   method {refresh bookmarks} bookmarks {
+      set mb $win.mb.bookmarks
+      $mb delete 0 end
+      destroy $mb.delete
+      $mb add command -label "Bookmark this timestamp..." \
+         -command [mymethod controller prompt bookmark current]
+      if {$bookmarks ne ""} {
+         $mb add separator
+         menu $mb.delete
+         foreach {soe name} $bookmarks {
+            $mb add command -label $name \
+               -command [mymethod controller jump soe $soe]
+            $mb.delete add command -label $name \
+               -command [mymethod controller bookmark delete $soe]
+         }
+         $mb add separator
+         $mb add cascade -label "Remove a bookmark" -menu $mb.delete
+      }
+   }
+
    # GetImage option
    #     Used to return the image via the -image option.
    method GetImage option {
       return $image
+   }
+
+   # OnToolbarConfigure
+   #     Bound to the <Configure> event of the toolbars frame. When it gets
+   #     resized, this attempts to optimally lay out its contents based on its
+   #     width.
+   method OnToolbarConfigure {} {
+      set tb $win.toolbars
+      set combined [expr {[winfo reqwidth $tb.f1] + [winfo reqwidth $tb.f2]}]
+      if {[winfo width $win] > $combined} {
+         grid $tb.f2 -row 0 -column 1
+      } else {
+         grid $tb.f2 -row 1 -column 0
+      }
    }
 
    # geodirty
@@ -728,30 +808,6 @@ namespace eval ::sf::gui {
          0x80, 0x0d, 0x00, 0x0d, 0x00, 0x00, 0x00, 0x00};
    }]
 
-   # img(wind,fwd)
-   #     A solid triangle pointing right, with a solid vertical line to its
-   #     right. Similar to: >|
-   set img(wind,fwd) [image create bitmap -data {
-      #define right-arrow-full_width 16
-      #define right-arrow-full_height 16
-      static unsigned char right-arrow-full_bits[] = {
-         0x00, 0x00, 0x08, 0x18, 0x18, 0x18, 0x38, 0x18, 0x78, 0x18, 0xf8, 0x18,
-         0xf8, 0x19, 0xf8, 0x1b, 0xf8, 0x19, 0xf8, 0x18, 0x78, 0x18, 0x38, 0x18,
-         0x18, 0x18, 0x08, 0x18, 0x00, 0x00, 0x00, 0x00};
-   }]
-
-   # img(wind,bwd)
-   #     A solid triangle pointing left, with a solid vertical line to its
-   #     left. Similar to: |<
-   set img(wind,bwd) [image create bitmap -data {
-      #define left-arrow-full_width 16
-      #define left-arrow-full_height 16
-      static unsigned char left-arrow-full_bits[] = {
-         0x00, 0x00, 0x18, 0x10, 0x18, 0x18, 0x18, 0x1c, 0x18, 0x1e, 0x18, 0x1f,
-         0x98, 0x1f, 0xd8, 0x1f, 0x98, 0x1f, 0x18, 0x1f, 0x18, 0x1e, 0x18, 0x1c,
-         0x18, 0x18, 0x18, 0x10, 0x00, 0x00, 0x00, 0x00};
-   }]
-
    # img(stop)
    #     A solid square.
    set img(stop) [image create bitmap -data {
@@ -763,11 +819,16 @@ namespace eval ::sf::gui {
          0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
    }]
 
+   # img(plot)
+   #     Depicts a red square on a blue line, as would be seen in Yorick when
+   #     plotting the point.
    set img(plot) [image create photo -format gif -data {
       R0lGODdhEAAQAJEAAAAA/+fn5/8AAP///ywAAAAAEAAQAAACIUSOqWHr196KMtF6hN5C9vQ5
       YeYpo4k+3IZZrftCsTwDBQA7
    }]
 
+   # img(raster)
+   #     Depicts an excerpt/thumbnail of a plotted lidar raster.
    set img(raster) [image create photo -format png -data {
       iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAAHnlligAAAABGdBTUEAAYagMeiWXwAAAttJ
       REFUKJEFwd1vU2UYAPDned9z2o3OjhHsVtgcMBUxcdCJvSCDkEUTL1AIFyByoTde+AcYzDRR

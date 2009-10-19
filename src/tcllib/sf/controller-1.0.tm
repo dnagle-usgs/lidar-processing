@@ -302,6 +302,135 @@ snit::type ::sf::controller {
       $self update info
    }
 
+   # prompt bookmark current
+   #     Prompts the user for a name to assign to the currently viewed frame as
+   #     a bookmark.
+   method {prompt bookmark current} {} {
+      set prompt "Enter a unique name for this bookmark."
+      if {[$gui prompt string -prompt $prompt -variable name]} {
+         $self bookmark add [$gui cget -soe] $name
+      }
+   }
+
+   # bookmark add <soe> <name>
+   #     Adds a bookmark with the given <name> for the given <soe>.
+   method {bookmark add} {soe name} {
+      if {![string is integer -strict $soe]} {
+         $gui prompt error "expected integer, got: $soe"
+         return
+      }
+      # Does the soe already exist? That's an error, unless the name is also a
+      # match in which case they're duplicating an existing bookmark which is
+      # harmless.
+      if {[dict exists $bookmarks $soe]} {
+         if {[dict get $bookmarks $soe] eq $name} {
+            # This results in a no-op so abort without error.
+            return
+         } else {
+            set other [dict get $bookmarks $soe]
+            $gui prompt error "A bookmark already exists for soe $soe entitled\
+               \"$other\"; please remove the existing bookmark before creating\
+               a new one."
+            return
+         }
+      }
+      # Does the name already exist? That's an error, too.
+      set idx [lsearch -exact $bookmarks $name]
+      if {$idx > -1 && [expr {$idx % 2}] == 1} {
+         set other [lindex $bookmarks [expr {$idx - 1}]]
+         $gui prompt error "There is already a \"$name\" bookmark for timestamp\
+            $other. Please remove the existing bookmark before creating this\
+            one."
+         return
+      }
+      dict set bookmarks $soe $name
+      $gui refresh bookmarks [$self bookmark list all]
+   }
+
+   # bookmark delete <item>
+   #     Deletes the bookmark associated with <item>. Automatically determines
+   #     whether <item> is an soe or a name.
+   method {bookmark delete} item {
+      if {[dict exists $bookmarks $item]} {
+         set soe $item
+      } else {
+         set idx [lsearch -exact $bookmarks $item]
+         if {$idx == -1} {
+            $gui prompt warning "No bookmark exists for \"$item\" so deletion\
+               is impossible."
+            return
+         } else {
+            set soe [lindex $bookmarks [expr {$idx - 1}]]
+         }
+      }
+      dict unset bookmarks $soe
+      $gui refresh bookmarks [$self bookmark list all]
+   }
+
+   # bookmark list <which>
+   #     Returns a list of bookmarks. The specifics vary based on the value of
+   #     <which>:
+   #        soes - A list of soe values is returned, sorted.
+   #        names - A list of bookmark names is returned, sorted.
+   #        all - A list of soe/name pairs is returned, sorted by soe. This can
+   #           be used as a dict, or it can be iterated over as a list.
+   method {bookmark list} which {
+      switch -exact -- $which {
+         soes {
+            return [lsort -integer [dict keys $bookmarks]]
+         }
+         names {
+            return [lsort [dict values $bookmarks]]
+         }
+         all {
+            set result [list]
+            foreach soe [lsort -integer [dict keys $bookmarks]] {
+               lappend result $soe [dict get $bookmarks $soe]
+            }
+            return $result
+         }
+         default {
+            $gui error "Invalid argument to method \"bookmark list\": $which"
+         }
+      }
+   }
+
+   # bookmark query <value> ?<flag>?
+   #     Queries the bookmarks to get the corresponding data for the given
+   #     value. If <flag> is provided and is -soe or -name, then <value> is
+   #     treated accordingly. Otherwise (or if -auto is provided for flag), it
+   #     autodetermines what was passed. An empty string is returned if nothing
+   #     is found.
+   method {bookmark query} {value {flag -auto}} {
+      switch -exact -- $flag {
+         -soe {
+            if {[dict exists $bookmarks $value]} {
+               return [dict get $bookmarks $value]
+            } else {
+               return ""
+            }
+         }
+         -name {
+            set idx [lsearch -exact $bookmarks $value]
+            if {$idx > -1 && [expr {$idx % 2}] == 1} {
+               return [lindex $bookmarks [expr {$idx - 1}]]
+            } else {
+               return ""
+            }
+         }
+         -auto {
+            set idx [lsearch -exact $bookmarks $value]
+            if {$idx == -1} {
+               return ""
+            } elseif {[expr {$idx % 2}] == 1} {
+               return [lindex $bookmarks [expr {$idx - 1}]]
+            } else {
+               return [lindex $bookmarks [expr {$idx + 1}]]
+            }
+         }
+      }
+   }
+
    #===========================================================================#
    #                                 Internals                                 #
    #---------------------------------------------------------------------------#
@@ -334,6 +463,11 @@ snit::type ::sf::controller {
    #     canceled if a new play or stop direction is received.
    variable playcancel {}
 
+   # bookmarks
+   #     Stores the bookmark information, used by the bookmark subcommands.
+   #     This is a dict whose keys are soe timestamps and whose values are
+   #     descriptive names for the bookmarks.
+   variable bookmarks ""
 
    # -------------------------------- Options ----------------------------------
    #
