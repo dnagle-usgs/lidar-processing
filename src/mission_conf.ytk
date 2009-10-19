@@ -473,9 +473,11 @@ namespace eval mission {
         if {[llength $rgb_p]} {
             set rgb [sf::controller %AUTO%]
             $rgb load rgb::f2006::tarpaths -paths $rgb_p
+            ybkg set_sf_bookmarks \"$rgb\"
         } elseif {[llength $rgb_t]} {
             set rgb [sf::controller %AUTO%]
             $rgb load rgb::f2001::tarfiles -files $rgb_t
+            ybkg set_sf_bookmarks \"$rgb\"
         }
     }
 
@@ -489,6 +491,7 @@ namespace eval mission {
         if {[llength $paths]} {
             set cir [sf::controller %AUTO%]
             $cir load cir::tarpaths -paths $paths
+            ybkg set_sf_bookmarks \"$cir\"
         }
     }
 
@@ -700,9 +703,11 @@ namespace eval mission {
         if {[mission_has "rgb dir" $day]} {
             set rgb [sf::controller %AUTO%]
             $rgb load rgb::f2006::tarpath -path [mission_get "rgb dir" $day]
+            ybkg set_sf_bookmark \"$rgb\" \"$day\"
         } elseif {[mission_has "rgb file" $day]} {
             set rgb [sf::controller %AUTO%]
             $rgb load rgb::f2001::tarfiles -files [list [mission_get "rgb file" $day]]
+            ybkg set_sf_bookmark \"$rgb\" \"$day\"
         }
     }
 
@@ -710,6 +715,7 @@ namespace eval mission {
         if {[mission_has "cir dir" $day]} {
             set cir [sf::controller %AUTO%]
             $cir load cir::tarpath -path [mission_get "cir dir" $day]
+            ybkg set_sf_bookmark \"$cir\" \"$day\"
         }
     }
 
