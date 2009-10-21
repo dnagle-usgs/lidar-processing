@@ -294,7 +294,7 @@ if {![namespace exists ::pixelwf]} {
       dict for {ns vars} $constants::valid_variables {
          foreach var $vars {
             validation_trace append vars::${ns}::$var \
-               {regexp {^[[:alpha:]_]\w*$} %V}
+               {regexp {^([[:alpha:]_]\w*|)$} %V}
          }
          unset var
       }
@@ -436,7 +436,7 @@ namespace eval ::pixelwf::gui {
       }
 
       ::misc::combobox $cboAction -state readonly -width 0 \
-         -modifycmd "set ${ns}::dest_action \[$cboAction curselection\]" \
+         -modifycmd "set ${ns}::dest_action \[$cboAction current\]" \
          -values $vals
       $cboAction setvalue first
 
