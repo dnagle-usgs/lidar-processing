@@ -692,7 +692,7 @@ win=, dofma=, edt=, marker=, skip=, quiet=) {
    if(numberof(q)) {
       q = q(::skip);
       plcm, elv(q), north(q)/100., east(q)/100.,
-         msize=msize, cmin=cmin, cmax=cmax, marker=marker;
+         msize=size, cmin=cmin, cmax=cmax, marker=marker;
    }
 
    if (!quiet)
