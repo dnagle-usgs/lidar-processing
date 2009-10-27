@@ -537,7 +537,7 @@ $w.mb.file add separator
  $w.mb.images add command -label "Launch new SF viewer..." \
    -command [list ::sf::controller %AUTO%]
  $w.mb.images add command -label "Process Lidar Data..." -command {
-    source "$src_path/l1pro.ytk"
+    wm deiconify .l1wid
  }
  $w.mb.images add command -label "Lidar First Return Surface..." -command {
  }
