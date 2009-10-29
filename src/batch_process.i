@@ -550,27 +550,9 @@ func check_space(wmark=, dir=) {
    return ([space, fc]);
 }
 
-func batch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=,
-onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=,
-only_veg=, update=, avg_surf=,conf_file=, now=) {
-/* DOCUMENT batch_process, typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=,
-   n=, onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=,
-   only_bathy=, only_veg=, update=, avg_surf=,conf_file=, now=
-
-   This function is a wrapper for mbatch_process. For information on what each
-   of the available options mean, see help, mbatch_process.
-
-   This function is meant to be used from an active ALPS session. Thus, now=
-   defaults to 1 (unlike mbatch_process, where it defaults to 0).
-*/
-   default, now, 1;
-   mbatch_process, typ=typ, save_dir=save_dir, shem=shem, zone=zone,
-      dat_tag=dat_tag, cmdfile=cmdfile, n=n, onlyplot=onlyplot, mdate=mdate,
-      pbd=pdb, edf=edf, win=win, auto=auto, pick=pick, get_typ=get_typ,
-      only_bathy=only_bathy, only_veg=only_veg, update=update,
-      avg_surf=avg_surv,conf_file=conf_file, now=now;
-}
-
+// batch_process is defined further below; it is dummied out here so that it
+// inherits the same documentation as mbatch_process.
+func batch_process {};
 func mbatch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=,
 onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=,
 only_veg=, update=, avg_surf=,conf_file=, now=, b_rcf=, buf=, w=, no_rcf=,
@@ -580,9 +562,18 @@ mode=, merge=, clean=, rcfmode=, write_merge=) {
    only_bathy=, only_veg=, update=, avg_surf=,conf_file=, now=, b_rcf=, buf=,
    w=, no_rcf=, mode=, merge=, clean=, rcfmode=, write_merge=
 
-This function is used to batch process several regions for a given
-data set.  The regions are either defined by a command file or
-automatically choosen by the program if auto=1 (auto=1 by default)
+   batch_process, typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=,
+   onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=,
+   only_veg=, update=, avg_surf=,conf_file=, now=
+
+This function is used to batch process several regions for a given data set.
+The regions are either defined by a command file or automatically choosen by
+the program if auto=1.
+
+For mbatch_process, auto= defaults to 1. This form of the function is intended
+for batch usage. For batch_process, auto= defaults to 0. This form of the
+function is intended for interactive usage. Otherwise, the two functions are
+identical.
 
 Input:
   typ=         : Type of data to process for
@@ -593,6 +584,10 @@ Input:
   save_dir=    : Directory name where the processed data will be written
 
   zone=        : Set to UTM zone number when using pick=1
+
+  pick=        : Specifies how to select which data to process.
+                 1: draw a rubber-band box
+                 2: draw a polygon
 
   onlyplot=    : Set to '1' to only plot the areas that would be
                  processed to the screen.
@@ -668,17 +663,13 @@ The following are pass thru variables needed for batch_rcf
   rcfmode=     :
   write_merge= :
 
-
-
 Ex: curzone=18
     batch_process,typ=2,save_dir="/data/3/2004/bombay-hook/output/",
                   mdate="20040209",zone=18,pick=1
 
-
 amar nayegandhi started (10/04/02) Lance Mosher
 Added server/client support (2009-01) Richard Mitchell
 */
-
    extern pnav_filenam, bath_ctl
 
    // start the timer
@@ -995,6 +986,18 @@ Added server/client support (2009-01) Richard Mitchell
    write, format="Walltime: %f: %f - %f\n", myt1-myt0, myt1, myt0;
 
 }
+
+func batch_process(typ=, save_dir=, shem=, zone=, dat_tag=, cmdfile=, n=,
+onlyplot=, mdate=, pbd=, edf=, win=, auto=, pick=, get_typ=, only_bathy=,
+only_veg=, update=, avg_surf=,conf_file=, now=) {
+   default, now, 1;
+   mbatch_process, typ=typ, save_dir=save_dir, shem=shem, zone=zone,
+      dat_tag=dat_tag, cmdfile=cmdfile, n=n, onlyplot=onlyplot, mdate=mdate,
+      pbd=pdb, edf=edf, win=win, auto=auto, pick=pick, get_typ=get_typ,
+      only_bathy=only_bathy, only_veg=only_veg, update=update,
+      avg_surf=avg_surv,conf_file=conf_file, now=now;
+}
+
 
 // This is called after mbatch_process() mbatch_process_dir() generates
 // all of the tiles and then monitors the status of the work completed,
