@@ -292,14 +292,14 @@ func polygon_acquire(closed) {
    else
       type = "polyline";
 
-   prompt = swrite(format="Left click generates a vertice. " +
+   prompt = swrite(format="Left click generates a vertex. " +
       "CTRL+Left or CTRL+Middle click will close %s.", type);
    poly = array(float, 2, 1);
    result = mouse(1, 0, prompt);
    poly(,1) = result(1:2);
    plmk, poly(2,0), poly(1,0), marker=4, msize=.4, width=10, color="red";
 
-   prompt = swrite(format="Left click generates another vertice. " +
+   prompt = swrite(format="Left click generates another vertex. " +
       "CTRL+Left or Middle click will close %s.", type);
 
    while(!((result(11) == 4 && result(10) == 1) || result(10) == 2)) {

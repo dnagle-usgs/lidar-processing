@@ -24,7 +24,7 @@ Returns:    ply - array of polygon vertices
 */
 { 
  extern _ply;	// global copy of most recently defined ply
- prompt = "Left mouse generates a vertice. Ctl-Left or middle mouse click to end and close polygon."
+ prompt = "Left mouse generates a vertex. Ctl-Left or middle mouse click to end and close polygon."
 	ply = array(float, 2, 1)     // array that contains polygon vertices
   	result = mouse(1, 0, prompt)
   	ply(1, 1) = result(1)	     // x coordinate of the first vertex
