@@ -1827,6 +1827,8 @@ if {![winfo exists .l1wid]} {
       }
      Button $w.dismiss -text "Dismiss" -command {
       destroy .cbartool
+      exp_send "winkill, 7;\r"
+      expect ">"
     }
     pack \
       $w.both \
@@ -2944,7 +2946,7 @@ if {![winfo exists .l1wid]} {
     switch -- $b {
       cmax -
       cmin {
-        set cdelta [expr {$plot_settings(cmax) - $plot_settings(cmin)}]
+        set cdelta [format %.2f [expr {$plot_settings(cmax) - $plot_settings(cmin)}]]
       }
     }
     if { [ winfo exists .rem ] } {
