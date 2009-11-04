@@ -236,7 +236,7 @@ if {![namespace exists ::pixelwf]} {
       mcset en missionday Day
 
       # fit_gauss
-      mcset en "fit_gauss functionality" "Gaussian Deconvolution"
+      mcset en "fit_gauss functionality" "Gaussian Decomposition"
 
       # ex_bath
       mcset en "ex_bath functionality" "Bathy Functionality"
