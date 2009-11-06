@@ -130,7 +130,8 @@ func tkcmd(s) {
 */
    extern ytkfifo;
    write, ytkfifo, s;
-   fflush, ytkfifo;
+   if ( ytkfifo ) 
+    fflush, ytkfifo;
 }
 
 func tksetval(tkvar, yval) {

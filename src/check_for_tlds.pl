@@ -69,7 +69,7 @@ $path = <IN>; chop $path;
 $list = "";
 while ( $file=<IN> ) {
   chop $file;
-  $fqn = $path . "eaarl/" . $file;
+  $fqn = $path . "/eaarl/" . $file;
   if ( ! -e $fqn ) {
     printf("NEED: %s\n", $fqn);
     $fqn = $host . ":" . $fqn;     # prepend the hostname

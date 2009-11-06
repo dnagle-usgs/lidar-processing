@@ -60,7 +60,7 @@ func save_vars (filename, tile=) {
       save, f, q, r, min_e, max_e, min_n, max_n;
       save, f, get_typ, typ, auto;
       save, f, save_dir;
-      save, f, zone_s;
+      save, f, zone, zone_s;
       save, f, dat_tag, mdate;
       save, f, iidx_path, indx_path, bool_arr, mtdt_path, mtdt_file;
       save, f, i, n;
