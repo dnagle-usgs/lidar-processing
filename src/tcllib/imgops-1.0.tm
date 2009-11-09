@@ -34,6 +34,8 @@ namespace eval ::imgops {}
 #     -channel <name>
 #        If specified, extracts a single channel to operate on. Name should be
 #        one of red, green, or blue (or R, G, or B).
+#     -cirtransform <mode>
+#        Transform cir channels.
 ##
 snit::type ::imgops::transform {
    pragma -hastypeinfo false
@@ -125,6 +127,13 @@ snit::type ::imgops::transform {
          set cmd [concat $cmd $resize_cmd]
       }
 
+      # http://www.topoimagery.com/making/cir/makingcir.html
+      if {[dict exists $args -cirtransform]} {
+         lappend cmd ( +clone -channel R -fx G ) +swap
+         lappend cmd -channel G -fx (v.r+u.b)/2
+         lappend cmd -channel RGB
+      }
+
       # Perform requested enhancements before rotations, otherwise the
       # background color can alter results.
       # -normalize overrides -equalize
@@ -166,10 +175,13 @@ snit::type ::imgops::transform {
          return
       }
 
-      lappend cmd [file normalize $fn]
-      set cmd [concat [auto_execok mogrify] $cmd]
-
-      return [eval exec $cmd]
+      set tmp [file join [::fileutil::tempdir] [::uuid::uuid generate]].png
+      set cmd [linsert $cmd 0 [file normalize $fn]]
+      lappend cmd $tmp
+      set cmd [concat [auto_execok convert] $cmd]
+      set result [eval exec $cmd]
+      file rename -force $tmp $fn
+      return $result
    }
 
    # Returns [list $width $height]
