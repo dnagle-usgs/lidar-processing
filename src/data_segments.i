@@ -112,8 +112,10 @@ func plot_statistically(y, x, title=, xtitle=, ytitle=, nofma=, win=) {
    w = current_window();
    window, win;
 
-   if(! nofma)
+   if(!nofma) {
       fma;
+      limits;
+   }
 
    count = numberof(y);
    default, x, indgen(count);
@@ -165,34 +167,55 @@ func tk_dsw_plot_stats(var, data, type, win) {
    title = regsub("_", title, "!_", all=1);
    x = y = [];
    if(type == "elevation") {
-      y = data.elevation;
+      y = data.elevation/100.;
       x = data.soe;
+      ytitle = "Elevation (meters)";
    } else if(type == "bathy") {
       if(structeq(structof(data), GEO)) {
-         y = data.elevation + data.depth;
+         y = (data.elevation + data.depth)/100.;
          x = data.soe;
       } else if(structeq(structof(data), VEG__)) {
-         y = data.lelv;
+         y = data.lelv/100.;
          x = data.soe;
       }
+      ytitle = "Elevation (meters)";
    } else if(type == "roll") {
       working_tans = tk_dsw_get_data(data, "dmars", "tans", "somd");
       y = working_tans.roll;
       x = working_tans.somd;
+      ytitle = "Roll (degrees)";
    } else if(type == "pitch") {
       working_tans = tk_dsw_get_data(data, "dmars", "tans", "somd");
       y = working_tans.pitch;
       x = working_tans.somd;
+      ytitle = "Pitch (degrees)";
    } else if(type == "pdop") {
       working_pnav = tk_dsw_get_data(data, "pnav", "pnav", "sod");
       y = working_pnav.pdop;
       x = working_pnav.sod;
+      ytitle = "Pitch (degrees)";
    } else if(type == "alt") {
       working_pnav = tk_dsw_get_data(data, "pnav", "pnav", "sod");
       y = working_pnav.alt;
       x = working_pnav.sod;
+      ytitle = "Altitude (meters)";
+   } else if(type == "sv") {
+      working_pnav = tk_dsw_get_data(data, "pnav", "pnav", "sod");
+      y = working_pnav.sv;
+      x = working_pnav.sod;
+      ytitle = "Number of Satellites";
+   } else if(type == "xrms") {
+      working_pnav = tk_dsw_get_data(data, "pnav", "pnav", "sod");
+      y = working_pnav.xrms;
+      x = working_pnav.sod;
+      ytitle = "GPS RMS";
+   } else if(type == "velocity") {
+      working_pnav = tk_dsw_get_data(data, "pnav", "pnav", "sod");
+      y = sqrt(working_pnav.veast^2 + working_pnav.vnorth^2 + working_pnav.vup^2);
+      x = working_pnav.sod;
+      ytitle = "Velocity (m/s)";
    }
-   plot_statistically, y, x, title=title, win=win;
+   plot_statistically, y, x, title=title, win=win, ytitle=ytitle;
 }
 
 
@@ -333,6 +356,44 @@ func gather_data_stats(data, &working_tans, &working_pnav) {
       h_set, stat_temp, "avg", working_pnav.alt(avg);
       h_set, stat_temp, "rms", working_pnav.alt(rms);
       h_set, stats, "alt", stat_temp;
+
+      // sv (number of satellites)
+      stat_temp = h_new();
+      qs = quartiles(working_pnav.sv);
+      h_set, stat_temp, "q1", qs(1);
+      h_set, stat_temp, "med", qs(2);
+      h_set, stat_temp, "q3", qs(3);
+      h_set, stat_temp, "min", working_pnav.sv(min);
+      h_set, stat_temp, "max", working_pnav.sv(max);
+      h_set, stat_temp, "avg", working_pnav.sv(avg);
+      h_set, stat_temp, "rms", working_pnav.sv(rms);
+      h_set, stats, "sv", stat_temp;
+
+      // xrms
+      stat_temp = h_new();
+      qs = quartiles(working_pnav.xrms);
+      h_set, stat_temp, "q1", qs(1);
+      h_set, stat_temp, "med", qs(2);
+      h_set, stat_temp, "q3", qs(3);
+      h_set, stat_temp, "min", working_pnav.xrms(min);
+      h_set, stat_temp, "max", working_pnav.xrms(max);
+      h_set, stat_temp, "avg", working_pnav.xrms(avg);
+      h_set, stat_temp, "rms", working_pnav.xrms(rms);
+      h_set, stats, "xrms", stat_temp;
+
+      // velocity
+      stat_temp = h_new();
+      v = sqrt(working_pnav.veast^2 + working_pnav.vnorth^2 + working_pnav.vup^2);
+      qs = quartiles(v);
+      h_set, stat_temp, "q1", qs(1);
+      h_set, stat_temp, "med", qs(2);
+      h_set, stat_temp, "q3", qs(3);
+      h_set, stat_temp, "min", v(min);
+      h_set, stat_temp, "max", v(max);
+      h_set, stat_temp, "avg", v(avg);
+      h_set, stat_temp, "rms", v(rms);
+      h_set, stats, "velocity", stat_temp;
+      v = [];
    }
 
    logger, "debug", logid + " Returning from gather_data_stats";

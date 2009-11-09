@@ -36,6 +36,9 @@ if {[info commands DataStatsWindow] eq ""} {
          Heading     heading \
          Elevation   elevation \
          Bathymetry  bathy \
+         Satellites  sv \
+         "GPS RMS"   xrms \
+         Velocity    velocity \
       ]
       variable _stat_data [dict create]
       variable _count
