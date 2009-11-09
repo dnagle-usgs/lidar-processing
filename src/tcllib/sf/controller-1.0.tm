@@ -573,7 +573,9 @@ snit::type ::sf::controller {
             }
          }
          set band [string index [string toupper [$gui cget -band]] 0]
-         if {$band ne "A"} {
+         if {$band eq "C"} {
+            dict set opts -cirtransform 1
+         } elseif {$band ne "A"} {
             dict set opts -channel $band
          }
          eval [list $model retrieve [$gui cget -token]] $opts

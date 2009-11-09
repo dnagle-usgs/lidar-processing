@@ -528,7 +528,7 @@ snit::widget ::sf::gui {
       ttk::frame $f
       ttk::combobox $f.band -width 5 -state readonly \
          -textvariable [myvar options(-band)] \
-         -values [list "All" "Red" "Green" "Blue"]
+         -values [list "All" "Red" "Green" "Blue" "CIR"]
       ttk::combobox $f.enhancement -width 9 -state readonly \
          -textvariable [myvar options(-enhancement)] \
          -values [list None Normalize Equalize]
@@ -543,7 +543,10 @@ snit::widget ::sf::gui {
          displayed. \"Red\" is actually band \n1, \"Green\" is actually band 2,\
          and \"Blue\" is actually band 3. Thus, \nfor CIR images, select\
          \"Red\" for near-infrared, \"Green\" for actual \nred, and \"Blue\"\
-         for actual green."
+         for actual green.\
+         \n\
+         \nThe \"CIR\" entry is special and will juggle the bands to provide a\
+         \npseudo-truecolor estimation of the image based on the existing bands."
       ::tooltip::tooltip $f.enhancement "The kind of image enhancement to\
          apply, if any. If all bands are \nselected, then normalize and\
          equalize will operate on each band \nindependently."
