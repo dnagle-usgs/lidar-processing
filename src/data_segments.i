@@ -108,7 +108,6 @@ func tk_sdw_define_region_variables(obj, ..) {
 func plot_statistically(y, x, title=, xtitle=, ytitle=, nofma=, win=) {
    default, nofma, 0;
    default, win, max([current_window(), 0]);
-   default, xtitle, "red: mean, deviations; blue: median and quartiles";
 
    w = current_window();
    window, win;
@@ -147,6 +146,16 @@ func plot_statistically(y, x, title=, xtitle=, ytitle=, nofma=, win=) {
       xytitles, xtitle;
    if(ytitle)
       xytitles, , ytitle;
+
+   vport = viewport();
+   if(vport(1) < 0.1) {
+      vx = vport(1) - 0.07;
+      vy = vport(3) - 0.07;
+   } else {
+      vx = vport(1) - 0.07;
+      vy = vport(3) - 0.08;
+   }
+   plt, "red: mean, deviations\nblue: median, quartiles", vx, vy, justify="LA";
 
    window_select, w;
 }

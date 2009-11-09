@@ -19,6 +19,7 @@ if {[info commands DataStatsWindow] eq ""} {
       # Variable containing list of variables to populate interface with
       itk_option define -segmentvariables dataVariables VariableList ""
 
+      method update_highlight {} {}
       method get_stats {} {}
       method set_stats {var json} {}
       method refresh_fields {} {}
@@ -56,29 +57,35 @@ itcl::body DataStatsWindow::constructor {args} {
    set w $itk_interior
 
    set f $w.fraHead
-   frame $f
+   ttk::frame $f
    ::misc::combobox $f.cboStatistic \
       -textvariable [itcl::scope _statistic] \
       -state readonly \
       -modifycmd [itcl::code $this refresh_fields] \
       -values [lsort [dict keys $_stat_mapping]]
 
-   grid $f.cboStatistic
+   grid $f.cboStatistic -column 1
+   grid columnconfigure $f {0 2} -weight 1
 
    set f $w.fraVariables
 
-   labelframe $f -text "Statistics"
+   ttk::labelframe $f -text "Statistics"
 
    foreach field [list Variable Min Q1 Median Q3 Max Mean RMS] {
-      label $f.lblHeading$field -text $field
+      ttk::label $f.lblHeading$field -text $field -justify center -anchor center
+      bind $f.lblHeading$field <Enter> [itcl::code $this update_highlight]
+      bind $f.lblHeading$field <Leave> [itcl::code $this update_highlight]
+      bind $f.lblHeading$field <Motion> [itcl::code $this update_highlight]
    }
-   label $f.lblHeadingPlot -text "Plot Segment"
+   ttk::label $f.lblHeadingPlot -text "Plot Segment" -justify center -anchor center
 
    grid $f.lblHeadingPlot - $f.lblHeadingVariable \
       $f.lblHeadingMin $f.lblHeadingQ1 $f.lblHeadingMedian \
       $f.lblHeadingQ3 $f.lblHeadingMax \
       $f.lblHeadingMean $f.lblHeadingRMS \
       -sticky ew
+
+   grid columnconfigure $f {3 4 5 6 7 8 9} -uniform cols
 
    set _count [llength $itk_option(-segmentvariables)]
    set idx 0
@@ -103,15 +110,22 @@ itcl::body DataStatsWindow::constructor {args} {
          -from 0 -to $itk_option(-maxwin) -width 2
 
       foreach field [list var min q1 med q3 max avg rms] {
-         label $f.lbl$field$idx \
+         ttk::label $f.lbl$field$idx -justify center -anchor center \
             -textvariable [itcl::scope _segment($idx,$field)]
+         bind $f.lbl$field$idx <Enter> [itcl::code $this update_highlight]
+         bind $f.lbl$field$idx <Leave> [itcl::code $this update_highlight]
+         bind $f.lbl$field$idx <Motion> [itcl::code $this update_highlight]
       }
 
       grid $f.btnPlot$idx $f.spnWin$idx $f.lblvar$idx \
          $f.lblmin$idx $f.lblq1$idx $f.lblmed$idx $f.lblq3$idx $f.lblmax$idx \
          $f.lblavg$idx $f.lblrms$idx \
-         -sticky ew
+         -sticky ewns
    }
+   bind $f <Enter> [itcl::code $this update_highlight]
+   bind $f <Leave> [itcl::code $this update_highlight]
+   bind $f <Motion> [itcl::code $this update_highlight]
+
    unset idx
    grid columnconfigure $f 1 -weight 1
    #-minsize 80
@@ -120,9 +134,46 @@ itcl::body DataStatsWindow::constructor {args} {
    grid $w.fraVariables -sticky wens
    grid columnconfigure $w 0 -weight 1
 
+   bind $w <Enter> [itcl::code $this update_highlight]
+   bind $w <Leave> [itcl::code $this update_highlight]
+   bind $w <Motion> [itcl::code $this update_highlight]
+
    get_stats
 
    logger debug "$logid Exiting DataStatsWindow::constructor"
+}
+
+itcl::body DataStatsWindow::update_highlight {} {
+   set hover [eval winfo containing [winfo pointerxy $itk_interior]]
+   if {[string match $itk_interior.fraVariables.* $hover]} {
+      set cnf [grid info $hover]
+      set r [dict get $cnf -row]
+      set c [dict get $cnf -column]
+      if {$c < 2} {
+         set r -1
+         set c -1
+      } elseif {$c == 2} {
+         set c -1
+      }
+      if {$r == 0} {
+         set r -1
+      }
+   } else {
+      set r -1
+      set c -1
+   }
+   foreach widget [grid slaves $itk_interior.fraVariables] {
+      if {[winfo class $widget] eq "TLabel"} {
+         set cnf [grid info $widget]
+         set wr [dict get $cnf -row]
+         set wc [dict get $cnf -column]
+         if {$r == $wr || $c == $wc} {
+            $widget state active
+         } else {
+            $widget state !active
+         }
+      }
+   }
 }
 
 itcl::body DataStatsWindow::query {} {
