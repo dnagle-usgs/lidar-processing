@@ -1139,6 +1139,9 @@ if {![winfo exists .l1wid]} {
       }
     }
 
+  .l1wid.mb.options add checkbutton -label "Autodraw colorbar when plotting" \
+    -variable l1pro_cbar
+
   .l1wid.mb.options add checkbutton -label "Set Plot Limits" -variable setll \
     -command {
       if {$setll == 1} {
@@ -2993,7 +2996,7 @@ if {![winfo exists .l1wid]} {
     -width 5
   ::tooltip::tooltip .l1wid.bf45.sc.g.sk.skip "Enter plot points to skip"
 
-  checkbutton .l1wid.bf45.sc.g.fma -text "Auto Fma" -variable l1pro_fma
+  checkbutton .l1wid.bf45.sc.g.fma -text "Auto Clear" -variable l1pro_fma
 
   Button .l1wid.bf45.sc.pl -text "Plot" -width 6 -height 2 -bd 5 -command {
     plot_fltlines 0
@@ -3006,7 +3009,7 @@ if {![winfo exists .l1wid]} {
   pack \
     .l1wid.bf45.sc.g.fma \
     .l1wid.bf45.sc.g.sk \
-    -side top -pady 5
+    -side top
 
   Button .l1wid.bf4.2.proc -text "Process Now" -width 20 -bd 5\
     -command {
@@ -3240,6 +3243,9 @@ if {![winfo exists .l1wid]} {
           exp_send "window, $win_no; fma;\r"
           expect ">"
         }
+      }
+      if {$::l1pro_cbar} {
+        exp_send "colorbar;\r"
       }
       if {$setll} {
         exp_send "limits, _ytk_ll(1), _ytk_ll(2), _ytk_ll(3), _ytk_ll(4);\r"
