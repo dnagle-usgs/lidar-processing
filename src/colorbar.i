@@ -71,6 +71,7 @@ func colorbar(cmin, cmax, drag=, landscape=, units=, datum=) {
    yoff = 0.0;
    if (drag) {
       mm = mouse(0, 1, "Drag out a rectangle for the color bar:");
+      x = y = array(double, 4);
       x(1) = x(2) = mm([1,3])(min);
       x(3) = x(4) = mm([1,3])(max);
       y(1) = y(4) = mm([2,4])(min);
