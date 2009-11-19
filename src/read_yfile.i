@@ -908,11 +908,6 @@ soe=, indx=, mapping=, columns=, types=) {
    function is optimized to read files created with write_ascii_xyz but has
    also been designed with flexibility for other uses in mind.
 
-   If no options are provided, then the function will attempt to auto-detect
-   everything. This will usually work provided you created the file using
-   write_ascii_xyz. So if you created the file with write_ascii_xyz, you can
-   probably read it without any explicit options.
-
    This fills in as many fields in the provided structure as it can, even if
    doing so isn't "correct", in order to improve compatibility throughout ALPS.
    For example, the mirror coordinates are filled in with the XYZ coordinates.
@@ -930,10 +925,17 @@ soe=, indx=, mapping=, columns=, types=) {
 
       delimit= The delimiter used. Defaults to " ".
 
-   These options will turn off auto-detect mode and correspond to options from
-   write_ascii_xyz. If you know what options were used when the file was
-   created and for some reason the file isn't parsing automatically, then
-   specify those same options here.
+   Without any additional options, the function works in auto-detect mode. It
+   will analyze the first few lines of the file in an attempt to determine what
+   the columns are. This will usually work provided you created the file using
+   write_ascii_xyz. So if you created the file with write_ascii_xyz, you can
+   probably read it without any explicit options.
+
+   On rare occasions, it may not read in properly even though it was written
+   with write_ascii_xyz. If you know what options were used when the file was
+   created and for some reason the file isn't parsing automatically, then you
+   can specify those same options here.  These options will turn off
+   auto-detect mode and correspond to options from write_ascii_xyz.
 
       ESRI=
       header=
@@ -941,15 +943,6 @@ soe=, indx=, mapping=, columns=, types=) {
       rn=
       soe=
       indx=
-
-   These options will turn off or alter certain aspects of auto-detect mode but
-   should only be used if you've read the function's source code and understand
-   what they do:
-
-      mapping=
-      columns=
-      types= (Note: This is NOT the same as the type= parameter in
-         write_ascii_xyz.)
 
    The following options from write_ascii_xyz are NOT implemented, but affect
    output when used. Thus, if these options were used on write_ascii_xyz, you
@@ -963,6 +956,107 @@ soe=, indx=, mapping=, columns=, types=) {
          file was data.elevation + data.depth. There's no way to figure out
          what those two values were. The output will set both data.elevation
          AND data.depth to this value, which effectively doubles the value.
+
+   If none of the above works, then you can use the following advanced options
+   to manually dictate the function's behavior.
+
+      mapping= Used to map ascii columns to structure fields.
+      columns= Used to specify what each column is.
+      types= Used to override the type expected when reading in the file. This
+         should almost never be used, as it's accounted for in mapping. (Note:
+         This is NOT the same as the type= parameter in write_ascii_xyz.)
+
+   Some examples of advanced usage follow.
+
+   -- Example 1 --
+
+   Consider a file with content like this:
+
+      574210.74,7378000.00,134.38,4,1,931741523.046877
+      574001.46,7377693.71,134.78,8,1,931742705.021433
+      574000.39,7377698.72,134.85,7,1,931742705.057043
+      574002.36,7377697.26,134.64,15,1,931742705.057073
+      574004.28,7377695.83,134.80,11,1,931742705.057103
+      574006.23,7377694.39,134.66,12,1,931742705.057133
+      574009.55,7377694.07,136.12,7,1,931742705.076933
+      574007.76,7377695.47,134.74,7,1,931742705.076963
+      574005.82,7377696.93,134.58,11,1,931742705.076993
+      574003.90,7377698.37,134.51,15,1,931742705.077023
+      ...
+
+   The fields here correspond to UTM x, y, and z, the intensity, the return
+   number, and the time. With the exception of the return number, all other
+   fields are something we're used to seeing in the output of write_ascii_xyz.
+   However, they're not in the same order and there's an extra field in the
+   middle.  In order to read the file in, we need to tell the function what
+   each column contains. We use the names that the columns would have if we
+   wrote it out with write_ascii_xyz.
+
+   For reference, the fields used by write_ascii_xyz include: utm_x, utm_y,
+   z_meters, intensity_counts, raster_pulse, and soe.
+
+   If we wanted to read this into an FS structure, our function call would look
+   like this:
+
+      fs_all = read_ascii_xyz("example1.txt", FS, delimit=",",
+         columns=["utm_x", "utm_y", "z_meters", "intensity_counts", "", "soe"])
+
+   Note that we used an empty string to ignore the column with the return
+   number.
+
+   -- Example 2 --
+
+   Consider a file with content like this:
+
+      513496.35 3205716.66 -25.86 513496.32 3205716.80 -25.86 1243527928.781
+      513499.59 3205718.69 -25.83 513499.60 3205718.72 -25.83 1243527928.782
+      513497.98 3205717.69 -25.82 513498.00 3205717.76 -25.82 1243527928.781
+      513858.76 3205718.66 -30.42 513858.72 3205718.72 -30.42 1243549056.772
+      513856.97 3205717.64 -30.41 513856.96 3205717.76 -30.41 1243549056.771
+      513855.18 3205716.62 -30.39 513855.20 3205716.80 -30.39 1243549056.771
+      513514.37 3205722.50 -27.85 513514.40 3205722.56 -27.85 1243527928.882
+      513513.71 3205723.55 -27.76 513513.68 3205723.52 -27.76 1243527928.854
+      513512.13 3205722.57 -27.76 513512.12 3205722.56 -27.76 1243527928.854
+      513517.59 3205724.46 -27.64 513517.60 3205724.48 -27.64 1243527928.883
+
+   The fields here correspond to first return x,y,z, last return x,y,z, and soe
+   time. The fields defined for write_ascii_xyz won't work here, so we have to
+   tell the function how to map those columns to the structure fields.
+
+   Here's how we can read this into a VEG__ structure:
+
+      vegmapping = h_new(
+         fx=h_new(type=3, dest=["east","meast"], factor=100),
+         fy=h_new(type=3, dest=["north","mnorth"], factor=100),
+         fz=h_new(type=3, dest=["elevation","melevation"], factor=100),
+         lx=h_new(type=3, dest=["least"], factor=100),
+         ly=h_new(type=3, dest=["lnorth"], factor=100),
+         lz=h_new(type=3, dest=["lelv"], factor=100),
+         soe=h_new(type=3, dest=["soe"])
+      )
+      veg_all = read_ascii_xyz("example2.txt", VEG__, mapping=vegmapping,
+         columns=["fx", "fy", "fz", "lx", "ly", "lz", "soe"])
+
+   The mapping= option accepts a Yeti hash. The keys to that hash should match
+   the column names. The value of each entry is another hash with the following
+   keys:
+
+      type= This corresponds ot the type= option of rdcols and tells rdcols how
+         to interpret the text for that field.
+         Valid values:
+            type=0 -- guess
+            type=1 -- string
+            type=2 -- integer
+            type=3 -- real
+            type=4 -- integer or real
+
+      dest= This is an array of strings. Each string is the name of a structure
+         field where this column should get written to. (If the structure
+         doesn't have a given field, then that field is ignored.)
+
+      factor= Specifies a factor to multiply the value by. This field is
+         optional. It's useful for converting meters to centimeters, as shown
+         in the example above.
 */
 // Original: David Nagle 2009-08-24
    default, delimit, " ";
