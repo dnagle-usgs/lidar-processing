@@ -74,6 +74,11 @@ snit::type ::imgops::transform {
       #   resize -- specifies what kind if resize is needed:
       #        0 = none; -1 = smaller; 1 = bigger
       #   resize_cmd -- the command arguments needed to perform the resize
+      set mogrify [auto_execok mogrify]
+      if {$mogrify eq ""} {
+         error "mogrify not available, please install ImageMagick"
+      }
+
       if {[dict exists $args -percent]} {
          set percent [dict get $args -percent]
          set resize_cmd [list -scale ${percent}%]
@@ -93,7 +98,7 @@ snit::type ::imgops::transform {
          set resize_cmd [list -scale ${sw}x${sh}]
 
          # cw and ch are current images' dimensions
-         lassign [$type File size $fn] cw ch
+         lassign [::imgops::query size $fn] cw ch
 
          if {$cw > $sw || $ch > $sh} {
             # If either current dimension is bigger than the requested
@@ -183,10 +188,19 @@ snit::type ::imgops::transform {
       file rename -force $tmp $fn
       return $result
    }
+}
+
+snit::type ::imgops::query {
+   pragma -hastypeinfo false
+   pragma -hastypedestroy false
+   pragma -hasinstances false
 
    # Returns [list $width $height]
-   typemethod {File size} fn {
+   typemethod size fn {
       set cmd [auto_execok identify]
+      if {$cmd eq ""} {
+         error "identify not available, please install ImageMagick"
+      }
       lappend cmd -format "%w %h" [file nativename $fn]
       set result [eval exec $cmd]
       set result [split $result " \n\r"]
