@@ -67,6 +67,9 @@ func colorbar(cmin, cmax, drag=, landscape=, units=, datum=) {
 
    The landscape= option is ignored and exists for historical reasons.
 */
+   // Coercing type to avoid type mismatch in swrites later in function.
+   cmin = is_void(cmin) ? [] : double(cmin);
+   cmax = is_void(cmax) ? [] : double(cmax);
    xoff = 0.0;
    yoff = 0.0;
    if (drag) {
