@@ -556,9 +556,7 @@ proc ::plot::replot_all { } {
 }
 
 proc ::plot::plot_all { } {
-   if {$g::coordType == "UTM"} {
-      ::plot::curzone
-   }
+   ::plot::curzone
    # Plot images first
    if { $g::enable_plot_images } {
       ::plot::image_plot
@@ -852,6 +850,11 @@ proc ::plot::shp_add {} {
 proc ::plot::shp_plot {} {
    ::plot::window_store
    ::plot::window_set
+   if {$g::coordType == "UTM"} {
+      exp_send "utm=1;\r"
+   } else {
+      exp_send "utm=0;\r"
+   }
    if { $g::shapeLineColor eq "randomize" } {
       exp_send "plot_shapefiles, random_colors=1;\r"
    } else {

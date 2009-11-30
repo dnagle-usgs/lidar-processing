@@ -115,16 +115,58 @@ func plot_shape(shp, color=, width=) {
 /* DOCUMENT plot_shape, shp, color=, width=
    Plots a shapefile. See read_ascii_shapefile for details on the format of
    shp.
+
+   If extern utm is defined, then this does some autodetection work for UTM
+   versus geographic coordinates. When utm=1, any shapefiles in geographic
+   coordinates get converted to UTM coordinates on the fly. When utm=0, any
+   shapefiles in UTM coordinates get converted to geographic coordinates on the
+   fly. For best results, curzone should be set (even if you're using
+   geographic coordinates).
 */
 // Original David Nagle 2008-10-06
+   extern utm, curzone;
    for(i = 1; i <= numberof(shp); i++) {
       ply = *shp(i);
+
+      if(numberof(ply(1,)) < 1) {
+         write, "Skipping polygon with zero points."
+         continue;
+      }
+
+      // If utm is defined, then correct the coordinates for the current mode.
+      if(!is_void(utm)) {
+         // If the coordinates are less than 1000, then they're lat/lon. If
+         // they're larger, then they're UTM. This covers the majority of cases
+         // safely.
+         if(abs(ply(1,1)) < 1000) {
+            if(utm) {
+               u = fll2utm(ply(2,), ply(1,), force_zone=curzone);
+               ply(1,) = u(2,);
+               ply(2,) = u(1,);
+            }
+         } else {
+            if(!utm) {
+               zone = curzone;
+               if(is_void(zone)) {
+                  // Attempt to guess the zone based on the window's limits and
+                  // hope for the best...
+                  lims = limits();
+                  u = fll2utm(lims(3:4)(avg), lims(1:2)(avg));
+                  zone = long(u(3));
+                  write, format="Guessing that zone is currently %d... for best results, set curzone!\n", zone;
+               }
+               ll = utm2ll(ply(2,), ply(1,), zone);
+               ply(1,) = ll(,1);
+               ply(2,) = ll(,2);
+            }
+         }
+      }
+      ply;
+
       if(numberof(ply(1,)) > 1) {
          plg, ply(2,), ply(1,), marks=0, color=color, width=width;
       } else if(numberof(ply(1,)) == 1) {
          plmk, ply(2,), ply(1,), marker=1, color=color, msize=0.1;
-      } else {
-         write, "Skipping polygon with zero points."
       }
    }
 }
