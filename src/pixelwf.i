@@ -202,7 +202,7 @@ func pixelwf_enter_interactive(void) {
    continue_interactive = 1;
    while(continue_interactive) {
 
-      write, format="Window %d. Left-click to examine a point. Anything else aborts.\n", win;
+      write, format="\nWindow %d: Left-click to examine a point. Anything else aborts.\n", pixelwfvars.selection.win;
 
       window, pixelwfvars.selection.win;
       spot = mouse(1, 1, "");
@@ -241,7 +241,7 @@ func pixelwf_selected_info(nearest) {
       write, format="    first - last: %9.2f\n", (point.elevation-point.lelv)/100.;
    } else if(has_member(point, "depth")) {
       write, format="   bottom return: %9.2f\n", (point.elevation+point.depth)/100.;
-      write, format="  first - bottom: %9.2f\n", point.depth/100.;
+      write, format="  first - bottom: %9.2f\n", -1 * point.depth/100.;
    }
    write, format="%s", "\n";
    write, format="Timestamp: %s\n", soe2iso8601(point.soe);

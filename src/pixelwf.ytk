@@ -111,6 +111,13 @@ if {![namespace exists ::pixelwf]} {
             variable dest_action 0
             variable dest_variable ""
          }
+         # Backup all the variables we just created...
+         variable defaults {}
+         foreach ns [namespace children [namespace current]] {
+            foreach vname [info vars ${ns}::*] {
+               dict set defaults $vname [set $vname]
+            }
+         }
       }
       namespace eval gui {
          variable widgets_tied_to_enabled {
@@ -395,6 +402,12 @@ namespace eval ::pixelwf::util {
    proc valid_range var {helper_valid ranges $var}
    proc valid_values var {helper_valid values $var}
    proc valid_class var {helper_valid classes $var}
+
+   proc restore_defaults {} {
+      dict for {vname value} $::pixelwf::vars::defaults {
+         set $vname $value
+      }
+   }
 }
 
 namespace eval ::pixelwf::gui {
@@ -527,10 +540,19 @@ namespace eval ::pixelwf::gui {
          trace_toggle_visibility $childsite ::pixelwf::vars::${type}::enabled
       }
       grid columnconfigure $mf 0 -weight 1
+
+      makemenu $mf.mb
+      bind $mf <Button-3> [list tk_popup $mf.mb %X %Y]
    }
 
    proc helper_update_days {} {
       set ::pixelwf::gui::missionday_list [missionday_list]
+   }
+
+   proc makemenu mb {
+      menu $mb
+      $mb add command -label "Reset all options to defaults" \
+         -command ::pixelwf::util::restore_defaults
    }
 
    proc selection f {
