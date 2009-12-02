@@ -1,5 +1,5 @@
 /* unsigned.i
- * $Id$
+ * Id: unsigned.i,v 1.1 2009/11/21 22:59:11 dhmunro Exp
  * support for unsigned integers
  */
 
