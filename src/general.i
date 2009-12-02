@@ -398,7 +398,7 @@ func h_merge(..) {
 }
 
 func bound(val, bmin, bmax) {
-/* bound(val, bmin, bmax)
+/* DOCUMENT bound(val, bmin, bmax)
    Constrains a value to a set of bounds. Note that val can have any
    dimensions.
    
