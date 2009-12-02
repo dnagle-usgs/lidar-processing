@@ -1870,32 +1870,17 @@ Refactored and modified by David Nagle 2008-11-04
       }
 
       if(buffer >= 0) {
-         n = e = [];
-         if(mode == 1 || mode == 3) {
-            n = eaarl.north;
-            e = eaarl.east;
-         } else if(mode == 2) {
-            n = eaarl.lnorth;
-            e = eaarl.least;
-         }
-         idx = [];
-         n = n/100.;
-         e = e/100.;
-         if(qq) {
-            idx = extract_for_qq(n, e, qq2uz(fn_tail), fn_tail, buffer=buffer);
+         npre = numberof(eaarl);
+         eaarl = restrict_data_extent(unref(eaarl), fn_tail, buffer=buffer,
+            mode=["fs", "ba", "be"](mode));
+         if(numberof(eaarl)) {
+            write, format="Applied buffer, reduced points from %d to %d\n",
+               npre, numberof(eaarl);
          } else {
-            idx = extract_for_dt(n, e, fn_tail, buffer=buffer);
-         }
-         n = e = [];
-         if(numberof(idx)) {
-            write, format="Applied buffer, reduced points from %d to %d\n", numberof(eaarl), numberof(idx);
-            eaarl = eaarl(idx);
-            idx = [];
-         } else {
-            eaarl = [];
             write, format="Skipping %s: no data within buffer\n", fn_tail;
             continue;
          }
+         npre = [];
       }
       pstruc = structof(eaarl(1));
       write, format="Writing ascii file %d of %d\n",i,numberof(fn_all);
