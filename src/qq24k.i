@@ -116,7 +116,8 @@ func extract_for_qq(north, east, zone, qq, buffer=) {
    comp_utm = fll2utm(unref(comp_lat), unref(comp_lon), force_zone=zone);
 
    dist = ppdist([unref(east), unref(north)], [comp_utm(2,), comp_utm(1,)], tp=1);
-   return where(dist <= buffer);
+   // Adding 1mm to buffer to accommodate floating point error
+   return where(dist <= buffer + 0.001);
 }
 
 func extract_for_dt(north, east, dt, buffer=) {
@@ -1404,4 +1405,54 @@ suffix=, buffer=, shorten=, flat=, uniq=, overwrite=, verbose=, split_zones=) {
       if(verbose)
          write, format=" %d: %s\n", i, outfile;
    }
+}
+
+func restrict_data_extent(data, tilename, buffer=, mode=) {
+/* DOCUMENT data = restrict_data_extent(data, tilename, buffer=, mode=)
+   Restricts the extent of the data based on its tile.
+
+   Parameters:
+      data: An array of EAARL data (VEG__, GEO, etc.).
+      tilename: The name of the tile. Works for both 2k, 10k, and qq tiles.
+         This can be the exact tile name (ie. "t_e123_n4567_12") or the tile
+         name can be embedded (ie. "t_e123_n3456_12_n88.pbd").
+
+   Options:
+      buffer= A buffer in meters to apply around the tile. Default is 0, which
+         constrains to the exact tile boundaries. A larger buffer will include
+         more data.
+      mode= The mode of the data. Mode can be one of the following:
+         "fs": First surface
+         "be": Bare earth
+         "ba": Bathy
+*/
+// Original David Nagle 2009-11-23
+   default, buffer, 0;
+   default, mode, "be";
+   n = e = [];
+   if(mode == "be") {
+      n = data.lnorth/100.;
+      e = data.least/100.;
+   } else {
+      n = data.north/100.;
+      e = data.east/100.;
+   }
+   idx = [];
+   tile = dt_short(tilename);
+   if(tile) {
+      if(strpart(tilename, 1:2) == "i_")
+         idx = extract_for_it(unref(n), unref(e), tile, buffer=buffer);
+      else
+         idx = extract_for_dt(unref(n), unref(e), tile, buffer=buffer);
+   } else {
+      tile = extract_qq(tilename);
+      if(tile)
+         idx = extract_for_qq(unref(n), unref(e), qq2uz(tile), tile, buffer=buffer);
+   }
+   if(numberof(idx)) {
+      data = data(unref(idx));
+   } else {
+      data = [];
+   }
+   return data;
 }
