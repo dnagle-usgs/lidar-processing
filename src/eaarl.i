@@ -40,6 +40,10 @@ if(is_void(__eaarl_includes_included__)) {
       ymedian = median;
    median = quick_median;
 
+   // This file is from the Yorick CVS but hasn't been released in an official
+   // version yet. Until it is, it's being kept in our CVS as well.
+   require, "unsigned.i";
+
    // ALPS plugin requires
    require, "rcf_triangulate.i";
    require, "rcf_utils.i";
