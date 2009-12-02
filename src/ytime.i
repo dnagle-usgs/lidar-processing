@@ -417,7 +417,9 @@ func ymd2doy(year, month, day) {
 
 extern _leap_dates;
 /* DOCUMENT _leap_dates
-   Array of strings representing the dates on which leap seconds were added to UTC.
+   Array of strings representing the dates on which leap seconds were added to
+   UTC. This only includes leap dates starting with 1980, which is when GPS
+   time was started.
 */
 _leap_dates = [
    "1981-06-30", "1982-06-30", "1983-06-30", "1985-06-30", "1987-12-31",
@@ -451,6 +453,42 @@ func gps_utc_offset(date) {
       return res;
    else
       return res(1);
+}
+
+_gps2utc_epoch_offset = ymd2soe(1980, 1, 6);
+
+func gps_epoch_to_utc_epoch(soe) {
+   extern _gps2utc_epoch_offset;
+   soe += _gps2utc_epoch_offset;
+   sod = soe2sod(soe);
+   ymd = soe2date(unref(soe));
+   sod = gps2utc(ymd, unref(sod));
+   return date2soe(unref(ymd), unref(sod));
+}
+
+func utc_epoch_to_gps_epoch(soe) {
+   extern _gps2utc_epoch_offset;
+   sod = soe2sod(soe);
+   ymd = soe2date(unref(soe));
+   sod = utc2gps(ymd, unref(sod));
+   soe = date2soe(unref(ymd), unref(sod));
+   return unref(soe) - _gps2utc_epoch_offset;
+}
+
+func soe2gpssow(soe, &week) {
+/* DOCUMENT sow = soe2gpssow(soe)
+   sow = soe2gpssow(soe, &week)
+
+   Given a seconds-of-the-epoch value, this will return the GPS
+   seconds-of-the-week corresponding to it. If the optional second argument is
+   given, then the GPS week number will be stored in the variable specified.
+*/
+// Original David Nagle 209-11-16
+   // GPS weeks start on 1980-01-06 and are modulo 1024
+   // ymd2soe(1980, 1, 6) => 315964800
+   // seconds in a week => 60 * 60 * 24 * 7 => 604800
+   week = (long(soe - 315964800) / 604800) % 1024;
+   return (soe - 315964800) % 604800;
 }
 
 /*******************************************************************************
