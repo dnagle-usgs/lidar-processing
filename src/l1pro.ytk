@@ -705,12 +705,12 @@ if {![winfo exists .l1wid]} {
   .l1wid.mb.file add command -label "Load EAARL data from map limits" \
     -underline 21 \
     -command {
-      global data_file_path path
+      global data_file_path path _ytk
       set skipb 0
       set search .pbd
 
       if { [info exists data_file_path] == 0} {
-        set data_file_path "~/"
+        set data_file_path $_ytk(initialdir)
       }
 
       destroy .l1map
