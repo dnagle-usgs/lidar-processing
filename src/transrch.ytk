@@ -248,7 +248,7 @@ proc create_transbuttons { cnt } {
       ::misc::combobox $tw.f2$tbi.iwnval -values $lwin_list \
          -state readonly \
          -width 3
-      $tw.f2$tbi.iwnval setvalue @4
+      $tw.f2$tbi.iwnval setvalue @5
       ::tooltip::tooltip $tw.f2$tbi.iwnval "window to get data"
       pack $tw.f2$tbi.iwin $tw.f2$tbi.iwnval -side left -fill x -padx 2
 
