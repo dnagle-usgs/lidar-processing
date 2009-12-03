@@ -510,42 +510,16 @@ itcl::body SegmentedDataWindow::new_segment_window {} {
    }
 }
 
-proc segment_by_flightlines {yvar} {
-   set var_prefix "::tempvar_[expr {round(rand()*1000)}]_[clock seconds]_"
-   set i 1
-   while {[info exists $var_prefix$i]} {
-      incr i
+proc segment_data_launcher {method {yvar -}} {
+   if {$yvar eq "-"} {
+      set yvar $::pro_var
    }
-   set var $var_prefix$i
-   set $var -1
-
-   exp_send "fptr = split_by_fltline($yvar);\r"
-   expect ">"
-   exp_send "tkcmd, swrite(format=\"set $var %d\", numberof(fptr));\r"
-   expect ">"
-
-   ::misc::idle [list _segment_by_flightlines_post $yvar $var]
-}
-
-proc _segment_by_flightlines_post {yvar count_var} {
-   if {[set $count_var] < 0} {
-      ::misc::idle [list _segment_by_flightlines_post $yvar $count_var]
-   } else {
-      set segment_count [set $count_var]
-      unset $count_var
-
-      set seg_vars [list]
-      for {set i 1} {$i <= $segment_count} {incr i} {
-         set seg_var ${yvar}_flt$i
-         exp_send "$seg_var = *fptr($i)\r"
-         expect ">"
-         lappend seg_vars $seg_var
-      }
-      exp_send "fptr = \[\];\r"
-
-      launch_segmenteddatawindow $seg_vars \
-         -title "Flightline Segments for $yvar"
+   set valid [list fltlines fltlines_digitizer days days_digitizer]
+   if {[lsearch $valid $method] == -1} {
+      error "Invalid method for segment_data_launcher: $method"
    }
+   exp_send "tk_sdw_launch_$method, \"$yvar\";\r"
+   expect "> "
 }
 
 proc launch_segmenteddatawindow {segments args} {

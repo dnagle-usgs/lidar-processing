@@ -1216,10 +1216,17 @@ if {![winfo exists .l1wid]} {
     source "$src_path/transrch.ytk"
   }
 
-  .l1wid.mb.diag add command -label "Flightline Segments" \
-    -command [list eval segment_by_flightlines \$::pro_var]
-
-  .l1wid.mb.diag add command -label "Select Data Segments" \
+  menu .l1wid.mb.diag.seg
+  .l1wid.mb.diag add cascade -label "Launch segments by..." -menu .l1wid.mb.diag.seg
+  .l1wid.mb.diag.seg add command -label "Flightline" \
+    -command [list segment_data_launcher fltlines]
+  .l1wid.mb.diag.seg add command -label "Flightline and digitizer" \
+    -command [list segment_data_launcher fltlines_digitizer]
+  .l1wid.mb.diag.seg add command -label "Day" \
+    -command [list segment_data_launcher days]
+  .l1wid.mb.diag.seg add command -label "Day and digitizer" \
+    -command [list segment_data_launcher days_digitizer]
+  .l1wid.mb.diag.seg add command -label "Manual selection" \
     -command select_data_segments
 
   .l1wid.mb.diag add command -label "Open Fit Gaussian GUI" \

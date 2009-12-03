@@ -1,4 +1,122 @@
-/* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
+// vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
+
+func subsplit_by_digitizer(ptr) {
+/* DOCUMENT sptr = subsplit_by_digitizer(ptr)
+   Given an array of pointers as returned by split_by_day or split_by_fltline,
+   this will return an array of the same data subsplit by digitizer. Generally,
+   this will contain twice as many elements as the input.
+
+   Example:
+      fptr = split_by_fltline(data);
+      sptr = subsplit_by_digitizer(fptr);
+      f1d1 = sptr(1);   // First flightline, first digitizer
+      f1d2 = sptr(2);   // First flightline, second digitizer
+      f2d1 = sptr(1);   // Second flightline, first digitizer
+      f2d2 = sptr(2);   // Second flightline, second digitizer
+      ...
+
+   Note that if any of the data arrays contains data from only one digitizer,
+   then that array will not get split. This will result in one of the elements
+   of the resulting pointer array being (nil).
+
+   Also, the notion of "first digitizer" and "second digitizer" is arbitrary.
+   The "first digitizer" for one day may correspond to the same physical
+   digitizer that gets considered "second digitizer" for another.
+*/
+// Original David Nagle 2009-12-03
+   dig = array(pointer, 2*numberof(ptr));
+   for(i = 1; i <= numberof(ptr); i++) {
+      j = i*2 - 1;
+      data = *ptr(i);
+
+      w = where(data.rn % 2 == 0);
+      if(numberof(w))
+         dig(j) = &data(w);
+
+      w = where(data.rn % 2 == 1);
+      if(numberof(w))
+         dig(j+1) = &data(w);
+   }
+   return dig;
+}
+
+func split_by_day(data, timediff=, daythresh=) {
+/* DOCUMENT dptr = split_by_day(data)
+
+   This function splits the data by day. It will only work with EAARL data as
+   it uses a combination of raster number and time to analytically
+   differentiate between days.
+
+   Note that "day" isn't necessarily a literal day. If the digitizer is
+   restarted during a flight or if multiple flights occur in a day, then each
+   will count as separate days.
+
+   Parameter:
+      data: An array of ALPS data (using structs such as FS, GEO, VEG__, etc.)
+
+   Returns:
+      An array of pointers to each day's data. For example:
+         dptr = split_by_day(data)
+         d1 = *dptr(1) is the first day's data
+         d2 = *dptr(2) is the second day's data
+         dn = *dptr(n) is the nth day's data
+
+   Advanced options:
+      The defaults for the following options shouldn't need to be changed under
+      ordinary circumstances. They are documented primarily for completeness,
+      without expectation that they will get used.
+
+      timediff= The time difference in seconds to use when splitting data into
+         individual flightlines. This is passed to split_by_fltline, where it
+         defaults to 60 seconds.
+      daythresh= A threshold in minutes used to determine if a pair of
+         flightlines came from the same day. This defaults to 20.
+      pulsecount= The number of pulses in a raster. Defaults to 119.
+*/
+// Original David Nagle 2009-12-03
+   default, daythresh, 20;
+   default, pulsecount, 119;
+   fltlines = split_by_fltline(data, timediff=timediff);
+
+   // bbar: The average y-intercept in linear fit for
+   //    raster = intercept + slope * time
+   bbar = array(double, numberof(fltlines));
+   for(i = 1; i <= numberof(fltlines); i++) {
+      data = *fltlines(i);
+      data = data(sort(data.soe));
+      rn = parse_rn(data.rn);
+      // rnu: Combines raster and pulse into a unified form that better
+      // reflects position in sequence. A pulse is effectively converted into a
+      // fractional raster number.
+      rnu = rn(,1) + (rn(,2)-1.)/pulsecount;
+      rn = [];
+
+      model = regress(unref(data).soe, [1, rnu]);
+      bbar(i) = model(1);
+   }
+
+   // Downgrade resolution of bbar from fractional seconds to integer minutes
+   bbar = long(bbar/60);
+
+   // Sort the bbars (and keep the fltlines sorted with them)
+   idx = sort(bbar);
+   bbar = bbar(idx);
+   fltlines = fltlines(idx);
+
+   // Merge fltlines that have similar bbars, they are from the same day.
+   merged = array(pointer, numberof(fltlines));
+   merged(1) = &(*fltlines(1));
+   j = 1;
+   for(i = 2; i <= numberof(bbar); i++) {
+      if(bbar(i) - bbar(i-1) < daythresh) {
+         merged(j) = &grow(*merged(j), *fltlines(i));
+      } else {
+         j++;
+         merged(j) = &(*fltlines(i));
+      }
+   }
+   return merged(:j);
+}
 
 func split_by_fltline(data, timediff=) {
 /* DOCUMENT fptr = split_by_fltline(data, timediff=)
@@ -41,10 +159,93 @@ func split_by_fltline(data, timediff=) {
    return fptr;
 }
 
+func funtimes(data) {
+   ptr = subsplit_by_digitizer(split_by_day(data));
+   days = numberof(ptr)/2;
+   for(i = 1; i <= days; i++) {
+      j = i * 2 - 1;
+      if(ptr(j)) {
+         vname = swrite(format="fun_day%d_d1", i);
+         symbol_set, vname, *ptr(j);
+         tkcmd, swrite(format="append_varlist %s", vname);
+      }
+      j++;
+      if(ptr(j)) {
+         vname = swrite(format="fun_day%d_d2", i);
+         symbol_set, vname, *ptr(j);
+         tkcmd, swrite(format="append_varlist %s", vname);
+      }
+   }
+}
+
+func tk_sdw_launch_fltlines(varname) {
+   fptr = split_by_fltline(symbol_def(varname));
+   segvars = swrite(format="%s_flt%d", varname, indgen(numberof(fptr)));
+   for(i = 1; i <= numberof(fptr); i++) {
+      symbol_set, segvars(i), *fptr(i);
+   }
+   segvars = (unref(segvars) + " ")(sum);
+   tkcmd, swrite(format="launch_segmenteddatawindow {%s} -title {Segments for %s by flightline}", segvars, varname);
+}
+
+func tk_sdw_launch_fltlines_digitizer(varname) {
+   ptr = subsplit_by_digitizer(split_by_fltline(symbol_def(varname)));
+
+   flts = transpose(array(indgen(numberof(ptr)/2), 2))(*);
+   digs = array([1,2], numberof(ptr)/2)(*);
+   segvars = swrite(format="%s_flt%d_d%d", varname, unref(flts), unref(digs));
+
+   w = where(ptr);
+   if(!numberof(ptr)) {
+      // Shouldn't happen...
+      write, "Aborting! No data found?";
+   }
+   ptr = ptr(w);
+   segvars = segvars(w);
+
+   for(i = 1; i <= numberof(ptr); i++) {
+      symbol_set, segvars(i), *ptr(i);
+   }
+   segvars = (unref(segvars) + " ")(sum);
+   tkcmd, swrite(format="launch_segmenteddatawindow {%s} -title {Segments for %s by flightline and digitizer}", segvars, varname);
+}
+
+func tk_sdw_launch_days(varname) {
+   dptr = split_by_day(symbol_def(varname));
+   segvars = swrite(format="%s_day%d", varname, indgen(numberof(dptr)));
+   for(i = 1; i <= numberof(dptr); i++) {
+      symbol_set, segvars(i), *dptr(i);
+   }
+   segvars = (unref(segvars) + " ")(sum);
+   tkcmd, swrite(format="launch_segmenteddatawindow {%s} -title {Segments for %s by day}", segvars, varname);
+}
+
+func tk_sdw_launch_days_digitizer(varname) {
+   ptr = subsplit_by_digitizer(split_by_day(symbol_def(varname)));
+
+   days = transpose(array(indgen(numberof(ptr)/2), 2))(*);
+   digs = array([1,2], numberof(ptr)/2)(*);
+   segvars = swrite(format="%s_day%d_d%d", varname, unref(days), unref(digs));
+
+   w = where(ptr);
+   if(!numberof(ptr)) {
+      // Shouldn't happen...
+      write, "Aborting! No data found?";
+   }
+   ptr = ptr(w);
+   segvars = segvars(w);
+
+   for(i = 1; i <= numberof(ptr); i++) {
+      symbol_set, segvars(i), *ptr(i);
+   }
+   segvars = (unref(segvars) + " ")(sum);
+   tkcmd, swrite(format="launch_segmenteddatawindow {%s} -title {Segments for %s by day and digitizer}", segvars, varname);
+}
+
 func tk_sdw_send_times(obj, idx, data) {
    mintime = soe2iso8601(data.soe(min));
    maxtime = soe2iso8601(data.soe(max));
-   
+
    cmd = swrite(format="%s set_time %d {%s} {%s}",
       obj, idx, mintime, maxtime);
 
@@ -78,7 +279,7 @@ func tk_sdw_define_region_variables(obj, ..) {
          segment = *ptr(i);
          smin = segment.soe(min);
          smax = segment.soe(max);
-         
+
          if(smin < avail_min || smax > avail_max) {
             tkcmd, swrite(format="%s define_region_mismatch", obj);
             _tk_swd_region = [];
@@ -411,7 +612,7 @@ func tk_dsw_get_data(data, type, var, sod_field) {
 // tk_dsw_get_data(data, "dmars", "tans");
 // tk_dsw_get_data(data, "pnav", "pnav");
    extern tans, pnav;
-   
+
    logid = logger_id();
 
    logger, "debug", logid + swrite(
@@ -443,7 +644,7 @@ func tk_dsw_get_data(data, type, var, sod_field) {
 
             dmin = temp.soe(min);
             dmax = temp.soe(max);
-            
+
             w = where(dmin <= vsoe & vsoe <= dmax);
 
             //get_member(ex_data, sod_field) += soe_base;
