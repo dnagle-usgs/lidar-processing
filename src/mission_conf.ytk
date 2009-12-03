@@ -413,7 +413,9 @@ namespace eval mission {
     }
 
     proc menu_open {} {
+        global _ytk
         set filename [tk_getOpenFile \
+            -initialdir $_ytk(initialdir) \
             -parent $v::toplevel \
             -title "Select the mission configuration file to load" \
             -filetypes $v::filetypes]
