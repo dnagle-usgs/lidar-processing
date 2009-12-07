@@ -216,10 +216,10 @@ local las;
 
 func batch_pbd2las(dir_pbd, outdir=, searchstr=, v_maj=, v_min=, zone=,
 cs_h=, cs_v=, mode=, pdrf=, encode_rn=, include_scan_angle_rank=, buffer=,
-classification=, header=, verbose=) {
+classification=, header=, verbose=, pre_fn=, post_fn=, shorten_fn=) {
 /* DOCUMENT batch_pbd2las, dir_pbd, outdir=, searchstr=, v_maj=, v_min=,
    zone=, cs_h=, cs_v=, mode=, pdrf=, encode_rn=, include_scan_angle_rank=,
-   buffer=, classification=, header=, verbose=
+   buffer=, classification=, header=, verbose=, pre_fn=, post_fn=, shorten_fn=
 
    Runs pbd2las in a batch mode. This converts individual PBD files into LAS
    files.
@@ -308,6 +308,33 @@ classification=, header=, verbose=) {
             verbose=1 - Simple progress will be displayed.
             verbose=2 - More detailed progress will be displayed. (default)
 
+      pre_fn= A string to prefix to the output filename.
+         Default: pre_fn=""
+
+      post_fn= A string to suffix to the output filename. It must include the
+         file extension.
+         Default: post_fn=".las"
+
+      shorten_fn= Allows you to shorten the filenames based on tile they
+         contain. Possible values:
+            shorten_fn=0  - Disabled shortening (default)
+            shorten_fn=1  - Enables shortening
+
+   About file names:
+
+      By default, the output filename is the same as the input filename but
+      with a ".pbd" extension. The outdir= option allows you to change where
+      the file goes, but the name remains the same.
+
+      The pre_fn=, post_fn=, and shorten_fn= options allow for customization of
+      the output filename. See the documentation of batch_las2pbd for details
+      (it has the same options).
+
+      Note that if an output file already exists, it will be silently
+      overwritten. This is especially problematic if you're using shorten_fn=1
+      on a set of files that contains multiple files for the same tile (such as
+      a be and fs version of the same tile).
+
    See also:
       pbd2las - Converts a single file instead of a batch of them
       batch_las2pbd - Batch converts LAS back to PBD
@@ -316,22 +343,46 @@ classification=, header=, verbose=) {
 */
    default, searchstr, "*.pbd";
    default, verbose, 2;
-   files = find(dir_pbd, glob=searchstr);
-   fn_las = files_las = [];
-   if(!is_void(outdir))
-      files_las = file_join(outdir, file_rootname(file_tail(files))+".las");
-   for(i = 1; i <= numberof(files); i++) {
-      if(!is_void(files_las))
-         fn_las = files_las(i);
+   default, pre_fn, string(0);
+   default, post_fn, ".las";
+   default, shorten_fn, 0;
+
+   files_pbd = find(dir_pbd, glob=searchstr);
+   files_las = file_rootname(files_pbd);
+
+   tails = file_tail(file_rootname(files_pbd));
+   if(shorten_fn) {
+      tiles_dt = dt_short(tails);
+      tiles_qq = extract_qq(tails);
+      w = where(tiles_qq);
+      if(numberof(w))
+         tails(w) = tiles_qq(w);
+      w = where(tiles_dt);
+      if(numberof(w))
+         tails(w) = tiles_dt(w);
+      tiles_qq = tiles_dt = [];
+   }
+   tails = pre_fn + tails + post_fn;
+
+   if(is_void(outdir))
+      files_las = file_join(file_basename(files_pbd), tails);
+   else
+      files_las = file_join(outdir, tails);
+   tails = [];
+
+   pass_verbose = verbose > 0 ? verbose-1 : 0;
+   for(i = 1; i <= numberof(files_pbd); i++) {
       if(verbose)
          write, format="Converting pbd file %d of %d to LAS...\n",
-            i, numberof(files);
-      pbd2las, files(i), fn_las=fn_las, v_maj=v_maj, v_min=v_min, zone=zone,
-         cs_h=cs_h, cs_v=cs_v, mode=mode, pdrf=pdrf, encode_rn=encode_rn,
-         include_scan_angle_rank=include_scan_angle_rank, buffer=buffer,
-         classification=classification, header=header,
-         verbose=max([0,verbose-1]);
-      if(verbose > 1)
+            i, numberof(files_pbd);
+
+      pbd2las, files_pbd(i), fn_las=files_las(i), v_maj=v_maj, v_min=v_min,
+         zone=zone, cs_h=cs_h, cs_v=cs_v, mode=mode, pdrf=pdrf,
+         encode_rn=encode_rn, include_scan_angle_rank=include_scan_angle_rank,
+         buffer=buffer, classification=classification, header=header,
+         verbose=pass_verbose;
+
+      if(pass_verbose)
          write, "";
    }
 }
@@ -608,9 +659,11 @@ mode=, pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=) {
 // formats.
 
 func batch_las2pbd(dir_las, outdir=, searchstr=, format=, fakemirror=, rgbrn=,
-verbose=, pre_vname=, post_vname=, shorten_vname=) {
+verbose=, pre_vname=, post_vname=, shorten_vname=, pre_fn=, post_fn=,
+shorten_fn=) {
 /* DOCUMENT batch_las2pbd, dir_las, outdir=, searchstr=, format=, fakemirror=,
-   rgbrn=, verbose=, pre_vname=, post_vname=, shorten_vname=
+   rgbrn=, verbose=, pre_vname=, post_vname=, shorten_vname=, pre_fn=,
+   post_fn=, shorten_fn=
 
    Batch converts LAS files to PBD files.
 
@@ -643,8 +696,12 @@ verbose=, pre_vname=, post_vname=, shorten_vname=) {
             rgbrn=0  - Completely ignores RGB if present. The rn will be zeroed.
          Note that if no RGB data is present, rn will be zeroed either way.
 
-      verbose= Allows you to customize how much information is printed to the
-         screen.
+      verbose=
+         By default, the function will spew out lots of progress information.
+         You can tone it down by changing the verbosity level.
+            verbose=2  ->  The default. Very chatty.
+            verbose=1  ->  Less info, but still gives progress indication.
+            verbose=0  ->  Stops talking unless it encounters a problem.
 
       pre_vname= A string to prefix to the variable name that gets stored in
          the PBD file.
@@ -659,10 +716,22 @@ verbose=, pre_vname=, post_vname=, shorten_vname=) {
             shorten_vname=0  - Disables shortening
             shorten_vname=1  - Enables shortening (default)
 
+      pre_fn= A string to prefix to the output filename.
+         Default: pre_fn=""
+
+      post_fn= A string to suffix to the output filename. It must include the
+         file extension.
+         Default: post_fn=".pbd"
+
+      shorten_fn= Allows you to shorten the filenames based on tile they
+         contain. Possible values:
+            shorten_fn=0  - Disabled shortening (default)
+            shorten_fn=1  - Enables shortening
+
    About variable names:
 
       Before the data can get saved to a PBD file, it needs a variable name.
-      The variable name is based on the file's name.
+      The variable name is based on the output file's name.
 
       If the filename contains parseable information about a 2km tile or a
       quarter-quad tile, then the vname will be initialized to the short form
@@ -675,7 +744,7 @@ verbose=, pre_vname=, post_vname=, shorten_vname=) {
 
       Follows are some examples.
 
-      For this file: t_e402000_n2928000_17_w84_20040817_b.las
+      For this file: t_e402000_n2928000_17_w84_20040817_b.pbd
 
          The default vname:      e402_n2928_17
          With shorten_vname=0:   t_e402000_n2928000_17_w84_20040817_b
@@ -684,7 +753,7 @@ verbose=, pre_vname=, post_vname=, shorten_vname=) {
          With shorten_vname=0, pre_vname="silly_", post_vname="_example":
             silly_t_e402000_n2928000_17_w84_20040817_b_example
 
-      For this file: 30088b4b_be.las
+      For this file: 30088b4b_be.pbd
 
          The default vname:      qq30088b4b
          With shorten_vname=0:   30088b4b_be
@@ -697,8 +766,54 @@ verbose=, pre_vname=, post_vname=, shorten_vname=) {
       Yorick, you would encounter problems. However, by pre-pending "qq" to it,
       it becomes a valid variable name.
 
-      Note also that the default vname for a quarter quad gets "qq" prepended
-      to the quarter quad name, since all quarter quads begin with a number.
+      The default vname for a quarter quad gets "qq" prepended to the quarter
+      quad name, since all quarter quads begin with a number. These is
+      currently no way to disable this behavior. Variable names that begin with
+      a number cause problems when loaded into Yorick.
+
+      Since the vname is based on the output filename, the effects of
+      shorten_fn=, pre_fn=, and post_fn= also come into play.
+
+   About file names:
+
+      By default, the output filename is the same as the input filename but
+      with a ".las" extension. The outdir= option allows you to change where
+      the file goes, but the name remains the same.
+
+      The shorten_fn=, pre_fn=, and  post_fn= options allow you to better
+      customize the output filenames. These work similarly to the similarly
+      named options for vnames.
+
+      Follows are some examples:
+
+      For this file: t_e402000_n2928000_17_w84_20040817_b.las
+
+         The default filename:   t_e402000_n2928000_17_w84_20040817_b.pbd
+         With shorten_fn=1:      e402_n2928_17.pbd
+         With post_fn="_ba.pbd": t_e402000_n2928000_17_w84_20040817_b_ba.pbd
+         With shorten_fn=1, pre_fn="ba_", post_fn="_w84.pbd":
+            ba_e402_n2928_17_w84.pbd
+
+      For this file: 30088b4b_be.las
+
+         The default filename:   30088b4b_be.pbd
+         With shorten_fn=1:      30088b4b.pbd
+         With shorten_fn=1, post_fn="_be.pbd": 30088b4b_be.pbd
+
+      Please note that files will be silently overwritten if they already
+      exist. This is especially of concern if you're using shorten_fn=1 on a
+      set of files that contains duplicate tiles. For example, given this list
+      of files:
+
+         t_e586000_n4478000_18_n88_20070426_v_b600_w40_n3_rcf_mf.las
+         t_e586000_n4478000_18_w84_20070426_v_b600_w40_n3_rcf_mf.las
+
+      Running the command with shorten_fn=1 would result in a single file:
+
+         e586_n4478_18.pbd
+
+      The file would be the result of whichever of the files got converted
+      last.
 
    See also:
       batch_pbd2las - To convert PBD files back to LAS
@@ -710,34 +825,67 @@ verbose=, pre_vname=, post_vname=, shorten_vname=) {
    default, pre_vname, string(0);
    default, post_vname, string(0);
    default, shorten_vname, 1;
-   files = find(dir_las, glob=searchstr);
-   fn_pbd = files_pbd = [];
+   default, pre_fn, string(0);
+   default, post_fn, ".pbd";
+   default, shorten_fn, 0;
+
+   files_las = find(dir_las, glob=searchstr);
+   files_pbd = file_rootname(files_las);
+
+   // Both shorten_vname and shorten_fn work the same, so instead of having
+   // this code in two places, it's refactored to here.
+   if(shorten_vname || shorten_fn) {
+      tiles = file_tail(files_pbd);
+      tiles_dt = dt_short(tiles);
+      tiles_qq = extract_qq(tiles);
+      // qq first, so that dt can override it. That shouldn't ever happen but
+      // if somehow it strangely does... we'll prefer dt here over qq.
+      w = where(tiles_qq);
+      if(numberof(w))
+         tiles(w) = tiles_qq(w);
+      w = where(tiles_dt);
+      if(numberof(w))
+         tiles(w) = tiles_dt(w);
+      qq = where(strlen(tiles_qq) & !strlen(tiles_dt));
+      tiles_qq = tiles_dt = [];
+   }
+
+   // Calculate output files
    if(!is_void(outdir))
-      files_pbd = file_join(outdir, file_rootname(file_tail(files))+".pbd");
-   for(i = 1; i <= numberof(files); i++) {
-      if(!is_void(files_pbd))
-         fn_pbd = files_pbd(i);
+      files_pbd = file_join(outdir, file_tail(files_pbd));
+   if(shorten_fn)
+      files_pbd = file_join(file_dirname(files_pbd), tiles);
+   files_pbd = file_join(file_dirname(files_pbd),
+      pre_fn + file_tail(files_pbd) + post_fn);
 
-      vname = file_tail(file_rootname(files(i)));
-      if(shorten_vname) {
-         if(dt_short(vname))
-            vname = dt_short(vname);
-         else if(extract_qq(vname))
-            vname = "qq" + extract_qq(vname);
-      }
-      vname = pre_vname + vname + post_vname;
+   // Calculate vnames
+   if(shorten_vname) {
+      vnames = tiles;
+      if(numberof(qq))
+         vnames(qq) = "qq" + vnames(qq);
+   } else {
+      vnames = file_rootname(file_tail(files_pbd));
+   }
+   vnames = pre_vname + vnames + post_vname;
 
+   pass_verbose = verbose > 0 ? verbose-1 : 0;
+   for(i = 1; i <= numberof(files_las); i++) {
       if(verbose)
          write, format="Converting LAS file %d of %d to PBD...\n",
-            i, numberof(files);
+            i, numberof(files_las);
 
-      las2pbd, files(i), fn_pbd=fn_pbd, format=format, vname=vname,
-         fakemirror=fakemirror, rgbrn=rgbrn;
+      las2pbd, files_las(i), fn_pbd=files_pbd(i), vname=vnames(i),
+         format=format, fakemirror=fakemirror, rgbrn=rgbrn,
+         verbose=pass_verbose;
+
+      if(pass_verbose)
+         write, "";
    }
 }
 
-func las2pbd(fn_las, fn_pbd=, format=, vname=, fakemirror=, rgbrn=) {
-/* DOCUMENT las2pbd, fn_las, fn_pbd=, format=, vname=, fakemirror=, rgbrn=
+func las2pbd(fn_las, fn_pbd=, format=, vname=, fakemirror=, rgbrn=, verbose=) {
+/* DOCUMENT las2pbd, fn_las, fn_pbd=, format=, vname=, fakemirror=, rgbrn=,
+   verbose=
 
    Converts a LAS file or stream to a PBD file.
 
@@ -753,12 +901,16 @@ func las2pbd(fn_las, fn_pbd=, format=, vname=, fakemirror=, rgbrn=) {
       fn_pbd: The full path and filename where the PBD file should get created.
          Default is the same as fn_las, except with the .pbd extension.
 
-      vname= The name of the variable to store the data as. Default is
-         las_import.
+      vname= The name of the variable to store the data as.
+         Default: vname="las_import"
+
+      verbose= Specifies whether information should get output to the console.
+         Default: verbose=0
 */
    default, fn_pbd, file_rootname(fn_las) + ".pbd";
    default, format, "fs";
    default, vname, "las_import";
+   default, verbose, 0;
 
    fnc = [];
    if(format == "fs")
@@ -768,6 +920,11 @@ func las2pbd(fn_las, fn_pbd=, format=, vname=, fakemirror=, rgbrn=) {
 
    if(is_void(fnc))
       error, "Invalid format specified. Must be \"fs\" or \"veg\".";
+
+   if(verbose) {
+      write, format="  %s\n", file_tail(fn_pbd);
+      write, format="  format=\"%s\"  vname=\"%s\"\n", format, vname;
+   }
 
    las = las_open(fn_las);
    data = fnc(las, fakemirror=fakemirror, rgbrn=rgbrn);
