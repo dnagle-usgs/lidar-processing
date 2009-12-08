@@ -348,6 +348,8 @@ classification=, header=, verbose=, pre_fn=, post_fn=, shorten_fn=) {
    default, shorten_fn, 0;
 
    files_pbd = find(dir_pbd, glob=searchstr);
+   if(is_void(files_pbd))
+      error, "No files found.";
    files_las = file_rootname(files_pbd);
 
    tails = file_tail(file_rootname(files_pbd));
@@ -830,6 +832,8 @@ shorten_fn=) {
    default, shorten_fn, 0;
 
    files_las = find(dir_las, glob=searchstr);
+   if(is_void(files_las))
+      error, "No files found.";
    files_pbd = file_rootname(files_las);
 
    // Both shorten_vname and shorten_fn work the same, so instead of having
