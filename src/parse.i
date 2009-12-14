@@ -2,6 +2,70 @@
 
 require, "eaarl.i";
 
+func extract_tile(text, dtlength=, qqprefix=) {
+/* DOCUMENT extract_tile(text, dtlength=, qqprefix=)
+    Attempts to extract a tile name from each string in the given array of text.
+
+    Options:
+        dtlength= Dictates which kind of data tile name is returned when a data
+            tile is detected. (Note: This has no effect on index tile names.)
+            Valid values:
+                dtlength="short"  Returns short form (default)
+                dtlength="long"   Returns long form
+
+        qqprefix= Dictates whether quarter quad tiles should be prefixed with
+            "qq". Useful if they're going to be used as variable names. Valid
+            values:
+                qqprefix=0      No prefix added (default)
+                qqprefix=1      Prefix added
+
+    If a tile has an ambiguous name, then index tile names take priority over
+    data tile names and data tile names take priority over quarter quad names.
+    If a tile does not contain a parseable name, then a nil string is yielded.
+*/
+// Original David Nagle 2009-12-09
+    default, dtlength, "short";
+    default, qqprefix, 0;
+    qq = extract_qq(text);
+    dt = (dtlength == "short") ? dt_short(text) : dt_long(text);
+    it = "i_" == strpart(text, 1:2);
+
+    result = array(string, dimsof(text));
+
+    w = where(strlen(dt) > 0 & it);
+    if(numberof(w))
+        result(w) = get_dt_itcodes(dt(w));
+
+    w = where(strlen(dt) > 0 & !strlen(result));
+    if(numberof(w))
+        result(w) = dt(w);
+
+    w = where(strlen(qq) > 0 & !strlen(result));
+    if(numberof(w))
+        result(w) = (qqprefix ? "qq" : "") + qq(w);
+
+    return result;
+}
+
+func tile2uz(tile) {
+/* DOCUMENT tile2uz(tile)
+    Attempts to return a UTM zone for each tile in the array given. This is a
+    wrapper around dt2uz and qq2uz. If both yield a result, then dt2uz wins
+    out. 0 indicates that neither yielded a result.
+*/
+    tile = extract_tile(tile);
+
+    dt = dt2uz(tile);
+    qq = qq2uz(tile);
+
+    result = dt;
+    w = where(result == 0 & qq != 0);
+    if(numberof(w))
+        result(w) = qq(w);
+
+    return result;
+}
+
 func extract_qq(text) {
 /* DOCUMENT extract_qq(text)
 
@@ -20,7 +84,7 @@ func extract_qq(text) {
     be string(0).
 */
 //  Original David Nagle 2008-07-17
-    regmatch, "(^|_)([0-9][0-9][0-1][0-9][0-9][a-h][1-8][a-d])(\.|_|$)", text, , , qq;
+    regmatch, "(^|_|qq)([0-9][0-9][0-1][0-9][0-9][a-h][1-8][a-d])(\.|_|$)", text, , , qq;
     return qq;
 }
 
