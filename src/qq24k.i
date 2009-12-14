@@ -63,7 +63,7 @@ struct CONUSQQ {
 
 func qq2uz(qq, centroid=) {
 /* DOCUMENT qq2uz(qq, centroid=)
-   
+
    Returns the UTM zone that the given quarter quad is expected to fall in.
    Since UTM zones are exactly six degrees longitude in width and have
    boundaries that coincide with full degrees of longitude, and since the
@@ -84,8 +84,11 @@ func qq2uz(qq, centroid=) {
 */
    default, centroid, 0;
    bbox = qq2ll(qq, bbox=1);
+   invalid = where((bbox == 0)(,sum) == 4);
    u = array(double, 3, dimsof(qq));
    u(*) = fll2utm( bbox(..,[1,3])(..,avg), bbox(..,[2,4])(..,avg) )(*);
+   if(numberof(invalid))
+      u(,invalid) = 0;
    if(centroid)
       return u;
    else
@@ -186,44 +189,55 @@ func qq2ll(qq, bbox=) {
 */
    default, bbox, 0;
    qq = extract_qq(qq);
-   if(numberof(where(strlen(qq) != 8))) {
-      write, "Not all input contained valid quarter quads. Aborting."
-      return;
+
+   lat = array(double(0.), dimsof(qq));
+   lon = array(double(0.), dimsof(qq));
+
+   valid = where(qq);
+   if(numberof(valid)) {
+      qq = qq(valid);
+
+      AA    = atoi(strpart(qq, 1:2));
+      OOO   = atoi(strpart(qq, 3:5));
+      a     =      strpart(qq, 6:6);
+      o     = atoi(strpart(qq, 7:7));
+      q     =      strpart(qq, 8:8);
+
+      lat(valid) = AA;
+      lon(valid) = OOO;
+
+      // The following line converts a-h to 0-7
+      a = int(atoc(strcase(0,a))) - int(atoc("a"));
+      a *= 0.125;
+      lat(valid) += a;
+
+      o = o - 1;
+      o = o * 0.125;
+      lon(valid) += o;
+
+      // The following line converts a-d to 1-4
+      q = int(atoc(strcase(0,q))) - int(atoc("a")) + 1;
+      qa = (q == 2 | q == 3);
+      qo = (q >= 3);
+
+      qa = qa * 0.0625;
+      qo = qo * 0.0625;
+
+      lat(valid) += qa;
+      lon(valid) += qo;
    }
 
-   AA    = atoi(strpart(qq, 1:2));
-   OOO   = atoi(strpart(qq, 3:5));
-   a     =      strpart(qq, 6:6);
-   o     = atoi(strpart(qq, 7:7));
-   q     =      strpart(qq, 8:8);
-
-   lat = AA;
-   lon = OOO;
-
-   // The following line converts a-h to 0-7
-   a = int(atoc(strcase(0,a))) - int(atoc("a"));
-   a *= 0.125;
-   lat += a;
-
-   o = o - 1;
-   o = o * 0.125;
-   lon += o;
-
-   // The following line converts a-d to 1-4
-   q = int(atoc(strcase(0,q))) - int(atoc("a")) + 1;
-   qa = (q == 2 | q == 3);
-   qo = (q >= 3);
-   
-   qa = qa * 0.0625;
-   qo = qo * 0.0625;
-   
-   lat += qa;
-   lon += qo;
-
-   if(bbox)
-      return [lat, -1 * lon, lat + 0.0625, -1 * (lon + 0.0625)];
-   else
+   if(bbox) {
+      north = lat;
+      west = lon;
+      if(numberof(valid)) {
+         north(valid) += 0.0625;
+         west(valid) += 0.0625;
+      }
+      return [lat, -1 * lon, north, -1 * west];
+   } else {
       return [lat, -1 * lon];
+   }
 }
 
 func calc24qq(lat, lon) {
