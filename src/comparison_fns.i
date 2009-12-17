@@ -29,6 +29,36 @@ func read_xyz_ascii_file(fname,n) {
   }
 
 
+func __compare_pts_fix_kings(&kings) {
+/* DOCUMENT __compare_pts_fix_kings, kings;
+   Private function used by compare_pts and extract_closest_pts to make sure
+   the kings array is in the right format. kings is supposed to be numerical
+   with dims of [2,3,n].
+      * If kings is in a structure, then it's turned into a numerical array.
+        The east/north/elevation values will be used if present and nonzero;
+        otherwise the lnorth/least/lelv values will be used.
+      * If kings is numerical but has dims of [2,n,3], it is transposed.
+*/
+   if(is_numerical(kings)) {
+      dims = dimsof(kings);
+      if(dims(1) == 2 && dims(2) != 3 && dims(3) == 3) {
+         kings = transpose(kings);
+      }
+   } else {
+      newkings = [];
+      if(has_member(kings, "north")) {
+         newkings = transpose([kings.east/100., kings.north/100.,
+            kings.elevation/100.]);
+      }
+      if(!numberof(where(newkings)) && has_member(kings, "lnorth")) {
+         newkings = transpose([kings.least/100., kings.lnorth/100.,
+            kings.lelv/100.]);
+      }
+      if(!is_void(newkings))
+         kings = newkings;
+   }
+}
+
 func compare_pts(eaarl, kings, rgn, fname=, buf=, elv=, read_file=, pdop=, mode=) {
    // this function compares each point of kings data within a buffer of eaarl data.
    // amar nayegandhi 11/15/2002.
@@ -38,6 +68,7 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, elv=, read_file=, pdop=, mode=
    // mode = 3 for topo under veg
 
    extern i, no, be_avg_pts, be, kings_elv, be_elv, diff1, diff2, kings_indx, day123_pnav, eaarl2;
+   __compare_pts_fix_kings, kings;
    kings_indx = [];
    if (!buf) buf = 100 // default to 1 m buffer side.
    if (is_void(mode)) mode = 3
@@ -397,7 +428,7 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fsmode=, wfs=) {
 func extract_closest_pts(eaarl, kings, buf=, fname=, invert=) {
   //this function returns a data set of the closest points
   // if invert = 1, delete the closest points and return the rest of the array
-
+   __compare_pts_fix_kings, kings;
   if (!(buf)) buf = 100; //default 1m buffer
 
  for (i=1; i <= numberof(kings(1,)); i++) {
