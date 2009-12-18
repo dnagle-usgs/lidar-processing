@@ -84,7 +84,7 @@ func qq2uz(qq, centroid=) {
 */
    default, centroid, 0;
    bbox = qq2ll(qq, bbox=1);
-   invalid = where((bbox == 0)(,sum) == 4);
+   invalid = where((bbox == 0)(..,sum) == 4);
    u = array(double, 3, dimsof(qq));
    u(*) = fll2utm( bbox(..,[1,3])(..,avg), bbox(..,[2,4])(..,avg) )(*);
    if(numberof(invalid))
@@ -92,7 +92,7 @@ func qq2uz(qq, centroid=) {
    if(centroid)
       return u;
    else
-      return u(3,);
+      return long(u(3,));
 }
 
 func extract_for_qq(north, east, zone, qq, buffer=) {
