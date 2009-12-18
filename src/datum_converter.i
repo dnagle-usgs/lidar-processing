@@ -113,7 +113,8 @@ dst_geoid=, verbose=) {
                   dst_geoid=dst_geoid, verbose=verbose;
                if(numberof(w))
                   cnorth(w) = ceast(w) = cheight(w) = 0;
-               write, format="%s", "\n";
+               if(verbose)
+                  write, format="%s", "\n";
                north(i) = cnorth;
                east(i) = ceast;
                height(i) = &(long(unref(cheight) * 100 + 0.5));
@@ -126,7 +127,8 @@ dst_geoid=, verbose=) {
                dst_geoid=dst_geoid, verbose=verbose;
             if(numberof(w))
                north(w) = east(w) = height(w) = 0;
-            write, format="%s", "\n";
+            if(verbose)
+               write, format="%s", "\n";
             height = long(unref(height) * 100 + 0.5);
          }
 
@@ -314,4 +316,115 @@ func datum_convert_pnav(pnav=, infile=, export=, outfile=, src_datum=, src_geoid
    }
 
    return pnav;
+}
+
+func datum_convert_guess_geoid(w84, n88, zone=) {
+/* DOCUMENT datum_convert_guess_geoid, w84, n88, zone=
+   This function is intended to help you determine which GEOID version was used
+   to convert a set of w84 data to n88. It does this by testing all available
+   GEOIDs and reporting which one(s) match. This is not necessarily foolproof.
+
+   There are two ways to call the function. You can either give it filenames,
+   or you can give it data.
+
+   Parameters:
+      w84: This should be the filename or data array containing WGS84 data.
+      n88: This should be the filename or data array containing NAVD88 data.
+
+   Options:
+      zone= The zone for the data. This is required if w84 and n88 are both
+         data arrays. If either one is a filename, it will default to
+         autodetecting the zone from the filename.
+
+   Note: Make sure that w84 and n88 both cover identical data. They must have
+   the same structure and same dimensions and must cover the same data points.
+
+   This is intended for interactive command line use. It will print its output
+   to the console and will return nothing.
+*/
+   // If they passed filenames, then load the data
+   if(is_string(w84)) {
+      default, zone, tile2uz(file_tail(w84));
+      f = openb(w84);
+      w84 = get_member(f, f.vname);
+      close, f;
+   }
+   if(is_string(n88)) {
+      default, zone, tile2uz(file_tail(n88));
+      f = openb(n88);
+      n88 = get_member(f, f.vname);
+      close, f;
+   }
+
+   if(numberof(w84) != numberof(n88)) {
+      write, "The number of points in the two data sources do not match. Aborting.";
+      return;
+   }
+
+   defns = h_new(
+      "First Return", h_new(e="east", n="north", z="elevation"),
+      "Mirror", h_new(e="meast", n="mnorth", z="melevation"),
+      "Last Return", h_new(e="least", n="lnorth", z="lelv")
+   );
+   fields = h_keys(defns);
+
+   // Remove any field definitions that do not exist in the data
+   for(i = 1; i <= numberof(fields); i++) {
+      cur = defns(fields(i));
+      for(j = 1; j <= 3; j++) {
+         if(! has_member(n88, cur(["n", "e", "z"](j)))) {
+            j = 4;
+            h_pop, defns, fields(i);
+         }
+      }
+   }
+   fields = h_keys(defns);
+
+   w84 = w84(msort(w84.soe, w84.rn));
+   n88 = n88(msort(n88.soe, n88.rn));
+
+   // Work-around for old ALPS bug that let one point unconverted
+   write, "\n Bug checking...";
+   n83 = datum_convert_data(w84, zone=zone, src_datum="w84", dst_datum="n83",
+      verbose=0);
+   d = abs(unref(n83).elevation - n88.elevation);
+   w = where(unref(d) > 10);
+   if(numberof(w) > 0 && numberof(w) == numberof(w84)-1) {
+      write, "This data exhibits the old ALPS bug that failed to convert one data point.\n Removing outlier point.\n";
+      w84 = w84(w);
+      n88 = n88(w);
+   } else {
+      write, "No bug detected.\n";
+   }
+
+   geoids = navd88_geoids_available();
+   maxs = array(-1, numberof(geoids));
+   write, "Beginning comparisons. Please disregard messages any messages that say \"No\n area is in data covered by GEOID.\"."
+   for(i = 1; i <= numberof(geoids); i++) {
+      write, format="\n-- Testing %s --\n", geoids(i);
+      // It's not safe to pre-convert to nad83 up above, because that can
+      // introduce an additional cm of error when it's converted again here.
+      test = datum_convert_data(w84, zone=zone, src_datum="w84",
+         dst_datum="n88", dst_geoid=geoids(i), verbose=0);
+      if(!numberof(test))
+         continue;
+      for(j = 1; j <= numberof(fields); j++) {
+         cur = defns(fields(j));
+         x = abs(get_member(n88, cur.e) - get_member(test, cur.e));
+         y = abs(get_member(n88, cur.n) - get_member(test, cur.n));
+         z = abs(get_member(n88, cur.z) - get_member(test, cur.z));
+         maxs(i) = max(maxs(i), x(max), y(max), z(max));
+      }
+      write, format=" * Maximum delta: %d\n", maxs(i);
+   }
+
+   w = where(maxs <= 1);
+   if(numberof(w) == 0) {
+      write, "\nNo match found.";
+   } else if(numberof(w) == 1) {
+      write, format="\nMatch found: %s\n", geoids(w)(1);
+   } else {
+      result = (geoids(w) + " ")(sum);
+      write, format="\nMultiple matches found: %s\n", result;
+   }
 }
