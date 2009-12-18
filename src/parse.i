@@ -60,8 +60,12 @@ func tile2uz(tile) {
 
     result = dt;
     w = where(result == 0 & qq != 0);
-    if(numberof(w))
-        result(w) = qq(w);
+    if(numberof(w)) {
+        if(dimsof(result)(1))
+            result(w) = qq(w);
+        else
+            result = qq;
+    }
 
     return result;
 }
@@ -100,7 +104,7 @@ func dt_short(dtcodes) {
 */
 //  Original David Nagle 2008-07-21
     e = n = z = []; // prevents the next line from making them externs
-    regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)(_|\\.|$)", dtcodes, , , e, , n, , z;
+    regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)[c-hj-np-xC-HJ-NP-X]?(_|\\.|$)", dtcodes, , , e, , n, , z;
     w = where( !(!e) & !(!n) & !(!z) );
     result = array(string(0), dimsof(dtcodes));
     if(numberof(w))
@@ -120,7 +124,7 @@ func dt_long(dtcodes) {
 */
 //  Original David Nagle 2008-08-07
     e = n = z = []; // prevents the next line from making them externs
-    regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)(_|\\.|$)", dtcodes, , , e, , n, , z;
+    regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)[c-hj-np-xC-HJ-NP-X]?(_|\\.|$)", dtcodes, , , e, , n, , z;
     w = where( !(!e) & !(!n) & !(!z) );
     result = array(string(0), dimsof(dtcodes));
     if(numberof(w))
@@ -155,7 +159,7 @@ func dt2utm(dtcodes, &north, &east, &zone, bbox=, centroid=) {
 */
 //  Original David Nagle 2008-07-21
     e = n = z = []; // prevents the next line from making them externs
-    regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)(_|\\.|$)", dtcodes, , , e, , n, , z;
+    regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)[c-hj-np-xC-HJ-NP-X]?(_|\\.|$)", dtcodes, , , e, , n, , z;
     w = where( ! (!(!e) & !(!n) & !(!z)) );
     if(numberof(w)) {
         e(w) = "0";
