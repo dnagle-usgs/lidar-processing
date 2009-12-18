@@ -19,14 +19,13 @@ deg2rad = pi / 180.0;
 rad2deg = 180.0 / pi;
 FOURTHPI = pi / 4.0;
 
-func ll2utm( lat, lon, force_zone= ) {
+func ll2utm(lat, lon, force_zone=) {
 /* DOCUMENT  ll2utm(lat, lon, force_zone=)
   
    Convert lat/lon pairs to UTM.  Returns values in
    the global arrays UTMNorthing, UTMEasting, and UTMZone;
 
-   If retarr=1, then [UTMNorthing, UTMEasting] are returned.
-   Otherwise, numberof(UTMEasting) is returned.
+   Numberof(UTMEasting) is returned.
 
    If a zone is provided by the option force_zone= or by the extern fixedzone,
    the coordinates will be forced to that zone. If both are set, then
@@ -35,19 +34,11 @@ func ll2utm( lat, lon, force_zone= ) {
    See also:  fll2utm.
 */
    extern UTMEasting, UTMNorthing, ZoneNumber;
-   u = fll2utm(lat, lon, force_zone=force_zone);
-   UTMNorthing = u(1, );
-   UTMEasting  = u(2, );
-   ZoneNumber  = u(3, );
-
-   if (!retarr) {
-      return numberof(u(1, ));
-   } else {
-      return [u(2, ), u(1, )];
-   }  
+   fll2utm, lat, lon, UTMNorthing, UTMEasting, ZoneNumber, force_zone=force_zone;
+   return numberof(UTMNorthing);
 }
 
-func fll2utm(lat, lon, force_zone=) {
+func fll2utm(lat, lon, &north, &east, &zone, force_zone=) {
 /* DOCUMENT  u=fll2utm(lat, lon, force_zone=)
 
    Convert latitude and longitude pairs to utm and return 
@@ -73,7 +64,7 @@ func fll2utm(lat, lon, force_zone=) {
    k0                = double(0.9996);
    eccPrimeSquared   = eccSquared/(1-eccSquared);
 
-   u = array(double, 3, numberof(lat));
+   north = east = zone = array(double, dimsof(lat));
 
    //Make sure the longitude is between -180.00 .. 179.9
    // Original:
@@ -84,12 +75,12 @@ func fll2utm(lat, lon, force_zone=) {
    //ZoneNumber = int((lonTemp + 180)/6) + 1;
    // Simplified (more efficient):
    if (!is_void(force_zone)) {
-      u(3, *) = force_zone;
+      zone(*) = force_zone;
    } else if (is_array(fixedzone)) {
-      u(3, *) = fixedzone; // set to fixedzone when set.. this is useful when data crosses utm zones.
+      zone(*) = fixedzone; // set to fixedzone when set.. this is useful when data crosses utm zones.
       curzone=fixedzone;
    } else {
-      u(3, ) = int(lonTemp/6 + 31)
+      zone(*) = int(lonTemp/6 + 31)
    }
 
    latRad = double(lat*deg2rad);
@@ -100,7 +91,7 @@ func fll2utm(lat, lon, force_zone=) {
    //lonOrigin = (ZoneNumber - 1) *6 - 180 + 3;  //+3 puts origin in middle of zone
    //lonOriginRad = lonOrigin * deg2rad;
    // Simplified (more efficient):
-   lonOriginRad = (6 * u(3,) - 183) * deg2rad;
+   lonOriginRad = (6 * zone - 183) * deg2rad;
 
    N = Earth_radius/sqrt(1-eccSquared*sin(latRad)*sin(latRad));
    T = tan(latRad)*tan(latRad);
@@ -119,20 +110,21 @@ func fll2utm(lat, lon, force_zone=) {
    //UTMEasting = (double)(k0*N*(A+(1-T+C)*A*A*A/6 + \
    //   (5-18*T+T*T+72*C-58*eccPrimeSquared)*A*A*A*A*A/120) + 500000.0);
    // Optimized:
-   u(2, ) =
+   east(*) =
       ((5-18*T+T*T+72*C-58*eccPrimeSquared)*A^5/120+A+(1-T+C)*A^3/6)*k0*N+500000.0;
 
    // Original:
    //UTMNorthing = (double)(k0*(M+N*tan(latRad)*(A*A/2+(5-T+9*C+4*C*C)*A*A*A*A/24 + \
    //   (61-58*T+T*T+600*C-330*eccPrimeSquared)*A*A*A*A*A*A/720)));
    // Optimized:
-   u(1, ) =
+   north(*) =
       (((-(58+T)*T+600*C-330*eccPrimeSquared+61)*A^6/720+(5-T+9*C+4*C*C)*A^4/24+A*A/2)*N*tan(latRad)+M)*k0;
 
-   return u;
+   if(!am_subroutine())
+      return transpose([north, east, zone]);
 }
 
-func utm2ll( UTMNorthing, UTMEasting, UTMZone) {
+func utm2ll(UTMNorthing, UTMEasting, UTMZone, &lon, &lat) {
 /* DOCUMENT  utm2ll( UTMNorthing, UTMEasting, UTMZone)
 
    Convert UTM coords. to  lat/lon.  Returned values are
@@ -185,7 +177,13 @@ func utm2ll( UTMNorthing, UTMEasting, UTMZone) {
          *D*D*D*D*D/120)/cos(phi1Rad);
 
    Long = LongOrigin + Long * rad2deg;
-   return [Long, Lat]
+
+   if(am_subroutine()) {
+      lon = Long;
+      lat = Lat;
+   } else {
+      return [Long, Lat];
+   }
 }
 
 func combine_zones(u) {
