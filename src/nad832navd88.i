@@ -227,6 +227,24 @@ func geoid_data_to_pbd(gfname=, pbdfname=, initialdir=, geoid_version=) {
    return data;
 }
 
+func navd88_geoids_available(void) {
+/* DOCUMENT geoids = navd88_geoids_available()
+   Returns a list of available geoids. This simply checks for directories that
+   match GEOID* in the geoid_data_root. Returns them as an array of strings in
+   an arbitrary order.
+
+   For example:
+
+      > navd88_geoids_available()
+      ["06","99","03","09","96"]
+*/
+   dirs = lsdirs(alpsrc.geoid_data_root, glob="GEOID*");
+   if(!is_void(dirs))
+      return strpart(dirs, 6:);
+   else
+      return [];
+}
+
 func nad832navd88(lon, lat, &elv, gdata_dir=, geoid=, verbose=) {
 /* DOCUMENT navd882nad83, lon, lat, &elv, gdata_dir=, geoid=
    Converts data from NAD83 to NAVD88. lon and lat should be in degrees. elv
