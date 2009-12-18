@@ -30,8 +30,12 @@ func set_contains(A, b) {
 */
    idx = set_intersection(b, unref(A), idx=1);
    result = array(0, dimsof(b));
-   if(numberof(idx))
-      result(idx) = 1;
+   if(numberof(idx)) {
+      if(dimsof(result)(1))
+         result(idx) = 1;
+      else
+         result = 1;
+   }
    return result;
 }
 
@@ -57,28 +61,48 @@ func set_intersection(A, B, idx=, delta=) {
    default, idx, 0;
    default, delta, 0;
 
-   // Trivial cases
+   // Trivial case
    if(! numberof(A) || ! numberof(B))
       return [];
 
-   // If A << B, then we'll get better performance if we switch the operands
-   // (But we can only do that if idx=0)
-   if(!idx && numberof(A) < numberof(B))
-      return set_intersection(unref(B), unref(A));
-
-   C = array(0, dimsof(A));
-   if(delta)
-      for(i = 1; i <= numberof(B); i++)
-         C |= (abs(A - B(i)) < delta);
-   else
-      for(i = 1; i <= numberof(B); i++)
-         C |= (A == B(i));
+   aw = set_remove_duplicates(A, idx=1);
+   B = set_remove_duplicates(B);
+   an = numberof(aw);
+   bn = numberof(B);
+   ai = bi = 1;
+   C = array(short(0), numberof(aw));
+   if(delta) {
+      while(ai <= an && bi <= bn) {
+         if(abs(A(aw(ai)) - B(bi)) <= delta) {
+            C(ai) = 1;
+            ai++;
+            bi++;
+         } else {
+            if(A(aw(ai)) < B(bi))
+               ai++;
+            else
+               bi++;
+         }
+      }
+   } else {
+      while(ai <= an && bi <= bn) {
+         if(A(aw(ai)) == B(bi)) {
+            C(ai) = 1;
+            ai++;
+            bi++;
+         } else {
+            if(A(aw(ai)) < B(bi))
+               ai++;
+            else
+               bi++;
+         }
+      }
+   }
    index = where(C);
-
    if(idx)
-      return index;
+      return aw(index);
    if(numberof(index))
-      return A(index);
+      return A(aw(index))
    else
       return [];
 }
@@ -189,7 +213,7 @@ func set_cartesian_product(A, B) {
    return C;
 }
 
-func set_remove_duplicates(A, idx=, ret_sort=) {
+func set_remove_duplicates(A, idx=, ret_sort=, delta=) {
 /* DOCUMENT set_remove_duplicates(A, idx=, ret_sort=)
 
    Returns the set A with its duplicate elements removed. The returned list
@@ -206,8 +230,11 @@ func set_remove_duplicates(A, idx=, ret_sort=) {
 */
    default, idx, 0;
    default, ret_sort, 0;
+   default, delta, 0;
    if(ret_sort)
       return unique(unref(A), ret_sort=1);
+   if(delta)
+      return set_remove_duplicates_delta(A, delta=delta, idx=idx);
 
    // Trivial/edge cases
    if(! numberof(A))
@@ -235,6 +262,41 @@ func set_remove_duplicates(A, idx=, ret_sort=) {
 
    // Eliminate duplicates in the sorted sequence
    unq = where(grow([1n], A(seq)(srt)(:-1) != A(seq)(srt)(2:)));
+
+   // If they want indices, we want to index into an index list instead of A
+   if(idx) A = indgen(numberof(unref(A)));
+
+   return A(seq)(srt)(unq);
+}
+
+func set_remove_duplicates_delta(A, delta=, idx=) {
+   extern EPSILON;
+   default, delta, EPSILON;
+   default, idx, 0;
+
+   // Trivial/edge cases
+   if(! numberof(A))
+      return [];
+   if(numberof(A) == 1)
+      return idx ? [1] : A;
+
+   // Eliminate any dimensionality
+   A = unref(A)(*);
+
+   // Eliminate duplicates in the initial sequence. Valuable when there are a
+   // large number of items that take a long time to sort, especially with
+   // strings.
+   seq = where(grow([1n], abs(A(:-1) - A(2:)) > delta));
+
+   // If there's only one item, we're done!
+   if(numberof(seq) == 1)
+      return idx ? seq : A(seq);
+
+   // Sort them
+   srt = sort(A(seq));
+
+   // Eliminate duplicates in the sorted sequence
+   unq = where(grow([1n], abs(A(seq)(srt)(:-1) - A(seq)(srt)(2:)) > delta));
 
    // If they want indices, we want to index into an index list instead of A
    if(idx) A = indgen(numberof(unref(A)));
