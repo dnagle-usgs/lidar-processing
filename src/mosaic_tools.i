@@ -416,21 +416,13 @@ func mosaic_gather_tans(date_list, photo_soes, progress=, mounting_bias=) {
          photo_tans(w).somd) + mounting_bias.heading;
    }
    
-   if(progress)
-      write, format="Converting WGS84 to NAD83 to NAVD88...%s", "\n";
+   photo_tans = datum_convert_pnav(pnav=photo_tans, src_datum="w84",
+      dst_datum="n88", verbose=progress);
 
    w = where(photo_tans.lon != 0 & photo_tans.lat != 0);
    if(numberof(w)) {
-      wgs = transpose([photo_tans(w).lon, photo_tans(w).lat, photo_tans(w).alt]);
-      nad = wgs842nad83(unref(wgs));
-      navd = nad832navd88(unref(nad));
-      photo_tans(w).lon = navd(1,);
-      photo_tans(w).lat = navd(2,);
-      photo_tans(w).alt = navd(3,);
-      navd = [];
-
       if(progress)
-         write, format="Converting lat/lon to UTM...%s", "\n";
+         write, format=" Converting lat/lon to UTM...%s", "\n";
       utm = fll2utm(photo_tans(w).lat, photo_tans(w).lon);
       photo_tans(w).northing = utm(1,);
       photo_tans(w).easting = utm(2,);

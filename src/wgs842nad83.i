@@ -1,146 +1,214 @@
+// vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 /*
-  Id: wgs842nad83.i
-  Converted to yorick from John Sonntag's C code.
-  amar nayegandhi.
+   Equations can be found at:
+   http://www.linz.govt.nz/geodetic/conversion-coordinates/geodetic-datum-conversion/datum-transformation-equations/index.aspx
 */
 
- 
-func wgs842nad83(data) {
-  /*DOUCMENT wgs842nad83(data)
-   amar nayegandhi 07/09/03.
-   this function converts coordinates from wgs84 (referenced to itrfxx) to the nad83 reference datum.
-   INPUT:  data = A 2-D array of size (3,n).  The rows in the data array must be longitude (in degrees),latitude (in degrees),altitude (in meters).
-   OUTPUT: nad83 = A 2-D array of the same size as the input array (3,n).  
-   report all errors to /dev/null
-  */
-  
-  //write, format="%12.8f\n",data(,1);
-  //write, "\n";
-  // convert the coordinates from geo to cart
-  rcart = geod_cart(data);
-  //write, format="%-16.8f\n",rcart(,1);
-  //write, "\n";
-
-  // convert the coordinates to NAD83 reference datum
-  rnad83 = cart_wgs842nad83(rcart);
-  //write, format="%12.8f\n",rnad83(,1);
-  //write, "\n";
-
-  // convert the coordinates from cart back to geo
-  rgeo2 = cart_geod(rnad83);
-  //write, format="%12.8f\n",rgeo2(,1);
-  //write, "\n";
-
-  return rgeo2;
-}
-
-func cart_wgs842nad83(rcart) {
-  /*DOCUMENT wgs842nad83
-   amar nayegandhi 07/09/03
-   Converted to yorick from John Sonntags C code.
-  */
-  
-  // define rotations and scale
-  PI = atan(1.0)*4.0;
-  rx = (-0.0275/60.0/60.0)*PI/180.0;
-  ry = (-0.0101/60.0/60.0)*PI/180.0;
-  rz = (-0.0114/60.0/60.0)*PI/180.0;
-  d  = 0.0;
-
-  // define rotation matrix
-  rotmat = array(double, 3, 3)
-  rotmat(1,1) = 1.0+d;
-  rotmat(1,2) = -rz;
-  rotmat(1,3) = ry;
-  rotmat(2,1) = rz;
-  rotmat(2,2) = 1.0+d;
-  rotmat(2,3) = -rx;
-  rotmat(3,1) = -ry;
-  rotmat(3,2) = rx;
-  rotmat(3,3) = 1.0+d;
-
-  // perform rotation
-  rnad83 = matvec(rotmat, rcart);
-
-  // add origin offsets
-  rnad83(1,) += 0.9738;
-  rnad83(2,) += -1.9453;
-  rnad83(3,) += -0.5486;
- 
-
-  return rnad83;
-}
-
-func matvec(rotmat, rcart) {
-  /*DOCUMENT matvec(rotmac,rcart)
-   amar nayegandhi 07/09/03.
-  */
-  rnad83 = rotmat(+,)*rcart(+,);
-  return rnad83;
-}
-    
-  
-  
-  
-func geod_cart(data_in) {
-  /*DOCUMENT geod_cart(rgeo1) 
-   This function converts geodetic coordinates to cartesian coordinates.
-   amar nayegandhi 07/08/03
-   INPUT : rgeo1 = 2-dimensional input array (x,y,z) of size (3,n).
-   OUTPUT: rcart = 2-dimensional output array (x,y,z) of same size (3,n).
-   Converted to yorick from John Sonntags C code.
-   
-  */
-
-  rgeo1 = data_in; 
-  pi = atan(1.0)*4.0; //double precision pi
-  a = 6378137.0; // semi-major axis
-  b = 6356752.3141404; //semi-minor axis
-  f = (a-b)/a;  // flattening factor
-  e2 = 2*f - f*f; //eccentricity squared
-
-  rgeo1(1,) = rgeo1(1,) * pi/180.0;
-  rgeo1(2,) = rgeo1(2,) * pi/180.0;
-
-  N = a/sqrt(1 - e2*(sin(rgeo1(2,)))^2);
-  
-  rcart = array(double, 3, numberof(rgeo1(1,)));
-  rcart(1,) = (N + rgeo1(3,))*cos(rgeo1(2,))*cos(rgeo1(1,));
-  rcart(2,) = (N + rgeo1(3,))*cos(rgeo1(2,))*sin(rgeo1(1,));
-  rcart(3,) = (N*(1-e2)+rgeo1(3,))*sin(rgeo1(2,));
-
-  return rcart;
-}
-
-func cart_geod(rnad83) {
-  /*DOCUMENT cart_geod(rnad83)
-   This function converts cartesian coordinates to geodetic coordinates.
-   amar nayegandhi 07/08/03.
-   INPUT : rnad83 = 2-dimensional input array (x,y,z) of size (3,n).
-   OUTPUT: rgeo2 = 2-dimensional output array (x,y,z) of size (3,n).
-   Converted to yorick from John Sonntags C code.
+func wgs842nad83(&lon, &lat, &height) {
+/* DOUCMENT wgs842nad83, lon, lat, height
+   Converts coordinates from WGS-84 to NAD-83. Conversion happens in place, or
+   can be returned as [lon, lat, height].
 */
+   local X, Y, Z;
 
- 
-  pi = atan(1.0)*4.0; //double precision pi
-  a = 6378137.0; // semi-major axis
-  b = 6356752.3141404; //semi-minor axis
+   // Convert to cartesian coordinates
+   geographic2cartesian, lon, lat, height, "wgs84", X, Y, Z;
+   // Apply 7-param transform
+   helmert_transformation, X, Y, Z, "wgs84 nad83";
 
-  e1 = (a^2 - b^2)/(b^2); // e^12 in Peter Dana s formula
-  f = (a-b)/a;  // flattening factor
-  e2 = 2*f - f*f; //eccentricity squared
+   // Convert back to geographic coordinates
+   if(am_subroutine()) {
+      cartesian2geographic, X, Y, Z, "grs80", lon, lat, height;
+   } else {
+      return cartesian2geographic(X, Y, Z, "grs80");
+   }
+}
 
-  p = sqrt(rnad83(1,)^2 + rnad83(2,)^2);
-  theta = atan(rnad83(3,)*a, p*b);
-  num = rnad83(3,) + e1*b*((sin(theta))^3);
-  den = p - e2*a*((cos(theta))^3);
-  rgeo2 = array(double, 3, numberof(rcart(1,)));
-  rgeo2(2,) = atan(num,den);
-  N = a/sqrt(1-e2*(sin(rgeo2(2,))*sin(rgeo2(2,))));
-  rgeo2(1,) = atan(rnad83(2,),rnad83(1,));
-  rgeo2(3,) = (p/cos(rgeo2(2,))) - N;
-  rgeo2(2,) = rgeo2(2,)*180.0/pi;
-  rgeo2(1,) = rgeo2(1,)*180.0/pi;
+func nad832wgs84(&lon, &lat, &height) {
+/* DOUCMENT nad832wgs84, lon, lat, height
+   Converts coordinates from NAD-83 to WGS-84. Conversion happens in place, or
+   can be returned as [lon, lat, height].
+*/
+   local X, Y, Z;
 
- return rgeo2;
+   // Convert to cartesian coordinates
+   geographic2cartesian, lon, lat, height, "grs80", X, Y, Z;
+
+   // Apply 7-param transform
+   helmert_transformation, X, Y, Z, "nad83 wgs84";
+
+   // Convert back to geographic coordinates
+   if(am_subroutine()) {
+      cartesian2geographic, X, Y, Z, "wgs84", lon, lat, height;
+   } else {
+      return cartesian2geographic(X, Y, Z, "wgs84");
+   }
+}
+
+local __helmert;
+/* DOCUMENT __helmert
+   A yeti hash containing the parameter sets necessary for datum conversions.
+   This is used by helmert_transformation. These are the 7 parameters for
+   helmert:
+      rx, ry, rz - rotation parameters in arcseconds
+      tx, ty, tz - translation parameters in meters
+      d - scale factor in ppm
+*/
+__helmert = h_new(
+   "wgs84 nad83", h_new(
+      rx = 0.0275, ry = 0.0101, rz = 0.0114,
+      tx = 0.9738, ty = -1.9453, tz = -0.5486,
+      d = 0.0
+   )
+);
+// The inverse transformation is acheived by multiplying each element by -1.
+k = h_keys(__helmert);
+for(i = 1; i <= numberof(k); i++) {
+   po = __helmert(k(i));
+   pn = h_new(
+      rx=po.rx*-1, ry=po.ry*-1, rz=po.rz*-1,
+      tx=po.tx*-1, ty=po.ty*-1, tz=po.tz*-1,
+      d=po.d*-1
+   );
+   po = []
+   kn = strsplit(k(i), " ");
+   h_set, __helmert, kn(2) + " " + kn(1), pn;
+   kn = pn = [];
+}
+k = i = [];
+
+func helmert_transformation(&X, &Y, &Z, transform) {
+/* DOCUMENT helmert_transformation, X, Y, Z, transform
+   Applies the 7-parameter Helmert transformation specified by transform to the
+   given X, Y, and Z values, which are updated in place. Alternately, it will
+   also return [X, Y, Z].
+*/
+   extern __helmert;
+   p = __helmert(transform);
+   if(!h_has(__helmert, transform))
+      error, "Undefined transformation: " + transform;
+
+   // Convert from arc-seconds to radians
+   // arcsec2rad = pi / 180 / 60 / 60
+   arcsec2rad = pi / 648000.;
+   rx = p.rx * arcsec2rad;
+   ry = p.ry * arcsec2rad;
+   rz = p.rz * arcsec2rad;
+   arcsec2rad = [];
+
+   d = 1. + p.d/1000000.;
+
+   // define rotation matrix
+   rotmat = [
+      [  d, -rz,  ry],
+      [ rz,   d, -rx],
+      [-ry,  rx,   d]
+   ];
+
+   XYZ = rotmat(+,) * [X(*),Y(*),Z(*)](,+);
+
+   if(am_subroutine()) {
+      X = XYZ(1,) + p.tx;
+      Y = XYZ(2,) + p.ty;
+      Z = unref(XYZ)(3,) + p.tz;
+   } else {
+      Xp = XYZ(1,) + p.tx;
+      Yp = XYZ(2,) + p.ty;
+      Zp = unref(XYZ)(3,) + p.tz;
+      return [Xp, Yp, Zp];
+   }
+}
+
+local __spheroids;
+/* DOCUMENT __spheroids
+   A yeti hash containing the constants that define the spheroids implemented
+   in ALPS. These are used to convert lat/lon/height coordinates to X/Y/Z
+   coordinates. Each spheroid contains four parameters:
+      a - the semi-major axis
+      b - the semi-minor axis 
+      f - flattening factor
+      e2 - eccentricity squared
+*/
+// Constants
+__spheroids = h_new(
+   wgs84=h_new(a=6378137., b=6356752.315245),
+   grs80=h_new(a=6378137., b=6356752.3141404)
+);
+// Derived
+for(i = 1; i <= 2; i++) {
+   tmp = __spheroids(["wgs84","grs80"](i));
+   h_set, tmp, f=(tmp.a-tmp.b)/tmp.a;
+   h_set, tmp, e2=2*tmp.f - tmp.f*tmp.f;
+}
+tmp = i = [];
+
+func geographic2cartesian(lon, lat, height, spheroid, &X, &Y, &Z) {
+/* DOCUMENT geographic2cartesian, lon, lat, height, spheroid, X, Y, Z
+   Given geographic coordinates in longitude, latitude, and height, this will
+   convert them to X, Y, and Z cartesian coordinates using the parameters for
+   the specified spheroid. The parameters X, Y, and Z are output parameters.
+   Alternately, it will also return [X, Y, Z].
+*/
+   extern __spheroids;
+   if(!h_has(__spheroids, spheroid))
+      error, "Undefined spheroid: " + spheroid;
+   constants = __spheroids(spheroid);
+   a = constants.a;
+   e2 = constants.e2;
+   constants = [];
+
+   deg2rad = pi/180.;
+   lon *= deg2rad;
+   lat *= deg2rad;
+
+   coslat = cos(lat);
+   sinlat = sin(unref(lat));
+   coslon = cos(lon);
+   sinlon = sin(unref(lon));
+
+   v = a / sqrt(1 - e2 * sinlat^2);
+   v_height = v + height;
+
+   X = v_height * coslat * unref(coslon);
+   Y = unref(v_height) * unref(coslat) * unref(sinlon);
+   Z = (unref(v) * (1 - e2) + unref(height)) * unref(sinlat);
+
+   if(!am_subroutine())
+      return [X, Y, Z];
+}
+
+func cartesian2geographic(X, Y, Z, spheroid, &lon, &lat, &height) {
+/* DOCUMENT cartesian2geographic, X, Y, Z, spheroid, lon, lat, height
+   Given cartesian coordinates as X, Y, and Z, this will convert them to
+   geographic coordinates longitude, latitude, and height using the parameters
+   for the specified spheroid. The parameters lon, lat, and height are output
+   parameters. Alternately, it will also return [lon, lat, height].
+*/
+   extern __spheroids;
+   if(!h_has(__spheroids, spheroid))
+      error, "Undefined spheroid: " + spheroid;
+   constants = __spheroids(spheroid);
+   a = constants.a;
+   f = constants.f;
+   e2 = constants.e2;
+   constants = [];
+
+   p2 = X*X + Y*Y;
+   r = sqrt(p2 + Z*Z);
+   p = sqrt(unref(p2));
+   mu = atan(Z * ((1 - f) + e2 * a / r), p);
+
+   lon = atan(unref(Y), unref(X));
+   lat = atan(Z * (1 - f) + e2 * a * sin(mu)^3,
+      (1 - f) * (p - e2 * a * cos(mu)^3));
+
+   sinlat = sin(lat);
+   height = p * cos(lat) + unref(Z) * sinlat - a * sqrt(1 - e2 * sinlat^2);
+
+   rad2deg = 180./pi;
+   lon *= rad2deg;
+   lat *= rad2deg;
+
+   if(!am_subroutine())
+      return [lon, lat, height];
 }

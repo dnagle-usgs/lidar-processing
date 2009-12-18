@@ -2503,7 +2503,7 @@ if {![winfo exists .l1wid]} {
       -command {
         set convar "n88_$datum_var"
 
-        exp_send "$convar = data_datum_converter($datum_var);\r"
+        exp_send "$convar = datum_convert_data($datum_var);\r"
         expect ">"
 
         append_varlist $convar

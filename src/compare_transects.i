@@ -92,7 +92,7 @@ INPUT:
                 get_member(f, vname) = data;
                 save, f, vname;
                 close, f;
-		data = data_datum_converter(data, tonad83=1, tonavd88=1, type = VEG__);
+      datum_convert_data, data, src_datum="w84", dst_datum="n88";
 		vname = "transdata_rcf_n88"
 		f = createb(pbdfile+"_n88_rcf.pbd");
                 add_variable, f, -1, vname, structof(data), dimsof(data);
