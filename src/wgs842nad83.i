@@ -157,9 +157,9 @@ func geographic2cartesian(lon, lat, height, spheroid, &X, &Y, &Z) {
    e2 = constants.e2;
    constants = [];
 
-   deg2rad = pi/180.;
-   lon *= deg2rad;
-   lat *= deg2rad;
+   DEG2RAD = pi/180.;
+   lon *= DEG2RAD;
+   lat *= DEG2RAD;
 
    coslat = cos(lat);
    sinlat = sin(unref(lat));
@@ -205,9 +205,9 @@ func cartesian2geographic(X, Y, Z, spheroid, &lon, &lat, &height) {
    sinlat = sin(lat);
    height = p * cos(lat) + unref(Z) * sinlat - a * sqrt(1 - e2 * sinlat^2);
 
-   rad2deg = 180./pi;
-   lon *= rad2deg;
-   lat *= rad2deg;
+   RAD2DEG = 180./pi;
+   lon *= RAD2DEG;
+   lat *= RAD2DEG;
 
    if(!am_subroutine())
       return [lon, lat, height];

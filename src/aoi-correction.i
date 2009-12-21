@@ -62,7 +62,7 @@ func correct_fs( r, aoi= ) {
       hyp(lst,i) = sqrt( a(lst) + b(lst) + c(lst));
 
       aoi(lst,i) = acos( (r(i).melevation(lst) - 
-                     r(i).elevation(lst)) / hyp(lst,i) )*rad2deg; 
+                     r(i).elevation(lst)) / hyp(lst,i) )*RAD2DEG; 
     }
  }
  return aoi;

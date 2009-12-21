@@ -29,7 +29,7 @@ func qde( xr, centroid= ) {
 		irg.
 
 */
-   rb = roll_bias * d2r;
+   rb = roll_bias * DEG2RAD;
    a = xr.sa / Hcvt * pi + rb;
    if ( centroid ) {
      rn = xr.raster(1)
@@ -43,10 +43,10 @@ func qde( xr, centroid= ) {
      }
      xr.irange(,1) = prange(1,) ;
      e = -(prange(1,) * NS2MAIR - range_bias) *  cos(a + xr.rroll ) * 
-         cos(xr.rpitch + ops_conf.pitch_bias*d2r ) ;
+         cos(xr.rpitch + ops_conf.pitch_bias*DEG2RAD ) ;
    } else {
      e = -(xr.irange * NS2MAIR - range_bias) *  cos(a + xr.rroll ) * 
-         cos(xr.rpitch + ops_conf.pitch_bias*d2r ) ;
+         cos(xr.rpitch + ops_conf.pitch_bias*DEG2RAD ) ;
    }
    ea = [ e + xr.alt - qde_vertical_offset, (xr.sa+3)/4 + 80 ];
    return ea;

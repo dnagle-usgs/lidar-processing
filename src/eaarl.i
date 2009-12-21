@@ -50,6 +50,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "triangle.i";
 
    // ALPS requires
+   require, "eaarl_constants.i"; // Must come first; some other files need it
    require, "batch_process.i";
    require, "bathy_filter.i";
    require, "change_window_size.i";
@@ -58,7 +59,6 @@ if(is_void(__eaarl_includes_included__)) {
    require, "data_rgn_selector.i";
    require, "dir.i";
    require, "dmars.i";
-   require, "eaarl_constants.i";
    require, "eaarl_mounting_bias.i";
    require, "edb_access.i";
    require, "general.i";
@@ -89,7 +89,6 @@ if(is_void(__eaarl_includes_included__)) {
    require, "set.i";
    require, "sf.i";
    require, "transect.i";
-   require, "waves.i";
    require, "wgs842nad83.i";
    require, "ytime.i";
    require, "zone.i";

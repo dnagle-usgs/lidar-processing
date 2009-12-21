@@ -1319,10 +1319,10 @@ func gen_jgw(ins, elev, camera=, mounting_bias=) {
    else
       H2 = 0 - H;
 
-   Prad = P * d2r;
-   Rrad = R * d2r;
-   Hrad = H * d2r;
-   H2rad = H2 * d2r;
+   Prad = P * DEG2RAD;
+   Rrad = R * DEG2RAD;
+   Hrad = H * DEG2RAD;
+   H2rad = H2 * DEG2RAD;
 
    // Create Rotation Coeff
    Term1 = cos(H2rad);

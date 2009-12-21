@@ -3079,7 +3079,7 @@ if {![winfo exists .l1wid]} {
           set pro_var cveg_all
         }
         4 {
-          exp_send "process_for_dws,q\r"
+          exp_send "require, \"waves.i\";process_for_dws,q;\r"
           expect ">"
         }
       }

@@ -131,7 +131,7 @@ pitch/roll/heading and other information.
 */ 
 
 G = 9.80665;
-gs = 90.0/double(2^15); 
+GS = 90.0/double(2^15); 
 as = (19.6/double(2^15)); 
 
 /*
@@ -351,7 +351,7 @@ func convert_raw_dmars_2_engr(dmars) {
 // data set.  
  engr_dmars.soe = dmars.tspo/200.0 + tdiff;
  for (i=1, j=4; i<=3; i++,j++ ) {
-   engr_dmars.sensor(i,) = dmars.sensor(i,) * gs;
+   engr_dmars.sensor(i,) = dmars.sensor(i,) * GS;
    engr_dmars.sensor(j,) = dmars.sensor(j,) * as;
  }
  return engr_dmars;

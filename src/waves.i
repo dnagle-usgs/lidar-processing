@@ -295,13 +295,11 @@ wave_data.levels = span(minlvl,maxlvl,16)
 
 fftx = span(-1.5707961, 1.5585241, 256) (,-:1:256)
 ffty = span(-1.5707961, 1.5585241, 256) (-:1:256,)
-d2r = pi/180.
-dtr = d2r
-tha360 = d2r * span(0, 360, 121)
+tha360 = DEG2RAD * span(0, 360, 121)
 circly = cos(tha360)
 circlx = sin(tha360)
 radials = span(10,90,9)
-xradials = 1.2*cos(radials*d2r)
-yradials = 1.2*sin(radials*d2r)
+xradials = 1.2*cos(radials*DEG2RAD)
+yradials = 1.2*sin(radials*DEG2RAD)
 
 

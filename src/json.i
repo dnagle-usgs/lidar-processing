@@ -256,6 +256,7 @@ func __json2yorick(&text) {
          // numbers
          // extract number portion
          restr = "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?([eE][-+]?[0-9]+)?";
+         num = [];
          if(regmatch(restr, text, num)) {
             __json_dbug, state, c, "extracted " + num, lvl=2;
             text = strpart(text, strlen(num)+1:);

@@ -80,8 +80,8 @@ func tky_stdout(msg) {
    This is used internally by Ytk to handle messages sent to it via the tky
    pipe.
 */
-   extern tky_fragment, __ybkg_list;
-   lines = spawn_callback(tky_fragment, msg);
+   extern __tky_fragment, __ybkg_list;
+   lines = spawn_callback(__tky_fragment, msg);
    for(i = 1; i <= numberof(lines); i++) {
       line = lines(i);
       if(!line) {

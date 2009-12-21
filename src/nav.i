@@ -189,16 +189,6 @@ struct FB {
 
 
 
-  d = array(float, 100)
- ll = array( float, 2, 100)
-
-
- ONERAD =  180.0 / pi
- TWORAD =  360.0 / pi
- DEG2RAD = pi  / 180.0
- RAD2DEG = 180.0 / pi
-
-
 func dist ( lat0,lon0,lat1,lon1 ) {
         lat0 =  DEG2RAD * lat0
         lat1 =  DEG2RAD * lat1
@@ -211,9 +201,6 @@ func dist ( lat0,lon0,lat1,lon1 ) {
 
 func lldist ( lat0,lon0,lat1,lon1 )
 {
- ONERAD = 180.0 / pi;
- RAD2DEG = ONERAD;
- DEG2RAD = pi / 180.0;
         rlat0 = DEG2RAD * lat0
         rlat1 = DEG2RAD * lat1
         rlon0 = DEG2RAD * lon0
@@ -221,11 +208,6 @@ func lldist ( lat0,lon0,lat1,lon1 )
         rv=60.0*acos(sin(rlat0)*sin(rlat1)+cos(rlat0) * cos(rlat1)*cos(rlon0-rlon1))
         return rv * RAD2DEG
 }
-
-
-msz = .3
-sres = array(float,11);
-dd = array(float, 1);
 
 func mdist ( none, nodraw=, units=, win=, redrw=, nox= ) {
 /* DOCUMENT mdist
@@ -262,6 +244,7 @@ func mdist ( none, nodraw=, units=, win=, redrw=, nox= ) {
 
 // Default to decimal degrees of lat/lon if units is not
 // set.
+ msz = .3
  if ( is_void( units ) ) {
    units = "ll";
  }
@@ -345,9 +328,6 @@ if (is_void(sw) )
 	sw = 0.2;		// scan width in km (minus desired overlap)
 
 
-mission_time = 0.0
-
-
 func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=, debug=) {
 /* DOCUMENT sdist(junk, block=, line= , mode=, fill=)
    Measure distance, and draw a proportional rectangle showing the 
@@ -397,6 +377,7 @@ extern mission_time, aw, sw;
 extern sr, dv, rdv, lrdv, rrdv;
 extern blockn, segn;
 extern curzone; // current zone number if in UTM
+   default, mission_time, 0.;
 
   if (is_array(ply)) {
     if (!in_utm) {
@@ -1026,38 +1007,6 @@ extern a;
 
  }
 
-  
-  
-
-/*
-
-  See: http://www.ngs.noaa.gov/CORS/Derivation.html
-  for more info.
-
-   Xn = Tx + (1 + S)*Xi + Rz*Yi - Ry*Zi
-Yn = Ty - Rz*Xi + (1 + S)*Yi + Rx*Zi
-Zn = Tz + Ry*Xi - Rx*Yi + (1 + S)*Zi
-
-where
-Tx = 0.9910 m Rx = (125033 + 258*(E - 1997.0))*(10**-12) radian
-Ty = -1.9072 m Ry = ( 46785 - 3599*(E - 1997.0))*(10**-12) radian
-Tz = -0.5129 m Rz = ( 56529 - 153*(E - 1997.0))*(10**-12) radian
-*/
-
-func xyz2nad83( Xi, Yi, Zi, E= ) {
-/*
-  if ( is_void(E) )
-	E = 2002.0;
-  S = 0.0;
-  Tx = 0.9910 m Rx = (125033 + 258*(E - 1997.0))*(10**-12) radian
-  Ty = -1.9072 m Ry = ( 46785 - 3599*(E - 1997.0))*(10**-12) radian
-  Tz = -0.5129 m Rz = ( 56529 - 153*(E - 1997.0))*(10**-12) radian
-  Xn = Tx + (1 + S)*Xi + Rz*Yi - Ry*Zi
-  Yn = Ty - Rz*Xi + (1 + S)*Yi + Rx*Zi
-  Zn = Tz + Ry*Xi - Rx*Yi + (1 + S)*Z
-  return [ Tx, Ty, Tz ];
-*/
-}
 
 func utmfp2ll (fname, zone=) {
   //amar nayegandhi 06/14/03

@@ -15,10 +15,6 @@ require, "eaarl.i";
    6/21/1999
 */
 
-deg2rad = pi / 180.0;
-rad2deg = 180.0 / pi;
-FOURTHPI = pi / 4.0;
-
 func ll2utm(lat, lon, force_zone=) {
 /* DOCUMENT  ll2utm(lat, lon, force_zone=)
   
@@ -83,15 +79,15 @@ func fll2utm(lat, lon, &north, &east, &zone, force_zone=) {
       zone(*) = int(lonTemp/6 + 31)
    }
 
-   latRad = double(lat*deg2rad);
-   lonRad = double(lonTemp*deg2rad);
+   latRad = double(lat*DEG2RAD);
+   lonRad = double(lonTemp*DEG2RAD);
    lat = lon = lonTemp = []; // free memory
 
    // Original:
    //lonOrigin = (ZoneNumber - 1) *6 - 180 + 3;  //+3 puts origin in middle of zone
-   //lonOriginRad = lonOrigin * deg2rad;
+   //lonOriginRad = lonOrigin * DEG2RAD;
    // Simplified (more efficient):
-   lonOriginRad = (6 * zone - 183) * deg2rad;
+   lonOriginRad = (6 * zone - 183) * DEG2RAD;
 
    N = Earth_radius/sqrt(1-eccSquared*sin(latRad)*sin(latRad));
    T = tan(latRad)*tan(latRad);
@@ -155,7 +151,7 @@ func utm2ll(UTMNorthing, UTMEasting, UTMZone, &lon, &lat) {
       + (21*e1*e1/16-55*e1*e1*e1*e1/32)*sin(4*mu) \
       +(151*e1*e1*e1/96)*sin(6*mu);
 
-   phi1 = phi1Rad*rad2deg;
+   phi1 = phi1Rad*RAD2DEG;
 
    N1 = Earth_radius/sqrt(1-eccSquared*sin(phi1Rad)*sin(phi1Rad));
    T1 = tan(phi1Rad)*tan(phi1Rad);
@@ -170,13 +166,13 @@ func utm2ll(UTMNorthing, UTMEasting, UTMZone, &lon, &lat) {
       (61+90*T1+298*C1+45*T1*T1-252*eccPrimeSquared- \
       3*C1*C1)*D*D*D*D*D*D/720);
 
-   Lat *= rad2deg;
+   Lat *= RAD2DEG;
 
    Long = (D-(1+2*T1+C1)*D*D*D/6+(5-2*C1+28*T1- \
             3*C1*C1+8*eccPrimeSquared+24*T1*T1) \
          *D*D*D*D*D/120)/cos(phi1Rad);
 
-   Long = LongOrigin + Long * rad2deg;
+   Long = LongOrigin + Long * RAD2DEG;
 
    if(am_subroutine()) {
       lon = Long;

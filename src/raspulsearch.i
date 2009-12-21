@@ -432,7 +432,7 @@ func dump_info(edb, mindata, minindx, last=, ref=) {
       double(mindata.mnorth - mindata.north)^2);
 
    if((mindata.melevation > mindata.elevation) && (mindata.elevation > -100000))
-      aoi = acos((mindata.melevation - mindata.elevation) / hy) * rad2deg;
+      aoi = acos((mindata.melevation - mindata.elevation) / hy) * RAD2DEG;
    else
       aoi = -9999.999;
    write, format="Scanner Elev: %8.2fm   Aoi:%6.3f Slant rng:%6.3f\n",

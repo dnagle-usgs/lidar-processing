@@ -239,9 +239,9 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
 
    if ( is_void( north ) ) {
       if (verbose) write,format="%cheading...", 0x20
-      hy = interp( sin( tans.heading*deg2rad), tans.somd, atime );
-      hx = interp( cos( tans.heading*deg2rad), tans.somd, atime );
-      heading = atan( hy, hx)/deg2rad;
+      hy = interp( sin( tans.heading*DEG2RAD), tans.somd, atime );
+      hx = interp( cos( tans.heading*DEG2RAD), tans.somd, atime );
+      heading = atan( hy, hx)/DEG2RAD;
    } else {
       if (verbose) write,"interpolating North only..."
       heading = interp( array( 0.0, dimsof(tans)(2) ), tans.somd, atime ) 
@@ -408,10 +408,10 @@ animate,1;
 for ( ; i< j; i += step){ 
    fma; 
    croll = (SAD2 * a(i).sa ) + roll(, i) + ops_conf.roll_bias;
-   rad_roll = roll * d2r; 
+   rad_roll = roll * DEG2RAD; 
    cr = cos( rad_roll);
    srm = a(i).irange*NS2MAIR;
-   hm = srm * cr * cos(pitch(,i)*d2r); //   - cr*0.11*srm(64);
+   hm = srm * cr * cos(pitch(,i)*DEG2RAD); //   - cr*0.11*srm(64);
    el = palt(, i) - hm;
    if ( hm(60) > 0 ) 
 	nn = 60;

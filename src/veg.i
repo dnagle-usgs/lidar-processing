@@ -107,7 +107,7 @@ func define_veg_conf {
 }
 
 func veg_winpix(m) {
-   extern depth_display_units, rn;
+   extern _depth_display_units, rn;
    window, 3;
    idx = int(mouse()(1:2));
    idx;
@@ -121,7 +121,7 @@ func veg_winpix(m) {
    rp = decode_raster(r);
    window, 1;
    fma;
-   aa = ndrast(rp, units=depth_display_units);
+   aa = ndrast(rp, units=_depth_display_units);
    pix;
    rn;
 }

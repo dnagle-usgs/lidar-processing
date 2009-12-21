@@ -206,8 +206,8 @@ func irg( b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo=, skip=, v
   }
   if ( !is_void(georef) ) {
     atime = a.soe - soe_day_start;
-    a.rroll = interp( tans.roll*d2r,    tans.somd, atime );
-    a.rpitch= interp( tans.pitch*d2r,   tans.somd, atime );
+    a.rroll = interp( tans.roll*DEG2RAD,    tans.somd, atime );
+    a.rpitch= interp( tans.pitch*DEG2RAD,   tans.somd, atime );
     a.alt   = interp( pnav.alt,   pnav.sod,  atime );
   }
 

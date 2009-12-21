@@ -27,7 +27,7 @@ Returns:
     write, "No bias correction required!"
     return
  }
- da = atan( xy(2)/xy(1) )*rad2deg
+ da = atan( xy(2)/xy(1) )*RAD2DEG
  write,format="Elevation error due to roll bias error: %4.1f cm over %5.1f meters\n", xy(2)*100.0, abs(xy(1))
  write,format="Current ops_conf.roll_bias = %5.3f, Estimated roll bias error: %6.3f deg\n",
    ops_conf.roll_bias, da

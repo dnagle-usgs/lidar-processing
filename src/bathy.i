@@ -36,7 +36,7 @@ struct BATHPIX {
 
 // 94000
 func bath_winpix(m) {
-   extern depth_display_units;
+   extern _depth_display_units;
    extern rn;
    window, 3;
    idx = int(mouse()(1:2));
@@ -51,7 +51,7 @@ func bath_winpix(m) {
    rp = decode_raster(r);
    window, 1;
    fma;
-   aa = ndrast(rp, units=depth_display_units);
+   aa = ndrast(rp, units=_depth_display_units);
    pix;
    rn;
 }

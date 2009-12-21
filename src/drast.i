@@ -3,42 +3,42 @@ require, "l1pro.i";
 
 func set_depth_scale(new_units) {
 /* DOCUMENT set_depth_scale, new_units
-   Updates externs depth_display_units and depth_scale per new_units.
+   Updates externs _depth_display_units and _depth_scale per new_units.
 
    new_units should be one of: "meters", "ns", "feet".
 
-   depth_display_units will be set to new_units.
-   depth_scale will be set to a 250-value span based on the units.
+   _depth_display_units will be set to new_units.
+   _depth_scale will be set to a 250-value span based on the units.
 */
-   extern depth_display_units, depth_scale;
-   depth_display_units = new_units;
-   if (depth_display_units == "meters") {
-      depth_scale = span(5*CNSH2O2X, -245 * CNSH2O2X, 250);
-   } else if (depth_display_units == "ns") {
-      depth_scale = span(0, -249, 250);
-   } else if (depth_display_units == "feet") {
-      depth_scale = span(5*CNSH2O2XF, -245 * CNSH2O2XF, 250);
+   extern _depth_display_units, _depth_scale;
+   _depth_display_units = new_units;
+   if (_depth_display_units == "meters") {
+      _depth_scale = span(5*CNSH2O2X, -245 * CNSH2O2X, 250);
+   } else if (_depth_display_units == "ns") {
+      _depth_scale = span(0, -249, 250);
+   } else if (_depth_display_units == "feet") {
+      _depth_scale = span(5*CNSH2O2XF, -245 * CNSH2O2XF, 250);
    } else {
-      depth_scale = -1;
+      _depth_scale = -1;
    }
 }
 
 local wfa;  // decoded waveform array
 
-default, depth_display_units, "meters";
-set_depth_scale, depth_display_units;
+default, _depth_display_units, "meters";
+set_depth_scale, _depth_display_units;
 
 func ytk_rast(rn) {
 /* DOCUMENT ytk_rast, rn
    Wrapper used by YTK to display raster waveform data (via ndrast) for a given
    raster.
 */
-   extern wfa, depth_display_units, _ytk_rast;
+   extern wfa, _depth_display_units, _ytk_rast;
    r = get_erast(rn=rn);
    rr = decode_raster(r);
    window, 1, wait=0;
    fma;
-   wfa = ndrast(rr, units=depth_display_units);
+   wfa = ndrast(rr, units=_depth_display_units);
    if (is_void(_ytk_rast)) {
       limits;
       _ytk_rast = 1;
@@ -292,7 +292,7 @@ func show_wf(r, pix, win=, nofma=, cb=, c1=, c2=, c3=, raster=) {
       c3= Set to 1 to display channel 3.
       raster= Raster where pulse is located. This is printed if present.
 */
-   extern depth_scale, depth_display_units, data_path;
+   extern _depth_scale, _depth_display_units, data_path;
 
    default, nofma, 0;
    default, cb, 0;
@@ -311,21 +311,21 @@ func show_wf(r, pix, win=, nofma=, cb=, c1=, c2=, c3=, raster=) {
    if(!nofma) fma;
 
    if(c1) {
-      plg, depth_scale, r(,pix,1), marker=0, color="black";
-      plmk, depth_scale, r(,pix,1), msize=.2, marker=1, color="black";
+      plg, _depth_scale, r(,pix,1), marker=0, color="black";
+      plmk, _depth_scale, r(,pix,1), msize=.2, marker=1, color="black";
    }
    if(c2) {
-      plg, depth_scale, r(,pix,2), marker=0, color="red";
-      plmk, depth_scale, r(,pix,2), msize=.2, marker=1, color="red";
+      plg, _depth_scale, r(,pix,2), marker=0, color="red";
+      plmk, _depth_scale, r(,pix,2), msize=.2, marker=1, color="red";
    }
    if(c3) {
-      plg, depth_scale, r(,pix,3),  marker=0, color="blue";
-      plmk, depth_scale, r(,pix,3), msize=.2, marker=1, color="blue";
+      plg, _depth_scale, r(,pix,3),  marker=0, color="blue";
+      plmk, _depth_scale, r(,pix,3), msize=.2, marker=1, color="blue";
    }
 
    xtitle = swrite(format="Pix:%d   Digital Counts", pix);
    if(!is_void(raster)) xtitle = swrite(format="Raster:%d %s", raster, xtitle);
-   ytitle = swrite(format="Water depth (%s)", depth_display_units);
+   ytitle = swrite(format="Water depth (%s)", _depth_display_units);
    xytitles, xtitle, ytitle;
    pltitle, regsub("_", data_path, "!_", all=1);
 

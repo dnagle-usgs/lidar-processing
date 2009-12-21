@@ -83,7 +83,6 @@ write,"Type    load   to load the data"
 range_bias = -6.0;
  scan_bias =  0.0;
  roll_bias = -1.45;
-d2r = pi/180.0
 
 struct R {
  double north(120);
@@ -156,10 +155,10 @@ animate,1;
 for ( ; i< j; i += step){ 
    fma; 
    roll = ((720.0/8000) * a(i).sa ) + tr(, i) + roll_bias;
-   rad_roll = roll * d2r; 
+   rad_roll = roll * DEG2RAD; 
    cr = cos( rad_roll);
    srm = a(i).irange*NS2MAIR;
-   hm = srm * cr * cos(tpr(,i)*d2r); //   - cr*0.11*srm(64);
+   hm = srm * cr * cos(tpr(,i)*DEG2RAD); //   - cr*0.11*srm(64);
    el = palt(, i) - hm;
    if ( hm(60) > 0 ) 
 	nn = 60;
