@@ -1,19 +1,10 @@
-/* 
-   8-20-02 -ww Added to Document comment. Fixed spelling.
-*/
-
-local rcf_help
-/* DOCUMENT rcf_help
-
-*/
+// vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 
 func rcf( jury, w, mode= ) {
 /* DOCUMENT rcf( jury, w, mode= )
 Generic Random Consensus filter.  The jury is the 
 array to test for consensis, and w is the window range
 which things can vary within.
-
-  Orginal: C. W. Wright 6/15/2002 wright@lidar.wff.nasa.gov
 
 jury       The array of points used to reach the consenus.
 
@@ -49,7 +40,7 @@ Mode=
 	The default mode:
 	rcf(a, w) and Enter
 	The result printed on the screen will be the following:
-	[98, 100] where 98 is the minimum value of the points in the window
+	[98, 10] where 98 is the minimum value of the points in the window
 
 	Mode 1
 	rcf(a, w, mode= 1) and Enter
@@ -79,11 +70,10 @@ FISCHLER MA, SRI INT,CTR ARTIFICIAL INTELLIGENCE,MENLO PK,CA 94025
  
 Publisher:
 ASSOC COMPUTING MACHINERY, NEW YORK
-
-
 */
-
-
+// Original: C. W. Wright 6/15/2002 wright@lidar.wff.nasa.gov
+// Rewritten in linear time David Nagle 2009-12-21
+/*
   if ( is_void(mode) )
 	mode = 0;
   si = sort(jury);		// order the jury
@@ -111,10 +101,32 @@ ASSOC COMPUTING MACHINERY, NEW YORK
   } else if ( mode == 2 ) {
   	return [ &si(kwinners+iidx-1), &vote ]
   }
+*/
+   default, mode, 0;
+   srt = sort(jury);
+   jurysize = numberof(jury);
+   bestvote = besti = bestj = 0;
+   for(i = 1, j = 1; j <= jurysize; i++) {
+      upper = jury(srt(i)) + w;
+      while(j <= jurysize && jury(srt(j)) < upper)
+         j++;
+      vote = j - i;
+      if(vote >= bestvote) {
+         bestvote = vote;
+         besti = i;
+      }
+   }
+   lower = besti;
+   upper = besti + bestvote - 1;
+   if(mode == 0) {
+      return [jury(srt(lower)), bestvote];
+   } else if(mode == 1) {
+      return [jury(srt(lower:upper))(avg), bestvote];
+   } else if(mode == 2) {
+      idx = where(jury >= jury(srt(lower)) & jury <= jury(srt(upper)));
+      return [&idx, &bestvote];
+   }
 }
-
-
-
 
 func moving_rcf( yy, fw, n) {
 /* DOCUMENT moving_rcf( yy, fw, n )
@@ -143,5 +155,3 @@ Original:  W. Wright 9/30/2003
    }
    return (where( edt )) ;
  }
-
-
