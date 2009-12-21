@@ -531,16 +531,18 @@ suffix=, remove_buffers=, buffer=, uniq=) {
       dt2utm, basefile, n, e, z;
       
       // Load data
-      f = openb(files(i));
-      data = get_member(f, get_member(f, "vname"));
-      close, f;
+      data = pbd_load(files(i));
+      if(!numberof(data))
+         continue;
 
       // Restrict data to tile boundaries if remove_buffers = 1
       if(remove_buffers) {
          idx = extract_for_dt(get_member(data, north)/100.0,
             get_member(data, east)/100.0, basefile, buffer=0);
-         data = data(idx);
-         if(numberof(data) == 0) continue;
+         if(numberof(idx))
+            data = unref(data)(idx);
+         else
+            continue;
       }
 
       // Get a list of the quarter quad codes represented by the data
@@ -561,16 +563,16 @@ suffix=, remove_buffers=, buffer=, uniq=) {
       write, format=" * [%d/%d] Scanning %s\n", i, numberof(files), basefile;
       
       // Load data
-      f = openb(files(i));
-      data = get_member(f, f.vname);
-      close, f;
+      data = pbd_load(files(i));
+      if(!numberof(data))
+         continue;
       
       // Restrict data to tile boundaries if remove_buffers = 1
       if(remove_buffers) {
          idx = extract_for_dt(get_member(data, north)/100.0,
             get_member(data, east)/100.0, basefile, buffer=0);
          data = data(idx);
-         if(numberof(data) == 0) {
+         if(!numberof(data)) {
             write, "  Problem: No data found after buffers removed.";
             continue;
          }
@@ -700,16 +702,17 @@ remove_buffers=, buffer=, uniq=) {
       qqzone = qq2uz(qq);
       
       // load qq tile
-      f = openb(files(i));
-      data = get_member(f, get_member(f, "vname"));
-      close, f;
+      data = pbd_load(files(i));
+      if(!numberof(data))
+         continue;
       
       // Restrict data to tile boundaries if remove_buffers = 1
       if(remove_buffers) {
          qq_list = get_utm_qqcodes(get_member(data, north)/100.0,
             get_member(data, east)/100.0, qqzone);
          data = data(where(qq == qq_list));
-         if(numberof(data) == 0) continue;
+         if(numberof(data))
+            continue;
       }
 
       // determine which data tiles are covered by dataset
@@ -1041,16 +1044,16 @@ func calculate_qq_extents(qqdir, glob=, remove_buffers=) {
       z = qq2uz(qq);
       
       // Load data
-      f = openb(files(i));
-      data = get_member(f, get_member(f, "vname"));
-      close, f;
+      data = pbd_load(files(i));
+      if(!numberof(data))
+         continue;
 
       // Restrict data to tile boundaries if remove_buffers = 1
       if(remove_buffers) {
          qq_list = get_utm_qqcodes(get_member(data, north)/100.0,
             get_member(data, east)/100.0, z);
          data = data(where(qq == qq_list));
-         if(numberof(data) == 0) {
+         if(!numberof(data)) {
             write, "  Problem: No data found after buffers removed.";
             continue;
          }

@@ -208,12 +208,13 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=) {
       // Now... we can actually convert the data!
 
       // Load it up
-      f = openb(files(i));
-      vname = f.vname;
-      data = get_member(f, vname);
-      close, f;
+      vname = err = "";
+      data = pbd_load(files(i), err, vname);
 
-      if(is_void(data)) {
+      if(strlen(err)) {
+         write, format=" Error encountered loading file: %s\n", err;
+         continue;
+      } else if(!numberof(data)) {
          write, " Skipping, no data in file.";
          continue;
       }

@@ -161,10 +161,8 @@ func batch_fix_dt_zones(dir, glob=, ignore_zeros=) {
       // further north, as the UTM zone gets narrower towards the poles.
       if(e < 300000 || e > 700000) {
          write, format="%s: ", basefile;
-         f = openb(files(i));
-         vname = f.vname;
-         data = get_member(f, vname);
-         close, f;
+         vname = [];
+         data = pbd_load(files(i), , vname);
          write, format="%d points\n", numberof(data);
 
          fields = print(structof(data))(2:-1);
@@ -262,10 +260,8 @@ func batch_fix_qq_zones(dir, glob=) {
       // poles.
       if(e < 300000 || e > 700000) {
          write, format="%s: ", basefile;
-         f = openb(files(i));
-         vname = f.vname;
-         data = get_member(f, vname);
-         close, f;
+         vname = [];
+         data = pbd_load(files(i), , vname);
          write, format="%d points\n", numberof(data);
 
          fields = print(structof(data))(2:-1);
@@ -340,9 +336,9 @@ func load_rezone_pbd(file, src_zone, dest_zone, skip=) {
    Original David Nagle 2008-07-31
 */
    default, skip, 1;
-   f = openb(file);
-   data = get_member(f, f.vname) (::skip);
-   close, f;
+   data = pbd_load(file);
+   if(numberof(data))
+      data = unref(data)(::skip);
    if(src_zone != dest_zone)
       rezone_data_utm, data, src_zone, dest_zone;
    return data;

@@ -91,10 +91,7 @@ func merge_qi_tiles(dir, glob=, srt=) {
                vdata = [];
                for(k = 1; k <= numberof(files); k++) {
                   write, format="   - Loading %s\n", files(k);
-                  f = openb(ttdir + files(k));
-                  restore, f, vname;
-                  grow, vdata, get_member(f, vname);
-                  close, f;
+                  grow, vdata, pbd_load(ttdir + files(k));
                }
                vfile = ttiles(j) + "_merged.pbd";
                write, format="   - Creating %s\n", vfile;

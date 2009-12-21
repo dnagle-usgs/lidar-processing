@@ -460,9 +460,11 @@ verbose=) {
          mode = "fs";
    }
 
-   f = openb(fn_pbd);
-   data = get_member(f, f.vname);
-   close, f;
+   data = pbd_load(fn_pbd);
+   if(!numberof(data)) {
+      write, format=" No data found for %s.\n", file_tail(fn_pbd);
+      return;
+   }
 
    if(!is_void(buffer)) {
       data = restrict_data_extent(unref(data), file_tail(fn_pbd), buffer=buffer,
