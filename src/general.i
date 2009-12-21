@@ -461,11 +461,8 @@ func pbd_append(file, vname, data, uniq=) {
 */
 // Original David Nagle 2008-07-16
    default, uniq, 1;
-   if(file_exists(file)) {
-      f = openb(file);
-      grow, data, get_member(f, f.vname);
-      close, f;
-   }
+   if(file_exists(file))
+      data = grow(pbd_load(file), unref(data));
    if(uniq)
       data = data(set_remove_duplicates(data.soe, idx=1));
    f = createb(file);
@@ -473,6 +470,75 @@ func pbd_append(file, vname, data, uniq=) {
    get_member(f, vname) = data;
    save, f, vname;
    close, f;
+}
+
+func pbd_load(file, &err, &vname) {
+/* DOCUMENT data = pbd_load(filename);
+   data = pbd_load(filename, err);
+   data = pbd_load(filename, , vname);
+   data = pbd_load(filename, err, vname);
+
+   Loads data from a PBD file. The PBD file should have (at least) two
+   variables defined. The first should be "vname", which specifies the name of
+   the other variable. That variable should contain the data.
+
+   If everything is in order then the data is returned; otherwise [] is
+   returned.
+
+   Output parameter "err" will contain a string indicating what error was
+   encountered while loading the data. A nil string indicates no error was
+   encountered. A return result of [] can mean that an error was encountered OR
+   that the file contained an empty data array; these cases can be
+   differentiated by the presence or absence of an error message in err.
+
+   Output parameter "vname" will contain the value of vname. A nil string
+   indicates that no vname was found (which only happens when there's an
+   error).
+
+   Possible errors:
+      "file does not exist"
+      "file not readable"
+      "not a PBD file"
+      "no vname"
+      "invalid vname"
+*/
+// Original David Nagle 2009-12-21
+   err = string(0);
+   vname = string(0);
+
+   if(!file_exists(file)) {
+      err = "file does not exist";
+      return [];
+   }
+
+   if(!file_readable(file)) {
+      err = "file not readable";
+      return [];
+   }
+
+   yPDBopen = 1;
+   f = open(file, "rb");
+   if(_not_pdb(f, 0)) {
+      err = "not a PBD file";
+      return [];
+   }
+
+   close, f;
+   f = openb(file);
+   vars = get_vars(f);
+
+   if(!is_present(vars, "vname")) {
+      err = "no vname";
+      return [];
+   }
+
+   vname = f.vname;
+   if(!is_present(vars, vname)) {
+      err = "invalid vname";
+      return [];
+   }
+
+   return get_member(f, vname);
 }
 
 func get_user(void) {
