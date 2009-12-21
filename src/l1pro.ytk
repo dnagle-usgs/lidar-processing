@@ -146,12 +146,14 @@ if {![winfo exists .l1wid]} {
   menu .l1wid.mb.options
   menu .l1wid.mb.options.processing
   menu .l1wid.mb.graph
-  menu .l1wid.mb.post
+  menu .l1wid.mb.util
   menu .l1wid.mb.cmd
-  menu .l1wid.mb.diag
   menu .l1wid.mb.dep
-  .l1wid.mb   add cascade -label File -underline 0 -menu .l1wid.mb.file
 
+  .eaarl.mb clone .l1wid.mb.eaarl menubar
+  .l1wid.mb add cascade -label EAARL -underline 0 -menu .l1wid.mb.eaarl
+
+  .l1wid.mb   add cascade -label File -underline 0 -menu .l1wid.mb.file
   .l1wid.mb.file add command -label "Read Binary Data file..." -underline 0 \
     -command {
       global cbv cdelta cbvc plot_settings pro_var
@@ -788,10 +790,17 @@ if {![winfo exists .l1wid]} {
         .l1map.2.skip .l1map.2.search .l1map.2.go -side left -padx 2
     }
 
-
-  .l1wid.mb add cascade -label "Load" -underline 0 -menu .l1wid.mb.load
+  .l1wid.mb.file add command -label "Capture a display..." -command scap
+  .l1wid.mb.file add separator
   .l1wid.mb.file add command -label "Dismiss" -underline 0 \
     -command {wm withdraw .l1wid}
+
+  .l1wid.mb add cascade -label "Load" -underline 0 -menu .l1wid.mb.load
+  .l1wid.mb.load add command -label "Mission configuration manager" \
+    -underline 0 -command ::mission::launch_gui
+  .l1wid.mb.load add command -label "Plotting tool" -underline 0 \
+    -command ::plot::menu
+  .l1wid.mb.load add separator
   .l1wid.mb.load add command -label "Load TANS Data .. " -underline 5 \
     -command {
       exp_send "tans = rbtans();\r"
@@ -1175,13 +1184,154 @@ if {![winfo exists .l1wid]} {
   .l1wid.mb.graph add command -label "Change current window to 100 DPI / 1100x850" \
     -command [list ycmd change_window_size [list window() 4 0]]
 
-  .l1wid.mb add cascade -label PostProcessing -underline 0 -menu .l1wid.mb.post
+  .l1wid.mb add cascade -label Utilities -underline 0 -menu .l1wid.mb.util
 
-  .l1wid.mb.post add command -label "Datum Convert" -underline 0 \
-    -command datum_proc
+  .l1wid.mb.util add command -label "Transect Tool" -command {
+    source "$src_path/transrch.ytk"
+  }
 
-  .l1wid.mb.post add command -label "RCF Region Filter" -underline 0 \
-    -command rcf_region
+  menu .l1wid.mb.util.seg
+  .l1wid.mb.util add cascade -label "Launch segments by..." -menu .l1wid.mb.util.seg
+  .l1wid.mb.util.seg add command -label "Flightline" \
+    -command [list segment_data_launcher fltlines]
+  .l1wid.mb.util.seg add command -label "Flightline and digitizer" \
+    -command [list segment_data_launcher fltlines_digitizer]
+  .l1wid.mb.util.seg add command -label "Day" \
+    -command [list segment_data_launcher days]
+  .l1wid.mb.util.seg add command -label "Day and digitizer" \
+    -command [list segment_data_launcher days_digitizer]
+  .l1wid.mb.util.seg add command -label "Manual selection" \
+    -command select_data_segments
+
+  .l1wid.mb.util add command -label "Open Fit Gaussian GUI" \
+    -command open_fit_gaussian_gui
+
+  .l1wid.mb.util add command -label "Pixel Analysis" \
+    -command [list ::pixelwf::gui::launch_full_panel .pixelwf]
+
+  .l1wid.mb.util add command -label "Determine Roll Bias" -underline 0 \
+    -command {
+      global win_no varlist bias pro_var
+
+      destroy .l1bias
+      toplevel .l1bias
+      wm title .l1bias "Determine Roll Bias"
+
+      foreach x {1 2 3 4 5 6} {
+        frame .l1bias.$x
+        pack .l1bias.$x -side top
+      }
+
+      if { [info exists bias ] == 0 } {
+        exp_send "updatebias\r"
+        expect ">"
+        exp_send "updatebias\r"
+        expect ">"
+      }
+      set slope 0
+      set iob 0
+      set inout 1
+      set width 5
+      set flwin 4
+      set var $pro_var
+
+      LabelEntry .l1bias.1.var -relief sunken -borderwidth 3 -width 10 \
+        -label "Variable:" -helptext "EAARL source data" \
+        -textvariable var -text $var
+
+      Label .l1bias.1.winl -text "in window:"
+      spinbox .l1bias.1.win -justify center -width 2 \
+        -textvariable win_no -from 0 -to 63 -increment 1
+
+      Label .l1bias.1.transl -text "Then click"
+      Button .l1bias.1.transbutton -text "Get Transect" \
+        -helptext "Click to get transect" \
+        -command {
+          exp_send "transdata = get_transect($var, win=$win_no, update=1,\
+            width=$width)\r"
+          expect ">"
+          .l1bias.3.plot configure -state normal
+          .l1bias.3.winl configure -state normal
+          .l1bias.3.win configure -state normal
+          .l1bias.3.pick configure -state normal
+          .l1bias.3.inout configure -state normal
+          .l1bias.3.auto configure -state normal
+        }
+
+      Button .l1bias.1.help -text "Help!" -helptext "Click for directions" \
+        -command {
+          tk_messageBox -icon warning \
+            -message "1) Start with data array plotted in a window and raw EAARL\
+              data loaded. Set the variable and window and click Get Transect.\
+              \r2) Drag a line perpendicular to the flightlines you wish to\
+              examine. In the window that appears, zoom into the top, type\
+              something, and hit enter. Now drag a box over the section of the\
+              transect you wish to keep.\
+              \r3) Click the plot button to display the loaded transect. In\
+              order to determine the bias automatically all flightlines must be\
+              traveling the same direction, so you'll need to remove whichever\
+              direction is the minority.\
+              \r4) Click 'select flightlines' and simply type 'y' or 'n' to keep\
+              or remove each flightline. Now you have a set of flightlines going\
+              the same direction.\
+              \r5) Finally, determine whether the flightlines are going into or\
+              out of the screen. If they are going INTO the screen, check the\
+              box." \
+            -type ok
+        }
+
+      LabelEntry .l1bias.2.width -relief sunken -width 3 \
+        -label "Width:" -helptext "Transect width" \
+        -textvariable width -text $width
+
+      LabelEntry .l1bias.2.bias -relief sunken -width 10 \
+        -label "Current Roll Bias:" -helptext "Current Roll Bias" \
+        -textvariable bias -text $bias
+
+      LabelEntry .l1bias.2.slope -relief sunken -width 10 \
+        -label "Current Slope:" -helptext "Current slope" \
+        -textvariable slope -text $slope
+
+      Button .l1bias.3.plot -text "Plot" \
+        -helptext "Click to plot flightline transect" \
+        -command {
+          exp_send "plot_flightline_transect(transdata, $flwin)\r"
+          expect ">"
+        }
+
+      Label .l1bias.3.winl -text "in win:"
+      spinbox .l1bias.3.win -justify center \
+        -width 2 -textvariable flwin -from 0 -to 63 -increment 1
+
+      Button .l1bias.3.pick -text "Select Flightlines" \
+        -helptext "Click to select which flightlines to keep" \
+        -command {
+          exp_send "transdata=selgoodflightlines(transdata, win=$flwin)\r"
+          expect ">"
+        }
+
+      checkbutton .l1bias.3.inout -text "in/out:" -variable iob \
+        -command {
+          set inout [lindex {1 -1} $iob]
+        }
+
+      Button .l1bias.3.auto -text "Determine bias" \
+        -helptext "Click to automatically determine roll bias" \
+        -command {
+          exp_send "goodroll=find_roll_bias(transdata,0,$inout,update=1)\r"
+          expect ">"
+        }
+
+      pack .l1bias.1.var .l1bias.1.winl .l1bias.1.win .l1bias.1.transl \
+        .l1bias.1.transbutton .l1bias.1.help -side left
+      pack .l1bias.2.width .l1bias.2.bias .l1bias.2.slope -side left
+      pack .l1bias.3.plot .l1bias.3.winl .l1bias.3.win .l1bias.3.pick \
+        .l1bias.3.inout .l1bias.3.auto -side left
+
+      foreach w {plot winl win pick inout auto} {
+        .l1bias.3.$w configure -state disabled
+      }
+    }
 
   .l1wid.mb add cascade -label CmdLine -underline 1 -menu .l1wid.mb.cmd
 
@@ -1209,31 +1359,6 @@ if {![winfo exists .l1wid]} {
   .l1wid.mb.cmd add command -label "batch_write_xyz" -command {
     exp_send "require, \"batch_process.i\"; help,batch_write_xyz\r"
   }
-
-  .l1wid.mb add cascade -label Diagnostics -underline 0 -menu .l1wid.mb.diag
-
-  .l1wid.mb.diag add command -label "Transect Tool" -command {
-    source "$src_path/transrch.ytk"
-  }
-
-  menu .l1wid.mb.diag.seg
-  .l1wid.mb.diag add cascade -label "Launch segments by..." -menu .l1wid.mb.diag.seg
-  .l1wid.mb.diag.seg add command -label "Flightline" \
-    -command [list segment_data_launcher fltlines]
-  .l1wid.mb.diag.seg add command -label "Flightline and digitizer" \
-    -command [list segment_data_launcher fltlines_digitizer]
-  .l1wid.mb.diag.seg add command -label "Day" \
-    -command [list segment_data_launcher days]
-  .l1wid.mb.diag.seg add command -label "Day and digitizer" \
-    -command [list segment_data_launcher days_digitizer]
-  .l1wid.mb.diag.seg add command -label "Manual selection" \
-    -command select_data_segments
-
-  .l1wid.mb.diag add command -label "Open Fit Gaussian GUI" \
-    -command open_fit_gaussian_gui
-
-  .l1wid.mb.diag add command -label "Pixel Analysis" \
-    -command [list ::pixelwf::gui::launch_full_panel .pixelwf]
 
   .l1wid.mb add cascade -label Deprecated -underline 1 -menu .l1wid.mb.dep
 
@@ -1535,130 +1660,6 @@ if {![winfo exists .l1wid]} {
     pack .rcf.0 .rcf.1 .rcf.2 .rcf.5 .rcf.6 .rcf.3 -side top -pady 10
     pack forget .rcf.5 .rcf.6
   }
-
-  .l1wid.mb.post add command -label "Determine Roll Bias" -underline 0 \
-    -command {
-      global win_no varlist bias pro_var
-
-      destroy .l1bias
-      toplevel .l1bias
-      wm title .l1bias "Determine Roll Bias"
-
-      foreach x {1 2 3 4 5 6} {
-        frame .l1bias.$x
-        pack .l1bias.$x -side top
-      }
-
-      if { [info exists bias ] == 0 } {
-        exp_send "updatebias\r"
-        expect ">"
-        exp_send "updatebias\r"
-        expect ">"
-      }
-      set slope 0
-      set iob 0
-      set inout 1
-      set width 5
-      set flwin 4
-      set var $pro_var
-
-      LabelEntry .l1bias.1.var -relief sunken -borderwidth 3 -width 10 \
-        -label "Variable:" -helptext "EAARL source data" \
-        -textvariable var -text $var
-
-      Label .l1bias.1.winl -text "in window:"
-      spinbox .l1bias.1.win -justify center -width 2 \
-        -textvariable win_no -from 0 -to 63 -increment 1
-
-      Label .l1bias.1.transl -text "Then click"
-      Button .l1bias.1.transbutton -text "Get Transect" \
-        -helptext "Click to get transect" \
-        -command {
-          exp_send "transdata = get_transect($var, win=$win_no, update=1,\
-            width=$width)\r"
-          expect ">"
-          .l1bias.3.plot configure -state normal
-          .l1bias.3.winl configure -state normal
-          .l1bias.3.win configure -state normal
-          .l1bias.3.pick configure -state normal
-          .l1bias.3.inout configure -state normal
-          .l1bias.3.auto configure -state normal
-        }
-
-      Button .l1bias.1.help -text "Help!" -helptext "Click for directions" \
-        -command {
-          tk_messageBox -icon warning \
-            -message "1) Start with data array plotted in a window and raw EAARL\
-              data loaded. Set the variable and window and click Get Transect.\
-              \r2) Drag a line perpendicular to the flightlines you wish to\
-              examine. In the window that appears, zoom into the top, type\
-              something, and hit enter. Now drag a box over the section of the\
-              transect you wish to keep.\
-              \r3) Click the plot button to display the loaded transect. In\
-              order to determine the bias automatically all flightlines must be\
-              traveling the same direction, so you'll need to remove whichever\
-              direction is the minority.\
-              \r4) Click 'select flightlines' and simply type 'y' or 'n' to keep\
-              or remove each flightline. Now you have a set of flightlines going\
-              the same direction.\
-              \r5) Finally, determine whether the flightlines are going into or\
-              out of the screen. If they are going INTO the screen, check the\
-              box." \
-            -type ok
-        }
-
-      LabelEntry .l1bias.2.width -relief sunken -width 3 \
-        -label "Width:" -helptext "Transect width" \
-        -textvariable width -text $width
-
-      LabelEntry .l1bias.2.bias -relief sunken -width 10 \
-        -label "Current Roll Bias:" -helptext "Current Roll Bias" \
-        -textvariable bias -text $bias
-
-      LabelEntry .l1bias.2.slope -relief sunken -width 10 \
-        -label "Current Slope:" -helptext "Current slope" \
-        -textvariable slope -text $slope
-
-      Button .l1bias.3.plot -text "Plot" \
-        -helptext "Click to plot flightline transect" \
-        -command {
-          exp_send "plot_flightline_transect(transdata, $flwin)\r"
-          expect ">"
-        }
-
-      Label .l1bias.3.winl -text "in win:"
-      spinbox .l1bias.3.win -justify center \
-        -width 2 -textvariable flwin -from 0 -to 63 -increment 1
-
-      Button .l1bias.3.pick -text "Select Flightlines" \
-        -helptext "Click to select which flightlines to keep" \
-        -command {
-          exp_send "transdata=selgoodflightlines(transdata, win=$flwin)\r"
-          expect ">"
-        }
-
-      checkbutton .l1bias.3.inout -text "in/out:" -variable iob \
-        -command {
-          set inout [lindex {1 -1} $iob]
-        }
-
-      Button .l1bias.3.auto -text "Determine bias" \
-        -helptext "Click to automatically determine roll bias" \
-        -command {
-          exp_send "goodroll=find_roll_bias(transdata,0,$inout,update=1)\r"
-          expect ">"
-        }
-
-      pack .l1bias.1.var .l1bias.1.winl .l1bias.1.win .l1bias.1.transl \
-        .l1bias.1.transbutton .l1bias.1.help -side left
-      pack .l1bias.2.width .l1bias.2.bias .l1bias.2.slope -side left
-      pack .l1bias.3.plot .l1bias.3.winl .l1bias.3.win .l1bias.3.pick \
-        .l1bias.3.inout .l1bias.3.auto -side left
-
-      foreach w {plot winl win pick inout auto} {
-        .l1bias.3.$w configure -state disabled
-      }
-    }
 
   ::misc::combobox .l1wid.bf4.1.d -text "Define Region..." -width 15 \
     -values [list "Rubberband Box" "Points in Polygon" "Rectangular Coords"] \
