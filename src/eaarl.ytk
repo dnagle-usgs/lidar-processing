@@ -449,6 +449,7 @@ proc load_edb {} {
    global w
    destroy  $w
    toplevel $w
+   wm protocol $w WM_DELETE_WINDOW [list wm withdraw $w]
    frame $w.f -width 440
    pack $w.f
 
@@ -460,8 +461,7 @@ proc load_edb {} {
    menu $w.mb.rasters
    menu $w.mb.images
    menu $w.mb.time
-   menu $w.mb.new
-   menu $w.mb.help
+   menu $w.mb.deprecated
 
    ybkg require \"rbgga.i\"
    source rbgga.ytk
@@ -472,8 +472,7 @@ proc load_edb {} {
  $w.mb add cascade -label "Lidar"  -underline 0 -menu $w.mb.rasters
  $w.mb add cascade -label Imagery   -underline 0 -menu $w.mb.images
  $w.mb add cascade -label Time     -underline 0 -menu $w.mb.time
- #$w.mb add cascade -label "CmdLine" -underline 0 -menu $w.mb.new
- $w.mb add cascade -label Help     -underline 0 -menu $w.mb.help
+ $w.mb add cascade -label Deprecated -underline 0 -menu $w.mb.deprecated
 
  $w.mb.file add command -label "Load EAARL Database Index (Edb)..." -command { load_edb }  -underline 5
  $w.mb.file add command -label "Load GPS PNAV data..."   -underline 9 -command { exp_send "require, \"rbpnav.i\"\r"
@@ -484,10 +483,6 @@ proc load_edb {} {
  $w.mb.file add command -label "Load Tans Attitude data..."   -underline 5 -command { exp_send "require, \"rbtans.i\"\r"
    	      expect ">"
     	      exp_send "tans = rbtans() \r" }
- ### DEPRECATED 2009-02-02 ###
- $w.mb.file add command -label "Coastlines & Flight tracks (deprecated)" \
-   -underline 13  -command rbgga_menu
-
 $w.mb.file add separator
 $w.mb.file add command -label "Mission configuration manager" \
    -underline 0 -command ::mission::launch_gui
@@ -503,7 +498,7 @@ $w.mb.file add separator
      ytk_kick_off_editor  $_ytk(editor) "$edb(path)/notes.txt"    
    }
  } 
- $w.mb.file add command -label Dismiss -command { destroy $w }
+ $w.mb.file add command -label Dismiss -command [list wm withdraw $w]
 
  source "$src_path/map.ytk"
  restore_eaarl_options "map.options" _map
@@ -528,24 +523,8 @@ $w.mb.file add separator
  $w.mb.images add command -label "Capture a display..." -command {
     scap
  }
- $w.mb.images add command -label "1-Hz RGB Low-Res Images..." -command {
-    start_sf
- }
- $w.mb.images add command -label "1-Hz CIR High-Res Images..." -command {
-    start_cir
- }
  $w.mb.images add command -label "Launch new SF viewer..." \
    -command [list ::sf::controller %AUTO%]
- $w.mb.images add command -label "Process Lidar Data..." -command {
-    wm deiconify .l1wid
- }
- $w.mb.images add command -label "Lidar First Return Surface..." -command {
- }
- $w.mb.images add command -label "Lidar Last Return Sub-aerial Surface..." -command {
- }
- $w.mb.images add command -label "Lidar Bathymetric Surface..." -command {
- }
-
 
 ##############################
 #   Attitude Sensors
@@ -576,10 +555,6 @@ $w.mb.file add separator
  $w.mb.nav add command -label "Plotting tool" -underline 0 \
    -command ::plot::menu
  source [file join $src_path plot.ytk]
- ### DEPRECATED 2009-02-02 ###
- $w.mb.nav add command -label "Flight Tracks & Coastlines... (deprecated)" \
-   -underline 0 \
-	-command rbgga_menu
  $w.mb.nav add command -label "Load Tans Attitude data..."   -underline 5 \
    -command { exp_send "require, \"rbtans.i\"\r"
    	      expect ">"
@@ -617,57 +592,29 @@ $w.mb.file add separator
 #############
 #   Time
 #############
- $w.mb.time add command -label "Time..." -command {  
-
- }
  $w.mb.time add command -label "Check and correct EDB time..." -command {
   source "$src_path/ts_check.ytk"; ts_check;
  }
 
 #############
-#  Command Line Function HELP 
+#   Deprecated
 #############
-# $w.mb.new add command -label "mtransect"     -command {  
-#      exp_send "require,\"transect.i\"; help,mtransect\r" 
-# }
-# $w.mb.new add command -label "batch_process" -command {  
-#      exp_send "require, \"batch_process.i\"; help,batch_process\r" 
-# }
-# $w.mb.new add command -label "batch_rcf(Filter)" -command {  
-#      exp_send "require, \"batch_process.i\"; help,batch_rcf\r" 
-# }
-# $w.mb.new add command -label "batch_datum_convert" -command {  
-#      exp_send "require, \"batch_datum_convert.i\"; help,batch_datum_convert\r" 
-# }
-# $w.mb.new add command -label "batch_veg_lfpw" -command {  
-#      exp_send "require, \"batch_veg_energy.i\"; help,batch_veg_lfpw\r" 
-# }
-# $w.mb.new add command -label "batch_pbd2las" -command {  
-#      exp_send "require, \"pbd2las.i\"; help,batch_pbd2las\r" 
-# }
-# $w.mb.new add command -label "batch_write_xyz" -command {  
-#      exp_send "require, \"batch_process.i\"; help,batch_write_xyz\r" 
-# }
 
-#############
-#   help
-#############
- $w.mb.help add command -label "Yorick Graphics Window Use"
- $w.mb.help add command -label "0 Waveform Display"
- $w.mb.help add command -label "3 "
- $w.mb.help add command -label "4 "
- $w.mb.help add command -label "5 Laser point plots"
- $w.mb.help add command -label "6 Coast maps, NMEA GGA nav data"
- $w.mb.help add command -label "7 Geographic maps and Nav data"
-
-
-
+ ### Deprecated 2009-02-02
+ $w.mb.deprecated add command -label "Flight Tracks & Coastlines..." \
+   -underline 0 \
+	-command rbgga_menu
+ ### Deprecated 2009-10-19
+ $w.mb.deprecated add command -label "1-Hz RGB Low-Res Images..." -command {
+    start_sf
+ }
+ ### Deprecated 2009-10-19
+ $w.mb.deprecated add command -label "1-Hz CIR High-Res Images..." -command {
+    start_cir
+ }
 
 ## disabled unused menu options
 $w.mb.nav entryconfigure 1 -state normal
-$w.mb.images entryconfigure 6 -state disabled
-$w.mb.images entryconfigure 7 -state disabled
-$w.mb.images entryconfigure 8 -state disabled
 
 # Since ybkg is used, some output may go to the console (especially Yeti), so
 # this gives the user back their prompt.
