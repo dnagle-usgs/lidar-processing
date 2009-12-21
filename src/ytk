@@ -1902,7 +1902,8 @@ proc launch_gui {} {
    .mb.file add separator
    .mb.file add command -label "Most recent loaded" -command most_recent_loaded
    .mb.file add separator
-   .mb.file add command -label Exit -command [list ytk_exit 0]
+   .mb.file add command -label "Close YTK GUI" -command [list wm withdraw .]
+   .mb.file add command -label "Exit YTK" -command [list ytk_exit 0]
 
    toplevel .ytk_dynamic_help
    set varinfo "This is the Dynamic help window.
@@ -2353,6 +2354,7 @@ logger debug "Spawn id: $spawn_id"
 match_max -i $spawn_id 32768
 
 wm withdraw .
+wm protocol . WM_DELETE_WINDOW [list wm withdraw .]
 if {$gui_enabled} {
    launch_gui
 }
