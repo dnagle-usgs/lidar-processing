@@ -1,0 +1,153 @@
+#!/bin/env tclsh
+# vim: set tabstop=3 softtabstop=3 shiftwidth=3 shiftround autoindent expandtab:
+
+package require fileutil
+package require dict
+package require cmdline
+
+# Summarizes the contents of an Index_Tiles directory. To use, change directory
+# to /path/to/my/data/Index_Tiles (or similar) and run:
+#   idx_tiles_summarize
+# Alternately, you can provide the path:
+#   idx_tiles_summarize /path/to/my/data/Index_Tiles
+# You can also filter it by one or more search strings:
+#   idx_tiles_summarize "*.pbd"
+#   idx_tiles_summarize "*.pbd" "*.edf"
+# And you can provide a path AND filter:
+#   idx_tiles_summarize /path/to/my/data/Index_Tiles "*.pbd" "*.edf"
+# You can also ask it to keep patterns that have different datums but are
+# otherwise the same together with the -d option:
+#   idx_tiles_summarize -d
+# It can be used with other arguments as well:
+#   idx_tiles_summarize -d /path/to/my/data/Index_Tiles "*.pbd"
+# Whatever you run, it'll print a nice summary to your screen with the
+# following columns:
+#   Most recent date the pattern was modified (YYYY-MM)
+#   The user who owns the files (or "(varies)" if more than one person)
+#   The number of files associated with this pattern
+#   The pattern (search string aka glob)
+# For example:
+#   2006-10 root 2 *n88_20050913_v_b400_w50_n3_rcf_mf.edf.bz2
+#   2006-10 root 2 *n88_20050913_v_b400_w50_n3_rcf_mf.pbd.bz2
+#   2006-10 root 3 *n88_20050913_v_b500_w200_n3_fs_rcf_mf.edf.bz2
+#   2006-10 root 3 *n88_20050913_v_b500_w200_n3_fs_rcf_mf.pbd.bz2
+
+proc main {} {
+   global dirname globs datumsort
+
+   set counts [dict create]
+   set owners [dict create]
+   set times [dict create]
+   set ownerlen 0
+   foreach fn [::fileutil::find $dirname [list file isfile]] {
+      set tail [file tail $fn]
+      set good [regexp {^t_e[0-9]{6}_n[0-9]{7}_[0-9]{2}_(.*)$} $tail - pattern]
+      if {$good && [llength $globs]} {
+         set good 0
+         foreach glob $globs {
+            if {[string match $glob $tail]} {
+               set good 1
+            }
+         }
+      }
+      if {$good} {
+         set time [file mtime $fn]
+         if {[dict exists $times $pattern]} {
+            set last [dict get $times $pattern]
+            if {$last > $time} {
+               set time $last
+            }
+         }
+         dict set times $pattern $time
+
+         set owner [file attributes $fn -owner]
+         if {[dict exists $owners $pattern]} {
+            set owner [lsort -unique [concat [dict get $owners $pattern] $owner]]
+         }
+         if {[llength $owner] > 1} {
+            set owner (varies)
+         }
+         dict set owners $pattern $owner
+         if {[string length $owner] > $ownerlen} {
+            set ownerlen [string length $owner]
+         }
+         
+         dict incr counts $pattern
+      }
+   }
+
+   set countlen [string length [lindex [lsort -integer [dict values $counts]] end]]
+
+   set fmt "%s %${ownerlen}s %${countlen}d *%s"
+
+   set patterns [dict keys $counts]
+
+   if {$datumsort} {
+      set temp [list]
+      foreach pat $patterns {
+         if {[regexp {^w84(.*)$} $pat - rest]} {
+            lappend temp [list $rest 1 - $pat]
+         } elseif {[regexp {^n83(.*)$} $pat - rest]} {
+            lappend temp [list $rest 2 - $pat]
+         } elseif {[regexp {^n88_g(\d\d)(.*)$} $pat - g rest]} {
+            scan $g %02d g
+            if {$g > 80} {
+               incr g 1900
+            } else {
+               incr g 2000
+            }
+            lappend temp [list $rest 3 $g $pat]
+         } elseif {[regexp {^n88(.*)$} $pat - rest]} {
+            lappend temp [list $rest 3 0 $pat]
+         } else {
+            lappend temp [list $pat 0 - $pat]
+         }
+      }
+      set temp [lsort $temp]
+      set patterns [list]
+      foreach grp $temp {
+         lappend patterns [lindex $grp 3]
+      }
+      unset temp
+   } else {
+      set patterns [lsort $patterns]
+   }
+
+   foreach pattern $patterns {
+      set time [clock format [dict get $times $pattern] -format %Y-%m]
+      set owner [dict get $owners $pattern]
+      set count [dict get $counts $pattern]
+      puts [format $fmt $time $owner $count $pattern]
+   }
+}
+
+proc handle_args {} {
+   global dirname globs datumsort
+
+   set dirname [pwd]
+   set globs [list]
+   set datumsort 0
+
+   set options {
+      {d "keep files with different datums together"}
+   }
+   set usage ": idx_tiles_summarize \[options] \[path] \[pattern ...]\noptions:"
+   array set params [::cmdline::getoptions ::argv $options $usage]
+
+   if {$params(d)} {
+      set datumsort 1
+   }
+   foreach item $::argv {
+      if {[file isdirectory [file join [pwd] $item]]} {
+         set dirname [file join [pwd] $item]
+      } elseif {[regexp \\* $item]} {
+         lappend globs $item
+      } else {
+         puts "Unknown command line argument, aborting: $item"
+         exit
+      }
+   }
+}
+
+handle_args
+main
