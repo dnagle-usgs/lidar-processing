@@ -516,14 +516,11 @@ func pbd_load(file, &err, &vname) {
       return [];
    }
 
-   yPDBopen = 1;
-   f = open(file, "rb");
-   if(_not_pdb(f, 0)) {
+   if(!is_pbd(file)) {
       err = "not a PBD file";
       return [];
    }
 
-   close, f;
    f = openb(file);
    vars = get_vars(f);
 
@@ -538,7 +535,16 @@ func pbd_load(file, &err, &vname) {
       return [];
    }
 
-   return get_member(f, vname);
+   data = get_member(f, vname);
+   return unref(data);
+}
+
+func is_pbd(file) {
+   yPDBopen = 1;
+   f = open(file, "rb");
+   result = ! _not_pdb(f, 0);
+   close, f;
+   return result;
 }
 
 func get_user(void) {
