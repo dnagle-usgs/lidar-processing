@@ -70,6 +70,30 @@ func tile2uz(tile) {
     return result;
 }
 
+func tile2bbox(tile) {
+/* DOCUMENT bbox = tile2bbox(tile)
+    Returns the bounding box for a tile.
+*/
+    tile = extract_tile(tile, dtlength="long", qqprefix=1);
+    key = strpart(tile, 1:1);
+
+    if(key == "q") {
+        zone = qq2uz(tile);
+        ll = qq2ll(tile, bbox=1); // [south, east, north, west]
+        lats = ll([1,3,1,3]);
+        lons = ll([2,4,4,2]);
+        norths = easts = [];
+        fll2utm, lats, lons, norths, easts, force_zone=zone;
+        return [norths(min), easts(min), norths(max), easts(max)];
+    } else if(key == "t") {
+        return dt2utm(tile, bbox=1);
+    } else if(key == "i") {
+        return it2utm(tile, bbox=1);
+    } else {
+        return [];
+    }
+}
+
 func extract_qq(text) {
 /* DOCUMENT extract_qq(text)
 
