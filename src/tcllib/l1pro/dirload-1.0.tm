@@ -1,0 +1,266 @@
+# vim: set tabstop=3 softtabstop=3 shiftwidth=3 shiftround autoindent:
+
+package provide l1pro::dirload 1.0
+
+# Global ::data_file_path
+if {![namespace exists ::l1pro::dirload]} {
+   namespace eval ::l1pro::dirload {
+      namespace eval v {
+         variable top .l1wid.l1dir
+         variable searchstr "*.pbd"
+         variable vname merged
+         variable skip 1
+         variable unique 0
+         variable zone Auto
+         variable zonelist {}
+         variable region_data {}
+         variable region_desc "All data"
+      }
+      set v::zonelist [lreplace [::struct::list iota 61] 0 0 Auto]
+   }
+}
+
+proc ::l1pro::dirload {} {
+   if {![winfo exists $dirload::v::top]} {
+      ::l1pro::dirload::gui
+   }
+   wm deiconify $dirload::v::top
+   raise $dirload::v::top
+}
+
+proc ::l1pro::dirload::gui {} {
+   destroy $v::top
+   toplevel $v::top
+   wm resizable $v::top 1 0
+   wm minsize $v::top 440 1
+   wm title $v::top "Read PBD Data Directory"
+   wm protocol $v::top WM_DELETE_WINDOW [list wm withdraw $v::top]
+
+   set f $v::top
+
+   # Container for everything that follows; declared first to make sure they
+   # stack above it
+   ttk::frame $f.f
+   pack $f.f -fill both -expand 1
+
+   ttk::label $f.lblPath -text "Data path:"
+   ttk::entry $f.entPath -width 40 -textvariable ::data_file_path
+   ttk::button $f.btnPath -text "Browse..." \
+      -command [namespace code browse_path]
+
+   ttk::label $f.lblSearch -text "Search string:"
+   ttk::entry $f.entSearch -width 8 \
+      -textvariable [namespace which -variable v::searchstr]
+
+   ttk::label $f.lblVname -text "Output variable:"
+   ttk::entry $f.entVname -width 8 \
+      -textvariable [namespace which -variable v::vname]
+
+   ttk::label $f.lblUnique -text "Unique:"
+   ttk::checkbutton $f.chkUnique \
+      -variable [namespace which -variable v::unique]
+
+   ttk::label $f.lblSkip -text "Subsample:"
+   spinbox $f.spnSkip -from 1 -to 10000 -increment 1 -width 5 \
+      -textvariable [namespace which -variable v::skip]
+
+   ttk::label $f.lblZone -text "Zone:"
+   ::misc::combobox $f.cboZone -state readonly -width 5 \
+      -textvariable [namespace which -variable v::zone] \
+      -listvariable [namespace which -variable v::zonelist]
+
+   ttk::label $f.lblRegion -text "Region:"
+   ttk::entry $f.entRegion -state readonly \
+      -textvariable [namespace which -variable v::region_desc]
+   ttk::menubutton $f.mnuRegion -text "Configure..." \
+      -menu [set mb $f.mnuRegion.mb]
+   menu $mb
+   $mb add command -label "Load all data" \
+      -command [namespace code region_all]
+   $mb add command -label "Load using rubberband box" \
+      -command [namespace code region_bbox]
+   $mb add command -label "Load using polygon" \
+      -command [namespace code region_poly]
+   $mb add command -label "Plot current region (if possible)" \
+      -command [namespace code region_plot]
+
+   ttk::frame $f.fraButtons
+   ttk::button $f.btnLoad -text "Load Data" \
+      -command [namespace code load_data]
+   ttk::button $f.btnClose -text "Close" -command [list wm withdraw $v::top]
+
+   grid $f.lblPath $f.entPath - - - - $f.btnPath -in $f.f
+   grid $f.lblSearch $f.entSearch - - - - -in $f.f
+   grid $f.lblVname $f.entVname - - - - -in $f.f
+   grid $f.lblZone $f.cboZone $f.lblSkip $f.spnSkip $f.lblUnique $f.chkUnique \
+      -in $f.f
+   grid $f.lblRegion $f.entRegion - - - - $f.mnuRegion -in $f.f
+   grid $f.fraButtons - - - - - - -in $f.f
+
+   pack $f.btnLoad $f.btnClose -in $f.fraButtons -side left
+
+   grid configure $f.lblPath $f.lblSearch $f.lblVname $f.lblUnique $f.lblSkip \
+      $f.lblZone $f.lblRegion -sticky e -padx {2 0}
+   grid configure $f.entPath $f.entSearch $f.entVname $f.chkUnique $f.spnSkip \
+      $f.cboZone $f.entRegion -sticky ew -padx 2
+   grid configure $f.btnPath $f.mnuRegion -sticky news
+
+   grid rowconfigure $f.f {0 1 2 3 4 5 6} -uniform 1
+   grid columnconfigure $f.f {1 3} -weight 1
+}
+
+proc ::l1pro::dirload::browse_path {} {
+   set temp_path [tk_chooseDirectory -initialdir $::data_file_path \
+      -mustexist 1 -title "Choose data directory"]
+   if {$temp_path ne ""} {
+      set ::data_file_path $temp_path
+   }
+}
+
+proc ::l1pro::dirload::region_all {} {
+   set v::region_data {}
+   set v::region_desc "All data"
+}
+
+proc ::l1pro::dirload::region_bbox {} {
+   exp_send "dirload_l1pro_selbbox;\r"
+   expect "> "
+}
+
+proc ::l1pro::dirload::region_poly {} {
+   exp_send "dirload_l1pro_selpoly;\r"
+   expect "> "
+}
+
+proc ::l1pro::dirload::region_plot {} {
+   exp_send "plotPoly, $v::region_data;\r"
+   expect "> "
+}
+
+proc ::l1pro::dirload::load_data {} {
+   if {![file isdirectory $::data_file_path]} {
+      error "Data path is not a directory: $::data_file_path"
+   }
+
+   wm withdraw $v::top
+
+   set filter ""
+
+   # Do we need to filter by region?
+   if {[llength $v::region_data]} {
+      set filter "dlfilter_poly($v::region_data)"
+   }
+
+   # Do we need to force a zone?
+   if {$v::zone ne "Auto"} {
+      if {$filter ne ""} {
+         set filter ", next=$filter"
+      }
+      set filter "dlfilter_rezone($v::zone$filter)"
+   }
+
+   set arglist "\"$::data_file_path\", searchstr=\"$v::searchstr\""
+
+   if {$v::skip > 1} {
+      append arglist ", skip=$v::skip"
+   }
+
+   if {$v::unique} {
+      append arglist ", uniq=1"
+   }
+
+   if {$filter ne ""} {
+      append arglist ", filter=$filter"
+   }
+
+   exp_send "$v::vname = dirload($arglist);\r"
+   expect "> "
+   append_varlist $v::vname
+}
+
+### For binary files
+
+# Global ::data_file_path
+if {![namespace exists ::l1pro::dirload_bin]} {
+   namespace eval ::l1pro::dirload_bin {
+      namespace eval v {
+         variable top .l1wid.l1dirbin
+         variable searchstr "*.edf"
+      }
+   }
+}
+
+proc ::l1pro::dirload_bin {} {
+   if {![winfo exists $dirload_bin::v::top]} {
+      ::l1pro::dirload_bin::gui
+   }
+   wm deiconify $dirload_bin::v::top
+   raise $dirload_bin::v::top
+}
+
+proc ::l1pro::dirload_bin::gui {} {
+   destroy $v::top
+   toplevel $v::top
+   wm resizable $v::top 1 0
+   wm minsize $v::top 440 1
+   wm title $v::top "Read Binary Data (edf/bin) Directory"
+   wm protocol $v::top WM_DELETE_WINDOW [list wm withdraw $v::top]
+
+   set f $v::top
+
+   # Container for everything that follows; declared first to make sure they
+   # stack above it
+   ttk::frame $f.f
+   pack $f.f -fill both -expand 1
+
+   ttk::label $f.lblPath -text "Data path:"
+   ttk::entry $f.entPath -width 40 -textvariable ::data_file_path
+   ttk::button $f.btnPath -text "Browse..." \
+      -command [namespace code browse_path]
+
+   ttk::label $f.lblSearch -text "Search string:"
+   ttk::entry $f.entSearch -width 8 \
+      -textvariable [namespace which -variable v::searchstr]
+
+   ttk::frame $f.fraButtons
+   ttk::button $f.btnLoad -text "Load Data" \
+      -command [namespace code load_data]
+   ttk::button $f.btnClose -text "Close" -command [list wm withdraw $v::top]
+
+   grid $f.lblPath $f.entPath $f.btnPath -in $f.f
+   grid $f.lblSearch $f.entSearch -in $f.f
+   grid $f.fraButtons - - -in $f.f
+
+   pack $f.btnLoad $f.btnClose -in $f.fraButtons -side left
+
+   grid configure $f.lblPath $f.lblSearch -sticky e -padx {2 0}
+   grid configure $f.entPath $f.entSearch -sticky ew -padx 2
+   grid configure $f.btnPath -sticky news
+
+   grid rowconfigure $f.f {0 1} -uniform 1
+   grid columnconfigure $f.f 1 -weight 1
+}
+
+proc ::l1pro::dirload_bin::browse_path {} {
+   set temp_path [tk_chooseDirectory -initialdir $::data_file_path \
+      -mustexist 1 -title "Choose data directory"]
+   if {$temp_path ne ""} {
+      set ::data_file_path $temp_path
+   }
+}
+
+proc ::l1pro::dirload_bin::load_data {} {
+   if {![file isdirectory $::data_file_path]} {
+      error "Data path is not a directory: $::data_file_path"
+   }
+
+   wm withdraw $v::top
+
+   set arglist "\"$::data_file_path\", searchstring=\"$v::searchstr\""
+
+   exp_send "data_ptr = read_yfile($arglist);\r"
+   expect "> "
+   exp_send "read_pointer_yfile, data_ptr, mode=1;\r"
+   expect "> "
+}
+
