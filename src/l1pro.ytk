@@ -14,6 +14,7 @@ package require struct::list
 package require struct::set
 package require misc
 package require tooltip
+package require l1pro::dirload
 
 if {![winfo exists .l1wid]} {
   set l1pro_data(processing_mode) [list \
@@ -57,6 +58,7 @@ if {![winfo exists .l1wid]} {
   set autoclean_after_process 0
 
   set show_pro_gui 1
+  set data_file_path ""
 
   proc show_pro_gui_update {a b c} {
     global show_pro_gui
@@ -276,7 +278,7 @@ if {![winfo exists .l1wid]} {
       pack .l1write.1 .l1write.2 .l1write.3
     }
 
-  .l1wid.mb.file add command -label "Read SubSampled Data File..." -underline 0 \
+  .l1wid.mb.file add command -label "Read SubSampled Data File..." -underline 5 \
     -command {
       global data_file_path
       set ofn [ tk_getOpenFile -filetypes \
@@ -311,225 +313,10 @@ if {![winfo exists .l1wid]} {
       pack .l1ss.1 .l1ss.2 -pady 5
     }
 
-  .l1wid.mb.file add command -label "Read Data Directory..." \
-    -underline 10 -command ::l1dir::gui
-
-  catch { namespace delete l1dir }
-  namespace eval l1dir {
-    # Global scope variables used:
-    # ::data_file_path
-    namespace eval v {
-      variable window .l1dir
-      variable merged ""
-      variable type_pbd pbd
-      variable type_yfile {edf or bin}
-      variable datatype $type_pbd
-      variable skip 1
-      variable unique 0
-      variable search ""
-      variable fixedzone 0
-      variable zone 18
-      variable tile_dt {2km Data Tiles}
-      variable tile_qq {Quarter Quads}
-      variable tiletype $tile_dt
-    }
-
-    proc gui {} {
-      set win $v::window
-      destroy $win
-      toplevel $win
-      wm resizable $win 1 0
-      wm minsize $win 400 1
-      wm title $win "Read Data Directory"
-
-      label $win.lblPath -text "Data Path:"
-      entry $win.entPath -width 40 -textvariable ::data_file_path
-      button $win.butPath -text "Browse..." \
-        -command [namespace code butPath_cmd]
-
-      label $win.lblType -text "Data Type:"
-      ::misc::combobox $win.cboType -state readonly \
-        -textvariable [namespace which -variable v::datatype] \
-        -values [list $v::type_pbd $v::type_yfile]
-
-      label $win.lblSearch -text "Search String:"
-      entry $win.entSearch -width 8 \
-        -textvariable [namespace which -variable v::search]
-
-      set fra $win.fraPBD
-      labelframe $fra -text "PBD Options"
-
-      label $fra.lblMerged -text "Merged Variable:"
-      entry $fra.entMerged -width 8 \
-        -textvariable [namespace which -variable v::merged]
-
-      label $fra.lblUnique -text "Unique:"
-      checkbutton $fra.chkUnique \
-        -variable [namespace which -variable v::unique]
-
-      label $fra.lblSubsample -text "Subsample:"
-      spinbox $fra.spnSubsample -from 1 -to 1000 -increment 1 -width 5 \
-        -textvariable [namespace which -variable v::skip]
-
-      label $fra.lblFixed -text "Fixed Zone:"
-      checkbutton $fra.chkFixed \
-        -variable [namespace which -variable v::fixedzone]
-
-      label $fra.lblZone -text "Zone:"
-      spinbox $fra.spnZone -from 1 -to 60 -increment 1 -width 5 \
-        -textvariable [namespace which -variable v::zone]
-
-      label $fra.lblTiles -text "Tile Type:"
-      ::misc::combobox $fra.cboTiles -state readonly \
-        -textvariable [namespace which -variable v::tiletype] \
-        -values [list $v::tile_dt $v::tile_qq]
-
-      grid $fra.lblMerged - $fra.entMerged -
-      grid $fra.lblUnique $fra.chkUnique $fra.lblSubsample $fra.spnSubsample
-      grid $fra.lblFixed $fra.chkFixed $fra.lblZone $fra.spnZone
-      grid $fra.lblTiles - $fra.cboTiles -
-
-      makesticky e [list $fra.lblMerged $fra.lblTiles \
-      $fra.lblUnique $fra.lblFixed $fra.lblSubsample $fra.lblZone]
-      makesticky w [list $fra.chkUnique $fra.chkFixed]
-      makesticky ew [list $fra.spnSubsample $fra.spnZone $fra.entMerged \
-        $fra.cboTiles]
-
-      set fra $win.fraEmpty
-      frame $fra
-
-      set fra $win.fraButtons
-      frame $fra
-      button $fra.butLoad -text "Load Data" \
-        -command [namespace code butLoad_cmd]
-      button $fra.butCancel -text "Cancel" \
-        -command [namespace code butCancel_cmd]
-      grid $fra.butLoad $fra.butCancel
-
-      grid $win.lblPath   $win.entPath   - $win.butPath
-      grid $win.lblType   $win.cboType   $win.fraPBD -
-      grid $win.lblSearch $win.entSearch ^ ^
-      grid $win.fraEmpty   - ^ ^
-      grid $win.fraButtons - ^ ^
-      makesticky e [list \
-        $win.lblPath $win.lblType $win.lblSearch]
-      makesticky ew [list \
-        $win.entPath $win.cboType $win.entSearch]
-      makesticky news [list $win.fraEmpty]
-      grid $win.fraPBD -padx {5 0}
-      grid columnconfigure $win 1 -weight 1
-      grid rowconfigure    $win 3 -weight 1
-
-      datatype_changes
-    }
-
-    proc makesticky {sticky widgets} {
-      foreach widget $widgets {
-        grid $widget -sticky $sticky
-      }
-    }
-
-    trace add variable [namespace which -variable v::datatype] write \
-      [namespace code datatype_changes]
-
-    proc datatype_changes {{n1 {}} {n2 {}} {op {}}} {
-      set state [lindex {disabled normal} \
-        [string equal $v::datatype $v::type_pbd]]
-      foreach widget [winfo children $v::window.fraPBD] {
-        $widget configure -state $state
-      }
-      tiletype_changes
-    }
-
-    trace add variable [namespace which -variable v::fixedzone] write \
-      [namespace code tiletype_changes]
-
-    proc tiletype_changes {{n1 {}} {n2 {}} {op {}}} {
-      set fra $v::window.fraPBD
-      if {[$fra.lblFixed cget -state] == "normal"} {
-        set state [lindex {disabled normal} $v::fixedzone]
-        foreach widget [list $fra.lblZone $fra.spnZone \
-            $fra.lblTiles] {
-          $widget configure -state $state
-        }
-        set state [lindex {disabled readonly} $v::fixedzone]
-        $fra.cboTiles configure -state $state
-      }
-    }
-
-    proc butPath_cmd {} {
-      set temp_path [ tk_chooseDirectory -initialdir $::data_file_path \
-        -mustexist 1 -title "Read data directory" ]
-      if {$temp_path != ""} {
-        set ::data_file_path $temp_path
-      }
-    }
-
-    proc butLoad_cmd {} {
-      if { ! [file isdirectory $::data_file_path] } {
-        error "The data path provided is not a real directory: $::data_file_path"
-      }
-      switch -- $v::datatype \
-        $v::type_pbd {
-          if { ! [string length $v::merged] } {
-            error "You must provide a merged variable name!"
-          }
-          set search $v::search
-          if {! [string length $search]} {
-            set search {*.pbd}
-          }
-          if {$v::fixedzone} {
-            switch -- $v::tiletype \
-              $v::tile_dt {
-                set cmd zoneload_dt_dir
-              } \
-              $v::tile_qq {
-                set cmd zoneload_qq_dir
-              } \
-              default {
-                error "Invalid tile type provided: $v::tiletype"
-              }
-            exp_send "require, \"zone.i\";\
-              require, \"qq24k.i\";\
-              $v::merged = ${cmd}(\"$::data_file_path\",\
-                $v::zone, skip=$v::skip, unique=$v::unique,\
-                glob=\"$search\");\r"
-          } else {
-            wm withdraw $v::window
-            exp_send "$v::merged = merge_data_pbds(\"$::data_file_path\",\
-              skip=$v::skip, uniq=$v::unique,\
-              searchstring=\"$search\");\r"
-          }
-          expect ">"
-          exp_send "vname=\"$v::merged\";\
-            set_read_tk;\
-            set_read_yorick, $v::merged\r"
-          expect ">"
-          exp_send "\r"
-        } \
-        $v::type_yfile {
-          set search $v::search
-          if {! [string length $search]} {
-            set search "\[\]"
-          }
-          wm withdraw $v::window
-          exp_send "data_ptr = read_yfile(\"$::data_file_path\",\
-            searchstring=\"$search\");\r"
-          expect ">"
-          exp_send "read_pointer_yfile, data_ptr, mode=1;\r"
-          expect ">"
-        } \
-        default {
-          error "Invalid data type provided: $v::datatype"
-        }
-
-      destroy $v::window
-    }
-
-    proc butCancel_cmd {} {
-      destroy $v::window
-    }
-  }
+  .l1wid.mb.file add command -label "Read PBD Data Directory..." \
+    -underline 14 -command ::l1pro::dirload
+  .l1wid.mb.file add command -label "Read Binary Data (edf/bin) Directory..." \
+    -underline 5 -command ::l1pro::dirload_bin
 
   .l1wid.mb.file add command -label "Ascii output ..." -underline 0 \
     -command {
@@ -790,7 +577,8 @@ if {![winfo exists .l1wid]} {
         .l1map.2.skip .l1map.2.search .l1map.2.go -side left -padx 2
     }
 
-  .l1wid.mb.file add command -label "Capture a display..." -command scap
+  .l1wid.mb.file add command -label "Capture a display..." -command scap \
+    -underline 0
   .l1wid.mb.file add separator
   .l1wid.mb.file add command -label "Dismiss" -underline 0 \
     -command {wm withdraw .l1wid}
@@ -1398,11 +1186,234 @@ if {![winfo exists .l1wid]} {
 
   .l1wid.mb.dep add separator
 
+  ### DEPRECATED 2009-12-22 ###
+  # Replaced by "Read PBD Data Directory..." and "Read Binary Data (edf/bin)
+  # Directory..." entries, supported by l1pro::dirload.
+  .l1wid.mb.dep add command -label "Old Read Data Directory..." \
+    -underline 10 -command ::l1dir::gui
+
+  catch { namespace delete l1dir }
+  namespace eval l1dir {
+    # Global scope variables used:
+    # ::data_file_path
+    namespace eval v {
+      variable window .l1dir
+      variable merged ""
+      variable type_pbd pbd
+      variable type_yfile {edf or bin}
+      variable datatype $type_pbd
+      variable skip 1
+      variable unique 0
+      variable search ""
+      variable fixedzone 0
+      variable zone 18
+      variable tile_dt {2km Data Tiles}
+      variable tile_qq {Quarter Quads}
+      variable tiletype $tile_dt
+    }
+
+    proc gui {} {
+      set win $v::window
+      destroy $win
+      toplevel $win
+      wm resizable $win 1 0
+      wm minsize $win 400 1
+      wm title $win "Read Data Directory"
+
+      label $win.lblPath -text "Data Path:"
+      entry $win.entPath -width 40 -textvariable ::data_file_path
+      button $win.butPath -text "Browse..." \
+        -command [namespace code butPath_cmd]
+
+      label $win.lblType -text "Data Type:"
+      ::misc::combobox $win.cboType -state readonly \
+        -textvariable [namespace which -variable v::datatype] \
+        -values [list $v::type_pbd $v::type_yfile]
+
+      label $win.lblSearch -text "Search String:"
+      entry $win.entSearch -width 8 \
+        -textvariable [namespace which -variable v::search]
+
+      set fra $win.fraPBD
+      labelframe $fra -text "PBD Options"
+
+      label $fra.lblMerged -text "Merged Variable:"
+      entry $fra.entMerged -width 8 \
+        -textvariable [namespace which -variable v::merged]
+
+      label $fra.lblUnique -text "Unique:"
+      checkbutton $fra.chkUnique \
+        -variable [namespace which -variable v::unique]
+
+      label $fra.lblSubsample -text "Subsample:"
+      spinbox $fra.spnSubsample -from 1 -to 1000 -increment 1 -width 5 \
+        -textvariable [namespace which -variable v::skip]
+
+      label $fra.lblFixed -text "Fixed Zone:"
+      checkbutton $fra.chkFixed \
+        -variable [namespace which -variable v::fixedzone]
+
+      label $fra.lblZone -text "Zone:"
+      spinbox $fra.spnZone -from 1 -to 60 -increment 1 -width 5 \
+        -textvariable [namespace which -variable v::zone]
+
+      label $fra.lblTiles -text "Tile Type:"
+      ::misc::combobox $fra.cboTiles -state readonly \
+        -textvariable [namespace which -variable v::tiletype] \
+        -values [list $v::tile_dt $v::tile_qq]
+
+      grid $fra.lblMerged - $fra.entMerged -
+      grid $fra.lblUnique $fra.chkUnique $fra.lblSubsample $fra.spnSubsample
+      grid $fra.lblFixed $fra.chkFixed $fra.lblZone $fra.spnZone
+      grid $fra.lblTiles - $fra.cboTiles -
+
+      makesticky e [list $fra.lblMerged $fra.lblTiles \
+      $fra.lblUnique $fra.lblFixed $fra.lblSubsample $fra.lblZone]
+      makesticky w [list $fra.chkUnique $fra.chkFixed]
+      makesticky ew [list $fra.spnSubsample $fra.spnZone $fra.entMerged \
+        $fra.cboTiles]
+
+      set fra $win.fraEmpty
+      frame $fra
+
+      set fra $win.fraButtons
+      frame $fra
+      button $fra.butLoad -text "Load Data" \
+        -command [namespace code butLoad_cmd]
+      button $fra.butCancel -text "Cancel" \
+        -command [namespace code butCancel_cmd]
+      grid $fra.butLoad $fra.butCancel
+
+      grid $win.lblPath   $win.entPath   - $win.butPath
+      grid $win.lblType   $win.cboType   $win.fraPBD -
+      grid $win.lblSearch $win.entSearch ^ ^
+      grid $win.fraEmpty   - ^ ^
+      grid $win.fraButtons - ^ ^
+      makesticky e [list \
+        $win.lblPath $win.lblType $win.lblSearch]
+      makesticky ew [list \
+        $win.entPath $win.cboType $win.entSearch]
+      makesticky news [list $win.fraEmpty]
+      grid $win.fraPBD -padx {5 0}
+      grid columnconfigure $win 1 -weight 1
+      grid rowconfigure    $win 3 -weight 1
+
+      datatype_changes
+    }
+
+    proc makesticky {sticky widgets} {
+      foreach widget $widgets {
+        grid $widget -sticky $sticky
+      }
+    }
+
+    trace add variable [namespace which -variable v::datatype] write \
+      [namespace code datatype_changes]
+
+    proc datatype_changes {{n1 {}} {n2 {}} {op {}}} {
+      set state [lindex {disabled normal} \
+        [string equal $v::datatype $v::type_pbd]]
+      foreach widget [winfo children $v::window.fraPBD] {
+        $widget configure -state $state
+      }
+      tiletype_changes
+    }
+
+    trace add variable [namespace which -variable v::fixedzone] write \
+      [namespace code tiletype_changes]
+
+    proc tiletype_changes {{n1 {}} {n2 {}} {op {}}} {
+      set fra $v::window.fraPBD
+      if {[$fra.lblFixed cget -state] == "normal"} {
+        set state [lindex {disabled normal} $v::fixedzone]
+        foreach widget [list $fra.lblZone $fra.spnZone \
+            $fra.lblTiles] {
+          $widget configure -state $state
+        }
+        set state [lindex {disabled readonly} $v::fixedzone]
+        $fra.cboTiles configure -state $state
+      }
+    }
+
+    proc butPath_cmd {} {
+      set temp_path [ tk_chooseDirectory -initialdir $::data_file_path \
+        -mustexist 1 -title "Read data directory" ]
+      if {$temp_path != ""} {
+        set ::data_file_path $temp_path
+      }
+    }
+
+    proc butLoad_cmd {} {
+      if { ! [file isdirectory $::data_file_path] } {
+        error "The data path provided is not a real directory: $::data_file_path"
+      }
+      switch -- $v::datatype \
+        $v::type_pbd {
+          if { ! [string length $v::merged] } {
+            error "You must provide a merged variable name!"
+          }
+          set search $v::search
+          if {! [string length $search]} {
+            set search {*.pbd}
+          }
+          if {$v::fixedzone} {
+            switch -- $v::tiletype \
+              $v::tile_dt {
+                set cmd zoneload_dt_dir
+              } \
+              $v::tile_qq {
+                set cmd zoneload_qq_dir
+              } \
+              default {
+                error "Invalid tile type provided: $v::tiletype"
+              }
+            exp_send "require, \"zone.i\";\
+              require, \"qq24k.i\";\
+              $v::merged = ${cmd}(\"$::data_file_path\",\
+                $v::zone, skip=$v::skip, unique=$v::unique,\
+                glob=\"$search\");\r"
+          } else {
+            wm withdraw $v::window
+            exp_send "$v::merged = merge_data_pbds(\"$::data_file_path\",\
+              skip=$v::skip, uniq=$v::unique,\
+              searchstring=\"$search\");\r"
+          }
+          expect ">"
+          exp_send "vname=\"$v::merged\";\
+            set_read_tk;\
+            set_read_yorick, $v::merged\r"
+          expect ">"
+          exp_send "\r"
+        } \
+        $v::type_yfile {
+          set search $v::search
+          if {! [string length $search]} {
+            set search "\[\]"
+          }
+          wm withdraw $v::window
+          exp_send "data_ptr = read_yfile(\"$::data_file_path\",\
+            searchstring=\"$search\");\r"
+          expect ">"
+          exp_send "read_pointer_yfile, data_ptr, mode=1;\r"
+          expect ">"
+        } \
+        default {
+          error "Invalid data type provided: $v::datatype"
+        }
+
+      destroy $v::window
+    }
+
+    proc butCancel_cmd {} {
+      destroy $v::window
+    }
+  }
+
   ### DEPRECATED 2009-02-02 ###
   # This menu entry and its code are deprecated. They have been replaced by the
   # code in namespace l1dir, which is invoked from the non-deprecated
   # "Read Data Directory..." menu entry above it.
-  .l1wid.mb.dep add command -label "Old Read Data Directory..." \
+  .l1wid.mb.dep add command -label "Even Older Read Data Directory..." \
     -command {
       global data_file_path
       if { [info exists data_file_path ] == 0 } {
