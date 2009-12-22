@@ -58,6 +58,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "comparison_fns.i";
    require, "data_rgn_selector.i";
    require, "dir.i";
+   require, "dirload.i";
    require, "dmars.i";
    require, "eaarl_mounting_bias.i";
    require, "edb_access.i";
