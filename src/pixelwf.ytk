@@ -673,7 +673,7 @@ namespace eval ::pixelwf::gui {
          $f.cboAction $f.entVariable \
          $f.chkVerbose $f.btnGraph $f.btnBathctl
 
-      grid columnconfigure $f 1 -weight 1
+      grid columnconfigure $f {0 1} -weight 1 -uniform 1
    }
 
    proc ex_veg f {
