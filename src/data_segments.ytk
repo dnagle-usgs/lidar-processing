@@ -27,8 +27,7 @@ if {[info commands SegmentedDataWindow] eq ""} {
 
       method init_opt_var {opt default} {}
       method size_optimally {} {}
-      method refresh_times {} {}
-      method configure_times {} {}
+      method refresh_times {{method -}} {}
       method set_time {idx time_start time_end} {}
       method clear_time {idx} {}
       method plot_segment {args} {}
@@ -42,6 +41,7 @@ if {[info commands SegmentedDataWindow] eq ""} {
       method define_region_mismatch {} {}
       method define_region_multilines {} {}
       method new_segment_window {} {}
+      method selected {cmd} {}
 
       # Holds per-segment data
       variable _segment
@@ -91,14 +91,45 @@ itcl::body SegmentedDataWindow::constructor {args} {
    set f [$f1 childsite]
    $f configure -padx 4
 
+   set mb $f.btnHeadingSelect.mb
+   menubutton $f.btnHeadingSelect -menu $mb -text X -relief raised
+   menu $mb
+   $mb add command -label "Select all" \
+      -command [itcl::code $this selected all]
+   $mb add command -label "Select none" \
+      -command [itcl::code $this selected none]
+   $mb add command -label "Toggle selection" \
+      -command [itcl::code $this selected toggle]
    label $f.lblHeadingVariables -text "Variable"
-   button $f.btnHeadingTime -text "Times (refresh)" \
-      -command [itcl::code $this refresh_times]
+   set mb $f.btnHeadingTime.mb
+   menubutton $f.btnHeadingTime -text "Time Format/Refresh" -menu $mb \
+      -relief raised
+   menu $mb
+   $mb add command \
+      -label "2004-01-10 12:00:00 - 2004-01-15 14:00:00" \
+      -command [itcl::code $this refresh_times full]
+   $mb add command \
+      -label "01-10 12:00 - 01-15 14:00" \
+      -command [itcl::code $this refresh_times short]
+   $mb add command \
+      -label "2004-01-10 - 2004-01-15" \
+      -command [itcl::code $this refresh_times date]
+   $mb add command \
+      -label "12:00:00 - 14:00:00" \
+      -command [itcl::code $this refresh_times time]
+   $mb add command \
+      -label "2004-01-10 12:00:00" \
+      -command [itcl::code $this refresh_times startfull]
+   $mb add command \
+      -label "2004-01-10 12:00:00 (05 min 13 sec)" \
+      -command [itcl::code $this refresh_times startfulllen]
+   $mb add command \
+      -label "12:00:00" \
+      -command [itcl::code $this refresh_times starttime]
    label $f.lblHeadingPlot -text "Plot Segment"
 
-   grid configure x $f.lblHeadingVariables \
-      $f.lblHeadingPlot - $f.btnHeadingTime \
-      -sticky ew
+   grid configure $f.btnHeadingSelect $f.lblHeadingVariables \
+      $f.lblHeadingPlot - $f.btnHeadingTime
 
    set _count [llength $itk_option(-segmentvariables)]
    set idx 0
@@ -184,11 +215,7 @@ itcl::body SegmentedDataWindow::constructor {args} {
       -text "Auto Fma" \
       -variable $itk_option(-fmavariable)
 
-   button $f.btnTimeConfig -text "Time Format" \
-      -command [itcl::code $this configure_times]
-
    grid $f.chkFma -sticky w
-   grid $f.btnTimeConfig -sticky we
    grid columnconfigure $f 0 -weight 1
 
    grid $w.fraVariables - -sticky wens
@@ -270,50 +297,13 @@ itcl::body SegmentedDataWindow::size_optimally {} {
    eval [[$f component canvas] cget -yscrollcommand] [$f yview]
 }
 
-itcl::body SegmentedDataWindow::refresh_times {} {
+itcl::body SegmentedDataWindow::refresh_times {{method -}} {
+   if {$method ne "-"} {
+      set _timeformat $method
+   }
    for {set i 1} {$i <= $_count} {incr i} {
       after [expr {$i * 20}] [list \
          ybkg tk_sdw_send_times \"[itcl::scope $this]\" $i $_segment($i,var)]
-   }
-}
-
-itcl::body SegmentedDataWindow::configure_times {} {
-   set dlg [iwidgets::dialog .#auto \
-      -title "Configure Time Format" \
-      -modality application]
-
-   $dlg hide Help
-   $dlg hide Apply
-
-   set w [$dlg childsite]
-
-   set f $w.fraChoices
-   labelframe $f -text "Select a format:"
-
-   pack $f -fill both -expand yes
-
-   set options [list \
-      full "2004-01-10 12:00:00 - 2004-01-15 14:00:00" \
-      short "01-10 12:00 - 01-15 14:00" \
-      date "2004-01-10 - 2004-01-15" \
-      time "12:00:00 - 14:00:00" \
-      startfull "2004-01-10 12:00:00" \
-      startfulllen "2004-01-10 12:00:00 (05 min 13 sec)" \
-      starttime "12:00:00"]
-
-   foreach {tag desc} $options {
-      grid [radiobutton $f.rdb$tag -value $tag \
-         -text $desc \
-         -variable [itcl::scope _timeformat]] \
-         -sticky w
-   }
-
-   set backup_format $_timeformat
-
-   if {[$dlg activate]} {
-      refresh_times
-   } else {
-      set _timeformat $backup_format
    }
 }
 
@@ -507,6 +497,22 @@ itcl::body SegmentedDataWindow::new_segment_window {} {
       tk_messageBox -icon warning \
          -message "No variables were selected." \
          -type ok
+   }
+}
+
+itcl::body SegmentedDataWindow::selected {cmd} {
+   for {set idx 1} {$idx <= $_count} {incr idx} {
+      switch -- $cmd {
+         all {
+            set _segment($idx,use) 1
+         }
+         none {
+            set _segment($idx,use) 0
+         }
+         toggle {
+            set _segment($idx,use) [expr {1 - $_segment($idx,use)}]
+         }
+      }
    }
 }
 
