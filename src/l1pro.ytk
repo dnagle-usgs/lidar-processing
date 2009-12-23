@@ -15,6 +15,7 @@ package require struct::set
 package require misc
 package require tooltip
 package require l1pro::dirload
+package require l1pro::vars
 
 if {![winfo exists .l1wid]} {
   set l1pro_data(processing_mode) [list \
@@ -576,6 +577,12 @@ if {![winfo exists .l1wid]} {
       pack .l1map.2.mode .l1map.2.winl .l1map.2.win .l1map.2.uniqb .l1map.2.skipb \
         .l1map.2.skip .l1map.2.search .l1map.2.go -side left -padx 2
     }
+  menu .l1wid.mb.file.vars
+  .l1wid.mb.file add cascade -label "Variables..." -underline 0 -menu .l1wid.mb.file.vars
+  .l1wid.mb.file.vars add command -label "Load from file..." \
+    -command ::l1pro::vars::load_from_file
+  .l1wid.mb.file.vars add command -label "Save to file..." \
+    -command ::l1pro::vars::save_to_file
 
   .l1wid.mb.file add command -label "Capture a display..." -command scap \
     -underline 0
