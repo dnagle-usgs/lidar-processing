@@ -242,6 +242,10 @@ snit::type ::sf::controller {
          unset $waitvar
 
          $gui configure -title [$model cget -name]
+
+         if {[$model position 0] eq ""} {
+            $gui prompt warning "No images found."
+         }
       }
    }
 
