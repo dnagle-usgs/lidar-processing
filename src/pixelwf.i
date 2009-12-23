@@ -232,6 +232,7 @@ func pixelwf_enter_interactive(void) {
 func pixelwf_selected_info(nearest) {
    extern pixelwfvars, soe_day_start;
    point = nearest.point;
+   spot = nearest.spot;
    write, format="Location clicked: %9.2f %10.2f\n", spot(1), spot(2);
    write, format="   Nearest point: %9.2f %10.2f (%.2fm away)\n",
       point.east/100., point.north/100., nearest.distance;
@@ -292,7 +293,7 @@ func pixelwf_find_point(spot) {
       }
    }
 
-   return h_new(point=nearest, index=index, distance=dist);
+   return h_new(point=nearest, index=index, distance=dist, spot=spot);
 }
 
 func pixelwf_set_soe(soe) {
