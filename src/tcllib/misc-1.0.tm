@@ -140,7 +140,7 @@ snit::type ::misc::file {
          eval [list dict set parts] [::file split [::file normalize $path]] *
       }
       set common [list /]
-      set continue 1
+      set continue [expr {[llength $parts] > 0}]
       while {$continue} {
          set continue 0
          set sub [eval [list dict get $parts] $common]
