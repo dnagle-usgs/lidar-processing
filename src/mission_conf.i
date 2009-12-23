@@ -646,6 +646,8 @@ func missiondata_load(type, day=) {
                 error, "Could not load pnav data: no pnav file defined";
             }
         }
+        tkcmd, swrite(format="set ::plot::g::pnav_file {%s}",
+            mission_get("pnav file", day=day));
     } else if(type == "dmars") {
         if(cache_enabled && h_has(cache, "dmars")) {
             missiondata_unwrap, cache("dmars");
