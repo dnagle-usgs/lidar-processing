@@ -680,7 +680,11 @@ maxx = elev(q)(max);
   xytitles,"Elevation (meters)", "Number of measurements"
   //limits
   hst = [e,h];
-  window, win; limits,,,,hst(max,2) * 1.5
+  window, win;
+  // The next line checks to see if the user has supplied any custom limits.
+  // If so, we do not override them. If not, we display it nicely.
+  if(long(limits()(5)) & 1)
+     limits,"e","e",0,hst(max,2) * 1.5;
   window_select, w;
   return hst;
 }
