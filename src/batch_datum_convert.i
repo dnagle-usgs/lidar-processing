@@ -104,17 +104,8 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=) {
       write, format="\n%d/%d %s\n", i, numberof(files), tail;
 
       // Attempt to extract datum information from filename
-      regmatch, "(^.*?(^|_))(w84|n83|n88)((\.|_).*$)", tail, , part1, , fn_datum, part2;
-      regmatch, "^_g(96|99|03|09)((\.|_).*$)", part2, , fn_geoid, part3;
-
-      // If it's not n88, then our match on the geoid is wrong, discard it.
-      if(fn_datum != "n88")
-         fn_geoid = string(0);
-
-      // If there's a valid geoid, then part3 replaces part2.
-      if(strlen(fn_geoid))
-         part2 = part3;
-      part3 = [];
+      fn_datum = fn_geoid = part1 = part2 = [];
+      assign, parse_datum(tail), fn_datum, fn_geoid, part1, part2;
 
       // We could now reconstruct the original filename with logic like this:
       // part1 + fn_datum + (fn_geoid ? "_g"+fn_geoid : "") + part2
