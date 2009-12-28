@@ -698,15 +698,16 @@ func missiondata_soe_load(soe) {
 
 func missiondata_soe_query(soe) {
 /* DOCUMENT day = missiondata_soe_query(soe)
-    If a mission day exists and contains this soe in its edb data, that day's
-    name will be returned. Otherwise, returns [];
+    If a mission day exists and contains this soe in its edb or pnav data, that
+    day's name will be returned. Otherwise, returns [].
 */
 // Original David Nagle 2009-08-07
-    extern edb;
-    env_backup = missiondata_wrap("edb");
+    extern edb, pnav_filename, pnav;
+    edb_backup = missiondata_wrap("edb");
+    pnav_backup = missiondata_wrap("pnav");
 
     days = missionday_list();
-    result = [];
+    result = pnavresult = [];
     for(i = 1; i <= numberof(days); i++) {
         if(mission_has("edb file", day=days(i))) {
             missiondata_load, "edb", day=days(i);
@@ -720,10 +721,22 @@ func missiondata_soe_query(soe) {
                 }
             }
         }
+        if(mission_has("pnav file", day=days(i))) {
+            missiondata_load, "pnav", day=days(i);
+            cur_date = mission_get("date", day=days(i));
+            if(strlen(cur_date)) {
+                soe_min = date2soe(cur_date, pnav.sod(min))(1);
+                soe_max = date2soe(cur_date, pnav.sod(max))(1);
+                if(soe_min <= soe && soe <= soe_max) {
+                    pnavresult = days(i);
+                }
+            }
+        }
     }
 
-    missiondata_unwrap, env_backup;
-    return result;
+    missiondata_unwrap, edb_backup;
+    missiondata_unwrap, pnav_backup;
+    return is_void(result) ? pnavresult : result;
 }
 
 func missiondata_read(filename) {
