@@ -618,3 +618,68 @@ func structeqany(a, ..) {
    }
    return 0;
 }
+
+func binary_search(ary, val, exact=, inline=) {
+/* DOCUMENT binary_search(ary, val, exact=, inline=)
+   Searches in ary for val. The ary must be sorted and must contain numerical
+   data. Will return the index corresponding to the value in ary that is
+   nearest to val.
+
+   Parameters:
+      ary - Array of data to search in. Must be numerical, sorted, and
+         one-dimensional.
+      val - Value to search for. Must be a scalar number.
+
+   Options:
+      exact= By default, the closest match is returned. If exact=1, it will
+         instead only return the index if it finds an exact match. If no match
+         is found, it will return [].
+      inline= If enabled, returns the matched value instead of the index.
+*/
+   default, exact, 0;
+   default, inline, 0;
+
+   // Initial bounds cover entire list
+   b0 = 1
+   b1 = numberof(ary);
+
+   // Make sure the value is in bounds. If not... this becomes trivial.
+   if(val <= ary(b0))
+      b1 = b0;
+   else if(ary(b1) <= val)
+      b0 = b1;
+
+   // Narrow bounds until it's either a single value or adjacent indexes
+   while(b1 - b0 > 1) {
+      pivot = long((b0 + b1) / 2.);
+      pivotVal = ary(pivot);
+
+      if(pivotVal == val) {
+         b0 = b1 = pivot;
+      } else if(pivotVal < val) {
+         b0 = pivot;
+      } else {
+         b1 = pivot;
+      }
+   }
+
+   // Select the nearest index
+   nearest = [];
+   if(b0 == b1) {
+      nearest = b0;
+   } else {
+      db0 = abs(val - ary(b0));
+      db1 = abs(val - ary(b1));
+      nearest = (db0 < db1) ? b0 : b1;
+   }
+
+   // Handle exact=1
+   if(exact && ary(nearest) != val)
+      nearest = [];
+
+   // Handle inline=1
+   if(inline && !is_void(nearest))
+      nearest = ary(nearest);
+
+   return nearest;
+}
