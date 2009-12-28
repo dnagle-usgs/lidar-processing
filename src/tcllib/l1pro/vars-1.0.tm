@@ -30,6 +30,7 @@ snit::widget ::l1pro::vars::gui::load_from_file {
    variable pane -array {}
    variable widget -array {}
    variable filename {}
+   variable addvarlist 0
 
    constructor args {
       iwidgets::notebook $win.nb -height 400 -width 400
@@ -112,6 +113,10 @@ snit::widget ::l1pro::vars::gui::load_from_file {
       set widget(vars) $f.vars
 
       ttk::frame $f.f1
+      ttk::checkbutton $f.chkAddVarlist -variable [myvar addvarlist]
+      ttk::label $f.lblAddVarlist -text "Add to variable list"
+
+      ttk::frame $f.f2
       ttk::button $f.btnPrev -text "<- Previous" \
          -command [mymethod swap to select]
       ttk::button $f.btnCancel -text "Cancel" \
@@ -119,12 +124,15 @@ snit::widget ::l1pro::vars::gui::load_from_file {
       ttk::button $f.btnImport -text "Load" \
          -command [mymethod load]
 
-      grid $f.btnPrev $f.btnCancel $f.btnImport -in $f.f1
+      grid $f.chkAddVarlist $f.lblAddVarlist -in $f.f1 -sticky w
+
+      grid $f.btnPrev $f.btnCancel $f.btnImport -in $f.f2
       grid configure $f.btnCancel -padx 2
 
       grid $f.msg -sticky ew
       grid $f.vars -sticky news -padx 2 -pady 2
-      grid $f.f1 -sticky e -padx 2 -pady 2
+      grid $f.f1 -sticky w -padx 2 -pady 2
+      grid $f.f2 -sticky e -padx 2 -pady 2
       grid columnconfigure $f 0 -weight 1
       grid rowconfigure $f 1 -weight 1
    }
@@ -178,6 +186,9 @@ snit::widget ::l1pro::vars::gui::load_from_file {
       foreach {fvar yvar} $mapping {
          exp_send "$yvar = f.$fvar;\r"
          expect "> "
+         if {$addvarlist} {
+            append_varlist $yvar
+         }
       }
       exp_send "close, f;\r"
       expect "> "
