@@ -159,25 +159,6 @@ func split_by_fltline(data, timediff=) {
    return fptr;
 }
 
-func funtimes(data) {
-   ptr = subsplit_by_digitizer(split_by_day(data));
-   days = numberof(ptr)/2;
-   for(i = 1; i <= days; i++) {
-      j = i * 2 - 1;
-      if(ptr(j)) {
-         vname = swrite(format="fun_day%d_d1", i);
-         symbol_set, vname, *ptr(j);
-         tkcmd, swrite(format="append_varlist %s", vname);
-      }
-      j++;
-      if(ptr(j)) {
-         vname = swrite(format="fun_day%d_d2", i);
-         symbol_set, vname, *ptr(j);
-         tkcmd, swrite(format="append_varlist %s", vname);
-      }
-   }
-}
-
 func tk_sdw_launch_fltlines(varname) {
    fptr = split_by_fltline(symbol_def(varname));
    segvars = swrite(format="%s_flt%d", varname, indgen(numberof(fptr)));
@@ -421,11 +402,6 @@ func tk_dsw_plot_stats(var, data, type, win) {
 
 
 func gather_data_stats(data, &working_tans, &working_pnav) {
-   logid = logger_id();
-   logger, "debug", logid + swrite(
-      format=" Entering gather_data_stats(%s(%d))",
-      nameof(structof(data)), numberof(data));
-
    stats = h_new();
 
    // First, pull stats out of the data itself:
@@ -444,8 +420,6 @@ func gather_data_stats(data, &working_tans, &working_pnav) {
 
    if(structeq(structof(data), GEO)) {
       temp_data = data.elevation + data.depth;
-      logger, "debug", logid + swrite(
-         format=" found elevation data (GEO), %d points", numberof(temp_data));
       stat_temp = h_new();
       qs = quartiles(temp_data);
       h_set, stat_temp, "q1", qs(1)/100.;
@@ -459,8 +433,6 @@ func gather_data_stats(data, &working_tans, &working_pnav) {
    }
 
    if(structeq(structof(data), VEG__)) {
-      logger, "debug", logid + swrite(
-         format=" found elevation data (VEG__), %d points", numberof(data));
       stat_temp = h_new();
       qs = quartiles(data.lelv);
       h_set, stat_temp, "q1", qs(1)/100.;
@@ -476,9 +448,6 @@ func gather_data_stats(data, &working_tans, &working_pnav) {
    // Now attempt to extract from tans
    working_tans = tk_dsw_get_data(data, "dmars", "tans", "somd");
    if(numberof(working_tans)) {
-      logger, "debug", logid + swrite(
-         format=" found tans data, %d points", numberof(working_tans));
-
       // roll
       stat_temp = h_new();
       qs = quartiles(working_tans.roll);
@@ -505,10 +474,7 @@ func gather_data_stats(data, &working_tans, &working_pnav) {
 
       // heading
       angrng = angular_range(working_tans.heading);
-      logger, "debug", logid + swrite(
-         format=" angular range = %.2f", angrng(3));
       if(angrng(3) < 90) {
-         logger, "debug", logid + " including heading stats";
          stat_temp = h_new();
          h_set, stat_temp, "min", angrng(1);
          h_set, stat_temp, "max", angrng(2);
@@ -532,8 +498,6 @@ func gather_data_stats(data, &working_tans, &working_pnav) {
    // Now attempt to extract from pnav
    working_pnav = tk_dsw_get_data(data, "pnav", "pnav", "sod");
    if(numberof(working_pnav)) {
-      logger, "debug", logid + swrite(
-         format=" found pnav data, %d points", numberof(working_tans));
       // pdop
       stat_temp = h_new();
       qs = quartiles(working_pnav.pdop);
@@ -597,14 +561,86 @@ func gather_data_stats(data, &working_tans, &working_pnav) {
       v = [];
    }
 
-   logger, "debug", logid + " Returning from gather_data_stats";
    return stats;
 }
 
-func tk_dsw_send_stats(obj, var, data) {
-   stats = gather_data_stats(data);
+func tk_dsw_launch_fltlines(varname) {
+   fptr = split_by_fltline(symbol_def(varname));
+   segvars = swrite(format="%s_flt%d", varname, indgen(numberof(fptr)));
+   stats = h_new();
+   for(i = 1; i <= numberof(fptr); i++) {
+      h_set, stats, segvars(i), gather_data_stats(*fptr(i));
+   }
    json = yorick2json(stats, compact=1);
-   tkcmd, swrite(format="%s set_stats {%s} {%s}", obj, var, json);
+   tkcmd, swrite(format="launch_datastats_stats {%s}", json);
+}
+
+func tk_dsw_launch_fltlines_digitizer(varname) {
+   ptr = subsplit_by_digitizer(split_by_fltline(symbol_def(varname)));
+
+   flts = transpose(array(indgen(numberof(ptr)/2), 2))(*);
+   digs = array([1,2], numberof(ptr)/2)(*);
+   segvars = swrite(format="%s_flt%d_d%d", varname, unref(flts), unref(digs));
+
+   w = where(ptr);
+   if(!numberof(ptr)) {
+      // Shouldn't happen...
+      write, "Aborting! No data found?";
+   }
+   ptr = ptr(w);
+   segvars = segvars(w);
+
+   stats = h_new();
+   for(i = 1; i <= numberof(ptr); i++) {
+      h_set, stats, segvars(i), gather_data_stats(*ptr(i));
+   }
+   json = yorick2json(stats, compact=1);
+   tkcmd, swrite(format="launch_datastats_stats {%s}", json);
+}
+
+func tk_dsw_launch_days(varname) {
+   dptr = split_by_day(symbol_def(varname));
+   segvars = swrite(format="%s_day%d", varname, indgen(numberof(dptr)));
+   stats = h_new();
+   for(i = 1; i <= numberof(dptr); i++) {
+      h_set, stats, segvars(i), gather_data_stats(*dptr(i));
+   }
+   json = yorick2json(stats, compact=1);
+   tkcmd, swrite(format="launch_datastats_stats {%s}", json);
+}
+
+func tk_dsw_launch_days_digitizer(varname) {
+   ptr = subsplit_by_digitizer(split_by_day(symbol_def(varname)));
+
+   days = transpose(array(indgen(numberof(ptr)/2), 2))(*);
+   digs = array([1,2], numberof(ptr)/2)(*);
+   segvars = swrite(format="%s_day%d_d%d", varname, unref(days), unref(digs));
+
+   w = where(ptr);
+   if(!numberof(ptr)) {
+      // Shouldn't happen...
+      write, "Aborting! No data found?";
+   }
+   ptr = ptr(w);
+   segvars = segvars(w);
+
+   stats = h_new();
+   for(i = 1; i <= numberof(ptr); i++) {
+      h_set, stats, segvars(i), gather_data_stats(*ptr(i));
+   }
+   json = yorick2json(stats, compact=1);
+   tkcmd, swrite(format="launch_datastats_stats {%s}", json);
+}
+
+func tk_dsw_launch_stats(vars) {
+   vars = strsplit(vars, " ");
+   stats = h_new();
+   for(i = 1; i <= numberof(vars); i++) {
+      data = symbol_def(vars(i));
+      h_set, stats, vars(i), gather_data_stats(data);
+   }
+   json = yorick2json(stats, compact=1);
+   tkcmd, swrite(format="launch_datastats_stats {%s}", json);
 }
 
 func tk_dsw_get_data(data, type, var, sod_field) {
@@ -612,12 +648,6 @@ func tk_dsw_get_data(data, type, var, sod_field) {
 // tk_dsw_get_data(data, "dmars", "tans");
 // tk_dsw_get_data(data, "pnav", "pnav");
    extern tans, pnav;
-
-   logid = logger_id();
-
-   logger, "debug", logid + swrite(
-      format=" Entering tk_dsw_get_data(%s(%d), \"%s\", \"%s\", \"%s\")",
-      nameof(structof(data)), numberof(data), type, var, sod_field);
 
    segment_ptrs = split_by_fltline(unref(data));
 
@@ -627,49 +657,42 @@ func tk_dsw_get_data(data, type, var, sod_field) {
    working = [];
    working_soe = [];
    days = missionday_list();
+   for(i = 1; i <= numberof(segment_ptrs); i++) {
+      temp = *segment_ptrs(i);
+      day = missiondata_soe_query(temp.soe(1));
+      if(!strlen(day))
+         continue;
+      missiondata_load, type, day=day;
+      if(!numberof(symbol_def(var)))
+         continue;
+      ex_data = symbol_def(var);
+      soe_offset = date2soe(mission_get("date", day=day))(1);
+      vsod = get_member(ex_data, sod_field);
 
-   logger, "debug", logid + swrite(format=" %d segments, %d days",
-      numberof(segment_ptrs), numberof(days));
-   for(i = 1; i <= numberof(days); i++) {
-      if(mission_has(type + " file", day=days(i))) {
-         missiondata_load, type, day=days(i);
-         if(! numberof(symbol_def(var)))
-            continue;
-         for(j = 1; j <= numberof(segment_ptrs); j++) {
-            temp = *segment_ptrs(j);
+      dmin = temp.soe(min) - soe_offset;
+      dmax = temp.soe(max) - soe_offset;
 
-            ex_data = symbol_def(var);
-            vsod = get_member(ex_data, sod_field);
-            vsoe = date2soe(mission_get("date", day=days(i)), vsod);
+      if(dmax < 0)
+         continue;
 
-            dmin = temp.soe(min);
-            dmax = temp.soe(max);
+      vmin = binary_search(vsod, dmin);
+      if(vsod(vmin) < dmin)
+         vmin++;
 
-            w = where(dmin <= vsoe & vsoe <= dmax);
+      vmax = binary_search(vsod, dmax);
+      if(vsod(vmax) > dmax)
+         vmax--;
 
-            //get_member(ex_data, sod_field) += soe_base;
-
-            if(numberof(w)) {
-               logger, "debug", logid + swrite(format=" seg %d day %s: found %d",
-                  j, days(i), numberof(w));
-               grow, working, ex_data(w);
-               grow, working_soe, vsoe(w);
-            }
-         }
+      if(vmin <= vmax) {
+         grow, working, ex_data(vmin:vmax);
+         grow, working_soe, vsod(vmin:vmax) + soe_offset;
       }
    }
    missiondata_unwrap, env_backup;
 
    if(numberof(working)) {
       idx = set_remove_duplicates(int((working_soe-working_soe(min))*200), idx=1);
-      logger, "debug", logid + swrite(format=" Reducing working from %d to %d",
-         numberof(working), numberof(idx));
       working = working(idx);
-      logger, "debug", logid + swrite(format=" Returning %s(%d)",
-         nameof(structof(working)), numberof(working));
-   } else {
-      logger, "debug", logid + " Returning []";
    }
-   logger, "debug", logid + " Leaving tk_dsw_get_data";
    return working;
 }

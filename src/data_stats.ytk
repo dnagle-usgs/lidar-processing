@@ -10,14 +10,12 @@ if {[info commands DataStatsWindow] eq ""} {
    itcl::class DataStatsWindow {
       inherit iwidgets::Shell
 
-      constructor {args} {}
+      constructor {data args} {}
       destructor {}
 
       # All options should be treated as read-only after creation
       # Variable containing list of valid windows
       itk_option define -maxwin maxWin MaxWin 64
-      # Variable containing list of variables to populate interface with
-      itk_option define -segmentvariables dataVariables VariableList ""
 
       method update_highlight {} {}
       method get_stats {} {}
@@ -40,19 +38,21 @@ if {[info commands DataStatsWindow] eq ""} {
          "GPS RMS"   xrms \
          Velocity    velocity \
       ]
-      variable _stat_data [dict create]
+      variable _stat_data [list]
       variable _count
    }
 }
 
-itcl::body DataStatsWindow::constructor {args} {
+itcl::body DataStatsWindow::constructor {data args} {
    wm protocol $itk_component(hull) WM_DELETE_WINDOW \
       [itcl::code itcl::delete object $this]
    eval itk_initialize $args
 
-   set logid [logger_id]
-   logger debug "$logid Entering DataStatsWindow::constructor $args"
-   logger debug "$logid this = $this"
+   set data [::json::json2dict $data]
+   foreach key [lsort -dictionary [dict keys $data]] {
+      lappend _stat_data $key
+      lappend _stat_data [dict get $data $key]
+   }
 
    #wm resizable $itk_component(hull) 1 0
    #wm minsize $itk_component(hull) 460 100
@@ -90,9 +90,9 @@ itcl::body DataStatsWindow::constructor {args} {
 
    grid columnconfigure $f {3 4 5 6 7 8 9} -uniform cols
 
-   set _count [llength $itk_option(-segmentvariables)]
+   set _count [expr {[llength $_stat_data]/2}]
    set idx 0
-   foreach segment $itk_option(-segmentvariables) {
+   foreach {segment -} $_stat_data {
       incr idx
 
       set _segment($idx,win) 10
@@ -131,7 +131,6 @@ itcl::body DataStatsWindow::constructor {args} {
 
    unset idx
    grid columnconfigure $f 1 -weight 1
-   #-minsize 80
 
    grid $w.fraHead -sticky wens
    grid $w.fraVariables -sticky wens
@@ -140,10 +139,6 @@ itcl::body DataStatsWindow::constructor {args} {
    bind $w <Enter> [itcl::code $this update_highlight]
    bind $w <Leave> [itcl::code $this update_highlight]
    bind $w <Motion> [itcl::code $this update_highlight]
-
-   get_stats
-
-   logger debug "$logid Exiting DataStatsWindow::constructor"
 }
 
 itcl::body DataStatsWindow::update_highlight {} {
@@ -183,24 +178,6 @@ itcl::body DataStatsWindow::query {} {
    return $_stat_data
 }
 
-itcl::body DataStatsWindow::get_stats {} {
-   set logid [logger_id]
-   logger debug "$logid Entering DataStatsWindow::get_stats"
-   logger debug "$logid this = $this"
-
-   foreach var $itk_option(-segmentvariables) {
-      logger debug "$logid Asking yorick to send $var"
-      ycmd tk_dsw_send_stats \
-         [list [ystr [itcl::scope $this]] [ystr $var] $var]
-   }
-
-   logger debug "$logid Exiting DataStatsWindow::get_stats"
-}
-
-itcl::body DataStatsWindow::set_stats {var json} {
-   dict set _stat_data $var [::json::json2dict $json]
-}
-
 itcl::body DataStatsWindow::refresh_fields {} {
    set statistic [dict get $_stat_mapping $_statistic]
    if {$statistic eq ""} {
@@ -232,11 +209,27 @@ itcl::body DataStatsWindow::plot_segment {idx} {
       [list [ystr $var] $var [ystr $type] $win]
 }
 
-proc launch_datastatswindow {variables args} {
+proc launch_datastats_stats {data args} {
    set dsw [eval \
-      [list DataStatsWindow .#auto \
-         -maxwin 64 \
-         -segmentvariables $variables] \
+      [list DataStatsWindow .#auto $data \
+         -maxwin 64] \
       $args]
    $dsw activate
+}
+
+proc launch_datastatswindow {variables args} {
+   exp_send "tk_dsw_launch_stats, \"$variables\";\r"
+   expect "> "
+}
+
+proc segment_stat_launcher {method {yvar -}} {
+   if {$yvar eq "-"} {
+      set yvar $::pro_var
+   }
+   set valid [list fltlines fltlines_digitizer days days_digitizer]
+   if {[lsearch $valid $method] == -1} {
+      error "Invalid method for segment_stat_launcher: $method"
+   }
+   exp_send "tk_dsw_launch_$method, \"$yvar\";\r"
+   expect "> "
 }
