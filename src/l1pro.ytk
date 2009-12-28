@@ -1003,6 +1003,18 @@ if {![winfo exists .l1wid]} {
   .l1wid.mb.util.seg add command -label "Manual selection" \
     -command select_data_segments
 
+  menu .l1wid.mb.util.stat
+  .l1wid.mb.util add cascade -label "Launch statistics by..." \
+    -menu .l1wid.mb.util.stat
+  .l1wid.mb.util.stat add command -label "Flightline" \
+    -command [list segment_stat_launcher fltlines]
+  .l1wid.mb.util.stat add command -label "Flightline and digitizer" \
+    -command [list segment_stat_launcher fltlines_digitizer]
+  .l1wid.mb.util.stat add command -label "Day" \
+    -command [list segment_stat_launcher days]
+  .l1wid.mb.util.stat add command -label "Day and digitizer" \
+    -command [list segment_stat_launcher days_digitizer]
+
   .l1wid.mb.util add command -label "Open Fit Gaussian GUI" \
     -command open_fit_gaussian_gui
 
