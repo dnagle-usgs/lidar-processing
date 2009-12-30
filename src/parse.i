@@ -425,13 +425,15 @@ func parse_datum(text) {
             *_n88_g96_* *_n88_g96.* n88_g96_*
             *_n88_g99_* *_n88_g99.* n88_g99_*
             *_n88_g03_* *_n88_g03.* n88_g03_*
+            *_n88_g03dep_* *_n88_g03dep.* n88_g03dep_*
             *_n88_g06_* *_n88_g06.* n88_g06_*
             *_n88_g09_* *_n88_g09.* n88_g09_*
 
     Four pieces of information will be returned: [datum, geoid, prefix, suffix]
     These pieces are:
         datum: The datum string, one of "w84", "n83", or "n88".
-        geoid: The geoid string, one of "96", "99", "03", "06", or "09".
+        geoid: The geoid string, one of "96", "99", "03", "03dep", "06", or
+            "09". ("03dep" is for the deprecated version of GEOID03.)
         prefix: Anything in "text" that came before the datum/geoid.
         suffix: Anything in "text" that came after the datum/geoid.
 
@@ -450,7 +452,7 @@ func parse_datum(text) {
 
     part1 = part2 = part3 = datum = geoid = [];
     regmatch, "(^.*?(^|_))(w84|n83|n88)((\.|_).*$)", text, , part1, , datum, part2;
-    regmatch, "^_g(96|99|03|06|09)((\.|_).*$)", part2, , geoid, part3;
+    regmatch, "^_g(96|99|03dep|03|06|09)((\.|_).*$)", part2, , geoid, part3;
 
     w = where(datum != "n88");
     if(numberof(w)) {
