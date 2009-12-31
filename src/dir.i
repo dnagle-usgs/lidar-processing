@@ -135,6 +135,8 @@ func file_join(..) {
             cleaned = ["/"];
          } else if(part == ".") {
             // . doesn't change the path, so we can throw it out
+         } else if(part == string(0)) {
+            // treat a nil string as if it weren't there
          } else if (part == "") {
             // the empty string also can be discarded
          } else if(part == "..") {
