@@ -304,3 +304,54 @@ Output:
    grow, findata, wdata;
    return findata;
 }
+
+func filter_bounded_elv(eaarl, lbound=, ubound=, mode=, idx=) {
+/* DOCUMENT filter_bounded_elv(eaarl, lbound=, ubound=, mode=, idx=)
+   Filters eaarl data by restricting it to the given elevation bounds.
+
+   Parameters:
+      eaarl: The data to filter, must be an ALPS data structure.
+
+   Options:
+      lbound= The lower bound to apply, in meters. By default, no bound is
+         applied.
+      ubound= The upper bound to apply, in meters. By default, no bound is
+         applied.
+      mode= The data mode to use. Possible settings:
+            mode="fs"      First surface (default)
+            mode="be"      Bare earth
+            mode="ba"      Bathy
+      idx= By default, the function returns the filtered data. Using idx=1 will
+         force it to return the index list into the data instead.
+            idx=0    Return filtered data (default)
+            idx=1    Return index into data
+
+   Note that if both lbound= and ubound= are omitted, then this function is
+   effectively a no-op.
+*/
+   default, mode, "fs";
+   default, idx, 0;
+
+   if(mode == "fs")
+      z = eaarl.elevation;
+   else if(mode == "ba")
+      z = eaarl.elevation + eaarl.depth;
+   else if(mode == "be")
+      z = eaarl.lelv;
+
+   keep = indgen(numberof(z));
+
+   if(!is_void(lbound))
+      keep = keep(where(z(keep) >= long(lbound * 100)));
+
+   if(is_void(keep))
+      return [];
+
+   if(!is_void(ubound))
+      keep = keep(where(z(keep) <= long(ubound * 100)));
+
+   if(is_void(keep))
+      return [];
+
+   return idx ? keep : eaarl(keep);
+}
