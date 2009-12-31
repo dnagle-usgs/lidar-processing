@@ -585,3 +585,50 @@ func soe2iso8601(soe) {
    return swrite(format="%04d-%02d-%02d %02d:%02d:%02d",
       ymd(..,1), ymd(..,2), ymd(..,3), time(..,4), time(..,5), time(..,6));
 }
+
+func seconds2prettytime(seconds) {
+/* DOCUMENT seconds2prettytime(seconds)
+   Converts a duration in seconds to a pretty-printed text representation of
+   the same duration.
+
+   Examples:
+      > seconds2prettytime(0)
+      "0 seconds"
+      > seconds2prettytime(1)
+      "1 second"
+      > seconds2prettytime(100)
+      "1 minute, 40 seconds"
+      > seconds2prettytime(3600)
+      "1 hour"
+      > seconds2prettytime(3000000)
+      "4 weeks, 6 days, 17 hours, 20 minutes"
+      > seconds2prettytime([1,2,3,4])
+      ["1 second","2 seconds","3 seconds","4 seconds"]
+      > seconds2prettytime([[1,2],[3,4]])
+      [["1 second","2 seconds"],["3 seconds","4 seconds"]]
+      > seconds2prettytime(1.234)
+      "1 second"
+*/
+// Original David Nagle 2009-12-29
+   dims = dimsof(seconds);
+   seconds = reform(long(seconds), [1, numberof(seconds)]);
+   s = seconds % 60;
+   m = (seconds / 60) % 60;
+   h = (seconds / 3600) % 24;
+   d = (seconds / 86400) % 7;
+   w = seconds / 604800;
+   vals = [w,d,h,m,s];
+   names = array(["week","day","hour", "minute", "second"], numberof(seconds));
+   names = transpose(names);
+   w = where(vals != 1);
+   if(numberof(w))
+      names(w) += "s";
+   pretty = swrite(format="#%d %s, ", vals, names)(,sum);
+   pretty = regsub("#0 [^#]*, ", pretty, "", all=1);
+   pretty = regsub("#", pretty, "", all=1);
+   pretty = regsub(", $", pretty, "");
+   w = where(strlen(pretty) == 0);
+   if(numberof(w))
+      pretty(w) = "0 seconds";
+   return dims(0) ? reform(pretty, dims) : pretty(1);
+}
