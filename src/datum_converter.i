@@ -349,15 +349,11 @@ func datum_convert_guess_geoid(w84, n88, zone=) {
    // If they passed filenames, then load the data
    if(is_string(w84)) {
       default, zone, tile2uz(file_tail(w84));
-      f = openb(w84);
-      w84 = get_member(f, f.vname);
-      close, f;
+      w84 = pbd_load(w84);
    }
    if(is_string(n88)) {
       default, zone, tile2uz(file_tail(n88));
-      f = openb(n88);
-      n88 = get_member(f, f.vname);
-      close, f;
+      n88 = pbd_load(n88);
    }
 
    if(numberof(w84) != numberof(n88)) {
