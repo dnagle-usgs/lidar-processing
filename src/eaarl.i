@@ -88,6 +88,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "rlw.i";
    require, "sel_file.i";
    require, "set.i";
+   require, "strutil.i";
    require, "sf.i";
    require, "transect.i";
    require, "wgs842nad83.i";
