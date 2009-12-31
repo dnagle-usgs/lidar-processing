@@ -2,7 +2,7 @@
 require, "l1pro.i";
 
 func batch_datum_convert(indir, files=, searchstr=, zone=, outdir=, update=,
-excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=) {
+excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=, clean=) {
 /* DOCUMENT batch_datum_convert, indir, files=, searchstr=, zone=, outdir=,
    update=, excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=
 
@@ -36,6 +36,9 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=) {
             force=1   - Always convert, even when issues are detected. This may
                         result in incorrect conversions!
          Use of force=1 can cause major issues. Use with caution!!!
+      clean= Specifies whether to use test_and_clean on the data. Settings:
+            clean=0  - Do not clean data.
+            clean=1  - Clean data. (default)
 
    The following additional options are more extensively documented in
    datum_convert_data, but have special additional properties here:
@@ -74,6 +77,7 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=) {
    default, dst_datum, "n88";
    default, dst_geoid, "09";
    default, force, 0;
+   default, clean, 1;
 
    if(!is_void(src_geoid))
       src_geoid = regsub("^g", src_geoid, "");
@@ -167,6 +171,34 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=) {
          grow, fatal, "Unable to detect file zone.";
       }
 
+      // If we aren't yet dead, then try to load the data to check for more
+      // errors.
+      vname = data = err = [];
+      if(!numberof(fatal) && (force || !numberof(messages))) {
+         data = pbd_load(files(i), err, vname);
+         if(is_void(data)) {
+            grow, fatal, "Unable to load file: " + err;
+         }
+      }
+
+      // If we received a vname, datum-check it
+      if(!is_void(vname)) {
+      // Check variable name for datum
+         var_datum = var_geoid = part1 = part2 = [];
+         assign, parse_datum(vname), var_datum, var_geoid, part1, part2;
+         if(strlen(var_datum)) {
+            // If we have a datum... it should match the file's!
+            if(fn_datum == var_datum) {
+               // Update the vname to show its new datum...
+               vname = part1 + dst_datum + part2;
+            } else {
+               grow, warnings, "Filename datum does not match variable name datum.";
+            }
+         } else {
+            vname = vname + "_" + dst_datum;
+         }
+      }
+
       // If we encountered problems that prevent us from continue, then skip
       // regardless of the force= setting.
       if(numberof(fatal)) {
@@ -198,10 +230,6 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=) {
 
       // Now... we can actually convert the data!
 
-      // Load it up
-      vname = err = "";
-      data = pbd_load(files(i), err, vname);
-
       if(strlen(err)) {
          write, format=" Error encountered loading file: %s\n", err;
          continue;
@@ -210,7 +238,8 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=) {
          continue;
       }
 
-      data = test_and_clean(unref(data));
+      if(clean)
+         data = test_and_clean(unref(data));
       if(is_void(data)) {
          write, " WARNING!!! test_and_clean eliminated all the data!!!";
          write, " This isn't supposed to happen!!! Skipping...";
@@ -226,10 +255,6 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=) {
          continue;
       }
 
-      f = createb(fn_out);
-      add_variable, f, -1, vname, structof(data), dimsof(data);
-      get_member(f, vname) = unref(data);
-      save, f, vname;
-      close, f;
+      pbd_save, fn_out, vname, data;
    }
 }
