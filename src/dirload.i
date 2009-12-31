@@ -92,8 +92,11 @@ filter=, verbose=) {
    }
    temp = [];
 
-   if(!is_struct(eaarl_struct))
-      error, "Unable to determine struct for data.";
+   if(!is_struct(eaarl_struct)) {
+      if(verbose)
+         write, "Unable to determine struct for data. Aborting.";
+      return [];
+   }
 
    // data - the output data, as we build it up
    // start with an array of size 10MB
@@ -211,12 +214,7 @@ func __dirload_write(outfile, outvname, ptr) {
       else outvname = "merged";
    }
 
-   f = createb(outfile);
-   add_variable, f, -1, outvname, structof(*ptr), dimsof(*ptr);
-   get_member(f, outvname) = *ptr;
-   add_variable, f, -1, "vname", structof(outvname), dimsof(outvname);
-   f.vname = outvname;
-   close, f;
+   pbd_save, outfile, outvname, *ptr;
 }
 
 /* FILTERS */
