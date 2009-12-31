@@ -85,7 +85,7 @@ pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygri
 
   if (datamode eq 2) then begin
      c1 = 100/cell
-     c2 = 2000/cell + 100/cell 
+     c2 = 2099/cell
      zgrid = zgrid(c1:c2, c1:c2)
      xgrid = xgrid(c1:c2)
      ygrid = ygrid(c1:c2)
@@ -93,7 +93,7 @@ pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygri
 
   if (datamode eq 3) then begin
      c1 = 100/cell
-     c2 = 10000/cell + 100/cell
+     c2 = 10099/cell
      zgrid = zgrid(c1:c2, c1:c2)
      xgrid = xgrid(c1:c2)
      ygrid = ygrid(c1:c2)
