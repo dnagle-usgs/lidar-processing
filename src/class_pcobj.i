@@ -3,7 +3,8 @@ require, "eaarl.i";
 
 // scratch stores the values of scratch and tmp so that we can restore them
 // when we're done, leaving things as we found them.
-scratch = save(scratch, tmp, _grow, _save);
+scratch = save(scratch, tmp, pcobj_summary, pcobj_index, pcobj_grow, pcobj_x,
+   pcobj_y, pcobj_z, pcobj_xyz, pcobj_save);
 // tmp stores a list of the methods that will go into pcobj. It stores their
 // current values up-front, then restores them at the end while swapping the
 // new function definitions into pcobj.
@@ -152,7 +153,7 @@ func pcobj(base, obj) {
    return obj;
 }
 
-func summary(util) {
+func pcobj_summary(util) {
    extern current_cs;
    local head, x, y;
    write, "Summary for point cloud object:";
@@ -183,8 +184,9 @@ func summary(util) {
    write, format=" %s\n", current_cs;
    display_coord_bounds, x, y, current_cs;
 }
+summary = pcobj_summary;
 
-func _grow(obj, headers=) {
+func pcobj_grow(obj, headers=) {
    default, headers, "merge";
    res = am_subroutine() ? use() : obj_copy(use(), recurse=1);
 
@@ -222,9 +224,9 @@ func _grow(obj, headers=) {
    pcobj, res;
    return res;
 }
-grow = _grow;
+grow = pcobj_grow;
 
-func index(idx) {
+func pcobj_index(idx) {
    res = am_subroutine() ? use() : obj_copy(use(), recurse=1);
    if(is_string(idx))
       idx = use(class, where, idx);
@@ -232,8 +234,9 @@ func index(idx) {
    pcobj, res;
    return res;
 }
+index = pcobj_index;
 
-func xyz(working, idx) {
+func pcobj_xyz(working, idx) {
    extern current_cs;
    if(working.cs != current_cs) {
       save, working, cs=current_cs,
@@ -243,18 +246,19 @@ func xyz(working, idx) {
       idx = use(class, where, idx);
    return working.xyz(idx,);
 }
-xyz = closure(xyz, save(cs="0", xyz=[]));
+xyz = closure(pcobj_xyz, save(cs="0", xyz=[]));
 
-func x(idx) { return use(xyz, idx)(,1); }
-func y(idx) { return use(xyz, idx)(,2); }
-func z(idx) { return use(xyz, idx)(,3); }
+func pcobj_x(idx) { return use(xyz, idx)(,1); }
+func pcobj_y(idx) { return use(xyz, idx)(,2); }
+func pcobj_z(idx) { return use(xyz, idx)(,3); }
+x = pcobj_x; y = pcobj_y; z = pcobj_z;
 
-func _save(fn) {
+func pcobj_save(fn) {
    obj = obj_copy_data(use());
    save, obj, class=obj(class, serialize);
    obj2pbd, obj, createb(fn, i86_primitives);
 }
-save = _save;
+save = pcobj_save;
 
 help = closure(help, pcobj);
 

@@ -2,7 +2,9 @@
 
 // To avoid name collisions breaking help, some functions get temporarily named
 // with an underscore prefix.
-scratch = save(scratch, tmp, _remove, _where, _grow);
+scratch = save(scratch, tmp, clsobj_set, clsobj_apply, clsobj_remove,
+   clsobj_drop, clsobj_classes, clsobj_query, clsobj_where, clsobj_grow,
+   clsobj_serialize);
 tmp = save(set, apply, remove, drop, classes, query, where, grow, serialize,
    help);
 
@@ -157,7 +159,7 @@ func clsobj(base, count) {
    return obj;
 }
 
-func serialize(nil) {
+func clsobj_serialize(nil) {
    use, count, data;
    classes = use(classes,);
    numclasses = numberof(classes);
@@ -181,8 +183,9 @@ func serialize(nil) {
 
    return grow(classes, char(0), bits(*));
 }
+serialize = clsobj_serialize;
 
-func set(class, vals) {
+func clsobj_set(class, vals) {
    if(!regmatch("^[a-zA-Z_][a-zA-Z_0-9]*$", class))
       error, "invalid classification name: " + class;
    use, count, data;
@@ -193,8 +196,9 @@ func set(class, vals) {
       error, "invalid number of vals";
    save, data, noop(class), vals;
 }
+set = clsobj_set;
 
-func apply(class, idx) {
+func clsobj_apply(class, idx) {
    if(!regmatch("^[a-zA-Z_][a-zA-Z_0-9]*$", class))
       error, "invalid classification name: " + class;
    use, count, data;
@@ -202,8 +206,9 @@ func apply(class, idx) {
    val(idx) = 1;
    save, data, noop(class), val;
 }
+apply = clsobj_apply;
 
-func _remove(class, idx) {
+func clsobj_remove(class, idx) {
    if(!regmatch("^[a-zA-Z_][a-zA-Z_0-9]*$", class))
       error, "invalid classification name: " + class;
    use, count, data;
@@ -211,9 +216,9 @@ func _remove(class, idx) {
    val(idx) = 0;
    save, data, noop(class), val;
 }
-remove = _remove;
+remove = clsobj_remove;
 
-func drop(class) {
+func clsobj_drop(class) {
    if(!regmatch("^[a-zA-Z_][a-zA-Z_0-9]*$", class))
       error, "invalid classification name: " + class;
    use, data;
@@ -223,13 +228,15 @@ func drop(class) {
    w = where(keys != class);
    data = numberof(w) ? data(noop(w)) : save();
 }
+drop = clsobj_drop;
 
-func classes(nil) {
+func clsobj_classes(nil) {
    use, data;
    return data(*,);
 }
+classes = clsobj_classes;
 
-func query(expr) {
+func clsobj_query(expr) {
    use, count, data;
    strtrim, expr;
 
@@ -249,13 +256,14 @@ func query(expr) {
    return math_eval_infix(expr, operators=["!", "==", "!=", "&", "~", "|"],
       variables=data, missing=array(char, count), accept_numbers=0);
 }
+query = clsobj_query;
 
-func _where(expr) {
+func clsobj_where(expr) {
    return where(use(query, expr));
 }
-where = _where;
+where = clsobj_where;
 
-func _grow(obj) {
+func clsobj_grow(obj) {
    use, data, count;
 
    thiscount = count;
@@ -295,7 +303,7 @@ func _grow(obj) {
       save, data, noop(curclass), grow(this, that);
    }
 }
-grow = _grow;
+grow = clsobj_grow;
 
 help = closure(help, clsobj);
 

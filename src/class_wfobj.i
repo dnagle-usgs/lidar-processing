@@ -3,7 +3,9 @@ require, "eaarl.i";
 
 // To avoid name collisions breaking help, some functions get temporarily named
 // with an underscore prefix.
-scratch = save(scratch, tmp, xyzwrap, _grow, _save);
+scratch = save(scratch, tmp, wfobj_xyzwrap, wfobj_summary, wfobj_index,
+   wfobj_grow, wfobj_x0, wfobj_y0, wfobj_z0, wfobj_xyz0, wfobj_x1, wfobj_y1,
+   wfobj_z1, wfobj_xyz1, wfobj_save);
 tmp = save(help, summary, index, grow, x0, y0, z0, xyz0, x1, y1, z1, xyz1,
    save);
 
@@ -184,7 +186,7 @@ func wfobj(base, obj) {
    return obj;
 }
 
-func summary {
+func wfobj_summary {
    extern current_cs;
    local head, x, y;
    write, "Summary for waveform object:";
@@ -216,8 +218,9 @@ func summary {
    write, format=" %s\n", current_cs;
    display_coord_bounds, x, y, current_cs;
 }
+summary = wfobj_summary;
 
-func _grow(obj, headers=) {
+func wfobj_grow(obj, headers=) {
    default, headers, "merge";
    res = am_subroutine() ? use() : obj_copy(use());
 
@@ -257,12 +260,12 @@ func _grow(obj, headers=) {
    wfobj, res;
    return res;
 }
-grow = _grow;
+grow = wfobj_grow;
 
 // xyz0 and xyz1 both use the same logic, and they both benefit from caching
 // working data. This is accomplished by using a closure to wrap around the
 // common functionality and track their working data.
-func xyzwrap(working, idx) {
+func wfobj_xyzwrap(working, idx) {
    extern current_cs;
    if(working.cs != current_cs) {
       save, working, cs=current_cs,
@@ -271,18 +274,20 @@ func xyzwrap(working, idx) {
    return working.xyz(idx,);
 }
 
-xyz0 = closure(xyzwrap, save(var="raw_xyz0", cs="-", xyz=[]));
-xyz1 = closure(xyzwrap, save(var="raw_xyz1", cs="-", xyz=[]));
+xyz0 = closure(wfobj_xyzwrap, save(var="raw_xyz0", cs="-", xyz=[]));
+xyz1 = closure(wfobj_xyzwrap, save(var="raw_xyz1", cs="-", xyz=[]));
 
-func x0(idx) { return use(xyz0, idx)(,1); }
-func y0(idx) { return use(xyz0, idx)(,2); }
-func z0(idx) { return use(xyz0, idx)(,3); }
+func wfobj_x0(idx) { return use(xyz0, idx)(,1); }
+func wfobj_y0(idx) { return use(xyz0, idx)(,2); }
+func wfobj_z0(idx) { return use(xyz0, idx)(,3); }
+x0 = wfobj_x0; y0 = wfobj_y0; z0 = wfobj_z0;
 
-func x1(idx) { return use(xyz1, idx)(,1); }
-func y1(idx) { return use(xyz1, idx)(,2); }
-func z1(idx) { return use(xyz1, idx)(,3); }
+func wfobj_x1(idx) { return use(xyz1, idx)(,1); }
+func wfobj_y1(idx) { return use(xyz1, idx)(,2); }
+func wfobj_z1(idx) { return use(xyz1, idx)(,3); }
+x1 = wfobj_x1; y1 = wfobj_y1; z1 = wfobj_z1;
 
-func _save(fn) {
+func wfobj_save(fn) {
    obj = obj_copy_data(use());
 
    // saving/loading a large array of small pointers is much more expensive
@@ -310,14 +315,15 @@ func _save(fn) {
 
    obj2pbd, obj, createb(fn, i86_primitives);
 }
-save = _save;
+save = wfobj_save;
 
-func index(idx) {
+func wfobj_index(idx) {
    res = am_subroutine() ? use() : obj_copy(use());
    obj_index, res, idx, size="count";
    wfobj, res;
    return res;
 }
+index = wfobj_index;
 
 help = closure(help, wfobj);
 

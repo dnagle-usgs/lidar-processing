@@ -1,6 +1,7 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 
-scratch = save(scratch, tmp);
+scratch = save(scratch, tmp, deque_push, deque_pop, deque_unshift, deque_shift,
+   deque_first, deque_last, deque_count, deque_help);
 tmp = save(data, push, pop, unshift, shift, first, last, count, help);
 
 func deque(base, data) {
@@ -68,22 +69,24 @@ func deque(base, data) {
    return obj;
 }
 
-func push(val, ..) {
+func deque_push(val, ..) {
    use, data;
    save, data, string(0), val;
    while(more_args())
       save, data, string(0), next_arg();
    return data(*);
 }
+push = deque_push;
 
-func pop(nil) {
+func deque_pop(nil) {
    use, data;
    result = data(*) ? data(0) : [];
    data = (data(*) > 1 ? data(:-1) : save());
    return result;
 }
+pop = deque_pop;
 
-func unshift(val, ..) {
+func deque_unshift(val, ..) {
    use, data;
    count = data(*);
    save, data, string(0), val;
@@ -92,28 +95,33 @@ func unshift(val, ..) {
    data = data(long(roll(indgen(data(*)), data(*)-count)));
    return data(*);
 }
+unshift = deque_unshift;
 
-func shift(nil) {
+func deque_shift(nil) {
    use, data;
    result = data(*) ? data(1) : [];
    data = (data(*) > 1 ? data(2:) : save());
    return result;
 }
+shift = deque_shift;
 
-func first(nil) {
+func deque_first(nil) {
    use, data;
    return data(*) ? data(1) : [];
 }
+first = deque_first;
 
-func last(nil) {
+func deque_last(nil) {
    use, data;
    return data(*) ? data(0) : [];
 }
+last = deque_last;
 
-func count(nil) {
+func deque_count(nil) {
    use, data;
    return data(*);
 }
+count = deque_count;
 
 help = closure(help, deque);
 
