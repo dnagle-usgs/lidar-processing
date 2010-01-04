@@ -65,7 +65,7 @@ func select_region(data, win=, plot=) {
 
 func test_and_clean(data, verbose=) {
    if(is_void(data)) {
-      tk_messageBox, "No data found in the variable you selected. Please select another one.", "ok", "";
+      tk_messageBox, "No data found in the variable you selected. Please select another one.", "ok", title="";
       return [];
    }
 
