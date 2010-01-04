@@ -1,3 +1,4 @@
+// vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 require, "eaarl.i";
 
 func select_region(data, win=, plot=) {
@@ -354,4 +355,73 @@ func filter_bounded_elv(eaarl, lbound=, ubound=, mode=, idx=) {
       return [];
 
    return idx ? keep : eaarl(keep);
+}
+
+func extract_corresponding_data(data, ref, soefudge=) {
+/* DOCUMENT extracted = extract_corresponding_data(data, ref, soefudge=)
+
+   This extracts points from "data" that exist in "ref".
+
+   An example use of this function:
+
+      We have a variable named "old_mf" that contains manually filtered VEG__
+      data that had been processed using rapid trajectory pnav files. We have
+      another variable "new" that contains data for the same region that was
+      processed using precision trajectory pnav files, but has not yet been
+      filtered. If we do this:
+
+         new_mf = extract_corresponding_data(new, old_mf);
+
+      Then new_mf will contain point data from new, but will only contain those
+      points that were present in old_mf.
+
+   Another example:
+
+      We have a variable "fs" that contains first surface data and a variable
+      "be" that contains bare earth data. If we do this:
+
+         be = extract_corresponding_data(be, fs);
+         fs = extract_corresponding_data(fs, be);
+
+      Both variables are now restricted to those points that existed in both
+      original point clouds.
+
+   Parameters:
+      data: The source data. The return result will contain points from this
+         variable.
+      ref: The reference data. Points in "data" will only be kept if they are
+         found in "ref".
+
+   Options:
+      soe_fudge= This is the amount of "fudge" allowed for soe timestamps. The
+         default value is 0.001 seconds. Thus, two timestamps are considered the
+         same if they are within 0.001 seconds of one another. Changing this
+         might be helpful if one of your variables was recreated from XYZ or
+         LAS data and seems to have lost some timestamp resolution.
+*/
+   default, soefudge, 0.001;
+   data = data(msort(data.rn, data.soe));
+   ref = ref(msort(ref.rn, ref.soe));
+   keep = array(char(0), numberof(data));
+
+   i = j = 1;
+   ndata = numberof(data);
+   nref = numberof(ref);
+   while(i <= ndata && j <= nref) {
+      if(data(i).rn < ref(j).rn) {
+         i++;
+      } else if(data(i).rn > ref(j).rn) {
+         j++;
+      } else if(data(i).soe < ref(j).soe - soefudge) {
+         i++;
+      } else if(data(i).soe > ref(j).soe + soefudge) {
+         j++;
+      } else {
+         keep(i) = 1;
+         i++;
+         j++;
+      }
+   }
+
+   return data(where(keep));
 }
