@@ -731,11 +731,8 @@ func write_ascii_xyz(data_arr, opath, ofname, type=, ESRI=, header=, footer=, de
       zone=        : UTM zone number. Only required if latlon=1. Defaults to
                      extern curzone if not supplied.
 
-      pstruc=      : Specifies a structure that suggests how the data should be
-                     cleaned, if cleaning is necessary.
-                        FS - convert FS_ALL to FS using clean_fs
-                        GEO - convert GEOALL to GEO using clean_bathy
-                        VEG__ - convert veg_all_ to veg using clean_veg
+      pstruc=      : Mostly obsolete. If pstruc=CVEG_ALL, then type is forced
+                     to type=6. Otherwise, pstruc= is ignored.
 
    amar nayegandhi 04/25/02
    modified 12/30/02 amar nayegandhi to :
@@ -755,6 +752,7 @@ func write_ascii_xyz(data_arr, opath, ofname, type=, ESRI=, header=, footer=, de
    default, zclip, [-600., 30000.];
    default, latlon, 0;
    default, footer, [];
+   default, pstruc, VEG__;
 
    default, mode, 1;
 
@@ -830,23 +828,18 @@ func write_ascii_xyz(data_arr, opath, ofname, type=, ESRI=, header=, footer=, de
       if (intensity) {
          data_intensity = [];
          if ( (type == 1) || (type == 6 ) ) {
-            if (pstruc == FS) {
+            if(has_member(data_arr, "intensity"))
                data_intensity = data_arr.intensity;
-            }
-            if (pstruc == GEO) {
+            else if(has_member(data_arr, "first_peak"))
                data_intensity = data_arr.first_peak;
-            }
-            if (pstruc == VEG__) {
+            else if (has_member(data_arr, "fint"))
                data_intensity = data_arr.fint;
-            }
          } else if ((type == 2) || (type == 4)) {
-            if (pstruc == GEO) {
+            if(has_member(data_arr, "bottom_peak"))
                data_intensity = data_arr.bottom_peak;
-            }
          } else if ((type == 3) || (type == 5)) {
-            if (pstruc == VEG__) {
+            if(has_member(data_arr, "lint"))
                data_intensity = data_arr.lint;
-            }
          }
          if(is_void(data_intensity))
             intensity = 0;
@@ -1261,8 +1254,30 @@ func read_pointer_yfile(data_ptr, mode=) {
   }
 
 }
-    
-    
+
+func restore_alps_pbd(fn, vname=, skip=) {
+/* DOCUMENT restore_alps_pbd, fn;
+   restore_alps_pbd, fn, vname=, skip=;
+
+   Restores data from the given file. Updates the l1pro GUI as well.
+*/
+   local err, fvname;
+   default, skip, 1;
+   data = pbd_load(fn, err, fvname);
+   if(strlen(err)) {
+      write, format="Unable to load file due to error: %s\n", err;
+   } else {
+      default, vname, fvname;
+      if(skip > 1 && numberof(data))
+         data = data(::skip);
+      symbol_set, vname, data;
+      tkcmd, swrite(format="append_varlist %s", vname);
+      tkcmd, swrite(format="set pro_var %s", vname);
+      set_read_yorick, data;
+      write, format="Loaded variable %s\n", vname;
+   }
+}
+
 func set_read_tk(junk) {
   /* DOCUMENT set_read_tk(vname)
     This function sets the variable name in the Process Eaarl Data gui
