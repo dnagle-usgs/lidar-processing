@@ -92,7 +92,9 @@ itcl::body SegmentedDataWindow::constructor {args} {
    $f configure -padx 4
 
    set mb $f.btnHeadingSelect.mb
-   menubutton $f.btnHeadingSelect -menu $mb -text X -relief raised
+   # \u2713 is Unicode for a checkmark
+   # \u2714 is a heavier version
+   menubutton $f.btnHeadingSelect -menu $mb -text \u2713 -relief raised
    menu $mb
    $mb add command -label "Select all" \
       -command [itcl::code $this selected all]
