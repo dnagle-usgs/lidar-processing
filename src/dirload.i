@@ -352,6 +352,13 @@ func dirload_l1pro_selbbox {
    dirload_l1pro_send, ply, "Rubberband box";
 }
 
+func dirload_l1pro_sellims {
+   win = window();
+   lims = limits();
+   ply = lims([[1,3],[1,4],[2,4],[2,3],[1,3]]);
+   dirload_l1pro_send, ply, swrite(format="Window %d limits", win);
+}
+
 func dirload_l1pro_send(ply, kind) {
 /* DOCUMENT dirload_l1pro_send, ply, kind;
    Intergration function for YTK. Used for l1pro::dirload.

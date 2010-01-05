@@ -33,7 +33,7 @@ proc ::l1pro::dirload::gui {} {
    toplevel $v::top
    wm resizable $v::top 1 0
    wm minsize $v::top 440 1
-   wm title $v::top "Read PBD Data Directory"
+   wm title $v::top "Load ALPS data directory"
    wm protocol $v::top WM_DELETE_WINDOW [list wm withdraw $v::top]
 
    set f $v::top
@@ -55,6 +55,8 @@ proc ::l1pro::dirload::gui {} {
    ttk::label $f.lblVname -text "Output variable:"
    ttk::entry $f.entVname -width 8 \
       -textvariable [namespace which -variable v::vname]
+
+   ttk::frame $f.fraZoneLine
 
    ttk::label $f.lblUnique -text "Unique:"
    ttk::checkbutton $f.chkUnique \
@@ -81,32 +83,40 @@ proc ::l1pro::dirload::gui {} {
       -command [namespace code region_bbox]
    $mb add command -label "Load using polygon" \
       -command [namespace code region_poly]
+   $mb add command -label "Load using current window limits" \
+      -command [namespace code region_lims]
    $mb add command -label "Plot current region (if possible)" \
       -command [namespace code region_plot]
 
    ttk::frame $f.fraButtons
    ttk::button $f.btnLoad -text "Load Data" \
       -command [namespace code load_data]
-   ttk::button $f.btnClose -text "Close" -command [list wm withdraw $v::top]
+   ttk::button $f.btnClose -text "Cancel" -command [list wm withdraw $v::top]
 
-   grid $f.lblPath $f.entPath - - - - $f.btnPath -in $f.f
-   grid $f.lblSearch $f.entSearch - - - - -in $f.f
-   grid $f.lblVname $f.entVname - - - - -in $f.f
-   grid $f.lblZone $f.cboZone $f.lblSkip $f.spnSkip $f.lblUnique $f.chkUnique \
+   grid $f.cboZone $f.lblSkip $f.spnSkip $f.lblUnique $f.chkUnique \
+      -in $f.fraZoneLine -sticky ew
+   grid columnconfigure $f.fraZoneLine {0 2} -weight 1 -uniform 1
+
+   grid $f.lblPath $f.entPath $f.btnPath -in $f.f
+   grid $f.lblSearch $f.entSearch x -in $f.f
+   grid $f.lblVname $f.entVname x -in $f.f
+   grid $f.lblZone $f.fraZoneLine x \
       -in $f.f
-   grid $f.lblRegion $f.entRegion - - - - $f.mnuRegion -in $f.f
-   grid $f.fraButtons - - - - - - -in $f.f
+   grid $f.lblRegion $f.entRegion $f.mnuRegion -in $f.f
+   grid $f.fraButtons - - -in $f.f -pady 2
 
-   pack $f.btnLoad $f.btnClose -in $f.fraButtons -side left
+   grid x $f.btnLoad $f.btnClose x -in $f.fraButtons -sticky e -padx 2
+   grid columnconfigure $f.fraButtons {0 3} -weight 1
 
    grid configure $f.lblPath $f.lblSearch $f.lblVname $f.lblUnique $f.lblSkip \
       $f.lblZone $f.lblRegion -sticky e -padx {2 0}
    grid configure $f.entPath $f.entSearch $f.entVname $f.chkUnique $f.spnSkip \
       $f.cboZone $f.entRegion -sticky ew -padx 2
    grid configure $f.btnPath $f.mnuRegion -sticky news
+   grid configure $f.fraZoneLine $f.fraButtons -sticky ew
 
-   grid rowconfigure $f.f {0 1 2 3 4 5 6} -uniform 1
-   grid columnconfigure $f.f {1 3} -weight 1
+   grid rowconfigure $f.f {0 1 2 3 4 5} -uniform 1
+   grid columnconfigure $f.f 1 -weight 1
 }
 
 proc ::l1pro::dirload::browse_path {} {
@@ -129,6 +139,11 @@ proc ::l1pro::dirload::region_bbox {} {
 
 proc ::l1pro::dirload::region_poly {} {
    exp_send "dirload_l1pro_selpoly;\r"
+   expect "> "
+}
+
+proc ::l1pro::dirload::region_lims {} {
+   exp_send "dirload_l1pro_sellims;\r"
    expect "> "
 }
 
@@ -173,9 +188,10 @@ proc ::l1pro::dirload::load_data {} {
       append arglist ", filter=$filter"
    }
 
+   append_varlist $v::vname
+   set ::pro_var $v::vname
    exp_send "$v::vname = dirload($arglist);\r"
    expect "> "
-   append_varlist $v::vname
 }
 
 ### For binary files
