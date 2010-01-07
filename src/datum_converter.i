@@ -322,7 +322,7 @@ func datum_convert_pnav(pnav=, infile=, export=, outfile=, src_datum=, src_geoid
    return pnav;
 }
 
-func datum_convert_guess_geoid(w84, n88, zone=) {
+func datum_convert_guess_geoid(w84, n88, zone=, geoids=) {
 /* DOCUMENT datum_convert_guess_geoid, w84, n88, zone=
    This function is intended to help you determine which GEOID version was used
    to convert a set of w84 data to n88. It does this by testing all available
@@ -344,8 +344,12 @@ func datum_convert_guess_geoid(w84, n88, zone=) {
    the same structure and same dimensions and must cover the same data points.
 
    This is intended for interactive command line use. It will print its output
-   to the console and will return nothing.
+   to the console. However, it will also return an array of the found geoids
+   that matched.
 */
+   if(is_void(geoids))
+      geoids = navd88_geoids_available();
+
    // If they passed filenames, then load the data
    if(is_string(w84)) {
       default, zone, tile2uz(file_tail(w84));
@@ -357,8 +361,18 @@ func datum_convert_guess_geoid(w84, n88, zone=) {
    }
 
    if(numberof(w84) != numberof(n88)) {
-      write, "The number of points in the two data sources do not match. Aborting.";
-      return;
+      write, "The number of points in the two data sources do not match. Restricting to\n common points.";
+
+      w84 = extract_corresponding_data(unref(w84), n88);
+      if(numberof(w84))
+         n88 = extract_corresponding_data(unref(n88), w84);
+      else
+         n88 = [];
+
+      if(!numberof(n88)) {
+         write, "Restriction resulting in zero points. Aborting.";
+         return;
+      }
    }
 
    defns = h_new(
@@ -397,9 +411,8 @@ func datum_convert_guess_geoid(w84, n88, zone=) {
       write, "No bug detected.\n";
    }
 
-   geoids = navd88_geoids_available();
    maxs = array(-1, numberof(geoids));
-   write, "Beginning comparisons. Please disregard messages any messages that say \"No\n area is in data covered by GEOID.\"."
+   write, "Beginning comparisons. Please disregard messages any messages that say \"No\n data is in area covered by GEOID.\"."
    for(i = 1; i <= numberof(geoids); i++) {
       write, format="\n-- Testing %s --\n", geoids(i);
       // It's not safe to pre-convert to nad83 up above, because that can
@@ -427,4 +440,6 @@ func datum_convert_guess_geoid(w84, n88, zone=) {
       result = (geoids(w) + " ")(sum);
       write, format="\nMultiple matches found: %s\n", result;
    }
+
+   return numberof(w) > 0 ? geoids(w) : [];
 }
