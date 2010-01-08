@@ -58,7 +58,7 @@ if {![winfo exists .l1wid]} {
   set changed_dpi 0
   set avg_surf 1
   set rcf_buf_rgn 0; #Used in proc replace_proc
-  set autoclean_after_process 0
+  set autoclean_after_process 1
 
   set show_pro_gui 1
   set data_file_path ""
@@ -139,10 +139,11 @@ if {![winfo exists .l1wid]} {
   frame .l1wid.bf3
   frame .l1wid.bf4
   frame .l1wid.bf4.1
-  frame .l1wid.bf4.2
   frame .l1wid.bf45 -relief groove -borderwidth 3
   frame .l1wid.bf45.sc -relief groove -borderwidth 3
-  frame .l1wid.bf45.p -relief groove -borderwidth 3
+  ttk::panedwindow .l1wid.bf45.p -orient horizontal
+  .l1wid.bf45.p add [frame .l1wid.bf45.p.left] -weight 1
+  .l1wid.bf45.p add [frame .l1wid.bf45.p.right] -weight 1
   frame .l1wid.bf45.q -relief groove -borderwidth 3
   LabelFrame .l1wid.bf45.r -relief groove -borderwidth 7 -text "FILTER:"
   frame .l1wid.bf5  -relief groove -borderwidth 3
@@ -927,7 +928,7 @@ if {![winfo exists .l1wid]} {
           } else {
             set plottriag ""
           }
-          set datawin [.l1wid.bf45.p.3 getvalue]
+          set datawin $::win_no
           exp_send "$outvar = rcf_triag_filter($rcf_var, buf=$buf, w=$w,\
             no_rcf=$no_rcf, mode=$mode, tw=$tw, interactive=$interactive,\
             tai=$tai, plottriag=$plottriag, plottriagwin=$plottriagwin,\
@@ -1066,11 +1067,6 @@ if {![winfo exists .l1wid]} {
     global curs
     if {$b eq "processing_mode"} {
       set curs [processing_mode]
-      if {$curs == 1} {
-        .l1wid.bf4.2.surf configure -state active
-      } else {
-        .l1wid.bf4.2.surf configure -state disabled
-      }
     }
   }
 
@@ -1090,29 +1086,11 @@ if {![winfo exists .l1wid]} {
       [lindex $l1pro_data(processing_mode) $index]
   }
 
-  ::misc::combobox .l1wid.bf4.1.m -text "Method" \
-    -width 7 -state readonly -values [list Batch Single]
-  ::tooltip::tooltip .l1wid.bf4.1.m "Batch or single processing"
-
   Label .l1wid.bf4.1.lw -text "in Win:"
   spinbox .l1wid.bf4.1.sw -justify center -from 0 -to 63 -increment 1 \
     -width 2 -textvariable _map(window)
 
-  checkbutton .l1wid.bf4.2.cen -variable usecentroid \
-    -text "Correct Range\nWalk with Centroid"
-
-  checkbutton .l1wid.bf4.2.surf -variable avg_surf \
-    -text "Use Fresnel reflections\nto determine water surface"
-
-  .l1wid.bf4.2.surf configure -state disabled
-
-  checkbutton .l1wid.bf45.p.fma -text "Auto\nFma" -variable l1pro_fma
-
-  Button .l1wid.bf45.p.1 -text "Plot" -command {
-    plot_fltlines 0
-  }
-
-  Button .l1wid.bf45.p.14 -text "Variable:" -command ::varplot::gui
+  Button .l1wid.bf45.p.left.14 -text "Variable:" -command ::varplot::gui
 
   proc pro_var_changed {a b c} {
     global var_settings plot_settings pro_var cbv win_no constant_win_no
@@ -1172,7 +1150,7 @@ if {![winfo exists .l1wid]} {
   trace remove variable pro_var write pro_var_changed
   trace add variable pro_var write pro_var_changed
 
-  ::misc::combobox .l1wid.bf45.p.15 \
+  ::misc::combobox .l1wid.bf45.p.left.15 \
     -textvariable pro_var \
     -state readonly \
     -listvariable varlist
@@ -1226,8 +1204,8 @@ if {![winfo exists .l1wid]} {
   }
 
 
-  Label .l1wid.bf45.p.2 -text "in Win:"
-  spinbox .l1wid.bf45.p.3 -justify center -from 0 -to 63 -increment 1 \
+  Label .l1wid.bf45.p.right.2 -text "in Win:"
+  spinbox .l1wid.bf45.p.right.3 -justify center -from 0 -to 63 -increment 1 \
     -width 2 -textvariable win_no
 
   proc display_type {} {
@@ -1260,8 +1238,8 @@ if {![winfo exists .l1wid]} {
     }
   }
 
-  Label .l1wid.bf45.p.25 -text "Mode:"
-  ::misc::combobox .l1wid.bf45.p.5 \
+  Label .l1wid.bf45.p.right.25 -text "Mode:"
+  ::misc::combobox .l1wid.bf45.p.right.5 \
     -textvariable plot_settings(display_type) \
     -state readonly \
     -values $l1pro_data(display_types)
@@ -1585,8 +1563,6 @@ if {![winfo exists .l1wid]} {
     exp_send "show_qq_grid_location, $win_no\r"
   }
 
-
-  checkbutton .l1wid.bf45.q.5 -text "Set Plot Limits" -variable usecentroid
 
   frame  .l1wid.bf45.sc.1
 
@@ -2373,7 +2349,7 @@ if {![winfo exists .l1wid]} {
     .l1wid.bf45.sc.g.sk \
     -side top
 
-  Button .l1wid.bf4.2.proc -text "Process Now" -width 20 -bd 5\
+  Button .l1wid.bf4.1.proc -text "Process" -bd 5\
     -command {
       global list lrnindx pro_var varlist autoclean_after_process
       set list {}
@@ -2432,16 +2408,13 @@ if {![winfo exists .l1wid]} {
   pack \
     .l1wid.bf4.1.d \
     .l1wid.bf4.1.p \
-    .l1wid.bf4.1.m \
     .l1wid.bf4.1.lw \
     .l1wid.bf4.1.sw \
+    .l1wid.bf4.1.proc \
     -side left \
     -padx 5
 
-  pack  .l1wid.bf4.2.cen .l1wid.bf4.2.surf .l1wid.bf4.2.proc -side left -padx 10
-
-  grid .l1wid.bf4.1 -pady 10
-  grid .l1wid.bf4.2
+  grid .l1wid.bf4.1 -pady 5
   #pack .l1wid.bf4.1 .l1wid.bf4.2 -side top -pady 10
 
   #pack \
@@ -2481,14 +2454,14 @@ if {![winfo exists .l1wid]} {
     .l1wid.bf45.q.f46 \
     -side left
 
-  pack \
-    .l1wid.bf45.p.14 \
-    .l1wid.bf45.p.15 \
-    .l1wid.bf45.p.25 \
-    .l1wid.bf45.p.5 \
-    .l1wid.bf45.p.2 \
-    .l1wid.bf45.p.3 \
-    -side left -fill x  -padx 2
+  grid .l1wid.bf45.p.left.14 .l1wid.bf45.p.left.15 -padx 2 -sticky ew -row 1
+  grid columnconfigure .l1wid.bf45.p.left 1 -weight 1
+  grid rowconfigure .l1wid.bf45.p.left {0 2} -weight 1
+
+  grid .l1wid.bf45.p.right.25 .l1wid.bf45.p.right.5 .l1wid.bf45.p.right.2 \
+    .l1wid.bf45.p.right.3 -padx 2 -sticky ew -row 1
+  grid columnconfigure .l1wid.bf45.p.right 1 -weight 1
+  grid rowconfigure .l1wid.bf45.p.right {0 2} -weight 1
 
   pack \
     .l1wid.bf45.p \
