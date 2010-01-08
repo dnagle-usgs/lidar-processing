@@ -161,7 +161,8 @@ func split_by_fltline(data, timediff=) {
 
 func tk_sdw_launch_fltlines(varname) {
    fptr = split_by_fltline(symbol_def(varname));
-   segvars = swrite(format="%s_flt%d", varname, indgen(numberof(fptr)));
+   fmt = swrite(format="flt%%0%dd_%%s", long(log10(numberof(fptr))) + 1);
+   segvars = swrite(format=fmt, indgen(numberof(fptr)), varname);
    for(i = 1; i <= numberof(fptr); i++) {
       symbol_set, segvars(i), *fptr(i);
    }
@@ -174,7 +175,8 @@ func tk_sdw_launch_fltlines_digitizer(varname) {
 
    flts = transpose(array(indgen(numberof(ptr)/2), 2))(*);
    digs = array([1,2], numberof(ptr)/2)(*);
-   segvars = swrite(format="%s_flt%d_d%d", varname, unref(flts), unref(digs));
+   fmt = swrite(format="flt%%0%dd_d%%d_%%s", long(log10(numberof(ptr)/2)) + 1);
+   segvars = swrite(format=fmt, unref(flts), unref(digs), varname);
 
    w = where(ptr);
    if(!numberof(ptr)) {
@@ -193,7 +195,8 @@ func tk_sdw_launch_fltlines_digitizer(varname) {
 
 func tk_sdw_launch_days(varname) {
    dptr = split_by_day(symbol_def(varname));
-   segvars = swrite(format="%s_day%d", varname, indgen(numberof(dptr)));
+   fmt = swrite(format="day%%0%dd_%%s", long(log10(numberof(dptr))) + 1);
+   segvars = swrite(format=fmt, indgen(numberof(dptr)), varname);
    for(i = 1; i <= numberof(dptr); i++) {
       symbol_set, segvars(i), *dptr(i);
    }
@@ -206,7 +209,8 @@ func tk_sdw_launch_days_digitizer(varname) {
 
    days = transpose(array(indgen(numberof(ptr)/2), 2))(*);
    digs = array([1,2], numberof(ptr)/2)(*);
-   segvars = swrite(format="%s_day%d_d%d", varname, unref(days), unref(digs));
+   fmt = swrite(format="day%%0%dd_d%%d_%%s", long(log10(numberof(ptr)/2)) + 1);
+   segvars = swrite(format=fmt, unref(days), unref(digs), varname);
 
    w = where(ptr);
    if(!numberof(ptr)) {
