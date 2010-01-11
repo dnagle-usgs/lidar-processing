@@ -664,10 +664,10 @@ mode=, pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=) {
 
 func batch_las2pbd(dir_las, outdir=, searchstr=, format=, fakemirror=, rgbrn=,
 verbose=, pre_vname=, post_vname=, shorten_vname=, pre_fn=, post_fn=,
-shorten_fn=) {
+shorten_fn=, update=, files=) {
 /* DOCUMENT batch_las2pbd, dir_las, outdir=, searchstr=, format=, fakemirror=,
    rgbrn=, verbose=, pre_vname=, post_vname=, shorten_vname=, pre_fn=,
-   post_fn=, shorten_fn=
+   post_fn=, shorten_fn=, update, files=
 
    Batch converts LAS files to PBD files.
 
@@ -676,6 +676,8 @@ shorten_fn=) {
       dir_las: A directory to search for LAS files in.
 
    Options:
+
+      files= A list of files to convert. Will ignore searchstr= and dir_las.
 
       outdir= By default, LAS files are created alongside PBD files. This lets
          you put them all in a separate directory instead.
@@ -699,6 +701,10 @@ shorten_fn=) {
             rgbrn=1  - Enables interpreting RGB as rn, if present (default)
             rgbrn=0  - Completely ignores RGB if present. The rn will be zeroed.
          Note that if no RGB data is present, rn will be zeroed either way.
+
+      update= Specifies whether to overwrite existing files.
+            update=0    -> Overwrite existing files (default)
+            update=1    -> Skip existing files, only create new ones
 
       verbose=
          By default, the function will spew out lots of progress information.
@@ -832,8 +838,12 @@ shorten_fn=) {
    default, pre_fn, string(0);
    default, post_fn, ".pbd";
    default, shorten_fn, 0;
+   default, update, 0;
 
-   files_las = find(dir_las, glob=searchstr);
+   if(is_void(files))
+      files_las = find(dir_las, glob=searchstr);
+   else
+      files_las = unref(files);
    if(is_void(files_las))
       error, "No files found.";
    files_pbd = file_rootname(files_las);
@@ -880,6 +890,10 @@ shorten_fn=) {
          write, format="Converting LAS file %d of %d to PBD...\n",
             i, numberof(files_las);
 
+      if(update && file_exists(files_pbd(i))) {
+         write, " File already exists, skipping.";
+         continue;
+      }
       las2pbd, files_las(i), fn_pbd=files_pbd(i), vname=vnames(i),
          format=format, fakemirror=fakemirror, rgbrn=rgbrn,
          verbose=pass_verbose;
@@ -934,13 +948,10 @@ func las2pbd(fn_las, fn_pbd=, format=, vname=, fakemirror=, rgbrn=, verbose=) {
 
    las = las_open(fn_las);
    data = fnc(las, fakemirror=fakemirror, rgbrn=rgbrn);
+   close, las;
    fnc = [];
 
-   f = createb(fn_pbd);
-   save, f, vname;
-   add_variable, f, -1, vname, structof(data), dimsof(data);
-   get_member(f, vname) = data;
-   close, f;
+   pbd_save, fn_pbd, vname, unref(data);
 }
 
 func las_to_fs(las, fakemirror=, rgbrn=) {
