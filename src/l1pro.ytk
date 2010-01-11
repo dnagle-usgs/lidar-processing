@@ -55,7 +55,6 @@ if {![winfo exists .l1wid]} {
   set lrnindx {}
   set write_some 0
   set ssvar "*.pbd"
-  set changed_dpi 0
   set avg_surf 1
   set rcf_buf_rgn 0; #Used in proc replace_proc
   set autoclean_after_process 1
@@ -133,10 +132,6 @@ if {![winfo exists .l1wid]} {
   }
 
   wm title .l1wid "Process EAARL Data"
-  frame .l1wid.bf1
-  frame .l1wid.bf2
-  frame .l1wid.bf2.utm
-  frame .l1wid.bf3
   frame .l1wid.bf4
   frame .l1wid.bf4.1
   frame .l1wid.bf45 -relief groove -borderwidth 3
@@ -146,7 +141,6 @@ if {![winfo exists .l1wid]} {
   .l1wid.bf45.p add [frame .l1wid.bf45.p.right] -weight 1
   frame .l1wid.bf45.q -relief groove -borderwidth 3
   LabelFrame .l1wid.bf45.r -relief groove -borderwidth 7 -text "FILTER:"
-  frame .l1wid.bf5  -relief groove -borderwidth 3
 
   .l1wid configure -menu .l1wid.mb
   menu .l1wid.mb
@@ -521,21 +515,6 @@ if {![winfo exists .l1wid]} {
 
 
   .l1wid.mb   add cascade -label Graph -underline 0 -menu .l1wid.mb.graph
-  .l1wid.mb.graph add radiobutton \
-    -label "75 Dpi (450x450)" -value "75" -variable plot_dpi -underline 1 \
-    -command {
-      set changed_dpi 1
-    }
-  .l1wid.mb.graph add radiobutton \
-    -label "100 Dpi (600x600)" -value "100" -variable plot_dpi -underline 1 \
-    -command {
-      set changed_dpi 1
-    }
-  .l1wid.mb.graph add radiobutton \
-    -label "100 Dpi (1100x850)" -value "1100" -variable plot_dpi -underline 1 \
-    -command {
-      set changed_dpi 1
-    }
   .l1wid.mb.graph add command -label "Open the Limits Tool" -underline 0 \
     -command limits_tool
   .l1wid.mb.graph add separator
@@ -547,6 +526,18 @@ if {![winfo exists .l1wid]} {
     -command [list ycmd change_window_size [list window() 3 0]]
   .l1wid.mb.graph add command -label "Change current window to 100 DPI / 1100x850" \
     -command [list ycmd change_window_size [list window() 4 0]]
+  .l1wid.mb.graph add separator
+  menu .l1wid.mb.graph.pal
+  .l1wid.mb.graph add cascade -label Palette... -under 0 -menu .l1wid.mb.graph.pal
+  foreach __p [list earth stern rainbow yarg heat gray] {
+  .l1wid.mb.graph.pal add command -label $__p -under 0 -command [list ypalette $__p]
+  }
+  unset __p
+
+  proc ypalette p {
+    exp_send "palette, \"${p}.gp\";\r"
+    expect "> "
+  }
 
   .l1wid.mb add cascade -label Utilities -underline 0 -menu .l1wid.mb.util
 
@@ -2405,22 +2396,21 @@ if {![winfo exists .l1wid]} {
       }
     }
 
-  pack \
+  grid \
     .l1wid.bf4.1.d \
     .l1wid.bf4.1.p \
     .l1wid.bf4.1.lw \
     .l1wid.bf4.1.sw \
     .l1wid.bf4.1.proc \
-    -side left \
+    -sticky ew \
     -padx 5
+  grid columnconfigure .l1wid.bf4.1 {0 1} -weight 1
 
-  grid .l1wid.bf4.1 -pady 5
+  grid .l1wid.bf4.1 -pady 5 -sticky ew
+  grid columnconfigure .l1wid.bf4 0 -weight 1
   #pack .l1wid.bf4.1 .l1wid.bf4.2 -side top -pady 10
 
   #pack \
-  #  .l1wid.bf1 \
-  #  .l1wid.bf2 \
-  #  .l1wid.bf3 \
   #  .l1wid.bf4 \
   #  -side top -expand 1 -fill both
 
@@ -2470,17 +2460,9 @@ if {![winfo exists .l1wid]} {
     .l1wid.bf45.r \
     -side top -fill x -expand 1
 
-  grid .l1wid.bf1
-  grid .l1wid.bf2
-  grid .l1wid.bf3
-  grid .l1wid.bf4
-  grid .l1wid.bf5 -pady 3
-  grid .l1wid.bf45 -pady 3
-
-  #pack \
-  #  .l1wid.bf5 \
-  #  .l1wid.bf45 \
-  #  -side top -pady 3 -fill x
+  grid .l1wid.bf4 -sticky ew
+  grid .l1wid.bf45 -pady 3 -sticky ew
+  grid columnconfigure .l1wid 0 -weight 1
 
 
   proc send_latlon_to_l1pro {minlon maxlon minlat maxlat utmarg} {
@@ -2511,7 +2493,7 @@ if {![winfo exists .l1wid]} {
 
   proc plot_fltlines {sel} {
     global l1pro_fma win_no cdelta varlist skip \
-      plot_dpi setll changed_dpi plot_settings pro_var
+      plot_dpi setll plot_settings pro_var
     #fill in later using what to plot
     set fs 0
     set ba 0
@@ -2542,42 +2524,8 @@ if {![winfo exists .l1wid]} {
         -type ok
     } else {
       if { $l1pro_fma } {
-        if {$changed_dpi == 1} {
-          switch -- $plot_dpi {
-            75  {
-              set width_arg 450
-              set height_arg 450
-              set dpi_arg 75
-              set style_arg work.gs
-            }
-            100 {
-              set width_arg 600
-              set height_arg 600
-              set dpi_arg 100
-              set style_arg work.gs
-            }
-            1100 {
-              set width_arg 1100
-              set height_arg 850
-              set dpi_arg 100
-              set style_arg landscape11x85.gs
-            }
-          }
-          if {[lsearch {75 100 1100} $plot_dpi] >= 0} {
-            exp_send "winkill, $win_no;\
-              window, $win_no, dpi=$dpi_arg,\
-                width=$width_arg, height=$height_arg,\
-                style=\"$style_arg\";\
-              fma;\
-              limits, square=1;\
-              window, $win_no, width=0, height=0;\r"
-            expect ">"
-          }
-          set changed_dpi 0
-        } else {
-          exp_send "window, $win_no; fma;\r"
-          expect ">"
-        }
+        exp_send "window, $win_no; fma;\r"
+        expect ">"
       }
       if {$::l1pro_cbar} {
         exp_send "colorbar;\r"
@@ -2756,6 +2704,7 @@ if {![winfo exists .l1wid]} {
   }
 }
 
+source "$src_path/plot.ytk"
 source "$src_path/bathctl.ytk"
 source "$src_path/data_segments.ytk"
 source "$src_path/pixelwf.ytk"
