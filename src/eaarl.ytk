@@ -73,8 +73,9 @@ proc display_mission_constants { l } {
     grid  $w1.v$lbl{v}    -column 1  -row $row -sticky ew
     incr row
   }
-  button $w1.dismiss -text "Dismiss" -command { 
-	destroy $w1 }
+  button $w1.dismiss -text "Dismiss" -command {
+       destroy $w1 }
+
   button $w1.set     -text "Use these" -command "eval { 
      exp_send ops_conf=$ary(VarName)\\r; 
      destroy $w1 }" 
@@ -484,9 +485,6 @@ proc load_edb {} {
    	      expect ">"
     	      exp_send "tans = rbtans() \r" }
 $w.mb.file add separator
-$w.mb.file add command -label "Mission configuration manager" \
-   -underline 0 -command ::mission::launch_gui
-$w.mb.file add separator
 
  $w.mb.file add command -label "Edb Status" -command  edb_status 
 
@@ -498,7 +496,6 @@ $w.mb.file add separator
      ytk_kick_off_editor  $_ytk(editor) "$edb(path)/notes.txt"    
    }
  } 
- $w.mb.file add command -label Dismiss -command [list wm withdraw $w]
 
  source "$src_path/map.ytk"
  restore_eaarl_options "map.options" _map
@@ -519,9 +516,6 @@ $w.mb.file add separator
  $w.mb.images add command -label "Load Images in Yorick..." -command {
  	source "$src_path/image_load_tool.ytk"
  	ytk_image_load_tool $data_path
- }
- $w.mb.images add command -label "Capture a display..." -command {
-    scap
  }
  $w.mb.images add command -label "Launch new SF viewer..." \
    -command [list ::sf::controller %AUTO%]
@@ -551,10 +545,6 @@ $w.mb.file add separator
 
  set gga_color black
 
- menu $w.mb.nav.rbgga
- $w.mb.nav add command -label "Plotting tool" -underline 0 \
-   -command ::plot::menu
- source [file join $src_path plot.ytk]
  $w.mb.nav add command -label "Load Tans Attitude data..."   -underline 5 \
    -command { exp_send "require, \"rbtans.i\"\r"
    	      expect ">"
