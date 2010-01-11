@@ -339,7 +339,7 @@ func date2soe(date, sod) {
    when they all share the same date.
 */
 // Original David B. Nagle 2009-05-18
-   date = get_date(date);
+   date = get_date(unref(date));
    y = atoi(strpart(date, 1:4));
    m = atoi(strpart(date, 6:7));
    d = atoi(strpart(date, 9:10));
@@ -448,11 +448,13 @@ func gps_utc_offset(date) {
    Calculates the leap seconds offset between GPS and UTC for a given date.
 */
    extern _leap_dates;
-   res = (_leap_dates(*,) < date)(,sum);
-   if(dimsof(date)(1))
-      return res;
-   else
-      return res(1);
+   if(is_scalar(date))
+      return (_leap_dates < date)(sum);
+
+   res = array(short, dimsof(date));
+   for(i = 1; i <= numberof(_leap_dates); i++)
+      res += _leap_dates(i) < date;
+   return res;
 }
 
 _gps2utc_epoch_offset = ymd2soe(1980, 1, 6);
