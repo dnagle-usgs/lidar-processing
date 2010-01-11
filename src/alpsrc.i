@@ -62,7 +62,7 @@ func __alpsrc_load_and_merge(&hash, fn) {
 __alpsrc_defaults = h_new(
    "geoid_data_root", file_join(get_cwd(), ".."),
    "maps_dir", file_join(get_cwd(), "..", "maps"),
-   "l1pro_startup", 0
+   "l1pro_startup", 1
 );
 
 alpsrc_load;
