@@ -1,6 +1,7 @@
 require, "shapefile.i";
 require, "mission_conf.i";
 require, "mosaic_biases.i";
+require, "l1pro.i";
 
 /*
    These notes are probably obsolete...
@@ -94,7 +95,7 @@ func prepare_inpho_full(cirdata, pbd_dir, inpho_dir,
       write, "Generating tile definition files...";
       defn_file_25cm = file_join(zone_dir, "data", "tile_defns_25cm.txt");
 
-      zone_dtiles = "t_" + dtile_names(w);
+      zone_dtiles = "t_" + dtile_names(w) + "_25cm";
       zone_dtiles = zone_dtiles(sort(zone_dtiles));
       bbox = dt2utm(zone_dtiles, bbox=1);
       mosaic_write_tile_defns, defn_file_25cm, zone_dtiles,
@@ -1493,9 +1494,9 @@ func png_make_zips(src_dir, dst_dir, glob=) {
       zip = file_join(dst_dir, file_tail(file_rootname(png)),
          file_tail(file_rootname(png)) + ".zip");
       mkdirp, file_dirname(zip);
-      tkcmd, "exec zip \"" + zip + "\" \"" + png + "\"";
-      tkcmd, "exec zip \"" + zip + "\" \"" + pgw + "\"";
-      tkcmd, "exec zip \"" + zip + "\" \"" + prj + "\"";
+      tkcmd, "exec zip -jX \"" + zip + "\" \"" + png + "\"";
+      tkcmd, "exec zip -jX \"" + zip + "\" \"" + pgw + "\"";
+      tkcmd, "exec zip -jX \"" + zip + "\" \"" + prj + "\"";
    }
    write, "Files queues for zipping... may take a few minutes to complete.";
 }
