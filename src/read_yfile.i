@@ -892,10 +892,58 @@ func __write_ascii_xyz_helper(void, fn=, lines=, header=, footer=, indx=, delimi
    write, format="Total records written to ascii file = %d\n", numberof(lines(,1));
 }
 
+local __ascii_xyz_settings;
+__ascii_xyz_settings = h_new(
+   "charts", h_new(
+      columns=["lon", "lat", "zone", "east", "north", "elev", "z_ellip",
+         "yyyymmdd", "hhmmss", "intensity"],
+      delimit=",",
+      header=1
+   ),
+   "charts ellipsoid", h_new(
+      columns=["lon", "lat", "zone", "east", "north", "elev_datum", "elev",
+         "yyyymmdd", "hhmmss", "intensity"],
+      delimit=",",
+      header=1
+   )
+);
+
+func __read_ascii_xyz_hhmmss2soe(&data, field, val) {
+   soe = get_member(data, field);
+   hms = atod(regsub(":", val, "", all=1));
+   soe += hms2sod(hms);
+   get_member(data, field) = soe;
+}
+
+func __read_ascii_xyz_yyyymmdd2soe(&data, field, val) {
+   sod = get_member(data, field);
+   soe = array(double, numberof(sod));
+   ymds = set_remove_duplicates(val);
+   for(i = 1; i <= numberof(ymds); i++) {
+      ymd = regsub("/", ymds(i), "", all=1);
+      ymd = regsub("-", ymd, "", all=1);
+      ymd = atoi(ymd);
+      y = long(ymd/10000);
+      m = long((ymd/100) % 100);
+      d = ymd % 100;
+      w = where(val == ymds(i));
+      soe(w) = ymd2soe(y, m, d) + sod(w);
+   }
+   get_member(data, field) = soe;
+}
+
+func __read_ascii_xyz_m2cm(&data, field, val) {
+   get_member(data, field) = val * 100;
+}
+
+func __read_ascii_xyz_store(&data, field, val) {
+   get_member(data, field) = val;
+}
+
 func read_ascii_xyz(file, pstruc, delimit=, header=, ESRI=, intensity=, rn=,
-soe=, indx=, mapping=, columns=, types=) {
+soe=, indx=, columns=, mapping=, types=, preset=) {
 /* DOCUMENT data = read_ascii_xyz(file, pstruc, header=, delimit=, ESRI=,
-   intensity=, rn=, soe=, indx=, mapping=, columns=, types=)
+   intensity=, rn=, soe=, indx=, mapping=, columns=, types=, preset=)
 
    Reads an ASCII file and stores its data in the specified structure. This
    function is optimized to read files created with write_ascii_xyz but has
@@ -916,30 +964,39 @@ soe=, indx=, mapping=, columns=, types=) {
 
    Options:
 
+      preset= Select a set of custom settings tailored to a specific XYZ
+         format. Using preset= will turn off auto-detect mode (described
+         below). The list of presets is given further below.
+
       delimit= The delimiter used. Defaults to " ".
 
-   Without any additional options, the function works in auto-detect mode. It
-   will analyze the first few lines of the file in an attempt to determine what
-   the columns are. This will usually work provided you created the file using
-   write_ascii_xyz. So if you created the file with write_ascii_xyz, you can
-   probably read it without any explicit options.
+      Without any additional options, the function works in auto-detect mode.
+      It will analyze the first few lines of the file in an attempt to
+      determine what the columns are. This will usually work provided you
+      created the file using write_ascii_xyz. So if you created the file with
+      write_ascii_xyz, you can probably read it without any explicit options.
 
-   On rare occasions, it may not read in properly even though it was written
-   with write_ascii_xyz. If you know what options were used when the file was
-   created and for some reason the file isn't parsing automatically, then you
-   can specify those same options here.  These options will turn off
-   auto-detect mode and correspond to options from write_ascii_xyz.
+      On rare occasions, it may not read in properly even though it was written
+      with write_ascii_xyz. If you know what options were used when the file was
+      created and for some reason the file isn't parsing automatically, then you
+      can specify those same options here.  These options will turn off
+      auto-detect mode and correspond to options from write_ascii_xyz.
 
       ESRI=
-      header=
       intensity=
       rn=
       soe=
       indx=
 
-   The following options from write_ascii_xyz are NOT implemented, but affect
-   output when used. Thus, if these options were used on write_ascii_xyz, you
-   may not have success with read_ascii_xyz.
+      The header= option from write_ascii_xyz is also used, but its meaning is
+      altered some. It will also turn off auto-detect mode.
+
+      header= This is extended to provide the number of header lines. If your
+         file has 3 header lines, use header=3.
+
+      The following options from write_ascii_xyz are NOT implemented, but
+      affect output when used. Thus, if these options were used on
+      write_ascii_xyz, you may not have success with read_ascii_xyz.
 
       footer: If your file has a footer, you'll have to manually remove it.
       latlon: Conversion from lat/lon to UTM is not implemented.
@@ -947,94 +1004,162 @@ soe=, indx=, mapping=, columns=, types=) {
          multiple copies.
       type: If you used type=2, then be aware that the elevation written to
          file was data.elevation + data.depth. There's no way to figure out
-         what those two values were. The output will set both data.elevation
-         AND data.depth to this value, which effectively doubles the value.
+         what those two values were. The output will set data.elevation
+         to this value and leave data.depth at 0.
 
-   If none of the above works, then you can use the following advanced options
-   to manually dictate the function's behavior.
+      If you are using a custom ASCII format that doesn't have a preset, you
+      will probably need the column= option.
 
-      mapping= Used to map ascii columns to structure fields.
-      columns= Used to specify what each column is.
+      columns= Used to specify what each column is. This is an array of column
+         names, for example:
+            columns=["east", "north", "elevation"]
+         These column names can be anything, but in order for them to actually
+         accomplish anything they must be defined in the mapping. See further
+         below for the default mappings.
+
+      If none of the above works, then you can use the following advanced
+      options to further override the function's behavior.
+
+      mapping= Used to provide a custom mapping of ascii columns to structure
+         fields. This overrides the built-in mapping.
       types= Used to override the type expected when reading in the file. This
          should almost never be used, as it's accounted for in mapping. (Note:
          This is NOT the same as the type= parameter in write_ascii_xyz.)
 
-   Some examples of advanced usage follow.
+   Presets
 
-   -- Example 1 --
+      Presets are intended for common-use ascii data that has a reliable
+      format. Follows is a list of the currently defined presets. Note that
+      some of the column names used in these presets are not defined in the
+      default mappings; this means that those columns will be ignored.
 
-   Consider a file with content like this:
+      preset="charts"
+         This preset is intended for CHARTS data. It is equivalent to using
+         these settings:
+            columns=["lon", "lat", "zone", "east", "north", "elev", "z_ellip",
+               "yyyymmdd", "hhmmss", "intensity"]
+            delimit=","
+            header=1
+         Here is a sample of the first five lines of an example CHARTS file,
+         showing the format of data this is intended to work with:
 
-      574210.74,7378000.00,134.38,4,1,931741523.046877
-      574001.46,7377693.71,134.78,8,1,931742705.021433
-      574000.39,7377698.72,134.85,7,1,931742705.057043
-      574002.36,7377697.26,134.64,15,1,931742705.057073
-      574004.28,7377695.83,134.80,11,1,931742705.057103
-      574006.23,7377694.39,134.66,12,1,931742705.057133
-      574009.55,7377694.07,136.12,7,1,931742705.076933
-      574007.76,7377695.47,134.74,7,1,931742705.076963
-      574005.82,7377696.93,134.58,11,1,931742705.076993
-      574003.90,7377698.37,134.51,15,1,931742705.077023
-      ...
+# LONGITUDE, LATITUDE, UTM ZONE, EASTING, NORTHING, ELEV, ELEV (ellipsoid),  YYYY/MM/DD,HH:MM:SS.SSSSSS INTENSITY
+-75.501746746,35.347383504,18,454408.926,3911683.171,2.38,-36.40,2009/08/12,14:48:51.243122,50
+-75.501760721,35.347384483,18,454407.657,3911683.286,2.08,-36.70,2009/08/12,14:48:51.243176,42
+-75.501816206,35.347391056,18,454402.619,3911684.040,1.91,-36.87,2009/08/12,14:48:51.243374,46
+-75.501829975,35.347392697,18,454401.369,3911684.229,1.85,-36.93,2009/08/12,14:48:51.243423,44
 
-   The fields here correspond to UTM x, y, and z, the intensity, the return
-   number, and the time. With the exception of the return number, all other
-   fields are something we're used to seeing in the output of write_ascii_xyz.
-   However, they're not in the same order and there's an extra field in the
-   middle.  In order to read the file in, we need to tell the function what
-   each column contains. We use the names that the columns would have if we
-   wrote it out with write_ascii_xyz.
+      preset="charts ellipsoid"
+         This preset is almost identical to the "charts" preset. The only
+         difference is that it uses the ellipsoid elevation instead of the
+         non-ellipsoid elevation. It is equivalent to using these settings:
+            columns=["lon", "lat", "zone", "east", "north", "elev_datum", "elev",
+               "yyyymmdd", "hhmmss", "intensity"],
+            delimit=",",
+            header=1
 
-   For reference, the fields used by write_ascii_xyz include: utm_x, utm_y,
-   z_meters, intensity_counts, raster_pulse, and soe.
+   Columns
 
-   If we wanted to read this into an FS structure, our function call would look
-   like this:
+      This function has a wide range of built-in column mappings defined that
+      should make it easy in most circumstances to specify how to read in an
+      ASCII file's content. Follows is a listing of defined column names and
+      what data structure fields they will map to. If a value is passed to
+      columns= that is not in this list, then that column is simply ignored.
+
+      Column            Maps to                       Notes
+      ----------------  ----------------------------  -----------------------
+      utm_x             .east .meast .least           Input should be meters
+      UTMX(m)           .east .meast .least           Input should be meters
+      east              .east .meast .least           Input should be meters
+      feast             .east                         Input should be meters
+      least             .least                        Input should be meters
+      meast             .meast                        Input should be meters
+      utm_y             .north .mnorth .lnorth        Input should be meters
+      UTMY(m)           .north .mnorth .lnorth        Input should be meters
+      north             .north .mnorth .lnorth        Input should be meters
+      fnorth            .north                        Input should be meters
+      lnorth            .lnorth                       Input should be meters
+      mnorth            .mnorth                       Input should be meters
+      z_meters          .elevation .lelv .melevation  Input should be meters
+      cZ(m)             .elevation .lelv .melevation  Input should be meters
+      elev              .elevation .lelv .melevation  Input should be meters
+      elevation         .elevation .lelv .melevation  Input should be meters
+      felevation        .elevation                    Input should be meters
+      lelv              .lelv                         Input should be meters
+      melevation        .melevation                   Input should be meters
+      depth             .depth                        Input should be meters
+      intensity_counts  .intensity .first_peak .fint
+                        .bottom_peak .lint
+      Intensity(counts) .intensity .first_peak .fint
+                        .bottom_peak .lint
+      intensity         .intensity .first_peak .fint
+                        .bottom_peak .lint
+      first_peak        .first_peak
+      bottom_peak       .bottom_peak
+      fint              .fint
+      lint              .lint
+      soe               .soe
+      SOE               .soe
+      hhmmss            .soe                          See note [1] below
+      hh:mm:ss          .soe                          See note [1] below
+      yyyymmdd          .soe                          See note [1] below
+      yyyy-mm-dd        .soe                          See note [1] below
+      yyyy/mm/dd        .soe                          See note [1] below
+      raster_pulse      .rn
+      Raster/Pulse      .rn
+      rn                .rn
+
+      [1] Columns for HMS-values and date-values are combined if both are
+         present. If only one is present, then soe will receive just the
+         seconds of the day or the timestmap of the day start. If your input
+         data for some reason has the HMS in multiple columns or the date in
+         multiple columns, only use one of each. Otherwise, the multiple values
+         will get added together to give you a bogus time.
+
+   Example of using columns=
+
+      Consider a file with content like this:
+
+         574210.74,7378000.00,134.38,4,1,931741523.046877
+         574001.46,7377693.71,134.78,8,1,931742705.021433
+         574000.39,7377698.72,134.85,7,1,931742705.057043
+         574002.36,7377697.26,134.64,15,1,931742705.057073
+         574004.28,7377695.83,134.80,11,1,931742705.057103
+         574006.23,7377694.39,134.66,12,1,931742705.057133
+         574009.55,7377694.07,136.12,7,1,931742705.076933
+         574007.76,7377695.47,134.74,7,1,931742705.076963
+         574005.82,7377696.93,134.58,11,1,931742705.076993
+         574003.90,7377698.37,134.51,15,1,931742705.077023
+         ...
+
+      The fields here correspond to UTM x, y, and z, the intensity, the return
+      number, and the time. With the exception of the return number, all other
+      fields are something we're used to seeing in the output of write_ascii_xyz.
+      However, they're not in the same order and there's an extra field in the
+      middle.  In order to read the file in, we need to tell the function what
+      each column contains. We can use the names that the columns would have if
+      we wrote it out with write_ascii_xyz.
+
+      If we wanted to read this into an FS structure, our function call would look
+      like this:
 
       fs_all = read_ascii_xyz("example1.txt", FS, delimit=",",
          columns=["utm_x", "utm_y", "z_meters", "intensity_counts", "", "soe"])
 
-   Note that we used an empty string to ignore the column with the return
-   number.
+      Note that we used an empty string to ignore the column with the return
+      number, since the FS structure does not have a field for this.
 
-   -- Example 2 --
+   The advanced mapping= option
+      
+      The mapping= option is primarily a "just in case" option. It isn't
+      expected to actually be used, since the default mapping is supposed to
+      cover everything a user may need. However, just in case...
+   
+      The mapping= option accepts a Yeti hash. The keys to that hash should match
+      the column names. The value of each entry is another hash with the following
+      keys:
 
-   Consider a file with content like this:
-
-      513496.35 3205716.66 -25.86 513496.32 3205716.80 -25.86 1243527928.781
-      513499.59 3205718.69 -25.83 513499.60 3205718.72 -25.83 1243527928.782
-      513497.98 3205717.69 -25.82 513498.00 3205717.76 -25.82 1243527928.781
-      513858.76 3205718.66 -30.42 513858.72 3205718.72 -30.42 1243549056.772
-      513856.97 3205717.64 -30.41 513856.96 3205717.76 -30.41 1243549056.771
-      513855.18 3205716.62 -30.39 513855.20 3205716.80 -30.39 1243549056.771
-      513514.37 3205722.50 -27.85 513514.40 3205722.56 -27.85 1243527928.882
-      513513.71 3205723.55 -27.76 513513.68 3205723.52 -27.76 1243527928.854
-      513512.13 3205722.57 -27.76 513512.12 3205722.56 -27.76 1243527928.854
-      513517.59 3205724.46 -27.64 513517.60 3205724.48 -27.64 1243527928.883
-
-   The fields here correspond to first return x,y,z, last return x,y,z, and soe
-   time. The fields defined for write_ascii_xyz won't work here, so we have to
-   tell the function how to map those columns to the structure fields.
-
-   Here's how we can read this into a VEG__ structure:
-
-      vegmapping = h_new(
-         fx=h_new(type=3, dest=["east","meast"], factor=100),
-         fy=h_new(type=3, dest=["north","mnorth"], factor=100),
-         fz=h_new(type=3, dest=["elevation","melevation"], factor=100),
-         lx=h_new(type=3, dest=["least"], factor=100),
-         ly=h_new(type=3, dest=["lnorth"], factor=100),
-         lz=h_new(type=3, dest=["lelv"], factor=100),
-         soe=h_new(type=3, dest=["soe"])
-      )
-      veg_all = read_ascii_xyz("example2.txt", VEG__, mapping=vegmapping,
-         columns=["fx", "fy", "fz", "lx", "ly", "lz", "soe"])
-
-   The mapping= option accepts a Yeti hash. The keys to that hash should match
-   the column names. The value of each entry is another hash with the following
-   keys:
-
-      type= This corresponds ot the type= option of rdcols and tells rdcols how
+      type= This corresponds to the type= option of rdcols and tells rdcols how
          to interpret the text for that field.
          Valid values:
             type=0 -- guess
@@ -1047,11 +1172,38 @@ soe=, indx=, mapping=, columns=, types=) {
          field where this column should get written to. (If the structure
          doesn't have a given field, then that field is ignored.)
 
-      factor= Specifies a factor to multiply the value by. This field is
-         optional. It's useful for converting meters to centimeters, as shown
-         in the example above.
+      fnc= Specifies a function to use to store the data. This is optional; if
+         not provided, it is stored as is. If your data needs custom treatment
+         (for example, converting meters to centimeters), you'll need to
+         provide a storage function. The function must accept three arguments:
+         data, field, and val. The data argument must also be an output
+         argument that modifies the data in-place. The field argument is the
+         string name of the field to be stored to (so... get_member(data,
+         field)). And the val argument is the array of data to be stored
+         (subject to custom alteration). There are a few predefined functions
+         for this:
+            __read_ascii_xyz_hhmmss2soe __read_ascii_xyz_yyyymmdd2soe
+            __read_ascii_xyz_m2cm __read_ascii_xyz_store
 */
 // Original: David Nagle 2009-08-24
+   if(!is_void(preset)) {
+      if(h_has(__ascii_xyz_settings, preset)) {
+         settings = __ascii_xyz_settings(preset);
+         if(h_has(settings, "mapping") && is_void(mapping))
+            mapping = settings.mapping;
+         if(h_has(settings, "columns") && is_void(columns))
+            columns = settings.columns;
+         if(h_has(settings, "header") && is_void(header))
+            header = settings.header;
+         if(h_has(settings, "types") && is_void(types))
+            types = settings.types;
+         if(h_has(settings, "delimit") && is_void(delimit))
+            delimit = settings.delimit;
+      } else {
+         error, "Unknown preset.";
+      }
+   }
+
    default, delimit, " ";
    if(typeof(pstruc) == "string") pstruc = symbol_def(pstruc);
 
@@ -1067,24 +1219,67 @@ soe=, indx=, mapping=, columns=, types=) {
       // Field definitions
       // id/Index has no destination in the struct, so it's omitted
       h_set, mapping, "utm_x",
-         h_new(type=3, dest=["east","meast","least"], factor=100);
+         h_new(type=3, dest=["east","meast","least"], fnc=__read_ascii_xyz_m2cm);
       h_set, mapping, "utm_y",
-         h_new(type=3, dest=["north","mnorth","lnorth"], factor=100);
+         h_new(type=3, dest=["north","mnorth","lnorth"], fnc=__read_ascii_xyz_m2cm);
       h_set, mapping, "z_meters",
-         h_new(type=3, dest=["elevation","lelv","depth","melevation"], factor=100);
+         h_new(type=3, dest=["elevation","lelv","melevation"],
+            fnc=__read_ascii_xyz_m2cm);
       h_set, mapping, "intensity_counts",
          h_new(type=2, dest=["intensity","first_peak","fint","bottom_peak","lint"]);
       h_set, mapping, "raster_pulse",
          h_new(type=2, dest=["rn"]);
       h_set, mapping, "soe",
          h_new(type=3, dest=["soe"]);
-      // Equivalencies
+      h_set, mapping, "hhmmss",
+         h_new(type=1, dest=["soe"], fnc=__read_ascii_xyz_hhmmss2soe);
+      h_set, mapping, "yyyymmdd",
+         h_new(type=1, dest=["soe"], fnc=__read_ascii_xyz_yyyymmdd2soe);
+      h_set, mapping, "feast",
+         h_new(type=3, dest=["east"], fnc=__read_ascii_xyz_m2cm);
+      h_set, mapping, "fnorth",
+         h_new(type=3, dest=["north"], fnc=__read_ascii_xyz_m2cm);
+      h_set, mapping, "felevation",
+         h_new(type=3, dest=["elevation"], fnc=__read_ascii_xyz_m2cm);
+      h_set, mapping, "least",
+         h_new(type=3, dest=["least"], fnc=__read_ascii_xyz_m2cm);
+      h_set, mapping, "lnorth",
+         h_new(type=3, dest=["lnorth"], fnc=__read_ascii_xyz_m2cm);
+      h_set, mapping, "lelv",
+         h_new(type=3, dest=["lelv"], fnc=__read_ascii_xyz_m2cm);
+      h_set, mapping, "depth",
+         h_new(type=3, dest=["depth"], fnc=__read_ascii_xyz_m2cm);
+      h_set, mapping, "meast",
+         h_new(type=3, dest=["meast"], fnc=__read_ascii_xyz_m2cm);
+      h_set, mapping, "mnorth",
+         h_new(type=3, dest=["mnorth"], fnc=__read_ascii_xyz_m2cm);
+      h_set, mapping, "melevation",
+         h_new(type=3, dest=["melevation"], fnc=__read_ascii_xyz_m2cm);
+      h_set, mapping, "first_peak",
+         h_new(type=2, dest=["first_peak"]);
+      h_set, mapping, "bottom_peak",
+         h_new(type=2, dest=["bottom_peak"]);
+      h_set, mapping, "fint",
+         h_new(type=2, dest=["fint"]);
+      h_set, mapping, "lint",
+         h_new(type=2, dest=["lint"]);
+      // Equivalencies for ESRI
       h_set, mapping, "UTMX(m)", mapping("utm_x");
       h_set, mapping, "UTMY(m)", mapping("utm_y");
       h_set, mapping, "cZ(m)", mapping("z_meters");
       h_set, mapping, "Intensity(counts)", mapping("intensity_counts");
       h_set, mapping, "Raster/Pulse", mapping("raster_pulse");
       h_set, mapping, "SOE", mapping("soe");
+      // Equivalencies for user-friendliness
+      h_set, mapping, "intensity", mapping("intensity_counts");
+      h_set, mapping, "rn", mapping("raster_pulse");
+      h_set, mapping, "east", mapping("utm_x");
+      h_set, mapping, "north", mapping("utm_y");
+      h_set, mapping, "elev", mapping("z_meters");
+      h_set, mapping, "elevation", mapping("z_meters");
+      h_set, mapping, "hh:mm:ss", mapping("hhmmss");
+      h_set, mapping, "yyyy-mm-dd", mapping("yyyymmdd");
+      h_set, mapping, "yyyy/mm/dd", mapping("yyyymmdd");
    }
 
    // If none of these were specified, then we should try to auto-detect
@@ -1098,8 +1293,7 @@ soe=, indx=, mapping=, columns=, types=) {
       fields = strsplit(line, delimit);
 
       // Check for text field headers. The first field is always id or easting.
-      w = where(fields(1) == ["id","Index","utm_x","UTMX(m)"]);
-      if(numberof(w)) {
+      if(anyof(fields(1) == ["id","Index","utm_x","UTMX(m)"])) {
          columns = fields;
          header = 1;
       } else {
@@ -1163,7 +1357,7 @@ soe=, indx=, mapping=, columns=, types=) {
       }
    }
 
-   nskip = (header ? 1 : 0);
+   nskip = (header ? header : 0);
    cols = rdcols(file, numberof(columns), marker=delimit, type=types, nskip=nskip);
 
    if(is_void(pstruc)) {
@@ -1177,10 +1371,10 @@ soe=, indx=, mapping=, columns=, types=) {
          if(h_has(mapping, columns(i))) {
             map = mapping(columns(i));
             factor = (h_has(map, "factor") ? h_get(map, "factor") : 1);
+            fnc = (h_has(map, "fnc")) ? h_get(map, "fnc") : __read_ascii_xyz_store;
             for(j = 1; j <= numberof(map.dest); j++) {
-               if(has_member(data, map.dest(j))) {
-                  get_member(data, map.dest(j)) = *cols(i) * factor;
-               }
+               if(has_member(data, map.dest(j)))
+                  fnc, data, map.dest(j), *cols(i);
             }
          }
       }

@@ -2140,22 +2140,18 @@ Refactored and modified by David Nagle 2008-11-04
 
 func batch_convert_ascii2pbd(dirname, pstruc, outdir=, ss=, update=, vprefix=,
 vsuffix=, delimit=, ESRI=, header=, intensity=, rn=, soe=, indx=, mapping=,
-columns=, types=) {
+columns=, types=, preset=) {
 /* DOCUMENT batch_convert_ascii2pbd, dirname, pstruc, outdir=, ss=, update=,
    vprefix=, vsuffix=, delimit=, ESRI=, header=, intensity=, rn=, soe=, indx=,
-   mapping=, columns=, types=
+   mapping=, columns=, types=, preset=
 
    Batch converts ascii xyz files back into pbd files.
 
    The variable name (vname) for the created pbd files will be determined based
    on the file name by following this sequence of rules:
-      - If the filename is parseable by dt_short, then its output is used.
-      - If the filename is parseable by extract_qq, then its output is used.
+      - If the filename contains a parseable tile name, then that is used. (The
+        short form for data tiles, the qq-prefixed form of quarter quads.)
       - Otherwise, the filename minus its extension is used.
-
-   If the resulting vname begins with a number, it will have a "v" prepended to
-   it in order to make it a valid Yorick variable name. (You can alter this by
-   specifying vprefix=.)
 
    Required parameters:
 
@@ -2173,10 +2169,12 @@ columns=, types=) {
       vprefix= A prefix to apply to all vnames.
       vsuffix= A suffix to apply to all vnames.
 
-   Options that are passed as-is to read_ascii_xyz (see read_ascii_xyz for
-   details). You *probably* won't need these options if the file was created
-   with write_ascii_xyz.
+   Options that are passed as-is to read_ascii_xyz. You *probably* won't need
+   these options if the file was created with write_ascii_xyz, but you *will*
+   need them for any custom format data. For usage information, please see the
+   (extensive) documentation for read_ascii_xyz.
 
+      preset=
       delimit=
       ESRI=
       header=
@@ -2218,24 +2216,18 @@ columns=, types=) {
       write, format="Converting file %d of %d\n", i, numberof(fn_all);
       data = read_ascii_xyz(fn_all(i), pstruc, delimit=delimit, header=header,
          ESRI=ESRI, intensity=intensity, rn=rn, soe=soe, indx=indx,
-         mapping=mapping, columns=columns, types=types);
+         mapping=mapping, columns=columns, types=types, preset=preset);
 
       if(numberof(data)) {
-         vname = dt_short(fn_tail);
-         if(!vname) vname = extract_qq(fn_tail);
+         vname = extract_tile(fn_tail, dtlength="short", qqprefix=1);
          if(!vname) vname = file_rootname(fn_tail);
          vname = vprefix + vname + vsuffix;
          if(regmatch("^[0-9]", vname)) vname = "v" + vname;
 
-         f = createb(out_path + out_tail);
-         add_variable, f, -1, vname, structof(data), dimsof(data);
-         get_member(f, vname) = data;
-         save, f, vname;
-         close, f;
+         pbd_save, out_path + out_tail, vname, data;
       }
    }
 }
-
 
 func batch_test_rcf(dir, mode, datum=, testpbd=, testedf=, buf=, w=, no_rcf=, re_rcf=) {
 /* DOCUMENT batch_test_rcf
