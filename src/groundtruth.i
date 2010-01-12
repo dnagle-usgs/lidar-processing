@@ -9,8 +9,8 @@
 func pnav2fs(pn, soe=) {
   retarr = 1;
   if ( is_void(soe)) soe = pn.sod ;
-  x   = ll2utm( pn.lat, pn.lon, force_zone=curzone );
-  xyz = [ x(,1), x(,2), pn.alt, soe ];
+  x   = fll2utm( pn.lat, pn.lon, force_zone=curzone );
+  xyz = [ x(2,), x(1,), pn.alt, soe ];
   gd  = transpose(xyz);
 
   N   = numberof(gd(1,));
