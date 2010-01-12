@@ -522,6 +522,7 @@ namespace eval mission {
                 -command [@ [list date_delete $date]]
             grid $f.lbl$date $f.btnConfig$date $f.btnLoad$date \
                 $f.btnRgb$date $f.btnCir$date $f.btnDelete$date
+            grid $f.lbl$date -sticky w
         }
         uncurry @
     }
@@ -725,7 +726,7 @@ namespace eval mission {
         set dlg [iwidgets::promptdialog $v::toplevel.#auto \
             -modality application \
             -title "Add new mission day" \
-            -labeltext "Please enter the mission date as YYYY-MM-DD:"]
+            -labeltext "Please enter a name for the mission day (such as YYYY-MM-DD):"]
         $dlg hide Help
         $dlg hide Apply
         focus [$dlg component prompt component entry]
@@ -735,8 +736,8 @@ namespace eval mission {
             if {[missionday_exists $date]} {
                 tk_messageBox \
                     -icon warning -parent $dlg -type ok \
-                    -message "That mission date already exists. If you want to\
-                        modify, please use the mission date's configure\
+                    -message "That mission day already exists. If you want to\
+                        modify, please use the mission day's configure\
                         button."
             } else {
                 after idle [list after 0 [namespace code [list date_config $date]]]
