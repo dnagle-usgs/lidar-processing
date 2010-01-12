@@ -232,7 +232,7 @@ func time2soe( a ) {
    a(*,2)--;                  // convert to zero-based day number
    usehms = a(*,3) == 0;
    if(numberof(where(usehms)))
-      a(*,3)(where(usehms)) = (a(*,4:6)(where(usehms)) * [3600,60,1])(sum);
+      a(*,3)(where(usehms)) = (a(*,4:6)(where(usehms),) * [3600,60,1](-,))(sum);
    return _ys(idx) + a(*,2)*86400 + a(*,3);
 }
 
