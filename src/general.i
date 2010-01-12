@@ -191,6 +191,12 @@ func pbd_save(file, vname, data) {
    See also: pbd_append pbd_load
 */
 // Original David Nagle 2009-12-28
+   // Sanitize vname
+   if(regmatch("^[0-9]", vname))
+      vname = "v" + vname;
+   vname = regsub(" ", vname, "_", all=1);
+   vname = regsub("-", vname, "_", all=1);
+
    f = createb(file, i86_primitives);
    add_variable, f, -1, vname, structof(data), dimsof(data);
    get_member(f, vname) = data;
