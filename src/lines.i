@@ -41,41 +41,66 @@ func perpendicular_intercept(x1, y1, x2, y2, x3, y3) {
    y2 = double(y2);
    x3 = double(x3);
    y3 = double(y3);
+
+   // Coerce same dimensions
+   dims = dimsof(x1);
+   if(dims(1) < dimsof(x2)(1))
+      dims = dimsof(x2);
+   if(dims(1) < dimsof(x3)(1))
+      dims = dimsof(x3);
+
+   if(dimsof(x1)(1) < dims(1)) {
+      x1 = array(x1, dims);
+      y1 = array(y1, dims);
+   }
+
+   if(dimsof(x2)(1) < dims(1)) {
+      x2 = array(x2, dims);
+      y2 = array(y2, dims);
+   }
+
+   if(dimsof(x3)(1) < dims(1)) {
+      x3 = array(x3, dims);
+      y3 = array(y3, dims);
+   }
    
    // Result arrays
-   xi = yi = array(double, numberof(x1));
+   xi = yi = array(double, dims);
 
    // Generate indexes for different portions
-   x_eq = where(x1 == x2); // Special case
-   y_eq = where(y1 == y2); // Special case
-   norm = where(!x1 == x2 | !y1 == y2); // Normal
+   x_eq = x1 == x2; // Special case
+   y_eq = y1 == y2; // Special case
+   norm = !x_eq & !y_eq; // Normal
    
    // Special case
-   if(numberof(x_eq)) {
-      xi(x_eq) = x1(x_eq);
-      yi(x_eq) = y3(x_eq);
+   if(anyof(x_eq)) {
+      w = where(x_eq);
+      xi(w) = x1(w);
+      yi(w) = y3(w);
    }
 
    // Special case
-   if(numberof(y_eq)) {
-      yi(y_eq) = y1(y_eq);
-      xi(y_eq) = x3(y_eq);
+   if(anyof(y_eq)) {
+      w = where(y_eq);
+      yi(w) = y1(w);
+      xi(w) = x3(w);
    }
 
    // Normal
-   if(numberof(norm)) {
+   if(anyof(norm)) {
+      w = where(norm);
       // m12: Slope of line passing through pts 1 and 2
-      m12 = (y2(norm) - y1(norm))/(x2(norm) - x1(norm));
+      m12 = (y2(w) - y1(w))/(x2(w) - x1(w));
       // m3: Slope of line passing through pt 3, perpendicular to line 12
       m3 = -1 / m12;
 
       // y-intercepts of the two lines
-      b12 = y1(norm) - m12 * x1(norm);
-      b3 = y3(norm) - m3 * x3(norm);
+      b12 = y1(w) - m12 * x1(w);
+      b3 = y3(w) - m3 * x3(w);
 
       // x and y values of intersection points
-      xi(norm) = (b3 - b12)/(m12 - m3);
-      yi(norm) = m12 * xi(norm) + b12;
+      xi(w) = (b3 - b12)/(m12 - m3);
+      yi(w) = m12 * xi(w) + b12;
    }
 
    return [xi, yi];
@@ -151,7 +176,7 @@ func average_line(x, y, bin=, taper=) {
 }
 
 func smooth_line(x, y, &upX, &upY, &idx, bin=, upsample=) {
-/* smooth_line(x, y, &upX, &upY, &idx, bin=, upsample=)
+/* DOCUMENT smooth_line(x, y, &upX, &upY, &idx, bin=, upsample=)
    
    This function smooths the line given by [x, y].
 
@@ -351,4 +376,233 @@ func comparelines(x, y, a, b, start=, stop=) {
    if (is_array(err)) avgerr = avg(err^2);
    if (!is_array(err)) avgerr = 0;
    return avgerr;
+}
+
+func line_point_dist(x1, y1, x2, y2, xp, yp) {
+/* DOCUMENT dist = line_point_dist(x1, y1, x2, y2, xp, yp);
+   Returns the array of distances between the points xp,yp and the line defined
+   by (x1,y1),(x2,y2).
+
+   Parameters:
+      x1, y1 - A point on the line. Scalars.
+      x2, y2 - A different point on the same line. Scalars.
+      xp, yp - Arrays of point coordinates.
+
+   Returns:
+      dist - Array of distances, conformable with xp and yp.
+*/
+   intercepts = perpendicular_intercept(x1, y1, x2, y2, xp, yp);
+   return ppdist([xp, yp], intercepts, tp=1);
+}
+
+func downsample_line(x, y, maxdist=, idx=) {
+/* DOCUMENT downsample_line(x, y, maxdist=, idx=)
+   Given a polyline defined by a series of x and y coordinates, this will
+   downsample the polyline to a subset of those coordinates that still fits the
+   original polyline.
+
+   Parameters:
+      x, y: Arrays of x and y coordinates.
+
+   Options:
+      maxdist= The maximum distance that the downsampled line may be from the
+         given points. Default: maxdist=1.
+      idx= Specifies whether to return coordinates or indices. Settings:
+            idx=0    Return [xd, yd], the downsampled line. (Default)
+            idx=1    Return w, the indices into x, y for the downsampled line.
+
+*/
+   default, maxdist, 1.;
+   default, idx, 0;
+
+   // The new polyline will be a subset of the original. We need to decide
+   // which points must be kept in order to retain the shape.
+
+   // Start by keeping just the first and last points.
+   keep = array(char(0), numberof(x));
+   keep(1) = keep(0) = 1;
+
+   // Check each segment in the new polyline. If any segment is too far from
+   // the points it corresponds to, then add the furthest point to the new
+   // polyline. New segments are checked further until they fit the threshold.
+   w = where(keep);
+   for(i = 1; i <= numberof(w) - 1; i++) {
+      if(w(i) + 1 == w(i+1))
+         continue;
+      rng = w(i):w(i+1)
+      sx = x(rng);
+      sy = y(rng);
+      dist = line_point_dist(sx(1), sy(1), sx(0), sy(0), sx, sy);
+
+      if(dist(max) > maxdist) {
+         mx = dist(mxx);
+         adding = w(i) + mx - 1;
+         keep(adding) = 1;
+         w = where(keep);
+         i--;
+      }
+   }
+
+   // We now have a reasonable model. However, it can be thinned out even
+   // further by reassessing the kept points.
+
+   // We want to repeat this code block until we stop losing points.
+   startcount = numberof(keep);
+   endcount = numberof(w);
+   while(endcount < startcount) {
+      startcount = endcount;
+
+      // Tune: Update all kept points to minimize the maximum distance from the
+      // original line. Also, if we discover any points that aren't needed...
+      // throw them out.
+      for(i = 1; i <= numberof(w) - 2; i++) {
+         rng = w(i):w(i+2);
+         sx = x(rng);
+         sy = y(rng);
+         dist = line_point_dist(sx(1), sy(1), sx(0), sy(0), sx, sy);
+
+         if(dist(max) > maxdist) {
+            mx = dist(mxx);
+            adding = w(i) + mx - 1;
+            if(adding != w(i+1)) {
+               keep(w(i+1)) = 0;
+               keep(adding) = 1;
+               w = where(keep);
+            }
+         } else {
+            keep(w(i+1)) = 0;
+            w = where(keep);
+            i--;
+         }
+      }
+
+      // Thinout: Scan through looking at subseries of four kept points. Check
+      // to see if the central two points can be removed. If not, check to see
+      // if they can be replaced by a single point.
+      thinout = 1;
+      while(thinout) {
+         thinout = 0;
+         for(i = 1; i <= numberof(w) - 3; i++) {
+            rng = w(i):w(i+3);
+            sx = x(rng);
+            sy = y(rng);
+            dist = line_point_dist(sx(1), sy(1), sx(0), sy(0), sx, sy);
+
+            if(dist(max) <= maxdist) {
+               keep(w(i+1)) = 0;
+               keep(w(i+2)) = 0;
+               w = where(keep);
+               i--;
+               thinout = 1;
+            } else {
+               pivot = dist(mxx);
+
+               p1x = sx(:pivot);
+               p1y = sy(:pivot);
+               dist1 = line_point_dist(p1x(1), p1y(1), p1x(0), p1x(0), p1x, p1y);
+
+               p2x = sx(pivot:);
+               p2y = sy(pivot:);
+               dist2 = line_point_dist(p2x(1), p2y(1), p2x(0), p2x(0), p2x, p2y);
+
+               if(dist1(max) <= maxdist && dist2(max) <= maxdist) {
+                  keep(w(i+1)) = 0;
+                  keep(w(i+2)) = 0;
+                  adding = w(i) + pivot - 1;
+                  keep(adding) = 1;
+                  w = where(keep);
+                  i--;
+                  thinout = 1;
+               }
+            }
+         }
+      }
+
+      endcount = numberof(w);
+   }
+
+   return idx ? w : [x(w), y(w)];
+}
+
+func level_short_dips(seq, dist=, thresh=) {
+/* DOCUMENT leveled = level_short_dips(seq, dist=, thresh=)
+   Removes short "dips" in a data array, smoothing out some of its "noise".
+
+   seq should be a 1-dimensional array of numerical values. For example:
+      seq=[4,4,4,3,3,4,4,4,5,5,5,6,5,5]
+
+   The sequnce of "3,3" in the above is a short "dip". This function is
+   intended to smooth that sort of thing out:
+      leveled=[4,4,4,4,4,4,4,4,5,5,5,6,5,5]
+
+   Short peaks will be left alone; only short dips will be leveled.
+
+   Parameter:
+      seq: An array of numbers with values to be smoothed out.
+
+   Options:
+      dist= If provided, this must be the same length of seq. It defaults to
+         [1,2,3...numberof(seq)]. This is used with thresh to determine which
+         items on either side of a value are used for comparisons. This array
+         is the cummulative differences of distances from point to point. (So
+         the default assumes they are equally spaced.)
+      thresh= The threshold for how far on either side of a value the algorithm
+         should look for determining whether it's a dip. Default is 10.
+
+   Examples:
+      > seq = [2,2,1,0,0,0,0,0,1,2,2,1,1,2,2,3]
+      > seq
+      [2,2,1,0,0,0,0,0,1,2,2,1,1,2,2,3]
+      > level_short_dips(seq, thresh=2)
+      [2,2,1,0,0,0,0,0,1,2,2,2,2,2,2,3]
+      > level_short_dips(seq, thresh=4)
+      [2,2,1,1,1,1,1,1,1,2,2,2,2,2,2,3]
+      > level_short_dips(seq, thresh=5)
+      [2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,3]
+      > dist = [2,1,1,2,1,1,2,1,1,2,1,1,2,1,1](cum)
+      > dist
+      [0,2,3,4,6,7,8,10,11,12,14,15,16,18,19,20]
+      > level_short_dips(seq, thresh=4, dist=dist)
+      [2,2,1,0,0,0,0,0,1,2,2,2,2,2,2,3]
+*/
+   default, dist, indgen(numberof(seq));
+   default, thresh, 10;
+
+   // We don't want to change the original array, so forcibly create new
+   // instance.
+   seq = (seq);
+
+   count = numberof(seq);
+   // Must make two passes
+   // Pass one will miss points that are near the edges of long dips but will
+   // fill their centers.
+   for(pass = 1; pass <= 2; pass++) {
+      r1 = r2 = 1;
+      for(i = 1; i <= count; i++) {
+         b1 = dist(i) - thresh;
+         b2 = dist(i) + thresh;
+
+         // Bring the lower bound within range
+         while(r1 <= count && dist(r1) < b1)
+            r1++;
+
+         // Push the upper bound /just/ out of range then bring it back in
+         while(r2 <= count && dist(r2) < b2)
+            r2++;
+         r2--;
+
+         // Determine upper and lower max
+         lower = seq(r1:i)(max);
+         upper = seq(i:r2)(max);
+
+         // Get median value among current and two maxes
+         medmax = median([seq(i), lower, upper]);
+
+         // If the median is higher than our current value, change it
+         if(seq(i) < medmax)
+            seq(i) = medmax;
+      }
+   }
+
+   return seq;
 }
