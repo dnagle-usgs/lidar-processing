@@ -1,19 +1,8 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
 require, "eaarl.i";
+require, "photo.i";
 
-local kml_i;
-/* DOCUMENT kml_i
-
-   Functions for working with KML files:
-
-      kml_write_line
-      ll_to_kml
-      kml_downsample
-      kml_segment
-      kml_pnav
-
-   Original by David Nagle, imported/modified from ADAPT
-*/
+// OLD STYLE KML FUNCTIONS
 
 func kml_write_line(dest, lat, lon, elv, name=, description=, visibility=,
    Open=, linecolor=, linewidth=, segment=) {
@@ -54,54 +43,20 @@ func kml_write_line(dest, lat, lon, elv, name=, description=, visibility=,
    default, linewidth, "1";
    default, segment, array(0, numberof(lat));
 
-   f = open(dest, "w");
-
-   write, f, format="%s\n", [
-      "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
-      "<kml xmlns=\"http://earth.google.com/kml/2.1\">",
-      "<Document>",
-      "<Placemark>",
-      "  <description>" + description + "</description>",
-      "  <name>" + name + "</name>",
-      "  <Style>",
-      "    <LineStyle>",
-      "      <color>" + linecolor + "</color>",
-      "      <width>" + linewidth + "</width>",
-      "    </LineStyle>",
-      "  </Style>",
-      "  <visibility>" + visibility + "</visibility>",
-      "  <open>" + Open + "</open>",
-      "  <MultiGeometry>"
-   ];
-
    segvals = set_remove_duplicates(segment);
 
+   lines = [];
    for(i = 1; i <= numberof(segvals); i++) {
       idx = where(segment==segvals(i));
-
-      write, f, format="%s\n", [
-         "    <LineString>",
-         "      <tessellate>1</tessellate>",
-         "      <altitudeMode>absolute</altitudeMode>",
-         "      <coordinates>"
-      ];
-
-      write, f, format="%.5f,%.5f,%.2f\n", lon(idx), lat(idx), elv(idx);
-
-      write, f, format="%s\n", [
-         "      </coordinates>",
-         "    </LineString>"
-      ];
+      grow, lines, kml_LineString(lon(idx), lat(idx), elv(idx),
+         altitudeMode="absolute");
    }
 
-   write, f, format="%s\n", [
-      "  </MultiGeometry>",
-      "</Placemark>",
-      "</Document>",
-      "</kml>"
-   ];
-
-   close, f;
+   kml_save, dest, kml_Placemark(
+      kml_Style(kml_LineStyle(color=linecolor, width=linewidth)),
+      kml_MultiGeometry(lines),
+      name=name, Open=Open, visibility=visibility, description=description
+   );
 }
 
 func ll_to_kml(lat, lon, elv, output, name=, description=, linecolor=,
@@ -117,7 +72,7 @@ func ll_to_kml(lat, lon, elv, output, name=, description=, linecolor=,
 
    Options:
       name= A name for the kml linestring. Defaults to the output filename.
-      description= A description for the kmkl linestring. Defaults to name's
+      description= A description for the kml linestring. Defaults to name's
          value.
       sample_thresh= The distance threshold to use to downsample the line.
       segment_threshold= The distance threshold to use to segment a line.
@@ -143,27 +98,16 @@ func kml_downsample(&lat, &lon, &elv, threshold=) {
 
    Original David Nagle 2008-03-26
 */
-   default, threshold, 100;
+   default, threshold, 5.;
    utm = fll2utm(lat, lon);
    n = utm(1,);
    e = utm(2,);
 
-   do {
-      if(numberof(n) < 2) break;
-      dist = sqrt(n(dif)^2 + e(dif)^2);
-      w = where(dist < threshold);
-      if(numberof(w)) {
-         w = w(::2);
-         keep = array(1, numberof(n));
-         keep(w) = 0;
-         k = where(keep);
-         lat = lat(k);
-         lon = lon(k);
-         elv = elv(k);
-         n = n(k);
-         e = e(k);
-      }
-   } while (numberof(w));
+   idx = downsample_line(e, n, maxdist=threshold, idx=1);
+
+   lat = lat(idx);
+   lon = lon(idx);
+   elv = elv(idx);
 }
 
 func kml_segment(lat, lon, threshold=) {
@@ -180,7 +124,7 @@ func kml_segment(lat, lon, threshold=) {
 
    utm = fll2utm(lat, lon);
    dist = sqrt(utm(1,)(dif)^2 + utm(2,)(dif)^2);
-   
+
    w = where(dist > threshold);
    if(numberof(w)) {
       w = grow(0, w, numberof(lat));
@@ -188,38 +132,940 @@ func kml_segment(lat, lon, threshold=) {
          seg(w(i-1)+1:w(i)) = i;
       }
    }
-   
+
    return seg;
 }
 
-func kml_pnav(input, output, name=, description=, linecolor=, sample_thresh=, segment_thresh=) {
-/* DOCUMENT kml_pnav, input, output, name=, description=, linecolor=,
-   sample_thresh=, segment_thresh=
-   Reads the input pnav.ybin file and generates an output kml file.
+// PNAV/MISSION ORIENTED FUNCTIONS
+
+func batch_kml_mission(datadir, outdir, searchstr=, outfile=, webdest=) {
+/* DOCUMENT batch_kml_mission, datadir, outdir, searchstr=, outfile=, webdest=
+   This is used to create kml/kmz files for a collection of missions.
 
    Parameters:
-      input: Path/filename to a *-pnav.ybin file.
-      output: Path/filename to a destination .kml file.
+      datadir: The directory (or array of directories) to search for missions
+         in.
+      outdir: The directory where the created kml/kmz files will go.
 
    Options:
-      name= A name for the kml linestring. Defaults to the output filename.
-      description= A description for the kmkl linestring. Defaults to name's
-         value.
-      sample_thresh= The distance threshold to use to downsample the line.
-      segment_threshold= The distance threshold to use to segment a line.
-      linecolor= The color of the line, in AABBGGRR format
-         (alpha-blue-green-red).
-
-   Original David Nagle 2008-03-26
+      searchstr= The search string to use for finding mission json files.
+         Default: searchstr="flightlines.json"
+      outfile= The name of the overall kml file to create, for the entire
+         collection. Default: outfile="eaarl.kml"
+      webdest= The destination directory on the web. If this is used, then all
+         of the KML files will be updated to use full URL references, prefixing
+         this to what they'd normally have used.
 */
-   pnav = rbpnav(fn=input);
+   default, searchstr, "flightlines.json";
+   default, outfile, "eaarl.kml";
 
-   if(!numberof(pnav)) {
-      write, "Error: No data loaded.";
-      return;
+   if(!is_void(webdest))
+      fix_dir, webdest;
+
+   jsons = paths = [];
+   for(i = 1; i <= numberof(datadir); i++) {
+      cur = find(datadir(i), glob=searchstr);
+      grow, jsons, cur;
+      grow, paths, file_dirname(file_relative(datadir(i), cur));
    }
 
-   ll_to_kml, pnav.lat, pnav.lon, pnav.alt, output, name=name,
-      description=description, sample_thresh=sample_thresh,
-      segment_thresh=segment_threshold, linecolor=linecolor;
+   missiondata_cache, "disable";
+   missiondata_cache, "clear";
+
+   mission_kmls = day_kmls = kpart_kmls = [];
+   tree = h_new();
+   webtree = h_new();
+
+   for(i = 1; i <= numberof(jsons); i++) {
+      passdest = [];
+      if(!is_void(webdest))
+         passdest = webdest + paths(i) + "/";
+      result = kml_mission(conf_file=jsons(i), keepkml=1,
+         outdir=file_join(outdir, paths(i)), webdest=passdest);
+      fn = file_join(file_dirname(jsons(i)), (*result(1))(1));
+      grow, mission_kmls, fn;
+      grow, day_kmls, file_join(file_dirname(jsons(i)), *result(2));
+      grow, kpart_kmls, file_join(file_dirname(jsons(i)), *result(3));
+      result = [];
+
+      treepath = strsplit(paths(i), "/");
+      node = tree;
+      for(j = 1; j < numberof(treepath); j++) {
+         if(!h_has(node, treepath(j))) {
+            h_set, node, treepath(j), h_new();
+         }
+         node = node(treepath(j));
+      }
+      h_set, node, treepath(0), kml_NetworkLink(
+         kml_Link(href=file_relative(outdir, fn)),
+         name=treepath(0)
+      );
+
+      if(!is_void(webdest)) {
+         node = webtree;
+         for(j = 1; j < numberof(treepath); j++) {
+            if(!h_has(node, treepath(j))) {
+               h_set, node, treepath(j), h_new();
+            }
+            node = node(treepath(j));
+         }
+         h_set, node, treepath(0), kml_NetworkLink(
+            kml_Link(href=webdest + file_relative(outdir, fn)),
+            name=treepath(0)
+         );
+      }
+   }
+
+   write, format="\n----------\nProcessing %s\n", "everything";
+   outname = file_join(outdir, outfile);
+   kml_save, outname, __batch_kml_mission_builder(tree), name="EAARL flightlines";
+
+   kmz = file_rootname(outname) + ".kmz";
+   kmz_create, kmz, outname, mission_kmls, day_kmls, kpart_kmls;
+
+   if(!is_void(webdest)) {
+      remove, outname;
+      kml_save, outname, __batch_kml_mission_builder(webtree),
+         name="EAARL flightlines";
+      webify = grow(mission_kmls, day_kmls);
+      for(i = 1; i <= numberof(webify); i++) {
+         remove, webify(i);
+         rename, file_rootname(webify(i)) + "-web.kml", webify(i);
+      }
+   }
+}
+
+func __batch_kml_mission_builder(node) {
+   keys = h_keys(node);
+   keys = keys(sort(keys));
+   children = [];
+   for(i = 1; i <= numberof(keys); i++) {
+      val = node(keys(i));
+      if(!is_string(val)) {
+         val = kml_Folder(
+            __batch_kml_mission_builder(val),
+            name=keys(i)
+         );
+      }
+      grow, children, val;
+   }
+   return children;
+}
+
+func kml_mission(void, conf_file=, outdir=, name=, keepkml=, webdest=) {
+/* DOCUMENT kml_mission, conf_file=, outdir=, name=
+   Creates kml/kmz files for a mission, based on the currently defined mission
+   configuration.
+
+   To create for the currently loaded mission, just run:
+      kml_mission;
+   This will create a kml subdirectory for the mission that contains all the
+   relevant files. A KMZ will be created for each mission day, plus a KMZ will
+   be created that contains all of the mission days together.
+
+   Options:
+      conf_file= This specifies the path of a json mission configuration file
+         to load and use, instead of the currently loaded mission
+         configuration.
+      outdir= The output directory to put the results in. This defaults to a
+         "kml" subdirectory in the mission directory.
+      name= Name of the mission. Used in creating the full mission KML/KMZ
+         file's filename and also used to label things in the file. Defaults to
+         the last component of the mission path.
+      keepkml= By default, your final result will be just KMZ files. However,
+         these KMZ files were generated by a whole lot of KML files. If you
+         want the KML files to stick around, set keepkml=1. This is useful if
+         you'll be serving the flightlines from a web interface or integrating
+         the kml results into a single larger KMZ file, for example.
+      webdest= The destination directory on the web. Do not use directly; this
+         is used by batch_mission_kml.
+
+   As an example, if your mission path is /data/0/EAARL/raw/NorIda, then you'll
+   get these as defaults:
+      outdir="/data/0/EAARL/raw/NorIda/kml/", name="NorIda"
+   The full-mission kmz file would then be:
+      /data/0/EAARL/raw/NorIda/kml/NorIda.kmz
+*/
+   extern pnav, edb, soe_day_start;
+
+   if(!is_void(conf_file))
+      mission_load, conf_file;
+
+   default, outdir, file_join(mission_path(), "kml");
+   default, name, file_tail(mission_path());
+   default, keepkml, !is_void(webdest);
+
+   mkdirp, outdir;
+
+   days = missionday_list();
+   days = days(sort(days));
+
+   files = links = weblinks = [];
+
+   for(i = 1; i <= numberof(days); i++) {
+      write, format="\n----------\nProcessing %s\n", days(i);
+      missiondata_load, "edb", day=days(i), noerror=1;
+      missiondata_load, "pnav", day=days(i), noerror=1;
+      fn = file_join(outdir, days(i) + ".kml");
+      if(!is_void(pnav) && !is_void(edb) && !is_void(soe_day_start)) {
+         grow, files, kml_pnav(pnav, fn, name=days(i), edb=edb,
+            soe_day_start=soe_day_start, webdest=webdest);
+         grow, links, kml_NetworkLink(
+            kml_Link(href=file_relative(outdir, fn)),
+            name=days(i)
+         );
+         if(!is_void(webdest))
+            grow, weblinks, kml_NetworkLink(
+               kml_Link(href=webdest + file_relative(outdir, fn)),
+               name=days(i)
+            );
+      } else {
+         write, "No data, skipped!";
+      }
+   }
+
+   write, format="\n----------\nProcessing %s\n", name;
+
+   kparts = strglob("*kpart*", file_tail(files));
+   masters = where(!kparts);
+   kparts = where(kparts);
+
+   outname = file_join(outdir, name + ".kml");
+   kml_save, outname, links;
+   kmz = file_rootname(outname) + ".kmz";
+   kmz_create, kmz, outname, files(masters), files(kparts);
+
+   if(!is_void(webdest))
+      kml_save, file_rootname(outname) + "-web.kml", weblinks;
+
+   if(!keepkml) {
+      for(i = 1; i <= numberof(files); i++)
+         remove, files(i);
+      remove, outname;
+   }
+
+   return [&[outname], &files(masters), &files(kparts)];
+}
+
+func kml_pnav(input, output, name=, edb=, soe_day_start=, webdest=) {
+/* DOCUMENT kml_pnav, input, output, name=, edb=, soe_day_start=
+   Creates KML/KMZ files for a PNAV file.
+
+   Parameters:
+      input: The pnav to use. This can be the path to the pnav data to load, or
+         it can be a loaded array of PNAV data.
+      output: The desired output filename. This should be something.kml or
+         something.kmz. (Both a .kml and a .kmz will be created, so either
+         extension is fine here.)
+
+   Options:
+      name= The name to use for the flightline, for descriptive purposes.
+         Defaults to the output file's name, without leading directories and
+         without extension.
+      edb= An array of edb data to use.
+      soe_day_start= The soe_day_start value associated with that edb data.
+      webdest= The destination directory on the web. Do not use directly; this
+         is used by batch_mission_kml.
+
+   Returns a array of the .kml files created. The first item is the main .kml,
+   which was used a doc.kml inside the created .kmz.
+*/
+   local fn;
+   default, name, file_rootname(file_tail(output));
+   pnav = typeof(input) == "string" ? load_pnav(fn=input, verbose=0) : input;
+
+   if(file_extension(output) == ".kmz")
+      output = file_rootname(output) + ".kml";
+
+   region = kml_pnav_region(pnav);
+   outdir = file_dirname(output);
+
+   // FLIGHTLINE
+   color = kml_randomcolor();
+   width = sqrt(region.area);
+
+   maxdists = [10, 50, 250, 10000];
+   files = links = weblinks = [];
+   for(i = 1; i < numberof(maxdists); i++) {
+      // Estimate the pixel range that this maxdist is appropriate for
+      lod_max = long(width/maxdists(i));
+      lod_min = long(width/maxdists(i+1));
+
+      if(is_void(files))
+         lod_max = -1;
+      if(lod_max > -1 && lod_max <= 16)
+         continue;
+
+      if(lod_min <= 16 || i + 1 == numberof(maxdists))
+         lod_min = 4;
+
+      fn = swrite(format="%s_kpart_l%d.kml", file_rootname(output), maxdists(i));
+      kml_save, fn, kml_pnav_flightline(pnav, maxdist=maxdists(i), color=color);
+      grow, files, fn;
+      reg = kml_Region(
+         north=region.north, south=region.south,
+         east=region.east, west=region.west,
+         minLodPixels=lod_min, maxLodPixels=lod_max
+      );
+      grow, links, kml_NetworkLink(
+         kml_Link(href=file_relative(outdir, fn)),
+         reg
+      );
+      if(!is_void(webdest))
+         grow, weblinks, kml_NetworkLink(
+            kml_Link(href=webdest + file_relative(outdir, fn)),
+            reg
+         );
+   }
+
+   flightline = kml_Folder(
+      links,
+      kml_Style(kml_ListStyle(listItemType="checkHideChildren")),
+      name="Flightline"
+   );
+
+   if(!is_void(webdest))
+      webflightline = kml_Folder(
+         weblinks,
+         kml_Style(kml_ListStyle(listItemType="checkHideChildren")),
+         name="Flightline"
+      );
+
+   links = weblinks = [];
+
+   // Elevated Flightline
+   fn = file_rootname(output) + "_kpart_elev.kml";
+   kml_save, fn, kml_pnav_flightline(pnav, maxdist=10, color=color, alt=1);
+   grow, files, fn;
+   grow, links, kml_NetworkLink(
+      kml_Link(href=file_relative(outdir, fn)),
+      name="Elevated flightline", visibility=0
+   );
+   if(!is_void(webdest))
+      grow, weblinks, kml_NetworkLink(
+         kml_Link(href=webdest + file_relative(outdir, fn)),
+         name="Elevated flightline", visibility=0
+      );
+
+   // TIMESTAMPS
+   local timestampstyle, timestampfolder;
+   assign, kml_pnav_timestamps(pnav), timestampstyle, timestampfolder;
+   fn = file_rootname(output) + "_kpart_time.kml";
+   kml_save, fn, *timestampstyle, *timestampfolder;
+   grow, files, fn;
+   grow, links, kml_NetworkLink(
+      kml_Link(href=file_relative(outdir, fn)),
+      name="Timestamps", visibility=0
+   );
+   if(!is_void(webdest))
+      grow, weblinks, kml_NetworkLink(
+         kml_Link(href=webdest + file_relative(outdir, fn)),
+         name="Timestamps", visibility=0
+      );
+
+   // PDOP
+   local pdopstyle, pdopfolder;
+   assign, kml_pnav_pdop(pnav), pdopstyle, pdopfolder;
+   fn = file_rootname(output) + "_kpart_pdop.kml";
+   kml_save, fn, *pdopstyle, *pdopfolder;
+   grow, files, fn;
+   grow, links, kml_NetworkLink(
+      kml_Link(href=file_relative(outdir, fn)),
+      name="PDOP", visibility=0
+   );
+   if(!is_void(webdest))
+      grow, weblinks, kml_NetworkLink(
+         kml_Link(href=webdest + file_relative(outdir, fn)),
+         name="PDOP", visibility=0
+      );
+
+   // EDB
+   local edbstyle, edbfolder;
+   edbstyle = edbfolder = &[string(0)];
+   if(!is_void(edb) && !is_void(soe_day_start)) {
+      assign, kml_pnav_edb(pnav, edb, soe_day_start), edbstyle, edbfolder;
+      fn = file_rootname(output) + "_kpart_edb.kml";
+      kml_save, fn, *edbstyle, *edbfolder;
+      grow, files, fn;
+      grow, links, kml_NetworkLink(
+         kml_Link(href=file_relative(outdir, fn)),
+         name="Lidar coverage", visibility=0
+      );
+      if(!is_void(webdest))
+         grow, weblinks, kml_NetworkLink(
+            kml_Link(href=webdest + file_relative(outdir, fn)),
+            name="Lidar coverage", visibility=0
+         );
+   }
+
+   supplemental = kml_Folder(
+      kml_Style(kml_ListStyle(listItemType="checkOffOnly")),
+      links,
+      name="Supplemental layers",
+      Open=0,
+      visibility=0
+   );
+   kml_save, output, flightline, supplemental, name=name;
+
+   kmz = file_rootname(output) + ".kmz";
+   kmz_create, kmz, output, files;
+
+   if(!is_void(webdest)) {
+      supplemental = kml_Folder(
+         kml_Style(kml_ListStyle(listItemType="checkOffOnly")),
+         weblinks,
+         name="Supplemental layers",
+         Open=0,
+         visibility=0
+      );
+      kml_save, file_rootname(output)+"-web.kml", webflightline, supplemental,
+         name=name;
+   }
+
+   return grow(output, files);
+}
+
+// PNAV KML COMPONENTS
+
+func kml_pnav_flightline(pnav, color=, maxdist=, alt=) {
+/* DOCUMENT placemark = kml_pnav_flightline(pnav, color=)
+   Generates KLM data for the pnav flightline.
+   Return value is a string.
+   color= defaults to a random color
+   alt= specifies whether to include altitude, default is 0
+*/
+   if(is_void(color))
+      color = kml_randomcolor();
+   return kml_Placemark(
+      kml_Style(kml_LineStyle(color=color, width=2)),
+      kml_pnav_LineString(pnav, maxdist=maxdist, alt=alt),
+      name="Flightline"
+   );
+}
+
+func kml_pnav_region(pnav) {
+/* DOCUMENT region = kml_pnav_region(pnav)
+   Returns a Yeti hash with five keys:
+      region.north \
+      region.south  \ The bounding box for this
+      region.east   / pnav data, in lat/lon.
+      region.west  /
+      region.area     The area of the bounding box, in meters.
+*/
+   north = pnav.lat(max);
+   south = pnav.lat(min);
+   east = pnav.lon(max);
+   west = pnav.lon(min);
+   u = fll2utm([north, north, south, south], [east, west, east, west]);
+   z = long(median(u(3,)));
+   if(anyof(u(3,) != z))
+      u = fll2utm([north, north, south, south], [east, west, east, west],
+         force_zone=z);
+   area = (u(1,max) - u(1,min)) * (u(2,max) - u(2,min));
+   return h_new(north=north, east=east, south=south, west=west, area=area);
+}
+
+func kml_pnav_timestamps(pnav, interval=, visibility=) {
+/* DOCUMENT [&style, &folder] = kml_pnav_timestamps(pnav, interval=)
+   Generates KML data for the timestamps in a pnav.
+   Return value is an array of pointers.
+   Interval defaults to 900 seconds (15 minutes).
+*/
+   default, interval, 900.;
+   spots = grow(1, where(floor(pnav.sod / interval)(dif) == 1) + 1, numberof(pnav));
+   spots = pnav(set_remove_duplicates(spots));
+   hms = sod2hms(spots.sod);
+   msg = swrite(format="%s: %02d:%02d:%02d", name, hms(,1), hms(,2), hms(,3));
+
+   style = kml_Style(
+      kml_IconStyle(
+         href="http://maps.google.com/mapfiles/kml/shapes/placemark_circle.png"
+      ),
+      id="timestamp"
+   );
+
+   timestamps = array(string, numberof(spots));
+   for(i = 1; i <= numberof(spots); i++) {
+      timestamps(i) = kml_Placemark(
+         kml_Point(spots(i).lon, spots(i).lat),
+         name=msg(i), styleUrl="#timestamp", visibility=visibility
+      );
+   }
+
+   return [&style, &timestamps];
+}
+
+func kml_pnav_pdop(pnav, maxdist=, visibility=) {
+/* DOCUMENT [&styles, &folder] = kml_pnav_pdop(pnav, maxdist=)
+   Generates KML data for the pdops in a pnav.
+   Return value is an array of pointers.
+*/
+   // Threshold values and settings
+   conf = _lst(
+      h_new(low=0.0, high=2.0, name="pdop &lt; 2",
+         width=1, color=kml_color(0, 0, 255)),
+      h_new(low=2.0, high=3.0, name="2 &lt;= pdop &lt; 3",
+         width=2, color=kml_color(0, 255, 255)),
+      h_new(low=3.0, high=4.0, name="3 &lt;= pdop &lt; 4",
+         width=3, color=kml_color(0, 255, 0)),
+      h_new(low=4.0, high=5.0, name="4 &lt;= pdop &lt; 5",
+         width=4, color=kml_color(255, 255, 0)),
+      h_new(low=5.0, high=1e100, name="5 &lt;= pdop",
+         width=5, color=kml_color(255, 0, 0))
+   );
+
+   count = _len(conf);
+
+   // Condense pdops into discrete values
+   pdopi = array(short, numberof(pnav));
+   for(i = 1; i <= count; i++) {
+      cur = _car(conf, i);
+      // Find all points that match the current range
+      match = cur.low <= pnav.pdop & pnav.pdop < cur.high;
+
+      // No matches? Nothing to do
+      if(noneof(match))
+         continue;
+
+      pdopi(where(match)) = i;
+   }
+
+   // Calculate point-to-point distances
+   n = e = [];
+   fll2utm, pnav.lat, pnav.lon, n, e;
+   dist = ppdist([e(:-1), n(:-1)], [e(2:), n(2:)], tp=1)(cum);
+   n = e = [];
+
+   // Smooth
+   pdopi = level_short_dips(pdopi, dist=dist, thresh=100.0);
+
+   folders = styles = array(string, count);
+   for(i = 1; i <= count; i++) {
+      cur = _car(conf, i);
+
+      // Find all points that match the current range
+      match = pdopi == i;
+
+      // No matches? Nothing to do
+      if(noneof(match))
+         continue;
+
+      // Calculate our range start/stop indices
+      r0 = r1 = [];
+      if(allof(match)) {
+         // If everything matches, then it's very simple...
+         r0 = [1];
+         r1 = [numberof(pnav)];
+      } else {
+         // Pick out the start and stop of each range
+         r0 = where(match(dif) == 1);
+         r1 = where(match(dif) == -1);
+
+         // Special case: if the first element is part of the range
+         if(r1(1) < r0(1))
+            r0 = grow(1, r0);
+
+         // Special case: if the last element is part of the range
+         if(numberof(r1) < numberof(r0))
+            grow, r1, numberof(pnav);
+      }
+
+      // Add style information
+      styles(i) = kml_Style(
+         kml_LineStyle(width=cur.width, color=cur.color),
+         id=swrite(format="pdop%d", i)
+      );
+
+      // Generate placemarks for each range
+      segments = array(string, numberof(r0));
+      for(j = 1; j <= numberof(r0); j++) {
+         pnavseg = pnav(r0(j):r1(j));
+         hms0 = sod2hms(pnavseg(1).sod);
+         hms1 = sod2hms(pnavseg(0).sod);
+         segname = swrite(format="%02d:%02d:%02d - %02d:%02d:%02d",
+            hms0(1), hms0(2), hms0(3), hms1(1), hms1(2), hms1(3));
+         segments(j) = kml_Placemark(
+            kml_pnav_LineString(pnavseg, maxdist=maxdist),
+            name=segname, visibility=visibility,
+            styleUrl=swrite(format="#pdop%d", i)
+         );
+      }
+
+      // Put placemarks in a folder
+      folders(i) = kml_Folder(
+         segments,
+         name=cur.name, visibility=visibility
+      );
+   }
+
+   // Eliminate anything we skipped
+   folders = folders(where(folders));
+   styles = styles(where(styles));
+
+   return [&styles, &folders];
+}
+
+func kml_pnav_edb(pnav, edb, soe_day_start, maxdist=, visibility=) {
+/* DOCUMENT [&style, &folder] = kml_pnav_edb(pnav, edb, soe_day_start, maxdist=)
+   Generates KML data for the edb coverage on the given pnav.
+   Return value is an array of pointers.
+*/
+   sod_edb = edb.seconds - soe_day_start;
+
+   segw = where(sod_edb(dif) > 300);
+   if(numberof(segw)) {
+      segw = grow(0, segw, numberof(sod_edb));
+   } else {
+      segw = [0, numberof(sod_edb)];
+   }
+   lines = array(string, numberof(segw) - 1);
+   for(i = 1; i < numberof(segw); i++) {
+      seg_sod = sod_edb(segw(i)+1:segw(i+1));
+      edb_min = seg_sod(min);
+      edb_max = seg_sod(max);
+      w = where(edb_min <= pnav.sod & pnav.sod <= edb_max);
+      if(!numberof(w))
+         continue;
+      pnavseg = pnav(w);
+      hms0 = sod2hms(pnavseg(1).sod);
+      hms1 = sod2hms(pnavseg(0).sod);
+      segname = swrite(format="%02d:%02d:%02d - %02d:%02d:%02d",
+         hms0(1), hms0(2), hms0(3), hms1(1), hms1(2), hms1(3));
+      lines(i) = kml_Placemark(
+         kml_pnav_LineString(pnavseg, maxdist=maxdist),
+         name=segname, visibility=visibility, styleUrl="#edb"
+      );
+   }
+   lines = lines(where(lines));
+
+   style = kml_Style(
+      kml_LineStyle(width=6, color=kml_color(102,255,0)),
+      id="edb"
+   );
+
+   return [&style, &lines];
+}
+
+func kml_pnav_LineString(pnav, maxdist=, alt=) {
+/* DOCUMENT kml_pnav_LineString(pnav, maxdist=)
+   Given an array of PNAV data, this will return a <LineString> element
+   representing its trajectory. Option maxdist= is passed to downsample_line
+   and defaults to 10.
+*/
+   default, maxdist, 10;
+   default, alt, 0;
+   utm = fll2utm(pnav.lat, pnav.lon);
+   idx = downsample_line(utm(2,), utm(1,), maxdist=maxdist, idx=1);
+   if(alt)
+      return kml_LineString(pnav(idx).lon, pnav(idx).lat, pnav(idx).alt,
+         altitudeMode="absolute");
+   else
+      return kml_LineString(pnav(idx).lon, pnav(idx).lat, tessellate=1);
+}
+
+// GENERAL KML UTILITY
+
+func kmz_create(dest, files, ..) {
+/* DOCUMENT kmz_create, dest, mainfile, file, file, file ...
+   Creates a kmz at dest. mainfile is used as doc.kml, any additional files are
+   also included. Arguments may be scalar or array.
+*/
+   while(more_args())
+      grow, files, next_arg();
+
+   rmvdoc = 0;
+
+   if(file_tail(files(1)) != "doc.kml") {
+      dockml = file_join(file_dirname(files(1)), "doc.kml");
+      if(file_exists(dockml))
+         error, "doc.kml already exists!";
+      file_copy, files(1), dockml;
+      files(1) = dockml;
+      rmvdoc = 1;
+   }
+
+   cmd = [];
+   exe = popen_rdfile("which zip");
+   if(numberof(exe)) {
+      cmd = swrite(format="'%s' -X -9 '%%s' '%%s'", exe(1));
+   } else {
+      error, "Unable to zip command.";
+   }
+
+   files = file_relative(file_dirname(dest), files);
+
+   if(file_exists(dest))
+      remove, dest;
+
+   cwd = get_cwd();
+   cd, file_dirname(dest);
+   dest = file_tail(dest);
+
+
+   for(i = 1; i <= numberof(files); i++)
+      system, swrite(format=cmd, dest, files(i));
+
+   if(rmvdoc)
+      remove, files(1);
+
+   cd, cwd;
+}
+
+func kml_save(fn, items, .., id=, name=, visibility=, Open=, description=,
+styleUrl=) {
+   while(more_args())
+      grow, items, next_arg();
+   write, open(fn, "w"), format="%s\n", kml_Document(items, id=id, name=name,
+      visibility=visibility, Open=Open, description=description,
+      styleUrl=styleUrl);
+}
+
+__kml_randomcolor = random();
+func kml_randomcolor(void) {
+   extern __kml_randomcolor;
+   __kml_randomcolor += 0.195 + random()/1000.;
+   __kml_randomcolor %= 1.;
+   rgb = hsl2rgb(__kml_randomcolor, random()*.2+.8, random()*.1+.45);
+   return kml_color(rgb(1), rgb(2), rgb(3));
+}
+
+
+func kml_color(r, g, b, a) {
+/* DOCUMENT kml_color(r, g, b, a)
+   Given a color defined by r, g, b, and optionally a (all numbers), this will
+   return the properly formatted colorcode per the KML spec.
+
+   If alpha is omitted, it defaults to fully opaque (255).
+*/
+   default, a, array(short(255), dimsof(r));
+   if(anyof(0 < r & r < 1))
+      r = short(r * 255);
+   if(anyof(0 < g & g < 1))
+      g = short(g * 255);
+   if(anyof(0 < b & b < 1))
+      b = short(b * 255);
+   if(anyof(0 < a & a < 1))
+      a = short(a * 255);
+   return swrite(format="%02x%02x%02x%02x", short(a), short(b), short(g), short(r));
+}
+
+// GENERIC KML COMPONENT FUNCTIONS
+
+func kml_Document(items, .., id=, name=, visibility=, Open=, description=,
+styleUrl=) {
+   while(more_args())
+      grow, items, next_arg();
+
+   Document = kml_Feature("Document", items, id=id, description=description,
+      name=name, visibility=visibility, Open=Open, styleUrl=styleUrl);
+
+   return swrite(format="\
+<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
+<kml xmlns=\"http://earth.google.com/kml/2.2\">\n\
+%s\n\
+</kml>", Document);
+}
+
+func kml_Style(items, .., id=) {
+   while(more_args())
+      grow, items, next_arg();
+   return kml_element("Style", items, id=id);
+}
+
+func kml_IconStyle(void, id=, color=, colorMode=, scale=, heading=, href=, x=,
+y=, xunits=, yunits=) {
+   elems = [];
+   grow, elems, kml_element("color", color);
+   grow, elems, kml_element("colorMode", colorMode);
+   grow, elems, kml_element("scale", scale);
+   grow, elems, kml_element("heading", heading);
+   grow, elems, kml_element("Icon", kml_element("href", href));
+
+   hotSpot = "";
+   if(!is_void(x))
+      hotSpot += swrite(format=" x=\"%s\"", x);
+   if(!is_void(y))
+      hotSpot += swrite(format=" y=\"%s\"", y);
+   if(!is_void(xunits))
+      hotSpot += swrite(format=" xunits=\"%s\"", xunits);
+   if(!is_void(yunits))
+      hotSpot += swrite(format=" yunits=\"%s\"", yunits);
+   if(strlen(hotSpot) > 0)
+      grow, elems, swrite(format="<hotSpot%s />\n", hotSpot);
+
+   return kml_element("IconStyle", elems, id=id);
+}
+
+func kml_LineStyle(void, id=, color=, colorMode=, width=) {
+   elems = [];
+   grow, elems, kml_element("color", color);
+   grow, elems, kml_element("colorMode", colorMode);
+   grow, elems, kml_element("width", width);
+   return kml_element("LineStyle", elems, id=id);
+}
+
+func kml_ListStyle(void, id=, listItemType=, bgColor=, state=, href=) {
+   elems = [];
+   grow, elems, kml_element("listItemType", listItemType);
+   grow, elems, kml_element("bgColor", bgColor);
+
+   iconelems = [];
+   grow, iconelems, kml_element("state", state);
+   grow, iconelems, kml_element("href", href);
+   grow, elems, kml_element("ItemIcon", iconelems);
+
+   return kml_element("ListStyle", elems, id=id);
+}
+
+func kml_PolyStyle(void, id=, color=, colorMode=, fill=, outline=) {
+   elems = [];
+   grow, elems, kml_element("color", color);
+   grow, elems, kml_element("colorMode", colorMode);
+   grow, elems, kml_element("fill", fill);
+   grow, elems, kml_element("outline", outline);
+   return kml_element("PolyStyle", elems, id=id);
+}
+
+func kml_Folder(items, .., id=, name=, visibility=, Open=, description=,
+styleUrl=) {
+   while(more_args())
+      grow, items, next_arg();
+   return kml_Feature("Folder", items, id=id, description=description,
+      name=name, visibility=visibility, Open=Open, styleUrl=styleUrl);
+}
+
+func kml_Placemark(items, .., id=, name=, description=, visibility=, Open=,
+styleUrl=) {
+   while(more_args())
+      grow, items, next_arg();
+   return kml_Feature("Placemark", items, id=id, description=description,
+      name=name, visibility=visibility, Open=Open, styleUrl=styleUrl);
+}
+
+func kml_NetworkLink(items, .., id=, name=, description=, visibility=, Open=,
+styleUrl=) {
+   while(more_args())
+      grow, items, next_arg();
+   return kml_Feature("NetworkLink", items, id=id, description=description,
+      name=name, visibility=visibility, Open=Open, styleUrl=styleUrl);
+}
+
+func kml_Feature(type, items, .., id=, name=, visibility=, Open=, description=,
+styleUrl=) {
+   while(more_args())
+      grow, items, next_arg();
+   elems = [];
+   grow, elems, kml_element("name", name);
+   grow, elems, kml_element("visibility", visibility);
+   grow, elems, kml_element("open", Open);
+   grow, elems, kml_element("description", description);
+   grow, elems, kml_element("styleUrl", styleUrl);
+   return kml_element(type, elems, items, id=id);
+}
+
+func kml_MultiGeometry(items, .., id=) {
+   while(more_args())
+      grow, items, next_arg();
+   return kml_element("MultiGeometry", items, id=id);
+}
+
+func kml_LineString(lon, lat, alt, id=, extrude=, tessellate=, altitudeMode=) {
+   elems = [];
+   grow, elems, kml_element("extrude", extrude);
+   grow, elems, kml_element("tessellate", tessellate);
+   grow, elems, kml_element("altitudeMode", altitudeMode);
+   grow, elems, kml_coordinates(lon, lat, alt);
+   return kml_element("LineString", elems, id=id);
+}
+
+func kml_Point(lon, lat, alt, id=, extrude=, altitudeMode=) {
+   elems = [];
+   grow, elems, kml_element("extrude", extrude);
+   grow, elems, kml_element("altitudeMode", altitudeMode);
+   grow, elems, kml_coordinates(lon, lat, alt);
+   return kml_element("Point", elems, id=id);
+}
+
+func kml_coordinates(lon, lat, alt) {
+   if(is_void(alt))
+      coordinates = swrite(format="%.5f,%.5f", lon, lat);
+   else
+      coordinates = swrite(format="%.5f,%.5f,%.2f", lon, lat, alt);
+   return kml_element("coordinates", strwrap(strjoin(coordinates, " ")));
+}
+
+func kml_Link(items, .., id=, href=) {
+   while(more_args())
+      grow, items, next_arg();
+   return kml_element("Link", kml_element("href", href), items, id=id);
+}
+
+func kml_Region(items, .., id=, north=, south=, east=, west=, minAltitude=,
+maxAltitude=, altitudeMode=, minLodPixels=, maxLodPixels=, minFadeExtent=,
+maxFadeExtent=) {
+   elems = [];
+   grow, elems, kml_element("north", north);
+   grow, elems, kml_element("south", south);
+   grow, elems, kml_element("east", east);
+   grow, elems, kml_element("west", west);
+   grow, elems, kml_element("minAltitude", minAltitude);
+   grow, elems, kml_element("maxAltitude", maxAltitude);
+   grow, elems, kml_element("altitudeMode", altitudeMode);
+   LatLonAltBox = kml_element("LatLonAltBox", elems);
+
+   elems = [];
+   grow, elems, kml_element("minLodPixels", minLodPixels);
+   grow, elems, kml_element("maxLodPixels", maxLodPixels);
+   grow, elems, kml_element("minFadeExtent", minFadeExtent);
+   grow, elems, kml_element("maxFadeExtent", maxFadeExtent);
+   Lod = kml_element("Lod", elems);
+
+   return kml_element("Region", LatLonAltBox, Lod, id=id);
+
+}
+
+func kml_element(name, items, .., id=) {
+   while(more_args())
+      grow, items, next_arg();
+
+   if(is_void(items))
+      return [];
+
+   id = is_void(id) ? "" : swrite(format=" id=\"%s\"", id);
+
+   if(numberof(items) == 1 && !is_string(items(1))) {
+      items = items(1);
+      if(is_integer(items))
+         items = swrite(format="%d", items);
+      if(is_real(items)) {
+         len = 0;
+         while(len < 6 && long(items * 10 ^ len)/(10. ^ len) != items)
+            len++;
+         fmt = swrite(format="%%.%df", len);
+         items = swrite(format=fmt, items);
+      }
+      if(!is_string(items))
+         items = swrite(items);
+   }
+
+   single = numberof(items) == 1;
+
+   if(single)
+      single = !strmatch(items(1), "\n");
+
+   if(single)
+      single = (strpart(items(1), 1:1) != "<");
+
+   if(single)
+      single = strlen(name) * 2 + strlen(id) + strlen(items(1)) <= 66;
+
+   if(single) {
+      items = items(1);
+      fmt = "<%s%s>%s</%s>";
+   } else {
+      items = strindent(strjoin(items, "\n"), "  ");
+      fmt = "<%s%s>\n%s\n</%s>";
+   }
+
+   return swrite(format=fmt, name, id, items, name);
 }
