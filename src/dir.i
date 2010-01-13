@@ -267,6 +267,7 @@ func file_relative(base, dest) {
          result(i) = file_relative(base, dest(i));
       }
    } else {
+      dest = dest(1);
       if(file_pathtype(base) != file_pathtype(dest))
          error, "Unable to compute relation for paths of different path types.";
 
