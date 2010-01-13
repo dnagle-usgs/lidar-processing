@@ -574,7 +574,7 @@ func missiondata_unwrap(data) {
     }
 }
 
-func missiondata_load(type, day=) {
+func missiondata_load(type, day=, noerror=) {
 /* DOCUMENT missiondata_load, type, day=
     Loads mission data for the current day, or for day= if specified.
 
@@ -587,19 +587,16 @@ func missiondata_load(type, day=) {
 */
     extern __mission_conf, __mission_day, __mission_cache, __mission_settings;
     default, day, __mission_day;
+    default, noerror, 0;
 
     if(!day)
         error, "Please provide day= or set __mission_day.";
 
     if(type == "all") {
-        if(mission_has("edb file", day=day))
-            missiondata_load, "edb", day=day;
-        if(mission_has("pnav file", day=day))
-            missiondata_load, "pnav", day=day;
-        if(mission_has("dmars file", day=day))
-            missiondata_load, "dmars", day=day;
-        if(mission_has("ops_conf file", day=day))
-            missiondata_load, "ops_conf", day=day;
+        missiondata_load, "edb", day=day, noerror=1;
+        missiondata_load, "pnav", day=day, noerror=1;
+        missiondata_load, "dmars", day=day, noerror=1;
+        missiondata_load, "ops_conf", day=day, noerror=1;
         return;
     }
 
@@ -619,61 +616,67 @@ func missiondata_load(type, day=) {
     } else if(type == "edb") {
         if(cache_enabled && h_has(cache, "edb")) {
             missiondata_unwrap, cache("edb");
-        } else {
-            if(mission_has("edb file", day=day)) {
-                extern data_path;
-                if(mission_has("data_path", day=day))
-                    data_path = mission_get("data_path", day=day);
-                load_edb, fn=mission_get("edb file", day=day);
-                if(cache_enabled) {
-                    h_set, cache, "edb", missiondata_wrap("edb");
-                }
-            } else {
-                error, "Could not load edb data: no edb file defined";
+        } else if(mission_has("edb file", day=day)) {
+            extern data_path;
+            if(mission_has("data_path", day=day))
+                data_path = mission_get("data_path", day=day);
+            load_edb, fn=mission_get("edb file", day=day);
+            if(cache_enabled) {
+                h_set, cache, "edb", missiondata_wrap("edb");
             }
+        } else if(noerror) {
+            extern edb, edb_filename, edb_files, _ecfidx, total_edb_records,
+                soe_day_start, eaarl_time_offset, data_path;
+            edb = edb_filename = edb_files = _ecfidx = total_edb_records =
+                soe_day_start = eaarl_time_offset = data_path = [];
+        } else {
+            error, "Could not load edb data: no edb file defined";
         }
     } else if(type == "pnav") {
         if(cache_enabled && h_has(cache, "pnav")) {
             missiondata_unwrap, cache("pnav");
-        } else {
-            if(mission_has("pnav file", day=day)) {
-                extern pnav;
-                pnav = rbpnav(fn=mission_get("pnav file", day=day), verbose=0);
-                if(cache_enabled) {
-                    h_set, cache, "pnav", missiondata_wrap("pnav");
-                }
-            } else {
-                error, "Could not load pnav data: no pnav file defined";
+        } else if(mission_has("pnav file", day=day)) {
+            extern pnav;
+            pnav = rbpnav(fn=mission_get("pnav file", day=day), verbose=0);
+            if(cache_enabled) {
+                h_set, cache, "pnav", missiondata_wrap("pnav");
             }
+        } else if(noerror) {
+            extern pnav, gga, pnav_filename;
+            pnav = gga = pnav_filename = [];
+        } else {
+            error, "Could not load pnav data: no pnav file defined";
         }
         tkcmd, swrite(format="set ::plot::g::pnav_file {%s}",
             mission_get("pnav file", day=day));
     } else if(type == "dmars") {
         if(cache_enabled && h_has(cache, "dmars")) {
             missiondata_unwrap, cache("dmars");
-        } else {
-            if(mission_has("dmars file", day=day)) {
-                load_iexpbd, mission_get("dmars file", day=day), verbose=0;
-                if(cache_enabled) {
-                    h_set, cache, "dmars", missiondata_wrap("dmars");
-                }
-            } else {
-                error, "Could not load dmars data: no dmars file defined";
+        } else if(mission_has("dmars file", day=day)) {
+            load_iexpbd, mission_get("dmars file", day=day), verbose=0;
+            if(cache_enabled) {
+                h_set, cache, "dmars", missiondata_wrap("dmars");
             }
+        } else if(noerror) {
+            extern iex_nav, iex_head, iex_nav1hz, tans;
+            iex_nav = iex_head = iex_nav1hz = tans = [];
+        } else {
+            error, "Could not load dmars data: no dmars file defined";
         }
     } else if(type == "ops_conf") {
         if(cache_enabled && h_has(cache, "ops_conf")) {
             missiondata_unwrap, cache("ops_conf");
-        } else {
-            if(mission_has("ops_conf file", day=day)) {
-                extern ops_conf;
-                include, mission_get("ops_conf file", day=day), 1;
-                if(cache_enabled) {
-                    h_set, cache, "ops_conf", missiondata_wrap("ops_conf");
-                }
-            } else {
-                error, "Could not load ops_conf: no ops_conf file defined";
+        } else if(mission_has("ops_conf file", day=day)) {
+            extern ops_conf;
+            include, mission_get("ops_conf file", day=day), 1;
+            if(cache_enabled) {
+                h_set, cache, "ops_conf", missiondata_wrap("ops_conf");
             }
+        } else if(noerror) {
+            extern ops_conf;
+            ops_conf = [];
+        } else {
+            error, "Could not load ops_conf: no ops_conf file defined";
         }
     } else {
         error, swrite(format="Unknown type provided: %s", type);
