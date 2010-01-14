@@ -95,6 +95,36 @@ func qq2uz(qq, centroid=) {
       return long(u(3,));
 }
 
+func extract_for_tile(north, east, zone, tile, buffer=) {
+/* DOCUMENT idx = extract_for_tile(north, east, zone, tile, buffer=);
+   Wrapper around extract_for_qq, extract_for_dt, and extract_for_it.
+   Automatically uses the right one.
+*/
+   tile = extract_tile(tile);
+   type = tile_type(tile);
+
+   if(type == "dt" || type == "it") {
+      if(is_scalar(zone)) {
+         if(zone != dt2uz(tile))
+            return [];
+      } else {
+         w = where(zone == dt2uz(tile));
+         if(!numberof(w))
+            return [];
+         north = north(w);
+         east = east(w);
+      }
+      if(type == "dt")
+         return extract_for_dt(north, east, tile, buffer=buffer);
+      else
+         return extract_for_it(north, east, tile, buffer=buffer);
+   } else if(type == "qq") {
+      return extract_for_qq(north, east, zone, tile, buffer=buffer);
+   } else {
+      error, "Unknown tiling type";
+   }
+}
+
 func extract_for_qq(north, east, zone, qq, buffer=) {
 /* DOCUMENT extract_for_qq(north, east, zone, qq, buffer=)
 
@@ -1230,15 +1260,19 @@ func partition_by_tile_type(type, north, east, zone, buffer=, shorten=, verbose=
       2k --> partition_into_2k
       10k --> partition_into_10k
 
+   Also:
+      dt --> Alias for 2k
+      it --> Alias for 10k
+
    Arguments and options are passed to the functions as is, as appropriate.
 */
 // Original David B. Nagle 2009-04-01
    if(type == "qq") {
       return partition_into_qq(north, east, zone, buffer=buffer, verbose=verbose);
-   } else if(type == "2k") {
+   } else if(type == "2k" || type == "dt") {
       return partition_into_2k(north, east, zone, buffer=buffer, verbose=verbose,
          shorten=shorten);
-   } else if(type == "10k") {
+   } else if(type == "10k" || type == "it") {
       return partition_into_10k(north, east, zone, buffer=buffer, verbose=verbose,
          shorten=shorten);
    } else {
