@@ -2917,3 +2917,188 @@ func show_setup ( junk ) {
    write, format="\nDATA PATH\n  %s\n", data_path;
 
 }
+
+func batch_tile(srcdir, dstdir, scheme=, mode=, searchstr=, suffix=,
+remove_buffers=, buffer=, uniq=, verbose=, zone=, shorten=, flat=,
+split_zones=, north=, east=) {
+/* DOCUMENT batch_tile, srcdir, dstdir, scheme=, mode=, searchstr=, suffix=,
+   remove_buffers=, buffer=, uniq=, verbose=, zone=, shorten=, flat=,
+   split_zones=, north=, east=;
+
+   Loads the data in srcdir that matches searchstr= and partitions it into
+   tiles, which are created in dstdir.
+
+   Note: This operates in an "append" mode. If there are already files that
+   have the same names as the files you are trying to create, they will be
+   appended to. If you do not want that... delete them first!
+
+   Parameters:
+      srcdir: Directory of PBD data you want to tile.
+      dstdir: Directory where your tiled data should go.
+
+   Options:
+      scheme= Partioning scheme to use. Valid values:
+            scheme="10k2k"    Tiered 10km/2km structure (default)
+            scheme="2k"       2km structure
+            scheme="dt"       2km structure
+            scheme="10k"      10km structure
+            scheme="it"       10km structure
+            scheme="qq"       Quarter quad structure
+      mode= Mode of data. Valid values:
+            mode="fs"         First surface (default)
+            mode="be"         Bare earth
+            mode="ba"         Bathy
+      searchstr= Search string to use when locating input data. Example:
+            searchstr="*.pbd"    (default)
+      suffix= Suffix to append to file names when creating them. If your suffix
+         does not end in .pbd, it will be auto-appended. Examples:
+            suffix=".pbd"        (default)
+            suffix="w84_fs"
+            suffix="n88_g09_merged_be.pbd"
+      remove_buffers= By default, it is assumed that your input data are
+         already tiled and that any buffer regions on those tiles is
+         redundant--and probably not as well manually filtered. Thus, by
+         default the buffers around the input tiles are removed. If your file
+         names cannot be parsed as tile names, you'll get a warning message but
+         they'll still be tiled (without removing anything). Valid settings:
+            remove_buffers=1     Attempt to remove source data buffers (default)
+            remove_buffers=0     Use source data as is
+      buffer= By default, output tiles will have a 100m buffer added to them.
+         You can change that with this setting. Examples:
+            buffer=100     Include 100m buffer (default)
+            buffer=250     Include 250m buffer
+            buffer=0       Do not include a buffer
+      uniq= Specifies whether to discard points with matching soe values.
+            uniq=1   Discard points with matching soe values (default)
+            uniq=0   Keep all points, even duplicates
+      verbose= Specifies how much output should go to the screen.
+            verbose=1   Keeps you well-informed (default)
+            verbose=0   No screen output at all
+      zone= By default, the zone will be determined on a file-by-file basis
+         based on the file's name. If no parseable tile name can be determined,
+         the file will be ignored. You can specify a zone to use for all files
+         with this option.
+            zone=[]     No zone provided, autodetect (default)
+            zone=17     Force all input data to be treated as being in zone 17
+      shorten= By default, the longer form of the 2km data tile names will be
+         used. This setting allows you to change that. Ignored if your scheme
+         does not involve 2km data tiles.
+            shorten=0   Use long form, t_e123000_n4567000_12 (default)
+            shorten=1   Use short form, e123_n4567_12
+      flat= By default, files will be created in a directory structure. This
+         settings lets you force them all into a single directory.
+            flat=0   Put files in tired directory structure. (default)
+            flat=1   Put files all directly into dstdir.
+      split_zones= Specifies how to handle multiple-zone data. This is ignored
+         if flat=1. Valid settings:
+            split_zones=0     Never split data by zone. (default for most schemes)
+            split_zones=1     Split by zone if multiple zones found (default for qq)
+            split_zones=2     Always split by zone, even if only one found
+
+   Advanced options:
+      north= The struct field in data containing the northings to use. This is
+         typically set based on mode=.
+      east= The struct field in data containing the eastings to use. This is
+         typically set based on mode=.
+*/
+
+   default, scheme, "10k2k";
+   default, searchstr, "*.pbd";
+   default, remove_buffers, 1;
+   default, north, "north";
+   default, east, "east";
+   default, verbose, 1;
+
+   if(!is_void(mode)) {
+      if(mode == "be") {
+         north = "lnorth";
+         east = "least";
+      } else {
+         north = "north";
+         east = "east";
+      }
+   }
+
+   // Locate files
+   files = find(srcdir, glob=searchstr);
+
+   // Get zones
+   zones = tile2uz(file_tail(files));
+   if(!is_void(zone))
+      zones(*) = zone;
+
+   // Check for missing zones
+   if(noneof(zones)) {
+      write, "None of the file names contained a parseable zone. Please use the zone= option.";
+      return;
+   } if(nallof(zones)) {
+      w = where(zones == 0)
+      write, "The following file names did not contain a parseable zone and will be skipped.\n (Consider using zone= to avoid this.)";
+      write, format=" - %s\n", file_tail(files(w));
+      write, "";
+
+      files = files(w);
+      zones = zones(w);
+   }
+
+   srt = msort(zones, files);
+   zones = zones(srt);
+   files = files(srt);
+
+   // Check for missing tiles, if we need them.
+   tiles = extract_tile(file_tail(files));
+   if(remove_buffers && nallof(tiles)) {
+      w = where(!tiles);
+      write, "The following file names did not contain a parseable tile name. They will be\n retiled, but they cannot have any buffers removed; remove_buffers=1 will be\n ignored for these files."
+      write, format=" - %s\n", file_tail(files(w));
+      write, "";
+   }
+
+   t0 = t1 = tp = array(double, 3);
+   timer, t0;
+   tp = t0;
+   for(i = 1; i <= numberof(files); i++) {
+      if(verbose)
+         write, format="\n----------\nRetiling %d/%d: %s\n", i, numberof(files),
+            file_tail(files(i));
+
+      data = pbd_load(files(i));
+
+      if(remove_buffers && tiles(i) && numberof(data)) {
+         n = get_member(data, north)/100.;
+         e = get_member(data, east)/100.;
+         idx = extract_for_tile(unref(n), unref(e), zones(i), tiles(i), buffer=0);
+         if(numberof(idx))
+            data = data(idx);
+         else
+            data = [];
+      }
+
+      if(!numberof(data)) {
+         if(verbose)
+            write, " - Skipping, no data found for tile";
+         continue;
+      }
+
+      save_data_to_tiles, unref(data), zones(i), dstdir, scheme=scheme,
+         suffix=suffix, buffer=buffer, shorten=shorten, flat=flat, uniq=uniq,
+         verbose=verbose, split_zones=split_zones, north=north, east=east;
+
+      if(verbose && i < numberof(files)) {
+         timer, t1;
+         if(t1(3) - tp(3) >= 10) {
+            elapsed = t1(3) - t0(3);
+            remain = elapsed/double(i) * (numberof(files) - i);
+            write, format="\n[Estimated %s remaining]\n", seconds2prettytime(remain);
+            tp = t1;
+         }
+      }
+   }
+
+   if(verbose) {
+      timer, t1;
+      elapsed = t1(3) - t0(3);
+
+      write, format="\nFinished in %s.\n", seconds2prettytime(elapsed);
+   }
+}
