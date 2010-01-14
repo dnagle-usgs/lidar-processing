@@ -47,6 +47,39 @@ func extract_tile(text, dtlength=, qqprefix=) {
     return result;
 }
 
+func tile_type(text) {
+/* DOCUMENT tile_type(text)
+    Returns string indicating the type of tile used.
+
+    The return result (scalar or array, depending on the input) will have
+    strings that mean the following:
+
+        "dt" - Two-kilometer data tile
+        "it" - Ten-kilometer index tile
+        "qq" - Quarter quad tile
+        (nil) - Unparseable
+*/
+    qq = extract_qq(text);
+    dt = dt_short(text);
+    it = "i_" == strpart(text, 1:2);
+
+    result = array(string, dimsof(text));
+
+    w = where(strlen(dt) > 0 & it);
+    if(numberof(w))
+        result(w) = "it";
+
+    w = where(strlen(dt) > 0 & !strlen(result));
+    if(numberof(w))
+        result(w) = "dt";
+
+    w = where(strlen(qq) > 0 & !strlen(result));
+    if(numberof(w))
+        result(w) = "qq";
+
+    return result;
+}
+
 func tile2uz(tile) {
 /* DOCUMENT tile2uz(tile)
     Attempts to return a UTM zone for each tile in the array given. This is a
