@@ -96,7 +96,7 @@ func rezone_utm(&north, &east, src_zone, dest_zone) {
    Original David Nagle 2008-07-17
 */
    u = transpose([north, east, src_zone]);
-   if(numberof(src_zone) == 1 && numberof(dest_zone) == 1 && src_zone == dest_zone)
+   if(numberof(src_zone) == 1 && numberof(dest_zone) == 1 && src_zone(1) == dest_zone(1))
       return u;
    if(numberof(src_zone) == 1) src_zone = array(src_zone, dimsof(north));
    if(numberof(dest_zone) == 1) dest_zone = array(dest_zone, dimsof(north));
