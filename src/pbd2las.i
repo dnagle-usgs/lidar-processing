@@ -603,14 +603,21 @@ mode=, pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=) {
    // Bitfield for return, scan direction, and flightline edge
    ret_num = 1;
    num_ret = 1;
-   scan_dir = data.rn % 2;
-   // If the rn is zero, then we dummy the pulse to 60 to approximate a central
-   // return, which ensures that f_edge stays 0.
-   pulse = array(60, dimsof(data));
-   w = where(data.rn);
-   if(numberof(w))
-      pulse(w) = data(w).rn/0xffffff;
-   f_edge = ((pulse == 0) | (pulse == 1) | (pulse == 119) | (pulse == 120));
+
+   // If our data has an .rn member and the values aren't all zero...
+   if(has_member(data, "rn") && allof(data.rn)) {
+      scan_dir = data.rn % 2;
+      // If the rn is zero, then we dummy the pulse to 60 to approximate a central
+      // return, which ensures that f_edge stays 0.
+      pulse = array(60, dimsof(data));
+      w = where(data.rn);
+      if(numberof(w))
+         pulse(w) = data(w).rn/0xffffff;
+      f_edge = ((pulse == 0) | (pulse == 1) | (pulse == 119) | (pulse == 120));
+   } else {
+      scan_dir = 0;
+      f_edge = 0;
+   }
    stream.points.bitfield = las_encode_return(ret_num, num_ret, scan_dir, f_edge);
 
    // Classification bitfield
@@ -647,7 +654,7 @@ mode=, pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=) {
       }
    }
 
-   if(encode_rn && has_member(stream.points, "eaarl_rn")) {
+   if(encode_rn && has_member(stream.points, "eaarl_rn") && has_member(data, "rn") {
       stream.points.eaarl_rn = data.rn;
    }
 
