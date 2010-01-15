@@ -588,10 +588,13 @@ func soe2iso8601(soe) {
       ymd(..,1), ymd(..,2), ymd(..,3), time(..,4), time(..,5), time(..,6));
 }
 
-func seconds2prettytime(seconds) {
-/* DOCUMENT seconds2prettytime(seconds)
+func seconds2prettytime(seconds, maxparts=) {
+/* DOCUMENT seconds2prettytime(seconds, maxparts=)
    Converts a duration in seconds to a pretty-printed text representation of
    the same duration.
+
+   If maxparts is used, it limits how many parts will get emitted. It is only
+   compatible with scalar input.
 
    Examples:
       > seconds2prettytime(0)
@@ -610,9 +613,17 @@ func seconds2prettytime(seconds) {
       [["1 second","2 seconds"],["3 seconds","4 seconds"]]
       > seconds2prettytime(1.234)
       "1 second"
+      > seconds2prettytime(3000000, maxparts=2)
+      "4 weeks, 6 days"
+      > seconds2prettytime(86401)
+      "1 day, 1 second"
+      > seconds2prettytime(86401, maxparts=2)
+      "1 days"
 */
 // Original David Nagle 2009-12-29
    dims = dimsof(seconds);
+   if(!is_void(maxparts) && !is_scalar(seconds))
+      error, "maxparts= only compatible with scalars.";
    seconds = reform(long(seconds), [1, numberof(seconds)]);
    s = seconds % 60;
    m = (seconds / 60) % 60;
@@ -622,6 +633,14 @@ func seconds2prettytime(seconds) {
    vals = [w,d,h,m,s];
    names = array(["week","day","hour", "minute", "second"], numberof(seconds));
    names = transpose(names);
+   if(maxparts) {
+      w = where(vals != 0);
+      if(numberof(w)) {
+         discard = w(1) + maxparts;
+         if(discard <= numberof(vals))
+            vals(discard:numberof(vals)) = 0;
+      }
+   }
    w = where(vals != 1);
    if(numberof(w))
       names(w) += "s";
