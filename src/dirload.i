@@ -67,6 +67,9 @@ filter=, verbose=) {
    default, verbose, 1;
    default, filter, h_new();
 
+   // Necessary to avoid clobbering external variables for some reason.
+   local idx;
+
    // Generate list of input files
    if(is_void(files))
       files = find(dir, glob=searchstr);
