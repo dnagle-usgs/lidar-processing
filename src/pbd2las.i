@@ -367,7 +367,7 @@ classification=, header=, verbose=, pre_fn=, post_fn=, shorten_fn=) {
    tails = pre_fn + tails + post_fn;
 
    if(is_void(outdir))
-      files_las = file_join(file_basename(files_pbd), tails);
+      files_las = file_join(file_dirname(files_pbd), tails);
    else
       files_las = file_join(outdir, tails);
    tails = [];
