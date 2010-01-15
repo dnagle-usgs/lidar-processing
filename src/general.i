@@ -23,10 +23,11 @@ func timer_init(&tstamp) {
 /* DOCUMENT timer_init, &tstamp
    Initializes timer for use with timer_tick.
 */
-   tstamp = 60 * 60 * 60;
+   tstamp = array(double, 3);
+   timer, tstamp;
 }
 
-func timer_tick(&tstamp, cur, cnt, msg) {
+func timer_tick(&t0, cur, cnt, msg) {
 /* DOCUMENT timer_tick, &tstamp, cur, cnt, msg
 
    Displays progress information, updated once per second and at the end.
@@ -42,14 +43,94 @@ func timer_tick(&tstamp, cur, cnt, msg) {
       msg: A string to indicate our progress. Default is " * cur/cnt". Do not
          append "\n" or "\r" to this.
 */
-   if(tstamp != getsod() || cur == cnt) {
-      tstamp = getsod();
+   t1 = array(double, 3);
+   timer, t1;
+   if(cur == cnt || t1(3) - t0(3) >= 1) {
+      t0 = t1;
       default, msg, swrite(format=" * %i/%i", cur, cnt);
       write, format="%s\r", msg;
       if(cur == cnt) {
          write, format="%s", "\n";
       }
    }
+}
+
+func timer_remaining(t0, current, count, &tp, interval=) {
+/* DOCUMENT timer_remaining, t0, current, count;
+   timer_remaining, t0, current, count, tp, interval=;
+
+   Estimates how much time is remaining and displays to the screen.
+
+   t0: Should be a timer variable initialized externally at the very start.
+      This will not be altered.
+   current: Current progress. If you're doing a for loop for(i = 1; i <=
+      numberof(something); i++) then set current to i.
+   count: Maximum items you're working towards. With the previous for loop,
+      this would be numberof(something).
+
+   tp: If set, this variable will be kept updated in place. It maintains the
+      time at which we previously emitted a time remaining message.
+   interval= Specifies that we should only emit the message if this many
+      seconds have passed since the last one.
+
+   Example:
+      t0 = array(double, 3);
+      timer, t0;
+      for(i = 1; i <= numberof(data); i++) {
+         // Do something here that takes some time!
+         data = mywork(data);
+
+         timer_remaining, t0, i, numberof(data);
+      }
+
+   Alternately:
+      t0 = tp = array(double, 3);
+      timer, t0;
+      for(i = 1; i <= numberof(data); i++) {
+         // Do something here that takes some time, but isn't so slow that you
+         // want to constantly barrage the user with time remaining
+         // information.
+         data = mywork(data);
+
+         timer_remaining, t0, i, numberof(data), tp, interval=20;
+      }
+*/
+   t1 = array(double, 3);
+   default, tp, t1;
+   default, interval, -1;
+   timer, t1;
+   if(t1(3) - tp(3) >= interval) {
+      tp = t1;
+      elapsed = t1(3) - t0(3);
+      remain = elapsed/double(current) * (count - current);
+      write, format="[%s elapsed. Estimated %s remaining.]\n",
+         seconds2prettytime(elapsed, maxparts=2),
+         seconds2prettytime(remain, maxparts=2);
+   }
+}
+
+func timer_finished(t0) {
+/* DOCUMENT timer_finished, t0;
+   Used in conjunction with timer_remaining to display how much time a process
+   took.
+
+   t0: Should be initialized at the start of the process.
+
+   Example:
+      t0 = array(double, 3);
+      timer, t0;
+      for(i = 1; i <= numberof(data); i++) {
+         // Do something here that takes some time!
+         data = mywork(data);
+
+         timer_remaining, t0, i, numberof(data);
+      }
+      timer_finished, t0;
+*/
+   t1 = array(double, 3);
+   timer, t1;
+   elapsed = t1(3) - t0(3);
+   write, format="Finished in %s.\n", seconds2prettytime(elapsed, maxparts=2);
 }
 
 func popen_rdfile(cmd) {
