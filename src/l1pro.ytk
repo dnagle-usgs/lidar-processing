@@ -121,6 +121,7 @@ if {![winfo exists .l1wid]} {
   set cbvc(mtype) $plot_settings(mtype)
 
   set constant_win_no 0
+  set l1pro_square_limits 1
 
   #load all yorick support functions
   ybkg require \"l1pro.i\"
@@ -421,6 +422,9 @@ if {![winfo exists .l1wid]} {
 
   .l1wid.mb.options add checkbutton -label "Autodraw colorbar when plotting" \
     -variable l1pro_cbar
+
+  .l1wid.mb.options add checkbutton -label "Plot with square limits" \
+    -variable l1pro_square_limits
 
   .l1wid.mb.options add checkbutton -label "Set Plot Limits" -variable setll \
     -command {
@@ -2493,7 +2497,7 @@ if {![winfo exists .l1wid]} {
 
   proc plot_fltlines {sel} {
     global l1pro_fma win_no cdelta varlist skip \
-      plot_dpi setll plot_settings pro_var
+      plot_dpi setll plot_settings pro_var l1pro_square_limits
     #fill in later using what to plot
     set fs 0
     set ba 0
@@ -2529,10 +2533,14 @@ if {![winfo exists .l1wid]} {
       }
       if {$::l1pro_cbar} {
         exp_send "colorbar;\r"
+        expect "> "
       }
       if {$setll} {
-        exp_send "limits, _ytk_ll(1), _ytk_ll(2), _ytk_ll(3), _ytk_ll(4);\r"
-        expect ">"
+        exp_send "window, $win_no; limits, _ytk_ll(1), _ytk_ll(2), _ytk_ll(3), _ytk_ll(4);\r"
+        expect "> "
+      } else {
+        exp_send "window, $win_no; limits, square=${l1pro_square_limits};\r"
+        expect "> "
       }
     }
 
