@@ -654,7 +654,7 @@ mode=, pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=) {
       }
    }
 
-   if(encode_rn && has_member(stream.points, "eaarl_rn") && has_member(data, "rn") {
+   if(encode_rn && has_member(stream.points, "eaarl_rn") && has_member(data, "rn")) {
       stream.points.eaarl_rn = data.rn;
    }
 
