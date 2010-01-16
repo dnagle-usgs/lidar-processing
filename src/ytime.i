@@ -232,7 +232,7 @@ func time2soe( a ) {
    a(*,2)--;                  // convert to zero-based day number
    usehms = a(*,3) == 0;
    if(numberof(where(usehms)))
-      a(*,3)(where(usehms)) = (a(*,4:6)(where(usehms),) * [3600,60,1](-,))(sum);
+      a(*,3)(where(usehms)) = (a(*,4:6)(where(usehms),) * [3600,60,1](-,))(,sum);
    return _ys(idx) + a(*,2)*86400 + a(*,3);
 }
 
@@ -361,9 +361,8 @@ func ymd2soe(y, m, d, sod) {
 */
 // Original David Nagle 2008-11-07
    default, sod, 0;
-   doy = ymd2doy(y, m, d);
-   soe = time2soe([y, doy, sod, 0, 0, 0]);
-   return soe;
+   doy = ymd2doy(y, unref(m), unref(d));
+   return time2soe([unref(y), unref(doy), 0, 0, 0, 0]) + unref(sod);
 }
 
 func ymd2doy(year, month, day) {
