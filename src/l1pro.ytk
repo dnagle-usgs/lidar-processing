@@ -180,8 +180,11 @@ if {![winfo exists .l1wid]} {
   .l1wid.mb.file.bin add command -label "Load directory..." \
     -underline 5 -command ::l1pro::dirload_bin
 
+  .l1wid.mb.file add command -label "Import ASPRS LAS..." \
+    -underline 0 -command ::l1pro::file::load_las
+
   .l1wid.mb.file add command -label "Export ASCII..." \
-    -command ::l1pro::file::export_ascii
+    -underline 1 -command ::l1pro::file::export_ascii
 
   .l1wid.mb.file add separator
 
