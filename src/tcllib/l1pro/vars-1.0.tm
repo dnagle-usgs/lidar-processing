@@ -384,10 +384,10 @@ snit::widgetadaptor ::l1pro::vars::gui::vartree {
       $self heading dimsof -text Dimensions
       $self heading sizeof -text Size
 
-      $self column name -width 10
-      $self column structof -width 10
-      $self column dimsof -width 10
-      $self column sizeof -width 10
+      foreach col {name structof dimsof sizeof} {
+         $self column $col -width 10
+         $self heading $col -command [mymethod Sortby $col 0]
+      }
 
       $self configurelist $args
    }
@@ -403,6 +403,25 @@ snit::widgetadaptor ::l1pro::vars::gui::vartree {
          set sizeof [dict get $info sizeof]
          $self insert {} end -id $var -values [list $var $structof $dimsof $sizeof]
       }
+   }
+
+   # Copied/modified from Tcl/Tk demo mclist.tcl
+   method Sortby {col direction} {
+      set data {}
+      foreach row [$self children {}] {
+         lappend data [list [$self set $row $col] $row]
+      }
+
+      set dir [expr {$direction ? "-decreasing" : "-increasing"}]
+      set r -1
+
+      # Now resuffle rows into sorted order
+      foreach info [lsort -dictionary -index 0 $dir $data] {
+         $self move [lindex $info 1] {} [incr r]
+      }
+
+      # Switch the heading so that it sorts in opposite direction next time
+      $self heading $col -command [mymethod Sortby $col [expr {!$direction}]]
    }
 }
 
