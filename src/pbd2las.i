@@ -1183,6 +1183,98 @@ func las_open(filename) {
    return stream;
 }
 
+func las_header(las) {
+/* DOCUMENT las_header, las;
+   Displays the data from a las file or stream's header in a user-friendly
+   fashion.
+*/
+   if(is_string(las))
+      las = las_open(las);
+   header = las.header;
+   fn = filepath(las);
+   pdrf = header.point_data_format_id;
+
+   write, format="Header information for:\n  %s\n\n", file_tail(fn);
+
+   write, format="%-19s : %d.%d\n", "LAS version",
+      header.version_major, header.version_minor;
+
+   lasf = strchar(header.file_signature);
+   valid = lasf == "LASF" ? "valid" : "invalid";
+   write, format="%-19s : %s (%s)\n",
+      "File signature", unref(lasf), unref(valid);
+
+   if(has_member(header, "file_source_id"))
+      write, format="%-19s : %d\n", "File source ID", header.file_source_id;
+
+   msg = "GPS week time";
+   if(noneof(pdrf == [1,3,4,5])) {
+      msg = "Not applicable";
+   } else if(has_member(header, "global_encoding")) {
+      enc = las_decode_global_encoding(header.global_encoding);
+      if(enc.gps_soe)
+         msg = "GPS epoch time minus 1e9";
+   }
+   write, format="%-19s : %s\n", "Time format", msg;
+
+   guid1 = swrite(format="%02x%02x%02x%02x", header.guid_1 >> 24,
+      (header.guid_1 >> 16) & 0xff, (header.guid_1 >> 8) & 0xff,
+      header.guid_1 & 0xff);
+   guid2 = swrite(format="%02x%02x", header.guid_2 >> 8, header.guid_2 & 0xff);
+   guid3 = swrite(format="%02x%02x", header.guid_3 >> 8, header.guid_3 & 0xff);
+   guid4 = swrite(format="%02x", header.guid_4);
+   guid = swrite(format="%s-%s-%s-%s-%s", guid1, guid2, guid3, guid4(1:2)(sum),
+      guid4(3:)(sum));
+   write, format="%-19s : {%s}\n", "GUID", guid;
+   guid = guid1 = guid2 = guid3 = guid4 = [];
+
+   tmp = strchar(header.system_identifier)(sum);
+   tmp = strlen(tmp) ? tmp : "(nil)"
+   write, format="%-19s : %s\n", "System identifier", tmp;
+
+   tmp = strchar(header.generating_software)(sum);
+   tmp = strlen(tmp) ? tmp : "(nil)"
+   write, format="%-19s : %s\n", "Generating software", tmp;
+
+   if(has_member(header, "flight_day_of_year")) {
+      soe = time2soe([header.flight_year, header.flight_day_of_year, 0, 0, 0, 0]);
+      write, format="%-19s : %s\n", "Flight date", soe2date(soe);
+   } else if(has_member(header, "creation_day_of_year")) {
+      soe = time2soe([header.creation_year, header.creation_day_of_year, 0, 0, 0, 0]);
+      write, format="%-19s : %s\n", "Creation date", soe2date(soe);
+   }
+
+   write, "";
+   write, format="Point data record format: %d\n", pdrf;
+   if(0 <= pdrf && pdrf <= 5) {
+      msg = [
+         "Core data only (x, y, z, intensity, etc.)",
+         "Core data (x, y, z, etc.) plus GPS time",
+         "Core data (x, y, z, etc.) plus RGB data",
+         "Core data (x, y, z, etc.) plus GPS time and RGB data",
+         "Core data (x, y, z, etc.) plus GPS time and waveform data",
+         "Core data (x, y, z, etc.) plus GPS time, RGB data, and waveform data"
+      ](pdrf + 1);
+      write, format="  %s\n", msg;
+   }
+
+   write, "";
+   write, format="Number of point records: %d\n", header.number_of_point_records;
+   write, format="Number of points by return: %d, %d, %d, %d, %d\n",
+      header.number_of_points_by_return(1), header.number_of_points_by_return(2),
+      header.number_of_points_by_return(3), header.number_of_points_by_return(4),
+      header.number_of_points_by_return(5);
+
+   write, "";
+   write, "   Minimum   Maximum     Scale    Offset";
+   write, format="X: %   8.0f  %   8.0f  %   8.4f  %   8.0f\n",
+      header.x_min, header.x_max, header.x_scale, header.x_offset;
+   write, format="Y: %   8.0f  %   8.0f  %   8.4f  %   8.0f\n",
+      header.y_min, header.y_max, header.y_scale, header.y_offset;
+   write, format="Z: %   8.2f  %   8.2f  %   8.4f  %   8.2f\n",
+      header.z_min, header.z_max, header.z_scale, header.z_offset;
+}
+
 func las_get_version(las, &v_maj, &v_min) {
 /* DOCUMENT las_get_version, las, v_maj, v_min
    [v_maj, v_min] = las_get_version(las)
