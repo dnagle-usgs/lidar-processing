@@ -1979,7 +1979,7 @@ atm=, seamless=) {
                      A negative value indicates that all data should be used.
                      e.g. buffer=0  crops to 2kmx2km
                           buffer=10 crops to 2.01kmx2.01km
-                          buffer=-1 does not crop
+                          buffer=-1 does not crop (default)
 
    The following options are passed to write_ascii_xyz. Please refer to the
    documentation for write_ascii_xyz for information on what they do.
