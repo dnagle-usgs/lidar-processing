@@ -490,6 +490,74 @@ snit::widgetadaptor ::misc::combobox {
    }
 }
 
+namespace eval ::misc::treeview {}
+
+# treeview::sortable <path> ?options...?
+#     A wrapper around the ttk::treeview widget that makes columns sortable.
+#
+#     This can be used to create a new treeview widget, OR to add a "mixin" to
+#     an existing widget.
+#
+#     Code somewhat adapted from Tcl/Tk demo mclist.tcl
+snit::widgetadaptor ::misc::treeview::sortable {
+   constructor args {
+      if {[winfo exists $win]} {
+         installhull $win
+      } else {
+         installhull using ttk::treeview
+      }
+      $self configurelist $args
+      # Force the columns to all get configured
+      $self SetColumns -columns [$hull cget -columns]
+   }
+
+   delegate method * to hull
+   delegate option * to hull
+
+   # Override the -columns option so that we can tags columns for sorting
+   option {-columns columns Columns} -default {} \
+      -configuremethod SetColumns \
+      -cgetmethod GetColumns
+
+   # Pass the configuration through and update columns to sort
+   method SetColumns {option value} {
+      $hull configure $option $value
+
+      foreach col $value {
+         $self heading $col -command [mymethod Sortby $col 0]
+      }
+   }
+
+   # Pass through, retrieve from hull
+   method GetColumns option {
+      return [$hull cget $option]
+   }
+
+   # Core method to enable sorting
+   method Sortby {col direction} {
+      set data {}
+      foreach row [$self children {}] {
+         lappend data [list [$self set $row $col] $row]
+      }
+
+      set dir [expr {$direction ? "-decreasing" : "-increasing"}]
+      set r -1
+
+      # Now resuffle rows into sorted order
+      foreach info [lsort -dictionary -index 0 $dir $data] {
+         $self move [lindex $info 1] {} [incr r]
+      }
+
+      # Put all other headings back to default sort order
+      foreach column [$self cget -columns] {
+         $self heading $column -command [mymethod Sortby $column 0]
+      }
+
+      # Switch the heading so that it sorts in opposite direction next time
+      $self heading $col -command [mymethod Sortby $col [expr {!$direction}]]
+   }
+}
+
 # default varName value
 #     This is used within a procedure to specify a default value for a
 #     parameter. This is useful when the default value is dynamic.
