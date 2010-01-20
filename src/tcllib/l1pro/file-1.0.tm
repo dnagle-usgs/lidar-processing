@@ -29,6 +29,18 @@ proc ::l1pro::file::load_pbd {} {
    }
 }
 
+proc ::l1pro::file::save_pbd {} {
+   set vname $::pro_var
+   set fn [tk_getSaveFile -parent .l1wid \
+      -title "Select destination to save $vname" \
+      -filetypes {{"PBD files" .pbd} {"All files" *}}]
+
+   if {$fn ne ""} {
+      exp_send "pbd_save, \"$fn\", \"$vname\", $vname;\r"
+      expect "> "
+   }
+}
+
 proc ::l1pro::file::load_bin {} {
    set fn [tk_getOpenFile -parent .l1wid -filetypes {
       {{IDL binary files} {.bin .edf}}
@@ -45,11 +57,11 @@ proc ::l1pro::file::load_bin {} {
    }
 }
 
-proc ::l1pro::file::save_pbd {} {
-   gui::save_pbd [prefix]%AUTO%
+proc ::l1pro::file::save_pbd_as {} {
+   gui::save_pbd_as [prefix]%AUTO%
 }
 
-snit::widget ::l1pro::file::gui::save_pbd {
+snit::widget ::l1pro::file::gui::save_pbd_as {
    hulltype toplevel
    delegate option * to hull
    delegate method * to hull

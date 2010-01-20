@@ -158,7 +158,7 @@ if {![winfo exists .l1wid]} {
   .l1wid.mb add cascade -label File -underline 0 -menu .l1wid.mb.file
   .l1wid.mb.file add command -label "Load ALPS data..." \
     -underline 0 -command ::l1pro::file::load_pbd
-  .l1wid.mb.file add command -label "Save ALPS data as..." \
+  .l1wid.mb.file add command -label "Save ALPS data..." \
     -underline 0 -command ::l1pro::file::save_pbd
 
   .l1wid.mb.file add separator
@@ -167,6 +167,8 @@ if {![winfo exists .l1wid]} {
     -underline 15 -command ::l1pro::file::load_pbd_as
   .l1wid.mb.file add command -label "Load ALPS data directory..." \
     -underline 10 -command ::l1pro::dirload
+  .l1wid.mb.file add command -label "Save ALPS data as..." \
+    -underline 0 -command ::l1pro::file::save_pbd_as
 
   .l1wid.mb.file add separator
 
