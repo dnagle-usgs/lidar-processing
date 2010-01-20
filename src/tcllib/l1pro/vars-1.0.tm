@@ -375,7 +375,7 @@ snit::widgetadaptor ::l1pro::vars::gui::vartree {
    option -varinfo -default {} -configuremethod {Update varinfo}
 
    constructor args {
-      installhull using ttk::treeview \
+      installhull using ::misc::treeview::sortable \
          -columns [list name structof dimsof sizeof] \
          -show headings -selectmode extended
 
@@ -386,7 +386,6 @@ snit::widgetadaptor ::l1pro::vars::gui::vartree {
 
       foreach col {name structof dimsof sizeof} {
          $self column $col -width 10
-         $self heading $col -command [mymethod Sortby $col 0]
       }
 
       $self configurelist $args
@@ -403,25 +402,6 @@ snit::widgetadaptor ::l1pro::vars::gui::vartree {
          set sizeof [dict get $info sizeof]
          $self insert {} end -id $var -values [list $var $structof $dimsof $sizeof]
       }
-   }
-
-   # Copied/modified from Tcl/Tk demo mclist.tcl
-   method Sortby {col direction} {
-      set data {}
-      foreach row [$self children {}] {
-         lappend data [list [$self set $row $col] $row]
-      }
-
-      set dir [expr {$direction ? "-decreasing" : "-increasing"}]
-      set r -1
-
-      # Now resuffle rows into sorted order
-      foreach info [lsort -dictionary -index 0 $dir $data] {
-         $self move [lindex $info 1] {} [incr r]
-      }
-
-      # Switch the heading so that it sorts in opposite direction next time
-      $self heading $col -command [mymethod Sortby $col [expr {!$direction}]]
    }
 }
 
