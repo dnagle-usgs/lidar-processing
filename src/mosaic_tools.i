@@ -69,6 +69,9 @@ maxfiles=) {
    default, maxfiles, 500;
    default, defn_buffer, 100;
 
+   if(is_string(cirdata))
+      cirdata = gather_cir_data(cirdata);
+
    dtiles = partition_by_tile_type("2k", cirdata.tans.northing,
       cirdata.tans.easting, cirdata.tans.zone, buffer=defn_buffer, shorten=1);
 
@@ -91,17 +94,29 @@ maxfiles=) {
       zone_idx = set_remove_duplicates(zone_idx);
       zonedata = filter_cirdata_by_index(cirdata, zone_idx);
 
-      write, "Copying images...";
-      imgdir = file_join(zone_dir, "images");
-      copy_cirdata_images_splitdirs, zonedata, imgdir, maxfiles;
+      split_cir_by_maxcount, cirdata, maxfiles;
+      fmt = swrite(format="%%0%dd", long(log10(numberof(cirdata.chunks))+1));
+      write, format=" Partitioned into %d chunks.\n", numberof(cirdata.chunks);
 
-      write, "Generating GPS/INS file...";
-      mosaic_gen_gpsins, file_join(zone_dir, "data", "merged.gpsins"),
-         zonedata.files, zonedata.tans;
+      for(j = 1; j <= numberof(cirdata.chunks); j++) {
+         write, format=" Chunk %d:\n", j;
+         idx = *(cirdata.chunks(j));
+         subdata = filter_cirdata_by_index(cirdata, idx);
+         subname = swrite(format=fmt, j);
 
-      write, "Generating XYZ file...";
-      mosaic_gen_xyz, zonedata, pbd_dir,
-         file_join(zone_dir, "xyz", "merged.xyz");
+         write, "   Copying images...";
+         imgdir = file_join(zone_dir, "region", subname, "images");
+         copy_cirdata_images, subdata, imgdir;
+
+         write, "   Generating GPS/INS file...";
+         gpsfn = file_join(zone_dir, "region", subname, "data", "merged.gpsins");
+         mosaic_gen_gpsins, gpsfn, subdata.files, subdata.tans;
+
+         write, "   Generating XYZ file...";
+         xyzfn = file_join(zone_dir, "region", subname, "xyz", "merged.xyz");
+         mosaic_gen_xyz, subdata, pbd_dir, xyzfn;
+
+      }
 
       write, "Generating tile definition files...";
       defn_file_25cm = file_join(zone_dir, "data", "tile_defns_25cm.txt");
@@ -301,39 +316,15 @@ func mosaic_gen_xyz(cirdata, pbd_dir, dest_file, buffer=) {
    from all pbds found in pbd_dir that appear useful for the given cirdata.
 */
    default, buffer, 500;
-   files = find(pbd_dir, glob="*.pbd");
-   dest_path = file_dirname(dest_file);
-   if(!file_isdir(dest_path))
-      mkdirp, dest_path;
+   hull = convex_hull(cirdata.tans.easting, cirdata.tans.northing);
+   hull = buffer_hull(hull, buffer, pts=16);
+
+   data = dirload(pbd_dir, searchstr="*.pbd", filter=dlfilter_poly(hull), uniq=1);
+
+   mkdirp, file_dirname(dest_file);
    f = open(dest_file, "w");
-   for(i = 1; i <= numberof(files); i++) {
-      zone = int(dt2utm(file_tail(files(i)))(3));
-
-      data = pbd_load(files(i));
-      if(is_void(data))
-         continue;
-
-      east = data.east/100.;
-      north = data.north/100.;
-      elev = data.elevation/100.;
-      data = [];
-      w = where(cirdata.tans.zone == zone &
-         cirdata.tans.easting > east(min) - buffer &
-         cirdata.tans.easting < east(max) + buffer &
-         cirdata.tans.northing > north(min) - buffer &
-         cirdata.tans.northing < north(max) + buffer);
-      if(numberof(w)) {
-         cur_tans = cirdata.tans(w);
-         hull = convex_hull(cur_tans.easting, cur_tans.northing);
-         hull = buffer_hull(hull, buffer, pts=16);
-         idx = testPoly2(hull, east, north);
-         if(numberof(idx)) {
-            write, f, format="%.2f %.2f %.2f\n",
-               east(idx), north(idx), elev(idx);
-         }
-      }
-      east = north = elev = [];
-   }
+   write, f, format="%.2f %.2f %.2f\n", data.east/100., data.north/100.,
+      data.elevation/100.;
    close, f;
 }
 
@@ -733,6 +724,86 @@ func split_cir_by_fltline(cirdata, timediff=) {
    h_set, cirdata, "flightlines", ptr;
 }
 
+func split_cir_by_maxcount(cirdata, maxfiles) {
+/* DOCUMENT split_cir_by_maxcount, cirdata, maxfiles;
+   Partitions cirdata into chunks such that no chunk exceeds maxfiles in size.
+   Tries to be somewhat intelligent about it; it tries to split up distant
+   regions, then cuts regions down until they're small enough.
+*/
+   tidx = cidx = 0;
+   chunks = toobig = array(pointer, 4);
+
+   toobig(++tidx) = &indgen(numberof(cirdata.files));
+
+   while(tidx > 0) {
+      // Make sure enough space is allocated for anything we may want to do
+      if(tidx == numberof(toobig) - 1)
+         grow, toobig, array(pointer, numberof(toobig));
+      if(cidx == numberof(chunks))
+         grow, chunks, array(pointer, numberof(chunks));
+
+      curidx = *toobig(tidx);
+      toobig(tidx--) = pointer(0);
+      curtans = cirdata.tans(curidx);
+
+      // Check for north/south gap
+      north = curtans.northing(sort(curtans.northing));
+      if(north(dif)(max) > 2000) {
+         pivot = north(north(dif)(mxx));
+         toobig(++tidx) = &curidx(where(curtans.northing <= pivot));
+         toobig(++tidx) = &curidx(where(curtans.northing > pivot));
+         continue;
+      }
+
+      // Check for east/west gap
+      east = curtans.easting(sort(curtans.easting));
+      if(east(dif)(max) > 2000) {
+         pivot = east(east(dif)(mxx));
+         toobig(++tidx) = &curidx(where(curtans.easting <= pivot));
+         toobig(++tidx) = &curidx(where(curtans.easting > pivot));
+         continue;
+      }
+
+      // Check if the size is okay
+      if(numberof(curidx) <= maxfiles) {
+         chunks(++cidx) = &curidx;
+         continue;
+      }
+
+      // Select axis to work over: which direction has larger extent?
+      nrange = north(0) - north(1);
+      erange = east(0) - east(1);
+      east = north = [];
+
+      axis = (nrange > erange) ? sort(curtans.northing) : sort(curtans.easting);
+      curtans = [];
+
+      // Figure out how many parts we want to segment this into
+      // Explanation: Determine how many segments there would be if we were
+      // fully splitting it. Then select the largest prime factor of that
+      // number. This should help us tend towards an optimal split in the end.
+      numsegs_w = ceil(numberof(axis)/double(maxfiles));
+      numsegs_f = factorize(numsegs_w)(,1)(max);
+      // However, if our total number of segments is a big prime, we force it
+      // to segment in half anyway. This is to avoid having really thin
+      // segments. (Unfortunately, it adds an extra chunk overall.)
+      numsegs = (numsegs_f < max(8, numsegs_w)) ? numsegs_f : 2;
+
+      // How many images per segment?
+      interval = ceil(numberof(axis)/double(numsegs));
+
+      // Store each segment
+      for(start = 1; start <= numberof(axis); start += interval) {
+         end = min(numberof(axis), start + interval - 1);
+         toobig(++tidx) = &curidx(axis(long(start):long(end)));
+         if(tidx == numberof(toobig))
+            grow, toobig, array(pointer, numberof(toobig));
+      }
+   }
+
+   h_set, cirdata, "chunks", chunks(:cidx);
+}
+
 func copy_cirdata_images(cirdata, dest) {
 /* DOCUMENT copy_cirdata_images, cirdata, dest;
    Copies the images defined in cirdata to dest.
@@ -851,16 +922,14 @@ func copy_cirdata_images_splitdirs(cirdata, imgdir, maxfiles) {
    subdirectories to ensure that no directory contains more than maxfiles.
    Subdivision is arbitrary.
 */
-   num_dirs = int(ceil(double(numberof(cirdata.files)) / maxfiles));
-   split_dirs = swrite(format="%d", indgen(num_dirs));
-   files_per_dir = ceil(numberof(cirdata.files) / double(num_dirs));
-   for(j = 1; j <= num_dirs; j++) {
-      idx_max = int(min(j * files_per_dir, numberof(cirdata.files)));
-      idx_min = int((j - 1) * files_per_dir + 1);
-      idx = indgen(idx_min:idx_max);
+   split_cir_by_maxcount, cirdata, maxfiles;
+   fmt = swrite(format="%%0%dd", long(log10(numberof(cirdata.chunks))+1));
+   for(j = 1; j <= numberof(cirdata.chunks); j++) {
+      idx = *(cirdata.chunks(j));
       subdata = filter_cirdata_by_index(cirdata, idx);
-      mkdirp, file_join(imgdir, split_dirs(j));
-      copy_cirdata_images, subdata, file_join(imgdir, split_dirs(j));
+      dirname = swrite(format=fmt, j);
+      mkdirp, file_join(imgdir, dirname);
+      copy_cirdata_images, subdata, file_join(imgdir, dirname);
    }
 }
 
