@@ -1311,10 +1311,11 @@ func partition_type_summary(north, east, zone, buffer=) {
 }
 
 func save_data_to_tiles(data, zone, dest_dir, scheme=, north=, east=, mode=,
-suffix=, buffer=, shorten=, flat=, uniq=, overwrite=, verbose=, split_zones=) {
+suffix=, buffer=, shorten=, flat=, uniq=, overwrite=, verbose=, split_zones=,
+split_days=) {
 /* DOCUMENT save_data_to_tiles, data, zone, dest_dir, scheme=, north=, east=,
    mode=, suffix=, buffer=, shorten=, flat=, uniq=, overwrite=, verbose=,
-   split_zones=
+   split_zones=, split_days=
 
    Given an array of data (which must be in an ALPS data structure such as
    VEG__) and a scalar or array of zone corresponding to it, this will create
@@ -1358,6 +1359,11 @@ suffix=, buffer=, shorten=, flat=, uniq=, overwrite=, verbose=, split_zones=) {
             is the default for the qq scheme.
          2 = Always split data out by zone, even if only one zone is present.
          (Note: If flat=1, split_zones is ignored.)
+      split_days= Enables splitting the data by day. If enabled, the per-day
+         files for each tile will be kept together and will be differentiated
+         by date in the filename.
+            split_days=0      Do not split by day. (default)
+            split_days=1      Split by days, adding _YYYYMMDD to filename.
 
    Advanced options:
       north= The struct field in data containing the northings to use. Defaults
@@ -1379,6 +1385,7 @@ suffix=, buffer=, shorten=, flat=, uniq=, overwrite=, verbose=, split_zones=) {
    default, overwrite, 0;
    default, verbose, 1;
    default, split_zones, scheme == "qq";
+   default, split_days, 0;
 
    bilevel = scheme == "10k2k";
    if(bilevel) scheme = "2k";
@@ -1443,16 +1450,38 @@ suffix=, buffer=, shorten=, flat=, uniq=, overwrite=, verbose=, split_zones=) {
          outpath = file_join(outpath, tiledir);
       mkdirp, outpath;
 
-      outfile = curtile;
-      if(suffix) outfile += "_" + suffix;
-      outfile += ".pbd";
+      if(split_days) {
+         dates = soe2date(vdata.soe);
+         date_uniq = set_remove_duplicates(dates);
+         for(j = 1; j <= numberof(date_uniq); j++) {
+            date_suffix = "_" + regsub("-", date_uniq(j), "", all=1);
+            outfile = curtile + date_suffix;
+            if(suffix) outfile += "_" + suffix;
+            outfile += ".pbd";
 
-      outdest = file_join(outpath, outfile);
+            outdest = file_join(outpath, outfile);
 
-      if(overwrite && file_exists(outdest))
-         remove, outdest;
-      
-      pbd_append, outdest, vname, vdata, uniq=uniq;
+            if(overwrite && file_exists(outdest))
+               remove, outdest;
+
+            dname = vname + date_suffix;
+            dw = where(dates == date_uniq(j));
+
+            pbd_append, outdest, dname, vdata(dw), uniq=uniq;
+         }
+      } else {
+         outfile = curtile;
+         if(suffix) outfile += "_" + suffix;
+         outfile += ".pbd";
+
+         outdest = file_join(outpath, outfile);
+
+         if(overwrite && file_exists(outdest))
+            remove, outdest;
+
+         pbd_append, outdest, vname, vdata, uniq=uniq;
+      }
+
       if(verbose)
          write, format=" %d: %s\n", i, outfile;
    }

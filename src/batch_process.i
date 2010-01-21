@@ -2920,10 +2920,10 @@ func show_setup ( junk ) {
 
 func batch_tile(srcdir, dstdir, scheme=, mode=, searchstr=, suffix=,
 remove_buffers=, buffer=, uniq=, verbose=, zone=, shorten=, flat=,
-split_zones=, north=, east=) {
+split_zones=, split_days=, north=, east=) {
 /* DOCUMENT batch_tile, srcdir, dstdir, scheme=, mode=, searchstr=, suffix=,
    remove_buffers=, buffer=, uniq=, verbose=, zone=, shorten=, flat=,
-   split_zones=, north=, east=;
+   split_zones=, split_days=, north=, east=;
 
    Loads the data in srcdir that matches searchstr= and partitions it into
    tiles, which are created in dstdir.
@@ -2994,6 +2994,11 @@ split_zones=, north=, east=) {
             split_zones=0     Never split data by zone. (default for most schemes)
             split_zones=1     Split by zone if multiple zones found (default for qq)
             split_zones=2     Always split by zone, even if only one found
+      split_days= Enables splitting the data by day. If enabled, the per-day
+         files for each tile will be kept together and will be differentiated
+         by date in the filename.
+            split_days=0      Do not split by day. (default)
+            split_days=1      Split by days, adding _YYYYMMDD to filename.
 
    Advanced options:
       north= The struct field in data containing the northings to use. This is
@@ -3082,7 +3087,8 @@ split_zones=, north=, east=) {
 
       save_data_to_tiles, unref(data), zones(i), dstdir, scheme=scheme,
          suffix=suffix, buffer=buffer, shorten=shorten, flat=flat, uniq=uniq,
-         verbose=verbose, split_zones=split_zones, north=north, east=east;
+         verbose=verbose, split_zones=split_zones, split_days=split_days,
+         north=north, east=east;
 
       if(verbose && i < numberof(files)) {
          timer, t1;
