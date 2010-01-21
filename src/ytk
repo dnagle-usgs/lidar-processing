@@ -89,6 +89,67 @@ proc app_root_dir {} {
    return $scriptPath
 }
 
+proc check_requirements {} {
+   if {[package vcompare [info patchlevel] 8.4.17] < 0} {
+      puts "                         *** *** *** ERROR! *** *** ***"
+      puts "
+ALPS requires ActiveTcl version 8.4.17 or later. You are running ActiveTcl [info patchlevel].
+
+Please upgrade to the latest version of ActiveTcl, available at:
+
+   http://www.activestate.com/activetcl/"
+      exit
+   }
+
+   set errors [list]
+   set warnings [list]
+
+   if {![file isdirectory [file join [app_root_dir] tcllib sf]]} {
+      lappend errors "
+Your ALPS is missing required source subdirectories. Please run cvs update
+using the -d option to update subdirectories:
+
+   cvs update -d"
+   }
+
+   if {[catch {package require getstring}]} {
+      lappend errors "
+You do not appear to have the package \"getstring\" installed in your version
+of ActiveTcl. To fix this, run this command at the command line:
+
+    sudo teacup install getstring"
+   }
+
+   if {[catch {package require Iwidgets}]} {
+      lappend errors "
+You do not appear to have the package \"Iwidgets\" installed in your version
+of ActiveTcl. To fix this, run this command at the command line:
+
+    sudo teacup install Iwidgets"
+   }
+
+   if {[catch {package require BWidget}] || [catch {package require Expect}]} {
+      lappend errors "
+You do not appear to have the ActiveState::ActiveTcl package suite installed in
+your version of ActiveTcl. To fix this, run this command at the command line:
+
+    sudo teacup install ActiveState::ActiveTcl -is profile"
+   }
+
+   if {[llength $errors]} {
+      puts "                         *** *** *** ERROR! *** *** ***"
+      foreach err $errors {
+         puts "$err\n"
+      }
+   }
+
+   if {[llength $errors]} {
+      exit
+   }
+}
+
+check_requirements
+
 ::tcl::tm::path add [file join [app_root_dir] tcllib]
 
 package require transitional
@@ -909,6 +970,23 @@ proc spawn_yorick {} {
       set result [spawner $cmd]
    }
 
+   # If first attempt for rlwrap failed, then try again without -D
+   if { $result && [info exists rlwrap] && $_ytk(use_rlwrap) eq "Yes" } {
+      set cmd [concat [list $rlwrap -c -b "'(){}\[],+=&^%$#@;|\""] $yor]
+      set result [spawner $cmd]
+
+      if {!$result} {
+         puts "
+                         *** *** *** NOTICE *** *** ***
+
+You are running an older version of rlwrap. It is recommended (but not
+required) that you upgrade to the latest version, available from:
+
+   http://utopia.knoware.nl/~hlub/rlwrap
+"
+      }
+   }
+
    # Attempt to spawn without any wrapper
    if { $result } {
       set cmd $yor
@@ -942,7 +1020,13 @@ proc spawner {cmd} {
 #  setting various expect-related variables), in the global scope.
 ##
    set cmd [concat [list spawn -noecho] $cmd]
-   return [catch {uplevel #0 $cmd}]
+   set result [catch {uplevel #0 $cmd}]
+   if {!$result} {
+      expect "Copyright"
+      return [expr {![info exists expect_out(0,string)]}]
+   } else {
+      return 1
+   }
 }
 
 proc ytk_exit {code} {
