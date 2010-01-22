@@ -619,7 +619,7 @@ func missiondata_load(type, day=, noerror=) {
             extern data_path;
             if(mission_has("data_path", day=day))
                 data_path = mission_get("data_path", day=day);
-            load_edb, fn=mission_get("edb file", day=day);
+            load_edb, fn=mission_get("edb file", day=day), verbose=0;
             if(cache_enabled) {
                 h_set, cache, "edb", missiondata_wrap("edb");
             }
