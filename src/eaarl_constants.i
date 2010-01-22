@@ -16,7 +16,7 @@ CNSH2O2XF = CNSH2O2X*3.280839895; // two way Speed of light/ns  in water (ft)
 attdepth = span(0.0, 256 * CNSH2O2X, 256 );
 
 
- struct EAARL_INDEX {
+struct EAARL_INDEX {
    int seconds;
    int fseconds;
    int offset;
@@ -24,13 +24,7 @@ attdepth = span(0.0, 256 * CNSH2O2X, 256 );
    short file_number;
    char  pixels;
    char  digitizer;
-} ;
-
-struct EDB_FILE {
-  string name;
-  char status;
 };
-
 
 struct RAST {
   int soe;                      // seconds of the epoch

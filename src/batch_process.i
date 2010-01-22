@@ -113,7 +113,7 @@ func get_tld_names( q ) {
    myedb = edb(myrar).file_number;           // get list of file numbers for region
    myedb = myedb(unique(myedb));             // get unique file numbers
 
-   return ( edb_files(myedb).name );         // return list of names
+   return ( edb_files(myedb) );         // return list of names
  }
 
 func unpackage_tile (fn=,host= ) {
@@ -673,6 +673,7 @@ Added server/client support (2009-01) Richard Mitchell
    extern pnav_filenam, bath_ctl
 
    // start the timer
+   t0 = array(double, 3);
    timer, t0;
    myt0 = t0(3);
    write, format="Start Time: %f\n", t0(3);

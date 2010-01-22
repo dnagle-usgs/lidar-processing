@@ -43,7 +43,7 @@ func time_fix( b,e, deltat ) {
       if  ( n % 5000 ) {
         if ( lastfidx != edb(i).file_number ) {
           lastfidx = edb(i).file_number;
-          write,format="%3d %s updated\n", lastfidx, edb_files(lastfidx).name;
+          write,format="%3d %s updated\n", lastfidx, edb_files(lastfidx);
         }
         p = float(float(n) / float(e-b))
         write, format="  %4.2f%% complete  \r", p * 100.0;

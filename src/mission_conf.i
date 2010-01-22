@@ -485,7 +485,7 @@ func missiondata_wrap(type) {
             "ops_conf", missiondata_wrap("ops_conf")
         );
     } else if(type == "edb") {
-        extern edb, edb_filename, edb_files, _ecfidx, total_edb_records,
+        extern edb, edb_filename, edb_files, total_edb_records,
             soe_day_start, eaarl_time_offset, data_path;
         return h_new(
             "__type", "edb",
@@ -542,9 +542,9 @@ func missiondata_unwrap(data) {
         missiondata_unwrap, data.dmars;
         missiondata_unwrap, data.ops_conf;
     } else if(type == "edb") {
-        extern edb, edb_filename, edb_files, _ecfidx, total_edb_records,
+        extern edb, edb_filename, edb_files, total_edb_records,
             soe_day_start, eaarl_time_offset, data_path;
-        // _edb_fd -- file handle??? also, _ecfidx
+        // _edb_fd -- file handle???
         // gps_time_correction -- shouldn't change
         edb = data.edb;
         edb_filename = data.edb_filename;
@@ -553,7 +553,6 @@ func missiondata_unwrap(data) {
         soe_day_start = data.soe_day_start;
         eaarl_time_offset = data.eaarl_time_offset;
         data_path = data.data_path;
-        _ecfidx = 0; //?
     } else if(type == "pnav") {
         extern pnav, gga, pnav_filename;
         pnav = data.pnav;
@@ -625,9 +624,9 @@ func missiondata_load(type, day=, noerror=) {
                 h_set, cache, "edb", missiondata_wrap("edb");
             }
         } else if(noerror) {
-            extern edb, edb_filename, edb_files, _ecfidx, total_edb_records,
+            extern edb, edb_filename, edb_files, total_edb_records,
                 soe_day_start, eaarl_time_offset, data_path;
-            edb = edb_filename = edb_files = _ecfidx = total_edb_records =
+            edb = edb_filename = edb_files = total_edb_records =
                 soe_day_start = eaarl_time_offset = data_path = [];
         } else {
             error, "Could not load edb data: no edb file defined";
