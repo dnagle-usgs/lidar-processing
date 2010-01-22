@@ -601,14 +601,22 @@ func file_copy(src, dest, force=) {
    drastically faster than using 'system, "cp src dest"'.
 */
    extern _ytk;
+   default, force, 1;
    if(_ytk) {
-      default, force, 1;
-      cmd = "file copy";
-      if(force)
-         cmd = cmd + " -force";
-      cmd = cmd + " -- " + src + " " + dest + ";\r";
+      forcestr = force ? "-force" : "";
+      cmd = swrite(format="file copy %s -- {%s} {%s}", forcestr, src, dest);
+      t0 = t1 = array(double, 3);
+      timer, t0;
       tkcmd, cmd;
+      while(!file_exists(dest)) {
+         timer, t1;
+         if(t1(3) - t0(3) > 60) {
+            error, "Timeout while waiting for file to copy";
+         }
+      }
    } else {
+      if(!force && file_exists(dest))
+         return;
       fs = open(src, "rb");
       c = array(char, sizeof(fs));
       _read, fs, 0, c;
