@@ -133,6 +133,8 @@ maxfiles=) {
       mkdirp, file_join(zone_dir, "mosaics", "inpho");
       mkdirp, file_join(zone_dir, "mosaics", "gm");
    }
+
+   mkdirp, file_join(inpho_dir, "tiles");
 }
 
 func gather_cir_data(photo_dir, conf_file=, downsample=) {
