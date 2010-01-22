@@ -163,7 +163,7 @@ func load_edb(fn=, update=, verbose=, override_offset=) {
 
    edb_filename = fn;
    //_edb_fd = idf = open(fn, filemode );
-   f = edb_open(fn, filemode=filemode);
+   f = edb_open(fn, filemode=filemode, verbose=verbose);
 
    edb_files = edb_get_filenames(f);
 
