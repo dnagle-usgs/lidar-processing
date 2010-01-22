@@ -325,8 +325,9 @@ func has_member(val, member, deref=) {
    If deref=1, then pointers will be derefenced as necessary.
 */
 // Original David Nagle 2009-08-14
-   if(is_hash(val)) return h_has(val, member);
    if(deref && is_pointer(val)) val = *val;
+   if(is_hash(val)) return h_has(val, member);
+   if(is_stream(val)) return anyof(*(get_vars(f)(1)) == member);
    if(catch(0x08)) {
       return 0;
    }
@@ -343,11 +344,7 @@ func has_members(val, deref=) {
 */
 // Original David Nagle 2009-08-14
    if(deref && is_pointer(val)) val = *val;
-   result = 0;
-   result |= is_stream(val);
-   result |= is_hash(val);
-   result |= typeof(val) == "struct_instance";
-   return result;
+   return is_stream(val) | is_hash(val) | (typeof(val) == "struct_instance");
 }
 
 func get_dir(void, initialdir=, title=, mustexist=) {
