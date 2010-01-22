@@ -233,7 +233,8 @@ snit::widgetadaptor ::misc::text::autoheight {
 
 if {[package vcompare 8.5 [info tclversion]] == 1} {
    # Backwards compatibility for Tcl 8.4, which doesn't have the "text count"
-   # method. However, this will only work if the 
+   # method. However, this will only work if the the lines are of uniform
+   # height (all have the same font).
    proc ::misc::text::calc_height w {
       set content [$w get 1.0 end]
       # Trim off a single trailing newline, if present
@@ -490,6 +491,127 @@ snit::widgetadaptor ::misc::combobox {
    }
 }
 
+namespace eval ::misc::combobox {}
+
+snit::widgetadaptor ::misc::combobox::mapping {
+   constructor args {
+      if {[winfo exists $win]} {
+         installhull $win
+      } else {
+         installhull using ::misc::combobox
+      }
+      $self configurelist $args
+   }
+
+   option {-mapping mapping Mapping} -default {} \
+      -configuremethod SetMapping -cgetmethod GetMapping
+
+   option {-altvalues altValues Values} -default {}
+
+   option {-altvariable altVariable Variable} -default {} \
+      -configuremethod SetAltVar
+
+   option {-textvariable textVariable Variable} -default {} \
+      -configuremethod SetTextVar -cgetmethod GetTextVar
+
+   delegate method * to hull
+   delegate option * to hull
+
+   method altset value {
+      set idx [lsearch -exact [$self cget -altvalues] $value]
+      if {$idx > -1 && $idx < [llength [$self cget -values]]} {
+         set value [lindex [$self cget -values] $idx]
+      }
+      $self set $value
+   }
+
+   method altget {} {
+      set value [$self get]
+      set idx [lsearch -exact [$self cget -values] $value]
+      if {$idx > -1 && $idx < [llength [$self cget -altvalues]]} {
+         set value [lindex [$self cget -altvalues] $idx]
+      }
+      return $value
+   }
+
+   method SetMapping {option value} {
+      set vals [list]
+      set alts [list]
+      foreach {val alt} $value {
+         lappend vals $val
+         lappend alts $alt
+      }
+      $self configure -values $vals -altvalues $alts
+   }
+
+   method GetMapping option {
+      set mapping [list]
+      foreach val [$self cget -values] alt [$self cget -altvalues] {
+         lappend mapping $val $alt
+      }
+      return $mapping
+   }
+
+   method SetAltVar {option value} {
+      if {![uplevel 1 [list info exists $value]]} {
+         uplevel 1 [list set $value [list]]
+      }
+      set value [uplevel 1 [list namespace which -variable $value]]
+      if {$options(-altvariable) ne ""} {
+         $self RemAltVarTraces $options(-altvariable)
+      }
+      set options($option) $value
+      if {$options(-altvariable) ne ""} {
+         $self AddAltVarTraces $options(-altvariable)
+      }
+   }
+
+   method AddAltVarTraces var {
+      trace add variable $var write [mymethod TraceSetAltVar]
+   }
+
+   method RemAltVarTraces var {
+      catch [list trace remove variable $var write [mymethod TraceSetAltVar]]
+   }
+
+   method TraceSetAltVar {name1 name2 op} {
+      $self altset [set $options(-altvariable)]
+   }
+
+   method SetTextVar {option value} {
+      if {![uplevel 1 [list info exists $value]]} {
+         uplevel 1 [list set $value [list]]
+      }
+      set value [uplevel 1 [list namespace which -variable $value]]
+      if {[$hull cget -textvariable] ne ""} {
+         $self RemTextVarTraces [$hull cget -textvariable]
+      }
+      $hull configure $option $value
+      if {[$hull cget -textvariable] ne ""} {
+         $self AddTextVarTraces [$hull cget -textvariable]
+      }
+   }
+
+   method GetTextVar option {
+      return [$hull cget -textvariable]
+   }
+
+   method AddTextVarTraces var {
+      trace add variable $var write [mymethod TraceSetTextVar]
+   }
+
+   method RemTextVarTraces var {
+      catch [list trace remove variable $var write [mymethod TraceSetTextVar]]
+   }
+
+   method TraceSetTextVar {name1 name2 op} {
+      if {$options(-altvariable) ne ""} {
+         $self set [set [$hull cget -textvariable]]
+         set $options(-altvariable) [$self altget]
+      }
+   }
+}
+
 namespace eval ::misc::treeview {}
 
 # treeview::sortable <path> ?options...?
@@ -555,6 +677,79 @@ snit::widgetadaptor ::misc::treeview::sortable {
 
       # Switch the heading so that it sorts in opposite direction next time
       $self heading $col -command [mymethod Sortby $col [expr {!$direction}]]
+   }
+}
+
+namespace eval ::misc::labelframe {}
+
+snit::widgetadaptor ::misc::labelframe::collapsible {
+   component toggle
+   component interior
+
+   constructor args {
+      if {[winfo exists $win]} {
+         installhull $win
+      } else {
+         installhull using ttk::labelframe
+      }
+
+      install toggle using ttk::checkbutton $win.toggle
+      install interior using ttk::frame $win.interior
+      ttk::frame $win.null
+
+      # The null frame is to ensure that the labelframe resizes properly. If
+      # all contents are removed, it won't resize otherwise.
+
+      $hull configure -labelwidget $toggle
+      grid $interior -in $win -sticky news
+      grid $win.null -in $win -sticky news
+      grid columnconfigure $win 0 -weight 1
+      grid rowconfigure $win 0 -weight 1
+
+      if {[lsearch -exact $args -variable] == -1} {
+         set ::$toggle 1
+         $self configure -variable ::$toggle
+      }
+      $self configurelist $args
+      $self TraceSetVar - - -
+   }
+
+   delegate method * to hull
+   delegate option -text to toggle
+   delegate option -command to toggle
+   delegate option * to hull except -labelwidget
+
+   option {-variable variable Variable} -default {} \
+      -configuremethod SetVar -cgetmethod GetVar
+
+   method interior args {
+      if {[llength $args] == 0} {
+         return $interior
+      } else {
+         return [eval [list $interior] $args]
+      }
+   }
+
+   method SetVar {option value} {
+      if {$value eq ""} {
+         set value ::$toggle
+      }
+      catch [list trace remove variable [$toggle cget -variable] write \
+         [mymethod TraceSetVar]]
+      $toggle configure -variable $value
+      trace add variable [$toggle cget -variable] write [mymethod TraceSetVar]
+   }
+
+   method GetVar option {
+      return [$toggle cget -variable]
+   }
+
+   method TraceSetVar {name1 name2 op} {
+      if {[set [$toggle cget -variable]]} {
+         grid $win.interior
+      } else {
+         grid remove $win.interior
+      }
    }
 }
 
