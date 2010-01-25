@@ -498,3 +498,35 @@ func binary_search(ary, val, exact=, inline=) {
 
    return nearest;
 }
+
+func merge_pointers(pary) {
+/* DOCUMENT merged = merge_pointers(ptr_ary);
+   Merges the data pointed to by an array of pointers.
+
+   > example = array(pointer, 3);
+   > example(1) = &[1,2,3];
+   > example(2) = &[4,5,6];
+   > example(3) = &[7,8,9,10];
+   > merge_pointers(example)
+   [1,2,3,4,5,6,7,8,9,10]
+*/
+   // Edge case: no input
+   if(numberof(pary) == 0 || noneof(pary))
+      return [];
+   // Eliminate null pointers
+   pary = pary(where(pary));
+
+   size = 0;
+   for(i = 1; i <= numberof(pary); i++)
+      size += numberof(*pary(i));
+   mary = array(structof(*pary(1)), size);
+   offset = 1;
+   for(i= 1; i <= numberof(pary); i++) {
+      nextoffset = offset + numberof(*pary(i));
+      mary(offset:nextoffset-1) = (*pary(i))(*);
+      offset = nextoffset;
+   }
+   return mary;
+}
+
+
