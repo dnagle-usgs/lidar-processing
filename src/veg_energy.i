@@ -671,6 +671,10 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, max_elv=, normalize=) {
     out = array(double, 5, dims(2));
     dims = grow(dims,1);
  }
+ if (is_void(normalize)) normalize = 1;
+ // set all metrics to initial value of -1000 (missing value)
+ out(*) = -1000;
+
  if (is_void(thresh)) thresh = 5;
  if (is_void(min_elv)) min_elv = -2;
  if (is_void(max_elv)) max_elv = 300;
@@ -680,7 +684,6 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, max_elv=, normalize=) {
 	lfprx = *lfpveg(i,j).rx;
 	lfpnpix = *lfpveg(i,j).npixels;
 	if (!is_array(lfprx)) {
-	  out(,i,j) = -1000;
 	  continue;
         }
 	//normalize for number of pixels in each rx
@@ -701,25 +704,8 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, max_elv=, normalize=) {
 	   }
 	 }
 
-      if (numberof(lfprx) < 2) continue;
-      lfpcum = (lfprx)(cum);
-      menergy = lfpcum(0)/2;
-      mindx = abs(lfpcum-menergy)(mnx);
-      out(5,i,j) = (lfpelv)(mindx); // this is HOME
-
-      lfpdif = where(lfprx(dif) <= -thresh);
-      if (!is_array(lfpdif)) continue;
-      mnxcan = min(lfpdif(0)-3,numberof(lfprx));
-      if (mnxcan <= 0) continue;
-      //mxxcan = (lfprx(mnxcan:lfpdif(0)))(mxx) + mnxcan -1;
-      mxidx = where(lfprx(mnxcan:lfpdif(0))(dif) < 0);
-      if (is_array(mxidx)) {
-	mxxcan = mxidx(0) + mnxcan - 1;
-      } else {
-        mxxcan = (lfprx(mnxcan:lfpdif(0)))(mxx) + mnxcan -1;
-      }
-      out(1,i,j) = lfpelv(mxxcan);
       if (!is_array(img)) {
+	// LOOK INTO THIS LATER... FOR NOW ONLY WORKING WITH DATA THAT HAS BARE EARTH (img) AVAILABLE
         // no additional bare earth image available
 	lfpdif = where(lfprx(dif) >= thresh);
         if (!is_array(lfpdif)) continue;
@@ -759,41 +745,71 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, max_elv=, normalize=) {
 	} else {
 	    fgr = 1;
 	}
-	//if (out(2,i,j) < 5.5) out(1,i,j) -= out(2,i,j); // assuming gnd is below 2.5 m
-	out(1,i,j) -= out(2,i,j); // correct CH for bare earth
-	out(5,i,j) -= out(2,i,j); // correct HOME for bare earth
       } else {
-	// correct the canopy height by subtracting the bare earth elevation
-	if ((img(i,j) != -1000) && (img(i,j) < out(1,i,j))) {
-          out(1,i,j) = out(1,i,j) - img(i,j);
-          out(5,i,j) = out(5,i,j) - img(i,j);
-        } 
 	out(2,i,j) = img(i,j);
+	if (img(i,j) == -1000) continue;
+	// look for all waveform samples from a few 3 samples below to the end of the waveform
+	idx = where(lfpelv > img(i,j));
+	if (is_array(idx)) {
+	     sidx = idx(1)-3; // take this to be the starting pt.
+	     if (sidx <= 0) sidx = 1;
+	     lfprx = lfprx(sidx:);
+	     lfpnpix = lfpnpix(sidx:);
+	     lfpelv = lfpelv(sidx:);
+	 }
 	gidx = (abs(lfpelv - img(i,j)))(mnx);
 	if (abs(lfpelv(gidx)-img(i,j)) > 2) {
-	   // this waveform does not contain gnd info
-	   continue;
-        }
-	mxxgnd = min(gidx+5, numberof(lfpelv));
-        mxxgnd = long(mxxgnd(1));
-        mnxgnd = max(gidx-5, 1);
-        mnxgnd = long(mnxgnd(1));
-        if (numberof(lfpelv(gidx:mxxgnd)) > 1)
- 	  lgndidx = where(lfpelv(gidx:mxxgnd)(dif) > 1);// dont really need to do this
-	if (is_array(lgndidx)) {
-	   lgr = lgndidx(1)+gidx-1;
-	} else {
+	   // the composite waveform is "above" the elevation determined to be the ground.  All returns are from the canopy.
+	   //write, "composite waveform above ground elevation"
+	   //write, format="Ground = %5.2f, gidx elv = %5.2f\n", out(2,i,j), lfpelv(gidx);
+	   fgr = 0; lgr = 0;
+	  // the waveforms is entirely from the canopy. CRR and GRR need to be set NOW.
+	   out(3,i,j) = 0;
+	   out(4,i,j) = 1;
+        } else {
+	 mxxgnd = min(gidx+5, numberof(lfpelv)); // index to the waveform sample indicating the last point in the trailing edge of the ground return
+         mxxgnd = long(mxxgnd(1));
+         mnxgnd = max(gidx-5, 1);// index to the waveform sample indicating the first point in the leading edge of the ground return
+         mnxgnd = long(mnxgnd(1));
+	 // let's try to better define the ground by checking if the trailing edge of the ground return from the waveform falls to or near 0 before mxxgnd. This is to better constrain the ground return
+         if (numberof(lfpelv(gidx:mxxgnd)) > 1) {
+ 	  lgndidx = where(lfpelv(gidx:mxxgnd)(dif) > 1);
+	 }
+	 if (is_array(lgndidx)) {
+	  lgr = lgndidx(1)+gidx-1;
+	 } else {
 	   lgr = mxxgnd;
-	}
-        if (numberof(lfpelv(mnxgnd:gidx)) > 1)
-          fgndidx = where(lfpelv(mnxgnd:gidx)(dif) < -1); // dont really need to do this
-	if (is_array(fgndidx)) {
+	 }
+	 // try the same constraint for the first (rising edge) of the gnd return
+         if (numberof(lfpelv(mnxgnd:gidx)) > 1)
+          fgndidx = where(lfpelv(mnxgnd:gidx)(dif) < -1); 
+	 if (is_array(fgndidx)) {
 	   fgr = fgndidx(0)+mnxgnd;
-	} else {
+	 } else {
 	   fgr = mnxgnd;
-	}
+	 }
+       }
       }
-      if (fgr > lgr) continue;
+ 
+      if (numberof(lfprx) < 2) continue;
+      lfpcum = (lfprx)(cum);
+      menergy = lfpcum(0)/2;
+      mindx = abs(lfpcum-menergy)(mnx);
+      out(5,i,j) = (lfpelv)(mindx)-out(2,i,j); // this is HOME 
+
+      lfpdif = where(lfprx(dif) <= -thresh);
+      if (!is_array(lfpdif)) continue;
+      mnxcan = min(lfpdif(0)-3,numberof(lfprx));
+      if (mnxcan <= 0) continue;
+      //mxxcan = (lfprx(mnxcan:lfpdif(0)))(mxx) + mnxcan -1;
+      mxidx = where(lfprx(mnxcan:lfpdif(0))(dif) < 0);
+      if (is_array(mxidx)) {
+	mxxcan = mxidx(0) + mnxcan - 1;
+      } else {
+        mxxcan = (lfprx(mnxcan:lfpdif(0)))(mxx) + mnxcan -1;
+      }
+      out(1,i,j) = lfpelv(mxxcan)-out(2,i,j); // this is Canopy Height 
+      if (fgr >= lgr) continue;
       if (lgr > numberof(lfprx)) lgr = numberof(lfprx);
       if (fgr > numberof(lfprx)) fgr = numberof(lfprx);
 	lfpgnd = lfprx(fgr:lgr);
@@ -810,21 +826,32 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, max_elv=, normalize=) {
 	 if ((out(2,i,j) > min_elv) && (out(2,i,j) < max_elv)) {
            out(3,i,j) = lfpgsum/(lfpgsum+lfpcsum);
 	   out(4,i,j) = lfpcsum/(lfpcsum+lfpgsum);
-         } else { // all returns are from the canopy
-	   out(3,i,j) = 0.0;
-           out(4,i,j) = 1.0;
-         }
+         } 
         }
-	
 
+ 	/*
+	if ((out(2,i,j) != -1000) && (out(2,i,j) <= out(1,i,j))) {
+	  out(1,i,j) -= out(2,i,j); // correct CH for bare earth
+	  out(5,i,j) -= out(2,i,j); // correct HOME for bare earth
+        } else {
+	  out(,i,j) = [-1000,-1000,-1000,-1000,-1000];
+	}
+	*/
+
+	// DO SOME FINAL CHECKS ON THE METRICS
+	// ch cannot be less than 0.
+	if (out(1,i,j) < 0) out(,i,j) = [-1000,-1000,-1000,-1000,-1000];
+	// home cannot be less than 0
+	if (out(5,i,j) < 0) out(,i,j) = [-1000,-1000,-1000,-1000,-1000];
     }
  }
 
  if (fill) { // use this to fill in small gaps in the data.
+   fillgrid = 3;
    new_out = out;
-   for (i=3;i<dims(2)-1;i++) {
-     ilow=i-2;
-     ihigh=i+2;
+   for (i=fillgrid;i<dims(2)-1;i++) {
+     ilow=i-fillgrid-1;
+     ihigh=i+fillgrid-1;
      for (j=3;j<dims(3)-1;j++) {
         jlow=j-2;
         jhigh=j+2;
@@ -1361,6 +1388,7 @@ func make_begrid_from_bexyz(bexyz, binsize=, intdist=, lfpveg=) {
      if ((imgx > ngridx) || (imgy > ngridy)) continue;
      if (img(imgx,imgy) == -1000) {
         img(imgx,imgy) = centz(i);
+	imgcount(imgx,imgy)++;
      } else {
         img(imgx,imgy) = sum([img(imgx,imgy),centz(i)]);
 	imgcount(imgx,imgy)++;

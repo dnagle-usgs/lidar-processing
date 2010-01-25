@@ -149,7 +149,7 @@ func batch_veg_lfpw(ipath, opath, fname=, searchstr=, onlyupdate=, only_if_mf=, 
  return
 }
 
-func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, fill=, min_elv=, max_elv=, outwin=, onlyplot=, dofma=, use_be=, be_path=, be_ss=, cl_lfpw=, onlyupdate=) {
+func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, fill=, min_elv=, max_elv=, outwin=, onlyplot=, dofma=, use_be=, be_path=, be_ss=, smooth_be=, cl_lfpw=, onlyupdate=) {
 /* DOCUMENT batch_veg_metrics(ipath, opath, searchstr=, plot=, plotclasses=)
    amar nayegandhi 10/01/04
    ipath = input path
@@ -170,6 +170,7 @@ func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, 
    be_path = path name to where bare earth files are located.  only useful if use_be=1
    be_ss = search string for bare earth files, defaults to : 
            be_ss = "*n88*_merged_*rcf*.pbd";
+   smooth_be = run polyfit_smooth function on be data before using it.  Defaults to 0.
    cl_lfpw = set to 1 to reduce the noise in the large footprint waveform. (Default cl_lfpw=1)
 
    onlyupdate = only make metrics files for those tiles that don't have the output metric files.  Useful when the function is re-started midway through a batch run.
@@ -181,6 +182,7 @@ func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, 
    if (is_void(outwin)) outwin = 3;
    if (is_void(searchstr)) searchstr = "*energy_merged.pbd";
    if (is_void(cl_lfpw)) cl_lfpw = 1;
+   if (is_void(smooth_be)) smooth_be = 0; // do not smooth by default.
 
    if (plotclasses) {
        window, outwin; 
@@ -327,8 +329,9 @@ func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, 
             pause, 2000;
 	    f = openb(be_file(1));
 	    restore, f;
-	    bexyz = get_member(f,vname);
-            bexyz1 = polyfit_eaarl_pts(bexyz, gridmode=1, mode=3);
+	    bexyz1 = get_member(f,vname);
+	    if (smooth_be) 
+              bexyz1 = polyfit_eaarl_pts(bexyz, gridmode=1, mode=3);
 	    close, f;
 	    write, "Converting bare earth xyz into a grid...";
   	    img = make_begrid_from_bexyz(bexyz1, binsize=binsize, lfpveg=outveg);
