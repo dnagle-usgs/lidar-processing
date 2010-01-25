@@ -169,26 +169,46 @@ func batch_kml_mission(datadir, outdir, searchstr=, outfile=, webdest=) {
       grow, paths, file_dirname(file_relative(datadir(i), cur));
    }
 
+   srt = sort(paths);
+   jsons = jsons(srt);
+   paths = paths(srt);
+   srt = [];
+
+   jsons = strchar(jsons);
+   paths = strchar(paths);
+
+   jidx = grow(0, where(jsons == 0));
+   pidx = grow(0, where(paths == 0));
+
    missiondata_cache, "disable";
    missiondata_cache, "clear";
 
-   mission_kmls = day_kmls = kpart_kmls = [];
+   mission_kmls = day_kmls = part_kmls = array(pointer, numberof(jidx)-1);
    tree = h_new();
    webtree = h_new();
 
-   for(i = 1; i <= numberof(jsons); i++) {
+   t0 = array(double, 3);
+   timer, t0;
+
+   for(i = 1; i < numberof(jidx); i++) {
+      json = strchar(jsons(jidx(i)+1:jidx(i+1)));
+      path = strchar(paths(pidx(i)+1:pidx(i+1)));
+
       passdest = [];
       if(!is_void(webdest))
-         passdest = webdest + paths(i) + "/";
-      result = kml_mission(conf_file=jsons(i), keepkml=1,
-         outdir=file_join(outdir, paths(i)), webdest=passdest);
-      fn = file_join(file_dirname(jsons(i)), (*result(1))(1));
-      grow, mission_kmls, fn;
-      grow, day_kmls, file_join(file_dirname(jsons(i)), *result(2));
-      grow, kpart_kmls, file_join(file_dirname(jsons(i)), *result(3));
+         passdest = webdest + path + "/";
+      result = kml_mission(conf_file=json, keepkml=1,
+         outdir=file_join(outdir, path), webdest=passdest);
+      if(is_void(result))
+         continue;
+      fn = file_join(file_dirname(json), (*result(1))(1));
+
+      mission_kmls(i) = &(strchar(fn));
+      day_kmls(i) = &(strchar(file_join(file_dirname(json), *result(2))));
+      part_kmls(i) = &(strchar(file_join(file_dirname(json), *result(3))));
       result = [];
 
-      treepath = strsplit(paths(i), "/");
+      treepath = strsplit(path, "/");
       node = tree;
       for(j = 1; j < numberof(treepath); j++) {
          if(!h_has(node, treepath(j))) {
@@ -214,14 +234,21 @@ func batch_kml_mission(datadir, outdir, searchstr=, outfile=, webdest=) {
             name=treepath(0)
          );
       }
+
+      timer_remaining, t0, i, numberof(jidx);
    }
 
    write, format="\n----------\nProcessing %s\n", "everything";
    outname = file_join(outdir, outfile);
    kml_save, outname, __batch_kml_mission_builder(tree), name="EAARL flightlines";
 
+   // Convert pointer arrays into string arrays
+   mission_kmls = strchar(merge_pointers(mission_kmls));
+   day_kmls = strchar(merge_pointers(day_kmls));
+   part_kmls = strchar(merge_pointers(part_kmls));
+
    kmz = file_rootname(outname) + ".kmz";
-   kmz_create, kmz, outname, mission_kmls, day_kmls, kpart_kmls;
+   kmz_create, kmz, outname, mission_kmls, day_kmls, part_kmls;
 
    if(!is_void(webdest)) {
       remove, outname;
@@ -233,6 +260,8 @@ func batch_kml_mission(datadir, outdir, searchstr=, outfile=, webdest=) {
          rename, file_rootname(webify(i)) + "-web.kml", webify(i);
       }
    }
+
+   timer_finished, t0;
 }
 
 func __batch_kml_mission_builder(node) {
@@ -286,7 +315,7 @@ func kml_mission(void, conf_file=, outdir=, name=, keepkml=, webdest=) {
    The full-mission kmz file would then be:
       /data/0/EAARL/raw/NorIda/kml/NorIda.kmz
 */
-   extern pnav, edb, soe_day_start;
+   extern pnav;
 
    if(!is_void(conf_file))
       mission_load, conf_file;
@@ -298,18 +327,40 @@ func kml_mission(void, conf_file=, outdir=, name=, keepkml=, webdest=) {
    mkdirp, outdir;
 
    days = missionday_list();
+   if(is_void(days)) {
+      write, "No mission days defined, skipping!";
+      return [];
+   }
    days = days(sort(days));
 
-   files = links = weblinks = [];
+   masters = files = links = weblinks = [];
 
    for(i = 1; i <= numberof(days); i++) {
       write, format="\n----------\nProcessing %s\n", days(i);
-      missiondata_load, "edb", day=days(i), noerror=1;
+      edb_file = mission_get("edb file", day=days(i));
+      edb = soe_day_start = [];
+      if(!is_void(edb_file)) {
+         f = edb_open(edb_file, verbose=0);
+         edb = (f.records);
+         close, f;
+         w = where(edb.seconds > time2soe([2000,0,0,0,0,0]));
+         if(!numberof(w)) {
+            edb = [];
+         } else {
+            tmp = soe2time(edb(w(1)).seconds);
+            tmp(3:) = 0;
+            soe_day_start = time2soe(tmp);
+         }
+         determine_gps_time_correction, edb_file, verbose=1;
+      }
       missiondata_load, "pnav", day=days(i), noerror=1;
       fn = file_join(outdir, days(i) + ".kml");
       if(!is_void(pnav) && !is_void(edb) && !is_void(soe_day_start)) {
-         grow, files, kml_pnav(pnav, fn, name=days(i), edb=edb,
+         newfiles = kml_pnav(pnav, fn, name=days(i), edb=edb,
             soe_day_start=soe_day_start, webdest=webdest);
+         grow, masters, newfiles(1);
+         grow, files, newfiles(2:);
+         newfiles = [];
          grow, links, kml_NetworkLink(
             kml_Link(href=file_relative(outdir, fn)),
             name=days(i)
@@ -326,14 +377,15 @@ func kml_mission(void, conf_file=, outdir=, name=, keepkml=, webdest=) {
 
    write, format="\n----------\nProcessing %s\n", name;
 
-   kparts = strglob("*kpart*", file_tail(files));
-   masters = where(!kparts);
-   kparts = where(kparts);
+   if(is_void(links)) {
+      write, "No kmls created, skipped!";
+      return [];
+   }
 
    outname = file_join(outdir, name + ".kml");
    kml_save, outname, links;
    kmz = file_rootname(outname) + ".kmz";
-   kmz_create, kmz, outname, files(masters), files(kparts);
+   kmz_create, kmz, outname, masters, files;
 
    if(!is_void(webdest))
       kml_save, file_rootname(outname) + "-web.kml", weblinks;
@@ -344,7 +396,7 @@ func kml_mission(void, conf_file=, outdir=, name=, keepkml=, webdest=) {
       remove, outname;
    }
 
-   return [&[outname], &files(masters), &files(kparts)];
+   return [&[outname], &masters, &files];
 }
 
 func kml_pnav(input, output, name=, edb=, soe_day_start=, webdest=) {
@@ -384,7 +436,7 @@ func kml_pnav(input, output, name=, edb=, soe_day_start=, webdest=) {
    color = kml_randomcolor();
    width = sqrt(region.area);
 
-   maxdists = [10, 50, 250, 10000];
+   maxdists = [5, 25, 125, 625, 10000];
    files = links = weblinks = [];
    for(i = 1; i < numberof(maxdists); i++) {
       // Estimate the pixel range that this maxdist is appropriate for
@@ -399,7 +451,7 @@ func kml_pnav(input, output, name=, edb=, soe_day_start=, webdest=) {
       if(lod_min <= 16 || i + 1 == numberof(maxdists))
          lod_min = 4;
 
-      fn = swrite(format="%s_kpart_l%d.kml", file_rootname(output), maxdists(i));
+      fn = swrite(format="%s_l%d.kml", file_rootname(output), maxdists(i));
       kml_save, fn, kml_pnav_flightline(pnav, maxdist=maxdists(i), color=color);
       grow, files, fn;
       reg = kml_Region(
@@ -434,7 +486,7 @@ func kml_pnav(input, output, name=, edb=, soe_day_start=, webdest=) {
    links = weblinks = [];
 
    // Elevated Flightline
-   fn = file_rootname(output) + "_kpart_elev.kml";
+   fn = file_rootname(output) + "_elev.kml";
    kml_save, fn, kml_pnav_flightline(pnav, maxdist=10, color=color, alt=1);
    grow, files, fn;
    grow, links, kml_NetworkLink(
@@ -450,7 +502,7 @@ func kml_pnav(input, output, name=, edb=, soe_day_start=, webdest=) {
    // TIMESTAMPS
    local timestampstyle, timestampfolder;
    assign, kml_pnav_timestamps(pnav), timestampstyle, timestampfolder;
-   fn = file_rootname(output) + "_kpart_time.kml";
+   fn = file_rootname(output) + "_time.kml";
    kml_save, fn, *timestampstyle, *timestampfolder;
    grow, files, fn;
    grow, links, kml_NetworkLink(
@@ -466,7 +518,7 @@ func kml_pnav(input, output, name=, edb=, soe_day_start=, webdest=) {
    // PDOP
    local pdopstyle, pdopfolder;
    assign, kml_pnav_pdop(pnav), pdopstyle, pdopfolder;
-   fn = file_rootname(output) + "_kpart_pdop.kml";
+   fn = file_rootname(output) + "_pdop.kml";
    kml_save, fn, *pdopstyle, *pdopfolder;
    grow, files, fn;
    grow, links, kml_NetworkLink(
@@ -484,7 +536,7 @@ func kml_pnav(input, output, name=, edb=, soe_day_start=, webdest=) {
    edbstyle = edbfolder = &[string(0)];
    if(!is_void(edb) && !is_void(soe_day_start)) {
       assign, kml_pnav_edb(pnav, edb, soe_day_start), edbstyle, edbfolder;
-      fn = file_rootname(output) + "_kpart_edb.kml";
+      fn = file_rootname(output) + "_edb.kml";
       kml_save, fn, *edbstyle, *edbfolder;
       grow, files, fn;
       grow, links, kml_NetworkLink(
@@ -661,12 +713,16 @@ func kml_pnav_pdop(pnav, maxdist=, visibility=) {
          r0 = where(match(dif) == 1);
          r1 = where(match(dif) == -1);
 
+         // Sanitize r0 and r1
+         if(!numberof(r0)) r0 = [];
+         if(!numberof(r1)) r1 = [];
+
          // Special case: if the first element is part of the range
-         if(r1(1) < r0(1))
+         if(match(1))
             r0 = grow(1, r0);
 
          // Special case: if the last element is part of the range
-         if(numberof(r1) < numberof(r0))
+         if(match(0))
             grow, r1, numberof(pnav);
       }
 
