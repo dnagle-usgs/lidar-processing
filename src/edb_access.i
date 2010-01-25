@@ -243,7 +243,7 @@ To see a raster, try:\n\
          write, "******NOTE: The file(s) are open for updating.";
    }
 
-   determine_gps_time_correction, edb_filename;
+   determine_gps_time_correction, edb_filename, verbose=verbose;
    total_edb_records = numberof(edb);
 
    // if we're using ytk, then set a var over in tcl to indicate the total
