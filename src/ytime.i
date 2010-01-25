@@ -527,8 +527,8 @@ func time_diff( foo ) {
    close,f;
 }
 
-func determine_gps_time_correction(fn, silent=) {
-/* DOCUMENT determine_gps_time_correction(fn)
+func determine_gps_time_correction(fn, verbose=) {
+/* DOCUMENT determine_gps_time_correction(fn, verbose=)
   This function determines the gps_time_correction automatically based on the year of the survey. 
   If survey date is before year 2006, gps_time_correction = -13.
   If survey date is after year 2006, gps_time_correction = -14.
@@ -548,7 +548,7 @@ func determine_gps_time_correction(fn, silent=) {
      been set (or that it hasn't, if this fails).
 */
    extern gps_time_correction;
-   default, silent, 0;
+   default, verbose, 1;
    success = 0; 
 
    parts = file_split(file_dirname(fn));
@@ -556,13 +556,16 @@ func determine_gps_time_correction(fn, silent=) {
    w = where(dates);
    if(numberof(w)) {
       ymd = dates(w(0));
-      gps_time_correction = gps_utc_offset(ymd) * -1.0;
+      correction = gps_utc_offset(ymd) * -1.0;
       success = 1;
 
-      if(! silent) {
-         write, format="*** NOTE: gps_time_correction is now set to %.1f seconds ***\n", gps_time_correction;
+      if(is_void(gps_time_correction) || gps_time_correction != correction) {
+         gps_time_correction = correction;
+         if(verbose) {
+            write, format="*** NOTE: gps_time_correction is now set to %.1f seconds ***\n", gps_time_correction;
       }
-   } else if(! silent) {
+      }
+   } else if(verbose && is_void(gps_time_correction)) {
       write, "*** NOTE: gps_time_correction could not be set!";
       write, "***       You will have to set it manually. You may also have to manually";
       write, "***       apply it to some of the data you have loaded."
