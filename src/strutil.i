@@ -14,9 +14,7 @@ func atoi(str) {
 
       An integer value.
 */
-   i = array(float, dimsof(str));
-   sread, str, format="%f", i;
-   return int(i);
+   return int(atod(unref(str)));
 }
 
 func atol(str) {
@@ -32,9 +30,7 @@ func atol(str) {
 
       An integer value.
 */
-   i = array(float, dimsof(str));
-   sread, str, format="%f", i;
-   return long(i);
+   return long(atod(unref(str)));
 }
 
 func atof(str) {
