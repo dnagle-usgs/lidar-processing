@@ -2921,10 +2921,10 @@ func show_setup ( junk ) {
 
 func batch_tile(srcdir, dstdir, scheme=, mode=, searchstr=, suffix=,
 remove_buffers=, buffer=, uniq=, verbose=, zone=, shorten=, flat=,
-split_zones=, split_days=, north=, east=) {
+split_zones=, split_days=, day_shift=, north=, east=) {
 /* DOCUMENT batch_tile, srcdir, dstdir, scheme=, mode=, searchstr=, suffix=,
    remove_buffers=, buffer=, uniq=, verbose=, zone=, shorten=, flat=,
-   split_zones=, split_days=, north=, east=;
+   split_zones=, split_days=, day_shift=, north=, east=;
 
    Loads the data in srcdir that matches searchstr= and partitions it into
    tiles, which are created in dstdir.
@@ -3000,6 +3000,18 @@ split_zones=, split_days=, north=, east=) {
          by date in the filename.
             split_days=0      Do not split by day. (default)
             split_days=1      Split by days, adding _YYYYMMDD to filename.
+      day_shift= Specifies an offset in seconds to apply to the soes when
+         determining their YYYYMMDD value for split_days. This can be used to
+         shift time periods into the previous/next day when surveys are flown
+         close to UTC midnight. The value is added to soe only for determining
+         the date; the actual soe values remain unchanged.
+            day_shift=0          No shift; UTC time (default)
+            day_shift=-14400     -4 hours; EDT time
+            day_shift=-18000     -5 hours; EST and CDT time
+            day_shift=-21600     -6 hours; CST and MDT time
+            day_shift=-25200     -7 hours; MST and PDT time
+            day_shift=-28800     -8 hours; PST and AKDT time
+            day_shift=-32400     -9 hours; AKST time
 
    Advanced options:
       north= The struct field in data containing the northings to use. This is
@@ -3089,7 +3101,7 @@ split_zones=, split_days=, north=, east=) {
       save_data_to_tiles, unref(data), zones(i), dstdir, scheme=scheme,
          suffix=suffix, buffer=buffer, shorten=shorten, flat=flat, uniq=uniq,
          verbose=verbose, split_zones=split_zones, split_days=split_days,
-         north=north, east=east;
+         day_shift=day_shift, north=north, east=east;
 
       if(verbose && i < numberof(files)) {
          timer, t1;

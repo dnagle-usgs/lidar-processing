@@ -1312,10 +1312,10 @@ func partition_type_summary(north, east, zone, buffer=) {
 
 func save_data_to_tiles(data, zone, dest_dir, scheme=, north=, east=, mode=,
 suffix=, buffer=, shorten=, flat=, uniq=, overwrite=, verbose=, split_zones=,
-split_days=) {
+split_days=, day_shift=) {
 /* DOCUMENT save_data_to_tiles, data, zone, dest_dir, scheme=, north=, east=,
    mode=, suffix=, buffer=, shorten=, flat=, uniq=, overwrite=, verbose=,
-   split_zones=, split_days=
+   split_zones=, split_days=, day_shift=
 
    Given an array of data (which must be in an ALPS data structure such as
    VEG__) and a scalar or array of zone corresponding to it, this will create
@@ -1364,6 +1364,18 @@ split_days=) {
          by date in the filename.
             split_days=0      Do not split by day. (default)
             split_days=1      Split by days, adding _YYYYMMDD to filename.
+      day_shift= Specifies an offset in seconds to apply to the soes when
+         determining their YYYYMMDD value for split_days. This can be used to
+         shift time periods into the previous/next day when surveys are flown
+         close to UTC midnight. The value is added to soe only for determining
+         the date; the actual soe values remain unchanged.
+            day_shift=0          No shift; UTC time (default)
+            day_shift=-14400     -4 hours; EDT time
+            day_shift=-18000     -5 hours; EST and CDT time
+            day_shift=-21600     -6 hours; CST and MDT time
+            day_shift=-25200     -7 hours; MST and PDT time
+            day_shift=-28800     -8 hours; PST and AKDT time
+            day_shift=-32400     -9 hours; AKST time
 
    Advanced options:
       north= The struct field in data containing the northings to use. Defaults
@@ -1386,6 +1398,7 @@ split_days=) {
    default, verbose, 1;
    default, split_zones, scheme == "qq";
    default, split_days, 0;
+   default, day_shift, 0;
 
    bilevel = scheme == "10k2k";
    if(bilevel) scheme = "2k";
@@ -1451,7 +1464,7 @@ split_days=) {
       mkdirp, outpath;
 
       if(split_days) {
-         dates = soe2date(vdata.soe);
+         dates = soe2date(vdata.soe + day_shift);
          date_uniq = set_remove_duplicates(dates);
          for(j = 1; j <= numberof(date_uniq); j++) {
             date_suffix = "_" + regsub("-", date_uniq(j), "", all=1);
@@ -1468,6 +1481,9 @@ split_days=) {
             dw = where(dates == date_uniq(j));
 
             pbd_append, outdest, dname, vdata(dw), uniq=uniq;
+
+            if(verbose)
+               write, format=" %d: %s\n", i, outfile;
          }
       } else {
          outfile = curtile;
@@ -1480,10 +1496,10 @@ split_days=) {
             remove, outdest;
 
          pbd_append, outdest, vname, vdata, uniq=uniq;
-      }
 
-      if(verbose)
-         write, format=" %d: %s\n", i, outfile;
+         if(verbose)
+            write, format=" %d: %s\n", i, outfile;
+      }
    }
 }
 
