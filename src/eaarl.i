@@ -1,6 +1,5 @@
-/*
-   Place to collect all yorick .i files that eaarl needs.
-*/
+// vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
+// Place to collect all yorick .i files that eaarl needs.
 
 if(is_void(__eaarl_includes_included__)) {
    __eaarl_includes_included__ = 1;
@@ -51,6 +50,7 @@ if(is_void(__eaarl_includes_included__)) {
 
    // ALPS requires
    require, "eaarl_constants.i"; // Must come first; some other files need it
+   require, "eaarl_data.i";
    require, "batch_process.i";
    require, "bathy_filter.i";
    require, "change_window_size.i";
