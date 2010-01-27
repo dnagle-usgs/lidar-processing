@@ -45,7 +45,7 @@ if {![winfo exists .l1wid]} {
   set win_no 5
   set win_load 6;    # used by EAARL Data Loader
   set usecentroid 1
-  set hist_log 1
+  set hist_log 0
 
   set cmax_max 5000
   set cmin_min -100
@@ -250,8 +250,8 @@ if {![winfo exists .l1wid]} {
     -variable show_pro_gui
 
   .l1wid.mb.options add checkbutton -label "Log Histograms" -underline 0 \
-    -variable hist_log \
-    -command hist_linlog
+    -variable hist_log
+    #-command hist_linlog
 
   .l1wid.mb.options add command -label "Plot/Write Individual Flightlines..." \
     -underline 0 \
@@ -287,7 +287,7 @@ if {![winfo exists .l1wid]} {
 
       Button .l1plot.plot -text "Plot" -width 6 -command {
         make_selected_arrays
-        plot_fltlines 1
+        display_data
       }
 
       Button .l1plot.write -text "Write Datafile" -command {
@@ -1253,7 +1253,9 @@ if {![winfo exists .l1wid]} {
   Button .l1wid.bf45.q.2 -text "Histogram\nElevations" \
     -helptext "Generate and display a histogram of all the first return\
       elevations" \
-    -command {
+    -command hist_data
+
+  proc old_hist_data {} {
       global cbvc plot_settings
       set ptype [processing_mode]
       set disp_type [display_type]
@@ -1280,6 +1282,19 @@ if {![winfo exists .l1wid]} {
       set cbvc(cmin) $plot_settings(cmin)
       set cbvc(cmax) $plot_settings(cmax)
     }
+
+  proc hist_data {} {
+    set cmd "hist_data, $::pro_var"
+    append cmd ", mode=\"[lindex {fs ba de be fint lint ch} [display_type]]\""
+    append cmd ", vname=\"$::pro_var\""
+    append cmd ", win=7, dofma=1"
+    if {$::hist_log} {
+      append cmd ", logy=1"
+    }
+    append cmd ", normalize=1"
+    exp_send "$cmd\r"
+    cbar_tool
+  }
 
   Button .l1wid.bf45.q.1 -text "Pixel\nAnalysis" \
     -helptext "Click to jump to raster, pulse, and image for xyz point." \
@@ -2337,7 +2352,7 @@ if {![winfo exists .l1wid]} {
   checkbutton .l1wid.bf45.sc.g.fma -text "Auto Clear" -variable l1pro_fma
 
   Button .l1wid.bf45.sc.pl -text "Plot" -width 6 -height 2 -bd 5 -command {
-    plot_fltlines 0
+    display_data
   }
   pack \
     .l1wid.bf45.sc.f.msize \
@@ -2499,6 +2514,26 @@ if {![winfo exists .l1wid]} {
     }
   }
 
+  proc display_data {} {
+    set cmd "display_data, $::pro_var"
+    append cmd ", mode=\"[lindex {fs ba de be fint lint ch} [display_type]]\""
+    if {$::skip > 1} {
+      append cmd ", skip=$::skip"
+    }
+    append cmd ", msize=$::plot_settings(msize)"
+    append cmd ", marker=$::plot_settings(mtype)"
+    append cmd ", win=$::win_no"
+    if {! $::l1pro_square_limits} {
+      append cmd ", square=0"
+    }
+    if {$::l1pro_fma} {
+      append cmd ", dofma=1"
+    }
+    append cmd ", cmin=$::plot_settings(cmin)"
+    append cmd ", cmax=$::plot_settings(cmax)"
+
+    exp_send "$cmd;\r"
+  }
 
   proc plot_fltlines {sel} {
     global l1pro_fma win_no cdelta varlist skip \
