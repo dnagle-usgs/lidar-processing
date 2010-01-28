@@ -386,6 +386,15 @@ func mission_json_import(json, sync=) {
         __mission_conf = data;
     }
 
+    keys = h_keys(__mission_conf);
+    for(i = 1; i <= numberof(keys); i++) {
+        mday = __mission_conf(keys(i));
+        // On 2010-01-28, "dmars file" was renamed to "ins file". This provides
+        // compatibility for previously saved configuration files.
+        if(h_has(mday, "dmars file"))
+            h_set, mday, "ins file", h_pop(mday, "dmars file");
+    }
+
     if(__mission_settings("ytk") && sync)
         mission_send;
 }
