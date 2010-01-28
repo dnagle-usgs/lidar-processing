@@ -256,8 +256,8 @@ func mosaic_gather_tans(date_list, photo_soes, progress=, mounting_bias=) {
       if(progress)
          write, format=" - %d: Interpolating for %s...\n", i, days(i);
       missionday_current, days(i);
-      if(!mission_has("dmars file")) continue;
-      missiondata_load, "dmars";
+      if(!mission_has("ins file")) continue;
+      missiondata_load, "ins";
 
       tans_soe = date2soe(mission_get("date"), tans.somd);
 

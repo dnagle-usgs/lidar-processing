@@ -29,7 +29,7 @@ if {![info exists __mission_path]} {
 if {![info exists __mission_settings]} {
     set __mission_settings [dict create \
         "relative paths" [list "data_path" "edb file" "pnav file" \
-            "dmars file" "ops_conf file" "cir dir" "rgb dir" "rgb file"] \
+            "ins file" "ops_conf file" "cir dir" "rgb dir" "rgb file"] \
     ]
 }
 
@@ -352,6 +352,8 @@ namespace eval mission {
         $mb.act add separator
         $mb.act add command -label "Launch RGB" -command [@ menu_launch_rgb]
         $mb.act add command -label "Launch CIR" -command [@ menu_launch_cir]
+        $mb.act add separator
+        $mb.act add command -label "Generate KMZ" -command [@ menu_gen_kmz]
 
         menu $mb.cache
         $mb add cascade -label Cache -underline 0 -menu $mb.cache
@@ -497,6 +499,17 @@ namespace eval mission {
         }
     }
 
+    proc menu_gen_kmz {} {
+        set response [tk_messageBox -type yesno \
+            -icon question -title "Generate KMZ files?" \
+            -message "Would you like to generate KMZ files for the current\
+                mission configuration? Your KMZ files will be placed in a 'kml'\
+                subdirectory of the mission."]
+        if {$response eq "yes"} {
+            exp_send "kml_mission;\r"
+        }
+    }
+
     proc update_gui {args} {
         set f $v::dateframe
         foreach w [winfo children $f] {
@@ -528,7 +541,7 @@ namespace eval mission {
     }
 
     proc __date_config_path_helper {w var dlg} {
-        foreach child [list Edb Pnav Dmars Ops Cir RgbDir RgbTar] {
+        foreach child [list Edb Pnav Ins Ops Cir RgbDir RgbTar] {
             $w.ent$child configure -initialdir [set [set var]([list $dlg data_path])]
         }
     }
@@ -551,7 +564,7 @@ namespace eval mission {
         set v::config_temp([% data_path]) [mission_get data_path $date]
         set v::config_temp([% "edb file"]) [mission_get "edb file" $date]
         set v::config_temp([% "pnav file"]) [mission_get "pnav file" $date]
-        set v::config_temp([% "dmars file"]) [mission_get "dmars file" $date]
+        set v::config_temp([% "ins file"]) [mission_get "ins file" $date]
         set v::config_temp([% "ops_conf file"]) [mission_get "ops_conf file" $date]
         set v::config_temp([% "cir dir"]) [mission_get "cir dir" $date]
         set v::config_temp([% "rgb dir"]) [mission_get "rgb dir" $date]
@@ -588,15 +601,15 @@ namespace eval mission {
             } \
             -parent $dlg \
             -textvariable [& v::config_temp]([% "pnav file"])
-        GUI::FileEntryButton $w.entDmars \
-            -labeltext "DMARS file:" \
+        GUI::FileEntryButton $w.entIns \
+            -labeltext "INS file:" \
             -actiontype open \
             -filetypes {
                 {{pbd files} {.pbd}}
                 {{All files} *}
             } \
             -parent $dlg \
-            -textvariable [& v::config_temp]([% "dmars file"])
+            -textvariable [& v::config_temp]([% "ins file"])
         GUI::FileEntryButton $w.entOps \
             -labeltext "ops_conf.i file:" \
             -actiontype open \
@@ -628,19 +641,19 @@ namespace eval mission {
 
         __date_config_path_helper $w [& v::config_temp] $dlg
 
-        foreach ent [list Date Path Edb Pnav Dmars Ops Cir RgbDir RgbTar] {
+        foreach ent [list Date Path Edb Pnav Ins Ops Cir RgbDir RgbTar] {
             [$w.ent$ent component entry] configure \
                 -width 60
         }
 
         iwidgets::Labeledwidget::alignlabels \
             $w.entDate \
-            $w.entPath $w.entEdb $w.entPnav $w.entDmars $w.entOps \
+            $w.entPath $w.entEdb $w.entPnav $w.entIns $w.entOps \
             $w.entCir $w.entRgbDir $w.entRgbTar
 
         pack \
             $w.entDate \
-            $w.entPath $w.entEdb $w.entPnav $w.entDmars $w.entOps \
+            $w.entPath $w.entEdb $w.entPnav $w.entIns $w.entOps \
             $w.entCir $w.entRgbDir $w.entRgbTar \
             -side top -pady 5 -padx 10 -fill x -expand yes
 
@@ -651,7 +664,7 @@ namespace eval mission {
             if {[$dlg activate]} {
                 set temp_data [dict create]
                 set keys [list date data_path "edb file" "pnav file" \
-                    "dmars file" "ops_conf file" "cir dir" "rgb dir" \
+                    "ins file" "ops_conf file" "cir dir" "rgb dir" \
                     "rgb file"]
                 foreach key $keys {
                     if {[string length $v::config_temp([% $key])]} {

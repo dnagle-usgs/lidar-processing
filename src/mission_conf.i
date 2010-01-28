@@ -128,7 +128,7 @@ if(is_void(__mission_settings))
     __mission_settings = h_new(
         "use cache", 1,
         "ytk", 0,
-        "relative paths", ["data_path", "edb file", "pnav file", "dmars file",
+        "relative paths", ["data_path", "edb file", "pnav file", "ins file",
             "ops_conf file", "cir dir", "rgb dir", "rgb file"]
     );
 
@@ -471,7 +471,7 @@ func missiondata_wrap(type) {
         all - includes all of the others
         edb
         pnav
-        dmars
+        ins
         ops_conf
 */
     if(is_void(type)) {
@@ -481,7 +481,7 @@ func missiondata_wrap(type) {
             "__type", "all",
             "edb", missiondata_wrap("edb"),
             "pnav", missiondata_wrap("pnav"),
-            "dmars", missiondata_wrap("dmars"),
+            "ins", missiondata_wrap("ins"),
             "ops_conf", missiondata_wrap("ops_conf")
         );
     } else if(type == "edb") {
@@ -505,11 +505,11 @@ func missiondata_wrap(type) {
             "gga", gga,
             "pnav_filename", pnav_filename
         );
-    } else if(type == "dmars") {
+    } else if(type == "ins") {
         extern iex_nav, iex_head, iex_nav1hz, tans;
         // ops_conf ?
         return h_new(
-            "__type", "dmars",
+            "__type", "ins",
             "iex_nav", iex_nav,
             "iex_head", iex_head,
             "iex_nav1hz", iex_nav1hz,
@@ -539,7 +539,7 @@ func missiondata_unwrap(data) {
     if(type == "all") {
         missiondata_unwrap, data.edb;
         missiondata_unwrap, data.pnav;
-        missiondata_unwrap, data.dmars;
+        missiondata_unwrap, data.ins;
         missiondata_unwrap, data.ops_conf;
     } else if(type == "edb") {
         extern edb, edb_filename, edb_files, total_edb_records,
@@ -558,7 +558,7 @@ func missiondata_unwrap(data) {
         pnav = data.pnav;
         gga = data.gga;
         pnav_filename = data.pnav_filename;
-    } else if(type == "dmars") {
+    } else if(type == "ins") {
         extern iex_nav, iex_head, iex_nav1hz, tans;
         // ops_conf ?
         iex_nav = data.iex_nav;
@@ -581,7 +581,7 @@ func missiondata_load(type, day=, noerror=) {
         all - will load all defined data
         edb
         pnav
-        dmars
+        ins
         ops_conf
 */
     extern __mission_conf, __mission_day, __mission_cache, __mission_settings;
@@ -594,7 +594,7 @@ func missiondata_load(type, day=, noerror=) {
     if(type == "all") {
         missiondata_load, "edb", day=day, noerror=1;
         missiondata_load, "pnav", day=day, noerror=1;
-        missiondata_load, "dmars", day=day, noerror=1;
+        missiondata_load, "ins", day=day, noerror=1;
         missiondata_load, "ops_conf", day=day, noerror=1;
         return;
     }
@@ -649,19 +649,19 @@ func missiondata_load(type, day=, noerror=) {
         if(mission_has("pnav file", day=day))
             tkcmd, swrite(format="set ::plot::g::pnav_file {%s}",
                 mission_get("pnav file", day=day));
-    } else if(type == "dmars") {
-        if(cache_enabled && h_has(cache, "dmars")) {
-            missiondata_unwrap, cache("dmars");
-        } else if(mission_has("dmars file", day=day)) {
-            load_iexpbd, mission_get("dmars file", day=day), verbose=0;
+    } else if(type == "ins") {
+        if(cache_enabled && h_has(cache, "ins")) {
+            missiondata_unwrap, cache("ins");
+        } else if(mission_has("ins file", day=day)) {
+            load_iexpbd, mission_get("ins file", day=day), verbose=0;
             if(cache_enabled) {
-                h_set, cache, "dmars", missiondata_wrap("dmars");
+                h_set, cache, "ins", missiondata_wrap("ins");
             }
         } else if(noerror) {
             extern iex_nav, iex_head, iex_nav1hz, tans;
             iex_nav = iex_head = iex_nav1hz = tans = [];
         } else {
-            error, "Could not load dmars data: no dmars file defined";
+            error, "Could not load ins data: no ins file defined";
         }
     } else if(type == "ops_conf") {
         if(cache_enabled && h_has(cache, "ops_conf")) {
@@ -814,7 +814,7 @@ func mission_initialize_from_path(path, strict=) {
     This will clear __mission_conf and attempt to initialize it automatically.
     For each mission day in the mission path (identified by those directories
     whose names contain a date string), it will attempt to locate and define a
-    pnav file, dmars file, ops_conf.i file, and edb file.
+    pnav file, ins file, ops_conf.i file, and edb file.
 
     If strict is 1 (which it is by default), then a mission day will not be
     initialized unless an edf file is present. If strict is 0, then that
@@ -861,9 +861,9 @@ func mission_initialize_from_path(path, strict=) {
         if(pnav_file)
             mission_set, "pnav file", pnav_file;
 
-        dmars_file = autoselect_iexpbd(dir);
-        if(dmars_file)
-            mission_set, "dmars file", dmars_file;
+        ins_file = autoselect_iexpbd(dir);
+        if(ins_file)
+            mission_set, "ins file", ins_file;
 
         ops_conf_file = autoselect_ops_conf(dir);
         if(ops_conf_file)
