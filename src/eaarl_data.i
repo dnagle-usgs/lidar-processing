@@ -382,9 +382,9 @@ func xyz2data(_x, &_y, _z, &data, mode=, native=) {
    }
 }
 
-func display_data(data, mode=, axes=, cmin=, cmax=, marker=, msize=, win=, dofma=, skip=, square=) {
+func display_data(data, mode=, axes=, cmin=, cmax=, marker=, msize=, win=, dofma=, skip=, square=, restore_win=) {
 /* DOCUMENT display_data, data, mode=, axes=, cmin=, cmax=, marker=, msize=,
-   win=, dofma=, skip=, square=
+   win=, dofma=, skip=, square=, restore_win=
 
    Plots ALPS data.
 
@@ -416,6 +416,10 @@ func display_data(data, mode=, axes=, cmin=, cmax=, marker=, msize=, win=, dofma
       square= Specifies which kind of limits to use.
             square=1    Units in both axes have same size. (default)
             square=0    Units may vary per axis, resulting in non-square squares.
+      restore_win= Specifies whether to leave the active window as win= or
+         change it back to what it was before the function was called.
+            restore_win=0  Leave window set to the one we plotted in (default)
+            restore_win=1  Restore window to whatever it was before we plotted
 */
 // Original David Nagle 2009-01-25
    local x, y, z, X, Y, Z;
@@ -423,6 +427,7 @@ func display_data(data, mode=, axes=, cmin=, cmax=, marker=, msize=, win=, dofma
    default, dofma, 0;
    default, axes, "xyz";
    default, square, 1;
+   default, restore_win, 0;
 
    data2xyz, unref(data), x, y, z, mode=mode;
 
@@ -453,7 +458,8 @@ func display_data(data, mode=, axes=, cmin=, cmax=, marker=, msize=, win=, dofma
       cmin=cmin, cmax=cmax;
    limits, square=square;
 
-   window_select, wbkp;
+   if(restore_win)
+      window_select, wbkp;
 }
 
 func hist_data(data, mode=, binsize=, normalize=, plot=, win=, dofma=, logy=,
