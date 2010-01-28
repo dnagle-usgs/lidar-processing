@@ -1,3 +1,10 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-01-28. It has not been in use for   *
+* several years. The intent was to make a web interface for easier viewing of  *
+* the data. However, this method was abandoned and other approaches pursued    *
+* instead.                                                                     *
+\******************************************************************************/
+
 require, "eaarl.i";
 
 func webview(data_dir, webdir, mode, rcfmode=, min_elv=, max_elv=, getcolor=, datum=, update=, fltdir=, indir=, nohtml=, title=, alwaysdrawmap=) {

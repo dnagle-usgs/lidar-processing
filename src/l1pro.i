@@ -30,7 +30,6 @@ if(is_void(__l1pro_includes_included__)) {
    require, "raspulsearch.i";
    require, "surface_topo.i";
    require, "veg.i";
-   require, "webview.i";
    require, "ytriangulate.i";
 }
 
