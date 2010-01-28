@@ -470,7 +470,7 @@ func struct2hash(data) {
 */
    fields = print(structof(data))(2:-1);
    fields = regsub("^ +", fields);
-   fields = regsub(";$", fields);
+   fields = regsub("(\\(.+\\))?;$", fields);
    fields = strsplit(fields, " ")(,2);
 
    hash = h_new();
