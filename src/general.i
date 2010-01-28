@@ -529,4 +529,39 @@ func merge_pointers(pary) {
    return mary;
 }
 
+func pbd2hash(pbd) {
+/* DOCUMENT hash = pbd2hash(pbd)
+   Creates a Yeti hash whose contents match the pbd's contents. The pbd
+   argument may be the filename of a pbd file, or it may be an open filehandle
+   to a binary file that contains variables.
+*/
+// Original David Nagle 2010-01-28
+   if(is_string(pbd))
+      pbd = openb(pbd);
 
+   hash = h_new();
+   vars = *(get_vars(pbd)(1));
+   for(i = 1; i <= numberof(vars); i++)
+      // Wrap the get_member in parens to ensure we don't end up with a
+      // reference to the file.
+      h_set, hash, vars(i), (get_member(pbd, vars(i)));
+
+   return hash;
+}
+
+func hash2pbd(hash, pbd) {
+/* DOCUMENT hash2pbd, hash, pbd
+   Creates a pbd file whose contents match the Yeti hash's contents.
+*/
+// Original David Nagle 2010-01-28
+   if(is_string(pbd))
+      pbd = createb(pbd);
+
+   vars = h_keys(hash);
+   for(i = 1; i <= numberof(vars); i++) {
+      if(is_void(hash(vars(i))))
+         continue;
+      add_variable, pbd, -1, vars(i), structof(hash(vars(i))), dimsof(hash(vars(i)));
+      get_member(pbd, vars(i)) = hash(vars(i));
+   }
+}
