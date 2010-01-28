@@ -119,10 +119,11 @@ func plot_hash(wsrc, pal=) {
 /* DOCUMENT p = plot_hash(wsrc, pal=)
 
    Save Yorick plot of window wsrc in a Yeti hash. This plot can be restored
-   with plot_restore. You can save it to file using yhd_save and restore that
-   file using yhd_restore.
+   with plot_restore.
 
    Use pal=0 if you do not want the palette saved.
+
+   See also: plot_restore plot_save plot_load
 
    Modified from function save_plot in copy_plot.i
 */
@@ -189,6 +190,8 @@ func plot_restore(wout, p, style=, clear=, lmt=, pal=) {
    Use clear=0 to disable clearing of window before plotting.
    Use pal=0 to disable using palette saved (if present).
 
+   See also: plot_hash plot_save plot_load
+
    Modified from function load_plot in copy_plot.i
 */
    default, style, 1;
@@ -203,7 +206,8 @@ func plot_restore(wout, p, style=, clear=, lmt=, pal=) {
    window, wout;
 
    if(style)
-      set_style, p.getstyle_p1, p.getstyle_p2, p.getstyle_p3, p.getstyle_p4;
+      set_style, h_get(p, "getstyle_p1"), h_get(p, "getstyle_p2"),
+         h_get(p, "getstyle_p3"), h_get(p, "getstyle_p4");
 
    if(clear)
       fma;
@@ -221,11 +225,11 @@ func plot_restore(wout, p, style=, clear=, lmt=, pal=) {
          limits, p(swrite(format="limits_%d", i));
       j = 0;
       while(h_has(p, swrite(format="prop1_%d_%d", i, ++j))) {
-         p1 = p(swrite(format="prop1_%d_%d", i, j));
-         p2 = p(swrite(format="prop2_%d_%d", i, j));
-         p3 = p(swrite(format="prop3_%d_%d", i, j));
-         p4 = p(swrite(format="prop4_%d_%d", i, j));
-         p5 = p(swrite(format="prop5_%d_%d", i, j));
+         p1 = h_get(p, swrite(format="prop1_%d_%d", i, j));
+         p2 = h_get(p, swrite(format="prop2_%d_%d", i, j));
+         p3 = h_get(p, swrite(format="prop3_%d_%d", i, j));
+         p4 = h_get(p, swrite(format="prop4_%d_%d", i, j));
+         p5 = h_get(p, swrite(format="prop5_%d_%d", i, j));
          replot, p1, p2, p3, p4, p5;
       }
    }
@@ -235,4 +239,28 @@ func plot_restore(wout, p, style=, clear=, lmt=, pal=) {
       window, old_win;
       plsys, old_sys;
    }
+}
+
+func plot_save(win, pbd) {
+/* DOCUMENT plot_save, win, pbd
+
+   Saves a window's plot to a pbd, which can then later be restored with
+   plot_load.
+
+   See also: plot_hash plot_restore plot_load
+*/
+   if(!is_hash(win))
+      win = plot_hash(win);
+   hash2pbd, win, pbd;
+}
+
+func plot_load(win, pbd) {
+/* DOCUMENT plot_load, win, pbd
+
+   Loads a plot to a window that had been saved by plot_save.
+
+   See also: plot_hash plot_restore plot_save
+*/
+   hash = pbd2hash(pbd);
+   plot_restore, win, hash, style=0;
 }
