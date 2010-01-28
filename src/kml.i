@@ -393,6 +393,8 @@ func kml_mission(void, conf_file=, outdir=, name=, keepkml=, webdest=) {
    if(!keepkml) {
       for(i = 1; i <= numberof(files); i++)
          remove, files(i);
+      for(i = 1; i <= numberof(masters); i++)
+         remove, masters(i);
       remove, outname;
    }
 
