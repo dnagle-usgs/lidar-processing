@@ -1,4 +1,10 @@
-func scanflatmirror1_direct_vector(yaw,pitch,roll,gx,gy,gz,dx,dy,dz,lasang,mirang,curang,mag)
+/******************************************************************************\
+* This file was moved to the attic on 2010-01-28. It has not been in use for   *
+* several years. See scanflatmirror2_direct_vector.i for the corresponding     *
+* code that is in use instead.                                                 *
+\******************************************************************************/
+
+func scanflatmirror2_direct(yaw,pitch,roll,gx,gy,gz,dx,dy,dz,cyaw,lasang,mirang,curang,mag)
 {
 /*---------------------------------------------------------------
   This function computes a vector (M) of xyz points projected
@@ -18,12 +24,13 @@ func scanflatmirror1_direct_vector(yaw,pitch,roll,gx,gy,gz,dx,dy,dz,lasang,miran
   dx     - delta x distance from GPS antenna to mirror exit
   dy     - delta y distance from GPS antenna to mirror exit
   dz     - delta z distance from GPS antenna to mirror exit
+  cyaw   - yaw angle (z) about laser/mirror chasis
   lasang - mounting angle of laser about x-axis
   mirang - mounting angle of mirror about x-axis
   curang - current angle of mirror rotating about y-axis
   mag    - magnitude of vector in 'y' direction
  ---------------------------------------------------------------
-  SAB			NASA			3/29/2000
+  SAB			NASA			8/11/2000
  ---------------------------------------------------------------
 */
 
@@ -53,26 +60,33 @@ m3  = G*dx + H*dy + I*dz + gz;
 mir = [m1,m2,m3];
 
 la   = lasang*rad;			// Convert to radians
-mi   = mirang*rad;
-cu   = curang*rad;
+ma   = mirang*rad;
+ca   = curang*rad;
+pa   = cyaw*rad;
 
-c    = cos(la);
-s    = sin(la);
+cla  = cos(la);
+sla  = sin(la);
+cpa  = cos(pa);
+spa  = sin(pa);
+cca  = cos(ca);
+sca  = sin(ca);
+cma  = cos(ma);
+sma  = sin(ma);
 
-a1   = (B*c+C*s)*mag;			// Move incident vector with
-a2   = (E*c+F*s)*mag;			// aircraft attitude and then
-a3   = (H*c+I*s)*mag; 			// rotate about x-axis
-a    = [a1,a2,a3];
-
-J    =  cos(cu);			// These matrix components
-K    =  0;				// comprise the 2 rotations
-L    =  sin(cu);			// needed for a planar mirror
-M    =  sin(mi)*sin(cu);
-N    =  cos(mi);
-O    = -sin(mi)*cos(cu);
-P    = -cos(mi)*sin(cu);
-Q    =  sin(mi);
-R    =  cos(mi)*cos(cu);
+a1 = ((-A*spa+B*cpa)*cla+C*sla)*mag;	// Move incident vector with
+a2 = ((-D*spa+E*cpa)*cla+F*sla)*mag;	// aircraft attitude and then
+a3 = ((-G*spa+H*cpa)*cla+I*sla)*mag; 	// rotate about z-axis, then
+a  = [a1,a2,a3];			// x-axis
+					
+J  =  cpa*cca-spa*sma*sca;		// These matrix components
+K  =  -spa*cma;				// comprise the 3 rotations
+L  =  cpa*sca+spa*sma*cca;		// needed for a planar mirror
+M  =  spa*cca+cpa*sma*sca;
+N  =  cpa*cma;
+O  =  spa*sca-cpa*sma*cca;
+P  =  -cma*sca;
+Q  =  sma;
+R  =  cma*cca;
 
 r11  = A*J + B*M + C*P;			// X-axis attitude after all
 r12  = D*J + E*M + F*P;			// rotations
@@ -84,16 +98,16 @@ r22  = D*K + E*N + F*Q;			// rotations
 r23  = G*K + H*N + I*Q;
 R2   = [r21,r22,r23];
 					
-rm1  = R1(,2)*R2(,3) - R1(,3)*R2(,2);	// Compute cross product of R1
-rm2  = R1(,3)*R2(,1) - R1(,1)*R2(,3);       // and R2 to find normal (RM)        
-rm3  = R1(,1)*R2(,2) - R1(,2)*R2(,1);
+rm1  = R1(2)*R2(3) - R1(3)*R2(2);	// Compute cross product of R1
+rm2  = R1(3)*R2(1) - R1(1)*R2(3);       // and R2 to find normal (RM)        
+rm3  = R1(1)*R2(2) - R1(2)*R2(1);
 RM   = [rm1,rm2,rm3];
 					// Compute inner product
-MM   = RM(,1)*a(,1) + RM(,2)*a(,2) + RM(,3)*a(,3);
+MM   = RM(1)*a(1) + RM(2)*a(2) + RM(3)*a(3);
 
-mx   = a(,1) - 2*MM*RM(,1) + mir(,1);	// Compute reflected vector
-my   = a(,2) - 2*MM*RM(,2) + mir(,2);   // x,y,z position
-mz   = a(,3) - 2*MM*RM(,3) + mir(,3);
+mx   = a(1) - 2*MM*RM(1) + mir(1);	// Compute reflected vector
+my   = a(2) - 2*MM*RM(2) + mir(2);   	// x,y,z position
+mz   = a(3) - 2*MM*RM(3) + mir(3);
 M    = [mx,my,mz];
 
 return M;  

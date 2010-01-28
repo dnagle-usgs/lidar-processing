@@ -1,4 +1,10 @@
-func scanflatmirror1_direct(yaw,pitch,roll,gx,gy,gz,dx,dy,dz,lasang,mirang,curang,mag)
+/******************************************************************************\
+* This file was moved to the attic on 2010-01-28. It has not been in use for   *
+* several years. See scanflatmirror2_direct_vector.i for the corresponding     *
+* code that is in use instead.                                                 *
+\******************************************************************************/
+
+func scanflatmirror1_direct_vector(yaw,pitch,roll,gx,gy,gz,dx,dy,dz,lasang,mirang,curang,mag)
 {
 /*---------------------------------------------------------------
   This function computes a vector (M) of xyz points projected
@@ -84,16 +90,16 @@ r22  = D*K + E*N + F*Q;			// rotations
 r23  = G*K + H*N + I*Q;
 R2   = [r21,r22,r23];
 					
-rm1  = R1(2)*R2(3) - R1(3)*R2(2);	// Compute cross product of R1
-rm2  = R1(3)*R2(1) - R1(1)*R2(3);       // and R2 to find normal (RM)        
-rm3  = R1(1)*R2(2) - R1(2)*R2(1);
+rm1  = R1(,2)*R2(,3) - R1(,3)*R2(,2);	// Compute cross product of R1
+rm2  = R1(,3)*R2(,1) - R1(,1)*R2(,3);       // and R2 to find normal (RM)        
+rm3  = R1(,1)*R2(,2) - R1(,2)*R2(,1);
 RM   = [rm1,rm2,rm3];
 					// Compute inner product
-MM   = RM(1)*a(1) + RM(2)*a(2) + RM(3)*a(3);
+MM   = RM(,1)*a(,1) + RM(,2)*a(,2) + RM(,3)*a(,3);
 
-mx   = a(1) - 2*MM*RM(1) + mir(1);	// Compute reflected vector
-my   = a(2) - 2*MM*RM(2) + mir(2);   	// x,y,z position
-mz   = a(3) - 2*MM*RM(3) + mir(3);
+mx   = a(,1) - 2*MM*RM(,1) + mir(,1);	// Compute reflected vector
+my   = a(,2) - 2*MM*RM(,2) + mir(,2);   // x,y,z position
+mz   = a(,3) - 2*MM*RM(,3) + mir(,3);
 M    = [mx,my,mz];
 
 return M;  
