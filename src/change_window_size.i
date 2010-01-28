@@ -29,32 +29,25 @@ local alps_windows;
 
 func change_window_size(win, winsize, dofma) {
 /* DOCUMENT change_window_size(win, winsize, dofma)
-	This function is used to change the size of the yorick window.
-	INPUT:
-		win: window number
-		winsize: window size (1=small, 2=medium, 3=large, 4=huge)
-		dofma: clear plot (fma).  must be set to 1 to change window size.
-	OUTPUT:
-		wset: 1 if window size has been changed, 0 otherwise.
+   This function is used to change the size of the yorick window.
+   INPUT:
+      win: window number
+      winsize: window size (1=small, 2=medium, 3=large, 4=huge)
+      dofma: clear plot (fma).  must be set to 1 to change window size.
+   OUTPUT:
+      wset: 1 if window size has been changed, 0 otherwise.
 
-		Original: Amar Nayegandhi 12/12/2005.
+      Original: Amar Nayegandhi 12/12/2005.
 */
-	extern _ytk_window_size;
+   extern _ytk_window_size;
+   local wdata;
 
    default, dofma, 0;
    default, _ytk_window_size, array(int, 64);
 
    if(_ytk_window_size(win) != winsize) {
-      if(!dofma) {
-         // find unused window
-         bkpwin = 63;
-         while(bkpwin >= 0 && window_exists(bkpwin)) bkpwin -= 1;
-         if(bkpwin >= 0) {
-            replot_all, win, bkpwin;
-         } else {
-            bkpwin = [];
-         }
-      }
+      if(!dofma)
+         wdata = plot_hash(win);
 
       winkill, win;
       _ytk_window_size(win) = winsize;
@@ -70,20 +63,20 @@ func change_window_size(win, winsize, dofma) {
       if (_ytk_window_size(win) == 4) {
          window, win, dpi=100, style="landscape11x85.gs", width=1100, height=850;
       }
+      window, win, width=0, height=0;
       limits, square=1;
 
-      if(!is_void(bkpwin)) {
-         replot_all, bkpwin, win;
-         winkill, bkpwin;
+      if(!dofma) {
+         plot_restore, win, wdata, style=0;
       }
-	} else {
-		if (dofma) {
-			window, win; fma; limits, square=1;
-		} else {
-			window, win;
-		}
-	}
-	return 1;
+   } else {
+      window, win;
+      if(dofma) {
+         fma;
+         limits, square=1;
+      }
+   }
+   return 1;
 }
 
 func winlimits( win1, win2 ) {
@@ -120,4 +113,126 @@ func window2image(file, win=) {
    system, swrite(format="convert %s %s", xwdfile, file);
    remove, xwdfile;
    rmdir, dir;
+}
+
+func plot_hash(wsrc, pal=) {
+/* DOCUMENT p = plot_hash(wsrc, pal=)
+
+   Save Yorick plot of window wsrc in a Yeti hash. This plot can be restored
+   with plot_restore. You can save it to file using yhd_save and restore that
+   file using yhd_restore.
+
+   Use pal=0 if you do not want the palette saved.
+
+   Modified from function save_plot in copy_plot.i
+*/
+   local a,b,c,d,x,y,z;
+   local x0,x1,y0,y1,txt;
+   local ireg;
+   local p1,p2,p3,p4,p5;
+   local rp,gp,bp;
+   default, pal, 1;
+
+   p = h_new();
+
+   old_win = current_window();
+   if(old_win >= 0)
+      old_sys = plsys();
+
+   window, wsrc;
+   get_style, a, b, c, d;
+   h_set, p, "getstyle_p1", a;
+   h_set, p, "getstyle_p2", b;
+   h_set, p, "getstyle_p3", c;
+   h_set, p, "getstyle_p4", d;
+
+   palette, rp, gp, bp, query=1;
+   if(!is_void(rp) && pal) {
+      rgb_pal = long(rp) + (long(gp)<<8) + (long(bp)<<16);
+      h_set, p ,"palette", rgb_pal;
+  }
+
+   nbsys = get_nb_sys(wsrc);
+   for(i = 0; i <= nbsys; i++) {
+      plsys, i;
+      lmt = limits();
+      nbobj = numberof(plq());
+      h_set, p, swrite(format="system_%d",i), i;
+      h_set, p, swrite(format="limits_%d",i), lmt;
+      for(j = 1; j <= nbobj; j++) {
+          prop=plq(j);
+          decomp_prop, prop, p1, p2, p3, p4, p5;
+          h_set, p, swrite(format="prop1_%d_%d",i,j), (is_void(p1) ? "dummy" : p1);
+          h_set, p, swrite(format="prop2_%d_%d",i,j), (is_void(p1) ? "dummy" : p2);
+          h_set, p, swrite(format="prop3_%d_%d",i,j), (is_void(p1) ? "dummy" : p3);
+          h_set, p, swrite(format="prop4_%d_%d",i,j), (is_void(p1) ? "dummy" : p4);
+
+          rslt = reshape_prop(prop);
+          h_set, p, swrite(format="prop5_%d_%d",i,j), (is_void(rslt) ? "dummy" : rslt);
+      }
+   }
+
+   if(old_win >= 0) {
+      window, old_win;
+      plsys, old_sys;
+   }
+
+   return p;
+}
+
+func plot_restore(wout, p, style=, clear=, lmt=, pal=) {
+/* DOCUMENT plot_restore, wout, p, clear=, lmt=, pal=
+
+   Restores a plot saved to hash by plot_hash.
+
+   Use lmt=0 to disable restoration of limits.
+   Use clear=0 to disable clearing of window before plotting.
+   Use pal=0 to disable using palette saved (if present).
+
+   Modified from function load_plot in copy_plot.i
+*/
+   default, style, 1;
+   default, clear, 1;
+   default, lmt, 1;
+   default, pal, 1;
+
+   old_win = current_window();
+   if(old_win >= 0)
+      old_sys = plsys();
+
+   window, wout;
+
+   if(style)
+      set_style, p.getstyle_p1, p.getstyle_p2, p.getstyle_p3, p.getstyle_p4;
+
+   if(clear)
+      fma;
+
+   if(pal && h_has(p, "palette")) {
+      rgb = p.palette;
+      palette, char(rgb&0x0000FF), char((rgb&0x00FF00)>>8), char((rgb&0xFF0000)>>16);
+   }
+
+   i = 0;
+   while(h_has(p, swrite(format="system_%d", ++i))) {
+      plsys, p(swrite(format="system_%d", i));
+      limits;
+      if(lmt)
+         limits, p(swrite(format="limits_%d", i));
+      j = 0;
+      while(h_has(p, swrite(format="prop1_%d_%d", i, ++j))) {
+         p1 = p(swrite(format="prop1_%d_%d", i, j));
+         p2 = p(swrite(format="prop2_%d_%d", i, j));
+         p3 = p(swrite(format="prop3_%d_%d", i, j));
+         p4 = p(swrite(format="prop4_%d_%d", i, j));
+         p5 = p(swrite(format="prop5_%d_%d", i, j));
+         replot, p1, p2, p3, p4, p5;
+      }
+   }
+   redraw;
+
+   if(old_win >= 0) {
+      window, old_win;
+      plsys, old_sys;
+   }
 }
