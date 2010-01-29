@@ -12,6 +12,7 @@ if(is_void(__l1pro_includes_included__)) {
    require, "atm.i";
    require, "batch_datum_convert.i";
    require, "batch_multipip_process.i";
+   require, "batch_typ_convert.i";
    require, "bathy.i";
    require, "centroid-1.i";
    require, "compare_transects.i";
