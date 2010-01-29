@@ -772,38 +772,6 @@ func write_bathy(opath, ofname, depth_all, ba_depth=, bd_depth=) {
 
 }
 
-func plot_bathy(depth_all, fs=, ba=, de=, fint=, lint=, win=, cmin=, cmax=, msize=, marker=, skip=) {
-  /* DOCUMENT plot_bathy(depth_all, fs=, ba=, de=, int=, win=)
-     This function plots bathy data in window, "win" depending on which variable is set.
-     If fs = 1, first surface returns are plotted referenced to NAD83.
-     If ba = 1, subaqueous topography is plotted referenced to NAD83.
-     If de = 1, water depth in meters is plotted.
-     If int = 1, intensity values are plotted.
-
-  */
-  if (!(skip)) skip = 1
-  if (is_void(win)) win = 5;
-  //window, win;fma;
-  if (fs) {
-     indx = where(depth_all.north != 0);
-     plcm, depth_all.elevation(indx)(1:0:skip)/100., depth_all.north(indx)(1:0:skip)/100., depth_all.east(indx)(1:0:skip)/100., cmin=cmin, cmax=cmax, msize = msize, marker = marker;
-  } else if (ba) {
-    indx = where((depth_all.north != 0) & (depth_all.depth !=0));
-    plcm, (depth_all.elevation(indx)(1:0:skip) + depth_all.depth(indx)(1:0:skip))/100., depth_all.north(indx)(1:0:skip)/100., depth_all.east(indx)(1:0:skip)/100., cmin = cmin, cmax = cmax, msize = msize, marker=marker;
-  } else if (fint) {
-    indx = where(depth_all.north != 0);
-    plcm, depth_all.first_peak((indx)(1:0:skip)), depth_all.north((indx)(1:0:skip))/100., depth_all.east((indx)(1:0:skip))/100., cmin = cmin, cmax = cmax, msize = msize, marker=marker;
-  } else if (lint) {
-    indx = where((depth_all.north != 0) & (depth_all.depth !=0));
-    plcm, depth_all.bottom_peak((indx)(1:0:skip)), depth_all.north((indx)(1:0:skip))/100., depth_all.east((indx)(1:0:skip))/100., cmin = cmin, cmax = cmax, msize = msize, marker=marker;
-  } else {
-    indx = where((depth_all.north != 0) & (depth_all.depth !=0));
-    plcm, depth_all.depth((indx)(1:0:skip))/100., depth_all.north((indx)(1:0:skip))/100., depth_all.east((indx)(1:0:skip))/100., cmin = cmin, cmax = cmax, msize = msize, marker=marker;
-  }
-//////////////   colorbar, cmin, cmax, drag=1;
-}
-
-
 func hist_depth( depth_all, win=, dtyp=, dofma=, binsize= ) {
 /* DOCUMENT hist_depth(depth_all)
 
