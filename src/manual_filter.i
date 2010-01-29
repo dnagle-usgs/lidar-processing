@@ -213,97 +213,72 @@ func write_to_final_arr(temp_arr) {
 }
  
 
-func pipthresh(data, maxthresh=, minthresh=,  mode=) {
+func pipthresh(data, maxthresh=, minthresh=, mode=, idx=) {
 /* DOCUMENT pipthresh(data, maxthresh=, minthresh=, mode=)
-This function prompts the user to select data using the
-points-in-polygon (PIP) technique and then returns all points
-in this region that are within the speficified threshold.
+   This function prompts the user to select data using the points-in-polygon
+   (PIP) technique. Points within this region that are within the min and max
+   threshold are removed and the data is returned.
 
-Input:
-  data        : Data array
-  maxthresh=  : Maxiumum threshold value in meters.
-                All data below this value are retained.
+   Parameter:
+      data: An array of ALPS data.
 
-  minthresh=  : Minimum threshold value in meters.
-                All data above this value are retained.
-
-  mode=       : Type of data to threshold is automatically determined.
-                1 First surface
-                2 Bathymetry
-                3 Bare earth)
-                Mode overrides the automatic default.
-
-Output:
-  Output data array after threshold is applied for selected region.
+   Options:
+      minthresh= Minimum threshold in meters. Points below this elevation are
+         always kept.
+      maxthresh= Maximum threshold in meters. Points above this elevation are
+         always kept.
+      mode= Type of data. Can be any mode valid for data2xyz.
+            mode="fs"   First surface
+            mode="ba"   Bathymetry
+            mode="be"   Bare earth
+         For backwards compatibility, it can also be one of the following:
+            mode=1      First surface
+            mode=2      Bathymetry
+            mode=3      Bare earth
+         If not specified, then the mode is set based on the data's structure:
+            FS -> mode="fs"
+            GEO -> mode="ba"
+            VEG__ -> mode="be"
+      idx= By default, the filtered data is returned. Using idx=1 gives an
+         index list instead.
+            idx=0    Return filtered data (default)
+            idx=1    Return an index into data
 */
-     //Automatically get mode if not set
+   local x, y, z;
+   default, idx, 0;
+
+   //Automatically get mode if not set
    if (is_void(mode)) {
       a = structof(data);
       if (structeq(a, FS)) mode = 1;
       if (structeq(a, GEO)) mode = 2;
       if (structeq(a, VEG__)) mode = 3;
    }
-   // convert maxthresh and minthresh to centimeters
-   if (is_array(maxthresh)) maxthresh *= 100;
-   if (is_array(minthresh)) minthresh *= 100;
+   if(is_integer(mode))
+      mode = ["fs", "ba", "be"](mode);
+   data2xyz, data, x, y, z, mode=mode;
+
+   // Make the user give us a polygon
    ply = getPoly();
-   box = boundBox(ply);
-   if ((mode == 1) || (mode == 2)) {
-      box_pts = ptsInBox(box*100., data.east, data.north);
-   } else {
-      box_pts = ptsInBox(box*100., data.least, data.lnorth);
-   }
-   if (!is_array(box_pts)) return data;
-   if ((mode == 1) || (mode == 2)) {
-      poly_pts = testPoly(ply*100., data.east(box_pts), data.north(box_pts));
-   } else {
-      poly_pts = testPoly(ply*100., data.least(box_pts), data.lnorth(box_pts));
-   }
 
-   indx = box_pts(poly_pts);
-   iindx = array(int,numberof(data.soe));
-   if (is_array(indx)) iindx(indx) = 1;
-   findx = where(iindx == 0);
-   findata = data(findx);
-   wdata = data(indx);
-   norig = numberof(wdata);
-   if (mode == 1) {
-      if ((is_array(maxthresh)) & (is_array(minthresh))) {
-         nidx = array(int, norig);
-         idx = where((wdata.elevation <= maxthresh) & (wdata.elevation >= minthresh));
-         nidx(idx) = 1;
-         wdata = wdata(where(!nidx));
-      } else {
-         if (is_array(maxthresh)) wdata = wdata(where(wdata.elevation <= maxthresh));
-         if (is_array(minthresh)) wdata = wdata(where(wdata.elevation >= minthresh));
-      }
-   }
-   if (mode == 2) {
-      if ((is_array(maxthresh)) & (is_array(minthresh))) {
-         nidx = array(int, norig);
-         idx = where(((wdata.elevation+wdata.depth) <= maxthresh) & ((wdata.elevation+wdata.depth) >= minthresh))
-         nidx(idx) = 1;
-         wdata = wdata(where(!nidx));
-      } else {
+   // Find the points that are within the polygon.
+   poly_pts = testPoly(ply, x, y);
+   if(!numberof(poly_pts))
+      return idx ? indgen(numberof(data)) : data;
 
-         if (is_array(maxthresh)) wdata = wdata(where(wdata.elevation + wdata.depth <= maxthresh));
-         if (is_array(minthresh)) wdata = wdata(where(wdata.elevation + wdata.depth >= minthresh));
-      }
-   }
-   if (mode == 3) {
-      if ((is_array(maxthresh)) & (is_array(minthresh))) {
-         nidx = array(int, norig);
-         idx = where((wdata.lelv <= maxthresh) & (wdata.lelv >= minthresh));
-         nidx(idx) = 1;
-         wdata = wdata(where(!nidx));
-      } else {
-         if (is_array(maxthresh)) wdata = wdata(where(wdata.lelv <= maxthresh));
-         if (is_array(minthresh)) wdata = wdata(where(wdata.lelv <= minthresh));
-      }
-   }
-   write, format="%d of %d points within selected region removed\n",norig-numberof(wdata), norig;
-   grow, findata, wdata;
-   return findata;
+   // Among the points in the polygon, find the ones that are within the
+   // threshold.
+   thresh_pts = filter_bounded_elv(data(poly_pts), lbound=minthresh,
+      ubound=maxthresh, mode=mode, idx=1);
+
+   // Good points are those that don't match thresh_pts.
+   good = array(short(1), dimsof(data));
+   good(poly_pts(thresh_pts)) = 0;
+   good = where(good);
+
+   write, format="%d of %d points within selected region removed.\n",
+      numberof(thresh_pts), numberof(poly_pts);
+   return idx ? good : data(good);
 }
 
 func filter_bounded_elv(eaarl, lbound=, ubound=, mode=, idx=) {
@@ -318,7 +293,7 @@ func filter_bounded_elv(eaarl, lbound=, ubound=, mode=, idx=) {
          applied.
       ubound= The upper bound to apply, in meters. By default, no bound is
          applied.
-      mode= The data mode to use. Possible settings:
+      mode= The data mode to use. Can be any setting valid for data2xyz.
             mode="fs"      First surface (default)
             mode="be"      Bare earth
             mode="ba"      Bathy
@@ -330,26 +305,20 @@ func filter_bounded_elv(eaarl, lbound=, ubound=, mode=, idx=) {
    Note that if both lbound= and ubound= are omitted, then this function is
    effectively a no-op.
 */
-   default, mode, "fs";
+   local z;
    default, idx, 0;
 
-   if(mode == "fs")
-      z = eaarl.elevation;
-   else if(mode == "ba")
-      z = eaarl.elevation + eaarl.depth;
-   else if(mode == "be")
-      z = eaarl.lelv;
-
+   data2xyz, eaarl, , , z, mode=mode;
    keep = indgen(numberof(z));
 
    if(!is_void(lbound))
-      keep = keep(where(z(keep) >= long(lbound * 100)));
+      keep = keep(where(z(keep) >= lbound));
 
    if(is_void(keep))
       return [];
 
    if(!is_void(ubound))
-      keep = keep(where(z(keep) <= long(ubound * 100)));
+      keep = keep(where(z(keep) <= ubound));
 
    if(is_void(keep))
       return [];
