@@ -289,13 +289,9 @@ func ptsInBox(box, x, y)
 	
 */
 {
- xl = box(1 ,min) // x-lower bound of box
- xh = box(1, max) // x-upper bound of box
- yl = box(2, min) // y-lower bound of box					
- yh = box(2, max) // x-upper bound of box
-
- area = ((x > xl) & (x < xh) & (y > yl) & (y < yh)) 
-
- pts = numberof(where(area)) // points within area
- return (where(area))	    // array of indexes to points in area
+ xl = box(1, min); // x-lower bound of box
+ xh = box(1, max); // x-upper bound of box
+ yl = box(2, min); // y-lower bound of box					
+ yh = box(2, max); // x-upper bound of box
+ return data_box(unref(x), unref(y), xl, xh, yl, yh);
 }
