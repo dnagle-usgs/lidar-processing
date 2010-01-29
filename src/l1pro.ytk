@@ -1255,34 +1255,6 @@ if {![winfo exists .l1wid]} {
       elevations" \
     -command hist_data
 
-  proc old_hist_data {} {
-      global cbvc plot_settings
-      set ptype [processing_mode]
-      set disp_type [display_type]
-      set var_type $pro_var
-      if {$disp_type == -1} {
-        tk_messageBox  -icon warning \
-          -message "You need to specify the type of data before using this\
-            function!" \
-          -type ok
-      }
-
-      if {$ptype == 0 || $disp_type == 0} {
-        set hist_func hist_fs
-      } elseif {$ptype == 1} {
-        set hist_func hist_depth
-      } elseif {$ptype == 2} {
-        set hist_func hist_veg
-      }
-
-      exp_send "hst = ${hist_func}($var_type, win=7, dofma=1);\r"
-      expect ">"
-
-      cbar_tool
-      set cbvc(cmin) $plot_settings(cmin)
-      set cbvc(cmax) $plot_settings(cmax)
-    }
-
   proc hist_data {} {
     set cmd "hist_data, $::pro_var"
     append cmd ", mode=\"[lindex {fs ba de be fint lint ch} [display_type]]\""
