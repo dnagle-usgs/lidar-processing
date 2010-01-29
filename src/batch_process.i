@@ -1686,7 +1686,8 @@ prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=, verbose=) {
             update=0    Overwrite output files if they exist.
             update=1    Skip output files if they exist.
 
-      mode= Specifies which data mode to use for the data. Possible settings:
+      mode= Specifies which data mode to use for the data. Can be any setting
+         valid for data2xyz.
             mode="fs"   First surface (default)
             mode="be"   Bare earth
             mode="ba"   Bathymetry (submerged topo)
