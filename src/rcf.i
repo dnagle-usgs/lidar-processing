@@ -378,13 +378,11 @@ func rcf_filter_eaarl(eaarl, mode=, clean=, rcfmode=, buf=, w=, n=, idx=) {
       eaarl: An array of data in an ALPS data structure.
 
    Options:
-      mode= Specifies which data mode to use for the data. Possible settings:
+      mode= Specifies which data mode to use for the data. Can use any setting
+         valid for data2xyz.
             mode="fs"   First surface (default)
-               This mode uses x=data.east, y=data.north, z=data.elevation
             mode="be"   Bare earth
-               This mode uses x=data.least, y=data.lnorth, z=data.lelv
             mode="ba"   Bathymetry (submerged topo)
-               This mode uses x=data.east, y=data.north, z=data.elevation+data.depth
 
       clean= Specifies whether the data should be cleaned first using
          test_and_clean. Settings:
@@ -412,10 +410,11 @@ func rcf_filter_eaarl(eaarl, mode=, clean=, rcfmode=, buf=, w=, n=, idx=) {
             idx=0    Return the filtered data (default)
             idx=1    Return the index into the data
 */
+   local x, y, z;
+
    default, buf, 500;
    default, w, 30;
    default, n, 3;
-   default, mode, "fs";
    default, rcfmode, "grcf";
    default, idx, 0;
    default, clean, !idx;
@@ -426,19 +425,7 @@ func rcf_filter_eaarl(eaarl, mode=, clean=, rcfmode=, buf=, w=, n=, idx=) {
    if(clean)
       eaarl = test_and_clean(unref(eaarl));
 
-   x = (mode == "be") ? eaarl.least : eaarl.east;
-   y = (mode == "be") ? eaarl.lnorth : eaarl.north;
-
-   z = [];
-
-   if(mode == "fs")
-      z = eaarl.elevation;
-   else if(mode == "ba")
-      z = eaarl.elevation + eaarl.depth;
-   else if(mode == "be")
-      z = eaarl.lelv;
-   else
-      error, "Please specify a valid mode=.";
+   data2xyz, eaarl, x, y, z, mode=mode;
 
    keep = [];
 
