@@ -371,7 +371,7 @@ itcl::body SegmentedDataWindow::plot_segment {idx} {
    set l1pro_fma [set $itk_option(-fmavariable)]
    set win_no $_segment($idx,win)
    set pro_var $_segment($idx,var)
-   plot_fltlines 0
+   display_data
 
    set l1pro_fma $fma_bkp
    set win_no $win_bkp
@@ -388,7 +388,7 @@ itcl::body SegmentedDataWindow::plot_selected {} {
    for {set idx 1} {$idx <= $_count} {incr idx} {
       if {$_segment($idx,use)} {
          set pro_var $_segment($idx,var)
-         plot_fltlines 0
+         display_data
          set l1pro_fma 0
       }
    }

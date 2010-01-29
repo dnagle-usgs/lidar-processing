@@ -1542,14 +1542,6 @@ Original amar nayegandhi. Started 12/06/02.
       if(write_merge==1) {
          gg=merge_data_pbds(fn_split(1), write_to_file=1, merged_filename=file_rootname(fn_all(i))+"_merged.pbd", nvname="merged_v", searchstring="*"+searchstr+"*");
       }
-      /*	if (interactive) {
-            oldwin = window();
-            winkill, 5; window,5,dpi=100,width=600, height=600, style="work.gs"; fma; limits, square=1;
-            cbar.cmax=-14.5; cbar.cmin=-47.5; cbar.cdelta=33.0
-            window, 5; plot_bathy, eaarl, win=5, ba=1, fs = 0, de = 0 , fint = 0, lint = 0, cmin=-47.5, cmax=-14.5, msize = 1.0, marker=1, skip=1;
-            window, oldwin;
-         }
-      */
 
       if ((mode == 1) && (strglob("*_v*",fn_all(i)))) {
          if (fnametag) {

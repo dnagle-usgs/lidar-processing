@@ -84,7 +84,7 @@ INPUT:
                 save, f, vname;
                 close, f;
 		winkill,5;window,5,dpi=75,style="work.gs", legends=0;
-		display_veg,transdata,win=5,cmin=-40,cmax=-30, size = 1.0, edt=1, felv = 0, lelv=1, fint=0, lint=0, cht = 0, marker=1, skip=1;
+      display_data, transdata, win=5, cmin=-40, cmax=-30, mode="be";
 		data = rcf_triag_filter(transdata,buf=400,w=50,mode=3,no_rcf=3,interactive=1,plottriag=1,datawin=5);
 		vname = "transdata_rcf"
 		f = createb(pbdfile+"_rcf.pbd");
@@ -103,9 +103,6 @@ INPUT:
 
 	if ((mode == 3) || (mode == 4)) bestats = comparelines(this_prof.east, this_prof.elv, data.east/100.0, data.lelv/100.0);
 	if ((mode == 1) || (mode == 4)) fsstats = comparelines(this_prof.east, this_prof.elv, data.east/100.0, data.elevation/100.0);
-//	winkill, 5; window,5,dpi=100,width=600, height=600, style="work.gs"; fma; limits, square=1;
-//	minmax = stdev_min_max(data.lelv);
-//	display_veg, veg_all, win=5, cmin=minmax(1), cmax =minmax(2), size = 1.0, edt=1, felv = 0, lelv=1, fint=0, lint=0, cht = 0, marker=1, skip=1;
 	if (mode != 0) {
 		box_pts = ptsInBox(box*100., data.east, data.north);
 		if (!is_array(box_pts)) continue;

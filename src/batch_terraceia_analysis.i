@@ -540,7 +540,7 @@ func plot_batch_veg_kings_rgns(day123, ll) {
    restore, f;
    close, f;
    winkill, 5; window, 5, dpi=100, width=1100, height=850, style="landscape11x85.gs";fma; limits, square=1;
-   display_veg, day123, win=5, cmin=-1.0, cmax = 14.0, size = 1.3, edt=1, felv = 1, lelv=0, fint=0, lint=0, cht = 0, marker=1, skip=1;
+   display_data, day123, mode="fs", win=5, cmin=-1., cmax=14., msize=1.3;
    plmk, k_aus_pine.north/100., k_aus_pine.east/100., msize=0.1, marker=1, color="black",width=5.0;
    plmk, k_dense_bp.north/100., k_dense_bp.east/100., msize=0.1, marker=2, color="red",width=5.0;
    plmk, k_sparse_bp.north/100., k_sparse_bp.east/100., msize=0.1, marker=3, color="blue",width=5.0;

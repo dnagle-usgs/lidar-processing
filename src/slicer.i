@@ -42,8 +42,7 @@ func slicer_d(i) {
       cn = cmin;
    }
    write, format="%2d: cmin=%f  cmax=%f\n", i, cn, cx;
-   display_veg, data, win=5, cmin=cn, cmax=cx, size=1.0, marker=1, \
-      edt=1, felv=1, lelv=0, fint=0, lint=0,cht=0, skip=1, quiet=1;
+   display_data, data, win=5, cmin=cn, cmax=cx, mode="fs";
    cx = cx-hgt;
    cn = cn-hgt;
    // pause,40;

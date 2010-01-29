@@ -102,11 +102,11 @@ is the same
    }
 
    if(plot) {
-      window, data1plot; fma; 
-      display_veg, data1, win=data1plot, cmin=ucmin, cmax=ucmax, size=1, marker=1; 
+      window, data1plot; fma;
+      display_data, data1, win=data1plot, cmin=ucmin, cmax=ucmax;
       xytitles, "",data1title;
       window, data2plot; fma;
-      display_veg, data2, win=data2plot, cmin=ucmin, cmax=ucmax, size=1, marker=1; 
+      display_data, data2, win=data2plot, cmin=ucmin, cmax=ucmax;
       xytitles, "",data2title;
    }
 

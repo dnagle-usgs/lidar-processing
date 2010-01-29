@@ -444,9 +444,9 @@ min_elev & max_elev:  If these are both set, the flightlines plotted if more tha
 	}
 	daelv = stdev_min_max(this_data.elevation/100.0 + this_data.depth/100.0);
 	if ((is_array(min_elev)) && (is_array(max_elev))) {
-           plot_bathy, show, win=3, ba=1, fs = 0, de = 0, fint = 0, lint = 0, cmin=min_elev, cmax=max_elev, msize = 1.0, marker=1, skip=1;
+           display_data, show, win=3, mode="ba", cmin=min_elev, cmax=max_elev;
         }else{
-	   plot_bathy, show, win=3, ba=1, fs = 0, de = 0 , fint = 0, lint = 0, cmin=daelv(1), cmax=daelv(2), msize = 1.0, marker=1, skip=1;
+	   display_data, show, win=3, mode="ba", cmin=daelv(1), cmax=daelv(2);
         }
 	limits, square=1;
 	limits;
@@ -476,9 +476,9 @@ min_elev & max_elev:  If these are both set, the flightlines plotted if more tha
 	lasteast = max(this_data.east)+50000;
 	daelv = stdev_min_max(this_data.elevation/100.0 + this_data.depth/100.0);
         if ((is_array(min_elev)) && (is_array(max_elev))) {
-            plot_bathy, this_data, win=3, ba=1, fs = 0, de = 0 , fint = 0, lint = 0, cmin=min_elev, cmax=max_elev, msize = 1.0, marker=1, skip=1;
+            display_data, this_data, win=3, mode="ba", cmin=min_elev, cmax=max_elev;
         } else {
-	    plot_bathy, this_data, win=3, ba=1, fs = 0, de = 0 , fint = 0, lint = 0, cmin=daelv(1), cmax=daelv(2), msize = 1.0, marker=1, skip=1;
+	    display_data, this_data, win=3, mode="ba", cmin=daelv(1), cmax=daelv(2);
         }
 	plt, swrite(format="%d", i), this_data.east(min)/100.0, this_data.north(max)/100.0+200, tosys=1;
    }
@@ -509,9 +509,9 @@ min_elev & max_elev:  If these are both set, the flightlines plotted if more tha
    }
    daelv = stdev_min_max(this_data.elevation/100.0 + this_data.depth/100.0);
    if ((is_array(min_elev)) && (is_array(max_elev))) {
-       plot_bathy, show, win=3, ba=1, fs = 0, de = 0 , fint = 0, lint = 0, cmin=min_elev, cmax=max_elev, msize = 1.0, marker=1, skip=1;
+       display_data, show, win=3, mode="ba", cmin=min_elev, cmax=max_elev;
    } else {
-       plot_bathy, show, win=3, ba=1, fs = 0, de = 0 , fint = 0, lint = 0, cmin=daelv(1), cmax=daelv(2), msize = 1.0, marker=1, skip=1;
+       display_data, show, win=3, mode="ba", cmin=daelv(1), cmax=daelv(2);
    }
    write, "Correct Flightline? (Y for yes, any other key to quit)";
    cor = "blah";
@@ -599,7 +599,7 @@ func mod_flightline(data, data_dir, soes=, pt=, win=, clipmax=, clipmin=, alsome
 	windold = current_window();
 	window, 3; fma;
 	belv = stdev_min_max(bad_data.elevation/100.0 + bad_data.depth/100.0, N_factor=0.3);
-	plot_bathy, bad_data, win=3, ba=1, fs = 0, de = 0 , fint = 0, lint = 0, cmin=belv(1), cmax=belv(2), msize = 2.0, marker=1, skip=1;
+	display_data, bad_data, win=3, mode="ba", cmin=belv(1), cmax=belv(2), msize=2.;
 	limits, square=1;
 	limits;
 	l1 = indgen(1:badline(1)-1);
@@ -622,11 +622,11 @@ func mod_flightline(data, data_dir, soes=, pt=, win=, clipmax=, clipmin=, alsome
 	}
 	gelv = stdev_min_max(good_data.elevation/100.0 + good_data.depth/100.0, N_factor=0.3);
 	window, 2; fma;
-	if (!trust) plot_bathy, good_data, win=2, ba=1, fs = 0, de = 0 , fint = 0, lint = 0, cmin=gelv(1), cmax=gelv(2), msize = 2.0, marker=1, skip=3;
+	if (!trust) display_data, good_data, win=2, mode="ba", cmin=gelv(1), cmax=gelv(2), msize=2.0, skip=3;
 	limits, square=1;
 	limits;
 	window, 1; fma;
-	if (!trust) plot_bathy, eaarl, win=2, ba=1, fs = 0, de = 0 , fint = 0, lint = 0, cmin=gelv(1), cmax=gelv(2), msize = 2.0, marker=1, skip=3;
+	if (!trust) display_data, eaarl, win=2, mode="ba", cmin=gelv(1), cmax=gelv(2), msize=2., skip=3;
 	limits, square=1;
 	limits;
 	if ((numberof(eaarl) == numberof(good_data)+numberof(bad_data)) || (clipmax) || (clipmin)) write, "OK to modify this flightline? (y for yes, n for no, q to quit program)";

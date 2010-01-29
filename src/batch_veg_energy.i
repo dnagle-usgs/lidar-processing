@@ -123,8 +123,7 @@ func batch_veg_lfpw(ipath, opath, fname=, searchstr=, onlyupdate=, only_if_mf=, 
 	eaarl = get_member(f,vname);
         close, f;
 
-        display_veg, eaarl, felv=1, cmin=emin/100., cmax=emax/100., win=5, dofma=1, skip=20;
-        limits, square=1;
+        display_data, eaarl, mode="fs", cmin=emin/100., cmax=emax/100., win=5, dofma=1, skip=20;
 	limits;
         pause, 2000;
         ll = limits();
