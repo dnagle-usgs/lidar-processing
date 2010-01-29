@@ -1,3 +1,7 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-01-29. File poly.i in the Yorick    *
+* yutils package provides similar functionality.                               *
+\******************************************************************************/
 
 /*
  * fitpoly.i

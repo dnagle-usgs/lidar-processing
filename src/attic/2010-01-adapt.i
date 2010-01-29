@@ -1,3 +1,9 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-01-29. Development on the YTK       *
+* version of ADAPT has ceased; new work is being done on a new Python-based    *
+* version.                                                                     *
+\******************************************************************************/
+
 /* adapt.i
    This script adds the ADAPT repository to the search path and loads in the
    core ADAPT code. This enables the capability to use code from both

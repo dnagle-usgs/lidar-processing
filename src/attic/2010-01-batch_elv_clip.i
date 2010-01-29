@@ -1,3 +1,13 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-01-29. The code contained within    *
+* was not in use anywhere within ALPS, and other functions now accomplish the  *
+* same purpose.                                                                *
+*                                                                              *
+* In particular, if you want to do the equivalent of batch_elv_clip, then use  *
+* new_batch_rcf with prefilter_min= and prefilter_max= and set your w= to a    *
+* big enough value to encompass all of the data.                               *
+\******************************************************************************/
+
 func batch_elv_clip(con_dir, searchstr=, emax=, emin=, typ=) {
 /*DOCUMENT 
         dir, string, directory containing pbd files wanted for conversion

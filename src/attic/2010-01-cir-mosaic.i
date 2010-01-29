@@ -1,3 +1,9 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-01-29. However, as the comments     *
+* below indicate, this file has been deprecated since 2009-04-15. Use          *
+* mosaic_tools.i instead.                                                      *
+\******************************************************************************/
+
 /*
    ************************ DEPRECATION NOTICE 2009-04-15 ************************
    This file is deprecated in favor of mosaic_tools.i. If you need to create

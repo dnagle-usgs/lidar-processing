@@ -1,3 +1,9 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-01-29. It is no longer in active    *
+* use. Similar functionality is provided by the pixel analysis tool. See also  *
+* function find_nearest_point in geometry.i.                                   *
+\******************************************************************************/
+
 /* 
   Routines to compare sonar data with eaarl bathymetric data
   amar nayegandhi 05/03

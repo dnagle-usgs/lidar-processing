@@ -1,3 +1,9 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-01-29. It appears that the function *
+* eex_bath was previously named ex_bath. There's already an ex_bath defined in *
+* bathy.i which is what we currently use.                                      *
+\******************************************************************************/
+
 func eex_bath( rn, i, xfma= ) {
 /* DOCUMENT ex_bath(raster_number, pulse_index)
  

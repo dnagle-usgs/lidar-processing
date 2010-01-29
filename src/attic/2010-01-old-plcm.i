@@ -1,3 +1,8 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-01-29. It was replaced by file      *
+* plcm.i a long time ago.                                                      *
+\******************************************************************************/
+
 func plcm( z, y, x, cmin=, cmax=, sz=, shape= ) {
 /* DOCUMENT plmc   Plot markers z,y,x where z will be color coded
 
