@@ -1,3 +1,11 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-02-01. The contents of this file    *
+* are not in active use within the ALPS codebase and are redundant to other    *
+* functions that are. One of the functions even has a name collision           *
+* (plot_histogram in spatial_clean.i). For similar functionality, see function *
+* hist_data.                                                                   *
+\******************************************************************************/
+
 func histogram1 (list,binsize=, plot=, width=, color=, type=, win=, dofma=) {
 /* DOCUMENT histogram1 (list,binsize=, plot=, width=, color=, type=)
   This function computes the histogram by counting the number of 
