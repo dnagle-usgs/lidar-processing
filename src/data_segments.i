@@ -366,12 +366,12 @@ func tk_dsw_plot_stats(var, data, type, win) {
       }
       ytitle = "Elevation (meters)";
    } else if(type == "roll") {
-      working_tans = tk_dsw_get_data(data, "dmars", "tans", "somd");
+      working_tans = tk_dsw_get_data(data, "ins", "tans", "somd");
       y = working_tans.roll;
       x = working_tans.somd;
       ytitle = "Roll (degrees)";
    } else if(type == "pitch") {
-      working_tans = tk_dsw_get_data(data, "dmars", "tans", "somd");
+      working_tans = tk_dsw_get_data(data, "ins", "tans", "somd");
       y = working_tans.pitch;
       x = working_tans.somd;
       ytitle = "Pitch (degrees)";
@@ -450,7 +450,7 @@ func gather_data_stats(data, &working_tans, &working_pnav) {
    }
 
    // Now attempt to extract from tans
-   working_tans = tk_dsw_get_data(data, "dmars", "tans", "somd");
+   working_tans = tk_dsw_get_data(data, "ins", "tans", "somd");
    if(numberof(working_tans)) {
       // roll
       stat_temp = h_new();
@@ -649,7 +649,7 @@ func tk_dsw_launch_stats(vars) {
 
 func tk_dsw_get_data(data, type, var, sod_field) {
 // Extract either tans or pnav data for a set of mission days for a given data
-// tk_dsw_get_data(data, "dmars", "tans");
+// tk_dsw_get_data(data, "ins", "tans");
 // tk_dsw_get_data(data, "pnav", "pnav");
    extern tans, pnav;
 
