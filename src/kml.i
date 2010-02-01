@@ -354,10 +354,11 @@ func kml_mission(void, conf_file=, outdir=, name=, keepkml=, webdest=) {
          determine_gps_time_correction, edb_file, verbose=1;
       }
       missiondata_load, "pnav", day=days(i), noerror=1;
+      missiondata_load, "ins", day=days(i), noerror=1;
       fn = file_join(outdir, days(i) + ".kml");
       if(!is_void(pnav) && !is_void(edb) && !is_void(soe_day_start)) {
          newfiles = kml_pnav(pnav, fn, name=days(i), edb=edb,
-            soe_day_start=soe_day_start, webdest=webdest);
+            soe_day_start=soe_day_start, ins_header=iex_head, webdest=webdest);
          grow, masters, newfiles(1);
          grow, files, newfiles(2:);
          newfiles = [];
@@ -401,7 +402,8 @@ func kml_mission(void, conf_file=, outdir=, name=, keepkml=, webdest=) {
    return [&[outname], &masters, &files];
 }
 
-func kml_pnav(input, output, name=, edb=, soe_day_start=, webdest=) {
+func kml_pnav(input, output, name=, edb=, soe_day_start=, ins_header=,
+webdest=) {
 /* DOCUMENT kml_pnav, input, output, name=, edb=, soe_day_start=
    Creates KML/KMZ files for a PNAV file.
 
@@ -455,22 +457,26 @@ func kml_pnav(input, output, name=, edb=, soe_day_start=, webdest=) {
 
       fn = swrite(format="%s_l%d.kml", file_rootname(output), maxdists(i));
       kml_save, fn, kml_pnav_flightline(pnav, maxdist=maxdists(i), color=color);
-      grow, files, fn;
+      grow, files, &strchar(fn);
       reg = kml_Region(
          north=region.north, south=region.south,
          east=region.east, west=region.west,
          minLodPixels=lod_min, maxLodPixels=lod_max
       );
-      grow, links, kml_NetworkLink(
+      grow, links, &strchar(kml_NetworkLink(
          kml_Link(href=file_relative(outdir, fn)),
          reg
-      );
+      ));
       if(!is_void(webdest))
-         grow, weblinks, kml_NetworkLink(
+         grow, weblinks, &strchar(kml_NetworkLink(
             kml_Link(href=webdest + file_relative(outdir, fn)),
             reg
-         );
+         ));
    }
+
+   links = strchar(merge_pointers(links));
+   if(!is_void(weblinks))
+      weblinks = strchar(merge_pointers(weblinks));
 
    flightline = kml_Folder(
       links,
@@ -490,48 +496,68 @@ func kml_pnav(input, output, name=, edb=, soe_day_start=, webdest=) {
    // Elevated Flightline
    fn = file_rootname(output) + "_elev.kml";
    kml_save, fn, kml_pnav_flightline(pnav, maxdist=10, color=color, alt=1);
-   grow, files, fn;
-   grow, links, kml_NetworkLink(
+   grow, files, &strchar(fn);
+   grow, links, &strchar(kml_NetworkLink(
       kml_Link(href=file_relative(outdir, fn)),
       name="Elevated flightline", visibility=0
-   );
+   ));
    if(!is_void(webdest))
-      grow, weblinks, kml_NetworkLink(
+      grow, weblinks, &strchar(kml_NetworkLink(
          kml_Link(href=webdest + file_relative(outdir, fn)),
          name="Elevated flightline", visibility=0
-      );
+      ));
 
    // TIMESTAMPS
    local timestampstyle, timestampfolder;
    assign, kml_pnav_timestamps(pnav), timestampstyle, timestampfolder;
    fn = file_rootname(output) + "_time.kml";
    kml_save, fn, *timestampstyle, *timestampfolder;
-   grow, files, fn;
-   grow, links, kml_NetworkLink(
+   grow, files, &strchar(fn);
+   grow, links, &strchar(kml_NetworkLink(
       kml_Link(href=file_relative(outdir, fn)),
       name="Timestamps", visibility=0
-   );
+   ));
    if(!is_void(webdest))
-      grow, weblinks, kml_NetworkLink(
+      grow, weblinks, &strchar(kml_NetworkLink(
          kml_Link(href=webdest + file_relative(outdir, fn)),
          name="Timestamps", visibility=0
-      );
+      ));
+
+   // BASESTATIONS
+   if(!is_void(ins_header)) {
+      local stationstyle, stationfolder;
+      assign, kml_ins_basestations(ins_header), stationstyle, stationfolder;
+      if(!is_void(stationfolder)) {
+         fn = file_rootname(output) + "_base.kml";
+         kml_save, fn, *stationstyle, *stationfolder;
+         grow, files, &strchar(fn);
+         grow, links, &strchar(kml_NetworkLink(
+            kml_Link(href=file_relative(outdir, fn)),
+            name="Basestations", visibility=0
+         ));
+         if(!is_void(webdest))
+            grow, weblinks, &strchar(kml_NetworkLink(
+               kml_Link(href=webdest + file_relative(outdir, fn)),
+               name="Basestations", visibility=0
+            ));
+      }
+   }
 
    // PDOP
    local pdopstyle, pdopfolder;
    assign, kml_pnav_pdop(pnav), pdopstyle, pdopfolder;
    fn = file_rootname(output) + "_pdop.kml";
    kml_save, fn, *pdopstyle, *pdopfolder;
-   grow, files, fn;
-   grow, links, kml_NetworkLink(
+   grow, files, &strchar(fn);
+   grow, links, &strchar(kml_NetworkLink(
       kml_Link(href=file_relative(outdir, fn)),
       name="PDOP", visibility=0
-   );
+   ));
    if(!is_void(webdest))
-      grow, weblinks, kml_NetworkLink(
+      grow, weblinks, &strchar(kml_NetworkLink(
          kml_Link(href=webdest + file_relative(outdir, fn)),
          name="PDOP", visibility=0
-      );
+      ));
 
    // EDB
    local edbstyle, edbfolder;
@@ -540,17 +566,22 @@ func kml_pnav(input, output, name=, edb=, soe_day_start=, webdest=) {
       assign, kml_pnav_edb(pnav, edb, soe_day_start), edbstyle, edbfolder;
       fn = file_rootname(output) + "_edb.kml";
       kml_save, fn, *edbstyle, *edbfolder;
-      grow, files, fn;
-      grow, links, kml_NetworkLink(
+      grow, files, &strchar(fn);
+      grow, links, &strchar(kml_NetworkLink(
          kml_Link(href=file_relative(outdir, fn)),
          name="Lidar coverage", visibility=0
-      );
+      ));
       if(!is_void(webdest))
-         grow, weblinks, kml_NetworkLink(
+         grow, weblinks, &strchar(kml_NetworkLink(
             kml_Link(href=webdest + file_relative(outdir, fn)),
             name="Lidar coverage", visibility=0
-         );
+         ));
    }
+
+   links = strchar(merge_pointers(links));
+   files = strchar(merge_pointers(files));
+   if(!is_void(weblinks))
+      weblinks = strchar(merge_pointers(weblinks));
 
    supplemental = kml_Folder(
       kml_Style(kml_ListStyle(listItemType="checkOffOnly")),
@@ -620,7 +651,7 @@ func kml_pnav_region(pnav) {
 }
 
 func kml_pnav_timestamps(pnav, interval=, visibility=) {
-/* DOCUMENT [&style, &folder] = kml_pnav_timestamps(pnav, interval=)
+/* DOCUMENT [&style, &folder] = kml_pnav_timestamps(pnav, interval=, visibility=)
    Generates KML data for the timestamps in a pnav.
    Return value is an array of pointers.
    Interval defaults to 900 seconds (15 minutes).
@@ -649,6 +680,49 @@ func kml_pnav_timestamps(pnav, interval=, visibility=) {
    return [&style, &timestamps];
 }
 
+func kml_ins_basestations(header, visibility=) {
+/* DOCUMENT [&style, &folder] = kml_ins_basestations(header, visibility=)
+   Generates KML data for the basestations.
+   Return value is an array of pointers.
+*/
+   data = parse_iex_basestations(header);
+   if(is_void(data))
+      return [];
+   keys = h_keys(data);
+   if(!numberof(keys))
+      return [];
+
+   style = [
+      kml_Style(
+         kml_IconStyle(
+            href="http://maps.google.com/mapfiles/kml/shapes/donut.png"
+         ),
+         id="base_on"
+      ),
+      kml_Style(
+         kml_IconStyle(
+            href="http://maps.google.com/mapfiles/kml/shapes/forbidden.png"
+         ),
+         id="base_off"
+      )
+   ];
+
+   stations = array(string, numberof(keys));
+   for(i = 1; i <= numberof(stations); i++) {
+      cur = data(keys(i));
+      curstyle = cur.enabled ? "#base_on" : "#base_off";
+      desc = strjoin(strsplit(cur.desc, "\n"), "<br />");
+      desc = "<![CDATA[<tt><pre>" + desc + "</pre></tt>]]>";
+      stations(i) = kml_Placemark(
+         kml_Point(cur.lon, cur.lat),
+         name=cur.name, styleUrl=curstyle, description=desc,
+         visibility=visibility
+      );
+   }
+
+   return [&style, &stations];
+}
+
 func kml_pnav_pdop(pnav, maxdist=, visibility=) {
 /* DOCUMENT [&styles, &folder] = kml_pnav_pdop(pnav, maxdist=)
    Generates KML data for the pdops in a pnav.
@@ -657,13 +731,11 @@ func kml_pnav_pdop(pnav, maxdist=, visibility=) {
    // Threshold values and settings
    conf = _lst(
       h_new(low=0.0, high=2.0, name="pdop &lt; 2",
-         width=1, color=kml_color(0, 0, 255)),
-      h_new(low=2.0, high=3.0, name="2 &lt;= pdop &lt; 3",
-         width=2, color=kml_color(0, 255, 255)),
-      h_new(low=3.0, high=4.0, name="3 &lt;= pdop &lt; 4",
-         width=3, color=kml_color(0, 255, 0)),
-      h_new(low=4.0, high=5.0, name="4 &lt;= pdop &lt; 5",
-         width=4, color=kml_color(255, 255, 0)),
+         width=1, color=kml_color(99, 200, 57)),
+      h_new(low=2.0, high=3.5, name="2 &lt;= pdop &lt; 3.5",
+         width=2, color=kml_color(65, 143, 145)),
+      h_new(low=3.5, high=5.0, name="3.5 &lt;= pdop &lt; 5",
+         width=4, color=kml_color(222, 190, 61)),
       h_new(low=5.0, high=1e100, name="5 &lt;= pdop",
          width=5, color=kml_color(255, 0, 0))
    );
