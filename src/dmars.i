@@ -184,9 +184,7 @@ func load_iexpbd(fn, verbose=) {
 
   iex2tans;
   ops_conf = ops_IMU2_default;
-  gcn_val = gen_cir_nav( 0.120, verbose=verbose );
   if(verbose) {
-  gcn_val;
   write, "Using default DMARS mounting bias and lever arms.(ops_IMU2_default)";
   }
 }
@@ -646,3 +644,45 @@ func autoselect_iexpbd(dir) {
   return [];
 }
 
+func parse_iex_basestations(header) {
+/* DOCUMENT result = parse_iex_basestations(header)
+  Input should be iex_head or similar. Returns a yeti hash with parsed data.
+*/
+  local m_num, m_name, m_status, lat_deg, lat_min, lat_sec, lon_deg, lon_min,
+    lon_sec;
+
+  header = strtrim(header, 2, blank="\n\r");
+
+  m_idx = where(regmatch("Master (.+): +Name (.+), Status (ENABLED|DISABLED)",
+    header, , m_num, m_name, m_status));
+
+  if(!numberof(m_idx))
+    return [];
+
+  p_idx = m_idx + 2;
+
+  regmatch, "Position ([-0-9.]+) ([-0-9.]+) ([-0-9.]+), ([-0-9.]+) ([-0-9.]+) ([-0-9.]+), ",
+    header(p_idx), , lat_deg, lat_min, lat_sec, lon_deg, lon_min, lon_sec;
+
+  lat_dms = lat_deg + lat_min + lat_sec;
+  lon_dms = lon_deg + lon_min + lon_sec;
+
+  lat = dms2deg(atod(lat_dms));
+  lon = dms2deg(atod(lon_dms));
+
+  enabled = (m_status == "ENABLED");
+
+  result = h_new();
+  for(i = 1; i <= numberof(m_idx); i++) {
+    idx = m_idx(i);
+    h_set, result, m_num(idx), h_new(
+      name=m_name(idx),
+      enabled=enabled(idx),
+      lat=lat(i),
+      lon=lon(i),
+      desc=strjoin(header(idx:idx+2), "\n")
+    );
+  }
+
+  return result;
+}
