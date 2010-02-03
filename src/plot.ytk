@@ -6,6 +6,10 @@ package require struct::list
 package require misc
 package require tooltip
 
+if {![info exists curzone]} {
+   set curzone 17
+}
+
 if {![namespace exists ::plot]} {
    namespace eval ::plot {
       # Constants
@@ -68,7 +72,6 @@ if {![namespace exists ::plot]} {
          variable markSize .5
          # _map(window)
          #variable window 6
-         variable zone 17
          variable pnav_file {}
          variable enable_plot_images 1
          variable enable_plot_maps 1
@@ -232,7 +235,7 @@ proc ::plot::menu { } {
    label $f.labUTMZone -text "UTM Zone:" -anchor e
    spinbox $f.spnUTMZone -justify center \
       -from 1 -to 60 -increment 1 \
-      -textvariable ::plot::g::zone
+      -textvariable ::curzone
    ::tooltip::tooltip $f.spnUTMZone \
       "This is only used when the Coordinates system is UTM."
    grid $f.labUTMZone $f.spnUTMZone
@@ -584,7 +587,7 @@ proc ::plot::plot_all { } {
 }
 
 proc ::plot::curzone { } {
-   exp_send "curzone = $g::zone\r"
+   exp_send "curzone = $::curzone\r"
 }
 
 proc ::plot::track_load { } {
