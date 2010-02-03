@@ -641,6 +641,7 @@ func missiondata_load(type, day=, noerror=) {
             error, "Could not load edb data: no edb file defined";
         }
     } else if(type == "pnav") {
+        extern pnav;
         if(cache_enabled && h_has(cache, "pnav")) {
             missiondata_unwrap, cache("pnav");
         } else if(mission_has("pnav file", day=day)) {
@@ -658,7 +659,10 @@ func missiondata_load(type, day=, noerror=) {
         if(mission_has("pnav file", day=day))
             tkcmd, swrite(format="set ::plot::g::pnav_file {%s}",
                 mission_get("pnav file", day=day));
+        if(!is_void(pnav))
+            auto_curzone, pnav.lat, pnav.lon;
     } else if(type == "ins") {
+        extern iex_nav;
         if(cache_enabled && h_has(cache, "ins")) {
             missiondata_unwrap, cache("ins");
         } else if(mission_has("ins file", day=day)) {
@@ -672,6 +676,8 @@ func missiondata_load(type, day=, noerror=) {
         } else {
             error, "Could not load ins data: no ins file defined";
         }
+        if(!is_void(iex_nav))
+            auto_curzone, iex_nav.lat, iex_nav.lon;
     } else if(type == "ops_conf") {
         if(cache_enabled && h_has(cache, "ops_conf")) {
             missiondata_unwrap, cache("ops_conf");
