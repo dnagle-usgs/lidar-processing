@@ -153,6 +153,62 @@ snit::type ::misc::file {
    }
 }
 
+namespace eval ::misc::bind {}
+
+proc ::misc::bind::label_to_checkbutton {lbl chk} {
+   bind $lbl <Enter> [list $chk instate !disabled [list $lbl state active]]
+   bind $lbl <Enter> +[list $chk instate !disabled [list $chk state active]]
+   bind $lbl <Leave> [list $chk state !active]
+   bind $lbl <Leave> +[list $lbl state !active]
+
+   bind $chk <Enter> +[list $chk instate !disabled [list $lbl state active]]
+   bind $chk <Leave> +[list $lbl state !active]
+
+   bind $lbl <Button-1> [list $chk instate !disabled [list $chk invoke]]
+}
+
+snit::widgetadaptor ::misc::statevar {
+   constructor args {
+      installhull $win
+      $self configurelist $args
+   }
+
+   destructor {
+      catch [list $self configure -statevariable ""]
+   }
+
+   delegate method * to hull
+   delegate option * to hull
+
+   option {-statevariable stateVariable Variable} -default {} \
+      -configuremethod SetStateVar
+
+   option {-statemap stateMap Map} -default {}
+
+   method SetStateVar {option value} {
+      if {$options(-statevariable) ne ""} {
+         catch [list trace remove variable $options(-statevariable) write \
+            [mymethod TraceStateVar]]
+      }
+      set options($option) $value
+      if {$options(-statevariable) ne ""} {
+         trace add variable $options(-statevariable) write \
+            [mymethod TraceStateVar]
+         $self TraceStateVar - - -
+      }
+   }
+
+   method TraceStateVar {name1 name2 op} {
+      set state [set $options(-statevariable)]
+      if {[dict exists $options(-statemap) $state]} {
+         set state [dict get $options(-statemap) $state]
+      }
+      if {[catch [list $self configure -state $state]]} {
+         $self configure -state disabled
+      }
+   }
+}
+
 namespace eval ::misc::text {}
 
 # readonly <widget> ?<options>?
@@ -494,13 +550,22 @@ snit::widgetadaptor ::misc::combobox {
 namespace eval ::misc::combobox {}
 
 snit::widgetadaptor ::misc::combobox::mapping {
+   variable localalt ""
+   variable localval ""
+
    constructor args {
       if {[winfo exists $win]} {
          installhull $win
       } else {
          installhull using ::misc::combobox
       }
+      $self configure -altvariable "" -textvariable ""
       $self configurelist $args
+   }
+
+   destructor {
+      catch [list $self RemTextVarTraces $options(-textvariable)]
+      catch [list $self RemAltVarTraces $options(-altvariable)]
    }
 
    option {-mapping mapping Mapping} -default {} \
@@ -542,6 +607,13 @@ snit::widgetadaptor ::misc::combobox::mapping {
          lappend alts $alt
       }
       $self configure -values $vals -altvalues $alts
+      if {[$hull cget -textvariable] eq ""} {
+         if {[$self cget -altvariable] ne ""} {
+            $self TraceSetAltVar - - -
+         }
+      } else {
+         $self TraceSetTextVar - - -
+      }
    }
 
    method GetMapping option {
@@ -557,12 +629,17 @@ snit::widgetadaptor ::misc::combobox::mapping {
          uplevel 1 [list set $value [list]]
       }
       set value [uplevel 1 [list namespace which -variable $value]]
+      if {$value eq ""} {
+         set value [myvar localalt]
+      }
       if {$options(-altvariable) ne ""} {
          $self RemAltVarTraces $options(-altvariable)
       }
       set options($option) $value
       if {$options(-altvariable) ne ""} {
          $self AddAltVarTraces $options(-altvariable)
+         # Force an update
+         $self TraceSetAltVar - - -
       }
    }
 
@@ -583,12 +660,18 @@ snit::widgetadaptor ::misc::combobox::mapping {
          uplevel 1 [list set $value [list]]
       }
       set value [uplevel 1 [list namespace which -variable $value]]
+      if {$value eq ""} {
+         set value [myvar localval]
+      }
       if {[$hull cget -textvariable] ne ""} {
          $self RemTextVarTraces [$hull cget -textvariable]
       }
       $hull configure $option $value
+      set options($option) $value
       if {[$hull cget -textvariable] ne ""} {
          $self AddTextVarTraces [$hull cget -textvariable]
+         # Force an update
+         $self TraceSetTextVar - - -
       }
    }
 
@@ -714,9 +797,16 @@ snit::widgetadaptor ::misc::labelframe::collapsible {
       $self TraceSetVar - - -
    }
 
+   destructor {
+      catch [list trace remove variable $options(-variable) write \
+         [mymethod TraceSetVar]]
+   }
+
    delegate method * to hull
    delegate option -text to toggle
    delegate option -command to toggle
+   delegate option -onvalue to toggle
+   delegate option -offvalue to toggle
    delegate option * to hull except -labelwidget
 
    option {-variable variable Variable} -default {} \
@@ -737,6 +827,7 @@ snit::widgetadaptor ::misc::labelframe::collapsible {
       catch [list trace remove variable [$toggle cget -variable] write \
          [mymethod TraceSetVar]]
       $toggle configure -variable $value
+      set options($option) $value
       trace add variable [$toggle cget -variable] write [mymethod TraceSetVar]
    }
 
@@ -745,7 +836,7 @@ snit::widgetadaptor ::misc::labelframe::collapsible {
    }
 
    method TraceSetVar {name1 name2 op} {
-      if {[set [$toggle cget -variable]]} {
+      if {[set [$toggle cget -variable]] == [$toggle cget -onvalue]} {
          grid $win.interior
       } else {
          grid remove $win.interior
