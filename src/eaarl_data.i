@@ -17,16 +17,15 @@ func splitxyz(data, &x, &y, &z) {
    w = where(dims(2:) == 3);
    if(!numberof(w))
       error, "Unable to handle input data."
-   w = w(1);
-   if(w == 1) {
+   if(anyof(w == 1)) {
       x = data(1,..);
       y = data(2,..);
       z = data(3,..);
-   } else if(w == 2) {
+   } else if(anyof(w == 2)) {
       x = data(,1,..);
       y = data(,2,..);
       z = data(,3,..);
-   } else if(w == dims(1)) {
+   } else if(anyof(w == dims(1))) {
       x = data(..,1);
       y = data(..,2);
       z = data(..,3);
@@ -83,6 +82,78 @@ func datamode2name(mode, which=) {
    if(!h_has(names(which), mode))
       return [];
    return names(which)(mode);
+}
+
+func datahasmode(data, mode=, xyzpassthrough=) {
+/* DOCUMENT datahasmode(data, mode=, xyzpassthrough=)
+   Returns a boolean 0 or 1 indicating whether data has the mode specified.
+
+   Options:
+      mode= Any mode valid for data2xyz.
+      xyzpassthrough= Specifies whether numerical arrays of xyz data are
+         allowed to pass.
+            xyzpassthrough=0  Numerical arrays always return 0 (default)
+            xyzpassthrough=1  Numerical arrays return 1 if they are valid for
+                              passing through data2xyz
+*/
+// Original David Nagle 2010-02-03
+   default, mode, "fs";
+   default, xyzpassthrough, 0;
+
+   if(is_numerical(data)) {
+      if(!xyzpassthrough)
+         return 0;
+      dims = dimsof(data);
+      if(dims(1) < 2)
+         return 0;
+      w = where(dims(2:) == 3);
+      if(!numberof(w))
+         return 0;
+      has = 0;
+      has = has || anyof(w == 1);
+      has = has || anyof(w == 2);
+      has = has || anyof(w == dims(1));
+      return has;
+   }
+
+   has = 1;
+
+   // x and y
+   if(anyof(["ba","ch","de","fint","fs"] == mode)) {
+      has = has && has_member(data, "east");
+      has = has && has_member(data, "north");
+   } else if(anyof(["be","lint"] == mode)) {
+      has = has && has_member(data, "least");
+      has = has && has_member(data, "lnorth");
+   } else if("mir" == mode) {
+      has = has && has_member(data, "meast");
+      has = has && has_member(data, "mnorth");
+   } else {
+      error, "Unknown mode.";
+   }
+
+   // z
+   if("ba" == mode) {
+      has = has && has_member(data, "elevation");
+      has = has && has_member(data, "depth");
+   } else if("be" == mode) {
+      has = has && has_member(data, "lelv");
+   } else if("ch" == mode) {
+      has = has && has_member(data, "elevation");
+      has = has && has_member(data, "lelv");
+   } else if("de" == mode) {
+      has = has && has_member(data, "depth");
+   } else if("fint" == mode) {
+      has = has && (has_member(data, "intensity") || has_member(data, "fint"));
+   } else if("fs" == mode) {
+      has = has && has_member(data, "elevation");
+   } else if("lint" == mode) {
+      has = has && has_member(data, "lint");
+   } else if("mir" == mode) {
+      has = has && has_member(data, "melevation");
+   }
+
+   return has;
 }
 
 func data2xyz(data, &x, &y, &z, mode=, native=) {
