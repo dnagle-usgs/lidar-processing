@@ -394,3 +394,79 @@ func __load_rezone_dir(dir, zone, fnc, skip=, glob=, unique=) {
    }
    return data;
 }
+
+func auto_curzone(lat, lon, verbose=) {
+/* DOCUMENT auto_curzone, lat, lon;
+   Attempts to automatically set curzone based on the given lat/lon
+   coordinates.
+
+   If only one zone is represented by the coordinates, then curzone will be set
+   to it. Otherwise, the user will be informed that they have to manually set
+   it.
+
+   If fixedzone is set, this function does nothing.
+
+   Set verbose=0 to silence output. With verbose=1, the user is informed of any
+   action taken by auto_curzone.
+
+   This will also update Tcl's curzone variable.
+*/
+   extern curzone, fixedzone;
+   local zone;
+   default, verbose, 1;
+
+   if(!is_void(fixedzone))
+      return;
+
+   fll2utm, unref(lat), unref(lon), , , zone;
+
+   zmin = long(zone(min));
+   zmax = long(zone(max));
+   zone = [];
+
+   updated = 0;
+   needset = 0;
+   conflict = 0;
+   if(is_void(curzone)) {
+      if(zmin == zmax) {
+         updated = 1;
+         curzone = zmin;
+      } else {
+         // Notify user for decision
+         needset = 1;
+      }
+   } else {
+      if(zmin <= curzone && curzone <= zmax) {
+         // no action needed
+      } else if(zmin == zmax) {
+         conflict = curzone;
+         updated = 1;
+         curzone = zmin;
+      } else {
+         // Notify user for decision
+         conflict = curzone;
+         needset = 1;
+      }
+   }
+
+   tkcmd, swrite(format="set curzone %d", long(curzone));
+   if(!verbose)
+      return;
+
+   if(updated) {
+      if(conflict) {
+         write, format="*** curzone has been changed from %d to %d\n",
+            long(conflict), long(curzone);
+      } else {
+         write, format="curzone has been set to %d\n", long(curzone);
+      }
+   } else if(needset) {
+      if(conflict) {
+         write, format="*** curzone currently %d; should be between %d and %d\n",
+            long(conflict), zmin, zmax;
+      } else {
+         write, format="*** curzone should be between %d and %d\n", zmin, zmax;
+      }
+      write, format="*** Please manually set curzone to the proper zone%s", "\n";
+   }
+}
