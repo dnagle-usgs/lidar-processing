@@ -66,6 +66,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "geometry.i";
    require, "gridr.i";
    require, "groundtruth.i";
+   require, "histogram.i";
    require, "jpeg_support.i";
    require, "json.i";
    require, "lines.i";
