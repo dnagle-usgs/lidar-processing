@@ -18,6 +18,7 @@ package require l1pro::deprecated
 package require l1pro::dirload
 package require l1pro::vars
 package require l1pro::file
+package require l1pro::tools
 
 if {![winfo exists .l1wid]} {
   set l1pro_data(processing_mode) [list \
@@ -45,7 +46,6 @@ if {![winfo exists .l1wid]} {
   set win_no 5
   set win_load 6;    # used by EAARL Data Loader
   set usecentroid 1
-  set hist_log 0
 
   set cmax_max 5000
   set cmin_min -100
@@ -248,10 +248,6 @@ if {![winfo exists .l1wid]} {
   .l1wid.mb.options.processing add checkbutton \
     -label "Show Processing section of GUI" \
     -variable show_pro_gui
-
-  .l1wid.mb.options add checkbutton -label "Log Histograms" -underline 0 \
-    -variable hist_log
-    #-command hist_linlog
 
   .l1wid.mb.options add command -label "Plot/Write Individual Flightlines..." \
     -underline 0 \
@@ -516,13 +512,6 @@ if {![winfo exists .l1wid]} {
     }
   }
 
-  proc hist_linlog {} {
-    global hist_log
-    exp_send "_win=current_window();window,0;\
-      logxy,0,$hist_log; range,$hist_log;window_select,_win \r"
-  }
-
-
   .l1wid.mb   add cascade -label Graph -underline 0 -menu .l1wid.mb.graph
   .l1wid.mb.graph add command -label "Open the Limits Tool" -underline 0 \
     -command limits_tool
@@ -549,6 +538,14 @@ if {![winfo exists .l1wid]} {
   }
 
   .l1wid.mb add cascade -label Utilities -underline 0 -menu .l1wid.mb.util
+
+  .l1wid.mb.util add command -label "Pixel Analysis" \
+    -command [list ::pixelwf::gui::launch_full_panel .pixelwf]
+
+  .l1wid.mb.util add command -label "Histogram Elevations" \
+    -command ::l1pro::tools::histelev::gui
+
+  .l1wid.mb.util add separator
 
   .l1wid.mb.util add command -label "Transect Tool" -command {
     source "$src_path/transrch.ytk"
@@ -581,9 +578,6 @@ if {![winfo exists .l1wid]} {
 
   .l1wid.mb.util add command -label "Open Fit Gaussian GUI" \
     -command open_fit_gaussian_gui
-
-  .l1wid.mb.util add command -label "Pixel Analysis" \
-    -command [list ::pixelwf::gui::launch_full_panel .pixelwf]
 
   .l1wid.mb.util add command -label "Determine Roll Bias" -underline 0 \
     -command {
@@ -1253,20 +1247,7 @@ if {![winfo exists .l1wid]} {
   Button .l1wid.bf45.q.2 -text "Histogram\nElevations" \
     -helptext "Generate and display a histogram of all the first return\
       elevations" \
-    -command hist_data
-
-  proc hist_data {} {
-    set cmd "hist_data, $::pro_var"
-    append cmd ", mode=\"[lindex {fs ba de be fint lint ch} [display_type]]\""
-    append cmd ", vname=\"$::pro_var\""
-    append cmd ", win=7, dofma=1"
-    if {$::hist_log} {
-      append cmd ", logy=1"
-    }
-    append cmd ", normalize=1"
-    exp_send "$cmd\r"
-    cbar_tool
-  }
+    -command ::l1pro::tools::histelev
 
   Button .l1wid.bf45.q.1 -text "Pixel\nAnalysis" \
     -helptext "Click to jump to raster, pulse, and image for xyz point." \
