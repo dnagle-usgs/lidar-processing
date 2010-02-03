@@ -358,13 +358,13 @@ namespace eval mission {
         menu $mb.cache
         $mb add cascade -label Cache -underline 0 -menu $mb.cache
         $mb.cache add command -label "Enable cache" \
-            -command [list ybkg missiondata_cache \"enable\"]
+            -command {exp_send "missiondata_cache, \"enable\";\r"}
         $mb.cache add command -label "Disable cache" \
-            -command [list ybkg missiondata_cache \"disable\"]
+            -command {exp_send "missiondata_cache, \"disable\";\r"}
         $mb.cache add command -label "Preload cache" \
-            -command [list ybkg missiondata_cache \"preload\"]
+            -command {exp_send "missiondata_cache, \"preload\";\r"}
         $mb.cache add command -label "Clear cache" \
-            -command [list ybkg missiondata_cache \"clear\"]
+            -command {exp_send "missiondata_cache, \"clear\";\r"}
 
         set f $win.fraDates
         set v::dateframe $f
