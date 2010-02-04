@@ -187,7 +187,7 @@ vname=, title=, xtitle=, ytitle=) {
             h = binsize;
          }
          kde_data, z, win=win, dofma=dofma, h=h, K=kernel, kdesample=kdesample,
-            linecolor=kdecolor, linewidth=kdewidth, linetype=kdetype;
+            color=kdecolor, width=kdewidth, type=kdetype;
          dofma = 0;
       }
       hist_data_plot, hist, refs, ticks=ticks, mode=mode, normalize=normalize,
@@ -268,7 +268,11 @@ tickcolor=, vname=, title=, xtitle=, ytitle=) {
    window_select, wbkp;
 }
 
-func hist_data_plot_titles(hist, refs, mode=, vname=, title=, xtitle=, ytitle=, binsize=, normalize=) {
+func hist_data_plot_titles(hist, refs, mode=, vname=, title=, xtitle=, ytitle=,
+binsize=, normalize=) {
+/* DOCUMENT hist_data_plot_titles
+   Helper function for hist_data_plot.
+*/
    if(is_void(binsize))
       binsize = refs(dif)(avg);
    default, normalize, 1;
@@ -292,6 +296,9 @@ func hist_data_plot_titles(hist, refs, mode=, vname=, title=, xtitle=, ytitle=, 
 }
 
 func hist_data_plot_line(hist, refs, color=, width=, type=) {
+/* DOCUMENT hist_data_plot_line
+   Helper function for hist_data_plot.
+*/
    default, color, "blue";
    default, width, 2;
    default, type, "solid";
@@ -299,6 +306,9 @@ func hist_data_plot_line(hist, refs, color=, width=, type=) {
 }
 
 func hist_data_plot_boxes(hist, refs, color=, width=, type=) {
+/* DOCUMENT hist_data_plot_boxes
+   Helper function for hist_data_plot.
+*/
    default, color, "black";
    default, width, 2;
    default, type, "dot";
@@ -323,17 +333,72 @@ func hist_data_plot_boxes(hist, refs, color=, width=, type=) {
 }
 
 func hist_data_plot_ticks(ticks, msize=, color=) {
+/* DOCUMENT hist_data_plot_ticks
+   Helper function for hist_data_plot.
+*/
    default, msize, 0.1;
    default, color, "red";
    plmk, array(0, numberof(ticks)), ticks, marker=1, msize=msize, color=color;
 }
 
-func kde_data(data, mode=, win=, dofma=, kdesample=, elevsample=, h=, K=,
-linecolor=, linewidth=, linetype=) {
+func kde_data(data, mode=, plot=, win=, dofma=, kdesample=, elevsample=, h=,
+K=, color=, width=, type=) {
+/* DOCUMENT kde = kde_data(data, mode=, plot=, win=, dofma=, kdesample=,
+   elevsample=, h=, K=, color=, width=, type=)
+
+   Creates a kernel density estimation and plots it. Return value is an array
+   of [sample, estimate], where sample is the range of points sampled at
+   (specified by kdesample) and estimate is the kernel density estimate at that
+   point.
+
+   Parameter:
+      data: Array of data to use. May be any sort of data acceptable to
+         data2xyz. Additionally, it can also be one-dimensial array of values.
+
+   Options:
+      mode= Mode to use for data. Any value acceptable to data2xyz.
+      plot= Specifies whether to plot.
+            plot=1   Plot. (default)
+            plot=0   Do not plot.
+      win= Window to plot in. If not specified, uses current window.
+            win=7
+      dofma= Specifies whether to clear window before plotting.
+            dofma=1  Clear first. (default)
+            dofma=0  Do not clear.
+      kdesample= Number of points at which to sample for the estimate. More
+         points gives better resolution at the cost of speed. Sampling is
+         performed on evenly spaced points from the minimum to the maximum
+         value. Alternately, this can also be an array of points to sample at.
+            kdesample=100           Default
+            kdesample=250
+            kdesample=span(25., 82., 250)
+      elevsample= Number of points to interpolate to when plotting. Spline
+         interpolation is used. Defaults to approx. eight times the kdesample.
+         Alternately, this can also be an array of points to interpolate to.
+            elevsample=kdesample*8-7   Default
+            elevsample=793             (Default when kdesample=100)
+            elevsample=span(22., 89., 1000)
+      h= Bandwidth parameter to use in the estimation.
+            h=0.15      Default, based on EAARL elevation accuracy
+      K= Kernel to use. May be the string name of a kernel, or a kernel
+         function.
+            K="triangular"       (default)
+            K="uniform"
+            K=krnl_quartic
+            K=krnl_triweight
+      color= Color to use for plotted line.
+            color="green"     (default)
+      width= Width of plotted line.
+            width=2           (default)
+      type= Type of plotted line.
+            type="solid"      (default)
+*/
    local z;
+   default, plot, 1;
    default, kdesample, 100;
-   default, elevsample, kdesample + 7 * (kdesample-1);
+   default, elevsample, 8 * kdesample - 7;
    default, h, .15;
+   default, K, "triangular";
 
    if(is_numerical(data) && dimsof(data)(1) == 1)
       z = unref(data);
@@ -350,13 +415,20 @@ linecolor=, linewidth=, linetype=) {
    sample = is_vector(kdesample) ? kdesample : span(z(min), z(max), kdesample);
    density = krnl_density_est(z, sample, h=h, K=K);
 
-   kde_data_plot, sample, density, win=win, dofma=dofma, elev=elevsample,
-      color=linecolor, width=linewidth, type=linetype;
+   if(plot)
+      kde_data_plot, sample, density, win=win, dofma=dofma, elev=elevsample,
+         color=color, width=width, type=type;
 
    return [sample, density];
 }
 
 func kde_data_plot(sample, density, win=, dofma=, elev=, color=, width=, type=) {
+/* DOCUMENT kde_data_plot, sample, density, win=, dofma=, elev=, color=,
+   width=, type=
+
+   Helper plotting function for kde_data. See kde_data for details.
+*/
+   default, dofma, 1;
    default, color, "green";
    default, width, 2;
    default, type, "solid";
@@ -453,6 +525,71 @@ func krnl_cosine(u) {
    return K;
 }
 
+func krnl_plot_profile(K, dist=, dofma=, win=, color=) {
+/* DOCUMENT krnl_plot_profile, K, dist=, dofma=, win=, color=
+   Plots the profile of a kernel.
+
+   Parameter:
+      K: Should be the name of a kernel. Alternately, you can instead provide
+         your own function directly.
+            krnl_plot_profile, "uniform"        // Examples of using name
+            krnl_plot_profile, "triangular"
+            krnl_plot_profile, "epanechnikov"
+            krnl_plot_profile, "quartic"
+            krnl_plot_profile, "triweight"
+            krnl_plot_profile, "gaussian"
+            krnl_plot_profile, "cosine"
+            krnl_plot_profile, krnl_uniform     // Example of using function
+
+   Options:
+      dist= To what distance from zero should the profile be shown? This
+         defines the range of the x axis.
+            dist=2         2 units (default)
+            dist=3         3 units (helpful for the gaussian kernel)
+      dofma= Should the window be cleared before plotting?
+            dofma=1        Clear the window (default)
+            dofma=0        Do not clear the window
+      win= Which window to use?
+            win=12         (default)
+      color= What color should the profile line use?
+            color="blue"   (default)
+*/
+   local kernel;
+   default, dist, 2;
+   default, dofma, 1;
+   default, win, 12;
+   default, color, "blue";
+   if(is_string(K)) {
+      kernel = K;
+      if(symbol_exists("krnl_"+K))
+         K = symbol_def("krnl_"+K);
+      else
+         error, "Unknown kernel function.";
+   }
+
+   count = 200 * dist + 1;
+   sample = span(-dist, dist, count);
+   profile = K(sample);
+
+   ymin = min(profile(min)-0.1, -0.1);
+   ymax = max(profile(max)+0.2, 1.2);
+
+   wbkp = current_window();
+   window, win;
+   if(dofma)
+      fma;
+   plg, [ymin, ymax], [0, 0], type="dot";
+   plg, [0, 0], [-dist, dist], type="dot";
+   plmk, [0,1,0], [-1,0,1], marker=4, msize=0.5, color="red";
+   plg, profile, sample, color=color, width=2;
+   limits, square=1;
+   if(!is_void(kernel))
+      pltitle, kernel + " kernel";
+   tmp = K([0., 1.]);
+   xytitles, swrite(format="K(0) = %.3f    K(1) = %.3f", tmp(1), tmp(2));
+   window_select, wbkp;
+}
+
 func krnl_density_est(data, sample, h=, K=) {
 /* DOCUMENT density = krnl_density_est(data, sample, h=, K=)
    Performs a kernel density estimation on the data.
@@ -467,11 +604,11 @@ func krnl_density_est(data, sample, h=, K=) {
       K= Kernel function. Must be a function of one argument. Possible
          settings:
             K=krnl_uniform
-            K=krnl_triangular
+            K=krnl_triangular (default)
             K=krnl_epanechnikov
             K=krnl_quartic
             K=krnl_triweight
-            K=krnl_gaussian   (default)
+            K=krnl_gaussian
             K=krnl_cosine
 
    Returns:
@@ -479,7 +616,7 @@ func krnl_density_est(data, sample, h=, K=) {
       values will normally vary between 0 and 1.
 */
    default, h, 0.15;
-   default, K, krnl_gaussian;
+   default, K, krnl_triangular;
 
    h = double(h);
    n = double(numberof(data));
