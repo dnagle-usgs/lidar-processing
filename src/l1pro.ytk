@@ -213,10 +213,7 @@ if {![winfo exists .l1wid]} {
     -command ::plot::menu
   .l1wid.mb.load add separator
   .l1wid.mb.load add command -label "Load TANS Data .. " -underline 5 \
-    -command {
-      exp_send "tans = rbtans();\r"
-      expect ">"
-    }
+    -command {exp_send "tans = rbtans();\r"}
   .l1wid.mb.load  add command -label "Load DMARS PBD Data .. " -underline 5 \
     -command load_dmars
 
@@ -251,15 +248,11 @@ if {![winfo exists .l1wid]} {
 
   .l1wid.mb.options add command \
     -label "Show Flightlines with No Raster Data..." -underline 25 \
-    -command {
-      exp_send "plot_no_raster_fltlines(gga, edb);\r"
-    }
+    -command {exp_send "plot_no_raster_fltlines(gga, edb);\r"}
 
   .l1wid.mb.options add command -label "Show Flightlines with No TANS Data..." \
     -underline 25 \
-    -command {
-      exp_send "plot_no_tans_fltlines(tans, gga);\r"
-    }
+    -command {exp_send "plot_no_tans_fltlines(tans, gga);\r"}
 
   namespace eval varplot {
     namespace eval v {
@@ -420,13 +413,6 @@ if {![winfo exists .l1wid]} {
   .l1wid.mb.options add checkbutton -label "Plot with square limits" \
     -variable l1pro_square_limits
 
-  .l1wid.mb.options add checkbutton -label "Set Plot Limits" -variable setll \
-    -command {
-      if {$setll == 1} {
-        exp_send "_ytk_ll = limits();\n"
-      }
-    }
-
   proc make_selected_arrays {} {
     global lrnindx list
     set curlist [.l1plot.1.lb curselection]
@@ -540,9 +526,8 @@ if {![winfo exists .l1wid]} {
 
   .l1wid.mb.util add separator
 
-  .l1wid.mb.util add command -label "Transect Tool" -command {
-    source "$src_path/transrch.ytk"
-  }
+  .l1wid.mb.util add command -label "Transect Tool" \
+    -command [list source [file join $src_path transrch.ytk]]
 
   menu .l1wid.mb.util.seg
   .l1wid.mb.util add cascade -label "Launch segments by..." -menu .l1wid.mb.util.seg
@@ -573,7 +558,9 @@ if {![winfo exists .l1wid]} {
     -command open_fit_gaussian_gui
 
   .l1wid.mb.util add command -label "Determine Roll Bias" -underline 0 \
-    -command {
+    -command determine_roll_bias
+
+  proc determine_roll_bias {} {
       global win_no varlist bias pro_var
 
       destroy .l1bias
@@ -592,7 +579,6 @@ if {![winfo exists .l1wid]} {
         expect ">"
       }
       set slope 0
-      set iob 0
       set inout 1
       set width 5
       set flwin 4
@@ -657,10 +643,7 @@ if {![winfo exists .l1wid]} {
 
       Button .l1bias.3.plot -text "Plot" \
         -helptext "Click to plot flightline transect" \
-        -command {
-          exp_send "plot_flightline_transect(transdata, $flwin)\r"
-          expect ">"
-        }
+        -command {exp_send "plot_flightline_transect(transdata, $flwin)\r"}
 
       Label .l1bias.3.winl -text "in win:"
       spinbox .l1bias.3.win -justify center \
@@ -668,22 +651,14 @@ if {![winfo exists .l1wid]} {
 
       Button .l1bias.3.pick -text "Select Flightlines" \
         -helptext "Click to select which flightlines to keep" \
-        -command {
-          exp_send "transdata=selgoodflightlines(transdata, win=$flwin)\r"
-          expect ">"
-        }
+        -command {exp_send "transdata=selgoodflightlines(transdata, win=$flwin)\r"}
 
-      checkbutton .l1bias.3.inout -text "in/out:" -variable iob \
-        -command {
-          set inout [lindex {1 -1} $iob]
-        }
+      checkbutton .l1bias.3.inout -text "in/out:" \
+        -variable inout -onvalue -1 -offvalue 1
 
       Button .l1bias.3.auto -text "Determine bias" \
         -helptext "Click to automatically determine roll bias" \
-        -command {
-          exp_send "goodroll=find_roll_bias(transdata,0,$inout,update=1)\r"
-          expect ">"
-        }
+        -command {exp_send "goodroll=find_roll_bias(transdata,0,$inout,update=1)\r"}
 
       pack .l1bias.1.var .l1bias.1.winl .l1bias.1.win .l1bias.1.transl \
         .l1bias.1.transbutton .l1bias.1.help -side left
@@ -697,30 +672,12 @@ if {![winfo exists .l1wid]} {
     }
 
   .l1wid.mb add cascade -label CmdLine -underline 1 -menu .l1wid.mb.cmd
-
-  .l1wid.mb.cmd add command -label "mtransect" -command {
-    exp_send "require,\"transect.i\"; help,mtransect\r"
-  }
-  .l1wid.mb.cmd add command -label "batch_process" -command {
-    exp_send "require, \"batch_process.i\"; help,batch_process\r"
-  }
-  .l1wid.mb.cmd add command -label "mbatch_process" -command {
-    exp_send "require, \"batch_process.i\"; help,mbatch_process\r"
-  }
-  .l1wid.mb.cmd add command -label "batch_rcf(Filter)" -command {
-    exp_send "require, \"batch_process.i\"; help,batch_rcf\r"
-  }
-  .l1wid.mb.cmd add command -label "batch_datum_convert" -command {
-    exp_send "require, \"batch_datum_convert.i\"; help,batch_datum_convert\r"
-  }
-  .l1wid.mb.cmd add command -label "batch_veg_lfpw" -command {
-    exp_send "require, \"batch_veg_energy.i\"; help,batch_veg_lfpw\r"
-  }
-  .l1wid.mb.cmd add command -label "batch_pbd2las" -command {
-    exp_send "require, \"pbd2las.i\"; help,batch_pbd2las\r"
-  }
-  .l1wid.mb.cmd add command -label "batch_write_xyz" -command {
-    exp_send "require, \"batch_process.i\"; help,batch_write_xyz\r"
+  foreach ycmd {
+    mtransect batch_process mbatch_process batch_rcf batch_datum_convert
+    batch_veg_lfpw batch_pbd2las batch_write_xyz
+  } {
+    .l1wid.mb.cmd add command -label $ycmd \
+      -command [list exp_send "help, $ycmd\r"]
   }
 
   .l1wid.mb add cascade -label Deprecated -underline 1 -menu .l1wid.mb.dep
@@ -773,9 +730,8 @@ if {![winfo exists .l1wid]} {
     -underline 0 \
     -command ::l1pro::deprecated::plot_write_individual_flightlines
 
-  .l1wid.mb.dep add command -label "Test and Clean" -command {
-    exp_send "$::pro_var = test_and_clean($::pro_var);\r"
-  }
+  .l1wid.mb.dep add command -label "Test and Clean" \
+    -command {exp_send "$::pro_var = test_and_clean($::pro_var);\r"}
 
   .l1wid.mb.dep add command -label "Append2Tile" \
     -command ::l1pro::deprecated::append2tile
@@ -1166,35 +1122,20 @@ if {![winfo exists .l1wid]} {
     wm title $w "Color Bar Tool"
     frame $w.1
     Button $w.both -text "Both" \
-      -helptext "Interactively set Cmin, Cmax by \
-        clicking in the histogram window" \
-      -command {
-        exp_send "set_cbar, \"both\" \r"
-        expect ">"
-      }
+      -helptext "Interactively set Cmin, Cmax by clicking in the histogram window" \
+      -command {exp_send "set_cbar, \"both\"\r"}
     Button $w.cmax -text "Cmax" \
-      -helptext "Interactively set Cmax by \
-        clicking in the histogram window" \
-      -command {
-        exp_send "set_cbar, \"cmax\" \r"
-      }
+      -helptext "Interactively set Cmax by clicking in the histogram window" \
+      -command {exp_send "set_cbar, \"cmax\"\r"}
     Button $w.cmin -text "Cmin" \
-      -helptext "Interactively set Cmin by \
-        clicking in the histogram window" \
-      -command {
-        exp_send "set_cbar, \"cmin\" \r"
-      }
+      -helptext "Interactively set Cmin by clicking in the histogram window" \
+      -command {exp_send "set_cbar, \"cmin\" \r"}
     Button $w.bothdismiss -text "Both/Dismiss" \
-      -helptext "Interactively set Cmin, Cmax by \
-        clicking in the histogram window" \
-      -command {
-        exp_send "set_cbar, \"both\", opt=\"dismiss\" \r"
-        expect ">"
-      }
-     Button $w.dismiss -text "Dismiss" -command {
+      -helptext "Interactively set Cmin, Cmax by clicking in the histogram window" \
+      -command {exp_send "set_cbar, \"both\", opt=\"dismiss\"\r"}
+    Button $w.dismiss -text "Dismiss" -command {
       destroy .cbartool
       exp_send "winkill, 7;\r"
-      expect ">"
     }
     pack \
       $w.both \
@@ -1271,253 +1212,7 @@ if {![winfo exists .l1wid]} {
   Button .l1wid.bf45.q.rcf -text "RCF" -command rcf_region
   Button .l1wid.bf45.q.datum -text "Datum\nConvert" -command datum_proc
   Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
-    -command {
-      global varlist plot_settings clip_in_var clip_out_var pro_var
-      destroy .l1clip
-      toplevel .l1clip
-      wm title .l1clip "Elevation Clipper"
-      frame .l1clip.05
-      frame .l1clip.1
-      frame .l1clip.2
-      frame .l1clip.3
-      frame .l1clip.4
-      set ptype [processing_mode]
-      Label .l1clip.05.varname -text "Input Variable:"
-
-      ::misc::combobox .l1clip.05.varlist \
-        -textvariable clip_in_var -state readonly \
-        -listvariable ::varlist \
-        -modifycmd {
-          set clip_out_var $clip_in_var
-        }
-      set clip_in_var $pro_var
-
-      checkbutton .l1clip.1.ymin -variable ymin \
-        -command {
-          if {$ymin == 1} {
-            set yrange 0
-            .l1clip.1.min.sb configure -state normal
-            .l1clip.1.min.lb configure -state normal
-            .l1clip.1.min.sc configure -state normal
-            .l1clip.3.range.sb configure -state disabled
-            .l1clip.3.range.lb configure -state disabled
-            .l1clip.3.range.sc configure -state disabled
-          }
-          if {$ymin == 0} {
-            .l1clip.1.min.sb configure -state disabled
-            .l1clip.1.min.lb configure -state disabled
-            .l1clip.1.min.sc configure -state disabled
-          }
-        }
-      set ymin 1
-      checkbutton .l1clip.2.ymax -variable ymax \
-        -command {
-          if {$ymax == 1} {
-            set yrange 0
-            .l1clip.2.max.sb configure -state normal
-            .l1clip.2.max.lb configure -state normal
-            .l1clip.2.max.sc configure -state normal
-            .l1clip.3.range.sb configure -state disabled
-            .l1clip.3.range.lb configure -state disabled
-            .l1clip.3.range.sc configure -state disabled
-          }
-          if {$ymax == 0} {
-            .l1clip.2.max.sb configure -state disabled
-            .l1clip.2.max.lb configure -state disabled
-            .l1clip.2.max.sc configure -state disabled
-          }
-        }
-      set ymax 1
-      checkbutton .l1clip.3.yrange -variable yrange -state disabled \
-        -command {
-          set yrange_elv 0
-        }
-
-      sst .l1clip.2.max max_elv "Maximum Elevation:" {-100 5000.0 0.1}
-      sst .l1clip.1.min min_elv "Minimum Elevation:" {-100 5000.0 0.1}
-      sst .l1clip.3.range range_elv "Vertical Range:" {0 300.0 0.1}
-
-      set max_elv $plot_settings(cmax)
-      set min_elv $plot_settings(cmin)
-      set range_elv $cdelta
-
-      LabelEntry .l1clip.35 -relief sunken -label "Output Variable:" \
-        -helptext "Define output variable" \
-        -textvariable clip_out_var
-      set clip_out_var $clip_in_var
-
-      Button .l1clip.4.ok -text "Clip Data" -width 5 -command {
-        global clip_in_var clip_out_var
-
-        set ptype [processing_mode]
-        set dtype [display_type]
-        if {$ptype == 0} {
-          ##for surface topography
-          if {$ymin == 1 && $ymax == 1} {
-            exp_send "$clip_out_var = $clip_in_var\(where(\
-              ($clip_in_var.elevation >= $min_elv*100) &\
-              ($clip_in_var.elevation <= $max_elv*100)));\r"
-            expect ">"
-          } else {
-            if {$ymin == 1} {
-              exp_send "$clip_out_var = $clip_in_var\(where(\
-                $clip_in_var.elevation >= $min_elv*100));\r"
-              expect ">"
-            }
-            if {$ymax == 1} {
-              exp_send "$clip_out_var = $clip_in_var\(where(\
-                $clip_in_var.elevation <= $max_elv*100));\r"
-              expect ">"
-            }
-          }
-          if {$yrange == 1} {
-            exp_send "sel_ptr = rcf($clip_in_var.elevation, $range_elv*100,\
-                mode=2);\
-              $clip_out_var = $clip_in_var(*sel_ptr(1));\r"
-            expect ">"
-          }
-        }
-        if {$ptype == 1} {
-          ##for bathymetry
-          if {$dtype == 1} {
-            if {$ymin == 1 && $ymax == 1} {
-              exp_send "$clip_out_var = $clip_in_var\(where(\
-                ($clip_in_var.elevation+$clip_in_var.depth >= $min_elv*100) &\
-                ($clip_in_var.elevation+$clip_in_var.depth <= $max_elv*100) ));\r"
-              expect ">"
-            } else {
-              if {$ymin == 1} {
-                exp_send "$clip_out_var = $clip_in_var\(where((\
-                  $clip_in_var.elevation+$clip_in_var.depth) >= $min_elv\*100));\r"
-                expect ">"
-              }
-              if {$ymax == 1} {
-                exp_send "$clip_out_var = $clip_in_var\(where((\
-                  $clip_in_var.elevation+$clip_in_var.depth) <= $max_elv*100));\r"
-                expect ">"
-              }
-            }
-            if {$yrange == 1} {
-              exp_send "sel_ptr = rcf(\
-                  ($clip_in_var.elevation+$clip_in_var.depth),\
-                  $range_elv*100, mode=2);\
-                $clip_out_var = $clip_in_var\(*sel_ptr(1));\r"
-              expect ">"
-            }
-          }
-          if {$dtype == 0} {
-            if {$ymin == 1 && $ymax == 1} {
-              exp_send "$clip_out_var = $clip_in_var\(where(\
-                ($clip_in_var.elevation >= $min_elv*100) &\
-                ($clip_in_var.elevation <= $max_elv*100) ));\r"
-              expect ">"
-            } else {
-              if {$ymin == 1} {
-                exp_send "$clip_out_var = $clip_in_var\(where(\
-                  $clip_in_var.elevation >= $min_elv*100));\r"
-                expect ">"
-              }
-              if {$ymax == 1} {
-                exp_send "$clip_out_var = $clip_in_var\(where(\
-                  $clip_in_var.elevation <= $max_elv*100));\r"
-                expect ">"
-              }
-            }
-            if {$yrange == 1} {
-              exp_send "sel_ptr = rcf($clip_in_var.elevation, $range_elv*100,\
-                  mode=2);\
-                $clip_out_var = $clip_in_var\(*sel_ptr(1));\r"
-              expect ">"
-            }
-          }
-          if {$dtype == 2} {
-            if {$ymin == 1 && $ymax == 1} {
-              exp_send "$clip_out_var = $clip_in_var\(where(\
-                ($clip_in_var.depth >= $min_elv*100) &\
-                ($clip_in_var.depth <= $max_elv*100) ));\r"
-              expect ">"
-            } else {
-              if {$ymin == 1} {
-                exp_send "$clip_out_var = $clip_in_var\(where(\
-                  $clip_in_var.depth >= $min_elv*100));\r"
-              }
-              if {$ymax == 1} {
-                exp_send "$clip_out_var = $clip_in_var\(where(\
-                  $clip_in_var.depth <= $max_elv*100));\r"
-              }
-            }
-            if {$yrange == 1} {
-              exp_send "sel_ptr = rcf($clip_in_var.depth,$range_elv*100,mode=2);\
-                $clip_out_var = $clip_in_var\(*sel_ptr(1));\r"
-            }
-          }
-        }
-        if {$ptype == 2} {
-          ##for vegetation
-          if {$dtype == 0} {
-            if {$ymin == 1 && $ymax == 1} {
-              exp_send "$clip_out_var = $clip_in_var\(where(\
-                ($clip_in_var.elevation >= $min_elv*100) &\
-                ($clip_in_var.elevation <= $max_elv*100)));\r"
-              expect ">"
-            } else {
-              if {$ymin == 1} {
-                exp_send "$clip_out_var = $clip_in_var(where\(\
-                  $clip_in_var.elevation >= $min_elv*100));\r"
-              }
-              if {$ymax == 1} {
-                exp_send "$clip_out_var = $clip_in_var(where\(\
-                  $clip_in_var.elevation <= $max_elv*100));\r"
-              }
-            }
-            if {$yrange == 1} {
-              exp_send "sel_ptr = rcf($clip_in_var.elevation,$range_elv*100,mode=2);\
-                $clip_out_var = $clip_in_var\(*sel_ptr(1));\r"
-            }
-          }
-          if {$dtype == 3} {
-            if {$ymin == 1 && $ymax == 1} {
-              exp_send "$clip_out_var = $clip_in_var\(where(\
-                ($clip_in_var.lelv >= $min_elv*100) &\
-                ($clip_in_var.lelv <= $max_elv*100) ));\r"
-              expect ">"
-            } else {
-              if {$ymin == 1} {
-                exp_send "$clip_out_var = $clip_in_var\(where(\
-                  $clip_in_var.lelv >= $min_elv*100));\r"
-              }
-              if {$ymax == 1} {
-                exp_send "$clip_out_var = $clip_in_var\(where(\
-                  $clip_in_var.lelv <= $max_elv*100));\r"
-              }
-            }
-            if {$yrange == 1} {
-              exp_send "sel_ptr = rcf($clip_in_var.lelv,$range_elv*100,mode=2);\
-                $clip_out_var = $clip_in_var\(*sel_ptr(1));\r"
-            }
-          }
-        }
-        append_varlist $clip_out_var
-        destroy .l1clip
-      }
-
-      Button .l1clip.4.dismiss -text "Close" -width 5 -command {
-        destroy .l1clip
-      }
-
-      pack .l1clip.05.varname .l1clip.05.varlist -side left -padx 5
-      pack .l1clip.1.ymin .l1clip.1.min -side left -padx 5
-      pack .l1clip.2.ymax .l1clip.2.max -side left -padx 5
-      pack .l1clip.3.yrange .l1clip.3.range -side left -fill x
-
-      pack .l1clip.4.ok .l1clip.4.dismiss -side left -padx 5
-      pack .l1clip.05 .l1clip.1 .l1clip.2 .l1clip.3 .l1clip.35 .l1clip.4 -side top -pady 5
-
-      .l1clip.3.range.sb configure -state disabled
-      .l1clip.3.range.lb configure -state disabled
-      .l1clip.3.range.sc configure -state disabled
-      set range_elv 0
-    }
+    -command ::l1pro::tools::histclip::gui
 
   ttk::menubutton .l1wid.bf45.q.grids -text "Grids" -menu .l1wid.bf45.q.grids.mb
   menu .l1wid.bf45.q.grids.mb

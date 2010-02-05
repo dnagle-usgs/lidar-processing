@@ -358,3 +358,112 @@ proc ::l1pro::tools::histelev::gui_buttons f {
    grid columnconfigure $f {0 3} -weight 1
    return $f
 }
+
+if {![namespace exists ::l1pro::tools::elevclip]} {
+   namespace eval ::l1pro::tools::histclip {
+      namespace import ::l1pro::tools::appendif
+      namespace eval v {
+         variable top .l1wid.elevclip
+         variable invar {}
+         variable minelv 0
+         variable maxelv 0
+         variable usemin 1
+         variable usemax 1
+         variable outvar {}
+      }
+   }
+}
+
+proc ::l1pro::tools::histclip::gui {} {
+   set w $v::top
+   destroy $w
+   toplevel $w
+
+   wm resizable $w 1 0
+   wm title $w "Elevation Clipper"
+
+   set v::invar $::pro_var
+   set v::outvar $::pro_var
+   set v::minelv $::plot_settings(cmin)
+   set v::maxelv $::plot_settings(cmax)
+   set v::usemin 1
+   set v::usemax 1
+
+   ttk::frame $w.f
+   grid $w.f -sticky news
+   grid columnconfigure $w 0 -weight 1
+   grid rowconfigure $w 0 -weight 1
+
+   set f $w
+
+   ttk::label $f.lblinput -text "Input variable: "
+   ttk::label $f.lblmin -text "Minimum elevation: "
+   ttk::label $f.lblmax -text "Maximum elevation: "
+   ttk::label $f.lbloutput -text "Output variable: "
+
+   ::misc::combobox $f.input \
+      -state readonly \
+      -listvariable ::varlist \
+      -textvariable [namespace which -variable v::invar]
+
+   ttk::checkbutton $f.usemin \
+      -variable [namespace which -variable v::usemin]
+   ttk::checkbutton $f.usemax \
+      -variable [namespace which -variable v::usemax]
+
+   spinbox $f.minelv -from -5000 -to 5000 -increment 0.1 \
+      -format %.2f \
+      -textvariable [namespace which -variable v::minelv]
+   spinbox $f.maxelv -from -5000 -to 5000 -increment 0.1 \
+      -format %.2f \
+      -textvariable [namespace which -variable v::maxelv]
+
+   ::misc::statevar $f.minelv \
+      -statemap {1 normal 0 disabled} \
+      -statevariable [namespace which -variable v::usemin]
+
+   ::misc::statevar $f.maxelv \
+      -statemap {1 normal 0 disabled} \
+      -statevariable [namespace which -variable v::usemax]
+
+   ttk::entry $f.output \
+      -textvariable [namespace which -variable v::outvar]
+
+   ttk::frame $f.buttons
+   ttk::button $f.clip -text "Clip Data" \
+      -command ::l1pro::tools::histclip::clip
+   ttk::button $f.dismiss -text "Dismiss" \
+      -command [list destroy [winfo toplevel $f]]
+
+   grid x $f.clip $f.dismiss -padx 2 -in $f.buttons
+   grid columnconfigure $f.buttons {0 3} -weight 1
+
+   grid x $f.lblinput $f.input -in $w.f -padx 2 -pady 2
+   grid $f.usemin $f.lblmin $f.minelv -in $w.f -padx 2 -pady 2
+   grid $f.usemax $f.lblmax $f.maxelv -in $w.f -padx 2 -pady 2
+   grid x $f.lbloutput $f.output -in $w.f -padx 2 -pady 2
+   grid $f.buttons - - -in $w.f -pady 2
+
+   grid configure $f.lblinput $f.lblmin $f.lblmax $f.lbloutput $f.usemin \
+      $f.usemax -sticky e
+   grid configure $f.input $f.minelv $f.maxelv $f.output $f.buttons -sticky ew
+
+   grid columnconfigure $w.f 2 -weight 1
+}
+
+proc ::l1pro::tools::histclip::clip {} {
+   set mode [lindex {fs ba de be fint lint ch} [display_type]]
+
+   set cmd "$v::outvar = filter_bounded_elv($v::invar"
+
+   appendif cmd \
+      1                       ", mode=\"$mode\"" \
+      $v::usemin              ", lbound=$v::minelv" \
+      $v::usemax              ", ubound=$v::maxelv" \
+      1                       ")"
+
+   exp_send "$cmd\r"
+
+   append_varlist $v::outvar
+   destroy $v::top
+}
