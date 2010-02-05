@@ -1114,40 +1114,6 @@ if {![winfo exists .l1wid]} {
     ::tooltip::tooltip .l1wid.bf45.p.left.15 $::pro_var
   }}}
 
-  proc cbar_tool { } {
-    global cbvc
-    set w .cbartool
-    destroy $w
-    toplevel $w
-    wm title $w "Color Bar Tool"
-    frame $w.1
-    Button $w.both -text "Both" \
-      -helptext "Interactively set Cmin, Cmax by clicking in the histogram window" \
-      -command {exp_send "set_cbar, \"both\"\r"}
-    Button $w.cmax -text "Cmax" \
-      -helptext "Interactively set Cmax by clicking in the histogram window" \
-      -command {exp_send "set_cbar, \"cmax\"\r"}
-    Button $w.cmin -text "Cmin" \
-      -helptext "Interactively set Cmin by clicking in the histogram window" \
-      -command {exp_send "set_cbar, \"cmin\" \r"}
-    Button $w.bothdismiss -text "Both/Dismiss" \
-      -helptext "Interactively set Cmin, Cmax by clicking in the histogram window" \
-      -command {exp_send "set_cbar, \"both\", opt=\"dismiss\"\r"}
-    Button $w.dismiss -text "Dismiss" -command {
-      destroy .cbartool
-      exp_send "winkill, 7;\r"
-    }
-    pack \
-      $w.both \
-      $w.cmax \
-      $w.cmin \
-      $w.bothdismiss \
-      $w.dismiss \
-      -side top \
-      -fill both
-  }
-
-
   Label .l1wid.bf45.p.right.2 -text "in Win:"
   spinbox .l1wid.bf45.p.right.3 -justify center -from 0 -to 63 -increment 1 \
     -width 2 -textvariable win_no

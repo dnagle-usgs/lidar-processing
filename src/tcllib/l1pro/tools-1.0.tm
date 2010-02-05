@@ -19,6 +19,7 @@ if {![namespace exists ::l1pro::tools::histelev]} {
       namespace import ::l1pro::tools::appendif
       namespace eval v {
          variable top .l1wid.histelev
+         variable cbartop .l1wid.cbartool
          variable auto_binsize 1
          variable binsize 0.30
          variable normalize 1
@@ -357,6 +358,61 @@ proc ::l1pro::tools::histelev::gui_buttons f {
    grid x $f.plot $f.dismiss -padx 2 -pady 2
    grid columnconfigure $f {0 3} -weight 1
    return $f
+}
+
+proc ::l1pro::tools::histelev::cbar_tool {} {
+   set w $v::cbartop
+   if {[winfo exists $w]} {
+      return
+   }
+   toplevel $w
+   wm resizable $w 0 0
+   wm title $w "Colorbar Tool"
+
+   ttk::frame $w.f
+   grid $w.f -sticky news
+   grid columnconfigure $w 0 -weight 1
+   grid rowconfigure $w 0 -weight 1
+
+   set f $w
+
+   ttk::frame $f.fwin
+   ttk::label $f.lblwin -text "Window: "
+   spinbox $f.win -from 0 -to 63 -increment 1 -width 0 \
+      -textvariable [namespace which -variable v::win]
+
+   grid $f.lblwin $f.win -in $f.fwin -sticky ew
+   grid columnconfigure $f.fwin 1 -weight 1
+
+   set cmd [namespace which -command cbar_do]
+   ttk::button $f.cmax -text "Cmax" -width 0 \
+      -command [list $cmd cmax]
+   ttk::button $f.cmin -text "Cmin" -width 0 \
+      -command [list $cmd cmin]
+   ttk::button $f.both -text "Both" -width 0 \
+      -command [list $cmd both]
+   ttk::button $f.dism -text "Close" -width 0 \
+      -command [list $cmd dism]
+   ttk::button $f.bdis -text "Both & Close" -width 0 \
+      -command [list $cmd bdis]
+
+   grid $f.fwin - - -in $f.f -sticky ew -padx 1 -pady 1
+   grid $f.cmax $f.both $f.dism -in $f.f -sticky ew -padx 1 -pady 1
+   grid $f.cmin $f.bdis - -in $f.f -sticky ew -padx 1 -pady 1
+   grid columnconfigure $f.f {0 1 2} -weight 1 -uniform 1
+}
+
+proc ::l1pro::tools::histelev::cbar_do cmd {
+   switch -- $cmd {
+      both  {exp_send "set_cbar, w=$v::win, \"both\"\r"}
+      cmax  {exp_send "set_cbar, w=$v::win, \"cmax\"\r"}
+      cmin  {exp_send "set_cbar, w=$v::win, \"cmin\"\r"}
+      dism  {destroy $v::cbartop}
+      bdis  {
+         exp_send "set_cbar, w=$v::win, \"both\"; winkill, $v::win\r"
+         destroy $v::cbartop
+      }
+   }
 }
 
 if {![namespace exists ::l1pro::tools::elevclip]} {
