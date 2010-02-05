@@ -7,8 +7,9 @@ package require misc
 package require tooltip
 
 if {![info exists curzone]} {
-   set curzone 17
+   set curzone 0
 }
+tky_tie add sync ::curzone to curzone -initialize 1
 
 if {![namespace exists ::plot]} {
    namespace eval ::plot {
@@ -234,11 +235,17 @@ proc ::plot::menu { } {
 
    label $f.labUTMZone -text "UTM Zone:" -anchor e
    spinbox $f.spnUTMZone -justify center \
-      -from 1 -to 60 -increment 1 \
+      -from 0 -to 60 -increment 1 \
       -textvariable ::curzone
    ::tooltip::tooltip $f.spnUTMZone \
-      "This is only used when the Coordinates system is UTM."
+      "This setting is tied to Yorick's curzone variable. Changes made here\
+      \nwill get sent (transparently) to Yorick. Changes made in Yorick will NOT\
+      \nshow up here immediately; however, it should update immediately when
+      \nyou next interact with this window."
    grid $f.labUTMZone $f.spnUTMZone
+
+   bind $pane <Enter> {set ::curzone $::curzone}
+   bind $pane <Visibility> {set ::curzone $::curzone}
 
    set f $pane.lfrData
    labelframe $f -text "Data to plot by default"
@@ -559,7 +566,6 @@ proc ::plot::replot_all { } {
 }
 
 proc ::plot::plot_all { } {
-   ::plot::curzone
    # Plot images first
    if { $g::enable_plot_images } {
       ::plot::image_plot
@@ -584,10 +590,6 @@ proc ::plot::plot_all { } {
    if { $g::enable_plot_pnav } {
       ::plot::track_plot
    }
-}
-
-proc ::plot::curzone { } {
-   exp_send "curzone = $::curzone\r"
 }
 
 proc ::plot::track_load { } {
@@ -639,9 +641,6 @@ proc ::plot::fma { } {
 }
 
 proc ::plot::jump { } {
-   if {$g::coordType == "UTM"} {
-      ::plot::curzone
-   }
    ::plot::window_store
    ::plot::window_set
    exp_send "gga_click_start_isod()\r"
@@ -694,12 +693,10 @@ proc ::plot::window_restore { } {
 }
 
 proc ::plot::utm_grid_overlay { } {
-   ::plot::curzone
    exp_send "draw_grid, $::_map(window)\r"
 }
 
 proc ::plot::utm_grid_show_name { } {
-   ::plot::curzone
    exp_send "show_grid_location, $::_map(window)\r"
 }
 

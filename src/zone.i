@@ -1,6 +1,9 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
 require, "eaarl.i";
 
+if(is_void(curzone))
+   curzone = 0;
+
 __ZONE_STRUCTS = h_new(
 /* DOCUMENT __ZONE_STRUCTS
    Yeti hash with info on the struct elements for northings/eastings.
@@ -427,7 +430,7 @@ func auto_curzone(lat, lon, verbose=) {
    updated = 0;
    needset = 0;
    conflict = 0;
-   if(is_void(curzone)) {
+   if(!curzone) {
       if(zmin == zmax) {
          updated = 1;
          curzone = zmin;
