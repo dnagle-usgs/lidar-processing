@@ -899,3 +899,85 @@ proc ::l1pro::deprecated::configure_elevation_scale_limits {} {
         -side top -anchor e -pady 5
    }
 }
+
+proc ::l1pro::deprecated::plot_write_individual_flightlines {} {
+   uplevel #0 {
+      global list lrnindx
+      destroy .l1plot
+      toplevel .l1plot
+      wm title .l1plot "Plot / Write Selected Flightlines"
+      frame .l1plot.1
+      listbox .l1plot.1.lb -selectmode extended -width 50 \
+         -xscrollcommand ".l1plot.xscroll set" \
+         -yscrollcommand ".l1plot.1.yscroll set"
+      scrollbar .l1plot.xscroll -orient horizontal \
+         -command [list .l1plot.1.lb xview]
+      scrollbar .l1plot.1.yscroll -command [list .l1plot.1.lb yview]
+      for {set i 0} { $i < [llength $lrnindx] } {incr i} {
+         set e [lindex $lrnindx $i]
+         set rnf [lindex $list [expr ($i*2)]]
+         set rnl [lindex $list [expr ($i*2+1)]]
+         .l1plot.1.lb insert end \
+            "Flightline $i. Rasters $rnf to $rnl. Start Index = $e"
+      }
+
+      Button .l1plot.sall -text "Select All" -width 10 -command {
+         .l1plot.1.lb selection set 0 [llength $lrnindx]
+      }
+
+      Button .l1plot.clear -text "Clear All" -width 10 -command {
+         .l1plot.1.lb delete 0 end
+         set list {}
+         set lrnindx {}
+      }
+
+      Button .l1plot.plot -text "Plot" -width 6 -command {
+         make_selected_arrays
+         display_data
+      }
+
+      Button .l1plot.write -text "Write Datafile" -command {
+      }
+
+      pack .l1plot.1.lb .l1plot.1.yscroll -side left -fill y
+      pack .l1plot.1 .l1plot.xscroll -side top -fill x
+      pack .l1plot.sall .l1plot.clear .l1plot.plot .l1plot.write \
+         -side left -fill x
+   }
+}
+
+proc ::l1pro::deprecated::append2tile {} {
+   uplevel #0 {
+      set selection  [tk_messageBox  -icon question \
+         -message "Append \'$pro_var\' array to final data array?" \
+         -type yesno -title "Warning"]
+      if {$selection == "yes"} {
+         exp_send "grow, finaldata, $pro_var;\r"
+         expect ">"
+      }
+   }
+}
+
+proc ::l1pro::deprecated::savetile {} {
+   uplevel #0 {
+      global tilefname initialpath
+
+      if {[info exists initialpath] == 0} {set initialpath "~/"}
+      exp_send "if (!curzone) curzone = 17;\
+         tilefname = set_tile_filename(win=$win_no);\r"
+      expect ">"
+      if {[info exists tilefname] == 0} {
+         set tilefname ""
+      }
+      set ofname [tk_getSaveFile -initialdir $initialpath \
+         -defaultextension "*.pbd" \
+         -initialfile $tilefname \
+      ]
+      if {$ofname != ""} {
+         exp_send "$tilename = ifinaldata;\
+         vname=tilename;\
+         save, createb(\"$ofname\"), vname, $tilename;\r"
+         expect ">"
+      }
+   }
+}

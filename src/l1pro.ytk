@@ -249,52 +249,6 @@ if {![winfo exists .l1wid]} {
     -label "Show Processing section of GUI" \
     -variable show_pro_gui
 
-  .l1wid.mb.options add command -label "Plot/Write Individual Flightlines..." \
-    -underline 0 \
-    -command {
-      global list lrnindx
-      destroy .l1plot
-      toplevel .l1plot
-      wm title .l1plot "Plot / Write Selected Flightlines"
-      frame .l1plot.1
-      listbox .l1plot.1.lb -selectmode extended -width 50 \
-        -xscrollcommand ".l1plot.xscroll set" \
-        -yscrollcommand ".l1plot.1.yscroll set"
-      scrollbar .l1plot.xscroll -orient horizontal \
-        -command [list .l1plot.1.lb xview]
-      scrollbar .l1plot.1.yscroll -command [list .l1plot.1.lb yview]
-      for {set i 0} { $i < [llength $lrnindx] } {incr i} {
-        set e [lindex $lrnindx $i]
-        set rnf [lindex $list [expr ($i*2)]]
-        set rnl [lindex $list [expr ($i*2+1)]]
-        .l1plot.1.lb insert end \
-          "Flightline $i. Rasters $rnf to $rnl. Start Index = $e"
-      }
-
-      Button .l1plot.sall -text "Select All" -width 10 -command {
-        .l1plot.1.lb selection set 0 [llength $lrnindx]
-      }
-
-      Button .l1plot.clear -text "Clear All" -width 10 -command {
-        .l1plot.1.lb delete 0 end
-        set list {}
-        set lrnindx {}
-      }
-
-      Button .l1plot.plot -text "Plot" -width 6 -command {
-        make_selected_arrays
-        display_data
-      }
-
-      Button .l1plot.write -text "Write Datafile" -command {
-      }
-
-      pack .l1plot.1.lb .l1plot.1.yscroll -side left -fill y
-      pack .l1plot.1 .l1plot.xscroll -side top -fill x
-      pack .l1plot.sall .l1plot.clear .l1plot.plot .l1plot.write \
-        -side left -fill x
-    }
-
   .l1wid.mb.options add command \
     -label "Show Flightlines with No Raster Data..." -underline 25 \
     -command {
@@ -306,9 +260,6 @@ if {![winfo exists .l1wid]} {
     -command {
       exp_send "plot_no_tans_fltlines(tans, gga);\r"
     }
-
-  .l1wid.mb.options add command -label "List Plot Variables..." -underline 10 \
-    -command ::varplot::gui
 
   namespace eval varplot {
     namespace eval v {
@@ -339,12 +290,14 @@ if {![winfo exists .l1wid]} {
       -textvariable ::varplot::v::var_add
     $f.lbeAdd bind <Return> ::varplot::bind_add_enter
     button $f.btnDelete -text "Delete" -command ::varplot::cmd_delete
+    button $f.btnRename -text "Rename" -command ::varplot::cmd_rename
     button $f.btnDismiss -text "Dismiss" -command [list destroy $v::win]
 
     grid $v::lb -sticky news
     grid $f.btnSelect -sticky news
     grid $f.lbeAdd -sticky news
     grid $f.btnDelete -sticky news
+    grid $f.btnRename -sticky news
     grid $f.btnDismiss -sticky news
 
     grid columnconfigure $f 0 -weight 1 -minsize 110
@@ -389,6 +342,46 @@ if {![winfo exists .l1wid]} {
           yset $var = {[]}
         }
         set ::varlist $fail
+      }
+    }
+  }
+
+  proc varplot::cmd_rename {} {
+    set selected [$v::lb getcurselection]
+
+    ::struct::list split $selected [list ::struct::set contains $v::fixed_vars] \
+      pass fail
+
+    if {[llength $pass]} {
+      set this_variable [this_variable [llength $pass]]
+      tk_messageBox -icon warning -type ok \
+        -message "Aborting. You cannot delete ${this_variable}: $pass"
+    } else {
+      ::struct::list split $::varlist [list ::struct::set contains $selected] \
+        pass fail
+
+      if {[llength $pass] == 1} {
+        set old [lindex $pass 0]
+        set new $old
+        set prompt "What would you like to rename '$old' to?"
+        if {[::getstring::tk_getString $v::win.gs new $prompt]} {
+          if {$old ne $new} {
+            exp_send "eq_nocopy, $new, $old; $old = \[\];\r"
+            set idx [lsearch -exact $::varlist $old]
+            set ::varlist [lreplace $::varlist $idx $idx $new]
+            if {[info exists ::plot_settings($old)]} {
+              if {![info exists ::plot_settings($new)]} {
+                set ::plot_settings($new) $::plot_settings($old)
+              }
+            }
+            if {$::pro_var eq $old} {
+              set ::pro_var $new
+            }
+          }
+        }
+      } else {
+        tk_messageBox -icon warning -type ok -title Warning \
+          -message "You cannot rename multiple variables at once. Select only one."
       }
     }
   }
@@ -776,6 +769,18 @@ if {![winfo exists .l1wid]} {
     -underline 0 \
     -command ::l1pro::deprecated::configure_elevation_scale_limits
 
+  .l1wid.mb.dep add command -label "Plot/Write Individual Flightlines..." \
+    -underline 0 \
+    -command ::l1pro::deprecated::plot_write_individual_flightlines
+
+  .l1wid.mb.dep add command -label "Test and Clean" -command {
+    exp_send "$::pro_var = test_and_clean($::pro_var);\r"
+  }
+
+  .l1wid.mb.dep add command -label "Append2Tile" \
+    -command ::l1pro::deprecated::append2tile
+  .l1wid.mb.dep add command -label "Save Tile" \
+    -command ::l1pro::deprecated::savetile
 
   proc open_fit_gaussian_gui {} {
     source [file join $::src_path fit_gauss.ytk]
@@ -1149,6 +1154,10 @@ if {![winfo exists .l1wid]} {
     -state readonly \
     -listvariable varlist
 
+  trace add variable pro_var write {apply {{v1 v2 op} {
+    ::tooltip::tooltip .l1wid.bf45.p.left.15 $::pro_var
+  }}}
+
   proc cbar_tool { } {
     global cbvc
     set w .cbartool
@@ -1259,6 +1268,8 @@ if {![winfo exists .l1wid]} {
       exp_send "window, $win_no;\
         colorbar, $plot_settings(cmin), $plot_settings(cmax), drag=1\r"
     }
+  Button .l1wid.bf45.q.rcf -text "RCF" -command rcf_region
+  Button .l1wid.bf45.q.datum -text "Datum\nConvert" -command datum_proc
   Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
     -command {
       global varlist plot_settings clip_in_var clip_out_var pro_var
@@ -1508,29 +1519,17 @@ if {![winfo exists .l1wid]} {
       set range_elv 0
     }
 
-  Button .l1wid.bf45.q.44 -text "Test and\nClean" -command {
-    global varlist pro_var
-    exp_send "$pro_var = test_and_clean($pro_var)\r"
-  }
-
-  frame .l1wid.bf45.q.f45
-  Button .l1wid.bf45.q.f45.1 -text "2K Grid" -font {Helvetica -8} -command {
-    exp_send "draw_grid, $win_no\r"
-  }
-
-  Button .l1wid.bf45.q.f45.2 -text "2K Name" -font {Helvetica -8} -command {
-    exp_send "show_grid_location, $win_no\r"
-  }
-
-  frame .l1wid.bf45.q.f46
-  Button .l1wid.bf45.q.f46.1 -text "QQ Grid" -font {Helvetica -8} -command {
-    exp_send "draw_qq_grid, $win_no\r"
-  }
-
-  Button .l1wid.bf45.q.f46.2 -text "QQ Name" -font {Helvetica -8} -command {
-    exp_send "show_qq_grid_location, $win_no\r"
-  }
-
+  ttk::menubutton .l1wid.bf45.q.grids -text "Grids" -menu .l1wid.bf45.q.grids.mb
+  menu .l1wid.bf45.q.grids.mb
+  .l1wid.bf45.q.grids.mb add command -label "Plot 2K grid" \
+    -command {exp_send "draw_grid, $::win_no\r"}
+  .l1wid.bf45.q.grids.mb add command -label "Show 2K tile name" \
+    -command {exp_send "show_grid_location, $::win_no\r"}
+  .l1wid.bf45.q.grids.mb add separator
+  .l1wid.bf45.q.grids.mb add command -label "Plot QQ grid" \
+    -command {exp_send "draw_qq_grid, $::win_no\r"}
+  .l1wid.bf45.q.grids.mb add command -label "Show QQ tile name" \
+    -command {exp_send "show_qq_grid_location, $::win_no"\r}
 
   frame  .l1wid.bf45.sc.1
 
@@ -1589,7 +1588,7 @@ if {![winfo exists .l1wid]} {
      \n  Single Pixel"
 
   ::misc::combobox .l1wid.bf45.r.7 -text "Filter tools..." -width 16 \
-    -values [list Keep Remove Replace RCF Re-Process Datum-Convert] \
+    -values [list Keep Remove Replace] \
     -state readonly \
     -modifycmd {
       global varlist
@@ -1597,9 +1596,6 @@ if {![winfo exists .l1wid]} {
         0 keep_proc
         1 removing_proc
         2 replace_proc
-        3 rcf_region
-        4 {tk_messageBox -icon error -message "Not implemented" -type ok}
-        5 datum_proc
         default {error "Please Define Region."}
       }
     }
@@ -2202,36 +2198,6 @@ if {![winfo exists .l1wid]} {
     pack .rep.2 .rep.4 .rep.3 -side left -padx 5 -pady 5
     pack .rep.5 -side left -pady 5
   }
-  Button .l1wid.bf45.r.5 -text "Append2Tile" -command {
-    set selection  [tk_messageBox  -icon question \
-      -message "Append \'$pro_var\' array to final data array?" \
-      -type yesno -title "Warning"]
-    if {$selection == "yes"} {
-      exp_send "grow, finaldata, $pro_var;\r"
-      expect ">"
-    }
-  }
-  Button .l1wid.bf45.r.6 -text "Save Tile" -command {
-    global tilefname initialpath
-
-    if {[info exists initialpath] == 0} {set initialpath "~/"}
-    exp_send "if (!curzone) curzone = 17;\
-      tilefname = set_tile_filename(win=$win_no);\r"
-    expect ">"
-    if {[info exists tilefname] == 0} {
-      set tilefname ""
-    }
-    set ofname [tk_getSaveFile -initialdir $initialpath \
-      -defaultextension "*.pbd" \
-      -initialfile $tilefname \
-    ]
-    if {$ofname != ""} {
-      exp_send "$tilename = ifinaldata;\
-        vname=tilename;\
-        save, createb(\"$ofname\"), vname, $tilename;\r"
-      expect ">"
-    }
-  }
 
   proc sst {w var lbl rg} {
   # This procedure builds a widget composed of a Label, a spinbox, and a scale so
@@ -2397,28 +2363,17 @@ if {![winfo exists .l1wid]} {
   pack \
     .l1wid.bf45.r.1 \
     .l1wid.bf45.r.7 \
-    .l1wid.bf45.r.5 \
-    .l1wid.bf45.r.6 \
     -side left
-
-  pack \
-    .l1wid.bf45.q.f45.1 \
-    .l1wid.bf45.q.f45.2 \
-    -side top
-
-  pack \
-    .l1wid.bf45.q.f46.1 \
-    .l1wid.bf45.q.f46.2 \
-    -side top
 
   pack \
     .l1wid.bf45.q.1 \
     .l1wid.bf45.q.2  \
     .l1wid.bf45.q.3 \
+    .l1wid.bf45.q.rcf \
+    .l1wid.bf45.q.datum \
     .l1wid.bf45.q.4  \
-    .l1wid.bf45.q.44 \
-    .l1wid.bf45.q.f45 \
-    .l1wid.bf45.q.f46 \
+    .l1wid.bf45.q.grids \
+    -fill y \
     -side left
 
   grid .l1wid.bf45.p.left.14 .l1wid.bf45.p.left.15 -padx 2 -sticky ew -row 1
@@ -2478,6 +2433,9 @@ if {![winfo exists .l1wid]} {
     append cmd ", win=$::win_no"
     if {! $::l1pro_square_limits} {
       append cmd ", square=0"
+    }
+    if {$::l1pro_cbar} {
+      append cmd ", showcbar=1"
     }
     if {$::l1pro_fma} {
       append cmd ", dofma=1"
