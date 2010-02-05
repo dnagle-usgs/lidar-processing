@@ -430,11 +430,11 @@ extern curzone; // current zone number if in UTM
 
   if (in_utm == 1) {
      //convert to latlon to continue using the code below
-     if (is_void(curzone)) {
-	curzone = 0.0
+     if (!curzone) {
+	curzone = 0
         czone = ""
 	read, prompt="Could not determine UTM Zone Number.\nPlease enter zone number: ",czone;
-	sread, czone, format="%f",curzone;
+	sread, czone, format="%d",curzone;
      }
      ll = utm2ll([res(2), res(4)], [res(1), res(3)], [curzone, curzone]);
      res(1) = ll(1,1);

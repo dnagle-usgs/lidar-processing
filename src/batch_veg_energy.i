@@ -513,7 +513,7 @@ func write_pbd_to_gdf(ipath=, opath=, fname=, searchstr=, remove_buffer=) {
    timer, tb1;
    if (is_void(searchstr)) searchstr = "*energy*mets*.pbd";
 
-   if (is_void(curzone)) {
+   if (!curzone) {
      curzone = 0L;
      read, prompt="Enter UTM Zone Number: ",curzone;
    }

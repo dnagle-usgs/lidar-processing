@@ -559,7 +559,7 @@ func draw_qq_grid(win, pts=) {
 // Original David Nagle 2008-07-18
    if(is_void(win)) return;
    extern curzone;
-   if(is_void(curzone)) {
+   if(!curzone) {
       write, "Please define curzone. draw_qq_grid aborting";
       return;
    }

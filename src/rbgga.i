@@ -194,7 +194,7 @@ Also see: getPoly, plotPoly, testPoly, gga_win_sel
    default, win, 6;
    window, win;
    if (!is_array(llarr)) {
-      if(utm && is_void(curzone)) {
+      if(utm && !curzone) {
          if(is_void(ZoneNumber)) {
             message = "Points in Polygon requires that you set curzone if utm=1. Aborting.";
             if(!is_void(_ytk))
@@ -854,7 +854,6 @@ func show_pnav_track ( pn, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=
 	// check to see if data crosses utm zones
   if ( numberof(pn) > 1 )
 	zd = where(abs(u(3,)(dif)) > 0);
-	//if (is_void(curzone)) curzone = 0;
 	if (is_array(zd)) {
 	  write, "Selected flightline crosses UTM Zones."
 	  if (curzone) {

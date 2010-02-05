@@ -2215,7 +2215,7 @@ if {![winfo exists .l1wid]} {
     global tilefname initialpath
 
     if {[info exists initialpath] == 0} {set initialpath "~/"}
-    exp_send "if (is_void(curzone)) curzone = 17;\
+    exp_send "if (!curzone) curzone = 17;\
       tilefname = set_tile_filename(win=$win_no);\r"
     expect ">"
     if {[info exists tilefname] == 0} {
