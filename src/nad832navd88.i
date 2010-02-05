@@ -360,14 +360,16 @@ func nad832navd88offset(lon, lat, gdata_dir=, geoid=, verbose=) {
       return;
    }
 
+   files = files(sort(file_tail(files)));
+
    // Get bounds for each file
    latmin = latmax = lonmin = lonmax = array(double, numberof(files));
    for(i = 1; i <= numberof(files); i++) {
       g = geoid_load(files(i));
       latmin(i) = g.glamn;
       lonmin(i) = g.glomn;
-      latmax(i) = latmin(i) + g.dlo * (g.ncols - 1);
-      lonmax(i) = lonmin(i) + g.dla * (g.nrows - 1);
+      latmax(i) = latmin(i) + g.dla * (g.nrows - 1);
+      lonmax(i) = lonmin(i) + g.dlo * (g.ncols - 1);
       g = [];
    }
 
