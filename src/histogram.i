@@ -198,10 +198,14 @@ vname=, title=, xtitle=, ytitle=) {
          ytitle=ytitle;
 
       if(long(limits()(5)) & 1) {
+         wbkp = current_window();
+         if(!is_void(win))
+            window, win;
          ymin = limits()(3);
          limits;
          ymax = limits()(4) * 1.5;
          limits, "e", "e", ymin, ymax;
+         window_select, wbkp;
       }
    }
 
