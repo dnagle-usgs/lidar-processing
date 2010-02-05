@@ -453,9 +453,9 @@ func xyz2data(_x, &_y, _z, &data, mode=, native=) {
    }
 }
 
-func display_data(data, mode=, axes=, cmin=, cmax=, marker=, msize=, win=, dofma=, skip=, square=, restore_win=) {
+func display_data(data, mode=, axes=, cmin=, cmax=, marker=, msize=, win=, dofma=, skip=, square=, restore_win=, showcbar=) {
 /* DOCUMENT display_data, data, mode=, axes=, cmin=, cmax=, marker=, msize=,
-   win=, dofma=, skip=, square=, restore_win=
+   win=, dofma=, skip=, square=, restore_win=, showcbar=
 
    Plots ALPS data.
 
@@ -491,6 +491,9 @@ func display_data(data, mode=, axes=, cmin=, cmax=, marker=, msize=, win=, dofma
          change it back to what it was before the function was called.
             restore_win=0  Leave window set to the one we plotted in (default)
             restore_win=1  Restore window to whatever it was before we plotted
+      showcbar= Allows you to automatically plot the showcbar.
+            colorbar=0     Do not show colorbar. (default)
+            colorbar=1     Include colorbar.
 */
 // Original David Nagle 2009-01-25
    local x, y, z, X, Y, Z;
@@ -499,6 +502,7 @@ func display_data(data, mode=, axes=, cmin=, cmax=, marker=, msize=, win=, dofma
    default, axes, "xyz";
    default, square, 1;
    default, restore_win, 0;
+   default, showcbar, 0;
 
    data2xyz, unref(data), x, y, z, mode=mode;
 
@@ -528,6 +532,8 @@ func display_data(data, mode=, axes=, cmin=, cmax=, marker=, msize=, win=, dofma
    plcm, unref(Z), unref(Y), unref(X), msize=msize, marker=marker,
       cmin=cmin, cmax=cmax;
    limits, square=square;
+   if(showcbar)
+      colorbar, cmin, cmax;
 
    if(restore_win)
       window_select, wbkp;
