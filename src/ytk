@@ -457,6 +457,7 @@ proc tky_tie {cmd type tkvar - yvar args} {
 #  then Tcl will be initialized with the Yorick variable's current value. This
 #  is useful if tying to a variable that is used in a GUI.
 ##
+   array set opts [list -initialize 0 -src yor]
    array set opts $args
    switch -- $cmd {
       add - remove {}
