@@ -262,27 +262,9 @@ func rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fsmode=, wfs=) {
 
  // if data array is in raster format (R, GEOALL, VEGALL), then covert to 
  // non raster format (FS, GEO, VEG).
- a = structof(eaarl(1));
- if (structeq(a, R)) {
-     data_out = clean_fs(eaarl);
- }
-
- if (structeq(a, GEOALL)) {
-     data_out = clean_bathy(eaarl);
- }
-
- if (structeq(a, VEG_ALL)) {
-     data_out = clean_veg(eaarl);
- }
-
- if (structeq(a, VEG_ALL_)) {
-     data_out = clean_veg(eaarl);
- }
-
- if (is_array(data_out)) eaarl = data_out;
-
- a = structof(eaarl(1));
- new_eaarl = array(a, MAXSIZE);
+ eaarl = (eaarl); // make sure we don't modify original
+ test_and_clean, eaarl;
+ new_eaarl = array(structof(eaarl), MAXSIZE);
  selcount = 0;
 
  // define a bounding box

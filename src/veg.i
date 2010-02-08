@@ -977,7 +977,7 @@ func write_vegall (vegall, opath=, ofname=, type=, append=) {
    }
    num_rec = 0;
 
-   vegall = clean_veg(vegall);
+   vegall = test_and_clean(unref(vegall));
 
    /* now look through the vegall array of structures and write
       out only valid points
@@ -1100,93 +1100,6 @@ func test_veg(veg_all,  fname=, pse=, graph=) {
          write, "ooooooooops!!!"
       }
    }
-   return veg_all;
-}
-
-func clean_veg(veg_all, rcf_width=, type=, verbose=) {
-/* DOCUMENT clean_veg(veg_all, rcf_width=)
-   this function cleans the veg_all array
-   amar nayegandhi 12/20/02
-   Input: veg_all    Initial data array of structure VEG__ or VEG_ALL_
-          rcf_width  The elevation width (m) to be used for the RCF
-                     filter.  If not set, rcf is not used.
-
-     type=      3 = structure VEG__.
-           5 = strucutre VEG_.
-
-   Output: Cleaned data array of type VEG_ or VEG__
-   modified AN 3/8/03 to add rcf_width= option and other changes
-   modified AN 3/14/03 to make this function work for data of old type
-*/
-   default, verbose, 1;
-
-   if (!type) type = 3;
-   if (numberof(veg_all) != numberof(veg_all.north)) {
-      if (type == 3) {
-         // convert VEG_ALL_ to VEG__
-         if(verbose) write, "converting raster structure (VEG_ALL_) to point structure (VEG__)";
-         veg_all = veg_all__to_veg__(unref(veg_all));
-      }
-      if (type == 5) {
-         // convert VEG_ALL to VEG_
-         if(verbose) write, "converting raster structure (VEG_ALL) to point structure (VEG_)";
-         veg_all = veg_all_to_veg_(unref(veg_all));
-      }
-   }
-
-   if(verbose) write, "cleaning data...";
-
-   // remove pts that have both bare earth and first return elevations assigned to melevation
-   indx = where((veg_all.lelv != veg_all.melevation) | (veg_all.elevation != veg_all.melevation));
-   if (is_array(indx)) {
-      veg_all = veg_all(indx);
-   } else {
-      veg_all = [];
-      return veg_all;
-   }
-
-   // remove pts that had north and lnorth values assigned to 0
-   indx = where(veg_all.north != 0);
-   if (is_array(indx)) {
-      veg_all = veg_all(indx);
-   } else {
-      veg_all = [];
-      return veg_all;
-   }
-
-   if (type == 3) {
-      indx = where(veg_all.lnorth != 0);
-      if (is_array(indx)) {
-         veg_all = veg_all(indx);
-      } else {
-         veg_all = [];
-         return veg_all;
-      }
-   }
-
-   /*
-   // remove points that have been assigned mirror elevation values
-   indx = where((veg_all.melevation - veg_all.elevation) > 14000)
-   if (is_array(indx)) {
-      veg_all = veg_all(indx);
-   } else {
-      veg_all = [];
-      return veg_all
-   }
-   */
-
-   if (is_array(rcf_width)) {
-      if(verbose) write, "using rcf filter to clean veg data..."
-         //run rcf on the entire data set
-         ptr = rcf(veg_all.elevation, rcf_width*100, mode=2);
-      if (*ptr(2) > 3) {
-         veg_all = veg_all(*ptr(1));
-      } else {
-         veg_all = [];
-      }
-   }
-
-   if(verbose) write, "cleaning completed";
    return veg_all;
 }
 
@@ -1704,62 +1617,4 @@ func clean_cveg_all(vegall, rcf_width=) {
    }
 
    return new_vegall;
-}
-
-func veg_all__to_veg__(data) {
-/* DOCUMENT veg_all__to_veg__(data)
-      This function converts the data array from the raster structure
-      (VEG_ALL_) to the VEG__ structure in point format.
-      amar nayegandhi
-     03/08/03
-*/
-   if (numberof(data) != numberof(data.north)) {
-      data_new = array(VEG__, numberof(data)*120);
-      indx = where(data.rn >= 0);
-      data_new.rn = data.rn(indx);
-      data_new.north = data.north(indx);
-      data_new.east = data.east(indx);
-      data_new.elevation = data.elevation(indx);
-      data_new.mnorth = data.mnorth(indx);
-      data_new.meast = data.meast(indx);
-      data_new.melevation = data.melevation(indx);
-      data_new.lnorth = data.lnorth(indx);
-      data_new.least = data.least(indx);
-      data_new.lelv = data.lelv(indx);
-      data_new.fint = data.fint(indx);
-      data_new.lint = data.lint(indx);
-      data_new.nx = data.nx(indx);
-      data_new.soe = data.soe(indx);
-   } else data_new = data;
-
-   return data_new;
-}
-
-func veg_all_to_veg_(data) {
-/* DOCUMENT veg_all_to_veg_(data)
-      this function converts the data array from the raster structure (VEG_ALL)
-      to the VEG_ structure in point format. Note this structure is of the OLD
-      format.
-
-      amar nayegandhi 03/14/03
-*/
-   if (numberof(data) != numberof(data.north)) {
-      data_new = array(VEG_, numberof(data)*120);
-      indx = where(data.rn >= 0);
-      data_new.rn = data.rn(indx);
-      data_new.north = data.north(indx);
-      data_new.east = data.east(indx);
-      data_new.elevation = data.elevation(indx);
-      data_new.mnorth = data.mnorth(indx);
-      data_new.meast = data.meast(indx);
-      data_new.melevation = data.melevation(indx);
-      data_new.felv = data.felv(indx);
-      data_new.fint = data.fint(indx);
-      data_new.lelv = data.lelv(indx);
-      data_new.lint = data.lint(indx);
-      data_new.nx = data.nx(indx);
-      data_new.soe = data.soe(indx);
-   } else data_new = data;
-
-   return data_new;
 }

@@ -319,16 +319,14 @@ Input:
 	if (!is_array(q)) {write, "No gga records found. GGA records not from correct dataset?"; return;}
 	if (typ == 0) {
 		eaarl = make_fs(latutm = 1, q = q,  ext_bad_att=1, usecentroid=1);
-		eaarl = clean_fs(eaarl);
 	}
 	if (typ == 1) {
 		eaarl = make_bathy(latutm = 1, q = q,  ext_bad_att=1, ext_bad_depth=1);
-		eaarl = clean_bathy(eaarl);
 	}
 	if (typ == 2) {
 		eaarl = make_veg(latutm = 1, q = q, ext_bad_veg=1, ext_bad_att=1, use_centroid=1);
-		eaarl= clean_veg(eaarl);
 	}
+   test_and_clean, eaarl;
 	idx = array(int, numberof(eaarl));
 	for (i=1;i<=numberof(data);i++) {
 		test = where(eaarl.soe == data.soe(i));
@@ -358,7 +356,7 @@ Function reprocesses and returns the exact fs input data array.
 		raster = data.rn(rnidx(i))&0xffffff;
 		eaarl(i) = first_surface(start=raster, stop=raster+1, usecentroid=1, use_highelv_echo=1)(1);
 	}
-	eaarl = r_to_fs(eaarl);
+   struct_cast, eaarl;
 	idx = array(int, numberof(eaarl));
 	for (i=1;i<=numberof(data);i++) {
 		test = where(eaarl.soe == data.soe(i));
@@ -393,7 +391,7 @@ Function reprocesses and returns the exact bathy input data array.
 		depth = make_fs_bath(bat,fs);
 		cdepth_ptr = compute_depth(data_ptr=&depth);
 		depth = *cdepth_ptr(1);
-		thisrast = geoall_to_geo(depth);
+		thisrast = struct_cast(depth);
 
 		write, format="Saving good points from raster %i...\n", i;
 		idx = array(int, numberof(thisrast));
@@ -429,7 +427,7 @@ func reprocess_bathy_flightline(data) {
 
 	for (i=1;i<=numberof(rnidx)-1;i++) {
 		raster = data.rn(rnidx(i))&0xffffff
-		thisrast = geoall_to_geo(depth(where(rasters == raster)));
+		thisrast = struct_cast(depth(where(rasters == raster)));
 		thisdata = data(rnidx(i):rnidx(i+1)-1);
 		write, format="Saving good points from raster %i...\n", i;
 		idx = array(int, numberof(thisrast));

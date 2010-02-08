@@ -1248,7 +1248,7 @@ if {![winfo exists .l1wid]} {
             window $win_no within the required cell."\
           -type okcancel -title "Message" ]
         if {$selection == "ok"} {
-          exp_send "workdata = select_region($var_type, win=$win_no, plot=1);\r"
+          exp_send "workdata = select_region_tile($var_type, win=$win_no, plot=1);\r"
           expect ">"
         }
       }

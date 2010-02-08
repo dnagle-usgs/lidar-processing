@@ -360,7 +360,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
          // fs_all = make_fs(latutm = 1, q = q,  ext_bad_att=1, use_centroid=1);
          fs_all = make_fs(latutm = 1, q = q,  ext_bad_att=1 );
          if (is_array(fs_all)) {
-            fs_all = clean_fs(fs_all);
+            test_and_clean, fs_all;
             if (is_array(fs_all)) {
                if (edf) {
                   write, format = "Writing edf file for Region %d of %d\n",i,n;
@@ -389,7 +389,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
             write, format = "Processing Region %d of %d for Bathymetry\n",i,n;
             depth_all = make_bathy(latutm = 1, q = q,avg_surf=avg_surf);
             if (is_array(depth_all)){
-               depth_all = clean_bathy(depth_all);
+               test_and_clean, depth_all;
                if (is_array(depth_all)) {
                   numstart=numberof(depth_all)
                   if ((min(depth_all.east) < (min_e-400)*100) || (max(depth_all.east) > (max_e+400)*100) || (min(depth_all.north) < (min_n-400)*100) || (max(depth_all.north) > (max_n+400)*100)) {
@@ -431,7 +431,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
             write, format = "Processing Region %d of %d for Vegetation\n",i,n;
             veg_all = make_veg(latutm = 1, q = q, ext_bad_veg=1, ext_bad_att=1, use_centroid=1);
             if (is_array(veg_all))  {
-               veg_all = clean_veg(veg_all);
+               test_and_clean, veg_all;
                if (is_array(veg_all)) {
                   if (edf) {
                      write, format = "Writing edf file for Region %d of %d\n",i,n;
@@ -461,7 +461,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
          write, format = "Processing Region %d of %d for Bathymetry\n",i,n;
          depth_all = make_bathy(latutm = 1, q = q, ext_bad_depth=1, ext_bad_att=1);
          if (is_array(depth_all)){
-            depth_all = clean_bathy(depth_all);
+            test_and_clean, depth_all;
             if (is_array(depth_all)) {
                if (edf) {
                   write, format = "Writing edf file for Region %d of %d\n",i,n;
@@ -487,7 +487,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
          write, format = "Processing Region %d of %d for Vegetation\n",i,n;
          veg_all = make_veg(latutm = 1, q = q, ext_bad_veg=1, ext_bad_att=1, use_centroid=1);
          if (is_array(veg_all))  {
-            veg_all = clean_veg(veg_all);
+            test_and_clean, veg_all;
             if (is_array(veg_all)) {
                if (edf) {
                   write, format = "Writing edf file for Region %d of %d\n",i,n;
@@ -1325,17 +1325,8 @@ Original amar nayegandhi. Started 12/06/02.
             write, "merging all eaarl pbd data";
             show_files(files=fn_arr, str="Merge");
             all_eaarl = merge_data_pbds(fn_all=fn_arr);
-            if (!(is_void(clean))) {
-               if (mode == 1) {
-                  all_eaarl = clean_fs(unref(all_eaarl));
-               }
-               if (mode == 2) {
-                  all_eaarl = clean_bathy(unref(all_eaarl));
-               }
-               if (mode == 3) {
-                  all_eaarl = clean_veg(unref(all_eaarl));
-               }
-            }
+            if(clean)
+               test_and_clean, all_eaarl;
          }
       }
    }
@@ -1449,17 +1440,8 @@ Original amar nayegandhi. Started 12/06/02.
             grow, eaarl, (*data_ptr(j));
          }
       }
-      if (!(is_void(clean)) && ! (merge && readpbd)) {
-         if (mode == 1) {
-            eaarl = clean_fs(unref(eaarl));
-         }
-         if (mode == 2) {
-            eaarl = clean_bathy(unref(eaarl));
-         }
-         if (mode == 3) {
-            eaarl = clean_veg(unref(eaarl));
-         }
-      }
+      if(clean && !(merged && readpbd))
+         test_and_clean, eaarl;
       data_ptr = [];
       if (bmode == 1 && ! (merge && readpbd)) {
          fmeast = fmnorth = 0;

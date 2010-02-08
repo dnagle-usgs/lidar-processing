@@ -124,7 +124,7 @@ func make_large_footprint_waveform(eaarl, binsize=, digitizer=, normalize=, mode
 
   tm1 = tm2 = array(double, 3);
   timer, tm1;
-  eaarl = clean_veg(eaarl);
+  eaarl = test_and_clean(eaarl, force=1);
   if (is_void(pse)) pse = 1000;
   if (is_void(bin)) bin = 50;
   if (is_void(min_elv)) min_elv = -300;

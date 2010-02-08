@@ -457,26 +457,7 @@ func grid_triag_data(eaarl, cell=, nlimit=) {
   if (is_void(nlimit)) nlimit = 40000; // defaults to 200m^2
  // if data array is in raster format (R, GEOALL, VEGALL), then covert to 
  // non raster format (FS, GEO, VEG).
- data_out = test_and_clean(eaarl);
- a = structof(eaarl(1));
- if (structeq(a, R)) {
-     data_out = clean_fs(eaarl);
- }
-
- if (structeq(a, GEOALL)) {
-     data_out = clean_bathy(eaarl);
- }
-
- if (structeq(a, VEG_ALL)) {
-     data_out = clean_veg(eaarl);
- }
-
- if (structeq(a, VEG_ALL_)) {
-     data_out = clean_veg(eaarl);
- }
-
- if (is_array(data_out)) eaarl = data_out;
- data_out = [];
+ test_and_clean, eaarl;
 
  nlsqrt = sqrt(nlimit);
 

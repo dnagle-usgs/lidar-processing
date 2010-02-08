@@ -539,4 +539,90 @@ func display_data(data, mode=, axes=, cmin=, cmax=, marker=, msize=, win=, dofma
       window_select, wbkp;
 }
 
+func struct_cast(&data, dest, verbose=) {
+/* DOCUMENT result = struct_cast(data, dest)
+   result = struct_cast(data)
+   struct_cast, data, dest
+   struct_cast, data
 
+   Converts an array of raster data to an array of point data.
+
+   If dest is provided, it should be a structure you would like the data
+   converted to. Any field present in both the source and destination will be
+   copied as is.
+
+   If dest is omitted, then the data will be converted based on its current
+   structure. The conversion is knows to make are:
+      GEOALL   -> GEO
+      VEG_ALL  -> VEG_
+      VEG_ALL_ -> VEG__
+      R        -> FS
+   If the data is not in any of those formats, then nothing is done to it and
+   it is returned as is. (Thus, it's fairly safe to run this on data of any
+   type.)
+
+   If called as a subroutine, data is updated in place. Otherwise, returns a
+   new copy.
+
+   This is intended primarily to cast raster formats into point formats.
+   However, it's also smart enough to do the reverse.
+      > foo = array(FS, 240);
+      > bar = struct_cast(foo, R);
+      > info, bar;
+       array(R,2)
+   Please note however that the point format HAS to be conformable with the
+   raster format. In other words, numberof(data) must be divisible by 120.
+
+   By default, this function is silent. Use verbose=1 to make it chatty.
+*/
+// Original David Nagle 2010-02-05
+   default, verbose, 0;
+
+   // If dest wasn't provided, try to guess it.
+   if(is_void(dest)) {
+      src = nameof(structof(data));
+      mapping = h_new(
+         GEOALL=GEO,
+         VEG_ALL=VEG_,
+         VEG_ALL_=VEG__,
+         R=FS
+      );
+      if(h_has(mapping, src))
+         dest = mapping(src);
+      else
+         return data;
+   }
+
+   if(verbose)
+      write, format=" Converting %s to %s\n", nameof(structof(data)), nameof(dest);
+
+   // Figure out what kind of dimensions the destination wants
+   sample = dest();
+   fields = get_members(sample);
+   dims = dimsof(get_member(sample, fields(1)));
+   sample = fields = [];
+
+   // Get information about our source data
+   fields = get_members(data);
+   count = numberof(get_member(data, fields(1)));
+
+   // Figure out how we'll have to contort the source to match the dest
+   divisor = 1;
+   for(i = 2; i <= numberof(dims); i++)
+      divisor *= dims(i);
+   count /= divisor;
+   dims(1)++;
+   grow, dims, count;
+
+   // Create the result, filling it as well as we can
+   result = array(dest, count);
+   for(i = 1; i <= numberof(fields); i++) {
+      if(has_member(result, fields(i)))
+         get_member(result, fields(i)) = reform(get_member(data, fields(i)), dims);
+   }
+
+   if(am_subroutine())
+      eq_nocopy, data, result;
+   else
+      return result;
+}

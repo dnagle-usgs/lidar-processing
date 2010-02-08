@@ -1,220 +1,284 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 require, "eaarl.i";
 
-func select_region(data, win=, plot=) {
- /*DOCUMENT select_region(data, win=)
-   This function allows the user to select a region by using a mouse click.  The user 
-   will have to decide if the mouse click is for a data tile(2km by 2km), 
-   letter tile (1km by 1km) or number tile (250m by 250m).
-   amar nayegandhi 11/21/03.
+func select_region_tile(data, win=, plot=, mode=) {
+/* DOCUMENT select_region(data, win=, plot=, mode=)
+   This function allows the user to select a region tile by dragging a box with
+   the mouse. The smallest size tile (data, 2km; letter, 1km; or number, 250m)
+   that contains that box will be selected, and the data within that region
+   will be returned. If the user selects an invalid box (one that crosses two
+   data tiles), no filtering will occur.
+
+   win= specifies which window to use (default win=5)
+   plot= specifies whether to draw the selected tile's boundary (default plot=1)
+   mode= specifies the data mode to use when selecting the data (default mode="fs")
 */
+// Original amar nayegandhi 11/21/03.
+// Overhauled David Nagle 2010-02-05
+   local etile, ntile, x, y;
+   default, win, 5;
+   default, plot, 1;
 
-  extern cur_east, cur_north, cur_csize;
-  if (is_void(win)) win = 5;
-  data = test_and_clean( data ); 
-  // wtemp = window();
-  window, win;
-  a = mouse(1,1,"Hold the left mouse button down and select a region:");
- 
-  mneast = min(a(1),a(3));
-  mxnorth = max(a(2),a(4));
-
-  seldist = sqrt((a(3)-a(1))^2+(a(4)-a(2))^2);
-  if (seldist < 250*sqrt(2)) {
-    write, "Congratulations! You have selected a 250m by 250m cell tile."
-    teast = int(mneast/250) * 250;
-    tnorth = ceil(mxnorth/250) * 250;
-    csize = 250;
-  } else {
-     if (seldist < 1000*sqrt(2)) {
-       write, "Congratulations! You have selected a 1km by 1km quad tile."
-       teast = int(mneast/1000) * 1000;
-       tnorth = ceil(mxnorth/1000) * 1000;
-       csize = 1000;
-     } else {
-       if (seldist < 2000*sqrt(2)) {
-         write, "Congratulations! You have selected a 2km by 2km data tile."
-         teast = int(mneast/2000) * 2000;
-         tnorth = ceil(mxnorth/2000) * 2000;
-         csize = 2000;
-       } else {
-         write, "Bad region selected! Please try again..."
-       }
-     }
-  }
-
- if (!is_void(plot)) {
+   wbkp = current_window();
    window, win;
-   pldj, [teast,teast,teast+csize,teast+csize], 
-	 [tnorth-csize, tnorth, tnorth, tnorth-csize],
-         [teast, teast+csize, teast+csize, teast], 
-         [tnorth, tnorth, tnorth-csize, tnorth-csize],
-         color="yellow", width=1.5;
- }
- //now extract data within selected region
- idx = data_box(data.east/100., data.north/100., teast, teast+csize, tnorth-csize, tnorth);
- if (is_array(idx)) outdata = data(idx);
 
- cur_east = teast;
- cur_north = tnorth;
- cur_csize = csize;
+   a = mouse(1,1,"Hold the left mouse button down and select a region:");
 
- return outdata;
+   emin = a([1,3])(min);
+   emax = a([1,3])(max);
+   nmin = a([2,4])(min);
+   nmax = a([2,4])(max);
 
+   factors = [250., 1000., 2000.];
+
+   // Try to find the smallest factor that yields a tile
+   i = 0;
+   do {
+      i++;
+      f = factors(i);
+      etile = long(floor([emin,emax]/f)*f);
+      ntile = long(ceil([nmin,nmax]/f)*f);
+      difs = etile(dif)(1) + ntile(dif)(1);
+   } while(i < 3 && difs > 1);
+
+   if(difs > 1) {
+      write, "Bad region selected! Please try again...";
+      return data;
+   }
+
+   etile = etile(1);
+   ntile = ntile(1);
+
+   write, format=" Congratulations! You have selected a %s tile.\n",
+      ["250m by 250m cell", "1km by 1km quad", "2km by 2km data"](i);
+
+   bbox = [etile, ntile-f, etile+f, ntile];
+
+   if(plot) {
+      tx = etile + [0, f, f, 0, 0];
+      ty = ntile - [f, f, 0, 0, f];
+      plg, ty, tx, color="yellow", width=1.5;
+   }
+   window_select, wbkp;
+
+   data2xyz, data, x, y, mode=mode;
+   idx = data_box(unref(x), unref(y), etile, etile+f, ntile-f, ntile);
+
+   return data(idx);
 }
 
-func test_and_clean(data, verbose=) {
+func test_and_clean(&data, verbose=, force=) {
+/* DOCUMENT test_and_clean, data, verbose=, force=
+   cleaned = test_and_clean(data, verbose=, force=)
+
+   Tests the data in various ways and cleans it as necessary.
+
+   By default, this is a no-op unless the structure of the data is one of
+   GEOALL, VEG_ALL_, VEG_ALL, or R (the raster structures). However, you can
+   force it to clean by specifying force=1.
+
+   When cleaning, it does the following:
+      * Converts known raster format structured data into corresponding point
+        format structure data using struct_cast.
+      * If the data has .elevation, .lelv, and .melevation fields, then points
+        where both .elevation and .lelev equal .melevation are discarded.
+      * If the data has .elevation and .melevation but not .depth or .lelv,
+        then points where .elevation equals .melevation are discarded.
+      * Points with zero values for .north, .lnorth, and .depth are discarded
+        (only applies for the fields that are actually present).
+
+   By default, it runs silently. Use verbose=1 to get some info.
+
+   This function utilizes memory better when run as a subroutine rather than a
+   function. If you don't need to keep the original, unclean data, then use the
+   subroutine form.
+*/
+   default, verbose, 0;
+   default, force, 0;
+
    if(is_void(data)) {
-      tk_messageBox, "No data found in the variable you selected. Please select another one.", "ok", title="";
+      if(verbose)
+         write, "No data found in variable provided.";
       return [];
    }
 
-   /***************************************************************
-     Added to convert from raster format to cleaned linear format.
-    ***************************************************************/
-   if(numberof(dimsof(data.north)) > 2) {
-      a = structof(data(1));
-      if (structeq(a, GEOALL)) 
-         data = clean_bathy(unref(data), verbose=verbose);
-      if (structeqany(a, VEG_ALL_, VEG_ALL))
-         data = clean_veg(unref(data), verbose=verbose);
-      if (structeqany(a, R, ATM2))
-         data = clean_fs(unref(data), verbose=verbose);
+   // If we're not forcing, and if the struct isn't a known raster type, do
+   // nothing.
+   if(!force && !structeqany(structof(data), GEOALL, VEG_ALL_, VEG_ALL, R))
+      return data;
+
+   // If we're running as subroutine, we can be more memory efficient.
+   if(am_subroutine()) {
+      eq_nocopy, result, data;
+      data = [];
+   } else {
+      result = data;
    }
 
-   return data;
+   // Convert from raster type to point type
+   struct_cast, result, verbose=verbose;
+
+   if(verbose)
+      write, "Cleaning data...";
+
+   // Only applies to veg types.
+   // Removes points where both of elevation and lelv equal the mirror.
+   if(
+      has_member(result, "elevation") && has_member(result, "lelv") &&
+      has_member(result, "melevation")
+   ) {
+      w = where(
+         (result.lelv != result.melevation) |
+         (result.elevation != result.melevation)
+      );
+      result = numberof(w) ? result(w) : [];
+   }
+
+   // Only applies to fs types. (Explicitly avoiding veg and bathy.)
+   // Removes points where the elevation equals the mirror.
+   if(
+      has_member(result, "elevation") && has_member(result, "melevation") &&
+      !has_member(result, "depth") && !has_member(result, "lelv")
+   ) {
+      w = where(result.elevation != result.melevation);
+      result = numberof(w) ? result(w) : [];
+   }
+
+   // Applies to all types.
+   // Removes points with zero fs northings.
+   if(has_member(result, "north")) {
+      w = where(result.north);
+      result = numberof(w) ? result(w) : [];
+   }
+
+   // Only applies to veg types.
+   // Removes points with zero be northings.
+   if(has_member(result, "lnorth")) {
+      w = where(result.lnorth);
+      result = numberof(w) ? result(w) : [];
+   }
+
+   // Only appllies to bathy types.
+   // Removes points with zero depths.
+   if(has_member(result, "depth")) {
+      w = where(result.depth);
+      result = numberof(w) ? result(w) : [];
+   }
+
+   if(am_subroutine())
+      eq_nocopy, data, result;
+   else
+      return result;
 }
 
 func select_points(celldata, exclude=, win=) {
-  // amar nayegandhi 11/21/03
+// amar nayegandhi 11/21/03
+   extern croppeddata, edb;
+   default, win, 4;
+   default, exclude, 0;
+
+   celldata = test_and_clean(celldata);
+
+   if(exclude)
+      write,"Left: Examine pixel, Center: Remove Pixel, Right: Quit"
+   else
+      write,"Left: Examine pixel, Center: Save Pixel, Right: Quit"
+
+   window, win;
+   left_mouse = 1;
+   center_mouse = 2;
+   right_mouse = 3;
+   buf = 1000;  // 10 meters
+
+   rtn_data = [];
+   clicks = selclicks = 0;
+
+   if (!is_array(edb)) {
+      write, "No EDB data present.  Use left OR middle mouse to select point, right mouse to quit."
+      new_point_selected = 1;
+   }
 
 
-  extern croppeddata;
-  celldata = test_and_clean( celldata );
+   do {
+      spot = mouse(1,1,"");
+      mouse_button = spot(10);
+      if (mouse_button == right_mouse)
+         break;
 
-if (is_void(exclude)) {
-  write,"Left: Examine pixel, Center: Save Pixel, Right: Quit"
-} else {
-  write,"Left: Examine pixel, Center: Remove Pixel, Right: Quit"
-}
-  
- 
- if (is_void(win)) win = 4;
-  
- window, win;
- left_mouse = 1;
- center_mouse = 2;
- right_mouse = 3;
- buf = 1000;  // 10 meters
- 
- rtn_data = [];
- clicks = selclicks = 0;
-
- if (!is_array(edb)) {
-    write, "No EDB data present.  Use left OR middle mouse to select point, right mouse to quit."
-    new_point_selected = 1;
- }
-
-  
- do {
-  //write, format="Window: %d, Controls:- Left: View Waveform, Middle: Select Recently Viewed Waveform, Right: Quit \n",win;
-  spot = mouse(1,1,"");
-  mouse_button = spot(10);
-  if (mouse_button == right_mouse) break;
-  
-  if ( (mouse_button == center_mouse)  ) {
-   if (is_array(edb)) {
-     if ( new_point_selected ) {
-      new_point_selected = 0;
-      selclicks++;
-      if (is_void(exclude))  {
-        write, format="Point saved to workdata. Total points selected:%d, Right:Quit.\n", selclicks;
-      } else {
-        write, format="Point removed from workdata. Total points removed:%d. Right:Quit.\n", selclicks;
+      if ( (mouse_button == center_mouse)  ) {
+         if (is_array(edb)) {
+            if ( new_point_selected ) {
+               new_point_selected = 0;
+               selclicks++;
+               if(exclude)
+                  write, format="Point removed from workdata. Total points removed:%d. Right:Quit.\n", selclicks;
+               else
+                  write, format="Point saved to workdata. Total points selected:%d, Right:Quit.\n", selclicks;
+               plmk, mindata.north/100., mindata.east/100., marker=6, color="red", msize=0.4, width=5;
+               rtn_data = grow(rtn_data, mindata);
+               continue;
+            } else {
+               write, "Use the left button to select a new point first.";
+            }
+         }
       }
-      plmk, mindata.north/100., mindata.east/100., marker=6, color="red", msize=0.4, width=5;
-      rtn_data = grow(rtn_data, mindata);
-      continue;
-     } else {
-      write, "Use the left button to select a new point first.";
-     }
-   } 
-  }
-     
-  q = where(((celldata.east >= spot(1)*100-buf)   &
-               (celldata.east <= spot(1)*100+buf)) )
 
-  if (is_array(q)) {
-    indx = where(((celldata.north(q) >= spot(2)*100-buf) &
-               (celldata.north(q) <= spot(2)*100+buf)));
+      q = where(((celldata.east >= spot(1)*100-buf) &
+         (celldata.east <= spot(1)*100+buf)) );
 
-    indx = q(indx);
-  }
-  if (is_array(indx)) {
-    rn = celldata(indx(1)).rn;
-    mindist = buf*sqrt(2);
-    for (i = 1; i <= numberof(indx); i++) {
-      x1 = (celldata(indx(i)).east)/100.0;
-      y1 = (celldata(indx(i)).north)/100.0;
-      dist = sqrt((spot(1)-x1)^2 + (spot(2)-y1)^2);
-      if (dist <= mindist) {
-        mindist = dist;
-        mindata = celldata(indx(i));
-        minindx = indx(i);
+      if (is_array(q)) {
+         indx = where(((celldata.north(q) >= spot(2)*100-buf) &
+            (celldata.north(q) <= spot(2)*100+buf)));
+         indx = q(indx);
       }
-    }
-    blockindx = minindx / 120;
-    rasterno = mindata.rn&0xffffff;
-    pulseno  = mindata.rn/0xffffff;
+      if (is_array(indx)) {
+         rn = celldata(indx(1)).rn;
+         mindist = buf*sqrt(2);
+         for (i = 1; i <= numberof(indx); i++) {
+            x1 = (celldata(indx(i)).east)/100.0;
+            y1 = (celldata(indx(i)).north)/100.0;
+            dist = sqrt((spot(1)-x1)^2 + (spot(2)-y1)^2);
+            if (dist <= mindist) {
+               mindist = dist;
+               mindata = celldata(indx(i));
+               minindx = indx(i);
+            }
+         }
+         blockindx = minindx / 120;
+         rasterno = mindata.rn&0xffffff;
+         pulseno  = mindata.rn/0xffffff;
 
-    if (mouse_button == left_mouse) {
-      if (is_array(edb)) {
-          new_point_selected = 1;
-	  a = [];
-	  clicks++;
-          ex_bath, rasterno, pulseno, win=0, graph=1, xfma=1;
-	  window, win;
+         if (mouse_button == left_mouse) {
+            if (is_array(edb)) {
+               new_point_selected = 1;
+               a = [];
+               clicks++;
+               ex_bath, rasterno, pulseno, win=0, graph=1, xfma=1;
+               window, win;
+            }
+         }
+         if (!is_array(edb)) {
+            if ((mouse_button == left_mouse) || (mouse_button == center_mouse)) {
+               selclicks++;
+               write, format="Point saved to (or removed from) workdata. Total points selected:%d\n", selclicks;
+               rtn_data = grow(rtn_data, mindata);
+            }
+         }
       }
-    }
-    if (!is_array(edb)) {
-     if ((mouse_button == left_mouse) || (mouse_button == center_mouse)) {
-      selclicks++;
-      write, format="Point saved to (or removed from) workdata. Total points selected:%d\n", selclicks;
-      rtn_data = grow(rtn_data, mindata);
-        
-     }
-    }
-  }
+   } while ( mouse_button != right_mouse );
 
- } while ( mouse_button != right_mouse );
+   write, format="Total waveforms examined = %d; Total points selected = %d\n",clicks, selclicks;
 
- write, format="Total waveforms examined = %d; Total points selected = %d\n",clicks, selclicks;
+   if (exclude) {
+      croppeddata = rtn_data;
+      rtn_data = exclude_region(celldata, rtn_data);
+   }
 
- if (exclude) {
-    croppeddata = rtn_data;
-    rtn_data = exclude_region(celldata, rtn_data);
- }
-   
-
- return rtn_data;
+   return rtn_data;
 }
-
- 
-
-func write_to_final_arr(temp_arr) {
-  // amar nayegandhi 11/21/03
-  extern final_arr, cur_east, cur_north, cur_csize;
-  final_arr = grow(final_arr, temp_arr);
-  pldj, [cur_east,cur_east,cur_east+cur_csize,cur_east+cur_csize], 
-	 [cur_north-cur_csize, cur_north, cur_north, cur_north-cur_csize],
-         [cur_east, cur_east+cur_csize, cur_east+cur_csize, cur_east], 
-         [cur_north, cur_north, cur_north-cur_csize, cur_north-cur_csize],
-         color="green", width=1.5;
-}
- 
 
 func pipthresh(data, maxthresh=, minthresh=, mode=, idx=) {
-/* DOCUMENT pipthresh(data, maxthresh=, minthresh=, mode=)
+/* DOCUMENT pipthresh(data, maxthresh=, minthresh=, mode=, idx=)
    This function prompts the user to select data using the points-in-polygon
    (PIP) technique. Points within this region that are within the min and max
    threshold are removed and the data is returned.
