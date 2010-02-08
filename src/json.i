@@ -468,11 +468,7 @@ func struct2hash(data) {
 /* DOCUMENT struct2hash(data)
    Converts data that is held in a struct to an equivalent hash (using Yeti).
 */
-   fields = print(structof(data))(2:-1);
-   fields = regsub("^ +", fields);
-   fields = regsub("(\\(.+\\))?;$", fields);
-   fields = strsplit(fields, " ")(,2);
-
+   fields = get_members(data);
    hash = h_new();
    for(i = 1; i <= numberof(fields); i++) {
       h_set, hash, fields(i), get_member(data, fields(i));
