@@ -59,6 +59,8 @@ if {![winfo exists .l1wid]} {
   set rcf_buf_rgn 0; #Used in proc replace_proc
   set autoclean_after_process 1
 
+  set gridtype grid
+
   set show_pro_gui 1
   set data_file_path ""
 
@@ -1113,6 +1115,8 @@ if {![winfo exists .l1wid]} {
   trace add variable pro_var write {apply {{v1 v2 op} {
     ::tooltip::tooltip .l1wid.bf45.p.left.15 $::pro_var
   }}}
+  # Trigger the trace
+  set pro_var $pro_var
 
   Label .l1wid.bf45.p.right.2 -text "in Win:"
   spinbox .l1wid.bf45.p.right.3 -justify center -from 0 -to 63 -increment 1 \
@@ -1180,17 +1184,28 @@ if {![winfo exists .l1wid]} {
   Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
     -command ::l1pro::tools::histclip::gui
 
-  ttk::menubutton .l1wid.bf45.q.grids -text "Grids" -menu .l1wid.bf45.q.grids.mb
-  menu .l1wid.bf45.q.grids.mb
-  .l1wid.bf45.q.grids.mb add command -label "Plot 2K grid" \
-    -command {exp_send "draw_grid, $::win_no\r"}
-  .l1wid.bf45.q.grids.mb add command -label "Show 2K tile name" \
-    -command {exp_send "show_grid_location, $::win_no\r"}
-  .l1wid.bf45.q.grids.mb add separator
-  .l1wid.bf45.q.grids.mb add command -label "Plot QQ grid" \
-    -command {exp_send "draw_qq_grid, $::win_no\r"}
-  .l1wid.bf45.q.grids.mb add command -label "Show QQ tile name" \
-    -command {exp_send "show_qq_grid_location, $::win_no"\r}
+  misc::combobox::mapping .l1wid.bf45.q.gridtype \
+    -width 0 \
+    -state readonly \
+    -altvariable ::gridtype \
+    -mapping {
+      "2km Data Tile" grid
+      "Quarter Quad" qq_grid
+    }
+  button .l1wid.bf45.q.gridplot -text "Plot" -width 0 \
+    -command {exp_send "draw_${::gridtype}, $::win_no\r"}
+  button .l1wid.bf45.q.gridname -text "Name" -width 0 \
+    -command {exp_send "show_${::gridtype}_location, $::win_no\r"}
+
+  ::tooltip::tooltip .l1wid.bf45.q.gridtype \
+    "Select the tiling system to use\ for \"Plot\" and \"Name\" below."
+  ::tooltip::tooltip .l1wid.bf45.q.gridplot \
+    "Plots a grid showing tile boundaries for the currently selected tiling\
+    \nsystem."
+  ::tooltip::tooltip .l1wid.bf45.q.gridname \
+    "After clicking this button, you will be prompted to click on the current\
+    \nplotting window. You will then be told which tile corresponds to the\
+    \nlocation you clicked."
 
   frame  .l1wid.bf45.sc.1
 
@@ -2026,16 +2041,13 @@ if {![winfo exists .l1wid]} {
     .l1wid.bf45.r.7 \
     -side left
 
-  pack \
-    .l1wid.bf45.q.1 \
-    .l1wid.bf45.q.2  \
-    .l1wid.bf45.q.3 \
-    .l1wid.bf45.q.rcf \
-    .l1wid.bf45.q.datum \
-    .l1wid.bf45.q.4  \
-    .l1wid.bf45.q.grids \
-    -fill y \
-    -side left
+  grid .l1wid.bf45.q.1 .l1wid.bf45.q.2 .l1wid.bf45.q.3 \
+    .l1wid.bf45.q.rcf .l1wid.bf45.q.datum .l1wid.bf45.q.4 \
+    .l1wid.bf45.q.gridtype - -sticky news
+  grid ^ ^ ^ ^ ^ ^ \
+    .l1wid.bf45.q.gridplot .l1wid.bf45.q.gridname -sticky news
+  grid columnconfigure .l1wid.bf45.q 1000 -weight 1
+  grid columnconfigure .l1wid.bf45.q {6 7} -uniform g
 
   grid .l1wid.bf45.p.left.14 .l1wid.bf45.p.left.15 -padx 2 -sticky ew -row 1
   grid columnconfigure .l1wid.bf45.p.left 1 -weight 1
