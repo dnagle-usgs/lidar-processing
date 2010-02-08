@@ -79,12 +79,13 @@ dst_geoid=, verbose=) {
    local data_out;
    if(am_subroutine()) {
       eq_nocopy, data_out, data_in;
+      data_in = [];
    } else {
       data_out = data_in;
    }
 
    if (!structeq(structof(data_out), LFP_VEG)) {
-      data_out(*) = test_and_clean(data_out);
+      data_out = test_and_clean(data_out);
    }
 
    defns = h_new(
@@ -142,7 +143,10 @@ dst_geoid=, verbose=) {
       }
    }
 
-   return data_out;
+   if(am_subroutine())
+      eq_nocopy, data_in, data_out;
+   else
+      return data_out;
 }
 
 func datum_convert_utm(&north, &east, &elevation, zone=, src_datum=,
@@ -189,7 +193,7 @@ src_geoid=, dst_datum=, dst_geoid=, verbose=) {
       write, "Converting data to UTM...";
    else if(verbose)
       write, format="%s", "lat/lon -> utm";
-   fll2utm, lat, lon, north, east, zone;
+   fll2utm, lat, lon, north, east, force_zone=zone;
 
    if(!am_subroutine())
       return [north, east, elevation];
