@@ -133,7 +133,6 @@ See also: transect, _transect_history
   window,owin;
   if ( is_void(recall) ) {
         limits
-	limits,,, cbar.cmin, cbar.cmax
   } else
 	limits(lmts(1),lmts(2), lmts(3), lmts(4));
    if ( ! is_void ( exp ) )
