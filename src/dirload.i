@@ -139,7 +139,7 @@ filter=, verbose=) {
       new_end = end + numberof(temp);
 
       // Make sure the data variable has enough space allocated
-      __dirload_allocate, data, new_end;
+      array_allocate, data, new_end;
 
       data(end+1:new_end) = unref(temp);
       end = new_end;
@@ -177,32 +177,6 @@ func __dirload_apply_filter(&input, state, filters, name) {
          filter = h_has(filter, "next") ? filter.next : [];
       }
    }
-}
-
-func __dirload_allocate(&data, request) {
-/* DOCUMENT __dirload_allocate, data, request;
-   Used internally by dirload. Allocates space for data. request is the
-   requested size (in total) to allocate. data is the current data array.
-*/
-   dsize = numberof(data);
-
-   // If we have enough space... do nothing!
-   if(request < dsize)
-      return;
-
-   // If we need to more than double... then just grow to the size requested
-   if(dsize/double(request) < 0.5) {
-      grow, data, data(array('\01', request-dsize));
-      return;
-   }
-
-   // Try to double; if we fail, try to increase to the size requested
-   if(catch(0x08)) {
-      grow, data, data(array('\01', request-dsize));
-      return;
-   }
-
-   grow, data, data;
 }
 
 func __dirload_write(outfile, outvname, ptr) {

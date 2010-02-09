@@ -565,3 +565,56 @@ func hash2pbd(hash, pbd) {
       get_member(pbd, vars(i)) = hash(vars(i));
    }
 }
+
+func array_allocate(&data, request) {
+/* DOCUMENT array_allocate, data, request
+   Used to smartly allocate space in the data array.
+
+   Instead of writing this:
+
+   data = [];
+   for(i = 1; i <= 100000; i++) {
+      newdata = getnewdata(i);
+      grow, data, newdata;
+   }
+
+   Write this instead:
+
+   data = array(double, 1);
+   last = 0;
+   for(i = 1; i <= 100000; i++) {
+      newdata = getnewdata(i);
+      array_allocate, data, numberof(newdata) + last;
+      data(last+1:last+numberof(newdata)) = newdata;
+      last += numberof(newdata);
+   }
+   data = data(:last);
+
+   This will drastically speed running time up by reducing the number of times
+   mememory has to be reallocated for your data. Repeated grows is very
+   expensive!
+
+   The only caveat is that you have to know what kind of data structure you're
+   using up front (to pre-create the array) and that it has to be
+   one-dimensional.
+*/
+   size = numberof(data);
+
+   // If we have enough space... do nothing!
+   if(request <= size)
+      return;
+
+   // If we need to more than double... then just grow to the size requested
+   if(size/double(request) < 0.5) {
+      grow, data, data(array('\01', request-size));
+      return;
+   }
+
+   // Try to double. If we fail, try to increase to the size requested.
+   if(catch(0x08)) {
+      grow, data, data(array('\01', request-size));
+      return;
+   }
+
+   grow, data, data;
+}
