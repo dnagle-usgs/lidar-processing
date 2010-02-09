@@ -328,8 +328,6 @@ Input:
   write, format="%d:%d sod = %6.2f:%-10.2f(%10.4f) utc=%2d:%02d:%02d %5.1f %s\n",
                     t(1),t(2), tb, te, td, hms(1), hms(2), hms(3), hd, clr(c);
  }
-// limits
-// limits,,, cbar.cmin, cbar.cmax
  return glst(llst);
 }
 

@@ -2166,18 +2166,6 @@ if {![winfo exists .l1wid]} {
     pack .limitstool.2 -side right
     pack .limitstool.2.dismiss .limitstool.2.l -padx 4 -side right
   }
-
-  proc ycbar { } {
-    global cdelta plot_settings
-    if { ![ info exists plot_settings(cmax) ] } {
-      set plot_settings(cmax) 0
-      set plot_settings(cmin) 0
-      set cdelta 0
-    }
-    exp_send "cbar.cmax=$plot_settings(cmax);\
-      cbar.cmin=$plot_settings(cmin);\
-      cbar.cdelta=$cdelta;\r"
-  }
 }
 
 source "$src_path/plot.ytk"
