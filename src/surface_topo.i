@@ -416,16 +416,21 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
    fcount = 0;
 
    open_seg_process_status_bar;
+   fs_all = array(R, rn_arr(dif,sum)(1)+numberof(rn_arr(1,)));
+   end = 0;
    for (i=1;i<=no_t;i++) {
       if ((rn_arr(1,i) != 0)) {
        fcount ++;
        write, format="Processing segment %d of %d for first_surface...\n",i,no_t;
        rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=usecentroid); 
        //a=[];
-       grow, fs_all, rrr;
+       new_end = end + numberof(rrr);
+       fs_all(end+1:new_end) = rrr;
+       end = new_end;
        tot_count += numberof(rrr.elevation);
       }
     }
+    fs_all = end ? fs_all(:end) : [];
 
     if ( _ytk ) 
       tkcmd,"destroy .seg";
