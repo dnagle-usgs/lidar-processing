@@ -626,3 +626,127 @@ func struct_cast(&data, dest, verbose=) {
    else
       return result;
 }
+
+func uniq_data(data, idx=, bool=, mode=, forcesoe=, forcexy=, enablez=) {
+/* DOCUMENT uniq_data(data, idx=, bool=, mode=, forcesoe=, forcexy=, enablez=)
+   Returns the unique data in the given array.
+
+   By default, uniqueness is determined based on the .soe field. When using the
+   .soe field, points with the same soe value are considered duplicates.
+
+   If the .soe field is not present, if all soe values are the same, or if
+   forcexy=1, then the x and y coordinates of the data are used instead. In
+   this case, points located at the same x,y coordinate are considered
+   duplicates. If enablez=1, then points located at the same x,y,z coordinate
+   are instead considered duplicates.
+
+   This allows the function to work on almost any kind of data:
+      * data generated within ALPS
+      * data imported from XYZ, LAS, etc. and stored in an ALPS array, but
+        missing some or all auxiliary fields
+      * XYZ data that is not in an ALPS data structure
+
+   Options that change what gets returned:
+      idx= Returns index into data.
+      bool= Returns boolean array corresponding to data.
+
+      These are all equivalent:
+         result = uniq_data(data);
+         result = data(uniq_data(data, idx=1));
+         result = data(where(uniq_data(data, bool=1)));
+
+   Options that change how uniqueness is determined:
+      forcesoe= Forces the use of soe values, even if it's determined to be
+         inappropriate.
+            forcesoe=0  Do not force use of soe (default)
+            forcesoe=1  Force use of soe
+      forcexy= Forces the use of x/y values.
+            forcexy=0   Do not force use of x/y values (default)
+            forcexy=1   Force use of x/y values.
+      enablez= Enables the use of z values. If the soe values get used, this
+         has no effect. If the x/y values get used, then causes z to get used
+         as well.
+            enablez=0   Ignore z values (default)
+            enablez=1   Include z values in uniqueness check
+      mode= Specifies which data mode to use to extract x/y/z points when using
+         them to determine uniqueness.
+            mode="fs"   Default
+*/
+   local w, x, y, z, keep, srt, dupe;
+   default, idx, 0;
+   default, forcesoe, 0;
+   default, forcexy, 0;
+   default, enablez, 0;
+
+   // Edge case
+   if(is_void(data))
+      return [];
+   // Edge case
+   if(numberof(data) == 1)
+      return (bool || idx) ? [1] : data;
+
+   // First, we assume that we want to keep everything.
+   keep = array(char(1), dimsof(data));
+
+   if(forcesoe && !has_member(data, "soe"))
+      error, "You cannot use forcesoe=1 when the data does not have an soe field.";
+
+   if(forcesoe && forcexy)
+      error, "You cannot use both of forcesoe=1 and forcexy=1 together."
+
+   // Determine how to determine uniqueness. Start by assuming soe.
+   usesoe = 1;
+   // If they have forcexy=1, then we don't want soe.
+   if(usesoe && forcexy)
+      usesoe = 0;
+   // If there is no .soe member, then we can't use soe.
+   if(usesoe && !has_member(data, "soe"))
+      usesoe = 0;
+   // Unless we're forcing use of soe, there has to be some variation in the
+   // .soe values. Otherwise, we can't use them.
+   if(usesoe && !forcesoe && allof(data.soe == data.soe(1)))
+      usesoe = 0;
+
+   if(usesoe) {
+      // When using soe to determine uniqueness, duplicate points are
+      // determined by points where the soe value matches.
+      srt = sort(data.soe);
+      dupe = where(!data.soe(srt)(dif));
+      if(numberof(dupe))
+         keep(srt(dupe)) = 0;
+   } else {
+      data2xyz, data, x, y, z, native=1, mode=mode;
+
+      // Redefine keep based on x. If they passed an XYZ array instead of EAARL
+      // data, this will prevent errors.
+      keep = array(char(1), dimsof(x));
+
+      // Now, do we use just x/y to determine uniqueness... or z as well?
+      // Assume just xyz by default
+
+      srt = enablez ? msort(x, y, z) : msort(x, y);
+      dupex = where(x(srt(:-1)) == x(srt(2:)));
+      if(numberof(dupex)) {
+         dupey = where(y(srt(dupex)) == y(srt(dupex+1)));
+         if(numberof(dupey)) {
+            if(enablez) {
+               dupez = where(z(srt(dupex(dupey))) == z(srt(dupex(dupey+1))));
+               if(numberof(dupez))
+                  keep(srt(dupex(dupey(dupez)))) = 0;
+            } else {
+               keep(srt(dupex(dupey))) = 0;
+            }
+         }
+      }
+   }
+
+   if(bool)
+      return keep;
+   w = where(unref(keep));
+   if(idx)
+      return w;
+   else if(is_numerical(data)) // Special case for XYZ input.
+      return [x(w), y(w), z(w)];
+   else
+      return data(w);
+}
