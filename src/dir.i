@@ -625,15 +625,7 @@ func file_copy(src, dest, force=) {
    if(_ytk) {
       forcestr = force ? "-force" : "";
       cmd = swrite(format="file copy %s -- {%s} {%s}", forcestr, src, dest);
-      t0 = t1 = array(double, 3);
-      timer, t0;
-      tkcmd, cmd;
-      while(!file_exists(dest)) {
-         timer, t1;
-         if(t1(3) - t0(3) > 60) {
-            error, "Timeout while waiting for file to copy";
-         }
-      }
+      tkcmd, cmd, async=0;
    } else {
       if(!force && file_exists(dest))
          return;
