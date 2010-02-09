@@ -1979,39 +1979,38 @@ if {![winfo exists .l1wid]} {
       #    llarr=\[$mnlon, $mxlon, $mnlat, $mxlat\]);\r"
       #}
 
+      set cmd ""
       switch -- $ptype {
         0 {
-          exp_send "fs_all = make_fs(latutm=1, q=q, ext_bad_att=1,\
-            usecentroid=$usecentroid);\r"
-          expect ">"
+          set cmd "fs_all = make_fs(latutm=1, q=q, ext_bad_att=1,\
+            usecentroid=$usecentroid)"
           set pro_var fs_all
         }
         1 {
-          exp_send "depth_all = make_bathy(latutm = 1, q = q, ext_bad_depth=1,\
-            ext_bad_att=1, avg_surf=$avg_surf);\r"
-          expect ">"
+          set cmd "depth_all = make_bathy(latutm = 1, q = q, ext_bad_depth=1,\
+            ext_bad_att=1, avg_surf=$avg_surf)"
           set pro_var depth_all
         }
         2 {
-          exp_send "veg_all = make_veg(latutm=1, q=q, ext_bad_att=1,\
-            ext_bad_veg=1, use_centroid=$usecentroid);\r"
-          expect ">"
+          set cmd "veg_all = make_veg(latutm=1, q=q, ext_bad_att=1,\
+            ext_bad_veg=1, use_centroid=$usecentroid)"
           set pro_var veg_all
         }
         3 {
-          exp_send "cveg_all = make_veg(latutm=1, q=q, use_centroid=$usecentroid,\
-            multi_peaks=1);\r"
-          expect ">"
+          set cmd "cveg_all = make_veg(latutm=1, q=q, use_centroid=$usecentroid,\
+            multi_peaks=1)"
           set pro_var cveg_all
         }
         4 {
           exp_send "require, \"waves.i\";process_for_dws,q;\r"
-          expect ">"
         }
       }
 
-      if {$autoclean_after_process} {
-        yset $pro_var test_and_clean [list $pro_var]
+      if {$cmd ne ""} {
+        if {$autoclean_after_process} {
+          append cmd "; test_and_clean, $pro_var"
+        }
+        exp_send "$cmd\r"
       }
     }
 
