@@ -155,6 +155,7 @@ check_requirements
 package require transitional
 
 package require Tk
+package require tile
 package require BWidget
 package require Expect
 package require Iwidgets
@@ -163,6 +164,12 @@ package require log
 package require struct::list
 
 option add *tearOff 0
+foreach __theme [ttk::style theme names] {
+   ttk::style theme settings $__theme {
+      ttk::style configure TButton -justify center
+   }
+}
+unset __theme
 wm withdraw .
 
 set gui_enabled 1
