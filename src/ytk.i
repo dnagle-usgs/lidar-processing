@@ -123,15 +123,29 @@ func safe_run_funcdef(f) {
    return;
 }
 
-func tkcmd(s) {
+func tkcmd(s, async=) {
 /* DOCUMENT tkcmd, s;
    This sends its input to Tcl for evaluation. The string must be a valid
    statement suitable for evaluation in Tcl.
+
+   Commands are normally sent asynchronously. For non-asynchronous operation,
+   add async=0 to your command. For example, for a 1-second pause:
+      tkcmd, "after 1000", async=0
 */
-   extern ytkfifo;
+   extern ytkfifo, _pid, Y_USER;
    write, ytkfifo, s;
-   if ( ytkfifo ) 
-    fflush, ytkfifo;
+   if(ytkfifo)
+      fflush, ytkfifo;
+   if(!is_void(async) && !async) {
+      blockfn = swrite(format="tkyunblock.%d", _pid);
+      mkdirp, Y_USER;
+      write, ytkfifo, "::fileutil::writeFile {" + Y_USER + "/" + blockfn + "} {}";
+      if(ytkfifo)
+         fflush, ytkfifo;
+      while(noneof(lsdir(Y_USER) == blockfn))
+         continue;
+      remove, Y_USER + "/" + blockfn;
+   }
 }
 
 func tksetval(tkvar, yval) {
