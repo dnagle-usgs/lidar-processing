@@ -384,6 +384,26 @@ func find(path, glob=) {
    return results;
 }
 
+func remove_empty_dirs(path) {
+/* DOCUMENT remove_empty_dirs, path
+   Given a path, this will recursively search its subdirectories and will
+   remove all directories that are empty (or that become empty because they had
+   only empty subdirectories).
+
+   Equivalent to this linux command:
+      cd path
+      find -depth -type d -empty -exec rmdir \{} \;
+*/
+// Original David Nagle 2010-02-08
+   fix_dir, path;
+   subdirs = lsdirs(path);
+   for(i = 1; i <= numberof(subdirs); i++)
+      remove_empty_dirs, path+subdirs(i);
+   files = lsdir(path, subdirs);
+   if(!numberof(files) && !numberof(subdirs))
+      rmdir, path;
+}
+
 func lsfiles(dir, glob=, ext=, case=, regex=) {
 /* DOCUMENT lsfiles(directory_name, glob=, ext=, case=, regex=)
    
