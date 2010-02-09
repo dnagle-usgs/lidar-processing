@@ -606,6 +606,7 @@ namespace eval mission {
             -actiontype open \
             -filetypes {
                 {{pbd files} {.pbd}}
+                {{TANS files} {.ybin}}
                 {{All files} *}
             } \
             -parent $dlg \

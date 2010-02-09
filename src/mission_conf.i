@@ -515,13 +515,12 @@ func missiondata_wrap(type) {
             "pnav_filename", pnav_filename
         );
     } else if(type == "ins") {
-        extern iex_nav, iex_head, iex_nav1hz, tans;
+        extern iex_nav, iex_head, tans;
         // ops_conf ?
         return h_new(
             "__type", "ins",
             "iex_nav", iex_nav,
             "iex_head", iex_head,
-            "iex_nav1hz", iex_nav1hz,
             "tans", tans
         );
     } else if(type == "ops_conf") {
@@ -568,11 +567,10 @@ func missiondata_unwrap(data) {
         gga = data.gga;
         pnav_filename = data.pnav_filename;
     } else if(type == "ins") {
-        extern iex_nav, iex_head, iex_nav1hz, tans;
+        extern iex_nav, iex_head, tans;
         // ops_conf ?
         iex_nav = data.iex_nav;
         iex_head = data.iex_head;
-        iex_nav1hz = data.iex_nav1hz;
         tans = data.tans;
     } else if(type == "ops_conf") {
         extern ops_conf;
@@ -662,21 +660,26 @@ func missiondata_load(type, day=, noerror=) {
         if(!is_void(pnav))
             auto_curzone, pnav.lat, pnav.lon;
     } else if(type == "ins") {
-        extern iex_nav;
+        extern iex_nav, iex_head, tans;
         if(cache_enabled && h_has(cache, "ins")) {
             missiondata_unwrap, cache("ins");
         } else if(mission_has("ins file", day=day)) {
-            load_iexpbd, mission_get("ins file", day=day), verbose=0;
+            insfile = mission_get("ins file", day=day);
+            if(file_extension(insfile) == ".pbd") {
+                load_iexpbd, insfile, verbose=0;
+            } else {
+                tans = iex_nav = rbtans(fn=insfile);
+                iex_head = [];
+            }
             if(cache_enabled) {
                 h_set, cache, "ins", missiondata_wrap("ins");
             }
         } else if(noerror) {
-            extern iex_nav, iex_head, iex_nav1hz, tans;
-            iex_nav = iex_head = iex_nav1hz = tans = [];
+            iex_nav = iex_head = tans = [];
         } else {
             error, "Could not load ins data: no ins file defined";
         }
-        if(!is_void(iex_nav))
+        if(has_member(iex_nav, "lat") && has_member(iex_nav, "lon"))
             auto_curzone, iex_nav.lat, iex_nav.lon;
     } else if(type == "ops_conf") {
         if(cache_enabled && h_has(cache, "ops_conf")) {
