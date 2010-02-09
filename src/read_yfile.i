@@ -1512,12 +1512,11 @@ func set_read_yorick(data, vname=, fn=) {
       dmode = 1;
       cminmax = stdev_min_max(data.depth+data.elevation)/100.;
    } else if(structeqany(dstruc, VEG, VEG_, VEG__, VEGALL, VEG_ALL, VEG_ALL_)) {
+      pmode = 2;
       if(anyof(regmatch("(^|_)fs(t_|_|\.|$)", [vname, fn]))) {
-         pmode = 0;
          dmode = 0;
          cminmax = stdev_min_max(data.elevation)/100.;
       } else {
-         pmode = 2;
          dmode = 3;
          cminmax = stdev_min_max(data.lelv)/100.;
       }
