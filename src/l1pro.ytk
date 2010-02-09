@@ -15,6 +15,7 @@ package require struct::set
 package require misc
 package require tooltip
 package require l1pro::deprecated
+package require l1pro::main
 package require l1pro::dirload
 package require l1pro::vars
 package require l1pro::file
@@ -142,7 +143,6 @@ if {![winfo exists .l1wid]} {
   ttk::panedwindow .l1wid.bf45.p -orient horizontal
   .l1wid.bf45.p add [frame .l1wid.bf45.p.left] -weight 1
   .l1wid.bf45.p add [frame .l1wid.bf45.p.right] -weight 1
-  frame .l1wid.bf45.q -relief groove -borderwidth 3
   LabelFrame .l1wid.bf45.r -relief groove -borderwidth 7 -text "FILTER:"
 
   .l1wid configure -menu .l1wid.mb
@@ -1164,49 +1164,6 @@ if {![winfo exists .l1wid]} {
       [lindex $l1pro_data(display_types) $index]
   }
 
-  Button .l1wid.bf45.q.2 -text "Histogram\nElevations" \
-    -helptext "Generate and display a histogram of all the first return\
-      elevations" \
-    -command ::l1pro::tools::histelev
-
-  Button .l1wid.bf45.q.1 -text "Pixel\nAnalysis" \
-    -helptext "Click to jump to raster, pulse, and image for xyz point." \
-    -command [list ycmd pixelwf_enter_interactive]
-
-  Button .l1wid.bf45.q.3 -text "Color\nBar" \
-    -command {
-      global win_no plot_settings
-      exp_send "window, $win_no;\
-        colorbar, $plot_settings(cmin), $plot_settings(cmax), drag=1\r"
-    }
-  Button .l1wid.bf45.q.rcf -text "RCF" -command rcf_region
-  Button .l1wid.bf45.q.datum -text "Datum\nConvert" -command datum_proc
-  Button .l1wid.bf45.q.4 -text "Elevation\nClipper" \
-    -command ::l1pro::tools::histclip::gui
-
-  misc::combobox::mapping .l1wid.bf45.q.gridtype \
-    -width 0 \
-    -state readonly \
-    -altvariable ::gridtype \
-    -mapping {
-      "2km Data Tile" grid
-      "Quarter Quad" qq_grid
-    }
-  button .l1wid.bf45.q.gridplot -text "Plot" -width 0 \
-    -command {exp_send "draw_${::gridtype}, $::win_no\r"}
-  button .l1wid.bf45.q.gridname -text "Name" -width 0 \
-    -command {exp_send "show_${::gridtype}_location, $::win_no\r"}
-
-  ::tooltip::tooltip .l1wid.bf45.q.gridtype \
-    "Select the tiling system to use\ for \"Plot\" and \"Name\" below."
-  ::tooltip::tooltip .l1wid.bf45.q.gridplot \
-    "Plots a grid showing tile boundaries for the currently selected tiling\
-    \nsystem."
-  ::tooltip::tooltip .l1wid.bf45.q.gridname \
-    "After clicking this button, you will be prompted to click on the current\
-    \nplotting window. You will then be told which tile corresponds to the\
-    \nlocation you clicked."
-
   frame  .l1wid.bf45.sc.1
 
   ::misc::combobox .l1wid.bf45.r.1 -text "Copy points using..." -width 16 \
@@ -2040,14 +1997,6 @@ if {![winfo exists .l1wid]} {
     .l1wid.bf45.r.7 \
     -side left
 
-  grid .l1wid.bf45.q.1 .l1wid.bf45.q.2 .l1wid.bf45.q.3 \
-    .l1wid.bf45.q.rcf .l1wid.bf45.q.datum .l1wid.bf45.q.4 \
-    .l1wid.bf45.q.gridtype - -sticky news
-  grid ^ ^ ^ ^ ^ ^ \
-    .l1wid.bf45.q.gridplot .l1wid.bf45.q.gridname -sticky news
-  grid columnconfigure .l1wid.bf45.q 1000 -weight 1
-  grid columnconfigure .l1wid.bf45.q {6 7} -uniform g
-
   grid .l1wid.bf45.p.left.14 .l1wid.bf45.p.left.15 -padx 2 -sticky ew -row 1
   grid columnconfigure .l1wid.bf45.p.left 1 -weight 1
   grid rowconfigure .l1wid.bf45.p.left {0 2} -weight 1
@@ -2056,6 +2005,8 @@ if {![winfo exists .l1wid]} {
     .l1wid.bf45.p.right.3 -padx 2 -sticky ew -row 1
   grid columnconfigure .l1wid.bf45.p.right 1 -weight 1
   grid rowconfigure .l1wid.bf45.p.right {0 2} -weight 1
+
+  ::l1pro::main::panel_tools .l1wid.bf45.q
 
   pack \
     .l1wid.bf45.p \

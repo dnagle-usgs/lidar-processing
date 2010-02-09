@@ -523,3 +523,9 @@ proc ::l1pro::tools::histclip::clip {} {
    append_varlist $v::outvar
    destroy $v::top
 }
+
+proc ::l1pro::tools::colorbar {} {
+   set cmd "window, $::win_no; "
+   append cmd "colorbar, $::plot_settings(cmin), $::plot_settings(cmax), drag=1"
+   exp_send "$cmd\r"
+}
