@@ -675,8 +675,9 @@ if {![winfo exists .l1wid]} {
 
   .l1wid.mb add cascade -label CmdLine -underline 1 -menu .l1wid.mb.cmd
   foreach ycmd {
-    mtransect batch_process mbatch_process batch_rcf batch_datum_convert
-    batch_veg_lfpw batch_pbd2las batch_write_xyz
+    mtransect batch_process mbatch_process batch_merge_tiles new_batch_rcf
+    batch_rcf batch_datum_convert batch_veg_lfpw batch_pbd2edf batch_pbd2las
+    batch_las2pbd batch_write_xyz batch_convert_ascii2pbd batch_tile
   } {
     .l1wid.mb.cmd add command -label $ycmd \
       -command [list exp_send "help, $ycmd\r"]
