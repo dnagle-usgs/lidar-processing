@@ -307,7 +307,7 @@ See also:
    ytime.i:  soe2sod sod2hms hms2sod
 
 */
-   extern data_path, edb, edb_files, _eidf, soe_day_start;
+   extern data_path, edb, edb_files, edb_filename, _eidf, soe_day_start;
    default, timeonly, 0;
 
    if(is_void(rn)) {
@@ -329,7 +329,8 @@ See also:
    fn = file_tail(edb_files(fidx));
    if(is_void(_eidf) || fn != file_tail(filepath(_eidf))) {
       filemode = timeonly ? "r+b" : "rb";
-      _eidf = open(file_join(data_path, "eaarl", fn), filemode);
+      fullfn = file_join(file_dirname(edb_filename), fn);
+      _eidf = open(fullfn, filemode);
    }
 
    // _eidf now should point to our file
