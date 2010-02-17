@@ -438,7 +438,6 @@ proc load_edb {} {
    ybkg cd \"$src_path\"
    ybkg funcset src_path \"$src_path\"
    # send ytk process id to yorick global variable _pid.
-   ybkg funcset _pid [pid]
    ybkg require \"eaarl.i\"
 
    source [file join $src_path mission_conf.ytk]

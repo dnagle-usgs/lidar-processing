@@ -2459,6 +2459,7 @@ if { $load_on_start != "" } {
 
 ybkg funcset initialdir \"$_ytk(initialdir)\"
 ybkg funcset _ytk 1
+ybkg funcset _pid [pid]
 
 start_yorick
 
