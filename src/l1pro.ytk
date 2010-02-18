@@ -20,6 +20,7 @@ package require l1pro::dirload
 package require l1pro::vars
 package require l1pro::file
 package require l1pro::tools
+package require l1pro::settings
 
 if {![winfo exists .l1wid]} {
   set l1pro_data(processing_mode) [list \
@@ -228,6 +229,9 @@ if {![winfo exists .l1wid]} {
   .l1wid.mb.load add command -label "Load Bathymetry Settings .." -underline 21 \
     -command bathctl::gui
 
+  .l1wid.mb.load add separator
+  .l1wid.mb.load add command -label "Configure ops_conf..." -underline 0 \
+    -command ::l1pro::settings::ops_conf::gui
 
   .l1wid.mb add cascade -label Options -underline 0 -menu .l1wid.mb.options
 
