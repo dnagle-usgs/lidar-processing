@@ -14,6 +14,117 @@ proc ::l1pro::tools::appendif {var args} {
    }
 }
 
+if {![namespace exists ::l1pro::tools::rcf]} {
+   namespace eval ::l1pro::tools::rcf {
+      namespace import ::l1pro::tools::appendif
+      namespace eval v {
+         variable top .l1wid.rcf
+         variable invar ""
+         variable outvar ""
+         variable w 500
+         variable buf 20
+         variable n 3
+         variable mode {}
+      }
+   }
+}
+
+proc ::l1pro::tools::rcf::gui {} {
+   set w $v::top
+   destroy $w
+   toplevel $w
+
+   wm resizable $w 1 0
+   wm title $w "Random Consensus Filter"
+
+   set v::invar $::pro_var
+   set v::outvar ${::pro_var}_grcf
+   set v::mode [display_type_mode]
+
+   ttk::frame $w.f
+   grid $w.f -sticky news
+   grid columnconfigure $w 0 -weight 1
+   grid rowconfigure $w 0 -weight 1
+
+   set f $w
+
+   ttk::label $f.lblbuf -text "Input window (cm): "
+   ttk::label $f.lblw -text "Elevation width (cm): "
+   ttk::label $f.lbln -text "Minimum winners: "
+   ttk::label $f.lblinput -text "Input variable: "
+   ttk::label $f.lbloutput -text "Output variable: "
+   ttk::label $f.lblmode -text "Data mode: "
+
+   ::misc::combobox::mapping $f.mode \
+      -state readonly \
+      -altvariable [namespace which -variable v::mode] \
+      -mapping {
+         "First Return Topography"  fs
+         "Submerged Topography"     ba
+         "Water Depth"              de
+         "Bare Earth Topography"    be
+         "Surface Amplitude"        fint
+         "Bottom Amplitude"         lint
+         "Canopy Height"            ch
+      }
+
+   ::misc::combobox $f.input \
+      -state readonly \
+      -listvariable ::varlist \
+      -textvariable [namespace which -variable v::invar]
+
+   spinbox $f.buf -from 1 -to 100000 -increment 1 \
+      -format %.0f \
+      -textvariable [namespace which -variable v::buf]
+   spinbox $f.w -from 1 -to 100000 -increment 1 \
+      -format %.0f \
+      -textvariable [namespace which -variable v::w]
+   spinbox $f.n -from 1 -to 100000 -increment 1 \
+      -format %.0f \
+      -textvariable [namespace which -variable v::n]
+   ttk::entry $f.output \
+      -textvariable [namespace which -variable v::outvar]
+
+   ttk::frame $f.buttons
+   ttk::button $f.filter -text "Filter" \
+      -command ::l1pro::tools::rcf::filter
+   ttk::button $f.dismiss -text "Dismiss" \
+      -command [list destroy [winfo toplevel $f]]
+
+   grid x $f.filter $f.dismiss -padx 2 -in $f.buttons
+   grid columnconfigure $f.buttons {0 3} -weight 1
+
+   grid $f.lblinput $f.input -in $w.f -padx 2 -pady 2
+   grid $f.lblmode $f.mode -in $w.f -padx 2 -pady 2
+   grid $f.lblbuf $f.buf -in $w.f -padx 2 -pady 2
+   grid $f.lblw $f.w -in $w.f -padx 2 -pady 2
+   grid $f.lbln $f.n -in $w.f -padx 2 -pady 2
+   grid $f.lbloutput $f.output -in $w.f -padx 2 -pady 2
+   grid $f.buttons - -in $w.f -pady 2
+
+   grid configure $f.lblinput $f.lblmode $f.lblbuf $f.lblw $f.lbln \
+      $f.lbloutput -sticky e
+   grid configure $f.input $f.mode $f.buf $f.w $f.n $f.output $f.buttons \
+      -sticky ew
+
+   grid columnconfigure $w.f 1 -weight 1
+}
+
+proc ::l1pro::tools::rcf::filter {} {
+   set cmd "$v::outvar = rcf_filter_eaarl($v::invar"
+   append cmd ", mode=\"$v::mode\""
+   append cmd ", buf=$v::buf"
+   append cmd ", w=$v::w"
+   append cmd ", n=$v::n"
+   append cmd ")"
+
+   exp_send "$cmd\r"
+
+   append_varlist $v::outvar
+   destroy $v::top
+}
+
+
 if {![namespace exists ::l1pro::tools::histelev]} {
    namespace eval ::l1pro::tools::histelev {
       namespace import ::l1pro::tools::appendif
@@ -58,7 +169,7 @@ proc ::l1pro::tools::histelev {} {
 }
 
 proc ::l1pro::tools::histelev::plot {} {
-   set mode [lindex {fs ba de be fint lint ch} [display_type]]
+   set mode [display_type_mode]
    set cmd "hist_data, $::pro_var"
 
    appendif cmd \
@@ -508,7 +619,7 @@ proc ::l1pro::tools::histclip::gui {} {
 }
 
 proc ::l1pro::tools::histclip::clip {} {
-   set mode [lindex {fs ba de be fint lint ch} [display_type]]
+   set mode [display_type_mode]
 
    set cmd "$v::outvar = filter_bounded_elv($v::invar"
 

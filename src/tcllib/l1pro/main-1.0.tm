@@ -21,7 +21,7 @@ proc ::l1pro::main::panel_tools w {
    ttk::button $f.colorbar -text " Color \n Bar " -width 0 \
       -command ::l1pro::tools::colorbar
    ttk::button $f.rcf -text " RCF " -width 0 \
-      -command ::rcf_region
+      -command ::l1pro::tools::rcf::gui
    ttk::button $f.datum -text " Datum \n Convert " -width 0 \
       -command ::datum_proc
    ttk::button $f.elvclip -text " Elevation \n Clipper " -width 0 \
