@@ -184,6 +184,33 @@ func tksetsym(tkvar, ysym) {
    tksetval, tkvar, var_expr_get(ysym);
 }
 
+func tksetfunc(tkvar, yfunc, ..) {
+/* DOCUMENT tksetsym, tkvar, yfunc, ..
+   Given the name of a tcl variable (as a string) and the name of a Yorick
+   function (as a string), this will set the tcl variable to the return value
+   of the function. If additional arguments are given, they will be passed to
+   the Yorick function when it is called. Currently, a maximum of 4 arguments
+   may be passed. (Options are not supported.)
+*/
+// Original David Nagle 2010-02-16
+   args = [];
+   while(more_args())
+      grow, args, &next_arg();
+   nargs = numberof(args);
+   if(nargs == 0)
+      tksetval, tkvar, symbol_def(yfunc)();
+   else if(nargs == 1)
+      tksetval, tkvar, symbol_def(yfunc)(*args(1));
+   else if(nargs == 2)
+      tksetval, tkvar, symbol_def(yfunc)(*args(1), *args(2));
+   else if(nargs == 3)
+      tksetval, tkvar, symbol_def(yfunc)(*args(1), *args(2), *args(3));
+   else if(nargs == 4)
+      tksetval, tkvar, symbol_def(yfunc)(*args(1), *args(2), *args(3), *args(4));
+   else
+      error, "tksetfunc not yet implemented for more than 4 arguments."
+}
+
 func var_expr_tkupdate(expr, tkval) {
 /* DOCUMENT var_expr_tkupdate, expr, tkval
    Given a variable expression (expr), this will update it to a new value as
