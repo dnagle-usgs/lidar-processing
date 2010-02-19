@@ -1017,12 +1017,11 @@ if {![winfo exists .l1wid]} {
 
       set selr [.l1wid.bf45.r.1 getvalue]
       if {$selr == 0} {
-        set var_type $pro_var
         set selection [tk_messageBox -icon info \
           -message "Drag a Rectangular Box in Window $win_no to define region." \
           -type okcancel -title "Message"]
         if {$selection == "ok"} {
-          exp_send "workdata = sel_data_rgn($var_type, mode=2, win=$win_no)\r"
+          exp_send "workdata = sel_data_rgn($::pro_var, mode=2, win=$win_no)\r"
           expect ">"
         }
       }
@@ -1033,12 +1032,12 @@ if {![winfo exists .l1wid]} {
             click OR <Ctrl> and left mouse click." \
           -type okcancel -title "Message" ]
         if {$selection == "ok"} {
-          exp_send "workdata = sel_data_rgn($var_type, mode=3, win=$win_no)\r"
+          exp_send "workdata = sel_data_rgn($::pro_var, mode=3, win=$win_no)\r"
           expect ">"
         }
       }
       if {$selr == 2} {
-        exp_send "workdata = select_points($var_type, win=$win_no);\r"
+        exp_send "workdata = select_points($::pro_var, win=$win_no);\r"
         expect ">"
       }
       if {$selr == 3} {
@@ -1047,7 +1046,7 @@ if {![winfo exists .l1wid]} {
             window $win_no within the required cell."\
           -type okcancel -title "Message" ]
         if {$selection == "ok"} {
-          exp_send "workdata = select_region_tile($var_type, win=$win_no, plot=1);\r"
+          exp_send "workdata = select_region_tile($::pro_var, win=$win_no, plot=1);\r"
           expect ">"
         }
       }
