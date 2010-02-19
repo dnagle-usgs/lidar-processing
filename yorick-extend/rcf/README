@@ -1,0 +1,8 @@
+This directory contains the RCF Yorick plugin.
+
+IMPORTANT: This plugin is DEPRECATED. Do NOT install it.
+
+This plugin is deprecated in favor of the C-ALPS plugin, found in
+yorick-extend/calps. Please install that plugin instead. If you have already
+installed the rcf plugin, then please uninstall it as it conflicts with the
+calps plugin.

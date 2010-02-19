@@ -1,0 +1,35 @@
+This directory contains the source for the C-ALPS Yorick plugin, also known by
+its plugin name "calps". This provides extensions, coded in C, that make
+certain parts of ALPS run faster and expand ALPS's capabilities.
+
+IMPORTANT NOTE: This plugin is *incompatible* with the older "rcf" plugin
+(found in yorick-extend/rcf) due to them using conflicting versions of the
+triangle library. The "rcf" plugin is deprecated and should be uninstalled
+prior to installing this plugin.
+
+If you have "rcf" installed, you can uninstall it as follows:
+    cd /opt/eaarl/lidar-processing/yorick-extend/rcf
+    yorick -batch make.i
+    make uninstall
+
+To then install "calps", do as follows:
+    cd /opt/eaarl/lidar-processing/yorick-extend/calps
+    yorick -batch make.i
+    make
+    make install
+
+Whenever changes are made to code within this directory, you will need to
+re-install the calps plugin to benefit from them. To do so, simply follow the
+instructions for installing calps again; the updated version will replace the
+old one. (However, you will not need to repeat the "rcf" uninstall.)
+
+The calps plugin is set up to autoload. Certain functions in ALPS have been
+modified to look for calps functions and use them, when they are available.
+This enhancement is automatic and transparent once the plugin is installed. If
+you do not install it, then those functions will use their Yorick implemention.
+The only difference you will see is a difference in speed.
+
+However, there are also some functions that are only implemented in calps and
+do not have a native Yorick implementation. In particular, triangulation and
+gridding both require calps. If you need features provided exclusively by
+calps, then you'll have to install it.

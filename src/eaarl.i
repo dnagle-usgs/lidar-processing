@@ -43,11 +43,6 @@ if(is_void(__eaarl_includes_included__)) {
    // version yet. Until it is, it's being kept in our CVS as well.
    require, "unsigned.i";
 
-   // ALPS plugin requires
-   require, "rcf_triangulate.i";
-   require, "rcf_utils.i";
-   require, "triangle.i";
-
    // ALPS requires
    require, "eaarl_constants.i"; // Must come first; some other files need it
    require, "eaarl_data.i";

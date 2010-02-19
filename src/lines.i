@@ -34,38 +34,23 @@ func perpendicular_intercept(x1, y1, x2, y2, x3, y3) {
 
       [x, y] where x and y are arrays of the same size as the parameters.
 */
-   // Make everything doubles to avoid integer-related errors
-   x1 = double(x1);
-   y1 = double(y1);
-   x2 = double(x2);
-   y2 = double(y2);
-   x3 = double(x3);
-   y3 = double(y3);
+   // Coerce same dimensions and make everything doubles to avoid
+   // integer-related errors
+   dims = dimsof(x1, y1, x2, y2, x3, y3);
+   if(is_void(dims))
+      error, "Input not conformable.";
+   one = array(1., dims);
+   x1 *= one;
+   y1 *= one;
+   x2 *= one;
+   y2 *= one;
+   x3 *= one;
+   y3 *= one;
+   one = [];
 
-   // Coerce same dimensions
-   dims = dimsof(x1);
-   if(dims(1) < dimsof(x2)(1))
-      dims = dimsof(x2);
-   if(dims(1) < dimsof(x3)(1))
-      dims = dimsof(x3);
-
-   if(dimsof(x1)(1) < dims(1)) {
-      x1 = array(x1, dims);
-      y1 = array(y1, dims);
-   }
-
-   if(dimsof(x2)(1) < dims(1)) {
-      x2 = array(x2, dims);
-      y2 = array(y2, dims);
-   }
-
-   if(dimsof(x3)(1) < dims(1)) {
-      x3 = array(x3, dims);
-      y3 = array(y3, dims);
-   }
-   
    // Result arrays
    xi = yi = array(double, dims);
+   dims = [];
 
    // Generate indexes for different portions
    x_eq = x1 == x2; // Special case
@@ -572,7 +557,12 @@ func level_short_dips(seq, dist=, thresh=) {
    // instance.
    seq = (seq);
 
-   count = numberof(seq);
+   if(is_func(_ylevel_short_dips)) {
+      seq = double(seq);
+      _ylevel_short_dips, seq, dist, thresh, numberof(seq);
+      return seq;
+   }
+
    // Must make two passes
    // Pass one will miss points that are near the edges of long dips but will
    // fill their centers.

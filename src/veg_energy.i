@@ -1317,7 +1317,7 @@ func make_begrid_from_bexyz(bexyz, binsize=, intdist=, lfpveg=) {
   	   begrid conform to the size of the lfpveg array.
   OUTPUT:  array img containing the Bare Earth grid
 */
-
+   local v1, v2, v3;
   extern bbox
   if (is_void(intdist)) intdist=2;
   if (!binsize) binsize = 5; //in meters
@@ -1362,18 +1362,20 @@ func make_begrid_from_bexyz(bexyz, binsize=, intdist=, lfpveg=) {
   }
 
  // now use delaunay triangulation to find the vertices
-  verts = triangulate_xyz(data=bexyz, mode=3, distthresh=100);
+  verts = triangulate_data(bexyz, mode="be", maxside=100);
+  splitxyz, verts, v1, v2, v3;
+  verts = [];
 
   // find the centroid for each triangle
   
-  da = sqrt(((bexyz.least(verts(2,))-bexyz.lnorth(verts(3,)))/100.)^2+((bexyz.lnorth(verts(2,))-bexyz.lnorth(verts(3,)))/100.)^2);
-  db = sqrt(((bexyz.least(verts(3,))-bexyz.lnorth(verts(1,)))/100.)^2+((bexyz.lnorth(verts(3,))-bexyz.lnorth(verts(1,)))/100.)^2);
-  dc = sqrt(((bexyz.least(verts(1,))-bexyz.lnorth(verts(2,)))/100.)^2+((bexyz.lnorth(verts(1,))-bexyz.lnorth(verts(2,)))/100.)^2);
+  da = sqrt(((bexyz.least(v2)-bexyz.lnorth(v3))/100.)^2+((bexyz.lnorth(v2)-bexyz.lnorth(v3))/100.)^2);
+  db = sqrt(((bexyz.least(v3)-bexyz.lnorth(v1))/100.)^2+((bexyz.lnorth(v3)-bexyz.lnorth(v1))/100.)^2);
+  dc = sqrt(((bexyz.least(v1)-bexyz.lnorth(v2))/100.)^2+((bexyz.lnorth(v1)-bexyz.lnorth(v2))/100.)^2);
 
 
-  centx = (da*bexyz.least(verts(1,))/100.+db*bexyz.least(verts(2,))/100.+dc*bexyz.least(verts(3,))/100.)/(da+db+dc);
-  centy = (da*bexyz.lnorth(verts(1,))/100.+db*bexyz.lnorth(verts(2,))/100.+dc*bexyz.lnorth(verts(3,))/100.)/(da+db+dc);
-  centz = (bexyz.lelv(verts(1,))+bexyz.lelv(verts(2,))+bexyz.lelv(verts(3,)))/300.0;
+  centx = (da*bexyz.least(v1)/100.+db*bexyz.least(v2)/100.+dc*bexyz.least(v3)/100.)/(da+db+dc);
+  centy = (da*bexyz.lnorth(v1)/100.+db*bexyz.lnorth(v2)/100.+dc*bexyz.lnorth(v3)/100.)/(da+db+dc);
+  centz = (bexyz.lelv(v1)+bexyz.lelv(v2)+bexyz.lelv(v3))/300.0;
 
   // now loop through the centroids and place the centz values in the img array
   // if there is more than 1 centz value for the same bincell, then take an avg.

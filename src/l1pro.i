@@ -22,6 +22,7 @@ if(is_void(__l1pro_includes_included__)) {
    require, "determine_bias.i";
    require, "drast.i";
    require, "geo_bath.i";
+   require, "gridding.i";
    require, "ircf.i";
    require, "irg.i";
    require, "kml.i";

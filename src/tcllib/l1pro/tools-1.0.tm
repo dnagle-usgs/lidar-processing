@@ -640,3 +640,133 @@ proc ::l1pro::tools::colorbar {} {
    append cmd "colorbar, $::plot_settings(cmin), $::plot_settings(cmax), drag=1"
    exp_send "$cmd\r"
 }
+
+if {![namespace exists ::l1pro::tools::griddata]} {
+   namespace eval ::l1pro::tools::griddata {
+      namespace import ::l1pro::tools::appendif
+      namespace eval v {
+         variable top .l1wid.griddata
+         variable invar {}
+         variable outvar {}
+         variable mode {}
+         variable usearea 1
+         variable useside 1
+         variable usetile 1
+         variable maxarea 200
+         variable maxside 50
+         variable cell 1
+         variable tile {}
+      }
+   }
+}
+
+proc ::l1pro::tools::griddata::gui {} {
+   set w $v::top
+   destroy $w
+   toplevel $w
+
+   wm resizable $w 1 0
+
+   wm title $w "Gridding $::pro_var"
+
+   set v::invar $::pro_var
+   set v::mode [lindex {fs ba de be fint lint ch} [display_type]]
+   set v::outvar ${::pro_var}_grid
+   ybkg tksetfunc \"[namespace which -variable v::tile]\" \"guess_tile\" \
+      \"$::pro_var\"
+
+   ttk::frame $w.f
+   grid $w.f -sticky news
+   grid columnconfigure $w 0 -weight 1
+   grid rowconfigure $w 0 -weight 1
+
+   set f $w
+
+   ttk::label $f.lblmaxside -text "Maximum side: "
+   ttk::label $f.lblmaxarea -text "Maximum area: "
+   ttk::label $f.lblcell -text "Cell size: "
+   ttk::label $f.lbltile -text "Clip to tile: "
+   ttk::label $f.lbloutput -text "Output variable: "
+
+   ttk::checkbutton $f.useside \
+      -variable [namespace which -variable v::useside]
+   ttk::checkbutton $f.usearea \
+      -variable [namespace which -variable v::usearea]
+   ttk::checkbutton $f.usetile \
+      -variable [namespace which -variable v::usetile]
+
+   spinbox $f.maxside -from 0 -to 5000 -increment 0.1 \
+      -format %.2f \
+      -textvariable [namespace which -variable v::maxside]
+   spinbox $f.maxarea -from 0 -to 100000 -increment 0.1 \
+      -format %.2f \
+      -textvariable [namespace which -variable v::maxarea]
+   spinbox $f.cell -from 0 -to 100 -increment 0.1 \
+      -format %.2f \
+      -textvariable [namespace which -variable v::cell]
+
+   ttk::entry $f.tile \
+      -textvariable [namespace which -variable v::tile]
+   ttk::entry $f.output \
+      -textvariable [namespace which -variable v::outvar]
+
+   ::misc::statevar $f.maxside \
+      -statemap {1 normal 0 disabled} \
+      -statevariable [namespace which -variable v::useside]
+
+   ::misc::statevar $f.maxarea \
+      -statemap {1 normal 0 disabled} \
+      -statevariable [namespace which -variable v::usearea]
+
+   ::misc::statevar $f.tile \
+      -statemap {1 normal 0 disabled} \
+      -statevariable [namespace which -variable v::usetile]
+
+   ttk::frame $f.buttons
+   ttk::button $f.grid -text "Grid" \
+      -command ::l1pro::tools::griddata::griddata
+   ttk::button $f.dismiss -text "Dismiss" \
+      -command [list destroy [winfo toplevel $f]]
+
+   grid x $f.grid $f.dismiss -padx 2 -in $f.buttons
+   grid columnconfigure $f.buttons {0 3} -weight 1
+
+   grid $f.useside $f.lblmaxside $f.maxside -in $w.f -padx 2 -pady 2
+   grid $f.usearea $f.lblmaxarea $f.maxarea -in $w.f -padx 2 -pady 2
+   grid $f.usetile $f.lbltile $f.tile -in $w.f -padx 2 -pady 2
+   grid x $f.lblcell $f.cell -in $w.f -padx 2 -pady 2
+   grid x $f.lbloutput $f.output -in $w.f -padx 2 -pady 2
+   grid $f.buttons - - -in $w.f -pady 2
+
+   grid configure $f.lblmaxside $f.lblmaxarea $f.lbltile $f.lblcell \
+      $f.lbloutput $f.useside $f.usearea $f.usetile -sticky e
+   grid configure $f.maxside $f.maxarea $f.tile $f.cell $f.output -sticky ew
+
+   grid columnconfigure $w.f 2 -weight 1
+
+   ::tooltip::tooltip $f.tile \
+      "Enter the name of the tile here, either as a 2k, 10k, or qq tile, and the\
+      \ndata will be restricted to the tile's boundaries. If you do not known the\
+      \ntile's name, or do not wish to restrict by the tile's boundaries, then\
+      \ndisable this. If it is not a valid tile name, an error will be\
+      \ngenerated."
+}
+
+proc ::l1pro::tools::griddata::griddata {} {
+   set cmd "$v::outvar = data_triangle_grid($v::invar"
+
+   appendif cmd \
+      1                       ", mode=\"$v::mode\"" \
+      $v::usetile             ", tile=\"$v::tile\"" \
+      {$v::cell != 1}         ", cell=$v::cell" \
+      $v::useside             ", maxside=$v::maxside" \
+      {!$v::useside}          ", maxside=0" \
+      $v::usearea             ", maxarea=$v::maxarea" \
+      {!$v::usearea}          ", maxarea=0" \
+      1                       ")"
+
+   exp_send "$cmd\r"
+
+   append_varlist $v::outvar
+   destroy $v::top
+}

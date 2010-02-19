@@ -231,6 +231,36 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
       return am_subroutine() ? [] : [x, y, z];
    }
 
+   // Special case for gridded data
+   if(structeq(structof(data), ZGRID)) {
+      if(numberof(data) > 1) {
+         ptrs = array(pointer, numberof(data));
+         for(i = 1; i <= numberof(data); i++)
+            ptrs(i) = &transpose(data2xyz(data(i)));
+         merged = merge_pointers(unref(ptrs));
+         merged = reform(merged, [2, 3, numberof(merged)/3]);
+         splitxyz, merged, x, y, z;
+         return am_subroutine() ? [] : [x, y, z];
+      } else {
+         z = *(data.zgrid);
+         x = y = array(double, dimsof(z));
+         xmax = data.xmin + dimsof(x)(2) * data.cell;
+         ymax = data.ymin + dimsof(y)(3) * data.cell;
+         hc = 0.5 * data.cell;
+         x(,) = span(data.xmin+hc, xmax-hc, dimsof(x)(2))(,-);
+         y(,) = span(data.ymin+hc, ymax-hc, dimsof(y)(3))(-,);
+         w = where(z != data.nodata);
+         if(numberof(w)) {
+            x = x(w);
+            y = y(w);
+            z = z(w);
+         } else {
+            x = y = z = [];
+         }
+         return am_subroutine() ? [] : [x, y, z];
+      }
+   }
+
    // Most data modes use east/north for x/y. Only bare earth and be intensity
    // use least/lnorth.
    if(anyof(["ba","ch","de","fint","fs"] == mode)) {
@@ -453,9 +483,9 @@ func xyz2data(_x, &_y, _z, &data, mode=, native=) {
    }
 }
 
-func display_data(data, mode=, axes=, cmin=, cmax=, marker=, msize=, win=, dofma=, skip=, square=, restore_win=, showcbar=) {
+func display_data(data, mode=, axes=, cmin=, cmax=, marker=, msize=, win=, dofma=, skip=, square=, restore_win=, showcbar=, triag=, triagedges=) {
 /* DOCUMENT display_data, data, mode=, axes=, cmin=, cmax=, marker=, msize=,
-   win=, dofma=, skip=, square=, restore_win=, showcbar=
+   win=, dofma=, skip=, square=, restore_win=, showcbar=, triag=
 
    Plots ALPS data.
 
@@ -504,33 +534,38 @@ func display_data(data, mode=, axes=, cmin=, cmax=, marker=, msize=, win=, dofma
    default, restore_win, 0;
    default, showcbar, 0;
 
-   data2xyz, unref(data), x, y, z, mode=mode;
-
-   w = where(y);
-   if(!numberof(w))
-      return;
-
-   // Extract points of interest (apply w and skip)
-   X = unref(x)(w)(::skip);
-   Y = unref(y)(w)(::skip);
-   Z = unref(z)(w)(::skip);
-   w = [];
-
-   // xyz -> xzy
-   if(anyof(axes == ["xzy", "yzx"]))
-      swap, Z, Y;
-   // xzy -> yzx
-   if(axes == "yzx")
-      swap, Z, X;
-
    if(is_void(win)) win = window();
    wbkp = current_window();
    window, win;
    if(dofma)
       fma;
 
-   plcm, unref(Z), unref(Y), unref(X), msize=msize, marker=marker,
-      cmin=cmin, cmax=cmax;
+   if(structeq(structof(data), ZGRID) && noneof(axes == ["xzy", "yxz"])) {
+      display_grid, data, cmin=cmin, cmax=cmax;
+   } else {
+      data2xyz, unref(data), x, y, z, mode=mode;
+
+      // Extract points of interest (apply w and skip)
+      X = unref(x)(::skip);
+      Y = unref(y)(::skip);
+      Z = unref(z)(::skip);
+
+      // xyz -> xzy
+      if(anyof(axes == ["xzy", "yzx"]))
+         swap, Z, Y;
+      // xzy -> yzx
+      if(axes == "yzx")
+         swap, Z, X;
+
+      if(triag) {
+         v = triangulate(X, Y);
+         plot_triag_mesh, [X,Y,Z], v, cmin=cmin, cmax=cmax, dofma=0, edges=triagedges;
+      } else {
+         plcm, unref(Z), unref(Y), unref(X), msize=msize, marker=marker,
+            cmin=cmin, cmax=cmax;
+      }
+   }
+
    limits, square=square;
    if(showcbar)
       colorbar, cmin, cmax;

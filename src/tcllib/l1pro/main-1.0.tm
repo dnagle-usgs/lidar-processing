@@ -26,6 +26,8 @@ proc ::l1pro::main::panel_tools w {
       -command ::datum_proc
    ttk::button $f.elvclip -text " Elevation \n Clipper " -width 0 \
       -command ::l1pro::tools::histclip::gui
+   ttk::button $f.griddata -text " Grid " -width 0 \
+      -command ::l1pro::tools::griddata::gui
    misc::combobox::mapping $f.gridtype -width 0 \
       -state readonly \
       -altvariable ::gridtype \
@@ -47,10 +49,13 @@ proc ::l1pro::main::panel_tools w {
       "After clicking this button, you will be prompted to click on the\
       \ncurrent plotting window. You will then be told which tile corresponds\
       \nto the location you clicked."
+   ::tooltip::tooltip $f.griddata \
+      "NOTE: This tool requires that you have C-ALPS installed. If you do not,\
+      \nit will not work!"
 
-   grid $f.pixelwf $f.histelv $f.colorbar $f.rcf $f.datum $f.elvclip \
+   grid $f.pixelwf $f.histelv $f.colorbar $f.rcf $f.datum $f.elvclip $f.griddata \
       $f.gridtype - -sticky news -padx 1 -pady 1
-   grid ^ ^ ^ ^ ^ ^ $f.gridplot $f.gridname -sticky news -padx 1 -pady 1
+   grid ^ ^ ^ ^ ^ ^ ^ $f.gridplot $f.gridname -sticky news -padx 1 -pady 1
    grid columnconfigure $f 1000 -weight 1
-   grid columnconfigure $f {6 7} -uniform g
+   grid columnconfigure $f {7 8} -uniform g
 }

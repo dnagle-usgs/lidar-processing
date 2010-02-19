@@ -1,6 +1,6 @@
 # You must download the triangle library from:
 # https://www.cs.cmu.edu/~quake/triangle.com
-# # Then put triangle.c and triangle.h in this directory.
+# Then put triangle.c and triangle.h in this directory.
 
 # these values filled in by    yorick -batch make.i
 Y_MAKEDIR=/opt/yorick
@@ -17,10 +17,10 @@ TGT=$(DEFAULT_TGT)
 
 # ------------------------------------------------ macros for this package
 
-PKG_NAME=rcf
-PKG_I=triangle.i rcf_utils.i rcf_triangulate.i
+PKG_NAME=calps
+PKG_I=calps.i
 
-OBJS=triangle.o rcf_utils.o rcf_triangulate.o
+OBJS=triangle.o triangle_y.o gridding.o region.o lines.o
 
 # change to give the executable a name other than yorick
 PKG_EXENAME=yorick
@@ -39,7 +39,7 @@ EXTRA_PKGS=$(Y_EXE_PKGS)
 PKG_CLEAN=
 
 # autoload file for this package, if any
-PKG_I_START=
+PKG_I_START=calps_start.i
 # non-pkg.i include files for this package, if any
 PKG_I_EXTRA=
 
@@ -73,5 +73,6 @@ MAKE_TEMPLATE = protect-against-1.5
 #	$(CC) $(CPPFLAGS) $(CFLAGS) -DMY_SWITCH -o $@ -c myfunc.c
 
 triangle.o: triangle.h
+triangle_y.o: triangle.h
 
 # -------------------------------------------------------- end of Makefile

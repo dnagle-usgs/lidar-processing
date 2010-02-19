@@ -279,11 +279,11 @@ func normalize_degrees(ary, mode=) {
          1. The range will be [0,360). (Default)
          2. The range will be (-180,180].
 */
-   while(numberof(where(ary<0.0))) {
+   while(anyof(ary<0.0)) {
       ary += 360.0;
    }
    ary %= 360.0;
-   if(mode==2 && numberof(where(ary>180.0))) {
+   if(mode==2 && anyof(ary>180.0)) {
       ary(where(ary>180.0)) -= 360.0;
    }
    return ary;
@@ -695,11 +695,51 @@ func cross_product_sign(x1, y1, x2, y2, x3, y3) {
 // Original David B. Nagle 2009-03-10
 // Using math from Wikipedia:
 // http://en.wikipedia.org/w/index.php?title=Graham_scan&oldid=274508758
+   if(is_func(_ycross_product_sign)) {
+      result = array(double(0.), dimsof(x1,y1,x2,y2,x3,y3));
+      if(is_void(result))
+         error, "Input not conformable.";
+      // Adding result to everything belong forces them all to double and
+      // broadcasts them to the result size if necessary.
+      _ycross_product_sign, result+unref(x1), result+unref(y1),
+         result+unref(x2), result+unref(y2), result+unref(x3),
+         result+unref(y3), result, numberof(result);
+      return result;
+   }
    x2x1 = unref(x2) - x1;
    y3y1 = unref(y3) - y1;
    y2y1 = unref(y2) - unref(y1);
    x3x1 = unref(x3) - unref(x1);
    return unref(x2x1)*unref(y3y1)-unref(y2y1)*unref(x3x1);
+}
+
+func in_triangle(x1, y1, x2, y2, x3, y3, xp, yp) {
+/* DOCUMENT in_triangle(x1, y1, x2, y2, x3, y3, xp, yp)
+   Returns an array of boolean values (1 or 0) indicating whether each point
+   xp, yp is within the triangle defined by the points x1,y1, x2,y2, and x3,y3.
+
+   All input may be scalar or array; if arrays are given, they must all be
+   conformable.
+
+   This is effectively a specialized version of testPoly/testPoly2 for
+   triangles.
+*/
+// Original David Nagle 2010-02-10
+   if(is_func(_yin_triangle)) {
+      result = array(short(0), dimsof(x1,y1,x2,y2,x3,y3,xp,yp));
+      if(is_void(result))
+         error, "Input not conformable.";
+      // Adding result to everything broadcasts them to the result size if
+      // necessary.
+      _yin_triangle, result+unref(x1), result+unref(y1), result+unref(x2),
+         result+unref(y2), result+unref(x3), result+unref(y3),
+         result+unref(xp), result+unref(yp), result, numberof(result);
+      return result;
+   }
+   AB = cross_product_sign(x1, y1, x2, y2, xp, yp);
+   BC = cross_product_sign(x2, y2, x3, y3, xp, yp);
+   CA = cross_product_sign(x3, y3, x1, y1, xp, yp);
+   return ((AB >= 0) & (BC >= 0) & (CA >= 0)) | ((AB <= 0) & (BC <= 0) & (CA <= 0));
 }
 
 func triangle_areas(x1, y1, x2, y2, x3, y3) {
@@ -821,4 +861,56 @@ func angular_range(ang, rad=) {
    if(!rad) result *= 180./pi;
 
    return result;
+}
+
+func planar_params_from_pts(x1, y1, z1, x2, y2, z2, x3, y3, z3) {
+/* DOCUMENT planar_params_from_pts(x1, y1, z1, x2, y2, z2, x3, y3, z3)
+   planar_params_from_pts(p1, p2, p3)
+
+   Returns an array of three values [A, B, C] that are the parameters that
+   define the plane containing the given three points. The points may be
+   specified individually, or in triplets.
+
+   The parameters can be used with this equation:
+      z = Ax + By + C
+*/
+   if(is_void(x2)) {
+      assign, z1, x3, y3, z3;
+      assign, y1, x2, y2, z2;
+      assign, (x1), x1, x2, x3;
+   }
+   if(is_func(_yplanar_params_from_pts)) {
+      A = B = D = double(0);
+      _yplanar_params_from_pts, x1, y1, z1, x2, y2, z2, x3, y3, z3, A, B, D;
+      return [A,B,D];
+   }
+
+   /*
+   Equation of a plane is:
+
+      Ax + By + Cz + D = 0
+
+   Given three points defined as x1 .. z3, the constants are defined by the
+   following determinants:
+
+          | 1 y1 z1 |      | x1 1 z1 |      | x1 y1 1 |       | x1 y1 z1 |
+      A = | 1 y2 z2 |  B = | x2 1 z2 |  C = | x2 y2 1 |  -D = | x2 y2 z2 |
+          | 1 y3 z3 |      | x3 1 z3 |      | x3 y3 1 |       | x3 y3 z3 |
+
+   We then normalize it to solve for z by coercing z's factor to 1.
+
+      Ax + By + Cz + D = 0
+      Cz = -Ax + -By + -D
+      z = (-A/C)x + (-B/C)y + (-D/C)
+      z = A'x + B'y + C'
+      A' = -A/C   B' = -B/C   C' = -D/C
+
+   */
+
+   A = det([[1,y1,z1],[1,y2,z2],[1,y3,z3]]);
+   B = det([[x1,1,z1],[x2,1,z2],[x3,1,z3]]);
+   C = det([[x1,y1,1],[x2,y2,1],[x3,y3,1]]);
+   D = -det([[x1,y1,z1],[x2,y2,z2],[x3,y3,z3]]);
+
+   return [A,B,D]/(-C);
 }

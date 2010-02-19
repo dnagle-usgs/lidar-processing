@@ -314,9 +314,8 @@ func write_sel_rgn_stats(data, type) {
 func data_box(x, y, xmin, xmax, ymin, ymax) {
 /* DOCUMENT data_box(x, y, xmin, xmax, ymin, ymax)
    data_box(x, y, bbox)
-Function takes the arrays (of equal dimension) x and y, returns the
-indicies of the arrays that fit inside the box defined by xmin, xmax, ymin,
-ymax
+   Function takes the arrays (of equal dimension) x and y, returns the indicies
+   of the arrays that fit inside the box defined by xmin, xmax, ymin, ymax.
 */
    if(is_void(xmax) && numberof(xmin) == 4) {
       ymax = xmin(4);
@@ -324,17 +323,47 @@ ymax
       xmax = xmin(2);
       xmin = xmin(1);
    }
-   indx = where(x >= xmin);
-   if (is_array(indx)) {
-      indx1 = where(x(indx) <= xmax);
-      if (is_array(indx1)) {
-         indx2 = where(y(indx(indx1)) >= ymin);
-         if (is_array(indx2)) {
-            indx3 = where(y(indx(indx1(indx2))) <= ymax);
-            if (is_array(indx3)) return indx(indx1(indx2(indx3)));
-         } else return;
-      } else return;
-   } else return;
+
+   // If calps is available and boundaries are scalar, use the accelarator.
+   if(
+      is_func(_yin_box) && is_scalar(xmin) && is_scalar(xmax) &&
+      is_scalar(ymin) && is_scalar(ymax)
+   ) {
+      in = array(short, dimsof(x));
+      _yin_box, x, y, xmin, xmax, ymin, ymax, in, numberof(x);
+      return where(in);
+   }
+
+   indx1 = where(x >= xmin);
+   if (is_array(indx1)) {
+      indx2 = where(x(indx1) <= xmax);
+      if (is_array(indx2)) {
+         indx3 = where(y(indx1(indx2)) >= ymin);
+         if (is_array(indx3)) {
+            indx4 = where(y(indx1(indx2(indx3))) <= ymax);
+            if (is_array(indx4))
+               return indx1(indx2(indx3(indx4)));
+         }
+      }
+   }
+   return [];
+}
+
+func in_box(x, y, xmin, xmax, ymin, ymax) {
+/* DOCUMENT in_box(x, y, xmin, xmax, ymin, ymax)
+   Returns an array of boolean shorts indicating whether each element in x,y
+   falls within the box defined by xmin, xmax, ymin, ymax.
+*/
+   in = array(short(0), dimsof(x));
+   if(is_func(_yin_box)) {
+      write, "Y";
+      _yin_box, x, y, xmin, xmax, ymin, ymax, in, numberof(x);
+   } else {
+      w = data_box(x, y, xmin, xmax, ymin, ymax);
+      if(numberof(w))
+         in(w) = 1;
+   }
+   return in;
 }
 
 func sel_rgn_from_datatiles(rgn=, data_dir=,lmap=, win=, mode=, search_str=, skip=, noplot=,  pip=, pidx=, uniq=, silent=) {

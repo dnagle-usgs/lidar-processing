@@ -1491,6 +1491,7 @@ func set_read_yorick(data, vname=, fn=) {
    This function sets the cmin and cmax values in the Process EAARL data GUI
    amar nayegandhi 05/06/03
 */
+   local z;
    if(is_void(_ytk) || !_ytk)
       return;
 
@@ -1520,6 +1521,11 @@ func set_read_yorick(data, vname=, fn=) {
          dmode = 3;
          cminmax = stdev_min_max(data.lelv)/100.;
       }
+   } else if(structeq(dstruc, ZGRID) || is_numerical(data)) {
+      pmode = 0;
+      dmode = 0;
+      data2xyz, data, , , z;
+      cminmax = stdev_min_max(z);
    }
 
    if(!is_void(pmode)) {

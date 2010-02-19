@@ -1,8 +1,9 @@
+// vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 require, "l1pro.i";
 
 func rcf_triag_filter(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=, plottriag=, plottriagwin=, prefilter_min=, prefilter_max=, distthresh=, datawin=, wfs=, plottriagpal=) {
-  /* DOCUMENT rcf_triag_filter(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=)
- this function splits data sets into manageable portions and calls new_rcfilter_eaarl_pts that 
+/* DOCUMENT rcf_triag_filter(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=)
+ this function splits data sets into manageable portions and calls ircf_eaarl_pts that 
 uses the random consensus filter (rcf) and triangulation method to filter data.
  
  amar nayegandhi April 2004.
@@ -11,11 +12,11 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
   eaarl : data array to be filtered.  
   buf = buffer size in CENTIMETERS within which the rcf block minimum filter will be implemented (default is 500cm).
   w   = block minimum elevation width (vertical extent) in CENTIMETERS of the filter (default is 20cm)
-  no_rcf = minimum number of 'winners' required in each buffer (default is 3).
+  no_rcf = minimum number of 'winners' required in each buffer (default is be).
   mode =
-   mode = 1; //for first surface
-   mode = 2; //for bathymetry
-   mode = 3; // for bare earth vegetation
+   mode = "fs" //for first surface
+   mode = "ba" //for bathymetry
+   mode = "be" // for bare earth vegetation
    (default mode = 3)
   fbuf = buffer size in METERS for the initial RCF to remove the "bad" outliers. Default = 100m
   fw = window size in METERS for the initial RCF to remove the "bad" outliers. Default = 25m
@@ -33,143 +34,28 @@ uses the random consensus filter (rcf) and triangulation method to filter data.
     rcf'd data array of the same type as the 'eaarl' data array.
 
 */
- tmr1 = tmr2 = array(double, 3);
- timer, tmr1;
- extern tag_eaarl;
- //reset new_eaarl and data_out
- //t0 = t1 = double( [0,0,0] );
- MAXSIZE = 50000;
- new_eaarl = [];
- new_eaarl_all = [];
- data_out = [];
- if (!mode) mode = 3;
- if (is_void(distthresh)) distthresh = 200;
- if (is_void(datawin)) datawin = 5;
- ecount = 0;
+// This function is kept primarily for backwards compatibility.
+   default, mode, "be";
+   default, distthresh, 200;
+   default, datawin, 5;
 
- endit = 0; // if set, will end the iteration mode
- fsmode = mode;
- wfs = 15;
+   // if data array is in raster format (R, GEOALL, VEGALL), then covert to 
+   // non raster format (FS, GEO, VEG).
+   test_and_clean, eaarl;
 
- // if data array is in raster format (R, GEOALL, VEGALL), then covert to 
- // non raster format (FS, GEO, VEG).
-  eaarl = test_and_clean(unref(eaarl));
+   //crop region to within user-specified elevation limits
+   if(!is_void(prefilter_min) || !is_void(prefilter_max))
+      eaarl = filter_bounded_elv(unref(eaarl), lbound=prefilter_min,
+         ubound=prefilter_max, mode=mode);
 
- if (is_array(data_out)) eaarl = data_out;
- data_out = [];
-
- //crop region to within user-specified elevation limits
-	if (!is_void(prefilter_min) && (is_void(prefilter_max))) {
-         if (mode == 1) {
-           pfindx = where(eaarl.elevation > prefilter_min*100);
-         }
-         if (mode == 2) {
-           pfindx = where((eaarl.depth+eaarl.elevation) > prefilter_min*100);
-         }
-         if (mode == 3) {
-           pfindx = where(eaarl.lelv > prefilter_min*100);
-         }
-         if (is_array(pfindx)) {
-           eaarl = eaarl(pfindx);
-         } 
-        }
-        if (is_void(prefilter_min) && !(is_void(prefilter_max))) {
-         if (mode == 1) {
-           pfindx = where(eaarl.elevation < prefilter_max*100);
-         }
-         if (mode == 2) {
-           pfindx = where((eaarl.depth+eaarl.elevation) < prefilter_max*100);
-         }
-         if (mode == 3) {
-           pfindx = where(eaarl.lelv < prefilter_max*100);
-         }
-         if (is_array(pfindx)) {
-           eaarl = eaarl(pfindx);
-         }
-        }
-        if (!is_void(prefilter_min) && !(is_void(prefilter_max))) {
-         if (mode == 1) {
-           pfindx = where(eaarl.elevation < prefilter_max*100);
-           pfpfindx = where(eaarl.elevation(pfindx) > prefilter_min*100);
-         }
-         if (mode == 2) {
-           pfindx = where((eaarl.depth+eaarl.elevation) < prefilter_max*100);
-           pfpfindx = where((eaarl.depth(pfindx)+eaarl.elevation(pfindx)) > prefilter_min*100);
-         }
-         if (mode == 3) {
-           pfindx = where(eaarl.lelv < prefilter_max*100);
-           pfpfindx = where(eaarl.lelv(pfindx) > prefilter_min*100);
-         }
-         pfindx = pfindx(pfpfindx);
-         if (is_array(pfindx)) {
-           eaarl = eaarl(pfindx);
-         }
-        }
-
-
- neaarl = numberof(eaarl);
-
- //break the array into regional blocks if greater than MAXN points
- MAXN = 100000;
- if (neaarl > MAXN) {
-  eaarl_out = array(a, neaarl);
-  min_mx = min(eaarl.east)/100.;
-  max_mx = max(eaarl.east)/100.;
-  min_my = min(eaarl.north)/100.;
-  max_my = max(eaarl.north)/100.;
-
-  // using max block size, figure out how many blocks to make, and use those to make blocks
-  max_block_size = 650;
-  nmx = int(ceil((max_mx - min_mx) / max_block_size))+1;
-  nmy = int(ceil((max_my - min_my) / max_block_size))+1;
-  
-  if (nmx > 1)  {
-     spanx = span(min_mx, max_mx, nmx);
-  } else {
-     spanx = [min_mx, max_mx];
-  }
-  if (nmy > 1)  {
-     spany = span(min_my, max_my, nmy);
-  } else {
-     spany = [min_my, max_my];
-  }
- 
-  for (j=1;j<numberof(spany);j++) {
-    for (k=1;k<numberof(spanx);k++) {
-       isp1 = data_box(eaarl.east, eaarl.north,  spanx(k)*100-5000, spanx(k+1)*100+5000, spany(j)*100-5000, spany(j+1)*100+5000);
-       if (interactive) {
-         wi = current_window();
-         window, datawin; 
-	 plg, [spany(j)-50, spany(j)-50, spany(j+1)+50, spany(j+1)+50, spany(j)-50], [spanx(k)-50, spanx(k+1)+50, spanx(k+1)+50, spanx(k)-50, spanx(k)-50], color="red";
-	 window_select, wi;
-       }
-       if (!is_array(isp1)) continue;
-       eaarl1 = eaarl(isp1);
-       xx = new_rcfilter_eaarl_pts(eaarl1, buf=buf, w=w, mode=mode, no_rcf=no_rcf, fbuf=fbuf, fw=fw, tw=tw, interactive=interactive, tai=tai, plottriag=plottriag, plottriagwin=plottriagwin, plottriagpal=plottriagpal);
-       if (!is_array(xx)) continue;
-       xx = xx(data_box(xx.east, xx.north,  spanx(k)*100, spanx(k+1)*100, spany(j)*100, spany(j+1)*100));
-       eaarl_out(ecount+1:ecount+numberof(xx)) = xx;
-       ecount += numberof(xx);
-     }
-   }
- } else {
-       eaarl_out = new_rcfilter_eaarl_pts(eaarl, buf=buf, w=w, mode=mode, no_rcf=no_rcf, fbuf=fbuf, fw=fw, tw=tw, interactive=interactive, tai=tai, plottriag=plottriag, plottriagwin=plottriagwin, plottriagpal=plottriagpal);
-       ecount = numberof(eaarl_out);
-       if(! ecount) return;
- }
- if (is_void(eaarl_out)) return;
- eaarl_out = eaarl_out(1:ecount);
- 
- write, format="Original points %d, Filtered points %d.  %2.2f%% data reduction\n", neaarl, ecount, (neaarl-ecount)*100./neaarl;
- timer, tmr2;
- tmr = tmr2-tmr1;
- write, format="Total time taken to filter: %4.2f minutes\n",tmr(3)/60.;
-  
- return eaarl_out;    
+   return ircf_eaarl_pts(eaarl, buf=buf, w=w, mode=mode,
+      no_rcf=no_rcf, fbuf=fbuf, fw=fw, tw=tw, interactive=interactive,
+      tai=tai, plottriag=plottriag, plottriagwin=plottriagwin,
+      plottriagpal=plottriagpal);
 }
    
-func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=, plottriag=, plottriagwin=, plottriagpal=) {
-  /* DOCUMENT new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=)
+func ircf_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=, plottriag=, plottriagwin=, plottriagpal=, autoreducetw=) {
+/* DOCUMENT ircf_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=)
  this function uses the random consensus filter (rcf) and triangulation method to filter data.
  
  amar nayegandhi Jan/Feb 2004.
@@ -197,599 +83,253 @@ func new_rcfilter_eaarl_pts(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, in
     rcf'd data array of the same type as the 'eaarl' data array.
 
 */
+   default, mode, 3;
+   default, fw, 25;     // 25m
+   default, fbuf, 25;   // 25m
+   default, buf, 500;   // 500cm
+   default, w, 20;      // 20cm
+   default, tw, w;
+   default, no_rcf, 3;  // 3 points
+   default, tai, 3;
+   default, autoreducetw, 0;
+   default, plottriagwin, 0;
+   default, plottriagpal, "";
 
- savewindow = current_window();
- tmr1 = tmr2 = array(double, 3);
- timer, tmr1;
- extern tag_eaarl;
- //reset new_eaarl and data_out
- //t0 = t1 = double( [0,0,0] );
- MAXSIZE = 50000;
- new_eaarl = [];
- new_eaarl_all = [];
- data_out = [];
- if (!mode) mode = 3;
+   wbkp = current_window();
+   t0 = array(double, 3);
+   timer, t0;
 
- fsmode = mode;
- wfs = 15;
+   // PRELIMINARIES....
 
- // if data array is in raster format (R, GEOALL, VEGALL), then covert to 
- // non raster format (FS, GEO, VEG).
- eaarl = test_and_clean(unref(eaarl));
+   // if data array is in raster format (R, GEOALL, VEGALL), then covert to 
+   // non raster format (FS, GEO, VEG).
+   test_and_clean, eaarl;
 
- a = structof(eaarl(1));
- new_eaarl = array(a, MAXSIZE);
- selcount = 0;
+   write, format="RCF'ing data set with window size = %d, and elevation width = %d meters...\n", fbuf, fw;
 
- if (is_void(fw)) fw = 25; //25m
- if (is_void(fbuf)) fbuf = 25; // 25m
- write, format="RCF'ing data set with window size = %d, and elevation width = %d meters...\n",fbuf,fw
- eaarl = rcfilter_eaarl_pts(eaarl, buf=fbuf*100, w=fw*100, mode=mode)
+   // Get rid of the really bad outliers
+   eaarl = rcf_filter_eaarl(eaarl, buf=fbuf*100, w=fw*100, mode=mode);
 
- if (!is_array(eaarl)) return;
+   if(is_void(eaarl))
+      return;
 
- tag_eaarl = array(int, numberof(eaarl));
- tag_eaarl++;
- indx = [];
- if (mode == 3) {
-     eaarl = eaarl(sort(eaarl.least)); // for bare_earth
- } else {
-     eaarl = eaarl(sort(eaarl.east)); // for first surface and bathy
- }
+   // END OF PRELIMINARIES
+   // The eaarl variable now holds our overall dataset; we want to run IRCF on
+   // it. From this point on, we won't modify eaarl until the end. So... split
+   // out its xyz coordinates for ease of access.
+   data2xyz, eaarl, x, y, z, mode=mode;
 
- eaarl_orig = eaarl;
+   // mf is a boolean array for points that have been manually removed. Only
+   // used in interactive mode.
+   mf = array(short(0), numberof(eaarl));
 
- // define a bounding box
-  bbox = array(float, 4);
- if (mode != 3) {
-  bbox(1) = min(eaarl.east);
-  bbox(2) = max(eaarl.east);
-  bbox(3) = min(eaarl.north);
-  bbox(4) = max(eaarl.north);
- } else {
-  bbox(1) = min(eaarl.least);
-  bbox(2) = max(eaarl.least);
-  bbox(3) = min(eaarl.lnorth);
-  bbox(4) = max(eaarl.lnorth);
- }
+   // maybe is a boolean array for points that haven't yet passed any tests
+   maybe = array(short(1), numberof(eaarl));
 
-  if (!buf) buf = 500; //in centimeters
-  if (!w) w = 20; //in centimeters
-  if (is_void(tw)) tw = w;
-  // no_rcf is the minimum number of points required to be returned from rcf
-  if (!no_rcf) no_rcf = 3;
+   // -- our good data is where(!mf & !maybe)
 
-  //now make a grid in the bbox
-  ngridx = int(ceil((bbox(2)-bbox(1))/buf));
-  ngridy = int(ceil((bbox(4)-bbox(3))/buf));
-  if (ngridx > 1) {
-    xgrid = bbox(1)+span(0, buf*(ngridx-1), ngridx);
-  } else {
-    xgrid = [bbox(1)];
-  }
-  if (ngridy > 1) {
-    ygrid = bbox(3)+span(0, buf*(ngridy-1), ngridy);
-  } else {
-    ygrid = [bbox(3)];
-  }
-
-  if ( _ytk && (ngridy>1)) {
-    tkcmd,"destroy .rcf1; toplevel .rcf1; set progress 0;"
-    tkcmd,swrite(format="ProgressBar .rcf1.pb \
-	-fg green \
-	-troughcolor blue \
-	-relief raised \
-	-maximum %d \
-	-variable progress \
-	-height 30 \
-	-width 400", int(ngridy) );
-    tkcmd,"pack .rcf1.pb; update; center_win .rcf1;"
-  }
-
-
-  //timer, t0
-  origdata = [];
-  for (i = 1; i <= ngridy; i++) {
-   q = [];
-   if (mode == 3) {
-    q = where(eaarl.lnorth >= ygrid(i));
-    if (is_array(q)) {
-       qq = where(eaarl.lnorth(q) <= ygrid(i)+buf);
-       if (is_array(qq)) {
-          q = q(qq);
-       } else q = []
-    }
-   } else {
-    q = where (eaarl.north >= ygrid(i));
-    if (is_array(q)) {
-       qq = where(eaarl.north(q) <= ygrid(i)+buf);
-       if (is_array(qq)){
-	   q = q(qq);
-       } else q = [];
-    }
+   // Now figure out which points fail the normal RCF params and convert them
+   // to maybes.
+   w = rcf_filter_eaarl([x,y,z], buf=buf, w=w, n=no_rcf, idx=1);
+   if(numberof(w)) {
+      maybe(w) = 0;
    }
-   if (!(is_array(q))) continue;
+
+   done = 0; // set done to 0 to continue interactive mode
+
+   // tai = number of triangulation iterations to perform
+   for (ai = 1; ai <= tai; ai++) {
+      write, format="Iteration number %d of %d...\n", ai, tai;
+
+      if(autoreducetw) {
+         if(ai > 1)
+            tw = tw - tw*((ai-1)/(2.0*tai-2.5));
+         write, format="Using tw of %f\n", tw;
+      }
+
+      // Want to test skipped points
+      if(noneof(maybe)) {
+         // No points left to consider!!
+         continue;
+      }
+
+      // Triangulate good points
+      good = where(!mf & !maybe);
+      v = good(triangulate_data([x(good),y(good),0], maxside=distthresh, verbose=0));
+      good = [];
+
+      mfcount = numberof(where(mf));
+      if(interactive)
+         ircf_interactive_mode, x, y, z, maybe, mf, win=plottriagwin,
+            pal=plottriagpal;
+
+      if (plottriag)
+         plot_triag_mesh, [x,y,z], v, win=plottriagwin, resetlimits=1, showcbar=1, dofma=1;
+
+      if(mfcount != numberof(where(mf))) {
+         // Exclude mf points from maybe
+         maybe &= !mf;
+         // Retriangulate
+         good = where(!mf & !maybe);
+         v = good(triangulate_data([x(good),y(good),0], maxside=distthresh, verbose=0));
+         good = [];
+      }
+
+      if (plottriag)
+         plot_triag_mesh, [x,y,z], v, win=plottriagwin, resetlimits=1, showcbar=1, dofma=1;
+
+      // Check each maybe point to see if it fits the tin
+      w = where(maybe);
+      pz = triangle_interp(x, y, z, v, x(w), y(w));
       
-    for (j = 1; j <= ngridx; j++) {
-      indx = [];
-      if (is_array(q)) {
-       if (mode == 3) {
-        indx = where(eaarl.least(q) >= xgrid(j));
-	if (is_array(indx)) {
-           iindx = where(eaarl.least(q)(indx) <= xgrid(j)+buf);
-	   if (is_array(iindx)) {
-             indx = indx(iindx);
-             indx = q(indx);
-           } else indx = [];
-        }
-       } else {
-        indx = where(eaarl.east(q) >= xgrid(j));
-	if (is_array(indx)) {
-           iindx = where(eaarl.east(q)(indx) <= xgrid(j)+buf);
-	   if (is_array(iindx)) {
-             indx = indx(iindx);
-             indx = q(indx);
-           } else indx = [];
-        }
-       }
-      }
-      if (is_array(indx)) {
-       // this is the data inside the box
-       if (mode==3) {
-         be_elv = eaarl.lelv(indx);
-       }
-       if (mode==2) {
-         be_elv = eaarl.elevation(indx)+eaarl.depth(indx);
-       }
-       if (mode==1) {
-         be_elv = eaarl.elevation(indx);
-       }
-       // find the minimum inside the box
-       min_be_elv = min(be_elv);
+      // Anything that's within tw is no longer a maybe... it's a good! So
+      // update maybe to only point to things that are still out of bounds.
+      maybe(w) = abs(pz - z(w)) > tw;
 
-       sel_ptr = rcf(be_elv, w, mode=2);
+      write, format="%d points added this iteration.\n",
+         numberof(w) - numberof(where(maybe));
+   }
 
-       if ((min(be_elv(*sel_ptr(1))) < (min_be_elv+w)) && (*sel_ptr(2) >= no_rcf)) {
-	    tmp_eaarl = eaarl(indx(*sel_ptr(1)));
-            tag_eaarl(indx(*sel_ptr(1)))++;
-            if (fsmode == 4 && mode == 3) {
-	      fsidx = where(tmp_eaarl.elevation < (avg(tmp_eaarl.lelv)+wfs*100));
-	      if (is_array(fsidx)) {
-	         tmp_eaarl = tmp_eaarl(fsidx);
-		 *sel_ptr(2) = numberof(fsidx);
-	      } else {
-	         continue;
-	      }
-	    }
-	    if (selcount+(*sel_ptr(2)) > MAXSIZE) {
-	      grow, new_eaarl_all, new_eaarl(1:selcount);
-	      new_eaarl = array(a, MAXSIZE);
-	      selcount = 0;
-	    }
-	    new_eaarl(selcount+1:selcount+(*sel_ptr(2))) = tmp_eaarl;
-	    selcount = selcount + (*sel_ptr(2));
-	    //write, numberof(indx), *sel_ptr(2);
-       } 
-      }
-    }
-    if (_ytk && (ngridy>1)) 
-       tkcmd, swrite(format="set progress %d", i)
-  }
-  if (selcount > 0) 
-	grow, new_eaarl_all, new_eaarl(1:selcount);
-  //timer,t1
-  //t1 - t0;
-  if (_ytk) {
-   tkcmd, "destroy .rcf1"
-  } 
-  if (!is_array(new_eaarl_all)) return;
+   timer_finished, t0, fmt="Total time taken to filter this section: ELAPSED\n";
+   window_select, wbkp;
 
- // **** initial RCF complete ****
+   return eaarl(where(!mf & !maybe));
+}
 
- // now find all points that have been rejected in the above step
- // i.e. where tag_eaarl == 1
- tidx = where(tag_eaarl == 1);
- if (is_array(tidx)) {
-      maybe_eaarl = eaarl_orig(tidx);
- } else {
-      maybe_eaarl = [];
- }
+func ircf_interactive_prompt(question) {
+/* DOCUMENT used by ircf_interactive_mode */
+   answer = "";
+   valid = regsub("]([^][]*)\\[", regsub("][^]]*$",
+         regsub("^[^[]*\\[", question, all=1), all=1), all=1);
+   if(valid)
+      valid = "[" + valid + "]";
+   else
+      valid = "*";
+   do {
+      read, prompt=question, answer;
+      answer = strlower(strpart(strtrim(answer), 1:1));
+   } while(!strglob(valid, answer));
+   return answer;
+}
 
+func ircf_interactive_mode(x, y, z, maybe, &mf, win=, pal=, elvbuf=) {
+/* DOCUMENT used by ircf_eaarl_pts */
+   local v;
 
- if (is_void(tai)) tai = 3;
- done = 0; // set done to 0 to continue interactive mode
- for (ai=1;ai<=tai;ai++) {
-  selcount = 0;
-  write, format="Iteration number %d...\n", ai;
+   // Local constant
+   default, elvbuf, 2;
+   default, win, window();
+   default, pal, "";
 
-//-----Uncomment to enable reducing tw each step
-//  tw = tw - tw*((ai-1)/(2.0*tai-2.5));
-//  write, format="Using tw of %f\n", tw;
+   window, win;
+   if(pal != "")
+      palette, pal;
 
-  if (ai > 1) {
-    // again find all points that have been rejected in the above step
-    // i.e. where tag_eaarl == 1
-    tidx = where(tag_eaarl == 1);
-    if (is_array(tidx)) {
-       maybe_eaarl = maybe_eaarl(tidx);
-    } else {
-      maybe_eaarl = [];
-    }
-  }
-  if (!is_array(maybe_eaarl)) continue;
-  tag_eaarl = array(int,numberof(maybe_eaarl));
-  tag_eaarl++;
+   answer = ircf_interactive_prompt("Interactive mode? [y]es or [n]o: ");
+   if(answer == "n")
+      return;
 
-  // now triangulate all the selected bare earth points
-  if (mode == 3) {
-    nea_idx = msort(new_eaarl_all.least, new_eaarl_all.lnorth);
-  } else {
-    nea_idx = msort(new_eaarl_all.east, new_eaarl_all.north);
-  }
-  new_eaarl_all = new_eaarl_all(nea_idx);
+   // Force an initial ctrl-left click to initialize vertices and to plot the
+   // triangulation.
+   m = 41;
 
-  // initial check for duplicates
-  dupidx = [];
-  if (mode == 3) {
-    dupidx = where((new_eaarl_all.least(dif) != 0) | (new_eaarl_all.lnorth(dif) != 0));
-  } else {
-    dupidx = where((new_eaarl_all.east(dif) != 0) | (new_eaarl_all.north(dif) != 0));
-  }
-  new_eaarl_all = grow(new_eaarl_all(dupidx),new_eaarl_all(0));
-  //write, format="number of new_eaarl_all = %d when ai = %d\n",numberof(new_eaarl_all), ai;
-
-  if (is_void(plottriagwin)) plottriagwin = 0;
-  if (is_void(plottriagpal)) plottriagpal = "";
-  verts = triangulate_xyz(data=new_eaarl_all, plot=plottriag, win=plottriagwin, pal=plottriagpal, mode=mode, distthresh=distthresh, dolimits=1);
- if (!is_array(verts)) continue;
-
-  //endit;
-  //done;
-  if ((interactive == 1) && (!endit) && (!done)) {
-    // allow interactive mode to remove any outliers
-    ques = "";
-    n = read(prompt="Interactive Mode?(yes/no/done/end):",ques);
-    icount=0;
-    pques = pointer(ques);
-    if ((*pques)(1) == 'd') done = 1; //done iterating for this loop
-    if ((*pques)(1) == 'e') endit = 1; // ends interation mode
-    if ((*pques)(1) == 's') return;
-    while(((*pques)(1) == 'y') && (!done) && (!endit) ) {
-      window, plottriagwin;
-      if(plottriagpal != "") palette, plottriagpal;
-      m = mouse(1,0,"Left:Continue Selection; Middle=Pan/Zoom Mode; Right=Select similar; CTRL-Right=End Interactive Mode; CTRL-left=Retriangulate");
-      while ((m(10) == 1) && (m(11) == 0)) {
- 	tr = locate_triag_surface(pxyz, verts, win=plottriagwin, m=m, show=1);
-        if (is_array(tr)) {
- 	    for (tri = 1; tri<= 3; tri++) {
-	     if (mode == 3) {
-	       tridx = where((new_eaarl_all.least/100. == tr(1,tri)) & (new_eaarl_all.lnorth/100.== tr(2,tri)));
-	     } else {
-	       tridx = where((new_eaarl_all.east/100. == tr(1,tri)) & (new_eaarl_all.north/100.== tr(2,tri)));
-  	     }
-	     new_eaarl_all(tridx).rn = 0;
-             icount++;
-            }
-          } else {
-             write, "No points selected..."
-          }
-	m = mouse(1,0,"");
-      }
-      if (m(10) == 2) {
-	// middle click
-	n = read(prompt="Continue Interactive Mode?(yes/no/done/end):",ques);
-        pques = pointer(ques);
-        if ((*pques)(1) == 'd') done = 1; //done iterating for this loop
-        if ((*pques)(1) == 'e') endit = 1; // ends interation mode
-      }
-      if ((m(11) != 4) && (m(10) == 3)) {
-	// right-click (select similar);
-	elvbuf=2;
-	tr = locate_triag_surface(pxyz, verts, win=plottriagwin, m=m, show=1);
-	if (is_array(tr)) {
-	 maxpt = tr(3,1,max);
-	 idx = where((pxyz(3,) >= maxpt-elvbuf/2.) & (pxyz(3,) <= maxpt+elvbuf/2.));
-	 if (is_array(idx)) {
-	   plmk, pxyz(2,idx), pxyz(1,idx), marker=4, msize=0.2, color="blue";
-	   rmv = "";
-	   while ((rmv != "y") && (rmv != "n")) {
-	   	write, "Remove selected points? (y)es (n)o (s)pecify (s)ubregion";
-	   	read(rmv);
-		if (rmv == "s") {
-			rgn = array(float, 4);
-     			a = mouse(1,1, "select box region: ");
-              		rgn(1) = min( [ a(1), a(3) ] );
-              		rgn(2) = max( [ a(1), a(3) ] );
-              		rgn(3) = min( [ a(2), a(4) ] );
-              		rgn(4) = max( [ a(2), a(4) ] );
-			seldata = data_box(pxyz(1,idx), pxyz(2,idx), rgn(1), rgn(2), rgn(3), rgn(4));
-			idx = idx(seldata);
-			plmk, pxyz(2,idx), pxyz(1,idx), marker=4, msize=0.2, color="green";
-  		 }
-           }
-	   if (rmv == "y") {
-	     if (numberof(idx) >= 100) {
-		swrite(format="Too many points selected (%i)!! Continue anyway? y/n", numberof(idx));
-		read(rmv);
-		if (rmv == "y") {write, "Ok. Continueing..";} else {continue;}
-	     }
- 	     for (tri = 1; tri<= numberof(idx); tri++) {
-	      if (mode == 3) {
-	        tridx = where((new_eaarl_all.least/100. == pxyz(1,idx(tri))) & (new_eaarl_all.lnorth/100.== pxyz(2,idx(tri))));
-	      } else {
-	        tridx = where((new_eaarl_all.east/100. == pxyz(1,idx(tri))) & (new_eaarl_all.north/100.== pxyz(2,idx(tri))));
-  	      }
-	      new_eaarl_all(tridx).rn = 0;
-              icount++;
-             }
-	   }
+   show_prompt = 1;
+   while (1) {
+      // ctrl-left -- re-triangulate
+      if(mouse_click_is("ctrl-left", m)) {
+         good = where(!mf & !maybe);
+         if(!numberof(good)) {
+            error, "All points have been eliminated! Uh oh...";
          } else {
-             write, "No points selected..."
+            v = good(triangulate_data([x(good),y(good),0], maxside=distthresh,
+               verbose=0));
          }
-       } else {
-           write, "No points selected..."
-       }
+         good = [];
+         plot_triag_mesh, [x,y,z], v, showcbar=1, dofma=1;
       }
-      if ((m(11) == 4) && (m(10) == 3)) break; // CTRL-right click
-      if ((m(11) == 4) && (m(10) == 1)) {
-	// control-left click
-	// retriangulate....
-        if (icount) {
-           tridx = where(new_eaarl_all.rn != 0);
-	   new_eaarl_all = new_eaarl_all(tridx);
-           write, "Retriangulating..."
-	   if (mode == 3) {
-  	     nea_idx = msort(new_eaarl_all.least, new_eaarl_all.lnorth);
-	   } else {
-  	     nea_idx = msort(new_eaarl_all.east, new_eaarl_all.north);
-	   }
 
-  	   new_eaarl_all = new_eaarl_all(nea_idx);
-  	   verts = triangulate_xyz(data=new_eaarl_all, plot=plottriag, win=plottriagwin, pal=plottriagpal, mode=mode, distthresh=distthresh);
-	   n = read(prompt="Continue Interactive Mode?(yes/no/done/end):",ques);
-           pques = pointer(ques);
-           if ((*pques)(1) == 'd') done = 1; //done iterating for this loop
-           if ((*pques)(1) == 'e') endit = 1; // ends interation mode
-        }
+      // left click -- manually remove points
+      if(mouse_click_is("left", m)) {
+         tr = locate_triag_surface(x, y, z, v, m=m, plot=1, idx=1);
+         if(is_void(tr))
+            write, "No points selected...";
+         else
+            mf(tr) = 1;
       }
-    }
 
-    if (icount) {
-        tridx = where(new_eaarl_all.rn != 0);
-	new_eaarl_all = new_eaarl_all(tridx);
-        write, "Retriangulating..."
-	if (mode == 3) {
-  	  nea_idx = msort(new_eaarl_all.least, new_eaarl_all.lnorth);
-	} else {
-  	  nea_idx = msort(new_eaarl_all.east, new_eaarl_all.north);
-	}
+      // ctrl-right -- end
+      if(mouse_click_is("ctrl-right", m))
+         return;
 
-  	new_eaarl_all = new_eaarl_all(nea_idx);
-  	verts = triangulate_xyz(data=new_eaarl_all, plot=plottriag, win=plottriagwin, pal=plottriagpal, mode=mode, distthresh=distthresh);
-     }
-  }
+      // center click -- pan/zoom mode
+      if(mouse_click_is("center", m)) {
+         answer = ircf_interactive_prompt(
+            "Continue interactive mode? [y]es or [n]o: ");
+         if(answer == "n")
+            return;
+         show_prompt = 1;
+      }
 
-  n_eaarl = numberof(new_eaarl_all);
-  n_maybe = numberof(maybe_eaarl);
-  if (mode == 3) {
-    new_eaarl_all1 = array(VEG__, n_eaarl+n_maybe);
-  }
-  if (mode == 2) {
-    new_eaarl_all1 = array(GEO, n_eaarl+n_maybe);
-  }
-  if (mode == 1) {
-    new_eaarl_all1 = array(FS, n_eaarl+n_maybe);
-  }
+      // right click -- select similar
+      if(mouse_click_is("right", m)) {
+         tr = locate_triag_surface(x, y, z, v, win=plottriagwin, m=m, plot=1);
+         if(is_void(tr)) {
+            write, "No points selected..."
+         } else {
+            maxpt = tr(3,max);
 
-  new_eaarl_all1(1:n_eaarl) = new_eaarl_all;
-  new_eaarl_all = new_eaarl_all1;
-  new_eaarl_all1 = [];
-  
-  // now loop through the 'maybe' points and see if they fit within the TIN
-  ncount = n_eaarl;
-  if (mode == 3) {
-    maybe_xyz = [maybe_eaarl.least/100., maybe_eaarl.lnorth/100., maybe_eaarl.lelv/100.];
-    neweaarl_xyz = [new_eaarl_all.least/100., new_eaarl_all.lnorth/100., new_eaarl_all.lelv/100.];
-  }
-  if (mode == 2) {
-    maybe_xyz = [maybe_eaarl.east/100., maybe_eaarl.north/100., (maybe_eaarl.elevation+maybe_eaarl.depth)/100.];
-    neweaarl_xyz = [new_eaarl_all.east/100., new_eaarl_all.north/100., (new_eaarl_all.elevation+new_eaarl_all.depth)/100.];
-  }
-  if (mode == 1) {
-    maybe_xyz = [maybe_eaarl.east/100., maybe_eaarl.north/100., maybe_eaarl.elevation/100.];
-    neweaarl_xyz = [new_eaarl_all.east/100., new_eaarl_all.north/100., new_eaarl_all.elevation/100.];
-  }
-  verts_idx = array(int, numberof(verts(1,)));
+            good = where(!mf & !maybe);
+            idx = good(filter_bounded_elv([x,y,z](good,), lbound=maxpt-elvbuf/2.,
+               ubound=maxpt+elvbuf/2., idx=1));
+            good = [];
 
-  // if maybe_xyz is greater than 100, split the array in regional blocks of 100 m
-  min_mx = min(maybe_xyz(,1));
-  max_mx = max(maybe_xyz(,1));
-  min_my = min(maybe_xyz(,2));
-  max_my = max(maybe_xyz(,2));
-  nmx = int(ceil((max_mx - min_mx)/100.));
-  nmy = int(ceil((max_my - min_my)/100.));
-  if (nmx > 1)  {
-     spanx = span(min_mx, max_mx, nmx);
-  } else {
-     spanx = [min_mx, max_mx];
-  }
-  if (nmy > 1)  {
-     spany = span(min_my, max_my, nmy);
-  } else {
-     spany = [min_my, max_my];
-  }
-      
-  for (j=1;j<numberof(spany);j++) {
-    for (k=1;k<numberof(spanx);k++) {
-       isp1 = data_box(maybe_xyz(,1), maybe_xyz(,2),  spanx(k), spanx(k+1), spany(j), spany(j+1));
-       if (plottriag) {
-         window, plottriagwin;  plg, [spany(j), spany(j), spany(j+1), spany(j+1), spany(j)], [spanx(k), spanx(k+1), spanx(k+1), spanx(k), spanx(k)], color="red";
-         if(plottriagpal != "") palette, plottriagpal;
-       }
-       if (!is_array(isp1)) continue;
-       maybe_sp = maybe_xyz(isp1,);
-       //plmk, maybe_sp(,2), maybe_sp(,1), color="green", msize=0.1, marker=1;
-       // find the points in each triangulated facet
-       itpts=ibpts=bpts=tpts=ichpts=[];
-       for (i=1;i<=numberof(verts(1,));i++) {
-        //if ((i-1)%1000 == 0) write, format="%d of %d facets complete\r",i-1,numberof(verts(1,));
-        if ((neweaarl_xyz(verts(1,i),1) < spanx(k)) || (neweaarl_xyz(verts(1,i),1) > spanx(k+1)) || (neweaarl_xyz(verts(1,i),2) < spany(j)) || (neweaarl_xyz(verts(1,i),2) > spany(j+1))) continue;
-        if ((neweaarl_xyz(verts(2,i),1) < spanx(k)) || (neweaarl_xyz(verts(2,i),1) > spanx(k+1)) || (neweaarl_xyz(verts(2,i),2) < spany(j)) || (neweaarl_xyz(verts(2,i),2) > spany(j+1))) continue;
-        if ((neweaarl_xyz(verts(3,i),1) < spanx(k)) || (neweaarl_xyz(verts(3,i),1) > spanx(k+1)) || (neweaarl_xyz(verts(3,i),2) < spany(j)) || (neweaarl_xyz(verts(3,i),2) >= spany(j+1))) continue;
-        verts_idx(i) = 1;
-        vpp = pxyz(,verts(,i));
-        vp = grow(vpp(1:2,),vpp(1:2,1));
-        box = boundBox(vp, noplot=1);
-        //ibpts = ptsInBox(box, maybe_xyz(,1), maybe_xyz(,2));
-        ibpts = data_box(maybe_sp(,1), maybe_sp(,2), box(1,min), box(1,max), box(2,min), box(2,max));
-        if (is_array(ibpts)) {
-         bpts = maybe_sp(ibpts,);
-        } else {
-         continue;
-        }
-        itpts = testPoly(vp, bpts(,1), bpts(,2));
-        if (is_array(itpts)) {
-         tpts = bpts(itpts,);
-        } else {
-         continue;
-        }
-        //elvavg = avg(vpp(3,));
-        //ichpts = where((tpts(,3) < elvavg+w/100.) & (tpts(,3) > elvavg-w/100.)); 
-        plconst = derive_plane_constants(vpp(,1), vpp(,2), vpp(,3));
- 	if (plconst(3) == 0) continue;
-        z_hope = -(tpts(,1)*plconst(1)+tpts(,2)*plconst(2)+plconst(4))/plconst(3);
-        ichpts = where(abs(z_hope-tpts(,3)) <= tw/100.);
-        if (is_array(ichpts)) {
-         chidx = ibpts(itpts(ichpts));
-        } else {
-         chidx = [];
-         continue;
-        }
-        nstart = ncount+1;
-        ncount += numberof(chidx);
-        new_eaarl_all(nstart:ncount) = maybe_eaarl(isp1(chidx));
-        tag_eaarl(isp1(chidx))++;
-       }
-       //write, format="%d of %d facets complete\n",numberof(verts(1,ito)),numberof(verts(1,ito));
-     
-  /*   
-  for (i=1;i<=numberof(maybe_eaarl);i++) {
-    m = [maybe_xyz(i,1), maybe_xyz(i,2)];
-    tr = locate_triag_surface(pxyz, verts, m=m);
-    if (is_array(tr)) {
-       elvavg = avg(tr(3,,));
-       if ((maybe_xyz(i,3) < elvavg+w/100.) && (maybe_xyz(i,3) > elvavg-w/100.)) {
-	   new_eaarl_all(++ncount) = maybe_eaarl(i);
-	   tag_eaarl(i)++;
-       }
-    }
-    if (i%1000 == 0) write, format="%d of %d complete\r",i,numberof(maybe_eaarl)
-  }
-  */
-  }
-  write, format="%d of %d iterations complete\r",j,numberof(spany);
- }
-  write, format="%d of %d facets complete\n",numberof(verts(1,ito)),numberof(verts(1,ito));
-  write, format="%d new points added in this iteration.\n",(ncount-n_eaarl);
+            if(is_void(idx)) {
+               write, "No points selected..."
+            } else {
+               plmk, y(idx), x(idx), marker=4, msize=0.2, color="blue";
 
-  vidx = where(verts_idx == 0);
-  if (!is_array(vidx)) continue;
-  write, format="numberof of verts == 0 is %d\n",numberof(vidx);
-  rverts = verts(,vidx);
-  itpts=ibpts=bpts=tpts=ichpts=[];
-  for (i=1;i<=numberof(rverts(1,));i++) {
-    if ((i-1)%1000 == 0) write, format="%d of %d remaining facets complete\r",i-1,numberof(rverts(1,));
-        vpp = pxyz(,rverts(,i));
-        vp = grow(vpp(1:2,),vpp(1:2,1));
-        box = boundBox(vp, noplot=1);
-        ibpts = data_box(maybe_xyz(,1), maybe_xyz(,2), box(1,min), box(1,max), box(2,min), box(2,max));
-        if (is_array(ibpts)) {
-         bpts = maybe_xyz(ibpts,);
-        } else {
-         continue;
-        }
-        itpts = testPoly(vp, bpts(,1), bpts(,2));
-        if (is_array(itpts)) {
-         tpts = bpts(itpts,);
-        } else {
-         continue;
-        }
-        //elvavg = avg(vpp(3,));
-        //ichpts = where((tpts(,3) < elvavg+w/100.) & (tpts(,3) > elvavg-w/100.)); 
-        plconst = derive_plane_constants(vpp(,1), vpp(,2), vpp(,3));
- 	if (plconst(3) == 0) continue;
-        z_hope = -(tpts(,1)*plconst(1)+tpts(,2)*plconst(2)+plconst(4))/plconst(3);
-        ichpts = where(abs(z_hope-tpts(,3)) <= tw/100.);
-        if (is_array(ichpts)) {
-         chidx = ibpts(itpts(ichpts));
-        } else {
-         chidx = [];
-         continue;
-        }
-        nstart = ncount+1;
-        ncount += numberof(chidx);
-        new_eaarl_all(nstart:ncount) = maybe_eaarl(chidx);
-        tag_eaarl(chidx)++;
+               do {
+                  rmanswer = ircf_interactive_prompt(
+                     "Remove selected point? [y]es, [n]o, [s]pecify subregion: ");
+
+                  if(rmanswer == "s") {
+                     a = mouse(1,1, "Drag box to select region...");
+                     rxmn = a([1,3])(min);
+                     rxmx = a([1,3])(max);
+                     rymn = a([2,4])(min);
+                     rymx = a([2,4])(max);
+
+                     plmk, y(idx), x(idx), marker=4, msize=0.2, color="green";
+                     idx = idx(data_box(x(idx), y(idx), rxmn, rxmx, rymn, rymx));
+                     plmk, y(idx), x(idx), marker=4, msize=0.2, color="blue";
+                  }
+               } while(rmanswer == "s");
+
+               if (rmanswer == "y" && numberof(idx) >= 100) {
+                  rmanswer = ircf_interactive_prompt(swrite(format=
+                     "Too many points selected (%i)! Continue anyway? [y]es/[n]o: ",
+                     numberof(idx)));
+               }
+               if(rmanswer == "y") {
+                  write, format="Removed %d points.\n", numberof(idx);
+                  mf(idx) = 1;
+               }
+               show_prompt = 1;
+            }
+         }
+      }
+
+      if(show_prompt) {
+         show_prompt = 0;
+         write, "";
+         write, format=" Mouse controls, using window %d:\n", win;
+         write, "  left . . . . Remove triangle";
+         write, "  middle . . . Enter pan/zoom mode";
+         write, "  right. . . . Remove points of similar elevation";
+         write, "  ctrl-left. . Retriangulate and replot";
+         write, "  ctrl-right . End interactive mode";
+      }
+      window, win;
+      m = mouse(1, 0, "");
    }
-   write, format="\n %d iterations completed.\n", numberof(rverts(1,));
-  new_eaarl_all = new_eaarl_all(1:ncount);
- }
- timer, tmr2;
- tmr = tmr2-tmr1;
- write, format="Total time taken to filter this section: %4.2f minutes\n",tmr(3)/60.;
- window_select, savewindow;
- return new_eaarl_all;
-	 
-}
-
-
-func derive_plane_constants(p,q,r) {
-/*DOCUMENT derive_plane_constants(p,q,r)
-  amar nayegandhi 02/04/04.
-*/
- 
-  A = p(2)*(q(3)-r(3))+q(2)*(r(3)-p(3))+r(2)*(p(3)-q(3));
-  B = p(3)*(q(1)-r(1))+q(3)*(r(1)-p(1))+r(3)*(p(1)-q(1));
-  C = p(1)*(q(2)-r(2))+q(1)*(r(2)-p(2))+r(1)*(p(2)-q(2));
-  D = p(1)*(q(2)*r(3) - r(2)*q(3))+q(1)*(r(2)*p(3)-p(2)*r(3))+r(1)*(p(2)*q(3)-q(2)*p(3));
-  D = -1.0*D;
-
-return [A,B,C,D];
-}
-
-func remove_large_triangles(verts, data, distthresh, mode=) {
-/* DOCUMENT remove_large_triangles(verts, distthresh) 
-   this function removes large triangles using a distance threshold.  
-   the length of the sides of a triangle must be lesser than this threshold.
-   amar nayegandhi 04/16/04.
-*/
-
-  if (is_void(mode)) mode = 3;
-  if (!is_void(distthresh)) {
-      write, "removing large triangles using distance threshold...";
-      if (mode != 3) {
-        d1sq = (data(verts(1,)).east/100. - data(verts(2,)).east/100.)^2 +
-		(data(verts(1,)).north/100. - data(verts(2,)).north/100.)^2;
-        d2sq = (data(verts(2,)).east/100. - data(verts(3,)).east/100.)^2 +
-		(data(verts(2,)).north/100. - data(verts(3,)).north/100.)^2;
-        d3sq = (data(verts(3,)).east/100. - data(verts(1,)).east/100.)^2 +
-		(data(verts(3,)).north/100. - data(verts(1,)).north/100.)^2;
-      } else {
-        d1sq = (data(verts(1,)).least/100. - data(verts(2,)).least/100.)^2 +
-		(data(verts(1,)).lnorth/100. - data(verts(2,)).lnorth/100.)^2;
-        d2sq = (data(verts(2,)).least/100. - data(verts(3,)).least/100.)^2 +
-		(data(verts(2,)).lnorth/100. - data(verts(3,)).lnorth/100.)^2;
-        d3sq = (data(verts(3,)).least/100. - data(verts(1,)).least/100.)^2 +
-		(data(verts(3,)).lnorth/100. - data(verts(1,)).lnorth/100.)^2;
-      }
-      dsq = [d1sq, d2sq, d3sq](,max);
-      didx = where(dsq <= distthresh^2);
-      if (is_array(didx)) {
-        verts = verts(,didx);
-      } else {
-	verts = [];
-      }
-  }
-
-  return verts;
 }
