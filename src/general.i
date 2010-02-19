@@ -55,7 +55,7 @@ func timer_tick(&t0, cur, cnt, msg) {
    }
 }
 
-func timer_remaining(t0, current, count, &tp, interval=) {
+func timer_remaining(t0, current, count, &tp, interval=, fmt=) {
 /* DOCUMENT timer_remaining, t0, current, count;
    timer_remaining, t0, current, count, tp, interval=;
 
@@ -72,6 +72,14 @@ func timer_remaining(t0, current, count, &tp, interval=) {
       time at which we previously emitted a time remaining message.
    interval= Specifies that we should only emit the message if this many
       seconds have passed since the last one.
+   fmt= Allows you to customize the output. The string will have the following
+      tokens replaced by their relevant value:
+         CURRENT - value for current (coerced to long)
+         COUNT - value for count (coerced to long)
+         ELAPSED - time elapsed
+         REMAINING - time remaining
+      All tokens are optional. Your string must include a newline if you wish
+      to have one.
 
    Example:
       t0 = array(double, 3);
@@ -95,6 +103,7 @@ func timer_remaining(t0, current, count, &tp, interval=) {
          timer_remaining, t0, i, numberof(data), tp, interval=20;
       }
 */
+   default, fmt, "[ELAPSED elapsed. Estimated REMAINING remaining.]\n";
    t1 = array(double, 3);
    default, tp, t1;
    default, interval, -1;
@@ -103,18 +112,25 @@ func timer_remaining(t0, current, count, &tp, interval=) {
       tp = t1;
       elapsed = t1(3) - t0(3);
       remain = elapsed/double(current) * (count - current);
-      write, format="[%s elapsed. Estimated %s remaining.]\n",
-         seconds2prettytime(elapsed, maxparts=2),
-         seconds2prettytime(remain, maxparts=2);
+      fmt = regsub("CURRENT", fmt, swrite(format="%d", long(current)), all=1);
+      fmt = regsub("COUNT", fmt, swrite(format="%d", long(count)), all=1);
+      fmt = regsub("ELAPSED", fmt, seconds2prettytime(elapsed, maxparts=2), all=1);
+      fmt = regsub("REMAINING", fmt, seconds2prettytime(remain, maxparts=2), all=1);
+      write, format="%s", fmt;
    }
 }
 
-func timer_finished(t0) {
+func timer_finished(t0, fmt=) {
 /* DOCUMENT timer_finished, t0;
    Used in conjunction with timer_remaining to display how much time a process
    took.
 
    t0: Should be initialized at the start of the process.
+
+   fmt= Allows you to customize the output. The string will have the following
+      token replaced by its relevant value:
+         ELAPSED - time elapsed
+      Your string must include a newline if you wish to have one.
 
    Example:
       t0 = array(double, 3);
@@ -127,10 +143,12 @@ func timer_finished(t0) {
       }
       timer_finished, t0;
 */
+   default, fmt, "Finished in ELAPSED.\n";
    t1 = array(double, 3);
    timer, t1;
    elapsed = t1(3) - t0(3);
-   write, format="Finished in %s.\n", seconds2prettytime(elapsed, maxparts=2);
+   fmt = regsub("ELAPSED", fmt, seconds2prettytime(elapsed, maxparts=2), all=1);
+   write, format="%s", fmt;
 }
 
 func popen_rdfile(cmd) {
