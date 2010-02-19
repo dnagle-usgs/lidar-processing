@@ -387,9 +387,8 @@ func gen_jgws_rough(photo_dir, conf_file=, elev=, camera=) {
       timer_tick, tstamp, i, numberof(cirdata.files);
       jgw_data = gen_jgw(cirdata.tans(i), elev, camera=camera);
       jgw_file = file_rootname(cirdata.files(i)) + ".jgw";
-      prj_file = file_rootname(jgw_file) + ".prj";
       write_jgw, jgw_file, jgw_data;
-      gen_prj_file, prj_file, cirdata.tans(i).zone, "n88";
+      batch_gen_prj, files=jgw_file, zone=cirdata.tans(i).zone, datum="n88";
    }
 }
 
@@ -503,7 +502,8 @@ max_adjustments=, min_improvement=, buffer=, update=) {
          } else {
             // Write files
             write_jgw, jgw_files(idx(j)), jgw_data;
-            gen_prj_file, prj_files(idx(j)), cirdata.tans(idx(j)).zone, "n88";
+            batch_gen_prj, files=jgw_files(idx(j)), zone=cirdata.tans(j).zone,
+               datum="n88";
 
             // Talk to user
             write, format="Image %d: %d adjustments to elevation %.3f resulting in %.3f m change\n",
@@ -1226,57 +1226,6 @@ func gen_jgw(ins, elev, camera=, mounting_bias=) {
    //NewY = UL_Y + Yoff2
 
    return [A,B,C,D,NewX,NewY];
-}
-
-func gen_prj_file(filename, zone, datum) {
-/* DOCUMENT gen_prj_file, filename, zone, datum
-   Calls gen_prj_string and writes its output to the given filename.
-*/
-// Original David B. Nagle 2009-04-15
-   write, open(filename, "w"), format="%s\n", gen_prj_string(zone, datum);
-}
-
-func gen_prj_string(zone, datum) {
-/* DOCUMENT gen_prj_string(zone, datum)
-   Creates a WKT string that represents the spatial system in the given datum
-   and UTM zone.
-
-   zone: Must be an integer value representing the zone.
-   datum: Must be one of "n83", "n88", or "w84".
-
-   Caveats:
-      * The returned string only represents the horizontal datum, not the
-        vertical.
-      * This only works for the northern hemisphere.
-      * This only works for UTM coordinate systems.
-*/
-// Original David B. Nagle 2009-04-15
-   base_string = "\
-PROJCS[\"UTM Zone %d, Northern Hemisphere\",\n\
-   GEOGCS[\"Geographic Coordinate System\",\n\
-      DATUM[\"%s\",\n\
-         SPHEROID[%s]],\n\
-      PRIMEM[\"Greenwich\",0],\n\
-      UNIT[\"degree\",0.0174532925199433]],\n\
-   PROJECTION[\"Transverse_Mercator\"],\n\
-   PARAMETER[\"latitude_of_origin\",0],\n\
-   PARAMETER[\"central_meridian\",%d],\n\
-   PARAMETER[\"scale_factor\",0.9996],\n\
-   PARAMETER[\"false_easting\",500000],\n\
-   PARAMETER[\"false_northing\",0],\n\
-   UNIT[\"Meter\",1]]";
-
-   if(datum == "n83" || datum == "n88") {
-      spheroid = "\"GRS 1980\",6378137,298.2572220960423";
-      datum = "NAD83";
-   } else if(datum == "w84") {
-      spheroid = "\"WGS84\",6378137,298.257223560493";
-      datum = "WGS84";
-   } else {
-      error, "Unknown datum " + datum;
-   }
-   meridian = long((zone - 30.5) * 6);
-   return swrite(format=base_string, long(zone), datum, spheroid, meridian);
 }
 
 func png_make_zips(src_dir, dst_dir, searchstr=) {

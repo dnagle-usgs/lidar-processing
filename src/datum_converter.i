@@ -705,3 +705,123 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=, clean=) {
       pbd_save, fn_out, vname, data;
    }
 }
+
+func batch_gen_prj(dir, files=, searchstr=, zone=, datum=, vert=) {
+/* DOCUMENT batch_gen_prj, dir, files=, searchstr=, zone=, datum=, vert=
+   Batch generates .prj files.
+
+   Parameters:
+      dir: Directory in which to find files to create .prj files for.
+   Options:
+      searchstr= Search pattern to use to locate files that need .prj files.
+            searchstr="*.asc"    Do all ARC ASCII files.
+            searchstr="*.jpg"    Do all JPEG files.
+            searchstr=["*w84*", "*n83*", "*n88*"] Do anything detectable (default)
+      files= Allows you to specify a list of files to generate for, rather than
+         using dir + searchstr.
+      zone= The UTM zone of the data. If not provided, it will attempt to
+         detect from the filename and will skip files it can't detect.
+            zone=0   Auto-detect from filename (default)
+            zone=16  Force use of zone 16 for all files
+      datum= The datum that the data is in. If not provided, it will attempt to
+         detect from the filename and will skip files it can't detect.
+            datum=0     Auto-detect from filename (default)
+            datum="w84" Force WGS-84.
+            datum="n83" Force NAD-83.
+            datum="n88" Force NAVD-88.
+      vert= Specifies whether vertical datum information should be included. By
+         default, only horizontal datum information is emitted. Including
+         vertical datum information is less compatible for most software.
+            vert=0   Do not include vertical datum (default)
+            vert=1   Include vertical datum
+*/
+   local czone, cdatum;
+   default, searchstr, ["*w84*", "*n83*", "*n88*"];
+   default, vert, 0;
+   wkt = vert ? wkt_cmpd : wkt_horz;
+   if(is_void(files))
+      files = find(dir, glob=searchstr);
+   for(i = 1; i <= numberof(files); i++) {
+      tail = file_tail(files(i));
+      czone = zone ? zone : tile2uz(tail);
+      if(czone == 0) {
+         write, "Skipping, can't parse zone.";
+         continue;
+      }
+      cdatum = datum ? datum : parse_datum(tail)(1);
+      if(!cdatum) {
+         write, "Skipping, can't parse datum.";
+         continue;
+      }
+      prj = wkt(cdatum, czone);
+      write, open(file_rootname(files(i))+".prj", "w"), format="%s\n", prj;
+   }
+}
+
+func wkt_cmpd(datum, zone) {
+/* DOCUMENT txt = wkt_cmpd(datum, zone)
+   Creates a WKT string for the given datum and zone. For "n83" and "w84", this
+   is identical to wkt_horz. For "n88", this creates a compound definition with
+   horizontal and vertical datum information.
+*/
+   local cmpd;
+   horz = wkt_horz(datum, zone);
+   if(datum == "n88") {
+      name = swrite(format="NAD83 UTM Zone %d + NAVD88", zone);
+      vert = wkt_vert(datum);
+      cmpd = swrite(format="[\"%s\",\n%s,\n%s]",
+         name, strindent(horz, "  "), strindent(vert, "  "));
+   } else {
+      cmpd = horz;
+   }
+   return cmpd;
+}
+
+func wkt_horz(datum, zone) {
+/* DOCUMENT txt = wkt_horz(datum, zone)
+   Creates a WKT string for the given datum and zone. This only handles
+   horizontal datum information.
+*/
+   base_string = "\
+PROJCS[\"UTM Zone %d, Northern Hemisphere\",\n\
+   GEOGCS[\"Geographic Coordinate System\",\n\
+      DATUM[\"%s\",\n\
+         SPHEROID[%s]],\n\
+      PRIMEM[\"Greenwich\",0],\n\
+      UNIT[\"degree\",0.0174532925199433]],\n\
+   PROJECTION[\"Transverse_Mercator\"],\n\
+   PARAMETER[\"latitude_of_origin\",0],\n\
+   PARAMETER[\"central_meridian\",%d],\n\
+   PARAMETER[\"scale_factor\",0.9996],\n\
+   PARAMETER[\"false_easting\",500000],\n\
+   PARAMETER[\"false_northing\",0],\n\
+   UNIT[\"Meter\",1]]";
+
+   if(datum == "n83" || datum == "n88") {
+      spheroid = "\"GRS 1980\",6378137,298.2572220960423";
+      datum = "NAD83";
+   } else if(datum == "w84") {
+      spheroid = "\"WGS84\",6378137,298.257223560493";
+      datum = "WGS84";
+   } else {
+      error, "Unknown datum " + datum;
+   }
+   meridian = long((zone - 30.5) * 6);
+   return swrite(format=base_string, long(zone), datum, spheroid, meridian);
+
+}
+
+func wkt_vert(datum) {
+/* DOCUMENT txt = wkt_vert(datum)
+   Creates a WKT string for the given vertical datum. Only "n88" is allowed as
+   input at present. Any other input throws an error.
+*/
+   base_string = "\
+VERT_CS[\"North American Vertical Datum of 1988\",\n\
+   VERT_DATUM[\"North American Datum of 1988\",2005],\n\
+   UNIT[\"m\",1.0]]";
+   if(datum == "n88")
+      return base_string;
+   else
+      error, "Unknown datum " + datum;
+}
