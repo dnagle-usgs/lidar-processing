@@ -47,6 +47,21 @@ func extract_tile(text, dtlength=, qqprefix=) {
     return result;
 }
 
+func guess_tile(text, dtlength=, qqprefix=) {
+    local e, n, z;
+    extern curzone;
+
+    tile = extract_tile(text);
+    w = where(!tile);
+    if(numberof(w)) {
+        regmatch, "e([1-9][0-9]{2}).*n([1-9][0-9]{3})", text(w), , e, n;
+        wen = where(!(!e) & !(!n));
+        if(numberof(wen))
+            tile(w(wen)) = swrite(format="e%s_n%s_%d", e(wen), n(wen), curzone);
+    }
+    return tile;
+}
+
 func tile_type(text) {
 /* DOCUMENT tile_type(text)
     Returns string indicating the type of tile used.
