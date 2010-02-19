@@ -135,7 +135,8 @@ filter=, verbose=) {
 
       // Skip gets applied on a file by file basis to keep the total memory
       // usage down
-      temp = unref(temp)(::skip);
+      if(numberof(temp) > 1)
+         temp = unref(temp)(::skip);
       new_end = end + numberof(temp);
 
       // Make sure the data variable has enough space allocated
