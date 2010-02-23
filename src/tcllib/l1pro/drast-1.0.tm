@@ -483,7 +483,7 @@ proc ::l1pro::drast::examine_waveforms {} {
 namespace eval ::l1pro::drast::mediator {
    proc jump_soe soe {
       if {$::l1pro::drast::v::sfsync} {
-         # Update!
+         ybkg drast_set_soe $soe
       }
    }
 

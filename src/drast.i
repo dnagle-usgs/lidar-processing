@@ -571,3 +571,16 @@ func sfsod_to_rn(sfsod) {
    tkcmd, swrite(format="set rn %d\n",rnarr(1));
    ytk_rast, rnarr(1);
 }
+
+func drast_set_soe(soe) {
+   extern edb;
+   found = missiondata_soe_load(soe);
+   if(found) {
+      w = where(edb.seconds == long(soe));
+      if(numberof(w)) {
+         rn = w(1);
+         tksetval, "::l1pro::drast::v::rn", rn;
+      }
+   }
+   return found;
+}
