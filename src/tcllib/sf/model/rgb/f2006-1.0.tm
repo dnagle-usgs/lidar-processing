@@ -102,6 +102,11 @@ snit::type ::sf::model::translator::rgb::f2006 {
       return [::misc::soe from list $Y $M $D $h $m $s]
    }
 
+   typemethod {file clean} fn {
+      scan [file tail $fn] $patterns(fmtjpg) Y M D h m s
+      return [format $patterns(fmtout) $Y $M $D $h $m $s]
+   }
+
    typemethod {modify retrieve} {tokenVar argsVar} {
       upvar $argsVar opts
       if {[dict exists $opts -rotate]} {
@@ -131,5 +136,6 @@ snit::type ::sf::model::translator::rgb::f2006 {
       expjpg {^cam147_\d{4}-\d\d-\d\d_\d{6}-\d\d.jpg$}
       fmttar {cam147_%4d-%2d-%2d_%2d%2d.tar}
       fmtjpg {cam147_%4d-%2d-%2d_%2d%2d%2d-%*2d.jpg}
+      fmtout {cam147_%04d-%02d-%02d_%02d%02d%02d.jpg}
    }
 }

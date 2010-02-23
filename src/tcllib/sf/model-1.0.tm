@@ -193,6 +193,18 @@ snit::type ::sf::model::collection::null {
       }
    }
 
+   # export <token> <fn>
+   #     Exports the image represented by the given token. The token should be
+   #     the value for the -token key of a result from 'query', 'relative', or
+   #     'position'. The image will be stored to the given file fn.
+   method export {token fn} {return {}}
+
+   # filename <token>
+   #     Returns the filename associated with the image for the given token.
+   #     This is generally either the name of the image file natively, or a
+   #     slightly modified version thereof.
+   method filename token {return {}}
+
    #===========================================================================#
    #                                 Internals                                 #
    #===========================================================================#
@@ -254,6 +266,10 @@ snit::type ::sf::model::translator::null {
    # file soe <fn>
    #     Return the soe value represented by the image file's name.
    typemethod {file soe} fn {return 0}
+
+   # file clean <fn>
+   #     Returns a cleaned form of the given file name.
+   typemethod {file clean} fn {return {}}
 
    # modify retrieve <tokenVariableName> <argsVariableName>
    #     This is used to modify or otherwise react to the values passed to the

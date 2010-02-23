@@ -103,6 +103,13 @@ snit::type ::sf::model::translator::cir {
       return [::misc::soe from list $Y $M $D $h $m $s]
    }
 
+   typemethod {file clean} fn {
+      scan [file tail $fn] $patterns(fmtjpg) Y M D h m s
+      set outfn [format $patterns(fmtout) $Y $M $D $h $m $s]
+      set outdir [format "%02d%02d" $h $m]
+      return [file join $outdir $outfn]
+   }
+
    typemethod {modify retrieve} {tokenVar argsVar} {}
 
    #===========================================================================#
@@ -116,10 +123,12 @@ snit::type ::sf::model::translator::cir {
    #        expjpg - Regular expression for image file (jpg)
    #        fmttar - Formatting scan pattern for tar file to extract YMDhms
    #        fmtjpg - Formatting scan pattern for image file to extract YMDhms
+   #        fmtout - Formatting format pattern for image file from YMDhms
    typevariable patterns -array {
       exptar {^\d{6}-\d{6}-cir.tar$}
       expjpg {^\d{6}-\d{6}-\d{3}-cir.jpg$}
       fmttar {%2$2d%3$2d%1$2d-%4$2d%5$2d%6$2d-cir.tar}
       fmtjpg {%2$2d%3$2d%1$2d-%4$2d%5$2d%6$2d-%*3d-cir.jpg}
+      fmtout {%2$02d%3$02d%1$02d-%4$02d%5$02d%6$02d-cir.jpg}
    }
 }

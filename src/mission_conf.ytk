@@ -352,6 +352,7 @@ namespace eval mission {
         $mb.act add separator
         $mb.act add command -label "Launch RGB" -command [@ menu_launch_rgb]
         $mb.act add command -label "Launch CIR" -command [@ menu_launch_cir]
+        $mb.act add command -label "Dump CIR" -command [@ menu_dump_cir]
         $mb.act add separator
         $mb.act add command -label "Generate KMZ" -command [@ menu_gen_kmz]
 
@@ -496,6 +497,15 @@ namespace eval mission {
             set cir [sf::controller %AUTO%]
             $cir load cir::tarpaths -paths $paths
             ybkg set_sf_bookmarks \"$cir\"
+        }
+    }
+
+    proc menu_dump_cir {} {
+        set outdir [tk_chooseDirectory \
+            -title "Select destination for CIR imagery" \
+            -initialdir [mission_path]]
+        if {$outdir ne ""} {
+            ::sf::tools::dump_mission_cir $outdir
         }
     }
 

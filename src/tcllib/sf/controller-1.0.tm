@@ -587,6 +587,18 @@ snit::type ::sf::controller {
       $gui refresh canvas
    }
 
+   method {export image} {} {
+      if {[$gui cget -token] eq ""} {
+         $gui prompt error "You must be viewing an image before it can be exported."
+      } else {
+         set fn [file tail [$model filename [$gui cget -token]]]
+         set fn [$gui prompt file save -initialfile $fn]
+         if {$fn ne ""} {
+            $model export [$gui cget -token] $fn
+         }
+      }
+   }
+
    # update info
    #     Updates the GUI's -info.
    method {update info} {} {

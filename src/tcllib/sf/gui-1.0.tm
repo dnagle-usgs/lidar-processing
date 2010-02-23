@@ -160,6 +160,13 @@ snit::widget ::sf::gui {
       return [eval tk_chooseDirectory $opts]
    }
 
+   # prompt file save <args>
+   #     Provides the tk_getSaveFile dialog. Uses the GUI as its parent.
+   method {prompt file save} args {
+      set opts [dict merge $args [list -parent $self]]
+      return [eval tk_getSaveFile $opts]
+   }
+
    # prompt string <args>
    #     Provides the ::getstring::tk_getString dialog. In addition to
    #     tk_getString's options, the following options are also accepted:
@@ -375,6 +382,9 @@ snit::widget ::sf::gui {
          -command [mymethod controller prompt load from path rgb::f2001::tarpath]
       $mb.file add command -label "Load CIR from path..." \
          -command [mymethod controller prompt load from path cir::tarpath]
+      $mb.file add separator
+      $mb.file add command -label "Export current image..." \
+         -command [mymethod controller export image]
 
       $mb add cascade -label "Bookmarks" -menu [menu $mb.bookmarks]
       $self refresh bookmarks {}

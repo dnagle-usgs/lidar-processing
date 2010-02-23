@@ -109,7 +109,6 @@ snit::type ::sf::model::translator::rgb::f2001 {
    }
 
    typemethod {file soe} fn {
-      set succeeded 0
       foreach exp $patterns(expjpg) {
          if {[regexp $exp [file tail $fn] - Y M D h m s]} {
             scan $Y %4d Y
@@ -120,6 +119,19 @@ snit::type ::sf::model::translator::rgb::f2001 {
          }
       }
       return 0
+   }
+
+   typemethod {file clean} fn {
+      foreach exp $patterns(expjpg) {
+         if {[regexp $exp [file tail $fn] - Y M D h m s]} {
+            scan $Y %4d Y
+            foreach v [list M D h m s] {
+               scan [set $v] %2d $v
+            }
+            return [format $patterns(fmtout) $Y $M $D $h $m $s]
+         }
+      }
+      return {}
    }
 
    typemethod {modify retrieve} {tokenVar argsVar} {}
@@ -142,5 +154,6 @@ snit::type ::sf::model::translator::rgb::f2001 {
          {^cam1_CAM1_(\d{4})-(\d\d)-(\d\d)_(\d\d)(\d\d)(\d\d)\.jpg$}
          {^cam1_(\d{4})_(\d\d)(\d\d)_(\d\d)(\d\d)(\d\d)_\d\d\.jpg$}
       }
+      fmtout {cam1_%04d-%02d-%02d_%02d%02d%02d.jpg}
    }
 }

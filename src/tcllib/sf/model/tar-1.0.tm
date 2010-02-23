@@ -118,6 +118,37 @@ snit::type ::sf::model::collection::tar::files {
       return $img
    }
 
+   method export {token fn} {
+      lassign $token tar file
+      unset token
+
+      set temp [file join [::fileutil::tempdir] [::uuid::uuid generate]]
+      file mkdir $temp
+      set tempfn [$self ExtractFile $tar $file $temp]
+
+      file mkdir [file dirname $fn]
+      file rename -force $tempfn $fn
+      file delete -force $temp
+
+      return $fn
+   }
+
+   method filename token {
+      lassign $token tar file
+      unset token
+
+      if {[$self translator file valid $file]} {
+         set clean [$self translator file clean $file]
+         set dir [file dirname $file]
+         if {$dir eq "."} {
+            set dir ""
+         }
+         return [file join $dir $clean]
+      } else {
+         return {}
+      }
+   }
+
    # ----------------------------- Supplemental --------------------------------
    # The supplemental public interface provides functionality for defining the
    # data source for the model.
