@@ -45,8 +45,8 @@ func ytk_rast(rn) {
    }
 }
 
-func ndrast(r, units=, win=, graph=, sfsync=) {
-/* DOCUMENT drast(r, units=, win=, graph=, sfsync=)
+func ndrast(r, rn=, units=, win=, graph=, sfsync=) {
+/* DOCUMENT drast(r, rn=, units=, win=, graph=, sfsync=)
    Displays raster waveform data for the given raster. Try this:
 
       > rn = 1000
@@ -59,6 +59,12 @@ func ndrast(r, units=, win=, graph=, sfsync=) {
    "feet" and defaults to "ns". win= defaults to the current window. graph=
    defaults to 1; set graph=0 to disable plotting.
 
+   Alternately, try this:
+
+      > w = ndrast(rn=1000)
+
+   rn should be a raster number.
+
    Returns a pointer to a 250x120x4 array of all the decoded waveforms in this
    raster.
 
@@ -70,10 +76,13 @@ func ndrast(r, units=, win=, graph=, sfsync=) {
    default, graph, 1;
    default, sfsync, 1;
 
+   if(is_void(r) && !is_void(rn))
+      r = decode_raster(get_erast(rn=rn));
+
    aa = array(short(255), 250, 120, 3);
 
    npix = r.npixels(1);
-   somd = (rr.soe - soe_day_start)(1);
+   somd = (r.soe - soe_day_start)(1);
    if (somd != last_somd && sfsync) {
       send_sod_to_sf, somd;
       if (!is_void(pkt_sf)) {
@@ -221,7 +230,7 @@ func drast_graph(aa, digitizer, win=) {
    window_select, win_bkp;
 }
 
-func msel_wf(w, cb=, geo=) {
+func msel_wf(w, cb=, geo=, winsel=, winplot=, seltype=) {
 /* DOCUMENT msel_wf, w, cb=, geo=
    Use the mouse to select a pixel to display a waveform for.
 
@@ -237,9 +246,12 @@ func msel_wf(w, cb=, geo=) {
 
    default, cb, 7;
    default, geo, 0;
+   default, winplot, 0;
 
    win = 1;
-   if (geo == 1) win = 2; //use georectified raster
+   if(geo == 1) win = 2; //use georectified raster
+   if(!is_void(winsel)) win = winsel;
+   default, seltype, (winsel == 2 ? "geo" : "rast");
    window, win;
 
    prompt = swrite(format="Window: %d. Left click: Examine Waveform. Middle click: Exit",win);
@@ -250,17 +262,17 @@ func msel_wf(w, cb=, geo=) {
          write, "Wrong Window... Try Again.";
          break;
       }
-      if (win == 1)
+      if (seltype == "rast")
          idx = int(b(1));
-      if (win == 2)
+      if (seltype == "geo")
          idx = (abs(b(1)-xm))(mnx);
 
       if(mouse_click_is("middle", b)) break;
 
       if (geo)
-         show_geo_wf, *w, idx, win=0, cb=cb;
+         show_geo_wf, *w, idx, win=winplot, cb=cb;
       else
-         show_wf, *w, idx , win=0, cb=cb;
+         show_wf, *w, idx , win=winplot, cb=cb;
       if (is_array(bath_ctl)) {
          if (bath_ctl.laser != 0)
             ex_bath, rn, idx, graph=1, win=4, xfma=1;
@@ -397,7 +409,42 @@ func show_geo_wf(r, pix, win=, nofma=, cb=, c1=, c2=, c3=, raster=) {
    if(!is_void(win)) window_select, prev_win;
 }
 
-func geo_rast(rn, fsmarks=, eoffset=, win=, verbose=) {
+func rast_scanline(rn, win=, style=, color=) {
+   default, style, "average";
+   default, win, window();
+   local fs, x, y;
+   fs = first_surface(start=rn, stop=rn+1, verbose=0)(1);
+   test_and_clean, fs;
+   // Kick out points within 1m of the mirror
+   fs = fs(where(fs.melevation - fs.elevation > 100));
+   if(numberof(fs) < 2) {
+      write, "All points invalid.";
+      return;
+   }
+   data2xyz, fs, x, y;
+   if(style == "straight") {
+      n = numberof(x);
+      x = x([1,n]);
+      y = y([1,n]);
+   } else if(style == "average") {
+      xy = avgline(x, y);
+      x = grow(x(1), xy(,1), x(0));
+      y = grow(y(1), xy(,2), y(0));
+   } else if(style == "smooth") {
+      xy = smooth_line(x, y, upsample=5);
+      x = xy(,1);
+      y = xy(,2);
+   } else {
+      // style == "actual" -- or anything else -- gives actual unmodified line
+   }
+
+   wbkp = current_window();
+   window, win;
+   plg, y, x, marks=0, color=color;
+   window_select, wbkp;
+}
+
+func geo_rast(rn, fsmarks=, eoffset=, win=, verbose=, titles=) {
 /* DOCUMENT get_rast, rn, fsmarks=, eoffset=, win=, verbose=
 
    Plot a geo-referenced false color waveform image.
@@ -418,25 +465,26 @@ func geo_rast(rn, fsmarks=, eoffset=, win=, verbose=) {
    default, eoffset, 0.;
    default, win, 2;
    default, verbose, 1;
+   default, titles, 1;
 
    prev_win = current_window();
    window, win;
    // animate, 2;
    fma;
 
-   fs = first_surface(start=rn, stop=rn+1, north=1, verbose=verbose);
-   sp = fs.elevation(,1)/ 100.0;
-   xm = (fs.east(,1) - fs.meast(1,1))/100.0;
+   fs = first_surface(start=rn, stop=rn+1, north=1, verbose=verbose)(1);
+   sp = fs.elevation/100.0;
+   xm = (fs.east - fs.meast(1))/100.0;
 
    // prepare background
    // assuming the range gate will not allow the width to exceed 50 m
    // we use w = 50 in the rcf function below.
 
    allz = ally = allx = [];
-   rst = decode_raster(get_erast(rn=rn));
+   rst = decode_raster(get_erast(rn=rn))(1);
    for (i = 1; i < 120; i++) {
       zz = array(245, 255);
-      z = (*rst(1).rx(i));
+      z = *rst.rx(i);
       n = numberof(z);
       if (n > 0) {
          zz(1:n) = z;
@@ -455,8 +503,10 @@ func geo_rast(rn, fsmarks=, eoffset=, win=, verbose=) {
          plmk, sp(indx)+eoffset, xm(indx), marker=4, msize=.1, color="magenta";
    }
 
-   xytitles, "Relative distance across raster (m)", "Height (m)";
-   pltitle, swrite(format="Raster %d", rn);
+   if(titles) {
+      xytitles, "Relative distance across raster (m)", "Height (m)";
+      pltitle, swrite(format="Raster %d", rn);
+   }
    window_select, prev_win;
 }
 
