@@ -1520,7 +1520,7 @@ if {![winfo exists .l1wid]} {
       -command {
         global curvar have_replaced have_undone croppeddata outvar rcf_buf_rgn \
           sel_points
-        set outvar rcf_workdata
+        set outvar workdata_grcf
         if {$have_undone == 1} {
           if {$rcf_buf_rgn > 0} {
             exp_send "workdata = tempdata;\r"
@@ -1537,8 +1537,7 @@ if {![winfo exists .l1wid]} {
             exp_send "$replace_out_var = $replace_out_var (1: - numberof($outvar));\r"
           }
         }
-        rcf_region
-        set rcf_var [lindex $varlist 4]
+        ::l1pro::tools::rcf::gui -var workdata
         set have_replaced 0
         set have_undone 0
       }
@@ -1581,7 +1580,7 @@ if {![winfo exists .l1wid]} {
       -command {
         global varlist outvar reps keep_var curvar origvar have_replaced \
           have_undone croppeddata
-        set $outvar rcf_workdata
+        set $outvar workdata_grcf
         set selection [tk_messageBox -icon question \
           -message "Append array $outvar to $replace_out_var?" \
           -type yesno -title "Warning" ]
@@ -1594,7 +1593,7 @@ if {![winfo exists .l1wid]} {
               mode=4, rgn=$sel_points, win=$win_no, exclude=1, make_workdata=1,\
               origdata=$replace_orig_var);\r"
             expect ">"
-            # This is kind of confusing, but $outvar = rcf_workdata (love this
+            # This is kind of confusing, but $outvar = workdata_grcf (love this
             # confuciated variable hiding)
             exp_send "workdata = tempdata;\
               $outvar = sel_data_rgn($outvar, mode=4, win=$win_no,\
@@ -1625,7 +1624,7 @@ if {![winfo exists .l1wid]} {
             if {$rcf_buf_rgn > 0} {
               # have to save workdata since sel_data_rgn with exclude set to 1
               # will over-write it
-              set $outvar rcf_workdata
+              set $outvar workdata_grcf
               exp_send "tempdata = workdata;\r"
               exp_send "$replace_out_var = sel_data_rgn($replace_out_var,\
                 mode=4, rgn=$sel_points, win=$win_no, exclude=1,\

@@ -29,7 +29,7 @@ if {![namespace exists ::l1pro::tools::rcf]} {
    }
 }
 
-proc ::l1pro::tools::rcf::gui {} {
+proc ::l1pro::tools::rcf::gui args {
    set w $v::top
    destroy $w
    toplevel $w
@@ -37,8 +37,12 @@ proc ::l1pro::tools::rcf::gui {} {
    wm resizable $w 1 0
    wm title $w "Random Consensus Filter"
 
-   set v::invar $::pro_var
-   set v::outvar ${::pro_var}_grcf
+   if {[dict exists $args -var]} {
+      set v::invar [dict get $args -var]
+   } else {
+      set v::invar $::pro_var
+   }
+   set v::outvar ${v::invar}_grcf
    set v::mode [display_type_mode]
 
    ttk::frame $w.f
