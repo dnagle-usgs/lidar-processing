@@ -21,6 +21,7 @@ package require l1pro::vars
 package require l1pro::file
 package require l1pro::tools
 package require l1pro::settings
+package require l1pro::drast
 
 if {![winfo exists .l1wid]} {
   set l1pro_data(processing_mode) [list \
@@ -562,9 +563,10 @@ if {![winfo exists .l1wid]} {
 
   .l1wid.mb.util add command -label "Open Fit Gaussian GUI" \
     -command open_fit_gaussian_gui
-
   .l1wid.mb.util add command -label "Determine Roll Bias" -underline 0 \
     -command determine_roll_bias
+  .l1wid.mb.util add command -label "Browse Rasters" -underline 7 \
+    -command ::l1pro::drast::gui
 
   proc determine_roll_bias {} {
       global win_no varlist bias pro_var
