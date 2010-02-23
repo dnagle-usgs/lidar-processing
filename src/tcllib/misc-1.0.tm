@@ -803,6 +803,7 @@ snit::widgetadaptor ::misc::labelframe::collapsible {
    }
 
    delegate method * to hull
+   delegate method invoke to toggle
    delegate option -text to toggle
    delegate option -command to toggle
    delegate option -onvalue to toggle
