@@ -303,20 +303,17 @@ func avgline(x, y, step=) {
    num = numberof(x);
    numstep = floor(num/step);
    if(numstep < 2) { /* In case of a too-small dataset */
-      newx = avg(x);
-      newy = avg(y);
+      result = [[avg(x)], [avg(y)]];
    } else {
-      newx = array(float, int(numstep));
-      newy = array(float, int(numstep));
+      result = array(double, long(numstep), 2);
       step = int(step);
       for (i=1;i<=numstep;i++) {
          xx = x((i-1)*step+1:step*i);
          yy = y((i-1)*step+1:step*i);
-         newx(i) = avg(xx);
-         newy(i) = avg(yy);
+         result(i,) = [avg(xx), avg(yy)];
       }
    }
-   return [newx, newy];
+   return result;
 }
 
 func comparelines(x, y, a, b, start=, stop=) {
