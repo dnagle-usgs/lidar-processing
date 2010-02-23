@@ -171,8 +171,6 @@ func pixelwf_geo_rast(void) {
    vars = pixelwfvars.geo_rast;
    pixelwf_load_data;
 
-   r = get_erast(rn=raster);
-   rr = decode_raster(r);
    geo_rast, raster, win=vars.win, eoffset=vars.eoffset, verbose=vars.verbose;
 }
 
@@ -188,9 +186,7 @@ func pixelwf_ndrast(void) {
    window, vars.win;
    fma;
 
-   r = get_erast(rn=raster);
-   rr = decode_raster(r);
-   result = ndrast(rr, graph=1, win=vars.win, units=vars.units, sfsync=0);
+   result = ndrast(rn=raster, graph=1, win=vars.win, units=vars.units, sfsync=0);
    pixelwf_handle_result, vars, result;
 
    window_select, win;
