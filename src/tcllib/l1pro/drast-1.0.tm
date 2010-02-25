@@ -19,6 +19,7 @@ if {![namespace exists ::l1pro::drast]} {
          variable show_rast 0
          variable show_sline 0
          variable sfsync 0
+         variable ptsync 0
          variable rastwin 0
          variable rastunits meters
          variable eoffset 0
@@ -38,6 +39,7 @@ if {![namespace exists ::l1pro::drast]} {
          variable slinecolor black
          variable export 0
          variable exportgeo 1
+         variable exportsline 1
          variable exportdir ""
          variable playcancel {}
          variable playmode 0
@@ -193,10 +195,13 @@ proc ::l1pro::drast::gui_opts_play {f labelgrid} {
       -variable [namespace which -variable v::show_sline]
    ttk::checkbutton $f.sfsync -text "Sync with SF" \
       -variable [namespace which -variable v::sfsync]
+   ttk::checkbutton $f.ptsync -text "Sync with Plotting Tool (Clear and Plot)" \
+      -variable [namespace which -variable v::ptsync]
    grid $f.rast - -sticky w
    grid $f.geo - -sticky w
    grid $f.sline - -sticky w
    grid $f.sfsync - -sticky w
+   grid $f.ptsync - -sticky w
    grid columnconfigure $f 1 -weight 1
 }
 
@@ -235,9 +240,9 @@ proc ::l1pro::drast::gui_opts_geo {f labelgrid} {
       -variable [namespace which -variable v::geotitles]
    ttk::frame $f.styles
    ttk::button $f.styles.work -text "Work" \
-      -command [list [namespace which -command geo_style] work]
+      -command [list [namespace which -command apply_style] v::geowin work]
    ttk::button $f.styles.nobox -text "No Box" \
-      -command [list [namespace which -command geo_style] nobox]
+      -command [list [namespace which -command apply_style] v::geowin nobox]
    grid $f.styles.work $f.styles.nobox -sticky news
    grid columnconfigure $f.styles 100 -weight 1
 
@@ -296,6 +301,14 @@ proc ::l1pro::drast::gui_opts_sline {f labelgrid} {
       -textvariable [namespace which -variable v::slinecolor] \
       -values {black red blue green cyan magenta yellow white}
    apply $labelgrid $f.color "Color:"
+   ttk::frame $f.styles
+   ttk::button $f.styles.work -text "Work" \
+      -command [list [namespace which -command apply_style] v::slinewin work]
+   ttk::button $f.styles.nobox -text "No Box" \
+      -command [list [namespace which -command apply_style] v::slinewin nobox]
+   grid $f.styles.work $f.styles.nobox -sticky news
+   grid columnconfigure $f.styles 100 -weight 1
+   apply $labelgrid $f.styles "Plot style:"
    grid columnconfigure $f 1 -weight 1
 }
 
@@ -306,16 +319,20 @@ proc ::l1pro::drast::gui_opts_export {f labelgrid} {
       -variable [namespace which -variable v::export]
    ttk::checkbutton $f.geo -text "Export Geo" \
       -variable [namespace which -variable v::exportgeo]
+   ttk::checkbutton $f.sline -text "Export Scanline" \
+      -variable [namespace which -variable v::exportsline]
    ttk::entry $f.dest -textvariable [namespace which -variable v::exportdir]
 
    grid $f.enable - -sticky w
    grid $f.geo - -sticky w
+   grid $f.sline - -sticky w
    apply $labelgrid $f.dest "Destination:"
    grid columnconfigure $f 1 -weight 1
 
    set state [list w "::misc::statevar \$w -statemap {0 disabled 1 normal} \
       -statevariable [namespace which -variable v::export]"]
    apply $state $f.geo
+   apply $state $f.sline
    apply $state $f.dest
 }
 
@@ -332,6 +349,12 @@ proc ::l1pro::drast::gui_refresh {} {
 }
 
 proc ::l1pro::drast::show_auto {} {
+   if {$v::sfsync} {
+      exp_send "tkcmd, swrite(format=\"::l1pro::drast::mediator::broadcast_soe %d\", edb.seconds($v::rn));\r"
+   }
+   if {$v::ptsync} {
+      ::plot::replot_all
+   }
    foreach name {rast geo sline} {
       if {[set v::show_$name]} {
          show_$name
@@ -384,11 +407,19 @@ proc ::l1pro::drast::show_sline {} {
       {$v::slinestyle ne "average"}    ", style=\"$v::slinestyle\"" \
       1                                ", color=\"$v::slinecolor\""
 
+   if {$v::export && $v::exportsline} {
+      if {![file isdirectory $v::exportdir]} {
+         error "Your export directory does not exist."
+      }
+      set fn [file nativename [file join $v::exportdir ${v::rn}_scanline.png]]
+      append cmd "; png, \"$fn\""
+   }
+
    exp_send "$cmd\r"
 }
 
-proc ::l1pro::drast::geo_style style {
-   set cmd "window, $v::geowin, style=\"${style}.gs\""
+proc ::l1pro::drast::apply_style {winvar style} {
+   set cmd "window, [set $winvar], style=\"${style}.gs\""
    exp_send "$cmd\r"
 }
 
