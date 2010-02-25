@@ -40,6 +40,7 @@ if {![namespace exists ::l1pro::drast]} {
          variable export 0
          variable exportgeo 1
          variable exportsline 1
+         variable exportres 72
          variable exportdir ""
          variable playcancel {}
          variable playmode 0
@@ -321,11 +322,14 @@ proc ::l1pro::drast::gui_opts_export {f labelgrid} {
       -variable [namespace which -variable v::exportgeo]
    ttk::checkbutton $f.sline -text "Export Scanline" \
       -variable [namespace which -variable v::exportsline]
+   ttk::spinbox $f.res -from 1 -to 100 -increment 1 \
+      -textvariable [namespace which -variable v::exportres]
    ttk::entry $f.dest -textvariable [namespace which -variable v::exportdir]
 
    grid $f.enable - -sticky w
    grid $f.geo - -sticky w
    grid $f.sline - -sticky w
+   apply $labelgrid $f.res "Resolution:"
    apply $labelgrid $f.dest "Destination:"
    grid columnconfigure $f 1 -weight 1
 
@@ -394,6 +398,9 @@ proc ::l1pro::drast::show_geo {} {
       }
       set fn [file nativename [file join $v::exportdir ${v::rn}_georast.png]]
       append cmd "; png, \"$fn\""
+      if {$v::exportres != 72} {
+         append cmd ", dpi=$v::exportres"
+      }
    }
 
    exp_send "$cmd\r"
@@ -413,6 +420,9 @@ proc ::l1pro::drast::show_sline {} {
       }
       set fn [file nativename [file join $v::exportdir ${v::rn}_scanline.png]]
       append cmd "; png, \"$fn\""
+      if {$v::exportres != 72} {
+         append cmd ", dpi=$v::exportres"
+      }
    }
 
    exp_send "$cmd\r"
