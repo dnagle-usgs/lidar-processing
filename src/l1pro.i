@@ -26,6 +26,7 @@ if(is_void(__l1pro_includes_included__)) {
    require, "ircf.i";
    require, "irg.i";
    require, "kml.i";
+   require, "mosaic_tools.i";
    require, "pbd2las.i";
    require, "plcm.i";
    require, "qaqc_fns.i";
