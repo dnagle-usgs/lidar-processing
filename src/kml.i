@@ -1,6 +1,5 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
 require, "eaarl.i";
-require, "photo.i";
 
 // OLD STYLE KML FUNCTIONS
 
@@ -893,6 +892,122 @@ func kml_pnav_LineString(pnav, maxdist=, alt=) {
       return kml_LineString(pnav(idx).lon, pnav(idx).lat, tessellate=1);
 }
 
+// CIR/JGW COMPONENTS
+
+func kml_jgw_tree(dir, ofn, root=, name=) {
+   default, root, "";
+   contents = kml_jgw_tree_recurse(dir, root);
+   kml_save, ofn, contents, name=file_tail(file_rootname(ofn));
+}
+
+func kml_jgw_tree_recurse(dir, root) {
+   local files, subdirs;
+   fix_dir, dir;
+   fix_dir, root;
+   result = [];
+   files = lsdir(dir, subdirs);
+   for(i = 1; i <= numberof(subdirs); i++) {
+      grow, result, &strchar(kml_Folder(
+         kml_jgw_tree_recurse(dir+subdirs(i), root+subdirs(i)),
+         name=subdirs(i)));
+   }
+   if(numberof(files))
+      files = files(where(strglob("*-cir.kml", files)));
+   for(i = 1; i <= numberof(files); i++) {
+      grow, result, &strchar(kml_NetworkLink(
+         kml_Link(href=root+files(i)),
+         name=file_rootname(files(i))+".jpg"));
+   }
+   return strchar(merge_pointers(result));
+}
+
+func batch_kml_jgw(dir, zone, levels=, searchstr=, update=, fast=, quality=) {
+   default, searchstr, "*.jgw";
+   files = find(dir, glob=searchstr);
+   t0 = array(double, 3);
+   timer, t0;
+   tp = t0;
+   n = numberof(files);
+   for(i = 1; i <= n; i++) {
+      kml_jgw, files(i), zone, levels=levels, update=update, fast=fast,
+         quality=quality;
+      timer_remaining, t0, i, n, tp, interval=10;
+   }
+   timer_finished, t0;
+}
+
+func kml_jgw(jgw, zone, kml=, levels=, update=, fast=, quality=) {
+   local lon, lat;
+   default, levels, 0;
+   default, update, 0;
+   default, kml, file_rootname(jgw)+".kml";
+   levels = max(0, min(7, levels));
+   jpg = file_rootname(jgw)+".jpg";
+   jgw = read_ascii(jgw)(*);
+   dims = image_size(jpg);
+   params = jgw_decompose(jgw, dims);
+
+   utmx = params.centerx + params.width * [-0.5,-0.5,0.5,0.5];
+   utmy = params.centery + params.height * [-0.5,0.5,0.5,-0.5];
+   utm2ll, utmy, utmx, zone, lon, lat;
+
+   onorth = lat(max);
+   osouth = lat(min)
+   oeast = lon(max);
+   owest = lon(min);
+   rotation = params.rotation;
+   while(rotation > 180)
+      rotation -= 360;
+   while(rotation < -180)
+      rotation += 360;
+
+   utmx = [params.xmin, params.xmin, params.xmax, params.xmax];
+   utmy = [params.ymin, params.ymax, params.ymax, params.ymin];
+   utm2ll, utmy, utmx, zone, lon, lat;
+
+   rnorth = lat(max);
+   rsouth = lat(min);
+   reast = lon(max);
+   rwest = lon(min);
+
+   utmx = utmy = lon = lat = [];
+
+   overlays = [];
+
+   lodbasis = sqrt(dims(1)*dims(2));
+   minlod = levels ? long(lodbasis/(2.^.5)) : 64;
+   region = kml_Region(north=rnorth, south=rsouth, east=reast, west=rwest,
+      minLodPixels=minlod);
+   grow, overlays, &strchar(kml_GroundOverlay(region, north=onorth,
+      south=osouth, east=oeast, west=owest, rotation=rotation,
+      href=file_tail(jpg), drawOrder=(levels ? levels+2 : [])));
+   if(levels) {
+      reduces = 2^indgen(1:levels);
+      ljpgs = file_rootname(jpg) + swrite(format="_d%d.jpg", indgen(levels));
+      w = indgen(levels);
+      if(update)
+         w = where(!file_exists(ljpgs));
+      if(numberof(w))
+         jpg_shrink, jpg, ljpgs(w), reduces(w), fast=fast, quality=quality;
+      for(i = 1; i <= levels; i++) {
+         ljpg = ljpgs(i);
+         minlod = long(lodbasis/(2.^(i+.5)));
+         region = kml_Region(north=rnorth, south=rsouth, east=reast, west=rwest,
+            minLodPixels=minlod);
+         grow, overlays, &strchar(kml_GroundOverlay(region, north=onorth,
+            south=osouth, east=oeast, west=owest, rotation=rotation,
+            href=file_tail(ljpg), drawOrder=levels+2-i));
+      }
+      region = kml_Region(north=rnorth, south=rsouth, east=reast, west=rwest,
+         minLodPixels=4);
+      grow, overlays, &strchar(kml_GroundOverlay(region, north=onorth,
+         south=osouth, east=oeast, west=owest, rotation=rotation,
+         color=kml_color(0,0,255,127), drawOrder=1));
+   }
+   overlays = strchar(merge_pointers(overlays));
+   kml_save, kml, overlays, name=file_tail(jpg);
+}
+
 // GENERAL KML UTILITY
 
 func kmz_create(dest, files, ..) {
@@ -1151,7 +1266,28 @@ maxFadeExtent=) {
    Lod = kml_element("Lod", elems);
 
    return kml_element("Region", LatLonAltBox, Lod, id=id);
+}
 
+func kml_GroundOverlay(items, .., id=, name=, visibility=, Open=, description=, styleUrl=, north=, south=, east=, west=, rotation=, drawOrder=, color=, href=) {
+   while(more_args())
+      grow, items, next_arg();
+
+   elems = [];
+   grow, elems, kml_element("north", north);
+   grow, elems, kml_element("south", south);
+   grow, elems, kml_element("east", east);
+   grow, elems, kml_element("west", west);
+   grow, elems, kml_element("rotation", rotation);
+   LatLonBox = kml_element("LatLonBox", elems);
+
+   elems = [];
+   grow, elems, kml_element("drawOrder", drawOrder);
+   grow, elems, kml_element("color", color);
+   grow, elems, kml_element("Icon", kml_element("href", href));
+
+   return kml_Feature("GroundOverlay", items, elems, LatLonBox, id=id,
+      description=description, name=name, visibility=visibility, Open=Open,
+      styleUrl=styleUrl);
 }
 
 func kml_element(name, items, .., id=) {

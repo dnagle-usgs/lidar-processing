@@ -1255,3 +1255,43 @@ func png_make_zips(src_dir, dst_dir, searchstr=) {
    }
    write, "Files queues for zipping... may take a few minutes to complete.";
 }
+
+func jgw_decompose(jgw, pixels) {
+/* DOCUMENT result = jgw_decompose(jgw, pixels)
+   Given a jgw affine matrix and the pixel dimensions of its associated image,
+   this returns Yeti hash with information that describes the georeferenced
+   image. Defines the following keys:
+      width height rotation centerx centery xmin xmax ymin ymax
+*/
+   if(numberof(pixels) == 3)
+      pixels = pixels(2:3);
+
+   // 2 3
+   // 1 4
+   x = [0., 0, pixels(1), pixels(1)];
+   y = [0., pixels(2), pixels(2), 0];
+
+   affine_transform, x, y, jgw;
+
+   result = h_new();
+
+   // Calculate width
+   h_set, result, width=ppdist([x([1,2]),y([1,2])], [x([4,3]),y([4,3])], tp=1)(avg);
+
+   // Calculate height
+   h_set, result, height=ppdist([x([1,4]),y([1,4])], [x([2,3]),y([2,3])], tp=1)(avg);
+
+   // Calculate rotation -- ccw, north=0
+   m1 = linear_regression(x([1,4]), y([1,4]))(1);
+   m2 = linear_regression(x([2,3]), y([2,3]))(1);
+   deg = slope2degrees([m1,m2](avg), x([1,4])(dif)(1));
+   h_set, result, rotation=deg;
+
+   // Calculate center
+   h_set, result, centerx=x(avg), centery=y(avg);
+
+   // Calculate bounds
+   h_set, result, xmax=x(max), ymax=y(max), xmin=x(min), ymin=y(min);
+
+   return result;
+}

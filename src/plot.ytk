@@ -31,14 +31,6 @@ if {![namespace exists ::plot]} {
             { {tif}           {.tif .tiff}                      }
             { {All files}     *                                 }
          }
-         variable image_worldfile_types {
-            { {Common world files}  {.jgw .pgw .gfw .tfw} }
-            { {jpg world file}      {.jgw}                }
-            { {png world file}      {.pgw}                }
-            { {gif world file}      {.gfw}                }
-            { {tif world file}      {.tfw}                }
-            { {All files}           *                     }
-         }
          variable shape_file_types {
             { {ASCII shapefiles} {.xyz} }
             { {All files}        *      }
@@ -83,6 +75,7 @@ if {![namespace exists ::plot]} {
          variable windowSize [lindex $::plot::c::windowSizes 0]
          variable shpListBox
          variable imageListBox
+         variable imageSkip 1
          variable mapListBox
          variable planListBox
          variable polyListBox
@@ -90,20 +83,12 @@ if {![namespace exists ::plot]} {
          variable limits_copy_from 5
          variable poly_next_name poly1
       }
-
-      # Non-GUI variables
-      namespace eval v {
-         # array
-         variable imageCoords
-      }
    }
 }
 ybkg tksetsym \"::plot::c::mapPath\" \"alpsrc.maps_dir\"
 
 proc ::plot::menu { } {
-   exp_send "require, \"rbgga.i\"\r"
-   exp_send "require, \"shapefile.i\"\r"
-   exp_send "require, \"change_window_size.i\"\r"
+   ybkg require \"shapefile.i\"
 
    set w .plotmenu
    destroy $w
@@ -480,29 +465,27 @@ proc ::plot::menu { } {
 
    iwidgets::scrolledlistbox $g::imageListBox \
       -hscrollmode dynamic -vscrollmode dynamic -height 5
-   grid $g::imageListBox -sticky news
+   grid $g::imageListBox - -sticky news
+
+   Button $pane.butAddImage -text "Add referenced image" \
+      -command ::plot::image_add
+   grid $pane.butAddImage - -sticky ew
 
    Button $pane.butRemove -text "Remove selected image" \
       -command ::plot::image_remove
-   grid $pane.butRemove -sticky ew
-
-   Button $pane.butAddWorldFile -text "Add image with world file" \
-      -command ::plot::image_add_worldfile
-   grid $pane.butAddWorldFile -sticky ew
-
-   Button $pane.butAddCoords -text "Add image, specifying location" \
-      -command ::plot::image_add_location
-   grid $pane.butAddCoords -sticky ew
-
-   Button $pane.butAddLidar -text "Add lidar image" \
-      -command ::plot::image_add_lidar
-   grid $pane.butAddLidar -sticky ew
+   grid $pane.butRemove - -sticky ew
 
    Button $pane.butPlot -text "Plot Images" -command ::plot::image_plot
-   grid $pane.butPlot -sticky ew
+   grid $pane.butPlot - -sticky ew
+
+   label $pane.labSkip -text "Skip factor:"
+   spinbox $pane.spnSkip -justify center -width 4 \
+      -from 1 -to 10000 -increment 1 \
+      -textvariable ::plot::g::imageSkip
+   grid $pane.labSkip $pane.spnSkip -sticky ew
 
    grid rowconfigure $pane 0 -weight 1
-   grid columnconfigure $pane 0 -weight 1
+   grid columnconfigure $pane 1 -weight 1
 
 
    set pane [$nb getframe map]
@@ -941,33 +924,14 @@ proc ::plot::image_remove { } {
    set item [$g::imageListBox getcurselection]
    if {![string equal $item ""]} {
       $g::imageListBox delete $item
-      unset v::imageCoords($item)
    }
 }
 
-proc ::plot::image_add_worldfile { } {
-   ::plot::_image_add [::plot::dlg::worldfile::prompt]
-}
-
-proc ::plot::image_add_location { } {
-   ::plot::_image_add [::plot::dlg::location::prompt]
-}
-
-proc ::plot::image_add_lidar { } {
+proc ::plot::image_add {} {
    set file [tk_getOpenFile -filetypes $::plot::c::image_file_types \
       -parent .plotmenu]
-   if { ![string equal "" $file] } {
-      regexp -- {t_e([^_]+)_n([^_]+)_([^_]+).*} [file tail $file] - east north zone
-      ::plot::_image_add [list $file $east $north \
-         [expr {$east+2000}] [expr {$north-2000}]]
-   }
-}
-
-proc ::plot::_image_add { info } {
-   if { [llength $info] == 5 } {
-      foreach {file x0 y0 x1 y1} $info {}
+   if {$file ne ""} {
       $g::imageListBox insert end $file
-      set v::imageCoords($file) [list $x0 $y0 $x1 $y1]
    }
 }
 
@@ -975,257 +939,7 @@ proc ::plot::image_plot { } {
    ::plot::window_store
    ::plot::window_set
    foreach img [$g::imageListBox get 0 end] {
-      foreach {x0 y0 x1 y1} $v::imageCoords($img) {}
-      set coords \[[join [list $x0 $y0 $x1 $y1] ,]\]
-      exp_send "img = read_image(\"$img\")\r"
-      expect ">"
-      exp_send "plot_image, img, $coords, nocws=1\r"
-      expect ">"
+      exp_send "load_and_plot_image, \"$img\", skip=$g::imageSkip\r"
    }
    ::plot::window_restore
-}
-
-# Keep location dialog self-contained
-# Used to prompt for an image with manual coords
-namespace eval ::plot::dlg::location {
-   namespace eval v {
-      variable file
-      variable origin
-      variable x0
-      variable y0
-      variable x1
-      variable y1
-      variable dlg
-   }
-}
-
-proc ::plot::dlg::location::reset_vars { } {
-   foreach var [info vars ::plot::dlg::location::v::*] {
-      set $var ""
-   }
-   set v::origin NW
-   set v::dlg .plotmenu.dlg
-}
-
-proc ::plot::dlg::location::prompt { } {
-   ::plot::dlg::location::reset_vars
-
-   Dialog $v::dlg -side bottom -title Interval -transient yes -modal local -parent .plotmenu
-   
-   $v::dlg add -text "Add Image"
-   $v::dlg add -text "Cancel"
-   $v::dlg configure -default 0 -cancel 1
-   
-   set f [$v::dlg getframe]
-
-   Button $f.butChoose -text "Choose Image" -command ::plot::dlg::location::choose_image
-   Entry $f.entChoose -textvariable ::plot::dlg::location::v::file
-   grid $f.butChoose $f.entChoose
-   ::plot::readonly $f.entChoose
-   grid $f.butChoose $f.entChoose - - -sticky ew
-
-   Label $f.labOrigin -text "Image Origin:"
-   ::misc::combobox $f.cboOrigin -values {NW SW NE SE} -state readonly -width 10 \
-      -textvariable ::plot::dlg::location::v::origin
-   grid $f.labOrigin $f.cboOrigin - -
-   grid $f.labOrigin -sticky e
-   grid $f.cboOrigin -sticky w
-
-   Label $f.labMinEast -text "Min UTM Easting:"
-   Entry $f.entMinEast -textvariable ::plot::dlg::location::v::x0
-   Label $f.labMaxEast -text "Max UTM Easting:"
-   Entry $f.entMaxEast -textvariable ::plot::dlg::location::v::x1
-   grid $f.labMinEast $f.entMinEast $f.labMaxEast $f.entMaxEast
-   grid $f.labMinEast $f.labMaxEast -sticky e
-   grid $f.entMinEast $f.entMaxEast -sticky ew
-
-   Label $f.labMinNorth -text "Min UTM Northing:"
-   Entry $f.entMinNorth -textvariable ::plot::dlg::location::v::y0
-   Label $f.labMaxNorth -text "Max UTM Northing:"
-   Entry $f.entMaxNorth -textvariable ::plot::dlg::location::v::y1
-   grid $f.labMinNorth $f.entMinNorth $f.labMaxNorth $f.entMaxNorth
-   grid $f.labMinNorth $f.labMaxNorth -sticky e
-   grid $f.entMinNorth $f.entMaxNorth -sticky ew
-
-   grid columnconfigure $f 1 -weight 1
-   grid columnconfigure $f 3 -weight 1
-
-   set result [$v::dlg draw]
-   destroy $v::dlg
-   
-   # Cancel
-   if { $result == 1} {
-      return
-   }
-   
-   # Check for blanks
-   if {
-      [llength [::struct::list filter \
-         [list $v::file $v::x0 $v::y0 $v::x1 $v::y1] \
-         [list string equal ""]]] > 0
-   } {
-      MessageDlg .msg -type ok -icon error \
-         -message "Some fields were not provided. Aborting."
-      return
-   }
-   
-   switch -- $v::origin {
-      NW { set result [list $v::file $v::x0 $v::y1 $v::x1 $v::y0] }
-      SW { set result [list $v::file $v::x0 $v::y0 $v::x1 $v::y1] }
-      NE { set result [list $v::file $v::x1 $v::y0 $v::x0 $v::y1] }
-      SE { set result [list $v::file $v::x1 $v::y1 $v::x0 $v::y0] }
-   }
-   return $result
-}
-
-proc ::plot::dlg::location::choose_image { } {
-   set file [tk_getOpenFile -filetypes $::plot::c::image_file_types \
-      -parent $v::dlg]
-   if { $file != "" } {
-      set v::file $file
-   }
-}
-
-# Keep worldfile dialog self-contained
-# Used to prompt for an image with a world file
-namespace eval ::plot::dlg::worldfile {
-   namespace eval v {
-      variable image
-      variable world
-      variable dlg
-   }
-}
-
-proc ::plot::dlg::worldfile::reset_vars { } {
-   foreach var [info vars ::plot::dlg::worldfile::v::*] {
-      set $var ""
-   }
-   set v::dlg .plotmenu.dlg
-}
-
-proc ::plot::dlg::worldfile::prompt { } {
-   ::plot::dlg::worldfile::reset_vars
-
-   Dialog $v::dlg -side bottom -title Interval -transient yes -modal local -parent .plotmenu
-   
-   $v::dlg add -text "Add Image"
-   $v::dlg add -text "Cancel"
-   $v::dlg configure -default 0 -cancel 1
-   
-   set f [$v::dlg getframe]
-
-   Button $f.butImage -text "Choose Image" -command ::plot::dlg::worldfile::choose_image
-   Entry $f.entImage -textvariable ::plot::dlg::worldfile::v::image
-   grid $f.butImage $f.entImage
-   ::plot::readonly $f.entImage
-   grid $f.butImage $f.entImage -sticky ew
-
-   Button $f.butWorld -text "Choose World File" -command ::plot::dlg::worldfile::choose_world
-   Entry $f.entWorld -textvariable ::plot::dlg::worldfile::v::world
-   grid $f.butWorld $f.entWorld
-   ::plot::readonly $f.entWorld
-   grid $f.butWorld $f.entWorld -sticky ew
-
-   set result [$v::dlg draw]
-   destroy $v::dlg
-   
-   # Cancel
-   if { $result == 1} {
-      return
-   }
-   
-   # Check for blanks
-   if {
-      [llength [::struct::list filter \
-         [list $v::image $v::world] \
-         [list string equal ""]]] > 0
-   } {
-      MessageDlg .msg -type ok -icon error \
-         -message "Some fields were not provided. Aborting."
-      return
-   }
-
-   ::jgw::read $v::world xscale yrot xrot yscale xcoord ycoord
-
-   if { $xrot != 0 || $yrot != 0 } {
-      MessageDlg .msg -type ok -icon error \
-         -message "World file has a rotation/skew factor. Cannot handle, aborting."
-      return
-   }
-
-   foreach {dimx dimy} [::plot::image_dimensions $v::image] {}
-   foreach {x0 y0 x1 y1} [::jgw::coords $v::world $dimx $dimy] {}
-
-   return [list $v::image $x0 $y0 $x1 $y1]
-}
-
-proc ::plot::image_dimensions {filename} {
-   return [exec identify -format "%w %h" "$filename"]
-}
-
-proc ::plot::dlg::worldfile::choose_image { } {
-   set file [tk_getOpenFile -filetypes $::plot::c::image_file_types \
-      -parent $v::dlg]
-   if { $file != "" } {
-      set v::image $file
-      ::plot::dlg::worldfile::predict_world
-   }
-}
-
-proc ::plot::dlg::worldfile::choose_world { } {
-   if {![string equal "" $v::image]} {
-      set dir [file dirname $v::image]
-   } else {
-      set dir ""
-   }
-   set file [tk_getOpenFile -filetypes $::plot::c::image_worldfile_types \
-      -initialdir $dir -parent $v::dlg]
-   if { $file != "" } {
-      set v::world $file
-   }
-}
-
-proc ::plot::dlg::worldfile::predict_world { } {
-   switch -- [file extension $v::image] {
-      .jpeg    -
-      .jpg     { set ext jgw }
-      .png     { set ext pgw }
-      .gif     { set ext gfw }
-      .tiff    -
-      .tif     { set ext tfw }
-      default  { set ext {}  }
-   }
-   set v::world [file rootname $v::image].$ext
-}
-
-
-namespace eval ::jgw {}
-
-proc ::jgw::read {jgw _xscale _yrot _xrot _yscale _xref _yref} {
-   foreach var {xscale yrot xrot yscale xref yref} {
-      eval upvar \$_[set var] $var
-   }
-   if {[catch {set f [open $jgw "r"]}]} {
-      error "Could not open file $jgw"
-   }
-
-   foreach var {xscale yrot xrot yscale xref yref} {
-      if {[eof $f]} {
-         error "Premature end of file in $jgw"
-      }
-      set $var [gets $f]
-   }
-   close $f
-}
-
-proc ::jgw::coords {jgw xpix ypix} {
-   ::jgw::read $jgw xscale yrot xrot yscale xcoord ycoord
-
-   set x0 $xcoord
-   set y0 $ycoord
-
-   set x1 [expr {$xscale * $xpix + $xrot * $ypix + $xcoord}]
-   set y1 [expr {$yscale * $ypix + $yrot * $xpix + $ycoord}]
-
-   return [list $x0 $y0 $x1 $y1]
 }

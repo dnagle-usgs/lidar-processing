@@ -1,16 +1,27 @@
+/******************************************************************************\
+* The functions in this file were moved to the attic on 2010-02-26. These      *
+* functions have not been in use for several years. Further, their             *
+* functionality is deprecated in favor of other functions and approaches. More *
+* specific information on this is provided in comments ahead of each function. *
+\******************************************************************************/
+
 /*
   Functions to work with the EAARL Axis digital camera.  
 
   Orginal W. Wright, 5-6-03 while in San Juan, Pr.
 */
 
-require, "eaarl.i";
-
 cam1_roll_bias = 9.0;
 cam1_yaw_bias  = -3.5 - 180.0;
 cam1_pitch_bias  = 0.0;
 fov = 43.0 * pi/180.0;	// camera FOV
 
+/*
+   Function jpg_read is redundant to (and less efficient than) the similarly
+   named function jpeg_read from Yorick-z. Moreover, the pnm-based
+   functionality this function provides can also be found in the function
+   img_read from yutils, if Yorick-z is not available.
+*/
 func jpg_read(filename) {
 /* DOCUMENT image= jpg_read(filename)
 
@@ -37,6 +48,11 @@ func jpg_read(filename) {
    return pnm_data;
 }
 
+/*
+   This was only designed to work with our older RGB camera and has not been
+   updated for the new one. The core functionality is deprecated in favor of
+   mosaic_tools' functionality.
+*/
 func cam_photo_orient(photo, heading=, pitch=, roll=, alt=, center=, offset=,
 scale=, win=) {
 /* DOCUMENT cam_photo_orient(photo, heading=, pitch=, roll=, alt=, center=, offset=,
@@ -58,6 +74,10 @@ scale=, win=)
       mounting_biases=biases);
 }
 
+/*
+   This was replaced by similar but more flexible functionality in
+   jpeg_support.i.
+*/
 func photo_orient_jgw(photo, jgw, win=) {
 /* DOCUMENT photo_orient_jgw, photo, jgw, win=
    [x, y] = photo_orient_jgw(photo, jgw, win=)
@@ -116,6 +136,11 @@ func photo_orient_jgw(photo, jgw, win=) {
       return [x, y];
 }
 
+/*
+   This was only designed to work with our older RGB camera and has not been
+   updated for the new one. The core functionality is deprecated in favor of
+   mosaic_tools' functionality.
+*/
 func photo_orient(photo, heading=, pitch=, roll=, alt=, center=, offset=,
 scale=, win=, mounting_biases=) {
 /* DOCUMENT coordinates = photo_orient(photo, heading=, pitch=, roll=, alt=,
@@ -151,7 +176,7 @@ scale=, win=, mounting_biases=) {
    default, win, 7;
    default, mounting_biases, [0.0, 0.0, 0.0];
 
-   assign, mounting_baises, roll_bias, pitch_bias, yaw_bias;
+   assign, mounting_biases, roll_bias, pitch_bias, yaw_bias;
 
    roll += roll_bias;
    pitch += pitch_bias;
@@ -199,6 +224,9 @@ scale=, win=, mounting_biases=) {
    return [rotated_x, rotated_y];
 }
 
+/*
+   As noted below, this has been unused for a very long time.
+*/
 // TODO: DEPRECATED
 func pref (junk) {
 /* DOCUMENT pref 
@@ -223,6 +251,11 @@ func pref (junk) {
    return lst;
 }
 
+/*
+   This was only designed to work with our older RGB camera and has not been
+   updated for the new one. The core functionality is deprecated in favor of
+   mosaic_tools' functionality.
+*/
 func gref_photo( somd=, ioff=, offset=,ggalst=, skip=, drift=, date=, win= ) {
 /* DOCUMENT gref_photo, somd=, ioff=, offset=, ggalst=, skip=
 
@@ -288,121 +321,4 @@ func gref_photo( somd=, ioff=, offset=,ggalst=, skip=, drift=, date=, win= ) {
 	     pitch = pitch + ops_conf.pitch_bias + cam1_pitch_bias,
 	     offset = [ northing, easting ], win=win;
  }
-}
-
-// rgb2hsl and hsl2rgb math from:
-// http://www.easyrgb.com/index.php?X=MATH
-
-func rgb2hsl(R, G, B, &H, &S, &L) {
-/* DOCUMENT hsl = rgb2hsl(r, g, b);
-   rgb2hsl, r, g, b, h, s, l;
-
-   Converts a color in RGB notation to HSL. Works for scalars and arrays.
-*/
-   if(numberof(R) > 1) {
-      H = array(double, dimsof(R));
-      S = array(double, dimsof(R));
-      L = array(double, dimsof(R));
-      for(i = 1; i <= numberof(R); i++) {
-         temp = rgb2hsl(R(i), G(i), B(i));
-         H(i) = temp(1);
-         S(i) = temp(2);
-         L(i) = temp(3);
-      }
-      return [H,S,L];
-   }
-
-   R /= 255.;
-   G /= 255.;
-   B /= 255.;
-
-   mn = min(R,G,B);
-   mx = max(R,G,B);
-   delta = mx - mn;
-
-   L = (mx + mn) / 2.;
-
-   H = S = 0;
-
-   if(mx != 0) {
-      if(L < 0.5)
-         S = delta / (mx + mn);
-      else
-         S = delta / (2 - mx - mn);
-
-      dR = (((mx - R)/6.) + (delta/2.)) / delta;
-      dG = (((mx - G)/6.) + (delta/2.)) / delta;
-      dB = (((mx - B)/6.) + (delta/2.)) / delta;
-
-      if(R == mx)
-         H = dB - dG;
-      else if(G == mx)
-         H = 1/3. + dR - dB;
-      else if(B == mx)
-         H = 2/3. + dG - dR;
-
-      if(H < 0)
-         H++;
-      if(H > 1)
-         H--;
-   }
-
-   return [H, S, L];
-}
-
-func hsl2rgb(H, S, L, &R, &G, &B) {
-/* DOCUMENT rgb = hsl2rgb(h, s, l);
-   hsl2rgb, h, s, l, r, g, b;
-
-   Converts a color in HSL notation to RGB. Works for scalars and arrays.
-*/
-   if(numberof(H) > 1) {
-      R = array(short, dimsof(H));
-      G = array(short, dimsof(H));
-      B = array(short, dimsof(H));
-      for(i = 1; i <= numberof(H); i++) {
-         temp = hsl2rgb(H(i), S(i), L(i));
-         R(i) = temp(1);
-         G(i) = temp(2);
-         B(i) = temp(3);
-      }
-      return [R,G,B];
-   }
-
-   R = G = B = 0;
-
-   if(S == 0) {
-      R = G = B = L * 255;
-   } else {
-      if(L < 0.5)
-         v2 = L * (1 + S);
-      else
-         v2 = (L + S) - (S * L);
-
-      v1 = 2 * L - v2;
-
-      R = 255 * __hue2rgb(v1, v2, H + 1/3.);
-      G = 255 * __hue2rgb(v1, v2, H);
-      B = 255 * __hue2rgb(v1, v2, H - 1/3.);
-   }
-
-   return short([R,G,B]);
-}
-
-func __hue2rgb(v1, v2, H) {
-/* DOCUMENT c = __hue2rgb(v1, v2, H)
-   Helper function for hsl2rgb.
-*/
-   if(H < 0)
-      H++;
-   if(H > 1)
-      H--;
-   if(6 * H < 1)
-      return v1 + (v2 - v1) * 6 * H;
-   if(2 * H < 1)
-      return v2;
-   if(3 * H < 2)
-      return v1 + (v2 - v1) * (2/3. - H) * 6;
-   else
-      return v1;
 }
