@@ -120,7 +120,7 @@ func tile2uz(tile) {
 
 func tile2bbox(tile) {
 /* DOCUMENT bbox = tile2bbox(tile)
-    Returns the bounding box for a tile.
+    Returns the bounding box for a tile: [south,east,north,west].
 */
     tile = extract_tile(tile, dtlength="long", qqprefix=1);
     key = strpart(tile, 1:1);
@@ -132,7 +132,7 @@ func tile2bbox(tile) {
         lons = ll([2,4,4,2]);
         norths = easts = [];
         fll2utm, lats, lons, norths, easts, force_zone=zone;
-        return [norths(min), easts(min), norths(max), easts(max)];
+        return [norths(min), easts(max), norths(max), easts(min)];
     } else if(key == "t") {
         return dt2utm(tile, bbox=1);
     } else if(key == "i") {
@@ -443,6 +443,41 @@ func cir_to_soe(filename, offset=) {
         result(w) = ymd2soe(
             yyyy, atod(m_dm(w))+1, atod(m_dd(w)),
             hms2sod(atod(m_th(w)), atod(m_tm(w)), offset + atod(m_ts(w))));
+    }
+
+    return result;
+}
+
+func cam_to_soe(filename, offset=) {
+/* DOCUMENT cam_to_soe(filename, offset=)
+    Parses an RGB image's filename and returns the second of the epoch from when
+    it was taken.
+
+    offset specifies an offset to apply to the raw soe value. By default,
+    offset=0.
+*/
+    default, offset, 0;
+
+    dmreg = "0[1-9]|1[02]";             // (date) month reg exp 01-12
+    ddreg = "0[1-9]|[12][0-9]|3[01]";   // (date) day reg exp 01-31
+    dyreg = "[12][90][890123][0-9]";    // (date) year reg exp 1980-2039
+    threg = "[01][0-9]|2[0-3]";         // (time) hour reg exp 00-23
+    tmreg = "[0-5][0-9]";               // (time) minute reg exp 00-59
+    tsreg = "[0-5][0-9]";               // (time) second reg exp 00-59
+
+    reg = "^cam1(47|)_(CAM1_|)";
+    reg += swrite(format="(%s)(-|_)(%s)(-|)(%s)_", dyreg, dmreg, ddreg);
+    reg += swrite(format="(%s)(%s)(%s)([-_][0-9][0-9]|)\.jpg$", threg, tmreg, tsreg);
+
+    m_full = m_dm = m_dd = m_dy = m_th = m_tm = m_ts = m_no = [];
+    w = where(regmatch(reg, filename, m_full,
+        m_no, m_no, m_dy, m_no, m_dm, m_no, m_dd, m_th, m_tm, m_ts, m_no));
+
+    result = array(double(-1), dimsof(filename));
+    if(numberof(w)) {
+        result(w) = ymd2soe(
+            atod(m_dy(w)), atod(m_dm(w)), atod(m_dd(w)),
+            hms2sod(atod(m_th(w)), atod(m_tm(w)), offset+atod(m_ts(w))));
     }
 
     return result;
