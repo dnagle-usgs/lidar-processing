@@ -421,7 +421,12 @@ func auto_curzone(lat, lon, verbose=) {
    if(!is_void(fixedzone))
       return;
 
-   fll2utm, unref(lat), unref(lon), , , zone;
+   lamn = lat(min);
+   lomn = lon(min);
+   lamx = lat(max);
+   lomx = lon(max);
+   lon = lat = [];
+   fll2utm, [lamn,lamx,lamn,lamx], [lomn,lomn,lomx,lomx], , , zone;
 
    zmin = long(zone(min));
    zmax = long(zone(max));
