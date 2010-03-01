@@ -28,12 +28,15 @@ if {![namespace exists ::l1pro::drast]} {
          variable geoymax 300
          variable geoyuse 0
          variable geotitles 1
+         variable geostyle pli
+         variable georcfw 0
          variable wfchan1 1
          variable wfchan2 1
          variable wfchan3 1
          variable wfgeo 0
          variable wfwin 9
-         variable wfsrc rast
+         variable wfwinbath 4
+         variable wfsrc geo
          variable slinewin 6
          variable slinestyle average
          variable slinecolor black
@@ -237,6 +240,11 @@ proc ::l1pro::drast::gui_opts_geo {f labelgrid} {
       -textvariable [namespace which -variable v::geoymax]
    spinbox $f.ymin -from -1000 -to 1000 -increment 0.01 \
       -textvariable [namespace which -variable v::geoymin]
+   ::misc::combobox $f.style -state readonly \
+      -textvariable [namespace which -variable v::geostyle] \
+      -values {pli plcm}
+   spinbox $f.rcfw -from 0 -to 10000 -increment 1 \
+      -textvariable [namespace which -variable v::georcfw]
    ttk::checkbutton $f.titles -text "Show titles" \
       -variable [namespace which -variable v::geotitles]
    ttk::frame $f.styles
@@ -252,6 +260,8 @@ proc ::l1pro::drast::gui_opts_geo {f labelgrid} {
    grid $f.yuse - -sticky w
    apply $labelgrid $f.ymax "Y axis max:"
    apply $labelgrid $f.ymin "Y axis min:"
+   apply $labelgrid $f.style "Pulse style:"
+   apply $labelgrid $f.rcfw "RCF window:"
    grid $f.titles - -sticky w
    apply $labelgrid $f.styles "Plot style:"
    grid columnconfigure $f 1 -weight 1
@@ -260,6 +270,10 @@ proc ::l1pro::drast::gui_opts_geo {f labelgrid} {
       -statevariable [namespace which -variable v::geoyuse]
    ::misc::statevar $f.ymax -statemap {0 disabled 1 normal} \
       -statevariable [namespace which -variable v::geoyuse]
+
+   ::tooltip::tooltip $f.rcfw \
+      "If specified, the RCF filter will be used to remove outliers, using this\
+      \nvalue as a window size. Set this to 0 to disable the RCF filter."
 }
 
 proc ::l1pro::drast::gui_opts_wf {f labelgrid} {
@@ -268,6 +282,9 @@ proc ::l1pro::drast::gui_opts_wf {f labelgrid} {
    spinbox $f.winwf -from 0 -to 63 -increment 1 \
       -textvariable [namespace which -variable v::wfwin]
    apply $labelgrid $f.winwf "WF window:"
+   spinbox $f.winbath -from 0 -to 63 -increment 1 \
+      -textvariable [namespace which -variable v::wfwinbath]
+   apply $labelgrid $f.winbath "ex_bath window:"
    ::misc::combobox $f.src -state readonly \
       -textvariable [namespace which -variable v::wfsrc] \
       -values {rast geo}
@@ -322,7 +339,7 @@ proc ::l1pro::drast::gui_opts_export {f labelgrid} {
       -variable [namespace which -variable v::exportgeo]
    ttk::checkbutton $f.sline -text "Export Scanline" \
       -variable [namespace which -variable v::exportsline]
-   ttk::spinbox $f.res -from 1 -to 100 -increment 1 \
+   spinbox $f.res -from 1 -to 100 -increment 1 \
       -textvariable [namespace which -variable v::exportres]
    ttk::entry $f.dest -textvariable [namespace which -variable v::exportdir]
 
@@ -332,12 +349,6 @@ proc ::l1pro::drast::gui_opts_export {f labelgrid} {
    apply $labelgrid $f.res "Resolution:"
    apply $labelgrid $f.dest "Destination:"
    grid columnconfigure $f 1 -weight 1
-
-   set state [list w "::misc::statevar \$w -statemap {0 disabled 1 normal} \
-      -statevariable [namespace which -variable v::export]"]
-   apply $state $f.geo
-   apply $state $f.sline
-   apply $state $f.dest
 }
 
 proc ::l1pro::drast::send_rastunits {} {
@@ -381,12 +392,14 @@ proc ::l1pro::drast::show_rast {} {
 proc ::l1pro::drast::show_geo {} {
    set cmd "window, $v::geowin"
    appendif cmd \
-      1                    "; geo_rast" \
-      1                    ", $v::rn" \
-      {$v::geowin != 2}    ", win=$v::geowin" \
-      {$v::eoffset != 0}   ", eoffset=$v::eoffset" \
-      1                    ", verbose=0" \
-      {!$v::geotitles}     ", titles=0"
+      1                          "; geo_rast" \
+      1                          ", $v::rn" \
+      {$v::geowin != 2}          ", win=$v::geowin" \
+      {$v::eoffset != 0}         ", eoffset=$v::eoffset" \
+      1                          ", verbose=0" \
+      {!$v::geotitles}           ", titles=0" \
+      $v::georcfw                ", rcfw=$v::georcfw" \
+      {$v::geostyle ne "pli"}    ", style=\"$v::geostyle\""
 
    if {$v::geoyuse} {
       append cmd "; range, $v::geoymin, $v::geoymax"
@@ -512,11 +525,12 @@ proc ::l1pro::drast::jump pos {
 proc ::l1pro::drast::examine_waveforms {} {
    set cb [expr {$v::wfchan1 + 2*$v::wfchan2 + 4*$v::wfchan3}]
    set src [dict get [list geo $v::geowin rast $v::rastwin] $v::wfsrc]
-   set cmd "rn = $v::rn; msel_wf, wfa, cb=$cb"
+   set cmd "rn=$v::rn; msel_wf, ndrast(rn=rn, graph=0), cb=$cb"
    appendif cmd \
       $v::wfgeo      ", geo=1" \
       1              ", winsel=$src" \
       1              ", winplot=$v::wfwin" \
+      1              ", winbath=$v::wfwinbath" \
       1              ", seltype=\"$v::wfsrc\""
    exp_send "$cmd\r"
 }
