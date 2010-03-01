@@ -19,7 +19,9 @@ if {![namespace exists ::l1pro::drast]} {
          variable show_rast 0
          variable show_sline 0
          variable sfsync 0
-         variable ptsync 0
+         variable autolidar 0
+         variable autopt 0
+         variable autoptc 0
          variable rastwin 0
          variable rastunits meters
          variable eoffset 0
@@ -199,13 +201,19 @@ proc ::l1pro::drast::gui_opts_play {f labelgrid} {
       -variable [namespace which -variable v::show_sline]
    ttk::checkbutton $f.sfsync -text "Sync with SF" \
       -variable [namespace which -variable v::sfsync]
-   ttk::checkbutton $f.ptsync -text "Sync with Plotting Tool (Clear and Plot)" \
-      -variable [namespace which -variable v::ptsync]
+   ttk::checkbutton $f.autolidar -text "Auto Plot Lidar (Process EAARL Data)" \
+      -variable [namespace which -variable v::autolidar]
+   ttk::checkbutton $f.autopt -text "Auto Plot (Plotting Tool)" \
+      -variable [namespace which -variable v::autopt]
+   ttk::checkbutton $f.autoptc -text "Auto Clear and Plot (Plotting Tool)" \
+      -variable [namespace which -variable v::autoptc]
    grid $f.rast - -sticky w
    grid $f.geo - -sticky w
    grid $f.sline - -sticky w
    grid $f.sfsync - -sticky w
-   grid $f.ptsync - -sticky w
+   grid $f.autolidar - -sticky w
+   grid $f.autopt - -sticky w
+   grid $f.autoptc - -sticky w
    grid columnconfigure $f 1 -weight 1
 }
 
@@ -367,7 +375,13 @@ proc ::l1pro::drast::show_auto {} {
    if {$v::sfsync} {
       exp_send "tkcmd, swrite(format=\"::l1pro::drast::mediator::broadcast_soe %d\", edb.seconds($v::rn));\r"
    }
-   if {$v::ptsync} {
+   if {$v::autolidar} {
+      ::display_data
+   }
+   if {$v::autopt} {
+      ::plot::plot_all
+   }
+   if {$v::autoptc} {
       ::plot::replot_all
    }
    foreach name {rast geo sline} {
