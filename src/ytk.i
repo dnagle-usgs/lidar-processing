@@ -585,4 +585,17 @@ func ytk_startup(void) {
    }
 }
 
+func ytkquit {
+/* DOCUMENT ytkquit
+   Exit YTK. This tells TCL to exit, which in turn automatically shuts down
+   Yorick. (This is safer than exiting Yorick directly and hoping that Tcl
+   takes the hint.)
+
+   The Yorick built-in command quit was renamed to __quit if you need it.
+*/
+   tkcmd, "exit";
+}
+__quit = quit;
+quit = ytkquit;
+
 ytk_startup;
