@@ -776,7 +776,8 @@ snit::widgetadaptor ::misc::labelframe::collapsible {
          installhull using ttk::labelframe
       }
 
-      install toggle using ttk::checkbutton $win.toggle
+      install toggle using ttk::checkbutton $win.toggle \
+         -style Collapsible.TCheckbutton -compound left
       install interior using ttk::frame $win.interior
       ttk::frame $win.null
 
@@ -791,7 +792,7 @@ snit::widgetadaptor ::misc::labelframe::collapsible {
 
       if {[lsearch -exact $args -variable] == -1} {
          set ::$toggle 1
-         $self configure -variable ::$toggle
+         $self configure -variable ""
       }
       $self configurelist $args
       $self TraceSetVar - - -
@@ -824,6 +825,9 @@ snit::widgetadaptor ::misc::labelframe::collapsible {
    method SetVar {option value} {
       if {$value eq ""} {
          set value ::$toggle
+         $toggle configure -style Collapsible.TCheckbutton -compound left
+      } else {
+         $toggle configure -style TCheckbutton -compound text
       }
       catch [list trace remove variable [$toggle cget -variable] write \
          [mymethod TraceSetVar]]
@@ -843,6 +847,29 @@ snit::widgetadaptor ::misc::labelframe::collapsible {
          grid remove $win.interior
       }
    }
+}
+
+namespace eval ::misc::labelframe::collapsible {
+   set img(expand) [image create bitmap -data {
+      #define expand_width 11
+      #define expand_height 11
+      static unsigned char expand_bits[] = {
+         0xff, 0x07, 0x01, 0x04, 0x01, 0x04, 0x21, 0x04, 0x21, 0x04, 0xf9, 0x04,
+         0x21, 0x04, 0x21, 0x04, 0x01, 0x04, 0x01, 0x04, 0xff, 0x07};
+   }]
+
+   set img(collapse) [image create bitmap -data {
+      #define collapse_width 11
+      #define collapse_height 11
+      static unsigned char collapse_bits[] = {
+         0xff, 0x07, 0x01, 0x04, 0x01, 0x04, 0x01, 0x04, 0x01, 0x04, 0xf9, 0x04,
+         0x01, 0x04, 0x01, 0x04, 0x01, 0x04, 0x01, 0x04, 0xff, 0x07};
+   }]
+
+   ttk::style configure Collapsible.TCheckbutton -relief flat
+   ttk::style layout Collapsible.TCheckbutton [ttk::style layout Toolbutton]
+   ttk::style map Collapsible.TCheckbutton \
+      -image [list selected $img(collapse) !selected $img(expand)]
 }
 
 # default varName value
