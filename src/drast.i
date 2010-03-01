@@ -230,7 +230,7 @@ func drast_graph(aa, digitizer, win=) {
    window_select, win_bkp;
 }
 
-func msel_wf(w, cb=, geo=, winsel=, winplot=, seltype=) {
+func msel_wf(w, cb=, geo=, winsel=, winplot=, winbath=, seltype=) {
 /* DOCUMENT msel_wf, w, cb=, geo=
    Use the mouse to select a pixel to display a waveform for.
 
@@ -247,6 +247,7 @@ func msel_wf(w, cb=, geo=, winsel=, winplot=, seltype=) {
    default, cb, 7;
    default, geo, 0;
    default, winplot, 0;
+   default, winbath, 4;
 
    win = 1;
    if(geo == 1) win = 2; //use georectified raster
@@ -275,7 +276,7 @@ func msel_wf(w, cb=, geo=, winsel=, winplot=, seltype=) {
          show_wf, *w, idx , win=winplot, cb=cb;
       if (is_array(bath_ctl)) {
          if (bath_ctl.laser != 0)
-            ex_bath, rn, idx, graph=1, win=4, xfma=1;
+            ex_bath, rn, idx, graph=1, win=winbath, xfma=1;
       }
       window, win;
       write, format="Pulse %d\n", idx;
@@ -444,8 +445,8 @@ func rast_scanline(rn, win=, style=, color=) {
    window_select, wbkp;
 }
 
-func geo_rast(rn, fsmarks=, eoffset=, win=, verbose=, titles=) {
-/* DOCUMENT get_rast, rn, fsmarks=, eoffset=, win=, verbose=
+func geo_rast(rn, fsmarks=, eoffset=, win=, verbose=, titles=, rcfw=, style=) {
+/* DOCUMENT geo_rast, rn, fsmarks=, eoffset=, win=, verbose=, titles=, rcfw=, style=
 
    Plot a geo-referenced false color waveform image.
 
@@ -455,10 +456,18 @@ func geo_rast(rn, fsmarks=, eoffset=, win=, verbose=, titles=) {
       fsmarks= If fsmarks=1, will plot first surface range values over the
          waveform.
       eoffset= The mount to offset the vertical scale, in meters. Default is 0.
-      - Updates externs fs and xm
+         - Updates externs fs and xm
       win= The window to plot in. Defaults to 2.
       verbose= Displays progress/info output if verbose=1; goes quiet if
          verbose=0. Default is 1.
+      titles= By default, helpful titles are added to the plot. use titles=0 to
+         prevent that.
+      rcfw= When this option is specified, the RCF filter will be passed over
+         the elevations to remove outliers. This option species the window to
+         use for that filtering, in meters.
+      style= Allows for specifying an alternate plotting style.
+            style="pli"    Plot using the pli command (default)
+            style="plcm"   Plot using the plcm command (former default)
 */
    extern xm, fs;
    default, fsmarks, 0;
@@ -469,34 +478,65 @@ func geo_rast(rn, fsmarks=, eoffset=, win=, verbose=, titles=) {
 
    prev_win = current_window();
    window, win;
-   // animate, 2;
    fma;
 
    fs = first_surface(start=rn, stop=rn+1, north=1, verbose=verbose)(1);
    sp = fs.elevation/100.0;
-   xm = (fs.east - fs.meast(1))/100.0;
+   xm = (fs.east - fs.east(avg))/100.0;
+   skip = array(short(0), numberof(sp));
+   if(rcfw) {
+      skip() = 1;
+      rcfres = rcf(sp, rcfw, mode=2);
+      skip(*rcfres(1)) = 0;
+   }
+
+   rst = decode_raster(get_erast(rn=rn))(1);
+   w = where(!rst.rx(,1));
+   if(numberof(w))
+      skip(w) = 1;
+
+   C = .15;  // in air
 
    // prepare background
-   // assuming the range gate will not allow the width to exceed 50 m
-   // we use w = 50 in the rcf function below.
-
-   allz = ally = allx = [];
-   rst = decode_raster(get_erast(rn=rn))(1);
-   for (i = 1; i < 120; i++) {
-      zz = array(245, 255);
-      z = *rst.rx(i);
-      n = numberof(z);
-      if (n > 0) {
-         zz(1:n) = z;
-         C = .15;  // in air
-         grow, allx, array(xm(i), 255);
-         grow, ally, span(sp(i)+eoffset, sp(i)-255*C+eoffset, 255);
-         grow, allz, 254-zz;
-      }
+   w = where(!skip);
+   xmax = max(abs([xm(w)(max),xm(w)(min)]));
+   xmin = -xmax;
+   ymax = sp(w)(max)+eoffset;
+   ymin = sp(w)(min)+eoffset-255*C;
+   // Coerce into square
+   if(ymax - ymin > xmax - xmin) {
+      xmax = 0.5 * (ymax-ymin);
+      xmin = -xmax;
+   } else {
+      yavg = [ymin,ymax](avg);
+      ymax = yavg + xmax;
+      ymin = yavg + xmin;
    }
    bg = [[char(9)]];
-   pli, bg, min(allx), min(ally), max(allx), max(ally);
-   plcm, allz, ally, allx, cmin=0, cmax=255, msize=2.0;
+   pli, bg, xmin, ymin, xmax, ymax;
+
+   // plot pulses
+   xw = abs(xm(where(!skip))(dif))(min) * 0.475;
+   for(i = 1; i <= 120; i++) {
+      if(skip(i))
+         continue;
+      z = 254 - *rst.rx(i,1);
+      n = numberof(z);
+
+      if(style == "plcm") {
+         x = array(xm(i), n);
+         y = span(sp(i)+eoffset, sp(i)-(n-1)*C+eoffset, n);
+         plcm, z, y, x, cmin=0, cmax=255, msize=2.0;
+      } else {
+         x0 = xm(i) - xw;
+         x1 = xm(i) + xw;
+         y0 = sp(i) + eoffset + 0.5 * C;
+         y1 = sp(i) + eoffset - 0.5 * C - (n-1) * C;
+         pli, z(-,), x0, y0, x1, y1, cmin=0, cmax=255;
+      }
+   }
+
+   // fsmarks, if necessary
    if (fsmarks) {
       indx = where(fs(1).elevation <= 0.4*(fs(1).melevation));
       if(numberof(indx))
