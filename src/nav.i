@@ -1152,15 +1152,15 @@ func pip_fp(junk,fp=, ply=, win=, mode=,in_utm=,out_utm=, debug=) {
   }
   fpxy = *fp.p;
   // convert to utm
-  ufpxy1 = transpose(fll2utm(fpxy(,1), fpxy(,2)));
-  ufpxy2 = transpose(fll2utm(fpxy(,3), fpxy(,4)));
+  ufpxy1 = transpose(fll2utm(fpxy(,1), fpxy(,2), force_zone=curzone));
+  ufpxy2 = transpose(fll2utm(fpxy(,3), fpxy(,4), force_zone=curzone));
   fpxy(,1:2) = ufpxy1(,1:2);
   fpxy(,3:4) = ufpxy2(,1:2);
-  curzone = ufpxy1(1,3);
+  //curzone = ufpxy1(1,3);
 
   if (!in_utm) {
      ply = lply1;
-     ply1 = (fll2utm(ply(2,), ply(1,)))(1:2,);
+     ply1 = (fll2utm(ply(2,), ply(1,),force_zone=curzone))(1:2,);
      ply(1,) = ply1(2,);
      ply(2,) = ply1(1,);
   }
