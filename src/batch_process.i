@@ -213,7 +213,7 @@ func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, rcf
             system, cmd;
             write, "rsync complete";
          }
-         batch_rcf, mypath, buf=buf, w=w, no_rcf=no_rcf, mode=mode, merge=merge, clean=clean, rcfmode=rcfmode, onlyupdate=update, write_merge=write_merge;
+         batch_rcf, mypath, buf=buf, w=w, no_rcf=no_rcf, mode=typ+1, merge=merge, clean=clean, rcfmode=rcfmode, onlyupdate=update, write_merge=write_merge;
       }
 
       if ( ! strmatch(host, "localhost") ) {
@@ -1549,7 +1549,7 @@ Original amar nayegandhi. Started 12/06/02.
          } else {
             fnametag = rcftag;
          }
-         if (rcfmode == 1) rcf_eaarl = rcfilter_eaarl_pts(eaarl, buf=buf, w=w, mode=mode, no_rcf=no_rcf, wfs=wfs, fsmode=fsmode);
+         if (rcfmode == 1) rcf_eaarl = rcf_filter_eaarl(eaarl, buf=buf, w=w, mode=["fs","ba","be"](mode), n=no_rcf, rcfmode="grcf");
          if (rcfmode == 2) rcf_eaarl = rcf_triag_filter(eaarl,buf=buf,w=w,mode=mode,no_rcf=no_rcf,tw=tw,fbuf=fbuf,fw=fw,interactive=interactive, datawin=datawin, plottriag=plottriag);
          if (rcfmode == 0) rcf_eaarl=eaarl;
          if (!is_array(rcf_eaarl)) continue;
@@ -2415,7 +2415,7 @@ Input:
       pldj, rgn(2), rgn(3), rgn(1), rgn(3), color="cyan";
    }
    rgn = oldrgn;
-   if (rcfmode == 1) rcfdata = rcfilter_eaarl_pts(rawdata,buf=buf,w=w,mode=mode,no_rcf=no_rcf,fsmode=fsmode,wfs=wfs);
+   if (rcfmode == 1) rcfdata = rcf_filter_eaarl(rawdata, buf=buf, w=w, mode=["fs","ba","be"](mode), n=no_rcf, rcfmode="grcf");
    if (rcfmode == 2) rcfdata = rcf_triag_filter(rawdata,buf=buf,w=w,mode=mode,no_rcf=no_rcf,fbuf=fbuf,fw=fw,tw=tw,interactive=interactive,tai=tai,plottriag=plottriag,plottriagwin=plottriagwin,prefilter_min=prefilter_min,prefilter_max=prefilter_max,distthresh=distthresh,datawin=datawin);
    if (!type) {
       if (mode == 2) type = GEO;
