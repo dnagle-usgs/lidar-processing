@@ -29,9 +29,8 @@ vname=, title=, xtitle=, ytitle=) {
             mode="ba"   Bathy
       binsize= The width to use for each bin. If not specified, it will
          automatically calculate a binsize that appears good for the data. This
-         automatic binsize will always be at least 0.10 and will attempt to
-         partition the data into 25 to 50 bins. Units correspond to the data
-         mode. (Generally, meters.)
+         automatic binsize will always be between 0.10 and 0.60.  Units
+         correspond to the data mode. (Generally, meters.)
             binsize=100    Use a 100 unit bin size.
             binsize=0.25   Use a 0.25 unit bin size.
       normalize= Specifies whether the histogram should be normalized. This
@@ -145,11 +144,23 @@ vname=, title=, xtitle=, ytitle=) {
       data2xyz, unref(data), , , z, mode=mode;
 
    if(is_void(binsize)) {
-      binsize = (z(max)-z(min))/50.;
+      zavg = z(avg);
+      zrms = z(rms);
+      zmin = [z(min), zavg-3*zrms](max);
+      zmax = [z(max), zavg+3*zrms](min);
+      zrng = zmax - zmin;
+      zavg = zrms = zmin = zmax = [];
+      binsize = zrng/50.;
+      if(binsize > 0.3)
+         binsize = min(binsize, zrng/100.);
+      if(binsize > 0.45)
+         binsize = min(binsize, zrng/200.);
+      if(binsize > 0.6)
+         binsize = 0.60;
       if(binsize < 0.25)
-         binsize = max(binsize, (z(max)-z(min))/25.);
+         binsize = max(binsize, zrng/25.);
       if(binsize < 0.17)
-         binsize = max(binsize, (z(max)-z(min))/20.);
+         binsize = max(binsize, zrng/20.);
       if(binsize < 0.10)
          binsize = 0.10;
       binsize = long(binsize * 100)/100.;
