@@ -362,39 +362,20 @@ itcl::body SegmentedDataWindow::clear_time {idx} {
 }
 
 itcl::body SegmentedDataWindow::plot_segment {idx} {
-   global pro_var win_no l1pro_fma
-
-   set fma_bkp $l1pro_fma
-   set win_bkp $win_no
-   set var_bkp $pro_var
-
-   set l1pro_fma [set $itk_option(-fmavariable)]
-   set win_no $_segment($idx,win)
-   set pro_var $_segment($idx,var)
-   display_data
-
-   set l1pro_fma $fma_bkp
-   set win_no $win_bkp
-   set pro_var $var_bkp
+   ::display_data -var $_segment($idx,var) -win $_segment($idx,win) \
+      -fma [set $itk_option(-fmavariable)]
 }
 
 itcl::body SegmentedDataWindow::plot_selected {} {
-   global pro_var l1pro_fma
-
-   set fma_bkp $l1pro_fma
-   set var_bkp $pro_var
-
-   set l1pro_fma [set $itk_option(-fmavariable)]
+   set fma [set $itk_option(-fmavariable)]
    for {set idx 1} {$idx <= $_count} {incr idx} {
       if {$_segment($idx,use)} {
-         set pro_var $_segment($idx,var)
-         display_data
-         set l1pro_fma 0
+         ::display_data -var $_segment($idx,var) \
+            -win [set $itk_option(-windowvariable)] \
+            -fma $fma
+         set fma 0
       }
    }
-
-   set l1pro_fma $fma_bkp
-   set pro_var $var_bkp
 }
 
 itcl::body SegmentedDataWindow::merge_selected {} {
