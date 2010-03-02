@@ -1887,22 +1887,25 @@ if {![winfo exists .l1wid]} {
     }
   }
 
-  proc display_data {} {
-    set cmd "display_data, $::pro_var"
-    append cmd ", mode=\"[lindex {fs ba de be fint lint ch} [display_type]]\""
+  proc display_data args {
+    array set opts [list -var $::pro_var -win $::win_no -fma $::l1pro_fma]
+    array set opts $args
+
+    set cmd "display_data, $opts(-var)"
+    append cmd ", mode=\"[display_type_mode]\""
     if {$::skip > 1} {
       append cmd ", skip=$::skip"
     }
     append cmd ", msize=$::plot_settings(msize)"
     append cmd ", marker=$::plot_settings(mtype)"
-    append cmd ", win=$::win_no"
+    append cmd ", win=$opts(-win)"
     if {! $::l1pro_square_limits} {
       append cmd ", square=0"
     }
     if {$::l1pro_cbar} {
       append cmd ", showcbar=1"
     }
-    if {$::l1pro_fma} {
+    if {$opts(-fma)} {
       append cmd ", dofma=1"
     }
     append cmd ", cmin=$::plot_settings(cmin)"
