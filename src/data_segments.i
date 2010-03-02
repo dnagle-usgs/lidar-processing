@@ -159,6 +159,24 @@ func split_by_fltline(data, timediff=) {
    return fptr;
 }
 
+func rcf_by_fltline(data, mode=, rcfmode=, buf=, w=, n=, timediff=) {
+/* DOCUMENT rcf_by_fltline(data, mode=, rcfmode=, buf=, w=, n=, timediff=)
+   Applies an RCF filter to eaarl data on a flightline by flightline basis.
+   Each flightline is filtered in isolation and the results are merged
+   together.
+
+   The mode=, rcfmode=, buf=, w=, and n= options are as documented in
+   rcf_filter_eaarl.
+
+   The timediff= option is as documented in split_by_fltline.
+*/
+   ptrs = split_by_fltline(unref(data), timediff=timediff);
+   for(i = 1; i <= numberof(ptrs); i++)
+      ptrs(i) = &rcf_filter_eaarl(*ptrs(i), buf=buf, w=w, n=n, mode=mode,
+         rcfmode=rcfmode);
+   return merge_pointers(ptrs);
+}
+
 func tk_sdw_launch_fltlines(varname) {
    fptr = split_by_fltline(symbol_def(varname));
    fmt = swrite(format="flt%%0%dd_%%s", long(log10(numberof(fptr))) + 1);
