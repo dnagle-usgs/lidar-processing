@@ -89,9 +89,18 @@ proc ::l1pro::dirload::gui {} {
       -command [namespace code region_plot]
 
    ttk::frame $f.fraButtons
-   ttk::button $f.btnLoad -text "Load Data" \
-      -command [namespace code load_data]
+   ttk::button $f.btnLoadCont -text "Load & Continue" \
+      -command [namespace code [list load_data continue]]
+   ttk::button $f.btnLoadDism -text "Load & Finish" \
+      -command [namespace code [list load_data finish]]
    ttk::button $f.btnClose -text "Cancel" -command [list wm withdraw $v::top]
+
+   ::tooltip::tooltip $f.btnLoadCont \
+      "Loads the data, then leaves this GUI open. Useful if you're using\
+      \nsubsample to preview data before loading it again at a higher density for\
+      \na specific subregion, for example."
+   ::tooltip::tooltip $f.btnLoadDism \
+      "Loads the data, then closes this GUI."
 
    grid $f.cboZone $f.lblSkip $f.spnSkip $f.lblUnique $f.chkUnique \
       -in $f.fraZoneLine -sticky ew
@@ -105,8 +114,9 @@ proc ::l1pro::dirload::gui {} {
    grid $f.lblRegion $f.entRegion $f.mnuRegion -in $f.f
    grid $f.fraButtons - - -in $f.f -pady 2
 
-   grid x $f.btnLoad $f.btnClose x -in $f.fraButtons -sticky e -padx 2
-   grid columnconfigure $f.fraButtons {0 3} -weight 1
+   grid x $f.btnLoadCont $f.btnLoadDism $f.btnClose x -in $f.fraButtons \
+      -sticky e -padx 2
+   grid columnconfigure $f.fraButtons {0 4} -weight 1
 
    grid configure $f.lblPath $f.lblSearch $f.lblVname $f.lblUnique $f.lblSkip \
       $f.lblZone $f.lblRegion -sticky e -padx {2 0}
@@ -152,12 +162,14 @@ proc ::l1pro::dirload::region_plot {} {
    expect "> "
 }
 
-proc ::l1pro::dirload::load_data {} {
+proc ::l1pro::dirload::load_data termaction {
    if {![file isdirectory $::data_file_path]} {
       error "Data path is not a directory: $::data_file_path"
    }
 
-   wm withdraw $v::top
+   if {$termaction eq "finish"} {
+      wm withdraw $v::top
+   }
 
    set filter ""
 
@@ -191,7 +203,6 @@ proc ::l1pro::dirload::load_data {} {
    append_varlist $v::vname
    set ::pro_var $v::vname
    exp_send "$v::vname = dirload($arglist);\r"
-   expect "> "
 }
 
 ### For binary files
