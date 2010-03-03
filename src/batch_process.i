@@ -213,7 +213,11 @@ func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, rcf
             system, cmd;
             write, "rsync complete";
          }
-         batch_rcf, mypath, buf=buf, w=w, no_rcf=no_rcf, mode=typ+1, merge=merge, clean=clean, rcfmode=rcfmode, onlyupdate=update, write_merge=write_merge;
+
+         tile_id = swrite(format="t_e%6.0f_n%7.0f_%s_rcf",
+            min_e, max_n, zone_s);
+
+         batch_rcf, mypath, buf=buf, w=w, no_rcf=no_rcf, mode=typ+1, merge=merge, clean=clean, rcfmode=rcfmode, onlyupdate=update, write_merge=write_merge, tile_id=tile_id;
       }
 
       if ( ! strmatch(host, "localhost") ) {
@@ -254,7 +258,6 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
          if (edf) ofn(2) = ofn(2) + ".edf";
          if (pbd) ofn(2) = ofn(2) + ".pbd";
          pofn = ofn(1) + ofn(2);
-
 
          // if update = 1, check to see if file exists
          if (update) {
@@ -1109,7 +1112,7 @@ func show_files(files=, str=) {
   }
 }
 
-func batch_rcf(dirname, fname=, buf=, w=, tw=, fbuf=, fw=, no_rcf=, mode=, meta=, prefilter_min=, prefilter_max=, clean=, compare_noaa=, merge=, write_merge=, readedf=, readpbd=, writeedf=, writepbd=, rcfmode=, datum=, fsmode=, wfs=, searchstr=, bmode=, interactive=, onlyupdate=, selectmode=) {
+func batch_rcf(dirname, fname=, buf=, w=, tw=, fbuf=, fw=, no_rcf=, mode=, meta=, prefilter_min=, prefilter_max=, clean=, compare_noaa=, merge=, write_merge=, readedf=, readpbd=, writeedf=, writepbd=, rcfmode=, datum=, fsmode=, wfs=, searchstr=, bmode=, interactive=, onlyupdate=, selectmode=, tile_id=) {
 /* DOCUMENT
 func batch_rcf(dirname, fname=, buf=, w=, tw=, fbuf=, fw=, no_rcf=,
                mode=, meta=, prefilter_min=, prefilter_max=, clean=,
@@ -1606,7 +1609,12 @@ Original amar nayegandhi. Started 12/06/02.
                write_vegall, rcf_eaarl, opath=res(1), ofname=res(2);
             }
             if (writepbd) {
-               vname = "bet"+vnametag+"_"+swrite(format="%d",i);
+               // use tile_id when run from mbatch_process() as 'i' is always 1.
+               if ( tile_id ) {
+                  vname = "bet"+vnametag+"_"+tile_id;
+               } else {
+                  vname = "bet"+vnametag+"_"+swrite(format="%d",i);
+               }
                write, format = "Writing pbd file for Region %d of %d\n",i,nfiles;
                f = createb(ofn);
                add_variable, f, -1, vname, structof(rcf_eaarl), dimsof(rcf_eaarl);
