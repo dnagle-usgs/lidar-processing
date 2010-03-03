@@ -1,6 +1,26 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 plug_in, "calps";
 
+func calps_compatibility(nil) {
+/* DOCUMENT calps_compatibility()
+   Returns an integer that can be used for comptability checks. If any of the
+   functions implemented in C-ALPS change in a way that breaks compatibility
+   with the previous version of that function, the number returned by this
+   function will be incremented and the change will be documented here.
+
+   For example, suppose a function in C-ALPS gets changed to take 6 arguments
+   instead of 5. If a user does a CVS update on lidar-processing/src but
+   doesn't upgrade their C-ALPS alongside that, then they might run into
+   serious problems when their updated Yorick code is trying to use 6 arguments
+   but their old C-ALPS code is only accepting 5. The solution is to ensure
+   that the Yorick code gets updated to check calps_compatibility() and, if the
+   function is the outdated format, adjust behavior accordingly.
+
+   This version of calps_compatibility returns 1.
+*/
+   return 1;
+}
+
 // *** defined in triangle_y.c ***
 // Supported by triangle.c and triangle.h
 
@@ -101,4 +121,18 @@ extern _yin_box;
 extern _ylevel_short_dips;
 /* PROTOTYPE
    void level_short_dips(double *seq, double *dist, double thresh, long count)
+*/
+
+// *** defined in ll2utm.c ***
+
+extern _yll2utm;
+/* PROTOTYPE
+   void ll2utm(double *lat, double *lon, double *north, double *east,
+   short *zone, long count, double a, double e2)
+*/
+
+extern _yutm2ll;
+/* PROTOTYPE
+   void utm2ll(double *north, double *east, short *zone, double *lon,
+   double *lat, long count, double a, double e2)
 */
