@@ -119,45 +119,20 @@ func helmert_transformation(&X, &Y, &Z, transform) {
    }
 }
 
-local __spheroids;
-/* DOCUMENT __spheroids
-   A yeti hash containing the constants that define the spheroids implemented
-   in ALPS. These are used to convert lat/lon/height coordinates to X/Y/Z
-   coordinates. Each spheroid contains four parameters:
-      a - the semi-major axis
-      b - the semi-minor axis 
-      f - flattening factor
-      e2 - eccentricity squared
-*/
-// Constants
-__spheroids = h_new(
-   wgs84=h_new(a=6378137., b=6356752.315245),
-   grs80=h_new(a=6378137., b=6356752.3141404)
-);
-// Derived
-for(i = 1; i <= 2; i++) {
-   tmp = __spheroids(["wgs84","grs80"](i));
-   h_set, tmp, f=(tmp.a-tmp.b)/tmp.a;
-   h_set, tmp, e2=2*tmp.f - tmp.f*tmp.f;
-}
-tmp = i = [];
-
-func geographic2cartesian(lon, lat, height, spheroid, &X, &Y, &Z) {
-/* DOCUMENT geographic2cartesian, lon, lat, height, spheroid, X, Y, Z
+func geographic2cartesian(lon, lat, height, ellip, &X, &Y, &Z) {
+/* DOCUMENT geographic2cartesian, lon, lat, height, ellip, X, Y, Z
    Given geographic coordinates in longitude, latitude, and height, this will
    convert them to X, Y, and Z cartesian coordinates using the parameters for
-   the specified spheroid. The parameters X, Y, and Z are output parameters.
+   the specified ellipsoid. The parameters X, Y, and Z are output parameters.
    Alternately, it will also return [X, Y, Z].
 */
-   extern __spheroids;
-   if(!h_has(__spheroids, spheroid))
-      error, "Undefined spheroid: " + spheroid;
-   constants = __spheroids(spheroid);
+   if(!h_has(ELLIPSOID, ellip))
+      error, "Undefined ellipsoid: " + ellip;
+   constants = ELLIPSOID(ellip);
    a = constants.a;
    e2 = constants.e2;
    constants = [];
 
-   DEG2RAD = pi/180.;
    lon *= DEG2RAD;
    lat *= DEG2RAD;
 
@@ -177,17 +152,16 @@ func geographic2cartesian(lon, lat, height, spheroid, &X, &Y, &Z) {
       return [X, Y, Z];
 }
 
-func cartesian2geographic(X, Y, Z, spheroid, &lon, &lat, &height) {
-/* DOCUMENT cartesian2geographic, X, Y, Z, spheroid, lon, lat, height
+func cartesian2geographic(X, Y, Z, ellip, &lon, &lat, &height) {
+/* DOCUMENT cartesian2geographic, X, Y, Z, ellip, lon, lat, height
    Given cartesian coordinates as X, Y, and Z, this will convert them to
    geographic coordinates longitude, latitude, and height using the parameters
-   for the specified spheroid. The parameters lon, lat, and height are output
+   for the specified ellipsoid. The parameters lon, lat, and height are output
    parameters. Alternately, it will also return [lon, lat, height].
 */
-   extern __spheroids;
-   if(!h_has(__spheroids, spheroid))
-      error, "Undefined spheroid: " + spheroid;
-   constants = __spheroids(spheroid);
+   if(!h_has(ELLIPSOID, ellip))
+      error, "Undefined ellipsoid: " + ellip;
+   constants = ELLIPSOID(ellip);
    a = constants.a;
    f = constants.f;
    e2 = constants.e2;
@@ -205,7 +179,6 @@ func cartesian2geographic(X, Y, Z, spheroid, &lon, &lat, &height) {
    sinlat = sin(lat);
    height = p * cos(lat) + unref(Z) * sinlat - a * sqrt(1 - e2 * sinlat^2);
 
-   RAD2DEG = 180./pi;
    lon *= RAD2DEG;
    lat *= RAD2DEG;
 
