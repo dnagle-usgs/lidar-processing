@@ -222,7 +222,7 @@ func convert_map ( ffn= , utm=, msave=, arcview=) {
          grow, dllmap, &ll;			  // concat to list of pointers
          plg,lat(1:n),lon(1:n),marks=0;	  // show the segment
       } else {
-         ll2utm(lat,lon);
+         fll2utm, lat, lon, UTMNorthing, UTMEasting, ZoneNumber;
          plg,UTMNorthing(1:n),UTMEasting(1:n),marks=0;
       }
       gridxy,0,0;

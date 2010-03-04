@@ -709,7 +709,7 @@ proc ::plot::mark_pos { lat lon } {
    ::plot::window_set
    set marker [lsearch $c::markerShapes $g::markShape]
    if {$g::coordType == "UTM"} {
-      exp_send "ll2utm, $lat, $lon\r"
+      exp_send "fll2utm, $lat, $lon, UTMNorthing, UTMEasting, ZoneNumber\r"
       exp_send "plmk, UTMNorthing, UTMEasting, msize=$g::markSize, marker=$marker, color=\"$g::markColor\"\r"
    } else {
       exp_send "plmk, $lat, $lon, msize=$g::markSize, marker=$marker, color=\"$g::markColor\"\r"

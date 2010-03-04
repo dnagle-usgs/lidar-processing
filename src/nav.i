@@ -463,7 +463,7 @@ res
      
   llat = [res(2), res(4)];
   llon = [res(1), res(3)] - res(1);   // translate to zero longitude
-  ll2utm(llat, llon);		// convert to utm
+  fll2utm, llat, llon, UTMNorthing, UTMEasting, ZoneNumber; // convert to utm
   zone = ZoneNumber(1);		// they are all the same cuz we translated
 
 
@@ -631,7 +631,7 @@ res
   zone = array(ZoneNumber(1), dimsof( sr) (2) );
 
 // Convert it back to lat/lon
-  utm2ll, sr(,1), sr(,2), zone ;
+  utm2ll, sr(,1), sr(,2), zone, Long, Lat;
 
 // Add the longitude back in that we subtrated in the beginning.
 // to keep it all i the same utm zone
@@ -686,11 +686,11 @@ if (!silent) {
 Xlong = Long;		// save Long cuz utm2ll clobbers it
 Xlat  = Lat;
 zone = array(pZoneNumber, dimsof( sega) (2) );
-  utm2ll, sega(,1), sega(,2), zone ;
+  utm2ll, sega(,1), sega(,2), zone, Long, Lat;
   sega(,1) = Lat; 
   sega(,2) = Long + res(1);
   //sega(,2) = Long + min(ply1(1,));
-  utm2ll, sega(,3), sega(,4), zone;
+  utm2ll, sega(,3), sega(,4), zone, Long, Lat;
   sega(,3) = Lat; 
   sega(,4) = Long + res(1);
   //sega(,4) = Long + min(ply1(1,));

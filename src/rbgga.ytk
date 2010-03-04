@@ -213,7 +213,7 @@ proc mark_pos { lat lon } {
   if {$utm == 0} {
   exp_send "wsav=current_window();window,$_map(window); plmk, $lat, $lon, msize=.5, marker=1, color=\"red\"; window_select,wsav\r"
   } else {
-  exp_send "ll2utm, $lat, $lon; \r"
+  exp_send "fll2utm, $lat, $lon, UTMNorthing, UTMEasting, ZoneNumber; \r"
   expect ">"
   exp_send "wsav=current_window();window,$_map(window); plmk, UTMNorthing, UTMEasting, msize=.5, marker=1, color=\"red\"; window_select,wsav\r"
   }

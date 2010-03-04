@@ -255,7 +255,7 @@ func mark_time_pos(win, sod, msize=, marker=, color=) {
  sf_a.tcl via eaarl.ytk
 
 */
-  extern utm;
+  extern utm, UTMNorthing, UTMEasting, ZoneNumber;
   default, marker, 5;
   default, color, "blue";
   default, msize, 0.6;
@@ -263,7 +263,7 @@ func mark_time_pos(win, sod, msize=, marker=, color=) {
   q = where( gga.sod == sod )
   window,win;
   if (utm) {
-   ll2utm, gga.lat(q), gga.lon(q) 
+   fll2utm, gga.lat(q), gga.lon(q), UTMNorthing, UTMEasting, ZoneNumber;
    plmk, UTMNorthing, UTMEasting, marker=marker, color=color, msize=msize;
   } else {
    plmk, gga.lat(q), gga.lon(q), marker=marker, color=color, msize=msize;
