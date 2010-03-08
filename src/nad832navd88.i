@@ -5,6 +5,8 @@
     The following code has been adapted from the GEOID 99 model available at
     http://www.ngs.noaa.gov/GEOID/GEOID99/
     The original DISCLAIMER applies to this as well.
+    David Nagle, updated to reflect more recent algorithms used by NGS in
+    GEOID09 model.
 */
 
 require, "eaarl.i";
@@ -36,7 +38,7 @@ func geoid_load(fn) {
       g.glamn - southernmost latitude in whole degrees
       g.glomn - westernmost longitude in whole degrees
       g.dla - distance interval in latitude in degrees
-      g.dlo - distance internval in longitude in degrees
+      g.dlo - distance interval in longitude in degrees
       g.nrows - number of rows (latitude)
       g.ncols - number of columns (longitude)
       g.itype - always equal to one (indicates that data are four-byte floats)
@@ -251,11 +253,6 @@ func nad832navd88(lon, lat, &elv, gdata_dir=, geoid=, verbose=) {
    should be in meters and is updated in place. See nad832navd88offset for a
    description of the options.
 */
-   if(!is_pointer(lon))
-      lon = &lon;
-   if(!is_pointer(lat))
-      lat = &lat;
-
    if(is_pointer(elv)) {
       // If elv is a pointer then we need to loop. :(
       offset = nad832navd88offset(lon, lat, gdata_dir=gdata_dir, geoid=geoid,
@@ -263,7 +260,7 @@ func nad832navd88(lon, lat, &elv, gdata_dir=, geoid=, verbose=) {
       for(i = 1; i <= numberof(elv); i++)
          *elv(i) -= offset(i);
    } else {
-      elv -= nad832navd88offset(lon, lat, gdata_dir=gdata_dir, geoid=geoid,
+      elv() -= nad832navd88offset(lon, lat, gdata_dir=gdata_dir, geoid=geoid,
          verbose=verbose);
    }
 }
@@ -274,11 +271,6 @@ func navd882nad83(lon, lat, &elv, gdata_dir=, geoid=, verbose=) {
    should be in meters and is updated in place. See nad832navd88offset for a
    description of the options.
 */
-   if(!is_pointer(lon))
-      lon = &lon;
-   if(!is_pointer(lat))
-      lat = &lat;
-
    if(is_pointer(elv)) {
       // If elv is a pointer then we need to loop. :(
       offset = nad832navd88offset(lon, lat, gdata_dir=gdata_dir, geoid=geoid,
@@ -291,8 +283,9 @@ func navd882nad83(lon, lat, &elv, gdata_dir=, geoid=, verbose=) {
    }
 }
 
-func nad832navd88offset(lon, lat, gdata_dir=, geoid=, verbose=) {
-/*DOCUMENT offset = nad832navd88offset(lon, lat, gdata_dir=, geoid_version=)
+func nad832navd88offset(lon, lat, gdata_dir=, geoid=, verbose=, interpolator=) {
+/*DOCUMENT offset = nad832navd88offset(lon, lat, gdata_dir=, geoid_version=,
+   interpolator=)
    This function provides the offset between NAD83 and NAVD88 data at a given
    lat/lon location using the GEOIDxx model.
 
@@ -310,6 +303,9 @@ func nad832navd88offset(lon, lat, gdata_dir=, geoid=, verbose=) {
             geoid="03"     For GEOID03
             geoid="09"     For GEOID09 (default)
          If gdata_dir= is specified, then geoid= is ignored.
+      interpolator= The interpolator function to use. Default is:
+            interpolator=n88_interp2d
+         See help on n88_interp2d for further details.
 
    Output:
       The returns an array of offset values between NAD83 and NAVD88 for each
@@ -326,11 +322,6 @@ func nad832navd88offset(lon, lat, gdata_dir=, geoid=, verbose=) {
       The function will use the first geoid data file it finds that will
       suffice for each point. *.pbd takes precedence over *.bin, which takes
       precedence over *.geo.
-
-   Memory optimization:
-      For most efficient use of memory, this function allows you to pass a
-      pointer to your lon and lat arrays instead of the arrays themselves. The
-      original data will not be changed.
 */
 // Amar Nayegandhi 07/10/03, original nad832navd88
 // Charlene Sullivan 09/21/06, modified for use of GEOID96 model
@@ -340,14 +331,10 @@ func nad832navd88offset(lon, lat, gdata_dir=, geoid=, verbose=) {
    default, geoid, "03";
    default, gdata_dir, file_join(alpsrc.geoid_data_root, "GEOID"+geoid);
    default, verbose, 1;
+   default, interpolator, n88_interp2d;
 
-   if(!is_pointer(lon))
-      lon = &lon;
-   if(!is_pointer(lat))
-      lat = &lat;
-
-   if((*lon)(1) < 0)
-      lon = &(*lon + 360.);
+   if(lon(1) < 0)
+      lon = lon + 360.;
 
    // Get list of candidate GEOID files
    files = [];
@@ -374,19 +361,20 @@ func nad832navd88offset(lon, lat, gdata_dir=, geoid=, verbose=) {
    }
 
    // Calculate the file to use for each point
-   which = array(short(0), numberof(*lon));
+   which = array(short(0), numberof(lon));
+
    for(i = 1; i <= numberof(files); i++) {
       need = where(!which);
       if(!numberof(need))
          break;
-      idx = data_box((*lon)(need), (*lat)(need), lonmin(i), lonmax(i),
+      idx = data_box(lon(need), lat(need), lonmin(i), lonmax(i),
          latmin(i), latmax(i));
       if(numberof(idx))
          which(need(idx)) = i;
    }
 
    // This will hold our return results
-   offset = array(0., numberof(*lon));
+   offset = array(0., numberof(lon));
 
    // Do any lack? Warn!
    if(!numberof(where(which))) {
@@ -406,72 +394,304 @@ func nad832navd88offset(lon, lat, gdata_dir=, geoid=, verbose=) {
       w = where(which == needed(i));
       g = geoid_load(files(needed(i)));
 
-      // Find the row/col of the nearest point to the data_in lat/lon points
-      irown = 1 + int(((*lat)(w) - g.glamn) / g.dla);
-      icoln = 1 + int(((*lon)(w) - g.glomn) / g.dlo);
+      // Figure out where we are in the lat/lon grid
+      ix = 1 + (lon(w) - g.glomn) / g.dlo;
+      iy = 1 + (lat(w) - g.glamn) / g.dla;
 
-      // Are we on an edge? If so, then move to the center point
-      cidx = where(irown <= 1);
-      if(numberof(cidx))
-         irown(cidx) = 2;
-      cidx = where(icoln <= 1);
-      if(numberof(cidx))
-         icoln(cidx) = 2;
-      cidx = where(irown >= g.nrows);
-      if(numberof(cidx))
-         irown(cidx) = g.nrows - 1;
-      cidx = where(icoln >= g.ncols);
-      if(numberof(cidx))
-         icoln(cidx) = g.ncols - 1;
-
-      // At this point, the irown/icoln values reflect the center node of the
-      // 3x3 grid of points we will use for biquadratic interpolation.
-
-      // Now extract that 3x3 grid:
-      // f1 f2 f3
-      // f4 f5 f6
-      // f7 f8 f9
-
-      xx = ((*lon)(w) - g.glomn - ((icoln-2)*g.dlo)) / g.dlo;
-
-      index = g.ncols * (irown - 2) + icoln;
-      f1 = g.data(index-1);
-      f2 = g.data(index);
-      f3 = g.data(index+1);
-      fx1 = qfit(xx,unref(f1),unref(f2),unref(f3));
-
-      index += g.ncols;
-      f4 = g.data(index-1);
-      f5 = g.data(index);
-      f6 = g.data(index+1);
-      fx2 = qfit(xx,unref(f4),unref(f5),unref(f6));
-
-      index += g.ncols;
-      f7 = g.data(index-1);
-      f8 = g.data(index);
-      f9 = g.data(unref(index)+1);
-      fx3 = qfit(unref(xx),unref(f7),unref(f8),unref(f9));
-
-      yy = ((*lat)(w) - g.glamn - ((irown-2)*g.dla)) / g.dla;
-
-      close, f;
-
-      offset(w) = qfit(unref(yy),unref(fx1),unref(fx2),unref(fx3));
+      offset(w) = interpolator(ix, iy, g.data);
    }
    return offset;
 }
 
-func qfit(x,f0,f1,f2) {
-/* DOCUMENT qfit(x,f1,f2,f3)
-   Parabola fit through 3 points (x=0,x=1,x=2) with values
-      f0=f(0)  f1=f(1)  f2=f(2)
-   and returning the value qfit = f(x) where 0<=x<=2.
-   Adapted from GEOID99 model.
+func n88_interp2d(x, y, f) {
+/* DOCUMENT n88_interp2d(x, y, f)
+   Performs 2-dimensional interpolation on f at point(s) x, y.
+
+   If x and y are valid integer indices into f, then the following will hold
+   true:
+      f(x,y) = n88_interp2d(x,y,f)
+   All other values will be interpolated.
+
+   This function is effectively a placeholder for one of the other 2d interp
+   functions. If C-ALPS is available, then calps_n88_interp_spline2d is used
+   internally. Otherwise, n88_interp_qfit2d is used instead.
+
+   This function is the default function used for GEOID offset calculation. If
+   you would like to override the function used, you can redfine this function,
+   for example:
+      n88_interp2d = n88_interp_spline2d
+   Or:
+      n88_interp2d = calps_n88_interp_qfit2d
+
+   The spline and qfit interpolation functions generally agree to within 1 cm.
+   The Yorick implementation of spline is much, much slower than the Yorick
+   implementation of qfit, which is why qfit is used by default when C-ALPS is
+   not available. The C versions of both algorithms run sufficiently fast that
+   there is no noticeable speed difference. The spline algorithm is equivalent
+   to what NGS currently uses in their conversion program. The qfit algorithm
+   matches a much older version of their software.
 */
-// Original Amar Nayegandhi 07/14/03
-// Rewrote by David Nagle 2009-02-26 to reduce memory impact
-   t1 = f1 - f0;
+   if(is_func(calps_n88_interp_spline2d))
+      return calps_n88_interp_spline2d(x, y, f);
+   else
+      return n88_interp_qfit2d(x, y, f);
+}
+// Make a backup in case it's overwritten by the user.
+__n88_interp2d = n88_interp2d;
+
+func n88_splinefit(x, f, offset, size) {
+/* DOCUMENT n88_splinefit(x, f, offset, size)
+   Performs a spline fit using the number of points specified by size.
+   Algorithm derived from NGS code associated with the GEOID 09 model.
+
+   Parameters:
+      x: The value to interpolate at.
+      f: Known values.
+      offset: Offset into f that x is referenced against.
+      size: Number of points to use for spline.
+
+   Normally, x will be between 1 and size. If it is outside of that range,
+   extrapolation is used.
+
+   The following pseudo-code identity holds true:
+      for(i = 1; i <= size; i++)
+         f(offset+i-1) == n88_splinefit(i, f, offset, size)
+
+   Any other value for x is interpolated on the spline that passes through
+   those points.
+*/
+   // Calculate spline moments
+   q = r = array(0., size, dimsof(x));
+   for(k = 2; k < size; k++) {
+      kk = k + offset - 1;
+      p = q(k-1,..)/2 + 2;
+      q(k,..) = -0.5/p;
+      r(k,..) = (3.*(f(kk+1) - 2.*f(kk) + f(kk-1)) - r(k-1,..)/2.)/p;
+   }
+   kk = [];
+   for(k = size - 1; k > 1; k--)
+      r(k,..) += q(k,..) * r(k+1,..);
+   q = [];
+
+   result = array(double, dimsof(x));
+
+   elo = x <= 1;
+   ehi = x >= size;
+   spl = !(elo | ehi);
+
+   if(anyof(elo)) {
+      w = where(elo);
+      o = offset(w);
+      result(w) = f(o) + (x(w)-1) * (f(o+1) - f(o) - r(2,w)/6.);
+      w = o = [];
+   }
+   elo = [];
+
+   if(anyof(ehi)) {
+      w = where(ehi);
+      o = offset(w) + size - 1;
+      result(w) = f(o) + (x(w)-size) * (f(o) - f(o-1) + r(size-1,w)/6.);
+      w = o = [];
+   }
+   ehi = [];
+
+   if(anyof(spl)) {
+      // Spline interpolation. This code is sprawled out in order to reduce
+      // memory impact and improve performance.
+      w = where(spl);
+      spl = [];
+      jj = long(x(w));
+      xx = x(w) - jj;
+      x = [];
+      ro = size*(w-1) + jj;
+      rr0 = r(ro);
+      rr1 = r(ro+1);
+      r = [];
+      ojj = offset(w) - 1 + jj;
+      offset = jj = [];
+      result(w) = (rr1-rr0)/6;
+      result(w) *= xx;
+      result(w) += rr0/2;
+      result(w) *= xx;
+      result(w) += f(ojj+1)
+      result(w) -= f(ojj)
+      result(w) -= rr0/3;
+      result(w) -= rr1/6;
+      result(w) *= xx;
+      result(w) += f(ojj);
+   }
+
+   return result;
+}
+
+func n88_interp_spline2d(x, y, f) {
+/* DOCUMENT n88_interp_spline2d(x, y, f)
+   Performs a 2-dimensional spline fit interpolation against f at coordinates
+   x, y.
+
+   The following holds true provided that x and y are valid integer indices
+   into f:
+      f(x, y) == n88_interp_spline2d(x, y, f)
+
+   All other values for x and y are interpolated using splines. For each
+   coordinate pair, splines are calculated using the neighborhood centered
+   around the coordinates. The largest possible neighborhood out of 6x6, 4x4,
+   and 2x2 are used for each coordinate; if none are possible, then
+   extrapolation is used with the nearest 2x2 neighborhood.
+*/
+   result = array(double, dimsof(x));
+   need = array(char(1), dimsof(x));
+
+   // Calculate distance from edges
+   xmin = ymin = 1;
+   xmax = dimsof(f)(2);
+   ymax = dimsof(f)(3);
+   dist = min(x - xmin, y - ymin, xmax - x, ymax - y);
+
+   thresh = [1, 2, -1];
+   size = [2, 4, 6];
+
+   for(i = 1; i <= numberof(thresh); i++) {
+      current = need;
+      // If we don't need anything... continue.
+      if(noneof(current))
+         continue;
+      // If we have a threshold, apply it.
+      if(thresh(i) > 0) {
+         w = where(current);
+         current(w) &= dist(w) <= thresh(i);
+      }
+      // If nothing is left... continue.
+      if(noneof(current))
+         continue;
+
+      w = where(current);
+
+      // Based on size, calculate lower/upper modifiers
+      lo = long(size(i)/2.)-1;
+      hi = size(i) - 1;
+
+      // Determine index to corner of matrix to use
+      xi = max(min(long(x(w)-lo), xmax - hi), 1);
+      yi = max(min(long(y(w)-lo), ymax - hi), 1);
+
+      // Determine position within sub matrix
+      xp = 1 + x(w) - xi;
+      yp = 1 + y(w) - yi;
+
+      // Convert corner location into offset
+      offset = xi + (yi - 1) * xmax;
+
+      // Interim results
+      interim = array(double, size(i), dimsof(offset));
+      for(j = 1; j <= size(i); j++) {
+         interim(j,..) = n88_splinefit(xp, f, offset, size(i));
+         if(j != size(i))
+            offset += xmax;
+      }
+
+      // Offsets into interim results
+      offset = indgen(1:numberof(interim):size(i));
+
+      result(w) = n88_splinefit(yp, interim, offset, size(i))(*);
+      interim = offset = [];
+      need(w) = 0;
+   }
+
+   return result;
+}
+
+func n88_interp_qfit2d(x, y, f) {
+/* DOCUMENT n88_interp_qfit2d(x, y, f)
+   Performs a 2-dimensional parabola fit interpolation against f at coordinates
+   x, y.
+
+   The following holds true provided that x and y are valid integer indices
+   into f:
+      f(x, y) == n88_interp_qfit2d(x, y, f)
+
+   All other values of x and y are interpolated using the parabolas that pass
+   through the points in their 3x3 neighborhood.
+*/
+   xmax = dimsof(f)(2);
+   ymax = dimsof(f)(3);
+
+   // Determine index for corner of 3x3 matrix to use
+   xi = max(min(long(x), xmax-2), 1);
+   yi = max(min(long(y), ymax-2), 1);
+
+   // Determine position within sub matrix
+   xp = 1 + x - xi;
+   yp = 1 + y - yi;
+
+   // Convert corner location into offset
+   offset = xi + (yi - 1) * xmax;
+
+   // Interim results
+   interim = array(double, 3, dimsof(x));
+   interim(1,..) = n88_qfit(xp, f, offset);
+   offset += xmax;
+   interim(2,..) = n88_qfit(xp, f, offset);
+   offset += xmax;
+   interim(3,..) = n88_qfit(xp, f, offset);
+
+   // Offsets into interium results
+   offset = indgen(1:numberof(interim):3);
+   return n88_qfit(yp, interim, offset);
+}
+
+func n88_qfit(x, f, offset) {
+/* DOCUMENT n88_qfit(x, f, offset)
+   Performs a parabola fit using three points. Algorithm derived from NGS code
+   associated with the GEOID 99 model.
+
+   Parameters:
+      x: The value to interpolate at.
+      f: Known values.
+      offset: Offset into f that x is referenced against.
+
+   Normally, x will be between 1 and 3.
+
+   Some identities:
+      n88_qfit(1, f, offset) == f(offset)
+      n88_qfit(2, f, offset) == f(offset+1)
+      n88_qfit(3, f, offset) == f(offset+2)
+   Any other value for x is interpolated on the parabola that passes through
+   those points.
+*/
+   x--;
+   t1 = f(offset+1) - f(offset);
    x2 = 0.5 * x * (x-1);
-   t2 = unref(f2) - 2 * unref(f1) + f0;
-   return unref(f0) + unref(x) * unref(t1) + unref(x2) * unref(t2);
+   t2 = f(offset+2) - 2 * f(offset+1) + f(offset);
+   return f(offset) + x * t1 + x2 * t2;
+}
+
+func import_geoid_grid(g, searchstr=) {
+/* DOCUMENT grid = import_geoid_grid(geoid)
+   -or-  grid = import_geoid_grid(filename)
+   -or-  grid = import_geoid_grid(path, searchstr=)
+
+   Imports one or more GEOIDs into a ZGRID structure.
+*/
+   default, searchstr, "*.bin";
+   if(is_string(g)) {
+      if(file_isfile(g)) {
+         g = geoid_load(g);
+      } else {
+         files = find(g, glob=searchstr);
+         grids = array(ZGRID, numberof(files));
+         for(i = 1; i <= numberof(files); i++)
+            grids(i) = import_geoid_grid(files(i));
+         return grids;
+      }
+   }
+
+   grid = ZGRID();
+   grid.xmin = g.glomn - 360.;
+   grid.ymin = g.glamn;
+   grid.cell = g.dla;
+   grid.nodata = -32767;
+   grid.zgrid = &g.data;
+
+   return grid;
 }
