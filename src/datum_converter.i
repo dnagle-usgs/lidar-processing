@@ -416,7 +416,7 @@ func datum_convert_guess_geoid(w84, n88, zone=, geoids=) {
    }
 
    maxs = array(-1, numberof(geoids));
-   write, "Beginning comparisons. Please disregard messages any messages that say \"No\n data is in area covered by GEOID.\"."
+   write, "Beginning comparisons. Please disregard any messages that say \"No\n data is in area covered by GEOID.\"."
    for(i = 1; i <= numberof(geoids); i++) {
       write, format="\n-- Testing %s --\n", geoids(i);
       // It's not safe to pre-convert to nad83 up above, because that can
