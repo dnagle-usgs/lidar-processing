@@ -136,3 +136,31 @@ extern _yutm2ll;
    void utm2ll(double *north, double *east, short *zone, double *lon,
    double *lat, long count, double a, double e2)
 */
+
+// *** defined in navd88.c ***
+
+func calps_n88_interp_qfit2d(x, y, f) {
+   result = array(double, dimsof(x));
+   _yn88_interp_qfit2d, result, x, y, numberof(result),
+      f, dimsof(f)(2), dimsof(f)(3);
+   return result;
+}
+
+func calps_n88_interp_spline2d(x, y, f) {
+   result = array(double, dimsof(x));
+   _yn88_interp_spline2d, result, x, y, numberof(result),
+      f, dimsof(f)(2), dimsof(f)(3);
+   return result;
+}
+
+extern _yn88_interp_qfit2d;
+/* PROTOTYPE
+   void n88_interp_qfit2d(double *result, double *x, double *y, long count,
+   double *f, long fxcount, long fycount)
+*/
+
+extern _yn88_interp_spline2d;
+/* PROTOTYPE
+   void n88_interp_spline2d(double *result, double *x, double *y, long count,
+   double *f, long fxcount, long fycount)
+*/
