@@ -636,3 +636,128 @@ func array_allocate(&data, request) {
 
    grow, data, data;
 }
+
+func splitary(ary, num, &a1, &a2, &a3, &a4, &a5, &a6) {
+/* DOCUMENT splitary, ary, num, a1, a2, a3, a4, a5, a6
+   result = splitary(ary, num)
+
+   This allows you to split up a multidimensional array using a dimension of a
+   specified size. The split up parts will then be copied to the output
+   arguments, and the return result will contain the parts in a single array
+   that can be indexed by its final dimension.
+
+   Here are some examples that illustrate. This first example shows that a 3xn
+   and nx3 array will both yield the same results:
+
+      > ary = array(short, 100, 3)
+      > info, ary
+       array(short,100,3)
+      > splitary, ary, 3, x, y, z
+      > info, x
+       array(short,100)
+      > info, splitary(ary, 3)
+       array(short,100,3)
+
+      > ary = array(short, 3, 100)
+      > info, ary
+       array(short,3,100)
+      > splitary, ary, 3, x, y, z
+      > info, x
+       array(short,100)
+      > info, splitary(ary, 3)
+       array(short,100,3)
+
+   And here's some examples showing that it can handle arrays with numerous
+   dimensions:
+
+      > ary = array(short,1,2,3,4,5,6,7)
+      > info, ary
+       array(short,1,2,3,4,5,6,7)
+      > splitary, ary, 5, v, w, x, y, z
+      > info, v
+       array(short,1,2,3,4,6,7)
+      > splitary, ary, 2, x, y
+      > info, x
+       array(short,1,3,4,5,6,7)
+      > info, splitary(ary, 7)
+       array(short,1,2,3,4,5,6,7)
+      > info, splitary(ary, 6)
+       array(short,1,2,3,4,5,7,6)
+      > info, splitary(ary, 5)
+       array(short,1,2,3,4,6,7,5)
+      > info, splitary(ary, 4)
+       array(short,1,2,3,5,6,7,4)
+      > info, splitary(ary, 3)
+       array(short,1,2,4,5,6,7,3)
+
+   In some cases, there might be ambiguity on which dimension to use. This
+   function will split on the last dimension if it can; otherwise, it will
+   split on the first dimension that works. For example, in this case:
+
+      > ary = array(short, 3, 3, 3)
+      > splitary, ary, 3, x, y, z
+
+   The last dimension is used. The result is equivalent to this:
+
+      > ary = array(short, 3, 3, 3)
+      > x = ary(..,1)
+      > y = ary(..,2)
+      > z = ary(..,3)
+
+   Another example:
+
+      > ary = array(short, 2, 3, 4, 3, 5)
+      > splitary, ary, 3, x, y, z
+
+   In this case, the second dimension is used. The result is equivalent to
+   this:
+
+      > ary = array(short, 2, 3, 4, 3, 5)
+      > x = ary(,1,,,)
+      > y = ary(,2,,,)
+      > z = ary(,3,,,)
+
+   When used in a subroutine form, up to six output arguments can be used to
+   acquire the split results, which effectively limits num to 6. However, The
+   limit is a soft limit and does not apply at all when used in the functional
+   form. To illustrate:
+
+      > ary = array(short, 2, 3, 100, 4, 5)
+      > info, ary
+       array(short,2,3,100,4,5)
+      > info, splitary(ary, 100)
+       array(short,2,3,4,5,100)
+      > splitary, ary, 100, u, v, w, x, y, z
+      > info, u
+       array(short,2,3,4,5)
+
+   Output arguments may also be selectively omitted when you do not need all of
+   them:
+
+      > ary = array(short, 100, 3)
+      > splitary, ary, 3, , , z
+*/
+// Original David Nagle 2010-03-08
+   dims = dimsof(ary);
+   if(dims(1) < 2)
+      error, "Input array must be multidimensional.";
+   w = where(dims(2:) == num);
+   if(!numberof(w))
+      error, "Input array does not contain requested dimension.";
+   if(dims(0) != num)
+      ary = transpose(ary, indgen(dims(1):w(1):-1));
+   a1 = a2 = a3 = a4 = a5 = a6 = [];
+   if(num >= 1)
+      a1 = ary(..,1);
+   if(num >= 2)
+      a2 = ary(..,2);
+   if(num >= 3)
+      a3 = ary(..,3);
+   if(num >= 4)
+      a4 = ary(..,4);
+   if(num >= 5)
+      a5 = ary(..,5);
+   if(num >= 6)
+      a6 = ary(..,6);
+   return ary;
+}

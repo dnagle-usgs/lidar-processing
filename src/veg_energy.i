@@ -1363,8 +1363,7 @@ func make_begrid_from_bexyz(bexyz, binsize=, intdist=, lfpveg=) {
 
  // now use delaunay triangulation to find the vertices
   verts = triangulate_data(bexyz, mode="be", maxside=100);
-  splitxyz, verts, v1, v2, v3;
-  verts = [];
+  splitary, unref(verts), 3, v1, v2, v3;
 
   // find the centroid for each triangle
   

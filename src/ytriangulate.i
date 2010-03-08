@@ -83,7 +83,7 @@ func plot_triag_mesh(data, v, mode=, edges=, win=, cmin=, cmax=, dofma=, showcba
    local x, y, z, v1, v2, v3;
    // Extract xyz and vertice information into a usable format
    data2xyz, data, x, y, z, mode=mode;
-   splitxyz, v, v1, v2, v3;
+   splitary, v, 3, v1, v2, v3;
    data = v = [];
 
    // Juggle the coordinates into a format the plfp likes
@@ -134,10 +134,10 @@ func locate_triag_surface(x, y, z, v, win=, m=, plot=, idx=) {
 // revised David Nagle 2010-02-12
    local v1, v2, v3;
    if(is_void(z)) {
-      splitxyz, y, v1, v2, v3;
-      splitxyz, (x), x, y, z;
+      splitary, y, 3, v1, v2, v3;
+      splitary, (x), 3, x, y, z;
    } else {
-      splitxyz, v, v1, v2, v3;
+      splitary, v, 3, v1, v2, v3;
       v = [];
    }
 
@@ -177,7 +177,7 @@ func filter_trimesh_maxarea(data, v, thresh, mode=) {
 */
    local x, y, v1, v2, v3;
    data2xyz, data, x, y, mode=mode;
-   splitxyz, v, v1, v2, v3;
+   splitary, v, 3, v1, v2, v3;
    data = v = [];
 
    areas = triangle_areas(x(v1), y(v1), x(v2), y(v2), x(v3), y(v3));
@@ -196,7 +196,7 @@ func filter_trimesh_maxside(data, v, thresh, mode=) {
 */
    local x, y, v1, v2, v3;
    data2xyz, data, x, y, mode=mode;
-   splitxyz, v, v1, v2, v3;
+   splitary, v, 3, v1, v2, v3;
    data = v = [];
 
    l12 = ppdist([x(v1),y(v1)], [x(v2),y(v2)], tp=1);
@@ -217,7 +217,7 @@ func filter_trimesh_minangle(data, v, thresh, mode=) {
 */
    local x, y, v1, v2, v3, a, b, c;
    data2xyz, data, x, y, mode=mode;
-   splitxyz, v, v1, v2, v3;
+   splitary, v, 3, v1, v2, v3;
    data = v = [];
 
    a = ppdist([x(v1),y(v1)], [x(v2),y(v2)], tp=1);

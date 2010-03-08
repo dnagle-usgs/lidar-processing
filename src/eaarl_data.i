@@ -1,39 +1,5 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 
-func splitxyz(data, &x, &y, &z) {
-/* DOCUMENT splitxyz, data, x, y, z;
-   Given an input array of data, this will decompose it into x, y, and z
-   arrays. The input data must have two or more dimensionals. Further, at least
-   one of the first, second, or last dimensions must be of size three; the
-   first such dimension will be used for the splitting.
-
-   This updates x, y, and z in-place (output parameters); data remains
-   unchanged.
-*/
-// Original David Nagle 2009-01-27
-   dims = dimsof(data);
-   if(dims(1) < 2)
-      error, "Unable to handle input data.";
-   w = where(dims(2:) == 3);
-   if(!numberof(w))
-      error, "Unable to handle input data."
-   if(anyof(w == 1)) {
-      x = data(1,..);
-      y = data(2,..);
-      z = data(3,..);
-   } else if(anyof(w == 2)) {
-      x = data(,1,..);
-      y = data(,2,..);
-      z = data(,3,..);
-   } else if(anyof(w == dims(1))) {
-      x = data(..,1);
-      y = data(..,2);
-      z = data(..,3);
-   } else {
-      error, "Unable to handle input data."
-   }
-}
-
 func datamode2name(mode, which=) {
 /* DOCUMENT datamode2name(mode)
    Given a data mode suitable for data2xyz's mode= option, this returns a human
@@ -226,10 +192,8 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
    x = y = z = [];
 
    // Special case to allow XYZ pass through
-   if(is_numerical(data)) {
-      splitxyz, unref(data), x, y, z;
-      return am_subroutine() ? [] : [x, y, z];
-   }
+   if(is_numerical(data))
+      return splitary(unref(data), 3, x, y, z);
 
    // Special case for gridded data
    if(structeq(structof(data), ZGRID)) {
@@ -239,8 +203,7 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
             ptrs(i) = &transpose(data2xyz(data(i)));
          merged = merge_pointers(unref(ptrs));
          merged = reform(merged, [2, 3, numberof(merged)/3]);
-         splitxyz, merged, x, y, z;
-         return am_subroutine() ? [] : [x, y, z];
+         return splitary(unref(merged), 3, x, y, z);
       } else {
          z = *(data.zgrid);
          x = y = array(double, dimsof(z));
@@ -388,7 +351,7 @@ func xyz2data(_x, &_y, _z, &data, mode=, native=) {
 
    // Extract arguments
    if(is_void(z)) {
-      splitxyz, unref(_x), x, y, z;
+      splitary, unref(_x), 3, x, y, z;
       working = (_y);
    } else {
       x = unref(_x);

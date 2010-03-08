@@ -379,7 +379,7 @@ func triangle_interp(x, y, z, v, xp, yp, nodata=) {
    yp += zp;
 
    local v1, v2, v3;
-   splitxyz, unref(v), v1, v2, v3;
+   splitary, unref(v), 3, v1, v2, v3;
 
    nodata = double(nodata);
    _ytriangle_interp, x, y, z, v1, v2, v3, numberof(v1), xp, yp, zp,
