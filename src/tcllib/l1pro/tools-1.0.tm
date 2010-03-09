@@ -21,8 +21,8 @@ if {![namespace exists ::l1pro::tools::rcf]} {
          variable top .l1wid.rcf
          variable invar ""
          variable outvar ""
-         variable w 500
-         variable buf 20
+         variable w 20
+         variable buf 500
          variable n 3
          variable mode {}
       }
