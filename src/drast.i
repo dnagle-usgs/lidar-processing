@@ -445,8 +445,8 @@ func rast_scanline(rn, win=, style=, color=) {
    window_select, wbkp;
 }
 
-func geo_rast(rn, fsmarks=, eoffset=, win=, verbose=, titles=, rcfw=, style=) {
-/* DOCUMENT geo_rast, rn, fsmarks=, eoffset=, win=, verbose=, titles=, rcfw=, style=
+func geo_rast(rn, fsmarks=, eoffset=, win=, verbose=, titles=, rcfw=, style=, bg=) {
+/* DOCUMENT geo_rast, rn, fsmarks=, eoffset=, win=, verbose=, titles=, rcfw=, style=, bg=
 
    Plot a geo-referenced false color waveform image.
 
@@ -468,6 +468,7 @@ func geo_rast(rn, fsmarks=, eoffset=, win=, verbose=, titles=, rcfw=, style=) {
       style= Allows for specifying an alternate plotting style.
             style="pli"    Plot using the pli command (default)
             style="plcm"   Plot using the plcm command (former default)
+      bg= The value to use for the background. Default is 9.
 */
    extern xm, fs;
    default, fsmarks, 0;
@@ -475,6 +476,8 @@ func geo_rast(rn, fsmarks=, eoffset=, win=, verbose=, titles=, rcfw=, style=) {
    default, win, 2;
    default, verbose, 1;
    default, titles, 1;
+   default, style, "pli";
+   default, bg, 9;
 
    prev_win = current_window();
    window, win;
@@ -482,13 +485,14 @@ func geo_rast(rn, fsmarks=, eoffset=, win=, verbose=, titles=, rcfw=, style=) {
 
    fs = first_surface(start=rn, stop=rn+1, north=1, verbose=verbose)(1);
    sp = fs.elevation/100.0;
-   xm = (fs.east - fs.east(avg))/100.0;
    skip = array(short(0), numberof(sp));
    if(rcfw) {
       skip() = 1;
       rcfres = rcf(sp, rcfw, mode=2);
       skip(*rcfres(1)) = 0;
    }
+   xm = (fs.east - fs.east(where(!skip))(avg))/100.0;
+   xw = abs(xm(where(!skip))(dif))(min) * 0.475;
 
    rst = decode_raster(get_erast(rn=rn))(1);
    w = where(!rst.rx(,1));
@@ -499,10 +503,14 @@ func geo_rast(rn, fsmarks=, eoffset=, win=, verbose=, titles=, rcfw=, style=) {
 
    // prepare background
    w = where(!skip);
-   xmax = max(abs([xm(w)(max),xm(w)(min)]));
+   xmax = max(abs([xm(w)(max)+xw,xm(w)(min)-xw])) * 1.1;
    xmin = -xmax;
-   ymax = sp(w)(max)+eoffset;
-   ymin = sp(w)(min)+eoffset-255*C;
+   ymax = sp(w)(max)+eoffset + 10*C;
+   ymin = sp(w)(min)+eoffset-255*C - 10*C;
+   if(style == "pli") {
+      ymax += 0.5 * C;
+      ymin -= 0.5 * C;
+   }
    // Coerce into square
    if(ymax - ymin > xmax - xmin) {
       xmax = 0.5 * (ymax-ymin);
@@ -512,11 +520,10 @@ func geo_rast(rn, fsmarks=, eoffset=, win=, verbose=, titles=, rcfw=, style=) {
       ymax = yavg + xmax;
       ymin = yavg + xmin;
    }
-   bg = [[char(9)]];
-   pli, bg, xmin, ymin, xmax, ymax;
+   bg = [[bg]];
+   pli, bg, xmin, ymin, xmax, ymax, cmin=0, cmax=255;
 
    // plot pulses
-   xw = abs(xm(where(!skip))(dif))(min) * 0.475;
    for(i = 1; i <= 120; i++) {
       if(skip(i))
          continue;
