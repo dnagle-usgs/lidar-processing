@@ -480,3 +480,55 @@ Examples using the result data:
    return_raster.npixels   = npixels;
    return return_raster;
 }
+
+func edb_summary(path, searchstr=) {
+/* DOCUMENT edb_summary, directory, searchstr=
+   edb_summary, files
+
+   Prints out a summary of information from the EDB files. The parameter can be
+   a directory path, a file path, or an array of file paths. If the parameter
+   is a directory path, then searchstr= specifies a pattern to search for and
+   defaults to "*.idx".
+
+   This only needs access to the *.idx files and can be run even if the TLD
+   files are compressed or unavailable.
+*/
+   if(is_scalar(path) && file_isdir(path)) {
+      default, searchstr, "*.idx";
+      path = find(path, glob=searchstr);
+   }
+
+   records = seconds = pixels = tldcount = 0;
+
+   write, "";
+   for(i = 1; i <= numberof(path); i++) {
+      f = edb_open(path(i), verbose=0);
+      rec = f.record_count;
+      sec = numberof(set_remove_duplicates(f.records.seconds));
+      pix = f.records.pixels(sum);
+      tld = f.file_count;
+
+      records += rec;
+      seconds += sec;
+      pixels += pix;
+      tldcount += tld;
+
+      write, format="%s (%d files):\n", file_tail(path(i)), tld;
+      write, format="   Period: %s - %s\n",
+         soe2iso8601(f.records.seconds(1)), soe2iso8601(f.records.seconds(0));
+      write, format="  Seconds: %d (%s)\n", sec, seconds2prettytime(sec);
+      write, format="   Pixels: %-16d Rasters: %d\n", pix, rec;
+      write, format="     Rate: %.3f KHz\n", double(pix)/sec/1000.;
+      write, "";
+
+      close, f;
+   }
+
+   if(numberof(path) > 1) {
+      write, format="Overall (%d files):\n", tldcount;
+      write, format="  Seconds: %d (%s)\n", seconds, seconds2prettytime(seconds);
+      write, format="   Pixels: %-16d Rasters: %d\n", pixels, records;
+      write, format="     Rate: %.3f KHz\n", double(pixels)/seconds/1000.;
+      write, "";
+   }
+}

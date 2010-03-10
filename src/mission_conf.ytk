@@ -355,6 +355,7 @@ namespace eval mission {
         $mb.act add command -label "Dump CIR" -command [@ menu_dump_cir]
         $mb.act add separator
         $mb.act add command -label "Generate KMZ" -command [@ menu_gen_kmz]
+        $mb.act add command -label "Show EDB summary" -command [@ menu_edb_summary]
 
         menu $mb.cache
         $mb add cascade -label Cache -underline 0 -menu $mb.cache
@@ -518,6 +519,10 @@ namespace eval mission {
         if {$response eq "yes"} {
             exp_send "kml_mission;\r"
         }
+    }
+
+    proc menu_edb_summary {} {
+        exp_send "mission_edb_summary\r"
     }
 
     proc update_gui {args} {
