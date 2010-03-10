@@ -273,7 +273,9 @@ sub kt2utm {
    my $east = $2 * 1000;
    my $north = $4 * 1000;
    my $zone = $6;
-   return [$north - 2000, $east, $north, $east + 2000, $zone];
+   my $offset = 2000;
+   $offset = 10000 if($kt =~ /^i_/);
+   return [$north - $offset, $east, $north, $east + $offset, $zone];
 }
 
 # $utm = ll2utm($ll)
