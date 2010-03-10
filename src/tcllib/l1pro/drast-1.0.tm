@@ -32,6 +32,7 @@ if {![namespace exists ::l1pro::drast]} {
          variable geotitles 1
          variable geostyle pli
          variable georcfw 0
+         variable geobg 7
          variable wfchan1 1
          variable wfchan2 1
          variable wfchan3 1
@@ -150,17 +151,43 @@ proc ::l1pro::drast::gui_opts f {
    $f invoke
    set f [$f interior]
 
-   set labels {}
+   set labels_left {}
+   set labels_right {}
 
-   set labelgrid {{w text} {
-      set lbl [winfo parent $w].lbl[winfo name $w]
+   set labelgrid {{w1 text1 {w2 {}} {text2 {}}} {
       set lvl 1
-      while {![uplevel $lvl info exists labels]} {incr lvl}
-      uplevel $lvl lappend labels $lbl
-      ttk::label $lbl -text $text
-      grid $lbl $w
-      grid $lbl -sticky e
-      grid $w -sticky ew
+      while {![uplevel $lvl info exists labels_left]} {incr lvl}
+      if {$text1 ne "-"} {
+         set lbl1 [winfo parent $w1].lbl[winfo name $w1]
+         ttk::label $lbl1 -text $text1
+         uplevel $lvl lappend labels_left $lbl1
+      } else {
+         set lbl1 $w1
+         set w1 -
+      }
+      if {$text2 ne ""} {
+         if {$text2 ne "-"} {
+            set lbl2 [winfo parent $w2].lbl[winfo name $w2]
+            ttk::label $lbl2 -text $text2
+            uplevel $lvl lappend labels_right $lbl2
+         } else {
+            set lbl2 $w2
+            set w2 -
+         }
+         grid $lbl1 $w1 x $lbl2 $w2 -sticky e
+         if {$text2 eq "-"} {
+            grid $lbl2 -sticky w
+         } else {
+            grid $w2 -sticky ew
+         }
+      } else {
+         grid $lbl1 $w1 - - - -sticky e
+      }
+      if {$text1 eq "-"} {
+         grid $lbl1 -sticky w
+      } else {
+         grid $w1 -sticky ew
+      }
    }}
 
    gui_opts_play $f.play $labelgrid
@@ -170,15 +197,21 @@ proc ::l1pro::drast::gui_opts f {
    gui_opts_sline $f.sline $labelgrid
    gui_opts_export $f.export $labelgrid
 
-   set minsize 0
-   foreach lbl $labels {
-      set cursize [winfo reqwidth $lbl]
-      if {$cursize > $minsize} {set minsize $cursize}
+   set minsize_left 0
+   set minsize_right 0
+   foreach side {left right} {
+      foreach lbl [set labels_$side] {
+         set cursize [winfo reqwidth $lbl]
+         if {$cursize > [set minsize_$side]} {set minsize_$side $cursize}
+      }
    }
 
    foreach widget [list $f.play $f.rast $f.geo $f.wf $f.sline $f.export] {
       grid $widget -sticky ew
-      grid columnconfigure [$widget interior] 0 -minsize $minsize
+      grid columnconfigure [$widget interior] 0 -minsize $minsize_left
+      grid columnconfigure [$widget interior] 3 -minsize $minsize_right
+      grid columnconfigure [$widget interior] {1 4} -weight 1 -uniform 1
+      grid columnconfigure [$widget interior] 2 -minsize 5
    }
 
    grid columnconfigure $f 0 -weight 1
@@ -187,12 +220,10 @@ proc ::l1pro::drast::gui_opts f {
 proc ::l1pro::drast::gui_opts_play {f labelgrid} {
    misc::labelframe::collapsible $f -text "Playback"
    set f [$f interior]
-   spinbox $f.playint -from 0 -to 10000 -increment 0.1 \
+   spinbox $f.playint -from 0 -to 10000 -increment 0.1 -width 0 \
       -textvariable [namespace which -variable v::playint]
-   spinbox $f.stepinc -from 1 -to 10000 -increment 1 \
+   spinbox $f.stepinc -from 1 -to 10000 -increment 1 -width 0 \
       -textvariable [namespace which -variable v::stepinc]
-   apply $labelgrid $f.playint "Playback interval:"
-   apply $labelgrid $f.stepinc "Step increment:"
    ttk::checkbutton $f.rast -text "Show rast" \
       -variable [namespace which -variable v::show_rast]
    ttk::checkbutton $f.geo -text "Show geo" \
@@ -207,23 +238,22 @@ proc ::l1pro::drast::gui_opts_play {f labelgrid} {
       -variable [namespace which -variable v::autopt]
    ttk::checkbutton $f.autoptc -text "Auto Clear and Plot (Plotting Tool)" \
       -variable [namespace which -variable v::autoptc]
-   grid $f.rast - -sticky w
-   grid $f.geo - -sticky w
-   grid $f.sline - -sticky w
-   grid $f.sfsync - -sticky w
-   grid $f.autolidar - -sticky w
-   grid $f.autopt - -sticky w
-   grid $f.autoptc - -sticky w
-   grid columnconfigure $f 1 -weight 1
+
+   apply $labelgrid $f.playint "Delay:" $f.stepinc "Step:"
+   apply $labelgrid $f.rast - $f.sfsync -
+   apply $labelgrid $f.geo -
+   apply $labelgrid $f.sline -
+   apply $labelgrid $f.autolidar -
+   apply $labelgrid $f.autopt -
+   apply $labelgrid $f.autoptc -
 }
 
 proc ::l1pro::drast::gui_opts_rast {f labelgrid} {
    misc::labelframe::collapsible $f -text "Rast: Unreferenced raster"
    set f [$f interior]
-   spinbox $f.winrast -from 0 -to 63 -increment 1 \
+   spinbox $f.winrast -from 0 -to 63 -increment 1 -width 0 \
       -textvariable [namespace which -variable v::rastwin]
-   apply $labelgrid $f.winrast "Rast window:"
-   ::misc::combobox::mapping $f.units -state readonly \
+   ::misc::combobox::mapping $f.units -state readonly -width 0 \
       -modifycmd [namespace which -command send_rastunits] \
       -altvariable [namespace which -variable v::rastunits] \
       -mapping {
@@ -231,30 +261,32 @@ proc ::l1pro::drast::gui_opts_rast {f labelgrid} {
          Feet           feet
          Nanoseconds    ns
       }
-   apply $labelgrid $f.units "Rast units:"
-   grid columnconfigure $f 1 -weight 1
+   apply $labelgrid $f.winrast "Window:" $f.units "Units:"
 }
 
 proc ::l1pro::drast::gui_opts_geo {f labelgrid} {
    misc::labelframe::collapsible $f -text "Geo: Georeferenced raster"
    set f [$f interior]
-   spinbox $f.eoffset -from -1000 -to 1000 -increment 0.01 \
+   spinbox $f.eoffset -from -1000 -to 1000 -increment 0.01 -width 0 \
       -textvariable [namespace which -variable v::eoffset]
-   spinbox $f.wingeo -from 0 -to 63 -increment 1 \
+   spinbox $f.wingeo -from 0 -to 63 -increment 1 -width 0 \
       -textvariable [namespace which -variable v::geowin]
    ttk::checkbutton $f.yuse -text "Constrain y axis" \
       -variable [namespace which -variable v::geoyuse]
-   spinbox $f.ymax -from -1000 -to 1000 -increment 0.01 \
+   spinbox $f.ymax -from -1000 -to 1000 -increment 0.01 -width 0 \
       -textvariable [namespace which -variable v::geoymax]
-   spinbox $f.ymin -from -1000 -to 1000 -increment 0.01 \
+   spinbox $f.ymin -from -1000 -to 1000 -increment 0.01 -width 0 \
       -textvariable [namespace which -variable v::geoymin]
-   ::misc::combobox $f.style -state readonly \
+   ::misc::combobox $f.style -state readonly -width 0 \
       -textvariable [namespace which -variable v::geostyle] \
       -values {pli plcm}
-   spinbox $f.rcfw -from 0 -to 10000 -increment 1 \
+   spinbox $f.rcfw -from 0 -to 10000 -increment 1 -width 0 \
       -textvariable [namespace which -variable v::georcfw]
+   spinbox $f.bg -from 0 -to 255 -increment 1 -width 0 \
+      -textvariable [namespace which -variable v::geobg]
    ttk::checkbutton $f.titles -text "Show titles" \
       -variable [namespace which -variable v::geotitles]
+
    ttk::frame $f.styles
    ttk::button $f.styles.work -text "Work" \
       -command [list [namespace which -command apply_style] v::geowin work]
@@ -263,16 +295,12 @@ proc ::l1pro::drast::gui_opts_geo {f labelgrid} {
    grid $f.styles.work $f.styles.nobox -sticky news
    grid columnconfigure $f.styles 100 -weight 1
 
-   apply $labelgrid $f.eoffset "Elevation offset:"
-   apply $labelgrid $f.wingeo "Geo window:"
-   grid $f.yuse - -sticky w
-   apply $labelgrid $f.ymax "Y axis max:"
-   apply $labelgrid $f.ymin "Y axis min:"
-   apply $labelgrid $f.style "Pulse style:"
-   apply $labelgrid $f.rcfw "RCF window:"
-   grid $f.titles - -sticky w
+   apply $labelgrid $f.wingeo "Window:" $f.style "Style:"
+   apply $labelgrid $f.eoffset "Elev. offset:" $f.rcfw "RCF win:"
+   apply $labelgrid $f.titles - $f.bg "Background:"
+   apply $labelgrid $f.yuse -
+   apply $labelgrid $f.ymin "Y min:" $f.ymax "Y max:"
    apply $labelgrid $f.styles "Plot style:"
-   grid columnconfigure $f 1 -weight 1
 
    ::misc::statevar $f.ymin -statemap {0 disabled 1 normal} \
       -statevariable [namespace which -variable v::geoyuse]
@@ -287,16 +315,13 @@ proc ::l1pro::drast::gui_opts_geo {f labelgrid} {
 proc ::l1pro::drast::gui_opts_wf {f labelgrid} {
    misc::labelframe::collapsible $f -text "WF: Examine waveforms"
    set f [$f interior]
-   spinbox $f.winwf -from 0 -to 63 -increment 1 \
+   spinbox $f.winwf -from 0 -to 63 -increment 1 -width 0 \
       -textvariable [namespace which -variable v::wfwin]
-   apply $labelgrid $f.winwf "WF window:"
-   spinbox $f.winbath -from 0 -to 63 -increment 1 \
+   spinbox $f.winbath -from 0 -to 63 -increment 1 -width 0 \
       -textvariable [namespace which -variable v::wfwinbath]
-   apply $labelgrid $f.winbath "ex_bath window:"
-   ::misc::combobox $f.src -state readonly \
+   ::misc::combobox $f.src -state readonly -width 0 \
       -textvariable [namespace which -variable v::wfsrc] \
       -values {rast geo}
-   apply $labelgrid $f.src "Select from:"
    ttk::checkbutton $f.use1 -text "90% channel (black)" \
       -variable [namespace which -variable v::wfchan1]
    ttk::checkbutton $f.use2 -text "10% channel (red)" \
@@ -305,28 +330,23 @@ proc ::l1pro::drast::gui_opts_wf {f labelgrid} {
       -variable [namespace which -variable v::wfchan3]
    ttk::checkbutton $f.geo -text "Georeference" \
       -variable [namespace which -variable v::wfgeo]
-   grid $f.use1 - -sticky w
-   grid $f.use2 - -sticky w
-   grid $f.use3 - -sticky w
-   grid $f.geo - -sticky w
-   grid columnconfigure $f 1 -weight 1
+   apply $labelgrid $f.winwf "WF window:" $f.use1 -
+   apply $labelgrid $f.winbath "ex_bath window:" $f.use2 -
+   apply $labelgrid $f.src "Select from:" $f.use3 -
+   apply $labelgrid $f.geo -
 }
 
 proc ::l1pro::drast::gui_opts_sline {f labelgrid} {
    misc::labelframe::collapsible $f -text "Scanline"
    set f [$f interior]
-   # win style color
-   spinbox $f.win -from 0 -to 63 -increment 1 \
+   spinbox $f.win -from 0 -to 63 -increment 1 -width 0 \
       -textvariable [namespace which -variable v::slinewin]
-   apply $labelgrid $f.win "Window:"
-   ::misc::combobox $f.style -state readonly \
+   ::misc::combobox $f.style -state readonly -width 0 \
       -textvariable [namespace which -variable v::slinestyle] \
       -values {straight average smooth actual}
-   apply $labelgrid $f.style "Style:"
-   ::misc::combobox $f.color -state readonly \
+   ::misc::combobox $f.color -state readonly -width 0 \
       -textvariable [namespace which -variable v::slinecolor] \
       -values {black red blue green cyan magenta yellow white}
-   apply $labelgrid $f.color "Color:"
    ttk::frame $f.styles
    ttk::button $f.styles.work -text "Work" \
       -command [list [namespace which -command apply_style] v::slinewin work]
@@ -334,8 +354,10 @@ proc ::l1pro::drast::gui_opts_sline {f labelgrid} {
       -command [list [namespace which -command apply_style] v::slinewin nobox]
    grid $f.styles.work $f.styles.nobox -sticky news
    grid columnconfigure $f.styles 100 -weight 1
+
+   apply $labelgrid $f.win "Window:" $f.color "Color:"
+   apply $labelgrid $f.style "Line style:"
    apply $labelgrid $f.styles "Plot style:"
-   grid columnconfigure $f 1 -weight 1
 }
 
 proc ::l1pro::drast::gui_opts_export {f labelgrid} {
@@ -347,16 +369,15 @@ proc ::l1pro::drast::gui_opts_export {f labelgrid} {
       -variable [namespace which -variable v::exportgeo]
    ttk::checkbutton $f.sline -text "Export Scanline" \
       -variable [namespace which -variable v::exportsline]
-   spinbox $f.res -from 1 -to 100 -increment 1 \
+   spinbox $f.res -from 1 -to 100 -increment 1 -width 0 \
       -textvariable [namespace which -variable v::exportres]
-   ttk::entry $f.dest -textvariable [namespace which -variable v::exportdir]
+   ttk::entry $f.dest -width 0 \
+      -textvariable [namespace which -variable v::exportdir]
 
-   grid $f.enable - -sticky w
-   grid $f.geo - -sticky w
-   grid $f.sline - -sticky w
-   apply $labelgrid $f.res "Resolution:"
+   apply $labelgrid $f.enable -
+   apply $labelgrid $f.geo -
+   apply $labelgrid $f.sline - $f.res "Resolution:"
    apply $labelgrid $f.dest "Destination:"
-   grid columnconfigure $f 1 -weight 1
 }
 
 proc ::l1pro::drast::send_rastunits {} {
@@ -413,6 +434,7 @@ proc ::l1pro::drast::show_geo {} {
       1                          ", verbose=0" \
       {!$v::geotitles}           ", titles=0" \
       $v::georcfw                ", rcfw=$v::georcfw" \
+      {$v::geobg != 7}           ", bg=$v::geobg" \
       {$v::geostyle ne "pli"}    ", style=\"$v::geostyle\""
 
    if {$v::geoyuse} {
