@@ -667,229 +667,295 @@ func data_struc (type, nwpr, recs, byt_pos, f) {
   return data;
 }
 
-func write_ascii_xyz(data_arr, opath, ofname, type=, ESRI=, header=, footer=, delimit=, intensity=, rn=, soe=, indx=, zclip=, latlon=, split=, zone=, pstruc=) {
-/* DOCUMENT write_ascii_xyz, data_arr, opath, ofname, type=, ESRI=, header=,
-   footer=, delimit=, intensity=, rn=, soe=, indx=, zclip=, latlon=, split=,
-   zone=, pstruc=
+func write_ascii_xyz(data, fn, mode=, intensity_mode=, ESRI=, header=, footer=,
+delimit=, indx=, intensity=, rn=, soe=, zclip=, latlon=, split=, zone=, chunk=,
+clean=, verbose=) {
+/* DOCUMENT write_ascii_xyz, data, fn, mode=, intensity_mode=, ESRI=, header=,
+   footer=, delimit=, indx=, intensity=, rn=, soe=, zclip=, latlon=, split=,
+   zone=, chunk=, clean=, verbose=
 
-   Creates an ascii file containing information from the data array.
+   Writes an ASCII file using the given data.
 
-   Required parameters and options:
+   Parameters:
+      data: The data to write out. Usually this will be an array of point data
+         in an ALPS data structure (VEG__, etc.). However, a 3xn or nx3 array
+         of [x,y,z] points is also acceptable as long as intensity=, rn=, and
+         soe= are not used.
+      fn: The filename to write the data to. Should be a full path and
+         filename.
 
-      data_arr     : Data array. Can be first surface (fs_all), bathymetry
-                     (depth_all), or vegetation (veg_all).
-
-      opath        : Path for output file.
-
-      ofname       : File name for output file.
-
-      type=        : Type of data to be written out.
-                        1 - first surface
-                        2 - bathymetry
-                        3 - vegetation (bare earth)
-                        4 - depth
-                        5 - (unknown?)
-                        6 - multi-peak veg
+   Options that affect how data is interpreted/converted:
+      mode= Specifies what data mode to use when interpreting the data. See
+         data2xyz for details.
+            mode="fs"   (default)
+            mode="be"
+      intensity_mode= Specifies the data mode to use when extracting intensity
+         values. Only used when intensity=1.
+            intensity_mode="lint" (default for modes "ba", "be", "de")
+            intensity_mode="fint" (default for everything else)
+      zclip= If specified, the data's z-range will be clipped to the given
+         values. "Clipping" here means that points with values outside the
+         given range are discarded. The values should be in meters.
+            zclip=[]             (default, no clipping)
+            zclip=[-20.,100.]    clips elevation to -20m to 100m
+      latlon= If specified, the data will be converted to latitude and
+         longitude coordinates instead of writing out UTM coordinates. If this
+         option is used, zone= or curzone must also be specified.
+            latlon=0    write out UTM coordinates (default)
+            latlon=1    write out lat/lon coordinates
+      zone= The UTM zone of the data. Only needed if latlon=1.
+            zone=curzone      (default)
+            zone=18           Specify zone 18
+      clean= Specifies whether test_and_clean should be applied to the data.
+         Ignored if data is numerical.
+            clean=1     Use test_and_clean (default)
+            clean=0     Use struct_cast
 
    Options that affect output file content:
+      ESRI= Toggles ESRI compatibility mode on. Changes the defaults for
+         header= and indx= to 1. Also changes the names used for the header to
+         be more ESRI-friendly.
+            ESRI=0      normal output (default)
+            ESRI=1      enable ESRI compatibility
+      header= Adds a header to the files. If specified, it can either be a
+         numerical true or false (1 or 0) or a string.
+            header=0          No header (default)
+            header=1          Automatically generate a header line (ESRI default)
+            header="X Y Z"    Use the given string as a header line
+      footer= Adds a footer to the file. Must be a string.
+            footer=[]               No footer (default)
+            footer="END OF FILE"    Adds an end of file statement to the file
+      delimit= Specifies what delimiter should be used between fields in an
+         output line. Must be a string.
+            delimit=" "    (default)
+            delimit=","
+            delimit=";"
+      split= Limits the maximum number of lines that may be written to a single
+         file. If the number of points exceeds this limit, the file will be
+         split into multiple files. The given output filename will be modified
+         from example.xyz to example_1.xyz, example_2.xyz, etc.
+            split=0        Write all data to a single file (default)
+            split=1000000  Each file may have 1 million points at most
 
-      ESRI=        : Forces ESRI compatibility.  Removes ()'s from header and
-                     forces index number.
+   Options that affect output column selection:
+      indx= Adds a column that is sequentially numbered starting at 1.
+            indx=0   omit (default)
+            indx=1   include (ESRI default)
+      intensity= Adds a column for laser backscatter intensity.
+            intensity=0    omit (default)
+            intensity=1    include
+      rn= Adds a column with the record number, which is a single value that
+         encodes raster and pulse information.
+            rn=0     omit (default)
+            rn=1     include
+      soe= Adds a column with the timestamp encoded as a seconds-of-the-epoch
+         value.
+            soe=0    omit (default)
+            soe=1    include
 
-      header=      : Set to 1 to add a header line to each ascii file
-
-      footer=      : Set to a "string" to put at the last line of the output
-                     file
-
-      delimit=     : Define the delimeter between fields in an output line,
-                     such as " ", ",", or ";". Default is a single space.
-
-      intensity=   : Set to 1 to include the laser backscatter intensity in the
-                     output files.
-
-      rn=          : Set to 1 to include the raster/pulse number in the output
-                     files.
-
-      soe=         : Set to 1 to include the unique timestamp in the output
-                     files.
-
-      indx=        : Set to 1 to include the index number for each record in
-                     the output files.
-
-      zclip=       : [minz,maxz] Min and max elevation values in cm to be used
-                     as a 'clipper'. Values outside of this range will be
-                     excluded.
-
-      latlon=      : Set to 1 to convert utm values to latlon.
-
-   Miscellaneous options:
-      
-      split=       : Set to the number of maximum lines to put in a file. If
-                     specified, multiple files may be created. If set to 0,
-                     then only one file will be created. (Default: split=0)
-
-      zone=        : UTM zone number. Only required if latlon=1. Defaults to
-                     extern curzone if not supplied.
-
-      pstruc=      : Mostly obsolete. If pstruc=CVEG_ALL, then type is forced
-                     to type=6. Otherwise, pstruc= is ignored.
-
+   Other options:
+      verbose= Specifies whether the function should provide progress
+         information.
+            verbose=1   Provide progress (default)
+            verbose=0   Remain silent
+      chunk= Specifies how many lines to write at a time. If you are
+         encountering memory issues, lowering this may help (but don't count on
+         it).
+            chunk=1000     Write 1000 lines at a time (default)
+            chunk=10       Write 10 lines at a time
+*/
+/*
    amar nayegandhi 04/25/02
    modified 12/30/02 amar nayegandhi to :
    write out x,y,z (first surface elevation) data for type=1
    to split at 1 million points and write to another file
    modified 01/30/03 to optionally split at 1 million points
-   modified 10/06/03 to add rn and soe and correct the output format for different delimiters.
+   modified 10/06/03 to add rn and soe and correct the output format for
+   different delimiters.
    modified 10/09/03 to add latlon conversion capability
-
-   Refactored and modified by David Nagle 2008-11-18
+   Refactored and modified 2008-11-18 by David Nagle
+   Rewritten 2010-03-11 by David Nagle
 */
    extern curzone;
+   local data_intensity, data_rn, data_soe;
+
+   default, mode, "fs";
    default, ESRI, 0;
-   default, header, 0;
-   default, indx, 0;
-   default, delimit, " ";
-   default, zclip, [-600., 30000.];
-   default, latlon, 0;
+   default, header, ESRI;
    default, footer, [];
-   default, pstruc, VEG__;
+   default, delimit, " ";
+   default, indx, ESRI;
+   default, intensity, 0;
+   default, rn, 0;
+   default, soe, 0;
+   default, zclip, [];
+   default, latlon, 0;
+   default, split, 0;
+   default, chunk, 1000;
+   default, clean, 1;
+   default, verbose, 1;
 
-   default, mode, 1;
-
-   if (ESRI) {
-      header = 1;
-      indx = 1;
+   if(latlon && is_void(zone)) {
+      default, zone, curzone;
+      if(!zone)
+         error, "Please specify zone= or define extern curzone.";
    }
 
-   default, zone, curzone;
-   if (latlon && !zone) { 
-      szone = "";
-      zone = 0;
-      f = read(prompt="Enter UTM Zone Number:", szone);
-      sread, szone, zone;
-      curzone = zone;
+   // Decode mode, for backwards compatibility
+   if(is_integer(mode))
+      mode = ["fs", "ba", "be", "de", "be", "fs"](mode);
+   // Determine intensity mode
+   if(is_void(intensity_mode)) {
+      if(anyof(mode == ["ba", "be", "de"]))
+         intensity_mode = "lint";
+      else
+         intensity_mode = "fint";
    }
 
-   fn = opath+ofname;
+   // Construct a header if one is needed and not provided
+   if(header && !is_string(header)) {
+      if(ESRI)
+         hnames = ["id", "utm_x", "utm_y", "z_meters", "intensity_counts",
+            "raster_pulse", "soe"];
+      else
+         hnames = ["Index", "UTMX(m)", "UTMY(m)", "cZ(m)", "Intensity(counts)",
+            "Raster/Pulse", "SOE"];
 
-   data_arr = test_and_clean(unref(data_arr));
-
-   hline = [];
-   if (header) {
-      if (indx)
-         grow, hline, (ESRI ? "id" : "Index");
-      grow, hline, (ESRI
-         ? ["utm_x", "utm_y", "z_meters"]
-         : ["UTMX(m)", "UTMY(m)", "cZ(m)"]);
-      if (intensity)
-         grow, hline, (ESRI ? "intensity_counts" : "Intensity(counts)");
-      if (rn)
-         grow, hline, (ESRI ? "raster_pulse" : "Raster/Pulse");
-      if (soe)
-         grow, hline, (ESRI ? "soe" : "SOE");
-      hline = strjoin(hline, delimit);
+      w = where([indx, 1, 1, 1, intensity, rn, soe]);
+      header = strjoin(hnames(w), delimit);
+      hnames = [];
    }
 
-   if (pstruc == CVEG_ALL) type = 6;
-
-   if ( (type == 1) || (type == 6)) {
-      z = data_arr.elevation/100.;
-   } else if (type == 2) {
-      z = (data_arr.elevation + data_arr.depth)/100.;
-   } else if ((type == 3) || (type == 5)) {
-      z = data_arr.lelv/100.;
-   } else if (type == 4) {
-      z = data_arr.depth/100.;
+   // Create the format string that will be used for writing out the data
+   // Fields: index, x, y, z, intensity, rn, soe
+   fmts = ["%d", "%.2f", "%.2f", "%.2f", "%d", "%d", "%.4f"];
+   // Any fields that won't be used will be replaced by nil strings, so replace
+   // their format specifier with %s
+   w = where(![indx, 1, 1, 1, intensity, rn, soe]);
+   if(numberof(w)) {
+      fmts(w) = "%s";
    }
-   zvalid = where( (z > zclip(1)) & (z < zclip(2)) );
-   if(numberof(zvalid)) {
-      z = z(zvalid);
-      data_arr = data_arr(zvalid);
-      if (numberof(where(type == [1,2,4,5,6]))) {
-         east = data_arr.east/100.;
-         north = data_arr.north/100.;
-         if ( type == 6 ) {
-           nx = data_arr.nx; 
-         }
-      } else if (type == 3) {
-         east = data_arr.least/100.;
-         north = data_arr.lnorth/100.;
-      }
-      if (latlon) {
-         ldat = utm2ll(north,east,zone);
-         east = ldat(,1);
-         north = ldat(,2);
-         east = swrite(format="%3.7f", east);
-         north = swrite(format="%3.7f", north);
-      } else {
-         east = swrite(format="%8.2f", east);
-         north = swrite(format="%9.2f", north);
-      }
-      if (intensity) {
-         data_intensity = [];
-         if ( (type == 1) || (type == 6 ) ) {
-            if(has_member(data_arr, "intensity"))
-               data_intensity = data_arr.intensity;
-            else if(has_member(data_arr, "first_peak"))
-               data_intensity = data_arr.first_peak;
-            else if (has_member(data_arr, "fint"))
-               data_intensity = data_arr.fint;
-         } else if ((type == 2) || (type == 4)) {
-            if(has_member(data_arr, "bottom_peak"))
-               data_intensity = data_arr.bottom_peak;
-         } else if ((type == 3) || (type == 5)) {
-            if(has_member(data_arr, "lint"))
-               data_intensity = data_arr.lint;
-         }
-         if(is_void(data_intensity))
-            intensity = 0;
+   // latlon coordinates need more decimal places
+   if(latlon)
+      fmts(2:3) = "%.7f";
+   // Each format specifier gets %s between them because they'll be
+   // interspersed with separator strings.
+   fmt = strjoin(fmts, "%s") + "\n";
+
+   // Create the array of delimiters. Any fields that won't get used are
+   // replaced by nil strings.
+   seps = array(delimit, 6);
+   w = where(![indx, 1, 1, intensity, rn, soe]);
+   if(numberof(w))
+      seps(w) = string(0);
+
+   // Make sure the data is in a clean one-dimensional array format so that our
+   // counts don't get confused.
+   if(!is_numerical(data)) {
+      if(clean)
+         test_and_clean, data;
+      else
+         struct_cast, data;
+   }
+
+   // If zclip is in effect, filter the data
+   if(numberof(zclip) == 2) {
+      data = filter_bounded_elv(data, lbound=zclip(1), ubound=zclip(2), mode=mode);
+   }
+
+   // Extract xyz and, if necessary, convert to lat/lon
+   data2xyz, data, x, y, z, mode=mode;
+   if(latlon)
+      utm2ll, (y), (x), zone, y, x;
+
+   // Extract intensity, rn, and soe if needed; otherwise, set to nil string.
+   if(intensity)
+      data2xyz, data, , , data_intensity, mode=intensity_mode;
+   else
+      data_intensity = string(0);
+   if(rn)
+      data_rn = data.rn;
+   else
+      data_rn = string(0);
+   if(soe)
+      data_soe = data.soe;
+   else
+      data_soe = string(0);
+
+   // Free some memory
+   data = [];
+
+   // Here we create three arrays:
+   //    fns: output filenames
+   //    start: starting index into x, y, z, etc.
+   //    stop: stopping index into x, y, z, etc.
+   // If we're not splitting to multiple files, then the result is trivial.
+   if(split && numberof(x) > split) {
+      fn_base = file_rootname(fn);
+      fn_ext = file_extension(fn);
+      n = long(ceil(numberof(x)/double(split)));
+      fnfmt = swrite(format="%%s_%%0%dd%%s", long(log10(n)+1));
+      fns = swrite(format=fnfmt, fn_base, indgen(n), fn_ext);
+      start = indgen(1:numberof(x):split);
+      stop = start + split - 1;
+      stop(0) = numberof(x);
+   } else {
+      fns = [fn];
+      start = [1];
+      stop = [numberof(x)];
+   }
+
+   idx = this_intensity = this_rn = this_soe = string(0);
+   t0 = array(double, 3);
+   for(fi = 1; fi <= numberof(fns); fi++) {
+      fn = fns(fi);
+
+      if(verbose) {
+         if(numberof(fns) > 1)
+            write, format="Writing %s (%d/%d)...\n", file_tail(fn), fi,
+               numberof(fns);
          else
-            data_intensity = swrite(format="%d", data_intensity);
+            write, format="Writing %s...\n", file_tail(fn);
       }
-      z = swrite(format="%4.2f", z);
 
-      // indx is deferred to output section...
-      curline = [east, north, z];
-      if (intensity) grow, curline, data_intensity;
-      if (rn) grow, curline, swrite(format="%d", data_arr.rn);
-      if (soe) grow, curline, swrite(format="%12.3f", data_arr.soe);
-      if ( type == 6 ) grow, curline, swrite(format="%d", nx);
+      f = open(fn, "w");
+      if(header)
+         write, f, format="%s\n", header;
 
-      if(split) {
-         fn_base = file_rootname(fn);
-         fn_ext = file_extension(fn);
-         fn_num = 0;
-         for(i = 1; i <= numberof(data_arr); i += split) {
-            fn_num++;
-            cur_fn = swrite(format="%s_%d%s", fn_base, fn_num, fn_ext);
-            max_idx = min(i + split, numberof(data_arr)+1);
-            __write_ascii_xyz_helper, fn=cur_fn, lines=curline(i:max_idx-1,),
-               header=hline, footer=footer, indx=indx, delimit=delimit;
-         }
-      } else {
-         data_arr = [];
-         __write_ascii_xyz_helper, fn=fn, lines=unref(curline),
-            header=hline, footer=footer, indx=indx, delimit=delimit;
+      timer, t0;
+      tp = t0;
+
+      // Write out the data in chunks. This helps to reduce how many strings
+      // are in memory at a given time. Yorick's memory management doesn't
+      // handle lots of strings very well.
+      for(i = start(fi); i <= stop(fi); i += chunk) {
+         j = [i + chunk - 1, stop(fi)](min);
+
+         if(indx)
+            idx = indgen(i:j) - start(fi) + 1;
+         if(intensity)
+            this_intensity = data_intensity(i:j);
+         if(rn)
+            this_rn = data_rn(i:j);
+         if(soe)
+            this_soe = data_soe(i:j);
+
+         write, f, format=fmt,
+            idx, seps(1), x(i:j), seps(2), y(i:j), seps(3), z(i:j), seps(4),
+            this_intensity, seps(5), this_rn, seps(6), this_soe;
+
+         if(verbose)
+            timer_remaining, t0, j - start(fi), stop(fi) - start(fi), tp,
+               interval=2, fmt="  (finishing in REMAINING)     \r";
       }
-   }
-}
 
-func __write_ascii_xyz_helper(void, fn=, lines=, header=, footer=, indx=, delimit=) {
-   f = open(fn, "w");
-   if (header)
-      write, f, format="%s\n", header;
-   if (indx) {
-      totw = swrite(format="%d", indgen(numberof(lines(,1))));
-      lines = grow([totw], lines);
+      if(verbose)
+         timer_finished, t0, fmt="  (done in ELAPSED)      \n";
+
+      if(footer)
+         write, f, format="%s\n", footer;
+      close, f;
    }
-   // Put delimiters in place and merge line elements into single strings
-   lines(,:-1) += delimit;
-   lines = unref(lines)(,sum);
-   write, f, format="%s\n", lines;
-   if (footer)
-      write, f, format="%s\n", footer;
-   close, f;
-   write, format="Total records written to ascii file = %d\n", numberof(lines(,1));
 }
 
 local __ascii_xyz_settings;
