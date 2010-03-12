@@ -550,36 +550,62 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=, clean=) {
       return;
    }
 
+   tails = file_tail(files(i));
+
+   // Attempt to extract datum information from filename
+   fn_datum = fn_geoid = part1 = part2 = [];
+   splitary, parse_datum(tails), 4, fn_datums, fn_geoids, part1s, part2s;
+
+   // We could now reconstruct the original filename with logic like this:
+   // part1 + fn_datum + (fn_geoid ? "_g"+fn_geoid : "") + part2
+
+   // If it's n88 but we don't have a geoid, default to g03.
+   w = where(fn_datums == "n88" & strlen(fn_geoids) == 0);
+   if(numberof(w))
+      fn_geoids(w) = "03";
+
+   // Extract UTM zone
+   fn_zones = tile2uz(tails);
+
+   // Construct the output file names
+   fn_outs = part1s + dst_datum;
+   if(dst_datum == "n88")
+      fn_outs += "_g" + dst_geoid;
+   fn_outs += part2s;
+   fn_outdir = is_void(outdir) ? file_dirname(files(i)) : outdir;
+   fn_outs = file_join(unref(fn_outdir), fn_outs);
+
+   // Check to see which files already exist
+   if(update)
+      exists = file_exists(fn_outs);
+   else
+      exists = array(0, dimsof(fn_outs));
+
+   // Calculate the size of the input files so we can more accurately predict
+   // the time remaining
+   sizes = file_size(files);
+   if(anyof(exists))
+      sizes(where(exists)) = 0;
+   sizes = sizes(cum)(2:);
+   // Make sure we won't hit a divide-by-zero scenario (unlikely, but...)
+   if(!sizes(0))
+      sizes(0) = 1;
+
+   t0 = array(double, 3);
+   timer, t0;
    for(i = 1; i <= numberof(files); i++) {
-      tail = file_tail(files(i));
+      tail = tails(i);
       write, format="\n%d/%d %s\n", i, numberof(files), tail;
 
-      // Attempt to extract datum information from filename
-      fn_datum = fn_geoid = part1 = part2 = [];
-      assign, parse_datum(tail), fn_datum, fn_geoid, part1, part2;
-
-      // We could now reconstruct the original filename with logic like this:
-      // part1 + fn_datum + (fn_geoid ? "_g"+fn_geoid : "") + part2
-
-      // If it's n88 but we don't have a geoid, default to g03.
-      if(fn_datum == "n88" && strlen(fn_geoid) == 0)
-         fn_geoid = "03";
-
-      // Extract UTM zone
-      fn_zone = tile2uz(tail);
-
-      // Construct the output file names
-      fn_out = part1 + dst_datum;
-      if(dst_datum == "n88")
-         fn_out += "_g" + dst_geoid;
-      fn_out += part2;
-      fn_outdir = is_void(outdir) ? file_dirname(files(i)) : outdir;
-      fn_out = file_join(unref(fn_outdir), fn_out);
-
-      if(file_exists(fn_out) && update) {
+      if(exists(i)) {
          write, " Skipping; output file exists.";
          continue;
       }
+
+      fn_zone = fn_zones(i);
+      fn_datum = fn_datums(i);
+      fn_geoid = fn_geoids(i);
+      fn_out = fn_outs(i);
 
       write, format="  Detected: zone=%d datum=%s", fn_zone, fn_datum;
       if(fn_datum == "n88")
@@ -703,7 +729,9 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=, clean=) {
       }
 
       pbd_save, fn_out, vname, data;
+      timer_remaining, t0, sizes(i), sizes(0);
    }
+   timer_finished, t0;
 }
 
 func batch_gen_prj(dir, files=, searchstr=, zone=, datum=, vert=) {
