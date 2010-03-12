@@ -641,10 +641,10 @@ func splitary(ary, num, &a1, &a2, &a3, &a4, &a5, &a6) {
 /* DOCUMENT splitary, ary, num, a1, a2, a3, a4, a5, a6
    result = splitary(ary, num)
 
-   This allows you to split up a multidimensional array using a dimension of a
-   specified size. The split up parts will then be copied to the output
-   arguments, and the return result will contain the parts in a single array
-   that can be indexed by its final dimension.
+   This allows you to split up an array using a dimension of a specified size.
+   The split up parts will then be copied to the output arguments, and the
+   return result will contain the parts in a single array that can be indexed
+   by its final dimension.
 
    Here are some examples that illustrate. This first example shows that a 3xn
    and nx3 array will both yield the same results:
@@ -739,8 +739,8 @@ func splitary(ary, num, &a1, &a2, &a3, &a4, &a5, &a6) {
 */
 // Original David Nagle 2010-03-08
    dims = dimsof(ary);
-   if(dims(1) < 2)
-      error, "Input array must be multidimensional.";
+   if(dims(1) < 1)
+      error, "Input must be array (with 1 or more dimensions).";
    w = where(dims(2:) == num);
    if(!numberof(w))
       error, "Input array does not contain requested dimension.";
