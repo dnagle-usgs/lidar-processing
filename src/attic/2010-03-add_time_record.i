@@ -1,3 +1,9 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-03-16. These functions are not in   *
+* active use any longer. All data processed during the past several years      *
+* includes timestamps.                                                         *
+\******************************************************************************/
+
 func add_time_record(data) {
 /* DOCUMENT add_time_record(data)
   amar nayegandhi 04/03/03.

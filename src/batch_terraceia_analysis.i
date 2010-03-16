@@ -47,8 +47,7 @@ func batch_analysis(path, kings=, plot=, ext=, out_txt_results_file=, elv=) {
   for (ai = 1; ai <= numberof(fname_arr); ai++) {
     diff1 = 0;
     if (strpart(fname_arr(ai), 0:0) != "L") {
-    ptr_out = read_yfile(path, fname_arr = fname_arr(ai));
-    data_out = *ptr_out(1);
+    data_out = edf_import(file_join(path, fname_arr(ai)));
     afname = (split_path(fname_arr(ai), 0, ext=1))(1)+"_anal.txt";
     compare_pts, data_out, kings, fname=path+afname, buf=100, read_file=1, elv=elv;
     diff1(rms);

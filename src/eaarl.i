@@ -45,7 +45,9 @@ if(is_void(__eaarl_includes_included__)) {
 
    // ALPS requires
    require, "eaarl_constants.i"; // Must come first; some other files need it
+   require, "eaarl_structs.i";
    require, "eaarl_data.i";
+   require, "asciixyz.i";
    require, "batch_process.i";
    require, "bathy_filter.i";
    require, "change_window_size.i";
@@ -57,6 +59,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "dmars.i";
    require, "eaarl_mounting_bias.i";
    require, "edb_access.i";
+   require, "edf.i";
    require, "general.i";
    require, "geometry.i";
    require, "gridr.i";

@@ -2,25 +2,8 @@
 require, "general.i";
 require, "eaarl.i";
 
-local edb_access
-/* DOCUMENT edb_access.i
-
-   Vars/Data Structures:
-       EDB
-       RAST
-       EDB_INDEX
-
-   Functions/subroutines:
-       load_edb, fn=
-       get_erast( rn=, sod=, hms= )
-       decode_raster(r)
-*/
-
-default, t0, array(double, 3);
-default, t1, array(double, 3);
 default, total_edb_records, 0;
 default, data_path, "";
-pldefault, marks=0;
 
 func get_total_edb_records {
 /* DOCUMENT get_total_edb_records;
@@ -40,46 +23,28 @@ func edb_open(fn, filemode=, verbose=) {
       f.files_offset    int, scalar
       f.record_count    int, scalar
       f.file_count      int, scalar
-      f.records         struct EDB of length f.record_count
+      f.records         struct EAARL_INDEX of length f.record_count
       f.files           struct EDB_FILES of length f.file_count
-
-   The EDB struct has the following fields:
-
-      f.records.seconds          int
-      f.records.fseconds         int
-      f.records.offset           int
-      f.records.raster_length    int
-      f.records.file_number      short
-      f.records.pixels           char
-      f.records.digitizer        char
 
    The EDB_FILES struct has the following fields:
 
       f.files.length    short
-      f.files.name      char of length 17
+      f.files.name      char array usually of length 17
 
-   The values for f.files.length will always be 17. To get a file name in
+   The values for f.files.length should always be 17. To get a file name in
    string format, use strchar(f.files.name).
+
+   SEE ALSO: EAARL_INDEX
 */
    default, filemode, "rb";
    default, verbose, 1;
    f = open(fn, filemode);
    i86_primitives, f;
 
-   add_member, f, "EDB", 0,  "seconds", int;
-   add_member, f, "EDB", -1, "fseconds", int;
-   add_member, f, "EDB", -1, "offset", int;
-   add_member, f, "EDB", -1, "raster_length", int;
-   add_member, f, "EDB", -1, "file_number", short;
-   add_member, f, "EDB", -1, "pixels", char;
-   add_member, f, "EDB", -1, "digitizer", char;
-   install_struct, f, "EDB";
-
-
    add_variable, f, 0, "files_offset", int;
    add_variable, f, 4, "record_count", int;
    add_variable, f, 8, "file_count", int;
-   add_variable, f, 12, "records", "EDB", f.record_count;
+   add_variable, f, 12, "records", EAARL_INDEX, f.record_count;
 
    offset = f.files_offset;
    lengths = array(short, f.file_count);
@@ -137,15 +102,16 @@ func edb_get_filenames(f) {
 func load_edb(fn=, update=, verbose=, override_offset=) {
 /* DOCUMENT load_edb, fn=, update, verbose=, override_offset=
 
-   This function reads the index file produced by the efdb program.  The data
-   is a type of cross-reference to an entire EAARL data set. This permits easy
+   This function reads the index file produced by the efdb program. The data is
+   a type of cross-reference to an entire EAARL data set. This permits easy
    access to the data without regard to what file the data are located in.
 
-   Two variables are created by this load_edb: edb and edb_file.  edb is an
-   array of structures of type EDB, and edb_file is an array of structures
-   containing the cross-referenced file names and the file status.  To see
-   whats in the edb structure, type EDB.  This will list the definition.  To
-   see some actual edb data, type edb(N) where N is the record number.
+   Two variables are created by this load_edb: edb and edb_file. edb is an
+   array of structures of type EAARL_INDEX, and edb_file is an array of
+   structures containing the cross-referenced file names and the file status.
+   To see some actual edb data, type edb(N) where N is the record number.
+
+   SEE ALSO: edb_open EAARL_INDEX
 */
    extern edb_filename, edb, edb_files, _edb_fd, total_edb_records,
       data_path, soe_day_start, eaarl_time_offset, tans, pnav,

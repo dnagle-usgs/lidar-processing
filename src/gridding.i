@@ -1,32 +1,6 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 require, "l1pro.i";
 
-local ZGRID;
-/* DOCUMENT
-   This structure is used for gridded data.
-
-   struct ZGRID {
-      double xmin;      Lower-left corner, x-coordinate
-      double ymin;      Lower-left corner, y-coordinate
-      double cell;      Size of cell (must be square)
-      double nodata;    The value given to cells that have no data
-      pointer zgrid;    Pointer to an array of doubles or floats for elevations
-   }
-
-   The cell size is the distance between rows/columns in zgrid. Each cell's
-   location can be determined based on xmin/ymin, cell, and their row/column.
-
-   The value for each zgrid location is the *center* of a cell. xmin/ymin
-   define the lower-left *corner* of the lower-left cell.
-*/
-struct ZGRID {
-   double xmin;
-   double ymin;
-   double cell;
-   double nodata;
-   pointer zgrid;
-}
-
 func batch_grid(dir, outdir=, searchstr=, method=, mode=, toarc=, buffer=,
 cell=, nodata=, maxside=, maxarea=, minangle=, maxradius=, minpoints=,
 powerwt=) {

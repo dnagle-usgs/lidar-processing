@@ -1,29 +1,5 @@
 require, "eaarl.i";
 
-func plot_yfile_data(data_ptr_arr, cmin =, cmax=, size=, win= ) {
- /* DOCUMENT plot_yfile_data(data_ptr_arr)
-    This function plots the xyz data in a window.  The data_ptr_arr is the array returned from the function read_yfile.  This array is an array of pointers which dereferences to the actual data read from .bin files and stored in structure DEPTH.
- */
- 
- if ( is_void(win) )
-   win = 5; 
- window, win; fma;
- if (is_void( cmin ))  cmin = -15;
- if (is_void( cmax )) cmax = 0;
- if (is_void( size )) size = 1.4;
-
- no_ptrs = numberof(data_ptr_arr);
-
- for (i=1;i<=no_ptrs;i++) {
-   data = *data_ptr_arr(i);
-   plcm, data.depth/100, data.north/100, data.east/100, msize=size, cmin=cmin, cmax=cmax;
-   }
-   colorbar(cmin,cmax);
-
-
-}
-
-
 func win_sel(win=,draw_box=) {
    /* DOCUMENT win_sel(win=)
      This function allows the user to select a window for applying spatial_clean algorithm.  The coordinates of the selected window are returned as an array.

@@ -31,69 +31,6 @@ struct VEGPIXS {
    char nx;       // number of return pulses found
 };
 
-struct VEGALL {
-   long rn(120);           // raster + pulse << 24
-   long north(120);        // surface northing in centimeters
-   long east(120);         // surface easting in centimeters
-   long elevation(120);    // first surface elevation in centimeters
-   long mnorth(120);       // mirror northing
-   long meast(120);        // mirror easting
-   long melevation(120);   // mirror elevation
-   short felv(120);        // first pulse index
-   short fint(120);        // first pulse peak value
-   short lelv(120);        // last pulse index
-   short lint(120);        // last pulse peak value
-   char nx(120);           // number of return pulses found
-   double soe(120);        // Seconds of the epoch
-};
-
-struct VEG_ALL {
-   long rn(120);           // raster + pulse << 24
-   long north(120);        // surface northing in centimeters
-   long east(120);         // surface easting in centimeters
-   long elevation(120);    // first surface elevation in centimeters
-   long mnorth(120);       // mirror northing
-   long meast(120);        // mirror easting
-   long melevation(120);   // mirror elevation
-   long felv(120);         // irange value in ns
-   short fint(120);        // first pulse peak value
-   long lelv(120);         // last return in centimeters
-   short lint(120);        // last return pulse peak value
-   char nx(120);           // number of return pulses found
-   double soe(120);        // Seconds of the epoch
-};
-
-// this structure below (VEG_ALL_)introduced on 03/08/03 to include the first surface easting, northing as well as the llast surface (bare earth) easting/northing.
-struct VEG_ALL_ {
-   long rn(120);           // raster + pulse << 24
-   long north(120);        // surface northing in centimeters
-   long east(120);         // surface easting in centimeters
-   long elevation(120);    // first surface elevation in centimeters
-   long mnorth(120);       // mirror northing
-   long meast(120);        // mirror easting
-   long melevation(120);   // mirror elevation
-   long lnorth(120);       // bottom northing in centimeters
-   long least(120);        // bottom easting in centimeters
-   long lelv(120);         // last return in centimeters
-   short fint(120);        // first pulse peak value
-   short lint(120);        // last return pulse peak value
-   char nx(120);           // number of return pulses found
-   double soe(120);        // Seconds of the epoch
-};
-
-struct CVEG_ALL {
-   long rn;          // raster + pulse << 24
-   long north;       // target northing in centimeters
-   long east;        // target easting in centimeters
-   long elevation;   // target elevation in centimeters
-   long mnorth;      // mirror northing
-   long meast;       // mirror easting
-   long melevation;  // mirror elevation
-   short intensity;  // pulse peak intensity value
-   char nx;          // number of return pulses found
-   double soe;       // Seconds of the epoch
-};
-
 func define_veg_conf {
 /* DOCUMENT define_veg_conf;
    If extern veg_conf is not already initialized, this will define it.
@@ -616,10 +553,9 @@ func make_fs_veg(d, rrr) {
         This the is the return value of function first_surface.
 
 
- The return value veg is an array of structure VEGALL. The array
- can be written to a file using write_geoall
+ The return value veg is an array of structure VEGALL.
 
-   See also: first_surface, run_veg, write_vegall
+   See also: first_surface, run_veg
 */
 
    // d is the veg array from veg.i
@@ -903,174 +839,12 @@ Returns:
    } else write, "No record numbers found for selected flightline.";
 }
 
-func write_vegall (vegall, opath=, ofname=, type=, append=) {
-/* DOCUMENT write_vegall (vegall, opath=, ofname=, type=, append=)
-
- This function writes a binary file containing georeferenced EAARL data.
- It writes an array of structure VEGALL to a binary file.
- Input parameter vegall is an array of structure VEGALL, defined by the
- make_fs_veg function.
-
- Amar Nayegandhi 05/07/02.
-
-   The input parameters are:
-
-   vegall   Array of structure VEGALL as returned by function
-                make_fs_veg;
-
-    opath=  Directory in which output file is to be written
-
-   ofname=  Output file name
-
-     type=  Type of output file.
-
-   append=  Set this keyword to append to existing file.
-
-
-   See also: make_fs_veg, make_veg
-
-*/
-   fn = opath+ofname;
-   num_rec=0;
-
-   if (is_void(append)) {
-      /* open file to read/write if append keyword not
-         set(it will overwrite any previous file with same name) */
-      f = open(fn, "w+b");
-   } else {
-      /*open file to append to existing file.  Header information
-        will not be written.*/
-      f = open(fn, "r+b");
-   }
-   i86_primitives, f;
-
-   if (is_void(append)) {
-      /* write header information only if append keyword not set */
-      if (is_void(type)) {
-         if (vegall.soe(1) == 0) {
-            type = 8;
-            nwpr = long(13);
-         } else {
-            type = 103;
-            nwpr = long(14);
-         }
-      } else {
-         nwpr = long(14);
-      }
-
-      rec = array(long, 4);
-      /* the first word in the file will decide the endian system. */
-      rec(1) = 0x0000ffff;
-      /* the second word defines the type of output file */
-      rec(2) = type;
-      /* the third word defines the number of words in each record */
-      rec(3) = nwpr;
-      /* the fourth word will eventually contain the total number of records.
-         We don't know the value just now, so will wait till the end. */
-      rec(4) = 0;
-
-      _write, f, 0, rec;
-
-      byt_pos = 16; /* 4bytes , 4words */
-   } else {
-      byt_pos = sizeof(f);
-   }
-   num_rec = 0;
-
-   vegall = test_and_clean(unref(vegall));
-
-   /* now look through the vegall array of structures and write
-      out only valid points
-    */
-   len = numberof(vegall);
-
-   for (i=1;i<=len;i++) {
-      indx = where(vegall(i).north != 0);
-      num_valid = numberof(indx);
-      for (j=1;j<=num_valid;j++) {
-         _write, f, byt_pos, vegall(i).rn(indx(j));
-         byt_pos = byt_pos + 4;
-         _write, f, byt_pos, vegall(i).north(indx(j));
-         byt_pos = byt_pos + 4;
-         _write, f, byt_pos, vegall(i).east(indx(j));
-         byt_pos = byt_pos + 4;
-         _write, f, byt_pos, vegall(i).elevation(indx(j));
-         byt_pos = byt_pos + 4;
-         _write, f, byt_pos, vegall(i).mnorth(indx(j));
-         byt_pos = byt_pos + 4;
-         _write, f, byt_pos, vegall(i).meast(indx(j));
-         byt_pos = byt_pos + 4;
-         _write, f, byt_pos, vegall(i).melevation(indx(j));
-         byt_pos = byt_pos + 4;
-         _write, f, byt_pos, vegall(i).lnorth(indx(j));
-         byt_pos = byt_pos + 4;
-         _write, f, byt_pos, vegall(i).least(indx(j));
-         byt_pos = byt_pos + 4;
-         _write, f, byt_pos, vegall(i).lelv(indx(j));
-         byt_pos = byt_pos + 4;
-         _write, f, byt_pos, vegall(i).fint(indx(j));
-         byt_pos = byt_pos + 2;
-         _write, f, byt_pos, vegall(i).lint(indx(j));
-         byt_pos = byt_pos + 2;
-         _write, f, byt_pos, vegall(i).nx(indx(j));
-         byt_pos = byt_pos + 1;
-         if (type == 103) {
-            _write, f, byt_pos, vegall(i).soe(indx(j));
-            byt_pos = byt_pos + 8;
-         }
-         if ((i%1000)==0) write, format="%d of %d\r", i, len;
-      }
-      num_rec = num_rec + num_valid;
-   }
-
-   /* now we can write the number of records in the 3rd element
-      of the header array
-   */
-   if (is_void(append)) {
-      _write, f, 12, num_rec;
-      write, format="Number of records written = %d \n", num_rec;
-   } else {
-      num_rec_old = 0L
-         _read, f, 12, num_rec_old;
-      num_rec = num_rec + num_rec_old;
-      write, format="Number of old records = %d \n",num_rec_old;
-      write, format="Number of new records = %d \n",(num_rec-num_rec_old);
-      write, format="Total number of records written = %d \n",num_rec;
-      _write, f, 12, num_rec;
-   }
-
-   close, f;
-}
-
-func write_veg(opath, ofname, veg_all, ba_veg=, bd_veg=) {
-/* DOCUMENT write_veg(opath, ofname, veg_all, ba_veg=, bd_veg=)
-   This function writes bathy data to a file.
-   amar nayegandhi 10/17/02.
-*/
-   if (is_array(ba_veg)) {
-      ba_ofname_arr = strtok(ofname, ".");
-      ba_ofname = ba_ofname_arr(1)+"_bad_fr."+ba_ofname_arr(2);
-      write, format="Writing array ba_veg to file: %s\n", ba_ofname;
-      write_geoall, ba_veg, opath=opath, ofname=ba_ofname;
-   }
-   if (is_array(bd_veg)) {
-      bd_ofname_arr = strtok(ofname, ".");
-      bd_ofname = bd_ofname_arr(1)+"_bad_veg."+bd_ofname_arr(2);
-      write, "now writing array bad_veg  to a file \r";
-      write_geoall, bd_veg, opath=opath, ofname=bd_ofname;
-   }
-   write_vegall, veg_all, opath=opath, ofname=ofname;
-}
-
 func test_veg(veg_all,  fname=, pse=, graph=) {
    // this function can be used to process for vegetation for only those pulses that are in data array veg_all or  those that are in file fname.
    // amar nayegandhi 11/27/02.
 
-   if (fname) {
-      ofn = split_path(fname,0);
-      data_ptr = read_yfile(ofn(1), fname_arr = ofn(2));
-      veg_all = *data_ptr(1);
-   }
+   if (fname)
+      veg_all = edf_import(fname);
 
    rasternos = veg_all.rn;
 
@@ -1404,10 +1178,9 @@ func make_fs_veg_all (d, rrr) {
                 This the is the return value of function first_surface.
 
 
-   The return value veg is an array of structure VEGALL. The array
-   can be written to a file using write_geoall
+   The return value veg is an array of structure VEGALL.
 
-   See also: first_surface, run_veg, write_vegall
+   See also: first_surface, run_veg
 */
 // d is the veg array from veg.i
 // rrr is the topo array from surface_topo.i
@@ -1451,137 +1224,6 @@ func make_fs_veg_all (d, rrr) {
 
    //write,format="Processing complete. %d rasters drawn. %s", len, "\n"
    return geoveg;
-}
-
-func write_multipeak_veg (vegall, opath=, ofname=, type=, append=) {
-/* DOCUMENT write_vegall (vegall, opath=, ofname=, type=, append=)
-
- This function writes a binary file containing georeferenced EAARL data.
- It writes an array of structure CVEG_ALL to a binary file.
- Input parameter vegall is an array of structure CVEG_ALL, defined by the
- make_fs_veg function.
-
- Amar Nayegandhi 05/07/02.
-
-   The input parameters are:
-
-   vegall   Array of structure CVEG_ALL as returned by function
-                make_veg with multipeaks keyword set;
-
-    opath=  Directory in which output file is to be written
-
-   ofname=  Output file name
-
-     type=  Type of output file, currently type = 7 is supported
-                for multipeaks veg data.
-
-   append=  Set this keyword to append to existing file.
-
-
-   See also: make_veg, make_fs_veg_all, run_veg_all, ex_veg_all
-
-*/
-
-   fn = opath+ofname;
-   num_rec=0;
-
-   if (is_void(append)) {
-      /* open file to read/write if append keyword not set(it will overwrite any previous file with same name) */
-      f = open(fn, "w+b");
-   } else {
-      /*open file to append to existing file.  Header information will not be written.*/
-      f = open(fn, "r+b");
-   }
-   i86_primitives, f;
-
-   if (is_void(append)) {
-      /* write header information only if append keyword not set */
-      if (is_void(type)) {
-         if (vegall.soe(1) == 0) {
-            type = 7;
-            nwpr = long(9);
-         } else {
-            type = 104;
-            nwpr = long(10);
-         }
-      } else {
-         nwpr = 10;
-      }
-
-      rec = array(long, 4);
-      /* the first word in the file will decide the endian system. */
-      rec(1) = 0x0000ffff;
-      /* the second word defines the type of output file */
-      rec(2) = type;
-      /* the third word defines the number of words in each record */
-      rec(3) = nwpr;
-      /* the fourth word will eventually contain the total number of records.  We don't know the value just now, so will wait till the end. */
-      rec(4) = 0;
-
-      _write, f, 0, rec;
-
-      byt_pos = 16; /* 4bytes , 4words */
-   } else {
-      byt_pos = sizeof(f);
-   }
-   num_rec = 0;
-
-
-   /* now look through the vegall array of structures and write
-      out only valid points
-    */
-
-   /* call function clean_cveg_all to remove erroneous data. */
-   write, "Cleaning data ... ";
-   vegall = clean_cveg_all(vegall);
-   write, "Writing data to file... ";
-   len = numberof(vegall);
-
-   for (i=1;i<=len;i++) {
-      _write, f, byt_pos, vegall(i).rn;
-      byt_pos = byt_pos + 4;
-      _write, f, byt_pos, vegall(i).north;
-      byt_pos = byt_pos + 4;
-      _write, f, byt_pos, vegall(i).east;
-      byt_pos = byt_pos + 4;
-      _write, f, byt_pos, vegall(i).elevation;
-      byt_pos = byt_pos + 4;
-      _write, f, byt_pos, vegall(i).mnorth;
-      byt_pos = byt_pos + 4;
-      _write, f, byt_pos, vegall(i).meast;
-      byt_pos = byt_pos + 4;
-      _write, f, byt_pos, vegall(i).melevation;
-      byt_pos = byt_pos + 4;
-      _write, f, byt_pos, vegall(i).intensity;
-      byt_pos = byt_pos + 2;
-      _write, f, byt_pos, vegall(i).nx;
-      byt_pos = byt_pos + 1;
-      if (type == 104) {
-         _write, f, byt_pos, vegall(i).soe;
-         byt_pos = byt_pos + 8;
-      }
-      if ((i%1000)==0) write, format="%d of %d\r", i, len;
-
-      num_rec++;
-   }
-
-   /* now we can write the number of records in the 3rd element
-      of the header array
-    */
-   if (is_void(append)) {
-      _write, f, 12, num_rec;
-      write, format="Number of records written = %d \n", num_rec
-   } else {
-      num_rec_old = 0L
-         _read, f, 12, num_rec_old;
-      num_rec = num_rec + num_rec_old;
-      write, format="Number of old records = %d \n",num_rec_old;
-      write, format="Number of new records = %d \n",(num_rec-num_rec_old);
-      write, format="Total number of records written = %d \n",num_rec;
-      _write, f, 12, num_rec;
-   }
-
-   close, f;
 }
 
 func clean_cveg_all(vegall, rcf_width=) {

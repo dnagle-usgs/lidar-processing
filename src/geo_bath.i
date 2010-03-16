@@ -11,24 +11,6 @@ require, "l1pro.i";
 */
 
 
-struct GEOALL {
-  long rn (120); 	//contains raster value and pulse value
-  long north(120); 	//surface northing in centimeters
-  long east(120);	//surface easting in centimeters
-  short sr2(120);	// Slant range first to last return in nanoseconds*10
-			// Modified slant range by a factor of 10 to increase the 
-			// the accuracy of the range vector (AN-Jan 2005).
-  long elevation(120); //first surface elevation in centimeters
-  long mnorth(120);	//mirror northing
-  long meast(120);	//mirror easting
-  long melevation(120);	//mirror elevation
-  short bottom_peak(120);//peak amplitude of the bottom return signal
-  short first_peak(120);//peak amplitude of the first surface return signal
-  // 2009-03-21: depth was short: rwm
-  int  depth(120);     //water depth in centimeters 
-  double soe(120);     //Seconds of the Epoch
-}
-
 func make_fs_bath (d, rrr, avg_surf=) {  
 /* DOCUMENT make_fs_bath (d, rrr) 
 
@@ -46,10 +28,9 @@ avg_surf	Set to 1 if the surface returns should be averaged to the
 		first surface returns at the center of the swath.
 
 
-   The return value depth is an array of structure GEOALL. The array 
-   can be written to a file using write_geoall  
+   The return value depth is an array of structure GEOALL.
 
-   See also: first_surface, run_bath, write_geoall
+   See also: first_surface, run_bath
 */
 
 
@@ -137,289 +118,6 @@ for (i=1; i<=len; i=i+1) {
 return geodepth;
 }
 
-
-func write_geodepth (geodepth, opath=, ofname=, type=) {
-/* DOCUMENT write_geodepth (geodepth, opath=, ofname=, type=)
-
-This function writes a binary file containing georeferenced depth data.
-input parameter geodepth is an array of structure GEODEPTH, defined 
-by the make_fs_bath function.
-
-Inputs:
- geodepth	Geodepth array.
-    opath=	Output data path
-   ofname=	Output file name
-     type=	Output data type.
-
-Amar Nayegandhi 02/15/02.
-
-
-*/
-fn = opath+ofname;
-
-/* 
-   open file to read/write (it will overwrite any previous 
-   file with same name) 
-*/
-
-f = open(fn, "w+b");
-i86_primitives, f;
-
-nwpr = long(4);
-
-if (is_void(type)) type = 1;
-
-rec = array(long, 4);
-
-/* The first word in the file will decide the endian system. */
-rec(1) = 0x0000ffff;
-
-/* The second word defines the type of output file */
-rec(2) = type;
-
-/* The third word defines the number of words in each record */
-rec(3) = nwpr;
-
-/* The fourth word will eventually contain the total number 
-   of records.  We don't know the value just now, so will wait 
-   till the end. 
-*/
-rec(4) = 0;
-
-_write, f, 0, rec;
-
-byt_pos = 16; /* 4bytes , 4words */
-num_rec = 0;
-
-
-/* Now look through the geodepth array of structures and write 
-   out only valid points 
-*/
-len = numberof(geodepth);
-
-for (i=1;i<=len;i++) {
-  indx = where(geodepth(i).north != 0);   
-  num_valid = numberof(indx);
-  for (j=1;j<=num_valid;j++) {
-     _write, f, byt_pos, geodepth(i).rn(indx(j));
-     byt_pos = byt_pos + 4;
-     _write, f, byt_pos, geodepth(i).north(indx(j));
-     byt_pos = byt_pos + 4;
-     _write, f, byt_pos, geodepth(i).east(indx(j));
-     byt_pos = byt_pos + 4;
-     _write, f, byt_pos, geodepth(i).depth(indx(j));
-     byt_pos = byt_pos + 2;
-  }
-  num_rec = num_rec + num_valid;
-}
-
-/* now we can write the number of records in the 3rd element of the header array */
-_write, f, 12, num_rec;
-
-close, f;
-}
-
-func write_geobath (geobath, opath=, ofname=, type=) {
-/* DOCUMENT write_geobath (geobath, opath=, ofname=, type=)
-
-This function writes a binary file containing georeferenced 
-bathymetric data.  Input parameter geodepth is an array of 
-structure GEOBATH, defined by the make_fs_bath function.
-
-Amar Nayegandhi 02/15/02.
-
-*/
-
-
-fn = opath+ofname;
-
-/* open file to read/write (it will overwrite any previous file with same name) */
-f = open(fn, "w+b");
-i86_primitives, f;
-
-if (is_void(type)) type = 3;
-nwpr = long(6);
-
-rec = array(long, 4);
-/* the first word in the file will decide the endian system. */
-rec(1) = 0x0000ffff;
-/* the second word defines the type of output file */
-rec(2) = type;
-/* the third word defines the number of words in each record */
-rec(3) = nwpr;
-/* the fourth word will eventually contain the total number of records.  We don't know the value just now, so will wait till the end. */
-rec(4) = 0;
-
-_write, f, 0, rec;
-
-byt_pos = 16; /* 4bytes , 4words */
-num_rec = 0;
-
-
-/* now look through the geobath array of structures and write out only valid points */
-len = numberof(geobath);
-
-for (i=1;i<=len;i++) {
-  indx = where(geobath(i).north != 0);   
-  num_valid = numberof(indx);
-  for (j=1;j<=num_valid;j++) {
-     _write, f, byt_pos, geobath(i).rn(indx(j));
-     byt_pos = byt_pos + 4;
-     _write, f, byt_pos, geobath(i).north(indx(j));
-     byt_pos = byt_pos + 4;
-     _write, f, byt_pos, geobath(i).east(indx(j));
-     byt_pos = byt_pos + 4;
-     bath_arr = long((geobath(i).sr2(indx(j)))*CNSH2O2X *10);
-     _write, f, byt_pos, bath_arr;
-     byt_pos = byt_pos + 4;
-     _write, f, byt_pos, geobath(i).depth(indx(j));
-     byt_pos = byt_pos + 2;
-     _write, f, byt_pos, geobath(i).bottom_peak(indx(j));
-     byt_pos = byt_pos + 2;
-  }
-  num_rec = num_rec + num_valid;
-}
-
-/* now we can write the number of records in the 3rd element of the header array */
-_write, f, 12, num_rec;
-
-close, f;
-}
-
-
-
-func write_geoall (geoall, opath=, ofname=, type=, append=) {
-/* DOCUMENT write_geoall (geoall, opath=, ofname=, type=, append=) 
-
- This function writes a binary file containing georeferenced EAARL data.
- It writes an array of structure GEOALL to a binary file.  
- Input parameter geoall is an array of structure GEOALL, defined by the 
- make_fs_bath function.
-
- Amar Nayegandhi 05/07/02.
-
-   The input parameters are:
-
-   geoall	Array of structure geoall as returned by function 
-                make_fs_bath;
-
-    opath= 	Directory in which output file is to be written
-
-   ofname=	Output file name
-
-     type=	Type of output file, currently only type = 4 is supported.
-
-   append=	Set this keyword to append to existing file.
-
-
-   See also: make_fs_bath, make_bathy
-
-*/
-
-fn = opath+ofname;
-num_rec=0;
-
-if (is_void(append)) {
-  /* open file to read/write if append keyword not set(it will overwrite any previous file with same name) */
-  f = open(fn, "w+b");
-} else {
-  /*open file to append to existing file.  Header information will not be written.*/
-  f = open(fn, "r+b");
-}
-i86_primitives, f;
-
-if (is_void(append)) {
-  /* write header information only if append keyword not set */
-  if (is_void(type)) {
-    if (geoall.soe(1) == 0) {
-      type = 4;
-      nwpr = long(11);
-    } else {
-      type = 102;
-      nwpr = long(12);
-    }
-  } else {
-      nwpr = long(12);
-  }
-
-  rec = array(long, 4);
-  /* the first word in the file will decide the endian system. */
-  rec(1) = 0x0000ffff;
-  /* the second word defines the type of output file */
-  rec(2) = type;
-  /* the third word defines the number of words in each record */
-  rec(3) = nwpr;
-  /* the fourth word will eventually contain the total number of records.  We don't know the value just now, so will wait till the end. */
-  rec(4) = 0;
-
-  _write, f, 0, rec;
-
-  byt_pos = 16; /* 4bytes , 4words */
-} else {
-  byt_pos = sizeof(f);
-}
-num_rec = 0;
-
-
-/* now look through the geoall array of structures and write 
- out only valid points 
-*/
-len = numberof(geoall);
-
-for (i=1;i<=len;i++) {
-  indx = where(geoall(i).north != 0);   
-  num_valid = numberof(indx);
-  for (j=1;j<=num_valid;j++) {
-     _write, f, byt_pos, geoall(i).rn(indx(j));
-     byt_pos = byt_pos + 4;
-     _write, f, byt_pos, geoall(i).north(indx(j));
-     byt_pos = byt_pos + 4;
-     _write, f, byt_pos, geoall(i).east(indx(j));
-     byt_pos = byt_pos + 4;
-     _write, f, byt_pos, geoall(i).sr2(indx(j));
-     byt_pos = byt_pos + 2;
-     _write, f, byt_pos, geoall(i).elevation(indx(j));
-     byt_pos = byt_pos + 4;
-     _write, f, byt_pos, geoall(i).mnorth(indx(j));
-     byt_pos = byt_pos + 4;
-     _write, f, byt_pos, geoall(i).meast(indx(j));
-     byt_pos = byt_pos + 4;
-     _write, f, byt_pos, geoall(i).melevation(indx(j));
-     byt_pos = byt_pos + 4;
-     _write, f, byt_pos, geoall(i).bottom_peak(indx(j));
-     byt_pos = byt_pos + 2;
-     _write, f, byt_pos, geoall(i).first_peak(indx(j));
-     byt_pos = byt_pos + 2;
-     _write, f, byt_pos, geoall(i).depth(indx(j));
-     byt_pos = byt_pos + 2;
-     if (type == 102) {
-       _write, f, byt_pos, geoall(i).soe(indx(j));
-       byt_pos = byt_pos + 8;
-     }
-     if ((i%1000)==0) write, format="%d of %d\r", i, len;
-  }
-  num_rec = num_rec + num_valid;
-}
-
-/* now we can write the number of records in the 3rd element 
-  of the header array 
-*/
-if (is_void(append)) {
-  _write, f, 12, num_rec;
-  write, format="Number of records written = %d \n", num_rec
-} else {
-  num_rec_old = 0L
-  _read, f, 12, num_rec_old;
-  num_rec = num_rec + num_rec_old;
-  write, format="Number of old records = %d \n",num_rec_old;
-  write, format="Number of new records = %d \n",(num_rec-num_rec_old);
-  write, format="Total number of records written = %d \n",num_rec;
-  _write, f, 12, num_rec;
-}
-
-close, f;
-}
-
 func compute_depth(data_ptr=, ipath=,fname=,ofname=) {
 /* DOCUMENT compute_depth(data_ptr=, ipath=,fname=,ofname=)  
 This function computes the depth in water using the mirror position 
@@ -434,21 +132,25 @@ ofname=		File name of output file.
 This function returns the pointer to the data array with 
 computed depth.
 
-See also: make_fs_bath, write_geoall, read_yfile, make_bathy
+See also: make_fs_bath, make_bathy
 
 */
-    
-    if ((!is_void(ipath)) && (is_void(fname)) && (is_void(data_ptr))) {
-       /* extract all data with *.bin extension from directory*/
-       data_ptr = read_yfile(ipath);
-    }
-
-    if ((!is_void(ipath)) && (!is_void(fname))) {
+   if(!is_void(ipath)) {
+      files = [];
+      if(is_void(data_ptr) && is_void(fname)) {
+      /* extract all data with *.bin extension from directory*/
+         files = find(ipath, glob=["*.bin", "*.edf"]);
+      } else if(!is_void(fname)) {
       /* extract data from file(s) */
-      data_ptr = read_yfile(ipath, fname_arr=fname);
-    }
-
-
+         files = file_join(ipath, fname);
+      }
+      if(!is_void(files)) {
+         data_ptr = array(pointer, numberof(files));
+         for(i = 1; i <= numberof(files); i++)
+            data_ptr(i) = &edf_import(files(i));
+      }
+   }
+    
     nfiles = numberof(data_ptr);
 
     for (i=1;i<=nfiles;i++) {
@@ -512,12 +214,8 @@ See also: make_fs_bath, write_geoall, read_yfile, make_bathy
 
       if (!is_void(ofname)) {
         //write current data out to output file ofname
-	if (i==1) {
-	write_geoall, data, opath=ipath, ofname=ofname;
-	} else {
-	write_geoall, data, opath=ipath, ofname=ofname, append=1;
-	}
-
+        // if only one file, then append
+         edf_export, file_join(ipath, ofname), data, append=(i == 1);
       }
 	
    }
@@ -745,29 +443,5 @@ See define_bath_ctl()
     return depth_all;
 
    } else write, "No Data in selected flightline. Good Bye!";
-
-}
-
-func write_bathy(opath, ofname, depth_all, ba_depth=, bd_depth=) {
-  /* DOCUMENT write_bathy(opath, ofname, depth_all, ba_depth=, bd_depth=)
-    This function writes bathy data to a file.
-    amar nayegandhi 09/17/02.
-  */
-  if (is_array(ba_depth)) {
-	ba_ofname_arr = strtok(ofname, ".");
-	ba_ofname = ba_ofname_arr(1)+"_bad_fr."+ba_ofname_arr(2);
-	write, format="Writing array ba_depth to file: %s\n", ba_ofname;
-        write_geoall, ba_depth, opath=opath, ofname=ba_ofname;
-  }
-
-  if (is_array(bd_depth)) {
-	bd_ofname_arr = strtok(ofname, ".");
-	bd_ofname = bd_ofname_arr(1)+"_bad_depth."+bd_ofname_arr(2);
-	write, "now writing array bad_depth  to a file \r";
-        write_geoall, bd_depth, opath=opath, ofname=bd_ofname;
-  }
-
-
-  write_geoall, depth_all, opath=opath, ofname=ofname;
 
 }

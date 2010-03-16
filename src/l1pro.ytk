@@ -176,16 +176,6 @@ if {![winfo exists .l1wid]} {
 
   .l1wid.mb.file add separator
 
-  menu .l1wid.mb.file.bin
-  .l1wid.mb.file add cascade -label "Binary (edf/bin) data..." \
-    -underline 0 -menu .l1wid.mb.file.bin
-  .l1wid.mb.file.bin add command -label "Load data from file..." \
-    -underline 0 -command ::l1pro::file::load_bin
-  .l1wid.mb.file.bin add command -label "Save data to file..." \
-    -underline 0 -command ::l1pro::file::save_bin
-  .l1wid.mb.file.bin add command -label "Load directory..." \
-    -underline 5 -command ::l1pro::dirload_bin
-
   .l1wid.mb.file add command -label "Import ASPRS LAS..." \
     -underline 0 -command ::l1pro::file::load_las
 

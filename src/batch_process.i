@@ -1,5 +1,4 @@
-/* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
-
+// vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 require, "eaarl.i";
 /*
    Original: Amar Nayegandhi
@@ -367,8 +366,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
             if (is_array(fs_all)) {
                if (edf) {
                   write, format = "Writing edf file for Region %d of %d\n",i,n;
-
-                  write_topo, ofn(1), split_path(ofn(2),0,ext=1)(1)+"_f.edf", fs_all;
+                  edf_export, file_rootname(file_join(ofn(1), ofn(2)))+"_f.edf", fs_all;
                }
                if (pbd) {
                   new_ofn = split_path(ofn(2),0,ext=1);
@@ -410,7 +408,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
 
                   if (edf) {
                      write, format = "Writing edf file for Region %d of %d\n",i,n;
-                     write_bathy, ofn(1), split_path(ofn(2),0,ext=1)(1)+"_b.edf", depth_all;
+                     edf_export, file_rootname(file_join(ofn(1), ofn(2)))+"_b.edf", depth_all;
                   }
                   if (pbd) {
                      new_ofn = split_path(ofn(2),0,ext=1);
@@ -438,7 +436,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
                if (is_array(veg_all)) {
                   if (edf) {
                      write, format = "Writing edf file for Region %d of %d\n",i,n;
-                     write_vegall, opath=ofn(1), ofname=split_path(ofn(2),0,ext=1)(1)+"_v.edf", veg_all;
+                     edf_export, file_rootname(file_join(ofn(1), ofn(2)))+"_v.edf", veg_all;
                   }
                   if (pbd) {
                      new_ofn = split_path(ofn(2),0,ext=1);
@@ -468,7 +466,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
             if (is_array(depth_all)) {
                if (edf) {
                   write, format = "Writing edf file for Region %d of %d\n",i,n;
-                  write_bathy, ofn(1), split_path(ofn(2),0,ext=1)(1)+"_b.edf", depth_all;
+                  edf_export, file_rootname(file_join(ofn(1), ofn(2)))+"_b.edf", depth_all;
                }
                if (pbd) {
                   new_ofn = split_path(ofn(2),0,ext=1);
@@ -494,7 +492,7 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
             if (is_array(veg_all)) {
                if (edf) {
                   write, format = "Writing edf file for Region %d of %d\n",i,n;
-                  write_vegall, opath=ofn(1), ofname=split_path(ofn(2),0,ext=1)(1)+"_v.edf", veg_all;
+                  edf_export, file_rootname(file_join(ofn(1), ofn(2)))+"_v.edf", veg_all;
                }
                if (pbd) {
                   new_ofn = split_path(ofn(2),0,ext=1);
@@ -1401,11 +1399,10 @@ Original amar nayegandhi. Started 12/06/02.
          }
          if (readedf) {
             write, format="merging eaarl edf data in directory %s\n",fn_split(1);
-            if (datum) {
-               data_ptr = read_yfile(fn_split(1), searchstring="*"+datum+"*"+searchstr+".edf");
-            } else {
-               data_ptr = read_yfile(fn_split(1), searchstring="*"+searchstr+"*");
-            }
+            if(datum)
+               data_edf = dirload(fn_split(1), searchstr="*"+datum+"*"+searchstr+"*.edf");
+            else
+               data_edf = dirload(fn_split(1), searchstr="*"+searchstr+"*.edf");
          }
          if (readpbd) {
             if ( b_rcf ) {
@@ -1429,23 +1426,16 @@ Original amar nayegandhi. Started 12/06/02.
             }
          }
       } else {
-         if (readedf) {
-            data_ptr = read_yfile(fn_split(1), fname_arr = fn_split(2));
-         }
-         if (readpbd) {
-            f = openb(fn_all(i));
-            restore, f, vname;
-            eaarl = get_member(f,vname);
-         }
+         if (readedf)
+            data_edf = edf_import(fn_all(i));
+         if (readpbd)
+            eaarl = pbd_load(fn_all(i));
       }
-      if (readedf) {
-         for (j=1;j<=numberof(data_ptr);j++) {
-            grow, eaarl, (*data_ptr(j));
-         }
-      }
+      if (readedf)
+         grow, eaarl, data_edf;
       if(clean && !(merged && readpbd))
          test_and_clean, eaarl;
-      data_ptr = [];
+      data_edf = [];
       if (bmode == 1 && ! (merge && readpbd)) {
          fmeast = fmnorth = 0;
          sread, strpart(fn_split(2), 4:9), fmeast;
@@ -1577,7 +1567,7 @@ Original amar nayegandhi. Started 12/06/02.
          //if (numberof(where(rcf_eaarl.east == 0))) lance_is_watching();
          if (mode == 1) {
             if (writeedf) {
-               write_topo, res(1), res(2), rcf_eaarl;
+               edf_export, file_join(res(1), res(2)), rcf_eaarl;
             }
             if (writepbd) {
                vname = "fst"+vnametag+"_"+swrite(format="%d",i);
@@ -1592,7 +1582,7 @@ Original amar nayegandhi. Started 12/06/02.
          }
          if (mode == 2) {
             if (writeedf) {
-               write_geoall, rcf_eaarl, opath=res(1), ofname=res(2);
+               edf_export, file_join(res(1), res(2)), rcf_eaarl;
             }
             if (writepbd) {
                vname = "bat"+vnametag+"_"+swrite(format="%d",i);
@@ -1606,7 +1596,7 @@ Original amar nayegandhi. Started 12/06/02.
          }
          if (mode == 3) {
             if (writeedf) {
-               write_vegall, rcf_eaarl, opath=res(1), ofname=res(2);
+               edf_export, file_join(res(1), res(2)), rcf_eaarl;
             }
             if (writepbd) {
                // use tile_id when run from mbatch_process() as 'i' is always 1.
@@ -1880,262 +1870,6 @@ prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=, verbose=) {
    timer, timing, elapsed;
    if(verbose > 1)
       write, format="Finished in %s\n", seconds2prettytime(elapsed(3));
-}
-
-func batch_write_xyz(dirname, outdir=, files=, searchstr=, buffer=, update=,
-extension=, mode=, intensity_mode=, ESRI=, header=, footer=, delimit=, indx=,
-intensity=, rn=, soe=, zclip=, latlon=, split=, zone=, chunk=, clean=) {
-/* DOCUMENT batch_write_xyz, dirname, outdir=, files=, searchstr=, buffer=,
-   update=, extension=, mode=, intensity_mode=, ESRI=, header=, footer=,
-   delimit=, indx=, intensity=, rn=, soe=, zclip=, latlon=, split=, zone=,
-   chunk=, clean=
-
-   Batch creates xyz files for specified files. This is a batch wrapper around
-   write_ascii_xyz.
-
-   Parameter:
-      dirname: The input directory where the source files reside.
-
-   Options specific to batch mode:
-      outdir= Specifies the output directory. If omitted, files will be created
-         alongside the source files.
-            outdir=[]                  Output alongside source files (default)
-            outdir="/data/0/example/"  Output in /data/0/example/
-      files= Specifies an array of files to convert. When provided, dirname and
-         searchstr will be ignored.
-      searchstr= A file pattern to use to locate the files to convert.
-            searchstr="*.pbd"             All pbd files (default)
-            searchstr="*n88*be*_qc.pbd"   Only NAVD88 bare earth qc'd files
-      buffer= Sets the buffer size in meters. Data outside the tile's limits
-         plus the buffer size will be excluded from output. Zero constrains
-         data to the tile boundaries; negative values force use of all data. If
-         you enable this, your file names MUST be in a format that is parseable
-         by extract_tile!
-            buffer=-1      Use all data (default)
-            buffer=0       Restrict to tile boundary
-            buffer=10      Adds a 10m buffer around tile boundary
-      update= By default, existing files are overwritten. Use update=1 to skip
-         them instead. If you are using split=, this option will not work very
-         well as it uses the base name instead of the split names.
-            update=0    Overwrite existing files (default)
-            update=1    Skip files that exist and are not empty
-      extension= Specify the file extension for the output files.
-            extension="*.xyz"    (default)
-            extension="*.txt"    (ESRI default)
-
-   Options that are passed to write_ascii_xyz (see its documentation for full
-   usage information):
-
-      mode=
-      intensity_mode=
-      ESRI=
-      header=
-      footer=
-      delimit=
-      indx=
-      intensity=
-      rn=
-      soe=
-      zclip=
-      latlon=
-      split=
-      zone= If latlon=1 and zone is omitted, the function will attempt to set
-         zone using the zone encoded in the filename, then falls back to
-         curzone.
-      chunk=
-      clean=
-*/
-/*
-amar nayegandhi 10/06/03.
-Refactored and modified by David Nagle 2008-11-04
-Rewrote David Nagle 2010-03-11
-*/
-   extern curzone;
-   default, outdir, [];
-   default, searchstr, "*.pbd";
-   default, buffer, -1;
-   default, update, 0;
-   default, ESRI, 0;
-   default, latlon, 0;
-   default, extension, (ESRI ? ".txt" : ".xyz");
-
-   if(is_void(files))
-      files = find(dirname, glob=searchstr);
-
-   if(is_void(files)) {
-      write, "No files found, aborting.";
-      return;
-   }
-
-   // just so that we have a stable ordering... nice for debugging.
-   files = files(sort(files));
-
-   outfiles = file_rootname(files) + extension;
-   if(!is_void(outdir))
-      outfiles = file_join(outdir, file_tail(outfiles));
-
-   if(update) {
-      exists = file_exists(outfiles);
-      if(anyof(exists)) {
-         exists(where(exists)) = file_size(outfiles(where(exists))) > 0;
-      }
-      if(allof(exists)) {
-         write, "Output files already exist for all input files.";
-         if(verbose)
-            write, format=" - %s\n", file_tail(outfiles);
-         write, "Aborting.";
-         return;
-      }
-      if(anyof(exists) && verbose) {
-         w = where(exists);
-         write, format=" Skipping %d output files that already exist:",
-            numberof(w);
-         write, format=" - %s\n", file_tail(outfiles(w));
-      }
-      w = where(!exists);
-      files = files(w);
-      outfiles = outfiles(w);
-   }
-
-   if(numberof(files) > 1)
-      sizes = file_size(files)(cum)(2:);
-   else
-      sizes = file_size(files);
-   t0 = array(double, 3);
-   timer, t0;
-   for(i = 1; i <= numberof(files); i++) {
-      fn = outfiles(i);
-      data = pbd_load(files(i), err);
-      if(err) {
-         write, format="Skipping due to error: %s\n", err;
-         continue;
-      }
-      if(is_void(data)) {
-         write, "Skipping due to no data";
-         continue;
-      }
-
-      if(buffer >= 0) {
-         npre = numberof(data);
-         data = restrict_data_extent(unref(data), file_tail(fn), buffer=buffer,
-            mode=mode);
-         if(numberof(data)) {
-            write, format="Applied buffer, reduced points from %d to %d\n",
-               npre, numberof(data);
-         } else {
-            write, format="Skipping %s: no data within buffer\n", file_tail(fn);
-            continue;
-         }
-      }
-
-      fzone = zone;
-      if(latlon && !fzone) {
-         fzone = tile2uz(file_tail(fn));
-         if(!fzone)
-            fzone = curzone;
-      }
-
-      write, format="%d/%d: %s\n", i, numberof(files), file_tail(fn);
-      write_ascii_xyz, unref(data), fn, mode=mode,
-         intensity_mode=intensity_mode, ESRI=ESRI, header=header,
-         footer=footer, delimit=delimit, indx=indx, intensity=intensity, rn=rn,
-         soe=soe, zclip=zclip, latlon=latlon, split=split, zone=fzone,
-         chunk=chunk, clean=clean, verbose=0;
-
-      timer_remaining, t0, sizes(i), sizes(0);
-   }
-   timer_finished, t0;
-}
-
-func batch_convert_ascii2pbd(dirname, pstruc, outdir=, ss=, update=, vprefix=,
-vsuffix=, delimit=, ESRI=, header=, intensity=, rn=, soe=, indx=, mapping=,
-columns=, types=, preset=) {
-/* DOCUMENT batch_convert_ascii2pbd, dirname, pstruc, outdir=, ss=, update=,
-   vprefix=, vsuffix=, delimit=, ESRI=, header=, intensity=, rn=, soe=, indx=,
-   mapping=, columns=, types=, preset=
-
-   Batch converts ascii xyz files back into pbd files.
-
-   The variable name (vname) for the created pbd files will be determined based
-   on the file name by following this sequence of rules:
-      - If the filename contains a parseable tile name, then that is used. (The
-        short form for data tiles, the qq-prefixed form of quarter quads.)
-      - Otherwise, the filename minus its extension is used.
-
-   Required parameters:
-
-      dirname: The directory to search in for the ascii xyz files.
-      pstruc: The structure to convert the data into.
-
-   Options:
-
-      outdir= If specified, all output files go here. Otherwise, they get
-         created alongside the xyz files.
-      ss= The search string that specifies which files to convert. Defaults to
-         *.xyz.
-      update= If set to 1, then existing pbd files will get skipped (good for
-         resuming a previously interrupted conversion).
-      vprefix= A prefix to apply to all vnames.
-      vsuffix= A suffix to apply to all vnames.
-
-   Options that are passed as-is to read_ascii_xyz. You *probably* won't need
-   these options if the file was created with write_ascii_xyz, but you *will*
-   need them for any custom format data. For usage information, please see the
-   (extensive) documentation for read_ascii_xyz.
-
-      preset=
-      delimit=
-      ESRI=
-      header=
-      intensity=
-      rn=
-      soe=
-      indx=
-      mapping=
-      columns=
-      types=
-*/
-// Original David Nagle 2009-08-24
-
-   default, outdir, string(0);
-   default, ss, "*.xyz";
-   default, update, 0;
-   default, vprefix, string(0);
-   default, vsuffix, string(0);
-
-   fn_all = find(dirname, glob=ss);
-
-   if(!numberof(fn_all)) {
-      write, "No files found.";
-      return;
-   }
-
-   for (i=1; i<=numberof(fn_all); i++) {
-      fn_tail = file_tail(fn_all(i));
-      fn_path = file_dirname(fn_all(i));
-      out_tail = file_rootname(fn_tail) + ".pbd";
-      out_path = strlen(outdir) ? outdir : fn_path;
-      fix_dir, out_path;
-
-      if(update && file_exists(out_path + out_tail)) {
-         write, format="%d: Skipping %s: output file already exists\n", i, fn_tail;
-         continue;
-      }
-
-      write, format="Converting file %d of %d\n", i, numberof(fn_all);
-      data = read_ascii_xyz(fn_all(i), pstruc, delimit=delimit, header=header,
-         ESRI=ESRI, intensity=intensity, rn=rn, soe=soe, indx=indx,
-         mapping=mapping, columns=columns, types=types, preset=preset);
-
-      if(numberof(data)) {
-         vname = extract_tile(fn_tail, dtlength="short", qqprefix=1);
-         if(!vname) vname = file_rootname(fn_tail);
-         vname = vprefix + vname + vsuffix;
-         if(regmatch("^[0-9]", vname)) vname = "v" + vname;
-
-         pbd_save, out_path + out_tail, vname, data;
-      }
-   }
 }
 
 func batch_test_rcf(dir, mode, datum=, testpbd=, testedf=, buf=, w=, no_rcf=, re_rcf=) {

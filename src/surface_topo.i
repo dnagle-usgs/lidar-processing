@@ -30,21 +30,6 @@ require, "scanflatmirror2_direct_vector.i";
 
 */
 
- 
-struct R {
- long rn(120);       // contains raster # and pulse number in msb
- long mnorth(120);       // mirror northing
- long meast(120);        // mirror east
- long melevation(120);   // mirror elevation
- long north(120);        // surface north
- long east(120);         // surface east
- long elevation(120);    // surface elevation (m)
- short intensity(120);	 // surface return intensity
- short fs_rtn_centroid(120);  // surface return centroid location within the waveform
- double soe(120);
-};
-
-
 func winsel(junk) {
 /* DOCUMENT q = winsel()
    Select a section from a gga map with the mouse, and this will return
@@ -503,87 +488,4 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
     return fs_all;
  } else write, "No good returns found"
 
-}
-
-func write_topo(opath, ofname, fs_all, type=) {
-
-//this function writes a binary file containing georeferenced topo data.
-// amar nayegandhi 03/29/02.
-fn = opath+ofname;
-
-/* open file to read/write (it will overwrite any previous file with same name) */
-f = open(fn, "w+b");
-i86_primitives, f;
-
-nwpr = long(9);
-
-if (is_void(type)) {
-   if (fs_all.soe(1) == 0) {
-      type = 3;
-      nwpr = long(8);
-   } else {
-      type = 101;
-   }
-}
-
-rec = array(long, 4);
-/* the first word in the file will define the endian system. */
-rec(1) = 0x0000ffff;
-/* the second word defines the type of output file */
-rec(2) = type;
-/* the third word defines the number of words in each record */
-rec(3) = nwpr;
-/* the fourth word will eventually contain the total number of records.  We don't know the value just now, so will wait till the end. */
-rec(4) = 0;
-
-a = structof(fs_all);
-_write, f, 0, rec;
-
-write, format="Writing first surface data of type %d\n",type
-
-byt_pos = 16; /* 4bytes , 4words  for header position*/
-num_rec = 0;
-
-
-/* now look through the geodepth array of structures and write out only valid points */
-len = numberof(fs_all);
-
-for (i=1;i<len;i++) {
-  indx = where(fs_all(i).north !=  0);   
-  num_valid = numberof(indx);
-  for (j=1;j<=num_valid;j++) {
-     //if (a == R) {
-     _write, f, byt_pos, fs_all(i).rn(indx(j));
-     //} else {
-     //_write, f, byt_pos, fs_all(i).rn(indx(j));
-     //}
-     
-     byt_pos = byt_pos + 4;
-     _write, f, byt_pos, fs_all(i).mnorth(indx(j));
-     byt_pos = byt_pos + 4;
-     _write, f, byt_pos, fs_all(i).meast(indx(j));
-     byt_pos = byt_pos + 4;
-     _write, f, byt_pos, fs_all(i).melevation(indx(j));
-     byt_pos = byt_pos + 4;
-     _write, f, byt_pos, fs_all(i).north(indx(j));
-     byt_pos = byt_pos + 4;
-     _write, f, byt_pos, fs_all(i).east(indx(j));
-     byt_pos = byt_pos + 4;
-     _write, f, byt_pos, fs_all(i).elevation(indx(j));
-     byt_pos = byt_pos + 4;
-     _write, f, byt_pos, fs_all(i).intensity(indx(j));
-     byt_pos = byt_pos + 2;
-     if (type = 101) {
-       _write, f, byt_pos, fs_all(i).soe(indx(j));
-       byt_pos = byt_pos + 8;
-     }
-     if ((i%1000)==0) write, format="%d of %d\r", i, len;
-  }
-  num_rec = num_rec + num_valid;
-}
-
-/* now we can write the number of records in the 3rd element of the header array */
-_write, f, 12, num_rec;
-
-close, f;
 }

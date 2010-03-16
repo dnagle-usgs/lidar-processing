@@ -19,13 +19,13 @@ proc ::l1pro::file::prefix {} {
 
 proc ::l1pro::file::load_pbd {} {
    set fn [tk_getOpenFile -parent .l1wid -filetypes {
-      {{Yorick PBD files} {.pbd}}
+      {{Yorick PBD files} {.pbd .pdb}}
+      {{IDL binary files} {.bin .edf}}
       {{All files} {*}}
    }]
 
    if {$fn ne ""} {
-      exp_send "restore_alps_pbd, \"$fn\";\r"
-      expect "> "
+      exp_send "restore_alps_data, \"$fn\";\r"
    }
 }
 
@@ -33,27 +33,21 @@ proc ::l1pro::file::save_pbd {} {
    set vname $::pro_var
    set fn [tk_getSaveFile -parent .l1wid \
       -title "Select destination to save $vname" \
-      -filetypes {{"PBD files" .pbd} {"All files" *}}]
+      -filetypes {
+         {"PBD files" {.pbd .pdb}}
+         {"IDL binary files" {.bin .edf}}
+         {"All files" *}
+      }]
 
    if {$fn ne ""} {
-      exp_send "pbd_save, \"$fn\", \"$vname\", $vname;\r"
-      expect "> "
-   }
-}
+      set ext [file extension $fn]
+      set ext [string tolower $ext]
 
-proc ::l1pro::file::load_bin {} {
-   set fn [tk_getOpenFile -parent .l1wid -filetypes {
-      {{IDL binary files} {.bin .edf}}
-      {{All files} {*}}
-   }]
-
-   if {$fn ne ""} {
-      set path [file dirname $fn]/
-      set file [file tail $fn]
-      exp_send "data_ptr = read_yfile(\"$path\", fname_arr=\"$file\");\r"
-      expect "> "
-      exp_send "read_pointer_yfile, data_ptr, mode=1;\r"
-      expect "> "
+      if {$ext eq ".edf" || $ext eq ".bin"} {
+         exp_send "edf_export, \"$fn\", $vname;\r"
+      } else {
+         exp_send "pbd_save, \"$fn\", \"$vname\", $vname;\r"
+      }
    }
 }
 
@@ -147,140 +141,6 @@ snit::widget ::l1pro::file::gui::save_pbd_as {
 
       exp_send "pbd_save, \"$filename\", \"$vname\", $vdata;\r"
       expect "> "
-
-      destroy $self
-   }
-
-   method cancel {} {
-      destroy $self
-   }
-}
-
-proc ::l1pro::file::save_bin {} {
-   if {[winfo exists .l1wid]} {
-      set prefix .l1wid.
-   } else {
-      set prefix .
-   }
-   ::l1pro::file::gui::save_bin ${prefix}%AUTO%
-}
-
-snit::widget ::l1pro::file::gui::save_bin {
-   hulltype toplevel
-   delegate option * to hull
-   delegate method * to hull
-
-   variable filename {}
-   variable vdata {}
-   variable dtype {}
-
-   constructor args {
-      wm title $win "Save ALPS data to binary file (edf/bin)..."
-      wm resizable $win 1 0
-
-      ttk::frame $win.f1
-      ttk::frame $win.f2
-
-      ttk::label $win.lblFile -text "Destination: "
-      ttk::entry $win.entFile -state readonly -width 40 \
-         -textvariable [myvar filename]
-      ttk::button $win.btnFile -text "Browse..." \
-         -command [mymethod select_file]
-
-      ttk::label $win.lblData -text "Data variable: "
-      misc::combobox $win.cboData \
-         -textvariable [myvar vdata] \
-         -listvariable ::varlist
-
-      ttk::label $win.lblType -text "Data type: "
-      misc::combobox $win.cboType \
-         -state readonly \
-         -values {topo bathy veg multipeak_veg} \
-         -textvariable [myvar dtype]
-
-      ttk::button $win.btnSave -text "Save" \
-         -command [mymethod save]
-      ttk::button $win.btnCancel -text "Cancel" \
-         -command [mymethod cancel]
-
-      grid $win.f1 -sticky news
-      grid columnconfigure $win 0 -weight 1
-      grid rowconfigure $win 0 -weight 1
-
-      grid $win.lblFile $win.entFile $win.btnFile -in $win.f1 -padx 1 -pady 1
-      grid $win.lblData $win.cboData -in $win.f1 -padx 1 -pady 1
-      grid $win.lblType $win.cboType -in $win.f1 -padx 1 -pady 1
-      grid $win.f2 - - -in $win.f1
-
-      grid $win.lblFile $win.lblData $win.lblType -sticky e
-      grid $win.entFile $win.btnFile $win.cboData $win.cboType $win.f2 \
-         -sticky ew
-
-      grid x $win.btnSave $win.btnCancel -in $win.f2 -sticky e -padx 1 -pady 1
-
-      grid columnconfigure $win.f1 1 -weight 1
-      grid columnconfigure $win.f2 {0 3} -weight 1
-      grid rowconfigure $win.f1 10 -weight 1
-
-      set vdata $::pro_var
-
-      switch -- [processing_mode] {
-         0 {set dtype topo}
-         1 {set dtype bathy}
-         2 {set dtype veg}
-         3 {set dtype multipeak_veg}
-         default {set dtype topo}
-      }
-
-      $self configurelist $args
-   }
-
-   method select_file {} {
-      if {$filename eq ""} {
-         set base $::data_file_path
-      } else {
-         set base [file dirname $filename]
-      }
-
-      set temp [tk_getSaveFile -initialdir $base \
-         -parent $win -title "Select destination" \
-         -filetypes {{"Binary files" {.bin .edf}} {"All files" *}}]
-
-      if {$temp ne ""} {
-         set filename $temp
-      }
-   }
-
-   method save {} {
-      if {$filename eq ""} {
-         $self select_file
-      }
-
-      if {$filename eq ""} {
-         return
-      }
-
-      set dir [file dirname $filename]/
-      set tail [file tail $filename]
-
-      switch -- $dtype {
-         topo {
-            exp_send "write_topo, \"$dir\", \"$tail\", $vdata;\r"
-            expect "> "
-         }
-         bathy {
-            exp_send "write_bathy, \"$dir\", \"$tail\", $vdata;\r"
-            expect "> "
-         }
-         veg {
-            exp_send "write_veg, \"$dir\", \"$tail\", $vdata;\r"
-            expect "> "
-         }
-         multipeak_veg {
-            exp_send "write_multipeak_veg, $vdata, opath=\"$dir\", ofname=\"$tail\";\r"
-            expect "> "
-         }
-      }
 
       destroy $self
    }
@@ -386,12 +246,11 @@ snit::widget ::l1pro::file::gui::load_pbd_as {
          return
       }
 
-      set cmd "restore_alps_pbd, \"$filename\", vname=\"$vname\""
+      set cmd "restore_alps_data, \"$filename\", vname=\"$vname\""
       if {$skip > 1} {
          append cmd ", skip=$skip"
       }
       exp_send "$cmd;\r"
-      expect "> "
 
       destroy $self
    }

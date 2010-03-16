@@ -19,8 +19,6 @@ require, "ll2utm.i"
 
 */
 
-
-
 func load {
 fn = rdline(prompt="Enter file: ");
 fn
@@ -83,12 +81,6 @@ write,"Type    load   to load the data"
 range_bias = -6.0;
  scan_bias =  0.0;
  roll_bias = -1.45;
-
-struct R {
- double north(120);
- double east(120);
- float  elevation(120);
-};
 
 func pz(i, j, step=, xpause=) {
 extern a, rrr

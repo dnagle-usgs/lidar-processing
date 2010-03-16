@@ -1,16 +1,3 @@
-
-struct LFP_VEG {
- long north;
- long east;
- pointer rx;
- pointer npixels; // this is the number of 1ns returns  in each vertical bin
- pointer elevation;
- long npix; // this is the number of returns in the composite footprint
-}
-
- 
-
-
 func energy_HOME(veg, rn, p=, bin=, plot=, thresh=, pse=) {
 /*DOCUMENT energy_bin(rn,p,bin=).
   amar nayegandhi 02/24/04
@@ -2028,5 +2015,3 @@ for (i=1;i<=numberof(arr(1,));i++) {
 close, wf;
 
 }
-
-

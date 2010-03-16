@@ -1,3 +1,9 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-03-16. These functions are not in   *
+* use any longer as use of yfile-style binary files is now primarily for IDL   *
+* compatibility and data is in UTM now by default.                             *
+\******************************************************************************/
+
 func fl1utm2ll(l1_path, l1_file, zone, opath=, ofname=) {
   /* DOCUMENT fl1utm2ll(l1_path, l1_file, zone) 
      this function converts a level 1 file from utm to latlon.  It writes out the file in the same format as the l1 file.  It just replaces the northings with the latitude and eastings with the longitude.  The lat and lon are in microdegrees.

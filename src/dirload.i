@@ -50,11 +50,13 @@ filter=, verbose=) {
          Examples:
             searchstr="*.pbd"       All pbd files (default)
             searchstr="*fs*.pbd"    All first surface files
+            searchstr="*.edf"       All edf files
 
       files= Specifies an array of file names to load and merge. If provided,
          then the dir parameter and the searchstr option are ignored.
 
-      filter=
+      filter= Advanced option. Used for specifying a filter configuration. See
+         source code for details.
 
       verbose= Specifies how chatty the function should be. Possible options:
             verbose=0   Complete silence, unless errors encountered
@@ -87,7 +89,11 @@ filter=, verbose=) {
    // the same one.
    eaarl_struct = [];
    for(i = 1; i <= numberof(files); i++) {
-      temp = pbd_load(files(i));
+      ext = strlower(file_extension(files(i)));
+      if(anyof(ext == [".bin", ".edf"]))
+         temp = edf_import(files(i));
+      else
+         temp = pbd_load(files(i));
       if(!is_void(temp)) {
          eaarl_struct = structof(temp);
          break;
@@ -117,7 +123,12 @@ filter=, verbose=) {
       if(verbose)
          timer_tick, tstamp, i, numberof(files);
 
-      temp = pbd_load(files(i), err);
+      ext = strlower(file_extension(files(i)));
+      err = "";
+      if(anyof(ext == [".bin", ".edf"]))
+         temp = edf_import(files(i));
+      else
+         temp = pbd_load(files(i), err);
 
       if(is_void(temp)) {
          if(verbose)
