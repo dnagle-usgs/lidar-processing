@@ -144,7 +144,7 @@ itcl::body SegmentedDataWindow::constructor {args} {
       set _segment($idx,var) $segment
       set _segment($idx,use) 1
       set _segment($idx,time) "..."
-      set _segment($idx,win) 0
+      set _segment($idx,win) 5
 
       checkbutton $f.chk$idx \
          -variable [itcl::scope _segment($idx,use)]
