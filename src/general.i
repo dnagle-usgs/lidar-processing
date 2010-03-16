@@ -282,6 +282,44 @@ func pbd_append(file, vname, data, uniq=) {
    pbd_save, file, vname, data;
 }
 
+func sanitize_vname(&vname) {
+/* DOCUMENT sanitized = sanitize_vname(vname)
+   -or-  sanitize_vname, vname
+
+   Sanitizes a string so that it can serve as a valid Yorick variable name.
+   Variable names in Yorick must match this regular express to be valid:
+      [A-Za-z_][A-Za-z0-9_]*
+
+   Two steps are taken to sanitize the variable name:
+      1. If vname starts with a number, it is prefixed by "v".
+      2. Each series of invalid characters in vname are replaced by a single
+         underscore.
+
+   Examples:
+      > sanitize_vname("abc")
+      "abc"
+      > sanitize_vname("123")
+      "v123"
+      > sanitize_vname("abc123")
+      "abc123"
+      > sanitize_vname("e123_n4567_12_fs_mf.pbd")
+      "e123_n4567_12_fs_mf_pbd"
+      > sanitize_vname("abc~!...123////&abc")
+      "abc_123_abc"
+      > sanitize_vname("Hello, world!")
+      "Hello_world_"
+*/
+// Original David Nagle 2010-03-13
+   ovname = (vname);
+   if(regmatch("^[0-9]", ovname))
+      ovname = "v" + ovname;
+   ovname = regsub("[^A-Za-z0-9_]+", ovname, "_", all=1);
+   if(am_subroutine())
+      vname = ovname;
+   else
+      return ovname;
+}
+
 func pbd_save(file, vname, data) {
 /* DOCUMENT pbd_save, file, vname, data
    This creates the pbd "file" using variable name "vname" to store "data". If
@@ -290,12 +328,8 @@ func pbd_save(file, vname, data) {
    See also: pbd_append pbd_load
 */
 // Original David Nagle 2009-12-28
-   // Sanitize vname
-   if(regmatch("^[0-9]", vname))
-      vname = "v" + vname;
-   vname = regsub(" ", vname, "_", all=1);
-   vname = regsub("-", vname, "_", all=1);
-
+   default, vname, file_rootname(file_tail(file));
+   sanitize_vname, vname;
    f = createb(file, i86_primitives);
    add_variable, f, -1, vname, structof(data), dimsof(data);
    get_member(f, vname) = data;
@@ -761,3 +795,35 @@ func splitary(ary, num, &a1, &a2, &a3, &a4, &a5, &a6) {
       a6 = ary(..,6);
    return ary;
 }
+
+func bytes2text(bytes) {
+/* DOCUMENT bytes2text(bytes)
+   Converts a value in bytes to a textified representation in bytes, KB, MB, or
+   GB. Works on scalars and arrays.
+*/
+   dims = dimsof(bytes);
+   bytes = long(reform(bytes, numberof(bytes)));
+   result = array(string, numberof(bytes));
+   zero = !bytes;
+   if(anyof(zero)) {
+      result(where(zero)) = "0 bytes";
+      bytes(where(zero)) = 1;
+   }
+   mag = log(bytes)/log(1024);
+   mag = ymedian(transpose([0, 3, long(floor(mag-0.01))]));
+   low = !result & mag == 0;
+   if(anyof(low))
+      result(where(low)) = swrite(format="%d bytes", bytes(where(low)));
+   remaining = !result;
+   if(anyof(remaining)) {
+      w = where(remaining);
+      fbytes = bytes(w) / (1024.^mag(w));
+      suffix = ["KB", "MB", "GB"](mag(w));
+      result(w) = swrite(format="%.2f %s", fbytes, suffix);
+   }
+   if(dims(1) == 0)
+      return result(1);
+   else
+      return reform(result, dims);
+}
+
