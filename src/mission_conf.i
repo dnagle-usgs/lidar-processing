@@ -129,7 +129,7 @@ if(is_void(__mission_settings))
         "use cache", 1,
         "ytk", 0,
         "relative paths", ["data_path", "edb file", "pnav file", "ins file",
-            "ops_conf file", "cir dir", "rgb dir", "rgb file"]
+            "ops_conf file", "bath_ctl file", "cir dir", "rgb dir", "rgb file"]
     );
 
 func mission_clear(void, sync=) {
@@ -482,6 +482,7 @@ func missiondata_wrap(type) {
         pnav
         ins
         ops_conf
+        bath_ctl
 */
     if(is_void(type)) {
         error, "No type was provided.";
@@ -491,7 +492,8 @@ func missiondata_wrap(type) {
             "edb", missiondata_wrap("edb"),
             "pnav", missiondata_wrap("pnav"),
             "ins", missiondata_wrap("ins"),
-            "ops_conf", missiondata_wrap("ops_conf")
+            "ops_conf", missiondata_wrap("ops_conf"),
+            "bath_ctl", missiondata_wrap("bath_ctl")
         );
     } else if(type == "edb") {
         extern edb, edb_filename, edb_files, total_edb_records,
@@ -516,7 +518,6 @@ func missiondata_wrap(type) {
         );
     } else if(type == "ins") {
         extern iex_nav, iex_head, tans;
-        // ops_conf ?
         return h_new(
             "__type", "ins",
             "iex_nav", iex_nav,
@@ -528,6 +529,12 @@ func missiondata_wrap(type) {
         return h_new(
             "__type", "ops_conf",
             "ops_conf", ops_conf
+        );
+    } else if(type == "bath_ctl") {
+        extern bath_ctl;
+        return h_new(
+            "__type", "bath_ctl",
+            "bath_ctl", bath_ctl
         );
     } else {
         error, swrite(format="Unknown type provided: %s", type);
@@ -549,6 +556,7 @@ func missiondata_unwrap(data) {
         missiondata_unwrap, data.pnav;
         missiondata_unwrap, data.ins;
         missiondata_unwrap, data.ops_conf;
+        missiondata_unwrap, data.bath_ctl;
     } else if(type == "edb") {
         extern edb, edb_filename, edb_files, total_edb_records,
             soe_day_start, eaarl_time_offset, data_path;
@@ -568,13 +576,15 @@ func missiondata_unwrap(data) {
         pnav_filename = data.pnav_filename;
     } else if(type == "ins") {
         extern iex_nav, iex_head, tans;
-        // ops_conf ?
         iex_nav = data.iex_nav;
         iex_head = data.iex_head;
         tans = data.tans;
     } else if(type == "ops_conf") {
         extern ops_conf;
         ops_conf = data.ops_conf;
+    } else if(type == "bath_ctl") {
+        extern bath_ctl;
+        bath_ctl = data.bath_ctl;
     } else {
         error, swrite(format="Unknown type provided: %s", type);
     }
@@ -590,6 +600,7 @@ func missiondata_load(type, day=, noerror=) {
         pnav
         ins
         ops_conf
+        bath_ctl
 */
     extern __mission_conf, __mission_day, __mission_cache, __mission_settings;
     default, day, __mission_day;
@@ -603,6 +614,7 @@ func missiondata_load(type, day=, noerror=) {
         missiondata_load, "pnav", day=day, noerror=1;
         missiondata_load, "ins", day=day, noerror=1;
         missiondata_load, "ops_conf", day=day, noerror=1;
+        missiondata_load, "bath_ctl", day=day, noerror=1;
         return;
     }
 
@@ -695,6 +707,25 @@ func missiondata_load(type, day=, noerror=) {
             ops_conf = [];
         } else {
             error, "Could not load ops_conf: no ops_conf file defined";
+        }
+    } else if(type == "bath_ctl") {
+        if(cache_enabled && h_has(cache, "bath_ctl")) {
+            missiondata_unwrap, cache("bath_ctl");
+        } else if(mission_has("bath_ctl file", day=day)) {
+            extern bath_ctl;
+            tkcmd, swrite(format="::bathctl::load_file {%s}",
+                mission_get("bath_ctl file", day=day)), async=0;
+            if(cache_enabled) {
+                // pause briefly just to make sure Yorick has time to process
+                // the updates Tcl gives it in the background
+                pause, 10;
+                h_set, cache, "bath_ctl", missiondata_wrap("bath_ctl");
+            }
+        } else if(noerror) {
+            extern bath_ctl;
+            bath_ctl = [];
+        } else {
+            error, "Could not load bath_ctl: no bath_ctl file defined";
         }
     } else {
         error, swrite(format="Unknown type provided: %s", type);
