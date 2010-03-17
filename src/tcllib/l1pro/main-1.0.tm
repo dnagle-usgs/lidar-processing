@@ -23,7 +23,7 @@ proc ::l1pro::main::panel_tools w {
    ttk::button $f.rcf -text " RCF " -width 0 \
       -command ::l1pro::tools::rcf::gui
    ttk::button $f.datum -text " Datum \n Convert " -width 0 \
-      -command ::datum_proc
+      -command ::l1pro::tools::datum::gui
    ttk::button $f.elvclip -text " Elevation \n Clipper " -width 0 \
       -command ::l1pro::tools::histclip::gui
    ttk::button $f.griddata -text " Grid " -width 0 \

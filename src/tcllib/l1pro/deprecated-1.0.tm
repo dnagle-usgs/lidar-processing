@@ -1152,3 +1152,35 @@ proc ::l1pro::deprecated::rcf_region {} {
       pack forget .rcf.5 .rcf.6
    }
 }
+
+proc ::l1pro::deprecated::datum_proc {} {
+    global varlist datum_var pro_var
+    destroy .con
+    toplevel .con
+
+    wm title .con "Convert data from w84 to n88..."
+
+    frame .con.05
+
+    Label .con.05.varname -text "Input Variable:"
+
+    ::misc::combobox .con.05.varlist \
+      -textvariable ::datum_var -state readonly \
+      -listvariable ::varlist
+    set datum_var $pro_var
+
+    Label .con.02 -text "The converted variable is named\
+      n88_(currentvariablename)"
+    Button .con.1 -width 8 -text "Go" \
+      -command {
+        set convar "n88_$datum_var"
+
+        exp_send "$convar = datum_convert_data($datum_var);\r"
+        expect ">"
+
+        append_varlist $convar
+      }
+
+    pack .con.05.varname .con.05.varlist -side left -padx 5
+    pack .con.05 .con.02 .con.1  -side top -pady 10
+}

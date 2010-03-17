@@ -774,3 +774,118 @@ proc ::l1pro::tools::griddata::griddata {} {
    append_varlist $v::outvar
    destroy $v::top
 }
+
+if {![namespace exists ::l1pro::tools::datum]} {
+   namespace eval ::l1pro::tools::datum {
+      namespace import ::l1pro::tools::appendif
+      namespace eval v {
+         variable top .l1wid.datumconvert
+         variable invar {}
+         variable indatum w84
+         variable ingeoid 03
+         variable outvar {}
+         variable outdatum n88
+         variable outgeoid 09
+         variable datumlist {w84 n83 n88}
+         variable geoidlist {}
+      }
+      set geoidroot [yget alpsrc.geoid_data_root]
+      set geoids [glob -nocomplain -tails -directory $geoidroot -- GEOID*]
+      foreach geoid [lsort -dictionary $geoids] {
+         lappend v::geoidlist [string range $geoid 5 end]
+      }
+      unset geoidroot
+      unset geoids
+      unset geoid
+   }
+}
+
+proc ::l1pro::tools::datum::guess_name {vname src dst} {
+   if {[regsub -- "_$src\$" $vname "_$dst" vname]} {
+      return $vname
+   }
+   if {[regsub -- "_${src}_" $vname "_${dst}_" vname]} {
+      return $vname
+   }
+   if {[regsub -- "^${src}_" $vname "${dst}_" vname]} {
+      return $vname
+   }
+   return "${dst}_$vname"
+}
+
+proc ::l1pro::tools::datum::gui {} {
+   set v::invar $::pro_var
+   set v::outvar [guess_name $v::invar $v::indatum $v::outdatum]
+
+   set w $v::top
+   destroy $w
+   toplevel $w
+   wm resizable $w 1 0
+   wm title $w "Datum Conversion"
+
+   ttk::frame $w.f
+   grid $w.f -sticky news
+   grid columnconfigure $w 0 -weight 1
+   grid rowconfigure $w 0 -weight 1
+
+   set f $w.f
+
+   ttk::label $f.inlbl -text "Input:"
+   ttk::label $f.outlbl -text "Output:"
+
+   ::misc::combobox $f.invar \
+      -state readonly -width [expr {[string length $v::invar]+2}] \
+      -textvariable [namespace which -variable v::invar] \
+      -listvariable ::varlist
+
+   ttk::entry $f.outvar \
+      -width [expr {[string length $v::outvar]+2}] \
+      -textvariable [namespace which -variable v::outvar]
+
+   foreach kind {in out} {
+      ::misc::combobox $f.${kind}datum \
+         -state readonly -width 4 \
+         -textvariable [namespace which -variable v::${kind}datum] \
+         -listvariable [namespace which -variable v::datumlist]
+      ::misc::combobox $f.${kind}geoid \
+         -state readonly -width 4 \
+         -textvariable [namespace which -variable v::${kind}geoid] \
+         -listvariable [namespace which -variable v::geoidlist]
+      ::misc::statevar $f.${kind}geoid \
+         -statemap {w84 disabled n83 disabled n88 readonly} \
+         -statevariable [namespace which -variable v::${kind}datum]
+      grid $f.${kind}lbl $f.${kind}var $f.${kind}datum $f.${kind}geoid \
+         -sticky ew -padx 2 -pady 2
+   }
+
+   ttk::frame $f.btns
+   ttk::button $f.convert -text "Convert" \
+      -command [namespace which -command convert]
+   ttk::button $f.dismiss -text "Dismiss" \
+      -command [list destroy $w]
+   grid x $f.convert $f.dismiss x -in $f.btns -sticky ew -padx 2
+   grid columnconfigure $f.btns {0 3} -weight 1
+
+   grid $f.btns - - - -sticky ew -pady 2
+   grid columnconfigure $f 1 -weight 1
+}
+
+proc ::l1pro::tools::datum::convert {} {
+   set cmd "$v::outvar = datum_convert_data($v::invar"
+
+   appendif cmd \
+      {$v::indatum ne "w84"}  ", src_datum=\"$v::indatum\"" \
+      {
+         $v::indatum eq "n88" && $v::ingeoid ne "03"
+      }                       ", src_geoid=\"$v::ingeoid\"" \
+      {$v::outdatum ne "n88"} ", dst_datum=\"$v::outdatum\"" \
+      {
+         $v::outdatum eq "n88" && $v::outgeoid ne "09"
+      }                       ", dst_geoid=\"$v::outgeoid\"" \
+      1                       ")"
+
+   exp_send "$cmd\r"
+
+   append_varlist $v::outvar
+   destroy $v::top
+}
