@@ -41,10 +41,23 @@ func getsod(void) {
 
    Returns the current SOD based on Yorick's timestamp() function.
 
+   SEE ALSO: timestamp, parsedate, getsoe
    See also:
       timestamp parsedate
 */
    return (parsedate(timestamp())(4:6)*[3600,60,1])(sum);
+}
+
+func getsoe(void) {
+/* DOCUMENT getsoe()
+
+   Returns the current SOE based on Yorick's timestamp() function.
+
+   SEE ALSO: timestamp, getsod
+*/
+   soe = [];
+   timestamp, soe;
+   return soe;
 }
 
 func soe2sod(soe) {
