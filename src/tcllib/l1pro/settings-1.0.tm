@@ -81,3 +81,16 @@ proc ::l1pro::settings::ops_conf::gui {} {
    bind $f <Enter> [namespace which -command gui_refresh]
    bind $f <Visibility> [namespace which -command gui_refresh]
 }
+
+proc ::l1pro::settings::ops_conf::save {} {
+   set fn [tk_getSaveFile -parent .l1wid \
+      -title "Select destination to save current ops_conf settings" \
+      -filetypes {
+         {"Yorick files" .i}
+         {"All files" *}
+      }]
+
+   if {$fn ne ""} {
+      exp_send "write_ops_conf, \"$fn\"\r"
+   }
+}

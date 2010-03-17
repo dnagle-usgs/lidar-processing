@@ -223,6 +223,8 @@ if {![winfo exists .l1wid]} {
   .l1wid.mb.mission add separator
   .l1wid.mb.mission add command -label "Configure ops_conf..." -underline 0 \
     -command ::l1pro::settings::ops_conf::gui
+  .l1wid.mb.mission add command -label "Save ops_conf..." -underline 0 \
+    -command ::l1pro::settings::ops_conf::save
 
   .l1wid.mb add cascade -label Options -underline 0 -menu .l1wid.mb.options
 

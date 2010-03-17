@@ -173,3 +173,29 @@ func display_mission_constants( m, ytk= ) {
   }
 }
 
+func write_ops_conf(fn, conf=) {
+/* DOCUMENT write_ops_conf, fn, conf=
+   -or- write_ops_conf, conf=
+
+   Allows you to write a set of mission constants to file. By default, it will
+   write out the constants in ops_conf; however, you can override that with the
+   conf= option.
+
+   If you provide an argument, it should be the filename to write the conf file
+   to. Otherwise, it will print it to the screen.
+*/
+   extern ops_conf;
+   default, conf, ops_conf;
+
+   ops = swrite(format="%s", print(conf)(sum));
+   if(!regmatch("mission_constants\\((.*)\\)", ops, , params))
+      error, "Invalid ops_conf!";
+   params = strjoin(strsplit(params, ","), ",\n  ");
+
+   f = [];
+   if(is_string(fn))
+      f = open(fn, "w");
+   write, f, format="// Exported from ALPS on %s\n", soe2date(getsoe());
+   write, f, format="ops_conf = mission_constants(\n  %s\n)\n", params;
+   if(f) close, f;
+}
