@@ -22,6 +22,7 @@ package require l1pro::file
 package require l1pro::tools
 package require l1pro::settings
 package require l1pro::drast
+package require l1pro::ascii
 
 if {![winfo exists .l1wid]} {
   set l1pro_data(processing_mode) [list \
@@ -178,6 +179,9 @@ if {![winfo exists .l1wid]} {
 
   .l1wid.mb.file add command -label "Import ASPRS LAS..." \
     -underline 0 -command ::l1pro::file::load_las
+
+  .l1wid.mb.file add command -label "Import ASCII..." \
+    -underline 1 -command ::l1pro::ascii::launch
 
   .l1wid.mb.file add command -label "Export ASCII..." \
     -underline 1 -command ::l1pro::file::export_ascii

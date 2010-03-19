@@ -340,10 +340,204 @@ func __read_ascii_xyz_store(&data, field, val) {
    get_member(data, field) = val;
 }
 
+func __read_ascii_xyz_autodetect(file, delimit, &columns, &indx, &intensity, &rn, &soe, &header, &ESRI) {
+   if(!is_void(columns) || !is_void(indx) || !is_void(intensity))
+      return;
+   if(!is_void(rn) || !is_void(soe) || !is_void(header) || !is_void(ESRI))
+      return;
+
+   f = open(file, "r");
+   line = rdline(f, 1)(1);
+   close, f;
+   fields = strsplit(line, delimit);
+
+   // Check for text field headers
+   if(numberof(set_intersection(fields, h_keys(mapping))) > 1) {
+      columns = fields;
+      header = 1;
+   } else {
+      // If there's no headers, then attempt to guess
+      cols = numberof(fields);
+      columns = [];
+      idx = 4;
+      // First column is either id or easting. Easting has a decimal
+      // point. Thus, lack of decimal means it's the id.
+      if(idx <= cols && !strglob("*.*", fields(1))) {
+         grow, columns, "id";
+         idx++;
+      }
+      // We always have east, north, and elevation
+      grow, columns, ["utm_x", "utm_y", "z_meters"];
+      // The rn and soe are both going to always be more than 65k,
+      // whereas intensity is always less than 65k.
+      if(idx <= cols && atoi(fields(idx)) < 65536) {
+         grow, columns, "intensity_counts";
+         idx++;
+      }
+      // The rn is a long, the soe is a double. Thus, we can diffentiate
+      // by checking for a decimal point.
+      if(idx <= cols && !strglob("*.*", fields(idx))) {
+         grow, columns, "raster_pulse";
+         idx++;
+      }
+      if(idx <= cols && strglob("*.*", fields(idx))) {
+         grow, columns, "soe";
+         idx++;
+      }
+      idx--;
+      // If the number of columns we thought we auto detected doesn't
+      // match the number of columns present, then we can't trust our
+      // auto detection.
+      if(idx != cols) {
+         columns = [];
+      } else {
+         header = 0;
+      }
+      cols = idx = [];
+   }
+}
+
+func read_ascii_xyz_default_mapping(nil) {
+/* DOCUMENT mapping = read_ascii_xyz_default_mapping()
+
+   Creates the default mapping used by read_ascii_xyz. If you wish to provide a
+   custom mapping, then you will need to match the format used by this
+   function's return result. You may even wish to use the return result as a
+   base for your custom format. Details are provided further below.
+
+   For details on what mappings are provided, run this command:
+      h_show, read_ascii_xyz_default_mapping()
+
+   A mapping is a Yeti hash. Its keys are labels that can be used in the
+   columns= option for read_ascii_xyz. Each key maps to one of two kinds of
+   values. If it maps to a string, then the key is an alias for another key as
+   specified by the string. If it maps to a Yeti hash, then the hash defines
+   how read_ascii_xyz should handle that kind of column. Such a hash should
+   have type= and dest= keys and may optionally have a fnc= key.
+
+      type= This corresponds to the type= option of rdcols and tells rdcols how
+         to interpret the text for that field.
+         Valid values:
+            type=0 -- guess
+            type=1 -- string
+            type=2 -- integer
+            type=3 -- real
+            type=4 -- integer or real
+
+      dest= This is an array of strings. Each string is the name of a structure
+         field where this column should get written to. (If the structure
+         doesn't have a given field, then that field is ignored.)
+
+      fnc= Specifies a function to use to store the data. This is optional; if
+         not provided, it is stored as is. If your data needs custom treatment
+         (for example, converting meters to centimeters), you'll need to
+         provide a storage function. The function must accept three arguments:
+         data, field, and val. The data argument must also be an output
+         argument that modifies the data in-place. The field argument is the
+         string name of the field to be stored to (so... get_member(data,
+         field)). And the val argument is the array of data to be stored
+         (subject to custom alteration). There are a few predefined functions
+         for this:
+            __read_ascii_xyz_hhmmss2soe __read_ascii_xyz_yyyymmdd2soe
+            __read_ascii_xyz_m2cm __read_ascii_xyz_store
+
+   SEE ALSO: read_ascii_xyz
+*/
+   mapping = h_new();
+
+   // Generic "fill everything" fields
+   h_set, mapping, "east",
+      h_new(type=3, dest=["east","meast","least"], fnc=__read_ascii_xyz_m2cm);
+   h_set, mapping, "north",
+      h_new(type=3, dest=["north","mnorth","lnorth"], fnc=__read_ascii_xyz_m2cm);
+   h_set, mapping, "elevation",
+      h_new(type=3, dest=["elevation","melevation","lelv"],
+         fnc=__read_ascii_xyz_m2cm);
+   h_set, mapping, "intensity",
+      h_new(type=2, dest=["intensity","first_peak","fint","bottom_peak","lint"]);
+
+   // first return
+   h_set, mapping, "east (first)",
+      h_new(type=3, dest=["east"], fnc=__read_ascii_xyz_m2cm);
+   h_set, mapping, "north (first)",
+      h_new(type=3, dest=["north"], fnc=__read_ascii_xyz_m2cm);
+   h_set, mapping, "elevation (first)",
+      h_new(type=3, dest=["elevation"], fnc=__read_ascii_xyz_m2cm);
+   h_set, mapping, "intensity (first)",
+      h_new(type=2, dest=["intensity","first_peak","fint"]);
+
+   // last return
+   h_set, mapping, "east (last)",
+      h_new(type=3, dest=["least"], fnc=__read_ascii_xyz_m2cm);
+   h_set, mapping, "north (last)",
+      h_new(type=3, dest=["lnorth"], fnc=__read_ascii_xyz_m2cm);
+   h_set, mapping, "elevation (last)",
+      h_new(type=3, dest=["lelv"], fnc=__read_ascii_xyz_m2cm);
+   h_set, mapping, "intensity (last)",
+      h_new(type=2, dest=["bottom_peak","lint"]);
+
+   // mirror
+   h_set, mapping, "east (mirror)",
+      h_new(type=3, dest=["meast"], fnc=__read_ascii_xyz_m2cm);
+   h_set, mapping, "north (mirror)",
+      h_new(type=3, dest=["mnorth"], fnc=__read_ascii_xyz_m2cm);
+   h_set, mapping, "elevation (mirror)",
+      h_new(type=3, dest=["melevation"], fnc=__read_ascii_xyz_m2cm);
+
+   // time fields
+   h_set, mapping, "soe",
+      h_new(type=3, dest=["soe"]);
+   h_set, mapping, "hhmmss",
+      h_new(type=1, dest=["soe"], fnc=__read_ascii_xyz_hhmmss2soe);
+   h_set, mapping, "yyyymmdd",
+      h_new(type=1, dest=["soe"], fnc=__read_ascii_xyz_yyyymmdd2soe);
+
+   // other fields
+   h_set, mapping, "depth",
+      h_new(type=3, dest=["depth"], fnc=__read_ascii_xyz_m2cm);
+   h_set, mapping, "raster/pulse",
+      h_new(type=2, dest=["rn"]);
+   h_set, mapping, "first_peak",
+      h_new(type=2, dest=["first_peak"]);
+   h_set, mapping, "bottom_peak",
+      h_new(type=2, dest=["bottom_peak"]);
+   h_set, mapping, "fint",
+      h_new(type=2, dest=["fint"]);
+   h_set, mapping, "lint",
+      h_new(type=2, dest=["lint"]);
+
+   // aliases
+   h_set, mapping,
+      "utm_x", "east",
+      "UTMX(m)", "east",
+      "utm_y", "north",
+      "UTMY(m)", "north",
+      "z_meters", "elevation",
+      "cZ(m)", "elevation",
+      "elev", "elevation",
+      "intensity_counts", "intensity",
+      "Intensity(counts)", "intensity",
+      "raster_pulse", "raster/pulse",
+      "Raster/Pulse", "raster/pulse",
+      "rn", "raster/pulse",
+      "least", "east (last)",
+      "lnorth", "north (last)",
+      "lelv", "elevation (last)",
+      "meast", "east (mirror)",
+      "mnorth", "north (mirror)",
+      "melevation", "elevation (mirror)",
+      "SOE", "soe",
+      "hh:mm:ss", "hhmmss",
+      "yyyy-mm-dd", "yyyymmdd",
+      "yyyy/mm/dd", "yyyymmdd";
+
+   return mapping;
+}
+
 func read_ascii_xyz(file, pstruc, delimit=, header=, ESRI=, intensity=, rn=,
-soe=, indx=, columns=, mapping=, types=, preset=) {
+soe=, indx=, columns=, mapping=, types=, preset=, latlon=) {
 /* DOCUMENT data = read_ascii_xyz(file, pstruc, header=, delimit=, ESRI=,
-   intensity=, rn=, soe=, indx=, mapping=, columns=, types=, preset=)
+   intensity=, rn=, soe=, indx=, mapping=, columns=, types=, preset=, latlon=)
 
    Reads an ASCII file and stores its data in the specified structure. This
    function is optimized to read files created with write_ascii_xyz but has
@@ -363,6 +557,10 @@ soe=, indx=, columns=, mapping=, types=, preset=) {
          doubles.
 
    Options:
+
+      latlon= By default, coordinates are assumed to be UTM. Use latlon=1 if
+         your coordinates are in latitude/longitude; they will then get
+         converted to UTM.
 
       preset= Select a set of custom settings tailored to a specific XYZ
          format. Using preset= will turn off auto-detect mode (described
@@ -421,7 +619,12 @@ soe=, indx=, columns=, mapping=, types=, preset=) {
       options to further override the function's behavior.
 
       mapping= Used to provide a custom mapping of ascii columns to structure
-         fields. This overrides the built-in mapping.
+         fields. By default, this will use the mapping returned by
+         read_ascii_xyz_default_mapping. The ability to override mapping= is
+         provided primarily as a "just in case" capability; users will probably
+         never need to use it as everything that might be needed should be
+         provided in the default mapping already. If you do want to use this
+         option, refer to the documentation for read_ascii_xyz_default_mapping.
       types= Used to override the type expected when reading in the file. This
          should almost never be used, as it's accounted for in mapping. (Note:
          This is NOT the same as the type= parameter in write_ascii_xyz.)
@@ -548,42 +751,6 @@ soe=, indx=, columns=, mapping=, types=, preset=) {
 
       Note that we used an empty string to ignore the column with the return
       number, since the FS structure does not have a field for this.
-
-   The advanced mapping= option
-      
-      The mapping= option is primarily a "just in case" option. It isn't
-      expected to actually be used, since the default mapping is supposed to
-      cover everything a user may need. However, just in case...
-   
-      The mapping= option accepts a Yeti hash. The keys to that hash should match
-      the column names. The value of each entry is another hash with the following
-      keys:
-
-      type= This corresponds to the type= option of rdcols and tells rdcols how
-         to interpret the text for that field.
-         Valid values:
-            type=0 -- guess
-            type=1 -- string
-            type=2 -- integer
-            type=3 -- real
-            type=4 -- integer or real
-
-      dest= This is an array of strings. Each string is the name of a structure
-         field where this column should get written to. (If the structure
-         doesn't have a given field, then that field is ignored.)
-
-      fnc= Specifies a function to use to store the data. This is optional; if
-         not provided, it is stored as is. If your data needs custom treatment
-         (for example, converting meters to centimeters), you'll need to
-         provide a storage function. The function must accept three arguments:
-         data, field, and val. The data argument must also be an output
-         argument that modifies the data in-place. The field argument is the
-         string name of the field to be stored to (so... get_member(data,
-         field)). And the val argument is the array of data to be stored
-         (subject to custom alteration). There are a few predefined functions
-         for this:
-            __read_ascii_xyz_hhmmss2soe __read_ascii_xyz_yyyymmdd2soe
-            __read_ascii_xyz_m2cm __read_ascii_xyz_store
 */
 // Original: David Nagle 2009-08-24
    if(!is_void(preset)) {
@@ -612,143 +779,37 @@ soe=, indx=, columns=, mapping=, types=, preset=) {
       indx = 1;
    }
 
-   if(is_void(mapping)) {
-      // If you want to pass the mapping= option, then you'll need to create a
-      // Yeti hash that contains information similar to the following.
-      mapping = h_new();
-      // Field definitions
-      // id/Index has no destination in the struct, so it's omitted
-      h_set, mapping, "utm_x",
-         h_new(type=3, dest=["east","meast","least"], fnc=__read_ascii_xyz_m2cm);
-      h_set, mapping, "utm_y",
-         h_new(type=3, dest=["north","mnorth","lnorth"], fnc=__read_ascii_xyz_m2cm);
-      h_set, mapping, "z_meters",
-         h_new(type=3, dest=["elevation","lelv","melevation"],
-            fnc=__read_ascii_xyz_m2cm);
-      h_set, mapping, "intensity_counts",
-         h_new(type=2, dest=["intensity","first_peak","fint","bottom_peak","lint"]);
-      h_set, mapping, "raster_pulse",
-         h_new(type=2, dest=["rn"]);
-      h_set, mapping, "soe",
-         h_new(type=3, dest=["soe"]);
-      h_set, mapping, "hhmmss",
-         h_new(type=1, dest=["soe"], fnc=__read_ascii_xyz_hhmmss2soe);
-      h_set, mapping, "yyyymmdd",
-         h_new(type=1, dest=["soe"], fnc=__read_ascii_xyz_yyyymmdd2soe);
-      h_set, mapping, "feast",
-         h_new(type=3, dest=["east"], fnc=__read_ascii_xyz_m2cm);
-      h_set, mapping, "fnorth",
-         h_new(type=3, dest=["north"], fnc=__read_ascii_xyz_m2cm);
-      h_set, mapping, "felevation",
-         h_new(type=3, dest=["elevation"], fnc=__read_ascii_xyz_m2cm);
-      h_set, mapping, "least",
-         h_new(type=3, dest=["least"], fnc=__read_ascii_xyz_m2cm);
-      h_set, mapping, "lnorth",
-         h_new(type=3, dest=["lnorth"], fnc=__read_ascii_xyz_m2cm);
-      h_set, mapping, "lelv",
-         h_new(type=3, dest=["lelv"], fnc=__read_ascii_xyz_m2cm);
-      h_set, mapping, "depth",
-         h_new(type=3, dest=["depth"], fnc=__read_ascii_xyz_m2cm);
-      h_set, mapping, "meast",
-         h_new(type=3, dest=["meast"], fnc=__read_ascii_xyz_m2cm);
-      h_set, mapping, "mnorth",
-         h_new(type=3, dest=["mnorth"], fnc=__read_ascii_xyz_m2cm);
-      h_set, mapping, "melevation",
-         h_new(type=3, dest=["melevation"], fnc=__read_ascii_xyz_m2cm);
-      h_set, mapping, "first_peak",
-         h_new(type=2, dest=["first_peak"]);
-      h_set, mapping, "bottom_peak",
-         h_new(type=2, dest=["bottom_peak"]);
-      h_set, mapping, "fint",
-         h_new(type=2, dest=["fint"]);
-      h_set, mapping, "lint",
-         h_new(type=2, dest=["lint"]);
-      // Equivalencies for ESRI
-      h_set, mapping, "UTMX(m)", mapping("utm_x");
-      h_set, mapping, "UTMY(m)", mapping("utm_y");
-      h_set, mapping, "cZ(m)", mapping("z_meters");
-      h_set, mapping, "Intensity(counts)", mapping("intensity_counts");
-      h_set, mapping, "Raster/Pulse", mapping("raster_pulse");
-      h_set, mapping, "SOE", mapping("soe");
-      // Equivalencies for user-friendliness
-      h_set, mapping, "intensity", mapping("intensity_counts");
-      h_set, mapping, "rn", mapping("raster_pulse");
-      h_set, mapping, "east", mapping("utm_x");
-      h_set, mapping, "north", mapping("utm_y");
-      h_set, mapping, "elev", mapping("z_meters");
-      h_set, mapping, "elevation", mapping("z_meters");
-      h_set, mapping, "hh:mm:ss", mapping("hhmmss");
-      h_set, mapping, "yyyy-mm-dd", mapping("yyyymmdd");
-      h_set, mapping, "yyyy/mm/dd", mapping("yyyymmdd");
-   }
+   if(is_void(mapping))
+      mapping = read_ascii_xyz_default_mapping();
 
    // If none of these were specified, then we should try to auto-detect
-   if(
-      is_void(columns) && is_void(indx) && is_void(intensity) && is_void(rn) &&
-      is_void(soe) && is_void(header) && is_void(ESRI)
-   ) {
-      f = open(file, "r");
-      line = rdline(f, 1)(1);
-      close, f;
-      fields = strsplit(line, delimit);
+   __read_ascii_xyz_autodetect, file, delimit, columns, indx, intensity, rn,
+      soe, header, ESRI;
 
-      // Check for text field headers. The first field is always id or easting.
-      if(anyof(fields(1) == ["id","Index","utm_x","UTMX(m)"])) {
-         columns = fields;
-         header = 1;
-      } else {
-         // If there's no headers, then attempt to guess
-         cols = numberof(fields);
-         columns = [];
-         idx = 4;
-         // First column is either id or easting. Easting has a decimal
-         // point. Thus, lack of decimal means it's the id.
-         if(idx <= cols && !strglob("*.*", fields(1))) {
-            grow, columns, "id";
-            idx++;
-         }
-         // We always have east, north, and elevation
-         grow, columns, ["utm_x", "utm_y", "z_meters"];
-         // The rn and soe are both going to always be more than 65k,
-         // whereas intensity is always less than 65k.
-         if(idx <= cols && atoi(fields(idx)) < 65536) {
-            grow, columns, "intensity_counts";
-            idx++;
-         }
-         // The rn is a long, the soe is a double. Thus, we can diffentiate
-         // by checking for a decimal point.
-         if(idx <= cols && !strglob("*.*", fields(idx))) {
-            grow, columns, "raster_pulse";
-            idx++;
-         }
-         if(idx <= cols && strglob("*.*", fields(idx))) {
-            grow, columns, "soe";
-            idx++;
-         }
-         idx--;
-         // If the number of columns we thought we auto detected doesn't
-         // match the number of columns present, then we can't trust our
-         // auto detection.
-         if(idx != cols) {
-            columns = [];
-         } else {
-            header = 0;
-         }
-         cols = idx = [];
-      }
-   }
    // If we still don't know the columns, then attempt to re-construct based on
    // options passed.
    if(is_void(columns)) {
-      // idx, intensity, rn, and soe are 0 by default in write_ascii_xyz
-      columns = [];
-      if(indx) grow, columns, "id";
-      grow, columns, ["utm_x", "utm_y", "z_meters"];
-      if(intensity) grow, columns, "intensity_counts";
-      if(rn) grow, columns, "raster_pulse";
-      if(soe) grow, columns, "soe";
+      w = where([long(indx), 1, 1, 1, long(intensity), long(rn), long(soe)]);
+      columns = ["(ignore)", "east", "north", "elevation", "intensity",
+         "raster/pulse", "soe"](w);
    }
 
+   // Now "clean" the column names by replacing aliases. Make up to ten passes;
+   // this should allow for limited chained aliases, but ensure that an
+   // accidental cyclic series of links won't result in infinite looping.
+   flag = 10;
+   while(flag) {
+      oldflag = flag;
+      flag = 0;
+      for(i = 1; i <= numberof(columns); i++) {
+         if(h_has(mapping, columns(i)) && is_string(mapping(columns(i)))) {
+            columns(i) = mapping(columns(i));
+            flag = oldflag - 1;
+         }
+      }
+   }
+
+   // Extract types from mapping
    if(is_void(types)) {
       types = array(0, numberof(columns));
       for(i = 1; i <= numberof(columns); i++) {
@@ -759,6 +820,26 @@ soe=, indx=, columns=, mapping=, types=, preset=) {
 
    nskip = (header ? header : 0);
    cols = rdcols(file, numberof(columns), marker=delimit, type=types, nskip=nskip);
+
+   // If laton=1, we need to convert lat/lon to UTM
+   if(latlon) {
+      w = where(strmatch(columns, "north"));
+      if(numberof(w)) {
+         for(i = 1; i <= numberof(w); i++) {
+            yi = w(i);
+            yf = columns(yi);
+            xf = regsub("north", yf, "east");
+            xi = where(columns == xf);
+            if(numberof(xi) != 1)
+               continue;
+            xi = xi(1);
+            north = east = [];
+            ll2utm, *cols(yi), *cols(xi), north, east;
+            cols(xi) = &east;
+            cols(yi) = &north;
+         }
+      }
+   }
 
    if(is_void(pstruc)) {
       data = array(double, numberof(columns), numberof(*cols(1)));
@@ -950,7 +1031,7 @@ Rewrote David Nagle 2010-03-11
 
 func batch_convert_ascii2pbd(dirname, pstruc, outdir=, ss=, update=, vprefix=,
 vsuffix=, delimit=, ESRI=, header=, intensity=, rn=, soe=, indx=, mapping=,
-columns=, types=, preset=) {
+columns=, types=, preset=, latlon=) {
 /* DOCUMENT batch_convert_ascii2pbd, dirname, pstruc, outdir=, ss=, update=,
    vprefix=, vsuffix=, delimit=, ESRI=, header=, intensity=, rn=, soe=, indx=,
    mapping=, columns=, types=, preset=
@@ -1026,7 +1107,8 @@ columns=, types=, preset=) {
       write, format="Converting file %d of %d\n", i, numberof(fn_all);
       data = read_ascii_xyz(fn_all(i), pstruc, delimit=delimit, header=header,
          ESRI=ESRI, intensity=intensity, rn=rn, soe=soe, indx=indx,
-         mapping=mapping, columns=columns, types=types, preset=preset);
+         mapping=mapping, columns=columns, types=types, preset=preset,
+         latlon=latlon);
 
       if(numberof(data)) {
          vname = extract_tile(fn_tail, dtlength="short", qqprefix=1);
