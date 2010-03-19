@@ -675,6 +675,7 @@ Added server/client support (2009-01) Richard Mitchell
 
    // start the timer
    t0 = array(double, 3);
+   t1 = array(double, 3);
    timer, t0;
    myt0 = t0(3);
    write, format="Start Time: %f\n", t0(3);
