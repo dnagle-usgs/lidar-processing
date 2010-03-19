@@ -1210,6 +1210,7 @@ Input:
 Original amar nayegandhi. Started 12/06/02.
 */
 
+   t0 = t1 = tp = array(double, 3);
    timer, t0;
    extern fn_all, noaa_data, ofn;
 
