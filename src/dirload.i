@@ -180,6 +180,75 @@ filter=, verbose=) {
    return data;
 }
 
+func dircopy(dir, outdir, searchstr=, files=, filter=, verbose=) {
+/* DOCUMENT dircopy, dir, outdir, searchstr=, files=, filter=, verbose=
+   Copies data from one directory to another, maintaining the directory and
+   file structure.
+
+   This function accepts the same kinds of filter= arguments as dirload.
+
+   Parameters:
+      dir: Source directory, to copy from.
+      outdir: Destination directory, to copy to.
+
+   Options:
+      searchstr= A search string to use for locating files to copy. Examples:
+            searchstr="*.pbd"       All pbd files (default)
+            searchstr="*fs*.pbd"    All first surface files
+      files= Specifies an array of file names to copy. If provided, then the
+         dir parameter and the searchstr option are ignored.
+      filter= Advanced option. Used for specifying a filter configuration. See
+         source code for details.
+      verbose= Specifies how chatty the function should be. Possible options:
+            verbose=0   Complete silence, unless errors encountered
+            verbose=1   Provide basic progress information (default)
+
+   Note: Files are copied in append mode, to allow building up a copy over
+   several passes. Duplicate points are eliminated.
+*/
+   // no defaults for: outfile, files; default for outvname established later
+   default, searchstr, "*.pbd";
+   default, verbose, 1;
+   default, filter, h_new();
+
+   // Generate list of input files
+   if(is_void(files))
+      files = find(dir, glob=searchstr);
+
+   // filter file list ...
+   __dirload_apply_filter, files, h_new(), filter, "files";
+
+   if(is_void(files)) {
+      if(verbose)
+         write, "No files found.";
+      return [];
+   }
+
+   local tstamp, data, vname;
+   timer_init, tstamp;
+   for(i = 1; i <= numberof(files); i++) {
+      if(verbose)
+         timer_tick, tstamp, i, numberof(files);
+
+      data = pbd_load(files(i), , vname);
+
+      if(!numberof(data))
+         continue;
+
+      // filter data ...
+      state = h_new(fn=files(i), cur=i, cnt=numberof(files));
+      __dirload_apply_filter, data, state, filter, "data";
+
+      // The filter is allowed to eliminate all data for a file
+      if(!numberof(data))
+         continue;
+
+      outfile = file_join(outdir, file_relative(dir, files(i)));
+      mkdirp, file_dirname(outfile);
+      pbd_append, outfile, vname, data, uniq=1;
+   }
+}
+
 /*** PRIVATE FUNCTIONS FOR dirload ***/
 func __dirload_apply_filter(&input, state, filters, name) {
    if(h_has(filters, name)) {
