@@ -257,6 +257,7 @@ time_rec(FILE *f, int pass) {
    case 1:
      tarray[time_recs].secs = tv.tv_sec + gps_time_offset ;
      tarray[time_recs].usecs = tv.tv_usec;
+
      if  ((((tv.tv_sec + gps_time_offset  ) - bsowe) ) >= (SECS_WEEK-1)) {
 	rv =0;
      } else 
@@ -275,6 +276,7 @@ dmars_rec( FILE *f, FILE *odf, int pass) {
   UI8 xor, lxor;
   DMARS_DATA dmars;
   IEX_RECORD iex;
+  static double osow = 0.0;
   fread( &dmars, sizeof(dmars), 1, idf);
   lxor = fgetc(idf);		// read the xor byte
   switch ( pass ) {
@@ -301,10 +303,17 @@ dmars_rec( FILE *f, FILE *odf, int pass) {
      iex.ax = -dmars.sensor[  AY ];   
      iex.az =  dmars.sensor[  AZ ];   
      iex.sow = (dmars.tspo/200.0 + dmars_2_gps) ;
+
+     if ( osow > iex.sow )
+       printf("TIME REVERSAL: %f : %f\n", iex.sow, osow);
+     else {
+       osow = iex.sow;
+
 if ( cnt++ == 0 )
  fprintf(stderr,"\nFirst dmars sow: %8.3f\n", iex.sow);
      fwrite( &iex, sizeof(iex), 1, odf );
      recs_written++;
+     }
     if ( (++current_rec % 10000) == 0 ) 
        fprintf(stderr,"Processing: %6d of %6d %2.0f%% complete \r", 
          current_rec, 
