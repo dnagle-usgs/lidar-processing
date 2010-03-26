@@ -197,6 +197,11 @@ clean=, verbose=) {
       data = filter_bounded_elv(data, lbound=zclip(1), ubound=zclip(2), mode=mode);
    }
 
+   if (is_void(data)) {
+      write, "No data available within specified bounds. return. ";
+      return
+   }
+
    // Extract xyz and, if necessary, convert to lat/lon
    data2xyz, data, x, y, z, mode=mode;
    if(latlon)
