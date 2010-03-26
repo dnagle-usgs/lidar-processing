@@ -180,7 +180,8 @@ src_geoid=, dst_datum=, dst_geoid=, verbose=) {
       write, "Converting data to lat/lon...";
    else if(verbose)
       write, format="%s", "utm -> lat/lon";
-   utm2ll, north, east, zone, lon, lat;
+   ellip = (is_void(src_datum) || src_datum == "w84") ? "wgs84" : "grs80";
+   utm2ll, north, east, zone, lon, lat, ellipsoid=ellip;
 
    if(verbose == 1)
       write, format="%s", " | ";
@@ -193,7 +194,8 @@ src_geoid=, dst_datum=, dst_geoid=, verbose=) {
       write, "Converting data to UTM...";
    else if(verbose)
       write, format="%s", "lat/lon -> utm";
-   fll2utm, lat, lon, north, east, force_zone=zone;
+   ellip = (!is_void(dst_datum) && dst_datum == "w84") ? "wgs84" : "grs80";
+   ll2utm, lat, lon, north, east, force_zone=zone, ellipsoid=ellip;
 
    if(!am_subroutine())
       return [north, east, elevation];
