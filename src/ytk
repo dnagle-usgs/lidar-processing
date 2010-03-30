@@ -636,11 +636,15 @@ proc y_messageBox {message type title} {
 proc yorick_executable {} {
 ##
 # yorick_executable
-#  Attempts to determine the yorick executable file. It will use the following,
-#  in order of priority:
-#     1. The value of _ytk(yorick_executable), if it exists and is a file.
-#     2. The result of the system call 'which yorick'.
-#     3. A user supplied value (acquired through a GUI prompt).
+#  Attempts to determine the yorick executable file.
+#
+#  In order of priority, tries to use the following:
+#     - value of _ytk(yorick_executable), if set (from .ytkrc)
+#     - ../../bin/yorick
+#     - ../../yorick/bin/yorick
+#     - yorick in path (shell call to "which yorick")
+#     - yorick provided by user when prompted for one
+#     - empty string (which means Ytk will probably exit)
 #
 # Arguments:
 #  None
@@ -648,24 +652,37 @@ proc yorick_executable {} {
 # Returns:
 #  A string representing the path+filename to the Yorick executable. If no
 #  executable is available, an empty string is returned.
-#
-# Side effects:
-#  None
 ##
    global _ytk
-   set yor_ex ""
-   # See if we can determine a Yorick from the system
-   catch {set yor_ex [exec which yorick]}
-   # See if we have a user-configured Yorick; if so, this takes precedence
-   if {
-      [info exists _ytk(yorick_executable)]
-      && [file isfile $_ytk(yorick_executable)]
-   } {
-      set yor_ex $_ytk(yorick_executable)
+
+   # See if there's a Yorick defined.
+   if {[info exists _ytk(yorick_executable)]} {
+      if {[file isfile $_ytk(yorick_executable)]} {
+         return $_ytk(yorick_executable)
+      }
    }
+
+   # If the current path is .../eaarl/lidar-processing/src
+   # Then basedir is .../eaarl
+   set basedir [file dirname [file dirname [app_root_dir]]]
+
+   # Check for .../eaarl/bin/yorick
+   if {[file isfile [file join $basedir bin yorick]]} {
+      return [file join $basedir bin yorick]
+   }
+
+   # Check for .../eaarl/yorick/bin/yorick
+   if {[file isfile [file join $basedir yorick bin yorick]]} {
+      return [file join $basedir yorick bin yorick]
+   }
+
+   # See if we can determine a Yorick from the system
+   set yor_ex ""
+   catch {set yor_ex [exec which yorick]}
+
    set flag yes
-   # If we do not have a valid Yorick, query the user for one until they give
-   # us one or give up.
+   # If "which" did not find a valid Yorick, query the user for one until they
+   # give us one or give up.
    while { ![file exists $yor_ex] && $flag eq "yes" } {
       set flag [tk_messageBox -icon error -type yesno \
          -message "Ytk cannot locate Yorick, which it needs to function. Would you like to manually locate a Yorick? (If you answer no, Ytk will exit.)"]
@@ -674,6 +691,54 @@ proc yorick_executable {} {
       }
    }
    return $yor_ex
+}
+
+proc rlwrap_executable {} {
+##
+# rlwrap_executable
+#  Attempts to determine the rlwrap executable file.
+#
+#  In order of priority, tries to use the following:
+#     - value of _ytk(rlwrap_executable), if set (from .ytkrc)
+#     - ../../bin/rlwrap
+#     - ../../rlwrap/bin/rlwrap
+#     - rlwrap in path (shell call to "which rlwrap")
+#     - empty string
+#
+# Arguments:
+#  None
+#
+# Returns:
+#  A string representing the path+filename to the rlwrap executable. If no
+#  executable is available, an empty string is returned.
+##
+   global _ytk
+
+   # See if we already have one
+   if {[info exists _ytk(rlwrap_executable)]} {
+      if {[file isfile $_ytk(rlwrap_executable)]} {
+         return $_ytk(rlwrap_executable)
+      }
+   }
+
+   # If the current path is .../eaarl/lidar-processing/src
+   # Then basedir is .../eaarl
+   set basedir [file dirname [file dirname [app_root_dir]]]
+
+   # Check for .../eaarl/bin/rlwrap
+   if {[file isfile [file join $basedir bin rlwrap]]} {
+      return [file join $basedir bin rlwrap]
+   }
+
+   # Check for .../eaarl/rlwrap/bin/rlwrap
+   if {[file isfile [file join $basedir rlwrap bin rlwrap]]} {
+      return [file join $basedir rlwrap bin rlwrap]
+   }
+
+   # See if we can determine an rlwrap from the system
+   set rl_ex ""
+   catch {set rl_ex [exec which rlwrap]}
+   return $rl_ex
 }
 
 proc restore_defaults {} {
@@ -693,6 +758,7 @@ proc restore_defaults {} {
    global _ytk
    array unset _ytk *
    set _ytk(yorick_executable)   [yorick_executable]
+   set _ytk(rlwrap_executable)   [rlwrap_executable]
    set _ytk(editor)              vim
    set _ytk(use_rlterm)          No
    set _ytk(use_rlwrap)          Yes
