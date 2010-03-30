@@ -1,0 +1,59 @@
+#!/bin/sh
+# This script attempts to find a suitable Tcl and then starts ALPS using it.
+
+# Use : to separate fields since PATH does
+IFS=:
+
+# These are the valid exectable names for various versions of Tcl that we are
+# willing to use. They are listed in order of priority.
+TCLNAMES="wish8.5:wish:alpstcl:tclsh8.5:tclsh"
+
+# pwd should be something like .../eaarl/lidar-processing/src
+# the root directory for this ALPS is then .../eaarl
+# the binary directory is thus .../eaarl/bin
+# and the Tcl directory is thus .../eaarl/tcl/bin
+
+# Need to use dirname twice to get to .../eaarl
+ROOTDIR=`pwd`
+ROOTDIR=`dirname "$ROOTDIR"`
+ROOTDIR=`dirname "$ROOTDIR"`
+
+BINDIR="$ROOTDIR/bin"
+TCLDIR="$ROOTDIR/tcl/bin"
+
+# Prepend this ALPS's paths to the PATH
+PATH="$BINDIR:$TCLDIR:$PATH"
+
+# Look for Tcl; earlier paths take priority over later paths (which means this
+# ALPS's paths take precedence over the user's path)
+TCL=""
+for DIR in $PATH
+do
+	for NAME in $TCLNAMES
+	do
+		if [ -x "$DIR/$NAME" ]
+		then
+			TCL="$DIR/$NAME"
+			break
+		fi
+	done
+
+	if [ -n "$TCL" ]
+	then
+		break
+	fi
+done
+
+# If we haven't found a TCL, then we're stumped.
+if [ -z "$TCL" ]
+then
+	echo "Unable to locate a suitable tcl executable; cannot continue. Please"
+	echo "install a suitable tcl and make sure it is either in your path or in"
+	echo "the binary directory for this ALPS: $BINDIR"
+	echo
+	echo "Alternately, start ytk using the tcl of your choice directly."
+	exit 1
+fi
+
+# If we make it this far, then we have a Tcl. Start up ALPS.
+exec $TCL ./ytk eaarl.ytk
