@@ -1,0 +1,33 @@
+#!/bin/sh
+
+base=`basename $0`
+
+bdir="/data/6"
+tstamp=".tstamp"
+
+# this will send email to $dir, make sure that
+# you have an alias to match on lidar.net in
+# /etc/mail/virtusertable
+
+output=/tmp/$base.$$
+dir=`echo $base | sed 's/check_//'`
+
+# echo $output
+# echo $dir
+
+cd $bdir
+
+# if $tstamp doesn't exist, we'll create it
+# at the beginning of time and find all files
+# created since then.
+
+if [ ! -f $dir/$tstamp ]; then
+  touch -t 197001010000 $dir/$tstamp
+fi
+
+find $dir -type f -newer $dir/$tstamp > $output
+if [ -s $output ]; then
+  touch $dir/$tstamp
+  (echo "Here are the new files:"; cat $output) | mail -s "New Files in $bdir/$dir" $dir
+fi
+rm $output
