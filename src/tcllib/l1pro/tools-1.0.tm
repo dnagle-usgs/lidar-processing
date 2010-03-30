@@ -796,7 +796,8 @@ if {![namespace exists ::l1pro::tools::datum]} {
       }
       unset geoidroot
       unset geoids
-      unset geoid
+      # catch needed in case there were no geoids
+      catch {unset geoid}
    }
 }
 
