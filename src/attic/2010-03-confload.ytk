@@ -1,3 +1,9 @@
+################################################################################
+# This file was moved to the attic on 2010-03-30. The file provides a GUI used #
+# solely for the functionality in confload.i, which was also moved to the      #
+# attic. See 2010-03-confload.i for details.                                   #
+################################################################################
+
 global path conflist
 
 proc write_conf { } {
