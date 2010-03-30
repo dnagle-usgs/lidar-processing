@@ -518,7 +518,8 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
 // show progress of jobs completed.
 func show_progress(color=) {
    default, color, "red";
-   system, "./show_tiles.pl -rm /tmp/batch/done > /tmp/batch/.tiles";
+   system, swrite(format="'%s' -rm /tmp/batch/done > /tmp/batch/.tiles",
+      file_join(alpsrc.batcher_dir, "show_tiles.pl"));
    f = open("/tmp/batch/.tiles");
 
    col1= col2= col3= col4= array(0, 1000 /* max rows per column */ );
@@ -541,8 +542,8 @@ func show_progress(color=) {
 
 // Check space in batch area
 func check_space(wmark=, dir=) {
-   cmd = swrite(format="./waiter.pl -noloop %d %s > /tmp/batch/.space", wmark, dir );
-   system, cmd;
+   system, swrite(format="'%s' -noloop %d '%s' > /tmp/batch/.space",
+      file_join(alpsrc.batcher_dir, "waiter.pl"), wmark, dir);
    f = open("/tmp/batch/.space");
 
    space= fc= array(0, 1 /* max rows per column */ );
@@ -957,7 +958,8 @@ Added server/client support (2009-01) Richard Mitchell
                show_progress, color="green";
 
                // make sure we have space before creating more files
-               system, "./waiter.pl 250000 /tmp/batch/jobs"
+               system, swrite(format="'%s' 25000 /tmp/batch/jobs",
+                  file_join(alpsrc.batcher_dir, "waiter.pl"));
                package_tile(q=q, r=r, typ=typ, min_e=min_e(i), max_e=max_e(i), min_n=min_n(i), max_n=max_n(i) )
             } else {
                uber_process_tile(q=q, r=r, typ=typ, min_e=min_e(i), max_e=max_e(i), min_n=min_n(i), max_n=max_n(i), host=host )
@@ -1093,7 +1095,8 @@ write,format="For      : %s\n", ss;
    // loop to generate batch jobs
    for ( i=1; i<=n; ++i ) {
       // make sure we have space
-      system, "./waiter.pl 25000 /tmp/batch/jobs"
+      system, swrite(format="'%s' 25000 /tmp/batch/jobs",
+         file_join(alpsrc.batcher_dir, "waiter.pl"));
       package_rcf, dn_all(i);
       show_progress, color="green";
    }

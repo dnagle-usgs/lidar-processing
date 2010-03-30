@@ -59,10 +59,26 @@ func __alpsrc_load_and_merge(&hash, fn) {
    }
 }
 
-__alpsrc_defaults = h_new(
-   "geoid_data_root", file_join(get_cwd(), ".."),
-   "maps_dir", file_join(get_cwd(), "..", "maps"),
-   "l1pro_startup", 1
-);
+func __alpsrc_set_defaults(&hash) {
+/* DOCUMENT __alpsrc_set_defaults, hash;
+   Sets the initial defaults for __alpsrc_defaults.
+*/
+   default, hash, h_new();
+   h_set, hash, batcher_dir=file_join(get_cwd(), "..", "batcher");
+   h_set, hash, l1pro_startup=1;
+   // Newer installations keep data files in a share directory
+   // If the src directory is .../eaarl/lidar-processing/src
+   // Then the share directory is .../eaarl/share
+   sharedir = file_join(get_cwd(), "..", "..", "share");
+   if(file_isdir(sharedir)) {
+      h_set, hash, geoid_data_root=file_join(sharedir, "NAVD88");
+      h_set, hash, maps_dir=file_join(sharedir, "maps");
+   // Old installations keep everything under lidar-processing
+   } else {
+      h_set, hash, geoid_data_root=file_join(get_cwd(), "..");
+      h_set, hash, maps_dir=file_join(get_cwd(), "..", "maps");
+   }
+}
 
+__alpsrc_set_defaults, __alpsrc_defaults;
 alpsrc_load;
