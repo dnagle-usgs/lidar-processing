@@ -268,7 +268,8 @@ func tk_sdw_define_region_variables(obj, ..) {
    _tk_swd_region = [];
 
    avail_min = edb.seconds(min);
-   avail_max = edb.seconds(max);
+   // Add one to max because edb seconds are truncated to integers
+   avail_max = edb.seconds(max) + 1;
 
    multi_flag = 0;
 
