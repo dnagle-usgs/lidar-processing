@@ -552,7 +552,7 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=, clean=) {
       return;
    }
 
-   tails = file_tail(files(i));
+   tails = file_tail(files);
 
    // Attempt to extract datum information from filename
    fn_datum = fn_geoid = part1 = part2 = [];
