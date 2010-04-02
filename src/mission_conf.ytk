@@ -301,6 +301,7 @@ namespace eval mission {
     namespace eval v {
         variable toplevel .mission_conf
         variable dateframe ""
+        variable kmlmenu ""
         variable filetypes [list \
             [list JSON .json] \
             [list "All files" *] \
@@ -355,7 +356,10 @@ namespace eval mission {
         $mb.act add command -label "Launch CIR" -command [@ menu_launch_cir]
         $mb.act add command -label "Dump CIR" -command [@ menu_dump_cir]
         $mb.act add separator
-        $mb.act add command -label "Generate KMZ" -command [@ menu_gen_kmz]
+        menu $mb.act.kml
+        set v::kmlmenu $mb.act.kml
+        $mb.act add cascade -label "Generate KMZ" -menu $mb.act.kml
+        $mb.act.kml add command -label "Full mission" -command [@ menu_gen_kmz]
         $mb.act add command -label "Show EDB summary" -command [@ menu_edb_summary]
 
         menu $mb.cache
@@ -511,14 +515,21 @@ namespace eval mission {
         }
     }
 
-    proc menu_gen_kmz {} {
+    proc menu_gen_kmz {{date {}}} {
         set response [tk_messageBox -type yesno \
             -icon question -title "Generate KMZ files?" \
             -message "Would you like to generate KMZ files for the current\
                 mission configuration? Your KMZ files will be placed in a 'kml'\
                 subdirectory of the mission."]
         if {$response eq "yes"} {
-            exp_send "kml_mission;\r"
+            if {$date eq ""} {
+                exp_send "kml_mission;\r"
+            } else {
+                date_load $date
+                set kml [file join [mission_path] kml ${date}.kmz]
+                exp_send "kml_pnav, pnav, \"$kml\", edb=edb,\
+                    soe_day_start=soe_day_start, ins_header=iex_head;\r"
+            }
         }
     }
 
@@ -528,8 +539,12 @@ namespace eval mission {
 
     proc update_gui {args} {
         set f $v::dateframe
+        set mb $v::kmlmenu
         foreach w [winfo children $f] {
             destroy $w
+        }
+        if {[$mb index end] > 0} {
+            $mb delete 1 end
         }
         curry @ namespace code
         foreach date [missionday_list] {
@@ -552,6 +567,8 @@ namespace eval mission {
             grid $f.lbl$date $f.btnConfig$date $f.btnLoad$date \
                 $f.btnRgb$date $f.btnCir$date $f.btnDelete$date
             grid $f.lbl$date -sticky w
+
+            $mb add command -label $date -command [@ [list menu_gen_kmz $date]]
         }
         uncurry @
     }
