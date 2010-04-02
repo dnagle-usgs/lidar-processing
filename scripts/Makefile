@@ -1,6 +1,6 @@
 SHELL = /bin/sh
 
-prefix = ..
+prefix = ../..
 bindir = $(prefix)/bin
 
 ROOTPATH = $(shell pwd)

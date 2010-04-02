@@ -1,7 +1,7 @@
 #   Original Makefile by W. Wright 7/21/2002
 
 SHELL = /bin/sh
-prefix = ..
+prefix = ../..
 bindir = $(prefix)/bin
 
 var:
