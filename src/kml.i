@@ -335,10 +335,11 @@ func kml_mission(void, conf_file=, outdir=, name=, keepkml=, webdest=) {
    masters = files = links = weblinks = [];
 
    for(i = 1; i <= numberof(days); i++) {
+      pause, 1;
       write, format="\n----------\nProcessing %s\n", days(i);
       edb_file = mission_get("edb file", day=days(i));
       edb = soe_day_start = [];
-      if(!is_void(edb_file)) {
+      if(!is_void(edb_file) && file_exists(edb_file)) {
          f = edb_open(edb_file, verbose=0);
          edb = (f.records);
          close, f;
@@ -402,8 +403,9 @@ func kml_mission(void, conf_file=, outdir=, name=, keepkml=, webdest=) {
 }
 
 func kml_pnav(input, output, name=, edb=, soe_day_start=, ins_header=,
-webdest=) {
-/* DOCUMENT kml_pnav, input, output, name=, edb=, soe_day_start=
+webdest=, keepkml=) {
+/* DOCUMENT kml_pnav, input, output, name=, edb=, soe_day_start=, ins_header,
+   keepkml=, webdest=
    Creates KML/KMZ files for a PNAV file.
 
    Parameters:
@@ -419,14 +421,22 @@ webdest=) {
          without extension.
       edb= An array of edb data to use.
       soe_day_start= The soe_day_start value associated with that edb data.
+      ins_header= The header data from the INS file.
+      keepkml= Specifies whether the .kml files should be kept after the .kmz
+         has been created.
+            keepkml=0      default when output ends with .kmz
+            keepkml=1      default when output ends with .kml
       webdest= The destination directory on the web. Do not use directly; this
-         is used by batch_mission_kml.
+         is used by batch_mission_kml. This option also forces keepkml=1.
 
    Returns a array of the .kml files created. The first item is the main .kml,
    which was used a doc.kml inside the created .kmz.
 */
    local fn;
    default, name, file_rootname(file_tail(output));
+   default, keepkml, (file_extension(output) == ".kml");
+   if(!is_void(webdest))
+      keepkml = 1;
    pnav = typeof(input) == "string" ? load_pnav(fn=input, verbose=0) : input;
 
    if(file_extension(output) == ".kmz")
@@ -434,6 +444,7 @@ webdest=) {
 
    region = kml_pnav_region(pnav);
    outdir = file_dirname(output);
+   mkdirp, outdir;
 
    // FLIGHTLINE
    color = kml_randomcolor();
@@ -604,6 +615,12 @@ webdest=) {
       );
       kml_save, file_rootname(output)+"-web.kml", webflightline, supplemental,
          name=name;
+   }
+
+   if(!keepkml) {
+      for(i = 1; i <= numberof(files); i++)
+         remove, files(i);
+      remove, output;
    }
 
    return grow(output, files);
@@ -1029,10 +1046,13 @@ func kmz_create(dest, files, ..) {
       rmvdoc = 1;
    }
 
+   listing = dest + ".listing";
+
    cmd = [];
    exe = popen_rdfile("which zip");
    if(numberof(exe)) {
-      cmd = swrite(format="'%s' -X -9 '%%s' '%%s'", exe(1));
+      cmd = swrite(format="cd '%s' && cat '%s' | '%s' -X -9 -@ '%s'; rm -f '%s'",
+         file_dirname(dest), listing, exe(1), file_tail(dest), listing);
    } else {
       error, "Unable to zip command.";
    }
@@ -1044,11 +1064,17 @@ func kmz_create(dest, files, ..) {
 
    cwd = get_cwd();
    cd, file_dirname(dest);
-   dest = file_tail(dest);
 
+   // Write out the list of files
+   f = open(listing, "w");
+   write, f, format="%s\n", files;
+   close, f;
 
-   for(i = 1; i <= numberof(files); i++)
-      system, swrite(format=cmd, dest, files(i));
+   system, cmd;
+
+   // In case we're using sysafe, which runs async
+   while(file_exists(listing))
+      pause, 1;
 
    if(rmvdoc)
       remove, files(1);
