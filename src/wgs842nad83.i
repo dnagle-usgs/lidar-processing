@@ -55,9 +55,14 @@ local __helmert;
       d - scale factor in ppm
 */
 __helmert = h_new(
-   "wgs84 nad83", h_new(
+   "wgs84 nad83 wrong", h_new(
       rx = 0.0275, ry = 0.0101, rz = 0.0114,
       tx = 0.9738, ty = -1.9453, tz = -0.5486,
+      d = 0.0
+   ),
+   "wgs84 nad83 right", h_new(
+      rx = 0.0275, ry = 0.0101, rz = 0.0114,
+      tx = -0.9738, ty = 1.9453, tz = 0.5486,
       d = 0.0
    )
 );
@@ -72,10 +77,35 @@ for(i = 1; i <= numberof(k); i++) {
    );
    po = []
    kn = strsplit(k(i), " ");
-   h_set, __helmert, kn(2) + " " + kn(1), pn;
+   kn([1,2]) = kn([2,1]);
+   kn(:-1) += " ";
+   h_set, __helmert, kn(sum), pn;
    kn = pn = [];
 }
 k = i = [];
+
+func nad83_helmert_select(which) {
+/* DOCUMENT nad83_helmert_select, "right"
+   -or- nad83_helmert_select, "wrong"
+
+   Specifies which set of Helmert transformation parameters should be used when
+   converting between WGS-84 and NAD-83.
+
+   Historically, ALPS data has used the parameters associated with "wrong". At
+   present, "wrong" is the default.
+
+   However, recent evidence suggests that the parameters for "right" are
+   actually correct.
+
+   The difference between right and wrong is simply a matter of flipped signs
+   on three parameters.
+*/
+   if(is_void(which) || noneof(which == ["right", "wrong"]))
+      error, "Must specify \"right\" or \"wrong\".";
+   h_set, __helmert, "wgs84 nad83", __helmert("wgs84 nad83 " + which);
+   h_set, __helmert, "nad83 wgs84", __helmert("nad83 wgs84 " + which);
+}
+nad83_helmert_select, "wrong";
 
 func helmert_transformation(&X, &Y, &Z, transform) {
 /* DOCUMENT helmert_transformation, X, Y, Z, transform
