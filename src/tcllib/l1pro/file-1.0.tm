@@ -280,29 +280,11 @@ snit::widget ::l1pro::file::gui::export_ascii {
    variable ESRI 0
    variable limit 0
    variable split 1000000
-   variable ttype ""
+   variable mode ""
 
    constructor args {
       set vname $::pro_var
-
-      set dtype [display_type]
-      switch -- [processing_mode] {
-         0 {
-            set ttype "First surface"
-         }
-         1 {
-            set ttype [expr {$dtype ? "Bathymetry" : "First surface"}]
-         }
-         2 {
-            set ttype [expr {$dtype ? "Bare earth" : "First surface"}]
-         }
-         3 {
-            set ttype "Multi-peak veg"
-         }
-         default {
-            set ttype "First surface"
-         }
-      }
+      set mode [display_type_mode]
 
       wm title $win "Export as ASCII..."
       wm resizable $win 1 0
@@ -321,16 +303,18 @@ snit::widget ::l1pro::file::gui::export_ascii {
          -state readonly \
          -listvariable ::varlist
 
-      ttk::label $win.lblType -text "Data type: "
-      misc::combobox $win.cboType \
-         -textvariable [myvar ttype] \
+      ttk::label $win.lblType -text "Data mode: "
+      misc::combobox::mapping $win.cboType \
+         -altvariable [myvar mode] \
          -state readonly \
-         -values {
-            "First surface"
-            "Bathymetry"
-            "Bare earth"
-            "Depth"
-            "Multi-peak veg"
+         -mapping {
+            "First Return Topography"  fs
+            "Submerged Topography"     ba
+            "Water Depth"              de
+            "Bare Earth Topography"    be
+            "Surface Amplitude"        fint
+            "Bottom Amplitude"         lint
+            "Canopy Height"            ch
          }
 
       ttk::checkbutton $win.chkIndx -text "Index number" \
@@ -417,15 +401,12 @@ snit::widget ::l1pro::file::gui::export_ascii {
          return
       }
 
-      set dir [file dirname $filename]/
-      set tail [file tail $filename]
-
-      set ::data_path $dir
+      set ::data_path [file dirname $filename]
 
       set latlon [expr {$coordinates eq "Geographic (lat/lon)"}]
       set delimit [dict get {space " " comma , semicolon ;} $delimiter]
 
-      set cmd "write_ascii_xyz, $vname, \"$dir\", \"$tail\""
+      set cmd "write_ascii_xyz, $vname, \"$filename\""
       append cmd ", delimit=\"$delimit\""
 
       foreach setting {header indx rn soe intensity ESRI latlon} {
@@ -438,11 +419,7 @@ snit::widget ::l1pro::file::gui::export_ascii {
          append cmd ", split=$split"
       }
 
-      set type [dict get {
-         "First surface" 1 "Bathymetry" 2 "Bare earth" 3
-         "Depth" 4 "Multi-peak veg" 6
-      } $ttype]
-      append cmd ", type=$type"
+      append cmd ", mode=$mode"
 
       exp_send "$cmd;\r"
       expect "> "
