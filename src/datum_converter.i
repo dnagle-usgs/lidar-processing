@@ -154,15 +154,15 @@ src_geoid=, dst_datum=, dst_geoid=, verbose=) {
 /* DOCUMENT datum_convert_utm(north, east, elevation, zone=, src_datum=,
    src_geoid=, dst_datum=, dst_geoid=)
 
-   Datum converts the northing, easting, and elevation values given. If called
-   as a subroutine, they are updated in place; otherwise they are returned as
-   [north, east, elevation].
+   Datum converts the northing, easting, and elevation values given. Values are
+   updated in place.
 
    All options are the same as is documented in datum_convert_data.
 
    See also: datum_convert_data, datum_convert_geo
 */
    extern curzone;
+   local lat, lon;
    default, verbose, 2;
    if(is_void(zone)) {
       if(curzone) {
@@ -173,8 +173,6 @@ src_geoid=, dst_datum=, dst_geoid=, verbose=) {
          return;
       }
    }
-
-   local lon, lat;
 
    if(verbose > 1)
       write, "Converting data to lat/lon...";
@@ -196,9 +194,6 @@ src_geoid=, dst_datum=, dst_geoid=, verbose=) {
       write, format="%s", "lat/lon -> utm";
    ellip = (!is_void(dst_datum) && dst_datum == "w84") ? "wgs84" : "grs80";
    ll2utm, lat, lon, north, east, force_zone=zone, ellipsoid=ellip;
-
-   if(!am_subroutine())
-      return [north, east, elevation];
 }
 
 func datum_convert_geo(&lon, &lat, &height, src_datum=, src_geoid=, dst_datum=,
@@ -206,9 +201,8 @@ dst_geoid=, verbose=) {
 /* DOCUMENT datum_convert_geo(lon, lat, height, src_datum=, src_geoid=,
    dst_datum=, dst_geoid=)
 
-   Datum converts the longitude, latitude, and height values given. If called
-   as a subroutine, they are updated in place; otherwise they are returned as
-   [lon, lat, height].
+   Datum converts the longitude, latitude, and height values given. The values
+   are updated in place.
 
    All options are the same as is documented in datum_convert_data.
 
