@@ -55,13 +55,23 @@ local __helmert;
       d - scale factor in ppm
 */
 __helmert = h_new(
-   "wgs84 nad83 wrong", h_new(
+   "wgs84 nad83 orig", h_new(
       rx = 0.0275, ry = 0.0101, rz = 0.0114,
       tx = 0.9738, ty = -1.9453, tz = -0.5486,
       d = 0.0
    ),
-   "wgs84 nad83 right", h_new(
+   "wgs84 nad83 flipt", h_new(
       rx = 0.0275, ry = 0.0101, rz = 0.0114,
+      tx = -0.9738, ty = 1.9453, tz = 0.5486,
+      d = 0.0
+   ),
+   "wgs84 nad83 flipr", h_new(
+      rx = -0.0275, ry = -0.0101, rz = -0.0114,
+      tx = 0.9738, ty = -1.9453, tz = -0.5486,
+      d = 0.0
+   ),
+   "wgs84 nad83 flipb", h_new(
+      rx = -0.0275, ry = -0.0101, rz = -0.0114,
       tx = -0.9738, ty = 1.9453, tz = 0.5486,
       d = 0.0
    )
@@ -91,21 +101,20 @@ func nad83_helmert_select(which) {
    Specifies which set of Helmert transformation parameters should be used when
    converting between WGS-84 and NAD-83.
 
-   Historically, ALPS data has used the parameters associated with "wrong". At
-   present, "wrong" is the default.
+   The parameters associated with "orig" are what have been traditionally used
+   within ALPS.
 
-   However, recent evidence suggests that the parameters for "right" are
-   actually correct.
-
-   The difference between right and wrong is simply a matter of flipped signs
-   on three parameters.
+   There are also three additional sets:
+      "flipt"  - flips the signs on the translation parameters
+      "flipr"  - flips the signs on the rotation parameters
+      "flipb"  - flips the signs on all parameters
 */
-   if(is_void(which) || noneof(which == ["right", "wrong"]))
-      error, "Must specify \"right\" or \"wrong\".";
+   if(is_void(which) || noneof(which == ["orig", "flipt", "flipr", "flipb"]))
+      error, "Must specify \"orig\", \"flipt\", \"flipr\", or \"flibp\".";
    h_set, __helmert, "wgs84 nad83", __helmert("wgs84 nad83 " + which);
    h_set, __helmert, "nad83 wgs84", __helmert("nad83 wgs84 " + which);
 }
-nad83_helmert_select, "wrong";
+nad83_helmert_select, "orig";
 
 func helmert_transformation(&X, &Y, &Z, transform) {
 /* DOCUMENT helmert_transformation, X, Y, Z, transform
@@ -114,6 +123,7 @@ func helmert_transformation(&X, &Y, &Z, transform) {
    also return [X, Y, Z].
 */
    extern __helmert;
+   dims = dimsof(X);
    p = __helmert(transform);
    if(!h_has(__helmert, transform))
       error, "Undefined transformation: " + transform;
@@ -137,14 +147,15 @@ func helmert_transformation(&X, &Y, &Z, transform) {
 
    XYZ = rotmat(+,) * [X(*),Y(*),Z(*)](,+);
 
+   Xp = reform(XYZ(1,) + p.tx, dims);
+   Yp = reform(XYZ(2,) + p.ty, dims);
+   Zp = reform(unref(XYZ)(3,) + p.tz, dims);
+
    if(am_subroutine()) {
-      X = XYZ(1,) + p.tx;
-      Y = XYZ(2,) + p.ty;
-      Z = unref(XYZ)(3,) + p.tz;
+      eq_nocopy, X, Xp;
+      eq_nocopy, Y, Yp;
+      eq_nocopy, Z, Zp;
    } else {
-      Xp = XYZ(1,) + p.tx;
-      Yp = XYZ(2,) + p.ty;
-      Zp = unref(XYZ)(3,) + p.tz;
       return [Xp, Yp, Zp];
    }
 }
