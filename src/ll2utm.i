@@ -88,9 +88,10 @@ func ll2utm(lat, lon, &north, &east, &zone, force_zone=, ellipsoid=) {
 
    // Fill in zone if appropriate
    if (!is_void(force_zone)) {
-      zone() = force_zone;
+      zone += force_zone;
    } else if (!is_void(fixedzone)) {
-      zone() = curzone = fixedzone;
+      curzone = fixedzone;
+      zone += fixedzone;
    }
 
    // *** Attempts to use CALPS ***
