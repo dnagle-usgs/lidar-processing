@@ -53,6 +53,7 @@ pro batch_grid, path, filename=filename, rcfmode=rcfmode, searchstr=searchstr, $
    ; amar nayegandhi 05/14/03
 
 start_time = systime(1)
+if (not keyword_set(datamode)) then datamode = 2
 if ((not keyword_set(rcfmode)) and (not keyword_set(searchstr))) then searchstr="*.edf"
 if not keyword_set(filename) then begin
    if not keyword_set (searchstr) then begin
@@ -100,23 +101,24 @@ for i = 0, n_elements(fn_arr)-1 do begin
    print, 'Data should be loaded. Continuing...'
 
    if (n_elements(*data_arr[0]) le 10) then continue
-   
-   if not keyword_set(datamode) then begin
+
+   if ((datamode eq 2) OR (datamode eq 3)) then begin
      ; find the corner points for the data tile
      spfn = strsplit(fname_arr, "_", /extract)
-     we = long( strmid(spfn(1), 1))+1
+     we = long(strmid(spfn(1), 1))
      no = long(strmid(spfn(2), 1))
      print, 'Grid locations: West:'+strcompress(string(we))+'  North:'+strcompress(string(no))
-   endif
    ;call gridding procedure
-   if keyword_set(datamode) then begin
-      grid_eaarl_data, *data_arr[0],cell=cell,mode=mode,zgrid=zgrid,xgrid=xgrid,ygrid=ygrid, $
-        z_max = z_grid_max, z_min=z_grid_min, missing = missing, $
-        area_threshold = area_threshold, dist_threshold=dist_threshold, datamode=datamode
-   endif else begin
-      grid_eaarl_data, *data_arr[0], cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygrid=ygrid, $
-	z_max = z_grid_max, z_min=z_grid_min, missing = missing, limits=[we-100,no-2099,we+2099,no+100], $
+     grid_eaarl_data, *data_arr[0], cell=cell, mode=mode, datamode=datamode, $
+	zgrid=zgrid, xgrid=xgrid, ygrid=ygrid, $
+	z_max=z_grid_max, z_min=z_grid_min, missing = missing, $
+	corner=[we, no], $
 	area_threshold = area_threshold, dist_threshold=dist_threshold
+   endif else begin
+     grid_eaarl_data, *data_arr[0], cell=cell, mode=mode, datamode=datamode, $
+	zgrid=zgrid, xgrid=xgrid, ygrid=ygrid, $
+        z_max=z_grid_max, z_min=z_grid_min, missing = missing, $
+        area_threshold = area_threshold, dist_threshold=dist_threshold
    endelse
 
    ptr_free, data_arr

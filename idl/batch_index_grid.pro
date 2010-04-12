@@ -113,13 +113,13 @@ for i=0, n_elements(idirs)-1 do begin
 
    ; find the corner points for the index tile
    spfn = strsplit(itile, "_", /extract)
-   we = long( strmid(spfn(1), 1))+1
+   we = long(strmid(spfn(1), 1))
    no = long(strmid(spfn(2), 1))
    print, 'Grid locations: West:'+strcompress(string(we))+'  North:'+strcompress(string(no))
    ;call gridding procedure
    grid_eaarl_data, data_all,cell=cell,mode=mode,zgrid=zgrid,xgrid=xgrid,ygrid=ygrid, $
         z_max = z_grid_max, z_min=z_grid_min, missing = missing, $
-	limits=[we-100,no-10099, we+10099, no+100],$
+        corner=[we,no], $
         area_threshold = area_threshold, dist_threshold=dist_threshold, datamode=2
 
    

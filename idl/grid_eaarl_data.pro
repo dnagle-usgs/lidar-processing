@@ -1,7 +1,7 @@
 pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygrid=ygrid, $
 	z_max = z_max, z_min=z_min, missing = missing, limits=limits, $
 	area_threshold=area_threshold, dist_threshold = dist_threshold, $
-	datamode=datamode
+	datamode=datamode, corner=corner
   ; this procedure does tinning / gridding on eaarl data
   ; amar nayegandhi 5/14/03.
   ; INPUT KEYWORDS:
@@ -24,9 +24,19 @@ pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygri
   if (not keyword_set(missing)) then missing = -32767L
   if (not keyword_set(area_threshold)) then area_threshold = 200
   if (not keyword_set(dist_threshold)) then dist_threshold = 50
+  if (not keyword_set(datamode)) then datamode = 2  
   if (not keyword_set(limits)) then begin
 	; get the limits from the input data set
-	limits = [min(data.east),min(data.north),max(data.east),max(data.north)]/100.
+	if ((not keyword_set(corner)) OR (datamode eq 1)) then begin
+	    limits = [min(data.east),min(data.north),max(data.east),max(data.north)]/100.
+	endif else begin
+	    if (datamode eq 2) then begin
+		limits = [corner[0], corner[1]-2000, corner[0]+2000, corner[1]]
+	    endif else begin
+		limits = [corner[0], corner[1]-10000, corner[0]+10000, corner[1]]
+	    endelse
+	    limits += ([cell, cell, -cell, -cell]/2.)
+	endelse
   endif
 
   print, "    triangulating..."
@@ -80,24 +90,6 @@ pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygri
 	    xgrid=xgrid, ygrid=ygrid, missing=missing, max_value = z_max, min_value = z_min)
     end
   endcase
-
-  if (not keyword_set(datamode)) then datamode = 2  
-
-  if (datamode eq 2) then begin
-     c1 = 100/cell
-     c2 = 2099/cell
-     zgrid = zgrid(c1:c2, c1:c2)
-     xgrid = xgrid(c1:c2)
-     ygrid = ygrid(c1:c2)
-  endif
-
-  if (datamode eq 3) then begin
-     c1 = 100/cell
-     c2 = 10099/cell
-     zgrid = zgrid(c1:c2, c1:c2)
-     xgrid = xgrid(c1:c2)
-     ygrid = ygrid(c1:c2)
-  endif
 return
 end
 
@@ -480,12 +472,14 @@ pro write_geotiff, fname, xgrid, ygrid, zgrid, zone_val, cell_dim, datum_type=da
     ;zgrid1 = zgrid1 - min_z
 
     MODELTIEPOINTTAG = [0, 0, 0, xgrid[0], ygrid[n_elements(ygrid)-1], 0]
-    write_tiff, fname, zgrid1, orientation=1, /float, /verbose, geotiff = { $
+    write_tiff, fname, zgrid1, orientation=1, /float, /verbose, $
+	compression=1, $
+	geotiff = { $
                         MODELPIXELSCALETAG: MODELPIXELSCALETAG, $
                         MODELTIEPOINTTAG: MODELTIEPOINTTAG, $
                         GTMODELTYPEGEOKEY: 1, $
                         PROJECTEDCSTYPEGEOKEY: proj_cs_key, $
-                        GTRASTERTYPEGEOKEY: 1, $
+                        GTRASTERTYPEGEOKEY: 2, $
                         PCSCITATIONGEOKEY: proj_cit_key, $
                         PROJLINEARUNITSGEOKEY: 9001, $
                         VERTICALCSTYPEGEOKEY: proj_vcs, $
