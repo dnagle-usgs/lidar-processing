@@ -271,8 +271,10 @@ snit::widgetadaptor ::misc::text::autoheight {
    }
 
    method Modified {} {
-      ::misc::idle [mymethod AdjustHeight]
-      $self edit modified 0
+      if {[$self edit modified]} {
+         ::misc::idle [mymethod AdjustHeight]
+         $self edit modified 0
+      }
    }
 
    method Configure {} {
