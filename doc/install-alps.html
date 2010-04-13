@@ -1,0 +1,853 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+  "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<!--
+  For best results, please view this file in a modern web browser.
+-->
+<head>
+  <title>ALPS installation documentation</title>
+  <style type="text/css">
+    body {
+      color: black;
+      background-color: white;
+      margin: 1em;
+      text-align: center;
+    }
+    #main {
+      max-width: 40em;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+    }
+    #title {
+      border-bottom: none;
+      text-align: center;
+      font-size: 2em;
+      padding-top: .5em;
+      padding-bottom: 1em;
+    }
+    h1 {
+      padding-top: 0.25em;
+      font-size: 1.5em;
+      border-bottom: solid 1px black;
+    }
+    h2 {
+      font-size: 1.2em;
+    }
+    pre.code {
+      overflow: auto;
+      padding: 0.5em 0.75em;
+      margin: 1em 5em;
+      background-color: #f1f1f1;
+      border: 1px solid gray;
+    }
+    strong.file, strong.directory, strong.variable, strong.command {
+      font-size: 90%;
+      font-weight: normal;
+      font-family: courier, "courier new", fixed, monospace;
+    }
+    .file, .directory {
+      color: #990000;
+    }
+    .variable {
+      color: #000099;
+    }
+    .command {
+      color: #009900;
+    }
+    .replaceable {
+      background-color: #dddddd;
+    }
+    pre.code .replaceable {
+      background-color: #d0d0d0;
+    }
+    dl dt {
+      font-weight: bold;
+      margin-top: 0.75em;
+    }
+    dl dd {
+      padding-left: 0;
+      margin-left: 2em;
+    }
+    @media print {
+      .noprint {
+        display: none;
+      }
+      a {
+        text-decoration: none;
+        color: #000000;
+      }
+      a[href^="http://"]:after {
+        content: " (" attr(href) ")";
+        font-size: 80%;
+      }
+      pre.code {
+        overflow: visible;
+        white-space: pre-wrap;
+      }
+      h1, h2 {
+        page-break-after: avoid;
+      }
+      pre.code {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+<div id="main">
+
+<h1 id="title">How to install ALPS</h1>
+
+<h1 id="toc">Table of contents</h1>
+<ul class="toc">
+<li><a href="#toc">Table of contents</a></li>
+<li><a href="#start">Where do I start?</a></li>
+<li><a href="#conventions">Conventions</a></li>
+<li><a href="#migrating">Migrating from old installations</a>
+<li><a href="#install_package">Installing ALPS</a>
+  <ul>
+  <li><a href="#install_package_basic">Basic installation</a></li>
+  <li><a href="#enable_cvs">Enabling CVS access</a></li>
+  <li><a href="#install_prefix">Installing to an alternate location</a></li>
+  <li><a href="#install_activetcl">Installing ActiveTcl</a></li>
+  </ul>
+</li>
+<li><a href="#troubleshooting">Troubleshooting</a>
+  <ul>
+  <li><a href="#need_devel">Missing development packages</a></li>
+  <li><a href="#disable_rlwrap">Problems with rlwrap</a></li>
+  </ul>
+</li>
+<li><a href="#upgrade_package">Upgrading ALPS</a>
+  <ul>
+    <li><a href="#upgrade_package_overview">Upgrade overview</a></li>
+    <li><a href="#upgrade_selective">Selective upgrade</a></li>
+    <li><a href="#nodata_download">The "-nodata" download</a></li>
+  </ul>
+</li>
+<li><a href="#install_repo">Installing/upgrading from the repository</a></li>
+<li><a href="#prep_alpstcl">Preparing alpstcl</a></li>
+<li><a href="#prep_package">Preparing an installation package</a></li>
+</ul>
+
+<h1 id="start">Where do I start?</h1>
+
+<p>
+  This document contains a wide range of information. Odds are, you won't need
+  to read the whole thing to get ALPS up and running. This introductory section
+  will help you determine which sections of the document are relevant to you.
+  Review the following and select the entries that seem to best match your
+  situation.
+</p>
+
+<p>
+  In addition to the directions refered to below, all users will first want to
+  familiarize themselves with the <a href="#conventions">Conventions</a> used
+  throughout the document.
+</p>
+
+<dl>
+  <dt>
+    I have an existing installation of ALPS that was installed before April
+    2010.
+  </dt>
+  <dd>
+    Read <a href="#migrating">Migrating from old installations</a> and follow
+    the directions to remove your existing ALPS installation before attempting
+    to install a fresh copy.
+  </dd>
+  <dt>
+    I want to install a basic ALPS installation for myself.
+  </dt>
+  <dd>
+    Follow the directions under <a href="#install_package_basic">Basic
+    installation</a>.
+  </dd>
+  <dt>
+    I want to install a basic ALPS installation for myself. I would like to
+    keep the ALPS code up to date using my lidar.net CVS account.
+  </dt>
+  <dd>
+    Read <a href="#install_package_basic">Basic installation</a> for an
+    overview, then follow those directions with the additional settings
+    explained under <a href="#enable_cvs">Enabling CVS access</a>.
+  </dd>
+  <dt>
+    I want to install a basic ALPS installation that will be shared by several
+    users.
+  </dt>
+  <dd>
+    Read <a href="#install_package_basic">Basic installation</a> for an
+    overview, then follow those directions with the additional settings
+    explained under <a href="#install_prefix">Installing to an alternate
+    location</a>.
+  </dd>
+  <dt>
+    I want to install a basic ALPS installation that will be shared by several
+    users. I would like to keep the ALPS code up to date using my lidar.net CVS
+    account.
+  </dt>
+  <dd>
+    Read <a href="#install_package_basic">Basic installation</a> for an
+    overview, then follow those directions with the additional settings
+    explained under <a href="#install_prefix">Installing to an alternate
+    location</a> and <a href="#enable_cvs">Enabling CVS access</a>.
+  </dd>
+  <dt>
+    I encountered problems while trying to install ALPS.
+  </dt>
+  <dd>
+    Consult <a href="#troubleshooting">Troubleshooting</a> to see if a
+    solution is available.
+  </dd>
+  <dt>
+    I have a basic ALPS installation. I would like to upgrade it.
+  </dt>
+  <dd>
+    Read <a href="#upgrade_package_overview">Upgrade overview</a>. Then
+    follow the same directions you followed when installing ALPS.
+  </dd>
+  <dt>
+    I have a basic ALPS installation. I would like to upgrade it. I do not need
+    to upgrade the data found under <strong class="directory">share</strong>.
+  </dt>
+  <dd>
+    If you're absolutely sure that you don't need to upgrade your <strong
+    class="directory">share</strong> directory, then refer to <a
+    href="#nodata_download">The "-nodata" download</a> in addition to <a
+    href="#upgrade_package_overview">Upgrade overview</a>. Then follow the same
+    directions you followed when installing ALPS.
+  </dd>
+  <dt>
+    I am an ALPS developer. I intend to work extensively on GUI development.
+  </dt>
+  <dd>
+    Read all of <a href="#install_package">Installing ALPS</a>.
+  </dd>
+  <dt>
+    I am an ALPS developer. I intend to work on C-ALPS (the C extension to
+    Yorick) or on other compiled components of the ALPS distribution.
+  </dt>
+  <dd>
+    Install as usual, but to a sandboxed location. Then consult <a
+    href="#install_repo">Installing/upgrading from the repository</a> for an
+    overview of how to upgrade individual components from within that
+    installation using its local repository.
+  </dd>
+  <dt>
+    I am an ALPS developer. I would like to create an installation distribution
+    package.
+  </dt>
+  <dd>
+    Consult <a href="#prep_package">Preparing an installation package</a>.
+  </dd>
+</dl>
+
+<h1 id="conventions">Conventions</h1>
+
+<p>
+  This document styles certain key words and phrases in special ways to help
+  denote their meanings and set them apart from normal text. For best results,
+  please render this document in a modern web browser. Inline stylings used are
+  as follows.
+</p>
+
+<ul>
+<li>
+  <strong class="command">commands</strong> are typically executable programs
+  such as <strong class="command">make</strong> or <strong
+  class="command">tar</strong>.
+</li>
+<li>
+  <strong class="file">file names</strong> and <strong
+  class="directory">directory names</strong> can be either literal or
+  illustrative paths to files and directories.
+</li>
+<li>
+  <strong class="variable">variable names</strong> and <strong
+  class="variable">options</strong> are keywords that allow the user to
+  customize how something works.
+</li>
+<li>
+  <span class="replaceable">replaceable text</span> signifies that the text
+  isn't necessarily going to match what you need to type. For example, file
+  names often have components that can vary, and some settings may receive
+  values that you specify. This can occur in conjunction with other styles; for
+  example, this file will always start with "alpsinstall" but the date in the
+  name may vary: <strong class="file">alpsinstall.<span
+  class="replaceable">2010-03-28</span>.tar</strong>.
+</li>
+</ul>
+
+<p>
+  Additionally, series of commands that you are expected to type on the command
+  line are set off in a format like this:
+</p>
+
+<pre class="code">
+<span class="command">echo</span> This is an example of a code block.
+<span class="command">tar</span> xvf <span class="file">alpsinstall.<span class="replaceable">2010-03-28</span>.tar</span>
+</pre>
+
+<p>
+  The above listing contains two separate commands: an <strong
+  class="command">echo</strong> command and a <strong
+  class="command">tar</strong> command. Code blocks also make use of the same
+  inline stylings noted above.
+</p>
+
+<h1 id="migrating">Migrating from old installations</h1>
+
+<p>
+  The installation framework documented here was first put in place in March
+  2010. If you have an ALPS that was installed prior to then, then your
+  existing installation may be incompatible with the upgrade directions
+  detailed under <a href="#upgrade_package">Upgrading ALPS</a>.
+  Fortunately, it generally isn't too difficult to make the transition.
+</p>
+
+<p>
+  Before migrating, there's a few things you may want to verify:
+</p>
+
+<ul>
+<li>
+  Did you do any code development for ALPS? If so, then check for modified or
+  added files that haven't been committed to the CVS repository. You'll want to
+  either check them in or make a copy of them before proceeding.
+</li>
+<li>
+  Did you add any custom files to <strong class="directory"><span
+  class="replaceable">~/</span>eaarl/lidar-processing/maps</strong>? The ALPS
+  installer provides all of the maps that are available from from lidar.net
+  (you can find them inside the installer at <strong class="directory"><span
+  class="replaceable">alpsinstall.2010-03-28/</span>share/maps</strong> if you
+  want to compare). If you added any custom maps not included with ALPS that
+  you'd like to keep, then you'll have to make a copy of them. After installing
+  ALPS, you can then place those copies back in <strong class="directory"><span
+  class="replaceable">~/</span>eaarl/share/maps</strong>.
+</li>
+</ul>
+
+<p>
+  Once you've made copies of any customized items you don't want to lose, you
+  can then delete your existing ALPS installation and install a new one. You'll
+  want to run a command like this one before installing ALPS to delete the old
+  files:
+</p>
+
+<pre class="code">
+<span class="command">rm</span> -rf <span class="directory"><span class="replaceable">~/</span>eaarl</span>
+</pre>
+
+<p>
+  Depending on how you installed your old copy of ALPS, you may also have
+  related software installed at alternate locations such as <strong
+  class="directory">/usr/local</strong>. If you decide to leave such software
+  in place, it will not conflict with your new ALPS installation.
+</p>
+
+<h1 id="install_package">Installing ALPS</h1>
+
+<h2 id="install_package_basic">Basic installation</h2>
+
+<p>
+  The easiest way to install ALPS is to use a premade installer package that
+  already has everything you'll need assembled together in one place. The
+  installer package is distributed as a tarball, with a name like <strong
+  class="file">alpsinstall.<span
+  class="replaceable">2010-03-28</span>.tar.bz2</strong>. (The date in the file
+  name indicates when the installer package was assembled. Newer is better.)
+  Once you have the ALPS installer package, you will need to unwrap it:
+</p>
+
+<pre class="code">
+<span class="command">bunzip2</span> <span class="file">alpsinstall.<span class="replaceable">2010-03-28</span>.tar.bz2</span>
+<span class="command">tar</span> xvf <span class="file">alpsinstall.<span class="replaceable">2010-03-28</span>.tar</span>
+</pre>
+
+<p>
+  This will create the directory <strong class="directory">alpsinstall.<span
+  class="replaceable">2010-03-28</span></strong>. You can now enter this
+  directory and install ALPS:
+</p>
+
+<pre class="code">
+<span class="command">cd</span> <span class="directory">alpsinstall.<span class="replaceeable">2010-03-28</span>/</span>
+<span class="command">make</span> install
+</pre>
+
+<p>
+  That's it. Unless your system runs into problems with something or unless
+  you'd like to customize something, you're done! You can now start ALPS like
+  this:
+</p>
+
+<pre class="code">
+<span class="command">cd</span> <span class="directory">~/eaarl/lidar-processing/src/</span>
+<span class="command">./alps</span>
+</pre>
+
+<p>
+  The rest of this section documents some customizations that are commonly
+  applied.
+</p>
+
+<h2 id="enable_cvs">Enabling CVS access</h2>
+
+<p>
+  By default, your <strong class="directory">lidar-processing</strong>
+  directory will not have CVS access enabled. If you have a user account on
+  lidar.net, you can ask the installer to use it by adding a <strong
+  class="variable">cvsuser</strong> setting to your <strong
+  class="command">make</strong> statement. You should define it to match your
+  lidar.net account username.
+</p>
+
+<p>
+  For example, if your account name is "jdoe":
+</p>
+
+<pre class="code">
+<span class="command">make</span> install <span class="variable">cvsuser=</span><span class="replaceable">jdoe</span>
+</pre>
+
+<p>
+  During the installation process, you'll be asked to enter your password for
+  lidar.net so that it can connect to the server.
+</p>
+
+<p>
+  (Note: This will enable CVS access, but it will not automatically keep your
+  <strong class="directory">lidar-processing</strong> up to date. You will need
+  to manually use <strong class="command">cvs</strong> on a regular basis to
+  keep it up to date. Directions for <strong class="command">cvs</strong> can
+  be found in <strong class="file"><span
+  class="replaceable">~/</span>lidar-processing/doc/cvs-notes.txt</strong>.)
+</p>
+
+<h2 id="install_prefix">Installing to an alternate location</h2>
+
+<p>
+  By default, ALPS will be installed at <strong
+  class="directory">~/eaarl</strong>. If you'd rather install it somewhere
+  else, use the <strong class="variable">prefix</strong> setting to specify the
+  desired directory path. For example, to install ALPS to <strong
+  class="directory">/opt/eaarl</strong>:
+</p>
+
+<pre class="code">
+<span class="command">make</span> install <span class="variable">prefix</span>=<span class="replaceable">/opt/eaarl</span>
+</pre>
+
+<p>
+  (Note: If you are doing something more involved than just installing, be
+  aware that you should include <strong class="variable">prefix</strong> on
+  <strong>all</strong> calls to <strong class="command">make</strong>.)
+</p>
+
+<h2 id="install_activetcl">Installing ActiveTcl</h2>
+
+<p>
+  One of the software requirements for ALPS is <a
+  href="http://www.activestate.com/activetcl/">ActiveTcl</a> from <a
+  href="http://www.activestate.com/">ActiveState</a>. Since the licensing terms
+  for ActiveTcl prohibit redistribution of their installer, the ALPS installer
+  cannot include it directly. Instead, it includes a custom program named
+  <strong class="command">alpstcl</strong> that compiles the Tcl interpreter
+  along with all of the package dependencies needed by ALPS into a single
+  executable.
+</p>
+
+<p>
+  The <strong class="command">alpstcl</strong> program should meet most users'
+  needs.  However, it does have two notable drawbacks: it takes longer to
+  initially start up and it provides less flexibility than an actual Tcl
+  installation would provide. Nonetheless, you probably won't need to worry
+  about ActiveTcl unless you are planning to do extensive GUI code development
+  or are planning to use Tcl outside of the ALPS processing environment.
+</p>
+
+<p>
+  The ALPS installer is designed to help you install ActiveTcl instead of
+  <strong class="command">alpstcl</strong>, but it does require you to manually
+  download the ActiveTcl installer. You can download ActiveTcl from <a
+  href="http://www.activestate.com/activetcl/">ActiveState's website</a>.
+  Download the 8.5 release for your platform, then unpack it as a subdirectory
+  of the installer. The download will have a filename like <strong
+  class="file">ActiveTcl8.5.<span
+  class="replaceable">8.1.291945</span>-linux-<span
+  class="replaceable">ix86-threaded</span>.tar.gz</strong>. Once downloaded,
+  you'll need to put it where the ALPS installer can find it:
+</p>
+
+<pre class="code">
+<span class="command">cd</span> <span class="directory">alpsinstall.<span class="replaceable">2010-03-28/</span></span>
+<span class="command">gunzip</span> <span class="file"><span class="replaceable">~/</span>ActiveTcl8.5.<span class="replaceable">8.1.291945</span>-linux-<span class="replaceable">ix86-threaded</span>.tar.gz</span>
+<span class="command">tar</span> xvf <span class="directory"><span class="replaceable">~/</span>ActiveTcl8.5.<span class="replaceable">8.1.291945</span>-linux-<span class="replaceable">ix86-threaded</span>.tar</span>
+</pre>
+
+<p>
+  After doing so, you should see the ActiveTcl directory inside the installer
+  directory. The installer will then automatically use ActiveTcl when you run
+  it. Install exactly like you normally would:
+</p>
+
+<pre class="code">
+<span class="command">make</span> install
+</pre>
+
+<p>
+  Alternately, if you've already installed everything and just want to replace
+  <strong class="command">alpstcl</strong> with ActiveTcl, then you can just
+  reinstall tcl as you would in a <a href="#upgrade_selective">selective
+  upgrade</a>:
+</p>
+
+<pre class="code">
+<span class="command">make</span> easy-tcl
+</pre>
+
+<h1 id="troubleshooting">Troubleshooting</h1>
+
+<h2 id="need_devel">Missing development packages</h2>
+
+<p>
+  Depending on the Linux distribution you are running and how it was installed,
+  you may need to install some "development" packages through your
+  distribution's package manager in order for ALPS to install. If you run into
+  problems during installation, this should be the first thing you check.
+</p>
+
+<p>
+  Each distribution has its own mechanisms for handling package management.
+  Further, the exact names of packages may change over time. This makes it
+  difficult to enumerate the exact steps required under every available
+  platform. This documentation was tested using Ubuntu 9.10; you may need to
+  adjust the directions to suit your own distribution.
+</p>
+
+<p>
+  Ubuntu uses the Synaptic Package Manager for managing packages from a GUI
+  interface and <strong class="command">apt-get</strong> to manage packages
+  from the command line. If you know exactly which packages (by name) you need
+  to install, you can easily use <strong class="command">apt-get</strong>.
+  These are the commands required under a basic Ubuntu 9.10 installation:
+</p>
+
+<pre class="code">
+<span class="command">sudo apt-get</span> install libreadline-dev
+<span class="command">sudo apt-get</span> install libx11-dev
+<span class="command">sudo apt-get</span> install zlib1g-dev
+<span class="command">sudo apt-get</span> install libjpeg62-dev
+<span class="command">sudo apt-get</span> install libpng12-dev
+</pre>
+
+<p>
+  If you are using a different distribution or package manager, or if your
+  version of Ubuntu does not seem to recognize those package names, then you'll
+  need to use the GUI package manager to search for packages with similar names
+  as the above. The package names will normally end with -dev, which signifies
+  that it will include the development libraries needed for software to compile
+  using it.
+</p>
+
+<p>
+  If your system does not appear to have a package manager, or if you do not
+  have system rights to install them, you may have to install them from source
+  files that you download elsewhere. However, that is very advanced and is
+  beyond the scope of this document.
+</p>
+
+<h2 id="disable_rlwrap">Problems with rlwrap</h2>
+
+<p>
+  The <strong class="command">rlwrap</strong> program requires the readline
+  library. If your system does not have readline installed, <strong
+  class="command">rlwrap</strong> will not install and you will encounter
+  errors. Ideally, you should attempt to install readline using the directions
+  in <a href="#need_devel">Missing development packages</a>.
+</p>
+
+<p>
+  However, if for any reason you cannot install the readline library using your
+  distribution's package management, you can attempt to install readline using
+  the ALPS installer. You can also do this if your system's readline is too old.
+  The installer already has the readline source code, so all you need to do is
+  run:
+</p>
+
+<pre class="code">
+<span class="command">make</span> readline-install
+</pre>
+
+<p>
+  If you are using a <strong class="variable">prefix</strong>, be sure to
+  include in your <strong class="command">make</strong> statement. The readline
+  library will be installed locally into your ALPS installation and will not
+  impact anything else on your system.
+</p>
+
+<p>
+  Once installed, ALPS will automatically detect the ALPS-specific readline and
+  attempt to use it when installing <strong class="command">rlwrap</strong>.
+  Simply try to install ALPS again like normal.
+</p>
+
+<p>
+  If <strong class="command">rlwrap</strong> still won't install, then you can
+  also just omit it since it's an optional component. To disable rlwrap, you
+  can unset the <strong class="variable">rlwrapsrc</strong> setting to prevent
+  the installer from using it. For example:
+</p>
+
+<pre class="code">
+<span class="command">make</span> install <span class="variable">rlwrapsrc</span>=
+</pre>
+
+<p>
+  The above will set <strong class="variable">rlwrapsrc</strong> to a null
+  value, effectively disabling it.
+</p>
+
+<h1 id="upgrade_package">Upgrading ALPS</h1>
+
+<h2 id="upgrade_package_overview">Upgrade overview</h2>
+
+<p>
+  Upgrading is accomplished in exactly the same way as installing: download the
+  installation package, unpack it, and run the appropriate <strong
+  class="command">make</strong> command. The existing installation will be
+  upgraded in-place.
+</p>
+
+<p>
+  However, upgrading does differ from installing in a few key ways:
+</p>
+
+<ul>
+<li>
+  The installer will detect if the <strong
+  class="directory">lidar-processing</strong> directory is configured for CVS
+  access. If it is and if you do not provide a <strong
+  class="variable">cvsuser</strong> setting, then the repository will be left
+  as is. You will need to separately run cvs update if you wish to update it.
+  If you do provide a <strong class="variable">cvsuser</strong> setting, then
+  it will be updated using that user name (even if it's different than the one
+  you had previously used when installing).
+</li>
+<li>
+  Your <strong class="directory">share</strong> directory will get updated with
+  fresh copies of all provided files. Files you have added will not be removed.
+  However, files with the same name may get overwritten.
+</li>
+<li>
+  If you manually included ActiveTcl's sources in your last install, then
+  you'll need to do it again when you upgrade. Otherwise, your ActiveTcl
+  installation will be replaced with <strong class="command">alpstcl</strong>.
+</li>
+<li>
+  If you had to perform a local installation of the readline library to
+  accomodate <strong class="command">rlwrap</strong>, then the existing
+  installation from last time can be re-used during upgrade. You shouldn't need
+  to upgrade readline.
+</li>
+</ul>
+
+<h2 id="upgrade_selective">Selective upgrade</h2>
+
+<p>
+  If you only want to upgrade one of the major components (<strong
+  class="command">rlwrap</strong>, <strong class="command">yorick</strong>, or
+  <strong class="command">tcl</strong>), it's pretty easy to do so. Just run
+  one of the following three commands:
+</p>
+
+<pre class="code">
+<span class="command">make</span> easy-yorick
+<span class="command">make</span> easy-rlwrap
+<span class="command">make</span> easy-tcl
+</pre>
+
+<p>
+  The normal installation/upgrade procedure includes all three lines plus
+  additional items. If you installed to an alternate location, you must also
+  specify your <strong class="variable">prefix</strong>. For example:
+</p>
+
+<pre class="code">
+<span class="command">make</span> easy-yorick <span class="variable">prefix</span>=<span class="replaceable">/opt/</span>eaarl
+</pre>
+
+<h2 id="nodata_download">The "-nodata" download</h2>
+
+<p>
+  The normal, full installation of ALPS is provided in a package named like
+  <strong class="file">alpsinstall.<span
+  class="replaceable">2010-03-28</span>.tar.bz2</strong>. However, a second
+  installation package is also available named like <strong
+  class="file">alpsinstall.<span
+  class="replaceable">2010-03-28</span>-nodata.tar.bz2</strong>. The "-nodata"
+  version contains everything that the normal version does except for the data
+  files under the <strong class="directory">share</strong> directory. This
+  reduces the size of the package from over 200MB to under 20MB.
+</p>
+
+<p>
+  If you are upgrading a fairly recently installation of ALPS and know that you
+  already have all of the data files, then you can probably download and use
+  the "-nodata" version instead of the full version. However, you should plan
+  to occasionally upgrade using the full version to ensure that you get any new
+  data files that might get added.
+</p>
+
+<p>
+  When using the "-nodata" version, you still follow all other directions
+  exactly the same as you normally would.
+</p>
+
+<h1 id="install_repo">Installing/upgrading from the repository</h1>
+
+<p>
+  If you're comfortable enough with linux, you can roll your own installer
+  using the repository. The seed functionality is found in the <strong
+  class="directory">installer</strong> subdirectory of the repository. Most
+  users probably will not want to use this option as the installation package
+  provides much of the same benefits without as much manual work.
+</p>
+
+<p>
+  You'll first need to download each of the component source archives manually.
+  If you read the <strong class="file">Makefile</strong>, it details the
+  websites where each of the components may be downloaded. Once you've
+  downloaded them, extract each archve as a subdirectory of the <strong
+  class="directory">installer</strong> directory.
+</p>
+
+<p>
+  Provided that the path names used by the various non-version components
+  haven't substantially changed much since the <strong
+  class="file">Makefile</strong> was last updated, you should then be able to
+  run the installer like you normally would. However, it's probably a good idea
+  to first check and make sure it's actually autodetecting everything properly.
+  Run this command:
+</p>
+
+<pre class="code">
+<span class="command">make</span> show
+</pre>
+
+<p>
+  You will receive a list detailing how many of the key variables are currently
+  defined.  If you plan to use any additional settings (such as <strong
+  class="variable">prefix</strong> or <strong
+  class="variable">cvsuser</strong>), you can include them in the above command
+  to see what impact they would have on your settings.
+</p>
+
+<p>
+  The installer will automatically detect that it is being run from within a
+  repository and will adjust certain aspects of its behavior accordingly:
+</p>
+
+<ul>
+<li>
+  The default <strong class="variable">prefix</strong> will be oriented around your
+  repository rather than defaulting to your home directory.
+</li>
+<li>
+  The repository is not checked out or updated since you are already running
+  from within it.
+</li>
+</ul>
+
+<h1 id="prep_alpstcl">Preparing alpstcl</h1>
+
+<p>
+  In order to create the <strong class="file">alpstcl</strong> binary file that
+  gets included in the installer package, you'll need to first <a
+  href="#install_activetcl">install ActiveTcl</a>. You'll also need to purchase
+  and install ActiveState's <a
+  href="http://www.activestate.com/tcl_dev_ki/">TclDevKit</a>.
+</p>
+
+<p>
+  Once you have the software installed, you can generate alpstcl as follows:
+</p>
+
+<pre class="code">
+<span class="command">cd</span> <span class="directory"><span class="replaceable">~/</span>eaarl/alpstcl</span>
+<span class="command">make</span>
+</pre>
+
+<p>
+  If you'd like to copy it over into the repository's <strong
+  class="directory">installer</strong> directory:
+</p>
+
+<pre class="code">
+<span class="command">cd</span> <span class="directory"><span class="replaceable">~/</span>eaarl/alpstcl</span>
+<span class="command">make</span> installer
+</pre>
+
+<h1 id="prep_package">Preparing an installation package</h1>
+
+<p>
+  These are the basic steps involved in creating or updating an installation
+  package.
+</p>
+
+<ol>
+<li>
+  Start with a pristine copy of the repository.
+</li>
+<li>
+  <a href="#prep_alpstcl">Prepare alpstcl</a>. Use <code><strong
+  class="command">make</strong> installer</code> so that it copies to the
+  appropriate place in the <strong class="directory">installer</strong>
+  directory.
+</li>
+<li>
+  Create a copy of <strong class="directory">installer</strong> that you can
+  then build up into an actual installer.
+<pre class="code">
+<span class="command">cp</span> -r <span class="directory"><span class="replaceable">~/</span>eaarl/lidar-processing/installer</span> <span class="directory"><span class="replaceable">~/</span>alpsinstall.<span class="replaceable">2010-03-28</span></span>
+</pre>
+</li>
+<li>
+  Create a new pristine copy of the repository at <strong
+  class="directory"><span class="replaceable">~/</span>alpsinstall.<span
+  class="replaceable">2010-03-28</span>/lidar-processing</strong>. Strip out
+  the CVS cruft. A set of commands similar to this will work (just be sure to
+  run them from within the right directory):
+<pre class="code">
+<span class="command">find</span> -name CVS | <span class="command">xargs rm</span> -rf
+<span class="command">find</span> -name .cvsignore | <span class="command">xargs rm</span> -rf
+</pre>
+</li>
+<li>
+  Download all requisite installation archives and expand them into the
+  installation directory, similar to a <a href="#install_repo">repository-based
+  installation</a>. Make sure everything autodetects properly. Do not
+  include ActiveTcl; that would be a violation of ActiveState's license.
+</li>
+<li>
+  Add the GEOID files and map files under <strong
+  class="directory">share</strong>. It's probably easiest to obtain them from a
+  prior installation package.
+</li>
+<li>
+  Package everything together:
+<pre class="code">
+<span class="command">tar</span> cjvf <span class="file">alpsinstall.<span class="replaceable">2010-03-28</span>.tar.bz2</span> <span class="directory">alpsinstall.<span class="replaceable">2010-03-28</span></span>
+</pre>
+</li>
+<li>
+  Upload the installation package to lidar.net.
+</li>
+</ol>
+
+</div>
+</body>
+</html>
