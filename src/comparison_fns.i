@@ -1,3 +1,121 @@
+func compare_pts(eaarl, truth, output, mode=, truthmode=, radius=, precision=) {
+/* DOCUMENT compare_pts, eaarl, truth, output, mode=, truthmode=, radius=,
+   precision=
+
+   Runs an analysis off point cloud data versus ground truth data. The analysis
+   results are written to file.
+
+   Required parameters:
+      eaarl: An array of data to test. This is typically eaarl data, but can be
+         anything that's valid input for data2xyz.
+      truth: An array of ground truth data to test against. This can also be
+         anything that's valid input for data2xyz.
+      output: The path to the output file to create.
+
+   Options:
+      mode= The mode to use for the eaarl data.
+            mode="fs"   (default)
+      truthmode= The mode to use for the truth data.
+            truthmode="fs"    (default)
+      radius= The search radius to use around each truth point, in meters.
+            radius=1.00    1m search radius (default)
+            radius=0.25    25cm search radius
+      precision= The number of decimal places of precision to use when creating
+         the output file.
+            precision=3    (default)
+
+   SEE ALSO: compare_pts_old, read_txt_anal_file
+*/
+   local x, y, z, tx, ty, tz;
+   default, radius, 1.;
+   default, precision, 3;
+
+   if(is_void(output))
+      error, "Invalid parameters provided, see \"help, compare_pts\".";
+
+   radius = double(radius);
+   precision = long(precision);
+
+   data2xyz, eaarl, x, y, z, mode=mode;
+   data2xyz, truth, tx, ty, tz, mode=truthmode;
+
+   averagez = nearestxy = nearestz = array(double, dimsof(tx));
+   found = array(long(0), dimsof(tx));
+
+   t0 = array(double, 3);
+   timer, t0;
+   tp = t0;
+   for(i = 1; i <= numberof(tx); i++) {
+      idx = find_points_in_radius(tx(i), ty(i), x, y, radius=radius);
+      if(!numberof(idx))
+         continue;
+
+      found(i) = numberof(idx);
+
+      // Average z value of all eaarl points within radius of groundtruth
+      averagez(i) = z(idx)(avg);
+
+      nearest = idx(find_nearest_point(tx(i), ty(i), x(idx), y(idx),
+         force_single=1, radius=radius));
+      // z value of eaarl point whose x,y coordinates are closest to the
+      // groundtruth x,y coordinates
+      nearestxy(i) = z(nearest);
+
+      elv_diff = abs(tz(i) - z(idx));
+      // z value of eaarl point within radius whose z value is closest to the
+      // groundtruth z value
+      nearestz(i) = z(idx)(elv_diff(mnx));
+
+      timer_remaining, t0, i, numberof(tx), tp, interval=15;
+   }
+   write, "";
+
+   w = where(found);
+
+   idx = indgen(numberof(tz))(w);
+   found = found(w);
+   groundz = tz(w);
+   averagez = averagez(w);
+   nearestxy = nearestxy(w);
+   nearestz = nearestz(w);
+   diffxy = nearestxy - groundz;
+   diffz = nearestz - groundz;
+
+   fmt = "%d %d" + array(swrite(format=" %%.%df", precision), 6)(sum) + "\n";
+   f = open(output, "w");
+   write, f, format=fmt, idx, found, averagez, nearestxy, groundz, nearestz,
+      diffxy, diffz;
+   close, f;
+
+   timer_finished, t0;
+}
+
+func read_txt_anal_file(fname, n=, pdop=) {
+/* DOCUMENT read_txt_anal_file, fname;
+   Loads a file created by compare_pts. Contents are stored to the following
+   extern variables:
+      i, no, be_avg_pts, be, kings_elv, be_elv, diff1, diff2, pdop_val
+
+   For backwards compatibility, the function accepts n= and pdop= options. Both
+   are ignored.
+
+   SEE ALSO: compare_pts, read_txt_anal_file_old
+*/
+   extern i, no, be_avg_pts, be, kings_elv, be_elv, diff1, diff2, pdop_val;
+   cols = rdcols(fname);
+   eq_nocopy, i, *cols(1);
+   eq_nocopy, no, *cols(2);
+   eq_nocopy, be_avg_pts, *cols(3);
+   eq_nocopy, be, *cols(4);
+   eq_nocopy, kings_elv, *cols(5);
+   eq_nocopy, be_elv, *cols(6);
+   eq_nocopy, diff1, *cols(7);
+   eq_nocopy, diff2, *cols(8);
+   if(numberof(cols) > 8)
+      eq_nocopy, pdop_val, *cols(9);
+}
+
+
 /*
   These functions were originally written to compare eaarl data with ground survey(Kings) data.
   There are a few useful functions in this file:
@@ -59,7 +177,7 @@ func __compare_pts_fix_kings(&kings) {
    }
 }
 
-func compare_pts(eaarl, kings, rgn, fname=, buf=, elv=, read_file=, pdop=, mode=) {
+func compare_pts_old(eaarl, kings, rgn, fname=, buf=, elv=, read_file=, pdop=, mode=) {
    // this function compares each point of kings data within a buffer of eaarl data.
    // amar nayegandhi 11/15/2002.
 
@@ -183,7 +301,7 @@ func compare_pts(eaarl, kings, rgn, fname=, buf=, elv=, read_file=, pdop=, mode=
 }
 
 
-func read_txt_anal_file(fname, n=, pdop=) {
+func read_txt_anal_file_old(fname, n=, pdop=) {
   // this function reads the analysis data file written out from compare_pts
   // amar nayegandhi 11/18/02
    

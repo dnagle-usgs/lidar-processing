@@ -136,7 +136,7 @@ is the same
 
    xyzdata=xyzdata/100;   
 
-   compare_pts(eaarldata, xyzdata, fname=filename, mode=3);
+   compare_pts, eaarldata, xyzdata, filename, mode="be";
    plot_be_kings_elv(filename, win=rwin,xtitle=xyztitle,ytitle=eaarldatatitle );
    window, rwin;
 

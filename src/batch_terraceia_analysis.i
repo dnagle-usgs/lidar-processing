@@ -49,7 +49,7 @@ func batch_analysis(path, kings=, plot=, ext=, out_txt_results_file=, elv=) {
     if (strpart(fname_arr(ai), 0:0) != "L") {
     data_out = edf_import(file_join(path, fname_arr(ai)));
     afname = (split_path(fname_arr(ai), 0, ext=1))(1)+"_anal.txt";
-    compare_pts, data_out, kings, fname=path+afname, buf=100, read_file=1, elv=elv;
+    compare_pts_old, data_out, kings, fname=path+afname, buf=100, read_file=1, elv=elv;
     diff1(rms);
     if (out_txt_results_file) {
       iindx = where(abs(diff1) < 1.0);
@@ -286,10 +286,10 @@ func batch_rgn_anal(eaarl, kings_arrays=, analpath=, type=, win=, buf=, date=, s
  	  rgn = [min(eaarl1.east)/100., max(eaarl1.east)/100., 
 		  min(eaarl1.north)/100., max(eaarl1.north)/100.];
           if (type == VEG__) {
-	    compare_pts(eaarl1, kings, rgn, fname=analpath+fname, buf=buf, pdop=pdop);
+	    compare_pts_old(eaarl1, kings, rgn, fname=analpath+fname, buf=buf, pdop=pdop);
           } 
 	  if (type == FS) {
-	    compare_pts(eaarl1, kings, rgn, fname=analpath+fname, buf=buf, elv=1);
+	    compare_pts_old(eaarl1, kings, rgn, fname=analpath+fname, buf=buf, elv=1);
           }
  	  plot_be_kings_elv, analpath+fname, win=3, saveplot=saveplot, out_txt_file=out_txt_file, n_data=n_data;
   }
