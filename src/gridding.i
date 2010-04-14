@@ -803,3 +803,79 @@ gdal_translate=, usetcl=) {
       system, cmd;
    }
 }
+
+func idl_batch_grid(dir, outdir=, searchstr=, cell=, mode=, maxarea=, maxside=,
+tilemode=, nodata=, datum=, zone=) {
+/* DOCUMENT idl_batch_grid, dir, outdir=, searchstr=, cell=, mode=, maxarea=,
+   maxside=, tilemode=, nodata=, datum=, zone=
+
+   Uses IDL to run batch_grid.
+
+   Parameter:
+      dir: The directory where the edf files can be found.
+   Options:
+      outdir= Output directory to put tiffs in. Defaults to same directory edf
+         file is found in.
+      searchstr= Search string for edfs to process.
+            searchstr="*.edf" (default)
+      cell= Cell size to use, in meters.
+            cell=1.00         (default)
+      mode= Mode of data to use. Must be one of the following:
+            mode="fs"         First surface (default)
+            mode="ba"         Bathy
+            mode="be"         Bare earth
+      maxarea= Maximum area threshold for triangles, in square meters.
+            maxarea=200.      (default)
+      maxside= Maximum triangle leg length threshold, in meters.
+            maxside=50.       (default)
+      tilemode= Tiling mode to use. Must be one of the following:
+            tilemode=1        Use all data (no tiles)
+            tilemode=2        Constrain to 2km data tile boundaries (default)
+            tilemode=3        Constrain to 10km index tile boundaries
+      nodata= Value to use for no data values. Default is to let IDL decide,
+         which is currently -32767.
+      datum= Datum value to use. Must be one of the following:
+            datum=1           NAD83/NAVD88 (default)
+            datum=2           WGS84/ITRF
+            datum=3           NAD83/ITRF
+      zone= UTM zone of the data. By default, will use curzone.
+*/
+   extern curzone;
+   default, outdir, [];
+   default, searchstr, "*.edf";
+   default, cell, 1.00;
+   default, mode, "fs";
+   default, maxarea, 200.; //area_threshold
+   default, maxside, 50.; //dist_threshold
+   default, tilemode, 2; // datamode
+   default, nodata, [];
+   default, datum, 1;
+   default, zone, curzone;
+
+   mode = where(mode == ["fs", "ba", "be"]);
+   if(numberof(mode) != 1) {
+      error, "Invalid mode, must be \"fs\", \"ba\", or \"be\".";
+   } else {
+      mode = mode(1);
+   }
+
+   cmd = swrite(format="batch_grid, \"%s\", write_geotiffs=1", dir);
+   if(!is_void(outdir))
+      cmd += ", outdir=\"" + fix_dir(outdir) + "\"";
+   cmd += swrite(format=", searchstr=\"%s\"", searchstr);
+   cmd += swrite(format=", cell=%.4f", double(cell));
+   cmd += swrite(format=", mode=%d", mode);
+   cmd += swrite(format=", area_threshold=%.4f", double(maxarea));
+   cmd += swrite(format=", dist_threshold=%.4f", double(maxside));
+   cmd += swrite(format=", datamode=%d", long(tilemode));
+   if(!is_void(nodata))
+      cmd += swrite(format=", missing=%.4f", double(nodata));
+   cmd += swrite(format=", datum_type=%d", long(datum));
+   cmd += swrite(format=", utmzone=%d", long(zone));
+
+   f = popen("cd ../idl; idl", 1);
+   write, f, ".COMPILE batch_grid.pro, grid_eaarl_data.pro";
+   write, f, cmd;
+   write, f, "exit";
+   close, f;
+}
