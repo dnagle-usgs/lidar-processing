@@ -192,10 +192,12 @@ func find_points_in_radius(x, y, xs, ys, radius=) {
 
    // Initialize the indx of points in the box def by radius 
    indx = data_box(xs, ys, x-radius, x+radius, y-radius, y+radius);
+   if(!numberof(indx))
+      return [];
 
    // Calculate the distance of each point in the index from the center
-   dist = array(double, numberof(xs));
-   dist() = radius + 1;  // By default, points are too far away
+   // Start with all points too far away
+   dist = array(double(radius) + 1, numberof(xs));
    dist(indx) = ( (x - xs(indx))^2 + (y - ys(indx))^2 ) ^ .5;
    
    // Find the indexes in the original array that are within radius
