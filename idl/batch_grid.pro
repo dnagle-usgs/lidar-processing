@@ -6,7 +6,7 @@ pro batch_grid, path, filename=filename, rcfmode=rcfmode, searchstr=searchstr, $
 	plot_grids = plot_grids, max_elv_limit=max_elv_limit, min_elv_limit = min_elv_limit, $
 	scale_down_by = scale_down_by, save_grid_plots = save_grid_plots, $
 	write_geotiffs=write_geotiffs, GE_plots=GE_plots, colorbar_plot = colorbar_plot, $
-	utmzone = utmzone, datamode=datamode, datum_type=datum_type
+	utmzone = utmzone, datamode=datamode, datum_type=datum_type, outdir=outdir
    ; this procedure does gridding in a batch mode
    ; Set datamode to run batch grid on a set of files that are not divided into the 
    ;    traditional index/data tile format.  Setting this will override and disable the
@@ -93,6 +93,12 @@ for i = 0, n_elements(fn_arr)-1 do begin
    n_spfn = n_elements(spfn)
    fname_arr = spfn(n_spfn-1)
    path = '/'+strjoin(spfn(0:n_spfn-2), '/')+'/'
+
+   if keyword_set(outdir) then begin
+	outpath = outdir
+   endif else begin
+	outpath = path
+   endelse
    
    print, 'File number :'+strcompress(string(i+1))
    print, 'File name: '+fname_arr
@@ -139,11 +145,11 @@ for i = 0, n_elements(fn_arr)-1 do begin
 	if not keyword_set(scale_down_by) then scale_down_by = 4
 	if keyword_set(save_grid_plots) then begin
 	  if (mode eq 1) then $
-	    pfname = path+(strsplit(fname_arr, '.', /extract))[0]+"_fs_gridplot.tif"
+	    pfname = outpath+(strsplit(fname_arr, '.', /extract))[0]+"_fs_gridplot.tif"
 	  if (mode eq 2) then $
-	    pfname = path+(strsplit(fname_arr, '.', /extract))[0]+"_ba_gridplot.tif"
+	    pfname = outpath+(strsplit(fname_arr, '.', /extract))[0]+"_ba_gridplot.tif"
 	  if (mode eq 3) then $
-	    pfname = path+(strsplit(fname_arr, '.', /extract))[0]+"_be_gridplot.tif"
+	    pfname = outpath+(strsplit(fname_arr, '.', /extract))[0]+"_be_gridplot.tif"
 
  	  plot_eaarl_grids, xgrid, ygrid, zgrid, max_elv_limit=max_elv_limit, $
 			min_elv_limit = min_elv_limit, num=scale_down_by, save_grid_plot = pfname
@@ -161,11 +167,11 @@ for i = 0, n_elements(fn_arr)-1 do begin
 	if not keyword_set(zbuf_scale) then zbuf_scale = 1
 	if keyword_set(save_zbuf_plots) then begin
 	  if (mode eq 1) then $
-	    pfname = path+(strsplit(fname_arr, '.', /extract))[0]+"_fs_zbuf_gridplot.tif"
+	    pfname = outpath+(strsplit(fname_arr, '.', /extract))[0]+"_fs_zbuf_gridplot.tif"
 	  if (mode eq 2) then $
-	    pfname = path+(strsplit(fname_arr, '.', /extract))[0]+"_ba_zbuf_gridplot.tif"
+	    pfname = outpath+(strsplit(fname_arr, '.', /extract))[0]+"_ba_zbuf_gridplot.tif"
 	  if (mode eq 3) then $
-	    pfname = path+(strsplit(fname_arr, '.', /extract))[0]+"_be_zbuf_gridplot.tif"
+	    pfname = outpath+(strsplit(fname_arr, '.', /extract))[0]+"_be_zbuf_gridplot.tif"
 	  plot_zbuf_eaarl_grids, xgrid, ygrid, zgrid, max_elv_limit=max_elv_limit, $
 		min_elv_limit = min_elv_limit, save_grid_plot = pfname, num=zbuf_scale, $
 		minelv = minelv, maxelv = maxelv
@@ -185,11 +191,11 @@ for i = 0, n_elements(fn_arr)-1 do begin
 		return
 	endif
       if (mode eq 1) then $
-        tfname = path+(strsplit(fname_arr, '.', /extract))[0]+"_fs_geotiff.tif"
+        tfname = outpath+(strsplit(fname_arr, '.', /extract))[0]+"_fs_geotiff.tif"
       if (mode eq 2) then $
-	tfname = path+(strsplit(fname_arr, '.', /extract))[0]+"_ba_geotiff.tif"
+	tfname = outpath+(strsplit(fname_arr, '.', /extract))[0]+"_ba_geotiff.tif"
       if (mode eq 3) then $
-	tfname = path+(strsplit(fname_arr, '.', /extract))[0]+"_be_geotiff.tif"
+	tfname = outpath+(strsplit(fname_arr, '.', /extract))[0]+"_be_geotiff.tif"
 	write_geotiff, tfname, xgrid, ygrid, zgrid, utmzone, cell, datum_type=datum_type
    endif
 
@@ -198,11 +204,11 @@ for i = 0, n_elements(fn_arr)-1 do begin
 	if (not keyword_set(GE_scale)) then GE_scale=2
 	if (not keyword_set(filetype)) then filetype="png"
 	if (mode eq 1) then $
-	    pfname = path+(strsplit(fname_arr, '.', /extract))[0]+"_fs_GE."+filetype
+	    pfname = outpath+(strsplit(fname_arr, '.', /extract))[0]+"_fs_GE."+filetype
 	if (mode eq 2) then $
-	    pfname = path+(strsplit(fname_arr, '.', /extract))[0]+"_ba_GE."+filetype
+	    pfname = outpath+(strsplit(fname_arr, '.', /extract))[0]+"_ba_GE."+filetype
 	if (mode eq 3) then $
-	    pfname = path+(strsplit(fname_arr, '.', /extract))[0]+"_be_GE."+filetype
+	    pfname = outpath+(strsplit(fname_arr, '.', /extract))[0]+"_be_GE."+filetype
 	make_GE_plots, xgrid=xgrid, ygrid=ygrid, zgrid=zgrid, max_elv_limit=max_elv_limit, $
 		min_elv_limit = min_elv_limit, save_grid_plot = pfname, num=GE_scale, $
 		minelv = minelv, maxelv = maxelv, filetype=filetype, topmax=1, botmin=1,$
