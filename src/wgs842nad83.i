@@ -55,24 +55,14 @@ local __helmert;
       d - scale factor in ppm
 */
 __helmert = h_new(
-   "wgs84 nad83 orig", h_new(
+   "wgs84 nad83 old", h_new(
       rx = 0.0275, ry = 0.0101, rz = 0.0114,
       tx = 0.9738, ty = -1.9453, tz = -0.5486,
       d = 0.0
    ),
-   "wgs84 nad83 flipt", h_new(
-      rx = 0.0275, ry = 0.0101, rz = 0.0114,
-      tx = -0.9738, ty = 1.9453, tz = 0.5486,
-      d = 0.0
-   ),
-   "wgs84 nad83 flipr", h_new(
+   "wgs84 nad83 correct", h_new(
       rx = -0.0275, ry = -0.0101, rz = -0.0114,
       tx = 0.9738, ty = -1.9453, tz = -0.5486,
-      d = 0.0
-   ),
-   "wgs84 nad83 flipb", h_new(
-      rx = -0.0275, ry = -0.0101, rz = -0.0114,
-      tx = -0.9738, ty = 1.9453, tz = 0.5486,
       d = 0.0
    )
 );
@@ -95,26 +85,26 @@ for(i = 1; i <= numberof(k); i++) {
 k = i = [];
 
 func nad83_helmert_select(which) {
-/* DOCUMENT nad83_helmert_select, "right"
-   -or- nad83_helmert_select, "wrong"
+/* DOCUMENT nad83_helmert_select, "correct"
+   -or- nad83_helmert_select, "old"
 
    Specifies which set of Helmert transformation parameters should be used when
    converting between WGS-84 and NAD-83.
 
-   The parameters associated with "orig" are what have been traditionally used
-   within ALPS.
+   The parameters associated with "correct" are the correct parameters to use
+   for a 7-parameter Helmert transformation between WGS-84 and NAD-83. They are
+   selected by default.
 
-   There are also three additional sets:
-      "flipt"  - flips the signs on the translation parameters
-      "flipr"  - flips the signs on the rotation parameters
-      "flipb"  - flips the signs on all parameters
+   The parameters associated with "old" are what were used by default in ALPS
+   prior to April 2010. The only difference is that the signs on the rotation
+   parameters are flipped.
 */
-   if(is_void(which) || noneof(which == ["orig", "flipt", "flipr", "flipb"]))
-      error, "Must specify \"orig\", \"flipt\", \"flipr\", or \"flibp\".";
+   if(is_void(which) || noneof(which == ["correct", "old"]))
+      error, "Must specify \"correct\" or \"old\".";
    h_set, __helmert, "wgs84 nad83", __helmert("wgs84 nad83 " + which);
    h_set, __helmert, "nad83 wgs84", __helmert("nad83 wgs84 " + which);
 }
-nad83_helmert_select, "orig";
+nad83_helmert_select, "correct";
 
 func helmert_transformation(&X, &Y, &Z, transform) {
 /* DOCUMENT helmert_transformation, X, Y, Z, transform
