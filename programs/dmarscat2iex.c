@@ -346,7 +346,7 @@ main( int argc, char *argv[] ) {
       break;
 
      case 't':
-       if ( sscanf( optarg, "%d", &time_offset ) == 0 )
+       if ( sscanf( optarg, "%ld", &time_offset ) == 0 )
          fail("Invalid time_offset value.");
       break;
 

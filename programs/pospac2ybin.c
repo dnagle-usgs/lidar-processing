@@ -35,6 +35,7 @@
  *
 ***********************************************************************/
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -138,7 +139,7 @@ main(int argc, char *argv[]) {
         posprh.alt = pospac.altitude*1000.0;
     posprh.heading = (int)((pospac.platform_heading)*BIN_ANGLE);
      if ( cnt == 1 ) {
-       printf("\nStart time: %d.%d(somd)\n", posprh.somd, posprh.ns);
+       printf("\nStart time: %ld.%ld(somd)\n", posprh.somd, posprh.ns);
        start_somd = posprh.somd;
      }
 
@@ -160,7 +161,7 @@ main(int argc, char *argv[]) {
   sprintf( start, "%08x %08x ", data_start, nbr_input_recs);
   fwrite(start, sizeof(start), 1, odf);	                // 
   fclose(odf);
-   printf("\nStop  time: %d.%d, Mission time %3.2f(hrs)\n", 
+   printf("\nStop  time: %ld.%ld, Mission time %3.2f(hrs)\n", 
 		   posprh.somd, posprh.ns, (posprh.somd-start_somd)/3600.0);
    printf("\nConversion completed\n");
 }

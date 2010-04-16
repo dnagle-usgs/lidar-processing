@@ -66,7 +66,7 @@ main( int argc, char *argv[]) {
        fread( &raw_dmars, sizeof(raw_dmars), 1, f);
        dcount++;
        if ( (raw_dmars.tspo - last_time) > 1 ) {
-         printf("\nGap detected: offset=0x%08x tspo=0x%08x %8.3f %6.3f", offset, raw_dmars.tspo,
+         printf("\nGap detected: offset=0x%08lx tspo=0x%08x %8.3f %6.3f", offset, raw_dmars.tspo,
            raw_dmars.tspo/200.0, (raw_dmars.tspo - last_time)/200.0);
        }
        last_time = raw_dmars.tspo;

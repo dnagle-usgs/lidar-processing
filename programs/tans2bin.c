@@ -130,7 +130,7 @@ printf("\nfgt=fgt=%lf sow=%lf sod=%lf sid=%lf", fgt, sow, sod, sid);
 	     if ( good ) fwrite( &attitude, sizeof(attitude), 1, odf );
 	     gap = sod - lgt;
 	     if ( (gap >= maxgap) && good ) {
-                printf("%10.2f %10d %9.5f %7.3f %7.3f %7.3f\n", gap, sod, fmod(sow, sid), roll, pitch, heading );
+                printf("%10.2f %10.2lf %9.5f %7.3f %7.3f %7.3f\n", gap, sod, fmod(sow, sid), roll, pitch, heading );
 	     }
 	     lgt = sod;
              good++;

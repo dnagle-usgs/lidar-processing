@@ -77,7 +77,7 @@ main(unsigned int argc, char *argv[])
 
   fseek( ofd, 0, SEEK_SET);	// go back to beginning 
   fwrite( &stuff.pulse, sizeof(stuff.pulse), 1, ofd);
-  fprintf(stderr,"\n%d pixels processed. File: %s written\n", 
+  fprintf(stderr,"\n%ld pixels processed. File: %s written\n", 
 	stuff.pulse, argv[2]);
   fclose(ofd);
 }

@@ -98,7 +98,7 @@ main( int argc, char *argv[] ) {
 //      printf( "%s", str );
     line++; good++;
   sscanf(str,"%s %d/%d/%d %d:%d:%f %d %f %c %f %c %f %f %f %d %f %f %f",
-                     &junk,
+                     junk,
                         &mt,&dd,&yy,
                                  &hh,&mm,&ss,&sv,&pdop,
                                                 &ns,&lat,
