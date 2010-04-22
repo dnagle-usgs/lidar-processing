@@ -22,6 +22,7 @@ func set_cbar(bar,w=) {
       n = mouse()(1);
       tkcmd, swrite(format="set plot_settings(cmin) %.2f", min(m,n));
       tkcmd, swrite(format="set plot_settings(cmax) %.2f", max(m,n));
+      tkcmd, swrite(format="set cdelta %.2f", abs(m-n));
    } else {
       write, "set_cbar was called with an unknown option: " + bar;
    }

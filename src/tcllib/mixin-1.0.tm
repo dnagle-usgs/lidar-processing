@@ -467,7 +467,6 @@ snit::widgetadaptor ::mixin::combobox::mapping {
       if {![uplevel 1 [list info exists $value]]} {
          uplevel 1 [list set $value [list]]
       }
-      set value [uplevel 1 [list namespace which -variable $value]]
       if {$value eq ""} {
          set value [myvar localalt]
       }
