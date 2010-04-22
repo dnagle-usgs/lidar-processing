@@ -13,6 +13,7 @@ package require Tktable
 package require struct::list
 package require struct::set
 package require misc
+package require mixin
 package require tooltip
 package require l1pro::deprecated
 package require l1pro::main
@@ -809,7 +810,7 @@ if {![winfo exists .l1wid]} {
   trace remove variable pro_var write pro_var_changed
   trace add variable pro_var write pro_var_changed
 
-  ::misc::combobox .l1wid.bf45.p.left.15 \
+  ::mixin::combobox .l1wid.bf45.p.left.15 \
     -textvariable pro_var \
     -state readonly \
     -listvariable varlist
@@ -859,7 +860,7 @@ if {![winfo exists .l1wid]} {
   }
 
   Label .l1wid.bf45.p.right.25 -text "Mode:"
-  ::misc::combobox .l1wid.bf45.p.right.5 \
+  ::mixin::combobox .l1wid.bf45.p.right.5 \
     -textvariable plot_settings(display_type) \
     -state readonly \
     -values $l1pro_data(display_types)
@@ -872,7 +873,7 @@ if {![winfo exists .l1wid]} {
 
   frame  .l1wid.bf45.sc.1
 
-  ::misc::combobox .l1wid.bf45.r.1 -text "Copy points using..." -width 16 \
+  ::mixin::combobox .l1wid.bf45.r.1 -text "Copy points using..." -width 16 \
     -state readonly \
     -values [list "Rubberband Box" "Points in Polygon" "Single Pixel" \
       "Select Cell/Quad/Tile"] \
@@ -925,7 +926,7 @@ if {![winfo exists .l1wid]} {
      \n  Points in Polygon\
      \n  Single Pixel"
 
-  ::misc::combobox .l1wid.bf45.r.7 -text "Filter tools..." -width 16 \
+  ::mixin::combobox .l1wid.bf45.r.7 -text "Filter tools..." -width 16 \
     -values [list Keep Remove Replace] \
     -state readonly \
     -modifycmd {
@@ -950,7 +951,7 @@ if {![winfo exists .l1wid]} {
     wm title .rem "Remove Points Using..."
     Label .rem.05.varname -text "Input Variable:"
 
-    ::misc::combobox .rem.05.varlist \
+    ::mixin::combobox .rem.05.varlist \
       -textvariable ::rmv_var -state readonly \
       -listvariable ::varlist
     set rmv_var $pro_var
@@ -960,7 +961,7 @@ if {![winfo exists .l1wid]} {
     # IMPORTANT NOTE: Do not change the order of GEO and VEG__ for the values of
     # the combobox below. A function parameter for the pipthresh function for
     # this gui is dependent on the index number of the selection.
-    ::misc::combobox .rem.06.type -textvariable remove_type -width 12 \
+    ::mixin::combobox .rem.06.type -textvariable remove_type -width 12 \
       -values [list "GEO or VEG__" "FS"]
     if {[display_type] == 0} {
       .rem.06.type setvalue @1
@@ -968,7 +969,7 @@ if {![winfo exists .l1wid]} {
       .rem.06.type setvalue @0
     }
 
-    ::misc::combobox .rem.1 -width 18 -state readonly \
+    ::mixin::combobox .rem.1 -width 18 -state readonly \
       -text "Remove points using..." \
       -values [list "Rubberband Box" "Points in Polygon" "Single Pixel" \
         "Pip-Thresh"] \
@@ -1106,12 +1107,12 @@ if {![winfo exists .l1wid]} {
     frame .sel.05
 
     Label .sel.05.varname -text "Input Variable:"
-    ::misc::combobox .sel.05.varlist \
+    ::mixin::combobox .sel.05.varlist \
       -textvariable ::keep_in_var -state readonly \
       -listvariable ::varlist
     set keep_in_var $pro_var
 
-    ::misc::combobox .sel.1 -state readonly -width 16 \
+    ::mixin::combobox .sel.1 -state readonly -width 16 \
       -text "Keep points using..." \
       -values [list "Rubberband Box" "Points in Polygon" "Single Pixel"] \
       -modifycmd {
@@ -1222,14 +1223,14 @@ if {![winfo exists .l1wid]} {
     set sameinput 0
     Label .rep.05.varname -text "Input Variable:"
 
-    ::misc::combobox .rep.05.varlist \
+    ::mixin::combobox .rep.05.varlist \
       -textvariable replace_in_var -state readonly \
       -listvariable ::varlist
     set replace_in_var $pro_var
 
     Label .rep.005.varname -text "Original Data Variable:"
 
-    ::misc::combobox .rep.005.varlist \
+    ::mixin::combobox .rep.005.varlist \
       -textvariable replace_orig_var -state readonly \
       -listvariable ::varlist
     set replace_orig_var $pro_var
@@ -1238,7 +1239,7 @@ if {![winfo exists .l1wid]} {
     # created through sel_data_rgn
     #   croppeddata = (selected filtered points);
     #   workdata = (selected original data points);
-    ::misc::combobox .rep.1 -state readonly -width 28 \
+    ::mixin::combobox .rep.1 -state readonly -width 28 \
       -text "Select points to replace using..." \
       -values [list "Rubberband Box" "Points in Polygon" "Window Limits"] \
       -modifycmd {
@@ -1680,11 +1681,11 @@ if {![winfo exists .l1wid]} {
     wm title .limitstool "Limits Tool"
     frame .limitstool.1 -relief groove -bd 4
     label .limitstool.1.t1 -text "Apply limits from window "
-    ::misc::combobox .limitstool.1.c1 -text 0 -width 3 -state readonly \
+    ::mixin::combobox .limitstool.1.c1 -text 0 -width 3 -state readonly \
       -values [::struct::list iota 64] \
       -takefocus 0
     label .limitstool.1.t2 -text " to window "
-    ::misc::combobox .limitstool.1.c2 -text 0 -width 3 -state readonly \
+    ::mixin::combobox .limitstool.1.c2 -text 0 -width 3 -state readonly \
       -values [::struct::list iota 64] \
       -takefocus 0
 

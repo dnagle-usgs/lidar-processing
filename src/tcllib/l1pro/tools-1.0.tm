@@ -59,7 +59,7 @@ proc ::l1pro::tools::rcf::gui args {
    ttk::label $f.lbloutput -text "Output variable: "
    ttk::label $f.lblmode -text "Data mode: "
 
-   ::misc::combobox::mapping $f.mode \
+   ::mixin::combobox::mapping $f.mode \
       -state readonly \
       -altvariable [namespace which -variable v::mode] \
       -mapping {
@@ -72,7 +72,7 @@ proc ::l1pro::tools::rcf::gui args {
          "Canopy Height"            ch
       }
 
-   ::misc::combobox $f.input \
+   ::mixin::combobox $f.input \
       -state readonly \
       -listvariable ::varlist \
       -textvariable [namespace which -variable v::invar]
@@ -273,7 +273,7 @@ proc ::l1pro::tools::histelev::gui_general {f labelsVar} {
    ttk::label $f.lbllogy -text "Use logarithmic y axis"
    ttk::label $f.lblautobin -text "Automatically set bin size"
    ttk::label $f.lblbinsize -text "Bin size: "
-   ::misc::combobox::mapping $f.normalize \
+   ::mixin::combobox::mapping $f.normalize \
       -state readonly \
       -altvariable [namespace which -variable v::normalize] \
       -mapping {
@@ -304,7 +304,7 @@ proc ::l1pro::tools::histelev::gui_general {f labelsVar} {
    grid columnconfigure $f 1 -weight 1
    lappend labels $f.lblnormalize $f.lblwin $f.lblbinsize
 
-   ::misc::statevar $f.binsize \
+   ::mixin::statevar $f.binsize \
       -statemap {0 normal 1 disabled} \
       -statevariable [namespace which -variable v::auto_binsize]
 
@@ -325,19 +325,19 @@ proc ::l1pro::tools::histelev::gui_general {f labelsVar} {
 
 proc ::l1pro::tools::histelev::gui_line {w labelsVar} {
    upvar $labelsVar labels
-   ::misc::labelframe::collapsible $w \
+   ::mixin::labelframe::collapsible $w \
       -text "Plot histogram line graph" \
       -variable [namespace which -variable v::show_line]
    set f [$w interior]
    ttk::label $f.lblcolor -text "Line color: "
    ttk::label $f.lblwidth -text "Line width: "
    ttk::label $f.lbltype -text "Line type: "
-   ::misc::combobox $f.color -state readonly \
+   ::mixin::combobox $f.color -state readonly \
       -textvariable [namespace which -variable v::linecolor] \
       -values $c::colors
    spinbox $f.width -from 0 -to 10 -increment 0.1 \
       -textvariable [namespace which -variable v::linewidth]
-   ::misc::combobox $f.type -state readonly \
+   ::mixin::combobox $f.type -state readonly \
       -textvariable [namespace which -variable v::linetype] \
       -values $c::types
    grid $f.lblcolor $f.color
@@ -352,19 +352,19 @@ proc ::l1pro::tools::histelev::gui_line {w labelsVar} {
 
 proc ::l1pro::tools::histelev::gui_box {w labelsVar} {
    upvar $labelsVar labels
-   ::misc::labelframe::collapsible $w \
+   ::mixin::labelframe::collapsible $w \
       -text "Plot histogram bar graph" \
       -variable [namespace which -variable v::show_box]
    set f [$w interior]
    ttk::label $f.lblcolor -text "Line color: "
    ttk::label $f.lblwidth -text "Line width: "
    ttk::label $f.lbltype -text "Line type: "
-   ::misc::combobox $f.color -state readonly \
+   ::mixin::combobox $f.color -state readonly \
       -textvariable [namespace which -variable v::boxcolor] \
       -values $c::colors
    spinbox $f.width -from 0 -to 10 -increment 0.1 \
       -textvariable [namespace which -variable v::boxwidth]
-   ::misc::combobox $f.type -state readonly \
+   ::mixin::combobox $f.type -state readonly \
       -textvariable [namespace which -variable v::boxtype] \
       -values $c::types
    grid $f.lblcolor $f.color
@@ -379,13 +379,13 @@ proc ::l1pro::tools::histelev::gui_box {w labelsVar} {
 
 proc ::l1pro::tools::histelev::gui_ticks {w labelsVar} {
    upvar $labelsVar labels
-   ::misc::labelframe::collapsible $w \
+   ::mixin::labelframe::collapsible $w \
       -text "Plot elevation tickmarks" \
       -variable [namespace which -variable v::show_ticks]
    set f [$w interior]
    ttk::label $f.lblcolor -text "Tick color: "
    ttk::label $f.lblsize -text "Tick size: "
-   ::misc::combobox $f.color -state readonly \
+   ::mixin::combobox $f.color -state readonly \
       -textvariable [namespace which -variable v::tickcolor] \
       -values $c::colors
    spinbox $f.size -from 0 -to 10 -increment 0.1 \
@@ -401,7 +401,7 @@ proc ::l1pro::tools::histelev::gui_ticks {w labelsVar} {
 
 proc ::l1pro::tools::histelev::gui_kde {w labelsVar} {
    upvar $labelsVar labels
-   ::misc::labelframe::collapsible $w \
+   ::mixin::labelframe::collapsible $w \
       -text "Plot kernel density estimate" \
       -variable [namespace which -variable v::show_kde]
    set f [$w interior]
@@ -412,7 +412,7 @@ proc ::l1pro::tools::histelev::gui_kde {w labelsVar} {
    ttk::label $f.lblcolor -text "Line color: "
    ttk::label $f.lblwidth -text "Line width: "
    ttk::label $f.lbltype -text "Line type: "
-   ::misc::combobox $f.kernel -state readonly -width 12 \
+   ::mixin::combobox $f.kernel -state readonly -width 12 \
       -textvariable [namespace which -variable v::kernel] \
       -values {uniform triangular epanechnikov quartic triweight gaussian cosine}
    ttk::button $f.profile -text " Profile " -width 0\
@@ -423,12 +423,12 @@ proc ::l1pro::tools::histelev::gui_kde {w labelsVar} {
       -textvariable [namespace which -variable v::bandwidth]
    spinbox $f.sample -from 1 -to 10000 -increment 1 \
       -textvariable [namespace which -variable v::kdesample]
-   ::misc::combobox $f.color -state readonly \
+   ::mixin::combobox $f.color -state readonly \
       -textvariable [namespace which -variable v::kdecolor] \
       -values $c::colors
    spinbox $f.width -from 0 -to 10 -increment 0.1 \
       -textvariable [namespace which -variable v::kdewidth]
-   ::misc::combobox $f.type -state readonly \
+   ::mixin::combobox $f.type -state readonly \
       -textvariable [namespace which -variable v::kdetype] \
       -values $c::types
    grid $f.lblkernel $f.kernel $f.profile
@@ -444,7 +444,7 @@ proc ::l1pro::tools::histelev::gui_kde {w labelsVar} {
       -sticky ew
    grid $f.lblautoband -sticky w
    grid columnconfigure $f 1 -weight 1
-   ::misc::statevar $f.bandwidth \
+   ::mixin::statevar $f.bandwidth \
       -statemap {0 normal 1 disabled} \
       -statevariable [namespace which -variable v::auto_bandwidth]
 
@@ -572,7 +572,7 @@ proc ::l1pro::tools::histclip::gui {} {
    ttk::label $f.lblmax -text "Maximum elevation: "
    ttk::label $f.lbloutput -text "Output variable: "
 
-   ::misc::combobox $f.input \
+   ::mixin::combobox $f.input \
       -state readonly \
       -listvariable ::varlist \
       -textvariable [namespace which -variable v::invar]
@@ -589,11 +589,11 @@ proc ::l1pro::tools::histclip::gui {} {
       -format %.2f \
       -textvariable [namespace which -variable v::maxelv]
 
-   ::misc::statevar $f.minelv \
+   ::mixin::statevar $f.minelv \
       -statemap {1 normal 0 disabled} \
       -statevariable [namespace which -variable v::usemin]
 
-   ::misc::statevar $f.maxelv \
+   ::mixin::statevar $f.maxelv \
       -statemap {1 normal 0 disabled} \
       -statevariable [namespace which -variable v::usemax]
 
@@ -714,15 +714,15 @@ proc ::l1pro::tools::griddata::gui {} {
    ttk::entry $f.output \
       -textvariable [namespace which -variable v::outvar]
 
-   ::misc::statevar $f.maxside \
+   ::mixin::statevar $f.maxside \
       -statemap {1 normal 0 disabled} \
       -statevariable [namespace which -variable v::useside]
 
-   ::misc::statevar $f.maxarea \
+   ::mixin::statevar $f.maxarea \
       -statemap {1 normal 0 disabled} \
       -statevariable [namespace which -variable v::usearea]
 
-   ::misc::statevar $f.tile \
+   ::mixin::statevar $f.tile \
       -statemap {1 normal 0 disabled} \
       -statevariable [namespace which -variable v::usetile]
 
@@ -834,7 +834,7 @@ proc ::l1pro::tools::datum::gui {} {
    ttk::label $f.inlbl -text "Input:"
    ttk::label $f.outlbl -text "Output:"
 
-   ::misc::combobox $f.invar \
+   ::mixin::combobox $f.invar \
       -state readonly -width [expr {[string length $v::invar]+2}] \
       -textvariable [namespace which -variable v::invar] \
       -listvariable ::varlist
@@ -844,15 +844,15 @@ proc ::l1pro::tools::datum::gui {} {
       -textvariable [namespace which -variable v::outvar]
 
    foreach kind {in out} {
-      ::misc::combobox $f.${kind}datum \
+      ::mixin::combobox $f.${kind}datum \
          -state readonly -width 4 \
          -textvariable [namespace which -variable v::${kind}datum] \
          -listvariable [namespace which -variable v::datumlist]
-      ::misc::combobox $f.${kind}geoid \
+      ::mixin::combobox $f.${kind}geoid \
          -state readonly -width 4 \
          -textvariable [namespace which -variable v::${kind}geoid] \
          -listvariable [namespace which -variable v::geoidlist]
-      ::misc::statevar $f.${kind}geoid \
+      ::mixin::statevar $f.${kind}geoid \
          -statemap {w84 disabled n83 disabled n88 readonly} \
          -statevariable [namespace which -variable v::${kind}datum]
       grid $f.${kind}lbl $f.${kind}var $f.${kind}datum $f.${kind}geoid \

@@ -61,7 +61,7 @@ itcl::body DataStatsWindow::constructor {data args} {
 
    set f $w.fraHead
    ttk::frame $f
-   ::misc::combobox $f.cboStatistic \
+   ::mixin::combobox $f.cboStatistic \
       -textvariable [itcl::scope _statistic] \
       -state readonly \
       -modifycmd [itcl::code $this refresh_fields] \

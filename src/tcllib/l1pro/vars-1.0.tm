@@ -375,7 +375,7 @@ snit::widgetadaptor ::l1pro::vars::gui::vartree {
    option -varinfo -default {} -configuremethod {Update varinfo}
 
    constructor args {
-      installhull using ::misc::treeview::sortable \
+      installhull using ::mixin::treeview::sortable \
          -columns [list name structof dimsof sizeof] \
          -show headings -selectmode extended
 

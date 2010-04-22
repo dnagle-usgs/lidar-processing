@@ -149,7 +149,7 @@ proc ::l1pro::drast::gui_tools f {
 }
 
 proc ::l1pro::drast::gui_opts f {
-   ::misc::labelframe::collapsible $f -text "Options"
+   ::mixin::labelframe::collapsible $f -text "Options"
    $f invoke
    set f [$f interior]
 
@@ -220,7 +220,7 @@ proc ::l1pro::drast::gui_opts f {
 }
 
 proc ::l1pro::drast::gui_opts_play {f labelgrid} {
-   misc::labelframe::collapsible $f -text "Playback"
+   ::mixin::labelframe::collapsible $f -text "Playback"
    set f [$f interior]
    spinbox $f.playint -from 0 -to 10000 -increment 0.1 -width 0 \
       -textvariable [namespace which -variable v::playint]
@@ -251,11 +251,11 @@ proc ::l1pro::drast::gui_opts_play {f labelgrid} {
 }
 
 proc ::l1pro::drast::gui_opts_rast {f labelgrid} {
-   misc::labelframe::collapsible $f -text "Rast: Unreferenced raster"
+   ::mixin::labelframe::collapsible $f -text "Rast: Unreferenced raster"
    set f [$f interior]
    spinbox $f.winrast -from 0 -to 63 -increment 1 -width 0 \
       -textvariable [namespace which -variable v::rastwin]
-   ::misc::combobox::mapping $f.units -state readonly -width 0 \
+   ::mixin::combobox::mapping $f.units -state readonly -width 0 \
       -modifycmd [namespace which -command send_rastunits] \
       -altvariable [namespace which -variable v::rastunits] \
       -mapping {
@@ -267,7 +267,7 @@ proc ::l1pro::drast::gui_opts_rast {f labelgrid} {
 }
 
 proc ::l1pro::drast::gui_opts_geo {f labelgrid} {
-   misc::labelframe::collapsible $f -text "Geo: Georeferenced raster"
+   ::mixin::labelframe::collapsible $f -text "Geo: Georeferenced raster"
    set f [$f interior]
    spinbox $f.eoffset -from -1000 -to 1000 -increment 0.01 -width 0 \
       -textvariable [namespace which -variable v::eoffset]
@@ -279,7 +279,7 @@ proc ::l1pro::drast::gui_opts_geo {f labelgrid} {
       -textvariable [namespace which -variable v::geoymax]
    spinbox $f.ymin -from -1000 -to 1000 -increment 0.01 -width 0 \
       -textvariable [namespace which -variable v::geoymin]
-   ::misc::combobox $f.style -state readonly -width 0 \
+   ::mixin::combobox $f.style -state readonly -width 0 \
       -textvariable [namespace which -variable v::geostyle] \
       -values {pli plcm}
    spinbox $f.rcfw -from 0 -to 10000 -increment 1 -width 0 \
@@ -304,9 +304,9 @@ proc ::l1pro::drast::gui_opts_geo {f labelgrid} {
    apply $labelgrid $f.ymin "Y min:" $f.ymax "Y max:"
    apply $labelgrid $f.styles "Plot style:"
 
-   ::misc::statevar $f.ymin -statemap {0 disabled 1 normal} \
+   ::mixin::statevar $f.ymin -statemap {0 disabled 1 normal} \
       -statevariable [namespace which -variable v::geoyuse]
-   ::misc::statevar $f.ymax -statemap {0 disabled 1 normal} \
+   ::mixin::statevar $f.ymax -statemap {0 disabled 1 normal} \
       -statevariable [namespace which -variable v::geoyuse]
 
    ::tooltip::tooltip $f.rcfw \
@@ -315,13 +315,13 @@ proc ::l1pro::drast::gui_opts_geo {f labelgrid} {
 }
 
 proc ::l1pro::drast::gui_opts_wf {f labelgrid} {
-   misc::labelframe::collapsible $f -text "WF: Examine waveforms"
+   ::mixin::labelframe::collapsible $f -text "WF: Examine waveforms"
    set f [$f interior]
    spinbox $f.winwf -from 0 -to 63 -increment 1 -width 0 \
       -textvariable [namespace which -variable v::wfwin]
    spinbox $f.winbath -from 0 -to 63 -increment 1 -width 0 \
       -textvariable [namespace which -variable v::wfwinbath]
-   ::misc::combobox $f.src -state readonly -width 0 \
+   ::mixin::combobox $f.src -state readonly -width 0 \
       -textvariable [namespace which -variable v::wfsrc] \
       -values {rast geo}
    ttk::checkbutton $f.use1 -text "90% channel (black)" \
@@ -339,14 +339,14 @@ proc ::l1pro::drast::gui_opts_wf {f labelgrid} {
 }
 
 proc ::l1pro::drast::gui_opts_sline {f labelgrid} {
-   misc::labelframe::collapsible $f -text "Scanline"
+   ::mixin::labelframe::collapsible $f -text "Scanline"
    set f [$f interior]
    spinbox $f.win -from 0 -to 63 -increment 1 -width 0 \
       -textvariable [namespace which -variable v::slinewin]
-   ::misc::combobox $f.style -state readonly -width 0 \
+   ::mixin::combobox $f.style -state readonly -width 0 \
       -textvariable [namespace which -variable v::slinestyle] \
       -values {straight average smooth actual}
-   ::misc::combobox $f.color -state readonly -width 0 \
+   ::mixin::combobox $f.color -state readonly -width 0 \
       -textvariable [namespace which -variable v::slinecolor] \
       -values {black red blue green cyan magenta yellow white}
    ttk::frame $f.styles
@@ -363,7 +363,7 @@ proc ::l1pro::drast::gui_opts_sline {f labelgrid} {
 }
 
 proc ::l1pro::drast::gui_opts_export {f labelgrid} {
-   misc::labelframe::collapsible $f -text "Export"
+   ::mixin::labelframe::collapsible $f -text "Export"
    set f [$f interior]
    ttk::checkbutton $f.enable -text "Enable auto-exporting" \
       -variable [namespace which -variable v::export]

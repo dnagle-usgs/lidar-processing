@@ -180,7 +180,7 @@ proc create_transbuttons { cnt } {
 
       pack $tw.f2$tbi.process -side left -fill x -padx 2
 
-      ::misc::combobox $tw.f2$tbi.cln_vars -listvariable ::varlist \
+      ::mixin::combobox $tw.f2$tbi.cln_vars -listvariable ::varlist \
          -state readonly \
          -width 10 \
          -modifycmd {
@@ -210,7 +210,7 @@ proc create_transbuttons { cnt } {
 #     pack $tw.f2$tbi.fma $tw.f2$tbi.fmaval -side left -fill x -padx 2
 
       Label $tw.f2$tbi.show -text "show="
-      ::misc::combobox $tw.f2$tbi.showval -values $show_list \
+      ::mixin::combobox $tw.f2$tbi.showval -values $show_list \
          -state readonly \
          -width 2
       $tw.f2$tbi.showval setvalue @1
@@ -220,7 +220,7 @@ proc create_transbuttons { cnt } {
 
 
       Label $tw.f2$tbi.width -text "w="
-      ::misc::combobox $tw.f2$tbi.widthval -values $width_list \
+      ::mixin::combobox $tw.f2$tbi.widthval -values $width_list \
          -state readonly \
          -width 3
       $tw.f2$tbi.widthval setvalue @1
@@ -228,7 +228,7 @@ proc create_transbuttons { cnt } {
       pack $tw.f2$tbi.width $tw.f2$tbi.widthval -side left -fill x -padx 2
 
       Label $tw.f2$tbi.recall -text "recall="
-      ::misc::combobox $tw.f2$tbi.recallval -values $recall_list \
+      ::mixin::combobox $tw.f2$tbi.recallval -values $recall_list \
          -state readonly \
          -width 2
       $tw.f2$tbi.recallval setvalue first
@@ -237,7 +237,7 @@ proc create_transbuttons { cnt } {
       pack $tw.f2$tbi.recall $tw.f2$tbi.recallval -side left -fill x -padx 2
 
       Label $tw.f2$tbi.color -text "color="
-      ::misc::combobox $tw.f2$tbi.colorval -values $color_list \
+      ::mixin::combobox $tw.f2$tbi.colorval -values $color_list \
          -state readonly \
          -width 3
       $tw.f2$tbi.colorval setvalue @8
@@ -245,7 +245,7 @@ proc create_transbuttons { cnt } {
       pack $tw.f2$tbi.color $tw.f2$tbi.colorval -side left -fill x -padx 2
 
       Label $tw.f2$tbi.iwin -text "iwin="
-      ::misc::combobox $tw.f2$tbi.iwnval -values $lwin_list \
+      ::mixin::combobox $tw.f2$tbi.iwnval -values $lwin_list \
          -state readonly \
          -width 3
       $tw.f2$tbi.iwnval setvalue @5
@@ -253,7 +253,7 @@ proc create_transbuttons { cnt } {
       pack $tw.f2$tbi.iwin $tw.f2$tbi.iwnval -side left -fill x -padx 2
 
       Label $tw.f2$tbi.owin -text "owin="
-      ::misc::combobox $tw.f2$tbi.ownval -values $lwin_list \
+      ::mixin::combobox $tw.f2$tbi.ownval -values $lwin_list \
          -state readonly \
          -width 3
       $tw.f2$tbi.ownval setvalue @2
@@ -262,7 +262,7 @@ proc create_transbuttons { cnt } {
 
 
       Label $tw.f2$tbi.rtn -text "rtn="
-      ::misc::combobox $tw.f2$tbi.rtnval -values $rtn_list \
+      ::mixin::combobox $tw.f2$tbi.rtnval -values $rtn_list \
          -state readonly \
          -width 2
       $tw.f2$tbi.rtnval setvalue @0
@@ -312,7 +312,7 @@ setTooltip $pf.f1.show_track "Displays positions from\ndata in specified window"
 
 
 Label $pf.f1.fs -text "FS:"
-::misc::combobox $pf.f1.fsval -values $track_list \
+::mixin::combobox $pf.f1.fsval -values $track_list \
    -state readonly \
    -width 10 
 $pf.f1.fsval setvalue @0
@@ -320,7 +320,7 @@ $pf.f1.fsval setvalue @0
 pack $pf.f1.fsval -side left -fill x -padx 2
 
 Label $pf.f1.utm -text "utm="
-::misc::combobox $pf.f1.utmval -values $utm_list \
+::mixin::combobox $pf.f1.utmval -values $utm_list \
    -state readonly \
    -width 2
 $pf.f1.utmval setvalue @1
@@ -329,7 +329,7 @@ pack $pf.f1.utm $pf.f1.utmval -side left -fill x -padx 2
 
 
 Label $pf.f1.skip -text "skip="
-::misc::combobox $pf.f1.skipval -values $skip_list \
+::mixin::combobox $pf.f1.skipval -values $skip_list \
    -state readonly \
    -width 2 
 $pf.f1.skipval setvalue @1
@@ -337,7 +337,7 @@ $pf.f1.skipval setvalue @1
 pack $pf.f1.skip $pf.f1.skipval -side left -fill x -padx 2
 
 Label $pf.f1.color -text "color="
-::misc::combobox $pf.f1.colorval -values $cname_list \
+::mixin::combobox $pf.f1.colorval -values $cname_list \
    -state readonly \
    -width 7
 $pf.f1.colorval setvalue @2
@@ -346,7 +346,7 @@ pack $pf.f1.color $pf.f1.colorval -side left -fill x -padx 2
 
 
 Label $pf.f1.win -text "win="
-::misc::combobox $pf.f1.winval -values $swin_list \
+::mixin::combobox $pf.f1.winval -values $swin_list \
    -state readonly \
    -width 3
 $pf.f1.winval setvalue @5
@@ -355,7 +355,7 @@ pack $pf.f1.win $pf.f1.winval -side left -fill x -padx 2
 
 
 Label $pf.f1.msize -text "msize="
-::misc::combobox $pf.f1.msizeval -values $msize_list \
+::mixin::combobox $pf.f1.msizeval -values $msize_list \
    -state readonly \
    -width 3 
 $pf.f1.msizeval setvalue @0

@@ -95,7 +95,7 @@ proc ytk_image_load_tool { {start_dir "~/"} } {
 					}
 				}
 
-   ::misc::combobox $lw.3.type.sys -text "Coordinate System" -width 18 \
+   ::mixin::combobox $lw.3.type.sys -text "Coordinate System" -width 18 \
       -values [list LatLon UTM] -state disabled
    ::tooltip::tooltip $lw.3.type.sys "Select the Coordinate System."
 
@@ -104,7 +104,7 @@ proc ytk_image_load_tool { {start_dir "~/"} } {
 		-textvariable img_utmzone 
 
 	Label $lw.3.type.originlabel -text "Image Origin:"
-   ::misc::combobox $lw.3.type.origin -state readonly -width 5 \
+   ::mixin::combobox $lw.3.type.origin -state readonly -width 5 \
       -textvariable img_origin -values [list NW SW NE SE]
 
 	LabelEntry $lw.3.utmnorth.min -width 12 -relief sunken -label "Min UTM Northing: " \
@@ -128,7 +128,7 @@ proc ytk_image_load_tool { {start_dir "~/"} } {
    ::tooltip::tooltip $lw.5.img_winno "Select the Yorick window number to plot"
 	
 	Label $lw.5.img_winsizelabel -text "Size:"
-   ::misc::combobox $lw.5.img_winsize -width 8 -state readonly \
+   ::mixin::combobox $lw.5.img_winsize -width 8 -state readonly \
       -textvariable img_winsize -values [list small medium large huge]
    set ::img_winsize small
 	

@@ -418,8 +418,8 @@ snit::widget ::sf::gui {
       text $f -wrap word -width 5 -height 1 \
          -relief flat -selectborderwidth 0 -highlightthickness 0
 
-      ::misc::text::readonly $f
-      ::misc::text::autoheight $f
+      ::mixin::text::readonly $f
+      ::mixin::text::autoheight $f
 
       foreach t [list date hms sod soe] {
          $f tag add $t 1.0

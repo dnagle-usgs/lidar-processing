@@ -448,7 +448,7 @@ namespace eval ::pixelwf::gui {
          lappend vals [mc $item]
       }
 
-      ::misc::combobox $cboAction -state readonly -width 0 \
+      ::mixin::combobox $cboAction -state readonly -width 0 \
          -modifycmd "set ${ns}::dest_action \[$cboAction current\]" \
          -values $vals
       $cboAction setvalue first
@@ -465,7 +465,7 @@ namespace eval ::pixelwf::gui {
    }
 
    proc helper_combobox {w v} {
-      ::misc::combobox $w -state readonly -textvariable $v -width 0 \
+      ::mixin::combobox $w -state readonly -textvariable $v -width 0 \
          -values [::pixelwf::util::valid_values $v]
    }
 
@@ -560,7 +560,7 @@ namespace eval ::pixelwf::gui {
       frame $f
 
       label $f.lblDay -text [mc missionday]:
-      ::misc::combobox $f.cboDay -textvariable ${ns}::missionday \
+      ::mixin::combobox $f.cboDay -textvariable ${ns}::missionday \
          -state readonly -width 0 \
          -listvariable ::pixelwf::gui::missionday_list \
          -postcommand ::pixelwf::gui::helper_update_days
@@ -580,7 +580,7 @@ namespace eval ::pixelwf::gui {
       setTooltip $f.spnRadius [mc "Search radius in meters"]
 
       label $f.lblVar -text [mc pro_var]:
-      ::misc::combobox $f.cboVar -textvariable ::pro_var -state readonly \
+      ::mixin::combobox $f.cboVar -textvariable ::pro_var -state readonly \
          -width 0 -listvariable ::varlist
 
       checkbutton $f.chkSf -text [mc "SF Sync"] -variable ${ns}::sfsync

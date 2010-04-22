@@ -79,7 +79,7 @@ snit::widget ::l1pro::file::gui::save_pbd_as {
          -command [mymethod select_file]
 
       ttk::label $win.lblData -text "Data variable: "
-      misc::combobox $win.cboData \
+      ::mixin::combobox $win.cboData \
          -textvariable [myvar vdata] \
          -listvariable ::varlist
 
@@ -299,13 +299,13 @@ snit::widget ::l1pro::file::gui::export_ascii {
       ttk::frame $win.f3
 
       ttk::label $win.lblVname -text "Data variable: "
-      misc::combobox $win.cboVname \
+      ::mixin::combobox $win.cboVname \
          -textvariable [myvar vname] \
          -state readonly \
          -listvariable ::varlist
 
       ttk::label $win.lblType -text "Data mode: "
-      misc::combobox::mapping $win.cboType \
+      ::mixin::combobox::mapping $win.cboType \
          -altvariable [myvar mode] \
          -state readonly \
          -mapping {
@@ -328,13 +328,13 @@ snit::widget ::l1pro::file::gui::export_ascii {
          -variable [myvar intensity]
 
       ttk::label $win.lblDelimit -text "Delimiter: "
-      misc::combobox $win.cboDelimit \
+      ::mixin::combobox $win.cboDelimit \
          -state readonly \
          -textvariable [myvar delimiter] \
          -values {space comma semicolon}
 
       ttk::label $win.lblCoordinates -text "Coordinates: "
-      misc::combobox $win.cboCoordinates \
+      ::mixin::combobox $win.cboCoordinates \
          -state readonly \
          -textvariable [myvar coordinates] \
          -values {UTM "Geographic (lat/lon)"}
@@ -468,7 +468,7 @@ snit::widget ::l1pro::file::gui::load_las {
          -command [mymethod select_file]
 
       ttk::label $win.lblStruct -text "Structure: "
-      misc::combobox $win.cboStruct \
+      ::mixin::combobox $win.cboStruct \
          -state readonly \
          -textvariable [myvar struct] \
          -values {FS VEG__}

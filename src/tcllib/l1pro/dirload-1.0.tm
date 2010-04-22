@@ -67,7 +67,7 @@ proc ::l1pro::dirload::gui {} {
       -textvariable [namespace which -variable v::skip]
 
    ttk::label $f.lblZone -text "Zone:"
-   ::misc::combobox $f.cboZone -state readonly -width 5 \
+   ::mixin::combobox $f.cboZone -state readonly -width 5 \
       -textvariable [namespace which -variable v::zone] \
       -listvariable [namespace which -variable v::zonelist]
 

@@ -149,7 +149,7 @@ itcl::body SegmentedDataWindow::constructor {args} {
       checkbutton $f.chk$idx \
          -variable [itcl::scope _segment($idx,use)]
 
-      ::misc::combobox $f.cbo$idx \
+      ::mixin::combobox $f.cbo$idx \
          -textvariable [itcl::scope _segment($idx,var)] \
          -state readonly \
          -modifycmd [itcl::code $this clear_time $idx] \

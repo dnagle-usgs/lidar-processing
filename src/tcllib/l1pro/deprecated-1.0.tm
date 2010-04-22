@@ -34,7 +34,7 @@ proc ::l1pro::deprecated::read_data_dir_older {} {
         set data_file_path $path
       }
 
-      ::misc::combobox .l1dir.3.dtype -text "Data Type..." -width 10 \
+      ::mixin::combobox .l1dir.3.dtype -text "Data Type..." -width 10 \
         -state readonly -takefocus 0 \
         -values [list pbd edf bin] \
         -modifycmd {
@@ -169,7 +169,7 @@ proc ::l1pro::deprecated::l1dir::gui {} {
       -command [namespace code butPath_cmd]
 
   label $win.lblType -text "Data Type:"
-  ::misc::combobox $win.cboType -state readonly \
+  ::mixin::combobox $win.cboType -state readonly \
     -textvariable [namespace which -variable v::datatype] \
     -values [list $v::type_pbd $v::type_yfile]
 
@@ -201,7 +201,7 @@ proc ::l1pro::deprecated::l1dir::gui {} {
       -textvariable [namespace which -variable v::zone]
 
    label $fra.lblTiles -text "Tile Type:"
-   ::misc::combobox $fra.cboTiles -state readonly \
+   ::mixin::combobox $fra.cboTiles -state readonly \
       -textvariable [namespace which -variable v::tiletype] \
       -values [list $v::tile_dt $v::tile_qq]
 
@@ -622,7 +622,7 @@ proc ::l1pro::deprecated::load_eaarl_data_from_map_limits {} {
             -mustexist 1 -title "Processed Data Directory" ]/
         }
 
-      ::misc::combobox .l1map.2.mode -text "Data Type..." -width 10 \
+      ::mixin::combobox .l1map.2.mode -text "Data Type..." -width 10 \
         -state readonly -values [list FirstSurface Bathy BareEarth] \
         -takefocus 0 \
         -modifycmd {
@@ -777,7 +777,7 @@ proc ::l1pro::deprecated::ascii_output {} {
       LabelFrame .l1asc.ops -justify center -relief groove -borderwidth 3 \
         -text "Options:"
       set utmll "UTM"
-      ::misc::combobox .l1asc.ops.0 -textvariable utmll -state readonly \
+      ::mixin::combobox .l1asc.ops.0 -textvariable utmll -state readonly \
         -values [list UTM LATLON] -width 8
       LabelFrame .l1asc.ops.1 -justify center -relief groove -borderwidth 3 \
         -text "Include:"
@@ -807,7 +807,7 @@ proc ::l1pro::deprecated::ascii_output {} {
       Separator .l1asc.ops.2.s1 -orient vertical -bg black -relief groove
 
       label .l1asc.ops.2.dl -text "Delimiter: "
-      ::misc::combobox .l1asc.ops.2.d -textvariable delimit -state readonly \
+      ::mixin::combobox .l1asc.ops.2.d -textvariable delimit -state readonly \
         -values [list comma semicolon space] -width 10
 
       LabelEntry .l1asc.ops.2.split -width 7 -bd 3 \
@@ -997,7 +997,7 @@ proc ::l1pro::deprecated::rcf_region {} {
       frame .rcf.5
       frame .rcf.6
 
-      ::misc::combobox .rcf.0.mode -text "Select RCF type" -width 18 \
+      ::mixin::combobox .rcf.0.mode -text "Select RCF type" -width 18 \
          -values [list RCF "Iterative RCF"] \
          -state readonly \
          -modifycmd {
@@ -1045,7 +1045,7 @@ proc ::l1pro::deprecated::rcf_region {} {
 
       Label .rcf.2.varname -text "Input Variable:"
 
-      ::misc::combobox .rcf.2.varlist \
+      ::mixin::combobox .rcf.2.varlist \
          -textvariable rcf_var \
          -listvariable varlist \
          -state readonly -width 10 \
@@ -1056,7 +1056,7 @@ proc ::l1pro::deprecated::rcf_region {} {
       set rcf_var $pro_var
 
       Label .rcf.2.dispname -text "Mode:"
-      ::misc::combobox .rcf.2.disp -width 20 -state readonly \
+      ::mixin::combobox .rcf.2.disp -width 20 -state readonly \
          -values $l1pro_data(processing_mode)
       ::tooltip::tooltip .rcf.2.disp "Select any one of the following"
 
@@ -1164,7 +1164,7 @@ proc ::l1pro::deprecated::datum_proc {} {
 
     Label .con.05.varname -text "Input Variable:"
 
-    ::misc::combobox .con.05.varlist \
+    ::mixin::combobox .con.05.varlist \
       -textvariable ::datum_var -state readonly \
       -listvariable ::varlist
     set datum_var $pro_var

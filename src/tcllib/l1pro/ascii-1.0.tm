@@ -74,7 +74,7 @@ snit::widget ::l1pro::ascii::gui {
          -command [mymethod select_file]
 
       ttk::label $w.structlbl -text "Structure:"
-      ::misc::combobox $w.struct \
+      ::mixin::combobox $w.struct \
          -state readonly \
          -textvariable [myvar struct] \
          -values [list VEG__ FS GEO]
@@ -251,10 +251,10 @@ snit::widget ::l1pro::ascii::gui {
       grid $w.outdir $w.outdirbrowse -in $w.outdirf -sticky ew -padx 2
       grid columnconfigure $w.outdirf 0 -weight 1
 
-      ::misc::statevar $w.outdir \
+      ::mixin::statevar $w.outdir \
          -statemap {0 disabled 1 readonly} \
          -statevariable [myvar useoutdir]
-      ::misc::statevar $w.outdirbrowse \
+      ::mixin::statevar $w.outdirbrowse \
          -statemap {0 disabled 1 normal} \
          -statevariable [myvar useoutdir]
 
@@ -465,7 +465,7 @@ snit::widgetadaptor ::l1pro::ascii::sample {
    constructor args {
       installhull using ttk::frame
 
-      install text using ::misc::text::readonly $win.text
+      install text using ::mixin::text::readonly $win.text
       install vsb using ttk::scrollbar $win.vsb -orient vertical
       install hsb using ttk::scrollbar $win.hsb -orient horizontal
       grid $text $vsb -sticky news

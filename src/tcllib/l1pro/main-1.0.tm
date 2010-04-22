@@ -13,7 +13,7 @@ if {![namespace exists ::l1pro::main]} {
 }
 
 proc ::l1pro::main::panel_processing w {
-   ::misc::labelframe::collapsible $w -text "Processing"
+   ::mixin::labelframe::collapsible $w -text "Processing"
    set f [$w interior]
 
    menu $f.regionmenu
@@ -35,7 +35,7 @@ proc ::l1pro::main::panel_processing w {
    ttk::menubutton $f.opt -text "Options" -menu $f.optmenu \
       -style Panel.TMenubutton
 
-   ::misc::combobox $f.mode -state readonly -width 4 \
+   ::mixin::combobox $f.mode -state readonly -width 4 \
       -textvariable ::plot_settings(processing_mode) \
       -values $::l1pro_data(processing_mode)
 
@@ -44,7 +44,7 @@ proc ::l1pro::main::panel_processing w {
       -width 2 -textvariable ::_map(window)
 
    ttk::label $f.varlbl -text "Use variable:"
-   ::misc::combobox $f.var -width 4 \
+   ::mixin::combobox $f.var -width 4 \
       -textvariable ::pro_var_next \
       -listvariable ::varlist
 
@@ -73,7 +73,7 @@ proc ::l1pro::main::panel_processing w {
 }
 
 proc ::l1pro::main::panel_tools w {
-   ::misc::labelframe::collapsible $w -text "Tools"
+   ::mixin::labelframe::collapsible $w -text "Tools"
    set f [$w interior]
 
    ttk::button $f.pixelwf -text " Pixel \n Analysis " -width 0 \
@@ -90,7 +90,7 @@ proc ::l1pro::main::panel_tools w {
       -command ::l1pro::tools::histclip::gui
    ttk::button $f.griddata -text " Grid " -width 0 \
       -command ::l1pro::tools::griddata::gui
-   misc::combobox::mapping $f.gridtype -width 0 \
+   ::mixin::combobox::mapping $f.gridtype -width 0 \
       -state readonly \
       -altvariable ::gridtype \
       -mapping {
