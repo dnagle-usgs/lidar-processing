@@ -6,6 +6,7 @@ package provide l1pro::file 1.0
 if {![namespace exists ::l1pro::file]} {
    namespace eval ::l1pro::file {
       namespace eval gui {}
+      namespace export prefix
    }
 }
 
