@@ -113,19 +113,28 @@ proc ::l1pro::main::panel_cbar w {
    grid columnconfigure $f 1 -weight 1
 
    regsub -all \\\$f {
-      if {! $::cbv} {
-         foreach widget {$f.max $f.dlt $f.min} {
-            $widget configure -state normal
-         }
-         switch -- $::cbar_locked {
-            cmax {$f.max configure -state disabled}
-            cmin {$f.min configure -state disabled}
-            cdelta {$f.dlt configure -state disabled}
-         }
+      foreach widget {$f.max $f.dlt $f.min} {
+         $widget configure -state normal
+      }
+      switch -- $::cbar_locked {
+         cmax {$f.max configure -state disabled}
+         cmin {$f.min configure -state disabled}
+         cdelta {$f.dlt configure -state disabled}
       }
    } $f cmd
    trace add variable ::cbar_locked write [list apply [list {v1 v2 op} $cmd]]
    set ::cbar_locked $::cbar_locked
+
+   ::tooltip::tooltip $f.constant \
+      "Toggle whether colorbars should be constant for all variables.\
+      \n  unlocked: each variable has its own colorbar\
+      \n  locked: colorbar shared by all variables"
+   ::tooltip::tooltip $f.maxlock \
+      "When locked, CMax will be automatically updated based on CDelta and CMin."
+   ::tooltip::tooltip $f.dltlock \
+      "When locked, CDelta will be automatically updated based on CMax and CMin."
+   ::tooltip::tooltip $f.minlock \
+      "When locked, CMin will be automatically updated based on CMax and CDelta."
 
    return $w
 }

@@ -634,6 +634,9 @@ snit::widgetadaptor ::mixin::labelframe::collapsible {
       grid columnconfigure $win 0 -weight 1
       grid rowconfigure $win 0 -weight 1
 
+      ::tooltip::tooltip $toggle \
+         "Click to expand or collapse this section."
+
       if {[lsearch -exact $args -variable] == -1} {
          set ::$toggle 1
          $self configure -variable ""
