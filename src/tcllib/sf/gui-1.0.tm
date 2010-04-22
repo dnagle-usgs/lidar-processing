@@ -10,6 +10,7 @@ package require Iwidgets
 package require snit
 package require tooltip
 package require getstring
+package require imglib
 
 namespace eval ::sf {}
 
@@ -484,15 +485,20 @@ snit::widget ::sf::gui {
       variable ::sf::gui::img
 
       ttk::frame $f
-      ttk::button $f.stepfwd -image $img(step,fwd) -style Toolbutton \
+      ttk::button $f.stepfwd -style Toolbutton \
+         -image ::imglib::vcr::stepfwd \
          -command [mymethod controller step forward]
-      ttk::button $f.stepbwd -image $img(step,bwd) -style Toolbutton \
+      ttk::button $f.stepbwd -style Toolbutton \
+         -image ::imglib::vcr::stepbwd \
          -command [mymethod controller step backward]
-      ttk::button $f.playfwd -image $img(play,fwd) -style Toolbutton \
+      ttk::button $f.playfwd -style Toolbutton \
+         -image ::imglib::vcr::playfwd \
          -command [mymethod controller play forward]
-      ttk::button $f.playbwd -image $img(play,bwd) -style Toolbutton \
+      ttk::button $f.playbwd -style Toolbutton \
+         -image ::imglib::vcr::playbwd \
          -command [mymethod controller play backward]
-      ttk::button $f.stop -image $img(stop) -style Toolbutton \
+      ttk::button $f.stop -style Toolbutton \
+         -image ::imglib::vcr::stop \
          -command [mymethod controller play stop]
       ttk::separator $f.spacer -orient vertical
 
@@ -591,9 +597,11 @@ snit::widget ::sf::gui {
    method {Create toolbar alps} f {
       variable ::sf::gui::img
       ttk::frame $f
-      ttk::button $f.plot -image $img(plot) -style Toolbutton \
+      ttk::button $f.plot -style Toolbutton \
+         -image ::imglib::misc::plot \
          -command [mymethod controller plot]
-      ttk::button $f.raster -image $img(raster) -style Toolbutton \
+      ttk::button $f.raster -style Toolbutton \
+         -image ::imglib::misc::raster \
          -command [mymethod controller raster]
 
       grid $f.plot $f.raster
@@ -761,102 +769,4 @@ snit::widget ::sf::gui {
          $controller play stop
       }
    }
-}
-
-namespace eval ::sf::gui {
-   #===========================================================================#
-   #                                 Resources                                 #
-   #---------------------------------------------------------------------------#
-   # Following are resources that are shared across multiple instances of the  #
-   # GUI class.                                                                #
-   #===========================================================================#
-
-   # -------------------------------- Images -----------------------------------
-
-   # The GUI uses some custom bitmap images for its buttons.
-
-   # img(play,fwd)
-   #     A solid triangle pointing right, similar to: >
-   set img(play,fwd) [image create bitmap -data {
-      #define right-arrow_width 16
-      #define right-arrow_height 16
-      static unsigned char right-arrow_bits[] = {
-         0x00, 0x00, 0x20, 0x00, 0x60, 0x00, 0xe0, 0x00, 0xe0, 0x01, 0xe0, 0x03,
-         0xe0, 0x07, 0xe0, 0x0f, 0xe0, 0x07, 0xe0, 0x03, 0xe0, 0x01, 0xe0, 0x00,
-         0x60, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00};
-   }]
-
-   # img(play,bwd)
-   #     A solid triangle pointing left, similar to: <
-   set img(play,bwd) [image create bitmap -data {
-      #define left-arrow_width 16
-      #define left-arrow_height 16
-      static unsigned char left-arrow_bits[] = {
-         0x00, 0x00, 0x00, 0x04, 0x00, 0x06, 0x00, 0x07, 0x80, 0x07, 0xc0, 0x07,
-         0xe0, 0x07, 0xf0, 0x07, 0xe0, 0x07, 0xc0, 0x07, 0x80, 0x07, 0x00, 0x07,
-         0x00, 0x06, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00};
-   }]
-
-   # img(step,fwd)
-   #     A solid triangle pointing right, with a solid vertical line to its
-   #     left. Similar to: |>
-   set img(step,fwd) [image create bitmap -data {
-      #define right-arrow-single_width 16
-      #define right-arrow-single_height 16
-      static unsigned char right-arrow-single_bits[] = {
-         0x00, 0x00, 0xb0, 0x00, 0xb0, 0x01, 0xb0, 0x03, 0xb0, 0x07, 0xb0, 0x0f,
-         0xb0, 0x1f, 0xb0, 0x3f, 0xb0, 0x1f, 0xb0, 0x0f, 0xb0, 0x07, 0xb0, 0x03,
-         0xb0, 0x01, 0xb0, 0x00, 0x00, 0x00, 0x00, 0x00};
-   }]
-
-   # img(step,bwd)
-   #     A solid triangle pointing left, with a solid vertical line to its
-   #     right. Similar to: <|
-   set img(step,bwd) [image create bitmap -data {
-      #define left-arrow-single_width 16
-      #define left-arrow-single_height 16
-      static unsigned char left-arrow-single_bits[] = {
-         0x00, 0x00, 0x00, 0x0d, 0x80, 0x0d, 0xc0, 0x0d, 0xe0, 0x0d, 0xf0, 0x0d,
-         0xf8, 0x0d, 0xfc, 0x0d, 0xf8, 0x0d, 0xf0, 0x0d, 0xe0, 0x0d, 0xc0, 0x0d,
-         0x80, 0x0d, 0x00, 0x0d, 0x00, 0x00, 0x00, 0x00};
-   }]
-
-   # img(stop)
-   #     A solid square.
-   set img(stop) [image create bitmap -data {
-      #define stop_width 16
-      #define stop_height 16
-      static unsigned char stop_bits[] = {
-         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x0f, 0xf0, 0x0f,
-         0xf0, 0x0f, 0xf0, 0x0f, 0xf0, 0x0f, 0xf0, 0x0f, 0xf0, 0x0f, 0xf0, 0x0f,
-         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-   }]
-
-   # img(plot)
-   #     Depicts a red square on a blue line, as would be seen in Yorick when
-   #     plotting the point.
-   set img(plot) [image create photo -format gif -data {
-      R0lGODdhEAAQAJEAAAAA/+fn5/8AAP///ywAAAAAEAAQAAACIUSOqWHr196KMtF6hN5C9vQ5
-      YeYpo4k+3IZZrftCsTwDBQA7
-   }]
-
-   # img(raster)
-   #     Depicts an excerpt/thumbnail of a plotted lidar raster.
-   set img(raster) [image create photo -format png -data {
-      iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAIAAAHnlligAAAABGdBTUEAAYagMeiWXwAAAttJ
-      REFUKJEFwd1vU2UYAPDned9z2o3OjhHsVtgcMBUxcdCJvSCDkEUTL1AIFyByoTde+AcYzDRR
-      g1Gj0RujF0KiidFERaMmBhdNJlE3HGNhDMQxwXZd6T66taynpz3nPB/+fph5drinO2XXJXtj
-      bARPDL/ri29zlcx8XnDLU6eOD/R/+uvfh0+ilXv2TVwtelc+/C+3Bx955q3+7bhUiSdcMEcO
-      tJ+f9MZGLg8ObLbTi4+iNpsrc+PXHCdsVI1p03A9IsYjr7340IPpC7O5VjdFjItzja9fPnj4
-      9d8wmXnJSbSQHxiHmvlLYtyu/f33J3sMMUS1iAOK/Fhz5S/hYH2uZXKiZJikWb5CAFv7EiCh
-      BKtBGEWi+Nwrb1/P0cbNXirZ/uPvlaHsfR1ubFdvl3n+2J4HBuKHBuvjy7XP3sjs2hns2+98
-      PHnRfvlH9/ToaMntrRSc784tP/5Y2ov5v5zzzIa4bUU3QY63IEFx9P3P/zWrnTYCgxQoy62S
-      KhpWCGv43tmrwKEDpAyAYMPyFICCsIYgrE4DUAGVGACUmxKRURE0BhGMdWtF0voCAIT+ArGq
-      Kr7w6refnD76zYXvN9rUULZPxTn9w0epjuTFm2up1L3Znm2567K7v226MGsaO5480I7pp4cj
-      Vw5ue7hYXsktLww94W+N9X0xsXxoN391PhEsNc+8uXctNlvxku98kI+bhI2lBoOShfTizE9/
-      tnZ2+tWOkZ+9aFGvTVFQmND6UkF5e3tnWfLGtpVugcVk1nWxeifOXl64uxZCeku1WtkQLo2r
-      shq36vWOTTfmSlz8B5HYdHRHwCzMrEARd2Ua87c3hWszoiSIgAigELKfb6U6q4hZLcSapMgC
-      AGq0Nm9tC4MwVWY08iW4qxEpE3AkIqRgQFUB/PKUmpgArN520mkCRABABUAgASJVYgEgFgOI
-      iABoABQBVBmljb0ccEMRNKxxPUcIJIAK1jH/A/0NrpQYv8ZmAAAAAElFTkSuQmCC
-   }]
 }

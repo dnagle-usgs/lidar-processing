@@ -1,9 +1,7 @@
 # vim: set tabstop=3 softtabstop=3 shiftwidth=3 shiftround autoindent:
 
 package provide l1pro::drast 1.0
-
-# We use sf::gui's button images
-package require sf::gui
+package require imglib
 
 if {![namespace exists ::l1pro::drast]} {
    namespace eval ::l1pro::drast {
@@ -95,18 +93,22 @@ proc ::l1pro::drast::gui_slider f {
 }
 
 proc ::l1pro::drast::gui_vcr f {
-   variable ::sf::gui::img
    ttk::frame $f -relief groove -padding 1 -borderwidth 2
 
-   ttk::button $f.stepfwd -image $img(step,fwd) -style Toolbutton \
+   ttk::button $f.stepfwd -style Toolbutton \
+      -image ::imglib::vcr::stepfwd \
       -command [list [namespace which -command step] forward]
-   ttk::button $f.stepbwd -image $img(step,bwd) -style Toolbutton \
+   ttk::button $f.stepbwd -style Toolbutton \
+      -image ::imglib::vcr::stepbwd \
       -command [list [namespace which -command step] backward]
-   ttk::button $f.playfwd -image $img(play,fwd) -style Toolbutton \
+   ttk::button $f.playfwd -style Toolbutton \
+      -image ::imglib::vcr::playfwd \
       -command [list [namespace which -command play] forward]
-   ttk::button $f.playbwd -image $img(play,bwd) -style Toolbutton \
+   ttk::button $f.playbwd -style Toolbutton \
+      -image ::imglib::vcr::playbwd \
       -command [list [namespace which -command play] backward]
-   ttk::button $f.stop -image $img(stop) -style Toolbutton \
+   ttk::button $f.stop -style Toolbutton \
+      -image ::imglib::vcr::stop \
       -command [list [namespace which -command play] stop]
    ttk::separator $f.spacer -orient vertical
 

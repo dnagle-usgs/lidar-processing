@@ -1,6 +1,7 @@
 # vim: set tabstop=3 softtabstop=3 shiftwidth=3 shiftround autoindent:
 
 package provide misc 1.0
+package require imglib
 
 package require snit
 
@@ -852,26 +853,11 @@ snit::widgetadaptor ::misc::labelframe::collapsible {
 }
 
 namespace eval ::misc::labelframe::collapsible {
-   set img(expand) [image create bitmap -data {
-      #define expand_width 11
-      #define expand_height 11
-      static unsigned char expand_bits[] = {
-         0xff, 0x07, 0x01, 0x04, 0x01, 0x04, 0x21, 0x04, 0x21, 0x04, 0xf9, 0x04,
-         0x21, 0x04, 0x21, 0x04, 0x01, 0x04, 0x01, 0x04, 0xff, 0x07};
-   }]
-
-   set img(collapse) [image create bitmap -data {
-      #define collapse_width 11
-      #define collapse_height 11
-      static unsigned char collapse_bits[] = {
-         0xff, 0x07, 0x01, 0x04, 0x01, 0x04, 0x01, 0x04, 0x01, 0x04, 0xf9, 0x04,
-         0x01, 0x04, 0x01, 0x04, 0x01, 0x04, 0x01, 0x04, 0xff, 0x07};
-   }]
-
    ttk::style configure Collapsible.TCheckbutton -relief flat
    ttk::style layout Collapsible.TCheckbutton [ttk::style layout Toolbutton]
    ttk::style map Collapsible.TCheckbutton \
-      -image [list selected $img(collapse) !selected $img(expand)]
+      -image [list selected ::imglib::collapsible::collapse \
+         !selected ::imglib::collapsible::expand]
 }
 
 # default varName value
