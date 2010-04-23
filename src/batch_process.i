@@ -2455,28 +2455,17 @@ ignore_none_found=) {
    default, ignore_none_found, 0;
    default, progress, 1;
 
-   logid = logger_id();
-   logger, "debug", logid + swrite(
-      format=" Entering batch_merge_veg_bathy(\"%s\", veg_ss=\"%s\", bathy_ss=\"%s\", file_suffix=\"%s\", ignore_not_found=%d)",
-      path, veg_ss, bathy_ss, file_suffix, ignore_none_found);
-
    v_files = find(path, glob=veg_ss);
    b_files = find(path, glob=bathy_ss);
 
-   logger, "debug", logid + swrite(format=" Found %d veg and %d bathy files.",
-      numberof(v_files), numberof(b_files));
-
    if(!numberof(v_files) && !numberof(b_files)) {
-      logger, "warning", "batch_merge_veg_bathy: No veg or bathy files found. Aborting.";
       write, "No veg or bathy files found. Aborting.";
       return;
    } else if(!numberof(v_files) && !ignore_none_found) {
-      logger, "warning", "batch_merge_veg_bathy: No veg files found. Aborting.";
       write, "No veg files found. Aborting.";
       write, "Use ignore_none_found=1 to force.";
       return;
    } else if(!numberof(b_files) && !ignore_none_found) {
-      logger, "warning", "batch_merge_veg_bathy: No bathy files found. Aborting.";
       write, "No bathy files found. Aborting.";
       write, "Use ignore_none_found=1 to force.";
       return;
@@ -2493,15 +2482,11 @@ ignore_none_found=) {
          timer_tick, tstamp, i, numberof(s_dt);
       this_tile = s_dt(i);
 
-      logger, "debug", logid + swrite(format=" %d/%d: %s",
-         i, numberof(s_dt), this_tile);
-
       seamless_file = string(0);
 
       vw = where(v_dt == this_tile);
       if(numberof(vw) == 1) {
          vw = vw(1);
-         logger, "debug", logid + " Loading veg: " + v_files(vw);
          f = openb(v_files(vw));
          v_data = get_member(f, f.vname);
          close, f;
@@ -2511,7 +2496,6 @@ ignore_none_found=) {
             this_tile + "_" + file_suffix
          );
       } else if(numberof(vw) > 1) {
-         logger, "error", "Found multiple veg files for tile " + this_tile;
          error, "Found multiple veg files for tile " + this_tile;
       } else {
          v_data = [];
@@ -2520,7 +2504,6 @@ ignore_none_found=) {
       bw = where(b_dt == this_tile);
       if(numberof(bw) == 1) {
          bw = bw(1);
-         logger, "debug", logid + " Loading bathy: " + b_files(bw);
          f = openb(b_files(bw));
          b_data = get_member(f, f.vname);
          close, f;
@@ -2531,7 +2514,6 @@ ignore_none_found=) {
                this_tile + "_" + file_suffix
             );
       } else if(numberof(bw) > 1) {
-         logger, "error", "Found multiple bathy files for tile " + this_tile;
          error, "Found multiple bathy files for tile " + this_tile;
       } else {
          b_data = [];
@@ -2540,17 +2522,12 @@ ignore_none_found=) {
       seamless_data = merge_veg_bathy(v_data, b_data);
       vname = "smls_" + dt_short(this_tile);
       
-      logger, "debug", logid + swrite(
-         format=" Writing %s to %s", vname, seamless_file);
-
       f = createb(seamless_file);
       save, f, vname;
       add_variable, f, -1, vname, structof(seamless_data), dimsof(seamless_data);
       get_member(f, vname) = seamless_data;
       close, f;
    }
-
-   logger, "debug", logid + " Leaving batch_merge_veg_bathy";
 }
 
 func show_setup ( junk ) {

@@ -588,7 +588,7 @@ namespace eval ::pixelwf::gui {
       button $f.btnGraph -text "Plot" -command [list ybkg pixelwf_plot]
 
       button $f.btnMouse -text [mc "Interactive"] \
-         -command [list ycmd pixelwf_enter_interactive]
+         -command [list exp_send "pixelwf_enter_interactive\r;"]
 
       grid $f.lblDay $f.cboDay - -
       grid $f.lblRaster $f.spnRaster $f.lblPulse $f.spnPulse

@@ -47,7 +47,7 @@ proc mission_clear {{sync 1}} {
     global __mission_conf
     set __mission_conf [dict create]
     if {$sync} {
-        ycmd mission_clear [list] [list sync 0]
+        exp_send "mission_clear, sync=0\r"
     }
 }
 
@@ -73,9 +73,7 @@ proc mission_set {key value {day -} {sync 1}} {
         error "Please provide a day or set __mission_day."
     }
     if {$sync} {
-        ycmd mission_set \
-            [list [ystr $key] [ystr $value]] \
-            [list day [ystr $day] sync 0]
+        exp_send "mission_set, \"$key\", \"$value\", day=\"$day\", sync=0;\r"
     }
     set rel_paths [dict get $__mission_settings "relative paths"]
     if {[::struct::set contains $rel_paths $key]} {
@@ -95,7 +93,7 @@ proc missionday_current {{day NODAYPROVIDED} {sync 1}} {
     if {$day ne "NODAYPROVIDED"} {
         set __mission_day $day
         if {$sync} {
-            ycmd missionday_current [list [ystr $day]] [list sync 0]
+            exp_send "missionday_current, \"$day\", sync=0;\r"
         }
     }
     return $__mission_day
@@ -115,7 +113,7 @@ proc mission_delete {key {day -} {sync 1}} {
     }
     dict unset __mission_conf $day $key
     if {$sync} {
-        ycmd mission_delete [list [ystr $key]] [list day [ystr $day] sync 0]
+        exp_send "mission_delete, \"$key\", day=\"$day\", sync=0;\r"
     }
 }
 
@@ -123,7 +121,7 @@ proc missionday_add {day {sync 1}} {
     global __mission_conf
     dict set __mission_conf $day [dict create]
     if {$sync} {
-        ycmd missionday_add [list [ystr $day]] [list sync 0]
+        exp_send "missionday_add, \"$day\", sync=0;\r"
     }
 }
 
@@ -131,7 +129,7 @@ proc missionday_delete {day {sync 1}} {
     global __mission_conf
     dict unset __mission_conf $day
     if {$sync} {
-        ycmd missionday_delete [list [ystr $day]] [list sync 0]
+        exp_send "missionday_delete, \"$day\", sync=0;\r"
     }
 }
 
@@ -223,25 +221,24 @@ proc mission_save {filename} {
     set f [open $filename "w"]
     puts -nonewline $f $json_out
     close $f
-    logger info "Mission configuration saved to: $filename"
 }
 
 proc mission_load {filename} {
-    ycmd mission_load [list [ystr $filename]]
+    exp_send "mission_load, \"$filename\";\r"
 }
 
 proc mission_send {} {
     global __mission_day
-    ycmd mission_json_import [list [ystr [mission_json_export]]] [list sync 0]
-    yset __mission_day = [ystr $__mission_day]
+    exp_send "mission_json_import, \"[mission_json_export]\", sync=0;\r"
+    exp_send "__mission_day = \"$__mission_day\";\r"
 }
 
 proc mission_receive {} {
-    ycmd mission_send
+    exp_send "mission_send;\r"
 }
 
 proc missiondata_cache {action} {
-    ycmd missiondata_cache [list [ystr $action]]
+    exp_send "missiondata_cache, \"$action\";\r"
 }
 
 # missiondata_wrap
@@ -250,17 +247,15 @@ proc missiondata_cache {action} {
 proc missiondata_load {type {day -}} {
     global __mission_day
     default day $__mission_day
-
-    ycmd missiondata_load [list [ystr $type]] [list day [ystr $day]]
+    exp_send "missiondata_load, \"$type\", day=\"$day\";\r"
 }
 
 proc missiondata_read {filename} {
-    ycmd missiondata_read [list [ystr $filename]]
+    exp_send "missiondata_read, \"$filename\";\r"
 }
 
 proc missiondata_write {filename type {overwrite 1}} {
-    ycmd missiondata_write [list [ystr $filename] [ystr $type]] \
-        [list overwrite $overwrite]
+    exp_send "missiondata_write, \"$filename\", \"$type\", overwrite=$overwrite;\r"
 }
 
 proc mission_path {{path NOPATHPROVIDED} {sync 1}} {
@@ -268,14 +263,14 @@ proc mission_path {{path NOPATHPROVIDED} {sync 1}} {
     if {$path ne "NOPATHPROVIDED"} {
         set __mission_path $path
         if {$sync} {
-            ycmd mission_path [list [ystr $path]] [list sync 0]
+            exp_send "mission_path, \"$path\", sync=0;\r"
         }
     }
     return $__mission_path
 }
 
 proc mission_initialize_from_path {mission_path} {
-    ycmd mission_initialize_from_path [list [ystr $mission_path]]
+    exp_send "mission_initialize_from_path, \"$mission_path\";\r"
 }
 
 ### UTILITY

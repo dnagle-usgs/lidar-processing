@@ -409,7 +409,6 @@ func mission_save(filename) {
     f = open(filename, "w");
     write, f, format="%s\n", json;
     close, f;
-    logger, "info", "Mission configuration saved to: " + filename;
 }
 
 func mission_load(filename) {
@@ -418,7 +417,6 @@ func mission_load(filename) {
     JSON format.
 */
     extern __mission_conf;
-    logger, "info", "Loading mission configuration: " + filename;
     f = open(filename, "r");
     json = rdfile(f)(sum);
     close, f;
@@ -874,11 +872,6 @@ func mission_initialize_from_path(path, strict=) {
     default, path, mission_path();
     default, strict, 1;
 
-    logid = logger_id();
-    logger, "debug", logid + swrite(
-        format=" Entering mission_initialize_from_path(\"%s\", strict=%d)",
-        path, strict);
-
     mission_clear;
     mission_path, path;
 
@@ -889,11 +882,7 @@ func mission_initialize_from_path(path, strict=) {
         return;
     dirs = dirs(w);
     days = days(w);
-    logger, "debug", logid + swrite(format=" Found %d potential days",
-        numberof(days));
     for(i = 1; i <= numberof(days); i++) {
-        logger, "debug", logid + swrite(format=" %d: day=%s dir=%s",
-            i, days(i), dirs(i));
         missionday_current, dirs(i);
         dir = file_join(path, dirs(i));
 
@@ -930,8 +919,6 @@ func mission_initialize_from_path(path, strict=) {
         if(rgb_tar)
             mission_set, "rgb file", rgb_tar;
     }
-
-    logger, "debug", logid + " Leaving mission_initialize_from_path";
 }
 
 func autoselect_ops_conf(dir) {

@@ -3,20 +3,12 @@
 package provide l1pro::tools 1.0
 
 namespace eval ::l1pro::tools {
-   namespace export appendif
-}
-
-proc ::l1pro::tools::appendif {var args} {
-   foreach {cond str} $args {
-      if {[uplevel 1 [list expr $cond]]} {
-         uplevel 1 [list append $var $str]
-      }
-   }
+   namespace import ::misc::appendif
 }
 
 if {![namespace exists ::l1pro::tools::rcf]} {
    namespace eval ::l1pro::tools::rcf {
-      namespace import ::l1pro::tools::appendif
+      namespace import ::misc::appendif
       namespace eval v {
          variable top .l1wid.rcf
          variable invar ""
@@ -131,7 +123,7 @@ proc ::l1pro::tools::rcf::filter {} {
 
 if {![namespace exists ::l1pro::tools::histelev]} {
    namespace eval ::l1pro::tools::histelev {
-      namespace import ::l1pro::tools::appendif
+      namespace import ::misc::appendif
       namespace eval v {
          variable top .l1wid.histelev
          variable cbartop .l1wid.cbartool
@@ -532,7 +524,7 @@ proc ::l1pro::tools::histelev::cbar_do cmd {
 
 if {![namespace exists ::l1pro::tools::elevclip]} {
    namespace eval ::l1pro::tools::histclip {
-      namespace import ::l1pro::tools::appendif
+      namespace import ::misc::appendif
       namespace eval v {
          variable top .l1wid.elevclip
          variable invar {}
@@ -647,7 +639,7 @@ proc ::l1pro::tools::colorbar {} {
 
 if {![namespace exists ::l1pro::tools::griddata]} {
    namespace eval ::l1pro::tools::griddata {
-      namespace import ::l1pro::tools::appendif
+      namespace import ::misc::appendif
       namespace eval v {
          variable top .l1wid.griddata
          variable invar {}
@@ -777,7 +769,7 @@ proc ::l1pro::tools::griddata::griddata {} {
 
 if {![namespace exists ::l1pro::tools::datum]} {
    namespace eval ::l1pro::tools::datum {
-      namespace import ::l1pro::tools::appendif
+      namespace import ::misc::appendif
       namespace eval v {
          variable top .l1wid.datumconvert
          variable invar {}

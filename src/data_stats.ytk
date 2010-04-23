@@ -205,8 +205,7 @@ itcl::body DataStatsWindow::plot_segment {idx} {
    set var $_segment($idx,var)
    set win $_segment($idx,win)
    set type [dict get $_stat_mapping $_statistic]
-   ycmd tk_dsw_plot_stats \
-      [list [ystr $var] $var [ystr $type] $win]
+   exp_send "tk_dsw_plot_stats, \"$var\", $var, \"$type\", $win;\r"
 }
 
 proc launch_datastats_stats {data args} {

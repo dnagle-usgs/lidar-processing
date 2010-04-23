@@ -62,6 +62,7 @@ if {![winfo exists .l1wid]} {
   set avg_surf 1
   set rcf_buf_rgn 0; #Used in proc replace_proc
   set autoclean_after_process 1
+  set l1pro_fma 0
 
   set gridtype grid
 
@@ -299,7 +300,7 @@ if {![winfo exists .l1wid]} {
 
       if {$response eq "yes"} {
         foreach var $pass {
-          yset $var = {[]}
+          exp_send "$var = \[\];\r"
         }
         set ::varlist $fail
       }
@@ -356,7 +357,6 @@ if {![winfo exists .l1wid]} {
     global varlist
     if {[lsearch -exact $varlist $newvar] == -1} {
       lappend varlist $newvar
-      logger info "(l1pro) appended to varlist: $newvar"
     }
   }
 
@@ -463,13 +463,13 @@ if {![winfo exists .l1wid]} {
     -command limits_tool
   .l1wid.mb.graph add separator
   .l1wid.mb.graph add command -label "Change current window to 75 DPI / 450x450" \
-    -command [list ycmd change_window_size [list window() 1 0]]
+    -command [list exp_send "change_window_size, window(), 1, 0;\r"]
   .l1wid.mb.graph add command -label "Change current window to 100 DPI / 600x600" \
-    -command [list ycmd change_window_size [list window() 2 0]]
+    -command [list exp_send "change_window_size, window(), 2, 0;\r"]
   .l1wid.mb.graph add command -label "Change current window to 75 DPI / 825x638" \
-    -command [list ycmd change_window_size [list window() 3 0]]
+    -command [list exp_send "change_window_size, window(), 3, 0;\r"]
   .l1wid.mb.graph add command -label "Change current window to 100 DPI / 1100x850" \
-    -command [list ycmd change_window_size [list window() 4 0]]
+    -command [list exp_send "change_window_size, window(), 4, 0;\r"]
   .l1wid.mb.graph add separator
   menu .l1wid.mb.graph.pal
   .l1wid.mb.graph add cascade -label Palette... -under 0 -menu .l1wid.mb.graph.pal

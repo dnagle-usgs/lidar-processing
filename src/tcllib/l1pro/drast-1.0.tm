@@ -5,7 +5,7 @@ package require imglib
 
 if {![namespace exists ::l1pro::drast]} {
    namespace eval ::l1pro::drast {
-      namespace import ::l1pro::tools::appendif
+      namespace import ::misc::appendif
       namespace eval v {
          variable top .l1wid.rslider
          variable scale {}

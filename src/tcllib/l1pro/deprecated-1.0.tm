@@ -362,7 +362,6 @@ proc ::l1pro::deprecated::read_binary_data_file {} {
           {{All Files}       {*}   }
         }]
       if { $_ytk_fn != "" } {
-        logger info "(l1pro) Read Binary Data file: $_ytk_fn"
         switch [ file extension $_ytk_fn ] {
           ".pbd" {
             exp_send "_ytk_pbd_f = openb(\"$_ytk_fn\"); restore, _ytk_pbd_f;\r"

@@ -316,7 +316,6 @@ proc ybkg args {
 ##
    set cmd [eval concat $args]
    set ::__ybkg__wait 1
-   logger debug "Sending background command to Yorick: $cmd"
    set cmd [string_to_hex $cmd]
    puts $::tky_fifo "bkg $cmd"
    while {$::__ybkg__wait} {sleep 1}
@@ -335,75 +334,6 @@ proc yget yvar {
    set result [set $wait_var]
    unset $wait_var
    return $result
-}
-
-
-proc ycmd {command {params {}} {options {}}} {
-##
-# ycmd command params options
-#  Sends a command to Yorick. This is meant to simplify sending straightforward
-#  commands to Yorick, rather than having to manually construct the command and
-#  send/expect it.
-#
-# Arguments:
-#  command - The command to execute.
-#  params - The positional parameters to use. Should be a list. Optional.
-#  options - The keyword arguments to use. Should be a dict. Optional.
-#
-# Returns:
-#  Nothing
-#
-# Side effects:
-#  None
-##
-   set ycommand $command
-   foreach param $params {
-      append ycommand ", $param"
-   }
-   dict for {key val} $options {
-      append ycommand ", $key=$val"
-   }
-   append ycommand ";\r"
-   exp_send $ycommand
-   expect ">"
-}
-
-proc yset {var command {params {}} {options {}}} {
-##
-# yset var = val
-# yset var command params options
-#  Sends a command to Yorick that sets a variable. This is meant to simplify
-#  sending straightforward assignments to Yorick, rather than having to
-#  manually contruct the command and send/expect it.
-#
-#  The first form is used to set a variable to a known value -- either a
-#  constant or another Yorick variable. The equal sign is mandatory.
-#
-#  The second form is used to set a variable to the result of a function call.
-#
-# Arguments, first form:
-#  var - The Yorick variable that is being assigned.
-#  val - The value to assign to the variable.
-#
-# Arguments, second form:
-#  var - The Yorick variable that is being assigned.
-#  command - The command to execute.
-#  params - The positional parameters to use. Should be a list. Optional.
-#  options - The keyword arguments to use. Should be a dict. Optional.
-##
-   if {$command eq "="} {
-      exp_send "$var = $params;\r"
-      expect ">"
-   } else {
-      set ycommand "$var = $command\("
-      dict for {key val} $options {
-         lappend params "$key=$val"
-      }
-      append ycommand [join $params ", "]
-      append ycommand ");\r"
-      exp_send $ycommand
-      expect ">"
-   }
 }
 
 proc tky_tie {cmd type tkvar - yvar args} {
@@ -1067,8 +997,6 @@ required) that you upgrade to the latest version, available from:
       set result [spawner $cmd]
    }
 
-   logger debug "Spawned yorick: $cmd"
-
    return $result
 }
 
@@ -1126,8 +1054,6 @@ proc ytk_exit {code} {
 
    catch [list close $tky_fifo]
    catch [list file delete $tky_fifo_name]
-
-   logger info "Exiting ytk (exit code: $code)"
 
    exit $code
 }
@@ -1759,7 +1685,6 @@ proc start_yorick {}  {
    upvar spawn_id spawn_id
    expect ">"
    set n 0
-   logger info "Beginning Yorick interact loop."
    interact {
       -o
       -nobuffer
@@ -1790,7 +1715,6 @@ proc start_yorick {}  {
          }
       }
    }
-   logger info "Yorick interact loop terminated."
 }
 
 proc load_and_run {fn} {
@@ -1813,22 +1737,18 @@ proc load_and_run {fn} {
 #  If it succeeds, almost any side effect could happen since it is sourcing
 #  external code. See source_ytk_file for more info on side effects.
 ##
-   logger info "Loading on startup: $fn"
    if { ![file exists $fn] } {
-      logger error "File specified to load on start-up not found: $fn"
       tk_messageBox -icon error -message "$fn not found" -type ok
       ytk_exit 1
    }
 
    if {[catch {source_ytk_file $fn} result]} {
       # Error
-      logger error "Error parsing file during startup: $fn\n$result"
       tk_messageBox -icon error -type ok -message "Error parsing $fn:\n$result"
       ytk_exit 1
    } else {
       if {! $result} {
          # Wrong kind of file
-         logger error "Unknown file type specified to load at startup: $fn"
          tk_messageBox -icon error -message "Don't know how to handle $fn" -type ok
          ytk_exit 1
       }
@@ -1993,7 +1913,6 @@ proc launch_gui {} {
    .mb.debug add command -label "dbskip" -command { exp_send "dbskip\r" }
    .mb.debug add command -label "dbup" -command { exp_send "dbup\r" }
 
-   .mb.tkcon add command -label "Logger" -command [list wm deiconify .ytklogger]
    .mb.tkcon add command -label "Tkcon" -command {
       exec tkcon &
    }
@@ -2378,110 +2297,13 @@ proc launch_gui {} {
 
 ######## END PROCEDURES ########
 
-############ LOGGER ############
-
-proc ytk_logger_window {} {
-# Creates the logger window and initializes logging.
-   toplevel .ytklogger
-   wm protocol .ytklogger WM_DELETE_WINDOW [list wm withdraw .ytklogger]
-   wm withdraw .ytklogger
-
-   set mb .ytklogger.mb
-   iwidgets::messagebox $mb -maxlines 10000
-   pack $mb -fill both -expand true
-
-   foreach type [log::levels] {
-      $mb type add $type -background [log::lv2color $type] -font {Courier 8}
-   }
-
-   log::lvCmdForall ytk_logger_log
-
-   set menu [$mb component itemMenu]
-   $menu add separator
-
-   foreach level [lsort -decreasing -command log::lvCompare [log::levels]] {
-      $menu add radiobutton -value $level -variable _ytk(log_level) \
-         -command ytk_logger_level_set \
-         -label $level
-   }
-
-   ytk_logger_level_set
-
-   logger info "Logger initialized."
-}
-
-proc ytk_logger_level_set {} {
-# Updates the suppressions for various log levels against _ytk(log_level).
-   foreach level [log::levels] {
-      log::lvSuppress $level [expr {[log::lvCompare $::_ytk(log_level) $level] > 0}]
-   }
-}
-
-proc ytk_logger_log {level message} {
-# Logging command to use to put something in the logging window. Used by log::log.
-   global _ytk
-   set level [log::lv2longform $level]
-   .ytklogger.mb issue $message [log::lv2longform $level]
-   if {$_ytk(log_file) ne ""} {
-      ::fileutil::appendToFile $_ytk(log_file) "\[[pid]\] $message\n"
-   }
-}
-
-proc logger {level message} {
-# Use this to send a logging message to the logger window in your code. For example:
-#   logger error "Something bad happened."
-#   logger debug "foo = $foo"
-   __logger $level $message Tcl
-}
-
-set ::_ytk_logger_id -2
-proc logger_id {} {
-# Returns a unique identifier that can be used within logging output to
-# identify, for example, which procedure you're in. Always returns an even
-# number in parentheses as a string.
-#
-# For example, in a procedure named "foo", you might do this:
-#
-# set log_id [logger_id]
-# logger debug "$log_id Entering foo()"
-# ...
-# logger debug "$log_id i=$i"
-# ...
-# logger debug "$log_id Leaving foo"
-#
-# This lets you keep track of which function call is generating which output,
-# which is useful when you have debug output mixed together from a function
-# that calls a function that calls a function...
-   return "([incr ::_ytk_logger_id 2])"
-}
-
-proc ylogger {level message} {
-# Used by Yorick's logger command.
-   __logger $level $message Yor
-}
-
-proc __logger {level message type} {
-# Implementation for both logger and ylogger.
-   set tstamp [clock format [clock seconds] -format %T]
-   log::log $level "\[$type $tstamp\] $level$log::fill($level) : $message"
-}
-
-########## END LOGGER ##########
-
 restore_defaults     ;# begin with the default settings
 load_options
-ytk_logger_window
 
 ############################################################
 # Stuff below here doesn't need to be changed if you are
 # just porting to another system.
 ############################################################
-
-logger debug "Started as: $argv0 $argv"
-logger debug "info library: [info library]"
-logger debug "info nameofexecutable: [info nameofexecutable]"
-logger debug "info script: [info script]"
-logger debug "info patchlevel: [info patchlevel]"
 
 ############# set _ytk(yorick_executable) junk
 if { ![file exists $_ytk(yorick_executable)] } {
@@ -2491,8 +2313,6 @@ if { ![file exists $_ytk(yorick_executable)] } {
       ytk_exit 2
    }
 }
-
-logger debug "Yorick executable: $_ytk(yorick_executable)"
 
 initialize_globals
 establish_fifos
@@ -2504,11 +2324,9 @@ if { [spawn_yorick] } {
 
 expect "Yorick * ready"
 set yorick_version [lindex [split $expect_out(0,string)] 1]
-logger debug "Yorick version: $yorick_version"
 
 set indoc 0
 set hwin 0
-logger debug "Spawn id: $spawn_id"
 match_max -i $spawn_id 32768
 
 wm withdraw .

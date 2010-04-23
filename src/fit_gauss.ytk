@@ -228,28 +228,24 @@ proc ::fit_gauss::cmd_fit_gauss {} {
       ybkg tky_fit_gauss_exec
    } else {
       set var $g::result_var
-      set command "fit_gauss"
-      set params [list $g::raster $g::pixel]
-      set options [list]
-      foreach setting [list graph add_peak verbose] {
-         if {[set g::$setting]} {
-            dict set options $setting [set g::$setting]
-         }
-      }
-      if {$g::add_peak == 1 && $g::lims} {
-         dict set options lims "\[\[$g::lims_x1, $g::lims_x2\]\]"
+      set params "$g::raster, $g::pixel"
+      ::misc::appendif params {
+         $g::graph      ", graph=1"
+         $g::add_peak   ", add_peak=1"
+         $g::verbose    ", verbose=1"
+         {$g::add_peak == 1 && $g::lims}  ", lims=\[\[$g::lims_x1, $g::lims_x2\]\]"
       }
       if {[string length $var]} {
-         yset $var $command $params $options
+         exp_send "$var = fit_gauss($params)\r"
       } else {
-         ycmd $command $params $options
+         exp_send "fit_gauss, $params\r"
       }
    }
 }
 
 proc ::fit_gauss::enter_mouse_mode {} {
    set g::mouse_mode 1
-   ycmd tky_fit_gauss_interactive [list $::pro_var $::win_no]
+   exp_send "tky_fit_gauss_interactive, $::pro_var, $::win_no;\r"
 }
 
 proc ::fit_gauss::leave_mouse_mode {} {

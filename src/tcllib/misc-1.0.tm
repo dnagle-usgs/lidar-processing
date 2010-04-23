@@ -5,10 +5,22 @@ package require imglib
 package require snit
 
 namespace eval ::misc {
-   namespace export soe
+   namespace export appendif
    namespace export idle
    namespace export safeafter
    namespace export search
+   namespace export soe
+}
+
+proc ::misc::appendif {var args} {
+   if {[llength $args] == 1} {
+      set args [uplevel 1 list [string map {\n \\\n} [lindex $args 0]]]
+   }
+   foreach {cond str} $args {
+      if {[uplevel 1 [list expr $cond]]} {
+         uplevel 1 [list append $var $str]
+      }
+   }
 }
 
 snit::type ::misc::soe {

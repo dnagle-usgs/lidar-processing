@@ -80,11 +80,7 @@ namespace eval ::sf {}
 # outside of ytk. Also allows sf-specific logging to be diverted and handled
 # specially, if desired.
 proc ::sf::log {level message} {
-   if {[info commands ::logger] ne ""} {
-      ::logger $level $message
-   } else {
-      ::log::log $level $message
-   }
+   ::log::log $level $message
 }
 
 # end of Internals

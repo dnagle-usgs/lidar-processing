@@ -3,7 +3,7 @@
 package provide l1pro::processing 1.0
 
 namespace eval ::l1pro::processing {
-   namespace import ::l1pro::tools::appendif
+   namespace import ::misc::appendif
    namespace import ::l1pro::file::prefix
 }
 
