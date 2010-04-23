@@ -224,7 +224,7 @@ proc ::l1pro::main::panel_plot w {
    return $w
 }
 
-proc ::l1pro::main::panel_tools w {
+proc ::l1pro::main::panel_tools_old w {
    ::mixin::labelframe::collapsible $w -text "Tools"
    set f [$w interior]
 
@@ -270,6 +270,124 @@ proc ::l1pro::main::panel_tools w {
    grid $f.pixelwf $f.histelv $f.colorbar $f.rcf $f.datum $f.elvclip $f.griddata \
       $f.gridtype - -sticky news -padx 1 -pady 1
    grid ^ ^ ^ ^ ^ ^ ^ $f.gridplot $f.gridname -sticky news -padx 1 -pady 1
+   grid columnconfigure $f 1000 -weight 1
+   grid columnconfigure $f {7 8} -uniform g
+
+   return $w
+}
+
+proc ::l1pro::main::panel_tools w {
+   ::mixin::labelframe::collapsible $w -text "Tools"
+   set f [$w interior]
+
+   menu $f.acmenu
+   menu $f.acmenu.rms
+   menu $f.acmenu.pct
+   menu $f.acmenu.rcf
+   $f.acmenu add cascade -label "Standard Deviations..." -menu $f.acmenu.rms
+   $f.acmenu.rms add command -label "+/-1 deviation" \
+      -command [list ::l1pro::tools::auto_cbar stdev 1]
+   $f.acmenu.rms add command -label "+/-2 deviations" \
+      -command [list ::l1pro::tools::auto_cbar stdev 2]
+   $f.acmenu.rms add command -label "+/-3 deviations" \
+      -command [list ::l1pro::tools::auto_cbar stdev 3]
+   $f.acmenu add cascade -label "Central Percentage..." -menu $f.acmenu.pct
+   $f.acmenu.pct add command -label "99%" \
+      -command [list ::l1pro::tools::auto_cbar percentage 0.99]
+   $f.acmenu.pct add command -label "98%" \
+      -command [list ::l1pro::tools::auto_cbar percentage 0.98]
+   $f.acmenu.pct add command -label "95%" \
+      -command [list ::l1pro::tools::auto_cbar percentage 0.95]
+   $f.acmenu.pct add command -label "90%" \
+      -command [list ::l1pro::tools::auto_cbar percentage 0.90]
+   $f.acmenu add cascade -label "Delta RCF..." -menu $f.acmenu.rcf
+   $f.acmenu.rcf add command -label "5 meter window" \
+      -command [list ::l1pro::tools::auto_cbar rcf 5]
+   $f.acmenu.rcf add command -label "10 meter window" \
+      -command [list ::l1pro::tools::auto_cbar rcf 10]
+   $f.acmenu.rcf add command -label "20 meter window" \
+      -command [list ::l1pro::tools::auto_cbar rcf 20]
+   $f.acmenu.rcf add command -label "30 meter window" \
+      -command [list ::l1pro::tools::auto_cbar rcf 30]
+   $f.acmenu.rcf add command -label "Use current CDelta value" \
+      -command ::l1pro::tools::auto_cbar_cdelta
+   ttk::menubutton $f.autocbar -text " Auto Cbar " -width 0 \
+      -style Panel.TMenubutton -menu $f.acmenu
+
+   menu $f.srtmenu
+   $f.srtmenu add command -label "By soe, ascending" \
+      -command [list ::l1pro::tools::sortdata soe 0]
+   $f.srtmenu add command -label "By soe, descending" \
+      -command [list ::l1pro::tools::sortdata soe 1]
+   $f.srtmenu add command -label "By easting, ascending (plots fast)" \
+      -command [list ::l1pro::tools::sortdata x 0]
+   $f.srtmenu add command -label "By easting, descending (plots fast)" \
+      -command [list ::l1pro::tools::sortdata x 1]
+   $f.srtmenu add command -label "By northing, ascending (plots fast)" \
+      -command [list ::l1pro::tools::sortdata y 0]
+   $f.srtmenu add command -label "By northing, descending (plots fast)" \
+      -command [list ::l1pro::tools::sortdata y 1]
+   $f.srtmenu add command -label "By elevation, ascending (plots slowly)" \
+      -command [list ::l1pro::tools::sortdata z 0]
+   $f.srtmenu add command -label "By elevation, descending (plots slowly)"  \
+      -command [list ::l1pro::tools::sortdata z 1]
+   $f.srtmenu add command -label "Randomize (plots slowly)" \
+      -command [list ::l1pro::tools::sortdata random 0]
+   ttk::menubutton $f.sortdata -text " Sort Data " -width 0 \
+      -style Panel.TMenubutton -menu $f.srtmenu
+
+   ttk::button $f.pixelwf -text " Pixel \n Analysis " -width 0 \
+      -style Panel.TButton \
+      -command {exp_send "pixelwf_enter_interactive\r"}
+   ttk::button $f.histelv -text " Histogram \n Elevations " -width 0 \
+      -style Panel.TButton \
+      -command ::l1pro::tools::histelev
+   ttk::button $f.colorbar -text " Color \n Bar " -width 0 \
+      -style Panel.TButton \
+      -command ::l1pro::tools::colorbar
+
+   ttk::button $f.datum -text " Datum \n Convert " -width 0 \
+      -style Panel.TButton \
+      -command ::l1pro::tools::datum::gui
+   ttk::button $f.elvclip -text " Elevation \n Clipper " -width 0 \
+      -style Panel.TButton \
+      -command ::l1pro::tools::histclip::gui
+   ttk::button $f.rcf -text " RCF " -width 0 \
+      -style Panel.TButton \
+      -command ::l1pro::tools::rcf::gui
+   ttk::button $f.griddata -text " Grid " -width 0 \
+      -style Panel.TButton \
+      -command ::l1pro::tools::griddata::gui
+   ::mixin::combobox::mapping $f.gridtype -width 0 \
+      -state readonly \
+      -altvariable ::gridtype \
+      -mapping {
+         "2km Tile" grid
+         "Quarter Quad" qq_grid
+      }
+   ttk::button $f.gridplot -text " Plot " -width 0 \
+      -style Panel.TButton \
+      -command {exp_send "draw_${::gridtype}, $::win_no\r"}
+   ttk::button $f.gridname -text " Name " -width 0 \
+      -style Panel.TButton \
+      -command {exp_send "show_${::gridtype}_location, $::win_no\r"}
+
+   ::tooltip::tooltip $f.gridtype \
+      "Select the tiling system to use\ for \"Plot\" and \"Name\" below."
+   ::tooltip::tooltip $f.gridplot \
+      "Plots a grid showing tile boundaries for the currently selected tiling\
+      \nsystem."
+   ::tooltip::tooltip $f.gridname \
+      "After clicking this button, you will be prompted to click on the\
+      \ncurrent plotting window. You will then be told which tile corresponds\
+      \nto the location you clicked."
+   ::tooltip::tooltip $f.griddata \
+      "NOTE: This tool requires that you have C-ALPS installed. If you do not,\
+      \nit will not work!"
+
+   grid $f.autocbar $f.pixelwf $f.histelv $f.colorbar $f.datum $f.elvclip $f.rcf \
+      $f.gridtype - -sticky news -padx 1 -pady 1
+   grid $f.sortdata ^ ^ ^ ^ ^ $f.griddata $f.gridplot $f.gridname -sticky news -padx 1 -pady 1
    grid columnconfigure $f 1000 -weight 1
    grid columnconfigure $f {7 8} -uniform g
 

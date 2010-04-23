@@ -650,3 +650,19 @@ func mod_flightline(data, data_dir, soes=, pt=, win=, clipmax=, clipmin=, alsome
    }
    window_select, windold;
 }
+
+func stdev_min_max(x, N_factor=) {
+/* DOCUMENT stdev_min_max(x, N_factor=)
+
+   For a given array of data, this will return an array [min, max] that
+   provides a bounding range for values within N_factor standard deviations of
+   the data's mean.
+
+   This is useful for automatically determining a reasonable colorbar for data.
+
+   N_factor defaults to 2.
+*/
+   default, N_factor, 2;
+   x = unref(x)(*);
+   return x(avg) + N_factor * x(rms) * [-1, 1];
+}

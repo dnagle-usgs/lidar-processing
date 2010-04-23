@@ -66,32 +66,25 @@ func set_read_yorick(data, vname=, fn=) {
    if(structeqany(dstruc, FS, R, CVEG_ALL)) {
       pmode = 0;
       dmode = 0;
-      cminmax = stdev_min_max(data.elevation)/100.;
    } else if(structeqany(dstruc, GEO, GEOALL)) {
       pmode = 1;
       dmode = 1;
-      cminmax = stdev_min_max(data.depth+data.elevation)/100.;
    } else if(structeqany(dstruc, VEG, VEG_, VEG__, VEGALL, VEG_ALL, VEG_ALL_)) {
       pmode = 2;
       if(anyof(regmatch("(^|_)fs(t_|_|\.|$)", [vname, fn]))) {
          dmode = 0;
-         cminmax = stdev_min_max(data.elevation)/100.;
       } else {
          dmode = 3;
-         cminmax = stdev_min_max(data.lelv)/100.;
       }
    } else if(structeq(dstruc, ZGRID) || is_numerical(data)) {
       pmode = 0;
       dmode = 0;
-      data2xyz, data, , , z;
-      cminmax = stdev_min_max(z);
    }
 
    if(!is_void(pmode)) {
       tkcmd, swrite(format="processing_mode_by_index %d", pmode);
       tkcmd, swrite(format="display_type_by_index %d", dmode);
-      tkcmd, swrite(format="set plot_settings(cmin) %.2f", cminmax(1));
-      tkcmd, swrite(format="set plot_settings(cmax) %.2f", cminmax(2));
+      auto_cbar, data, "stdev", mode=["fs","ba","","be"](dmode+1);
    }
 
    tkcmd, swrite("if {$cbv == 1} {set plot_settings(cmin) $cbvc(cmin)}");

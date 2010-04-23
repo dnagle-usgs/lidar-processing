@@ -748,3 +748,56 @@ func uniq_data(data, idx=, bool=, mode=, forcesoe=, forcexy=, enablez=) {
    else
       return data(w);
 }
+
+func sortdata(data, mode=, method=, desc=) {
+/* DOCUMENT sortdata(data, mode=, method=, desc=)
+   Sorts a data array.
+
+   Parameter:
+      data: An array of data suitable for data2xyz.
+
+   Options:
+      mode= A mode suitable for data2xyz.
+      method= The method to use for sorting. Valid values:
+            method="soe"      Sort by the .soe field
+            method="x"        Sort using x values
+            method="y"        Sort using y values
+            method="z"        Sort using z values
+            method="random"   Randomize sequence
+      desc= Indicates that the data should be in descending order.
+            desc=0      Sort ascending order (default)
+            desc=1      Sort descending order
+*/
+// Original David Nagle 2010-04-23
+   default, method, "y";
+   default, desc, 0;
+   local tmp, idx;
+
+   if(method == "soe") {
+      idx = sort(data.soe);
+   } else if(method == "x") {
+      data2xyz, data, tmp, mode=mode;
+      idx = sort(unref(tmp));
+   } else if(method == "y") {
+      data2xyz, data, , tmp, mode=mode;
+      idx = sort(unref(tmp));
+   } else if(method == "z") {
+      data2xyz, data, , , tmp, mode=mode;
+      idx = sort(unref(tmp));
+   } else if(method == "random") {
+      data2xyz, data, tmp;
+      idx = sort(random(numberof(unref(tmp))));
+   }
+   if(is_void(idx))
+      error, "Invalid method.";
+
+   if(desc) idx = idx(::-1);
+
+   if(is_numerical(data)) {
+      local x, y, z;
+      data2xyz, data, x, y, z;
+      return [x(idx), y(idx), z(idx)];
+   } else {
+      return data(idx);
+   }
+}

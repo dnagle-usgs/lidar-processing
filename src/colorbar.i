@@ -116,18 +116,64 @@ func colorbar(cmin, cmax, drag=, landscape=, units=, datum=) {
    plsys, sys;
 }
 
-func stdev_min_max(x, N_factor=) {
-/* DOCUMENT stdev_min_max(x, N_factor=)
+func auto_cbar(data, method, mode=, factor=) {
+/* DOCUMENT auto_cbar, data, method, mode=, factor=
+   Automatically sets the colorbar for data using the given method.
 
-   For a given array of data, this will return an array [min, max] that
-   provides a bounding range for values within N_factor standard deviations of
-   the data's mean.
+   Parameters:
+      data: An array of data suitable for passing to data2xyz.
+      method: The method to use for determining the colorbar. Valid values:
+            method="stdev"       Use standard deviations about the mean
+            method="percentage"  Use central percentage of data
+            method="rcf"         Use random consensus filter
 
-   This is useful for automatically determining a reasonable colorbar for data.
-
-   N_factor defaults to 2.
+   Options:
+      mode= A mode suitable for data2xyz.
+      factor= A numeric value whose purpose depends on method.
+         When method="stdev", factor is the number of standard deviations about
+         the mean to use.
+            factor=2    two standard deviations about mean (default)
+            factor=1    one standard deviation about mean
+         When method="percentage", factor is the percentage of points that
+         should be between cmin and cmax. An equal number of points are
+         excluded at that upper and lower bounds to result in this percentage.
+            factor=0.99    use 99% of the data (default)
+            factor=0.9     use 90% of the data
+         When method="rcf", factor is the desired cdelta value. The RCF filter
+         is used to find the cmin/cmax containing the most points for this
+         cdelta.
+            factor=20.     use 20m window (default)
+            factor=5       use 5m window
 */
-   default, N_factor, 2;
-   x = unref(x)(*);
-   return x(avg) + N_factor * x(rms) * [-1, 1];
+// Original David Nagle 2010-04-23
+   local z, cmin, cmax, cdelta;
+   data2xyz, data, , , z, mode=mode;
+   z = z(sort(z));
+
+   if(method == "stdev") {
+      default, factor, 2;
+      cminmax = z(avg) + z(rms) * factor * [-1, 1];
+      cmin = cminmax(1);
+      cmax = cminmax(2);
+      cdelta = cminmax(dif)(1);
+   } else if(method == "percentage") {
+      default, factor, 0.99;
+      factor = (1 - factor)/2.;
+      count = numberof(z) - 1;
+      cmini = long(count * factor + 0.5) + 1;
+      factor = 1 - factor;
+      cmaxi = long(count * factor + 0.5) + 1;
+      cmin = z(cmini);
+      cmax = z(cmaxi);
+      cdelta = cmax - cmin;
+   } else if(method == "rcf") {
+      default, factor, 20.;
+      cdelta = double(factor);
+      cmin = rcf(z, cdelta, mode=0)(1);
+      cmax = cmin + cdelta;
+   }
+
+   tkcmd, swrite(format="set plot_settings(cmin) %.2f", cmin);
+   tkcmd, swrite(format="set plot_settings(cmax) %.2f", cmax);
+   tkcmd, swrite(format="set cdelta %.2f", cdelta);
 }
