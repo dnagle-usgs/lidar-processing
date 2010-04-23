@@ -563,14 +563,9 @@ snit::widget ::l1pro::file::gui::load_las {
          append cmd "(::$skip)"
       }
 
+      exp_send "$cmd;\r"
       append_varlist $vname
       set ::pro_var $vname
-
-      exp_send "$cmd;\r"
-      expect "> "
-      exp_send "set_read_yorick, $vname;\r"
-      expect "> "
-
       destroy $self
    }
 

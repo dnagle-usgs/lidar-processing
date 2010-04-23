@@ -284,6 +284,8 @@ proc ::l1pro::main::panel_tools w {
    menu $f.acmenu.rms
    menu $f.acmenu.pct
    menu $f.acmenu.rcf
+   $f.acmenu add command -label "Elevation bounds" \
+      -command [list ::l1pro::tools::auto_cbar all]
    $f.acmenu add cascade -label "Standard Deviations..." -menu $f.acmenu.rms
    $f.acmenu.rms add command -label "+/-1 deviation" \
       -command [list ::l1pro::tools::auto_cbar stdev 1]

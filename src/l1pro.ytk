@@ -357,6 +357,7 @@ if {![winfo exists .l1wid]} {
     global varlist
     if {[lsearch -exact $varlist $newvar] == -1} {
       lappend varlist $newvar
+      init_var_settings $newvar
     }
   }
 
@@ -743,15 +744,22 @@ if {![winfo exists .l1wid]} {
       [lindex $l1pro_data(processing_mode) $index]
   }
 
+  proc init_var_settings {var args} {
+    dict set ::var_settings($var) var $var
+    set settings [array get ::plot_settings]
+    foreach {key val} [array get ::plot_settings] {
+      if {![dict exists $::var_settings($var) $key]} {
+        dict set ::var_settings($var) $key $val
+      }
+    }
+  }
+
   proc pro_var_changed {a b c} {
     global var_settings plot_settings pro_var cbv win_no constant_win_no
+    init_var_settings $plot_settings(var)
 
     # Currently saved version -- to be replaced
-    if {[info exists var_settings($plot_settings(var))]} {
-      set stored $var_settings($plot_settings(var))
-    } else {
-      set stored [array get plot_settings]
-    }
+    set stored $var_settings($plot_settings(var))
 
     # Update processing_mode and display_type
     dict set stored processing_mode $plot_settings(processing_mode)

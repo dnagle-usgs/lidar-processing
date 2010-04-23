@@ -25,9 +25,9 @@ func restore_alps_data(fn, vname=, skip=) {
 
    sanitize_vname, vname;
    symbol_set, vname, data;
+   update_var_settings, data, vname, fn=fn;
    tkcmd, swrite(format="append_varlist %s", vname);
    tkcmd, swrite(format="set pro_var %s", vname);
-   set_read_yorick, data, vname=vname, fn=fn;
    write, format="Loaded variable %s\n", vname;
 }
 
@@ -45,24 +45,14 @@ func set_read_tk(junk) {
 
 }
 
-func set_read_yorick(data, vname=, fn=) {
-/* DOCUMENT set_read_yorick(data, vname=, fn=)
-   This function sets the cmin and cmax values in the Process EAARL data GUI
-   amar nayegandhi 05/06/03
-*/
-   local z;
+func update_var_settings(data, vname, fn=) {
    if(is_void(_ytk) || !_ytk)
       return;
-
-   default, vname, string(0);
    default, fn, string(0);
    if(strlen(fn))
       fn = file_tail(fn);
 
-   local cminmax, pmode, dmode;
-
    dstruc = structof(data);
-
    if(structeqany(dstruc, FS, R, CVEG_ALL)) {
       pmode = 0;
       dmode = 0;
@@ -80,6 +70,20 @@ func set_read_yorick(data, vname=, fn=) {
       pmode = 0;
       dmode = 0;
    }
+   tkcmd, swrite(format="dict set var_settings(%s) processing_mode [lindex $l1pro_data(processing_mode) %d]", vname, pmode);
+   tkcmd, swrite(format="dict set var_settings(%s) display_type [lindex $l1pro_data(display_types) %d]", vname, dmode);
+
+   cbar = auto_cbar(data, "stdev", mode=["fs","ba","","be"](dmode+1));
+   tkcmd, swrite(format="dict set var_settings(%s) cmin %.2f", vname, cbar(1));
+   tkcmd, swrite(format="dict set var_settings(%s) cmax %.2f", vname, cbar(2));
+}
+
+func set_read_yorick(data, vname=, fn=) {
+/* DOCUMENT set_read_yorick(data, vname=, fn=)
+   This function sets the cmin and cmax values in the Process EAARL data GUI
+   amar nayegandhi 05/06/03
+*/
+   local cminmax, pmode, dmode;
 
    if(!is_void(pmode)) {
       tkcmd, swrite(format="processing_mode_by_index %d", pmode);

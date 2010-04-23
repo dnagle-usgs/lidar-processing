@@ -883,9 +883,10 @@ proc ::l1pro::tools::datum::convert {} {
    destroy $v::top
 }
 
-proc ::l1pro::tools::auto_cbar {method factor} {
+proc ::l1pro::tools::auto_cbar {method {factor {}}} {
    set cmd "auto_cbar, $::pro_var, \"$method\""
-   append cmd ", mode=[display_type_mode], factor=$factor"
+   append cmd ", mode=[display_type_mode]"
+   ::misc::appendif cmd {$factor ne ""} ", factor=$factor"
    exp_send "$cmd;\r"
 }
 

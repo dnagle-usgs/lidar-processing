@@ -120,12 +120,16 @@ func auto_cbar(data, method, mode=, factor=) {
 /* DOCUMENT auto_cbar, data, method, mode=, factor=
    Automatically sets the colorbar for data using the given method.
 
+   Alternatively, if called as a function, will return [cmin, cmax] instead of
+   automatically setting colorbar.
+
    Parameters:
       data: An array of data suitable for passing to data2xyz.
       method: The method to use for determining the colorbar. Valid values:
             method="stdev"       Use standard deviations about the mean
             method="percentage"  Use central percentage of data
             method="rcf"         Use random consensus filter
+            method="all"         Set cmin/cmax to include all data
 
    Options:
       mode= A mode suitable for data2xyz.
@@ -144,6 +148,7 @@ func auto_cbar(data, method, mode=, factor=) {
          cdelta.
             factor=20.     use 20m window (default)
             factor=5       use 5m window
+         When method="all", factor is ignored.
 */
 // Original David Nagle 2010-04-23
    local z, cmin, cmax, cdelta;
@@ -171,9 +176,17 @@ func auto_cbar(data, method, mode=, factor=) {
       cdelta = double(factor);
       cmin = rcf(z, cdelta, mode=0)(1);
       cmax = cmin + cdelta;
+   } else if(method == "all") {
+      cmin = z(min);
+      cmax = z(max);
+      cdelta = cmax - cmin;
    }
 
-   tkcmd, swrite(format="set plot_settings(cmin) %.2f", cmin);
-   tkcmd, swrite(format="set plot_settings(cmax) %.2f", cmax);
-   tkcmd, swrite(format="set cdelta %.2f", cdelta);
+   if(am_subroutine()) {
+      tkcmd, swrite(format="set plot_settings(cmin) %.2f", cmin);
+      tkcmd, swrite(format="set plot_settings(cmax) %.2f", cmax);
+      tkcmd, swrite(format="set cdelta %.2f", cdelta);
+   } else {
+      return [cmin, cmax];
+   }
 }

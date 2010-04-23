@@ -388,10 +388,9 @@ snit::widget ::l1pro::ascii::gui {
    method do_import {} {
       set cmd "$vname = read_ascii_xyz(\"$filename\", $struct"
       append cmd ", [$self build_args])"
-      append cmd "; set_read_yorick, $vname"
+      exp_send "$cmd\r"
       append_varlist $vname
       set ::pro_var $vname
-      exp_send "$cmd\r"
       $self dismiss
    }
 
