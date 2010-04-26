@@ -90,60 +90,37 @@ proc app_root_dir {} {
 }
 
 proc check_requirements {} {
-   if {[package vcompare [info patchlevel] 8.4.17] < 0} {
-      puts "                         *** *** *** ERROR! *** *** ***"
-      puts "
-ALPS requires ActiveTcl version 8.4.17 or later. You are running ActiveTcl [info patchlevel].
+   if {[package vcompare [info patchlevel] 8.5] < 0} {
+      puts "                         *** *** *** ERROR! *** *** ***
 
-Please upgrade to the latest version of ActiveTcl, available at:
+ALPS requires Tcl version 8.5 or later. You are running version [info patchlevel].
 
-   http://www.activestate.com/activetcl/"
+Please upgrade your installation of ALPS. Directions can be found in
+[file join [file dirname [app_root_dir]] doc/install-alps.html]"
       exit
    }
 
-   set errors [list]
-   set warnings [list]
+   if {![file isdirectory [file join [app_root_dir] tcllib l1pro]]} {
+      puts "                         *** *** *** ERROR! *** *** ***
 
-   if {![file isdirectory [file join [app_root_dir] tcllib sf]]} {
-      lappend errors "
 Your ALPS is missing required source subdirectories. Please run cvs update
 using the -d option to update subdirectories:
 
    cvs update -d"
+      exit
    }
 
-   if {[catch {package require getstring}]} {
-      lappend errors "
-You do not appear to have the package \"getstring\" installed in your version
-of ActiveTcl. To fix this, run this command at the command line:
+   set missing 0
+   if {
+      [catch {package require getstring}] || [catch {package require Iwidgets}] ||
+      [catch {package require BWidget}] || [catch {package require Expect}]
+   } {
+      puts "                         *** *** *** ERROR! *** *** ***
 
-    sudo teacup install getstring"
-   }
+ALPS cannot find some required packages in Tcl.
 
-   if {[catch {package require Iwidgets}]} {
-      lappend errors "
-You do not appear to have the package \"Iwidgets\" installed in your version
-of ActiveTcl. To fix this, run this command at the command line:
-
-    sudo teacup install Iwidgets"
-   }
-
-   if {[catch {package require BWidget}] || [catch {package require Expect}]} {
-      lappend errors "
-You do not appear to have the ActiveState::ActiveTcl package suite installed in
-your version of ActiveTcl. To fix this, run this command at the command line:
-
-    sudo teacup install ActiveState::ActiveTcl -is profile"
-   }
-
-   if {[llength $errors]} {
-      puts "                         *** *** *** ERROR! *** *** ***"
-      foreach err $errors {
-         puts "$err\n"
-      }
-   }
-
-   if {[llength $errors]} {
+Please upgrade your installation of ALPS. Directions can be found in
+[file join [file dirname [app_root_dir]] doc/install-alps.html]"
       exit
    }
 }
