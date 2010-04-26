@@ -2,6 +2,12 @@ This directory contains the source for the C-ALPS Yorick plugin, also known by
 its plugin name "calps". This provides extensions, coded in C, that make
 certain parts of ALPS run faster and expand ALPS's capabilities.
 
+Most users should not need to interact directly with this code, as it is
+installed as part of the normal ALPS installation documented at
+doc/install-alps.html. If you want to re-install the C-ALPS plugin to get
+recent changes, you can either upgrade ALPS as documented in the installation
+directions *or* follow the directions below.
+
 IMPORTANT NOTE: This plugin is *incompatible* with the older "rcf" plugin
 (found in yorick-extend/rcf) due to them using conflicting versions of the
 triangle library. The "rcf" plugin is deprecated and should be uninstalled
