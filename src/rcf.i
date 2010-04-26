@@ -427,6 +427,9 @@ func rcf_filter_eaarl(eaarl, mode=, clean=, rcfmode=, buf=, w=, n=, idx=) {
 
    data2xyz, eaarl, x, y, z, mode=mode;
 
+   buf /= 100.;
+   w /= 100.;
+
    keep = [];
 
    if(rcfmode == "grcf")
