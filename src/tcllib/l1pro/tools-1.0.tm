@@ -662,14 +662,13 @@ proc ::l1pro::tools::griddata::gui {} {
    toplevel $w
 
    wm resizable $w 1 0
-
    wm title $w "Gridding $::pro_var"
 
    set v::invar $::pro_var
    set v::mode [lindex {fs ba de be fint lint ch} [display_type]]
    set v::outvar ${::pro_var}_grid
-   ybkg tksetfunc \"[namespace which -variable v::tile]\" \"guess_tile\" \
-      \"$::pro_var\"
+   ::misc::idle [list ybkg tksetfunc \"[namespace which -variable v::tile]\" \
+      \"guess_tile\" \"$::pro_var\"]
 
    ttk::frame $w.f
    grid $w.f -sticky news
