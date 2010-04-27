@@ -102,6 +102,14 @@ image create bitmap ::imglib::padlock::closed -data {
       0xfc, 0x01, 0xdc, 0x01, 0xdc, 0x01, 0xfc, 0x01, 0x00, 0x00};
 }
 
+# Image used in styling panedwindows
+image create bitmap ::imglib::sash -data {
+   #define sash_width 2
+   #define sash_height 2
+   static unsigned char sash_bits[] = {
+      0xfd, 0xfc};
+}
+
 # Miscellaneous icons
 namespace eval ::imglib::misc {}
 

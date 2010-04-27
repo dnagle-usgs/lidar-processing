@@ -4,6 +4,13 @@ package provide mixin 1.0
 package require imglib
 package require snit
 
+# Change default stylings on panedwindow:
+ttk::style element create Sash.xsash image \
+   [list ::imglib::sash] -sticky enws
+ttk::style layout TPanedwindow {
+   Sash.xsash
+}
+
 snit::widgetadaptor ::mixin::statevar {
    constructor args {
       installhull $win
