@@ -355,7 +355,7 @@ func rgb2hsl(R, G, B, &H, &S, &L) {
 
    H = S = 0;
 
-   if(mx != 0) {
+   if(mx != 0 && mx != mn) {
       if(L < 0.5)
          S = delta / (mx + mn);
       else
