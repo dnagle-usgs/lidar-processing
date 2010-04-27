@@ -153,7 +153,6 @@ func auto_cbar(data, method, mode=, factor=) {
 // Original David Nagle 2010-04-23
    local z, cmin, cmax, cdelta;
    data2xyz, data, , , z, mode=mode;
-   z = z(sort(z));
 
    if(method == "stdev") {
       default, factor, 2;
@@ -163,6 +162,7 @@ func auto_cbar(data, method, mode=, factor=) {
       cdelta = cminmax(dif)(1);
    } else if(method == "percentage") {
       default, factor, 0.99;
+      z = z(sort(z));
       factor = (1 - factor)/2.;
       count = numberof(z) - 1;
       cmini = long(count * factor + 0.5) + 1;
