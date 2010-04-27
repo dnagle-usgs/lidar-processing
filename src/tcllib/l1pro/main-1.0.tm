@@ -143,8 +143,8 @@ proc ::l1pro::main::panel_plot w {
    ttk::labelframe $w -text "Visualization"
    set f $w
 
-   ttk::button $f.varbtn -text "Variable:" \
-      -style Panel.TButton \
+   ttk::button $f.varbtn -text "Var:" \
+      -style Panel.TButton -width 0 \
       -command ::varplot::gui
    ::mixin::combobox $f.varsel -state readonly -width 4 \
       -textvariable ::pro_var \
@@ -180,39 +180,16 @@ proc ::l1pro::main::panel_plot w {
       -variable ::l1pro_fma
    ttk::button $f.plot -text "Plot" -command ::display_data
 
-   ttk::panedwindow $f.pane -orient horizontal
-   $f.pane add [ttk::frame $f.pane.left] -weight 1
-   $f.pane add [ttk::frame $f.pane.right] -weight 1
-   lower $f.pane
-   lower $f.pane.left
-   lower $f.pane.right
+   grid $f.varbtn  $f.varsel -        $f.winlbl  $f.win  $f.plot -padx 1 -pady 1
+   grid $f.modelbl $f.mode   -        $f.skiplbl $f.skip ^       -padx 1 -pady 1
+   grid $f.marklbl $f.mtype  $f.msize $f.fma     -       ^       -padx 1 -pady 1
 
-   grid $f.varbtn $f.varsel -in $f.pane.left -padx 2 -sticky ew
-   grid columnconfigure $f.pane.left 1 -weight 1
+   grid configure $f.varbtn $f.varsel $f.mode $f.mtype $f.msize $f.win \
+      $f.skip $f.plot -sticky ew
+   grid configure $f.modelbl $f.marklbl $f.winlbl $f.skiplbl -sticky e
+   grid configure $f.fma -sticky w
 
-   grid $f.modelbl $f.mode -in $f.pane.right -padx 2 -sticky ew
-   grid columnconfigure $f.pane.right 1 -weight 1
-
-   lower [ttk::frame $f.fsettings1]
-   grid $f.marklbl $f.msize $f.mtype x $f.winlbl $f.win \
-      -in $f.fsettings1 -padx 2 -pady 1
-   grid columnconfigure $f.fsettings1 3 -weight 1
-
-   lower [ttk::frame $f.fsettings2]
-   grid $f.skiplbl $f.skip x $f.fma \
-      -in $f.fsettings2 -padx 2 -pady 1
-   grid columnconfigure $f.fsettings2 2 -weight 1
-
-   lower [ttk::frame $f.fsettings]
-   grid $f.fsettings1 -in $f.fsettings -sticky ew
-   grid $f.fsettings2 -in $f.fsettings -sticky ew
-   grid columnconfigure $f.fsettings 0 -weight 1
-
-   grid $f.pane - -sticky ew
-   grid $f.fsettings $f.plot -sticky ew
-   grid configure $f.plot -padx 2
-
-   grid columnconfigure $f 0 -weight 1
+   grid columnconfigure $f 1 -weight 1
 
    # Tooltip over variable combobox to show current variable (in case it's too
    # long)
@@ -220,6 +197,10 @@ proc ::l1pro::main::panel_plot w {
    trace add variable ::pro_var write [list apply [list {v1 v2 op} $cmd]]
    unset cmd
    set ::pro_var $::pro_var
+
+   ::tooltip::tooltip $f.varbtn \
+      "Select the variable to plot in the box to the right. Or click this\
+      \nbutton to bring up the variable manager."
 
    return $w
 }
@@ -284,16 +265,16 @@ proc ::l1pro::main::panel_tools w {
    menu $f.acmenu.rms
    menu $f.acmenu.pct
    menu $f.acmenu.rcf
-   $f.acmenu add command -label "Elevation bounds" \
+   $f.acmenu add command -label "Set to elevation bounds" \
       -command [list ::l1pro::tools::auto_cbar all]
-   $f.acmenu add cascade -label "Standard Deviations..." -menu $f.acmenu.rms
+   $f.acmenu add cascade -label "Set by standard deviations..." -menu $f.acmenu.rms
    $f.acmenu.rms add command -label "+/-1 deviation" \
       -command [list ::l1pro::tools::auto_cbar stdev 1]
    $f.acmenu.rms add command -label "+/-2 deviations" \
       -command [list ::l1pro::tools::auto_cbar stdev 2]
    $f.acmenu.rms add command -label "+/-3 deviations" \
       -command [list ::l1pro::tools::auto_cbar stdev 3]
-   $f.acmenu add cascade -label "Central Percentage..." -menu $f.acmenu.pct
+   $f.acmenu add cascade -label "Set using central percentage..." -menu $f.acmenu.pct
    $f.acmenu.pct add command -label "99%" \
       -command [list ::l1pro::tools::auto_cbar percentage 0.99]
    $f.acmenu.pct add command -label "98%" \
@@ -302,7 +283,7 @@ proc ::l1pro::main::panel_tools w {
       -command [list ::l1pro::tools::auto_cbar percentage 0.95]
    $f.acmenu.pct add command -label "90%" \
       -command [list ::l1pro::tools::auto_cbar percentage 0.90]
-   $f.acmenu add cascade -label "Delta RCF..." -menu $f.acmenu.rcf
+   $f.acmenu add cascade -label "Set using delta RCF..." -menu $f.acmenu.rcf
    $f.acmenu.rcf add command -label "5 meter window" \
       -command [list ::l1pro::tools::auto_cbar rcf 5]
    $f.acmenu.rcf add command -label "10 meter window" \
@@ -313,14 +294,18 @@ proc ::l1pro::main::panel_tools w {
       -command [list ::l1pro::tools::auto_cbar rcf 30]
    $f.acmenu.rcf add command -label "Use current CDelta value" \
       -command ::l1pro::tools::auto_cbar_cdelta
-   ttk::menubutton $f.autocbar -text " Auto Cbar " -width 0 \
+   $f.acmenu add separator
+   $f.acmenu add command -label "Draw colorbar" \
+      -command ::l1pro::tools::colorbar
+   ttk::menubutton $f.autocbar -text " Colorbar " -width 0 \
       -style Panel.TMenubutton -menu $f.acmenu
 
    menu $f.srtmenu
-   $f.srtmenu add command -label "By soe, ascending" \
+   $f.srtmenu add command -label "By soe (flightline), ascending" \
       -command [list ::l1pro::tools::sortdata soe 0]
-   $f.srtmenu add command -label "By soe, descending" \
+   $f.srtmenu add command -label "By soe (flightline), descending" \
       -command [list ::l1pro::tools::sortdata soe 1]
+   $f.srtmenu add separator
    $f.srtmenu add command -label "By easting, ascending (plots fast)" \
       -command [list ::l1pro::tools::sortdata x 0]
    $f.srtmenu add command -label "By easting, descending (plots fast)" \
@@ -329,10 +314,12 @@ proc ::l1pro::main::panel_tools w {
       -command [list ::l1pro::tools::sortdata y 0]
    $f.srtmenu add command -label "By northing, descending (plots fast)" \
       -command [list ::l1pro::tools::sortdata y 1]
+   $f.srtmenu add separator
    $f.srtmenu add command -label "By elevation, ascending (plots slowly)" \
       -command [list ::l1pro::tools::sortdata z 0]
    $f.srtmenu add command -label "By elevation, descending (plots slowly)"  \
       -command [list ::l1pro::tools::sortdata z 1]
+   $f.srtmenu add separator
    $f.srtmenu add command -label "Randomize (plots slowly)" \
       -command [list ::l1pro::tools::sortdata random 0]
    ttk::menubutton $f.sortdata -text " Sort Data " -width 0 \
@@ -344,10 +331,6 @@ proc ::l1pro::main::panel_tools w {
    ttk::button $f.histelv -text " Histogram \n Elevations " -width 0 \
       -style Panel.TButton \
       -command ::l1pro::tools::histelev
-   ttk::button $f.colorbar -text " Color \n Bar " -width 0 \
-      -style Panel.TButton \
-      -command ::l1pro::tools::colorbar
-
    ttk::button $f.datum -text " Datum \n Convert " -width 0 \
       -style Panel.TButton \
       -command ::l1pro::tools::datum::gui
@@ -387,9 +370,9 @@ proc ::l1pro::main::panel_tools w {
       "NOTE: This tool requires that you have C-ALPS installed. If you do not,\
       \nit will not work!"
 
-   grid $f.autocbar $f.pixelwf $f.histelv $f.colorbar $f.datum $f.elvclip $f.rcf \
+   grid $f.autocbar $f.pixelwf $f.histelv $f.datum $f.elvclip $f.rcf $f.griddata \
       $f.gridtype - -sticky news -padx 1 -pady 1
-   grid $f.sortdata ^ ^ ^ ^ ^ $f.griddata $f.gridplot $f.gridname -sticky news -padx 1 -pady 1
+   grid $f.sortdata ^ ^ ^ ^ ^ ^ $f.gridplot $f.gridname -sticky news -padx 1 -pady 1
    grid columnconfigure $f 1000 -weight 1
    grid columnconfigure $f {7 8} -uniform g
 
