@@ -913,8 +913,9 @@ func kml_pnav_LineString(pnav, maxdist=, alt=) {
 
 func kml_jgw_tree(dir, ofn, root=, name=) {
    default, root, "";
+   default, name, file_tail(file_rootname(ofn));
    contents = kml_jgw_tree_recurse(dir, root);
-   kml_save, ofn, contents, name=file_tail(file_rootname(ofn));
+   kml_save, ofn, contents, name=name;
 }
 
 func kml_jgw_tree_recurse(dir, root) {
