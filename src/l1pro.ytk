@@ -110,6 +110,7 @@ if {![winfo exists .l1wid]} {
   set plot_dpi 75
   array set cbvc {cmin cmin cmax cmax msize msize mtype mtype}
 
+  set cbv 0
   set cbvc(cmin) $plot_settings(cmin)
   set cbvc(cmax) $plot_settings(cmax)
   set cbvc(msize) $plot_settings(msize)
@@ -134,8 +135,6 @@ if {![winfo exists .l1wid]} {
   menu .l1wid.mb
   menu .l1wid.mb.file
   menu .l1wid.mb.mission
-  menu .l1wid.mb.options
-  menu .l1wid.mb.options.processing
   menu .l1wid.mb.graph
   menu .l1wid.mb.util
   menu .l1wid.mb.cmd
@@ -211,16 +210,6 @@ if {![winfo exists .l1wid]} {
     -command ::l1pro::settings::ops_conf::gui
   .l1wid.mb.mission add command -label "Save ops_conf..." -underline 0 \
     -command ::l1pro::settings::ops_conf::save
-
-  .l1wid.mb add cascade -label Options -underline 0 -menu .l1wid.mb.options
-
-  .l1wid.mb.options add command \
-    -label "Show Flightlines with No Raster Data..." -underline 25 \
-    -command {exp_send "plot_no_raster_fltlines(gga, edb);\r"}
-
-  .l1wid.mb.options add command -label "Show Flightlines with No TANS Data..." \
-    -underline 25 \
-    -command {exp_send "plot_no_tans_fltlines(tans, gga);\r"}
 
   namespace eval varplot {
     namespace eval v {
@@ -360,26 +349,6 @@ if {![winfo exists .l1wid]} {
       init_var_settings $newvar
     }
   }
-
-  .l1wid.mb.options add checkbutton -label "Constant Colorbar for Variables" \
-    -variable cbv \
-    -command {
-      if {$cbv == 1} {
-        global cbvc plot_settings
-        set cbvc(cmin) $plot_settings(cmin)
-        set cbvc(cmax) $plot_settings(cmax)
-        set cbvc(msize) $plot_settings(msize)
-        set cbvc(mtype) $plot_settings(mtype)
-      }
-    }
-  .l1wid.mb.options add checkbutton -label "Constant Window for Variables" \
-    -variable constant_win_no
-
-  .l1wid.mb.options add checkbutton -label "Autodraw colorbar when plotting" \
-    -variable l1pro_cbar
-
-  .l1wid.mb.options add checkbutton -label "Plot with square limits" \
-    -variable l1pro_square_limits
 
   proc make_selected_arrays {} {
     global lrnindx list
@@ -528,6 +497,14 @@ if {![winfo exists .l1wid]} {
     -command determine_roll_bias
   .l1wid.mb.util add command -label "Browse Rasters" -underline 7 \
     -command ::l1pro::drast::gui
+  .l1wid.mb.util add separator
+  .l1wid.mb.util add command \
+    -label "Show Flightlines with No Raster Data..." -underline 25 \
+    -command {exp_send "plot_no_raster_fltlines(gga, edb);\r"}
+  .l1wid.mb.util add command -label "Show Flightlines with No TANS Data..." \
+    -underline 25 \
+    -command {exp_send "plot_no_tans_fltlines(tans, gga);\r"}
+
 
   proc determine_roll_bias {} {
       global win_no varlist bias pro_var

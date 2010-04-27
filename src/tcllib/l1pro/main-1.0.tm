@@ -152,6 +152,8 @@ proc ::l1pro::main::panel_plot w {
    ttk::label $f.winlbl -text "Window:"
    spinbox $f.win -from 0 -to 63 -increment 1 -width 2 \
       -textvariable ::win_no
+   ::mixin::padlock $f.winlock \
+      -variable ::constant_win_no
    ttk::label $f.modelbl -text "Mode:"
    ::mixin::combobox $f.mode -state readonly -width 4 \
       -textvariable ::plot_settings(display_type) \
@@ -176,18 +178,23 @@ proc ::l1pro::main::panel_plot w {
    spinbox $f.skip -width 5 \
       -from 1 -to 10000 -increment 1 \
       -textvariable ::skip
-   ttk::checkbutton $f.fma -text "Auto Clear" \
+   ttk::checkbutton $f.fma -text "Auto clear" \
       -variable ::l1pro_fma
+   ttk::checkbutton $f.square -text "Square limits  " \
+      -variable ::l1pro_square_limits
    ttk::button $f.plot -text "Plot" -command ::display_data
 
-   grid $f.varbtn  $f.varsel -        $f.winlbl  $f.win  $f.plot -padx 1 -pady 1
-   grid $f.modelbl $f.mode   -        $f.skiplbl $f.skip ^       -padx 1 -pady 1
-   grid $f.marklbl $f.mtype  $f.msize $f.fma     -       ^       -padx 1 -pady 1
+   lower [ttk::frame $f.checks]
+   grid $f.square $f.fma -in $f.checks
+
+   grid $f.varbtn  $f.varsel -        $f.winlbl  $f.win $f.winlock  $f.plot -padx 1 -pady 1
+   grid $f.modelbl $f.mode   -        $f.skiplbl $f.skip -          ^       -padx 1 -pady 1
+   grid $f.marklbl $f.mtype  $f.msize $f.checks  -       -          -       -padx 1 -pady 1
 
    grid configure $f.varbtn $f.varsel $f.mode $f.mtype $f.msize $f.win \
       $f.skip $f.plot -sticky ew
    grid configure $f.modelbl $f.marklbl $f.winlbl $f.skiplbl -sticky e
-   grid configure $f.fma -sticky w
+   grid configure $f.checks -sticky w
 
    grid columnconfigure $f 1 -weight 1
 
@@ -201,6 +208,11 @@ proc ::l1pro::main::panel_plot w {
    ::tooltip::tooltip $f.varbtn \
       "Select the variable to plot in the box to the right. Or click this\
       \nbutton to bring up the variable manager."
+
+   ::tooltip::tooltip $f.winlock \
+      "Toggles whether the window should be kept constant across variables.\
+      \n  locked: all variables will use the same window\
+      \n  unlocked: each variable tracks its window separately"
 
    return $w
 }
@@ -295,8 +307,10 @@ proc ::l1pro::main::panel_tools w {
    $f.acmenu.rcf add command -label "Use current CDelta value" \
       -command ::l1pro::tools::auto_cbar_cdelta
    $f.acmenu add separator
-   $f.acmenu add command -label "Draw colorbar" \
+   $f.acmenu add command -label "Manually draw colorbar" \
       -command ::l1pro::tools::colorbar
+   $f.acmenu add checkbutton -label "Autodraw colorbar when plotting" \
+      -variable ::l1pro_cbar
    ttk::menubutton $f.autocbar -text " Colorbar " -width 0 \
       -style Panel.TMenubutton -menu $f.acmenu
 
