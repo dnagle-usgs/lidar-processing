@@ -190,3 +190,79 @@ func auto_cbar(data, method, mode=, factor=) {
       return [cmin, cmax];
    }
 }
+
+func palette_write(filename, red, green, blue, ntsc=) {
+/* DOCUMENT palette_write, filename, ntsc=
+   palette_write, filename, red, green, blue, ntsc=
+   Writes the current palette (or the one specified) to file.
+*/
+   default, ntsc, 1;
+   if(is_void(red))
+      palette, red, green, blue, query=1;
+
+   f = open(filename, "w");
+   write, f, format="ncolors=%d\n", numberof(red);
+   write, f, format="ntsc=%d\n", ntsc;
+   write, f, format="# r g b%s", "\n";
+   write, f, format="%3d %3d %3d\n", red, green, blue;
+   close, f;
+}
+
+func palette_generate(colors, spots, &red, &green, &blue, apply=, ntsc=, ncolors=) {
+/* DOCUMENT palette_generate, colors, spots, apply=, ntsc=, ncolors=
+   palette_generate, colors, spots, red, green, blue, apply=, ntsc=, ncolors=
+   rgb = palette_generate(colors, spots, apply=, ntsc=, ncolors=)
+
+   Generates a palette from a given list of colors.
+
+   "colors" should be an array of colors, either 3xn or nx3. (Note that a 3x3
+   array should be [[r,r,r],[g,g,g],[b,b,b]] and cannot be
+   [[r,g,b],[r,g,b],[r,g,b]]. In all other cases, order is irrelevant.)
+
+   "spots" should be an array of numbers whose length corresponds to the number
+   of colors given. These indicate where each given color falls relative to the
+   others.
+
+   The colors and spots are used to interpolate the colors needed for the
+   palette. In a simple case, consider:
+      palette_generate, [[0,0,0],[255,255,255]], [0,1]
+   This will generat a basic grayscale palette.
+
+   Options:
+      apply= By default, the generated palette is applied immediately. Set
+         apply=0 to prevent that.
+      ntsc= See palette for description. Default is ntsc=1.
+      ncolors= Number of colors to use in palette. Default is ncolors=240.
+
+   If called as a function, will return the palette as [R,G,B]. It can also be
+   called as a subroutine with output parameters red, green, and blue.
+*/
+   local R, G, B, H, S, L;
+   default, ntsc, 1;
+   default, apply, 1;
+   default, ncolors, 240;
+
+   splitary, colors, 3, R, G, B;
+
+   srt = sort(spots);
+   R = R(srt);
+   G = G(srt);
+   B = B(srt);
+   spots = spots(srt);
+
+   rgb2hsl, R, G, B, H, S, L;
+
+   wanted = span(spots(min), spots(max), ncolors);
+
+   s = interp(S, spots, wanted);
+   l = interp(L, spots, wanted);
+   h = interp_angles(H, spots, wanted);
+
+   hsl2rgb, h, s, l, red, green, blue;
+
+   if(apply)
+      palette, red, green, blue, ntsc=ntsc;
+
+   if(!am_subroutine())
+      return [red, green, blue];
+}
