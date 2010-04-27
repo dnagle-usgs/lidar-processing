@@ -269,8 +269,12 @@ proc mission_path {{path NOPATHPROVIDED} {sync 1}} {
     return $__mission_path
 }
 
-proc mission_initialize_from_path {mission_path} {
-    exp_send "mission_initialize_from_path, \"$mission_path\";\r"
+proc mission_initialize_from_path {mission_path {strict 1}} {
+    set cmd "mission_initialize_from_path, \"$mission_path\""
+    if {! $strict} {
+        append cmd ", strict=0"
+    }
+    exp_send "$cmd\r"
 }
 
 ### UTILITY
@@ -342,9 +346,15 @@ namespace eval mission {
         menu $mb.act
         $mb add cascade -label Actions -underline 0 -menu $mb.act
 
-        $mb.act add command -label "Initialize from mission directory" \
+        menu $mb.act.init
+        $mb.act add cascade -label "Initialize from mission directory" \
+            -underline 0 -menu $mb.act.init
+        $mb.act.init add command -label "Strict (days with lidar)" \
             -underline 0 \
-            -command [@ menu_initialize_from_mission_dir]
+            -command [list [@ menu_initialize_from_mission_dir] 1]
+        $mb.act.init add command -label "Non-strict (all days)" \
+            -underline 0 \
+            -command [list [@ menu_initialize_from_mission_dir] 0]
 
         $mb.act add separator
         $mb.act add command -label "Launch RGB" -command [@ menu_launch_rgb]
@@ -454,13 +464,13 @@ namespace eval mission {
         wm withdraw $v::toplevel
     }
 
-    proc menu_initialize_from_mission_dir {} {
+    proc menu_initialize_from_mission_dir strict {
         set dir [tk_chooseDirectory \
             -parent $v::toplevel \
             -title "Select the mission directory" \
             -mustexist 1]
         if {$dir ne ""} {
-            mission_initialize_from_path $dir
+            mission_initialize_from_path $dir $strict
             update_gui
         }
     }

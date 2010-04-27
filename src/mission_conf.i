@@ -864,7 +864,7 @@ func mission_initialize_from_path(path, strict=) {
     pnav file, ins file, ops_conf.i file, and edb file.
 
     If strict is 1 (which it is by default), then a mission day will not be
-    initialized unless an edf file is present. If strict is 0, then that
+    initialized unless an edb file is present. If strict is 0, then that
     restriction is lifted.
 */
 // Original David Nagle 2009-02-04
