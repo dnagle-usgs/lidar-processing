@@ -581,11 +581,73 @@ func merge_pointers(pary) {
    return mary;
 }
 
+func hash2ptr(hash, token=) {
+/* DOCUMENT ptr = hash2ptr(hash, token=)
+   Converts a Yeti hash into a pointer tree, which can then be stored safely in
+   a Yorick pbd file.
+
+   Keyword token indicates whether a "HASH POINTER" token should be included in
+   the pointer structure. Without this, there's no way to safely automatically
+   determine whether a pointer structure represents a hash or not; including it
+   allows for a hash tree to be recursively stored. By default, it is included
+   (token=1), but if you know for a fact that you will never need to determine
+   via automatic introspection that the pointer represents a hash you can set
+   token=0 to disable its inclusion. (Note that hash members that are
+   themselves hashes will be stored with token=1 either way, to allow for
+   recursive restoration.)
+
+   SEE ALSO: ptr2hash hash2pbd
+*/
+// Original David Nagle 2010-04-28
+   default, token, 1;
+   keys = h_keys(hash);
+   keys = keys(sort(keys));
+   num = numberof(keys);
+   data = array(pointer, num);
+   for(i = 1; i <= num; i++) {
+      if(is_hash(hash(keys(i))))
+         data(i) = &hash2ptr(hash(keys(i)));
+      else
+         data(i) = &hash(keys(i));
+   }
+   tokentext = "HASH POINTER";
+   if(token)
+      return &[&keys, &data, &tokentext];
+   else
+      return &[&keys, &data];
+}
+
+func ptr2hash(ptr) {
+/* DOCUMENT hash = ptr2hash(ptr)
+   Converts a pointer tree returned by hash2ptr into a Yeti hash.
+
+   SEE ALSO: hash2ptr
+*/
+// Original David Nagle 2010-04-28
+   keys = *(*ptr)(1);
+   data = *(*ptr)(2);
+   num = numberof(keys);
+   hash = h_new();
+   for(i = 1; i <= num; i++) {
+      item = *data(i);
+      if(
+         is_pointer(item) && numberof(*item) == 3 &&
+         is_string(*(*item)(3)) && *(*item)(3) == "HASH POINTER"
+      )
+         h_set, hash, keys(i), ptr2hash(item);
+      else
+         h_set, hash, keys(i), item;
+   }
+   return hash;
+}
+
 func pbd2hash(pbd) {
 /* DOCUMENT hash = pbd2hash(pbd)
    Creates a Yeti hash whose contents match the pbd's contents. The pbd
    argument may be the filename of a pbd file, or it may be an open filehandle
    to a binary file that contains variables.
+
+   SEE ALSO: hash2pbd
 */
 // Original David Nagle 2010-01-28
    if(is_string(pbd))
@@ -604,6 +666,8 @@ func pbd2hash(pbd) {
 func hash2pbd(hash, pbd) {
 /* DOCUMENT hash2pbd, hash, pbd
    Creates a pbd file whose contents match the Yeti hash's contents.
+
+   SEE ALSO: pbd2hash hash2ptr
 */
 // Original David Nagle 2010-01-28
    if(is_string(pbd))
@@ -826,4 +890,3 @@ func bytes2text(bytes) {
    else
       return reform(result, dims);
 }
-
