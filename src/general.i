@@ -600,7 +600,10 @@ func hash2ptr(hash, token=) {
 */
 // Original David Nagle 2010-04-28
    default, token, 1;
+   tokentext = "HASH POINTER";
    keys = h_keys(hash);
+   if(!numberof(h_keys(hash)))
+      return token ? &[&[], &[], &tokentext] : &[&[], &[]];
    keys = keys(sort(keys));
    num = numberof(keys);
    data = array(pointer, num);
@@ -610,7 +613,6 @@ func hash2ptr(hash, token=) {
       else
          data(i) = &hash(keys(i));
    }
-   tokentext = "HASH POINTER";
    if(token)
       return &[&keys, &data, &tokentext];
    else
