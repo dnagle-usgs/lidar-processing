@@ -180,21 +180,26 @@ proc ::l1pro::main::panel_plot w {
       -textvariable ::skip
    ttk::checkbutton $f.fma -text "Auto clear" \
       -variable ::l1pro_fma
-   ttk::checkbutton $f.square -text "Square limits  " \
-      -variable ::l1pro_square_limits
    ttk::button $f.plot -text "Plot" -command ::display_data
+   ttk::button $f.lims -text "Limits" -command [list exp_send "limits;\r"]
 
-   lower [ttk::frame $f.checks]
-   grid $f.square $f.fma -in $f.checks
+   ttk::separator $f.sep -orient vertical
 
-   grid $f.varbtn  $f.varsel -        $f.winlbl  $f.win $f.winlock  $f.plot -padx 1 -pady 1
-   grid $f.modelbl $f.mode   -        $f.skiplbl $f.skip -          ^       -padx 1 -pady 1
-   grid $f.marklbl $f.mtype  $f.msize $f.checks  -       -          -       -padx 1 -pady 1
+   lower [ttk::frame $f.btns]
+   grid $f.plot -in $f.btns -sticky ew -padx 2 -row 1
+   grid $f.lims -in $f.btns -sticky ew -padx 2 -row 3
+   grid columnconfigure $f.btns 0 -weight 1
+   grid rowconfigure $f.btns {0 2 4} -weight 1 -uniform 1
+
+   grid $f.varbtn  $f.varsel -        $f.winlbl  $f.win $f.winlock $f.sep $f.btns -padx 1 -pady 1
+   grid $f.modelbl $f.mode   -        $f.skiplbl $f.skip -         ^      ^       -padx 1 -pady 1
+   grid $f.marklbl $f.mtype  $f.msize $f.fma     -       -         ^      ^       -padx 1 -pady 1
 
    grid configure $f.varbtn $f.varsel $f.mode $f.mtype $f.msize $f.win \
-      $f.skip $f.plot -sticky ew
+      $f.skip -sticky ew
    grid configure $f.modelbl $f.marklbl $f.winlbl $f.skiplbl -sticky e
-   grid configure $f.checks -sticky w
+   grid configure $f.btns -sticky news
+   grid configure $f.sep -sticky ns -pady 2
 
    grid columnconfigure $f 1 -weight 1
 
@@ -213,6 +218,10 @@ proc ::l1pro::main::panel_plot w {
       "Toggles whether the window should be kept constant across variables.\
       \n  locked: all variables will use the same window\
       \n  unlocked: each variable tracks its window separately"
+
+   ::tooltip::tooltip $f.lims \
+      "Reset the viewing area for the plot so that all data can be seen in the\
+      \nplot, optimally."
 
    return $w
 }
