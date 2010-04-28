@@ -431,6 +431,8 @@ func extract_corresponding_data(data, ref, soefudge=) {
          same if they are within 0.001 seconds of one another. Changing this
          might be helpful if one of your variables was recreated from XYZ or
          LAS data and seems to have lost some timestamp resolution.
+
+   SEE ALSO: extract_unique_data
 */
    default, soefudge, 0.001;
    data = data(msort(data.rn, data.soe));
@@ -458,3 +460,39 @@ func extract_corresponding_data(data, ref, soefudge=) {
 
    return data(where(keep));
 }
+
+func extract_unique_data(data, ref, soefudge=) {
+/* DOCUMENT extracted = extract_unique_data(data, ref, soefudge=)
+   Extracts data that doesn't exist in ref. This is the opposite of
+   extract_corresponding_data: it will extract every point that
+   extract_corresponding wouldn't.
+
+   SEE ALSO: extract_corresponding_data
+*/
+   default, soefudge, 0.001;
+   data = data(msort(data.rn, data.soe));
+   ref = ref(msort(ref.rn, ref.soe));
+   keep = array(char(1), numberof(data));
+
+   i = j = 1;
+   ndata = numberof(data);
+   nref = numberof(ref);
+   while(i <= ndata && j <= nref) {
+      if(data(i).rn < ref(j).rn) {
+         i++;
+      } else if(data(i).rn > ref(j).rn) {
+         j++;
+      } else if(data(i).soe < ref(j).soe - soefudge) {
+         i++;
+      } else if(data(i).soe > ref(j).soe + soefudge) {
+         j++;
+      } else {
+         keep(i) = 0;
+         i++;
+         j++;
+      }
+   }
+
+   return data(where(keep));
+}
+

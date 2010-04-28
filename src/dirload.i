@@ -249,6 +249,97 @@ func dircopy(dir, outdir, searchstr=, files=, filter=, verbose=) {
    }
 }
 
+func dircopydiff(src, ref, dest, searchstr=, files=, verbose=) {
+/* DOCUMENT dircopy, src, ref, dest, searchstr=, files=, verbose=
+   Copies data from src that doesn't exist in ref to dest.
+
+   This is intended to be used after a "dircopy". Suppose you're working with
+   data that covers North Carolina and Virgina. You want to split it into
+   sections for each state. First, you might decide to use dircopy to copy over
+   the data for North Carolina with a command similar to this:
+
+   dircopy, "/data/EAARL/processed/ExampleMission/Index_Tiles",
+      "/data/EAARL/processed/ExampleMission/NC/Index_Tiles",
+      searchstr="*.pbd", filter=dlfilter_poly(.....);
+
+   Then you would use dircopydiff to get everything that /wasn't/ copied to
+   NC/Index_Tiles so that you can work with that data without overlaps.
+
+   dircopydiff, "/data/EAARL/processed/ExampleMission/Index_Tiles",
+      "/data/EAARL/processed/ExampleMission/NC/Index_Tiles",
+      "/data/EAARL/processed/ExampleMission/VA/Index_Tiles",
+      searchstr="*.pbd"
+
+   In some cases, you might need to use a more complicated series of commands
+   involving temporary directories. For example, if your data covered SC, NC,
+   and VA, you might need to do:
+      dircopy to extract NC from Index_Tiles
+      dircopydiff to extract Not_NC from Index_Tiles using NC
+      dircopy to extract SC from Not_NC
+      dircopydiff to extract VA from Not_NC using SC
+      delete Not_NC
+
+   Parameters:
+      src: The directory that you want to copy from.
+      ref: The directory to compare to. Anything that isn't in this directory
+         will get copied.
+      dest: The directory to copy to.
+
+   Options:
+      searchstr= A search string to use for locating files to copy. Examples:
+            searchstr="*.pbd"       All pbd files (default)
+            searchstr="*fs*.pbd"    All first surface files
+      files= Specifies an array of file names to copy. If provided, then the
+         dir parameter and the searchstr option are ignored.
+      verbose= Specifies how chatty the function should be. Possible options:
+            verbose=0   Complete silence, unless errors encountered
+            verbose=1   Provide basic progress information (default)
+
+   Note: Files are copied in append mode, to allow building up over several
+   passes. Duplicate points are eliminated.
+*/
+// Original David Nagle 2010-04-28
+   default, searchstr, "*.pbd";
+   default, verbose, 1;
+
+   // Generate list of input files
+   if(is_void(files))
+      files = find(src, glob=searchstr);
+
+   if(is_void(files)) {
+      if(verbose)
+         write, "No files found.";
+      return [];
+   }
+
+   local tstamp, data, vname;
+   timer_init, tstamp;
+   for(i = 1; i <= numberof(files); i++) {
+      if(verbose)
+         timer_tick, tstamp, i, numberof(files);
+
+      data = pbd_load(files(i), , vname);
+
+      if(!numberof(data))
+         continue;
+
+      reffile = file_join(ref, file_relative(src, files(i)));
+      if(file_exists(reffile)) {
+         refdata = pbd_load(reffile);
+         if(numberof(refdata))
+            data = extract_unique_data(data, refdata);
+         refdata = [];
+      }
+
+      if(!numberof(data))
+         continue;
+
+      outfile = file_join(dest, file_relative(src, files(i)));
+      mkdirp, file_dirname(outfile);
+      pbd_append, outfile, vname, data, uniq=1;
+   }
+}
+
 /*** PRIVATE FUNCTIONS FOR dirload ***/
 func __dirload_apply_filter(&input, state, filters, name) {
    if(h_has(filters, name)) {
