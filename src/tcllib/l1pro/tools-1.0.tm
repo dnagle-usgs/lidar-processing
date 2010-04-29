@@ -884,7 +884,7 @@ proc ::l1pro::tools::datum::convert {} {
 
 proc ::l1pro::tools::auto_cbar {method {factor {}}} {
    set cmd "auto_cbar, $::pro_var, \"$method\""
-   append cmd ", mode=[display_type_mode]"
+   append cmd ", mode=\"[display_type_mode]\""
    ::misc::appendif cmd {$factor ne ""} ", factor=$factor"
    exp_send "$cmd;\r"
 }
@@ -895,7 +895,7 @@ proc ::l1pro::tools::auto_cbar_cdelta {} {
 
 proc ::l1pro::tools::sortdata {method desc} {
    set cmd "$::pro_var = sortdata($::pro_var"
-   append cmd ", mode=[display_type_mode], method=\"$method\""
+   append cmd ", mode=\"[display_type_mode]\", method=\"$method\""
    ::misc::appendif cmd $desc ", desc=1"
    append cmd ")"
    exp_send "$cmd;\r"
