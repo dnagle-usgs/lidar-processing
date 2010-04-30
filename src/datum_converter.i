@@ -568,7 +568,7 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=, clean=) {
    if(dst_datum == "n88")
       fn_outs += "_g" + dst_geoid;
    fn_outs += part2s;
-   fn_outdir = is_void(outdir) ? file_dirname(files(i)) : outdir;
+   fn_outdir = is_void(outdir) ? file_dirname(files) : outdir;
    fn_outs = file_join(unref(fn_outdir), fn_outs);
 
    // Check to see which files already exist
