@@ -205,7 +205,7 @@ clean=, verbose=) {
    // Extract xyz and, if necessary, convert to lat/lon
    data2xyz, data, x, y, z, mode=mode;
    if(latlon)
-      utm2ll, (y), (x), zone, y, x;
+      utm2ll, (y), (x), zone, x, y;
 
    // Extract intensity, rn, and soe if needed; otherwise, set to nil string.
    if(intensity)
