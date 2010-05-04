@@ -125,9 +125,10 @@ func strsplit(str, sep) {
    all elements.
 */
 // Original David Nagle
-   str = str;
+   str = (str);
    match = [];
    parts = array(string, dimsof(str), 1);
+   sep = regcomp(sep);
    res = regmatch(sep, str, match, indices=1);
    while(numberof(where(res))) {
       new = array(string, dimsof(str));
@@ -241,13 +242,15 @@ func strwrap(str, space=, newline=, paragraph=, width=) {
    return result;
 }
 
+__strindent = regcomp("^(.*)$", newline=1);
 func strindent(str, ind) {
 /* DOCUMENT newstr = strindent(str, ind);
    Indents each line of str (as deliminted by newlines) with the indentation
    given by ind.
 */
 // Original David B. Nagle 2009-04-09
-   return regsub("^(.*)$", str, ind + "\\1", newline=1, all=1);
+   extern __strindent;
+   return regsub(__strindent, str, ind + "\\1", all=1);
 }
 
 func longest_common_suffix(S) {
