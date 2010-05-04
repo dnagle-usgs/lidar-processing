@@ -1,5 +1,36 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 
+func split_sequence_by_gaps(seq, gap=) {
+/* DOCUMENT ptr = split_sequence_by_gaps(seq, gap=)
+   Splits a sequence of values into segments, breaking wherever the gap is
+   greater than then given gap. (If not provided, gap is twice the RMS of the
+   gaps found in the data between consecutive points.)
+
+   Return result is an array of pointers. Each pointer points to an index list
+   for a segment.
+
+   The given sequence seq should be monotonically increasing.
+*/
+   default, gap, seq(dif)(rms)*2;
+
+   // Find indexes where the time exceeds the threshold
+   time_idx = where(seq(dif) > timediff);
+   if(numberof(time_idx)) {
+      num_lines = numberof(time_idx) + 1;
+      segs_idx = grow(1, time_idx+1, numberof(seq)+1);
+   } else {
+      num_lines = 1;
+      segs_idx = [1, numberof(seq)+1];
+   }
+
+   // Create array of pointers to each subsequence
+   ptr = array(pointer, num_lines);
+   for (i = 1; i <= num_lines; i++) {
+     ptr(i) = &indgen(segs_idx(i):segs_idx(i+1)-1);
+   }
+   return ptr;
+}
+
 func subsplit_by_digitizer(ptr) {
 /* DOCUMENT sptr = subsplit_by_digitizer(ptr)
    Given an array of pointers as returned by split_by_day or split_by_fltline,
@@ -140,21 +171,14 @@ func split_by_fltline(data, timediff=) {
    // Needs to be sorted in order for time diffing to work
    data = data(sort(data.soe));
 
-   // Find indexes where the time exceeds the threshold
-   time_idx = where(data.soe(dif) > timediff);
-   if(numberof(time_idx)) {
-      num_lines = numberof(time_idx) + 1;
-      segs_idx = grow(1,time_idx+1,1);
-   } else {
-      num_lines = 1;
-      segs_idx = [1, 1];
-   }
+   // Split into segments
+   sptr = split_sequence_by_gaps(data.soe, gap=timediff);
 
-   // Create array of pointers to each segment
-   fptr = array(pointer, num_lines);
-   for (i = 1; i<=num_lines; i++) {
-     fltseg = data(segs_idx(i):segs_idx(i+1)-1);
-     fptr(i) = &fltseg;
+   // Extract data for segments
+   num = numberof(sptr);
+   fptr = array(pointer, num);
+   for(i = 1; i <= num; i++) {
+      fptr(i) = &data(*sptr(i));
    }
    return fptr;
 }
