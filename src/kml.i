@@ -911,7 +911,91 @@ func kml_pnav_LineString(pnav, maxdist=, alt=) {
 
 // CIR/JGW COMPONENTS
 
+func kml_jgw_make_levels(dir, levels=, searchstr=, update=, fast=, quality=) {
+/* DOCUMENT kml_jgw_make_levels, dir, levels=, searchstr=, update=, fast=,
+   quality=
+
+   Generates downsampled images for multiple view levels for a CIR dataset.
+   Each level is half the width and half the height of the previous level.
+
+   This ONLY generates the images. It must be run independently of the actual
+   kml generation.
+
+   Parameter:
+      dir: The directory to find images in.
+
+   Options:
+      levels= The number of levels to generate.
+            levels=7          Seven levels (default)
+      searchstr= Search pattern to find images with.
+            searchstr="*-cir.jpg"      Default
+      update= Whether to skip existing images or not.
+            update=0          Re-create existing images, overwriting
+            update=1          Skip images that already exist (default)
+      fast= Passed through to jpg_shrink.
+      quality= Passed through to jpg_shrink.
+
+   SEE ALSO: kml_jgw_make_levels_single, jpg_shrink
+*/
+   default, searchstr, "*-cir.jpg";
+   files = find(dir, glob=searchstr);
+   num = numberof(files);
+   t0 = array(double, 3);
+   timer, t0;
+   tp = t0;
+   for(i = 1; i <= num; i++) {
+      kml_jgw_make_levels_single, files(i), levels=levels, update=update,
+         fast=fast, quality=quality;
+      timer_remaining, t0, i, num, tp, interval=15;
+   }
+   timer_finished, t0;
+}
+
+func kml_jgw_make_levels_single(jpg, levels=, update=, fast=, quality=) {
+/* DOCUMENT kml_jgw_make_levels_single, jpg, levels=, update=, fast=, quality=
+   Generates downsampled images for multiple view levels for a single jpg
+   image. Each level is half the width and height of the previous level.
+   Options are as documented in kml_jgw_make_levels. This is not normally run
+   directly; most users will want to use kml_jgw_make_levels.
+*/
+   default, levels, 7;
+   default, update, 1;
+   reduces = 2^indgen(1:levels);
+   ljpgs = file_rootname(jpg) + swrite(format="_d%d.jpg", indgen(levels));
+   w = indgen(levels);
+   if(update)
+      w = where(!file_exists(ljpgs));
+   if(numberof(w))
+      jpg_shrink, jpg, ljpgs(w), reduces(w), fast=fast, quality=quality;
+}
+
 func kml_jgw_tree(dir, ofn, root=, name=) {
+/* DOCUMENT kml_jgw_tree, dir, ofn, root=, name=
+   Generates a KML product for a directory tree of CIR imagery. All existing
+   CIR kml files in the given path will be located. They will be organized into
+   a single master KML file that loads all of them.
+
+   This approach is deprecated as it demands a lot of overhead, since all of
+   the individual kml files must immediately be loaded. Consider using
+   kml_jgw_build_product instead, as it consolidates everything into a single
+   KML file without the need for referring to external kml files.
+
+   Parameters:
+      dir: Path to the images
+      ofn: Path and filename for the output kml file.
+   Options:
+      root= If provided, this is a path to prefix to the links for purposes of
+         putting on the web. Examples:
+            root="http://localhost:8080/"
+            root="http://getafix.er.usgs.gov/data/"
+         When applying the root, it will basically sub in for "dir". So when
+         you upload to your web server, make sure that you put the contents of
+         "dir" into "root".
+      name= A name to apply to the top-level container in the KML file,
+         describing the dataset as a whole.
+
+   SEE ALSO: kml_jgw_build_product
+*/
    default, root, "";
    default, name, file_tail(file_rootname(ofn));
    contents = kml_jgw_tree_recurse(dir, root);
@@ -919,6 +1003,9 @@ func kml_jgw_tree(dir, ofn, root=, name=) {
 }
 
 func kml_jgw_tree_recurse(dir, root) {
+/* DOCUMENT kml_jgw_tree_recurse, dir, root
+   Worker function for kml_jgw_tree. Do not call directly.
+*/
    local files, subdirs;
    fix_dir, dir;
    fix_dir, root;
@@ -939,7 +1026,331 @@ func kml_jgw_tree_recurse(dir, root) {
    return strchar(merge_pointers(result));
 }
 
-func batch_kml_jgw(dir, zone, levels=, searchstr=, update=, fast=, quality=) {
+func kml_jgw_build_product(dir, zone, kml, levels=, searchstr=, root=,
+timediff=, name=) {
+/* DOCUMENT kml_jgw_build_product, dir, zone, kml, levels=, searchstr=, root=,
+   timediff=, name=
+
+   Builds a KML product for a directory of CIR imagery. The result is a single
+   large KML file that organizes all of the imagery with the following layers:
+
+      Product
+       - ( ) Images
+       |      + ( ) Organized by fltline/10km/2km
+       |      + ( ) Organized by 10km/2km/fltline
+       + [ ] Placemarks
+
+   The two layers under Image are radiobutton selections so that only one may
+   be selected at a time. Both contain all of the available images, but
+   organized by different schemes as noted.
+
+   The Placemarks layer puts a marker at the center of each image with a
+   balloon that provides various information on the image.
+
+   This function will build the KML to render the image at different view
+   levels based on the levels= option. However, it does *not* generate the
+   subsampled images. You must run kml_jgw_make_levels to create the images.
+
+   Parameters:
+      dir: The path where the imagery is located.
+      zone: The UTM zone of the imagery.
+      kml: The kml file to create as output.
+   Options:
+      levels= Specifies how many view levels to render. If not specified, it
+         will detect what's present and use that. However, it is recommended
+         that you specify this option explicitly.
+            levels=3    Use three view levels
+            levels=7    Use seven view levels
+         Generally speaking, a view level of 2-5 is typically sufficient. View
+         levels higher than 7 are generally inefficient since a level 7 CIR is
+         only 13x9 pixels, and further reductions gain nothing.
+      searchstr= The searchstring to use to locate the jgw files.
+            searchstr="*.jgw"    Default
+      root= The root path where the product will be uploaded on a web server.
+         The path specified by "dir" will be replaced by "root" in all links.
+         When you upload to the web server, make sure the contents of "dir" go
+         into "root". Examples:
+            root="http://localhost:8080/"
+            root="http://getafix.er.usgs.gov/data/"
+      timediff= Time threshold for determining breaks in flightlines. Any
+         series of images with gaps less than or equal to timediff will be
+         considered a single flightline. Value is in seconds.
+            timediff=60       Use a one-minute threshold. (default)
+      name= The name to use for the top-level folder in the product. Defaults
+         to the base name of the output kml file, without extension.
+*/
+   default, searchstr, "*.jgw";
+   default, root, string(0);
+   default, timediff, 60;
+   default, name, file_tail(file_rootname(kml));
+
+   fix_dir, root;
+
+   t0all = array(double, 3);
+   timer, t0all;
+
+   // Find files, calculate timestamps
+   files = find(dir, glob=searchstr);
+   soes = cir_to_soe(file_rootname(file_tail(files))+".jpg");
+   numfiles = numberof(files);
+
+   // Put everything in SOE order.
+   srt = sort(soes);
+   files = files(srt);
+   soes = soes(srt);
+   srt = [];
+
+   // Relative path to each file
+   relpath = file_relative(dir, files);
+
+   // Hash for storing placemark data
+   pmk = h_new();
+
+   // --- Establish styles ---
+   styles = [];
+   balloon = \
+"<![CDATA[\
+<b>$[name]</b><br/>\
+$[description]\
+]]>";
+   grow, styles, &strchar(kml_Style(
+      kml_IconStyle(
+         scale=1.2, color="bf00ffff",
+         href="http://maps.google.com/mapfiles/kml/shapes/shaded_dot.png"
+      ),
+      kml_BalloonStyle(text=unref(balloon)),
+      id="pmk"));
+
+   // --- Generate overlays ---
+
+   write, format="-- Generating overlays --%s", "\n";
+
+   t0 = array(double, 3);
+   timer, t0;
+   tp = t0;
+
+   // Generate overlays and calculate parameters for images
+   rotation = centerx = centery = array(double, dimsof(files));
+   links = array(string, dimsof(files));
+   overlays = array(pointer, dimsof(files));
+   for(i = 1; i <= numfiles; i++) {
+      curroot = fix_dir(root + file_dirname(relpath(i)));
+      overlays(i) = &kml_jgw_image(files(i), zone, params, levels=levels,
+         root=curroot);
+      rotation(i) = params.rotation;
+      centerx(i) = params.centerx;
+      centery(i) = params.centery;
+      links(i) = curroot + file_rootname(file_tail(files(i)))+".jpg";
+      params = [];
+      timer_remaining, t0, i, numfiles, tp, interval=15;
+   }
+   timer_finished, t0;
+
+   // To ensure that images layer nicely, we want each overlay to have a unique
+   // drawoder. The drawfactor lets us sequence them so that they do not
+   // overlap; each image is always stacked the same with respect to other
+   // images, regardless of view level.
+   //
+   // If level is provided, then drawfactor=level+2. If not provided, then we
+   // have to autodetect. For simplicity, we just autodetect.
+   drawfactor = 0;
+   for(i = 1; i <= numfiles; i++)
+      drawfactor = max(drawfactor, numberof(*overlays(i)));
+
+   // --- Generate flightline/10k/2k structure ---
+
+   write, format="%s-- Generating flightline/10k/2k --\n", "\n";
+
+   // Iterate over flightlines
+   sptr = split_sequence_by_gaps(soes, gap=timediff);
+   fmt = swrite(format="%%0%dd", long(log10(numberof(sptr))) + 1);
+   numptr = numberof(sptr);
+   snums = swrite(format=fmt, indgen(numptr));
+   treeitems = [];
+   for(i = 1; i <= numptr; i++) {
+      fidx = *sptr(i);
+      fname = snums(i);
+
+      // Iterate over 10k tiles
+      itilehash = partition_by_tile_type("10k", centery(fidx), centerx(fidx),
+         zone, buffer=0, shorten=1);
+      itiles = h_keys(itilehash);
+      itiles = itiles(sort(itiles));
+      fitems = [];
+      for(j = 1; j <= numberof(itiles); j++) {
+         iname = itiles(j);
+         iidx = fidx(itilehash(iname));
+
+         // Iterate over 2k tiles
+         dtilehash = partition_by_tile_type("2k", centery(iidx), centerx(iidx),
+            zone, buffer=0, shorten=1);
+         dtiles = h_keys(dtilehash);
+         dtiles = dtiles(sort(dtiles));
+         iitems = [];
+         for(k = 1; k <= numberof(dtiles); k++) {
+            dname = dtiles(k);
+            didx = iidx(dtilehash(dname));
+
+            // Iterate over images
+            ditems = [];
+            for(l = 1; l <= numberof(didx); l++) {
+               idx = didx(l);
+               grow, ditems, &strchar(__kml_jgw_build_product_image(
+                  file_tail(file_rootname(files(idx))), *overlays(idx), zone,
+                  drawfactor * (idx-1), 1));
+
+               h_set, pmk, file_rootname(file_tail(files(idx))), h_new(
+                  time=soe2iso8601(long(soes(idx))),
+                  link=links(idx),
+                  x=centerx(idx), y=centery(idx),
+                  fltline=h_new(fname=fname, iname=iname, dname=dname)
+               );
+            }
+            grow, iitems, &strchar(kml_Folder(
+               strchar(merge_pointers(unref(ditems))), name="t_"+dname,
+               visibility=1));
+         }
+         grow, fitems, &strchar(kml_Folder(
+            strchar(merge_pointers(unref(iitems))), name="i_"+iname,
+            visibility=1));
+      }
+      grow, treeitems, &strchar(kml_Folder(
+         strchar(merge_pointers(unref(fitems))), name=fname, visibility=1));
+   }
+   fltlinetree = &strchar(kml_Folder(
+      strchar(merge_pointers(unref(treeitems))),
+      name="Organized by fltline/10km/2km", visibility=1));
+
+   // --- Generate 10k/2k/flightline structure ---
+
+   write, format="%s-- Generating 10k/2k/flightline --\n", "\n";
+
+   // Iterate over 10k tiles
+   itilehash = partition_by_tile_type("10k", centery, centerx, zone, buffer=0,
+      shorten=1);
+   itiles = h_keys(itilehash);
+   itiles = itiles(sort(itiles));
+   treeitems = [];
+   for(i = 1; i <= numberof(itiles); i++) {
+      iname = itiles(i);
+      iidx = itilehash(iname);
+
+      // Iterate over 2k tiles
+      dtilehash = partition_by_tile_type("2k", centery(iidx), centerx(iidx),
+         zone, buffer=0, shorten=1);
+      dtiles = h_keys(dtilehash);
+      dtiles = dtiles(sort(dtiles));
+      iitems = [];
+      for(j = 1; j <= numberof(dtiles); j++) {
+         dname = dtiles(j);
+         didx = iidx(dtilehash(dname));
+
+         // Iterate over flightlines
+         sptr = split_sequence_by_gaps(soes(didx), gap=timediff);
+         fmt = swrite(format="%%0%dd", long(log10(numberof(sptr))) + 1);
+         numptr = numberof(sptr);
+         snums = swrite(format=fmt, indgen(numptr));
+         ditems = [];
+         for(k = 1; k <= numptr; k++) {
+            fidx = didx(*sptr(k));
+            fname = snums(k);
+
+            // Iterate over images
+            fitems = [];
+            for(l = 1; l <= numberof(fidx); l++) {
+               idx = fidx(l);
+               grow, fitems, &strchar(__kml_jgw_build_product_image(
+                  file_tail(file_rootname(files(idx))), *overlays(idx), zone,
+                  drawfactor * (idx-1), 0));
+
+               h_set, pmk(file_rootname(file_tail(files(idx)))),
+                  tile=h_new(iname=iname, dname=dname, fname=fname)
+            }
+            grow, ditems, &strchar(kml_Folder(
+               strchar(merge_pointers(unref(fitems))), name=fname,
+               visibility=0));
+         }
+         grow, iitems, &strchar(kml_Folder(
+            strchar(merge_pointers(unref(ditems))), name="t_"+dname,
+            visibility=0));
+      }
+      grow, treeitems, &strchar(kml_Folder(
+         strchar(merge_pointers(unref(iitems))), name="i_"+iname, visibility=0));
+   }
+   itiletree = &strchar(kml_Folder(
+      strchar(merge_pointers(unref(treeitems))),
+      name="Organized by 10km/2km/fltline", visibility=0));
+
+   // Placemarks
+   write, "\n-- Generating placemarks --";
+
+   placemarks = array(pointer, dimsof(files));
+   pnames = h_keys(pmk);
+   pnames = pnames(sort(pnames));
+   fmt = \
+"<![CDATA[Image: %s.jpg<br/>\
+Acquired: %s<br />\
+Organized by fltline/10km/2km at:<br />\
+&nbsp;&nbsp;&nbsp;&nbsp;%s &raquo; %s &raquo; %s<br />\
+Organized by 10km/2km/fltline at:<br />\
+&nbsp;&nbsp;&nbsp;&nbsp;%s &raquo; %s &raquo; %s<br />\
+<a href=\"%s\">Download full resolution image</a>]]>";
+   for(i = 1; i <= numfiles; i++) {
+      lat = lon = [];
+      utm2ll, pmk(pnames(i)).y, pmk(pnames(i)).x, zone, lon, lat;
+      cpmk = pmk(pnames(i));
+      placemarks(i) = &strchar(kml_Placemark(
+         kml_Point(lon, lat),
+         name=pnames(i), visibility=0, styleUrl="#pmk",
+         description=swrite(format=fmt,
+            pnames(i),
+            cpmk.time,
+            cpmk.fltline.fname, cpmk.fltline.iname, cpmk.fltline.dname,
+            cpmk.tile.iname, cpmk.tile.dname, cpmk.tile.fname,
+            cpmk.link)
+      ));
+   }
+
+   write, "\n-- Finalizing --";
+
+   trees = kml_Folder(
+      kml_Style(kml_ListStyle(listItemType="radioFolder")),
+      strchar(merge_pointers([unref(fltlinetree), unref(itiletree)])),
+      name="Images", visibility=1, Open=1
+   );
+
+   placemarks = kml_Folder(
+      strchar(merge_pointers(unref(placemarks))),
+      name="Placemarks", visibility=0, Open=0
+   );
+
+   kml_save, kml, strchar(merge_pointers(unref(styles))),
+      kml_Style(kml_ListStyle(listItemType="check")),
+      trees, placemarks, name=name, visibility=1, Open=1;
+
+   write, "\nKML generation complete.";
+   timer_finished, t0all;
+}
+
+func __kml_jgw_build_product_image(name, raw, zone, offset, vis) {
+/* DOCUMENT __kml_jgw_build_product_image, name, raw, zone, offset, vis
+   Worker function for kml_jgw_build_product. Do not use directly.
+*/
+   order = offset + indgen(numberof(raw):1:-1);
+   overlays = [];
+   for(i = 1; i <= numberof(raw); i++)
+      grow, overlays, &strchar(kml_GroundOverlay(strchar(*raw(i)),
+         drawOrder=order(i), visibility=vis));
+   return kml_Folder(
+      kml_Style(kml_ListStyle(listItemType="checkHideChildren")),
+      strchar(merge_pointers(overlays)), name=name, visibility=vis);
+}
+
+func batch_kml_jgw(dir, zone, levels=, searchstr=) {
+/* DOCUMENT batch_kml_jgw, dir, zone, levels=, searchstr=
+   Runs kml_jgw in batch mode. This creates individual per-image KML files for
+   each image. This function is deprecated in favor of kml_jgw_build_product/
+*/
    default, searchstr, "*.jgw";
    files = find(dir, glob=searchstr);
    t0 = array(double, 3);
@@ -947,28 +1358,92 @@ func batch_kml_jgw(dir, zone, levels=, searchstr=, update=, fast=, quality=) {
    tp = t0;
    n = numberof(files);
    for(i = 1; i <= n; i++) {
-      kml_jgw, files(i), zone, levels=levels, update=update, fast=fast,
-         quality=quality;
+      kml_jgw, files(i), zone, levels=levels;
       timer_remaining, t0, i, n, tp, interval=10;
    }
    timer_finished, t0;
 }
 
-func kml_jgw(jgw, zone, kml=, levels=, update=, fast=, quality=) {
+func kml_jgw(jgw, zone, kml=, levels=) {
+/* DOCUMENT kml_jgw, jgw, zone, kml=, levels=
+   Generates a KML file for a JGW file.
+
+   Parameters:
+      jgw: The JGW file to use
+      zone: UTM zone
+   Options:
+      kml= Where to create the kml file. Default is same as JGW with .kml
+         extension.
+      levels= How many view levels to incorporate.
+*/
    local lon, lat;
    default, levels, 0;
-   default, update, 0;
    default, kml, file_rootname(jgw)+".kml";
-   levels = max(0, min(7, levels));
+
+   raw_overlays = kml_jgw_image(jgw, zone, levels=levels);
+   order = indgen(numberof(raw_overlays):1:-1);
+
+   overlays = [];
+   for(i = 1; i <= numberof(raw_overlays); i++)
+      grow, overlays, &strchar(kml_GroundOverlay(strchar(*raw_overlays(i)),
+         drawOrder=order(i)));
+   overlays = strchar(merge_pointers(overlays));
+   kml_save, kml, overlays, name=file_rootname(file_tail(jgw))+".jpg";
+}
+
+func kml_jgw_image(jgw, zone, &params, levels=, root=) {
+/* DOCUMENT overlays = kml_jgw_image(jgw, zone, &params, levels=, root=)
+   Returns an array of pointers to arrays of characters. Each array of
+   characters represents an array of strings that comprise the ground overlay
+   components for a view level.
+
+   overlays(1) -> Full resolution image
+   overlays(2) -> First downsampling (*_d1.jpg)
+   overlays(3) -> Second downsampling (*_d2.jpg)
+   ...
+   overlays(0) -> Translucent footprint of area covered by image
+
+   It is intended that the overlay be converted to string, then passed to
+   GroundOverlay to actually create the overlay. The overlay components do not
+   include a "drawOrder" component, so the calling function should supply one.
+
+   The params parameter is an output parameter that will be populated with the
+   result from jgw_decompose for the image's jgw file.
+
+   Parameters:
+      jgw: The jgw file.
+      zone: The UTM zone for the image.
+   Output parameter:
+      params: Will be populated with the result from jgw_decompose for the
+         image's jgw file.
+   Options:
+      levels= The number of levels to generate. By default, uses whatever's
+         available.
+      root= Prefix to attach to icon links. By default, none is used.
+*/
+   local lon, lat;
+   default, root, string(0);
+   fix_dir, root;
+
+   // If levels is not provided, then determine based on available images
+   if(is_void(levels)) {
+      ljpgs = find(file_dirname(jgw), file_rootname(file_tail(jgw))+"_d*.jpg");
+      levels = numberof(ljpgs);
+      ljpgs = [];
+   }
+
    jpg = file_rootname(jgw)+".jpg";
+
+   // Read JGW parameters
    jgw = read_ascii(jgw)(*);
    dims = image_size(jpg);
    params = jgw_decompose(jgw, dims);
 
+   // Calculate where the overlay should be displayed. This uses the overlay's
+   // actual size plus a rotation factor.
    utmx = params.centerx + params.width * [-0.5,-0.5,0.5,0.5];
    utmy = params.centery + params.height * [-0.5,0.5,0.5,-0.5];
    utm2ll, utmy, utmx, zone, lon, lat;
-
    onorth = lat(max);
    osouth = lat(min)
    oeast = lon(max);
@@ -979,10 +1454,11 @@ func kml_jgw(jgw, zone, kml=, levels=, update=, fast=, quality=) {
    while(rotation < -180)
       rotation += 360;
 
+   // Calculate that view region for display loading. This is the bounding box
+   // of the overlay.
    utmx = [params.xmin, params.xmin, params.xmax, params.xmax];
    utmy = [params.ymin, params.ymax, params.ymax, params.ymin];
    utm2ll, utmy, utmx, zone, lon, lat;
-
    rnorth = lat(max);
    rsouth = lat(min);
    reast = lon(max);
@@ -990,40 +1466,48 @@ func kml_jgw(jgw, zone, kml=, levels=, update=, fast=, quality=) {
 
    utmx = utmy = lon = lat = [];
 
+   // All of them get the same latlonbox
+   latlonbox = kml_LatLonBox(north=onorth, south=osouth, east=oeast,
+      west=owest, rotation=rotation);
+
    overlays = [];
 
+   // the "lod" value is based on the square root of the area of pixels
+   // viewable on screen. The lodbasis allows us to calculate values with
+   // respect to that.
    lodbasis = sqrt(dims(1)*dims(2));
+
+   // The full resolution image gets 64 pixel lod if there are no subsequent
+   // layers
    minlod = levels ? long(lodbasis/(2.^.5)) : 64;
    region = kml_Region(north=rnorth, south=rsouth, east=reast, west=rwest,
       minLodPixels=minlod);
-   grow, overlays, &strchar(kml_GroundOverlay(region, north=onorth,
-      south=osouth, east=oeast, west=owest, rotation=rotation,
-      href=file_tail(jpg), drawOrder=(levels ? levels+2 : [])));
+   icon = kml_Icon(href=root + file_tail(jpg));
+   overlay = [region, latlonbox, icon];
+   grow, overlays, &strchar(strjoin(overlay, "\n"));
+
+   // Add additional layers, in decreasing resolution order
    if(levels) {
-      reduces = 2^indgen(1:levels);
       ljpgs = file_rootname(jpg) + swrite(format="_d%d.jpg", indgen(levels));
-      w = indgen(levels);
-      if(update)
-         w = where(!file_exists(ljpgs));
-      if(numberof(w))
-         jpg_shrink, jpg, ljpgs(w), reduces(w), fast=fast, quality=quality;
       for(i = 1; i <= levels; i++) {
          ljpg = ljpgs(i);
          minlod = long(lodbasis/(2.^(i+.5)));
          region = kml_Region(north=rnorth, south=rsouth, east=reast, west=rwest,
             minLodPixels=minlod);
-         grow, overlays, &strchar(kml_GroundOverlay(region, north=onorth,
-            south=osouth, east=oeast, west=owest, rotation=rotation,
-            href=file_tail(ljpg), drawOrder=levels+2-i));
+         icon = kml_Icon(href=root + file_tail(ljpg));
+         overlay = [region, latlonbox, icon];
+         grow, overlays, &strchar(strjoin(overlay, "\n"));
       }
-      region = kml_Region(north=rnorth, south=rsouth, east=reast, west=rwest,
-         minLodPixels=4);
-      grow, overlays, &strchar(kml_GroundOverlay(region, north=onorth,
-         south=osouth, east=oeast, west=owest, rotation=rotation,
-         color=kml_color(0,0,255,127), drawOrder=1));
    }
-   overlays = strchar(merge_pointers(overlays));
-   kml_save, kml, overlays, name=file_tail(jpg);
+
+   // Last layer is a blue box that shows footprint and should be viewable at
+   // all view levels
+   region = kml_Region(north=rnorth, south=rsouth, east=reast, west=rwest,
+      minLodPixels=0);
+   overlay = [region, latlonbox, kml_element("color", kml_color(0,0,255,127))];
+   grow, overlays, &strchar(strjoin(overlay, "\n"));
+
+   return overlays;
 }
 
 // GENERAL KML UTILITY
@@ -1142,6 +1626,15 @@ func kml_Style(items, .., id=) {
    while(more_args())
       grow, items, next_arg();
    return kml_element("Style", items, id=id);
+}
+
+func kml_BalloonStyle(void, id=, bgColor=, textColor=, text=, displayMode=) {
+   elems = [];
+   grow, elems, kml_element("bgColor", bgColor);
+   grow, elems, kml_element("textColor", textColor);
+   grow, elems, kml_element("text", text);
+   grow, elems, kml_element("displayMode", displayMode);
+   return kml_element("BalloonStyle", elems, id=id);
 }
 
 func kml_IconStyle(void, id=, color=, colorMode=, scale=, heading=, href=, x=,
@@ -1295,26 +1788,33 @@ maxFadeExtent=) {
    return kml_element("Region", LatLonAltBox, Lod, id=id);
 }
 
+func kml_LatLonBox(items, .., north=, south=, east=, west=, rotation=) {
+   while(more_args())
+      grow, items, next_arg();
+   grow, items, kml_element("north", north);
+   grow, items, kml_element("south", south);
+   grow, items, kml_element("east", east);
+   grow, items, kml_element("west", west);
+   grow, items, kml_element("rotation", rotation);
+   return kml_element("LatLonBox", items);
+}
+
+func kml_Icon(void, href=) {
+   return kml_element("Icon", kml_element("href", href));
+}
+
 func kml_GroundOverlay(items, .., id=, name=, visibility=, Open=, description=, styleUrl=, north=, south=, east=, west=, rotation=, drawOrder=, color=, href=) {
    while(more_args())
       grow, items, next_arg();
 
-   elems = [];
-   grow, elems, kml_element("north", north);
-   grow, elems, kml_element("south", south);
-   grow, elems, kml_element("east", east);
-   grow, elems, kml_element("west", west);
-   grow, elems, kml_element("rotation", rotation);
-   LatLonBox = kml_element("LatLonBox", elems);
+   grow, items, kml_LatLonBox(north=north, south=south, east=east, west=west,
+      rotation=rotation);
+   grow, items, kml_element("drawOrder", drawOrder);
+   grow, items, kml_element("color", color);
+   grow, items, kml_Icon(href=href);
 
-   elems = [];
-   grow, elems, kml_element("drawOrder", drawOrder);
-   grow, elems, kml_element("color", color);
-   grow, elems, kml_element("Icon", kml_element("href", href));
-
-   return kml_Feature("GroundOverlay", items, elems, LatLonBox, id=id,
-      description=description, name=name, visibility=visibility, Open=Open,
-      styleUrl=styleUrl);
+   return kml_Feature("GroundOverlay", items, id=id, description=description,
+      name=name, visibility=visibility, Open=Open, styleUrl=styleUrl);
 }
 
 func kml_element(name, items, .., id=) {
@@ -1344,19 +1844,21 @@ func kml_element(name, items, .., id=) {
    single = numberof(items) == 1;
 
    if(single)
+      single = strlen(name) * 2 + strlen(id) + strlen(items(1)) <= 66;
+
+   if(single)
       single = !strmatch(items(1), "\n");
 
    if(single)
       single = (strpart(items(1), 1:1) != "<");
 
-   if(single)
-      single = strlen(name) * 2 + strlen(id) + strlen(items(1)) <= 66;
-
    if(single) {
       items = items(1);
       fmt = "<%s%s>%s</%s>";
    } else {
-      items = strindent(strjoin(items, "\n"), "  ");
+      items = strjoin(unref(items), "\n");
+      if(strlen(items) < 1000)
+         items = strindent(unref(items), "  ");
       fmt = "<%s%s>\n%s\n</%s>";
    }
 
