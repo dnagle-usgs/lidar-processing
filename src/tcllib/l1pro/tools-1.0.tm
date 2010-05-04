@@ -44,8 +44,8 @@ proc ::l1pro::tools::rcf::gui args {
 
    set f $w
 
-   ttk::label $f.lblbuf -text "Input window (cm): "
-   ttk::label $f.lblw -text "Elevation width (cm): "
+   ttk::label $f.lblbuf -text "Horizontal buffer (cm): "
+   ttk::label $f.lblw -text "Elevation window (cm): "
    ttk::label $f.lbln -text "Minimum winners: "
    ttk::label $f.lblinput -text "Input variable: "
    ttk::label $f.lbloutput -text "Output variable: "
