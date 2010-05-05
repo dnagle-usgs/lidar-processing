@@ -487,6 +487,7 @@ max_adjustments=, min_improvement=, buffer=, update=) {
       write, "Generating JGWs...";
       // Now run through and generate the JGWs for real
       for(j = 1; j <= numberof(idx); j++) {
+         pause, 1; // Necessary to let output show up on screen.
          processed++;
 
          // No longer need to generate this one after this pass
@@ -502,7 +503,7 @@ max_adjustments=, min_improvement=, buffer=, update=) {
          } else {
             // Write files
             write_jgw, jgw_files(idx(j)), jgw_data;
-            batch_gen_prj, files=jgw_files(idx(j)), zone=cirdata.tans(j).zone,
+            batch_gen_prj, files=jgw_files(idx(j)), zone=cirdata.tans(idx(j)).zone,
                datum="n88";
 
             // Talk to user
