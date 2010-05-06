@@ -11,6 +11,9 @@ func split_sequence_by_gaps(seq, gap=) {
 
    The given sequence seq should be monotonically increasing.
 */
+   if(numberof(seq) == 1)
+      return [&[1]];
+
    default, gap, seq(dif)(rms)*2;
 
    // Find indexes where the time exceeds the threshold
