@@ -4,7 +4,7 @@ require, "mosaic_biases.i";
 require, "l1pro.i";
 
 func cir_create_level_a_tiles(mission_dir, pbd_dir, pro_cir_dir, raw_cir_dir=,
-conf_file=, downsample=, scheme=) {
+conf_file=, downsample=, scheme=, cir_soe_offset=) {
 /* DOCUMENT cir_create_leve_a_tiles, mission_dir, pbd_dir, pro_cir_dir,
    raw_cir_dir= conf_file=, downsample=, scheme=
 
@@ -44,11 +44,12 @@ conf_file=, downsample=, scheme=) {
       mission_load, conf_file;
 
    copy_cirdata_tiles, filter_cirdata_by_pbd_data(gather_cir_data(raw_cir_dir,
-      downsample=downsample), pbd_dir), scheme, pro_cir_dir;
+      downsample=downsample, cir_soe_offset=cir_soe_offset), pbd_dir), scheme,
+      pro_cir_dir;
 }
 
 func prepare_cir_for_inpho(cirdata, pbd_dir, inpho_dir, defn_buffer=,
-maxfiles=) {
+maxfiles=, cir_soe_offset=) {
 /* DOCUMENT prepare_cir_for_inpho, cirdata, pbd_dir, inpho_dir, defn_buffer=,
    maxfiles=;
 
@@ -70,7 +71,7 @@ maxfiles=) {
    default, defn_buffer, 100;
 
    if(is_string(cirdata))
-      cirdata = gather_cir_data(cirdata);
+      cirdata = gather_cir_data(cirdata, cir_soe_offset=cir_soe_offset);
 
    dtiles = partition_by_tile_type("2k", cirdata.tans.northing,
       cirdata.tans.easting, cirdata.tans.zone, buffer=defn_buffer, shorten=1);
@@ -137,20 +138,29 @@ maxfiles=) {
    mkdirp, file_join(inpho_dir, "tiles");
 }
 
-func gather_cir_data(photo_dir, conf_file=, downsample=) {
-/* DOCUMENT gather_cir_data(photo_dir, conf_file=, downsample=)
+func gather_cir_data(photo_dir, conf_file=, downsample=, cir_soe_offset=) {
+/* DOCUMENT gather_cir_data(photo_dir, conf_file=, downsample=, cir_soe_offset=)
    This creates a Yeti hash that represents a set of CIR images, including
    per-image data interpolated from tans.
 
-   photo_dir should be the directory that contains the images.
+   Parameters:
+      photo_dir: Path to directory with CIR imagery.
 
-   conf_file= should be the name of a JSON mission configuration file to load.
-   If none is provided, it will use the current mission configuration.
-
-   downsample= allows you to reduce the sampling interval of the images for a
-   sparser dataset. By default, all images are loaded into the hash. However,
-   downsample=2 means only half of them would be loaded. This only makes sense
-   to use against image directories that have *not* been downsampled already.
+   Options:
+      conf_file= JSON mission configuration file to load. If not provided, the
+         current configuration will be used.
+      downsample= A factor by which to downsample the number of images to be
+         used. For example:
+            downsample=2      Use half of the images
+            downsample=3      Use 1/3 of the images
+            downsample=1      Use all images (default)
+         The downsampling is done with respect to the timestamp, so a
+         downsample of 3 would result in all images with integer soe timestamps
+         divisible by three being kept.
+      cir_soe_offset= A time offset to apply to the raw SOE values read from
+         the CIR images. This should incorporate trigger delay, latency, and
+         any other time issues that may arise.
+            offset=1.12       Default offset is 1.12 seconds (per cir_to_soe)
 */
 // Original David B. Nagle 2009-03-15
    default, downsample, 0;
@@ -168,7 +178,7 @@ func gather_cir_data(photo_dir, conf_file=, downsample=) {
 
    write, format="Found %d images\n", numberof(photo_files);
    write, format="Determining second-of-epoch values...%s", "\n";
-   photo_soes = cir_to_soe(file_tail(photo_files));
+   photo_soes = cir_to_soe(file_tail(photo_files), offset=cir_soe_offset);
    if(downsample > 1) {
       write, format="Downsampling images...%s", "\r";
       w = where(long(photo_soes) % downsample == 0);
@@ -372,14 +382,15 @@ func cirdata_hull(cirdata, elev=, camera=, buffer=) {
    return bounds;
 }
 
-func gen_jgws_rough(photo_dir, conf_file=, elev=, camera=) {
+func gen_jgws_rough(photo_dir, conf_file=, elev=, camera=, cir_soe_offset=) {
 /* DOCUMENT gen_jgws_rough, photo_dir, conf_file=, elev=, camera=
    Performs a rough georeferencing of the images in photo_dir. Faster than
    gen_jgws_with_lidar, but less accurate. Do not use for anything important.
 */
    default, elev, 0;
 
-   cirdata = gather_cir_data(photo_dir, conf_file=conf_file, downsample=1);
+   cirdata = gather_cir_data(photo_dir, conf_file=conf_file, downsample=1,
+      cir_soe_offset=cir_soe_offset);
 
    tstamp = [];
    timer_init, tstamp;
@@ -393,7 +404,7 @@ func gen_jgws_rough(photo_dir, conf_file=, elev=, camera=) {
 }
 
 func gen_jgws_with_lidar(photo_dir, pbd_dir, conf_file=, elev=, camera=,
-max_adjustments=, min_improvement=, buffer=, update=) {
+max_adjustments=, min_improvement=, buffer=, update=, cir_soe_offset=) {
 /* DOCUMENT gen_jgws_with_lidar, photo_dir, pbd_dir, conf_file=, elev=,
    camera=, max_adjustments=, min_improvement=, buffer=, update=
 
@@ -426,7 +437,7 @@ max_adjustments=, min_improvement=, buffer=, update=) {
    default, buffer, 200.;
    default, update, 0;
 
-   cirdata = gather_cir_data(photo_dir, conf_file=conf_file, downsample=1);
+   cirdata = gather_cir_data(photo_dir, conf_file=conf_file, downsample=1, cir_soe_offset=cir_soe_offset);
    jgw_files = file_rootname(cirdata.files) + ".jgw";
    prj_files = file_rootname(jgw_files) + ".prj";
 
@@ -580,7 +591,7 @@ func jgw_remove_missing(dir, dryrun=, to_file=) {
       close, f;
 }
 
-func gen_cir_region_shapefile(photo_dir, shapefile, conf_file=, elev=, camera=) {
+func gen_cir_region_shapefile(photo_dir, shapefile, conf_file=, elev=, camera=, cir_soe_offset=) {
 /* DOCUMENT gen_cir_region_shapefile, photo_dir, shapefile, conf_file=, elev=,
    camera=
    Writes out a shapefile for the convex hull of the area covered by the images
@@ -588,7 +599,8 @@ func gen_cir_region_shapefile(photo_dir, shapefile, conf_file=, elev=, camera=) 
    this. (It does *not* use any jgw files that may be present.)
 */
    default, elev, 0;
-   cirdata = gather_cir_data(photo_dir, conf_file=conf_file, downsample=1);
+   cirdata = gather_cir_data(photo_dir, conf_file=conf_file, downsample=1,
+      cir_soe_offset=cir_soe_offset);
    bounds = cirdata_hull(cirdata, elev=elev, camera=camera);
    write_ascii_shapefile, &bounds, shapefile;
 }
@@ -815,6 +827,7 @@ func copy_cirdata_images(cirdata, dest) {
    tstamp = [];
    timer_init, tstamp;
    for(i = 1; i <= numfiles; i++) {
+      pause, 1; // short pause to ensure output shows up on screen
       timer_tick, tstamp, i, numfiles;
       mkdirp, dest;
       file_copy, cirdata.files(i), file_join(dest, file_tail(cirdata.files(i))),
@@ -890,6 +903,7 @@ subdir=) {
 
    tile_dirs = array(string, numberof(tile_names));
    for(i = 1; i <= numberof(tile_names); i++) {
+      pause, 1; // short pause to ensure output is displayed
       curtile = tile_names(i);
       idx = tiles(curtile);
       if(bilevel) {
