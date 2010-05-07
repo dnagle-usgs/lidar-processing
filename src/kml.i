@@ -1027,9 +1027,9 @@ func kml_jgw_tree_recurse(dir, root) {
 }
 
 func kml_jgw_build_product(dir, zone, kml, levels=, searchstr=, root=,
-timediff=, name=) {
+timediff=, name=, cir_soe_offset=) {
 /* DOCUMENT kml_jgw_build_product, dir, zone, kml, levels=, searchstr=, root=,
-   timediff=, name=
+   timediff=, name=, cir_soe_offset=
 
    Builds a KML product for a directory of CIR imagery. The result is a single
    large KML file that organizes all of the imagery with the following layers:
@@ -1078,6 +1078,9 @@ timediff=, name=) {
             timediff=60       Use a one-minute threshold. (default)
       name= The name to use for the top-level folder in the product. Defaults
          to the base name of the output kml file, without extension.
+      cir_soe_offset= A time offset to apply to the CIR imagery timestamps,
+         passed through to cir_to_soe.
+            cir_soe_offset=1.12     1.12 seconds offset (default for cir_to_soe)
 */
    default, searchstr, "*.jgw";
    default, root, string(0);
@@ -1091,7 +1094,7 @@ timediff=, name=) {
 
    // Find files, calculate timestamps
    files = find(dir, glob=searchstr);
-   soes = cir_to_soe(file_rootname(file_tail(files))+".jpg");
+   soes = cir_to_soe(file_rootname(file_tail(files))+".jpg", offset=cir_soe_offset);
    numfiles = numberof(files);
 
    // Put everything in SOE order.
@@ -1103,9 +1106,6 @@ timediff=, name=) {
    // Relative path to each file
    relpath = file_relative(dir, files);
 
-   // Hash for storing placemark data
-   pmk = h_new();
-
    // --- Establish styles ---
    styles = [];
    balloon = \
@@ -1115,7 +1115,7 @@ $[description]\
 ]]>";
    grow, styles, &strchar(kml_Style(
       kml_IconStyle(
-         scale=1.2, color="bf00ffff",
+         scale=0.8, color="bf00ffff",
          href="http://maps.google.com/mapfiles/kml/shapes/shaded_dot.png"
       ),
       kml_BalloonStyle(text=unref(balloon)),
@@ -1123,7 +1123,7 @@ $[description]\
 
    // --- Generate overlays ---
 
-   write, format="-- Generating overlays --%s", "\n";
+   write, format="-- Generating overlay data --%s", "\n";
 
    t0 = array(double, 3);
    timer, t0;
@@ -1144,7 +1144,10 @@ $[description]\
       params = [];
       timer_remaining, t0, i, numfiles, tp, interval=15;
    }
-   timer_finished, t0;
+
+   // Calculcate center coordinates in lat/lon
+   centerlat = centerlon = [];
+   utm2ll, centery, centerx, zone, centerlon, centerlat;
 
    // To ensure that images layer nicely, we want each overlay to have a unique
    // drawoder. The drawfactor lets us sequence them so that they do not
@@ -1157,159 +1160,71 @@ $[description]\
    for(i = 1; i <= numfiles; i++)
       drawfactor = max(drawfactor, numberof(*overlays(i)));
 
-   // --- Generate flightline/10k/2k structure ---
-
-   write, format="%s-- Generating flightline/10k/2k --\n", "\n";
-
-   // Iterate over flightlines
+   // --- Generate structures ---
+   img_fltline = array(string, dimsof(soes));
    sptr = split_sequence_by_gaps(soes, gap=timediff);
    fmt = swrite(format="%%0%dd", long(log10(numberof(sptr))) + 1);
    numptr = numberof(sptr);
    snums = swrite(format=fmt, indgen(numptr));
-   treeitems = [];
-   for(i = 1; i <= numptr; i++) {
-      fidx = *sptr(i);
-      fname = snums(i);
+   for(i = 1; i <= numptr; i++)
+      img_fltline(*sptr(i)) = snums(i);
+   img_dt = "t_" + dt_short(get_utm_dtcodes(centery, centerx, zone));
+   img_it = "i_" + dt_short(get_dt_itcodes(img_dt));
 
-      // Iterate over 10k tiles
-      itilehash = partition_by_tile_type("10k", centery(fidx), centerx(fidx),
-         zone, buffer=0, shorten=1);
-      itiles = h_keys(itilehash);
-      itiles = itiles(sort(itiles));
-      fitems = [];
-      for(j = 1; j <= numberof(itiles); j++) {
-         iname = itiles(j);
-         iidx = fidx(itilehash(iname));
 
-         // Iterate over 2k tiles
-         dtilehash = partition_by_tile_type("2k", centery(iidx), centerx(iidx),
-            zone, buffer=0, shorten=1);
-         dtiles = h_keys(dtilehash);
-         dtiles = dtiles(sort(dtiles));
-         iitems = [];
-         for(k = 1; k <= numberof(dtiles); k++) {
-            dname = dtiles(k);
-            didx = iidx(dtilehash(dname));
+   // --- Calculate fltlines and tiles ---
+   img_fltline = array(string, dimsof(soes));
+   ptr = split_sequence_by_gaps(soes, gap=timediff);
+   fmt = swrite(format="%%0%dd", long(log10(numberof(ptr))) + 1);
+   numptr = numberof(ptr);
+   for(i = 1; i <= numptr; i++)
+      img_fltline(*ptr(i)) = swrite(format=fmt, i);
+   img_tiledt = "t_" + dt_short(get_utm_dtcodes(centery, centerx, zone));
+   img_tileit = "i_" + dt_short(get_dt_itcodes(img_dt));
+   img_id = file_tail(file_rootname(files));
+   img_drawoffset = drawfactor * (indgen(numberof(files))-1);
 
-            // Iterate over images
-            ditems = [];
-            for(l = 1; l <= numberof(didx); l++) {
-               idx = didx(l);
-               grow, ditems, &strchar(__kml_jgw_build_product_image(
-                  file_tail(file_rootname(files(idx))), *overlays(idx), zone,
-                  drawfactor * (idx-1), 1));
+   write, format="%s-- Generating overlay trees --\n", "\n";
 
-               h_set, pmk, file_rootname(file_tail(files(idx))), h_new(
-                  time=soe2iso8601(long(soes(idx))),
-                  link=links(idx),
-                  x=centerx(idx), y=centery(idx),
-                  fltline=h_new(fname=fname, iname=iname, dname=dname)
-               );
-            }
-            grow, iitems, &strchar(kml_Folder(
-               strchar(merge_pointers(unref(ditems))), name="t_"+dname,
-               visibility=1));
-         }
-         grow, fitems, &strchar(kml_Folder(
-            strchar(merge_pointers(unref(iitems))), name="i_"+iname,
-            visibility=1));
-      }
-      grow, treeitems, &strchar(kml_Folder(
-         strchar(merge_pointers(unref(fitems))), name=fname, visibility=1));
-   }
    fltlinetree = &strchar(kml_Folder(
-      strchar(merge_pointers(unref(treeitems))),
+      __kml_jgw_build_product_img_tree([img_fltline, img_tileit, img_tiledt,
+      img_id], overlays, zone, img_drawoffset, 1),
       name="Organized by fltline/10km/2km", visibility=1));
 
-   // --- Generate 10k/2k/flightline structure ---
-
-   write, format="%s-- Generating 10k/2k/flightline --\n", "\n";
-
-   // Iterate over 10k tiles
-   itilehash = partition_by_tile_type("10k", centery, centerx, zone, buffer=0,
-      shorten=1);
-   itiles = h_keys(itilehash);
-   itiles = itiles(sort(itiles));
-   treeitems = [];
-   for(i = 1; i <= numberof(itiles); i++) {
-      iname = itiles(i);
-      iidx = itilehash(iname);
-
-      // Iterate over 2k tiles
-      dtilehash = partition_by_tile_type("2k", centery(iidx), centerx(iidx),
-         zone, buffer=0, shorten=1);
-      dtiles = h_keys(dtilehash);
-      dtiles = dtiles(sort(dtiles));
-      iitems = [];
-      for(j = 1; j <= numberof(dtiles); j++) {
-         dname = dtiles(j);
-         didx = iidx(dtilehash(dname));
-
-         // Iterate over flightlines
-         sptr = split_sequence_by_gaps(soes(didx), gap=timediff);
-         fmt = swrite(format="%%0%dd", long(log10(numberof(sptr))) + 1);
-         numptr = numberof(sptr);
-         snums = swrite(format=fmt, indgen(numptr));
-         ditems = [];
-         for(k = 1; k <= numptr; k++) {
-            fidx = didx(*sptr(k));
-            fname = snums(k);
-
-            // Iterate over images
-            fitems = [];
-            for(l = 1; l <= numberof(fidx); l++) {
-               idx = fidx(l);
-               grow, fitems, &strchar(__kml_jgw_build_product_image(
-                  file_tail(file_rootname(files(idx))), *overlays(idx), zone,
-                  drawfactor * (idx-1), 0));
-
-               h_set, pmk(file_rootname(file_tail(files(idx)))),
-                  tile=h_new(iname=iname, dname=dname, fname=fname)
-            }
-            grow, ditems, &strchar(kml_Folder(
-               strchar(merge_pointers(unref(fitems))), name=fname,
-               visibility=0));
-         }
-         grow, iitems, &strchar(kml_Folder(
-            strchar(merge_pointers(unref(ditems))), name="t_"+dname,
-            visibility=0));
-      }
-      grow, treeitems, &strchar(kml_Folder(
-         strchar(merge_pointers(unref(iitems))), name="i_"+iname, visibility=0));
-   }
    itiletree = &strchar(kml_Folder(
-      strchar(merge_pointers(unref(treeitems))),
+      __kml_jgw_build_product_img_tree([img_tileit, img_tiledt, img_fltline,
+      img_id], overlays, zone, img_drawoffset, 0),
       name="Organized by 10km/2km/fltline", visibility=0));
 
    // Placemarks
    write, "\n-- Generating placemarks --";
 
    placemarks = array(pointer, dimsof(files));
-   pnames = h_keys(pmk);
-   pnames = pnames(sort(pnames));
-   fmt = \
-"<![CDATA[Image: %s.jpg<br/>\
-Acquired: %s<br />\
+   descriptions = pointer(swrite(
+      format= \
+"<![CDATA[Acquired: %s<br />\
 Organized by fltline/10km/2km at:<br />\
 &nbsp;&nbsp;&nbsp;&nbsp;%s &raquo; %s &raquo; %s<br />\
 Organized by 10km/2km/fltline at:<br />\
 &nbsp;&nbsp;&nbsp;&nbsp;%s &raquo; %s &raquo; %s<br />\
-<a href=\"%s\">Download full resolution image</a>]]>";
-   for(i = 1; i <= numfiles; i++) {
-      lat = lon = [];
-      utm2ll, pmk(pnames(i)).y, pmk(pnames(i)).x, zone, lon, lat;
-      cpmk = pmk(pnames(i));
-      placemarks(i) = &strchar(kml_Placemark(
-         kml_Point(lon, lat),
-         name=pnames(i), visibility=0, styleUrl="#pmk",
-         description=swrite(format=fmt,
-            pnames(i),
-            cpmk.time,
-            cpmk.fltline.fname, cpmk.fltline.iname, cpmk.fltline.dname,
-            cpmk.tile.iname, cpmk.tile.dname, cpmk.tile.fname,
-            cpmk.link)
-      ));
-   }
+On filesystem at:<br />\
+&nbsp;&nbsp;&nbsp;&nbsp;%s<br />\
+<a href=\"%s\">Download full resolution image</a>]]>",
+      soe2iso8601(long(soes)),
+      img_fltline, img_tileit, img_tiledt,
+      img_tileit, img_tiledt, img_fltline,
+      file_rootname(relpath)+".jpg",
+      links));
+
+   pmkflts = &strchar(kml_Folder(
+      __kml_jgw_build_product_pmk_tree([img_fltline, img_tileit, img_tiledt,
+      img_id], centerlat, centerlon, descriptions),
+      name="Organized by fltline/10km/2km", visibility=0));
+
+   pmktiles = &strchar(kml_Folder(
+      __kml_jgw_build_product_pmk_tree([img_tileit, img_tiledt, img_fltline,
+      img_id], centerlat, centerlon, descriptions),
+      name="Organized by 10km/2km/fltline", visibility=0));
 
    write, "\n-- Finalizing --";
 
@@ -1320,7 +1235,8 @@ Organized by 10km/2km/fltline at:<br />\
    );
 
    placemarks = kml_Folder(
-      strchar(merge_pointers(unref(placemarks))),
+      kml_Style(kml_ListStyle(listItemType="radioFolder")),
+      strchar(merge_pointers([unref(pmkflts), unref(pmktiles)])),
       name="Placemarks", visibility=0, Open=0
    );
 
@@ -1344,6 +1260,60 @@ func __kml_jgw_build_product_image(name, raw, zone, offset, vis) {
    return kml_Folder(
       kml_Style(kml_ListStyle(listItemType="checkHideChildren")),
       strchar(merge_pointers(overlays)), name=name, visibility=vis);
+}
+
+func __kml_jgw_build_product_img_tree(tiers, raw, zone, offset, vis) {
+   curtier = tiers(..,1);
+   if(dimsof(tiers)(3) > 1) {
+      names = set_remove_duplicates(curtier);
+      names = names(sort(names));
+      count = numberof(names);
+      ptrs = array(pointer, count);
+      for(i = 1; i <= count; i++) {
+         w = where(curtier == names(i));
+         ptrs(i) = &strchar(kml_Folder(
+            __kml_jgw_build_product_img_tree(tiers(w,2:), raw(w), zone,
+            offset(w), vis), name=names(i), visibility=vis));
+      }
+      return strchar(merge_pointers(ptrs));
+   } else {
+      count = numberof(curtier);
+      ptrs = array(pointer, count);
+      for(i = 1; i <= count; i++) {
+         ptrs(i) = &strchar(__kml_jgw_build_product_image(curtier(i), *raw(i), zone,
+            offset(i), vis));
+      }
+      return strchar(merge_pointers(ptrs));
+   }
+}
+
+func __kml_jgw_build_product_pmk_tree(tiers, lat, lon, desc) {
+   curtier = tiers(..,1);
+   if(dimsof(tiers)(3) > 1) {
+      names = set_remove_duplicates(curtier);
+      names = names(sort(names));
+      count = numberof(names);
+      ptrs = array(pointer, count);
+      for(i = 1; i <= count; i++) {
+         w = where(curtier == names(i));
+         ptrs(i) = &strchar(kml_Folder(
+            __kml_jgw_build_product_pmk_tree(tiers(w,2:), lat(w), lon(w),
+            desc(w)), name=names(i)));
+      }
+      return strchar(merge_pointers(ptrs));
+   } else {
+      count = numberof(curtier);
+      ptrs = array(pointer, count);
+      for(i = 1; i <= count; i++) {
+         ptrs(i) = &strchar(kml_Placemark(
+            kml_Point(lon(i), lat(i)),
+            kml_Snippet("", maxLines=0),
+            name=curtier(i), visibility=0, styleUrl="#pmk",
+            description=strchar(*desc(i))
+         ));
+      }
+      return strchar(merge_pointers(ptrs));
+   }
 }
 
 func batch_kml_jgw(dir, zone, levels=, searchstr=) {
@@ -1726,6 +1696,13 @@ styleUrl=) {
    grow, elems, kml_element("description", description);
    grow, elems, kml_element("styleUrl", styleUrl);
    return kml_element(type, elems, items, id=id);
+}
+
+func kml_Snippet(text, maxLines=) {
+   if(is_void(maxLines))
+      return swrite(format="<Snippet>%s</Snippet>", text);
+   else
+      return swrite(format="<Snippet maxLines=\"%d\">%s</Snippet>", maxLines, text);
 }
 
 func kml_MultiGeometry(items, .., id=) {
