@@ -6,7 +6,7 @@ require, "l1pro.i";
 func cir_create_level_a_tiles(mission_dir, pbd_dir, pro_cir_dir, raw_cir_dir=,
 conf_file=, downsample=, scheme=, cir_soe_offset=) {
 /* DOCUMENT cir_create_leve_a_tiles, mission_dir, pbd_dir, pro_cir_dir,
-   raw_cir_dir= conf_file=, downsample=, scheme=
+   raw_cir_dir= conf_file=, downsample=, scheme=, cir_soe_offset=
 
    Creates the Level A directory structure of images.
 
@@ -33,6 +33,10 @@ conf_file=, downsample=, scheme=, cir_soe_offset=) {
          rather than auto-detecting or auto-creating, you can specify it here.
       downsample= By default, images are downsampled by 2.
       scheme= The default partitioning scheme is "10k2k".
+      cir_soe_offset= A time offset to apply to the raw SOE values read from
+         the CIR images. This should incorporate trigger delay, latency, and
+         any other time issues that may arise.
+            offset=1.12       Default offset is 1.12 seconds (per cir_to_soe)
 */
    default, downsample, 2;
    default, scheme, "10k2k";
@@ -51,7 +55,7 @@ conf_file=, downsample=, scheme=, cir_soe_offset=) {
 func prepare_cir_for_inpho(cirdata, pbd_dir, inpho_dir, defn_buffer=,
 maxfiles=, cir_soe_offset=) {
 /* DOCUMENT prepare_cir_for_inpho, cirdata, pbd_dir, inpho_dir, defn_buffer=,
-   maxfiles=;
+   maxfiles=, cir_soe_offset=
 
    Prepares a dataset for Inpho processing.
 
@@ -66,6 +70,10 @@ maxfiles=, cir_soe_offset=) {
          definitions file. Default: 100.
       maxfiles= The maximum number of images files to put in a single
          directory. Default: 500.
+      cir_soe_offset= A time offset to apply to the raw SOE values read from
+         the CIR images. This should incorporate trigger delay, latency, and
+         any other time issues that may arise.
+            offset=1.12       Default offset is 1.12 seconds (per cir_to_soe)
 */
    default, maxfiles, 500;
    default, defn_buffer, 100;
@@ -383,7 +391,7 @@ func cirdata_hull(cirdata, elev=, camera=, buffer=) {
 }
 
 func gen_jgws_rough(photo_dir, conf_file=, elev=, camera=, cir_soe_offset=) {
-/* DOCUMENT gen_jgws_rough, photo_dir, conf_file=, elev=, camera=
+/* DOCUMENT gen_jgws_rough, photo_dir, conf_file=, elev=, camera=, cir_soe_offset=
    Performs a rough georeferencing of the images in photo_dir. Faster than
    gen_jgws_with_lidar, but less accurate. Do not use for anything important.
 */
@@ -406,7 +414,7 @@ func gen_jgws_rough(photo_dir, conf_file=, elev=, camera=, cir_soe_offset=) {
 func gen_jgws_with_lidar(photo_dir, pbd_dir, conf_file=, elev=, camera=,
 max_adjustments=, min_improvement=, buffer=, update=, cir_soe_offset=) {
 /* DOCUMENT gen_jgws_with_lidar, photo_dir, pbd_dir, conf_file=, elev=,
-   camera=, max_adjustments=, min_improvement=, buffer=, update=
+   camera=, max_adjustments=, min_improvement=, buffer=, update=, cir_soe_offset=
 
    This generates JGW files for a directory of JPG files, using the lidar data
    in pbd_dir to correct the elevations used by the algorithm.
@@ -429,6 +437,10 @@ max_adjustments=, min_improvement=, buffer=, update=, cir_soe_offset=) {
          trigger further adjustment. Defaults to 0.001 meters.
       buffer= The buffer to use when loading pbd data. Defaults to 75 meters.
       update= Set to 1 to skip existing files. (By default, overwrites.)
+      cir_soe_offset= A time offset to apply to the raw SOE values read from
+         the CIR images. This should incorporate trigger delay, latency, and
+         any other time issues that may arise.
+            offset=1.12       Default offset is 1.12 seconds (per cir_to_soe)
 */
 // Original David B. Nagle 2009-03-19
    default, elev, 0;
@@ -593,7 +605,7 @@ func jgw_remove_missing(dir, dryrun=, to_file=) {
 
 func gen_cir_region_shapefile(photo_dir, shapefile, conf_file=, elev=, camera=, cir_soe_offset=) {
 /* DOCUMENT gen_cir_region_shapefile, photo_dir, shapefile, conf_file=, elev=,
-   camera=
+   camera=, cir_soe_offset=
    Writes out a shapefile for the convex hull of the area covered by the images
    in photo_dir. This runs a rough georeferencing of the images to determine
    this. (It does *not* use any jgw files that may be present.)
