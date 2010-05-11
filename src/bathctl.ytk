@@ -172,4 +172,44 @@ proc bathctl::gui_launch {} {
       sst $w.$key ::bath_ctl($key) [mc $key] $range
       pack $w.$key -side top -anchor e
    }
+
+   button $w.message -text "\
+Warning: These settings will\
+\nnot persist when using the\
+\nMission Configuration manager\
+\nto switch between days. Click\
+\nfor more information." \
+      -command bathctl::gui_message
+
+   pack $w.message -side top -fill x -expand 1
+}
+
+proc bathctl::gui_message {} {
+   set w $v::win.msgwin
+   destroy $w
+   toplevel $w
+
+   message $w.message -justify left -width 500 \
+      -text \
+"The Mission Configuration manager has support for including bathy settings,\
+however, there is a major quirk that users need to be aware of when\
+interactively adjusting settings: any unsaved interactive settings will be lost\
+whenever the Mission Configuration manager loads a mission day.
+
+If you are interactively attempting to fine-tune bathy settings, then make sure\
+you load the data for the mission day first. Then make your adjustments, then\
+process. But make sure you don't do anything else that might trigger a mission\
+configuration load. Such triggers are prevalent in ALPS, including within Pixel\
+Analysis.
+
+Once you have your settings defined, you'll need to save them to file for\
+future use. You'll also need to update the Mission Configuration to have the\
+mission day point to its bathy settings file. However, please note that changes\
+to the bathy settings file may not be immediately reflected within ALPS due to\
+caching.  If you expect to be changing and resaving settings files often, you\
+should disable caching in the Mission Configuration manager using \"Cache ->\
+Disable cache\". Alternately, you can manually use \"Cache -> Clear cache\"\
+whenever you know the cache needs to be cleared to pick up new changes."
+
+   pack $w.message -fill both -expand 1
 }
