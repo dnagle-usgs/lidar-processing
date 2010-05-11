@@ -721,7 +721,7 @@ func missiondata_load(type, day=, noerror=) {
             }
         } else if(noerror) {
             extern bath_ctl;
-            bath_ctl = [];
+            bath_ctl = BATH_CTL();
         } else {
             error, "Could not load bath_ctl: no bath_ctl file defined";
         }
