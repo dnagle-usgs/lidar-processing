@@ -420,7 +420,7 @@ snit::widget ::l1pro::file::gui::export_ascii {
          append cmd ", split=$split"
       }
 
-      append cmd ", mode=$mode"
+      append cmd ", mode=\"$mode\""
 
       exp_send "$cmd;\r"
       expect "> "
