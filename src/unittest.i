@@ -123,7 +123,7 @@ func tc_run(pattern, symbol_type=, report=, verbose=) {
    if(num) {
       output += "\n";
       output += swrite(format="FAILURE in %d test cases:\n", num);
-      output += swrite(format="  %s: %s\n", cases(w), messages(w))(sum);
+      output += swrite(format="  %s : %s\n", cases(w), messages(w))(sum);
    }
 
    w = where(results == 2);
@@ -131,7 +131,7 @@ func tc_run(pattern, symbol_type=, report=, verbose=) {
    if(num) {
       output += "\n";
       output += swrite(format="ERROR in %d test cases:\n", num);
-      output += swrite(format="  %s: %s\n", cases(w), messages(w))(sum);
+      output += swrite(format="  %s : %s\n", cases(w), messages(w))(sum);
    }
 
    output += swrite(
