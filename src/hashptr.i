@@ -418,3 +418,87 @@ func h_hashptr(hash) {
    }
    return p_clean(p_assemble(keys, vals));
 }
+
+func is_hashptr(obj) {
+   // Must be scalar (implies non-void) pointer
+   if(!is_scalar(obj) || !is_pointer(obj))
+      return 0;
+
+   // Dereferenced should yield array(pointer, 2)
+   if(!is_pointer(*obj))
+      return 0;
+
+   // Dimensions must be [1,2]
+   dims = dimsof(*obj);
+   if(dims(1) != 1 || dims(2) != 2)
+      return 0;
+
+   // An empty hash pointer is [(nil), (nil)]; if we have this, return true
+   if(noneof(*obj))
+      return 1;
+
+   obj1 = *(*obj)(1);
+   obj2 = *(*obj)(2);
+
+   // A non-empty hash pointer has a character vector for its first pointer value
+   if(typeof(obj1) != "char" || !is_vector(obj1))
+      return 0;
+
+   // The second value should be a vector of pointers
+   if(!is_pointer(obj2) || !is_vector(obj2))
+      return 0;
+
+   // When obj1 is turned into a string, it must match array size with obj2
+   // Final test -- return result.
+   return numberof(strchar(obj1)) == numberof(obj2);
+}
+
+func p_subkey_wrapper(args) {
+/* DOCUMENT p_subkey_wrapper(obj, key, amsub, repl, default)
+   This is intended to make it easy to make a "wrapper" function providing
+   access to KEY in OBJ.
+
+   Here is an example of a function that would use it:
+      func test(obj, repl) {
+         return p_subkey_wrapper(obj, "test", am_subroutine(), repl);
+      }
+
+   Such a function can them be called two ways, as a function or as a subroutine.
+
+   The functional form allows you to interact with the key's content directly.
+   For example, if the key points to another pointer hash, you could do the
+   following:
+      p_set, test(obj), foo="bar"
+      p_get, test(obj), "foo"
+      p_show, test(obj)
+   This is shorter and perhaps clearer than the alternative:
+      p_set, p_get(obj, test=), foo="bar"
+      p_get, p_get(obj, test=), "foo"
+      p_show, p_get(obj, test=)
+
+   If OBJ does not have key KEY, then it will default to a pointer hash. You
+   can alter this behavior by providing the optional DEFAULT argument, which
+   provides an alternate value to use as a default.
+
+   The subroutine form allows you to assign/replace the key's content. Any
+   existing value is lost. For example:
+      replacement = p_new(a=1, b=2, c=3)
+      test, obj, replacement
+   If you'd like to merge the replacement fields in with existing fields, you
+   can do this instead:
+      replacement = p_new(a=1, b=2, c=3)
+      test, obj, p_merge(test(obj), replacement)
+
+   Note: The above function "test" is an example and is not actually defined.
+*/
+   if(args(0) < 4 || 5 < args(0))
+      error, "Invalid argument count.";
+   if(args(3)) {
+      p_set, args(1), args(2), args(4);
+   } else {
+      if(!p_has(args(1), args(2)))
+         p_set, args(1), args(2), (args(0) > 4 ? args(5) : p_new());
+      return p_get(args(1), args(2));
+   }
+}
+wrap_args, p_subkey_wrapper;
