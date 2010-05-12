@@ -243,9 +243,9 @@ func pixelwf_selected_info(nearest) {
    write, format="%s", "\n";
    write, format="Timestamp: %s\n", soe2iso8601(point.soe);
    write, format="Mission day: %s\n", missionday_current();
-   write, format="somd: %.4f  soe: %.4f\n", point.soe - soe_day_start, point.soe;
+   write, format="somd= %.4f ; soe= %.4f\n", point.soe - soe_day_start, point.soe;
    rp = parse_rn(point.rn);
-   write, format="raster: %d  pulse: %d\n", rp(1), rp(2);
+   write, format="raster= %d ; pulse= %d\n", rp(1), rp(2);
    if((dimsof(get_member(var_expr_get(pixelwfvars.selection.pro_var),"soe"))(1)) == 1) {
       write, format="Corresponds to %s(%d)\n",
          pixelwfvars.selection.pro_var, nearest.index;
