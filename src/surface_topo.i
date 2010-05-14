@@ -109,21 +109,18 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
    i = j = [];
    if(!is_void(center)) {
       default, delta, 100;
-      i = center - delta;
-      j = center + delta;
+      start = center - delta;
+      stop = center + delta;
    } else {
       if(is_void(start))
          error, "Must provide start= or center=";
-      i = start;
       if(!is_void(delta))
-         j = start + delta;
-      else if(!is_void(stop))
-         j = stop;
-      else
+         stop = start + delta;
+      else if(is_void(stop))
          error, "When using start=, you must provide delta= or stop=";
    }
 
-   a = irg(i,j, usecentroid=usecentroid, use_highelv_echo=use_highelv_echo);		
+   a = irg(start, stop, usecentroid=usecentroid, use_highelv_echo=use_highelv_echo);		
    irg_a = a;
 
    atime   = a.soe - soe_day_start;
@@ -160,7 +157,7 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
    northing = interp( _utm(1,), pnav.sod, atime )
    easting  = interp( _utm(2,), pnav.sod, atime )
 
-   sz = j - i + 1;
+   sz = stop - start + 1;
    rrr = array(R, sz);
    if ( is_void(step) ) 
       step = 1;
