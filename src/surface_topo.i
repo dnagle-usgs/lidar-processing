@@ -99,7 +99,7 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
 
 */
    extern roll, pitch, heading, palt, utm, northing, easting;
-   extern a, irg_a, _utm;
+   extern a, irg_a;
    default, quiet, 0;
    default, verbose, !quiet;
    default, north, 0;
@@ -146,21 +146,11 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
 
    if(verbose)
       write, format="%s", " altitude...";
-   palt  = interp( pnav.alt,   pnav.sod,  atime )
-
-   if ( is_void( _utm ) ) {
-      if(verbose)
-         write, "Converting from lat/lon to UTM...";
-      _utm = fll2utm( pnav.lat, pnav.lon )
-   } else {
-      if ( dimsof(pnav)(2) != dimsof(pnav)(2) ) 
-      if(verbose)
-         write, "_utm has changed, re-converting from lat/lon to UTM...";
-      _utm = fll2utm( pnav.lat, pnav.lon )
-   }
+   palt = interp(pnav.alt, pnav.sod, atime);
 
    if(verbose)
       write, format="%s", " northing/easting...\n";
+   _utm = fll2utm(pnav.lat, pnav.lon);
    northing = interp( _utm(1,), pnav.sod, atime )
    easting  = interp( _utm(2,), pnav.sod, atime )
 
