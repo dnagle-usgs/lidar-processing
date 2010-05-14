@@ -158,8 +158,6 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
 
    count = stop - start + 1;
    rrr = array(R, count);
-   if ( is_void(step) ) 
-      step = 1;
    cyaw = gz = gx = gy = lasang = yaw = array( 0.0, 120);
    dx = array( ops_conf.x_offset, 120);
    dy = array( ops_conf.y_offset, 120);	// mirror offset along fuselage
@@ -184,9 +182,7 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
       }
    }
 
-   for ( i=1; i< count; i += step) {
-
-
+   for(i = 1; i <= count; i++) {
       gx  = easting (, i);
       gy  = northing(, i);
       yaw = -heading(, i);
