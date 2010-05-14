@@ -210,10 +210,10 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
       srm = mag(..,i);
       gz = palt(, i);
       m = scanflatmirror2_direct_vector(
-         yaw(,i),
-         pitch(,i),
-         roll(,i),
-         gx, gy, gz, dx, dy, dz, cyaw, lasang, mirang, scan_ang, srm);
+         yaw(,i), pitch(,i), roll(,i),
+         gx, gy, gz,
+         dx, dy, dz,
+         cyaw, lasang, mirang, scan_ang, srm);
   
       rrr(i).meast  =     m(,1) * 100.0;
       rrr(i).mnorth =     m(,2) * 100.0;
