@@ -195,16 +195,13 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
       gx = easting(..,i);
       gy = northing(..,i);
       yaw = -heading(..,i);
-
       scan_ang = SAD * (a(i).sa + scan_bias(i));
 
       srm = (a(i).irange*NS2MAIR - ops_conf.range_biasM);
       gz = palt(, i);
-      // "MARK C"
       m = scanflatmirror2_direct_vector(yaw+ ops_conf.yaw_bias,
       pitch(,i)+ ops_conf.pitch_bias,roll(,i)+ ops_conf.roll_bias,
          gx,gy,gz,dx,dy,dz,cyaw, lasang, mirang, scan_ang, srm)
-      // "MARK D"
   
       rrr(i).meast  =     m(,1) * 100.0;
       rrr(i).mnorth =     m(,2) * 100.0;
