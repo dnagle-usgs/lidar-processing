@@ -141,7 +141,7 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
    } else {
       if(verbose)
          write, format="%s", " interpolating north only...";
-      heading = interp( array( 0.0, dimsof(tans)(2) ), tans.somd, atime ) 
+      heading = array(0., dimsof(atime));
    }
 
    if(verbose)
