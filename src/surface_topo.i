@@ -188,16 +188,15 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
          scan_bias(i) = a(i).sa(1) - fix(i);
    }
 
+   // edit out tx/rx dropouts
+   a.irange *= ((long(a.irange) & 0xc000) == 0);
+
    for(i = 1; i <= count; i++) {
       gx = easting(..,i);
       gy = northing(..,i);
       yaw = -heading(..,i);
 
       scan_ang = SAD * (a(i).sa + scan_bias(i));
-
-// edit out tx/rx dropouts
-      el = ( int(a(i).irange) & 0xc000 ) == 0 ;
-      a(i).irange *= el;
 
       srm = (a(i).irange*NS2MAIR - ops_conf.range_biasM);
       gz = palt(, i);
