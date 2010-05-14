@@ -156,8 +156,8 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
    easting = interp(pnav_east, pnav.sod, atime);
    pnav_north = pnav_east = [];
 
-   sz = stop - start + 1;
-   rrr = array(R, sz);
+   count = stop - start + 1;
+   rrr = array(R, count);
    if ( is_void(step) ) 
       step = 1;
    cyaw = gz = gx = gy = lasang = yaw = array( 0.0, 120);
@@ -172,7 +172,7 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
 
    if ( is_array(fix_sa1) ) {    // we'll assume both are set
       write,"####################### MARK HERE ###################"
-      sb=array(0, sz);
+      sb=array(0, count);
 
       // "MARK A"
       info,a;
@@ -184,7 +184,7 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
       }
    }
 
-   for ( i=1; i< sz; i += step) {
+   for ( i=1; i< count; i += step) {
 
 
       gx  = easting (, i);
