@@ -158,6 +158,7 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
 
    count = stop - start + 1;
    rrr = array(R, count);
+
    cyaw = gz = gx = gy = lasang = yaw = array(double, 120);
 
    // mirror offsets
@@ -172,36 +173,27 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
    if(verbose)
       write, "Projecting to the surface...";
 
-   if ( is_array(fix_sa1) ) {    // we'll assume both are set
-      write,"####################### MARK HERE ###################"
-      sb=array(0, count);
+   // Check to see if scan angles must be fixed. If not, use ops_conf bias.
+   scan_bias = array(ops_conf.scan_bias, count);
+   fix = [];
+   if(is_array(fix_sa1) && is_array(fix_sa2)) {
+      write, "Using scan angle fixes...";
 
-      // "MARK A"
-      info,a;
-
-      if ( a(1).sa(1) > a(1).sa(118) ) {
+      if(a(1).sa(1) > a(1).sa(118))
          fix=fix_sa1(start:stop);
-      } else { 
+      else
          fix=fix_sa2(start:stop);
-      }
+
+      for(i = 1; i <= count; i++)
+         scan_bias(i) = a(i).sa(1) - fix(i);
    }
 
    for(i = 1; i <= count; i++) {
-      gx  = easting (, i);
-      gy  = northing(, i);
-      yaw = -heading(, i);
+      gx = easting(..,i);
+      gy = northing(..,i);
+      yaw = -heading(..,i);
 
-      if ( is_array(fix) ) {
-         // sb(i) = fix(i) - a(i).sa(1);
-         // "MARK B"
-         sb(i) = a(i).sa(1) - fix(i);
-
-         scan_ang = SAD * (a(i).sa + sb(i));
-         /*
-         fix = (a(i).sa(118) + sb(i));
-         */
-      } else
-         scan_ang = SAD * (a(i).sa + ops_conf.scan_bias);
+      scan_ang = SAD * (a(i).sa + scan_bias(i));
 
 // edit out tx/rx dropouts
       el = ( int(a(i).irange) & 0xc000 ) == 0 ;
