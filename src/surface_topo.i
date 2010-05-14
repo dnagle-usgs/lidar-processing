@@ -150,9 +150,11 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
 
    if(verbose)
       write, format="%s", " northing/easting...\n";
-   _utm = fll2utm(pnav.lat, pnav.lon);
-   northing = interp( _utm(1,), pnav.sod, atime )
-   easting  = interp( _utm(2,), pnav.sod, atime )
+   local pnav_north, pnav_east;
+   ll2utm, pnav.lat, pnav.lon, pnav_north, pnav_east;
+   northing = interp(pnav_north, pnav.sod, atime);
+   easting = interp(pnav_east, pnav.sod, atime);
+   pnav_north = pnav_east = [];
 
    sz = stop - start + 1;
    rrr = array(R, sz);
