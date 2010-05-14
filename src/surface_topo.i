@@ -198,6 +198,9 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
    // Calculate magnitude of vectors from mirror to ground
    mag = a.irange * NS2MAIR - ops_conf.range_biasM;
 
+   pitch += ops_conf.pitch_bias;
+   roll += ops_conf.roll_bias;
+
    for(i = 1; i <= count; i++) {
       gx = easting(..,i);
       gy = northing(..,i);
@@ -208,8 +211,8 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
       gz = palt(, i);
       m = scanflatmirror2_direct_vector(
          yaw + ops_conf.yaw_bias,
-         pitch(,i) + ops_conf.pitch_bias,
-         roll(,i) + ops_conf.roll_bias,
+         pitch(,i),
+         roll(,i),
          gx, gy, gz, dx, dy, dz, cyaw, lasang, mirang, scan_ang, srm);
   
       rrr(i).meast  =     m(,1) * 100.0;
