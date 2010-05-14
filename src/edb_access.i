@@ -250,6 +250,41 @@ func edb_update(time_correction) {
    }
 }
 
+func get_tld_rasts(fnum=, fname=) {
+/* DOCUMENT rasts = get_tld_rasts(fnum=, fname=)
+   Returns an array of pointers to all of the rasters in a given TLD file.
+
+   One of these two options are required:
+      fnum= The file number in edb_files
+      fname= The file name in edb_files
+
+   Result is a vector of pointers. Each pointer points to a vector of type
+   char. The char vectors can be interpreted using decode_raster.
+*/
+   extern edb, edb_files, edb_filename;
+   if(is_void(fnum) && !is_void(fname)) {
+      w = where(strglob("*"+file_rootname(fname), edb_files));
+      if(numberof(w) == 1)
+         fnum = w(1);
+   }
+   if(is_void(fnum) || fnum < 1 || fnum > numberof(edb_files))
+      error, "Must provide valid fnum= or fname=";
+
+   w = where(edb.file_number == fnum);
+   fn = file_tail(edb_files(fnum));
+   fullfn = file_join(file_dirname(edb_filename), fn);
+   f = open(fullfn, "rb");
+   add_variable, f, -1, "raw", char, sizeof(f);
+
+   rasts = array(pointer, numberof(w));
+   offsets = (edb(w).raster_length)(cum);
+
+   for(i = 1; i <= numberof(rasts); i++)
+      rasts(i) = &(f.raw(offsets(i)+1:offsets(i+1)));
+
+   return rasts;
+}
+
 func get_erast(rn=, sod=, hms=, timeonly=) {
 /* DOCUMENT get_erast( rn=, sod=, hms=, timeonly= )
 
@@ -304,6 +339,19 @@ See also:
    rast = array(char, len);
    _read, _eidf, edb(rn).offset, rast;
    return rast;
+}
+
+func decode_rasters(raw) {
+/* DOCUMENT rasts = decode_rasters(raw)
+   Given an array of pointers to raw raster data, this returns an array of RAST
+   with the decoded rasters. This is effectively a wrapper around decode_raster
+   for an array of pointers.
+*/
+   rasts = array(RAST, dimsof(raw));
+   count = numberof(raw);
+   for(i = 1; i <= count; i++)
+      rasts(i) = (decode_raster(*raw(i)))(1);
+   return rasts;
 }
 
 func decode_raster(r) {
