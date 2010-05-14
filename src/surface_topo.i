@@ -160,9 +160,12 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
    rrr = array(R, count);
    cyaw = gz = gx = gy = lasang = yaw = array(double, 120);
 
-   dx = array(ops_conf.x_offset, 120); // horizontal mirror offset
-   dy = array(ops_conf.y_offset, 120);	// mirror offset along fuselage
-   dz = array(ops_conf.z_offset, 120);	// vertical mirror offset
+   // mirror offsets
+   dx = array(ops_conf.x_offset, 120); // perpendicular to fuselage
+   dy = array(ops_conf.y_offset, 120);	// along fuselage
+   dz = array(ops_conf.z_offset, 120);	// vertical
+
+   // Constants for mirror angle and laser angle
    mirang = array(-22.5, 120);
    lasang = array(45.0, 120);
 
