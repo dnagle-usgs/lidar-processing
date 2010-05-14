@@ -231,6 +231,14 @@ func interp_angles(ang, i, ip, rad=) {
    default, rad, 0;
    
    angp = array(double, numberof(ip));
+
+   // Trigonometric functions are expensive. Rather than converting ALL of
+   // angles back and forth, we can save a lot of time by only converting the
+   // range of values that we'll actually need for interpolation.
+   minidx = max(1, digitize(ip(min), i) - 1);
+   maxidx = min(numberof(i), digitize(ip(max), i) + 1);
+   ang = ang(minidx:maxidx);
+   i = i(minidx:maxidx);
    
    if(!rad) ang *= DEG2RAD;
 
