@@ -232,7 +232,7 @@ func interp_angles(ang, i, ip, rad=) {
    
    angp = array(double, numberof(ip));
    
-   if(!rad) ang *= pi/180.0;
+   if(!rad) ang *= DEG2RAD;
 
    x = cos(ang);
    y = sin(ang);
@@ -242,7 +242,7 @@ func interp_angles(ang, i, ip, rad=) {
    
    angp = atan(yp, xp);
    
-   if(!rad) angp *= 180.0/pi;
+   if(!rad) angp *= RAD2DEG;
 
    return angp;
 }
