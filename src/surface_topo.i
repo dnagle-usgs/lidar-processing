@@ -102,6 +102,7 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
    extern a, irg_a, _utm;
    default, quiet, 0;
    default, verbose, !quiet;
+   default, north, 0;
 
    if(is_void(ops_conf))
       error, "ops_conf is not set";
@@ -127,18 +128,16 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
 
    if(verbose)
       write, format="%s", "\n Interpolating: roll...";
-   roll    =  interp( tans.roll,    tans.somd, atime ) 
+   roll = interp(tans.roll, tans.somd, atime);
 
    if(verbose)
       write, format="%s", " pitch...";
-   pitch   = interp( tans.pitch,   tans.somd, atime ) 
+   pitch = interp(tans.pitch, tans.somd, atime);
 
-   if ( is_void( north ) ) {
+   if(!north) {
       if(verbose)
          write, format="%s", " heading...";
-      hy = interp( sin( tans.heading*DEG2RAD), tans.somd, atime );
-      hx = interp( cos( tans.heading*DEG2RAD), tans.somd, atime );
-      heading = atan( hy, hx)/DEG2RAD;
+      heading = interp_angles(tans.heading, tans.somd, atime);
    } else {
       if(verbose)
          write, format="%s", " interpolating north only...";
