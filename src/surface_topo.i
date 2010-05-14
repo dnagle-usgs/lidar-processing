@@ -67,7 +67,7 @@ func make_pnav_from_gga( gga ) {
    return pnav;
 }
 
-func first_surface(start=, stop=, center=, delta=, north=, usecentroid=, use_highelv_echo=, quiet=, verbose=) {
+func first_surface(nil, start=, stop=, center=, delta=, north=, usecentroid=, use_highelv_echo=, quiet=, verbose=) {
 /* DOCUMENT first_surface(start=, stop=, center=, delta=, north= )
 
    Project the EAARL threshold trigger point to the surface. 
@@ -106,19 +106,21 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
    if(is_void(ops_conf))
       error, "ops_conf is not set";
 
-   if ( !is_void( center ) ) {
-      if ( is_void(delta) ) 
-         delta = 100;
+   i = j = [];
+   if(!is_void(center)) {
+      default, delta, 100;
       i = center - delta;
       j = center + delta;
-   } else if ( !is_void( start ) ) {
-      if ( !is_void( delta ) ) {
-         i = start;
+   } else {
+      if(is_void(start))
+         error, "Must provide start= or center=";
+      i = start;
+      if(!is_void(delta))
          j = start + delta;
-   } else if ( !is_void( stop ) ) {
-         i = start;
+      else if(!is_void(stop))
          j = stop;
-      }
+      else
+         error, "When using start=, you must provide delta= or stop=";
    }
 
    a = irg(i,j, usecentroid=usecentroid, use_highelv_echo=use_highelv_echo);		
