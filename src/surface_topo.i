@@ -188,20 +188,29 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
          scan_bias(i) = a(i).sa(1) - fix(i);
    }
 
+   // Calculate scan angles
+   scan_angles = SAD * (a.sa + scan_bias(-,));
+   scan_bias = [];
+
    // edit out tx/rx dropouts
    a.irange *= ((long(a.irange) & 0xc000) == 0);
+
+   // Calculate magnitude of vectors from mirror to ground
+   mag = a.irange * NS2MAIR - ops_conf.range_biasM;
 
    for(i = 1; i <= count; i++) {
       gx = easting(..,i);
       gy = northing(..,i);
       yaw = -heading(..,i);
-      scan_ang = SAD * (a(i).sa + scan_bias(i));
+      scan_ang = scan_angles(..,i);
 
-      srm = (a(i).irange*NS2MAIR - ops_conf.range_biasM);
+      srm = mag(..,i);
       gz = palt(, i);
-      m = scanflatmirror2_direct_vector(yaw+ ops_conf.yaw_bias,
-      pitch(,i)+ ops_conf.pitch_bias,roll(,i)+ ops_conf.roll_bias,
-         gx,gy,gz,dx,dy,dz,cyaw, lasang, mirang, scan_ang, srm)
+      m = scanflatmirror2_direct_vector(
+         yaw + ops_conf.yaw_bias,
+         pitch(,i) + ops_conf.pitch_bias,
+         roll(,i) + ops_conf.roll_bias,
+         gx, gy, gz, dx, dy, dz, cyaw, lasang, mirang, scan_ang, srm);
   
       rrr(i).meast  =     m(,1) * 100.0;
       rrr(i).mnorth =     m(,2) * 100.0;
