@@ -125,35 +125,43 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
 
    atime   = a.soe - soe_day_start;
 
-   if (verbose) write, format="\n%cInterpolating: roll...", 0x20
+   if(verbose)
+      write, format="%s", "\n Interpolating: roll...";
    roll    =  interp( tans.roll,    tans.somd, atime ) 
 
-   if (verbose) write,format="%cpitch...",0x20
+   if(verbose)
+      write, format="%s", " pitch...";
    pitch   = interp( tans.pitch,   tans.somd, atime ) 
 
    if ( is_void( north ) ) {
-      if (verbose) write,format="%cheading...", 0x20
+      if(verbose)
+         write, format="%s", " heading...";
       hy = interp( sin( tans.heading*DEG2RAD), tans.somd, atime );
       hx = interp( cos( tans.heading*DEG2RAD), tans.somd, atime );
       heading = atan( hy, hx)/DEG2RAD;
    } else {
-      if (verbose) write,"interpolating North only..."
+      if(verbose)
+         write, format="%s", " interpolating north only...";
       heading = interp( array( 0.0, dimsof(tans)(2) ), tans.somd, atime ) 
    }
 
-   if (verbose) write,format="%caltitude...",0x20
+   if(verbose)
+      write, format="%s", " altitude...";
    palt  = interp( pnav.alt,   pnav.sod,  atime )
 
    if ( is_void( _utm ) ) {
-      if (verbose) write,"Converting from lat/lon to UTM..."
+      if(verbose)
+         write, "Converting from lat/lon to UTM...";
       _utm = fll2utm( pnav.lat, pnav.lon )
    } else {
       if ( dimsof(pnav)(2) != dimsof(pnav)(2) ) 
-      if (verbose) write,"_utm has changed, re-converting from lat/lon to UTM..."
+      if(verbose)
+         write, "_utm has changed, re-converting from lat/lon to UTM...";
       _utm = fll2utm( pnav.lat, pnav.lon )
    }
 
-   if (verbose) write,format="%cnorthing/easting...\n", 0x20
+   if(verbose)
+      write, format="%s", " northing/easting...\n";
    northing = interp( _utm(1,), pnav.sod, atime )
    easting  = interp( _utm(2,), pnav.sod, atime )
 
@@ -168,7 +176,8 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
    mirang = array(-22.5, 120);
    lasang = array(45.0, 120);
 
-   if (verbose) write,"Projecting to the surface..."
+   if(verbose)
+      write, "Projecting to the surface...";
 
    if ( is_array(fix_sa1) ) {    // we'll assume both are set
       write,"####################### MARK HERE ###################"
@@ -226,16 +235,13 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
       rrr(i).fs_rtn_centroid = a(i).fs_rtn_centroid;
       rrr(i).rn += (indgen(120)*2^24);
       rrr(i).soe = a(i).soe;
-      if ( (i % 100 ) == 0 ) { 
-         if (verbose) write,format="%5d %8.1f %6.2f %6.2f %6.2f\n",
+      if(verbose && !(i % 100))
+         write, format="%5d %8.1f %6.2f %6.2f %6.2f\n",
             i, (a(i).soe(60))%86400, palt(60,i), roll(60,i), pitch(60,i);
-      }
    }
 
    return rrr;
 }
-
-
 
 func pz(i, j, step=, xpause=) {
 extern a, rrr
