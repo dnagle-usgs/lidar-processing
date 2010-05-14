@@ -200,17 +200,17 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
 
    pitch += ops_conf.pitch_bias;
    roll += ops_conf.roll_bias;
+   yaw = -heading + ops_conf.yaw_bias;
 
    for(i = 1; i <= count; i++) {
       gx = easting(..,i);
       gy = northing(..,i);
-      yaw = -heading(..,i);
       scan_ang = scan_angles(..,i);
 
       srm = mag(..,i);
       gz = palt(, i);
       m = scanflatmirror2_direct_vector(
-         yaw + ops_conf.yaw_bias,
+         yaw(,i),
          pitch(,i),
          roll(,i),
          gx, gy, gz, dx, dy, dz, cyaw, lasang, mirang, scan_ang, srm);
