@@ -67,17 +67,6 @@ func make_pnav_from_gga( gga ) {
    return pnav;
 }
 
-
-func ops_conf_not_loaded(junk) {
- if ( is_void(ops_conf) ) {
-   write,"ops_conf is not set.  Please either load tans or dmars settings."
-   return 1;
- } else return 0;
-}
-
-
-
-
 func first_surface(start=, stop=, center=, delta=, north=, usecentroid=, use_highelv_echo=, quiet=, verbose=) {
 /* DOCUMENT first_surface(start=, stop=, center=, delta=, north= )
 
@@ -114,8 +103,8 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
    default, quiet, 0;
    default, verbose, !quiet;
 
-   if ( ops_conf_not_loaded(1) ) 
-      return;
+   if(is_void(ops_conf))
+      error, "ops_conf is not set";
 
    if ( !is_void( center ) ) {
       if ( is_void(delta) ) 
@@ -362,8 +351,8 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
   extern edb, soe_day_start, tans, pnav, type, utm, fs_all, rn_arr_idx, rn_arr;
   fs_all = [];
   rn_arr =[];
-   if ( ops_conf_not_loaded(1) ) 
-	return;
+   if(is_void(ops_conf))
+      error, "ops_conf is not set";
 
 
    if (!is_array(tans)) {
