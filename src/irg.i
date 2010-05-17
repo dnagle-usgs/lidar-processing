@@ -51,21 +51,19 @@ struct XRTRS {
 
 func irg(b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo=, skip=, verbose=) {
 /* DOCUMENT irg(b, e, georef=)
-   Returns an array of irange values from record
-   b to record e.  "e" can be left out and it will default to 1.  Don't
-   include e if you supply inc=.
+   Returns an array of irange values from record b to record e.  "e" can be
+   left out and it will default to 1.  Don't include e if you supply inc=.
 
-   inc=         NN      Returns "inc" records beginning with b.
-    delta=      NN      Generate records from b-delta to b+delta.
-   georef=  <null>   Return RTRS records like normal.
-      1       Return XRTRS records.
-  usecentroid=  1 Set to determine centroid range using
-                        all 3 waveforms to correct for range walk.
-  use_highelv_echo =    Set to 1 to exclude  the waveforms that tripped above
-         the range gate and its echo caused a peak in the
-         positive direction higher than the bias.
+   inc=     NN      Returns "inc" records beginning with b.
+   delta=   NN      Generate records from b-delta to b+delta.
+   georef=  <null>  Return RTRS records like normal.
+            1       Return XRTRS records.
+   usecentroid=  1 Set to determine centroid range using
+      all 3 waveforms to correct for range walk.
+   use_highelv_echo =    Set to 1 to exclude  the waveforms that tripped above
+      the range gate and its echo caused a peak in the positive direction
+      higher than the bias.
    Returns an array of RTRS structures, or an array of XRTRS.
-
 */
    extern ops_conf;
    default, skip, 1;
@@ -125,37 +123,37 @@ func irg(b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo=, skip=, ve
       a(di).raster = si;
       a(di).soe = rp.offset_time ;    
       if(usecentroid == 1) {
-         for (ii=1; ii< rp.npixels(1); ii++ ) {
-            if (use_highelv_echo) {
-               if (int((*rp.rx(ii,1))(max)-min((*rp.rx(ii,1))(1),(*rp.rx(ii,1))(0))) < 5) {
-                  centroid_values     = pcr(rp, ii);
-                  if ( numberof(centroid_values) ) {
-                     a(di).irange(ii)    = centroid_values(1);
+         for(ii=1; ii< rp.npixels(1); ii++ ) {
+            if(use_highelv_echo) {
+               if(int((*rp.rx(ii,1))(max)-min((*rp.rx(ii,1))(1),(*rp.rx(ii,1))(0))) < 5) {
+                  centroid_values = pcr(rp, ii);
+                  if(numberof(centroid_values)) {
+                     a(di).irange(ii) = centroid_values(1);
                      a(di).intensity(ii) = centroid_values(2);
                      a(di).fs_rtn_centroid(ii) = centroid_values(4);
                   }
                }
             } else {
-               centroid_values     = pcr(rp, ii);
-               if ( numberof(centroid_values) ) {
-                  a(di).irange(ii)    = centroid_values(1);
+               centroid_values = pcr(rp, ii);
+               if(numberof(centroid_values)) {
+                  a(di).irange(ii) = centroid_values(1);
                   a(di).intensity(ii) = centroid_values(2);
                   a(di).fs_rtn_centroid(ii) = centroid_values(4);
                }
             }
          }
-      } else if (usecentroid == 2) {
+      } else if(usecentroid == 2) {
          //  This area is for the Leading-edge-tracker stuff
-         for (ii=1; ii< rp.npixels(1); ii++ ) {
-            centroid_values     = let(rp, ii);
-            a(di).irange(ii)    = centroid_values(1);
+         for(ii=1; ii< rp.npixels(1); ii++ ) {
+            centroid_values = let(rp, ii);
+            a(di).irange(ii) = centroid_values(1);
             a(di).intensity(ii) = centroid_values(2);
          }
       } else {
          // This section processes basic irange
          a(di).irange = rp.irange;
       }
-      a(di).sa  = rp.sa;
+      a(di).sa = rp.sa;
       if((di % update_freq) == 0) {
          if(use_ytk)
             tkcmd, swrite(format="set progress %d", di*100/len);
