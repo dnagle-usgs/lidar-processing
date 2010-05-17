@@ -153,26 +153,6 @@ func irg(b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo=, skip=, ve
          }
       } else {   // This section processes basic irange
          a(di).irange = rp.irange;
-/****************
-      for ( ii=1; ii< rp.npixels(1); ii++ ) { 
-       ta = -float(*rp.tx(ii));
-       x = indgen(1:numberof(ta))-1;
-       txb = ta(1:3)(avg);
-       ta -= txb;
-       tas = ta(sum);
-       if ( tas ) {
-          tc = (ta * x )(sum) / tas;
-          a(di).irange(ii) -= tc; 
-       }
-         
-       if ( numberof( (*rp.rx(ii,1) )) >= 8 ) {
-         bias = (*rp.rx(ii,1) )(1:5)(avg);
-    w = -((*rp.rx(ii,1) )(6:8) -bias);
-         if ( w(1) > 0 )
-           a(di).intensity(ii) = w(3) - w(1); //   
-        }
-      }
-****************/
       }
       a(di).sa  = rp.sa;
       if ( (di % update_freq ) == 0  )
