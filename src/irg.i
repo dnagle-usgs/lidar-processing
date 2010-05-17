@@ -49,7 +49,7 @@ struct XRTRS {
    short fs_rtn_centroid(120);
 }
 
-func irg( b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo=, skip=, verbose=) {
+func irg(b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo=, skip=, verbose=) {
 /* DOCUMENT irg(b, e, georef=)
    Returns an array of irange values from record
    b to record e.  "e" can be left out and it will default to 1.  Don't
@@ -59,50 +59,50 @@ func irg( b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo=, skip=, v
     delta=      NN      Generate records from b-delta to b+delta.
    georef=	<null> 	Return RTRS records like normal.
 		1       Return XRTRS records.
-  usecentroid=  1	Set to determine centroid range using 
+  usecentroid=  1	Set to determine centroid range using
                         all 3 waveforms to correct for range walk.
   use_highelv_echo =    Set to 1 to exclude  the waveforms that tripped above
-			the range gate and its echo caused a peak in the 
+			the range gate and its echo caused a peak in the
 			positive direction higher than the bias.
    Returns an array of RTRS structures, or an array of XRTRS.
 
 */
+   extern ops_conf;
+   default, skip, 1;
+   default, verbose, 0;
 
-  extern ops_conf;
-  default, skip, 1;
-  default, verbose, 0;
+   // if the 3 chn_range_bias settings are not set in ops_conf then use the
+   // default settings
+   if(ops_conf.chn1_range_bias == -999)
+      ops_conf.chn1_range_bias = 0.;
+   if(ops_conf.chn2_range_bias == -999)
+      ops_conf.chn2_range_bias = 0.36;
+   if(ops_conf.chn3_range_bias == -999)
+      ops_conf.chn3_range_bias = 0.23;
 
- // if the 3 chn_range_bias settings are not set in ops_conf then use the default settings
- if (ops_conf.chn1_range_bias == -999) 
-    ops_conf.chn1_range_bias = 0.;
- if (ops_conf.chn2_range_bias == -999) 
-    ops_conf.chn2_range_bias = 0.36;
- if (ops_conf.chn3_range_bias == -999) 
-    ops_conf.chn3_range_bias = 0.23;
+   // check if max_sfc_sat has been defined from the ops_conf.i file.  The
+   // default value is -1, so if it is the default value, then set it to 2,
+   // otherwise use the ops_conf.max_sfc_sat value
+   if (ops_conf.max_sfc_sat == -1)
+      ops_conf.max_sfc_sat = 2;
 
- // check if max_sfc_sat has been defined from the ops_conf.i file.  The default value is -1, so if it is the default value, then set it to 2, otherwise use the ops_conf.max_sfc_sat value
-  if (ops_conf.max_sfc_sat == -1) {
-     ops_conf.max_sfc_sat = 2;
-  }
+   if(!is_void(delta)) {
+      e = b + delta;
+      b = b - delta;
+   }
 
-  if ( !is_void( delta ) ) {
-     e = b + delta;
-     b = b - delta;
-  }
+   if(!is_void(inc)) {
+      e = b + inc;
+   }
 
-  if ( !is_void( inc ) ) {
-     e = b + inc;
-  } 
+   if(is_void(e))
+      e = b + 1;
 
-  if ( is_void(e) ) 
-	e = b + 1;
-
-  len = (e - b) / skip;				// Compute the length of the return
-					// data.
-  if ( is_void(georef) )		// if no georef, then return RTRS
-  	a = array( RTRS,  len + 1 );
-  else					// else return an extended XRTRS
-  	a = array( XRTRS,  len + 1 );	//   with georef information included.
+   len = (e - b) / skip;	// Compute the length of the return data.
+   if(!georef)    // if no georef, then return RTRS
+      a = array(RTRS, len + 1);
+   else           // else return an extended XRTRS
+      a = array(XRTRS, len + 1);    //   with georef information included.
 
 
   if ( _ytk && ( len > 10 ) )		// Determine if ytk popup status
