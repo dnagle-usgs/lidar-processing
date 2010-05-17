@@ -170,9 +170,9 @@ certain that they are equivalent.
 
 // Preallocate mir; we'll fill in half now, and half later
 mir = array(double, dims, 6);
-mir(,1) = A*dx + B*dy + C*dz + gx;   // Calc. freespace mirror
-mir(,2) = D*dx + E*dy + F*dz + gy;   // position
-mir(,3) = G*dx + H*dy + I*dz + gz;
+mir(..,1) = A*dx + B*dy + C*dz + gx;   // Calc. freespace mirror
+mir(..,2) = D*dx + E*dy + F*dz + gy;   // position
+mir(..,3) = G*dx + H*dy + I*dz + gz;
 
 // Clear memory
 dx = dy = dz = gx = gy = gz = [];
@@ -262,9 +262,9 @@ coordinate in plane space. -- ?
 
 // mag is the magnitude of the vector in the y direction
 a = array(double, dims, 3); // x-axis
-a(,1) = ((-A*spa+B*cpa)*cla+C*sla)*mag;   // Move incident vector with
-a(,2) = ((-D*spa+E*cpa)*cla+F*sla)*mag;   // aircraft attitude and then
-a(,3) = ((-G*spa+H*cpa)*cla+I*sla)*mag;   // rotate about z-axis, then
+a(..,1) = ((-A*spa+B*cpa)*cla+C*sla)*mag;   // Move incident vector with
+a(..,2) = ((-D*spa+E*cpa)*cla+F*sla)*mag;   // aircraft attitude and then
+a(..,3) = ((-G*spa+H*cpa)*cla+I*sla)*mag;   // rotate about z-axis, then
 
 // No longer need, clear memory
 cla = sla = [];
@@ -302,13 +302,13 @@ Following is just matrix multiplication between the above matrices?
 */
 
 R1 = R2 = array(double, dims, 3);
-R1(,1) = A*J + B*M + C*P;  // X-axis attitude after all
-R1(,2) = D*J + E*M + F*P;  // rotations
-R1(,3) = G*J + H*M + I*P;
+R1(..,1) = A*J + B*M + C*P;  // X-axis attitude after all
+R1(..,2) = D*J + E*M + F*P;  // rotations
+R1(..,3) = G*J + H*M + I*P;
 
-R2(,1) = A*K + B*N + C*Q;  // Y-axis attitude after all
-R2(,2) = D*K + E*N + F*Q;  // rotations
-R2(,3) = G*K + H*N + I*Q;
+R2(..,1) = A*K + B*N + C*Q;  // Y-axis attitude after all
+R2(..,2) = D*K + E*N + F*Q;  // rotations
+R2(..,3) = G*K + H*N + I*Q;
 
 // Clear memory
 A = B = C = D = E = F = G = H = I = [];
@@ -317,19 +317,19 @@ J = K = L = M = N = O = P = Q = R = [];
 // Following needs to be documented yet
 
 RM = array(double, dims, 3);
-RM(,1) = R1(,2)*R2(,3) - R1(,3)*R2(,2);
-RM(,2) = R1(,3)*R2(,1) - R1(,1)*R2(,3);   // and R2 to find normal (RM)
-RM(,3) = R1(,1)*R2(,2) - R1(,2)*R2(,1);
+RM(..,1) = R1(..,2)*R2(..,3) - R1(..,3)*R2(..,2);
+RM(..,2) = R1(..,3)*R2(..,1) - R1(..,1)*R2(..,3);   // and R2 to find normal (RM)
+RM(..,3) = R1(..,1)*R2(..,2) - R1(..,2)*R2(..,1);
 
 // Clear memory
 R1 = R2 = [];
 
 // Compute inner product
-MM = RM(,1)*a(,1) + RM(,2)*a(,2) + RM(,3)*a(,3);
+MM = RM(..,1)*a(..,1) + RM(..,2)*a(..,2) + RM(..,3)*a(..,3);
 
-mir(,4) = a(,1) - 2*MM*RM(,1) + mir(,1);	// Compute reflected vector
-mir(,5) = a(,2) - 2*MM*RM(,2) + mir(,2);  // x,y,z position
-mir(,6) = a(,3) - 2*MM*RM(,3) + mir(,3);
+mir(..,4) = a(..,1) - 2*MM*RM(..,1) + mir(..,1);	// Compute reflected vector
+mir(..,5) = a(..,2) - 2*MM*RM(..,2) + mir(..,2);  // x,y,z position
+mir(..,6) = a(..,3) - 2*MM*RM(..,3) + mir(..,3);
 
 return mir;
 }
