@@ -41,9 +41,9 @@ struct XRTRS {
    float irange(120);      // Integer range counter values
    short intensity(120);   // Laser return intensity
    short sa(120);          // Scan angle counts
-   float rroll(120);	      // Roll in radians
-   float rpitch(120);	   // Pitch in radians
-   float alt(120);	      // Altitude in either NS or meters
+   float rroll(120);       // Roll in radians
+   float rpitch(120);      // Pitch in radians
+   float alt(120);         // Altitude in either NS or meters
    // The location within the return waveform of the first return centroid.
    // This is to used to subtract from the depth idx to get true depth.
    short fs_rtn_centroid(120);
@@ -57,13 +57,13 @@ func irg(b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo=, skip=, ve
 
    inc=         NN      Returns "inc" records beginning with b.
     delta=      NN      Generate records from b-delta to b+delta.
-   georef=	<null> 	Return RTRS records like normal.
-		1       Return XRTRS records.
-  usecentroid=  1	Set to determine centroid range using
+   georef=  <null>   Return RTRS records like normal.
+      1       Return XRTRS records.
+  usecentroid=  1 Set to determine centroid range using
                         all 3 waveforms to correct for range walk.
   use_highelv_echo =    Set to 1 to exclude  the waveforms that tripped above
-			the range gate and its echo caused a peak in the
-			positive direction higher than the bias.
+         the range gate and its echo caused a peak in the
+         positive direction higher than the bias.
    Returns an array of RTRS structures, or an array of XRTRS.
 
 */
@@ -98,17 +98,17 @@ func irg(b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo=, skip=, ve
    if(is_void(e))
       e = b + 1;
 
-   len = (e - b) / skip;	// Compute the length of the return data.
+   len = (e - b) / skip;   // Compute the length of the return data.
    if(!georef)    // if no georef, then return RTRS
       a = array(RTRS, len + 1);
    else           // else return an extended XRTRS
       a = array(XRTRS, len + 1);    //   with georef information included.
 
 
-  if ( _ytk && ( len > 10 ) )		// Determine if ytk popup status
-	use_ytk = 1;			// dialogs are used.
+  if ( _ytk && ( len > 10 ) )    // Determine if ytk popup status
+   use_ytk = 1;         // dialogs are used.
   else
-	use_ytk = 0;
+   use_ytk = 0;
 
   update_freq = 10;
   if ( len >= 200 ) update_freq = 20;
@@ -117,37 +117,37 @@ func irg(b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo=, skip=, ve
   if (verbose)
     skip;
   for ( di=1, si=b; si<=e; di++, si += skip ) {
-    rp = decode_raster( get_erast( rn=si )) ;	// decode a raster
-    a(di).raster = si; 				// install the raster nbr
-    a(di).soe = rp.offset_time ;		
+    rp = decode_raster( get_erast( rn=si )) ;   // decode a raster
+    a(di).raster = si;           // install the raster nbr
+    a(di).soe = rp.offset_time ;    
     if ( usecentroid == 1 ) {
        for (ii=1; ii< rp.npixels(1); ii++ ) {
-	  if (use_highelv_echo) {
-	    if (int((*rp.rx(ii,1))(max)-min((*rp.rx(ii,1))(1),(*rp.rx(ii,1))(0))) < 5) {
+     if (use_highelv_echo) {
+       if (int((*rp.rx(ii,1))(max)-min((*rp.rx(ii,1))(1),(*rp.rx(ii,1))(0))) < 5) {
               centroid_values     = pcr(rp, ii);
               if ( numberof(centroid_values) ) {
-	        a(di).irange(ii)    = centroid_values(1);
-	        a(di).intensity(ii) = centroid_values(2);
-	        a(di).fs_rtn_centroid(ii) = centroid_values(4);
+           a(di).irange(ii)    = centroid_values(1);
+           a(di).intensity(ii) = centroid_values(2);
+           a(di).fs_rtn_centroid(ii) = centroid_values(4);
               }
-	    }
- 	  } else {
+       }
+     } else {
             centroid_values     = pcr(rp, ii);
             if ( numberof(centroid_values) ) {
-	      a(di).irange(ii)    = centroid_values(1);
-	      a(di).intensity(ii) = centroid_values(2);
-	      a(di).fs_rtn_centroid(ii) = centroid_values(4);
+         a(di).irange(ii)    = centroid_values(1);
+         a(di).intensity(ii) = centroid_values(2);
+         a(di).fs_rtn_centroid(ii) = centroid_values(4);
             }
          }
             
        }
-    } else if ( usecentroid == 2 ) {	//  This area is for the Leading-edge-tracker stuff
-	for (ii=1; ii< rp.npixels(1); ii++ ) {
+    } else if ( usecentroid == 2 ) {   //  This area is for the Leading-edge-tracker stuff
+   for (ii=1; ii< rp.npixels(1); ii++ ) {
            centroid_values     = let(rp, ii);
-	   a(di).irange(ii)    = centroid_values(1);
-	   a(di).intensity(ii) = centroid_values(2);
+      a(di).irange(ii)    = centroid_values(1);
+      a(di).intensity(ii) = centroid_values(2);
         }
-    } else {	// This section processes basic irange
+    } else {   // This section processes basic irange
       a(di).irange = rp.irange;
 /****************
       for ( ii=1; ii< rp.npixels(1); ii++ ) { 
@@ -163,7 +163,7 @@ func irg(b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo=, skip=, ve
          
        if ( numberof( (*rp.rx(ii,1) )) >= 8 ) {
          bias = (*rp.rx(ii,1) )(1:5)(avg);
-	 w = -((*rp.rx(ii,1) )(6:8) -bias);
+    w = -((*rp.rx(ii,1) )(6:8) -bias);
          if ( w(1) > 0 )
            a(di).intensity(ii) = w(3) - w(1); //   
         }
