@@ -124,7 +124,7 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
    a = irg(start, stop, usecentroid=usecentroid, use_highelv_echo=use_highelv_echo);		
    irg_a = a;
 
-   atime   = a.soe - soe_day_start;
+   atime = a.soe - soe_day_start;
 
    if(verbose)
       write, format="%s", "\n Interpolating: roll...";
@@ -202,34 +202,35 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
    roll += ops_conf.roll_bias;
    yaw = -heading + ops_conf.yaw_bias;
 
-   for(i = 1; i <= count; i++) {
-      gx = easting(..,i);
-      gy = northing(..,i);
-      scan_ang = scan_angles(..,i);
+   bcast = long(yaw * 0);
 
-      srm = mag(..,i);
-      gz = palt(, i);
-      m = scanflatmirror2_direct_vector(
-         yaw(,i), pitch(,i), roll(,i),
-         gx, gy, gz,
-         dx, dy, dz,
-         cyaw, lasang, mirang, scan_ang, srm);
+   m = scanflatmirror2_direct_vector(
+      yaw, pitch, roll,
+      easting, northing, palt,
+      dx, dy, dz,
+      bcast + cyaw(,-),
+      bcast + lasang(,-),
+      bcast + mirang(,-), scan_angles, mag);
   
-      rrr(i).meast  =     m(,1) * 100.0;
-      rrr(i).mnorth =     m(,2) * 100.0;
-      rrr(i).melevation=  m(,3) * 100.0;
-      rrr(i).east   =     m(,4) * 100.0;
-      rrr(i).north  =     m(,5) * 100.0;
-      rrr(i).elevation =  m(,6) * 100.0;
-      rrr(i).rn = (a(i).raster&0xffffff);
-      rrr(i).intensity = a(i).intensity;
-      rrr(i).fs_rtn_centroid = a(i).fs_rtn_centroid;
-      rrr(i).rn += (indgen(120)*2^24);
-      rrr(i).soe = a(i).soe;
-      if(verbose && !(i % 100))
-         write, format="%5d %8.1f %6.2f %6.2f %6.2f\n",
-            i, (a(i).soe(60))%86400, palt(60,i), roll(60,i), pitch(60,i);
-   }
+   rrr.meast  =     m(..,1) * 100.0;
+   rrr.mnorth =     m(..,2) * 100.0;
+   rrr.melevation=  m(..,3) * 100.0;
+   rrr.east   =     m(..,4) * 100.0;
+   rrr.north  =     m(..,5) * 100.0;
+   rrr.elevation =  m(..,6) * 100.0;
+   rrr.rn = (a.raster&0xffffff)(-,);
+   rrr.intensity = a.intensity;
+   rrr.fs_rtn_centroid = a.fs_rtn_centroid;
+   rrr.rn += (indgen(120)*2^24)(,-);
+   rrr.soe = a.soe;
+
+   if(verbose && count >= 100)
+      write, format="%5d %8.1f %6.2f %6.2f %6.2f\n",
+         indgen(100:count:100),
+         a(100:count:100).soe(60)%86400,
+         palt(60,100:count:100),
+         roll(60,100:count:100),
+         pitch(60,100:count:100);
 
    return rrr;
 }
