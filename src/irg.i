@@ -1,83 +1,56 @@
+// vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 require, "l1pro.i";
 
-/*
-   W. Wright
-
-   8/23/02 WW Minor additions to irg to permit giving an initial
-        raster number and an increment instead of a start and stop.
-
-   8/17/02 WW
-	Added XRTRS data type to return range data and
-        interpolated attitude and altitude info.
-
-   7/6/02 WW
-	Minor changes to omit progress bar when fewer then 10
-	rasters to process.
-*/
-
-// RTRS = Raster/Time/Range/ScanAngle
+local RTRS;
 /* DOCUMENT RTRS
+   RTRS = Raster / Time / Range / Scan Angle
 
-  RTRS means: Raster/Time/Range/ScanAngle.  The structure contains
-information on a given raster including the raster number, an array
-of soe's (start of epoch) time values for each pulse in the raster,
-the irange (integer range) which is the non-range-walk corrected basic
-range measurement returned by the EAARL data system, and the sa (scan
-angle) in digital counts.  The sa contains digital counts based on
-8000 counts for one 360 degree revolution.
- When using sa, remember that the angle the laser is deflected is 
- twice the angle of incidence, so effectively you should use 4000
-counts/revolution.
+   This structure contains information on a given raster including the raster
+   number, an array of soe (start of epoch) time values for each pulse in the
+   raster, the irange (integer range) which is the non-range-walk corrected
+   basic range measurement returned by the EAARL data system, and the sa (scan
+   angle) in digital counts.  The sa contains digital counts based on 8000
+   counts for one 360 degree revolution.  When using sa, remember that the
+   angle the laser is deflected is twice the angle of incidence, so effectively
+   you should use 4000 counts/revolution.
 
-Though the "irange" value comes from the system as an integer, it 
-is converted and stored in RTRS as a floating point value.  In this
-way it can be refined to better than the one-ns resolution by 
-processing methods. By carying it as a float, we don't have to scale
-it.
-
-
- ---------end-----------
+   Though the "irange" value comes from the system as an integer, it is
+   converted and stored in RTRS as a floating point value.  In this way it can
+   be refined to better than the one-ns resolution by processing methods. By
+   carying it as a float, we don't have to scale it.
 */
-  struct RTRS { 
-     int    raster;		// the raster number;
-     double    soe(120); 	// Seconds of the epoch for each pulse.
-     float    irange(120); 	// integer range counter values.
-     short  intensity(120);	// Laser return intensity
-     short      sa(120); 	// scan angle counts.
-     short  fs_rtn_centroid(120); // The location within the return waveform of the
-                                  // first return centroid.  This is to used to subtract
-                                  // from the depth idx to get true depth.
-  };
+struct RTRS {
+   int raster;             // Raster number
+   double soe(120);        // Seconds of the epoch for each pulse
+   float irange(120);      // Integer range counter values
+   short intensity(120);   // Laser return intensity
+   short sa(120);          // Scan angle counts
+   // The location within the return waveform of the first return centroid.
+   // This is to used to subtract from the depth idx to get true depth.
+   short fs_rtn_centroid(120);
+};
 
-local XRTRS
+local XRTRS;
 /* DOCUMENT XRTRS
-  XRTRS = Extended RTRS to hold info for qde georef.  The additional
-  information is radian roll, pitch, and precision altitude in meters.
-
-  See also:  info, XRTRS
-
-  -----end----------------
+   XRTRS = Extended RTRS to hold info for qde georef.  The additional
+   information is radian roll, pitch, and precision altitude in meters.
 */
-
-
-  struct XRTRS {
-     int    raster;		// the raster number;
-     double    soe(120); 	// Seconds of the epoch for each pulse.
-     float    irange(120); 	// integer range counter values.
-     short  intensity(120);	// Laser return intensity
-     short      sa(120); 	// scan angle counts.
-     float   rroll(120);	// Roll in radians
-     float  rpitch(120);	// Pitch in radians
-     float     alt(120);	// altitude in either NS or meters.
-     short  fs_rtn_centroid(120); // The location within the return waveform of the
-                                  // first return centroid.  This is to used to subtract
-                                  // from the depth idx to get true depth.
+struct XRTRS {
+   int raster;             // Raster number
+   double soe(120);        // Seconds of the epoch for each pulse
+   float irange(120);      // Integer range counter values
+   short intensity(120);   // Laser return intensity
+   short sa(120);          // Scan angle counts
+   float rroll(120);	      // Roll in radians
+   float rpitch(120);	   // Pitch in radians
+   float alt(120);	      // Altitude in either NS or meters
+   // The location within the return waveform of the first return centroid.
+   // This is to used to subtract from the depth idx to get true depth.
+   short fs_rtn_centroid(120);
 }
 
-
-
 func irg( b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo=, skip=, verbose=) {
-/* DOCUMENT irg(b, e, georef=) 
+/* DOCUMENT irg(b, e, georef=)
    Returns an array of irange values from record
    b to record e.  "e" can be left out and it will default to 1.  Don't
    include e if you supply inc=.
