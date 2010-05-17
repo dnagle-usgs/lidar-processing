@@ -121,6 +121,22 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
          error, "When using start=, you must provide delta= or stop=";
    }
 
+   // This is to prevent overrunning available memory
+   maxcount = 25000;
+   if(stop - start >= maxcount) {
+      count = stop - start + 1;
+      intervals = long(ceil(count/double(maxcount)));
+      parts = array(pointer, intervals);
+      for(i = start, interval = 1; interval <= intervals; i+=maxcount, interval++) {
+         i = min(stop, i);
+         j = min(stop, i + maxcount - 1);
+         parts(interval) = &first_surface(start=i, stop=j, north=north,
+            usecentroid=usecentroid, use_highelv_echo=use_highelv_echo,
+            verbose=verbose);
+      }
+      return merge_pointers(parts);
+   }
+
    a = irg(start, stop, usecentroid=usecentroid, use_highelv_echo=use_highelv_echo);		
    irg_a = a;
 
