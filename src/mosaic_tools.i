@@ -1309,9 +1309,9 @@ func jgw_decompose(jgw, pixels) {
    h_set, result, height=ppdist([x([1,4]),y([1,4])], [x([2,3]),y([2,3])], tp=1)(avg);
 
    // Calculate rotation -- ccw, north=0
-   m1 = linear_regression(x([1,4]), y([1,4]))(1);
-   m2 = linear_regression(x([2,3]), y([2,3]))(1);
-   deg = slope2degrees([m1,m2](avg), x([1,4])(dif)(1));
+   rad1 = atan(y([4,1])(dif)(1), x([4,1])(dif)(1));
+   rad2 = atan(y([3,2])(dif)(1), x([3,2])(dif)(1));
+   deg = [rad1,rad2](avg)(1) * RAD2DEG;
    h_set, result, rotation=deg;
 
    // Calculate center
