@@ -969,8 +969,8 @@ func kml_jgw_make_levels_single(jpg, levels=, update=, fast=, quality=) {
       jpg_shrink, jpg, ljpgs(w), reduces(w), fast=fast, quality=quality;
 }
 
-func kml_jgw_tree(dir, ofn, root=, name=) {
-/* DOCUMENT kml_jgw_tree, dir, ofn, root=, name=
+func kml_jgw_tree(dir, ofn, root=, name=, searchstr=) {
+/* DOCUMENT kml_jgw_tree, dir, ofn, root=, name=, searchstr=
    Generates a KML product for a directory tree of CIR imagery. All existing
    CIR kml files in the given path will be located. They will be organized into
    a single master KML file that loads all of them.
@@ -993,17 +993,20 @@ func kml_jgw_tree(dir, ofn, root=, name=) {
          "dir" into "root".
       name= A name to apply to the top-level container in the KML file,
          describing the dataset as a whole.
+      searchstr= Search string used to find kml files.
+            searchstr="*-cir.kml"   (default)
 
    SEE ALSO: kml_jgw_build_product
 */
    default, root, "";
+   default, searchstr, "*-cir.kml";
    default, name, file_tail(file_rootname(ofn));
-   contents = kml_jgw_tree_recurse(dir, root);
+   contents = kml_jgw_tree_recurse(dir, root, searchstr);
    kml_save, ofn, contents, name=name;
 }
 
-func kml_jgw_tree_recurse(dir, root) {
-/* DOCUMENT kml_jgw_tree_recurse, dir, root
+func kml_jgw_tree_recurse(dir, root, searchstr) {
+/* DOCUMENT kml_jgw_tree_recurse, dir, root, searchstr
    Worker function for kml_jgw_tree. Do not call directly.
 */
    local files, subdirs;
@@ -1013,11 +1016,11 @@ func kml_jgw_tree_recurse(dir, root) {
    files = lsdir(dir, subdirs);
    for(i = 1; i <= numberof(subdirs); i++) {
       grow, result, &strchar(kml_Folder(
-         kml_jgw_tree_recurse(dir+subdirs(i), root+subdirs(i)),
+         kml_jgw_tree_recurse(dir+subdirs(i), root+subdirs(i), searchstr),
          name=subdirs(i)));
    }
    if(numberof(files))
-      files = files(where(strglob("*-cir.kml", files)));
+      files = files(where(strglob(searchstr, files)));
    for(i = 1; i <= numberof(files); i++) {
       grow, result, &strchar(kml_NetworkLink(
          kml_Link(href=root+files(i)),
