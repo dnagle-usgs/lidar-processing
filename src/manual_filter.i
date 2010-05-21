@@ -390,6 +390,151 @@ func filter_bounded_elv(eaarl, lbound=, ubound=, mode=, idx=) {
    return idx ? keep : eaarl(keep);
 }
 
+func batch_extract_corresponding_data(src_searchstr, ref_searchstr, maindir,
+srcdir=, refdir=, outdir=, fn_append=, vname_append=, soefudge=) {
+/* DOCUMENT batch_extract_corresponding_data, src_searchstr, ref_searchstr,
+   maindir, srcdir=, refdir=, outdir=, fn_append=, vname_append=, soefudge=
+
+   This extracts points from source data that exist in reference data and
+   copies them as output data.
+
+   There are three data sets involved:
+      source (src): This is the data you'd like to copy from.
+      reference (ref): This is used as a reference to determine which points
+         from source get copied.
+      output (out): This is where the data gets copied to.
+
+   Example scenario:
+      You have a dataset that you've processed and manually filtered. After
+      completing the manual editing, you discover that there was a problem with
+      the processing. The problem is significant enough that you need to
+      re-process the data; however, it isn't so significant that the manual
+      edits you performed wouldn't apply to the re-processed data. You can use
+      batch_extract_corresponding_data to apply your manual edits to the
+      re-processed data. In this case, the three data sets involved are:
+         source: The re-processed data.
+         reference: The manually edited data that had a problem in the
+            processing.
+         output: Points from re-processed data that correspond to points in the
+            manually eedited data.
+
+   Required arguments:
+      src_searchstr: A search string that locates the source data.
+      ref_searchstr: A search string that locates the reference data.
+
+   Optional argument:
+      maindir: The directory where the data can be found. This serves as a
+         default for srcdir=, refdir=, and outdir=.
+
+   Options:
+      srcdir= The directory where the source data is located.
+      refdir= The directory where the reference data is located.
+      outdir= The directory where the output data should go.
+      fn_append= A string to include in the output filename to differentiate it
+         from the source filename.
+            fn_append="extracted"   (default)
+      vname_append= A string to include in the output vname to indicate that
+         it's extracted data.
+            vname_append="ext"      (default)
+      soefudge= Passed through to extract_corresponding_data.
+
+   Note on directory arguments/options:
+      If you provide all three of srcdir=, refdir=, and outdir=, then you do
+      NOT need to provide maindir. However, if you omit any of those three
+      options, then you DO need to provide maindir.
+
+      Supplying maindir is a shortcut that is equivalent to supplying that same
+      path for any of the srcdir=, refdir=, and outdir= options that you did
+      not explicitly provide.
+
+   Note on output:
+      Output files will be created using the same relative paths as the source
+      data. Unlike many other functions in ALPS, specifying outdir= will *not*
+      result in all files getting created directly in the specified directory.
+      If the source files are organized in a 10km/2km structure, then the
+      output files will also be organized in a 10km/2km structure.
+
+   Note on reference data:
+      It is assumed that the reference data is in the same UTM zone as the
+      source data. It is also assumed that the source and reference data are
+      located in similar x,y locations. If the easting and northing of a given
+      point are more than 10m different between source and reference, the
+      algorithm may fail to identify the point as one that should be copied.
+
+   Usage example:
+      Suppose you originally processed and manually edited data using rapid
+      trajectories. Now you have precision trajectories and want to reprocess
+      the data. You could do something like this:
+         batch_extract_corresponding_data,
+            "*w84_v_merged.pbd",
+            "*w84_v_merged_fs_b600_w500_nc_grcf_mf.pbd",
+            "/data/0/EAARL/processed/EXAMPLE/Index_Tiles/",
+            refdir="/data/0/EAARL/processed/EXAMPLE/Index_Tiles_rapid/"
+      That will look in EXAMPLE/Index_Tiles for files that match
+      *w84_v_merged.pbd. Each point in that data will be checked to see if it
+      exists in EXAMPLE/Index_Tiles_rapid in files that match
+      *w84_v_merged_fs_b600_w500_nc_grcf_mf.pbd. Any points that match are then
+      copied to EXAMPLE/Index_Tiles in files named *w84_v_merged_extracted.pbd.
+
+   SEE ALSO: extract_corresponding_data
+*/
+   default, srcdir, maindir;
+   default, refdir, maindir;
+   default, outdir, maindir;
+   default, fn_append, "extracted";
+   default, vname_append, "ext";
+   if(strpart(fn_append, 1:1) != "_")
+      fn_append = "_" + fn_append;
+   if(strlen(vname_append) && strpart(vname_append, 1:1) != "_")
+      vname_append = "_" + vname_append;
+
+   files = find(srcdir, glob=src_searchstr);
+
+   if(numberof(files) > 1)
+      sizes = file_size(files)(cum)(2:);
+   else if(numberof(files))
+      sizes = file_size(files);
+   else
+      error, "No files found.";
+
+   local t0, data, vname, x, y;
+   timer_init, t0;
+   tp = t0;
+   for(i = 1; i <= numberof(files); i++) {
+      data = pbd_load(files(i), , vname);
+
+      if(!numberof(data))
+         continue;
+
+      data2xyz, data, x, y;
+      // Include a 10m buffer, in case the points are located slightly
+      // differently
+      bbox = [x(min), y(min), x(max), y(max)] + [-10, -10, 10, 10];
+      x = y = [];
+      ref = dirload(refdir, searchstr=ref_searchstr, verbose=0,
+         filter=dlfilter_bbox(bbox));
+
+      if(!numberof(ref))
+         continue;
+
+      data = extract_corresponding_data(data, ref, soefudge=soefudge);
+      ref = [];
+
+      if(!numberof(data))
+         continue;
+
+      outfile = file_join(outdir, file_relative(srcdir, files(i)));
+      outfile = file_rootname(outfile) + fn_append + ".pbd";
+      vname += vname_append;
+      mkdirp, file_dirname(outfile);
+      pbd_append, outfile, vname, data, uniq=1;
+      data = [];
+
+      timer_remaining, t0, sizes(i), sizes(0), tp, interval=10;
+   }
+   timer_finished, t0;
+}
+
 func extract_corresponding_data(data, ref, soefudge=) {
 /* DOCUMENT extracted = extract_corresponding_data(data, ref, soefudge=)
 
@@ -432,7 +577,7 @@ func extract_corresponding_data(data, ref, soefudge=) {
          might be helpful if one of your variables was recreated from XYZ or
          LAS data and seems to have lost some timestamp resolution.
 
-   SEE ALSO: extract_unique_data
+   SEE ALSO: extract_unique_data, batch_extract_corresponding_data
 */
    default, soefudge, 0.001;
    data = data(msort(data.rn, data.soe));
