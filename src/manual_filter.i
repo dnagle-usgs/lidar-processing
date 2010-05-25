@@ -395,14 +395,19 @@ srcdir=, refdir=, outdir=, fn_append=, vname_append=, soefudge=) {
 /* DOCUMENT batch_extract_corresponding_data, src_searchstr, ref_searchstr,
    maindir, srcdir=, refdir=, outdir=, fn_append=, vname_append=, soefudge=
 
-   This extracts points from source data that exist in reference data and
-   copies them as output data.
+   This copies data from source (src) to output (out). It uses a given
+   reference data (ref) to determine which points get copied.
 
    There are three data sets involved:
       source (src): This is the data you'd like to copy from.
       reference (ref): This is used as a reference to determine which points
-         from source get copied.
+         from source get copied. This data is NOT copied. Instead, the raster
+         numbers and soe values are used to identify which points in source
+         should get copied.
       output (out): This is where the data gets copied to.
+
+   The source and reference data must both be EAARL data with valid soe values
+   and raster numbers.
 
    Example scenario:
       You have a dataset that you've processed and manually filtered. After
