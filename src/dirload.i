@@ -474,7 +474,7 @@ func dlfilter_bbox(bbox, prev=, next=) {
    Creates a filter for dirload that will filter using the given bounding box.
    bbox should be [x1, y1, x2, y2].
 */
-   poly = [bbox([1,3,3,1,1]), bbox([2,4,2,4,2])];
+   poly = [bbox([1,3,3,1,1]), bbox([2,2,4,4,2])];
    return dlfilter_poly(poly, prev=prev, next=next);
 }
 
