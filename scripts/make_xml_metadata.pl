@@ -376,27 +376,27 @@ sub apply_template {
    setnode($doc, $status, [qw/refSysInfo identCode/], 'NAD_1983_UTM_Zone_' . $utm->[4]);
 
    setnode($doc, $status, [qw/spdom bounding southbc/], format_number($utm->[0]));
-   setnode($doc, $status, [qw/spdom bounding eastbc/ ], format_number($utm->[1]));
+   setnode($doc, $status, [qw/spdom bounding westbc/ ], format_number($utm->[1]));
    setnode($doc, $status, [qw/spdom bounding northbc/], format_number($utm->[2]));
-   setnode($doc, $status, [qw/spdom bounding westbc/ ], format_number($utm->[3]));
+   setnode($doc, $status, [qw/spdom bounding eastbc/ ], format_number($utm->[3]));
 
    # The following are all commented out because they're no longer in use:
 
    setnode($doc, $status, [qw/spdom lboundng bottombc/], format_number($utm->[0]));
-   setnode($doc, $status, [qw/spdom lboundng rightbc/ ], format_number($utm->[1]));
+   setnode($doc, $status, [qw/spdom lboundng leftbc/ ], format_number($utm->[1]));
    setnode($doc, $status, [qw/spdom lboundng topbc/   ], format_number($utm->[2]));
-   setnode($doc, $status, [qw/spdom lboundng leftbc/  ], format_number($utm->[3]));
+   setnode($doc, $status, [qw/spdom lboundng rightbc/  ], format_number($utm->[3]));
 
    setnode($doc, $status, [qw/dataIdInfo GeoBndBox southBL/], format_number($utm->[0]));
-   setnode($doc, $status, [qw/dataIdInfo GeoBndBox eastBL/ ], format_number($utm->[1]));
+   setnode($doc, $status, [qw/dataIdInfo GeoBndBox westBL/ ], format_number($utm->[1]));
    setnode($doc, $status, [qw/dataIdInfo GeoBndBox northBL/], format_number($utm->[2]));
-   setnode($doc, $status, [qw/dataIdInfo GeoBndBox westBL/ ], format_number($utm->[3]));
+   setnode($doc, $status, [qw/dataIdInfo GeoBndBox eastBL/ ], format_number($utm->[3]));
 
    # Lat/lon
    setnode($doc, $status, [qw/dataIdInfo geoBox southBL/], format_number($ll->[0]));
-   setnode($doc, $status, [qw/dataIdInfo geoBox eastBL/ ], format_number($ll->[1]));
+   setnode($doc, $status, [qw/dataIdInfo geoBox westBL/ ], format_number($ll->[1]));
    setnode($doc, $status, [qw/dataIdInfo geoBox northBL/], format_number($ll->[2]));
-   setnode($doc, $status, [qw/dataIdInfo geoBox westBL/ ], format_number($ll->[3]));
+   setnode($doc, $status, [qw/dataIdInfo geoBox eastBL/ ], format_number($ll->[3]));
 
    dropnode($doc, $status, [qw/distInfo onLineSrc/]);
 
