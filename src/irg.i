@@ -88,10 +88,7 @@ skip=, verbose=) {
    a = array((georef ? XRTRS : RTRS), len + 1);
 
    // Determine if ytk popup status dialogs are used.
-   if(_ytk && (len > 10))
-      use_ytk = 1;
-   else
-      use_ytk = 0;
+   use_ytk = _ytk && len > 10;
 
    update_freq = 10;
    if(len >= 200) update_freq = 20;
