@@ -85,10 +85,7 @@ skip=, verbose=) {
    // Compute the length of the return data.
    len = (stop - start) / skip;
 
-   if(!georef)    // if no georef, then return RTRS
-      a = array(RTRS, len + 1);
-   else           // else return an extended XRTRS
-      a = array(XRTRS, len + 1);    // with georef information included.
+   a = array((georef ? XRTRS : RTRS), len + 1);
 
    // Determine if ytk popup status dialogs are used.
    if(_ytk && (len > 10))
