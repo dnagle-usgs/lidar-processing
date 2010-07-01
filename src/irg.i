@@ -49,7 +49,8 @@ struct XRTRS {
    short fs_rtn_centroid(120);
 }
 
-func irg(b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo=, skip=, verbose=) {
+func irg(start, stop, inc=, delta=, georef=, usecentroid=, use_highelv_echo=,
+skip=, verbose=) {
 /* DOCUMENT irg(b, e, georef=)
    Returns an array of irange values from record b to record e.  "e" can be
    left out and it will default to 1.  Don't include e if you supply inc=.
@@ -85,19 +86,18 @@ func irg(b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo=, skip=, ve
       ops_conf.max_sfc_sat = 2;
 
    if(!is_void(delta)) {
-      e = b + delta;
-      b = b - delta;
+      stop = start + delta;
+      start -= delta;
    }
 
    if(!is_void(inc)) {
-      e = b + inc;
+      stop = start + inc;
    }
 
-   if(is_void(e))
-      e = b + 1;
+   default, stop, start + 1;
 
    // Compute the length of the return data.
-   len = (e - b) / skip;
+   len = (stop - start) / skip;
 
    if(!georef)    // if no georef, then return RTRS
       a = array(RTRS, len + 1);
@@ -116,7 +116,7 @@ func irg(b, e, inc=, delta=, georef=, usecentroid=, use_highelv_echo=, skip=, ve
 
    if(verbose)
       write, format="skip: %d\n", skip;
-   for(di=1, si=b; si<=e; di++, si+=skip) {
+   for(di=1, si=start; si<=stop; di++, si+=skip) {
       // decode a raster
       rp = decode_raster(get_erast(rn=si));
       // install the raster nbr
