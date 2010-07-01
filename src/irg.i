@@ -67,21 +67,20 @@ skip=, verbose=) {
    Returns an array of RTRS structures, or an array of XRTRS.
 */
    extern ops_conf;
-   default, skip, 1;
-   default, verbose, 0;
-
    ops_conf_validate, ops_conf;
 
    if(!is_void(delta)) {
       stop = start + delta;
       start -= delta;
    }
-
    if(!is_void(inc)) {
       stop = start + inc;
    }
-
    default, stop, start + 1;
+
+   default, skip, 1;
+   default, verbose, 0;
+   default, georef, 0;
 
    // Compute the length of the return data.
    len = (stop - start) / skip;
