@@ -98,15 +98,7 @@ use_be_centroid=, use_be_peak=, hard_surface=) {
    default, last, 250;
    default, pse, 0;
 
-   if (ops_conf.max_sfc_sat == -1)
-      ops_conf.max_sfc_sat == 2;  // default it to 2 if not set
-
-   if (ops_conf.chn1_range_bias == -999)
-      ops_conf.chn1_range_bias = 0.;
-   if (ops_conf.chn2_range_bias == -999)
-      ops_conf.chn2_range_bias = 0.36;
-   if (ops_conf.chn3_range_bias == -999)
-      ops_conf.chn3_range_bias = 0.23;
+   ops_conf_validate, ops_conf;
 
    define_veg_conf;
 
