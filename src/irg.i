@@ -90,9 +90,8 @@ skip=, verbose=) {
    // Determine if ytk popup status dialogs are used.
    use_ytk = _ytk && len > 10;
 
-   update_freq = 10;
-   if(len >= 200) update_freq = 20;
-   if(len >= 400) update_freq = 50;
+   // Scale update_freq based on how many rasters are processing.
+   update_freq = [10,20,50](digitize(len, [200,400]));
 
    if(verbose)
       write, format="skip: %d\n", skip;
