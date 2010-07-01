@@ -203,3 +203,27 @@ func write_ops_conf(fn, conf=) {
    write, f, format="ops_conf = mission_constants(\n  %s\n)\n", params;
    if(f) close, f;
 }
+
+func ops_conf_validate(&conf) {
+/* DOCUMENT ops_conf_validate, conf;
+   The channel range biases and the max_sfc_sat setting are set by default to
+   flag values to allow for backwards compatibility with old ops_conf.i files
+   that do not have the values set.
+
+   This function detects the flag values and converts them to proper values.
+
+   Setting           Flag value     Converted value
+   chn1_range_bias   -999           0.
+   chn2_range_bias   -999           0.36
+   chn3_range_bias   -999           0.23
+   max_sfc_sat       -1             2
+*/
+   if(conf.chn1_range_bias == -999)
+      conf.chn1_range_bias = 0.;
+   if(conf.chn2_range_bias == -999)
+      conf.chn2_range_bias = 0.36;
+   if(conf.chn3_range_bias == -999)
+      conf.chn3_range_bias = 0.23;
+   if(conf.max_sfc_sat == -1)
+      conf.max_sfc_sat = 2;
+}
