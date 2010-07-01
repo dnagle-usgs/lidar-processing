@@ -909,6 +909,10 @@ intensity=, rn=, soe=, zclip=, latlon=, split=, zone=, chunk=, clean=) {
       extension= Specify the file extension for the output files.
             extension="*.xyz"    (default)
             extension="*.txt"    (ESRI default)
+      mode= Specifies what data mode to use when interpreting the data. See
+         data2xyz for details.
+            mode="fs"   (default)
+            mode="be"
 
    Options that are passed to write_ascii_xyz (see its documentation for full
    usage information):
