@@ -125,7 +125,7 @@ skip=, verbose=) {
          }
       } else if(usecentroid == 2) {
          //  This area is for the Leading-edge-tracker stuff
-         for(ii=1; ii< rp.npixels(1); ii++ ) {
+         for(ii=1; ii < rp.npixels(1); ii++) {
             centroid_values = let(rp, ii);
             a(di).irange(ii) = centroid_values(1);
             a(di).intensity(ii) = centroid_values(2);
