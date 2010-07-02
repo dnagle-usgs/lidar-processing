@@ -100,7 +100,7 @@ skip=, verbose=) {
       rp = decode_raster(get_erast(rn=si));
       // install the raster nbr
       a(di).raster = si;
-      a(di).soe = rp.offset_time ;    
+      a(di).soe = rp.offset_time;
       if(usecentroid == 1) {
          for(ii=1; ii< rp.npixels(1); ii++ ) {
             if(use_highelv_echo) {
