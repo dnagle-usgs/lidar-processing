@@ -81,6 +81,8 @@ skip=, verbose=) {
    default, skip, 1;
    default, verbose, 0;
    default, georef, 0;
+   default, usecentroid, 0;
+   default, use_highelv_echo, 0;
 
    // Compute the length of the return data.
    len = (stop - start) / skip;
