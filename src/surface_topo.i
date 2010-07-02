@@ -175,7 +175,7 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
    count = stop - start + 1;
    rrr = array(R, count);
 
-   cyaw = gz = gx = gy = lasang = yaw = array(0., 120);
+   cyaw = array(0., 120);
 
    // mirror offsets
    dx = array(ops_conf.x_offset, 120); // perpendicular to fuselage
