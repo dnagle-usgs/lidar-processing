@@ -105,6 +105,11 @@
 <li><a href="#start">Where do I start?</a></li>
 <li><a href="#conventions">Conventions</a></li>
 <li><a href="#migrating">Migrating from old installations</a>
+  <ul>
+  <li><a href="#migrating_201004">Installed prior to April, 2010</a></li>
+  <li><a href="#migrating_201007">Installed prior to July, 2010</a></li>
+  </ul>
+</li>
 <li><a href="#install_package">Installing ALPS</a>
   <ul>
   <li><a href="#install_package_basic">Basic installation</a></li>
@@ -278,6 +283,8 @@
 
 <h1 id="migrating">Migrating from old installations</h1>
 
+<h2 id="migrating_201004">Installed prior to April, 2010</h2>
+
 <p>
   The installation framework documented here was first put in place in March
   2010. If you have an ALPS that was installed prior to then, then your
@@ -292,9 +299,9 @@
 
 <ul>
 <li>
-  Did you do any code development for ALPS? If so, then check for modified or
-  added files that haven't been committed to the CVS repository. You'll want to
-  either check them in or make a copy of them before proceeding.
+  Did you do any code development for ALPS? If so, then read <a
+  href="#migrating_201007">Installed prior to July, 2010</a> in addition to
+  this section.
 </li>
 <li>
   Did you add any custom files to <strong class="directory"><span
@@ -325,6 +332,44 @@
   related software installed at alternate locations such as <strong
   class="directory">/usr/local</strong>. If you decide to leave such software
   in place, it will not conflict with your new ALPS installation.
+</p>
+
+<h2 id="migrating_201007">Installed prior to July, 2010</h2>
+
+<p>
+  In July 2010, the ALPS repository was migrated from <a
+  href="http://www.nongnu.org/cvs/">CVS</a> to <a
+  href="http://mercurial.selenic.com/">Mercurial</a>. Thus, installations prior
+  to July 2010 must have their existing <strong
+  class="directory">lidar-processing</strong> directory removed so that it can
+  be replaced with a Mercurial clone.
+</p>
+
+<p>
+  If you do nothing, then the installer will take care of this for you. If your
+  <strong class="directory">lidar-processing</strong> directory is a CVS
+  checkout, then it will be renamed to <strong
+  class="directory">lidar-processing-oldcvs</strong>. If it is not a CVS
+  checkout, then it will be deleted; if you have changes you do not want lost,
+  be sure to copy them before installing.
+</p>
+
+<p>
+  If you have not done any development on ALPS, then you can safely delete the
+  <strong class="directory">lidar-processing-oldcvs</strong> directory:
+</p>
+
+<pre class="code">
+<span class="command">rm</span> -rf <span class="directory"><span class="replaceable">~/</span>eaarl/lidar-processing-oldcvs</span>
+</pre>
+
+<p>
+  If you <em>have</em> done development on ALPS and you had not yet commited
+  your changes to the repository, then you will have to migrate your changes to
+  Mercurial before you can commit them. If your changes are non-trivial, you
+  may wish to investigate using <strong class="command">cvs diff</strong> and
+  <strong class="command">hg import</strong>; however, that is beyond the scope
+  of this document.
 </p>
 
 <h1 id="install_package">Installing ALPS</h1>
