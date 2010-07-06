@@ -688,8 +688,7 @@
 <p>
   You will receive a list detailing how many of the key variables are currently
   defined.  If you plan to use any additional settings (such as <strong
-  class="variable">prefix</strong> or <strong
-  class="variable">cvsuser</strong>), you can include them in the above command
+  class="variable">prefix</strong>), you can include them in the above command
   to see what impact they would have on your settings.
 </p>
 
@@ -763,15 +762,14 @@
 </pre>
 </li>
 <li>
-  Create a new pristine copy of the repository at <strong
-  class="directory"><span class="replaceable">~/</span>alpsinstall.<span
-  class="replaceable">2010-03-28</span>/lidar-processing</strong>. Strip out
-  the CVS cruft. A set of commands similar to this will work (just be sure to
-  run them from within the right directory):
-<pre class="code">
-<span class="command">find</span> -name CVS | <span class="command">xargs rm</span> -rf
-<span class="command">find</span> -name .cvsignore | <span class="command">xargs rm</span> -rf
-</pre>
+  Clone the repository at <strong class="directory"><span
+  class="replaceable">~/</span>alpsinstall.<span
+  class="replaceable">2010-03-28</span>/lidar-processing</strong>. Edit the
+  file <strong class="file"><span
+  class="replaceable">~/</span>alpsinstall.<span
+  class="replaceable">2010-03-28</span>/lidar-processing/.hg/hgrc</strong> to
+  change the default path to <strong
+  class="directory">ssh://lidar.net//repos/lidar-processing</strong>.
 </li>
 <li>
   Download all requisite installation archives and expand them into the
