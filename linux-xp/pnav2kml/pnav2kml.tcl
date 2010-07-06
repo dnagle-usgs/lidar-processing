@@ -3,7 +3,6 @@
 # The next line is executed by /bin/sh, but not tcl \
 exec wish "$0" ${1+"$@"}
 #
-# $Id$
 # Original: C. W. Wright charles.w.wright@nasa.gov
 # 10/04/2005
 # Modified: Amar Nayegandhi anayegandhi@usgs.gov

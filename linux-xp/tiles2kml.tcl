@@ -13,7 +13,6 @@ exec wish "$0" ${1+"$@"}
 # 3) Make sure the auto_path above goes to your lib.
 #
 #
-# $Id$
 # Original W. Wright 11/21/2005
 # Generate kml for a directory of ALPS 2k by 2k tile
 # files placing the resulting kml in the same

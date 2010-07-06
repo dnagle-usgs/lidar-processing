@@ -1,7 +1,5 @@
 /*
 
-  $Id$
-
   Wrapper file for rcf
 
   Original rcf.i by C.W.Wright

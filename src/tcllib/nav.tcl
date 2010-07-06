@@ -5,13 +5,9 @@
 # realtime inflight navigation.
 # W. Wright wright@lidar.net
 # 
-# $Id$
-#
 # Navigation and flight functions
 #
 #################################################################
-
-puts {$Id$}
 
 set PI 3.14159265358979323846264338327950288419716939937510
 set ONERAD	[ expr {180.0 / $PI  } ]

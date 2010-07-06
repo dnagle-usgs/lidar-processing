@@ -1,8 +1,5 @@
 #!/usr/bin/perl -w
 
-# $Id$
-# $Source$
-
 require 'newgetopt.pl' || die "Unable to require newgetopt.pl\n";
 
 undef $opt_help;    # just to quiet the warning message

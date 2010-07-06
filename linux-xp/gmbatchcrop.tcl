@@ -4,7 +4,6 @@
 exec wish "$0" ${1+"$@"}
 
 #############################################################
-# $Id$
 # Original: W. Wright, 2005/9/28
 #
 #  Generate EAARL batch cropping script for Global Mapper

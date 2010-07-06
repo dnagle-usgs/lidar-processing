@@ -1,5 +1,3 @@
-;   $Id$
-
 function define_struc, type, nwpr, recs
 ;this procedure defines the data structure using the value type
 ;amar nayegandhi 02/23/02

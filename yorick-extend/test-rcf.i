@@ -1,8 +1,4 @@
-
-
 /*
-
-   $Id$
 
    Test Suite for rcf development in "C"
 

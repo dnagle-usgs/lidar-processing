@@ -1,6 +1,3 @@
-# $Id$
-# $Source$
-
 # You'll need both of these:
 #    make.darwin
 #    make.solaris

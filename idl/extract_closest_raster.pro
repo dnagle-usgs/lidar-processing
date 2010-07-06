@@ -1,4 +1,3 @@
-; $Id$
 function extract_closest_raster, data, east, north, maxdist, minpt=minpt, rastdist=rastdist, $
 	retdist=retdist
   ; this procedure extracts the closest raster from the given (east,north) location

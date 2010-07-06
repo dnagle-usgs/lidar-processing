@@ -1,8 +1,5 @@
 #!/usr/bin/perl -w
 
-# $Id$
-# $Source$
-
 # removes the micro seconds from the embedded timestamp in
 # the cir .jpg names
 

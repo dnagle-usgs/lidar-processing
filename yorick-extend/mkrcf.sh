@@ -1,6 +1,3 @@
-#  
-#  $Id$
-#   
 #  This script generates the rcf.c file from rcfbase1.c & rcfbase2.c
 #  It then goes on to produce a new yorick executable called rcf_yorick
 #

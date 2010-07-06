@@ -1,5 +1,3 @@
-$Id$
-
 20051102
   These are utilities for unpacking the CIR and CAM tar files and then
   putting the images into subdirectories that Wayne can use for a website.

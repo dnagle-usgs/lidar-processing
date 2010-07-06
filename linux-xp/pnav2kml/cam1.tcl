@@ -1,5 +1,4 @@
 ####################################################
-# $Id$
 # Original C. W. Wright Sunday, 10/30/2005
 # Code to georef cam1 & CIR  photos in Google Earth
 # using a first order approximation in Platee Carree.

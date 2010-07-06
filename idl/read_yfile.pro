@@ -1,5 +1,3 @@
-;   $Id$
-
 function read_yfile, path, fname_arr=fname_arr, ndim=ndim
 
 ;this procedure reads an EAARL yorick-written binary processing file.

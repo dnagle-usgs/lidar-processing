@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * This file contains the base code to implement the rcf algorithm
  * It is used by the mkrcf.sh script, to generate 4 versiions of 
  * the code below. ie one version each for float, double, long and 

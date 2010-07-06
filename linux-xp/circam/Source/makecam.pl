@@ -1,8 +1,5 @@
 #!/usr/bin/perl -w
 
-# $Id$
-# $Source$
-
 #  unpacks the cam tarfile and puts it into a new directory
 #  structure that has images grouped into hhmm.
 

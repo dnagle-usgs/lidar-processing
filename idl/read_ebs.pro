@@ -1,5 +1,3 @@
-;   $Id$
-
 function read_ebs, path, fname_arr=fname_arr
 
 ;this procedure reads an EAARL yorick-written binary file containing bottom return statistics.

@@ -3,7 +3,6 @@
 # Magic! Next line executed by /bin/sh -- but ignored if encountered by Tcl \
 exec wish "$0" ${1+"$@"}
 
-# $Id$
 # Original David Nagle 2008-07-22
 
 ##
