@@ -575,13 +575,11 @@
 <ul>
 <li>
   The installer will detect if the <strong
-  class="directory">lidar-processing</strong> directory is configured for CVS
-  access. If it is and if you do not provide a <strong
-  class="variable">cvsuser</strong> setting, then the repository will be left
-  as is. You will need to separately run cvs update if you wish to update it.
-  If you do provide a <strong class="variable">cvsuser</strong> setting, then
-  it will be updated using that user name (even if it's different than the one
-  you had previously used when installing).
+  class="directory">lidar-processing</strong> directory exists and is
+  configured for Mercurial access. If it is, then new revisions (if any) will
+  be pulled from the repository clone in the installer and the directory will
+  be updated. If you have created a local branch, the update will fail; you
+  should resolve any branching issues prior to installing.
 </li>
 <li>
   Your <strong class="directory">share</strong> directory will get updated with
