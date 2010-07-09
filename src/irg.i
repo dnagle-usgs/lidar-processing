@@ -113,7 +113,7 @@ skip=, verbose=) {
    // Compute the length of the return data.
    len = (stop - start) / skip;
 
-   a = array((georef ? XRTRS : RTRS), len + 1);
+   rtrs = array((georef ? XRTRS : RTRS), len + 1);
 
    // Determine if ytk popup status dialogs are used.
    use_ytk = _ytk && len > 10;
@@ -127,25 +127,25 @@ skip=, verbose=) {
       // decode a raster
       rp = decode_raster(get_erast(rn=si));
       // install the raster nbr
-      a(di).raster = si;
-      a(di).soe = rp.offset_time;
+      rtrs(di).raster = si;
+      rtrs(di).soe = rp.offset_time;
       if(usecentroid == 1) {
          for(ii=1; ii< rp.npixels(1); ii++ ) {
             if(use_highelv_echo) {
                if(int((*rp.rx(ii,1))(max)-min((*rp.rx(ii,1))(1),(*rp.rx(ii,1))(0))) < 5) {
                   centroid_values = pcr(rp, ii);
                   if(numberof(centroid_values)) {
-                     a(di).irange(ii) = centroid_values(1);
-                     a(di).intensity(ii) = centroid_values(2);
-                     a(di).fs_rtn_centroid(ii) = centroid_values(4);
+                     rtrs(di).irange(ii) = centroid_values(1);
+                     rtrs(di).intensity(ii) = centroid_values(2);
+                     rtrs(di).fs_rtn_centroid(ii) = centroid_values(4);
                   }
                }
             } else {
                centroid_values = pcr(rp, ii);
                if(numberof(centroid_values)) {
-                  a(di).irange(ii) = centroid_values(1);
-                  a(di).intensity(ii) = centroid_values(2);
-                  a(di).fs_rtn_centroid(ii) = centroid_values(4);
+                  rtrs(di).irange(ii) = centroid_values(1);
+                  rtrs(di).intensity(ii) = centroid_values(2);
+                  rtrs(di).fs_rtn_centroid(ii) = centroid_values(4);
                }
             }
          }
@@ -153,14 +153,14 @@ skip=, verbose=) {
          //  This area is for the Leading-edge-tracker stuff
          for(ii=1; ii < rp.npixels(1); ii++) {
             centroid_values = let(rp, ii);
-            a(di).irange(ii) = centroid_values(1);
-            a(di).intensity(ii) = centroid_values(2);
+            rtrs(di).irange(ii) = centroid_values(1);
+            rtrs(di).intensity(ii) = centroid_values(2);
          }
       } else {
          // This section processes basic irange
-         a(di).irange = rp.irange;
+         rtrs(di).irange = rp.irange;
       }
-      a(di).sa = rp.sa;
+      rtrs(di).sa = rp.sa;
       if((di % update_freq) == 0) {
          if(use_ytk)
             tkcmd, swrite(format="set progress %d", di*100/len);
@@ -169,11 +169,11 @@ skip=, verbose=) {
       }
    }
    if(georef) {
-      atime = a.soe - soe_day_start;
-      a.rroll = interp(tans.roll*DEG2RAD, tans.somd, atime);
-      a.rpitch = interp(tans.pitch*DEG2RAD, tans.somd, atime);
-      a.alt = interp(pnav.alt, pnav.sod, atime);
+      atime = rtrs.soe - soe_day_start;
+      rtrs.rroll = interp(tans.roll*DEG2RAD, tans.somd, atime);
+      rtrs.rpitch = interp(tans.pitch*DEG2RAD, tans.somd, atime);
+      rtrs.alt = interp(pnav.alt, pnav.sod, atime);
    }
 
-   return a;
+   return rtrs;
 }
