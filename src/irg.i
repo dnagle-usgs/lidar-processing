@@ -123,29 +123,30 @@ skip=, verbose=) {
 
    if(verbose)
       write, format="skip: %d\n", skip;
-   for(di=1, si=start; si<=stop; di++, si+=skip) {
+
+   for(i = 1, rn = start; rn <= stop; i++, rn += skip) {
       // decode a raster
-      rp = decode_raster(get_erast(rn=si));
+      rp = decode_raster(get_erast(rn=rn));
       // install the raster nbr
-      rtrs(di).raster = si;
-      rtrs(di).soe = rp.offset_time;
+      rtrs(i).raster = rn;
+      rtrs(i).soe = rp.offset_time;
       if(usecentroid == 1) {
          for(ii=1; ii< rp.npixels(1); ii++ ) {
             if(use_highelv_echo) {
                if(int((*rp.rx(ii,1))(max)-min((*rp.rx(ii,1))(1),(*rp.rx(ii,1))(0))) < 5) {
                   centroid_values = pcr(rp, ii);
                   if(numberof(centroid_values)) {
-                     rtrs(di).irange(ii) = centroid_values(1);
-                     rtrs(di).intensity(ii) = centroid_values(2);
-                     rtrs(di).fs_rtn_centroid(ii) = centroid_values(4);
+                     rtrs(i).irange(ii) = centroid_values(1);
+                     rtrs(i).intensity(ii) = centroid_values(2);
+                     rtrs(i).fs_rtn_centroid(ii) = centroid_values(4);
                   }
                }
             } else {
                centroid_values = pcr(rp, ii);
                if(numberof(centroid_values)) {
-                  rtrs(di).irange(ii) = centroid_values(1);
-                  rtrs(di).intensity(ii) = centroid_values(2);
-                  rtrs(di).fs_rtn_centroid(ii) = centroid_values(4);
+                  rtrs(i).irange(ii) = centroid_values(1);
+                  rtrs(i).intensity(ii) = centroid_values(2);
+                  rtrs(i).fs_rtn_centroid(ii) = centroid_values(4);
                }
             }
          }
@@ -153,19 +154,19 @@ skip=, verbose=) {
          //  This area is for the Leading-edge-tracker stuff
          for(ii=1; ii < rp.npixels(1); ii++) {
             centroid_values = let(rp, ii);
-            rtrs(di).irange(ii) = centroid_values(1);
-            rtrs(di).intensity(ii) = centroid_values(2);
+            rtrs(i).irange(ii) = centroid_values(1);
+            rtrs(i).intensity(ii) = centroid_values(2);
          }
       } else {
          // This section processes basic irange
-         rtrs(di).irange = rp.irange;
+         rtrs(i).irange = rp.irange;
       }
-      rtrs(di).sa = rp.sa;
-      if((di % update_freq) == 0) {
+      rtrs(i).sa = rp.sa;
+      if((i % update_freq) == 0) {
          if(use_ytk)
-            tkcmd, swrite(format="set progress %d", di*100/len);
+            tkcmd, swrite(format="set progress %d", i*100/len);
          else if(verbose)
-            write, format="  %d/%d     \r", di, len;
+            write, format="  %d/%d     \r", i, len;
       }
    }
    if(georef) {
