@@ -121,6 +121,7 @@
   <ul>
   <li><a href="#need_devel">Missing development packages</a></li>
   <li><a href="#disable_rlwrap">Problems with rlwrap</a></li>
+  <li><a href="#distclean">Modified configuration</a></li>
   </ul>
 </li>
 <li><a href="#upgrade_package">Upgrading ALPS</a>
@@ -609,6 +610,44 @@
 <p>
   The above will set <strong class="variable">rlwrapsrc</strong> to a null
   value, effectively disabling it.
+</p>
+
+<h2 id="distclean">Modified configuration</h2>
+
+<p>
+  If you try to repeat an installation after making changes to your system (for
+  example, after installing <a href="#need_devel">missing development
+  packages</a>), then you may find that the installation continues to fail even
+  if it shouldn't be. This happens because the first installation attempt left
+  configuration files that the second install attempted to use; since those
+  configuration files reflected your system prior to the changes, the second
+  attempt still fails. The solution is to clean out those configuration files.
+</p>
+
+<p>
+  The first way to clean configuration files is to run the built-in cleaning
+  method:
+</p>
+
+<pre class="code">
+<span class="command">make</span> distclean
+</pre>
+
+<p>
+  The distclean method removes most of the configuration files, but sometimes
+  doesn't work perfectly. After using it, try to install again. If it fails
+  again, then you can use the second way to clean: remove the install directory
+  and extract a new copy. For example:
+</p>
+
+<pre class="code">
+<span class="command">rm</span> -rf <span class="directory">alpsinstall.<span class="replaceable">2010-03-28</span></span>
+<span class="command">tar xjf</span> <span class="file">alpsinstall.<span class="replaceable">2010-03-28</span>.tar.bz2</span>
+</pre>
+
+<p>
+  If the install continues to fail, then unfortunately that means the problem
+  lies elsewhere.
 </p>
 
 <h1 id="upgrade_package">Upgrading ALPS</h1>
