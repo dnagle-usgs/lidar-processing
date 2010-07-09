@@ -361,8 +361,7 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
      for a selected region of flightlines.
      amar nayegandhi 09/18/02
   */
-  extern edb, soe_day_start, tans, pnav, type, utm, fs_all, rn_arr_idx, rn_arr;
-  fs_all = [];
+  extern edb, soe_day_start, tans, pnav, type, utm, rn_arr_idx, rn_arr;
   rn_arr =[];
    if(is_void(ops_conf))
       error, "ops_conf is not set";
