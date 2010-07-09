@@ -229,7 +229,11 @@ func interp_angles(ang, i, ip, rad=) {
          degrees.
 */
    default, rad, 0;
-   
+
+   // Eliminates errors for scalars and simplifies handling of multi-dim arrays
+   dims = dimsof(ip);
+   ip = ip(*);
+
    angp = array(double, numberof(ip));
 
    // Trigonometric functions are expensive. Rather than converting ALL of
@@ -252,7 +256,7 @@ func interp_angles(ang, i, ip, rad=) {
    
    if(!rad) angp *= RAD2DEG;
 
-   return angp;
+   return dims(1) ? reform(angp, dims) : angp(1);
 }
 
 func slope2degrees(slope, xdif) {
