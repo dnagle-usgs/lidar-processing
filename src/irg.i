@@ -51,20 +51,46 @@ struct XRTRS {
 
 func irg(start, stop, inc=, delta=, georef=, usecentroid=, use_highelv_echo=,
 skip=, verbose=) {
-/* DOCUMENT irg(b, e, georef=)
-   Returns an array of irange values from record b to record e.  "e" can be
-   left out and it will default to 1.  Don't include e if you supply inc=.
+/* DOCUMENT irg(start, stop, inc=, delta=, georef=, usecentroid=,
+   use_highelv_echo=, skip=, verbose=)
 
-   inc=     NN      Returns "inc" records beginning with b.
-   delta=   NN      Generate records from b-delta to b+delta.
-   georef=  <null>  Return RTRS records like normal.
-            1       Return XRTRS records.
-   usecentroid=  1 Set to determine centroid range using
-      all 3 waveforms to correct for range walk.
-   use_highelv_echo =    Set to 1 to exclude  the waveforms that tripped above
-      the range gate and its echo caused a peak in the positive direction
-      higher than the bias.
-   Returns an array of RTRS structures, or an array of XRTRS.
+   Returns an array of irange values for the specified records, from START to
+   STOP.
+
+   Parameters:
+      start: First record to analyze.
+      stop: Last record to analyze. Optional; defaults to START+1.
+
+   Options that alter record selection:
+      inc= Specifies how many records to analyze after START. This ignores
+         STOP and DELTA=, if either are specified. For example:
+            inc=1    Equivalent to STOP=START+1
+            inc=20   Equivalent to STOP=START+20
+      delta= Specifies how many records to analyze on either side of START.
+         This changes the meaning of "START" as provided by the user. This
+         ignores STOP if provided. For
+         example:
+            delta=5  Equivalent to STOP=START+5, START=START-5
+      skip= Specifies a subsampling of the records to use.
+            skip=1   Use every record (default)
+            skip=2   Use every 2nd record
+            skip=15  Use every 15th record
+
+   Option that specifies return type:
+      georef= Specifies whether normal or georefectified output is desired.
+            georef=0    Return result uses struct RTRS (default)
+            georef=1    Return result uses struct XRTRS
+
+   Options that alter range algorithm:
+      usecentroid= Allows centroid range to be determined using all three
+         waveforms to correct for range walk.
+            usecentroid=0     Disable (default)
+            usecentroid=1     Enable
+      use_highelv_echo= Excludes records whose waveforms tripped above the
+         range gate and whose echo caused a peak in the positive direction
+         higher than the bias.
+            use_highelv_echo=0   Disable (default)
+            use_highelv_echo=1   Enable
 */
    extern ops_conf;
    ops_conf_validate, ops_conf;
