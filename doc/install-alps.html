@@ -269,7 +269,7 @@
   values that you specify. This can occur in conjunction with other styles; for
   example, this file will always start with "alpsinstall" but the date in the
   name may vary: <strong class="file">alpsinstall.<span
-  class="replaceable">2010-03-28</span>.tar</strong>.
+  class="replaceable">20100328</span>.tar</strong>.
 </li>
 </ul>
 
@@ -280,7 +280,7 @@
 
 <pre class="code">
 <span class="command">echo</span> This is an example of a code block.
-<span class="command">tar</span> xvf <span class="file">alpsinstall.<span class="replaceable">2010-03-28</span>.tar</span>
+<span class="command">tar</span> xvf <span class="file">alpsinstall.<span class="replaceable">20100328</span>.tar</span>
 </pre>
 
 <p>
@@ -317,7 +317,7 @@
   class="replaceable">~/</span>eaarl/lidar-processing/maps</strong>? The ALPS
   installer provides all of the maps that are available from from lidar.net
   (you can find them inside the installer at <strong class="directory"><span
-  class="replaceable">alpsinstall.2010-03-28/</span>share/maps</strong> if you
+  class="replaceable">alpsinstall.20100328/</span>share/maps</strong> if you
   want to compare). If you added any custom maps not included with ALPS that
   you'd like to keep, then you'll have to make a copy of them. After installing
   ALPS, you can then place those copies back in <strong class="directory"><span
@@ -390,23 +390,23 @@
   already has everything you'll need assembled together in one place. The
   installer package is distributed as a tarball, with a name like <strong
   class="file">alpsinstall.<span
-  class="replaceable">2010-03-28</span>.tar.bz2</strong>. (The date in the file
+  class="replaceable">20100328</span>.tar.bz2</strong>. (The date in the file
   name indicates when the installer package was assembled. Newer is better.)
   Once you have the ALPS installer package, you will need to unwrap it:
 </p>
 
 <pre class="code">
-<span class="command">tar</span> xjf <span class="file">alpsinstall.<span class="replaceable">2010-03-28</span>.tar.bz2</span>
+<span class="command">tar</span> xjf <span class="file">alpsinstall.<span class="replaceable">20100328</span>.tar.bz2</span>
 </pre>
 
 <p>
   This will create the directory <strong class="directory">alpsinstall.<span
-  class="replaceable">2010-03-28</span></strong>. You can now enter this
+  class="replaceable">20100328</span></strong>. You can now enter this
   directory and install ALPS:
 </p>
 
 <pre class="code">
-<span class="command">cd</span> <span class="directory">alpsinstall.<span class="replaceeable">2010-03-28</span>/</span>
+<span class="command">cd</span> <span class="directory">alpsinstall.<span class="replaceeable">20100328</span>/</span>
 <span class="command">make</span> install
 </pre>
 
@@ -483,7 +483,7 @@
 </p>
 
 <pre class="code">
-<span class="command">cd</span> <span class="directory">alpsinstall.<span class="replaceable">2010-03-28/</span></span>
+<span class="command">cd</span> <span class="directory">alpsinstall.<span class="replaceable">20100328/</span></span>
 <span class="command">gunzip</span> <span class="file"><span class="replaceable">~/</span>ActiveTcl8.5.<span class="replaceable">8.1.291945</span>-linux-<span class="replaceable">ix86-threaded</span>.tar.gz</span>
 <span class="command">tar</span> xvf <span class="directory"><span class="replaceable">~/</span>ActiveTcl8.5.<span class="replaceable">8.1.291945</span>-linux-<span class="replaceable">ix86-threaded</span>.tar</span>
 </pre>
@@ -641,8 +641,8 @@
 </p>
 
 <pre class="code">
-<span class="command">rm</span> -rf <span class="directory">alpsinstall.<span class="replaceable">2010-03-28</span></span>
-<span class="command">tar xjf</span> <span class="file">alpsinstall.<span class="replaceable">2010-03-28</span>.tar.bz2</span>
+<span class="command">rm</span> -rf <span class="directory">alpsinstall.<span class="replaceable">20100328</span></span>
+<span class="command">tar xjf</span> <span class="file">alpsinstall.<span class="replaceable">20100328</span>.tar.bz2</span>
 </pre>
 
 <p>
@@ -725,10 +725,10 @@
 <p>
   The normal, full installation of ALPS is provided in a package named like
   <strong class="file">alpsinstall.<span
-  class="replaceable">2010-03-28</span>.tar.bz2</strong>. However, a second
+  class="replaceable">20100328</span>.tar.bz2</strong>. However, a second
   installation package is also available named like <strong
   class="file">alpsinstall.<span
-  class="replaceable">2010-03-28</span>-nodata.tar.bz2</strong>. The "-nodata"
+  class="replaceable">20100328</span>-nodata.tar.bz2</strong>. The "-nodata"
   version contains everything that the normal version does except for the data
   files under the <strong class="directory">share</strong> directory. This
   reduces the size of the package from over 200MB to under 20MB.
@@ -851,16 +851,16 @@
   Create a copy of <strong class="directory">installer</strong> that you can
   then build up into an actual installer.
 <pre class="code">
-<span class="command">cp</span> -r <span class="directory"><span class="replaceable">~/</span>eaarl/lidar-processing/installer</span> <span class="directory"><span class="replaceable">~/</span>alpsinstall.<span class="replaceable">2010-03-28</span></span>
+<span class="command">cp</span> -r <span class="directory"><span class="replaceable">~/</span>eaarl/lidar-processing/installer</span> <span class="directory"><span class="replaceable">~/</span>alpsinstall.<span class="replaceable">20100328</span></span>
 </pre>
 </li>
 <li>
   Clone the repository at <strong class="directory"><span
   class="replaceable">~/</span>alpsinstall.<span
-  class="replaceable">2010-03-28</span>/lidar-processing</strong>. Edit the
+  class="replaceable">20100328</span>/lidar-processing</strong>. Edit the
   file <strong class="file"><span
   class="replaceable">~/</span>alpsinstall.<span
-  class="replaceable">2010-03-28</span>/lidar-processing/.hg/hgrc</strong> to
+  class="replaceable">20100328</span>/lidar-processing/.hg/hgrc</strong> to
   change the default path to <strong
   class="directory">ssh://lidar.net//repos/lidar-processing</strong>.
 </li>
@@ -878,7 +878,7 @@
 <li>
   Package everything together:
 <pre class="code">
-<span class="command">tar</span> cjvf <span class="file">alpsinstall.<span class="replaceable">2010-03-28</span>.tar.bz2</span> <span class="directory">alpsinstall.<span class="replaceable">2010-03-28</span></span>
+<span class="command">tar</span> cjvf <span class="file">alpsinstall.<span class="replaceable">20100328</span>.tar.bz2</span> <span class="directory">alpsinstall.<span class="replaceable">20100328</span></span>
 </pre>
 </li>
 <li>
