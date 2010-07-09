@@ -110,13 +110,18 @@ skip=, verbose=) {
    default, usecentroid, 0;
    default, use_highelv_echo, 0;
 
-   // Compute the length of the return data.
-   len = (stop - start) / skip;
+   // Calculate desired rasters
+   rasters = indgen(start:stop:skip);
 
-   rtrs = array((georef ? XRTRS : RTRS), len + 1);
+   // Calculate length of output array
+   len = numberof(rasters);
+
+   // Initialize output
+   rtrs = array((georef ? XRTRS : RTRS), len);
+   rtrs.raster = unref(rasters);
 
    // Determine if ytk popup status dialogs are used.
-   use_ytk = _ytk && len > 10;
+   use_ytk = _ytk && len >= 10;
 
    // Scale update_freq based on how many rasters are processing.
    update_freq = [10,20,50](digitize(len, [200,400]));
@@ -124,11 +129,10 @@ skip=, verbose=) {
    if(verbose)
       write, format="skip: %d\n", skip;
 
-   for(i = 1, rn = start; rn <= stop; i++, rn += skip) {
+   for(i = 1; i <= len; i++) {
       // decode a raster
-      rp = decode_raster(get_erast(rn=rn));
-      // install the raster nbr
-      rtrs(i).raster = rn;
+      rp = decode_raster(get_erast(rn=rtrs(i).raster));
+
       rtrs(i).soe = rp.offset_time;
       if(usecentroid == 1) {
          for(ii=1; ii< rp.npixels(1); ii++ ) {
