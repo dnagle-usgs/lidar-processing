@@ -1,3 +1,17 @@
+/******************************************************************************\
+* This file was created in the attic on 2010-07-13. It contains obsolete       *
+* functions from the file surface_topo.i that are no longer in use. The        *
+* functions are:                                                               *
+*     winsel                                                                   *
+*     make_pnav_from_gga                                                       *
+* Each function has comments below detailing the alternative functionality     *
+* that is currently available that supercedes it.                              *
+\******************************************************************************/
+
+/*
+   The functionality of 'winsel' is provided and expanded upon by
+   'sel_data_rgn' from data_rgn_selector.i.
+*/
 
 func winsel(junk) {
 /* DOCUMENT q = winsel()
@@ -20,6 +34,12 @@ func winsel(junk) {
  write,format="%d records found\n", numberof(q);
 return q
 }
+
+/*
+   The functionality of 'make_pnav_from_gga' can be reproduced by using
+   'struct_cast' in eaarl_data.i:
+      pnav = struct_cast(gga, PNAV)
+*/
 
 func make_pnav_from_gga( gga ) {
 /* make_pnav_from_gga( gga )
