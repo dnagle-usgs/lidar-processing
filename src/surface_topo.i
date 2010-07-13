@@ -18,8 +18,8 @@ require, "scanflatmirror2_direct_vector.i";
 
 
 /*
-   Structure used to hold laser return vector information. All the 
- values are in air-centimeters. 
+   Structure used to hold laser return vector information. All the
+ values are in air-centimeters.
 
 */
 
@@ -48,7 +48,7 @@ return q
 
 func make_pnav_from_gga( gga ) {
 /* make_pnav_from_gga( gga )
- 
+
   Builds and returns a pnav structure from a gga structure.
 
 */
@@ -63,7 +63,7 @@ func make_pnav_from_gga( gga ) {
 func first_surface(nil, start=, stop=, center=, delta=, north=, usecentroid=, use_highelv_echo=, quiet=, verbose=) {
 /* DOCUMENT first_surface(start=, stop=, center=, delta=, north= )
 
-   Project the EAARL threshold trigger point to the surface. 
+   Project the EAARL threshold trigger point to the surface.
 
  Inputs:
    start=   Raster number to start with.
@@ -71,19 +71,19 @@ func first_surface(nil, start=, stop=, center=, delta=, north=, usecentroid=, us
   center=   Center raster when doing before and after.
    delta=   NUmber of rasters to process before and after.
    north=       Ignore heading, and assume north.
-usecentroid=   Set to 1 to use the centroid of the waveform.  
+usecentroid=   Set to 1 to use the centroid of the waveform.
 use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gate.
-   
+
  This returns an array of type "R" which
  will contain the xyz of the mirror "track point" and the xyz of the
  "first surface threshold trigger point" or "fsttp."  The "fsttp" is
  derived here by using the "irange" (integer range) value from the raw
  data.  While the fsttp is certainly not the best range measurement, it
- does establish highly acurate vector information which will greatly 
+ does establish highly acurate vector information which will greatly
  simplify additional subaerial waveform processing.
 
   0 = center, delta
-  1 = start,  stop 
+  1 = start,  stop
   2 = start,  delta
 
    verbose= By default, progress/info output is enabled (verbose=1). Set
@@ -130,7 +130,7 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
       return merge_pointers(parts);
    }
 
-   a = irg(start, stop, usecentroid=usecentroid, use_highelv_echo=use_highelv_echo);      
+   a = irg(start, stop, usecentroid=usecentroid, use_highelv_echo=use_highelv_echo);
    irg_a = a;
 
    atime = a.soe - soe_day_start;
@@ -220,7 +220,7 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
       bcast + cyaw(,-),
       bcast + lasang(,-),
       bcast + mirang(,-), scan_angles, mag);
-  
+
    rrr.meast  =     m(..,1) * 100.0;
    rrr.mnorth =     m(..,2) * 100.0;
    rrr.melevation=  m(..,3) * 100.0;
@@ -247,7 +247,7 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
 func pz(i, j, step=, xpause=) {
 extern a, rrr
  rrr = array(R, j-i + 1);
- if ( is_void(step) ) 
+ if ( is_void(step) )
    step = 1;
   dx = dy = dz = cyaw = gz = gx = gy = lasang = yaw = array(0.0, 120);
   mirang = array(-22.5, 120);
@@ -255,7 +255,7 @@ extern a, rrr
 
 
 animate,1
-for ( ; i< j; i += step) { 
+for ( ; i< j; i += step) {
    gx = easting(, i);
    gy = northing(, i);
    yaw = -heading(, i);
@@ -264,7 +264,7 @@ for ( ; i< j; i += step) {
    gz = palt(, i);
   m = scanflatmirror2_direct_vector(yaw,pitch(,i),roll(,i)+ ops_conf.roll_bias,
          gx,gy,gz,dx,dy,dz,cyaw, lasang, mirang, scan_ang, srm)
-  
+
   rrr(i).east   =  m(,1);
   rrr(i).north  =  m(,2);
   rrr(i).elevation =  m(,3);
@@ -275,24 +275,24 @@ for ( ; i< j; i += step) {
   q = where( m(,3) > -35.0 )
   qq = where( m(q,3 ) < -30.0 );
   ar = m(q(qq),3) (avg);
-  if ( (i % 10 ) == 0 ) { 
-    write,format="%5d %8.1f %6.2f %6.2f %6.2f %6.2f\n", 
+  if ( (i % 10 ) == 0 ) {
+    write,format="%5d %8.1f %6.2f %6.2f %6.2f %6.2f\n",
          i, (a(i).soe(60))%86400, ar, palt(60,i), roll(60,i), pitch(60,i);
   }
-  
-  fma; plmk, m(,3), m(,1), color="black", msize=.15, marker=1; 
+
+  fma; plmk, m(,3), m(,1), color="black", msize=.15, marker=1;
 ///////////  plg, m(q(qq),3), m(q(qq),1), marks=0, color="red";
 
-// If there is more than one bottom trigger, draw a line between 
+// If there is more than one bottom trigger, draw a line between
 // the points.
   q = where( m(,3) > -50.0 )
   qq = where( m(q,3 ) < -37.0 );
 /********
-  if ( numberof(qq) > 1 ) 
+  if ( numberof(qq) > 1 )
      plg, m(q(qq),3), m(q(qq),1), marks=0, color="blue";
 *******/
 
-  if ( !is_void(xpause) ) 
+  if ( !is_void(xpause) )
    pause( xpause);
 }
 animate,0
@@ -302,29 +302,29 @@ animate,0
 
 func pe(i,j, step=) {
 extern a
-animate,1;  
- if ( is_void(step) ) 
+animate,1;
+ if ( is_void(step) )
    step = 1;
-//    plmk, a(2,,i) * NS2MAIR, a.sa,msize=.1, marker=1; 
-for ( ; i< j; i += step){ 
-   fma; 
+//    plmk, a(2,,i) * NS2MAIR, a.sa,msize=.1, marker=1;
+for ( ; i< j; i += step){
+   fma;
    croll = (SAD2 * a(i).sa ) + roll(, i) + ops_conf.roll_bias;
-   rad_roll = roll * DEG2RAD; 
+   rad_roll = roll * DEG2RAD;
    cr = cos( rad_roll);
    srm = a(i).irange*NS2MAIR;
    hm = srm * cr * cos(pitch(,i)*DEG2RAD); //   - cr*0.11*srm(64);
    el = palt(, i) - hm;
-   if ( hm(60) > 0 ) 
+   if ( hm(60) > 0 )
    nn = 60;
    else
    nn = 61
-    
-   
+
+
    xmeters = hm(nn) * tan( rad_roll );
    qq = where( xmeters > 200 );
    plmk,  el(64), xmeters(64),
         msize=.4, marker=1, color="blue";
-   plmk, el , xmeters,msize=.1, marker=1, color="red"; 
+   plmk, el , xmeters,msize=.1, marker=1, color="red";
    if ( (i % 100) == 0  )  {
       write,format="%d %6.1f %6.1f %4.2f\n", i, roll(60), tpr(60, i), palt(60, i);
    }
@@ -343,14 +343,14 @@ func open_seg_process_status_bar {
    -variable progress \
    -height 30 \
    -width 400", 100 );
-    tkcmd,"pack .seg.pb; update;" 
+    tkcmd,"pack .seg.pb; update;"
     tkcmd,"center_win .seg;"
   }
 }
 
 func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
   /* DOCUMENT make_fs(latutm=, q=, ext_bad_att=)
-     This function prepares data to write/plot first surface topography 
+     This function prepares data to write/plot first surface topography
      for a selected region of flightlines.
      amar nayegandhi 09/18/02
   */
@@ -370,7 +370,7 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
    }
    write, "TANS information LOADED. \n";
    if (!is_array(pnav)) {
-     write, "Precision Navigation (PNAV) data not loaded."+ 
+     write, "Precision Navigation (PNAV) data not loaded."+
             "Running function rbpnav() ... \n";
      pnav = rbpnav(fn=pnav_filename);
    }
@@ -401,7 +401,7 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
       if ((rn_arr(1,i) != 0)) {
        fcount ++;
        write, format="Processing segment %d of %d for first_surface...\n",i,no_t;
-       rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=usecentroid); 
+       rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=usecentroid);
        //a=[];
        new_end = end + numberof(rrr);
        fs_all(end+1:new_end) = rrr;
@@ -411,11 +411,11 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
     }
     fs_all = end ? fs_all(:end) : [];
 
-    if ( _ytk ) 
+    if ( _ytk )
       tkcmd,"destroy .seg";
 
-   /* if ext_bad_att is set, find all points having elevation = 70% of ht 
-       of airplane 
+   /* if ext_bad_att is set, find all points having elevation = 70% of ht
+       of airplane
    */
    if (is_array(fs_all)) {
     if (ext_bad_att) {
@@ -448,7 +448,7 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
    ba_fs.east = bdeast;
    ba_fs.north = bdnorth;
 
-      } 
+      }
     }
 
 
@@ -461,7 +461,7 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
        pba = float(ba_count)*100.0/tot_count;
        write, format = "%5.2f%% of the total records had "+
                        "inconclusive first surface return ranges \n",pba;
-    } else 
+    } else
    write, "No first surface returns found"
 
     no_append = 0;
@@ -469,7 +469,7 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
 // Compute a list of indices into each flight segment from rn_arr.
 // This information can be used to selectively plot each selected segment
 // along, or only a specfic group of selected segments.
-    rn_arr_idx = (rn_arr(dif,)(,cum)+1)(*);  
+    rn_arr_idx = (rn_arr(dif,)(,cum)+1)(*);
 
     write,"fs_all contains the data, and rn_arr_idx contains a list of indices"
     str=swrite(format="send_rnarr_to_l1pro %d %d %d\n", rn_arr(1,), rn_arr(2,), rn_arr_idx(1:-1))
