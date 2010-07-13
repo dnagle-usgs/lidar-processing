@@ -1,3 +1,8 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-07-13. Its contents are obsolete    *
+* and have not been in use for several years.                                  *
+\******************************************************************************/
+
 require, "eaarl_constants.i"
 require, "edb_access.i"
 require, "rbpnav.i"
