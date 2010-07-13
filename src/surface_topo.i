@@ -1,13 +1,6 @@
-/* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab: */
+// vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 require, "l1pro.i";
 require, "scanflatmirror2_direct_vector.i";
-
-/*
-   W. Wright
-
-   7/7/02 WW
-	Added north= to first_surface. 
-*/
 
 /*
    the a array has an array of RTRS structures;
