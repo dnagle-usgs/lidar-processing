@@ -66,14 +66,14 @@ func first_surface(nil, start=, stop=, center=, delta=, north=, usecentroid=, us
    Project the EAARL threshold trigger point to the surface. 
 
  Inputs:
-   start=	Raster number to start with.
-    stop=	Ending raster number.
-  center=	Center raster when doing before and after.
-   delta=	NUmber of rasters to process before and after.
+   start=   Raster number to start with.
+    stop=   Ending raster number.
+  center=   Center raster when doing before and after.
+   delta=   NUmber of rasters to process before and after.
    north=       Ignore heading, and assume north.
-usecentroid=	Set to 1 to use the centroid of the waveform.  
+usecentroid=   Set to 1 to use the centroid of the waveform.  
 use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gate.
-	
+   
  This returns an array of type "R" which
  will contain the xyz of the mirror "track point" and the xyz of the
  "first surface threshold trigger point" or "fsttp."  The "fsttp" is
@@ -130,7 +130,7 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
       return merge_pointers(parts);
    }
 
-   a = irg(start, stop, usecentroid=usecentroid, use_highelv_echo=use_highelv_echo);		
+   a = irg(start, stop, usecentroid=usecentroid, use_highelv_echo=use_highelv_echo);      
    irg_a = a;
 
    atime = a.soe - soe_day_start;
@@ -172,8 +172,8 @@ use_highelv_echo= Set to 1 to exclude waveforms that tripped above the range gat
 
    // mirror offsets
    dx = array(ops_conf.x_offset, 120); // perpendicular to fuselage
-   dy = array(ops_conf.y_offset, 120);	// along fuselage
-   dz = array(ops_conf.z_offset, 120);	// vertical
+   dy = array(ops_conf.y_offset, 120); // along fuselage
+   dz = array(ops_conf.z_offset, 120); // vertical
 
    // Constants for mirror angle and laser angle
    mirang = array(-22.5, 120);
@@ -293,7 +293,7 @@ for ( ; i< j; i += step) {
 *******/
 
   if ( !is_void(xpause) ) 
-	pause( xpause);
+   pause( xpause);
 }
 animate,0
 
@@ -315,9 +315,9 @@ for ( ; i< j; i += step){
    hm = srm * cr * cos(pitch(,i)*DEG2RAD); //   - cr*0.11*srm(64);
    el = palt(, i) - hm;
    if ( hm(60) > 0 ) 
-	nn = 60;
+   nn = 60;
    else
-	nn = 61
+   nn = 61
     
    
    xmeters = hm(nn) * tan( rad_roll );
@@ -336,13 +336,13 @@ func open_seg_process_status_bar {
   if ( _ytk  ) {
     tkcmd,"destroy .seg; toplevel .seg; set progress 0;wm title .seg \"Flight Segment Progress Bar\""
     tkcmd,swrite(format="ProgressBar .seg.pb \
-	-fg cyan \
-	-troughcolor blue \
-	-relief raised \
-	-maximum %d \
-	-variable progress \
-	-height 30 \
-	-width 400", 100 );
+   -fg cyan \
+   -troughcolor blue \
+   -relief raised \
+   -maximum %d \
+   -variable progress \
+   -height 30 \
+   -width 400", 100 );
     tkcmd,"pack .seg.pb; update;" 
     tkcmd,"center_win .seg;"
   }
@@ -421,32 +421,32 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
     if (ext_bad_att) {
         write, "Extracting and writing false first points";
         /* compare rrr.elevation within 20m  of rrr.melevation */
-	elv_thresh = fs_all.melevation-2000;
+   elv_thresh = fs_all.melevation-2000;
         ba_indx = where(fs_all.elevation > elv_thresh);
-	ba_count += numberof(ba_indx);
-	ba_fs = fs_all;
-	deast = fs_all.east;
-   	if ((is_array(ba_indx))) {
-	  deast(ba_indx) = 0;
+   ba_count += numberof(ba_indx);
+   ba_fs = fs_all;
+   deast = fs_all.east;
+      if ((is_array(ba_indx))) {
+     deast(ba_indx) = 0;
         }
-	dnorth = fs_all.north;
-   	if ((is_array(ba_indx))) {
-	 dnorth(ba_indx) = 0;
-	}
-	fs_all.east = deast;
-	fs_all.north = dnorth;
+   dnorth = fs_all.north;
+      if ((is_array(ba_indx))) {
+    dnorth(ba_indx) = 0;
+   }
+   fs_all.east = deast;
+   fs_all.north = dnorth;
 
-	ba_indx_r = where(ba_fs.elevation < elv_thresh);
-	bdeast = ba_fs.east;
-   	if ((is_array(ba_indx_r))) {
-	 bdeast(ba_indx_r) = 0;
- 	}
-	bdnorth = ba_fs.north;
-   	if ((is_array(ba_indx_r))) {
-	 bdnorth(ba_indx_r) = 0;
-	}
-	ba_fs.east = bdeast;
-	ba_fs.north = bdnorth;
+   ba_indx_r = where(ba_fs.elevation < elv_thresh);
+   bdeast = ba_fs.east;
+      if ((is_array(ba_indx_r))) {
+    bdeast(ba_indx_r) = 0;
+   }
+   bdnorth = ba_fs.north;
+      if ((is_array(ba_indx_r))) {
+    bdnorth(ba_indx_r) = 0;
+   }
+   ba_fs.east = bdeast;
+   ba_fs.north = bdnorth;
 
       } 
     }
@@ -462,14 +462,14 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
        write, format = "%5.2f%% of the total records had "+
                        "inconclusive first surface return ranges \n",pba;
     } else 
-	write, "No first surface returns found"
+   write, "No first surface returns found"
 
     no_append = 0;
 
 // Compute a list of indices into each flight segment from rn_arr.
 // This information can be used to selectively plot each selected segment
 // along, or only a specfic group of selected segments.
-    rn_arr_idx = (rn_arr(dif,)(,cum)+1)(*);	
+    rn_arr_idx = (rn_arr(dif,)(,cum)+1)(*);  
 
     write,"fs_all contains the data, and rn_arr_idx contains a list of indices"
     str=swrite(format="send_rnarr_to_l1pro %d %d %d\n", rn_arr(1,), rn_arr(2,), rn_arr_idx(1:-1))
