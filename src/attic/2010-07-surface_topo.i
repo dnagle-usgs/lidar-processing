@@ -4,8 +4,9 @@
 * functions are:                                                               *
 *     winsel                                                                   *
 *     make_pnav_from_gga                                                       *
+*     pz                                                                       *
 * Each function has comments below detailing the alternative functionality     *
-* that is currently available that supercedes it.                              *
+* that is currently available that supercedes it, as applicable.               *
 \******************************************************************************/
 
 /*
@@ -53,4 +54,63 @@ func make_pnav_from_gga( gga ) {
    pnav.lon = gga.lon;
    pnav.alt = gga.alt;
    return pnav;
+}
+
+/*
+   Function 'pz' is undocumented and is not in use in any place within our code.
+*/
+
+func pz(i, j, step=, xpause=) {
+extern a, rrr
+ rrr = array(R, j-i + 1);
+ if ( is_void(step) )
+   step = 1;
+  dx = dy = dz = cyaw = gz = gx = gy = lasang = yaw = array(0.0, 120);
+  mirang = array(-22.5, 120);
+  lasang = array(45.0, 120);
+
+
+animate,1
+for ( ; i< j; i += step) {
+   gx = easting(, i);
+   gy = northing(, i);
+   yaw = -heading(, i);
+   scan_ang = SAD * a(i).sa + ops_conf.scan_bias;
+   srm = (a(i).irange*NS2MAIR - ops_conf.range_biasM);
+   gz = palt(, i);
+  m = scanflatmirror2_direct_vector(yaw,pitch(,i),roll(,i)+ ops_conf.roll_bias,
+         gx,gy,gz,dx,dy,dz,cyaw, lasang, mirang, scan_ang, srm)
+
+  rrr(i).east   =  m(,1);
+  rrr(i).north  =  m(,2);
+  rrr(i).elevation =  m(,3);
+
+
+// Select returns based on range.  This will only work for water
+// targets.
+  q = where( m(,3) > -35.0 )
+  qq = where( m(q,3 ) < -30.0 );
+  ar = m(q(qq),3) (avg);
+  if ( (i % 10 ) == 0 ) {
+    write,format="%5d %8.1f %6.2f %6.2f %6.2f %6.2f\n",
+         i, (a(i).soe(60))%86400, ar, palt(60,i), roll(60,i), pitch(60,i);
+  }
+
+  fma; plmk, m(,3), m(,1), color="black", msize=.15, marker=1;
+///////////  plg, m(q(qq),3), m(q(qq),1), marks=0, color="red";
+
+// If there is more than one bottom trigger, draw a line between
+// the points.
+  q = where( m(,3) > -50.0 )
+  qq = where( m(q,3 ) < -37.0 );
+/********
+  if ( numberof(qq) > 1 )
+     plg, m(q(qq),3), m(q(qq),1), marks=0, color="blue";
+*******/
+
+  if ( !is_void(xpause) )
+   pause( xpause);
+}
+animate,0
+
 }
