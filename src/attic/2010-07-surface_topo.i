@@ -5,6 +5,7 @@
 *     winsel                                                                   *
 *     make_pnav_from_gga                                                       *
 *     pz                                                                       *
+*     pe                                                                       *
 * Each function has comments below detailing the alternative functionality     *
 * that is currently available that supercedes it, as applicable.               *
 \******************************************************************************/
@@ -114,3 +115,40 @@ for ( ; i< j; i += step) {
 animate,0
 
 }
+
+/*
+   Function 'pe' is undocumented and is not in use in any place within our code.
+*/
+
+func pe(i,j, step=) {
+extern a
+animate,1;
+ if ( is_void(step) )
+   step = 1;
+//    plmk, a(2,,i) * NS2MAIR, a.sa,msize=.1, marker=1;
+for ( ; i< j; i += step){
+   fma;
+   croll = (SAD2 * a(i).sa ) + roll(, i) + ops_conf.roll_bias;
+   rad_roll = roll * DEG2RAD;
+   cr = cos( rad_roll);
+   srm = a(i).irange*NS2MAIR;
+   hm = srm * cr * cos(pitch(,i)*DEG2RAD); //   - cr*0.11*srm(64);
+   el = palt(, i) - hm;
+   if ( hm(60) > 0 )
+   nn = 60;
+   else
+   nn = 61
+
+
+   xmeters = hm(nn) * tan( rad_roll );
+   qq = where( xmeters > 200 );
+   plmk,  el(64), xmeters(64),
+        msize=.4, marker=1, color="blue";
+   plmk, el , xmeters,msize=.1, marker=1, color="red";
+   if ( (i % 100) == 0  )  {
+      write,format="%d %6.1f %6.1f %4.2f\n", i, roll(60), tpr(60, i), palt(60, i);
+   }
+ }; animate,0
+
+}
+
