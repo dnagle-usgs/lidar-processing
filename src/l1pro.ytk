@@ -127,6 +127,7 @@ if {![winfo exists .l1wid]} {
   wm protocol .l1wid WM_DELETE_WINDOW {
     wm withdraw .l1wid
   }
+  wm resizable .l1wid 1 0
 
   wm title .l1wid "Process EAARL Data"
   LabelFrame .l1wid.filter -relief groove -borderwidth 7 -text "FILTER:"
