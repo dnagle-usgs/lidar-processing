@@ -1,3 +1,4 @@
+# vim: set tabstop=3 softtabstop=3 shiftwidth=3 shiftround autoindent expandtab:
 
 package provide l1pro::ascii 1.0
 package require struct::list
