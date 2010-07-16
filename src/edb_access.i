@@ -286,27 +286,26 @@ func get_tld_rasts(fnum=, fname=) {
 }
 
 func get_erast(rn=, sod=, hms=, timeonly=) {
-/* DOCUMENT get_erast( rn=, sod=, hms=, timeonly= )
+/* DOCUMENT get_erast(rn=, sod=, hms=, timeonly=)
 
-   Returns the requested raster from the database.  The request can
-specify the raster either by raster number, sod (seconds-of-day), or
-hms ( hours-minutes-seconds). Hms values are integers such as
-123456 which is 12 hours, 34 minutes, and 56 seconds.
+   Returns the requested raster from the database. The request can specify the
+   raster either by raster number, sod (seconds-of-day), or hms
+   (hours-minutes-seconds). Hms values are integers such as 123456 which is 12
+   hours, 34 minutes, and 56 seconds.
 
-   The returned data will be an array of characters which will vary in
-length depending on the complexity of the laser waveforms therein.
+   If a scalar raster (or sod or hms) is provided, then the return data will be
+   an array of characters which will vary in length depending on the complexity
+   of the laser waveforms therein. If an array of rasters (or sods or hms) is
+   provided, then the return data will be an array of pointers to arrays of
+   character.
 
-If the timeonly variable is set to anything, get_erast will only
-read and return the first 16 bytes of the raster.  This is used
-to improve speed when updating the seconds field in the data.  Setting
-timeonly will also cause get_erast to open the waveform files for
-random access read/write so the time can be updated.  See time_fix.i
-for more information on this.
+   If the timeonly variable is set to anything, get_erast will only read and
+   return the first 16 bytes of the raster.  This is used to improve speed when
+   updating the seconds field in the data.  Setting timeonly will also cause
+   get_erast to open the waveform files for random access read/write so the
+   time can be updated.  See time_fix.i for more information on this.
 
-See also:
-   drast decode_raster
-   ytime.i:  soe2sod sod2hms hms2sod
-
+   SEE ALSO: drast decode_raster soe2sod sod2hms hms2sod
 */
    extern data_path, edb, edb_files, edb_filename, _eidf, soe_day_start;
    default, timeonly, 0;
