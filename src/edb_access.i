@@ -311,17 +311,26 @@ See also:
    extern data_path, edb, edb_files, edb_filename, _eidf, soe_day_start;
    default, timeonly, 0;
 
+   scalar = 0;
    if(is_void(rn)) {
       if(is_void(sod) && !is_void(hms))
          sod = hms2sod(hms);
-      if(!is_void(sod))
-         rn = where(edb.seconds == sod);
-      if(numberof(rn))
-         rn = rn(1);
+      if(!is_void(sod)) {
+         rn = set_intersection(edb.seconds, sod, idx=1);
+         scalar = is_scalar(sod);
+      }
    }
 
    if(is_void(rn))
       error, "Unable to determine rn. Please specify rn=, sod=, or hms=.";
+   scalar = scalar | is_scalar(rn);
+
+   if(!is_scalar(rn)) {
+      result = array(pointer, dimsof(rn));
+      for(i = 1; i <= numberof(rn); i++)
+         result(i) = &get_erast(rn=rn(i));
+      return result;
+   }
 
    fidx = edb(rn).file_number;
 
