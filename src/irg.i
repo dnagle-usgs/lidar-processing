@@ -135,28 +135,21 @@ skip=, verbose=) {
 
       rtrs(i).soe = rp.offset_time;
       if(usecentroid == 1) {
-         for(ii=1; ii< rp.npixels(1); ii++ ) {
+         for(ii = 1; ii < rp.npixels(1); ii++ ) {
             if(use_highelv_echo) {
-               if(int((*rp.rx(ii,1))(max)-min((*rp.rx(ii,1))(1),(*rp.rx(ii,1))(0))) < 5) {
-                  centroid_values = pcr(rp, ii);
-                  if(numberof(centroid_values)) {
-                     rtrs(i).irange(ii) = centroid_values(1);
-                     rtrs(i).intensity(ii) = centroid_values(2);
-                     rtrs(i).fs_rtn_centroid(ii) = centroid_values(4);
-                  }
-               }
-            } else {
-               centroid_values = pcr(rp, ii);
-               if(numberof(centroid_values)) {
-                  rtrs(i).irange(ii) = centroid_values(1);
-                  rtrs(i).intensity(ii) = centroid_values(2);
-                  rtrs(i).fs_rtn_centroid(ii) = centroid_values(4);
-               }
+               if(int((*rp.rx(ii,1))(max)-min((*rp.rx(ii,1))(1),(*rp.rx(ii,1))(0))) >= 5)
+                  continue;
+            }
+            centroid_values = pcr(rp, ii);
+            if(numberof(centroid_values)) {
+               rtrs(i).irange(ii) = centroid_values(1);
+               rtrs(i).intensity(ii) = centroid_values(2);
+               rtrs(i).fs_rtn_centroid(ii) = centroid_values(4);
             }
          }
       } else if(usecentroid == 2) {
          //  This area is for the Leading-edge-tracker stuff
-         for(ii=1; ii < rp.npixels(1); ii++) {
+         for(ii = 1; ii < rp.npixels(1); ii++) {
             centroid_values = let(rp, ii);
             rtrs(i).irange(ii) = centroid_values(1);
             rtrs(i).intensity(ii) = centroid_values(2);
