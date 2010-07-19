@@ -54,6 +54,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "colorbar.i";
    require, "compare_transects.i";
    require, "comparison_fns.i";
+   require, "cs.i";
    require, "data_rgn_selector.i";
    require, "data_segments.i";
    require, "dataexplore.i";
