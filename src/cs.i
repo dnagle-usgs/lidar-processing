@@ -157,7 +157,7 @@ func cs_nad83(nil, zone=) {
 func cs_navd88(nil, zone=, geoid=) {
 /* DOCUMENT cs = cs_navd88(zone=, geoid=)
    Returns a coordinate system hash that specifies NAD-83 for the horizontal
-   datum and NAVD-88 for the verticla datum. If zone is provided, the
+   datum and NAVD-88 for the vertical datum. If zone is provided, the
    coordinate system will be UTM using that zone. If zone is omitted (or
    specified as zero), then the coordinate system will be geographic. If geoid=
    is not specified, it will default to "09".
