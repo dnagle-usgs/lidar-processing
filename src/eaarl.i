@@ -23,10 +23,6 @@ if(is_void(__eaarl_includes_included__)) {
    require, "yeti_regex.i";
    require, "yeti_yhdf.i";
    require, "ytk.i";
-   /*
-   The Yeti package is available from:
-   http://www-obs.univ-lyon1.fr/~thiebaut/yeti.html
-   */
 
    // Replace built-in median with Yeti's median which is much faster
    if(is_void(ymedian))
