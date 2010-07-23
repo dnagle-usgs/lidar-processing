@@ -35,9 +35,13 @@ if(is_void(__eaarl_includes_included__)) {
    median = quick_median;
 
    // ALPS requires
-   require, "eaarl_constants.i"; // Must come first; some other files need it
+   // These must come first, since some other functions make use of them at the
+   // top level
+   require, "eaarl_constants.i";
    require, "eaarl_structs.i";
    require, "eaarl_data.i";
+   require, "general.i";
+
    require, "asciixyz.i";
    require, "batch_process.i";
    require, "bathy_filter.i";
@@ -51,7 +55,6 @@ if(is_void(__eaarl_includes_included__)) {
    require, "eaarl_mounting_bias.i";
    require, "edb_access.i";
    require, "edf.i";
-   require, "general.i";
    require, "geometry.i";
    require, "gridr.i";
    require, "groundtruth.i";
