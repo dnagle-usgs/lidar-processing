@@ -2,62 +2,54 @@
 
 local coordinate_system;
 /* DOCUMENT coordinate_system
-   Coordinate systems are defined using the following parameters. Where
-   possible, these parameters are vaguely based on PROJ.4.
 
-      proj= Specifies the projection. Required. Valid values:
-            proj="longlat"
-            proj="utm"
-      ellps= Specifies the ellipsoid. Required. Valid values:
-            ellps="WGS84"
-            ellps="GRS80"
-      datum= Specifies the horizontal datum. Required. Valid values:
-            datum="WGS84"
-            datum="NAD83"
-      vert= Specifies the vertical datum. If not applicable, omit. Valid
-         values:
-            vert="NAVD88"
-      geoid= Specifies the geoid. Required when vert="NAVD88". If not
-         applicable, omit. Examples:
-            geoid="96"
-            geoid="03"
-            geoid="09"
-      zone= Specifies the UTM zone. If not applicable, omit. While the other
-         values are all strings, this must be an integer. Examples:
-            zone=8
-            zone=17
-
-   There are two ways of representing a coordinate system with these
-   parameters: as a string or as a Yeti hash. The string form is typically used
-   for most purposes; the Yeti hash form is mostly used within functions to
-   make it easier to access the information.
-
-   In the Yeti hash form, the parameter names above are all keys, as shown.
-
-   In the string form, each parameter name is prefixed with a plus sign. The
-   value is appended to it after an equal size. For example:
+   Coordinate systems are defined using a space-separated list of parameter
+   settings, in a style similar to that used in PROJ.4. An example of a
+   coordinate system string:
       +proj=utm +ellps=WGS84 +datum=WGS84 +zone=17
-   This notation is similar to that used in PROJ.4.
 
-   Follows are some examples. For each example, both the string and hash forms
-   are illustrated.
+   Follows are the parameters available and their permissible values:
+
+      +proj= Specifies the projection. Required. Valid values:
+            +proj=longlat
+            +proj=utm
+      +ellps= Specifies the ellipsoid. Required. Valid values:
+            +ellps=WGS84
+            +ellps=GRS80
+      +datum= Specifies the horizontal datum. Required. Valid values:
+            +datum=WGS84
+            +datum=NAD83
+      +vert= Specifies the vertical datum. If not applicable, omit. Valid
+         values:
+            +vert=NAVD88
+      +geoid= Specifies the geoid. Required when vert=NAVD88. If not
+         applicable, omit. Examples:
+            +geoid=96
+            +geoid=03
+            +geoid=09
+      +zone= Specifies the UTM zone. If not applicable, omit. While the other
+         values are all strings, this must be an integer. Examples:
+            +zone=8
+            +zone=17
+
+   Follows are more examples.
 
       WGS-84 using geographic coordinates:
-         "+proj=longlat +ellps=WGS84 +datum=WGS84"
-         h_new(proj="longlat", ellps="WGS84", datum="WGS84")
+         +proj=longlat +ellps=WGS84 +datum=WGS84
 
       WGS-84 using UTM zone 18:
-         "+proj=utm +ellps=WGS84 +datum=WGS84 +zone=18"
-         h_new(proj="utm", ellps="WGS84", datum="WGS84", zone=18)
+         +proj=utm +ellps=WGS84 +datum=WGS84 +zone=18
 
       NAD-83 using UTM zone 15:
-         "+proj=utm +ellps=GRS80 +datum=NAD83 +zone=15"
-         h_new(proj="utm", ellps="GRS80", datum="NAD83", zone=15)
+         +proj=utm +ellps=GRS80 +datum=NAD83 +zone=15
       
       NAVD-88 using UTM zone 17, geoid 2009:
-         "+proj=utm +ellps=GRS80 +datum=NAD83 +zone=17 +vert=NAVD88 +geoid=09"
-         h_new(proj="utm", ellps="GRS80", datum="NAD83", zone=17,
-            vert="NAVD88", geoid="09")
+         +proj=utm +ellps=GRS80 +datum=NAD83 +zone=17 +vert=NAVD88 +geoid=09
+
+   When passing such a string in Yorick, surround it by a single pair of
+   quotes, as such:
+
+      mycs = "+proj=longlat +ellps=WGS84 +datum=WGS84";
 
    SEE ALSO: cs_string cs_wgs84 cs_nad83 cs_navd88 cs2cs
 */
@@ -68,7 +60,7 @@ func cs_string(cs, output=) {
    a hash representation.
 
    Parameter:
-      cs: Must be a coordinate system definition, either as a hash or a string.
+      cs: Must be a coordinate system definition, either as a string or a hash.
 
    Option:
       output= Specifies what kind of output to return.
@@ -110,9 +102,10 @@ func cs_string(cs, output=) {
 
 func cs_wgs84(nil, zone=) {
 /* DOCUMENT cs = cs_wgs84(zone=)
-   Returns a coordinate system hash that specifies WGS-84. If zone is provided,
-   the coordinate system will be UTM using that zone. If zone is omitted (or
-   specified as zero), then the coordinate system will be geographic.
+   Returns a coordinate system string that specifies WGS-84. If zone is
+   provided, the coordinate system will be UTM using that zone. If zone is
+   omitted (or specified as zero), then the coordinate system will be
+   geographic.
 
    Examples:
       Coordinate system for WGS-84, geographic:
@@ -133,9 +126,10 @@ func cs_wgs84(nil, zone=) {
 
 func cs_nad83(nil, zone=) {
 /* DOCUMENT cs = cs_nad83(zone=)
-   Returns a coordinate system hash that specifies NAD-83. If zone is provided,
-   the coordinate system will be UTM using that zone. If zone is omitted (or
-   specified as zero), then the coordinate system will be geographic.
+   Returns a coordinate system string that specifies NAD-83. If zone is
+   provided, the coordinate system will be UTM using that zone. If zone is
+   omitted (or specified as zero), then the coordinate system will be
+   geographic.
 
    Examples:
       Coordinate system for NAD-83, geographic:
@@ -156,7 +150,7 @@ func cs_nad83(nil, zone=) {
 
 func cs_navd88(nil, zone=, geoid=) {
 /* DOCUMENT cs = cs_navd88(zone=, geoid=)
-   Returns a coordinate system hash that specifies NAD-83 for the horizontal
+   Returns a coordinate system string that specifies NAD-83 for the horizontal
    datum and NAVD-88 for the vertical datum. If zone is provided, the
    coordinate system will be UTM using that zone. If zone is omitted (or
    specified as zero), then the coordinate system will be geographic. If geoid=
