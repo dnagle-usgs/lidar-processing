@@ -51,13 +51,14 @@ local coordinate_system;
 
       mycs = "+proj=longlat +ellps=WGS84 +datum=WGS84";
 
-   SEE ALSO: cs_string cs_wgs84 cs_nad83 cs_navd88 cs2cs
+   SEE ALSO: cs_parse cs_wgs84 cs_nad83 cs_navd88 cs2cs
 */
 
-func cs_string(cs, output=) {
-/* DOCUMENT cs_string(cs, output=)
-   Converts a coordinate system definition between a string representation and
-   a hash representation.
+func cs_parse(cs, output=) {
+/* DOCUMENT cs_parse(cs, output=)
+   Given a coordinate system string, this will return a parsed hash with the
+   parameter values defined therein. Given a hash with coordinate system
+   parameters, this will return the corresponding coordinate system string.
 
    Parameter:
       cs: Must be a coordinate system definition, either as a string or a hash.
@@ -113,7 +114,7 @@ func cs_wgs84(nil, zone=) {
       Coordinate system for WGS-84, UTM zone 18:
          cs = cs_wgs84(zone=18)
 
-   SEE ALSO: coordinate_system cs_string cs_nad83 cs_navd88 cs2cs
+   SEE ALSO: coordinate_system cs_parse cs_nad83 cs_navd88 cs2cs
 */
    default, zone, 0;
    cs = h_new(ellps="WGS84", datum="WGS84");
@@ -121,7 +122,7 @@ func cs_wgs84(nil, zone=) {
       h_set, cs, proj="utm", zone=zone;
    else
       h_set, cs, proj="longlat";
-   return cs_string(cs);
+   return cs_parse(cs);
 }
 
 func cs_nad83(nil, zone=) {
@@ -137,7 +138,7 @@ func cs_nad83(nil, zone=) {
       Coordinate system for NAD-83, UTM zone 18:
          cs = cs_nad83(zone=18)
 
-   SEE ALSO: coordinate_system cs_string cs_wgs84 cs_navd88 cs2cs
+   SEE ALSO: coordinate_system cs_parse cs_wgs84 cs_navd88 cs2cs
 */
    default, zone, 0;
    cs = h_new(ellps="GRS80", datum="NAD83");
@@ -145,7 +146,7 @@ func cs_nad83(nil, zone=) {
       h_set, cs, proj="utm", zone=zone;
    else
       h_set, cs, proj="longlat";
-   return cs_string(cs);
+   return cs_parse(cs);
 }
 
 func cs_navd88(nil, zone=, geoid=) {
@@ -162,7 +163,7 @@ func cs_navd88(nil, zone=, geoid=) {
       Coordinate system for NAVD-88, geoid 09, UTM zone 18:
          cs = cs_navd88(zone=18, geoid="09")
 
-   SEE ALSO: coordinate_system cs_string cs_wgs84 cs_nad83 cs2cs
+   SEE ALSO: coordinate_system cs_parse cs_wgs84 cs_nad83 cs2cs
 */
    default, zone, 0;
    default, geoid, "09";
@@ -171,7 +172,7 @@ func cs_navd88(nil, zone=, geoid=) {
       h_set, cs, proj="utm", zone=zone;
    else
       h_set, cs, proj="longlat";
-   return cs_string(cs);
+   return cs_parse(cs);
 }
 
 func cs2cs(src, dst, &X, &Y, &Z) {
@@ -192,7 +193,7 @@ func cs2cs(src, dst, &X, &Y, &Z) {
    place. If used as a function, will return the result as [x,y,z] and will
    leave the input unchanged.
 
-   SEE ALSO: coordinate_system cs_string cs_wgs84 cs_nad83 cs_navd88
+   SEE ALSO: coordinate_system cs_parse cs_wgs84 cs_nad83 cs_navd88
 */
    local x, y, z, lat, lon, north, east;
    if(is_void(Y)) {
@@ -204,8 +205,8 @@ func cs2cs(src, dst, &X, &Y, &Z) {
    }
 
    // Convert hash pointers to Yeti pointers for ease of use
-   src = cs_string(src, output="hash");
-   dst = cs_string(dst, output="hash");
+   src = cs_parse(src, output="hash");
+   dst = cs_parse(dst, output="hash");
 
    // Check for short-circuit: src == dst
    if(
