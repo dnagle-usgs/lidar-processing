@@ -892,3 +892,31 @@ func bytes2text(bytes) {
    else
       return reform(result, dims);
 }
+
+func z_compress(data) {
+/* DOCUMENT z_compress(data)
+   Wrapper around z_deflate/z_flush that compresses data in a single call.
+   Returns the compressed data.
+   SEE ALSO: z_flush z_deflate z_inflate z_decompress
+*/
+// Original David B. Nagle 2010-07-23
+   return z_flush(z_deflate(), data);
+}
+
+func z_decompress(data, type) {
+/* DOCUMENT z_decompress(data, type)
+   Wrapper around z_inflate/z_flush that decompresses data in a single call.
+   Returns the decompressed data. The type parameter is optional; if provided,
+   it should be the data type to decompress as (by default, char).
+   SEE ALSO: z_flush z_deflate z_inflate z_compress
+*/
+// Original David B. Nagle 2010-07-23
+   default, type, char;
+   buffer = z_inflate();
+   flag = z_inflate(buffer, data);
+   if(flag == 0 || flag == -1) {
+      return z_flush(buffer, type);
+   } else {
+      error, swrite(format="could not decompress, error code %d", flag);
+   }
+}
