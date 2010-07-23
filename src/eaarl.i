@@ -67,8 +67,8 @@ if(is_void(__eaarl_includes_included__)) {
    require, "mouse.i";
    require, "nad832navd88.i";
    require, "nav.i";
-   require, "pip.i";
    require, "parse.i";
+   require, "pip.i";
    require, "qq24k.i";
    require, "rbgga.i";
    require, "rbpnav.i";
@@ -79,8 +79,8 @@ if(is_void(__eaarl_includes_included__)) {
    require, "rlw.i";
    require, "sel_file.i";
    require, "set.i";
-   require, "strutil.i";
    require, "sf.i";
+   require, "strutil.i";
    require, "transect.i";
    require, "wgs842nad83.i";
    require, "ytime.i";
