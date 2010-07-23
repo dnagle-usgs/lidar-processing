@@ -14,11 +14,15 @@ if(is_void(__eaarl_includes_included__)) {
       ymerge = merge;
 
    // Built-in and plugin includes
+   require, "copy_plot.i";
    require, "jpeg.i";
+   require, "lmfit.i";
    require, "msort.i";
    require, "pnm.i";
+   require, "rdcols.i";
    require, "string.i";
    require, "unsigned.i";
+   require, "utils.i";
    require, "yeti.i";
    require, "yeti_regex.i";
    require, "yeti_yhdf.i";
@@ -81,24 +85,6 @@ if(is_void(__eaarl_includes_included__)) {
    require, "wgs842nad83.i";
    require, "ytime.i";
    require, "zone.i";
-
-   // Check for yutils -- warn user if not present
-   // Yutils will put things in autoload, so we check for a few functions...
-   if(is_func(replot_all) && is_func(lmfit)) {
-      require, "copy_plot.i";
-      require, "lmfit.i";
-      require, "rdcols.i";
-      require, "utils.i";
-   } else {
-      write, "***********************************************************";
-      write, "* WARNING: Your system does not appear to have the yutils *";
-      write, "* package installed! Please download it from lidar.net at *";
-      write, "* /mnt/alps/eaarl/tarfiles and install into your Yorick.  *";
-      write, "* ALPS will continue, but you might encounter errors if   *";
-      write, "* you attempt to use yutils-derived functionality.        *";
-      write, "***********************************************************";
-      // yutils is hosted on the yorick SourceForge CVS as well: yorick.sf.net
-   }
 
    // Must come last, because it depends on some of the above (it actually runs
    // something instead of only defining functions)
