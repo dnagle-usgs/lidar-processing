@@ -18,6 +18,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "msort.i";
    require, "pnm.i";
    require, "string.i";
+   require, "unsigned.i";
    require, "yeti.i";
    require, "yeti_regex.i";
    require, "yeti_yhdf.i";
@@ -31,10 +32,6 @@ if(is_void(__eaarl_includes_included__)) {
    if(is_void(ymedian))
       ymedian = median;
    median = quick_median;
-
-   // This file is from the Yorick CVS but hasn't been released in an official
-   // version yet. Until it is, it's being kept in our CVS as well.
-   require, "unsigned.i";
 
    // ALPS requires
    require, "eaarl_constants.i"; // Must come first; some other files need it
