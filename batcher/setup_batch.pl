@@ -126,6 +126,7 @@ printf("NCPU = %d\n", $NCPU ) if ( $verbose );
 
 system("mkdir -p $LOG_PATH");
 
+system("mkdir -p $ETC") if ( ! -e $ETC );
 if ( -e $MASTER_file ) {
   $MSTR = `cat $MASTER_file`;
   if ( ! $initd ) {
@@ -182,12 +183,12 @@ activity              "activity in %n (%t) [%w:%s]~"
 # bell:         this message *includes* a "beep" with '~'.
 bell                  "bell     in %n (%t) [%w:%s]~"
 
-chdir /opt/eaarl/lidar-processing/src
+chdir /opt/eaarl/lidar-processing
 HERE_TARGET
 
 $SERVER = <<HERE_TARGET;
 setenv SERVER localhost
-screen -t SERVER  ./batcher.tcl server
+screen -t SERVER  ./batcher/batcher.tcl server
 logfile $LOG_PATH/foreman.log
 log on
 HERE_TARGET
@@ -197,7 +198,7 @@ setenv SERVER $MSTR
 HERE_TARGET
 
 $BOT = <<HERE_TARGET;
-# screen -t client1 ./batcher.tcl \$SERVER
+# screen -t client1 ./batcher/batcher.tcl \$SERVER
 screen -t tcsh
 next
 multiuser on
@@ -222,7 +223,7 @@ if ( $update ) {
   print OUT $TOP;
   print OUT $SERVER;
   for ( $i=1; $i <= $NCPU; ++$i ) {
-    printf OUT ("screen -t sub%d ./batcher.tcl \$SERVER\n", $i);
+    printf OUT ("screen -t sub%d ./batcher/batcher.tcl \$SERVER\n", $i);
     printf OUT ("logfile $LOG_PATH/worker-%d.log\n", $i);
     printf OUT ("log on\n");
   }
@@ -242,7 +243,7 @@ if ( $update ) {
   print OUT $TOP;
   print OUT $SLAVE;
   for ( $i=1; $i <= $NCPU; ++$i ) {
-    printf OUT ("screen -t sub%d ./batcher.tcl \$SERVER\n", $i);
+    printf OUT ("screen -t sub%d ./batcher/batcher.tcl \$SERVER\n", $i);
     printf OUT ("logfile $LOG_PATH/worker-%d.log\n", $i);
     printf OUT ("log on\n");
   }
