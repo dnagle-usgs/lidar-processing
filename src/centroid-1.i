@@ -1,6 +1,31 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 require, "eaarl.i";
 
+func wf_centroid(wf) {
+/* DOCUMENT centroid = wf_centroid(wf)
+   Returns the centroid of a waveform.
+
+   Parameter:
+      wf: Should be a vector of power values, with 0 representing "no power".
+
+   Returns:
+      Floating-point position in wf where the centroid is located.
+*/
+   count = numberof(wf);
+
+   sum_power = wf(sum);
+
+   weighted_idx = double(wf) * indgen(count);
+   weighted_sum = weighted_idx(sum);
+
+   if(sum_power)
+      centroid = weighted_sum / sum_power;
+   else
+      centroid = 1e1000;
+
+   return centroid;
+}
+
 func pcr(rast, n) {
 /* DOCUMENT pcr(rast,n)
 
