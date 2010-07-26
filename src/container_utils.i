@@ -471,6 +471,24 @@ func hash2obj(hash) {
    return obj;
 }
 
+func obj2ptr(obj) {
+/* DOCUMENT ptrhash = obj2ptr(obj)
+   Converts a Yorick object into a pointer hash.
+
+   SEE ALSO: ptr2hash ptr2obj obj2hash
+*/
+   return hash2ptr(obj2hash(obj));
+}
+
+func ptr2obj(ptr) {
+/* DOCUMENT obj = ptr2obj(ptrhash)
+   Converts a pointer hash into a Yorick object.
+
+   SEE ALSO: ptr2hash obj2ptr hash2obj
+*/
+   return hash2obj(ptr2hash(ptr));
+}
+
 func array_allocate(&data, request) {
 /* DOCUMENT array_allocate, data, request
    Used to smartly allocate space in the data array.
