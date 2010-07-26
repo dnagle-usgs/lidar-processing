@@ -156,74 +156,59 @@ func cent(wf) {
 }
 
 func let(rast, n) {
-/* DOCUMENT pcr(rast,n)
+/* DOCUMENT let(rast, n)
+   Leading-edge-tracker algorithm.
 
-  This function computes the centroid of the transmit and return pulses
- and then computes a range value corrected for signal level range walk.  It
- returns a 4 element array consisting of:
- 1) the controid corrected range,
- 2) the peak return power in digital counts,
- 3) the cooresponding irange value,
- 4) the number of pixels saturated in the transmit waveform.
+   NOTE: This function may be broken. Please examine code and ensure it is
+   doing what you expect it to be doing prior to use.
 
- This function determines which return waveform is not saturated or off-scale,
-and then calls the "cent" function to compute the actual pulse centroid.
+   Parameters:
+      rast: A raster array of type RAST.
+      n: The pixel within the raster to use.
 
- **Important** The centroid calculations do not include corrections for
-range_bias.
+   Return result is array(double, 4):
+      result(1) = Centroid corrected range
+      result(2) = Return's peak power, in digital counts
+      result(3) = Uncorrected irange value
+      result(4) = Number of saturated pixels in transmit waveform
 
- Inputs:
-   rast  A raster array of type RAST.
-   n  The pixel within the raster to apply centroid corrections to.
-
- Returns:
-   array(float,4) where:
-     1   Centroid corrected irange value
-     2  Return peak power.
-     3  Uncorrected irange value.
-     4  Number of transmit pulse digitizer bins which are offscale.
-
- Element 2, return power, contains values ranging from 0 to 900 digital
-counts. The values are contained in three discrete ranges and each range
-cooresponds to a return channel.  Values from 0-255 are from channel 1,
-from 300-555 are from channel 2, and from 600-855 are from channel 3.
-Channel 1 is the most sensitive and channel 3 the least.
-
-
-See also: RAST, cent
+   SEE ALSO: RAST, cent
 */
+   // Return values
+   rv = array(float,4);
 
+   // find out how many waveform points are in the primary (most sensitive)
+   // receiver channel.
+   np = numberof(*rast.rx(n,1));
 
- rv = array(float,4);         // return values
-  np = numberof ( *rast.rx(n,1) );      // find out how many waveform points
-                                        // are in the primary (most sensitive)
-                                        // receiver channel.
+   // give up if there are not at least two points
+   if(np < 2)
+      return;
 
-  if ( np < 2 )                         // give up if there are not at
-     return;                            // least two points.
+   // use no more than 12
+   if(np > 12)
+      np = 12;
 
-  if ( np > 12 ) np = 12;               // use no more than 12
+   if(numberof(*rast.tx(n)) > 0)
+      rv(4) = (*rast.tx(n) == 0)(sum);
 
-  if ( numberof( *rast.tx(n) ) > 0 )
-   rv(4) = (*rast.tx(n) == 0 )(sum);
-  ctx = cent( *rast.tx(n) ) ;              // compute transmit centroid
+   // compute transmit centroid
+   ctx = cent(*rast.tx(n));
 
+   cv = array(double, 3);
+   a = -float(*rast.rx(n,1));
+   if(numberof(a) >= 8) {
+      bias = a(1:5)(avg);
+      a -= bias;
+      cv(1) = 0.0;
+      // cv(3) = ((1000.0 * (a(7)*7 + a(8)*8)) / float(a(7) + a(8))) - 6500.;
+      // cv(1) = cv(3)/140.;
+      cv(3) = a(7) + a(8);
+   }
 
-     cv = [ 0.0, 0.0, 0.0 ];
-     a = -float(*rast.rx(n,1));
-     if ( numberof ( a ) >= 8 ) {
-       bias = a(1:5)(avg);
-       a  -= bias;
-       cv(1) = 0.0;
-//       cv(3) = ((1000.0*(a(7)*7 + a(8)*8 ))  / float(a(7) + a(8) ) ) - 6500.0;
-//       cv(1) = cv(3) / 140.0  +  -0.0;
-         cv(3) = a(7) + a(8);
-     }
-
-
-// Now compute the actual range value in NS
-  rv(1) = float(rast.irange(n)) - ctx(1) + cv(1)   ;
-  rv(2) = cv(3);
-  rv(3) = rast.irange(n);
- return rv;
+   // Now compute the actual range value in NS
+   rv(1) = float(rast.irange(n)) - ctx(1) + cv(1);
+   rv(2) = cv(3);
+   rv(3) = rast.irange(n);
+   return rv;
 }
