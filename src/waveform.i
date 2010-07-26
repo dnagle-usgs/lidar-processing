@@ -105,6 +105,7 @@ func georef_eaarl1_rasts(rasts) {
 
    hdr = h_new(
       horz_scale=0.01, vert_scale=0.01,
+      cs=cs_wgs84(zone=zone),
       source="unknown plane",
       system="EAARL rev 1",
       record_format=0,
