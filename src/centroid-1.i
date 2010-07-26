@@ -114,45 +114,46 @@ See also: RAST, cent
    return rv;
 }
 
+func cent(wf) {
+/* DOCUMENT cent(wf)
+   Compute the centroid of "wf" using the no more than the first 12 points.
+   This function considers the entire pulse and is probably only good for solid
+   first-return targets or bottom pulses.
 
-
-
-// Compute waveform centroid
-func cent( a ) {
-/* DOCUMENT cent(a)
-
-   Compute the centroid of "a" using the no more than the
- first 12 points.  This function considers the entire pulse
- and is probably only good for solid first-return targets or
- bottom pulses.
-
+   Return result is array(double, 3):
+      result(1) = centroid range
+      result(2) = peak range
+      result(3) = peak power
 */
-  n = numberof(a);   // determine number of points in waveform
-  if ( n < 2 )
-   return [ 0,0,0];
-  if ( n > 12 ) n = 12; // if more than 12, only use the first 12
-  r = 1:n;     // set the range we will consider
-   a = -short(a); // flip it over and convert to signed short
-   a -= a(1);     // remove bias using first point of wf
-  mv = a (max);      // find the maximum value
-  mx = a (mxx);      // find the index of the maximum
-  s =  a(r)(sum); // compute the sum of all the samples
-  if ( s != 0.0 ) {
-    c = float(  (a(r) * indgen(r)) (sum) ) / s;
-  } else {
-    c = 10000.0;
-//////     write,"********* centroid-1.i  cent()  Reject: Sum was zero"
-  }
+   n = numberof(a);
+   if(n < 2)
+      return [0., 0., 0.];
 
-//      centroid peak     average
-//        range  range    power
-//  return [ c, mx, (a(r)(avg)) ];
-  return [ c, mx, mv ];
+   // Only use first 12
+   if(n > 12)
+      n = 12;
+
+   // flip it over and convert to signed short
+   a = -short(a);
+   // remove bias using first point of wf
+   a -= a(1);
+
+   // Find maximum value & associated index
+   mv = a(max);
+   mx = a(mxx);
+
+   // compute the sum of all the samples used
+   s = a(1:n)(sum);
+
+   // Avoid divide-by-zero
+   if(s != 0.0) {
+      c = float((a(r) * indgen(r))(sum)) / s;
+   } else {
+      c = 10000.0;
+   }
+
+   return [c, mx, mv];
 }
-
-
-
-
 
 func let(rast, n) {
 /* DOCUMENT pcr(rast,n)
