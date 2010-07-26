@@ -1,6 +1,19 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 require, "eaarl.i";
 
+/*
+   This file is intended to gather various "container" related utility code.
+   For the purpose of this file, a "container" is anything that groups together
+   data. This includes:
+      - arrays
+      - lists
+      - structs
+      - Yeti hashes
+      - pointer hashes
+      - Yorick objects (oxy)
+      - Yorick binary files
+*/
+
 func h_merge(..) {
 /* DOCUMENT h_merge(objA, objB, objC, ...)
    Merges all of its arguments into a single hash. They must all be Yeti hash
