@@ -4,39 +4,30 @@ require, "eaarl.i";
 func pcr(rast, n) {
 /* DOCUMENT pcr(rast,n)
 
-  This function computes the centroid of the transmit and return pulses
- and then computes a range value corrected for signal level range walk.  It
- returns a 4 element array consisting of:
- 1) the controid corrected range,
- 2) the peak return power in digital counts,
- 3) the cooresponding irange value,
- 4) the number of pixels saturated in the transmit waveform.
+   Computes the centroid of the transmit and return pulses, then derives a
+   range value that corrects for signal level range walk. The most sensitive
+   return that is not saturated will be used.
 
- This function determines which return waveform is not saturated or off-scale,
-and then calls the "cent" function to compute the actual pulse centroid.
+   Parameters:
+      rast: A raster array of type RAST.
+      n: The pixel within the raster to use.
 
- **Important** The centroid calculations do not include corrections for
-range_bias.
+   **Important** The centroid calculations do not include corrections for
+   range_bias.
 
- Inputs:
-   rast  A raster array of type RAST.
-   n  The pixel within the raster to apply centroid corrections to.
+   Return result is array(double, 4) where:
+      result(1) = Centroid corrected range
+      result(2) = Return's peak power
+      result(3) = Uncorrected irange value
+      result(4) = Number of saturated pixels in transmit waveform
 
- Returns:
-   array(float,4) where:
-     1   Centroid corrected irange value
-     2  Return peak power.
-     3  Uncorrected irange value.
-     4  Number of transmit pulse digitizer bins which are offscale.
+   Note: result(2), return power, contains values ranging from 0 to 900 digital
+   counts. The values are contained in three discrete ranges and each range
+   cooresponds to a return channel.  Values from 0-255 are from channel 1, from
+   300-555 are from channel 2, and from 600-855 are from channel 3.  Channel 1
+   is the most sensitive and channel 3 the least.
 
- Element 2, return power, contains values ranging from 0 to 900 digital
-counts. The values are contained in three discrete ranges and each range
-cooresponds to a return channel.  Values from 0-255 are from channel 1,
-from 300-555 are from channel 2, and from 600-855 are from channel 3.
-Channel 1 is the most sensitive and channel 3 the least.
-
-
-See also: RAST, cent
+   SEE ALSO: RAST, cent
 */
    extern ops_conf;
    if(n == 0)
