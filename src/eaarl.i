@@ -49,7 +49,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "batch_veg_energy.i";
    require, "bathy.i";
    require, "bathy_filter.i";
-   require, "centroid-1.i";
+   require, "centroid.i";
    require, "change_window_size.i";
    require, "colorbar.i";
    require, "compare_transects.i";
