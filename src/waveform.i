@@ -33,7 +33,7 @@ func georef_eaarl1_rasts(rasts, verbose=) {
    wf.record(1,..) = rasts.rasternbr(-,);
    wf.record(2,..) = indgen(120)(,-);
    wf.soe = rasts.offset_time;
-   wf.tx = rasts.tx;
+   wf.tx = map_pointers(bw_not, rasts.tx);
 
    // Calculate waveform and mirror locations
 
@@ -109,7 +109,7 @@ func georef_eaarl1_rasts(rasts, verbose=) {
    // Expand to hold return waveform, shape properly, then fill in
    wf = array(wf, 4);
    wf = transpose(wf, [1,2]);
-   wf.rx = transpose(rasts.rx, [0,1,2]);
+   wf.rx = transpose(map_pointers(bw_not, rasts.rx), [0,1,2]);
 
    // Update record numbers to differentiate between channels
    wf.record(2,..) |= indgen(4)(-,-,);
