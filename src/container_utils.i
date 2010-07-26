@@ -442,6 +442,35 @@ func hash2pbd(hash, pbd) {
    }
 }
 
+func obj2hash(obj) {
+/* DOCUMENT hash = obj2hash(obj)
+   Converts a Yorick object into a Yeti hash.
+
+   SEE ALSO: hash2obj oxy h_new
+*/
+// Original David Nagle 2010-07-26
+   count = obj(*);
+   hash = h_new();
+   for(i = 1; i <= count; i++)
+      h_set, hash, obj(*,i), obj(i);
+   return hash;
+}
+
+func hash2obj(hash) {
+/* DOCUMENT obj = hash2obj(hash)
+   Converts a Yeti hash into a Yorick object.
+
+   SEE ALSO: obj2hash oxy h_new
+*/
+// Original David Nagle 2010-07-26
+   keys = h_keys(hash);
+   count = numberof(keys);
+   obj = save();
+   for(i = 1; i <= count; i++)
+      save, obj, keys(i), hash(keys(i));
+   return obj;
+}
+
 func array_allocate(&data, request) {
 /* DOCUMENT array_allocate, data, request
    Used to smartly allocate space in the data array.
