@@ -19,11 +19,14 @@ struct ALPS_WAVEFORM {
    pointer *rx;
 }
 
-func georef_eaarl1_rasts(rasts) {
+func georef_eaarl1_rasts(rasts, verbose=) {
    // raw = get_tld_rasts(fname=)
    // decoded = decode_rasters(raw)
    dims = dimsof(rasts);
    rasts = rasts(*);
+
+   if(verbose)
+      write, format="%s", " Interpolating: ";
 
    // Initialize waveforms with raster, pulse, soe, and transmit waveform
    wf = array(ALPS_WAVEFORM, 120, numberof(rasts));
@@ -40,10 +43,16 @@ func georef_eaarl1_rasts(rasts) {
    // Relative timestamps
    somd = wf.soe - soe_day_start;
 
+   if(verbose)
+      write, format="%s", "roll/pitch/yaw... ";
+
    // Aircraft roll, pitch, and yaw (in degrees)
    aR = interp(tans.roll, tans.somd, somd);
    aP = interp(tans.pitch, tans.somd, somd);
    aY = -interp_angles(tans.heading, tans.somd, somd);
+
+   if(verbose)
+      write, format="%s", "easting/northing/altitude...\n";
 
    // Cast PNAV to UTM
    if(is_void(zone)) {
@@ -83,6 +92,8 @@ func georef_eaarl1_rasts(rasts) {
    // Convert to degrees
    ang *= SAD;
 
+   if(verbose)
+      write, "Projecting to the surface...";
    // Georeference
    georef = scanflatmirror2_direct_vector(
       aY, aP, aR, gx, gy, gz, dx, dy, dz,
