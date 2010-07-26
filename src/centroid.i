@@ -135,9 +135,9 @@ func pcr(rast, n) {
    return rv;
 }
 
-func cent(wf) {
-/* DOCUMENT cent(wf)
-   Compute the centroid of "wf" using the no more than the first 12 points.
+func cent(a) {
+/* DOCUMENT cent(a)
+   Compute the centroid of "a" using the no more than the first 12 points.
    This function considers the entire pulse and is probably only good for solid
    first-return targets or bottom pulses.
 
