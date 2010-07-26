@@ -103,7 +103,7 @@ func georef_eaarl1_rasts(rasts) {
    // Update record numbers to differentiate between channels
    wf.record(2,..) |= indgen(4)(-,-,);
 
-   hdr = p_new(
+   hdr = h_new(
       horz_scale=0.01, vert_scale=0.01,
       source="unknown plane",
       system="EAARL rev 1",
@@ -112,5 +112,5 @@ func georef_eaarl1_rasts(rasts) {
       wf_encoding=0
    );
 
-   return wf;
+   return h_new(header=hdr, wf=wf);
 }
