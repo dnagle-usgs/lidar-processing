@@ -450,7 +450,7 @@ func obj2hash(obj) {
    count = obj(*);
    hash = h_new();
    for(i = 1; i <= count; i++)
-      h_set, hash, obj(*,i), obj(i);
+      h_set, hash, obj(*,i), obj(noop(i));
    return hash;
 }
 
