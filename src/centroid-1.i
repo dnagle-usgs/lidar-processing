@@ -19,12 +19,12 @@ and then calls the "cent" function to compute the actual pulse centroid.
 range_bias.
 
  Inputs: 
-   rast	A raster array of type RAST.
-   n	The pixel within the raster to apply centroid corrections to.
+   rast  A raster array of type RAST.
+   n  The pixel within the raster to apply centroid corrections to.
 
  Returns:
    array(float,4) where:
-     1	Centroid corrected irange value
+     1   Centroid corrected irange value
      2  Return peak power.
      3  Uncorrected irange value.
      4  Number of transmit pulse digitizer bins which are offscale.
@@ -41,7 +41,7 @@ See also: RAST, cent
 
  extern ops_conf;
 
- rv = array(float,4);			// return values
+ rv = array(float,4);         // return values
  if ( n == 0 ) return [];
 
 
@@ -55,7 +55,7 @@ See also: RAST, cent
   if ( np > 12 ) np = 12;               // use no more than 12
 
   if ( numberof( *rast.tx(n) ) > 0 )
-	rv(4) = (*rast.tx(n) == 0 )(sum);
+   rv(4) = (*rast.tx(n) == 0 )(sum);
   ctx = cent( *rast.tx(n) ) ;              // compute transmit centroid
 
 
@@ -81,7 +81,7 @@ See also: RAST, cent
   if ( (nsat1 = numberof(where(  ((*rast.rx(n,1))(1:np)) < 5 ))) <= ops_conf.max_sfc_sat ) {
      cv = cent( *rast.rx(n, 1 ) );
 //     if ( nsat1 > 1 ) cv(1) = cv(1) - (nsat1 -1 ) * .1 ;    // See Note 1 above
-     if ( cv(3) < -90 ) {	   // Must be water column only return.  
+     if ( cv(3) < -90 ) {     // Must be water column only return.  
         slope = 0.029625
         x = cv(3)  - 90;
         y = slope * x;
@@ -105,7 +105,7 @@ See also: RAST, cent
 
  // if ( cv(1) > 300.0) rv(4) = 0;
  // else 
-      rv(4) = cv(1);		// This will be needed to compute true depth
+      rv(4) = cv(1);    // This will be needed to compute true depth
  return rv;
 }
 
@@ -122,16 +122,16 @@ func cent( a ) {
  bottom pulses.  
 
 */
-  n = numberof(a);	// determine number of points in waveform
+  n = numberof(a);   // determine number of points in waveform
   if ( n < 2 ) 
-	return [ 0,0,0];
+   return [ 0,0,0];
   if ( n > 12 ) n = 12; // if more than 12, only use the first 12
-  r = 1:n;		// set the range we will consider 
-   a = -short(a);	// flip it over and convert to signed short
-   a -= a(1);		// remove bias using first point of wf
-  mv = a (max);		// find the maximum value
-  mx = a (mxx);		// find the index of the maximum
-  s =  a(r)(sum);	// compute the sum of all the samples
+  r = 1:n;     // set the range we will consider 
+   a = -short(a); // flip it over and convert to signed short
+   a -= a(1);     // remove bias using first point of wf
+  mv = a (max);      // find the maximum value
+  mx = a (mxx);      // find the index of the maximum
+  s =  a(r)(sum); // compute the sum of all the samples
   if ( s != 0.0 ) {
     c = float(  (a(r) * indgen(r)) (sum) ) / s;
   } else {
@@ -167,12 +167,12 @@ and then calls the "cent" function to compute the actual pulse centroid.
 range_bias.
 
  Inputs: 
-   rast	A raster array of type RAST.
-   n	The pixel within the raster to apply centroid corrections to.
+   rast  A raster array of type RAST.
+   n  The pixel within the raster to apply centroid corrections to.
 
  Returns:
    array(float,4) where:
-     1	Centroid corrected irange value
+     1   Centroid corrected irange value
      2  Return peak power.
      3  Uncorrected irange value.
      4  Number of transmit pulse digitizer bins which are offscale.
@@ -188,7 +188,7 @@ See also: RAST, cent
 */
 
 
- rv = array(float,4);			// return values
+ rv = array(float,4);         // return values
   np = numberof ( *rast.rx(n,1) );      // find out how many waveform points
                                         // are in the primary (most sensitive)
                                         // receiver channel.
@@ -199,7 +199,7 @@ See also: RAST, cent
   if ( np > 12 ) np = 12;               // use no more than 12
 
   if ( numberof( *rast.tx(n) ) > 0 )
-	rv(4) = (*rast.tx(n) == 0 )(sum);
+   rv(4) = (*rast.tx(n) == 0 )(sum);
   ctx = cent( *rast.tx(n) ) ;              // compute transmit centroid
 
 
