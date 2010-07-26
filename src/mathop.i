@@ -3,31 +3,37 @@
 func lt(a, b) { return a < b; }
 /* DOCUMENT lt(a, b)
    Equivalent to a < b
+   SEE ALSO: le gt ge eq ne cmp bw_not
 */
 
 func le(a, b) { return a <= b; }
 /* DOCUMENT le(a, b)
    Equivalent to a <= b
+   SEE ALSO: lt gt ge eq ne cmp bw_not
 */
 
 func gt(a, b) { return a > b; }
 /* DOCUMENT gt(a, b)
    Equivalent to a > b
+   SEE ALSO: lt le ge eq ne cmp bw_not
 */
 
 func ge(a, b) { return a >= b; }
 /* DOCUMENT ge(a, b)
    Equivalent to a >= b
+   SEE ALSO: lt le gt eq ne cmp bw_not
 */
 
 func eq(a, b) { return a == b; }
 /* DOCUMENT eq(a, b)
    Equivalent to a == b
+   SEE ALSO: lt le gt ge ne cmp bw_not
 */
 
 func ne(a, b) { return a != b; }
 /* DOCUMENT ne(a, b)
    Equivalent to a != b
+   SEE ALSO: lt le gt ge eq cmp bw_not
 */
 
 func cmp(a, b) { return a < b ? -1 : a > b; }
@@ -36,11 +42,13 @@ func cmp(a, b) { return a < b ? -1 : a > b; }
       -1 if a < b
        0 if a == b
        1 if a > b
+   SEE ALSO: lt le gt ge eq ne bw_not
 */
 
 func bw_not(a) { return ~a; }
 /* DOCUMENT bw_not(a)
    Equivalent to ~a
+   SEE ALSO: lt le gt ge eq ne cmp
 */
 
 func det(A) {
