@@ -428,13 +428,13 @@ func is_hashptr(obj) {
    if(!is_pointer(*obj))
       return 0;
 
-   // Dimensions must be [1,2]
+   // Dimensions must be [1,2] or [1,3]
    dims = dimsof(*obj);
-   if(dims(1) != 1 || dims(2) != 2)
+   if(dims(1) != 1 || !anyof(dims(2) == [2,3]))
       return 0;
 
    // An empty hash pointer is [(nil), (nil)]; if we have this, return true
-   if(noneof(*obj))
+   if(noneof((*obj)(1:2)))
       return 1;
 
    obj1 = *(*obj)(1);
