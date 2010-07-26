@@ -551,6 +551,22 @@ func binary_search(ary, val, exact=, inline=) {
    return nearest;
 }
 
+func map_pointers(__map__f, __map__input) {
+/* DOCUMENT map_pointers(f, input);
+   Map scalar function F onto pointer array argument INPUT to mimic
+   element-wise unary operation on each pointer's value. Returns an array of
+   pointers.
+*/
+// Original David Nagle 2010-07-26
+   // Funny local names used to reduce likelihood of clashes, in case called
+   // function requires extern use
+   __map__output = array(pointer, dimsof(__map__input));
+   __map__count = numberof(__map__input);
+   for(__i = 1; __i <= __map__count; __i++)
+      __map__output(__i) = &__map__f(*__map__input(__i));
+   return __map__output;
+}
+
 func merge_pointers(pary) {
 /* DOCUMENT merged = merge_pointers(ptr_ary);
    Merges the data pointed to by an array of pointers.
