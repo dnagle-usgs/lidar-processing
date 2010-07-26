@@ -163,16 +163,7 @@ func cent(wf) {
    mv = a(max);
    mx = a(mxx);
 
-   // compute the sum of all the samples used
-   s = a(1:n)(sum);
-
-   // Avoid divide-by-zero
-   if(s != 0.0) {
-      c = float((a(1:n) * indgen(1:n))(sum)) / s;
-   } else {
-      c = 10000.0;
-   }
-
+   c = min(wf_centroid(a(1:n)), 10000.);
    return [c, mx, mv];
 }
 
