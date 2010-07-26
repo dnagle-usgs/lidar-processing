@@ -38,6 +38,11 @@ func cmp(a, b) { return a < b ? -1 : a > b; }
        1 if a > b
 */
 
+func bw_not(a) { return ~a; }
+/* DOCUMENT bw_not(a)
+   Equivalent to ~a
+*/
+
 func det(A) {
 /* DOCUMENT det(A)
    Returns the determinant of A. A must be a square matrix. At present, this is
