@@ -10,7 +10,12 @@ func wf_centroid(wf) {
 
    Returns:
       Floating-point position in wf where the centroid is located.
+
+   If wf=[], then will return inf.
 */
+   if(!numberof(wf))
+      return 1e1000;
+
    count = numberof(wf);
 
    sum_power = wf(sum);
