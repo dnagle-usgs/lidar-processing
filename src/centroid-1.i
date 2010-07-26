@@ -138,7 +138,7 @@ func cent(wf) {
 
    // Avoid divide-by-zero
    if(s != 0.0) {
-      c = float((a(r) * indgen(r))(sum)) / s;
+      c = float((a(1:n) * indgen(1:n))(sum)) / s;
    } else {
       c = 10000.0;
    }
