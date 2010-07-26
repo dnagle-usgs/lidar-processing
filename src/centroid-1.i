@@ -1,9 +1,5 @@
+// vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 require, "eaarl.i";
-/*
-  Orginal W. Wright
-
-  9/20/02 Added pcr function.
-*/
 
 func pcr(rast, n) {
 /* DOCUMENT pcr(rast,n)
