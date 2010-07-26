@@ -6,19 +6,19 @@ func pcr(rast, n) {
 
   This function computes the centroid of the transmit and return pulses
  and then computes a range value corrected for signal level range walk.  It
- returns a 4 element array consisting of: 
+ returns a 4 element array consisting of:
  1) the controid corrected range,
- 2) the peak return power in digital counts, 
- 3) the cooresponding irange value,  
- 4) the number of pixels saturated in the transmit waveform.  
+ 2) the peak return power in digital counts,
+ 3) the cooresponding irange value,
+ 4) the number of pixels saturated in the transmit waveform.
 
  This function determines which return waveform is not saturated or off-scale,
 and then calls the "cent" function to compute the actual pulse centroid.
 
- **Important** The centroid calculations do not include corrections for 
+ **Important** The centroid calculations do not include corrections for
 range_bias.
 
- Inputs: 
+ Inputs:
    rast  A raster array of type RAST.
    n  The pixel within the raster to apply centroid corrections to.
 
@@ -29,14 +29,14 @@ range_bias.
      3  Uncorrected irange value.
      4  Number of transmit pulse digitizer bins which are offscale.
 
- Element 2, return power, contains values ranging from 0 to 900 digital 
+ Element 2, return power, contains values ranging from 0 to 900 digital
 counts. The values are contained in three discrete ranges and each range
 cooresponds to a return channel.  Values from 0-255 are from channel 1,
-from 300-555 are from channel 2, and from 600-855 are from channel 3. 
+from 300-555 are from channel 2, and from 600-855 are from channel 3.
 Channel 1 is the most sensitive and channel 3 the least.
 
 
-See also: RAST, cent  
+See also: RAST, cent
 */
 
  extern ops_conf;
@@ -61,15 +61,15 @@ See also: RAST, cent
 
 /**********************************************************************
  Now examine all three receiver waveforms for saturation, and use the
- one thats next to the channel thats offscale. 
+ one thats next to the channel thats offscale.
  First check the most sensitive channel (1), and if it's offscale,
  then check (2), and then (3).  A channel is considered offscale if
  more than 2 pixels are equal to zero.  Signals are inverted, which
- means the base line is around 240 counts and signal strength goes 
- toward zero.  An offscale pixel value would equal zero. 
+ means the base line is around 240 counts and signal strength goes
+ toward zero.  An offscale pixel value would equal zero.
 
- Note 1) This attempts to corect range walk for situations where wf0 
-         had to be used for range even when saturated.  The 2-16-04 
+ Note 1) This attempts to corect range walk for situations where wf0
+         had to be used for range even when saturated.  The 2-16-04
          Bombay-hook dataset for example.  On that mission, the wf0
          was offscale while wf1 was disconected and did not produce a
          return.  This line tries to correct by examining the number of
@@ -81,7 +81,7 @@ See also: RAST, cent
   if ( (nsat1 = numberof(where(  ((*rast.rx(n,1))(1:np)) < 5 ))) <= ops_conf.max_sfc_sat ) {
      cv = cent( *rast.rx(n, 1 ) );
 //     if ( nsat1 > 1 ) cv(1) = cv(1) - (nsat1 -1 ) * .1 ;    // See Note 1 above
-     if ( cv(3) < -90 ) {     // Must be water column only return.  
+     if ( cv(3) < -90 ) {     // Must be water column only return.
         slope = 0.029625
         x = cv(3)  - 90;
         y = slope * x;
@@ -89,11 +89,11 @@ See also: RAST, cent
      }
      cv(1:2) += ops_conf.chn1_range_bias;
   } else if ( numberof(where(  ((*rast.rx(n,2))(1:np)) < 5 )) <= ops_conf.max_sfc_sat ) {
-     cv = cent( *rast.rx(n, 2 ) ); 
+     cv = cent( *rast.rx(n, 2 ) );
      cv(1:2) += ops_conf.chn2_range_bias;
      cv(3) += 300;
   } else {
-     cv = cent( *rast.rx(n, 3 ) ); 
+     cv = cent( *rast.rx(n, 3 ) );
      cv(1:2) += ops_conf.chn3_range_bias;
      cv(3) += 600;
   }
@@ -104,7 +104,7 @@ See also: RAST, cent
   rv(3) = rast.irange(n);
 
  // if ( cv(1) > 300.0) rv(4) = 0;
- // else 
+ // else
       rv(4) = cv(1);    // This will be needed to compute true depth
  return rv;
 }
@@ -115,18 +115,18 @@ See also: RAST, cent
 // Compute waveform centroid
 func cent( a ) {
 /* DOCUMENT cent(a)
-  
+
    Compute the centroid of "a" using the no more than the
  first 12 points.  This function considers the entire pulse
  and is probably only good for solid first-return targets or
- bottom pulses.  
+ bottom pulses.
 
 */
   n = numberof(a);   // determine number of points in waveform
-  if ( n < 2 ) 
+  if ( n < 2 )
    return [ 0,0,0];
   if ( n > 12 ) n = 12; // if more than 12, only use the first 12
-  r = 1:n;     // set the range we will consider 
+  r = 1:n;     // set the range we will consider
    a = -short(a); // flip it over and convert to signed short
    a -= a(1);     // remove bias using first point of wf
   mv = a (max);      // find the maximum value
@@ -154,19 +154,19 @@ func let(rast, n) {
 
   This function computes the centroid of the transmit and return pulses
  and then computes a range value corrected for signal level range walk.  It
- returns a 4 element array consisting of: 
+ returns a 4 element array consisting of:
  1) the controid corrected range,
- 2) the peak return power in digital counts, 
- 3) the cooresponding irange value,  
- 4) the number of pixels saturated in the transmit waveform.  
+ 2) the peak return power in digital counts,
+ 3) the cooresponding irange value,
+ 4) the number of pixels saturated in the transmit waveform.
 
  This function determines which return waveform is not saturated or off-scale,
 and then calls the "cent" function to compute the actual pulse centroid.
 
- **Important** The centroid calculations do not include corrections for 
+ **Important** The centroid calculations do not include corrections for
 range_bias.
 
- Inputs: 
+ Inputs:
    rast  A raster array of type RAST.
    n  The pixel within the raster to apply centroid corrections to.
 
@@ -177,14 +177,14 @@ range_bias.
      3  Uncorrected irange value.
      4  Number of transmit pulse digitizer bins which are offscale.
 
- Element 2, return power, contains values ranging from 0 to 900 digital 
+ Element 2, return power, contains values ranging from 0 to 900 digital
 counts. The values are contained in three discrete ranges and each range
 cooresponds to a return channel.  Values from 0-255 are from channel 1,
-from 300-555 are from channel 2, and from 600-855 are from channel 3. 
+from 300-555 are from channel 2, and from 600-855 are from channel 3.
 Channel 1 is the most sensitive and channel 3 the least.
 
 
-See also: RAST, cent  
+See also: RAST, cent
 */
 
 
