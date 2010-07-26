@@ -1,15 +1,4 @@
-local mathop_i;
-/* DOCUMENT mathop_i
-
-   Contains functional versions of some of the math operators. At present, this
-   is primarily just the comparison operators. On rare occasions, it is helpful
-   to have a functional form available for these things.
-
-   Functions:
-      lt le gt ge eq ne cmp
-
-   Original David Nagle 2008-07-31
-*/
+// vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 
 func lt(a, b) { return a < b; }
 /* DOCUMENT lt(a, b)
