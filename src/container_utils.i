@@ -360,21 +360,20 @@ func hash2ptr(hash, token=) {
    default, token, 1;
    tokentext = "HASH POINTER";
    keys = h_keys(hash);
-   if(!numberof(h_keys(hash)))
-      return token ? &[&[], &[], &tokentext] : &[&[], &[]];
-   keys = keys(sort(keys));
-   num = numberof(keys);
-   data = array(pointer, num);
-   for(i = 1; i <= num; i++) {
-      if(is_hash(hash(keys(i))))
-         data(i) = &hash2ptr(hash(keys(i)));
-      else
-         data(i) = &hash(keys(i));
+   ptr = p_new();
+   if(numberof(h_keys(hash))) {
+      keys = keys(sort(keys));
+      num = numberof(keys);
+      for(i = 1; i <= num; i++) {
+         if(is_hash(hash(keys(i))))
+            p_set, ptr, keys(i), hash2ptr(hash(keys(i)));
+         else
+            p_set, ptr, keys(i), hash(keys(i));
+      }
    }
    if(token)
-      return &[&keys, &data, &tokentext];
-   else
-      return &[&keys, &data];
+      ptr = &(grow(*ptr, &tokentext));
+   return ptr;
 }
 
 func ptr2hash(ptr) {
