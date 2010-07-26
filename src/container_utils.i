@@ -383,14 +383,13 @@ func ptr2hash(ptr) {
    SEE ALSO: hash2ptr
 */
 // Original David Nagle 2010-04-28
-   keys = *(*ptr)(1);
-   data = *(*ptr)(2);
+   keys = p_keys(ptr);
    num = numberof(keys);
    hash = h_new();
    for(i = 1; i <= num; i++) {
-      item = *data(i);
+      item = p_get(ptr, keys(i));
       if(
-         is_pointer(item) && numberof(*item) == 3 &&
+         is_hashptr(item) && numberof(*item) == 3 &&
          is_string(*(*item)(3)) && *(*item)(3) == "HASH POINTER"
       )
          h_set, hash, keys(i), ptr2hash(item);
