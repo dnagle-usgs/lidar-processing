@@ -562,8 +562,10 @@ func map_pointers(__map__f, __map__input) {
    // function requires extern use
    __map__output = array(pointer, dimsof(__map__input));
    __map__count = numberof(__map__input);
-   for(__i = 1; __i <= __map__count; __i++)
-      __map__output(__i) = &__map__f(*__map__input(__i));
+   for(__i = 1; __i <= __map__count; __i++) {
+      if(__map__input(__i))
+         __map__output(__i) = &__map__f(*__map__input(__i));
+   }
    return __map__output;
 }
 
