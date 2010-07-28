@@ -623,11 +623,14 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=, clean=) {
             grow, messages, "Detected datum matches output datum.";
          }
       }
-      if(is_void(src_datum)) {
-         if(strlen(fn_datum) == 0) {
+      if(strlen(fn_datum) == 0) {
+         if(is_void(src_datum)) {
             grow, fatal, "Unable to detect file datum.";
+         } else {
+            grow, fatal, "Unable to parse input filename; cannot generate output filename.";
          }
-      } else {
+      }
+      if(!is_void(src_datum)) {
          if(src_datum != fn_datum)
             grow, messages, "Detected datum does not match user-specified datum.";
          if(src_datum == "n88" && !is_void(src_geoid) && src_geoid != fn_geoid)
