@@ -338,11 +338,6 @@ proc init_sf {} {
     send_sf set dir $data_path
 }
 
-proc start_cir {} {
- global sf_a_id data_path
-    exec ./cir.tcl -parent [::comm::comm self] -sf $sf_a_id -path $data_path &
-}
-
 proc init_cir {} {
  global data_path
     send_cir cirdir "$data_path/cir"
@@ -572,11 +567,6 @@ $w.mb.file add separator
 #############
 #   Deprecated
 #############
-
- ### Deprecated 2009-10-19
- $w.mb.deprecated add command -label "1-Hz CIR High-Res Images..." -command {
-    start_cir
- }
 
 ## disabled unused menu options
 $w.mb.nav entryconfigure 1 -state normal

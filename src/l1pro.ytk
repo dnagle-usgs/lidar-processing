@@ -699,6 +699,10 @@ if {![winfo exists .l1wid]} {
   .l1wid.mb.dep add command -label "1-Hz RGB Low-Res Images..." \
     -command ::l1pro::deprecated::start_sf
 
+  ### Deprecated 2009-10-19
+  .l1wid.mb.dep add command -label "1-Hz CIR High-Res Images..." \
+    -command ::l1pro::deprecated::start_cir
+
   proc open_fit_gaussian_gui {} {
     source [file join $::src_path fit_gauss.ytk]
     fit_gauss::create_gui
