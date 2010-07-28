@@ -1360,7 +1360,7 @@ Button $w.show_grid -text "Show\nGrid Name" -command {
 
 proc ::l1pro::deprecated::start_sf {} {
  global cir_id data_path
-    exec ./sf_a.tcl -parent [::comm::comm self] -cir $cir_id -path $data_path &
+    exec ./attic/2010-07-sf_a.tcl -parent [::comm::comm self] -cir $cir_id -path $data_path &
 }
 
 proc ::l1pro::deprecated::start_cir {} {
