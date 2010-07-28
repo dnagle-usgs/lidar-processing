@@ -588,10 +588,6 @@ $w.mb.file add separator
 #   Deprecated
 #############
 
- ### Deprecated 2009-02-02
- $w.mb.deprecated add command -label "Flight Tracks & Coastlines..." \
-   -underline 0 \
-	-command rbgga_menu
  ### Deprecated 2009-10-19
  $w.mb.deprecated add command -label "1-Hz RGB Low-Res Images..." -command {
     start_sf

@@ -689,6 +689,12 @@ if {![winfo exists .l1wid]} {
   .l1wid.mb.dep add command -label "Old RCF GUI" \
     -command ::l1pro::deprecated::rcf_region
 
+  .l1wid.mb.dep add separator
+
+  ### Deprecated 2009-02-02
+  .l1wid.mb.dep add command -label "Flight Tracks & Coastlines..." \
+    -command ::l1pro::deprecated::rbgga_menu
+
   proc open_fit_gaussian_gui {} {
     source [file join $::src_path fit_gauss.ytk]
     fit_gauss::create_gui
