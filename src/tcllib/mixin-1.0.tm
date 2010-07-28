@@ -133,58 +133,16 @@ snit::widgetadaptor ::mixin::text::autoheight {
    }
 }
 
-if {[package vcompare 8.5 [info tclversion]] == 1} {
-   # Backwards compatibility for Tcl 8.4, which doesn't have the "text count"
-   # method. However, this will only work if the the lines are of uniform
-   # height (all have the same font).
-   proc ::mixin::text::calc_height w {
-      set content [$w get 1.0 end]
-      # Trim off a single trailing newline, if present
-      if {[string index $content end] eq "\n"} {
-         set content [string range $content 0 end-1]
-      }
-
-      set bw [$w cget -borderwidth]
-      set ht [$w cget -highlightthickness]
-      set sw [$w cget -selectborderwidth]
-      set displaywidth [expr {1.0 * [winfo width $w] - 2 * ($bw + $ht + $sw)}]
-      unset bw ht
-
-      set font [$w cget -font]
-      set top [winfo toplevel $w]
-
-      set height 0
-      foreach line [split $content \n] {
-         set linewidth [font measure $font -displayof $top $line]
-         # The displaywidth is cast as a float when it is set above, to avoid
-         # integer division here.
-         set amt [expr {int(ceil($linewidth / $displaywidth))}]
-         if {$amt < 1} {
-            set amt 1
-         }
-         incr height $amt
-      }
-
-      if {$height < 1} {
-         set height 1
-      }
-
-      return $height
+proc ::mixin::text::calc_height w {
+   set pixelheight [$w count -update -ypixels 1.0 end]
+   set font [$w cget -font]
+   set top [winfo toplevel $w]
+   set fontheight [font metrics $font -displayof $top -linespace]
+   set height [expr {int(ceil(double($pixelheight)/$fontheight))}]
+   if {$height < 1} {
+      set height 1
    }
-} else {
-   # Tcl 8.5 drastically simplifies things *and* makes them drastically more
-   # accurate by use of "text count".
-   proc ::mixin::text::calc_height w {
-      set pixelheight [$w count -update -ypixels 1.0 end]
-      set font [$w cget -font]
-      set top [winfo toplevel $w]
-      set fontheight [font metrics $font -displayof $top -linespace]
-      set height [expr {int(ceil(double($pixelheight)/$fontheight))}]
-      if {$height < 1} {
-         set height 1
-      }
-      return $height
-   }
+   return $height
 }
 
 # combobox <path> ?options...?
