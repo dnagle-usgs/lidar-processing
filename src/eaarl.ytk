@@ -414,14 +414,6 @@ proc load_edb {} {
   edb_status
   if { [sf_exists] } {
      send_sf "set dir $data_path"
-  } else {
-      set sfrun [ tk_messageBox  \
-           -message "Digital Camera Playback Software\
- isn\'t running. Would you like to run it now?  " \
-           -type yesno ]
-      switch  -- $sfrun {
-	yes start_sf;
-      }
   }
   wm title .eaarl "Current Data: $data_path"
   }
