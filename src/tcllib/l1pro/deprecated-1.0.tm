@@ -1357,3 +1357,9 @@ Button $w.show_grid -text "Show\nGrid Name" -command {
  pack $mw.f1 $mw.g1 -side left -anchor n -fill both -expand 1
 
 }
+
+proc ::l1pro::deprecated::start_sf {} {
+ global cir_id data_path
+    exec ./sf_a.tcl -parent [::comm::comm self] -cir $cir_id -path $data_path &
+}
+

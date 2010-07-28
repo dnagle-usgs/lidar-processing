@@ -333,13 +333,6 @@ proc load_cmd { start_dir } {
   }
 }
 
-
-
-proc start_sf {} {
- global cir_id data_path
-    exec ./sf_a.tcl -parent [::comm::comm self] -cir $cir_id -path $data_path &
-}
-
 proc init_sf {} {
  global data_path
     send_sf set dir $data_path
@@ -580,10 +573,6 @@ $w.mb.file add separator
 #   Deprecated
 #############
 
- ### Deprecated 2009-10-19
- $w.mb.deprecated add command -label "1-Hz RGB Low-Res Images..." -command {
-    start_sf
- }
  ### Deprecated 2009-10-19
  $w.mb.deprecated add command -label "1-Hz CIR High-Res Images..." -command {
     start_cir
