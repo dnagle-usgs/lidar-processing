@@ -129,8 +129,6 @@ check_requirements
 
 ::tcl::tm::path add [file join [app_root_dir] tcllib]
 
-package require transitional
-
 package require Tk
 package require tile
 package require BWidget
