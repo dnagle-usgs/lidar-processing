@@ -1365,6 +1365,6 @@ proc ::l1pro::deprecated::start_sf {} {
 
 proc ::l1pro::deprecated::start_cir {} {
  global sf_a_id data_path
-    exec ./cir.tcl -parent [::comm::comm self] -sf $sf_a_id -path $data_path &
+    exec ./attic/2010-07-cir.tcl -parent [::comm::comm self] -sf $sf_a_id -path $data_path &
 }
 
