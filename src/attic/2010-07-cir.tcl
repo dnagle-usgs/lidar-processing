@@ -2,6 +2,11 @@
 # \
 exec wish "$0" ${1+"$@"}
 
+################################################################################
+# This file was moved to the attic on 2010-07-28. Its functionality is         #
+# obsolete, having been replaced by the sf module under tcllib.                #
+################################################################################
+
 #####################################################################
 # Original W. Wright 8/7/2004
 # This program displays images from the EAARL CIR camera while the

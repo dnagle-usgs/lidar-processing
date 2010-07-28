@@ -3,6 +3,10 @@
 exec wish "$0" ${1+"$@"}
 
 # /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 shiftround autoindent: */
+################################################################################
+# This file was moved to the attic on 2010-07-28. Its functionality is         #
+# obsolete, having been replaced by the sf module under tcllib.                #
+################################################################################
 
 # [ Header #########################################
 #
