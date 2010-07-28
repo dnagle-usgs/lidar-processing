@@ -305,12 +305,6 @@ set wfc3 4
 	-command { global wf_chan wfc1; set wf_chan [ expr $wfc1+$wfc2+$wfc3 ] }  \
 	-label "1\% channel (Blue)" 
 
-##AN: added menu bar options for sf photos
-############ Photo pulldown
-.rslider.mb.photos add command -label "Review 1Hz Photos..." -command {
-        exec "./sf_a.tcl" &
- }
-
 .rslider.mb.photos add checkbutton \
 	-label "Link sf Photos to Rasters" \
 	-onvalue 1 \
