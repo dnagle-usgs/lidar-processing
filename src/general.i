@@ -15,6 +15,8 @@ func default(&var, val) {
          updated in place.
 
       value: The default value.
+
+   SEE ALSO: require_keywords
 */
    if(is_void(var)) var = val;
 }
@@ -45,6 +47,8 @@ func require_keywords(args) {
       now at pc= 3 (of 21), failed at pc= 7
        To enter debug mode, type <RETURN> now (then dbexit to get out)
       >
+
+   SEE ALSO: default
 */
 // Original David Nagle 2010-07-29
    arg_count = args(0);
