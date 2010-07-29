@@ -1,11 +1,5 @@
 ybkg require \"rbgga.i\"
 
-proc mark_time_pos { sod } {
-  global _map
-  exp_send "mark_time_pos, $_map(window), $sod\r"
-}
-
-
 proc mark_pos { lat lon } {
   global utm _map rbgga_mode
   if { [string equal $rbgga_mode "adapt"] } {
