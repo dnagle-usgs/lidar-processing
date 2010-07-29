@@ -19,6 +19,42 @@ func default(&var, val) {
    if(is_void(var)) var = val;
 }
 
+func require_keywords(args) {
+/* DOCUMENT require_keywords, key1, key2, key3
+   This checks each of the given variables to make sure that the user provided
+   a non-void value for them.
+
+   For example, consider this function:
+
+      func increment(&x, amount=) {
+         require_keywords, amount;
+         x += amount;
+      }
+
+   If the user omits the "amount=" keyword (or if they provide it, but define
+   it to []), then they will receive an error. Otherwise, it works. To
+   illustrate:
+
+      > x=0
+      > increment, x, amount=5
+      > x
+      5
+      > increment, x
+      ERROR (increment) Missing required keyword: amount
+      WARNING source code unavailable (try dbdis function)
+      now at pc= 3 (of 21), failed at pc= 7
+       To enter debug mode, type <RETURN> now (then dbexit to get out)
+      >
+*/
+// Original David Nagle 2010-07-29
+   arg_count = args(0);
+   for(i = 1; i <= arg_count; i++)
+      if(is_string(args(-,i)) && is_void(args(i)))
+         error, "Missing required keyword: "+args(-,i);
+}
+errs2caller, require_keywords;
+wrap_args, require_keywords;
+
 func timer_init(&tstamp) {
 /* DOCUMENT timer_init, &tstamp
    Initializes timer for use with timer_tick.
