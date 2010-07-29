@@ -444,7 +444,6 @@ proc load_edb {} {
    menu $w.mb.deprecated
 
    ybkg require \"rbgga.i\"
-   source rbgga.ytk
 
  $w.mb add cascade -label File     -underline 0 -menu $w.mb.file
  $w.mb add cascade -label "Maps/Nav"     -underline 0 -menu $w.mb.nav
