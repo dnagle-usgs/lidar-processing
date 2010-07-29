@@ -1,3 +1,11 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-07-29. It has not been in use for   *
+* several years and has not been modified since 2002. The functions contained  *
+* within do not provide any significant functionality and have simple names    *
+* that easily can conflict with names elsewhere in ALPS (including mdist,      *
+* which clashes with the mdist function in nav.i).                             *
+\******************************************************************************/
+
 require, "plcm.i"
 
 func load {
