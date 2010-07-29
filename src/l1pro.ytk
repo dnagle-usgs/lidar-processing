@@ -140,7 +140,10 @@ if {![winfo exists .l1wid]} {
   menu .l1wid.mb.util
   menu .l1wid.mb.cmd
   menu .l1wid.mb.dep
-
+  menu .l1wid.mb.dep.an
+  menu .l1wid.mb.dep.ie
+  menu .l1wid.mb.dep.vz
+  menu .l1wid.mb.dep.ed
 
   .l1wid.mb add cascade -label File -underline 0 -menu .l1wid.mb.file
   .l1wid.mb.file add command -label "Load ALPS data..." \
@@ -630,78 +633,89 @@ if {![winfo exists .l1wid]} {
 
   .l1wid.mb add cascade -label Deprecated -underline 1 -menu .l1wid.mb.dep
 
-  .l1wid.mb.dep add command -label "Old Pixel Waveform" \
+  .l1wid.mb.dep add cascade -label Analysis -underline 0 \
+    -menu .l1wid.mb.dep.an
+
+  .l1wid.mb.dep.an add command -label "Old Pixel Waveform" \
     -command ::l1pro::deprecated::pixelwf
 
-  .l1wid.mb.dep add checkbutton \
+  .l1wid.mb.dep.an add checkbutton \
     -label "Show raw and processed waveforms when using Pixel Waveform" \
     -variable bconst
 
-  .l1wid.mb.dep add separator
+  .l1wid.mb.dep add cascade -label "Import/Export" -underline 0 \
+    -menu .l1wid.mb.dep.ie
 
   ### DEPRECATED 2009-12-22 ###
   # Replaced by "Read PBD Data Directory..." and "Read Binary Data (edf/bin)
   # Directory..." entries, supported by l1pro::dirload.
-  .l1wid.mb.dep add command -label "Old Read Data Directory..." \
+  .l1wid.mb.dep.ie add command -label "Old Read Data Directory..." \
     -underline 10 -command ::l1pro::deprecated::l1dir::gui
 
   ### DEPRECATED 2009-02-02 ###
   # This menu entry and its code are deprecated. They have been replaced by the
   # code in namespace l1dir, which is invoked from the non-deprecated
   # "Read Data Directory..." menu entry above it.
-  .l1wid.mb.dep add command -label "Even Older Read Data Directory..." \
+  .l1wid.mb.dep.ie add command -label "Even Older Read Data Directory..." \
     -command ::l1pro::deprecated::read_data_dir_older
 
-  .l1wid.mb.dep add separator
+  .l1wid.mb.dep.ie add separator
 
   ### DEPRECATED 2010-01-03 ###
   # Following entries replaced by file-1.0.tm functionality.
-  .l1wid.mb.dep add command -label "Read Binary Data file..." -underline 0 \
+  .l1wid.mb.dep.ie add command -label "Read Binary Data file..." -underline 0 \
     -command ::l1pro::deprecated::read_binary_data_file
-  .l1wid.mb.dep add command -label "Write Binary Data File..." -underline 0 \
+  .l1wid.mb.dep.ie add command -label "Write Binary Data File..." -underline 0 \
     -command ::l1pro::deprecated::write_binary_data_file
-  .l1wid.mb.dep add command -label "Read SubSampled Data File..." -underline 5 \
+  .l1wid.mb.dep.ie add command -label "Read SubSampled Data File..." -underline 5 \
     -command ::l1pro::deprecated::read_subsampled_data_file
-  .l1wid.mb.dep add command -label "Load EAARL data from map limits" \
+  .l1wid.mb.dep.ie add command -label "Load EAARL data from map limits" \
     -underline 21 \
     -command ::l1pro::deprecated::load_eaarl_data_from_map_limits
-  .l1wid.mb.dep add command -label "Ascii output ..." -underline 0 \
+  .l1wid.mb.dep.ie add command -label "Ascii output ..." -underline 0 \
     -command ::l1pro::deprecated::ascii_output
 
-  .l1wid.mb.dep add separator
+  .l1wid.mb.dep.ie add separator
 
-  .l1wid.mb.dep add command -label "Configure elevation scale limits..." \
+  .l1wid.mb.dep.ie add command -label "Save Tile" \
+    -command ::l1pro::deprecated::savetile
+
+  .l1wid.mb.dep add cascade -label "Visualization" -underline 0 \
+    -menu .l1wid.mb.dep.vz
+
+  .l1wid.mb.dep.vz add command -label "Configure elevation scale limits..." \
     -underline 0 \
     -command ::l1pro::deprecated::configure_elevation_scale_limits
 
-  .l1wid.mb.dep add command -label "Plot/Write Individual Flightlines..." \
+  .l1wid.mb.dep.vz add command -label "Plot/Write Individual Flightlines..." \
     -underline 0 \
     -command ::l1pro::deprecated::plot_write_individual_flightlines
 
-  .l1wid.mb.dep add command -label "Test and Clean" \
-    -command {exp_send "$::pro_var = test_and_clean($::pro_var);\r"}
-
-  .l1wid.mb.dep add command -label "Append2Tile" \
-    -command ::l1pro::deprecated::append2tile
-  .l1wid.mb.dep add command -label "Save Tile" \
-    -command ::l1pro::deprecated::savetile
-
-  .l1wid.mb.dep add command -label "Old RCF GUI" \
-    -command ::l1pro::deprecated::rcf_region
-
-  .l1wid.mb.dep add separator
+  .l1wid.mb.dep.vz add separator
 
   ### Deprecated 2009-02-02
-  .l1wid.mb.dep add command -label "Flight Tracks & Coastlines..." \
+  .l1wid.mb.dep.vz add command -label "Flight Tracks & Coastlines..." \
     -command ::l1pro::deprecated::rbgga_menu
 
   ### Deprecated 2009-10-19
-  .l1wid.mb.dep add command -label "1-Hz RGB Low-Res Images..." \
+  .l1wid.mb.dep.vz add command -label "1-Hz RGB Low-Res Images..." \
     -command ::l1pro::deprecated::start_sf
 
   ### Deprecated 2009-10-19
-  .l1wid.mb.dep add command -label "1-Hz CIR High-Res Images..." \
+  .l1wid.mb.dep.vz add command -label "1-Hz CIR High-Res Images..." \
     -command ::l1pro::deprecated::start_cir
+
+  .l1wid.mb.dep add cascade -label "Editting" -underline 0 \
+    -menu .l1wid.mb.dep.ed
+
+  .l1wid.mb.dep.ed add command -label "Test and Clean" \
+    -command {exp_send "$::pro_var = test_and_clean($::pro_var);\r"}
+
+  .l1wid.mb.dep.ed add command -label "Append2Tile" \
+    -command ::l1pro::deprecated::append2tile
+
+  .l1wid.mb.dep.ed add command -label "Old RCF GUI" \
+    -command ::l1pro::deprecated::rcf_region
 
   proc open_fit_gaussian_gui {} {
     source [file join $::src_path fit_gauss.ytk]
