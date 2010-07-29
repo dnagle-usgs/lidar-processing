@@ -980,8 +980,7 @@ proc get_heading {inhd} {
    if {$inhd == 1} {
       .canf.can configure -height 420 -width 440
       set psf [pid]
-## the function request_heading is defined in eaarl.ytk
-      send_ytk request_heading $psf $inhd $sod
+      send_ytk ::l1pro::deprecated::rbgga::request_heading $psf $inhd $sod
 ## tmp file is now saved as /tmp/tans_pkt.$psf
       if { [catch {set f [open "/tmp/tans_pkt.$psf" r] } ] } {
          tk_messageBox -icon warning -message "Heading information is being loaded... Click OK to continue"

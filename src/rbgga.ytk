@@ -1,13 +1,5 @@
 ybkg require \"rbgga.i\"
 
-proc request_heading {psf inhd_count sod} {
-   ## this procedure requests heading information for sf_a.tcl
-   ## amar nayegandhi
-   global sf_pid
-   set sf_pid $psf
-   exp_send "pkt_sf = prepare_sf_pkt($sod, $psf); \r"
-}
-
 proc mark_time_pos { sod } {
   global _map
   exp_send "mark_time_pos, $_map(window), $sod\r"

@@ -288,8 +288,7 @@ proc get_heading {inhd} {
   global img settings tansstr
   if {$inhd == 1} {
 	set pcir [pid]
-	## the function request_heading is defined in eaarl.ytk
-	send_ytk request_heading $pcir $inhd $settings(sod)
+	send_ytk ::l1pro::deprecated::rbgga::request_heading $pcir $inhd $settings(sod)
 	## tmp file is now saved as /tmp/tans_pkt.$pcir
 	if { [catch {set f [open "/tmp/tans_pkt.$pcir" r] } ] } {
 	  tk_messageBox -icon warning -message "Heading information is being loaded... Click OK to continue"
