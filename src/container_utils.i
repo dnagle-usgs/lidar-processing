@@ -487,6 +487,13 @@ func ptr2obj(ptr) {
    return hash2obj(ptr2hash(ptr));
 }
 
+func obj_show(obj) {
+/* DOCUMENT obj_show, obj
+   Equivalent to: h_show, obj2hash(obj)
+*/
+   h_show, obj2hash(obj);
+}
+
 func array_allocate(&data, request) {
 /* DOCUMENT array_allocate, data, request
    Used to smartly allocate space in the data array.
