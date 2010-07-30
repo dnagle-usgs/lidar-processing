@@ -664,3 +664,81 @@ func splitary(ary, num, &a1, &a2, &a3, &a4, &a5, &a6) {
       a6 = ary(..,6);
    return ary;
 }
+
+func obj_copy(dst) {
+/* DOCUMENT obj_copy -- method for generic objects
+   newobj = obj(copy,)
+   obj, copy, dst
+
+   When called as a function, returns a new object that is a complete copy of
+   the calling object.
+
+   When called as a subroutine, copies the data and methods of the calling
+   object to the provided DST object, overwriting existing members as
+   necessary.
+*/
+// Original David Nagle 2010-07-30
+   if(!am_subroutine())
+      dst = save();
+   else if(!is_obj(dst))
+      error, "Called as subroutine without destination argument";
+   keys = use(*,);
+   count = numberof(keys);
+   for(i = 1; i <= count; i++) {
+      key = keys(i);
+      save, dst, noop(key), use(noop(key));
+   }
+   return dst;
+}
+
+func obj_copy_methods(dst) {
+/* DOCUMENT obj_copy_methods -- method for generic objects
+   newobj = obj(copy_methods,)
+   obj, copy_methods, dst
+
+   When called as a function, returns a new object that has the same methods as
+   the calling object.
+
+   When called as a subroutine, copies the methods of the calling object to the
+   provided DST object, overwriting existing members as necessary.
+*/
+// Original David Nagle 2010-07-30
+   if(!am_subroutine())
+      dst = save();
+   else if(!is_obj(dst))
+      error, "Called as subroutine without destination argument";
+   keys = use(*,);
+   count = numberof(keys);
+   for(i = 1; i <= count; i++) {
+      key = keys(i);
+      if(is_func(use(noop(key))))
+         save, dst, noop(key), use(noop(key));
+   }
+   return dst;
+}
+
+func obj_copy_data(dst) {
+/* DOCUMENT obj_copy_data -- method for generic objects
+   newobj = obj(copy_data,)
+   obj, copy_data, dst
+
+   When called as a function, returns a new object that has the same data as
+   the calling object.
+
+   When called as a subroutine, copies the data of the calling object to the
+   provided DST object, overwriting existing members as necessary.
+*/
+// Original David Nagle 2010-07-30
+   if(!am_subroutine())
+      dst = save();
+   else if(!is_obj(dst))
+      error, "Called as subroutine without destination argument";
+   keys = use(*,);
+   count = numberof(keys);
+   for(i = 1; i <= count; i++) {
+      key = keys(i);
+      if(!is_func(use(noop(key))))
+         save, dst, noop(key), use(noop(key));
+   }
+   return dst;
+}
