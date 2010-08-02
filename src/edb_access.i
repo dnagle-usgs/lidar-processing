@@ -263,7 +263,7 @@ func get_tld_rasts(fnum=, fname=) {
 */
    extern edb, edb_files, edb_filename;
    if(is_void(fnum) && !is_void(fname)) {
-      w = where(strglob("*"+file_rootname(fname), edb_files));
+      w = where(strglob("*"+file_tail(fname), edb_files));
       if(numberof(w) == 1)
          fnum = w(1);
    }
