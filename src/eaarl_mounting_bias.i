@@ -177,6 +177,20 @@ func display_mission_constants( m, ytk= ) {
   }
 }
 
+func load_ops_conf(fn) {
+/* DOCUMENT conf = load_ops_conf(fn)
+   -or-  load_ops_conf, fn
+   Loads and returns a set of mission constants from a file. If called as a
+   function, the settings will be returned and no externs will be altered. If
+   called as a subroutine, then the extern ops_conf will be overwritten.
+*/
+   local ops_conf;
+   // include, fn, 0 --> goes to global scope
+   // include, fn, 1 --> goes to local scope
+   include, fn, !am_subroutine();
+   return ops_conf;
+}
+
 func write_ops_conf(fn, conf=) {
 /* DOCUMENT write_ops_conf, fn, conf=
    -or- write_ops_conf, conf=
