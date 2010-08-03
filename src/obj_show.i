@@ -14,7 +14,11 @@ func obj_show(obj, prefix=, maxary=, maxchild=, maxdepth=) {
   if(is_void(maxchild)) maxchild=20;
   if(is_void(maxdepth)) maxdepth=5;
   curdepth = 0;
+  output = "";
   _obj_show_worker, obj, "TOP", (is_void(prefix) ? "" : prefix), 0;
+  if(am_subroutine())
+    write, format="%s", output;
+  return output;
 }
 
 _obj_show_workers = save();
@@ -29,7 +33,7 @@ func _obj_show_worker(obj, name, prefix, stage) {
   if(_obj_show_workers(*,typeof(obj)))
     _obj_show_workers, typeof(obj), obj, name, prefix(1), prefix(2);
   else
-    write, format="%s %s (%s)\n", prefix(1), name, typeof(obj);
+    output += swrite(format="%s %s (%s)\n", prefix(1), name, typeof(obj));
   curdepth--;
 }
 
@@ -42,8 +46,8 @@ func _obj_show_worker(obj, name, prefix, stage) {
 
 func _obj_show_oxy_object(obj, name, prefix1, prefix2) {
   count = obj(*);
-  write, format="%s %s (oxy_object, %d %s)\n",
-    prefix1, name, count, (count == 1 ? "entry" : "entries");
+  output += swrite(format="%s %s (oxy_object, %d %s)\n",
+    prefix1, name, count, (count == 1 ? "entry" : "entries"));
   if(curdepth == maxdepth || count > maxchild)
     return;
   for(i = 1; i <= count; i++) {
@@ -60,9 +64,9 @@ func _obj_show_hash_table(obj, name, prefix1, prefix2) {
   if(count)
     key_list = key_list(sort(key_list));
   ev = h_evaluator(obj);
-  write, format="%s %s (hash_table, %s%d %s)\n",
+  output += swrite(format="%s %s (hash_table, %s%d %s)\n",
     prefix1, name, (ev ? "evaluator=\""+ev+"\", " : ""),
-    count, (count == 1 ? "entry" : "entries");
+    count, (count == 1 ? "entry" : "entries"));
   if(curdepth == maxdepth || count > maxchild)
     return;
   for(k = 1; k <= count; k++) {
@@ -81,9 +85,10 @@ func _obj_show_array(obj, name, prefix1, prefix2) {
     descr += swrite(format=",%d", dims(k));
   }
   if(numberof(obj) <= maxary) {
-    write, format="%s %s (%s) %s\n", prefix1, name, descr, sum(print(obj));
+    output += swrite(format="%s %s (%s) %s\n", prefix1, name, descr,
+      sum(print(obj)));
   } else {
-    write, format="%s %s (%s)\n", prefix1, name, descr;
+    output += swrite(format="%s %s (%s)\n", prefix1, name, descr);
   }
 }
 save, _obj_show_workers,
@@ -95,12 +100,12 @@ save, _obj_show_workers,
   long=_obj_show_array;
 
 func _obj_show_void(obj, name, prefix1, prefix2) {
-  write, format="%s %s (void) []\n", prefix1, name;
+  output += swrite(format="%s %s (void) []\n", prefix1, name);
 }
 save, _obj_show_workers, void=_obj_show_void;
 
 func _obj_show_symlink(obj, name, prefix1, prefix2) {
-  write, format="%s %s (%s) \"%s\"\n", prefix1, name, typeof(obj),
-    name_of_symlink(obj);
+  output += swrite(format="%s %s (%s) \"%s\"\n", prefix1, name, typeof(obj),
+    name_of_symlink(obj));
 }
 save, _obj_show_workers, symlink=_obj_show_symlink;
