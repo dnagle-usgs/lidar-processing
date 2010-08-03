@@ -19,14 +19,11 @@ struct ALPS_WAVEFORM {
    pointer *rx;
 }
 
-func georef_eaarl1_rasts(rasts, verbose=) {
+func georef_eaarl1(rasts, gns, ins, ops, daystart) {
    // raw = get_tld_rasts(fname=)
    // decoded = decode_rasters(raw)
    dims = dimsof(rasts);
    rasts = rasts(*);
-
-   if(verbose)
-      write, format="%s", " Interpolating: ";
 
    // Initialize waveforms with raster, pulse, soe, and transmit waveform
    wf = array(ALPS_WAVEFORM, 120, numberof(rasts));
@@ -43,39 +40,33 @@ func georef_eaarl1_rasts(rasts, verbose=) {
    // Relative timestamps
    somd = wf.soe - soe_day_start;
 
-   if(verbose)
-      write, format="%s", "roll/pitch/yaw... ";
-
    // Aircraft roll, pitch, and yaw (in degrees)
-   aR = interp(tans.roll, tans.somd, somd);
-   aP = interp(tans.pitch, tans.somd, somd);
-   aY = -interp_angles(tans.heading, tans.somd, somd);
-
-   if(verbose)
-      write, format="%s", "easting/northing/altitude...\n";
+   aR = interp(ins.roll, ins.somd, somd);
+   aP = interp(ins.pitch, ins.somd, somd);
+   aY = -interp_angles(ins.heading, ins.somd, somd);
 
    // Cast PNAV to UTM
    if(is_void(zone)) {
-      ll2utm, pnav.lat, pnav.lon, , , pzone;
-      zones = short(interp(pzone, pnav.sod, somd) + 0.5);
+      ll2utm, gns.lat, gns.lon, , , pzone;
+      zones = short(interp(pzone, gns.sod, somd) + 0.5);
       zone = histogram(zones)(mxx);
       zones = pzone = [];
    }
-   ll2utm, pnav.lat, pnav.lon, pnorth, peast, force_zone=zone;
+   ll2utm, gns.lat, gns.lon, pnorth, peast, force_zone=zone;
 
    // GPS antenna location
-   gx = interp(peast, pnav.sod, somd);
-   gy = interp(pnorth, pnav.sod, somd);
-   gz = interp(pnav.alt, pnav.sod, somd);
+   gx = interp(peast, gns.sod, somd);
+   gy = interp(pnorth, gns.sod, somd);
+   gz = interp(gns.alt, gns.sod, somd);
    pnorth = peast = somd = [];
 
    // Scan angle
    ang = rasts.sa;
 
    // Offsets
-   dx = ops_conf.x_offset;
-   dy = ops_conf.y_offset;
-   dz = ops_conf.z_offset;
+   dx = ops.x_offset;
+   dy = ops.y_offset;
+   dz = ops.z_offset;
 
    // Constants
    cyaw = 0.;
@@ -83,21 +74,21 @@ func georef_eaarl1_rasts(rasts, verbose=) {
    mirang = -22.5;
 
    // Apply biases
-   rng -= ops_conf.range_biasM;
-   aR += ops_conf.roll_bias;
-   aP += ops_conf.pitch_bias;
-   aY += ops_conf.yaw_bias;
-   ang += ops_conf.scan_bias;
+   rng -= ops.range_biasM;
+   aR += ops.roll_bias;
+   aP += ops.pitch_bias;
+   aY += ops.yaw_bias;
+   ang += ops.scan_bias;
 
    // Convert to degrees
    ang *= SAD;
 
-   if(verbose)
-      write, "Projecting to the surface...";
    // Georeference
    georef = scanflatmirror2_direct_vector(
       aY, aP, aR, gx, gy, gz, dx, dy, dz,
       cyaw, lasang, mirang, ang, rng);
+   aY = aP = aR = gx = gy = gz = dx = dy = dz = [];
+   cyaw = lasang = mirang = ang = rng = [];
 
    wf.x0 = georef(..,1) * 100;
    wf.y0 = georef(..,2) * 100;
@@ -105,6 +96,7 @@ func georef_eaarl1_rasts(rasts, verbose=) {
    wf.x1 = georef(..,4) * 100;
    wf.y1 = georef(..,5) * 100;
    wf.z1 = georef(..,6) * 100;
+   georef = [];
 
    // Expand to hold return waveform, shape properly, then fill in
    wf = array(wf, 4);
