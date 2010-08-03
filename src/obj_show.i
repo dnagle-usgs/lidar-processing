@@ -19,7 +19,6 @@ func obj_show(obj, prefix=, maxary=, maxchild=, maxdepth=) {
 
 _obj_show_workers = save();
 func _obj_show_worker(obj, name, prefix, stage) {
-  scratch = save(scratch, curdepth);
   curdepth++;
   if(stage == 1)
     prefix += [" |-", " | "];
@@ -31,7 +30,7 @@ func _obj_show_worker(obj, name, prefix, stage) {
     _obj_show_workers, typeof(obj), obj, name, prefix(1), prefix(2);
   else
     write, format="%s %s (%s)\n", prefix(1), name, typeof(obj);
-  restore, scratch;
+  curdepth--;
 }
 
 /*
