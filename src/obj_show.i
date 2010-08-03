@@ -2,6 +2,7 @@
 
 func obj_show(obj, prefix=, maxary=, maxchild=, maxdepth=) {
 /* DOCUMENT obj_show, obj;
+  -or- output = obj_show(obj);
   Display contents of object OBJ in a tree-like representation. Keyword PREFIX
   can be used to prepend a prefix to the printed lines. Keyword MAXARY (default
   5) can be used to specify the maximum number of elements for printing array
