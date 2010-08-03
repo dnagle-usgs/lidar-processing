@@ -19,6 +19,63 @@ struct ALPS_WAVEFORM {
    pointer *rx;
 }
 
+func batch_georef_eaarl1(tlddir, files=, outdir=, gns=, ins=, ops=, daystart=, update=) {
+   default, update, 0;
+
+   tldfiles = !is_void(files) ? files : find(tlddir, glob="*.tld");
+   outfiles = file_rootname(tldfiles) + ".pbd";
+   if(!is_void(outdir))
+      outfiles = file_join(outdir, file_tail(outfiles));
+
+   if(numberof(tldfiles) && update) {
+      w = where(!file_exists(outfiles));
+      if(!numberof(w))
+         return;
+      tldfiles = tldfiles(w);
+      outfiles = outfiles(w);
+   }
+
+   count = numberof(tldfiles);
+   if(count > 1)
+      sizes = double(file_size(tldfiles))(cum)(2:);
+   else if(count)
+      sizes = file_size(tldfiles);
+   else
+      error, "No files found.";
+
+   default, gns, pnav;
+   default, ins, tans;
+   default, ops, ops_conf;
+   default, daystart, soe_day_start;
+
+   if(is_string(gns))
+      gns = load_pnav(fn=gns);
+   if(is_string(ins))
+      ins = load_ins(ins);
+   if(is_string(ops))
+      ops = load_ops_conf(ops);
+
+   local t0;
+   timer_init, t0;
+   tp = t0;
+
+   for(i = 1; i <= count; i++) {
+      rasts = decode_rasters(get_tld_rasts(fname=tldfiles(i)));
+      data = georef_eaarl1(rasts, gns, ins, ops, daystart);
+      wfdata = hash2ptr(data);
+
+      f = createb(outfiles(i), i86_primitives);
+      save, f, ALPS_WAVEFORM;
+      save, f, wfdata;
+      close, f;
+
+      write, format="[%d/%d] %s: %.2f MB -> %.2f MB -> %.2f MB\n", i, count, file_tail(tldfiles(i)), file_size(tldfiles(i))/1024./1024., fullsizeof(wfdata)/1024./1024., file_size(outfiles(i))/1024./1024.;
+
+      timer_remaining, t0, sizes(i), sizes(0), tp, interval=10;
+   }
+   timer_finished, t0;
+}
+
 func georef_eaarl1(rasts, gns, ins, ops, daystart) {
    // raw = get_tld_rasts(fname=)
    // decoded = decode_rasters(raw)
