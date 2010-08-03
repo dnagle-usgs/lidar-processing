@@ -30,7 +30,7 @@ func _obj_show_worker(obj, name, prefix, stage) {
   if(_obj_show_workers(*,typeof(obj)))
     _obj_show_workers, typeof(obj), obj, name, prefix(1), prefix(2);
   else
-    write, format="%s %s (%s)\n", prefixes(1), name, typeof(obj);
+    write, format="%s %s (%s)\n", prefix(1), name, typeof(obj);
   restore, scratch;
 }
 
