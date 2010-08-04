@@ -29,6 +29,12 @@ if(is_void(__eaarl_includes_included__)) {
    require, "ytk.i";
    require, "zlib.i";
 
+   // Check for Yorick 2.2.00x and include things that depend on it if safe.
+   // Yorick 2.2 will be required in the future, but for now it is optional.
+   if(is_func(is_obj)) {
+      require, "obj_show.i";
+   }
+
    // Replace built-in median with Yeti's median which is much faster
    if(is_void(ymedian))
       ymedian = median;
