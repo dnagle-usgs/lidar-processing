@@ -46,6 +46,27 @@ func h_merge(..) {
    return obj;
 }
 
+func obj_merge(obj, ..) {
+/* DOCUMENT obj = obj_merge(objA, objB, objC, ...)
+   -or-  obj_grow, objA, objB, objC, ...
+
+   Merges all of its arguments together into a single object. All objects must
+   be oxy group objects. In the functional form, the new merged object is
+   returned. In the subroutine form, the first object is updated to contain the
+   result of the merge. If two objects use the same key name, the last object's
+   value is used.
+*/
+// Original David Nagle 2010-08-03
+   if(!am_subroutine())
+      obj = obj(:);
+   while(more_args()) {
+      src = next_arg();
+      for(i = 1; i <= src(*); i++)
+         save, obj, src(*,i), src(noop(i));
+   }
+   return obj;
+}
+
 func assign(ary, &v1, &v2, &v3, &v4, &v5, &v6, &v7, &v8, &v9, &v10) {
 /* DOCUMENT assign, ary, v1, v2, v3, v4, v5, .., v10
 
