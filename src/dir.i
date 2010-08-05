@@ -235,6 +235,31 @@ func file_pathtype(path) {
    return result;
 }
 
+func file_commonpath(path, ..) {
+/* DOCUMENT file_commonpath(paths, paths, ...)
+   Given a series of paths, this will return the common directory under which
+   all given paths can be found. All given paths must be absolute paths.
+   Arguments can be scalars or arrays; output is always a single scalar.
+*/
+   while(more_args())
+      grow, path, next_arg();
+   if(numberof(path) <= 1)
+      return numberof(path) ? path(1) : [];
+   if(anyof(file_pathtype(path)) == "relative")
+      return [];
+   len = strlen(path)(min);
+   path = strpart(path, 1:len);
+   while(nallof(path == path(1))) {
+      len--;
+      path = strpart(path, 1:len);
+   }
+   path = path(1);
+   if(strpart(path, 0:0) == "/")
+      return strpart(path, :-1);
+   else
+      return file_dirname(path);
+}
+
 func file_relative(base, dest) {
 /* DOCUMENT file_relative(base, dest)
    Returns a relative path for dest as referenced against base.
