@@ -6,6 +6,9 @@ func wfobj(obj) {
    keydefault, obj, source="unknown", system="unknown", record_format=0,
       cs=string(0);
    save, obj, obj_index, index=wfobj_index;
+   save, obj, check_cs_xyz=wfobj_check_cs_xyz, xyzwrap=wfobj_xyzwrap,
+      x=wfobj_x, y=wfobj_y, z=wfobj_z, xyz=wfobj_xyz, xref=wfobj_xref,
+      yref=wfobj_yref, zref=wfobj_zref, xyzref=wfobj_xyzref;
    return obj;
 }
 
@@ -17,6 +20,36 @@ func wfobj_index(idx) {
    else
       return use(obj_index, idx, which=which, bymethod=bymethod);
 }
+
+func wfobj_check_cs_xyz(nil) {
+// ensures that working xyz are in current cs
+   extern current_cs;
+   use, cs_cur, cs_xyz, cs_xyz_ref;
+   if(current_cs == cs_cur)
+      return;
+   cs_cur = current_cs;
+   cs_xyz = use(xyz,);
+   cs_xyz_ref = use(xyzref,);
+   if(use(cs) == cs_cur);
+      return;
+   cs2cs, use(cs), cs_cur, cs_xyz;
+   cs2cs, use(cs), cs_cur, cs_xyzref;
+}
+
+func wfobj_xyzwrap(var, which, idx) {
+   call, use(check_cs_xyz,);
+   return use(noop(var), idx, which);
+}
+
+func wfobj_x(idx) { return use(xyzwrap, "cs_xyz", 1, idx); }
+func wfobj_y(idx) { return use(xyzwrap, "cs_xyz", 2, idx); }
+func wfobj_z(idx) { return use(xyzwrap, "cs_xyz", 3, idx); }
+func wfobj_xyz(idx) { return use(xyzwrap, "cs_xyz", , idx); }
+
+func wfobj_xref(idx) { return use(xyzwrap, "cs_xyz_ref", 1, idx); }
+func wfobj_yref(idx) { return use(xyzwrap, "cs_xyz_ref", 2, idx); }
+func wfobj_zref(idx) { return use(xyzwrap, "cs_xyz_ref", 3, idx); }
+func wfobj_xyzref(idx) { return use(xyzwrap, "cs_xyz_ref", , idx); }
 
 struct ALPS_WAVEFORM {
    // Location of reference point, needed for projecting location of other
