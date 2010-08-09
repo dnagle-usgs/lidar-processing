@@ -795,6 +795,8 @@ func obj_index(idx, which=, bymethod=, ignoremissing=) {
    default, which, use(*,);
    default, bymethod, save();
    default, ignoremissing, 1;
+   if(is_scalar(which))
+      which = [which];
 
    methods = bymethod(*,);
    count = numberof(methods);
