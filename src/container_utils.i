@@ -738,6 +738,9 @@ func obj_index(idx, which=, bymethod=, ignoremissing=) {
       ignoremissing= By default, missing keys are silently ignored. Provide
          ignoremissing=0 to raise errors instead.
 
+   If any fields are multi-dimensional arrays, they are indexed along their
+   first dimension: field(idx,).
+
    Examples:
 
       > example = save(index=obj_index, copy=obj_copy, a=[2,4,6,8,10],
