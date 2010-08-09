@@ -12,9 +12,11 @@
 #    feeds those names to efdb which creates an "idx" file named
 #    after the mission date.     
 
+efdb="efdb"                   # this should work if pathing is setup
+# efdb="/opt/eaarl/bin/efdb"  # else 
 dir=`pwd`
 name=`basename $dir`".idx"
 echo $name
 cd eaarl
 # find . -name \*.tld | sed 's#./##'
-find . -name \*.tld | sed 's#./##' | sort | /opt/eaarl/lidar-processing/bin/efdb $name
+find . -name \*.tld | sed 's#./##' | sort | $efdb $name

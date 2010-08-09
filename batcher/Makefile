@@ -1,7 +1,8 @@
 # Batch processing Makefile
 #
 
-BIN = ../bin
+# push the directory to the same leval as lidar-processing
+BIN = ../../bin
 
 var:
 	@ echo
@@ -19,20 +20,20 @@ else
 	@echo
 	@echo "WARNING: need root priviledges!!"
 	@echo "   to install $@"
-	@echo "WARNING"
+	@echo "WARNINGd
 	@echo 
 endif
 
-../bin/setup_batch: setup_batch.pl
+$(BIN)/setup_batch: setup_batch.pl
 	install -m uog+rx  $< $@
 
 
 scripts:
-	../bin/setup_batch 		\
+	$(BIN)/setup_batch 		\
 	/etc/init.d/batcher 	\
 
 batch: 									\
-		../bin/setup_batch
-		../bin/setup_batch
+		$(BIN)/setup_batch
+		$(BIN)/setup_batch
 
 all:	scripts
