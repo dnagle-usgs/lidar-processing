@@ -686,6 +686,109 @@ func splitary(ary, num, &a1, &a2, &a3, &a4, &a5, &a6) {
    return ary;
 }
 
+func obj_index(idx, which=, bymethod=, ignoremissing=) {
+/* DOCUMENT obj_index -- method for generic objects
+   result = obj(index, idx, which=, bymethod=, ignoremissing=)
+   obj, index, idx, which=, bymethod=, ignoremissing=
+
+   Indexes into the member variables of the given object.
+
+   Parameter:
+      idx: Must be an expression suitable for indexing into arrays, such as a
+         range or a vector of longs.
+
+   Options:
+      which= Specifies which fields should be indexed into. All remaining
+         fields are left as-is. If not provided, then all indexable fields are
+         indexed into.
+      bymethod= Specifies fields that contain objects that need to be indexed
+         via a given method. This option should be provided as a group object
+         whose members are method names and whose values are the corresponding
+         object members to index using the given method name.
+      ignoremissing= By default, missing keys are silently ignored. Provide
+         ignoremissing=0 to raise errors instead.
+
+   Examples:
+
+      > example = save(index=obj_index, copy=obj_copy, a=[2,4,6,8,10],
+      cont> b=span(.1,.5,5))
+      > obj_show, example
+      TOP (oxy_object, 4 entries)
+      |- index (function)
+      |- copy (function)
+      |- a (long,5) [2,4,6,8,10]
+      `- b (double,5) [0.1,0.2,0.3,0.4,0.5]
+      > indexed = example(index, [2,4])
+      > obj_show, indexed
+      TOP (oxy_object, 4 entries)
+      |- index (function)
+      |- copy (function)
+      |- a (long,2) [4,8]
+      `- b (double,2) [0.2,0.4]
+      >
+
+      > nested = save(index=obj_index, copy=obj_copy, example, c=[1,2,3,4,5],
+      cont> d=span(0,1,5), g=42)
+      > obj_show, nested
+      TOP (oxy_object, 6 entries)
+      |- index (function)
+      |- copy (function)
+      |- example (oxy_object, 4 entries)
+      |  |- index (function)
+      |  |- copy (function)
+      |  |- a (long,5) [2,4,6,8,10]
+      |  `- b (double,5) [0.1,0.2,0.3,0.4,0.5]
+      |- c (long,5) [1,2,3,4,5]
+      |- d (double,5) [0,0.25,0.5,0.75,1]
+      `- g (long) 42
+      > nested, index, ::2, which=["c","d"], bymethod=save(index=["example"])
+      > obj_show, nested
+      TOP (oxy_object, 6 entries)
+      |- index (function)
+      |- copy (function)
+      |- example (oxy_object, 4 entries)
+      |  |- index (function)
+      |  |- copy (function)
+      |  |- a (long,3) [2,6,10]
+      |  `- b (double,3) [0.1,0.3,0.5]
+      |- c (long,3) [1,3,5]
+      |- d (double,3) [0,0.5,1]
+      `- g (long) 42
+      >
+*/
+// Original David Nagle 2010-08-09
+   result = am_subroutine() ? use() : use(copy,);
+   default, which, use(*,);
+   default, bymethod, save();
+   default, ignoremissing, 1;
+
+   methods = bymethod(*,);
+   count = numberof(methods);
+   for(i = 1; i <= count; i++) {
+      keys = bymethod(methods(i));
+      which = set_difference(which, keys);
+      nkeys = numberof(keys);
+      for(j = 1; j <= nkeys; j++) {
+         if(result(*,keys(j)))
+            save, result, keys(j), result(keys(j), methods(i), idx);
+         else if(!ignoremissing)
+            error, "Missing key: " + keys(j);
+      }
+   }
+
+   count = numberof(which);
+   for(i = 1; i <= count; i++) {
+      if(result(*,which(i))) {
+         if(is_array(result(which(i))) || is_obj(result(which(i))))
+            save, result, which(i), result(which(i), idx);
+      } else if(!ignoremissing) {
+         error, "Missing key: " + which(i);
+      }
+   }
+
+   return result;
+}
+
 func obj_copy(dst) {
 /* DOCUMENT obj_copy -- method for generic objects
    newobj = obj(copy,)
