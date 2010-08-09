@@ -690,7 +690,7 @@ func obj_generic(obj, force=) {
 /* DOCUMENT obj_generic, obj, force=
    obj = obj_generic(force=)
 
-   Initialized the given object OBJ as a generic object by defining the
+   Initializes the given object OBJ as a generic object by defining the
    following methods:
       obj(index,)          -or- obj, index
       obj(copy,)           -or- obj, copy
