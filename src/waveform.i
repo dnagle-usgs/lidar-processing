@@ -1,4 +1,23 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
+
+func wfobj(obj) {
+   default, obj, save();
+   obj_generic, obj;
+   keydefault, obj, source="unknown", system="unknown", record_format=0,
+      cs=string(0);
+   save, obj, index=wfobj_index, obj_index=obj_index;
+   return obj;
+}
+
+func wfobj_index(idx) {
+   which = ["soe", "record", "tx", "rx", "cs_xyz", "cs_xyz_ref"];
+   bymethod = save(index=["raw_xyz","raw_xyz_ref"]);
+   if(am_subroutine())
+      use, obj_index, idx, which=which, bymethod=bymethod;
+   else
+      return use(obj_index, idx, which=which, bymethod=bymethod);
+}
+
 struct ALPS_WAVEFORM {
    // Location of reference point, needed for projecting location of other
    // pixels. Can be any arbitrary point, but the prefered point would be on
