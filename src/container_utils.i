@@ -686,6 +686,36 @@ func splitary(ary, num, &a1, &a2, &a3, &a4, &a5, &a6) {
    return ary;
 }
 
+func obj_generic(obj, force=) {
+/* DOCUMENT obj_generic, obj, force=
+   obj = obj_generic(force=)
+
+   Initialized the given object OBJ as a generic object by defining the
+   following methods:
+      obj(index,)          -or- obj, index
+      obj(copy,)           -or- obj, copy
+      obj(copy_methods,)   -or- obj, copy_methods
+      obj(copy_data,)      -or- obj, copydata
+
+   For more information on a given method, use "help, obj(METHOD)" or "help,
+   obj_METHOD".
+
+   Parameter:
+      obj: If provided, must be a valid group object.
+
+   Option:
+      force: By default, the generic methods are only initalized if they do not
+         already exist. Using force=1 will overwrite existing definitions.
+*/
+// Original David Nagle 2010-08-09
+   default, force, 0;
+   default, obj, save();
+   op = force ? save : keydefault;
+   op, obj, index=obj_index, copy=obj_copy,
+      copy_methods=obj_copy_methods, copy_data=obj_copy_data;
+   return obj;
+}
+
 func obj_index(idx, which=, bymethod=, ignoremissing=) {
 /* DOCUMENT obj_index -- method for generic objects
    result = obj(index, idx, which=, bymethod=, ignoremissing=)
