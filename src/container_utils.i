@@ -48,7 +48,7 @@ func h_merge(..) {
 
 func obj_merge(obj, ..) {
 /* DOCUMENT obj = obj_merge(objA, objB, objC, ...)
-   -or-  obj_grow, objA, objB, objC, ...
+   -or-  obj_merge, objA, objB, objC, ...
 
    Merges all of its arguments together into a single object. All objects must
    be oxy group objects. In the functional form, the new merged object is
