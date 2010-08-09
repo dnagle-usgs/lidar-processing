@@ -5,7 +5,7 @@ func wfobj(obj) {
    obj_generic, obj;
    keydefault, obj, source="unknown", system="unknown", record_format=0,
       cs=string(0);
-   save, obj, index=wfobj_index, obj_index=obj_index;
+   save, obj, obj_index, index=wfobj_index;
    return obj;
 }
 
