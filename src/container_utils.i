@@ -730,7 +730,8 @@ func obj_index(idx, which=, bymethod=, ignoremissing=) {
    Options:
       which= Specifies which fields should be indexed into. All remaining
          fields are left as-is. If not provided, then all indexable fields are
-         indexed into.
+         indexed into. To forcibly indicate that no fields should be indexed
+         into, use which=string(0).
       bymethod= Specifies fields that contain objects that need to be indexed
          via a given method. This option should be provided as a group object
          whose members are method names and whose values are the corresponding
@@ -808,6 +809,12 @@ func obj_index(idx, which=, bymethod=, ignoremissing=) {
             error, "Missing key: " + keys(j);
       }
    }
+
+   // Discard any string(0) keys
+   w = where(which);
+   if(!numberof(w))
+      return result;
+   which = which(w);
 
    count = numberof(which);
    for(i = 1; i <= count; i++) {
