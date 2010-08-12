@@ -318,10 +318,8 @@ func atm_to_alps(atm_raw, ymd) {
    atm.lint = atm_raw.psig;
 
    write, "Converting ATM GPS Time to SOE";
-   for (i=0; i<numberof(atm); i++) {
-      atm.soe(i) = time2soe([int(ymd/10000), ymd2doy(ymd),
-             (hms2sod(atm_raw.gps_time(i)/100.0)), 0, 0, 0]);
-   }
+   atm.soe = time2soe([int(ymd/10000), ymd2doy(ymd),
+      (hms2sod(atm_raw.gps_time/100.)), 0, 0, 0]);
    atm.sint = atm_raw.pulse_start;
    atm.scaz = atm_raw.azimuth;
    atm.pitch = atm_raw.pitch;
