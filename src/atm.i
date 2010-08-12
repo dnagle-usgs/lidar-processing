@@ -229,12 +229,13 @@ func open_atm_raw(fname) {
       f.data_offset -- Offset to data
       f.data -- Array of ATM data, either ATM_RAW_10 or ATM_RAW_14
 */
+   word_len = 4;
+
    f = open(fname, "rb");
    sun_primitives, f;
    add_variable, f, 0, "rec_len", long;
-   add_variable, f, 4, "data_offset", long;
+   add_variable, f, word_len + f.rec_len, "data_offset", long;
 
-   word_len = 4;
    file_len = sizeof(f);
    rec_num = (file_len - f.data_offset + 1) / f.rec_len;
 
