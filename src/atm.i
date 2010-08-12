@@ -358,7 +358,7 @@ func atm_create_tiles(atm, dir, name=, buffer=) {
    mkdir, dir;
    
    bad = atm.north == 0 | atm.east == 0;
-   write, format=" There %i (of %i, %.2f%%) unusable points without north/east coords.\n",
+   write, format=" There are %i (of %i, %.2f%%) unusable points without north/east coords.\n",
       numberof(where(bad)), numberof(atm), 1.0*numberof(where(bad))/numberof(atm);
    atm = atm(where(!bad));
    bad = [];
