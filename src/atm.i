@@ -117,30 +117,25 @@ func merge_qi_tiles(dir, glob=, srt=) {
    }
 }
 
-func batch_qi_to_tiles(con_dir, ymd, dir,searchstr=, name=) {
-/* DOCUMENT batch_qi_to_tiles, con_dir, ymd, dir,searchstr, name=
+func batch_qi_to_tiles(con_dir, ymd, dir, searchstr=, name=) {
+/* DOCUMENT batch_qi_to_tiles, con_dir, ymd, dir, searchstr=, name=
 
-   Loads the data from the files in fname and generates index tiles for them in
-   dir.
+   Finds the files in CON_DIR and generates Index Tiles for them in DIR.
 
    Parameters:
-
-      con_dir, string: File names of the qi files.
-
-      ymd: The year-month-date of the qi files. format YYYYMMDD
-
-      dir, string: The directory in which to create the Index Tiles.
+      con_dir: Path where qi files are found.
+      ymd: A 8-digit integer representing the year-month-date of the qi files
+         in YYYYMMDD format. Example: 19980215 (for Feb. 15, 1998)
+      dir: The directory in which to create the Index Tiles.
 
    Options:
-
-      searchstr, string: search string of files to search for   default:"*.pbd"
-
-      name, string= A name to use within the pbd file that gets generated. This
+      searchstr= Search string to use to find files.
+            searchstr="*.qi"     (default)
+      name= A name to use within the pbd file that gets generated. This
          defaults to the first portion of the qi file's filename, up to the
          first dot.
 
-   See also: load_atm_raw atm_create_tiles merge_qi_tiles
-
+   SEE ALSO: load_atm_raw atm_create_tiles merge_qi_tiles
 */
 // Original Jim Lebonitte 2008-01-23
 // Rewritten David Nagle 2009-01-27
