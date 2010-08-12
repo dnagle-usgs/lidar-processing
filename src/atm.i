@@ -239,38 +239,6 @@ func load_atm_raw(fname) {
    atm_raw = array(ATM_RAW, rec_num);
    _read, f, data_offset, atm_raw;
    
-  /* 
-   bad = atm_raw.lat < 0 ; 
-   
-   write, format=" There %i (of %i, %.2f%%) unusable points with bad lat coordinates.\n",
-      numberof(where(bad)), numberof(atm_raw), 1.0*numberof(where(bad))/numberof(atm_raw);
-   
-   if (numberof(where(bad == 1)) == numberof(atm_raw))
-      atm_raw= [];
-   
-
-   if (where(bad)==1 != 0) 
-      if(!is_void(atm_raw)) 
-         atm_raw=atm_raw(where(bad == 0 ));
-   
-   if(!is_void(atm_raw)) {
-      bad = [];
-      bad = atm_raw.lon > 0 ; 
-      write, format=" There %i (of %i, %.2f%%) unusable points with bad lon coordinates.\n",
-      numberof(where(bad)), numberof(atm_raw), 1.0*numberof(where(bad))/numberof(atm_raw);
-   
-      if (numberof(where(bad == 1)) == numberof(atm_raw))
-         atm_raw= [];
-      
-      if (!is_void(bad)) 
-          if(!is_void(atm_raw)) 
-             atm_raw=atm_raw(where(bad == 0));
-      
-      bad = [];
-  } 
-  jim();
-  */
-
    return atm_raw;
 }
 
