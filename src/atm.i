@@ -143,7 +143,7 @@ func batch_qi_to_tiles(con_dir, ymd, dir, searchstr=, name=) {
    files = find(con_dir, glob=search_str);
 
    for(i = 1; i<=numberof(files); i++) {
-      qi_to_tiles(files(i), ymd, dir, name=name)
+      qi_to_tiles, files(i), ymd, dir, name=name;
    }
 }
 
