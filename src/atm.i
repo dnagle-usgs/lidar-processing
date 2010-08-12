@@ -40,6 +40,36 @@ struct ATM_RAW {
    int gps_time;     // GPS time packed (example: 153320100 = 15h 33m 20s 100ms)
 }
 
+struct ATM_RAW_10 {
+   int rel_time;     // Relative time - msec from start of data file
+   int lat;          // laser spot latitude (degrees x 1,000,000)
+   int lon;          // laser spot longitude (degrees x 1,000,000)
+   int elev;         // Elevation (millimeters)
+   int pulse_start;  // Start Pulse Signal Strength (relative)
+   int pulse_refl;   // Reflected Laser Signal Strength (relative)
+   int azimuth;      // Scan azimuth (degrees x 1,000)
+   int pitch;        // Pitch (degrees x 1,000)
+   int roll;         // Roll (degrees x 1,000)
+   int gps_time;     // GPS time packed (example: 153320100 = 15h 33m 20s 100ms)
+}
+
+struct ATM_RAW_14 {
+   int rel_time;     // Relative time - msec from start of data file
+   int lat;          // laser spot latitude (degrees x 1,000,000)
+   int lon;          // laser spot longitude (degrees x 1,000,000)
+   int elev;         // Elevation (millimeters)
+   int pulse_start;  // Start Pulse Signal Strength (relative)
+   int pulse_refl;   // Reflected Laser Signal Strength (relative)
+   int azimuth;      // Scan azimuth (degrees x 1,000)
+   int pitch;        // Pitch (degrees x 1,000)
+   int roll;         // Roll (degrees x 1,000)
+   int psig;         // Passive signal (relative)
+   int plat;         // Passive Footprint latitude (degrees x 1,000,000)
+   int plon;         // Passive footprint longitude (degrees x 1,000,000)
+   int pelev;        // Passive footprint synthesized elevation (millimeters)
+   int gps_time;     // GPS time packed (example: 153320100 = 15h 33m 20s 100ms)
+}
+
 func merge_qi_tiles(dir, glob=, srt=) {
 /* DOCUMENT merge_qi_tiles, dir, glob=, srt=
 
@@ -192,54 +222,41 @@ func qi_to_tiles(fname, ymd, dir, name=) {
    }
 }
 
-func load_atm_raw(fname) {
-/* DOCUMENT load_atm_raw(fname)
-
-   Loads the ATM data from file fname and returns it as an array of ATM_RAW.
-
-   See also: atm_to_alps qi_to_tiles
+func open_atm_raw(fname) {
+/* DOCUMENT f = open_atm_raw(fname)
+   Returns a filehandle for an ATM QI file with these variables installed:
+      f.rec_len -- Record length
+      f.data_offset -- Offset to data
+      f.data -- Array of ATM data, either ATM_RAW_10 or ATM_RAW_14
 */
    f = open(fname, "rb");
    sun_primitives, f;
+   add_variable, f, 0, "rec_len", long;
+   add_variable, f, 4, "data_offset", long;
 
-   // The size of each word
    word_len = 4;
-   
-   // The size of each record
-   rec_len = 0;
-   _read, f, 0, rec_len;
-
-   // Data segment offset
-   data_offset = 0;
-   _read, f, rec_len + word_len, data_offset;
-
-   // Size of file
    file_len = sizeof(f);
+   rec_num = (file_len - f.data_offset + 1) / f.rec_len;
 
-   // Number of records
-   rec_num = (file_len - data_offset + 1) / rec_len;
-   
-   all_fields = ["rel_time", "lat", "lon", "elev", "pulse_start", "pulse_refl",
-         "azimuth", "pitch", "roll", "psig", "plat", "plon", "pelev",
-         "gps-time"];
-   if(rec_len == 14 * word_len) {
-      fields = all_fields;
-   } else if(rec_len == 10 * word_len) {
-      fields = all_fields([1,2,3,4,5,6,7,8,9,14]);
-   } else {
-      error, swrite(format="Don't know how to handle a record length of %d.",
-            rec_len);
-   }
-   
-   for(i = 1; i <= numberof(fields); i++) {
-      add_member, f, "ATM_RAW", (i - 1) * word_len, fields(i), int, 1;
-   }
-   install_struct, f, "ATM_RAW";
+   if(f.rec_len == 14 * word_len)
+      add_variable, f, f.data_offset, "data", ATM_RAW_14, rec_num;
+   else if(f.rec_len == 10 * word_len)
+      add_variable, f, f.data_offset, "data", ATM_RAW_10, rec_num;
+   else
+      error, swrite(format="Unknown record length %d", f.rec_len);
 
-   atm_raw = array(ATM_RAW, rec_num);
-   _read, f, data_offset, atm_raw;
-   
-   return atm_raw;
+   return f;
+}
+
+func load_atm_raw(fname) {
+/* DOCUMENT load_atm_raw(fname)
+   Loads the ATM data from file fname and returns it as an array of ATM_RAW.
+   SEE ALSO: atm_to_alps qi_to_tiles open_atm_raw
+*/
+   f = open_atm_raw(fname);
+   data = struct_cast(f.data, ATM_RAW);
+   close, f;
+   return data;
 }
 
 func atm_to_alps(atm_raw, ymd) {
