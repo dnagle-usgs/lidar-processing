@@ -360,6 +360,18 @@ func merge_pointers(pary) {
    return mary;
 }
 
+func pointers2group(pary) {
+/* DOCUMENT grp = pointers2group(pary)
+   Given an array of pointers PARY, this returns a group object GRP that
+   contains the dereferenced pointers' contents such that grp(i) == *pary(i).
+*/
+   obj = save();
+   count = numberof(pary);
+   for(i = 1; i <= count; i++)
+      save, obj, string(0), *pary(i);
+   return obj;
+}
+
 func hash2ptr(hash, token=) {
 /* DOCUMENT ptr = hash2ptr(hash, token=)
    Converts a Yeti hash into a pointer tree, which can then be stored safely in
