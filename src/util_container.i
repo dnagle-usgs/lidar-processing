@@ -358,8 +358,8 @@ func array_allocate(&data, request) {
    mememory has to be reallocated for your data. Repeated grows is very
    expensive!
 
-   The only caveat is that you have to know what kind of data structure you're
-   using up front (to pre-create the array) and that it has to be
+   The only caveats are that you have to know what kind of data structure
+   you're using up front (to pre-create the array) and that it has to be
    one-dimensional.
 */
    size = numberof(data);
