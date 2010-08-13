@@ -222,6 +222,9 @@ func pbd_load(file, &err, &vname) {
 }
 
 func is_pbd(file) {
+/* DOCUMENT is_pbd(filename)
+   Checks if the given file is a PBD file. Returns 1 if it is, 0 if it's not.
+*/
    yPDBopen = 1;
    f = open(file, "rb");
    result = ! _not_pdb(f, 0);
