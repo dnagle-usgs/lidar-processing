@@ -383,8 +383,8 @@ func array_allocate(&data, request) {
    grow, data, data;
 }
 
-func splitary(ary, num, &a1, &a2, &a3, &a4, &a5, &a6) {
-/* DOCUMENT splitary, ary, num, a1, a2, a3, a4, a5, a6
+func splitary(args) {
+/* DOCUMENT splitary, ary, num, a1, a2, a3, ...
    result = splitary(ary, num)
 
    This allows you to split up an array using a dimension of a specified size.
@@ -484,26 +484,26 @@ func splitary(ary, num, &a1, &a2, &a3, &a4, &a5, &a6) {
       > splitary, ary, 3, , , z
 */
 // Original David Nagle 2010-03-08
+   if(args(0) == 1)
+      return;
+   if(args(0,2) == 1 && is_integer(args(2))) {
+      num = args(2);
+      offset = 2;
+   } else {
+      num = args(0) - 1;
+      offset = 1;
+   }
+   ary = args(1);
    dims = dimsof(ary);
    if(dims(1) < 1)
       error, "Input must be array (with 1 or more dimensions).";
    w = where(dims(2:) == num);
    if(!numberof(w))
-      error, "Input array does not contain requested dimension.";
+      error, "Input array does not contain required dimension.";
    if(dims(0) != num)
       ary = transpose(ary, indgen(dims(1):w(1):-1));
-   a1 = a2 = a3 = a4 = a5 = a6 = [];
-   if(num >= 1)
-      a1 = ary(..,1);
-   if(num >= 2)
-      a2 = ary(..,2);
-   if(num >= 3)
-      a3 = ary(..,3);
-   if(num >= 4)
-      a4 = ary(..,4);
-   if(num >= 5)
-      a5 = ary(..,5);
-   if(num >= 6)
-      a6 = ary(..,6);
+   for(i = 1; i <= num; i++)
+      args, i + offset, ary(..,i);
    return ary;
 }
+wrap_args, splitary;
