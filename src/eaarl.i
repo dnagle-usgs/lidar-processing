@@ -60,7 +60,6 @@ if(is_void(__eaarl_includes_included__)) {
    require, "colorbar.i";
    require, "compare_transects.i";
    require, "comparison_fns.i";
-   require, "container_utils.i";
    require, "cs.i";
    require, "data_rgn_selector.i";
    require, "data_segments.i";
@@ -115,6 +114,9 @@ if(is_void(__eaarl_includes_included__)) {
    require, "strutil.i";
    require, "surface_topo.i";
    require, "transect.i";
+   require, "util_cast.i";
+   require, "util_container.i";
+   require, "util_obj.i";
    require, "veg.i";
    require, "wgs842nad83.i";
    require, "ytime.i";
