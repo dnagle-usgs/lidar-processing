@@ -2,9 +2,10 @@
 require, "eaarl.i";
 
 /*
-   This file is intended to gather various "container" related utility code.
-   For the purpose of this file, a "container" is anything that groups together
-   data. This includes:
+   This file is intended to gather various "container" related utility code
+   that doesn't have a more appropriate home elsewhere.  For the purpose of
+   this file, a "container" is anything that groups together data. This
+   includes:
       - arrays
       - lists
       - structs
