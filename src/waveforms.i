@@ -1,6 +1,9 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 
-func wfobj(obj) {
+scratch = save(scratch, tmp);
+tmp = save(index, check_cs, xyzwrap, x0, y0, z0, xyz0, x1, y1, z1, xyz1);
+
+func wfobj(base, obj) {
    default, obj, save();
    obj_generic, obj;
    keydefault, obj, source="unknown", system="unknown", record_format=0,
@@ -12,44 +15,48 @@ func wfobj(obj) {
    return obj;
 }
 
-func wfobj_index(idx) {
-   which = ["soe", "record", "tx", "rx", "cs_xyz", "cs_xyz_ref"];
-   bymethod = save(index=["raw_xyz","raw_xyz_ref"]);
+func index(idx) {
+   which = ["raw_xyz0","raw_xyz1", "soe", "record", "tx", "rx", "cs_xyz0",
+      "cs_xyz1"];
    if(am_subroutine())
-      use, obj_index, idx, which=which, bymethod=bymethod;
+      use, obj_index, idx, which=which;
    else
-      return use(obj_index, idx, which=which, bymethod=bymethod);
+      return use(obj_index, idx, which=which);
 }
 
-func wfobj_check_cs_xyz(nil) {
+func check_cs(nil) {
 // ensures that working xyz are in current cs
    extern current_cs;
    use, cs_cur, cs_xyz, cs_xyz_ref;
    if(current_cs == cs_cur)
       return;
    cs_cur = current_cs;
-   cs_xyz = use(xyz,);
-   cs_xyz_ref = use(xyzref,);
-   if(use(cs) == cs_cur);
-      return;
-   cs2cs, use(cs), cs_cur, cs_xyz;
-   cs2cs, use(cs), cs_cur, cs_xyzref;
+   if(use(cs) == cs_cur) {
+      eq_nocopy, cs_xyz0, raw_xyz0;
+      eq_nocopy, cs_xyz1, raw_xyz1;
+   } else {
+      cs_xyz0 = cs2cs(use(cs), cs_cur, raw_xyz0);
+      cs_xyz1 = cs2cs(use(cs), cs_cur, raw_xyz1);
+   }
 }
 
-func wfobj_xyzwrap(var, which, idx) {
-   call, use(check_cs_xyz,);
+func xyzwrap(var, which, idx) {
+   call, use(check_cs,);
    return use(noop(var), idx, which);
 }
 
-func wfobj_x(idx) { return use(xyzwrap, "cs_xyz", 1, idx); }
-func wfobj_y(idx) { return use(xyzwrap, "cs_xyz", 2, idx); }
-func wfobj_z(idx) { return use(xyzwrap, "cs_xyz", 3, idx); }
-func wfobj_xyz(idx) { return use(xyzwrap, "cs_xyz", , idx); }
+func x0(idx) { return use(xyzwrap, "cs_xyz0", 1, idx); }
+func y0(idx) { return use(xyzwrap, "cs_xyz0", 2, idx); }
+func z0(idx) { return use(xyzwrap, "cs_xyz0", 3, idx); }
+func xyz0(idx) { return use(xyzwrap, "cs_xyz0", , idx); }
 
-func wfobj_xref(idx) { return use(xyzwrap, "cs_xyz_ref", 1, idx); }
-func wfobj_yref(idx) { return use(xyzwrap, "cs_xyz_ref", 2, idx); }
-func wfobj_zref(idx) { return use(xyzwrap, "cs_xyz_ref", 3, idx); }
-func wfobj_xyzref(idx) { return use(xyzwrap, "cs_xyz_ref", , idx); }
+func x1(idx) { return use(xyzwrap, "cs_xyz1", 1, idx); }
+func y1(idx) { return use(xyzwrap, "cs_xyz1", 2, idx); }
+func z1(idx) { return use(xyzwrap, "cs_xyz1", 3, idx); }
+func xyz1(idx) { return use(xyzwrap, "cs_xyz1", , idx); }
+
+wfobj = closure(wfobj, restore(tmp));
+restore, scratch;
 
 struct ALPS_WAVEFORM {
    // Location of reference point, needed for projecting location of other
