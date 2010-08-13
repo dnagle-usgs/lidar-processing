@@ -385,12 +385,22 @@ func array_allocate(&data, request) {
 
 func splitary(args) {
 /* DOCUMENT splitary, ary, num, a1, a2, a3, ...
-   result = splitary(ary, num)
+   -or- splitary, ary, a1, a2, a3, ...
+   -or- result = splitary(ary, num)
 
    This allows you to split up an array using a dimension of a specified size.
    The split up parts will then be copied to the output arguments, and the
    return result will contain the parts in a single array that can be indexed
    by its final dimension.
+
+   Arguments:
+      ary: Must be an array with appropriate dimensions.
+      num: If provided, must be a literal integer or an expression; a variable
+         reference will not work. (Surround with noop() if you need to use a
+         variable.)
+      a1, a2, a3, ...: Output arguments, where the parts get stored. If num is
+         not provided, then it is autodetermined by counting the number of
+         output arguments.
 
    Here are some examples that illustrate. This first example shows that a 3xn
    and nx3 array will both yield the same results:
@@ -408,6 +418,17 @@ func splitary(args) {
       > info, ary
        array(short,3,100)
       > splitary, ary, 3, x, y, z
+      > info, x
+       array(short,100)
+      > info, splitary(ary, 3)
+       array(short,100,3)
+
+   And an example that shows it can auto-detect the dimension of interest:
+
+      > ary = array(short, 100, 3)
+      > info, ary
+       array(short,100,3)
+      > splitary, ary, x, y, z
       > info, x
        array(short,100)
       > info, splitary(ary, 3)
@@ -463,22 +484,8 @@ func splitary(args) {
       > y = ary(,2,,,)
       > z = ary(,3,,,)
 
-   When used in a subroutine form, up to six output arguments can be used to
-   acquire the split results, which effectively limits num to 6. However, The
-   limit is a soft limit and does not apply at all when used in the functional
-   form. To illustrate:
-
-      > ary = array(short, 2, 3, 100, 4, 5)
-      > info, ary
-       array(short,2,3,100,4,5)
-      > info, splitary(ary, 100)
-       array(short,2,3,4,5,100)
-      > splitary, ary, 100, u, v, w, x, y, z
-      > info, u
-       array(short,2,3,4,5)
-
-   Output arguments may also be selectively omitted when you do not need all of
-   them:
+   If you provide a dimension size explicitly, then output arguments may also
+   be selectively omitted when you do not need all of them:
 
       > ary = array(short, 100, 3)
       > splitary, ary, 3, , , z
