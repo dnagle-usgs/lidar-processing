@@ -237,6 +237,11 @@ func open_atm_raw(fname) {
    add_variable, f, word_len + f.rec_len, "data_offset", long;
 
    file_len = sizeof(f);
+   if(!f.rec_len) {
+      write, "Record length of 0";
+      return f;
+   }
+
    rec_num = (file_len - f.data_offset + 1) / f.rec_len;
 
    if(f.rec_len == 14 * word_len)
