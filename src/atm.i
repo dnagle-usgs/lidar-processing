@@ -255,6 +255,8 @@ func load_atm_raw(fname) {
    SEE ALSO: atm_to_alps qi_to_tiles open_atm_raw
 */
    f = open_atm_raw(fname);
+   if(!has_member(f, "data"))
+      error, "Unable to extract data from file";
    data = struct_cast(f.data, ATM_RAW);
    close, f;
    return data;
