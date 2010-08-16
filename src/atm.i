@@ -244,7 +244,7 @@ func open_atm_raw(fname) {
    else if(f.rec_len == 10 * word_len)
       add_variable, f, f.data_offset, "data", ATM_RAW_10, rec_num;
    else
-      error, swrite(format="Unknown record length %d", f.rec_len);
+      write, format=" Unknown record length %d\n", f.rec_len;
 
    return f;
 }
