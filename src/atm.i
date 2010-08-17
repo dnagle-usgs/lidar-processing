@@ -321,7 +321,7 @@ func atm_to_alps(atm_raw, ymd) {
    return atm;
 }
 
-func batch_qi2pbd(srcdir, ymd, outdir=, files=, searchstr=) {
+func batch_qi2pbd(srcdir, ymd, outdir=, files=, searchstr=, maxcount=) {
    default, searchstr, ["*.qi", "*.QI"];
 
    if(is_void(files))
@@ -341,16 +341,33 @@ func batch_qi2pbd(srcdir, ymd, outdir=, files=, searchstr=) {
    t0 = array(double, 3);
    timer, t0;
    for(i = 1; i <= count; i++) {
-      qi2pbd, files(i), ymd, outfile=outfiles(i);
+      qi2pbd, files(i), ymd, outfile=outfiles(i), maxcount=maxcount;
       timer_remaining, t0, sizes(i), sizes(0);
    }
    timer_finished, t0;
 }
 
-func qi2pbd(file, ymd, outfile=, vname=) {
+func qi2pbd(file, ymd, outfile=, vname=, maxcount=) {
    default, outfile, file_rootname(file)+".pbd";
    default, vname, file_rootname(file_tail(file));
-   pbd_save, outfile, vname, atm_to_alps(load_atm_raw(file), ymd);
+   default, maxcount, 1750000;
+   data = atm_to_alps(load_atm_raw(file), ymd);
+   count = numberof(data);
+   if(count <= maxcount) {
+      pbd_save, outfile, vname, data;
+   } else {
+      maxnum = long(ceil(count/double(maxcount)));
+      digits = long(log10(maxnum)) + 1;
+      fmt = swrite(format="%%0%dd", digits);
+      outfilefmt = file_rootname(outfile) + "_" + fmt + ".pbd";
+      vnamefmt = vname + "_" + fmt;
+      for(i = 1; i <= maxnum; i++) {
+         lower = (i-1) * maxcount + 1;
+         upper = min(i*maxcount, count);
+         pbd_save, swrite(format=outfilefmt, i), swrite(format=vnamefmt, i),
+            data(lower:upper);
+      }
+   }
 }
 
 func atm_create_tiles(atm, dir, name=, buffer=) {
