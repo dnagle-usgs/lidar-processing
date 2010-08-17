@@ -278,14 +278,18 @@ func open_atm_raw(fname, verbose=) {
    return f;
 }
 
-func load_atm_raw(fname) {
-/* DOCUMENT load_atm_raw(fname)
+func load_atm_raw(fname, verbose=) {
+/* DOCUMENT load_atm_raw(fname, verbose=)
    Loads the ATM data from file fname and returns it as an array of ATM_RAW.
+   If errors are encounted, warnings will be displayed and [] will be returned.
+   Use verbose=0 to disable warning messages.
    SEE ALSO: atm_to_alps qi_to_tiles open_atm_raw
 */
-   f = open_atm_raw(fname);
+   default, verbose, 1;
+   f = open_atm_raw(fname, verbose=verbose);
    if(!has_member(f, "data")) {
-      write, format=" Unable to extract data from %s\n", file_tail(fname);
+      if(verbose)
+         write, format=" Unable to extract data from %s\n", file_tail(fname);
       return [];
    }
    return struct_cast(f.data, ATM_RAW);
