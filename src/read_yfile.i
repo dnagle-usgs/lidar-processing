@@ -53,23 +53,21 @@ func update_var_settings(data, vname, fn=) {
       fn = file_tail(fn);
 
    dstruc = structof(data);
-   if(structeqany(dstruc, FS, R, CVEG_ALL)) {
-      pmode = 0;
-      dmode = 0;
-   } else if(structeqany(dstruc, GEO, GEOALL)) {
+
+   // Default, includes FS, R, CVEG_ALL, ZGRID, ATM, numerical, etc.
+   pmode = dmode = 0;
+
+   // Special cases
+   if(structeqany(dstruc, GEO, GEOALL)) {
       pmode = 1;
       dmode = 1;
    } else if(structeqany(dstruc, VEG, VEG_, VEG__, VEGALL, VEG_ALL, VEG_ALL_)) {
       pmode = 2;
-      if(anyof(regmatch("(^|_)fs(t_|_|\.|$)", [vname, fn]))) {
-         dmode = 0;
-      } else {
+      if(!anyof(regmatch("(^|_)fs(t_|_|\.|$)", [vname, fn]))) {
          dmode = 3;
       }
-   } else if(structeq(dstruc, ZGRID) || is_numerical(data)) {
-      pmode = 0;
-      dmode = 0;
    }
+
    tkcmd, swrite(format="dict set var_settings(%s) processing_mode [lindex $l1pro_data(processing_mode) %d]", vname, pmode);
    tkcmd, swrite(format="dict set var_settings(%s) display_type [lindex $l1pro_data(display_types) %d]", vname, dmode);
 
