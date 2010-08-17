@@ -352,6 +352,11 @@ func qi2pbd(file, ymd, outfile=, vname=, maxcount=) {
    default, vname, file_rootname(file_tail(file));
    default, maxcount, 1750000;
    data = atm_to_alps(load_atm_raw(file), ymd);
+   bad = data.north == 0 | data.east == 0;
+   if(allof(bad))
+      return;
+   if(anyof(bad))
+      data = data(where(!bad));
    count = numberof(data);
    if(count <= maxcount) {
       pbd_save, outfile, vname, data;
