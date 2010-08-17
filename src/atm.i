@@ -321,6 +321,38 @@ func atm_to_alps(atm_raw, ymd) {
    return atm;
 }
 
+func batch_qi2pbd(srcdir, ymd, outdir=, files=, searchstr=) {
+   default, searchstr, ["*.qi", "*.QI"];
+
+   if(is_void(files))
+      files = find(srcdir, glob=searchstr);
+   outfiles = file_rootname(files) + ".pbd";
+   if(!is_void(outdir))
+      outfiles = file_join(outdir, file_tail(outfiles));
+
+   count = numberof(files);
+   if(count > 1)
+      sizes = file_size(files)(cum)(2:);
+   else if(count)
+      sizes = file_size(files);
+   else
+      error, "No files found.";
+
+   t0 = array(double, 3);
+   timer, t0;
+   for(i = 1; i <= count; i++) {
+      qi2pbd, files(i), ymd, outfile=outfiles(i);
+      timer_remaining, t0, sizes(i), sizes(0);
+   }
+   timer_finished, t0;
+}
+
+func qi2pbd(file, ymd, outfile=, vname=) {
+   default, outfile, file_rootname(file)+".pbd";
+   default, vname, file_rootname(file_tail(file));
+   pbd_save, outfile, vname, atm_to_alps(load_atm_raw(file), ymd);
+}
+
 func atm_create_tiles(atm, dir, name=, buffer=) {
 /* DOCUMENT atm_create_tiles, atm, dir, name=, buffer=
 
