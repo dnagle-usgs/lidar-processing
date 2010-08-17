@@ -2545,10 +2545,10 @@ func show_setup ( junk ) {
 
 func batch_tile(srcdir, dstdir, scheme=, mode=, searchstr=, suffix=,
 remove_buffers=, buffer=, uniq=, verbose=, zone=, shorten=, flat=,
-split_zones=, split_days=, day_shift=, north=, east=) {
+split_zones=, split_days=, day_shift=) {
 /* DOCUMENT batch_tile, srcdir, dstdir, scheme=, mode=, searchstr=, suffix=,
    remove_buffers=, buffer=, uniq=, verbose=, zone=, shorten=, flat=,
-   split_zones=, split_days=, day_shift=, north=, east=;
+   split_zones=, split_days=, day_shift=
 
    Loads the data in srcdir that matches searchstr= and partitions it into
    tiles, which are created in dstdir.
@@ -2569,7 +2569,7 @@ split_zones=, split_days=, day_shift=, north=, east=) {
             scheme="10k"      10km structure
             scheme="it"       10km structure
             scheme="qq"       Quarter quad structure
-      mode= Mode of data. Valid values:
+      mode= Mode of data. Valid values include:
             mode="fs"         First surface (default)
             mode="be"         Bare earth
             mode="ba"         Bathy
@@ -2637,30 +2637,12 @@ split_zones=, split_days=, day_shift=, north=, east=) {
             day_shift=-25200     -7 hours; MST and PDT time
             day_shift=-28800     -8 hours; PST and AKDT time
             day_shift=-32400     -9 hours; AKST time
-
-   Advanced options:
-      north= The struct field in data containing the northings to use. This is
-         typically set based on mode=.
-      east= The struct field in data containing the eastings to use. This is
-         typically set based on mode=.
 */
-
+   default, mode, "fs";
    default, scheme, "10k2k";
    default, searchstr, "*.pbd";
    default, remove_buffers, 1;
-   default, north, "north";
-   default, east, "east";
    default, verbose, 1;
-
-   if(!is_void(mode)) {
-      if(mode == "be") {
-         north = "lnorth";
-         east = "least";
-      } else {
-         north = "north";
-         east = "east";
-      }
-   }
 
    // Locate files
    files = find(srcdir, glob=searchstr);
@@ -2712,8 +2694,8 @@ split_zones=, split_days=, day_shift=, north=, east=) {
          if(filezone < 0) {
             filezone = data.zone;
          }
-         n = get_member(data, north)/100.;
-         e = get_member(data, east)/100.;
+         e = n = [];
+         data2xyz, data, e, n, mode=mode;
          idx = extract_for_tile(unref(n), unref(e), filezone, tiles(i), buffer=0);
          if(numberof(idx))
             data = data(idx);
@@ -2734,7 +2716,7 @@ split_zones=, split_days=, day_shift=, north=, east=) {
       save_data_to_tiles, unref(data), unref(filezone), dstdir, scheme=scheme,
          suffix=suffix, buffer=buffer, shorten=shorten, flat=flat, uniq=uniq,
          verbose=verbose, split_zones=split_zones, split_days=split_days,
-         day_shift=day_shift, north=north, east=east;
+         day_shift=day_shift;
 
       if(verbose && i < numberof(files)) {
          timer, t1;

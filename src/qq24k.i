@@ -951,12 +951,12 @@ func partition_type_summary(north, east, zone, buffer=) {
    }
 }
 
-func save_data_to_tiles(data, zone, dest_dir, scheme=, north=, east=, mode=,
-suffix=, buffer=, shorten=, flat=, uniq=, overwrite=, verbose=, split_zones=,
-split_days=, day_shift=) {
-/* DOCUMENT save_data_to_tiles, data, zone, dest_dir, scheme=, north=, east=,
-   mode=, suffix=, buffer=, shorten=, flat=, uniq=, overwrite=, verbose=,
-   split_zones=, split_days=, day_shift=
+func save_data_to_tiles(data, zone, dest_dir, scheme=, mode=, suffix=, buffer=,
+shorten=, flat=, uniq=, overwrite=, verbose=, split_zones=, split_days=,
+day_shift=) {
+/* DOCUMENT save_data_to_tiles, data, zone, dest_dir, scheme=, mode=, suffix=,
+   buffer=, shorten=, flat=, uniq=, overwrite=, verbose=, split_zones=,
+   split_days=, day_shift=
 
    Given an array of data (which must be in an ALPS data structure such as
    VEG__) and a scalar or array of zone corresponding to it, this will create
@@ -1023,19 +1023,11 @@ split_days=, day_shift=) {
             day_shift=-25200     -7 hours; MST and PDT time
             day_shift=-28800     -8 hours; PST and AKDT time
             day_shift=-32400     -9 hours; AKST time
-
-   Advanced options:
-      north= The struct field in data containing the northings to use. Defaults
-         to "north". (Ignored if mode= is provided.)
-      east= The struct field in data containing the eastings to use. Defaults
-         to "east". (Ignored if mode= is provided.)
 */
 // Original David Nagle 2009-07-06
    local n, e;
    default, scheme, "10k2k";
-   default, mode, [];
-   default, north, "north";
-   default, east, "east";
+   default, mode, "fs";
    default, suffix, string(0);
    default, buffer, 100;
    default, shorten, 0;
@@ -1050,14 +1042,9 @@ split_days=, day_shift=) {
    bilevel = scheme == "10k2k";
    if(bilevel) scheme = "2k";
 
-   if(!is_void(mode)) {
-      if(is_integer(mode))
-         mode = ["fs", "ba", "be"](mode);
-      data2xyz, data, e, n, mode=mode;
-   } else {
-      n = get_member(data, north)/100.;
-      e = get_member(data, east)/100.;
-   }
+   if(is_integer(mode))
+      mode = ["fs", "ba", "be"](mode);
+   data2xyz, data, e, n, mode=mode;
 
    if(numberof(zone) == 1)
       zone = array(zone, dimsof(data));
