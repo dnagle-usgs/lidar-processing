@@ -233,16 +233,32 @@ func open_atm_raw(fname) {
 
    f = open(fname, "rb");
    sun_primitives, f;
+   file_len = sizeof(f);
+
+   if(file_len < 4) {
+      write, format=" File too short at %d bytes\n", file_len;
+      return f;
+   }
    add_variable, f, 0, "rec_len", long;
+
+   if(file_len < word_len + f.rec_len + 4) {
+      write, format=" File too short at %d bytes\n", file_len;
+      return f;
+   }
    add_variable, f, word_len + f.rec_len, "data_offset", long;
 
-   file_len = sizeof(f);
    if(!f.rec_len) {
       write, "Record length of 0";
       return f;
    }
 
-   rec_num = (file_len - f.data_offset + 1) / f.rec_len;
+   data_len = file_len - f.data_offset + 1;
+   if(data_len % f.rec_len) {
+      write, "Data region does not conform to record length";
+      return f;
+   }
+
+   rec_num = data_len / f.rec_len;
 
    if(f.rec_len == 14 * word_len)
       add_variable, f, f.data_offset, "data", ATM_RAW_14, rec_num;
