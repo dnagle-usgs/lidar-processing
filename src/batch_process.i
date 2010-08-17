@@ -2679,12 +2679,17 @@ split_zones=, split_days=, day_shift=) {
       write, "";
    }
 
-   t0 = t1 = tp = array(double, 3);
+   count = numberof(files);
+   if(count > 1)
+      sizes = file_size(files)(cum)(2:);
+   else if(count)
+      sizes = file_size(files);
+
+   t0 = tp = array(double, 3);
    timer, t0;
-   tp = t0;
-   for(i = 1; i <= numberof(files); i++) {
+   for(i = 1; i <= count; i++) {
       if(verbose)
-         write, format="\n----------\nRetiling %d/%d: %s\n", i, numberof(files),
+         write, format="\n----------\nRetiling %d/%d: %s\n", i, count,
             file_tail(files(i));
 
       data = pbd_load(files(i));
@@ -2718,21 +2723,10 @@ split_zones=, split_days=, day_shift=) {
          verbose=verbose, split_zones=split_zones, split_days=split_days,
          day_shift=day_shift;
 
-      if(verbose && i < numberof(files)) {
-         timer, t1;
-         if(t1(3) - tp(3) >= 10) {
-            elapsed = t1(3) - t0(3);
-            remain = elapsed/double(i) * (numberof(files) - i);
-            write, format="\n[Estimated %s remaining]\n", seconds2prettytime(remain);
-            tp = t1;
-         }
-      }
+      if(verbose)
+         timer_remaining, t0, sizes(i), sizes(0), tp, interval=10;
    }
 
-   if(verbose) {
-      timer, t1;
-      elapsed = t1(3) - t0(3);
-
-      write, format="\nFinished in %s.\n", seconds2prettytime(elapsed);
-   }
+   if(verbose)
+      timer_finished, t0;
 }
