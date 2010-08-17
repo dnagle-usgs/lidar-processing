@@ -978,12 +978,6 @@ day_shift=) {
             mode="fs"   First surface
             mode="ba"   Bathymetry
             mode="be"   Bare earth
-         For backwards compatibility, it can also be one of the following:
-            mode=1      First surface
-            mode=2      Bathymetry
-            mode=3      Bare earth
-         If not specified, then it uses north= and east= to figure out the
-         northings/eastings.
       suffix= Specifies the suffix to use when naming the files. By default,
          files are named (tile-name).pbd. If suffix is provided, they will be
          named (tile-name)_(suffix).pbd. (Without the parentheses.)
@@ -1042,8 +1036,6 @@ day_shift=) {
    bilevel = scheme == "10k2k";
    if(bilevel) scheme = "2k";
 
-   if(is_integer(mode))
-      mode = ["fs", "ba", "be"](mode);
    data2xyz, data, e, n, mode=mode;
 
    if(numberof(zone) == 1)
