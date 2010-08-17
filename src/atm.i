@@ -295,8 +295,8 @@ func load_atm_raw(fname, verbose=) {
    return struct_cast(f.data, ATM_RAW);
 }
 
-func atm_to_alps(atm_raw, ymd) {
-/* DOCUMENT atm_to_alps(atm_raw, ymd)
+func atm_to_alps(atm_raw, ymd, verbose=) {
+/* DOCUMENT atm_to_alps(atm_raw, ymd, verbose=)
 
    Converts ATM_RAW to ATM.
 
@@ -310,7 +310,8 @@ func atm_to_alps(atm_raw, ymd) {
 */
    atm = array(ATM2, numberof(atm_raw));
 
-   write, "Converting ATM lat/lon to UTM";
+   if(verbose)
+      write, "Converting ATM lat/lon to UTM";
    idx = where(atm_raw.lat != 0 & atm_raw.lon != 0);
    if(numberof(idx)) {
       u = fll2utm(atm_raw(idx).lat/1000000.0, atm_raw(idx).lon/1000000.0);
@@ -318,18 +319,21 @@ func atm_to_alps(atm_raw, ymd) {
       atm(idx).north = (d(1,) * 100);
       atm(idx).east = (d(2,) * 100);
       zone = d(3,);
-      write, "UTM Zone of data:"
-      write, "Min:", min(zone);
-      write, "Max:", max(zone);
+      if(verbose) {
+         write, "UTM Zone of data:"
+         write, "Min:", min(zone);
+         write, "Max:", max(zone);
+      }
       atm(idx).zone = int(u(3,));
-   } else {
+   } else if(verbose) {
       write, "Serious problem encountered: No lat/lon info!";
    }
    
    atm.elevation = atm_raw.elev/10.0;
    atm.fint = atm_raw.pulse_refl;
-   
-   write, "Converting ATM passive lat/lon to UTM";
+
+   if(verbose)
+      write, "Converting ATM passive lat/lon to UTM";
    idx = where(atm_raw.plat != 0 & atm_raw.plon != 0);
    if(numberof(idx)) {
       u = fll2utm(atm_raw(idx).plat/1000000.0, atm_raw(idx).plon/-1000000.0);
@@ -338,7 +342,8 @@ func atm_to_alps(atm_raw, ymd) {
    }
    atm.lint = atm_raw.psig;
 
-   write, "Converting ATM GPS Time to SOE";
+   if(verbose)
+      write, "Converting ATM GPS Time to SOE";
    atm.soe = time2soe([int(ymd/10000), ymd2doy(ymd),
       (hms2sod(atm_raw.gps_time/1000.)), 0, 0, 0]);
    atm.sint = atm_raw.pulse_start;
