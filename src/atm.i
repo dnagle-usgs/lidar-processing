@@ -322,6 +322,24 @@ func atm_to_alps(atm_raw, ymd) {
 }
 
 func batch_qi2pbd(srcdir, ymd, outdir=, files=, searchstr=, maxcount=) {
+/* DOCUMENT batch_qi2pbd, srcdir, ymd, outdir=, files=, searchstr=, maxcount=
+   Batch converts ATM *.qi files into ALPS *.pbd files.
+
+   Parameters:
+      srcdir: The path to the files to convert.
+      ymd: An integer in YYYYMMDD format specifying the date of the data.
+   Options:
+      outdir= Specifies the directory to create the output files in. By
+         default, they are created alongside the source files.
+      files= If provided, this is a list of files to convert. Specifying this
+         disables searchstr=.
+      searchstr= The search string used to find files to convert.
+            searchstr=["*.qi", "*.QI"]    default, all QI files
+      maxcount= Specifies the maximum number of data points to store in a
+         single output file. If there are more points than this, then multiple
+         files will be created for a given input file. Each file will have the
+         suffix _NUM.pbd, where NUM is its number in the sequence as created.
+*/
    default, searchstr, ["*.qi", "*.QI"];
 
    if(is_void(files))
@@ -348,6 +366,22 @@ func batch_qi2pbd(srcdir, ymd, outdir=, files=, searchstr=, maxcount=) {
 }
 
 func qi2pbd(file, ymd, outfile=, vname=, maxcount=) {
+/* DOCUMENT qi2pbd, file, ymd, outfile=, vname=, maxcount=
+   Converts an ATM *.qi file into an ALPS *.pbd file.
+
+   Parameters:
+      file: The path to the file to convert.
+      ymd: An integer in YYYYMMDD format specifying the date of the data.
+   Options:
+      outfile= Specifies the output file to create. By default, uses the same
+         filename as FILE but with a .pbd suffix.
+      vname= Specifies the vname to use in the pbd file. Default is FILE,
+         without its leading path or extension.
+      maxcount= Specifies the maximum number of data points to store in a
+         single output file. If there are more points than this, then multiple
+         files will be created. Each file will have the suffix _NUM.pbd, where
+         NUM is its number in the sequence as created.
+*/
    default, outfile, file_rootname(file)+".pbd";
    default, vname, file_rootname(file_tail(file));
    default, maxcount, 1750000;
