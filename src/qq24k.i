@@ -1052,8 +1052,7 @@ day_shift=) {
    if(verbose)
       write, format=" Creating files for %d tiles...\n", numberof(tile_names);
    
-   tile_zones = (scheme == "qq") ? qq2uz(tile_names) : dt2uz(tile_names);
-   tile_zones = long(tile_zones);
+   tile_zones = long(tile2uz(tile_names));
    uniq_zones = numberof(set_remove_duplicates(tile_zones));
    if(uniq_zones == 1 && split_zones == 1)
       split_zones = 0;
