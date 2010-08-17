@@ -222,13 +222,17 @@ func qi_to_tiles(fname, ymd, dir, name=) {
    }
 }
 
-func open_atm_raw(fname) {
-/* DOCUMENT f = open_atm_raw(fname)
+func open_atm_raw(fname, verbose=) {
+/* DOCUMENT f = open_atm_raw(fname, verbose=)
    Returns a filehandle for an ATM QI file with these variables installed:
       f.rec_len -- Record length
       f.data_offset -- Offset to data
       f.data -- Array of ATM data, either ATM_RAW_10 or ATM_RAW_14
+   If problems are encountered, some or all of those members may be omitted and
+   warnings will be displayed to screen. Use verbose=0 to prevent warnings from
+   displaying.
 */
+   default, verbose, 1;
    word_len = 4;
 
    f = open(fname, "rb");
@@ -236,25 +240,29 @@ func open_atm_raw(fname) {
    file_len = sizeof(f);
 
    if(file_len < 4) {
-      write, format=" File too short at %d bytes\n", file_len;
+      if(verbose)
+         write, format=" File too short at %d bytes\n", file_len;
       return f;
    }
    add_variable, f, 0, "rec_len", long;
 
    if(file_len < word_len + f.rec_len + 4) {
-      write, format=" File too short at %d bytes\n", file_len;
+      if(verbose)
+         write, format=" File too short at %d bytes\n", file_len;
       return f;
    }
    add_variable, f, word_len + f.rec_len, "data_offset", long;
 
    if(!f.rec_len) {
-      write, "Record length of 0";
+      if(verbose)
+         write, "Record length of 0";
       return f;
    }
 
    data_len = file_len - f.data_offset + 1;
    if(data_len % f.rec_len) {
-      write, "Data region does not conform to record length";
+      if(verbose)
+         write, "Data region does not conform to record length";
       return f;
    }
 
@@ -264,7 +272,7 @@ func open_atm_raw(fname) {
       add_variable, f, f.data_offset, "data", ATM_RAW_14, rec_num;
    else if(f.rec_len == 10 * word_len)
       add_variable, f, f.data_offset, "data", ATM_RAW_10, rec_num;
-   else
+   else if(verbose)
       write, format=" Unknown record length %d\n", f.rec_len;
 
    return f;
