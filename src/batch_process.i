@@ -2605,6 +2605,7 @@ split_zones=, split_days=, day_shift=, north=, east=) {
          with this option.
             zone=[]     No zone provided, autodetect (default)
             zone=17     Force all input data to be treated as being in zone 17
+            zone=-1     After loading the data, use data.zone (useful for ATM)
       shorten= By default, the longer form of the 2km data tile names will be
          used. This setting allows you to change that. Ignored if your scheme
          does not involve 2km data tiles.
@@ -2707,9 +2708,13 @@ split_zones=, split_days=, day_shift=, north=, east=) {
       data = pbd_load(files(i));
 
       if(remove_buffers && tiles(i) && numberof(data)) {
+         filezone = zones(i);
+         if(filezone < 0) {
+            filezone = data.zone;
+         }
          n = get_member(data, north)/100.;
          e = get_member(data, east)/100.;
-         idx = extract_for_tile(unref(n), unref(e), zones(i), tiles(i), buffer=0);
+         idx = extract_for_tile(unref(n), unref(e), filezone, tiles(i), buffer=0);
          if(numberof(idx))
             data = data(idx);
          else
@@ -2722,7 +2727,11 @@ split_zones=, split_days=, day_shift=, north=, east=) {
          continue;
       }
 
-      save_data_to_tiles, unref(data), zones(i), dstdir, scheme=scheme,
+      filezone = zones(i);
+      if(filezone < 0) {
+         filezone = data.zone;
+      }
+      save_data_to_tiles, unref(data), unref(filezone), dstdir, scheme=scheme,
          suffix=suffix, buffer=buffer, shorten=shorten, flat=flat, uniq=uniq,
          verbose=verbose, split_zones=split_zones, split_days=split_days,
          day_shift=day_shift, north=north, east=east;
