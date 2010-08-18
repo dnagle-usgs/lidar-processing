@@ -256,8 +256,8 @@ func batch_qi2pbd(srcdir, ymd, outdir=, files=, searchstr=, maxcount=) {
    timer_finished, t0;
 }
 
-func qi2pbd(file, ymd, outfile=, vname=, maxcount=) {
-/* DOCUMENT qi2pbd, file, ymd, outfile=, vname=, maxcount=
+func qi2pbd(file, ymd, outfile=, vname=, maxcount=, verbose=) {
+/* DOCUMENT qi2pbd, file, ymd, outfile=, vname=, maxcount=, verbose=
    Converts an ATM *.qi file into an ALPS *.pbd file.
 
    Parameters:
@@ -272,11 +272,14 @@ func qi2pbd(file, ymd, outfile=, vname=, maxcount=) {
          single output file. If there are more points than this, then multiple
          files will be created. Each file will have the suffix _NUM.pbd, where
          NUM is its number in the sequence as created.
+      verbose= By default, progress information is shown. Use verbose=0 to
+         silence it.
 */
    default, outfile, file_rootname(file)+".pbd";
    default, vname, file_rootname(file_tail(file));
    default, maxcount, 1750000;
-   data = atm_to_alps(qi_load(file), ymd);
+   default, verbose, 1;
+   data = atm_to_alps(qi_load(file), ymd, verbose=verbose);
 
    bad = data.north == 0 | data.east == 0;
    if(allof(bad))
