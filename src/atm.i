@@ -138,7 +138,7 @@ func qi_load(fname, verbose=) {
    Loads the ATM data from file fname and returns it as an array of ATM_RAW.
    If errors are encounted, warnings will be displayed and [] will be returned.
    Use verbose=0 to disable warning messages.
-   SEE ALSO: atm_to_alps qi_open
+   SEE ALSO: qi_import qi_open
 */
    default, verbose, 1;
    f = qi_open(fname, verbose=verbose);
@@ -150,8 +150,8 @@ func qi_load(fname, verbose=) {
    return struct_cast(f.data, ATM_RAW);
 }
 
-func atm_to_alps(atm_raw, ymd, verbose=) {
-/* DOCUMENT atm_to_alps(atm_raw, ymd, verbose=)
+func qi_import(atm_raw, ymd, verbose=) {
+/* DOCUMENT qi_import(atm_raw, ymd, verbose=)
    Converts ATM_RAW to ATM.
 
    Parameters:
@@ -299,7 +299,7 @@ func qi2pbd(file, ymd, outfile=, vname=, maxcount=, verbose=) {
    default, vname, file_rootname(file_tail(file));
    default, maxcount, 1750000;
    default, verbose, 1;
-   data = atm_to_alps(qi_load(file), ymd, verbose=verbose);
+   data = qi_import(qi_load(file), ymd, verbose=verbose);
 
    bad = data.north == 0 | data.east == 0;
    if(allof(bad))
