@@ -131,7 +131,7 @@ func qi_load(fname, verbose=) {
    Loads the ATM data from file fname and returns it as an array of ATM_RAW.
    If errors are encounted, warnings will be displayed and [] will be returned.
    Use verbose=0 to disable warning messages.
-   SEE ALSO: atm_to_alps qi_to_tiles qi_open
+   SEE ALSO: atm_to_alps qi_open
 */
    default, verbose, 1;
    f = qi_open(fname, verbose=verbose);
@@ -154,7 +154,7 @@ func atm_to_alps(atm_raw, ymd, verbose=) {
 
       ymd: The year-month-day of the data
 
-   See also: qi_load atm_create_tiles
+   SEE ALSO: qi_load qi2pbd batch_qi2pbd
 */
    if(!is_integer(ymd) || ymd < 19800000 || ymd > 21000000)
       error, "YMD argument must be an integer in YYYYMMDD format.";
