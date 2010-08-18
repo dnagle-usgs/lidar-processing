@@ -316,13 +316,13 @@ func batch_qi2pbd(srcdir, ymd, outdir=, files=, searchstr=, maxcount=, verbose=)
    else
       error, "No files found.";
 
-   t0 = array(double, 3);
+   t0 = tp = array(double, 3);
    timer, t0;
    for(i = 1; i <= count; i++) {
       qi2pbd, files(i), ymd, outfile=outfiles(i), maxcount=maxcount,
          verbose=(verbose - 1);
       if(verbose)
-         timer_remaining, t0, sizes(i), sizes(0);
+         timer_remaining, t0, sizes(i), sizes(0), tp, interval=15;
    }
    if(verbose)
       timer_finished, t0;
