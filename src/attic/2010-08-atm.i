@@ -1,4 +1,13 @@
-/* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent expandtab: */
+/******************************************************************************\
+* This file was created in the attic on 2010-08-18. It contains obsolete       *
+* functions from the file atm.i that are no longer in use. The functions are:  *
+*     merge_qi_tiles                                                           *
+*     batch_qi_to_tiles                                                        *
+*     qi_to_tiles                                                              *
+*     atm_create_tiles                                                         *
+* These functions are superceded by alternate functionality in atm.i as well   *
+* as general functionality available elsewhere in ALPS.                        *
+\******************************************************************************/
 
 func merge_qi_tiles(dir, glob=, srt=) {
 /* DOCUMENT merge_qi_tiles, dir, glob=, srt=
