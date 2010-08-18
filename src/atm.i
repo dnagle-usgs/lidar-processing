@@ -272,7 +272,7 @@ func batch_qi2pbd(srcdir, ymd, outdir=, files=, searchstr=, maxcount=, verbose=)
    timer, t0;
    for(i = 1; i <= count; i++) {
       qi2pbd, files(i), ymd, outfile=outfiles(i), maxcount=maxcount,
-         verbose=(verbose > 1);
+         verbose=(verbose - 1);
       if(verbose)
          timer_remaining, t0, sizes(i), sizes(0);
    }
