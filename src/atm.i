@@ -172,6 +172,7 @@ func qi_import(atm_raw, ymd, verbose=) {
 
    if(is_string(atm_raw))
       atm_raw = qi_load(atm_raw, verbose=(verbose > -1));
+   verbose = max(verbose, 0);
 
    bad = atm_raw.lat == 0 | atm_raw.lon == 0;
    if(allof(bad)) {
