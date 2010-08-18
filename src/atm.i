@@ -1,73 +1,80 @@
 /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent expandtab: */
 require, "l1pro.i";
 
-// Yorick functions for ATM data.
+local ATM2;
+/* DOCUMENT
+   Point structure for ATM data structure, designed to mimic the VEG__
+   structure. This allows most of the EAARL functions to work with ATM data.
 
-// ATM2 structure has been designed to mimic the VEG__ structure.  This allows
-// most of the EAARL functions to work with ATM2.
+   struct ATM2 {
+      long north;       UTM northing in cm
+      long east;        UTM easting in cm
+      short zone;       UTM zone
+      long elevation;   elevation in cm
+      short fint;       reflected laser signal strength (intensity)
+      long least;       passive channel easting in cm
+      long lnorth;      passive channel northing in cm
+      short lzone;      passive channel zone
+      short lint;       passive intensity
+      double soe;       soe timestamp
+      short sint;       start pulse signal strength (relative)
+      long scaz;        scanning azimuth in milliarcdegrees
+      long pitch;       pitch in milliarcdegrees
+      long roll;        roll in milliarcdegrees
+   }
+*/
 struct ATM2 {
-   long north;       // UTM northing in cm
-   long east;        // UTM easting in cm
-   short zone;       // UTM zone
-   long elevation;   // elevation in cm
-   short fint;       // reflected laser signal strength (intensity)
-   long least;       // passive channel easting in cm
-   long lnorth;      // passive channel northing in cm
-   short lzone;      // passive channel zone
-   short lint;       // passive intensity
-   double soe;       // soe timestamp
-   short sint;       // Start Pulse Signal Strength (relative)
-   long scaz;        // Scanning azimuth in milliarcdegrees
-   long pitch;       // Pitch in milliarcdegrees
-   long roll;        // Roll in milliarcdegrees
+   long north, east;
+   short zone;
+   long elevation;
+   short fint;
+   long least, lnorth;
+   short lzone, lint;
+   double soe;
+   short sint;
+   long scaz, pitch, roll;
 }
 
-// ATM_RAW is used to read the binary data only.
+local ATM_RAW, ATM_RAW_10, ATM_RAW_14;
+/* DOCUMENT
+   Structures for reading raw ATM QI binary files. ATM_RAW is the generalized
+   structure that has all possible fields that might be found in QI files.
+   ATM_RAW_10 and ATM_RAW_14 are specific formats which contain subsets of the
+   fields; each can be safely cast to ATM_RAW.
+
+   struct ATM_RAW {
+      int rel_time;     Relative time - msec from start of data file
+      int lat;          laser spot latitude (degrees x 1,000,000)
+      int lon;          laser spot longitude (degrees x 1,000,000)
+      int elev;         Elevation (millimeters)
+      int pulse_start;  Start Pulse Signal Strength (relative)
+      int pulse_refl;   Reflected Laser Signal Strength (relative)
+      int azimuth;      Scan azimuth (degrees x 1,000)
+      int pitch;        Pitch (degrees x 1,000)
+      int roll;         Roll (degrees x 1,000)
+      int psig;         Passive signal (relative)
+      int plat;         Passive Footprint latitude (degrees x 1,000,000)
+      int plon;         Passive footprint longitude (degrees x 1,000,000)
+      int pelev;        Passive footprint synthesized elevation (millimeters)
+      int gps_time;     GPS time packed (example: 153320100 = 15h 33m 20s 100ms)
+   }
+
+   struct ATM_RAW_10 is the same as ATM_RAW except that it lacks these fields:
+   psig, plat, plon, pelev.
+
+   struct ATM_RAW_14 is identicial to ATM_RAW.
+*/
 struct ATM_RAW {
-   int rel_time;     // Relative time - msec from start of data file
-   int lat;          // laser spot latitude (degrees x 1,000,000)
-   int lon;          // laser spot longitude (degrees x 1,000,000)
-   int elev;         // Elevation (millimeters)
-   int pulse_start;  // Start Pulse Signal Strength (relative)
-   int pulse_refl;   // Reflected Laser Signal Strength (relative)
-   int azimuth;      // Scan azimuth (degrees x 1,000)
-   int pitch;        // Pitch (degrees x 1,000)
-   int roll;         // Roll (degrees x 1,000)
-   int psig;         // Passive signal (relative)
-   int plat;         // Passive Footprint latitude (degrees x 1,000,000)
-   int plon;         // Passive footprint longitude (degrees x 1,000,000)
-   int pelev;        // Passive footprint synthesized elevation (millimeters)
-   int gps_time;     // GPS time packed (example: 153320100 = 15h 33m 20s 100ms)
+   int rel_time, lat, lon, elev, pulse_start, pulse_refl, azimuth, pitch, roll;
+   int psig, plat, plon, pelev, gps_time;
 }
-
 struct ATM_RAW_10 {
-   int rel_time;     // Relative time - msec from start of data file
-   int lat;          // laser spot latitude (degrees x 1,000,000)
-   int lon;          // laser spot longitude (degrees x 1,000,000)
-   int elev;         // Elevation (millimeters)
-   int pulse_start;  // Start Pulse Signal Strength (relative)
-   int pulse_refl;   // Reflected Laser Signal Strength (relative)
-   int azimuth;      // Scan azimuth (degrees x 1,000)
-   int pitch;        // Pitch (degrees x 1,000)
-   int roll;         // Roll (degrees x 1,000)
-   int gps_time;     // GPS time packed (example: 153320100 = 15h 33m 20s 100ms)
+   int rel_time, lat, lon, elev, pulse_start, pulse_refl, azimuth, pitch, roll;
+   int gps_time;
 }
-
 struct ATM_RAW_14 {
-   int rel_time;     // Relative time - msec from start of data file
-   int lat;          // laser spot latitude (degrees x 1,000,000)
-   int lon;          // laser spot longitude (degrees x 1,000,000)
-   int elev;         // Elevation (millimeters)
-   int pulse_start;  // Start Pulse Signal Strength (relative)
-   int pulse_refl;   // Reflected Laser Signal Strength (relative)
-   int azimuth;      // Scan azimuth (degrees x 1,000)
-   int pitch;        // Pitch (degrees x 1,000)
-   int roll;         // Roll (degrees x 1,000)
-   int psig;         // Passive signal (relative)
-   int plat;         // Passive Footprint latitude (degrees x 1,000,000)
-   int plon;         // Passive footprint longitude (degrees x 1,000,000)
-   int pelev;        // Passive footprint synthesized elevation (millimeters)
-   int gps_time;     // GPS time packed (example: 153320100 = 15h 33m 20s 100ms)
+   int rel_time, lat, lon, elev, pulse_start, pulse_refl, azimuth, pitch, roll;
+   int psig, plat, plon, pelev, gps_time;
 }
 
 func qi_open(fname, verbose=) {
@@ -145,7 +152,6 @@ func qi_load(fname, verbose=) {
 
 func atm_to_alps(atm_raw, ymd, verbose=) {
 /* DOCUMENT atm_to_alps(atm_raw, ymd, verbose=)
-
    Converts ATM_RAW to ATM.
 
    Parameters:
@@ -155,6 +161,7 @@ func atm_to_alps(atm_raw, ymd, verbose=) {
       verbose= Specifies whether progress information should be shown.
             verbose=0   Silence output
             verbose=1   Show output (default)
+
    SEE ALSO: qi_load qi2pbd batch_qi2pbd
 */
    default, verbose, 1;
