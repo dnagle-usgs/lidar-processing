@@ -307,12 +307,6 @@ func qi2pbd(file, ymd, outfile=, vname=, maxcount=, verbose=) {
    default, verbose, 1;
    data = qi_import(file, ymd, verbose=verbose);
 
-   bad = data.north == 0 | data.east == 0;
-   if(allof(bad))
-      return;
-   if(anyof(bad))
-      data = data(where(!bad));
-
    count = numberof(data);
    if(count <= maxcount) {
       pbd_save, outfile, vname, data;
