@@ -308,6 +308,9 @@ func atm_to_alps(atm_raw, ymd, verbose=) {
 
    See also: load_atm_raw atm_create_tiles
 */
+   if(!is_integer(ymd) || ymd < 19800000 || ymd > 21000000)
+      error, "YMD argument must be an integer in YYYYMMDD format.";
+
    bad = atm_raw.lat == 0 | atm_raw.lon == 0;
    if(allof(bad)) {
       if(verbose)
