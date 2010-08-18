@@ -259,7 +259,7 @@ func open_atm_raw(fname, verbose=) {
       return f;
    }
 
-   data_len = file_len - f.data_offset + 1;
+   data_len = file_len - f.data_offset;
    if(data_len % f.rec_len) {
       if(verbose)
          write, "Data region does not conform to record length";
