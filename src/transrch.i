@@ -145,7 +145,7 @@ plg, y, x, width=9.0, color="blue";
    rr.soe, rr.rasternbr, rr.digitizer, rr.npixels;
 
    // Now lets display the waveform
-   w = ndrast(rr);
+   w = ndrast(rr, rn=rasterno);
    show_wf, *w, pulseno, win=0, cb=7, raster=rasterno;
    limits;
 
