@@ -272,8 +272,10 @@ func qi2pbd(file, ymd, outfile=, vname=, maxcount=, verbose=) {
          single output file. If there are more points than this, then multiple
          files will be created. Each file will have the suffix _NUM.pbd, where
          NUM is its number in the sequence as created.
-      verbose= By default, progress information is shown. Use verbose=0 to
-         silence it.
+            maxcount=1750000  Default, results in files ~94MB in size
+      verbose= Specifies whether progress information should be shown.
+            verbose=0   Silence output
+            verbose=1   Show output (default)
 */
    default, outfile, file_rootname(file)+".pbd";
    default, vname, file_rootname(file_tail(file));
