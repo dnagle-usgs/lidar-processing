@@ -227,6 +227,54 @@ func qi_import(atm_raw, ymd, verbose=) {
    return atm;
 }
 
+func qi2pbd(file, ymd, outfile=, vname=, maxcount=, verbose=) {
+/* DOCUMENT qi2pbd, file, ymd, outfile=, vname=, maxcount=, verbose=
+   Converts an ATM *.qi file into an ALPS *.pbd file.
+
+   Parameters:
+      file: The path to the file to convert.
+      ymd: An integer in YYYYMMDD format specifying the date of the data.
+   Options:
+      outfile= Specifies the output file to create. By default, uses the same
+         filename as FILE but with a .pbd suffix.
+      vname= Specifies the vname to use in the pbd file. Default is FILE,
+         without its leading path or extension.
+      maxcount= Specifies the maximum number of data points to store in a
+         single output file. If there are more points than this, then multiple
+         files will be created. Each file will have the suffix _NUM.pbd, where
+         NUM is its number in the sequence as created.
+            maxcount=1750000  Default, results in files ~94MB in size
+      verbose= Specifies whether progress information should be shown.
+            verbose=-1  Silence all output
+            verbose=0   Silence progress output, but show warnings
+            verbose=1   Show output (default)
+*/
+   default, outfile, file_rootname(file)+".pbd";
+   default, vname, file_rootname(file_tail(file));
+   default, maxcount, 1750000;
+   default, verbose, 1;
+   data = qi_import(file, ymd, verbose=verbose);
+
+   count = numberof(data);
+   if(count <= maxcount) {
+      pbd_save, outfile, vname, data;
+   } else if(count) {
+      maxnum = long(ceil(count/double(maxcount)));
+      digits = long(log10(maxnum)) + 1;
+      fmt = swrite(format="%%0%dd", digits);
+      outfilefmt = file_rootname(outfile) + "_" + fmt + ".pbd";
+      vnamefmt = vname + "_" + fmt;
+      for(i = 1; i <= maxnum; i++) {
+         lower = (i-1) * maxcount + 1;
+         upper = min(i*maxcount, count);
+         pbd_save, swrite(format=outfilefmt, i), swrite(format=vnamefmt, i),
+            data(lower:upper);
+      }
+   } else if(verbose > 0) {
+      write, "No points loaded, so not output file created";
+   }
+}
+
 func batch_qi2pbd(srcdir, ymd, outdir=, files=, searchstr=, maxcount=, verbose=) {
 /* DOCUMENT batch_qi2pbd, srcdir, ymd, outdir=, files=, searchstr=, maxcount=,
       verbose=
@@ -278,52 +326,4 @@ func batch_qi2pbd(srcdir, ymd, outdir=, files=, searchstr=, maxcount=, verbose=)
    }
    if(verbose)
       timer_finished, t0;
-}
-
-func qi2pbd(file, ymd, outfile=, vname=, maxcount=, verbose=) {
-/* DOCUMENT qi2pbd, file, ymd, outfile=, vname=, maxcount=, verbose=
-   Converts an ATM *.qi file into an ALPS *.pbd file.
-
-   Parameters:
-      file: The path to the file to convert.
-      ymd: An integer in YYYYMMDD format specifying the date of the data.
-   Options:
-      outfile= Specifies the output file to create. By default, uses the same
-         filename as FILE but with a .pbd suffix.
-      vname= Specifies the vname to use in the pbd file. Default is FILE,
-         without its leading path or extension.
-      maxcount= Specifies the maximum number of data points to store in a
-         single output file. If there are more points than this, then multiple
-         files will be created. Each file will have the suffix _NUM.pbd, where
-         NUM is its number in the sequence as created.
-            maxcount=1750000  Default, results in files ~94MB in size
-      verbose= Specifies whether progress information should be shown.
-            verbose=-1  Silence all output
-            verbose=0   Silence progress output, but show warnings
-            verbose=1   Show output (default)
-*/
-   default, outfile, file_rootname(file)+".pbd";
-   default, vname, file_rootname(file_tail(file));
-   default, maxcount, 1750000;
-   default, verbose, 1;
-   data = qi_import(file, ymd, verbose=verbose);
-
-   count = numberof(data);
-   if(count <= maxcount) {
-      pbd_save, outfile, vname, data;
-   } else if(count) {
-      maxnum = long(ceil(count/double(maxcount)));
-      digits = long(log10(maxnum)) + 1;
-      fmt = swrite(format="%%0%dd", digits);
-      outfilefmt = file_rootname(outfile) + "_" + fmt + ".pbd";
-      vnamefmt = vname + "_" + fmt;
-      for(i = 1; i <= maxnum; i++) {
-         lower = (i-1) * maxcount + 1;
-         upper = min(i*maxcount, count);
-         pbd_save, swrite(format=outfilefmt, i), swrite(format=vnamefmt, i),
-            data(lower:upper);
-      }
-   } else if(verbose > 0) {
-      write, "No points loaded, so not output file created";
-   }
 }
