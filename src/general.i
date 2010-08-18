@@ -179,8 +179,8 @@ func timer_remaining(t0, current, count, &tp, interval=, fmt=) {
       tp = t1;
       elapsed = t1(3) - t0(3);
       remain = elapsed/double(current) * (count - current);
-      fmt = regsub("CURRENT", fmt, swrite(format="%d", long(current)), all=1);
-      fmt = regsub("COUNT", fmt, swrite(format="%d", long(count)), all=1);
+      fmt = regsub("CURRENT", fmt, swrite(format="%.0f", double(current)), all=1);
+      fmt = regsub("COUNT", fmt, swrite(format="%.0f", double(count)), all=1);
       fmt = regsub("ELAPSED", fmt, seconds2prettytime(elapsed, maxparts=2), all=1);
       fmt = regsub("REMAINING", fmt, seconds2prettytime(remain, maxparts=2), all=1);
       write, format="%s", fmt;
