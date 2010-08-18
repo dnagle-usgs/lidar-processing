@@ -309,12 +309,19 @@ func batch_qi2pbd(srcdir, ymd, outdir=, files=, searchstr=, maxcount=, verbose=)
       outfiles = file_join(outdir, file_tail(outfiles));
 
    count = numberof(files);
-   if(count > 1)
-      sizes = double(file_size(files))(cum)(2:);
-   else if(count)
-      sizes = file_size(files);
-   else
+   if(!count)
       error, "No files found.";
+
+   // Estimates will work better if largest files go first
+   sizes = double(file_size(files));
+   srt = sort(-sizes);
+   files = files(srt);
+   sizes = sizes(srt);
+   srt = [];
+
+   // Sizes should be a cummulative tally to track progress within whole
+   if(count > 1)
+      sizes = sizes(cum)(2:);
 
    t0 = tp = array(double, 3);
    timer, t0;
