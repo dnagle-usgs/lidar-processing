@@ -297,14 +297,15 @@ func qi2pbd(file, ymd, outfile=, vname=, maxcount=, verbose=) {
          NUM is its number in the sequence as created.
             maxcount=1750000  Default, results in files ~94MB in size
       verbose= Specifies whether progress information should be shown.
-            verbose=0   Silence output
+            verbose=-1  Silence all output
+            verbose=0   Silence progress output, but show warnings
             verbose=1   Show output (default)
 */
    default, outfile, file_rootname(file)+".pbd";
    default, vname, file_rootname(file_tail(file));
    default, maxcount, 1750000;
    default, verbose, 1;
-   data = qi_import(qi_load(file), ymd, verbose=verbose);
+   data = qi_import(file, ymd, verbose=verbose);
 
    bad = data.north == 0 | data.east == 0;
    if(allof(bad))
