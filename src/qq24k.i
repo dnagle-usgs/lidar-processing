@@ -1092,7 +1092,8 @@ day_shift=) {
             date_suffix = "_" + regsub("-", date_uniq(j), "", all=1);
             outfile = curtile + date_suffix;
             if(suffix) outfile += "_" + suffix;
-            outfile += ".pbd";
+            if(strpart(outfile, -3:) != ".pbd")
+               outfile += ".pbd";
 
             outdest = file_join(outpath, outfile);
 
@@ -1110,7 +1111,8 @@ day_shift=) {
       } else {
          outfile = curtile;
          if(suffix) outfile += "_" + suffix;
-         outfile += ".pbd";
+         if(strpart(outfile, -3:) != ".pbd")
+            outfile += ".pbd";
 
          outdest = file_join(outpath, outfile);
 
