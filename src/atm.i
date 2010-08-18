@@ -152,14 +152,16 @@ func qi_load(fname, verbose=) {
 
 func qi_import(atm_raw, ymd, verbose=) {
 /* DOCUMENT qi_import(atm_raw, ymd, verbose=)
-   Converts ATM_RAW to ATM.
+   Converts raw ATM data from a QI file into a format usable in ALPS (ATM2
+   structure).
 
    Parameters:
-      atm_raw: An array of ATM_RAW data.
-      ymd: The year-month-day of the data
+      atm_raw: A filename for a QI file, or an array of ATM_RAW data.
+      ymd: The year-month-day of the data.
    Option:
       verbose= Specifies whether progress information should be shown.
-            verbose=0   Silence output
+            verbose=-1  Silence all output
+            verbose=0   Silence progress output, but show warnings
             verbose=1   Show output (default)
 
    SEE ALSO: qi_load qi2pbd batch_qi2pbd
@@ -167,6 +169,9 @@ func qi_import(atm_raw, ymd, verbose=) {
    default, verbose, 1;
    if(!is_integer(ymd) || ymd < 19800000 || ymd > 21000000)
       error, "YMD argument must be an integer in YYYYMMDD format.";
+
+   if(is_string(atm_raw))
+      atm_raw = qi_load(atm_raw, verbose=(verbose > -1));
 
    bad = atm_raw.lat == 0 | atm_raw.lon == 0;
    if(allof(bad)) {
