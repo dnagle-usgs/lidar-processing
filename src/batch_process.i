@@ -2680,10 +2680,9 @@ split_zones=, split_days=, day_shift=) {
    }
 
    count = numberof(files);
+   sizes = double(file_size(files));
    if(count > 1)
-      sizes = file_size(files)(cum)(2:);
-   else if(count)
-      sizes = file_size(files);
+      sizes = sizes(cum)(2:);
 
    t0 = tp = array(double, 3);
    timer, t0;
