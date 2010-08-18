@@ -123,6 +123,7 @@ plg, y, x, width=9.0, color="blue";
    plg, y, x, width=10.0, color=clr(col);    // highlight selected point in iwin
  
    mindata = fs(m(minindx));
+   pixelwf_set_point, mindata;
    rasterno = mindata.rn&0xFFFFFF;
    pulseno  = mindata.rn/0xFFFFFF
    hms= sod2hms(soe2sod(mindata.soe));
