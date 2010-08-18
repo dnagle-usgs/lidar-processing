@@ -310,7 +310,7 @@ func batch_qi2pbd(srcdir, ymd, outdir=, files=, searchstr=, maxcount=, verbose=)
 
    count = numberof(files);
    if(count > 1)
-      sizes = file_size(files)(cum)(2:);
+      sizes = double(file_size(files))(cum)(2:);
    else if(count)
       sizes = file_size(files);
    else
