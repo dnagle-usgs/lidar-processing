@@ -9,6 +9,12 @@
 * as general functionality available elsewhere in ALPS.                        *
 \******************************************************************************/
 
+// Some of the functions used in/alongside the functions below were renamed.
+// The following aliases the old names to the new, for compatibility.
+atm_to_alps = qi_import;
+load_atm_raw = qi_load;
+open_atm_raw = qi_open;
+
 func merge_qi_tiles(dir, glob=, srt=) {
 /* DOCUMENT merge_qi_tiles, dir, glob=, srt=
 
