@@ -149,13 +149,15 @@ func atm_to_alps(atm_raw, ymd, verbose=) {
    Converts ATM_RAW to ATM.
 
    Parameters:
-
       atm_raw: An array of ATM_RAW data.
-
       ymd: The year-month-day of the data
-
+   Option:
+      verbose= Specifies whether progress information should be shown.
+            verbose=0   Silence output
+            verbose=1   Show output (default)
    SEE ALSO: qi_load qi2pbd batch_qi2pbd
 */
+   default, verbose, 1;
    if(!is_integer(ymd) || ymd < 19800000 || ymd > 21000000)
       error, "YMD argument must be an integer in YYYYMMDD format.";
 
