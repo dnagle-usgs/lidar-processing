@@ -27,7 +27,7 @@ if {[info commands SegmentedDataWindow] eq ""} {
 
       method init_opt_var {opt default} {}
       method size_optimally {} {}
-      method refresh_times {{method -}} {}
+      method refresh_times {} {}
       method set_time {idx time_start time_end} {}
       method clear_time {idx} {}
       method plot_segment {args} {}
@@ -56,7 +56,9 @@ if {[info commands SegmentedDataWindow] eq ""} {
       # For holding private GUI variables (array)
       variable _private
       # The format to use for time
-      variable _timeformat full
+      variable _dateformat "%Y-%m-%d"
+      variable _timeformat "%H:%M:%S"
+      variable _rangeformat "START - END"
    }
 }
 
@@ -107,27 +109,53 @@ itcl::body SegmentedDataWindow::constructor {args} {
    menubutton $f.btnHeadingTime -text "Time Format/Refresh" -menu $mb \
       -relief raised
    menu $mb
-   $mb add command \
-      -label "2004-01-10 12:00:00 - 2004-01-15 14:00:00" \
-      -command [itcl::code $this refresh_times full]
-   $mb add command \
-      -label "01-10 12:00 - 01-15 14:00" \
-      -command [itcl::code $this refresh_times short]
-   $mb add command \
-      -label "2004-01-10 - 2004-01-15" \
-      -command [itcl::code $this refresh_times date]
-   $mb add command \
-      -label "12:00:00 - 14:00:00" \
-      -command [itcl::code $this refresh_times time]
-   $mb add command \
-      -label "2004-01-10 12:00:00" \
-      -command [itcl::code $this refresh_times startfull]
-   $mb add command \
-      -label "2004-01-10 12:00:00 (05 min 13 sec)" \
-      -command [itcl::code $this refresh_times startfulllen]
-   $mb add command \
-      -label "12:00:00" \
-      -command [itcl::code $this refresh_times starttime]
+   menu $mb.date
+   menu $mb.time
+   menu $mb.range
+   $mb add cascade -label "Date format" -menu $mb.date
+   $mb.date add radiobutton -label "YYYY-MM-DD" \
+      -command [itcl::code $this refresh_times] \
+      -variable [itcl::scope _dateformat] -value "%Y-%m-%d"
+   $mb.date add radiobutton -label "MM-DD" \
+      -command [itcl::code $this refresh_times] \
+      -variable [itcl::scope _dateformat] -value "%m-%d"
+   $mb.date add radiobutton -label "YYYY-DOY" \
+      -command [itcl::code $this refresh_times] \
+      -variable [itcl::scope _dateformat] -value "%Y-%j"
+   $mb.date add radiobutton -label "DOY" \
+      -command [itcl::code $this refresh_times] \
+      -variable [itcl::scope _dateformat] -value "%j"
+   $mb.date add radiobutton -label "(omit)" \
+      -command [itcl::code $this refresh_times] \
+      -variable [itcl::scope _dateformat] -value " "
+   $mb add cascade -label "Time format" -menu $mb.time
+   $mb.time add radiobutton -label "HH:MM:SS" \
+      -command [itcl::code $this refresh_times] \
+      -variable [itcl::scope _timeformat] -value "%H:%M:%S"
+   $mb.time add radiobutton -label "HH:MM" \
+      -command [itcl::code $this refresh_times] \
+      -variable [itcl::scope _timeformat] -value "%H:%M"
+   $mb.time add radiobutton -label "SOE" \
+      -command [itcl::code $this refresh_times] \
+      -variable [itcl::scope _timeformat] -value "SOE"
+   $mb.time add radiobutton -label "SOD" \
+      -command [itcl::code $this refresh_times] \
+      -variable [itcl::scope _timeformat] -value "SOD"
+   $mb.time add radiobutton -label "(omit)" \
+      -command [itcl::code $this refresh_times] \
+      -variable [itcl::scope _timeformat] -value " "
+   $mb add cascade -label "Range format" -menu $mb.range
+   $mb.range add radiobutton -label "START - END" \
+      -command [itcl::code $this refresh_times] \
+      -variable [itcl::scope _rangeformat] -value "START - END"
+   $mb.range add radiobutton -label "START" \
+      -command [itcl::code $this refresh_times] \
+      -variable [itcl::scope _rangeformat] -value "START"
+   $mb.range add radiobutton -label "START (DURATION)" \
+      -command [itcl::code $this refresh_times] \
+      -variable [itcl::scope _rangeformat] -value "START (DURATION)"
+   $mb add command -label "Refresh" \
+      -command [itcl::code $this refresh_times]
    label $f.lblHeadingPlot -text "Plot Segment"
 
    grid configure $f.btnHeadingSelect $f.lblHeadingVariables \
@@ -299,10 +327,7 @@ itcl::body SegmentedDataWindow::size_optimally {} {
    eval [[$f component canvas] cget -yscrollcommand] [$f yview]
 }
 
-itcl::body SegmentedDataWindow::refresh_times {{method -}} {
-   if {$method ne "-"} {
-      set _timeformat $method
-   }
+itcl::body SegmentedDataWindow::refresh_times {} {
    for {set i 1} {$i <= $_count} {incr i} {
       after [expr {$i * 20}] [list \
          ybkg tk_sdw_send_times \"[itcl::scope $this]\" $i $_segment($i,var)]
@@ -313,46 +338,38 @@ itcl::body SegmentedDataWindow::set_time {idx time_start time_end} {
    set start [clock scan $time_start]
    set end [clock scan $time_end]
    set diff [expr {$end - $start}]
+
+   set date0 [clock format $start -format $_dateformat -gmt 1]
+   set date1 [clock format $end -format $_dateformat -gmt 1]
+
    switch -- $_timeformat {
-      full {
-         set format "%Y-%m-%d %H:%M:%S"
-         set s [clock format $start -format $format]
-         set e [clock format $end -format $format]
-         set _segment($idx,time) "$s - $e"
+      SOE {
+         set time0 $start
+         set time1 $end
       }
-      short {
-         set format "%m-%d %H:%M"
-         set s [clock format $start -format $format]
-         set e [clock format $end -format $format]
-         set _segment($idx,time) "$s - $e"
+      SOD {
+         set time0 [expr {$start % 86400}]
+         set time1 [expr {$end % 86400}]
       }
-      date {
-         set format "%Y-%m-%d"
-         set s [clock format $start -format $format]
-         set e [clock format $end -format $format]
-         set _segment($idx,time) "$s - $e"
+      default {
+         set time0 [clock format $start -format $_timeformat -gmt 1]
+         set time1 [clock format $end -format $_timeformat -gmt 1]
       }
-      time {
-         set format "%H:%M:%S"
-         set s [clock format $start -format $format]
-         set e [clock format $end -format $format]
-         set _segment($idx,time) "$s - $e"
+   }
+
+   set datetime0 [string trim "$date0 $time0"]
+   set datetime1 [string trim "$date1 $time1"]
+
+   switch -- $_rangeformat {
+      "START - END" {
+         set _segment($idx,time) "$datetime0 - $datetime1"
       }
-      startfull {
-         set format "%Y-%m-%d %H:%M:%S"
-         set s [clock format $start -format $format]
-         set _segment($idx,time) "$s"
+      "START" {
+         set _segment($idx,time) "$datetime0"
       }
-      startfulllen {
-         set format "%Y-%m-%d %H:%M:%S"
-         set s [clock format $start -format $format]
-         set d [clock format $diff -format "(%M min %S sec)"]
-         set _segment($idx,time) "$s $d"
-      }
-      starttime {
-         set format "%H:%M:%S"
-         set s [clock format $start -format $format]
-         set _segment($idx,time) "$s"
+      "START (DURATION)" {
+         set d [clock format $diff -format "(%M min %S sec)" -gmt 1]
+         set _segment($idx,time) "$datetime0 $d"
       }
    }
 }
