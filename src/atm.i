@@ -310,7 +310,7 @@ func qi2pbd(file, ymd, outfile=, vname=, maxcount=, verbose=) {
    count = numberof(data);
    if(count <= maxcount) {
       pbd_save, outfile, vname, data;
-   } else {
+   } else if(count) {
       maxnum = long(ceil(count/double(maxcount)));
       digits = long(log10(maxnum)) + 1;
       fmt = swrite(format="%%0%dd", digits);
@@ -322,5 +322,7 @@ func qi2pbd(file, ymd, outfile=, vname=, maxcount=, verbose=) {
          pbd_save, swrite(format=outfilefmt, i), swrite(format=vnamefmt, i),
             data(lower:upper);
       }
+   } else if(verbose > 0) {
+      write, "No points loaded, so not output file created";
    }
 }
