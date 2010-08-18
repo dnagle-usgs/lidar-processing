@@ -70,8 +70,8 @@ struct ATM_RAW_14 {
    int gps_time;     // GPS time packed (example: 153320100 = 15h 33m 20s 100ms)
 }
 
-func open_atm_raw(fname, verbose=) {
-/* DOCUMENT f = open_atm_raw(fname, verbose=)
+func qi_open(fname, verbose=) {
+/* DOCUMENT f = qi_open(fname, verbose=)
    Returns a filehandle for an ATM QI file with these variables installed:
       f.rec_len -- Record length
       f.data_offset -- Offset to data
@@ -131,10 +131,10 @@ func load_atm_raw(fname, verbose=) {
    Loads the ATM data from file fname and returns it as an array of ATM_RAW.
    If errors are encounted, warnings will be displayed and [] will be returned.
    Use verbose=0 to disable warning messages.
-   SEE ALSO: atm_to_alps qi_to_tiles open_atm_raw
+   SEE ALSO: atm_to_alps qi_to_tiles qi_open
 */
    default, verbose, 1;
-   f = open_atm_raw(fname, verbose=verbose);
+   f = qi_open(fname, verbose=verbose);
    if(!has_member(f, "data")) {
       if(verbose)
          write, format=" Unable to extract data from %s\n", file_tail(fname);
