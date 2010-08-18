@@ -315,16 +315,14 @@ func atm_to_alps(atm_raw, ymd, verbose=) {
    idx = where(atm_raw.lat != 0 & atm_raw.lon != 0);
    if(numberof(idx)) {
       u = fll2utm(atm_raw(idx).lat/1000000.0, atm_raw(idx).lon/1000000.0);
-      d=int(u);
-      atm(idx).north = (d(1,) * 100);
-      atm(idx).east = (d(2,) * 100);
-      zone = d(3,);
+      atm(idx).north = (u(1,) * 100);
+      atm(idx).east = (u(2,) * 100);
+      atm(idx).zone = long(u(3,));
       if(verbose) {
          write, "UTM Zone of data:"
-         write, "Min:", min(zone);
-         write, "Max:", max(zone);
+         write, "Min:", min(atm(idx).zone);
+         write, "Max:", max(atm(idx).zone);
       }
-      atm(idx).zone = int(u(3,));
    } else if(verbose) {
       write, "Serious problem encountered: No lat/lon info!";
    }
