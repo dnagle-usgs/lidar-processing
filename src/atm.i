@@ -308,23 +308,32 @@ func atm_to_alps(atm_raw, ymd, verbose=) {
 
    See also: load_atm_raw atm_create_tiles
 */
+   bad = atm_raw.lat == 0 | atm_raw.lon == 0;
+   if(allof(bad)) {
+      if(verbose)
+         write, "All points have bad lat/lon";
+      return [];
+   }
+   if(anyof(bad) && verbose) {
+      w = where(bad);
+      write, format=" Discarding %d of %d points (%.2f%%) with bad lat/lon\n",
+         numberof(w), numberof(atm_raw), 100.*numberof(w)/numberof(atm_raw);
+   }
+   w = where(!bad);
+   atm_raw = atm_raw(w);
+
    atm = array(ATM2, numberof(atm_raw));
 
    if(verbose)
       write, "Converting ATM lat/lon to UTM";
-   idx = where(atm_raw.lat != 0 & atm_raw.lon != 0);
-   if(numberof(idx)) {
-      u = fll2utm(atm_raw(idx).lat/1000000.0, atm_raw(idx).lon/1000000.0);
-      atm(idx).north = (u(1,) * 100);
-      atm(idx).east = (u(2,) * 100);
-      atm(idx).zone = long(u(3,));
-      if(verbose) {
-         write, "UTM Zone of data:"
-         write, "Min:", min(atm(idx).zone);
-         write, "Max:", max(atm(idx).zone);
-      }
-   } else if(verbose) {
-      write, "Serious problem encountered: No lat/lon info!";
+   u = fll2utm(atm_raw.lat/1000000.0, atm_raw.lon/1000000.0);
+   atm.north = (u(1,) * 100);
+   atm.east = (u(2,) * 100);
+   atm.zone = long(u(3,));
+   if(verbose) {
+      write, "UTM Zone of data:"
+      write, "Min:", min(atm.zone);
+      write, "Max:", max(atm.zone);
    }
    
    atm.elevation = atm_raw.elev/10.0;
