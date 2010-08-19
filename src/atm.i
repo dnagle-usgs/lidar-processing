@@ -311,10 +311,6 @@ func batch_qi2pbd(srcdir, ymd, outdir=, files=, searchstr=, maxcount=, verbose=)
 
    if(is_void(files))
       files = find(srcdir, glob=searchstr);
-   outfiles = file_rootname(files) + ".pbd";
-   if(!is_void(outdir))
-      outfiles = file_join(outdir, file_tail(outfiles));
-
    count = numberof(files);
    if(!count)
       error, "No files found.";
@@ -329,6 +325,10 @@ func batch_qi2pbd(srcdir, ymd, outdir=, files=, searchstr=, maxcount=, verbose=)
    // Sizes should be a cummulative tally to track progress within whole
    if(count > 1)
       sizes = sizes(cum)(2:);
+
+   outfiles = file_rootname(files) + ".pbd";
+   if(!is_void(outdir))
+      outfiles = file_join(outdir, file_tail(outfiles));
 
    t0 = tp = array(double, 3);
    timer, t0;
