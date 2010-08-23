@@ -211,7 +211,8 @@ func cs2cs(src, dst, &X, &Y, &Z) {
    // Check for short-circuit: src == dst
    if(
       src.datum == dst.datum && src.vert == dst.vert &&
-      src.geoid == dst.geoid && src.proj == dst.proj
+      src.geoid == dst.geoid && src.proj == dst.proj &&
+      (src.proj == "latlong" || src.zone == dst.zone)
    ) {
       if(am_subroutine())
          return;
