@@ -1,3 +1,10 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-08-23. The functionality it was     *
+* intended to provide is no longer needed due to the introduction of the oxy   *
+* object system in Yorick. The functions here had not yet been put into use    *
+* throughout the ALPS codebase.                                                *
+\******************************************************************************/
+
 local hashptr, hashptr_i;
 /* DOCUMENT hashptr.i
    A hash pointer (or pointer hash) is an associate array structure that
