@@ -72,9 +72,13 @@ func summary(nil) {
    write, "Approximate bounds in current coordinate system";
    write, format=" %s\n", current_cs;
    if(cs.proj == "longlat") {
-      write, "             min           max";
-      write, format="   x/lon: %11.6f   %11.6f\n", x(min), x(max);
-      write, format="   y/lat: %11.6f   %11.6f\n", y(min), y(max);
+      write, "                min                max";
+      write, format="   x/lon: %16.11f   %16.11f\n", x(min), x(max);
+      write, format="          %16s   %16s\n",
+         deg2dms_string(x(min)), deg2dms_string(x(max));
+      write, format="   y/lat: %16.11f   %16.11f\n", y(min), y(max);
+      write, format="          %16s   %16s\n",
+         deg2dms_string(y(min)), deg2dms_string(y(max));
    } else {
       write, "               min           max";
       write, format="    x/east: %11.2f   %11.2f\n", x(min), x(max);
