@@ -5,6 +5,8 @@ func pointers2group(pary) {
 /* DOCUMENT grp = pointers2group(pary)
    Given an array of pointers PARY, this returns a group object GRP that
    contains the dereferenced pointers' contents such that grp(i) == *pary(i).
+
+   SEE ALSO: hash2obj hash2pbd obj2hash obj2pbd pbd2hash pbd2obj oxy
 */
    obj = save();
    count = numberof(pary);
@@ -19,7 +21,7 @@ func pbd2hash(pbd) {
    argument may be the filename of a pbd file, or it may be an open filehandle
    to a binary file that contains variables.
 
-   SEE ALSO: hash2pbd
+   SEE ALSO: hash2obj hash2pbd obj2hash obj2pbd pbd2obj pointers2group h_new
 */
 // Original David Nagle 2010-01-28
    if(is_string(pbd))
@@ -39,7 +41,7 @@ func hash2pbd(hash, pbd) {
 /* DOCUMENT hash2pbd, hash, pbd
    Creates a pbd file whose contents match the Yeti hash's contents.
 
-   SEE ALSO: pbd2hash
+   SEE ALSO: hash2obj obj2hash obj2pbd pbd2hash pbd2obj pointers2group h_new
 */
 // Original David Nagle 2010-01-28
    if(is_string(pbd))
@@ -58,7 +60,8 @@ func obj2hash(obj) {
 /* DOCUMENT hash = obj2hash(obj)
    Converts a Yorick object into a Yeti hash.
 
-   SEE ALSO: hash2obj oxy h_new
+   SEE ALSO: hash2obj hash2pbd obj2pbd pbd2hash pbd2obj pointers2group oxy
+      h_new
 */
 // Original David Nagle 2010-07-26
    count = obj(*);
@@ -72,7 +75,8 @@ func hash2obj(hash) {
 /* DOCUMENT obj = hash2obj(hash)
    Converts a Yeti hash into a Yorick object.
 
-   SEE ALSO: obj2hash oxy h_new
+   SEE ALSO: hash2pbd obj2hash obj2pbd pbd2hash pbd2obj pointers2group oxy
+      h_new
 */
 // Original David Nagle 2010-07-26
    keys = h_keys(hash);
@@ -88,7 +92,7 @@ func obj2pbd(obj, pbd) {
    Converts a Yorick group object to a PBD file. Caveat: Only group members
    that are arrays and have non-nil key names will get saved.
 
-   SEE ALSO: pbd2obj
+   SEE ALSO: hash2obj hash2pbd obj2hash pbd2hash pbd2obj pointers2group oxy
 */
    if(is_string(pbd))
       pbd = createb(pbd);
@@ -105,7 +109,7 @@ func pbd2obj(pbd) {
 /* DOCUMENT obj = pbd2obj(pbd)
    Converts a PBD file to a Yorick group object.
 
-   SEE ALSO: obj2pbd
+   SEE ALSO: hash2obj hash2pbd obj2hash obj2pbd pbd2hash pointers2group oxy
 */
    if(is_string(pbd))
       pbd = openb(pbd);
