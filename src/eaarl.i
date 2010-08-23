@@ -111,12 +111,12 @@ if(is_void(__eaarl_includes_included__)) {
    require, "sel_file.i";
    require, "set.i";
    require, "sf.i";
-   require, "strutil.i";
    require, "surface_topo.i";
    require, "transect.i";
    require, "util_cast.i";
    require, "util_container.i";
    require, "util_obj.i";
+   require, "util_str.i";
    require, "veg.i";
    require, "wgs842nad83.i";
    require, "ytime.i";
