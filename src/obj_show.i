@@ -98,7 +98,9 @@ save, _obj_show_workers,
   char=_obj_show_array,
   short=_obj_show_array,
   int=_obj_show_array,
-  long=_obj_show_array;
+  long=_obj_show_array,
+  pointer=_obj_show_array,
+  string=_obj_show_array;
 
 func _obj_show_void(obj, name, prefix1, prefix2) {
   output += swrite(format="%s %s (void) []\n", prefix1, name);
