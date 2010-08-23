@@ -335,8 +335,8 @@ itcl::body SegmentedDataWindow::refresh_times {} {
 }
 
 itcl::body SegmentedDataWindow::set_time {idx time_start time_end} {
-   set start [clock scan $time_start]
-   set end [clock scan $time_end]
+   set start [clock scan $time_start -gmt 1]
+   set end [clock scan $time_end -gmt 1]
    set diff [expr {$end - $start}]
 
    set date0 [clock format $start -format $_dateformat -gmt 1]
