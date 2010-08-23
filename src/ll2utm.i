@@ -470,3 +470,15 @@ func deg2dms(coord, arr=) {
    else
       return sign(coord) * (d * 10000 + m * 100 + s);
 }
+
+func deg2dms_string(coord) {
+/* DOCUMENT deg2dms_string(coord)
+   Given a coordinate (or array of coordinates) in decimal degrees, this
+   returns a string (or array of strings) in degree-minute-seconds, formatted
+   nicely.
+*/
+   dms = deg2dms(coord, arr=1);
+   // ASCII: 176 = degree  39 = single-quote  34 = double-quote
+   return swrite(format="%.0f%c %.0f%c %.2f%c", dms(..,1), 176, dms(..,2), 39,
+      dms(..,3), 34);
+}
