@@ -91,12 +91,11 @@ func batch_georef_eaarl1(tlddir, files=, outdir=, gns=, ins=, ops=, daystart=, u
    }
 
    count = numberof(tldfiles);
-   if(count > 1)
-      sizes = double(file_size(tldfiles))(cum)(2:);
-   else if(count)
-      sizes = file_size(tldfiles);
-   else
+   if(!count)
       error, "No files found.";
+   sizes = double(file_size(tldfiles));
+   if(count > 1)
+      sizes = sizes(cum)(2:);
 
    default, gns, pnav;
    default, ins, tans;
