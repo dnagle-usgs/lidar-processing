@@ -1,3 +1,8 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-08-23. This is the test suite for   *
+* hashptr.i, which was also moved to the attic.                                *
+\******************************************************************************/
+
 #include "hashptr.i"
 #include "unittest.i"
 
