@@ -4,14 +4,29 @@ scratch = save(scratch, tmp);
 tmp = save(index, check_cs, xyzwrap, x0, y0, z0, xyz0, x1, y1, z1, xyz1);
 
 func wfobj(base, obj) {
+/*
+   Scalar members:
+      source = string
+      system = string
+      record_format = long
+      cs = string
+   Array members, for N points:
+      raw_xyz0 = array(double,3,N)
+      raw_xyz1 = array(double,3,N)
+      soe = array(double,N)
+      record = array(long,2,N)
+      tx = array(pointer,N)
+      rx = array(pointer,N)
+*/
    default, obj, save();
+   obj_merge, obj, base;
    obj_generic, obj;
+   save, obj, obj_index;
+   // scalar members
    keydefault, obj, source="unknown", system="unknown", record_format=0,
       cs=string(0);
-   save, obj, obj_index, index=wfobj_index;
-   save, obj, check_cs_xyz=wfobj_check_cs_xyz, xyzwrap=wfobj_xyzwrap,
-      x=wfobj_x, y=wfobj_y, z=wfobj_z, xyz=wfobj_xyz, xref=wfobj_xref,
-      yref=wfobj_yref, zref=wfobj_zref, xyzref=wfobj_xyzref;
+   // array members
+   keydefault, obj, raw_xyz0=[], raw_xyz1=[], soe=[], record=[], tx=[], rx=[];
    return obj;
 }
 
