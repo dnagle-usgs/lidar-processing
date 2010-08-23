@@ -13,66 +13,6 @@ func pointers2group(pary) {
    return obj;
 }
 
-func hash2ptr(hash, token=) {
-/* DOCUMENT ptr = hash2ptr(hash, token=)
-   Converts a Yeti hash into a pointer tree, which can then be stored safely in
-   a Yorick pbd file.
-
-   Keyword token indicates whether a "HASH POINTER" token should be included in
-   the pointer structure. Without this, there's no way to safely automatically
-   determine whether a pointer structure represents a hash or not; including it
-   allows for a hash tree to be recursively stored. By default, it is included
-   (token=1), but if you know for a fact that you will never need to determine
-   via automatic introspection that the pointer represents a hash you can set
-   token=0 to disable its inclusion. (Note that hash members that are
-   themselves hashes will be stored with token=1 either way, to allow for
-   recursive restoration.)
-
-   SEE ALSO: ptr2hash hash2pbd
-*/
-// Original David Nagle 2010-04-28
-   default, token, 1;
-   tokentext = "HASH POINTER";
-   keys = h_keys(hash);
-   ptr = p_new();
-   if(numberof(h_keys(hash))) {
-      keys = keys(sort(keys));
-      num = numberof(keys);
-      for(i = 1; i <= num; i++) {
-         if(is_hash(hash(keys(i))))
-            p_set, ptr, keys(i), hash2ptr(hash(keys(i)));
-         else
-            p_set, ptr, keys(i), hash(keys(i));
-      }
-   }
-   if(token)
-      ptr = &(grow(*ptr, &tokentext));
-   return ptr;
-}
-
-func ptr2hash(ptr) {
-/* DOCUMENT hash = ptr2hash(ptr)
-   Converts a pointer tree returned by hash2ptr into a Yeti hash.
-
-   SEE ALSO: hash2ptr
-*/
-// Original David Nagle 2010-04-28
-   keys = p_keys(ptr);
-   num = numberof(keys);
-   hash = h_new();
-   for(i = 1; i <= num; i++) {
-      item = p_get(ptr, keys(i));
-      if(
-         is_hashptr(item) && numberof(*item) == 3 &&
-         is_string(*(*item)(3)) && *(*item)(3) == "HASH POINTER"
-      )
-         h_set, hash, keys(i), ptr2hash(item);
-      else
-         h_set, hash, keys(i), item;
-   }
-   return hash;
-}
-
 func pbd2hash(pbd) {
 /* DOCUMENT hash = pbd2hash(pbd)
    Creates a Yeti hash whose contents match the pbd's contents. The pbd
