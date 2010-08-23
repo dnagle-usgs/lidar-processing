@@ -78,7 +78,6 @@ if(is_void(__eaarl_includes_included__)) {
    require, "gridding.i";
    require, "gridr.i";
    require, "groundtruth.i";
-   require, "hashptr.i";
    require, "histogram.i";
    require, "ircf.i";
    require, "irg.i";
