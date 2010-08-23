@@ -45,7 +45,7 @@ func index(idx) {
 func check_cs(nil) {
 // ensures that working xyz are in current cs
    extern current_cs;
-   use, cs_cur, cs_xyz0, cs_xyz1;
+   use, cs_cur, cs_xyz0, cs_xyz1, raw_xyz0, raw_xyz1;
    if(current_cs == cs_cur)
       return;
    cs_cur = current_cs;
