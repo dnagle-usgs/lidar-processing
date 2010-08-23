@@ -39,7 +39,7 @@ func hash2pbd(hash, pbd) {
 /* DOCUMENT hash2pbd, hash, pbd
    Creates a pbd file whose contents match the Yeti hash's contents.
 
-   SEE ALSO: pbd2hash hash2ptr
+   SEE ALSO: pbd2hash
 */
 // Original David Nagle 2010-01-28
    if(is_string(pbd))
@@ -81,22 +81,4 @@ func hash2obj(hash) {
    for(i = 1; i <= count; i++)
       save, obj, keys(i), hash(keys(i));
    return obj;
-}
-
-func obj2ptr(obj) {
-/* DOCUMENT ptrhash = obj2ptr(obj)
-   Converts a Yorick object into a pointer hash.
-
-   SEE ALSO: ptr2hash ptr2obj obj2hash
-*/
-   return hash2ptr(obj2hash(obj));
-}
-
-func ptr2obj(ptr) {
-/* DOCUMENT obj = ptr2obj(ptrhash)
-   Converts a pointer hash into a Yorick object.
-
-   SEE ALSO: ptr2hash obj2ptr hash2obj
-*/
-   return hash2obj(ptr2hash(ptr));
 }
