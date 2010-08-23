@@ -20,6 +20,8 @@ func wfobj(base, obj) {
       rx = array(pointer,N)
 */
    default, obj, save();
+   if(is_string(obj))
+      obj = pbd2obj(obj);
    obj_merge, obj, base;
    obj_generic, obj;
    save, obj, obj_index;
