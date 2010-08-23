@@ -116,15 +116,16 @@ func batch_georef_eaarl1(tlddir, files=, outdir=, gns=, ins=, ops=, daystart=, u
 
    for(i = 1; i <= count; i++) {
       rasts = decode_rasters(get_tld_rasts(fname=tldfiles(i)));
-      data = georef_eaarl1(rasts, gns, ins, ops, daystart);
-      wfdata = hash2ptr(data);
+      wf = georef_eaarl1(rasts, gns, ins, ops, daystart);
+      rasts = [];
 
       f = createb(outfiles(i), i86_primitives);
-      save, f, ALPS_WAVEFORM;
-      save, f, wfdata;
+      obj2pbd, wf, f;
       close, f;
 
-      write, format="[%d/%d] %s: %.2f MB -> %.2f MB -> %.2f MB\n", i, count, file_tail(tldfiles(i)), file_size(tldfiles(i))/1024./1024., fullsizeof(wfdata)/1024./1024., file_size(outfiles(i))/1024./1024.;
+      write, format="[%d/%d] %s: %.2f MB -> %.2f MB\n", i, count,
+         file_tail(tldfiles(i)), file_size(tldfiles(i))/1024./1024.,
+         file_size(outfiles(i))/1024./1024.;
 
       timer_remaining, t0, sizes(i), sizes(0), tp, interval=10;
    }
