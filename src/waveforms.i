@@ -27,9 +27,10 @@ func wfobj(base, obj) {
    save, obj, obj_index;
    // scalar members
    keydefault, obj, source="unknown", system="unknown", record_format=0,
-      cs=string(0), sample_interval=0.;
+      cs=string(0), sample_interval=0., cs_cur="null";
    // array members
-   keydefault, obj, raw_xyz0=[], raw_xyz1=[], soe=[], record=[], tx=[], rx=[];
+   keydefault, obj, raw_xyz0=[], raw_xyz1=[], soe=[], record=[], tx=[], rx=[],
+      cs_xyz0=[], cs_xyz1=[];
    return obj;
 }
 
