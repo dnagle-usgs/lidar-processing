@@ -3,7 +3,6 @@
 require, "ytime.i"
 require, "rlw.i"
 require, "string.i"
-require, "sel_file.i"
 require, "eaarl_constants.i"
 require, "colorbar.i"
 

@@ -108,7 +108,6 @@ if(is_void(__eaarl_includes_included__)) {
    require, "read_yfile.i";
    require, "remove_bathy_from_veg.i";
    require, "rlw.i";
-   require, "sel_file.i";
    require, "set.i";
    require, "sf.i";
    require, "surface_topo.i";
