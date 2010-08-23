@@ -10,11 +10,12 @@ func wfobj(base, obj) {
       system = string
       record_format = long
       cs = string
+      sample_interval = double
    Array members, for N points:
-      raw_xyz0 = array(double,3,N)
-      raw_xyz1 = array(double,3,N)
+      raw_xyz0 = array(double,N,3)
+      raw_xyz1 = array(double,N,3)
       soe = array(double,N)
-      record = array(long,2,N)
+      record = array(long,N,2)
       tx = array(pointer,N)
       rx = array(pointer,N)
 */
@@ -24,7 +25,7 @@ func wfobj(base, obj) {
    save, obj, obj_index;
    // scalar members
    keydefault, obj, source="unknown", system="unknown", record_format=0,
-      cs=string(0);
+      cs=string(0), sample_interval=0.;
    // array members
    keydefault, obj, raw_xyz0=[], raw_xyz1=[], soe=[], record=[], tx=[], rx=[];
    return obj;
