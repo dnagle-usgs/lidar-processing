@@ -74,26 +74,6 @@ func xyz1(idx) { return use(xyzwrap, "cs_xyz1", , idx); }
 wfobj = closure(wfobj, restore(tmp));
 restore, scratch;
 
-struct ALPS_WAVEFORM {
-   // Location of reference point, needed for projecting location of other
-   // pixels. Can be any arbitrary point, but the prefered point would be on
-   // the aircraft at the mirror.
-   long x0, y0, z0;
-
-   // Expected location of waveform's first pixel.
-   long x1, y1, z1;
-
-   // Timestamp for waveform, 1 ms resolution
-   double soe;
-
-   // Record number for unique raster
-   long record(2);
-
-   // Waveform arrays, transmit and return
-   pointer *tx;
-   pointer *rx;
-}
-
 func batch_georef_eaarl1(tlddir, files=, outdir=, gns=, ins=, ops=, daystart=, update=) {
    default, update, 0;
 
@@ -158,11 +138,7 @@ func georef_eaarl1(rasts, gns, ins, ops, daystart) {
    rasts = rasts(*);
 
    // Initialize waveforms with raster, pulse, soe, and transmit waveform
-   wf = array(ALPS_WAVEFORM, 120, numberof(rasts));
-   wf.record(1,..) = rasts.rasternbr(-,);
-   wf.record(2,..) = indgen(120)(,-);
-   wf.soe = rasts.offset_time;
-   wf.tx = map_pointers(bw_not, rasts.tx);
+   shape = array(char(1), numberof(rasts), 120, 3);
 
    // Calculate waveform and mirror locations
 
@@ -170,7 +146,7 @@ func georef_eaarl1(rasts, gns, ins, ops, daystart) {
    rng = rasts.irange * NS2MAIR;
 
    // Relative timestamps
-   somd = wf.soe - soe_day_start;
+   somd = rasts.offset_time - soe_day_start;
 
    // Aircraft roll, pitch, and yaw (in degrees)
    aR = interp(ins.roll, ins.somd, somd);
@@ -222,31 +198,37 @@ func georef_eaarl1(rasts, gns, ins, ops, daystart) {
    aY = aP = aR = gx = gy = gz = dx = dy = dz = [];
    cyaw = lasang = mirang = ang = rng = [];
 
-   wf.x0 = georef(..,1) * 100;
-   wf.y0 = georef(..,2) * 100;
-   wf.z0 = georef(..,3) * 100;
-   wf.x1 = georef(..,4) * 100;
-   wf.y1 = georef(..,5) * 100;
-   wf.z1 = georef(..,6) * 100;
+   x0 = shape * georef(..,1)(,,-);
+   y0 = shape * georef(..,2)(,,-);
+   z0 = shape * georef(..,3)(,,-);
+   x1 = shape * georef(..,4)(,,-);
+   y1 = shape * georef(..,5)(,,-);
+   z1 = shape * georef(..,6)(,,-);
    georef = [];
 
-   // Expand to hold return waveform, shape properly, then fill in
-   wf = array(wf, 4);
-   wf = transpose(wf, [1,2]);
-   wf.rx = transpose(map_pointers(bw_not, rasts.rx), [0,1,2]);
+   raw_xyz0 = [x0, y0, z0];
+   x0 = y0 = z0 = [];
+   raw_xyz1 = [x1, y1, z1];
+   x1 = y1 = z1 = [];
 
-   // Update record numbers to differentiate between channels
-   wf.record(2,..) |= indgen(4)(-,-,);
+   record1 = shape * rasts.rasternbr(,-,-);
+   record2 = shape * indgen(120)(-,,-) * 4 + indgen(3)(-,-,);
+   record = [record1, record2];
+   record1 = record2 = [];
 
-   hdr = h_new(
-      horz_scale=0.01, vert_scale=0.01,
-      cs=cs_wgs84(zone=zone),
-      source="unknown plane",
-      system="EAARL rev 1",
-      record_format=0,
-      sample_interval=1.0,
-      wf_encoding=0
-   );
+   soe = shape * rasts.offset_time(,-,-);
+   tx = map_pointers(bw_not, array(transpose(rasts.tx), 3));
+   rx = map_pointers(bw_not, transpose(rasts.rx(,1:3,), 1));
 
-   return h_new(header=hdr, wf=wf);
+   rasts = [];
+
+   source = "unknown plane";
+   system = "EAARL rev 1";
+   cs = cs_wgs84(zone=zone);
+   record_format = 1;
+   sample_interval = 1.0;
+   result = save(source, system, cs, record_format, sample_interval, raw_xyz0,
+      raw_xyz1, soe, record, tx, rx);
+
+   return wfobj(result);
 }
