@@ -1,3 +1,9 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-08-23. The file was checked in as   *
+* part of the initial check-in to the CVS repository in 2002 and has remained  *
+* unchanged since. The code has not been in active use in years.               *
+\******************************************************************************/
+
 require, "fillin.i"
 
 CNSH2O2X = 0.11270393157;
