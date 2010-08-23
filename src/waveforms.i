@@ -200,12 +200,12 @@ func georef_eaarl1(rasts, gns, ins, ops, daystart) {
    aY = aP = aR = gx = gy = gz = dx = dy = dz = [];
    cyaw = lasang = mirang = ang = rng = [];
 
-   x0 = array(transpose(georef(..,1), 3));
-   y0 = array(transpose(georef(..,2), 3));
-   z0 = array(transpose(georef(..,3), 3));
-   x1 = array(transpose(georef(..,4), 3));
-   y1 = array(transpose(georef(..,5), 3));
-   z1 = array(transpose(georef(..,6), 3));
+   x0 = array(transpose(georef(..,1)), 3);
+   y0 = array(transpose(georef(..,2)), 3);
+   z0 = array(transpose(georef(..,3)), 3);
+   x1 = array(transpose(georef(..,4)), 3);
+   y1 = array(transpose(georef(..,5)), 3);
+   z1 = array(transpose(georef(..,6)), 3);
    georef = [];
 
    raw_xyz0 = [x0, y0, z0];
