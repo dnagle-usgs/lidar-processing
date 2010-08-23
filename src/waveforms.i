@@ -216,7 +216,7 @@ func georef_eaarl1(rasts, gns, ins, ops, daystart) {
    record = [record1, record2];
    record1 = record2 = [];
 
-   soe = shape * rasts.offset_time(,-,-);
+   soe = array(transpose(rasts.offset_time), 3);
    tx = map_pointers(bw_not, array(transpose(rasts.tx), 3));
    rx = map_pointers(bw_not, transpose(rasts.rx(,1:3,), 1));
 
