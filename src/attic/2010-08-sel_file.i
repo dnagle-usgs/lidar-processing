@@ -1,3 +1,10 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-08-23. This file implements one     *
+* function, sel_file. Its functionality is effectively the same as that of     *
+* select_file, which is a builtin Yorick function (and was formerly part of    *
+* Yeti). ALPS now uses select_file.                                            *
+\******************************************************************************/
+
 func sel_file( ss=, path= )  {
 /* DOCUMENT  sel_file(ss=, path=)
  Select and return  a file name  from the current directory.
