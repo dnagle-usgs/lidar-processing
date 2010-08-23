@@ -90,7 +90,7 @@ struct EGGNAV {
  }
 
  path = data_path +"/gps/"
- ifn = sel_file(ss="*.egg", path=path)(1);
+ ifn = select_file(path, pattern="\\.egg$");
 
  n = int(0)
  idf = open( ifn);
@@ -190,7 +190,7 @@ default, verbose, 1;
     }
  } else {
   write,format="data_path=%s\n",path
- ifn = sel_file(ss="*.ybin", path=path)(1);
+ ifn = select_file(path, pattern="\\.ybin$");
  }
 }
 

@@ -33,9 +33,8 @@ func show_points( ffn= ) {
     map_path = "~/lidar-processing/maps"
   }
 
-  if ( is_void( ffn ) ) {
-    ffn = sel_files(ss="*.pts", path=map_path) (1);
-  }
+  if(is_void(ffn))
+    ffn = select_file(map_path, pattern="\\.pts$");
   
 
   mypoints = array( mypoint, n);

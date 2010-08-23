@@ -108,7 +108,7 @@ if (!ifn) {
    if ( is_void( data_path) )
       data_path = set_data_path();
       path = data_path+"/gps/";
-   ifn = sel_file(ss="*.ybin", path=path)(1);
+      ifn = select_file(path, pattern="\\.ybin$");
  } else {
     path = data_path;
     ifn  = get_openfn( initialdir=path, filetype="*.ybin" );

@@ -12,7 +12,6 @@ func load_map( ffn=, color=,utm=) {
    Use the "mapgen" format option. After you download the map, remove
    the first line (which is a comment beginning with a # sign).  This
    function expects the map files to end with a .pbd or .amap extension.  
-   This function uses sel_file to solicite a filename from the user.
 
    C. W. Wright wright@web-span.com  99-03-20
 
@@ -20,7 +19,7 @@ func load_map( ffn=, color=,utm=) {
              load accordingly.
    11/3/2000 -an to display in utm coords.
 
-   See also:   sel_file, ll2utm, show_map, convert_map
+   See also:   ll2utm, show_map, convert_map
 
 
 */
@@ -31,9 +30,8 @@ func load_map( ffn=, color=,utm=) {
    default, map_path, "~/lidar-processing/maps";
    default, color, "black";
 
-   if ( is_void( ffn ) ) {
-      ffn = sel_file(ss="*.pbd", path="~/lidar-processing/maps/") (1);
-   }
+   if(is_void(ffn))
+      ffn = select_file(map_path, pattern="\\.pbd$");
 
    typ = strtok(ffn,".")(2);
    typ;
@@ -153,14 +151,13 @@ func convert_map ( ffn= , utm=, msave=, arcview=) {
    Get the maps from: http://crusty.er.usgs.gov/coast/getcoast.html
    Use the "mapgen" format option. After you download the map, remove 
    the first line (which is a comment beginning with a # sign).  This 
-   function expects the map files to end with a .amap extension.  This 
-   function uses sel_file to solicite a filename from the user.
+   function expects the map files to end with a .amap extension.
 
    C. W. Wright wright@web-span.com  99-03-20
 
    Modified 11/3/2000 to display in utm coords.
 
-   See also:   sel_file, ll2utm
+   See also:   ll2utm
 */
    extern map_path;
    extern dllmap;		// array of pointers to digital map data
@@ -171,9 +168,8 @@ func convert_map ( ffn= , utm=, msave=, arcview=) {
    // Set the following to where the maps are stored on your system.
    default, map_path, "./maps";
 
-   if ( is_void( ffn ) ) { 
-      ffn = sel_file(ss="*.amap *.pbd", path=map_path+"/")(1);
-   }
+   if(is_void(ffn))
+      ffn = select_file(map_path, pattern="\\.(amap|pbd)$");
 
    mapf = open(ffn, "r" );
    dllmap = [];

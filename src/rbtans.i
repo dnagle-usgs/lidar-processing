@@ -60,7 +60,7 @@ if ( _ytk ) {
  } else {
  if ( is_void(data_path) )
    data_path = rdline(prompt="Enter data path:");
- ifn = sel_file(ss="*.ybin", path=data_path+"/tans/")(1);
+ ifn = select_file(data_path+"/tans/", pattern="\\.ybin$");
  }
 }
 
