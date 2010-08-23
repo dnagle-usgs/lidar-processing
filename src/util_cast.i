@@ -82,3 +82,38 @@ func hash2obj(hash) {
       save, obj, keys(i), hash(keys(i));
    return obj;
 }
+
+func obj2pbd(obj, pbd) {
+/* DOCUMENT obj2pbd, obj, pbd
+   Converts a Yorick group object to a PBD file. Caveat: Only group members
+   that are arrays and have non-nil key names will get saved.
+
+   SEE ALSO: pbd2obj
+*/
+   if(is_string(pbd))
+      pbd = createb(pbd);
+   for(i = 1; i <= obj(*); i++) {
+      key = obj(*,i);
+      val = obj(noop(i));
+      if(!strlen(key) || !is_array(val))
+         continue;
+      save, pbd, noop(key), val;
+   }
+}
+
+func pbd2obj(pbd) {
+/* DOCUMENT obj = pbd2obj(pbd)
+   Converts a PBD file to a Yorick group object.
+
+   SEE ALSO: obj2pbd
+*/
+   if(is_string(pbd))
+      pbd = openb(pbd);
+   obj = save();
+   vars = *(get_vars(pbd)(1));
+   for(i = 1; i <= numberof(vars); i++)
+      // Wrap the get_member in parens to ensure we don't end up with a
+      // reference to the file.
+      save, obj, vars(i), (get_member(pbd, vars(i)));
+   return obj;
+}
