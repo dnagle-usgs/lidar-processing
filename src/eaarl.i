@@ -33,6 +33,7 @@ if(is_void(__eaarl_includes_included__)) {
    // Yorick 2.2 will be required in the future, but for now it is optional.
    if(is_func(is_obj)) {
       require, "obj_show.i";
+      require, "waveforms.i";
    }
 
    // Replace built-in median with Yeti's median which is much faster
