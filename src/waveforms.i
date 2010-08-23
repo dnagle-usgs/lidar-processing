@@ -237,8 +237,11 @@ func georef_eaarl1(rasts, gns, ins, ops, daystart) {
    cs = cs_wgs84(zone=zone);
    record_format = 1;
    sample_interval = 1.0;
-   result = save(source, system, cs, record_format, sample_interval, raw_xyz0,
+   wf = save(source, system, cs, record_format, sample_interval, raw_xyz0,
       raw_xyz1, soe, record, tx, rx);
+   wf = wfobj(wf);
 
-   return wfobj(result);
+   // Now get rid of points without waveforms
+   w = where(rx);
+   return wf(index, w);
 }
