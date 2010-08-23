@@ -1,7 +1,8 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 
 scratch = save(scratch, tmp);
-tmp = save(index, check_cs, xyzwrap, x0, y0, z0, xyz0, x1, y1, z1, xyz1);
+tmp = save(summary, index, check_cs, xyzwrap, x0, y0, z0, xyz0, x1, y1, z1,
+   xyz1);
 
 func wfobj(base, obj) {
 /*
@@ -32,6 +33,53 @@ func wfobj(base, obj) {
    keydefault, obj, raw_xyz0=[], raw_xyz1=[], soe=[], record=[], tx=[], rx=[],
       cs_xyz0=[], cs_xyz1=[];
    return obj;
+}
+
+func summary(nil) {
+   extern current_cs;
+   local x, y;
+   write, "Summary for waveform object:";
+   write, "";
+   write, format=" %d total waveforms\n", numberof(use(soe));
+   write, "";
+   write, format=" source: %s\n", use(source);
+   write, format=" system: %s\n", use(system);
+   write, format=" coords: %s\n", use(cs);
+   write, format=" acquired: %s to %s\n", soe2iso8601(use(soe)(min)),
+      soe2iso8601(use(soe)(max));
+   write, "";
+   write, format=" record_format: %d\n", use(record_format);
+   write, format=" sample_interval: %.6f ns/sample\n", use(sample_interval);
+   write, "";
+   write, "Approximate bounds in native coordinate system";
+   splitary, use(raw_xyz1), 3, x, y;
+   cs = cs_parse(use(cs), output="hash");
+   if(cs.proj == "longlat") {
+      write, format="   x/lon: %.6f - %.6f\n", x(min), x(max);
+      write, format="   y/lat: %.6f - %.6f\n", y(min), y(max);
+   } else {
+      write, "               min           max";
+      write, format="    x/east: %11.2f   %11.2f\n", x(min), x(max);
+      write, format="   y/north: %11.2f   %11.2f\n", y(min), y(max);
+   }
+
+   if(current_cs == use(cs))
+      return;
+   cs = cs_parse(current_cs);
+   tmp = use(xyz1,);
+   splitary, use(xyz1,), 3, x, y;
+   write, "";
+   write, "Approximate bounds in current coordinate system";
+   write, format=" %s\n", current_cs;
+   if(cs.proj == "longlat") {
+      write, "             min           max";
+      write, format="   x/lon: %11.6f   %11.6f\n", x(min), x(max);
+      write, format="   y/lat: %11.6f   %11.6f\n", y(min), y(max);
+   } else {
+      write, "               min           max";
+      write, format="    x/east: %11.2f   %11.2f\n", x(min), x(max);
+      write, format="   y/north: %11.2f   %11.2f\n", y(min), y(max);
+   }
 }
 
 func index(idx) {
