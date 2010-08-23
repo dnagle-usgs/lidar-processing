@@ -136,7 +136,6 @@ func batch_georef_eaarl1(tlddir, files=, outdir=, gns=, ins=, ops=, daystart=, u
 func georef_eaarl1(rasts, gns, ins, ops, daystart) {
    // raw = get_tld_rasts(fname=)
    // decoded = decode_rasters(raw)
-   dims = dimsof(rasts);
    rasts = rasts(*);
 
    // Initialize waveforms with raster, pulse, soe, and transmit waveform
@@ -222,7 +221,16 @@ func georef_eaarl1(rasts, gns, ins, ops, daystart) {
    tx = map_pointers(bw_not, array(transpose(rasts.tx), 3));
    rx = map_pointers(bw_not, transpose(rasts.rx(,1:3,), 2));
 
+   count = numberof(rasts) * 120 * 3;
    rasts = [];
+
+   // Now get rid of multiple dimensions
+   raw_xyz0 = reform(raw_xyz0, count, 3);
+   raw_xyz1 = reform(raw_xyz1, count, 3);
+   record = reform(record, count, 2);
+   soe = soe(*);
+   tx = tx(*);
+   rx = rx(*);
 
    source = "unknown plane";
    system = "EAARL rev 1";
