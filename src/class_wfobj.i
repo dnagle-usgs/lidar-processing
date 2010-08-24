@@ -147,5 +147,11 @@ xyz1 = closure(xyzwrap, save(var="cs_xyz1", which=[]));
 
 restore, scratch;
 
+save, tmp, save;
+func save(fn) {
+   keys = set_difference(use(*,), ["cs_cur", "cs_xyz0", "cs_xyz1"]);
+   obj2pbd, use(noop(keys)), createb(fn, i86_primitives);
+}
+
 wfobj = closure(wfobj, restore(tmp));
 restore, scratch;
