@@ -48,10 +48,12 @@ func wfobj(base, obj) {
    return obj;
 }
 
+// summary method uses a closure to encapsulate code that would otherwise need
+// to be repeated within the function
 scratch = save(tmp, scratch);
 // listing same item twice to avoid bug where save fails to recognize a single
 // void argument
-tmp = save(summary_coord_print, summary_coord_print);
+tmp = save(coord_print, coord_print);
 
 func summary(util) {
    extern current_cs;
@@ -72,7 +74,7 @@ func summary(util) {
    write, format=" %s\n", use(cs);
    splitary, use(raw_xyz1), 3, x, y;
    cs = cs_parse(use(cs), output="hash");
-   util, summary_coord_print, cs, x, y;
+   util, coord_print, cs, x, y;
 
    if(current_cs == use(cs))
       return;
@@ -81,10 +83,10 @@ func summary(util) {
    write, "";
    write, "Approximate bounds in current coordinate system";
    write, format=" %s\n", current_cs;
-   util, summary_coord_print, cs, x, y;
+   util, coord_print, cs, x, y;
 }
 
-func summary_coord_print(cs, x, y) {
+func coord_print(cs, x, y) {
    if(cs.proj == "longlat") {
       write, "                min                max";
       write, format="   x/lon: %16.11f   %16.11f\n", x(min), x(max);
