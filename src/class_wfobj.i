@@ -10,20 +10,51 @@ scratch = save(tmp, scratch);
 tmp = save(summary, index, check_cs, x0, y0, z0, xyz0, x1, y1, z1, xyz1);
 
 func wfobj(base, obj) {
-/* DOCUMENT wfobj
-   Scalar members:
-      source = string
-      system = string
-      record_format = long
-      cs = string
-      sample_interval = double
-   Array members, for N points:
-      raw_xyz0 = array(double,N,3)
-      raw_xyz1 = array(double,N,3)
-      soe = array(double,N)
-      record = array(long,N,2)
-      tx = array(pointer,N)
-      rx = array(pointer,N)
+/* DOCUMENT wfobj()
+   Creates a waveforms data object. This can be called in one of four ways.
+
+      data = wfobj()
+         Without any arguments, DATA is an object with defaults for header
+         values and void for array/data values. Effectively, it's "empty".
+      data = wfobj(group)
+         When passed a group object, DATA will be initialized as a copy of it.
+         Any missing header or data members get filled in as in the previous
+         case.
+      data = wfobj(filename)
+         When passed a filename, DATA will be initialized using the data from
+         the specified file; that file should have been created using the save
+         method to this class.
+      wfobj, data
+         When called in the subroutine form, data should be a group object. It
+         will be treated as in the second case, but will be done in-place.
+
+   A wfobj object is comprised of scalar header members, array data members,
+   and methods. In the documentation below, "data" is the result of a call to
+   wfobj.
+
+   Scalar header members:
+      data(source,)           string      default: "unknown"
+         Source used to collect the data. Generally an airplane tail number.
+      data(system,)           string      default: "unknown"
+         Data acquisition system, ie. ATM, EAARL, etc.
+      data(record_format,)    long        default: 0
+         Defines how to interpret the record field.
+      data(cs,)               string      default: string(0)
+         Specifies the coordinate system used.
+      data(sample_interval,)  double      default: 0.
+         Specifies the interval in nanoseconds between samples.
+      data(cs_cur,)           PRIVATE
+         For internal use only, do not use. This holds temporary working data.
+
+   Array data members, for N points:
+      data(raw_xyz0,)         array(double,N,3)
+      data(raw_xyz1,)         array(double,N,3)
+      data(soe,)              array(double,N)
+      data(record,)           array(long,N,2)
+      data(tx,)               array(pointer,N)
+      data(rx,)               array(pointer,N)
+      data(cs_xyz0,)          array(double,N,3)
+      data(cs_xyz1,)          array(double,N,3)
 */
    default, obj, save();
 
