@@ -66,7 +66,6 @@ func summary(nil) {
    if(current_cs == use(cs))
       return;
    cs = cs_parse(current_cs);
-   tmp = use(xyz1,);
    splitary, use(xyz1,), 3, x, y;
    write, "";
    write, "Approximate bounds in current coordinate system";
