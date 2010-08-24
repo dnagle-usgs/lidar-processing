@@ -7,8 +7,7 @@ scratch = save(tmp, scratch);
 // tmp stores a list of the methods that will go into wfobj. It stores their
 // current values up-front, then restores them at the end while swapping the
 // new function definitions into wfobj.
-tmp = save(summary, index, check_cs, xyzwrap, x0, y0, z0, xyz0, x1, y1, z1,
-   xyz1);
+tmp = save(summary, index, check_cs, x0, y0, z0, xyz0, x1, y1, z1, xyz1);
 
 func wfobj(base, obj) {
 /*
@@ -125,20 +124,24 @@ func check_cs(nil) {
    cs_xyz1 = cs2cs(use(cs), cs_cur, raw_xyz1);
 }
 
-func xyzwrap(var, which, idx) {
+scratch = save(xyzwrap, scratch);
+
+func xyzwrap(conf, idx) {
    call, use(check_cs,);
-   return use(noop(var), idx, which);
+   return use(conf.var, idx, conf.which);
 }
 
-func x0(idx) { return use(xyzwrap, "cs_xyz0", 1, idx); }
-func y0(idx) { return use(xyzwrap, "cs_xyz0", 2, idx); }
-func z0(idx) { return use(xyzwrap, "cs_xyz0", 3, idx); }
-func xyz0(idx) { return use(xyzwrap, "cs_xyz0", , idx); }
+x0 = closure(xyzwrap, save(var="cs_xyz0", which=1));
+y0 = closure(xyzwrap, save(var="cs_xyz0", which=2));
+z0 = closure(xyzwrap, save(var="cs_xyz0", which=3));
+xyz0 = closure(xyzwrap, save(var="cs_xyz0", which=[]));
 
-func x1(idx) { return use(xyzwrap, "cs_xyz1", 1, idx); }
-func y1(idx) { return use(xyzwrap, "cs_xyz1", 2, idx); }
-func z1(idx) { return use(xyzwrap, "cs_xyz1", 3, idx); }
-func xyz1(idx) { return use(xyzwrap, "cs_xyz1", , idx); }
+x1 = closure(xyzwrap, save(var="cs_xyz1", which=1));
+y1 = closure(xyzwrap, save(var="cs_xyz1", which=2));
+z1 = closure(xyzwrap, save(var="cs_xyz1", which=3));
+xyz1 = closure(xyzwrap, save(var="cs_xyz1", which=[]));
+
+restore, scratch;
 
 wfobj = closure(wfobj, restore(tmp));
 restore, scratch;
