@@ -177,11 +177,7 @@ func y1(idx) { return use(xyz1, idx)(,2); }
 func z1(idx) { return use(xyz1, idx)(,3); }
 
 save, tmp, save, help;
-func save(fn) {
-   keys = set_difference(use(*,), ["cs_cur", "cs_xyz0", "cs_xyz1"]);
-   obj2pbd, use(noop(keys)), createb(fn, i86_primitives);
-}
-
+func save(fn) { obj2pbd, use(), createb(fn, i86_primitives); }
 help = closure(help, wfobj);
 
 wfobj = closure(wfobj, restore(tmp));
