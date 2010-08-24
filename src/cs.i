@@ -54,6 +54,13 @@ local coordinate_system;
    SEE ALSO: cs_parse cs_wgs84 cs_nad83 cs_navd88 cs2cs
 */
 
+local current_cs;
+/* DOCUMENT current_cs
+   This is a global variable that defines your current coordinate system. At
+   start-up, this will be WGS-84 with lat/long.
+*/
+if(is_void(current_cs)) current_cs = cs_wgs84();
+
 func cs_parse(cs, output=) {
 /* DOCUMENT cs_parse(cs, output=)
    Given a coordinate system string, this will return a parsed hash with the
