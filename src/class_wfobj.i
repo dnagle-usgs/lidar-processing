@@ -48,7 +48,12 @@ func wfobj(base, obj) {
    return obj;
 }
 
-func summary(nil) {
+scratch = save(tmp, scratch);
+// listing same item twice to avoid bug where save fails to recognize a single
+// void argument
+tmp = save(summary_coord_print, summary_coord_print);
+
+func summary(util) {
    extern current_cs;
    local x, y;
    write, "Summary for waveform object:";
@@ -57,7 +62,6 @@ func summary(nil) {
    write, "";
    write, format=" source: %s\n", use(source);
    write, format=" system: %s\n", use(system);
-   write, format=" coords: %s\n", use(cs);
    write, format=" acquired: %s to %s\n", soe2iso8601(use(soe)(min)),
       soe2iso8601(use(soe)(max));
    write, "";
@@ -65,16 +69,10 @@ func summary(nil) {
    write, format=" sample_interval: %.6f ns/sample\n", use(sample_interval);
    write, "";
    write, "Approximate bounds in native coordinate system";
+   write, format=" %s\n", use(cs);
    splitary, use(raw_xyz1), 3, x, y;
    cs = cs_parse(use(cs), output="hash");
-   if(cs.proj == "longlat") {
-      write, format="   x/lon: %.6f - %.6f\n", x(min), x(max);
-      write, format="   y/lat: %.6f - %.6f\n", y(min), y(max);
-   } else {
-      write, "               min           max";
-      write, format="    x/east: %11.2f   %11.2f\n", x(min), x(max);
-      write, format="   y/north: %11.2f   %11.2f\n", y(min), y(max);
-   }
+   util, summary_coord_print, cs, x, y;
 
    if(current_cs == use(cs))
       return;
@@ -83,6 +81,10 @@ func summary(nil) {
    write, "";
    write, "Approximate bounds in current coordinate system";
    write, format=" %s\n", current_cs;
+   util, summary_coord_print, cs, x, y;
+}
+
+func summary_coord_print(cs, x, y) {
    if(cs.proj == "longlat") {
       write, "                min                max";
       write, format="   x/lon: %16.11f   %16.11f\n", x(min), x(max);
@@ -97,6 +99,9 @@ func summary(nil) {
       write, format="   y/north: %11.2f   %11.2f\n", y(min), y(max);
    }
 }
+
+summary = closure(summary, restore(tmp));
+restore, scratch;
 
 func index(idx) {
    which = ["raw_xyz0","raw_xyz1", "soe", "record", "tx", "rx", "cs_xyz0",
