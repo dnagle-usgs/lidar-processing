@@ -3,7 +3,7 @@ require, "eaarl.i";
 
 // scratch stores the values of scratch and tmp so that we can restore them
 // when we're done, leaving things as we found them.
-scratch = save(scratch, tmp);
+scratch = save(tmp, scratch);
 // tmp stores a list of the methods that will go into wfobj. It stores their
 // current values up-front, then restores them at the end while swapping the
 // new function definitions into wfobj.
