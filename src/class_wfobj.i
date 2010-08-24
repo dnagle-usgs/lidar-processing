@@ -1,7 +1,12 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 require, "eaarl.i";
 
+// scratch stores the values of scratch and tmp so that we can restore them
+// when we're done, leaving things as we found them.
 scratch = save(scratch, tmp);
+// tmp stores a list of the methods that will go into wfobj. It stores their
+// current values up-front, then restores them at the end while swapping the
+// new function definitions into wfobj.
 tmp = save(summary, index, check_cs, xyzwrap, x0, y0, z0, xyz0, x1, y1, z1,
    xyz1);
 
@@ -22,17 +27,24 @@ func wfobj(base, obj) {
       rx = array(pointer,N)
 */
    default, obj, save();
+
+   // For restoring from file
    if(is_string(obj))
       obj = pbd2obj(obj);
+
+   // Set up methods. We override generic's "index" method so we have to
+   // provide it specially.
    obj_merge, obj, base;
    obj_generic, obj;
    save, obj, obj_index;
-   // scalar members
+
+   // Provide defaults for scalar members
    keydefault, obj, source="unknown", system="unknown", record_format=0,
       cs=string(0), sample_interval=0., cs_cur="null";
-   // array members
+   // Provide null defaults for array members
    keydefault, obj, raw_xyz0=[], raw_xyz1=[], soe=[], record=[], tx=[], rx=[],
       cs_xyz0=[], cs_xyz1=[];
+
    return obj;
 }
 
