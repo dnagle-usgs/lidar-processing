@@ -34,7 +34,7 @@ if(is_void(__eaarl_includes_included__)) {
    if(is_func(is_obj)) {
       require, "class_wfobj.i";
       require, "obj_show.i";
-      require, "waveforms.i";
+      require, "eaarl1_wf.i";
    }
 
    // Replace built-in median with Yeti's median which is much faster
