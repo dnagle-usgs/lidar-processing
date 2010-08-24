@@ -114,7 +114,9 @@ func index(idx) {
 }
 
 func check_cs(nil) {
-// ensures that working xyz are in current cs
+// Checks extern current_cs to see what the current coordinate system is, then
+// (if necessary) projects the coordinates from raw_xyz0 and raw_xyz1 to that
+// system and stores to cs_xyz0 and cs_xyz1 for future use.
    extern current_cs;
    use, cs_cur, cs_xyz0, cs_xyz1, raw_xyz0, raw_xyz1;
    if(current_cs == cs_cur)
@@ -124,6 +126,8 @@ func check_cs(nil) {
    cs_xyz1 = cs2cs(use(cs), cs_cur, raw_xyz1);
 }
 
+// Logic for all of x0, y0, etc. is the same, so use a closure to encapsulate
+// it.
 scratch = save(xyzwrap, scratch);
 
 func xyzwrap(conf, idx) {
