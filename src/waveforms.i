@@ -101,13 +101,8 @@ func check_cs(nil) {
    if(current_cs == cs_cur)
       return;
    cs_cur = current_cs;
-   if(use(cs) == cs_cur) {
-      eq_nocopy, cs_xyz0, raw_xyz0;
-      eq_nocopy, cs_xyz1, raw_xyz1;
-   } else {
-      cs_xyz0 = cs2cs(use(cs), cs_cur, raw_xyz0);
-      cs_xyz1 = cs2cs(use(cs), cs_cur, raw_xyz1);
-   }
+   cs_xyz0 = cs2cs(use(cs), cs_cur, raw_xyz0);
+   cs_xyz1 = cs2cs(use(cs), cs_cur, raw_xyz1);
 }
 
 func xyzwrap(var, which, idx) {
