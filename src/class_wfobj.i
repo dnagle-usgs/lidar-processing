@@ -10,7 +10,7 @@ scratch = save(tmp, scratch);
 tmp = save(summary, index, check_cs, x0, y0, z0, xyz0, x1, y1, z1, xyz1);
 
 func wfobj(base, obj) {
-/*
+/* DOCUMENT wfobj
    Scalar members:
       source = string
       system = string
@@ -147,11 +147,13 @@ xyz1 = closure(xyzwrap, save(var="cs_xyz1", which=[]));
 
 restore, scratch;
 
-save, tmp, save;
+save, tmp, save, help;
 func save(fn) {
    keys = set_difference(use(*,), ["cs_cur", "cs_xyz0", "cs_xyz1"]);
    obj2pbd, use(noop(keys)), createb(fn, i86_primitives);
 }
+
+help = closure(help, wfobj);
 
 wfobj = closure(wfobj, restore(tmp));
 restore, scratch;
