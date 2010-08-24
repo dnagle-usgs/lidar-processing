@@ -28,8 +28,12 @@ func wfobj(base, obj) {
    default, obj, save();
 
    // For restoring from file
-   if(is_string(obj))
+   if(is_string(obj)) {
       obj = pbd2obj(obj);
+   // If calling as a subroutine, don't modify in place
+   } else if(!am_subroutine()) {
+      obj = obj(:);
+   }
 
    // Set up methods. We override generic's "index" method so we have to
    // provide it specially.
