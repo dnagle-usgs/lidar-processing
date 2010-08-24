@@ -7,7 +7,7 @@ scratch = save(tmp, scratch);
 // tmp stores a list of the methods that will go into wfobj. It stores their
 // current values up-front, then restores them at the end while swapping the
 // new function definitions into wfobj.
-tmp = save(summary, index, check_cs, x0, y0, z0, xyz0, x1, y1, z1, xyz1);
+tmp = save(summary, index, x0, y0, z0, xyz0, x1, y1, z1, xyz1);
 
 func wfobj(base, obj) {
 /* DOCUMENT wfobj()
@@ -43,8 +43,6 @@ func wfobj(base, obj) {
          Specifies the coordinate system used.
       data(sample_interval,)  double      default: 0.
          Specifies the interval in nanoseconds between samples.
-      data(cs_cur,)           PRIVATE
-         For internal use only, do not use. This holds temporary working data.
 
    Array data members, for N points:
       data(raw_xyz0,)         array(double,N,3)
@@ -53,8 +51,6 @@ func wfobj(base, obj) {
       data(record,)           array(long,N,2)
       data(tx,)               array(pointer,N)
       data(rx,)               array(pointer,N)
-      data(cs_xyz0,)          array(double,N,3)
-      data(cs_xyz1,)          array(double,N,3)
 */
    default, obj, save();
 
@@ -71,13 +67,17 @@ func wfobj(base, obj) {
    obj_merge, obj, base;
    obj_generic, obj;
    save, obj, obj_index;
+   // We don't want all of the objects to share a common data item, so they get
+   // re-initialized here.
+   save, obj,
+      xyz0=closure(obj.xyz0.function, save(var="raw_xyz0", cs="-", xyz=[])),
+      xyz1=closure(obj.xyz1.function, save(var="raw_xyz1", cs="-", xyz=[]));
 
    // Provide defaults for scalar members
    keydefault, obj, source="unknown", system="unknown", record_format=0,
-      cs=string(0), sample_interval=0., cs_cur="null";
+      cs=string(0), sample_interval=0.;
    // Provide null defaults for array members
-   keydefault, obj, raw_xyz0=[], raw_xyz1=[], soe=[], record=[], tx=[], rx=[],
-      cs_xyz0=[], cs_xyz1=[];
+   keydefault, obj, raw_xyz0=[], raw_xyz1=[], soe=[], record=[], tx=[], rx=[];
 
    return obj;
 }
@@ -140,47 +140,41 @@ summary = closure(summary, restore(tmp));
 restore, scratch;
 
 func index(idx) {
-   which = ["raw_xyz0","raw_xyz1", "soe", "record", "tx", "rx", "cs_xyz0",
-      "cs_xyz1"];
-   if(am_subroutine())
-      use, obj_index, idx, which=which;
-   else
-      return use(obj_index, idx, which=which);
+   which = ["raw_xyz0","raw_xyz1", "soe", "record", "tx", "rx"];
+   if(am_subroutine()) {
+      this = use();
+      this, obj_index, idx, which=which;
+      wfobj, this;
+   } else {
+      return wfobj(use(obj_index, idx, which=which));
+   }
 }
 
-func check_cs(nil) {
-// Checks extern current_cs to see what the current coordinate system is, then
-// (if necessary) projects the coordinates from raw_xyz0 and raw_xyz1 to that
-// system and stores to cs_xyz0 and cs_xyz1 for future use.
-   extern current_cs;
-   use, cs_cur, cs_xyz0, cs_xyz1, raw_xyz0, raw_xyz1;
-   if(current_cs == cs_cur)
-      return;
-   cs_cur = current_cs;
-   cs_xyz0 = cs2cs(use(cs), cs_cur, raw_xyz0);
-   cs_xyz1 = cs2cs(use(cs), cs_cur, raw_xyz1);
-}
-
-// Logic for all of x0, y0, etc. is the same, so use a closure to encapsulate
-// it.
+// xyz0 and xyz1 both use the same logic, and they both benefit from caching
+// working data. This is accomplished by using a closure to wrap around the
+// common functionality and track their working data.
 scratch = save(xyzwrap, scratch);
 
-func xyzwrap(conf, idx) {
-   call, use(check_cs,);
-   return use(conf.var, idx, conf.which);
+func xyzwrap(working, idx) {
+   extern current_cs;
+   if(working.cs != current_cs) {
+      save, working, cs=current_cs,
+         xyz=cs2cs(use(cs), current_cs, use(working.var));
+   }
+   return working.xyz(idx,);
 }
 
-x0 = closure(xyzwrap, save(var="cs_xyz0", which=1));
-y0 = closure(xyzwrap, save(var="cs_xyz0", which=2));
-z0 = closure(xyzwrap, save(var="cs_xyz0", which=3));
-xyz0 = closure(xyzwrap, save(var="cs_xyz0", which=[]));
-
-x1 = closure(xyzwrap, save(var="cs_xyz1", which=1));
-y1 = closure(xyzwrap, save(var="cs_xyz1", which=2));
-z1 = closure(xyzwrap, save(var="cs_xyz1", which=3));
-xyz1 = closure(xyzwrap, save(var="cs_xyz1", which=[]));
-
+xyz0 = closure(xyzwrap, save(var="raw_xyz0", cs="-", xyz=[]));
+xyz1 = closure(xyzwrap, save(var="raw_xyz1", cs="-", xyz=[]));
 restore, scratch;
+
+func x0(idx) { return use(xyz0, idx)(,1); }
+func y0(idx) { return use(xyz0, idx)(,2); }
+func z0(idx) { return use(xyz0, idx)(,3); }
+
+func x1(idx) { return use(xyz1, idx)(,1); }
+func y1(idx) { return use(xyz1, idx)(,2); }
+func z1(idx) { return use(xyz1, idx)(,3); }
 
 save, tmp, save, help;
 func save(fn) {
