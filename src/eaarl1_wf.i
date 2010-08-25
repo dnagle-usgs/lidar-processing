@@ -57,6 +57,18 @@ func batch_georef_eaarl1(tlddir, files=, outdir=, gns=, ins=, ops=, daystart=, u
 }
 
 func georef_eaarl1(rasts, gns, ins, ops, daystart) {
+/* DOCUMENT wfobj = georef_eaarl1(rasts, gns, is, ops, daystart)
+   Given raw EAARL data, this returns a georefenced waveforms object.
+
+   Parameters:
+      rasts: An array of raster data in struct RAST.
+      gns: An array of positional trajectory data in struct PNAV.
+      ins: An array of attitude data in struct IEX_ATTITUDE.
+      ops: An instance of mission_constants.
+      daystart: The SOE value for the start of the mission day.
+
+   Result is an instance of wfobj.
+*/
    // raw = get_tld_rasts(fname=)
    // decoded = decode_rasters(raw)
    rasts = rasts(*);
