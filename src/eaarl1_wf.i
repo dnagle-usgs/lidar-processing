@@ -2,6 +2,16 @@
 require, "eaarl.i";
 
 func mission_georef_eaarl1(outdir=, update=) {
+/* DOCUMENT mission_georef_eaarl1, outdir=, update=
+   Runs batch_georef_eaarl1 for each mission day in a mission configuration.
+
+   Options:
+      outdir= Specifies an output directory where the PBD data should go. By
+         default, files are created alongside their corresponding TLD files.
+      update= Specifies whether to run in "update" mode.
+            update=0    Process all files; replace any existing PBD files.
+            update=1    Create missing PBD files, skip existing ones.
+*/
    cache_state = __mission_settings("use cache");
    missiondata_cache, "disable";
    missiondata_cache, "clear";
