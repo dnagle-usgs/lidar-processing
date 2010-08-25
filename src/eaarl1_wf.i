@@ -4,6 +4,10 @@ require, "eaarl.i";
 func batch_georef_eaarl1(tlddir, files=, searchstr=, outdir=, gns=, ins=, ops=,
 daystart=, update=) {
    default, searchstr, "*.tld";
+   default, gns, pnav;
+   default, ins, tans;
+   default, ops, ops_conf;
+   default, daystart, soe_day_start;
    default, update, 0;
 
    if(is_void(files))
@@ -27,11 +31,6 @@ daystart=, update=) {
    sizes = double(file_size(files));
    if(count > 1)
       sizes = sizes(cum)(2:);
-
-   default, gns, pnav;
-   default, ins, tans;
-   default, ops, ops_conf;
-   default, daystart, soe_day_start;
 
    if(is_string(gns))
       gns = load_pnav(fn=gns);
