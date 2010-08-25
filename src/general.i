@@ -184,6 +184,7 @@ func timer_remaining(t0, current, count, &tp, interval=, fmt=) {
       fmt = regsub("ELAPSED", fmt, seconds2prettytime(elapsed, maxparts=2), all=1);
       fmt = regsub("REMAINING", fmt, seconds2prettytime(remain, maxparts=2), all=1);
       write, format="%s", fmt;
+      pause, 1;
    }
 }
 
