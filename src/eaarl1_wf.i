@@ -117,15 +117,23 @@ func georef_eaarl1(rasts, gns, ins, ops, daystart) {
 
    Parameters:
       rasts: An array of raster data in struct RAST.
-      gns: An array of positional trajectory data in struct PNAV.
-      ins: An array of attitude data in struct IEX_ATTITUDE.
-      ops: An instance of mission_constants.
+      gns: An array of positional trajectory data in struct PNAV, or a filename
+         to such data.
+      ins: An array of attitude data in struct IEX_ATTITUDE, or a filename to
+         such data.
+      ops: An instance of mission_constants, or a filename to such data.
       daystart: The SOE value for the start of the mission day.
 
    Result is an instance of wfobj.
 */
-   // raw = get_tld_rasts(fname=)
-   // decoded = decode_rasters(raw)
+   if(is_string(gns))
+      gns = load_pnav(fn=gns);
+   if(is_string(ins))
+      ins = load_ins(ins);
+   if(is_string(ops))
+      ops = load_ops_conf(ops);
+
+   // Eliminate any dimensionality if present
    rasts = rasts(*);
 
    // Initialize waveforms with raster, pulse, soe, and transmit waveform
