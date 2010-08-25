@@ -3,6 +3,33 @@ require, "eaarl.i";
 
 func batch_georef_eaarl1(tlddir, files=, searchstr=, outdir=, gns=, ins=, ops=,
 daystart=, update=) {
+/* DOCUMENT batch_georef_eaarl1, tlddir, files=, searchstr=, outdir=, gns=,
+   ins=, ops=, daystart=, update=
+
+   Runs georef_eaarl1 in a batch mode over a set of TLD files.
+
+   Parameter:
+      tlddir: Directory under which TLD files are found.
+
+   Options:
+      files= Specifies an array of TLD files to use. If this is specified, then
+         "tlddir" and "searchstr=" are ignored.
+      searchstr= Specifies a search string to use to find the TLD files.
+            searchstr="*.tld"    default
+      outdir= Specifies an output directory where the PBD data should go. By
+         default, files are created alongside their corresponding TLD files.
+      gns= The path to a PNAV file, or an array of PNAV data. Default is to use
+         extern "pnav".
+      ins= The path to an INS file, or an array of IEX_ATTITUDE data. Default
+         is to use the extern "tans".
+      ops= The path to an ops_conf file, or an instance of mission_constants.
+         Default is to use the extern "ops_conf".
+      daystart= The soe timestamp for the start of the mission day. Default is
+         to use extern "soe_day_start".
+      update= Specifies whether to run in "update" mode.
+            update=0    Process all files; replace any existing PBD files.
+            update=1    Create missing PBD files, skip existing ones.
+*/
    extern pnav, tans, ops_conf, soe_day_start;
    default, searchstr, "*.tld";
    default, gns, pnav;
