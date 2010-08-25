@@ -23,7 +23,7 @@ func mission_georef_eaarl1(outdir=, update=) {
       missionday_current, days(i);
       missiondata_load, "all";
       batch_georef_eaarl1, file_dirname(mission_get("edb file")),
-         outdir=outdir, update=update;
+         outdir=outdir, update=update, interval=45;
    }
 
    if(cache_state)
