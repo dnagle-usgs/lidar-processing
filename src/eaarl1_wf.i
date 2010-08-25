@@ -1,6 +1,25 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 require, "eaarl.i";
 
+func mission_georef_eaarl1(outdir=, update=) {
+   cache_state = __mission_settings("use cache");
+   missiondata_cache, "disable";
+   missiondata_cache, "clear";
+
+   days = missionday_list();
+   count = numberof(days);
+   for(i = 1; i <= count; i++) {
+      write, format="Processing day %d/%d:\n", i, count;
+      missionday_current, days(i);
+      missiondata_load, "all";
+      batch_georef_eaarl1, file_dirname(mission_get("edb file")),
+         outdir=outdir, update=update;
+   }
+
+   if(cache_state)
+      missiondata_cache, "enable";
+}
+
 func batch_georef_eaarl1(tlddir, files=, searchstr=, outdir=, gns=, ins=, ops=,
 daystart=, update=) {
 /* DOCUMENT batch_georef_eaarl1, tlddir, files=, searchstr=, outdir=, gns=,
