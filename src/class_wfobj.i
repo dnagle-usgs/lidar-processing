@@ -46,11 +46,52 @@ func wfobj(base, obj) {
 
    Array data members, for N points:
       data(raw_xyz0,)         array(double,N,3)
+         Specifies an arbitrary point that, along with "raw_xyz1", defines the
+         line upon which the waveform traveled. This point is in the coordinate
+         system specified by "cs". It is recommended that this point be the
+         point of origin for the waveform (ie the mirror location), but this is
+         not required and should not be assumed.
       data(raw_xyz1,)         array(double,N,3)
+         Specifies a point that, along with "raw_xyz0", defines the line upon
+         which the waveform traveled. Unlike "raw_xyz0", this point is NOT
+         arbitrary. If TDELTA is the time interval in ns between the first
+         sample of "tx" and the first sample of "rx", then "raw_xyz1" is the
+         point representing where the pulse would be at TDELTA ns after the
+         laser fired.
       data(soe,)              array(double,N)
+         The timestamp for the point, in seconds of the epoch.
       data(record,)           array(long,N,2)
+         The record number for the point. This value must be interpreted as
+         defined by "record_format". Together with "soe", this should uniquely
+         identify the waveform.
       data(tx,)               array(pointer,N)
+         The transmit waveform.
       data(rx,)               array(pointer,N)
+         The return waveform.
+
+   Methods:
+      data, help
+         Displays this help documentation.
+      data, summary
+         Displays a summary for the data. Meant for interactive use.
+      data(index, idx)
+         Returns a new wfobj object. The new object will contain the same
+         header information. However, it will contain only the points specified
+         by "idx".
+      data(xyz0,) -or- data(xyz0,idx)
+         Returns the points stored in raw_xyz0, except converted into the
+         current coordinate system as specified by current_cs. The points are
+         cached to improve performance. If "idx" is specified, then only those
+         points are returned.
+      data(xyz1,) -or- data(xyz1,idx)
+         Like "xyz0", except for the points stored in raw_xyz1.
+      data(x0,)  data(y0,)  data(z0,)  data(x1,)  data(y1,)  data(z1,)
+         Like "xyz0" or "xyz1", except they only return the x, y, or z
+         coordinate. Like xyz0 and xyz1, these also can accept an "idx"
+         parameter.
+      data, save, fn
+         Saves the data for this wfobj object to a pbd file specified by FN.
+         The data can later be restored using 'data = wfobj(fn)'.
 */
    default, obj, save();
 
