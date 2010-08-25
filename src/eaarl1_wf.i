@@ -3,6 +3,7 @@ require, "eaarl.i";
 
 func batch_georef_eaarl1(tlddir, files=, searchstr=, outdir=, gns=, ins=, ops=,
 daystart=, update=) {
+   extern pnav, tans, ops_conf, soe_day_start;
    default, searchstr, "*.tld";
    default, gns, pnav;
    default, ins, tans;
