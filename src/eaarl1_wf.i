@@ -49,10 +49,6 @@ daystart=, update=) {
 
       wf, save, outfiles(i);
 
-      write, format="[%d/%d] %s: %.2f MB -> %.2f MB\n", i, count,
-         file_tail(files(i)), file_size(files(i))/1024./1024.,
-         file_size(outfiles(i))/1024./1024.;
-
       timer_remaining, t0, sizes(i), sizes(0), tp, interval=10;
    }
    timer_finished, t0;
