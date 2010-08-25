@@ -45,9 +45,7 @@ func batch_georef_eaarl1(tlddir, files=, outdir=, gns=, ins=, ops=, daystart=, u
       wf = georef_eaarl1(rasts, gns, ins, ops, daystart);
       rasts = [];
 
-      f = createb(outfiles(i), i86_primitives);
-      obj2pbd, wf, f;
-      close, f;
+      wf, save, outfiles(i);
 
       write, format="[%d/%d] %s: %.2f MB -> %.2f MB\n", i, count,
          file_tail(tldfiles(i)), file_size(tldfiles(i))/1024./1024.,
