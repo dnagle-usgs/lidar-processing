@@ -39,9 +39,8 @@ daystart=, update=) {
    if(is_string(ops))
       ops = load_ops_conf(ops);
 
-   local t0;
-   timer_init, t0;
-   tp = t0;
+   t0 = tp = array(double, 3);
+   timer, t0;
 
    for(i = 1; i <= count; i++) {
       rasts = decode_rasters(get_tld_rasts(fname=files(i)));
