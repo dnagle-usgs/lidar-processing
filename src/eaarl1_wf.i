@@ -1,26 +1,30 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 require, "eaarl.i";
 
-func batch_georef_eaarl1(tlddir, files=, outdir=, gns=, ins=, ops=, daystart=, update=) {
+func batch_georef_eaarl1(tlddir, files=, searchstr=, outdir=, gns=, ins=, ops=,
+daystart=, update=) {
+   default, searchstr, "*.tld";
    default, update, 0;
 
-   tldfiles = !is_void(files) ? files : find(tlddir, glob="*.tld");
-   outfiles = file_rootname(tldfiles) + ".pbd";
+   if(is_void(files))
+      files = find(tlddir, glob=searchstr);
+
+   outfiles = file_rootname(files) + ".pbd";
    if(!is_void(outdir))
       outfiles = file_join(outdir, file_tail(outfiles));
 
-   if(numberof(tldfiles) && update) {
+   if(numberof(files) && update) {
       w = where(!file_exists(outfiles));
       if(!numberof(w))
          return;
-      tldfiles = tldfiles(w);
+      files = files(w);
       outfiles = outfiles(w);
    }
 
-   count = numberof(tldfiles);
+   count = numberof(files);
    if(!count)
       error, "No files found.";
-   sizes = double(file_size(tldfiles));
+   sizes = double(file_size(files));
    if(count > 1)
       sizes = sizes(cum)(2:);
 
@@ -41,14 +45,14 @@ func batch_georef_eaarl1(tlddir, files=, outdir=, gns=, ins=, ops=, daystart=, u
    tp = t0;
 
    for(i = 1; i <= count; i++) {
-      rasts = decode_rasters(get_tld_rasts(fname=tldfiles(i)));
+      rasts = decode_rasters(get_tld_rasts(fname=files(i)));
       wf = georef_eaarl1(rasts, gns, ins, ops, daystart);
       rasts = [];
 
       wf, save, outfiles(i);
 
       write, format="[%d/%d] %s: %.2f MB -> %.2f MB\n", i, count,
-         file_tail(tldfiles(i)), file_size(tldfiles(i))/1024./1024.,
+         file_tail(files(i)), file_size(files(i))/1024./1024.,
          file_size(outfiles(i))/1024./1024.;
 
       timer_remaining, t0, sizes(i), sizes(0), tp, interval=10;
