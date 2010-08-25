@@ -31,7 +31,7 @@ func mission_georef_eaarl1(outdir=, update=) {
 }
 
 func batch_georef_eaarl1(tlddir, files=, searchstr=, outdir=, gns=, ins=, ops=,
-daystart=, update=) {
+daystart=, update=, verbose=, interval=) {
 /* DOCUMENT batch_georef_eaarl1, tlddir, files=, searchstr=, outdir=, gns=,
    ins=, ops=, daystart=, update=
 
@@ -58,6 +58,12 @@ daystart=, update=) {
       update= Specifies whether to run in "update" mode.
             update=0    Process all files; replace any existing PBD files.
             update=1    Create missing PBD files, skip existing ones.
+      verbose= Specifies whether to display estimated time to completion.
+            verbose=0   No output
+            verbose=1   Show est. time to completion  (default)
+      interval= Minimum time in seconds that should elapse before showing an
+         update to the time elapsed and estimate to completion.
+            interval=10    10 seconds, default
 */
    extern pnav, tans, ops_conf, soe_day_start;
    default, searchstr, "*.tld";
@@ -66,6 +72,8 @@ daystart=, update=) {
    default, ops, ops_conf;
    default, daystart, soe_day_start;
    default, update, 0;
+   default, verbose, 1;
+   default, interval, 10;
 
    if(is_void(files))
       files = find(tlddir, glob=searchstr);
@@ -106,9 +114,11 @@ daystart=, update=) {
 
       wf, save, outfiles(i);
 
-      timer_remaining, t0, sizes(i), sizes(0), tp, interval=10;
+      if(verbose)
+         timer_remaining, t0, sizes(i), sizes(0), tp, interval=interval;
    }
-   timer_finished, t0;
+   if(verbose)
+      timer_finished, t0;
 }
 
 func georef_eaarl1(rasts, gns, ins, ops, daystart) {
