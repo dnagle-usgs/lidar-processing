@@ -232,6 +232,15 @@ func georef_eaarl1(rasts, gns, ins, ops, daystart) {
    count = numberof(rasts) * 120 * 3;
    rasts = [];
 
+   // Change dimension ordering to keep channels together for a pulse, and
+   // pulses together for a raster
+   raw_xyz0 = transpose(raw_xyz0, [3,1]);
+   raw_xyz1 = transpose(raw_xyz1, [3,1]);
+   record = transpose(record, [3,1]);
+   soe = transpose(soe, [3,1])
+   tx = transpose(tx, [3,1])
+   rx = transpose(rx, [3,1])
+
    // Now get rid of multiple dimensions
    raw_xyz0 = reform(raw_xyz0, count, 3);
    raw_xyz1 = reform(raw_xyz1, count, 3);
