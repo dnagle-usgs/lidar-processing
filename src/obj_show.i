@@ -22,7 +22,6 @@ func obj_show(obj, prefix=, maxary=, maxchild=, maxdepth=) {
   return output;
 }
 
-_obj_show_workers = save();
 func _obj_show_worker(obj, name, prefix, stage) {
   curdepth++;
   if(stage == 1)
@@ -45,7 +44,12 @@ func _obj_show_worker(obj, name, prefix, stage) {
   where typename is the result of typeof(item).
 */
 
-func _obj_show_oxy_object(obj, name, prefix1, prefix2) {
+scratch = save(tmp, _array, _closure, scratch);
+_closure = closure;
+tmp = save(oxy_object, hash_table, float, double, char, short, int, long,
+  pointer, string, void, symlink, closure);
+
+func oxy_object(obj, name, prefix1, prefix2) {
   count = obj(*);
   output += swrite(format="%s %s (oxy_object, %d %s)\n",
     prefix1, name, count, (count == 1 ? "entry" : "entries"));
@@ -57,9 +61,8 @@ func _obj_show_oxy_object(obj, name, prefix1, prefix2) {
     _obj_show_worker, obj(noop(i)), key, prefix2, 1 + (i == count);
   }
 }
-save, _obj_show_workers, oxy_object=_obj_show_oxy_object;
 
-func _obj_show_hash_table(obj, name, prefix1, prefix2) {
+func hash_table(obj, name, prefix1, prefix2) {
   key_list = h_keys(obj);
   count = numberof(key_list);
   if(count)
@@ -75,9 +78,8 @@ func _obj_show_hash_table(obj, name, prefix1, prefix2) {
     _obj_show_worker, h_get(obj,key), key, prefix2, 1 + (k == count);
   }
 }
-save, _obj_show_workers, hash_table=_obj_show_hash_table;
 
-func _obj_show_array(obj, name, prefix1, prefix2) {
+func _array(obj, name, prefix1, prefix2) {
   descr = typeof(obj);
   dims = dimsof(obj);
   n = numberof(dims);
@@ -92,28 +94,25 @@ func _obj_show_array(obj, name, prefix1, prefix2) {
     output += swrite(format="%s %s (%s)\n", prefix1, name, descr);
   }
 }
-save, _obj_show_workers,
-  float=_obj_show_array,
-  double=_obj_show_array,
-  char=_obj_show_array,
-  short=_obj_show_array,
-  int=_obj_show_array,
-  long=_obj_show_array,
-  pointer=_obj_show_array,
-  string=_obj_show_array;
+float=_array;
+double=_array;
+char=_array;
+short=_array;
+int=_array;
+long=_array;
+pointer=_array;
+string=_array;
 
-func _obj_show_void(obj, name, prefix1, prefix2) {
+func void(obj, name, prefix1, prefix2) {
   output += swrite(format="%s %s (void) []\n", prefix1, name);
 }
-save, _obj_show_workers, void=_obj_show_void;
 
-func _obj_show_symlink(obj, name, prefix1, prefix2) {
+func symlink(obj, name, prefix1, prefix2) {
   output += swrite(format="%s %s (%s) \"%s\"\n", prefix1, name, typeof(obj),
     name_of_symlink(obj));
 }
-save, _obj_show_workers, symlink=_obj_show_symlink;
 
-func _obj_show_closure(obj, name, prefix1, prefix2) {
+func closure(obj, name, prefix1, prefix2) {
   output += swrite(format="%s %s (closure)\n", prefix1, name);
   if(curdepth == maxdepth || 4 > maxchild)
     return;
@@ -122,4 +121,6 @@ func _obj_show_closure(obj, name, prefix1, prefix2) {
   _obj_show_worker, obj.function, "function", prefix2, 1;
   _obj_show_worker, obj.data, "data", prefix2, 2;
 }
-save, _obj_show_workers, closure=_obj_show_closure;
+
+_obj_show_workers = restore(tmp);
+restore, scratch;
