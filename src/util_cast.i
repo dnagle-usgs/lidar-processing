@@ -1,6 +1,19 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 require, "eaarl.i";
 
+func bool(val) {
+/* DOCUMENT result = bool(val)
+   Coerces its result into boolean values. RESULT will be an array of type
+   char, where 0x00 is false and 0x01 is true.
+
+   This can accept virtually anything as input. It is logically equivalent to
+   the following:
+      result = (val ? 0x01 : 0x00)
+   However, it also works for arrays and will maintain their dimensions.
+*/
+   return char(!(!val));
+}
+
 func pointers2group(pary) {
 /* DOCUMENT grp = pointers2group(pary)
    Given an array of pointers PARY, this returns a group object GRP that
