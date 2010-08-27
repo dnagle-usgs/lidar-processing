@@ -53,9 +53,110 @@ func classes(nil) {
 
 func query(expr) {
    use, count, data;
+   strtrim, expr;
+
+   // simple query - bare class name that exists
    if(data(*,expr))
       return data(noop(expr));
-   return array(char, count);
+
+   // simple query - bare class name that does not exist
+   if(regmatch("^[a-zA-Z_][a-zA-Z_0-9]*$", expr))
+      return array(char, count);
+
+   // null query
+   if(!strlen(expr))
+      return array(char, count);
+
+   // complicated query -- parse and convert to postfix stack
+   postfix = deque();
+   opstack = deque();
+   while(strlen(expr)) {
+      // Check for operators
+      if(anyof(strpart(expr, :2) == ["==", "!="])) {
+         while(anyof(opstack(last,) == ["!", "==", "!="]))
+            postfix, push, opstack(pop,);
+         opstack, push, strpart(expr, :2);
+         expr = strtrim(strpart(expr, 3:), 1);
+      } else if(strpart(expr, :1) == "!") {
+         while(opstack(last,) == "!")
+            postfix, push, opstack(pop,);
+         opstack, push, "!";
+         expr = strtrim(strpart(expr, 2:), 1);
+      } else if(strpart(expr, :1) == "&") {
+         while(anyof(opstack(last,) == ["!", "==", "!=", "&"]))
+            postfix, push, opstack(pop,);
+         opstack, push, "&";
+         expr = strtrim(strpart(expr, 2:), 1);
+      } else if(strpart(expr, :1) == "~") {
+         while(anyof(opstack(last,) == ["!", "==", "!=", "&", "~"]))
+            postfix, push, opstack(pop,);
+         opstack, push, "~";
+         expr = strtrim(strpart(expr, 2:), 1);
+      } else if(strpart(expr, :1) == "|") {
+         while(anyof(opstack(last,) == ["!", "==", "!=", "&", "~", "|"]))
+            postfix, push, opstack(pop,);
+         opstack, push, "|";
+         expr = strtrim(strpart(expr, 2:), 1);
+      // Handle parentheses
+      } else if(strpart(expr, :1) == "(") {
+         opstack, push, "(";
+         expr = strtrim(strpart(expr, 2:), 1);
+      } else if(strpart(expr, :1) == ")") {
+         while(opstack(count,) && opstack(last,) != "(")
+            postfix, push, opstack(pop,);
+         if(!opstack(count,))
+            error, "mismatched parentheses";
+         opstack, pop;
+         expr = strtrim(strpart(expr, 2:), 1);
+      // Handle classification names; store as values
+      } else {
+         offset = strgrep("^[a-zA-Z_][a-zA-Z_0-9]*", expr);
+         if(offset(2) == -1)
+            error, "invalid input";
+         postfix, push, use(query, strpart(expr, offset));
+         expr = strtrim(strpart(expr, offset(2)+1:), 1);
+      }
+   }
+   while(opstack(count,)) {
+      if(opstack(last,) == "(")
+         error, "mismatched parentheses";
+      postfix, push, opstack(pop,);
+   }
+   opstack = [];
+
+   // Evaluate postfix queue
+   work = deque();
+   while(postfix(count,)) {
+      token = postfix(shift,);
+      if(!is_string(token)) {
+         work, push, token;
+      } else if(token == "!") {
+         if(work(count,) < 1)
+            error, "invalid input";
+         work, push, !work(pop,);
+      } else if(work(count,) < 2) {
+         error, "invalid input";
+      } else {
+         A = work(pop,);
+         B = work(pop,);
+         if(token == "==")
+            work, push, A == B;
+         else if(token == "!=")
+            work, push, A != B;
+         else if(token == "&")
+            work, push, A & B;
+         else if(token == "~")
+            work, push, A ~ B;
+         else if(token == "|")
+            work, push, A | B;
+         else
+            error, "invalid input";
+      }
+   }
+   if(work(count,) == 1)
+      return work(pop,);
+   else
+      error, "invalid input";
 }
 
 func where(expr) {
