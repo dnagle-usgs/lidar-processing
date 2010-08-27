@@ -137,6 +137,7 @@ package require Iwidgets
 package require fileutil
 package require log
 package require struct::list
+package require mixin
 
 option add *tearOff 0
 foreach __theme [ttk::style theme names] {
@@ -1677,9 +1678,9 @@ proc start_yorick {}  {
                   set cmd "scrollbar .docwin$hwin.sb -command {.docwin$hwin.doc yview }"
                   eval $cmd
 
-                  text .docwin$hwin.doc -height 25 \
+                  ::mixin::text::readonly .docwin$hwin.doc -height 25 \
                      -yscrollcommand [list .docwin$hwin.sb set]
-                  .docwin$hwin.doc insert end $str
+                  .docwin$hwin.doc ins end $str
                   pack .docwin$hwin.doc -side left -fill both -expand 1
                   pack .docwin$hwin.sb -side left -fill y -expand 0
                   wm title .docwin$hwin $wintitle
