@@ -16,20 +16,106 @@ func clsobj(base, count) {
          CHARDATA, as returned by the serialize method.
 
    A clsobj object is comprised of two private data members as well as various
-   methods. In the documentation below, "class" is the result of a call to
+   methods. In the documentation below, "data" is the result of a call to
    clsobj.
 
    Private data members:
-      class(count,)        long
+      data(count,)        long
          The number of items that this object is configured to classify. This
          number must not be changed by the user.
-      class(data,)         group object
+      data(data,)         group object
          This stores the classification data. Group member names are the
          classification names, and their values are character arrays indicating
          whether the class applies or not for each item. The end user should
          not interact with this directly in any way!! Its implementation is not
          guaranteed to remain constant. You should be able to get any
          information you'd want from this via the object's methods.
+
+   Methods:
+      data, help
+         Displays this help documentation.
+      data(serialize,)
+         Returns an array of type char that represents the data stored in the
+         object. This character array is opaque; outside code should not try to
+         modify it. The classification object can be restored later by classing
+         clsobj with this character data as its argument.
+      data, set, class, vals
+         Sets the values for classification CLASS to VALS. VALS must be either
+         a scalar value (which is applied to all data points) or a vector whose
+         size matches data(count,).
+      data, apply, class, idx
+         Applies the specified classification CLASS to the indices specified by
+         IDX. Other indices are left unmodified. If CLASS did not previously
+         exist, then all other values will be 0.
+      data, remove, class, idx
+         Removes the specified classification CLASS from the indices specified
+         by IDX. Other indices are left unmodified. If CLASS did not previously
+         exist, then all other values will be 0.
+      data, drop, class
+         Completely removes classification CLASS.
+      data(classes,)
+         Returns an array of the classifications currently in use by the
+         object.
+      data(query, expr)
+         Performs a query on the classifications. The return result will be an
+         array of size "count" (as from "data(count,)") where 1 indicates that
+         the data point matches the expression EXPR and 0 indicates that it
+         does not. See the section further below for information on
+         expressions.
+      data(where, expr)
+         This is similar to data(query, expr) above. However, instead of
+         returning a boolean array result, this returns an index list
+         corresponding to it. It is exactly equivalent to where(data(query,
+         expr)).
+      data, grow, obj
+         Appends the data from OBJ to the current object. If DATA had 10 items
+         and OBJ had 5, then after the grow items 1-10 match the original DATA
+         and items 11-15 match OBJ's data. Classes that do not exist in one or
+         the other object are initialized to zeroes for that object's points.
+
+   Classification names:
+      The various methods that accept a classification name are constricted on
+      what kind of input they will provide. A classification name must start
+      with an alphabetic character or an underscore, and may be followed by any
+      number of alphanumeric characters or underscores. In glob terms:
+         [a-zA-Z_][a-zA-Z0-9_]*
+      No spaces or other punctuation is allowed. The name may not start with a
+      number. These rules are exactly the same as those imposed on Yorick
+      variable names.
+
+   Query expressions:
+      The query and where methods accept expressions as their argument. An
+      expression is a string. In the simplest case, this string is a
+      classification name. So if you have a classification object "data" with
+      classifications "first_return" and "last_return", you might make these
+      calls:
+         result = data(query, "first_return")
+         w = data(where, "last_return")
+
+      However, expressions can also be more complicated than that. Expressions
+      accept a very limited subset of the Yorick language. The following
+      operators are permitted:
+         !     not/negation
+         ==    equality
+         !=    not equal
+         &     and
+         ~     xor
+         |     or
+      In addition to those operators, parentheses may be used for grouping. You
+      may not use any other symbols, exept for whitespace and classification
+      names. If you use invalid symbols or syntax, you will receive an error.
+
+      Follows are some examples of more complex queries.
+
+      Return all bare earth points that are also first returns:
+         w = data(where, "bare_earth & first_return")
+      Return all bare earth points that are not first returns:
+         w = data(where, "bare_earth & !first_return")
+      Return all canopy points that are neither first nor last returns.
+         w = data(where, "canopy & !(first_return | last_return)")
+      Return all points that are either first or last returns, but that are not
+      both.
+         w = data(where, "first_return ~ last_return")
 */
    data = save();
    if(numberof(count) > 1) {
