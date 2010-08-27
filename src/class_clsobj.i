@@ -1,6 +1,6 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 
-scratch = save(tmp, scratch);
+scratch = save(tmp, util, scratch);
 tmp = save(set, apply, remove, drop, classes, query, where);
 
 func clsobj(base, count) {
@@ -9,7 +9,8 @@ func clsobj(base, count) {
    return obj;
 }
 
-func set(class, vals) {
+func set(util, class, vals) {
+   util, validate, class;
    use, count, data;
    vals = bool(vals);
    if(is_scalar(vals))
@@ -19,21 +20,24 @@ func set(class, vals) {
    save, data, noop(class), vals;
 }
 
-func apply(class, idx) {
+func apply(util, class, idx) {
+   util, validate, class;
    use, count, data;
    val = data(*,class) ? data(noop(class)) : array(char, count);
    val(idx) = 1;
    save, data, noop(class), val;
 }
 
-func remove(class, idx) {
+func remove(util, class, idx) {
+   util, validate, class;
    use, count, data;
    val = data(*,class) ? data(noop(class)) : array(char, count);
    val(idx) = 0;
    save, data, noop(class), val;
 }
 
-func drop(class) {
+func drop(util, class) {
+   util, validate, class;
    use, data;
    if(!data(*))
       return;
@@ -57,6 +61,22 @@ func query(expr) {
 func where(expr) {
    return where(use(query, expr));
 }
+
+scratch = save(tmp, scratch);
+tmp = save(validate, validate);
+
+func validate(class) {
+   if(!regmatch("^[a-zA-Z_][a-zA-Z_0-9]*$", class))
+      error, "invalid classification name: " + class;
+}
+
+util = restore(tmp);
+restore, scratch;
+
+set = closure(set, util);
+apply = closure(apply, util);
+remove = closure(remove, util);
+drop = closure(drop, util);
 
 clsobj = closure(clsobj, restore(tmp));
 restore, scratch;
