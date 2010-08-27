@@ -29,6 +29,8 @@ func clsobj(base, count) {
             pow = 0;
          }
       }
+   } else if(!count) {
+      error, "must provide either a count or data to restore";
    }
    obj = save(count, data);
    obj_copy, base, obj;
