@@ -236,33 +236,26 @@ func query(expr) {
    // complicated query -- parse and convert to postfix stack
    postfix = deque();
    opstack = deque();
+   precedence_ops = ["!", "==", "!=", "&", "~", "|"];
+   precedence_val = [4, 3, 3, 2, 1, 0];
    while(strlen(expr)) {
       // Check for operators
-      if(anyof(strpart(expr, :2) == ["==", "!="])) {
-         while(anyof(opstack(last,) == ["!", "==", "!="]))
+      token = string(0);
+      if(anyof(strpart(expr, :2) == ["==", "!="]))
+         token = strpart(expr, :2);
+      else if(anyof(strpart(expr, :1) == ["!", "&", "~", "|"]))
+         token = strpart(expr, :1);
+
+      if(token) {
+         w = where(precedence_ops == token)(1);
+         w = where(precedence_val >= precedence_val(w));
+         check = precedence_ops(w);
+         w = [];
+         while(anyof(opstack(last,) == check))
             postfix, push, opstack(pop,);
-         opstack, push, strpart(expr, :2);
-         expr = strtrim(strpart(expr, 3:), 1);
-      } else if(strpart(expr, :1) == "!") {
-         while(opstack(last,) == "!")
-            postfix, push, opstack(pop,);
-         opstack, push, "!";
-         expr = strtrim(strpart(expr, 2:), 1);
-      } else if(strpart(expr, :1) == "&") {
-         while(anyof(opstack(last,) == ["!", "==", "!=", "&"]))
-            postfix, push, opstack(pop,);
-         opstack, push, "&";
-         expr = strtrim(strpart(expr, 2:), 1);
-      } else if(strpart(expr, :1) == "~") {
-         while(anyof(opstack(last,) == ["!", "==", "!=", "&", "~"]))
-            postfix, push, opstack(pop,);
-         opstack, push, "~";
-         expr = strtrim(strpart(expr, 2:), 1);
-      } else if(strpart(expr, :1) == "|") {
-         while(anyof(opstack(last,) == ["!", "==", "!=", "&", "~", "|"]))
-            postfix, push, opstack(pop,);
-         opstack, push, "|";
-         expr = strtrim(strpart(expr, 2:), 1);
+         opstack, push, token;
+         expr = strtrim(strpart(expr, strlen(token)+1:));
+
       // Handle parentheses
       } else if(strpart(expr, :1) == "(") {
          opstack, push, "(";
@@ -274,6 +267,7 @@ func query(expr) {
             error, "mismatched parentheses";
          opstack, pop;
          expr = strtrim(strpart(expr, 2:), 1);
+
       // Handle classification names; store as values
       } else {
          offset = strgrep("^[a-zA-Z_][a-zA-Z_0-9]*", expr);
