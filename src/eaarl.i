@@ -32,6 +32,7 @@ if(is_void(__eaarl_includes_included__)) {
    // Check for Yorick 2.2.00x and include things that depend on it if safe.
    // Yorick 2.2 will be required in the future, but for now it is optional.
    if(is_func(is_obj)) {
+      require, "class_deque.i";
       require, "class_wfobj.i";
       require, "obj_show.i";
       require, "eaarl1_wf.i";
