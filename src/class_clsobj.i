@@ -15,11 +15,10 @@ func clsobj(base, count) {
          Restores a classification object using an array of character data
          CHARDATA, as returned by the serialize method.
 
-   A clsobj object is comprised of two private data members as well as various
-   methods. In the documentation below, "data" is the result of a call to
-   clsobj.
+   A clsobj object is comprised of two data members as well as various methods.
+   In the documentation below, "data" is the result of a call to clsobj.
 
-   Private data members:
+   Data members:
       data(count,)        long
          The number of items that this object is configured to classify. This
          number must not be changed by the user.
