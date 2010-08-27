@@ -178,12 +178,8 @@ func obj_copy(this, dst) {
       dst = save();
    else if(!is_obj(dst))
       error, "Called as subroutine without destination argument";
-   keys = this(*,);
-   count = numberof(keys);
-   for(i = 1; i <= count; i++) {
-      key = keys(i);
-      save, dst, noop(key), this(noop(key));
-   }
+   for(i = 1; i <= this(*); i++)
+      save, dst, this(*,i), this(noop(i));
    return dst;
 }
 
@@ -211,12 +207,9 @@ func obj_copy_methods(this, dst) {
       dst = save();
    else if(!is_obj(dst))
       error, "Called as subroutine without destination argument";
-   keys = this(*,);
-   count = numberof(keys);
-   for(i = 1; i <= count; i++) {
-      key = keys(i);
-      if(is_func(this(noop(key))))
-         save, dst, noop(key), this(noop(key));
+   for(i = 1; i <= this(*); i++) {
+      if(is_func(this(noop(i))))
+         save, dst, this(*,i), this(noop(i));
    }
    return dst;
 }
@@ -245,12 +238,9 @@ func obj_copy_data(this, dst) {
       dst = save();
    else if(!is_obj(dst))
       error, "Called as subroutine without destination argument";
-   keys = this(*,);
-   count = numberof(keys);
-   for(i = 1; i <= count; i++) {
-      key = keys(i);
-      if(!is_func(this(noop(key))))
-         save, dst, noop(key), this(noop(key));
+   for(i = 1; i <= this(*); i++) {
+      if(!is_func(this(noop(i))))
+         save, dst, this(*,i), this(noop(i));
    }
    return dst;
 }
