@@ -60,7 +60,7 @@ func deque(base, data) {
    by only using push/shift.
 */
    obj = obj_copy(base);
-   data = (is_void(data) || !data(*)) ? save() : data(:);
+   data = is_void(data) ? save() : obj_copy(data);
    save, obj, data;
    return obj;
 }
