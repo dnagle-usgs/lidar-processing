@@ -112,3 +112,14 @@ func _obj_show_symlink(obj, name, prefix1, prefix2) {
     name_of_symlink(obj));
 }
 save, _obj_show_workers, symlink=_obj_show_symlink;
+
+func _obj_show_closure(obj, name, prefix1, prefix2) {
+  output += swrite(format="%s %s (closure)\n", prefix1, name);
+  if(curdepth == maxdepth || 4 > maxchild)
+    return;
+  _obj_show_worker, obj.function_name, "function_name", prefix2, 1;
+  _obj_show_worker, obj.data_name, "data_name", prefix2, 1;
+  _obj_show_worker, obj.function, "function", prefix2, 1;
+  _obj_show_worker, obj.data, "data", prefix2, 2;
+}
+save, _obj_show_workers, closure=_obj_show_closure;
