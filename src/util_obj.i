@@ -31,37 +31,6 @@ func obj_merge(obj, ..) {
    return obj;
 }
 
-func obj_generic(obj, force=) {
-/* DOCUMENT obj_generic, obj, force=
-   obj = obj_generic(force=)
-
-   Initializes the given object OBJ as a generic object by defining the
-   following methods:
-      obj(index,)          -or- obj, index
-      obj(copy,)           -or- obj, copy
-      obj(copy_methods,)   -or- obj, copy_methods
-      obj(copy_data,)      -or- obj, copydata
-
-   For more information on a given method, use "help, obj(METHOD)" or "help,
-   obj_METHOD".
-
-   Parameter:
-      obj: If provided, must be a valid group object.
-
-   Option:
-      force: By default, the generic methods are only initalized if they do not
-         already exist. Using force=1 will overwrite existing definitions.
-*/
-// Original David Nagle 2010-08-09
-   default, force, 0;
-   default, obj, save();
-   op = force ? save : keydefault;
-   op, obj, index=closure(obj_index, 0), copy=closure(obj_copy, 0),
-      copy_methods=closure(obj_copy_methods, 0),
-      copy_data=closure(obj_copy_data, 0);
-   return obj;
-}
-
 func obj_index(this, idx, which=, bymethod=, ignoremissing=) {
 /* DOCUMENT result = obj_index(obj, idx, which=, bymethod=, ignoremissing=)
    -or- obj_index, obj, index, idx, which=, bymethod=, ignoremissing=
