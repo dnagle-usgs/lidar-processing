@@ -1,6 +1,6 @@
 // vim: set tabstop=2 softtabstop=2 shiftwidth=2 autoindent shiftround expandtab:
 
-func obj_show(obj, prefix=, maxary=, maxchild=, maxdepth=) {
+func obj_show(workers, obj, prefix=, maxary=, maxchild=, maxdepth=) {
 /* DOCUMENT obj_show, obj;
   -or- output = obj_show(obj);
   Display contents of object OBJ in a tree-like representation. Keyword PREFIX
@@ -16,13 +16,27 @@ func obj_show(obj, prefix=, maxary=, maxchild=, maxdepth=) {
   if(is_void(maxdepth)) maxdepth=5;
   curdepth = 0;
   output = "";
-  _obj_show_worker, obj, "TOP", (is_void(prefix) ? "" : prefix), 0;
+  workers, _recurse, obj, "TOP", (is_void(prefix) ? "" : prefix), 0;
   if(am_subroutine())
     write, format="%s", output;
   return output;
 }
 
-func _obj_show_worker(obj, name, prefix, stage) {
+/*
+  Custom workers can be defined externally by creating a function with
+  parameters (obj, name, prefix1, prefix2). Then add an entry to obj_show's
+  workers like so:
+    save, obj_show.data, typename=customworker
+  where typename is the result of typeof(item).
+*/
+
+scratch = save(tmp, _array, _closure, scratch);
+_closure = closure;
+tmp = save(_recurse, oxy_object, hash_table, float, double, char, short, int,
+  long, pointer, string, void, symlink, closure);
+
+func _recurse(obj, name, prefix, stage) {
+  this = use();
   curdepth++;
   if(stage == 1)
     prefix += [" |-", " | "];
@@ -30,24 +44,12 @@ func _obj_show_worker(obj, name, prefix, stage) {
     prefix += [" `-", "   "];
   else
     prefix += ["", ""];
-  if(_obj_show_workers(*,typeof(obj)))
-    _obj_show_workers, typeof(obj), obj, name, prefix(1), prefix(2);
+  if(this(*,typeof(obj)))
+    this, typeof(obj), obj, name, prefix(1), prefix(2);
   else
     output += swrite(format="%s %s (%s)\n", prefix(1), name, typeof(obj));
   curdepth--;
 }
-
-/*
-  Custom workers can be defined by creating a function with parameters (obj,
-  name, prefix1, prefix2). Then add an entry to _obj_show_workers like so:
-    save, _obj_show_workers, typename=customworker
-  where typename is the result of typeof(item).
-*/
-
-scratch = save(tmp, _array, _closure, scratch);
-_closure = closure;
-tmp = save(oxy_object, hash_table, float, double, char, short, int, long,
-  pointer, string, void, symlink, closure);
 
 func oxy_object(obj, name, prefix1, prefix2) {
   count = obj(*);
@@ -58,7 +60,7 @@ func oxy_object(obj, name, prefix1, prefix2) {
   for(i = 1; i <= count; i++) {
     key = obj(*,i);
     if(!key) key = "(nil)";
-    _obj_show_worker, obj(noop(i)), key, prefix2, 1 + (i == count);
+    call, use(_recurse, obj(noop(i)), key, prefix2, 1 + (i == count));
   }
 }
 
@@ -75,7 +77,7 @@ func hash_table(obj, name, prefix1, prefix2) {
     return;
   for(k = 1; k <= count; k++) {
     key = key_list(k);
-    _obj_show_worker, h_get(obj,key), key, prefix2, 1 + (k == count);
+    use, _recurse, h_get(obj,key), key, prefix2, 1 + (k == count);
   }
 }
 
@@ -113,14 +115,15 @@ func symlink(obj, name, prefix1, prefix2) {
 }
 
 func closure(obj, name, prefix1, prefix2) {
+  this = use();
   output += swrite(format="%s %s (closure)\n", prefix1, name);
   if(curdepth == maxdepth || 4 > maxchild)
     return;
-  _obj_show_worker, obj.function_name, "function_name", prefix2, 1;
-  _obj_show_worker, obj.data_name, "data_name", prefix2, 1;
-  _obj_show_worker, obj.function, "function", prefix2, 1;
-  _obj_show_worker, obj.data, "data", prefix2, 2;
+  this, _recurse, obj.function_name, "function_name", prefix2, 1;
+  this, _recurse, obj.data_name, "data_name", prefix2, 1;
+  this, _recurse, obj.function, "function", prefix2, 1;
+  this, _recurse, obj.data, "data", prefix2, 2;
 }
 
-_obj_show_workers = restore(tmp);
+obj_show = _closure(obj_show, restore(tmp));
 restore, scratch;
