@@ -106,8 +106,6 @@ func wfobj(base, obj) {
    // Set up methods. We override generic's "index" method so we have to
    // provide it specially.
    obj_merge, obj, base;
-   obj_generic, obj;
-   save, obj, obj_index;
    // We don't want all of the objects to share a common data item, so they get
    // re-initialized here.
    save, obj,
@@ -181,13 +179,13 @@ summary = closure(summary, restore(tmp));
 restore, scratch;
 
 func index(idx) {
+   this = use();
    which = ["raw_xyz0","raw_xyz1", "soe", "record", "tx", "rx"];
    if(am_subroutine()) {
-      this = use();
-      this, obj_index, idx, which=which;
+      obj_index, this, idx, which=which;
       wfobj, this;
    } else {
-      return wfobj(use(obj_index, idx, which=which));
+      return wfobj(obj_index(this, idx, which=which));
    }
 }
 
