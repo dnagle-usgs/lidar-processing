@@ -107,6 +107,39 @@ func set_intersection(A, B, idx=, delta=) {
       return [];
 }
 
+func set_intersect3(A, B) {
+/* DOCUMENT result = set_intersect3(A, B)
+
+   Returns the intersection and differences between sets A and B. Return result
+   will be a Yorick group object.
+
+      result.left  -or-  result(1)
+         Items in A that are not in B. (A - B)
+      result.both  -or-  result(2)
+         Items in both A and B. (A * B)
+      result.right  -or-  result(3)
+         Items in B that are not in A. (B - A)
+
+   Unlike other set commands, this does not accept idx= or delta= options.
+*/
+   C = set_union(A, B);
+   state = array(0, numberof(C));
+   idx = set_intersection(C, A, idx=1);
+   if(numberof(idx))
+      state(idx)--;
+   idx = set_intersection(C, B, idx=1);
+   if(numberof(idx))
+      state(idx)++;
+   result = save();
+   w = where(state == -1);
+   save, result, left=(numberof(w) ? C(w) : []);
+   w = where(state == 0);
+   save, result, both=(numberof(w) ? C(w) : []);
+   w = where(state == 1);
+   save, result, right=(numberof(w) ? C(w) : []);
+   return result;
+}
+
 func set_difference(A, B, idx=, delta=) {
 /* DOCUMENT set_difference(A, B, idx=, delta=)
 
