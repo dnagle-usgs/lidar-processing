@@ -4,6 +4,32 @@ scratch = save(tmp, scratch);
 tmp = save(set, apply, remove, drop, classes, query, where, grow, serialize);
 
 func clsobj(base, count) {
+/* DOCUMENT clsobj()
+   Creates a classification object. This can be called in one of two ways:
+
+      data = clsobj(count)
+         Creates an empty classification object that is allocated for COUNT
+         items.
+      data = clsobj(chardata)
+         Restores a classification object using an array of character data
+         CHARDATA, as returned by the serialize method.
+
+   A clsobj object is comprised of two private data members as well as various
+   methods. In the documentation below, "class" is the result of a call to
+   clsobj.
+
+   Private data members:
+      class(count,)        long
+         The number of items that this object is configured to classify. This
+         number must not be changed by the user.
+      class(data,)         group object
+         This stores the classification data. Group member names are the
+         classification names, and their values are character arrays indicating
+         whether the class applies or not for each item. The end user should
+         not interact with this directly in any way!! Its implementation is not
+         guaranteed to remain constant. You should be able to get any
+         information you'd want from this via the object's methods.
+*/
    data = save();
    if(numberof(count) > 1) {
       bits = count;
