@@ -1,12 +1,60 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 
 scratch = save(tmp, scratch);
-tmp = save(set, apply, remove, drop, classes, query, where, grow);
+tmp = save(set, apply, remove, drop, classes, query, where, grow, serialize);
 
 func clsobj(base, count) {
-   obj = save(count, data=save());
+   data = save();
+   if(numberof(count) > 1) {
+      bits = count;
+
+      zeroes = !bits;
+      w = where(zeroes(:-1) & zeroes(2:));
+      if(!numberof(w))
+         error, "invalid data";
+
+      classes = strchar(bits(:w(1)));
+      bits = bits(w(1)+2:);
+      numclasses = numberof(classes);
+      count = numberof(bits) / long(ceil(numclasses/8.));
+      bits = reform(bits, count, numberof(bits)/count);
+
+      pos = 1;
+      pow = 0;
+      for(i = 1; i <= numclasses; i++) {
+         save, data, classes(i), bool(2^pow & bits(,pos));
+         pow++;
+         if(pow == 8) {
+            pos++;
+            pow = 0;
+         }
+      }
+   }
+   obj = save(count, data);
    obj_copy, base, obj;
    return obj;
+}
+
+func serialize(nil) {
+   use, count, data;
+   classes = use(classes,);
+   numclasses = numberof(classes);
+   bits = array(char, count, long(ceil(numclasses/8.)));
+
+   pos = 1;
+   pow = 0;
+   for(i = 1; i <= numclasses; i++) {
+      bits(,pos) |= data(classes(i)) << pow;
+      pow++;
+      if(pow == 8) {
+         pos++;
+         pow = 0;
+      }
+   }
+
+   classes = strchar(classes);
+
+   return grow(classes, char(0), bits(*));
 }
 
 func set(class, vals) {
