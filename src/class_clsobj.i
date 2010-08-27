@@ -1,7 +1,8 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 
 scratch = save(tmp, scratch);
-tmp = save(set, apply, remove, drop, classes, query, where, grow, serialize);
+tmp = save(set, apply, remove, drop, classes, query, where, grow, serialize,
+   help);
 
 func clsobj(base, count) {
 /* DOCUMENT clsobj()
@@ -283,6 +284,8 @@ func grow(obj) {
       save, data, noop(curclass), grow(this, that);
    }
 }
+
+help = closure(help, clsobj);
 
 clsobj = closure(clsobj, restore(tmp));
 restore, scratch;
