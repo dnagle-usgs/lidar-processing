@@ -10,8 +10,17 @@ func obj_merge(obj, ..) {
    returned. In the subroutine form, the first object is updated to contain the
    result of the merge. If two objects use the same key name, the last object's
    value is used.
+
+   This function can be used as an object method by using a closure whose
+   data item is 0:
+      save, obj, merge=closure(obj_merge, 0)
+   You can then call merge like this:
+      obj(merge, ...)
+      obj, merge, ...
 */
 // Original David Nagle 2010-08-03
+   if(!obj)
+      obj = use();
    if(!am_subroutine())
       obj = obj(:);
    while(more_args()) {
@@ -47,15 +56,15 @@ func obj_generic(obj, force=) {
    default, force, 0;
    default, obj, save();
    op = force ? save : keydefault;
-   op, obj, index=obj_index, copy=obj_copy,
-      copy_methods=obj_copy_methods, copy_data=obj_copy_data;
+   op, obj, index=closure(obj_index, 0), copy=closure(obj_copy, 0),
+      copy_methods=closure(obj_copy_methods, 0),
+      copy_data=closure(obj_copy_data, 0);
    return obj;
 }
 
-func obj_index(idx, which=, bymethod=, ignoremissing=) {
-/* DOCUMENT obj_index -- method for generic objects
-   result = obj(index, idx, which=, bymethod=, ignoremissing=)
-   obj, index, idx, which=, bymethod=, ignoremissing=
+func obj_index(this, idx, which=, bymethod=, ignoremissing=) {
+/* DOCUMENT result = obj_index(obj, idx, which=, bymethod=, ignoremissing=)
+   -or- obj_index, obj, index, idx, which=, bymethod=, ignoremissing=
 
    Indexes into the member variables of the given object.
 
@@ -78,14 +87,20 @@ func obj_index(idx, which=, bymethod=, ignoremissing=) {
    If any fields are multi-dimensional arrays, they are indexed along their
    first dimension: field(idx,).
 
+   This function can be used as an object method by using a closure whose data
+   item is 0:
+      save, obj, index=closure(obj_index, 0)
+   You can then call index like this:
+      obj(index, ...)
+      obj, index, ...
+
    Examples:
 
-      > example = save(index=obj_index, copy=obj_copy, a=[2,4,6,8,10],
+      > example = save(index=closure(obj_index, 0), a=[2,4,6,8,10],
       cont> b=span(.1,.5,5))
       > obj_show, example
       TOP (oxy_object, 4 entries)
       |- index (function)
-      |- copy (function)
       |- a (long,5) [2,4,6,8,10]
       `- b (double,5) [0.1,0.2,0.3,0.4,0.5]
       > indexed = example(index, [2,4])
@@ -97,7 +112,7 @@ func obj_index(idx, which=, bymethod=, ignoremissing=) {
       `- b (double,2) [0.2,0.4]
       >
 
-      > nested = save(index=obj_index, copy=obj_copy, example, c=[1,2,3,4,5],
+      > nested = save(index=closure(obj_index, 0), example, c=[1,2,3,4,5],
       cont> d=span(0,1,5), g=42)
       > obj_show, nested
       TOP (oxy_object, 6 entries)
@@ -105,7 +120,6 @@ func obj_index(idx, which=, bymethod=, ignoremissing=) {
       |- copy (function)
       |- example (oxy_object, 4 entries)
       |  |- index (function)
-      |  |- copy (function)
       |  |- a (long,5) [2,4,6,8,10]
       |  `- b (double,5) [0.1,0.2,0.3,0.4,0.5]
       |- c (long,5) [1,2,3,4,5]
@@ -115,7 +129,6 @@ func obj_index(idx, which=, bymethod=, ignoremissing=) {
       > obj_show, nested
       TOP (oxy_object, 6 entries)
       |- index (function)
-      |- copy (function)
       |- example (oxy_object, 4 entries)
       |  |- index (function)
       |  |- copy (function)
@@ -127,8 +140,10 @@ func obj_index(idx, which=, bymethod=, ignoremissing=) {
       >
 */
 // Original David Nagle 2010-08-09
-   result = am_subroutine() ? use() : use(copy,);
-   default, which, use(*,);
+   if(!this)
+      this = use();
+   result = am_subroutine() ? this : obj_copy(this);
+   default, which, this(*,);
    default, bymethod, save();
    default, ignoremissing, 1;
    if(is_scalar(which))
@@ -169,10 +184,9 @@ func obj_index(idx, which=, bymethod=, ignoremissing=) {
    return result;
 }
 
-func obj_copy(dst) {
-/* DOCUMENT obj_copy -- method for generic objects
-   newobj = obj(copy,)
-   obj, copy, dst
+func obj_copy(this, dst) {
+/* DOCUMENT newobj = obj_copy(obj)
+   -or- obj_copy, obj, dst
 
    When called as a function, returns a new object that is a complete copy of
    the calling object.
@@ -180,69 +194,94 @@ func obj_copy(dst) {
    When called as a subroutine, copies the data and methods of the calling
    object to the provided DST object, overwriting existing members as
    necessary.
+
+   This function can be used as an object method by using a closure whose data
+   item is 0:
+      save, obj, copy=closure(obj_copy, 0)
+   You can then call copy like this:
+      obj(copy, ...)
+      obj, copy, ...
 */
 // Original David Nagle 2010-07-30
+   if(!this)
+      this = use();
    if(!am_subroutine())
       dst = save();
    else if(!is_obj(dst))
       error, "Called as subroutine without destination argument";
-   keys = use(*,);
+   keys = this(*,);
    count = numberof(keys);
    for(i = 1; i <= count; i++) {
       key = keys(i);
-      save, dst, noop(key), use(noop(key));
+      save, dst, noop(key), this(noop(key));
    }
    return dst;
 }
 
-func obj_copy_methods(dst) {
-/* DOCUMENT obj_copy_methods -- method for generic objects
-   newobj = obj(copy_methods,)
-   obj, copy_methods, dst
+func obj_copy_methods(this, dst) {
+/* DOCUMENT newobj = obj_copy_methods(obj)
+   obj_copy_methods, obj, dst
 
    When called as a function, returns a new object that has the same methods as
    the calling object.
 
    When called as a subroutine, copies the methods of the calling object to the
    provided DST object, overwriting existing members as necessary.
+
+   This function can be used as an object method by using a closure whose data
+   item is 0:
+      save, obj, copy_methods=closure(obj_copy_methods, 0)
+   You can then call copy_methods like this:
+      obj(copy_methods, ...)
+      obj, copy_methods, ...
 */
 // Original David Nagle 2010-07-30
+   if(!this)
+      this = use();
    if(!am_subroutine())
       dst = save();
    else if(!is_obj(dst))
       error, "Called as subroutine without destination argument";
-   keys = use(*,);
+   keys = this(*,);
    count = numberof(keys);
    for(i = 1; i <= count; i++) {
       key = keys(i);
-      if(is_func(use(noop(key))))
-         save, dst, noop(key), use(noop(key));
+      if(is_func(this(noop(key))))
+         save, dst, noop(key), this(noop(key));
    }
    return dst;
 }
 
-func obj_copy_data(dst) {
-/* DOCUMENT obj_copy_data -- method for generic objects
-   newobj = obj(copy_data,)
-   obj, copy_data, dst
+func obj_copy_data(this, dst) {
+/* DOCUMENT newobj = obj_copy_data(obj)
+   obj_copy_data, obj, dst
 
    When called as a function, returns a new object that has the same data as
    the calling object.
 
    When called as a subroutine, copies the data of the calling object to the
    provided DST object, overwriting existing members as necessary.
+
+   This function can be used as an object method by using a closure whose data
+   item is 0:
+      save, obj, copy_data=closure(obj_copy_data, 0)
+   You can then call copy_data like this:
+      obj(copy_data, ...)
+      obj, copy_data, ...
 */
 // Original David Nagle 2010-07-30
+   if(!this)
+      this = use();
    if(!am_subroutine())
       dst = save();
    else if(!is_obj(dst))
       error, "Called as subroutine without destination argument";
-   keys = use(*,);
+   keys = this(*,);
    count = numberof(keys);
    for(i = 1; i <= count; i++) {
       key = keys(i);
-      if(!is_func(use(noop(key))))
-         save, dst, noop(key), use(noop(key));
+      if(!is_func(this(noop(key))))
+         save, dst, noop(key), this(noop(key));
    }
    return dst;
 }
