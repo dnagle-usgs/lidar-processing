@@ -294,8 +294,8 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
             update=0;  // if the tile was updated, force rcf to process.
          }
 
-         mkdir, swrite(format="%si_e%d_n%d_%s", save_dir, idx_e, idx_n, zone_s);
-         mkdir, swrite(format="%si_e%d_n%d_%s/t_e%6.0f_n%7.0f_%s", save_dir, idx_e, idx_n, zone_s, min_e, max_n, zone_s);
+         mkdirp, swrite(format="%si_e%d_n%d_%s", save_dir, idx_e, idx_n, zone_s);
+         mkdirp, swrite(format="%si_e%d_n%d_%s/t_e%6.0f_n%7.0f_%s", save_dir, idx_e, idx_n, zone_s, min_e, max_n, zone_s);
          indx_num = where(mtdt_path == swrite(format="%si_e%d_n%d_%s/", save_dir, idx_e, idx_n, zone_s));
          indx_number = indx_num(1);
          if (bool_arr(indx_number) != 1) {

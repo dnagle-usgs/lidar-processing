@@ -328,7 +328,7 @@ proc client'read sock {
             }
 
             set doall list
-            catch { exec /opt/eaarl/lidar-processing/src/cmdline_batch $wdir/$args $host } res
+            catch { exec /opt/eaarl/lidar-processing/batcher/cmdline_batch $wdir/$args $host } res
             puts "cmdline_batch: completed"
             if { $res > "" } {
                puts "res3: $res"

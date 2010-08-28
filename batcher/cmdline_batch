@@ -4,6 +4,7 @@
 src_path = "/opt/eaarl/lidar-processing/src";
 
 
+#include "/opt/eaarl/lidar-processing/src/general.i"
 #include "/opt/eaarl/lidar-processing/src/l1pro.i"
 #include "/opt/eaarl/lidar-processing/src/veg.i"
 #include "/opt/eaarl/lidar-processing/src/batch_process.i"
