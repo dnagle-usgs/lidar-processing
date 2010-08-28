@@ -3,6 +3,7 @@
 // _ytk = 1;
 src_path = "/opt/eaarl/lidar-processing/src";
 
+cd(src_path);
 
 #include "/opt/eaarl/lidar-processing/src/general.i"
 #include "/opt/eaarl/lidar-processing/src/l1pro.i"
