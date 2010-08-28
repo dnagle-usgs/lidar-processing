@@ -4,10 +4,10 @@
 # push the directory to the same leval as lidar-processing
 BIN = ../../bin
 
-var:
-	@ echo
-	@ echo "make batch    setup the system for batch processing"
-	@ echo
+#var:
+#	@ echo
+#	@ echo "make batch    setup the system for batch processing"
+#	@ echo
 
 ifeq (${USER}, root)
 /etc/init.d/batcher:  initd-batcher.sh
