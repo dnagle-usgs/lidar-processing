@@ -124,9 +124,7 @@ func wfobj(base, obj) {
 // summary method uses a closure to encapsulate code that would otherwise need
 // to be repeated within the function
 scratch = save(scratch, tmp);
-// listing same item twice to avoid bug where save fails to recognize a single
-// void argument
-tmp = save(coord_print, coord_print);
+tmp = save(coord_print);
 
 func summary(util) {
    extern current_cs;
