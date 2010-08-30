@@ -1,6 +1,6 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 
-scratch = save(tmp, scratch);
+scratch = save(scratch, tmp);
 tmp = save(set, apply, remove, drop, classes, query, where, grow, serialize,
    help);
 

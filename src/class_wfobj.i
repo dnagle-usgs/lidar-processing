@@ -3,7 +3,7 @@ require, "eaarl.i";
 
 // scratch stores the values of scratch and tmp so that we can restore them
 // when we're done, leaving things as we found them.
-scratch = save(tmp, scratch);
+scratch = save(scratch, tmp);
 // tmp stores a list of the methods that will go into wfobj. It stores their
 // current values up-front, then restores them at the end while swapping the
 // new function definitions into wfobj.
@@ -123,7 +123,7 @@ func wfobj(base, obj) {
 
 // summary method uses a closure to encapsulate code that would otherwise need
 // to be repeated within the function
-scratch = save(tmp, scratch);
+scratch = save(scratch, tmp);
 // listing same item twice to avoid bug where save fails to recognize a single
 // void argument
 tmp = save(coord_print, coord_print);
@@ -192,7 +192,7 @@ func index(idx) {
 // xyz0 and xyz1 both use the same logic, and they both benefit from caching
 // working data. This is accomplished by using a closure to wrap around the
 // common functionality and track their working data.
-scratch = save(xyzwrap, scratch);
+scratch = save(scratch, xyzwrap);
 
 func xyzwrap(working, idx) {
    extern current_cs;
