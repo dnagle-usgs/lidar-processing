@@ -45,16 +45,19 @@ local mathop;
    ==       eq       2        equal
    !=       ne       2        not equal
    <=>      cmp      2        SCALAR ONLY; 0 if equal, -1 if <, 1 if >
+   &&       and      2        SCALAR ONLY; logical and
+   ||       or       2        SCALAR ONLY; logical or
    !        not      1        not
    (n/a)    bw_inv   1        bitwise complement
    ~        bw_xor   2        bitwise xor
    &        bw_and   2        bitwise and
    |        bw_or    2        bitwise or
+   ?:       cond     3        ternary conditional
 */
 
 scratch = save(scratch, tmp);
 tmp = save(pow, mul, div, mod, add, sub, lshift, rshift, lt, le, gt, ge, eq,
-   ne, cmp, not, bw_inv, bw_xor, bw_and, bw_or);
+   ne, cmp, and, or, not, bw_inv, bw_xor, bw_and, bw_or, cond);
 
 func pow(a, b) { return a ^ b; }
 func mul(a, b) { return a * b; }
@@ -71,11 +74,14 @@ func ge(a, b) { return a >= b; }
 func eq(a, b) { return a == b; }
 func ne(a, b) { return a != b; }
 func cmp(a, b) { return a < b ? -1 : a > b; }
+func and(a, b) { return a && b; }
+func or(a, b) { return a || b; }
 func not(a) { return !a; }
 func bw_inv(a) { return ~a; }
 func bw_xor(a, b) { return a ~ b; }
 func bw_and(a, b) { return a & b; }
 func bw_or(a, b) { return a | b; }
+func cond(a, b, c) { return a ? b : c; }
 
 mathop = restore(tmp);
 restore, scratch;
@@ -96,10 +102,13 @@ save, mathop,
    "==", mathop.eq,
    "!=", mathop.ne,
    "<=>", mathop.cmp,
+   "&&", mathop.and,
+   "||", mathop.or,
    "!", mathop.not,
    "~", mathop.bw_xor,
    "&", mathop.bw_and,
-   "|", mathop.bw_or;
+   "|", mathop.bw_or,
+   "?:", mathop.cond;
 
 func det(A) {
 /* DOCUMENT det(A)
