@@ -234,7 +234,6 @@ func math_eval_postfix(postfix, operators=, operands=, math=, variables=) {
    work = deque();
    while(postfix(count,)) {
       token = postfix(shift,);
-
       if(anyof(operators == token)) {
          params = operands(noop(token));
          if(params == 1) {
@@ -272,6 +271,8 @@ func math_eval_postfix(postfix, operators=, operands=, math=, variables=) {
 
 func math_eval_infix(expr, precedence=, operators=, operands=, math=,
 variables=, accept_variables=, accept_numbers, accept_parens=) {
+   if(is_void(operators) && !is_void(precedence))
+      operators = precedence(*,);
    pf = math_parse_infix(expr, precedence=precedence, operators=operators,
       accept_variables=accept_variables, accept_numbers=accept_numbers,
       accept_parens=accept_parens);
