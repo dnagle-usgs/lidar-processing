@@ -57,6 +57,16 @@ func bw_not(a) { return ~a; }
 mathop = restore(tmp);
 restore, scratch;
 
+save, mathop,
+   "<", mathop.lt,
+   "<=", mathop.le,
+   ">", mathop.gt,
+   ">=", mathop.ge,
+   "==", mathop.eq,
+   "!=", mathop.ne,
+   "<=>", mathop.cmp,
+   "~", mathop.bw_not;
+
 func det(A) {
 /* DOCUMENT det(A)
    Returns the determinant of A. A must be a square matrix. At present, this is
