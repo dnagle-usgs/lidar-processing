@@ -271,6 +271,57 @@ func math_eval_postfix(postfix, operators=, operands=, math=, variables=) {
 
 func math_eval_infix(expr, precedence=, operators=, operands=, math=,
 variables=, accept_variables=, accept_numbers, accept_parens=) {
+/* DOCUMENT result = math_eval_infix(expr, precedence=, operators=, operands=,
+   math=, variables=, accept_variables=, accept_numbers, accept_parens=)
+
+   Evaluates an infix expression and returns the result. Infix notation is the
+   normal notation used for mathematical expressions in Yorick. For example:
+      2 * (3 - 5)
+   Such expressions should be passed to this function in string form. They will
+   then be evaluated, and a numerical result will be returned.
+
+   Options:
+      precedence= A Yorick group object whose keys are operators and whose
+         values are precedence values. Higher precedence values indicate higher
+         precedence. Example:
+            precedence=save("*",2,"/",2,"+",1,"-",1)
+         The default precedence object follows the Yorick rules for precedence,
+         defining the following (from highest to lowest precedence):
+            !              unary not
+            ^              raise to power
+            * / %          multiply, divide, modulo
+            + -            add, subtract
+            >> <<          right shift, left shift
+            >= < <= >      (not) less, (not) greater
+            == !=          equal, not equal
+            &              bitwise and
+            ~              bitwise xor
+            |              bitwise or
+            && ||          logical and, logical or
+      operators= A string array whose values define which operators may be
+         used. If not provided, all members from precedence will be used. This
+         results in the following under the default value for precedence:
+            operators=["!", "^", "*", "/", "%", "+", "-", ">>", "<<", ">=",
+               ">", "<=", "<", "==", "!=", "&", "~", "|", "&&", "||"]
+      operands= A Yorick group object that specifies how many operands each
+         operator accepts. The default is initialized such that "!" has one
+         operand and anything else has 2.
+      math= A Yorick group object that defines the functions that may be used.
+         This must have keys that match precedence, operators, and operands.
+         The default is to use the extern mathop.
+      variables= A Yorick group object defines the variables that may be used.
+         If not provided, then variables are retrieved from the current symbol
+         table.
+      accept_variables= Boolean specifying whether the expression may contain
+         variables. Default is true.
+      accept_numbers= Boolean specifying whether the expression may contain
+         numbers. Default is true. However, only simple positive decimal
+         numbers are accepted. So "120" and "1234.5679" are valid but "-4" and
+         "1e23" are not. If you need a negative number, you'll need to use
+         awkward syntax like "(0 - 5)" for -5.
+      accept_parens= Boolean specifying whether the expression may contain
+         parentheses for grouping. Default is true.
+*/
    if(is_void(operators) && !is_void(precedence))
       operators = precedence(*,);
    pf = math_parse_infix(expr, precedence=precedence, operators=operators,
