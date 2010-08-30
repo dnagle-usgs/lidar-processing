@@ -110,6 +110,163 @@ save, mathop,
    "|", mathop.bw_or,
    "?:", mathop.cond;
 
+func math_parse_infix(expr, precedence=, operators=, operands=,
+accept_variables=, accept_numbers=, accept_parens=) {
+   default, accept_variables, 1;
+   default, accept_numbers, 1;
+   default, accept_parens, 1;
+
+   default, precedence, save(
+      "!", 10,
+      "^", 9,
+      "*", 8, "/", 8, "%", 8,
+      "+", 7, "-", 7,
+      ">>", 6, "<<", 6,
+      ">=", 5, ">", 5, "<=", 5, "<", 5,
+      "==", 4, "!=", 4,
+      "&", 3,
+      "~", 2,
+      "|", 1,
+      "&&", 0, "||", 0
+   );
+   default, operators, precedence(*,);
+   max_op_len = strlen(operators)(max);
+
+   expr = strtrim(expr);
+
+   postfix = deque();
+   opstack = deque();
+   while(strlen(expr)) {
+
+      // parse off operator, if it exists; check from longest to shortest to
+      // ensure we don't mistake "!=" as "!", etc.
+      token = string(0);
+      for(check = max_op_len; check; check--) {
+         if(anyof(operators == strpart(expr, :check))) {
+            token = strpart(expr, :check);
+            break;
+         }
+      }
+
+      // handle operator
+      if(token) {
+         check = precedence(noop(token));
+         while(
+            opstack(count,) && precedence(*,opstack(last,))
+            && check <= precedence(opstack(last,))
+         ) {
+            postfix, push, opstack(pop,);
+         }
+         opstack, push, token;
+
+      // handle parentheses
+      } else if(strpart(expr, :1) == "(") {
+         if(!accept_parens)
+            error, "invalid input";
+         token = "(";
+         opstack, push, token;
+      } else if(strpart(expr, :1) == ")") {
+         if(!accept_parens)
+            error, "invalid input";
+         token = ")";
+         while(opstack(count,) && opstack(last,) != "(")
+            postfix, push, opstack(pop,);
+         if(!opstack(count,))
+            error, "mismatched parentheses";
+         opstack, pop;
+
+      } else {
+         // handle variable names
+         offset = strgrep("^[a-zA-Z_][a-zA-Z_0-9]*", expr);
+         if(offset(2) > -1) {
+            if(!accept_variables)
+               error, "invalid input";
+            token = strpart(expr, offset);
+            postfix, push, token;
+         } else {
+            offset = strgrep("^([1-9][0-9]*)?[0-9]?\.?[1-9]+", expr);
+            if(offset(2) > -1) {
+               if(!accept_numbers)
+                  error, "invalid input";
+               token = strpart(expr, offset);
+               postfix, push, token;
+            } else {
+               error, "invalid input";
+            }
+         }
+      }
+
+      // strip off the token now that we've consumed it
+      expr = strtrim(strpart(expr, strlen(token)+1:), 1);
+   }
+
+   while(opstack(count,)) {
+      if(opstack(last,) == "(")
+         error, "mismatched parentheses";
+      postfix, push, opstack(pop,);
+   }
+   opstack = [];
+
+   return postfix;
+}
+
+func math_eval_postfix(postfix, operators=, operands=, math=, variables=) {
+   extern mathop;
+   default, operators, ["!", "^", "*", "/", "%", "+", "-", ">>", "<<", ">=",
+      ">", "<=", "<", "==", "!=", "&", "~", "|", "&&", "||"];
+   if(is_void(operands)) {
+      operands = save();
+      for(i = 1; i <= numberof(operators); i++)
+         save, operands, operators(i), 2;
+      save, operands, "!", 1;
+   }
+   default, math, mathop;
+
+   postfix = deque(obj_copy(postfix.data));
+
+   work = deque();
+   while(postfix(count,)) {
+      token = postfix(shift,);
+
+      if(anyof(operators == token)) {
+         params = operands(noop(token));
+         if(params == 1) {
+            A = work(pop,);
+            work, push, math(noop(token), A);
+         } else if(params == 2) {
+            A = work(pop,);
+            B = work(pop,);
+            work, push, math(noop(token), A, B);
+         } else if(params == 3) {
+            A = work(pop,);
+            B = work(pop,);
+            C = work(pop,);
+            work, push, math(noop(token), A, B, C);
+         } else {
+            error, "invalid operand count";
+         }
+      } else if(strgrep("^[a-zA-Z_][a-zA-Z_0-9]*$", token)(2) > -1) {
+         if(is_void(variables))
+            work, push, symbol_def(token);
+         else
+            work, push, variables(noop(token));
+      } else if(strgrep("^([1-9][0-9]*)?[0-9]?\.?[1-9]+$", token)(2) > -1) {
+         work, push, atod(token);
+      } else {
+         error, "invalid input";
+      }
+   }
+
+   if(work(count,) == 1)
+      return work(pop,);
+   else
+      error, "invalid input";
+}
+
+func math_eval_infix(expr) {
+   return math_eval_postfix(math_parse_infix(expr));
+}
+
 func det(A) {
 /* DOCUMENT det(A)
    Returns the determinant of A. A must be a square matrix. At present, this is
