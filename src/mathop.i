@@ -224,6 +224,7 @@ func math_eval_postfix(postfix, operators=, operands=, math=, variables=) {
 
    postfix = deque(obj_copy(postfix.data));
 
+   // process postfix using shunting-yard algorithm
    work = deque();
    while(postfix(count,)) {
       token = postfix(shift,);
@@ -263,8 +264,13 @@ func math_eval_postfix(postfix, operators=, operands=, math=, variables=) {
       error, "invalid input";
 }
 
-func math_eval_infix(expr) {
-   return math_eval_postfix(math_parse_infix(expr));
+func math_eval_infix(expr, precedence=, operators=, operands=, math=,
+variables=, accept_variables=, accept_numbers, accept_parens=) {
+   pf = math_parse_infix(expr, precedence=precedence, operators=operators,
+      accept_variables=accept_variables, accept_numbers=accept_numbers,
+      accept_parens=accept_parens);
+   return math_eval_postfix(pf, operators=operators, operands=operands,
+      math=math, variables=variables);
 }
 
 func det(A) {
