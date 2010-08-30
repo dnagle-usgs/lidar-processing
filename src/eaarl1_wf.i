@@ -226,8 +226,8 @@ func georef_eaarl1(rasts, gns, ins, ops, daystart) {
    record1 = record2 = [];
 
    soe = array(transpose(rasts.offset_time), 3);
-   tx = map_pointers(bw_not, array(transpose(rasts.tx), 3));
-   rx = map_pointers(bw_not, transpose(rasts.rx(,1:3,), 2));
+   tx = map_pointers(mathop.bw_inv, array(transpose(rasts.tx), 3));
+   rx = map_pointers(mathop.bw_inv, transpose(rasts.rx(,1:3,), 2));
 
    count = numberof(rasts) * 120 * 3;
    rasts = [];
