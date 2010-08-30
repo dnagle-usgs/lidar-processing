@@ -30,7 +30,14 @@ local mathop;
    it as a string since it is not a valid Yorick bare variable name.
 
    Symbol   Name     #args    Comments
-   ~        bw_not   1        bitwise not
+   ^        pow      2        raise to power
+   *        mul      2        multiply
+   /        div      2        divide
+   %        mod      2        modulo
+   +        add      2        add
+   -        sub      2        subtract
+   <<       lshift   2        left shift
+   >>       rshift   2        right shift
    <        lt       2        less than
    <=       le       2        less than or equal to
    >        gt       2        greater than
@@ -38,11 +45,25 @@ local mathop;
    ==       eq       2        equal
    !=       ne       2        not equal
    <=>      cmp      2        SCALAR ONLY; 0 if equal, -1 if <, 1 if >
+   !        not      1        not
+   (n/a)    bw_inv   1        bitwise complement
+   ~        bw_xor   2        bitwise xor
+   &        bw_and   2        bitwise and
+   |        bw_or    2        bitwise or
 */
 
 scratch = save(scratch, tmp);
-tmp = save(lt, le, gt, ge, eq, ne, cmp, bw_not);
+tmp = save(pow, mul, div, mod, add, sub, lshift, rshift, lt, le, gt, ge, eq,
+   ne, cmp, not, bw_inv, bw_xor, bw_and, bw_or);
 
+func pow(a, b) { return a ^ b; }
+func mul(a, b) { return a * b; }
+func div(a, b) { return a / b; }
+func mod(a, b) { return a % b; }
+func add(a, b) { return a + b; }
+func sub(a, b) { return a - b; }
+func lshift(a, b) { return a << b; }
+func rshift(a, b) { return a >> b; }
 func lt(a, b) { return a < b; }
 func le(a, b) { return a <= b; }
 func gt(a, b) { return a > b; }
@@ -50,12 +71,24 @@ func ge(a, b) { return a >= b; }
 func eq(a, b) { return a == b; }
 func ne(a, b) { return a != b; }
 func cmp(a, b) { return a < b ? -1 : a > b; }
-func bw_not(a) { return ~a; }
+func not(a) { return !a; }
+func bw_inv(a) { return ~a; }
+func bw_xor(a, b) { return a ~ b; }
+func bw_and(a, b) { return a & b; }
+func bw_or(a, b) { return a | b; }
 
 mathop = restore(tmp);
 restore, scratch;
 
 save, mathop,
+   "^", mathop.pow,
+   "*", mathop.mul,
+   "/", mathop.div,
+   "%", mathop.mod,
+   "+", mathop.add,
+   "-", mathop.sub,
+   "<<", mathop.lshift,
+   ">>", mathop.rshift,
    "<", mathop.lt,
    "<=", mathop.le,
    ">", mathop.gt,
@@ -63,7 +96,10 @@ save, mathop,
    "==", mathop.eq,
    "!=", mathop.ne,
    "<=>", mathop.cmp,
-   "~", mathop.bw_not;
+   "!", mathop.not,
+   "~", mathop.bw_xor,
+   "&", mathop.bw_and,
+   "|", mathop.bw_or;
 
 func det(A) {
 /* DOCUMENT det(A)
