@@ -1,5 +1,8 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 
+scratch = save(scratch, tmp);
+tmp = save(lt, le, gt, ge, eq, ne, cmp, bw_not);
+
 func lt(a, b) { return a < b; }
 /* DOCUMENT lt(a, b)
    Equivalent to a < b
@@ -50,6 +53,9 @@ func bw_not(a) { return ~a; }
    Equivalent to ~a
    SEE ALSO: lt le gt ge eq ne cmp
 */
+
+mathop = restore(tmp);
+restore, scratch;
 
 func det(A) {
 /* DOCUMENT det(A)
