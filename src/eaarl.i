@@ -35,6 +35,7 @@ if(is_void(__eaarl_includes_included__)) {
       require, "class_clsobj.i";
       require, "class_deque.i";
       require, "class_wfobj.i";
+      require, "mathop.i";
       require, "obj_show.i";
       require, "eaarl1_wf.i";
    }
@@ -92,7 +93,6 @@ if(is_void(__eaarl_includes_included__)) {
    require, "ll2utm.i";
    require, "manual_filter.i";
    require, "map.i";
-   require, "mathop.i";
    require, "mosaic_tools.i";
    require, "mouse.i";
    require, "nad832navd88.i";
