@@ -110,8 +110,8 @@ save, mathop,
    "|", mathop.bw_or,
    "?:", mathop.cond;
 
-func math_parse_infix(expr, precedence=, operators=, operands=,
-accept_variables=, accept_numbers=, accept_parens=) {
+func math_parse_infix(expr, precedence=, operators=, accept_variables=,
+accept_numbers=, accept_parens=) {
    default, accept_variables, 1;
    default, accept_numbers, 1;
    default, accept_parens, 1;
