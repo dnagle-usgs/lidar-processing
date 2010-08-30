@@ -30,7 +30,7 @@ to recall the one before last, use:
 
 */
 
-func mtransect( fs, iwin=, owin=, w=, connect=, recall=, color=, xfma=, rcf_parms=, rtn=, show=, msize=, exp= ) {
+func mtransect( fs, iwin=, owin=, w=, connect=, recall=, color=, xfma=, rcf_parms=, rtn=, show=, msize=, exp=, marker= ) {
 /* DOCUMENT mtransect( fs, iwin= ,owin=, w=, connect=, recall=, color=, xfma= )
 
 Mouse selected transect
@@ -62,6 +62,8 @@ Input:
   rcf_parms= :  Filter output with [W, P], where
                 W = filter width
                 P = # points on either side to use as jury pool
+  msize=		 :  set msize value (same as plcm, etc.), default = .1
+  marker=	 :  set marker value (same as plcm, etc.), default = 1
 
 Examples:
 
@@ -98,6 +100,7 @@ See also: transect, _transect_history
  if ( is_void(xfma))        xfma= 0;
  if ( is_void(color))      color= 2;  // start at red, not black
  if ( is_void(rcf_parms))   rcf_parms = [];
+ if ( is_void(marker))   marker = [];
 
 
  window,owin;
@@ -122,7 +125,7 @@ See also: transect, _transect_history
   fs = test_and_clean(fs);
   fs = fs(sort(fs.soe))
 
-  glst = transect( fs, l, connect=connect, color=color,xfma=xfma, rcf_parms=rcf_parms,rtn=rtn, owin=owin, lw=w, msize=msize );
+  glst = transect( fs, l, connect=connect, color=color,xfma=xfma, rcf_parms=rcf_parms,rtn=rtn, owin=owin, lw=w, msize=msize, marker=marker );
    // plot the actual points selected onto the input window
    if (show == 2 )
      show_track,fs(glst), utm=1, skip=0, color="red", lines=0, win=iwin;
@@ -140,7 +143,7 @@ See also: transect, _transect_history
   return glst;
 }
 
-func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=, rcf_parms=,rtn= ) {
+func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=, rcf_parms=,rtn=, marker= ) {
 /* DOCUMENT transect( fs, l, lw=, connect=, xtime=, msize=, xfma=,
                       owin=, color=,rtn= )
 
@@ -161,6 +164,8 @@ Input:
                 1  veg last return
                 2  submerged topo from bathy algo
 
+  msize		 :  set msize value (same as plcm, etc.), default = .1
+  marker		 :  set marker value (same as plcm, etc.), default = 1
  See also: mtransact, _transect_history
 
 */
@@ -172,6 +177,7 @@ Input:
  if ( is_void(color) ) color = 1;		// 1 is first color
  if ( is_void(owin)   )   owin = 3;
  if ( is_void(msize) ) msize = 0.1;
+ if ( is_void(marker) ) marker = 1;
  window,wait=1;
  window, owin;
  if ( !is_void(xfma) ) {
@@ -290,7 +296,7 @@ Input:
 
      if ( xtime ) {
      plmk, elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0,
-           fs.soe(*)(llst)(ss(i)+1:ss(i+1))/100.0,color=clr(abs(c)), msize=msize, width=10;
+           fs.soe(*)(llst)(ss(i)+1:ss(i+1))/100.0,color=clr(abs(c)), msize=msize, width=10, marker=marker;
        if ( connect ) plg, elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0,
                 fs.soe(*)(llst)(ss(i)+1:ss(i+1))/100.0,color=clr(abs(c))
      } else {
@@ -300,7 +306,7 @@ Input:
      if ( !is_void(rcf_parms) )
          si = si(moving_rcf(yy(si), rcf_parms(1), int(rcf_parms(2) )));
      // XYZZY - this is where the points get plotted
-     plmk, yy(si), xx(si),color=clr(abs(c)), msize=msize, width=10;
+     plmk, yy(si), xx(si),color=clr(abs(c)), msize=msize, width=10, marker=marker;
        if ( connect ) plg, yy(si), xx(si),color=clr(abs(c))
     }
    }
@@ -310,7 +316,7 @@ Input:
    si = sort(xx);
    if ( !is_void(rcf_parms) )
          si = si(moving_rcf(yy(si), rcf_parms(1), int(rcf_parms(2) )));
-  plmk, yy(si),xx(si), color=clr(color), msize=msize, marker=1, width=10;
+  plmk, yy(si),xx(si), color=clr(color), msize=msize, marker=marker, width=10;
   if ( connect ) plg, yy(si), xx(si),color=clr(color)
 
   c    = (color+0)&7;
