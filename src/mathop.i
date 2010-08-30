@@ -211,18 +211,24 @@ accept_numbers=, accept_parens=) {
 }
 
 func math_eval_postfix(postfix, operators=, operands=, math=, variables=) {
+   // By default, use math functions defined in mathop
    extern mathop;
+   default, math, mathop;
+
+   // This list of operators must match the default for math_parse_infix
    default, operators, ["!", "^", "*", "/", "%", "+", "-", ">>", "<<", ">=",
       ">", "<=", "<", "==", "!=", "&", "~", "|", "&&", "||"];
+
+   // All operators are assumed to have 2 operands except for !, which has 1
    if(is_void(operands)) {
       operands = save();
       for(i = 1; i <= numberof(operators); i++)
          save, operands, operators(i), 2;
       save, operands, "!", 1;
    }
-   default, math, mathop;
 
-   postfix = deque(obj_copy(postfix.data));
+   // Make a copy so that we don't destroy the original
+   postfix = deque(postfix.data);
 
    // process postfix using shunting-yard algorithm
    work = deque();
