@@ -101,6 +101,58 @@ func cs_parse(cs, output=) {
    return result;
 }
 
+func cs_compromise(csA, csB) {
+/* DOCUMENT csC = cs_compromise(csA, csB)
+   Works out a compromise coordinate system between two given coordinate
+   systems. If csA and csB are the same, then csA is returned. Otherwise, a
+   coordinate system is determined that attempts to minimize the amount of
+   change necessary for each of the given coordinate systems to convert to the
+   compromise.
+
+   Specifically:
+      * Fields that are present and identical in each are kept
+      * If both are not UTM with the same zone, then proj=longlat
+      * If both do not have the same datum/ellps, then datum=NAD83 ellps=GRS80
+      * If both do not use the same NAVD88 geoid, then no vertical datum is
+        used at all
+
+   Returns a coordinate system string.
+*/
+   csA = cs_parse(csA, output="hash");
+   csB = cs_parse(csB, output="hash");
+
+   if(cs_parse(csA) == cs_parse(csB))
+      return cs_parse(csA);
+
+   // Start by copying everything they have in common
+   csC = h_new();
+   keys = h_keys(csA);
+   nkeys = numberof(keys);
+   for(i = 1; i <= nkeys; i++)
+      if(h_has(csB, keys(i)) && csA(keys(i)) == csB(keys(i)))
+         h_set, csC, keys(i), csA(keys(i));
+
+   // All transformations go through longlat, so it's a safe bet to change to.
+   // Besides, if they couldn't agree on a zone, we can't know what zone would
+   // work well.
+   if(!h_has(csC, "proj") || !h_has(csC, "zone"))
+      h_set, csC, proj="longlat";
+
+   // Horizontal is either WGS84 or NAD83. If they don't agree, then opt for
+   // NAD83, since it's in the middle of the progression WGS84 <-> NAD83 <->
+   // NAVD88.
+   if(!h_has(csC, "datum"))
+      h_set, csC, datum="NAD83";
+   if(!h_has(csC, "ellps"))
+      h_set, csC, "ellps", (csC.datum == "NAD83" ? "GRS80" : "WGS84");
+
+   // If they are using different NAVD88 geoids, then just revert to NAD83.
+   if(h_has(csC, "vert") && !h_has(csC, "geoid"))
+      h_pop, csC, "vert";
+
+   return cs_parse(csC);
+}
+
 func cs_wgs84(nil, zone=) {
 /* DOCUMENT cs = cs_wgs84(zone=)
    Returns a coordinate system string that specifies WGS-84. If zone is
