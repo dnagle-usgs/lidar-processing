@@ -100,7 +100,7 @@ func wfobj(base, obj) {
       obj = pbd2obj(obj);
    // If calling as a subroutine, don't modify in place
    } else if(!am_subroutine()) {
-      obj = obj(:);
+      obj = obj_copy(obj);
    }
 
    // Set up methods. We override generic's "index" method so we have to
