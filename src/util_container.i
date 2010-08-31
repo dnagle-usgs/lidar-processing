@@ -517,3 +517,32 @@ func splitary(args) {
    return ary;
 }
 wrap_args, splitary;
+
+func tp_grow(&ary, .., tp=, tpinv=) {
+/* DOCUMENT result = tp_grow(ary1, ary2, ..., tp=, tpinv=)
+   -or- tp_grow, ary1, ary2, ..., tp=, tpinv=
+
+   This is equivalent to:
+      result = transpose(grow(transpose(ary1,tp), transpose(ary2,tp)),tpinv)
+   It is useful for growing arrays whose dimensions are in the wrong order for
+   a simple grow.
+
+   If called as a subroutine, first array is updated in-place.
+
+   Options:
+      tp: Value to use for second parameter to transpose for converting arrays
+         to growable format. Default is [1,0].
+      tpinv: Value to use for second parameter to transpose for converting
+         result from growable format back to normal format. Default is to use
+         tp.
+*/
+   default, tp, [1,0];
+   default, tpinv, tp;
+   res = transpose(ary, tp);
+   while(more_args())
+      grow, res, transpose(next_arg(), tp);
+   res = transpose(unref(res), tpinv);
+   if(am_subroutine())
+      eq_nocopy, ary, res;
+   return res;
+}
