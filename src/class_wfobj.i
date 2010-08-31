@@ -1,13 +1,14 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 require, "eaarl.i";
 
-// scratch stores the values of scratch and tmp so that we can restore them
-// when we're done, leaving things as we found them.
-scratch = save(scratch, tmp);
+// scratch stores the values of working variables so that they can be restored
+// when we're finished with them, leaving things as we found them.
+scratch = save(scratch, tmp, coord_print, xyzwrap);
 // tmp stores a list of the methods that will go into wfobj. It stores their
 // current values up-front, then restores them at the end while swapping the
 // new function definitions into wfobj.
-tmp = save(summary, index, grow, x0, y0, z0, xyz0, x1, y1, z1, xyz1);
+tmp = save(help, summary, index, grow, x0, y0, z0, xyz0, x1, y1, z1, xyz1,
+   save);
 
 func wfobj(base, obj) {
 /* DOCUMENT wfobj()
@@ -140,11 +141,6 @@ func wfobj(base, obj) {
    return obj;
 }
 
-// summary method uses a closure to encapsulate code that would otherwise need
-// to be repeated within the function
-scratch = save(scratch, tmp);
-tmp = save(coord_print);
-
 func summary(util) {
    extern current_cs;
    local x, y;
@@ -192,8 +188,7 @@ func coord_print(cs, x, y) {
    }
 }
 
-summary = closure(summary, restore(tmp));
-restore, scratch;
+summary = closure(summary, save(coord_print));
 
 func index(idx) {
    this = use();
@@ -253,8 +248,6 @@ func grow(obj, headers=) {
 // xyz0 and xyz1 both use the same logic, and they both benefit from caching
 // working data. This is accomplished by using a closure to wrap around the
 // common functionality and track their working data.
-scratch = save(scratch, xyzwrap);
-
 func xyzwrap(working, idx) {
    extern current_cs;
    if(working.cs != current_cs) {
@@ -266,7 +259,6 @@ func xyzwrap(working, idx) {
 
 xyz0 = closure(xyzwrap, save(var="raw_xyz0", cs="-", xyz=[]));
 xyz1 = closure(xyzwrap, save(var="raw_xyz1", cs="-", xyz=[]));
-restore, scratch;
 
 func x0(idx) { return use(xyz0, idx)(,1); }
 func y0(idx) { return use(xyz0, idx)(,2); }
@@ -276,7 +268,6 @@ func x1(idx) { return use(xyz1, idx)(,1); }
 func y1(idx) { return use(xyz1, idx)(,2); }
 func z1(idx) { return use(xyz1, idx)(,3); }
 
-save, tmp, save, help;
 func save(fn) { obj2pbd, use(), createb(fn, i86_primitives); }
 help = closure(help, wfobj);
 
