@@ -219,9 +219,10 @@ accept_numbers=, accept_parens=) {
    return postfix;
 }
 
-func math_eval_postfix(postfix, operators=, operands=, math=, variables=) {
+func math_eval_postfix(postfix, operators=, operands=, math=, variables=,
+missing=) {
 /* DOCUMENT result = math_eval_postfix(postfix, operators=, operands=, math=,
-   variables=)
+   variables=, missing=)
 
    Given an postfix deque (as returned by math_parse_infix), this evaluate the
    stack and return the result.
@@ -270,9 +271,9 @@ func math_eval_postfix(postfix, operators=, operands=, math=, variables=) {
          }
       } else if(strgrep("^[a-zA-Z_][a-zA-Z_0-9]*$", token)(2) > -1) {
          if(is_void(variables))
-            work, push, symbol_def(token);
+            work, push, (symbol_exists(token) ? symbol_def(token) : missing);
          else
-            work, push, variables(noop(token));
+            work, push, (variables(*,token) ? variables(noop(token)) : missing);
       } else if(strgrep("^([1-9][0-9]*)?[0-9]?\.?[1-9]+$", token)(2) > -1) {
          work, push, atod(token);
       } else {
@@ -287,9 +288,10 @@ func math_eval_postfix(postfix, operators=, operands=, math=, variables=) {
 }
 
 func math_eval_infix(expr, precedence=, operators=, operands=, math=,
-variables=, accept_variables=, accept_numbers=, accept_parens=) {
+variables=, missing=, accept_variables=, accept_numbers=, accept_parens=) {
 /* DOCUMENT result = math_eval_infix(expr, precedence=, operators=, operands=,
-   math=, variables=, accept_variables=, accept_numbers=, accept_parens=)
+   math=, variables=, missing=, accept_variables=, accept_numbers=,
+   accept_parens=)
 
    Evaluates an infix expression and returns the result. Infix notation is the
    normal notation used for mathematical expressions in Yorick. For example:
@@ -329,6 +331,8 @@ variables=, accept_variables=, accept_numbers=, accept_parens=) {
       variables= A Yorick group object defines the variables that may be used.
          If not provided, then variables are retrieved from the current symbol
          table.
+      missing= Value to use if a variable is not found in variables; default is
+         void [].
       accept_variables= Boolean specifying whether the expression may contain
          variables. Default is true.
       accept_numbers= Boolean specifying whether the expression may contain
@@ -345,7 +349,7 @@ variables=, accept_variables=, accept_numbers=, accept_parens=) {
       accept_variables=accept_variables, accept_numbers=accept_numbers,
       accept_parens=accept_parens);
    return math_eval_postfix(pf, operators=operators, operands=operands,
-      math=math, variables=variables);
+      math=math, variables=variables, missing=missing);
 }
 
 func det(A) {
