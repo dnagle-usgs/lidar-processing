@@ -7,7 +7,7 @@ scratch = save(scratch, tmp);
 // tmp stores a list of the methods that will go into wfobj. It stores their
 // current values up-front, then restores them at the end while swapping the
 // new function definitions into wfobj.
-tmp = save(summary, index, x0, y0, z0, xyz0, x1, y1, z1, xyz1);
+tmp = save(summary, index, grow, x0, y0, z0, xyz0, x1, y1, z1, xyz1);
 
 func wfobj(base, obj) {
 /* DOCUMENT wfobj()
@@ -185,6 +185,50 @@ func index(idx) {
    } else {
       return wfobj(obj_index(this, idx, which=which));
    }
+}
+
+func grow(obj, headers=) {
+   default, headers, "merge";
+
+   res = am_subroutine() ? use() : obj_copy(use());
+
+   // handle coordinate system first, as it requires minor juggling
+   cs = [];
+   if(headers == "merge")
+      cs = cs_compromise(res.cs, obj.cs);
+   else
+      cs = (headers == "keep" ? res.cs : obj.cs);
+   raw_xyz0 = tp_grow(
+      cs2cs(res.cs, cs, res.raw_xyz0),
+      cs2cs(obj.cs, cs, obj.raw_xyz0));
+   raw_xyz1 = tp_grow(
+      cs2cs(res.cs, cs, res.raw_xyz1),
+      cs2cs(obj.cs, cs, obj.raw_xyz1));
+   save, res, cs, raw_xyz0, raw_xyz1;
+   cs = raw_xyz0 = raw_xyz1 = [];
+
+   // handle other headers
+   if(headers == "replace") {
+      if(res.source != obj.source)
+         save, res, source="merged";
+      if(res.system != obj.system)
+         save, res, system="merged";
+      if(res.record_format != obj.record_format)
+         save, res, record_format=0;
+      if(res.sample_interval != obj.sample_interval)
+         save, res, sample_interval=0;
+   } else if(headers == "merge") {
+      save, res, source=obj.source, system=obj.system,
+         record_format=obj.record_format, sample_interval=obj.sample_interval;
+   }
+
+   // handle rest of data items
+   save, res, soe=grow(res.soe, obj.soe);
+   save, res, record=tp_grow(res.record, obj.record);
+   save, res, tx=grow(res.tx, obj.tx);
+   save, res, rx=grow(res.rx, obj.rx);
+
+   return res;
 }
 
 // xyz0 and xyz1 both use the same logic, and they both benefit from caching
