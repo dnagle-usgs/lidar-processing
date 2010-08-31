@@ -112,6 +112,15 @@ save, mathop,
 
 func math_parse_infix(expr, precedence=, operators=, accept_variables=,
 accept_numbers=, accept_parens=) {
+/* DOCUMENT postfix = math_parse_infix(expr, precedence=, operators=,
+   accept_variables=, accept_numbers=, accept_parens=)
+
+   Given an infix expression, this will return a deque object that contains the
+   parsed postfix stack that corresponds to it. The stack may be passed to
+   math_eval_postfix for evaluation.
+
+   See math_eval_infix for documentation on the options accepted.
+*/
    default, accept_variables, 1;
    default, accept_numbers, 1;
    default, accept_parens, 1;
@@ -211,6 +220,14 @@ accept_numbers=, accept_parens=) {
 }
 
 func math_eval_postfix(postfix, operators=, operands=, math=, variables=) {
+/* DOCUMENT result = math_eval_postfix(postfix, operators=, operands=, math=,
+   variables=)
+
+   Given an postfix deque (as returned by math_parse_infix), this evaluate the
+   stack and return the result.
+
+   See math_eval_infix for documentation on the options accepted.
+*/
    // By default, use math functions defined in mathop
    extern mathop;
    default, math, mathop;
