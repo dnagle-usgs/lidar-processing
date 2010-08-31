@@ -78,6 +78,25 @@ func wfobj(base, obj) {
          Returns a new wfobj object. The new object will contain the same
          header information. However, it will contain only the points specified
          by "idx".
+      data, grow, otherdata, headers=
+         Appends the data in "otherdata" to the current data. The HEADERS=
+         option specifies how to merge the header fields. Valid values:
+            headers="merge" -- Equivalent fields are kept; this is the default
+               setting. Different fields are replaced as follows:
+                     source -> "merged"
+                     system -> "merged"
+                     cs -> uses cs_compromise
+                     record_format -> 0
+                     sample_interval -> 0
+            headers="keep" -- All header fields are kept as is.
+            headers="replace" -- All header fields are replaced by those from
+               the other data.
+         The data in raw_xyz0 and raw_xyz1 is converted to the target
+         coordinate system, if necessary.
+      newdata = data(grow, otherdata, headers=)
+         Creates a new wfobj object that is comprised of the data from data and
+         otherdata. This functions exactly like grow as described above, except
+         that it leaves "data" unmodified.
       data(xyz0,) -or- data(xyz0,idx)
          Returns the points stored in raw_xyz0, except converted into the
          current coordinate system as specified by current_cs. The points are
