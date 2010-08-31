@@ -254,6 +254,8 @@ missing=) {
       token = postfix(shift,);
       if(anyof(operators == token)) {
          params = operands(noop(token));
+         if(params > work(count,))
+            error, "invalid input";
          if(params == 1) {
             A = work(pop,);
             work, push, math(noop(token), A);
