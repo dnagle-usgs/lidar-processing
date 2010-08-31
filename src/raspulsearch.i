@@ -468,7 +468,7 @@ func dump_info(edb, mindata, minindx, last=, ref=) {
 
       write, format="Bottom elev: %8.2fm Delta: %7.2fm\n",
          (mindata.elevation+mindata.depth)/100.,
-         (mindata.elevation+mindata.depth)/100.-_last_rastpulse(4)/100.;
+         (mindata.elevation+mindata.depth)/100.-last(4)/100.;
       write, format="First/Bottom return elv DIFF: %8.2fm", mindata.depth/100.;
       write, format="Surface channel-intensity: %d-%3d\n", fs_chn_used,
          mindata.first_peak;

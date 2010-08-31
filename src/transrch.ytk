@@ -12,7 +12,7 @@ package require tooltip
 
 set trans_varlist { gt_fs fs_all gt_fsall }
 set  width_list   { 50 100 150 200 250 300 }
-set  color_list   {-7 -6 -5 -4 -3 -2 -1  1 2 3 4 5 6 7 }
+set  color_list   {-7 -6 -5 -4 -3 -2 -1 0  1 2 3 4 5 6 7 }
 set recall_list   { "" 0 1 2 3 }
 set   show_list   { "" 1 2 3 }
 set    fma_list   { 0 1 }
@@ -161,7 +161,7 @@ proc run_mt { id } {
 #  set fma_var [lindex $fma_list      [$tw.f2$id.fmaval    getvalue]]
 
 #   puts "m=mtransect( $src_var, xfma=$fma_var show=$shw_var, w=$wdt_var, recall=$rcl_var, color=$col_var )"
-   exp_send "m$id=mtransect( $src_var, xfma=$fma_var, show=$shw_var, w=$wdt_var, recall=$rcl_var, color=$col_var, iwin=$iwn_var, owin=$own_var, exp=1,rtn=$rtn_var, msize=$msize_var, marker=$marker_var )\r"
+   exp_send "if (is_array(where($src_var.soe(dif)))) $src_var = sortdata($src_var, method=\"soe\"); m$id=mtransect( $src_var, xfma=$fma_var, show=$shw_var, w=$wdt_var, recall=$rcl_var, color=$col_var, iwin=$iwn_var, owin=$own_var, exp=1,rtn=$rtn_var, msize=$msize_var, marker=$marker_var )\r"
    expect "END mtransect:"
    exp_send "llst$id=llst;rx$id=rx;elevation$id=elevation\r"
 }
@@ -218,7 +218,7 @@ proc create_transbuttons { cnt } {
          -width 2
       $tw.f2$tbi.showval setvalue @1
       ::tooltip::tooltip $tw.f2$tbi.showval \
-         " : No display\n1: Display User selection\n2: Display found points"
+         " : No display\n1: Display User selection\n2: Display found points\n3: Redisplay transect line"
       pack $tw.f2$tbi.show $tw.f2$tbi.showval -side left -fill x -padx 2
 
 

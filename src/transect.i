@@ -122,13 +122,14 @@ See also: transect, _transect_history
   l = _transect_history(, recall);
  }
   // if ( color > 0 ) --color;  // XYZZY adjust for nsegs starting at 1
-  fs = test_and_clean(fs);
-  fs = fs(sort(fs.soe))
 
   glst = transect( fs, l, connect=connect, color=color,xfma=xfma, rcf_parms=rcf_parms,rtn=rtn, owin=owin, lw=w, msize=msize, marker=marker );
    // plot the actual points selected onto the input window
-   if (show == 2 )
-     show_track,fs(glst), utm=1, skip=0, color="red", lines=0, win=iwin;
+   if (show == 2 ) {
+	  data2xyz, unref(fs(glst)), x, y, z, mode=["be","ba","fs"](rtn)
+	  window, iwin; plmk, unref(y), unref(x), msize=msize, marker=marker, color="black", width=10;
+	}
+     //show_track,fs(glst), utm=1, skip=0, color="red", lines=0, win=iwin;
   if (show == 3 ) {   // this only redraws the last transect selected.
     window,iwin;
     plg, [transect_line(2),transect_line(4)]/100., [transect_line(1),transect_line(3)]/100., width=2.0, color="red";
@@ -200,10 +201,17 @@ Input:
 //  angle ;
 //  [n,s,e,w]
 
+  // clean and sort fs
+  fs = test_and_clean(fs);
+  // sort by soe only if soe values are not the same.  This is necessary because some times a data set is brought in that does not have any soe value
+  if (is_array(where(fs.soe(dif)))) 
+		fs = fs(sort(fs.soe))
 
 // build a matrix to select only the data withing the bounding box
-  good = (fs.north(*) < n)  & ( fs.north(*) > s ) & (fs.east(*) < e ) & ( fs.east(*) > w );
+//  good = (fs.north(*) < n)  & ( fs.north(*) > s ) & (fs.east(*) < e ) & ( fs.east(*) > w );
+//  glst = where(good);
 
+  glst = data_box(fs.east, fs.north, w, e, s, n);
 // rotation:  x' = xcos - ysin
 //            y' = ycos + xsin
 
@@ -213,7 +221,6 @@ Input:
         3 select desired data
 */
 
-  glst = where(good);
   if ( numberof(glst) == 0 ) {
     write, "No points found along specified line";
     return ;
