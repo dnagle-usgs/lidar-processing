@@ -287,9 +287,9 @@ func math_eval_postfix(postfix, operators=, operands=, math=, variables=) {
 }
 
 func math_eval_infix(expr, precedence=, operators=, operands=, math=,
-variables=, accept_variables=, accept_numbers, accept_parens=) {
+variables=, accept_variables=, accept_numbers=, accept_parens=) {
 /* DOCUMENT result = math_eval_infix(expr, precedence=, operators=, operands=,
-   math=, variables=, accept_variables=, accept_numbers, accept_parens=)
+   math=, variables=, accept_variables=, accept_numbers=, accept_parens=)
 
    Evaluates an infix expression and returns the result. Infix notation is the
    normal notation used for mathematical expressions in Yorick. For example:
