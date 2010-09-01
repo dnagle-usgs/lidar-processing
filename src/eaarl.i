@@ -107,8 +107,8 @@ if(is_void(__eaarl_includes_included__)) {
    require, "rbtans.i";
    require, "rcf.i";
    require, "read_yfile.i";
-   require, "remove_bathy_from_veg.i";
    require, "rlw.i";
+   require, "seamless.i";
    require, "set.i";
    require, "sf.i";
    require, "surface_topo.i";
