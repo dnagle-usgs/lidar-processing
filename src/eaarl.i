@@ -55,6 +55,7 @@ if(is_void(__eaarl_includes_included__)) {
 
    require, "asciixyz.i";
    require, "atm.i";
+   require, "batch_analysis.i";
    require, "batch_multipip_process.i";
    require, "batch_process.i";
    require, "batch_veg_energy.i";
