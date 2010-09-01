@@ -670,9 +670,6 @@ if {![winfo exists .l1wid]} {
     -command ::l1pro::deprecated::write_binary_data_file
   .l1wid.mb.dep.ie add command -label "Read SubSampled Data File..." -underline 5 \
     -command ::l1pro::deprecated::read_subsampled_data_file
-  .l1wid.mb.dep.ie add command -label "Load EAARL data from map limits" \
-    -underline 21 \
-    -command ::l1pro::deprecated::load_eaarl_data_from_map_limits
   .l1wid.mb.dep.ie add command -label "Ascii output ..." -underline 0 \
     -command ::l1pro::deprecated::ascii_output
 
