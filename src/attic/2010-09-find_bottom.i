@@ -1,3 +1,9 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-09-01. It has not been used for     *
+* years and appears to be a precursor to the functionality in bathy.i and      *
+* geo_bath.i.                                                                  *
+\******************************************************************************/
+
 func find_bottom( r ) {
  extern tay;
  bathpeakposition = array(int,120);
