@@ -1,3 +1,7 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-09-01. Its functionality was        *
+* replaced by dirload.i.                                                       *
+\******************************************************************************/
 
 func explorestart(dir, mode, win=, search_str=, rgn=,forceskip=, uniq=) {
 	extern exploredata, datadir, zoomoutdata;
