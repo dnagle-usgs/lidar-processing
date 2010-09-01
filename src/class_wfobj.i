@@ -1,12 +1,9 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 require, "eaarl.i";
 
-// scratch stores the values of working variables so that they can be restored
-// when we're finished with them, leaving things as we found them.
-scratch = save(scratch, tmp, coord_print, xyzwrap);
-// tmp stores a list of the methods that will go into wfobj. It stores their
-// current values up-front, then restores them at the end while swapping the
-// new function definitions into wfobj.
+// To avoid name collisions breaking help, some functions get temporarily named
+// with an underscore prefix.
+scratch = save(scratch, tmp, coord_print, xyzwrap, _grow, _save);
 tmp = save(help, summary, index, grow, x0, y0, z0, xyz0, x1, y1, z1, xyz1,
    save);
 
@@ -201,7 +198,7 @@ func index(idx) {
    }
 }
 
-func grow(obj, headers=) {
+func _grow(obj, headers=) {
    default, headers, "merge";
 
    res = am_subroutine() ? use() : obj_copy(use());
@@ -244,6 +241,7 @@ func grow(obj, headers=) {
 
    return res;
 }
+grow = _grow;
 
 // xyz0 and xyz1 both use the same logic, and they both benefit from caching
 // working data. This is accomplished by using a closure to wrap around the
@@ -268,7 +266,8 @@ func x1(idx) { return use(xyz1, idx)(,1); }
 func y1(idx) { return use(xyz1, idx)(,2); }
 func z1(idx) { return use(xyz1, idx)(,3); }
 
-func save(fn) { obj2pbd, use(), createb(fn, i86_primitives); }
+func _save(fn) { obj2pbd, use(), createb(fn, i86_primitives); }
+save = _save;
 help = closure(help, wfobj);
 
 wfobj = closure(wfobj, restore(tmp));

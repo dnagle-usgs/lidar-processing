@@ -1,6 +1,8 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 
-scratch = save(scratch, tmp);
+// To avoid name collisions breaking help, some functions get temporarily named
+// with an underscore prefix.
+scratch = save(scratch, tmp, _where, _grow);
 tmp = save(set, apply, remove, drop, classes, query, where, grow, serialize,
    help);
 
@@ -238,11 +240,12 @@ func query(expr) {
       variables=data, missing=array(char, count), accept_numbers=0);
 }
 
-func where(expr) {
+func _where(expr) {
    return where(use(query, expr));
 }
+where = _where;
 
-func grow(obj) {
+func _grow(obj) {
    use, data, count;
 
    thiscount = count;
@@ -282,6 +285,7 @@ func grow(obj) {
       save, data, noop(curclass), grow(this, that);
    }
 }
+grow = _grow;
 
 help = closure(help, clsobj);
 
