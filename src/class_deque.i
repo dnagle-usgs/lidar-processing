@@ -1,7 +1,7 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 
 scratch = save(scratch, tmp);
-tmp = save(data, push, pop, unshift, shift, first, last, count);
+tmp = save(data, push, pop, unshift, shift, first, last, count, help);
 
 func deque(base, data) {
 /* DOCUMENT deque()
@@ -18,6 +18,9 @@ func deque(base, data) {
    The deque object is comprised of a single data member and seven methods. In
    the documentation below, an object named "data" is used to represent an
    instance of a deque object.
+
+      data, help
+         Displays this documentation.
 
       data.data
       data(data,)
@@ -111,6 +114,8 @@ func count(nil) {
    use, data;
    return data(*);
 }
+
+help = closure(help, deque);
 
 deque = closure(deque, restore(tmp));
 restore, scratch;
