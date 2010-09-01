@@ -1,3 +1,7 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-09-01. It has not been used for     *
+* years. The GUI that drove this function was removed years ago.               *
+\******************************************************************************/
 
 func batch_multipip_process (pip_var, data_var, fname_var, ptype_var, qname_var, ply_var, plyname_var) {
    /* amar nayegandhi 05/19/03
