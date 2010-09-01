@@ -1,3 +1,7 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-09-01. It has not been used for     *
+* years as there is no longer a need for quick-and-dirty estimations.          *
+\******************************************************************************/
 require, "eaarl.i";
 
 /*
