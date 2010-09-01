@@ -1,3 +1,8 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-09-01. It has not been used for     *
+* years and there is no indication as to its purpose.                          *
+\******************************************************************************/
+
 /*
   Dave Munro wrote this stuff.
 */
