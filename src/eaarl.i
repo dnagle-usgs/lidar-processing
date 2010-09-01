@@ -61,7 +61,6 @@ if(is_void(__eaarl_includes_included__)) {
    require, "bathy.i";
    require, "bathy_filter.i";
    require, "centroid.i";
-   require, "change_window_size.i";
    require, "colorbar.i";
    require, "compare_transects.i";
    require, "comparison_fns.i";
@@ -120,6 +119,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "util_str.i";
    require, "veg.i";
    require, "wgs842nad83.i";
+   require, "window.i";
    require, "ytime.i";
    require, "ytriangulate.i";
    require, "zone.i";
