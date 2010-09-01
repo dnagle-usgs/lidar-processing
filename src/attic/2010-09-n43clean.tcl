@@ -1,5 +1,9 @@
 #!/usr/bin/tcl
-#
+
+################################################################################
+# This file was moved to the attic on 2010-09-01. The code was tailored to a   #
+# specific situation in 2001 and has not been used for years.                  #
+################################################################################
 
 # Clean up ascii data from n43 
 #  -Wayne 10/25/2001
