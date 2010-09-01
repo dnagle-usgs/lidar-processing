@@ -1,6 +1,6 @@
 // vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
 require, "l1pro.i";
-require, "scanflatmirror2_direct_vector.i";
+require, "scanflatmirror2.i";
 
 /*
    the a array has an array of RTRS structures;
