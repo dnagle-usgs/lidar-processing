@@ -68,7 +68,6 @@ if(is_void(__eaarl_includes_included__)) {
    require, "cs.i";
    require, "data_rgn_selector.i";
    require, "data_segments.i";
-   require, "dataexplore.i";
    require, "datum_converter.i";
    require, "determine_bias.i";
    require, "dir.i";
