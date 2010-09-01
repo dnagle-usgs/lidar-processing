@@ -10,6 +10,10 @@ require, "l1pro.i";
 // gga = rbgga();
 
 func irg_replot(temp_time_offset=, range_offset=) {
+/* DOCUMENT irg_replot, temp_time_offset=, range_offset=
+   Used by ts_check.ytk for plotting/replotting the laser range values and GPS
+   altitudes.
+*/
    extern irg_t, rtrs, soe_day_start, gga, data_path;
    default, range_offset, 0;
    default, temp_time_offset, eaarl_time_offset;
