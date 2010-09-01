@@ -132,5 +132,4 @@ If that's what you want, then click Ok.  Otherwise click Cancel." ] == "ok" } {
 
 }
 
-ybkg require \"ts_check.i\"
 set_time_check_defaults
