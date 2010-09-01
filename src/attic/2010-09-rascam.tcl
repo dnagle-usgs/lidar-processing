@@ -1,6 +1,11 @@
 #!/usr/local/bin/wish8.4
 #!/usr/bin/wish
-#
+
+################################################################################
+# This file was moved to the attic on 2010-09-01. Its functionality is         #
+# obsolete, having been replaced by the sf module under tcllib.                #
+################################################################################
+
 #tcl program to integrate the sf_a.tcl camera images with the yorick edb raster
 #amar nayegandhi started 11/14/01
 toplevel .t
