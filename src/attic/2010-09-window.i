@@ -1,3 +1,9 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-09-01. It has not been used for     *
+* years and its functionality is provided in alternate forms elsewhere in      *
+* ALPS.                                                                        *
+\******************************************************************************/
+
 func gga_window ( ck ) {
 // Find all latitudes in the window
  q  = where( gga(2,) < ck(2) );
