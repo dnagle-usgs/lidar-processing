@@ -87,6 +87,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "jpeg_support.i";
    require, "json.i";
    require, "kml.i";
+   require, "las.i";
    require, "lines.i";
    require, "ll2utm.i";
    require, "manual_filter.i";
@@ -96,7 +97,6 @@ if(is_void(__eaarl_includes_included__)) {
    require, "nad832navd88.i";
    require, "nav.i";
    require, "parse.i";
-   require, "pbd2las.i";
    require, "pip.i";
    require, "plcm.i";
    require, "qaqc_fns.i";
