@@ -135,6 +135,19 @@ func wfobj(base, obj) {
    // Provide null defaults for array members
    keydefault, obj, raw_xyz0=[], raw_xyz1=[], soe=[], record=[], tx=[], rx=[];
 
+   // Check and convert tx/rx if necessary; requires that soe also exist
+   if(numberof(obj.rx) == 2 && numberof(obj.soe) > 10) {
+      rx = tx = array(pointer, numberof(obj.soe));
+      roff = toff = 1;
+      for(i = 1; i <= numberof(obj.soe); i++) {
+         rx(i) = &(*obj.rx(2))(roff:roff-1+(*obj.rx(1))(i));
+         tx(i) = &(*obj.tx(2))(toff:toff-1+(*obj.tx(1))(i));
+         roff += numberof(*rx(i));
+         toff += numberof(*tx(i));
+      }
+      save, obj, rx, tx;
+   }
+
    return obj;
 }
 
@@ -266,7 +279,34 @@ func x1(idx) { return use(xyz1, idx)(,1); }
 func y1(idx) { return use(xyz1, idx)(,2); }
 func z1(idx) { return use(xyz1, idx)(,3); }
 
-func _save(fn) { obj2pbd, use(), createb(fn, i86_primitives); }
+func _save(fn) {
+   obj = obj_copy_data(use());
+
+   // saving/loading a large array of small pointers is much more expensive
+   // than saving/loading a small array of large pointers; thus tx and rx get
+   // converted to a more efficient format for saving
+   if(numberof(obj.soe) > 10) {
+      count = numberof(obj.soe);
+      rsize = tsize = array(long, count);
+      for(i = 1; i <= count; i++) {
+         rsize(i) = numberof(*obj.rx(i));
+         tsize(i) = numberof(*obj.tx(i));
+      }
+      if(rsize(max) < 256)
+         rsize = char(rsize);
+      else if(rsize(max) < 16385)
+         rsize = short(rsize);
+      if(tsize(max) < 256)
+         tsize = char(tsize);
+      else if(tsize(max) < 16385)
+         tsize = short(tsize);
+      rx = [&rsize, &merge_pointers(obj.rx)];
+      tx = [&tsize, &merge_pointers(obj.tx)];
+      save, obj, rx, tx;
+   }
+
+   obj2pbd, obj, createb(fn, i86_primitives);
+}
 save = _save;
 help = closure(help, wfobj);
 
