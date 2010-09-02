@@ -216,6 +216,7 @@ func timer_finished(t0, fmt=) {
    timer, t1;
    elapsed = t1(3) - t0(3);
    fmt = regsub("ELAPSED", fmt, seconds2prettytime(elapsed, maxparts=2), all=1);
+   fmt = regsub("SECONDS", fmt, swrite(format="%.4f", elapsed), all=1);
    write, format="%s", fmt;
 }
 
