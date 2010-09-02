@@ -144,7 +144,7 @@ func obj_index(this, idx, which=, bymethod=, ignoremissing=) {
          if(is_array(result(which(i))))
             save, result, which(i), result(which(i),idx,..);
          else if(is_obj(result(which(i))))
-            save, result, which(i), result(which(i), idx);
+            save, result, which(i), result(which(i), noop(idx));
       } else if(!ignoremissing) {
          error, "Missing key: " + which(i);
       }
