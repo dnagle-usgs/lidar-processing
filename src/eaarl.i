@@ -29,17 +29,6 @@ if(is_void(__eaarl_includes_included__)) {
    require, "ytk.i";
    require, "zlib.i";
 
-   // Check for Yorick 2.2.00x and include things that depend on it if safe.
-   // Yorick 2.2 will be required in the future, but for now it is optional.
-   if(is_func(is_obj)) {
-      require, "class_clsobj.i";
-      require, "class_deque.i";
-      require, "class_wfobj.i";
-      require, "mathop.i";
-      require, "obj_show.i";
-      require, "eaarl1_wf.i";
-   }
-
    // Replace built-in median with Yeti's median which is much faster
    if(is_void(ymedian))
       ymedian = median;
@@ -123,6 +112,19 @@ if(is_void(__eaarl_includes_included__)) {
    require, "ytime.i";
    require, "ytriangulate.i";
    require, "zone.i";
+
+   // Check for Yorick 2.2.00x and include things that depend on it if safe.
+   // Yorick 2.2 will be required in the future, but for now it is optional.
+   // This comes below the rest because the class_* files require some of the
+   // above functions at the global scope, for closures.
+   if(is_func(is_obj)) {
+      require, "class_clsobj.i";
+      require, "class_deque.i";
+      require, "class_wfobj.i";
+      require, "mathop.i";
+      require, "obj_show.i";
+      require, "eaarl1_wf.i";
+   }
 
    // Must come last, because it depends on some of the above (it actually runs
    // something instead of only defining functions)
