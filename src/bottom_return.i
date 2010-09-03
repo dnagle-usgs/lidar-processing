@@ -1,4 +1,4 @@
-require, "l1pro.i";
+require, "eaarl.i";
 
 struct BOTRET {
    long  rn;	//raster-pulse number

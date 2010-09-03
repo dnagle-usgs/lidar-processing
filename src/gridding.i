@@ -1,5 +1,5 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
-require, "l1pro.i";
+require, "eaarl.i";
 
 func batch_grid(dir, outdir=, searchstr=, method=, mode=, toarc=, buffer=,
 cell=, nodata=, maxside=, maxarea=, minangle=, maxradius=, minpoints=,

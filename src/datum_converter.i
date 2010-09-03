@@ -1,7 +1,7 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 // original amar nayegandhi 07/15/03
 // modified charlene sullivan 09/25/06
-require, "l1pro.i";
+require, "eaarl.i";
 
 func datum_convert_data(&data_in, zone=, src_datum=, src_geoid=, dst_datum=,
 dst_geoid=, verbose=) {
