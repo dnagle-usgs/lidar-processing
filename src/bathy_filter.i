@@ -223,38 +223,19 @@ func compare_data(ndata, edata) {
        
 }
 
-func unique(x, ret_sort=) {
-/* DOCUMENT unique(x, ret_sort=)
-   This function uses the sort function to return the unique elements of array x.
-   Input: x : 1 dimensional array
+func unique(x) {
+/* DOCUMENT unique(x)
+   Returns the indexes into x corresponding to unique values. This is exactly
+   equivalent to set_remove_duplicates(x, idx=1). Example:
+      > data = [1,2,1,2,3,2,1,2,3,4,3,2,1]
+      > unique(data) // index list
+      [13,4,9,10]
+      > data(unique(data)) // values
+      [1,2,3,4]
 
-   If ret_sort is set, the program will return the indices that correspond to
-   the unique values in x(sort(x)). If not set it will return indices into x.
-   
-   Do not use ret_sort unless you explicitly need it. Using ret_sort=0 is more
-   efficient because you only sort the data once, rather than twice.
-
-   Output:  Indices of the unique elements in array x
-   Original David Munro 
-   Adapted by amar nayegandhi 03/21/03
-   Modified to use set_remove_duplicates for ret_sort=0 by David Nagle 08/15/07
-
-   See also: set_remove_duplicates (in set.i)
+   SEE ALSO: set_remove_duplicates sort
 */
-   default, ret_sort, 0;
-   // set.i's set_remove_duplicates is more efficient than using ret_sort into
-   // a sorted array, and it's *much* more efficient than using the results
-   // found below to iterate through a loop to reconstruct an index list into
-   // an unsorted array (which is what unique used to do instead of call
-   // set_remove_duplicates)
-   if(!ret_sort) return set_remove_duplicates(x, idx=1);
-   x = x(*);
-   y = x;
-   if (numberof(y)<2) return [where(y(1))];
-   y = y(sort(y));
-   mask = grow([1n], y(1:-1) != y(2:0));
-   idx = where(mask);
-   return idx;
+   return set_remove_duplicates(unref(x), idx=1);
 }
 
 func test_bathy(null) {
