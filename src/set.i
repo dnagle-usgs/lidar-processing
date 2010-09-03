@@ -382,6 +382,16 @@ func unique(x) {
 }
 
 func munique(x, ..) {
+/* DOCUMENT munique(x1, x2, x3, ...)
+   Returns the indexes into the given arrays that correspond to unique tuples
+   of values. For example, if you have a set of points identified by x and y,
+   then munique(x,y) is all unique x,y points.
+
+   The Xi may be numbers or strings in any combination, but must all be
+   conformable arrays.
+
+   SEE ALSO: unique munique_array msort
+*/
    mxrank = numberof(x)-1;
    rank = msort_rank(x);
 
@@ -398,6 +408,14 @@ func munique(x, ..) {
 }
 
 func munique_array(x, which) {
+/* DOCUMENT munique_array(x, which)
+   This is like munique, but instead of operating over multiple arrays, it
+   operates over a single array along one of its dimensions (like msort_array).
+   The WHICH parameter specifies which dimension to use, defaulting to the
+   smallest.
+
+   SEE ALSO: unique munique msort_array
+*/
    dims = dimsof(x);
    default, which, dims(2:)(mnx);
 
