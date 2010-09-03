@@ -246,26 +246,18 @@ func set_cartesian_product(A, B) {
    return C;
 }
 
-func set_remove_duplicates(A, idx=, ret_sort=, delta=) {
-/* DOCUMENT set_remove_duplicates(A, idx=, ret_sort=)
+func set_remove_duplicates(A, idx=, delta=) {
+/* DOCUMENT set_remove_duplicates(A, idx=, delta=)
 
    Returns the set A with its duplicate elements removed. The returned list
    will also be sorted.
 
    If idx=1, then the indices will be returned rather than the values.
 
-   If ret_sort=1, then indexes will be returned into A(sort(A)). This is
-   equivalent to (and in fact, calls) the unique function. This can be
-   expensive, especially with large arrays of strings. Using ret_sort=0 is
-   always more efficient than sorting externally, since it incorporates a sort.
-
    See also: unique (in ALPS, bathy_filter.i)
 */
    default, idx, 0;
-   default, ret_sort, 0;
    default, delta, 0;
-   if(ret_sort)
-      return unique(unref(A), ret_sort=1);
    if(delta)
       return set_remove_duplicates_delta(A, delta=delta, idx=idx);
 
