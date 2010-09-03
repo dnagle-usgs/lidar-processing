@@ -127,20 +127,26 @@ func clsobj(base, count) {
       if(!numberof(w))
          error, "invalid data";
 
-      classes = strchar(bits(:w(1)));
-      bits = bits(w(1)+2:);
-      numclasses = numberof(classes);
-      count = numberof(bits) / long(ceil(numclasses/8.));
-      bits = reform(bits, count, numberof(bits)/count);
+      // special case for no classes
+      if(w(1) == 1) {
+         count = numberof(bits);
+         numclasses = 0;
+      } else {
+         classes = strchar(bits(:w(1)));
+         bits = bits(w(1)+2:);
+         numclasses = numberof(classes);
+         count = numberof(bits) / long(ceil(numclasses/8.));
+         bits = reform(bits, count, numberof(bits)/count);
 
-      pos = 1;
-      pow = 0;
-      for(i = 1; i <= numclasses; i++) {
-         save, data, classes(i), bool(2^pow & bits(,pos));
-         pow++;
-         if(pow == 8) {
-            pos++;
-            pow = 0;
+         pos = 1;
+         pow = 0;
+         for(i = 1; i <= numclasses; i++) {
+            save, data, classes(i), bool(2^pow & bits(,pos));
+            pow++;
+            if(pow == 8) {
+               pos++;
+               pow = 0;
+            }
          }
       }
    } else if(!count) {
@@ -155,6 +161,9 @@ func serialize(nil) {
    use, count, data;
    classes = use(classes,);
    numclasses = numberof(classes);
+   // special case for no classes
+   if(!numclasses)
+      return array(char(0), count);
    bits = array(char, count, long(ceil(numclasses/8.)));
 
    pos = 1;
