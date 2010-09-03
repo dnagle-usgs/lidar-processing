@@ -3,7 +3,7 @@ require, "eaarl.i";
 
 // scratch stores the values of scratch and tmp so that we can restore them
 // when we're done, leaving things as we found them.
-scratch = save(tmp, scratch);
+scratch = save(scratch, tmp, _save);
 // tmp stores a list of the methods that will go into wfobj. It stores their
 // current values up-front, then restores them at the end while swapping the
 // new function definitions into wfobj.
@@ -68,7 +68,8 @@ func x(idx) { return use(xyz, idx)(,1); }
 func y(idx) { return use(xyz, idx)(,2); }
 func z(idx) { return use(xyz, idx)(,3); }
 
-func save(fn) { obj2pbd, use(), createb(fn, i86_primitives); }
+func _save(fn) { obj2pbd, use(), createb(fn, i86_primitives); }
+save = _save;
 
 help = closure(help, pcobj);
 
