@@ -380,3 +380,42 @@ func unique(x) {
 */
    return set_remove_duplicates(unref(x), idx=1);
 }
+
+func munique(x, ..) {
+   mxrank = numberof(x)-1;
+   rank = msort_rank(x);
+
+   norm = 1./(mxrank+1.);
+   if(1.+norm == 1.) error, pr1(mxrank+1)+" is too large an array";
+
+   while(max(rank) != mxrank && more_args()) {
+      x = next_arg();
+      rank += msort_rank(x) * norm;
+      rank = msort_rank(rank);
+   }
+
+   return unique(rank);
+}
+
+func munique_array(x, which) {
+   dims = dimsof(x);
+   default, which, dims(2:)(mnx);
+
+   // Juggle dimensions so that we can index into final dimension
+   if(which != dims(1))
+      x = transpose(x, indgen(dims(1):which:-1));
+
+   count = dims(which+1);
+   mxrank = numberof(x(..,1))-1;
+   rank = msort_rank(x(..,1));
+
+   norm = 1./(mxrank+1.);
+   if(1.+norm == 1.) error, pr1(mxrank+1)+" is too large an array";
+
+   for(i = 2; i <= count && max(rank) != mxrank; i++) {
+      rank += msort_rank(x(..,i))*norm;
+      rank = msort_rank(rank);
+   }
+
+   return unique(rank);
+}
