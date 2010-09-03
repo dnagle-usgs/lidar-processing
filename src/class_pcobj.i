@@ -68,7 +68,11 @@ func x(idx) { return use(xyz, idx)(,1); }
 func y(idx) { return use(xyz, idx)(,2); }
 func z(idx) { return use(xyz, idx)(,3); }
 
-func _save(fn) { obj2pbd, use(), createb(fn, i86_primitives); }
+func _save(fn) {
+   obj = obj_copy_data(use());
+   save, obj, class=obj(class, serialize);
+   obj2pbd, obj, createb(fn, i86_primitives);
+}
 save = _save;
 
 help = closure(help, pcobj);
