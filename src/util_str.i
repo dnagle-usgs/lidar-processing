@@ -12,36 +12,13 @@ func atoi(str) {
    return long(atod(unref(str)));
 }
 
-func atof(str) {
-/* DOCUMENT atof(str)
-   
-   Converts a string representation of a number into a float.
-
-   The following parameters are required:
-
-      str: A string representation of a float.
-   
-   Function returns:
-
-      A float value.
-*/
-   f = array(float, dimsof(str));
-   sread, str, format="%f", f;
-   return f;
-}
-
 func atod(str) {
 /* DOCUMENT atod(str)
-   
-   Converts a string representation of a number into a double.
-
-   The following parameters are required:
-
-      str: A string representation of a double.
-   
-   Function returns:
-
-      A double value.
+   Converts a string representation of a number into a double. For example:
+      > atod("3.14")
+      3.14
+      > atod(["-23.4", "43.1"])
+      [-23.4,43.1]
 */
    d = array(double, dimsof(str));
    sread, str, format="%f", d;
