@@ -48,8 +48,13 @@ func obj_index(this, idx, which=, bymethod=, ignoremissing=) {
          into, use which=string(0).
       bymethod= Specifies fields that contain objects that need to be indexed
          via a given method. This option should be provided as a group object
-         whose members are method names and whose values are the corresponding
-         object members to index using the given method name.
+         whose members are member names for the object and whose values are the
+         corresponding methods that should be called for those members. For
+         example, supposing you had an object "obj" and called obj_index with
+         this option:
+            bymethod=save(foo="index", bar="index", baz="myindex")
+         This would index by calling obj(foo,index,idx), obj(bar,index,idx) and
+         obj(baz,myindex,idx).
       ignoremissing= By default, missing keys are silently ignored. Provide
          ignoremissing=0 to raise errors instead.
 
@@ -94,7 +99,7 @@ func obj_index(this, idx, which=, bymethod=, ignoremissing=) {
       |- c (long,5) [1,2,3,4,5]
       |- d (double,5) [0,0.25,0.5,0.75,1]
       `- g (long) 42
-      > nested, index, ::2, which=["c","d"], bymethod=save(index=["example"])
+      > nested, index, ::2, which=["c","d"], bymethod=save(example="index")
       > obj_show, nested
       TOP (oxy_object, 6 entries)
       |- index (function)
@@ -118,19 +123,18 @@ func obj_index(this, idx, which=, bymethod=, ignoremissing=) {
    if(is_scalar(which))
       which = [which];
 
-   methods = bymethod(*,);
-   count = numberof(methods);
+   // Handle members that require sub-methods for indexing
+   keys = bymethod(*,);
+   count = numberof(keys);
    for(i = 1; i <= count; i++) {
-      keys = bymethod(methods(i));
-      which = set_difference(which, keys);
-      nkeys = numberof(keys);
-      for(j = 1; j <= nkeys; j++) {
-         if(result(*,keys(j)))
-            save, result, keys(j), result(keys(j), methods(i), idx);
-         else if(!ignoremissing)
-            error, "Missing key: " + keys(j);
-      }
+      if(result(*,keys(i)))
+         save, result, keys(i), result(keys(i), bymethod(keys(i)), idx);
+      else if(!ignoremissing)
+         error, "Missing key: " + keys(j);
    }
+
+   // Eliminate any keys in which that were handled by bymethod
+   which = set_difference(which, bymethod(*,));
 
    // Discard any string(0) keys
    w = where(which);
@@ -138,6 +142,7 @@ func obj_index(this, idx, which=, bymethod=, ignoremissing=) {
       return result;
    which = which(w);
 
+   // Handle directly-indexable members
    count = numberof(which);
    for(i = 1; i <= count; i++) {
       if(result(*,which(i))) {
