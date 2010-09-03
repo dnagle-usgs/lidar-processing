@@ -1,4 +1,5 @@
 // This would probably be better located elsewhere but for now...
+require, "eaarl.i";
 
 func __ytk_l1pro_vars_filequery(fn, tclcmd) {
 /* DOCUMENT __ytk_l1pro_vars_filequery, fn, tclcmd;
