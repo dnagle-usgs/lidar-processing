@@ -27,17 +27,11 @@ func atod(str) {
 
 func atoc(str) {
 /* DOCUMENT atoc(str)
-   
-   Converts a string representation of a char into a char.
-
-   The following parameters are required:
-
-      str: A string representation of a char.
-
-   Function returns:
-
-      A char value.
-
+   Converts a string representation of a char into a char. For example:
+      > atoc("a")
+      0x61
+      > atoc(["a","b","c"])
+      [0x61,0x62,0x63]
    Caveat: Every string element must be exactly one character in length.
 */
 // Original David B. Nagle 2009-04-17
