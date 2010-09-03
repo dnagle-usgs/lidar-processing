@@ -509,7 +509,7 @@ func reprocess_data_along_transect(new_pnav, outdir=, ofname_tag=, rtn=, w= ) {
    data_re = test_and_clean(data_re);
    idx = sort(data_re.soe);
    data_re = data_re(idx);
-   idx = unique(data_re.soe, ret_sort=1);
+   idx = unique(data_re.soe);
    data_re = data_re(idx);
    for (j=1;j<=numberof(coords_all(1,));j++) {
       // run the mtransect function on the each transect

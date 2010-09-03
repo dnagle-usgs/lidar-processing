@@ -213,8 +213,8 @@ func compare_data(ndata, edata) {
     //write, format="Number of multiple occurences of the same data point = %d.  Deleting them... \n",numberof(midx);
     //use David Munros unique function 
     write, "Deleting multiple occurances of the same data points..."
-    neidx = unique(new_edata.rn, ret_sort=1);
     new_edata = new_edata(sort(new_edata.rn));
+    neidx = unique(new_edata.rn);
     new_edata = new_edata(neidx);
 
    } 

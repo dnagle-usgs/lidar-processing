@@ -343,7 +343,7 @@ func day_pdop_vals(eaarl, pnav) {
  extern soe_day_start;
  eaarl = eaarl(sort(eaarl.soe));
  day_soe = int(eaarl.soe + 0.5 - soe_day_start);
- idx = unique(day_soe, ret_sort=1);
+ idx = unique(day_soe);
  day_pnav = array(float, numberof(eaarl));
  for (ic = 1; ic<= numberof(idx); ic++) {
    iidx = (abs(pnav.sod - day_soe(idx(ic))))(mnx)

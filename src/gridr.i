@@ -83,7 +83,7 @@ func set_tile_filename(m, win=, nodata=) {
 
       // find the unique elements in the ifinaldata array
       ifinaldata = ifinaldata(sort(ifinaldata.rn));
-      idx = unique(ifinaldata.rn, ret_sort=1);
+      idx = unique(ifinaldata.rn);
       ifinaldata = ifinaldata(idx);
       ymd = soe2ymd(ifinaldata.soe(where(ifinaldata.soe == min(ifinaldata.soe)))); // finds the year-month-day of the lowest SOE value
       if (ymd(2) <=9) m = swrite(format="0%d", ymd(2));

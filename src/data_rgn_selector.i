@@ -838,12 +838,11 @@ Original: Amar Nayegandhi July 12-14, 2005
                restore, f, vname;
                if (get_member(f,vname) == 0) continue;
                outdata1 = grow(outdata1, get_member(f,vname));
-               write, "Finding unique elements in array..."
-                  // sort the elements by soe
-                  uidx = sort(outdata1.soe);
+               write, "Finding unique elements in array...";
+               // sort the elements by soe
+               uidx = sort(outdata1.soe);
                outdata1 = outdata1(uidx);
-               // now use the unique function with ret_sort=1
-               uidx = unique(outdata1.soe, ret_sort=1);
+               uidx = unique(outdata1.soe);
                outdata1 = outdata1(uidx);
             }
          }

@@ -187,8 +187,7 @@ func merge_data_pbds(filepath, write_to_file=, merged_filename=, nvname=, uniq=,
      return
    }
    eaarl = eaarl(idx);
-   // now use the unique function with ret_sort=1
-   idx = unique(eaarl.soe, ret_sort=1);
+   idx = unique(eaarl.soe);
    if (!is_array(idx)) {
      write, "No Records found.";
      return

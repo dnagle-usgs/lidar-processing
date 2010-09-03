@@ -436,7 +436,7 @@ func batch_merge_veg_energy(ipath, opath=, searchstr=) {
       fn_file(i) = path(2);
   }
 
-  xx = unique(fn_path, ret_sort=1);
+  xx = unique(fn_path);
  
  // now find the files in each unique path 
   for (i=1;i<=numberof(xx);i++) {
