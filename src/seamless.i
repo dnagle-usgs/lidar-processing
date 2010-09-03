@@ -20,7 +20,7 @@ func remove_bathy_from_veg(veg, bathy, buf=) {
    // make sure bathy array has unique rn
    rnb_idx = sort(bathy.rn);
    bathy1 = bathy(rnb_idx);
-   rnbu_idx = unique(bathy1.rn, ret_sort=0);
+   rnbu_idx = unique(bathy1.rn);
    bathy1 = bathy1(rnbu_idx);
     
    rnv_idx = [];
@@ -29,7 +29,7 @@ func remove_bathy_from_veg(veg, bathy, buf=) {
    //sort veg array as well and ensure uniqueness
    rnv_idx = sort(veg.rn);
    veg1 = veg(rnv_idx);
-   rnvu_idx = unique(veg1.rn, ret_sort=0);
+   rnvu_idx = unique(veg1.rn);
    veg1 = veg1(rnvu_idx);
 
 
