@@ -135,11 +135,12 @@ func wfobj(base, obj) {
    // Provide null defaults for array members
    keydefault, obj, raw_xyz0=[], raw_xyz1=[], soe=[], record=[], tx=[], rx=[];
 
-   // Check and convert tx/rx if necessary; requires that soe also exist
-   if(numberof(obj.rx) == 2 && numberof(obj.soe) > 10) {
-      rx = tx = array(pointer, numberof(obj.soe));
+   // Check and convert tx/rx if necessary; requires that raw_xyz0 also exist
+   count = is_void(obj.raw_xyz0) ? 0 : dimsof(obj.raw_xyz0)(2);
+   if(numberof(obj.rx) == 2 && count > 10) {
+      rx = tx = array(pointer, count);
       roff = toff = 1;
-      for(i = 1; i <= numberof(obj.soe); i++) {
+      for(i = 1; i <= count; i++) {
          rx(i) = &(*obj.rx(2))(roff:roff-1+(*obj.rx(1))(i));
          tx(i) = &(*obj.tx(2))(toff:toff-1+(*obj.tx(1))(i));
          roff += numberof(*rx(i));
@@ -274,8 +275,8 @@ func _save(fn) {
    // saving/loading a large array of small pointers is much more expensive
    // than saving/loading a small array of large pointers; thus tx and rx get
    // converted to a more efficient format for saving
-   if(numberof(obj.soe) > 10) {
-      count = numberof(obj.soe);
+   count = is_void(obj.raw_xyz0) ? 0 : dimsof(obj.raw_xyz0)(2);
+   if(count > 10) {
       rsize = tsize = array(long, count);
       for(i = 1; i <= count; i++) {
          rsize(i) = numberof(*obj.rx(i));
