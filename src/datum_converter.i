@@ -1,4 +1,4 @@
-// vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
+// vim: set ts=3 sts=3 sw=3 ai sr et:
 // original amar nayegandhi 07/15/03
 // modified charlene sullivan 09/25/06
 require, "l1pro.i";

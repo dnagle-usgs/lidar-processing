@@ -1,4 +1,4 @@
-/* vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent: */
+// vim: set ts=3 sts=3 sw=3 ai sr et:
 /***********************************************************************
    Range_bias computed from 7-29-02 ground test.  The EAARL data 
  was taken from pulses 8716:10810 which was captured from a static 

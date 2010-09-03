@@ -1,4 +1,4 @@
-// vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent expandtab:
+// vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "eaarl.i";
 /*
 History:

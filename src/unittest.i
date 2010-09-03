@@ -1,4 +1,4 @@
-// vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
+// vim: set ts=3 sts=3 sw=3 ai sr et:
 
 local unittest, tc_assert, tc_assert_false, tc_assert_equal,
 tc_assert_not_equal, tc_assert_almost_equal, tc_assert_not_almost_equal,

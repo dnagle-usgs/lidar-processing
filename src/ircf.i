@@ -1,4 +1,4 @@
-// vim: set tabstop=3 softtabstop=3 shiftwidth=3 autoindent shiftround expandtab:
+// vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "l1pro.i";
 
 func rcf_triag_filter(eaarl, buf=, w=, mode=, no_rcf=, fbuf=, fw=, tw=, interactive=, tai=, plottriag=, plottriagwin=, prefilter_min=, prefilter_max=, distthresh=, datawin=, wfs=, plottriagpal=) {
