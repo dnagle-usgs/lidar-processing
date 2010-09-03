@@ -10,6 +10,7 @@ scratch = save(tmp, scratch);
 tmp = save(summary, index, x, y, z, xyz, save, help);
 
 func pcobj(base, obj) {
+   // requires raw_xyz
    default, obj, save();
 
    // For restoring from file
@@ -19,8 +20,9 @@ func pcobj(base, obj) {
       obj = obj_copy(obj);
    }
 
-   // Set up methods. We override generic's "index" method so we have to
-   // provide it specially.
+   if(!obj(*,"raw_xyz") || is_void(obj.raw_xyz))
+      error, "Must provide raw_xyz to initiliaze object";
+
    obj_merge, obj, base;
    // We don't want all of the objects to share a common data item, so they get
    // re-initialized here.
@@ -30,11 +32,10 @@ func pcobj(base, obj) {
    keydefault, obj, source="unknown", system="unknown", record_format=0,
       cs=string(0);
    // Provide null defaults for array members
-   keydefault, obj, raw_xyz=[], intensity=[], soe=[], record=[], pixel=[],
+   keydefault, obj, intensity=[], soe=[], record=[], pixel=[],
       return_number=[], number_of_returns=[];
 
-   count = is_void(obj.raw_xyz) ? 0 : dimsof(obj.raw_xyz)(2);
-   keydefault, obj, class=clsobj(count);
+   keydefault, obj, class=clsobj(dimsof(obj.raw_xyz)(2));
    // Restore if serialized
    if(typeof(obj.class) == "char")
       save, obj, class=clsobj(obj.class);
