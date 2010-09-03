@@ -1,4 +1,3 @@
-require, "shapefile.i";
 require, "mission_conf.i";
 require, "mosaic_biases.i";
 require, "l1pro.i";

@@ -88,8 +88,6 @@ if {![namespace exists ::plot]} {
 ybkg tksetsym \"::plot::c::mapPath\" \"alpsrc.maps_dir\"
 
 proc ::plot::menu { } {
-   ybkg require \"shapefile.i\"
-
    set w .plotmenu
    destroy $w
    toplevel $w

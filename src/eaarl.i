@@ -97,6 +97,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "rcf.i";
    require, "read_yfile.i";
    require, "rlw.i";
+   require, "shapefile.i";
    require, "seamless.i";
    require, "set.i";
    require, "sf.i";
