@@ -3,32 +3,11 @@ require, "eaarl.i";
 
 func atoi(str) {
 /* DOCUMENT atoi(str)
-   
-   Converts a string representation of a number into an integer.
-
-   The following parameters are required:
-
-      str: A string representation of an integer.
-   
-   Function returns:
-
-      An integer value.
-*/
-   return int(atod(unref(str)));
-}
-
-func atol(str) {
-/* DOCUMENT atol(str)
-   
-   Converts a string representation of a number into a long integer.
-
-   The following parameters are required:
-
-      str: A string representation of an integer.
-   
-   Function returns:
-
-      An integer value.
+   Converts a string representation of a number into an integer. For example:
+      > atoi("12")
+      12
+      > atoi(["13.45", "-1000"])
+      [13,-1000]
 */
    return long(atod(unref(str)));
 }
