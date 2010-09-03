@@ -223,21 +223,6 @@ func compare_data(ndata, edata) {
        
 }
 
-func unique(x) {
-/* DOCUMENT unique(x)
-   Returns the indexes into x corresponding to unique values. This is exactly
-   equivalent to set_remove_duplicates(x, idx=1). Example:
-      > data = [1,2,1,2,3,2,1,2,3,4,3,2,1]
-      > unique(data) // index list
-      [13,4,9,10]
-      > data(unique(data)) // values
-      [1,2,3,4]
-
-   SEE ALSO: set_remove_duplicates sort
-*/
-   return set_remove_duplicates(unref(x), idx=1);
-}
-
 func test_bathy(null) {
    extern noaa_data;
    noaa_data = read_4wd_ascii("~/bathy_keys/", "bathy_data_keys_0_40m_min_max.txt")
@@ -245,7 +230,6 @@ func test_bathy(null) {
      data_out =  extract_indx_tile(noaa_data, i, win=6);
     }
 }
-
 
 func remove_bow_effect(data, factor=, mode=) {
 /* DOCUMENT func remove_bow_effect(data, factor=, mode=) 
