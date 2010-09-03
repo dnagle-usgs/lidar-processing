@@ -200,17 +200,6 @@ func coord_print(cs, x, y) {
 
 summary = closure(summary, save(coord_print));
 
-func index(idx) {
-   this = use();
-   which = ["raw_xyz0","raw_xyz1", "soe", "record", "tx", "rx"];
-   if(am_subroutine()) {
-      obj_index, this, idx, which=which;
-      wfobj, this;
-   } else {
-      return wfobj(obj_index(this, idx, which=which));
-   }
-}
-
 func _grow(obj, headers=) {
    default, headers, "merge";
 
@@ -308,6 +297,8 @@ func _save(fn) {
    obj2pbd, obj, createb(fn, i86_primitives);
 }
 save = _save;
+
+index = closure(obj_index, 0);
 help = closure(help, wfobj);
 
 wfobj = closure(wfobj, restore(tmp));
