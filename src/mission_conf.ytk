@@ -34,7 +34,6 @@ if {![info exists __mission_settings]} {
     ]
 }
 
-ybkg require \"mission_conf.i\"
 ybkg h_set __mission_settings \"ytk\" 1
 
 ### COMMON WITH YORICK

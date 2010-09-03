@@ -81,6 +81,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "ll2utm.i";
    require, "manual_filter.i";
    require, "map.i";
+   require, "mission_conf.i";
    require, "mosaic_tools.i";
    require, "mouse.i";
    require, "nad832navd88.i";
