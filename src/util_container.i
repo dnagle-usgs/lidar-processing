@@ -546,3 +546,43 @@ func tp_grow(&ary, .., tp=, tpinv=) {
       eq_nocopy, ary, res;
    return res;
 }
+
+func msort_array(x, which) {
+/* DOCUMENT idx = msort_array(x, which)
+   This is like msort, but instead of operating over multiple arrays, it
+   operates over a single array along one of its dimensions. Thus, this:
+      > data = array(double, 3, 100)
+      > idx = msort(data(1,), data(2,), data(3,))
+   Is equivalent to this:
+      > data = array(double, 3, 100)
+      > idx = msort_array(data, 1)
+   If WHICH is omitted, then the smallest dimension will be used. The code for
+   this function is modeled on msort.
+
+   SEE ALSO: sort, msort, msort_rank
+*/
+   local list;
+   dims = dimsof(x);
+   default, which, dims(2:)(mnx);
+
+   // Juggle dimensions so that we can index into final dimension
+   if(which != dims(1))
+      x = transpose(x, indgen(dims(1):which:-1));
+
+   count = dims(which+1);
+   mxrank = numberof(x(..,1))-1;
+   rank = msort_rank(x(..,1), list);
+   if(max(rank) == mxrank) return list;
+
+   norm = 1./(mxrank+1.);
+   if(1.+norm == 1.) error, pr1(mxrank+1)+" is too large an array";
+
+   for(i = 2; i <= count; i++) {
+      // Adjust rank for next index, then renormalize
+      rank += msort_rank(x(..,i))*norm;
+      rank = msort_rank(rank, list);
+      if(max(rank) == mxrank) return list;
+   }
+
+   return sort(rank+indgen(0:mxrank)*norm);
+}
