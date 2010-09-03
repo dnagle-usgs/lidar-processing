@@ -1330,7 +1330,7 @@ Original amar nayegandhi. Started 12/06/02.
          if (readpbd) {
             write, "merging all eaarl pbd data";
             show_files(files=fn_arr, str="Merge");
-            all_eaarl = merge_data_pbds(fn_all=fn_arr);
+            all_eaarl = dirload(files=fn_arr);
             if(clean)
                test_and_clean, all_eaarl;
          }
@@ -1423,9 +1423,9 @@ Original amar nayegandhi. Started 12/06/02.
             } else {
                write, format="merging eaarl pbd data in directory %s\n",fn_split(1);
                if (datum) {
-                  eaarl = merge_data_pbds(fn_split(1), searchstring="*"+datum+"*"+searchstr+".pbd");
+                  eaarl = dirload(fn_split(1), searchstr="*"+datum+"*"+searchstr+".pbd");
                } else {
-                  eaarl = merge_data_pbds(fn_split(1), searchstring="*"+searchstr+"*");
+                  eaarl = dirload(fn_split(1), searchstr="*"+searchstr+"*");
                }
             
             }
@@ -1520,7 +1520,8 @@ Original amar nayegandhi. Started 12/06/02.
       if (!is_array(eaarl)) continue;
 
       if(write_merge==1) {
-         gg=merge_data_pbds(fn_split(1), write_to_file=1, merged_filename=file_rootname(fn_all(i))+"_merged.pbd", nvname="merged_v", searchstring="*"+searchstr+"*");
+         dirload, fn_split(1), searchstr="*"+searchstr+"*",
+            outvname="merged_v", outfile=file_rootname(fn_all(i))+"_merged.pbd";
       }
 
       if ((mode == 1) && (strglob("*_v*",fn_all(i)))) {
