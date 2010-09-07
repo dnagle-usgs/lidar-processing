@@ -177,16 +177,23 @@ func summary(util) {
    local x, y;
    write, "Summary for waveform object:";
    write, "";
-   write, format=" %d total waveforms\n", numberof(use(soe));
+   write, format=" %d total waveforms\n", numberof(use(rx));
    write, "";
-   write, format=" source: %s\n", use(source);
-   write, format=" system: %s\n", use(system);
-   write, format=" acquired: %s to %s\n", soe2iso8601(use(soe)(min)),
-      soe2iso8601(use(soe)(max));
-   write, "";
-   write, format=" record_format: %d\n", use(record_format);
-   write, format=" sample_interval: %.6f ns/sample\n", use(sample_interval);
-   write, "";
+   if(use(*,"source"))
+      write, format=" source: %s\n", use(source);
+   if(use(*,"system"))
+      write, format=" system: %s\n", use(system);
+   if(use(*,"soe"))
+      write, format=" acquired: %s to %s\n", soe2iso8601(use(soe)(min)),
+         soe2iso8601(use(soe)(max));
+   if(anyof(use(*,["source","system","soe"])))
+      write, "";
+   if(use(*,"record_format"))
+      write, format=" record_format: %d\n", use(record_format);
+   if(use(*,"sample_interval"))
+      write, format=" sample_interval: %.6f ns/sample\n", use(sample_interval);
+   if(anyof(use(*,["record_format","sample_interval"])))
+      write, "";
    write, "Approximate bounds in native coordinate system";
    write, format=" %s\n", use(cs);
    splitary, use(raw_xyz1), 3, x, y;
