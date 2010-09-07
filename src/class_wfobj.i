@@ -11,38 +11,57 @@ func wfobj(base, obj) {
 /* DOCUMENT wfobj()
    Creates a waveforms data object. This can be called in one of four ways.
 
-      data = wfobj()
-         Without any arguments, DATA is an object with defaults for header
-         values and void for array/data values. Effectively, it's "empty".
       data = wfobj(group)
          When passed a group object, DATA will be initialized as a copy of it.
-         Any missing header or data members get filled in as in the previous
-         case.
+         The group object should contain the header and array data members for
+         the object. A simplified contrived example of use:
+               N = numberof(waveforms);
+               raw_xyz0 = raw_xyz1 = array(double, N, 3);
+               tx = rx = array(pointer, N);
+               // fill in arrays...
+               wfdata = wfobj(save(raw_xyz0, raw_xyz1, tx, rx,
+                  cs=cs_wgs84(zone=15), sample_interval=1.))
+         In actual code, there would probably also be rn and soe arrays, as
+         well as record_format, source, and system header values.
+      wfobj, data
+         When called in the subroutine form, DATA should be a group object.
+         This is equivalent to the previous case, except that DATA is updated
+         in-place to become a wfobj object.
       data = wfobj(filename)
          When passed a filename, DATA will be initialized using the data from
          the specified file; that file should have been created using the save
          method to this class.
-      wfobj, data
-         When called in the subroutine form, data should be a group object. It
-         will be treated as in the second case, but will be done in-place.
+      data = wfobj()
+         Without any arguments, DATA is an object with defaults for header
+         values and void for array/data values. Effectively, it's "empty".
+         While valid, this is fairly useless.
 
    A wfobj object is comprised of scalar header members, array data members,
    and methods. In the documentation below, "data" is the result of a call to
    wfobj.
 
+   IMPORTANT: It is assumed that the values for the various header and array
+   members will not change after initialization. If you need to alter any
+   values, you should create a new wfobj object rather than modifying an
+   existing one in-place. In-place alterations may result in some functions
+   giving erroneous results.
+
    Scalar header members:
+   Required:
+      data(cs,)               string      default: string(0)
+         Specifies the coordinate system used.
+      data(sample_interval,)  double      default: 0.
+         Specifies the interval in nanoseconds between samples.
+   Optional:
       data(source,)           string      default: "unknown"
          Source used to collect the data. Generally an airplane tail number.
       data(system,)           string      default: "unknown"
          Data acquisition system, ie. ATM, EAARL, etc.
       data(record_format,)    long        default: 0
          Defines how to interpret the record field.
-      data(cs,)               string      default: string(0)
-         Specifies the coordinate system used.
-      data(sample_interval,)  double      default: 0.
-         Specifies the interval in nanoseconds between samples.
 
    Array data members, for N points:
+   Required:
       data(raw_xyz0,)         array(double,N,3)
          Specifies an arbitrary point that, along with "raw_xyz1", defines the
          line upon which the waveform traveled. This point is in the coordinate
@@ -56,16 +75,17 @@ func wfobj(base, obj) {
          sample of "tx" and the first sample of "rx", then "raw_xyz1" is the
          point representing where the pulse would be at TDELTA ns after the
          laser fired.
+      data(tx,)               array(pointer,N)
+         The transmit waveform.
+      data(rx,)               array(pointer,N)
+         The return waveform.
+   Optional:
       data(soe,)              array(double,N)
          The timestamp for the point, in seconds of the epoch.
       data(record,)           array(long,N,2)
          The record number for the point. This value must be interpreted as
          defined by "record_format". Together with "soe", this should uniquely
          identify the waveform.
-      data(tx,)               array(pointer,N)
-         The transmit waveform.
-      data(rx,)               array(pointer,N)
-         The return waveform.
 
    Methods:
       data, help
@@ -133,7 +153,7 @@ func wfobj(base, obj) {
    keydefault, obj, source="unknown", system="unknown", record_format=0,
       cs=string(0), sample_interval=0.;
    // Provide null defaults for array members
-   keydefault, obj, raw_xyz0=[], raw_xyz1=[], soe=[], record=[], tx=[], rx=[];
+   keydefault, obj, raw_xyz0=[], raw_xyz1=[], tx=[], rx=[];
 
    // Check and convert tx/rx if necessary; requires that raw_xyz0 also exist
    count = is_void(obj.raw_xyz0) ? 0 : dimsof(obj.raw_xyz0)(2);
