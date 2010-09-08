@@ -286,11 +286,12 @@ func mosaic_gather_tans(photo_soes, progress=, mounting_bias=) {
       photo_tans(w).heading = interp_angles(tans.heading, tans.somd,
          photo_tans(w).somd) + mounting_bias.heading;
    }
-   photo_tans = datum_convert_pnav(pnav=photo_tans, src_datum="w84",
-      dst_datum="n88", verbose=progress);
 
    w = where(photo_tans.lon != 0 & photo_tans.lat != 0);
    if(numberof(w)) {
+      photo_tans(w) = datum_convert_pnav(pnav=photo_tans(w), src_datum="w84",
+         dst_datum="n88", verbose=progress);
+
       if(progress)
          write, format=" Converting lat/lon to UTM...%s", "\n";
       utm = fll2utm(photo_tans(w).lat, photo_tans(w).lon);
