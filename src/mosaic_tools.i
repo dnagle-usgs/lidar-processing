@@ -197,20 +197,14 @@ func gather_cir_data(photo_dir, conf_file=, downsample=, cir_soe_offset=) {
       }
    }
 
-   write, format="Calculating dates...%s", "\n";
-   photo_dates = soe2date(photo_soes);
-   date_list = set_remove_duplicates(photo_dates);
-
    // Step 2: Load tans data for images
-   write, format="Calculating tans data for %d dates...\n", numberof(date_list);
+   write, format="Calculating tans data...%s", "\n";
    photo_tans = mosaic_gather_tans(photo_soes, progress=1);
 
    data = h_new(
       "files", photo_files,
       "soes", photo_soes,
       "tans", photo_tans,
-      "dates", photo_dates,
-      "date_list", date_list,
       "photo_dir", photo_dir
    );
 
@@ -711,9 +705,7 @@ func filter_cirdata_by_index(cirdata, idx) {
       newdata = h_new(
          "files", cirdata.files(idx),
          "soes", cirdata.soes(idx),
-         "tans", cirdata.tans(idx),
-         "dates", cirdata.dates(idx),
-         "date_list", cirdata.date_list
+         "tans", cirdata.tans(idx)
       );
       if(h_has(cirdata, "jgw")) {
          h_set, newdata, "jgw", cirdata.jgw(,idx);
