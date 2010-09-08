@@ -203,7 +203,7 @@ func gather_cir_data(photo_dir, conf_file=, downsample=, cir_soe_offset=) {
 
    // Step 2: Load tans data for images
    write, format="Calculating tans data for %d dates...\n", numberof(date_list);
-   photo_tans = mosaic_gather_tans(date_list, photo_soes, progress=1);
+   photo_tans = mosaic_gather_tans(photo_soes, progress=1);
 
    data = h_new(
       "files", photo_files,
@@ -256,8 +256,8 @@ func jgw_poly(jgw, camera=) {
    return transpose([x, y]);
 }
 
-func mosaic_gather_tans(date_list, photo_soes, progress=, mounting_bias=) {
-/* DOCUMENT tans = mosaic_gather_tans(date_list, photo_soes, progress=,
+func mosaic_gather_tans(photo_soes, progress=, mounting_bias=) {
+/* DOCUMENT tans = mosaic_gather_tans(photo_soes, progress=,
    mounting_bias=);
    For the given array of mission days and soes, this will return an array of
    interpolated tans data that corresponds to those soes.
