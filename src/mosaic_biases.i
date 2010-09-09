@@ -37,16 +37,16 @@ cir_mounting_bias_n111x.x = -0.180;
 cir_mounting_bias_n111x.y =  0.170;
 cir_mounting_bias_n111x.z =  0.310;
 //=================================================
-// N5308F with Span/CPT: measurements from IMU to camera
+// N5308F with Span/CPT: measurements from camera to IMU
 //=================================================
 cir_mounting_bias_n5308f.name    = "n5308f";
 cir_mounting_bias_n5308f.pitch   =  0.000;
 cir_mounting_bias_n5308f.roll    =  0.000;
 cir_mounting_bias_n5308f.heading =  0.0;
 
-cir_mounting_bias_n5308f.x = -0.120;   // toward right wing
-cir_mounting_bias_n5308f.y =  0.050;   // toward cockpit
-cir_mounting_bias_n5308f.z = -0.760;   // Up
+cir_mounting_bias_n5308f.x =  0.120;   // toward right wing
+cir_mounting_bias_n5308f.y = -0.050;   // toward cockpit
+cir_mounting_bias_n5308f.z =  0.760;   // Up
 
 
 //=================================================
