@@ -44,8 +44,8 @@ cir_mounting_bias_n5308f.pitch   =  0.000;
 cir_mounting_bias_n5308f.roll    =  0.000;
 cir_mounting_bias_n5308f.heading =  0.0;
 
-cir_mounting_bias_n5308f.x =  0.120;   // toward right wing
-cir_mounting_bias_n5308f.y = -0.050;   // toward cockpit
+cir_mounting_bias_n5308f.x = -0.050;   // toward cockpit
+cir_mounting_bias_n5308f.y =  0.120;   // toward right wing
 cir_mounting_bias_n5308f.z =  0.760;   // Up
 
 
