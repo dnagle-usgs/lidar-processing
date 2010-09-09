@@ -16,6 +16,7 @@ struct CAMERA_MOUNTING_BIAS {
 }
 
 cir_mounting_bias_n111x = CAMERA_MOUNTING_BIAS();
+cir_mounting_bias_n5308f = CAMERA_MOUNTING_BIAS();
 cir_mounting_bias_n48rf = CAMERA_MOUNTING_BIAS();
 
 //=================================================
