@@ -22,7 +22,7 @@ func obj_merge(obj, ..) {
    if(!obj)
       obj = use();
    if(!am_subroutine())
-      obj = obj(:);
+      obj = obj_copy(obj);
    while(more_args()) {
       src = next_arg();
       for(i = 1; i <= src(*); i++)
