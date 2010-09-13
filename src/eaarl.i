@@ -119,13 +119,15 @@ if(is_void(__eaarl_includes_included__)) {
    // This comes below the rest because the class_* files require some of the
    // above functions at the global scope, for closures.
    if(is_func(is_obj)) {
+      // util_obj.i must come first because class_* may use it
+      require, "util_obj.i";
+
       require, "class_clsobj.i";
       require, "class_deque.i";
       require, "class_wfobj.i";
       require, "eaarl1_wf.i";
       require, "mathop.i";
       require, "obj_show.i";
-      require, "util_obj.i";
    }
 
    // Must come last, because it depends on some of the above (it actually runs
