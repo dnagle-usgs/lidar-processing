@@ -31,9 +31,9 @@ func obj_merge(obj, ..) {
    return obj;
 }
 
-func obj_grow(util, this, .., ref=) {
-/* DOCUMENT obj_grow, this, that, .., ref=
-   -or- result = obj_grow(this, that, .., ref=)
+func obj_grow(util, this, .., ref=, exclude=) {
+/* DOCUMENT obj_grow, this, that, .., ref=, exclude=
+   -or- result = obj_grow(this, that, .., ref=, exclude=)
    Grows the growable members of a set of objects.
 
    This is intended to be used on objects that have keyed members where some
@@ -63,6 +63,9 @@ func obj_grow(util, this, .., ref=) {
    have the same size, then that size is used. If more than one size is
    detected, then none of the members will be used.
 
+   If exclude= is provided, then it should be an array of key names that should
+   be skipped if present.
+
    If called as a subroutine, then the first object is grown in place.
    Otherwise, a new object is created and returned.
 */
@@ -75,8 +78,8 @@ func obj_grow(util, this, .., ref=) {
    while(more_args()) {
       that = next_arg();
 
-      util, find_needed, this, ref, this_size, this_need;
-      util, find_needed, that, ref, that_size, that_need;
+      util, find_needed, this, ref, exclude, this_size, this_need;
+      util, find_needed, that, ref, exclude, that_size, that_need;
 
       // Scan through THIS and grow everything that needs to be grown
       for(i = 1; i <= this(*); i++) {
@@ -136,7 +139,7 @@ func dummy_array(val, size) {
    return array(structof(val), dims);
 }
 
-func find_needed(obj, ref, &size, &need) {
+func find_needed(obj, ref, exclude, &size, &need) {
 // Utility function for obj_grow
 // For a given object, finds the dimension size of its growable members and
 // determines which members need to be grown
@@ -149,7 +152,12 @@ func find_needed(obj, ref, &size, &need) {
    sizes = array(long(0), obj(*));
    for(i = 1; i <= obj(*); i++) {
       // Only consider keyed items
-      if(!obj(*,i))
+      key = obj(*,i);
+      if(!key)
+         continue;
+
+      // check for excluded items
+      if(!is_void(exclude) && anyof(exclude == key))
          continue;
 
       // Only consider non-scalar arrays
