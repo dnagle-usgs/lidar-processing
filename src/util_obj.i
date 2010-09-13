@@ -31,6 +31,169 @@ func obj_merge(obj, ..) {
    return obj;
 }
 
+func obj_grow(util, this, .., ref=) {
+/* DOCUMENT obj_grow, this, that, .., ref=
+   -or- result = obj_grow(this, that, .., ref=)
+   Grows the growable members of a set of objects.
+
+   This is intended to be used on objects that have keyed members where some
+   members are non-scalar arrays and other members may be scalars and/or
+   functions. The non-scalar arrays are expected to be of equal leading
+   dimension size within an object. Such members from successive objects will
+   be grown together into the result. If a member does not exist in the other
+   object, it will be dummied out for growing so that the result remains
+   conformable with other grown members.
+
+   For example:
+      > foo = save(a="Foo", b=indgen(10), c=indgen(10))
+      > bar = save(a="Test", b=indgen(5), d=indgen(5))
+      > baz = obj_grow(foo, bar)
+      > obj_show, baz, maxary=15
+       TOP (oxy_object, 4 entries)
+       |- a (string) "Foo"
+       |- b (long,15) [1,2,3,4,5,6,7,8,9,10,1,2,3,4,5]
+       |- c (long,15) [1,2,3,4,5,6,7,8,9,10,0,0,0,0,0]
+       `- d (long,15) [0,0,0,0,0,0,0,0,0,0,1,2,3,4,5]
+
+   If ref= is provided, it should be the name of a key to use to determine the
+   leading size for the object. This key must be present in all objects. In the
+   above example, we coul dhave used ref="b".
+
+   If ref= is not provided, then all members are checked for size. If they all
+   have the same size, then that size is used. If more than one size is
+   detected, then none of the members will be used.
+
+   If called as a subroutine, then the first object is grown in place.
+   Otherwise, a new object is created and returned.
+*/
+   if(!this)
+      this = use();
+   if(!am_subroutine())
+      this = obj_copy(this);
+
+   this_size = that_size = this_need = that_need = [];
+   while(more_args()) {
+      that = next_arg();
+
+      util, find_needed, this, ref, this_size, this_need;
+      util, find_needed, that, ref, that_size, that_need;
+
+      // Scan through THIS and grow everything that needs to be grown
+      for(i = 1; i <= this(*); i++) {
+         if(!this_need(i))
+            continue;
+
+         key = this(*,i);
+         this_val = this(noop(i));
+
+         // Check to see if THAT has this key; if so, grow; otherwise, extend
+         j = that(*,key);
+         if(j) {
+            // If THAT doesn't need it, then it isn't growable... error!
+            if(!that_need(j))
+               error, "Unable to grow \""+key+"\"";
+            that_need(j) = 0;
+            that_val = that(noop(j));
+         } else {
+            that_val = util(dummy_array, this_val, that_size);
+         }
+
+         save, this, noop(key), tp_grow(this_val, that_val);
+      }
+
+      for(j = 1; j <= that(*); j++) {
+         if(!that_need(j))
+            continue;
+
+         key = that(*,j);
+         that_val = that(noop(j));
+
+         // If the key exists in THIS, then it wasn't growable... error!
+         if(this(*,key))
+            error, "Unable to grow \""+key+"\"";
+         this_val = util(dummy_array, that_val, this_size);
+
+         save, this, noop(key), tp_grow(this_val, that_val);
+      }
+
+      // Need to clear that_need to avoid having find_needed apply it to the
+      // next object
+      that_need = [];
+   }
+
+   return this;
+}
+
+scratch = save(scratch, tmp);
+tmp = save(dummy_array, find_needed);
+
+func dummy_array(val, size) {
+// Utility function for obj_grow
+// Creates a dummy array with struct and dimensionf of VAL, except that its
+// leading dimension is changed to SIZE.
+   dims = dimsof(val);
+   dims(2) = size;
+   return array(structof(val), dims);
+}
+
+func find_needed(obj, ref, &size, &need) {
+// Utility function for obj_grow
+// For a given object, finds the dimension size of its growable members and
+// determines which members need to be grown
+
+   if(!is_void(ref) && !obj(*,ref))
+      error, "Reference key \""+key+"\" not present in object";
+
+   // Determine the size of each member. If the member is not a non-scalar
+   // array, then give it size 0.
+   sizes = array(long(0), obj(*));
+   for(i = 1; i <= obj(*); i++) {
+      // Only consider keyed items
+      if(!obj(*,i))
+         continue;
+
+      // Only consider non-scalar arrays
+      val = obj(noop(i));
+      if(is_scalar(val) || !is_array(val))
+         continue;
+
+      sizes(i) = dimsof(val)(2);
+   }
+
+   // Determine the size to use for growable members. If ref is present, it
+   // determines. Otherwise, we can only grow if all growable members are the
+   // same size.
+   if(!is_void(ref)) {
+      size = dimsof(obj(noop(ref)))(2);
+   } else {
+      size = 0;
+      w = where(sizes);
+      if(numberof(w)) {
+         size_list = set_remove_duplicates(sizes(w));
+         if(numberof(size_list) == 1)
+            size = size_list(1);
+         size_list = [];
+      }
+   }
+
+   last_need = need;
+
+   // Only want to grow for non-zero-size members of the right size
+   need = (size > 0) & (sizes == size);
+
+   // This is used to make sure we don't accidentally pick up members when
+   // growing multiple objects in sequence. For example, if our object had a
+   // reference size of 10 and one of the members was 25, it would be excluded.
+   // However, if the first object that grew onto it was size 15, the new
+   // reference would be 25. The following ensures that we remember not to grow
+   // the original size 25 member.
+   if(!is_void(last_need))
+      need(:numberof(last_need)) &= last_need;
+}
+
+obj_grow = closure(obj_grow, restore(tmp));
+restore, scratch;
+
 func obj_index(this, idx, which=, bymethod=, ignoremissing=) {
 /* DOCUMENT result = obj_index(obj, idx, which=, bymethod=, ignoremissing=)
    -or- obj_index, obj, index, idx, which=, bymethod=, ignoremissing=
