@@ -1,3 +1,10 @@
+/******************************************************************************\
+* This file was created in the attic on 2010-09-13. It contains the function   *
+* spatial_rcf that was formerly in rcf.i. This function was an experimental    *
+* filter that never made it into actual use. It ran too slowly and provided no *
+* actual benefit.                                                              *
+\******************************************************************************/
+
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 
 func spatial_rcf(x, y, z, w, buf, n) {
