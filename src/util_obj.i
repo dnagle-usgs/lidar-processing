@@ -8,7 +8,7 @@ func keydefault(args) {
    For a given object OBJ, if the given keys are not present, then they are set
    with the corresponding given values.
 
-   SEE ALSO: default save
+   SEE ALSO: keyrequire default save
 */
 // Original David Nagle 2010-08-09
    if(!(args(0) % 2))
@@ -27,6 +27,31 @@ func keydefault(args) {
    }
 }
 wrap_args, keydefault;
+
+func keyrequire(args) {
+/* DOCUMENT keyrequire, obj, key1, key2, ...
+   -or- keyrequire, obj, key1=, key2=, ...
+
+   Checks to make sure that each of the keys given are present in the given
+   object OBJ. If any are missing, an error is generated.
+
+   SEE ALSO: keydefault default save
+*/
+// Original David Nagle 2010-09-13
+   if(!args(0))
+      error, "invalid call to keyrequire";
+   obj = args(1);
+   keys = args(-);
+   for(i = 2; i <= args(0); i++)
+      grow, keys, (args(0,i) ? args(i) : args(-,i));
+   missing = !obj(*,keys);
+   if(anyof(missing)) {
+      missing = strjoin(keys(where(missing)), ", ");
+      error, "missing required keys: "+missing;
+   }
+}
+errs2caller, keyrequire;
+wrap_args, keyrequire;
 
 func obj_merge(obj, ..) {
 /* DOCUMENT obj = obj_merge(objA, objB, objC, ...)
