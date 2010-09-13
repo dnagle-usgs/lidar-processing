@@ -248,8 +248,8 @@ func _grow(obj, headers=) {
    save, res, cs, raw_xyz0, raw_xyz1;
    cs = raw_xyz0 = raw_xyz1 = [];
 
-   // handle other headers
-   if(headers == "replace") {
+   // Handle other headers
+   if(headers == "merge") {
       if(res.source != obj.source)
          save, res, source="merged";
       if(res.system != obj.system)
@@ -258,7 +258,7 @@ func _grow(obj, headers=) {
          save, res, record_format=0;
       if(res.sample_interval != obj.sample_interval)
          save, res, sample_interval=0;
-   } else if(headers == "merge") {
+   } else if(headers == "replace") {
       save, res, source=obj.source, system=obj.system,
          record_format=obj.record_format, sample_interval=obj.sample_interval;
    }
