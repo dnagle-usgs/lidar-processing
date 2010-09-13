@@ -1,3 +1,8 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-09-13. It was created on an         *
+* experimental basis and never came into actual use.                           *
+\******************************************************************************/
+
 require, "eaarl.i";
 
 func simulated_annealing(initial_state, max_iterations, max_energy, calculate_energy, neighbor, temperature, acceptance_probability=, show_status=) {
