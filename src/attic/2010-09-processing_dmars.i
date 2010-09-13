@@ -1,3 +1,9 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-09-13. It contains documentation    *
+* that was added to the repository years ago, and it does not provide any      *
+* actual code.                                                                 *
+\******************************************************************************/
+
 extern processing_dmars
 /* DOCUMENT  processing_dmars
 
