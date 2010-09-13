@@ -233,7 +233,10 @@ func _grow(obj, headers=) {
 
    res = am_subroutine() ? use() : obj_copy(use());
 
-   // handle coordinate system first, as it requires minor juggling
+   // Grow everything except coordinates (which have to be handled specially)
+   obj_grow, res, obj, ref="raw_xyz0", exclude=["raw_xyz0", "raw_xyz1"];
+
+   // Handle coordinate system, which requires minor juggling
    cs = [];
    if(headers == "merge")
       cs = cs_compromise(res.cs, obj.cs);
@@ -262,12 +265,6 @@ func _grow(obj, headers=) {
       save, res, source=obj.source, system=obj.system,
          record_format=obj.record_format, sample_interval=obj.sample_interval;
    }
-
-   // handle rest of data items
-   save, res, soe=grow(res.soe, obj.soe);
-   save, res, record=tp_grow(res.record, obj.record);
-   save, res, tx=grow(res.tx, obj.tx);
-   save, res, rx=grow(res.rx, obj.rx);
 
    return res;
 }
