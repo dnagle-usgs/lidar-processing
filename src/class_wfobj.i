@@ -9,7 +9,7 @@ tmp = save(help, summary, index, grow, x0, y0, z0, xyz0, x1, y1, z1, xyz1,
 
 func wfobj(base, obj) {
 /* DOCUMENT wfobj()
-   Creates a waveforms data object. This can be called in one of four ways.
+   Creates a waveforms data object. This can be called in one of three ways.
 
       data = wfobj(group)
          When passed a group object, DATA will be initialized as a copy of it.
@@ -31,10 +31,6 @@ func wfobj(base, obj) {
          When passed a filename, DATA will be initialized using the data from
          the specified file; that file should have been created using the save
          method to this class.
-      data = wfobj()
-         Without any arguments, DATA is an object with defaults for header
-         values and void for array/data values. Effectively, it's "empty".
-         While valid, this is fairly useless.
 
    A wfobj object is comprised of scalar header members, array data members,
    and methods. In the documentation below, "data" is the result of a call to
@@ -140,20 +136,16 @@ func wfobj(base, obj) {
       obj = obj_copy(obj);
    }
 
-   // Set up methods. We override generic's "index" method so we have to
-   // provide it specially.
    obj_merge, obj, base;
+
    // We don't want all of the objects to share a common data item, so they get
    // re-initialized here.
    save, obj,
       xyz0=closure(obj.xyz0.function, save(var="raw_xyz0", cs="-", xyz=[])),
       xyz1=closure(obj.xyz1.function, save(var="raw_xyz1", cs="-", xyz=[]));
 
-   // Provide defaults for scalar members
-   keydefault, obj, source="unknown", system="unknown", record_format=0,
-      cs=string(0), sample_interval=0.;
-   // Provide null defaults for array members
-   keydefault, obj, raw_xyz0=[], raw_xyz1=[], tx=[], rx=[];
+   keyrequire, obj, cs, sample_interval, raw_xyz0, raw_xyz1, tx, rx;
+   keydefault, obj, source="unknown", system="unknown", record_format=0;
 
    // Check and convert tx/rx if necessary; requires that raw_xyz0 also exist
    count = is_void(obj.raw_xyz0) ? 0 : dimsof(obj.raw_xyz0)(2);
