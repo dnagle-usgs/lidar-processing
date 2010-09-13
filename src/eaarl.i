@@ -106,7 +106,6 @@ if(is_void(__eaarl_includes_included__)) {
    require, "transect.i";
    require, "util_cast.i";
    require, "util_container.i";
-   require, "util_obj.i";
    require, "util_str.i";
    require, "veg.i";
    require, "wgs842nad83.i";
@@ -123,9 +122,10 @@ if(is_void(__eaarl_includes_included__)) {
       require, "class_clsobj.i";
       require, "class_deque.i";
       require, "class_wfobj.i";
+      require, "eaarl1_wf.i";
       require, "mathop.i";
       require, "obj_show.i";
-      require, "eaarl1_wf.i";
+      require, "util_obj.i";
    }
 
    // Must come last, because it depends on some of the above (it actually runs
