@@ -1,6 +1,33 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "eaarl.i";
 
+func keydefault(args) {
+/* DOCUMENT keydefault, obj, key1, val1, key2, val2, ...
+   keydefault, obj, key1=val1, key2=val2, ...
+
+   For a given object OBJ, if the given keys are not present, then they are set
+   with the corresponding given values.
+
+   SEE ALSO: default save
+*/
+// Original David Nagle 2010-08-09
+   if(!(args(0) % 2))
+      error, "invalid call to keydefault";
+   obj = args(1);
+   for(i = 2; i <= args(0); i += 2) {
+      key = args(0,i) ? args(i) : args(-,i);
+      if(!obj(*,key))
+         save, obj, noop(key), args(i+1);
+   }
+   keys = args(-);
+   for(i = 1; i <= numberof(keys); i++) {
+      key = keys(i);
+      if(!obj(*,key))
+         save, obj, noop(key), args(key);
+   }
+}
+wrap_args, keydefault;
+
 func obj_merge(obj, ..) {
 /* DOCUMENT obj = obj_merge(objA, objB, objC, ...)
    -or-  obj_merge, objA, objB, objC, ...
