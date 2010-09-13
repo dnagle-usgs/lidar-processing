@@ -1692,7 +1692,6 @@ prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=, verbose=) {
       rcfmode= Specifies which rcf filter function to use. Possible settings:
             rcfmode="grcf"    Use gridded_rcf (default)
             rcfmode="rcf"     Use old_gridded_rcf (deprecated)
-            rcfmode="srcf"    Use spatial_rcf (experimental)
 
       buf= Defines the size of the x/y neighborhood the filter uses, in
          centimeters. Default is 700cm.
@@ -1808,7 +1807,7 @@ prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=, verbose=) {
       // _b700_w50_n3
       if(meta)
          file_out += swrite(format="_b%d_w%d_n%d", buf, w, n);
-      // _grcf, _srcf, _ircf, _rcf
+      // _grcf, _ircf, _rcf
       file_out += "_" + rcfmode;
       // _mf
       // .pbd
