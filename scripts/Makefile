@@ -14,8 +14,7 @@ SCRIPTS = ascii_rename.pl check_for_tlds.pl check_to_archive clean.awk \
 	idx_tiles_summarize iex_ascii2pbd initialize_cir.py \
 	make_html_tiles.pl make_xml_metadata.pl mkeidx mk_opsconf \
 	mktrajfiles pnav2gm.pl pnav2kml.pl shapefile_filter.pl \
-	showdays show_doc.pl test_checksum vncpl whatsnew.pl wrsync \
-	xyz2track.pl
+	showdays show_doc.pl test_checksum vncpl wrsync xyz2track.pl
 
 $(bindir):
 	mkdir $(bindir)
