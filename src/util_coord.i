@@ -159,3 +159,54 @@ func deg2dms_string(coord) {
    return swrite(format="%.0f%c %.0f%c %.2f%c", dms(..,1), 176, abs(dms(..,2)),
       39, abs(dms(..,3)), 34);
 }
+
+func display_coord_bounds(x, y, cs, prefix=) {
+/* DOCUMENT display_coord_bounds, x, y, cs, prefix=
+   Displays the boundars for the given set of coordinates. X and Y must be
+   arrays of coordinate values. CS must be the coordinate system. PREFIX
+   defaults to " " and is used as a prefix to each output line.
+*/
+   default, prefix, " ";
+   cs = cs_parse(cs, output="hash");
+
+   // cells is an array of cell data in string form that will get displayed in
+   // tabular fashion
+   cells = [["","min","max"],["","",""]];
+   if(cs.proj == "longlat") {
+      grow, cells, [["x/lon:", swrite(format="%.11f", x(min)),
+         swrite(format="%.11f", x(max))]];
+      grow, cells, [["", deg2dms_string(x(min)), deg2dms_string(x(max))]];
+      grow, cells, [["","",""]];
+      grow, cells, [["y/lat:", swrite(format="%.11f", y(min)),
+         swrite(format="%.11f", y(max))]];
+      grow, cells, [["", deg2dms_string(y(min)), deg2dms_string(y(max))]];
+   } else {
+      grow, cells, [["x/east:", swrite(format="%.2f", x(min)),
+         swrite(format="%.2f", x(max))]];
+      grow, cells, [["y/north:", swrite(format="%.2f", y(min)),
+         swrite(format="%.2f", y(max))]];
+   }
+
+   // rows is an array of strings, one per row of cells
+   rows = array(string, dimsof(cells)(3));
+
+   // cols is the width of each column
+   cols = strlen(cells)(,max);
+
+   // the min and max column headers get padded to center them
+   cells(2) += array(" ", cols(2)/2)(sum);
+   cells(3) += array(" ", cols(3)/2)(sum);
+
+   // blank is rows that are blank -- those that get replaced by lines
+   blank = strlen(cells)(max,) == 0;
+
+   // fill in the rows with data or lines
+   fmt = swrite(format="%%%ds | %%%ds | %%%ds", cols(1), cols(2), cols(3));
+   w = where(!blank);
+   rows(w) = swrite(format=fmt, cells(1,w), cells(2,w), cells(3,w));
+   w = where(blank);
+   rows(w) = swrite(format="%s-+-%s-+-%s", array("-", cols(1))(sum),
+      array("-", cols(2))(sum), array("-", cols(3))(sum));
+
+   write, format="%s%s\n", prefix, rows;
+}
