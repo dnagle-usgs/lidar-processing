@@ -77,10 +77,13 @@ func summary(util) {
 func _grow(obj, headers=) {
    default, headers, "merge";
 
-   res = am_subroutine() ? use() : obj_copy(use());
+   res = am_subroutine() ? use() : obj_copy(use(), recurse=1);
 
    // Grow everything except coordinates (which have to be handled specially)
    obj_grow, res, obj, ref="raw_xyz", exclude=["raw_xyz"];
+
+   // Grow classes
+   res, class, grow, obj(class);
 
    // Handle coordinate system, which requires minor juggling
    cs = [];
