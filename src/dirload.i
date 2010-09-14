@@ -3,8 +3,6 @@ require, "eaarl.i";
 /*
 The functionality in this file is intended to supercede similar functions
 elsewhere, including:
-   read_yfile.i -- merge_data_pbds
-   zone.i -- zoneload_dt_dir, zoneload_qq_dir, __load_rezone_dir
    data_rgn_selector.i -- sel_rgn_from_datatiles
 */
 
