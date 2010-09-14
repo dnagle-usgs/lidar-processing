@@ -3,12 +3,14 @@ require, "eaarl.i";
 
 // scratch stores the values of scratch and tmp so that we can restore them
 // when we're done, leaving things as we found them.
-scratch = save(scratch, tmp, _save);
+scratch = save(scratch, tmp, _grow, _save);
 // tmp stores a list of the methods that will go into wfobj. It stores their
 // current values up-front, then restores them at the end while swapping the
 // new function definitions into wfobj.
-tmp = save(summary, index, x, y, z, xyz, save, help);
+tmp = save(help, summary, index, grow, x, y, z, xyz, save);
 
+   // common keys:
+   // intensity soe record pixel return_number number_of_returns
 func pcobj(base, obj) {
    if(is_void(obj))
       error, "Must provide group object or filename.";
@@ -71,6 +73,44 @@ func summary(util) {
    write, format=" %s\n", current_cs;
    display_coord_bounds, x, y, current_cs;
 }
+
+func _grow(obj, headers=) {
+   default, headers, "merge";
+
+   res = am_subroutine() ? use() : obj_copy(use());
+
+   // Grow everything except coordinates (which have to be handled specially)
+   obj_grow, res, obj, ref="raw_xyz", exclude=["raw_xyz"];
+
+   // Handle coordinate system, which requires minor juggling
+   cs = [];
+   if(headers == "merge")
+      cs = cs_compromise(res.cs, obj.cs);
+   else
+      cs = (headers == "keep" ? res.cs : obj.cs);
+   raw_xyz = tp_grow(
+      cs2cs(res.cs, cs, res.raw_xyz),
+      cs2cs(obj.cs, cs, obj.raw_xyz));
+   save, res, cs, raw_xyz;
+   cs = raw_xyz = [];
+
+   // Handle other headers
+   if(headers == "merge") {
+      if(res.source != obj.source)
+         save, res, source="merged";
+      if(res.system != obj.system)
+         save, res, system="merged";
+      if(res.record_format != obj.record_format)
+         save, res, record_format=0;
+   } else if(headers == "replace") {
+      save, res, source=obj.source, system=obj.system,
+         record_format=obj.record_format;
+   }
+
+   pcobj, res;
+   return res;
+}
+grow = _grow;
 
 func index(idx) {
    this = use();
