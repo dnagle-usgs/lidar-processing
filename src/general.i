@@ -193,6 +193,67 @@ func timer_finished(t0, fmt=) {
    write, format="%s", fmt;
 }
 
+func keyval_val(&data, name, val, fmt) {
+/* DOCUMENT keyval_val, data, name, val, fmt
+   DATA is an array of key/val string pairs. This function adds NAME and VAL to
+   the array. VAL is formatted using optional parameter FMT if given;
+   otherwise, is coerced into string as necessary.
+   SEE ALSO: keyval_hash keyval_obj keyval_display
+*/
+   if(!is_string(val))
+      default, fmt, "";
+   if(!is_void(fmt))
+      val = swrite(format=fmt, val);
+   grow, data, [[name, val]];
+}
+
+func keyval_hash(&data, obj, key, fmt, name=) {
+/* DOCUMENT keyval_hash, data, obj, key, fmt, name=
+   DATA is an array of key/val string pairs. If OBJ has a key KEY, then its
+   value is formatted using FMT and is added to DATA for the value. The name
+   will then be NAME if provided, KEY otherwise.
+   SEE ALSO: keyval_val keyval_obj keyval_display
+*/
+   if(!h_has(obj, key))
+      return;
+   default, name, key;
+   val = swrite(format=fmt, obj(key));
+   grow, data, [[name, val]];
+}
+
+func keyval_obj(&data, obj, key, fmt, name=) {
+/* DOCUMENT keyval_obj, data, obj, key, fmt, name=
+   DATA is an array of key/val string pairs. If OBJ has a member KEY, then its
+   value is formatted using FMT and is added to DATA for the value. The name
+   will then be NAME if provided, KEY otherwise.
+   SEE ALSO: keyval_val keyval_hash keyval_display
+*/
+   if(!obj(*,key))
+      return;
+   default, name, key;
+   val = swrite(format=fmt, obj(noop(key)));
+   grow, data, [[name, val]];
+}
+
+func keyval_display(data, prefix=, delim=, keyright=, valright=) {
+/* DOCUMENT keyval_display, data, prefix=, delim=, keyright=, valright=
+   DATA is an array of key/val string pairs that will be displayed one pair per
+   line as "KEY : VAL\n". PREFIX is a string to prefix to each line and
+   defaults to " ". DELIM is the delimiter to use between the key and value and
+   defaults to " : ". KEYRIGHT and VALRIGHT can be used to right justify either
+   the keys or values; they are left justified by default.
+   SEE ALSO: keyval_val keyval_hash keyval_display
+*/
+   default, prefix, " ";
+   default, delim, " : ";
+   default, keyright, 0;
+   default, valright, 0;
+   cols = strlen(data)(,max);
+   fmt = swrite(format="%s%%%s%ds%s%%%s%ds\n", prefix, (keyright ? "" : "-"),
+      cols(1), delim, (valright ? "" : "-"), cols(2));
+   write, format=fmt, data(1,), data(2,);
+}
+
 func popen_rdfile(cmd) {
 /* DOCUMENT popen_rdfile(cmd)
    This opens a pipe to the command given and reads its output, returning it as
