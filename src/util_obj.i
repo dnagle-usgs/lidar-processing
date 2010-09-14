@@ -383,7 +383,7 @@ func obj_index(this, idx, which=, bymethod=, ignoremissing=) {
    return result;
 }
 
-func obj_copy(this, dst) {
+func obj_copy(this, dst, recurse=) {
 /* DOCUMENT newobj = obj_copy(obj)
    -or- obj_copy, obj, dst
 
@@ -393,6 +393,9 @@ func obj_copy(this, dst) {
    When called as a subroutine, copies the data and methods of the calling
    object to the provided DST object, overwriting existing members as
    necessary.
+
+   By default, a shallow copy is made. Use recurse=1 to recursively apply
+   obj_copy to any member objects encountered.
 
    This function can be used as an object method by using a closure whose data
    item is 0:
@@ -408,8 +411,12 @@ func obj_copy(this, dst) {
       dst = save();
    else if(!is_obj(dst))
       error, "Called as subroutine without destination argument";
-   for(i = 1; i <= this(*); i++)
-      save, dst, this(*,i), this(noop(i));
+   for(i = 1; i <= this(*); i++) {
+      val = this(noop(i));
+      if(recurse && is_obj(val))
+         val = obj_copy(val, recurse=1);
+      save, dst, this(*,i), val;
+   }
    return dst;
 }
 
