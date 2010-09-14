@@ -126,7 +126,8 @@ func wfobj(base, obj) {
          Saves the data for this wfobj object to a pbd file specified by FN.
          The data can later be restored using 'data = wfobj(fn)'.
 */
-   default, obj, save();
+   if(is_void(obj))
+      error, "Must provide group object or filename.";
 
    // For restoring from file
    if(is_string(obj)) {
