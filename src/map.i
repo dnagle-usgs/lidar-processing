@@ -97,7 +97,6 @@ func show_map( m,color=,utm=,width=, noff=, eoff=, zone=) {
       a = *m(i);
       if (utm) {
          u = fll2utm(a(,1),a(,2));
-         //u = combine_zones(u);
          zone = u(3,);
          if (!curzone) curzone = u(3,1);
          idxcurzone = where(zone == curzone);
