@@ -32,13 +32,44 @@ func pcobj(base, obj) {
    // re-initialized here.
    save, obj, xyz=closure(obj.xyz.function, save(cs="-", xyz=[]));
 
-
    // Initialize clsobj if needed, and restore if serialized
    keydefault, obj, class=clsobj(dimsof(obj.raw_xyz)(2));
    if(typeof(obj.class) == "char")
       save, obj, class=clsobj(obj.class);
 
    return obj;
+}
+
+func summary(util) {
+   extern current_cs;
+   local head, x, y;
+   write, "Summary for point cloud object:";
+   write, "";
+   this = use();
+   keyval_val, head, "point count", dimsof(this.raw_xyz)(2), "%d";
+   keyval_obj, head, this, "source", "%s";
+   keyval_obj, head, this, "system", "%s";
+   keyval_obj, head, this, "record_format", "%d";
+   if(use(*,"soe")) {
+      times = swrite(format="%s to %s", soe2iso8601(use(soe)(min)),
+         soe2iso8601(use(soe)(max)));
+      keyval_val, head, "acquired", unref(times);
+   }
+   keyval_display, head;
+
+   write, "";
+   write, "Approximate bounds in native coordinate system";
+   write, format=" %s\n", use(cs);
+   splitary, use(raw_xyz), 3, x, y;
+   display_coord_bounds, x, y, use(cs);
+
+   if(current_cs == use(cs))
+      return;
+   splitary, use(xyz,), 3, x, y;
+   write, "";
+   write, "Approximate bounds in current coordinate system";
+   write, format=" %s\n", current_cs;
+   display_coord_bounds, x, y, current_cs;
 }
 
 func index(idx) {
