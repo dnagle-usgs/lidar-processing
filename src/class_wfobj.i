@@ -132,11 +132,16 @@ func wfobj(base, obj) {
    // For restoring from file
    if(is_string(obj)) {
       obj = pbd2obj(obj);
-   // If calling as a subroutine, don't modify in place
+   // If calling as a function, don't modify in place
    } else if(!am_subroutine()) {
       obj = obj_copy(obj);
    }
 
+   // Check for required keys and supply some defaults
+   keyrequire, obj, cs, sample_interval, raw_xyz0, raw_xyz1, tx, rx;
+   keydefault, obj, source="unknown", system="unknown", record_format=0;
+
+   // Import class methods
    obj_merge, obj, base;
 
    // We don't want all of the objects to share a common data item, so they get
@@ -145,11 +150,8 @@ func wfobj(base, obj) {
       xyz0=closure(obj.xyz0.function, save(var="raw_xyz0", cs="-", xyz=[])),
       xyz1=closure(obj.xyz1.function, save(var="raw_xyz1", cs="-", xyz=[]));
 
-   keyrequire, obj, cs, sample_interval, raw_xyz0, raw_xyz1, tx, rx;
-   keydefault, obj, source="unknown", system="unknown", record_format=0;
-
-   // Check and convert tx/rx if necessary; requires that raw_xyz0 also exist
-   count = is_void(obj.raw_xyz0) ? 0 : dimsof(obj.raw_xyz0)(2);
+   // Check and convert tx/rx if necessary
+   count = dimsof(obj.raw_xyz0)(2);
    if(numberof(obj.rx) == 2 && count > 10) {
       rx = tx = array(pointer, count);
       roff = toff = 1;
