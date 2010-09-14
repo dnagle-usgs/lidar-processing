@@ -3,7 +3,7 @@ require, "eaarl.i";
 
 // To avoid name collisions breaking help, some functions get temporarily named
 // with an underscore prefix.
-scratch = save(scratch, tmp, coord_print, xyzwrap, _grow, _save);
+scratch = save(scratch, tmp, key_prep, coord_print, xyzwrap, _grow, _save);
 tmp = save(help, summary, index, grow, x0, y0, z0, xyz0, x1, y1, z1, xyz1,
    save);
 
@@ -169,23 +169,21 @@ func summary(util) {
    local x, y;
    write, "Summary for waveform object:";
    write, "";
-   write, format=" %d total waveforms\n", numberof(use(rx));
+   this = use();
+   prep = [["waveform count", swrite(format="%d", numberof(this.rx))]];
+   util, key_prep, prep, this, "source", "%s";
+   util, key_prep, prep, this, "system", "%s";
+   util, key_prep, prep, this, "record_format", "%d";
+   util, key_prep, prep, this, "sample_interval", "%.6f ns/sample";
+   if(use(*,"soe")) {
+      times = swrite(format="%s to %s", soe2iso8601(use(soe)(min)),
+         soe2iso8601(use(soe)(max)));
+      grow, prep, [["acquired", unref(times)]];
+   }
+   fmt = swrite(format=" %%-%ds : %%s\n", strlen(prep(1,))(max));
+   write, format=fmt, prep(1,), prep(2,);
+
    write, "";
-   if(use(*,"source"))
-      write, format=" source: %s\n", use(source);
-   if(use(*,"system"))
-      write, format=" system: %s\n", use(system);
-   if(use(*,"soe"))
-      write, format=" acquired: %s to %s\n", soe2iso8601(use(soe)(min)),
-         soe2iso8601(use(soe)(max));
-   if(anyof(use(*,["source","system","soe"])))
-      write, "";
-   if(use(*,"record_format"))
-      write, format=" record_format: %d\n", use(record_format);
-   if(use(*,"sample_interval"))
-      write, format=" sample_interval: %.6f ns/sample\n", use(sample_interval);
-   if(anyof(use(*,["record_format","sample_interval"])))
-      write, "";
    write, "Approximate bounds in native coordinate system";
    write, format=" %s\n", use(cs);
    splitary, use(raw_xyz1), 3, x, y;
@@ -200,6 +198,14 @@ func summary(util) {
    write, "Approximate bounds in current coordinate system";
    write, format=" %s\n", current_cs;
    util, coord_print, cs, x, y;
+}
+
+func key_prep(&prep, this, key, fmt, name) {
+   if(!this(*,key))
+      return;
+   default, name, key;
+   val = swrite(format=fmt, this(noop(key)));
+   grow, prep, [[name, val]];
 }
 
 func coord_print(cs, x, y) {
@@ -218,7 +224,7 @@ func coord_print(cs, x, y) {
    }
 }
 
-summary = closure(summary, save(coord_print));
+summary = closure(summary, save(key_prep, coord_print));
 
 func _grow(obj, headers=) {
    default, headers, "merge";
