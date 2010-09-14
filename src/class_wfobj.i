@@ -3,7 +3,7 @@ require, "eaarl.i";
 
 // To avoid name collisions breaking help, some functions get temporarily named
 // with an underscore prefix.
-scratch = save(scratch, tmp, key_prep, xyzwrap, _grow, _save);
+scratch = save(scratch, tmp, xyzwrap, _grow, _save);
 tmp = save(help, summary, index, grow, x0, y0, z0, xyz0, x1, y1, z1, xyz1,
    save);
 
@@ -167,24 +167,23 @@ func wfobj(base, obj) {
    return obj;
 }
 
-func summary(util) {
+func summary {
    extern current_cs;
-   local x, y;
+   local head, x, y;
    write, "Summary for waveform object:";
    write, "";
    this = use();
-   prep = [["waveform count", swrite(format="%d", numberof(this.rx))]];
-   util, key_prep, prep, this, "source", "%s";
-   util, key_prep, prep, this, "system", "%s";
-   util, key_prep, prep, this, "record_format", "%d";
-   util, key_prep, prep, this, "sample_interval", "%.6f ns/sample";
+   keyval_val, head, "waveform count", numberof(this.rx), "%d";
+   keyval_obj, head, this, "source", "%s";
+   keyval_obj, head, this, "system", "%s";
+   keyval_obj, head, this, "record_format", "%d";
+   keyval_obj, head, this, "sample_interval", "%.6f ns/sample";
    if(use(*,"soe")) {
       times = swrite(format="%s to %s", soe2iso8601(use(soe)(min)),
          soe2iso8601(use(soe)(max)));
-      grow, prep, [["acquired", unref(times)]];
+      keyval_val, head, "acquired", unref(times);
    }
-   fmt = swrite(format=" %%-%ds : %%s\n", strlen(prep(1,))(max));
-   write, format=fmt, prep(1,), prep(2,);
+   keyval_display, head;
 
    write, "";
    write, "Approximate bounds in native coordinate system";
@@ -200,16 +199,6 @@ func summary(util) {
    write, format=" %s\n", current_cs;
    display_coord_bounds, x, y, current_cs;
 }
-
-func key_prep(&prep, this, key, fmt, name) {
-   if(!this(*,key))
-      return;
-   default, name, key;
-   val = swrite(format=fmt, this(noop(key)));
-   grow, prep, [[name, val]];
-}
-
-summary = closure(summary, save(key_prep));
 
 func _grow(obj, headers=) {
    default, headers, "merge";
