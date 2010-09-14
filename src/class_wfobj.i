@@ -82,6 +82,13 @@ func wfobj(base, obj) {
          The record number for the point. This value must be interpreted as
          defined by "record_format". Together with "soe", this should uniquely
          identify the waveform.
+   Automatic:
+   These data values are automatically created and should not be altered by the
+   user.
+      data(raw_bounds,)       array(double,2,3)
+         The bounds of the data, in the coordinate system specified by "cs".
+         This array is [[xmin,xmax],[ymin,ymax],[zmin,zmax]]. These bounds
+         cover the extent of both raw_xyz0 and raw_xyz1.
 
    Methods:
       data, help
@@ -163,6 +170,13 @@ func wfobj(base, obj) {
       }
       save, obj, rx, tx;
    }
+
+   raw0min = obj(raw_xyz0)(min,);
+   raw0max = obj(raw_xyz0)(max,);
+   raw1min = obj(raw_xyz1)(min,);
+   raw1max = obj(raw_xyz1)(max,);
+   raw_bounds = splitary([min(raw0min,raw1min), max(raw0max,raw1max)], 3);
+   save, obj, raw_bounds;
 
    return obj;
 }
