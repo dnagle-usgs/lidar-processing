@@ -647,21 +647,6 @@ if {![winfo exists .l1wid]} {
   .l1wid.mb.dep add cascade -label "Import/Export" -underline 0 \
     -menu .l1wid.mb.dep.ie
 
-  ### DEPRECATED 2009-12-22 ###
-  # Replaced by "Read PBD Data Directory..." and "Read Binary Data (edf/bin)
-  # Directory..." entries, supported by l1pro::dirload.
-  .l1wid.mb.dep.ie add command -label "Old Read Data Directory..." \
-    -underline 10 -command ::l1pro::deprecated::l1dir::gui
-
-  ### DEPRECATED 2009-02-02 ###
-  # This menu entry and its code are deprecated. They have been replaced by the
-  # code in namespace l1dir, which is invoked from the non-deprecated
-  # "Read Data Directory..." menu entry above it.
-  .l1wid.mb.dep.ie add command -label "Even Older Read Data Directory..." \
-    -command ::l1pro::deprecated::read_data_dir_older
-
-  .l1wid.mb.dep.ie add separator
-
   ### DEPRECATED 2010-01-03 ###
   # Following entries replaced by file-1.0.tm functionality.
   .l1wid.mb.dep.ie add command -label "Read Binary Data file..." -underline 0 \
