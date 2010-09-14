@@ -295,7 +295,13 @@ func _save(fn) {
 }
 save = _save;
 
-index = closure(obj_index, 0);
+func index(idx) {
+   res = am_subroutine() ? use() : obj_copy(use());
+   obj_index, res, idx;
+   wfobj, res;
+   return res;
+}
+
 help = closure(help, wfobj);
 
 wfobj = closure(wfobj, restore(tmp));
