@@ -202,7 +202,6 @@ func summary {
 
 func _grow(obj, headers=) {
    default, headers, "merge";
-
    res = am_subroutine() ? use() : obj_copy(use());
 
    // Grow everything except coordinates (which have to be handled specially)
@@ -238,6 +237,7 @@ func _grow(obj, headers=) {
          record_format=obj.record_format, sample_interval=obj.sample_interval;
    }
 
+   wfobj, res;
    return res;
 }
 grow = _grow;
