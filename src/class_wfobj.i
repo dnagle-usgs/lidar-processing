@@ -3,7 +3,7 @@ require, "eaarl.i";
 
 // To avoid name collisions breaking help, some functions get temporarily named
 // with an underscore prefix.
-scratch = save(scratch, tmp, key_prep, coord_print, xyzwrap, _grow, _save);
+scratch = save(scratch, tmp, key_prep, xyzwrap, _grow, _save);
 tmp = save(help, summary, index, grow, x0, y0, z0, xyz0, x1, y1, z1, xyz1,
    save);
 
@@ -190,17 +190,15 @@ func summary(util) {
    write, "Approximate bounds in native coordinate system";
    write, format=" %s\n", use(cs);
    splitary, use(raw_xyz1), 3, x, y;
-   cs = cs_parse(use(cs), output="hash");
-   util, coord_print, cs, x, y;
+   display_coord_bounds, x, y, use(cs);
 
    if(current_cs == use(cs))
       return;
-   cs = cs_parse(current_cs);
    splitary, use(xyz1,), 3, x, y;
    write, "";
    write, "Approximate bounds in current coordinate system";
    write, format=" %s\n", current_cs;
-   util, coord_print, cs, x, y;
+   display_coord_bounds, x, y, current_cs;
 }
 
 func key_prep(&prep, this, key, fmt, name) {
@@ -211,23 +209,7 @@ func key_prep(&prep, this, key, fmt, name) {
    grow, prep, [[name, val]];
 }
 
-func coord_print(cs, x, y) {
-   if(cs.proj == "longlat") {
-      write, "                min                max";
-      write, format="   x/lon: %16.11f   %16.11f\n", x(min), x(max);
-      write, format="          %16s   %16s\n",
-         deg2dms_string(x(min)), deg2dms_string(x(max));
-      write, format="   y/lat: %16.11f   %16.11f\n", y(min), y(max);
-      write, format="          %16s   %16s\n",
-         deg2dms_string(y(min)), deg2dms_string(y(max));
-   } else {
-      write, "               min           max";
-      write, format="    x/east: %11.2f   %11.2f\n", x(min), x(max);
-      write, format="   y/north: %11.2f   %11.2f\n", y(min), y(max);
-   }
-}
-
-summary = closure(summary, save(key_prep, coord_print));
+summary = closure(summary, save(key_prep));
 
 func _grow(obj, headers=) {
    default, headers, "merge";
