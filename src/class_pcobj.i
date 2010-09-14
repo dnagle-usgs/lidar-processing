@@ -10,33 +10,31 @@ scratch = save(scratch, tmp, _save);
 tmp = save(summary, index, x, y, z, xyz, save, help);
 
 func pcobj(base, obj) {
-   // requires raw_xyz
-   default, obj, save();
+   if(is_void(obj))
+      error, "Must provide group object or filename.";
 
    // For restoring from file
    if(is_string(obj)) {
       obj = pbd2obj(obj);
+   // If calling as function, don't modify in place
    } else if(!am_subroutine()) {
       obj = obj_copy(obj);
    }
 
-   if(!obj(*,"raw_xyz") || is_void(obj.raw_xyz))
-      error, "Must provide raw_xyz to initiliaze object";
+   // Check for required keys and supply some defaults
+   keyrequire, obj, cs, raw_xyz;
+   keydefault, obj, source="unknown", system="unknown", record_format=0;
 
+   // Import class methods
    obj_merge, obj, base;
+
    // We don't want all of the objects to share a common data item, so they get
    // re-initialized here.
    save, obj, xyz=closure(obj.xyz.function, save(cs="-", xyz=[]));
 
-   // Provide defaults for scalar members
-   keydefault, obj, source="unknown", system="unknown", record_format=0,
-      cs=string(0);
-   // Provide null defaults for array members
-   keydefault, obj, intensity=[], soe=[], record=[], pixel=[],
-      return_number=[], number_of_returns=[];
 
+   // Initialize clsobj if needed, and restore if serialized
    keydefault, obj, class=clsobj(dimsof(obj.raw_xyz)(2));
-   // Restore if serialized
    if(typeof(obj.class) == "char")
       save, obj, class=clsobj(obj.class);
 
