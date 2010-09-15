@@ -39,6 +39,9 @@ func pcobj(base, obj) {
    if(typeof(obj.class) == "char")
       save, obj, class=clsobj(obj.class);
 
+   raw_bounds = splitary([obj(raw_xyz)(min,),obj(raw_xyz)(max,)], 3);
+   save, obj, raw_bounds;
+
    return obj;
 }
 
