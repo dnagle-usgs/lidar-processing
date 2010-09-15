@@ -76,7 +76,6 @@ func summary(util) {
 
 func _grow(obj, headers=) {
    default, headers, "merge";
-
    res = am_subroutine() ? use() : obj_copy(use(), recurse=1);
 
    // Grow everything except coordinates (which have to be handled specially)
@@ -116,14 +115,10 @@ func _grow(obj, headers=) {
 grow = _grow;
 
 func index(idx) {
-   this = use();
-   bymethod = save(class="index");
-   if(am_subroutine()) {
-      obj_index, this, idx, bymethod=bymethod;
-      pcobj, this;
-   } else {
-      return pcobj(obj_index(this, idx, bymethod=bymethod));
-   }
+   res = am_subroutine() ? use() : obj_copy(use(), recurse=1);
+   obj_index, res, idx, bymethod=save(class="index");
+   pcobj, res;
+   return res;
 }
 
 func xyz(working, idx) {
