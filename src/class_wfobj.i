@@ -44,9 +44,9 @@ func wfobj(base, obj) {
 
    Scalar header members:
    Required:
-      data(cs,)               string      default: string(0)
+      data(cs,)               string
          Specifies the coordinate system used.
-      data(sample_interval,)  double      default: 0.
+      data(sample_interval,)  double
          Specifies the interval in nanoseconds between samples.
    Optional:
       data(source,)           string      default: "unknown"
@@ -77,7 +77,7 @@ func wfobj(base, obj) {
          The return waveform.
    Optional:
       data(soe,)              array(double,N)
-         The timestamp for the point, in seconds of the epoch.
+         The timestamp for the point, in UTC seconds of the epoch.
       data(record,)           array(long,N,2)
          The record number for the point. This value must be interpreted as
          defined by "record_format". Together with "soe", this should uniquely
