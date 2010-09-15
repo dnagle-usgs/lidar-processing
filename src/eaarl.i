@@ -130,6 +130,7 @@ if(is_void(__eaarl_includes_included__)) {
       require, "eaarl1_wf.i";
       require, "mathop.i";
       require, "obj_show.i";
+      require, "pcobj_import.i";
    }
 
    // Must come last, because it depends on some of the above (it actually runs
