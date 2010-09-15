@@ -538,9 +538,12 @@ func tp_grow(&ary, .., tp=, tpinv=) {
 */
    default, tp, [1,0];
    default, tpinv, tp;
-   res = transpose(ary, tp);
-   while(more_args())
-      grow, res, transpose(next_arg(), tp);
+   res = is_void(ary) ? [] : transpose(ary, tp);
+   while(more_args()) {
+      next = next_arg();
+      if(!is_void(next))
+         grow, res, transpose(next, tp);
+   }
    res = transpose(unref(res), tpinv);
    if(am_subroutine())
       eq_nocopy, ary, res;
