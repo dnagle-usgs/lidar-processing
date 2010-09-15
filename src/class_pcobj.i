@@ -119,6 +119,8 @@ grow = _grow;
 
 func index(idx) {
    res = am_subroutine() ? use() : obj_copy(use(), recurse=1);
+   if(is_string(idx))
+      idx = use(class, where, idx);
    obj_index, res, idx, bymethod=save(class="index");
    pcobj, res;
    return res;
@@ -130,6 +132,8 @@ func xyz(working, idx) {
       save, working, cs=current_cs,
          xyz=cs2cs(use(cs), current_cs, use(raw_xyz));
    }
+   if(is_string(idx))
+      idx = use(class, where, idx);
    return working.xyz(idx,);
 }
 xyz = closure(xyz, save(cs="0", xyz=[]));
