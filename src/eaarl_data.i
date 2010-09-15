@@ -224,6 +224,15 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
       }
    }
 
+   // Special case for pcobj
+   if(is_func(is_obj) && is_obj(data) && data(*,"class")) {
+      class = where(["be","ba","fs"] == mode);
+      if(!numberof(class))
+         return [];
+      class = ["bare_earth", "submerged_topo", "first_surface"](class)(1);
+      return splitary(data(xyz, class), 3, x, y, z);
+   }
+
    // Most data modes use east/north for x/y. Only bare earth and be intensity
    // use least/lnorth.
    if(anyof(["ba","ch","de","fint","fs"] == mode)) {
