@@ -9,9 +9,111 @@ scratch = save(scratch, tmp, _grow, _save);
 // new function definitions into wfobj.
 tmp = save(help, summary, index, grow, x, y, z, xyz, save);
 
-   // common keys:
-   // intensity soe record pixel return_number number_of_returns
 func pcobj(base, obj) {
+/* DOCUMENT pcobj()
+   Creates a point cloud data object. This can be called in one of three ways.
+
+      data = pcobj(group)
+      pcobj, data
+      data = pcobj(filename)
+
+   A pcobj object is compromised of scalar header members, array data members,
+   methods, and a classification sub-object. In the documentation below, "data"
+   is the result of a call to pcobj.
+
+   IMPORTANT: It is assumed that the values for the various header and array
+   members will not change after initialization. If you need to alter any
+   values, you should create a new pcobj object rather than modifying an
+   existing one in-place. In-place alterations may result in some functions
+   giving erroneous results.
+
+   Scalar header members:
+   Requires:
+      data(cs,)                  string
+         Specifies the coordinate system used.
+   Optional:
+      data(source,)              string      default: "unknown"
+         Source used to collect the data. Generally an airplane tail number.
+      data(system,)              string      default: "unknown"
+         Data acquisition system, ie. ATM, EAARL, etc.
+      data(record_format,)       long        default: 0
+         Defines how to interpret the record field.
+
+   Array data members, for N points:
+   Required:
+      data(raw_xyz,)             array(double,N,3)
+         Specifies the coordinates for the points, in the coordinate system
+         specified by "cs".
+   Optional:
+      data(soe,)                 array(double,N)
+         The timestamp for the point, in UTC seconds of the epoch.
+      data(record,)              array(long,N,2)
+         The record number for the point. This value must be interpreted as
+         defined by "record_format". Together with "soe", this should uniquely
+         identify the point.
+      data(intensity,)           array(float,N)
+         The intensity value for the point. In other words, the energy value
+         (or interpolated energy value) for the waveform where this point was
+         extracted.
+      data(tx_pixel,)            array(float,N)
+         Position in the transmit waveform that was used.
+      data(rx_pixel,)            array(float,N)
+         Position in the received waveform that was used.
+      data(return_number,)       array(short,N)
+         Which return number in sequence the point was, starting with 1 for
+         first.
+      data(number_of_returns,)   array(short,N)
+         Number of returns found on this waveform.
+   Automatic:
+   These data values are automatically created and should not be altered by the
+   user.
+      data(raw_bounds,)          array(double,2,3)
+         The bounds of the data, in the coordinate system specified by "cs".
+         This array is [[xmin,xmax],[ymin,ymax],[zmin,zmax]].
+
+   Sub-object:
+      data, class
+         The "class" sub-object is a clsobj object. For documentation, please
+         use:
+               data, class, help
+
+   Methods:
+      data, help
+         Displays this help documentation.
+      data, summary
+         Displays a summary for the data. Meant for interactive use.
+      data(index, idx)
+         Returns a new pcobj object. The new object will contain the same
+         header information. However, it will only contain the points specified
+         by "idx".
+      data, grow, otherdata, headers=
+         Appends the data in "otherdata" to the current data. The HEADERS=
+         option specifies how to merge the header fields. Valid values:
+            headers="merge" -- Equivalent fields are kept; this is the default
+               setting. Different fields are replaced as follows:
+                     source -> "merged"
+                     system -> "merged"
+                     cs -> uses cs_compromise
+                     record_format -> 0
+            headers="keep" -- All header fields are kept as is.
+            headers="replace" -- All header fields are replaced by those from
+               the other data.
+      newdata = data(grow, otherdata, headers=)
+         Creates a new wfobj object that is comprised of the data from data and
+         otherdata. This functions exactly like grow as described above, except
+         that it leaves "data" unmodified.
+      data(xyz,) -or- data(xyz,idx)
+         Returns the points stored in raw_xyz, except converted into the
+         current coordinate system as specified by current_cs. The points are
+         cached to improve performance. If "idx" is specified, then only those
+         points are returned.
+      data(x,)  data(y,)  data(z,)
+         Like "xyz", except they only return the x, y, or z coordinates. These
+         also can accept an "idx" parameter.
+      data, save, fn
+         Saves the data for this pcobj object to a pbd file specified by FN.
+         The data can later be restored using 'data = pcobj(fn)'.
+*/
    if(is_void(obj))
       error, "Must provide group object or filename.";
 
