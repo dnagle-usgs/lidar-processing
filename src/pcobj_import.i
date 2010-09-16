@@ -2,6 +2,22 @@
 require, "eaarl.i";
 
 func pcobj_from_old(data, cs=) {
+/* DOCUMENT result = pcobj_from_old(data, cs=)
+   Converts data in the old ALPS format into a point cloud object.
+
+   DATA must be an array using one of the old ALPS structures such as VEG__,
+   FS, GEO, etc.
+
+   CS should be the coordinate system of the data. It will default to WGS84
+   using extern CURZONE for the zone (or, if not defined, uses lat/long). This
+   is probably not trustworthy though, so you should provide the coordinate
+   system directly. Examples:
+      cs=cs_wgs84(zone=18)
+      cs=cs_nad83(zone=14)
+      cs=cs_navd88(zone=17, geoid="03")
+
+   SEE ALSO: pcobj
+*/
    if(structeqany(structof(data), VEG, VEG_, VEG__))
       return pcobj_from_old_veg(data, cs=cs);
    if(structeq(structof(data), GEO))
@@ -10,6 +26,10 @@ func pcobj_from_old(data, cs=) {
 }
 
 func pcobj_from_old_veg(data, cs=) {
+/* DOCUMENT pcobj_from_old_veg(data, cs=)
+   Handler function for pcobj_from_old that handles VEG, VEG_, and VEG__ data.
+   SEE ALSO: pcobj_from_old
+*/
    default, cs, cs_wgs84(zone=curzone);
 
    raw_xyz = data2xyz(data, mode="fs");
@@ -40,6 +60,10 @@ func pcobj_from_old_veg(data, cs=) {
 }
 
 func pcobj_from_old_geo(data, cs=) {
+/* DOCUMENT pcobj_from_old_geo(data, cs=)
+   Handler function for pcobj_from_old that handles GEO data.
+   SEE ALSO: pcobj_from_old
+*/
    default, cs, cs_wgs84(zone=curzone);
 
    raw_xyz = data2xyz(data, mode="fs");
@@ -70,21 +94,10 @@ func pcobj_from_old_geo(data, cs=) {
 }
 
 func pcobj_from_old_modes(data, cs=) {
-/* DOCUMENT result = pcobj_from_old_modes(data, cs=)
-   Converts data in the old ALPS format into a point cloud object.
-
-   DATA must be an array using one of the old ALPS structures such as VEG__,
-   FS, GEO, etc.
-
-   CS should be the coordinate system of the data. It will default to WGS84
-   using extern CURZONE for the zone (or, if not defined, uses lat/long). This
-   is probably not trustworthy though, so you should provide the coordinate
-   system directly. Examples:
-      cs=cs_wgs84(zone=18)
-      cs=cs_nad83(zone=14)
-      cs=cs_navd88(zone=17, geoid="03")
-
-   SEE ALSO: pcobj
+/* DOCUMENT pcobj_from_old_modes(data, cs=)
+   Handler function for pcobj_from_old that handles data based on the modes
+   present.
+   SEE ALSO: pcobj_from_old
 */
    local raw_xyz, intensity, soe, record, class;
    default, cs, cs_wgs84(zone=curzone);
