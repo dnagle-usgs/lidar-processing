@@ -271,10 +271,10 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
    }
 
    if(!native) {
-      x = unref(x) * double(0.01);
-      y = unref(y) * double(0.01);
+      x = unref(x) * 0.01;
+      y = unref(y) * 0.01;
       if(anyof(["ba","be","ch","de","fs","mir"] == mode))
-         z = unref(z) * double(0.01);
+         z = unref(z) * 0.01;
    }
 
    // Only want to do this if it's a subroutine, to avoid the memory overhead
