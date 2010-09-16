@@ -4,6 +4,8 @@ require, "eaarl.i";
 func pcobj_from_old(data, cs=) {
    if(structeqany(structof(data), VEG, VEG_, VEG__))
       return pcobj_from_old_veg(data, cs=cs);
+   if(structeq(structof(data), GEO))
+      return pcobj_from_old_geo(data, cs=cs);
    return pcobj_from_old_modes(data, cs=cs);
 }
 
@@ -30,6 +32,36 @@ func pcobj_from_old_veg(data, cs=) {
       record = data.rn;
       temp = pcobj(save(cs, raw_xyz, intensity, soe, record));
       temp, class, set, "bare_earth", 1;
+      result, grow, temp;
+      temp = [];
+   }
+
+   return result;
+}
+
+func pcobj_from_old_geo(data, cs=) {
+   default, cs, cs_wgs84(zone=curzone);
+
+   raw_xyz = data2xyz(data, mode="fs");
+   intensity = data.first_peak;
+   soe = data.soe;
+   record = data.rn;
+   result = pcobj(save(cs, raw_xyz, intensity, soe, record));
+   result, class, set, "first_surface", 1;
+
+   same = (data.depth == 0);
+
+   if(anyof(same))
+      result, class, apply, "submerged_topo", where(same);
+
+   if(nallof(same)) {
+      data = data(where(!same));
+      raw_xyz = data2xyz(data, mode="ba");
+      intensity = data.bottom_peak;
+      soe = data.soe;
+      record = data.rn;
+      temp = pcobj(save(cs, raw_xyz, intensity, soe, record));
+      temp, class, set, "submerged_topo", 1;
       result, grow, temp;
       temp = [];
    }
