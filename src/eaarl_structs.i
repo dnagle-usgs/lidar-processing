@@ -272,7 +272,7 @@ struct VEGALL {
 };
 
 
-local VEG_ALL_, VEG_ALL, VEGALL;
+local GEOALL;
 /* DOCUMENT
    Raster structure for bathymetry.
 
