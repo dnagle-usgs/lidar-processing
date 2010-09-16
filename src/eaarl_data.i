@@ -277,8 +277,8 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
          z = unref(z) * 0.01;
    }
 
-   // Only want to do this if it's a subroutine, to avoid the memory overhead
-   // of creating an unnecessary array.
+   // Only want to do this if it's not a subroutine, to avoid the memory
+   // overhead of creating an unnecessary array.
    if(!am_subroutine())
       return [x, y, z];
 }
