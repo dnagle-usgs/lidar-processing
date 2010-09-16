@@ -602,8 +602,8 @@ proc ::l1pro::tools::histclip::gui {} {
    grid columnconfigure $f.buttons {0 3} -weight 1
 
    grid x $f.lblinput $f.input -in $w.f -padx 2 -pady 2
-   grid $f.usemin $f.lblmin $f.minelv -in $w.f -padx 2 -pady 2
    grid $f.usemax $f.lblmax $f.maxelv -in $w.f -padx 2 -pady 2
+   grid $f.usemin $f.lblmin $f.minelv -in $w.f -padx 2 -pady 2
    grid x $f.lbloutput $f.output -in $w.f -padx 2 -pady 2
    grid $f.buttons - - -in $w.f -pady 2
 
