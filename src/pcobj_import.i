@@ -2,7 +2,11 @@
 require, "eaarl.i";
 
 func pcobj_from_old(data, cs=) {
-/* DOCUMENT result = pcobj_from_old(data, cs=)
+   return pcobj_from_old_modes(data, cs=cs);
+}
+
+func pcobj_from_old_modes(data, cs=) {
+/* DOCUMENT result = pcobj_from_old_modes(data, cs=)
    Converts data in the old ALPS format into a point cloud object.
 
    DATA must be an array using one of the old ALPS structures such as VEG__,
