@@ -2,7 +2,39 @@
 require, "eaarl.i";
 
 func pcobj_from_old(data, cs=) {
+   if(structeqany(structof(data), VEG, VEG_, VEG__))
+      return pcobj_from_old_veg(data, cs=cs);
    return pcobj_from_old_modes(data, cs=cs);
+}
+
+func pcobj_from_old_veg(data, cs=) {
+   default, cs, cs_wgs84(zone=curzone);
+
+   raw_xyz = data2xyz(data, mode="fs");
+   intensity = data.fint;
+   soe = data.soe;
+   record = data.rn;
+   result = pcobj(save(cs, raw_xyz, intensity, soe, record));
+   result, class, set, "first_surface", 1;
+
+   same = (data.elevation == data.lelv);
+
+   if(anyof(same))
+      result, class, apply, "bare_earth", where(same);
+
+   if(nallof(same)) {
+      data = data(where(!same));
+      raw_xyz = data2xyz(data, mode="be");
+      intensity = data.lint;
+      soe = data.soe;
+      record = data.rn;
+      temp = pcobj(save(cs, raw_xyz, intensity, soe, record));
+      temp, class, set, "bare_earth", 1;
+      result, grow, temp;
+      temp = [];
+   }
+
+   return result;
 }
 
 func pcobj_from_old_modes(data, cs=) {
