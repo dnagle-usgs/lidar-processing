@@ -18,6 +18,14 @@ local DEG2RAD, RAD2DEG;
 DEG2RAD = pi/180.;
 RAD2DEG = 180./pi;
 
+local MPS2KN, KN2MPS;
+/* DOCUMENT
+   MPS2KN -- constant for converting meters per second to knots
+   KN2MPS -- cosntant for converting knots to meters per second
+*/
+MPS2KN = 1.943844;
+KN2MPS = 0.514444;
+
 local CNS;
 /* DOCUMENT CNS
    Speed of light in space, in meters per nanosecond.
