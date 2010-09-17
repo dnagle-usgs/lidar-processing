@@ -60,6 +60,7 @@ if {![namespace exists ::pixelwf]} {
             variable pulse 1
             variable missionday {}
             variable radius 10.00
+            variable extended 0
             variable sfsync 0
          }
          namespace eval fit_gauss {
@@ -169,7 +170,7 @@ if {![namespace exists ::pixelwf]} {
          # applied.
          variable valid_values {
             {0 1} {
-               selection sfsync
+               selection {extended sfsync}
                fit_gauss {enabled lims verbose}
                ex_bath {enabled verbose}
                ex_veg {enabled verbose use_be_peak use_be_centroid hard_surface}
@@ -584,6 +585,7 @@ namespace eval ::pixelwf::gui {
          -width 0 -listvariable ::varlist
 
       checkbutton $f.chkSf -text [mc "SF Sync"] -variable ${ns}::sfsync
+      checkbutton $f.chkExt -text "Extended output" -variable ${ns}::extended
 
       button $f.btnGraph -text "Plot" -command [list ybkg pixelwf_plot]
 
@@ -591,16 +593,18 @@ namespace eval ::pixelwf::gui {
          -command [list exp_send "pixelwf_enter_interactive;\r"]
 
       grid $f.lblDay $f.cboDay - -
+      grid $f.lblVar $f.cboVar - -
       grid $f.lblRaster $f.spnRaster $f.lblPulse $f.spnPulse
-      grid $f.lblWindow $f.spnWindow $f.lblVar $f.cboVar
-      grid $f.lblRadius $f.spnRadius $f.chkSf -
+      grid $f.lblWindow $f.spnWindow $f.chkSf -
+      grid $f.lblRadius $f.spnRadius $f.chkExt -
       grid $f.btnMouse - $f.btnGraph -
 
       default_sticky \
          $f.lblDay $f.cboDay \
          $f.lblRaster $f.spnRaster $f.lblPulse $f.spnPulse \
          $f.lblWindow $f.spnWindow $f.lblVar $f.cboVar $f.chkSf \
-         $f.lblRadius $f.spnRadius $f.btnMouse $f.btnGraph
+         $f.lblRadius $f.spnRadius $f.btnMouse $f.btnGraph \
+         $f.chkExt
 
       grid configure $f.btnMouse -sticky w
 
