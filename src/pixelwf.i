@@ -14,6 +14,7 @@ if(is_void(pixelwfvars)) {
          radius=10.00,
          win=5,
          pro_var="fs_all",
+         extended=0,
          sfsync=0
       ),
       fit_gauss=h_new(
@@ -229,6 +230,7 @@ func pixelwf_selected_info(nearest) {
    extern pixelwfvars, soe_day_start;
    point = nearest.point;
    spot = nearest.spot;
+
    write, format="Location clicked: %9.2f %10.2f\n", spot(1), spot(2);
    write, format="   Nearest point: %9.2f %10.2f (%.2fm away)\n",
       point.east/100., point.north/100., nearest.distance;
@@ -249,6 +251,37 @@ func pixelwf_selected_info(nearest) {
    if((dimsof(get_member(var_expr_get(pixelwfvars.selection.pro_var),"soe"))(1)) == 1) {
       write, format="Corresponds to %s(%d)\n",
          pixelwfvars.selection.pro_var, nearest.index;
+   }
+
+   if(pixelwfvars.selection.extended && is_array(tans) && is_array(pnav)) {
+      write, "";
+      somd = point.soe - soe_day_start;
+      gns_idx = abs(pnav.sod - somd)(mnx);
+      gns = pnav(gns_idx);
+      ins = tans(abs(tans.somd - somd)(mnx));
+      write, format="GPS:  PDOP= %.2f  SVS= %d  RMS= %.3f  Flag= %d\n",
+         gns.pdop, gns.sv, gns.xrms, gns.flag;
+      write, format="INS:  Heading= %.3f  Pitch= %.3f  Roll= %.3f\n",
+         ins.heading, ins.pitch, ins.roll;
+      write, format="Altitude= %.2fm\n", gns.alt;
+
+      gns_idx = [gns_idx];
+      if(gns_idx(1) > 1)
+         gns_idx = gns_idx(1) + [-1,0];
+      if(gns_idx(0) < numberof(pnav))
+         grow, gns_idx, gns_idx(0)+1;
+
+      x = y = [];
+      gns = pnav(gns_idx);
+      ll2utm, gns.lat, gns.lon, y, x, force_zone=curzone;
+      dist = ppdist([x(:-1), y(:-1)], [x(2:), y(2:)], tp=1);
+      mps = (dist/abs(gns.sod(dif)))(avg);
+      write, format="Speed= %.1fm/s %.1fkn\n", mps, mps*MPS2KN;
+
+      write, "";
+      write, format="Trajectory files:\n  %s\n  %s\n",
+         file_tail(mission_get("pnav file")),
+         file_tail(mission_get("ins file"));
    }
 }
 
