@@ -314,7 +314,7 @@ save = _save;
 
 func index(idx) {
    res = am_subroutine() ? use() : obj_copy(use());
-   obj_index, res, idx;
+   obj_index, res, idx, size="count";
    wfobj, res;
    return res;
 }
