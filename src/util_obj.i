@@ -109,7 +109,7 @@ func obj_grow(util, this, .., ref=, exclude=) {
 
    If ref= is provided, it should be the name of a key to use to determine the
    leading size for the object. This key must be present in all objects. In the
-   above example, we coul dhave used ref="b".
+   above example, we could have used ref="b".
 
    If ref= is not provided, then all members are checked for size. If they all
    have the same size, then that size is used. If more than one size is
