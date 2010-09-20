@@ -83,9 +83,9 @@ func obj_merge(obj, ..) {
    return obj;
 }
 
-func obj_grow(util, this, .., ref=, exclude=) {
-/* DOCUMENT obj_grow, this, that, .., ref=, exclude=
-   -or- result = obj_grow(this, that, .., ref=, exclude=)
+func obj_grow(util, this, .., ref=, size=, exclude=) {
+/* DOCUMENT obj_grow, this, that, .., ref=, size=, exclude=
+   -or- result = obj_grow(this, that, .., ref=, size=, exclude=)
    Grows the growable members of a set of objects.
 
    This is intended to be used on objects that have keyed members where some
@@ -111,9 +111,13 @@ func obj_grow(util, this, .., ref=, exclude=) {
    leading size for the object. This key must be present in all objects. In the
    above example, we could have used ref="b".
 
-   If ref= is not provided, then all members are checked for size. If they all
-   have the same size, then that size is used. If more than one size is
-   detected, then none of the members will be used.
+   If size= is provided, it should be the name of a member (as a string) that
+   will return the leading size for the object. This key must be present in all
+   objects.
+
+   If neither ref= nor size= is provided, then all members are checked for
+   size. If they all have the same size, then that size is used. If more than
+   one size is detected, then none of the members will be used.
 
    If exclude= is provided, then it should be an array of key names that should
    be skipped if present.
@@ -130,8 +134,8 @@ func obj_grow(util, this, .., ref=, exclude=) {
    while(more_args()) {
       that = next_arg();
 
-      util, find_needed, this, ref, exclude, this_size, this_need;
-      util, find_needed, that, ref, exclude, that_size, that_need;
+      util, find_needed, this, ref, size, exclude, this_size, this_need;
+      util, find_needed, that, ref, size, exclude, that_size, that_need;
 
       // Scan through THIS and grow everything that needs to be grown
       for(i = 1; i <= this(*); i++) {
@@ -191,7 +195,7 @@ func dummy_array(val, size) {
    return array(structof(val), dims);
 }
 
-func find_needed(obj, ref, exclude, &size, &need) {
+func find_needed(obj, ref, sizekey, exclude, &size, &need) {
 // Utility function for obj_grow
 // For a given object, finds the dimension size of its growable members and
 // determines which members need to be grown
@@ -221,10 +225,12 @@ func find_needed(obj, ref, exclude, &size, &need) {
    }
 
    // Determine the size to use for growable members. If ref is present, it
-   // determines. Otherwise, we can only grow if all growable members are the
-   // same size.
+   // determines. If size is present, it determines. Otherwise, we can only
+   // grow if all growable members are the same size.
    if(!is_void(ref)) {
       size = dimsof(obj(noop(ref)))(2);
+   } else if(is_string(sizekey)) {
+      size = obj(noop(sizekey),);
    } else {
       size = 0;
       w = where(sizes);
