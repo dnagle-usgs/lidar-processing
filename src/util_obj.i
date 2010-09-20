@@ -260,9 +260,11 @@ func find_needed(obj, ref, sizekey, exclude, &size, &need) {
 obj_grow = closure(obj_grow, restore(tmp));
 restore, scratch;
 
-func obj_index(this, idx, which=, bymethod=, ignoremissing=) {
-/* DOCUMENT result = obj_index(obj, idx, which=, bymethod=, ignoremissing=)
-   -or- obj_index, obj, index, idx, which=, bymethod=, ignoremissing=
+func obj_index(this, idx, which=, ref=, size=, bymethod=, ignoremissing=) {
+/* DOCUMENT result = obj_index(obj, idx, which=, ref=, size= bymethod=,
+      ignoremissing=)
+   -or- obj_index, obj, index, idx, which=, ref=, size=, bymethod=,
+      ignoremissing=
 
    Indexes into the member variables of the given object.
 
@@ -275,6 +277,12 @@ func obj_index(this, idx, which=, bymethod=, ignoremissing=) {
          fields are left as-is. If not provided, then all indexable fields are
          indexed into. To forcibly indicate that no fields should be indexed
          into, use which=string(0).
+      ref= Specifies a member (by string name) that should be indexed. Its
+         leading size is used to determine which other members can also be
+         indexed. Only those members will be indexed.
+      size= Specifies a member (by string name) that will return the leading
+         size of the members that should be indexed.  Only those members will
+         be indexed.
       bymethod= Specifies fields that contain objects that need to be indexed
          via a given method. This option should be provided as a group object
          whose members are member names for the object and whose values are the
@@ -371,16 +379,34 @@ func obj_index(this, idx, which=, bymethod=, ignoremissing=) {
       return result;
    which = which(w);
 
+   // If ref= or size= are provided, then retrieve the size that needs to be
+   // used and store in leading for comparison
+   leading = 0;
+   if(!is_void(ref)) {
+      if(!result(*,ref))
+         error, "object does not have ref member: "+ref;
+      leading = dimsof(result(noop(ref)))(2);
+   } else if(!is_void(size)) {
+      if(!result(*,size))
+         error, "object does not have size member: "+size;
+      leading = result(noop(size),);
+   }
+
    // Handle directly-indexable members
    count = numberof(which);
    for(i = 1; i <= count; i++) {
       if(result(*,which(i))) {
          if(is_scalar(result(which(i))))
-            noop;
-         else if(is_array(result(which(i))))
+            continue;
+         if(is_array(result(which(i)))) {
+            if(leading && dimsof(result(which(i)))(2) != leading)
+               continue;
             save, result, which(i), result(which(i),idx,..);
-         else if(is_obj(result(which(i))))
+         } else if(is_obj(result(which(i)))) {
+            if(leading && result(which(i))(*) != leading)
+               continue;
             save, result, which(i), result(which(i), noop(idx));
+         }
       } else if(!ignoremissing) {
          error, "Missing key: " + which(i);
       }
