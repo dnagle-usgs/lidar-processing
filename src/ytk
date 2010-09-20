@@ -138,6 +138,7 @@ package require fileutil
 package require log
 package require struct::list
 package require mixin
+package require yorick
 
 option add *tearOff 0
 foreach __theme [ttk::style theme names] {
@@ -559,32 +560,8 @@ proc yorick_executable {} {
 #  A string representing the path+filename to the Yorick executable. If no
 #  executable is available, an empty string is returned.
 ##
-   global _ytk
-
-   # See if there's a Yorick defined.
-   if {[info exists _ytk(yorick_executable)]} {
-      if {[file isfile $_ytk(yorick_executable)]} {
-         return $_ytk(yorick_executable)
-      }
-   }
-
-   # If the current path is .../eaarl/lidar-processing/src
-   # Then basedir is .../eaarl
-   set basedir [file dirname [file dirname [app_root_dir]]]
-
-   # Check for .../eaarl/bin/yorick
-   if {[file isfile [file join $basedir bin yorick]]} {
-      return [file join $basedir bin yorick]
-   }
-
-   # Check for .../eaarl/yorick/bin/yorick
-   if {[file isfile [file join $basedir yorick bin yorick]]} {
-      return [file join $basedir yorick bin yorick]
-   }
-
-   # See if we can determine a Yorick from the system
    set yor_ex ""
-   catch {set yor_ex [exec which yorick]}
+   catch {set yor_ex [::yorick::executable]}
 
    set flag yes
    # If "which" did not find a valid Yorick, query the user for one until they
