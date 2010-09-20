@@ -64,9 +64,12 @@ func pcobj(base, obj) {
          first.
       data(number_of_returns,)   array(short,N)
          Number of returns found on this waveform.
+
    Automatic:
    These data values are automatically created and should not be altered by the
    user.
+      data(count,)               long
+         The number of points represented by the object.
       data(raw_bounds,)          array(double,2,3)
          The bounds of the data, in the coordinate system specified by "cs".
          This array is [[xmin,xmax],[ymin,ymax],[zmin,zmax]].
@@ -141,8 +144,9 @@ func pcobj(base, obj) {
    if(typeof(obj.class) == "char")
       save, obj, class=clsobj(obj.class);
 
+   count = dimsof(obj(raw_xyz))(2);
    raw_bounds = splitary([obj(raw_xyz)(min,),obj(raw_xyz)(max,)], 3);
-   save, obj, raw_bounds;
+   save, obj, count, raw_bounds;
 
    return obj;
 }
