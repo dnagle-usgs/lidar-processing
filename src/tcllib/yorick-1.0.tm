@@ -46,3 +46,52 @@ proc ::yorick::destroy_fifos args {
       catch [list file delete $fn]
    }
 }
+
+proc ::yorick::spawn {yor_tcl_fn tcl_yor_fn args} {
+   array set opts {-rlterm 0 -rlwrap 0}
+   array set opts $args
+
+   set spawner {cmd {
+      set cmd [linsert $cmd 0 spawn -noecho]
+      set result [catch {uplevel #0 $cmd}]
+      if {!$result} {
+         set result 1
+         expect "Copyright" {set result 0}
+      }
+      return $result
+   }}
+
+   set result 1
+   set cmd ""
+
+   set yorick [auto_execok yorick]
+   set rlterm [auto_execok rlterm]
+   set rlwrap [auto_execok rlwrap]
+
+   if {$yorick eq ""} {
+      error "Unable to find Yorick"
+   }
+
+   lappend yorick -i ytk.i $yor_tcl_fn $tcl_yor_fn
+
+   # Try rlterm first, if enabled
+   if {$result && $opts(-rlterm) && $rlterm ne ""} {
+      set result [apply $spawner [concat $rlterm $yorick]]
+   }
+   # Try rlwrap next, if enabled
+   if {$result && $opts(-rlwrap) && $rlwrap ne ""} {
+      set switches [list -c -b "'(){}\[],+=&^%$#@;|\""]
+      set dupes [list -D $::_ytk(rlwrap_nodupes)]
+      # Try first with -D option, then without (for older rlwraps)
+      set result [apply $spawner [concat $rlwrap $switches $dupes $yorick]]
+      if {$result} {
+         set result [apply $spawner [concat $rlwrap $switches $yorick]]
+      }
+   }
+   # Try vanilla Yorick last
+   if {$result} {
+      set result [apply $spawner $yorick]
+   }
+
+   return $result
+}
