@@ -6,9 +6,9 @@ local las_old;
 
    In December 2009, the parameters and options for pbd2las and batch_pbd2las
    changed as part of an upgrade of the functions' functionality. This
-   documents information how to transition from the old-style function calls to
-   the new-style ones. This documentation focuses on batch_pbd2las, but most of
-   it applies equally to pbd2las.
+   documents how to transition from the old-style function calls to the
+   new-style ones. This documentation focuses on batch_pbd2las, but most of it
+   applies equally to pbd2las.
 
    The old batch_pbd2las had this list of parameters and options:
 
@@ -105,7 +105,7 @@ local las_old;
          specify the file's creation day of year and year. Yorick is capable of
          automatically determining that quite easily, so now it does. You can
          safely omit these options if they were present in the older version.
-         If you for some reason need to explicity override them, you can do so
+         If you for some reason need to explicitly override them, you can do so
          with the header= option. However, that is advanced usage and is not
          detailed further here.
 
@@ -780,11 +780,11 @@ shorten_fn=, update=, files=) {
 
       In the examples above, "30088b4b_be" is not a valid variable name in
       Yorick because it contains a number. When that files is read back into
-      Yorick, you would encounter problems. However, by pre-pending "qq" to it,
+      Yorick, you would encounter problems. However, by prepending "qq" to it,
       it becomes a valid variable name.
 
       The default vname for a quarter quad gets "qq" prepended to the quarter
-      quad name, since all quarter quads begin with a number. These is
+      quad name, since all quarter quads begin with a number. There is
       currently no way to disable this behavior. Variable names that begin with
       a number cause problems when loaded into Yorick.
 
@@ -1143,10 +1143,10 @@ func las_open(filename) {
    Only header and points are guaranteed to be present.
 
    If sGeoKeys and sKeyEntry are present, then be aware that they are aliased
-   to data that is also refered to by one of the vrd_* variables.
+   to data that is also referred to by one of the vrd_* variables.
 
    IMPORTANT NOTE: When looking at the x, y, and z fields of the points
-   variable, you MUST also take into account the correspnending scale and
+   variable, you MUST also take into account the corresponding scale and
    offset in the header! If you're looking to plot or otherwise interact with
    the data, you should probably convert it to an FS or VEG__ structure using
    las_to_fs or las_to_veg.
