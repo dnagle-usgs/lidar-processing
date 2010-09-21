@@ -566,6 +566,7 @@ proc yorick_executable {} {
 #  A string representing the path+filename to the Yorick executable. If no
 #  executable is available, an empty string is returned.
 ##
+   set flag yes
    while {[auto_execok yorick] eq "" && $flag eq "yes"} {
       set flag [tk_messageBox -icon error -type yesno \
          -message "Ytk cannot locate Yorick, which it needs to function. Would you like to manually locate a Yorick? (If you answer no, Ytk will exit.)"]
