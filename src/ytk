@@ -579,12 +579,15 @@ proc yorick_executable {} {
 proc trace__ytk {name1 name2 op} {
 # When entries are added to _ytk in the form NAME_executable, auto_execs is
 # updated so that NAME returns the new value placed in _ytk.
-   if {![string match "*_executable" $name2]} {
-      return
+   if {[string match "*_executable" $name2]} {
+      set cmd [string range $name2 0 end-11]
+      set ::auto_execs($cmd) $::_ytk($name2)
+   } elseif {$name2 eq "executables_path"} {
+      set pathsep [expr {$::tcl_platform(platform) eq "windows" ? ";" : ":"}]
+      set path [split $::env(PATH) $pathsep]
+      set path [lreplace $path 0 0 $::_ytk($name2)]
+      set ::env(PATH) [join $path $pathsep]
    }
-
-   set cmd [string range $name2 0 end-11]
-   set ::auto_execs($cmd) $::_ytk($name2)
 }
 
 proc restore_defaults {} {
