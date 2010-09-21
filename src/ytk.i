@@ -545,7 +545,7 @@ func ytkquit {
 
    The Yorick built-in command quit was renamed to __quit if you need it.
 */
-   tkcmd, "exit";
+   tkcmd, "ytk_exit 0";
 }
 __quit = quit;
 quit = ytkquit;
