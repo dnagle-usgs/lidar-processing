@@ -792,38 +792,10 @@ proc establish_fifos {} {
 
    set tkcmd_line 0
 
-   # Establish fifo for communications, Yorick ---> tcl/tk
-   set ytk_fifo_name "/tmp/ytkfifo.[pid]"
-   set ytk_fifo [create_fifo $ytk_fifo_name]
-
-   # Establish fifo for communications, tcl/tk ---> Yorick
-   set tky_fifo_name "/tmp/tkyfifo.[pid]"
-   set tky_fifo [create_fifo $tky_fifo_name]
+   set fifos [::yorick::create_fifos]
+   lassign $fifos ytk_fifo ytk_fifo_name tky_fifo tky_fifo_name
 
    fileevent $ytk_fifo readable ytk_fifo_fileevent
-}
-
-proc create_fifo {fifo_file} {
-##
-# create_fifo fifo_file
-#  Creates a fifo using the filename specified, opens it, and returns its
-#  filehandle.
-#
-# Arguments:
-#  fifo_file: A string indicating the path and filename to use for the fifo.
-#
-# Returns:
-#  The filehandle for the open fifo.
-#
-# Side effects:
-#  The fifo is created and opened, but otherwise none.
-##
-   if {![file exists $fifo_file]} {
-      exec mkfifo -m uog+rw "$fifo_file"
-   }
-   set fifo [open $fifo_file "r+"]
-   fconfigure $fifo -buffering line -blocking 0
-   return $fifo
 }
 
 proc ytk_fifo_fileevent {} {
