@@ -71,3 +71,13 @@ proc ::yorick::create_fifos {} {
 
    return $result
 }
+
+proc ::yorick::destroy_fifos args {
+   if {[llength $args] % 2} {
+      error "Must provide fifos as pairs of FIFO FN"
+   }
+   foreach {fifo fn} $args {
+      catch [list close $fifo]
+      catch [list file delete $fn]
+   }
+}

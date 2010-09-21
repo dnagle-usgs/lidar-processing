@@ -973,13 +973,7 @@ proc ytk_exit {code} {
 #  application terminates with the given exit $code.
 ##
    global ytk_fifo_name tky_fifo_name ytk_fifo tky_fifo
-
-   catch [list close $ytk_fifo]
-   catch [list file delete $ytk_fifo_name]
-
-   catch [list close $tky_fifo]
-   catch [list file delete $tky_fifo_name]
-
+   ::yorick::destroy_fifos $ytk_fifo $ytk_fifo_name $tky_fifo $tky_fifo_name
    exit $code
 }
 
