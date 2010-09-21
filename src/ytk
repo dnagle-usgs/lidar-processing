@@ -129,6 +129,12 @@ check_requirements
 
 ::tcl::tm::path add [file join [app_root_dir] tcllib]
 
+# Ensures that programs in .../eaarl/bin are detected and take precedence when
+# using auto_execok
+set bindir [file join [file dirname [file dirname [app_root_dir]]] bin]
+set pathsep [expr {$::tcl_platform(platform) eq "windows" ? ";" : ":"}]
+set env(PATH) $bindir$pathsep$env(PATH)
+
 package require Tk
 package require tile
 package require BWidget
@@ -560,68 +566,24 @@ proc yorick_executable {} {
 #  A string representing the path+filename to the Yorick executable. If no
 #  executable is available, an empty string is returned.
 ##
-   set yor_ex ""
-   catch {set yor_ex [::yorick::executable]}
-
-   set flag yes
-   # If "which" did not find a valid Yorick, query the user for one until they
-   # give us one or give up.
-   while { ![file exists $yor_ex] && $flag eq "yes" } {
+   while {[auto_execok yorick] eq "" && $flag eq "yes"} {
       set flag [tk_messageBox -icon error -type yesno \
          -message "Ytk cannot locate Yorick, which it needs to function. Would you like to manually locate a Yorick? (If you answer no, Ytk will exit.)"]
       if { $flag eq "yes" } {
-         set $yor_ex [tk_getOpenFile -initialdir /]
+         set ::_ytk(yorick_executable) [tk_getOpenFile -initialdir /]
       }
    }
-   return $yor_ex
 }
 
-proc rlwrap_executable {} {
-##
-# rlwrap_executable
-#  Attempts to determine the rlwrap executable file.
-#
-#  In order of priority, tries to use the following:
-#     - value of _ytk(rlwrap_executable), if set (from .ytkrc)
-#     - ../../bin/rlwrap
-#     - ../../rlwrap/bin/rlwrap
-#     - rlwrap in path (shell call to "which rlwrap")
-#     - empty string
-#
-# Arguments:
-#  None
-#
-# Returns:
-#  A string representing the path+filename to the rlwrap executable. If no
-#  executable is available, an empty string is returned.
-##
-   global _ytk
-
-   # See if we already have one
-   if {[info exists _ytk(rlwrap_executable)]} {
-      if {[file isfile $_ytk(rlwrap_executable)]} {
-         return $_ytk(rlwrap_executable)
-      }
+proc trace__ytk {name1 name2 op} {
+# When entries are added to _ytk in the form NAME_executable, auto_execs is
+# updated so that NAME returns the new value placed in _ytk.
+   if {![string match "*_executable" $name2]} {
+      return
    }
 
-   # If the current path is .../eaarl/lidar-processing/src
-   # Then basedir is .../eaarl
-   set basedir [file dirname [file dirname [app_root_dir]]]
-
-   # Check for .../eaarl/bin/rlwrap
-   if {[file isfile [file join $basedir bin rlwrap]]} {
-      return [file join $basedir bin rlwrap]
-   }
-
-   # Check for .../eaarl/rlwrap/bin/rlwrap
-   if {[file isfile [file join $basedir rlwrap bin rlwrap]]} {
-      return [file join $basedir rlwrap bin rlwrap]
-   }
-
-   # See if we can determine an rlwrap from the system
-   set rl_ex ""
-   catch {set rl_ex [exec which rlwrap]}
-   return $rl_ex
+   set cmd [string range $name2 0 end-11]
+   set ::auto_execs($cmd) $::_ytk($name2)
 }
 
 proc restore_defaults {} {
@@ -640,8 +602,6 @@ proc restore_defaults {} {
 ##
    global _ytk
    array unset _ytk *
-   set _ytk(yorick_executable)   [yorick_executable]
-   set _ytk(rlwrap_executable)   [rlwrap_executable]
    set _ytk(editor)              vim
    set _ytk(use_rlterm)          No
    set _ytk(use_rlwrap)          Yes
@@ -882,26 +842,27 @@ proc spawn_yorick {} {
    # This is 1 until we successfully spawn a Yorick
    set result 1
    set cmd ""
-   set yor [list $_ytk(yorick_executable) -i ytk.i $ytk_fifo_name $tky_fifo_name]
+   set yor [auto_execok yorick]
+   lappend yor -i ytk.i $ytk_fifo_name $tky_fifo_name
 
    # Attempt to spawn using rlterm
-   catch { set rlterm [exec which rlterm] }
-   if { $result && [info exists rlterm] && $_ytk(use_rlterm) eq "Yes" } {
-      set cmd [concat [list $rlterm] $yor]
+   set rlterm [auto_execok rlterm]
+   if { $result && $rlterm ne "" && $_ytk(use_rlterm) eq "Yes" } {
+      set cmd [concat $rlterm $yor]
       set result [spawner $cmd]
    }
 
    # Attempt to spawn using rlwrap
-   catch { set rlwrap [exec which rlwrap] }
-   if { $result && [info exists rlwrap] && $_ytk(use_rlwrap) eq "Yes" } {
-      set cmd [concat [list $rlwrap -c -D $_ytk(rlwrap_nodupes) \
+   set rlwrap [auto_execok rlwrap]
+   if { $result && $rlwrap ne "" && $_ytk(use_rlwrap) eq "Yes" } {
+      set cmd [concat $rlwrap [list -c -D $_ytk(rlwrap_nodupes) \
          -b "'(){}\[],+=&^%$#@;|\""] $yor]
       set result [spawner $cmd]
    }
 
    # If first attempt for rlwrap failed, then try again without -D
    if { $result && [info exists rlwrap] && $_ytk(use_rlwrap) eq "Yes" } {
-      set cmd [concat [list $rlwrap -c -b "'(){}\[],+=&^%$#@;|\""] $yor]
+      set cmd [concat $rlwrap [list -c -b "'(){}\[],+=&^%$#@;|\""] $yor]
       set result [spawner $cmd]
 
       if {!$result} {
@@ -1814,9 +1775,7 @@ proc launch_gui {} {
    .mb.edit add command -label "Restore Defaults" -command restore_defaults
    .mb.edit add separator
    .mb.edit add command -label "Yorick executable ..." -command {
-      set _ytk(yorick_executable) [ tk_getOpenFile \
-         -initialdir [file dirname $_ytk(yorick_executable)] \
-         -initialfile [file tail $_ytk(yorick_executable)] ]
+      set _ytk(yorick_executable) [tk_getOpenFile]
    }
    .mb.edit add checkbutton -label "Use rlterm" -onvalue Yes -offvalue No -variable _ytk(use_rlterm)
    .mb.edit add checkbutton -label "Use rlwrap" -onvalue Yes -offvalue No -variable _ytk(use_rlwrap)
@@ -1870,7 +1829,7 @@ proc launch_gui {} {
    .mb.help add command -label "About Ytk" -command { ytk_About }
    .mb.help add command -label "Y_SITE: $Y_SITE"
    .mb.help add command -label "Yorick Version: $yorick_version"
-   .mb.help add command -label "Yorick location: $_ytk(yorick_executable)"
+   .mb.help add command -label "Yorick location: [auto_execok yorick]"
    .mb.help add command -label "Tcl [info patchlevel], Tk $tk_patchLevel, Expect [exp_version]"
    .mb.help add command -label "Yorick" -command { exp_send "help\r" }
    .mb.help add separator
@@ -2216,6 +2175,7 @@ proc launch_gui {} {
 
 ######## END PROCEDURES ########
 
+trace add variable _ytk write trace__ytk
 restore_defaults     ;# begin with the default settings
 load_options
 
@@ -2225,12 +2185,10 @@ load_options
 ############################################################
 
 ############# set _ytk(yorick_executable) junk
-if { ![file exists $_ytk(yorick_executable)] } {
-   set _ytk(yorick_executable) [yorick_executable]
-   if { ![file exists $_ytk(yorick_executable)] } {
-      puts stderr "No yorick found, aborting..."
-      ytk_exit 2
-   }
+yorick_executable
+if {[auto_execok yorick] eq ""} {
+   puts stderr "No yorick found, aborting..."
+   ytk_exit 2
 }
 
 initialize_globals
