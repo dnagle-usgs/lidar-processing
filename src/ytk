@@ -1132,61 +1132,6 @@ proc select_ytk_fn {start_dir} {
    }
 }
 
-proc winopen {n} {
-##
-# winopen n
-#  Opens a Yorick plot window, taking these steps:
-#  1. Kills the specified window
-#  2. Opens the specified window with its dpi set to _ytk(plot_dpi) and its
-#     style set to _ytk(plot_style).gs.
-#
-# Arguments:
-#  n: An integer indicating the window to open.
-#
-# Returns:
-#  Nothing
-#
-# Side effects:
-#  None
-##
-   global _ytk
-   exp_send "winkill,$n;window,$n,dpi=$_ytk(plot_dpi),style=\"$_ytk(plot_style).gs\"\r"
-}
-
-proc winkill {n} {
-##
-# winkill n
-#  Kills a Yorick plot window (via the Yorick winkill command).
-#
-# Arguments:
-#  n: An integer indicating the window to kill.
-#
-# Returns:
-#  Nothing
-#
-# Side effects:
-#  None
-##
-   exp_send "winkill, $n;\r"
-}
-
-proc winsel {n} {
-##
-# winsel n
-#  Selects a Yorick plot window (via the Yorick window command).
-#
-# Arguments:
-#  n: An integer indicating the window to select.
-#
-# Returns:
-#  Nothing
-#
-# Side effects:
-#  None
-##
-   exp_send "window, $n;\r"
-}
-
 proc pa_winkill {n} {
 ##
 # pa_winkill n
@@ -1204,7 +1149,7 @@ proc pa_winkill {n} {
 #  None
 ##
    global plot_array
-   winkill $plot_array(window$n)
+   exp_send "winkill, $plot_array(window$n);\r"
 }
 
 proc pa_fma {n} {
@@ -1595,9 +1540,6 @@ proc launch_gui {} {
    menu .mb.edit
    menu .mb.edit.editor
    menu .mb.graph
-   menu .mb.graph.open
-   menu .mb.graph.kill
-   menu .mb.graph.select
    menu .mb.graph.gridxy
    menu .mb.graph.plot
    menu .mb.debug
@@ -1947,9 +1889,6 @@ proc launch_gui {} {
    the points. It is much faster then plmk if you
    have much data."
 
-   .mb.graph add cascade -label "Open window..." -underline 1 -menu .mb.graph.open
-   .mb.graph add cascade -label "Kill window..." -underline 1 -menu .mb.graph.kill
-   .mb.graph add cascade -label "Select window..." -underline 1 -menu .mb.graph.select
    .mb.graph add cascade -label "Grid Settings..." -underline 1 -menu .mb.graph.gridxy
    .mb.graph add cascade -label "Plot ..." -underline 2 -menu .mb.graph.plot
    .mb.graph add separator
@@ -1969,12 +1908,6 @@ proc launch_gui {} {
    .mb.graph add separator
    .mb.graph add command -label "Show color bar in window 0" \
       -command [list show_colorbar 0]
-
-   for {set w 0} {$w < 8} {incr w} {
-      .mb.graph.open add command -label "Window $w" -command [list winopen $w]
-      .mb.graph.kill add command -label "Winkill $w" -command [list winkill $w]
-      .mb.graph.select add command -label "Window $w" -command [list winsel $w]
-   }
 
    .mb.graph.gridxy add command -label "No grid lines" \
       -command { exp_send "gridxy,0,0\r"  }
