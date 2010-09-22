@@ -1349,18 +1349,6 @@ proc launch_gui {} {
    .mb.help add command -label "Yorick location: [auto_execok yorick]"
    .mb.help add command -label "Tcl [info patchlevel], Tk $tk_patchLevel, Expect [exp_version]"
    .mb.help add command -label "Yorick" -command { exp_send "help\r" }
-   .mb.help add separator
-
-   set help_commands [list \
-      array animate fft fma grow help hardcopy indgen interp limits numberof \
-      plg plmk plsys print sort span where where2 write window viewport \
-      get_dir get_openfn get_savefn tk_messageBox]
-
-   foreach help_command $help_commands {
-      .mb.help add command -label $help_command \
-         -command [list exp_send "help, $help_command\r"]
-   }
-   unset help_command help_commands
 
    .mb.file add command -label "Load a Yorick/ytk program file ..." \
       -command { select_ytk_fn $ytkcode_dir }
