@@ -673,8 +673,6 @@ proc initialize_globals {} {
 # initialize_globals
 #  Initializes the values of global variables that are not initialized
 #  elsewhere:
-#     ytk_PLMK_marker: A constant array matching marker names to numbers.
-#     markers: A constant list of marker names.
 #     _ytk_mrl: The most recently used file list.
 #     _ytk_mrl_idx: The current index into _ytk_mrl.
 #
@@ -683,18 +681,8 @@ proc initialize_globals {} {
 #
 # Returns:
 #  Nothing
-#
-# Side effects:
-#  Sets the values for the globals ytk_PLMK_marker and markers.
 ##
-   global ytk_PLMK_marker markers _ytk_mrl_idx _ytk_mrl
-
-   set _markers [list \
-      None Square Cross Triangle Circle Diamond Cross45 Inverted-Triangle]
-   for {set i 0} {$i < 8} {incr i} {
-      set ytk_PLMK_marker([lindex $_markers $i]) $i
-   }
-   set markers "square cross triangle circle diamond cross45 inverted_triangle"
+   global _ytk_mrl_idx _ytk_mrl
 
    set _ytk_mrl_idx 1
    for { set i 1 } { $i <= 8 } { incr i } {
@@ -1128,225 +1116,6 @@ proc select_ytk_fn {start_dir} {
    if {[source_ytk_file $_ytk_fn]} {
       ytk_mr_enqueue $_ytk_fn
    }
-}
-
-proc pa_winkill {n} {
-##
-# pa_winkill n
-#  Kills a Yorick plot window (via the Yorick winkill command) associated with
-#  the plot_array global.
-#
-# Arguments:
-#  n: A string indicating the index into plot_array that represents the
-#     window to kill.
-#
-# Returns:
-#  Nothing
-#
-# Side effects:
-#  None
-##
-   global plot_array
-   exp_send "winkill, $plot_array(window$n);\r"
-}
-
-proc pa_fma {n} {
-##
-# pa_fma n
-#  Issues a Yorick frame advance (fma) to a Yorick plot window associated with
-#  the plot_array global.
-#
-# Arguments:
-#  n: A string indicating the index into plot_array that represents the
-#     window to receive the frame advance.
-#
-# Returns:
-#  Nothing
-#
-# Side effects:
-#  None
-##
-   global plot_array
-   exp_send "window, $plot_array(window$n); fma;\r"
-}
-
-proc pa_limits {n} {
-##
-# pa_limits n
-#  Issues a Yorick limits command to a Yorick plot window associated with the
-#  plot_array global.
-#
-# Arguments:
-#  n: A string indicating the index into plot_array that represents the
-#     window to receive the limits command.
-#
-# Returns:
-#  Nothing
-#
-# Side effects:
-#  None
-##
-   global plot_array
-   exp_send "window, $plot_array(window$n); limits;\r"
-}
-
-proc plot_cmd {cmd n} {
-##
-# plot_cmd cmd n
-#  Issues the given command $cmd with index n. Only works when $cmd is plg or
-#  plmk. Uses the settings defined in plot_array and the data stored in _ytk_x
-#  and _ytk_y (all globals).
-#
-#  This is used within the GUI created by ytk_plot.
-#
-# Arguments:
-#  cmd: String indicating the command to use. Should be one of: plg plmk
-#  n: The index of the command, which should be unique.
-#
-# Returns:
-#  Nothing
-#
-# Side effects:
-#  Globals _ytk_x and _ytk_y are set to the values in pot_array that correspond
-#  to the given command/index.
-##
-   global plot_array markers _ytk_x _ytk_y
-
-   set idx "$cmd$n"
-   set win "window($plot_array(window$idx));"
-   set fma "$plot_array(fma$idx);"
-   if {$fma ne "fma;"} {set fma ""}
-   set color  "$plot_array(color$idx)"
-   set _ytk_x      "$plot_array(x$idx)"
-   set _ytk_y      "$plot_array(y$idx)"
-   set lwidth "width=$plot_array(lwidth$idx)"
-
-   switch $cmd {
-      plg {
-         set marks  "$plot_array(marks$idx)"
-         set lwidth "width=$plot_array(lwidth$idx)"
-         set type   "$plot_array(type$idx)"
-
-         send_user "($n)$win$fma $cmd,$_ytk_y,$_ytk_x,\
-            $marks,type=\"$type\",$lwidth,color=\"$color\"\n"
-         exp_send "$win$fma$cmd,$_ytk_y,$_ytk_x,\
-            $marks,type=\"$type\",$lwidth,color=\"$color\"\r"
-      }
-      plmk {
-         set marker [expr [lsearch $markers $plot_array(marker$idx)] + 1]
-         set msize $plot_array(msize$idx)
-         exp_send "$win$fma$cmd,$_ytk_y,$_ytk_x,\
-            marker=$marker,$lwidth,msize=$msize,color=\"$color\"\r"
-      }
-   }
-}
-
-proc ytk_plot {plot_type} {
-##
-# ytk_plot plot_type
-#  Creates a GUI to facilitate plotting. This GUI provides the following:
-#     * The user can specify which variables to plot, for x and for y (stored
-#     in plot_array).
-#     * The user can specify a window to plot in, the color to plot with, the
-#     marker to use (if relevant), the width to use, line style, and various
-#     other settings (all stored in plot_array).
-#     * The plot can be executed via a provided button (which uses plot_cmd).
-#     * Buttons are provided for fma and limits.
-#
-# Arguments:
-#  plot_type: One of plg or plmk.
-#
-# Returns:
-#  Nothing
-#
-# Side effects:
-#  Sets up the values of global plot_array using a unique index, for later
-#  reference.
-#
-#  Increments global _ytk_plot_num -- or sets to 1 if it does not exist yet.
-#
-#  Sets the yorick variables _ytk_x and _ytk_y to test data.
-##
-   global _ytk_plot_num markers expect_out plot_array _ytk_x _ytk_y
-
-   if {[info exists _ytk_plot_num]} {
-      incr _ytk_plot_num
-   } else {
-      set _ytk_plot_num 1
-   }
-
-   set fma 1
-   set w $plot_type$_ytk_plot_num
-   set plot_array(x$w) _ytk_x
-   set plot_array(y$w) _ytk_y
-   toplevel .$w
-
-   # Determine the present window by asking Yorick with a window() command
-   # We'll keep the information and use it to insure we're plotting in the
-   # desired window.
-   exp_send "window()\r"
-   expect "\r*>"
-   set win [lindex [split [string trim $expect_out(0,string) "\r\n>"] "\""] 0]
-   set plot_array(window$w)  $win
-
-   # send some data for testing.
-   exp_send "_ytk_x = span(-6*pi,6*pi, 256); _ytk_y = sin(_ytk_x)/_ytk_x;\r";
-
-   frame .$w.a -relief sunken -borderwidth 3
-   button .$w.a.dismiss -text Dismiss -command [list destroy .$w]
-   tk_optionMenu .$w.a.window plot_array(window$w)  0 1 2 3 4 5 6 7
-   entry .$w.x -width 32 -textvariable plot_array(x$w)
-   entry .$w.y -width 32 -textvariable plot_array(y$w)
-
-   button .$w.a.kill -text Kill -command [list pa_winkill $w]
-   tk_optionMenu .$w.color plot_array(color$w) \
-      fg bg black white red green blue cyan magenta yellow
-   checkbutton .$w.fma -text {Fma first} \
-      -variable plot_array(fma$w) -onvalue fma
-   tk_optionMenu .$w.lwidth plot_array(lwidth$w) \
-      0.5 1.0 1.5 2.0 2.5 3 5 7 10 15 20 25
-
-   switch $plot_type {
-      plg {
-         checkbutton .$w.marks -text Marks \
-            -variable plot_array(marks$w) \
-            -offvalue "marks=0" \
-            -onvalue  "marks=1"
-         tk_optionMenu .$w.type plot_array(type$w) solid none dash dot dashdot dashdotdot
-      }
-      plmk {
-         eval [list tk_optionMenu .$w.marker plot_array(marker$w)] $markers
-         tk_optionMenu .$w.msize plot_array(msize$w) \
-            .1 .2 .3 .4 .5 .75 1.0 1.5 2.0 2.5 3 4 5 6 7 10 15 20
-      }
-   }
-
-   frame .$w.c -relief raised -borderwidth 3
-   button .$w.c.plot -text "Execute Plot" -command [list plot_cmd $plot_type $_ytk_plot_num]
-   button .$w.c.fma -text Fma -command [list pa_fma $w]
-   button .$w.c.limits -text Limits -command [list pa_limits $w]
-
-   pack .$w.c.plot .$w.c.fma .$w.c.limits \
-      -side left  -fill x -expand 1
-   label .$w.a.winlabel -text "Window:"
-   pack .$w.a.dismiss -side right -anchor ne
-   pack .$w.a.winlabel .$w.a.window .$w.a.kill -side left -expand 1 -fill x
-   pack .$w.a -side top -expand 1 -fill x
-   pack .$w.fma -side top
-   pack .$w.color -side top
-   pack .$w.lwidth -side top
-   switch $plot_type {
-      plg {
-         pack .$w.marks -side top
-         pack .$w.type -side top
-      }
-      plmk {
-         pack .$w.marker -side top
-         pack .$w.msize -side top
-      }
-   }
-   pack .$w.x .$w.y -side top
-   pack .$w.c -side bottom -expand 1 -fill x
 }
 
 proc start_yorick {}  {
@@ -1888,7 +1657,6 @@ proc launch_gui {} {
    have much data."
 
    .mb.graph add cascade -label "Grid Settings..." -underline 1 -menu .mb.graph.gridxy
-   .mb.graph add cascade -label "Plot ..." -underline 2 -menu .mb.graph.plot
 
    .mb.graph add separator
    .mb.graph add command -label "Show color bar in window 0" \
@@ -1909,12 +1677,6 @@ proc launch_gui {} {
       -command { exp_send "gridxy,2,0\r"  }
    .mb.graph.gridxy add command -label "X and Y origins only" \
       -command { exp_send "gridxy,2,2\r"  }
-
-   # TODO: implement and add options for: plc pldj plf plfp pli plm plt plv
-   .mb.graph.plot add command -label "Plg  ..." -underline 2 \
-      -command [list ytk_plot plg]
-   .mb.graph.plot add command -label "Plmk ..." -underline 2 \
-      -command [list ytk_plot plmk]
 
    toplevel .tx
    wm withdraw .tx
