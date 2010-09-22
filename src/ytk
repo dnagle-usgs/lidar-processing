@@ -720,9 +720,9 @@ proc tx_doc {message} {
 #  all but the last 100 lines.
 ##
    if {[winfo exists .tx.doc]} {
-      .tx.doc insert end $message
+      .tx.doc ins end $message
       .tx.doc yview moveto 1.0
-      .tx.doc delete 1.0 "end - 100 lines"
+      .tx.doc del 1.0 "end - 101 lines"
    }
 }
 
@@ -946,12 +946,14 @@ proc launch_gui {} {
 
    toplevel .tx
    wm withdraw .tx
-   button .tx.hide -text "Click to hide this window" \
-      -command { .mb.tkcon invoke 2  }
-   pack .tx.hide -side top -fill x -expand 1
-   scrollbar .tx.sb -command {.tx.doc yview }
-   text .tx.doc  -width 80 -height 4 -yscrollcommand {  .tx.sb set }
-   pack  .tx.doc .tx.sb -side left -fill y -expand 1
+   wm title .tx "tkcmd history"
+   wm protocol .tx WM_DELETE_WINDOW [list wm withdraw .tx]
+   scrollbar .tx.sb -command [list .tx.doc yview]
+   ::mixin::text::readonly .tx.doc -width 80 -height 10 \
+      -yscrollcommand [list .tx.sb set]
+   grid .tx.doc .tx.sb -sticky news
+   grid columnconfigure .tx 0 -weight 1
+   grid rowconfigure .tx 0 -weight 1
 }
 
 ######## END PROCEDURES ########
