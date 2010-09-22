@@ -1305,12 +1305,6 @@ proc launch_gui {} {
 
    .mb.help add checkbutton -label "Help goes in new window" \
       -onvalue Yes -offvalue No -variable _ytk(separate_help_win)
-   .mb.help add separator
-   .mb.help add command -label "Y_SITE: $Y_SITE"
-   .mb.help add command -label "Yorick Version: $yorick_version"
-   .mb.help add command -label "Yorick location: [auto_execok yorick]"
-   .mb.help add command -label "Tcl [info patchlevel], Tk $tk_patchLevel, Expect [exp_version]"
-   .mb.help add command -label "Yorick" -command { exp_send "help\r" }
 
    .mb.file add command -label "Load a Yorick/ytk program file ..." \
       -command { select_ytk_fn $ytkcode_dir }
@@ -1360,6 +1354,7 @@ if {[auto_execok yorick] eq ""} {
 initialize_globals
 establish_fifos
 
+puts " Tcl [info patchlevel], Tk $tk_patchLevel, Expect [exp_version] ready."
 if { [spawn_yorick] } {
    puts "Encountered problem starting yorick... please restart with a different yorick"
    ytk_exit 3
