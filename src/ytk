@@ -586,7 +586,7 @@ proc restore_defaults {} {
    set _ytk(separate_help_win)   Yes
    set _ytk(ycode_dir)           .
    set _ytk(ytkcode_dir)         /opt/eaarl/lidar-processing/src/
-   set _ytk(initialdir)          /data/0
+   set _ytk(initialdir)          /data
    set _ytk(rlwrap_nodupes)      1
 }
 
