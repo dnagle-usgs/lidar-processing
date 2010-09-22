@@ -666,28 +666,6 @@ proc load_options {} {
    }
 }
 
-proc initialize_globals {} {
-##
-# initialize_globals
-#  Initializes the values of global variables that are not initialized
-#  elsewhere:
-#     _ytk_mrl: The most recently used file list.
-#     _ytk_mrl_idx: The current index into _ytk_mrl.
-#
-# Arguments:
-#  None
-#
-# Returns:
-#  Nothing
-##
-   global _ytk_mrl_idx _ytk_mrl
-
-   set _ytk_mrl_idx 1
-   for { set i 1 } { $i <= 8 } { incr i } {
-      set _ytk_mrl($i) ""
-   }
-}
-
 proc establish_fifos {} {
 ##
 # establish_fifos
@@ -827,73 +805,6 @@ proc ytk_exit {code} {
    exit $code
 }
 
-proc most_recent_loaded {} {
-##
-# most_recent_loaded
-#  Creates a GUI window that lists the most recently loaded files, as defined
-#  in _ytk_mrl. Double-clicking an entry will cause it to be sourced via
-#  most_recent_lb_dbl_clk.
-#
-# Arguments:
-#  None
-#
-# Returns:
-#  Nothing
-#
-# Side effects:
-#  None
-##
-   global _ytk_mrl
-
-   set w .most_recent
-
-   destroy $w
-   toplevel $w
-   wm transient $w .
-
-   listbox $w.lb -height 0 -width 0
-   button $w.dismiss -text "Dismiss" -command [list destroy $w]
-   pack   $w.lb $w.dismiss -side top -fill x
-   for { set i 1 } { $i <= 8 } { incr i } {
-      if { $_ytk_mrl($i) != "" } {
-         $w.lb insert end "$i [file tail $_ytk_mrl($i)]"
-      }
-   }
-
-   bind $w.lb <Double-Button-1> most_recent_lb_dbl_clk
-}
-
-proc most_recent_lb_dbl_clk {} {
-##
-# most_recent_lb_dbl_clk
-#  Used by the binding of <Double-Button-1> on .most_recent (created in
-#  most_recent_loaded). This sources the code file represented by that entry in
-#  the list box.
-#
-# Arguments:
-#  None
-#
-# Returns:
-#  Nothing
-#
-# Side effects:
-#  Global _ytk_fn is set to the filename represented by the listbox selection.
-#  If _ytk_fn ends with .i, then global ycode_dir is set to match _ytk_fn's
-#  directory.
-#
-#  If _ytk_fn ends with .tcl, .tk, or .ytk, it is sourced at the global level
-#  and could have any effect. If ytk_fn ends with .i, it is sourced into Yorick
-#  and could have any effect; also, Tcl's and Yorick's current directories are
-#  changed to ycode_dir.
-##
-   global _ytk_fn _ytk_mrl
-
-   set idx [lindex [selection get] 0]
-   set _ytk_fn $_ytk_mrl($idx)
-
-   source_ytk_file $_ytk_fn
-}
-
 proc source_ytk_file {filename} {
 ##
 # source_ytk_file filename
@@ -936,28 +847,6 @@ proc source_ytk_file {filename} {
    }
 }
 
-proc ytk_mr_enqueue {f} {
-##
-# ytk_mr_enqueue filename
-#  Addes a file to the "most recently loaded" files list.
-#
-# Arguments:
-#  filename: The name of a file to put in the most recent files list.
-#
-# Returns:
-#  Nothing
-#
-# Side effects:
-#  Stores $filename in global _ytk_mrl in the index specified by global
-#  _ytk_mrl_idx, then increments _ytk_mrl_idx (but sets it to 1 if it exceeds
-#  8).
-##
-   global _ytk_mrl _ytk_mrl_idx
-   set _ytk_mrl($_ytk_mrl_idx) $f
-   incr _ytk_mrl_idx
-   if { $_ytk_mrl_idx > 8 } { set _ytk_mrl_idx 1 }
-}
-
 proc select_ytk_fn {start_dir} {
 ##
 # select_ytk_fn start_dir
@@ -972,17 +861,10 @@ proc select_ytk_fn {start_dir} {
 #  Nothing
 #
 # Side effects:
-#  Global _ytk_fn is set to the selected file's name.
-#
 #  The file is sourced at the global scope, which could have any effect; see
 #  source_ytk_file.
-#
-#  If the file is recognized as a valid kind of file by source_ytk_file, then
-#  it's added to the "most recent files" list by way of ytk_mr_enqueue.
 ##
-   global _ytk_fn
-
-   set _ytk_fn [tk_getOpenFile \
+   set fn [tk_getOpenFile \
       -initialdir $start_dir -filetypes {
          {{Yorick Specfic Tcl/Tk Programs} {.ytk} }
          {{Yorick or Tcl/tk program} {.i .ytk}  }
@@ -991,9 +873,7 @@ proc select_ytk_fn {start_dir} {
          {{All Files}       {*}   }
       }]
 
-   if {[source_ytk_file $_ytk_fn]} {
-      ytk_mr_enqueue $_ytk_fn
-   }
+   source_ytk_file $fn
 }
 
 proc start_yorick {}  {
@@ -1148,8 +1028,6 @@ proc launch_gui {} {
       -command { select_ytk_fn $Y_SITE }
 
    .mb.file add separator
-   .mb.file add command -label "Most recent loaded" -command most_recent_loaded
-   .mb.file add separator
    .mb.file add command -label "Close YTK GUI" -command [list wm withdraw .]
    .mb.file add command -label "Exit YTK" -command [list ytk_exit 0]
 
@@ -1183,7 +1061,6 @@ if {[auto_execok yorick] eq ""} {
    ytk_exit 2
 }
 
-initialize_globals
 establish_fifos
 
 puts " Tcl [info patchlevel], Tk $tk_patchLevel, Expect [exp_version] ready."
