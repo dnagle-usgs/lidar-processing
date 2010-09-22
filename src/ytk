@@ -585,7 +585,6 @@ proc restore_defaults {} {
    set _ytk(use_rlterm)          No
    set _ytk(use_rlwrap)          Yes
    set _ytk(separate_help_win)   Yes
-   set _ytk(plot_dpi)            75
    set _ytk(ycode_dir)           .
    set _ytk(ytkcode_dir)         /opt/eaarl/lidar-processing/src/
    set _ytk(plmk_default_color)  black
@@ -1890,11 +1889,6 @@ proc launch_gui {} {
 
    .mb.graph add cascade -label "Grid Settings..." -underline 1 -menu .mb.graph.gridxy
    .mb.graph add cascade -label "Plot ..." -underline 2 -menu .mb.graph.plot
-   .mb.graph add separator
-   .mb.graph add radiobutton \
-      -label "75 Dpi (450x450)" -value "75" -variable _ytk(plot_dpi) -underline 1
-   .mb.graph add radiobutton \
-      -label "100 Dpi (600x600)" -value "100" -variable _ytk(plot_dpi) -underline 1
 
    .mb.graph add separator
    .mb.graph add command -label "Show color bar in window 0" \
