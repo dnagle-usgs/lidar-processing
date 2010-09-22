@@ -184,31 +184,6 @@ set Y_SITE ""
 #                                  Procedures                                  #
 ################################################################################
 
-proc docstring {procname} {
-# Reports a proc's args and leading comments.
-# Multiple documentation lines are allowed.
-   set res "{usage: $procname [uplevel 1 [list args $procname]]}"
-   foreach line [split [uplevel 1 [list info body $procname]] \n] {
-      set line [string trim $line]
-      if {$line eq ""} continue
-      if {[string index $line 0] ne "#"} break
-      lappend res [string trimleft $line "#"]
-   }
-   join $res \n
-}
-
-proc args {procname} {
-# Signature of a proc: arguments with defaults
-   set res ""
-   foreach a [info args $procname] {
-      if [info default $procname $a default] {
-         lappend a $default
-      }
-      lappend res $a
-   }
-   set res
-}
-
 proc ystr {val {quoted 1}} {
 ##
 # ystr val [quoted]
