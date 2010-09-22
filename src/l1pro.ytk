@@ -139,6 +139,7 @@ if {![winfo exists .l1wid]} {
   menu .l1wid.mb.graph
   menu .l1wid.mb.util
   menu .l1wid.mb.cmd
+  menu .l1wid.mb.ytk
   menu .l1wid.mb.dep
   menu .l1wid.mb.dep.an
   menu .l1wid.mb.dep.ie
@@ -657,6 +658,18 @@ if {![winfo exists .l1wid]} {
     .l1wid.mb.cmd add command -label $ycmd \
       -command [list exp_send "help, $ycmd\r"]
   }
+
+  .l1wid.mb add cascade -label Ytk -underline 0 -menu .l1wid.mb.ytk
+
+  .l1wid.mb.ytk add command -label "Load a Yorick/Ytk program file..." \
+    -command select_ytk_fn
+  .l1wid.mb.ytk add separator
+  .l1wid.mb.ytk add command -label Tkcon \
+    -command [list exec {*}[auto_execok tkcon] &]
+  .l1wid.mb.ytk add command -label Tkcmd -command [list wm deiconify .tx]
+  .l1wid.mb.ytk add separator
+  .l1wid.mb.ytk add checkbutton -label "Help goes in new window" \
+    -onvalue Yes -offvalue No -variable _ytk(separate_help_win)
 
   .l1wid.mb add cascade -label Deprecated -underline 1 -menu .l1wid.mb.dep
 
