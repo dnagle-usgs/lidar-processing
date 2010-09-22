@@ -467,6 +467,22 @@ if {![winfo exists .l1wid]} {
     exp_send "change_window_style, window(), \"$s\";\r"
   }
 
+  menu .l1wid.mb.graph.grid
+  .l1wid.mb.graph add cascade -label "Grid lines..." -underline 0 -menu .l1wid.mb.graph.grid
+  .l1wid.mb.graph.grid add command -label "None" -command [list ygridxy 0 0]
+  .l1wid.mb.graph.grid add separator
+  .l1wid.mb.graph.grid add command -label "X axis" -command [list ygridxy 1 0]
+  .l1wid.mb.graph.grid add command -label "Y axis" -command [list ygridxy 0 1]
+  .l1wid.mb.graph.grid add command -label "Both axes" -command [list ygridxy 1 1]
+  .l1wid.mb.graph.grid add separator
+  .l1wid.mb.graph.grid add command -label "X origin" -command [list ygridxy 2 0]
+  .l1wid.mb.graph.grid add command -label "Y origin" -command [list ygridxy 0 2]
+  .l1wid.mb.graph.grid add command -label "Both origins" -command [list ygridxy 2 2]
+
+  proc ygridxy {x y} {
+    exp_send "gridxy, $x, $y;\r"
+  }
+
   .l1wid.mb add cascade -label Utilities -underline 0 -menu .l1wid.mb.util
 
   .l1wid.mb.util add command -label "Pixel Analysis" \
