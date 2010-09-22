@@ -27,6 +27,40 @@ local alps_windows;
       - Default window for plotting flightlines (pnav) in plot.tcl, etc.
 */
 
+func change_window_style(win, style, dofma=, dpi=) {
+/* DOCUMENT change_window_style, win, style, dofma=, dpi=
+   Changes the style of a Yorick window.
+   Parameters:
+      win: Window number to change
+      style: Name of style sheet to use, such as "work" or "nobox"
+   Options:
+      dofma= Set to 1 to issue an FMA prior to changing. This avoids the need
+         to re-plot the window's contents.
+      dpi= The DPI setting to use. Normally either dpi=75 or dpi=100.
+*/
+   local wdata;
+   default, dofma, 0;
+   default, dpi, 75;
+
+   width = height = [];
+   if(dpi == 75) {
+      width = height = 450;
+   } else if(dpi == 100) {
+      width = height = 600;
+   }
+
+   if(!dofma)
+      wdata = plot_hash(win);
+
+   winkill, win;
+   window, win, dpi=dpi, style=style+".gs", width=width, height=height;
+   window, win, width=0, height=0;
+   limits, square=1;
+
+   if(!dofma)
+      plot_restore, win, wdata, style=0;
+}
+
 func change_window_size(win, winsize, dofma) {
 /* DOCUMENT change_window_size(win, winsize, dofma)
    This function is used to change the size of the yorick window.
