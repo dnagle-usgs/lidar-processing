@@ -1261,30 +1261,6 @@ proc restore_pbd {} {
    }
 }
 
-proc show_colorbar {w} {
-##
-# show_colorbar w
-#  Clears the given window $w then draws a colorbar in it for the current
-#  palette. Also, the user receives a notice that this has been done.
-#
-# Argument:
-#  w: The window into which the colorbar should be drawn.
-#
-# Returns:
-#  Nothing.
-#
-# Side effects:
-#  Yorick variable _ytk_z is set with the values needed to draw the colorbar.
-##
-   exp_send "winkill,$w;window,$w;\r"
-   exp_send "_ytk_z = char(span(1,240,240)) (,-:1:10);pli,_ytk_z\r"
-   expect ">"
-   tk_messageBox -message "You should see the color bar in the\
-      Yorick window $w.\n\n\
-      To see other color bars, Click on <GRAPH> and then the \
-      color bar you want to see. "
-}
-
 proc launch_gui {} {
 ##
 # launch_gui
@@ -1657,11 +1633,6 @@ proc launch_gui {} {
    have much data."
 
    .mb.graph add cascade -label "Grid Settings..." -underline 1 -menu .mb.graph.gridxy
-
-   .mb.graph add separator
-   .mb.graph add command -label "Show color bar in window 0" \
-      -command [list show_colorbar 0]
-
    .mb.graph.gridxy add command -label "No grid lines" \
       -command { exp_send "gridxy,0,0\r"  }
    .mb.graph.gridxy add command -label "Y axis only" \
