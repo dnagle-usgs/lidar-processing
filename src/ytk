@@ -1090,55 +1090,6 @@ proc load_and_run {fn} {
    }
 }
 
-proc restore_pbd {} {
-##
-# restore_pbd
-#  The user is prompted for a pbd file. If one is provided, it is restored.
-#
-# Arguments:
-#  None
-#
-# Returns:
-#  Nothing
-#
-# Side effects:
-#  Global _ytk_fn is set to the selected file.
-#
-#  Within Yorick, any variables stored in the pbd are restored in the global
-#  scope. Also, _ytk_pbd_f is set to an open filehandle to the pbd file.
-##
-   global _ytk_fn
-
-   set _ytk_fn [tk_getOpenFile -filetypes {
-      {{Yorick PBD file} {.pbd}}
-      {{All Files}       {*}   }
-   }]
-
-   if { $_ytk_fn ne "" } {
-      switch [file extension $_ytk_fn] {
-         ".pbd" {
-            exp_send "_ytk_pbd_f = openb(\"$_ytk_fn\"); restore, _ytk_pbd_f;\r"
-            exp_send "show, _ytk_pbd_f\r"
-            toplevel .stby
-            exp_send "\r"
-            set sz [wm maxsize .]
-            label .stby.lbl -text "Loading\n$_ytk_fn\nplease wait.."
-            pack .stby.lbl
-            set wz "50 50"
-            set sx [expr [lindex $sz 0] / 2 - [lindex $wz 0]/2]
-            set sy [expr [lindex $sz 1] / 2 - [lindex $wz 1]/2]
-            wm geometry .stby "+$sx+$sy"
-            update
-            expect ">"
-            destroy .stby
-         }
-         default {
-            tk_messageBox -type ok -icon error -message "Did not restore $_ytk_fn: not a PBD file."
-         }
-      }
-   }
-}
-
 proc launch_gui {} {
 ##
 # launch_gui
@@ -1195,8 +1146,6 @@ proc launch_gui {} {
       -command { select_ytk_fn "~/Yorick" }
    .mb.file add command -label "Load Yorick/ytk from Y_SITE ..." \
       -command { select_ytk_fn $Y_SITE }
-
-   .mb.file add command -label "Restore PBD Data file..." -command restore_pbd
 
    .mb.file add separator
    .mb.file add command -label "Most recent loaded" -command most_recent_loaded
