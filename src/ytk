@@ -828,43 +828,6 @@ proc ytk_exit {code} {
    exit $code
 }
 
-proc ytk_About {} {
-##
-# ytk_About
-#  Displays an "About" GUI window, creating it if it doesn't already exist.
-#
-# Arguments:
-#  None
-#
-# Returns:
-#  Nothing
-#
-# Side effects:
-#  None
-##
-   global _ytk_splash_img yorick_version about_geo tk_patchLevel
-
-   set w .about
-   if {[winfo exists $w]} {
-      wm deiconify $w
-   } else {
-      toplevel $w
-      wm title $w "About Ytk"
-      button $w.b -text Dismiss -command [list wm withdraw $w]
-      label $w.img -image $_ytk_splash_img -relief raised -borderwidth 4
-      label $w.text -bd 1 -text \
-"Yorick-Tcl-tK (and Expect)\n\
-YTK (fork)\n\
-Yorick $yorick_version\n\
-Tcl [info patchlevel], Tk $tk_patchLevel, Expect [exp_version]"
-      pack $w.img -side top
-      pack $w.text -fill both -side top -expand 1
-      pack $w.b -fill x -side bottom
-      wm geometry $w $about_geo
-      update
-   }
-}
-
 proc ytk_kick_off_editor {editor fn} {
 ##
 # ytk_kick_off_editor editor fn
@@ -1343,7 +1306,6 @@ proc launch_gui {} {
    .mb.help add checkbutton -label "Help goes in new window" \
       -onvalue Yes -offvalue No -variable _ytk(separate_help_win)
    .mb.help add separator
-   .mb.help add command -label "About Ytk" -command { ytk_About }
    .mb.help add command -label "Y_SITE: $Y_SITE"
    .mb.help add command -label "Yorick Version: $yorick_version"
    .mb.help add command -label "Yorick location: [auto_execok yorick]"
