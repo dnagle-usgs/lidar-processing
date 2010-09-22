@@ -1646,14 +1646,12 @@ proc launch_gui {} {
    menu .mb.graph.plot
    menu .mb.debug
    menu .mb.tkcon
-   menu .mb.demo
    menu .mb.help
    .mb add cascade -label File  -underline 0 -menu .mb.file
    .mb add cascade -label Edit  -underline 0 -menu .mb.edit
    .mb add cascade -label Debug -underline 0 -menu .mb.debug
    .mb add cascade -label Graph -underline 0 -menu .mb.graph
    .mb add cascade -label "Tcl/Tk" -underline 0 -menu .mb.tkcon
-   .mb add cascade -label Demos -underline 2 -menu .mb.demo
    .mb add cascade -label Help  -underline 0 -menu .mb.help
 
    .mb.edit add command -label "Y_SITE ..." \
@@ -1705,20 +1703,6 @@ proc launch_gui {} {
       -onvalue "wm deiconify .tx" \
       -offvalue "wm withdraw .tx" \
       -variable tkcmdvalue  -underline 1 -command {eval $tkcmdvalue}
-
-   .mb.demo add command -label "demo 1  sliding sine wave" -command { ytk_run_demo demo1 }
-   .mb.demo add command -label "demo 2  drum head simulation" -command { ytk_run_demo demo2 }
-   .mb.demo add command -label "demo 3  mechanical arms swinging around" -command { ytk_run_demo demo3 }
-   .mb.demo add command -label "demo 4  Air flow around an airfoil section" -command { ytk_run_demo demo4 }
-   .mb.demo add command -label "demo 5  3D graphics and 3D slicing" -command { ytk_run_demo demo5 }
-   .mb.demo add command -label "testg   Graphics performance test" -command { ytk_run_demo testg }
-   .mb.demo add command -label "testlp  Test linear algebra functions" -command { ytk_run_demo testlp }
-   .mb.demo add command -label "testm   Test Fft, LU, QR, and SVD" -command { ytk_run_demo testm }
-   .mb.demo add command -label "test1" -command { ytk_run_demo test1 }
-   .mb.demo add command -label "test2" -command { ytk_run_demo test2 }
-   .mb.demo add command -label "test3" -command { ytk_run_demo test3 }
-   .mb.demo add command -label "testb   Test I/O stuff" -command { ytk_run_demo testb }
-   .mb.demo add command -label "testfull Runs a complete test of Yorick" -command { ytk_run_demo testfull }
 
    .mb.help add checkbutton -label "Help goes in new window" \
       -onvalue Yes -offvalue No -variable _ytk(separate_help_win)
