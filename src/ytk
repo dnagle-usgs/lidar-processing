@@ -586,11 +586,6 @@ proc restore_defaults {} {
    set _ytk(separate_help_win)   Yes
    set _ytk(ycode_dir)           .
    set _ytk(ytkcode_dir)         /opt/eaarl/lidar-processing/src/
-   set _ytk(plmk_default_color)  black
-   set _ytk(plmk_default_msize)  0.2
-   set _ytk(plmk_default_width)  0.5
-   set _ytk(log_file)            ""
-   set _ytk(log_level)           info
    set _ytk(initialdir)          /data/0
    set _ytk(rlwrap_nodupes)      1
 }
