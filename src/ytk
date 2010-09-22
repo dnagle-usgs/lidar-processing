@@ -586,7 +586,6 @@ proc restore_defaults {} {
    set _ytk(use_rlwrap)          Yes
    set _ytk(separate_help_win)   Yes
    set _ytk(plot_dpi)            75
-   set _ytk(plot_style)          work
    set _ytk(ycode_dir)           .
    set _ytk(ytkcode_dir)         /opt/eaarl/lidar-processing/src/
    set _ytk(plmk_default_color)  black
@@ -1896,14 +1895,6 @@ proc launch_gui {} {
       -label "75 Dpi (450x450)" -value "75" -variable _ytk(plot_dpi) -underline 1
    .mb.graph add radiobutton \
       -label "100 Dpi (600x600)" -value "100" -variable _ytk(plot_dpi) -underline 1
-   .mb.graph add separator
-
-   set plot_styles [list axes boxed boxed2 l_nobox nobox vgbox vg work work2]
-   foreach plot_style $plot_styles {
-      .mb.graph add radiobutton -label $plot_style -value $plot_style \
-         -variable _ytk(plot_style) -underline 1
-   }
-   unset plot_style plot_styles
 
    .mb.graph add separator
    .mb.graph add command -label "Show color bar in window 0" \
