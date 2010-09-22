@@ -457,6 +457,16 @@ if {![winfo exists .l1wid]} {
     expect "> "
   }
 
+  menu .l1wid.mb.graph.sty
+  .l1wid.mb.graph add cascade -label Style... -under 0 -menu .l1wid.mb.graph.sty
+  foreach __s [list axes boxed l_nobox nobox vgbox vg work] {
+  .l1wid.mb.graph.sty add command -label $__s -under 0 -command [list ystyle $__s]
+  }
+
+  proc ystyle s {
+    exp_send "change_window_style, window(), \"$s\";\r"
+  }
+
   .l1wid.mb add cascade -label Utilities -underline 0 -menu .l1wid.mb.util
 
   .l1wid.mb.util add command -label "Pixel Analysis" \
