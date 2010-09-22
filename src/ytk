@@ -587,7 +587,6 @@ proc restore_defaults {} {
    set _ytk(separate_help_win)   Yes
    set _ytk(plot_dpi)            75
    set _ytk(plot_style)          work
-   set _ytk(plot_palette)        earth
    set _ytk(ycode_dir)           .
    set _ytk(ytkcode_dir)         /opt/eaarl/lidar-processing/src/
    set _ytk(plmk_default_color)  black
@@ -1248,26 +1247,6 @@ proc pa_limits {n} {
    exp_send "window, $plot_array(window$n); limits;\r"
 }
 
-proc setpalette {args} {
-##
-# setpalette args
-#  Issues a Yorick palette command to load the palette defined by
-#  _ytk(plot_palette).
-#
-# Arguments:
-#  This can accept any number of arguments, but they are all disregarded. (This
-#  makes it useable by variable traces.)
-#
-# Returns:
-#  Nothing
-#
-# Side effects:
-#  None
-##
-   global _ytk
-   exp_send "palette, \"$_ytk(plot_palette).gp\"\r"
-}
-
 proc plot_cmd {cmd n} {
 ##
 # plot_cmd cmd n
@@ -1604,9 +1583,6 @@ proc launch_gui {} {
 #
 # Returns:
 #  Nothing
-#
-# Side effects:
-#  Adds a trace on _ytk(plot_palette) that calls setpalette on writes.
 ##
    global Y_SITE _ytk yorick_version tk_patchLevel
 
@@ -1971,8 +1947,6 @@ proc launch_gui {} {
    the points. It is much faster then plmk if you
    have much data."
 
-   trace variable _ytk(plot_palette) w setpalette
-
    .mb.graph add cascade -label "Open window..." -underline 1 -menu .mb.graph.open
    .mb.graph add cascade -label "Kill window..." -underline 1 -menu .mb.graph.kill
    .mb.graph add cascade -label "Select window..." -underline 1 -menu .mb.graph.select
@@ -1995,13 +1969,6 @@ proc launch_gui {} {
    .mb.graph add separator
    .mb.graph add command -label "Show color bar in window 0" \
       -command [list show_colorbar 0]
-
-   set plot_palettes [list earth stern rainbow yarg heat gray]
-   foreach plot_palette $plot_palettes {
-      .mb.graph add radiobutton -label $plot_palette -value $plot_palette \
-         -variable _ytk(plot_palette) -underline 1
-   }
-   unset plot_palette plot_palettes
 
    for {set w 0} {$w < 8} {incr w} {
       .mb.graph.open add command -label "Window $w" -command [list winopen $w]
