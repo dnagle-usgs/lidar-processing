@@ -1282,16 +1282,12 @@ proc launch_gui {} {
    menu .mb.file
    menu .mb.edit
    menu .mb.edit.editor
-   menu .mb.graph
-   menu .mb.graph.gridxy
-   menu .mb.graph.plot
    menu .mb.debug
    menu .mb.tkcon
    menu .mb.help
    .mb add cascade -label File  -underline 0 -menu .mb.file
    .mb add cascade -label Edit  -underline 0 -menu .mb.edit
    .mb add cascade -label Debug -underline 0 -menu .mb.debug
-   .mb add cascade -label Graph -underline 0 -menu .mb.graph
    .mb add cascade -label "Tcl/Tk" -underline 0 -menu .mb.tkcon
    .mb add cascade -label Help  -underline 0 -menu .mb.help
 
@@ -1492,98 +1488,6 @@ proc launch_gui {} {
    you run ytk, be sure and click \"Save Options\"
    above to write them to .ytkrc."
 
-   ####################### Graph menu
-   DynamicHelp::register .mb.graph menu varinfo
-   DynamicHelp::register .mb.graph menuentry 0 \
-   "Click the dashed-line to convert this menu
-   into a separate window which will persist."
-
-   DynamicHelp::register .mb.graph menuentry 1 \
-   "Open a Yorick graphics window. **BEFORE**
-   you open the window, be sure and select the
-   size (Dpi 75 or 100) and also the style.  You
-   can't change dpi or style without killing, and
-   then reopening the graphics window.
-   Up to 8 windows can be opened at once. Be
-   careful to always kill a window with the winkill
-   command or the \"Window Kill\" menu selection. If
-   you use the little \"X\". Yorick won't know
-   the window was killed."
-
-   DynamicHelp::register .mb.graph menuentry 2 \
-   "Get rid of a Yorick graphics window."
-
-   DynamicHelp::register .mb.graph menuentry 3 \
-   "Select a Yorick window for use.  After selecting
-   a window, all Yorick plotting commands will
-   use it."
-
-   DynamicHelp::register .mb.graph menuentry 4 \
-   "Draw various grids over the current
-   Yorick graphics window."
-
-   DynamicHelp::register .mb.graph menuentry 5 \
-   "This menu contains all the Yorick plotting
-   commands and basic menus to select many of the
-   specific options."
-
-   DynamicHelp::register .mb.graph menuentry 7 \
-   "The next \"Open Window..\" will create a
-   75 Dpi (450x450 pixel) graphics window."
-
-   DynamicHelp::register .mb.graph menuentry 8 \
-   "The next \"Open Window..\" will create a
-   100 Dpi (600x600 pixel) graphics window."
-
-   DynamicHelp::register .mb.graph menuentry 10 \
-   "Axes: Has coordinate axes with ticks running through
-   the middle of the viewport, similar to the style
-   of many elementary math textbooks."
-
-   DynamicHelp::register .mb.graph menuentry 11 \
-   "Boxed: Many people prefer the 'Boxed' style,
-   which looks more like other graphics packages."
-
-   DynamicHelp::register .mb.graph menuentry 12 \
-   "Boxed2: Variant of Boxed. Allows you to put
-   a second set of tick marks and labels on the
-   right hand side of the plot, independent of
-   the ones on the left side."
-
-   DynamicHelp::register .mb.graph menuentry 13 \
-   "L_nobox: Allow you to put a second set of
-   tick marks and labels on the right hand side
-   of the plot, independent of the ones on the
-   left side."
-
-   DynamicHelp::register .mb.graph menuentry 14 \
-   "Nobox: has no tick marks, labels, or other
-   distractions; use it for drawing geometrical
-   figures or imitating photographs."
-
-   DynamicHelp::register .mb.graph menuentry 15 \
-   "Vgbox: Viewgraph graphics style in a box."
-
-   DynamicHelp::register .mb.graph menuentry 16 \
-   "Vg: Viewgraph graphics style'', which the
-   High Priest of Yorick, David Munro, recommends
-   as the starting point for high quality graphics."
-
-   DynamicHelp::register .mb.graph menuentry 17 \
-   "Work: the default style and David Munro's
-   own preference."
-
-   DynamicHelp::register .mb.graph menuentry 18 \
-   "Work2: allow you to put a second set of tick
-   marks and labels on the right hand side of the
-   plot, independent of the ones on the left side."
-
-   DynamicHelp::register .mb.graph menuentry 20 \
-   "Pops up Yorick graphics window-0 and fills it
-   with the selected color bar.  After the window
-   is up, you can select other color bars and the
-   display update and show you what they look like."
-
    ####################### Tcl/Tk menu
    DynamicHelp::register .mb.tkcon menu varinfo
    DynamicHelp::register .mb.tkcon menuentry 0 \
@@ -1624,30 +1528,6 @@ proc launch_gui {} {
    DynamicHelp::register .mb.help menuentry 2 \
    "Enable or disable the annoying dynamic help display
    which is displaying this message right now."
-
-   ####################### plg submenu
-   DynamicHelp::register .mb.graph.plot menu varinfo
-   DynamicHelp::register .mb.graph.plot menuentry 0 \
-   "Plg: This command plots with lines connecting
-   the points. It is much faster then plmk if you
-   have much data."
-
-   .mb.graph add cascade -label "Grid Settings..." -underline 1 -menu .mb.graph.gridxy
-   .mb.graph.gridxy add command -label "No grid lines" \
-      -command { exp_send "gridxy,0,0\r"  }
-   .mb.graph.gridxy add command -label "Y axis only" \
-      -command { exp_send "gridxy,0,1\r"  }
-   .mb.graph.gridxy add command -label "X axis only" \
-      -command { exp_send "gridxy,1,0\r"  }
-   .mb.graph.gridxy add command -label "Grid X and Y" \
-      -command { exp_send "gridxy,1,1\r"  }
-   .mb.graph.gridxy add separator
-   .mb.graph.gridxy add command -label "Y origin only" \
-      -command { exp_send "gridxy,,2\r"  }
-   .mb.graph.gridxy add command -label "X origin only" \
-      -command { exp_send "gridxy,2,0\r"  }
-   .mb.graph.gridxy add command -label "X and Y origins only" \
-      -command { exp_send "gridxy,2,2\r"  }
 
    toplevel .tx
    wm withdraw .tx
