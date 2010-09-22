@@ -581,7 +581,6 @@ proc restore_defaults {} {
 ##
    global _ytk
    array unset _ytk *
-   set _ytk(editor)              vim
    set _ytk(use_rlterm)          No
    set _ytk(use_rlwrap)          Yes
    set _ytk(separate_help_win)   Yes
@@ -826,89 +825,6 @@ proc ytk_exit {code} {
    global ytk_fifo_name tky_fifo_name ytk_fifo tky_fifo
    ::yorick::destroy_fifos $ytk_fifo $ytk_fifo_name $tky_fifo $tky_fifo_name
    exit $code
-}
-
-proc ytk_kick_off_editor {editor fn} {
-##
-# ytk_kick_off_editor editor fn
-#  Launches the requested editor to edit the specified file. If $fn is an empty
-#  string, this is a no-op. If $editor is not recognized, this is a no-op.
-#
-# Arguments:
-#  editor: The name of the editor to use. Should be one of:
-#     vim vi kedit kwrite emacs gedit gvim xedit nedit xemacs
-#  fn: A string indicating the filename and path to the file to be edited.
-#
-# Returns:
-#  Nothing
-#
-# Side effects:
-#  Launches the given editor with the given file, provided a file is given.
-##
-   if { $fn != "" } {
-      switch $editor {
-         vim -
-         vi {
-            exec xterm -T "$editor $fn" -e $editor $fn &
-         }
-         kedit  -
-         kwrite -
-         emacs  -
-         gedit  -
-         gvim   -
-         xedit  -
-         nedit  -
-         xemacs {
-            exec $editor $fn &
-         }
-      }
-   }
-}
-
-proc select_for_edit {start_dir} {
-##
-# select_for_edit start_dir
-#  Launches the "Open File" dialog in the given $start_dir directory, then
-#  returns the file selected by the user.
-#
-# Arguments:
-#  start_dir: The directory to open up in.
-#
-# Returns:
-#  The filename that was selected.
-#
-# Side effects:
-#  None
-##
-   return [tk_getOpenFile \
-      -initialdir $start_dir \
-      -filetypes {
-         {{Yorick Programs, files} {.i .gp .gs}  }
-         {{Yorick Specfic Tcl/Tk Programs} {.ytk} }
-         {{Tcl/Tk Programs} {.tcl .tk} }
-         {{All Files}       {*}   }
-      }]
-}
-
-proc select_then_edit_from {directory} {
-##
-# select_then_edit_from directory
-#  Prompts the user to select a file from $directory, then lets them edit it
-#  using the editor defined in $_ytk(editor).
-#
-# Arguments:
-#  directory: The directory from which the user should start browsing from to
-#     select their file.
-#
-# Returns:
-#  Nothing
-#
-# Side effects:
-#  Global _ytk_fn is set to the file that is selected.
-##
-   global _ytk_fn _ytk
-   set _ytk_fn [select_for_edit $directory]
-   ytk_kick_off_editor $_ytk(editor) $_ytk_fn
 }
 
 proc most_recent_loaded {} {
@@ -1253,27 +1169,6 @@ proc launch_gui {} {
    .mb add cascade -label "Tcl/Tk" -underline 0 -menu .mb.tkcon
    .mb add cascade -label Help  -underline 0 -menu .mb.help
 
-   .mb.edit add command -label "Y_SITE ..." \
-      -command [list select_then_edit_from $Y_SITE]
-
-   .mb.edit add command -label "~/Yorick ..." \
-      -command [list select_then_edit_from "~/Yorick/"]
-
-   .mb.edit add command -label "~/lidar-processing ..." \
-      -command [list select_then_edit_from "~/lidar-processing/"]
-
-   .mb.edit add separator
-   .mb.edit add cascade -label "Editor" -underline 0 -menu .mb.edit.editor
-
-   set editors [list vi vim gvim emacs xemacs kedit nedit kwrite gedit xedit]
-   set underlines [list 0 0 2 0 0 2 0 1 0 4]
-   foreach editor $editors underline $underlines {
-      .mb.edit.editor add radiobutton -label $editor -value $editor \
-         -variable _ytk(editor) -underline $underline
-   }
-   unset editors underlines
-
-   .mb.edit add separator
    .mb.edit add command -label "Save Options" -command save_options
    .mb.edit add command -label "Restore Defaults" -command restore_defaults
    .mb.edit add separator
