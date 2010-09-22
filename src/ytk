@@ -590,35 +590,6 @@ proc restore_defaults {} {
    set _ytk(rlwrap_nodupes)      1
 }
 
-proc save_options {} {
-##
-# save_options
-#  Saves the user's _ytk options to a file for later retrieval.
-#
-# Arguments:
-#  None
-#
-# Returns:
-#  Nothing
-#
-# Side effects:
-#  Creates the file ~/.ytkrc and stores the contents of global _ytk to it.
-#  Afterwards, the user will receive a GUI messagebox indicating whether it
-#  succeeded or not.
-##
-   global _ytk
-   set fn "~/.ytkrc"
-   if { [catch {set f [open $fn "w+"]} err] } {
-      tk_messageBox -icon error -message $err -type ok
-   } else {
-      foreach x [array names _ytk] {
-         puts $f [format "set %32s    %-32s"  "_ytk($x)" $_ytk($x)]
-      }
-      close $f
-      tk_messageBox -icon info -message "Options saved to: $fn" -type ok
-   }
-}
-
 proc load_options {} {
 ##
 # load_options
@@ -984,24 +955,11 @@ proc launch_gui {} {
    menu .mb
    . configure -menu .mb
    menu .mb.file
-   menu .mb.edit
-   menu .mb.edit.editor
    menu .mb.tkcon
    menu .mb.help
    .mb add cascade -label File  -underline 0 -menu .mb.file
-   .mb add cascade -label Edit  -underline 0 -menu .mb.edit
    .mb add cascade -label "Tcl/Tk" -underline 0 -menu .mb.tkcon
    .mb add cascade -label Help  -underline 0 -menu .mb.help
-
-   .mb.edit add command -label "Save Options" -command save_options
-   .mb.edit add command -label "Restore Defaults" -command restore_defaults
-   .mb.edit add separator
-   .mb.edit add command -label "Yorick executable ..." -command {
-      set _ytk(yorick_executable) [tk_getOpenFile]
-   }
-   .mb.edit add checkbutton -label "Use rlterm" -onvalue Yes -offvalue No -variable _ytk(use_rlterm)
-   .mb.edit add checkbutton -label "Use rlwrap" -onvalue Yes -offvalue No -variable _ytk(use_rlwrap)
-
 
    .mb.tkcon add command -label "Tkcon" -command {
       exec tkcon &
