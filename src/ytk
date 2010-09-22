@@ -590,7 +590,6 @@ proc restore_defaults {} {
    set _ytk(plmk_default_color)  black
    set _ytk(plmk_default_msize)  0.2
    set _ytk(plmk_default_width)  0.5
-   set _ytk(annoying_help)       No
    set _ytk(log_file)            ""
    set _ytk(log_level)           info
    set _ytk(initialdir)          /data/0
@@ -1343,15 +1342,6 @@ proc launch_gui {} {
 
    .mb.help add checkbutton -label "Help goes in new window" \
       -onvalue Yes -offvalue No -variable _ytk(separate_help_win)
-   .mb.help add checkbutton -label "Help PopUp" \
-      -onvalue Yes -offvalue No -variable _ytk(annoying_help) \
-      -command {
-         if { $_ytk(annoying_help) eq "Yes" } {
-            wm state .ytk_dynamic_help normal
-         }  else {
-            wm state .ytk_dynamic_help withdrawn
-         }
-      }
    .mb.help add separator
    .mb.help add command -label "About Ytk" -command { ytk_About }
    .mb.help add command -label "Y_SITE: $Y_SITE"
@@ -1386,148 +1376,6 @@ proc launch_gui {} {
    .mb.file add separator
    .mb.file add command -label "Close YTK GUI" -command [list wm withdraw .]
    .mb.file add command -label "Exit YTK" -command [list ytk_exit 0]
-
-   toplevel .ytk_dynamic_help
-   set varinfo "This is the Dynamic help window.
-      Many of the menu items will be described here
-      when you place the mouse cursor over each item."
-   label .ytk_dynamic_help.lhelp \
-      -textvariable varinfo \
-      -bg yellow -fg black -borderwidth 7
-   button .ytk_dynamic_help.dismiss \
-      -fg black \
-      -bg orange \
-      -activebackground red \
-      -activeforeground white \
-      -text "Turn dynamic help OFF" \
-      -command {
-         wm state .ytk_dynamic_help withdrawn
-         set _ytk(annoying_help) No
-      }
-   pack .ytk_dynamic_help.lhelp .ytk_dynamic_help.dismiss \
-      -side top -expand 1 -fill both
-
-   if { $_ytk(annoying_help) eq "No" } {
-      wm state .ytk_dynamic_help withdrawn
-   }
-
-   ####################### File menu
-   DynamicHelp::register .mb.file menu varinfo
-   DynamicHelp::register .mb.file menuentry 0 \
-   "Click the dashed-line to convert this menu
-   into a separate window which will persist."
-   DynamicHelp::register .mb.file menuentry 1 \
-   "Load Ytk program into the Tcl/Tk portion of
-   Ytk, or load Yorick .i file into Yorick."
-
-   DynamicHelp::register .mb.file menuentry 2 \
-   "Load Ytk program or a
-   Yorick .i file from
-   your personal Yorick
-   directory."
-
-   DynamicHelp::register .mb.file menuentry 3 \
-   "Load Ytk program or a Yorick .i
-   file from the Y_SITE directory.
-   (Y_SITE on your system is: $Y_SITE)"
-
-   DynamicHelp::register .mb.file menuentry 4 \
-   "Load a Yorick PBD (Portable Binary Data)
-   file into Yorick and display the variable
-   names stored in it."
-
-   DynamicHelp::register .mb.file menuentry 6 \
-   "Use this to quickly re-load a file that
-   you have previously loaded.  This saves
-   having to locate the file with the file
-   dialog window."
-
-   DynamicHelp::register .mb.file menuentry 8 \
-   "This terminates Ytk and Yorick. If you
-   would like to keep any setting changes
-   you've made, be sure and save them by
-   clicking Edit, then \"Save Options\"
-   before exiting."
-
-   ####################### Edit menu
-   DynamicHelp::register .mb.edit menu varinfo
-   DynamicHelp::register .mb.edit menuentry 0 \
-   "Click the dashed-line to convert this menu
-   into a separate window which will persist."
-   DynamicHelp::register .mb.edit menuentry 1 \
-   "Select, then edit a file from Y_SITE
-   ($Y_SITE on your system)
-   with the selected editor."
-
-   DynamicHelp::register .mb.edit menuentry 2 \
-   "Select, then edit a file from
-   your personal Yorick subdirectory
-   with the selected editor."
-
-   DynamicHelp::register .mb.edit menuentry 3 \
-   "Select, then edit a file from
-   the lidar-processing subdirectory
-   with the selected editor.  This is
-   specific to my project, edit ytk
-   and change it if you want."
-
-   DynamicHelp::register .mb.edit menuentry 5 \
-   "Select your favorite editor below.  Whichever
-   editor is selected is the one that will be
-   used by the above menus.  The editors need
-   to be present on your system and in a location
-   described in your path statement."
-
-   DynamicHelp::register .mb.edit menuentry 16 \
-   "Save all the ytk settings to .ytkrc in your
-   home directory."
-
-   DynamicHelp::register .mb.edit menuentry 17 \
-   "Restore ytk to the default settings.  If you
-   want the defaults to be loaded the next time
-   you run ytk, be sure and click \"Save Options\"
-   above to write them to .ytkrc."
-
-   ####################### Tcl/Tk menu
-   DynamicHelp::register .mb.tkcon menu varinfo
-   DynamicHelp::register .mb.tkcon menuentry 0 \
-   "Click the dashed-line to convert this menu
-   into a separate window which will persist."
-
-   DynamicHelp::register .mb.tkcon menuentry 1 \
-   "Run Tkcon.  You can use Tkcon to help debug
-   Ytk and Tcl/Tk programs.  You can attach Tkcon
-   to Ytk by clicking:
-
-   Console->Attach to->Interpreter->ytk.
-
-   You will be able to send Tcl/Tk commands to Ytk
-   and examine variables etc. etc.  See the Tkcon
-   website: http://tkcon.sourceforge.net. for more
-   documentation.  Tkcon is part of the Activetcl
-   package."
-
-
-   DynamicHelp::register .mb.tkcon menuentry 2 \
-   "Open a window to view Tcl/Tk commands sent to ytk
-   for execution.  If you call ytk functions from
-   your Yorick programs, you can see what ytk actually
-   received and executed in this window."
-
-
-   ####################### Tcl/Tk menu
-   DynamicHelp::register .mb.help menu varinfo
-   DynamicHelp::register .mb.help menuentry 0 \
-   "Click the dashed-line to convert this menu
-   into a separate window which will persist."
-
-   DynamicHelp::register .mb.help menuentry 1 \
-   "Redirects the Yorick help results to a separate
-   window."
-
-   DynamicHelp::register .mb.help menuentry 2 \
-   "Enable or disable the annoying dynamic help display
-   which is displaying this message right now."
 
    toplevel .tx
    wm withdraw .tx
