@@ -1160,12 +1160,10 @@ proc launch_gui {} {
    menu .mb.file
    menu .mb.edit
    menu .mb.edit.editor
-   menu .mb.debug
    menu .mb.tkcon
    menu .mb.help
    .mb add cascade -label File  -underline 0 -menu .mb.file
    .mb add cascade -label Edit  -underline 0 -menu .mb.edit
-   .mb add cascade -label Debug -underline 0 -menu .mb.debug
    .mb add cascade -label "Tcl/Tk" -underline 0 -menu .mb.tkcon
    .mb add cascade -label Help  -underline 0 -menu .mb.help
 
@@ -1178,16 +1176,6 @@ proc launch_gui {} {
    .mb.edit add checkbutton -label "Use rlterm" -onvalue Yes -offvalue No -variable _ytk(use_rlterm)
    .mb.edit add checkbutton -label "Use rlwrap" -onvalue Yes -offvalue No -variable _ytk(use_rlwrap)
 
-
-   .mb.debug add command \
-      -label "dbauto,0  Enter dbug automatically" -command { exp_send "dbauto,0\r" }
-   .mb.debug add command \
-      -label "dbauto,1  Enter dbug after hitting <RET>" -command { exp_send "dbauto,1\r" }
-   .mb.debug add command -label "dbdis" -command { exp_send "dbdis\r" }
-   .mb.debug add command -label "dbexit" -command { exp_send "dbexit\r" }
-   .mb.debug add command -label "dbinfo" -command { exp_send "dbinfo\r" }
-   .mb.debug add command -label "dbskip" -command { exp_send "dbskip\r" }
-   .mb.debug add command -label "dbup" -command { exp_send "dbup\r" }
 
    .mb.tkcon add command -label "Tkcon" -command {
       exec tkcon &
