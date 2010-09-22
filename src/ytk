@@ -918,26 +918,6 @@ proc ytk_kick_off_editor {editor fn} {
    }
 }
 
-proc ytk_run_demo {n} {
-##
-# ytk_run_demo n
-#  Instructs Yorick to run the demo named by $n.
-#
-# Arguments:
-#  n: The name of a demo to run.
-#
-# Returns:
-#  Nothing
-#
-# Side effects:
-#  The file "$n.i" will be #included into Yorick, then the command $n will be
-#  run in Yorick.
-##
-   exp_send "#include \"$n.i\"\r"
-   expect ">"
-   exp_send "$n\r"
-}
-
 proc select_for_edit {start_dir} {
 ##
 # select_for_edit start_dir
