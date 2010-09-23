@@ -445,22 +445,12 @@ proc load_edb {} {
 
    ybkg require \"rbgga.i\"
 
- $w.mb add cascade -label File     -underline 0 -menu $w.mb.file
  $w.mb add cascade -label "Maps/Nav"     -underline 0 -menu $w.mb.nav
  $w.mb add cascade -label "Settings"     -underline 0 -menu $w.mb.attitude
  $w.mb add cascade -label "Lidar"  -underline 0 -menu $w.mb.rasters
  $w.mb add cascade -label Imagery   -underline 0 -menu $w.mb.images
  $w.mb add cascade -label Time     -underline 0 -menu $w.mb.time
  $w.mb add cascade -label Deprecated -underline 0 -menu $w.mb.deprecated
-
- $w.mb.file add command -label "Load command file..." -command { 
-   load_cmd $data_path 
- }
- $w.mb.file add command -label "Edit missions notes..." -command  {
-   if { [ edb_loaded ] } { 
-     ytk_kick_off_editor  $_ytk(editor) "$edb(path)/notes.txt"    
-   }
- } 
 
  source "$src_path/map.ytk"
  restore_eaarl_options "map.options" _map
