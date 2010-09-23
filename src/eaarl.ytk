@@ -458,9 +458,6 @@ proc load_edb {} {
  $w.mb.rasters add command -label "Examine Lidar Rasters..." -command {
    source "$src_path/drast.ytk"
  }
- $w.mb.rasters add command -label "Process Lidar Data..." -command {
-    wm deiconify .l1wid
- }
 
 #############
 #   Images
