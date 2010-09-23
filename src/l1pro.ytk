@@ -237,6 +237,8 @@ if {![winfo exists .l1wid]} {
 
   .l1wid.mb.mission add separator
   .l1wid.mb.mission add command -label "EDB Status" -command edb_status
+  .l1wid.mb.mission add command -label "Launch new SF viewer..." \
+    -command [list ::sf::controller %AUTO%]
 
   namespace eval varplot {
     namespace eval v {

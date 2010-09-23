@@ -453,8 +453,6 @@ proc load_edb {} {
  	source "$src_path/image_load_tool.ytk"
  	ytk_image_load_tool $data_path
  }
- $w.mb.images add command -label "Launch new SF viewer..." \
-   -command [list ::sf::controller %AUTO%]
 
 #############
 #   Nav
