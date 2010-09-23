@@ -271,7 +271,8 @@ func select_points(celldata, exclude=, win=) {
 
    if (exclude) {
       croppeddata = rtn_data;
-      rtn_data = exclude_region(celldata, rtn_data);
+      idx = set_difference(celldata.rn, rtn_data.rn);
+      rtn_data = celldata(idx);
    }
 
    return rtn_data;
