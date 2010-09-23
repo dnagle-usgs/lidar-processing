@@ -52,3 +52,11 @@ func pearson_skew_2(x) {
 */
    return 3 * (x(avg) - median(x)) / x(rms);
 }
+
+func pearson_correlation(x, y) {
+/* DOCUMENT pearson_correlation(x, y)
+   Returns Perason's product-moment correlation coefficient for the two
+   variables given. Also known as "Pearson's r".
+*/
+   return covariance(x,y) / (x(rms) * y(rms));
+}
