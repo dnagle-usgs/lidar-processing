@@ -436,7 +436,6 @@ proc load_edb {} {
   $w configure -menu $w.mb
    menu $w.mb
    menu $w.mb.nav
-   menu $w.mb.rasters
    menu $w.mb.images
    menu $w.mb.time
    menu $w.mb.deprecated
@@ -444,20 +443,12 @@ proc load_edb {} {
    ybkg require \"rbgga.i\"
 
  $w.mb add cascade -label "Maps/Nav"     -underline 0 -menu $w.mb.nav
- $w.mb add cascade -label "Lidar"  -underline 0 -menu $w.mb.rasters
  $w.mb add cascade -label Imagery   -underline 0 -menu $w.mb.images
  $w.mb add cascade -label Time     -underline 0 -menu $w.mb.time
  $w.mb add cascade -label Deprecated -underline 0 -menu $w.mb.deprecated
 
  source "$src_path/map.ytk"
  restore_eaarl_options "map.options" _map
-
-#############
-#  Lidar / Rasters 
-#############
- $w.mb.rasters add command -label "Examine Lidar Rasters..." -command {
-   source "$src_path/drast.ytk"
- }
 
 #############
 #   Images

@@ -705,6 +705,9 @@ if {![winfo exists .l1wid]} {
     -label "Show raw and processed waveforms when using Pixel Waveform" \
     -variable bconst
 
+  .l1wid.mb.dep.an add command -label "Examine Lidar Rasters..." \
+    -command [list source [file join $src_path drast.ytk]]
+
   .l1wid.mb.dep add cascade -label "Import/Export" -underline 0 \
     -menu .l1wid.mb.dep.ie
 
