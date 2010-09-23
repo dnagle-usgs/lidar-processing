@@ -519,7 +519,7 @@ func batch_rcf_compare(day123, path=, kings_fs=) {
     date = string(&p);
     fname = swrite(format="rcf-eaarl-%s-b400-w%d-%s.pbd",rgn_name, ic, date);
      write, format="Rcf'ing region %d\n",ic;
-     rcf_day = rcfilter_eaarl_pts(day123, buf=400, w=ic, mode=3);
+     rcf_day = rcf_filter_eaarl(day123, buf=400, w=ic, mode="be");
      f = createb(path+fname);
      vname = "rcf_day123_"+swrite(format="%d",ic);
      add_variable, f, -1, vname, structof(rcf_day), dimsof(rcf_day);
