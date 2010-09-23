@@ -1,3 +1,14 @@
+/******************************************************************************\
+* This file was created in the attic on 2010-09-23. These functions were moved *
+* here from data_rgn_selector.i because they are unused and/or obsolete in     *
+* favor of other functionality.                                                *
+*     write_sel_rgn_stats - unused                                             *
+*     exclude_region - replaced by set_difference                              *
+*     make_GEO_from_VEG - replaced by struct_cast                              *
+*     save_data_tiles_from_array - replaced by save_data_to_tiles              *
+*     copy_tilefiles_to_indexdir - approximated by batch_tile                  *
+\******************************************************************************/
+
 func write_sel_rgn_stats(data, type) {
    write, "****************************";
    write, format="Number of Points Selected	= %6d \n",numberof(data.elevation);
