@@ -208,17 +208,24 @@ if {![winfo exists .l1wid]} {
     -command load_dmars
   .l1wid.mb.mission.load add command -label "PNAV Data..." -underline 5 \
     -command {exp_send "pnav = rbpnav(); \r"}
-  .l1wid.mb.mission.load add command -label "Ops_conf Settings..." \
-    -underline 5 -command load_ops_conf
   .l1wid.mb.mission.load add command -label "Bathymetry Settings..." \
+    -underline 21 -command bathctl::gui
+
+  menu .l1wid.mb.mission.settings
+  .l1wid.mb.mission add cascade -label "Settings" -underline 0 \
+    -menu .l1wid.mb.mission.settings
+  .l1wid.mb.mission.settings add command -label "Load ops_conf..." \
+    -underline 0 -command load_ops_conf
+  .l1wid.mb.mission.settings add command -label "Configure ops_conf..." \
+    -underline 0 -command ::l1pro::settings::ops_conf::gui
+  .l1wid.mb.mission.settings add command -label "Save ops_conf..." \
+    -underline 0 -command ::l1pro::settings::ops_conf::save
+  .l1wid.mb.mission.settings add separator
+  .l1wid.mb.mission.settings add command -label "Bathymetry Settings..." \
     -underline 21 -command bathctl::gui
 
   .l1wid.mb.mission add separator
   .l1wid.mb.mission add command -label "EDB Status" -command edb_status
-  .l1wid.mb.mission add command -label "Configure ops_conf..." -underline 0 \
-    -command ::l1pro::settings::ops_conf::gui
-  .l1wid.mb.mission add command -label "Save ops_conf..." -underline 0 \
-    -command ::l1pro::settings::ops_conf::save
 
   namespace eval varplot {
     namespace eval v {
