@@ -437,13 +437,11 @@ proc load_edb {} {
    menu $w.mb
    menu $w.mb.nav
    menu $w.mb.images
-   menu $w.mb.time
 
    ybkg require \"rbgga.i\"
 
  $w.mb add cascade -label "Maps/Nav"     -underline 0 -menu $w.mb.nav
  $w.mb add cascade -label Imagery   -underline 0 -menu $w.mb.images
- $w.mb add cascade -label Time     -underline 0 -menu $w.mb.time
 
  source "$src_path/map.ytk"
  restore_eaarl_options "map.options" _map
@@ -483,13 +481,6 @@ proc load_edb {} {
             }
 
  set clist "black red blue green cyan magenta yellow white"
-
-#############
-#   Time
-#############
- $w.mb.time add command -label "Check and correct EDB time..." -command {
-  source "$src_path/ts_check.ytk"; ts_check;
- }
 
 #############
 #   Deprecated

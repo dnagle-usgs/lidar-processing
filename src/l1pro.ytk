@@ -546,10 +546,13 @@ if {![winfo exists .l1wid]} {
 
   .l1wid.mb.util add command -label "Open Fit Gaussian GUI" \
     -command open_fit_gaussian_gui
-  .l1wid.mb.util add command -label "Determine Roll Bias" -underline 0 \
-    -command determine_roll_bias
   .l1wid.mb.util add command -label "Browse Rasters" -underline 7 \
     -command ::l1pro::drast::gui
+  .l1wid.mb.util add separator
+  .l1wid.mb.util add command -label "Determine Roll Bias" -underline 0 \
+    -command determine_roll_bias
+  .l1wid.mb.util add command -label "Check and correct EDB time" \
+    -command ts_check
   .l1wid.mb.util add separator
   .l1wid.mb.util add command \
     -label "Show Flightlines with No Raster Data..." -underline 25 \
@@ -557,7 +560,6 @@ if {![winfo exists .l1wid]} {
   .l1wid.mb.util add command -label "Show Flightlines with No TANS Data..." \
     -underline 25 \
     -command {exp_send "plot_no_tans_fltlines(tans, gga);\r"}
-
 
   proc determine_roll_bias {} {
       global win_no varlist bias pro_var
@@ -1699,3 +1701,4 @@ source "$src_path/plot.ytk"
 source "$src_path/bathctl.ytk"
 source "$src_path/data_segments.ytk"
 source "$src_path/pixelwf.ytk"
+source "$src_path/ts_check.ytk"
