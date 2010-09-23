@@ -403,7 +403,6 @@ proc load_edb {} {
   if { [sf_exists] } {
      send_sf "set dir $data_path"
   }
-  wm title .eaarl "Current Data: $data_path"
   }
 }
 
@@ -424,17 +423,6 @@ proc load_edb {} {
 
 ####   exp_send "#include \"edb_access.i\"\r"
 ####   exp_send "#include \"map.i\"\r"
-
-   set w .eaarl
-   global w
-   destroy  $w
-   toplevel $w
-   wm protocol $w WM_DELETE_WINDOW [list wm withdraw $w]
-   frame $w.f -width 440
-   pack $w.f
-
-  $w configure -menu $w.mb
-   menu $w.mb
 
    ybkg require \"rbgga.i\"
 
@@ -462,5 +450,4 @@ expect ">"
 source "$src_path/l1pro.ytk"
 if {[yget alpsrc.l1pro_startup]} {
    wm deiconify .l1wid
-   wm withdraw .eaarl
 }
