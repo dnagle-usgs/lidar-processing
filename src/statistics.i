@@ -42,7 +42,9 @@ func pearson_skew_1(x, binsize=) {
    binsize= is given, it is passed to the mode function.
    SEE ALSO: pearson_skew_2
 */
-   return (x(avg) - mode(x, binsize=binsize)) / x(rms);
+   xrms = x(rms);
+   if(xrms)
+      return (x(avg) - mode(x, binsize=binsize)) / xrms;
 }
 
 func pearson_skew_2(x) {
@@ -50,7 +52,9 @@ func pearson_skew_2(x) {
    Returns Pearson's second skewness coefficient for the given distribution.
    SEE ALSO: pearson_skew_1
 */
-   return 3 * (x(avg) - median(x)) / x(rms);
+   xrms = x(rms);
+   if(xrms)
+      return 3 * (x(avg) - median(x)) / xrms;
 }
 
 func pearson_correlation(x, y) {
@@ -58,5 +62,8 @@ func pearson_correlation(x, y) {
    Returns Perason's product-moment correlation coefficient for the two
    variables given. Also known as "Pearson's r".
 */
-   return covariance(x,y) / (x(rms) * y(rms));
+   xrms = x(rms);
+   yrms = y(rms);
+   if(xrms && yrms)
+      return covariance(x,y) / (xrms * yrms);
 }
