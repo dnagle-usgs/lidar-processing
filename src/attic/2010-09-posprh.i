@@ -1,3 +1,9 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-09-23. The functionality is unused  *
+* and apparently unneeded in favor of other attitude implementations. Morever, *
+* the format this returns its data in does not integrate well with the rest of *
+* ALPS.                                                                        *
+\******************************************************************************/
 
 /*
 
