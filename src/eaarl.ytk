@@ -454,13 +454,6 @@ proc load_edb {} {
  $w.mb add cascade -label Deprecated -underline 0 -menu $w.mb.deprecated
 
  $w.mb.file add command -label "Load EAARL Database Index (Edb)..." -command { load_edb }  -underline 5
- $w.mb.file add command -label "Load GPS PNAV data..."   -underline 9 -command { exp_send "require, \"rbpnav.i\"\r"
-    	      expect ">"
-     	      exp_send "pnav = rbpnav() \r" }
- $w.mb.file add command -label "Load DMARS Attitude data..."   -underline 5 -command  load_dmars;
- $w.mb.file add command -label "Load Tans Attitude data..."   -underline 5 -command { exp_send "require, \"rbtans.i\"\r"
-   	      expect ">"
-    	      exp_send "tans = rbtans() \r" }
 $w.mb.file add separator
 
  $w.mb.file add command -label "Edb Status" -command  edb_status 
@@ -522,16 +515,6 @@ $w.mb.file add separator
 
  set gga_color black
 
- $w.mb.nav add command -label "Load Tans Attitude data..."   -underline 5 \
-   -command { exp_send "require, \"rbtans.i\"\r"
-   	      expect ">"
-    	      exp_send "tans = rbtans() \r" }
-
- $w.mb.nav add command -label "Load Aircraft PNAV data..."   -underline 9 \
-   -command { exp_send "require, \"rbpnav.i\"\r"
-    	      expect ">"
-     	      exp_send "pnav = rbpnav() \r" }
-
  $w.mb.nav add command -label "Load Ground PNAV (gt_pnav) data..."   -underline 12 \
    -command {
      	        exp_send "gt_pnav = load_pnav() \r" }
@@ -545,16 +528,7 @@ $w.mb.file add separator
               append_varlist gt_fsall
             }
 
- $w.mb.nav add command -label "Load DMARS data..."   -underline 5 \
-   -command load_dmars
-
  set clist "black red blue green cyan magenta yellow white"
-
-
-
-
-
-
 
 #############
 #   Time
