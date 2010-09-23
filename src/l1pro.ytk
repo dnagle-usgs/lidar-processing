@@ -187,9 +187,6 @@ if {![winfo exists .l1wid]} {
   .l1wid.mb.file add command -label "Dismiss" -underline 0 \
     -command {wm withdraw .l1wid}
 
-  .eaarl.mb clone .l1wid.mb.eaarl menubar
-  .l1wid.mb add cascade -label EAARL -underline 0 -menu .l1wid.mb.eaarl
-
   .l1wid.mb add cascade -label "Mission" -underline 0 -menu .l1wid.mb.mission
   .l1wid.mb.mission add command -label "Mission configuration manager" \
     -underline 0 -command ::mission::launch_gui
