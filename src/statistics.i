@@ -29,11 +29,17 @@ func mode(x, binsize=) {
    return binsize * idx + offset;
 }
 
+func pearson_skew_1(x, binsize=) {
+/* DOCUMENT person_skew_1(x, binsize=)
+   Returns Person's first skewness coefficient for the given distribution. If
+   binsize= is given, it is passed to the mode function.
+*/
+   return (x(avg) - mode(x, binsize=binsize)) / x(rms);
+}
+
 func pearson_skew_2(x) {
 /* DOCUMENT pearson_skew_2(x)
    Returns Pearson's second skewness coefficient for the given distribution.
 */
-   xmean = x(avg);
-   xmedian = median(x);
    return 3 * (x(avg) - median(x)) / x(rms);
 }
