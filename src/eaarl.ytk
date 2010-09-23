@@ -449,10 +449,6 @@ proc load_edb {} {
 #############
 
 
- $w.mb.nav add command -label "Yorick Flight Planning..." \
-	-command { exp_send "require, \"nav.i\"\r" }
-
-
  set gga_color black
 
  $w.mb.nav add command -label "Load Ground PNAV (gt_pnav) data..."   -underline 12 \
