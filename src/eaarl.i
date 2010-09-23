@@ -98,6 +98,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "set.i";
    require, "sf.i";
    require, "shapefile.i";
+   require, "statistics.i";
    require, "surface_topo.i";
    require, "tiles.i";
    require, "transect.i";
