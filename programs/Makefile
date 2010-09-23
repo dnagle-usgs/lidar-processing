@@ -35,10 +35,10 @@ var:
 
 # All programs to be installed
 PROGS = efdb erange gga2bin mkidx pnav2ybin tans2bin fix-dos-crlf-ash \
-	rdmars dmars2iex dmarscat2iex pospac2ybin
+	rdmars dmars2iex dmarscat2iex pospac2ybin terrapos2ybin
 
 # Programs that require the math library (-lm)
-NEEDSMATH = tans2bin dmars2iex
+NEEDSMATH = tans2bin dmars2iex terrapos2ybin
 
 $(filter-out $(NEEDSMATH),$(PROGS)) : % : %.o
 	$(CC) -o $@ $<
