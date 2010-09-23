@@ -435,9 +435,7 @@ proc load_edb {} {
 
   $w configure -menu $w.mb
    menu $w.mb
-   menu $w.mb.file
    menu $w.mb.nav
-   menu $w.mb.attitude
    menu $w.mb.rasters
    menu $w.mb.images
    menu $w.mb.time
@@ -446,7 +444,6 @@ proc load_edb {} {
    ybkg require \"rbgga.i\"
 
  $w.mb add cascade -label "Maps/Nav"     -underline 0 -menu $w.mb.nav
- $w.mb add cascade -label "Settings"     -underline 0 -menu $w.mb.attitude
  $w.mb add cascade -label "Lidar"  -underline 0 -menu $w.mb.rasters
  $w.mb add cascade -label Imagery   -underline 0 -menu $w.mb.images
  $w.mb add cascade -label Time     -underline 0 -menu $w.mb.time
@@ -474,20 +471,6 @@ proc load_edb {} {
  }
  $w.mb.images add command -label "Launch new SF viewer..." \
    -command [list ::sf::controller %AUTO%]
-
-##############################
-#   Attitude Sensors
-#############################9
- $w.mb.attitude add command -label "Load Ops_conf Settings..." \
-	-command load_ops_conf 
- $w.mb.attitude add command -label "Current Ops_conf Settings..." \
-	-command { exp_send "display_mission_constants, ops_conf, ytk=1\r"; }
- $w.mb.attitude add command -label "TANS Settings..." \
-	-command { exp_send "display_mission_constants, ops_tans, ytk=1\r"; }
- $w.mb.attitude add command -label "DMARS Settings..." \
-	-command { exp_send "display_mission_constants, ops_IMU2, ytk=1\r"; }
- $w.mb.attitude add command -label "Applanix 510 Settings..." \
-	-command { exp_send "display_mission_constants, ops_IMU1, ytk=1\r"; }
 
 #############
 #   Nav
