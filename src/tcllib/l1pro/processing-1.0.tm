@@ -8,29 +8,10 @@ namespace eval ::l1pro::processing {
 }
 
 proc ::l1pro::processing::define_region_box {} {
-   if {$::_ytk(annoying_help) eq "Yes"} {
-      set result [tk_messageBox \
-         -icon info -type okcancel \
-         -message "Drag a rectangular box in window $::_map(window) to\
-            define the region."]
-      if {$result ne "ok"} {
-         return
-      }
-   }
    exp_send "q = gga_win_sel(2, win=$::_map(window));\r"
 }
 
 proc ::l1pro::processing::define_region_poly {} {
-   if {$::_ytk(annoying_help) eq "Yes"} {
-      set result [tk_messageBox \
-         -icon info -type okcancel \
-         -message "Draw a polygon in window $::_map(window) to define a region\
-            using a series of left mouse clicks. To complete the polygon,\
-            middle mouse click or CTRL-left mouse click."]
-      if {$result ne "ok"} {
-         return
-      }
-   }
    exp_send "q = gga_pip_sel(1, win=$::_map(window));\r"
 }
 
