@@ -1,6 +1,15 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "eaarl.i";
 
+func covariance(x, y) {
+/* DOCUMENT covariance(x, y)
+   Returns the covariance of the two variables.
+*/
+   x -= x(avg);
+   y -= y(avg);
+   return (x*y)(sum)/numberof(x);
+}
+
 func quartiles(ary) {
 /* DOCUMENT quartiles(ary)
    Returns the first, second, and third quartiles for the array.
