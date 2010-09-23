@@ -453,11 +453,6 @@ proc load_edb {} {
  $w.mb add cascade -label Time     -underline 0 -menu $w.mb.time
  $w.mb add cascade -label Deprecated -underline 0 -menu $w.mb.deprecated
 
- $w.mb.file add command -label "Load EAARL Database Index (Edb)..." -command { load_edb }  -underline 5
-$w.mb.file add separator
-
- $w.mb.file add command -label "Edb Status" -command  edb_status 
-
  $w.mb.file add command -label "Load command file..." -command { 
    load_cmd $data_path 
  }
