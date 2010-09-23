@@ -436,23 +436,13 @@ proc load_edb {} {
   $w configure -menu $w.mb
    menu $w.mb
    menu $w.mb.nav
-   menu $w.mb.images
 
    ybkg require \"rbgga.i\"
 
  $w.mb add cascade -label "Maps/Nav"     -underline 0 -menu $w.mb.nav
- $w.mb add cascade -label Imagery   -underline 0 -menu $w.mb.images
 
  source "$src_path/map.ytk"
  restore_eaarl_options "map.options" _map
-
-#############
-#   Images
-#############
- $w.mb.images add command -label "Load Images in Yorick..." -command {
- 	source "$src_path/image_load_tool.ytk"
- 	ytk_image_load_tool $data_path
- }
 
 #############
 #   Nav
