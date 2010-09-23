@@ -15,6 +15,20 @@ func quartiles(ary) {
    return [q1, q2, q3];
 }
 
+func mode(x, binsize=) {
+/* DOCUMENT mode(x, binsize=)
+   Returns the mode of the given distribution. Option BINSIZE specifies the
+   width of the bins to be used when calculating the distribution's histogram.
+   By default, binsize=1 (which is appropriate for integer input).
+*/
+   default, binsize, 1;
+   offset = x(min) - 1;
+   X = long((x-offset)/double(binsize)+0.5);
+   hist = histogram(X);
+   idx = hist(mxx);
+   return binsize * idx + offset;
+}
+
 func pearson_skew_2(x) {
 /* DOCUMENT pearson_skew_2(x)
    Returns Pearson's second skewness coefficient for the given distribution.
