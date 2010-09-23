@@ -4,10 +4,8 @@ require, "eaarl.i";
 func quartiles(ary) {
 /* DOCUMENT quartiles(ary)
    Returns the first, second, and third quartiles for the array.
-
-   See also: median
+   SEE ALSO: median
 */
-// Original David Nagle 2008-03-26
    ary = ary(sort(ary));
    q1 = median(ary(:numberof(ary)/2));
    q2 = median(ary);
@@ -33,6 +31,7 @@ func pearson_skew_1(x, binsize=) {
 /* DOCUMENT person_skew_1(x, binsize=)
    Returns Person's first skewness coefficient for the given distribution. If
    binsize= is given, it is passed to the mode function.
+   SEE ALSO: pearson_skew_2
 */
    return (x(avg) - mode(x, binsize=binsize)) / x(rms);
 }
@@ -40,6 +39,7 @@ func pearson_skew_1(x, binsize=) {
 func pearson_skew_2(x) {
 /* DOCUMENT pearson_skew_2(x)
    Returns Pearson's second skewness coefficient for the given distribution.
+   SEE ALSO: pearson_skew_1
 */
    return 3 * (x(avg) - median(x)) / x(rms);
 }
