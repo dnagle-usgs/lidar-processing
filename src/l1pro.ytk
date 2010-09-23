@@ -196,9 +196,11 @@ if {![winfo exists .l1wid]} {
   .l1wid.mb.mission add command -label "Plotting tool" -underline 0 \
     -command ::plot::menu
   .l1wid.mb.mission add separator
+  .l1wid.mb.mission add command -label "Load EDB Data .. " -underline 5 \
+    -command load_edb
   .l1wid.mb.mission add command -label "Load TANS Data .. " -underline 5 \
     -command {exp_send "tans = rbtans();\r"}
-  .l1wid.mb.mission  add command -label "Load DMARS PBD Data .. " -underline 5 \
+  .l1wid.mb.mission add command -label "Load DMARS PBD Data .. " -underline 5 \
     -command load_dmars
 
   .l1wid.mb.mission add command -label "Load PNAV Data .. " -underline 5 \
@@ -211,6 +213,7 @@ if {![winfo exists .l1wid]} {
     -command bathctl::gui
 
   .l1wid.mb.mission add separator
+  .l1wid.mb.mission add command -label "EDB Status" -command edb_status
   .l1wid.mb.mission add command -label "Configure ops_conf..." -underline 0 \
     -command ::l1pro::settings::ops_conf::gui
   .l1wid.mb.mission add command -label "Save ops_conf..." -underline 0 \
