@@ -448,6 +448,4 @@ exp_send \r
 expect ">"
 
 source "$src_path/l1pro.ytk"
-if {[yget alpsrc.l1pro_startup]} {
-   wm deiconify .l1wid
-}
+wm deiconify .l1wid
