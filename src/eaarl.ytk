@@ -435,11 +435,8 @@ proc load_edb {} {
 
   $w configure -menu $w.mb
    menu $w.mb
-   menu $w.mb.nav
 
    ybkg require \"rbgga.i\"
-
- $w.mb add cascade -label "Maps/Nav"     -underline 0 -menu $w.mb.nav
 
  source "$src_path/map.ytk"
  restore_eaarl_options "map.options" _map
@@ -451,27 +448,11 @@ proc load_edb {} {
 
  set gga_color black
 
- $w.mb.nav add command -label "Load Ground PNAV (gt_pnav) data..."   -underline 12 \
-   -command {
-     	        exp_send "gt_pnav = load_pnav() \r" }
-
- $w.mb.nav add command -label "Load Ground PNAV2FS (gt_fs) data..."   -underline 12 \
-   -command { 
-              exp_send "\r"
-     	        expect ">"
-     	        exp_send "gt_fs = load_pnav2FS(); grow, gt_fsall, gt_fs\r"
-              append_varlist gt_fs
-              append_varlist gt_fsall
-            }
-
  set clist "black red blue green cyan magenta yellow white"
 
 #############
 #   Deprecated
 #############
-
-## disabled unused menu options
-$w.mb.nav entryconfigure 1 -state normal
 
 # Since ybkg is used, some output may go to the console (especially Yeti), so
 # this gives the user back their prompt.

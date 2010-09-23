@@ -240,6 +240,18 @@ if {![winfo exists .l1wid]} {
   .l1wid.mb.mission add command -label "Launch new SF viewer..." \
     -command [list ::sf::controller %AUTO%]
 
+  .l1wid.mb.mission add separator
+  .l1wid.mb.mission add command -label "Load Ground PNAV (gt_pnav) data..." \
+    -command {
+      exp_send "gt_pnav = load_pnav();\r"
+    }
+  .l1wid.mb.mission add command -label "Load Ground PNAV2FS (gt_fs) data..." \
+    -command {
+      exp_send "gt_fs = load_pnav2FS(); grow, gt_fsall, gt_fs;\r"
+      append_varlist gs_fs
+      append_varlist gs_fsall
+    }
+
   namespace eval varplot {
     namespace eval v {
       variable win .varplot
