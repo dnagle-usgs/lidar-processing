@@ -32,6 +32,7 @@ func plcm( z, y, x, cmin=, cmax=, marker=, msize=)
   if ( is_void(cmax) )
 	cmax = z(max);
 
+  if (is_void(x)) x= indgen(numberof(y));
   q = where( z >= cmin );
   if ( numberof(q) == 0 ) 
      return;
@@ -47,7 +48,6 @@ func plcm( z, y, x, cmin=, cmax=, marker=, msize=)
 
   n= array(1, 1+numberof(y));
   n(1)= numberof(py);
-  if (is_void(x)) x= indgen(numberof(y));
   plfp, edges=0, grow([0.],z), grow(py,y), grow(px,x), n, 
        cmin=cmin, cmax=cmax;
 }
