@@ -1,17 +1,6 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "eaarl.i";
 
-struct CONUSQQ {
-   string   codeqq;
-   double   lat;
-   double   lon;
-   string   name24k;
-   string   state24k;
-   string   code24k;
-   int      utmzone;
-   string   nedquad;
-}
-
 func qq2uz(qq, centroid=) {
 /* DOCUMENT qq2uz(qq, centroid=)
 
@@ -307,37 +296,6 @@ func calc24qq(lat, lon) {
    aqq = ["a", "d", "b", "c"];
 
    return swrite(format="%02d%03d%s%d%s", dlat, dlon, alat(qlat), qlon, aqq(qq));
-}
-
-func get_conusqq_data(void) {
-/* DOCUMENT get_conusqq_data()
-   
-   Loads and returns the CONUS quarter quad data from ../CONUSQQ/conusqq.pbd.
-   This file can be downloaded from
-
-      lidar.net:/mnt/alps/eaarl/tarfiles/CONUSQQ/conusqq.pbd
-
-   It should be placed in the directory eaarl/lidar-processing/CONUSQQ/, which
-   makes its relative path ../CONUSQQ/ from the perspective of Ytk (when run
-   from lidar-processing/src).
-
-   This data was collected from a shapefile provided by Jason Stoker of the
-   USGS.  It uses a quarter quad tile scheme as described in calc24qq. This
-   data provides additional information for each tile.
-
-   The return data is an array of CONUSQQ.
-
-   See also: calc24qq
-*/
-   fname = "../CONUSQQ/conusqq.pbd";
-   if(!open(fname,"r",1)) {
-      message = "The conus quarter-quad data is not available. Please download it from lidar.net:/mnt/alps/eaarl/tarfiles/CONUSQQ/conusqq.pbd and place it in the directory eaarl/lidar-processing/CONUSQQ/."
-      tkcmd, "MessageDlg .conusqqerror -type ok -icon error -title {Data not available} -message {" + message + "}"
-      write, format="%s\n", message;
-   } else {
-      restore, openb(fname), conusqq;
-      return conusqq;
-   }
 }
 
 func get_utm_qqcodes(north, east, zone) {
