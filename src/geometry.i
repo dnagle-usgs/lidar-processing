@@ -1,33 +1,6 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "eaarl.i";
 
-local geometry_i;
-/* DOCUMENT geometry.i
-
-   This file contains geometric and related functions.
-
-   Functions for working with affine matrixes:
-
-      solve_affine
-      affine_transform
-
-   Functions for working in a cartesian plane:
-
-      find_nearest_point
-      find_points_in_radius
-
-   Functions for interpolations:
-
-      interp_angles
-
-   Functions for working with degrees:
-
-      slope2degrees
-      normalize_degrees
-      rereference_angle
-
-*/
-
 func solve_affine(sx, sy, dx, dy) {
 /* DOCUMENT solve_affine(sx, sy, dx, dy)
 

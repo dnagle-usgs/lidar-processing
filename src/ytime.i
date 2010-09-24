@@ -1,18 +1,5 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 
-local ytime_i;
-/* DOCUMENT ytime.i
-
-   Functions to manipulate 32 bit time of day values.  These functions convert
-   to/from soe, sod, and hms.  Hms is hours-minutes-seconds, soe is
-   seconds-of-epoch (since midnight, Jan 1, 1970), and sod is seconds-of-day.
-   There are 86400 seconds in a day.
-
-   See also:
-      getsod soe2sod soe2time hms2sod sod2hms time2soe time_correct is_leap
-      soe2ymd ymd2doy time_plot time_diff soe2iso8601
-*/
-
 extern _ys;
 /* DOCUMENT _ys
    Array of integers representing the seconds of the epoch at midnight, Jan 1,

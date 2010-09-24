@@ -1,28 +1,6 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "eaarl.i";
 
-local set_i;
-/* DOCUMENT set_i
-
-   This file provides functions for set operations:
-
-      set_union
-      set_intersection
-      set_difference
-      set_symmetric_difference
-      set_cartesian_product
-      set_remove_duplicates
-   
-   Note that a set's complement can be obtained with set_difference (see
-   set_difference).
-
-   All set functions assume that the arrays passed are one-dimensional and have
-   no repeated elements (except set_remove_duplicates, which removes the
-   repeated elements). The returned arrays will not have any guaranteed
-   ordering for the elements, except where noted. Empty sets are permissible as
-   [].
-*/
-
 func set_contains(A, b) {
 /* DOCUMENT set_contains(A, b)
    Returns an array of boolean values indicating which values in b are

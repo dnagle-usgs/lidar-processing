@@ -1,55 +1,6 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "eaarl.i";
 
-local qq24k_i;
-/* DOCUMENT qq24k_i
-
-   Functions for the CLICK 24k Quarter-Quad tiling scheme and the 2k tiling
-   scheme.
-
-   Conversions:
-
-      batch_2k_to_qq
-      batch_qq_to_2k
-
-   Quarter-quad processing:
-   
-      qq2uz
-      extract_for_qq
-      qq2ll
-      calc24qq
-      extract_qq
-      get_conusqq_data
-      get_utm_qqcodes
-
-   Quarter-quad plotting:
-
-      draw_qq
-      draw_q
-      draw_ll_box
-      draw_qq_grid
-
-   2k data tile processing:
-
-      extract_for_dt
-      get_utm_dtcodes
-      get_dt_itcodes
-      get_utm_dtcode_candidates
-      dt_short
-      dt2utm
-      it2utm
-
-   Miscellaneous:
-
-      pbd_append
-      qqtiff_gms_prep
-      calculate_qq_extents
-
-   Structs defined:
-
-      CONUSQQ
-*/
-
 struct CONUSQQ {
    string   codeqq;
    double   lat;

@@ -1,19 +1,6 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "eaarl.i";
 
-local lines_i;
-/* DOCUMENT lines.i
-   
-   This file contains functions for working with lines.
-
-   perpendicular_intercept
-   average_line
-   smooth_line
-   linear_regression
-   avgline
-   comparelines
-*/
-
 func perpendicular_intercept(x1, y1, x2, y2, x3, y3) {
 /* DOCUMENT perpendicular_intercept(x1, y1, x2, y2, x3, y3)
    
