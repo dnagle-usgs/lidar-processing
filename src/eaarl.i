@@ -68,7 +68,6 @@ if(is_void(__eaarl_includes_included__)) {
    require, "geo_bath.i";
    require, "geometry.i";
    require, "gridding.i";
-   require, "gridr.i";
    require, "groundtruth.i";
    require, "histogram.i";
    require, "ircf.i";
@@ -97,11 +96,12 @@ if(is_void(__eaarl_includes_included__)) {
    require, "rcf.i";
    require, "read_yfile.i";
    require, "rlw.i";
-   require, "shapefile.i";
    require, "seamless.i";
    require, "set.i";
    require, "sf.i";
+   require, "shapefile.i";
    require, "surface_topo.i";
+   require, "tiles.i";
    require, "transect.i";
    require, "util_cast.i";
    require, "util_container.i";
