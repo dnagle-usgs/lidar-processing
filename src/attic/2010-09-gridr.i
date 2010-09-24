@@ -1,4 +1,12 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
+/******************************************************************************\
+* This file was created in the attic on 2010-09-24. These functions were moved *
+* here from gridr.i because they are unused and obsolete.                      *
+*     tile_file_name                                                           *
+*     set_tile_filename                                                        *
+*     tile_location                                                            *
+*     sel_grid_area                                                            *
+\******************************************************************************/
 
 func tile_file_name(m) {
 /* DOCUMENT tile_file_name(m)
