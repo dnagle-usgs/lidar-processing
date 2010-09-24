@@ -1228,11 +1228,11 @@ func las_header(las) {
    write, format="%-19s : {%s}\n", "GUID", guid;
    guid = guid1 = guid2 = guid3 = guid4 = [];
 
-   tmp = strchar(header.system_identifier)(sum);
+   tmp = [strchar(header.system_identifier)](sum);
    tmp = strlen(tmp) ? tmp : "(nil)"
    write, format="%-19s : %s\n", "System identifier", tmp;
 
-   tmp = strchar(header.generating_software)(sum);
+   tmp = [strchar(header.generating_software)](sum);
    tmp = strlen(tmp) ? tmp : "(nil)"
    write, format="%-19s : %s\n", "Generating software", tmp;
 
