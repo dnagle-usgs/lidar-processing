@@ -37,3 +37,13 @@ func plcm(z, y, x, cmin=, cmax=, marker=, msize=) {
    plfp, grow(0., z), grow(py, y), grow(px, x), n, edges=0, cmin=cmin,
       cmax=cmax;
 }
+
+func plgrid(y, x, color=, width=, type=) {
+/* DOCUMENT plgrid, y, x, color=, width=, type=
+   Plots a grid. Lines will be plotted vertically at X and horizontally at Y to
+   make a square grid. Keywords COLOR, WIDTH, and TYPE are as defined for plm.
+*/
+   xx = array(x, numberof(y));
+   yy = transpose(array(y, numberof(x)));
+   plm, yy, xx, color=color, width=width, type=type;
+}
