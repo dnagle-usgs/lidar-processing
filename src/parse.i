@@ -295,6 +295,46 @@ func get_utm_dtcodes(north, east, zone) {
         int(zone));
 }
 
+func get_utm_dt_quadcell(north, east, &quad, &cell) {
+/* DOCUMENT get_utm_dt_quadcell, north, east, &quad, &cell
+    Sets the quad and cell for the given northing/easting values within their
+    data tile.
+
+    A 2km-square data tile has four quads, each 1km-square. They are laid out
+    as:
+        +---+---+
+        | A | B |
+        +---+---+
+        | C | D |
+        +---+---+
+
+    A 1km-square quad has sixteen cells, each 250m-square. They are laid out
+    as:
+        +----+----+----+----+
+        |  1 |  2 |  3 |  4 |
+        +----+----+----+----+
+        |  5 |  6 |  7 |  8 |
+        +----+----+----+----+
+        |  9 | 10 | 11 | 12 |
+        +----+----+----+----+
+        | 12 | 13 | 14 | 16 |
+        +----+----+----+----+
+*/
+    quad_map = [["C","D"],["A","B"]];
+    cell_map = [indgen(13:16),indgen(9:12),indgen(5:8),indgen(1:4)];
+
+    tn = floor(north/2000.)*2000;
+    qn = long(north - tn)/1000 + 1;
+    cn = long(north - tn - (qn*1000 - 1000)) / 250 + 1;
+
+    te = floor(east/2000.)*2000;
+    qe = long(east - te)/1000 + 1;
+    ce = long(east - te - (qe*1000 - 1000)) / 250 + 1;
+
+    quad = quad_map(qe, qn);
+    cell = cell_map(ce, cn);
+}
+
 func get_utm_dtcode_coverage(north, east, zone) {
 /* DOCUMENT dt = get_utm_dtcode_coverage(north, east, zone)
     For a set of UTM northings, eastings, and zones, this will calculate the
