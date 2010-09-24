@@ -1,51 +1,50 @@
+// vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "eaarl.i";
 
-func dgrid(w, ll, d, c, wd) {
-   x0 = ll(1);
-   x1 = ll(2);
-   for ( y=ll(3); y<=ll(4); y+=d ) {
-      pldj, x0,y,x1,y,color=c,width=wd;
-   }
-
-   y0 = ll(3);
-   y1 = ll(4);
-   for ( x=x0; x<=x1; x+=d ) {
-      pldj, x,y0,x,y1,color=c,width=wd;
-   }
-}
-
-func draw_grid( w ) {
-/* DOCUMENT draw_grid(w)
- 
-   Draws a standard grid in window "w" using the windows current
- limits.  The grid outlines tiles in red, quads in dark gray, and 
- cells in light gray.
-
- For a description of tiles, quads, and cells type:
- help, show_grid_location.
-
- See also: tile_file_name, draw_grid, show_grid_location, dgrid
+func draw_grid(w) {
+/* DOCUMENT draw_grid, w
+   Draws a 10k/2k grid in window W using the window's current limits. The grid
+   will contain one or more of the following kinds of grid lines:
+      10km tile: violet
+      2km tile: red
+      1km quad: dark grey
+      250m cell: light grey
+   SEE ALSO: tile_file_name show_grid_location
 */
-   c = [200,200,200];
-   if ( is_void(w) ) w = 5;
+   local x0, x1, y0, y1;
+   default, w, 5;
    old_w = current_window();
    window, w;
-   ll = int(limits()/2000) * 2000;
-   ll(2) +=2000;
-   ll(4) += 2000;
-   if ((ll(4)-ll(3)) <= 4000) {
-      dgrid, w, ll, 250, [200,200,200],0.1;
-      dgrid, w, ll, 1000,[120,120,120],0.1;
-   }
-   if ((ll(4)-ll(3)) >= 8000) {
-      ll = int(limits()/10000) * 10000;
-      ll(2) +=10000;
-      ll(4) += 10000;
-      dgrid, w, ll, 2000,[250,140,140],3;
-      dgrid, w, ll, 10000, [170,120,170], 7;
+   ll = long(limits()/2000) * 2000;
+
+   // Only show 10km tiles if range is >= 8km; otherwise, 2km
+   if(ll(4) - ll(3) >= 8000) {
+      ll = long(ll/10000)*10000;
+      ll([2,4]) += 10000;
    } else {
-      dgrid, w, ll, 2000,[250,140,140],5;
+      ll([2,4]) += 2000;
    }
+   assign, ll, x0, x1, y0, y1;
+
+   // Only show quads and cells when within 4km
+   if (y1 - y0 <= 4000) {
+      plgrid, indgen(y0:y1:250), indgen(x0:x1:250), color=[200,200,200],
+         width=0.1;
+      plgrid, indgen(y0:y1:1000), indgen(x0:x1:1000), color=[120,120,120],
+         width=0.1;
+   }
+
+   // Always show 2km tile, though with a smaller width when zoomed out
+   width = (y1 - y0 >= 8000) ? 3 : 5;
+   plgrid, indgen(y0:y1:2000), indgen(x0:x1:2000), color=[250,140,140],
+      width=width;
+
+   // Only show 1km tiles if range is >= 8km
+   if(y1 - y0 >= 8000) {
+      plgrid, indgen(y0:y1:10000), indgen(x0:x1:10000), color=[170,120,170],
+         width=7;
+   }
+
    window_select, old_w;
 }
 
@@ -59,7 +58,7 @@ func tile_file_name(m) {
       tilefn     A string containing the filename of the tile
                  which goes with the selected location.
 
- See also: tile_file_name, draw_grid, show_grid_location, dgrid
+ See also: tile_file_name, draw_grid, show_grid_location
 */
    tilefn = "";
    tile = tile_location(m);
@@ -130,7 +129,7 @@ func tile_location(m) {
           tile  A 2 element integet array containing the tile
                 numbers.
 
- See also: tile_file_name, draw_grid, show_grid_location, dgrid
+ See also: tile_file_name, draw_grid, show_grid_location
 */
    tile = array(int,2);
    tile(1) = int(m)(2) / 2000 * 2000;
@@ -167,7 +166,7 @@ func show_grid_location(w,m) {
 
   [4230000,484000,2,2,3,4]
 
- See also: tile_file_name, draw_grid, show_grid_location, dgrid
+ See also: tile_file_name, draw_grid, show_grid_location
 
   
 */
