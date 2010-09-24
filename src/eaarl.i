@@ -88,7 +88,6 @@ if(is_void(__eaarl_includes_included__)) {
    require, "nav.i";
    require, "parse.i";
    require, "pip.i";
-   require, "plcm.i";
    require, "qaqc_fns.i";
    require, "qq24k.i";
    require, "raspulsearch.i";
@@ -107,6 +106,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "util_cast.i";
    require, "util_container.i";
    require, "util_coord.i";
+   require, "util_plot.i";
    require, "util_str.i";
    require, "veg.i";
    require, "wgs842nad83.i";
