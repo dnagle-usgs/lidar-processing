@@ -323,7 +323,7 @@ func get_utm_itcodes(north, east, zone) {
     to them.
 */
 //  Original David Nagle 2009-07-09
-    return swrite(format="t_e%.0f000_n%.0f000_%d",
+    return swrite(format="i_e%.0f000_n%.0f000_%d",
         floor(east /10000.0)*10,
         ceil (north/10000.0)*10,
         int(zone));

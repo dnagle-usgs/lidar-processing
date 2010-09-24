@@ -170,6 +170,7 @@ func show_grid_location(w,m) {
 
   
 */
+   extern curzone;
    default, w, 5;
    ltr = [["A","B"],["C","D"]];
    cells =[
@@ -181,7 +182,6 @@ func show_grid_location(w,m) {
    window, w;
    if ( is_void(m) ) 
       m = mouse();
-   tilefname = set_tile_filename(m, nodata=1);
    im = int(m);
    tile  = tile_location(im);
    tilen = tile(1); 
@@ -192,12 +192,9 @@ func show_grid_location(w,m) {
    quade = ((int(m)(1) - tilee ) / 1000 + 1);
    celln =  ((im(2) - tilen - (quadn*1000 - 1000)) )/250 + 1;
    celle =  ((im(1) - tilee - (quade*1000 - 1000)) )/250 + 1;
-   write, format="Index Tile: i_e%d_n%d\n",itilee, itilen;
-   write, format="Tile File name will be %s\n", tilefname;
-   write, format="Tile: E%d N%d Quad:%s Cell:%d\n", 
-      tilee/1000 *1000, 
-      (tilen+2000)/1000 *1000,
-      ltr(quade,3-quadn), 
+   write, format="10km index tile : %s\n", get_utm_itcodes(m(2), m(1), curzone);
+   write, format="2km data tile   : %s   quad %s cell %d\n",
+      get_utm_dtcodes(m(2), m(1), curzone), ltr(quade,3-quadn),
       cells(celle,5-celln);
    return [tilen,tilee,quadn,quade,celln,celle];
 }
