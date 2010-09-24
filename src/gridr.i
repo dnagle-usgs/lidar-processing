@@ -137,66 +137,28 @@ func tile_location(m) {
    return tile;
 }
 
-func show_grid_location(w,m) {
-/* DOCUMENT show_grid_location(w,m)
-
-   Draw a UTM grid on windw "w" centered on mouse position "m".
-   If "m" is not given, this function will wait for a mouse click
-   in window "w".  Defaults to window 5.  The standard block divisions
-    are the tile, quad, and cell.  A tile is always 2x2km, a quad
-    1x1km and each tile contains 4 quads.  There are 16 cells in each
-    quad and each cell is 250x250 meters. Nothing smaller than a 
-   tile is saves in disk files.
-   
-
-   Returns:
-      An array describing the location as follows:
-
- Given the input array from mouse(): 
- [ 485913,4.23174e+06,
-   485913, 4.23174e+06,
-   0.552432,0.653899,
-   0.552432,0.653899,
-   1,1, 0
-  ]
-
- It will return the following array containing the tile north,
- and east, the block north and east index, and the cell north
- and east index within the block.
-
-  [4230000,484000,2,2,3,4]
-
- See also: tile_file_name, draw_grid, show_grid_location
-
-  
+func show_grid_location(m) {
+/* DOCUMENT show_grid_location, win
+   -or- show_grid_location, point
+   Displays information about the grid location for a given point. If provided
+   a scalar value WIN, the user will be prompted to click on a location in that
+   window. Otherwise, the location POINT is used. Will display the index tile,
+   data tile, quad name, and cell name.
+   SEE ALSO: draw_grid
 */
    extern curzone;
+   local quad, cell;
    default, w, 5;
-   ltr = [["A","B"],["C","D"]];
-   cells =[
-      [ 1,  2,  3,  4],
-      [ 5,  6,  7,  8],
-      [ 9, 10, 11, 12],
-      [13, 14, 15, 16]
-   ];
-   window, w;
-   if ( is_void(m) ) 
+   if(is_scalar(m) || is_void(m)) {
+      wbkp = current_window();
+      window, m;
       m = mouse();
-   im = int(m);
-   tile  = tile_location(im);
-   tilen = tile(1); 
-   tilee = tile(2);
-   itilee = tilee/10000 * 10000;
-   itilen = tilen/10000 * 10000 + 10000;
-   quadn = ((int(m)(2) - tilen ) / 1000 + 1);
-   quade = ((int(m)(1) - tilee ) / 1000 + 1);
-   celln =  ((im(2) - tilen - (quadn*1000 - 1000)) )/250 + 1;
-   celle =  ((im(1) - tilee - (quade*1000 - 1000)) )/250 + 1;
+      window_select, wbkp;
+   }
    write, format="10km index tile : %s\n", get_utm_itcodes(m(2), m(1), curzone);
+   get_utm_dt_quadcell, m(2), m(1), quad, cell;
    write, format="2km data tile   : %s   quad %s cell %d\n",
-      get_utm_dtcodes(m(2), m(1), curzone), ltr(quade,3-quadn),
-      cells(celle,5-celln);
-   return [tilen,tilee,quadn,quade,celln,celle];
+      get_utm_dtcodes(m(2), m(1), curzone), quad, cell;
 }
 
 func sel_grid_area( r ) {
