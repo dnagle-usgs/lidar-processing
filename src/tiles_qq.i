@@ -57,6 +57,51 @@ func qq2uz(qq, centroid=) {
       return long(u(3,));
 }
 
+func qq2utm(qq, &north, &east, &zone, bbox=, centroid=) {
+/* DOCUMENT qq2utm(qq, bbox=, centroid=)
+   -or-  qq2utm, qq, north, east, zone
+
+   Returns the northwest coordinates for the given qq as an array of [north,
+   west, zone]. This is the coordinates for the northwest corner; however, it
+   may not be the northmost or westmost point.
+
+   If bbox=1, then it instead returns the bounding box as an array of [south,
+   east, north, west, zone]. (Note that this does not exactly match the tile's
+   boundary since bbox is in UTM but tile is in lat/long.)
+
+   If centroid=1, then it returns the tile's central point.
+
+   If called as subroutine, sets northwest coordinates in given output
+   variables
+*/
+   local lats, lone, latn, lonw, e, n, z;
+   splitary, qq2ll(qq, bbox=1), lats, lone, latn, lonw;
+
+   // Calculate central point
+   ll2utm, (lats+latn)/2., (lone+lonw)/2., n, e, z;
+
+   if(!am_subroutine() && centroid)
+      return [n, e, z];
+
+   if(am_subroutine() || !bbox) {
+      ll2utm, latn, lonw, n, e, force_zone=z;
+      if(!am_subroutine())
+         return [n, e, z];
+      north = n;
+      east = e;
+      zone = z;
+      return;
+   }
+
+   local xne, xse, xnw, xne, yne, yse, ynw, yne;
+   ll2utm, latn, lone, yne, xne, force_zone=z;
+   ll2utm, latn, lonw, ynw, xnw, force_zone=z;
+   ll2utm, lats, lone, yse, xse, force_zone=z;
+   ll2utm, lats, lonw, ysw, xsw, force_zone=z;
+
+   return [min(yse, ysw), max(xne, xse), max(yne, ynw), min(xnw, xsw), z];
+}
+
 func qq2ll(qq, bbox=) {
 /* DOCUMENT ll = qq2ll(qq, bbox=)
 
