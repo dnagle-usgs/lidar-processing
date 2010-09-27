@@ -56,10 +56,10 @@ func get_utm_dtcodes(north, east, zone) {
    return utm2dt(east, north, zone, dtlength="long");
 }
 
-func get_utm_dt_quadcell(north, east, &quad, &cell) {
-/* DOCUMENT get_utm_dt_quadcell, north, east, &quad, &cell
-   Sets the quad and cell for the given northing/easting values within their
-   data tile.
+func utm2dtcell(east, north, &quad, &cell) {
+/* DOCUMENT utm2dtcell, north, east, &quad, &cell
+   Proivdes the quad and cell for the given northing/easting values within
+   their data tile.
 
    A 2km-square data tile has four quads, each 1km-square. They are laid out
    as:
@@ -94,6 +94,10 @@ func get_utm_dt_quadcell(north, east, &quad, &cell) {
 
    quad = quad_map(qe, qn);
    cell = cell_map(ce, cn);
+}
+
+func get_utm_dt_quadcell(north, east, &quad, &cell) {
+   utm2dtcell, east, north, quad, cell;
 }
 
 func utm2it(east, north, zone, dtlength=) {
