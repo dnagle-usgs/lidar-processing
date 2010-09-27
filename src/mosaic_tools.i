@@ -900,7 +900,7 @@ subdir=) {
    tile_names = h_keys(tiles);
    tile_zones = [];
    if(scheme == "qq") {
-      tile_zones = long(qq2uz(tile_names));
+      tile_zones = tile2uz(tile_names);
       tile_zones = swrite(format="zone_%d", tile_zones);
    }
 
