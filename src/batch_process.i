@@ -2471,8 +2471,8 @@ ignore_none_found=) {
       return;
    }
 
-   v_dt = numberof(v_files) ? dt_long(file_tail(v_files)) : [];
-   b_dt = numberof(b_files) ? dt_long(file_tail(b_files)) : [];
+   v_dt = numberof(v_files) ? extract_dt(file_tail(v_files), dtlength="long") : [];
+   b_dt = numberof(b_files) ? extract_dt(file_tail(b_files), dtlength="long") : [];
    s_dt = set_union(v_dt, b_dt);
 
    tstamp = 0;
@@ -2520,7 +2520,7 @@ ignore_none_found=) {
       }
 
       seamless_data = merge_veg_bathy(v_data, b_data);
-      vname = "smls_" + dt_short(this_tile);
+      vname = "smls_" + extract_dt(this_tile);
       
       f = createb(seamless_file);
       save, f, vname;
