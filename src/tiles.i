@@ -276,6 +276,181 @@ func get_utm_itcode_coverage(north, east, zone) {
    return swrite(format="i_e%d0000_n%d0000_%d", east, north, zone);
 }
 
+func get_utm_qqcodes(north, east, zone) {
+/* DOCUMENT qq = get_utm_qqcodes(north, east, zone)
+
+   For a set of UTM northings, eastings, and zones, this will calculate
+   each coordinate's quarter-quad code name and return an array of strings
+   that correspond to them.
+
+   See also: calc24qq qq_segment_pbd
+*/
+   // Convert the coordinates to lat/lon, coercing them into their quarter-quad
+   // corner points
+   ll = int(utm2ll(north, east, zone)/0.0625) * 0.0625;
+   // Then feed to calc24qq
+   return calc24qq(ll(*,2), ll(*,1));
+}
+
+func get_utm_qqcode_coverage(north, east, zone) {
+/* DOCUMENT qq = get_utm_qqcode_coverage(north, east, zone)
+    For a set of UTM northings, eastings, and zones, this will calculate the
+    set of quarter-quad tiles that encompass all the points.
+
+    This is equivalent to
+        qq = set_remove_duplicates(get_utm_qqcodes(north,east,zone))
+    but works much more efficiently (and faster).
+*/
+// Original David Nagle 2009-07-09
+   ll = utm2ll(north,east,zone);
+   lat = long(ll(*,2)/0.0625);
+   lon = long(ll(*,1)/0.0625);
+   ll = [];
+   lat += 3000;
+   lon += 3000;
+   code = long(unref(lat) * 10000 + unref(lon));
+   code = set_remove_duplicates(unref(code));
+   lat = code / 10000;
+   lon = unref(code) % 10000;
+   lat -= 3000;
+   lon -= 3000;
+   lat *= 0.0625;
+   lon *= 0.0625;
+   return calc24qq(lat, lon);
+}
+
+func get_utm_dtcode_candidates(north, east, zone, buffer) {
+/* DOCUMENT dtcodes = get_utm_dtcode_candidates(north, east, zone, buffer)
+
+   Quickly generates a list of data tiles that might be contained within the
+   given northings, eastings, and zones using the given buffer.
+
+   The returned dtcodes are NOT guaranteed to all exist within the data.
+   However, it is guaranteed that the array of dtcodes will contain all dtcodes
+   that are covered in the data.
+
+   Original David Nagle 2008-07-21
+*/
+   e_min = floor((east (min)-buffer)/2000.0)*2000;
+   e_max = ceil ((east (max)+buffer)/2000.0)*2000;
+   n_min = floor((north(min)-buffer)/2000.0)*2000;
+   n_max = ceil ((north(max)+buffer)/2000.0)*2000;
+   es = indgen(int(e_min):int(e_max):2000);
+   ns = indgen(int(n_min):int(n_max):2000);
+   coords = [es(*,),ns(,*)];
+   return swrite(format="t_e%d_n%d_%d", coords(*,1), coords(*,2), int(zone));
+}
+
+func extract_for_tile(north, east, zone, tile, buffer=) {
+/* DOCUMENT idx = extract_for_tile(north, east, zone, tile, buffer=);
+   Wrapper around extract_for_qq, extract_for_dt, and extract_for_it.
+   Automatically uses the right one.
+*/
+   tile = extract_tile(tile);
+   type = tile_type(tile);
+
+   if(type == "dt" || type == "it") {
+      if(is_scalar(zone)) {
+         if(zone != dt2uz(tile))
+            return [];
+      } else {
+         w = where(zone == dt2uz(tile));
+         if(!numberof(w))
+            return [];
+         north = north(w);
+         east = east(w);
+      }
+      if(type == "dt")
+         return extract_for_dt(north, east, tile, buffer=buffer);
+      else
+         return extract_for_it(north, east, tile, buffer=buffer);
+   } else if(type == "qq") {
+      return extract_for_qq(north, east, zone, tile, buffer=buffer);
+   } else {
+      error, "Unknown tiling type";
+   }
+}
+
+func extract_for_qq(north, east, zone, qq, buffer=) {
+/* DOCUMENT extract_for_qq(north, east, zone, qq, buffer=)
+
+   This will return an index into north/east of all coordinates that fall
+   within the bounds of the given quarter quad, which should be the string name
+   of the quarter quad.
+
+   The buffer= option specifies a buffer (in meters) to extend the quarter
+   quad's boundaries by. By default, it is 100 meters.
+*/
+   // Original David Nagle 2008-07-17
+   default, buffer, 100;
+   bbox = qq2ll(qq, bbox=1);
+
+   // ll(,1) is lon, ll(,2) is lat
+   ll = utm2ll(north, east, zone);
+
+   comp_lon = bound(ll(,1), bbox(4), bbox(2));
+   comp_lat = bound(ll(,2), bbox(1), bbox(3));
+
+   // comp_utm(1,) is north, (2,) is east
+   comp_utm = fll2utm(unref(comp_lat), unref(comp_lon), force_zone=zone);
+
+   dist = ppdist([unref(east), unref(north)], [comp_utm(2,), comp_utm(1,)], tp=1);
+   // Adding 1mm to buffer to accommodate floating point error
+   return where(dist <= buffer + 0.001);
+}
+
+func extract_for_dt(north, east, dt, buffer=) {
+/* DOCUMENT extract_for_dt(north, east, dt, buffer=)
+
+   This will return an index into north/east of all coordinates that fall
+   within the bounds of the given 2k data tile dt, which should be the string
+   name of the data tile.
+
+   The buffer= option specifies a buffer in meters to extend the tile's
+   boundaries by. By default, it is 100 meters. Setting buffer=0 will constrain
+   the data to the exact tile boundaries.
+*/
+   // Original David Nagle 2008-07-21
+   default, buffer, 100;
+   bbox = dt2utm(dt, bbox=1);
+   return extract_for_bbox(unref(north), unref(east), bbox, buffer);
+}
+
+func extract_for_it(north, east, it, buffer=) {
+/* DOCUMENT extract_for_it(north, east, it, buffer=)
+
+   This will return an index into north/east of all coordinates that fall
+   within the bounds of the given 10k index tile it, which should be the string
+   name of the index tile.
+
+   The buffer= option specifies a buffer in meters to extend the tile's
+   boundaries by. By default, it is 100 meters. Setting buffer=0 will constrain
+   the data to the exact tile boundaries.
+*/
+   default, buffer, 100;
+   bbox = it2utm(it, bbox=1);
+   return extract_for_bbox(unref(north), unref(east), bbox, buffer);
+}
+
+func extract_for_bbox(north, east, bbox, buffer) {
+/* DOCUMENT extract_for_bbox(north, east, bbox, buffer)
+
+   This will return an index into north/east of all coordinates that fall
+   within the bounds of the given bounding box bbox.
+
+   The buffer argument specifies a buffer in meters to extend the bbox's
+   boundaries by.
+*/
+   min_n = bbox(1) - buffer;
+   max_n = bbox(3) + buffer;
+   min_e = bbox(4) - buffer;
+   max_e = bbox(2) + buffer;
+   return where(
+      min_n <= north & north <= max_n &
+      min_e <= east  & east  <= max_e
+   );
+}
+
 func partition_into_2k(north, east, zone, buffer=, shorten=, verbose=) {
 /* DOCUMENT partition_into_2k(north, east, zone, buffer=, shorten=, verbose=)
    Given a set of points represented by northing, easting, and zone, this will
@@ -586,7 +761,7 @@ day_shift=) {
 
    if(verbose)
       write, format=" Creating files for %d tiles...\n", numberof(tile_names);
-   
+
    tile_zones = long(tile2uz(tile_names));
    uniq_zones = numberof(set_remove_duplicates(tile_zones));
    if(uniq_zones == 1 && split_zones == 1)
