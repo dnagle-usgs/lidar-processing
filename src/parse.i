@@ -48,6 +48,12 @@ func extract_tile(text, dtlength=, qqprefix=) {
 }
 
 func guess_tile(text, dtlength=, qqprefix=) {
+/* DOCUMENT guess_tile(text, dtlength=, qqprefix=)
+    Calls extract_tile and returns its result if it finds a valid tile name.
+    Otherwise, attempts to guess a 2km tile name from the string. This
+    currently will catch 2km tile names that do not have a zone identifier in
+    the string.
+*/
     local e, n, z;
     extern curzone;
 
