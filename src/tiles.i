@@ -9,7 +9,7 @@ func draw_grid(w) {
       2km tile: red
       1km quad: dark grey
       250m cell: light grey
-   SEE ALSO: tile_file_name show_grid_location
+   SEE ALSO: show_grid_location draw_qq_grid
 */
    local x0, x1, y0, y1;
    default, w, 5;
@@ -55,7 +55,7 @@ func show_grid_location(m) {
    a scalar value WIN, the user will be prompted to click on a location in that
    window. Otherwise, the location POINT is used. Will display the index tile,
    data tile, quad name, and cell name.
-   SEE ALSO: draw_grid
+   SEE ALSO: draw_grid show_qq_grid_location
 */
    extern curzone;
    local quad, cell;
@@ -74,14 +74,15 @@ func show_grid_location(m) {
 func draw_qq_grid(win, pts=) {
 /* DOCUMENT draw_qq_grid, win, pts=
    Draws a quarter quad grid for the given window. This will draw all quads and
-   quarter quads that fall within the visible region in the given window.
+   quarter quads that fall within the visible region in the given window. Quads
+   are in red, quarter quads in grey.
 
-   Quads are in red, quarter quads in grey.
-
-   If given pts= specifies how many points to drop along each side of the
+   If given, pts= specifies how many points to drop along each side of the
    quarter quad between corners. Default is pts=3. Minimum is pts=1.
 
    If the current plot crosses UTM zone boundaries, please set fixedzone.
+
+   SEE ALSO: show_qq_grid_location draw_grid
 */
 // Original David Nagle 2008-07-18
    if(is_void(win)) return;
@@ -130,11 +131,10 @@ func draw_qq(qq, win, pts=) {
 /* DOCUMENT draw_qq, qq, win, pts=
    Draws a grey box for the given quarter quad(s) in the given window.
 
-   If given pts= specifies how many points to drop along each side of the
+   If given, pts= specifies how many points to drop along each side of the
    quarter quad between corners. Default is pts=3. Minimum is pts=1.
-
-   Original David Nagle 2008-07-18
 */
+// Original David Nagle 2008-07-18
    if(is_void(win)) return;
    default, pts, 3;
    if(pts < 1) pts = 1;
@@ -149,11 +149,10 @@ func draw_q(qq, win, pts=) {
    For the given quarter quad(s), red boxes will be drawn for the quads and
    grey boxes will be drawn inside for the quarter quads, in the given window.
 
-   If given pts= specifies how many points to drop along each side of the
+   If given, pts= specifies how many points to drop along each side of the
    quarter quad between corners. Default is pts=3. Minimum is pts=1.
-
-   Original David Nagle 2008-07-18
 */
+// Original David Nagle 2008-07-18
    if(is_void(win)) return;
    default, pts, 3;
    if(pts < 1) pts = 1;
@@ -176,9 +175,8 @@ func draw_ll_box(bbox, win, pts=, color=) {
    box between corners. Default is pts=3. Minimum is pts=1.
 
    If given color= specifies the color to draw with. Default is black.
-
-   Original David Nagle 2008-07-18
 */
+// Original David Nagle 2008-07-18
    if(is_void(win)) return;
    default, pts, 3;
    if(pts < 1) pts = 1;
@@ -204,9 +202,9 @@ func show_qq_grid_location(m) {
    -or- show_qq_grid_location, point
    Displays information about the grid location for a given point. If provided
    a scalar value WIN, the user will be prompted to click on a location in that
-   window. Otherwise, the location POINT is used. Will display the index tile,
-   data tile, quad name, and cell name.
-   SEE ALSO: draw_grid
+   window. Otherwise, the location POINT is used. Will display the quarter quad
+   tile name.
+   SEE ALSO: draw_qq_grid show_grid_location
 */
    extern curzone;
    if(!curzone) {
