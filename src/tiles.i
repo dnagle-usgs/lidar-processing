@@ -59,7 +59,7 @@ func show_grid_location(m) {
 */
    extern curzone;
    local quad, cell;
-   default, w, 5;
+   default, m, 5;
    if(is_scalar(m) || is_void(m)) {
       wbkp = current_window();
       window, m;
