@@ -276,6 +276,94 @@ func get_utm_itcode_coverage(north, east, zone) {
    return swrite(format="i_e%d0000_n%d0000_%d", east, north, zone);
 }
 
+func calc24qq(lat, lon) {
+/* DOCUMENT qq = calc24qq(lat, lon)
+
+   Provides the 24k Quarter-Quad code as per the system used by CLICK. The lat
+   and lon values should be the southeast corner of the tile. Quarter-quads are
+   each 1/16 of a degree in width and height. They are referenced on the NAD83
+   Datum.
+
+   These codes have the following structure:
+
+      AAOOOaoq
+
+   Where
+
+      AA is the positive whole number component of the latitude.
+
+      OOO is the positive whole number component of the longitude (zero-padded
+         to a width of 3).
+
+      a is an alpha character a-h designating which quad in the degree of
+         latitude, where a is closest to 0 minutes and h is closest to the next
+         full degree. Each represents 1/8 of a degree.
+
+      o is a numeral 1-8 designating which quad in the degree of longitude,
+         where 1 is closest to 0 minutes and 8 is closest to the next full
+         degree. Each represents 1/8 of a degree.
+
+      q is an alpha character a-d designating which quarter in the quad, where
+         a is SE, b is NE, c is NW, and d is SW. Each quarter-quad is 1/16 of
+         a degree in latitude and 1/16 of a degree in longitude.
+
+   For example, 47104h2c means:
+
+      47 - 47 degrees latitude
+      104 - 104 degrees longitude
+
+      The section is in the degree range starting 47N 104W.
+
+      h - h is the 8th in sequence, so it's the last section and would start at
+         7/8 of a degree, or 0.875
+      2 - 2 is the 2nd in sequence, so it's the 2nd section and would start at
+         1/8 of a degree, or 0.125
+
+      The quad's SE corner is 47.875N, 104.125W.
+
+      c - c is the NW corner, which means we must add 1/16 degree to both N and
+         W, or 0.0625 to each.
+
+      The quarter-quad's SE corner is 47.9375N, 104.1875W.
+
+   Correspondingly, calc24qq(47.9375, -104.1875) results in "47104h2c".
+
+   These codes are only valid for locations with positive latitude and negative
+      longitude.
+
+   Parameters:
+
+      lat, lon: Must be in decimal degree format. May be a single value each or
+         an array of values each. Must be in the NAD83 projection, or
+         equivalent.
+
+   Returns:
+
+      A string or array of strings containing the codes.
+
+   See also: get_utm_qqcodes get_conusqq_data qq_segment_pbd
+*/
+   if(numberof(where(lat < 0)))
+      error, "Latitude values must be positive.";
+   if(numberof(where(lon > 0)))
+      error, "Longitude values must be negative.";
+   dlat = int(abs(lat));
+   dlon = int(abs(lon));
+
+   flat = abs(lat) - dlat;
+   flon = abs(lon) - dlon;
+
+   qlat = int(flat * 8.0) + 1;
+   qlon = int(flon * 8.0) + 1;
+
+   qq = int(2 * (flat * 16 % 2) + (flon * 16 % 2) + 1);
+
+   alat = ["a", "b", "c", "d", "e", "f", "g", "h"];
+   aqq = ["a", "d", "b", "c"];
+
+   return swrite(format="%02d%03d%s%d%s", dlat, dlon, alat(qlat), qlon, aqq(qq));
+}
+
 func get_utm_qqcodes(north, east, zone) {
 /* DOCUMENT qq = get_utm_qqcodes(north, east, zone)
 
