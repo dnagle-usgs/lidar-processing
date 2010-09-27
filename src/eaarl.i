@@ -88,7 +88,6 @@ if(is_void(__eaarl_includes_included__)) {
    require, "parse.i";
    require, "pip.i";
    require, "qaqc_fns.i";
-   require, "qq24k.i";
    require, "raspulsearch.i";
    require, "rbgga.i";
    require, "rbpnav.i";
