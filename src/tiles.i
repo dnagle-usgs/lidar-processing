@@ -175,7 +175,6 @@ func dt_short(dtcodes) {
    aren't data tile codes become string(0).
 
    Example:
-
       > dt_short("t_e466000_n3354000_16")
       "e466_n3354_16"
 */
@@ -195,7 +194,6 @@ func dt_long(dtcodes) {
    data tile codes become string(0).
 
    Example:
-
       > dt_long("e466_n3354_16")
       "t_e466000_n3354000_16"
 */
@@ -251,6 +249,7 @@ func dt2utm(dtcodes, &north, &east, &zone, bbox=, centroid=) {
       north = n;
       east = e;
       zone = z;
+      return;
    }
 
    if(is_void(z))
