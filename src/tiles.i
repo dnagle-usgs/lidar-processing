@@ -151,7 +151,7 @@ func tile2centroid(tile) {
    key = strpart(tile, 1:1);
 
    if(key == "q") {
-      return qq2uz(tile, centroid=1);
+      return qq2utm(tile, centroid=1);
    } else if(key == "t") {
       return dt2utm(tile, centroid=1);
    } else if(key == "i") {
