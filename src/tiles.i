@@ -239,10 +239,10 @@ func show_grid_location(m) {
       m = mouse();
       window_select, wbkp;
    }
-   write, format="10km index tile : %s\n", get_utm_itcodes(m(2), m(1), curzone);
+   write, format="10km index tile : %s\n", utm2it(m(1), m(2), curzone);
    utm2dtcell, m(1), m(2), quad, cell;
    write, format="2km data tile   : %s   quad %s cell %d\n",
-      get_utm_dtcodes(m(2), m(1), curzone), quad, cell;
+      utm2dt(m(1), m(2), curzone), quad, cell;
 }
 
 func draw_qq_grid(win, pts=) {
@@ -401,7 +401,7 @@ func get_utm_dtcode_coverage(north, east, zone) {
    set of data tiles that encompass all the points.
 
    This is equivalent to
-      dt = set_remove_duplicates(get_utm_dtcodes(north,east,zone))
+      dt = set_remove_duplicates(dt2utm(east,north,zone))
    but works much more efficiently (and faster).
 */
 // Original David Nagle 2009-07-09
@@ -422,7 +422,7 @@ func get_utm_itcode_coverage(north, east, zone) {
    set of index tiles that encompass all the points.
 
    This is equivalent to
-      it = set_remove_duplicates(get_utm_itcodes(north,east,zone))
+      it = set_remove_duplicates(utm2it(east,north,zone))
    but works much more efficiently (and faster).
 */
 // Original David Nagle 2009-07-09
