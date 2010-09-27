@@ -388,48 +388,6 @@ func show_qq_grid_location(m) {
    write, format="Quarter Quad: %s\n", qq(1);
 }
 
-func get_utm_dtcode_coverage(north, east, zone) {
-/* DOCUMENT dt = get_utm_dtcode_coverage(north, east, zone)
-   For a set of UTM northings, eastings, and zones, this will calculate the
-   set of data tiles that encompass all the points.
-
-   This is equivalent to
-      dt = set_remove_duplicates(dt2utm(east,north,zone))
-   but works much more efficiently (and faster).
-*/
-// Original David Nagle 2009-07-09
-   east = long(floor(unref(east)/2000.0));
-   north = long(ceil(unref(north)/2000.0));
-   code = long(unref(zone)) * 1000 * 10000 + unref(east) * 10000 + unref(north);
-   code = set_remove_duplicates(unref(code));
-   north = code % 10000;
-   code /= 10000;
-   east = code % 1000;
-   zone = code / 1000;
-   return swrite(format="t_e%d000_n%d000_%d", east*2, north*2, zone);
-}
-
-func get_utm_itcode_coverage(north, east, zone) {
-/* DOCUMENT it = get_utm_itcode_coverage(north, east, zone)
-   For a set of UTM northings, eastings, and zones, this will calculate the
-   set of index tiles that encompass all the points.
-
-   This is equivalent to
-      it = set_remove_duplicates(utm2it(east,north,zone))
-   but works much more efficiently (and faster).
-*/
-// Original David Nagle 2009-07-09
-   east = long(floor(unref(east)/10000.0));
-   north = long(ceil(unref(north)/10000.0));
-   code = long(unref(zone)) * 10000000 + unref(east) * 10000 + unref(north);
-   code = set_remove_duplicates(unref(code));
-   north = code % 10000;
-   code /= 10000;
-   east = code % 1000;
-   zone = code / 1000;
-   return swrite(format="i_e%d0000_n%d0000_%d", east, north, zone);
-}
-
 func calc24qq(lat, lon) {
 /* DOCUMENT qq = calc24qq(lat, lon)
 
