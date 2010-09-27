@@ -161,20 +161,6 @@ func tile2centroid(tile) {
    }
 }
 
-func get_dt_itcodes(dtcodes) {
-/* DOCUMENT it = get_dt_itcodes(dtcodes)
-   For an array of data tile codes, this will return the corresponding index
-   tile codes.
-
-   Original David Nagle 2008-07-21
-*/
-   north = east = zone = [];
-   dt2utm, dtcodes, north, east, zone;
-   north = int(ceil(north/10000.)*10000.);
-   east = int(floor(east/10000.)*10000.);
-   return swrite(format="i_e%i_n%i_%i", east, north, zone);
-}
-
 func draw_grid(w) {
 /* DOCUMENT draw_grid, w
    Draws a 10k/2k grid in window W using the window's current limits. The grid

@@ -118,6 +118,16 @@ func utm2dtcell(east, north, zone, &quad, &cell) {
    }
 }
 
+func dt2it(dt, dtlength=) {
+/* DOCUMENT dt2it(dt, dtlength=)
+   Returns the index tile that corresponds to a given data tile.
+*/
+   local e, n, z;
+   dt2utm, dt, e, n, z;
+   return utm2it(e, n, z, dtlength=dtlength);
+}
+get_dt_itcodes = dt2it;
+
 func utm2it(east, north, zone, dtlength=) {
 /* DOCUMENT it = utm2it(east, north, zone, dtlength=)
    Returns the 10km data tile name for each east, north, and zone coordinate.
