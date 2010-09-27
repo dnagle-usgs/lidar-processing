@@ -23,9 +23,8 @@ func extract_qq(text) {
    return qq;
 }
 
-func qq2uz(qq, centroid=) {
-/* DOCUMENT qq2uz(qq, centroid=)
-
+func qq2uz(qq) {
+/* DOCUMENT qq2uz(qq)
    Returns the UTM zone that the given quarter quad is expected to fall in.
    Since UTM zones are exactly six degrees longitude in width and have
    boundaries that coincide with full degrees of longitude, and since the
@@ -36,18 +35,9 @@ func qq2uz(qq, centroid=) {
    Occasionally a few points along the border will get placed wrong. Also,
    it is possible that the UTM coordinates may have been forcibly projected
    in an alternate UTM zone. So proceed with caution.
-
-   If set to 1, the centroid= option will return the UTM coordinates of the
-   center of the quarter quad rather than just the zone. This may be useful
-   if trying to determine whether the expected zone corresponds to the data
-   on hand.
-
-   Original David Nagle 2008-07-15
 */
-   default, centroid, 0;
+// Original David Nagle 2008-07-15
    center = qq2utm(qq, centroid=1);
-   if(centroid)
-      return center;
    return long(center(..,3));
 }
 
