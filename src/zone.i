@@ -252,7 +252,7 @@ func batch_fix_qq_zones(dir, glob=) {
          write, format="%s: Unable to parse quarter quad.\n", basefile;
          continue;
       }
-      centroid = qq2uz(qq, centroid=1);
+      centroid = tile2centroid(qq);
       n = centroid(1);
       e = centroid(2);
       z = centroid(3);
