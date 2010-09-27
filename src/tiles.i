@@ -657,7 +657,8 @@ split_zones=, split_days=, day_shift=) {
             uniq=1   Discard points with matching soe values (default)
             uniq=0   Keep all points, even duplicates
       verbose= Specifies how much output should go to the screen.
-            verbose=1   Keeps you well-informed (default)
+            verbose=2   Keeps you extremely well-informed
+            verbose=1   Provides estimated time to completion (default)
             verbose=0   No screen output at all
       zone= By default, the zone will be determined on a file-by-file basis
          based on the file's name. If no parseable tile name can be determined,
@@ -746,8 +747,9 @@ split_zones=, split_days=, day_shift=) {
 
    t0 = tp = array(double, 3);
    timer, t0;
+   passverbose = max(0, verbose-1);
    for(i = 1; i <= count; i++) {
-      if(verbose)
+      if(verbose > 1)
          write, format="\n----------\nRetiling %d/%d: %s\n", i, count,
             file_tail(files(i));
 
@@ -768,7 +770,7 @@ split_zones=, split_days=, day_shift=) {
       }
 
       if(!numberof(data)) {
-         if(verbose)
+         if(verbose > 1)
             write, " - Skipping, no data found for tile";
          continue;
       }
@@ -779,7 +781,7 @@ split_zones=, split_days=, day_shift=) {
       }
       save_data_to_tiles, unref(data), unref(filezone), dstdir, scheme=scheme,
          suffix=suffix, buffer=buffer, shorten=shorten, flat=flat, uniq=uniq,
-         verbose=verbose, split_zones=split_zones, split_days=split_days,
+         verbose=passverbose, split_zones=split_zones, split_days=split_days,
          day_shift=day_shift;
 
       if(verbose)
