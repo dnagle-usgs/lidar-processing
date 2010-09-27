@@ -56,6 +56,22 @@ func get_utm_dtcodes(north, east, zone) {
    return utm2dt(east, north, zone, dtlength="long");
 }
 
+func utm2dtquad(east, north, zone, &quad) {
+/* DOCUMENT utm2dtquad, east, north, &quad
+   -or-  tile = utm2dtquad(north, east, zone)
+   Like utm2dtcell, but only provides quad information. Data tile e123_n4567_15
+   quad B has the quad name:
+      t_e123000_n4567000_15_B
+   SEE ALSO: utm2dtcell
+*/
+   utm2dtcell, east, north, q;
+   if(am_subroutine()) {
+      quad = q;
+   } else {
+      return utm2dt(east, north, zone, dtlength="long") + "_" + q;
+   }
+}
+
 func utm2dtcell(east, north, zone, &quad, &cell) {
 /* DOCUMENT utm2dtcell, north, east, &quad, &cell
    -or-  tile = utm2dtcell(north, east, zone)
