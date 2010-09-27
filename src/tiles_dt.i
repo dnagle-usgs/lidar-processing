@@ -52,10 +52,6 @@ func utm2dt(east, north, zone, dtlength=) {
       dtlength=dtlength);
 }
 
-func get_utm_dtcodes(north, east, zone) {
-   return utm2dt(east, north, zone, dtlength="long");
-}
-
 func utm2dtquad(east, north, zone, &quad) {
 /* DOCUMENT utm2dtquad, east, north, &quad
    -or-  tile = utm2dtquad(north, east, zone)
@@ -122,10 +118,6 @@ func utm2dtcell(east, north, zone, &quad, &cell) {
    }
 }
 
-func get_utm_dt_quadcell(north, east, &quad, &cell) {
-   utm2dtcell, east, north, quad, cell;
-}
-
 func utm2it(east, north, zone, dtlength=) {
 /* DOCUMENT it = utm2it(east, north, zone, dtlength=)
    Returns the 10km data tile name for each east, north, and zone coordinate.
@@ -134,10 +126,6 @@ func utm2it(east, north, zone, dtlength=) {
    n = ceil(north/10000.);
    return extract_it(swrite(format="e%.0f0_n%.0f0_%d", e, n, long(zone)),
       dtlength=dtlength);
-}
-
-func get_utm_itcodes(north, east, zone) {
-   return utm2it(east, north, zone, dtlength="long");
 }
 
 func dt2utm_km(dtcodes, &east, &north, &zone) {
