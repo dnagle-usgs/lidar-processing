@@ -174,10 +174,10 @@ func batch_fix_dt_zones(dir, glob=, ignore_zeros=) {
          // Rather than having two blocks of code that differ only in the most
          // trivial of ways, I factored out the two differences here.
          if(e < 300000) {
-            comparison = gt;
+            comparison = mathop.gt;
             badzone = z - 1;
          } else {
-            comparison = lt;
+            comparison = mathop.lt;
             badzone = z + 1;
          }
 
