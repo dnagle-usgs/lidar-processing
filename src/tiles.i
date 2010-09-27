@@ -71,3 +71,150 @@ func show_grid_location(m) {
    write, format="2km data tile   : %s   quad %s cell %d\n",
       get_utm_dtcodes(m(2), m(1), curzone), quad, cell;
 }
+
+func draw_qq_grid(win, pts=) {
+/* DOCUMENT draw_qq_grid, win, pts=
+   Draws a quarter quad grid for the given window. This will draw all quads and
+   quarter quads that fall within the visible region in the given window.
+
+   Quads are in red, quarter quads in grey.
+
+   If given pts= specifies how many points to drop along each side of the
+   quarter quad between corners. Default is pts=3. Minimum is pts=1.
+
+   If the current plot crosses UTM zone boundaries, please set fixedzone.
+*/
+// Original David Nagle 2008-07-18
+   if(is_void(win)) return;
+   extern curzone;
+   if(!curzone) {
+      write, "Please define curzone. draw_qq_grid aborting";
+      return;
+   }
+
+   old_win = window();
+   window, win;
+   lims = limits();
+
+   // Pull utm into directional variables
+   w = lims(1);
+   e = lims(2);
+   s = lims(3);
+   n = lims(4);
+
+   // Make the limits sticky to avoid repeated redraw performance hit
+   limits, w, e, s, n;
+
+   // Get lat/lon coords for each corner
+   ne = utm2ll(n, e, curzone);
+   nw = utm2ll(n, w, curzone);
+   se = utm2ll(s, e, curzone);
+   sw = utm2ll(s, w, curzone);
+
+   // Re-assign the directional variables to lat/lon extremes
+   w = min(nw(1), sw(1));
+   e = max(ne(1), se(1));
+   s = min(sw(2), se(2));
+   n = max(nw(2), ne(2));
+
+   ew = 0.125 * indgen(int(floor(w*8.0)):int(ceil(e*8.0)));
+   ns = 0.125 * indgen(int(floor(s*8.0)):int(ceil(n*8.0)));
+
+   llgrid = [ew(-,), ns(,-)];
+   qq = calc24qq(llgrid(*,2), llgrid(*,1));
+
+   draw_q, qq, win, pts=pts;
+   window, old_win;
+}
+
+func draw_qq(qq, win, pts=) {
+/* DOCUMENT draw_qq, qq, win, pts=
+   Draws a grey box for the given quarter quad(s) in the given window.
+
+   If given pts= specifies how many points to drop along each side of the
+   quarter quad between corners. Default is pts=3. Minimum is pts=1.
+
+   Original David Nagle 2008-07-18
+*/
+   if(is_void(win)) return;
+   default, pts, 3;
+   if(pts < 1) pts = 1;
+   for(i = 1; i <= numberof(qq); i++) {
+      bbox = qq2ll(qq(i), bbox=1);
+      draw_ll_box, bbox, win, pts=pts, color=[120,120,120];
+   }
+}
+
+func draw_q(qq, win, pts=) {
+/* DOCUMENT draw_qq, qq, win, pts=
+   For the given quarter quad(s), red boxes will be drawn for the quads and
+   grey boxes will be drawn inside for the quarter quads, in the given window.
+
+   If given pts= specifies how many points to drop along each side of the
+   quarter quad between corners. Default is pts=3. Minimum is pts=1.
+
+   Original David Nagle 2008-07-18
+*/
+   if(is_void(win)) return;
+   default, pts, 3;
+   if(pts < 1) pts = 1;
+   q = set_remove_duplicates(strpart(qq, 1:-1));
+   for(i = 1; i <= numberof(q); i++) {
+      draw_qq, q(i) + ["a","b","c","d"], win, pts=pts;
+      q_a = qq2ll(q(i)+"a", bbox=1);
+      q_c = qq2ll(q(i)+"c", bbox=1);
+      bbox = [q_a(1), q_a(2), q_c(3), q_c(4)];
+      draw_ll_box, bbox, win, pts=pts*2+1, color=[250,20,20];
+   }
+}
+
+func draw_ll_box(bbox, win, pts=, color=) {
+/* DOCUMENT draw_ll_box, bbox, win, pts=, color=
+   Given a lat/lon bounding box (as [south, east, north, west]), this will
+   draw it in utm in the given window.
+
+   If given pts= specifies how many points to drop along each side of the
+   box between corners. Default is pts=3. Minimum is pts=1.
+
+   If given color= specifies the color to draw with. Default is black.
+
+   Original David Nagle 2008-07-18
+*/
+   if(is_void(win)) return;
+   default, pts, 3;
+   if(pts < 1) pts = 1;
+   default, color, "black";
+   ll_x = grow(
+      array(bbox(2), pts+1), span(bbox(2), bbox(4), pts+2),
+      array(bbox(4), pts), span(bbox(4), bbox(2), pts+2) );
+   ll_y = grow(
+      span(bbox(1), bbox(3), pts+2), array(bbox(3), pts),
+      span(bbox(3), bbox(1), pts+2), array(bbox(1), pts+1) );
+   utm = fll2utm(ll_y, ll_x);
+   u_x = utm(2,);
+   u_y = utm(1,);
+
+   old_win = window();
+   window, win;
+   plg, u_y, u_x, color=color;
+   window, old_win;
+}
+
+func show_qq_grid_location(w, m) {
+   extern curzone;
+   default, w, 5;
+   window, w;
+   if(is_void(m))
+      m = mouse();
+   if(!curzone) {
+      zone = "void";
+      write, "Please enter the current UTM zone:\n";
+      read(zone);
+      curzone = 0;
+      sread(zone, format="%d", curzone);
+   }
+   qq = get_utm_qqcodes(m(2), m(1), curzone);
+   write, format="Quarter Quad: %s\n", qq(1);
+}
+
+
