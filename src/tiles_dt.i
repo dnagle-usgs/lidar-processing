@@ -21,8 +21,3 @@ func extract_dt(text, dtlength=) {
       result(w) = swrite(format=fmt, e(w), n(w), z(w));
    return result;
 }
-
-// *** DEPRECATED
-func dt_short(dtcodes) { return extract_dt(dtcodes, dtlength="short"); }
-func dt_long(dtcodes) { return extract_dt(dtcodes, dtlength="long"); }
-// ---
