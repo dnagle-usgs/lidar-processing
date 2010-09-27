@@ -200,18 +200,26 @@ func draw_ll_box(bbox, win, pts=, color=) {
    window, old_win;
 }
 
-func show_qq_grid_location(w, m) {
+func show_qq_grid_location(m) {
+/* DOCUMENT show_qq_grid_location, win
+   -or- show_qq_grid_location, point
+   Displays information about the grid location for a given point. If provided
+   a scalar value WIN, the user will be prompted to click on a location in that
+   window. Otherwise, the location POINT is used. Will display the index tile,
+   data tile, quad name, and cell name.
+   SEE ALSO: draw_grid
+*/
    extern curzone;
-   default, w, 5;
-   window, w;
-   if(is_void(m))
-      m = mouse();
+   default, m, 5;
    if(!curzone) {
-      zone = "void";
-      write, "Please enter the current UTM zone:\n";
-      read(zone);
-      curzone = 0;
-      sread(zone, format="%d", curzone);
+      write, "Aborting. Please define curzone.";
+      return;
+   }
+   if(is_scalar(m) || is_void(m)) {
+      wbkp = current_window();
+      window, m;
+      m = mouse();
+      window_select, wbkp;
    }
    qq = get_utm_qqcodes(m(2), m(1), curzone);
    write, format="Quarter Quad: %s\n", qq(1);
