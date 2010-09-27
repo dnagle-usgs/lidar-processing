@@ -911,7 +911,7 @@ subdir=) {
       idx = tiles(curtile);
       if(bilevel) {
          curtile = file_join(
-            swrite(format="i_%s", extract_dt(get_dt_itcodes(curtile))),
+            swrite(format="%s", dt2it(curtile)),
             swrite(format="t_%s", curtile)
          );
       }
