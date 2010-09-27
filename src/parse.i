@@ -339,61 +339,6 @@ func get_utm_dt_quadcell(north, east, &quad, &cell) {
    cell = cell_map(ce, cn);
 }
 
-func get_utm_dtcode_coverage(north, east, zone) {
-/* DOCUMENT dt = get_utm_dtcode_coverage(north, east, zone)
-   For a set of UTM northings, eastings, and zones, this will calculate the
-   set of data tiles that encompass all the points.
-
-   This is equivalent to
-      dt = set_remove_duplicates(get_utm_dtcodes(north,east,zone))
-   but works much more efficiently (and faster).
-*/
-// Original David Nagle 2009-07-09
-   east = long(floor(unref(east)/2000.0));
-   north = long(ceil(unref(north)/2000.0));
-   code = long(unref(zone)) * 1000 * 10000 + unref(east) * 10000 + unref(north);
-   code = set_remove_duplicates(unref(code));
-   north = code % 10000;
-   code /= 10000;
-   east = code % 1000;
-   zone = code / 1000;
-   return swrite(format="t_e%d000_n%d000_%d", east*2, north*2, zone);
-}
-
-func get_utm_itcodes(north, east, zone) {
-/* DOCUMENT it = get_utm_itcodes(north, east, zone)
-   For a set of UTM northings, eastings, and zones, this will calculate each
-   coordinate's index tile name and return an array of strings that correspond
-   to them.
-*/
-//  Original David Nagle 2009-07-09
-   return swrite(format="i_e%.0f000_n%.0f000_%d",
-      floor(east /10000.0)*10,
-      ceil (north/10000.0)*10,
-      int(zone));
-}
-
-func get_utm_itcode_coverage(north, east, zone) {
-/* DOCUMENT it = get_utm_itcode_coverage(north, east, zone)
-   For a set of UTM northings, eastings, and zones, this will calculate the
-   set of index tiles that encompass all the points.
-
-   This is equivalent to
-      it = set_remove_duplicates(get_utm_itcodes(north,east,zone))
-   but works much more efficiently (and faster).
-*/
-// Original David Nagle 2009-07-09
-   east = long(floor(unref(east)/10000.0));
-   north = long(ceil(unref(north)/10000.0));
-   code = long(unref(zone)) * 10000000 + unref(east) * 10000 + unref(north);
-   code = set_remove_duplicates(unref(code));
-   north = code % 10000;
-   code /= 10000;
-   east = code % 1000;
-   zone = code / 1000;
-   return swrite(format="i_e%d0000_n%d0000_%d", east, north, zone);
-}
-
 func get_dt_itcodes(dtcodes) {
 /* DOCUMENT it = get_dt_itcodes(dtcodes)
    For an array of data tile codes, this will return the corresponding index
