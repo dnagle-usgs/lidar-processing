@@ -1,8 +1,8 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "eaarl.i";
 
-func extract_dt(text, dtlength=) {
-/* DOCUMENT extract_dt(text, dtlength=)
+func extract_dt(text, dtlength=, dtprefix=) {
+/* DOCUMENT extract_dt(text, dtlength=, dtprefix=)
    Attempts to extract a data tile name from each string in TEXT.
 
    Options:
@@ -10,20 +10,26 @@ func extract_dt(text, dtlength=) {
          names. Valid values:
             dtlength="short"     Short form (default)
             dtlength="long"      Long form
+      dtprefix= Dictates whether the tile name should be prefixed with "t_".
+         Valid values:
+            dtprefix=1     Apply prefix (default when dtlength=="long")
+            dtprefix=0     Omit prefix (default when dtlength=="short")
 */
    local e, n, z;
    default, dtlength, "short";
+   default, dtprefix, (dtlength == "long");
    dt2utm_km, text, e, n, z;
    w = where(bool(e) & bool(n) & bool(z));
    result = array(string(0), dimsof(text));
-   fmt = (dtlength == "short") ? "e%d_n%d_%d" : "t_e%d000_n%d000_%d";
+   fmt = (dtlength == "short") ? "e%d_n%d_%d" : "e%d000_n%d000_%d";
+   if(dtprefix) fmt = "t_" + fmt;
    if(numberof(w))
       result(w) = swrite(format=fmt, e(w), n(w), z(w));
    return result;
 }
 
-func extract_it(text, dtlength=) {
-/* DOCUMENT extract_it(text, dtlength=)
+func extract_it(text, dtlength=, dtprefix=) {
+/* DOCUMENT extract_it(text, dtlength=, dtprefix=)
    Attempts to extract an index tile name from each string in TEXT.
 
    Options:
@@ -31,12 +37,15 @@ func extract_it(text, dtlength=) {
          names. Valid values:
             dtlength="short"     Short form (default)
             dtlength="long"      Long form
+      dtprefix= Dictates whether the tile name should be prefixed with "i_".
+         Valid values:
+            dtprefix=1     Apply prefix (default)
+            dtprefix=0     Omit prefix
 */
-   result = extract_dt(text, dtlength=dtlength);
+   default, dtprefix, 1;
+   result = extract_dt(text, dtlength=dtlength, dtprefix=0);
    w = where(result);
-   if(numberof(w)) {
-      if(dtlength == "long")
-         result(w) = strpart(result(w), 3:);
+   if(dtprefix && numberof(w)) {
       result(w) = "i_" + result(w);
    }
    return result;
