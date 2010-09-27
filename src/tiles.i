@@ -149,6 +149,24 @@ func tile2bbox(tile) {
    }
 }
 
+func tile2centroid(tile) {
+/* DOCUMENT centroid = tile2centroid(tile)
+   Returns the centroid for a tile: [north,east,zone].
+*/
+   tile = extract_tile(tile, dtlength="long", qqprefix=1);
+   key = strpart(tile, 1:1);
+
+   if(key == "q") {
+      return qq2uz(tile, centroid=1);
+   } else if(key == "t") {
+      return dt2utm(tile, centroid=1);
+   } else if(key == "i") {
+      return it2utm(tile, centroid=1);
+   } else {
+      return [];
+   }
+}
+
 func get_utm_dtcodes(north, east, zone) {
 /* DOCUMENT dt = get_utm_dtcodes(north, east, zone)
    For a set of UTM northings, eastings, and zones, this will calculate each
