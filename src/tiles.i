@@ -133,13 +133,7 @@ func tile2bbox(tile) {
    key = strpart(tile, 1:1);
 
    if(key == "q") {
-      zone = qq2uz(tile);
-      ll = qq2ll(tile, bbox=1); // [south, east, north, west]
-      lats = ll([1,3,1,3]);
-      lons = ll([2,4,4,2]);
-      norths = easts = [];
-      fll2utm, lats, lons, norths, easts, force_zone=zone;
-      return [norths(min), easts(max), norths(max), easts(min)];
+      return qq2utm(tile, bbox=1);
    } else if(key == "t") {
       return dt2utm(tile, bbox=1);
    } else if(key == "i") {
