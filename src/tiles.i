@@ -179,9 +179,9 @@ func dt_short(dtcodes) {
       "e466_n3354_16"
 */
 //  Original David Nagle 2008-07-21
-   e = n = z = []; // prevents the next line from making them externs
-   regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)[c-hj-np-xC-HJ-NP-X]?(_|\\.|$)", dtcodes, , , e, , n, , z;
-   w = where( !(!e) & !(!n) & !(!z) );
+   local e, n, z;
+   dt2utm_km, dtcodes, e, n, z;
+   w = where(bool(e) & bool(n) & bool(z));
    result = array(string(0), dimsof(dtcodes));
    if(numberof(w))
       result(w) = swrite(format="e%s_n%s_%s", e(w), n(w), z(w));
@@ -198,9 +198,9 @@ func dt_long(dtcodes) {
       "t_e466000_n3354000_16"
 */
 //  Original David Nagle 2008-08-07
-   e = n = z = []; // prevents the next line from making them externs
-   regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)[c-hj-np-xC-HJ-NP-X]?(_|\\.|$)", dtcodes, , , e, , n, , z;
-   w = where( !(!e) & !(!n) & !(!z) );
+   local e, n, z;
+   dt2utm_km, dtcodes, e, n, z;
+   w = where(bool(e) & bool(n) & bool(z));
    result = array(string(0), dimsof(dtcodes));
    if(numberof(w))
       result(w) = swrite(format="t_e%s000_n%s000_%s", e(w), n(w), z(w));
@@ -212,9 +212,20 @@ func dt2uz(dtcodes) {
    Returns the UTM zone(s) for the given dtcode(s).
 */
 // Original David Nagle 2009-07-06
-   zone = [];
-   dt2utm, dtcodes, , , zone;
+   local zone;
+   dt2utm_km, dtcodes, , , zone;
    return zone;
+}
+
+func dt2utm_km(dtcodes, &north, &east, &zone) {
+/* DOCUMENT dt2utm_km, dtcodes, &north, &east, &zone
+   Parses the given data or index tile codes and sets the key easting,
+   northing, and zone values. Values are in kilometers.
+*/
+   regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)[c-hj-np-xC-HJ-NP-X]?(_|\\.|$)", dtcodes, , , east, , north, , zone;
+   east = atoi(east);
+   north = atoi(north);
+   zone = atoi(zone);
 }
 
 func dt2utm(dtcodes, &north, &east, &zone, bbox=, centroid=) {
@@ -233,17 +244,10 @@ func dt2utm(dtcodes, &north, &east, &zone, bbox=, centroid=) {
    output variables.
 */
 //  Original David Nagle 2008-07-21
-   e = n = z = []; // prevents the next line from making them externs
-   regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)[c-hj-np-xC-HJ-NP-X]?(_|\\.|$)", dtcodes, , , e, , n, , z;
-   w = where( ! (!(!e) & !(!n) & !(!z)) );
-   if(numberof(w)) {
-      e(w) = "0";
-      n(w) = "0";
-      z(w) = "0";
-   }
-   e = atoi(e + "000");
-   n = atoi(n + "000");
-   z = atoi(z);
+   local e, n, z;
+   dt2utm_km, dtcodes, e, n, z;
+   e *= 1000;
+   n *= 1000;
 
    if(am_subroutine()) {
       north = n;
