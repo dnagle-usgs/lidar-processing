@@ -1171,8 +1171,8 @@ $[description]\
    snums = swrite(format=fmt, indgen(numptr));
    for(i = 1; i <= numptr; i++)
       img_fltline(*sptr(i)) = snums(i);
-   img_dt = "t_" + extract_dt(get_utm_dtcodes(centery, centerx, zone));
-   img_it = "i_" + extract_dt(get_dt_itcodes(img_dt));
+   img_dt = "t_" + utm2dt(centery, centerx, zone);
+   img_it = utm2it(centery, centerx, zone);
 
 
    // --- Calculate fltlines and tiles ---
@@ -1182,8 +1182,8 @@ $[description]\
    numptr = numberof(ptr);
    for(i = 1; i <= numptr; i++)
       img_fltline(*ptr(i)) = swrite(format=fmt, i);
-   img_tiledt = "t_" + extract_dt(get_utm_dtcodes(centery, centerx, zone));
-   img_tileit = "i_" + extract_dt(get_dt_itcodes(img_dt));
+   img_tiledt = "t_" + utm2dt(centery, centerx, zone);
+   img_tileit = utm2it(centery, centerx, zone);
    img_id = file_tail(file_rootname(files));
    img_drawoffset = drawfactor * (indgen(numberof(files))-1);
 
