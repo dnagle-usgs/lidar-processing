@@ -240,7 +240,7 @@ func show_grid_location(m) {
       window_select, wbkp;
    }
    write, format="10km index tile : %s\n", get_utm_itcodes(m(2), m(1), curzone);
-   get_utm_dt_quadcell, m(2), m(1), quad, cell;
+   utm2dtcell, m(1), m(2), quad, cell;
    write, format="2km data tile   : %s   quad %s cell %d\n",
       get_utm_dtcodes(m(2), m(1), curzone), quad, cell;
 }
