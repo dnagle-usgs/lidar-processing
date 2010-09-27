@@ -45,16 +45,10 @@ func qq2uz(qq, centroid=) {
    Original David Nagle 2008-07-15
 */
    default, centroid, 0;
-   bbox = qq2ll(qq, bbox=1);
-   invalid = where((bbox == 0)(..,sum) == 4);
-   u = array(double, 3, dimsof(qq));
-   u(*) = fll2utm( bbox(..,[1,3])(..,avg), bbox(..,[2,4])(..,avg) )(*);
-   if(numberof(invalid))
-      u(,invalid) = 0;
+   center = qq2utm(qq, centroid=1);
    if(centroid)
-      return u;
-   else
-      return long(u(3,));
+      return center;
+   return long(center(..,3));
 }
 
 func qq2utm(qq, &north, &east, &zone, bbox=, centroid=) {
