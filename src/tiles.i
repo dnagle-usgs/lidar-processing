@@ -59,7 +59,6 @@ func show_grid_location(m) {
 */
    extern curzone;
    local quad, cell;
-   default, m, 5;
    if(is_scalar(m) || is_void(m)) {
       wbkp = current_window();
       window, m;
@@ -210,7 +209,6 @@ func show_qq_grid_location(m) {
    SEE ALSO: draw_grid
 */
    extern curzone;
-   default, m, 5;
    if(!curzone) {
       write, "Aborting. Please define curzone.";
       return;
