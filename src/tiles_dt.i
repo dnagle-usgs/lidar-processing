@@ -22,6 +22,26 @@ func extract_dt(text, dtlength=) {
    return result;
 }
 
+func extract_it(text, dtlength=) {
+/* DOCUMENT extract_it(text, dtlength=)
+   Attempts to extract an index tile name from each string in TEXT.
+
+   Options:
+      dtlength= Dictates whether to use the short or long form for index tile
+         names. Valid values:
+            dtlength="short"     Short form (default)
+            dtlength="long"      Long form
+*/
+   result = extract_dt(text, dtlength=dtlength);
+   w = where(result);
+   if(numberof(w)) {
+      if(dtlength == "long")
+         result(w) = strpart(result(w), 3:);
+      result(w) = "i_" + result(w);
+   }
+   return result;
+}
+
 func utm2dt(east, north, zone, dtlength=) {
 /* DOCUMENT dt = utm2dt(east, north, zone, dtlength=)
    Returns the 2km data tile name for each east, north, and zone coordinate.
