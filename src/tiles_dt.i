@@ -52,6 +52,16 @@ func utm2dt(east, north, zone, dtlength=) {
       dtlength=dtlength);
 }
 
+func utm2it(east, north, zone, dtlength=) {
+/* DOCUMENT it = utm2it(east, north, zone, dtlength=)
+   Returns the 10km data tile name for each east, north, and zone coordinate.
+*/
+   e = floor(east/10000.);
+   n = ceil(north/10000.);
+   return extract_it(swrite(format="e%.0f0_n%.0f0_%d", e, n, long(zone)),
+      dtlength=dtlength);
+}
+
 func dt2utm_km(dtcodes, &east, &north, &zone) {
 /* DOCUMENT dt2utm_km, dtcodes, &east, &north, &zone
    Parses the given data or index tile codes and sets the key easting,
