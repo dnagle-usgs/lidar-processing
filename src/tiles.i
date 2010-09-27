@@ -161,19 +161,6 @@ func tile2centroid(tile) {
    }
 }
 
-func get_utm_dtcodes(north, east, zone) {
-/* DOCUMENT dt = get_utm_dtcodes(north, east, zone)
-   For a set of UTM northings, eastings, and zones, this will calculate each
-   coordinate's data tile name and return an array of strings that correspond
-   to them.
-*/
-//  Original David Nagle 2008-07-21
-   return swrite(format="t_e%.0f000_n%.0f000_%d",
-      floor(east /2000.0)*2,
-      ceil (north/2000.0)*2,
-      int(zone));
-}
-
 func get_utm_dt_quadcell(north, east, &quad, &cell) {
 /* DOCUMENT get_utm_dt_quadcell, north, east, &quad, &cell
    Sets the quad and cell for the given northing/easting values within their
@@ -467,19 +454,6 @@ func get_utm_dtcode_coverage(north, east, zone) {
    east = code % 1000;
    zone = code / 1000;
    return swrite(format="t_e%d000_n%d000_%d", east*2, north*2, zone);
-}
-
-func get_utm_itcodes(north, east, zone) {
-/* DOCUMENT it = get_utm_itcodes(north, east, zone)
-   For a set of UTM northings, eastings, and zones, this will calculate each
-   coordinate's index tile name and return an array of strings that correspond
-   to them.
-*/
-//  Original David Nagle 2009-07-09
-   return swrite(format="i_e%.0f000_n%.0f000_%d",
-      floor(east /10000.0)*10,
-      ceil (north/10000.0)*10,
-      int(zone));
 }
 
 func get_utm_itcode_coverage(north, east, zone) {
