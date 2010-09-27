@@ -27,7 +27,7 @@ func extract_tile(text, dtlength=, qqprefix=) {
 // Original David Nagle 2009-12-09
    default, dtlength, "short";
    default, qqprefix, 0;
-   qq = extract_qq(text);
+   qq = extract_qq(text, qqprefix=qqprefix);
    dt = extract_dt(text, dtlength=dtlength);
    it = "i_" == strpart(text, 1:2);
 
@@ -43,7 +43,7 @@ func extract_tile(text, dtlength=, qqprefix=) {
 
    w = where(strlen(qq) > 0 & !strlen(result));
    if(numberof(w))
-      result(w) = (qqprefix ? "qq" : "") + qq(w);
+      result(w) = qq(w);
 
    return result;
 }
