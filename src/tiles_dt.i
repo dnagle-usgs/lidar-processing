@@ -168,7 +168,7 @@ func dt2uz(dtcodes) {
    return zone;
 }
 
-func dt2utm(dtcodes, &north, &east, &zone, bbox=, centroid=) {
+func dt2utm(dtcodes, &east, &north, &zone, bbox=, centroid=) {
 /* DOCUMENT dt2utm(dtcodes, bbox=, centroid=)
    dt2utm, dtcodes, &north, &east, &zone
 
