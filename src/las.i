@@ -354,15 +354,11 @@ classification=, header=, verbose=, pre_fn=, post_fn=, shorten_fn=) {
 
    tails = file_tail(file_rootname(files_pbd));
    if(shorten_fn) {
-      tiles_dt = dt_short(tails);
-      tiles_qq = extract_qq(tails);
-      w = where(tiles_qq);
+      tiles = extract_tile(tails, qqprefix=0);
+      w = where(tiles);
       if(numberof(w))
-         tails(w) = tiles_qq(w);
-      w = where(tiles_dt);
-      if(numberof(w))
-         tails(w) = tiles_dt(w);
-      tiles_qq = tiles_dt = [];
+         tails(w) = tiles(w);
+      tiles = [];
    }
    tails = pre_fn + tails + post_fn;
 
@@ -855,39 +851,27 @@ shorten_fn=, update=, files=) {
       error, "No files found.";
    files_pbd = file_rootname(files_las);
 
-   // Both shorten_vname and shorten_fn work the same, so instead of having
-   // this code in two places, it's refactored to here.
-   if(shorten_vname || shorten_fn) {
-      tiles = file_tail(files_pbd);
-      tiles_dt = dt_short(tiles);
-      tiles_qq = extract_qq(tiles);
-      // qq first, so that dt can override it. That shouldn't ever happen but
-      // if somehow it strangely does... we'll prefer dt here over qq.
-      w = where(tiles_qq);
-      if(numberof(w))
-         tiles(w) = tiles_qq(w);
-      w = where(tiles_dt);
-      if(numberof(w))
-         tiles(w) = tiles_dt(w);
-      qq = where(strlen(tiles_qq) & !strlen(tiles_dt));
-      tiles_qq = tiles_dt = [];
-   }
-
    // Calculate output files
    if(!is_void(outdir))
       files_pbd = file_join(outdir, file_tail(files_pbd));
-   if(shorten_fn)
-      files_pbd = file_join(file_dirname(files_pbd), tiles);
+   if(shorten_fn) {
+      tiles = extract_tile(file_tail(files_pbd), qqprefix=0);
+      w = where(tiles);
+      if(numberof(w))
+         files_pbd(w) = file_join(file_dirname(files_pbd(w)), tiles(w));
+      tiles = [];
+   }
    files_pbd = file_join(file_dirname(files_pbd),
       pre_fn + file_tail(files_pbd) + post_fn);
 
    // Calculate vnames
+   vnames = file_rootname(file_tail(files_pbd));
    if(shorten_vname) {
-      vnames = tiles;
-      if(numberof(qq))
-         vnames(qq) = "qq" + vnames(qq);
-   } else {
-      vnames = file_rootname(file_tail(files_pbd));
+      tiles = extract_tile(vnames, qqprefix=1);
+      w = where(tiles);
+      if(numberof(w))
+         vnames(w) = tiles(w);
+      tiles = [];
    }
    vnames = pre_vname + vnames + post_vname;
 
