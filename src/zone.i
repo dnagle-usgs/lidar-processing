@@ -153,7 +153,7 @@ func batch_fix_dt_zones(dir, glob=, ignore_zeros=) {
    for(i = 1; i <= numberof(files); i++) {
       basefile = file_tail(files(i));
       n = e = z = [];
-      dt2utm, basefile, n, e, z;
+      assign, tile2centroid(basefile), n, e, z;
       if(is_void(z)) {
          write, format="%s: Unable to parse UTM zone.\n", basefile;
          continue;
