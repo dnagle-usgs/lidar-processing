@@ -60,6 +60,29 @@ func utm2dt(east, north, zone, dtlength=, dtprefix=) {
       dtlength=dtlength, dtprefix=dtprefix);
 }
 
+func utm2dt_names(east, north, zone, dtlength=, dtprefix=) {
+/* DOCUMENT dt = utm2dt_names(north, east, zone, dtlength=, dtprefix=)
+   For a set of UTM eastings, northings, and zones, this will calculate the
+   set of data tiles that encompass all the points. This is equivalent to
+      dt = set_remove_duplicates(utm2dt(east, north, zone))
+   but works much more efficiently (and faster).
+*/
+   east = long(floor(unref(east)/2000.));
+   north = long(ceil(unref(north)/2000.));
+   code = long(unref(zone)) * 1000 * 10000 + unref(east) * 10000 + unref(north);
+   code = set_remove_duplicates(unref(code));
+   north = code % 10000;
+   code /= 10000;
+   east = code % 1000;
+   zone = code / 1000;
+   return extract_dt(swrite(format="e%d_n%d_%d", east*2, north*2, zone),
+      dtlength=dtlength, dtprefix=dtprefix);
+}
+
+func get_utm_dtcode_coverage(north, east, zone) {
+   return utm2dt_names(east, north, zone, dtlength="long");
+}
+
 func utm2dtquad(east, north, zone, &quad) {
 /* DOCUMENT utm2dtquad, east, north, &quad
    -or-  tile = utm2dtquad(north, east, zone)
@@ -146,37 +169,13 @@ func utm2it(east, north, zone, dtlength=, dtprefix=) {
       dtlength=dtlength, dtprefix=dtprefix);
 }
 
-func get_utm_dtcode_coverage(north, east, zone) {
-/* DOCUMENT dt = get_utm_dtcode_coverage(north, east, zone)
-   For a set of UTM northings, eastings, and zones, this will calculate the
-   set of data tiles that encompass all the points.
-
-   This is equivalent to
-      dt = set_remove_duplicates(dt2utm(east,north,zone))
+func utm2it_names(east, north, zone, dtlength=, dtprefix=) {
+/* DOCUMENT it = utm2it_names(east, north, zone, dtlength=, dtprefix=)
+   For a set of UTM eastings, northings, and zones, this will calculate the
+   set of index tiles that encompass all the points. This is equivalent to
+      it = set_remove_duplicates(utm2it(east, north, zone))
    but works much more efficiently (and faster).
 */
-// Original David Nagle 2009-07-09
-   east = long(floor(unref(east)/2000.0));
-   north = long(ceil(unref(north)/2000.0));
-   code = long(unref(zone)) * 1000 * 10000 + unref(east) * 10000 + unref(north);
-   code = set_remove_duplicates(unref(code));
-   north = code % 10000;
-   code /= 10000;
-   east = code % 1000;
-   zone = code / 1000;
-   return swrite(format="t_e%d000_n%d000_%d", east*2, north*2, zone);
-}
-
-func get_utm_itcode_coverage(north, east, zone) {
-/* DOCUMENT it = get_utm_itcode_coverage(north, east, zone)
-   For a set of UTM northings, eastings, and zones, this will calculate the
-   set of index tiles that encompass all the points.
-
-   This is equivalent to
-      it = set_remove_duplicates(utm2it(east,north,zone))
-   but works much more efficiently (and faster).
-*/
-// Original David Nagle 2009-07-09
    east = long(floor(unref(east)/10000.0));
    north = long(ceil(unref(north)/10000.0));
    code = long(unref(zone)) * 10000000 + unref(east) * 10000 + unref(north);
@@ -185,7 +184,12 @@ func get_utm_itcode_coverage(north, east, zone) {
    code /= 10000;
    east = code % 1000;
    zone = code / 1000;
-   return swrite(format="i_e%d0000_n%d0000_%d", east, north, zone);
+   return extract_it(swrite(format="e%d0_n%d0_%d", east, north, zone),
+      dtlength=dtlength, dtprefix=dtprefix);
+}
+
+func get_utm_itcode_coverage(north, east, zone) {
+   return utm2it_names(east, north, zone, dtlength="long");
 }
 
 func dt2utm_km(dtcodes, &east, &north, &zone) {
