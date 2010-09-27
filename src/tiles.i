@@ -3,7 +3,7 @@ require, "eaarl.i";
 require, "tiles_dt.i";
 require, "tiles_qq.i";
 
-func extract_tile(text, dtlength=, qqprefix=) {
+func extract_tile(text, dtlength=, dtprefix=, qqprefix=) {
 /* DOCUMENT extract_tile(text, dtlength=, qqprefix=)
    Attempts to extract a tile name from each string in the given array of text.
 
@@ -13,6 +13,13 @@ func extract_tile(text, dtlength=, qqprefix=) {
          Valid values:
             dtlength="short"  Returns short form (default)
             dtlength="long"   Returns long form
+
+      dtprefix= Dictates whether data tile and index tile names should be
+         prefixed with t_ and i_ prefixes, respectively.
+            dtprefix=1     Apply prefix
+            dtprefix=0     Omit prefix
+         By default, index tiles have dtprefix=1; data tiles have dtprefix=1
+         when dtlength=="long" and dtprefix=0 otherwise.
 
       qqprefix= Dictates whether quarter quad tiles should be prefixed with
          "qq". Useful if they're going to be used as variable names. Valid
@@ -28,14 +35,14 @@ func extract_tile(text, dtlength=, qqprefix=) {
    default, dtlength, "short";
    default, qqprefix, 0;
    qq = extract_qq(text, qqprefix=qqprefix);
-   dt = extract_dt(text, dtlength=dtlength);
+   dt = extract_dt(text, dtlength=dtlength, dtprefix=dtprefix);
    it = "i_" == strpart(text, 1:2);
 
    result = array(string, dimsof(text));
 
    w = where(strlen(dt) > 0 & it);
    if(numberof(w))
-      result(w) = get_dt_itcodes(dt(w));
+      result(w) = dt2it(dt(w), dtlength=dtlength, dtprefix=dtprefix);
 
    w = where(strlen(dt) > 0 & !strlen(result));
    if(numberof(w))
