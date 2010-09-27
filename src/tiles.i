@@ -28,7 +28,7 @@ func extract_tile(text, dtlength=, qqprefix=) {
    default, dtlength, "short";
    default, qqprefix, 0;
    qq = extract_qq(text);
-   dt = (dtlength == "short") ? dt_short(text) : dt_long(text);
+   dt = extract_dt(text, dtlength=dtlength);
    it = "i_" == strpart(text, 1:2);
 
    result = array(string, dimsof(text));
@@ -82,7 +82,7 @@ func tile_type(text) {
       (nil) - Unparseable
 */
    qq = extract_qq(text);
-   dt = dt_short(text);
+   dt = extract_dt(text);
    it = "i_" == strpart(text, 1:2);
 
    result = array(string, dimsof(text));
@@ -1017,7 +1017,7 @@ func restrict_data_extent(data, tilename, buffer=, mode=) {
    default, mode, "be";
 
    data2xyz, data, e, n, mode=mode;
-   tile = dt_short(tilename);
+   tile = extract_dt(tilename);
    if(tile) {
       if(strpart(tilename, 1:2) == "i_")
          idx = extract_for_it(unref(n), unref(e), tile, buffer=buffer);
@@ -1068,7 +1068,7 @@ func partition_into_2k(north, east, zone, buffer=, shorten=, verbose=) {
    if(shorten) {
       if(verbose)
          write, "- Shortening tile names...";
-      dtcodes = dt_short(unref(dtcodes));
+      dtcodes = extract_dt(unref(dtcodes));
    }
 
    tiles = h_new();
@@ -1120,7 +1120,7 @@ func partition_into_10k(north, east, zone, buffer=, shorten=, verbose=) {
    if(shorten) {
       if(verbose)
          write, "- Shortening tile names...";
-      itcodes = dt_short(unref(itcodes));
+      itcodes = extract_dt(unref(itcodes));
    }
 
    tiles = h_new();
@@ -1357,7 +1357,7 @@ day_shift=) {
       if(bilevel) {
          if(shorten)
             tiledir = file_join(
-               swrite(format="i_%s", dt_short(get_dt_itcodes(curtile))),
+               swrite(format="i_%s", extract_dt(get_dt_itcodes(curtile))),
                swrite(format="t_%s", curtile)
             );
          else
@@ -1367,7 +1367,7 @@ day_shift=) {
       }
       vdata = data(idx);
       vzone = zone(idx);
-      vname = (scheme == "qq") ? curtile : dt_short(curtile);
+      vname = (scheme == "qq") ? curtile : extract_dt(curtile);
       tzone = tile_zones(i);
 
       // Coerce zones
