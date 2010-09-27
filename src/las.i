@@ -436,11 +436,7 @@ verbose=) {
    default, cs_v, cs_h;
 
    if(is_void(zone)) {
-      zone = dt2uz(file_tail(fn_pbd));
-      if(!zone) {
-         qq = extract_qq(file_tail(fn_pbd));
-         zone = qq ? qq2uz(qq) : [];
-      }
+      zone = tile2uz(file_tail(fn_pbd));
    }
 
    if(is_void(mode)) {
