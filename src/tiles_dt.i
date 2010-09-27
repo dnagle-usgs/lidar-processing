@@ -22,8 +22,8 @@ func extract_dt(text, dtlength=) {
    return result;
 }
 
-func dt2utm_km(dtcodes, &north, &east, &zone) {
-/* DOCUMENT dt2utm_km, dtcodes, &north, &east, &zone
+func dt2utm_km(dtcodes, &east, &north, &zone) {
+/* DOCUMENT dt2utm_km, dtcodes, &east, &north, &zone
    Parses the given data or index tile codes and sets the key easting,
    northing, and zone values. Values are in kilometers.
 */
