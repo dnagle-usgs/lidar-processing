@@ -45,20 +45,19 @@ func extract_it(text, dtlength=, dtprefix=) {
    default, dtprefix, 1;
    result = extract_dt(text, dtlength=dtlength, dtprefix=0);
    w = where(result);
-   if(dtprefix && numberof(w)) {
+   if(dtprefix && numberof(w))
       result(w) = "i_" + result(w);
-   }
    return result;
 }
 
-func utm2dt(east, north, zone, dtlength=) {
+func utm2dt(east, north, zone, dtlength=, dtprefix=) {
 /* DOCUMENT dt = utm2dt(east, north, zone, dtlength=)
    Returns the 2km data tile name for each east, north, and zone coordinate.
 */
    e = floor(east/2000.)*2;
    n = ceil(north/2000.)*2;
    return extract_dt(swrite(format="e%.0f_n%.0f_%d", e, n, long(zone)),
-      dtlength=dtlength);
+      dtlength=dtlength, dtprefix=dtprefix);
 }
 
 func utm2dtquad(east, north, zone, &quad) {
@@ -127,24 +126,24 @@ func utm2dtcell(east, north, zone, &quad, &cell) {
    }
 }
 
-func dt2it(dt, dtlength=) {
+func dt2it(dt, dtlength=, dtprefix=) {
 /* DOCUMENT dt2it(dt, dtlength=)
    Returns the index tile that corresponds to a given data tile.
 */
    local e, n, z;
    dt2utm, dt, e, n, z;
-   return utm2it(e, n, z, dtlength=dtlength);
+   return utm2it(e, n, z, dtlength=dtlength, dtprefix=dtprefix);
 }
 get_dt_itcodes = dt2it;
 
-func utm2it(east, north, zone, dtlength=) {
+func utm2it(east, north, zone, dtlength=, dtprefix=) {
 /* DOCUMENT it = utm2it(east, north, zone, dtlength=)
    Returns the 10km data tile name for each east, north, and zone coordinate.
 */
    e = floor(east/10000.);
    n = ceil(north/10000.);
    return extract_it(swrite(format="e%.0f0_n%.0f0_%d", e, n, long(zone)),
-      dtlength=dtlength);
+      dtlength=dtlength, dtprefix=dtprefix);
 }
 
 func dt2utm_km(dtcodes, &east, &north, &zone) {
