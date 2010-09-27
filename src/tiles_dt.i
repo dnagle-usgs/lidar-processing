@@ -56,10 +56,14 @@ func get_utm_dtcodes(north, east, zone) {
    return utm2dt(east, north, zone, dtlength="long");
 }
 
-func utm2dtcell(east, north, &quad, &cell) {
+func utm2dtcell(east, north, zone, &quad, &cell) {
 /* DOCUMENT utm2dtcell, north, east, &quad, &cell
-   Proivdes the quad and cell for the given northing/easting values within
-   their data tile.
+   -or-  tile = utm2dtcell(north, east, zone)
+
+   Provides the quad and cell for the given northing/easting values within
+   their data tile. -OR- Returns a tile name that incorporates the quad and
+   cell. For data tile e123_n4567_15 quad B cell 9, the cell tile name is:
+      t_e123000_n4567000_15_B09
 
    A 2km-square data tile has four quads, each 1km-square. They are laid out
    as:
@@ -80,6 +84,7 @@ func utm2dtcell(east, north, &quad, &cell) {
       +----+----+----+----+
       | 12 | 13 | 14 | 16 |
       +----+----+----+----+
+
 */
    quad_map = [["C","D"],["A","B"]];
    cell_map = [indgen(13:16),indgen(9:12),indgen(5:8),indgen(1:4)];
@@ -92,8 +97,13 @@ func utm2dtcell(east, north, &quad, &cell) {
    qe = long(east - te)/1000 + 1;
    ce = long(east - te - (qe*1000 - 1000)) / 250 + 1;
 
-   quad = quad_map(qe, qn);
-   cell = cell_map(ce, cn);
+   if(am_subroutine()) {
+      quad = quad_map(qe, qn);
+      cell = cell_map(ce, cn);
+   } else {
+      return utm2dt(east, north, zone, dtlength="long") + \
+         swrite(format="_%s%02d", quad, cell);
+   }
 }
 
 func get_utm_dt_quadcell(north, east, &quad, &cell) {
