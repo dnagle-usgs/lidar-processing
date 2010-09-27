@@ -471,11 +471,13 @@ day_shift=) {
       verbose= By default, progress information will be provided. Set verbose=0
          to silence it.
       split_zones= This can be set to one of the following three values:
-         0 = Never split data out by zone. This is the default for most schemes.
-         1 = Split data out by zone if there are multiple zones present. This
-            is the default for the qq scheme.
-         2 = Always split data out by zone, even if only one zone is present.
-         (Note: If flat=1, split_zones is ignored.)
+            split_zones=0  Never split data out by zone. This is the default
+                           for most schemes.
+            split_zones=1  Split data out by zone if there are multiple zones
+                           present. This is the default for the qq scheme.
+            split_zones=2  Always split data out by zone, even if only one zone
+                           is present.
+         Note: If flat=1, split_zones is ignored.
       split_days= Enables splitting the data by day. If enabled, the per-day
          files for each tile will be kept together and will be differentiated
          by date in the filename.
@@ -493,6 +495,8 @@ day_shift=) {
             day_shift=-25200     -7 hours; MST and PDT time
             day_shift=-28800     -8 hours; PST and AKDT time
             day_shift=-32400     -9 hours; AKST time
+
+   SEE ALSO: batch_tile
 */
 // Original David Nagle 2009-07-06
    local n, e;
@@ -642,11 +646,12 @@ split_zones=, split_days=, day_shift=) {
             suffix="n88_g09_merged_be.pbd"
       remove_buffers= By default, it is assumed that your input data are
          already tiled and that any buffer regions on those tiles is
-         redundant--and probably not as well manually filtered. Thus, by
-         default the buffers around the input tiles are removed. If your file
-         names cannot be parsed as tile names, you'll get a warning message but
+         redundant--and probably not well manually filtered. Thus, by default
+         the buffers around the input tiles are removed. If your file names
+         cannot be parsed as tile names, you'll get a warning message but
          they'll still be tiled (without removing anything). Valid settings:
-            remove_buffers=1     Attempt to remove source data buffers (default)
+            remove_buffers=1     Attempt to remove source data buffers
+                                 (default)
             remove_buffers=0     Use source data as is
       buffer= By default, output tiles will have a 100m buffer added to them.
          You can change that with this setting. Examples:
@@ -678,8 +683,10 @@ split_zones=, split_days=, day_shift=) {
             flat=1   Put files all directly into dstdir.
       split_zones= Specifies how to handle multiple-zone data. This is ignored
          if flat=1. Valid settings:
-            split_zones=0     Never split data by zone. (default for most schemes)
-            split_zones=1     Split by zone if multiple zones found (default for qq)
+            split_zones=0     Never split data by zone. (default for most
+                              schemes)
+            split_zones=1     Split by zone if multiple zones found (default
+                              for qq)
             split_zones=2     Always split by zone, even if only one found
       split_days= Enables splitting the data by day. If enabled, the per-day
          files for each tile will be kept together and will be differentiated
@@ -698,6 +705,8 @@ split_zones=, split_days=, day_shift=) {
             day_shift=-25200     -7 hours; MST and PDT time
             day_shift=-28800     -8 hours; PST and AKDT time
             day_shift=-32400     -9 hours; AKST time
+
+   SEE ALSO: save_data_to_tiles
 */
    default, mode, "fs";
    default, scheme, "10k2k";
