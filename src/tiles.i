@@ -662,7 +662,7 @@ func partition_into_qq(north, east, zone, buffer=, verbose=) {
    default, verbose, 0;
    if(verbose)
       write, "- Calculating quarter-quad tile names...";
-   qqcodes = get_utm_qqcode_coverage(north, east, zone);
+   qqcodes = utm2qq_names(east, north, zone);
 
    tiles = h_new();
    if(verbose)
