@@ -200,6 +200,11 @@ func show_grid_location(m) {
 */
    extern curzone;
    local quad, cell;
+   if(!curzone) {
+      write, "Please define curzone.";
+      return;
+   }
+
    if(is_scalar(m) || is_void(m)) {
       wbkp = current_window();
       window, m;
