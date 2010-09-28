@@ -242,21 +242,18 @@ func calc24qq(lat, lon) {
    return swrite(format="%02d%03d%s%d%s", dlat, dlon, alat(qlat), qlon, aqq(qq));
 }
 
-func get_utm_qqcodes(north, east, zone) {
-/* DOCUMENT qq = get_utm_qqcodes(north, east, zone)
-
-   For a set of UTM northings, eastings, and zones, this will calculate
-   each coordinate's quarter-quad code name and return an array of strings
-   that correspond to them.
-
-   See also: calc24qq qq_segment_pbd
+func utm2qq(east, north, zone, qqprefix=) {
+/* DOCUMENT qq = utm2qq(east, north, zone)
+   Returns the quarter-quad tile name for each east, north, and zone coordinate.
 */
    // Convert the coordinates to lat/lon, coercing them into their quarter-quad
    // corner points
    ll = int(utm2ll(north, east, zone)/0.0625) * 0.0625;
-   // Then feed to calc24qq
-   return calc24qq(ll(*,2), ll(*,1));
+   result = calc24qq(ll(*,2), ll(*,1));
+   if(qqprefix) result = "qq" + result;
+   return result;
 }
+func get_utm_qqcodes(north, east, zone) { return utm2qq(east, north, zone); }
 
 func utm2qq_names(east, north, zone) {
 /* DOCUMENT qq = utm2qq_names(east, north, zone)
