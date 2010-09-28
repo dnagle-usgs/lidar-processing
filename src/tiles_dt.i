@@ -141,7 +141,7 @@ func utm2dtquad(east, north, zone, &quad, dtlength=, dtprefix=) {
       quad = q;
    } else {
       tile = utm2dt(east, north, zone) + "_" + q;
-      return extract_dtquad(tile, dtlenght=dtlength, dtprefix=dtprefix);
+      return extract_dtquad(tile, dtlength=dtlength, dtprefix=dtprefix);
    }
 }
 
@@ -191,7 +191,7 @@ func utm2dtcell(east, north, zone, &quad, &cell, dtlength=, dtprefix=) {
       cell = cell_map(ce, cn);
    } else {
       tile = utm2dt(east, north, zone) + swrite(format="_%s%02d", quad, cell);
-      return extract_dtcell(tile, dtlenght=dtlength, dtprefix=dtprefix);
+      return extract_dtcell(tile, dtlength=dtlength, dtprefix=dtprefix);
    }
 }
 
