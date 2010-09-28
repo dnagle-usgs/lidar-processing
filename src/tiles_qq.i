@@ -312,3 +312,60 @@ func extract_for_qq(north, east, zone, qq, buffer=) {
    // Adding 1mm to buffer to accommodate floating point error
    return where(dist <= buffer + 0.001);
 }
+
+func calculate_qq_extents(qqdir, mode=, glob=, remove_buffers=) {
+/* DOCUMENT calculate_qq_extents(qqdir, mode=, glob=, remove_buffers=)
+   Calculates the lat/lon extents for a each quarter quad using the given
+   directory of qq pbd files. Returns a Yeti hash with the results.
+*/
+   local n, e;
+   fix_dir, qqdir;
+   default, glob, "*.pbd";
+   default, remove_buffers, 1;
+
+   // Source files
+   files = find(qqdir, glob=glob);
+
+   qqs = h_new();
+
+   // Iterate over the source files to determine the 2k tiles
+   stamp = 0;
+   timer_init, tstamp;
+   write, "Scanning quarter quad data to determine extents...";
+   for(i = 1; i<= numberof(files); i++) {
+      timer_tick, tstamp, i, numberof(files);
+      basefile = file_tail(files(i));
+      qq = extract_qq(basefile);
+      z = qq2uz(qq);
+
+      // Load data
+      data = pbd_load(files(i));
+      if(!numberof(data))
+         continue;
+      data2xyz, unref(data), e, n, mode=mode;
+
+      // Restrict data to tile boundaries if remove_buffers = 1
+      if(remove_buffers) {
+         qq_list = get_utm_qqcodes(n, e, z);
+         w = where(qq == qq_list);
+         if(!numberof(w)) {
+            write, "  Problem: No data found after buffers removed.";
+            continue;
+         }
+         n = n(w);
+         e = e(w);
+      }
+
+      // Convert data to lat/lon
+      ll = utm2ll(n, e, z);
+
+      // Find extents
+      h_set, qqs, qq, h_new(
+         "n", ll(max,2),
+         "s", ll(min,2),
+         "e", ll(max,1),
+         "w", ll(min,1)
+      );
+   }
+   return qqs;
+}
