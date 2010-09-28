@@ -285,3 +285,30 @@ func get_utm_qqcode_coverage(north, east, zone) {
    return calc24qq(lat, lon);
 }
 
+func extract_for_qq(north, east, zone, qq, buffer=) {
+/* DOCUMENT extract_for_qq(north, east, zone, qq, buffer=)
+
+   This will return an index into north/east of all coordinates that fall
+   within the bounds of the given quarter quad, which should be the string name
+   of the quarter quad.
+
+   The buffer= option specifies a buffer (in meters) to extend the quarter
+   quad's boundaries by. By default, it is 100 meters.
+*/
+   // Original David Nagle 2008-07-17
+   default, buffer, 100;
+   bbox = qq2ll(qq, bbox=1);
+
+   // ll(,1) is lon, ll(,2) is lat
+   ll = utm2ll(north, east, zone);
+
+   comp_lon = bound(ll(,1), bbox(4), bbox(2));
+   comp_lat = bound(ll(,2), bbox(1), bbox(3));
+
+   // comp_utm(1,) is north, (2,) is east
+   comp_utm = fll2utm(unref(comp_lat), unref(comp_lon), force_zone=zone);
+
+   dist = ppdist([unref(east), unref(north)], [comp_utm(2,), comp_utm(1,)], tp=1);
+   // Adding 1mm to buffer to accommodate floating point error
+   return where(dist <= buffer + 0.001);
+}
