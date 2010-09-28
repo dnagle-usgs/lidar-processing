@@ -649,7 +649,7 @@ func partition_into_2k(north, east, zone, buffer=, shorten=, verbose=) {
 
    if(verbose)
       write, "- Calculating 2km tile names...";
-   dtcodes = get_utm_dtcode_coverage(north, east, zone);
+   dtcodes = utm2dt_names(east, north, zone, dtlength="long");
    if(shorten) {
       if(verbose)
          write, "- Shortening tile names...";
@@ -701,7 +701,7 @@ func partition_into_10k(north, east, zone, buffer=, shorten=, verbose=) {
 
    if(verbose)
       write, "- Calculating 10km tile names...";
-   itcodes = get_utm_itcode_coverage(north, east, zone);
+   itcodes = utm2it_names(east, north, zone, dtlength="long");
    if(shorten) {
       if(verbose)
          write, "- Shortening tile names...";
