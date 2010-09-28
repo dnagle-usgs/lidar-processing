@@ -9,7 +9,9 @@ func atoi(str) {
       > atoi(["13.45", "-1000"])
       [13,-1000]
 */
-   return long(atod(unref(str)));
+   dims = dimsof(str);
+   res = _rc_convert(str(*), 2, 0);
+   return (dims(0) ? reform(res, dims) : res(1));
 }
 
 func atod(str) {
@@ -20,9 +22,9 @@ func atod(str) {
       > atod(["-23.4", "43.1"])
       [-23.4,43.1]
 */
-   d = array(double, dimsof(str));
-   sread, str, format="%f", d;
-   return d;
+   dims = dimsof(str);
+   res = _rc_convert(str(*), 3, 0.);
+   return (dims(0) ? reform(res, dims) : res);
 }
 
 func atoc(str) {
