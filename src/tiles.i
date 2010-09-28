@@ -140,6 +140,20 @@ func tile_type(text) {
    return result;
 }
 
+func utm2tile(east, north, zone, type, dtlength=, dtprefix=, qqprefix=) {
+/* DOCUMENT utm2tile(east, north, zone, type, dtlength=, dtprefix=, qqprefix=)
+   Returns the tile name for each set of east/north/zone. Wrapper around
+   utm2dt, utm2it, utm2qq, utm2dtcell, and utm2dtquad.
+*/
+   dtfuncs = h_new(dtcell=utm2dtcell, dtquad=utm2dtquad, dt=utm2dt, it=utm2it);
+   if(h_has(funcs, type))
+      return funcs(type)(east, north, zone, dtlength=dtlength,
+         dtprefix=dtprefix);
+   if(type == "qq")
+      return utm2qq(east, north, zone, qqprefix=qqprefix);
+   return [];
+}
+
 func tile2uz(tile) {
 /* DOCUMENT tile2uz(tile)
    Attempts to return a UTM zone for each tile in the array given. This is a
