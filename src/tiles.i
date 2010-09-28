@@ -27,9 +27,12 @@ func extract_tile(text, dtlength=, dtprefix=, qqprefix=) {
             qqprefix=0      No prefix added (default)
             qqprefix=1      Prefix added
 
-   If a tile has an ambiguous name, then index tile names take priority over
-   data tile names and data tile names take priority over quarter quad names.
-   If a tile does not contain a parseable name, then a nil string is yielded.
+   The 10km/2km/1km/250m tiling structure can resulting in ambiguous tile
+   names. If the tile has a prefix of i_, q_, or c_, then it is parsed as an
+   index tile, quad tile, or cell tile, respectively.  Otherwise, it is parsed
+   as a data tile. If the string contains both a data tile and quarter quad
+   name, the data tile name takes precedence. Tiles without parseable names
+   will yield the nil string.
 */
 // Original David Nagle 2009-12-09
    default, dtlength, "short";
@@ -38,19 +41,23 @@ func extract_tile(text, dtlength=, dtprefix=, qqprefix=) {
    dt = extract_dt(text, dtlength=dtlength, dtprefix=dtprefix);
    dtq = extract_dtquad(text, dtlength=dtlength, dtprefix=dtprefix);
    dtc = extract_dtcell(text, dtlength=dtlength, dtprefix=dtprefix);
-   it = "i_" == strpart(text, 1:2);
+
+   prefix = strpart(text, 1:2);
+   is_it = "i_" == prefix;
+   is_dtq = "q_" == prefix;
+   is_dtc = "c_" == prefix;
 
    result = array(string, dimsof(text));
 
-   w = where(strlen(dt) > 0 & it);
+   w = where(strlen(dt) > 0 & is_it);
    if(numberof(w))
       result(w) = dt2it(dt(w), dtlength=dtlength, dtprefix=dtprefix);
 
-   w = where(strlen(dtc) > 0 & !strlen(result));
+   w = where(strlen(dtc) > 0 & is_dtc & !strlen(result));
    if(numberof(w))
       result(w) = dtc(w);
 
-   w = where(strlen(dtq) > 0 & !strlen(result));
+   w = where(strlen(dtq) > 0 & is_dtq & !strlen(result));
    if(numberof(w))
       result(w) = dtq(w);
 
