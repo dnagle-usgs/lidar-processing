@@ -195,8 +195,8 @@ func draw_grid(w) {
    will contain one or more of the following kinds of grid lines:
       10km tile: violet
       2km tile: red
-      1km quad: dark grey
-      250m cell: light grey
+      1km quad: dark grey (dashed)
+      250m cell: light grey (dashed)
    SEE ALSO: show_grid_location draw_qq_grid
 */
    local x0, x1, y0, y1;
@@ -217,9 +217,9 @@ func draw_grid(w) {
    // Only show quads and cells when within 4km
    if (y1 - y0 <= 4000) {
       plgrid, indgen(y0:y1:250), indgen(x0:x1:250), color=[200,200,200],
-         width=0.1;
+         width=0.1, type="dash";
       plgrid, indgen(y0:y1:1000), indgen(x0:x1:1000), color=[120,120,120],
-         width=0.1;
+         width=0.1, type="dash";
    }
 
    // Always show 2km tile, though with a smaller width when zoomed out
