@@ -258,31 +258,28 @@ func get_utm_qqcodes(north, east, zone) {
    return calc24qq(ll(*,2), ll(*,1));
 }
 
-func get_utm_qqcode_coverage(north, east, zone) {
-/* DOCUMENT qq = get_utm_qqcode_coverage(north, east, zone)
-    For a set of UTM northings, eastings, and zones, this will calculate the
-    set of quarter-quad tiles that encompass all the points.
-
-    This is equivalent to
-        qq = set_remove_duplicates(get_utm_qqcodes(north,east,zone))
-    but works much more efficiently (and faster).
+func utm2qq_names(east, north, zone) {
+/* DOCUMENT qq = utm2qq_names(east, north, zone)
+   For a set of UTM eastings, northings, and zones, this will calculate the set
+   of index tiles that encompass all the points. This is equivalent to
+      qq = set_remove_duplicates(utm2qq(east, north, zone))
+   but works much more efficiently (and faster).
 */
-// Original David Nagle 2009-07-09
-   ll = utm2ll(north,east,zone);
-   lat = long(ll(*,2)/0.0625);
-   lon = long(ll(*,1)/0.0625);
-   ll = [];
-   lat += 3000;
-   lon += 3000;
+   local lon, lat;
+   utm2ll, north, east, zone, lon, lat;
+   lon = long(lon/.0625) + 3000;
+   lat = long(lat/.0625) + 3000;
    code = long(unref(lat) * 10000 + unref(lon));
    code = set_remove_duplicates(unref(code));
    lat = code / 10000;
    lon = unref(code) % 10000;
-   lat -= 3000;
-   lon -= 3000;
-   lat *= 0.0625;
-   lon *= 0.0625;
+   lat = (unref(lat) - 3000) * .0625;
+   lon = (unref(lon) - 3000) * .0625;
    return calc24qq(lat, lon);
+}
+
+func get_utm_qqcode_coverage(north, east, zone) {
+   return utm2qq_names(east, north, zone);
 }
 
 func extract_for_qq(north, east, zone, qq, buffer=) {
