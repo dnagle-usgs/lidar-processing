@@ -128,7 +128,7 @@ func utm2dt_names(east, north, zone, dtlength=, dtprefix=) {
       dtlength=dtlength, dtprefix=dtprefix);
 }
 
-func utm2dtquad(east, north, zone, &quad) {
+func utm2dtquad(east, north, zone, &quad, dtlength=, dtprefix=) {
 /* DOCUMENT utm2dtquad, east, north, &quad
    -or-  tile = utm2dtquad(north, east, zone)
    Like utm2dtcell, but only provides quad information. Data tile e123_n4567_15
@@ -140,11 +140,12 @@ func utm2dtquad(east, north, zone, &quad) {
    if(am_subroutine()) {
       quad = q;
    } else {
-      return utm2dt(east, north, zone, dtlength="long") + "_" + q;
+      tile = utm2dt(east, north, zone) + "_" + q;
+      return extract_dtquad(tile, dtlenght=dtlength, dtprefix=dtprefix);
    }
 }
 
-func utm2dtcell(east, north, zone, &quad, &cell) {
+func utm2dtcell(east, north, zone, &quad, &cell, dtlength=, dtprefix=) {
 /* DOCUMENT utm2dtcell, north, east, &quad, &cell
    -or-  tile = utm2dtcell(north, east, zone)
 
@@ -189,8 +190,8 @@ func utm2dtcell(east, north, zone, &quad, &cell) {
       quad = quad_map(qe, qn);
       cell = cell_map(ce, cn);
    } else {
-      return utm2dt(east, north, zone, dtlength="long") + \
-         swrite(format="_%s%02d", quad, cell);
+      tile = utm2dt(east, north, zone) + swrite(format="_%s%02d", quad, cell);
+      return extract_dtcell(tile, dtlenght=dtlength, dtprefix=dtprefix);
    }
 }
 
