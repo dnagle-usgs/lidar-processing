@@ -257,10 +257,10 @@ func dtcell2utm(dtcodes, &east, &north, &zone, bbox=, centroid=) {
    q = where(["A","B","C","D"] == q)(1) - 1;
    c--;
 
-   qeoff = q / 2;
-   qnoff = q % 2;
-   ceoff = c / 4;
+   qnoff = q / 2;
+   qeoff = q % 2;
    cnoff = c / 4;
+   ceoff = c % 4;
 
    e += (qeoff * 1000 + ceoff * 250);
    n -= (qnoff * 1000 + cnoff * 250);
@@ -292,8 +292,8 @@ func dtquad2utm(dtcodes, &east, &north, &zone, bbox=, centroid=) {
    n *= 1000;
    q = where(["A","B","C","D"] == q)(1) - 1;
 
-   qeoff = q / 2;
-   qnoff = q % 2;
+   qnoff = q / 2;
+   qeoff = q % 2;
 
    e += qeoff * 1000;
    n -= qnoff * 1000;
