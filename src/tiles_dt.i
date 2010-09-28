@@ -1,6 +1,17 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "eaarl.i";
 
+func dt2utm_km(dtcodes, &east, &north, &zone) {
+/* DOCUMENT dt2utm_km, dtcodes, &east, &north, &zone
+   Parses the given data or index tile codes and sets the key easting,
+   northing, and zone values. Values are in kilometers.
+*/
+   regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)[c-hj-np-xC-HJ-NP-X]?(_|\\.|$)", dtcodes, , , east, , north, , zone;
+   east = atoi(east);
+   north = atoi(north);
+   zone = atoi(zone);
+}
+
 func extract_dt(text, dtlength=, dtprefix=) {
 /* DOCUMENT extract_dt(text, dtlength=, dtprefix=)
    Attempts to extract a data tile name from each string in TEXT.
@@ -181,17 +192,6 @@ func utm2it_names(east, north, zone, dtlength=, dtprefix=) {
    zone = code / 1000;
    return extract_it(swrite(format="e%d0_n%d0_%d", east, north, zone),
       dtlength=dtlength, dtprefix=dtprefix);
-}
-
-func dt2utm_km(dtcodes, &east, &north, &zone) {
-/* DOCUMENT dt2utm_km, dtcodes, &east, &north, &zone
-   Parses the given data or index tile codes and sets the key easting,
-   northing, and zone values. Values are in kilometers.
-*/
-   regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)[c-hj-np-xC-HJ-NP-X]?(_|\\.|$)", dtcodes, , , east, , north, , zone;
-   east = atoi(east);
-   north = atoi(north);
-   zone = atoi(zone);
 }
 
 func dt2uz(dtcodes) {
