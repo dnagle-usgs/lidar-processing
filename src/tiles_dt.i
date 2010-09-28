@@ -1,15 +1,16 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "eaarl.i";
 
-func dt2utm_km(dtcodes, &east, &north, &zone) {
-/* DOCUMENT dt2utm_km, dtcodes, &east, &north, &zone
+func dt2utm_km(dtcodes, &east, &north, &zone, &quad, &cell) {
+/* DOCUMENT dt2utm_km, dtcodes, &east, &north, &zone, &quad, &cell
    Parses the given data or index tile codes and sets the key easting,
-   northing, and zone values. Values are in kilometers.
+   northing, zone, quad, and cell values. Values are in kilometers.
 */
-   regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)[c-hj-np-xC-HJ-NP-X]?(_|\\.|$)", dtcodes, , , east, , north, , zone;
+   regmatch, "(^|_)e([1-9][0-9]{2})(000)?_n([1-9][0-9]{3})(000)?_z?([1-9][0-9]?)[c-hj-np-xC-HJ-NP-X]?(_([A-D])(0[1-9]|1[0-6])?)?(_|\\.|$)", dtcodes, , , east, , north, , zone, , quad, cell;
    east = atoi(east);
    north = atoi(north);
    zone = atoi(zone);
+   cell = atoi(cell);
 }
 
 func extract_dt(text, dtlength=, dtprefix=) {
