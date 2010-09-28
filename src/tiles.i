@@ -36,6 +36,8 @@ func extract_tile(text, dtlength=, dtprefix=, qqprefix=) {
    default, qqprefix, 0;
    qq = extract_qq(text, qqprefix=qqprefix);
    dt = extract_dt(text, dtlength=dtlength, dtprefix=dtprefix);
+   dtq = extract_dtquad(text, dtlength=dtlength, dtprefix=dtprefix);
+   dtc = extract_dtcell(text, dtlength=dtlength, dtprefix=dtprefix);
    it = "i_" == strpart(text, 1:2);
 
    result = array(string, dimsof(text));
@@ -43,6 +45,14 @@ func extract_tile(text, dtlength=, dtprefix=, qqprefix=) {
    w = where(strlen(dt) > 0 & it);
    if(numberof(w))
       result(w) = dt2it(dt(w), dtlength=dtlength, dtprefix=dtprefix);
+
+   w = where(strlen(dtc) > 0 & !strlen(result));
+   if(numberof(w))
+      result(w) = dtc(w);
+
+   w = where(strlen(dtq) > 0 & !strlen(result));
+   if(numberof(w))
+      result(w) = dtq(w);
 
    w = where(strlen(dt) > 0 & !strlen(result));
    if(numberof(w))
