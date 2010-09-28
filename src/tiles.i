@@ -206,10 +206,23 @@ func show_grid_location(m) {
       m = mouse();
       window_select, wbkp;
    }
-   write, format="10km index tile : %s\n", utm2it(m(1), m(2), curzone);
-   utm2dtcell, m(1), m(2), quad, cell;
-   write, format="2km data tile   : %s   quad %s cell %d\n",
-      utm2dt(m(1), m(2), curzone), quad, cell;
+
+   write, format="Location: %.2f east, %.2f north, zone %d\n", m(1), m(2),
+      curzone;
+
+   fmt = "%15s: %-25s -or- %s\n";
+   write, format=fmt, "Quarter Quad",
+      utm2qq(m(1), m(2), curzone, qqprefix=0),
+      utm2qq(m(1), m(2), curzone, qqprefix=1);
+   write, format=fmt, "10km Index Tile",
+      utm2it(m(1), m(2), curzone, dtlength="long"),
+      utm2it(m(1), m(2), curzone, dtlength="short");
+   write, format=fmt, "2km Data Tile",
+      utm2dt(m(1), m(2), curzone, dtlength="long"),
+      utm2dt(m(1), m(2), curzone, dtlength="short");
+   write, format=fmt, "250m Cell",
+      utm2dtcell(m(1), m(2), curzone, dtlength="long"),
+      utm2dtcell(m(1), m(2), curzone, dtlength="short");
 }
 
 func show_qq_grid_location(m) {
