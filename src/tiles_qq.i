@@ -412,7 +412,7 @@ func draw_qq_grid(win, pts=) {
 
    If the current plot crosses UTM zone boundaries, please set fixedzone.
 
-   SEE ALSO: show_qq_grid_location draw_grid
+   SEE ALSO: draw_grid
 */
 // Original David Nagle 2008-07-18
    if(is_void(win)) return;

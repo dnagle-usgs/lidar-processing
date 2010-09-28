@@ -196,7 +196,7 @@ func show_grid_location(m) {
    a scalar value WIN, the user will be prompted to click on a location in that
    window. Otherwise, the location POINT is used. Will display the index tile,
    data tile, quad name, and cell name.
-   SEE ALSO: draw_grid show_qq_grid_location
+   SEE ALSO: draw_grid
 */
    extern curzone;
    local quad, cell;
@@ -228,30 +228,6 @@ func show_grid_location(m) {
    write, format=fmt, "250m Cell",
       utm2dtcell(m(1), m(2), curzone, dtlength="long"),
       utm2dtcell(m(1), m(2), curzone, dtlength="short");
-}
-
-func show_qq_grid_location(m) {
-/* DOCUMENT show_qq_grid_location, win
-   -or- show_qq_grid_location, point
-   Displays information about the grid location for a given point. If provided
-   a scalar value WIN, the user will be prompted to click on a location in that
-   window. Otherwise, the location POINT is used. Will display the quarter quad
-   tile name.
-   SEE ALSO: draw_qq_grid show_grid_location
-*/
-   extern curzone;
-   if(!curzone) {
-      write, "Aborting. Please define curzone.";
-      return;
-   }
-   if(is_scalar(m) || is_void(m)) {
-      wbkp = current_window();
-      window, m;
-      m = mouse();
-      window_select, wbkp;
-   }
-   qq = get_utm_qqcodes(m(2), m(1), curzone);
-   write, format="Quarter Quad: %s\n", qq(1);
 }
 
 func get_utm_dtcode_candidates(north, east, zone, buffer) {
