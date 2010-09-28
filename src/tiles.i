@@ -95,25 +95,39 @@ func guess_tile(text, dtlength=, qqprefix=) {
 
 func tile_type(text) {
 /* DOCUMENT tile_type(text)
-   Returns string indicating the type of tile used.
-
-   The return result (scalar or array, depending on the input) will have
-   strings that mean the following:
-
+   Returns string indicating the type of tile used.  The return result (scalar
+   or array, depending on the input) will have strings that mean the following:
+      "dtcell" - 250-meter cell tile
+      "dtquad" - One-kilometer quad tile
       "dt" - Two-kilometer data tile
       "it" - Ten-kilometer index tile
       "qq" - Quarter quad tile
       (nil) - Unparseable
+   See extract_tile for information about how ambiguity is handled.
 */
    qq = extract_qq(text);
    dt = extract_dt(text);
-   it = "i_" == strpart(text, 1:2);
+   dtq = extract_dtquad(text);
+   dtc = extract_dtcell(text);
+
+   prefix = strpart(text, 1:2);
+   is_it = "i_" == prefix;
+   is_dtq = "q_" == prefix;
+   is_dtc = "c_" == prefix;
 
    result = array(string, dimsof(text));
 
-   w = where(strlen(dt) > 0 & it);
+   w = where(strlen(dt) > 0 & is_it);
    if(numberof(w))
       result(w) = "it";
+
+   w = where(strlen(dtc) > 0 & is_dtc & !strlen(result));
+   if(numberof(w))
+      result(w) = "dtcell";
+
+   w = where(strlen(dtq) > 0 & is_dtq & !strlen(result));
+   if(numberof(w))
+      result(w) = "dtquad";
 
    w = where(strlen(dt) > 0 & !strlen(result));
    if(numberof(w))
