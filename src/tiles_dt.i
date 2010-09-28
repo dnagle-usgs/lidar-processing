@@ -13,6 +13,43 @@ func dt2utm_km(dtcodes, &east, &north, &zone, &quad, &cell) {
    cell = atoi(cell);
 }
 
+func extract_dtcell(text, dtlength=, dtprefix=) {
+/* DOCUMENT extract_dtcell(text, dtlength=, dtprefix=)
+   Attempts to extract a data tile cell name from each string in TEXT.
+   See extract_dt for info on options.
+*/
+   local e, n, z, q, c;
+   default, dtlength, "short";
+   default, dtprefix, (dtlength == "long");
+   dt2utm_km, text, e, n, z, q, c;
+   w = where(bool(e) & bool(n) & bool(z) & bool(q) & bool(c));
+   result = array(string(0), dimsof(text));
+   fmt = (dtlength == "short") ? "e%d_n%d_%d" : "e%d000_n%d000_%d";
+   fmt += "_%s%02d";
+   if(dtprefix) fmt = "t_" + fmt;
+   if(numberof(w))
+      result(w) = swrite(format=fmt, e(w), n(w), z(w), q(w), c(w));
+   return result;
+}
+
+func extract_dtquad(text, dtlength=, dtprefix=) {
+/* DOCUMENT extract_dtquad(text, dtlength=, dtprefix=)
+   Attempts to extract a data tile quad name from each string in TEXT.
+   See extract_dt for info on options.
+*/
+   local e, n, z, q;
+   default, dtlength, "short";
+   default, dtprefix, (dtlength == "long");
+   dt2utm_km, text, e, n, z, q;
+   w = where(bool(e) & bool(n) & bool(z) & bool(q));
+   result = array(string(0), dimsof(text));
+   fmt = (dtlength == "short") ? "e%d_n%d_%d_%s" : "e%d000_n%d000_%d_%s";
+   if(dtprefix) fmt = "t_" + fmt;
+   if(numberof(w))
+      result(w) = swrite(format=fmt, e(w), n(w), z(w), q(w));
+   return result;
+}
+
 func extract_dt(text, dtlength=, dtprefix=) {
 /* DOCUMENT extract_dt(text, dtlength=, dtprefix=)
    Attempts to extract a data tile name from each string in TEXT.
