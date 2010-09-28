@@ -186,11 +186,14 @@ func utm2dtcell(east, north, zone, &quad, &cell, dtlength=, dtprefix=) {
    qe = long(east - te)/1000 + 1;
    ce = long(east - te - (qe*1000 - 1000)) / 250 + 1;
 
+   q = quad_map(qe, qn);
+   c = cell_map(ce, cn);
+
    if(am_subroutine()) {
-      quad = quad_map(qe, qn);
-      cell = cell_map(ce, cn);
+      quad = q;
+      cell = c;
    } else {
-      tile = utm2dt(east, north, zone) + swrite(format="_%s%02d", quad, cell);
+      tile = utm2dt(east, north, zone) + swrite(format="_%s%02d", q, c);
       return extract_dtcell(tile, dtlength=dtlength, dtprefix=dtprefix);
    }
 }
