@@ -136,7 +136,7 @@ func utm2dtquad(east, north, zone, &quad, dtlength=, dtprefix=) {
       t_e123000_n4567000_15_B
    SEE ALSO: utm2dtcell
 */
-   utm2dtcell, east, north, q;
+   utm2dtcell, east, north, zone, q;
    if(am_subroutine()) {
       quad = q;
    } else {
