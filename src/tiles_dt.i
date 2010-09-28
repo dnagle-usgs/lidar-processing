@@ -302,3 +302,36 @@ func it2utm(itcodes, bbox=, centroid=) {
    else
       return u;
 }
+
+func extract_for_dt(north, east, dt, buffer=) {
+/* DOCUMENT extract_for_dt(north, east, dt, buffer=)
+
+   This will return an index into north/east of all coordinates that fall
+   within the bounds of the given 2k data tile dt, which should be the string
+   name of the data tile.
+
+   The buffer= option specifies a buffer in meters to extend the tile's
+   boundaries by. By default, it is 100 meters. Setting buffer=0 will constrain
+   the data to the exact tile boundaries.
+*/
+   // Original David Nagle 2008-07-21
+   default, buffer, 100;
+   bbox = dt2utm(dt, bbox=1);
+   return extract_for_bbox(unref(north), unref(east), bbox, buffer);
+}
+
+func extract_for_it(north, east, it, buffer=) {
+/* DOCUMENT extract_for_it(north, east, it, buffer=)
+
+   This will return an index into north/east of all coordinates that fall
+   within the bounds of the given 10k index tile it, which should be the string
+   name of the index tile.
+
+   The buffer= option specifies a buffer in meters to extend the tile's
+   boundaries by. By default, it is 100 meters. Setting buffer=0 will constrain
+   the data to the exact tile boundaries.
+*/
+   default, buffer, 100;
+   bbox = it2utm(it, bbox=1);
+   return extract_for_bbox(unref(north), unref(east), bbox, buffer);
+}
