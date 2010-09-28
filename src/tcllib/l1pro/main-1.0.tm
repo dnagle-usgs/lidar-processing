@@ -326,7 +326,7 @@ proc ::l1pro::main::panel_tools w {
       -command {exp_send "draw_${::gridtype}, $::win_no\r"}
    ttk::button $f.gridname -text " Name " -width 0 \
       -style Panel.TButton \
-      -command {exp_send "show_${::gridtype}_location, $::win_no\r"}
+      -command {exp_send "show_grid_location, $::win_no\r"}
 
    ::tooltip::tooltip $f.gridtype \
       "Select the tiling system to use\ for \"Plot\" and \"Name\" below."

@@ -686,7 +686,7 @@ proc ::plot::qq_grid_overlay {} {
 }
 
 proc ::plot::qq_grid_show_name {} {
-   exp_send "show_qq_grid_location, $::_map(window)\r"
+   exp_send "show_grid_location, $::_map(window)\r"
 }
 
 proc ::plot::mark_time_pos { sod } {
