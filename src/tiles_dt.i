@@ -335,3 +335,107 @@ func extract_for_it(north, east, it, buffer=) {
    bbox = it2utm(it, bbox=1);
    return extract_for_bbox(unref(north), unref(east), bbox, buffer);
 }
+
+func partition_into_2k(north, east, zone, buffer=, shorten=, verbose=) {
+/* DOCUMENT partition_into_2k(north, east, zone, buffer=, shorten=, verbose=)
+   Given a set of points represented by northing, easting, and zone, this will
+   return a Yeti hash that partitions them into 2km data tiles.
+
+   Parameters:
+      north: Northing in meters
+      east: Easting in meters
+      zone: Zone (must be array conforming to north/east)
+
+   Options:
+      buffer= A buffer around the tile to include, in meters. Defaults to
+         100m. Set to 0 to constrain to exact tile boundaries.
+      shorten= If set to 1, the tile names will be in the short form
+         (e466_n3354_16). Default is long form (t_e466000_n3354000_16).
+      verbose= Set to 1 to get progress output. Defaults to 0 (silent).
+
+   Returns:
+      A yeti hash. The keys are the tile names, the values are the indexes
+      into north/east/zone.
+*/
+// Original David B. Nagle 2009-04-01
+   default, buffer, 100;
+   default, shorten, 0;
+   default, verbose, 0;
+
+   if(verbose)
+      write, "- Calculating 2km tile names...";
+   dtcodes = utm2dt_names(east, north, zone, dtlength="long");
+   if(shorten) {
+      if(verbose)
+         write, "- Shortening tile names...";
+      dtcodes = extract_dt(unref(dtcodes));
+   }
+
+   tiles = h_new();
+   if(verbose)
+      write, format=" - Calculating indices for %d tiles...\n", numberof(dtcodes);
+   for(i = 1; i <= numberof(dtcodes); i++) {
+      if(verbose)
+         write, format="   * Processing %d/%d: %s\n", i, numberof(dtcodes), dtcodes(i);
+      this_zone = dt2uz(dtcodes(i));
+      data = rezone_utm(north, east, zone, this_zone);
+      idx = extract_for_dt(data(1,), data(2,), dtcodes(i), buffer=buffer);
+      if(numberof(idx))
+         h_set, tiles, dtcodes(i), idx;
+      else if(verbose)
+         write, "    !! No points found, discarding tile!";
+   }
+   return tiles;
+}
+
+func partition_into_10k(north, east, zone, buffer=, shorten=, verbose=) {
+/* DOCUMENT partition_into_10k(north, east, zone, buffer=, shorten=)
+   Given a set of points represented by northing, easting, and zone, this will
+   return a Yeti hash that partitions them into 10km index tiles.
+
+   Parameters:
+      north: Northing in meters
+      east: Easting in meters
+      zone: Zone (must be array conforming to north/east)
+
+   Options:
+      buffer= A buffer around the tile to include, in meters. Defaults to
+         100m. Set to 0 to constrain to exact tile boundaries.
+      shorten= If set to 1, the tile names will be in the short form
+         (e460_n3350_16). Default is long form (i_e460000_n3350000_16).
+      verbose= Set to 1 to get progress output. Defaults to 0 (silent).
+
+   Returns:
+      A yeti hash. The keys are the tile names, the values are the indexes
+      into north/east/zone.
+*/
+// Original David B. Nagle 2009-04-01
+   default, buffer, 100;
+   default, shorten, 0;
+   default, verbose, 0;
+
+   if(verbose)
+      write, "- Calculating 10km tile names...";
+   itcodes = utm2it_names(east, north, zone, dtlength="long");
+   if(shorten) {
+      if(verbose)
+         write, "- Shortening tile names...";
+      itcodes = extract_dt(unref(itcodes));
+   }
+
+   tiles = h_new();
+   if(verbose)
+      write, format=" - Calculating indices for %d tiles...\n", numberof(itcodes);
+   for(i = 1; i <= numberof(itcodes); i++) {
+      if(verbose)
+         write, format="   * Processing %d/%d: %s\n", i, numberof(itcodes), itcodes(i);
+      this_zone = dt2uz(itcodes(i));
+      data = rezone_utm(north, east, zone, this_zone);
+      idx = extract_for_it(data(1,), data(2,), itcodes(i), buffer=buffer);
+      if(numberof(idx))
+         h_set, tiles, itcodes(i), idx;
+      else if(verbose)
+         write, "    !! No points found, discarding tile!";
+   }
+   return tiles;
+}
