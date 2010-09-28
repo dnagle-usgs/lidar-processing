@@ -242,6 +242,75 @@ func dt2uz(dtcodes) {
    return zone;
 }
 
+func dtcell2utm(dtcodes, &east, &north, &zone, bbox=, centroid=) {
+/* DOCUMENT dtcell2utm(dtcodes, &east, &north, &zone, bbox=, centroid=)
+   Like dt2utm, but for cells.
+*/
+   local e, n, z, q, c;
+   dt2utm_km, dtcodes, e, n, z, q, c;
+   e *= 1000;
+   n *= 1000;
+   q = where(["A","B","C","D"] == q)(1) - 1;
+   c--;
+
+   qeoff = q / 2;
+   qnoff = q % 2;
+   ceoff = c / 4;
+   cnoff = c / 4;
+
+   e += (qeoff * 1000 + ceoff * 250);
+   n -= (qnoff * 1000 + cnoff * 250);
+
+   if(am_subroutine()) {
+      north = n;
+      east = e;
+      zone = z;
+      return;
+   }
+
+   if(is_void(z))
+      return [];
+   else if(bbox)
+      return [n - 250, e + 250, n, e, z];
+   else if(centroid)
+      return [n - 125, e + 125, z];
+   else
+      return [n, e, z];
+}
+
+func dtquad2utm(dtcodes, &east, &north, &zone, bbox=, centroid=) {
+/* DOCUMENT dtquad2utm(dtcodes, &east, &north, &zone, bbox=, centroid=)
+   Like dt2utm, but for quads.
+*/
+   local e, n, z, q;
+   dt2utm_km, dtcodes, e, n, z, q;
+   e *= 1000;
+   n *= 1000;
+   q = where(["A","B","C","D"] == q)(1) - 1;
+
+   qeoff = q / 2;
+   qnoff = q % 2;
+
+   e += qeoff * 1000;
+   n -= qnoff * 1000;
+
+   if(am_subroutine()) {
+      north = n;
+      east = e;
+      zone = z;
+      return;
+   }
+
+   if(is_void(z))
+      return [];
+   else if(bbox)
+      return [n - 1000, e + 1000, n, e, z];
+   else if(centroid)
+      return [n - 500, e + 500, z];
+   else
+      return [n, e, z];
+}
+
 func dt2utm(dtcodes, &east, &north, &zone, bbox=, centroid=) {
 /* DOCUMENT dt2utm(dtcodes, bbox=, centroid=)
    dt2utm, dtcodes, &north, &east, &zone
