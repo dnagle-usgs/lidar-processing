@@ -232,31 +232,29 @@ func show_grid_location(m) {
 
 func extract_for_tile(north, east, zone, tile, buffer=) {
 /* DOCUMENT idx = extract_for_tile(north, east, zone, tile, buffer=);
-   Wrapper around extract_for_qq, extract_for_dt, and extract_for_it.
-   Automatically uses the right one.
+   Returns an index into north/east of all coordinates that fall within the
+   bounds of the given tile. The buffer= option specifies a value to extend
+   around the tile and defaults to 100. Set buffer=0 to disable buffer.
 */
+   default, buffer, 100;
    tile = extract_tile(tile);
    type = tile_type(tile);
+   if(is_scalar(zone))
+      zone = array(zone, dimsof(north));
 
-   if(type == "dt" || type == "it") {
-      if(is_scalar(zone)) {
-         if(zone != dt2uz(tile))
-            return [];
-      } else {
-         w = where(zone == dt2uz(tile));
-         if(!numberof(w))
-            return [];
-         north = north(w);
-         east = east(w);
-      }
-      if(type == "dt")
-         return extract_for_dt(north, east, tile, buffer=buffer);
-      else
-         return extract_for_it(north, east, tile, buffer=buffer);
-   } else if(type == "qq") {
+   if(type == "qq") {
       return extract_for_qq(north, east, zone, tile, buffer=buffer);
+   } else if(!type) {
+      error, "Unknown tiling type.";
    } else {
-      error, "Unknown tiling type";
+      bbox = tile2bbox(tile);
+      okzone = where(bbox(5) == zone);
+      if(!numberof(okzone))
+         return [];
+      idx = extract_for_bbox(north(okzone), east(okzone), bbox, buffer);
+      if(!numberof(idx))
+         return [];
+      return okzone(idx);
    }
 }
 
