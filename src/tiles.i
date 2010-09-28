@@ -277,13 +277,13 @@ func extract_for_bbox(north, east, bbox, buffer) {
    );
 }
 
-func restrict_data_extent(data, tilename, buffer=, mode=) {
-/* DOCUMENT data = restrict_data_extent(data, tilename, buffer=, mode=)
+func restrict_data_extent(data, tile, buffer=, mode=) {
+/* DOCUMENT data = restrict_data_extent(data, tile, buffer=, mode=)
    Restricts the extent of the data based on its tile.
 
    Parameters:
       data: An array of EAARL data (VEG__, GEO, etc.).
-      tilename: The name of the tile. Works for both 2k, 10k, and qq tiles.
+      tile: The name of the tile. Works for both 2k, 10k, and qq tiles.
          This can be the exact tile name (ie. "t_e123_n4567_12") or the tile
          name can be embedded (ie. "t_e123_n3456_12_n88.pbd").
 
@@ -302,23 +302,9 @@ func restrict_data_extent(data, tilename, buffer=, mode=) {
    default, mode, "be";
 
    data2xyz, data, e, n, mode=mode;
-   tile = extract_dt(tilename);
-   if(tile) {
-      if(strpart(tilename, 1:2) == "i_")
-         idx = extract_for_it(unref(n), unref(e), tile, buffer=buffer);
-      else
-         idx = extract_for_dt(unref(n), unref(e), tile, buffer=buffer);
-   } else {
-      tile = extract_qq(tilename);
-      if(tile)
-         idx = extract_for_qq(unref(n), unref(e), qq2uz(tile), tile, buffer=buffer);
-   }
-   if(numberof(idx)) {
-      data = data(unref(idx));
-   } else {
-      data = [];
-   }
-   return data;
+   zone = tile2uz(tile);
+   idx = extract_for_tile(n, e, zone, tile, buffer=buffer);
+   return numberof(idx) ? data(idx) : [];
 }
 
 func partition_by_tile_type(type, north, east, zone, buffer=, shorten=, verbose=) {
