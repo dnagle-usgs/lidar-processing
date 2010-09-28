@@ -79,10 +79,6 @@ func utm2dt_names(east, north, zone, dtlength=, dtprefix=) {
       dtlength=dtlength, dtprefix=dtprefix);
 }
 
-func get_utm_dtcode_coverage(north, east, zone) {
-   return utm2dt_names(east, north, zone, dtlength="long");
-}
-
 func utm2dtquad(east, north, zone, &quad) {
 /* DOCUMENT utm2dtquad, east, north, &quad
    -or-  tile = utm2dtquad(north, east, zone)
@@ -186,10 +182,6 @@ func utm2it_names(east, north, zone, dtlength=, dtprefix=) {
    zone = code / 1000;
    return extract_it(swrite(format="e%d0_n%d0_%d", east, north, zone),
       dtlength=dtlength, dtprefix=dtprefix);
-}
-
-func get_utm_itcode_coverage(north, east, zone) {
-   return utm2it_names(east, north, zone, dtlength="long");
 }
 
 func dt2utm_km(dtcodes, &east, &north, &zone) {
