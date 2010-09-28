@@ -153,7 +153,6 @@ func dt2it(dt, dtlength=, dtprefix=) {
    dt2utm, dt, e, n, z;
    return utm2it(e, n, z, dtlength=dtlength, dtprefix=dtprefix);
 }
-get_dt_itcodes = dt2it;
 
 func utm2it(east, north, zone, dtlength=, dtprefix=) {
 /* DOCUMENT it = utm2it(east, north, zone, dtlength=)
