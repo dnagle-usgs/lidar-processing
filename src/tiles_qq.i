@@ -278,10 +278,6 @@ func utm2qq_names(east, north, zone) {
    return calc24qq(lat, lon);
 }
 
-func get_utm_qqcode_coverage(north, east, zone) {
-   return utm2qq_names(east, north, zone);
-}
-
 func extract_for_qq(north, east, zone, qq, buffer=) {
 /* DOCUMENT extract_for_qq(north, east, zone, qq, buffer=)
 
