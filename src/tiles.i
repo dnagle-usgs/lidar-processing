@@ -167,36 +167,26 @@ func tile2bbox(tile) {
 /* DOCUMENT bbox = tile2bbox(tile)
    Returns the bounding box for a tile: [south,east,north,west].
 */
-   tile = extract_tile(tile, dtlength="long", qqprefix=1);
-   key = strpart(tile, 1:1);
+   type = tile_type(tile);
+   funcs = h_new(dtcell=dtcell2utm, dtquad=dtquad2utm, dt=dt2utm, it=it2utm,
+      qq=qq2utm);
 
-   if(key == "q") {
-      return qq2utm(tile, bbox=1);
-   } else if(key == "t") {
-      return dt2utm(tile, bbox=1);
-   } else if(key == "i") {
-      return it2utm(tile, bbox=1);
-   } else {
-      return [];
-   }
+   if(h_has(funcs, type))
+      return funcs(type)(tile, bbox=1);
+   return [];
 }
 
 func tile2centroid(tile) {
 /* DOCUMENT centroid = tile2centroid(tile)
    Returns the centroid for a tile: [north,east,zone].
 */
-   tile = extract_tile(tile, dtlength="long", qqprefix=1);
-   key = strpart(tile, 1:1);
+   type = tile_type(tile);
+   funcs = h_new(dtcell=dtcell2utm, dtquad=dtquad2utm, dt=dt2utm, it=it2utm,
+      qq=qq2utm);
 
-   if(key == "q") {
-      return qq2utm(tile, centroid=1);
-   } else if(key == "t") {
-      return dt2utm(tile, centroid=1);
-   } else if(key == "i") {
-      return it2utm(tile, centroid=1);
-   } else {
-      return [];
-   }
+   if(h_has(funcs, type))
+      return funcs(type)(tile, centroid=1);
+   return [];
 }
 
 func draw_grid(w) {
