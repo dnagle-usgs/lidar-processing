@@ -20,13 +20,13 @@ func extract_dtcell(text, dtlength=, dtprefix=) {
 */
    local e, n, z, q, c;
    default, dtlength, "short";
-   default, dtprefix, (dtlength == "long");
+   default, dtprefix, 1;
    dt2utm_km, text, e, n, z, q, c;
    w = where(bool(e) & bool(n) & bool(z) & bool(q) & bool(c));
    result = array(string(0), dimsof(text));
    fmt = (dtlength == "short") ? "e%d_n%d_%d" : "e%d000_n%d000_%d";
    fmt += "_%s%02d";
-   if(dtprefix) fmt = "t_" + fmt;
+   if(dtprefix) fmt = "c_" + fmt;
    if(numberof(w))
       result(w) = swrite(format=fmt, e(w), n(w), z(w), q(w), c(w));
    return result;
@@ -39,12 +39,12 @@ func extract_dtquad(text, dtlength=, dtprefix=) {
 */
    local e, n, z, q;
    default, dtlength, "short";
-   default, dtprefix, (dtlength == "long");
+   default, dtprefix, 1;
    dt2utm_km, text, e, n, z, q;
    w = where(bool(e) & bool(n) & bool(z) & bool(q));
    result = array(string(0), dimsof(text));
    fmt = (dtlength == "short") ? "e%d_n%d_%d_%s" : "e%d000_n%d000_%d_%s";
-   if(dtprefix) fmt = "t_" + fmt;
+   if(dtprefix) fmt = "q_" + fmt;
    if(numberof(w))
       result(w) = swrite(format=fmt, e(w), n(w), z(w), q(w));
    return result;
