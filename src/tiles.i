@@ -942,11 +942,11 @@ day_shift=) {
       if(bilevel) {
          if(shorten)
             tiledir = file_join(
-               swrite(format="i_%s", extract_dt(get_dt_itcodes(curtile))),
-               swrite(format="t_%s", curtile)
+               dt2it(curtile, dtlength="short"),
+               extract_dt(curtile, dtprefix=1)
             );
          else
-            tiledir = file_join(get_dt_itcodes(curtile), curtile);
+            tiledir = file_join(dt2it(curtile), curtile);
       } else {
          tiledir = curtile;
       }
