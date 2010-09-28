@@ -362,3 +362,44 @@ func calculate_qq_extents(qqdir, mode=, glob=, remove_buffers=) {
    }
    return qqs;
 }
+
+func partition_into_qq(north, east, zone, buffer=, verbose=) {
+/* DOCUMENT partition_into_qq(north, east, zone, buffer=, verbose=)
+   Given a set of points represented by northing, easting, and zone, this will
+   return a Yeti hash that partitions them into quarter quad tiles.
+
+   Parameters:
+      north: Northing in meters
+      east: Easting in meters
+      zone: Zone (must be array conforming to north/east)
+
+   Options:
+      buffer= A buffer around the tile to include, in meters. Defaults to
+         100m. Set to 0 to constrain to exact tile boundaries.
+      verbose= Set to 1 to get progress output. Defaults to 0 (silent).
+
+   Returns:
+      A yeti hash. The keys are the tile names, the values are the indexes
+      into north/east/zone.
+*/
+// Original David B. Nagle 2009-04-01
+   default, buffer, 100;
+   default, verbose, 0;
+   if(verbose)
+      write, "- Calculating quarter-quad tile names...";
+   qqcodes = utm2qq_names(east, north, zone);
+
+   tiles = h_new();
+   if(verbose)
+      write, format=" - Calculating indices for %d tiles...\n", numberof(qqcodes);
+   for(i = 1; i <= numberof(qqcodes); i++) {
+      if(verbose)
+         write, format="   * Processing %d/%d: %s\n", i, numberof(qqcodes), qqcodes(i);
+      w = extract_for_qq(north, east, zone, qqcodes(i), buffer=buffer);
+      if(numberof(w))
+         h_set, tiles, qqcodes(i), w;
+      else if(verbose)
+         write, "    !! No points found, discarding tile!";
+   }
+   return tiles;
+}
