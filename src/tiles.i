@@ -230,28 +230,6 @@ func show_grid_location(m) {
       utm2dtcell(m(1), m(2), curzone, dtlength="short");
 }
 
-func get_utm_dtcode_candidates(north, east, zone, buffer) {
-/* DOCUMENT dtcodes = get_utm_dtcode_candidates(north, east, zone, buffer)
-
-   Quickly generates a list of data tiles that might be contained within the
-   given northings, eastings, and zones using the given buffer.
-
-   The returned dtcodes are NOT guaranteed to all exist within the data.
-   However, it is guaranteed that the array of dtcodes will contain all dtcodes
-   that are covered in the data.
-
-   Original David Nagle 2008-07-21
-*/
-   e_min = floor((east (min)-buffer)/2000.0)*2000;
-   e_max = ceil ((east (max)+buffer)/2000.0)*2000;
-   n_min = floor((north(min)-buffer)/2000.0)*2000;
-   n_max = ceil ((north(max)+buffer)/2000.0)*2000;
-   es = indgen(int(e_min):int(e_max):2000);
-   ns = indgen(int(n_min):int(n_max):2000);
-   coords = [es(*,),ns(,*)];
-   return swrite(format="t_e%d_n%d_%d", coords(*,1), coords(*,2), int(zone));
-}
-
 func extract_for_tile(north, east, zone, tile, buffer=) {
 /* DOCUMENT idx = extract_for_tile(north, east, zone, tile, buffer=);
    Wrapper around extract_for_qq, extract_for_dt, and extract_for_it.
