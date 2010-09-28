@@ -975,7 +975,7 @@ func las_to_fs(las, fakemirror=, rgbrn=) {
    data.elevation = 100 * (las.points.z * las.header.z_scale + las.header.z_offset);
    data.intensity = las.points.intensity;
 
-   if(numberof(where(las.header.point_data_format_id == [1,3,4,5]))) {
+   if(anyof(las.header.point_data_format_id == [1,3,4,5])) {
       if(v_maj == 1 && v_min > 0 && las_global_encoding(las.header).gps_soe) {
          data.soe = gps_epoch_to_utc_epoch(las.points.gps_time + 1e9);
       } else {
@@ -1369,7 +1369,7 @@ func las_setup_vlr_data(stream, offset, header) {
       }
       if(record_id >= 100 && record_id < 356) {
          var = _las_vlr_var(stream, swrite("wpd_%d", record_id));
-         if(numberof(where(strglob("wpd_*", *(get_vars(stream)(1))))))
+         if(anyof(strglob("wpd_*", *(get_vars(stream)(1)))))
             las_install_vlr_wpd, stream;
          add_variable, stream, offset, var, "LAS_VLR_WPD";
       }

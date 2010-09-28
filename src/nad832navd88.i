@@ -377,10 +377,10 @@ func nad832navd88offset(lon, lat, gdata_dir=, geoid=, verbose=, interpolator=) {
    offset = array(0., numberof(lon));
 
    // Do any lack? Warn!
-   if(!numberof(where(which))) {
+   if(noneof(which)) {
       write, format="%s", "\n ** No data is in area covered by GEOID. No change made. **\n";
       return offset;
-   } else if(numberof(where(!which))) {
+   } else if(nallof(which)) {
       write, format="\n ** %d points (of %d) in areas not covered by GEOID. Those points will remain unchanged. **\n", numberof(where(!which)), numberof(which);
    }
 

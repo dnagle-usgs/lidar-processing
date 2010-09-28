@@ -72,9 +72,9 @@ func cir_to_soe(filename, offset=) {
       yy = atod(m_dy(w));
       c20 = yy > 60; // 20th century
       yyyy = array(double, dimsof(yy));
-      if(numberof(where(c20)))
+      if(anyof(c20))
          yyyy(where(c20)) = yy(where(c20)) + 1900;
-      if(numberof(where(!c20)))
+      if(nallof(c20))
          yyyy(where(!c20)) = yy(where(!c20)) + 2000;
 
       result(w) = ymd2soe(

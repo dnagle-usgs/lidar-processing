@@ -410,7 +410,7 @@ func __json_join(elements, compact) {
       } else if(strlen(joined) > 72) {
          subarray = strpart(elements, :1) == "[";
          subhash = strpart(elements, :1) == "{";
-         if(numberof(where(subarray | subhash))) {
+         if(anyof(subarray) || anyof(subhash)) {
             joined = "\n" + strindent(strjoin(elements, ",\n"), "  ") + "\n";
          } else {
             joined = "\n" + strindent(strwrap(joined, width=68), "  ") + "\n";

@@ -221,9 +221,9 @@ func calc24qq(lat, lon) {
 
    See also: get_utm_qqcodes get_conusqq_data qq_segment_pbd
 */
-   if(numberof(where(lat < 0)))
+   if(anyof(lat < 0))
       error, "Latitude values must be positive.";
-   if(numberof(where(lon > 0)))
+   if(anyof(lon > 0))
       error, "Longitude values must be negative.";
    dlat = int(abs(lat));
    dlon = int(abs(lon));

@@ -63,7 +63,7 @@ func rezone_data_utm(&idata, src_zone, dest_zone, keys=) {
    fields = print(structof(data))(2:-1);
    for(i = 1; i <= numberof(keys); i++) {
       key = __ZONE_STRUCTS(keys(i));
-      if(numberof(where(fields==key.match))) {
+      if(anyof(fields==key.match)) {
          u = rezone_utm(get_member(data, key.north)*key.factor,
             get_member(data, key.east)*key.factor, src_zone, dest_zone);
          get_member(data, key.north) = u(1,) / key.factor;
@@ -182,7 +182,7 @@ func batch_fix_zones(dir, glob=, ignore_zeros=) {
 
          for(j = 1; j <= numberof(keys); j++) {
             key = __ZONE_STRUCTS(keys(j));
-            if(numberof(where(fields==key.match))) {
+            if(anyof(fields==key.match)) {
                if(ignore_zeroes) {
                   filter = get_member(data, key.east) != 0;
                } else {

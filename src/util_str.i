@@ -35,7 +35,7 @@ func atoc(str) {
    Caveat: Every string element must be exactly one character in length.
 */
 // Original David B. Nagle 2009-04-17
-   if(numberof(where(strlen(str) != 1)))
+   if(anyof(strlen(str) != 1))
       error, "Input string elements must be exactly one character in length.";
    c = array(char, dimsof(str));
    for(i = 1; i <= numberof(str); i++) {
@@ -80,7 +80,7 @@ func strsplit(str, sep) {
    parts = array(string, dimsof(str), 1);
    sep = regcomp(sep);
    res = regmatch(sep, str, match, indices=1);
-   while(numberof(where(res))) {
+   while(anyof(res)) {
       new = array(string, dimsof(str));
       w = where(match(1,) > 1 & res);
       if(numberof(w)) {

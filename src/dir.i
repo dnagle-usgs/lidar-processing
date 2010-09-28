@@ -400,7 +400,7 @@ func find(path, glob=) {
       idx = array(0, numberof(files));
       for(i = 1; i <= numberof(glob); i++)
          idx |= strglob(glob(i), files);
-      if(numberof(where(idx)))
+      if(anyof(idx))
          results = path+files(where(idx));
    }
    if(numberof(subdirs))

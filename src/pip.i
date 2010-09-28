@@ -199,7 +199,7 @@ func testPoly2(pl, ptx, pty, includevertices=) {
    in_bbox = (pl(1,min) <= ptx) & (ptx <= pl(1,max)) &
              (pl(2,min) <= pty) & (pty <= pl(2,max));
    
-   if(!numberof(where(in_bbox)))
+   if(noneof(in_bbox))
       return [];
 
    idx = where(in_bbox);

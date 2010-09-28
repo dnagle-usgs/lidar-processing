@@ -217,7 +217,7 @@ func var_expr_tkupdate(expr, tkval) {
 */
 // Original David Nagle 2009-08-14
    val = var_expr_get(expr);
-   if(numberof(where(typeof(val) == ["long","int","short","double","float"]))) {
+   if(anyof(typeof(val) == ["long","int","short","double","float"])) {
       newval = double(0);
       sread, tkval, format="%f", newval;
       newval = structof(val)(newval);
