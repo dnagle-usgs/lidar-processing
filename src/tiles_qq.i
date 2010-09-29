@@ -253,8 +253,8 @@ func utm2qq(east, north, zone, qqprefix=) {
 }
 func get_utm_qqcodes(north, east, zone) { return utm2qq(east, north, zone); }
 
-func utm2qq_names(east, north, zone) {
-/* DOCUMENT qq = utm2qq_names(east, north, zone)
+func utm2qq_names(east, north, zone, qqprefix=) {
+/* DOCUMENT qq = utm2qq_names(east, north, zone, qqprefix=)
    For a set of UTM eastings, northings, and zones, this will calculate the set
    of index tiles that encompass all the points. This is equivalent to
       qq = set_remove_duplicates(utm2qq(east, north, zone))
@@ -270,7 +270,7 @@ func utm2qq_names(east, north, zone) {
    lon = unref(code) % 10000;
    lat = (unref(lat) - 3000) * .0625;
    lon = (unref(lon) - 3000) * .0625;
-   return calc24qq(lat, lon);
+   return calc24qq(lat, lon, qqprefix=qqprefix);
 }
 
 func extract_for_qq(north, east, zone, qq, buffer=) {
