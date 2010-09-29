@@ -219,7 +219,7 @@ func calc24qq(lat, lon, qqprefix=) {
 
       A string or array of strings containing the codes.
 
-   See also: get_utm_qqcodes get_conusqq_data qq_segment_pbd
+   See also: get_conusqq_data qq_segment_pbd
 */
    if(anyof(lat < 0))
       error, "Latitude values must be positive.";
@@ -251,7 +251,6 @@ func utm2qq(east, north, zone, qqprefix=) {
    ll = int(utm2ll(north, east, zone)/0.0625) * 0.0625;
    return calc24qq(ll(*,2), ll(*,1), qqprefix=qqprefix);
 }
-func get_utm_qqcodes(north, east, zone) { return utm2qq(east, north, zone); }
 
 func utm2qq_names(east, north, zone, qqprefix=) {
 /* DOCUMENT qq = utm2qq_names(east, north, zone, qqprefix=)
@@ -334,7 +333,7 @@ func calculate_qq_extents(qqdir, mode=, glob=, remove_buffers=) {
 
       // Restrict data to tile boundaries if remove_buffers = 1
       if(remove_buffers) {
-         qq_list = get_utm_qqcodes(n, e, z);
+         qq_list = utm2qq_names(e, n, z);
          w = where(qq == qq_list);
          if(!numberof(w)) {
             write, "  Problem: No data found after buffers removed.";
