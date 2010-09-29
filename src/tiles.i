@@ -291,25 +291,6 @@ func extract_for_tile(east, north, zone, tile, buffer=) {
    }
 }
 
-func extract_for_bbox(east, north, bbox, buffer) {
-/* DOCUMENT extract_for_bbox(east, north, bbox, buffer)
-
-   This will return an index into north/east of all coordinates that fall
-   within the bounds of the given bounding box bbox.
-
-   The buffer argument specifies a buffer in meters to extend the bbox's
-   boundaries by.
-*/
-   min_n = bbox(1) - buffer;
-   max_n = bbox(3) + buffer;
-   min_e = bbox(4) - buffer;
-   max_e = bbox(2) + buffer;
-   return where(
-      min_n <= north & north <= max_n &
-      min_e <= east  & east  <= max_e
-   );
-}
-
 func restrict_data_extent(data, tile, buffer=, mode=) {
 /* DOCUMENT data = restrict_data_extent(data, tile, buffer=, mode=)
    Restricts the extent of the data based on its tile.
