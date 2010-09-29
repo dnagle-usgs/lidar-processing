@@ -594,10 +594,8 @@ split_zones=, split_days=, day_shift=) {
 
    Options:
       scheme= Partioning scheme to use. Valid values:
-            scheme="10k2k"    Tiered 10km/2km structure (default)
-            scheme="2k"       2km structure
+            scheme="itdt"     Tiered 10km/2km structure (default)
             scheme="dt"       2km structure
-            scheme="10k"      10km structure
             scheme="it"       10km structure
             scheme="qq"       Quarter quad structure
       mode= Mode of data. Valid values include:
