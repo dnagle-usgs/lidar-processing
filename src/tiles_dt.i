@@ -186,8 +186,8 @@ func utm2dtcell(east, north, zone, &quad, &cell, dtlength=, dtprefix=) {
    qe = long(east - te)/1000 + 1;
    ce = long(east - te - (qe*1000 - 1000)) / 250 + 1;
 
-   q = quad_map(qe, qn);
-   c = cell_map(ce, cn);
+   q = quad_map(qe + (qn-1)*2);
+   c = cell_map(ce + (cn-1)*4);
 
    if(am_subroutine()) {
       quad = q;
