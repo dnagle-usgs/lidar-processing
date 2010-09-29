@@ -382,7 +382,7 @@ func partition_by_tile_type(type, north, east, zone, buffer=, shorten=, verbose=
 */
 // Original David B. Nagle 2009-04-01
    if(type == "qq") {
-      return partition_into_qq(north, east, zone, buffer=buffer, verbose=verbose);
+      return partition_by_tile(east, north, zone, "qq", buffer=buffer);
    } else if(type == "2k" || type == "dt") {
       return partition_into_2k(north, east, zone, buffer=buffer, verbose=verbose,
          shorten=shorten);
