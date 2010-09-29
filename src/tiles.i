@@ -396,16 +396,15 @@ func partition_by_tile_type(type, north, east, zone, buffer=, shorten=, verbose=
    }
 }
 
-func partition_type_summary(north, east, zone, buffer=) {
-/* DOCUMENT partition_type_summary, north, east, zone, buffer=
+func partition_type_summary(north, east, zone, buffer=, schemes=) {
+/* DOCUMENT partition_type_summary, north, east, zone, buffer=, schemes=
    Displays a summary of what the results would be for each of the
    partitioning schemes.
 */
 // Original David B. Nagle 2009-04-07
-   schemes = ["10k", "qq", "2k"];
+   default, schemes, ["it", "qq", "dt"];
    for(i = 1; i <= numberof(schemes); i++) {
-      tiles = partition_by_tile_type(schemes(i), north, east, zone,
-         buffer=buffer);
+      tiles = partition_by_tile(east, north, zone, schemes(i), buffer=buffer);
       write, format="Summary for: %s\n", schemes(i);
       tile_names = h_keys(tiles);
       write, format="  Number of tiles: %d\n", numberof(tile_names);
@@ -445,9 +444,11 @@ day_shift=) {
    Options:
       scheme= Should be one of the following; defaults to "10k2k".
          "qq" - Quarter quad tiles
-         "2k" - 2-km data tiles
-         "10k" - 10-km index tiles
-         "10k2k" - Two-tiered index tile/data tile
+         "dt" - 2km data tiles
+         "it" - 10km index tiles
+         "itdt" - Two-tiered index tile/data tile
+         "dtquad" - 1km quad tiles
+         "dtcell" - 250m cell tiles
       mode= Specifies the data mode to use. Can be any value valid for
          data2xyz.
             mode="fs"   First surface
@@ -499,7 +500,7 @@ day_shift=) {
 */
 // Original David Nagle 2009-07-06
    local n, e;
-   default, scheme, "10k2k";
+   default, scheme, "itdt";
    default, mode, "fs";
    default, suffix, string(0);
    default, buffer, 100;
@@ -512,8 +513,14 @@ day_shift=) {
    default, split_days, 0;
    default, day_shift, 0;
 
-   bilevel = scheme == "10k2k";
-   if(bilevel) scheme = "2k";
+   dtlength = (shorten ? "short" : "long");
+
+   aliases = h_new("10k2k", "itdt", "2k", "dt", "10k", "it");
+   if(h_has(aliases, scheme))
+      scheme = aliases(scheme);
+
+   bilevel = scheme == "itdt";
+   if(bilevel) scheme = "dt";
 
    data2xyz, data, e, n, mode=mode;
 
@@ -522,8 +529,8 @@ day_shift=) {
 
    if(verbose)
       write, "Partitioning data...";
-   tiles = partition_by_tile_type(scheme, n, e, zone, buffer=buffer,
-      shorten=shorten, verbose=verbose);
+   tiles = partition_by_tile(e, n, zone, scheme, buffer=buffer,
+      dtlength=dtlength);
 
    tile_names = h_keys(tiles);
    tile_names = tile_names(sort(tile_names));
