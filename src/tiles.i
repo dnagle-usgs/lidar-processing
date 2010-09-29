@@ -261,8 +261,8 @@ func show_grid_location(m) {
       utm2dtcell(m(1), m(2), curzone, dtlength="short");
 }
 
-func extract_for_tile(north, east, zone, tile, buffer=) {
-/* DOCUMENT idx = extract_for_tile(north, east, zone, tile, buffer=);
+func extract_for_tile(east, north, zone, tile, buffer=) {
+/* DOCUMENT idx = extract_for_tile(east, north, zone, tile, buffer=);
    Returns an index into north/east of all coordinates that fall within the
    bounds of the given tile. The buffer= option specifies a value to extend
    around the tile and defaults to 100. Set buffer=0 to disable buffer.
@@ -334,7 +334,7 @@ func restrict_data_extent(data, tile, buffer=, mode=) {
 
    data2xyz, data, e, n, mode=mode;
    zone = tile2uz(tile);
-   idx = extract_for_tile(n, e, zone, tile, buffer=buffer);
+   idx = extract_for_tile(e, n, zone, tile, buffer=buffer);
    return numberof(idx) ? data(idx) : [];
 }
 
@@ -356,7 +356,7 @@ qqprefix=) {
    tiles = h_new();
    count = numberof(names);
    for(i = 1; i <= count; i++) {
-      idx = extract_for_tile(north, east, zone, names(i), buffer=buffer);
+      idx = extract_for_tile(east, north, zone, names(i), buffer=buffer);
       if(numberof(idx))
          h_set, tiles, names(i), idx;
    }
@@ -764,7 +764,7 @@ split_zones=, split_days=, day_shift=, dtlength=, dtprefix=, qqprefix=) {
          }
          e = n = [];
          data2xyz, data, e, n, mode=mode;
-         idx = extract_for_tile(unref(n), unref(e), filezone, tiles(i), buffer=0);
+         idx = extract_for_tile(unref(e), unref(n), filezone, tiles(i), buffer=0);
          if(numberof(idx))
             data = data(idx);
          else
