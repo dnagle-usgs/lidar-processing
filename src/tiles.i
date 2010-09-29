@@ -267,6 +267,7 @@ func extract_for_tile(east, north, zone, tile, buffer=) {
    bounds of the given tile. The buffer= option specifies a value to extend
    around the tile and defaults to 100. Set buffer=0 to disable buffer.
 */
+   local xmin, xmax, ymin, ymax;
    default, buffer, 100;
    tile = extract_tile(tile);
    type = tile_type(tile);
@@ -282,7 +283,8 @@ func extract_for_tile(east, north, zone, tile, buffer=) {
       okzone = where(bbox(5) == zone);
       if(!numberof(okzone))
          return [];
-      idx = extract_for_bbox(east(okzone), north(okzone), bbox, buffer);
+      assign, bbox(:4) + [-1,1,1,-1]*buffer, ymin, xmax, ymax, xmin;
+      idx = data_box(east(okzone), north(okzone), xmin, xmax, ymin, ymax);
       if(!numberof(idx))
          return [];
       return okzone(idx);
