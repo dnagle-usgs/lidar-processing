@@ -338,6 +338,31 @@ func restrict_data_extent(data, tile, buffer=, mode=) {
    return numberof(idx) ? data(idx) : [];
 }
 
+func partition_by_tile(east, north, zone, type, buffer=, dtlength=, dtprefix=,
+qqprefix=) {
+/* DOCUMENT partition_by_tile(east, north, zone, type, buffer=, dtlength=,
+   dtprefix=, verbose=)
+   Partitions data given by east, north, and zone into the given TYPE of tiles.
+   Type may be one of the following values:
+      "qq" --> quarter quads
+      "it" --> index tiles
+      "dt" --> data tiles
+      "dtquad" --> quad tiles
+      "dtcell" --> cell tiles
+*/
+   default, buffer, 100;
+   names = utm2tile_names(east, north, zone, type, dtlength=dtlength,
+      dtprefix=dtprefix, qqprefix=qqprefix);
+   tiles = h_new();
+   count = numberof(names);
+   for(i = 1; i <= count; i++) {
+      idx = extract_for_tile(north, east, zone, names(i), buffer=buffer);
+      if(numberof(idx))
+         h_set, tiles, names(i), idx;
+   }
+   return tiles;
+}
+
 func partition_by_tile_type(type, north, east, zone, buffer=, shorten=, verbose=) {
 /* DOCUMENT partition_by_tile_type(type, north, east, zone, buffer=, shorten=, verbose=)
    This is a wrapper around other partition types that allows the user to call
