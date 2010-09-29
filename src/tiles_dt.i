@@ -219,9 +219,9 @@ func __utm2dt_corners(&east, &north, &zone, factor) {
    zone -= zmin;
    code = long(unref(zone)) * 40000 * 4000 + unref(e) * 40000 + unref(n);
    code = set_remove_duplicates(unref(code));
-   north = (code % 40000) * factor;
+   north = (code % 40000) * factor - (factor/2);
    code /= 40000;
-   east = (code % 4000) * factor;
+   east = (code % 4000) * factor + (factor/2);
    zone = (code / 4000) + zmin;
 }
 func utm2dtcell_names(east, north, zone, dtlength=, dtprefix=) {
