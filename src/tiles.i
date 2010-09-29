@@ -384,11 +384,13 @@ func partition_by_tile_type(type, north, east, zone, buffer=, shorten=, verbose=
    if(type == "qq") {
       return partition_by_tile(east, north, zone, "qq", buffer=buffer);
    } else if(type == "2k" || type == "dt") {
-      return partition_into_2k(north, east, zone, buffer=buffer, verbose=verbose,
-         shorten=shorten);
+      dtlength = (shorten ? "short" : "long");
+      return partition_by_tile(east, north, zone, "dt", buffer=buffer,
+         dtlength=dtlength);
    } else if(type == "10k" || type == "it") {
-      return partition_into_10k(north, east, zone, buffer=buffer, verbose=verbose,
-         shorten=shorten);
+      dtlength = (shorten ? "short" : "long");
+      return partition_by_tile(east, north, zone, "it", buffer=buffer,
+         dtlength=dtlength);
    } else {
       error, "Invalid type";
    }
