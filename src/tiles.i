@@ -282,15 +282,15 @@ func extract_for_tile(east, north, zone, tile, buffer=) {
       okzone = where(bbox(5) == zone);
       if(!numberof(okzone))
          return [];
-      idx = extract_for_bbox(north(okzone), east(okzone), bbox, buffer);
+      idx = extract_for_bbox(east(okzone), north(okzone), bbox, buffer);
       if(!numberof(idx))
          return [];
       return okzone(idx);
    }
 }
 
-func extract_for_bbox(north, east, bbox, buffer) {
-/* DOCUMENT extract_for_bbox(north, east, bbox, buffer)
+func extract_for_bbox(east, north, bbox, buffer) {
+/* DOCUMENT extract_for_bbox(east, north, bbox, buffer)
 
    This will return an index into north/east of all coordinates that fall
    within the bounds of the given bounding box bbox.
