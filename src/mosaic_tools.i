@@ -79,8 +79,8 @@ maxfiles=, cir_soe_offset=) {
    if(is_string(cirdata))
       cirdata = gather_cir_data(cirdata, cir_soe_offset=cir_soe_offset);
 
-   dtiles = partition_by_tile_type("2k", cirdata.tans.northing,
-      cirdata.tans.easting, cirdata.tans.zone, buffer=defn_buffer, shorten=1);
+   dtiles = partition_by_tile(cirdata.tans.easting, cirdata.tans.northing,
+      cirdata.tans.zone, "dt", buffer=defn_buffer);
 
    dtile_names = h_keys(dtiles);
    dtile_zones = int(dt2utm(dtile_names)(,3));
@@ -864,9 +864,9 @@ subdir=) {
 
    Arguments:
       cirdata: A Yeti hash, as returned by gather_cir_data.
-      scheme: One of "10k", "qq", "2k", or "10k2k". See partition_by_tile_type
-         for the first three. "10k2k" will divide into 2k tiles, but organize
-         them into 10k directories.
+      scheme: One of "it", "qq", "dt", "dtquad", "dtcell", or "itdt". See
+         partition_by_tile for the first five. "itdt" will divide into 2k
+         tiles, but organize them into 10k directories.
       dest_dir: The directory that will contain the partition directories and
          images.
 
@@ -876,7 +876,7 @@ subdir=) {
          directly in the tile directory, then set this to 0.
       buffer= This specifies the buffer to apply around each tile. This
          defaults to whatever the defaults are for the individual partitioning
-         functions (see partition_by_tile_type).
+         functions (see partition_by_tile).
       subdir= If provided, images will be placed in a subdirectory of this
          name. (If split_fltlines=1, the flightline directories will be in the
          subdirectory.)
@@ -891,12 +891,15 @@ subdir=) {
    default, split_fltlines, 1;
    default, subdir, string(0);
 
-   bilevel = scheme == "10k2k";
-   if(bilevel) scheme = "2k";
+   aliases = h_new("10k2k", "itdi", "2k", "dt", "10k", "it");
+   if(h_has(aliases, scheme))
+      scheme = aliases(scheme);
 
-   tiles = partition_by_tile_type(scheme,
-      cirdata.tans.northing, cirdata.tans.easting, cirdata.tans.zone,
-      buffer=buffer, shorten=1);
+   bilevel = scheme == "itdt";
+   if(bilevel) scheme = "dt";
+
+   tiles = partition_by_tile(cirdata.tans.easting, cirdata.tans.northing,
+      cirdata.tans.zone, scheme, buffer=buffer, dtlength="short");
    tile_names = h_keys(tiles);
    tile_zones = [];
    if(scheme == "qq") {
@@ -1007,14 +1010,14 @@ func cir_tile_type_summary(cirdata, buffer=) {
 
    buffer= specifies the buffer to include around each tile.
 
-   Once a tiling scheme is chosen, use partition_by_tile_type to do the actual
+   Once a tiling scheme is chosen, use partition_by_tile to do the actual
    partitioning.
 */
 // Original David B. Nagle 2009-04-13
-   schemes = ["10k", "qq", "2k"];
+   schemes = ["it", "qq", "dt"];
    for(i = 1; i <= numberof(schemes); i++) {
-      tiles = partition_by_tile_type(schemes(i), cirdata.tans.northing,
-         cirdata.tans.easting, cirdata.tans.zone, buffer=buffer);
+      tiles = partition_by_tile(cirdata.tans.easting, cirdata.tans.northing,
+         cirdata.tans.zone, schemes(i), buffer=buffer, dtlength="long");
 
       tile_names = h_keys(tiles);
       tile_counts = array(0, numberof(tile_names));
