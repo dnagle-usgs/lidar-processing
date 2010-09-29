@@ -394,10 +394,10 @@ func partition_type_summary(north, east, zone, buffer=, schemes=) {
 
 func save_data_to_tiles(data, zone, dest_dir, scheme=, mode=, suffix=, buffer=,
 shorten=, flat=, uniq=, overwrite=, verbose=, split_zones=, split_days=,
-day_shift=) {
+day_shift=, dtlength=, dtprefix=, qqprefix=) {
 /* DOCUMENT save_data_to_tiles, data, zone, dest_dir, scheme=, mode=, suffix=,
    buffer=, shorten=, flat=, uniq=, overwrite=, verbose=, split_zones=,
-   split_days=, day_shift=
+   split_days=, day_shift=, dtlength=, dtprefix=, qqprefix=
 
    Given an array of data (which must be in an ALPS data structure such as
    VEG__) and a scalar or array of zone corresponding to it, this will create
@@ -479,8 +479,7 @@ day_shift=) {
    default, split_zones, scheme == "qq";
    default, split_days, 0;
    default, day_shift, 0;
-
-   dtlength = (shorten ? "short" : "long");
+   default, dtlength, (shorten ? "short" : "long");
 
    aliases = h_new("10k2k", "itdt", "2k", "dt", "10k", "it");
    if(h_has(aliases, scheme))
@@ -497,7 +496,7 @@ day_shift=) {
    if(verbose)
       write, "Partitioning data...";
    tiles = partition_by_tile(e, n, zone, scheme, buffer=buffer,
-      dtlength=dtlength);
+      dtlength=dtlength, dtprefix=dtprefix, qqprefix=qqprefix);
 
    tile_names = h_keys(tiles);
    tile_names = tile_names(sort(tile_names));
@@ -513,7 +512,8 @@ day_shift=) {
       curtile = tile_names(i);
       idx = tiles(curtile);
       if(bilevel) {
-         tiledir = file_join(dt2it(curtile, dtlength=dtlength), curtile);
+         tiledir = file_join(dt2it(curtile, dtlength=dtlength,
+            dtprefix=dtprefix), curtile);
       } else {
          tiledir = curtile;
       }
@@ -576,10 +576,10 @@ day_shift=) {
 
 func batch_tile(srcdir, dstdir, scheme=, mode=, searchstr=, suffix=,
 remove_buffers=, buffer=, uniq=, verbose=, zone=, shorten=, flat=,
-split_zones=, split_days=, day_shift=) {
+split_zones=, split_days=, day_shift=, dtlength=, dtprefix=, qqprefix=) {
 /* DOCUMENT batch_tile, srcdir, dstdir, scheme=, mode=, searchstr=, suffix=,
    remove_buffers=, buffer=, uniq=, verbose=, zone=, shorten=, flat=,
-   split_zones=, split_days=, day_shift=
+   split_zones=, split_days=, day_shift=, dtlength=, dtprefix=, qqprefix=
 
    Loads the data in srcdir that matches searchstr= and partitions it into
    tiles, which are created in dstdir.
