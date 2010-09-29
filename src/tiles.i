@@ -154,6 +154,23 @@ func utm2tile(east, north, zone, type, dtlength=, dtprefix=, qqprefix=) {
    return [];
 }
 
+func utm2tile_names(east, north, zone, type, dtlength=, dtprefix=, qqprefix=) {
+/* DOCUMENT utm2tile_names(east, north, zone, type, dtlength=, dtprefix=,
+   qqprefix=)
+   Returns the unique tile names for the eastings/northings/zone. Wrapper
+   around utm2dt_names, utm2it_names, utm2qq_names, utm2dtcell_names, and
+   utm2dtquad_names.
+*/
+   dtfuncs = h_new(dtcell=utm2dtcell_names, dtquad=utm2dtquad_names,
+      dt=utm2dt_names, it=utm2it_names);
+   if(h_has(dtfuncs, type))
+      return dtfuncs(type)(east, north, zone, dtlength=dtlength,
+         dtprefix=dtprefix);
+   if(type == "qq")
+      return utm2qq_names(east, north, zone, qqprefix=qqprefix);
+   return [];
+}
+
 func tile2uz(tile) {
 /* DOCUMENT tile2uz(tile)
    Attempts to return a UTM zone for each tile in the array given. This is a
