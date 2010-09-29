@@ -513,13 +513,7 @@ day_shift=) {
       curtile = tile_names(i);
       idx = tiles(curtile);
       if(bilevel) {
-         if(shorten)
-            tiledir = file_join(
-               dt2it(curtile, dtlength="short"),
-               extract_dt(curtile, dtprefix=1)
-            );
-         else
-            tiledir = file_join(dt2it(curtile), curtile);
+         tiledir = file_join(dt2it(curtile, dtlength=dtlength), curtile);
       } else {
          tiledir = curtile;
       }
