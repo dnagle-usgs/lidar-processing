@@ -248,12 +248,8 @@ func utm2qq(east, north, zone, qqprefix=) {
 /* DOCUMENT qq = utm2qq(east, north, zone)
    Returns the quarter-quad tile name for each east, north, and zone coordinate.
 */
-   // Convert the coordinates to lat/lon, coercing them into their quarter-quad
-   // corner points
    ll = int(utm2ll(north, east, zone)/0.0625) * 0.0625;
-   result = calc24qq(ll(*,2), ll(*,1));
-   if(qqprefix) result = "qq" + result;
-   return result;
+   return calc24qq(ll(*,2), ll(*,1), qqprefix=qqprefix);
 }
 func get_utm_qqcodes(north, east, zone) { return utm2qq(east, north, zone); }
 
