@@ -146,8 +146,8 @@ func utm2tile(east, north, zone, type, dtlength=, dtprefix=, qqprefix=) {
    utm2dt, utm2it, utm2qq, utm2dtcell, and utm2dtquad.
 */
    dtfuncs = h_new(dtcell=utm2dtcell, dtquad=utm2dtquad, dt=utm2dt, it=utm2it);
-   if(h_has(funcs, type))
-      return funcs(type)(east, north, zone, dtlength=dtlength,
+   if(h_has(dtfuncs, type))
+      return dtfuncs(type)(east, north, zone, dtlength=dtlength,
          dtprefix=dtprefix);
    if(type == "qq")
       return utm2qq(east, north, zone, qqprefix=qqprefix);
