@@ -426,8 +426,11 @@ day_shift=, dtlength=, dtprefix=, qqprefix=) {
          named (tile-name)_(suffix).pbd. (Without the parentheses.)
       buffer= Specifies a buffer to include around each tile, in meters.
          Defaults to 100.
-      shorten= By default (shorten=0), the long form of 2k, 10k, and 10k2k tile
-         names will be used. If shorten=1, the short forms will be used.
+      shorten= By default (shorten=0), the long form of dt, it, and itdt tile
+         names will be used. If shorten=1, the short forms will be used. This
+         is shorthand for dtlength settings:
+            shorten=0   -->   dtlength="long"
+            shorten=1   -->   dtlength="short"
       flat= If set to 1, then no directory structure will be created. Instead,
          all files will be created directly into dest_dir.
       uniq= With the default value of uniq=1, only unique data points
@@ -462,6 +465,19 @@ day_shift=, dtlength=, dtprefix=, qqprefix=) {
             day_shift=-25200     -7 hours; MST and PDT time
             day_shift=-28800     -8 hours; PST and AKDT time
             day_shift=-32400     -9 hours; AKST time
+      dtlength= Specifies whether to use the short or long form for data tile
+         (and related) schemes. By default, this is set based on shorten=.
+            dtlength="long"      Use long form: t_e234000_n3456000_15
+            dtlength="short"     Use short form: e234_n3456_15
+      dtprefix= Specifies whether to include the type prefix for data tile (and
+         related) schemes. When enabled, index tiles are prefixed by i_, data
+         tiles by t_, quad tiles by q_, and cell tiles by c_.
+            dtprefix=0  Exclude prefix (default for dt when dtlength=="short")
+            dtprefix=1  Include prefix (default for everything else)
+      qqprefix= Specifies whether to prepend "qq" to the beginning of quarter
+         quad names.
+            qqprefix=0  Exclude prefix (default)
+            qqprefix=1  Include prefix
 
    SEE ALSO: batch_tile
 */
@@ -471,7 +487,6 @@ day_shift=, dtlength=, dtprefix=, qqprefix=) {
    default, mode, "fs";
    default, suffix, string(0);
    default, buffer, 100;
-   default, shorten, 0;
    default, flat, 0;
    default, uniq, 1;
    default, overwrite, 0;
@@ -637,11 +652,11 @@ split_zones=, split_days=, day_shift=, dtlength=, dtprefix=, qqprefix=) {
             zone=[]     No zone provided, autodetect (default)
             zone=17     Force all input data to be treated as being in zone 17
             zone=-1     After loading the data, use data.zone (useful for ATM)
-      shorten= By default, the longer form of the 2km data tile names will be
-         used. This setting allows you to change that. Ignored if your scheme
-         does not involve 2km data tiles.
-            shorten=0   Use long form, t_e123000_n4567000_12 (default)
-            shorten=1   Use short form, e123_n4567_12
+      shorten= By default (shorten=0), the long form of dt, it, and itdt tile
+         names will be used. If shorten=1, the short forms will be used. This
+         is shorthand for dtlength settings:
+            shorten=0   -->   dtlength="long"
+            shorten=1   -->   dtlength="short"
       flat= By default, files will be created in a directory structure. This
          settings lets you force them all into a single directory.
             flat=0   Put files in tired directory structure. (default)
@@ -670,6 +685,19 @@ split_zones=, split_days=, day_shift=, dtlength=, dtprefix=, qqprefix=) {
             day_shift=-25200     -7 hours; MST and PDT time
             day_shift=-28800     -8 hours; PST and AKDT time
             day_shift=-32400     -9 hours; AKST time
+      dtlength= Specifies whether to use the short or long form for data tile
+         (and related) schemes. By default, this is set based on shorten=.
+            dtlength="long"      Use long form: t_e234000_n3456000_15
+            dtlength="short"     Use short form: e234_n3456_15
+      dtprefix= Specifies whether to include the type prefix for data tile (and
+         related) schemes. When enabled, index tiles are prefixed by i_, data
+         tiles by t_, quad tiles by q_, and cell tiles by c_.
+            dtprefix=0  Exclude prefix (default for dt when dtlength=="short")
+            dtprefix=1  Include prefix (default for everything else)
+      qqprefix= Specifies whether to prepend "qq" to the beginning of quarter
+         quad names.
+            qqprefix=0  Exclude prefix (default)
+            qqprefix=1  Include prefix
 
    SEE ALSO: save_data_to_tiles
 */
