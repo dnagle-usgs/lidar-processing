@@ -363,39 +363,6 @@ qqprefix=) {
    return tiles;
 }
 
-func partition_by_tile_type(type, north, east, zone, buffer=, shorten=, verbose=) {
-/* DOCUMENT partition_by_tile_type(type, north, east, zone, buffer=, shorten=, verbose=)
-   This is a wrapper around other partition types that allows the user to call
-   the right one based on a type parameter.
-
-   There are three legal values for type. They are listed below along with the
-   functions each maps to.
-      qq --> partition_into_qq
-      2k --> partition_into_2k
-      10k --> partition_into_10k
-
-   Also:
-      dt --> Alias for 2k
-      it --> Alias for 10k
-
-   Arguments and options are passed to the functions as is, as appropriate.
-*/
-// Original David B. Nagle 2009-04-01
-   if(type == "qq") {
-      return partition_by_tile(east, north, zone, "qq", buffer=buffer);
-   } else if(type == "2k" || type == "dt") {
-      dtlength = (shorten ? "short" : "long");
-      return partition_by_tile(east, north, zone, "dt", buffer=buffer,
-         dtlength=dtlength);
-   } else if(type == "10k" || type == "it") {
-      dtlength = (shorten ? "short" : "long");
-      return partition_by_tile(east, north, zone, "it", buffer=buffer,
-         dtlength=dtlength);
-   } else {
-      error, "Invalid type";
-   }
-}
-
 func partition_type_summary(north, east, zone, buffer=, schemes=) {
 /* DOCUMENT partition_type_summary, north, east, zone, buffer=, schemes=
    Displays a summary of what the results would be for each of the
