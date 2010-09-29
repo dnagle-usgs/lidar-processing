@@ -933,10 +933,8 @@ func qqtiff_gms_prep(tif_dir, pbd_dir, mode, outfile, tif_glob=, pbd_glob=) {
       bbox = dt2utm(basefile, bbox=1);
 
       // Get four-corner qqcodes
-      tile_qqcodes = set_remove_duplicates(
-         get_utm_qqcodes(bbox([1,3,1,3]),
-            bbox([2,2,4,4]), bbox([5,5,5,5]))
-      );
+      tile_qqcodes = utm2qq_names(bbox([2,2,4,4]), bbox([1,3,1,3]),
+         bbox([5,5,5,5]));
 
       // Only keep qqcodes that are in extents
       tile_qqcodes = set_intersection(tile_qqcodes, h_keys(extents));
