@@ -154,8 +154,8 @@ func qq2ll(qq, bbox=) {
    }
 }
 
-func calc24qq(lat, lon) {
-/* DOCUMENT qq = calc24qq(lat, lon)
+func calc24qq(lat, lon, qqprefix=) {
+/* DOCUMENT qq = calc24qq(lat, lon, qqprefix=)
 
    Provides the 24k Quarter-Quad code as per the system used by CLICK. The lat
    and lon values should be the southeast corner of the tile. Quarter-quads are
@@ -239,7 +239,9 @@ func calc24qq(lat, lon) {
    alat = ["a", "b", "c", "d", "e", "f", "g", "h"];
    aqq = ["a", "d", "b", "c"];
 
-   return swrite(format="%02d%03d%s%d%s", dlat, dlon, alat(qlat), qlon, aqq(qq));
+   fmt = "%02d%03d%s%d%s";
+   if(qqprefix) fmt = "qq" + fmt;
+   return swrite(format=fmt, dlat, dlon, alat(qlat), qlon, aqq(qq));
 }
 
 func utm2qq(east, north, zone, qqprefix=) {
