@@ -466,8 +466,8 @@ max_adjustments=, min_improvement=, buffer=, update=, cir_soe_offset=) {
    // work with the pbd data. Loading data on an image-by-image basis is
    // expensive.
 
-   tiling = partition_into_2k(cirdata.tans.northing, cirdata.tans.easting,
-      cirdata.tans.zone, buffer=0);
+   tiling = partition_by_tile(cirdata.tans.easting, cirdata.tans.northing,
+      cirdata.tans.zone, "dt", buffer=0, dtlength="long");
    tiles = h_keys(tiling);
    need = array(char(1), numberof(cirdata.files));
 
