@@ -109,25 +109,6 @@ func utm2dt(east, north, zone, dtlength=, dtprefix=) {
       dtlength=dtlength, dtprefix=dtprefix);
 }
 
-func utm2dt_names(east, north, zone, dtlength=, dtprefix=) {
-/* DOCUMENT dt = utm2dt_names(north, east, zone, dtlength=, dtprefix=)
-   For a set of UTM eastings, northings, and zones, this will calculate the
-   set of data tiles that encompass all the points. This is equivalent to
-      dt = set_remove_duplicates(utm2dt(east, north, zone))
-   but works much more efficiently (and faster).
-*/
-   east = long(floor(unref(east)/2000.));
-   north = long(ceil(unref(north)/2000.));
-   code = long(unref(zone)) * 1000 * 10000 + unref(east) * 10000 + unref(north);
-   code = set_remove_duplicates(unref(code));
-   north = code % 10000;
-   code /= 10000;
-   east = code % 1000;
-   zone = code / 1000;
-   return extract_dt(swrite(format="e%d_n%d_%d", east*2, north*2, zone),
-      dtlength=dtlength, dtprefix=dtprefix);
-}
-
 func utm2dtquad(east, north, zone, &quad, dtlength=, dtprefix=) {
 /* DOCUMENT utm2dtquad, east, north, &quad
    -or-  tile = utm2dtquad(north, east, zone)
@@ -217,23 +198,47 @@ func utm2it(east, north, zone, dtlength=, dtprefix=) {
       dtlength=dtlength, dtprefix=dtprefix);
 }
 
-func utm2it_names(east, north, zone, dtlength=, dtprefix=) {
-/* DOCUMENT it = utm2it_names(east, north, zone, dtlength=, dtprefix=)
-   For a set of UTM eastings, northings, and zones, this will calculate the
-   set of index tiles that encompass all the points. This is equivalent to
-      it = set_remove_duplicates(utm2it(east, north, zone))
-   but works much more efficiently (and faster).
+local utm2dtcell_names, utm2dtquad_names, utm2dt_names, utm2it_names;
+/* DOCUMENT
+   tiles = utm2it_names(east, north, zone, dtlength=, dtprefix=)
+   tiles = utm2dt_names(east, north, zone, dtlength=, dtprefix=)
+   tiles = utm2dtquad_names(east, north, zone, dtlength=, dtprefix=)
+   tiles = utm2dtcell_names(east, north, zone, dtlength=, dtprefix=)
+
+   For a set of UTM eastings, northings, and zones, each of these calculate the
+   set of tiles that encompass the given points. This is equivalent to, for
+   example,
+      dt = set_remove_duplicates(utm2dt(east, north, zone))
+   but works much more efficiently and faster.
 */
-   east = long(floor(unref(east)/10000.0));
-   north = long(ceil(unref(north)/10000.0));
-   code = long(unref(zone)) * 10000000 + unref(east) * 10000 + unref(north);
+
+func __utm2dt_corners(&east, &north, &zone, factor) {
+   e = long(floor(unref(east)/factor));
+   n = long(ceil(unref(north)/factor));
+   zmin = zone(*)(min);
+   zone -= zmin;
+   code = long(unref(zone)) * 40000 * 4000 + unref(e) * 40000 + unref(n);
    code = set_remove_duplicates(unref(code));
-   north = code % 10000;
-   code /= 10000;
-   east = code % 1000;
-   zone = code / 1000;
-   return extract_it(swrite(format="e%d0_n%d0_%d", east, north, zone),
-      dtlength=dtlength, dtprefix=dtprefix);
+   north = (code % 40000) * factor;
+   code /= 40000;
+   east = (code % 4000) * factor;
+   zone = (code / 4000) + zmin;
+}
+func utm2dtcell_names(east, north, zone, dtlength=, dtprefix=) {
+   __utm2dt_corners, east, north, zone, 250.;
+   return utm2dtcell(east, north, zone, dtlength=dtlength, dtprefix=dtprefix);
+}
+func utm2dtquad_names(east, north, zone, dtlength=, dtprefix=) {
+   __utm2dt_corners, east, north, zone, 1000.;
+   return utm2dtquad(east, north, zone, dtlength=dtlength, dtprefix=dtprefix);
+}
+func utm2dt_names(east, north, zone, dtlength=, dtprefix=) {
+   __utm2dt_corners, east, north, zone, 2000.;
+   return utm2dt(east, north, zone, dtlength=dtlength, dtprefix=dtprefix);
+}
+func utm2it_names(east, north, zone, dtlength=, dtprefix=) {
+   __utm2dt_corners, east, north, zone, 10000.;
+   return utm2it(east, north, zone, dtlength=dtlength, dtprefix=dtprefix);
 }
 
 func dt2uz(dtcodes) {
