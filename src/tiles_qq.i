@@ -272,8 +272,8 @@ func utm2qq_names(east, north, zone, qqprefix=) {
    return calc24qq(lat, lon, qqprefix=qqprefix);
 }
 
-func extract_for_qq(north, east, zone, qq, buffer=) {
-/* DOCUMENT extract_for_qq(north, east, zone, qq, buffer=)
+func extract_for_qq(east, north, zone, qq, buffer=) {
+/* DOCUMENT extract_for_qq(east, north, zone, qq, buffer=)
 
    This will return an index into north/east of all coordinates that fall
    within the bounds of the given quarter quad, which should be the string name

@@ -274,7 +274,7 @@ func extract_for_tile(east, north, zone, tile, buffer=) {
       zone = array(zone, dimsof(north));
 
    if(type == "qq") {
-      return extract_for_qq(north, east, zone, tile, buffer=buffer);
+      return extract_for_qq(east, north, zone, tile, buffer=buffer);
    } else if(!type) {
       error, "Unknown tiling type.";
    } else {
