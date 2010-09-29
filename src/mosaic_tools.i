@@ -891,7 +891,7 @@ subdir=) {
    default, split_fltlines, 1;
    default, subdir, string(0);
 
-   aliases = h_new("10k2k", "itdi", "2k", "dt", "10k", "it");
+   aliases = h_new("10k2k", "itdt", "2k", "dt", "10k", "it");
    if(h_has(aliases, scheme))
       scheme = aliases(scheme);
 
