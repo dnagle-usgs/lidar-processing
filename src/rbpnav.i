@@ -349,6 +349,10 @@ func pnav2fs(pn, soe=) {
 */
    extern curzone;
    local x, y;
+   if(!curzone) {
+      write, "Please define curzone. Aborting.";
+      return;
+   }
    default, soe, pn.sod;
    ll2utm, pn.lat, pn.lon, y, x, force_zone=curzone;
    fs = array(FS, dimsof(pn));
@@ -365,6 +369,10 @@ func fs2pnav(fs) {
 */
    extern curzone;
    local x, y;
+   if(!curzone) {
+      write, "Please define curzone. Aborting.";
+      return;
+   }
    pn = array(PNAV, dimsof(fs));
    utm2ll, fs.north/100., fs.east/100., curzone, x, y;
    pn.lon = x;
