@@ -68,7 +68,6 @@ if(is_void(__eaarl_includes_included__)) {
    require, "geo_bath.i";
    require, "geometry.i";
    require, "gridding.i";
-   require, "groundtruth.i";
    require, "histogram.i";
    require, "ircf.i";
    require, "irg.i";
