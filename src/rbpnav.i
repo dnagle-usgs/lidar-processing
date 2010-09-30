@@ -342,15 +342,11 @@ func autoselect_pnav(dir) {
    return [];
 }
 
-/*
-  Convert a PNAV to FS.  Used when reading a ground truth
-  gtpnav file and then displaying it with lidar data
-  A check should probably be done to make sure curzone is set.
-  The "Process EAARL Data" window must also be open or FS isn't
-  available.
-*/
-
 func pnav2fs(pn, soe=) {
+/* DOCUMENT pnav2fs(pn, soe=)
+   Converts data in PNAV format to FS format. If provided, SOE is used for
+   timestamps instead of PN.SOD.
+*/
    extern curzone;
    local x, y;
    default, soe, pn.sod;
@@ -364,6 +360,9 @@ func pnav2fs(pn, soe=) {
 }
 
 func fs2pnav(fs) {
+/* DOCUMENT fs2pnav(fs)
+   Converts data in FS format to PNAV format.
+*/
    extern curzone;
    local x, y;
    pn = array(PNAV, dimsof(fs));
