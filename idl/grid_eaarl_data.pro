@@ -35,15 +35,16 @@ pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygri
 	    endif else begin
 		limits = [corner[0], corner[1]-10000, corner[0]+10000, corner[1]]
 	    endelse
+            cell = double(cell)
 	    limits += ([cell, cell, -cell, -cell]/2.)
 	endelse
   endif
 
   print, "    triangulating..."
   if ((mode eq 1) OR (mode eq 2)) then begin
-    triangulate, float(data.east/100.), float(data.north/100.), tr, b
+    triangulate, double(data.east/100.), double(data.north/100.), tr, b
   endif else begin
-    triangulate, float(data.least/100.), float(data.lnorth/100.), tr, b
+    triangulate, double(data.least/100.), double(data.lnorth/100.), tr, b
   endelse
 
   ; now remove the large triangles by comparing the area to the threshold
@@ -75,18 +76,18 @@ pro  grid_eaarl_data, data, cell=cell, mode=mode, zgrid=zgrid, xgrid=xgrid, ygri
   print, "    gridding..."
   case mode of 
   1: begin
-	  zgrid = trigrid(float(data.east/100.), float(data.north/100.), $
-	    float(data.elevation/100.), tr, [cell,cell], [limits], $
+	  zgrid = trigrid(double(data.east/100.), double(data.north/100.), $
+	    double(data.elevation/100.), tr, [cell,cell], [limits], $
 	    xgrid=xgrid, ygrid=ygrid, missing=missing, max_value = z_max, min_value = z_min)
      end
   2: begin
-	  zgrid = trigrid(float(data.east/100.), float(data.north/100.), $
-	    float((data.depth+data.elevation)/100.), tr, [cell,cell], [limits], $
+	  zgrid = trigrid(double(data.east/100.), double(data.north/100.), $
+	    double((data.depth+data.elevation)/100.), tr, [cell,cell], [limits], $
 	    xgrid=xgrid, ygrid=ygrid, missing=missing, max_value = z_max, min_value = z_min)
      end
   3:begin
-	  zgrid = trigrid(float(data.east/100.), float(data.north/100.), $
-	    float(data.lelv/100.), tr, [cell,cell], [limits], $
+	  zgrid = trigrid(double(data.east/100.), double(data.north/100.), $
+	    double(data.lelv/100.), tr, [cell,cell], [limits], $
 	    xgrid=xgrid, ygrid=ygrid, missing=missing, max_value = z_max, min_value = z_min)
     end
   endcase
@@ -387,7 +388,7 @@ pro make_GE_plots, xgrid=xgrid, ygrid=ygrid, zgrid=zgrid, geotif_file=geotif_fil
 	   if (keyword_set(settrans)) then begin
     	   	; set transparency if more than 10% contain missing value
     		idxtrans = where(zgrid_i_sb2 eq 255, count)
-    		if ((float(count)/n_elements(zgrid_i)) ge 0.1) then begin
+    		if ((double(count)/n_elements(zgrid_i)) ge 0.1) then begin
       		   ; call external convert command to convert with transparency
       		   print, "Using transparency feature for this image..."
       		   spawn, "convert -transparent white "+ outfile+ " "+outfile
