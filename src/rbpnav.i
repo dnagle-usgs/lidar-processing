@@ -364,18 +364,15 @@ func pnav2fs(pn, soe=) {
 }
 
 func fs2pnav(fs) {
-   retarr = 1;
-
-   N = numberof(fs);
-   pn = array(PNAV, N);
-   ll = utm2ll(fs.north/100., fs.east/100., curzone);
-   if ( N > 1 ) {
-      pn.lat = ll(,2);
-      pn.lon = ll(,1);
-   } else {
-      pn.lat = ll(2,);
-      pn.lon = ll(1,);
-   }
-
-   return(pn);
+   extern curzone;
+   local x, y;
+   pn = array(PNAV, dimsof(fs));
+   utm2ll, fs.north/100., fs.east/100., curzone, x, y;
+   pn.lon = x;
+   pn.lat = y;
+   pn.alt = fs.elevation/100.;
+   minsod = pn.sod(min);
+   offset = minsod - (minsod % 86400);
+   pn.sod = fs.soe - offset;
+   return pn;
 }
