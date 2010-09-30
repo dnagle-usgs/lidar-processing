@@ -127,6 +127,7 @@ if(is_void(__eaarl_includes_included__)) {
       require, "class_pcobj.i";
       require, "class_wfobj.i";
       require, "eaarl1_wf.i";
+      require, "groundtruth.i";
       require, "mathop.i";
       require, "obj_show.i";
       require, "pcobj_import.i";
