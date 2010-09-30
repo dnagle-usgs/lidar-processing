@@ -351,20 +351,16 @@ func autoselect_pnav(dir) {
 */
 
 func pnav2fs(pn, soe=) {
-   retarr = 1;
-   if ( is_void(soe)) soe = pn.sod ;
-   x   = fll2utm( pn.lat, pn.lon, force_zone=curzone );
-   xyz = [ x(2,), x(1,), pn.alt, soe ];
-   gd  = transpose(xyz);
-
-   N   = numberof(gd(1,));
-   fs  = array(FS,N);
-   fs.east      = long(gd(1,) * 100. );
-   fs.north     = long(gd(2,) * 100. );
-   fs.elevation = long(gd(3,) * 100. );
-   fs.soe       = long(gd(4,));
-
-   return(fs);
+   extern curzone;
+   local x, y;
+   default, soe, pn.sod;
+   ll2utm, pn.lat, pn.lon, y, x, force_zone=curzone;
+   fs = array(FS, dimsof(pn));
+   fs.east = x * 100;
+   fs.north = y * 100;
+   fs.elevation = pn.alt * 100;
+   fs.soe = soe;
+   return fs;
 }
 
 func fs2pnav(fs) {
