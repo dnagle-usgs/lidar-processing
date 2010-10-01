@@ -226,7 +226,7 @@ sub file2coords {
 sub whatkind {
    my $file = shift;
    my $qq = 1 & $file =~ /\d\d\d\d\d[a-h][1-8][a-d]/;
-   my $kts = 1 & $file =~ /_e\d\d\d000_n\d\d\d\d000_\d\d[a-zA-Z]?_/;
+   my $kts = 1 & $file =~ /_e\d\d\d000_n\d\d\d\d000_\d\d[a-zA-Z]?(\.|_)/;
    my $ktl = 1 & $file =~ /(^|_)e\d\d\d_n\d\d\d\d_z?\d\d[a-zA-Z]?(\.|_)/;
    my $kt = $kts || $ktl;
    if($qq == $kt) {
