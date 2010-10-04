@@ -20,7 +20,8 @@ func analysis_extract_neighborhood(data, truth, mode=, truthmode=, radius=) {
    y = y(w);
    z = z(w);
 
-   dist = match = array(pointer, numberof(tx));
+   z_best = z_nearest = z_average = z_median = array(double, dimsof(tx));
+   keep = array(char(0), dimsof(tx));
    stack = deque();
    stack, push, save(t=indgen(numberof(tx)), d=indgen(numberof(x)),
       schemes=["it","dt","dtquad","dtcell"]);
@@ -63,46 +64,30 @@ func analysis_extract_neighborhood(data, truth, mode=, truthmode=, radius=) {
             ym = Y(idx);
             zm = Z(idx);
 
-            dist(j) = &(((tx(j) - xm)^2 + (ty(j) - ym)^2) ^ .5);
-            match(j) = &[xm, ym, zm];
+            keep(j) = 1;
+            dist = abs(zm - tz(j));
+            z_best(j) = zm(dist(mnx));
+            dist = ((tx(j) - xm)^2 + (ty(j) - ym)^2) ^ .5;
+            z_nearest(j) = zm(dist(mnx));
+            z_average(j) = zm(avg);
+            z_median(j) = median(zm);
          }
       }
       if(anyof(match))
          timer_remaining, t0, numberof(where(match)), numberof(match), tp, interval=10;
    }
    timer_finished, t0;
-   return save(dist, match, truth=[tx,ty,tz], maxradius=radius);
-}
 
-func analysis_nearest_z(data, radius=) {
-   bkp = restore(data);
-   // dist, match, truth, radius
-
-   count = numberof(match);
-   found = array(char(1), count);
-   result = array(double, count, 2);
-   result(,1) = truth(,3);
-   for(i = 1; i <= count; i++) {
-      if(!match(i)) {
-         found(i) = 0;
-         continue;
-      }
-      pts = *match(i);
-      if(radius) {
-         w = where(*dist(i) <= radius);
-         if(!numberof(w)) {
-            found(i) = 0;
-            continue;
-         }
-         pts = pts(w,);
-      }
-      zdif = abs(pts(,3) - result(i,1));
-      result(i,2) = pts(,3)(zdif(mnx));
-   }
-   restore, bkp;
-
-   w = where(found);
-   if(!numberof(w))
+   if(noneof(keep))
       return [];
-   return result(w,);
+   x = y = z = tx = ty = [];
+
+   w = where(keep);
+   z_truth = tz(w);
+   z_best = z_best(w);
+   z_nearest = z_nearest(w);
+   z_average = z_average(w);
+   z_median = z_median(w);
+
+   return save(z_truth, z_best, z_nearest, z_average, z_median);
 }
