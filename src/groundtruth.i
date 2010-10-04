@@ -91,3 +91,45 @@ func analysis_extract_neighborhood(data, truth, mode=, truthmode=, radius=) {
 
    return save(z_truth, z_best, z_nearest, z_average, z_median);
 }
+
+func analysis_plot(z1, z2, win=, xtitle=, ytitle=) {
+   default, win, window();
+   default, xtitle, "Ground Truth Data (m)";
+   default, ytitle, "Lidar Data (m)";
+
+   // z1 = truth; z2 = lidar
+   zdif = z2 - z1;
+
+   // Line of equality
+   eq_lo = max(z2(min), z1(min));
+   eq_hi = min(z2(max), z1(max));
+   eq = [eq_lo, eq_hi];
+
+   // Least-squares-fit line
+   lsqx = [z1(min), z1(max)];
+   lsqy = fitlsq(z2, z1, lsqx);
+
+   txt_rmse = swrite(format="RMSE = %.1f cm", zdif(rms)*100);
+   txt_me = swrite(format="ME = %.1f cm", zdif(avg)*100);
+   txt_count = swrite(format="%d points", numberof(z1));
+
+   wbkp = current_window();
+   window, win;
+   fma;
+   // Scatter plot of points
+   plmk, z2, z1, width=10, marker=4, msize=0.1, color="black";
+   // Line of equality
+   plg, eq, eq, width=3, type="dash";
+   // Least-squares-fit line
+   plg, lsqy, lsqx, color="black", width=3;
+   vp = viewport();
+   tx = vp(1) + 0.01;
+   ty = vp(4);
+   plt, txt_rmse, tx, (ty -= .02);
+   plt, txt_me, tx, (ty -= .02);
+   plt, txt_count, tx, (ty -= .02);
+   xytitles, xtitle, ytitle;
+   limits, square=1;
+   limits;
+   window_select, wbkp;
+}
