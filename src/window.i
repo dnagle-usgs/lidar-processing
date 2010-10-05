@@ -43,10 +43,20 @@ func change_window_style(win, style, dofma=, dpi=) {
    default, dpi, 75;
 
    width = height = [];
-   if(dpi == 75) {
-      width = height = 450;
-   } else if(dpi == 100) {
-      width = height = 600;
+   if(style == "landscape11x85") {
+      if(dpi == 75) {
+         width = 825;
+         height = 638;
+      } else if(dpi == 100) {
+         width = 1100;
+         height = 850;
+      }
+   } else {
+      if(dpi == 75) {
+         width = height = 450;
+      } else if(dpi == 100) {
+         width = height = 600;
+      }
    }
 
    if(!dofma)
