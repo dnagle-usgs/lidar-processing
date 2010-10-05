@@ -498,7 +498,7 @@ if {![winfo exists .l1wid]} {
   }
 
   proc ystyle s {
-    exp_send "change_window_style, window(), \"$s\";\r"
+    exp_send "change_window_style, \"$s\";\r"
   }
 
   menu .l1wid.mb.graph.grid

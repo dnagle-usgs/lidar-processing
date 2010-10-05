@@ -27,20 +27,25 @@ local alps_windows;
       - Default window for plotting flightlines (pnav) in plot.tcl, etc.
 */
 
-func change_window_style(win, style, dofma=, dpi=) {
-/* DOCUMENT change_window_style, win, style, dofma=, dpi=
+func change_window_style(style, win=, dofma=, dpi=) {
+/* DOCUMENT change_window_style, style, win=, dofma=, dpi=
    Changes the style of a Yorick window.
-   Parameters:
-      win: Window number to change
+   Parameter:
       style: Name of style sheet to use, such as "work" or "nobox"
    Options:
+      win= Window number to change. If not provided, uses current window. If
+         there is no current window, then uses window 0.
       dofma= Set to 1 to issue an FMA prior to changing. This avoids the need
          to re-plot the window's contents.
       dpi= The DPI setting to use. Normally either dpi=75 or dpi=100.
 */
    local wdata;
+   default, win, current_window();
    default, dofma, 0;
    default, dpi, 75;
+
+   if(win < 0)
+      win = window();
 
    width = height = [];
    if(style == "landscape11x85") {
@@ -84,13 +89,13 @@ func change_window_size(win, winsize, dofma) {
       Original: Amar Nayegandhi 12/12/2005.
 */
    if(winsize == 1)
-      change_window_style, win, "work", dpi=75, dofma=dofma;
+      change_window_style, "work", win=win, dpi=75, dofma=dofma;
    else if(winsize == 2)
-      change_window_style, win, "work", dpi=100, dofma=dofma;
+      change_window_style, "work", win=win, dpi=100, dofma=dofma;
    else if(winsize == 3)
-      change_window_style, win, "landscape11x85", dpi=75, dofma=dofma;
+      change_window_style, "landscape11x85", win=win, dpi=75, dofma=dofma;
    else if(winsize == 4)
-      change_window_style, win, "landscape11x85", dpi=100, dofma=dofma;
+      change_window_style, "landscape11x85", win=win, dpi=100, dofma=dofma;
    return 1;
 }
 
