@@ -45,9 +45,6 @@ if {![winfo exists .l1wid]} {
     "Canopy Height" \
   ]
 
-  set _l1pro_processing_mode [lindex $l1pro_data(processing_mode) 0]
-  set ofname ""
-  set curvar ""
   set outvar ""
   set win_no 5
   set win_load 6;    # used by EAARL Data Loader
@@ -57,8 +54,6 @@ if {![winfo exists .l1wid]} {
 
   set list {}
   set lrnindx {}
-  set write_some 0
-  set ssvar "*.pbd"
   set avg_surf 1
   set rcf_buf_rgn 0; #Used in proc replace_proc
   set autoclean_after_process 1
@@ -107,7 +102,6 @@ if {![winfo exists .l1wid]} {
   set pro_var_next fs_all
   array set plot_settings $var_settings($pro_var)
 
-  set plot_dpi 75
   array set cbvc {cmin cmin cmax cmax msize msize mtype mtype}
 
   set cbv 0
@@ -1404,7 +1398,7 @@ if {![winfo exists .l1wid]} {
 
     Button .rep.type -text "Filter selected points" -width 15 -bd 5 \
       -command {
-        global curvar have_replaced have_undone croppeddata outvar rcf_buf_rgn \
+        global have_replaced have_undone croppeddata outvar rcf_buf_rgn \
           sel_points
         set outvar workdata_grcf
         if {$have_undone == 1} {
@@ -1464,7 +1458,7 @@ if {![winfo exists .l1wid]} {
   # put in the original data. Same is true for opposite situation.
     Button .rep.2 -width 8 -text "Replace..." -bd 5 \
       -command {
-        global varlist outvar reps keep_var curvar origvar have_replaced \
+        global varlist outvar reps keep_var origvar have_replaced \
           have_undone croppeddata
         set $outvar workdata_grcf
         set selection [tk_messageBox -icon question \
@@ -1500,7 +1494,7 @@ if {![winfo exists .l1wid]} {
       }
     Button .rep.4 -width 10 -text "Do Not Replace..." -bd 5 \
       -command {
-        global varlist outvar reps replace_out_var curvar origvar
+        global varlist outvar reps replace_out_var origvar
         set selection [tk_messageBox -icon question \
           -message "Append ORIGINAL cropped array croppeddata to\
             $replace_out_var?" \
