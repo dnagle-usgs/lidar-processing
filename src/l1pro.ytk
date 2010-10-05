@@ -495,14 +495,24 @@ if {![winfo exists .l1wid]} {
     expect "> "
   }
 
+  set ystyle_dpi 75
   menu .l1wid.mb.graph.sty
   .l1wid.mb.graph add cascade -label Style... -under 0 -menu .l1wid.mb.graph.sty
-  foreach __s [list axes boxed l_nobox nobox vgbox vg work] {
+  .l1wid.mb.graph.sty add radiobutton \
+    -label "75 DPI" -variable ystyle_dpi -value 75
+  .l1wid.mb.graph.sty add radiobutton \
+    -label "100 DPI" -variable ystyle_dpi -value 100
+  .l1wid.mb.graph.sty add separator
+  foreach __s [list axes boxed l_nobox nobox vgbox vg work landscape11x85] {
   .l1wid.mb.graph.sty add command -label $__s -under 0 -command [list ystyle $__s]
   }
 
   proc ystyle s {
-    exp_send "change_window_style, \"$s\";\r"
+    set cmd "change_window_style, \"$s\""
+    if {$::ystyle_dpi != 75} {
+      append cmd ", dpi=$::ystyle_dpi"
+    }
+    exp_send "${cmd};\r"
   }
 
   menu .l1wid.mb.graph.grid
