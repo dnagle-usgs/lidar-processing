@@ -470,14 +470,18 @@ if {![winfo exists .l1wid]} {
   .l1wid.mb.graph add command -label "Open the Limits Tool" -underline 0 \
     -command limits_tool
   .l1wid.mb.graph add separator
-  .l1wid.mb.graph add command -label "Change current window to 75 DPI / 450x450" \
-    -command [list exp_send "change_window_size, window(), 1, 0;\r"]
-  .l1wid.mb.graph add command -label "Change current window to 100 DPI / 600x600" \
-    -command [list exp_send "change_window_size, window(), 2, 0;\r"]
-  .l1wid.mb.graph add command -label "Change current window to 75 DPI / 825x638" \
-    -command [list exp_send "change_window_size, window(), 3, 0;\r"]
-  .l1wid.mb.graph add command -label "Change current window to 100 DPI / 1100x850" \
-    -command [list exp_send "change_window_size, window(), 4, 0;\r"]
+  .l1wid.mb.graph add command \
+    -label "Change current window to 75 DPI / 450x450" \
+    -command [list exp_send "change_window_style, \"work\";\r"]
+  .l1wid.mb.graph add command \
+    -label "Change current window to 100 DPI / 600x600" \
+    -command [list exp_send "change_window_style, \"work\", dpi=100;\r"]
+  .l1wid.mb.graph add command \
+    -label "Change current window to 75 DPI / 825x638" \
+    -command [list exp_send "change_window_style, \"landscape11x85\";\r"]
+  .l1wid.mb.graph add command \
+    -label "Change current window to 100 DPI / 1100x850" \
+    -command [list exp_send "change_window_style, \"landscape11x85\", dpi=100;\r"]
   .l1wid.mb.graph add separator
   menu .l1wid.mb.graph.pal
   .l1wid.mb.graph add cascade -label Palette... -under 0 -menu .l1wid.mb.graph.pal
