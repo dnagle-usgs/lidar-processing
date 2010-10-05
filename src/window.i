@@ -83,43 +83,14 @@ func change_window_size(win, winsize, dofma) {
 
       Original: Amar Nayegandhi 12/12/2005.
 */
-   extern _ytk_window_size;
-   local wdata;
-
-   default, dofma, 0;
-   default, _ytk_window_size, array(int, 64);
-
-   if(_ytk_window_size(win) != winsize) {
-      if(!dofma)
-         wdata = plot_hash(win);
-
-      winkill, win;
-      _ytk_window_size(win) = winsize;
-      if (_ytk_window_size(win) == 1) {
-         window, win, dpi=75, style="work.gs", width=450, height=450;
-      }
-      if (_ytk_window_size(win) == 2) {
-         window, win, dpi=100, style="work.gs", width=600, height=600;
-      }
-      if (_ytk_window_size(win) == 3) {
-         window, win, dpi=75, style="landscape11x85.gs", width=825, height=638;
-      }
-      if (_ytk_window_size(win) == 4) {
-         window, win, dpi=100, style="landscape11x85.gs", width=1100, height=850;
-      }
-      window, win, width=0, height=0;
-      limits, square=1;
-
-      if(!dofma) {
-         plot_restore, win, wdata, style=0;
-      }
-   } else {
-      window, win;
-      if(dofma) {
-         fma;
-         limits, square=1;
-      }
-   }
+   if(winsize == 1)
+      change_window_style, win, "work", dpi=75, dofma=dofma;
+   else if(winsize == 2)
+      change_window_style, win, "work", dpi=100, dofma=dofma;
+   else if(winsize == 3)
+      change_window_style, win, "landscape11x85", dpi=75, dofma=dofma;
+   else if(winsize == 4)
+      change_window_style, win, "landscape11x85", dpi=100, dofma=dofma;
    return 1;
 }
 
