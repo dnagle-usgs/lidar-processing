@@ -72,16 +72,22 @@ func change_window_size(win, winsize, dofma) {
    return 1;
 }
 
-func copy_limits(win1, win2) {
+func copy_limits(src, dst) {
 /* DOCUMENT copy_limits, src, dst
-    Convenient shortcut function to set the window limits in window2
-    equal to the limits in window1. i.e. make window2 look like window1.
+   -or- copy_limits, src
+   Copies the limits from window SRC to window DST. DST may be an array to
+   apply to multiple windows. If DST is omitted, then the limits from SRC are
+   applied to all open windows.
 */
-  window, win1;
-  lm=limits();
-  window, win2;
-  limits,lm(1),lm(2),lm(3),lm(4);
-  window, win1;
+   wbkp = current_window();
+   window, src;
+   lims = limits();
+   default, dst, window_list();
+   for(i = 1; i <= numberof(dst); i++) {
+      window, dst(i);
+      limits, lims(1), lims(2), lims(3), lims(4);
+   }
+   window_select, wbkp;
 }
 
 func window2image(file, win=) {
