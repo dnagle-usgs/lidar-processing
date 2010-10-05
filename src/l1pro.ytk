@@ -1694,7 +1694,7 @@ if {![winfo exists .l1wid]} {
         set window2 [.limitstool.1.c2 getvalue]
         if {$window1 >= 0 && $window2 >= 0} {
           #This function provided by l1pro.i
-          exp_send "winlimits($window1,$window2); \r"
+          exp_send "copy_limits, $window1, $window2;\r"
         }
       }
 

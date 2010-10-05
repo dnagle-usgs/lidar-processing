@@ -653,7 +653,7 @@ proc ::plot::limits_tracklines {} {
 
 proc ::plot::copy_limits {} {
    ::plot::window_store
-   exp_send "winlimits($g::limits_copy_from, $g::limits_copy_to)\r"
+   exp_send "copy_limits, $g::limits_copy_from, $g::limits_copy_to\r"
    ::plot::window_restore
 }
 

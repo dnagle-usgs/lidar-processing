@@ -72,8 +72,8 @@ func change_window_size(win, winsize, dofma) {
    return 1;
 }
 
-func winlimits( win1, win2 ) {
-/* DOCUMENT set_winlimits( window1, window2 )
+func copy_limits(win1, win2) {
+/* DOCUMENT copy_limits, src, dst
     Convenient shortcut function to set the window limits in window2
     equal to the limits in window1. i.e. make window2 look like window1.
 */
