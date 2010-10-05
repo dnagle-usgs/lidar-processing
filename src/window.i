@@ -1,32 +1,5 @@
 require, "eaarl.i";
 
-local alps_windows;
-/* DOCUMENT alps_windows
-
-   This documents what windows are used for throughout ALPS.
-
-   window, 0
-      - Used to display a pixel waveform (drast.i, raspulsearch.i)
-
-   window, 1
-      - Used for the raster (drast.i)
-
-   window, 2
-      - Used for the georectified raster (drast.i)
-
-   window, 3
-      - Default window for transects (transect.i)
-
-   window, 4
-      - ? raspulsearch.i
-
-   window, 5
-      - Default window for plotting processed data in l1pro.ytk
-
-   window, 6
-      - Default window for plotting flightlines (pnav) in plot.tcl, etc.
-*/
-
 func change_window_style(style, win=, dofma=, dpi=) {
 /* DOCUMENT change_window_style, style, win=, dofma=, dpi=
    Changes the style of a Yorick window.
