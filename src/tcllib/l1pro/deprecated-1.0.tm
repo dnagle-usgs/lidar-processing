@@ -987,3 +987,51 @@ proc ::l1pro::deprecated::start_cir {} {
  global sf_a_id data_path
     exec ./attic/2010-07-cir.tcl -parent [::comm::comm self] -sf $sf_a_id -path $data_path &
 }
+
+proc ::l1pro::deprecated::limits_tool {} {
+    # Added by Jeremy Bracone 4/15/05
+    # Opens a limits tool that makes a few functions a little quicker to perform.
+    # The main function it provides is to set the limits from one window equal to
+    # another.
+    destroy .limitstool
+    toplevel .limitstool
+    wm title .limitstool "Limits Tool"
+    frame .limitstool.1 -relief groove -bd 4
+    label .limitstool.1.t1 -text "Apply limits from window "
+    ::mixin::combobox .limitstool.1.c1 -text 0 -width 3 -state readonly \
+      -values [::struct::list iota 64] \
+      -takefocus 0
+    label .limitstool.1.t2 -text " to window "
+    ::mixin::combobox .limitstool.1.c2 -text 0 -width 3 -state readonly \
+      -values [::struct::list iota 64] \
+      -takefocus 0
+
+    Button .limitstool.1.limits -text "Set Limits" \
+      -helptext "Set Limits in window from box 2 equal to limits in window from\
+        box 1.\
+        \ni.e. Make the second window look like the first." \
+      -command {
+        set window1 [.limitstool.1.c1 getvalue]
+        set window2 [.limitstool.1.c2 getvalue]
+        if {$window1 >= 0 && $window2 >= 0} {
+          #This function provided by l1pro.i
+          exp_send "copy_limits, $window1, $window2;\r"
+        }
+      }
+
+    frame .limitstool.2
+    Button .limitstool.2.l -text "Limits()" \
+      -helptext "Set current window limits to view entire plot" \
+      -command {
+        exp_send "limits\r"
+        expect ">"
+      }
+    Button .limitstool.2.dismiss -text "Dismiss" -command {
+      destroy .limitstool
+    }
+    pack .limitstool.1 -side top
+    pack .limitstool.1.t1 .limitstool.1.c1 .limitstool.1.t2 .limitstool.1.c2 \
+      .limitstool.1.limits -side left
+    pack .limitstool.2 -side right
+    pack .limitstool.2.dismiss .limitstool.2.l -padx 4 -side right
+}

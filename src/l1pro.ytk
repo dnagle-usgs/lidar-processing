@@ -461,8 +461,8 @@ if {![winfo exists .l1wid]} {
   }
 
   .l1wid.mb   add cascade -label Graph -underline 0 -menu .l1wid.mb.graph
-  .l1wid.mb.graph add command -label "Open the Limits Tool" -underline 0 \
-    -command limits_tool
+  .l1wid.mb.graph add command -label "Limits Tool" -underline 0 \
+    -command ::l1pro::tools::copy_limits::gui
   .l1wid.mb.graph add separator
   .l1wid.mb.graph add command \
     -label "Change current window to 75 DPI / 450x450" \
@@ -750,6 +750,9 @@ if {![winfo exists .l1wid]} {
 
   .l1wid.mb.dep add cascade -label "Visualization" -underline 0 \
     -menu .l1wid.mb.dep.vz
+
+  .l1wid.mb.dep.vz add command -label "Open the Limits Tool" -underline 0 \
+    -command ::l1pro::deprecated::limits_tool
 
   .l1wid.mb.dep.vz add command -label "Configure elevation scale limits..." \
     -underline 0 \
@@ -1665,54 +1668,6 @@ if {![winfo exists .l1wid]} {
     append cmd ", cmax=$::plot_settings(cmax)"
 
     exp_send "$cmd;\r"
-  }
-
-  proc limits_tool {} {
-    # Added by Jeremy Bracone 4/15/05
-    # Opens a limits tool that makes a few functions a little quicker to perform.
-    # The main function it provides is to set the limits from one window equal to
-    # another.
-    destroy .limitstool
-    toplevel .limitstool
-    wm title .limitstool "Limits Tool"
-    frame .limitstool.1 -relief groove -bd 4
-    label .limitstool.1.t1 -text "Apply limits from window "
-    ::mixin::combobox .limitstool.1.c1 -text 0 -width 3 -state readonly \
-      -values [::struct::list iota 64] \
-      -takefocus 0
-    label .limitstool.1.t2 -text " to window "
-    ::mixin::combobox .limitstool.1.c2 -text 0 -width 3 -state readonly \
-      -values [::struct::list iota 64] \
-      -takefocus 0
-
-    Button .limitstool.1.limits -text "Set Limits" \
-      -helptext "Set Limits in window from box 2 equal to limits in window from\
-        box 1.\
-        \ni.e. Make the second window look like the first." \
-      -command {
-        set window1 [.limitstool.1.c1 getvalue]
-        set window2 [.limitstool.1.c2 getvalue]
-        if {$window1 >= 0 && $window2 >= 0} {
-          #This function provided by l1pro.i
-          exp_send "copy_limits, $window1, $window2;\r"
-        }
-      }
-
-    frame .limitstool.2
-    Button .limitstool.2.l -text "Limits()" \
-      -helptext "Set current window limits to view entire plot" \
-      -command {
-        exp_send "limits\r"
-        expect ">"
-      }
-    Button .limitstool.2.dismiss -text "Dismiss" -command {
-      destroy .limitstool
-    }
-    pack .limitstool.1 -side top
-    pack .limitstool.1.t1 .limitstool.1.c1 .limitstool.1.t2 .limitstool.1.c2 \
-      .limitstool.1.limits -side left
-    pack .limitstool.2 -side right
-    pack .limitstool.2.dismiss .limitstool.2.l -padx 4 -side right
   }
 }
 
