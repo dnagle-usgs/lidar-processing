@@ -900,3 +900,83 @@ proc ::l1pro::tools::sortdata {method desc} {
    append cmd ")"
    exp_send "$cmd;\r"
 }
+
+if {![namespace exists ::l1pro::tools::copy_limits]} {
+   namespace eval ::l1pro::tools::copy_limits {
+      namespace import ::misc::appendif
+      namespace eval v {
+         variable top .l1wid.copylimits
+         variable src 5
+         variable dst 6
+      }
+   }
+}
+
+proc ::l1pro::tools::copy_limits::gui {} {
+   set w $v::top
+   destroy $w
+   toplevel $w
+   wm resizable $w 1 0
+   wm title $w "Limits Tool"
+
+   ttk::frame $w.f
+   grid $w.f -sticky news
+   grid columnconfigure $w 0 -weight 1
+   grid rowconfigure $w 0 -weight 1
+
+   set f $w.f
+
+   ttk::label $f.srclbl -text "Copy from:"
+   ttk::button $f.btndst -text "Apply to:" -width 0 \
+      -command [namespace which -command apply]
+   ttk::button $f.btnall -text "Apply to all" -width 0 \
+      -command [namespace which -command apply_all]
+   ttk::button $f.viz -text "Viz" -width 0 \
+      -command [namespace which -command viz]
+   ttk::button $f.swap -text "Swap" -width 0 \
+      -command [namespace which -command swap]
+   spinbox $f.src -justify center -width 2 \
+      -textvariable [namespace which -variable v::src] \
+      -from 0 -to 63 -increment 1
+   spinbox $f.dst -justify center -width 2 \
+      -textvariable [namespace which -variable v::dst] \
+      -from 0 -to 63 -increment 1
+
+   grid $f.srclbl $f.src $f.viz -sticky ew -padx 2 -pady 2
+   grid $f.btndst $f.dst $f.swap -sticky ew -padx 2 -pady 2
+   grid $f.btnall - - -sticky ew -padx 2 -pady 2
+   grid columnconfigure $f 1 -weight 1
+
+   grid configure $f.srclbl -sticky e
+
+   ::tooltip::tooltip $f.btndst \
+      "Copies the limits from the first window (specified at the right of\
+      \n\"Copy from:\") to the second window (specified at the right of \"Apply\
+      \nto:\")."
+   ::tooltip::tooltip $f.btnall \
+      "Copies the limits from the first window (specified at the right of\
+      \n\"Copy from:\") to all open windows."
+   ::tooltip::tooltip $f.viz \
+      "Sets \"Copy from:\" to the current window in the Visualization section\
+      \nof the Process EAARL Data GUI."
+   ::tooltip::tooltip $f.swap \
+      "Swaps the \"Copy from:\" and \"Apply to:\" window settings."
+}
+
+proc ::l1pro::tools::copy_limits::apply {} {
+   exp_send "copy_limits, $v::src, $v::dst;\r"
+}
+
+proc ::l1pro::tools::copy_limits::apply_all {} {
+   exp_send "copy_limits, $v::src;\r"
+}
+
+proc ::l1pro::tools::copy_limits::viz {} {
+   set v::src $::win_no
+}
+
+proc ::l1pro::tools::copy_limits::swap {} {
+   set tmp $v::src
+   set v::src $v::dst
+   set v::dst $tmp
+}
