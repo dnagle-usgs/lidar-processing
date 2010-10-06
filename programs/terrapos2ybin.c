@@ -78,34 +78,14 @@ main( int argc, char *argv[] ) {
 // this after we know how many elements there are.
     fwrite( &good, sizeof(int), 1, odf);                          
 
-// this reads and discards the commentary at the top.  
-// We want to change this to keep the comments,and append them
-// to the end of the data
-     fgets( str, MAXSTR-4, idf );
-     fgets( str, MAXSTR-4, idf );
-     fgets( str, MAXSTR-4, idf );
-     fgets( str, MAXSTR-4, idf );
-     fgets( str, MAXSTR-4, idf );
-     fgets( str, MAXSTR-4, idf );
-     fgets( str, MAXSTR-4, idf );
-     fgets( str, MAXSTR-4, idf );
-     fgets( str, MAXSTR-4, idf );
-     fgets( str, MAXSTR-4, idf );
-     fgets( str, MAXSTR-4, idf );
-     fgets( str, MAXSTR-4, idf );
-     fgets( str, MAXSTR-4, idf );
-     fgets( str, MAXSTR-4, idf );
-     fgets( str, MAXSTR-4, idf );
-     fgets( str, MAXSTR-4, idf );
-     fgets( str, MAXSTR-4, idf );
-     fgets( str, MAXSTR-4, idf );
-     fgets( str, MAXSTR-4, idf );
-
    while ( !feof(idf) ) {
 
 // get the string from the file
-     fgets( str, MAXSTR-4, idf );
-//      printf( "%s", str );
+    fgets( str, MAXSTR-4, idf );
+	if(str[0] == ';') {
+		//skip comments
+		continue;
+	}
     line++; good++;
 
   sscanf(str,"%f %f %f %f %d %f %f %f %f %f %f %f %f %f %d %f",
