@@ -22,6 +22,24 @@ func quartiles(ary) {
    return [q1, q2, q3];
 }
 
+func midhinge(x) {
+/* DOCUMENT midhinge(x)
+   Returns the midhinge for X. The midhinge is the average of the first and
+   thirt quartiles.
+*/
+   q = quartiles(x);
+   return q([1,3])(avg);
+}
+
+func trimean(x) {
+/* DOCUMENT trimean(x)
+   Returns the trimean (TM) for X. The trimean is the average of the median and
+   midhinge.
+*/
+   q = quartiles(x);
+   return q([1,2,2,3])(avg);
+}
+
 func mode(x, binsize=) {
 /* DOCUMENT mode(x, binsize=)
    Returns the mode of the given distribution. Option BINSIZE specifies the
