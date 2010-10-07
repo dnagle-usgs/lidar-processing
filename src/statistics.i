@@ -76,3 +76,13 @@ func standard_error_of_mean(x) {
 */
    return x(rms)/sqrt(numberof(x));
 }
+
+func confidence_interval_95(x) {
+   // z is the constant value such that a standard normal variable X has the
+   // probability of exactly .975 to fall within the interval (-inf,z]. When
+   // used to bound both sides of an interval, this becomes a probability of
+   // .95.
+   z = 1.96;
+   var = z * standard_error_of_mean(x);
+   return x(avg) + [-var, var];
+}
