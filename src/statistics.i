@@ -67,3 +67,12 @@ func pearson_correlation(x, y) {
    if(xrms && yrms)
       return covariance(x,y) / (xrms * yrms);
 }
+
+func standard_error_of_mean(x) {
+/* DOCUMENT standard_error_of_mean(x)
+   Returns the standard error of the mean (SEM) of X. This is estimated by
+   estimating the standard deviation and dividing by the square root of the
+   sample size.
+*/
+   return x(rms)/sqrt(numberof(x));
+}
