@@ -381,3 +381,18 @@ func det(A) {
          A(2)*(A(6)*A(7)-A(4)*A(9)) +
          A(3)*(A(4)*A(8)-A(5)*A(7));
 }
+
+func binomial_coefficient(n, k) {
+/* DOCUMENT binomial_coefficient(n, k)
+   Returns the binomial coefficient for n and k, or "n choose k". Both values
+   must be scalar integers.
+*/
+   if(k > n - k)
+      k = n - k;
+   c = 1;
+   for(i = 0; i < k; i++) {
+      c = c * (n - i);
+      c = c / (i + 1);
+   }
+   return c;
+}
