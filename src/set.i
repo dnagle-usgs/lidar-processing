@@ -359,6 +359,21 @@ func unique(x) {
    return set_remove_duplicates(unref(x), idx=1);
 }
 
+func heapsort_rank(x, &list) {
+/* DOCUMENT heapsort_rank(x)
+   -or- heapsort_rank(x, list)
+   Identical to msort_rank, except it uses heapsort instead of sort.
+*/
+   rank = array(0, dimsof(x));
+   if(numberof(x) < 2) return rank;
+   void = use_origins(0);
+   list = heapsort(x(*));
+   x = x(list);
+   x = (x(1:-1) != x(2:0))(cum);
+   rank(list) = x;
+   return rank;
+}
+
 func munique(x, ..) {
 /* DOCUMENT munique(x1, x2, x3, ...)
    Returns the indexes into the given arrays that correspond to unique tuples
@@ -371,15 +386,15 @@ func munique(x, ..) {
    SEE ALSO: unique munique_array msort
 */
    mxrank = numberof(x)-1;
-   rank = msort_rank(x);
+   rank = heapsort_rank(x);
 
    norm = 1./(mxrank+1.);
    if(1.+norm == 1.) error, pr1(mxrank+1)+" is too large an array";
 
    while(max(rank) != mxrank && more_args()) {
       x = next_arg();
-      rank += msort_rank(x) * norm;
-      rank = msort_rank(rank);
+      rank += heapsort_rank(x) * norm;
+      rank = heapsort_rank(rank);
    }
 
    return unique(rank);
@@ -403,14 +418,14 @@ func munique_array(x, which) {
 
    count = dims(which+1);
    mxrank = numberof(x(..,1))-1;
-   rank = msort_rank(x(..,1));
+   rank = heapsort_rank(x(..,1));
 
    norm = 1./(mxrank+1.);
    if(1.+norm == 1.) error, pr1(mxrank+1)+" is too large an array";
 
    for(i = 2; i <= count && max(rank) != mxrank; i++) {
-      rank += msort_rank(x(..,i))*norm;
-      rank = msort_rank(rank);
+      rank += heapsort_rank(x(..,i))*norm;
+      rank = heapsort_rank(rank);
    }
 
    return unique(rank);
