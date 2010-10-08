@@ -40,6 +40,28 @@ func trimean(x) {
    return q([1,2,2,3])(avg);
 }
 
+func interquartile_mean(x) {
+/* DOCUMENT interquartile_mean(x)
+   Returns the interquartile mean (IQM) of X. This is the mean of the values in
+   the interquartile range. If X cannot be evenly divided into quartiles, then
+   the extreme values of the interquartile range are weighted to compensate.
+*/
+   x = x(sort(x));
+   n = numberof(x);
+   // Number of observations per quartile
+   obs = n/4.;
+   low = long(obs + 1);
+   high = long(ceil(n - obs));
+   // truncate x to the points in the interquartile range
+   x = x(low:high);
+   n = numberof(x);
+   // Fractional observation count requires weighting of first and last
+   weight = array(1., n);
+   if(obs != long(obs))
+      weight([1,n]) = 1 - (numberof(x) - (2*obs))/2.;
+   return (x * weight)(sum) / weight(sum);
+}
+
 func mode(x, binsize=) {
 /* DOCUMENT mode(x, binsize=)
    Returns the mode of the given distribution. Option BINSIZE specifies the
