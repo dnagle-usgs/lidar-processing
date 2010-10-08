@@ -170,7 +170,8 @@ func timer_finished(t0, fmt=) {
 
    fmt= Allows you to customize the output. The string will have the following
       token replaced by its relevant value:
-         ELAPSED - time elapsed
+         ELAPSED - time elapsed in pretty-printed output
+         SECONDS - time elapsed in seconds to four decimal places
       Your string must include a newline if you wish to have one.
 
    Example:
