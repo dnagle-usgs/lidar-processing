@@ -10,15 +10,15 @@ func covariance(x, y) {
    return (x*y)(sum)/numberof(x);
 }
 
-func quartiles(ary) {
-/* DOCUMENT quartiles(ary)
-   Returns the first, second, and third quartiles for the array.
+func quartiles(x) {
+/* DOCUMENT quartiles(x)
+   Returns the first, second, and third quartiles for X.
    SEE ALSO: median
 */
-   ary = ary(sort(ary));
-   q1 = median(ary(:numberof(ary)/2));
-   q2 = median(ary);
-   q3 = median(ary(::-1)(:numberof(ary)/2));
+   x = x(sort(x));
+   q1 = median(x(:numberof(x)/2));
+   q2 = median(x);
+   q3 = median(x(::-1)(:numberof(x)/2));
    return [q1, q2, q3];
 }
 
