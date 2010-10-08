@@ -261,7 +261,7 @@ func set_remove_duplicates(A, idx=, delta=) {
       return idx ? seq : A(seq);
 
    // Sort them
-   srt = sort(A(seq));
+   srt = heapsort(A(seq));
 
    // Eliminate duplicates in the sorted sequence
    unq = where(grow([1n], A(seq)(srt)(:-1) != A(seq)(srt)(2:)));
@@ -296,7 +296,7 @@ func set_remove_duplicates_delta(A, delta=, idx=) {
       return idx ? seq : A(seq);
 
    // Sort them
-   srt = sort(A(seq));
+   srt = heapsort(A(seq));
 
    // Eliminate duplicates in the sorted sequence
    unq = where(grow([1n], abs(A(seq)(srt)(:-1) - A(seq)(srt)(2:)) > delta));
