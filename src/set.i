@@ -362,12 +362,16 @@ func unique(x) {
 func heapsort_rank(x, &list) {
 /* DOCUMENT heapsort_rank(x)
    -or- heapsort_rank(x, list)
-   Identical to msort_rank, except it uses heapsort instead of sort.
+   Identical to msort_rank, except it uses heapsort instead of sort for
+   numerical data. (Strings still use sort.)
 */
    rank = array(0, dimsof(x));
    if(numberof(x) < 2) return rank;
    void = use_origins(0);
-   list = heapsort(x(*));
+   if(is_string(x))
+      list = sort(x(*));
+   else
+      list = heapsort(x(*));
    x = x(list);
    x = (x(1:-1) != x(2:0))(cum);
    rank(list) = x;
