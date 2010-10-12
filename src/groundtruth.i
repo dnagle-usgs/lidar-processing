@@ -1,7 +1,7 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "eaarl.i";
 
-func analysis_extract_neighborhood(data, truth, mode=, truthmode=, radius=) {
+func analysis_extract_neighborhood(model, truth, mode=, truthmode=, radius=) {
    extern curzone;
    local x, y, z, tx, ty, tz;
    default, radius, 1.;
@@ -9,10 +9,12 @@ func analysis_extract_neighborhood(data, truth, mode=, truthmode=, radius=) {
    // For our purposes, zone can be arbitrary but use curzone if it's defined
    zone = curzone ? curzone : 15;
 
-   data2xyz, data, x, y, z, mode=mode;
+   data2xyz, model, x, y, z, mode=mode;
    data2xyz, truth, tx, ty, tz, mode=truthmode;
 
-   // eliminate data points outside of bbox+radius from truth points
+   // Eliminate model points outside of bbox+radius from truth points. Easy to
+   // do, and results in huge savings if the model points cover a much larger
+   // region than the truth points.
    w = data_box(x, y, [tx(min),tx(max),ty(min),ty(max)] + radius*[-1,1,-1,1]);
    if(!numberof(w))
       error, "Points do not overlap";
