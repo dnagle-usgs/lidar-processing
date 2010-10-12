@@ -138,7 +138,8 @@ func skewness(x) {
    xdif = x - x(avg);
    term1 = (xdif^3)(avg);
    term2 = ((xdif^2)(avg))^1.5;
-   return term1 / term2;
+   if(term2)
+      return term1 / term2;
 }
 
 func kurtosis(x) {
@@ -148,5 +149,6 @@ func kurtosis(x) {
    xdif = x - x(avg);
    term1 = (xdif^4)(avg);
    term2 = ((xdif^2)(avg))^2;
-   return term1/term2 - 3;
+   if(term2)
+      return term1/term2 - 3;
 }
