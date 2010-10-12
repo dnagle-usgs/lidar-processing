@@ -118,6 +118,10 @@ func standard_error_of_mean(x) {
 }
 
 func confidence_interval_95(x) {
+/* DOCUMENT confidence_interval_95(x)
+   Returns the 95% confidence interval for X. This will be a two-element array
+   [lo, hi] where LO and HI are the lower and upper bounds of the interval.
+*/
    // z is the constant value such that a standard normal variable X has the
    // probability of exactly .975 to fall within the interval (-inf,z]. When
    // used to bound both sides of an interval, this becomes a probability of
