@@ -261,7 +261,7 @@ func set_remove_duplicates(A, idx=, delta=) {
       return idx ? seq : A(seq);
 
    // Sort them
-   srt = heapsort(A(seq));
+   srt = sort(A(seq));
 
    // Eliminate duplicates in the sorted sequence
    unq = where(grow([1n], A(seq)(srt)(:-1) != A(seq)(srt)(2:)));
@@ -296,7 +296,7 @@ func set_remove_duplicates_delta(A, delta=, idx=) {
       return idx ? seq : A(seq);
 
    // Sort them
-   srt = heapsort(A(seq));
+   srt = sort(A(seq));
 
    // Eliminate duplicates in the sorted sequence
    unq = where(grow([1n], abs(A(seq)(srt)(:-1) - A(seq)(srt)(2:)) > delta));
@@ -359,25 +359,6 @@ func unique(x) {
    return set_remove_duplicates(unref(x), idx=1);
 }
 
-func heapsort_rank(x, &list) {
-/* DOCUMENT heapsort_rank(x)
-   -or- heapsort_rank(x, list)
-   Identical to msort_rank, except it uses heapsort instead of sort for
-   numerical data. (Strings still use sort.)
-*/
-   rank = array(0, dimsof(x));
-   if(numberof(x) < 2) return rank;
-   void = use_origins(0);
-   if(is_string(x))
-      list = sort(x(*));
-   else
-      list = heapsort(x(*));
-   x = x(list);
-   x = (x(1:-1) != x(2:0))(cum);
-   rank(list) = x;
-   return rank;
-}
-
 func munique(x, ..) {
 /* DOCUMENT munique(x1, x2, x3, ...)
    Returns the indexes into the given arrays that correspond to unique tuples
@@ -390,15 +371,15 @@ func munique(x, ..) {
    SEE ALSO: unique munique_array msort
 */
    mxrank = numberof(x)-1;
-   rank = heapsort_rank(x);
+   rank = msort_rank(x);
 
    norm = 1./(mxrank+1.);
    if(1.+norm == 1.) error, pr1(mxrank+1)+" is too large an array";
 
    while(max(rank) != mxrank && more_args()) {
       x = next_arg();
-      rank += heapsort_rank(x) * norm;
-      rank = heapsort_rank(rank);
+      rank += msort_rank(x) * norm;
+      rank = msort_rank(rank);
    }
 
    return unique(rank);
@@ -422,14 +403,14 @@ func munique_array(x, which) {
 
    count = dims(which+1);
    mxrank = numberof(x(..,1))-1;
-   rank = heapsort_rank(x(..,1));
+   rank = msort_rank(x(..,1));
 
    norm = 1./(mxrank+1.);
    if(1.+norm == 1.) error, pr1(mxrank+1)+" is too large an array";
 
    for(i = 2; i <= count && max(rank) != mxrank; i++) {
-      rank += heapsort_rank(x(..,i))*norm;
-      rank = heapsort_rank(rank);
+      rank += msort_rank(x(..,i))*norm;
+      rank = msort_rank(rank);
    }
 
    return unique(rank);
