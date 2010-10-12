@@ -131,6 +131,16 @@ func confidence_interval_95(x) {
    return x(avg) + [-var, var];
 }
 
+func skewness(x) {
+/* DOCUMENT skewness(x)
+   Returns the sample skewness of X.
+*/
+   xdif = x - x(avg);
+   term1 = (xdif^3)(avg);
+   term2 = ((xdif^2)(avg))^1.5;
+   return term1 / term2;
+}
+
 func kurtosis(x) {
 /* DOCUMENT kurtosis(x)
    Returns the sample kurtosis of X.
