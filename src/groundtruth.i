@@ -1,7 +1,7 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "eaarl.i";
 
-func analysis_extract_neighborhood(model, truth, mode=, truthmode=, radius=) {
+func gt_extract_comparisons(model, truth, mode=, truthmode=, radius=) {
    extern curzone;
    local x, y, z, tx, ty, tz;
    default, radius, 1.;
