@@ -130,3 +130,13 @@ func confidence_interval_95(x) {
    var = z * standard_error_of_mean(x);
    return x(avg) + [-var, var];
 }
+
+func kurtosis(x) {
+/* DOCUMENT kurtosis(x)
+   Returns the sample kurtosis of X.
+*/
+   xdif = x - x(avg);
+   term1 = (xdif^4)(avg);
+   term2 = ((xdif^2)(avg))^2;
+   return term1/term2 - 3;
+}
