@@ -168,44 +168,76 @@ func gt_extract_comparisons(model, truth, modelmode=, truthmode=, radius=) {
    return save(truth, m_best, m_nearest, m_average, m_median);
 }
 
-func analysis_plot(z1, z2, win=, xtitle=, ytitle=) {
-   default, win, window();
+func gt_scatterplot(z1, z2, win=, title=, xtitle=, ytitle=, scatterplot=,
+equality=, mean_error=, ci95=, linear_lsf=, quadratic_lsf=, metrics=) {
+   default, win, current_window();
+   // default, title, []
    default, xtitle, "Ground Truth Data (m)";
    default, ytitle, "Lidar Data (m)";
+   default, scatterplot, "square black 0.2";
+   default, equality, "dash black 1.0";
+   default, mean_error, "hide null 0";
+   default, ci95, "hide null 0";
+   default, linear_lsf, "solid black 1.0";
+   default, quadratic_lsf, "hide null 0";
+
+   type = color = "";
+   size = 0.;
+
+   if(win < 0)
+      win = 0;
 
    // z1 = truth; z2 = lidar
    zdif = z2 - z1;
 
-   // Line of equality
-   eq_lo = max(z2(min), z1(min));
-   eq_hi = min(z2(max), z1(max));
-   eq = [eq_lo, eq_hi];
+   xbounds = [z1(min), z1(max)];
+   ybounds = [z2(min), z2(max)];
 
-   // Least-squares-fit line
-   lsqx = [z1(min), z1(max)];
-   lsqy = fitlsq(z2, z1, lsqx);
-
-   txt_rmse = swrite(format="RMSE = %.1f cm", zdif(rms)*100);
-   txt_me = swrite(format="ME = %.1f cm", zdif(avg)*100);
-   txt_count = swrite(format="%d points", numberof(z1));
-
-   wbkp = current_window();
    window, win;
    fma;
-   // Scatter plot of points
-   plmk, z2, z1, width=10, marker=4, msize=0.1, color="black";
-   // Line of equality
-   plg, eq, eq, width=3, type="dash";
-   // Least-squares-fit line
-   plg, lsqy, lsqx, color="black", width=3;
-   vp = viewport();
-   tx = vp(1) + 0.01;
-   ty = vp(4);
-   plt, txt_rmse, tx, (ty -= .02);
-   plt, txt_me, tx, (ty -= .02);
-   plt, txt_count, tx, (ty -= .02);
+
+   sread, scatterplot, type, color, size;
+   if(type != "hide") {
+      marker = where(type == ["square", "cross", "triangle", "circle",
+         "diamond", "cross", "triangle2"]);
+      if(numberof(marker)) marker = marker(1);
+      plmk, z2, z1, width=10, marker=marker, color=color, msize=size;
+   }
+
+   sread, equality, type, color, size;
+   if(type != "hide") {
+      plg, xbounds, xbounds, type=type, color=color, width=size;
+   }
+
+   sread, mean_error, type, color, size;
+   if(type != "hide") {
+      ME = zdif(avg);
+      plg, xbounds + ME, xbounds, type=type, color=color, width=size;
+   }
+
+   sread, ci95, type, color, size;
+   if(type != "hide") {
+      CI = confidence_interval_95(zdif);
+      plg, xbounds + CI(1), xbounds, type=type, color=color, width=size;
+      plg, xbounds + CI(2), xbounds, type=type, color=color, width=size;
+   }
+
+   sread, linear_lsf, type, color, size;
+   if(type != "hide") {
+      c = poly1_fit(z2, z1, 1);
+      plg, poly1(xbounds, c), xbounds, type=type, color=color, width=size;
+   }
+
+   sread, quadratic_lsf, type, color, size;
+   if(type != "hide") {
+      c = poly1_fit(z2, z1, 2);
+      x = span(xbounds(1), xbounds(2), 100);
+      plg, poly1(x, c), x, type=type, color=color, width=size;
+   }
+
+   if(title)
+      pltitle, title;
    xytitles, xtitle, ytitle;
    limits, square=1;
    limits;
-   window_select, wbkp;
 }
