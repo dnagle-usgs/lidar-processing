@@ -57,6 +57,13 @@ func rank(x, method=) {
    s = msort(x);
    xs = x(s);
    rxs = indgen(n);
+
+   // For method ordinal, no further work is needed.
+   if(method == "ordinal") {
+      rx(s) = rsx;
+      return rx;
+   }
+
    if(method == "fractional")
       rxs *= 1.;
 
@@ -76,8 +83,6 @@ func rank(x, method=) {
             rxs(i:j) = rxs(i);
             if(j < n)
                rxs(j+1:) -= (j - i);
-         } else if(method == "ordinal") {
-            // do nothing; stable sort was used
          }
       }
       i = j+1;
