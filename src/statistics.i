@@ -191,6 +191,16 @@ func pearson_correlation(x, y) {
       return covariance(x,y) / (xrms * yrms);
 }
 
+func spearman_correlation(x, y) {
+/* DOCUMENT spearman_correlation(x, y)
+   Returns Spearman's rank correlation coefficient for the two variables given.
+   Also known as "Spearman's rho".
+*/
+   rx = rank(x);
+   ry = rank(y);
+   return pearson_correlation(rx, ry);
+}
+
 func standard_error_of_mean(x) {
 /* DOCUMENT standard_error_of_mean(x)
    Returns the standard error of the mean (SEM) of X. This is estimated by
