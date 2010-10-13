@@ -208,11 +208,13 @@ func gt_metrics(z1, z2, metrics) {
    return result;
 }
 
-func gt_scatterplot(z1, z2, win=, title=, xtitle=, ytitle=, scatterplot=,
-equality=, mean_error=, ci95=, linear_lsf=, quadratic_lsf=, metrics=) {
+func gt_scatterplot(z1, z2, win=, dofma=, title=, xtitle=, ytitle=,
+scatterplot=, equality=, mean_error=, ci95=, linear_lsf=, quadratic_lsf=,
+metrics=) {
    local type, color, size;
 
    default, win, current_window();
+   default, dofma, 1;
    // default, title, []
    default, xtitle, "Ground Truth Data (m)";
    default, ytitle, "Lidar Data (m)";
@@ -234,7 +236,7 @@ equality=, mean_error=, ci95=, linear_lsf=, quadratic_lsf=, metrics=) {
    ybounds = [z2(min), z2(max)];
 
    window, win;
-   fma;
+   if(dofma) fma;
 
    parse_plopts, scatterplot, type, color, size;
    if(type != "hide")
