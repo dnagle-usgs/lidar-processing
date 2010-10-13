@@ -222,6 +222,7 @@ equality=, mean_error=, ci95=, linear_lsf=, quadratic_lsf=, metrics=) {
    default, ci95, "hide";
    default, linear_lsf, "solid black 1.0";
    default, quadratic_lsf, "hide";
+   default, metrics, ["# points", "ME"];
 
    if(win < 0)
       win = 0;
@@ -267,6 +268,13 @@ equality=, mean_error=, ci95=, linear_lsf=, quadratic_lsf=, metrics=) {
       c = poly1_fit(z2, z1, 2);
       x = span(xbounds(1), xbounds(2), 100);
       plg, poly1(x, c), x, type=type, color=color, width=size;
+   }
+
+   if(!is_scalar(metrics)) {
+      values = gt_metrics(z1, z2, metrics);
+      display = strjoin(metrics + ": " + values, "\n");
+      vp = viewport();
+      plt, display, vp(1) + .01, vp(4) - .01, justify="LT", height=12;
    }
 
    if(title)
