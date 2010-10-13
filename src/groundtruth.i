@@ -168,6 +168,46 @@ func gt_extract_comparisons(model, truth, modelmode=, truthmode=, radius=) {
    return save(truth, m_best, m_nearest, m_average, m_median);
 }
 
+func gt_metrics(z1, z2, metrics) {
+   count = numberof(metrics);
+   result = array(string, count);
+   zdif = z2 - z1;
+   for(i = 1; i <= count; i++) {
+      if(metrics(i) == "# points")
+         result(i) = swrite(format="%d", numberof(z1));
+      else if(metrics(i) == "COV")
+         result(i) = swrite(format="%.3f", covariance(z1,z2));
+      else if(metrics(i) == "Q1E")
+         result(i) = swrite(format="%.2f", quartiles(zdif)(1));
+      else if(metrics(i) == "Q3E")
+         result(i) = swrite(format="%.2f", quartiles(zdif)(1));
+      else if(metrics(i) == "Median E")
+         result(i) = swrite(format="%.2f", median(zdif));
+      else if(metrics(i) == "ME")
+         result(i) = swrite(format="%.2f", zdif(avg));
+      else if(metrics(i) == "Midhinge E")
+         result(i) = swrite(format="%.2f", midhinge(zdif));
+      else if(metrics(i) == "Trimean E")
+         result(i) = swrite(format="%.2f", trimean(zdif));
+      else if(metrics(i) == "IQME")
+         result(i) = swrite(format="%.2f", interquartile_mean(zdif));
+      else if(metrics(i) == "Pearson's R")
+         result(i) = swrite(format="%.3f", pearson_correlation(z1,z2));
+      else if(metrics(i) == "Spearman's rho")
+         result(i) = swrite(format="%.3f", spearman_correlation(z1,z2));
+      else if(metrics(i) == "95% CI E") {
+         ci = confidence_interval_95(zdif);
+         result(i) = swrite(format="%.2f to %2.f", ci(1), ci(2));
+      } else if(metrics(i) == "E skewness")
+         result(i) = swrite(format="%.3f", skewness(zdif));
+      else if(metrics(i) == "E kurtosis")
+         result(i) = swrite(format="%.3f", kurtosis(zdif));
+      else
+         error, "Unknown metric: " + metrics(i);
+   }
+   return result;
+}
+
 func gt_scatterplot(z1, z2, win=, title=, xtitle=, ytitle=, scatterplot=,
 equality=, mean_error=, ci95=, linear_lsf=, quadratic_lsf=, metrics=) {
    local type, color, size;
