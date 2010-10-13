@@ -1,6 +1,89 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "eaarl.i";
 
+func rank(x, method=) {
+/* DOCUMENT rank(x, method=)
+   Returns an array with the ranking values for X. METHOD specifies what to do
+   in the case of a tie. The following examples show the allowed values for
+   METHOD as well as how it handles a tie.
+
+      > rank([10,20,20,30], method="ordinal")
+      [1,2,3,4]
+         All items receive distinct rankings, including items that compare
+         equal. Items that compare equal are ranked based on their order in X.
+
+      > rank([10,20,20,30], method="fractional")
+      [1,2.5,2.5,4]
+         Values with equal rank are assigned the mean of the ranks they would
+         have had under ordinal ranking.
+
+      > rank([10,20,20,30], method="competition")
+      [1,2,2,4]
+         Values with equal rank receive the same ranking number. A gap is left
+         afterwards that is equal to one less than the number of equal items.
+
+      > rank([10,20,20,30], method="competition_mod")
+      [1,3,3,4]
+         Values with equal rank receive the same ranking number. A gap is left
+         prior to the set that is equal to one less than the number of equal
+         items.
+
+      > rank([10,20,20,30], method="dense")
+      [1,2,2,3]
+         Values with equal rank receive the same ranking number. No gaps are
+         left.
+
+   The default value for METHOD is "fractional". When method="fractional", the
+   return result is of type double; otherwise, it is of type long.
+*/
+   // Variables used:
+   //    n - number of samples
+   //    rx - rank values for x
+   //    s - index list that sorts x
+   //    xs - x, sorted as by s
+   //    rsx - rx, sorted as by s
+
+   default, method, "fractional";
+
+   n = numberof(x);
+   if(method == "fractional")
+      rx = array(double, n);
+   else
+      rx = array(long, n);
+
+   s = msort(x);
+   xs = x(s);
+   rxs = indgen(n);
+   if(method == "fractional")
+      rxs *= 1.;
+
+   i = 1;
+   j = 2;
+   while(i < n) {
+      while(xs(i) == xs(j)) j++;
+      j--;
+      if(i < j) {
+         if(method == "fractional") {
+            rxs(i:j) = rxs(i:j)(avg);
+         } else if(method == "competition") {
+            rxs(i:j) = rxs(i);
+         } else if(method == "competition_mod") {
+            rxs(i:j) = rxs(j);
+         } else if(method == "dense") {
+            rxs(i:j) = rxs(i);
+            if(j < n)
+               rxs(j+1:) -= (j - i);
+         } else if(method == "ordinal") {
+            // do nothing; stable sort was used
+         }
+      }
+      i = j+1;
+      j = i+1;
+   }
+   rx(s) = rxs;
+   return rx;
+}
+
 func covariance(x, y) {
 /* DOCUMENT covariance(x, y)
    Returns the covariance of the two variables.
