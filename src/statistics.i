@@ -44,6 +44,9 @@ func rank(x, method=) {
    //    rsx - rx, sorted as by s
 
    default, method, "fractional";
+   methods = ["fractional","ordinal","competition","competition_mod","dense"];
+   if(noneof(method == methods))
+      error, "Unknown method: "+method;
 
    n = numberof(x);
    if(method == "fractional")
