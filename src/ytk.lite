@@ -1,3 +1,0 @@
-#!/bin/sh
-# vim: set syntax=sh :
-exec ./ytk -nogui "$@"
