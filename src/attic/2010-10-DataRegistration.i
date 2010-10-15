@@ -1,3 +1,9 @@
+/******************************************************************************\
+* This file was moved to the attic on 2010-10-15. Its functionality is         *
+* effectively a wrapper around the compare_pts functionality and isn't         *
+* referenced anywhere in ALPS.                                                 *
+\******************************************************************************/
+
 func dataReg(data1, data2, win=, plot=, ucmin=, ucmax=, data1plot=, data2plot=,
 filename=, rwin=, regionresultpbd=, regionresulttxt=, oply=, data1title=,
 data2title=) {
