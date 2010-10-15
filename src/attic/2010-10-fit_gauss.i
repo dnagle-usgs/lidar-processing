@@ -1,3 +1,5 @@
+require, "attic/2010-10-raspulsearch.i";
+
 if(is_void(tky_fit_gauss_vars)) {
    tky_fit_gauss_vars = h_new(
       raster=1, pixel=1, graph=0, add_peak=1, lims=0, lims_x1=0, lims_x2=0,
