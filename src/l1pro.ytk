@@ -45,6 +45,16 @@ if {![winfo exists .l1wid]} {
     "Canopy Height" \
   ]
 
+  set l1pro_data(mode_mapping) [lrange {
+    "First Return Topography"  fs
+    "Submerged Topography"     ba
+    "Water Depth"              de
+    "Bare Earth Topography"    be
+    "Surface Amplitude"        fint
+    "Bottom Amplitude"         lint
+    "Canopy Height"            ch
+  } 0 end]
+
   set outvar ""
   set win_no 5
   set win_load 6;    # used by EAARL Data Loader

@@ -308,15 +308,7 @@ snit::widget ::l1pro::file::gui::export_ascii {
       ::mixin::combobox::mapping $win.cboType \
          -altvariable [myvar mode] \
          -state readonly \
-         -mapping {
-            "First Return Topography"  fs
-            "Submerged Topography"     ba
-            "Water Depth"              de
-            "Bare Earth Topography"    be
-            "Surface Amplitude"        fint
-            "Bottom Amplitude"         lint
-            "Canopy Height"            ch
-         }
+         -mapping $::l1pro_data(mode_mapping)
 
       ttk::checkbutton $win.chkIndx -text "Index number" \
          -variable [myvar indx]

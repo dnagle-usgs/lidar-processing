@@ -54,15 +54,7 @@ proc ::l1pro::tools::rcf::gui args {
    ::mixin::combobox::mapping $f.mode \
       -state readonly \
       -altvariable [namespace which -variable v::mode] \
-      -mapping {
-         "First Return Topography"  fs
-         "Submerged Topography"     ba
-         "Water Depth"              de
-         "Bare Earth Topography"    be
-         "Surface Amplitude"        fint
-         "Bottom Amplitude"         lint
-         "Canopy Height"            ch
-      }
+      -mapping $::l1pro_data(mode_mapping)
 
    ::mixin::combobox $f.input \
       -state readonly \
