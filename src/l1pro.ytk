@@ -573,8 +573,6 @@ if {![winfo exists .l1wid]} {
   .l1wid.mb.util.stat add command -label "Day and digitizer" \
     -command [list segment_stat_launcher days_digitizer]
 
-  .l1wid.mb.util add command -label "Open Fit Gaussian GUI" \
-    -command open_fit_gaussian_gui
   .l1wid.mb.util add command -label "Browse Rasters" -underline 7 \
     -command ::l1pro::drast::gui
   .l1wid.mb.util add separator
@@ -739,6 +737,9 @@ if {![winfo exists .l1wid]} {
   .l1wid.mb.dep.an add command -label "Examine Lidar Rasters..." \
     -command [list source [file join $src_path drast.ytk]]
 
+  .l1wid.mb.dep.an add command -label "Open Fit Gaussian GUI" \
+    -command open_fit_gaussian_gui
+
   .l1wid.mb.dep add cascade -label "Import/Export" -underline 0 \
     -menu .l1wid.mb.dep.ie
 
@@ -799,7 +800,7 @@ if {![winfo exists .l1wid]} {
     -command ::l1pro::deprecated::rcf_region
 
   proc open_fit_gaussian_gui {} {
-    source [file join $::src_path fit_gauss.ytk]
+    source [file join $::src_path attic 2010-10-fit_gauss.ytk]
     fit_gauss::create_gui
   }
 

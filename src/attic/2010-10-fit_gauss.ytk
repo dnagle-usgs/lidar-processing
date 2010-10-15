@@ -5,6 +5,7 @@
 ################################################################################
 if {![namespace exists ::fit_gauss]} {
    ybkg require \"fit_gauss.i\"
+   ybkg require \"attic/2010-10-fit_gauss.i\"
    namespace eval ::fit_gauss {
       # Constants
       namespace eval c {
