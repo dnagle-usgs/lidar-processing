@@ -100,16 +100,6 @@ Please upgrade your installation of ALPS. Directions can be found in
       exit
    }
 
-   if {![file isdirectory [file join [app_root_dir] tcllib l1pro]]} {
-      puts "                         *** *** *** ERROR! *** *** ***
-
-Your ALPS is missing required source subdirectories. Please run cvs update
-using the -d option to update subdirectories:
-
-   cvs update -d"
-      exit
-   }
-
    set missing 0
    if {
       [catch {package require getstring}] || [catch {package require Iwidgets}] ||
