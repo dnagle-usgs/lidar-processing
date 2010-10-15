@@ -117,7 +117,7 @@ Please upgrade your installation of ALPS. Directions can be found in
 
 check_requirements
 
-::tcl::tm::path add [file join [app_root_dir] tcllib]
+::tcl::tm::path add [file join [app_root_dir] tcl]
 
 # Ensures that programs in .../eaarl/bin are detected and take precedence when
 # using auto_execok
