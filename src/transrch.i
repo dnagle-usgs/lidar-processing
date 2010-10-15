@@ -12,10 +12,6 @@
 
 require, "raspulsearch.i";
 
-//            1      2       3        4          5         6       7
-  clr = ["black", "red", "blue", "green", "magenta", "yellow", "cyan" ];
-
-
 func transrch( fs, m, llst, _rx=, _el=, spot=, iwin=, disp_type= ) {
 /* DOCUMENT  transrch(fs, m)
 Searches for the point in the transect plot window iwin (default 3) nearest to where
@@ -42,6 +38,10 @@ m = mtransect(cln_fs, show=1);
 transrch, cln_fs, fs, llst
 
 */
+
+//            1      2       3        4          5         6       7
+   clr = ["black", "red", "blue", "green", "magenta", "yellow", "cyan" ];
+
 
    extern mindata;
    extern _last_transrch;
