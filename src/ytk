@@ -967,7 +967,8 @@ load_options
 # just porting to another system.
 ############################################################
 
-############# set _ytk(yorick_executable) junk
+set env(GISTPATH) [file join [pwd] gist]
+
 yorick_executable
 if {[auto_execok yorick] eq ""} {
    puts stderr "No yorick found, aborting..."
