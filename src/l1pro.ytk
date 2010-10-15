@@ -1632,7 +1632,7 @@ if {![winfo exists .l1wid]} {
     array set opts $args
 
     set cmd "display_data, $opts(-var)"
-    append cmd ", mode=\"[display_type_mode]\""
+    append cmd ", mode=\"$::plot_settings(display_mode)\""
     if {$::skip > 1} {
       append cmd ", skip=$::skip"
     }

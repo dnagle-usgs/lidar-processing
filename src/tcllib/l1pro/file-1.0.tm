@@ -285,7 +285,7 @@ snit::widget ::l1pro::file::gui::export_ascii {
 
    constructor args {
       set vname $::pro_var
-      set mode [display_type_mode]
+      set mode $::plot_settings(display_mode)
 
       wm title $win "Export as ASCII..."
       wm resizable $win 1 0

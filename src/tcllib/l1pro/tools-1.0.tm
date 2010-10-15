@@ -35,7 +35,7 @@ proc ::l1pro::tools::rcf::gui args {
       set v::invar $::pro_var
    }
    set v::outvar ${v::invar}_grcf
-   set v::mode [display_type_mode]
+   set v::mode $::plot_settings(display_mode)
 
    ttk::frame $w.f
    grid $w.f -sticky news
@@ -157,11 +157,10 @@ proc ::l1pro::tools::histelev {} {
 }
 
 proc ::l1pro::tools::histelev::plot {} {
-   set mode [display_type_mode]
    set cmd "hist_data, $::pro_var"
 
    appendif cmd \
-      1                       ", mode=\"$mode\"" \
+      1                       ", mode=\"$::plot_settings(display_mode)\"" \
       1                       ", vname=\"$::pro_var\"" \
       {! $v::auto_binsize}    ", binsize=$v::binsize" \
       {$v::normalize != 1}    ", normalize=$v::normalize" \
@@ -607,12 +606,10 @@ proc ::l1pro::tools::histclip::gui {} {
 }
 
 proc ::l1pro::tools::histclip::clip {} {
-   set mode [display_type_mode]
-
    set cmd "$v::outvar = filter_bounded_elv($v::invar"
 
    appendif cmd \
-      1                       ", mode=\"$mode\"" \
+      1                       ", mode=\"$::plot_settings(display_mode)\"" \
       $v::usemin              ", lbound=$v::minelv" \
       $v::usemax              ", ubound=$v::maxelv" \
       1                       ")"
@@ -657,7 +654,7 @@ proc ::l1pro::tools::griddata::gui {} {
    wm title $w "Gridding $::pro_var"
 
    set v::invar $::pro_var
-   set v::mode [lindex {fs ba de be fint lint ch} [display_type]]
+   set v::mode $::plot_settings(display_mode)
    set v::outvar ${::pro_var}_grid
    ::misc::idle [list ybkg tksetfunc \"[namespace which -variable v::tile]\" \
       \"guess_tile\" \"$::pro_var\"]
@@ -876,7 +873,7 @@ proc ::l1pro::tools::datum::convert {} {
 
 proc ::l1pro::tools::auto_cbar {method {factor {}}} {
    set cmd "auto_cbar, $::pro_var, \"$method\""
-   append cmd ", mode=\"[display_type_mode]\""
+   append cmd ", mode=\"$::plot_settings(display_mode)\""
    ::misc::appendif cmd {$factor ne ""} ", factor=$factor"
    exp_send "$cmd;\r"
 }
@@ -887,7 +884,7 @@ proc ::l1pro::tools::auto_cbar_cdelta {} {
 
 proc ::l1pro::tools::sortdata {method desc} {
    set cmd "$::pro_var = sortdata($::pro_var"
-   append cmd ", mode=\"[display_type_mode]\", method=\"$method\""
+   append cmd ", mode=\"$::plot_settings(display_mode)\", method=\"$method\""
    ::misc::appendif cmd $desc ", desc=1"
    append cmd ")"
    exp_send "$cmd;\r"
