@@ -21,7 +21,6 @@ proc ::l1pro::groundtruth {} {
 proc ::l1pro::groundtruth::gui {} {
    destroy $v::top
    toplevel $v::top
-   wm resizable $v::top 1 0
    wm minsize $v::top 440 1
    wm title $v::top "Groundtruth Analysis"
    wm protocol $v::top WM_DELETE_WINDOW [list wm withdraw $v::top]
@@ -30,11 +29,10 @@ proc ::l1pro::groundtruth::gui {} {
 
    ttk::frame $f.f
    pack $f.f -fill both -expand 1
-   set f $f.f
 
    set nb $f.nb
    ttk::notebook $nb
-   pack $nb -fill both -expand 1
+   pack $nb -in $f.f -fill both -expand 1
 
    $nb add [panel_extract $nb.extract] -text "Extract" -sticky news
    $nb add [panel_scatter $nb.scatter] -text "Scatterplot" -sticky news
@@ -174,6 +172,14 @@ proc ::l1pro::groundtruth::panel_scatter w {
 
    set f $w.plots
    ttk::labelframe $f -text Plots
+   ::mixin::frame::scrollable $f.f -xfill 1 -yfill 1\
+      -yscrollcommand [list $f.vs set]
+   ttk::scrollbar $f.vs -command [list $f.f yview]
+
+   grid $f.f $f.vs -sticky news -padx 0 -pady 0
+   grid rowconfigure $f 0 -weight 1
+   grid columnconfigure $f 0 -weight 1
+   set f [$f.f interior]
 
    widget_plots $f scatter Scatterplot: null
    widget_plots $f equality "Equality line:" null
@@ -186,6 +192,14 @@ proc ::l1pro::groundtruth::panel_scatter w {
 
    set f $w.metrics
    ttk::labelframe $f -text Metrics
+   ::mixin::frame::scrollable $f.f -xfill 1 -yfill 1 \
+      -yscrollcommand [list $f.vs set]
+   ttk::scrollbar $f.vs -command [list $f.f yview]
+
+   grid $f.f $f.vs -sticky news -padx 0 -pady 0
+   grid rowconfigure $f 0 -weight 1
+   grid columnconfigure $f 0 -weight 1
+   set f [$f.f interior]
 
    foreach metric {
       "# points" COV Q1E Q3E "Median E" ME "Midhinge E" "Trimean E"
@@ -204,7 +218,7 @@ proc ::l1pro::groundtruth::panel_scatter w {
    grid columnconfigure $f {0 3} -weight 1
 
    grid $w.general $w.metrics {*}$news
-   grid $w.plots ^ {*}$o -sticky new
+   grid $w.plots ^ {*}$news
    grid $w.bottom - {*}$news
    grid columnconfigure $w 0 -weight 1
    grid rowconfigure $w 1 -weight 1
