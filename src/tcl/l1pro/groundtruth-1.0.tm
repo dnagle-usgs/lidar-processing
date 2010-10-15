@@ -7,6 +7,15 @@ if {![namespace exists ::l1pro::groundtruth]} {
       namespace eval v {
          variable top .l1wid.groundtruth
       }
+
+      namespace eval extract {
+         variable model_var fs_all
+         variable model_mode fs
+         variable truth_var fs_all
+         variable truth_mode fs
+         variable output comparisons
+         variable radius 1.00
+      }
    }
 }
 
@@ -58,8 +67,12 @@ proc ::l1pro::groundtruth::panel_extract w {
       ttk::checkbutton $f.chkmin -text "Min z:"
       ttk::label $f.lblregion -text Region:
       ttk::label $f.lbltransect -text "Transect width:"
-      ::mixin::combobox $f.var -width 0
-      ::mixin::combobox $f.mode -width 0
+      ::mixin::combobox $f.var -width 0 -state readonly \
+         -textvariable [namespace which -variable extract::${data}_var] \
+         -listvariable ::varlist
+      ::mixin::combobox::mapping $f.mode -width 0 -state readonly \
+         -altvariable [namespace which -variable extract::${data}_mode] \
+         -mapping $::l1pro_data(mode_mapping)
       ttk::spinbox $f.max -width 0
       ttk::spinbox $f.min -width 0
       ttk::entry $f.region -width 0
@@ -89,23 +102,36 @@ proc ::l1pro::groundtruth::panel_extract w {
       $mb add command -label "Use current window's limits"
       $mb add separator
       $mb add command -label "Plot current region (if possible)"
+
+      # Temporarily disable unimplemented widgets
+      set disable [list $f.chkmax $f.chkmin $f.max $f.min $f.lblregion \
+         $f.region $f.btnregion $f.lbltransect $f.transect]
+      foreach widget $disable {
+         $widget state disabled
+         ::tooltip::tooltip $widget \
+            "This control is not yet implemented."
+      }
    }
 
    set f $w
 
    ttk::frame $f.output
    ttk::label $f.output.lbl -text Output:
-   ttk::entry $f.output.ent -width 0
+   ttk::entry $f.output.ent -width 0 \
+      -textvariable [namespace which -variable extract::output]
    grid $f.output.lbl $f.output.ent -sticky ew -padx 1
    grid columnconfigure $f.output 1 -weight 1
 
    ttk::frame $f.radius
    ttk::label $f.radius.lbl -text "Search radius:"
-   ttk::spinbox $f.radius.spn -width 0
+   ttk::spinbox $f.radius.spn -width 0 \
+      -from 0 -to 1000 -increment 1 -format %.2f \
+      -textvariable [namespace which -variable extract::radius]
    grid $f.radius.lbl $f.radius.spn -sticky ew -padx 1
    grid columnconfigure $f.radius 1 -weight 1
 
-   ttk::button $f.extract -text "Extract Comparisons"
+   ttk::button $f.extract -text "Extract Comparisons" \
+      -command [namespace which -command extract]
 
    grid $f.model $f.truth {*}$news
    grid $f.output $f.radius {*}$ew
@@ -114,6 +140,16 @@ proc ::l1pro::groundtruth::panel_extract w {
    grid columnconfigure $f {0 1} -weight 1 -uniform 1
 
    return $w
+}
+
+proc ::l1pro::groundtruth::extract {} {
+   set cmd "$extract::output = gt_extract_comparisons($extract::model_var,\
+      $extract::truth_var"
+   ::misc::appendif cmd \
+      {$extract::model_mode ne "fs"} ", modelmode=\"$extract::model_mode\"" \
+      {$extract::truth_mode ne "fs"} ", truthmode=\"$extract::truth_mode\""
+   append cmd ", radius=$extract::radius)"
+   exp_send "$cmd;\r"
 }
 
 proc ::l1pro::groundtruth::widget_comparison_vars {lbl cbo btns} {
