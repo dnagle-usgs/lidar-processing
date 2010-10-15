@@ -1,4 +1,8 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
+/******************************************************************************\
+* This file was moved to the attic on 2010-10-15. This functionality was never *
+* utilized.                                                                    *
+\******************************************************************************/
 
 local unittest, tc_assert, tc_assert_false, tc_assert_equal,
 tc_assert_not_equal, tc_assert_almost_equal, tc_assert_not_almost_equal,
