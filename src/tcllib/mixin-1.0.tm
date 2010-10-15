@@ -816,11 +816,16 @@ snit::widgetadaptor ::mixin::frame::scrollable {
          if {$scrollcmd ne ""} {
             {*}$scrollcmd {*}[$self ${xy}view]
          }
-         if {$fill && ($vsize < $size || $scrollcmd == "")} {
+         if {$fill && ($vsize < $size || $scrollcmd eq "")} {
             # "scrolled object" is not scrolled, because it is too small or
             # because no scrollbar was requested. fill means that, in these
             # cases, we must tell the object what its size should be.
             place $win.interior -in $win -$xy [expr {-$vside}] -$wh $size
+            # If there's no scrollcommand, we also need to propagate the width
+            # to the parent window.
+            if {$scrollcmd eq ""} {
+               $win configure -$wh $vsize
+            }
          } else {
             place $win.interior -in $win -$xy [expr {-$vside}] -$wh {}
          }
