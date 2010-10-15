@@ -10,7 +10,7 @@
 
 *********************************************************************/
 
-require, "raspulsearch.i";
+require, "eaarl.i";
 
 func transrch( fs, m, llst, _rx=, _el=, spot=, iwin=, disp_type= ) {
 /* DOCUMENT  transrch(fs, m)
