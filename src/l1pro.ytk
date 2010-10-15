@@ -86,27 +86,27 @@ if {![winfo exists .l1wid]} {
   set var_settings(fs_all) [linsert $var_common end \
     var fs_all \
     processing_mode "First Return Topo" \
-    display_type "First Return Topography"]
+    display_mode fs]
 
   set var_settings(depth_all) [linsert $var_common end \
     var depth_all \
     processing_mode "Submerged Topo" \
-    display_type "Submerged Topography"]
+    display_mode ba]
 
   set var_settings(veg_all) [linsert $var_common end \
     var veg_all \
     processing_mode "Topo Under Veg" \
-    display_type "Bare Earth Topography"]
+    display_mode be]
 
   set var_settings(cveg_all) [linsert $var_common end \
     var cveg_all \
     processing_mode "Multi Peak Veg" \
-    display_type "First Return Topography"]
+    display_mode fs]
 
   set var_settings(workdata) [linsert $var_common end \
     var workdata \
     processing_mode "Submerged Topo" \
-    display_type "Submerged Topography"]
+    display_mode ba]
 
   set pro_var fs_all
   set pro_var_next fs_all
@@ -848,9 +848,9 @@ if {![winfo exists .l1wid]} {
     # Currently saved version -- to be replaced
     set stored $var_settings($plot_settings(var))
 
-    # Update processing_mode and display_type
+    # Update processing_mode and display_mode
     dict set stored processing_mode $plot_settings(processing_mode)
-    dict set stored display_type $plot_settings(display_type)
+    dict set stored display_mode $plot_settings(display_mode)
 
     # Update cbar if appropriate
     if {$cbv == 0} {
@@ -874,10 +874,10 @@ if {![winfo exists .l1wid]} {
       set stored [array get plot_settings]
     }
 
-    # Update processing_mode and display_type
+    # Update processing_mode and display_mode
     set plot_settings(var) $pro_var
     set plot_settings(processing_mode) [dict get $stored processing_mode]
-    set plot_settings(display_type) [dict get $stored display_type]
+    set plot_settings(display_mode) [dict get $stored display_mode]
 
     # Update cbar if appropriate
     if {$cbv == 0} {
@@ -897,43 +897,17 @@ if {![winfo exists .l1wid]} {
   trace add variable pro_var write pro_var_changed
 
   proc display_type {} {
-    global plot_settings
-    switch -- $plot_settings(display_type) {
-      "First Return Topography" {
-        return 0
-      }
-      "Submerged Topography" {
-        return 1
-      }
-      "Water Depth" {
-        return 2
-      }
-      "Bare Earth Topography" {
-        return 3
-      }
-      "Surface Amplitude" {
-        return 4
-      }
-      "Bottom Amplitude" {
-        return 5
-      }
-      "Canopy Height" {
-        return 6
-      }
-      default {
-        return -1
-      }
-    }
+    lsearch -exact [dict values $::l1pro_data(mode_mapping)] \
+      $::plot_settings(display_mode)
   }
 
   proc display_type_mode {} {
-    return [lindex {fs ba de be fint lint ch} [display_type]]
+    return $::plot_settings(display_mode)
   }
 
   proc display_type_by_index {index} {
-    global plot_settings l1pro_data
-    set plot_settings(display_type) \
-      [lindex $l1pro_data(display_types) $index]
+    set ::plot_settings(display_mode) \
+      [lindex [dict values $::l1pro_data(mode_mapping)] $index]
   }
 
   ::mixin::combobox .l1wid.filter.1 -text "Copy points using..." -width 16 \

@@ -490,7 +490,7 @@ namespace eval ::pixelwf::gui {
       set ${ns}::show_wf::enabled 0
       set ${ns}::geo_rast::enabled 1
       set ${ns}::ndrast::enabled 1
-      if {$::plot_settings(display_type) eq "Submerged Topography"} {
+      if {$::plot_settings(display_mode) eq "ba"} {
          set ${ns}::ex_bath::enabled 1
          set ${ns}::ex_veg::enabled 0
       } else {

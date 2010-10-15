@@ -55,23 +55,24 @@ func update_var_settings(data, vname, fn=) {
    dstruc = structof(data);
 
    // Default, includes FS, R, CVEG_ALL, ZGRID, ATM, numerical, etc.
-   pmode = dmode = 0;
+   pmode = 0;
+   dmode = "fs";
 
    // Special cases
    if(structeqany(dstruc, GEO, GEOALL)) {
       pmode = 1;
-      dmode = 1;
+      dmode = "ba";
    } else if(structeqany(dstruc, VEG, VEG_, VEG__, VEGALL, VEG_ALL, VEG_ALL_)) {
       pmode = 2;
       if(!anyof(regmatch("(^|_)fs(t_|_|\.|$)", [vname, fn]))) {
-         dmode = 3;
+         dmode = "be";
       }
    }
 
    tkcmd, swrite(format="dict set var_settings(%s) processing_mode [lindex $l1pro_data(processing_mode) %d]", vname, pmode);
-   tkcmd, swrite(format="dict set var_settings(%s) display_type [lindex $l1pro_data(display_types) %d]", vname, dmode);
+   tkcmd, swrite(format="dict set var_settings(%s) display_mode %s", vname, dmode);
 
-   cbar = auto_cbar(data, "stdev", mode=["fs","ba","","be"](dmode+1));
+   cbar = auto_cbar(data, "stdev", mode=dmode);
    tkcmd, swrite(format="dict set var_settings(%s) cmin %.2f", vname, cbar(1));
    tkcmd, swrite(format="dict set var_settings(%s) cmax %.2f", vname, cbar(2));
 }

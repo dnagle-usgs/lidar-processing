@@ -155,9 +155,9 @@ proc ::l1pro::main::panel_plot w {
    ::mixin::padlock $f.winlock \
       -variable ::constant_win_no
    ttk::label $f.modelbl -text "Mode:"
-   ::mixin::combobox $f.mode -state readonly -width 4 \
-      -textvariable ::plot_settings(display_type) \
-      -values $::l1pro_data(display_types)
+   ::mixin::combobox::mapping $f.mode -state readonly -width 4 \
+      -altvariable ::plot_settings(display_mode) \
+      -mapping $::l1pro_data(mode_mapping)
    ttk::label $f.marklbl -text "Marker:"
    spinbox $f.msize -width 5 \
       -from 0.1 -to 10.0 -increment 0.1 \
