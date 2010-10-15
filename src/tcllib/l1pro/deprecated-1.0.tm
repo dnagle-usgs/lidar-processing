@@ -3,41 +3,7 @@
 package provide l1pro::deprecated 1.0
 
 # Global ::data_file_path
-if {![namespace exists ::l1pro::deprecated]} {
-   namespace eval ::l1pro::deprecated {
-   }
-}
-
-proc ::l1pro::deprecated::pixelwf {} {
-   uplevel #0 {
-      global bconst plot_settings pro_var
-      if {$bconst == 1} {
-        set bconst 2
-      }
-      set ptype [processing_mode]
-      set disp_type [display_type]
-      set var_type $pro_var
-      if {$disp_type == -1} {
-        tk_messageBox  -icon warning \
-          -message "You need to specify the type of data before using this\
-            function!" \
-          -type ok
-      }
-
-      # Only ptypes 1 and 3 use bconst, so by default it is void
-      set bconstarg ""
-      if {$ptype == 1 || $ptype == 3} {
-        set bconstarg $bconst
-      }
-
-      if {[lindex {0 1 2 3} $ptype] >= 0} {
-        exp_send "mindata = raspulsearch($var_type, win=$win_no,\
-          cmin=$plot_settings(cmin), cmax=$plot_settings(cmax),\
-          msize=$plot_settings(msize), disp_type=$disp_type, ptype=$ptype,\
-          lmark=lmark, bconst=$bconstarg);\r"
-      }
-   }
-}
+namespace eval ::l1pro::deprecated {}
 
 proc ::l1pro::deprecated::read_binary_data_file {} {
    uplevel #0 {

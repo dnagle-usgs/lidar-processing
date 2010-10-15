@@ -727,13 +727,6 @@ if {![winfo exists .l1wid]} {
   .l1wid.mb.dep add cascade -label Analysis -underline 0 \
     -menu .l1wid.mb.dep.an
 
-  .l1wid.mb.dep.an add command -label "Old Pixel Waveform" \
-    -command ::l1pro::deprecated::pixelwf
-
-  .l1wid.mb.dep.an add checkbutton \
-    -label "Show raw and processed waveforms when using Pixel Waveform" \
-    -variable bconst
-
   .l1wid.mb.dep.an add command -label "Examine Lidar Rasters..." \
     -command [list source [file join $src_path drast.ytk]]
 
