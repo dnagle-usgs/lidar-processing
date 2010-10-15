@@ -1,4 +1,10 @@
 # vim: set ts=3 sts=3 sw=3 ai sr et:
+################################################################################
+# This file was moved to the attic on 2010-10-15. Its code creates a GUI for   #
+# the Gaussian Decomposition functionality. This is redundant to and           #
+# superceded by the Pixel Analysis GUI, which contains the same basic          #
+# functionality.                                                               #
+################################################################################
 
 ################################################################################
 #                                Initialization                                #

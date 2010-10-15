@@ -1,4 +1,9 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
+/******************************************************************************\
+* This file was moved to the attic on 2010-10-15. The functions defined here   *
+* are no longer used and are deprecated in favor of the Pixel Analysis tool.   *
+* See pixelwf.i.                                                               *
+\******************************************************************************/
 
 func raspulsearch(data, win=, buf=, cmin=, cmax=, msize=, disp_type=, ptype=,
 fset=, lmark=, bconst=, xyz_data=, xyz_buf=, tx=) {

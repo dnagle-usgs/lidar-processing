@@ -1,3 +1,9 @@
+/******************************************************************************\
+* This file was created in the attic on 2010-10-15. These functions were moved *
+* here from fit_gauss.i. They are GUI glue for fit_gauss.ytk, which was also   *
+* moved to the attic and are not needed outside of it.                         *
+\******************************************************************************/
+
 require, "attic/2010-10-raspulsearch.i";
 
 if(is_void(tky_fit_gauss_vars)) {
