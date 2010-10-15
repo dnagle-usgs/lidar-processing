@@ -489,7 +489,7 @@ if {![winfo exists .l1wid]} {
   .l1wid.mb.graph add separator
   menu .l1wid.mb.graph.pal
   .l1wid.mb.graph add cascade -label Palette... -under 0 -menu .l1wid.mb.graph.pal
-  foreach __p [list earth stern rainbow yarg heat gray] {
+  foreach __p [list earth altearth stern rainbow yarg heat gray] {
   .l1wid.mb.graph.pal add command -label $__p -under 0 -command [list ypalette $__p]
   }
   unset __p
