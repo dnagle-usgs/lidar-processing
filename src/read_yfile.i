@@ -75,23 +75,3 @@ func update_var_settings(data, vname, fn=) {
    tkcmd, swrite(format="dict set var_settings(%s) cmin %.2f", vname, cbar(1));
    tkcmd, swrite(format="dict set var_settings(%s) cmax %.2f", vname, cbar(2));
 }
-
-func set_read_yorick(data, vname=, fn=) {
-/* DOCUMENT set_read_yorick(data, vname=, fn=)
-   This function sets the cmin and cmax values in the Process EAARL data GUI
-   amar nayegandhi 05/06/03
-*/
-   local cminmax, pmode, dmode;
-
-   if(!is_void(pmode)) {
-      tkcmd, swrite(format="processing_mode_by_index %d", pmode);
-      tkcmd, swrite(format="display_type_by_index %d", dmode);
-      auto_cbar, data, "stdev", mode=["fs","ba","","be"](dmode+1);
-   }
-
-   tkcmd, swrite("if {$cbv == 1} {set plot_settings(cmin) $cbvc(cmin)}");
-   tkcmd, swrite("if {$cbv == 1} {set plot_settings(cmax) $cbvc(cmax)}");
-   tkcmd, swrite("if {$cbv == 1} {set plot_settings(msize) $cbvc(msize)}");
-   tkcmd, swrite("if {$cbv == 1} {set plot_settings(mtype) $cbvc(mtype)}");
-}
-
