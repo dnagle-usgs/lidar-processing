@@ -999,7 +999,7 @@ if {![winfo exists .l1wid]} {
     # the combobox below. A function parameter for the pipthresh function for
     # this gui is dependent on the index number of the selection.
     ::mixin::combobox .rem.06.type -textvariable remove_type -width 12 \
-      -values [list "GEO or VEG__" "FS"]
+      -values [list "GEO or VEG__" "FS"] -state readonly
     if {[display_type] == 0} {
       .rem.06.type setvalue @1
     } else {
