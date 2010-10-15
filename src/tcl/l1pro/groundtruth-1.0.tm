@@ -37,6 +37,7 @@ proc ::l1pro::groundtruth::gui {} {
    pack $nb -fill both -expand 1
 
    $nb add [panel_extract $nb.extract] -text "Extract" -sticky news
+   $nb add [panel_scatter $nb.scatter] -text "Scatterplot" -sticky news
 
    $nb select 0
 }
@@ -113,6 +114,100 @@ proc ::l1pro::groundtruth::panel_extract w {
    grid $f.extract - {*}$o
 
    grid columnconfigure $f {0 1} -weight 1 -uniform 1
+
+   return $w
+}
+
+proc ::l1pro::groundtruth::widget_comparison_vars {lbl cbo btns} {
+   ttk::label $lbl -text "Comparisons:"
+   ::mixin::combobox $cbo -width 0
+   ttk::frame $btns
+   ttk::button $btns.save -text Save -style Panel.TButton -width 0
+   ttk::button $btns.load -text Load -style Panel.TButton -width 0
+   ttk::button $btns.del -text Delete -style Panel.TButton -width 0
+   grid $btns.save $btns.load $btns.del -sticky news -padx 1 -pady 1
+}
+
+proc ::l1pro::groundtruth::widget_plots {f prefix label var} {
+   set p [list apply [list suffix "return \"$f.${prefix}_\$suffix\""]]
+   ttk::label [{*}$p lbl] -text $label
+   ::mixin::combobox [{*}$p type] -width 0
+   ::mixin::combobox [{*}$p color] -width 0
+   ttk::spinbox [{*}$p size] -width 3
+   grid [{*}$p lbl] [{*}$p type] [{*}$p color] [{*}$p size] \
+      -sticky ew -padx 1 -pady 1
+   grid configure [{*}$p lbl] -sticky e
+}
+
+proc ::l1pro::groundtruth::panel_scatter w {
+   ttk::frame $w
+
+   set o [list -padx 1 -pady 1]
+   set e [list {*}$o -sticky e]
+   set ew [list {*}$o -sticky ew]
+   set news [list {*}$o -sticky news]
+
+   set f $w.general
+   ttk::frame $f
+
+   widget_comparison_vars $f.lblvar $f.cbovar $f.btnvar
+   ttk::label $f.lbldata -text "Data to use:"
+   ::mixin::combobox $f.data -width 0
+   ttk::label $f.lblwin -text Window:
+   ttk::spinbox $f.win -width 0
+   ttk::label $f.lbltitle -text "Graph title:"
+   ttk::label $f.lblxtitle -text "Model label:"
+   ttk::label $f.lblytitle -text "Truth label:"
+   ttk::entry $f.title -width 0
+   ttk::entry $f.xtitle -width 0
+   ttk::entry $f.ytitle -width 0
+
+   grid $f.lblvar $f.cbovar $f.btnvar - {*}$ew
+   grid $f.lbldata $f.data $f.lblwin $f.win {*}$ew
+   grid $f.lbltitle $f.title - - {*}$ew
+   grid $f.lblxtitle $f.xtitle - - {*}$ew
+   grid $f.lblytitle $f.ytitle - - {*}$ew
+
+   grid configure $f.lblvar $f.lbldata $f.lbltitle $f.lblxtitle $f.lblytitle \
+      $f.lblwin -sticky e
+   grid columnconfigure $f 1 -weight 1
+
+   set f $w.plots
+   ttk::labelframe $f -text Plots
+
+   widget_plots $f scatter Scatterplot: null
+   widget_plots $f equality "Equality line:" null
+   widget_plots $f mean "Mean error line:" null
+   widget_plots $f 95ci "95% CI lines:" null
+   widget_plots $f lsf_linear "Linear LSF line:" null
+   widget_plots $f lsf_quad "Quadratic LSF line:" null
+
+   grid columnconfigure $f {1 2} -weight 1
+
+   set f $w.metrics
+   ttk::labelframe $f -text Metrics
+
+   foreach metric {
+      "# points" COV Q1E Q3E "Median E" ME "Midhinge E" "Trimean E"
+      IQME "Pearson's R" "Spearman's rho" "95% CI E" "E skewness"
+      "E kurtosis"
+   } {
+      ttk::checkbutton $f.m$metric -text $metric
+      grid $f.m$metric {*}$o -sticky w
+   }
+
+   set f $w.bottom
+   ttk::frame $f
+   ttk::button $f.plot -text Plot
+   ttk::checkbutton $f.fma -text "Clear before plotting"
+   grid x $f.plot $f.fma x -sticky ew -padx 1 -pady 1
+   grid columnconfigure $f {0 3} -weight 1
+
+   grid $w.general $w.metrics {*}$news
+   grid $w.plots ^ {*}$o -sticky new
+   grid $w.bottom - {*}$news
+   grid columnconfigure $w 0 -weight 1
+   grid rowconfigure $w 1 -weight 1
 
    return $w
 }
