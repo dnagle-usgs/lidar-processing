@@ -5,46 +5,6 @@ package require msgcat
 package require misc
 package require sf
 
-################################################################################
-#
-#  This needs to handle the following:
-#     fit_gauss (fit_gauss.i)
-#     ex_bath (ref: raspulsearch.i; bathy.i)
-#     ex_veg (ref: raspulseach.i; veg.i)
-#     show_wf (ref: raspulsearch.i; drast.i)
-#     geo_rast (ref: raspulsearch.i; drast.i)
-#     dump_info (raspulsearch.i)
-#     raspulsearch_groundtruth (raspulseach.i)
-#
-#  #####
-#
-#  fit_gauss, raster, pulse, graph=, add_peak=, lims=, verbose=
-#
-#  #####
-#
-#  ex_bath, raster, pulse, win=0, graph=1
-#
-#  #####
-#
-#  ex_veg, raster, pulse, last=int(250), graph=0/1, win=int(0), use_be_peak=0/1
-#     use_be_centroid=0/1, hard_surface=0/1
-#
-#  #####
-#
-#  show_wf, *wfa, pulse, win=(0 or 7), raster=raster, c1=, c2=, c3=
-#
-#  #####
-#
-#  geo_rast, raster, win=2 (, fsmarks=(0/1), eoffset=double(0)/meters)
-#
-#  #####
-#
-#  r = get_erast(rn=raster)
-#  rr = decode_raster(r)
-#  wfa = ndrast(rr, win=??, graph=??)
-#
-################################################################################
-
 if {![namespace exists ::pixelwf]} {
    # Initialization and Traces only happen first time ::pixelwf is created.
 
