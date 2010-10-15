@@ -87,7 +87,6 @@ if(is_void(__eaarl_includes_included__)) {
    require, "parse.i";
    require, "pip.i";
    require, "qaqc_fns.i";
-   require, "raspulsearch.i";
    require, "rbgga.i";
    require, "rbpnav.i";
    require, "rbtans.i";
@@ -102,6 +101,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "surface_topo.i";
    require, "tiles.i";
    require, "transect.i";
+   require, "transrch.i";
    require, "util_cast.i";
    require, "util_container.i";
    require, "util_coord.i";
