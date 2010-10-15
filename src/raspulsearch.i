@@ -359,25 +359,6 @@ func raspulsearch_groundtruth(mindata, xyz_data, xyz_buf) {
    write, "====================================================";
 }
 
-func intensity_channel(intensity) {
-/* DOCUMENT channel = intensity_channel(intensity)
-   Returns the channel associated with the given intensity.
-
-      channel = 1  if  intensity < 255
-      channel = 2  if  300 <= intensity < 600
-      channel = 3  if  600 <= intensity < 900
-      channel = 0  otherwise
-
-   Works for both scalars and arrays.
-*/
-// Original David Nagle 2009-07-21
-   result = array(0, dimsof(intensity));
-   result += (intensity < 255);
-   result += 2 * ((intensity >= 300) & (intensity < 600));
-   result += 3 * ((intensity >= 600) & (intensity < 900));
-   return result;
-}
-
 func dump_info(edb, mindata, minindx, last=, ref=) {
 /* DOCUMENT dump_info, edb, mindata, minindx, last=, ref=
 
@@ -442,15 +423,15 @@ func dump_info(edb, mindata, minindx, last=, ref=) {
       mindata.elevation/100.0, mindata.elevation/100.0 - last(3)/100.0;
 
    if(structeq(structof(mindata(1)), FS)) {
-      fs_chn_used = intensity_channel(mindata.intensity);
+      fs_chn_used = eaarl_intensity_channel(mindata.intensity);
 
       write, format="First Surface channel / intensity: %d / %3d\n",
          fs_chn_used, mindata.intensity;
    }
 
    if(structeq(structof(mindata(1)), VEG__)) {
-      fs_chn_used = intensity_channel(mindata.fint);
-      be_chn_used = intensity_channel(mindata.lint);
+      fs_chn_used = eaarl_intensity_channel(mindata.fint);
+      be_chn_used = eaarl_intensity_channel(mindata.lint);
 
       write, format="Last return elev: %8.2fm Delta: %7.2fm\n",
          mindata.lelv/100., mindata.lelv/100.-last(4)/100.
@@ -463,8 +444,8 @@ func dump_info(edb, mindata, minindx, last=, ref=) {
    }
 
    if(structeq(structof(mindata(1)), GEO)) {
-      fs_chn_used = intensity_channel(mindata.first_peak);
-      be_chn_used = intensity_channel(mindata.bottom_peak);
+      fs_chn_used = eaarl_intensity_channel(mindata.first_peak);
+      be_chn_used = eaarl_intensity_channel(mindata.bottom_peak);
 
       write, format="Bottom elev: %8.2fm Delta: %7.2fm\n",
          (mindata.elevation+mindata.depth)/100.,
