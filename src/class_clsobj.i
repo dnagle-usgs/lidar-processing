@@ -2,7 +2,7 @@
 
 // To avoid name collisions breaking help, some functions get temporarily named
 // with an underscore prefix.
-scratch = save(scratch, tmp, _where, _grow);
+scratch = save(scratch, tmp, _remove, _where, _grow);
 tmp = save(set, apply, remove, drop, classes, query, where, grow, serialize,
    help);
 
@@ -203,7 +203,7 @@ func apply(class, idx) {
    save, data, noop(class), val;
 }
 
-func remove(class, idx) {
+func _remove(class, idx) {
    if(!regmatch("^[a-zA-Z_][a-zA-Z_0-9]*$", class))
       error, "invalid classification name: " + class;
    use, count, data;
@@ -211,6 +211,7 @@ func remove(class, idx) {
    val(idx) = 0;
    save, data, noop(class), val;
 }
+remove = _remove;
 
 func drop(class) {
    if(!regmatch("^[a-zA-Z_][a-zA-Z_0-9]*$", class))
