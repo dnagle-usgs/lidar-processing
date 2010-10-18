@@ -9,6 +9,13 @@ namespace eval ::yorick {
    variable fifo_counter -1
 }
 
+proc ::yorick::sanitize_vname var {
+   if {[string is digit -strict [string index $var 0]]} {
+      set var v$var
+   }
+   return [regsub -all {[^A-Za-z0-9_]+} $var _]
+}
+
 proc ::yorick::create_fifos {} {
    variable fifo_counter
    set mkfifo [auto_execok mkfifo]
