@@ -64,18 +64,58 @@ proc ::l1pro::groundtruth::widget_comparison_vars {lbl cbo btns var} {
 }
 
 proc ::l1pro::groundtruth::widget_plots {f prefix label ns {plot plg}} {
-   set p [list apply [list suffix "return \"$f.${prefix}_\$suffix\""]]
+   set w [list apply [list suffix "return \"$f.${prefix}_\$suffix\""]]
    set v [list apply [list suffix "return ${ns}::v::plot_${prefix}_\$suffix"]]
-   ttk::label [{*}$p lbl] -text $label
-   ::mixin::combobox [{*}$p type] -width 0 -state readonly \
+   ttk::label [{*}$w lbl] -text $label
+   ::mixin::combobox [{*}$w type] -width 0 -state readonly \
       -textvariable [{*}$v type] -values [set v::${plot}_type_list]
-   ::mixin::combobox [{*}$p color] -width 0 -state readonly \
+   ::mixin::combobox [{*}$w color] -width 0 -state readonly \
       -textvariable [{*}$v color] -values $v::color_list
-   ttk::spinbox [{*}$p size] -width 3 -textvariable [{*}$v size] \
+   ttk::spinbox [{*}$w size] -width 3 -textvariable [{*}$v size] \
       -from 0 -to 100 -increment 1 -format %.2f
-   grid [{*}$p lbl] [{*}$p type] [{*}$p color] [{*}$p size] \
+   grid [{*}$w lbl] [{*}$w type] [{*}$w color] [{*}$w size] \
       -sticky ew -padx 1 -pady 1
-   grid configure [{*}$p lbl] -sticky e
+   grid configure [{*}$w lbl] -sticky e
+
+   if {$plot eq "plg"} {
+      ::tooltip::tooltip [{*}$w type] \
+         "Select the kind of line to display, or \"hide\" if you do not wish\
+         \nto plot this line."
+      trace add variable [{*}$v type] write \
+         [list [namespace which -command widget_plots_state] $w $v line]
+   } else {
+      ::tooltip::tooltip [{*}$w type] \
+         "Select the kind of markers to display, or \"hide\" if you do not\
+         \nwish to plot these points."
+      trace add variable [{*}$v type] write \
+         [list [namespace which -command widget_plots_state] $w $v markers]
+   }
+   set [{*}$v type] [set [{*}$v type]]
+}
+
+proc ::l1pro::groundtruth::widget_plots_state {w v kind name1 name2 op} {
+   if {![winfo exists [{*}$w color]]} {
+      set cmd [lrange [info level 0] 0 end-3]
+      trace remove variable [{*}$v type] write $cmd
+      return
+   }
+   if {[set [{*}$v type]] eq "hide"} {
+      [{*}$w color] state disabled
+      [{*}$w size] state disabled
+      ::tooltip::tooltip [{*}$w color] \
+         "This line is configured to not plot. Change the type to something\
+         \nother than \"hide\" to enable color selection."
+      ::tooltip::tooltip [{*}$w size] \
+         "This line is configured to not plot. Change the type to something\
+         \nother than \"hide\" to enable size selection."
+   } else {
+      [{*}$w color] state !disabled
+      [{*}$w size] state !disabled
+      ::tooltip::tooltip [{*}$w color] \
+         "Select the color for this plot."
+      ::tooltip::tooltip [{*}$w size] \
+         "Select the size for the $kind used in this plot."
+   }
 }
 
 if {![namespace exists ::l1pro::groundtruth::extract::v]} {
