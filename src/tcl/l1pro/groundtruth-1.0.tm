@@ -258,6 +258,7 @@ if {![namespace exists ::l1pro::groundtruth::scatter::v]} {
       variable comparison ""
       variable data best
       variable win 10
+      variable dofma 1
       variable title ""
       variable xtitle "Ground Truth Data (m)"
       variable ytitle "Lidar Data (m)"
@@ -372,8 +373,9 @@ proc ::l1pro::groundtruth::scatter::panel w {
 
    set f $w.bottom
    ttk::frame $f
-   ttk::button $f.plot -text Plot
-   ttk::checkbutton $f.fma -text "Clear before plotting"
+   ttk::button $f.plot -text Plot -command [namespace which -command plot]
+   ttk::checkbutton $f.fma -text "Clear before plotting" \
+      -variable [namespace which -variable v::dofma]
    grid x $f.plot $f.fma x -sticky ew -padx 1 -pady 1
    grid columnconfigure $f {0 3} -weight 1
 
@@ -384,4 +386,53 @@ proc ::l1pro::groundtruth::scatter::panel w {
    grid rowconfigure $w 1 -weight 1
 
    return $w
+}
+
+proc ::l1pro::groundtruth::scatter::plot {} {
+   set plot_defaults {
+         scatterplot "square black 0.2"
+         equality "dash black 1"
+         mean_error "hide"
+         ci95 "hide"
+         linear_lsf "solid black 1"
+         quadratic_lsf "hide"
+   }
+
+   set cmd "gt_scatterplot, $v::comparison.truth, $v::comparison.m_$v::data"
+   ::misc::appendif cmd \
+      1                    ", win=$v::win" \
+      {!$v::dofma}         ", dofma=0" \
+      {$v::title ne ""}    ", title=\"$v::title\"" \
+      {$v::xtitle ne "Ground Truth Data (m)"}   ", xtitle=\"$v::xtitle\"" \
+      {$v::ytitle ne "Lidar Data (m)"}          ", ytitle=\"$v::ytitle\""
+
+   foreach plot [dict keys $plot_defaults] {
+      set type [set v::plot_${plot}_type]
+      set color [set v::plot_${plot}_color]
+      set size [format %g [set v::plot_${plot}_size]]
+      if {$type eq "hide"} {
+         set val $type
+      } else {
+         set val "$type $color $size"
+      }
+      if {$val ne [dict get $plot_defaults $plot]} {
+         append cmd ", ${plot}=\"$val\""
+      }
+   }
+
+   set metrics [list]
+   foreach metric $v::metric_list {
+      if {$v::metrics($metric)} {
+         lappend metrics \"$metric\"
+      }
+   }
+   if {![llength $metrics]} {
+      set metrics 0
+   } else {
+      set metrics \[[join $metrics ", "]\]
+   }
+   ::misc::appendif cmd \
+      {$metrics ne {["# points", "ME"]}}  ", metrics=$metrics"
+
+   exp_send "$cmd;\r"
 }
