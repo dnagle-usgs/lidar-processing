@@ -5,7 +5,7 @@ package provide l1pro::groundtruth 1.0
 if {![namespace exists ::l1pro::groundtruth::v]} {
    namespace eval ::l1pro::groundtruth::v {
       variable top .l1wid.groundtruth
-      variable metric_list [list "# points" COV Q1E Q3E "Median E" ME \
+      variable metric_list [list "# points" ME "R^2" COV Q1E Q3E "Median E" \
          "Midhinge E" "Trimean E" IQME "Pearson's R" "Spearman's rho" \
          "95% CI E" "E skewness" "E kurtosis"]
       variable plg_type_list [list hide solid dash dot dashdot dashdotdot]
@@ -289,6 +289,7 @@ if {![namespace exists ::l1pro::groundtruth::scatter::v]} {
       unset m
       set metrics(#\ points) 1
       set metrics(ME) 1
+      set metrics(R^2) 1
    }
 }
 
