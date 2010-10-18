@@ -109,7 +109,7 @@ proc ::l1pro::groundtruth::comparison_load {} {
 
 proc ::l1pro::groundtruth::widget_comparison_vars {lbl cbo btns var} {
    ttk::label $lbl -text "Comparisons:"
-   ::mixin::combobox $cbo -width 0 -state readonly \
+   ::mixin::combobox $cbo -width 0 \
       -listvariable [namespace which -variable v::comparisons] \
       -textvariable $var
    ttk::frame $btns
@@ -125,6 +125,17 @@ proc ::l1pro::groundtruth::widget_comparison_vars {lbl cbo btns var} {
       [list [namespace code widget_comparison_state] $var $btns]
    set $var [set $var]
 
+   bind $cbo <Return> [namespace code "comparison_add \[set $var\]"]
+
+   ::tooltip::tooltip $cbo \
+      "Select an existing variable from the drop-down list. Variables are\
+      \nadded to this list when you load data using the \"Load\" button (to\
+      \nthe right) or when you extract comparisons using the \"Extract\
+      \nComparisons\" button on the \"Extract\" tab.\
+      \n\
+      \nIf you have created a variable manually on the Yorick command line,\
+      \nyou can type the variable name and hit <Enter> or <Return> to add it\
+      \nto the list."
    ::tooltip::tooltip $btns.load \
       "Load a comparison variable from a PBD file."
 }
@@ -145,12 +156,12 @@ proc ::l1pro::groundtruth::widget_comparison_state {v w name1 name2 op} {
    } else {
       $w.save state disabled
       ::tooltip::tooltip $w.save \
-         "No comparison variables are defined. Extract or load a comparison\
-         \nvariable to enable saving."
+         "No comparison variable is selected. Select a comparison variable to\
+         \nenable saving."
       $w.del state disabled
       ::tooltip::tooltip $w.del \
-         "No comparison variables are defined. Extract or load a comparison\
-         \nvariable to enable deletion."
+         "No comparison variable is selected. Select a comparison variable to\
+         \nenable deletion."
    }
 }
 
