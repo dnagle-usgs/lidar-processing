@@ -204,26 +204,26 @@ func gt_metrics(z1, z2, metrics) {
       else if(metrics(i) == "COV")
          result(i) = swrite(format="%.3f", covariance(z1,z2));
       else if(metrics(i) == "Q1E")
-         result(i) = swrite(format="%.2f", quartiles(zdif)(1));
+         result(i) = swrite(format="%.3f", quartiles(zdif)(1));
       else if(metrics(i) == "Q3E")
-         result(i) = swrite(format="%.2f", quartiles(zdif)(1));
+         result(i) = swrite(format="%.3f", quartiles(zdif)(1));
       else if(metrics(i) == "Median E")
-         result(i) = swrite(format="%.2f", median(zdif));
+         result(i) = swrite(format="%.3f", median(zdif));
       else if(metrics(i) == "ME")
-         result(i) = swrite(format="%.2f", zdif(avg));
+         result(i) = swrite(format="%.3f", zdif(avg));
       else if(metrics(i) == "Midhinge E")
-         result(i) = swrite(format="%.2f", midhinge(zdif));
+         result(i) = swrite(format="%.3f", midhinge(zdif));
       else if(metrics(i) == "Trimean E")
-         result(i) = swrite(format="%.2f", trimean(zdif));
+         result(i) = swrite(format="%.3f", trimean(zdif));
       else if(metrics(i) == "IQME")
-         result(i) = swrite(format="%.2f", interquartile_mean(zdif));
+         result(i) = swrite(format="%.3f", interquartile_mean(zdif));
       else if(metrics(i) == "Pearson's R")
          result(i) = swrite(format="%.3f", pearson_correlation(z1,z2));
       else if(metrics(i) == "Spearman's rho")
          result(i) = swrite(format="%.3f", spearman_correlation(z1,z2));
       else if(metrics(i) == "95% CI E") {
          ci = confidence_interval_95(zdif);
-         result(i) = swrite(format="%.2f to %2.f", ci(1), ci(2));
+         result(i) = swrite(format="%.3f to %.3f", ci(1), ci(2));
       } else if(metrics(i) == "E skewness")
          result(i) = swrite(format="%.3f", skewness(zdif));
       else if(metrics(i) == "E kurtosis")
