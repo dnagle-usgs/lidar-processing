@@ -47,8 +47,10 @@ snit::widgetadaptor ::mixin::statevar {
       if {[dict exists $options(-statemap) $state]} {
          set state [dict get $options(-statemap) $state]
       }
-      if {[catch [list $self configure -state $state]]} {
-         $self configure -state disabled
+      if {[catch [list $self state $state]]} {
+         if {[catch [list $self configure -state $state]]} {
+            $self configure -state disabled
+         }
       }
    }
 }
