@@ -5,6 +5,9 @@ package provide l1pro::groundtruth 1.0
 if {![namespace exists ::l1pro::groundtruth::v]} {
    namespace eval ::l1pro::groundtruth::v {
       variable top .l1wid.groundtruth
+      variable metric_list [list "# points" COV Q1E Q3E "Median E" ME \
+         "Midhinge E" "Trimean E" IQME "Pearson's R" "Spearman's rho" \
+         "95% CI E" "E skewness" "E kurtosis"]
    }
 }
 
@@ -183,6 +186,8 @@ namespace eval ::l1pro::groundtruth::scatter {
 
 if {![namespace exists ::l1pro::groundtruth::scatter::v]} {
    namespace eval ::l1pro::groundtruth::scatter::v {
+      namespace upvar [namespace parent [namespace parent]]::v \
+         metric_list metric_list
    }
 }
 
@@ -250,11 +255,7 @@ proc ::l1pro::groundtruth::scatter::panel w {
    grid columnconfigure $f 0 -weight 1
    set f [$f.f interior]
 
-   foreach metric {
-      "# points" COV Q1E Q3E "Median E" ME "Midhinge E" "Trimean E"
-      IQME "Pearson's R" "Spearman's rho" "95% CI E" "E skewness"
-      "E kurtosis"
-   } {
+   foreach metric $v::metric_list {
       ttk::checkbutton $f.m$metric -text $metric
       grid $f.m$metric {*}$o -sticky w
    }
