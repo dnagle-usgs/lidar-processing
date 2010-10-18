@@ -8,6 +8,12 @@ if {![namespace exists ::l1pro::groundtruth::v]} {
       variable metric_list [list "# points" COV Q1E Q3E "Median E" ME \
          "Midhinge E" "Trimean E" IQME "Pearson's R" "Spearman's rho" \
          "95% CI E" "E skewness" "E kurtosis"]
+      variable plg_type_list [list hide solid dash dot dashdot dashdotdot]
+      variable plmk_type_list [list hide square cross triangle circle diamond \
+         cross2 triangle2]
+      variable color_list [list black white red green blue cyan magenta yellow]
+      variable data_list [list best nearest average median]
+      variable comparisons [list]
    }
 }
 
@@ -45,9 +51,11 @@ namespace eval ::l1pro::groundtruth {
    namespace export widget_comparison_vars widget_plots
 }
 
-proc ::l1pro::groundtruth::widget_comparison_vars {lbl cbo btns} {
+proc ::l1pro::groundtruth::widget_comparison_vars {lbl cbo btns var} {
    ttk::label $lbl -text "Comparisons:"
-   ::mixin::combobox $cbo -width 0
+   ::mixin::combobox $cbo -width 0 -state readonly \
+      -listvariable [namespace which -variable v::comparisons] \
+      -textvariable $var
    ttk::frame $btns
    ttk::button $btns.save -text Save -style Panel.TButton -width 0
    ttk::button $btns.load -text Load -style Panel.TButton -width 0
@@ -55,12 +63,16 @@ proc ::l1pro::groundtruth::widget_comparison_vars {lbl cbo btns} {
    grid $btns.save $btns.load $btns.del -sticky news -padx 1 -pady 1
 }
 
-proc ::l1pro::groundtruth::widget_plots {f prefix label var} {
+proc ::l1pro::groundtruth::widget_plots {f prefix label ns {plot plg}} {
    set p [list apply [list suffix "return \"$f.${prefix}_\$suffix\""]]
+   set v [list apply [list suffix "return ${ns}::v::plot_${prefix}_\$suffix"]]
    ttk::label [{*}$p lbl] -text $label
-   ::mixin::combobox [{*}$p type] -width 0
-   ::mixin::combobox [{*}$p color] -width 0
-   ttk::spinbox [{*}$p size] -width 3
+   ::mixin::combobox [{*}$p type] -width 0 -state readonly \
+      -textvariable [{*}$v type] -values [set v::${plot}_type_list]
+   ::mixin::combobox [{*}$p color] -width 0 -state readonly \
+      -textvariable [{*}$v color] -values $v::color_list
+   ttk::spinbox [{*}$p size] -width 3 -textvariable [{*}$v size] \
+      -from 0 -to 100 -increment 1 -format %.2f
    grid [{*}$p lbl] [{*}$p type] [{*}$p color] [{*}$p size] \
       -sticky ew -padx 1 -pady 1
    grid configure [{*}$p lbl] -sticky e
@@ -186,8 +198,39 @@ namespace eval ::l1pro::groundtruth::scatter {
 
 if {![namespace exists ::l1pro::groundtruth::scatter::v]} {
    namespace eval ::l1pro::groundtruth::scatter::v {
+      variable comparison ""
+      variable data best
+      variable win 10
+      variable title ""
+      variable xtitle "Ground Truth Data (m)"
+      variable ytitle "Lidar Data (m)"
+      variable plot_scatterplot_type square
+      variable plot_scatterplot_color black
+      variable plot_scatterplot_size 0.2
+      variable plot_equality_type dash
+      variable plot_equality_color black
+      variable plot_equality_size 1.0
+      variable plot_mean_error_type hide
+      variable plot_mean_error_color black
+      variable plot_mean_error_size 1.0
+      variable plot_ci95_type hide
+      variable plot_ci95_color black
+      variable plot_ci95_size 1.0
+      variable plot_linear_lsf_type solid
+      variable plot_linear_lsf_color black
+      variable plot_linear_lsf_size 1.0
+      variable plot_quadratic_lsf_type hide
+      variable plot_quadratic_lsf_color black
+      variable plot_quadratic_lsf_size 1.0
+
       namespace upvar [namespace parent [namespace parent]]::v \
-         metric_list metric_list
+         metric_list metric_list data_list data_list
+
+      variable metrics
+      foreach m $metric_list {set metrics($m) 0}
+      unset m
+      set metrics(#\ points) 1
+      set metrics(ME) 1
    }
 }
 
@@ -202,17 +245,25 @@ proc ::l1pro::groundtruth::scatter::panel w {
    set f $w.general
    ttk::frame $f
 
-   widget_comparison_vars $f.lblvar $f.cbovar $f.btnvar
+   widget_comparison_vars $f.lblvar $f.cbovar $f.btnvar \
+      [namespace which -variable v::comparison]
    ttk::label $f.lbldata -text "Data to use:"
-   ::mixin::combobox $f.data -width 0
+   ::mixin::combobox $f.data -width 0 -state readonly \
+      -textvariable [namespace which -variable v::data] \
+      -values $v::data_list
    ttk::label $f.lblwin -text Window:
-   ttk::spinbox $f.win -width 0
+   ttk::spinbox $f.win -width 0 \
+      -textvariable [namespace which -variable v::win] \
+      -from 0 -to 63 -increment 1 -format %.0f
    ttk::label $f.lbltitle -text "Graph title:"
    ttk::label $f.lblxtitle -text "Model label:"
    ttk::label $f.lblytitle -text "Truth label:"
-   ttk::entry $f.title -width 0
-   ttk::entry $f.xtitle -width 0
-   ttk::entry $f.ytitle -width 0
+   ttk::entry $f.title -width 0 \
+      -textvariable [namespace which -variable v::title]
+   ttk::entry $f.xtitle -width 0 \
+      -textvariable [namespace which -variable v::xtitle]
+   ttk::entry $f.ytitle -width 0 \
+      -textvariable [namespace which -variable v::ytitle]
 
    grid $f.lblvar $f.cbovar $f.btnvar - {*}$ew
    grid $f.lbldata $f.data $f.lblwin $f.win {*}$ew
@@ -235,12 +286,13 @@ proc ::l1pro::groundtruth::scatter::panel w {
    grid columnconfigure $f 0 -weight 1
    set f [$f.f interior]
 
-   widget_plots $f scatter Scatterplot: null
-   widget_plots $f equality "Equality line:" null
-   widget_plots $f mean "Mean error line:" null
-   widget_plots $f 95ci "95% CI lines:" null
-   widget_plots $f lsf_linear "Linear LSF line:" null
-   widget_plots $f lsf_quad "Quadratic LSF line:" null
+   set ns [namespace current]
+   widget_plots $f scatterplot Scatterplot: $ns plmk
+   widget_plots $f equality "Equality line:" $ns
+   widget_plots $f mean_error "Mean error line:" $ns
+   widget_plots $f ci95 "95% CI lines:" $ns
+   widget_plots $f linear_lsf "Linear LSF line:" $ns
+   widget_plots $f quadratic_lsf "Quadratic LSF line:" $ns
 
    grid columnconfigure $f {1 2} -weight 1
 
@@ -256,7 +308,8 @@ proc ::l1pro::groundtruth::scatter::panel w {
    set f [$f.f interior]
 
    foreach metric $v::metric_list {
-      ttk::checkbutton $f.m$metric -text $metric
+      ttk::checkbutton $f.m$metric -text $metric \
+         -variable [namespace which -variable v::metrics]($metric)
       grid $f.m$metric {*}$o -sticky w
    }
 
