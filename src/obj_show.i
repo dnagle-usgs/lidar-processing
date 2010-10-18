@@ -30,8 +30,8 @@ func obj_show(workers, obj, prefix=, maxary=, maxchild=, maxdepth=) {
   where typename is the result of typeof(item).
 */
 
-scratch = save(tmp, _array, _closure, scratch);
-_closure = closure;
+scratch = save(tmp, _array, _closure, __closure, scratch);
+__closure = closure;
 tmp = save(_recurse, oxy_object, hash_table, float, double, char, short, int,
   long, pointer, string, void, symlink, closure);
 
@@ -114,7 +114,7 @@ func symlink(obj, name, prefix1, prefix2) {
     name_of_symlink(obj));
 }
 
-func closure(obj, name, prefix1, prefix2) {
+func _closure(obj, name, prefix1, prefix2) {
   this = use();
   output += swrite(format="%s %s (closure)\n", prefix1, name);
   if(curdepth == maxdepth || 4 > maxchild)
@@ -124,6 +124,7 @@ func closure(obj, name, prefix1, prefix2) {
   this, _recurse, obj.function, "function", prefix2, 1;
   this, _recurse, obj.data, "data", prefix2, 2;
 }
+closure = _closure
 
-obj_show = _closure(obj_show, restore(tmp));
+obj_show = __closure(obj_show, restore(tmp));
 restore, scratch;
