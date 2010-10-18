@@ -26,7 +26,7 @@ proc ::l1pro::groundtruth {} {
 }
 
 namespace eval ::l1pro::groundtruth {
-   namespace export add_comparison widget_*
+   namespace export comparison_* widget_*
 }
 
 proc ::l1pro::groundtruth::gui {} {
@@ -51,9 +51,28 @@ proc ::l1pro::groundtruth::gui {} {
    $nb select 0
 }
 
-proc ::l1pro::groundtruth::add_comparison var {
+proc ::l1pro::groundtruth::comparison_add var {
    lappend v::comparisons $var
    set scatter::v::comparison $var
+}
+
+proc ::l1pro::groundtruth::comparison_delete varname {
+   set var [set $varname]
+   if {$var eq ""} return
+   exp_send "$var = \[\];\r"
+   set idx [lsearch -exact $v::comparisons $var]
+   if {$idx > -1} {
+      set v::comparisons [lreplace $v::comparisons $idx $idx]
+      if {$idx == [llength $v::comparisons]} {
+         incr idx -1
+      }
+   }
+   if {$idx == -1} {
+      set new ""
+   } else {
+      set new [lindex $v::comparisons $idx]
+   }
+   if {$scatter::v::comparison eq $var} {set scatter::v::comparison $new}
 }
 
 proc ::l1pro::groundtruth::widget_comparison_vars {lbl cbo btns var} {
@@ -64,15 +83,38 @@ proc ::l1pro::groundtruth::widget_comparison_vars {lbl cbo btns var} {
    ttk::frame $btns
    ttk::button $btns.save -text Save -style Panel.TButton -width 0
    ttk::button $btns.load -text Load -style Panel.TButton -width 0
-   ttk::button $btns.del -text Delete -style Panel.TButton -width 0
+   ttk::button $btns.del -text Delete -style Panel.TButton -width 0 \
+      -command [namespace code [list comparison_delete $var]]
    grid $btns.save $btns.load $btns.del -sticky news -padx 1 -pady 1
 
    # Temporarily disable unimplemented widgets
-   set disable [list $btns.save $btns.load $btns.del]
+   set disable [list $btns.save $btns.load]
    foreach widget $disable {
       $widget state disabled
       ::tooltip::tooltip $widget \
          "This control is not yet implemented."
+   }
+
+   trace add variable $var write \
+      [list [namespace code widget_comparison_state] $var $btns]
+   set $var [set $var]
+}
+
+proc ::l1pro::groundtruth::widget_comparison_state {v w name1 name2 op} {
+   if {![winfo exists $w]} {
+      set cmd [lrange [info level 0] 0 end-3]
+      trace remove variable $v write $cmd
+      return
+   }
+   if {[llength [set $v]]} {
+      $w.del state !disabled
+      ::tooltip::tooltip $w.del \
+         "Delete the currently selected comparison variable."
+   } else {
+      $w.del state disabled
+      ::tooltip::tooltip $w.del \
+         "No comparison variables are defined. Extract or load a comparison\
+         \nvariable to enable deletion."
    }
 }
 
@@ -246,7 +288,7 @@ proc ::l1pro::groundtruth::extract::extract {} {
       {$v::truth_mode ne "fs"} ", truthmode=\"$v::truth_mode\""
    append cmd ", radius=$v::radius)"
    exp_send "$cmd;\r"
-   add_comparison $v::output
+   comparison_add $v::output
 }
 
 namespace eval ::l1pro::groundtruth::scatter {
