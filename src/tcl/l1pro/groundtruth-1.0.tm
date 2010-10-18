@@ -75,29 +75,55 @@ proc ::l1pro::groundtruth::comparison_delete varname {
    if {$scatter::v::comparison eq $var} {set scatter::v::comparison $new}
 }
 
+proc ::l1pro::groundtruth::comparison_save varname {
+   set var [set $varname]
+   if {$var eq ""} return
+   set file [tk_getSaveFile \
+      -parent $v::top \
+      -title "Select destination to save $var" \
+      -defaultextension .pbd \
+      -filetypes {
+         {"PBD files" {*.pbd *.pdb}}
+         {"All files" *}
+      }]
+   if {$file eq ""} return
+   exp_send "obj2pbd, $var, \"$file\";\r"
+}
+
+proc ::l1pro::groundtruth::comparison_load {} {
+   set file [tk_getOpenFile \
+      -parent $v::top \
+      -title "Select file to load" \
+      -filetypes {
+         {"PBD files" {*.pbd *.pdb}}
+         {"All files" *}
+      }]
+   if {$file eq ""} return
+   set var [yorick::sanitize_vname [file rootname [file tail $file]]]
+   exp_send "$var = pbd2obj(\"$file\");\r"
+   comparison_add $var
+}
+
 proc ::l1pro::groundtruth::widget_comparison_vars {lbl cbo btns var} {
    ttk::label $lbl -text "Comparisons:"
    ::mixin::combobox $cbo -width 0 -state readonly \
       -listvariable [namespace which -variable v::comparisons] \
       -textvariable $var
    ttk::frame $btns
-   ttk::button $btns.save -text Save -style Panel.TButton -width 0
-   ttk::button $btns.load -text Load -style Panel.TButton -width 0
+   ttk::button $btns.save -text Save -style Panel.TButton -width 0 \
+      -command [namespace code [list comparison_save $var]]
+   ttk::button $btns.load -text Load -style Panel.TButton -width 0 \
+      -command [namespace code comparison_load]
    ttk::button $btns.del -text Delete -style Panel.TButton -width 0 \
       -command [namespace code [list comparison_delete $var]]
    grid $btns.save $btns.load $btns.del -sticky news -padx 1 -pady 1
 
-   # Temporarily disable unimplemented widgets
-   set disable [list $btns.save $btns.load]
-   foreach widget $disable {
-      $widget state disabled
-      ::tooltip::tooltip $widget \
-         "This control is not yet implemented."
-   }
-
    trace add variable $var write \
       [list [namespace code widget_comparison_state] $var $btns]
    set $var [set $var]
+
+   ::tooltip::tooltip $btns.load \
+      "Load a comparison variable from a PBD file."
 }
 
 proc ::l1pro::groundtruth::widget_comparison_state {v w name1 name2 op} {
@@ -107,10 +133,17 @@ proc ::l1pro::groundtruth::widget_comparison_state {v w name1 name2 op} {
       return
    }
    if {[llength [set $v]]} {
+      $w.save state !disabled
+      ::tooltip::tooltip $w.save \
+         "Save the currently selected comparison variable to a PBD file."
       $w.del state !disabled
       ::tooltip::tooltip $w.del \
          "Delete the currently selected comparison variable."
    } else {
+      $w.save state disabled
+      ::tooltip::tooltip $w.save \
+         "No comparison variables are defined. Extract or load a comparison\
+         \nvariable to enable saving."
       $w.del state disabled
       ::tooltip::tooltip $w.del \
          "No comparison variables are defined. Extract or load a comparison\
