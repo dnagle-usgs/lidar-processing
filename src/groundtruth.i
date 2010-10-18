@@ -211,11 +211,15 @@ func gt_metrics(z1, z2, metrics) {
 func gt_scatterplot(z1, z2, win=, dofma=, title=, xtitle=, ytitle=,
 scatterplot=, equality=, mean_error=, ci95=, linear_lsf=, quadratic_lsf=,
 metrics=) {
+/* DOCUMENT gt_scatterplot, z1, z2, win=, dofma=, title=, xtitle=, ytitle=,
+   scatterplot=, equality=, mean_error=, ci95=, linear_lsf=, quadratic_lsf=,
+   metrics=
+*/
    local type, color, size;
 
    default, win, current_window();
    default, dofma, 1;
-   // default, title, []
+   default, title, string(0);
    default, xtitle, "Ground Truth Data (m)";
    default, ytitle, "Lidar Data (m)";
    default, scatterplot, "square black 0.2";
@@ -279,9 +283,10 @@ metrics=) {
       plt, display, vp(1) + .01, vp(4) - .01, justify="LT", height=12;
    }
 
-   if(title)
+   if(strlen(title))
       pltitle, title;
-   xytitles, xtitle, ytitle;
+   if(strlen(xtitle) || strlen(ytitle))
+      xytitles, xtitle, ytitle;
    limits, square=1;
    limits;
 }
