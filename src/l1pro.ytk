@@ -544,8 +544,10 @@ if {![winfo exists .l1wid]} {
   .l1wid.mb.util add command -label "Histogram Elevations" \
     -command ::l1pro::tools::histelev::gui
 
-  .l1wid.mb.util add command -label "Groundtruth Analysis" \
-    -command ::l1pro::groundtruth::gui
+  if {[package vcompare [info patchlevel] 8.5.9] != -1} {
+    .l1wid.mb.util add command -label "Groundtruth Analysis" \
+      -command ::l1pro::groundtruth::gui
+  }
 
   .l1wid.mb.util add separator
 
