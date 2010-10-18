@@ -2,20 +2,9 @@
 
 package provide l1pro::groundtruth 1.0
 
-if {![namespace exists ::l1pro::groundtruth]} {
-   namespace eval ::l1pro::groundtruth {
-      namespace eval v {
-         variable top .l1wid.groundtruth
-      }
-
-      namespace eval extract {
-         variable model_var fs_all
-         variable model_mode fs
-         variable truth_var fs_all
-         variable truth_mode fs
-         variable output comparisons
-         variable radius 1.00
-      }
+if {![namespace exists ::l1pro::groundtruth::v]} {
+   namespace eval ::l1pro::groundtruth::v {
+      variable top .l1wid.groundtruth
    }
 }
 
@@ -43,13 +32,49 @@ proc ::l1pro::groundtruth::gui {} {
    ttk::notebook $nb
    pack $nb -in $f.f -fill both -expand 1
 
-   $nb add [panel_extract $nb.extract] -text "Extract" -sticky news
-   $nb add [panel_scatter $nb.scatter] -text "Scatterplot" -sticky news
+   $nb add [extract::panel $nb.extract] -text "Extract" -sticky news
+   $nb add [scatter::panel $nb.scatter] -text "Scatterplot" -sticky news
 
    $nb select 0
 }
 
-proc ::l1pro::groundtruth::panel_extract w {
+namespace eval ::l1pro::groundtruth {
+   namespace export widget_comparison_vars widget_plots
+}
+
+proc ::l1pro::groundtruth::widget_comparison_vars {lbl cbo btns} {
+   ttk::label $lbl -text "Comparisons:"
+   ::mixin::combobox $cbo -width 0
+   ttk::frame $btns
+   ttk::button $btns.save -text Save -style Panel.TButton -width 0
+   ttk::button $btns.load -text Load -style Panel.TButton -width 0
+   ttk::button $btns.del -text Delete -style Panel.TButton -width 0
+   grid $btns.save $btns.load $btns.del -sticky news -padx 1 -pady 1
+}
+
+proc ::l1pro::groundtruth::widget_plots {f prefix label var} {
+   set p [list apply [list suffix "return \"$f.${prefix}_\$suffix\""]]
+   ttk::label [{*}$p lbl] -text $label
+   ::mixin::combobox [{*}$p type] -width 0
+   ::mixin::combobox [{*}$p color] -width 0
+   ttk::spinbox [{*}$p size] -width 3
+   grid [{*}$p lbl] [{*}$p type] [{*}$p color] [{*}$p size] \
+      -sticky ew -padx 1 -pady 1
+   grid configure [{*}$p lbl] -sticky e
+}
+
+if {![namespace exists ::l1pro::groundtruth::extract::v]} {
+   namespace eval ::l1pro::groundtruth::extract::v {
+      variable model_var fs_all
+      variable model_mode fs
+      variable truth_var fs_all
+      variable truth_mode fs
+      variable output comparisons
+      variable radius 1.00
+   }
+}
+
+proc ::l1pro::groundtruth::extract::panel w {
    ttk::frame $w
 
    set o [list -padx 1 -pady 1]
@@ -68,10 +93,10 @@ proc ::l1pro::groundtruth::panel_extract w {
       ttk::label $f.lblregion -text Region:
       ttk::label $f.lbltransect -text "Transect width:"
       ::mixin::combobox $f.var -width 0 -state readonly \
-         -textvariable [namespace which -variable extract::${data}_var] \
+         -textvariable [namespace which -variable v::${data}_var] \
          -listvariable ::varlist
       ::mixin::combobox::mapping $f.mode -width 0 -state readonly \
-         -altvariable [namespace which -variable extract::${data}_mode] \
+         -altvariable [namespace which -variable v::${data}_mode] \
          -mapping $::l1pro_data(mode_mapping)
       ttk::spinbox $f.max -width 0
       ttk::spinbox $f.min -width 0
@@ -118,7 +143,7 @@ proc ::l1pro::groundtruth::panel_extract w {
    ttk::frame $f.output
    ttk::label $f.output.lbl -text Output:
    ttk::entry $f.output.ent -width 0 \
-      -textvariable [namespace which -variable extract::output]
+      -textvariable [namespace which -variable v::output]
    grid $f.output.lbl $f.output.ent -sticky ew -padx 1
    grid columnconfigure $f.output 1 -weight 1
 
@@ -126,7 +151,7 @@ proc ::l1pro::groundtruth::panel_extract w {
    ttk::label $f.radius.lbl -text "Search radius:"
    ttk::spinbox $f.radius.spn -width 0 \
       -from 0 -to 1000 -increment 1 -format %.2f \
-      -textvariable [namespace which -variable extract::radius]
+      -textvariable [namespace which -variable v::radius]
    grid $f.radius.lbl $f.radius.spn -sticky ew -padx 1
    grid columnconfigure $f.radius 1 -weight 1
 
@@ -142,38 +167,26 @@ proc ::l1pro::groundtruth::panel_extract w {
    return $w
 }
 
-proc ::l1pro::groundtruth::extract {} {
-   set cmd "$extract::output = gt_extract_comparisons($extract::model_var,\
-      $extract::truth_var"
+proc ::l1pro::groundtruth::extract::extract {} {
+   set cmd "$v::output = gt_extract_comparisons($v::model_var, $v::truth_var"
    ::misc::appendif cmd \
-      {$extract::model_mode ne "fs"} ", modelmode=\"$extract::model_mode\"" \
-      {$extract::truth_mode ne "fs"} ", truthmode=\"$extract::truth_mode\""
-   append cmd ", radius=$extract::radius)"
+      {$v::model_mode ne "fs"} ", modelmode=\"$v::model_mode\"" \
+      {$v::truth_mode ne "fs"} ", truthmode=\"$v::truth_mode\""
+   append cmd ", radius=$v::radius)"
    exp_send "$cmd;\r"
 }
 
-proc ::l1pro::groundtruth::widget_comparison_vars {lbl cbo btns} {
-   ttk::label $lbl -text "Comparisons:"
-   ::mixin::combobox $cbo -width 0
-   ttk::frame $btns
-   ttk::button $btns.save -text Save -style Panel.TButton -width 0
-   ttk::button $btns.load -text Load -style Panel.TButton -width 0
-   ttk::button $btns.del -text Delete -style Panel.TButton -width 0
-   grid $btns.save $btns.load $btns.del -sticky news -padx 1 -pady 1
+namespace eval ::l1pro::groundtruth::scatter {
+   namespace import [namespace parent]::widget_comparison_vars
+   namespace import [namespace parent]::widget_plots
 }
 
-proc ::l1pro::groundtruth::widget_plots {f prefix label var} {
-   set p [list apply [list suffix "return \"$f.${prefix}_\$suffix\""]]
-   ttk::label [{*}$p lbl] -text $label
-   ::mixin::combobox [{*}$p type] -width 0
-   ::mixin::combobox [{*}$p color] -width 0
-   ttk::spinbox [{*}$p size] -width 3
-   grid [{*}$p lbl] [{*}$p type] [{*}$p color] [{*}$p size] \
-      -sticky ew -padx 1 -pady 1
-   grid configure [{*}$p lbl] -sticky e
+if {![namespace exists ::l1pro::groundtruth::scatter::v]} {
+   namespace eval ::l1pro::groundtruth::scatter::v {
+   }
 }
 
-proc ::l1pro::groundtruth::panel_scatter w {
+proc ::l1pro::groundtruth::scatter::panel w {
    ttk::frame $w
 
    set o [list -padx 1 -pady 1]
