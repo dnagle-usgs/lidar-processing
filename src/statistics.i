@@ -92,6 +92,17 @@ func rank(x, method=) {
    return rx;
 }
 
+func r_squared(y, x) {
+/* DOCUMENT r_squared(y, x)
+   Returns the coefficient of determination for X and Y, also called "R
+   squared" or "R^2". This is determined using a linear least-squares-fit of Y
+   to X.
+*/
+   c = poly1_fit(y, x, 1);
+   yp = poly1(x, c);
+   return pearson_correlation(y, yp);
+}
+
 func covariance(x, y) {
 /* DOCUMENT covariance(x, y)
    Returns the covariance of the two variables.
