@@ -189,6 +189,7 @@ func gt_metrics(z1, z2, metrics) {
       "95% CI E" - 95% confidence interval for z2-z1
       "E skewness" - Skewness of z2-z1
       "E kurtosis" - Kurtosis of z2-z1
+      "R^2" - R squared of z2 versus z1
 
    For information about the statistics, SEE ALSO:
       covariance quartiles median midhinge trimean interquartile_mean
@@ -228,6 +229,8 @@ func gt_metrics(z1, z2, metrics) {
          result(i) = swrite(format="%.3f", skewness(zdif));
       else if(metrics(i) == "E kurtosis")
          result(i) = swrite(format="%.3f", kurtosis(zdif));
+      else if(metrics(i) == "R^2")
+         result(i) = swrite(format="%.3f", r_squared(z2, z1));
       else
          error, "Unknown metric: " + metrics(i);
    }
@@ -345,6 +348,9 @@ metrics=) {
 
    if(!is_scalar(metrics)) {
       values = gt_metrics(z1, z2, metrics);
+      w = where(strglob("*^*", metrics));
+      if(numberof(w))
+         metrics(w) += "^";
       display = strjoin(metrics + ": " + values, "\n");
       vp = viewport();
       plt, display, vp(1) + .01, vp(4) - .01, justify="LT", height=12;
