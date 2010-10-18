@@ -25,6 +25,10 @@ proc ::l1pro::groundtruth {} {
    raise $groundtruth::v::top
 }
 
+namespace eval ::l1pro::groundtruth {
+   namespace export add_comparison widget_*
+}
+
 proc ::l1pro::groundtruth::gui {} {
    destroy $v::top
    toplevel $v::top
@@ -47,8 +51,9 @@ proc ::l1pro::groundtruth::gui {} {
    $nb select 0
 }
 
-namespace eval ::l1pro::groundtruth {
-   namespace export widget_comparison_vars widget_plots
+proc ::l1pro::groundtruth::add_comparison var {
+   lappend v::comparisons $var
+   set scatter::v::comparison $var
 }
 
 proc ::l1pro::groundtruth::widget_comparison_vars {lbl cbo btns var} {
@@ -124,6 +129,10 @@ proc ::l1pro::groundtruth::widget_plots_state {w v kind name1 name2 op} {
       ::tooltip::tooltip [{*}$w size] \
          "Select the size for the $kind used in this plot."
    }
+}
+
+namespace eval ::l1pro::groundtruth::extract {
+   namespace import [namespace parent]::*
 }
 
 if {![namespace exists ::l1pro::groundtruth::extract::v]} {
@@ -237,11 +246,11 @@ proc ::l1pro::groundtruth::extract::extract {} {
       {$v::truth_mode ne "fs"} ", truthmode=\"$v::truth_mode\""
    append cmd ", radius=$v::radius)"
    exp_send "$cmd;\r"
+   add_comparison $v::output
 }
 
 namespace eval ::l1pro::groundtruth::scatter {
-   namespace import [namespace parent]::widget_comparison_vars
-   namespace import [namespace parent]::widget_plots
+   namespace import [namespace parent]::*
 }
 
 if {![namespace exists ::l1pro::groundtruth::scatter::v]} {
