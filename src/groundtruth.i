@@ -169,6 +169,32 @@ func gt_extract_comparisons(model, truth, modelmode=, truthmode=, radius=) {
 }
 
 func gt_metrics(z1, z2, metrics) {
+/* DOCUMENT gt_metrics(z1, z2, metrics)
+   Returns an array of strings that are the metric values as requested by the
+   given array METRICS. Z1 and Z2 must each be one-dimensional arrays of
+   numbers. METRICS must be an array of strings.
+
+   Valid metrics:
+      "# points" - Number of points
+      "COV" - Covariance of z1 and z2
+      "Q1E" - First quartile of z2-z1
+      "Q3E" - Third quartile of z2-z1
+      "Median E" - Median of z2-z1
+      "ME" - Average of z2-z1
+      "Midhinge E" - Midhinge of z2-z1
+      "Trimean E" - Trimean of z2-z1
+      "IQME" - Interquartile mean of z2-z1
+      "Pearson's R" - Perason's correlation coefficient for z1 and z2
+      "Spearman's rho" - Spearman's correlation coefficient for z1 and z2
+      "95% CI E" - 95% confidence interval for z2-z1
+      "E skewness" - Skewness of z2-z1
+      "E kurtosis" - Kurtosis of z2-z1
+
+   For information about the statistics, SEE ALSO:
+      covariance quartiles median midhinge trimean interquartile_mean
+      pearson_correlation spearman_correlation confidence_interval_95 skewness
+      kurtosis
+*/
    count = numberof(metrics);
    result = array(string, count);
    zdif = z2 - z1;
@@ -214,6 +240,47 @@ metrics=) {
 /* DOCUMENT gt_scatterplot, z1, z2, win=, dofma=, title=, xtitle=, ytitle=,
    scatterplot=, equality=, mean_error=, ci95=, linear_lsf=, quadratic_lsf=,
    metrics=
+
+   Plots a scatterplot of Z1 versus Z2, along with additional plots and
+   metrics.
+
+   Parameters:
+      z1: A one-dimensional array of values. These are typically ground truth
+         values and will be associated with the Y axis.
+      z2: A one-dimensional array of values. These are typically model/lidar
+         data values and will be associated with the X axis.
+
+   General options:
+      win= The window to plot in. Default is the current window.
+      dofma= Specifies whether to clear before plotting. Valid settings:
+            dofma=0     Do not clear
+            dofma=1     Clear (default)
+      title= Specifies a title for the plot. Examples:
+            title="Fire Island Analysis"
+            title=""    (default; this results in no title)
+      xtitle= Specifies a title for the X axis. Examples:
+            xtitle="Ground Truth Data (m)"   (default)
+      ytitle= Specifies a title for the Y axis. Examples:
+            ytitle="Lidar Data (m)"    (default)
+      metrics= Specifies which metrics to plot. This should be an array of
+         strings. Each string must be a valid metric for gt_metrics. Examples:
+            metrics=["# points", "ME"]    (default)
+
+   Plot options:
+   These options each take a string as a value. The string should be formatted
+   as detailed in parse_plopts.
+      scatterplot= Scatter plot of z2 vs z1
+            scatterplot="square black 0.2"   (default)
+      equality= Equality line: x = y
+            equality="dash black 1.0"
+      mean_error= Mean error line
+            mean_error="hide"
+      ci95= 95% confidence interval lines about the mean error
+            ci95="hide"
+      linear_lsf= Linear least-squares-fit line
+            linear_lsf="solid black 1.0"
+      quadratic_lsf= Quadratic least-squares-fit line
+            quadratic_lsf="hide"
 */
    local type, color, size;
 
