@@ -15,16 +15,17 @@ package require struct::set
 package require misc
 package require mixin
 package require tooltip
-package require l1pro::deprecated
-package require l1pro::main
-package require l1pro::dirload
-package require l1pro::vars
-package require l1pro::file
-package require l1pro::tools
-package require l1pro::settings
-package require l1pro::drast
 package require l1pro::ascii
+package require l1pro::deprecated
+package require l1pro::dirload
+package require l1pro::drast
+package require l1pro::file
+package require l1pro::groundtruth
+package require l1pro::main
 package require l1pro::processing
+package require l1pro::settings
+package require l1pro::tools
+package require l1pro::vars
 
 if {![winfo exists .l1wid]} {
   set l1pro_data(processing_mode) [list \
