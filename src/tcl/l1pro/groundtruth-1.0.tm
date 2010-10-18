@@ -228,8 +228,16 @@ if {![namespace exists ::l1pro::groundtruth::extract::v]} {
    namespace eval ::l1pro::groundtruth::extract::v {
       variable model_var fs_all
       variable model_mode fs
+      variable model_zmax_use 0
+      variable model_zmax_val 0
+      variable model_zmin_use 0
+      variable model_zmin_val 0
       variable truth_var fs_all
       variable truth_mode fs
+      variable truth_zmax_use 0
+      variable truth_zmax_val 0
+      variable truth_zmin_use 0
+      variable truth_zmin_val 0
       variable output comparisons
       variable radius 1.00
    }
@@ -249,8 +257,10 @@ proc ::l1pro::groundtruth::extract::panel w {
       ttk::labelframe $f -text [string totitle $data]
       ttk::label $f.lblvar -text Var:
       ttk::label $f.lblmode -text Mode:
-      ttk::checkbutton $f.chkmax -text "Max z:"
-      ttk::checkbutton $f.chkmin -text "Min z:"
+      ttk::checkbutton $f.chkmax -text "Max z:" \
+         -variable [namespace which -variable v::${data}_zmax_use]
+      ttk::checkbutton $f.chkmin -text "Min z:" \
+         -variable [namespace which -variable v::${data}_zmin_use]
       ttk::label $f.lblregion -text Region:
       ttk::label $f.lbltransect -text "Transect width:"
       ::mixin::combobox $f.var -width 0 -state readonly \
@@ -259,12 +269,23 @@ proc ::l1pro::groundtruth::extract::panel w {
       ::mixin::combobox::mapping $f.mode -width 0 -state readonly \
          -altvariable [namespace which -variable v::${data}_mode] \
          -mapping $::l1pro_data(mode_mapping)
-      ttk::spinbox $f.max -width 0
-      ttk::spinbox $f.min -width 0
+      ttk::spinbox $f.max -width 0 \
+         -from -10000 -to 10000 -increment 0.1 \
+         -textvariable [namespace which -variable v::${data}_zmax_val]
+      ttk::spinbox $f.min -width 0 \
+         -from -10000 -to 10000 -increment 0.1 \
+         -textvariable [namespace which -variable v::${data}_zmin_val]
       ttk::entry $f.region -width 0
       ttk::menubutton $f.btnregion -menu $f.regionmenu \
          -text "Configure Region..."
       ttk::spinbox $f.transect -width 0
+
+      ::mixin::statevar $f.max \
+         -statemap {0 disabled 1 !disabled} \
+         -statevariable [namespace which -variable v::${data}_zmax_use]
+      ::mixin::statevar $f.min \
+         -statemap {0 disabled 1 !disabled} \
+         -statevariable [namespace which -variable v::${data}_zmin_use]
 
       grid $f.lblvar $f.var - {*}$ew
       grid $f.lblmode $f.mode - {*}$ew
@@ -290,12 +311,23 @@ proc ::l1pro::groundtruth::extract::panel w {
       $mb add command -label "Plot current region (if possible)"
 
       # Temporarily disable unimplemented widgets
-      set disable [list $f.chkmax $f.chkmin $f.max $f.min $f.lblregion \
-         $f.region $f.btnregion $f.lbltransect $f.transect]
+      set disable [list $f.lblregion $f.region $f.btnregion $f.lbltransect \
+         $f.transect]
       foreach widget $disable {
          $widget state disabled
          ::tooltip::tooltip $widget \
             "This control is not yet implemented."
+      }
+
+      foreach widget [list $f.chkmax $f.max] {
+         ::tooltip::tooltip $widget \
+            "When enabled, only points with an elevation below this threshold\
+            \nwill be used."
+      }
+      foreach widget [list $f.chkmin $f.min] {
+         ::tooltip::tooltip $widget \
+            "When enabled, only points with an elevation above this threshold\
+            \nwill be used."
       }
    }
 
@@ -329,11 +361,27 @@ proc ::l1pro::groundtruth::extract::panel w {
 }
 
 proc ::l1pro::groundtruth::extract::extract {} {
-   set cmd "$v::output = gt_extract_comparisons($v::model_var, $v::truth_var"
+   set model $v::model_var
+   set truth $v::truth_var
+   foreach var {model truth} {
+      if {[set v::${var}_zmax_use] || [set v::${var}_zmin_use]} {
+         set $var "filter_bounded_elv([set $var]"
+         ::misc::appendif $var \
+            {[set v::${var}_mode] ne "fs"} \
+               ", mode=\"[set v::${var}_mode]\"" \
+            [set v::${var}_zmin_use] \
+               ", lbound=[format %g [set v::${var}_zmin_val]]" \
+            [set v::${var}_zmax_use] \
+               ", ubound=[format %g [set v::${var}_zmax_val]]" \
+            1 ")"
+      }
+   }
+   set cmd "$v::output = gt_extract_comparisons($model, $truth"
    ::misc::appendif cmd \
-      {$v::model_mode ne "fs"} ", modelmode=\"$v::model_mode\"" \
-      {$v::truth_mode ne "fs"} ", truthmode=\"$v::truth_mode\""
-   append cmd ", radius=$v::radius)"
+      {$v::model_mode ne "fs"}   ", modelmode=\"$v::model_mode\"" \
+      {$v::truth_mode ne "fs"}   ", truthmode=\"$v::truth_mode\"" \
+      {$v::radius != 1.}         ", radius=[format %g $v::radius]" \
+      1                          ")"
    exp_send "$cmd;\r"
    comparison_add $v::output
 }
