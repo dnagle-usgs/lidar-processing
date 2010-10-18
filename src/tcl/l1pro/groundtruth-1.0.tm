@@ -61,6 +61,14 @@ proc ::l1pro::groundtruth::widget_comparison_vars {lbl cbo btns var} {
    ttk::button $btns.load -text Load -style Panel.TButton -width 0
    ttk::button $btns.del -text Delete -style Panel.TButton -width 0
    grid $btns.save $btns.load $btns.del -sticky news -padx 1 -pady 1
+
+   # Temporarily disable unimplemented widgets
+   set disable [list $btns.save $btns.load $btns.del]
+   foreach widget $disable {
+      $widget state disabled
+      ::tooltip::tooltip $widget \
+         "This control is not yet implemented."
+   }
 }
 
 proc ::l1pro::groundtruth::widget_plots {f prefix label ns {plot plg}} {
