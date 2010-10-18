@@ -184,13 +184,13 @@ proc ::l1pro::groundtruth::widget_plots {f prefix label ns {plot plg}} {
          "Select the kind of line to display, or \"hide\" if you do not wish\
          \nto plot this line."
       trace add variable [{*}$v type] write \
-         [list [namespace which -command widget_plots_state] $w $v line]
+         [namespace code [list widget_plots_state $w $v line]]
    } else {
       ::tooltip::tooltip [{*}$w type] \
          "Select the kind of markers to display, or \"hide\" if you do not\
          \nwish to plot these points."
       trace add variable [{*}$v type] write \
-         [list [namespace which -command widget_plots_state] $w $v markers]
+         [namespace code [list widget_plots_state $w $v markers]]
    }
    set [{*}$v type] [set [{*}$v type]]
 }
@@ -349,7 +349,7 @@ proc ::l1pro::groundtruth::extract::panel w {
    grid columnconfigure $f.radius 1 -weight 1
 
    ttk::button $f.extract -text "Extract Comparisons" \
-      -command [namespace which -command extract]
+      -command [namespace code extract]
 
    grid $f.model $f.truth {*}$news
    grid $f.output $f.radius {*}$ew
@@ -512,7 +512,7 @@ proc ::l1pro::groundtruth::scatter::panel w {
 
    set f $w.bottom
    ttk::frame $f
-   ttk::button $f.plot -text Plot -command [namespace which -command plot]
+   ttk::button $f.plot -text Plot -command [namespace code plot]
    ttk::checkbutton $f.fma -text "Clear before plotting" \
       -variable [namespace which -variable v::dofma]
    grid x $f.plot $f.fma x -sticky ew -padx 1 -pady 1
