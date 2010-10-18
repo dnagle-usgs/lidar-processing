@@ -349,9 +349,9 @@ proc ::l1pro::groundtruth::scatter::panel w {
    set ns [namespace current]
    widget_plots $f scatterplot Scatterplot: $ns plmk
    widget_plots $f equality "Equality line:" $ns
+   widget_plots $f linear_lsf "Linear LSF line:" $ns
    widget_plots $f mean_error "Mean error line:" $ns
    widget_plots $f ci95 "95% CI lines:" $ns
-   widget_plots $f linear_lsf "Linear LSF line:" $ns
    widget_plots $f quadratic_lsf "Quadratic LSF line:" $ns
 
    grid columnconfigure $f {1 2} -weight 1
