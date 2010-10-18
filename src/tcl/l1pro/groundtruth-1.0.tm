@@ -52,7 +52,10 @@ proc ::l1pro::groundtruth::gui {} {
 }
 
 proc ::l1pro::groundtruth::comparison_add var {
-   lappend v::comparisons $var
+   if {$var eq ""} return
+   if {[lsearch -exact $v::comparisons $var] == -1} {
+      lappend v::comparisons $var
+   }
    set scatter::v::comparison $var
 }
 
