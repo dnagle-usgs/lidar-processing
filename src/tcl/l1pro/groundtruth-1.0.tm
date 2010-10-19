@@ -700,9 +700,13 @@ proc ::l1pro::groundtruth::hist::panel w {
    ttk::checkbutton $f.binauto -text "Automatic bin size" \
       -variable [namespace which -variable v::bin_auto]
    grid $f.lblbinsize $f.binsize {*}$ew
-   grid $f.binauto {*}$o -sticky w
+   grid $f.binauto - {*}$o -sticky w
 
-   grid columnconfigure $f 2 -weight 1
+   ::mixin::statevar $f.binsize \
+      -statemap {1 disabled 0 !disabled} \
+      -statevariable [namespace which -variable v::bin_auto]
+
+   grid columnconfigure $f 1 -weight 1
 
    set f $w.kde
    ttk::labelframe $f -text "Kernel density estimate"
@@ -725,9 +729,14 @@ proc ::l1pro::groundtruth::hist::panel w {
    grid $f.lblband $f.band {*}$ew
    grid $f.auto_band - {*}$o -sticky w
    grid $f.lblsamples $f.samples {*}$ew
-   grid $f.plot {*}$o
+   grid $f.plot - {*}$o
 
-   grid columnconfigure $f 2 -weight 1
+   ::mixin::statevar $f.band \
+      -statemap {1 disabled 0 !disabled} \
+      -statevariable [namespace which -variable v::kde_h_match]
+
+   grid configure $f.lblkernel $f.lblband $f.lblsamples -sticky e
+   grid columnconfigure $f 1 -weight 1
 
    set f $w.topleft
    ttk::frame $f
