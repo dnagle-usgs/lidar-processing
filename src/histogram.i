@@ -144,78 +144,76 @@ kdesample=, title=, xtitle=, ytitle=) {
    if(normalize)
       hist /= double(numberof(z));
 
-   if(1) {
-      wbkp = current_window();
-      window, win;
-      if(dofma) fma;
+   wbkp = current_window();
+   window, win;
+   if(dofma) fma;
 
-      // Plot data
+   // Plot data
 
-      parse_plopts, kdeline, type, color, size;
-      if(type != "hide") {
-         h = (bandwidth > 0) ? bandwidth : binsize;
-         kde_data, z, sample, density, h=h, K=kernel, kdesample=kdesample;
-         x = span(sample(1), sample(0), numberof(sample) * 8 - 7);
-         y = spline(density, sample, x);
-         if(!normalize)
-            y *= double(numberof(z));
-         plg, y, x, color=color, width=width, type=type;
-         grow, display, swrite(format="bandwidth=%g", h);
-      }
-
-      parse_plopts, tickmarks, type, color, size;
-      if(type != "hide") {
-         ticks = set_remove_duplicates(z);
-         plmk, 0 * ticks, ticks, marker=type, color=color, msize=size;
-      }
-
-      parse_plopts, histbar, type, color, size;
-      if(type != "hide")
-         plh, hist, refs, type=type, color=color, width=size;
-
-      parse_plopts, histline, type, color, size;
-      if(type != "hide")
-         plg, hist, refs, type=type, color=color, width=size;
-
-      if(histline != "hide" || histbar != "hide")
-         grow, display, swrite(format="binsize=%g", binsize);
-
-      if(!is_void(display)) {
-         vp = viewport();
-         display = strjoin(display, "\n");
-         plt, display, vp(1) + .01, vp(4) - .01, justify="LT", height=12;
-      }
-
-      // Plot titles
-      default, title, "Histogram";
-      if(is_void(xtitle))
-         xtitle = is_void(mode) ? "z values" : \
-            datamode2name(mode, which="zunits");
-      if(is_void(ytitle))
-         ytitle = ["Counts", "Density"](normalize+1);
-      title = regsub("_", title, "!_", all=1);
-      xtitle = regsub("_", xtitle, "!_", all=1);
-      ytitle = regsub("_", ytitle, "!_", all=1);
-      pltitle, title;
-      xytitles, xtitle, ytitle;
-
-      // Set axes
-      logxy, 0, logy;
-
-      // (Don't reset limits if user has changed them manually.)
-      if(long(limits()(5)) & 1) {
-         if(!is_void(win))
-            window, win;
-         limits;
-         if(logy)
-            ymin = normalize ? 1./numberof(z) : 1.;
-         else
-            ymin = 0.;
-         ymax = limits()(4) * 1.5;
-         limits, "e", "e", ymin, ymax;
-      }
-      window_select, wbkp;
+   parse_plopts, kdeline, type, color, size;
+   if(type != "hide") {
+      h = (bandwidth > 0) ? bandwidth : binsize;
+      kde_data, z, sample, density, h=h, K=kernel, kdesample=kdesample;
+      x = span(sample(1), sample(0), numberof(sample) * 8 - 7);
+      y = spline(density, sample, x);
+      if(!normalize)
+         y *= double(numberof(z));
+      plg, y, x, color=color, width=width, type=type;
+      grow, display, swrite(format="bandwidth=%g", h);
    }
+
+   parse_plopts, tickmarks, type, color, size;
+   if(type != "hide") {
+      ticks = set_remove_duplicates(z);
+      plmk, 0 * ticks, ticks, marker=type, color=color, msize=size;
+   }
+
+   parse_plopts, histbar, type, color, size;
+   if(type != "hide")
+      plh, hist, refs, type=type, color=color, width=size;
+
+   parse_plopts, histline, type, color, size;
+   if(type != "hide")
+      plg, hist, refs, type=type, color=color, width=size;
+
+   if(histline != "hide" || histbar != "hide")
+      grow, display, swrite(format="binsize=%g", binsize);
+
+   if(!is_void(display)) {
+      vp = viewport();
+      display = strjoin(display, "\n");
+      plt, display, vp(1) + .01, vp(4) - .01, justify="LT", height=12;
+   }
+
+   // Plot titles
+   default, title, "Histogram";
+   if(is_void(xtitle))
+      xtitle = is_void(mode) ? "z values" : \
+         datamode2name(mode, which="zunits");
+   if(is_void(ytitle))
+      ytitle = ["Counts", "Density"](normalize+1);
+   title = regsub("_", title, "!_", all=1);
+   xtitle = regsub("_", xtitle, "!_", all=1);
+   ytitle = regsub("_", ytitle, "!_", all=1);
+   pltitle, title;
+   xytitles, xtitle, ytitle;
+
+   // Set axes
+   logxy, 0, logy;
+
+   // (Don't reset limits if user has changed them manually.)
+   if(long(limits()(5)) & 1) {
+      if(!is_void(win))
+         window, win;
+      limits;
+      if(logy)
+         ymin = normalize ? 1./numberof(z) : 1.;
+      else
+         ymin = 0.;
+      ymax = limits()(4) * 1.5;
+      limits, "e", "e", ymin, ymax;
+   }
+   window_select, wbkp;
 }
 
 func kde_data(data, &sample, &density, mode=, kdesample=, h=, K=) {
