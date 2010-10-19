@@ -285,34 +285,6 @@ func kde_data(data, &sample, &density, mode=, kdesample=, h=, K=) {
    return [sample, density];
 }
 
-func kde_data_plot(sample, density, win=, dofma=, elev=, color=, width=, type=) {
-/* DOCUMENT kde_data_plot, sample, density, win=, dofma=, elev=, color=,
-   width=, type=
-
-   Helper plotting function for kde_data. See kde_data for details.
-*/
-   default, dofma, 1;
-   default, color, "green";
-   default, width, 2;
-   default, type, "solid";
-   default, elev, 8 * numberof(sample) - 7;
-
-   elev = is_vector(elev) ? unref(elev) : span(sample(1), sample(0), elev);
-   dens = spline(density, sample, elev);
-
-   winbkp = current_window();
-   if(!is_void(win))
-      window, win;
-   if(dofma)
-      fma;
-
-   plg, dens, elev, color=color, width=width, type=type;
-   if(long(limits()(5)) & 1)
-      limits, "e", "e", 0, dens(max) * 1.5;
-
-   window_select, winbkp;
-}
-
 func krnl_uniform(u) {
 /* DOCUMENT krnl_uniform(u)
    Uniform kernel. See krnl_density_est.
