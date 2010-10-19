@@ -125,25 +125,31 @@ if {![namespace exists ::l1pro::tools::histelev]} {
          variable win 7
          variable dofma 1
          variable logy 0
-         variable show_line 1
-         variable linecolor blue
-         variable linewidth 2
-         variable linetype solid
-         variable show_box 1
-         variable boxcolor black
-         variable boxwidth 2
-         variable boxtype dot
-         variable show_ticks 0
-         variable ticksize 0.1
-         variable tickcolor red
-         variable show_kde 0
+
+         variable plot_histline_show 1
+         variable plot_histline_type solid
+         variable plot_histline_color blue
+         variable plot_histline_size 2
+
+         variable plot_histbar_show 1
+         variable plot_histbar_type dot
+         variable plot_histbar_color black
+         variable plot_histbar_size 2
+
+         variable plot_tickmarks_show 0
+         variable plot_tickmarks_type square
+         variable plot_tickmarks_color red
+         variable plot_tickmarks_size 0.1
+
+         variable plot_kdeline_show 0
+         variable plot_kdeline_type solid
+         variable plot_kdeline_color green
+         variable plot_kdeline_size 2
+
          variable kernel triangular
          variable auto_bandwidth 0
          variable bandwidth 0.15
          variable kdesample 100
-         variable kdecolor green
-         variable kdewidth 2
-         variable kdetype solid
       }
       namespace eval c {
          variable colors {black white red green blue cyan magenta yellow}
@@ -157,6 +163,13 @@ proc ::l1pro::tools::histelev {} {
 }
 
 proc ::l1pro::tools::histelev::plot {} {
+   set plot_defaults {
+      histline "solid blue 2"
+      histbar "dot black 2"
+      tickmarks "hide"
+      kdeline "hide"
+   }
+
    set cmd "hist_data, $::pro_var"
 
    appendif cmd \
@@ -168,35 +181,24 @@ proc ::l1pro::tools::histelev::plot {} {
       {! $v::dofma}           ", dofma=0" \
       {$v::logy}              ", logy=1"
 
-   if {$v::show_line} {
-      appendif cmd \
-         {$v::linecolor ne "blue"}  ", linecolor=\"$v::linecolor\"" \
-         {$v::linewidth != 2}       ", linewidth=$v::linewidth" \
-         {$v::linetype ne "solid"}  ", linetype=\"$v::linetype\""
-   } else {
-      append cmd ", linetype=\"none\""
+   foreach plot [dict keys $plot_defaults] {
+      if {[set v::plot_${plot}_show]} {
+         set type [set v::plot_${plot}_type]
+         set color [set v::plot_${plot}_color]
+         set size [format %g [set v::plot_${plot}_size]]
+         set val "$type $color $size"
+      } else {
+         set val hide
+      }
+      if {$val ne [dict get $plot_defaults $plot]} {
+         append cmd ", ${plot}=\"$val\""
+      }
    }
-   if {$v::show_box} {
-      appendif cmd \
-         {$v::boxcolor ne "black"}  ", boxcolor=\"$v::boxcolor\"" \
-         {$v::boxwidth != 2}        ", boxwidth=$v::boxwidth" \
-         {$v::boxtype ne "dot"}     ", boxtype=\"$v::boxtype\""
-   } else {
-      append cmd ", boxtype=\"none\""
-   }
-   if {$v::show_ticks} {
-      appendif cmd \
-         {$v::tickcolor ne "red"}   ", tickcolor=\"$v::tickcolor\"" \
-         1                          ", ticksize=$v::ticksize"
-   }
-   if {$v::show_kde} {
+   if {$v::plot_kdeline_show} {
       appendif cmd \
          1                          ", kernel=\"$v::kernel\"" \
          {! $v::auto_bandwidth}     ", bandwidth=$v::bandwidth" \
-         {$v::kdesample != 100}     ", kdesample=$v::kdesample" \
-         {$v::kdecolor ne "black"}  ", kdecolor=\"$v::kdecolor\"" \
-         {$v::kdewidth != 2}        ", kdewidth=$v::kdewidth" \
-         {$v::kdetype ne "dot"}     ", kdetype=\"$v::kdetype\""
+         {$v::kdesample != 100}     ", kdesample=$v::kdesample"
    }
    exp_send "$cmd\r"
    cbar_tool
@@ -310,18 +312,18 @@ proc ::l1pro::tools::histelev::gui_line {w labelsVar} {
    upvar $labelsVar labels
    ::mixin::labelframe::collapsible $w \
       -text "Plot histogram line graph" \
-      -variable [namespace which -variable v::show_line]
+      -variable [namespace which -variable v::plot_histline_show]
    set f [$w interior]
    ttk::label $f.lblcolor -text "Line color: "
    ttk::label $f.lblwidth -text "Line width: "
    ttk::label $f.lbltype -text "Line type: "
    ::mixin::combobox $f.color -state readonly \
-      -textvariable [namespace which -variable v::linecolor] \
+      -textvariable [namespace which -variable v::plot_histline_color] \
       -values $c::colors
    spinbox $f.width -from 0 -to 10 -increment 0.1 \
-      -textvariable [namespace which -variable v::linewidth]
+      -textvariable [namespace which -variable v::plot_histline_size]
    ::mixin::combobox $f.type -state readonly \
-      -textvariable [namespace which -variable v::linetype] \
+      -textvariable [namespace which -variable v::plot_histline_type] \
       -values $c::types
    grid $f.lblcolor $f.color
    grid $f.lblwidth $f.width
@@ -337,18 +339,18 @@ proc ::l1pro::tools::histelev::gui_box {w labelsVar} {
    upvar $labelsVar labels
    ::mixin::labelframe::collapsible $w \
       -text "Plot histogram bar graph" \
-      -variable [namespace which -variable v::show_box]
+      -variable [namespace which -variable v::plot_histbar_show]
    set f [$w interior]
    ttk::label $f.lblcolor -text "Line color: "
    ttk::label $f.lblwidth -text "Line width: "
    ttk::label $f.lbltype -text "Line type: "
    ::mixin::combobox $f.color -state readonly \
-      -textvariable [namespace which -variable v::boxcolor] \
+      -textvariable [namespace which -variable v::plot_histbar_color] \
       -values $c::colors
    spinbox $f.width -from 0 -to 10 -increment 0.1 \
-      -textvariable [namespace which -variable v::boxwidth]
+      -textvariable [namespace which -variable v::plot_histbar_size]
    ::mixin::combobox $f.type -state readonly \
-      -textvariable [namespace which -variable v::boxtype] \
+      -textvariable [namespace which -variable v::plot_histbar_type] \
       -values $c::types
    grid $f.lblcolor $f.color
    grid $f.lblwidth $f.width
@@ -364,7 +366,7 @@ proc ::l1pro::tools::histelev::gui_ticks {w labelsVar} {
    upvar $labelsVar labels
    ::mixin::labelframe::collapsible $w \
       -text "Plot elevation tickmarks" \
-      -variable [namespace which -variable v::show_ticks]
+      -variable [namespace which -variable v::plot_tickmarks_show]
    set f [$w interior]
    ttk::label $f.lblcolor -text "Tick color: "
    ttk::label $f.lblsize -text "Tick size: "
@@ -386,7 +388,7 @@ proc ::l1pro::tools::histelev::gui_kde {w labelsVar} {
    upvar $labelsVar labels
    ::mixin::labelframe::collapsible $w \
       -text "Plot kernel density estimate" \
-      -variable [namespace which -variable v::show_kde]
+      -variable [namespace which -variable v::plot_kdeline_show]
    set f [$w interior]
    ttk::label $f.lblkernel -text "Kernel: "
    ttk::label $f.lblautoband -text "Match bandwith to bin size"
@@ -407,12 +409,12 @@ proc ::l1pro::tools::histelev::gui_kde {w labelsVar} {
    spinbox $f.sample -from 1 -to 10000 -increment 1 \
       -textvariable [namespace which -variable v::kdesample]
    ::mixin::combobox $f.color -state readonly \
-      -textvariable [namespace which -variable v::kdecolor] \
+      -textvariable [namespace which -variable v::plot_kdeline_color] \
       -values $c::colors
    spinbox $f.width -from 0 -to 10 -increment 0.1 \
-      -textvariable [namespace which -variable v::kdewidth]
+      -textvariable [namespace which -variable v::plot_kdeline_size]
    ::mixin::combobox $f.type -state readonly \
-      -textvariable [namespace which -variable v::kdetype] \
+      -textvariable [namespace which -variable v::plot_kdeline_type] \
       -values $c::types
    grid $f.lblkernel $f.kernel $f.profile
    grid $f.autoband $f.lblautoband -

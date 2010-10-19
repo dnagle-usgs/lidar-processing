@@ -1,13 +1,11 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 
 func hist_data(data, mode=, binsize=, normalize=, plot=, win=, dofma=, logy=,
-linecolor=, linewidth=, linetype=, boxcolor=, boxwidth=, boxtype=, ticksize=,
-tickcolor=, kernel=, bandwidth=, kdesample=, kdecolor=, kdewidth=, kdetype=,
+histline=, histbar=, tickmarks=, kdeline=, kernel=, bandwidth=, kdesample=,
 vname=, title=, xtitle=, ytitle=) {
 /* DOCUMENT hd = hist_data(data, mode=, binsize=, normalize=, plot=, win=,
-      dofma=, logy=, linecolor=, linewidth=, linetype=, boxcolor=, boxwidth=,
-      boxtype=, ticksize=, tickcolor=, kernel=, bandwidth=, kdesample=,
-      kdecolor=, kdewidth=, kdetype=, vname=, title=, xtitle=, ytitle=)
+      dofma=, logy=, kernel=, bandwidth=, kdesample=, vname=, title=, xtitle=,
+      ytitle=)
 
    Creates a histogram for data's elevations, then plots it. Optionally, it can
    also include a kernel density estimation plot. (See kde_data.)
@@ -56,48 +54,30 @@ vname=, title=, xtitle=, ytitle=) {
             logy=0   Normal linear scale (default)
             logy=1   Logarithmic scale
 
-   Plotting options for line:
-   These options control the curve/line that passes through the histogram
-   points.
-      linecolor= Color of the line.
-            linecolor="blue"     (default)
-      linewidth= Width of the line.
-            linewidth=2          (default)
-      linetype= Type of line. See "help, type" for list of valid settings.
-            linetype="solid"     Solid line (default)
-            linetype="dot"       Dotted line
-            linetype="none"      Hides the line
-
-   Plotting options for boxes:
-   These options control the box-like line that denotes the histogram bars.
-      boxcolor= Color of the line.
-            boxcolor="black"  (default)
-      boxwidth= Width of the line.
-            boxwidth=2        (default)
-      boxtype= Type of line. See "help, type" for list of valid settings.
-            boxtype="dot"     Dotted line (default)
-            boxtype="solid"   Solid line
-            boxtype="none"    Hides the line
-
-   Plotting options for tick marks:
-   These options control the tick marks across the bottom denoting where data
-   points occured.
-      ticksize= Size of tick marks.
-            ticksize=0     Hides the tick marks (default)
-            ticksize=0.1
-      tickcolor= Color of tick marks.
-            tickcolor="red"
+   Specific plot options:
+   These options each take a string as a value. The string should be formatted
+   as detailed in parse_plopts.
+      histline= Line plotted through the centers of the histogram bins.
+            histline="solid blue 2" (default)
+      histbar= Bar graph that shows the width of each histogram bin as well as
+         its value.
+            histbar="dot black 2" (default)
+      tickmarks= Places markers across the bottom of the plot at each unique
+         data value in the dataset. (Note: On large sets of points, this is
+         very slow.)
+            tickmarks="hide" (default)
+      kdeline= Line plotted for the kernel density estimate.
+            kdeline="hide" (default)
 
    Plotting option for kernel density estimation:
    These options control the kernel density estimation line plot.
       kernel= Kernel to use when calling kde_data. (K= option to kde_data)
-            kernel="none"           Do not run kde. (default)
+            kernel="gaussian"       (default)
             kernel="uniform"
             kernel="triangular"
             kernel="epanechnikov"
             kernel="quartic"
             kernel="triweight"
-            kernel="gaussian"
             kernel="cosine"
       bandwidth= Bandwidth to supply to kde_data. If set to 0, then it will be
          automatially set to either your binsize or, if kernel="gaussian", half
@@ -109,13 +89,6 @@ vname=, title=, xtitle=, ytitle=) {
          accuracy/detail. When plotting, a spline interpolation is performed to
          upsample this by a factor of 8 for a smoother result.
             kdesample=100     (default)
-      kdecolor= Color of the line.
-            kdecolor="green"     (default)
-      kdewidth= Width of the line.
-            linewidth=2          (default)
-      kdetype= Type of line. See "help, type" for list of valid settings.
-            kdetype="solid"      Solid line (default)
-            kdetype="dot"        Dotted line
 
    Plotting options for titles:
       vname= Allows you to specify the input data's variable name. If provided,
@@ -134,9 +107,9 @@ vname=, title=, xtitle=, ytitle=) {
    default, normalize, 1;
    default, plot, 1;
    default, dofma, 1;
-   default, kernel, "none";
    default, bandwidth, 0;
-   default, ticksize, 0;
+   default, kdeline, "hide";
+   default, kernel, "gaussian";
 
    if(is_numerical(data) && dimsof(data)(1) == 1)
       z = unref(data);
@@ -155,7 +128,7 @@ vname=, title=, xtitle=, ytitle=) {
    hist = histogram(Z, top=Z(max)+1);
    refs = zmin + binsize * (indgen(numberof(hist)) - 0.5);
 
-   if(kernel != "none")
+   if(kdeline != "hide")
       normalize = 1;
 
    if(normalize == 2) {
@@ -168,11 +141,11 @@ vname=, title=, xtitle=, ytitle=) {
       total = [];
    }
 
-   if(ticksize)
-      ticks = set_remove_duplicates(z);
+   ticks = set_remove_duplicates(z);
 
    if(plot) {
-      if(kernel != "none") {
+      parse_plopts, kdeline, type, color, size;
+      if(type != "hide") {
          if(bandwidth > 0) {
             h = bandwidth;
          } else if(kernel == "gaussian") {
@@ -181,14 +154,12 @@ vname=, title=, xtitle=, ytitle=) {
             h = binsize;
          }
          kde_data, z, win=win, dofma=dofma, h=h, K=kernel, kdesample=kdesample,
-            color=kdecolor, width=kdewidth, type=kdetype;
+            type=type, color=color, width=size;
          dofma = 0;
       }
       hist_data_plot, hist, refs, ticks=ticks, mode=mode, normalize=normalize,
-         win=win, dofma=dofma, logy=logy, linecolor=linecolor,
-         linewidth=linewidth, linetype=linetype, boxcolor=boxcolor,
-         boxwidth=boxwidth, boxtype=boxtype, ticksize=ticksize,
-         tickcolor=tickcolor, vname=vname, title=title, xtitle=xtitle,
+         win=win, dofma=dofma, logy=logy, histline=histline, histbar=histbar,
+         tickmarks=tickmarks, vname=vname, title=title, xtitle=xtitle,
          ytitle=ytitle;
 
       if(long(limits()(5)) & 1) {
@@ -207,11 +178,9 @@ vname=, title=, xtitle=, ytitle=) {
 }
 
 func hist_data_plot(hist, refs, ticks=, mode=, normalize=, win=, dofma=, logy=,
-linecolor=, linewidth=, linetype=, boxcolor=, boxwidth=, boxtype=, ticksize=,
-tickcolor=, vname=, title=, xtitle=, ytitle=) {
+histline=, histbar=, tickmarks=, vname=, title=, xtitle=, ytitle=) {
 /* DOCUMENT hist_data_plot, hst, ticks=, mode=, normalize=, win=, dofma=,
-      logy=, linecolor=, linewidth=, linetype=, boxcolor=, boxwidth=, boxtype=,
-      ticksize=, tickcolor=, vname=, title=, xtitle=, ytitle=
+      logy=, histline=, histbar=, tickmarks=, vname=, title=, xtitle=, ytitle=
 
    Parameter hst should be the return result of hist_data. Option ticks= is an
    array of tickmark values. All other options are as described in hist_data.
@@ -220,6 +189,9 @@ tickcolor=, vname=, title=, xtitle=, ytitle=) {
 // Original David Nagle 2009-01-26
    default, dofma, 1;
    default, logy, 0;
+   default, histline, "solid blue 2";
+   default, histbar, "dot black 2";
+   default, tickmarks, "hide";
 
    if(is_void(refs)) {
       refs = hist(,1);
@@ -244,14 +216,17 @@ tickcolor=, vname=, title=, xtitle=, ytitle=) {
    hist_data_plot_titles, hist, refs, mode=mode, vname=vname, title=title,
       xtitle=xtitle, ytitle=ytitle, binsize=binsize, normalize=normalize;
 
-   if(!is_void(ticks) && (is_void(ticksize) || ticksize > 0))
-      hist_data_plot_ticks, ticks, msize=ticksize, color=tickcolor;
-   if(boxtype != "none")
-      hist_data_plot_boxes, hist, refs, color=boxcolor, width=boxwidth,
-         type=boxtype;
-   if(linetype != "none")
-      hist_data_plot_line, hist, refs, color=linecolor, width=linewidth,
-         type=linetype;
+   parse_plopts, tickmarks, type, color, size;
+   if(type != "hide")
+      hist_data_plot_ticks, ticks, color=color, msize=size;
+
+   parse_plopts, histbar, type, color, size;
+   if(type != "hide")
+      hist_data_plot_boxes, hist, refs, type=type, color=color, width=size;
+
+   parse_plopts, histline, type, color, size;
+   if(type != "hide")
+      plg, hist, refs, type=type, color=color, width=size;
 
    // Set axes
    logxy, 0, logy;
@@ -291,16 +266,6 @@ binsize=, normalize=) {
    }
    pltitle, title;
    xytitles, xtitle, ytitle;
-}
-
-func hist_data_plot_line(hist, refs, color=, width=, type=) {
-/* DOCUMENT hist_data_plot_line
-   Helper function for hist_data_plot.
-*/
-   default, color, "blue";
-   default, width, 2;
-   default, type, "solid";
-   plg, hist, refs, color=color, width=width, type=type;
 }
 
 func hist_data_plot_boxes(hist, refs, color=, width=, type=) {
