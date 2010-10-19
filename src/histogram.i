@@ -49,11 +49,12 @@ func hist_data(data, &refs, &hist, mode=, binsize=) {
 }
 
 func hist_data_plot(data, mode=, binsize=, normalize=, win=, dofma=,
-logy=, histline=, histbar=, tickmarks=, kdeline=, kernel=, bandwidth=,
-kdesample=, title=, xtitle=, ytitle=) {
-/* DOCUMENT hd = hist_data_plot(data, mode=, binsize=, normalize=, plot=, win=,
-      dofma=, logy=, kernel=, bandwidth=, kdesample=, title=, xtitle=,
-      ytitle=)
+logy=, histline=, histbar=, tickmarks=, zeroline=, meanline=, ci95lines=,
+kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=, ytitle=) {
+/* DOCUMENT hd = hist_data_plot(data, mode=, binsize=, normalize=, win=,
+   dofma=, logy=, histline=, histbar=, tickmarks=, zeroline=, meanline=,
+   ci95lines=, kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=,
+   ytitle=)
 
    Creates a histogram for data's elevations, then plots it. Optionally, it can
    also include a kernel density estimation plot. (See kde_data.)
@@ -110,6 +111,12 @@ kdesample=, title=, xtitle=, ytitle=) {
          data value in the dataset. (Note: On large sets of points, this is
          very slow.)
             tickmarks="hide" (default)
+      zeroline= Plots a vertical line at 0.
+            zeroline="hide" (default)
+      meanline= Plots a vertical line at the mean.
+            meanline="hide" (default)
+      ci95lines= Plots vertical lines about the 95% confidence interval.
+            ci95lines="hide"
       kdeline= Line plotted for the kernel density estimate.
             kdeline="hide" (default)
 
@@ -149,13 +156,16 @@ kdesample=, title=, xtitle=, ytitle=) {
    default, normalize, 1;
    default, dofma, 1;
    default, bandwidth, 0;
-   default, kdeline, "hide";
    default, kernel, "gaussian";
    default, dofma, 1;
    default, logy, 0;
    default, histline, "solid blue 2";
    default, histbar, "dot black 2";
    default, tickmarks, "hide";
+   default, zeroline, "hide";
+   default, meanline, "hide";
+   default, ci95lines, "hide";
+   default, kdeline, "hide";
    default, win, current_window();
    if(win < 0) win = 0;
 
@@ -186,10 +196,10 @@ kdesample=, title=, xtitle=, ytitle=) {
    if(type != "hide") {
       h = (bandwidth > 0) ? bandwidth : binsize;
       kde_data, z, sample, density, h=h, K=kernel, kdesample=kdesample;
+      if(!normalize)
+         density *= double(numberof(z));
       x = span(sample(1), sample(0), numberof(sample) * 8 - 7);
       y = spline(density, sample, x);
-      if(!normalize)
-         y *= double(numberof(z));
       plg, y, x, color=color, width=width, type=type;
       grow, display, swrite(format="bandwidth=%g", h);
    }
@@ -208,6 +218,25 @@ kdesample=, title=, xtitle=, ytitle=) {
    parse_plopts, histline, type, color, size;
    if(type != "hide")
       plg, hist, refs, type=type, color=color, width=size;
+
+   ymax = hist(max);
+   if(!is_void(density))
+      ymax = max(ymax, density(max));
+   ymax *= 1.5;
+
+   parse_plopts, zeroline, type, color, size;
+   if(type != "hide")
+      plvline, 0, 0, ymax, type=type, color=color, width=size;
+
+   parse_plopts, meanline, type, color, size;
+   if(type != "hide")
+      plvline, z(avg), 0, ymax, type=type, color=color, width=size;
+
+   parse_plopts, ci95lines, type, color, size;
+   if(type != "hide") {
+      CI = confidence_interval_95(z);
+      plvline, CI, 0, ymax, type=type, color=color, width=size;
+   }
 
    if(!is_void(display)) {
       vp = viewport();
@@ -239,7 +268,6 @@ kdesample=, title=, xtitle=, ytitle=) {
          ymin = normalize ? 1./numberof(z) : 1.;
       else
          ymin = 0.;
-      ymax = limits()(4) * 1.5;
       limits, "e", "e", ymin, ymax;
    }
    window_select, wbkp;
