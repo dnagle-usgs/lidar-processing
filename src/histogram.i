@@ -110,6 +110,11 @@ vname=, title=, xtitle=, ytitle=) {
    default, bandwidth, 0;
    default, kdeline, "hide";
    default, kernel, "gaussian";
+   default, dofma, 1;
+   default, logy, 0;
+   default, histline, "solid blue 2";
+   default, histbar, "dot black 2";
+   default, tickmarks, "hide";
 
    if(is_numerical(data) && dimsof(data)(1) == 1)
       z = unref(data);
@@ -155,88 +160,51 @@ vname=, title=, xtitle=, ytitle=) {
             type=type, color=color, width=size;
          dofma = 0;
       }
-      hist_data_plot, hist, refs, ticks=ticks, mode=mode, normalize=normalize,
-         win=win, dofma=dofma, logy=logy, histline=histline, histbar=histbar,
-         tickmarks=tickmarks, vname=vname, title=title, xtitle=xtitle,
-         ytitle=ytitle;
 
+      wbkp = current_window();
+      if(is_void(win))
+         win = window();
+      window, win;
+
+      if(dofma)
+         fma;
+
+      // Plot data
+      hist_data_plot_titles, hist, refs, mode=mode, vname=vname, title=title,
+         xtitle=xtitle, ytitle=ytitle, binsize=binsize, normalize=normalize;
+
+      parse_plopts, tickmarks, type, color, size;
+      if(type != "hide")
+         plmk, 0 * ticks, ticks, marker=type, color=color, msize=size;
+
+      parse_plopts, histbar, type, color, size;
+      if(type != "hide")
+         plh, hist, refs, type=type, color=color, width=size;
+
+      parse_plopts, histline, type, color, size;
+      if(type != "hide")
+         plg, hist, refs, type=type, color=color, width=size;
+
+      // Set axes
+      logxy, 0, logy;
+      if(logy && normalize)
+         ymin = hist(where(hist > 0))(min)/10.;
+      else
+         ymin = logy;
+
+      // (Don't reset limits if user has changed them manually.)
       if(long(limits()(5)) & 1) {
-         wbkp = current_window();
          if(!is_void(win))
             window, win;
          ymin = limits()(3);
          limits;
          ymax = limits()(4) * 1.5;
          limits, "e", "e", ymin, ymax;
-         window_select, wbkp;
       }
+      window_select, wbkp;
    }
 
    return [unref(refs), unref(hist)];
-}
-
-func hist_data_plot(hist, refs, ticks=, mode=, normalize=, win=, dofma=, logy=,
-histline=, histbar=, tickmarks=, vname=, title=, xtitle=, ytitle=) {
-/* DOCUMENT hist_data_plot, hst, ticks=, mode=, normalize=, win=, dofma=,
-      logy=, histline=, histbar=, tickmarks=, vname=, title=, xtitle=, ytitle=
-
-   Parameter hst should be the return result of hist_data. Option ticks= is an
-   array of tickmark values. All other options are as described in hist_data.
-   This performs the plotting for hist_data.
-*/
-// Original David Nagle 2009-01-26
-   default, dofma, 1;
-   default, logy, 0;
-   default, histline, "solid blue 2";
-   default, histbar, "dot black 2";
-   default, tickmarks, "hide";
-
-   if(is_void(refs)) {
-      refs = hist(,1);
-      hist = hist(,2);
-   }
-
-   // Attempt to guess normalization. If max hist is over 100, then it's
-   // definitely normalize=0. If it's under 100, then we have no idea... but
-   // "Relative freqency" is a generic enough descriptor that we can go with
-   // normalize=2.
-   default, normalize, (hist(max) > 100 ? 0 : 2);
-
-   wbkp = current_window();
-   if(is_void(win))
-      win = window();
-   window, win;
-
-   if(dofma)
-      fma;
-
-   // Plot data
-   hist_data_plot_titles, hist, refs, mode=mode, vname=vname, title=title,
-      xtitle=xtitle, ytitle=ytitle, binsize=binsize, normalize=normalize;
-
-   parse_plopts, tickmarks, type, color, size;
-   if(type != "hide")
-      plmk, 0 * ticks, ticks, marker=type, color=color, msize=size;
-
-   parse_plopts, histbar, type, color, size;
-   if(type != "hide")
-      plh, hist, refs, type=type, color=color, width=size;
-
-   parse_plopts, histline, type, color, size;
-   if(type != "hide")
-      plg, hist, refs, type=type, color=color, width=size;
-
-   // Set axes
-   logxy, 0, logy;
-   if(logy && normalize)
-      ymin = hist(where(hist > 0))(min)/10.;
-   else
-      ymin = logy;
-   // (Don't reset limits if user has changed them manually.)
-   if(long(limits()(5)) & 1)
-      limits, "e", "e", ymin, hist(max) * 1.5;
-
-   window_select, wbkp;
 }
 
 func hist_data_plot_titles(hist, refs, mode=, vname=, title=, xtitle=, ytitle=,
