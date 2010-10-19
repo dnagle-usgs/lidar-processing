@@ -103,7 +103,7 @@ vname=, title=, xtitle=, ytitle=) {
          axis (based on normalize)
 */
 // Original David Nagle 2009-01-26
-   local z, ticks;
+   local z, ticks, type, color, size;
    default, normalize, 1;
    default, plot, 1;
    default, dofma, 1;
