@@ -1,6 +1,24 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 
-func hist_data_plot(data, mode=, binsize=, normalize=, plot=, win=, dofma=,
+func hist_data(data, &refs, &hist, mode=, binsize=) {
+   local z;
+   default, binsize, 0.30;
+   if(is_numerical(data) && dimsof(data)(1) == 1)
+      z = unref(data);
+   else
+      data2xyz, unref(data), , , z, mode=mode;
+
+   zmin = z(min) - binsize;
+   Z = long((z-zmin)/binsize) + 1;
+
+   hist = histogram(Z, top=Z(max)+1);
+   refs = zmin + binsize * (indgen(numberof(hist)) - 0.5);
+
+   if(!am_subroutine())
+      return [refs, hist];
+}
+
+func hist_data_plot(data, mode=, binsize=, normalize=, win=, dofma=,
 logy=, histline=, histbar=, tickmarks=, kdeline=, kernel=, bandwidth=,
 kdesample=, title=, xtitle=, ytitle=) {
 /* DOCUMENT hd = hist_data_plot(data, mode=, binsize=, normalize=, plot=, win=,
@@ -39,9 +57,6 @@ kdesample=, title=, xtitle=, ytitle=) {
             normalize=1    Normalize against sum to yield fraction of whole (default)
 
    General plotting options:
-      plot= Specifies whether a plot should be made.
-            plot=0   Do not plot
-            plot=1   Plot (default)
       win= The window to plot in. Defaults to the current window.
             win=2    Plot in window 2.
       dofma= Specifies whether an fma should occur before plotting, which
@@ -102,7 +117,6 @@ kdesample=, title=, xtitle=, ytitle=) {
 // Original David Nagle 2009-01-26
    local z, ticks, type, color, size, display, sample, density;
    default, normalize, 1;
-   default, plot, 1;
    default, dofma, 1;
    default, bandwidth, 0;
    default, kdeline, "hide";
@@ -125,16 +139,12 @@ kdesample=, title=, xtitle=, ytitle=) {
       binsize = 1/(1+exp(-((zrng-100)/20.)))*.2+.1;
       binsize = long(binsize * 100)/100.;
    }
+   hist_data, z, refs, hist, binsize=binsize;
 
-   zmin = z(min) - binsize;
-   Z = long((z-zmin)/binsize) + 1;
-
-   hist = histogram(Z, top=Z(max)+1);
-   refs = zmin + binsize * (indgen(numberof(hist)) - 0.5);
    if(normalize)
       hist /= double(numberof(z));
 
-   if(plot) {
+   if(1) {
       wbkp = current_window();
       window, win;
       if(dofma) fma;
@@ -206,8 +216,6 @@ kdesample=, title=, xtitle=, ytitle=) {
       }
       window_select, wbkp;
    }
-
-   return [unref(refs), unref(hist)];
 }
 
 func kde_data(data, &sample, &density, mode=, kdesample=, h=, K=) {
