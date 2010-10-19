@@ -145,7 +145,7 @@ kdesample=, title=, xtitle=, ytitle=) {
          axis (based on normalize)
 */
 // Original David Nagle 2009-01-26
-   local z, ticks, type, color, size, display, sample, density;
+   local z, ticks, type, color, size, display, sample, density, hist, refs;
    default, normalize, 1;
    default, dofma, 1;
    default, bandwidth, 0;
@@ -169,16 +169,18 @@ kdesample=, title=, xtitle=, ytitle=) {
       binsize = 1/(1+exp(-((zrng-100)/20.)))*.2+.1;
       binsize = long(binsize * 100)/100.;
    }
-   hist_data, z, refs, hist, binsize=binsize;
-
-   if(normalize)
-      hist /= double(numberof(z));
 
    wbkp = current_window();
    window, win;
    if(dofma) fma;
 
    // Plot data
+
+   parse_plopts, tickmarks, type, color, size;
+   if(type != "hide") {
+      ticks = set_remove_duplicates(z);
+      plmk, 0 * ticks, ticks, marker=type, color=color, msize=size;
+   }
 
    parse_plopts, kdeline, type, color, size;
    if(type != "hide") {
@@ -192,10 +194,11 @@ kdesample=, title=, xtitle=, ytitle=) {
       grow, display, swrite(format="bandwidth=%g", h);
    }
 
-   parse_plopts, tickmarks, type, color, size;
-   if(type != "hide") {
-      ticks = set_remove_duplicates(z);
-      plmk, 0 * ticks, ticks, marker=type, color=color, msize=size;
+   if(histline != "hide" || histbar != "hide") {
+      grow, display, swrite(format="binsize=%g", binsize);
+      hist_data, z, refs, hist, binsize=binsize;
+      if(normalize)
+         hist /= double(numberof(z));
    }
 
    parse_plopts, histbar, type, color, size;
@@ -206,9 +209,6 @@ kdesample=, title=, xtitle=, ytitle=) {
    if(type != "hide")
       plg, hist, refs, type=type, color=color, width=size;
 
-   if(histline != "hide" || histbar != "hide")
-      grow, display, swrite(format="binsize=%g", binsize);
-
    if(!is_void(display)) {
       vp = viewport();
       display = strjoin(display, "\n");
@@ -217,9 +217,8 @@ kdesample=, title=, xtitle=, ytitle=) {
 
    // Plot titles
    default, title, "Histogram";
-   if(is_void(xtitle))
-      xtitle = is_void(mode) ? "z values" : \
-         datamode2name(mode, which="zunits");
+   if(is_void(xtitle) && !is_void(mode))
+      xtitle = datamode2name(mode, which="zunits");
    if(is_void(ytitle))
       ytitle = ["Counts", "Density"](normalize+1);
    title = regsub("_", title, "!_", all=1);
