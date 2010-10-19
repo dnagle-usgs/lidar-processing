@@ -47,6 +47,7 @@ proc ::l1pro::groundtruth::gui {} {
 
    $nb add [extract::panel $nb.extract] -text "Extract" -sticky news
    $nb add [scatter::panel $nb.scatter] -text "Scatterplot" -sticky news
+   $nb add [hist::panel $nb.hist] -text "Histogram" -sticky news
 
    $nb select 0
 }
@@ -57,6 +58,7 @@ proc ::l1pro::groundtruth::comparison_add var {
       lappend v::comparisons $var
    }
    set scatter::v::comparison $var
+   set hist::v::comparison $var
 }
 
 proc ::l1pro::groundtruth::comparison_delete varname {
@@ -76,6 +78,7 @@ proc ::l1pro::groundtruth::comparison_delete varname {
       set new [lindex $v::comparisons $idx]
    }
    if {$scatter::v::comparison eq $var} {set scatter::v::comparison $new}
+   if {$hist::v::comparison eq $var} {set hist::v::comparison $new}
 }
 
 proc ::l1pro::groundtruth::comparison_save varname {
@@ -169,9 +172,9 @@ proc ::l1pro::groundtruth::widget_plots {f prefix label ns {plot plg}} {
    set w [list apply [list suffix "return \"$f.${prefix}_\$suffix\""]]
    set v [list apply [list suffix "return ${ns}::v::plot_${prefix}_\$suffix"]]
    ttk::label [{*}$w lbl] -text $label
-   ::mixin::combobox [{*}$w type] -width 0 -state readonly \
+   ::mixin::combobox [{*}$w type] -width 5 -state readonly \
       -textvariable [{*}$v type] -values [set v::${plot}_type_list]
-   ::mixin::combobox [{*}$w color] -width 0 -state readonly \
+   ::mixin::combobox [{*}$w color] -width 5 -state readonly \
       -textvariable [{*}$v color] -values $v::color_list
    ttk::spinbox [{*}$w size] -width 3 -textvariable [{*}$v size] \
       -from 0 -to 100 -increment 1 -format %.2f
@@ -515,7 +518,7 @@ proc ::l1pro::groundtruth::scatter::panel w {
    ttk::button $f.plot -text Plot -command [namespace code plot]
    ttk::checkbutton $f.fma -text "Clear before plotting" \
       -variable [namespace which -variable v::dofma]
-   grid x $f.plot $f.fma x -sticky ew -padx 1 -pady 1
+   grid x $f.plot $f.fma x {*}$ew
    grid columnconfigure $f {0 3} -weight 1
 
    grid $w.general $w.metrics {*}$news
@@ -574,4 +577,187 @@ proc ::l1pro::groundtruth::scatter::plot {} {
       {$metrics ne {["# points", "RMSE", "ME", "R^2"]}}  ", metrics=$metrics"
 
    exp_send "$cmd;\r"
+}
+
+namespace eval ::l1pro::groundtruth::hist {
+   namespace import [namespace parent]::*
+}
+
+if {![namespace exists ::l1pro::groundtruth::hist::v]} {
+   namespace eval ::l1pro::groundtruth::hist::v {
+      variable comparison ""
+      variable data best
+      variable win 11
+      variable dofma 1
+      variable logy 0
+      variable title ""
+      variable xtitle "Offset: Model - Truth (m)"
+      variable normalize 1
+      variable plot_histline_type solid
+      variable plot_histline_color blue
+      variable plot_histline_size 2.0
+      variable plot_histbar_type dot
+      variable plot_histbar_color black
+      variable plot_histbar_size 2.0
+      variable plot_tickmarks_type hide
+      variable plot_tickmarks_color red
+      variable plot_tickmarks_size 0.1
+      variable plot_zeroline_type dash
+      variable plot_zeroline_color cyan
+      variable plot_zeroline_size 2.0
+      variable plot_meanline_type dash
+      variable plot_meanline_color red
+      variable plot_meanline_size 2.0
+      variable plot_ci95lines_type hide
+      variable plot_ci95lines_color red
+      variable plot_ci95lines_size 2.0
+      variable plot_kdeline_type hide
+      variable plot_kdeline_color green
+      variable plot_kdeline_size 2.0
+      variable bin_auto 1
+      variable bin_size 0.10
+      variable kernel gaussian
+      variable kde_h 0.10
+      variable kde_h_match 1
+      variable kde_samples 100
+
+      namespace upvar [namespace parent [namespace parent]]::v \
+         data_list data_list
+   }
+}
+
+proc ::l1pro::groundtruth::hist::panel w {
+   ttk::frame $w
+
+   set o [list -padx 1 -pady 1]
+   set e [list {*}$o -sticky e]
+   set ew [list {*}$o -sticky ew]
+   set news [list {*}$o -sticky news]
+
+   set f $w.general
+   ttk::frame $f
+
+   widget_comparison_vars $f.lblvar $f.cbovar $f.btnvar \
+      [namespace which -variable v::comparison]
+   ttk::label $f.lbldata -text "Data to use:"
+   ::mixin::combobox $f.data -width 0 -state readonly \
+      -textvariable [namespace which -variable v::data] \
+      -values $v::data_list
+   ttk::label $f.lblwin -text Window:
+   ttk::spinbox $f.win -width 0 \
+      -textvariable [namespace which -variable v::win] \
+      -from 0 -to 63 -increment 1 -format %.0f
+   ttk::label $f.lbltitle -text "Graph title:"
+   ttk::label $f.lblxtitle -text "X axis label:"
+   ttk::label $f.lblytitle -text "Y axis:"
+   ttk::entry $f.title -width 0 \
+      -textvariable [namespace which -variable v::title]
+   ttk::entry $f.xtitle -width 0 \
+      -textvariable [namespace which -variable v::xtitle]
+   ::mixin::combobox::mapping $f.ytitle \
+      -state readonly \
+      -altvariable [namespace which -variable v::normalize] \
+      -mapping {Density 1 Counts 0}
+
+   grid $f.lblvar $f.cbovar $f.btnvar - {*}$ew
+   grid $f.lbldata $f.data $f.lblwin $f.win {*}$ew
+   grid $f.lbltitle $f.title - - {*}$ew
+   grid $f.lblxtitle $f.xtitle - - {*}$ew
+   grid $f.lblytitle $f.ytitle - - {*}$ew
+
+   grid configure $f.lblvar $f.lbldata $f.lbltitle $f.lblxtitle $f.lblytitle \
+      $f.lblwin -sticky e
+   grid columnconfigure $f 1 -weight 1
+
+   set f $w.plots
+   ttk::labelframe $f -text Plots
+   ::mixin::frame::scrollable $f.f -xfill 1 -yfill 1\
+      -yscrollcommand [list $f.vs set]
+   ttk::scrollbar $f.vs -command [list $f.f yview]
+
+   grid $f.f $f.vs -sticky news -padx 0 -pady 0
+   grid rowconfigure $f 0 -weight 1
+   grid columnconfigure $f 0 -weight 1
+   set f [$f.f interior]
+
+   set ns [namespace current]
+   widget_plots $f histline "Histogram line:" $ns
+   widget_plots $f histbar "Histogram bar graph:" $ns
+   widget_plots $f tickmarks Tickmarks: $ns plmk
+   widget_plots $f zeroline "Equality line:" $ns
+   widget_plots $f meanline "Mean error line:" $ns
+   widget_plots $f ci95lines "95% CI lines:" $ns
+   widget_plots $f kdeline "KDE line:" $ns
+
+   grid columnconfigure $f {1 2} -weight 1
+
+   set f $w.hist
+   ttk::labelframe $f -text Histogram
+   ttk::label $f.lblbinsize -text "Bin size:"
+   ttk::spinbox $f.binsize -width 0 \
+      -textvariable [namespace which -variable v::bin_size] \
+      -from 0 -to 100 -increment 0.01 -format %.2f
+   ttk::checkbutton $f.binauto -text "Automatic bin size" \
+      -variable [namespace which -variable v::bin_auto]
+   grid $f.lblbinsize $f.binsize {*}$ew
+   grid $f.binauto {*}$o -sticky w
+
+   grid columnconfigure $f 2 -weight 1
+
+   set f $w.kde
+   ttk::labelframe $f -text "Kernel density estimate"
+   ttk::label $f.lblkernel -text "Kernel:"
+   ::mixin::combobox $f.kernel -state readonly -width 12 \
+      -textvariable [namespace which -variable v::kernel] \
+      -values {uniform triangular epanechnikov quartic triweight gaussian cosine}
+   ttk::checkbutton $f.auto_band -text "Match bandwidth to bin size" \
+      -variable [namespace which -variable v::kde_h_match]
+   ttk::label $f.lblband -text Bandwidth:
+   ttk::spinbox $f.band -width 0 \
+      -textvariable [namespace which -variable v::kde_h] \
+      -from 0 -to 100 -increment 0.01 -format %.2f
+   ttk::label $f.lblsamples -text Samples:
+   ttk::spinbox $f.samples -width 0 \
+      -textvariable [namespace which -variable v::kde_samples] \
+      -from 1 -to 1000000 -increment 1 -format %.0f
+   ttk::button $f.plot -text "Plot Kernel"
+   grid $f.lblkernel $f.kernel {*}$ew
+   grid $f.lblband $f.band {*}$ew
+   grid $f.auto_band - {*}$o -sticky w
+   grid $f.lblsamples $f.samples {*}$ew
+   grid $f.plot {*}$o
+
+   grid columnconfigure $f 2 -weight 1
+
+   set f $w.topleft
+   ttk::frame $f
+   lower $f
+   grid $w.general -in $f -sticky new {*}$o
+   grid $w.plots -in $f {*}$news
+
+   grid rowconfigure $f 1 -weight 1
+   grid columnconfigure $f 0 -weight 1
+
+   set f $w.topright
+   ttk::frame $f
+   lower $f
+   grid $w.hist -in $f -sticky new {*}$o
+   grid $w.kde -in $f -sticky new {*}$o
+
+   set f $w.bottom
+   ttk::frame $f
+   ttk::button $f.plot -text Plot -command [namespace code plot]
+   ttk::checkbutton $f.fma -text "Clear before plotting" \
+      -variable [namespace which -variable v::dofma]
+   ttk::checkbutton $f.logy -text "Use logarithmic y axis" \
+      -variable [namespace which -variable v::logy]
+   grid x $f.plot $f.fma $f.logy x {*}$ew
+   grid columnconfigure $f {0 4} -weight 1
+
+   grid $w.topleft $w.topright {*}$news
+   grid $w.bottom - {*}$news
+   grid columnconfigure $w 0 -weight 1
+   grid rowconfigure $w 0 -weight 1
+
+   return $w
 }
