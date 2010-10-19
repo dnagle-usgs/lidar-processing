@@ -508,7 +508,7 @@ func krnl_gaussian(u) {
 /* DOCUMENT krnl_gaussian(u)
    Gaussian kernel. See krnl_density_est.
 */
-   return gauss(u, [1,0,1]);
+   return gauss(u, [1./sqrt(2*pi), 0, 1]);
 }
 
 func krnl_cosine(u) {
