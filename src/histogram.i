@@ -162,8 +162,7 @@ title=, xtitle=, ytitle=) {
          } else {
             h = binsize;
          }
-         kde_data, z, sample, density, h=h, K=kernel, kdesample=kdesample,
-            plot=0;
+         kde_data, z, sample, density, h=h, K=kernel, kdesample=kdesample;
          x = span(sample(1), sample(0), numberof(sample) * 8 - 7);
          y = spline(density, sample, x);
          plg, y, x, color=color, width=width, type=type;
@@ -228,10 +227,8 @@ title=, xtitle=, ytitle=) {
    return [unref(refs), unref(hist)];
 }
 
-func kde_data(data, &sample, &density, mode=, plot=, win=, dofma=, kdesample=,
-elevsample=, h=, K=, color=, width=, type=) {
-/* DOCUMENT kde = kde_data(data, &sample, &density, mode=, plot=, win=, dofma=,
-   kdesample=, elevsample=, h=, K=, color=, width=, type=)
+func kde_data(data, &sample, &density, mode=, kdesample=, h=, K=) {
+/* DOCUMENT kde = kde_data(data, &sample, &density, mode=, kdesample=, h=, K=)
 
    Creates a kernel density estimation and plots it. Return value is an array
    of [sample, estimate], where sample is the range of points sampled at
@@ -248,14 +245,6 @@ elevsample=, h=, K=, color=, width=, type=) {
 
    Options:
       mode= Mode to use for data. Any value acceptable to data2xyz.
-      plot= Specifies whether to plot.
-            plot=1   Plot. (default)
-            plot=0   Do not plot.
-      win= Window to plot in. If not specified, uses current window.
-            win=7
-      dofma= Specifies whether to clear window before plotting.
-            dofma=1  Clear first. (default)
-            dofma=0  Do not clear.
       kdesample= Number of points at which to sample for the estimate. More
          points gives better resolution at the cost of speed. Sampling is
          performed on evenly spaced points from the minimum to the maximum
@@ -263,12 +252,6 @@ elevsample=, h=, K=, color=, width=, type=) {
             kdesample=100           Default
             kdesample=250
             kdesample=span(25., 82., 250)
-      elevsample= Number of points to interpolate to when plotting. Spline
-         interpolation is used. Defaults to approx. eight times the kdesample.
-         Alternately, this can also be an array of points to interpolate to.
-            elevsample=kdesample*8-7   Default
-            elevsample=793             (Default when kdesample=100)
-            elevsample=span(22., 89., 1000)
       h= Bandwidth parameter to use in the estimation.
             h=0.15      Default, based on EAARL elevation accuracy
       K= Kernel to use. May be the string name of a kernel, or a kernel
@@ -277,19 +260,12 @@ elevsample=, h=, K=, color=, width=, type=) {
             K="uniform"
             K=krnl_quartic
             K=krnl_triweight
-      color= Color to use for plotted line.
-            color="green"     (default)
-      width= Width of plotted line.
-            width=2           (default)
-      type= Type of plotted line.
-            type="solid"      (default)
 */
    local z;
-   default, plot, 1;
    default, kdesample, 100;
    default, elevsample, 8 * kdesample - 7;
    default, h, .15;
-   default, K, "triangular";
+   default, K, "gaussian";
 
    if(is_numerical(data) && dimsof(data)(1) == 1)
       z = unref(data);
@@ -305,10 +281,6 @@ elevsample=, h=, K=, color=, width=, type=) {
 
    sample = is_vector(kdesample) ? kdesample : span(z(min), z(max), kdesample);
    density = krnl_density_est(z, sample, h=h, K=K);
-
-   if(plot)
-      kde_data_plot, sample, density, win=win, dofma=dofma, elev=elevsample,
-         color=color, width=width, type=type;
 
    return [sample, density];
 }
