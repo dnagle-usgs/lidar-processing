@@ -216,7 +216,7 @@ histline=, histbar=, tickmarks=, vname=, title=, xtitle=, ytitle=) {
 
    parse_plopts, tickmarks, type, color, size;
    if(type != "hide")
-      hist_data_plot_ticks, ticks, color=color, msize=size;
+      plmk, 0 * ticks, ticks, marker=type, color=color, msize=size;
 
    parse_plopts, histbar, type, color, size;
    if(type != "hide")
@@ -264,15 +264,6 @@ binsize=, normalize=) {
    }
    pltitle, title;
    xytitles, xtitle, ytitle;
-}
-
-func hist_data_plot_ticks(ticks, msize=, color=) {
-/* DOCUMENT hist_data_plot_ticks
-   Helper function for hist_data_plot.
-*/
-   default, msize, 0.1;
-   default, color, "red";
-   plmk, array(0, numberof(ticks)), ticks, marker=1, msize=msize, color=color;
 }
 
 func kde_data(data, mode=, plot=, win=, dofma=, kdesample=, elevsample=, h=,
