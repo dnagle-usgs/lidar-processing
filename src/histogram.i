@@ -169,10 +169,24 @@ vname=, title=, xtitle=, ytitle=) {
       if(dofma)
          fma;
 
-      // Plot data
-      hist_data_plot_titles, hist, refs, mode=mode, vname=vname, title=title,
-         xtitle=xtitle, ytitle=ytitle, binsize=binsize, normalize=normalize;
+      // Plot titles
+      if(is_void(title)) {
+         title = is_void(mode) ? "Histogram" : datamode2name(mode, which="data");
+         if(vname)
+            title += " " + regsub("_", vname, "!_", all=1);
+      }
+      if(is_void(xtitle)) {
+         bintitle = strtrim(swrite(format="%.12f", double(binsize)), 2, blank="0");
+         xtitle = is_void(mode) ? "z values" : datamode2name(mode, which="zunits");
+         xtitle += swrite(format="; binsize=%s", bintitle);
+      }
+      if(is_void(ytitle)) {
+         ytitle = ["Counts", "Density", "Relative frequency"](normalize+1);
+      }
+      pltitle, title;
+      xytitles, xtitle, ytitle;
 
+      // Plot data
       parse_plopts, tickmarks, type, color, size;
       if(type != "hide")
          plmk, 0 * ticks, ticks, marker=type, color=color, msize=size;
@@ -205,33 +219,6 @@ vname=, title=, xtitle=, ytitle=) {
    }
 
    return [unref(refs), unref(hist)];
-}
-
-func hist_data_plot_titles(hist, refs, mode=, vname=, title=, xtitle=, ytitle=,
-binsize=, normalize=) {
-/* DOCUMENT hist_data_plot_titles
-   Helper function for hist_data_plot.
-*/
-   if(is_void(binsize))
-      binsize = refs(dif)(avg);
-   default, normalize, 1;
-
-   // Plot titles
-   if(is_void(title)) {
-      title = is_void(mode) ? "Histogram" : datamode2name(mode, which="data");
-      if(vname)
-         title += " " + regsub("_", vname, "!_", all=1);
-   }
-   if(is_void(xtitle)) {
-      bintitle = strtrim(swrite(format="%.12f", double(binsize)), 2, blank="0");
-      xtitle = is_void(mode) ? "z values" : datamode2name(mode, which="zunits");
-      xtitle += swrite(format="; binsize=%s", bintitle);
-   }
-   if(is_void(ytitle)) {
-      ytitle = ["Counts", "Density", "Relative frequency"](normalize+1);
-   }
-   pltitle, title;
-   xytitles, xtitle, ytitle;
 }
 
 func kde_data(data, mode=, plot=, win=, dofma=, kdesample=, elevsample=, h=,
