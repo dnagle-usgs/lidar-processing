@@ -146,8 +146,8 @@ if {![namespace exists ::l1pro::tools::histelev]} {
          variable plot_kdeline_color green
          variable plot_kdeline_size 2
 
-         variable kernel triangular
-         variable auto_bandwidth 0
+         variable kernel gaussian
+         variable auto_bandwidth 1
          variable bandwidth 0.15
          variable kdesample 100
       }
