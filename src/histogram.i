@@ -164,8 +164,9 @@ title=, xtitle=, ytitle=) {
          }
          kde_data, z, sample, density, h=h, K=kernel, kdesample=kdesample,
             plot=0;
-         kde_data_plot, sample, density, win=win, dofma=0, color=color,
-            width=width, type=type;
+         x = span(sample(1), sample(0), numberof(sample) * 8 - 7);
+         y = spline(density, sample, x);
+         plg, y, x, color=color, width=width, type=type;
          grow, display, swrite(format="bandwidth=%g", h);
       }
 
