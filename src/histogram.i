@@ -129,18 +129,8 @@ title=, xtitle=, ytitle=) {
 
    hist = histogram(Z, top=Z(max)+1);
    refs = zmin + binsize * (indgen(numberof(hist)) - 0.5);
-
-   if(kdeline != "hide")
-      normalize = 1;
-
-   if(normalize) {
-      total = hist(sum);
-      if(total > 0)
-         hist /= double(total);
-      total = [];
-   }
-
-   ticks = set_remove_duplicates(z);
+   if(normalize)
+      hist /= double(numberof(z));
 
    if(plot) {
       wbkp = current_window();
@@ -153,14 +143,12 @@ title=, xtitle=, ytitle=) {
 
       parse_plopts, kdeline, type, color, size;
       if(type != "hide") {
-         if(bandwidth > 0) {
-            h = bandwidth;
-         } else {
-            h = binsize;
-         }
+         h = (bandwidth > 0) ? bandwidth : binsize;
          kde_data, z, sample, density, h=h, K=kernel, kdesample=kdesample;
          x = span(sample(1), sample(0), numberof(sample) * 8 - 7);
          y = spline(density, sample, x);
+         if(!normalize)
+            y *= double(numberof(z));
          plg, y, x, color=color, width=width, type=type;
          grow, display, swrite(format="bandwidth=%g", h);
       }
@@ -180,8 +168,10 @@ title=, xtitle=, ytitle=) {
 
       // Plot data
       parse_plopts, tickmarks, type, color, size;
-      if(type != "hide")
+      if(type != "hide") {
+         ticks = set_remove_duplicates(z);
          plmk, 0 * ticks, ticks, marker=type, color=color, msize=size;
+      }
 
       parse_plopts, histbar, type, color, size;
       if(type != "hide")
