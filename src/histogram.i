@@ -1,6 +1,36 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 
 func hist_data(data, &refs, &hist, mode=, binsize=) {
+/* DOCUMENT hist_data, data, &refs, &hist, mode=, binsize=
+   Creates a histogram for the given data.
+
+   Input parameter:
+      data: The data to generate a histogram for. There are three forms that
+         this can take:
+            * An array of data in an ALPS structure, suitable for passing
+              through data2xyz.
+            * A two-dimensional array of XYZ coordinates.
+            * A one-dimensional array of Z values.
+
+   Output parameters:
+      refs: Values at the center of each bin.
+      hist: Count of values in each bin.
+
+   Options:
+      mode= The mode to use for extracting XYZ. See data2xyz for list of
+         options. This only has an effect when the data is in an ALPS
+         structure.
+            mode="fs"   First surface
+            mode="be"   Bare earth
+            mode="ba"   Bathy
+      binsize= The width to use for each bin. Units correspond to the data
+         mode. (Generally, meters.)
+            binsize=100    Use a 100 unit bin size.
+            binsize=0.30   Use a 0.30 unit bin size. (default)
+
+   Returns:
+      [refs, hist]
+*/
    local z;
    default, binsize, 0.30;
    if(is_numerical(data) && dimsof(data)(1) == 1)
