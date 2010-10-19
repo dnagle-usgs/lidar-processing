@@ -371,10 +371,10 @@ proc ::l1pro::tools::histelev::gui_ticks {w labelsVar} {
    ttk::label $f.lblcolor -text "Tick color: "
    ttk::label $f.lblsize -text "Tick size: "
    ::mixin::combobox $f.color -state readonly \
-      -textvariable [namespace which -variable v::tickcolor] \
+      -textvariable [namespace which -variable v::plot_tickmarks_color] \
       -values $c::colors
    spinbox $f.size -from 0 -to 10 -increment 0.1 \
-      -textvariable [namespace which -variable v::ticksize]
+      -textvariable [namespace which -variable v::plot_tickmarks_size]
    grid $f.lblcolor $f.color
    grid $f.lblsize $f.size
    grid $f.lblcolor $f.lblsize -sticky e
