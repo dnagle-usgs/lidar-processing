@@ -103,7 +103,7 @@ vname=, title=, xtitle=, ytitle=) {
          axis (based on normalize)
 */
 // Original David Nagle 2009-01-26
-   local z, ticks, type, color, size;
+   local z, ticks, type, color, size, display;
    default, normalize, 1;
    default, plot, 1;
    default, dofma, 1;
@@ -159,6 +159,7 @@ vname=, title=, xtitle=, ytitle=) {
          kde_data, z, win=win, dofma=dofma, h=h, K=kernel, kdesample=kdesample,
             type=type, color=color, width=size;
          dofma = 0;
+         grow, display, swrite(format="bandwidth=%g", h);
       }
 
       wbkp = current_window();
@@ -176,15 +177,14 @@ vname=, title=, xtitle=, ytitle=) {
             title += " " + regsub("_", vname, "!_", all=1);
       }
       if(is_void(xtitle)) {
-         bintitle = strtrim(swrite(format="%.12f", double(binsize)), 2, blank="0");
          xtitle = is_void(mode) ? "z values" : datamode2name(mode, which="zunits");
-         xtitle += swrite(format="; binsize=%s", bintitle);
       }
       if(is_void(ytitle)) {
          ytitle = ["Counts", "Density", "Relative frequency"](normalize+1);
       }
       pltitle, title;
       xytitles, xtitle, ytitle;
+
 
       // Plot data
       parse_plopts, tickmarks, type, color, size;
@@ -198,6 +198,15 @@ vname=, title=, xtitle=, ytitle=) {
       parse_plopts, histline, type, color, size;
       if(type != "hide")
          plg, hist, refs, type=type, color=color, width=size;
+
+      if(histline != "hide" || histbar != "hide")
+         grow, display, swrite(format="binsize=%g", binsize);
+
+      if(!is_void(display)) {
+         vp = viewport();
+         display = strjoin(display, "\n");
+         plt, display, vp(1) + .01, vp(4) - .01, justify="LT", height=12;
+      }
 
       // Set axes
       logxy, 0, logy;
