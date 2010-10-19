@@ -101,7 +101,7 @@ title=, xtitle=, ytitle=) {
          axis (based on normalize)
 */
 // Original David Nagle 2009-01-26
-   local z, ticks, type, color, size, display;
+   local z, ticks, type, color, size, display, sample, density;
    default, normalize, 1;
    default, plot, 1;
    default, dofma, 1;
@@ -147,19 +147,6 @@ title=, xtitle=, ytitle=) {
    ticks = set_remove_duplicates(z);
 
    if(plot) {
-      parse_plopts, kdeline, type, color, size;
-      if(type != "hide") {
-         if(bandwidth > 0) {
-            h = bandwidth;
-         } else {
-            h = binsize;
-         }
-         kde_data, z, win=win, dofma=dofma, h=h, K=kernel, kdesample=kdesample,
-            type=type, color=color, width=size;
-         dofma = 0;
-         grow, display, swrite(format="bandwidth=%g", h);
-      }
-
       wbkp = current_window();
       if(is_void(win))
          win = window();
@@ -167,6 +154,20 @@ title=, xtitle=, ytitle=) {
 
       if(dofma)
          fma;
+
+      parse_plopts, kdeline, type, color, size;
+      if(type != "hide") {
+         if(bandwidth > 0) {
+            h = bandwidth;
+         } else {
+            h = binsize;
+         }
+         kde_data, z, sample, density, h=h, K=kernel, kdesample=kdesample,
+            plot=0;
+         kde_data_plot, sample, density, win=win, dofma=0, color=color,
+            width=width, type=type;
+         grow, display, swrite(format="bandwidth=%g", h);
+      }
 
       // Plot titles
       default, title, "Histogram";
@@ -321,6 +322,7 @@ func kde_data_plot(sample, density, win=, dofma=, elev=, color=, width=, type=) 
    default, color, "green";
    default, width, 2;
    default, type, "solid";
+   default, elev, 8 * numberof(sample) - 7;
 
    elev = is_vector(elev) ? unref(elev) : span(sample(1), sample(0), elev);
    dens = spline(density, sample, elev);
