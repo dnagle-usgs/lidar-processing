@@ -220,7 +220,7 @@ histline=, histbar=, tickmarks=, vname=, title=, xtitle=, ytitle=) {
 
    parse_plopts, histbar, type, color, size;
    if(type != "hide")
-      hist_data_plot_boxes, hist, refs, type=type, color=color, width=size;
+      plh, hist, refs, type=type, color=color, width=size;
 
    parse_plopts, histline, type, color, size;
    if(type != "hide")
@@ -264,33 +264,6 @@ binsize=, normalize=) {
    }
    pltitle, title;
    xytitles, xtitle, ytitle;
-}
-
-func hist_data_plot_boxes(hist, refs, color=, width=, type=) {
-/* DOCUMENT hist_data_plot_boxes
-   Helper function for hist_data_plot.
-*/
-   default, color, "black";
-   default, width, 2;
-   default, type, "dot";
-
-   // Calculate binsize
-   binsize = refs(dif)(avg);
-   // zmin: value of the bottom of the first bin
-   zmin = refs(1) - binsize/2.;
-
-   // Juggle things around into a format usable for plotting the boxes/bars
-   box_hist = box_refs = array(double, numberof(hist) * 2 + 2);
-
-   box_hist(1) = 0;
-   box_hist(2:-1:2) = hist;
-   box_hist(3:-1:2) = hist;
-   box_hist(0) = 0;
-
-   box_refs(1::2) = zmin + binsize * (indgen(numberof(hist)+1) - 1);
-   box_refs(2::2) = box_refs(1::2);
-
-   plg, box_hist, box_refs, color=color, width=width, type=type;
 }
 
 func hist_data_plot_ticks(ticks, msize=, color=) {
