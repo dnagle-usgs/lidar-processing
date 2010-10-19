@@ -226,10 +226,10 @@ title=, xtitle=, ytitle=) {
    return [unref(refs), unref(hist)];
 }
 
-func kde_data(data, mode=, plot=, win=, dofma=, kdesample=, elevsample=, h=,
-K=, color=, width=, type=) {
-/* DOCUMENT kde = kde_data(data, mode=, plot=, win=, dofma=, kdesample=,
-   elevsample=, h=, K=, color=, width=, type=)
+func kde_data(data, &sample, &density, mode=, plot=, win=, dofma=, kdesample=,
+elevsample=, h=, K=, color=, width=, type=) {
+/* DOCUMENT kde = kde_data(data, &sample, &density, mode=, plot=, win=, dofma=,
+   kdesample=, elevsample=, h=, K=, color=, width=, type=)
 
    Creates a kernel density estimation and plots it. Return value is an array
    of [sample, estimate], where sample is the range of points sampled at
@@ -239,6 +239,10 @@ K=, color=, width=, type=) {
    Parameter:
       data: Array of data to use. May be any sort of data acceptable to
          data2xyz. Additionally, it can also be one-dimensial array of values.
+
+   Output parameters:
+      sample: Range of points sampled at (count specified by kdesample)
+      density: Kernel density estimate at sample's points
 
    Options:
       mode= Mode to use for data. Any value acceptable to data2xyz.
