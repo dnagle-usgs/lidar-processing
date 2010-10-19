@@ -170,7 +170,7 @@ proc ::l1pro::tools::histelev::plot {} {
       kdeline "hide"
    }
 
-   set cmd "hist_data, $::pro_var"
+   set cmd "hist_data_plot, $::pro_var"
 
    set title [dict get [lreverse $::l1pro_data(mode_mapping)] \
       $::plot_settings(display_mode)]

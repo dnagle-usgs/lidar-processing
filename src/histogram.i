@@ -1,9 +1,9 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 
-func hist_data(data, mode=, binsize=, normalize=, plot=, win=, dofma=, logy=,
-histline=, histbar=, tickmarks=, kdeline=, kernel=, bandwidth=, kdesample=,
-title=, xtitle=, ytitle=) {
-/* DOCUMENT hd = hist_data(data, mode=, binsize=, normalize=, plot=, win=,
+func hist_data_plot(data, mode=, binsize=, normalize=, plot=, win=, dofma=,
+logy=, histline=, histbar=, tickmarks=, kdeline=, kernel=, bandwidth=,
+kdesample=, title=, xtitle=, ytitle=) {
+/* DOCUMENT hd = hist_data_plot(data, mode=, binsize=, normalize=, plot=, win=,
       dofma=, logy=, kernel=, bandwidth=, kdesample=, title=, xtitle=,
       ytitle=)
 
