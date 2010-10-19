@@ -112,6 +112,8 @@ title=, xtitle=, ytitle=) {
    default, histline, "solid blue 2";
    default, histbar, "dot black 2";
    default, tickmarks, "hide";
+   default, win, current_window();
+   if(win < 0) win = 0;
 
    if(is_numerical(data) && dimsof(data)(1) == 1)
       z = unref(data);
@@ -134,12 +136,10 @@ title=, xtitle=, ytitle=) {
 
    if(plot) {
       wbkp = current_window();
-      if(is_void(win))
-         win = window();
       window, win;
+      if(dofma) fma;
 
-      if(dofma)
-         fma;
+      // Plot data
 
       parse_plopts, kdeline, type, color, size;
       if(type != "hide") {
@@ -153,20 +153,6 @@ title=, xtitle=, ytitle=) {
          grow, display, swrite(format="bandwidth=%g", h);
       }
 
-      // Plot titles
-      default, title, "Histogram";
-      if(is_void(xtitle))
-         xtitle = is_void(mode) ? "z values" : \
-            datamode2name(mode, which="zunits");
-      if(is_void(ytitle))
-         ytitle = ["Counts", "Density"](normalize+1);
-      title = regsub("_", title, "!_", all=1);
-      xtitle = regsub("_", xtitle, "!_", all=1);
-      ytitle = regsub("_", ytitle, "!_", all=1);
-      pltitle, title;
-      xytitles, xtitle, ytitle;
-
-      // Plot data
       parse_plopts, tickmarks, type, color, size;
       if(type != "hide") {
          ticks = set_remove_duplicates(z);
@@ -189,6 +175,19 @@ title=, xtitle=, ytitle=) {
          display = strjoin(display, "\n");
          plt, display, vp(1) + .01, vp(4) - .01, justify="LT", height=12;
       }
+
+      // Plot titles
+      default, title, "Histogram";
+      if(is_void(xtitle))
+         xtitle = is_void(mode) ? "z values" : \
+            datamode2name(mode, which="zunits");
+      if(is_void(ytitle))
+         ytitle = ["Counts", "Density"](normalize+1);
+      title = regsub("_", title, "!_", all=1);
+      xtitle = regsub("_", xtitle, "!_", all=1);
+      ytitle = regsub("_", ytitle, "!_", all=1);
+      pltitle, title;
+      xytitles, xtitle, ytitle;
 
       // Set axes
       logxy, 0, logy;
