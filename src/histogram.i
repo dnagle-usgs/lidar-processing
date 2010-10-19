@@ -2,9 +2,9 @@
 
 func hist_data(data, mode=, binsize=, normalize=, plot=, win=, dofma=, logy=,
 histline=, histbar=, tickmarks=, kdeline=, kernel=, bandwidth=, kdesample=,
-vname=, title=, xtitle=, ytitle=) {
+title=, xtitle=, ytitle=) {
 /* DOCUMENT hd = hist_data(data, mode=, binsize=, normalize=, plot=, win=,
-      dofma=, logy=, kernel=, bandwidth=, kdesample=, vname=, title=, xtitle=,
+      dofma=, logy=, kernel=, bandwidth=, kdesample=, title=, xtitle=,
       ytitle=)
 
    Creates a histogram for data's elevations, then plots it. Optionally, it can
@@ -91,12 +91,10 @@ vname=, title=, xtitle=, ytitle=) {
             kdesample=100     (default)
 
    Plotting options for titles:
-      vname= Allows you to specify the input data's variable name. If provided,
-         it will be included in the default title.
-      title= Allows you to override the window's title. Default will describe
-         mode and, if provided, will include variable name.
-            title="My custom title"
+      title= Allows you to override the window's title.
+            title="First Return Topography - fst_m_rcf_8"
             title=""                   (suppresses title completely)
+            title="Histogram"          (default)
       xtitle= Allows you to override the x-axis title. Default describes data's
          z units and includes binsize.
       ytitle= Allows you to override the y-axis title. Default describes the y
@@ -171,17 +169,15 @@ vname=, title=, xtitle=, ytitle=) {
          fma;
 
       // Plot titles
-      if(is_void(title)) {
-         title = is_void(mode) ? "Histogram" : datamode2name(mode, which="data");
-         if(vname)
-            title += " " + regsub("_", vname, "!_", all=1);
-      }
-      if(is_void(xtitle)) {
-         xtitle = is_void(mode) ? "z values" : datamode2name(mode, which="zunits");
-      }
-      if(is_void(ytitle)) {
+      default, title, "Histogram";
+      if(is_void(xtitle))
+         xtitle = is_void(mode) ? "z values" : \
+            datamode2name(mode, which="zunits");
+      if(is_void(ytitle))
          ytitle = ["Counts", "Density", "Relative frequency"](normalize+1);
-      }
+      title = regsub("_", title, "!_", all=1);
+      xtitle = regsub("_", xtitle, "!_", all=1);
+      ytitle = regsub("_", ytitle, "!_", all=1);
       pltitle, title;
       xytitles, xtitle, ytitle;
 

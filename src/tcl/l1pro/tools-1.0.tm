@@ -172,9 +172,13 @@ proc ::l1pro::tools::histelev::plot {} {
 
    set cmd "hist_data, $::pro_var"
 
+   set title [dict get [lreverse $::l1pro_data(mode_mapping)] \
+      $::plot_settings(display_mode)]
+   set title "$title $::pro_var"
+
    appendif cmd \
       1                       ", mode=\"$::plot_settings(display_mode)\"" \
-      1                       ", vname=\"$::pro_var\"" \
+      1                       ", title=\"$title\"" \
       {! $v::auto_binsize}    ", binsize=$v::binsize" \
       {$v::normalize != 1}    ", normalize=$v::normalize" \
       1                       ", win=$v::win" \
