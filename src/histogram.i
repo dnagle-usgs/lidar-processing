@@ -148,8 +148,6 @@ vname=, title=, xtitle=, ytitle=) {
       if(type != "hide") {
          if(bandwidth > 0) {
             h = bandwidth;
-         } else if(kernel == "gaussian") {
-            h = binsize/2.;
          } else {
             h = binsize;
          }
