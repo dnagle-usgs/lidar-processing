@@ -37,7 +37,6 @@ title=, xtitle=, ytitle=) {
          normalize=1.
             normalize=0    Bin values contain counts
             normalize=1    Normalize against sum to yield fraction of whole (default)
-            normalize=2    Normalize against max value
 
    General plotting options:
       plot= Specifies whether a plot should be made.
@@ -134,10 +133,7 @@ title=, xtitle=, ytitle=) {
    if(kdeline != "hide")
       normalize = 1;
 
-   if(normalize == 2) {
-      if(hist(max) > 0)
-         hist /= double(hist(max));
-   } else if(normalize) {
+   if(normalize) {
       total = hist(sum);
       if(total > 0)
          hist /= double(total);
@@ -175,13 +171,12 @@ title=, xtitle=, ytitle=) {
          xtitle = is_void(mode) ? "z values" : \
             datamode2name(mode, which="zunits");
       if(is_void(ytitle))
-         ytitle = ["Counts", "Density", "Relative frequency"](normalize+1);
+         ytitle = ["Counts", "Density"](normalize+1);
       title = regsub("_", title, "!_", all=1);
       xtitle = regsub("_", xtitle, "!_", all=1);
       ytitle = regsub("_", ytitle, "!_", all=1);
       pltitle, title;
       xytitles, xtitle, ytitle;
-
 
       // Plot data
       parse_plopts, tickmarks, type, color, size;

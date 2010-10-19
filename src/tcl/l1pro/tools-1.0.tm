@@ -268,7 +268,6 @@ proc ::l1pro::tools::histelev::gui_general {f labelsVar} {
       -mapping {
          "Density"         1
          "Counts"          0
-         "Peak normalized" 2
       }
    spinbox $f.win -from 0 -to 63 -increment 1 \
       -textvariable [namespace which -variable v::win]
