@@ -28,23 +28,13 @@ package require l1pro::tools
 package require l1pro::vars
 
 if {![winfo exists .l1wid]} {
-  set l1pro_data(processing_mode) [list \
-    "First Return Topo" \
-    "Submerged Topo" \
-    "Topo Under Veg" \
-    "Multi Peak Veg" \
-    "Direct. Wave Spectra" \
-  ]
-
-  set l1pro_data(display_types) [list \
-    "First Return Topography" \
-    "Submerged Topography" \
-    "Water Depth" \
-    "Bare Earth Topography" \
-    "Surface Amplitude" \
-    "Bottom Amplitude" \
-    "Canopy Height" \
-  ]
+  set l1pro_data(processing_mode) [lrange {
+    "First Return Topo"
+    "Submerged Topo"
+    "Topo Under Veg"
+    "Multi Peak Veg"
+    "Direct. Wave Spectra"
+  } 0 end]
 
   set l1pro_data(mode_mapping) [lrange {
     "First Return Topography"  fs
