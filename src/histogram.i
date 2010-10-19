@@ -191,17 +191,16 @@ title=, xtitle=, ytitle=) {
 
       // Set axes
       logxy, 0, logy;
-      if(logy && normalize)
-         ymin = hist(where(hist > 0))(min)/10.;
-      else
-         ymin = logy;
 
       // (Don't reset limits if user has changed them manually.)
       if(long(limits()(5)) & 1) {
          if(!is_void(win))
             window, win;
-         ymin = limits()(3);
          limits;
+         if(logy)
+            ymin = normalize ? 1./numberof(z) : 1.;
+         else
+            ymin = 0.;
          ymax = limits()(4) * 1.5;
          limits, "e", "e", ymin, ymax;
       }
