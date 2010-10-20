@@ -270,6 +270,7 @@ kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=, ytitle=) {
          ymin = normalize ? 1./numberof(z) : 1.;
       else
          ymin = 0.;
+      limits, square=0;
       limits, "e", "e", ymin, ymax;
    }
    window_select, wbkp;
@@ -468,6 +469,7 @@ func krnl_plot_profile(K, dist=, dofma=, win=, color=) {
    plmk, [0,1,0], [-1,0,1], marker=4, msize=0.5, color="red";
    plg, profile, sample, color=color, width=2;
    limits, square=1;
+   limits;
    if(!is_void(kernel))
       pltitle, kernel + " kernel";
    tmp = K([0., 1.]);
