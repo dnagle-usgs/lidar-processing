@@ -26,7 +26,7 @@ proc ::l1pro::groundtruth {} {
 }
 
 namespace eval ::l1pro::groundtruth {
-   namespace export comparison_* widget_*
+   namespace export comparison_* widget_* gen_array_list
 }
 
 proc ::l1pro::groundtruth::gui {} {
@@ -66,6 +66,7 @@ proc ::l1pro::groundtruth::comparison_add var {
    }
    set scatter::v::comparison $var
    set hist::v::comparison $var
+   set report::v::comparison $var
 }
 
 proc ::l1pro::groundtruth::comparison_delete varname {
@@ -86,6 +87,7 @@ proc ::l1pro::groundtruth::comparison_delete varname {
    }
    if {$scatter::v::comparison eq $var} {set scatter::v::comparison $new}
    if {$hist::v::comparison eq $var} {set hist::v::comparison $new}
+   if {$report::v::comparison eq $var} {set report::v::comparison $new}
 }
 
 proc ::l1pro::groundtruth::comparison_save varname {
@@ -227,6 +229,21 @@ proc ::l1pro::groundtruth::widget_plots_state {w v kind name1 name2 op} {
          "Select the color for this plot."
       ::tooltip::tooltip [{*}$w size] \
          "Select the size for the $kind used in this plot."
+   }
+}
+
+proc ::l1pro::groundtruth::gen_array_list {varname list} {
+   upvar $varname values
+   set result [list]
+   foreach item $list {
+      if {$values($item)} {
+         lappend result \"$item\"
+      }
+   }
+   if {![llength $result]} {
+      return 0
+   } else {
+      return \[[join $result ", "]\]
    }
 }
 
@@ -569,17 +586,7 @@ proc ::l1pro::groundtruth::scatter::plot {} {
       }
    }
 
-   set metrics [list]
-   foreach metric $v::metric_list {
-      if {$v::metrics($metric)} {
-         lappend metrics \"$metric\"
-      }
-   }
-   if {![llength $metrics]} {
-      set metrics 0
-   } else {
-      set metrics \[[join $metrics ", "]\]
-   }
+   set metrics [gen_array_list v::metrics $v::metric_list]
    ::misc::appendif cmd \
       {$metrics ne {["# points", "RMSE", "ME", "R^2"]}}  ", metrics=$metrics"
 
@@ -868,9 +875,17 @@ namespace eval ::l1pro::groundtruth::report {
 if {![namespace exists ::l1pro::groundtruth::report::v]} {
    namespace eval ::l1pro::groundtruth::report::v {
       variable comparison ""
+      variable output screen
+      variable filename ""
+      variable title ""
 
       namespace upvar [namespace parent [namespace parent]]::v \
-         metric_list metric_list data_list data_list
+         metric_list metric_list data_list data_list top top
+
+      variable use_data
+      foreach d $data_list {set use_data($d) 1}
+      unset d
+      set use_data(median) 0
 
       variable metrics
       foreach m $metric_list {set metrics($m) 0}
@@ -881,6 +896,7 @@ if {![namespace exists ::l1pro::groundtruth::report::v]} {
       set metrics(R^2) 1
    }
 }
+
 proc ::l1pro::groundtruth::report::panel w {
    ttk::frame $w
 
@@ -896,12 +912,23 @@ proc ::l1pro::groundtruth::report::panel w {
       [namespace which -variable v::comparison]
 
    ttk::frame $f.fout
-   ttk::radiobutton $f.out_screen -text "Display on screen"
-   ttk::radiobutton $f.out_file -text "Write to file:"
-   ttk::entry $f.file
-   ttk::button $f.browse -text "Browse" -style Panel.TButton
+   ttk::radiobutton $f.out_screen -text "Display on screen" \
+      -variable [namespace which -variable v::output] \
+      -value screen
+   ttk::radiobutton $f.out_file -text "Write to file:" \
+      -variable [namespace which -variable v::output] \
+      -value file
+   ttk::entry $f.file -textvariable [namespace which -variable v::filename]
+   ttk::button $f.browse -text "Browse" -style Panel.TButton -width 0 \
+      -command [namespace code select_file]
    grid $f.out_screen $f.out_file $f.file $f.browse -in $f.fout {*}$ew
    grid columnconfigure $f.fout 2 -weight 1
+
+   foreach widget [list $f.file $f.browse] {
+      ::mixin::statevar $widget \
+         -statemap {screen disabled file !disabled} \
+         -statevariable [namespace which -variable v::output]
+   }
 
    ttk::label $f.lbltitle -text "Report title:"
    ttk::entry $f.title -width 0 \
@@ -917,7 +944,8 @@ proc ::l1pro::groundtruth::report::panel w {
    set f $w.data
    ttk::labelframe $f -text "Data to use"
    foreach type $v::data_list {
-      ttk::checkbutton $f.$type -text $type
+      ttk::checkbutton $f.$type -text $type \
+         -variable [namespace which -variable v::use_data]($type)
       grid $f.$type {*}$o -sticky w
    }
 
@@ -947,7 +975,8 @@ proc ::l1pro::groundtruth::report::panel w {
       set f [$w.metrics.f interior].$col
       ttk::frame $f
       foreach metric [set metrics_$col] {
-         ttk::checkbutton $f.m$metric -text $metric
+         ttk::checkbutton $f.m$metric -text $metric \
+            -variable [namespace which -variable v::metrics]($metric)
          grid $f.m$metric {*}$o -sticky w
       }
    }
@@ -958,7 +987,8 @@ proc ::l1pro::groundtruth::report::panel w {
 
    set f $w.bottom
    ttk::frame $f
-   ttk::button $f.gen -text "Generate Report"
+   ttk::button $f.gen -text "Generate Report" \
+      -command [namespace code generate]
    grid x $f.gen x {*}$ew
    grid columnconfigure $f {0 2} -weight 1
 
@@ -970,4 +1000,34 @@ proc ::l1pro::groundtruth::report::panel w {
    grid rowconfigure $w 1 -weight 1
 
    return $w
+}
+
+proc ::l1pro::groundtruth::report::select_file {} {
+   if {$v::filename eq ""} {
+      set base $::data_file_path
+   } else {
+      set base [file dirname $v::filename]
+   }
+
+   set temp [tk_getSaveFile -initialdir $base \
+      -parent $v::top -title "Select destination" \
+      -filetypes {{"Text files" .txt} {"All files" *}}]
+
+   if {$temp ne ""} {
+      set v::filename $temp
+   }
+}
+
+proc ::l1pro::groundtruth::report::generate {} {
+   set cmd "gt_report, $v::comparison"
+   set data [gen_array_list v::use_data $v::data_list]
+   set metrics [gen_array_list v::metrics $v::metric_list]
+   if {$metrics eq "0" || $data eq "0"} {
+      return
+   }
+   append cmd ", $data, metrics=$metrics"
+   ::misc::appendif cmd \
+      {$v::title ne ""}       ", title=\"$v::title\"" \
+      {$v::output eq "file"}  ", outfile=\"$v::filename\""
+   exp_send "$cmd;\r"
 }
