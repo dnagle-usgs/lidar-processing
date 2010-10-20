@@ -724,7 +724,8 @@ proc ::l1pro::groundtruth::hist::panel w {
    ttk::spinbox $f.samples -width 0 \
       -textvariable [namespace which -variable v::kde_samples] \
       -from 1 -to 1000000 -increment 1 -format %.0f
-   ttk::button $f.plot -text "Plot Kernel"
+   ttk::button $f.plot -text "Plot Kernel" \
+      -command [namespace code plot_kernel]
    grid $f.lblkernel $f.kernel {*}$ew
    grid $f.lblband $f.band {*}$ew
    grid $f.auto_band - {*}$o -sticky w
@@ -769,4 +770,54 @@ proc ::l1pro::groundtruth::hist::panel w {
    grid rowconfigure $w 0 -weight 1
 
    return $w
+}
+
+proc ::l1pro::groundtruth::hist::plot_kernel {} {
+   set cmd "krnl_plot_profile, \"$v::kernel\", win=$v::win"
+   exp_send "$cmd;\r"
+}
+
+proc ::l1pro::groundtruth::hist::plot {} {
+   set plot_defaults {
+      histline "solid blue 2"
+      histbar "dot black 2"
+      tickmarks "hide"
+      zeroline "hide"
+      meanline "hide"
+      ci95lines "hide"
+      kdeline "hide"
+   }
+
+   set cmd "hist_data_plot, $v::comparison.m_$v::data - $v::comparison.truth"
+   ::misc::appendif cmd \
+      1                    ", win=$v::win" \
+      {!$v::dofma}         ", dofma=0" \
+      {$v::logy}           ", logy=1" \
+      1                    ", title=\"$v::title\"" \
+      1                    ", xtitle=\"$v::xtitle\"" \
+      {!$v::bin_auto}      ", binsize=$v::bin_size" \
+      {!$v::normalize}     ", normalize=0"
+
+   if {$v::plot_kdeline_type ne "hide"} {
+      ::misc::appendif cmd \
+         {$v::kernel ne "gaussian"}    ", kernel=\"$v::kernel\"" \
+         {!$v::kde_h_match}            ", bandwidth=$v::kde_h" \
+         {$v::kde_samples != 100}      ", kdesample=$v::kde_samples"
+   }
+
+   foreach plot [dict keys $plot_defaults] {
+      set type [set v::plot_${plot}_type]
+      set color [set v::plot_${plot}_color]
+      set size [format %g [set v::plot_${plot}_size]]
+      if {$type eq "hide"} {
+         set val $type
+      } else {
+         set val "$type $color $size"
+      }
+      if {$val ne [dict get $plot_defaults $plot]} {
+         append cmd ", ${plot}=\"$val\""
+      }
+   }
+
+   exp_send "$cmd;\r"
 }
