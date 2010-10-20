@@ -708,6 +708,16 @@ proc ::l1pro::groundtruth::hist::panel w {
 
    grid columnconfigure $f 1 -weight 1
 
+   ::tooltip::tooltip $f.binsize \
+      "This specifies the width of the histogram bins. The histogram bar graph\
+      \nwill have bars of this width; the histogram line connects the center\
+      \nof each bar with a line graph.\
+      \n\
+      \nThis setting is disabled when \"Automatic bin size\" is selected."
+   ::tooltip::tooltip $f.binauto \
+      "If selected, the bin size will be automatically calculated based on the\
+      \nrange of values found in the data and will be between 0.10 and 0.30."
+
    set f $w.kde
    ttk::labelframe $f -text "Kernel density estimate"
    ttk::label $f.lblkernel -text "Kernel:"
@@ -738,6 +748,28 @@ proc ::l1pro::groundtruth::hist::panel w {
 
    grid configure $f.lblkernel $f.lblband $f.lblsamples -sticky e
    grid columnconfigure $f 1 -weight 1
+
+   ::tooltip::tooltip $f.kernel \
+      "Select the kernel to use for the kernel density estimation."
+   ::tooltip::tooltip $f.band \
+      "This specifies the bandwidth parameter for the kernel density\
+      \nestimation.\
+      \n\
+      \nThis setting is disabled when \"Match bandwidth to bin size\" is\
+      \nselected."
+   ::tooltip::tooltip $f.auto_band \
+      "If selected, the histogram bin size will be used for the bandwidth\
+      \nparameter."
+   ::tooltip::tooltip $f.samples \
+      "The kernel density estimation is a continuous function. This setting\
+      \nspecifies how many points it should be sampled at when constructing\
+      \nthe plot. Higher values result in a more accurate graph but take\
+      \nlonger to construct.\
+      \n\
+      \nWhen plotting, the estimate upsampled by a factor of 8 using spline\
+      \ninterpolation to result in a smoother graph."
+   ::tooltip::tooltip $f.plot \
+      "Plot the profile for the current kernel."
 
    set f $w.topleft
    ttk::frame $f
