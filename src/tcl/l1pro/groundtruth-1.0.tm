@@ -48,12 +48,13 @@ proc ::l1pro::groundtruth::gui {} {
    $nb add [extract::panel $nb.extract] -text "Extract" -sticky news
    $nb add [scatter::panel $nb.scatter] -text "Scatterplot" -sticky news
    $nb add [hist::panel $nb.hist] -text "Histogram" -sticky news
+   $nb add [report::panel $nb.report] -text "Report" -sticky news
 
    # Let Tk draw and layout the GUI elements. Then select each tab to encourage
    # the toplevel to take a size that works well for all tabs, ending on the
    # first to leave it open.
    update idletasks
-   foreach idx {2 1 0} {
+   foreach idx {3 2 1 0} {
       $nb select $idx
    }
 }
@@ -858,4 +859,115 @@ proc ::l1pro::groundtruth::hist::plot {} {
    }
 
    exp_send "$cmd;\r"
+}
+
+namespace eval ::l1pro::groundtruth::report {
+   namespace import [namespace parent]::*
+}
+
+if {![namespace exists ::l1pro::groundtruth::report::v]} {
+   namespace eval ::l1pro::groundtruth::report::v {
+      variable comparison ""
+
+      namespace upvar [namespace parent [namespace parent]]::v \
+         metric_list metric_list data_list data_list
+
+      variable metrics
+      foreach m $metric_list {set metrics($m) 0}
+      unset m
+      set metrics(#\ points) 1
+      set metrics(RMSE) 1
+      set metrics(ME) 1
+      set metrics(R^2) 1
+   }
+}
+proc ::l1pro::groundtruth::report::panel w {
+   ttk::frame $w
+
+   set o [list -padx 1 -pady 1]
+   set e [list {*}$o -sticky e]
+   set ew [list {*}$o -sticky ew]
+   set news [list {*}$o -sticky news]
+
+   set f $w.general
+   ttk::frame $f
+
+   widget_comparison_vars $f.lblvar $f.cbovar $f.btnvar \
+      [namespace which -variable v::comparison]
+
+   ttk::frame $f.fout
+   ttk::radiobutton $f.out_screen -text "Display on screen"
+   ttk::radiobutton $f.out_file -text "Write to file:"
+   ttk::entry $f.file
+   ttk::button $f.browse -text "Browse" -style Panel.TButton
+   grid $f.out_screen $f.out_file $f.file $f.browse -in $f.fout {*}$ew
+   grid columnconfigure $f.fout 2 -weight 1
+
+   ttk::label $f.lbltitle -text "Report title:"
+   ttk::entry $f.title -width 0 \
+      -textvariable [namespace which -variable v::title]
+
+   grid $f.lblvar $f.cbovar $f.btnvar {*}$ew
+   grid $f.fout - - {*}$ew
+   grid $f.lbltitle $f.title - {*}$ew
+
+   grid configure $f.lblvar $f.lbltitle -sticky e
+   grid columnconfigure $f 1 -weight 1
+
+   set f $w.data
+   ttk::labelframe $f -text "Data to use"
+   foreach type $v::data_list {
+      ttk::checkbutton $f.$type -text $type
+      grid $f.$type {*}$o -sticky w
+   }
+
+   set f $w.metrics
+   ttk::labelframe $f -text Metrics
+   ::mixin::frame::scrollable $f.f -xfill 1 -yfill 1 \
+      -yscrollcommand [list $f.vs set]
+   ttk::scrollbar $f.vs -command [list $f.f yview]
+
+   grid $f.f $f.vs -sticky news -padx 0 -pady 0
+   grid rowconfigure $f 0 -weight 1
+   grid columnconfigure $f 0 -weight 1
+   set f [$f.f interior]
+
+   set len [expr {int(ceil([llength $v::metric_list]/3.))}]
+   set a 0
+   set b [expr {$len-1}]
+   set metrics_c1 [lrange $v::metric_list $a $b]
+   set a [expr {$b + 1}]
+   incr b $len
+   set metrics_c2 [lrange $v::metric_list $a $b]
+   set a [expr {$b + 1}]
+   set b end
+   set metrics_c3 [lrange $v::metric_list $a $b]
+
+   foreach col {c1 c2 c3} {
+      set f [$w.metrics.f interior].$col
+      ttk::frame $f
+      foreach metric [set metrics_$col] {
+         ttk::checkbutton $f.m$metric -text $metric
+         grid $f.m$metric {*}$o -sticky w
+      }
+   }
+
+   set f [$w.metrics.f interior]
+   grid $f.c1 $f.c2 $f.c3 {*}$o -sticky nwe
+   grid columnconfigure $f {0 1 2} -uniform 1 -weight 1
+
+   set f $w.bottom
+   ttk::frame $f
+   ttk::button $f.gen -text "Generate Report"
+   grid x $f.gen x {*}$ew
+   grid columnconfigure $f {0 2} -weight 1
+
+   grid $w.general - {*}$news
+   grid $w.data $w.metrics {*}$news
+   grid $w.bottom - {*}$news
+   grid configure $w.data -sticky new
+   grid columnconfigure $w 1 -weight 1
+   grid rowconfigure $w 1 -weight 1
+
+   return $w
 }
