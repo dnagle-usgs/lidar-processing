@@ -683,11 +683,11 @@ proc ::l1pro::groundtruth::hist::panel w {
    set ns [namespace current]
    widget_plots $f histline "Histogram line:" $ns
    widget_plots $f histbar "Histogram bar graph:" $ns
-   widget_plots $f tickmarks Tickmarks: $ns plmk
    widget_plots $f zeroline "Equality line:" $ns
    widget_plots $f meanline "Mean error line:" $ns
    widget_plots $f ci95lines "95% CI lines:" $ns
    widget_plots $f kdeline "KDE line:" $ns
+   widget_plots $f tickmarks Tickmarks: $ns plmk
 
    grid columnconfigure $f {1 2} -weight 1
 
