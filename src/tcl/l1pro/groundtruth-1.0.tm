@@ -49,7 +49,13 @@ proc ::l1pro::groundtruth::gui {} {
    $nb add [scatter::panel $nb.scatter] -text "Scatterplot" -sticky news
    $nb add [hist::panel $nb.hist] -text "Histogram" -sticky news
 
-   $nb select 0
+   # Let Tk draw and layout the GUI elements. Then select each tab to encourage
+   # the toplevel to take a size that works well for all tabs, ending on the
+   # first to leave it open.
+   update idletasks
+   foreach idx {2 1 0} {
+      $nb select $idx
+   }
 }
 
 proc ::l1pro::groundtruth::comparison_add var {
