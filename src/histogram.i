@@ -177,6 +177,8 @@ kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=, ytitle=) {
       zrng = z(max)-z(min);
       binsize = 1/(1+exp(-((zrng-100)/20.)))*.2+.1;
       binsize = long(binsize * 100)/100.;
+   } else {
+      binsize = double(binsize);
    }
 
    wbkp = current_window();
