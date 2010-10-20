@@ -366,3 +366,30 @@ metrics=) {
    limits, square=1;
    limits;
 }
+
+func gt_report(comparisons, which, metrics=, title=, outfile=) {
+   default, metrics, ["# points", "RMSE", "ME", "R^2"];
+   fmt = swrite(format="%%%ds", strlen(metrics)(max));
+   output = swrite(format=fmt, grow("", metrics));
+   for(i = 1; i <= numberof(which); i++) {
+      col = gt_metrics(comparisons.truth, comparisons("m_"+which(i)), metrics);
+      col = grow(which(i), col);
+      fmt = swrite(format="  %%%ds", strlen(col)(max));
+      output += swrite(format=fmt, col);
+   }
+
+   if(!is_void(title) && strlen(title)) {
+      indent = (strlen(output)(max) - strlen(title))/2;
+      if(indent > 0)
+         title = array(" ", indent)(sum) + title;
+      output = grow(title, output);
+   }
+
+   if(outfile) {
+      f = open(outfile, "w");
+      write, f, format="%s\n", output;
+      close, f;
+   } else {
+      write, format="%s\n", output;
+   }
+}
