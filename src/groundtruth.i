@@ -368,6 +368,23 @@ metrics=) {
 }
 
 func gt_report(comparisons, which, metrics=, title=, outfile=) {
+/* DOCUMENT gt_report, comparisons, which, metrics=, title=, outfile=
+   Prints out statisticts for the given comparisons.
+
+   Parameters:
+      comparisons: The output of gt_extract_comparisons.
+      which: An array of strings that specify which comparisons to use. For
+         example: ["best", "nearest", "average"]
+
+   Options:
+      metrics= An array of metrics to report on. This array should be suitable
+         for gt_metrics. Example:
+            metrics=["# points", "RMSE", "ME", "R^2"]    (default)
+      title= If provided, this will be printed as a title at the top of the
+         report.
+      outfile= If provided, then the output will go to this file instead of
+         being printed on the screen.
+*/
    default, metrics, ["# points", "RMSE", "ME", "R^2"];
    fmt = swrite(format="%%%ds", strlen(metrics)(max));
    output = swrite(format=fmt, grow("", metrics));
