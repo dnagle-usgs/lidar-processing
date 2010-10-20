@@ -131,8 +131,7 @@ kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=, ytitle=) {
             kernel="triweight"
             kernel="cosine"
       bandwidth= Bandwidth to supply to kde_data. If set to 0, then it will be
-         automatially set to either your binsize or, if kernel="gaussian", half
-         the binsize. (h= option to kde_data)
+         automatically set to your binsize. (h= option to kde_data)
             bandwidth=0       Set based on binsize (default)
             bandwidth=0.15
       kdesample= Number of sample points to calculate the kernel density
@@ -147,7 +146,7 @@ kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=, ytitle=) {
             title=""                   (suppresses title completely)
             title="Histogram"          (default)
       xtitle= Allows you to override the x-axis title. Default describes data's
-         z units and includes binsize.
+         z units.
       ytitle= Allows you to override the y-axis title. Default describes the y
          axis (based on normalize)
 */
