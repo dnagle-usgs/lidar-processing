@@ -219,7 +219,9 @@ kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=, ytitle=) {
    if(type != "hide")
       plg, hist, refs, type=type, color=color, width=size;
 
-   ymax = hist(max);
+   ymax = 0;
+   if(!is_void(hist))
+      ymax = max(ymax, hist(max));
    if(!is_void(density))
       ymax = max(ymax, density(max));
    ymax *= 1.5;
