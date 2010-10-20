@@ -208,7 +208,7 @@ func gt_metrics(z1, z2, metrics) {
       else if(metrics(i) == "Q1E")
          result(i) = swrite(format="%.3f", quartiles(zdif)(1));
       else if(metrics(i) == "Q3E")
-         result(i) = swrite(format="%.3f", quartiles(zdif)(1));
+         result(i) = swrite(format="%.3f", quartiles(zdif)(3));
       else if(metrics(i) == "Median E")
          result(i) = swrite(format="%.3f", median(zdif));
       else if(metrics(i) == "ME")
