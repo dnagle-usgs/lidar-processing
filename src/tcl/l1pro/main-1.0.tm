@@ -7,10 +7,28 @@ package provide l1pro::main 1.0
 ttk::style configure Panel.TMenubutton -padding {2 0}
 ttk::style configure Panel.TButton -padding 0
 
-if {![namespace exists ::l1pro::main]} {
-   namespace eval ::l1pro::main {
-      namespace eval g {}
-   }
+namespace eval ::l1pro::main {}
+
+proc ::l1pro::main::gui {} {
+   set w .l1wid
+   toplevel $w
+   wm withdraw $w
+   wm protocol $w WM_DELETE_WINDOW [list wm withdraw $w]
+   wm resizable $w 1 0
+   wm title $w "Process EAARL Data"
+   $w configure -menu [::l1pro::main::menu::build $w.mb]
+
+   panel_processing $w.pro
+   panel_cbar $w.cbar
+   panel_plot $w.plot
+   panel_tools $w.tools
+   panel_filter $w.filter
+
+   grid $w.pro - -sticky ew
+   grid $w.cbar $w.plot -sticky ews
+   grid $w.tools - -sticky ew
+   grid $w.filter - -sticky ew
+   grid columnconfigure $w 1 -weight 1
 }
 
 proc ::l1pro::main::panel_processing w {

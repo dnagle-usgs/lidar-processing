@@ -119,17 +119,7 @@ if {![winfo exists .l1wid]} {
   #load all yorick support functions
   ybkg require \"l1pro.i\"
 
-  toplevel .l1wid
-  wm withdraw .l1wid
-  wm protocol .l1wid WM_DELETE_WINDOW {
-    wm withdraw .l1wid
-  }
-  wm resizable .l1wid 1 0
-
-  wm title .l1wid "Process EAARL Data"
-
-  .l1wid configure -menu .l1wid.mb
-  ::l1pro::main::menu::build .l1wid.mb
+  ::l1pro::main::gui
 
   proc load_ground_pnav {} {
     exp_send "gt_pnav = load_pnav();\r"
@@ -418,18 +408,6 @@ if {![winfo exists .l1wid]} {
   trace add variable plot_settings(cmin) write ud
   trace add variable plot_settings(cmax) write ud
   trace add variable cdelta write ud
-
-  ::l1pro::main::panel_processing .l1wid.pro
-  ::l1pro::main::panel_cbar .l1wid.cbar
-  ::l1pro::main::panel_plot .l1wid.plot
-  ::l1pro::main::panel_tools .l1wid.tools
-  ::l1pro::main::panel_filter .l1wid.filter
-
-  grid .l1wid.pro - -sticky ew
-  grid .l1wid.cbar .l1wid.plot -sticky ews
-  grid .l1wid.tools - -sticky ew
-  grid .l1wid.filter - -sticky ew
-  grid columnconfigure .l1wid 1 -weight 1
 
   proc send_latlon_to_l1pro {minlon maxlon minlat maxlat utmarg} {
     global mnlon mxlon mnlat mxlat utm
