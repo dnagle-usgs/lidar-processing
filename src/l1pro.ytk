@@ -22,6 +22,7 @@ package require l1pro::drast
 package require l1pro::file
 package require l1pro::groundtruth
 package require l1pro::main
+package require l1pro::main::menu
 package require l1pro::processing
 package require l1pro::settings
 package require l1pro::tools
@@ -128,121 +129,16 @@ if {![winfo exists .l1wid]} {
   LabelFrame .l1wid.filter -relief groove -borderwidth 7 -text "FILTER:"
 
   .l1wid configure -menu .l1wid.mb
-  menu .l1wid.mb
-  menu .l1wid.mb.file
-  menu .l1wid.mb.mission
-  menu .l1wid.mb.graph
-  menu .l1wid.mb.util
-  menu .l1wid.mb.cmd
-  menu .l1wid.mb.ytk
-  menu .l1wid.mb.dep
-  menu .l1wid.mb.dep.an
-  menu .l1wid.mb.dep.ie
-  menu .l1wid.mb.dep.vz
-  menu .l1wid.mb.dep.ed
+  ::l1pro::main::menu::build .l1wid.mb
 
-  .l1wid.mb add cascade -label File -underline 0 -menu .l1wid.mb.file
-  .l1wid.mb.file add command -label "Load ALPS data..." \
-    -underline 0 -command ::l1pro::file::load_pbd
-  .l1wid.mb.file add command -label "Save ALPS data..." \
-    -underline 0 -command ::l1pro::file::save_pbd
-
-  .l1wid.mb.file add separator
-
-  .l1wid.mb.file add command -label "Load ALPS data as..." \
-    -underline 15 -command ::l1pro::file::load_pbd_as
-  .l1wid.mb.file add command -label "Load ALPS data directory..." \
-    -underline 10 -command ::l1pro::dirload
-  .l1wid.mb.file add command -label "Save ALPS data as..." \
-    -underline 0 -command ::l1pro::file::save_pbd_as
-
-  .l1wid.mb.file add separator
-
-  .l1wid.mb.file add command -label "Import ASPRS LAS..." \
-    -underline 0 -command ::l1pro::file::load_las
-
-  .l1wid.mb.file add command -label "Import ASCII..." \
-    -underline 1 -command ::l1pro::ascii::launch
-
-  .l1wid.mb.file add command -label "Export ASCII..." \
-    -underline 1 -command ::l1pro::file::export_ascii
-
-  .l1wid.mb.file add separator
-
-  menu .l1wid.mb.file.vars
-  .l1wid.mb.file add cascade -label "Variables..." -underline 0 -menu .l1wid.mb.file.vars
-  .l1wid.mb.file.vars add command -label "Load from file..." \
-    -command ::l1pro::vars::load_from_file
-  .l1wid.mb.file.vars add command -label "Save to file..." \
-    -command ::l1pro::vars::save_to_file
-
-  .l1wid.mb.file add command -label "Capture a display..." -command scap \
-    -underline 0
-  .l1wid.mb.file add separator
-  .l1wid.mb.file add command -label "Dismiss" -underline 0 \
-    -command {wm withdraw .l1wid}
-
-  .l1wid.mb add cascade -label "Mission" -underline 0 -menu .l1wid.mb.mission
-  .l1wid.mb.mission add command -label "Mission configuration manager" \
-    -underline 0 -command ::mission::launch_gui
-  .l1wid.mb.mission add command -label "Plotting tool" -underline 0 \
-    -command ::plot::menu
-
-  .l1wid.mb.mission add separator
-  menu .l1wid.mb.mission.load
-  .l1wid.mb.mission add cascade -label "Load mission data" -underline 0 \
-    -menu .l1wid.mb.mission.load
-  .l1wid.mb.mission.load add command -label "EDB Data..." -underline 5 \
-    -command load_edb
-  .l1wid.mb.mission.load add command -label "TANS Data..." -underline 5 \
-    -command {exp_send "tans = rbtans();\r"}
-  .l1wid.mb.mission.load add command -label "DMARS PBD Data..." -underline 5 \
-    -command load_dmars
-  .l1wid.mb.mission.load add command -label "PNAV Data..." -underline 5 \
-    -command {exp_send "pnav = rbpnav(); \r"}
-  .l1wid.mb.mission.load add command -label "Bathymetry Settings..." \
-    -underline 21 -command bathctl::gui
-
-  menu .l1wid.mb.mission.settings
-  .l1wid.mb.mission add cascade -label "Settings" -underline 0 \
-    -menu .l1wid.mb.mission.settings
-  .l1wid.mb.mission.settings add command -label "Load ops_conf..." \
-    -underline 0 -command load_ops_conf
-  .l1wid.mb.mission.settings add command -label "Configure ops_conf..." \
-    -underline 0 -command ::l1pro::settings::ops_conf::gui
-  .l1wid.mb.mission.settings add command -label "Save ops_conf..." \
-    -underline 0 -command ::l1pro::settings::ops_conf::save
-  menu .l1wid.mb.mission.settings.ops
-  .l1wid.mb.mission.settings add cascade -label "Display..." \
-    -underline 0 -menu .l1wid.mb.mission.settings.ops
-  .l1wid.mb.mission.settings.ops add command -label "Current" \
-    -command {exp_send "display_mission_constants, ops_conf, ytk=1;\r"}
-  .l1wid.mb.mission.settings.ops add command -label "TANS default" \
-    -command {exp_send "display_mission_constants, ops_tans, ytk=1;\r"}
-  .l1wid.mb.mission.settings.ops add command -label "DMARS default" \
-    -command {exp_send "display_mission_constants, ops_IMU2, ytk=1;\r"}
-  .l1wid.mb.mission.settings.ops add command -label "Applanix 510 default" \
-    -command {exp_send "display_mission_constants, ops_IMU1, ytk=1;\r"}
-  .l1wid.mb.mission.settings add separator
-  .l1wid.mb.mission.settings add command -label "Bathymetry Settings..." \
-    -underline 21 -command bathctl::gui
-
-  .l1wid.mb.mission add separator
-  .l1wid.mb.mission add command -label "EDB Status" -command edb_status
-  .l1wid.mb.mission add command -label "Launch new SF viewer..." \
-    -command [list ::sf::controller %AUTO%]
-
-  .l1wid.mb.mission add separator
-  .l1wid.mb.mission add command -label "Load Ground PNAV (gt_pnav) data..." \
-    -command {
-      exp_send "gt_pnav = load_pnav();\r"
-    }
-  .l1wid.mb.mission add command -label "Load Ground PNAV2FS (gt_fs) data..." \
-    -command {
-      exp_send "gt_fs = load_pnav2FS(); grow, gt_fsall, gt_fs;\r"
-      append_varlist gs_fs
-      append_varlist gs_fsall
-    }
+  proc load_ground_pnav {} {
+    exp_send "gt_pnav = load_pnav();\r"
+  }
+  proc load_ground_pnav2fs {} {
+    exp_send "gt_fs = load_pnav2FS(); grow, gt_fsall, gt_fs;\r"
+    append_varlist gs_fs
+    append_varlist gs_fsall
+  }
 
   namespace eval varplot {
     namespace eval v {
@@ -461,46 +357,12 @@ if {![winfo exists .l1wid]} {
     }
   }
 
-  .l1wid.mb   add cascade -label Graph -underline 0 -menu .l1wid.mb.graph
-  .l1wid.mb.graph add command -label "Limits Tool" -underline 0 \
-    -command ::l1pro::tools::copy_limits::gui
-  .l1wid.mb.graph add separator
-  .l1wid.mb.graph add command \
-    -label "Change current window to 75 DPI / 450x450" \
-    -command [list exp_send "change_window_style, \"work\";\r"]
-  .l1wid.mb.graph add command \
-    -label "Change current window to 100 DPI / 600x600" \
-    -command [list exp_send "change_window_style, \"work\", dpi=100;\r"]
-  .l1wid.mb.graph add command \
-    -label "Change current window to 75 DPI / 825x638" \
-    -command [list exp_send "change_window_style, \"landscape11x85\";\r"]
-  .l1wid.mb.graph add command \
-    -label "Change current window to 100 DPI / 1100x850" \
-    -command [list exp_send "change_window_style, \"landscape11x85\", dpi=100;\r"]
-  .l1wid.mb.graph add separator
-  menu .l1wid.mb.graph.pal
-  .l1wid.mb.graph add cascade -label Palette... -under 0 -menu .l1wid.mb.graph.pal
-  foreach __p [list earth altearth stern rainbow yarg heat gray] {
-  .l1wid.mb.graph.pal add command -label $__p -under 0 -command [list ypalette $__p]
-  }
-  unset __p
-
   proc ypalette p {
     exp_send "palette, \"${p}.gp\";\r"
     expect "> "
   }
 
   set ystyle_dpi 75
-  menu .l1wid.mb.graph.sty
-  .l1wid.mb.graph add cascade -label Style... -under 0 -menu .l1wid.mb.graph.sty
-  .l1wid.mb.graph.sty add radiobutton \
-    -label "75 DPI" -variable ystyle_dpi -value 75
-  .l1wid.mb.graph.sty add radiobutton \
-    -label "100 DPI" -variable ystyle_dpi -value 100
-  .l1wid.mb.graph.sty add separator
-  foreach __s [list axes boxed l_nobox nobox vgbox vg work landscape11x85] {
-  .l1wid.mb.graph.sty add command -label $__s -under 0 -command [list ystyle $__s]
-  }
 
   proc ystyle s {
     set cmd "change_window_style, \"$s\""
@@ -510,79 +372,9 @@ if {![winfo exists .l1wid]} {
     exp_send "${cmd};\r"
   }
 
-  menu .l1wid.mb.graph.grid
-  .l1wid.mb.graph add cascade -label "Grid lines..." -underline 0 -menu .l1wid.mb.graph.grid
-  .l1wid.mb.graph.grid add command -label "None" -command [list ygridxy 0 0]
-  .l1wid.mb.graph.grid add separator
-  .l1wid.mb.graph.grid add command -label "X axis" -command [list ygridxy 1 0]
-  .l1wid.mb.graph.grid add command -label "Y axis" -command [list ygridxy 0 1]
-  .l1wid.mb.graph.grid add command -label "Both axes" -command [list ygridxy 1 1]
-  .l1wid.mb.graph.grid add separator
-  .l1wid.mb.graph.grid add command -label "X origin" -command [list ygridxy 2 0]
-  .l1wid.mb.graph.grid add command -label "Y origin" -command [list ygridxy 0 2]
-  .l1wid.mb.graph.grid add command -label "Both origins" -command [list ygridxy 2 2]
-
   proc ygridxy {x y} {
     exp_send "gridxy, $x, $y;\r"
   }
-
-  .l1wid.mb add cascade -label Utilities -underline 0 -menu .l1wid.mb.util
-
-  .l1wid.mb.util add command -label "Pixel Analysis" \
-    -command [list ::pixelwf::gui::launch_full_panel .pixelwf]
-
-  .l1wid.mb.util add command -label "Histogram Elevations" \
-    -command ::l1pro::tools::histelev::gui
-
-  if {[package vcompare [info patchlevel] 8.5.9] != -1} {
-    .l1wid.mb.util add command -label "Groundtruth Analysis" \
-      -command ::l1pro::groundtruth::gui
-  }
-
-  .l1wid.mb.util add separator
-
-  .l1wid.mb.util add command -label "Transect Tool" \
-    -command [list source [file join $src_path transrch.ytk]]
-
-  menu .l1wid.mb.util.seg
-  .l1wid.mb.util add cascade -label "Launch segments by..." -menu .l1wid.mb.util.seg
-  .l1wid.mb.util.seg add command -label "Flightline" \
-    -command [list segment_data_launcher fltlines]
-  .l1wid.mb.util.seg add command -label "Flightline and digitizer" \
-    -command [list segment_data_launcher fltlines_digitizer]
-  .l1wid.mb.util.seg add command -label "Day" \
-    -command [list segment_data_launcher days]
-  .l1wid.mb.util.seg add command -label "Day and digitizer" \
-    -command [list segment_data_launcher days_digitizer]
-  .l1wid.mb.util.seg add command -label "Manual selection" \
-    -command select_data_segments
-
-  menu .l1wid.mb.util.stat
-  .l1wid.mb.util add cascade -label "Launch statistics by..." \
-    -menu .l1wid.mb.util.stat
-  .l1wid.mb.util.stat add command -label "Flightline" \
-    -command [list segment_stat_launcher fltlines]
-  .l1wid.mb.util.stat add command -label "Flightline and digitizer" \
-    -command [list segment_stat_launcher fltlines_digitizer]
-  .l1wid.mb.util.stat add command -label "Day" \
-    -command [list segment_stat_launcher days]
-  .l1wid.mb.util.stat add command -label "Day and digitizer" \
-    -command [list segment_stat_launcher days_digitizer]
-
-  .l1wid.mb.util add command -label "Browse Rasters" -underline 7 \
-    -command ::l1pro::drast::gui
-  .l1wid.mb.util add separator
-  .l1wid.mb.util add command -label "Determine Roll Bias" -underline 0 \
-    -command determine_roll_bias
-  .l1wid.mb.util add command -label "Check and correct EDB time" \
-    -command ts_check
-  .l1wid.mb.util add separator
-  .l1wid.mb.util add command \
-    -label "Show Flightlines with No Raster Data..." -underline 25 \
-    -command {exp_send "plot_no_raster_fltlines(gga, edb);\r"}
-  .l1wid.mb.util add command -label "Show Flightlines with No TANS Data..." \
-    -underline 25 \
-    -command {exp_send "plot_no_tans_fltlines(tans, gga);\r"}
 
   proc determine_roll_bias {} {
       global win_no varlist bias pro_var
@@ -694,99 +486,6 @@ if {![winfo exists .l1wid]} {
         .l1bias.3.$w configure -state disabled
       }
     }
-
-  .l1wid.mb add cascade -label CmdLine -underline 1 -menu .l1wid.mb.cmd
-  foreach ycmd {
-    mtransect batch_process mbatch_process batch_merge_tiles new_batch_rcf
-    batch_rcf batch_datum_convert batch_veg_lfpw batch_pbd2edf batch_pbd2las
-    batch_las2pbd batch_qi2pbd batch_write_xyz batch_convert_ascii2pbd
-    batch_tile idl_batch_grid
-  } {
-    .l1wid.mb.cmd add command -label $ycmd \
-      -command [list exp_send "help, $ycmd\r"]
-  }
-
-  .l1wid.mb add cascade -label Ytk -underline 0 -menu .l1wid.mb.ytk
-
-  .l1wid.mb.ytk add command -label "Load a Yorick/Ytk program file..." \
-    -command select_ytk_fn
-  .l1wid.mb.ytk add separator
-  .l1wid.mb.ytk add command -label Tkcon \
-    -command [list exec {*}[auto_execok tkcon] &]
-  .l1wid.mb.ytk add command -label Tkcmd -command [list wm deiconify .tx]
-  .l1wid.mb.ytk add separator
-  .l1wid.mb.ytk add checkbutton -label "Help goes in new window" \
-    -onvalue Yes -offvalue No -variable _ytk(separate_help_win)
-
-  .l1wid.mb add cascade -label Deprecated -underline 1 -menu .l1wid.mb.dep
-
-  .l1wid.mb.dep add cascade -label Analysis -underline 0 \
-    -menu .l1wid.mb.dep.an
-
-  .l1wid.mb.dep.an add command -label "Examine Lidar Rasters..." \
-    -command [list source [file join $src_path drast.ytk]]
-
-  .l1wid.mb.dep.an add command -label "Open Fit Gaussian GUI" \
-    -command open_fit_gaussian_gui
-
-  .l1wid.mb.dep add cascade -label "Import/Export" -underline 0 \
-    -menu .l1wid.mb.dep.ie
-
-  ### DEPRECATED 2010-01-03 ###
-  # Following entries replaced by file-1.0.tm functionality.
-  .l1wid.mb.dep.ie add command -label "Read Binary Data file..." -underline 0 \
-    -command ::l1pro::deprecated::read_binary_data_file
-  .l1wid.mb.dep.ie add command -label "Write Binary Data File..." -underline 0 \
-    -command ::l1pro::deprecated::write_binary_data_file
-  .l1wid.mb.dep.ie add command -label "Read SubSampled Data File..." -underline 5 \
-    -command ::l1pro::deprecated::read_subsampled_data_file
-  .l1wid.mb.dep.ie add command -label "Ascii output ..." -underline 0 \
-    -command ::l1pro::deprecated::ascii_output
-
-  .l1wid.mb.dep.ie add separator
-
-  .l1wid.mb.dep.ie add command -label "Save Tile" \
-    -command ::l1pro::deprecated::savetile
-
-  .l1wid.mb.dep add cascade -label "Visualization" -underline 0 \
-    -menu .l1wid.mb.dep.vz
-
-  .l1wid.mb.dep.vz add command -label "Open the Limits Tool" -underline 0 \
-    -command ::l1pro::deprecated::limits_tool
-
-  .l1wid.mb.dep.vz add command -label "Configure elevation scale limits..." \
-    -underline 0 \
-    -command ::l1pro::deprecated::configure_elevation_scale_limits
-
-  .l1wid.mb.dep.vz add command -label "Plot/Write Individual Flightlines..." \
-    -underline 0 \
-    -command ::l1pro::deprecated::plot_write_individual_flightlines
-
-  .l1wid.mb.dep.vz add separator
-
-  ### Deprecated 2009-02-02
-  .l1wid.mb.dep.vz add command -label "Flight Tracks & Coastlines..." \
-    -command ::l1pro::deprecated::rbgga_menu
-
-  ### Deprecated 2009-10-19
-  .l1wid.mb.dep.vz add command -label "1-Hz RGB Low-Res Images..." \
-    -command ::l1pro::deprecated::start_sf
-
-  ### Deprecated 2009-10-19
-  .l1wid.mb.dep.vz add command -label "1-Hz CIR High-Res Images..." \
-    -command ::l1pro::deprecated::start_cir
-
-  .l1wid.mb.dep add cascade -label "Editting" -underline 0 \
-    -menu .l1wid.mb.dep.ed
-
-  .l1wid.mb.dep.ed add command -label "Test and Clean" \
-    -command {exp_send "$::pro_var = test_and_clean($::pro_var);\r"}
-
-  .l1wid.mb.dep.ed add command -label "Append2Tile" \
-    -command ::l1pro::deprecated::append2tile
-
-  .l1wid.mb.dep.ed add command -label "Old RCF GUI" \
-    -command ::l1pro::deprecated::rcf_region
 
   proc open_fit_gaussian_gui {} {
     source [file join $::src_path attic 2010-10-fit_gauss.ytk]
