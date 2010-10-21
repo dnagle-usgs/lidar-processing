@@ -57,7 +57,7 @@ if {![winfo exists .l1wid]} {
   set list {}
   set lrnindx {}
   set avg_surf 1
-  set rcf_buf_rgn 0; #Used in proc replace_proc
+  set rcf_buf_rgn 0; #Used in proc filter_replace
   set autoclean_after_process 1
   set l1pro_fma 0
 
@@ -529,17 +529,16 @@ if {![winfo exists .l1wid]} {
     -values [list Keep Remove Replace] \
     -state readonly \
     -modifycmd {
-      global varlist
       switch -- [.l1wid.filter.7 getvalue] {
-        0 keep_proc
-        1 removing_proc
-        2 replace_proc
+        0 filter_keep
+        1 filter_remove
+        2 filter_replace
         default {error "Please Define Region."}
       }
     }
   ::tooltip::tooltip .l1wid.filter.7 "Choose any of the following tools:"
 
-  proc removing_proc {} {
+  proc filter_remove {} {
     global varlist rmv_var plot_settings pro_var
     destroy .rem
     toplevel .rem
@@ -698,7 +697,7 @@ if {![winfo exists .l1wid]} {
     pack .rem.2 .rem.3 .rem.4 -side left -padx 5 -pady 5
   }
 
-  proc keep_proc {} {
+  proc filter_keep {} {
     global varlist keep_in_var keep_out_var pro_var
     destroy .sel
     toplevel .sel
@@ -807,7 +806,7 @@ if {![winfo exists .l1wid]} {
     pack .sel.2 .sel.3 -side left -padx 5 -pady 5
   }
 
-  proc replace_proc {} {
+  proc filter_replace {} {
     global varlist croppeddata have_replaced have_undone rcf_buf_rgn \
       pro_var replace_in_var replace_orig_var replace_out_var
     set have_undone 0
