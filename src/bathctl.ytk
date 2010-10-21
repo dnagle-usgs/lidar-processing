@@ -169,8 +169,12 @@ proc bathctl::gui_launch {} {
    $w configure -menu $w.mb
 
    foreach {key range} $v::ranges {
-      sst $w.$key ::bath_ctl($key) [mc $key] $range
-      pack $w.$key -side top -anchor e
+      lassign $range rmin rmax rinc
+      label $w.lb$key -text [mc $key]
+      spinbox $w.sb$key -textvariable ::bath_ctl($key) -format %.2f \
+         -from $rmin -to $rmax -increment $rinc -width 6
+      grid $w.lb$key $w.sb$key -in $w -sticky ew
+      grid configure $w.lb$key -sticky e
    }
 
    button $w.message -text "\
@@ -181,7 +185,8 @@ Warning: These settings will\
 \nfor more information." \
       -command bathctl::gui_message
 
-   pack $w.message -side top -fill x -expand 1
+   grid $w.message - -sticky news
+   grid columnconfigure $w 1 -weight 1
 }
 
 proc bathctl::gui_message {} {
