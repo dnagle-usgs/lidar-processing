@@ -1099,23 +1099,6 @@ if {![winfo exists .l1wid]} {
     pack .rep.5 -side left -pady 5
   }
 
-  proc sst {w var lbl rg} {
-  # This procedure builds a widget composed of a Label, a spinbox, and a scale so
-  # one can enter values by direct entry, the spin clicks, or the scale.
-    frame $w
-    lassign $rg rmin rmax rinc
-    spinbox $w.sb -textvariable $var -format %.2f \
-      -from $rmin -to $rmax -increment $rinc -width 6
-    scale $w.sc -showvalue 0 -orient horizontal  \
-      -variable $var \
-      -from $rmin \
-      -to   $rmax \
-      -resolution $rinc
-    label $w.lb -text $lbl
-    pack $w.lb $w.sb $w.sc -side left -fill x -expand 1
-    return $w
-  }
-
   proc ud { a b c } {
     switch -- $::cbar_locked {
       cmin {
