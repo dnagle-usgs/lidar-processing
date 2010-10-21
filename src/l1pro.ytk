@@ -127,7 +127,6 @@ if {![winfo exists .l1wid]} {
   wm resizable .l1wid 1 0
 
   wm title .l1wid "Process EAARL Data"
-  LabelFrame .l1wid.filter -relief groove -borderwidth 7 -text "FILTER:"
 
   .l1wid configure -menu .l1wid.mb
   ::l1pro::main::menu::build .l1wid.mb
@@ -391,38 +390,6 @@ if {![winfo exists .l1wid]} {
       [lindex [dict values $::l1pro_data(mode_mapping)] $index]
   }
 
-  ::mixin::combobox .l1wid.filter.1 -text "Copy points using..." -width 16 \
-    -state readonly \
-    -values [list "Rubberband Box" "Points in Polygon" "Single Pixel" \
-      "Select Cell/Quad/Tile"] \
-    -modifycmd {
-      switch -- [.l1wid.filter.1 getvalue] {
-        0 ::l1pro::filter::copy_points_using_box
-        1 ::l1pro::filter::copy_points_using_pip
-        2 ::l1pro::filter::copy_points_using_pix
-        3 ::l1pro::filter::copy_points_using_tile
-        default {error "Please Define Region."}
-      }
-    }
-  ::tooltip::tooltip .l1wid.filter.1 \
-    "Copy points to 'workdata' using any of the following methods:\
-     \n  Rubberband Box\
-     \n  Points in Polygon\
-     \n  Single Pixel"
-
-  ::mixin::combobox .l1wid.filter.7 -text "Filter tools..." -width 16 \
-    -values [list Keep Remove Replace] \
-    -state readonly \
-    -modifycmd {
-      switch -- [.l1wid.filter.7 getvalue] {
-        0 ::l1pro::filter::filter_keep
-        1 ::l1pro::filter::filter_remove
-        2 ::l1pro::filter::filter_replace
-        default {error "Please Define Region."}
-      }
-    }
-  ::tooltip::tooltip .l1wid.filter.7 "Choose any of the following tools:"
-
   proc ud { a b c } {
     switch -- $::cbar_locked {
       cmin {
@@ -452,15 +419,11 @@ if {![winfo exists .l1wid]} {
   trace add variable plot_settings(cmax) write ud
   trace add variable cdelta write ud
 
-  pack \
-    .l1wid.filter.1 \
-    .l1wid.filter.7 \
-    -side left
-
   ::l1pro::main::panel_processing .l1wid.pro
   ::l1pro::main::panel_cbar .l1wid.cbar
   ::l1pro::main::panel_plot .l1wid.plot
   ::l1pro::main::panel_tools .l1wid.tools
+  ::l1pro::main::panel_filter .l1wid.filter
 
   grid .l1wid.pro - -sticky ew
   grid .l1wid.cbar .l1wid.plot -sticky ews

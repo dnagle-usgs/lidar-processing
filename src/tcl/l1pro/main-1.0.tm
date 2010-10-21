@@ -349,3 +349,45 @@ proc ::l1pro::main::panel_tools w {
 
    return $w
 }
+
+proc ::l1pro::main::panel_filter w {
+   ttk::frame $w
+
+   ttk::label $w.filter -text "FILTER:"
+   ::mixin::combobox $w.copy -text "Copy points using..." -width 16 \
+      -state readonly \
+      -values [list "Rubberband Box" "Points in Polygon" "Single Pixel" \
+         "Select Cell/Quad/Tile"] \
+      -modifycmd {
+         switch -- [%W getvalue] {
+            0 ::l1pro::filter::copy_points_using_box
+            1 ::l1pro::filter::copy_points_using_pip
+            2 ::l1pro::filter::copy_points_using_pix
+            3 ::l1pro::filter::copy_points_using_tile
+            default {error "Please Define Region."}
+         }
+      }
+   ::tooltip::tooltip $w.copy \
+      "Copy points to 'workdata' using any of the following methods:\
+      \n  Rubberband Box\
+      \n  Points in Polygon\
+      \n  Single Pixel"
+
+   ::mixin::combobox $w.tools -text "Filter tools..." -width 16 \
+      -values [list Keep Remove Replace] \
+      -state readonly \
+      -modifycmd {
+         switch -- [%W getvalue] {
+            0 ::l1pro::filter::filter_keep
+            1 ::l1pro::filter::filter_remove
+            2 ::l1pro::filter::filter_replace
+            default {error "Please Define Region."}
+         }
+      }
+   ::tooltip::tooltip $w.tools "Choose any of the following tools:"
+
+   grid $w.filter $w.copy $w.tools
+   grid columnconfigure $w 3 -weight 1
+
+   return $w
+}
