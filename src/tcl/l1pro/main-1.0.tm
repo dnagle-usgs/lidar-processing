@@ -145,7 +145,7 @@ proc ::l1pro::main::panel_plot w {
 
    ttk::button $f.varbtn -text "Var:" \
       -style Panel.TButton -width 0 \
-      -command ::varplot::gui
+      -command ::l1pro::tools::varmanage::gui
    ::mixin::combobox $f.varsel -state readonly -width 4 \
       -textvariable ::pro_var \
       -listvariable ::varlist
