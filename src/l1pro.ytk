@@ -468,52 +468,56 @@ if {![winfo exists .l1wid]} {
       [lindex [dict values $::l1pro_data(mode_mapping)] $index]
   }
 
+  proc copy_points_using_box {} {
+    set selection [tk_messageBox -icon info \
+      -message "Drag a Rectangular Box in Window $::win_no to define region." \
+      -type okcancel -title "Message"]
+    if {$selection == "ok"} {
+      exp_send "workdata = sel_data_rgn($::pro_var, mode=2, win=$::win_no)\r"
+      expect ">"
+    }
+  }
+
+  proc copy_points_using_pip {} {
+    set selection  [tk_messageBox -icon info \
+      -message "Draw a Polygon in Window $::win_no to define a region using a\
+        series of left mouse clicks.  To complete the polygon, middle mouse\
+        click OR <Ctrl> and left mouse click." \
+      -type okcancel -title "Message" ]
+    if {$selection == "ok"} {
+      exp_send "workdata = sel_data_rgn($::pro_var, mode=3, win=$::win_no)\r"
+      expect ">"
+    }
+  }
+
+  proc copy_points_using_pix {} {
+    exp_send "workdata = select_points($::pro_var, win=$::win_no);\r"
+    expect ">"
+  }
+
+  proc copy_points_using_tile {} {
+    set selection [tk_messageBox -icon info \
+      -message "Select a cell (250m by 250m) region by dragging a region in\
+        window $::win_no within the required cell."\
+      -type okcancel -title "Message" ]
+    if {$selection == "ok"} {
+      exp_send "workdata = select_region_tile($::pro_var, win=$::win_no, plot=1);\r"
+      expect ">"
+    }
+  }
+
   ::mixin::combobox .l1wid.filter.1 -text "Copy points using..." -width 16 \
     -state readonly \
     -values [list "Rubberband Box" "Points in Polygon" "Single Pixel" \
       "Select Cell/Quad/Tile"] \
     -modifycmd {
-      global varlist pro_var
-
-      set selr [.l1wid.filter.1 getvalue]
-      if {$selr == 0} {
-        set selection [tk_messageBox -icon info \
-          -message "Drag a Rectangular Box in Window $win_no to define region." \
-          -type okcancel -title "Message"]
-        if {$selection == "ok"} {
-          exp_send "workdata = sel_data_rgn($::pro_var, mode=2, win=$win_no)\r"
-          expect ">"
-        }
+      switch -- [.l1wid.filter.1 getvalue] {
+        0 copy_points_using_box
+        1 copy_points_using_pip
+        2 copy_points_using_pix
+        3 copy_points_using_tile
+        default {error "Please Define Region."}
       }
-      if {$selr == 1} {
-        set selection  [tk_messageBox -icon info \
-          -message "Draw a Polygon in Window $win_no to define a region using a\
-            series of left mouse clicks.  To complete the polygon, middle mouse\
-            click OR <Ctrl> and left mouse click." \
-          -type okcancel -title "Message" ]
-        if {$selection == "ok"} {
-          exp_send "workdata = sel_data_rgn($::pro_var, mode=3, win=$win_no)\r"
-          expect ">"
-        }
-      }
-      if {$selr == 2} {
-        exp_send "workdata = select_points($::pro_var, win=$win_no);\r"
-        expect ">"
-      }
-      if {$selr == 3} {
-        set selection [tk_messageBox -icon info \
-          -message "Select a cell (250m by 250m) region by dragging a region in\
-            window $win_no within the required cell."\
-          -type okcancel -title "Message" ]
-        if {$selection == "ok"} {
-          exp_send "workdata = select_region_tile($::pro_var, win=$win_no, plot=1);\r"
-          expect ">"
-        }
-      }
-      if {$selr == -1} {
-        error "Please Define Region."
-      }
-      append_varlist workdata
     }
   ::tooltip::tooltip .l1wid.filter.1 \
     "Copy points to 'workdata' using any of the following methods:\
