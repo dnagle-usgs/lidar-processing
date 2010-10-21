@@ -521,6 +521,86 @@ proc ::l1pro::deprecated::plot_write_individual_flightlines {} {
    }
 }
 
+proc ::l1pro::deprecated::make_selected_arrays {} {
+# This belongs to ::l1pro::deprecated::plot_write_individual_flightlines
+    global lrnindx list
+    set curlist [.l1plot.1.lb curselection]
+    set ptype [processing_mode]
+    if {$ptype == 0} {
+      exp_send "fs_some = \[\];\r"
+      expect ">"
+      foreach f $curlist {
+        set fidx [lindex $lrnindx $f]
+        set lidx [lindex $lrnindx [expr ($f+1)]]
+        if {[expr ($lidx-$fidx)] != 0} {
+          if {($lidx != "")} {
+            set lidx [expr ($lidx - 1)]
+            exp_send "grow, fs_some, fs_all($fidx:$lidx);\r"
+            expect ">"
+          } else {
+            exp_send "grow, fs_some, fs_all($fidx:);\r"
+            expect ">"
+          }
+        }
+      }
+    }
+    if {$ptype == 1} {
+      exp_send "depth_some = \[\];\r"
+      expect ">"
+      foreach f $curlist {
+        set fidx [lindex $lrnindx $f]
+        set lidx [lindex $lrnindx [expr ($f+1)]]
+        if {[expr ($lidx-$fidx)] != 0} {
+          if {$lidx != ""} {
+            set lidx [expr ($lidx - 1)]
+            exp_send "grow, depth_some, depth_all($fidx:$lidx);\r"
+            expect ">"
+          } else {
+            exp_send "grow, depth_some, depth_all($fidx:);\r"
+            expect ">"
+          }
+        }
+      }
+    }
+    if {$ptype == 2} {
+      exp_send "veg_some = \[\];\r"
+      expect ">"
+      foreach f $curlist {
+        set fidx [lindex $lrnindx $f]
+        set lidx [lindex $lrnindx [expr ($f+1)]]
+        if {[expr ($lidx-$fidx)] != 0} {
+          if {$lidx != ""} {
+            set lidx [expr ($lidx - 1)]
+            exp_send "grow, veg_some, veg_all($fidx:$lidx);\r"
+            expect ">"
+          } else {
+            exp_send "grow, veg_some, veg_all($fidx:);\r"
+            expect ">"
+          }
+        }
+      }
+    }
+    if {$ptype == 3} {
+      exp_send "cveg_some = \[\];\r"
+      expect ">"
+      foreach f $curlist {
+        set fidx [lindex $lrnindx $f]
+        set lidx [lindex $lrnindx [expr ($f+1)]]
+        if {[expr ($lidx-$fidx)] != 0} {
+          if {$lidx != ""} {
+            set lidx [expr ($lidx - 1)]
+            exp_send "grow, cveg_some, cveg_all($fidx:$lidx);\r"
+            expect ">"
+          } else {
+            exp_send "grow, cveg_some, cveg_all($fidx:);\r"
+            expect ">"
+          }
+        }
+      }
+    }
+}
+
+
 proc ::l1pro::deprecated::append2tile {} {
    uplevel #0 {
       set selection  [tk_messageBox  -icon question \
