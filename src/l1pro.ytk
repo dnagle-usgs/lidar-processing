@@ -29,7 +29,10 @@ package require l1pro::settings
 package require l1pro::tools
 package require l1pro::vars
 
-if {![winfo exists .l1wid]} {
+#load all yorick support functions
+ybkg require \"l1pro.i\"
+
+if {![info exists l1pro_data]} {
   set l1pro_data(processing_mode) [lrange {
     "First Return Topo"
     "Submerged Topo"
@@ -116,287 +119,15 @@ if {![winfo exists .l1wid]} {
   set constant_win_no 0
   set l1pro_square_limits 1
 
-  #load all yorick support functions
-  ybkg require \"l1pro.i\"
-
-  ::l1pro::main::gui
-
-  proc load_ground_pnav {} {
-    exp_send "gt_pnav = load_pnav();\r"
-  }
-  proc load_ground_pnav2fs {} {
-    exp_send "gt_fs = load_pnav2FS(); grow, gt_fsall, gt_fs;\r"
-    append_varlist gs_fs
-    append_varlist gs_fsall
-  }
-
-  proc append_varlist {newvar} {
-    global varlist
-    if {[lsearch -exact $varlist $newvar] == -1} {
-      lappend varlist $newvar
-      init_var_settings $newvar
-    }
-  }
-
-  proc ypalette p {
-    exp_send "palette, \"${p}.gp\";\r"
-    expect "> "
-  }
-
   set ystyle_dpi 75
-
-  proc ystyle s {
-    set cmd "change_window_style, \"$s\""
-    if {$::ystyle_dpi != 75} {
-      append cmd ", dpi=$::ystyle_dpi"
-    }
-    exp_send "${cmd};\r"
-  }
-
-  proc ygridxy {x y} {
-    exp_send "gridxy, $x, $y;\r"
-  }
-
-  proc determine_roll_bias {} {
-      global win_no varlist bias pro_var
-
-      destroy .l1bias
-      toplevel .l1bias
-      wm title .l1bias "Determine Roll Bias"
-
-      foreach x {1 2 3 4 5 6} {
-        frame .l1bias.$x
-        pack .l1bias.$x -side top
-      }
-
-      if {![info exists bias]} {
-        ybkg updatebias
-      }
-      set slope 0
-      set inout 1
-      set width 5
-      set flwin 4
-      set var $pro_var
-
-      LabelEntry .l1bias.1.var -relief sunken -borderwidth 3 -width 10 \
-        -label "Variable:" -helptext "EAARL source data" \
-        -textvariable var -text $var
-
-      Label .l1bias.1.winl -text "in window:"
-      spinbox .l1bias.1.win -justify center -width 2 \
-        -textvariable win_no -from 0 -to 63 -increment 1
-
-      Label .l1bias.1.transl -text "Then click"
-      Button .l1bias.1.transbutton -text "Get Transect" \
-        -helptext "Click to get transect" \
-        -command {
-          exp_send "transdata = get_transect($var, win=$win_no, update=1,\
-            width=$width)\r"
-          expect ">"
-          .l1bias.3.plot configure -state normal
-          .l1bias.3.winl configure -state normal
-          .l1bias.3.win configure -state normal
-          .l1bias.3.pick configure -state normal
-          .l1bias.3.inout configure -state normal
-          .l1bias.3.auto configure -state normal
-        }
-
-      Button .l1bias.1.help -text "Help!" -helptext "Click for directions" \
-        -command {
-          tk_messageBox -icon warning \
-            -message "1) Start with data array plotted in a window and raw EAARL\
-              data loaded. Set the variable and window and click Get Transect.\
-              \r2) Drag a line perpendicular to the flightlines you wish to\
-              examine. In the window that appears, zoom into the top, type\
-              something, and hit enter. Now drag a box over the section of the\
-              transect you wish to keep.\
-              \r3) Click the plot button to display the loaded transect. In\
-              order to determine the bias automatically all flightlines must be\
-              traveling the same direction, so you'll need to remove whichever\
-              direction is the minority.\
-              \r4) Click 'select flightlines' and simply type 'y' or 'n' to keep\
-              or remove each flightline. Now you have a set of flightlines going\
-              the same direction.\
-              \r5) Finally, determine whether the flightlines are going into or\
-              out of the screen. If they are going INTO the screen, check the\
-              box." \
-            -type ok
-        }
-
-      LabelEntry .l1bias.2.width -relief sunken -width 3 \
-        -label "Width:" -helptext "Transect width" \
-        -textvariable width -text $width
-
-      LabelEntry .l1bias.2.bias -relief sunken -width 10 \
-        -label "Current Roll Bias:" -helptext "Current Roll Bias" \
-        -textvariable bias
-
-      LabelEntry .l1bias.2.slope -relief sunken -width 10 \
-        -label "Current Slope:" -helptext "Current slope" \
-        -textvariable slope -text $slope
-
-      Button .l1bias.3.plot -text "Plot" \
-        -helptext "Click to plot flightline transect" \
-        -command {exp_send "plot_flightline_transect(transdata, $flwin)\r"}
-
-      Label .l1bias.3.winl -text "in win:"
-      spinbox .l1bias.3.win -justify center \
-        -width 2 -textvariable flwin -from 0 -to 63 -increment 1
-
-      Button .l1bias.3.pick -text "Select Flightlines" \
-        -helptext "Click to select which flightlines to keep" \
-        -command {exp_send "transdata=selgoodflightlines(transdata, win=$flwin)\r"}
-
-      checkbutton .l1bias.3.inout -text "in/out:" \
-        -variable inout -onvalue -1 -offvalue 1
-
-      Button .l1bias.3.auto -text "Determine bias" \
-        -helptext "Click to automatically determine roll bias" \
-        -command {exp_send "goodroll=find_roll_bias(transdata,0,$inout,update=1)\r"}
-
-      pack .l1bias.1.var .l1bias.1.winl .l1bias.1.win .l1bias.1.transl \
-        .l1bias.1.transbutton .l1bias.1.help -side left
-      pack .l1bias.2.width .l1bias.2.bias .l1bias.2.slope -side left
-      pack .l1bias.3.plot .l1bias.3.winl .l1bias.3.win .l1bias.3.pick \
-        .l1bias.3.inout .l1bias.3.auto -side left
-
-      foreach w {plot winl win pick inout auto} {
-        .l1bias.3.$w configure -state disabled
-      }
-    }
-
-  proc open_fit_gaussian_gui {} {
-    source [file join $::src_path attic 2010-10-fit_gauss.ytk]
-    fit_gauss::create_gui
-  }
-
-  proc processing_mode {} {
-    global plot_settings l1pro_data
-    return [lsearch -exact $l1pro_data(processing_mode) \
-      $plot_settings(processing_mode)]
-  }
-
-  proc processing_mode_changed {a b c} {
-    global curs pro_var_next
-    if {$b eq "processing_mode"} {
-      set curs [processing_mode]
-    }
-    if {$pro_var_next in [list fs_all depth_all veg_all cveg_all]} {
-      set pro_var_next [lindex {fs_all depth_all veg_all cveg_all {}} \
-        [processing_mode]]
-    }
-  }
 
   trace remove \
     variable plot_settings(processing_mode) write processing_mode_changed
   trace add \
     variable plot_settings(processing_mode) write processing_mode_changed
 
-  proc processing_mode_by_index {index} {
-    global plot_settings l1pro_data
-    set plot_settings(processing_mode) \
-      [lindex $l1pro_data(processing_mode) $index]
-  }
-
-  proc init_var_settings {var args} {
-    dict set ::var_settings($var) var $var
-    set settings [array get ::plot_settings]
-    foreach {key val} [array get ::plot_settings] {
-      if {![dict exists $::var_settings($var) $key]} {
-        dict set ::var_settings($var) $key $val
-      }
-    }
-  }
-
-  proc pro_var_changed {a b c} {
-    global var_settings plot_settings pro_var cbv win_no constant_win_no
-    init_var_settings $plot_settings(var)
-
-    # Currently saved version -- to be replaced
-    set stored $var_settings($plot_settings(var))
-
-    # Update processing_mode and display_mode
-    dict set stored processing_mode $plot_settings(processing_mode)
-    dict set stored display_mode $plot_settings(display_mode)
-
-    # Update cbar if appropriate
-    if {$cbv == 0} {
-      foreach key {cmin cmax msize mtype} {
-        dict set stored $key $plot_settings($key)
-      }
-    }
-
-    # Update win_no if appropriate
-    if {$constant_win_no == 0} {
-      dict set stored win_no $win_no
-    }
-
-    # Replace saved version with new values
-    set var_settings($plot_settings(var)) $stored
-
-    # Load stored settings to be used
-    if {[info exists var_settings($pro_var)]} {
-      set stored $var_settings($pro_var)
-    } else {
-      set stored [array get plot_settings]
-    }
-
-    # Update processing_mode and display_mode
-    set plot_settings(var) $pro_var
-    set plot_settings(processing_mode) [dict get $stored processing_mode]
-    set plot_settings(display_mode) [dict get $stored display_mode]
-
-    # Update cbar if appropriate
-    if {$cbv == 0} {
-      foreach key {cmin cmax msize mtype} {
-        set plot_settings($key) [dict get $stored $key]
-      }
-    }
-
-    # Update win_no if appropriate
-    if {$constant_win_no == 0} {
-      set plot_settings(win_no) [dict get $stored win_no]
-      set win_no $plot_settings(win_no)
-    }
-  }
-
   trace remove variable pro_var write pro_var_changed
   trace add variable pro_var write pro_var_changed
-
-  proc display_type {} {
-    lsearch -exact [dict values $::l1pro_data(mode_mapping)] \
-      $::plot_settings(display_mode)
-  }
-
-  proc display_type_mode {} {
-    return $::plot_settings(display_mode)
-  }
-
-  proc display_type_by_index {index} {
-    set ::plot_settings(display_mode) \
-      [lindex [dict values $::l1pro_data(mode_mapping)] $index]
-  }
-
-  proc ud { a b c } {
-    switch -- $::cbar_locked {
-      cmin {
-        set ::plot_settings(cmin) \
-          [format %.2f [expr {$::plot_settings(cmax) - $::cdelta}]]
-      }
-      cmax {
-        set ::plot_settings(cmax) \
-          [format %.2f [expr {$::plot_settings(cmin) + $::cdelta}]]
-      }
-      cdelta {
-        set ::cdelta \
-          [format %.2f [expr {$::plot_settings(cmax) - $::plot_settings(cmin)}]]
-      }
-    }
-    if { [ winfo exists .rem ] } {
-      set ::min_thresh $::plot_settings(cmin)
-      set ::max_thresh $::plot_settings(cmax)
-    }
-  }
 
   trace remove variable plot_settings(cmin) write ud
   trace remove variable plot_settings(cmax) write ud
@@ -405,57 +136,328 @@ if {![winfo exists .l1wid]} {
   trace add variable plot_settings(cmin) write ud
   trace add variable plot_settings(cmax) write ud
   trace add variable cdelta write ud
+}
 
-  proc send_latlon_to_l1pro {minlon maxlon minlat maxlat utmarg} {
-    global mnlon mxlon mnlat mxlat utm
-    set mnlon $minlon
-    set mxlon $maxlon
-    set mnlat $minlat
-    set mxlat $maxlat
-    set utm $armarg
+proc load_ground_pnav {} {
+  exp_send "gt_pnav = load_pnav();\r"
+}
+proc load_ground_pnav2fs {} {
+  exp_send "gt_fs = load_pnav2FS(); grow, gt_fsall, gt_fs;\r"
+  append_varlist gs_fs
+  append_varlist gs_fsall
+}
+
+proc append_varlist {newvar} {
+  global varlist
+  if {[lsearch -exact $varlist $newvar] == -1} {
+    lappend varlist $newvar
+    init_var_settings $newvar
+  }
+}
+
+proc ypalette p {
+  exp_send "palette, \"${p}.gp\";\r"
+  expect "> "
+}
+
+proc ystyle s {
+  set cmd "change_window_style, \"$s\""
+  if {$::ystyle_dpi != 75} {
+    append cmd ", dpi=$::ystyle_dpi"
+  }
+  exp_send "${cmd};\r"
+}
+
+proc ygridxy {x y} {
+  exp_send "gridxy, $x, $y;\r"
+}
+
+proc determine_roll_bias {} {
+    global win_no varlist bias pro_var
+
+    destroy .l1bias
+    toplevel .l1bias
+    wm title .l1bias "Determine Roll Bias"
+
+    foreach x {1 2 3 4 5 6} {
+      frame .l1bias.$x
+      pack .l1bias.$x -side top
+    }
+
+    if {![info exists bias]} {
+      ybkg updatebias
+    }
+    set slope 0
+    set inout 1
+    set width 5
+    set flwin 4
+    set var $pro_var
+
+    LabelEntry .l1bias.1.var -relief sunken -borderwidth 3 -width 10 \
+      -label "Variable:" -helptext "EAARL source data" \
+      -textvariable var -text $var
+
+    Label .l1bias.1.winl -text "in window:"
+    spinbox .l1bias.1.win -justify center -width 2 \
+      -textvariable win_no -from 0 -to 63 -increment 1
+
+    Label .l1bias.1.transl -text "Then click"
+    Button .l1bias.1.transbutton -text "Get Transect" \
+      -helptext "Click to get transect" \
+      -command {
+        exp_send "transdata = get_transect($var, win=$win_no, update=1,\
+          width=$width)\r"
+        expect ">"
+        .l1bias.3.plot configure -state normal
+        .l1bias.3.winl configure -state normal
+        .l1bias.3.win configure -state normal
+        .l1bias.3.pick configure -state normal
+        .l1bias.3.inout configure -state normal
+        .l1bias.3.auto configure -state normal
+      }
+
+    Button .l1bias.1.help -text "Help!" -helptext "Click for directions" \
+      -command {
+        tk_messageBox -icon warning \
+          -message "1) Start with data array plotted in a window and raw EAARL\
+            data loaded. Set the variable and window and click Get Transect.\
+            \r2) Drag a line perpendicular to the flightlines you wish to\
+            examine. In the window that appears, zoom into the top, type\
+            something, and hit enter. Now drag a box over the section of the\
+            transect you wish to keep.\
+            \r3) Click the plot button to display the loaded transect. In\
+            order to determine the bias automatically all flightlines must be\
+            traveling the same direction, so you'll need to remove whichever\
+            direction is the minority.\
+            \r4) Click 'select flightlines' and simply type 'y' or 'n' to keep\
+            or remove each flightline. Now you have a set of flightlines going\
+            the same direction.\
+            \r5) Finally, determine whether the flightlines are going into or\
+            out of the screen. If they are going INTO the screen, check the\
+            box." \
+          -type ok
+      }
+
+    LabelEntry .l1bias.2.width -relief sunken -width 3 \
+      -label "Width:" -helptext "Transect width" \
+      -textvariable width -text $width
+
+    LabelEntry .l1bias.2.bias -relief sunken -width 10 \
+      -label "Current Roll Bias:" -helptext "Current Roll Bias" \
+      -textvariable bias
+
+    LabelEntry .l1bias.2.slope -relief sunken -width 10 \
+      -label "Current Slope:" -helptext "Current slope" \
+      -textvariable slope -text $slope
+
+    Button .l1bias.3.plot -text "Plot" \
+      -helptext "Click to plot flightline transect" \
+      -command {exp_send "plot_flightline_transect(transdata, $flwin)\r"}
+
+    Label .l1bias.3.winl -text "in win:"
+    spinbox .l1bias.3.win -justify center \
+      -width 2 -textvariable flwin -from 0 -to 63 -increment 1
+
+    Button .l1bias.3.pick -text "Select Flightlines" \
+      -helptext "Click to select which flightlines to keep" \
+      -command {exp_send "transdata=selgoodflightlines(transdata, win=$flwin)\r"}
+
+    checkbutton .l1bias.3.inout -text "in/out:" \
+      -variable inout -onvalue -1 -offvalue 1
+
+    Button .l1bias.3.auto -text "Determine bias" \
+      -helptext "Click to automatically determine roll bias" \
+      -command {exp_send "goodroll=find_roll_bias(transdata,0,$inout,update=1)\r"}
+
+    pack .l1bias.1.var .l1bias.1.winl .l1bias.1.win .l1bias.1.transl \
+      .l1bias.1.transbutton .l1bias.1.help -side left
+    pack .l1bias.2.width .l1bias.2.bias .l1bias.2.slope -side left
+    pack .l1bias.3.plot .l1bias.3.winl .l1bias.3.win .l1bias.3.pick \
+      .l1bias.3.inout .l1bias.3.auto -side left
+
+    foreach w {plot winl win pick inout auto} {
+      .l1bias.3.$w configure -state disabled
+    }
   }
 
-  proc send_rnarr_to_l1pro {bstart bstop brnindx} {
-    global start stop list lrnindx
-    set start $bstart
-    set stop $bstop
-    set rnindx $brnindx
-    set list1 [concat $start $stop]
-    if {[llength $list] == 0} {
-      set list $list1
-      set lrnindx $rnindx
-    } else {
-      set list [concat $list $list1 ]
-      set lrnindx [concat $lrnindx $rnindx]
+proc open_fit_gaussian_gui {} {
+  source [file join $::src_path attic 2010-10-fit_gauss.ytk]
+  fit_gauss::create_gui
+}
+
+proc processing_mode {} {
+  global plot_settings l1pro_data
+  return [lsearch -exact $l1pro_data(processing_mode) \
+    $plot_settings(processing_mode)]
+}
+
+proc processing_mode_changed {a b c} {
+  global curs pro_var_next
+  if {$b eq "processing_mode"} {
+    set curs [processing_mode]
+  }
+  if {$pro_var_next in [list fs_all depth_all veg_all cveg_all]} {
+    set pro_var_next [lindex {fs_all depth_all veg_all cveg_all {}} \
+      [processing_mode]]
+  }
+}
+
+proc processing_mode_by_index {index} {
+  global plot_settings l1pro_data
+  set plot_settings(processing_mode) \
+    [lindex $l1pro_data(processing_mode) $index]
+}
+
+proc init_var_settings {var args} {
+  dict set ::var_settings($var) var $var
+  set settings [array get ::plot_settings]
+  foreach {key val} [array get ::plot_settings] {
+    if {![dict exists $::var_settings($var) $key]} {
+      dict set ::var_settings($var) $key $val
+    }
+  }
+}
+
+proc pro_var_changed {a b c} {
+  global var_settings plot_settings pro_var cbv win_no constant_win_no
+  init_var_settings $plot_settings(var)
+
+  # Currently saved version -- to be replaced
+  set stored $var_settings($plot_settings(var))
+
+  # Update processing_mode and display_mode
+  dict set stored processing_mode $plot_settings(processing_mode)
+  dict set stored display_mode $plot_settings(display_mode)
+
+  # Update cbar if appropriate
+  if {$cbv == 0} {
+    foreach key {cmin cmax msize mtype} {
+      dict set stored $key $plot_settings($key)
     }
   }
 
-  proc display_data args {
-    array set opts [list -var $::pro_var -win $::win_no -fma $::l1pro_fma]
-    array set opts $args
-
-    set cmd "display_data, $opts(-var)"
-    append cmd ", mode=\"$::plot_settings(display_mode)\""
-    if {$::skip > 1} {
-      append cmd ", skip=$::skip"
-    }
-    append cmd ", msize=$::plot_settings(msize)"
-    append cmd ", marker=$::plot_settings(mtype)"
-    append cmd ", win=$opts(-win)"
-    if {! $::l1pro_square_limits} {
-      append cmd ", square=0"
-    }
-    if {$::l1pro_cbar} {
-      append cmd ", showcbar=1"
-    }
-    if {$opts(-fma)} {
-      append cmd ", dofma=1"
-    }
-    append cmd ", cmin=$::plot_settings(cmin)"
-    append cmd ", cmax=$::plot_settings(cmax)"
-
-    exp_send "$cmd;\r"
+  # Update win_no if appropriate
+  if {$constant_win_no == 0} {
+    dict set stored win_no $win_no
   }
+
+  # Replace saved version with new values
+  set var_settings($plot_settings(var)) $stored
+
+  # Load stored settings to be used
+  if {[info exists var_settings($pro_var)]} {
+    set stored $var_settings($pro_var)
+  } else {
+    set stored [array get plot_settings]
+  }
+
+  # Update processing_mode and display_mode
+  set plot_settings(var) $pro_var
+  set plot_settings(processing_mode) [dict get $stored processing_mode]
+  set plot_settings(display_mode) [dict get $stored display_mode]
+
+  # Update cbar if appropriate
+  if {$cbv == 0} {
+    foreach key {cmin cmax msize mtype} {
+      set plot_settings($key) [dict get $stored $key]
+    }
+  }
+
+  # Update win_no if appropriate
+  if {$constant_win_no == 0} {
+    set plot_settings(win_no) [dict get $stored win_no]
+    set win_no $plot_settings(win_no)
+  }
+}
+
+proc display_type {} {
+  lsearch -exact [dict values $::l1pro_data(mode_mapping)] \
+    $::plot_settings(display_mode)
+}
+
+proc display_type_mode {} {
+  return $::plot_settings(display_mode)
+}
+
+proc display_type_by_index {index} {
+  set ::plot_settings(display_mode) \
+    [lindex [dict values $::l1pro_data(mode_mapping)] $index]
+}
+
+proc ud { a b c } {
+  switch -- $::cbar_locked {
+    cmin {
+      set ::plot_settings(cmin) \
+        [format %.2f [expr {$::plot_settings(cmax) - $::cdelta}]]
+    }
+    cmax {
+      set ::plot_settings(cmax) \
+        [format %.2f [expr {$::plot_settings(cmin) + $::cdelta}]]
+    }
+    cdelta {
+      set ::cdelta \
+        [format %.2f [expr {$::plot_settings(cmax) - $::plot_settings(cmin)}]]
+    }
+  }
+  if { [ winfo exists .rem ] } {
+    set ::min_thresh $::plot_settings(cmin)
+    set ::max_thresh $::plot_settings(cmax)
+  }
+}
+
+proc send_latlon_to_l1pro {minlon maxlon minlat maxlat utmarg} {
+  global mnlon mxlon mnlat mxlat utm
+  set mnlon $minlon
+  set mxlon $maxlon
+  set mnlat $minlat
+  set mxlat $maxlat
+  set utm $armarg
+}
+
+proc send_rnarr_to_l1pro {bstart bstop brnindx} {
+  global start stop list lrnindx
+  set start $bstart
+  set stop $bstop
+  set rnindx $brnindx
+  set list1 [concat $start $stop]
+  if {[llength $list] == 0} {
+    set list $list1
+    set lrnindx $rnindx
+  } else {
+    set list [concat $list $list1 ]
+    set lrnindx [concat $lrnindx $rnindx]
+  }
+}
+
+proc display_data args {
+  array set opts [list -var $::pro_var -win $::win_no -fma $::l1pro_fma]
+  array set opts $args
+
+  set cmd "display_data, $opts(-var)"
+  append cmd ", mode=\"$::plot_settings(display_mode)\""
+  if {$::skip > 1} {
+    append cmd ", skip=$::skip"
+  }
+  append cmd ", msize=$::plot_settings(msize)"
+  append cmd ", marker=$::plot_settings(mtype)"
+  append cmd ", win=$opts(-win)"
+  if {! $::l1pro_square_limits} {
+    append cmd ", square=0"
+  }
+  if {$::l1pro_cbar} {
+    append cmd ", showcbar=1"
+  }
+  if {$opts(-fma)} {
+    append cmd ", dofma=1"
+  }
+  append cmd ", cmin=$::plot_settings(cmin)"
+  append cmd ", cmax=$::plot_settings(cmax)"
+
+  exp_send "$cmd;\r"
+}
+
+if {![winfo exists .l1wid]} {
+  ::l1pro::main::gui
 }
 
 source "$src_path/plot.ytk"
