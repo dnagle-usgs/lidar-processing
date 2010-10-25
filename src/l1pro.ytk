@@ -169,11 +169,8 @@ if {![winfo exists .l1wid]} {
         pack .l1bias.$x -side top
       }
 
-      if { [info exists bias ] == 0 } {
-        exp_send "updatebias\r"
-        expect ">"
-        exp_send "updatebias\r"
-        expect ">"
+      if {![info exists bias]} {
+        ybkg updatebias
       }
       set slope 0
       set inout 1
@@ -232,7 +229,7 @@ if {![winfo exists .l1wid]} {
 
       LabelEntry .l1bias.2.bias -relief sunken -width 10 \
         -label "Current Roll Bias:" -helptext "Current Roll Bias" \
-        -textvariable bias -text $bias
+        -textvariable bias
 
       LabelEntry .l1bias.2.slope -relief sunken -width 10 \
         -label "Current Slope:" -helptext "Current slope" \
