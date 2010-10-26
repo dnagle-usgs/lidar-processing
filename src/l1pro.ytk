@@ -107,8 +107,6 @@ if {![info exists l1pro_data]} {
   set constant_win_no 0
   set l1pro_square_limits 1
 
-  set yorick_style_dpi 75
-
   trace remove \
     variable plot_settings(processing_mode) write processing_mode_changed
   trace add \
@@ -126,42 +124,12 @@ if {![info exists l1pro_data]} {
   trace add variable cdelta write ud
 }
 
-proc load_ground_pnav {} {
-  exp_send "gt_pnav = load_pnav();\r"
-}
-proc load_ground_pnav2fs {} {
-  exp_send "gt_fs = load_pnav2FS(); grow, gt_fsall, gt_fs;\r"
-  append_varlist gs_fs
-  append_varlist gs_fsall
-}
-
 proc append_varlist {newvar} {
   global varlist
   if {[lsearch -exact $varlist $newvar] == -1} {
     lappend varlist $newvar
     init_var_settings $newvar
   }
-}
-
-proc set_yorick_palette p {
-  exp_send "palette, \"${p}.gp\";\r"
-}
-
-proc set_yorick_style s {
-  set cmd "change_window_style, \"$s\""
-  if {$::yorick_style_dpi != 75} {
-    append cmd ", dpi=$::yorick_style_dpi"
-  }
-  exp_send "${cmd};\r"
-}
-
-proc set_yorick_gridxy {x y} {
-  exp_send "gridxy, $x, $y;\r"
-}
-
-proc open_fit_gaussian_gui {} {
-  source [file join $::src_path attic 2010-10-fit_gauss.ytk]
-  fit_gauss::create_gui
 }
 
 proc processing_mode {} {

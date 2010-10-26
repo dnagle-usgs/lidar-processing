@@ -4,6 +4,10 @@ package provide l1pro::main::menu 1.0
 
 namespace eval ::l1pro::main::menu {
 
+namespace eval v {
+   variable yorick_style_dpi 75
+}
+
 proc menulabel txt {
    lassign [::tk::UnderlineAmpersand $txt] label pos
    if {$pos == -1} {
@@ -98,9 +102,9 @@ proc menu_mission mb {
       -command [list ::sf::controller %AUTO%]
    $mb add separator
    $mb add command {*}[menulabel "Load &Ground PNAV (gt_pnav) data..."] \
-      -command load_ground_pnav
+      -command [namespace code load_ground_pnav]
    $mb add command {*}[menulabel "Load Ground PNAV2&FS (gt_fs) data..."] \
-      -command load_ground_pnav2fs
+      -command [namespace code load_ground_pnav2fs]
    return $mb
 }
 
@@ -179,7 +183,7 @@ proc menu_graph_palette mb {
    menu $mb
    foreach p [list earth altearth stern rainbow yarg heat gray] {
       $mb add command -label $p -underline 0 \
-         -command [list set_yorick_palette $p]
+         -command [namespace code [list set_yorick_palette $p]]
    }
    return $mb
 }
@@ -187,20 +191,20 @@ proc menu_graph_palette mb {
 proc menu_graph_style mb {
    menu $mb
    $mb add radiobutton {*}[menulabel "&75 DPI"] \
-      -variable yorick_style_dpi -value 75
+      -variable [namespace which -variable v::yorick_style_dpi] -value 75
    $mb add radiobutton {*}[menulabel "&100 DPI"] \
-      -variable yorick_style_dpi -value 100
+      -variable [namespace which -variable v::yorick_style_dpi] -value 100
    $mb add separator
    foreach s [list axes boxed l_nobox nobox vgbox vg work landscape11x85] {
       $mb add command -label $s -underline 0 \
-         -command [list set_yorick_style $s]
+         -command [namespace code [list set_yorick_style $s]]
    }
    return $mb
 }
 
 proc menu_graph_grid mb {
    menu $mb
-   set cmd [list list set_yorick_gridxy]
+   set cmd [list list [namespace code set_yorick_gridxy]]
    $mb add command {*}[menulabel "None"] -command [{*}$cmd 0 0]
    $mb add separator
    $mb add command {*}[menulabel "X axis"] -command [{*}$cmd 1 0]
@@ -318,7 +322,7 @@ proc menu_deprecated_analysis mb {
    $mb add command {*}[menulabel "Examine Lidar Rasters..."] \
       -command [list source [file join $::src_path drast.ytk]]
    $mb add command {*}[menulabel "Open Fit Gaussian GUI"] \
-      -command open_fit_gaussian_gui
+      -command [namespace code open_fit_gaussian_gui]
    return $mb
 }
 
@@ -377,6 +381,37 @@ proc menu_deprecated_editing mb {
    $mb add command {*}[menulabel "Old RCF GUI"] \
       -command ::l1pro::deprecated::rcf_region
    return $mb
+}
+
+proc load_ground_pnav {} {
+   exp_send "gt_pnav = load_pnav();\r"
+}
+
+proc load_ground_pnav2fs {} {
+   exp_send "gt_fs = load_pnav2FS(); grow, gt_fsall, gt_fs;\r"
+   append_varlist gs_fs
+   append_varlist gs_fsall
+}
+
+proc set_yorick_palette p {
+   exp_send "palette, \"${p}.gp\";\r"
+}
+
+proc set_yorick_style s {
+   set cmd "change_window_style, \"$s\""
+   if {$v::yorick_style_dpi != 75} {
+      append cmd ", dpi=$v::yorick_style_dpi"
+   }
+   exp_send "${cmd};\r"
+}
+
+proc set_yorick_gridxy {x y} {
+   exp_send "gridxy, $x, $y;\r"
+}
+
+proc open_fit_gaussian_gui {} {
+   source [file join $::src_path attic 2010-10-fit_gauss.ytk]
+   fit_gauss::create_gui
 }
 
 } ;# closes namespace eval ::l1pro::main::menu
