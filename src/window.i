@@ -229,6 +229,8 @@ func plot_restore(wout, p, style=, clear=, lmt=, pal=) {
          p3 = h_get(p, swrite(format="prop3_%d_%d", i, j));
          p4 = h_get(p, swrite(format="prop4_%d_%d", i, j));
          p5 = h_get(p, swrite(format="prop5_%d_%d", i, j));
+         if(is_void(p1)||is_void(p2)||is_void(p3)||is_void(p4)||is_void(p5))
+            continue;
          replot, p1, p2, p3, p4, p5;
       }
    }
