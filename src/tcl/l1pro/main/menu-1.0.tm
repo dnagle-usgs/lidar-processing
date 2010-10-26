@@ -178,7 +178,8 @@ proc menu_graph mb {
 proc menu_graph_palette mb {
    menu $mb
    foreach p [list earth altearth stern rainbow yarg heat gray] {
-      $mb add command -label $p -underline 0 -command [list ypalette $p]
+      $mb add command -label $p -underline 0 \
+         -command [list set_yorick_palette $p]
    }
    return $mb
 }
@@ -186,27 +187,29 @@ proc menu_graph_palette mb {
 proc menu_graph_style mb {
    menu $mb
    $mb add radiobutton {*}[menulabel "&75 DPI"] \
-      -variable ystyle_dpi -value 75
+      -variable yorick_style_dpi -value 75
    $mb add radiobutton {*}[menulabel "&100 DPI"] \
-      -variable ystyle_dpi -value 100
+      -variable yorick_style_dpi -value 100
    $mb add separator
    foreach s [list axes boxed l_nobox nobox vgbox vg work landscape11x85] {
-      $mb add command -label $s -underline 0 -command [list ystyle $s]
+      $mb add command -label $s -underline 0 \
+         -command [list set_yorick_style $s]
    }
    return $mb
 }
 
 proc menu_graph_grid mb {
    menu $mb
-   $mb add command {*}[menulabel "None"] -command [list ygridxy 0 0]
+   set cmd [list list set_yorick_gridxy]
+   $mb add command {*}[menulabel "None"] -command [{*}$cmd 0 0]
    $mb add separator
-   $mb add command {*}[menulabel "X axis"] -command [list ygridxy 1 0]
-   $mb add command {*}[menulabel "Y axis"] -command [list ygridxy 0 1]
-   $mb add command {*}[menulabel "Both axes"] -command [list ygridxy 1 1]
+   $mb add command {*}[menulabel "X axis"] -command [{*}$cmd 1 0]
+   $mb add command {*}[menulabel "Y axis"] -command [{*}$cmd 0 1]
+   $mb add command {*}[menulabel "Both axes"] -command [{*}$cmd 1 1]
    $mb add separator
-   $mb add command {*}[menulabel "X origin"] -command [list ygridxy 2 0]
-   $mb add command {*}[menulabel "Y origin"] -command [list ygridxy 0 2]
-   $mb add command {*}[menulabel "Both origins"] -command [list ygridxy 2 2]
+   $mb add command {*}[menulabel "X origin"] -command [{*}$cmd 2 0]
+   $mb add command {*}[menulabel "Y origin"] -command [{*}$cmd 0 2]
+   $mb add command {*}[menulabel "Both origins"] -command [{*}$cmd 2 2]
    return $mb
 }
 

@@ -119,7 +119,7 @@ if {![info exists l1pro_data]} {
   set constant_win_no 0
   set l1pro_square_limits 1
 
-  set ystyle_dpi 75
+  set yorick_style_dpi 75
 
   trace remove \
     variable plot_settings(processing_mode) write processing_mode_changed
@@ -155,20 +155,19 @@ proc append_varlist {newvar} {
   }
 }
 
-proc ypalette p {
+proc set_yorick_palette p {
   exp_send "palette, \"${p}.gp\";\r"
-  expect "> "
 }
 
-proc ystyle s {
+proc set_yorick_style s {
   set cmd "change_window_style, \"$s\""
-  if {$::ystyle_dpi != 75} {
-    append cmd ", dpi=$::ystyle_dpi"
+  if {$::yorick_style_dpi != 75} {
+    append cmd ", dpi=$::yorick_style_dpi"
   }
   exp_send "${cmd};\r"
 }
 
-proc ygridxy {x y} {
+proc set_yorick_gridxy {x y} {
   exp_send "gridxy, $x, $y;\r"
 }
 
