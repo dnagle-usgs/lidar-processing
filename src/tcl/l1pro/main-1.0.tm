@@ -1,8 +1,8 @@
 # vim: set ts=3 sts=3 sw=3 ai sr et:
 
-package provide l1pro::main 1.0
-
 # Implements the main GUI
+package provide l1pro::main 1.0
+package require l1pro::main::menu
 
 ttk::style configure Panel.TMenubutton -padding {2 0}
 ttk::style configure Panel.TButton -padding 0
