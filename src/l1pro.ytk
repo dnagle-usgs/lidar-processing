@@ -143,8 +143,8 @@ proc processing_mode_changed {a b c} {
   if {$b eq "processing_mode"} {
     set curs [processing_mode]
   }
-  if {$pro_var_next in [list fs_all depth_all veg_all cveg_all]} {
-    set pro_var_next [lindex {fs_all depth_all veg_all cveg_all {}} \
+  if {$pro_var_next in [list fs_all depth_all veg_all cveg_all wave_data]} {
+    set pro_var_next [lindex {fs_all depth_all veg_all cveg_all wave_data} \
       [processing_mode]]
   }
 }
