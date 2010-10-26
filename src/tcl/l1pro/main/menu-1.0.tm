@@ -229,7 +229,7 @@ proc menu_utilities mb {
       -command ::l1pro::drast::gui
    $mb add separator
    $mb add command {*}[menulabel "&Determine Roll Bias"] \
-      -command determine_roll_bias
+      -command ::l1pro::tools::rollbias::gui
    $mb add command {*}[menulabel "Check and correct EDB time"] \
       -command ts_check
    $mb add separator

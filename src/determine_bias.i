@@ -3,8 +3,10 @@ require, "eaarl.i";
 // Original: ?????
 //  Added guessrollbias, WW/RM 2005/11/29
 
-func updatebias {
-	tkcmd, swrite(format="set bias %f", ops_conf.roll_bias);
+func updatebias(nil, slope=) {
+   tksetval, "::l1pro::tools::rollbias::v::bias", ops_conf.roll_bias;
+   if(!is_void(slope))
+      tksetval, "::l1pro::tools::rollbias::v::slope", slope;
 }
 
 func guessrollbias {
@@ -238,10 +240,8 @@ threshold= :  The threshold for proper flatness. Default = 0.0005
 		if (m < 0) rollmin = curroll;
 		if (rollmax < rollmin) lance();
 		write, format=" M was %f\n rollmax was %f\n rollmin was %f\n curroll is %f\n bias was %f\n", m, rollmax, rollmin, curroll, ops_conf.roll_bias;
-		if (update) {
-			tkcmd, swrite(format="set bias %f", ops_conf.roll_bias);
-			tkcmd, swrite(format="set slope %f", m);
-		}
+		if (update)
+         updatebias, slope=m;
 	}
 	return goodroll;
 }
