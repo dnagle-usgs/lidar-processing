@@ -40,7 +40,6 @@ if {![info exists l1pro_data]} {
   } 0 end]
 
   set outvar ""
-  set win_no 5
   set win_load 6;    # used by EAARL Data Loader
   set usecentroid 1
 
@@ -61,7 +60,7 @@ if {![info exists l1pro_data]} {
 
   set cdelta 80
   set var_common [list \
-    win_no 5 \
+    win 5 \
     cmin -40 \
     cmax 40 \
     msize 1.0 \
@@ -95,6 +94,10 @@ if {![info exists l1pro_data]} {
   set pro_var fs_all
   set pro_var_next fs_all
   array set plot_settings $var_settings($pro_var)
+
+  # Compatibility: We want to keep the window setting in ::plot_settings(win),
+  # but there's a ton of code that refers to ::win_no.
+  upvar #0 ::plot_settings(win) ::win_no
 
   array set cbvc {cmin cmin cmax cmax msize msize mtype mtype}
 
@@ -185,7 +188,7 @@ proc pro_var_changed {a b c} {
 
   # Update win_no if appropriate
   if {$constant_win_no == 0} {
-    dict set stored win_no $win_no
+    dict set stored win $win_no
   }
 
   # Replace saved version with new values
@@ -212,8 +215,7 @@ proc pro_var_changed {a b c} {
 
   # Update win_no if appropriate
   if {$constant_win_no == 0} {
-    set plot_settings(win_no) [dict get $stored win_no]
-    set win_no $plot_settings(win_no)
+    set plot_settings(win) [dict get $stored win]
   }
 }
 
