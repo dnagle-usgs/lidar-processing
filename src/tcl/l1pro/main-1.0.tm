@@ -55,7 +55,7 @@ proc ::l1pro::main::panel_processing w {
       -style Panel.TMenubutton
 
    ::mixin::combobox::mapping $f.mode -state readonly -width 4 \
-      -altvariable ::plot_settings(processing_mode) \
+      -altvariable ::processing_mode \
       -mapping $::l1pro_data(process_mapping)
 
    ttk::label $f.winlbl -text "Window:"

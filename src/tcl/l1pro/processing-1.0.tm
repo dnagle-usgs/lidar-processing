@@ -97,7 +97,7 @@ proc ::l1pro::processing::process {} {
    set ::pro_var $::pro_var_next
 
    set cmd ""
-   switch -- $::plot_settings(processing_mode) {
+   switch -- $::processing_mode {
       fs {
          set cmd "$::pro_var = make_fs(latutm=1, q=q, ext_bad_att=1,\
             usecentroid=$::usecentroid)"
@@ -118,7 +118,7 @@ proc ::l1pro::processing::process {} {
          exp_send "require, \"waves.i\"; process_for_dws, q;\r"
       }
       default {
-         error "Unknown processing mode: $::plot_settings(processing_mode)"
+         error "Unknown processing mode: $::processing_mode"
       }
    }
 

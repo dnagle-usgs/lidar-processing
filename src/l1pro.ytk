@@ -68,32 +68,29 @@ if {![info exists l1pro_data]} {
 
   set var_settings(fs_all) [linsert $var_common end \
     var fs_all \
-    processing_mode fs \
     display_mode fs]
 
   set var_settings(depth_all) [linsert $var_common end \
     var depth_all \
-    processing_mode bathy \
     display_mode ba]
 
   set var_settings(veg_all) [linsert $var_common end \
     var veg_all \
-    processing_mode veg \
     display_mode be]
 
   set var_settings(cveg_all) [linsert $var_common end \
     var cveg_all \
-    processing_mode cveg \
     display_mode fs]
 
   set var_settings(workdata) [linsert $var_common end \
     var workdata \
-    processing_mode bathy \
     display_mode ba]
 
   set pro_var fs_all
   set pro_var_next fs_all
   array set plot_settings $var_settings($pro_var)
+
+  set processing_mode fs
 
   # Compatibility: We want to keep the window setting in ::plot_settings(win),
   # but there's a ton of code that refers to ::win_no.
@@ -111,9 +108,9 @@ if {![info exists l1pro_data]} {
   set l1pro_square_limits 1
 
   trace remove \
-    variable plot_settings(processing_mode) write processing_mode_changed
+    variable processing_mode write processing_mode_changed
   trace add \
-    variable plot_settings(processing_mode) write processing_mode_changed
+    variable processing_mode write processing_mode_changed
 
   trace remove variable pro_var write pro_var_changed
   trace add variable pro_var write pro_var_changed
@@ -141,7 +138,7 @@ proc processing_mode_changed {a b c} {
     fs fs_all veg veg_all bathy depth_all cveg cveg_all dws wave_data
   }
   if {$pro_var_next in [list fs_all depth_all veg_all cveg_all wave_data]} {
-    set pro_var_next [dict get $mapping $::plot_settings(processing_mode)]
+    set pro_var_next [dict get $mapping $::processing_mode]
   }
 }
 
@@ -162,8 +159,7 @@ proc pro_var_changed {a b c} {
   # Currently saved version -- to be replaced
   set stored $var_settings($plot_settings(var))
 
-  # Update processing_mode and display_mode
-  dict set stored processing_mode $plot_settings(processing_mode)
+  # Update display_mode
   dict set stored display_mode $plot_settings(display_mode)
 
   # Update cbar if appropriate
@@ -188,9 +184,8 @@ proc pro_var_changed {a b c} {
     set stored [array get plot_settings]
   }
 
-  # Update processing_mode and display_mode
+  # Update display_mode
   set plot_settings(var) $pro_var
-  set plot_settings(processing_mode) [dict get $stored processing_mode]
   set plot_settings(display_mode) [dict get $stored display_mode]
 
   # Update cbar if appropriate
