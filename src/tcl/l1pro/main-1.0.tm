@@ -54,9 +54,9 @@ proc ::l1pro::main::panel_processing w {
    ttk::menubutton $f.opt -text "Options" -menu $f.optmenu \
       -style Panel.TMenubutton
 
-   ::mixin::combobox $f.mode -state readonly -width 4 \
-      -textvariable ::plot_settings(processing_mode) \
-      -values $::l1pro_data(processing_mode)
+   ::mixin::combobox::mapping $f.mode -state readonly -width 4 \
+      -altvariable ::plot_settings(processing_mode) \
+      -mapping $::l1pro_data(process_mapping)
 
    ttk::label $f.winlbl -text "Window:"
    spinbox $f.win -justify center -from 0 -to 63 -increment 1 \

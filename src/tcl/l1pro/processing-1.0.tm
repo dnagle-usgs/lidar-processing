@@ -94,30 +94,31 @@ snit::widget ::l1pro::processing::define_region_rect::gui {
 proc ::l1pro::processing::process {} {
    set ::list {}
    set ::lrnindx {}
-   set ptype [processing_mode]
-   exp_send "ptype = $ptype;\r"
    set ::pro_var $::pro_var_next
 
    set cmd ""
-   switch -- $ptype {
-      0 {
+   switch -- $::plot_settings(processing_mode) {
+      fs {
          set cmd "$::pro_var = make_fs(latutm=1, q=q, ext_bad_att=1,\
-         usecentroid=$::usecentroid)"
+            usecentroid=$::usecentroid)"
       }
-      1 {
+      bathy {
          set cmd "$::pro_var = make_bathy(latutm = 1, q = q, ext_bad_depth=1,\
-         ext_bad_att=1, avg_surf=$::avg_surf)"
+            ext_bad_att=1, avg_surf=$::avg_surf)"
       }
-      2 {
+      veg {
          set cmd "$::pro_var = make_veg(latutm=1, q=q, ext_bad_att=1,\
-         ext_bad_veg=1, use_centroid=$::usecentroid)"
+            ext_bad_veg=1, use_centroid=$::usecentroid)"
       }
-      3 {
-         set cmd "$::pro_var = make_veg(latutm=1, q=q, use_centroid=$::usecentroid,\
-         multi_peaks=1)"
+      cveg {
+         set cmd "$::pro_var = make_veg(latutm=1, q=q,\
+            use_centroid=$::usecentroid, multi_peaks=1)"
       }
-      4 {
-         exp_send "require, \"waves.i\";process_for_dws,q;\r"
+      dws {
+         exp_send "require, \"waves.i\"; process_for_dws, q;\r"
+      }
+      default {
+         error "Unknown processing mode: $::plot_settings(processing_mode)"
       }
    }
 
@@ -125,7 +126,7 @@ proc ::l1pro::processing::process {} {
       if {$::autoclean_after_process} {
          append cmd "; test_and_clean, $::pro_var"
       }
-      exp_send "$cmd\r"
+      exp_send "$cmd;\r"
    }
    append_varlist $::pro_var
 }
