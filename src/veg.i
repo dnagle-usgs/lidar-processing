@@ -642,7 +642,7 @@ Returns:
 
       See also: first_surface, run_veg, make_fs_veg
 */
-   extern edb, soe_day_start, tans, pnav, utm, veg_all, rn_arr, rn_arr_idx, ba_veg, bd_veg, n_all3sat;
+   extern edb, soe_day_start, tans, pnav, utm, rn_arr, rn_arr_idx, ba_veg, bd_veg, n_all3sat;
    veg_all = [];
 /************
    Currently, we are setting the following as defaults for last_surface determination algorithm:
