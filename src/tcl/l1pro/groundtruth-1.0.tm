@@ -264,6 +264,7 @@ if {![namespace exists ::l1pro::groundtruth::extract::v]} {
       variable model_zmin_val 0
       variable model_region_data {}
       variable model_region_desc "All data"
+      variable model_trans_width 10.00
       variable truth_var fs_all
       variable truth_mode fs
       variable truth_zmax_use 0
@@ -272,6 +273,7 @@ if {![namespace exists ::l1pro::groundtruth::extract::v]} {
       variable truth_zmin_val 0
       variable truth_region_data {}
       variable truth_region_desc "All data"
+      variable truth_trans_width 10.00
       variable output comparisons
       variable radius 1.00
    }
@@ -314,7 +316,9 @@ proc ::l1pro::groundtruth::extract::panel w {
          -textvariable ${ns}::v::${data}_region_desc
       ttk::menubutton $f.btnregion -menu $f.regionmenu \
          -text "Configure Region..."
-      ttk::spinbox $f.transect -width 0
+      ttk::spinbox $f.transect -width 0 \
+         -from 0 -to 10000 -increment 0.1 \
+         -textvariable ${ns}::v::${data}_trans_width
 
       ::mixin::statevar $f.max \
          -statemap {0 disabled 1 !disabled} \
@@ -345,20 +349,12 @@ proc ::l1pro::groundtruth::extract::panel w {
       $mb add command -label "Select polygon" \
          -command [list ${ns}::region_poly $data]
       $mb add command -label "Select transect" \
-         -state disabled
+         -command [list ${ns}::region_tran $data]
       $mb add command -label "Use current window's limits" \
          -command [list ${ns}::region_lims $data]
       $mb add separator
       $mb add command -label "Plot current region (if possible)" \
          -command [list ${ns}::region_plot $data]
-
-      # Temporarily disable unimplemented widgets
-      set disable [list $f.lbltransect $f.transect]
-      foreach widget $disable {
-         $widget state disabled
-         ::tooltip::tooltip $widget \
-            "This control is not yet implemented."
-      }
 
       foreach widget [list $f.chkmax $f.max] {
          ::tooltip::tooltip $widget \
@@ -446,6 +442,11 @@ proc ::l1pro::groundtruth::extract::region_bbox which {
 
 proc ::l1pro::groundtruth::extract::region_poly which {
    exp_send "gt_l1pro_selpoly, \"$which\";\r"
+}
+
+proc ::l1pro::groundtruth::extract::region_tran which {
+   set width [set v::${which}_trans_width]
+   exp_send "gt_l1pro_seltran, \"$which\", $width;\r"
 }
 
 proc ::l1pro::groundtruth::extract::region_lims which {

@@ -426,6 +426,14 @@ func gt_l1pro_selbbox(which) {
    gt_l1pro_send, ply, "Rubberband box", which;
 }
 
+func gt_l1pro_seltran(which, width) {
+   win = window();
+   msg = swrite(format="Drag a transect line in window %d to select the region.", win);
+   line = mouse(1, 2, msg);
+   ply = line_to_poly(line(1), line(2), line(3), line(4), width=width);
+   gt_l1pro_send, ply, "Transect", which;
+}
+
 func gt_l1pro_sellims(which) {
    win = window();
    lims = limits();
