@@ -51,6 +51,7 @@ if {![info exists l1pro_data]} {
   set rcf_buf_rgn 0; #Used in proc filter_replace
   set autoclean_after_process 1
   set l1pro_fma 0
+  set skip 1
 
   set gridtype grid
 
@@ -61,8 +62,8 @@ if {![info exists l1pro_data]} {
   set cdelta 80
   set var_common [list \
     win 5 \
-    cmin -40 \
-    cmax 40 \
+    cmin -40.00 \
+    cmax 40.00 \
     msize 1.0 \
     mtype 1]
 

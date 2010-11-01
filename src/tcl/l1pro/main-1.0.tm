@@ -59,7 +59,7 @@ proc ::l1pro::main::panel_processing w {
       -mapping $::l1pro_data(process_mapping)
 
    ttk::label $f.winlbl -text "Window:"
-   spinbox $f.win -justify center -from 0 -to 63 -increment 1 \
+   ttk::spinbox $f.win -from 0 -to 63 -increment 1 \
       -width 2 -textvariable ::_map(window)
 
    ttk::label $f.varlbl -text "Use variable:"
@@ -102,13 +102,14 @@ proc ::l1pro::main::panel_cbar w {
    ttk::label $f.maxlbl -text "CMax:"
    ttk::label $f.minlbl -text "CMin:"
    ttk::label $f.dltlbl -text "CDelta:"
-   spinbox $f.max -width 6 \
+   ttk::spinbox $f.max -width 6 \
       -from -10000 -to 10000 -increment 0.1 \
-      -textvariable ::plot_settings(cmax)
-   spinbox $f.min -width 6 \
+      -textvariable ::plot_settings(cmax) \
+      -format %.2f
+   ttk::spinbox $f.min -width 6 \
       -from -10000 -to 10000 -increment 0.1 \
       -textvariable ::plot_settings(cmin)
-   spinbox $f.dlt -width 6 \
+   ttk::spinbox $f.dlt -width 6 \
       -from 0 -to 20000 -increment 0.1 \
       -textvariable ::cdelta
    ttk::radiobutton $f.maxlock \
@@ -168,7 +169,7 @@ proc ::l1pro::main::panel_plot w {
       -textvariable ::pro_var \
       -listvariable ::varlist
    ttk::label $f.winlbl -text "Window:"
-   spinbox $f.win -from 0 -to 63 -increment 1 -width 2 \
+   ttk::spinbox $f.win -from 0 -to 63 -increment 1 -width 2 \
       -textvariable ::win_no
    ::mixin::padlock $f.winlock \
       -variable ::constant_win_no
@@ -177,7 +178,7 @@ proc ::l1pro::main::panel_plot w {
       -altvariable ::plot_settings(display_mode) \
       -mapping $::l1pro_data(mode_mapping)
    ttk::label $f.marklbl -text "Marker:"
-   spinbox $f.msize -width 5 \
+   ttk::spinbox $f.msize -width 5 \
       -from 0.1 -to 10.0 -increment 0.1 \
       -textvariable ::plot_settings(msize)
    ::mixin::combobox::mapping $f.mtype -width 8 -state readonly \
@@ -193,7 +194,7 @@ proc ::l1pro::main::panel_plot w {
          Triangle2   7
       }
    ttk::label $f.skiplbl -text "Skip:"
-   spinbox $f.skip -width 5 \
+   ttk::spinbox $f.skip -width 5 \
       -from 1 -to 10000 -increment 1 \
       -textvariable ::skip
    ttk::checkbutton $f.fma -text "Auto clear" \
