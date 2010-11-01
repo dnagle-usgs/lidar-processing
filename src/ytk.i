@@ -544,6 +544,9 @@ func ytk_startup(void) {
    if(numberof(args) > 3 && args(-2) == "ytk.i") {
       initialize_ytk, args(-1), args(0);
    }
+
+   if(!is_func(is_obj))
+      tkcmd, "ytk_alps_update_required";
 }
 
 func ytkquit {
