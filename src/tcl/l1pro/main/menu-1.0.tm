@@ -216,10 +216,8 @@ proc menu_utilities mb {
       -command [list ::pixelwf::gui::launch_full_panel .pixelwf]
    $mb add command {*}[menulabel "Histogram Elevations"] \
       -command ::l1pro::tools::histelev::gui
-   if {[package vcompare [info patchlevel] 8.5.9] != -1} {
-      $mb add command {*}[menulabel "Groundtruth Analysis"] \
-         -command ::l1pro::groundtruth::gui
-   }
+   $mb add command {*}[menulabel "Groundtruth Analysis"] \
+      -command ::l1pro::groundtruth::gui
    $mb add separator
    $mb add command {*}[menulabel "Transect Tool"] \
       -command [list source [file join $::src_path transrch.ytk]]
