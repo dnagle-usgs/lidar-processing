@@ -901,3 +901,41 @@ func planar_params_from_pts(x1, y1, z1, x2, y2, z2, x3, y3, z3) {
 
    return [A,B,D]/(-C);
 }
+
+func line_to_poly(x0, y0, x1, y1, width=) {
+/* DOCUMENT line_to_poly(x0, y0, x1, y1, width=)
+   Given a line defined as passing through points (X0,Y0) and (X1,Y1), this
+   will return a polygon that corresponds to it. If WIDTH= is given, the
+   polygon will be given that width.
+*/
+   ply = [[x0,y0],[x0,y0],[x1,y1],[x1,y1]]
+   if(is_void(width))
+      return ply;
+
+   // Cut the width in half, so we can apply it in both directions.
+   width = width/2.;
+
+   // Special case: vertical line
+   if(x0 == x1) {
+      offset = [[width,0],[-width,0],[-width,0],[width,0]];
+      return ply + offset;
+   }
+
+   // Special case: horizontal line
+   if(y0 == y1) {
+      offset = [[0,width],[0,-width],[0,-width],[0,width]];
+      return ply + offset;
+   }
+
+   // Normal case: line with slope
+
+   // Calculate theta of line perpendicular to that of the points
+   theta = atan(y1 - y0, x1 - x0) + pi/2;
+
+   // Determine x/y offsets given theta
+   xoff = cos(theta) * width;
+   yoff = sin(theta) * width;
+
+   offset = [[xoff,yoff],[-xoff,-yoff],[-xoff,-yoff],[xoff,yoff]];
+   return ply + offset;
+}
