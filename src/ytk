@@ -89,29 +89,35 @@ proc app_root_dir {} {
    return $scriptPath
 }
 
+proc ytk_alps_update_required {} {
+   puts \
+    "========================================================================\
+   \n                      P L E A S E   U P G R A D E\
+   \n------------------------------------------------------------------------\
+   \nYou are trying to run ALPS on a system that does not have the\
+   \nappropriate prerequisite software installed. Please download the latest\
+   \nALPS installer from lidar.net and upgrade your ALPS platform. This will\
+   \ninclude upgrades for Yorick, Tcl, ImageMagick, Python, Mercurial, and\
+   \nrlwrap. Please see doc/install-alps.html for installation/upgrade\
+   \ndetails.\
+   \n\
+   \nIf you cannot immediately upgrade, you can try reverting to an older\
+   \nversion of the software repository that would work on your system. As a\
+   \nstarting place, you can try this:\
+   \n    hg update -r 6322301fe559\
+   \nThat will update to the last revision prior to the last major change in\
+   \nALPS software prerequisites. However, you will be working on an old\
+   \nversion of ALPS at that point, and will not benefit from any recent\
+   \nchanges or fixes made to the software.\
+   \n========================================================================"
+
+   catch {ytk_exit 100}
+   exit 100
+}
+
 proc check_requirements {} {
-   if {[package vcompare [info patchlevel] 8.5] < 0} {
-      puts "                         *** *** *** ERROR! *** *** ***
-
-ALPS requires Tcl version 8.5 or later. You are running version [info patchlevel].
-
-Please upgrade your installation of ALPS. Directions can be found in
-[file join [file dirname [app_root_dir]] doc/install-alps.html]"
-      exit
-   }
-
-   set missing 0
-   if {
-      [catch {package require getstring}] || [catch {package require Iwidgets}] ||
-      [catch {package require BWidget}] || [catch {package require Expect}]
-   } {
-      puts "                         *** *** *** ERROR! *** *** ***
-
-ALPS cannot find some required packages in Tcl.
-
-Please upgrade your installation of ALPS. Directions can be found in
-[file join [file dirname [app_root_dir]] doc/install-alps.html]"
-      exit
+   if {[package vcompare [info patchlevel] 8.5.9] < 0} {
+      ytk_alps_update_required
    }
 }
 
