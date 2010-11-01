@@ -120,24 +120,26 @@ proc ::l1pro::groundtruth::comparison_load {} {
 }
 
 proc ::l1pro::groundtruth::widget_comparison_vars {lbl cbo btns var} {
+   set ns [namespace current]
+
    ttk::label $lbl -text "Comparisons:"
    ::mixin::combobox $cbo -width 0 \
-      -listvariable [namespace which -variable v::comparisons] \
+      -listvariable ${ns}::v::comparisons \
       -textvariable $var
    ttk::frame $btns
    ttk::button $btns.save -text Save -style Panel.TButton -width 0 \
-      -command [namespace code [list comparison_save $var]]
+      -command [list ${ns}::comparison_save $var]
    ttk::button $btns.load -text Load -style Panel.TButton -width 0 \
-      -command [namespace code comparison_load]
+      -command ${ns}::comparison_load
    ttk::button $btns.del -text Delete -style Panel.TButton -width 0 \
-      -command [namespace code [list comparison_delete $var]]
+      -command [list ${ns}::comparison_delete $var]
    grid $btns.save $btns.load $btns.del -sticky news -padx 1 -pady 1
 
    trace add variable $var write \
-      [list [namespace code widget_comparison_state] $var $btns]
+      [list ${ns}::widget_comparison_state $var $btns]
    set $var [set $var]
 
-   bind $cbo <Return> [namespace code "comparison_add \[set $var\]"]
+   bind $cbo <Return> "${ns}::comparison_add \[set $var\]"
 
    ::tooltip::tooltip $cbo \
       "Select an existing variable from the drop-down list. Variables are\
@@ -180,6 +182,7 @@ proc ::l1pro::groundtruth::widget_comparison_state {v w name1 name2 op} {
 proc ::l1pro::groundtruth::widget_plots {f prefix label ns {plot plg}} {
    set w [list apply [list suffix "return \"$f.${prefix}_\$suffix\""]]
    set v [list apply [list suffix "return ${ns}::v::plot_${prefix}_\$suffix"]]
+   set ns [namespace current]
    ttk::label [{*}$w lbl] -text $label
    ::mixin::combobox [{*}$w type] -width 5 -state readonly \
       -textvariable [{*}$v type] -values [set v::${plot}_type_list]
@@ -196,13 +199,13 @@ proc ::l1pro::groundtruth::widget_plots {f prefix label ns {plot plg}} {
          "Select the kind of line to display, or \"hide\" if you do not wish\
          \nto plot this line."
       trace add variable [{*}$v type] write \
-         [namespace code [list widget_plots_state $w $v line]]
+         [list ${ns}::widget_plots_state $w $v line]
    } else {
       ::tooltip::tooltip [{*}$w type] \
          "Select the kind of markers to display, or \"hide\" if you do not\
          \nwish to plot these points."
       trace add variable [{*}$v type] write \
-         [namespace code [list widget_plots_state $w $v markers]]
+         [list ${ns}::widget_plots_state $w $v markers]
    }
    set [{*}$v type] [set [{*}$v type]]
 }
@@ -273,6 +276,7 @@ if {![namespace exists ::l1pro::groundtruth::extract::v]} {
 proc ::l1pro::groundtruth::extract::panel w {
    ttk::frame $w
 
+   set ns [namespace current]
    set o [list -padx 1 -pady 1]
    set e [list {*}$o -sticky e]
    set ew [list {*}$o -sticky ew]
@@ -285,23 +289,23 @@ proc ::l1pro::groundtruth::extract::panel w {
       ttk::label $f.lblvar -text Var:
       ttk::label $f.lblmode -text Mode:
       ttk::checkbutton $f.chkmax -text "Max z:" \
-         -variable [namespace which -variable v::${data}_zmax_use]
+         -variable ${ns}::v::${data}_zmax_use
       ttk::checkbutton $f.chkmin -text "Min z:" \
-         -variable [namespace which -variable v::${data}_zmin_use]
+         -variable ${ns}::v::${data}_zmin_use
       ttk::label $f.lblregion -text Region:
       ttk::label $f.lbltransect -text "Transect width:"
       ::mixin::combobox $f.var -width 0 -state readonly \
-         -textvariable [namespace which -variable v::${data}_var] \
+         -textvariable ${ns}::v::${data}_var \
          -listvariable ::varlist
       ::mixin::combobox::mapping $f.mode -width 0 -state readonly \
-         -altvariable [namespace which -variable v::${data}_mode] \
+         -altvariable ${ns}::v::${data}_mode \
          -mapping $::l1pro_data(mode_mapping)
       ttk::spinbox $f.max -width 0 \
          -from -10000 -to 10000 -increment 0.1 \
-         -textvariable [namespace which -variable v::${data}_zmax_val]
+         -textvariable ${ns}::v::${data}_zmax_val
       ttk::spinbox $f.min -width 0 \
          -from -10000 -to 10000 -increment 0.1 \
-         -textvariable [namespace which -variable v::${data}_zmin_val]
+         -textvariable ${ns}::v::${data}_zmin_val
       ttk::entry $f.region -width 0
       ttk::menubutton $f.btnregion -menu $f.regionmenu \
          -text "Configure Region..."
@@ -309,10 +313,10 @@ proc ::l1pro::groundtruth::extract::panel w {
 
       ::mixin::statevar $f.max \
          -statemap {0 disabled 1 !disabled} \
-         -statevariable [namespace which -variable v::${data}_zmax_use]
+         -statevariable ${ns}::v::${data}_zmax_use
       ::mixin::statevar $f.min \
          -statemap {0 disabled 1 !disabled} \
-         -statevariable [namespace which -variable v::${data}_zmin_use]
+         -statevariable ${ns}::v::${data}_zmin_use
 
       grid $f.lblvar $f.var - {*}$ew
       grid $f.lblmode $f.mode - {*}$ew
@@ -363,7 +367,7 @@ proc ::l1pro::groundtruth::extract::panel w {
    ttk::frame $f.output
    ttk::label $f.output.lbl -text Output:
    ttk::entry $f.output.ent -width 0 \
-      -textvariable [namespace which -variable v::output]
+      -textvariable ${ns}::v::output
    grid $f.output.lbl $f.output.ent -sticky ew -padx 1
    grid columnconfigure $f.output 1 -weight 1
 
@@ -371,12 +375,12 @@ proc ::l1pro::groundtruth::extract::panel w {
    ttk::label $f.radius.lbl -text "Search radius:"
    ttk::spinbox $f.radius.spn -width 0 \
       -from 0 -to 1000 -increment 1 -format %.2f \
-      -textvariable [namespace which -variable v::radius]
+      -textvariable ${ns}::v::radius
    grid $f.radius.lbl $f.radius.spn -sticky ew -padx 1
    grid columnconfigure $f.radius 1 -weight 1
 
    ttk::button $f.extract -text "Extract Comparisons" \
-      -command [namespace code extract]
+      -command ${ns}::extract
 
    grid $f.model $f.truth {*}$news
    grid $f.output $f.radius {*}$ew
@@ -461,6 +465,7 @@ if {![namespace exists ::l1pro::groundtruth::scatter::v]} {
 proc ::l1pro::groundtruth::scatter::panel w {
    ttk::frame $w
 
+   set ns [namespace current]
    set o [list -padx 1 -pady 1]
    set e [list {*}$o -sticky e]
    set ew [list {*}$o -sticky ew]
@@ -470,24 +475,24 @@ proc ::l1pro::groundtruth::scatter::panel w {
    ttk::frame $f
 
    widget_comparison_vars $f.lblvar $f.cbovar $f.btnvar \
-      [namespace which -variable v::comparison]
+      ${ns}::v::comparison
    ttk::label $f.lbldata -text "Data to use:"
    ::mixin::combobox $f.data -width 0 -state readonly \
-      -textvariable [namespace which -variable v::data] \
+      -textvariable ${ns}::v::data \
       -values $v::data_list
    ttk::label $f.lblwin -text Window:
    ttk::spinbox $f.win -width 0 \
-      -textvariable [namespace which -variable v::win] \
+      -textvariable ${ns}::v::win \
       -from 0 -to 63 -increment 1 -format %.0f
    ttk::label $f.lbltitle -text "Graph title:"
    ttk::label $f.lblxtitle -text "Model label:"
    ttk::label $f.lblytitle -text "Truth label:"
    ttk::entry $f.title -width 0 \
-      -textvariable [namespace which -variable v::title]
+      -textvariable ${ns}::v::title
    ttk::entry $f.xtitle -width 0 \
-      -textvariable [namespace which -variable v::xtitle]
+      -textvariable ${ns}::v::xtitle
    ttk::entry $f.ytitle -width 0 \
-      -textvariable [namespace which -variable v::ytitle]
+      -textvariable ${ns}::v::ytitle
 
    grid $f.lblvar $f.cbovar $f.btnvar - {*}$ew
    grid $f.lbldata $f.data $f.lblwin $f.win {*}$ew
@@ -510,7 +515,6 @@ proc ::l1pro::groundtruth::scatter::panel w {
    grid columnconfigure $f 0 -weight 1
    set f [$f.f interior]
 
-   set ns [namespace current]
    widget_plots $f scatterplot Scatterplot: $ns plmk
    widget_plots $f equality "Equality line:" $ns
    widget_plots $f linear_lsf "Linear LSF line:" $ns
@@ -533,15 +537,15 @@ proc ::l1pro::groundtruth::scatter::panel w {
 
    foreach metric $v::metric_list {
       ttk::checkbutton $f.m$metric -text $metric \
-         -variable [namespace which -variable v::metrics]($metric)
+         -variable ${ns}::v::metrics($metric)
       grid $f.m$metric {*}$o -sticky w
    }
 
    set f $w.bottom
    ttk::frame $f
-   ttk::button $f.plot -text Plot -command [namespace code plot]
+   ttk::button $f.plot -text Plot -command ${ns}::plot
    ttk::checkbutton $f.fma -text "Clear before plotting" \
-      -variable [namespace which -variable v::dofma]
+      -variable ${ns}::v::dofma
    grid x $f.plot $f.fma x {*}$ew
    grid columnconfigure $f {0 3} -weight 1
 
@@ -643,6 +647,7 @@ if {![namespace exists ::l1pro::groundtruth::hist::v]} {
 proc ::l1pro::groundtruth::hist::panel w {
    ttk::frame $w
 
+   set ns [namespace current]
    set o [list -padx 1 -pady 1]
    set e [list {*}$o -sticky e]
    set ew [list {*}$o -sticky ew]
@@ -652,25 +657,25 @@ proc ::l1pro::groundtruth::hist::panel w {
    ttk::frame $f
 
    widget_comparison_vars $f.lblvar $f.cbovar $f.btnvar \
-      [namespace which -variable v::comparison]
+      ${ns}::v::comparison
    ttk::label $f.lbldata -text "Data to use:"
    ::mixin::combobox $f.data -width 0 -state readonly \
-      -textvariable [namespace which -variable v::data] \
+      -textvariable ${ns}::v::data \
       -values $v::data_list
    ttk::label $f.lblwin -text Window:
    ttk::spinbox $f.win -width 0 \
-      -textvariable [namespace which -variable v::win] \
+      -textvariable ${ns}::v::win \
       -from 0 -to 63 -increment 1 -format %.0f
    ttk::label $f.lbltitle -text "Graph title:"
    ttk::label $f.lblxtitle -text "X axis label:"
    ttk::label $f.lblytitle -text "Y axis:"
    ttk::entry $f.title -width 0 \
-      -textvariable [namespace which -variable v::title]
+      -textvariable ${ns}::v::title
    ttk::entry $f.xtitle -width 0 \
-      -textvariable [namespace which -variable v::xtitle]
+      -textvariable ${ns}::v::xtitle
    ::mixin::combobox::mapping $f.ytitle \
       -state readonly \
-      -altvariable [namespace which -variable v::normalize] \
+      -altvariable ${ns}::v::normalize \
       -mapping {Density 1 Counts 0}
 
    grid $f.lblvar $f.cbovar $f.btnvar - {*}$ew
@@ -694,7 +699,6 @@ proc ::l1pro::groundtruth::hist::panel w {
    grid columnconfigure $f 0 -weight 1
    set f [$f.f interior]
 
-   set ns [namespace current]
    widget_plots $f histline "Histogram line:" $ns
    widget_plots $f histbar "Histogram bar graph:" $ns
    widget_plots $f zeroline "Equality line:" $ns
@@ -709,16 +713,16 @@ proc ::l1pro::groundtruth::hist::panel w {
    ttk::labelframe $f -text Histogram
    ttk::label $f.lblbinsize -text "Bin size:"
    ttk::spinbox $f.binsize -width 0 \
-      -textvariable [namespace which -variable v::bin_size] \
+      -textvariable ${ns}::v::bin_size \
       -from 0 -to 100 -increment 0.01 -format %.2f
    ttk::checkbutton $f.binauto -text "Automatic bin size" \
-      -variable [namespace which -variable v::bin_auto]
+      -variable ${ns}::v::bin_auto
    grid $f.lblbinsize $f.binsize {*}$ew
    grid $f.binauto - {*}$o -sticky w
 
    ::mixin::statevar $f.binsize \
       -statemap {1 disabled 0 !disabled} \
-      -statevariable [namespace which -variable v::bin_auto]
+      -statevariable ${ns}::v::bin_auto
 
    grid columnconfigure $f 1 -weight 1
 
@@ -736,20 +740,20 @@ proc ::l1pro::groundtruth::hist::panel w {
    ttk::labelframe $f -text "Kernel density estimate"
    ttk::label $f.lblkernel -text "Kernel:"
    ::mixin::combobox $f.kernel -state readonly -width 12 \
-      -textvariable [namespace which -variable v::kernel] \
+      -textvariable ${ns}::v::kernel \
       -values {uniform triangular epanechnikov quartic triweight gaussian cosine}
    ttk::checkbutton $f.auto_band -text "Match bandwidth to bin size" \
-      -variable [namespace which -variable v::kde_h_match]
+      -variable ${ns}::v::kde_h_match
    ttk::label $f.lblband -text Bandwidth:
    ttk::spinbox $f.band -width 0 \
-      -textvariable [namespace which -variable v::kde_h] \
+      -textvariable ${ns}::v::kde_h \
       -from 0 -to 100 -increment 0.01 -format %.2f
    ttk::label $f.lblsamples -text Samples:
    ttk::spinbox $f.samples -width 0 \
-      -textvariable [namespace which -variable v::kde_samples] \
+      -textvariable ${ns}::v::kde_samples \
       -from 1 -to 1000000 -increment 1 -format %.0f
    ttk::button $f.plot -text "Plot Kernel" \
-      -command [namespace code plot_kernel]
+      -command ${ns}::plot_kernel
    grid $f.lblkernel $f.kernel {*}$ew
    grid $f.lblband $f.band {*}$ew
    grid $f.auto_band - {*}$o -sticky w
@@ -758,7 +762,7 @@ proc ::l1pro::groundtruth::hist::panel w {
 
    ::mixin::statevar $f.band \
       -statemap {1 disabled 0 !disabled} \
-      -statevariable [namespace which -variable v::kde_h_match]
+      -statevariable ${ns}::v::kde_h_match
 
    grid configure $f.lblkernel $f.lblband $f.lblsamples -sticky e
    grid columnconfigure $f 1 -weight 1
@@ -802,11 +806,11 @@ proc ::l1pro::groundtruth::hist::panel w {
 
    set f $w.bottom
    ttk::frame $f
-   ttk::button $f.plot -text Plot -command [namespace code plot]
+   ttk::button $f.plot -text Plot -command ${ns}::plot
    ttk::checkbutton $f.fma -text "Clear before plotting" \
-      -variable [namespace which -variable v::dofma]
+      -variable ${ns}::v::dofma
    ttk::checkbutton $f.logy -text "Use logarithmic y axis" \
-      -variable [namespace which -variable v::logy]
+      -variable ${ns}::v::logy
    grid x $f.plot $f.fma $f.logy x {*}$ew
    grid columnconfigure $f {0 4} -weight 1
 
@@ -900,6 +904,7 @@ if {![namespace exists ::l1pro::groundtruth::report::v]} {
 proc ::l1pro::groundtruth::report::panel w {
    ttk::frame $w
 
+   set ns [namespace current]
    set o [list -padx 1 -pady 1]
    set e [list {*}$o -sticky e]
    set ew [list {*}$o -sticky ew]
@@ -909,30 +914,30 @@ proc ::l1pro::groundtruth::report::panel w {
    ttk::frame $f
 
    widget_comparison_vars $f.lblvar $f.cbovar $f.btnvar \
-      [namespace which -variable v::comparison]
+      ${ns}::v::comparison
 
    ttk::frame $f.fout
    ttk::radiobutton $f.out_screen -text "Display on screen" \
-      -variable [namespace which -variable v::output] \
+      -variable ${ns}::v::output \
       -value screen
    ttk::radiobutton $f.out_file -text "Write to file:" \
-      -variable [namespace which -variable v::output] \
+      -variable ${ns}::v::output \
       -value file
-   ttk::entry $f.file -textvariable [namespace which -variable v::filename]
+   ttk::entry $f.file -textvariable ${ns}::v::filename
    ttk::button $f.browse -text "Browse" -style Panel.TButton -width 0 \
-      -command [namespace code select_file]
+      -command ${ns}::select_file
    grid $f.out_screen $f.out_file $f.file $f.browse -in $f.fout {*}$ew
    grid columnconfigure $f.fout 2 -weight 1
 
    foreach widget [list $f.file $f.browse] {
       ::mixin::statevar $widget \
          -statemap {screen disabled file !disabled} \
-         -statevariable [namespace which -variable v::output]
+         -statevariable ${ns}::v::output
    }
 
    ttk::label $f.lbltitle -text "Report title:"
    ttk::entry $f.title -width 0 \
-      -textvariable [namespace which -variable v::title]
+      -textvariable ${ns}::v::title
 
    grid $f.lblvar $f.cbovar $f.btnvar {*}$ew
    grid $f.fout - - {*}$ew
@@ -945,7 +950,7 @@ proc ::l1pro::groundtruth::report::panel w {
    ttk::labelframe $f -text "Data to use"
    foreach type $v::data_list {
       ttk::checkbutton $f.$type -text $type \
-         -variable [namespace which -variable v::use_data]($type)
+         -variable ${ns}::v::use_data($type)
       grid $f.$type {*}$o -sticky w
    }
 
@@ -976,7 +981,7 @@ proc ::l1pro::groundtruth::report::panel w {
       ttk::frame $f
       foreach metric [set metrics_$col] {
          ttk::checkbutton $f.m$metric -text $metric \
-            -variable [namespace which -variable v::metrics]($metric)
+            -variable ${ns}::v::metrics($metric)
          grid $f.m$metric {*}$o -sticky w
       }
    }
@@ -987,8 +992,7 @@ proc ::l1pro::groundtruth::report::panel w {
 
    set f $w.bottom
    ttk::frame $f
-   ttk::button $f.gen -text "Generate Report" \
-      -command [namespace code generate]
+   ttk::button $f.gen -text "Generate Report" -command ${ns}::generate
    grid x $f.gen x {*}$ew
    grid columnconfigure $f {0 2} -weight 1
 
