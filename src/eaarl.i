@@ -41,6 +41,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "eaarl_structs.i";
    require, "eaarl_data.i";
    require, "general.i";
+   require, "util_obj.i";
 
    require, "asciixyz.i";
    require, "atm.i";
@@ -50,6 +51,10 @@ if(is_void(__eaarl_includes_included__)) {
    require, "bathy.i";
    require, "bathy_filter.i";
    require, "centroid.i";
+   require, "class_clsobj.i";
+   require, "class_deque.i";
+   require, "class_pcobj.i";
+   require, "class_wfobj.i";
    require, "colorbar.i";
    require, "compare_transects.i";
    require, "comparison_fns.i";
@@ -62,12 +67,14 @@ if(is_void(__eaarl_includes_included__)) {
    require, "dirload.i";
    require, "dmars.i";
    require, "drast.i";
+   require, "eaarl1_wf.i";
    require, "eaarl_mounting_bias.i";
    require, "edb_access.i";
    require, "edf.i";
    require, "geo_bath.i";
    require, "geometry.i";
    require, "gridding.i";
+   require, "groundtruth.i";
    require, "histogram.i";
    require, "ircf.i";
    require, "irg.i";
@@ -79,12 +86,15 @@ if(is_void(__eaarl_includes_included__)) {
    require, "ll2utm.i";
    require, "manual_filter.i";
    require, "map.i";
+   require, "mathop.i";
    require, "mission_conf.i";
    require, "mosaic_tools.i";
    require, "mouse.i";
    require, "nad832navd88.i";
    require, "nav.i";
+   require, "obj_show.i";
    require, "parse.i";
+   require, "pcobj_import.i";
    require, "pip.i";
    require, "qaqc_fns.i";
    require, "rbgga.i";
@@ -114,30 +124,10 @@ if(is_void(__eaarl_includes_included__)) {
    require, "ytriangulate.i";
    require, "zone.i";
 
-   // Check for Yorick 2.2.00x and include things that depend on it if safe.
-   // Yorick 2.2 will be required in the future, but for now it is optional.
-   // This comes below the rest because the class_* files require some of the
-   // above functions at the global scope, for closures.
-   if(is_func(is_obj)) {
-      // util_obj.i must come first because class_* may use it
-      require, "util_obj.i";
-
-      require, "class_clsobj.i";
-      require, "class_deque.i";
-      require, "class_pcobj.i";
-      require, "class_wfobj.i";
-      require, "eaarl1_wf.i";
-      require, "groundtruth.i";
-      require, "mathop.i";
-      require, "obj_show.i";
-      require, "pcobj_import.i";
-   }
-
    // Must come last, because it depends on some of the above (it actually runs
    // something instead of only defining functions)
    require, "alpsrc.i";
 }
-
 
 // Functions for working with sf_a.tcl
 
