@@ -410,3 +410,42 @@ func gt_report(comparisons, which, metrics=, title=, outfile=) {
       write, format="%s\n", output;
    }
 }
+
+func gt_l1pro_selpoly(which) {
+   win = window();
+   write, format="Draw a polygon in window %d to select the region.", win;
+   ply = getPoly();
+   gt_l1pro_send, ply, "Polygon", which;
+}
+
+func gt_l1pro_selbbox(which) {
+   win = window();
+   msg = swrite(format="Draw a box in window %d to select the region.", win);
+   rgn = mouse(1, 1, msg);
+   ply = transpose([rgn([1,3,3,1,1]), rgn([2,2,4,4,2])]);
+   gt_l1pro_send, ply, "Rubberband box", which;
+}
+
+func gt_l1pro_sellims(which) {
+   win = window();
+   lims = limits();
+   ply = lims([[1,3],[1,4],[2,4],[2,3],[1,3]]);
+   gt_l1pro_send, ply, swrite(format="Window %d limits", win), which;
+}
+
+func gt_l1pro_send(ply, kind, which) {
+   area = poly_area(ply);
+   if(area < 1e6)
+      area = swrite(format="%.0f square meters", area);
+   else
+      area = swrite(format="%.3f square kilometers", area/1.e6);
+   fmt = "set ::l1pro::groundtruth::extract::v::%s_region_desc {%s with area %s}";
+   tkcmd, swrite(format=fmt, which, kind, area);
+
+   ply = swrite(format="%.3f", ply);
+   ply = "[" + ply(1,) + "," + ply(2,) + "]";
+   ply(:-1) += ","
+   ply = "[" + ply(sum) + "]";
+   fmt = "set ::l1pro::groundtruth::extract::v::%s_region_data {%s}";
+   tkcmd, swrite(format=fmt, which, ply);
+}
