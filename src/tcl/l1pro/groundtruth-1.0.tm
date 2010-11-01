@@ -262,12 +262,16 @@ if {![namespace exists ::l1pro::groundtruth::extract::v]} {
       variable model_zmax_val 0
       variable model_zmin_use 0
       variable model_zmin_val 0
+      variable model_region_data {}
+      variable model_region_desc "All data"
       variable truth_var fs_all
       variable truth_mode fs
       variable truth_zmax_use 0
       variable truth_zmax_val 0
       variable truth_zmin_use 0
       variable truth_zmin_val 0
+      variable truth_region_data {}
+      variable truth_region_desc "All data"
       variable output comparisons
       variable radius 1.00
    }
@@ -306,7 +310,8 @@ proc ::l1pro::groundtruth::extract::panel w {
       ttk::spinbox $f.min -width 0 \
          -from -10000 -to 10000 -increment 0.1 \
          -textvariable ${ns}::v::${data}_zmin_val
-      ttk::entry $f.region -width 0
+      ttk::entry $f.region -width 0 -state readonly \
+         -textvariable ${ns}::v::${data}_region_desc
       ttk::menubutton $f.btnregion -menu $f.regionmenu \
          -text "Configure Region..."
       ttk::spinbox $f.transect -width 0
@@ -333,17 +338,22 @@ proc ::l1pro::groundtruth::extract::panel w {
 
       set mb $f.regionmenu
       menu $mb
-      $mb add command -label "Use all data"
-      $mb add command -label "Select rubberband box"
-      $mb add command -label "Select polygon"
-      $mb add command -label "Select transect"
-      $mb add command -label "Use current window's limits"
+      $mb add command -label "Use all data" \
+         -command [list ${ns}::region_all $data]
+      $mb add command -label "Select rubberband box" \
+         -command [list ${ns}::region_bbox $data]
+      $mb add command -label "Select polygon" \
+         -command [list ${ns}::region_poly $data]
+      $mb add command -label "Select transect" \
+         -state disabled
+      $mb add command -label "Use current window's limits" \
+         -command [list ${ns}::region_lims $data]
       $mb add separator
-      $mb add command -label "Plot current region (if possible)"
+      $mb add command -label "Plot current region (if possible)" \
+         -command [list ${ns}::region_plot $data]
 
       # Temporarily disable unimplemented widgets
-      set disable [list $f.lblregion $f.region $f.btnregion $f.lbltransect \
-         $f.transect]
+      set disable [list $f.lbltransect $f.transect]
       foreach widget $disable {
          $widget state disabled
          ::tooltip::tooltip $widget \
@@ -406,6 +416,14 @@ proc ::l1pro::groundtruth::extract::extract {} {
                ", ubound=[format %g [set v::${var}_zmax_val]]" \
             1 ")"
       }
+      if {[set v::${var}_region_data] ne ""} {
+         set $var "data_in_poly([set $var]"
+         ::misc::appendif $var \
+            1  ", [set v::${var}_region_data]" \
+            {[set v::${var}_mode] ne "fs"} \
+               ", mode=\"[set v::${var}_mode]\"" \
+            1  ")"
+      }
    }
    set cmd "$v::output = gt_extract_comparisons($model, $truth"
    ::misc::appendif cmd \
@@ -415,6 +433,28 @@ proc ::l1pro::groundtruth::extract::extract {} {
       1                          ")"
    exp_send "$cmd;\r"
    comparison_add $v::output
+}
+
+proc ::l1pro::groundtruth::extract::region_all which {
+   set v::${which}_region_data {}
+   set v::${which}_region_desc "All data"
+}
+
+proc ::l1pro::groundtruth::extract::region_bbox which {
+   exp_send "gt_l1pro_selbbox, \"$which\";\r"
+}
+
+proc ::l1pro::groundtruth::extract::region_poly which {
+   exp_send "gt_l1pro_selpoly, \"$which\";\r"
+}
+
+proc ::l1pro::groundtruth::extract::region_lims which {
+   exp_send "gt_l1pro_sellims, \"$which\";\r"
+}
+
+proc ::l1pro::groundtruth::extract::region_plot which {
+   set data [set v::${which}_region_data]
+   exp_send "plotPoly, $data;\r"
 }
 
 namespace eval ::l1pro::groundtruth::scatter {
