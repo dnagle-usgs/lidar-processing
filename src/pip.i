@@ -258,6 +258,22 @@ func testPoly2(pl, ptx, pty, includevertices=) {
    return where(inpoly);
 }
 
+func data_in_poly(data, ply, mode=, idx=) {
+/* DOCUMENT data_in_poly(data, ply, mode=, idx=)
+   Wrapper around data2xyz and testPoly. Returns all DATA that falls within the
+   polygon PLY. MODE= should be one of "fs", "be", "ba", etc. Set IDX=1 to get
+   an index list instead of the data.
+*/
+   local x, y, z;
+   if(!numberof(data) || !numberof(ply))
+      return [];
+   data2xyz, data, x, y, z, mode=mode;
+   w = testPoly(ply, x, y);
+   if(!numberof(w))
+      return [];
+   return idx ? w : data(w,..);
+}
+
 func boundBox(pl, noplot=)
 /* DOCUMENT function boundBox
 	This function creates a bound rectangular box that wraps around the polygon
