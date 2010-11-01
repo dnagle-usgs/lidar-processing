@@ -149,6 +149,21 @@ foreach __theme [ttk::style theme names] {
    }
 }
 unset __theme
+
+# Make menu colors appropriate for Ttk
+proc FixMenuColors w {
+   $w configure \
+      -background [ttk::style lookup TFrame -background] \
+      -activebackground [ttk::style lookup TFrame -background]
+}
+proc FixMenuOption {} {
+   option add *Menu.background [ttk::style lookup TFrame -background]
+   option add *Menu.activeBackground [ttk::style lookup TFrame -background]
+}
+bind Menu <<ThemeChanged>> {FixMenuColors %W}
+bind . <<ThemeChanged>> FixMenuOption
+FixMenuOption
+
 wm withdraw .
 
 set gui_enabled 1
