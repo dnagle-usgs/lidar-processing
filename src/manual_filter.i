@@ -388,7 +388,7 @@ func filter_bounded_elv(eaarl, lbound=, ubound=, mode=, idx=) {
    if(is_void(keep))
       return [];
 
-   return idx ? keep : eaarl(keep);
+   return idx ? keep : eaarl(keep,..);
 }
 
 func batch_extract_corresponding_data(src_searchstr, ref_searchstr, maindir,
