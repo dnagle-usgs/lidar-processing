@@ -632,7 +632,7 @@ snit::widgetadaptor ::mixin::labelframe::collapsible {
       if {[llength $args] == 0} {
          return $interior
       } else {
-         return [eval [list $interior] $args]
+         return [$interior {*}$args]
       }
    }
 

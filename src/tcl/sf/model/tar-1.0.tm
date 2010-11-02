@@ -105,7 +105,7 @@ snit::type ::sf::model::collection::tar::files {
       file mkdir $temp
       set fn [$self ExtractFile $tar $file $temp]
 
-      eval [list ::imgops::transform file $fn] $args
+      ::imgops::transform file $fn {*}$args
 
       if {[dict exists $args -imagename]} {
          set img [dict get $args -imagename]
@@ -428,8 +428,7 @@ snit::type ::sf::model::collection::tar::paths {
    method Refresh {} {
       set tars [list]
       foreach path $options(-paths) {
-         eval [list lappend tars] \
-            [glob -nocomplain -directory $path -types {f r} *.tar]
+         lappend tars {*}[glob -nocomplain -directory $path -types {f r} *.tar]
       }
       set tars [lsort -unique $tars]
       set validtars [list]
@@ -508,7 +507,7 @@ proc ::sf::model::create::_tar {translator class opts} {
    set data [dict get $opts -$class]
    dict unset opts -$class
 
-   set name [eval [list ::sf::model::collection::tar::$class $name] $opts]
+   set name [::sf::model::collection::tar::$class $name {*}$opts]
    $name configure -$class $data
 
    set title [$name cget -name]

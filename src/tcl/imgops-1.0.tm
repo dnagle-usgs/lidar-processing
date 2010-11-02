@@ -48,7 +48,7 @@ snit::type ::imgops::transform {
       set fn [file join [::fileutil::tempdir] [::uuid::uuid generate]].png
       $img write $fn -format png
 
-      eval [list $type file $fn] $args
+      $type file $fn {*}$args
 
       # blank is necessary because otherwise, the new image is placed on top of
       # the prior image. The configuring of h/w to 1 then 0 is necessary because
@@ -184,7 +184,7 @@ snit::type ::imgops::transform {
       set cmd [linsert $cmd 0 [file normalize $fn]]
       lappend cmd $tmp
       set cmd [concat [auto_execok convert] $cmd]
-      set result [eval exec $cmd]
+      set result [exec {*}$cmd]
       file rename -force $tmp $fn
       return $result
    }
@@ -202,7 +202,7 @@ snit::type ::imgops::query {
          error "identify not available, please install ImageMagick"
       }
       lappend cmd -format "%w %h" [file nativename $fn]
-      set result [eval exec $cmd]
+      set result [exec {*}$cmd]
       set result [split $result " \n\r"]
       return [lrange $result 0 1]
    }

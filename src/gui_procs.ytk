@@ -204,7 +204,7 @@ proc GUI::utils::getfile { args } {
 
    dict set opts -initialdir $initial
 
-   set temp [eval $command $opts]
+   set temp [$command {*}$opts]
 
    if { $temp ne "" } {
       set filename $temp
@@ -238,7 +238,7 @@ itcl::body GUI::EntryFieldButton::constructor {args} {
    }
    pack $itk_component(button)
 
-   eval itk_initialize $args
+   itk_initialize {*}$args
 }
 
 ##############################################################################
@@ -264,7 +264,7 @@ if { [info commands GUI::FileEntryButton] eq "" } {
 
 itcl::body GUI::FileEntryButton::constructor {args} {
    #itk_option remove GUI::EntryFieldButton::buttoncommand
-   eval itk_initialize $args
+   itk_initialize {*}$args
    configure \
       -buttoncommand [itcl::code $this file_choose] \
       -buttontext "Choose..."
@@ -292,7 +292,7 @@ proc winfo_children_all widget {
    foreach child [winfo children $widget] {
       lappend result $child
       if {[llength [winfo children $child]]} {
-         eval [list lappend result] [winfo_children_all $child]
+         lappend result {*}[winfo_children_all $child]
       }
    }
    return $result

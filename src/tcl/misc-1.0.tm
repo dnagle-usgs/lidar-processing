@@ -30,7 +30,7 @@ snit::type ::misc::soe {
 
    typemethod {from list} {Y {M -} {D -} {h 0} {m 0} {s 0}} {
       if {$M eq "-"} {
-         return [eval [$type from list] $Y]
+         return [$type from list {*}$Y]
       }
       set fmt "%04d%02d%02d %02d%02d%02d"
       return [clock scan [format $fmt $Y $M $D $h $m $s] -gmt 1]
@@ -149,19 +149,19 @@ snit::type ::misc::file {
    typemethod common_base paths {
       set parts [list]
       foreach path $paths {
-         eval [list dict set parts] [::file split [::file normalize $path]] *
+         dict set parts {*}[::file split [::file normalize $path]] *
       }
       set common [list /]
       set continue [expr {[llength $parts] > 0}]
       while {$continue} {
          set continue 0
-         set sub [eval [list dict get $parts] $common]
+         set sub [dict get $parts {*}$common]
          if {$sub ne "*" && [llength [dict keys $sub]] == 1} {
             lappend common [lindex [dict keys $sub] 0]
             set continue 1
          }
       }
-      return [eval [list ::file join] $common]
+      return [::file join {*}$common]
    }
 }
 

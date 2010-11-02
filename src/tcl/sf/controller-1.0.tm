@@ -582,7 +582,7 @@ snit::type ::sf::controller {
          } elseif {$band ne "A"} {
             dict set opts -channel $band
          }
-         eval [list $model retrieve [$gui cget -token]] $opts
+         $model retrieve [$gui cget -token] {*}$opts
       }
       $gui refresh canvas
    }
@@ -623,7 +623,7 @@ snit::type ::sf::controller {
    #     provide the necesary context for the 'install' call within an after
    #     call.
    method InstallModel {cmd opts} {
-      eval [list install model using $cmd %AUTO%] $opts
+      install model using $cmd %AUTO% {*}$opts
    }
 
 }

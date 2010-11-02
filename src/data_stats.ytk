@@ -46,7 +46,7 @@ if {[info commands DataStatsWindow] eq ""} {
 itcl::body DataStatsWindow::constructor {data args} {
    wm protocol $itk_component(hull) WM_DELETE_WINDOW \
       [itcl::code itcl::delete object $this]
-   eval itk_initialize $args
+   itk_initialize {*}$args
 
    set data [::json::json2dict $data]
    foreach key [lsort -dictionary [dict keys $data]] {
@@ -142,7 +142,7 @@ itcl::body DataStatsWindow::constructor {data args} {
 }
 
 itcl::body DataStatsWindow::update_highlight {} {
-   set hover [eval winfo containing [winfo pointerxy $itk_interior]]
+   set hover [winfo containing {*}[winfo pointerxy $itk_interior]]
    if {[string match $itk_interior.fraVariables.* $hover]} {
       set cnf [grid info $hover]
       set r [dict get $cnf -row]
@@ -209,11 +209,7 @@ itcl::body DataStatsWindow::plot_segment {idx} {
 }
 
 proc launch_datastats_stats {data args} {
-   set dsw [eval \
-      [list DataStatsWindow .#auto $data \
-         -maxwin 64] \
-      $args]
-   $dsw activate
+   [DataStatsWindow .#auto $data -maxwin 64 {*}$args] activate
 }
 
 proc launch_datastatswindow {variables args} {

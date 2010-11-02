@@ -72,7 +72,7 @@ itcl::body SegmentedDataWindow::init_opt_var {opt default} {
 itcl::body SegmentedDataWindow::constructor {args} {
    wm protocol $itk_component(hull) WM_DELETE_WINDOW \
       [itcl::code itcl::delete object $this]
-   eval itk_initialize $args
+   itk_initialize {*}$args
 
    wm resizable $itk_component(hull) 1 1
    wm minsize $itk_component(hull) 460 100
@@ -321,10 +321,10 @@ itcl::body SegmentedDataWindow::size_optimally {} {
       -vscrollmode dynamic \
       -hscrollmode dynamic
    update idletasks
-   eval [[$f component canvas] cget -xscrollcommand] $xv
-   eval [[$f component canvas] cget -yscrollcommand] $yv
-   eval [[$f component canvas] cget -xscrollcommand] [$f xview]
-   eval [[$f component canvas] cget -yscrollcommand] [$f yview]
+   {*}[[$f component canvas] cget -xscrollcommand] {*}$xv
+   {*}[[$f component canvas] cget -yscrollcommand] {*}$yv
+   {*}[[$f component canvas] cget -xscrollcommand] {*}[$f xview]
+   {*}[[$f component canvas] cget -yscrollcommand] {*}[$f yview]
 }
 
 itcl::body SegmentedDataWindow::refresh_times {} {
@@ -529,14 +529,13 @@ proc segment_data_launcher {method {yvar -}} {
 }
 
 proc launch_segmenteddatawindow {segments args} {
-   set sdw [eval \
-      [list SegmentedDataWindow .#auto \
-         -varlistvariable ::varlist \
-         -maxwin 64 \
-         -segmentvariables $segments \
-         -windowvariable ::win_no \
-         -fmavariable ::l1pro_fma] \
-      $args]
+   set sdw [SegmentedDataWindow .#auto \
+      -varlistvariable ::varlist \
+      -maxwin 64 \
+      -segmentvariables $segments \
+      -windowvariable ::win_no \
+      -fmavariable ::l1pro_fma \
+      {*}$args]
    $sdw activate
 }
 

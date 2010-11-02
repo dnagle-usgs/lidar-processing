@@ -158,14 +158,14 @@ snit::widget ::sf::gui {
    #     Provides the tk_chooseDirectory dialog. Uses the GUI as its parent.
    method {prompt directory} args {
       set opts [dict merge $args [list -parent $self]]
-      return [eval tk_chooseDirectory $opts]
+      return [tk_chooseDirectory {*}$opts]
    }
 
    # prompt file save <args>
    #     Provides the tk_getSaveFile dialog. Uses the GUI as its parent.
    method {prompt file save} args {
       set opts [dict merge $args [list -parent $self]]
-      return [eval tk_getSaveFile $opts]
+      return [tk_getSaveFile {*}$opts]
    }
 
    # prompt string <args>
@@ -196,7 +196,7 @@ snit::widget ::sf::gui {
          set returnbool 0
       }
       set cmd [list ::getstring::tk_getString $win.gs result $prompt]
-      set pressedok [eval $cmd $args]
+      set pressedok [{*}$cmd {*}$args]
       if {$returnbool} {
          return $pressedok
       } else {
@@ -624,7 +624,7 @@ snit::widget ::sf::gui {
    #     a tk_messageBox with the GUI as its parent.
    method Prompt {opts args} {
       set opts [dict merge $args $opts [list -parent $self]]
-      return [eval tk_messageBox $opts]
+      return [tk_messageBox {*}$opts]
    }
 
    # Update title <option> <value>

@@ -68,7 +68,7 @@ snit::type ::sf::mediator {
          set color $::plot::g::markColor
          ybkg sf_mediator_plot $win $soe $msize $marker \"$color\" \"$errcmd\"
       } else {
-         eval $errcmd [list "YTK does not seem to be available."]
+         {*}$errcmd "YTK does not seem to be available."
       }
    }
 
@@ -81,7 +81,7 @@ snit::type ::sf::mediator {
       if {[info commands ybkg] ne ""} {
          ybkg sf_mediator_raster $soe \"$errcmd\"
       } else {
-         eval $errcmd [list "YTK does not seem to be available."]
+         {*}$errcmd "YTK does not seem to be available."
       }
    }
 
