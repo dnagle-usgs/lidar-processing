@@ -197,55 +197,6 @@ proc default {varName value} {
     }
 }
 
-proc curry {new args} {
-# See http://wiki.tcl.tk/_search?S=curry for an explanation of the ideas behind
-# currying. Basically, curry makes a shorthand alias for a command.
-#
-# Suppose we have a function like this:
-# proc mult {a b} {expr $a*$b}
-#
-# Then, this:
-#   curry double mult 2
-# Lets us call this:
-#   double 5
-# Which returns 10
-#
-# double is shorthand for "call mult with its first argument as 2"
-#
-# This can dramatically shorten code where you have lots of excess repeated
-# verbiage, especially if you can condense some key phrases down to something
-# like a single punctuation command.
-#
-# All curried aliases are at the global scope, as they use interp aliases. If a
-# curry is intended for short-term use, you can uncurry it using the uncurry
-# command. The curry/uncurry commands keep track of what's been curried. If you
-# curry something that has already been curried, then the next uncurry command
-# will restore the previous curry.
-#
-# Uncurrying something that's not curried is a no-op. Uncurry won't work with
-# any arbitrary interp alias; it will only work with those interp aliases set
-# through curry.
-    global __curry
-    dict lappend __curry $new $args
-    eval [list interp alias {} $new {}] $args
-}
-
-proc uncurry {name} {
-# See curry
-    global __curry
-    if {[info exists __curry] && [dict exists $__curry $name]} {
-        if {[llength [dict get $__curry $name]]} {
-            dict set __curry $name [lrange [dict get $__curry $name] 0 end-1]
-        }
-        if {[llength [dict get $__curry $name]]} {
-            eval [list interp alias {} $name {}] [lindex [dict get $__curry $name] end]
-        } else {
-            interp alias {} $name {}
-            dict unset __curry $name
-        }
-    }
-}
-
 ##############################################################################
 
 # copied from ADAPT: lib/combinators.tcl
