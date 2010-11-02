@@ -175,7 +175,7 @@ proc create_transbuttons { cnt } {
       if { $tbi == 1 } {
          Button $tw.f2$tbi.process -text "$tbi: mtransect" -command "run_mt $tbi" \
             -bg azure3 -activebackground azure4
-         setTooltip $tw.f2$tbi.process "This transect can be\nqueried using the\ntransrch and mtransrch\nbuttons below"
+         ::tooltip::tooltip $tw.f2$tbi.process "This transect can be\nqueried using the\ntransrch and mtransrch\nbuttons below"
       } else {
          Button $tw.f2$tbi.process -text "$tbi: mtransect" -command "run_mt $tbi" \
          -activebackground grey
@@ -304,12 +304,11 @@ Button $tw.f3.mtransrch -text "Transect Pixel Waveform" \
    exp_send "mtransrch, $fs_var, m1, llst1, _rx=rx1, _el=elevation1, iwin=$iwn_var, disp_type=$rtn_var\r"
 }
 pack $tw.f3.mtransrch -side left -fill x -padx 2
-setTooltip $tw.f3.mtransrch {
-Click on points in the transect plot window.
+::tooltip::tooltip $tw.f3.mtransrch \
+"Click on points in the transect plot window.
 
 Display information on multiple points from
-the mtransect 1 plot.
-}
+the mtransect 1 plot."
 
 ############################################################
 # Plot Frame / Frame 1
@@ -326,7 +325,7 @@ Button $pf.f1.show_track -text "show_track" -activebackground grey -command {
    
 }
 pack $pf.f1.show_track -side left -fill x -padx 2
-setTooltip $pf.f1.show_track "Displays positions from\ndata in specified window"
+::tooltip::tooltip $pf.f1.show_track "Displays positions from\ndata in specified window"
 
 
 Label $pf.f1.fs -text "FS:"

@@ -538,7 +538,7 @@ namespace eval ::pixelwf::gui {
 
       label $f.lblRadius -text [mc radius]:
       helper_spinbox $f.spnRadius ${ns}::radius
-      setTooltip $f.spnRadius [mc "Search radius in meters"]
+      ::tooltip::tooltip $f.spnRadius [mc "Search radius in meters"]
 
       label $f.lblVar -text [mc pro_var]:
       ::mixin::combobox $f.cboVar -textvariable ::pro_var -state readonly \
