@@ -200,7 +200,7 @@ proc create_transbuttons { cnt } {
       $tw.f2$tbi.cln_vars setvalue @0
       pack $tw.f2$tbi.cln_vars -side left -fill x -padx 2
 
-      west checkbutton $tw.f2$tbi.fma -text "xfma" -variable trans_xfma$tbi
+      checkbutton $tw.f2$tbi.fma -text "xfma" -variable trans_xfma$tbi
       pack $tw.f2$tbi.fma -side left -fill x -padx 2
 
 
