@@ -329,18 +329,18 @@ namespace eval mission {
         menu $mb
         $win configure -menu $mb
 
-        curry @ namespace code
+        set ns [namespace current]
 
         menu $mb.file
         $mb add cascade -label File -underline 0 -menu $mb.file
 
-        $mb.file add command -label "New" -command [@ menu_new] -underline 0
-        $mb.file add command -label "Open" -command [@ menu_open] -underline 0
-        $mb.file add command -label "Save" -command [@ menu_save] -underline 0
-        $mb.file add command -label "Save As" -command [@ menu_save_as] \
+        $mb.file add command -label "New" -command ${ns}::menu_new -underline 0
+        $mb.file add command -label "Open" -command ${ns}::menu_open -underline 0
+        $mb.file add command -label "Save" -command ${ns}::menu_save -underline 0
+        $mb.file add command -label "Save As" -command ${ns}::menu_save_as \
             -underline 5
         $mb.file add separator
-        $mb.file add command -label "Close" -command [@ menu_close] -underline 0
+        $mb.file add command -label "Close" -command ${ns}::menu_close -underline 0
 
         menu $mb.act
         $mb add cascade -label Actions -underline 0 -menu $mb.act
@@ -350,21 +350,23 @@ namespace eval mission {
             -underline 0 -menu $mb.act.init
         $mb.act.init add command -label "Strict (days with lidar)" \
             -underline 0 \
-            -command [list [@ menu_initialize_from_mission_dir] 1]
+            -command [list ${ns}::menu_initialize_from_mission_dir 1]
         $mb.act.init add command -label "Non-strict (all days)" \
             -underline 0 \
-            -command [list [@ menu_initialize_from_mission_dir] 0]
+            -command [list ${ns}::menu_initialize_from_mission_dir 0]
 
         $mb.act add separator
-        $mb.act add command -label "Launch RGB" -command [@ menu_launch_rgb]
-        $mb.act add command -label "Launch CIR" -command [@ menu_launch_cir]
-        $mb.act add command -label "Dump CIR" -command [@ menu_dump_cir]
+        $mb.act add command -label "Launch RGB" -command ${ns}::menu_launch_rgb
+        $mb.act add command -label "Launch CIR" -command ${ns}::menu_launch_cir
+        $mb.act add command -label "Dump CIR" -command ${ns}::menu_dump_cir
         $mb.act add separator
         menu $mb.act.kml
         set v::kmlmenu $mb.act.kml
         $mb.act add cascade -label "Generate KMZ" -menu $mb.act.kml
-        $mb.act.kml add command -label "Full mission" -command [@ menu_gen_kmz]
-        $mb.act add command -label "Show EDB summary" -command [@ menu_edb_summary]
+        $mb.act.kml add command -label "Full mission" \
+            -command ${ns}::menu_gen_kmz
+        $mb.act add command -label "Show EDB summary" \
+            -command ${ns}::menu_edb_summary
 
         menu $mb.cache
         $mb add cascade -label Cache -underline 0 -menu $mb.cache
@@ -385,27 +387,25 @@ namespace eval mission {
 
         button $win.btnAdd -text "Add new mission day..." \
             -padx 2m -pady 1m \
-            -command [@ date_add]
+            -command ${ns}::date_add
         pack $win.btnAdd -anchor w
 
         button $win.btnPath -text "Specify mission path..." \
             -padx 2m -pady 1m \
-            -command [@ set_mission_path]
+            -command ${ns}::set_mission_path
         pack $win.btnPath -anchor w
 
         button $win.btnRgb -text "All RGB" \
             -padx 2m -pady 1m \
-            -command [@ menu_launch_rgb]
+            -command ${ns}::menu_launch_rgb
         pack $win.btnRgb -anchor w
 
         button $win.btnCir -text "All Cir" \
             -padx 2m -pady 1m \
-            -command [@ menu_launch_cir]
+            -command ${ns}::menu_launch_cir
         pack $win.btnCir -anchor w
 
-        wm protocol $win WM_DELETE_WINDOW [@ menu_close]
-
-        uncurry @
+        wm protocol $win WM_DELETE_WINDOW ${ns}::menu_close
 
         register_traces
 
@@ -550,31 +550,30 @@ namespace eval mission {
         if {[$mb index end] > 0} {
             $mb delete 1 end
         }
-        curry @ namespace code
+        set ns [namespace current]
         foreach date [missionday_list] {
             label $f.lbl$date -text $date
             button $f.btnConfig$date -text Configure \
                 -padx 2m -pady 1m \
-                -command [@ [list date_config $date]]
+                -command [list ${ns}::date_config $date]
             button $f.btnLoad$date -text Load \
                 -padx 2m -pady 1m \
-                -command [@ [list date_load $date]]
+                -command [list ${ns}::date_load $date]
             button $f.btnRgb$date -text RGB \
                 -padx 2m -pady 1m \
-                -command [@ [list date_rgb $date]]
+                -command [list ${ns}::date_rgb $date]
             button $f.btnCir$date -text Cir \
                 -padx 2m -pady 1m \
-                -command [@ [list date_cir $date]]
+                -command [list ${ns}::date_cir $date]
             button $f.btnDelete$date -text X \
                 -padx 2m -pady 1m \
-                -command [@ [list date_delete $date]]
+                -command [list ${ns}::date_delete $date]
             grid $f.lbl$date $f.btnConfig$date $f.btnLoad$date \
                 $f.btnRgb$date $f.btnCir$date $f.btnDelete$date
             grid $f.lbl$date -sticky w
 
-            $mb add command -label $date -command [@ [list menu_gen_kmz $date]]
+            $mb add command -label $date -command [list ${ns}::menu_gen_kmz $date]
         }
-        uncurry @
     }
 
     proc __date_config_path_helper {w var dlg} {
@@ -590,37 +589,36 @@ namespace eval mission {
         $dlg hide Help
         $dlg hide Apply
 
-        curry % list $dlg
-        curry @ namespace code
-        curry & namespace which -variable
+        set ns [namespace current]
+        set c [list list $dlg]
 
-        $dlg buttonconfigure OK -command [@ [list $dlg deactivate 1]]
-        $dlg buttonconfigure Cancel -command [@ [list $dlg deactivate 0]]
+        $dlg buttonconfigure OK -command [list $dlg deactivate 1]
+        $dlg buttonconfigure Cancel -command [list $dlg deactivate 0]
 
-        set v::config_temp([% date]) [mission_get date $date]
-        set v::config_temp([% data_path]) [mission_get data_path $date]
-        set v::config_temp([% "edb file"]) [mission_get "edb file" $date]
-        set v::config_temp([% "pnav file"]) [mission_get "pnav file" $date]
-        set v::config_temp([% "ins file"]) [mission_get "ins file" $date]
-        set v::config_temp([% "ops_conf file"]) [mission_get "ops_conf file" $date]
-        set v::config_temp([% "bath_ctl file"]) [mission_get "bath_ctl file" $date]
-        set v::config_temp([% "cir dir"]) [mission_get "cir dir" $date]
-        set v::config_temp([% "rgb dir"]) [mission_get "rgb dir" $date]
-        set v::config_temp([% "rgb file"]) [mission_get "rgb file" $date]
+        set v::config_temp([{*}$c date]) [mission_get date $date]
+        set v::config_temp([{*}$c data_path]) [mission_get data_path $date]
+        set v::config_temp([{*}$c "edb file"]) [mission_get "edb file" $date]
+        set v::config_temp([{*}$c "pnav file"]) [mission_get "pnav file" $date]
+        set v::config_temp([{*}$c "ins file"]) [mission_get "ins file" $date]
+        set v::config_temp([{*}$c "ops_conf file"]) [mission_get "ops_conf file" $date]
+        set v::config_temp([{*}$c "bath_ctl file"]) [mission_get "bath_ctl file" $date]
+        set v::config_temp([{*}$c "cir dir"]) [mission_get "cir dir" $date]
+        set v::config_temp([{*}$c "rgb dir"]) [mission_get "rgb dir" $date]
+        set v::config_temp([{*}$c "rgb file"]) [mission_get "rgb file" $date]
 
         set w [$dlg childsite]
 
         iwidgets::Entryfield $w.entDate \
             -labeltext "Date:" \
-            -textvariable [& v::config_temp]([% date])
+            -textvariable ${ns}::v::config_temp([{*}$c date])
 
         GUI::FileEntryButton $w.entPath \
             -labeltext "Data path:" \
             -actiontype dir \
             -parent $dlg \
             -initialdir [mission_path] \
-            -updatecommand [@ [list __date_config_path_helper $w [& v::config_temp] $dlg]] \
-            -textvariable [& v::config_temp]([% data_path])
+            -updatecommand [list ${ns}::__date_config_path_helper $w ${ns}::v::config_temp $dlg] \
+            -textvariable ${ns}::v::config_temp([{*}$c data_path])
         GUI::FileEntryButton $w.entEdb \
             -labeltext "EDB file:" \
             -actiontype open \
@@ -629,7 +627,7 @@ namespace eval mission {
                 {{All files} *}
             } \
             -parent $dlg \
-            -textvariable [& v::config_temp]([% "edb file"])
+            -textvariable ${ns}::v::config_temp([{*}$c "edb file"])
         GUI::FileEntryButton $w.entPnav \
             -labeltext "PNAV file:" \
             -actiontype open \
@@ -638,7 +636,7 @@ namespace eval mission {
                 {{All files} *}
             } \
             -parent $dlg \
-            -textvariable [& v::config_temp]([% "pnav file"])
+            -textvariable ${ns}::v::config_temp([{*}$c "pnav file"])
         GUI::FileEntryButton $w.entIns \
             -labeltext "INS file:" \
             -actiontype open \
@@ -648,7 +646,7 @@ namespace eval mission {
                 {{All files} *}
             } \
             -parent $dlg \
-            -textvariable [& v::config_temp]([% "ins file"])
+            -textvariable ${ns}::v::config_temp([{*}$c "ins file"])
         GUI::FileEntryButton $w.entOps \
             -labeltext "ops_conf.i file:" \
             -actiontype open \
@@ -657,7 +655,7 @@ namespace eval mission {
                 {{All files} *}
             } \
             -parent $dlg \
-            -textvariable [& v::config_temp]([% "ops_conf file"])
+            -textvariable ${ns}::v::config_temp([{*}$c "ops_conf file"])
         GUI::FileEntryButton $w.entBath \
             -labeltext "bathy settings file:" \
             -actiontype open \
@@ -666,17 +664,17 @@ namespace eval mission {
                 {{All files} *}
             } \
             -parent $dlg \
-            -textvariable [& v::config_temp]([% "bath_ctl file"])
+            -textvariable ${ns}::v::config_temp([{*}$c "bath_ctl file"])
         GUI::FileEntryButton $w.entCir \
             -labeltext "CIR path:" \
             -actiontype dir \
             -parent $dlg \
-            -textvariable [& v::config_temp]([% "cir dir"])
+            -textvariable ${ns}::v::config_temp([{*}$c "cir dir"])
         GUI::FileEntryButton $w.entRgbDir \
             -labeltext "RGB path (newer datasets):" \
             -actiontype dir \
             -parent $dlg \
-            -textvariable [& v::config_temp]([% "rgb dir"])
+            -textvariable ${ns}::v::config_temp([{*}$c "rgb dir"])
         GUI::FileEntryButton $w.entRgbTar \
             -labeltext "RGB tar file (older datasets):" \
             -actiontype open \
@@ -685,9 +683,9 @@ namespace eval mission {
                 {{All files} *}
             } \
             -parent $dlg \
-            -textvariable [& v::config_temp]([% "rgb file"])
+            -textvariable ${ns}::v::config_temp([{*}$c "rgb file"])
 
-        __date_config_path_helper $w [& v::config_temp] $dlg
+        __date_config_path_helper $w ${ns}::v::config_temp $dlg
 
         foreach ent [list Date Path Edb Pnav Ins Ops Cir RgbDir RgbTar] {
             [$w.ent$ent component entry] configure \
@@ -715,8 +713,8 @@ namespace eval mission {
                     "ins file" "ops_conf file" "bath_ctl file" "cir dir" \
                     "rgb dir" "rgb file"]
                 foreach key $keys {
-                    if {[string length $v::config_temp([% $key])]} {
-                        dict set temp_data $key $v::config_temp([% $key])
+                    if {[string length $v::config_temp([{*}$c $key])]} {
+                        dict set temp_data $key $v::config_temp([{*}$c $key])
                     }
                 }
                 if {[llength [dict keys $temp_data]]} {
@@ -745,10 +743,6 @@ namespace eval mission {
                 }
             }
         }
-
-        uncurry %
-        uncurry @
-        uncurry &
 
         destroy $dlg
     }
