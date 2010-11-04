@@ -217,18 +217,24 @@ proc display_type_by_index {index} {
 }
 
 proc ud { a b c } {
+  set cmin [scan $::plot_settings(cmin) %f]
+  set cmax [scan $::plot_settings(cmax) %f]
+  set cdel [scan $::cdelta %f]
   switch -- $::cbar_locked {
     cmin {
-      set ::plot_settings(cmin) \
-        [format %.2f [expr {$::plot_settings(cmax) - $::cdelta}]]
+      if {"" ni [list $cmax $cdel]} {
+        set ::plot_settings(cmin) [format %.2f [expr {$cmax - $cdel}]]
+      }
     }
     cmax {
-      set ::plot_settings(cmax) \
-        [format %.2f [expr {$::plot_settings(cmin) + $::cdelta}]]
+      if {"" ni [list $cmin $cdel]} {
+        set ::plot_settings(cmax) [format %.2f [expr {$cmin + $cdel}]]
+      }
     }
     cdelta {
-      set ::cdelta \
-        [format %.2f [expr {$::plot_settings(cmax) - $::plot_settings(cmin)}]]
+      if {"" ni [list $cmax $cmin]} {
+        set ::cdelta [format %.2f [expr {$cmax - $cmin}]]
+      }
     }
   }
   if { [ winfo exists .rem ] } {
