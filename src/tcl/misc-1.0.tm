@@ -161,19 +161,15 @@ snit::type ::misc::search {
    }
 }
 
-snit::type ::misc::file {
-   pragma -hastypeinfo false
-   pragma -hastypedestroy false
-   pragma -hasinstances false
-
+::misc::extend file {
    # file common_base <paths>
    #     Finds the common base path for the given list of <paths>. For example,
    #     a list of {/foo/bar/baz /foo/bar/foo /foo/bar/bar/baz} would return
    #     /foo/bar. Paths will be normalized.
-   typemethod common_base paths {
+   proc common_base paths {
       set parts [list]
       foreach path $paths {
-         dict set parts {*}[::file split [::file normalize $path]] *
+         dict set parts {*}[file split [file normalize $path]] *
       }
       set common [list /]
       set continue [expr {[llength $parts] > 0}]
@@ -185,7 +181,7 @@ snit::type ::misc::file {
             set continue 1
          }
       }
-      return [::file join {*}$common]
+      return [file join {*}$common]
    }
 }
 

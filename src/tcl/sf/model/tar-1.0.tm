@@ -234,7 +234,7 @@ snit::type ::sf::model::collection::tar::files {
       }
       set options(-files) [lsort -unique $options(-files)]
 
-      $self configure -name [::misc::file common_base $options(-files)]
+      $self configure -name [file common_base $options(-files)]
 
       $self Refresh
    }
