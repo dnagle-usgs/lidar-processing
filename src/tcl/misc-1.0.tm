@@ -196,6 +196,19 @@ namespace eval ::misc::search {
    }
 }
 
+::misc::extend winfo {
+   proc descendents w {
+      set queue [list $w]
+      set result [list]
+      while {[llength $queue]} {
+         set children [winfo children [lindex $queue end]]
+         lappend result {*}$children
+         set queue [lreplace $queue end end {*}$children]
+      }
+      return $result
+   }
+}
+
 namespace eval ::misc::bind {}
 
 proc ::misc::bind::label_to_checkbutton {lbl chk} {

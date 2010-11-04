@@ -224,17 +224,3 @@ itcl::body GUI::FileEntryButton::file_choose {args} {
       uplevel #0 $itk_option(-updatecommand)
    }
 }
-
-##############################################################################
-
-proc winfo_children_all widget {
-# Like [winfo children $widget], except that it works recursively.
-   set result [list]
-   foreach child [winfo children $widget] {
-      lappend result $child
-      if {[llength [winfo children $child]]} {
-         lappend result {*}[winfo_children_all $child]
-      }
-   }
-   return $result
-}
