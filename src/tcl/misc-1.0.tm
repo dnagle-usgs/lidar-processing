@@ -410,7 +410,7 @@ proc validation_trace {cmd varname valcmd args} {
    # Create namespace, if necessary
    namespace eval ::__validation_backups[namespace qualifiers $varname] {}
    set ::__validation_backups$varname [set $varname]
-   trace_$cmd variable $varname write [list __validate_trace_worker $data]
+   trace $cmd variable $varname write [list __validate_trace_worker $data]
 }
 
 proc __validate_trace_worker {data name1 name2 op} {

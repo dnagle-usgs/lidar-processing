@@ -365,16 +365,8 @@ proc tky_tie {cmd type tkvar - yvar args} {
 ##
    array set opts [list -initialize 0 -src yor]
    array set opts $args
-   switch -- $cmd {
-      add - remove {}
-      append {
-         if {![string length [info procs trace_append]]} {
-            error "Unknown command: $cmd"
-         }
-      }
-      default {
-         error "Unknown command: $cmd"
-      }
+   if {$cmd ni {add remove append}} {
+      error "Unknown command: $cmd"
    }
    if {[regexp {^(.*?)(?:\((.*)\))$} $tkvar - var key]} {
       set tkvar [uplevel [list namespace which -variable $var]]($key)
@@ -386,11 +378,7 @@ proc tky_tie {cmd type tkvar - yvar args} {
          if {$cmd ne "remove" && $opts(-initialize)} {
             __tky_tie_write $tkvar $yvar - - -
          }
-         if {$cmd eq "append"} {
-            trace_append variable $tkvar write [list __tky_tie_write $tkvar $yvar]
-         } else {
-            trace $cmd variable $tkvar write [list __tky_tie_write $tkvar $yvar]
-         }
+         trace $cmd variable $tkvar write [list __tky_tie_write $tkvar $yvar]
       }
       sync {
          if {$cmd ne "remove" && $opts(-initialize)} {
@@ -400,23 +388,14 @@ proc tky_tie {cmd type tkvar - yvar args} {
                __tky_tie_read $tkvar $yvar - - -
             }
          }
-         if {$cmd eq "append"} {
-            trace_append variable $tkvar write [list __tky_tie_write $tkvar $yvar]
-            trace_append variable $tkvar read [list __tky_tie_read $tkvar $yvar]
-         } else {
-            trace $cmd variable $tkvar write [list __tky_tie_write $tkvar $yvar]
-            trace $cmd variable $tkvar read [list __tky_tie_read $tkvar $yvar]
-         }
+         trace $cmd variable $tkvar write [list __tky_tie_write $tkvar $yvar]
+         trace $cmd variable $tkvar read [list __tky_tie_read $tkvar $yvar]
       }
       read {
          if {$cmd ne "remove" && $opts(-initialize)} {
             __tky_tie_read $tkvar $yvar - - -
          }
-         if {$cmd eq "append"} {
-            trace_append variable $tkvar read [list __tky_tie_read $tkvar $yvar]
-         } else {
-            trace $cmd variable $tkvar read [list __tky_tie_read $tkvar $yvar]
-         }
+         trace $cmd variable $tkvar read [list __tky_tie_read $tkvar $yvar]
       }
       default {
          error "Unknown type $type"
