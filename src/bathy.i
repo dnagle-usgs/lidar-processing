@@ -83,22 +83,6 @@ func run_bath(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=) {
 
    depths = array(BATHPIX, 120, len);
 
-   /*
-      if ( _ytk && (len != 0) ) {
-      tkcmd,"destroy .bathy; toplevel .bathy; set progress 0;"
-      tkcmd,swrite(format="ProgressBar .bathy.pb \
-      -fg blue \
-      -troughcolor magenta \
-      -relief raised \
-      -maximum %d \
-      -variable progress \
-      -height 30 \
-      -width 400", len );
-      tkcmd,"pack .bathy.pb; update; center_win .bathy;"
-      }
-
-   */
-
    // set update interval for progress indicator
    udi = (_ytk ? 10 : 25);
 
@@ -113,13 +97,6 @@ func run_bath(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=) {
          pause, pse;
       }
    }
-   /*
-      if ( _ytk)
-      tkcmd, "destroy .bathy";
-      else
-      write,"\n"
-
-   */
    return depths;
 }
 
