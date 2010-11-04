@@ -1,7 +1,6 @@
 # vim: set ts=3 sts=3 sw=3 ai sr et:
 
 package require struct::set
-package require msgcat
 package require misc
 package require sf
 
@@ -185,60 +184,6 @@ if {![namespace exists ::pixelwf]} {
    }
 
 ################################################################################
-#                             User-Friendly Names                              #
-################################################################################
-
-   namespace eval ::pixelwf {
-      namespace import ::msgcat::mcset
-
-      # Universal
-      mcset en win Window
-      mcset en verbose Verbose
-      mcset en plot Plot
-
-      # selection
-      mcset en raster Raster
-      mcset en pulse Pulse
-      mcset en radius Radius
-      mcset en pro_var Variable
-      mcset en missionday Day
-
-      # fit_gauss
-      mcset en "fit_gauss functionality" "Gaussian Decomposition"
-
-      # ex_bath
-      mcset en "ex_bath functionality" "Bathy Functionality"
-
-      # ex_veg
-      mcset en "ex_veg functionality" "Topo Under Veg"
-      mcset en use_be_peak Peak
-      mcset en use_be_centroid Centroid
-      mcset en hard_surface "Hard Surface"
-
-      # show_wf
-      mcset en "show_wf functionality" "Original Waveform"
-
-      # geo_rast
-      mcset en "geo_rast functionality" "Georeferenced Raster"
-
-      # ndrast
-      mcset en "ndrast functionality" "Unreferenced Raster"
-      mcset en units Units
-
-      namespace forget mcset
-   }
-
-   namespace eval ::pixelwf {
-      namespace import ::msgcat::mc
-      namespace eval gui {
-         namespace import ::msgcat::mc
-      }
-      namespace eval util {
-         namespace import ::msgcat::mc
-      }
-   }
-
-################################################################################
 #                               Variable Traces                                #
 ################################################################################
 
@@ -366,7 +311,7 @@ namespace eval ::pixelwf::gui {
    proc helper_output_dest {cboAction entVariable ns} {
       set vals [list]
       foreach item $::pixelwf::constants::output_possibilities {
-         lappend vals [mc $item]
+         lappend vals $item
       }
 
       ::mixin::combobox $cboAction -state readonly -width 0 \
@@ -426,12 +371,12 @@ namespace eval ::pixelwf::gui {
 
       if {[winfo exists $w]} {destroy $w}
       toplevel $w
-      wm title $w [mc "Pixel Analysis"]
+      wm title $w "Pixel Analysis"
 
       set mf $w
 
       set f $mf.lfr_selection
-      ttk::labelframe $f -text [mc Selection]
+      ttk::labelframe $f -text Selection
       grid $f -sticky new
 
       set childsite $f.child
@@ -441,10 +386,19 @@ namespace eval ::pixelwf::gui {
       grid columnconfigure $f 0 -weight 1
       grid rowconfigure $f 0 -weight 1
 
+      set titles {
+         fit_gauss "Gaussian Decomposition"
+         ex_bath "Bathy Functionality"
+         ex_veg "Topo Under Veg"
+         show_wf "Original Waveform"
+         geo_rast "Georeferenced Raster"
+         ndrast "Unreferenced Raster"
+      }
+
       foreach type [list fit_gauss ex_bath ex_veg show_wf ndrast geo_rast] {
          set f $mf.lfr_$type
          ::mixin::labelframe::collapsible $f \
-            -text [mc "Enable %s" [mc "$type functionality"]] \
+            -text "Enable [dict get $titles $type]" \
             -variable ::pixelwf::vars::${type}::enabled
          grid $f -sticky new
 
@@ -470,36 +424,36 @@ namespace eval ::pixelwf::gui {
       set ns ::pixelwf::vars::selection
       ttk::frame $f
 
-      ttk::label $f.lblDay -text [mc missionday]:
+      ttk::label $f.lblDay -text Day:
       ::mixin::combobox $f.cboDay -textvariable ${ns}::missionday \
          -state readonly -width 0 \
          -listvariable ::pixelwf::gui::missionday_list \
          -postcommand ::pixelwf::gui::helper_update_days
 
-      ttk::label $f.lblRaster -text [mc raster]:
+      ttk::label $f.lblRaster -text Raster:
       helper_spinbox $f.spnRaster ${ns}::raster
 
-      ttk::label $f.lblPulse -text [mc pulse]:
+      ttk::label $f.lblPulse -text Pulse:
       helper_spinbox $f.spnPulse ${ns}::pulse
 
-      ttk::label $f.lblWindow -text [mc win]:
-      ttk::spinbox $f.spnWindow -text [mc win]: -textvariable ::win_no \
+      ttk::label $f.lblWindow -text Window:
+      ttk::spinbox $f.spnWindow -text Window: -textvariable ::win_no \
          -from 0 -to 63 -increment 1 -width 0
 
-      ttk::label $f.lblRadius -text [mc radius]:
+      ttk::label $f.lblRadius -text Radius:
       helper_spinbox $f.spnRadius ${ns}::radius
-      ::tooltip::tooltip $f.spnRadius [mc "Search radius in meters"]
+      ::tooltip::tooltip $f.spnRadius "Search radius in meters"
 
-      ttk::label $f.lblVar -text [mc pro_var]:
+      ttk::label $f.lblVar -text Variable:
       ::mixin::combobox $f.cboVar -textvariable ::pro_var -state readonly \
          -width 0 -listvariable ::varlist
 
-      ttk::checkbutton $f.chkSf -text [mc "SF Sync"] -variable ${ns}::sfsync
+      ttk::checkbutton $f.chkSf -text "SF Sync" -variable ${ns}::sfsync
       ttk::checkbutton $f.chkExt -text "Extended output" -variable ${ns}::extended
 
       ttk::button $f.btnGraph -text "Plot" -command [list ybkg pixelwf_plot]
 
-      ttk::button $f.btnMouse -text [mc "Interactive"] \
+      ttk::button $f.btnMouse -text "Interactive" \
          -command [list exp_send "pixelwf_enter_interactive;\r"]
 
       grid $f.lblDay $f.cboDay - -
@@ -525,23 +479,23 @@ namespace eval ::pixelwf::gui {
    proc fit_gauss f {
       set ns ::pixelwf::vars::fit_gauss
 
-      ttk::label $f.lblWindow -text [mc win]:
+      ttk::label $f.lblWindow -text Window:
       helper_spinbox $f.spnWindow ${ns}::win
 
-      ttk::label $f.lblAddPeak -text [mc add_peak]:
+      ttk::label $f.lblAddPeak -text add_peak:
       helper_spinbox $f.spnAddPeak ${ns}::add_peak
 
       # Limits needs to be reworked
       #checkbutton $f.chkLims -variable ${ns}::lims \
-      #   -text [mc "Constrain lims from"]
+      #   -text "Constrain lims from"
       #helper_spinbox $f.spnLimsX1 ${ns}::lims_x1
-      #label $f.lblLimsX2 -text [mc to]
+      #label $f.lblLimsX2 -text to
       #helper_spinbox $f.spnLimsX2 ${ns}::lims_x2
 
       helper_output_dest $f.cboAction $f.entVariable $ns
 
-      ttk::checkbutton $f.chkVerbose -text [mc verbose] -variable ${ns}::verbose
-      ttk::button $f.btnGraph -text [mc plot] -command [list ybkg pixelwf_fit_gauss]
+      ttk::checkbutton $f.chkVerbose -text Verbose -variable ${ns}::verbose
+      ttk::button $f.btnGraph -text Plot -command [list ybkg pixelwf_fit_gauss]
 
       grid $f.lblWindow $f.spnWindow $f.lblAddPeak $f.spnAddPeak
       #grid $f.chkLims $f.spnLimsX1 $f.lblLimsX2 $f.spnLimsX2
@@ -560,14 +514,14 @@ namespace eval ::pixelwf::gui {
    proc ex_bath f {
       set ns ::pixelwf::vars::ex_bath
 
-      ttk::label $f.lblWindow -text [mc win]:
+      ttk::label $f.lblWindow -text Window:
       helper_spinbox $f.spnWindow ${ns}::win
 
       helper_output_dest $f.cboAction $f.entVariable $ns
 
-      ttk::checkbutton $f.chkVerbose -text [mc verbose] -variable ${ns}::verbose
-      ttk::button $f.btnBathctl -text [mc Settings] -command bathctl::gui
-      ttk::button $f.btnGraph -text [mc plot] -command [list ybkg pixelwf_ex_bath]
+      ttk::checkbutton $f.chkVerbose -text Verbose -variable ${ns}::verbose
+      ttk::button $f.btnBathctl -text Settings -command bathctl::gui
+      ttk::button $f.btnGraph -text Plot -command [list ybkg pixelwf_ex_bath]
 
       ttk::frame $f.fraBtns
       lower $f.fraBtns
@@ -595,24 +549,24 @@ namespace eval ::pixelwf::gui {
    proc ex_veg f {
       set ns ::pixelwf::vars::ex_veg
 
-      ttk::label $f.lblWindow -text [mc win]:
+      ttk::label $f.lblWindow -text Window:
       helper_spinbox $f.spnWindow ${ns}::win
 
-      ttk::label $f.lblLast -text [mc last]:
+      ttk::label $f.lblLast -text last:
       helper_spinbox $f.spnLast ${ns}::last
 
       helper_output_dest $f.cboAction $f.entVariable $ns
 
-      ttk::checkbutton $f.chkBePeak -text [mc use_be_peak] \
+      ttk::checkbutton $f.chkBePeak -text Peak \
          -variable ${ns}::use_be_peak
-      ttk::checkbutton $f.chkBeCent -text [mc use_be_centroid] \
+      ttk::checkbutton $f.chkBeCent -text Centroid \
          -variable ${ns}::use_be_centroid
-      ttk::checkbutton $f.chkHardSf -text [mc hard_surface] \
+      ttk::checkbutton $f.chkHardSf -text "Hard Surface" \
          -variable ${ns}::hard_surface
 
-      ttk::button $f.btnGraph -text [mc plot] -command [list ybkg pixelwf_ex_veg]
+      ttk::button $f.btnGraph -text Plot -command [list ybkg pixelwf_ex_veg]
 
-      ttk::checkbutton $f.chkVerbose -text [mc verbose] -variable ${ns}::verbose
+      ttk::checkbutton $f.chkVerbose -text Verbose -variable ${ns}::verbose
 
       ttk::frame $f.fraChks
       lower $f.fraChks
@@ -637,14 +591,14 @@ namespace eval ::pixelwf::gui {
    proc show_wf f {
       set ns ::pixelwf::vars::show_wf
 
-      ttk::label $f.lblWindow -text [mc win]:
+      ttk::label $f.lblWindow -text Window:
       helper_spinbox $f.spnWindow ${ns}::win
 
-      ttk::checkbutton $f.chkC1 -text [mc c1] -variable ${ns}::c1
-      ttk::checkbutton $f.chkC2 -text [mc c2] -variable ${ns}::c2
-      ttk::checkbutton $f.chkC3 -text [mc c3] -variable ${ns}::c3
+      ttk::checkbutton $f.chkC1 -text c1 -variable ${ns}::c1
+      ttk::checkbutton $f.chkC2 -text c2 -variable ${ns}::c2
+      ttk::checkbutton $f.chkC3 -text c3 -variable ${ns}::c3
 
-      ttk::button $f.btnGraph -text [mc plot] -command [list ybkg pixelwf_show_wf]
+      ttk::button $f.btnGraph -text Plot -command [list ybkg pixelwf_show_wf]
 
       ttk::frame $f.fraC
       lower $f.fraC
@@ -664,15 +618,15 @@ namespace eval ::pixelwf::gui {
    proc geo_rast f {
       set ns ::pixelwf::vars::geo_rast
 
-      ttk::label $f.lblWindow -text [mc win]:
+      ttk::label $f.lblWindow -text Window:
       helper_spinbox $f.spnWindow ${ns}::win
 
-      ttk::label $f.lblEOff -text [mc eoffset]:
+      ttk::label $f.lblEOff -text eoffset:
       helper_spinbox $f.spnEOff ${ns}::eoffset
 
-      ttk::button $f.btnGraph -text [mc plot] -command [list ybkg pixelwf_geo_rast]
+      ttk::button $f.btnGraph -text Plot -command [list ybkg pixelwf_geo_rast]
 
-      ttk::checkbutton $f.chkVerbose -text [mc verbose] -variable ${ns}::verbose
+      ttk::checkbutton $f.chkVerbose -text Verbose -variable ${ns}::verbose
 
       grid $f.lblWindow $f.spnWindow $f.lblEOff $f.spnEOff
       grid $f.chkVerbose - $f.btnGraph -
@@ -688,15 +642,15 @@ namespace eval ::pixelwf::gui {
    proc ndrast f {
       set ns ::pixelwf::vars::ndrast
 
-      ttk::label $f.lblWindow -text [mc win]:
+      ttk::label $f.lblWindow -text Window:
       helper_spinbox $f.spnWindow ${ns}::win
 
-      ttk::label $f.lblUnits -text [mc units]:
+      ttk::label $f.lblUnits -text Units:
       helper_combobox $f.cboUnits ${ns}::units
 
       helper_output_dest $f.cboAction $f.entVariable $ns
 
-      ttk::button $f.btnGraph -text [mc plot] -command [list ybkg pixelwf_ndrast]
+      ttk::button $f.btnGraph -text Plot -command [list ybkg pixelwf_ndrast]
 
       grid $f.lblWindow $f.spnWindow $f.lblUnits $f.cboUnits
       grid $f.cboAction - $f.entVariable -
