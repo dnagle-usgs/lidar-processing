@@ -320,15 +320,6 @@ proc K* {x args} {
    }
 }
 
-# Helpers so that trace_* works
-proc trace_add args {uplevel [list trace add] $args}
-proc trace_remove args {uplevel [list trace remove] $args}
-proc trace_info args {uplevel [list trace info] $args}
-
-proc trace_append {type name ops prefix} {
-   trace append $type $name $ops $prefix
-}
-
 namespace eval ::__validation_backups {}
 
 proc validation_trace {cmd varname valcmd args} {
