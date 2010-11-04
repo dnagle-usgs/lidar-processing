@@ -5,11 +5,7 @@ package require imglib
 package require snit
 
 namespace eval ::misc {
-   namespace export appendif
-   namespace export idle
-   namespace export safeafter
-   namespace export search
-   namespace export soe
+   namespace export appendif idle safeafter search soe
 }
 
 proc ::misc::appendif {var args} {

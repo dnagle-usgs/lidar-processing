@@ -90,10 +90,7 @@ proc tk_getString {w var title text {initial {}}} {
 ##############################################################################
 # imported from ADAPT: GUI/lib/utils.tcl
 
-namespace eval GUI::utils {
-   proc getfile { args } { }
-}
-
+namespace eval GUI::utils {}
 proc GUI::utils::getfile { args } {
 # getfile: pops up one of tk_chooseDirectory, tk_getOpenFile, or tk_getSaveFile
 # usage: Much like the above three. Pass the dashed options you want.
