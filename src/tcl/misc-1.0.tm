@@ -8,6 +8,34 @@ namespace eval ::misc {
    namespace export appendif idle safeafter search soe
 }
 
+# ::misc::extend
+# Extends an ensemble-style command, even if it doesn't originally use
+# namespace ensemble. Scroll through this file for examples.
+# Based on code at http://wiki.tcl.tk/15566
+proc ::misc::extend {cmd body} {
+   if {![uplevel 1 [list namespace exists $cmd]]} {
+      set wrapper [string map [list %C $cmd] {
+         namespace eval %C {}
+         rename %C %C::%C
+         namespace eval %C {
+            proc _unknown {junk subc args} {
+               return [list %C::%C $subc]
+            }
+            namespace ensemble create -unknown %C::_unknown
+         }
+      }]
+   }
+
+   append wrapper [string map [list %C $cmd %B $body] {
+      namespace eval %C {
+         %B
+         namespace export -clear *
+      }
+   }]
+
+   uplevel 1 $wrapper
+}
+
 proc ::misc::appendif {var args} {
    if {[llength $args] == 1} {
       set args [uplevel 1 list [string map {\n \\\n} [lindex $args 0]]]
