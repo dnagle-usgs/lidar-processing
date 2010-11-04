@@ -311,15 +311,6 @@ if {![namespace exists ::pixelwf]} {
          -invalidcmd "set $x1 %V"
    }
 
-   # Add hook for toggling panel visibility
-   namespace eval ::pixelwf::vars {
-      foreach ns [list fit_gauss ex_bath ex_veg show_wf geo_rast ndrast] {
-         validation_trace append ${ns}::enabled \
-            {::pixelwf::gui::_trace_toggle_visibility %v}
-      }
-      unset ns
-   }
-
    # Keep Yorick updated for all variables in the specified namespaces
    namespace eval ::pixelwf::vars {
       foreach ns [list selection fit_gauss ex_bath ex_veg show_wf geo_rast ndrast] {
@@ -372,37 +363,6 @@ namespace eval ::pixelwf::util {
 }
 
 namespace eval ::pixelwf::gui {
-   proc trace_toggle_visibility {w v} {
-      variable widgets_tied_to_enabled
-      set name [namespace tail [namespace qualifiers \
-         [uplevel namespace which -variable $v]]]
-      dict lappend widgets_tied_to_enabled $name $w
-      ::misc::idle [list ::pixelwf::gui::_trace_toggle_visibility $v]
-   }
-
-   proc _trace_toggle_visibility v {
-      variable widgets_tied_to_enabled
-      set name [namespace tail [namespace qualifiers \
-         [uplevel namespace which -variable $v]]]
-      # Try to roughly atomically get and clear the list... then re-add all
-      # widgets that still exist.
-      set widgets [K [dict get $widgets_tied_to_enabled $name] \
-         [dict set widgets_tied_to_enabled $name [list]]]
-      foreach widget $widgets {
-         if {[winfo exists $widget]} {
-            dict lappend widgets_tied_to_enabled $name $widget
-            if {[uplevel set $v]} {
-               grid $widget
-               [winfo parent $widget] configure -height 0
-            } else {
-               grid remove $widget
-               [winfo parent $widget] configure -height 24
-            }
-         }
-      }
-      return 1
-   }
-
    proc helper_output_dest {cboAction entVariable ns} {
       set vals [list]
       foreach item $::pixelwf::constants::output_possibilities {
@@ -480,25 +440,13 @@ namespace eval ::pixelwf::gui {
       grid rowconfigure $f 0 -weight 1
 
       foreach type [list fit_gauss ex_bath ex_veg show_wf ndrast geo_rast] {
-         # Checkbox for frame
-         set chk $mf.chk_$type
-         checkbutton $chk -text [mc "Enable %s" [mc "$type functionality"]] \
-            -variable ::pixelwf::vars::${type}::enabled
-
-         # Parent frame
          set f $mf.lfr_$type
-         labelframe $f -labelwidget $chk
+         ::mixin::labelframe::collapsible $f \
+            -text [mc "Enable %s" [mc "$type functionality"]] \
+            -variable ::pixelwf::vars::${type}::enabled
          grid $f -sticky new
 
-         # Child frame
-         set childsite $f.child
-         $type $childsite
-         grid $childsite -sticky news
-
-         grid columnconfigure $f 0 -weight 1
-         grid rowconfigure $f 0 -weight 1
-
-         trace_toggle_visibility $childsite ::pixelwf::vars::${type}::enabled
+         $type [$f interior]
       }
       grid columnconfigure $mf 0 -weight 1
 
@@ -574,7 +522,6 @@ namespace eval ::pixelwf::gui {
 
    proc fit_gauss f {
       set ns ::pixelwf::vars::fit_gauss
-      frame $f
 
       label $f.lblWindow -text [mc win]:
       helper_spinbox $f.spnWindow ${ns}::win
@@ -610,7 +557,6 @@ namespace eval ::pixelwf::gui {
 
    proc ex_bath f {
       set ns ::pixelwf::vars::ex_bath
-      frame $f
 
       label $f.lblWindow -text [mc win]:
       helper_spinbox $f.spnWindow ${ns}::win
@@ -642,7 +588,6 @@ namespace eval ::pixelwf::gui {
 
    proc ex_veg f {
       set ns ::pixelwf::vars::ex_veg
-      frame $f
 
       label $f.lblWindow -text [mc win]:
       helper_spinbox $f.spnWindow ${ns}::win
@@ -685,7 +630,6 @@ namespace eval ::pixelwf::gui {
 
    proc show_wf f {
       set ns ::pixelwf::vars::show_wf
-      frame $f
 
       label $f.lblWindow -text [mc win]:
       helper_spinbox $f.spnWindow ${ns}::win
@@ -713,7 +657,6 @@ namespace eval ::pixelwf::gui {
 
    proc geo_rast f {
       set ns ::pixelwf::vars::geo_rast
-      frame $f
 
       label $f.lblWindow -text [mc win]:
       helper_spinbox $f.spnWindow ${ns}::win
@@ -738,7 +681,6 @@ namespace eval ::pixelwf::gui {
 
    proc ndrast f {
       set ns ::pixelwf::vars::ndrast
-      frame $f
 
       label $f.lblWindow -text [mc win]:
       helper_spinbox $f.spnWindow ${ns}::win
