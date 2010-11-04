@@ -97,10 +97,9 @@ proc ::misc::_safeafter {var delay cmd} {
    set $var [after $delay $cmd]
 }
 
-snit::type ::misc::search {
-   pragma -hastypeinfo false
-   pragma -hastypedestroy false
-   pragma -hasinstances false
+namespace eval ::misc::search {
+   namespace ensemble create
+   namespace export *
 
    # search binary <list> <value> <options>
    #     Searches <list> for <value>. The <list> must already be sorted and
@@ -113,7 +112,7 @@ snit::type ::misc::search {
    #              string if -inline is enabled).
    #        -inline <boolean>  If enabled, returns the matched value rather
    #              than the index.
-   typemethod binary {list value args} {
+   proc binary {list value args} {
       # Set initial bounds to cover the entire list.
       set b0 0
       set b1 [expr {[llength $list] - 1}]
