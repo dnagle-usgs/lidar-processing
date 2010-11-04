@@ -47,28 +47,40 @@ proc ::misc::appendif {var args} {
    }
 }
 
-snit::type ::misc::soe {
-   pragma -hastypeinfo false
-   pragma -hastypedestroy false
-   pragma -hasinstances false
+namespace eval ::misc::soe {
+   namespace ensemble create
+   namespace export *
 
-   typemethod {from list} {Y {M -} {D -} {h 0} {m 0} {s 0}} {
-      if {$M eq "-"} {
-         return [$type from list {*}$Y]
+   namespace eval from {
+      namespace ensemble create
+      namespace export *
+
+      # ::misc::soe from list Y M D h m s
+      proc list {Y {M -} {D -} {h 0} {m 0} {s 0}} {
+         if {$M eq "-"} {
+            return [list {*}$Y]
+         }
+         set fmt "%04d%02d%02d %02d%02d%02d"
+         return [clock scan [format $fmt $Y $M $D $h $m $s] -gmt 1]
       }
-      set fmt "%04d%02d%02d %02d%02d%02d"
-      return [clock scan [format $fmt $Y $M $D $h $m $s] -gmt 1]
    }
 
-   typemethod {to list} soe {
-      set str [clock format $soe -format "%Y %m %d %H %M %S" -gmt 1]
-      set fmt "%04d %02d %02d %02d %02d %02d"
-      return [scan $str $fmt]
-   }
+   namespace eval to {
+      namespace ensemble create
+      namespace export *
 
-   typemethod {to sod} soe {
-      set day [clock scan [clock format $soe -format "%Y-%m-%d 00:00:00" -gmt 1] -gmt 1]
-      return [expr {$soe - $day}]
+      # ::misc::soe to list soe
+      proc list soe {
+         set str [clock format $soe -format "%Y %m %d %H %M %S" -gmt 1]
+         set fmt "%04d %02d %02d %02d %02d %02d"
+         return [scan $str $fmt]
+      }
+
+      # ::misc::soe to sod
+      proc sod soe {
+         set day [clock scan [clock format $soe -format "%Y-%m-%d 00:00:00" -gmt 1] -gmt 1]
+         return [expr {$soe - $day}]
+      }
    }
 }
 
