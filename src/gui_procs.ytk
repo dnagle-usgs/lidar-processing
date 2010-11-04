@@ -36,15 +36,6 @@ proc west {type w args} {
 ##############################################################################
 # copied from ADAPT: lib/misc.tcl
 
-proc center_win { win } {
-# Center a window.
-   set lx [ expr [winfo screenwidth  $win]/2 - [winfo width  $win]/2 ]
-   set ly [ expr [winfo screenheight $win]/2 - [winfo height $win]/2 ]
-   wm geometry $win "+$lx+$ly"
-   wm deiconify $win
-   update
-}
-
 proc tk_getString {w var title text {initial {}}} {
 # adapted from http://wiki.tcl.tk/9172
    variable ::tk::Priv

@@ -409,3 +409,4 @@ proc constrain {var between min and max} {
    return
 }
 
+proc center_win win {::tk::PlaceWindow $win}
