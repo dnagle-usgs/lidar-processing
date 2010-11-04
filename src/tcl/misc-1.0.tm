@@ -291,36 +291,42 @@ proc K* {x args} {
    set x
 }
 
+::misc::extend trace {
+   ##
+   # traceappend is intended to be equivalent to 'trace add', except that it
+   # arranges that the new trace will be appended to the list of traces instead
+   # of prepended. Traces added with 'trace add' are executed in reverse of the
+   # order they were added; so the last trace added gets executed first. If
+   # 'trace append' is used, it puts the give trace to be executed last. Thus a
+   # series of traces added with 'trace append' will be executed in the order
+   # they were added.
+   ##
+   proc append {type name ops prefix} {
+      # Get a list of the current traces
+      set traces [trace info $type $name]
+
+      # Remove all the existing traces
+      foreach trace $traces {
+         trace remove $type $name [lindex $trace 0] [lindex $trace 1]
+      }
+
+      # Add the trace we want to append
+      trace add $type $name $ops $prefix
+
+      # Re-add the original traces
+      foreach trace [lreverse $traces] {
+         trace add $type $name [lindex $trace 0] [lindex $trace 1]
+      }
+   }
+}
+
 # Helpers so that trace_* works
 proc trace_add args {uplevel [list trace add] $args}
 proc trace_remove args {uplevel [list trace remove] $args}
 proc trace_info args {uplevel [list trace info] $args}
 
 proc trace_append {type name ops prefix} {
-##
-# trace_append is intended to be equivalent to 'trace add', except that it
-# arranges that the new trace will be appended to the list of traces instead of
-# prepended. Traces added with 'trace add' are executed in reverse of the
-# order they were added; so the last trace added gets executed first. If
-# 'trace_append' is used, it puts the give trace to be executed last. Thus a
-# series of traces added with 'trace_append' will be executed in the order they
-# were added.
-##
-   # Get a list of the current traces
-   set traces [trace info $type $name]
-
-   # Remove all the existing traces
-   foreach trace $traces {
-      trace remove $type $name [lindex $trace 0] [lindex $trace 1]
-   }
-
-   # Add the trace we want to append
-   trace add $type $name $ops $prefix
-
-   # Re-add the original traces
-   foreach trace [struct::list reverse $traces] {
-      trace add $type $name [lindex $trace 0] [lindex $trace 1]
-   }
+   trace append $type $name $ops $prefix
 }
 
 namespace eval ::__validation_backups {}
