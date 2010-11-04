@@ -126,21 +126,16 @@ proc GUI::utils::getfile { args } {
       set initial [file dirname $initial]
    }
 
+   set mapping {
+      dir {cmd tk_chooseDirectory opts {-parent -title}}
+      open {cmd tk_getOpenFile opts {-defaultextension -filetypes -parent -title}}
+      save {cmd tk_getSaveFile opts {-defaultextension -filetypes -parent -title}}
+   }
+
    set type [string tolower [dict get $args -type]]
-
-   set command [switch -- $type {
-      dir  {K* tk_chooseDirectory}
-      open {K* tk_getOpenFile}
-      save {K* tk_getSaveFile}
-   }]
-
+   set command [dict get $mapping $type cmd]
    set opts [dict filter $args script {key val} {
-      struct::set contains \
-         [switch -- $type {
-            dir {K* [list -parent -title]}
-            open -
-            save {K* [list -defaultextension -filetypes -parent -title]}
-         }] $key
+      struct::set contains [dict get $mapping $type opts] $key
    }]
 
    dict set opts -initialdir $initial
