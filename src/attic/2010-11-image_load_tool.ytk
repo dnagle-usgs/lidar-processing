@@ -1,3 +1,7 @@
+################################################################################
+# This file was moved to the attic on 2010-11-05. The functionality it         #
+# provides is superceded by the Plotting Tool.                                 #
+################################################################################
 
 exp_send "#include \"jpeg_support.i\"\n"
 package require misc
