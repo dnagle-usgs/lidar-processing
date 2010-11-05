@@ -26,9 +26,6 @@ if {![namespace exists ::pixelwf]} {
             variable enabled 0
             variable win 10
             variable add_peak 0
-            variable lims 0
-            variable lims_x1 1
-            variable lims_x2 2
             variable verbose 0
             variable dest_action 0
             variable dest_variable ""
@@ -114,9 +111,6 @@ if {![namespace exists ::pixelwf]} {
                geo_rast win
                ndrast win
             }
-            {0 100} {
-               fit_gauss {lims_x1 lims_x2}
-            }
             {-1000 1000 0.01} {geo_rast eoffset}
             {0.01 100 0.5} {selection radius}
          }
@@ -130,7 +124,7 @@ if {![namespace exists ::pixelwf]} {
          variable valid_values {
             {0 1} {
                selection {extended sfsync}
-               fit_gauss {enabled lims verbose}
+               fit_gauss {enabled verbose}
                ex_bath {enabled verbose}
                ex_veg {enabled verbose use_be_peak use_be_centroid hard_surface}
                show_wf {enabled c1 c2 c3}
@@ -154,7 +148,7 @@ if {![namespace exists ::pixelwf]} {
          variable valid_classes {
             integer {
                selection {raster pulse}
-               fit_gauss {win add_peak lims_x1 lims_x2}
+               fit_gauss {win add_peak}
                ex_bath win
                ex_veg {last win}
                show_wf win
@@ -244,16 +238,6 @@ if {![namespace exists ::pixelwf]} {
          unset ns vars
       }
       unset range data
-   }
-
-   # Custom constraint: lims_x1 <= lims_x2
-   namespace eval ::pixelwf::vars::fit_gauss {
-      set x1 [namespace which -variable lims_x1]
-      set x2 [namespace which -variable lims_x2]
-      validation_trace append $x1 "expr {%V eq \"\" || %V < \$$x2}" \
-         -invalidcmd "set $x2 %V"
-      validation_trace append $x2 "expr {%V eq \"\" || %V > \$$x1}" \
-         -invalidcmd "set $x1 %V"
    }
 
    # Keep Yorick updated for all variables in the specified namespaces
@@ -484,20 +468,12 @@ namespace eval ::pixelwf::gui {
       ttk::label $f.lblAddPeak -text add_peak:
       helper_spinbox $f.spnAddPeak ${ns}::add_peak
 
-      # Limits needs to be reworked
-      #checkbutton $f.chkLims -variable ${ns}::lims \
-      #   -text "Constrain lims from"
-      #helper_spinbox $f.spnLimsX1 ${ns}::lims_x1
-      #label $f.lblLimsX2 -text to
-      #helper_spinbox $f.spnLimsX2 ${ns}::lims_x2
-
       helper_output_dest $f.cboAction $f.entVariable $ns
 
       ttk::checkbutton $f.chkVerbose -text Verbose -variable ${ns}::verbose
       ttk::button $f.btnGraph -text Plot -command [list ybkg pixelwf_fit_gauss]
 
       grid $f.lblWindow $f.spnWindow $f.lblAddPeak $f.spnAddPeak
-      #grid $f.chkLims $f.spnLimsX1 $f.lblLimsX2 $f.spnLimsX2
       grid $f.cboAction - $f.entVariable -
       grid $f.chkVerbose $f.btnGraph - -
 

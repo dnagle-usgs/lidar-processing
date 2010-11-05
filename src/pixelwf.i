@@ -21,9 +21,6 @@ if(is_void(pixelwfvars)) {
          enabled=1,  //bool
          win=10,     //int
          add_peak=0, //int; num peaks to add
-         lims=0,
-         lims_x1=1,
-         lims_x2=2,
          verbose=0,  //bool
          dest_action=0,
          dest_variable=""
@@ -108,13 +105,8 @@ func pixelwf_fit_gauss(void) {
    vars = pixelwfvars.fit_gauss;
    pixelwf_load_data;
 
-   if(vars.lims)
-      lims = [vars.lims_x1, vars.lims_x2];
-   else
-      lims = [];
-
    result = fit_gauss(raster, pulse, graph=1, add_peak=vars.add_peak,
-      lims=lims, verbose=vars.verbose, win=vars.win);
+      verbose=vars.verbose, win=vars.win);
    pixelwf_handle_result, vars, &result;
 }
 
