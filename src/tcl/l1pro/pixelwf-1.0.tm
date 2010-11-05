@@ -6,15 +6,16 @@ package require struct::set
 package require misc
 package require sf
 
-if {![namespace exists ::pixelwf]} {
-   # Initialization and Traces only happen first time ::pixelwf is created.
+if {![namespace exists ::l1pro::pixelwf]} {
+   # Initialization and Traces only happen first time ::l1pro::pixelwf is
+   # created.
 
 ################################################################################
 #                                Initialization                                #
 ################################################################################
    ybkg require \"pixelwf.i\"
 
-   namespace eval ::pixelwf {
+   namespace eval ::l1pro::pixelwf {
       namespace eval vars {
          namespace eval selection {
             variable raster 1
@@ -184,7 +185,7 @@ if {![namespace exists ::pixelwf]} {
 ################################################################################
 
    # Enforce string classes
-   namespace eval ::pixelwf {
+   namespace eval ::l1pro::pixelwf {
       dict for {class data} $constants::valid_classes {
          dict for {ns vars} $data {
             foreach var $vars {
@@ -199,7 +200,7 @@ if {![namespace exists ::pixelwf]} {
    }
 
    # Enforce valid Yorick variable names
-   namespace eval ::pixelwf {
+   namespace eval ::l1pro::pixelwf {
       dict for {ns vars} $constants::valid_variables {
          foreach var $vars {
             validation_trace append vars::${ns}::$var \
@@ -211,7 +212,7 @@ if {![namespace exists ::pixelwf]} {
    }
 
    # Enforce constrained values
-   namespace eval ::pixelwf {
+   namespace eval ::l1pro::pixelwf {
       dict for {values data} $constants::valid_values {
          dict for {ns vars} $data {
             foreach var $vars {
@@ -226,7 +227,7 @@ if {![namespace exists ::pixelwf]} {
    }
 
    # Enforce constrained ranges
-   namespace eval ::pixelwf {
+   namespace eval ::l1pro::pixelwf {
       dict for {range data} $constants::valid_ranges {
          lassign $range range_min range_max
          dict for {ns vars} $data {
@@ -243,7 +244,7 @@ if {![namespace exists ::pixelwf]} {
    }
 
    # Keep Yorick updated for all variables in the specified namespaces
-   namespace eval ::pixelwf::vars {
+   namespace eval ::l1pro::pixelwf::vars {
       foreach ns [list selection fit_gauss ex_bath ex_veg show_wf geo_rast ndrast] {
          foreach var [info vars ${ns}::*] {
             set var [namespace tail $var]
@@ -257,21 +258,21 @@ if {![namespace exists ::pixelwf]} {
    tky_tie append broadcast ::pro_var to pixelwfvars.selection.pro_var -initialize 1
    tky_tie append broadcast ::win_no to pixelwfvars.selection.win -initialize 1
 
-}; # (end of: if {![namespace exists ::pixelwf]})
+}; # (end of: if {![namespace exists ::l1pro::pixelwf]})
 
 ################################################################################
 #                               Core Procedures                                #
 ################################################################################
-namespace eval ::pixelwf::util {
+namespace eval ::l1pro::pixelwf::util {
    proc helper_valid {type var} {
       # Not intended to be called directly... called by valid_*
       set var [uplevel 2 namespace which -variable $var]
-      if {![string match ::pixelwf::vars::?*::?* $var]} {
+      if {![string match ::l1pro::pixelwf::vars::?*::?* $var]} {
          return
       }
       set varname [namespace tail $var]
       set nsname [namespace tail [namespace qualifiers $var]]
-      dict for {valid data} [set ::pixelwf::constants::valid_$type] {
+      dict for {valid data} [set ::l1pro::pixelwf::constants::valid_$type] {
          if {[dict exists $data $nsname]} {
             set vars [dict get $data $nsname]
             if {[lsearch $vars $varname] >= 0} {
@@ -287,16 +288,16 @@ namespace eval ::pixelwf::util {
    proc valid_class var {helper_valid classes $var}
 
    proc restore_defaults {} {
-      dict for {vname value} $::pixelwf::vars::defaults {
+      dict for {vname value} $::l1pro::pixelwf::vars::defaults {
          set $vname $value
       }
    }
 }
 
-namespace eval ::pixelwf::gui {
+namespace eval ::l1pro::pixelwf::gui {
    proc helper_output_dest {cboAction entVariable ns} {
       set vals [list]
-      foreach item $::pixelwf::constants::output_possibilities {
+      foreach item $::l1pro::pixelwf::constants::output_possibilities {
          lappend vals $item
       }
 
@@ -309,7 +310,7 @@ namespace eval ::pixelwf::gui {
    }
 
    proc helper_spinbox {w v} {
-      set range [::pixelwf::util::valid_range $v]
+      set range [::l1pro::pixelwf::util::valid_range $v]
       lappend range 1
       lassign $range from to increment
       ttk::spinbox $w -textvariable $v -width 0 \
@@ -318,7 +319,7 @@ namespace eval ::pixelwf::gui {
 
    proc helper_combobox {w v} {
       ::mixin::combobox $w -state readonly -textvariable $v -width 0 \
-         -values [::pixelwf::util::valid_values $v]
+         -values [::l1pro::pixelwf::util::valid_values $v]
    }
 
    proc default_sticky args {
@@ -337,7 +338,7 @@ namespace eval ::pixelwf::gui {
    }
 
    proc set_default_enabled {} {
-      set ns ::pixelwf::vars
+      set ns ::l1pro::pixelwf::vars
       set ${ns}::fit_gauss::enabled 0
       set ${ns}::show_wf::enabled 0
       set ${ns}::geo_rast::enabled 1
@@ -384,7 +385,7 @@ namespace eval ::pixelwf::gui {
          set f $mf.lfr_$type
          ::mixin::labelframe::collapsible $f \
             -text "Enable [dict get $titles $type]" \
-            -variable ::pixelwf::vars::${type}::enabled
+            -variable ::l1pro::pixelwf::vars::${type}::enabled
          grid $f -sticky new
 
          $type [$f interior]
@@ -396,24 +397,24 @@ namespace eval ::pixelwf::gui {
    }
 
    proc helper_update_days {} {
-      set ::pixelwf::gui::missionday_list [missionday_list]
+      set ::l1pro::pixelwf::gui::missionday_list [missionday_list]
    }
 
    proc makemenu mb {
       menu $mb
       $mb add command -label "Reset all options to defaults" \
-         -command ::pixelwf::util::restore_defaults
+         -command ::l1pro::pixelwf::util::restore_defaults
    }
 
    proc selection f {
-      set ns ::pixelwf::vars::selection
+      set ns ::l1pro::pixelwf::vars::selection
       ttk::frame $f
 
       ttk::label $f.lblDay -text Day:
       ::mixin::combobox $f.cboDay -textvariable ${ns}::missionday \
          -state readonly -width 0 \
-         -listvariable ::pixelwf::gui::missionday_list \
-         -postcommand ::pixelwf::gui::helper_update_days
+         -listvariable ::l1pro::pixelwf::gui::missionday_list \
+         -postcommand ::l1pro::pixelwf::gui::helper_update_days
 
       ttk::label $f.lblRaster -text Raster:
       helper_spinbox $f.spnRaster ${ns}::raster
@@ -462,7 +463,7 @@ namespace eval ::pixelwf::gui {
    }
 
    proc fit_gauss f {
-      set ns ::pixelwf::vars::fit_gauss
+      set ns ::l1pro::pixelwf::vars::fit_gauss
 
       ttk::label $f.lblWindow -text Window:
       helper_spinbox $f.spnWindow ${ns}::win
@@ -489,7 +490,7 @@ namespace eval ::pixelwf::gui {
    }
 
    proc ex_bath f {
-      set ns ::pixelwf::vars::ex_bath
+      set ns ::l1pro::pixelwf::vars::ex_bath
 
       ttk::label $f.lblWindow -text Window:
       helper_spinbox $f.spnWindow ${ns}::win
@@ -524,7 +525,7 @@ namespace eval ::pixelwf::gui {
    }
 
    proc ex_veg f {
-      set ns ::pixelwf::vars::ex_veg
+      set ns ::l1pro::pixelwf::vars::ex_veg
 
       ttk::label $f.lblWindow -text Window:
       helper_spinbox $f.spnWindow ${ns}::win
@@ -566,7 +567,7 @@ namespace eval ::pixelwf::gui {
    }
 
    proc show_wf f {
-      set ns ::pixelwf::vars::show_wf
+      set ns ::l1pro::pixelwf::vars::show_wf
 
       ttk::label $f.lblWindow -text Window:
       helper_spinbox $f.spnWindow ${ns}::win
@@ -593,7 +594,7 @@ namespace eval ::pixelwf::gui {
    }
 
    proc geo_rast f {
-      set ns ::pixelwf::vars::geo_rast
+      set ns ::l1pro::pixelwf::vars::geo_rast
 
       ttk::label $f.lblWindow -text Window:
       helper_spinbox $f.spnWindow ${ns}::win
@@ -617,7 +618,7 @@ namespace eval ::pixelwf::gui {
    }
 
    proc ndrast f {
-      set ns ::pixelwf::vars::ndrast
+      set ns ::l1pro::pixelwf::vars::ndrast
 
       ttk::label $f.lblWindow -text Window:
       helper_spinbox $f.spnWindow ${ns}::win
@@ -643,19 +644,19 @@ namespace eval ::pixelwf::gui {
    }
 }
 
-namespace eval ::pixelwf::mediator {
+namespace eval ::l1pro::pixelwf::mediator {
    proc jump_soe soe {
-      if {$::pixelwf::vars::selection::sfsync} {
+      if {$::l1pro::pixelwf::vars::selection::sfsync} {
          ybkg pixelwf_set_soe $soe
       }
    }
 
    proc broadcast_soe soe {
-      if {$::pixelwf::vars::selection::sfsync} {
+      if {$::l1pro::pixelwf::vars::selection::sfsync} {
          ::sf::mediator broadcast soe $soe \
-            -exclude [list ::pixelwf::mediator::jump_soe]
+            -exclude [list ::l1pro::pixelwf::mediator::jump_soe]
       }
    }
 }
 
-::sf::mediator register [list ::pixelwf::mediator::jump_soe]
+::sf::mediator register [list ::l1pro::pixelwf::mediator::jump_soe]

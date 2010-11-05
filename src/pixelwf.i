@@ -75,7 +75,7 @@ func pixelwf_plot(void) {
          funcdef(swrite(format="pixelwf_%s", fns(i)));
    }
 
-   tkcmd, swrite(format="::pixelwf::mediator::broadcast_soe %d",
+   tkcmd, swrite(format="::l1pro::pixelwf::mediator::broadcast_soe %d",
       edb.seconds(pixelwfvars.selection.raster));
 }
 
@@ -287,9 +287,9 @@ func pixelwf_set_point(point) {
    missiondata_soe_load, point.soe;
    h_set, pixelwfvars.working, loaded_day=missionday_current(), loaded_when=getsod();
    rp = parse_rn(point.rn);
-   tksetval, "::pixelwf::vars::selection::raster", rp(1);
-   tksetval, "::pixelwf::vars::selection::pulse", rp(2);
-   tksetval, "::pixelwf::vars::selection::missionday", missionday_current();
+   tksetval, "::l1pro::pixelwf::vars::selection::raster", rp(1);
+   tksetval, "::l1pro::pixelwf::vars::selection::pulse", rp(2);
+   tksetval, "::l1pro::pixelwf::vars::selection::missionday", missionday_current();
    rn = rp(1);
 }
 
@@ -329,9 +329,9 @@ func pixelwf_set_soe(soe) {
             if(edb.seconds(vars.raster) == edb.seconds(rn))
                return 2;
          }
-         tksetval, "::pixelwf::vars::selection::raster", rn;
-         tksetval, "::pixelwf::vars::selection::pulse", 1;
-         tksetval, "::pixelwf::vars::selection::missionday", missionday_current();
+         tksetval, "::l1pro::pixelwf::vars::selection::raster", rn;
+         tksetval, "::l1pro::pixelwf::vars::selection::pulse", 1;
+         tksetval, "::l1pro::pixelwf::vars::selection::missionday", missionday_current();
       }
    }
    return found;
