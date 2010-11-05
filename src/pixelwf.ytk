@@ -336,9 +336,8 @@ namespace eval ::pixelwf::gui {
    }
 
    proc default_sticky args {
-      set stickiness [dict create Button es Checkbutton w Entry ew Combobox ew \
-         Label e Labelframe ew Frame ew Spinbox ew TButton es TCheckbutton w \
-         TCombobox ew TEntry ew TLabel e TLabelframe ew TFrames ew TSpinbox ew]
+      set stickiness [dict create TButton es TCheckbutton w TCombobox ew \
+         TEntry ew TLabel e TLabelframe ew TFrames ew TSpinbox ew]
       foreach slave $args {
          set class [winfo class $slave]
          if {[dict exists $stickiness $class]} {
