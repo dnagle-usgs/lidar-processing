@@ -77,7 +77,7 @@ func hash_table(obj, name, prefix1, prefix2) {
     return;
   for(k = 1; k <= count; k++) {
     key = key_list(k);
-    use, _recurse, h_get(obj,key), key, prefix2, 1 + (k == count);
+    call, use(_recurse, h_get(obj,key), key, prefix2, 1 + (k == count));
   }
 }
 
