@@ -15,7 +15,6 @@ package require struct::set
 package require misc
 package require mixin
 package require tooltip
-package require l1pro
 
 #load all yorick support functions
 ybkg require \"l1pro.i\"
@@ -124,6 +123,10 @@ if {![info exists l1pro_data]} {
   trace add variable plot_settings(cmax) write ud
   trace add variable cdelta write ud
 }
+
+# Some of the l1pro packages require the above variables, so this must come
+# after they exist
+package require l1pro
 
 proc append_varlist {newvar} {
   global varlist
@@ -301,5 +304,4 @@ if {![winfo exists .l1wid]} {
 source "$src_path/plot.ytk"
 source "$src_path/bathctl.ytk"
 source "$src_path/data_segments.ytk"
-source "$src_path/pixelwf.ytk"
 source "$src_path/ts_check.ytk"

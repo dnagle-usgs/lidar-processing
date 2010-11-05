@@ -1,5 +1,7 @@
 # vim: set ts=3 sts=3 sw=3 ai sr et:
 
+package provide l1pro::pixelwf 1.0
+
 package require struct::set
 package require misc
 package require sf
