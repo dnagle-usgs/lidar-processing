@@ -39,13 +39,10 @@ if {![info exists l1pro_data]} {
   } 0 end]
 
   set outvar ""
-  set win_load 6;    # used by EAARL Data Loader
   set usecentroid 1
 
   set cbar_locked cdelta
 
-  set list {}
-  set lrnindx {}
   set avg_surf 1
   set rcf_buf_rgn 0; #Used in proc filter_replace
   set autoclean_after_process 1
@@ -85,6 +82,8 @@ if {![info exists l1pro_data]} {
   set var_settings(workdata) [linsert $var_common end \
     var workdata \
     display_mode ba]
+
+  unset var_common
 
   set pro_var fs_all
   set pro_var_next fs_all

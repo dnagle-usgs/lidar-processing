@@ -92,8 +92,6 @@ snit::widget ::l1pro::processing::define_region_rect::gui {
 }
 
 proc ::l1pro::processing::process {} {
-   set ::list {}
-   set ::lrnindx {}
    set ::pro_var $::pro_var_next
 
    set cmd ""
