@@ -83,6 +83,7 @@ set pathsep [expr {$::tcl_platform(platform) eq "windows" ? ";" : ":"}]
 set env(PATH) $bindir$pathsep$env(PATH)
 
 package require Tk
+package require style
 package require tile
 package require BWidget
 package require Expect
@@ -92,28 +93,6 @@ package require log
 package require struct::list
 package require mixin
 package require yorick
-
-option add *tearOff 0
-foreach __theme [ttk::style theme names] {
-   ttk::style theme settings $__theme {
-      ttk::style configure TButton -justify center
-   }
-}
-unset __theme
-
-# Make menu colors appropriate for Ttk
-proc FixMenuColors w {
-   $w configure \
-      -background [ttk::style lookup TFrame -background] \
-      -activebackground [ttk::style lookup TFrame -background]
-}
-proc FixMenuOption {} {
-   option add *Menu.background [ttk::style lookup TFrame -background]
-   option add *Menu.activeBackground [ttk::style lookup TFrame -background]
-}
-bind Menu <<ThemeChanged>> {FixMenuColors %W}
-bind . <<ThemeChanged>> FixMenuOption
-FixMenuOption
 
 wm withdraw .
 
