@@ -349,11 +349,6 @@ proc menu_deprecated_visualization mb {
    $mb add command {*}[menulabel "Open the Limits Tool"]\
       -command ::l1pro::deprecated::limits_tool
 
-   $mb add command {*}[menulabel "Configure elevation scale limits..."] \
-      -command ::l1pro::deprecated::configure_elevation_scale_limits
-
-   $mb add separator
-
    ### Deprecated 2009-02-02
    $mb add command {*}[menulabel "Flight Tracks && Coastlines..."] \
       -command ::l1pro::deprecated::rbgga_menu

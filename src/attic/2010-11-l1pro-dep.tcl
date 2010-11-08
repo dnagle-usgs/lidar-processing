@@ -125,6 +125,56 @@ proc ::l1pro::deprecated::make_selected_arrays {} {
     }
 }
 
+proc ::l1pro::deprecated::configure_elevation_scale_limits {} {
+   uplevel #0 {
+      destroy  .l1wid-opts
+      toplevel .l1wid-opts
+      wm title .l1wid-opts "Set Elevation Scale limits"
+      frame .l1wid-opts.f1
+      frame .l1wid-opts.f2
+      frame .l1wid-opts.f3
+      frame .l1wid-opts.f4
+      set cmax_inc 0.1
+      Label .l1wid-opts.f1.label -text "Set Max Cmax scale to:"
+      Label .l1wid-opts.f2.label -text "Set Min Cmin scale to:"
+      Label .l1wid-opts.f3.label -text "Set Increment to:"
+      spinbox  .l1wid-opts.f1.max -width 10 -format %.2f \
+        -textvariable cmax_max -from 10000 -to 50000 -increment 10
+      spinbox  .l1wid-opts.f2.min -width 10 -format %.2f \
+        -textvariable cmax_min -from 10000 -to 50000 -increment 10
+      spinbox  .l1wid-opts.f3.inc -width 10 \
+        -values [list 0.1 0.2 .25 .5 .75 1.0 1.5 2.0 2.5 3 4 5 6 7 8 9 10 15 \
+          20 25] \
+        -textvariable cmax_inc
+
+      Button .l1wid-opts.f4.go -text "Go" -width 10 -command {
+        set rg [list $cmax_min $cmax_max $cmax_inc]
+        .l1wid.bf45.sc.1.cmin.sc configure -from $cmax_min -to $cmax_max \
+          -resolution $cmax_inc
+        .l1wid.bf45.sc.1.cmin.sb configure -range $rg
+        .l1wid.bf45.sc.1.cmax.sc configure -from $cmax_min -to $cmax_max \
+          -resolution $cmax_inc
+        .l1wid.bf45.sc.1.cmax.sb configure -range $rg
+        set cmax_delta [expr $cmax_max - $cmax_min]
+        set cdel_rg [list 0 $cmax_delta $cmax_inc]
+        .l1wid.bf45.sc.1.cdelta.sc configure -from 0 -to $cmax_delta \
+          -resolution $cmax_inc
+        .l1wid.bf45.sc.1.cdelta.sb configure -range $cdel_rg
+      }
+
+      Button .l1wid-opts.f4.dis -text "Dismiss" -width 10 -command {
+        destroy .l1wid-opts
+      }
+
+      pack .l1wid-opts.f1.label .l1wid-opts.f1.max -side left -fill x
+      pack .l1wid-opts.f2.label .l1wid-opts.f2.min -side left -fill x
+      pack .l1wid-opts.f3.label .l1wid-opts.f3.inc -side left -fill x
+      pack .l1wid-opts.f4.go .l1wid-opts.f4.dis -side left -fill x
+      pack .l1wid-opts.f1 .l1wid-opts.f2 .l1wid-opts.f3 .l1wid-opts.f4 \
+        -side top -anchor e -pady 5
+   }
+}
+
 proc ::l1pro::deprecated::rcf_region {} {
    uplevel #0 {
       global varlist l1pro_data pro_var rcf_var
