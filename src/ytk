@@ -125,38 +125,6 @@ set Y_SITE ""
 #                                  Procedures                                  #
 ################################################################################
 
-proc ystr {val {quoted 1}} {
-##
-# ystr val [quoted]
-#  Sanitizes a string so that it can be safely sent to Yorick. Things like
-#  quotes, newlines, and tabs will be escaped.
-#
-# Arguments:
-#  val - The string to sanitize
-#  quoted - Optional. By default, the returned string will be surrounded in
-#     quotes. Set this to 0 to omit the quotes.
-#
-# Returns:
-#  A sanitized string suitable for Yorick.
-#
-# Side effects:
-#  None
-##
-   set yval [string map [list \
-      \\ \\\\  \
-      \" \\\"  \
-      \n \\n   \
-      \b \\b   \
-      \f \\f   \
-      \r \\r   \
-      \t \\t   \
-   ] $val]
-   if {$quoted} {
-      set yval "\"$yval\""
-   }
-   return $yval
-}
-
 proc string_to_hex input {
 # Converts input, which can be any arbitrar string of data, into hexadecimal
 # format. This is a simple form of ASCII-armoring and is used by ybkg to
