@@ -375,8 +375,6 @@ proc menu_deprecated_editing mb {
       -command {exp_send "$::pro_var = test_and_clean($::pro_var);\r"}
    $mb add command {*}[menulabel "Append2Tile"] \
       -command ::l1pro::deprecated::append2tile
-   $mb add command {*}[menulabel "Old RCF GUI"] \
-      -command ::l1pro::deprecated::rcf_region
    return $mb
 }
 
