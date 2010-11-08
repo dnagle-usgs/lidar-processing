@@ -14,58 +14,9 @@ exec wish "$0" ${1+"$@"}
 #
 # The main site for this program is:
 #     http://ytk.sourceforge.net
-# *** NOTE: The newer version at ytk.sourceforge.net isn't compatible
-# with ytk (yet) so don't try using it.
 #
-# This version of Ytk is a fork from the version found at SourceForge,
-# tailored for ALPS.
-#
-# Revision history
-#
-# 11/12/2008 - David Nagle
-#  * Refactored most of the code into procs
-#  * Simplified and reduced repetitive chunks of code
-#  * Implemented a -nogui option that suppresses the YTK GUI menubar
-#  * Implemented a -gui option that forces the display of the YTK GUI menubar
-#    (it shows by default; however, "./ytk -nogui -gui" results in -gui
-#    overriding -nogui)
-#  * The logic for finding the yorick executable has been cleaned up and improved.
-#  * Removed large sections of commented-out code that was obsolete. Also
-#    removed some left over code relics that were no longer in use.
-#  * Removed a bunch of disabled menu entries that had no functionality
-#    supplied under Graph -> Plot. I left a note in the comments indicating
-#    what was removed, with a "TODO" note suggesting that they get added back
-#    later once code has been written to implement them.
-#  * Improved robustness in the spawning process slightly. If spawning via
-#    rlterm is requested but fails, it will move on to try using rlwrap (if
-#    enabled), and then on to spawning yorick without any wrappers.
-#  * Updated the comments up above to indicate that this version of "ytk" has
-#    diverged from the version found at Sourceforge.
-#
-# 06/02/2005 - Amar Nayegandhi
-#  Added option to use rlwrap or rlterm with yorick. Default setting uses
-#  rlwrap. Download rlwrap from: http://www.maumae.net/yorick/rlwrap-0.18.tar.gz
-#
-# 5/31/2003 Added runline commands.  Now you can say:  ytk somefile.[ytk,i,tcl,tk]
-# 1/3/2002
-#  -> Added  extended help for menu items.
-#  -> Moved fifos to users home dir and use a unique name so several
-#     Ytks can run at once.
-#  -) Added "Save Options" button in Edit pulldown.
-#  -) Added .ytkrc default file in users home dir.
-#  -) Changed many variables to be elements of the _ytk array so
-#     they can easily be saved/restored in .ytkrc
-#
-#   1/2/2002 ww *) Moved fifos to user's home dir and added some "uniqueness"
-#                  to the name to avoid problems when two or more ytks are running.
-# 12/31/2001 ww *) Minor changes to gracefully fail if ytk can't find Yorick.
-#               *) Added code to look for yorick and rlterm and use what it
-#                  finds if it can't use what the user provided.
-# 12/28/2001 ww Added some simple most recent file selection stuff
-# 12/21/2001 ww Added /tmp/ytk fifo for passing data back from yorick
-#               to tcl/tk.  Also added /tmp/tky for sending stuff from
-#               tcl/tk to Yorick in cases where you want/need to avoid
-#               using the exp_send command.
+# This version of Ytk is a fork from the version found at SourceForge, tailored
+# for ALPS. At this point, the two are incompatible.
 
 # Exit codes
 # 0 - Program ended normally
