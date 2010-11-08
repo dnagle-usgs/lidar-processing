@@ -2,7 +2,7 @@
 # \
 exec wish "$0" ${1+"$@"}
 
-# /* vim: set tabstop=3 softtabstop=3 shiftwidth=3 shiftround autoindent expandtab syntax=tcl: */
+# vim: set ts=3 sts=3 sw=3 ai sr et syntax=tcl:
 
 # Program to add some limited tcl/Tk GUI capability to Yorick programs.
 #
