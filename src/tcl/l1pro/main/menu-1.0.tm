@@ -352,9 +352,6 @@ proc menu_deprecated_visualization mb {
    $mb add command {*}[menulabel "Configure elevation scale limits..."] \
       -command ::l1pro::deprecated::configure_elevation_scale_limits
 
-   $mb add command {*}[menulabel "Plot/Write Individual Flightlines..."] \
-      -command ::l1pro::deprecated::plot_write_individual_flightlines
-
    $mb add separator
 
    ### Deprecated 2009-02-02
