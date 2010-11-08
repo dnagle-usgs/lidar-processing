@@ -816,15 +816,6 @@ Returns:
       no_append = 0;
       if (numberof(rn_arr)>2) {
          rn_arr_idx = (rn_arr(dif,)(,cum)+1)(*);
-
-         str=swrite(format="send_rnarr_to_l1pro %d %d %d\n", rn_arr(1,), rn_arr(2,), rn_arr_idx(1:-1))
-            if (_ytk) {
-               tkcmd, str;
-            } else {
-               // XYZZY - is there any reason to show this?
-               // XYZZY - we get here via mbatch_process()
-               write, str;
-            }
       }
       return veg_all;
    } else write, "No record numbers found for selected flightline.";

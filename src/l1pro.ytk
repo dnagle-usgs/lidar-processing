@@ -255,21 +255,6 @@ proc send_latlon_to_l1pro {minlon maxlon minlat maxlat utmarg} {
   set utm $armarg
 }
 
-proc send_rnarr_to_l1pro {bstart bstop brnindx} {
-  global start stop list lrnindx
-  set start $bstart
-  set stop $bstop
-  set rnindx $brnindx
-  set list1 [concat $start $stop]
-  if {[llength $list] == 0} {
-    set list $list1
-    set lrnindx $rnindx
-  } else {
-    set list [concat $list $list1 ]
-    set lrnindx [concat $lrnindx $rnindx]
-  }
-}
-
 proc display_data args {
   array set opts [list -var $::pro_var -win $::win_no -fma $::l1pro_fma]
   array set opts $args
