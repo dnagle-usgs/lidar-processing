@@ -358,7 +358,7 @@ proc menu_deprecated_visualization mb {
    $mb add separator
 
    ### Deprecated 2009-02-02
-   $mb add command {*}[menulabel "Flight Tracks & Coastlines..."] \
+   $mb add command {*}[menulabel "Flight Tracks && Coastlines..."] \
       -command ::l1pro::deprecated::rbgga_menu
 
    ### Deprecated 2009-10-19
