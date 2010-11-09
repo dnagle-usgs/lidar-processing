@@ -1,41 +1,47 @@
-# vim: set ts=3 sts=3 sw=3 ai sr et:
+# vim: set ts=4 sts=4 sw=4 ai sr et:
 
 package provide debug 1.0
 
 namespace eval ::debug {
+namespace export stack_trace_frames stack_trace_levels
 
 # stack_trace_frames
 #   Prints out the stack trace using [info frame]. This includes frames hidden
 #   from [info level]. To use, simply put this inside the procedure you're
 #   trying to debug.
 proc stack_trace_frames {} {
-   set level [info frame]
-
-   while {$level} {
-      incr level -1
-      puts "level $level:"
-      set info [info frame $level]
-      switch [dict get $info type] {
-         source {
-            puts "  sourced from [dict get $info file], line [dict get $info line]"
-            puts "  cmd: [dict get $info cmd]"
-         }
-         proc {
-            puts "  proc [dict get $info proc], line [dict get $info line]"
-            puts "  cmd: [dict get $info cmd]"
-         }
-         eval {
-            puts "  eval or uplevel call, line [dict get $info line]"
-            puts "  cmd: [dict get $info cmd]"
-         }
-         precompiled {
-            puts "  precompiled script, unable to provide further info"
-         }
-         default {
-            puts "  impossible info type: [dict get $info type]"
-         }
-      }
-   }
+    set lvl [info frame]
+    while {$lvl > 0} {
+        incr lvl -1
+        puts "frame level $lvl:"
+        set info [info frame $lvl]
+        unset -nocomplain level
+        dict with info {
+            if {[info exists level]} {
+                puts "  level: $level"
+            }
+            switch -- $type {
+                source {
+                    puts "  sourced from $file, line $line"
+                    puts "  cmd: $cmd"
+                }
+                proc {
+                    puts "  proc $proc, line $line"
+                    puts "  cmd: $cmd"
+                }
+                eval {
+                    puts "  eval or uplevel call, line $line"
+                    puts "  cmd: $cmd"
+                }
+                precompiled {
+                    puts "  precompiled script, unable to provide further info"
+                }
+                default {
+                    puts "  impossible info type: $type"
+                }
+            }
+        }
+    }
 }
 
 # stack_trace_levels
@@ -43,13 +49,11 @@ proc stack_trace_frames {} {
 #   *caller's* context. To use, simply put this inside the procedure you're
 #   trying to debug.
 proc stack_trace_levels {} {
-   set level -[info level]
-   incr level
-
-   while {$level} {
-      set info [info level $level]
-      puts "level [incr level]: $info"
-   }
+    set level [expr {-[info level] + 1}]
+    while {$level < 0} {
+        set info [info level $level]
+        puts "level [incr level]: $info"
+    }
 }
 
 } ;# end of namespace eval ::debug
