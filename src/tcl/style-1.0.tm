@@ -30,6 +30,11 @@ namespace eval style {
                     -sticky news
         }
         ttk::style layout TPanedwindow {Sash.xsash}
+
+        # Custom styles for buttons that appear on "panels" (as in the main
+        # l1pro GUI)
+        ttk::style configure Panel.TMenubutton -padding {2 0}
+        ttk::style configure Panel.TButton -padding 0
     }
 
     # When the theme changes, update the option database
