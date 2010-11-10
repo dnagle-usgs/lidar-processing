@@ -1,4 +1,4 @@
-# vim: set ts=3 sts=3 sw=3 ai sr et:
+# vim: set ts=4 sts=4 sw=4 ai sr et:
 # SF = Sequential Frames
 ################################################################################
 #                                  SF Library                                  #
@@ -80,7 +80,7 @@ namespace eval ::sf {}
 # outside of ytk. Also allows sf-specific logging to be diverted and handled
 # specially, if desired.
 proc ::sf::log {level message} {
-   ::log::log $level $message
+    ::log::log $level $message
 }
 
 # end of Internals
