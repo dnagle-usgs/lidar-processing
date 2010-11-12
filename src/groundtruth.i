@@ -252,9 +252,9 @@ metrics=) {
 
    Parameters:
       z1: A one-dimensional array of values. These are typically ground truth
-         values and will be associated with the Y axis.
+         values and will be associated with the X axis.
       z2: A one-dimensional array of values. These are typically model/lidar
-         data values and will be associated with the X axis.
+         data values and will be associated with the Y axis.
 
    General options:
       win= The window to plot in. Default is the current window.
