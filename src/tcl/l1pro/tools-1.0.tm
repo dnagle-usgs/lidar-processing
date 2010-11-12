@@ -22,6 +22,7 @@ if {![namespace exists ::l1pro::tools::rcf]} {
 }
 
 proc ::l1pro::tools::rcf::gui args {
+    set ns [namespace current]
     set w $v::top
     destroy $w
     toplevel $w
@@ -53,25 +54,25 @@ proc ::l1pro::tools::rcf::gui args {
 
     ::mixin::combobox::mapping $f.mode \
             -state readonly \
-            -altvariable [namespace which -variable v::mode] \
+            -altvariable ${ns}::v::mode \
             -mapping $::l1pro_data(mode_mapping)
 
     ::mixin::combobox $f.input \
             -state readonly \
             -listvariable ::varlist \
-            -textvariable [namespace which -variable v::invar]
+            -textvariable ${ns}::v::invar
 
     spinbox $f.buf -from 1 -to 100000 -increment 1 \
             -format %.0f \
-            -textvariable [namespace which -variable v::buf]
+            -textvariable ${ns}::v::buf
     spinbox $f.w -from 1 -to 100000 -increment 1 \
             -format %.0f \
-            -textvariable [namespace which -variable v::w]
+            -textvariable ${ns}::v::w
     spinbox $f.n -from 1 -to 100000 -increment 1 \
             -format %.0f \
-            -textvariable [namespace which -variable v::n]
+            -textvariable ${ns}::v::n
     ttk::entry $f.output \
-            -textvariable [namespace which -variable v::outvar]
+            -textvariable ${ns}::v::outvar
 
     ttk::frame $f.buttons
     ttk::button $f.filter -text "Filter" \
@@ -254,6 +255,7 @@ proc ::l1pro::tools::histelev::gui {} {
 }
 
 proc ::l1pro::tools::histelev::gui_general {f labelsVar} {
+    set ns [namespace current]
     upvar $labelsVar labels
     ttk::labelframe $f -text "General settings"
     ttk::label $f.lblnormalize -text "Y axis: "
@@ -264,21 +266,21 @@ proc ::l1pro::tools::histelev::gui_general {f labelsVar} {
     ttk::label $f.lblbinsize -text "Bin size: "
     ::mixin::combobox::mapping $f.normalize \
             -state readonly \
-            -altvariable [namespace which -variable v::normalize] \
+            -altvariable ${ns}::v::normalize \
             -mapping {
                 "Density"   1
                 "Counts"    0
             }
     spinbox $f.win -from 0 -to 63 -increment 1 \
-            -textvariable [namespace which -variable v::win]
+            -textvariable ${ns}::v::win
     ttk::checkbutton $f.dofma \
-            -variable [namespace which -variable v::dofma]
+            -variable ${ns}::v::dofma
     ttk::checkbutton $f.logy \
-            -variable [namespace which -variable v::logy]
+            -variable ${ns}::v::logy
     ttk::checkbutton $f.autobin \
-            -variable [namespace which -variable v::auto_binsize]
+            -variable ${ns}::v::auto_binsize
     spinbox $f.binsize -from 0 -to 100 -increment 0.01 \
-            -textvariable [namespace which -variable v::binsize]
+            -textvariable ${ns}::v::binsize
     grid $f.lblnormalize $f.normalize
     grid $f.lblwin $f.win
     grid $f.dofma $f.lbldofma
@@ -294,7 +296,7 @@ proc ::l1pro::tools::histelev::gui_general {f labelsVar} {
 
     ::mixin::statevar $f.binsize \
             -statemap {0 normal 1 disabled} \
-            -statevariable [namespace which -variable v::auto_binsize]
+            -statevariable ${ns}::v::auto_binsize
 
     ::misc::bind::label_to_checkbutton $f.lbldofma $f.dofma
     ::misc::bind::label_to_checkbutton $f.lbllogy $f.logy
@@ -315,21 +317,22 @@ proc ::l1pro::tools::histelev::gui_general {f labelsVar} {
 }
 
 proc ::l1pro::tools::histelev::gui_line {w labelsVar} {
+    set ns [namespace current]
     upvar $labelsVar labels
     ::mixin::labelframe::collapsible $w \
             -text "Plot histogram line graph" \
-            -variable [namespace which -variable v::plot_histline_show]
+            -variable ${ns}::v::plot_histline_show
     set f [$w interior]
     ttk::label $f.lblcolor -text "Line color: "
     ttk::label $f.lblwidth -text "Line width: "
     ttk::label $f.lbltype -text "Line type: "
     ::mixin::combobox $f.color -state readonly \
-            -textvariable [namespace which -variable v::plot_histline_color] \
+            -textvariable ${ns}::v::plot_histline_color \
             -values $c::colors
     spinbox $f.width -from 0 -to 10 -increment 0.1 \
-            -textvariable [namespace which -variable v::plot_histline_size]
+            -textvariable ${ns}::v::plot_histline_size
     ::mixin::combobox $f.type -state readonly \
-            -textvariable [namespace which -variable v::plot_histline_type] \
+            -textvariable ${ns}::v::plot_histline_type \
             -values $c::types
     grid $f.lblcolor $f.color
     grid $f.lblwidth $f.width
@@ -342,21 +345,22 @@ proc ::l1pro::tools::histelev::gui_line {w labelsVar} {
 }
 
 proc ::l1pro::tools::histelev::gui_box {w labelsVar} {
+    set ns [namespace current]
     upvar $labelsVar labels
     ::mixin::labelframe::collapsible $w \
             -text "Plot histogram bar graph" \
-            -variable [namespace which -variable v::plot_histbar_show]
+            -variable ${ns}::v::plot_histbar_show
     set f [$w interior]
     ttk::label $f.lblcolor -text "Line color: "
     ttk::label $f.lblwidth -text "Line width: "
     ttk::label $f.lbltype -text "Line type: "
     ::mixin::combobox $f.color -state readonly \
-            -textvariable [namespace which -variable v::plot_histbar_color] \
+            -textvariable ${ns}::v::plot_histbar_color \
             -values $c::colors
     spinbox $f.width -from 0 -to 10 -increment 0.1 \
-            -textvariable [namespace which -variable v::plot_histbar_size]
+            -textvariable ${ns}::v::plot_histbar_size
     ::mixin::combobox $f.type -state readonly \
-            -textvariable [namespace which -variable v::plot_histbar_type] \
+            -textvariable ${ns}::v::plot_histbar_type \
             -values $c::types
     grid $f.lblcolor $f.color
     grid $f.lblwidth $f.width
@@ -369,18 +373,19 @@ proc ::l1pro::tools::histelev::gui_box {w labelsVar} {
 }
 
 proc ::l1pro::tools::histelev::gui_ticks {w labelsVar} {
+    set ns [namespace current]
     upvar $labelsVar labels
     ::mixin::labelframe::collapsible $w \
             -text "Plot elevation tickmarks" \
-            -variable [namespace which -variable v::plot_tickmarks_show]
+            -variable ${ns}::v::plot_tickmarks_show
     set f [$w interior]
     ttk::label $f.lblcolor -text "Tick color: "
     ttk::label $f.lblsize -text "Tick size: "
     ::mixin::combobox $f.color -state readonly \
-            -textvariable [namespace which -variable v::plot_tickmarks_color] \
+            -textvariable ${ns}::v::plot_tickmarks_color \
             -values $c::colors
     spinbox $f.size -from 0 -to 10 -increment 0.1 \
-            -textvariable [namespace which -variable v::plot_tickmarks_size]
+            -textvariable ${ns}::v::plot_tickmarks_size
     grid $f.lblcolor $f.color
     grid $f.lblsize $f.size
     grid $f.lblcolor $f.lblsize -sticky e
@@ -391,10 +396,11 @@ proc ::l1pro::tools::histelev::gui_ticks {w labelsVar} {
 }
 
 proc ::l1pro::tools::histelev::gui_kde {w labelsVar} {
+    set ns [namespace current]
     upvar $labelsVar labels
     ::mixin::labelframe::collapsible $w \
             -text "Plot kernel density estimate" \
-            -variable [namespace which -variable v::plot_kdeline_show]
+            -variable ${ns}::v::plot_kdeline_show
     set f [$w interior]
     ttk::label $f.lblkernel -text "Kernel: "
     ttk::label $f.lblautoband -text "Match bandwith to bin size"
@@ -404,24 +410,24 @@ proc ::l1pro::tools::histelev::gui_kde {w labelsVar} {
     ttk::label $f.lblwidth -text "Line width: "
     ttk::label $f.lbltype -text "Line type: "
     ::mixin::combobox $f.kernel -state readonly -width 12 \
-            -textvariable [namespace which -variable v::kernel] \
+            -textvariable ${ns}::v::kernel \
             -values {uniform triangular epanechnikov quartic triweight \
                     gaussian cosine}
     ttk::button $f.profile -text " Profile " -width 0\
             -command ::l1pro::tools::histelev::krnl_profile
     ttk::checkbutton $f.autoband \
-            -variable [namespace which -variable v::auto_bandwidth]
+            -variable ${ns}::v::auto_bandwidth
     spinbox $f.bandwidth -from 0 -to 100 -increment 0.01 \
-            -textvariable [namespace which -variable v::bandwidth]
+            -textvariable ${ns}::v::bandwidth
     spinbox $f.sample -from 1 -to 10000 -increment 1 \
-            -textvariable [namespace which -variable v::kdesample]
+            -textvariable ${ns}::v::kdesample
     ::mixin::combobox $f.color -state readonly \
-            -textvariable [namespace which -variable v::plot_kdeline_color] \
+            -textvariable ${ns}::v::plot_kdeline_color \
             -values $c::colors
     spinbox $f.width -from 0 -to 10 -increment 0.1 \
-            -textvariable [namespace which -variable v::plot_kdeline_size]
+            -textvariable ${ns}::v::plot_kdeline_size
     ::mixin::combobox $f.type -state readonly \
-            -textvariable [namespace which -variable v::plot_kdeline_type] \
+            -textvariable ${ns}::v::plot_kdeline_type \
             -values $c::types
     grid $f.lblkernel $f.kernel $f.profile
     grid $f.autoband $f.lblautoband -
@@ -438,7 +444,7 @@ proc ::l1pro::tools::histelev::gui_kde {w labelsVar} {
     grid columnconfigure $f 1 -weight 1
     ::mixin::statevar $f.bandwidth \
             -statemap {0 normal 1 disabled} \
-            -statevariable [namespace which -variable v::auto_bandwidth]
+            -statevariable ${ns}::v::auto_bandwidth
 
     ::misc::bind::label_to_checkbutton $f.lblautoband $f.autoband
 
@@ -468,6 +474,7 @@ proc ::l1pro::tools::histelev::gui_buttons f {
 }
 
 proc ::l1pro::tools::histelev::cbar_tool {} {
+    set ns [namespace current]
     set w $v::cbartop
     if {[winfo exists $w]} {
         return
@@ -486,12 +493,12 @@ proc ::l1pro::tools::histelev::cbar_tool {} {
     ttk::frame $f.fwin
     ttk::label $f.lblwin -text "Window: "
     spinbox $f.win -from 0 -to 63 -increment 1 -width 0 \
-            -textvariable [namespace which -variable v::win]
+            -textvariable ${ns}::v::win
 
     grid $f.lblwin $f.win -in $f.fwin -sticky ew
     grid columnconfigure $f.fwin 1 -weight 1
 
-    set cmd [namespace which -command cbar_do]
+    set cmd ${ns}::cbar_do
     ttk::button $f.cmax -text "Cmax" -width 0 -command [list $cmd cmax]
     ttk::button $f.cmin -text "Cmin" -width 0 -command [list $cmd cmin]
     ttk::button $f.both -text "Both" -width 0 -command [list $cmd both]
@@ -533,6 +540,7 @@ if {![namespace exists ::l1pro::tools::elevclip]} {
 }
 
 proc ::l1pro::tools::histclip::gui {} {
+    set ns [namespace current]
     set w $v::top
     destroy $w
     toplevel $w
@@ -562,30 +570,27 @@ proc ::l1pro::tools::histclip::gui {} {
     ::mixin::combobox $f.input \
             -state readonly \
             -listvariable ::varlist \
-            -textvariable [namespace which -variable v::invar]
+            -textvariable ${ns}::v::invar
 
-    ttk::checkbutton $f.usemin \
-            -variable [namespace which -variable v::usemin]
-    ttk::checkbutton $f.usemax \
-            -variable [namespace which -variable v::usemax]
+    ttk::checkbutton $f.usemin -variable ${ns}::v::usemin
+    ttk::checkbutton $f.usemax -variable ${ns}::v::usemax
 
     spinbox $f.minelv -from -5000 -to 5000 -increment 0.1 \
             -format %.2f \
-            -textvariable [namespace which -variable v::minelv]
+            -textvariable ${ns}::v::minelv
     spinbox $f.maxelv -from -5000 -to 5000 -increment 0.1 \
             -format %.2f \
-            -textvariable [namespace which -variable v::maxelv]
+            -textvariable ${ns}::v::maxelv
 
     ::mixin::statevar $f.minelv \
             -statemap {1 normal 0 disabled} \
-            -statevariable [namespace which -variable v::usemin]
+            -statevariable ${ns}::v::usemin
 
     ::mixin::statevar $f.maxelv \
             -statemap {1 normal 0 disabled} \
-            -statevariable [namespace which -variable v::usemax]
+            -statevariable ${ns}::v::usemax
 
-    ttk::entry $f.output \
-            -textvariable [namespace which -variable v::outvar]
+    ttk::entry $f.output -textvariable ${ns}::v::outvar
 
     ttk::frame $f.buttons
     ttk::button $f.clip -text "Clip Data" \
@@ -651,6 +656,7 @@ if {![namespace exists ::l1pro::tools::griddata]} {
 }
 
 proc ::l1pro::tools::griddata::gui {} {
+    set ns [namespace current]
     set w $v::top
     destroy $w
     toplevel $w
@@ -661,8 +667,8 @@ proc ::l1pro::tools::griddata::gui {} {
     set v::invar $::pro_var
     set v::mode $::plot_settings(display_mode)
     set v::outvar ${::pro_var}_grid
-    ::misc::idle [list ybkg tksetfunc \"[namespace which -variable v::tile]\" \
-            \"guess_tile\" \"$::pro_var\"]
+    ::misc::idle [list ybkg tksetfunc \"${ns}::v::tile\" \"guess_tile\" \
+            \"$::pro_var\"]
 
     ttk::frame $w.f
     grid $w.f -sticky news
@@ -677,39 +683,34 @@ proc ::l1pro::tools::griddata::gui {} {
     ttk::label $f.lbltile -text "Clip to tile: "
     ttk::label $f.lbloutput -text "Output variable: "
 
-    ttk::checkbutton $f.useside \
-            -variable [namespace which -variable v::useside]
-    ttk::checkbutton $f.usearea \
-            -variable [namespace which -variable v::usearea]
-    ttk::checkbutton $f.usetile \
-            -variable [namespace which -variable v::usetile]
+    ttk::checkbutton $f.useside -variable ${ns}::v::useside
+    ttk::checkbutton $f.usearea -variable ${ns}::v::usearea
+    ttk::checkbutton $f.usetile -variable ${ns}::v::usetile
 
     spinbox $f.maxside -from 0 -to 5000 -increment 0.1 \
             -format %.2f \
-            -textvariable [namespace which -variable v::maxside]
+            -textvariable ${ns}::v::maxside
     spinbox $f.maxarea -from 0 -to 100000 -increment 0.1 \
             -format %.2f \
-            -textvariable [namespace which -variable v::maxarea]
+            -textvariable ${ns}::v::maxarea
     spinbox $f.cell -from 0 -to 100 -increment 0.1 \
             -format %.2f \
-            -textvariable [namespace which -variable v::cell]
+            -textvariable ${ns}::v::cell
 
-    ttk::entry $f.tile \
-            -textvariable [namespace which -variable v::tile]
-    ttk::entry $f.output \
-            -textvariable [namespace which -variable v::outvar]
+    ttk::entry $f.tile -textvariable ${ns}::v::tile
+    ttk::entry $f.output -textvariable ${ns}::v::outvar
 
     ::mixin::statevar $f.maxside \
             -statemap {1 normal 0 disabled} \
-            -statevariable [namespace which -variable v::useside]
+            -statevariable ${ns}::v::useside
 
     ::mixin::statevar $f.maxarea \
             -statemap {1 normal 0 disabled} \
-            -statevariable [namespace which -variable v::usearea]
+            -statevariable ${ns}::v::usearea
 
     ::mixin::statevar $f.tile \
             -statemap {1 normal 0 disabled} \
-            -statevariable [namespace which -variable v::usetile]
+            -statevariable ${ns}::v::usetile
 
     ttk::frame $f.buttons
     ttk::button $f.grid -text "Grid" \
@@ -800,6 +801,7 @@ proc ::l1pro::tools::datum::guess_name {vname src dst} {
 }
 
 proc ::l1pro::tools::datum::gui {} {
+    set ns [namespace current]
     set v::invar $::pro_var
     set v::outvar [guess_name $v::invar $v::indatum $v::outdatum]
 
@@ -821,32 +823,31 @@ proc ::l1pro::tools::datum::gui {} {
 
     ::mixin::combobox $f.invar \
             -state readonly -width [expr {[string length $v::invar]+2}] \
-            -textvariable [namespace which -variable v::invar] \
+            -textvariable ${ns}::v::invar \
             -listvariable ::varlist
 
     ttk::entry $f.outvar \
             -width [expr {[string length $v::outvar]+2}] \
-            -textvariable [namespace which -variable v::outvar]
+            -textvariable ${ns}::v::outvar
 
     foreach kind {in out} {
         ::mixin::combobox $f.${kind}datum \
                 -state readonly -width 4 \
-                -textvariable [namespace which -variable v::${kind}datum] \
-                -listvariable [namespace which -variable v::datumlist]
+                -textvariable ${ns}::v::${kind}datum \
+                -listvariable ${ns}::v::datumlist
         ::mixin::combobox $f.${kind}geoid \
                 -state readonly -width 4 \
-                -textvariable [namespace which -variable v::${kind}geoid] \
-                -listvariable [namespace which -variable v::geoidlist]
+                -textvariable ${ns}::v::${kind}geoid \
+                -listvariable ${ns}::v::geoidlist
         ::mixin::statevar $f.${kind}geoid \
                 -statemap {w84 disabled n83 disabled n88 readonly} \
-                -statevariable [namespace which -variable v::${kind}datum]
+                -statevariable ${ns}::v::${kind}datum
         grid $f.${kind}lbl $f.${kind}var $f.${kind}datum $f.${kind}geoid \
                 -sticky ew -padx 2 -pady 2
     }
 
     ttk::frame $f.btns
-    ttk::button $f.convert -text "Convert" \
-            -command [namespace which -command convert]
+    ttk::button $f.convert -text "Convert" -command ${ns}::convert
     ttk::button $f.dismiss -text "Dismiss" -command [list destroy $w]
     grid x $f.convert $f.dismiss x -in $f.btns -sticky ew -padx 2
     grid columnconfigure $f.btns {0 3} -weight 1
@@ -906,6 +907,7 @@ if {![namespace exists ::l1pro::tools::copy_limits]} {
 }
 
 proc ::l1pro::tools::copy_limits::gui {} {
+    set ns [namespace current]
     set w $v::top
     destroy $w
     toplevel $w
@@ -920,19 +922,16 @@ proc ::l1pro::tools::copy_limits::gui {} {
     set f $w.f
 
     ttk::label $f.srclbl -text "Copy from:"
-    ttk::button $f.btndst -text "Apply to:" -width 0 \
-            -command [namespace which -command apply]
-    ttk::button $f.btnall -text "Apply to all" -width 0 \
-            -command [namespace which -command apply_all]
-    ttk::button $f.viz -text "Viz" -width 0 \
-            -command [namespace which -command viz]
-    ttk::button $f.swap -text "Swap" -width 0 \
-            -command [namespace which -command swap]
+    ttk::button $f.btndst -text "Apply to:" -width 0 -command ${ns}::apply
+    ttk::button $f.btnall -text "Apply to all" -width 0 
+            -command ${ns}::apply_all
+    ttk::button $f.viz -text "Viz" -width 0 -command ${ns}::viz
+    ttk::button $f.swap -text "Swap" -width 0 -command ${ns}::swap
     spinbox $f.src -justify center -width 2 \
-            -textvariable [namespace which -variable v::src] \
+            -textvariable ${ns}::v::src \
             -from 0 -to 63 -increment 1
     spinbox $f.dst -justify center -width 2 \
-            -textvariable [namespace which -variable v::dst] \
+            -textvariable ${ns}::v::dst \
             -from 0 -to 63 -increment 1
 
     grid $f.srclbl $f.src $f.viz -sticky ew -padx 2 -pady 2
@@ -983,6 +982,7 @@ namespace eval ::l1pro::tools::varmanage {
     }
 
     proc gui {} {
+        set ns [namespace current]
         set w $v::win
         destroy $w
         toplevel $w
@@ -996,13 +996,13 @@ namespace eval ::l1pro::tools::varmanage {
                 -selectmode extended \
                 -scrollmargin 0 -sbwidth 10
 
-        button $f.btnSelect -text "Select" -command [namespace code cmd_select]
+        button $f.btnSelect -text "Select" -command ${ns}::cmd_select
         LabelEntry $f.lbeAdd -width 8 -relief sunken -label "Add:" \
                 -helptext "Add variable name to list" \
-                -textvariable [namespace which -variable v::var_add]
-        $f.lbeAdd bind <Return> [namespace code bind_add_enter]
-        button $f.btnDelete -text "Delete" -command [namespace code cmd_delete]
-        button $f.btnRename -text "Rename" -command [namespace code cmd_rename]
+                -textvariable ${ns}::v::var_add
+        $f.lbeAdd bind <Return> ${ns}::bind_add_enter
+        button $f.btnDelete -text "Delete" -command ${ns}::cmd_delete
+        button $f.btnRename -text "Rename" -command ${ns}::cmd_rename
         button $f.btnDismiss -text "Dismiss" -command [list destroy $v::win]
 
         grid $v::lb -sticky news
@@ -1123,6 +1123,7 @@ namespace eval ::l1pro::tools::rollbias {
     }
 
     proc gui {} {
+        set ns [namespace current]
         set v::var $::pro_var
         set v::winsrc $::win_no
         ybkg updatebias
@@ -1144,17 +1145,14 @@ namespace eval ::l1pro::tools::rollbias {
         set f $w
 
         ttk::label $f.lblvar -text "Variable:"
-        ttk::entry $f.var -width 5 \
-                -textvariable [namespace which -variable v::var]
+        ttk::entry $f.var -width 5 -textvariable ${ns}::v::var
         ttk::label $f.lblwinsrc -text "in window:"
         spinbox $f.winsrc -width 2 \
                 -from 0 -to 63 -increment 1 \
-                -textvariable [namespace which -variable v::winsrc]
+                -textvariable ${ns}::v::winsrc
         ttk::label $f.lbltrans -text "Then click"
-        ttk::button $f.trans -text "Get Transect" \
-                -command [namespace code transect]
-        ttk::button $f.help -text "Help" \
-                -command [namespace code help]
+        ttk::button $f.trans -text "Get Transect" -command ${ns}::transect
+        ttk::button $f.help -text "Help" -command ${ns}::help
 
         ::tooltip::tooltip $f.var "EAARL source data"
 
@@ -1165,13 +1163,11 @@ namespace eval ::l1pro::tools::rollbias {
         ttk::label $f.lblwidth -text "Width:"
         spinbox $f.width -width 4 \
                 -from 0 -to 10000 -increment 1 \
-                -textvariable [namespace which -variable v::width]
+                -textvariable ${ns}::v::width
         ttk::label $f.lblbias -text "Current Roll Bias:"
-        ttk::entry $f.bias -width 8 \
-                -textvariable [namespace which -variable v::bias]
+        ttk::entry $f.bias -width 8 -textvariable ${ns}::v::bias
         ttk::label $f.lblslope -text "Current slope"
-        ttk::entry $f.slope -width 8 \
-                -textvariable [namespace which -variable v::slope]
+        ttk::entry $f.slope -width 8 -textvariable ${ns}::v::slope
 
         ::tooltip::tooltip $f.width "Transect width"
 
@@ -1182,18 +1178,18 @@ namespace eval ::l1pro::tools::rollbias {
                 -in $w.row2 -sticky news -padx 1 -pady 1
         grid columnconfigure $w.row2 {3 5} -weight 1
 
-        ttk::button $f.plot -text "Plot" -command [namespace code plot]
+        ttk::button $f.plot -text "Plot" -command ${ns}::plot
         ttk::label $f.lblwindst -text "in win:"
         spinbox $f.windst -width 2 \
                 -from 0 -to 63 -increment 1 \
-                -textvariable [namespace which -variable v::windst]
+                -textvariable ${ns}::v::windst
         ttk::button $f.selflt -text "Select Flightlines" \
-                -command [namespace code select_flightlines]
+                -command ${ns}::select_flightlines
         ttk::checkbutton $f.inout -text "into screen:" \
-                -variable [namespace which -variable v::inout] \
+                -variable ${ns}::v::inout \
                 -onvalue 1 -offvalue -1
         ttk::button $f.determine -text "Determine Bias" \
-                -command [namespace code determine_bias]
+                -command ${ns}::determine_bias
         grid columnconfigure $w.row3 {0 2} -weight 1
         grid columnconfigure $w.row3 {3 5} -weight 2
 
@@ -1210,7 +1206,7 @@ namespace eval ::l1pro::tools::rollbias {
             }
             ::mixin::statevar $widget \
                     -statemap $map \
-                    -statevariable [namespace which -variable v::active]
+                    -statevariable ${ns}::v::active
         }
     }
 

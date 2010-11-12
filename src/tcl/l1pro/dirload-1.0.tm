@@ -36,6 +36,7 @@ proc ::l1pro::dirload::gui {} {
     wm title $v::top "Load ALPS data directory"
     wm protocol $v::top WM_DELETE_WINDOW [list wm withdraw $v::top]
 
+    set ns [namespace current]
     set f $v::top
 
     # Container for everything that follows; declared first to make sure they
@@ -45,54 +46,50 @@ proc ::l1pro::dirload::gui {} {
 
     ttk::label $f.lblPath -text "Data path:"
     ttk::entry $f.entPath -width 40 -textvariable ::data_file_path
-    ttk::button $f.btnPath -text "Browse..." \
-            -command [namespace code browse_path]
+    ttk::button $f.btnPath -text "Browse..." -command ${ns}::browse_path
 
     ttk::label $f.lblSearch -text "Search string:"
-    ttk::entry $f.entSearch -width 8 \
-            -textvariable [namespace which -variable v::searchstr]
+    ttk::entry $f.entSearch -width 8 -textvariable ${ns}::v::searchstr
 
     ttk::label $f.lblVname -text "Output variable:"
-    ttk::entry $f.entVname -width 8 \
-            -textvariable [namespace which -variable v::vname]
+    ttk::entry $f.entVname -width 8 -textvariable ${ns}::v::vname
 
     ttk::frame $f.fraZoneLine
 
     ttk::label $f.lblUnique -text "Unique:"
-    ttk::checkbutton $f.chkUnique \
-            -variable [namespace which -variable v::unique]
+    ttk::checkbutton $f.chkUnique -variable ${ns}::v::unique
 
     ttk::label $f.lblSkip -text "Subsample:"
-    spinbox $f.spnSkip -from 1 -to 10000 -increment 1 -width 5 \
-            -textvariable [namespace which -variable v::skip]
+    ttk::spinbox $f.spnSkip -from 1 -to 10000 -increment 1 -width 5 \
+            -textvariable ${ns}::v::skip
 
     ttk::label $f.lblZone -text "Zone:"
     ::mixin::combobox $f.cboZone -state readonly -width 5 \
-            -textvariable [namespace which -variable v::zone] \
-            -listvariable [namespace which -variable v::zonelist]
+            -textvariable ${ns}::v::zone \
+            -listvariable ${ns}::v::zonelist
 
     ttk::label $f.lblRegion -text "Region:"
     ttk::entry $f.entRegion -state readonly \
-            -textvariable [namespace which -variable v::region_desc]
+            -textvariable ${ns}::v::region_desc
     ttk::menubutton $f.mnuRegion -text "Configure..." \
             -menu [set mb $f.mnuRegion.mb]
     menu $mb
     $mb add command -label "Load all data" \
-            -command [namespace code region_all]
+            -command ${ns}::region_all
     $mb add command -label "Load using rubberband box" \
-            -command [namespace code region_bbox]
+            -command ${ns}::region_bbox
     $mb add command -label "Load using polygon" \
-            -command [namespace code region_poly]
+            -command ${ns}::region_poly
     $mb add command -label "Load using current window limits" \
-            -command [namespace code region_lims]
+            -command ${ns}::region_lims
     $mb add command -label "Plot current region (if possible)" \
-            -command [namespace code region_plot]
+            -command ${ns}::region_plot
 
     ttk::frame $f.fraButtons
     ttk::button $f.btnLoadCont -text "Load & Continue" \
-            -command [namespace code [list load_data continue]]
+            -command [list ${ns}::load_data continue]
     ttk::button $f.btnLoadDism -text "Load & Finish" \
-            -command [namespace code [list load_data finish]]
+            -command [list ${ns}::load_data finish]
     ttk::button $f.btnClose -text "Cancel" -command [list wm withdraw $v::top]
 
     ::tooltip::tooltip $f.btnLoadCont \
@@ -143,22 +140,18 @@ proc ::l1pro::dirload::region_all {} {
 
 proc ::l1pro::dirload::region_bbox {} {
     exp_send "dirload_l1pro_selbbox;\r"
-    expect "> "
 }
 
 proc ::l1pro::dirload::region_poly {} {
     exp_send "dirload_l1pro_selpoly;\r"
-    expect "> "
 }
 
 proc ::l1pro::dirload::region_lims {} {
     exp_send "dirload_l1pro_sellims;\r"
-    expect "> "
 }
 
 proc ::l1pro::dirload::region_plot {} {
     exp_send "plotPoly, $v::region_data;\r"
-    expect "> "
 }
 
 proc ::l1pro::dirload::load_data termaction {
@@ -185,21 +178,15 @@ proc ::l1pro::dirload::load_data termaction {
         set filter "dlfilter_rezone($v::zone$filter)"
     }
 
-    set arglist "\"$::data_file_path\", searchstr=\"$v::searchstr\""
-
-    if {$v::skip > 1} {
-        append arglist ", skip=$v::skip"
-    }
-
-    if {$v::unique} {
-        append arglist ", uniq=1"
-    }
-
-    if {$filter ne ""} {
-        append arglist ", filter=$filter"
-    }
+    set cmd "$v::vname = dirload(\"$::data_file_path\""
+    ::misc::appendif cmd \
+        1                   ", searchstr=\"$v::searchstr\"" \
+        {$v::skip > 1}      ", skip=$v::skip" \
+        {$v::unique}        ", uniq=1" \
+        {$filter ne ""}     ", filter=$filter"
+        1                   ")"
 
     append_varlist $v::vname
     set ::pro_var $v::vname
-    exp_send "$v::vname = dirload($arglist);\r"
+    exp_send "$cmd;\r"
 }

@@ -181,16 +181,13 @@ snit::widget ::l1pro::vars::gui::load_from_file {
     method load {} {
         set mapping [$widget(vars) mapping]
         exp_send "f = openb(\"$filename\");\r"
-        expect "> "
         foreach {fvar yvar} $mapping {
             exp_send "$yvar = f.$fvar;\r"
-            expect "> "
             if {$addvarlist} {
                 append_varlist $yvar
             }
         }
         exp_send "close, f;\r"
-        expect "> "
 
         destroy $self
     }
@@ -351,16 +348,12 @@ snit::widget ::l1pro::vars::gui::save_to_file {
         } else {
             set mapping [$widget(vars) mapping]
             exp_send "f = createb(\"$filename\");\r"
-            expect "> "
             foreach {yvar fvar} $mapping {
                 exp_send "add_variable, f, -1, \"$fvar\", structof($yvar),\
                         dimsof($yvar);\r"
-                expect "> "
                 exp_send "f.$fvar = $yvar;\r"
-                expect "> "
             }
             exp_send "close, f;\r"
-            expect "> "
 
             destroy $self
         }

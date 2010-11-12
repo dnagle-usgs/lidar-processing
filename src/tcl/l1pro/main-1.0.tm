@@ -130,17 +130,14 @@ proc ::l1pro::main::panel_cbar w {
     grid configure $f.max $f.dlt $f.min -sticky ew
     grid columnconfigure $f 1 -weight 1
 
-    regsub -all \\\$f {
-        foreach widget {$f.max $f.dlt $f.min} {
-            $widget configure -state normal
+    set body [string map [list %f $f] {
+        foreach widget {%f.max %f.dlt %f.min} {
+            $widget state !disabled
         }
-        switch -- $::cbar_locked {
-            cmax {$f.max configure -state disabled}
-            cmin {$f.min configure -state disabled}
-            cdelta {$f.dlt configure -state disabled}
-        }
-    } $f cmd
-    trace add variable ::cbar_locked write [list apply [list {v1 v2 op} $cmd]]
+        [dict get {cmax %f.max cmin %f.min cdelta %f.dlt} $::cbar_locked] \
+                state disabled
+    }]
+    trace add variable ::cbar_locked write [list apply [list {v1 v2 op} $body]]
     set ::cbar_locked $::cbar_locked
 
     ::tooltip::tooltip $f.constant \

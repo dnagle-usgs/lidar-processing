@@ -53,6 +53,7 @@ if {![namespace exists ::l1pro::drast]} {
 }
 
 proc ::l1pro::drast::gui {} {
+    set ns [namespace current]
     set w $v::top
     destroy $w
     toplevel $w
@@ -76,16 +77,17 @@ proc ::l1pro::drast::gui {} {
     grid $f.opts - - -sticky news
     grid columnconfigure $f 1 -weight 1
 
-    bind $f <Enter> [namespace which -command gui_refresh]
-    bind $f <Visibility> [namespace which -command gui_refresh]
+    bind $f <Enter> ${ns}::gui_refresh
+    bind $f <Visibility> ${ns}::gui_refresh
 }
 
 proc ::l1pro::drast::gui_slider f {
+    set ns [namespace current]
     ttk::frame $f -relief groove -padding 1 -borderwidth 2
     ttk::scale $f.scale -from 1 -to $v::maxrn \
             -orient horizontal \
-            -command [namespace which -command jump] \
-        -variable [namespace which -variable v::rn]
+            -command ${ns}::jump \
+            -variable ${ns}::v::rn
     grid $f.scale -sticky ew
     grid rowconfigure $f 0 -weight 1
     grid columnconfigure $f 0 -weight 1
@@ -93,23 +95,23 @@ proc ::l1pro::drast::gui_slider f {
 }
 
 proc ::l1pro::drast::gui_vcr f {
+    set ns [namespace current]
     ttk::frame $f -relief groove -padding 1 -borderwidth 2
-
     ttk::button $f.stepfwd -style Toolbutton \
             -image ::imglib::vcr::stepfwd \
-            -command [list [namespace which -command step] forward]
+            -command [list ${ns}::step forward]
     ttk::button $f.stepbwd -style Toolbutton \
             -image ::imglib::vcr::stepbwd \
-            -command [list [namespace which -command step] backward]
+            -command [list ${ns}::step backward]
     ttk::button $f.playfwd -style Toolbutton \
             -image ::imglib::vcr::playfwd \
-            -command [list [namespace which -command play] forward]
+            -command [list ${ns}::play forward]
     ttk::button $f.playbwd -style Toolbutton \
             -image ::imglib::vcr::playbwd \
-            -command [list [namespace which -command play] backward]
+            -command [list ${ns}::play backward]
     ttk::button $f.stop -style Toolbutton \
             -image ::imglib::vcr::stop \
-            -command [list [namespace which -command play] stop]
+            -command [list ${ns}::play stop]
     ttk::separator $f.spacer -orient vertical
 
     grid $f.stepbwd $f.stepfwd $f.spacer $f.playbwd $f.stop $f.playfwd
@@ -124,16 +126,15 @@ proc ::l1pro::drast::gui_vcr f {
 }
 
 proc ::l1pro::drast::gui_tools f {
+    set ns [namespace current]
     ttk::frame $f -relief groove -padding 1 -borderwidth 2
-
-    ttk::entry $f.rn -textvariable [namespace which -variable v::rn] \
-            -width 8
+    ttk::entry $f.rn -textvariable ${ns}::v::rn -width 8
     ttk::button $f.wf -text "WF" -style Toolbutton \
-            -command [namespace which -command examine_waveforms]
+            -command ${ns}::examine_waveforms
     ttk::button $f.rast -text "Rast" -style Toolbutton \
-            -command [namespace which -command show_rast]
+            -command ${ns}::show_rast
     ttk::button $f.geo -text "Geo" -style Toolbutton \
-            -command [namespace which -command show_geo]
+            -command ${ns}::show_geo
     ttk::separator $f.spacer -orient vertical
 
     grid $f.rn $f.spacer $f.wf $f.rast $f.geo
@@ -145,7 +146,7 @@ proc ::l1pro::drast::gui_tools f {
     ::tooltip::tooltip $f.rast "Display unreferenced raster"
     ::tooltip::tooltip $f.geo "Display georeference raster"
 
-    bind $f.rn <Return> [namespace which -variable show_auto]
+    bind $f.rn <Return> ${ns}::show_auto
 }
 
 proc ::l1pro::drast::gui_opts f {
@@ -220,26 +221,27 @@ proc ::l1pro::drast::gui_opts f {
 }
 
 proc ::l1pro::drast::gui_opts_play {f labelgrid} {
+    set ns [namespace current]
     ::mixin::labelframe::collapsible $f -text "Playback"
     set f [$f interior]
     spinbox $f.playint -from 0 -to 10000 -increment 0.1 -width 0 \
-            -textvariable [namespace which -variable v::playint]
+            -textvariable ${ns}::v::playint
     spinbox $f.stepinc -from 1 -to 10000 -increment 1 -width 0 \
-            -textvariable [namespace which -variable v::stepinc]
+            -textvariable ${ns}::v::stepinc
     ttk::checkbutton $f.rast -text "Show rast" \
-            -variable [namespace which -variable v::show_rast]
+            -variable ${ns}::v::show_rast
     ttk::checkbutton $f.geo -text "Show geo" \
-            -variable [namespace which -variable v::show_geo]
+            -variable ${ns}::v::show_geo
     ttk::checkbutton $f.sline -text "Show scan line" \
-            -variable [namespace which -variable v::show_sline]
+            -variable ${ns}::v::show_sline
     ttk::checkbutton $f.sfsync -text "Sync with SF" \
-            -variable [namespace which -variable v::sfsync]
+            -variable ${ns}::v::sfsync
     ttk::checkbutton $f.autolidar -text "Auto Plot Lidar (Process EAARL Data)" \
-            -variable [namespace which -variable v::autolidar]
+            -variable ${ns}::v::autolidar
     ttk::checkbutton $f.autopt -text "Auto Plot (Plotting Tool)" \
-            -variable [namespace which -variable v::autopt]
+            -variable ${ns}::v::autopt
     ttk::checkbutton $f.autoptc -text "Auto Clear and Plot (Plotting Tool)" \
-            -variable [namespace which -variable v::autoptc]
+            -variable ${ns}::v::autoptc
 
     apply $labelgrid $f.playint "Delay:" $f.stepinc "Step:"
     apply $labelgrid $f.rast - $f.sfsync -
@@ -251,13 +253,14 @@ proc ::l1pro::drast::gui_opts_play {f labelgrid} {
 }
 
 proc ::l1pro::drast::gui_opts_rast {f labelgrid} {
+    set ns [namespace current]
     ::mixin::labelframe::collapsible $f -text "Rast: Unreferenced raster"
     set f [$f interior]
     spinbox $f.winrast -from 0 -to 63 -increment 1 -width 0 \
-            -textvariable [namespace which -variable v::rastwin]
+            -textvariable ${ns}::v::rastwin
     ::mixin::combobox::mapping $f.units -state readonly -width 0 \
-            -modifycmd [namespace which -command send_rastunits] \
-            -altvariable [namespace which -variable v::rastunits] \
+            -modifycmd ${ns}::send_rastunits \
+            -altvariable ${ns}::v::rastunits \
             -mapping {
                 Meters         meters
                 Feet           feet
@@ -267,33 +270,34 @@ proc ::l1pro::drast::gui_opts_rast {f labelgrid} {
 }
 
 proc ::l1pro::drast::gui_opts_geo {f labelgrid} {
+    set ns [namespace current]
     ::mixin::labelframe::collapsible $f -text "Geo: Georeferenced raster"
     set f [$f interior]
     spinbox $f.eoffset -from -1000 -to 1000 -increment 0.01 -width 0 \
-            -textvariable [namespace which -variable v::eoffset]
+            -textvariable ${ns}::v::eoffset
     spinbox $f.wingeo -from 0 -to 63 -increment 1 -width 0 \
-            -textvariable [namespace which -variable v::geowin]
+            -textvariable ${ns}::v::geowin
     ttk::checkbutton $f.yuse -text "Constrain y axis" \
-            -variable [namespace which -variable v::geoyuse]
+            -variable ${ns}::v::geoyuse
     spinbox $f.ymax -from -1000 -to 1000 -increment 0.01 -width 0 \
-            -textvariable [namespace which -variable v::geoymax]
+            -textvariable ${ns}::v::geoymax
     spinbox $f.ymin -from -1000 -to 1000 -increment 0.01 -width 0 \
-            -textvariable [namespace which -variable v::geoymin]
+            -textvariable ${ns}::v::geoymin
     ::mixin::combobox $f.style -state readonly -width 0 \
-            -textvariable [namespace which -variable v::geostyle] \
+            -textvariable ${ns}::v::geostyle \
             -values {pli plcm}
     spinbox $f.rcfw -from 0 -to 10000 -increment 1 -width 0 \
-            -textvariable [namespace which -variable v::georcfw]
+            -textvariable ${ns}::v::georcfw
     spinbox $f.bg -from 0 -to 255 -increment 1 -width 0 \
-            -textvariable [namespace which -variable v::geobg]
+            -textvariable ${ns}::v::geobg
     ttk::checkbutton $f.titles -text "Show titles" \
-            -variable [namespace which -variable v::geotitles]
+            -variable ${ns}::v::geotitles
 
     ttk::frame $f.styles
     ttk::button $f.styles.work -text "Work" \
-            -command [list [namespace which -command apply_style] v::geowin work]
+            -command [list ${ns}::apply_style v::geowin work]
     ttk::button $f.styles.nobox -text "No Box" \
-            -command [list [namespace which -command apply_style] v::geowin nobox]
+            -command [list ${ns}::apply_style v::geowin nobox]
     grid $f.styles.work $f.styles.nobox -sticky news
     grid columnconfigure $f.styles 100 -weight 1
 
@@ -305,9 +309,9 @@ proc ::l1pro::drast::gui_opts_geo {f labelgrid} {
     apply $labelgrid $f.styles "Plot style:"
 
     ::mixin::statevar $f.ymin -statemap {0 disabled 1 normal} \
-            -statevariable [namespace which -variable v::geoyuse]
+            -statevariable ${ns}::v::geoyuse
     ::mixin::statevar $f.ymax -statemap {0 disabled 1 normal} \
-            -statevariable [namespace which -variable v::geoyuse]
+            -statevariable ${ns}::v::geoyuse
 
     ::tooltip::tooltip $f.rcfw \
             "If specified, the RCF filter will be used to remove outliers,\
@@ -316,23 +320,24 @@ proc ::l1pro::drast::gui_opts_geo {f labelgrid} {
 }
 
 proc ::l1pro::drast::gui_opts_wf {f labelgrid} {
+    set ns [namespace current]
     ::mixin::labelframe::collapsible $f -text "WF: Examine waveforms"
     set f [$f interior]
     spinbox $f.winwf -from 0 -to 63 -increment 1 -width 0 \
-            -textvariable [namespace which -variable v::wfwin]
+            -textvariable ${ns}::v::wfwin
     spinbox $f.winbath -from 0 -to 63 -increment 1 -width 0 \
-            -textvariable [namespace which -variable v::wfwinbath]
+            -textvariable ${ns}::v::wfwinbath
     ::mixin::combobox $f.src -state readonly -width 0 \
-            -textvariable [namespace which -variable v::wfsrc] \
+            -textvariable ${ns}::v::wfsrc \
             -values {rast geo}
     ttk::checkbutton $f.use1 -text "90% channel (black)" \
-            -variable [namespace which -variable v::wfchan1]
+            -variable ${ns}::v::wfchan1
     ttk::checkbutton $f.use2 -text "10% channel (red)" \
-            -variable [namespace which -variable v::wfchan2]
+            -variable ${ns}::v::wfchan2
     ttk::checkbutton $f.use3 -text "1% channel (blue)" \
-            -variable [namespace which -variable v::wfchan3]
+            -variable ${ns}::v::wfchan3
     ttk::checkbutton $f.geo -text "Georeference" \
-            -variable [namespace which -variable v::wfgeo]
+            -variable ${ns}::v::wfgeo
     apply $labelgrid $f.winwf "WF window:" $f.use1 -
     apply $labelgrid $f.winbath "ex_bath window:" $f.use2 -
     apply $labelgrid $f.src "Select from:" $f.use3 -
@@ -340,21 +345,22 @@ proc ::l1pro::drast::gui_opts_wf {f labelgrid} {
 }
 
 proc ::l1pro::drast::gui_opts_sline {f labelgrid} {
+    set ns [namespace current]
     ::mixin::labelframe::collapsible $f -text "Scanline"
     set f [$f interior]
     spinbox $f.win -from 0 -to 63 -increment 1 -width 0 \
-            -textvariable [namespace which -variable v::slinewin]
+            -textvariable ${ns}::v::slinewin
     ::mixin::combobox $f.style -state readonly -width 0 \
-            -textvariable [namespace which -variable v::slinestyle] \
+            -textvariable ${ns}::v::slinestyle \
             -values {straight average smooth actual}
     ::mixin::combobox $f.color -state readonly -width 0 \
-            -textvariable [namespace which -variable v::slinecolor] \
+            -textvariable ${ns}::v::slinecolor \
             -values {black red blue green cyan magenta yellow white}
     ttk::frame $f.styles
     ttk::button $f.styles.work -text "Work" \
-            -command [list [namespace which -command apply_style] v::slinewin work]
+            -command [list ${ns}::apply_style v::slinewin work]
     ttk::button $f.styles.nobox -text "No Box" \
-            -command [list [namespace which -command apply_style] v::slinewin nobox]
+            -command [list ${ns}::apply_style v::slinewin nobox]
     grid $f.styles.work $f.styles.nobox -sticky news
     grid columnconfigure $f.styles 100 -weight 1
 
@@ -364,18 +370,19 @@ proc ::l1pro::drast::gui_opts_sline {f labelgrid} {
 }
 
 proc ::l1pro::drast::gui_opts_export {f labelgrid} {
+    set ns [namespace current]
     ::mixin::labelframe::collapsible $f -text "Export"
     set f [$f interior]
     ttk::checkbutton $f.enable -text "Enable auto-exporting" \
-            -variable [namespace which -variable v::export]
+            -variable ${ns}::v::export
     ttk::checkbutton $f.geo -text "Export Geo" \
-            -variable [namespace which -variable v::exportgeo]
+            -variable ${ns}::v::exportgeo
     ttk::checkbutton $f.sline -text "Export Scanline" \
-            -variable [namespace which -variable v::exportsline]
+            -variable ${ns}::v::exportsline
     spinbox $f.res -from 1 -to 100 -increment 1 -width 0 \
-            -textvariable [namespace which -variable v::exportres]
+            -textvariable ${ns}::v::exportres
     ttk::entry $f.dest -width 0 \
-            -textvariable [namespace which -variable v::exportdir]
+            -textvariable ${ns}::v::exportdir
 
     apply $labelgrid $f.enable -
     apply $labelgrid $f.geo -
@@ -529,6 +536,7 @@ proc ::l1pro::drast::play opt {
 
 proc ::l1pro::drast::play_tick {} {
     after cancel $v::playcancel
+    set ns [namespace current]
     set delay [expr {int($v::playint * 1000)}]
     switch -exact -- $v::playmode {
         0 {
@@ -537,21 +545,19 @@ proc ::l1pro::drast::play_tick {} {
         }
         1 {
             if {$v::maxrn == $v::rn} {
-                ::misc::idle [list [namespace which -command play] stop]
+                ::misc::idle [list ${ns}::play stop]
             } else {
                 step forward
-                ::misc::safeafter [namespace which -variable v::playcancel] \
-                        $delay [namespace which -command play_tick]
+                ::misc::safeafter ${ns}::v::playcancel $delay ${ns}::play_tick
             }
             return
         }
         -1 {
             if {1 == $v::rn} {
-                ::misc::idle [list [namespace which -command play] stop]
+                ::misc::idle [list ${ns}::play stop]
             } else {
                 step backward
-                ::misc::safeafter [namespace which -variable v::playcancel] \
-                        $delay [namespace which -command play_tick]
+                ::misc::safeafter ${ns}::v::playcancel $delay ${ns}::play_tick
             }
             return
         }
