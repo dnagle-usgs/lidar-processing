@@ -62,13 +62,13 @@ proc ::l1pro::tools::rcf::gui args {
             -listvariable ::varlist \
             -textvariable ${ns}::v::invar
 
-    spinbox $f.buf -from 1 -to 100000 -increment 1 \
+    ttk::spinbox $f.buf -from 1 -to 100000 -increment 1 \
             -format %.0f \
             -textvariable ${ns}::v::buf
-    spinbox $f.w -from 1 -to 100000 -increment 1 \
+    ttk::spinbox $f.w -from 1 -to 100000 -increment 1 \
             -format %.0f \
             -textvariable ${ns}::v::w
-    spinbox $f.n -from 1 -to 100000 -increment 1 \
+    ttk::spinbox $f.n -from 1 -to 100000 -increment 1 \
             -format %.0f \
             -textvariable ${ns}::v::n
     ttk::entry $f.output \
@@ -271,7 +271,7 @@ proc ::l1pro::tools::histelev::gui_general {f labelsVar} {
                 "Density"   1
                 "Counts"    0
             }
-    spinbox $f.win -from 0 -to 63 -increment 1 \
+    ttk::spinbox $f.win -from 0 -to 63 -increment 1 \
             -textvariable ${ns}::v::win
     ttk::checkbutton $f.dofma \
             -variable ${ns}::v::dofma
@@ -279,7 +279,7 @@ proc ::l1pro::tools::histelev::gui_general {f labelsVar} {
             -variable ${ns}::v::logy
     ttk::checkbutton $f.autobin \
             -variable ${ns}::v::auto_binsize
-    spinbox $f.binsize -from 0 -to 100 -increment 0.01 \
+    ttk::spinbox $f.binsize -from 0 -to 100 -increment 0.01 \
             -textvariable ${ns}::v::binsize
     grid $f.lblnormalize $f.normalize
     grid $f.lblwin $f.win
@@ -329,7 +329,7 @@ proc ::l1pro::tools::histelev::gui_line {w labelsVar} {
     ::mixin::combobox $f.color -state readonly \
             -textvariable ${ns}::v::plot_histline_color \
             -values $c::colors
-    spinbox $f.width -from 0 -to 10 -increment 0.1 \
+    ttk::spinbox $f.width -from 0 -to 10 -increment 0.1 \
             -textvariable ${ns}::v::plot_histline_size
     ::mixin::combobox $f.type -state readonly \
             -textvariable ${ns}::v::plot_histline_type \
@@ -357,7 +357,7 @@ proc ::l1pro::tools::histelev::gui_box {w labelsVar} {
     ::mixin::combobox $f.color -state readonly \
             -textvariable ${ns}::v::plot_histbar_color \
             -values $c::colors
-    spinbox $f.width -from 0 -to 10 -increment 0.1 \
+    ttk::spinbox $f.width -from 0 -to 10 -increment 0.1 \
             -textvariable ${ns}::v::plot_histbar_size
     ::mixin::combobox $f.type -state readonly \
             -textvariable ${ns}::v::plot_histbar_type \
@@ -384,7 +384,7 @@ proc ::l1pro::tools::histelev::gui_ticks {w labelsVar} {
     ::mixin::combobox $f.color -state readonly \
             -textvariable ${ns}::v::plot_tickmarks_color \
             -values $c::colors
-    spinbox $f.size -from 0 -to 10 -increment 0.1 \
+    ttk::spinbox $f.size -from 0 -to 10 -increment 0.1 \
             -textvariable ${ns}::v::plot_tickmarks_size
     grid $f.lblcolor $f.color
     grid $f.lblsize $f.size
@@ -417,14 +417,14 @@ proc ::l1pro::tools::histelev::gui_kde {w labelsVar} {
             -command ::l1pro::tools::histelev::krnl_profile
     ttk::checkbutton $f.autoband \
             -variable ${ns}::v::auto_bandwidth
-    spinbox $f.bandwidth -from 0 -to 100 -increment 0.01 \
+    ttk::spinbox $f.bandwidth -from 0 -to 100 -increment 0.01 \
             -textvariable ${ns}::v::bandwidth
-    spinbox $f.sample -from 1 -to 10000 -increment 1 \
+    ttk::spinbox $f.sample -from 1 -to 10000 -increment 1 \
             -textvariable ${ns}::v::kdesample
     ::mixin::combobox $f.color -state readonly \
             -textvariable ${ns}::v::plot_kdeline_color \
             -values $c::colors
-    spinbox $f.width -from 0 -to 10 -increment 0.1 \
+    ttk::spinbox $f.width -from 0 -to 10 -increment 0.1 \
             -textvariable ${ns}::v::plot_kdeline_size
     ::mixin::combobox $f.type -state readonly \
             -textvariable ${ns}::v::plot_kdeline_type \
@@ -492,7 +492,7 @@ proc ::l1pro::tools::histelev::cbar_tool {} {
 
     ttk::frame $f.fwin
     ttk::label $f.lblwin -text "Window: "
-    spinbox $f.win -from 0 -to 63 -increment 1 -width 0 \
+    ttk::spinbox $f.win -from 0 -to 63 -increment 1 -width 0 \
             -textvariable ${ns}::v::win
 
     grid $f.lblwin $f.win -in $f.fwin -sticky ew
@@ -575,10 +575,10 @@ proc ::l1pro::tools::histclip::gui {} {
     ttk::checkbutton $f.usemin -variable ${ns}::v::usemin
     ttk::checkbutton $f.usemax -variable ${ns}::v::usemax
 
-    spinbox $f.minelv -from -5000 -to 5000 -increment 0.1 \
+    ttk::spinbox $f.minelv -from -5000 -to 5000 -increment 0.1 \
             -format %.2f \
             -textvariable ${ns}::v::minelv
-    spinbox $f.maxelv -from -5000 -to 5000 -increment 0.1 \
+    ttk::spinbox $f.maxelv -from -5000 -to 5000 -increment 0.1 \
             -format %.2f \
             -textvariable ${ns}::v::maxelv
 
@@ -687,13 +687,13 @@ proc ::l1pro::tools::griddata::gui {} {
     ttk::checkbutton $f.usearea -variable ${ns}::v::usearea
     ttk::checkbutton $f.usetile -variable ${ns}::v::usetile
 
-    spinbox $f.maxside -from 0 -to 5000 -increment 0.1 \
+    ttk::spinbox $f.maxside -from 0 -to 5000 -increment 0.1 \
             -format %.2f \
             -textvariable ${ns}::v::maxside
-    spinbox $f.maxarea -from 0 -to 100000 -increment 0.1 \
+    ttk::spinbox $f.maxarea -from 0 -to 100000 -increment 0.1 \
             -format %.2f \
             -textvariable ${ns}::v::maxarea
-    spinbox $f.cell -from 0 -to 100 -increment 0.1 \
+    ttk::spinbox $f.cell -from 0 -to 100 -increment 0.1 \
             -format %.2f \
             -textvariable ${ns}::v::cell
 
@@ -923,14 +923,14 @@ proc ::l1pro::tools::copy_limits::gui {} {
 
     ttk::label $f.srclbl -text "Copy from:"
     ttk::button $f.btndst -text "Apply to:" -width 0 -command ${ns}::apply
-    ttk::button $f.btnall -text "Apply to all" -width 0 
+    ttk::button $f.btnall -text "Apply to all" -width 0 \
             -command ${ns}::apply_all
     ttk::button $f.viz -text "Viz" -width 0 -command ${ns}::viz
     ttk::button $f.swap -text "Swap" -width 0 -command ${ns}::swap
-    spinbox $f.src -justify center -width 2 \
+    ttk::spinbox $f.src -justify center -width 2 \
             -textvariable ${ns}::v::src \
             -from 0 -to 63 -increment 1
-    spinbox $f.dst -justify center -width 2 \
+    ttk::spinbox $f.dst -justify center -width 2 \
             -textvariable ${ns}::v::dst \
             -from 0 -to 63 -increment 1
 
@@ -1147,7 +1147,7 @@ namespace eval ::l1pro::tools::rollbias {
         ttk::label $f.lblvar -text "Variable:"
         ttk::entry $f.var -width 5 -textvariable ${ns}::v::var
         ttk::label $f.lblwinsrc -text "in window:"
-        spinbox $f.winsrc -width 2 \
+        ttk::spinbox $f.winsrc -width 2 \
                 -from 0 -to 63 -increment 1 \
                 -textvariable ${ns}::v::winsrc
         ttk::label $f.lbltrans -text "Then click"
@@ -1161,7 +1161,7 @@ namespace eval ::l1pro::tools::rollbias {
         grid columnconfigure $w.row1 1 -weight 1
 
         ttk::label $f.lblwidth -text "Width:"
-        spinbox $f.width -width 4 \
+        ttk::spinbox $f.width -width 4 \
                 -from 0 -to 10000 -increment 1 \
                 -textvariable ${ns}::v::width
         ttk::label $f.lblbias -text "Current Roll Bias:"
@@ -1180,7 +1180,7 @@ namespace eval ::l1pro::tools::rollbias {
 
         ttk::button $f.plot -text "Plot" -command ${ns}::plot
         ttk::label $f.lblwindst -text "in win:"
-        spinbox $f.windst -width 2 \
+        ttk::spinbox $f.windst -width 2 \
                 -from 0 -to 63 -increment 1 \
                 -textvariable ${ns}::v::windst
         ttk::button $f.selflt -text "Select Flightlines" \

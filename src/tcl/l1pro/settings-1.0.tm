@@ -41,7 +41,7 @@ proc ::l1pro::settings::ops_conf::gui_entry {w key} {
 
 proc ::l1pro::settings::ops_conf::gui_spinbox {w key from to inc} {
     set var [namespace which -variable v::ops_conf]
-    spinbox $w.$key -textvariable ${var}($key) \
+    ttk::spinbox $w.$key -textvariable ${var}($key) \
             -from $from -to $to -increment $inc
     gui_line $w.$key "$key: "
 }
