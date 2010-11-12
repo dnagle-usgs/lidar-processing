@@ -525,8 +525,8 @@ proc ::l1pro::groundtruth::scatter::panel w {
             -textvariable ${ns}::v::win \
             -from 0 -to 63 -increment 1 -format %.0f
     ttk::label $f.lbltitle -text "Graph title:"
-    ttk::label $f.lblxtitle -text "Model label:"
-    ttk::label $f.lblytitle -text "Truth label:"
+    ttk::label $f.lblytitle -text "Model label:"
+    ttk::label $f.lblxtitle -text "Truth label:"
     ttk::entry $f.title -width 0 -textvariable ${ns}::v::title
     ttk::entry $f.xtitle -width 0 -textvariable ${ns}::v::xtitle
     ttk::entry $f.ytitle -width 0 -textvariable ${ns}::v::ytitle
@@ -534,8 +534,8 @@ proc ::l1pro::groundtruth::scatter::panel w {
     grid $f.lblvar $f.cbovar $f.btnvar - {*}$ew
     grid $f.lbldata $f.data $f.lblwin $f.win {*}$ew
     grid $f.lbltitle $f.title - - {*}$ew
-    grid $f.lblxtitle $f.xtitle - - {*}$ew
     grid $f.lblytitle $f.ytitle - - {*}$ew
+    grid $f.lblxtitle $f.xtitle - - {*}$ew
 
     grid configure $f.lblvar $f.lbldata $f.lbltitle $f.lblxtitle $f.lblytitle \
             $f.lblwin -sticky e
