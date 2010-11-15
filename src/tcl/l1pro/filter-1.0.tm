@@ -447,8 +447,8 @@ proc filter_replace {} {
 
     Button .rep.type -text "Filter selected points" -width 15 -bd 5 \
             -command {
-                global have_replaced have_undone croppeddata outvar rcf_buf_rgn
-                    sel_points
+                global have_replaced have_undone croppeddata outvar \
+                    rcf_buf_rgn sel_points
                 set outvar workdata_grcf
                 if {$have_undone == 1} {
                     if {$rcf_buf_rgn > 0} {
