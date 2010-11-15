@@ -102,14 +102,14 @@ snit::widget ::l1pro::ascii::gui {
                 -variable [myvar latlon]
 
         ttk::label $w.headerlbl -text "Header lines:"
-        spinbox $w.header \
+        ttk::spinbox $w.header \
                 -textvariable [myvar header] \
                 -width 4 \
                 -from 0 -to 1000 -increment 1 \
                 -command [mymethod reload_preview_data]
 
         ttk::label $w.columnlbl -text "Columns:"
-        spinbox $w.column \
+        ttk::spinbox $w.column \
                 -width 4 \
                 -from 1 -to 1000 -increment 1 -text 3 \
                 -textvariable [myvar columns] \

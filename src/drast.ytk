@@ -428,7 +428,7 @@ button .rslider.bf2.georef -text "Geo Ref" -command {
 
 checkbutton .rslider.bf2.angeo -text "Animate GeoRef" -variable animate_georef
 
-spinbox .rslider.bf2.elevation_offset \
+ttk::spinbox .rslider.bf2.elevation_offset \
         -justify center \
         -from -1000 -to 1000 -increment 0.5 -format %.2f \
         -width 7 \
@@ -462,7 +462,7 @@ button .rslider.bf1.play -text "Play->" -command {
  set tid [ after $play_interval  play ]
 }
 
-spinbox .rslider.bf1.pint -textvariable play_interval \
+ttk::spinbox .rslider.bf1.pint -textvariable play_interval \
    -from 1 -to 3000 -increment 1 -width 5
 
  entry .rslider.bf1.enter_rn -width 7 -textvariable rn
@@ -492,7 +492,7 @@ bind .rslider  <p> {
 }
 
 
-spinbox .rslider.bf1.inc -textvariable inc \
+ttk::spinbox .rslider.bf1.inc -textvariable inc \
    -from 1 -to 1000 -increment 1 -width 5
 
 trace variable depth_display_units w dus

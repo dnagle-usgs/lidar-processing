@@ -224,9 +224,9 @@ proc ::l1pro::drast::gui_opts_play {f labelgrid} {
     set ns [namespace current]
     ::mixin::labelframe::collapsible $f -text "Playback"
     set f [$f interior]
-    spinbox $f.playint -from 0 -to 10000 -increment 0.1 -width 0 \
+    ttk::spinbox $f.playint -from 0 -to 10000 -increment 0.1 -width 0 \
             -textvariable ${ns}::v::playint
-    spinbox $f.stepinc -from 1 -to 10000 -increment 1 -width 0 \
+    ttk::spinbox $f.stepinc -from 1 -to 10000 -increment 1 -width 0 \
             -textvariable ${ns}::v::stepinc
     ttk::checkbutton $f.rast -text "Show rast" \
             -variable ${ns}::v::show_rast
@@ -256,7 +256,7 @@ proc ::l1pro::drast::gui_opts_rast {f labelgrid} {
     set ns [namespace current]
     ::mixin::labelframe::collapsible $f -text "Rast: Unreferenced raster"
     set f [$f interior]
-    spinbox $f.winrast -from 0 -to 63 -increment 1 -width 0 \
+    ttk::spinbox $f.winrast -from 0 -to 63 -increment 1 -width 0 \
             -textvariable ${ns}::v::rastwin
     ::mixin::combobox::mapping $f.units -state readonly -width 0 \
             -modifycmd ${ns}::send_rastunits \
@@ -273,22 +273,22 @@ proc ::l1pro::drast::gui_opts_geo {f labelgrid} {
     set ns [namespace current]
     ::mixin::labelframe::collapsible $f -text "Geo: Georeferenced raster"
     set f [$f interior]
-    spinbox $f.eoffset -from -1000 -to 1000 -increment 0.01 -width 0 \
+    ttk::spinbox $f.eoffset -from -1000 -to 1000 -increment 0.01 -width 0 \
             -textvariable ${ns}::v::eoffset
-    spinbox $f.wingeo -from 0 -to 63 -increment 1 -width 0 \
+    ttk::spinbox $f.wingeo -from 0 -to 63 -increment 1 -width 0 \
             -textvariable ${ns}::v::geowin
     ttk::checkbutton $f.yuse -text "Constrain y axis" \
             -variable ${ns}::v::geoyuse
-    spinbox $f.ymax -from -1000 -to 1000 -increment 0.01 -width 0 \
+    ttk::spinbox $f.ymax -from -1000 -to 1000 -increment 0.01 -width 0 \
             -textvariable ${ns}::v::geoymax
-    spinbox $f.ymin -from -1000 -to 1000 -increment 0.01 -width 0 \
+    ttk::spinbox $f.ymin -from -1000 -to 1000 -increment 0.01 -width 0 \
             -textvariable ${ns}::v::geoymin
     ::mixin::combobox $f.style -state readonly -width 0 \
             -textvariable ${ns}::v::geostyle \
             -values {pli plcm}
-    spinbox $f.rcfw -from 0 -to 10000 -increment 1 -width 0 \
+    ttk::spinbox $f.rcfw -from 0 -to 10000 -increment 1 -width 0 \
             -textvariable ${ns}::v::georcfw
-    spinbox $f.bg -from 0 -to 255 -increment 1 -width 0 \
+    ttk::spinbox $f.bg -from 0 -to 255 -increment 1 -width 0 \
             -textvariable ${ns}::v::geobg
     ttk::checkbutton $f.titles -text "Show titles" \
             -variable ${ns}::v::geotitles
@@ -323,9 +323,9 @@ proc ::l1pro::drast::gui_opts_wf {f labelgrid} {
     set ns [namespace current]
     ::mixin::labelframe::collapsible $f -text "WF: Examine waveforms"
     set f [$f interior]
-    spinbox $f.winwf -from 0 -to 63 -increment 1 -width 0 \
+    ttk::spinbox $f.winwf -from 0 -to 63 -increment 1 -width 0 \
             -textvariable ${ns}::v::wfwin
-    spinbox $f.winbath -from 0 -to 63 -increment 1 -width 0 \
+    ttk::spinbox $f.winbath -from 0 -to 63 -increment 1 -width 0 \
             -textvariable ${ns}::v::wfwinbath
     ::mixin::combobox $f.src -state readonly -width 0 \
             -textvariable ${ns}::v::wfsrc \
@@ -348,7 +348,7 @@ proc ::l1pro::drast::gui_opts_sline {f labelgrid} {
     set ns [namespace current]
     ::mixin::labelframe::collapsible $f -text "Scanline"
     set f [$f interior]
-    spinbox $f.win -from 0 -to 63 -increment 1 -width 0 \
+    ttk::spinbox $f.win -from 0 -to 63 -increment 1 -width 0 \
             -textvariable ${ns}::v::slinewin
     ::mixin::combobox $f.style -state readonly -width 0 \
             -textvariable ${ns}::v::slinestyle \
@@ -379,7 +379,7 @@ proc ::l1pro::drast::gui_opts_export {f labelgrid} {
             -variable ${ns}::v::exportgeo
     ttk::checkbutton $f.sline -text "Export Scanline" \
             -variable ${ns}::v::exportsline
-    spinbox $f.res -from 1 -to 100 -increment 1 -width 0 \
+    ttk::spinbox $f.res -from 1 -to 100 -increment 1 -width 0 \
             -textvariable ${ns}::v::exportres
     ttk::entry $f.dest -width 0 \
             -textvariable ${ns}::v::exportdir

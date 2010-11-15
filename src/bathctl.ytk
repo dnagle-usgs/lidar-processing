@@ -171,7 +171,7 @@ proc bathctl::gui_launch {} {
    foreach {key range} $v::ranges {
       lassign $range rmin rmax rinc
       label $w.lb$key -text [mc $key]
-      spinbox $w.sb$key -textvariable ::bath_ctl($key) -format %.2f \
+      ttk::spinbox $w.sb$key -textvariable ::bath_ctl($key) -format %.2f \
          -from $rmin -to $rmax -increment $rinc -width 6
       grid $w.lb$key $w.sb$key -in $w -sticky ew
       grid configure $w.lb$key -sticky e

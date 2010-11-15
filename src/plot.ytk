@@ -183,11 +183,11 @@ proc ::plot::menu { } {
    grid $f -sticky ewn
 
    label $f.labWinFrom -text "From:"
-   spinbox $f.spnWinFrom -justify center -width 4 \
+   ttk::spinbox $f.spnWinFrom -justify center -width 4 \
       -from 0 -to 63 -increment 1 \
       -textvariable ::plot::g::limits_copy_from
    label $f.labWinTo -text "To:"
-   spinbox $f.spnWinTo -justify center -width 4 \
+   ttk::spinbox $f.spnWinTo -justify center -width 4 \
       -from 0 -to 63 -increment 1 \
       -textvariable ::plot::g::limits_copy_to
    Button $f.butApply -text "Apply" -command ::plot::copy_limits
@@ -217,7 +217,7 @@ proc ::plot::menu { } {
    grid $f.labCoord $f.cboCoord
 
    label $f.labUTMZone -text "UTM Zone:" -anchor e
-   spinbox $f.spnUTMZone -justify center \
+   ttk::spinbox $f.spnUTMZone -justify center \
       -from 0 -to 60 -increment 1 \
       -textvariable ::curzone
    ::tooltip::tooltip $f.spnUTMZone \
@@ -270,7 +270,7 @@ proc ::plot::menu { } {
    grid $f -sticky wen
 
    label $f.labWindow -text "In Window:"
-   spinbox $f.spnWindow -justify center -textvariable ::_map(window) \
+   ttk::spinbox $f.spnWindow -justify center -textvariable ::_map(window) \
       -from 0 -to 63 -increment 1
    grid $f.labWindow $f.spnWindow
    grid $f.labWindow -sticky e
@@ -477,7 +477,7 @@ proc ::plot::menu { } {
    grid $pane.butPlot - -sticky ew
 
    label $pane.labSkip -text "Skip factor:"
-   spinbox $pane.spnSkip -justify center -width 4 \
+   ttk::spinbox $pane.spnSkip -justify center -width 4 \
       -from 1 -to 10000 -increment 1 \
       -textvariable ::plot::g::imageSkip
    grid $pane.labSkip $pane.spnSkip -sticky ew

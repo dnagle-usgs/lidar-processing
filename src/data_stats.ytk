@@ -108,7 +108,7 @@ itcl::body DataStatsWindow::constructor {data args} {
       button $f.btnPlot$idx -text "Plot in:" \
          -command [itcl::code $this plot_segment $idx]
 
-      spinbox $f.spnWin$idx \
+      ttk::spinbox $f.spnWin$idx \
          -textvariable [itcl::scope _segment($idx,win)] \
          -from 0 -to $itk_option(-maxwin) -width 2
 

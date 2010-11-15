@@ -185,7 +185,7 @@ snit::widget ::l1pro::file::gui::load_pbd_as {
                 -textvariable [myvar vname]
 
         ttk::label $win.lblSkip -text "Subsample factor: "
-        spinbox $win.spnSkip -from 1 -to 10000 -increment 1 \
+        ttk::spinbox $win.spnSkip -from 1 -to 10000 -increment 1 \
                 -textvariable [myvar skip]
 
         ttk::button $win.btnLoad -text "Load" -command [mymethod load]
@@ -335,7 +335,7 @@ snit::widget ::l1pro::file::gui::export_ascii {
 
         ttk::checkbutton $win.chkLimit -text "Limit line count to: " \
                 -variable [myvar limit]
-        spinbox $win.spnLimit -from 1 -to 1000000000 -increment 1000 \
+        ttk::spinbox $win.spnLimit -from 1 -to 1000000000 -increment 1000 \
                 -width 10 -textvariable [myvar split]
 
         ttk::button $win.btnExport -text "Export" -command [mymethod export]
@@ -468,7 +468,7 @@ snit::widget ::l1pro::file::gui::load_las {
                 -textvariable [myvar vname]
 
         ttk::label $win.lblSkip -text "Subsample factor: "
-        spinbox $win.spnSkip -from 1 -to 10000 -increment 1 \
+        ttk::spinbox $win.spnSkip -from 1 -to 10000 -increment 1 \
                 -textvariable [myvar skip]
 
         ttk::checkbutton $win.chkFakemirror -text "Fake mirror coordinates" \

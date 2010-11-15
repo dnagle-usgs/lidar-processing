@@ -61,7 +61,7 @@ snit::widget ::sf::gui {
     # -interval <double>
     #   The delay (in seconds) between steps during playback. Must be greater
     #   than or equal to 0.
-    option -interval 0
+    option -interval 0.0
 
     # -playmode <mode>
     #   The current playback mode. Must be 0 (for "stopped"), 1 (for "forward
@@ -521,15 +521,15 @@ snit::widget ::sf::gui {
     #   Creates a toolbar with widgets for the various settings at $f.
     method {Create toolbar settings} f {
         ttk::frame $f
-        spinbox $f.interval \
+        ttk::spinbox $f.interval \
                 -format %.1f -from 0 -to 10 -increment 0.1 \
                 -textvariable [myvar options(-interval)] \
                 -width 4 -justify right
-        spinbox $f.increment \
+        ttk::spinbox $f.increment \
                 -format %.0f -from 1 -to 500 -increment 1 \
                 -textvariable [myvar options(-increment)] \
                 -width 4 -justify right
-        spinbox $f.offset \
+        ttk::spinbox $f.offset \
                 -format %.0f -from -86400 -to 86400 -increment 1 \
                 -textvariable [myvar options(-offset)] \
                 -width 4 -justify right \

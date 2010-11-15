@@ -107,9 +107,9 @@ proc filter_remove {} {
                 set state [lindex {disabled normal} $max]
                 .rem.08.maxthresh configure -state $state
             }
-    spinbox .rem.07.minthresh -textvariable min_thresh -width 10 \
+    ttk::spinbox .rem.07.minthresh -textvariable min_thresh -width 10 \
             -from -100 -to 5000 -increment 0.1 -format %.2f
-    spinbox .rem.08.maxthresh -textvariable max_thresh -width 10 \
+    ttk::spinbox .rem.08.maxthresh -textvariable max_thresh -width 10 \
             -from -100 -to 5000 -increment 0.1 -format %.2f
     set min 1
     set max 1
