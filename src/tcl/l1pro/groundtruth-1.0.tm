@@ -27,7 +27,7 @@ proc ::l1pro::groundtruth {} {
 }
 
 namespace eval ::l1pro::groundtruth {
-    namespace export comparison_* widget_* gen_array_list
+    namespace export comparison_* widget_* popup_* gen_array_list
 }
 
 proc ::l1pro::groundtruth::gui {} {
@@ -236,6 +236,35 @@ proc ::l1pro::groundtruth::widget_plots_state {w v kind name1 name2 op} {
                 "Select the size for the $kind used in this plot."
     }
 }
+
+proc ::l1pro::groundtruth::popup_selection_menu {w varName} {
+    set m [menu $w.__popup_menu__]
+    set cmd [namespace current]::popup_selection_
+    $m add command -label "Select all"  -command [list ${cmd}set $varName 1]
+    $m add command -label "Select none" -command [list ${cmd}set $varName 0]
+    $m add command -label "Toggle selection" \
+            -command [list ${cmd}flip $varName]
+    foreach widget [list $w {*}[winfo descendents $w]] {
+        bind $widget <Button-3> [list tk_popup $m %X %Y]
+        ::tooltip::tooltip $widget \
+            "Right click to select all, select none, or toggle selection."
+    }
+}
+
+proc ::l1pro::groundtruth::popup_selection_set {varName val} {
+    upvar $varName var
+    foreach key [array names var] {
+        set var($key) $val
+    }
+}
+
+proc ::l1pro::groundtruth::popup_selection_flip {varName} {
+    upvar $varName var
+    foreach key [array names $varName] {
+        set var($key) [expr {!$var($key)}]
+    }
+}
+
 
 proc ::l1pro::groundtruth::gen_array_list {varname list} {
     upvar $varname values
@@ -577,6 +606,8 @@ proc ::l1pro::groundtruth::scatter::panel w {
                 -variable ${ns}::v::metrics($metric)
         grid $f.m$metric {*}$o -sticky w
     }
+
+    popup_selection_menu $f ${ns}::v::metrics
 
     set f $w.bottom
     ttk::frame $f
@@ -993,6 +1024,8 @@ proc ::l1pro::groundtruth::report::panel w {
         grid $f.$type {*}$o -sticky w
     }
 
+    popup_selection_menu $f ${ns}::v::use_data
+
     set f $w.metrics
     ttk::labelframe $f -text Metrics
     ::mixin::frame::scrollable $f.f -xfill 1 -yfill 1 \
@@ -1028,6 +1061,8 @@ proc ::l1pro::groundtruth::report::panel w {
     set f [$w.metrics.f interior]
     grid $f.c1 $f.c2 $f.c3 {*}$o -sticky nwe
     grid columnconfigure $f {0 1 2} -uniform 1 -weight 1
+
+    popup_selection_menu $f ${ns}::v::metrics
 
     set f $w.bottom
     ttk::frame $f
