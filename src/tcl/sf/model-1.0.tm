@@ -100,94 +100,94 @@ namespace eval ::sf::model::collection {}
 # class.                                                                       #
 #==============================================================================#
 snit::type ::sf::model::collection::null {
-    # ------------------------------ Components ---------------------------------
+    # ------------------------------ Components --------------------------------
     # translator
-    #     Each collection has a translator that allows it to interpret its
-    #     collected data. The translator can be set by its corresponding
-    #     -translator option. The translator is accessed via the translator
-    #     subcommand, which is intended to be used only by derived classes.
+    #   Each collection has a translator that allows it to interpret its
+    #   collected data. The translator can be set by its corresponding
+    #   -translator option. The translator is accessed via the translator
+    #   subcommand, which is intended to be used only by derived classes.
     component translator -public translator
     option -translator -configuremethod SetTranslator -cgetmethod GetTranslator
     
-    # -------------------------------- Options ----------------------------------
+    # ------------------------------- Options ----------------------------------
     # -offset <integer>
-    #     An offset (in seconds) to apply to the soe values. This allows the
-    #     model to map between "local" soe values and "real" soe values.
+    #   An offset (in seconds) to apply to the soe values. This allows the
+    #   model to map between "local" soe values and "real" soe values.
     #
-    #     local soe + offset = real soe
+    #   local soe + offset = real soe
     option -offset 0
 
     # -name <string>
-    #     This option is optional. If present, it contains a descriptive name
-    #     for this collection.
+    #   This option is optional. If present, it contains a descriptive name for
+    #   this collection.
     option -name {}
 
-    # -------------------------------- Methods ----------------------------------
+    # ------------------------------- Methods ----------------------------------
 
     # convert to local <realSoe>
-    #     Converts a real soe into a local soe.
+    #   Converts a real soe into a local soe.
     method {convert to local} realSoe {
         return [expr {$realSoe - $options(-offset)}]
     }
 
     # convert to real <localSoe>
-    #     Converts a local soe into a real one.
+    #   Converts a local soe into a real one.
     method {convert to real} localSoe {
         return [expr {$localSoe + $options(-offset)}]
     }
 
     # query <realSoe>
-    #     Given an soe, finds the nearest image (in time) to it. This should
-    #     always provide a result (no threshold is involved), unless there are
-    #     no images at all.
+    #   Given an soe, finds the nearest image (in time) to it. This should
+    #   always provide a result (no threshold is involved), unless there are no
+    #   images at all.
     #
-    #     The result returned will be the empty string if no result could be
-    #     found. Otherwise, it will be a dictionary that defines the following
-    #     keys:
-    #        -fraction   A value representing the result's position in the
-    #                    sequence, suitable for passing to method 'position'.
-    #        -soe        The frame's real soe value.
-    #        -token      A token that can be passed to method 'retrieve' to get
-    #                    the image for the frame. Note that different
-    #                    collections may define this differently, so do not
-    #                    assume that its contents provide any information that
-    #                    is useful for any purpose other than the 'retrieve'
-    #                    method.
+    #   The result returned will be the empty string if no result could be
+    #   found. Otherwise, it will be a dictionary that defines the following
+    #   keys:
+    #       -fraction   A value representing the result's position in the
+    #                   sequence, suitable for passing to method 'position'.
+    #       -soe        The frame's real soe value.
+    #       -token      A token that can be passed to method 'retrieve' to get
+    #                   the image for the frame. Note that different
+    #                   collections may define this differently, so do not
+    #                   assume that its contents provide any information that
+    #                   is useful for any purpose other than the 'retrieve'
+    #                   method.
     method query realSoe {return {}}
 
     # relative <realSoe> <offset>
-    #     Given an soe known to be in the dataset, return the image that is
-    #     <offset> frames away from it.
+    #   Given an soe known to be in the dataset, return the image that is
+    #   <offset> frames away from it.
     #
-    #     The soe should be a known soe; if the soe isn't found then it will get
-    #     adjusted to a real soe by passing it through method 'query' first.
+    #   The soe should be a known soe; if the soe isn't found then it will get
+    #   adjusted to a real soe by passing it through method 'query' first.
     #
-    #     This returns the same kind of result as method 'query'; see
-    #     documentation at 'query' for details.
+    #   This returns the same kind of result as method 'query'; see
+    #   documentation at 'query' for details.
     method relative {realSoe offset} {return {}}
 
     # position <fraction>
-    #     The fraction given must be between 0 and 1 (inclusive). The frame that
-    #     is located at that position in the sequence will be returned.
+    #   The fraction given must be between 0 and 1 (inclusive). The frame that
+    #   is located at that position in the sequence will be returned.
     #
-    #     This returns the same kind of result as method 'query'; see
-    #     documentation at 'query' for details.
+    #   This returns the same kind of result as method 'query'; see
+    #   documentation at 'query' for details.
     method position fraction {return {}}
 
     # retrieve <token> <args>
-    #     Retrieves the image represented by the given token. The token should
-    #     be the value for the -token key of a result from 'query', 'relative',
-    #     or 'position'.
+    #   Retrieves the image represented by the given token. The token should be
+    #   the value for the -token key of a result from 'query', 'relative', or
+    #   'position'.
     #
-    #     The image will have image transformations performed to it as dictated
-    #     by the relevant options in <args>, which may be any of these options
-    #     accepted by ::imgops::transform:
-    #        -percent    -width      -normalize
-    #        -rotate     -height     -equalize
+    #   The image will have image transformations performed to it as dictated
+    #   by the relevant options in <args>, which may be any of these options
+    #   accepted by ::imgops::transform:
+    #       -percent    -width      -normalize
+    #       -rotate     -height     -equalize
     #
-    #     If present, the option -imagename specifies the name of the image to
-    #     store the retrieved image in. Otherwise, a new image is created. If no
-    #     image is found, the image is blanked.
+    #   If present, the option -imagename specifies the name of the image to
+    #   store the retrieved image in. Otherwise, a new image is created. If no
+    #   image is found, the image is blanked.
     method retrieve {token args} {
         if {[dict exists $args -imagename]} {
             [dict get $args -imagename] blank
@@ -198,20 +198,20 @@ snit::type ::sf::model::collection::null {
     }
 
     # export <token> <fn>
-    #     Exports the image represented by the given token. The token should be
-    #     the value for the -token key of a result from 'query', 'relative', or
-    #     'position'. The image will be stored to the given file fn.
+    #   Exports the image represented by the given token. The token should be
+    #   the value for the -token key of a result from 'query', 'relative', or
+    #   'position'. The image will be stored to the given file fn.
     method export {token fn} {return {}}
 
     # filename <token>
-    #     Returns the filename associated with the image for the given token.
-    #     This is generally either the name of the image file natively, or a
-    #     slightly modified version thereof.
+    #   Returns the filename associated with the image for the given token.
+    #   This is generally either the name of the image file natively, or a
+    #   slightly modified version thereof.
     method filename token {return {}}
 
-    #===========================================================================#
-    #                                 Internals                                 #
-    #===========================================================================#
+    #==========================================================================#
+    #                                Internals                                 #
+    #==========================================================================#
 
     constructor args {
         set translator ::sf::model::translator::null
@@ -220,8 +220,8 @@ snit::type ::sf::model::collection::null {
     }
 
     # SetTranslator <option> <value>
-    #     Used to set the translator component. Should be passed a translator
-    #     type command as its value.
+    #   Used to set the translator component. Should be passed a translator
+    #   type command as its value.
     method SetTranslator {option value} {
         set translator $value
     }
@@ -251,33 +251,33 @@ snit::type ::sf::model::translator::null {
     pragma -hasinstances false
 
     # tar valid <fn>
-    #     Is the tar file named valid for this kind of data? Returns boolean.
+    #   Is the tar file named valid for this kind of data? Returns boolean.
     typemethod {tar valid} fn {return 0}
 
     # tar soe <fn>
-    #     Returns the soe value represented by the tar file's name. This isn't
-    #     required to be accurate for the information within.
+    #   Returns the soe value represented by the tar file's name. This isn't
+    #   required to be accurate for the information within.
     typemethod {tar soe} fn {return 0}
 
     # tar predict soes <fn>
-    #     Return a list of soe values expected to be found within the tar file.
+    #   Return a list of soe values expected to be found within the tar file.
     typemethod {tar predict soes} fn {return [list 0]}
 
     # file valid <fn>
-    #     Is this file a valid image for this kind of data? Returns boolean.
+    #   Is this file a valid image for this kind of data? Returns boolean.
     typemethod {file valid} fn {return 0}
 
     # file soe <fn>
-    #     Return the soe value represented by the image file's name.
+    #   Return the soe value represented by the image file's name.
     typemethod {file soe} fn {return 0}
 
     # file clean <fn>
-    #     Returns a cleaned form of the given file name.
+    #   Returns a cleaned form of the given file name.
     typemethod {file clean} fn {return {}}
 
     # modify retrieve <tokenVariableName> <argsVariableName>
-    #     This is used to modify or otherwise react to the values passed to the
-    #     retrieve method of the collection. For example, some imagery may need
-    #     to apply a 180-degree rotation to the imagery.
+    #   This is used to modify or otherwise react to the values passed to the
+    #   retrieve method of the collection. For example, some imagery may need
+    #   to apply a 180-degree rotation to the imagery.
     typemethod {modify retrieve} {tokenVar argsVar} {}
 }

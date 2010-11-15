@@ -23,22 +23,22 @@ namespace eval ::sf::model::translator {}
 # ---------------------------- Public procedures -------------------------------
 
 # tarfiles ?<name>? <args>
-#     Creates an object of class collection::tar::tarfiles using the CIR
-#     translator.
+#   Creates an object of class collection::tar::tarfiles using the CIR
+#   translator.
 proc ::sf::model::create::cir::tarfiles args {
     return [_tar files $args]
 }
 
 # tarpaths ?<name>? <args>
-#     Creates an object of class collection::tar::tarpaths using the CIR
-#     translator.
+#   Creates an object of class collection::tar::tarpaths using the CIR
+#   translator.
 proc ::sf::model::create::cir::tarpaths args {
     return [_tar paths $args]
 }
 
 # tarpath ?<name>? <args>
-#     Creates an object of class collection::tar::tarpath using the CIR
-#     translator.
+#   Creates an object of class collection::tar::tarpath using the CIR
+#   translator.
 proc ::sf::model::create::cir::tarpath args {
     return [_tar path $args]
 }
@@ -46,8 +46,8 @@ proc ::sf::model::create::cir::tarpath args {
 # -------------------------------- Internals -----------------------------------
 
 # _tar <class> <opts>
-#     This procedure implements the public procs, varying by the slight
-#     differences required for the different tar class types.
+#   This procedure implements the public procs, varying by the slight
+#   differences required for the different tar class types.
 proc ::sf::model::create::cir::_tar {class opts} {
     return [::sf::model::create::_tar ::sf::model::translator::cir $class $opts]
 }
@@ -64,11 +64,11 @@ snit::type ::sf::model::translator::cir {
     pragma -hastypedestroy false
     pragma -hasinstances false
 
-    #===========================================================================#
-    #                             Public interface                              #
-    #---------------------------------------------------------------------------#
-    # The public interface is documentated at ::sf::model::translator::null.    #
-    #===========================================================================#
+    #==========================================================================#
+    #                             Public interface                             #
+    #--------------------------------------------------------------------------#
+    # The public interface is documentated at ::sf::model::translator::null.   #
+    #==========================================================================#
 
     typemethod {tar valid} fn {
         if {![file isfile $fn] || ![file readable $fn]} {
@@ -112,18 +112,18 @@ snit::type ::sf::model::translator::cir {
 
     typemethod {modify retrieve} {tokenVar argsVar} {}
 
-    #===========================================================================#
-    #                                 Internals                                 #
-    #===========================================================================#
+    #==========================================================================#
+    #                                Internals                                 #
+    #==========================================================================#
 
     # patterns
-    #     This maintains the patterns used for scan, format, and regular
-    #     expression operations.
-    #        exptar - Regular expression for tar file
-    #        expjpg - Regular expression for image file (jpg)
-    #        fmttar - Formatting scan pattern for tar file to extract YMDhms
-    #        fmtjpg - Formatting scan pattern for image file to extract YMDhms
-    #        fmtout - Formatting format pattern for image file from YMDhms
+    #   This maintains the patterns used for scan, format, and regular
+    #   expression operations.
+    #       exptar - Regular expression for tar file
+    #       expjpg - Regular expression for image file (jpg)
+    #       fmttar - Formatting scan pattern for tar file to extract YMDhms
+    #       fmtjpg - Formatting scan pattern for image file to extract YMDhms
+    #       fmtout - Formatting format pattern for image file from YMDhms
     typevariable patterns -array {
         exptar {^\d{6}-\d{6}-cir.tar$}
         expjpg {^\d{6}-\d{6}-\d{3}-cir.jpg$}

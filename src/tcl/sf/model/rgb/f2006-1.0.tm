@@ -24,22 +24,22 @@ namespace eval ::sf::model::translator {}
 # ---------------------------- Public procedures -------------------------------
 
 # tarfiles ?<name>? <args>
-#     Creates an object of class collection::tar::tarfiles using the RGB
-#     translator.
+#   Creates an object of class collection::tar::tarfiles using the RGB
+#   translator.
 proc ::sf::model::create::rgb::f2006::tarfiles args {
     return [_tar files $args]
 }
 
 # tarpaths ?<name>? <args>
-#     Creates an object of class collection::tar::tarpaths using the RGB
-#     translator.
+#   Creates an object of class collection::tar::tarpaths using the RGB
+#   translator.
 proc ::sf::model::create::rgb::f2006::tarpaths args {
     return [_tar paths $args]
 }
 
 # tarpath ?<name>? <args>
-#     Creates an object of class collection::tar::tarpath using the RGB
-#     translator.
+#   Creates an object of class collection::tar::tarpath using the RGB
+#   translator.
 proc ::sf::model::create::rgb::f2006::tarpath args {
     return [_tar path $args]
 }
@@ -47,8 +47,8 @@ proc ::sf::model::create::rgb::f2006::tarpath args {
 # -------------------------------- Internals -----------------------------------
 
 # _tar <class> <opts>
-#     This procedure implements the public procs, varying by the slight
-#     differences required for the different tar class types.
+#   This procedure implements the public procs, varying by the slight
+#   differences required for the different tar class types.
 proc ::sf::model::create::rgb::f2006::_tar {class opts} {
     return [::sf::model::create::_tar ::sf::model::translator::rgb::f2006 \
             $class $opts]
@@ -66,11 +66,11 @@ snit::type ::sf::model::translator::rgb::f2006 {
     pragma -hastypedestroy false
     pragma -hasinstances false
 
-    #===========================================================================#
-    #                             Public interface                              #
-    #---------------------------------------------------------------------------#
-    # The public interface is documentated at ::sf::model::translator::null.    #
-    #===========================================================================#
+    #==========================================================================#
+    #                             Public interface                             #
+    #--------------------------------------------------------------------------#
+    # The public interface is documentated at ::sf::model::translator::null.   #
+    #==========================================================================#
 
     typemethod {tar valid} fn {
         if {![file isfile $fn] || ![file readable $fn]} {
@@ -120,17 +120,17 @@ snit::type ::sf::model::translator::rgb::f2006 {
         }
     }
 
-    #===========================================================================#
-    #                                 Internals                                 #
-    #===========================================================================#
+    #==========================================================================#
+    #                                Internals                                 #
+    #==========================================================================#
 
     # patterns
-    #     This maintains the patterns used for scan, format, and regular
-    #     expression operations.
-    #        exptar - Regular expression for tar file
-    #        expjpg - Regular expression for image file (jpg)
-    #        fmttar - Formatting scan pattern for tar file to extract YMDhm
-    #        fmtjpg - Formatting scan pattern for image file to extract YMDhms
+    #   This maintains the patterns used for scan, format, and regular
+    #   expression operations.
+    #       exptar - Regular expression for tar file
+    #       expjpg - Regular expression for image file (jpg)
+    #       fmttar - Formatting scan pattern for tar file to extract YMDhm
+    #       fmtjpg - Formatting scan pattern for image file to extract YMDhms
     typevariable patterns -array {
         exptar {^cam147_\d{4}-\d\d-\d\d_\d{4}.tar$}
         expjpg {^cam147_\d{4}-\d\d-\d\d_\d{6}-\d\d.jpg$}

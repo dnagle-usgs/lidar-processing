@@ -21,14 +21,14 @@ namespace eval ::sf {}
 #==============================================================================#
 snit::type ::sf::controller {
 
-    #===========================================================================#
-    #                             Public interface                              #
-    #---------------------------------------------------------------------------#
-    # The following methods/options are all intended to be used externally.     #
-    # This functionality can be considered 'stable'.                            #
-    #===========================================================================#
+    #==========================================================================#
+    #                             Public interface                             #
+    #--------------------------------------------------------------------------#
+    # The following methods/options are all intended to be used externally.    #
+    # This functionality can be considered 'stable'.                           #
+    #==========================================================================#
 
-    # -------------------------------- Methods ----------------------------------
+    # ------------------------------- Methods ----------------------------------
 
     # wind forward
     #     Sets the current frame to the last frame in the dataset.
@@ -55,8 +55,8 @@ snit::type ::sf::controller {
     }
 
     # step backward
-    #     Sets the current frame by moving backward the number of frames
-    #     specified by the gui's -increment.
+    #   Sets the current frame by moving backward the number of frames
+    #   specified by the gui's -increment.
     method {step backward} {} {
         set soe [$gui cget -soe]
         if {$soe == 0} {
@@ -67,14 +67,14 @@ snit::type ::sf::controller {
     }
 
     # play forward
-    #     Activates playback mode, configured to move forward.
+    #   Activates playback mode, configured to move forward.
     method {play forward} {} {
         $gui configure -playmode 1
         $self play tick
     }
 
     # play forward
-    #     Activates playback mode, configured to move backward.
+    #   Activates playback mode, configured to move backward.
     method {play backward} {} {
         $gui configure -playmode -1
         $self play tick
@@ -88,19 +88,19 @@ snit::type ::sf::controller {
     }
 
     # jump user
-    #     Jumps to a frame as specified by user input. Notifies the user if
-    #     there's a problem with the input.
+    #   Jumps to a frame as specified by user input. Notifies the user if
+    #   there's a problem with the input.
     #
-    #     This uses the following as implicit input:
-    #        $gui -jumpvalue
-    #        $gui -jumpkind
+    #   This uses the following as implicit input:
+    #       $gui -jumpvalue
+    #       $gui -jumpkind
     #
-    #     The following kinds of jumps are implemented:
-    #        fraction
-    #        soe
-    #        sod
-    #        hhmmss
-    #        hh:mm:ss
+    #   The following kinds of jumps are implemented:
+    #       fraction
+    #       soe
+    #       sod
+    #       hhmmss
+    #       hh:mm:ss
     method {jump user} {} {
         set val [$gui cget -jumpvalue]
         switch -exact -- [$gui cget -jumpkind] {
@@ -168,22 +168,22 @@ snit::type ::sf::controller {
     }
 
     # jump position <fraction>
-    #     Jumps to the position denoted by fraction, which must be between 0 and
-    #     1.
+    #   Jumps to the position denoted by fraction, which must be between 0 and
+    #   1.
     method {jump position} fraction {
         $self SetState [$model position $fraction]
     }
 
     # jump soe <soe>
-    #     Jumps to the frame closest to the given seconds-of-the-epoch value.
+    #   Jumps to the frame closest to the given seconds-of-the-epoch value.
     method {jump soe} soe {
         $self SetState [$model query $soe]
     }
 
     # jump sod <sod>
-    #     Jumps to the frame closest to the given seconds-of-the-day value. This
-    #     assumes that the given timestamp is intended to be within the same day
-    #     as the currently viewed frame.
+    #   Jumps to the frame closest to the given seconds-of-the-day value. This
+    #   assumes that the given timestamp is intended to be within the same day
+    #   as the currently viewed frame.
     method {jump sod} sod {
         set soe [$gui cget -soe]
         set old_sod [::misc::soe to sod $soe]
@@ -192,10 +192,10 @@ snit::type ::sf::controller {
     }
 
     # jump hms <hms>
-    #     Jumps to the frame closest to the given hours-minutes-seconds
-    #     timestamp. This assumes that the given timestamp is intended to be
-    #     within the same day as the currently viewed frame. The hms value must
-    #     be in HHMMSS format (no colons).
+    #   Jumps to the frame closest to the given hours-minutes-seconds
+    #   timestamp. This assumes that the given timestamp is intended to be
+    #   within the same day as the currently viewed frame. The hms value must
+    #   be in HHMMSS format (no colons).
     method {jump hms} hms {
         scan $hms %2d%2d%2d h m s
         set sod [expr {$s + 60 * ($m + 60 * $h)}]
@@ -203,23 +203,23 @@ snit::type ::sf::controller {
     }
 
     # change offset
-    #     This method prompts the controller to update the model's -offset with
-    #     the gui's -offset, then triggers "update all".
+    #   This method prompts the controller to update the model's -offset with
+    #   the gui's -offset, then triggers "update all".
     method {change offset} {} {
         $model configure -offset [$gui cget -offset]
         $self jump soe [$gui cget -soe]
     }
 
     # load <modeltype> <args>
-    #     Loads a new model. The <modeltype> must be the name of a command
-    #     within the ::sf::model namespace (and will be executed as
-    #     ::sf::model::$modeltype, so omit ::sf::model:: from it). The <args>
-    #     provided will be passed to the command. These arguments should be
-    #     command-specific; the -offset is passed automatically and shouldn't be
-    #     included.
+    #   Loads a new model. The <modeltype> must be the name of a command within
+    #   the ::sf::model namespace (and will be executed as
+    #   ::sf::model::$modeltype, so omit ::sf::model:: from it). The <args>
+    #   provided will be passed to the command. These arguments should be
+    #   command-specific; the -offset is passed automatically and shouldn't be
+    #   included.
     #
-    #     The previously used model will be destroyed, and the GUI will be set
-    #     to use the first frame from the new dataset.
+    #   The previously used model will be destroyed, and the GUI will be set to
+    #   use the first frame from the new dataset.
     method load {modeltype args} {
         set cmd [info commands ::sf::model::create::$modeltype]
         if {$cmd eq ""} {
@@ -254,11 +254,10 @@ snit::type ::sf::controller {
     }
 
     # prompt load from path <modeltype>
-    #     This method is suitable for loading a dataset for a modeltype that
-    #     uses the -path option. It will prompt the user for a path, then load
-    #     it.
+    #   This method is suitable for loading a dataset for a modeltype that uses
+    #   the -path option. It will prompt the user for a path, then load it.
     #
-    #     See method 'load' for a description of the <modeltype> parameter.
+    #   See method 'load' for a description of the <modeltype> parameter.
     method {prompt load from path} modeltype {
         set dir [$gui prompt directory -mustexist 1]
         if {$dir ne ""} {
@@ -267,9 +266,9 @@ snit::type ::sf::controller {
     }
 
     # sync soe <soe>
-    #     This provides a public interface by which sf::mediator can signal the
-    #     viewer to synchronize on a given soe value. The viewer can choose to
-    #     ignore this, if -sync is disabled in the GUI.
+    #   This provides a public interface by which sf::mediator can signal the
+    #   viewer to synchronize on a given soe value. The viewer can choose to
+    #   ignore this, if -sync is disabled in the GUI.
     method {sync soe} soe {
         if {[$gui cget -sync]} {
             set state [$model query $soe]
@@ -279,8 +278,8 @@ snit::type ::sf::controller {
     }
 
     # plot
-    #     Asks ::sf::mediator to plot the current frame's location (as specified
-    #     by soe value).
+    #   Asks ::sf::mediator to plot the current frame's location (as specified
+    #   by soe value).
     method plot {} {
         if {[$gui cget -soe] != 0} {
             ::sf::mediator plot [$gui cget -soe] \
@@ -291,8 +290,8 @@ snit::type ::sf::controller {
     }
 
     # raster
-    #     Asks ::sf::mediator to show the current frame's raster (as specified
-    #     by soe value).
+    #   Asks ::sf::mediator to show the current frame's raster (as specified by
+    #   soe value).
     method raster {} {
         if {[$gui cget -soe] != 0} {
             ::sf::mediator raster [$gui cget -soe] \
@@ -303,18 +302,18 @@ snit::type ::sf::controller {
     }
 
     # update all
-    #     Triggers an update of various aspects of the GUI. This is a wrapper
-    #     around the following:
-    #        update info
-    #        update image
+    #   Triggers an update of various aspects of the GUI. This is a wrapper
+    #   around the following:
+    #       update info
+    #       update image
     method {update all} {} {
         $self update image
         $self update info
     }
 
     # prompt bookmark current
-    #     Prompts the user for a name to assign to the currently viewed frame as
-    #     a bookmark.
+    #   Prompts the user for a name to assign to the currently viewed frame as
+    #   a bookmark.
     method {prompt bookmark current} {} {
         set prompt "Enter a unique name for this bookmark."
         if {[$gui prompt string -prompt $prompt -variable name]} {
@@ -323,15 +322,15 @@ snit::type ::sf::controller {
     }
 
     # bookmark add <soe> <name>
-    #     Adds a bookmark with the given <name> for the given <soe>.
+    #   Adds a bookmark with the given <name> for the given <soe>.
     method {bookmark add} {soe name} {
         if {![string is integer -strict $soe]} {
             $gui prompt error "expected integer, got: $soe"
             return
         }
-        # Does the soe already exist? That's an error, unless the name is also a
-        # match in which case they're duplicating an existing bookmark which is
-        # harmless.
+        # Does the soe already exist? That's an error, unless the name is also
+        # a match in which case they're duplicating an existing bookmark which
+        # is harmless.
         if {[dict exists $bookmarks $soe]} {
             if {[dict get $bookmarks $soe] eq $name} {
                 # This results in a no-op so abort without error.
@@ -360,8 +359,8 @@ snit::type ::sf::controller {
     }
 
     # bookmark delete <item>
-    #     Deletes the bookmark associated with <item>. Automatically determines
-    #     whether <item> is an soe or a name.
+    #   Deletes the bookmark associated with <item>. Automatically determines
+    #   whether <item> is an soe or a name.
     method {bookmark delete} item {
         if {[dict exists $bookmarks $item]} {
             set soe $item
@@ -381,11 +380,11 @@ snit::type ::sf::controller {
     }
 
     # bookmark list <which>
-    #     Returns a list of bookmarks. The specifics vary based on the value of
-    #     <which>:
-    #        soes - A list of soe values is returned, sorted.
-    #        names - A list of bookmark names is returned, sorted.
-    #        all - A list of soe/name pairs is returned, sorted by soe. This can
+    #   Returns a list of bookmarks. The specifics vary based on the value of
+    #   <which>:
+    #       soes - A list of soe values is returned, sorted.
+    #       names - A list of bookmark names is returned, sorted.
+    #       all - A list of soe/name pairs is returned, sorted by soe. This can
     #           be used as a dict, or it can be iterated over as a list.
     method {bookmark list} which {
         switch -exact -- $which {
@@ -410,11 +409,11 @@ snit::type ::sf::controller {
     }
 
     # bookmark query <value> ?<flag>?
-    #     Queries the bookmarks to get the corresponding data for the given
-    #     value. If <flag> is provided and is -soe or -name, then <value> is
-    #     treated accordingly. Otherwise (or if -auto is provided for flag), it
-    #     autodetermines what was passed. An empty string is returned if nothing
-    #     is found.
+    #   Queries the bookmarks to get the corresponding data for the given
+    #   value. If <flag> is provided and is -soe or -name, then <value> is
+    #   treated accordingly. Otherwise (or if -auto is provided for flag), it
+    #   autodetermines what was passed. An empty string is returned if nothing
+    #   is found.
     method {bookmark query} {value {flag -auto}} {
         switch -exact -- $flag {
             -soe {
@@ -445,15 +444,15 @@ snit::type ::sf::controller {
         }
     }
 
-    #===========================================================================#
-    #                                 Internals                                 #
-    #---------------------------------------------------------------------------#
-    # The following methods/options are all intended for internal use and       #
-    # should not be directly used outside of this class. Any external use is    #
-    # liable to be broken if the internal implementation changes.               #
-    #===========================================================================#
+    #==========================================================================#
+    #                                Internals                                 #
+    #--------------------------------------------------------------------------#
+    # The following methods/options are all intended for internal use and      #
+    # should not be directly used outside of this class. Any external use is   #
+    # liable to be broken if the internal implementation changes.              #
+    #==========================================================================#
 
-    # ------------------------------ Components ---------------------------------
+    # ------------------------------ Components --------------------------------
     #
     # All components are made public for debugging purposes. However, internal
     # use should reference the component directly rather than using the
@@ -461,39 +460,39 @@ snit::type ::sf::controller {
     # removal.
     #
     # gui
-    #     An object instantiated from ::sf::gui.
+    #   An object instantiated from ::sf::gui.
     component gui -public gui
     #
     # model
-    #     An object instanted from a model class with an interface conformable
-    #     to ::sf::model::collection::null.
+    #   An object instanted from a model class with an interface conformable to
+    #   ::sf::model::collection::null.
     component model -public model
 
-    # ------------------------------- Variables ---------------------------------
+    # ------------------------------ Variables ---------------------------------
     #
     # playcancel
-    #     The play framework uses the after command to propagate itself. This
-    #     variable holds the last after command's token so that it can be
-    #     canceled if a new play or stop direction is received.
+    #   The play framework uses the after command to propagate itself. This
+    #   variable holds the last after command's token so that it can be
+    #   canceled if a new play or stop direction is received.
     variable playcancel {}
 
     # bookmarks
-    #     Stores the bookmark information, used by the bookmark subcommands.
-    #     This is a dict whose keys are soe timestamps and whose values are
-    #     descriptive names for the bookmarks.
+    #   Stores the bookmark information, used by the bookmark subcommands.
+    #   This is a dict whose keys are soe timestamps and whose values are
+    #   descriptive names for the bookmarks.
     variable bookmarks ""
 
-    # -------------------------------- Options ----------------------------------
+    # ------------------------------- Options ----------------------------------
     #
     # -logcmd
-    #     This is a command prefixed used internally for logging. A log level
-    #     and message will be appended to it for evaluation.
+    #   This is a command prefixed used internally for logging. A log level and
+    #   message will be appended to it for evaluation.
     option -logcmd ::sf::log
 
-    # -------------------------------- Methods ----------------------------------
+    # ------------------------------- Methods ----------------------------------
 
     # constructor args
-    #     The constructor is responsible for creating the gui and model objects.
+    #   The constructor is responsible for creating the gui and model objects.
     constructor args {
         install gui using ::sf::gui .sf%AUTO% -controller $self
         install model using ::sf::model::collection::null %AUTO%
@@ -502,8 +501,8 @@ snit::type ::sf::controller {
     }
 
     # destructor
-    #     The destructor is responsible for deleting its owned objects and
-    #     making sure there are no after events pending.
+    #   The destructor is responsible for deleting its owned objects and making
+    #   sure there are no after events pending.
     destructor {
         after cancel $playcancel
         catch [list ::sf::mediator unregister [mymethod sync soe]]
@@ -512,10 +511,10 @@ snit::type ::sf::controller {
     }
 
     # play tick
-    #     Handles one iteration of the play sequence; a single "tick". If
-    #     playback is active, it will step forward/backward then schedules the
-    #     next tick. It detects if it has reached the start/end and stops
-    #     playback if so.
+    #   Handles one iteration of the play sequence; a single "tick". If
+    #   playback is active, it will step forward/backward then schedules the
+    #   next tick. It detects if it has reached the start/end and stops
+    #   playback if so.
     method {play tick} {} {
         after cancel $playcancel
         set delay [$gui cget -interval]
@@ -549,11 +548,12 @@ snit::type ::sf::controller {
     }
 
     # SetState -fraction <double> -soe <double> -token <string> -sync <boolean>
-    # SetState {-fraction <double> -soe <double> -token <string> -sync <boolean>}
-    #     Updates the state information with the information given. If anything
-    #     is omitted, it defaults to null values (0 for numbers, empty string
-    #     for strings). The optional -sync value can be used to forcibly disable
-    #     synching; this is only intended to be used by method 'sync soe'.
+    # SetState {-fraction <double> -soe <double> -token <string> \
+    #       -sync <boolean>}
+    #   Updates the state information with the information given. If anything
+    #   is omitted, it defaults to null values (0 for numbers, empty string for
+    #   strings). The optional -sync value can be used to forcibly disable
+    #   synching; this is only intended to be used by method 'sync soe'.
     method SetState args {
         if {[llength $args] == 1} {
             set args [lindex $args 0]
@@ -570,7 +570,7 @@ snit::type ::sf::controller {
     }
 
     # update image
-    #     Updates the image used by the GUI.
+    #   Updates the image used by the GUI.
     method {update image} {} {
         if {[$gui cget -token] eq ""} {
             $gui image blank
@@ -612,7 +612,7 @@ snit::type ::sf::controller {
     }
 
     # update info
-    #     Updates the GUI's -info.
+    #   Updates the GUI's -info.
     method {update info} {} {
         if {[$gui cget -soe] eq 0} {
             $gui meta del 1.0 end
@@ -631,9 +631,9 @@ snit::type ::sf::controller {
     }
 
     # InstallModel <cmd> <opts>
-    #     This is a wrapper used by method 'load', since there's no other way to
-    #     provide the necesary context for the 'install' call within an after
-    #     call.
+    #   This is a wrapper used by method 'load', since there's no other way to
+    #   provide the necesary context for the 'install' call within an after
+    #   call.
     method InstallModel {cmd opts} {
         install model using $cmd %AUTO% {*}$opts
     }

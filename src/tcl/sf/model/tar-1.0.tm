@@ -20,14 +20,14 @@ namespace eval ::sf::model::collection::tar {}
 # The public interface conforms to collection::null.                           #
 #==============================================================================#
 snit::type ::sf::model::collection::tar::files {
-    #===========================================================================#
-    #                             Public interface                              #
-    #---------------------------------------------------------------------------#
-    # The following methods/options are all intended to be used externally.     #
-    # This functionality can be considered 'stable'.                            #
-    #===========================================================================#
+    #==========================================================================#
+    #                             Public interface                             #
+    #--------------------------------------------------------------------------#
+    # The following methods/options are all intended to be used externally.    #
+    # This functionality can be considered 'stable'.                           #
+    #==========================================================================#
 
-    # -------------------------------- Primary ----------------------------------
+    # ------------------------------- Primary ----------------------------------
     # The primary public interface corresponds to the interface defined in
     # ::sf::model::collection::null. See that class's documentation for details
     # on the methods and options in this section.
@@ -149,82 +149,82 @@ snit::type ::sf::model::collection::tar::files {
         }
     }
 
-    # ----------------------------- Supplemental --------------------------------
+    # ----------------------------- Supplemental -------------------------------
     # The supplemental public interface provides functionality for defining the
     # data source for the model.
 
     # -files <list>
-    #     This option is used to specify the list of tar files that should be
-    #     used. The internal state will be updated to use this list of files.
+    #   This option is used to specify the list of tar files that should be
+    #   used. The internal state will be updated to use this list of files.
     #
-    #     Before storing the list, the files listed will be normalized,
-    #     duplicates will be removed, and the list will be sorted. This helps to
-    #     ensure that any given list of files will have exactly one unique
-    #     representation.
+    #   Before storing the list, the files listed will be normalized,
+    #   duplicates will be removed, and the list will be sorted. This helps to
+    #   ensure that any given list of files will have exactly one unique
+    #   representation.
     option -files -default {} -configuremethod SetFiles
 
-    #===========================================================================#
-    #                                 Internals                                 #
-    #---------------------------------------------------------------------------#
-    # The following methods/options are all intended for internal use and       #
-    # should not be directly used outside of this class. Any external use is    #
-    # liable to be broken if the internal implementation changes.               #
-    #===========================================================================#
+    #==========================================================================#
+    #                                Internals                                 #
+    #--------------------------------------------------------------------------#
+    # The following methods/options are all intended for internal use and      #
+    # should not be directly used outside of this class. Any external use is   #
+    # liable to be broken if the internal implementation changes.              #
+    #==========================================================================#
 
     # destructor
-    #     The only thing we need to clean up is the mounts.
+    #   The only thing we need to clean up is the mounts.
     destructor {
         foreach mnt $mounted {
             catch {vfs::filesystem unmount $mnt}
         }
     }
 
-    # ------------------------------- Variables ---------------------------------
+    # ------------------------------ Variables ---------------------------------
     # This class uses an assortment of variables to cache information and
     # maintain state for optimal performance.
 
     # soe2tar
-    #     An array mapping local soe values to tar files. This is initially
-    #     populated with estimated information. As tar files are loaded, it's
-    #     updated with real information.
+    #   An array mapping local soe values to tar files. This is initially
+    #   populated with estimated information. As tar files are loaded, it's
+    #   updated with real information.
     variable soe2tar -array {}
 
     # soe2file
-    #     An array mapping local soe values to image files (located within the
-    #     tar files). This is initially empty. As tar files are loaded, it's
-    #     updated with information on specific image files.
+    #   An array mapping local soe values to image files (located within the
+    #   tar files). This is initially empty. As tar files are loaded, it's
+    #   updated with information on specific image files.
     variable soe2file -array {}
 
     # tar2soe
-    #     An array mapping each tar file to a list of the soe values for which
-    #     it provides images. This is initially populated with estimated
-    #     information. As tar files are loaded, it's updated with real
-    #     information.
+    #   An array mapping each tar file to a list of the soe values for which it
+    #   provides images. This is initially populated with estimated
+    #   information. As tar files are loaded, it's updated with real
+    #   information.
     variable tar2soe -array {}
 
     # tarloaded
-    #     An array mapping each tar file to a boolean value indicating whether
-    #     the tar file has been loaded yet or not.
+    #   An array mapping each tar file to a boolean value indicating whether
+    #   the tar file has been loaded yet or not.
     variable tarloaded -array {}
 
     # soelist
-    #     A list of the soe values represented by the dataset. This is
-    #     equivalent to [lsort [array names soe2tar]] and is maintained for
-    #     performance reasons.
+    #   A list of the soe values represented by the dataset. This is equivalent
+    #   to [lsort [array names soe2tar]] and is maintained for performance
+    #   reasons.
     variable soelist {}
 
     # mounted
-    #     Stores a list of all vfs::tar mounts created. This is used at object
-    #     destruction to clear out the mounts.
+    #   Stores a list of all vfs::tar mounts created. This is used at object
+    #   destruction to clear out the mounts.
     variable mounted {}
 
-    # -------------------------------- Methods ----------------------------------
+    # ------------------------------- Methods ----------------------------------
 
     # SetFiles <option> <value>
-    #     Used as the -configuremethod for public option -files.
+    #   Used as the -configuremethod for public option -files.
     #
-    #     This santizes the input (as described for option -files) and triggers
-    #     a refresh of the internal state.
+    #   This santizes the input (as described for option -files) and triggers a
+    #   refresh of the internal state.
     method SetFiles {option value} {
         if {$option ne "-files"} {error "only to be used for -files"}
 
@@ -240,9 +240,9 @@ snit::type ::sf::model::collection::tar::files {
     }
 
     # Lookup <localSoe>
-    #     Creates the dict result that gets returned for methods 'query',
-    #     'relative', and 'position'. If necessary, it will trigger the loading
-    #     of actual information for the tar file involved.
+    #   Creates the dict result that gets returned for methods 'query',
+    #   'relative', and 'position'. If necessary, it will trigger the loading
+    #   of actual information for the tar file involved.
     method Lookup localSoe {
         if {![info exists soe2tar($localSoe)]} {return}
         set tar $soe2tar($localSoe)
@@ -268,15 +268,15 @@ snit::type ::sf::model::collection::tar::files {
     }
 
     # Refresh
-    #     This refreshes our cached information. More specifically:
-    #        - Removes entries from soe2tar, soe2file, tarloaded, and tar2soe
-    #          that correspond to tar files that no longer are included in the
-    #          -paths
-    #        - Adds entries to soe2tar, tarloaded, and tar2soe for new tar
-    #          files.  This information is all done using the 'tar predict soes'
-    #          and cannot be trusted; thus, tarloaded($tar) is set to 0. Use
-    #          Load to load the real information in later.
-    #        - Updates soelist to match what's now in soe2tar.
+    #   This refreshes our cached information. More specifically:
+    #       - Removes entries from soe2tar, soe2file, tarloaded, and tar2soe
+    #         that correspond to tar files that no longer are included in the
+    #         -paths
+    #       - Adds entries to soe2tar, tarloaded, and tar2soe for new tar
+    #         files.  This information is all done using the 'tar predict soes'
+    #         and cannot be trusted; thus, tarloaded($tar) is set to 0. Use
+    #         Load to load the real information in later.
+    #       - Updates soelist to match what's now in soe2tar.
     method Refresh {} {
         set tars $options(-files)
 
@@ -309,13 +309,13 @@ snit::type ::sf::model::collection::tar::files {
     }
 
     # Load <tar>
-    #     Loads the real information for a tar file, replacing the guessed
-    #     information in the caches. Specifically:
-    #        - The estimated information is cleared from soe2tar and soe2file
-    #        - tar2soe, soe2tar, and soe2file are repopulated with information
-    #          constructed from what's actually in the tar file
-    #        - tarloaded is set to true for this tar
-    #        - soelist is repopulated from soe2tar
+    #   Loads the real information for a tar file, replacing the guessed
+    #   information in the caches. Specifically:
+    #       - The estimated information is cleared from soe2tar and soe2file
+    #       - tar2soe, soe2tar, and soe2file are repopulated with information
+    #         constructed from what's actually in the tar file
+    #       - tarloaded is set to true for this tar
+    #       - soelist is repopulated from soe2tar
     method Load tar {
         # If it's already loaded... abort!
         if {$tarloaded($tar)} {return}
@@ -347,13 +347,13 @@ snit::type ::sf::model::collection::tar::files {
     }
 
     # ExtractFile <tar> <file> <dest>
-    #     Extracts the specified <file> from the specified <tar>, using <dest>
-    #     as a destination directory. <dest> must already exist. Returns the
-    #     full path and filename to the extracted file.
+    #   Extracts the specified <file> from the specified <tar>, using <dest> as
+    #   a destination directory. <dest> must already exist. Returns the full
+    #   path and filename to the extracted file.
     #
-    #     Depending on the file's size, this will use either vfs::tar or
-    #     tar::untar to extract the file. With vfs::tar, the mount will remain
-    #     mounted for performance reason.
+    #   Depending on the file's size, this will use either vfs::tar or
+    #   tar::untar to extract the file. With vfs::tar, the mount will remain
+    #   mounted for performance reason.
     method ExtractFile {tar file dest} {
         if {![file isdirectory ${tar}.vfs] && [file size $tar] > 30000000} {
             ::vfs::tar::Mount $tar ${tar}.vfs
@@ -381,9 +381,9 @@ snit::type ::sf::model::collection::tar::files {
 # The public interface conforms to collect::null.                              #
 #==============================================================================#
 snit::type ::sf::model::collection::tar::paths {
-    #===========================================================================#
-    #                             Public interface                              #
-    #===========================================================================#
+    #==========================================================================#
+    #                             Public interface                             #
+    #==========================================================================#
 
     # The primary public interface is aliased to class tar::files.
     component files
@@ -391,9 +391,9 @@ snit::type ::sf::model::collection::tar::paths {
     delegate method * to files
 
     # -paths
-    #     Instead of a -files option, this provides a -paths option. The paths
-    #     specified will be searched for files, which are then used to configure
-    #     the underlying files component.
+    #   Instead of a -files option, this provides a -paths option. The paths
+    #   specified will be searched for files, which are then used to configure
+    #   the underlying files component.
     option -paths -default {} -configuremethod SetPaths
 
     constructor args {
@@ -401,13 +401,13 @@ snit::type ::sf::model::collection::tar::paths {
         $self configurelist $args
     }
 
-    #===========================================================================#
-    #                                 Internals                                 #
-    #===========================================================================#
+    #==========================================================================#
+    #                                Internals                                 #
+    #==========================================================================#
 
     # SetPaths
-    #     Normalize a list of paths and, if it's different than the existing
-    #     list, update internally.
+    #   Normalize a list of paths and, if it's different than the existing
+    #   list, update internally.
     method SetPaths {option value} {
         if {$option ne "-paths"} {error "only to be used for -paths"}
 
@@ -424,7 +424,7 @@ snit::type ::sf::model::collection::tar::paths {
     }
 
     # Refresh
-    #     Generates the list of files that gets passed to the files component.
+    #   Generates the list of files that gets passed to the files component.
     method Refresh {} {
         set tars [list]
         foreach path $options(-paths) {
@@ -452,9 +452,9 @@ snit::type ::sf::model::collection::tar::paths {
 # The public interface conforms to collect::null.                              #
 #==============================================================================#
 snit::type ::sf::model::collection::tar::path {
-    #===========================================================================#
-    #                             Public interface                              #
-    #===========================================================================#
+    #==========================================================================#
+    #                             Public interface                             #
+    #==========================================================================#
 
     # The primary public interface is aliased to class tar::paths.
     component paths
@@ -462,8 +462,8 @@ snit::type ::sf::model::collection::tar::path {
     delegate method * to paths
 
     # -path
-    #     Instead of a -paths option, this provides a -path option. This is
-    #     passed to the underlying -paths option as a single-entry list.
+    #   Instead of a -paths option, this provides a -path option. This is
+    #   passed to the underlying -paths option as a single-entry list.
     option -path -default {} -configuremethod SetPath
 
     constructor args {
@@ -471,12 +471,12 @@ snit::type ::sf::model::collection::tar::path {
         $self configurelist $args
     }
 
-    #===========================================================================#
-    #                                 Internals                                 #
-    #===========================================================================#
+    #==========================================================================#
+    #                                Internals                                 #
+    #==========================================================================#
 
     # SetPath
-    #     Passes the path along to -paths in the format it expects (a list).
+    #   Passes the path along to -paths in the format it expects (a list).
     method SetPath {option value} {
         if {$option ne "-path"} {error "only to be used for -path"}
         set options(-path) $value
@@ -486,9 +486,9 @@ snit::type ::sf::model::collection::tar::path {
 
 namespace eval ::sf::model::create {}
 # _tar <translator> <class> <opts>
-#     This procedure implements a core framework that can be used to create new
-#     tar models. It's intended to be used within other procs that specialize
-#     it for a given translator and class.
+#   This procedure implements a core framework that can be used to create new
+#   tar models. It's intended to be used within other procs that specialize it
+#   for a given translator and class.
 proc ::sf::model::create::_tar {translator class opts} {
     if {[expr {[llength $opts] % 2}]} {
         set name [lindex $opts 0]

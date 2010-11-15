@@ -18,32 +18,32 @@ snit::type ::sf::mediator {
     pragma -hastypedestroy false
     pragma -hasinstances false
 
-    #===========================================================================#
-    #                             Public interface                              #
-    #===========================================================================#
+    #==========================================================================#
+    #                             Public interface                             #
+    #==========================================================================#
 
     # register <viewer>
-    #     This is used by an SF viewer to register itself with the mediator. The
-    #     <viewer> argument should be the viewer's $self value.
+    #   This is used by an SF viewer to register itself with the mediator. The
+    #   <viewer> argument should be the viewer's $self value.
     typemethod register viewer {
         ::struct::set include viewers $viewer
     }
 
     # unregister <viewer>
-    #     The complement to register. This removes the register from the
-    #     mediator's list.
+    #   The complement to register. This removes the viewer from the mediator's
+    #   list.
     typemethod unregister viewer {
         ::struct::set exclude viewers $viewer
     }
 
     # broadcast soe <soe> ?-exclude <viewer>?
-    #     Broadcasts the given <soe> to all registered viewers via their 'sync
-    #     soe' method. If the -exclude option is provided, it specifies a viewer
-    #     that shouldn't receive the broadcast (typically used when a viewer is
-    #     broadcasting to other viewers, so that it doesn't notify itself).
+    #   Broadcasts the given <soe> to all registered viewers via their 'sync
+    #   soe' method. If the -exclude option is provided, it specifies a viewer
+    #   that shouldn't receive the broadcast (typically used when a viewer is
+    #   broadcasting to other viewers, so that it doesn't notify itself).
     #
-    #     Note that this only signals the viewers. If the viewers are not
-    #     configured to respond to sync requests, the signal will be ignored.
+    #   Note that this only signals the viewers. If the viewers are not
+    #   configured to respond to sync requests, the signal will be ignored.
     typemethod {broadcast soe} {soe args} {
         set recipients $viewers
         if {[dict exists $args -exclude]} {
@@ -88,17 +88,17 @@ snit::type ::sf::mediator {
         }
     }
 
-    #===========================================================================#
-    #                                 Internals                                 #
-    #===========================================================================#
+    #==========================================================================#
+    #                                Internals                                 #
+    #==========================================================================#
 
     # viewers
-    #     This contains the list of registered viewers.
+    #   This contains the list of registered viewers.
     typevariable viewers {}
 
     # viewers
-    #     Returns a list of all registered viewers. Primarily intended for
-    #     debugging purposes.
+    #   Returns a list of all registered viewers. Primarily intended for
+    #   debugging purposes.
     typemethod viewers {} {
         return $viewers
     }

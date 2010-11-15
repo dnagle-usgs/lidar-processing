@@ -26,22 +26,22 @@ namespace eval ::sf::model::translator {}
 # ---------------------------- Public procedures -------------------------------
 
 # tarfiles ?<name>? <args>
-#     Creates an object of class collection::tar::tarfiles using the Cam1 RGB
-#     translator.
+#   Creates an object of class collection::tar::tarfiles using the Cam1 RGB
+#   translator.
 proc ::sf::model::create::rgb::f2001::tarfiles args {
     return [_tar files $args]
 }
 
 # tarpaths ?<name>? <args>
-#     Creates an object of class collection::tar::tarpaths using the Cam1 RGB
-#     translator.
+#   Creates an object of class collection::tar::tarpaths using the Cam1 RGB
+#   translator.
 proc ::sf::model::create::rgb::f2001::tarpaths args {
     return [_tar paths $args]
 }
 
 # tarpath ?<name>? <args>
-#     Creates an object of class collection::tar::tarpath using the Cam1 RGB
-#     translator.
+#   Creates an object of class collection::tar::tarpath using the Cam1 RGB
+#   translator.
 proc ::sf::model::create::rgb::f2001::tarpath args {
     return [_tar path $args]
 }
@@ -49,8 +49,8 @@ proc ::sf::model::create::rgb::f2001::tarpath args {
 # -------------------------------- Internals -----------------------------------
 
 # _tar <class> <opts>
-#     This procedure implements the public procs, varying by the slight
-#     differences required for the different tar class types.
+#   This procedure implements the public procs, varying by the slight
+#   differences required for the different tar class types.
 proc ::sf::model::create::rgb::f2001::_tar {class opts} {
     return [::sf::model::create::_tar ::sf::model::translator::rgb::f2001 \
             $class $opts]
@@ -69,11 +69,11 @@ snit::type ::sf::model::translator::rgb::f2001 {
     pragma -hastypedestroy false
     pragma -hasinstances false
 
-    #===========================================================================#
-    #                             Public interface                              #
-    #---------------------------------------------------------------------------#
-    # The public interface is documentated at ::sf::model::translator::null.    #
-    #===========================================================================#
+    #==========================================================================#
+    #                             Public interface                             #
+    #--------------------------------------------------------------------------#
+    # The public interface is documentated at ::sf::model::translator::null.   #
+    #==========================================================================#
 
     typemethod {tar valid} fn {
         if {![file isfile $fn] || ![file readable $fn]} {
@@ -136,17 +136,17 @@ snit::type ::sf::model::translator::rgb::f2001 {
 
     typemethod {modify retrieve} {tokenVar argsVar} {}
 
-    #===========================================================================#
-    #                                 Internals                                 #
-    #===========================================================================#
+    #==========================================================================#
+    #                                Internals                                 #
+    #==========================================================================#
 
     # patterns
-    #     This maintains the patterns used for scan, format, and regular
-    #     expression operations.
-    #        exptar - Regular expression for tar file
-    #        expjpg - Regular expression for image file (jpg)
-    #        fmttar - Formatting scan pattern for tar file to extract YMDhm
-    #        fmtjpg - Formatting scan pattern for image file to extract YMDhms
+    #   This maintains the patterns used for scan, format, and regular
+    #   expression operations.
+    #       exptar - Regular expression for tar file
+    #       expjpg - Regular expression for image file (jpg)
+    #       fmttar - Formatting scan pattern for tar file to extract YMDhm
+    #       fmtjpg - Formatting scan pattern for image file to extract YMDhms
     typevariable patterns -array {
         exptar {^\d{8}-cam1\.tar$}
         fmttar {%4d%2d%2d-cam1.tar}
