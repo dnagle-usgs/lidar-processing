@@ -514,7 +514,7 @@ proc filter_replace {} {
         set $outvar workdata_grcf
         set selection [tk_messageBox -icon question -type yesno \
                 -title "Warning" -message "Append array $outvar to\
-                        $replace_out_var?"
+                        $replace_out_var?"]
         if {$selection == "yes" && $have_replaced == 0 && $have_undone == 0} {
             if {$rcf_buf_rgn > 0} {
                 # have to save workdata since sel_data_rgn with exclude set to
