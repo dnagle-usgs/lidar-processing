@@ -183,7 +183,7 @@ proc ::l1pro::dirload::load_data termaction {
         1                   ", searchstr=\"$v::searchstr\"" \
         {$v::skip > 1}      ", skip=$v::skip" \
         {$v::unique}        ", uniq=1" \
-        {$filter ne ""}     ", filter=$filter"
+        {$filter ne ""}     ", filter=$filter" \
         1                   ")"
 
     append_varlist $v::vname
