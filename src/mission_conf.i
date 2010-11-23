@@ -441,7 +441,7 @@ func mission_receive(void) {
     tkcmd, "after idle [list after 0 mission_send]";
 }
 
-func missiondata_cache(action) {
+func missiondata_cache(action, day=) {
 /* DOCUMENT missiondata_cache, action
     Does something cache related, depending on the action specified.
 
@@ -449,8 +449,17 @@ func missiondata_cache(action) {
         enable  - Enables the use of the cache
         disable - Disabled the use of the cache (but does not clear it)
         preload - Preloads the cache with each mission day's data
+        recache - Stores the current mission data to the cache for the current
+                mission day. (Note: This does not write to file. It only
+                updates the cache so that working state is not lost.)
+
+    Options:
+        day= Only used for the "recache" option. If provided, this will update
+                the cache for the given day instead of the current mission day.
+                Not intended for general use.
 */
     extern __mission_conf, __mission_day, __mission_cache, __mission_settings;
+    default, day, __mission_day;
     if(action == "clear") {
         __mission_cache = h_new();
     } else if(action == "enable") {
@@ -466,6 +475,26 @@ func missiondata_cache(action) {
             missiondata_load, "all", day=days(i);
         }
         missiondata_unwrap, environment_backup;
+    } else if(action == "recache") {
+        if(! __mission_settings("use cache")) {
+            write, "Caching is not enabled. To enable caching, use:";
+            write, "  missiondata_cache, \"enable\"";
+            return;
+        }
+        if(!day) {
+            write, "The recache command needs a mission day. Either provide day=";
+            write, "or set __mission_day.";
+        }
+        if(!h_has(__mission_cache, day))
+            h_set, __mission_cache, day, h_new();
+        cache = __mission_cache(day);
+        settings = ["edb", "pnav", "ins", "ops_conf", "bath_ctl"];
+        for(i = 1; i <= numberof(settings); i++)
+            h_set, cache, settings(i), missiondata_wrap(settings(i));
+        write, "Current data (edb, pnav, ins, ops_conf, and bath_ctl) have been";
+        write, "stored to the cache for "+day;
+        write, "Important: changes have NOT been written to file. If you want to";
+        write, "save changes, you must do that separately!";
     }
 }
 
