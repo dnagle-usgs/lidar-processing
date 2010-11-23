@@ -109,7 +109,7 @@ proc bathctl::save_file fn {
 
 proc bathctl::gui_load {} {
 # Prompts user for a file to load
-   set fn [tk_getOpenFile -initialdir "$::data_path/processing/" \
+   set fn [tk_getOpenFile -initialdir $::data_path \
       -filetypes $v::filetypes]
    if {$fn ne "" && [file readable $fn]} {
       load_file $fn
@@ -119,7 +119,7 @@ proc bathctl::gui_load {} {
 
 proc bathctl::gui_save {} {
 # Prompts user for a file to save to
-   set fn [tk_getSaveFile -initialdir "$::data_path/processing/" \
+   set fn [tk_getSaveFile -initialdir $::data_path \
       -filetypes $v::filetypes]
    if {$fn ne ""} {
       if {[file extension $fn] ne ".bctl"} {
