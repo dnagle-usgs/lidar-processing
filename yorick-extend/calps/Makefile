@@ -3,11 +3,11 @@
 # Then put triangle.c and triangle.h in this directory.
 
 # these values filled in by    yorick -batch make.i
-Y_MAKEDIR=/opt/yorick
-Y_EXE=/opt/yorick/bin/yorick
+Y_MAKEDIR=
+Y_EXE=
 Y_EXE_PKGS=
-Y_EXE_HOME=/opt/yorick
-Y_EXE_SITE=/opt/yorick
+Y_EXE_HOME=
+Y_EXE_SITE=
 
 # ----------------------------------------------------- optimization flags
 
