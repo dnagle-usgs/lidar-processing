@@ -4,9 +4,9 @@ require, "eaarl.i";
 // scratch stores the values of scratch and tmp so that we can restore them
 // when we're done, leaving things as we found them.
 scratch = save(scratch, tmp, _grow, _save);
-// tmp stores a list of the methods that will go into wfobj. It stores their
+// tmp stores a list of the methods that will go into pcobj. It stores their
 // current values up-front, then restores them at the end while swapping the
-// new function definitions into wfobj.
+// new function definitions into pcobj.
 tmp = save(help, summary, index, grow, x, y, z, xyz, save);
 
 func pcobj(base, obj) {
@@ -102,7 +102,7 @@ func pcobj(base, obj) {
             headers="replace" -- All header fields are replaced by those from
                the other data.
       newdata = data(grow, otherdata, headers=)
-         Creates a new wfobj object that is comprised of the data from data and
+         Creates a new pcobj object that is comprised of the data from data and
          otherdata. This functions exactly like grow as described above, except
          that it leaves "data" unmodified.
       data(xyz,) -or- data(xyz,idx)
