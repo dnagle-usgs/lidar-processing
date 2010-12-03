@@ -908,7 +908,7 @@ proc ::l1pro::groundtruth::hist::plot {} {
         kdeline "hide"
     }
 
-    set cmd "hist_data_plot, $v::comparison.m_$v::data - $v::comparison.truth"
+    set cmd "hist_data_plot, $v::comparison.model - $v::comparison.t_$v::data"
     ::misc::appendif cmd \
             1                    ", win=$v::win" \
             {!$v::dofma}         ", dofma=0" \
