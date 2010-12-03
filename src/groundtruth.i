@@ -22,15 +22,15 @@ func gt_extract_comparisons(model, truth, modelmode=, truthmode=, radius=) {
    defaults to 1 meter.
 
    Return result is a group object with these members:
-      truth - The elevation value from TRUTH.
-      m_best - The elevation value from MODEL that is closest in value to
-         TRUTH's elevation value, among those points within the RADIUS.
-      m_nearest - The elevation value from MODEL that is spatially closest to
-         TRUTH's x,y location.
-      m_average - The average elevation value for the MODEL points within
-         RADIUS of TRUTH.
-      m_median - The median elevation value for the MODEL points within RADIUS
-         of TRUTH.
+      model - The elevation value from MODEL.
+      t_best - The elevation value from TRUTH that is closest in value to
+         MODEL's elevation value, among those points within the RADIUS.
+      t_nearest - The elevation value from TRUTH that is spatially closest to
+         MODEL's x,y location.
+      t_average - The average elevation value for the TRUTH points within
+         RADIUS of MODEL.
+      t_median - The median elevation value for the TRUTH points within RADIUS
+         of MODEL.
 */
    extern curzone;
    local mx, my, mz, tx, ty, tz;
@@ -56,16 +56,16 @@ func gt_extract_comparisons(model, truth, modelmode=, truthmode=, radius=) {
    mz = mz(w);
 
    // We seek four results:
-   //    best: The model elevation closest to truth
-   //    nearest: The model elevation for the point spatially closest to truth
-   //    average: Average of model elevations in radius about truth
-   //    median: Median of model elevations in radius about truth
-   m_best = m_nearest = m_average = m_median = array(double, dimsof(tx));
+   //    best: The truth elevation closest to model
+   //    nearest: The truth elevation for the point spatially closest to model
+   //    average: Average of truth elevations in radius about model
+   //    median: Median of truth elevations in radius about model
+   t_best = t_nearest = t_average = t_median = array(double, dimsof(mx));
 
-   // Some or all of the truth points may not have a model point within radius;
+   // Some or all of the model points may not have a truth point within radius;
    // such points must be discarded. "keep" tracks which points have yielded
    // results.
-   keep = array(char(0), dimsof(tx));
+   keep = array(char(0), dimsof(mx));
 
    // In order to reduce the overall number of point-to-point comparisons
    // necessary, the truth data is partitioned into successively smaller
@@ -88,8 +88,8 @@ func gt_extract_comparisons(model, truth, modelmode=, truthmode=, radius=) {
    // well as with the array of remaining schemes that must be applied.
    //
    // If an item is popped that has no remaining schemes, then the points are
-   // analyzed to extract the relevant model values for each truth value. These
-   // values go in m_best, m_nearest, etc.
+   // analyzed to extract the relevant truth values for each model value. These
+   // values go in t_best, t_nearest, etc.
    stack = deque();
    stack, push, save(t=indgen(numberof(tx)), m=indgen(numberof(mx)),
       schemes=["it","dt","dtquad","dtcell"]);
@@ -118,13 +118,13 @@ func gt_extract_comparisons(model, truth, modelmode=, truthmode=, radius=) {
             }
          }
       } else {
-         X = mx(top.m);
-         Y = my(top.m);
-         Z = mz(top.m);
-         count = numberof(top.t);
+         X = tx(top.t);
+         Y = ty(top.t);
+         Z = tz(top.t);
+         count = numberof(top.m);
          for(i = 1; i <= count; i++) {
-            j = top.t(i);
-            idx = find_points_in_radius(tx(j), ty(j), X, Y, radius=radius);
+            j = top.m(i);
+            idx = find_points_in_radius(mx(j), my(j), X, Y, radius=radius);
             if(!numberof(idx))
                continue;
 
@@ -134,14 +134,14 @@ func gt_extract_comparisons(model, truth, modelmode=, truthmode=, radius=) {
 
             keep(j) = 1;
 
-            dist = abs(ZP - tz(j));
-            m_best(j) = ZP(dist(mnx));
+            dist = abs(ZP - mz(j));
+            t_best(j) = ZP(dist(mnx));
 
-            dist = ((tx(j) - XP)^2 + (ty(j) - YP)^2) ^ .5;
-            m_nearest(j) = ZP(dist(mnx));
+            dist = ((mx(j) - XP)^2 + (my(j) - YP)^2) ^ .5;
+            t_nearest(j) = ZP(dist(mnx));
 
-            m_average(j) = ZP(avg);
-            m_median(j) = median(ZP);
+            t_average(j) = ZP(avg);
+            t_median(j) = median(ZP);
          }
       }
       // The timer_remaining call will be fairly inaccurate, but in a
@@ -159,13 +159,13 @@ func gt_extract_comparisons(model, truth, modelmode=, truthmode=, radius=) {
    mx = my = mz = tx = ty = [];
 
    w = where(keep);
-   truth = tz(w);
-   m_best = m_best(w);
-   m_nearest = m_nearest(w);
-   m_average = m_average(w);
-   m_median = m_median(w);
+   model = mz(w);
+   t_best = t_best(w);
+   t_nearest = t_nearest(w);
+   t_average = t_average(w);
+   t_median = t_median(w);
 
-   return save(truth, m_best, m_nearest, m_average, m_median);
+   return save(model, t_best, t_nearest, t_average, t_median);
 }
 
 func gt_metrics(z1, z2, metrics) {
