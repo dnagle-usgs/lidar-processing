@@ -156,7 +156,7 @@ func gt_extract_comparisons(model, truth, modelmode=, truthmode=, radius=) {
 
    if(noneof(keep))
       return [];
-   mx = my = mz = tx = ty = [];
+   mx = my = tx = ty = tz = [];
 
    w = where(keep);
    model = mz(w);
