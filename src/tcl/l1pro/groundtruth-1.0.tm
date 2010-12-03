@@ -498,8 +498,8 @@ if {![namespace exists ::l1pro::groundtruth::scatter::v]} {
         variable win 10
         variable dofma 1
         variable title ""
-        variable xtitle "Lidar Data (m)"
-        variable ytitle "Ground Truth Data (m)"
+        variable xtitle "Ground Truth Data (m)"
+        variable ytitle "Lidar Data (m)"
         variable plot_scatterplot_type square
         variable plot_scatterplot_color black
         variable plot_scatterplot_size 0.2
@@ -554,8 +554,8 @@ proc ::l1pro::groundtruth::scatter::panel w {
             -textvariable ${ns}::v::win \
             -from 0 -to 63 -increment 1 -format %.0f
     ttk::label $f.lbltitle -text "Graph title:"
-    ttk::label $f.lblxtitle -text "Model label:"
-    ttk::label $f.lblytitle -text "Truth label:"
+    ttk::label $f.lblytitle -text "Model label:"
+    ttk::label $f.lblxtitle -text "Truth label:"
     ttk::entry $f.title -width 0 -textvariable ${ns}::v::title
     ttk::entry $f.xtitle -width 0 -textvariable ${ns}::v::xtitle
     ttk::entry $f.ytitle -width 0 -textvariable ${ns}::v::ytitle
@@ -563,8 +563,8 @@ proc ::l1pro::groundtruth::scatter::panel w {
     grid $f.lblvar $f.cbovar $f.btnvar - {*}$ew
     grid $f.lbldata $f.data $f.lblwin $f.win {*}$ew
     grid $f.lbltitle $f.title - - {*}$ew
-    grid $f.lblxtitle $f.xtitle - - {*}$ew
     grid $f.lblytitle $f.ytitle - - {*}$ew
+    grid $f.lblxtitle $f.xtitle - - {*}$ew
 
     grid configure $f.lblvar $f.lbldata $f.lbltitle $f.lblxtitle $f.lblytitle \
             $f.lblwin -sticky e
@@ -636,13 +636,13 @@ proc ::l1pro::groundtruth::scatter::plot {} {
         quadratic_lsf "hide"
     }
 
-    set cmd "gt_scatterplot, $v::comparison.model, $v::comparison.t_$v::data"
+    set cmd "gt_scatterplot, $v::comparison.t_$v::data, $v::comparison.model"
     ::misc::appendif cmd \
             1                   ", win=$v::win" \
             {!$v::dofma}        ", dofma=0" \
             {$v::title ne ""}   ", title=\"$v::title\"" \
-            {$v::xtitle ne "Lidar Data (m)"}        ", xtitle=\"$v::xtitle\"" \
-            {$v::ytitle ne "Ground Truth Data (m)"} ", ytitle=\"$v::ytitle\""
+            {$v::xtitle ne "Ground Truth Data (m)"} ", xtitle=\"$v::xtitle\"" \
+            {$v::ytitle ne "Lidar Data (m)"}        ", ytitle=\"$v::ytitle\""
 
     foreach plot [dict keys $plot_defaults] {
         set type [set v::plot_${plot}_type]
