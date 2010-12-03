@@ -389,7 +389,7 @@ func gt_report(comparisons, which, metrics=, title=, outfile=) {
    fmt = swrite(format="%%%ds", strlen(metrics)(max));
    output = swrite(format=fmt, grow("", metrics));
    for(i = 1; i <= numberof(which); i++) {
-      col = gt_metrics(comparisons.truth, comparisons("m_"+which(i)), metrics);
+      col = gt_metrics(comparisons.model, comparisons("t_"+which(i)), metrics);
       col = grow(which(i), col);
       fmt = swrite(format="  %%%ds", strlen(col)(max));
       output += swrite(format=fmt, col);
