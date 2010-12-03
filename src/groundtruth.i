@@ -251,9 +251,9 @@ metrics=) {
    metrics.
 
    Parameters:
-      z1: A one-dimensional array of values. These are typically model/lidar
+      z1: A one-dimensional array of values. These are typically ground truth
          values and will be associated with the X axis.
-      z2: A one-dimensional array of values. These are typically ground truth
+      z2: A one-dimensional array of values. These are typically model/lidar
          data values and will be associated with the Y axis.
 
    General options:
@@ -265,9 +265,9 @@ metrics=) {
             title="Fire Island Analysis"
             title=""    (default; this results in no title)
       xtitle= Specifies a title for the X axis. Examples:
-            xtitle="Lidar Data (m)"    (default)
+            xtitle="Ground Truth Data (m)"   (default)
       ytitle= Specifies a title for the Y axis. Examples:
-            ytitle="Ground Truth Data (m)"   (default)
+            ytitle="Lidar Data (m)"    (default)
       metrics= Specifies which metrics to plot. This should be an array of
          strings. Each string must be a valid metric for gt_metrics. Examples:
             metrics=["# points", "ME"]    (default)
@@ -293,8 +293,8 @@ metrics=) {
    default, win, current_window();
    default, dofma, 1;
    default, title, string(0);
-   default, xtitle, "Lidar Data (m)";
-   default, ytitle, "Ground Truth Data (m)";
+   default, xtitle, "Ground Truth Data (m)";
+   default, ytitle, "Lidar Data (m)";
    default, scatterplot, "square black 0.2";
    default, equality, "dash black 1.0";
    default, mean_error, "hide";
