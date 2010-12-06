@@ -24,7 +24,7 @@ func atod(str) {
 */
    dims = dimsof(str);
    res = _rc_convert(str(*), 3, 0.);
-   return (dims(0) ? reform(res, dims) : res);
+   return (dims(0) ? reform(res, dims) : res(1));
 }
 
 func atoc(str) {
