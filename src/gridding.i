@@ -184,6 +184,8 @@ nodata=, maxside=, maxarea=, minangle=, tile=, buffer=) {
    if(!is_void(tile)) {
       default, buffer, 0;
       bbox = tile2bbox(tile);
+      if(is_void(bbox))
+         error, "Invalid tile name provided.";
       xmin = bbox([2,4])(min) - buffer;
       xmax = bbox([2,4])(max) + buffer;
       ymin = bbox([1,3])(min) - buffer;
