@@ -87,8 +87,12 @@ func guess_tile(text, dtlength=, qqprefix=) {
    if(numberof(w)) {
       regmatch, "e([1-9][0-9]{2}).*n([1-9][0-9]{3})", text(w), , e, n;
       wen = where(!(!e) & !(!n));
-      if(numberof(wen))
-         tile(w(wen)) = swrite(format="e%s_n%s_%d", e(wen), n(wen), curzone);
+      if(numberof(wen)) {
+         zone = curzone ? curzone : 15;
+         if(!curzone)
+            write, "Curzone not set! Using zone 15 to dummy tile names.";
+         tile(w(wen)) = swrite(format="e%s_n%s_%d", e(wen), n(wen), zone);
+      }
    }
    return tile;
 }
