@@ -147,6 +147,18 @@ func struct2hash(data) {
    return hash;
 }
 
+func struct2obj(data) {
+/* DOCUMENT struct2obj(data)
+   Converts data that is held in a struct to an equivalent oxy object.
+*/
+   fields = get_members(data);
+   count = numberof(fields);
+   obj = save();
+   for(i = 1; i <= count; i++)
+      save, obj, fields(i), get_member(data, fields(i));
+   return obj;
+}
+
 func list2array(lst, strict=, depth=) {
 /* DOCUMENT list2array(lst, strict=, depth=)
    Converts a Yorick list into a Yorick array, if possible. If not possible,
