@@ -159,6 +159,18 @@ func struct2obj(data) {
    return obj;
 }
 
+func list2obj(data) {
+/* DOCUMENT list2obj(data)
+   Converts a Yorick list DATA into a Yorick oxy group object.
+*/
+   count = _len(data);
+   result = save();
+   for(i = 1; i <= count; i++) {
+      save, result, string(0), _car(data, i);
+   }
+   return result;
+}
+
 func list2array(lst, strict=, depth=) {
 /* DOCUMENT list2array(lst, strict=, depth=)
    Converts a Yorick list into a Yorick array, if possible. If not possible,
