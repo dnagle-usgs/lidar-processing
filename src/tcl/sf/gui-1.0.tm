@@ -382,6 +382,8 @@ snit::widget ::sf::gui {
                 -command [{*}$loadCmd rgb::f2001::tarpath]
         $mb.file add command -label "Load CIR from path..." \
                 -command [{*}$loadCmd cir::f2004::tarpath]
+        $mb.file add command -label "Load CIR from path... (new system)" \
+                -command [{*}$loadCmd cir::f2010::tarpath]
         $mb.file add separator
         $mb.file add command -label "Export current image..." \
                 -command [mymethod controller export image]
