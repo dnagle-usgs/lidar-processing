@@ -620,9 +620,10 @@ snit::type ::sf::controller {
         } else {
             $gui meta del 1.0 end
             set soe [$gui cget -soe]
-            $gui meta ins end [clock format $soe -format "%Y-%m-%d" -gmt 1] date
+            set sint [expr {int($soe)}]
+            $gui meta ins end [clock format $sint -format "%Y-%m-%d" -gmt 1] date
             $gui meta ins end " "
-            $gui meta ins end [clock format $soe -format "%H:%M:%S" -gmt 1] hms
+            $gui meta ins end [clock format $sint -format "%H:%M:%S" -gmt 1] hms
             $gui meta ins end "  "
             $gui meta ins end "sod: [::misc::soe to sod $soe]" sod
             $gui meta ins end "  "
