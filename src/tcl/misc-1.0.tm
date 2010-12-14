@@ -60,8 +60,11 @@ namespace eval ::misc::soe {
             if {$M eq "-"} {
                 return [list {*}$Y]
             }
+            set sint [expr {int($s)}]
+            set sfra [expr {$s - $sint}]
             set fmt "%04d%02d%02d %02d%02d%02d"
-            return [clock scan [format $fmt $Y $M $D $h $m $s] -gmt 1]
+            set soe [clock scan [format $fmt $Y $M $D $h $m $sint] -gmt 1]
+            return [expr {$soe + $sfra}]
         }
     }
 
