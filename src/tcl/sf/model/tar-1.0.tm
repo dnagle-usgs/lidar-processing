@@ -250,7 +250,7 @@ snit::type ::sf::model::collection::tar::files {
         if {![info exists soe2file($localSoe)]} {return}
 
         set file $soe2file($localSoe)
-        set idx [lsearch -sorted -integer $soelist $localSoe]
+        set idx [lsearch -sorted -real $soelist $localSoe]
         if {$idx == -1} {return}
 
         if {[llength $soelist] > 1} {
@@ -305,7 +305,7 @@ snit::type ::sf::model::collection::tar::files {
             }
         }
 
-        set soelist [lsort -integer [array names soe2tar]]
+        set soelist [lsort -real [array names soe2tar]]
     }
 
     # Load <tar>
@@ -343,7 +343,7 @@ snit::type ::sf::model::collection::tar::files {
 
         set tarloaded($tar) 1
         set tar2soe($tar) [lsort -unique $soes]
-        set soelist [lsort -integer [array names soe2tar]]
+        set soelist [lsort -real [array names soe2tar]]
     }
 
     # ExtractFile <tar> <file> <dest>
