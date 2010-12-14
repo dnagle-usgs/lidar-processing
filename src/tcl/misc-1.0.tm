@@ -81,8 +81,12 @@ namespace eval ::misc::soe {
 
         # ::misc::soe to sod
         proc sod soe {
-            set day [clock scan [clock format $soe -format "%Y-%m-%d 00:00:00" -gmt 1] -gmt 1]
-            return [expr {$soe - $day}]
+            set parts [split $soe .]
+            set sint [lindex $parts 0]
+            set day [clock scan [clock format $sint -format "%Y-%m-%d 00:00:00" -gmt 1] -gmt 1]
+            set sodint [expr {$sint - $day}]
+            set parts [lreplace $parts 0 0 $sodint]
+            return [join $parts .]
         }
     }
 }
