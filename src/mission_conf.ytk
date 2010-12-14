@@ -505,7 +505,7 @@ namespace eval mission {
         }
         if {[llength $paths]} {
             set cir [sf::controller %AUTO%]
-            $cir load cir::tarpaths -paths $paths
+            $cir load cir::f2004::tarpaths -paths $paths
             ybkg set_sf_bookmarks \"$cir\"
         }
     }
@@ -772,7 +772,7 @@ namespace eval mission {
     proc date_cir {day} {
         if {[mission_has "cir dir" $day]} {
             set cir [sf::controller %AUTO%]
-            $cir load cir::tarpath -path [mission_get "cir dir" $day]
+            $cir load cir::f2004::tarpath -path [mission_get "cir dir" $day]
             ybkg set_sf_bookmark \"$cir\" \"$day\"
         }
     }
