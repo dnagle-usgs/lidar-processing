@@ -12,7 +12,7 @@ func iter_list(f, data) {
       result(item,) -- Function that will return a item specified by index.
 
    Example:
-      > foo = [10,20,30];
+      > foo = [10,20,30]
       > bar = iter_list(foo)
       > bar.count
       3
@@ -54,6 +54,81 @@ func array_item(i) {return use(data,..,i);}
 func obj_item(i) {return use(data,noop(i));}
 func list_item(i) {return _car(use(data),i);}
 iter_list = closure(iter_list, restore(tmp));
+restore, scratch;
+
+func iter_dict(f, data) {
+/* DOCUMENT iter_list(data)
+   Wrapper around various kinds of dictionaries/associative arrays that lets
+   you iterate through them all in a consistent way. DATA can be an an
+   oxy object, a Yeti hash, a struct instance, or an open binary file stream.
+   An object will be returned with four members:
+      result(data,) -- This is what you passed in to it.
+      result(count,) -- The number of items in data.
+      result(keys,) -- A string array of key names.
+      result(item,) -- Function that will return a item specified by key/index.
+
+   Example:
+      > foo = save(a=10,b=23,c=42)
+      > bar = iter_dict(foo)
+      > bar.count
+      3
+      > bar(item,1)
+      10
+      > bar(item,"c")
+      30
+      > bar.keys
+      ["a","b","c"]
+
+   This can be used in code like so:
+
+      iter = iter_dict(data);
+      for(i = 1; i <= iter.count; i++) {
+         key = iter.keys(i);
+         item = iter(item, key);
+         // or if the key doesn't matter...
+         item = iter(item, i);
+         // then do something with key/item
+      }
+*/
+// Original David B. Nagle 2010-12-15
+   result = save(data);
+   if(is_stream(data)) {
+      save, result, keys=*(get_vars(data)(1));
+      save, result, count=numberof(result.keys);
+      save, result, item=f.stream_item;
+   } else if(is_obj(data)) {
+      if(nallof(data(*,)))
+         error, "one or more members of object lacks key name";
+      save, result, count=data(*);
+      save, result, keys=data(*,);
+      save, result, item=f.obj_item;
+   } else if(is_hash(data)) {
+      save, result, count=data();
+      save, result, keys=h_keys(data);
+      save, result, item=f.hash_item;
+   } else if(typeof(data) == "struct_instance") {
+      save, result, keys=get_members(data);
+      save, result, count=numberof(result.keys);
+      save, result, item=f.struct_item;
+   } else {
+      error, "don't know how to iterate over "+typeof(data);
+   }
+   return result;
+}
+
+scratch = save(scratch, tmp);
+tmp = save(obj_item, hash_item, struct_item, stream_item);
+func obj_item(i) {return use(data,noop(i));}
+func hash_item(i) {
+   if(!is_string(i)) i = use(keys, i);
+   return use(data, i);
+}
+func struct_item(i) {
+   if(!is_string(i)) i = use(keys, i);
+   return get_member(use(data), i);
+}
+stream_item = struct_item;
+iter_dict = closure(iter_dict, restore(tmp));
 restore, scratch;
 
 func bool(val) {
