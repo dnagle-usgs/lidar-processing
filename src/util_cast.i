@@ -1,6 +1,61 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "eaarl.i";
 
+func iter_list(f, data) {
+/* DOCUMENT iter_list(data)
+   Wrapper around various kinds of lists that lets you iterate through them all
+   in a consistent way. DATA can be an array, an oxy object (provided it allows
+   numerical indexing), a Yorick list, or a range. An object will be returned
+   with three members:
+      result(data,) -- This is what you passed in to it.
+      result(count,) -- The number of items in data.
+      result(item,) -- Function that will return a item specified by index.
+
+   Example:
+      > foo = [10,20,30];
+      > bar = iter_list(foo)
+      > bar.count
+      3
+      > bar(item,1)
+      10
+      > bar(item,3)
+      30
+
+   This can be used in code like so:
+
+      iter = iter_list(data);
+      for(i = 1; i <= iter.count; i++) {
+         item = iter(item, i);
+         // do something with item
+      }
+*/
+// Original David B. Nagle 2010-12-15
+   if(is_range(data))
+      data = indgen(data);
+   result = save(data);
+   if(is_array(data)) {
+      save, result, count=dimsof(data)(0);
+      save, result, item=f.array_item;
+   } else if(is_obj(data) == 3) {
+      save, result, count=data(*);
+      save, result, item=f.obj_item;
+   } else if(is_list(data)) {
+      save, result, count=_len(data);
+      save, result, item=f.list_item;
+   } else {
+      error, "don't know how to iterate over "+typeof(data);
+   }
+   return result;
+}
+
+scratch = save(scratch, tmp);
+tmp = save(array_item, obj_item, list_item);
+func array_item(i) {return use(data,..,i);}
+func obj_item(i) {return use(data,noop(i));}
+func list_item(i) {return _car(use(data),i);}
+iter_list = closure(iter_list, restore(tmp));
+restore, scratch;
+
 func bool(val) {
 /* DOCUMENT result = bool(val)
    Coerces its result into boolean values. RESULT will be an array of type
