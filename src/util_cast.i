@@ -119,7 +119,7 @@ func iter_dict(f, data) {
       save, result, count=numberof(result.keys);
       save, result, item=f.stream_item;
    } else if(is_obj(data)) {
-      if(nallof(data(*,)))
+      if(data(*) && nallof(data(*,)))
          error, "one or more members of object lacks key name";
       save, result, count=data(*);
       save, result, keys=data(*,);
