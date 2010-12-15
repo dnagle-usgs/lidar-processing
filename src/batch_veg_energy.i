@@ -504,6 +504,7 @@ func write_pbd_to_gdf(ipath=, opath=, fname=, searchstr=, remove_buffer=) {
 	
         amar nayegandhi 03/30/05.
         modified amar nayegandhi 07/21/2007 to remove buffer data around each tile.
+	modified christine k. 11/12/2010 to fix block that removes buffer
 */
  
    extern curzone
@@ -554,49 +555,53 @@ func write_pbd_to_gdf(ipath=, opath=, fname=, searchstr=, remove_buffer=) {
 	  dim3 = dmets(2);
         }
 
-/*
+
         if (remove_buffer) {
            write, "Removing buffer data around tile..."
            // conform the tile to the 2k by 2k format.
            min_e = max_n = 0;
            sread, strpart(split_path(fn_all(i), 0)(2), 4:9), min_e;
            sread, strpart(split_path(fn_all(i), 0)(2), 12:18), max_n;
-           max_e = min_e + 2000;
-           min_n = max_n - 2000;
-           num = int(2000/binsize)+1;
+           max_e = int(min_e + 2000 - binsize);
+           min_n = int(max_n - 2000 + binsize);
+           num = int(2000/binsize);		// remove extra row/col
            mets_tile = array(double, dim3,num,num);
            mets_tile(*) = -1000;
            minx = int((min_e  - mets_pos(1,1)) / binsize);
-           maxx = int(dmets(3) - (mets_pos(1,2)-max_e) / binsize);
+           maxx = int((mets_pos(1,2) - max_e) / binsize);
            miny = int((min_n  - mets_pos(2,1)) / binsize);
-           maxy = int (dmets(4) - (mets_pos(2,2)-max_n) / binsize);
+           maxy = int((mets_pos(2,2) - max_n) / binsize);
            tminx = tminy = 1;
            tmaxx = tmaxy = num;
            if (minx < 0) {
                 // the data in this tile does not start from the beginning
                 tminx = int(-minx) + 1;
-                minx = 1;
+                minx = 0;
            }
            if (miny < 0) {
                 // the data in this tile does not start from the beginning
                 tminy = int(-miny) + 1;
-                miny = 1;
+                miny = 0;
            } 
-          if ((maxx-minx) > num) {
+	  if (maxx < 0) {
                 // the data in this tile does not extend all the way to the end of the tile
-                tmaxx += int(maxx);
-                maxx = 0;
+		tmaxx += int(maxx);
+		maxx = 0;
           }
-          if ((maxy-miny) > num) {
+          if (maxy < 0) {
                 // the data in this tile does not extend all the way to the end of the tile
-                tmaxy += int(maxy);
-                maxy = 0;
+		tmaxy += int(maxy);
+		maxy = 0;
           }
+	  minx += 1;
+	  miny += 1;
+	  maxx = int(dmets(3) - maxx);
+	  maxy = int(dmets(4) - maxy);
           mets_tile(,tminx:tmaxx,tminy:tmaxy)  = mets(,minx:maxx,miny:maxy);
           mets = mets_tile;
-          mets_pos = [[min_e, min_n],[max_e,max_n]];
+          mets_pos = [[min_e, min_n],[max_e, max_n]];
         }
- */          
+           
         fn_split = split_path(fn_all(i), 1, ext=1);
 	outf = fn_split(1)+".gdf";
         f = open(outf,"w+b");
