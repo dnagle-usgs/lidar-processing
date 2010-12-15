@@ -1,6 +1,17 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "eaarl.i";
 
+func can_iter_list(x) {
+/* DOCUMENT can_iter_list(data)
+   Returns 1 if DATA is suitable for passing through iter_list, 0 otherwise.
+*/
+   if(is_range(x)) return 1;
+   if(is_array(x) && !is_scalar(x)) return 1;
+   if(is_obj(x) == 3) return 1;
+   if(is_list(x)) return 1;
+   return 0;
+}
+
 func iter_list(f, data) {
 /* DOCUMENT iter_list(data)
    Wrapper around various kinds of lists that lets you iterate through them all
@@ -55,6 +66,17 @@ func obj_item(i) {return use(data,noop(i));}
 func list_item(i) {return _car(use(data),i);}
 iter_list = closure(iter_list, restore(tmp));
 restore, scratch;
+
+func can_iter_dict(x) {
+/* DOCUMENT can_iter_dict(data)
+   Returns 1 if DATA is suitable for passing through iter_dict, 0 otherwise.
+*/
+   if(is_stream(x)) return 1;
+   if(is_obj(x) && (!x(*) || allof(x(*,)))) return 1;
+   if(is_hash(x)) return 1;
+   if(typeof(x) == "struct_instance") return 1;
+   return 0;
+}
 
 func iter_dict(f, data) {
 /* DOCUMENT iter_list(data)
