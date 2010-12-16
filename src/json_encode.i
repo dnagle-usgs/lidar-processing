@@ -5,7 +5,7 @@ tmp = save(
         // data items
         escape_find, escape_replace,
         // functions
-        json_stringify, long, char, short, int, double, float, string,
+        json_stringify, long, char, short, int, double, float, string, void,
         newline_indent, json_array, json_object
         );
 
@@ -132,6 +132,10 @@ func _string(data) {
     return "\"" + data + "\"";
 }
 string = _string;
+
+func void(data) {
+    return "null";
+}
 
 func newline_indent(nil) {
 // Constructs a newline + indentation sequence
