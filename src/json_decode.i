@@ -29,7 +29,7 @@ escapes = [[0x22,0x22],     // \" quote
         [0x5c,0x5c]];       // \\ bslash
 
 // contant ASCII values
-bslash = 0x27;
+bslash = 0x5c;
 fslash = 0x2f;
 dquote = 0x22;
 lbrace = 0x7b;
@@ -252,7 +252,7 @@ func escape(nil) {
     self = use();
     if(self.ch != self.bslash)
         self, decode_error, "expected backslash missing";
-    use, next_chr;
+    self, next_chr;
     if(anyof(self.escapes(1,) == self.ch)) {
         w = where(self.escapes(1,) == self.ch)(1);
         return self.escapes(2,w);
