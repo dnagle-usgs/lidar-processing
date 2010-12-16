@@ -80,6 +80,8 @@ if(is_void(__eaarl_includes_included__)) {
    require, "irg.i";
    require, "jpeg_support.i";
    require, "json.i";
+   require, "json_decode.i";
+   require, "json_encode.i";
    require, "kml.i";
    require, "las.i";
    require, "lines.i";
