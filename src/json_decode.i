@@ -123,6 +123,10 @@ func json_decode(base, text, arrays=, objects=) {
     if(!is_string(text))
         error, "input must be a well-formed JSON string";
 
+    // In case input is an array of strings, merge them together
+    if(!is_scalar(text))
+        text = (text + "\n")(sum);
+
     if(strlen(text) < 1)
         error, "malformed JSON string";
 
