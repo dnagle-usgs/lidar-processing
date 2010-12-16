@@ -2,39 +2,6 @@
 
 require, "eaarl.i";
 
-local json_i;
-/* DOCUMENT json_i
-   
-   Implements JSON support in Yorick.
-
-   json2yorick converts a JSON string to a Yorick data structure. Some
-   important caveats:
-      - When a JSON array contains a mixture of items that cannot be
-        represented by a Yorick array, it will be represented by a Yorick list.
-        See help, _lst;
-      - Yeti hashes are used instead of structs. Structs cannot be constructed
-        on the fly, plus they cannot hold complex or hierarchical data.
-      - If a number can be represented as a long, it is. Otherwise, it's a
-        double.
-
-   yorick2json converts a Yorick data structure to a JSON string.
-
-   Important note:
-      If you round trip something through json2yorick and yorick2json (in
-      either direction), you will probably not get exactly the same result!
-      This is due to limitations in the way Yorick can represent data. You will
-      probably encounter unwanted type and structure conversions, including
-      struct -> hash and array -> list. Data saved to then loaded from JSON may
-      require postprocessing to put in a more useful/efficient format.
-*/
-
-// Original David Nagle for ADAPT, imported to ALPS 2009-02-02
-
-/*
-   The json2yorick func is based largely on the json parser in TclLib:
-   http://tcllib.cvs.sourceforge.net/tcllib/tcllib/modules/json/json.tcl?revision1.2&view=markup
-*/
-
 func json2yorick(text) {
 /* DOCUMENT json2yorick(text)
 
