@@ -80,7 +80,7 @@ func tky_stdout(msg) {
    This is used internally by Ytk to handle messages sent to it via the tky
    pipe.
 */
-   extern __tky_fragment, __ybkg_list;
+   extern __tky_fragment, __ybkg_queue;
    lines = spawn_callback(__tky_fragment, msg);
    for(i = 1; i <= numberof(lines); i++) {
       line = lines(i);
@@ -91,7 +91,7 @@ func tky_stdout(msg) {
          data = strpart(line, 5:);
          if(cmd == "bkg") {
             data = hex_to_string(data);
-            __ybkg_list = _cat(__ybkg_list, data);
+            __ybkg_queue, append, data;
             tkcmd, "set ::__ybkg__wait 0"
          } else {
          }
@@ -101,16 +101,34 @@ func tky_stdout(msg) {
 }
 
 func tky_ybkg_handler {
-   extern __ybkg_list;
-
-   if(_len(__ybkg_list)) {
-      // Using && to try to enforce atomic operation
-      temp = (f = _car(__ybkg_list, 1)) && (__ybkg_list = _cdr(__ybkg_list, 1));
+   extern __ybkg_queue;
+   if(__ybkg_queue.data(*)) {
+      f = __ybkg_queue(pop,);
       safe_run_funcdef, funcdef(f);
-
       after, 0, tky_ybkg_handler;
    }
 }
+
+scratch = save(scratch, pop, append);
+func pop(nil) {
+   self = use();
+   if(self.data(*)) {
+      item = self.data(1);
+      if(self.data(*) > 1)
+         save, self, data=data(2:);
+      else
+         save, self, data=save();
+      return item;
+   } else {
+      return [];
+   }
+}
+func append(item) {
+   use, data;
+   save, data, string(0), item;
+}
+__ybkg_queue = save(data=save(), pop, append);
+restore, scratch;
 
 func safe_run_funcdef(f) {
    if(catch(-1)) {
