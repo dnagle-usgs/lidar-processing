@@ -225,7 +225,7 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
    }
 
    // Special case for pcobj
-   if(is_func(is_obj) && is_obj(data) && data(*,"class")) {
+   if(is_obj(data) && data(*,"class")) {
       class = where(["be","ba","fs"] == mode);
       if(!numberof(class))
          return [];

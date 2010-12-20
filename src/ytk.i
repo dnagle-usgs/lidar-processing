@@ -384,7 +384,7 @@ func has_member(val, member, deref=) {
    if(deref && is_pointer(val)) val = *val;
    if(is_hash(val)) return h_has(val, member);
    if(is_stream(val)) return anyof(*(get_vars(val)(1)) == member);
-   if(is_func(is_obj) && is_obj(val)) return val(*,member) > 0;
+   if(is_obj(val)) return val(*,member) > 0;
    if(catch(0x08)) {
       return 0;
    }
@@ -401,7 +401,7 @@ func has_members(val, deref=) {
 */
 // Original David Nagle 2009-08-14
    if(deref && is_pointer(val)) val = *val;
-   return is_stream(val) || is_hash(val) || (is_func(is_obj) && is_obj(val)) ||
+   return is_stream(val) || is_hash(val) || is_obj(val) ||
       (typeof(val) == "struct_instance");
 }
 
@@ -419,7 +419,7 @@ func get_members(val) {
       fields = strsplit(fields, " ")(,2);
       return fields;
    }
-   if(is_func(is_obj) && is_obj(val)) {
+   if(is_obj(val)) {
       fields = val(*,);
       w = where(fields);
       if(!numberof(w))
