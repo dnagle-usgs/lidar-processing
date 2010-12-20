@@ -71,11 +71,9 @@ func can_iter_dict(x) {
 /* DOCUMENT can_iter_dict(data)
    Returns 1 if DATA is suitable for passing through iter_dict, 0 otherwise.
 */
-   if(is_stream(x)) return 1;
-   if(is_obj(x) && (!x(*) || allof(x(*,)))) return 1;
-   if(is_hash(x)) return 1;
-   if(typeof(x) == "struct_instance") return 1;
-   return 0;
+   if(is_obj(x))
+      return !x(*) || allof(x(*,));
+   return has_members(x);
 }
 
 func iter_dict(f, data) {
@@ -114,24 +112,12 @@ func iter_dict(f, data) {
 */
 // Original David B. Nagle 2010-12-15
    result = save(data);
-   if(is_stream(data)) {
-      save, result, keys=*(get_vars(data)(1));
-      save, result, count=numberof(result.keys);
-      save, result, item=f.stream_item;
-   } else if(is_obj(data)) {
-      if(data(*) && nallof(data(*,)))
-         error, "one or more members of object lacks key name";
-      save, result, count=data(*);
-      save, result, keys=data(*,);
-      save, result, item=f.obj_item;
-   } else if(is_hash(data)) {
-      save, result, count=data();
-      save, result, keys=h_keys(data);
-      save, result, item=f.hash_item;
-   } else if(typeof(data) == "struct_instance") {
+   if(is_obj(data) && data(*) && nallof(data(*,)))
+      error, "one or more members of object lacks key name";
+   if(has_members(data)) {
       save, result, keys=get_members(data);
       save, result, count=numberof(result.keys);
-      save, result, item=f.struct_item;
+      save, result, item=f.member_item;
    } else {
       error, "don't know how to iterate over "+typeof(data);
    }
@@ -139,17 +125,11 @@ func iter_dict(f, data) {
 }
 
 scratch = save(scratch, tmp);
-tmp = save(obj_item, hash_item, struct_item, stream_item);
-func obj_item(i) {return use(data,noop(i));}
-func hash_item(i) {
-   if(!is_string(i)) i = use(keys, i);
-   return use(data, i);
-}
-func struct_item(i) {
+tmp = save(member_item);
+func member_item(i) {
    if(!is_string(i)) i = use(keys, i);
    return get_member(use(data), i);
 }
-stream_item = struct_item;
 iter_dict = closure(iter_dict, restore(tmp));
 restore, scratch;
 
