@@ -418,7 +418,7 @@ func mission_load(filename) {
 */
     extern __mission_conf;
     f = open(filename, "r");
-    json = rdfile(f)(sum);
+    json = rdfile(f);
     close, f;
     mission_path, file_dirname(filename);
     mission_json_import, json;
