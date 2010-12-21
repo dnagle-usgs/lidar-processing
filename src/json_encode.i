@@ -113,6 +113,11 @@ func _string(data) {
         return result;
     }
 
+    // if there's no string, there's nothing to do
+    // also necessary to protect call to strfind below
+    if(!strlen(data))
+        return "\"\"";
+
     // replace pre-defined escapes
     count = numberof(self.escape_find);
     for(i = 1; i <= count; i++) {
