@@ -118,6 +118,9 @@ func _string(data) {
     if(!strlen(data))
         return "\"\"";
 
+    // need to forcibly copy the string to avoid changing original
+    data = noop(data);
+
     // replace pre-defined escapes
     count = numberof(self.escape_find);
     for(i = 1; i <= count; i++) {
