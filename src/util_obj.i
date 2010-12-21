@@ -513,3 +513,48 @@ func obj_copy_data(this, dst) {
    }
    return dst;
 }
+
+func obj_pop(args) {
+/* DOCUMENT obj_pop(obj, key)
+   -or- obj_pop, obj, key
+   Pop member KEY out of object OBJ and return it. Or if called as a
+   subroutine, simply delete the member from the object. Caveats/notes:
+      * KEY may be specified as a simple variable reference (as elsewhere with
+        oxy), in which case the value is ignored. It may also be specified as a
+        string value or a key. So obj_pop(obj, foo), obj_pop(obj, "foo"), and
+        obj_pop(obj, foo=) are all equivalent.
+      * If KEY does not exist in OBJ, [] is returned and no change is made.
+      * If KEY exists and is removed from OBJ, then a new object is created and
+        stored back to OBJ. This effectively updates OBJ. However, if there are
+        other references to the same object elsewhere, the key will NOT be
+        removed for them. This is an inherent limitation of the oxy
+        functionality.
+*/
+   if(args(0) == 1) {
+      obj = args(1);
+      if(numberof(args(-)) != 1)
+         error, "obj_pop requires key name";
+      key = args(-)(1);
+   } else if(args(0) == 2) {
+      obj = args(1);
+      if(args(0,2) == 0)
+         key = args(-,2);
+      else
+         key = args(2);
+   } else {
+      error, "obj_pop requires object and key";
+   }
+   if(obj(*,key)) {
+      result = obj(noop(key));
+      if(args(0,1) == 0) {
+         w = where(obj(*,) != key);
+         obj = numberof(w) ? obj(noop(w)) : save();
+         args, 1, obj;
+      }
+      return result;
+   } else {
+      return [];
+   }
+}
+errs2caller, obj_pop;
+wrap_args, obj_pop;
