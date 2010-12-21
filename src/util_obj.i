@@ -517,8 +517,9 @@ func obj_copy_data(this, dst) {
 func obj_pop(args) {
 /* DOCUMENT obj_pop(obj, key)
    -or- obj_pop, obj, key
-   Pop member KEY out of object OBJ and return it. Or if called as a
-   subroutine, simply delete the member from the object. Caveats/notes:
+   Pop member KEY out of object OBJ and return the value that was associated
+   with it. Or if called as a subroutine, simply delete the member from the
+   object. Caveats/notes:
       * KEY may be specified as a simple variable reference (as elsewhere with
         oxy), in which case the value is ignored. It may also be specified as a
         string value or a key. So obj_pop(obj, foo), obj_pop(obj, "foo"), and
@@ -529,6 +530,7 @@ func obj_pop(args) {
         other references to the same object elsewhere, the key will NOT be
         removed for them. This is an inherent limitation of the oxy
         functionality.
+   SEE ALSO: obj_delete
 */
    if(args(0) == 1) {
       obj = args(1);
@@ -544,6 +546,10 @@ func obj_pop(args) {
    } else {
       error, "obj_pop requires object and key";
    }
+   if(!is_obj(obj))
+      error, "obj_pop requires object";
+   if(!is_string(key))
+      error, "obj_pop requires key name";
    if(obj(*,key)) {
       result = obj(noop(key));
       if(args(0,1) == 0) {
@@ -558,3 +564,47 @@ func obj_pop(args) {
 }
 errs2caller, obj_pop;
 wrap_args, obj_pop;
+
+func obj_delete(args) {
+/* DOCUMENT obj_delete(obj, keyA, keyB, keyC, ...)
+   -or- obj_delete, obj, keyA, keyB, keyC, ...
+   Deletes the various given KEYS from OBJ and returns OBJ. Caveats/notes:
+      * KEYS may be specified as a simple variable reference (as elsewhere with
+        oxy), in which case the value is ignored. It may also be specified as a
+        string value or a key. So obj_delete(obj, foo), obj_delete(obj, "foo"),
+        and obj_delete(obj, foo=) are all equivalent.
+      * KEYS do not need to exist in OBJ. If they do not, no action is taken.
+      * If KEYS exist and are removed from OBJ, then a new object. In
+        functional form, that new object is returned. In subroutine form, it
+        gets stored back to OBJ. However, if there are other references to the
+        same object elsewhere, KEYS will NOT be removed for them. This is an
+        inherent limitation of the oxy functionality.
+   SEE ALSO: obj_pop
+*/
+   obj = args(1);
+   if(!is_obj(obj))
+      error, "obj_delete requires object";
+   drop = args(-);
+   for(i = 2; i <= args(0); i++) {
+      key = args(0,i) ? args(i) : args(-,i);
+      if(!is_string(key))
+         error, "invalid key";
+      grow, drop, key;
+   }
+   keys = obj(*,);
+   keep = array(1, numberof(keys));
+   n = numberof(drop);
+   for(i = 1; i <= n; i++)
+      keep &= keys != drop(i);
+   w = where(keep);
+   result = numberof(w) ? obj(noop(w)) : save();
+   if(!am_subroutine()) {
+      return result;
+   } else if(args(0,1) == 0) {
+      args, 1, result;
+   } else {
+      // subroutine call on value that's not simple reference
+   }
+}
+errs2caller, obj_delete;
+wrap_args, obj_delete;
