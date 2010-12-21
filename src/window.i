@@ -181,13 +181,14 @@ func plot_hash(wsrc, pal=) {
 }
 
 func plot_restore(wout, p, style=, clear=, lmt=, pal=) {
-/* DOCUMENT plot_restore, wout, p, clear=, lmt=, pal=
+/* DOCUMENT plot_restore, wout, p, style=, clear=, lmt=, pal=
 
    Restores a plot saved to hash by plot_hash.
 
    Use lmt=0 to disable restoration of limits.
    Use clear=0 to disable clearing of window before plotting.
    Use pal=0 to disable using palette saved (if present).
+   Use style=0 to disable using style saved.
 
    See also: plot_hash plot_save plot_load
 
