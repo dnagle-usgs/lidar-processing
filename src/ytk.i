@@ -115,7 +115,7 @@ func pop(nil) {
    if(self.data(*)) {
       item = self.data(1);
       if(self.data(*) > 1)
-         save, self, data=data(2:);
+         save, self, data=self.data(2:);
       else
          save, self, data=save();
       return item;
