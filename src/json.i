@@ -24,8 +24,7 @@ func json2yorick(text) {
 
    The bare word "true" is converted to 1, "false" to 0, and "null" to [].
 */
-   return json_decode(text, arrays=["json_ary2array", "json_ary2list"],
-      objects="json_obj2hash");
+   return json_decode(text, arrays=["json_ary2array", "json_ary2list"]);
 }
 
 func yorick2json(data, compact=) {
