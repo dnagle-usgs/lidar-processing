@@ -3,7 +3,7 @@
 // partially adapted from
 // http://cpansearch.perl.org/src/MAKAMAKA/JSON-2.27/lib/JSON/PP.pm
 
-scratch = save(scratch, tmp);
+scratch = save(scratch, tmp, _array, _string);
 tmp = save(
         // data items
         escapes, bslash, fslash, dquote, lbrace, rbrace, lbracket, rbracket,
@@ -269,7 +269,7 @@ func escape(nil) {
     }
 }
 
-func string(nil) {
+func _string(nil) {
 // Parses and returns a string, converting any escape sequences encountered.
     self = use();
     if(self.ch != self.dquote)
@@ -300,6 +300,7 @@ func string(nil) {
     }
     self, decode_error, "unexpected end of string while parsing JSON string";
 }
+string = _string;
 
 func comment(nil) {
 // Parses and ignores comments. Comments must be of one of these forms:
@@ -347,7 +348,7 @@ func white(nil) {
     }
 }
 
-func array(nil) {
+func _array(nil) {
 // Parses and returns an array.
     self = use();
     ary = save();
@@ -379,6 +380,7 @@ func array(nil) {
     }
     self, decode_error, "expected ',' or ']' while parsing array";
 }
+array = _array;
 
 func object(nil) {
 // Parses and returns an object.
