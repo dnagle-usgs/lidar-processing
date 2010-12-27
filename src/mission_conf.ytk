@@ -216,10 +216,7 @@ proc mission_json_import {json {sync 1}} {
 }
 
 proc mission_save {filename} {
-    set json_out [mission_json_export]
-    set f [open $filename "w"]
-    puts -nonewline $f $json_out
-    close $f
+    exp_send "mission_save, \"$filename\";\r"
 }
 
 proc mission_load {filename} {
