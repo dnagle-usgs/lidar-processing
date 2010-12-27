@@ -1,6 +1,5 @@
 // vim: set ts=4 sts=4 sw=4 ai sr et:
 require, "eaarl.i";
-require, "json.i";
 
 // Original David Nagle 2009-02-03
 

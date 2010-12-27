@@ -1,7 +1,5 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
-require, "dir.i";
-require, "json.i";
-require, "yeti.i";
+require, "eaarl.i";
 
 local alpsrc;
 /* DOCUMENT alpsrc
