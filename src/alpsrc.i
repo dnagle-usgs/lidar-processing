@@ -53,7 +53,7 @@ func alpsrc_load(void) {
 
 func __alpsrc_load_and_merge(&hash, fn) {
    if(file_exists(fn)) {
-      hash = h_merge(hash, json2yorick(rdfile(open(fn, "r"))));
+      hash = h_merge(hash, json_decode(rdfile(open(fn, "r"))));
    }
 }
 
