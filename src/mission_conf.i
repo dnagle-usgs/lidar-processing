@@ -189,6 +189,13 @@ func mission_set(key, value, day=, sync=) {
     h_set, obj, key, value;
 }
 
+func mission_set_bg(key, value, day) {
+/* DOCUMENT mission_set_bg(key, value, day)
+    Wrapper around mission_set suitable for use with Ytk ybkg.
+*/
+    mission_set, key, value, day=day, sync=0;
+}
+
 func mission_has(key, day=) {
 /* DOCUMENT mission_has(key, day=)
     Returns boolean indicating whether the current mission day (or the mission
@@ -299,6 +306,13 @@ func missionday_delete(day, sync=) {
         tkcmd, swrite(format="missionday_delete {%s} 0", day);
 }
 
+func missionday_delete_bg(day) {
+/* DOCUMENT missionday_delete_bg(day)
+    Wrapper around mission_delete suitable for use with Ytk ybkg.
+*/
+    missionday_delete, day, sync=0;
+}
+
 func missionday_exists(void, day=) {
 /* DOCUMENT missionday_exists(day=)
     Returns 1 if the current mission day (or day=, if specified) exists.
@@ -397,6 +411,13 @@ func mission_json_import(json, sync=) {
 
     if(__mission_settings("ytk") && sync)
         mission_send;
+}
+
+func mission_json_import_bg(json) {
+/* DOCUMENT mission_json_import_bg(json)
+    Wrapper around mission_json_import suitable for use with Ytk ybkg.
+*/
+    mission_json_import, json, sync=0;
 }
 
 func mission_save(filename) {

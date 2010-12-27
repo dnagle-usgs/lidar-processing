@@ -72,7 +72,7 @@ proc mission_set {key value {day -} {sync 1}} {
         error "Please provide a day or set __mission_day."
     }
     if {$sync} {
-        exp_send "mission_set, \"$key\", \"$value\", day=\"$day\", sync=0;\r"
+        ybkg mission_set_bg \"$key\" \"$value\" \"$day\"
     }
     set rel_paths [dict get $__mission_settings "relative paths"]
     if {[::struct::set contains $rel_paths $key]} {
@@ -128,7 +128,7 @@ proc missionday_delete {day {sync 1}} {
     global __mission_conf
     dict unset __mission_conf $day
     if {$sync} {
-        exp_send "missionday_delete, \"$day\", sync=0;\r"
+        ybkg missionday_delete_bg \"$day\"
     }
 }
 
@@ -225,8 +225,8 @@ proc mission_load {filename} {
 
 proc mission_send {} {
     global __mission_day
-    exp_send "mission_json_import, \"[mission_json_export]\", sync=0;\r"
-    exp_send "__mission_day = \"$__mission_day\";\r"
+    ybkg mission_json_import_bg \"[mission_json_export]\"
+    ybkg funcset __mission_day \"$__mission_day\"
 }
 
 proc mission_receive {} {
