@@ -370,7 +370,7 @@ func mission_json_export(void, compact=) {
             "timestamp", soe2iso8601(soe_now)
         )
     }
-    return yorick2json(data, compact=compact);
+    return json_encode(data, indent=(compact ? [] : 2));
 }
 
 func mission_json_import(json, sync=) {
@@ -379,7 +379,7 @@ func mission_json_import(json, sync=) {
 */
     extern __mission_conf, __mission_settings;
     default, sync, 1;
-    data = json2yorick(json);
+    data = json_decode(json);
     if(h_has(data, "days")) {
         __mission_conf = data("days");
     } else {
