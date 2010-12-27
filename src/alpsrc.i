@@ -69,14 +69,8 @@ func __alpsrc_set_defaults(&hash) {
    // If the src directory is .../eaarl/lidar-processing/src
    // Then the share directory is .../eaarl/share
    sharedir = file_join(get_cwd(), "..", "..", "share");
-   if(file_isdir(sharedir)) {
-      h_set, hash, geoid_data_root=file_join(sharedir, "NAVD88");
-      h_set, hash, maps_dir=file_join(sharedir, "maps");
-   // Old installations keep everything under lidar-processing
-   } else {
-      h_set, hash, geoid_data_root=file_join(get_cwd(), "..");
-      h_set, hash, maps_dir=file_join(get_cwd(), "..", "maps");
-   }
+   h_set, hash, geoid_data_root=file_join(sharedir, "NAVD88");
+   h_set, hash, maps_dir=file_join(sharedir, "maps");
 }
 
 __alpsrc_set_defaults, __alpsrc_defaults;
