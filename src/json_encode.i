@@ -38,8 +38,8 @@ escape_replace = swrite(format="%c%c", 0x05c, [
 // cannot use "use, at, etc." because if a called function changes the member,
 // it won't reflect
 
-func json_encode(base, data, separators=, indent=) {
-/* DOCUMENT json_encode(data, separators=, indent=)
+func json_encode(base, data, separators=, indent=, compact=) {
+/* DOCUMENT json_encode(data, separators=, indent=, compact=)
     Converts the given DATA into a valid JSON string, which is then returned.
 
     DATA may be any of a number of Yorick data items, including numbers (char,
@@ -51,11 +51,13 @@ func json_encode(base, data, separators=, indent=) {
 
     Options:
         separators= Specifies the symbols to use for separators, as [ITEM_SEP,
-            KEY_SEP]. The default is:
+            KEY_SEP]. If indentation is provided (anything other than []) then
+            the default is:
                 separators=[", ", ": "]
-            which spaces things out nicely. If you need a very compact
-            representation, you can provide:
+            which spaces things out nicely. If no indentation is specified (or
+            is specified as indent=[]) then the default is:
                 separators=[",",":"]
+            which results in a more compact layout.
         indent= Specifies how much indentation should be used. If omitted (or
             specified as indent=[]), then no indentation is used and all output
             will be on a single line. With indent=0, no indentation is
@@ -67,7 +69,7 @@ func json_encode(base, data, separators=, indent=) {
                 indent=2        Multi-line, with 2-space indents
                 indent=5        Multi-line, with 5-space indents
 */
-    default, separators, [", ", ": "];
+    default, separators, is_void(indent) ? [",", ":"] : [", ", ": "];
     self = obj_copy(base);
     save, self, item_separator=separators(1), key_separator=separators(2),
         indent, indent_level=0;
