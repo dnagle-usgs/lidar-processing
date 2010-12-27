@@ -838,11 +838,22 @@ proc launch_gui {} {
    grid rowconfigure .tx 0 -weight 1
 }
 
+proc init_hgid {} {
+    global HGID
+    set hg [auto_execok hg]
+    if {$hg ne ""} {
+        set HGID [exec {*}$hg identify [file dirname [app_root_dir]]]
+    } else {
+        set HGID "--"
+    }
+}
+
 ######## END PROCEDURES ########
 
 trace add variable _ytk write trace__ytk
 restore_defaults     ;# begin with the default settings
 load_options
+init_hgid
 
 ############################################################
 # Stuff below here doesn't need to be changed if you are
@@ -887,6 +898,7 @@ if { $load_on_start != "" } {
 ybkg funcset initialdir \"$_ytk(initialdir)\"
 ybkg funcset _ytk 1
 ybkg funcset _pid [pid]
+ybkg funcset _hgid \"$HGID\"
 
 start_yorick
 
