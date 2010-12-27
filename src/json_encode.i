@@ -38,8 +38,8 @@ escape_replace = swrite(format="%c%c", 0x05c, [
 // cannot use "use, at, etc." because if a called function changes the member,
 // it won't reflect
 
-func json_encode(base, data, separators=, indent=, compact=) {
-/* DOCUMENT json_encode(data, separators=, indent=, compact=)
+func json_encode(base, data, separators=, indent=) {
+/* DOCUMENT json_encode(data, separators=, indent=)
     Converts the given DATA into a valid JSON string, which is then returned.
 
     DATA may be any of a number of Yorick data items, including numbers (char,
