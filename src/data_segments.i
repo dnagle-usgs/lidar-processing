@@ -621,7 +621,7 @@ func tk_dsw_launch_fltlines(varname) {
    for(i = 1; i <= numberof(fptr); i++) {
       h_set, stats, segvars(i), gather_data_stats(*fptr(i));
    }
-   json = yorick2json(stats, compact=1);
+   json = json_encode(stats);
    tkcmd, swrite(format="launch_datastats_stats {%s}", json);
 }
 
@@ -644,7 +644,7 @@ func tk_dsw_launch_fltlines_digitizer(varname) {
    for(i = 1; i <= numberof(ptr); i++) {
       h_set, stats, segvars(i), gather_data_stats(*ptr(i));
    }
-   json = yorick2json(stats, compact=1);
+   json = json_encode(stats);
    tkcmd, swrite(format="launch_datastats_stats {%s}", json);
 }
 
@@ -655,7 +655,7 @@ func tk_dsw_launch_days(varname) {
    for(i = 1; i <= numberof(dptr); i++) {
       h_set, stats, segvars(i), gather_data_stats(*dptr(i));
    }
-   json = yorick2json(stats, compact=1);
+   json = json_encode(stats);
    tkcmd, swrite(format="launch_datastats_stats {%s}", json);
 }
 
@@ -678,7 +678,7 @@ func tk_dsw_launch_days_digitizer(varname) {
    for(i = 1; i <= numberof(ptr); i++) {
       h_set, stats, segvars(i), gather_data_stats(*ptr(i));
    }
-   json = yorick2json(stats, compact=1);
+   json = json_encode(stats);
    tkcmd, swrite(format="launch_datastats_stats {%s}", json);
 }
 
@@ -689,7 +689,7 @@ func tk_dsw_launch_stats(vars) {
       data = symbol_def(vars(i));
       h_set, stats, vars(i), gather_data_stats(data);
    }
-   json = yorick2json(stats, compact=1);
+   json = json_encode(stats);
    tkcmd, swrite(format="launch_datastats_stats {%s}", json);
 }
 
