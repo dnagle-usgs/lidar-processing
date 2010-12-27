@@ -356,7 +356,7 @@ func mission_json_export(void, compact=) {
 
     If compact=1, a compact form will be generated.
 */
-    extern __mission_conf;
+    extern __mission_conf, _hgid;
     default, compact, 0;
     data = h_new("days", __mission_conf);
     if(!compact) {
@@ -366,8 +366,8 @@ func mission_json_export(void, compact=) {
             "path", mission_path(),
             "user", get_user(),
             "host", get_host(),
-            "platform", "Yorick",
-            "timestamp", soe2iso8601(soe_now)
+            "timestamp", soe2iso8601(soe_now),
+            "repository", _hgid
         )
     }
     return json_encode(data, indent=(compact ? [] : 2));
