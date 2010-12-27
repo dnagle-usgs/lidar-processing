@@ -10,19 +10,18 @@ local alpsrc;
 
    Settings handled by alpsrc, and their defaults:
 
-      geoid_data_root = ../
+      geoid_data_root = ../../share/NAVD88
          Defines the directory in which GEOID files can be found for
          conversions between NAD83 and NAVD88. It should contain
          subdirectories such as GEOID03.
 
-      maps_dir = ../maps
+      maps_dir = ../../share/maps
          Defines the directory in which map files can be found. File reefs.i
          will use this to find fla-reefs.dat, and plot.ytk will use it as a
          default directory for the maps.
 
-      l1pro_startup = 0
-         Defines whether to display the l1pro GUI at startup. 0 is "no", 1 is
-         "yes". This takes effect when eaarl.ytk is sourced.
+      batcher_dir = ../batcher
+         Defines the directory where the batcher scripts can be found.
 
    See also: alpsrc_load
 */
@@ -64,8 +63,6 @@ func __alpsrc_set_defaults(&hash) {
 */
    default, hash, h_new();
    h_set, hash, batcher_dir=file_join(get_cwd(), "..", "batcher");
-   h_set, hash, l1pro_startup=1;
-   // Newer installations keep data files in a share directory
    // If the src directory is .../eaarl/lidar-processing/src
    // Then the share directory is .../eaarl/share
    sharedir = file_join(get_cwd(), "..", "..", "share");
