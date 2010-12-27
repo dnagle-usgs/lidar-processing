@@ -88,7 +88,7 @@ func json_decode(base, text, arrays=, objects=) {
         arrays= Conversion functions to apply to arrays. See "Conversion
             Functions" below. Default: arrays="json_ary2array"
         objects= Conversion functions to apply to objects. See "Conversion
-            Functions" below. Default: objects=""
+            Functions" below. Default: objects="json_obj2hash"
 
     Conversion Functions:
         The arrays= and objects= options accept a string value or an array of
@@ -110,12 +110,12 @@ func json_decode(base, text, arrays=, objects=) {
         "class" to "bless" it with.
 
         A few general-purpose conversion functions exist:
-            json_ary2array
-            json_ary2list
-            json_obj2hash
+            json_ary2array - attempts coercion to Yorick array
+            json_ary2list - coerces to Yorick list
+            json_obj2hash - coerces to Yeti hash
 */
     default, arrays, "json_ary2array";
-    default, objects, "";
+    default, objects, "json_obj2hash";
 
     self = obj_copy(base);
     save, self, arrays, objects;
@@ -423,6 +423,7 @@ func object(nil) {
 }
 
 func apply_conversions(input, funcs) {
+// Used by array and object to apply conversions to final result
     count = numberof(funcs);
     for(i = 1; i <= count; i++) {
         if(strlen(funcs(i)) < 1)
