@@ -69,7 +69,7 @@ func json_encode(base, data, separators=, indent=, compact=) {
                 indent=2        Multi-line, with 2-space indents
                 indent=5        Multi-line, with 5-space indents
 */
-    default, separators, is_void(indent) ? [",", ":"] : [", ", ": "];
+    default, separators, (is_void(indent) ? [",", ":"] : [", ", ": "]);
     self = obj_copy(base);
     save, self, item_separator=separators(1), key_separator=separators(2),
         indent, indent_level=0;
