@@ -73,15 +73,18 @@ func hex_to_string(input) {
    return strchar(output);
 }
 
-func tky_stdout(msg) {
-/* DOCUMENT tky_stdout, msg;
-   DO NOT CALL THIS DIRECTLY!
-
-   This is used internally by Ytk to handle messages sent to it via the tky
-   pipe.
-*/
-   extern __tky_fragment, __ybkg_queue;
-   lines = spawn_callback(__tky_fragment, msg);
+/*******************************************************************************
+ * Handling for Tcl "ybkg" command
+ */
+scratch = save(scratch, temp);
+temp = save(fragment, data, stdout, handler, pop, append);
+fragment = [];
+data = save();
+func stdout(msg) {
+   self = use();
+   fragment = self.fragment;
+   lines = spawn_callback(fragment, msg);
+   save, self, fragment;
    for(i = 1; i <= numberof(lines); i++) {
       line = lines(i);
       if(!line) {
@@ -91,25 +94,22 @@ func tky_stdout(msg) {
          data = strpart(line, 5:);
          if(cmd == "bkg") {
             data = hex_to_string(data);
-            __ybkg_queue, append, data;
+            self, append, data;
             tkcmd, "set ::__ybkg__wait 0"
          } else {
          }
       }
    }
-   after, 0, tky_ybkg_handler;
+   after, 0, self, handler;
 }
-
-func tky_ybkg_handler {
-   extern __ybkg_queue;
-   if(__ybkg_queue.data(*)) {
-      f = __ybkg_queue(pop,);
+func handler {
+   self = use();
+   if(self.data(*)) {
+      f = self(pop,);
       safe_run_funcdef, funcdef(f);
-      after, 0, tky_ybkg_handler;
+      after, 0, self, handler;
    }
 }
-
-scratch = save(scratch, pop, append);
 func pop(nil) {
    self = use();
    if(self.data(*)) {
@@ -127,8 +127,13 @@ func append(item) {
    use, data;
    save, data, string(0), item;
 }
-__ybkg_queue = save(data=save(), pop, append);
+tky_bg = restore(temp);
 restore, scratch;
+
+func tky_stdout(msg) {
+   extern ytk_bg;
+   tky_bg, stdout, msg;
+}
 
 func safe_run_funcdef(f) {
    if(catch(-1)) {
@@ -137,6 +142,9 @@ func safe_run_funcdef(f) {
    f;
    return;
 }
+
+/* End of "ybkg" handling
+ ******************************************************************************/
 
 func tkcmd(s, async=) {
 /* DOCUMENT tkcmd, s;
