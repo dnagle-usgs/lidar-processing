@@ -63,7 +63,7 @@ func veg_winpix(m) {
 }
 
 func run_veg(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=,
-use_be_centroid=, use_be_peak=, hard_surface=) {
+use_be_centroid=, use_be_peak=, hard_surface=, alg_mode=) {
 /* DOCUMENT depths = run_veg(rn=, len=, start=, stop=, center=, delta=, last=,
    graph=, pse=, use_be_centroid=, use_be_peak=, hard_surface=)
 
@@ -132,7 +132,7 @@ use_be_centroid=, use_be_peak=, hard_surface=) {
       for (i = 1; i < 119; i++) {
          depths(i,j) = ex_veg(rn+j, i, last=last, graph=graph,
             use_be_centroid=use_be_centroid, use_be_peak=use_be_peak,
-            hard_surface=hard_surface);
+            hard_surface=hard_surface, alg_mode=alg_mode);
          if (pse) pause, pse;
       }
    }
@@ -142,393 +142,6 @@ use_be_centroid=, use_be_peak=, hard_surface=) {
    return depths;
 }
 
-func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=,
-hard_surface=, pse=, verbose=) {
-/* DOCUMENT rv = ex_veg(rn, i, last=, graph=, win=, use_be_centroid=,
-   use_be_peak=, hard_surface=, pse=, verbose=)
-
-   This function returns an array of VEGPIX structures.
-
-   Parameters:
-      rn: Raster number
-      i: Pulse number
-
-   Options:
-      last= Max veg
-      graph= If enabled (graph=1), plots a graph showing results. (Default:
-         graph=0, disabled)
-      verbose= If enabled (verbose=1), displays some information to stdout.
-         (Default: verbose=graph)
-      win= Window number where graph will be plotted. (Default: win=4)
-      use_be_centroid= Set to 1 to determine the range to the last surface
-         using the "centroid" algorithm. This algorithm finds the centroid of
-         the trailing edge of the last return in the waveform. The range
-         determined using this method will be the "lowest". Use this method
-         only if the waveforms are from wetland environments with a
-         grasses/herbaceous veg on the ground. Do not use this algorithm for
-         finding range to hard surfaces. (Default: use_be_centroid=0, disabled)
-      use_be_peak= Set to 1 to determine the range to the peak of the trailing
-         edge of the last inflection. This algorithm is used by default and is
-         the most optimal algorithm to use in a place of mixed "hard" and
-         "soft" targets. "Soft" targets include bare earth under grass/herb.
-         veg., marshlands, etc. (Default: use_be_peak=0, disabled)
-      hard_surface= Set to 1 if the data are mostly coming from hard surfaces
-         such as runways, roads, parking lots, etc. This algorithm will treat
-         all waveforms with only 1 inflection as a "first surface" return, and
-         will not apply any "trailing edge" algorithm to the data with only 1
-         inflection.  For more than 1 inflection, the algorithm defined by
-         use_be_peak (default) or use_be_centroid are used. (Default:
-         hard_suface=0, disabled)
-      pse= Time (in milliseconds) to pause between each waveform plot.
-*/
-   extern veg_conf, ops_conf, n_all3sat, ex_bath_rn, ex_bath_rp, a, irg_a, _errno;
-   define_veg_conf;
-
-   default, win, 4;
-   default, graph, 0;
-   default, verbose, graph;
-
-   default, ex_bath_rn, -1;
-   default, aa, array(float, 256, 120, 4);
-
-   _errno = 0; // If not specifically set, preset to assume no errors.
-
-   if (rn == 0 && i == 0) {
-      write, format="Are you clicking in window %d? No data was found.\n", win;
-      _errno = -1;
-      return;
-   }
-   // check if global variable irg_a contains the current raster number (rn)
-   if (is_void(irg_a) || !is_array(where(irg_a.raster == rn))) {
-      irg_a = irg(rn, rn, usecentroid=1);
-   }
-   this_irg = irg_a(where(rn == irg_a.raster));
-   irange = this_irg.irange(i);
-   intensity = this_irg.intensity(i);
-
-   // setup the return struct
-   rv = VEGPIX();
-   rv.rastpix = rn + (i<<24);
-   if (irange < 0)
-      return rv;
-
-   // simple cache for raster data
-   if (ex_bath_rn != rn) {
-      r = get_erast(rn=rn);
-      rp = decode_raster(r);
-      ex_bath_rn = rn;
-      ex_bath_rp = rp;
-   } else {
-      rp = ex_bath_rp;
-   }
-
-   ctx = cent(*rp.tx(i));
-
-   n = numberof(*rp.rx(i, 1));
-   rv.sa = rp.sa(i);
-   if (n == 0) {
-      _errno = -1;
-      return rv;
-   }
-
-   // Try 1st channel
-   ai = 1;
-   w = *rp.rx(i, ai);
-   aa(1:n, i) = float((~w+1) - (~w(1)+1));
-   nsat = where(w < 5);       // Create a list of saturated samples
-   numsat = numberof(nsat);   // Count how many are saturated
-
-   if (numsat > veg_conf.max_sat(ai)) {
-      // Try 2nd channel
-      ai = 2;
-      w = *rp.rx(i, ai);
-      aa(1:n, i) = float((~w+1) - (~w(1)+1));
-      nsat = where(w == 0);
-      numsat = numberof(nsat);
-
-      if (numsat > veg_conf.max_sat(ai)) {
-         // Try 3rd channel
-         ai = 3;
-         w = *rp.rx(i, ai);
-         aa(1:n, i) = float((~w+1) - (~w(1)+1));
-         nsat = where(w == 0);
-         numsat = numberof(nsat);
-      }
-   }
-
-   if (numsat > veg_conf.max_sat(ai)) {
-      n_all3sat++;
-      ai = 0;
-   }
-
-   if (!ai) {
-      rv.sa = rp.sa(i);
-      rv.mx0 = -1;
-      rv.mv0 = -10;
-      rv.mx1 = -1;
-      rv.mv1 = -11;
-      rv.nx = -1;
-      _errno = 0;
-      return rv;
-   }
-
-   wflen = min(12, numberof(w));
-   last_surface_sat = w(1:wflen)(mnx);
-   escale = 255 - w(1:wflen)(min);
-
-   da = aa(1:n,i);
-   dd = da(dif);
-
-   // xr(1) will be the first pulse edge and xr(0) will be the last
-   xr = where((dd >= veg_conf.thresh)(dif) == 1);
-   nxr = numberof(xr);
-
-   if (numberof(xr) == 0) {
-      rv.sa = rp.sa(i);
-      rv.mx0 = -1;
-      rv.mv0 = aa(max,i,1);
-      rv.mx1 = -1;
-      rv.mv1 = rv.mv0;
-      rv.nx = numberof(xr);
-      _errno = 0;
-      return rv;
-   }
-
-   // see if user specified the max veg
-   if(!is_void(last))
-      n = min(n, last);
-
-   // Find the length of the section of the waveform that represents the last
-   // return (starting from xr(0)). Assume 12ns to be the longest duration for
-   // a complete bottom return.
-   retdist = 12;
-   // If 12 is too long, then cut it short based on the length of the waveform.
-   retdist = min(retdist, n - xr(0) - 1);
-
-   // if there are more than 1 significant inflection (above threshold) in the
-   // waveform, then we may be able to use any of the channels to determine the
-   // last return.  In fact, there may be more information in a waveform that
-   // is saturated if it contains multiple inflections.
-   /*
-   if ( numberof(xr) > 1  ) {
-      if (use_be_centroid || use_be_peak) {
-         retdist = 12;
-         ai = 1; //channel number
-         if (xr(0)+retdist+1 > n) retdist = n - xr(0)-1;
-         // check for saturation
-         if ( numberof(where((w(xr(0):xr(0)+retdist)) < 5 )) > veg_conf.max_sat(ai) ) {
-            // goto second channel
-            ai = 2;
-            // write, format="trying channel 2, rn = %d, i = %d\n",rn, i
-            w  = *rp.rx(i, ai);  aa(1:n, i,ai) = float( (~w+1) - (~w(1)+1) );
-            da = aa(1:n,i,ai);
-            dd = aa(1:n, i, ai) (dif);
-            if ( numberof(where((w(xr(0):xr(0)+retdist)) < 5 )) > veg_conf.max_sat(ai) ) {
-               // goto third channel
-               //  write, format="trying channel 3, rn = %d, i = %d\n",rn, i
-               ai = 3;
-               w  = *rp.rx(i, ai);  aa(1:n, i,ai) = float( (~w+1) - (~w(1)+1) );
-               da = aa(1:n,i,ai);
-               dd = aa(1:n, i, ai) (dif);
-               if ( numberof(where((w(xr(0):xr(0)+retdist)) < 5 )) > veg_conf.max_sat(ai) ) {
-                  write, format="all 3 channels saturated for the last return in multiple returns... giving up!, rn=%d, i=%d\n",rn,i
-                     ai = 0;
-               }
-            }
-         }
-      }
-   }
-   */
-
-   if (retdist < 5) ai = 0; // this eliminates possible noise pulses.
-   if (!ai) {
-      rv.sa = rp.sa(i);
-      rv.mx0 = -1;
-      rv.mv0 = -10;
-      rv.mx1 = -1;
-      rv.mv1 = -11;
-      rv.nx  = -1;
-      _errno = 0;
-      return rv;
-   }
-   if (pse) pause, pse;
-
-   if (graph) {
-      winbkp = current_window();
-      window, win;
-      fma;
-      plmk, da+(ai-1)*300, msize=.2, marker=1, color="magenta";
-      plg, da+(ai-1)*300, color="magenta";
-      //plg, dd-100, color="blue";
-      pltitle, swrite(format="Channel ID = %d", ai);
-      window_select, winbkp;
-   }
-
-   // now process the trailing edge of the last inflection in the waveform
-   if (use_be_centroid && !use_be_peak) {
-      // find where the bottom return pulse changes direction after its
-      // trailing edge
-      idx = where(dd(xr(0)+1:xr(0)+retdist) > 0);
-      idx1 = where(dd(xr(0)+1:xr(0)+retdist) < 0);
-      if (is_array(idx1) && is_array(idx)) {
-         if (idx(0) > idx1(1)) {
-            // take length of return at this point
-            retdist = idx(0);
-         }
-      } else {
-         write, format="idx/idx1 is nuller for rn=%d, i=%d    \r", rn, i;
-      }
-      //now check to see if it it passes intensity test
-      mxmint = aa(xr(0)+1:xr(0)+retdist,i,ai)(max);
-      if (abs(aa(xr(0)+1,i,ai) - aa(xr(0)+retdist,i,ai)) < 0.2*mxmint) {
-         // This return is good to compute centroid.
-         // Create array b for retdist returns beyond the last peak leading
-         // edge.
-         b = aa(int(xr(0)+1):int(xr(0)+retdist),i,ai);
-         // compute centroid
-         if (b(sum) != 0) {
-            c = float(b*indgen(1:retdist)) (sum) / (b(sum));
-            mx0 = irange + xr(0) + c - ctx(1);
-            if (ai == 1) {
-               mx0 += ops_conf.chn1_range_bias;
-               mv0 = aa(int(xr(0)+c),i,ai);
-            } else if (ai == 2) {
-               mx0 += ops_conf.chn2_range_bias;
-               mv0 = aa(int(xr(0)+c),i,ai)+300;
-            } else if (ai == 3) {
-               mx0 += ops_conf.chn3_range_bias; // in ns -amar
-               mv0 = aa(int(xr(0)+c),i,ai)+600;
-            }
-         } else {
-            mx0 = -10;
-            mv0 = -10;
-         }
-      } else {
-         // for now, discard this pulse
-         mx0 = -10;
-         mv0 = -10;
-      }
-   } else if (!use_be_centroid && use_be_peak) {
-      // if within 3 ns from xr(0) we find a peak, we can assume this to be noise related and try again using xr(0) from the first positive difference after the last negative difference.
-      nidx = where(dd(xr(0):xr(0)+3) < 0);
-      if (is_array(nidx)) {
-         xr(0) = xr(0) + nidx(1);
-         if (xr(0)+retdist+1 > n) retdist = n - xr(0)-1;
-      }
-      // using trailing edge algorithm for bottom return
-      // find where the bottom return pulse changes direction after its trailing edge
-      idx = where(dd(xr(0)+1:xr(0)+retdist) > 0);
-      idx1 = where(dd(xr(0)+1:xr(0)+retdist) < 0);
-      if (is_array(idx1) && is_array(idx)) {
-         //write, idx;
-         //write, idx1;
-         if (idx(0) > idx1(1)) {
-            //take length of  return at this point
-            //write, format="this happens!! rn = %d; i = %d\n",rn,i;
-            retdist = idx(0);
-         }
-      }
-      if (is_array(idx1)) {
-         ftrail = idx1(1);
-         ltrail = retdist;
-         //halftrail = 0.5*(ltrail - ftrail);
-         if (ai == 1) {
-            mx0 = irange+xr(0)+idx1(1)-ctx(1)+ops_conf.chn1_range_bias;
-            mv0 = aa(int(xr(0)+idx1(1)),i,ai);
-         }
-         if (ai == 2) {
-            mx0 = irange+xr(0)+idx1(1)-ctx(1)+ops_conf.chn2_range_bias; // in ns - amar
-            mv0 = aa(int(xr(0)+idx1(1)),i,ai)+300;
-         }
-         if (ai == 3) {
-            mx0 = irange+xr(0)+idx1(1)-ctx(1)+ops_conf.chn3_range_bias; // in ns - amar
-            mv0 = aa(int(xr(0)+idx1(1)),i,ai)+600;
-         }
-         //mx0 = irange+xr(0)+idx1(1)-irg_a.fs_rtn_centroid(i);
-      } else {
-         mx0 = -10;
-         mv0 = -10;
-      }
-   } else if (!use_be_centroid && !use_be_peak) {
-      //do not use centroid or trailing edge
-      mvx = aa(xr(0):xr(0)+5,i,1)(mxx);
-      // find bottom peak now
-      mx0 = irange+aa(xr(0):xr(0)+5,i,1)(mxx) + xr(0) - 1;
-      mv0 = aa(mvx, i, 1);
-   }
-   // stuff below is for mx1 (first surface in veg).
-
-   if (use_be_centroid || use_be_peak) {
-      // Find out how many waveform points are in the primary (most sensitive)
-      // receiver channel.
-      np = numberof(*rp.rx(i,1));
-
-      // Give up if there are not at least two points.
-      if (np < 2) {
-         _errno = -1;
-         return;
-      }
-
-      np = min(np, 12); // use no more than 12
-      if (numberof(where(((*rp.rx(i,1))(1:np)) < 5)) <= ops_conf.max_sfc_sat) {
-         cv = cent(*rp.rx(i,1));
-         cv(1) += ops_conf.chn1_range_bias;
-      } else if (numberof(where(((*rp.rx(i,2))(1:np)) < 5)) <= ops_conf.max_sfc_sat) {
-         cv = cent(*rp.rx(i,2));
-         cv(1) += ops_conf.chn2_range_bias;
-         cv(3) += 300;
-      } else {
-         cv = cent(*rp.rx(i,3));
-         cv(1) += ops_conf.chn3_range_bias;
-         cv(3) += 600;
-      }
-
-      mx1 = (cv(1) >= 10000) ? -10 : irange + cv(1) - ctx(1);
-      mv1 = cv(3);
-   } else {
-      // find surface peak now
-      mx1 = aa(xr(1):xr(1)+5,i,1)(mxx) + xr(1) - 1;
-      mv1 = aa(mx1,i,1);
-   }
-
-   // Make mx1 be the irange value and mv1 be the intensity value from variable
-   // 'a'.  Edit out tx/rx dropouts.
-   el = (int(irange) & 0xc000) == 0;
-   irange *= el;
-
-   if (pse) pause, pse;
-   rv.sa = rp.sa(i);
-   rv.mx0 = mx0;
-   rv.mv0 = mv0;
-   rv.mx1 = mx1;
-   rv.mv1 = mv1;
-   rv.nx = numberof(xr);
-   _errno = 0;
-
-   if (hard_surface) {
-      // check to see if there is only 1 inflection
-      if (nxr == 1) {
-         //use first surface algorithm data to define range
-         rv.sa = rp.sa(i);
-         rv.mx0 = mx1;
-         rv.mv0 = mv1;
-      }
-   }
-   if (graph) {
-      winbkp = current_window();
-      window, win;
-      mx_start = irg_a.fs_rtn_centroid(i);
-      plmk, mv1, mx_start, msize=.5, marker=7, color="green", width=1;
-      plmk, mv1, mx1-irange+mx_start, msize=.5, marker=7, color="blue", width=1;
-      plmk, mv0, mx0-irange+mx_start, msize=.5, marker=7, color="red", width=1;
-      window_select, winbkp;
-   }
-   if (verbose) {
-      write, format="Range between first and last return = %4.2f ns\n",(rv.mx0-rv.mx1);
-   }
-
-   return rv;
-}
 
 func make_fs_veg(d, rrr) {
 /* DOCUMENT make_fs_veg (d, rrr)
@@ -617,7 +230,7 @@ func make_fs_veg(d, rrr) {
    return geoveg;
 }
 
-func make_veg(latutm=, q=, ext_bad_att=, ext_bad_veg=, use_centroid=, use_highelv_echo=, multi_peaks=) {
+func make_veg(latutm=, q=, ext_bad_att=, ext_bad_veg=, use_centroid=, use_highelv_echo=, multi_peaks=, alg_mode=) {
 /* DOCUMENT make_veg(opath=,ofname=,ext_bad_att=, ext_bad_veg=)
 
  This function allows a user to define a region on the gga plot
@@ -700,7 +313,7 @@ Returns:
             rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=use_centroid, use_highelv_echo=use_highelv_echo);
             write, format="Processing segment %d of %d for vegetation\n", i, no_t;
             if (!multi_peaks) {
-               d = run_veg(start=rn_arr(1,i), stop=rn_arr(2,i),use_be_centroid=use_be_centroid, use_be_peak=use_be_peak, hard_surface=hard_surface);
+               d = run_veg(start=rn_arr(1,i), stop=rn_arr(2,i),use_be_centroid=use_be_centroid, use_be_peak=use_be_peak, hard_surface=hard_surface, alg_mode=alg_mode);
                a=[];
                write, "Using make_fs_veg for vegetation...";
                veg = make_fs_veg(d,rrr);
@@ -1241,4 +854,610 @@ func clean_cveg_all(vegall, rcf_width=) {
    }
 
    return new_vegall;
+}
+
+
+func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=, hard_surface=, alg_mode=, pse=, verbose=, add_peak=) {
+/* DOCUMENT rv = ex_veg(rn, i, last=, graph=, win=, use_be_centroid=,
+   use_be_peak=, hard_surface=, alg_mode=, pse=, verbose=)
+
+   This function returns an array of VEGPIX structures.
+
+   Parameters:
+      rn: Raster number
+      i: Pulse number
+
+   Options:
+      last= Max veg
+      graph= If enabled (graph=1), plots a graph showing results. (Default:
+         graph=0, disabled)
+      verbose= If enabled (verbose=1), displays some information to stdout.
+         (Default: verbose=graph)
+      win= Window number where graph will be plotted. (Default: win=4)
+      use_be_centroid= Set to 1 to determine the range to the last surface
+         using the "centroid" algorithm. This algorithm finds the centroid of
+         the trailing edge of the last return in the waveform. The range
+         determined using this method will be the "lowest". This method is rarely
+         used and should be used with caution.
+         (Default: use_be_centroid=0, disabled)
+      use_be_peak= This is the "trailing edge" algorithm.  
+         Set to 1 to determine the range to the peak of the trailing
+         edge of the last inflection. This algorithm is used by default and is
+         the most optimal algorithm to use in a place of mixed "hard" and
+         "soft" targets. "Soft" targets include bare earth under grass/herb.
+         veg., marshlands, etc. This method is used most often (ALPS v1) along
+         with hard_surface=1.
+         (Default: use_be_peak=0, disabled)
+      hard_surface= Set to 1 if the data are mostly coming from hard surfaces
+         such as runways, roads, parking lots, etc. This algorithm will treat
+         all waveforms with only 1 inflection as a "first surface" return, and
+         will not apply any "trailing edge" algorithm to the data with only 1
+         inflection.  For more than 1 inflection, the algorithm defined by
+         use_be_peak (default) or use_be_centroid are used. 
+         Use this option with use_be_peak=1 for most optimal results (ALPS v1).
+         (Default: hard_suface=0, disabled)
+      alg_mode = This code is written to prepare for ALPS v2.  
+         it defines which algorithm mode to use.  This options works alongside
+         the other options (use_be-centroid, use_be_peak, hard_surface), so that if any 
+         old code uses those options, they will still work.
+         "cent" : use centroid algorithm, see func xcent
+         "peak" : use peak algorithm, see func xpeak
+         "gauss": use gaussian decomposition algorithm, see func xgauss
+      pse= Time (in milliseconds) to pause between each waveform plot.
+*/
+   extern veg_conf, ops_conf, n_all3sat, ex_bath_rn, ex_bath_rp, a, irg_a, _errno, ohno; 
+   define_veg_conf;
+
+   default, win, 4;
+   default, graph, 0;
+   default, verbose, graph;
+
+   default, ex_bath_rn, -1;
+   default, aa, array(float, 256, 120, 4);
+
+   _errno = 0; // If not specifically set, preset to assume no errors.
+
+   if (rn == 0 && i == 0) {
+      write, format="Are you clicking in window %d? No data was found.\n", win;
+      _errno = -1;
+      return;
+   }
+   // check if global variable irg_a contains the current raster number (rn)
+   if (is_void(irg_a) || !is_array(where(irg_a.raster == rn))) {
+      irg_a = irg(rn, rn, usecentroid=1);
+   }
+   this_irg = irg_a(where(rn == irg_a.raster));
+   irange = this_irg.irange(i);
+   intensity = this_irg.intensity(i);
+
+   // simple cache for raster data
+   if (ex_bath_rn != rn) {
+      r = get_erast(rn=rn);
+      rp = decode_raster(r);
+      ex_bath_rn = rn;
+      ex_bath_rp = rp;
+   } else {
+      rp = ex_bath_rp;
+   }
+
+   // setup the return struct
+   rv = VEGPIX();
+   rv_null = VEGPIX();
+   rv.rastpix = rv_null.rastpix = rn + (i<<24);
+   rv_null.sa = rp.sa(i);
+   rv_null.mx0 = -1;
+   rv_null.mv0 = -10;
+   rv_null.mx1 = -1;
+   rv_null.mv1 = -11;
+   rv_null.nx = -1;
+   if (irange < 0)
+      return rv_null;
+      
+
+ // This is the transmit pulse... use algorithm for transmit pulse based on algo used for return pulse.
+    rptxi = -short(*rp.tx(i));	// flip it over and convert to signed short
+    rptxi -= rptxi(1);		// remove bias using first point of wf
+   if (alg_mode=="cent") {
+      ctx = xcent(rptxi);
+   }
+   if (alg_mode=="peak") {
+      ctx = xpeak(rptxi);
+   }
+   if (alg_mode=="gauss") {
+      ctx = xgauss(rptxi);
+   }
+   if (is_void(alg_mode)) {
+      ctx = cent(*rp.tx(i));
+   }
+
+   // if transmit pulse does not exist, return
+   if ((ctx(1) == 0)  || (ctx(1) == 1e1000)) {
+      return rv_null
+   }
+
+   n = numberof(*rp.rx(i, 1));
+   rv.sa = rp.sa(i);
+   if (n == 0) {
+      _errno = -1;
+      return rv;
+   }
+
+   // Try 1st channel
+   ai = 1;
+   w = *rp.rx(i, ai);
+   aa(1:n,i,ai) = float((~w+1) - (~w(1)+1));
+   nsat = where(w < 5);       // Create a list of saturated samples
+   numsat = numberof(nsat);   // Count how many are saturated
+
+   if (numsat > veg_conf.max_sat(ai)) {
+      // Try 2nd channel
+      ai = 2;
+      w = *rp.rx(i, ai);
+      aa(1:n,i,ai) = float((~w+1) - (~w(1)+1));
+      nsat = where(w == 0);
+      numsat = numberof(nsat);
+
+      if (numsat > veg_conf.max_sat(ai)) {
+         // Try 3rd channel
+         ai = 3;
+         w = *rp.rx(i, ai);
+         aa(1:n,i,ai) = float((~w+1) - (~w(1)+1));
+         nsat = where(w == 0);
+         numsat = numberof(nsat);
+      }
+   }
+
+   if (numsat > veg_conf.max_sat(ai)) {
+      n_all3sat++;
+      ai = 0;
+   }
+
+   if (!ai) {
+      return rv_null;
+   }
+
+   wflen = min(18, numberof(w));
+   last_surface_sat = w(1:wflen)(mnx);
+   escale = 255 - w(1:wflen)(min);
+
+   da = aa(1:n,i,ai);
+   dd = da(dif);
+
+   // xr(1) will be the first pulse edge and xr(0) will be the last
+   xr = where((dd >= veg_conf.thresh)(dif) == 1);
+   nxr = numberof(xr);
+
+   if (numberof(xr) == 0) {
+      rv.sa = rp.sa(i);
+      rv.mx0 = -1;
+      rv.mv0 = aa(max,i,ai);
+      rv.mx1 = -1;
+      rv.mv1 = rv.mv0;
+      rv.nx = numberof(xr);
+      _errno = 0;
+      return rv;
+   }
+
+   // see if user specified the max veg
+   if(!is_void(last))
+      n = min(n, last);
+
+   // Find the length of the section of the waveform that represents the last
+   // return (starting from xr(0)). Assume 18ns to be the longest duration for
+   // a complete bottom return.
+   retdist = 18;
+   // If 18 is too long, then cut it short based on the length of the waveform.
+   retdist = min(retdist, n - xr(0) - 1);
+
+   if (retdist < 5) ai = 0; // this eliminates possible noise pulses.
+   if (!ai) {
+      _errno = 0;
+      return rv_null;
+   }
+   if (pse) pause, pse;
+
+
+   // now process the trailing edge of the last inflection in the waveform
+   if (!is_void(alg_mode)) {
+      // find where the bottom return pulse changes direction after its
+      // trailing edge
+      idx = where(dd(xr(0)+1:xr(0)+retdist) > 0);
+      idx1 = where(dd(xr(0)+1:xr(0)+retdist) < 0);
+      if (is_array(idx1) && is_array(idx)) {
+         if (idx(0) > idx1(1)) {
+            // take length of return at this point
+            retdist = idx(0);
+         }
+      } else {
+         write, format="idx/idx1 is nuller for rn=%d, i=%d    \r", rn, i;
+      }
+      //now check to see if it it passes intensity test
+      mxmint = aa(xr(0)+1:xr(0)+retdist,i,ai)(max);
+      // Create array b for retdist returns beyond the last peak leading
+      // edge.
+      b = aa(int(xr(0)+1):int(xr(0)+retdist),i,ai);
+      if ((min(b) > 240) && (max(b) < veg_conf.thresh)) {
+ 	      //write, format="This happens when rn = %d, pulse =%d\n", rn, i;
+	      return rv_null;
+      }
+      mx00 = irange + xr(0) - ctx(1)
+      if (ai == 1) 
+           mx00 += ops_conf.chn1_range_bias;
+      if (ai == 2) 
+           mx00 += ops_conf.chn2_range_bias;
+      if (ai == 3) 
+           mx00 += ops_conf.chn3_range_bias;
+
+      if (graph) {
+        winbkp = current_window();
+        window, win;
+        fma;
+	      xaxis = span(mx00+1,mx00+numberof(b), numberof(b));
+	      limits, xaxis(1), xaxis(0), 0, 250;
+         //  plmk, da(xr(0):xr(0)+retdist)+(ai-1)*300, msize=.2, marker=1, color="magenta";
+         plmk, b, xaxis, msize=.2, marker=1, color="black";
+         // plg, da(xr(0):xr(0)+retdist)+(ai-1)*300, color="magenta";
+         plg, b, xaxis, color="black";
+         pltitle, swrite(format="Channel ID = %d", ai);
+         window_select, winbkp;
+      } 
+      if (abs(aa(xr(0)+1,i,ai) - aa(xr(0)+retdist,i,ai)) < 0.8*mxmint) {
+         // This return is good to compute range.
+         // compute range 
+         if (b(sum) != 0) {
+   	    if (alg_mode=="cent") {
+		      c = xcent(b);
+   	    }
+   	    if (alg_mode=="peak") {
+   		   c = xpeak(b);
+   	    }
+   	    if (alg_mode=="gauss") {
+   		   c = xgauss(b, add_peak=0,graph=graph, xaxis=xaxis);
+   	    }
+ 	       if (c(1) <= 0) return rv_null;
+           mx0 = mx00 + c(1);
+          if (ai == 1) {
+               mv0 = aa(int(xr(0)+c(1)),i,ai);
+          } else if (ai == 2) {
+               mv0 = aa(int(xr(0)+c(1)),i,ai)+300;
+          } else if (ai == 3) {
+               mv0 = aa(int(xr(0)+c(1)),i,ai)+600;
+          }
+         } else {
+         if (is_void(ohno)) ohno = 0;
+         ohno++;
+            mx0 = -10;
+            mv0 = -10;
+         }
+      } 
+       else {
+         if (is_void(ohno)) ohno = 0;
+         ohno++;
+         // for now, discard this pulse
+         mx0 = -10;
+         mv0 = -10;
+      }
+      
+   } 
+   else if (!use_be_centroid && use_be_peak && is_void(alg_mode)) {
+      // this is the algorithm used most commonly in ALPS v1.
+      // if within 3 ns from xr(0) we find a peak, we can assume this to be noise related and try again using xr(0) from the first positive difference after the last negative difference.
+      nidx = where(dd(xr(0):xr(0)+3) < 0);
+      if (is_array(nidx)) {
+         xr(0) = xr(0) + nidx(1);
+         if (xr(0)+retdist+1 > n) retdist = n - xr(0)-1;
+      }
+      // using trailing edge algorithm for bottom return
+      // find where the bottom return pulse changes direction after its trailing edge
+      idx = where(dd(xr(0)+1:xr(0)+retdist) > 0);
+      idx1 = where(dd(xr(0)+1:xr(0)+retdist) < 0);
+      if (is_array(idx1) && is_array(idx)) {
+         //write, idx;
+         //write, idx1;
+         if (idx(0) > idx1(1)) {
+            //take length of  return at this point
+            //write, format="this happens!! rn = %d; i = %d\n",rn,i;
+            retdist = idx(0);
+         }
+      }
+      if (is_array(idx1)) {
+         ftrail = idx1(1);
+         ltrail = retdist;
+         //halftrail = 0.5*(ltrail - ftrail);
+         if (ai == 1) {
+            mx0 = irange+xr(0)+idx1(1)-ctx(1)+ops_conf.chn1_range_bias;
+            mv0 = aa(int(xr(0)+idx1(1)),i,ai);
+         }
+         if (ai == 2) {
+            mx0 = irange+xr(0)+idx1(1)-ctx(1)+ops_conf.chn2_range_bias; // in ns - amar
+            mv0 = aa(int(xr(0)+idx1(1)),i,ai)+300;
+         }
+         if (ai == 3) {
+            mx0 = irange+xr(0)+idx1(1)-ctx(1)+ops_conf.chn3_range_bias; // in ns - amar
+            mv0 = aa(int(xr(0)+idx1(1)),i,ai)+600;
+         }
+         //mx0 = irange+xr(0)+idx1(1)-irg_a.fs_rtn_centroid(i);
+      } else {
+         mx0 = -10;
+         mv0 = -10;
+      }
+   }
+   else if (use_be_centroid && !use_be_peak && is_void(alg_mode)) {
+      // this is less used in ALPS v1
+      // find where the bottom return pulse changes direction after its
+      // trailing edge
+      idx = where(dd(xr(0)+1:xr(0)+retdist) > 0);
+      idx1 = where(dd(xr(0)+1:xr(0)+retdist) < 0);
+      if (is_array(idx1) && is_array(idx)) {
+         if (idx(0) > idx1(1)) {
+            // take length of return at this point
+            retdist = idx(0);
+         }
+      } else {
+         write, format="idx/idx1 is nuller for rn=%d, i=%d    \r", rn, i;
+      }
+      //now check to see if it it passes intensity test
+      mxmint = aa(xr(0)+1:xr(0)+retdist,i,ai)(max);
+      if (abs(aa(xr(0)+1,i,ai) - aa(xr(0)+retdist,i,ai)) < 0.2*mxmint) {
+         // This return is good to compute centroid.
+         // Create array b for retdist returns beyond the last peak leading
+         // edge.
+         b = aa(int(xr(0)+1):int(xr(0)+retdist),i,ai);
+         // compute centroid
+         if (b(sum) != 0) {
+            c = float(b*indgen(1:retdist)) (sum) / (b(sum));
+            mx0 = irange + xr(0) + c - ctx(1);
+            if (ai == 1) {
+               mx0 += ops_conf.chn1_range_bias;
+               mv0 = aa(int(xr(0)+c),i,ai);
+            } else if (ai == 2) {
+               mx0 += ops_conf.chn2_range_bias;
+               mv0 = aa(int(xr(0)+c),i,ai)+300;
+            } else if (ai == 3) {
+               mx0 += ops_conf.chn3_range_bias; // in ns -amar
+               mv0 = aa(int(xr(0)+c),i,ai)+600;
+            }
+         } else {
+            mx0 = -10;
+            mv0 = -10;
+         }
+      } else {
+         // for now, discard this pulse
+         mx0 = -10;
+         mv0 = -10;
+      }
+   }
+   else if (!use_be_centroid && !use_be_peak && is_void(alg_mode)) {
+      // no bare earth algorithm selected.  
+      //do not use centroid or trailing edge
+      mvx = aa(xr(0):xr(0)+5,i,1)(mxx);
+      // find bottom peak now
+      mx0 = irange+aa(xr(0):xr(0)+5,i,1)(mxx) + xr(0) - 1;
+      mv0 = aa(mvx, i, 1);
+   }
+   // stuff below is for mx1 (first surface in veg).
+
+   if (use_be_centroid || use_be_peak || !is_void(alg_mode)) {
+      // Find out how many waveform points are in the primary (most sensitive)
+      // receiver channel.
+      np = numberof(*rp.rx(i,1));
+
+      // Give up if there are not at least two points.
+      if (np < 2) {
+         _errno = -1;
+         return;
+      }
+
+      np = min(np, 12); // use no more than 12
+      if (numberof(where(((*rp.rx(i,1))(1:np)) < 5)) <= ops_conf.max_sfc_sat) {
+         cv = cent(*rp.rx(i,1));
+         cv(1) += ops_conf.chn1_range_bias;
+      } else if (numberof(where(((*rp.rx(i,2))(1:np)) < 5)) <= ops_conf.max_sfc_sat) {
+         cv = cent(*rp.rx(i,2));
+         cv(1) += ops_conf.chn2_range_bias;
+         cv(3) += 300;
+      } else {
+         cv = cent(*rp.rx(i,3));
+         cv(1) += ops_conf.chn3_range_bias;
+         cv(3) += 600;
+      }
+
+      mx1 = (cv(1) >= 10000) ? -10 : irange + cv(1) - ctx(1);
+      mv1 = cv(3);
+   } else {
+      // find surface peak now
+      mx1 = aa(xr(1):xr(1)+5,i,1)(mxx) + xr(1) - 1;
+      mv1 = aa(mx1,i,1);
+   }
+
+   // Make mx1 be the irange value and mv1 be the intensity value from variable
+   // 'a'.  Edit out tx/rx dropouts.
+   el = (int(irange) & 0xc000) == 0;
+   irange *= el;
+
+   if (pse) pause, pse;
+   rv.sa = rp.sa(i);
+   rv.mx0 = mx0;
+   rv.mv0 = mv0;
+   rv.mx1 = mx1;
+   rv.mv1 = mv1;
+   rv.nx = numberof(xr);
+   _errno = 0;
+
+   if (hard_surface) {
+      // check to see if there is only 1 inflection
+      if (nxr == 1) {
+         //use first surface algorithm data to define range
+         rv.sa = rp.sa(i);
+         rv.mx0 = mx1;
+         rv.mv0 = mv1;
+      }
+   }
+   if (graph) {
+      winbkp = current_window();
+      window, win;
+      //mx_start = irg_a.fs_rtn_centroid(i);
+      plmk, mv1, mx1, msize=.5, marker=4, color="blue", width=10;
+      plmk, mv0, mx0, msize=.5, marker=7, color="red", width=10;
+      window_select, winbkp;
+   }
+   if (verbose) {
+      write, format="Range between first and last return = %4.2f ns\n",(rv.mx0-rv.mx1);
+   }
+
+   return rv;
+}
+
+
+func xcent( a ) {
+/* DOCUMENT cent(a)
+   Compute the centroid of "a" of the inflection in the waveform.
+*/
+  n = numberof(a);	// determine number of points in waveform
+  if ( n < 2 ) 
+	return [ 0,0,0];
+  r = 1:n;		// set the range we will consider 
+  mv = a (max);		// find the maximum value
+  mx = a (mxx);		// find the index of the maximum
+  s =  a(r)(sum);	// compute the sum of all the samples
+  if ( s != 0.0 ) {
+    c = float(  (a(r) * indgen(r)) (sum) ) / s;
+  } else {
+    //write,"********* xcent()  Reject: Sum was zero"
+    return [0,0,0]
+  }
+
+//      centroid peak     average
+//        range  range    power
+  return [ c, mx, mv ];
+}
+
+
+func xpeak( a ) {
+/* DOCUMENT xpeak(a)
+   Compute the peak of "a" of the inflection in the waveform.
+*/
+  n = numberof(a);	// determine number of points in waveform
+  if ( n < 2 ) 
+	return [ 0,0,0];
+  r = 1:n;		// set the range we will consider 
+  mv = a (max);		// find the maximum value
+  mx = a (mxx);		// find the index of the maximum
+
+  return [mx,mx,mv];
+
+}
+
+func xgauss(w1, add_peak=, graph=, xaxis=) {
+/* DOCUMENT xgauss
+   Computer the gaussian decomposition of the waveform
+   w1 = waveform to use
+   add_peak = set to number of peaks to add for the gaussian fitting
+*/
+  n = numberof(w1);      // determine number of points in waveform
+  if ( n < 8 ) 
+        return [ 0,0,0];
+  //r = 1:n;              // set the range we will consider 
+  mv = w1(max);         // find the maximum value
+  mx = w1(mxx);         // find the index of the maximum
+
+  x=indgen(numberof(w1));
+  n_peaks = 1;
+  a = array(float, n_peaks*3);
+
+  a(1) = mx
+  a(2)= 1.0
+  a(3)= mv
+
+  a_init = a;
+
+  if (mv <= veg_conf.thresh) return [0,0,0];
+  if (is_array(where(w1 < 0))) return [0,0,0];
+
+  n0 = numberof(where(w1==0));
+  n_non0 = n-n0;
+  if (n0 > n_non0) return [0,0,0];
+
+  r = lmfit(lmfitfun,x,a,w1,1.0,itmax=200);
+  if (catch(-1)) return;
+  chi2_0 = r.chi2_last;
+
+  if (abs(a_init(1)-a(1)) > 10) 
+	return [0,0,0];
+  a_noaddpeak = [];
+  a_noaddpeak = a;
+  if (is_void(add_peak)) add_peak=0;
+  if (add_peak) {
+    new_peaks=lclxtrem(w1, thresh=3);
+    if (is_array(new_peaks)) {
+      new_fit = array(float, 2, numberof(new_peaks))
+      for (j=1; j<=numberof(new_peaks); j++) {
+	a1=grow(a,new_peaks(j),1,w1(new_peaks(j)))
+	r1 = lmfit(lmfitfun,x,a1,w1,1.0, itmax=200);
+	if ((r1.niter == 200) && (verbose))
+	   write, format="%f failed to converge\n", a1(-2);
+	if (abs(a1(-2)-a1(1)) > 10) {
+	   a1=a;
+	   continue;
+  	}
+	new_fit(j*2-1:j*2) = [a1(-2), r1.chi2_last]
+	if (a1(0) < 0) new_fit(j*2) = chi2_0+1		// eliminate -ve peaks
+	}
+      if (verbose) print,new_fit
+
+      p_count=1
+      idx=array(1,numberof(new_peaks))
+      while (p_count <= add_peak) {
+	if (!is_void(lims)) {
+  	   if (add_peak != (dimsof(lims)(3))) {
+           write, "Not the correct # of limits. Exiting..";
+           return;
+        }
+	idx=((new_fit(1,) >= lims(1,p_count)) * (new_fit(1,) <= lims(2,p_count)))
+	}
+
+	if (noneof(idx)) min_chi2 = chi2_0+1
+	else min_chi2 = min(new_fit(2,where(idx)));
+	min_chi2_idx = where(new_fit(2,) == min_chi2)
+
+	if (min_chi2 < chi2_0) {
+	   new_fit(2,min_chi2_idx) = chi2_0+1
+	   min_chi2_idx=min_chi2_idx(1)
+	   a=grow(a,new_peaks(min_chi2_idx),1,w1(new_peaks(min_chi2_idx)))
+	   n_peaks = n_peaks+1
+	}
+	else print, "No useful peaks found within limits";
+
+	r1 = lmfit(lmfitfun,x,a,w1,1.0, itmax=200);
+	if ((r1.niter == 200) && (verbose))
+	write, format="%f failed to converge\n", a(-2);
+
+	p_count++
+	if (verbose) print, chi2_0, r1.chi2_last 
+    }
+   }
+  }
+  if (abs(a_noaddpeak(1)-a(1)) > 10) 
+	a = a_noaddpeak;
+  yfit =  lmfitfun(x,a);
+
+  if (graph)
+        {
+      winbkp = current_window();
+      window, win;
+           for (j=1; j<=numberof(a)/3; j++)
+                plg, gauss3(x,[a(j*3-2),a(j*3-1),a(j*3)]),xaxis, color="blue"
+           plg, yfit,xaxis, color="magenta"
+      window_select, winbkp;
+        }
+
+  fwhm = sqrt(8*log(2)) * a(2::3)
+   ret = array(float, 4, numberof(fwhm))
+   a = reform(a, [2,3,numberof(a)/3])
+   ret(1:3,) = a(1:3,)
+   ret(4,) = fwhm
+   if (numberof(a) > 3) a = a(,sort(a(1,)))
+
+   return [ret(1,1), ret(3,1)];
+
 }
