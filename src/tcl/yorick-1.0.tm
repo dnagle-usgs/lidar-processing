@@ -59,16 +59,17 @@ proc ::yorick::spawn {yor_tcl_fn tcl_yor_fn args} {
     array set opts $args
 
     set spawner {cmd {
-        set cmd [linsert $cmd 0 spawn -noecho]
-        set result [catch {uplevel #0 $cmd}]
+        set cmd [list spawn -noecho {*}$cmd]
+        set result [catch $cmd]
         if {!$result} {
-            set result 1
-            expect "Copyright" {set result 0}
+            expect "Copyright" {
+                return [list $spawn_id [array get spawn_out]]
+            }
         }
-        return $result
+        return ""
     }}
 
-    set result 1
+    set result ""
     set cmd ""
 
     set yorick [auto_execok yorick]
@@ -82,21 +83,21 @@ proc ::yorick::spawn {yor_tcl_fn tcl_yor_fn args} {
     lappend yorick -i ytk.i $yor_tcl_fn $tcl_yor_fn
 
     # Try rlterm first, if enabled
-    if {$result && $opts(-rlterm) && $rlterm ne ""} {
+    if {$result eq "" && $opts(-rlterm) && $rlterm ne ""} {
         set result [apply $spawner [concat $rlterm $yorick]]
     }
     # Try rlwrap next, if enabled
-    if {$result && $opts(-rlwrap) && $rlwrap ne ""} {
+    if {$result eq "" && $opts(-rlwrap) && $rlwrap ne ""} {
         set switches [list -c -b "'(){}\[],+=&^%$#@;|\""]
         set dupes [list -D $::_ytk(rlwrap_nodupes)]
         # Try first with -D option, then without (for older rlwraps)
         set result [apply $spawner [concat $rlwrap $switches $dupes $yorick]]
-        if {$result} {
+        if {$result eq ""} {
             set result [apply $spawner [concat $rlwrap $switches $yorick]]
         }
     }
     # Try vanilla Yorick last
-    if {$result} {
+    if {$result eq ""} {
         set result [apply $spawner $yorick]
     }
 
