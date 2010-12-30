@@ -109,7 +109,8 @@ func pcobj(base, obj) {
          Returns the points stored in raw_xyz, except converted into the
          current coordinate system as specified by current_cs. The points are
          cached to improve performance. If "idx" is specified, then only those
-         points are returned.
+         points are returned; idx may be an index list, or it may be a
+         classification suitable for use with data(class, where, idx).
       data(x,)  data(y,)  data(z,)
          Like "xyz", except they only return the x, y, or z coordinates. These
          also can accept an "idx" parameter.
