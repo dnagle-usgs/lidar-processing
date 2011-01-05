@@ -230,6 +230,8 @@ func pcobj_index(idx) {
    res = am_subroutine() ? use() : obj_copy(use(), recurse=1);
    if(is_string(idx))
       idx = use(class, where, idx);
+   if(!numberof(idx))
+      return [];
    obj_index, res, idx, bymethod=save(class="index"), size="count";
    pcobj, res;
    return res;
