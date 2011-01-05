@@ -405,7 +405,7 @@ func obj_index(this, idx, which=, ref=, size=, bymethod=, ignoremissing=) {
          } else if(is_obj(result(which(i)))) {
             if(leading && result(which(i))(*) != leading)
                continue;
-            save, result, which(i), result(which(i), noop(idx));
+            save, result, which(i), obj_index(result(which(i)), idx);
          }
       } else if(!ignoremissing) {
          error, "Missing key: " + which(i);
