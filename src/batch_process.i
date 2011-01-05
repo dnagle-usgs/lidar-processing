@@ -694,14 +694,7 @@ Added server/client support (2009-01) Richard Mitchell
    system, "mkdir -p /tmp/batch/jobs";
 
    // Get username and pc name of person running batch_process
-   system, "uname -n > ~/temp.123456789";
-   system, "whoami >> ~/temp.123456789";
-   f = open("~/temp.123456789");
-   user_pc_NAME = array(string,2);
-   user_pc_NAME(1) = rdline(f);
-   user_pc_NAME(2) = rdline(f);
-   close,f;
-   system, "rm ~/temp.123456789";
+   user_pc_NAME = [get_host(), get_user()];
 
    // Make sure the output path ends in a /
    if ( strpart(save_dir, 0:0) != "/" ) save_dir += "/";
