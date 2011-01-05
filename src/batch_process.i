@@ -233,7 +233,7 @@ func uber_process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=, rcf
 }
 
 func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= ) {
-   extern ofn;
+   extern ofn, _hgid;
    default, host, "localhost";
       if (get_typ) {
          typ=[]
@@ -304,6 +304,10 @@ func process_tile (q=, r=, typ=, min_e=, max_e=, min_n=, max_n=, host=,update= )
             write, f, "Batch Processing Begins"
             write, f, timestamp();
             write, f, format="   on %s by %s\n\n",user_pc_NAME(1),user_pc_NAME(2);
+            if(get_host() != user_pc_NAME(1))
+               write, f, format="   batch processed on %s as %s\n", get_host(), get_user();
+            if(!is_void(_hgid))
+               write, f, format="   using repository revision %s\n", _hgid;
             if (!is_array(conf_file_lines)) write, f, format="PNAV FILE: %s\n",pnav_filename;
             if (typ == 1) {
                write, f, "Bathymetry Constants: "
@@ -672,7 +676,7 @@ Ex: curzone=18
 amar nayegandhi started (10/04/02) Lance Mosher
 Added server/client support (2009-01) Richard Mitchell
 */
-   extern pnav_filenam, bath_ctl
+   extern pnav_filenam, bath_ctl, _hgid;
 
    // start the timer
    t0 = array(double, 3);
@@ -889,6 +893,8 @@ Added server/client support (2009-01) Richard Mitchell
          f = open(mtdt_file(i),"a");
          write, f, "Batch Processing Begins"
          write, f, timestamp();
+         if(!is_void(_hgid))
+            write, f, format="   using repository revision %s\n", _hgid;
          write, f, format="PNAV FILE: %s\n",pnav_filename;
          if (typ == 0) write, f, "Processing for First Surface Returns"
          if (typ == 1) {
