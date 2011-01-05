@@ -96,6 +96,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "obj_show.i";
    require, "parse.i";
    require, "pcobj_import.i";
+   require, "pcobj_export.i";
    require, "pip.i";
    require, "qaqc_fns.i";
    require, "rbgga.i";
