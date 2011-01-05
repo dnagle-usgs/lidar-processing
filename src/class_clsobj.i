@@ -4,9 +4,9 @@
 // with an underscore prefix.
 scratch = save(scratch, tmp, clsobj_set, clsobj_apply, clsobj_remove,
    clsobj_drop, clsobj_classes, clsobj_query, clsobj_where, clsobj_grow,
-   clsobj_serialize);
-tmp = save(set, apply, remove, drop, classes, query, where, grow, serialize,
-   help);
+   clsobj_index, clsobj_serialize);
+tmp = save(set, apply, remove, drop, classes, query, where, grow, index,
+   serialize, help);
 
 func clsobj(base, count) {
 /* DOCUMENT clsobj()
@@ -304,6 +304,16 @@ func clsobj_grow(obj) {
    }
 }
 grow = clsobj_grow;
+
+func clsobj_index(idx) {
+   res = am_subroutine() ? use() : obj_copy(use(), recurse=1);
+   if(is_string(idx))
+      idx = use(where, idx);
+   obj_index, res, idx;
+   clsobj, res;
+   return res;
+}
+index = clsobj_index;
 
 help = closure(help, clsobj);
 
