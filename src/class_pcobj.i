@@ -250,9 +250,9 @@ func pcobj_xyz(working, idx) {
 }
 xyz = closure(pcobj_xyz, save(cs="0", xyz=[]));
 
-func pcobj_x(idx) { return use(xyz, idx)(,1); }
-func pcobj_y(idx) { return use(xyz, idx)(,2); }
-func pcobj_z(idx) { return use(xyz, idx)(,3); }
+func pcobj_x(idx) { return use(xyz,)(idx, 1); }
+func pcobj_y(idx) { return use(xyz,)(idx, 2); }
+func pcobj_z(idx) { return use(xyz,)(idx, 3); }
 x = pcobj_x; y = pcobj_y; z = pcobj_z;
 
 func pcobj_save(fn) {
