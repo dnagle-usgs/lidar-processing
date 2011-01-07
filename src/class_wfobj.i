@@ -277,14 +277,14 @@ func wfobj_xyzwrap(working, idx) {
 xyz0 = closure(wfobj_xyzwrap, save(var="raw_xyz0", cs="-", xyz=[]));
 xyz1 = closure(wfobj_xyzwrap, save(var="raw_xyz1", cs="-", xyz=[]));
 
-func wfobj_x0(idx) { return use(xyz0, idx)(,1); }
-func wfobj_y0(idx) { return use(xyz0, idx)(,2); }
-func wfobj_z0(idx) { return use(xyz0, idx)(,3); }
+func wfobj_x0(idx) { return use(xyz0,)(idx, 1); }
+func wfobj_y0(idx) { return use(xyz0,)(idx, 2); }
+func wfobj_z0(idx) { return use(xyz0,)(idx, 3); }
 x0 = wfobj_x0; y0 = wfobj_y0; z0 = wfobj_z0;
 
-func wfobj_x1(idx) { return use(xyz1, idx)(,1); }
-func wfobj_y1(idx) { return use(xyz1, idx)(,2); }
-func wfobj_z1(idx) { return use(xyz1, idx)(,3); }
+func wfobj_x1(idx) { return use(xyz1,)(idx, 1); }
+func wfobj_y1(idx) { return use(xyz1,)(idx, 2); }
+func wfobj_z1(idx) { return use(xyz1,)(idx, 3); }
 x1 = wfobj_x1; y1 = wfobj_y1; z1 = wfobj_z1;
 
 func wfobj_save(fn) {
