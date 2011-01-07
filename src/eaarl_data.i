@@ -95,7 +95,8 @@ func datahasmode(data, mode=, xyzpassthrough=) {
       has = has && has_member(data, "meast");
       has = has && has_member(data, "mnorth");
    } else {
-      error, "Unknown mode.";
+      // Unknown mode
+      return 0;
    }
 
    // z
