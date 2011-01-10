@@ -11,12 +11,19 @@ func pcobj_to_old_fs(data, fs=, mirror=) {
       return [];
 
    result = array(FS, fsdata(count,));
-   result.soe = fsdata(soe,);
    result.east = long(fsdata(x,)*100. + 0.5);
    result.north = long(fsdata(y,)*100. + 0.5);
    result.elevation = long(fsdata(z,)*100. + 0.5);
-   result.intensity = fsdata(intensity,);
+   if(fsdata(*,"record"))
+      result.rn = fsdata(record,);
+   if(fsdata(*,"soe"))
+      result.soe = fsdata(soe,);
+   if(fsdata(*,"intensity"))
+      result.intensity = fsdata(intensity,);
    fsdata = [];
+
+   if(!fsdata(*,"soe"))
+      return result;
 
    mirdata = data(index, mirror);
    if(is_void(mirdata) || !mirdata(count,))
@@ -52,10 +59,11 @@ func pcobj_to_old_veg(data, fs=, be=, mirror=) {
       if(is_void(temp))
          return [];
       result = struct_cast(temp, VEG__);
+      if(temp(*,"intensity"))
+         result.fint = result.lint = temp.intensity;
       result.least = result.east;
       result.lnorth = result.north;
       result.lelv = result.elevation;
-      result.fint = result.lint = temp.intensity;
       return result;
    }
 
