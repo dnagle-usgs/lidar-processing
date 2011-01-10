@@ -33,9 +33,9 @@ func pcobj_to_old_fs(data, fs=, mirror=) {
       if(mirdata(soe,j) < result.soe(i))
          j++;
       if(result.soe(i) == mirdata(soe,j)) {
-         result.meast = long(mirdata(x,j)*100. + 0.5);
-         result.mnorth = long(mirdata(y,j)*100. + 0.5);
-         result.melevation = long(mirdata(z,j)*100. + 0.5);
+         result(i).meast = long(mirdata(x,j)*100. + 0.5);
+         result(i).mnorth = long(mirdata(y,j)*100. + 0.5);
+         result(i).melevation = long(mirdata(z,j)*100. + 0.5);
          i++;
          j++;
       }
@@ -80,10 +80,10 @@ func pcobj_to_old_veg(data, fs=, be=, mirror=) {
          j++;
       if(result.soe(i) == bedata(soe,j)) {
          beused(j) = 1;
-         result.least = long(bedata(x,j)*100. + 0.5);
-         result.lnorth = long(bedata(y,j)*100. + 0.5);
-         result.lelv = long(bedata(z,j)*100. + 0.5);
-         result.lint = bedata(intensity,j);
+         result(i).least = long(bedata(x,j)*100. + 0.5);
+         result(i).lnorth = long(bedata(y,j)*100. + 0.5);
+         result(i).lelv = long(bedata(z,j)*100. + 0.5);
+         result(i).lint = bedata(intensity,j);
          i++;
          j++;
       }
