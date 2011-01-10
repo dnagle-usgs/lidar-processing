@@ -103,3 +103,54 @@ proc ::yorick::spawn {yor_tcl_fn tcl_yor_fn args} {
 
     return $result
 }
+
+snit::type ::yorick::session {
+    variable connected 0
+    variable spawn_id ""
+    variable spawn_out -array {}
+    variable ytk_fifo
+    variable ytk_fifo_name
+    variable tky_fifo
+    variable tky_fifo_name
+
+    constructor args {
+        set fifos [::yorick::create_fifos]
+        lassign $fifos ytk_fifo ytk_fifo_name tky_fifo tky_fifo_name
+        fileevent $ytk_fifo readable [mymethod ytk_fifo_fileevent]
+        ::log_user 0
+        set result [::yorick::spawn $ytk_fifo_name $tky_fifo_name]
+        ::log_user 1
+        if {$result ne ""} {
+            set spawn_id [lindex $result 0]
+            array set spawn_out [lindex $result 1]
+            set connected 1
+        }
+    }
+
+    destructor {
+        ::yorick::destroy_fifos $ytk_fifo $ytk_fifo_name $tky_fifo $tky_fifo_name
+    }
+
+    method send args {
+        ::exp_send -i $spawn_id {*}$args
+    }
+
+    method expect args {
+        ::log_user 0
+        ::expect -i $spawn_id {*}$args
+        ::log_user 1
+    }
+
+    method ytk_fifo_fileevent {} {
+        set cmd [gets $ytk_fifo]
+
+        if {$cmd ne ""} {
+            if {[catch {uplevel #0 $cmd} errcode]} {
+                ::send_user "\r"
+                ::send_user "*** Ytk Error in session $spawn_id: $cmd\r"
+                ::send_user "*** $errcode\r"
+            }
+            update idletasks
+        }
+    }
+}
