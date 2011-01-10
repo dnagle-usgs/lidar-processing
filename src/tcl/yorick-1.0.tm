@@ -128,6 +128,7 @@ snit::type ::yorick::session {
     }
 
     destructor {
+        $self send "\r__quit\r"
         ::yorick::destroy_fifos $ytk_fifo $ytk_fifo_name $tky_fifo $tky_fifo_name
     }
 
