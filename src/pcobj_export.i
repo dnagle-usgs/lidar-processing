@@ -2,7 +2,23 @@
 require, "eaarl.i";
 
 func pcobj_to_old_fs(data, fs=, mirror=) {
-   extern current_cs;
+/* DOCUMENT pcobj_to_old_fs(data, fs=, mirror=)
+   Converts data in a pcobj object into the old FS structure.
+
+   Parameters:
+      data: Must be an oxy group object as returned by pcobj.
+   Options:
+      fs= Specifies the classification to use for extracting first surface
+         points.
+            fs="first_surface" (default)
+      mirror= Specifies the classification to use for extracting the mirror
+         coordinates.
+            mirror="mirror" (default)
+
+   This will incorporate the record number, soe, and intensity if present.
+   Mirror coordinates will only be used if first surface data is found;
+   matching is performed based on soe (and thus requires soe).
+*/
    default, fs, "first_surface";
    default, mirror, "mirror";
 
@@ -51,6 +67,26 @@ func pcobj_to_old_fs(data, fs=, mirror=) {
 }
 
 func pcobj_to_old_veg(data, fs=, be=, mirror=) {
+/* DOCUMENT pcobj_to_old_veg(data, fs=, be=, mirror=)
+   Converts data in a pcobj object into the old VEG__ structure.
+
+   Parameters:
+      data: Must be an oxy group object as returned by pcobj.
+   Options:
+      fs= Specifies the classification to use for extracting first surface
+         points.
+            fs="first_surface" (default)
+      be= Specifies the classification to use for extracting bare earth points.
+            be="bare_earth" (default)
+      mirror= Specifies the classification to use for extracting the mirror
+         coordinates.
+            mirror="mirror" (default)
+
+   This will incorporate the record number, soe, and intensity if present. If
+   both first surface and bare earth points are found, they will be matched up
+   by soe.  Mirror coordinates will only be used if point data is found;
+   matching is performed based on soe.
+*/
    default, be, "bare_earth";
    temp = pcobj_to_old_fs(data, fs=fs, mirror=mirror);
 
