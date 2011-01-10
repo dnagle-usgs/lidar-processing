@@ -662,6 +662,9 @@ proc ytk_exit {code} {
 #  application terminates with the given exit $code.
 ##
    global ytk_fifo_name tky_fifo_name ytk_fifo tky_fifo
+   foreach session [::yorick::session info instances] {
+      $session destroy
+   }
    ::yorick::destroy_fifos $ytk_fifo $ytk_fifo_name $tky_fifo $tky_fifo_name
    exit $code
 }
