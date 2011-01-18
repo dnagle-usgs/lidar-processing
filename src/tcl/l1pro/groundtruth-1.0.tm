@@ -466,20 +466,20 @@ proc ::l1pro::groundtruth::extract::region_all which {
 }
 
 proc ::l1pro::groundtruth::extract::region_bbox which {
-    exp_send "gt_l1pro_selbbox, \"$which\";\r"
+    exp_send "gt_extract_selbbox, \"$which\";\r"
 }
 
 proc ::l1pro::groundtruth::extract::region_poly which {
-    exp_send "gt_l1pro_selpoly, \"$which\";\r"
+    exp_send "gt_extract_selpoly, \"$which\";\r"
 }
 
 proc ::l1pro::groundtruth::extract::region_tran which {
     set width [set v::${which}_trans_width]
-    exp_send "gt_l1pro_seltran, \"$which\", $width;\r"
+    exp_send "gt_extract_seltran, \"$which\", $width;\r"
 }
 
 proc ::l1pro::groundtruth::extract::region_lims which {
-    exp_send "gt_l1pro_sellims, \"$which\";\r"
+    exp_send "gt_extract_sellims, \"$which\";\r"
 }
 
 proc ::l1pro::groundtruth::extract::region_plot which {

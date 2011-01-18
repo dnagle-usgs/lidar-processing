@@ -424,8 +424,8 @@ func gt_report(comparisons, which, metrics=, title=, outfile=) {
    }
 }
 
-func gt_l1pro_selpoly(which) {
-/* DOCUMENT gt_l1pro_selpoly, which
+func gt_extract_selpoly(which) {
+/* DOCUMENT gt_extract_selpoly, which
    Glue for Groundtruth Analysis tool's Extract pane. Prompts user to draw a
    polygon in the current window. The coordinates are sent to the tool to be
    used for the data specified by WHICH.
@@ -433,11 +433,11 @@ func gt_l1pro_selpoly(which) {
    win = window();
    write, format="Draw a polygon in window %d to select the region.", win;
    ply = getPoly();
-   gt_l1pro_send, ply, "Polygon", which;
+   gt_extract_send, ply, "Polygon", which;
 }
 
-func gt_l1pro_selbbox(which) {
-/* DOCUMENT gt_l1pro_selbbox, which
+func gt_extract_selbbox(which) {
+/* DOCUMENT gt_extract_selbbox, which
    Glue for Groundtruth Analysis tool's Extract pane. Prompts user to draw a
    box in the current window. The coordinates are sent to the tool to be used
    for the data specified by WHICH.
@@ -446,11 +446,11 @@ func gt_l1pro_selbbox(which) {
    msg = swrite(format="Draw a box in window %d to select the region.", win);
    rgn = mouse(1, 1, msg);
    ply = transpose([rgn([1,3,3,1,1]), rgn([2,2,4,4,2])]);
-   gt_l1pro_send, ply, "Rubberband box", which;
+   gt_extract_send, ply, "Rubberband box", which;
 }
 
-func gt_l1pro_seltran(which, width) {
-/* DOCUMENT gt_l1pro_seltran, which
+func gt_extract_seltran(which, width) {
+/* DOCUMENT gt_extract_seltran, which
    Glue for Groundtruth Analysis tool's Extract pane. Prompts user to draw a
    transect line in the current window. The line is buffered into a polygon
    with the specified WIDTH. The coordinates are sent to the tool to be used
@@ -460,11 +460,11 @@ func gt_l1pro_seltran(which, width) {
    msg = swrite(format="Drag a transect line in window %d to select the region.", win);
    line = mouse(1, 2, msg);
    ply = line_to_poly(line(1), line(2), line(3), line(4), width=width);
-   gt_l1pro_send, ply, "Transect", which;
+   gt_extract_send, ply, "Transect", which;
 }
 
-func gt_l1pro_sellims(which) {
-/* DOCUMENT gt_l1pro_sellims, which
+func gt_extract_sellims(which) {
+/* DOCUMENT gt_extract_sellims, which
    Glue for Groundtruth Analysis tool's Extract pane. Retrieves current
    window's limits as a polygon. The coordinates are sent to the tool to be
    used for the data specified by WHICH.
@@ -472,11 +472,11 @@ func gt_l1pro_sellims(which) {
    win = window();
    lims = limits();
    ply = lims([[1,3],[1,4],[2,4],[2,3],[1,3]]);
-   gt_l1pro_send, ply, swrite(format="Window %d limits", win), which;
+   gt_extract_send, ply, swrite(format="Window %d limits", win), which;
 }
 
-func gt_l1pro_send(ply, kind, which) {
-/* DOCUMENT gt_l1pro_send, ply, kind, which
+func gt_extract_send(ply, kind, which) {
+/* DOCUMENT gt_extract_send, ply, kind, which
    Utility function for other glue functions for Groundtruth Analysis tool's
    Extract pane. Sends a polygon PLY of type KIND to the tool to be used for
    data WHICH.
