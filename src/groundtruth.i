@@ -31,6 +31,8 @@ func gt_extract_comparisons(model, truth, modelmode=, truthmode=, radius=) {
          RADIUS of MODEL.
       t_median - The median elevation value for the TRUTH points within RADIUS
          of MODEL.
+      data - The points from MODEL that correspond to "model". This is only
+         included if MODEL is a struct instance (VEG__, FS, GEO, etc.).
 */
    extern curzone;
    local mx, my, mz, tx, ty, tz;
@@ -45,6 +47,10 @@ func gt_extract_comparisons(model, truth, modelmode=, truthmode=, radius=) {
    data2xyz, model, mx, my, mz, mode=modelmode;
    data2xyz, truth, tx, ty, tz, mode=truthmode;
 
+   data = [];
+   if(typeof(model) == "struct_instance")
+      data = model;
+
    // Eliminate model points outside of bbox+radius from truth points. Easy to
    // do, and results in huge savings if the model points cover a much larger
    // region than the truth points.
@@ -54,6 +60,8 @@ func gt_extract_comparisons(model, truth, modelmode=, truthmode=, radius=) {
    mx = mx(w);
    my = my(w);
    mz = mz(w);
+   if(!is_void(data))
+      data = data(w);
 
    // We seek four results:
    //    best: The truth elevation closest to model
@@ -160,12 +168,17 @@ func gt_extract_comparisons(model, truth, modelmode=, truthmode=, radius=) {
 
    w = where(keep);
    model = mz(w);
+   if(!is_void(data))
+      data = data(w);
    t_best = t_best(w);
    t_nearest = t_nearest(w);
    t_average = t_average(w);
    t_median = t_median(w);
 
-   return save(model, t_best, t_nearest, t_average, t_median);
+   result = save(model, t_best, t_nearest, t_average, t_median);
+   if(!is_void(data))
+      save, result, data;
+   return result;
 }
 
 func gt_metrics(z1, z2, metrics) {
