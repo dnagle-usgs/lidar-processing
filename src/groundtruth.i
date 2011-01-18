@@ -425,6 +425,11 @@ func gt_report(comparisons, which, metrics=, title=, outfile=) {
 }
 
 func gt_l1pro_selpoly(which) {
+/* DOCUMENT gt_l1pro_selpoly, which
+   Glue for Groundtruth Analysis tool's Extract pane. Prompts user to draw a
+   polygon in the current window. The coordinates are sent to the tool to be
+   used for the data specified by WHICH.
+*/
    win = window();
    write, format="Draw a polygon in window %d to select the region.", win;
    ply = getPoly();
@@ -432,6 +437,11 @@ func gt_l1pro_selpoly(which) {
 }
 
 func gt_l1pro_selbbox(which) {
+/* DOCUMENT gt_l1pro_selbbox, which
+   Glue for Groundtruth Analysis tool's Extract pane. Prompts user to draw a
+   box in the current window. The coordinates are sent to the tool to be used
+   for the data specified by WHICH.
+*/
    win = window();
    msg = swrite(format="Draw a box in window %d to select the region.", win);
    rgn = mouse(1, 1, msg);
@@ -440,6 +450,12 @@ func gt_l1pro_selbbox(which) {
 }
 
 func gt_l1pro_seltran(which, width) {
+/* DOCUMENT gt_l1pro_seltran, which
+   Glue for Groundtruth Analysis tool's Extract pane. Prompts user to draw a
+   transect line in the current window. The line is buffered into a polygon
+   with the specified WIDTH. The coordinates are sent to the tool to be used
+   for the data specified by WHICH.
+*/
    win = window();
    msg = swrite(format="Drag a transect line in window %d to select the region.", win);
    line = mouse(1, 2, msg);
@@ -448,6 +464,11 @@ func gt_l1pro_seltran(which, width) {
 }
 
 func gt_l1pro_sellims(which) {
+/* DOCUMENT gt_l1pro_sellims, which
+   Glue for Groundtruth Analysis tool's Extract pane. Retrieves current
+   window's limits as a polygon. The coordinates are sent to the tool to be
+   used for the data specified by WHICH.
+*/
    win = window();
    lims = limits();
    ply = lims([[1,3],[1,4],[2,4],[2,3],[1,3]]);
@@ -455,6 +476,11 @@ func gt_l1pro_sellims(which) {
 }
 
 func gt_l1pro_send(ply, kind, which) {
+/* DOCUMENT gt_l1pro_send, ply, kind, which
+   Utility function for other glue functions for Groundtruth Analysis tool's
+   Extract pane. Sends a polygon PLY of type KIND to the tool to be used for
+   data WHICH.
+*/
    area = poly_area(ply);
    if(area < 1e6)
       area = swrite(format="%.0f square meters", area);
