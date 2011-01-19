@@ -49,6 +49,7 @@ proc ::l1pro::groundtruth::gui {} {
     $nb add [extract::panel $nb.extract] -text "Extract" -sticky news
     $nb add [scatter::panel $nb.scatter] -text "Scatterplot" -sticky news
     $nb add [hist::panel $nb.hist] -text "Histogram" -sticky news
+    $nb add [variables::panel $nb.vars] -text "Variables" -sticky news
     $nb add [report::panel $nb.report] -text "Report" -sticky news
 
     # Let Tk draw and layout the GUI elements. Then select each tab to
@@ -940,6 +941,107 @@ proc ::l1pro::groundtruth::hist::plot {} {
     }
 
     exp_send "$cmd;\r"
+}
+
+namespace eval ::l1pro::groundtruth::variables {
+    namespace import [namespace parent]::*
+}
+
+if {![namespace exists ::l1pro::groundtruth::variables::v]} {
+    namespace eval ::l1pro::groundtruth::variables::v {
+        variable comparison ""
+        variable output_sub comparisons_new
+        variable output_data fs_all
+
+        set root [namespace parent [namespace parent]]
+        namespace upvar ${root}::scatter::v win win_scatter
+        namespace upvar ${root}::hist::v win win_hist
+        unset root
+    }
+}
+
+proc ::l1pro::groundtruth::variables::panel w {
+    ttk::frame $w
+
+    set ns [namespace current]
+    set o [list -padx 1 -pady 1]
+    set e [list {*}$o -sticky e]
+    set ew [list {*}$o -sticky ew]
+    set news [list {*}$o -sticky news]
+
+    set f $w.general
+    ttk::frame $f
+    widget_comparison_vars $f.lblvar $f.cbovar $f.btnvar ${ns}::v::comparison
+    grid $f.lblvar $f.cbovar $f.btnvar {*}$ew
+    grid configure $f.lblvar -sticky e
+    grid columnconfigure $f 1 -weight 1
+
+    set f $w.subsample
+    ttk::labelframe $f -text Subsample
+    ttk::label $f.lbloutput -text "Output:"
+    ::mixin::combobox $f.output -width 0 \
+            -listvariable [$w.general.cbovar cget -listvariable] \
+            -textvariable ${ns}::v::output_sub
+    ttk::label $f.lblscatter -text "Scatterplot:"
+    ttk::label $f.lblhist -text "Histogram:"
+    ttk::frame $f.fscatter
+    ttk::frame $f.fhist
+    ttk::button $f.scatterplot -text "Plot" -style Panel.TButton
+    ttk::button $f.scatterbox -text "Box" -style Panel.TButton
+    ttk::button $f.scatterpip -text "PIP" -style Panel.TButton
+    ttk::button $f.histplot -text "Plot" -style Panel.TButton
+    ttk::button $f.histmin -text "Min" -style Panel.TButton
+    ttk::button $f.histmax -text "Max" -style Panel.TButton
+    ttk::button $f.histminmax -text "Min/Max" -style Panel.TButton
+    ttk::label $f.lblscatterwin -text "Window:"
+    ttk::label $f.lblhistwin -text "Window:"
+    ttk::spinbox $f.scatterwin -width 2 \
+            -textvariable ${ns}::v::win_scatter \
+            -from 0 -to 63 -increment 1 -format %.0f
+    ttk::spinbox $f.histwin -width 2 \
+            -textvariable ${ns}::v::win_hist \
+            -from 0 -to 63 -increment 1 -format %.0f
+
+    grid $f.scatterplot $f.scatterbox $f.scatterpip -in $f.fscatter \
+            {*}$o -sticky w
+    grid $f.histplot $f.histmin $f.histmax $f.histminmax -in $f.fhist \
+            {*}$o -sticky w
+    grid columnconfigure $f.fscatter 100 -weight 1
+    grid columnconfigure $f.fhist 100 -weight 1
+
+    grid $f.lbloutput $f.output - - {*}$ew
+    grid $f.lblscatter $f.fscatter $f.lblscatterwin $f.scatterwin {*}$ew
+    grid $f.lblhist $f.fhist $f.lblhistwin $f.histwin {*}$ew
+    grid configure $f.lbloutput $f.lblscatter $f.lblhist $f.lblscatterwin \
+            $f.lblhistwin -sticky e
+    grid columnconfigure $f 1 -weight 1
+
+    foreach btn {
+        scatterplot scatterbox scatterpip histplot histmin histmax histminmax
+    } {
+        $f.$btn state disabled
+    }
+
+    set f $w.data
+    ttk::labelframe $f -text "Extract Data"
+    ttk::label $f.lbloutput -text "Output:"
+    ::mixin::combobox $f.output -width 0 \
+            -listvariable ::varlist \
+            -textvariable ${ns}::v::output_data
+    ttk::button $f.extract -text "Extract"
+    grid $f.lbloutput $f.output $f.extract {*}$ew
+    grid configure $f.lbloutput -sticky e
+    grid columnconfigure $f 1 -weight 1
+
+    $f.extract state disabled
+
+    grid $w.general {*}$ew
+    grid $w.subsample {*}$ew
+    grid $w.data {*}$ew
+    grid columnconfigure $w 0 -weight 1
+    grid rowconfigure $w 100 -weight 1
+
+    return $w
 }
 
 namespace eval ::l1pro::groundtruth::report {
