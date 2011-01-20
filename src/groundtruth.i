@@ -496,3 +496,46 @@ func gt_extract_send(ply, kind, which) {
    fmt = "set ::l1pro::groundtruth::extract::v::%s_region_data {%s}";
    tkcmd, swrite(format=fmt, which, ply);
 }
+
+func gt_vars_selpoly(data, which, win) {
+/* DOCUMENT gt_vars_selpoly(data, which, win)
+   Glue for Groundtruth Analysis tool's Variables pane. Prompts user to draw a
+   polygon in the Scatterplot window. Points in that region are then extracted
+   and returned. DATA is comparisons variable, WHICH is truth data to use, WIN
+   is window the plot exists in.
+*/
+   wbkp = current_window();
+   window, win;
+   write, format="Draw a polygon in window %d to select the region.", win;
+   ply = getPoly();
+   window_select, wbkp;
+   return gt_vars_subsample(data, which, ply);
+}
+
+func gt_vars_selbbox(data, which, win) {
+/* DOCUMENT gt_vars_selbbox(data, which, win)
+   Glue for Groundtruth Analysis tool's Variables pane. Prompts user to draw a
+   box in the Scatterplot window. Points in that region are then extracted and
+   returned. DATA is comparisons variable, WHICH is truth data to use, WIN is
+   window the plot exists in.
+*/
+   wbkp = current_window();
+   window, win;
+   msg = swrite(format="Draw a box in window %d to select the region.", win);
+   rgn = mouse(1, 1, msg);
+   ply = transpose([rgn([1,3,3,1,1]), rgn([2,2,4,4,2])]);
+   return gt_vars_subsample(data, which, ply);
+}
+
+func gt_vars_subsample(data, which, ply) {
+/* DOCUMENT gt_vars_subsample(data, which, ply)
+   Utility function for other glue functions for Groundtruth Analysis tool's
+   Variables pane. Extracts from DATA using comparison type WHICH (such as
+   "t_best"), the points within polygon PLY.
+*/
+   w = testPoly(ply, data(noop(which)), data(model));
+   if(numberof(w))
+      return obj_index(data, w)
+   else
+      return [];
+}

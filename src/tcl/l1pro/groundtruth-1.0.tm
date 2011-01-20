@@ -992,8 +992,10 @@ proc ::l1pro::groundtruth::variables::panel w {
     ttk::frame $f.fhist
     ttk::button $f.scatterplot -text "Plot" -style Panel.TButton \
             -command ${root}::scatter::plot
-    ttk::button $f.scatterbox -text "Box" -style Panel.TButton
-    ttk::button $f.scatterpip -text "PIP" -style Panel.TButton
+    ttk::button $f.scatterbox -text "Box" -style Panel.TButton \
+            -command [list ${ns}::subsample bbox]
+    ttk::button $f.scatterpip -text "PIP" -style Panel.TButton \
+            -command [list ${ns}::subsample poly]
     ttk::button $f.histplot -text "Plot" -style Panel.TButton \
             -command ${root}::hist::plot
     ttk::button $f.histmin -text "Min" -style Panel.TButton
@@ -1022,7 +1024,7 @@ proc ::l1pro::groundtruth::variables::panel w {
             $f.lblhistwin -sticky e
     grid columnconfigure $f 1 -weight 1
 
-    foreach btn {scatterbox scatterpip histmin histmax histminmax} {
+    foreach btn {histmin histmax histminmax} {
         $f.$btn state disabled
     }
 
@@ -1046,6 +1048,15 @@ proc ::l1pro::groundtruth::variables::panel w {
     grid rowconfigure $w 100 -weight 1
 
     return $w
+}
+
+proc ::l1pro::groundtruth::variables::subsample how {
+    namespace upvar [namespace parent]::scatter::v \
+        data data
+    set cmd "$v::output_sub = gt_vars_sel${how}\($v::comparison, \"t_$data\",\
+            $v::win_scatter)"
+    exp_send "$cmd;\r"
+    comparison_add $v::output_sub
 }
 
 namespace eval ::l1pro::groundtruth::report {
