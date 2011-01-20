@@ -993,14 +993,17 @@ proc ::l1pro::groundtruth::variables::panel w {
     ttk::button $f.scatterplot -text "Plot" -style Panel.TButton \
             -command ${root}::scatter::plot
     ttk::button $f.scatterbox -text "Box" -style Panel.TButton \
-            -command [list ${ns}::subsample bbox]
+            -command [list ${ns}::sub_scatter bbox]
     ttk::button $f.scatterpip -text "PIP" -style Panel.TButton \
-            -command [list ${ns}::subsample poly]
+            -command [list ${ns}::sub_scatter poly]
     ttk::button $f.histplot -text "Plot" -style Panel.TButton \
             -command ${root}::hist::plot
-    ttk::button $f.histmin -text "Min" -style Panel.TButton
-    ttk::button $f.histmax -text "Max" -style Panel.TButton
-    ttk::button $f.histminmax -text "Min/Max" -style Panel.TButton
+    ttk::button $f.histmin -text "Min" -style Panel.TButton \
+            -command [list ${ns}::sub_hist min]
+    ttk::button $f.histmax -text "Max" -style Panel.TButton \
+            -command [list ${ns}::sub_hist max]
+    ttk::button $f.histminmax -text "Min/Max" -style Panel.TButton \
+            -command [list ${ns}::sub_hist minmax]
     ttk::label $f.lblscatterwin -text "Window:"
     ttk::label $f.lblhistwin -text "Window:"
     ttk::spinbox $f.scatterwin -width 2 \
@@ -1024,10 +1027,6 @@ proc ::l1pro::groundtruth::variables::panel w {
             $f.lblhistwin -sticky e
     grid columnconfigure $f 1 -weight 1
 
-    foreach btn {histmin histmax histminmax} {
-        $f.$btn state disabled
-    }
-
     set f $w.data
     ttk::labelframe $f -text "Extract Data"
     ttk::label $f.lbloutput -text "Output:"
@@ -1049,11 +1048,18 @@ proc ::l1pro::groundtruth::variables::panel w {
     return $w
 }
 
-proc ::l1pro::groundtruth::variables::subsample how {
-    namespace upvar [namespace parent]::scatter::v \
-        data data
+proc ::l1pro::groundtruth::variables::sub_scatter how {
+    namespace upvar [namespace parent]::scatter::v data data
     set cmd "$v::output_sub = gt_vars_sel${how}\($v::comparison, \"t_$data\",\
             $v::win_scatter)"
+    exp_send "$cmd;\r"
+    comparison_add $v::output_sub
+}
+
+proc ::l1pro::groundtruth::variables::sub_hist bound {
+    namespace upvar [namespace parent]::hist::v data data
+    set cmd "$v::output_sub = gt_vars_bound($v::comparison, \"t_$data\",\
+            $v::win_hist, \"$bound\")"
     exp_send "$cmd;\r"
     comparison_add $v::output_sub
 }

@@ -535,7 +535,37 @@ func gt_vars_subsample(data, which, ply) {
 */
    w = testPoly(ply, data(noop(which)), data(model));
    if(numberof(w))
-      return obj_index(data, w)
+      return obj_index(data, w);
+   else
+      return [];
+}
+
+func gt_vars_bound(data, which, win, bound) {
+/* DOCUMENT gt_vars_bound(data, which, bound)
+   Glue for Groundtruth Analysis tool's Variables pane. User is prompted to
+   click according to BOUND. Extracts data from histogram of DATA using truth
+   data WHICH that falls between user-clicked bounds.
+*/
+   local lbound, ubound;
+   wbkp = current_window();
+   window, win;
+   if(bound == "minmax") {
+      write, format="Select two bounding points in window %d\n", win;
+      lbound = mouse()(1);
+      ubound = mouse()(1);
+      if(ubound < lbound)
+         swap, lbound, ubound;
+   } else if(bound == "min") {
+      write, format="Select minimum bounding point in window %d\n", win;
+      lbound = mouse()(1);
+   } else if(bound == "max") {
+      write, format="Select maximum bounding point in window %d\n", win;
+      ubound = mouse()(1);
+   }
+   w = filter_bounded_elv(data(model) - data(noop(which)), lbound=lbound,
+      ubound=ubound, idx=1);
+   if(numberof(w))
+      return obj_index(data, w);
    else
       return [];
 }
