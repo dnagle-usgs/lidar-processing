@@ -15,6 +15,7 @@ if {![namespace exists ::l1pro::groundtruth::v]} {
                 yellow]
         variable data_list [list best nearest average median]
         variable comparisons [list]
+        variable comparison ""
     }
 }
 
@@ -151,7 +152,10 @@ proc ::l1pro::groundtruth::widget_comparison_vars {lbl cbo btns var} {
             \n\
             \nIf you have created a variable manually on the Yorick command\
             \nline, you can type the variable name and hit <Enter> or <Return>\
-            \nto add it to the list."
+            \nto add it to the list.\
+            \n\
+            \nThis setting is shared across all panes, so changing the\
+            \ncomparison variable here will update all other panes."
     ::tooltip::tooltip $btns.load \
             "Load a comparison variable from a PBD file."
 }
@@ -494,7 +498,6 @@ namespace eval ::l1pro::groundtruth::scatter {
 
 if {![namespace exists ::l1pro::groundtruth::scatter::v]} {
     namespace eval ::l1pro::groundtruth::scatter::v {
-        variable comparison ""
         variable data best
         variable win 10
         variable dofma 1
@@ -521,7 +524,8 @@ if {![namespace exists ::l1pro::groundtruth::scatter::v]} {
         variable plot_quadratic_lsf_size 1.0
 
         namespace upvar [namespace parent [namespace parent]]::v \
-                metric_list metric_list data_list data_list
+                metric_list metric_list data_list data_list comparison \
+                comparison
 
         variable metrics
         foreach m $metric_list {set metrics($m) 0}
@@ -672,7 +676,6 @@ namespace eval ::l1pro::groundtruth::hist {
 
 if {![namespace exists ::l1pro::groundtruth::hist::v]} {
     namespace eval ::l1pro::groundtruth::hist::v {
-        variable comparison ""
         variable data best
         variable win 11
         variable dofma 1
@@ -709,7 +712,7 @@ if {![namespace exists ::l1pro::groundtruth::hist::v]} {
         variable kde_samples 100
 
         namespace upvar [namespace parent [namespace parent]]::v \
-                data_list data_list
+                data_list data_list comparison comparison
     }
 }
 
@@ -949,13 +952,13 @@ namespace eval ::l1pro::groundtruth::variables {
 
 if {![namespace exists ::l1pro::groundtruth::variables::v]} {
     namespace eval ::l1pro::groundtruth::variables::v {
-        variable comparison ""
         variable output_sub comparisons_new
         variable output_data fs_all
 
         set root [namespace parent [namespace parent]]
         namespace upvar ${root}::scatter::v win win_scatter
         namespace upvar ${root}::hist::v win win_hist
+        namespace upvar ${root}::v comparison comparison
         unset root
     }
 }
