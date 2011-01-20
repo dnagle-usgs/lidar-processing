@@ -373,7 +373,10 @@ func filter_bounded_elv(eaarl, lbound=, ubound=, mode=, idx=) {
    local z;
    default, idx, 0;
 
-   data2xyz, eaarl, , , z, mode=mode;
+   if(is_vector(eaarl) && is_numerical(eaarl))
+      z = eaarl;
+   else
+      data2xyz, eaarl, , , z, mode=mode;
    keep = indgen(numberof(z));
 
    if(!is_void(lbound))
