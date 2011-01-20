@@ -1034,12 +1034,11 @@ proc ::l1pro::groundtruth::variables::panel w {
     ::mixin::combobox $f.output -width 0 \
             -listvariable ::varlist \
             -textvariable ${ns}::v::output_data
-    ttk::button $f.extract -text "Extract"
+    ttk::button $f.extract -text "Extract" -style Panel.TButton \
+        -command ${ns}::extract
     grid $f.lbloutput $f.output $f.extract {*}$ew
     grid configure $f.lbloutput -sticky e
     grid columnconfigure $f 1 -weight 1
-
-    $f.extract state disabled
 
     grid $w.general {*}$ew
     grid $w.subsample {*}$ew
@@ -1057,6 +1056,12 @@ proc ::l1pro::groundtruth::variables::subsample how {
             $v::win_scatter)"
     exp_send "$cmd;\r"
     comparison_add $v::output_sub
+}
+
+proc ::l1pro::groundtruth::variables::extract {} {
+    set cmd "$v::output_data = $v::comparison.data"
+    exp_send "$cmd;\r"
+    append_varlist $v::output_data
 }
 
 namespace eval ::l1pro::groundtruth::report {
