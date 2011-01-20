@@ -967,6 +967,7 @@ proc ::l1pro::groundtruth::variables::panel w {
     ttk::frame $w
 
     set ns [namespace current]
+    set root [namespace parent]
     set o [list -padx 1 -pady 1]
     set e [list {*}$o -sticky e]
     set ew [list {*}$o -sticky ew]
@@ -989,10 +990,12 @@ proc ::l1pro::groundtruth::variables::panel w {
     ttk::label $f.lblhist -text "Histogram:"
     ttk::frame $f.fscatter
     ttk::frame $f.fhist
-    ttk::button $f.scatterplot -text "Plot" -style Panel.TButton
+    ttk::button $f.scatterplot -text "Plot" -style Panel.TButton \
+            -command ${root}::scatter::plot
     ttk::button $f.scatterbox -text "Box" -style Panel.TButton
     ttk::button $f.scatterpip -text "PIP" -style Panel.TButton
-    ttk::button $f.histplot -text "Plot" -style Panel.TButton
+    ttk::button $f.histplot -text "Plot" -style Panel.TButton \
+            -command ${root}::hist::plot
     ttk::button $f.histmin -text "Min" -style Panel.TButton
     ttk::button $f.histmax -text "Max" -style Panel.TButton
     ttk::button $f.histminmax -text "Min/Max" -style Panel.TButton
@@ -1019,9 +1022,7 @@ proc ::l1pro::groundtruth::variables::panel w {
             $f.lblhistwin -sticky e
     grid columnconfigure $f 1 -weight 1
 
-    foreach btn {
-        scatterplot scatterbox scatterpip histplot histmin histmax histminmax
-    } {
+    foreach btn {scatterbox scatterpip histmin histmax histminmax} {
         $f.$btn state disabled
     }
 
