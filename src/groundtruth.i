@@ -569,3 +569,62 @@ func gt_vars_bound(data, which, win, bound) {
    else
       return [];
 }
+
+func gt_pixelwf_interactive(data, which, win) {
+   extern pixelwfvars;
+
+   wbkp = current_window();
+
+   continue_interactive = 1;
+   while(continue_interactive) {
+      write, format="\nWindow %d: Left-click to examine a point. Anything else aborts.\n", win;
+
+      window, win;
+      spot = mouse(1, 1, "");
+
+      if(mouse_click_is("left", spot)) {
+         write, format="\n-----\n\n%s", "";
+         nearest = gt_pixelwf_find_point(spot, data, which);
+         if(is_void(nearest.point)) {
+            write, format="Location clicked: %9.2f %10.2f\n", spot(1), spot(2);
+            write, format="No point found within search radius (%.2fm).\n",
+               pixelwfvars.selection.radius;
+         } else {
+            pixelwf_set_point, nearest.point;
+            plmk, nearest.y, nearest.x, msize=0.004, color="red",
+               marker=[[0,1,0,1,0,-1,0,-1,0],[0,1,0,-1,0,-1,0,1,0]];
+            tkcmd, "::misc::idle {ybkg pixelwf_plot}";
+            pixelwf_selected_info, nearest, vname="(comparisons)";
+         }
+      } else {
+         continue_interactive = 0;
+      }
+   }
+
+   window_select, wbkp;
+}
+
+func gt_pixelwf_find_point(spot, data, which) {
+   extern pixelwfvars;
+   vars = pixelwfvars.selection;
+   radius = vars.radius;
+
+   bbox = spot([1,1,2,2]) + radius * [-1,1,-1,1];
+   w = data_box(data(noop(which)), data.model, bbox);
+
+   dist = index = nearest = [];
+   if(numberof(w)) {
+      x = data(noop(which))(w);
+      y = data.model(w);
+      d = sqrt((x-spot(1))^2 + (y-spot(2))^2);
+      if(d(min) <= radius) {
+         dist = d(min);
+         index = w(d(mnx));
+         nearest = data.data(index);
+         nx = x(d(mnx));
+         ny = y(d(mnx));
+      }
+   }
+
+   return h_new(point=nearest, index=index, distance=dist, spot=spot, x=nx, y=ny);
+}

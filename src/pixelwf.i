@@ -218,8 +218,9 @@ func pixelwf_enter_interactive(void) {
    }
 }
 
-func pixelwf_selected_info(nearest) {
+func pixelwf_selected_info(nearest, vname=) {
    extern pixelwfvars, soe_day_start;
+   default, vname, pixelwfvars.selection.pro_var;
    point = nearest.point;
    spot = nearest.spot;
 
@@ -241,8 +242,7 @@ func pixelwf_selected_info(nearest) {
    rp = parse_rn(point.rn);
    write, format="raster= %d ; pulse= %d\n", rp(1), rp(2);
    if((dimsof(get_member(var_expr_get(pixelwfvars.selection.pro_var),"soe"))(1)) == 1) {
-      write, format="Corresponds to %s(%d)\n",
-         pixelwfvars.selection.pro_var, nearest.index;
+      write, format="Corresponds to %s(%d)\n", vname, nearest.index;
    }
 
    if(pixelwfvars.selection.extended && is_array(tans) && is_array(pnav)) {
