@@ -570,8 +570,9 @@ func gt_vars_bound(data, which, win, bound) {
       return [];
 }
 
-func gt_pixelwf_interactive(data, which, win) {
+func gt_pixelwf_interactive(vname, which, win) {
    extern pixelwfvars;
+   data = var_expr_get(vname);
 
    wbkp = current_window();
 
@@ -594,7 +595,7 @@ func gt_pixelwf_interactive(data, which, win) {
             plmk, nearest.y, nearest.x, msize=0.004, color="red",
                marker=[[0,1,0,1,0,-1,0,-1,0],[0,1,0,-1,0,-1,0,1,0]];
             tkcmd, "::misc::idle {ybkg pixelwf_plot}";
-            pixelwf_selected_info, nearest, vname="(comparisons)";
+            pixelwf_selected_info, nearest, vname=vname;
          }
       } else {
          continue_interactive = 0;

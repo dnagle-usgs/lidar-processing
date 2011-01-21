@@ -619,8 +619,9 @@ proc ::l1pro::groundtruth::scatter::panel w {
     ttk::button $f.plot -text Plot -command ${ns}::plot
     ttk::checkbutton $f.fma -text "Clear before plotting" \
             -variable ${ns}::v::dofma
-    grid x $f.plot $f.fma x {*}$ew
-    grid columnconfigure $f {0 3} -weight 1
+    ttk::button $f.pixelwf -text "Pixel Waveform" -command ${ns}::pixelwf
+    grid x $f.plot $f.fma $f.pixelwf x {*}$ew
+    grid columnconfigure $f {0 4} -weight 1
 
     grid $w.general $w.metrics {*}$news
     grid $w.plots ^ {*}$news
@@ -667,6 +668,11 @@ proc ::l1pro::groundtruth::scatter::plot {} {
     ::misc::appendif cmd \
         {$metrics ne {["# points", "RMSE", "ME", "R^2"]}}  ", metrics=$metrics"
 
+    exp_send "$cmd;\r"
+}
+
+proc ::l1pro::groundtruth::scatter::pixelwf {} {
+    set cmd "gt_pixelwf_interactive, \"$v::comparison\", \"t_$v::data\", $v::win"
     exp_send "$cmd;\r"
 }
 
