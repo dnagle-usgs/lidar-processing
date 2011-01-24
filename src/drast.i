@@ -557,6 +557,49 @@ func geo_rast(rn, fsmarks=, eoffset=, win=, verbose=, titles=, rcfw=, style=, bg
    window_select, prev_win;
 }
 
+func show_wf_transmit(rast, pix, win=, xfma=) {
+/* DOCUMENT show_wf_transmit, rast, pix, win=, xfma=
+   Displays a transmit waveform.
+
+   Arguments:
+      rast - May be either an integer specifying the raster, or a scalar
+         instance of the RAST structure. Integer is prefered, as this enables
+         display of raster number in the plot.
+      pix - The pixel to plot. This is an index into RAST, in the range 1 to
+         120.
+   Options:
+      win= The window to plot in. Default is the current window.
+      xfma= By default, an fma is issued (xfma=1). Use xfma=0 to prevent that.
+*/
+   extern data_path;
+   default, win, window();
+   default, xfma, 1;
+
+   raster = [];
+   if(is_integer(rast)) {
+      raster = rast;
+      rast = decode_raster(get_erast(rn=raster));
+   }
+
+   tx = *rast.tx(pix);
+   tx = tx(max) - tx;
+
+   wbkp = current_window();
+   window, win;
+
+   if(xfma) fma;
+   plmk, tx, marker=1, msize=0.3, color="black";
+   plg, tx;
+
+   xtitle = swrite(format="Pix:%d  Digital Counts", pix);
+   if(!is_void(raster)) xtitle = swrite(format="Raster:%d %s", raster, xtitle);
+   ytitle = "Relative Energy";
+   xytitles, xtitle, ytitle;
+   pltitle, regsub("_", data_path, "!_", all=1);
+
+   window_select, wbkp;
+}
+
 func transmit_char(rr, p=, win=, plot=, autofma=) {
 /* DOCUMENT transmit_char(rr, p=, win=, plot=, autofma=)
 
