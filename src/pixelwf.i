@@ -50,6 +50,10 @@ if(is_void(pixelwfvars)) {
          c2=1,          //bool; channel 2
          c3=1           //bool; channel 3
       ),
+      show_wf_transmit=h_new(
+         enabled=1,
+         win=18
+      ),
       geo_rast=h_new(
          enabled=1,  //bool
          win=2,
@@ -68,7 +72,8 @@ if(is_void(pixelwfvars)) {
 
 func pixelwf_plot(void) {
    extern pixelwfvars, edb;
-   fns = ["ex_bath", "ex_veg", "show_wf", "geo_rast", "ndrast", "fit_gauss"];
+   fns = ["ex_bath", "ex_veg", "show_wf", "show_wf_transmit", "geo_rast",
+      "ndrast", "fit_gauss"];
 
    for(i = 1; i <= numberof(fns); i++) {
       if(pixelwfvars(fns(i)).enabled)
@@ -147,13 +152,19 @@ func pixelwf_show_wf(void) {
    pixelwf_load_data;
 
    win = current_window();
+   show_wf, raster, pulse, win=vars.win, c1=vars.c1, c2=vars.c2, c3=vars.c3;
+   window_select, win;
+}
 
-   r = get_erast(rn=raster);
-   rr = decode_raster(r);
-   wfa = ndrast(rr, graph=0, sfsync=0);
-   show_wf, *wfa, pulse, win=vars.win, raster=raster,
-      c1=vars.c1, c2=vars.c2, c3=vars.c3;
+func pixelwf_show_wf_transmit(void) {
+   extern pixelwfvars;
+   raster = pixelwfvars.selection.raster;
+   pulse = pixelwfvars.selection.pulse;
+   vars = pixelwfvars.show_wf_transmit;
+   pixelwf_load_data;
 
+   win = current_window();
+   show_wf_transmit, raster, pulse, win=vars.win;
    window_select, win;
 }
 

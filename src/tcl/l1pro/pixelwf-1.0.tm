@@ -58,6 +58,10 @@ if {![namespace exists ::l1pro::pixelwf]} {
                 variable c2 1
                 variable c3 1
             }
+            namespace eval show_wf_transmit {
+                variable enabled 0
+                variable win 18
+            }
             namespace eval geo_rast {
                 variable enabled 1
                 variable win 2
@@ -85,6 +89,7 @@ if {![namespace exists ::l1pro::pixelwf]} {
                 ex_bath {}
                 ex_veg {}
                 show_wf {}
+                show_wf_transmit {}
                 geo_rast {}
                 ndrast {}
             }
@@ -111,6 +116,7 @@ if {![namespace exists ::l1pro::pixelwf]} {
                     ex_bath win
                     ex_veg win
                     show_wf win
+                    show_wf_transmit win
                     geo_rast win
                     ndrast win
                 }
@@ -132,6 +138,7 @@ if {![namespace exists ::l1pro::pixelwf]} {
                     ex_veg {enabled verbose use_be_peak use_be_centroid \
                             hard_surface}
                     show_wf {enabled c1 c2 c3}
+                    show_wf {enabled}
                     geo_rast {enabled verbose}
                     ndrast {enabled}
                 }
@@ -156,6 +163,7 @@ if {![namespace exists ::l1pro::pixelwf]} {
                     ex_bath win
                     ex_veg {last win}
                     show_wf win
+                    show_wf_transmit win
                     geo_rast win
                     ndrast win
                 }
@@ -248,7 +256,8 @@ if {![namespace exists ::l1pro::pixelwf]} {
     # Keep Yorick updated for all variables in the specified namespaces
     namespace eval ::l1pro::pixelwf::vars {
         foreach ns {
-            selection fit_gauss ex_bath ex_veg show_wf geo_rast ndrast
+            selection fit_gauss ex_bath ex_veg show_wf show_wf_transmit
+            geo_rast ndrast
         } {
             foreach var [info vars ${ns}::*] {
                 set var [namespace tail $var]
@@ -348,6 +357,7 @@ namespace eval ::l1pro::pixelwf::gui {
         set ns ::l1pro::pixelwf::vars
         set ${ns}::fit_gauss::enabled 0
         set ${ns}::show_wf::enabled 0
+        set ${ns}::show_wf_transmit::enabled 0
         set ${ns}::geo_rast::enabled 1
         set ${ns}::ndrast::enabled 1
         if {$::plot_settings(display_mode) eq "ba"} {
@@ -384,11 +394,14 @@ namespace eval ::l1pro::pixelwf::gui {
             ex_bath "Bathy Functionality"
             ex_veg "Topo Under Veg"
             show_wf "Original Waveform"
+            show_wf_transmit "Transmit Waveform"
             geo_rast "Georeferenced Raster"
             ndrast "Unreferenced Raster"
         }
 
-        foreach type [list fit_gauss ex_bath ex_veg show_wf ndrast geo_rast] {
+        foreach type {
+            fit_gauss ex_bath ex_veg show_wf show_wf_transmit ndrast geo_rast
+        } {
             set f $mf.lfr_$type
             ::mixin::labelframe::collapsible $f \
                     -text "Enable [dict get $titles $type]" \
@@ -598,6 +611,24 @@ namespace eval ::l1pro::pixelwf::gui {
         default_sticky \
                 $f.lblWindow $f.spnWindow \
                 $f.fraC $f.btnGraph
+
+        grid columnconfigure $f 1 -weight 1
+    }
+
+    proc show_wf_transmit f {
+        set ns ::l1pro::pixelwf::vars::show_wf_transmit
+
+        ttk::label $f.lblWindow -text Window:
+        helper_spinbox $f.spnWindow ${ns}::win
+
+        ttk::button $f.btnGraph -text Plot -command [list ybkg pixelwf_show_wf_transmit]
+
+        grid $f.lblWindow $f.spnWindow
+        grid x $f.btnGraph
+
+        default_sticky \
+                $f.lblWindow $f.spnWindow \
+                $f.btnGraph
 
         grid columnconfigure $f 1 -weight 1
     }
