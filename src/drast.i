@@ -290,7 +290,8 @@ func show_wf(r, pix, win=, nofma=, cb=, c1=, c2=, c3=, raster=) {
    Display a set of waveforms for a given pulse.
 
    Parameters:
-      r - An array of waveform data as returned by drast.
+      r - An array of waveform data as returned by drast. Alternately, this may
+         be a scalar raster number (which will then be used for raster=).
       pix - The pixel index into r to display.
 
    Options:
@@ -312,6 +313,11 @@ func show_wf(r, pix, win=, nofma=, cb=, c1=, c2=, c3=, raster=) {
    default, c1, 0;
    default, c2, 0;
    default, c3, 0;
+
+   if(is_scalar(r)) {
+      raster = r;
+      r = *ndrast(decode_raster(get_erast(rn=raster)), graph=0, sfsync=0);
+   }
 
    if(cb & 1) c1 = 1;
    if(cb & 2) c2 = 1;
