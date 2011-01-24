@@ -35,6 +35,9 @@ namespace eval style {
         # l1pro GUI)
         ttk::style configure Panel.TMenubutton -padding {2 0}
         ttk::style configure Panel.TButton -padding 0
+
+        # Suppresses the tabs on a ttk::notebook
+        ttk::style layout NoTabs.TNotebook.Tab null
     }
 
     # When the theme changes, update the option database
