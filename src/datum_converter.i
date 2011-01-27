@@ -637,7 +637,7 @@ excludestr=, src_datum=, src_geoid=, dst_datum=, dst_geoid=, force=, clean=) {
             grow, messages, "Detected geoid does not match user-specified geoid.";
       }
       if(!is_void(zone)) {
-         if(zone != fn_zone)
+         if(fn_zone > 0 && zone != fn_zone)
             grow, messages, "Detected zone does not match user-specified zone.";
       } else if(fn_zone == 0) {
          grow, fatal, "Unable to detect file zone.";
