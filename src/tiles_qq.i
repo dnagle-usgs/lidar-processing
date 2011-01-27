@@ -62,16 +62,22 @@ func qq2utm(qq, &north, &east, &zone, bbox=, centroid=) {
    variables
 */
    local lats, lone, latn, lonw, e, n, z;
+   invalid = where(!extract_qq(qq));
+
    splitary, qq2ll(qq, bbox=1), lats, lone, latn, lonw;
 
    // Calculate central point
    ll2utm, (lats+latn)/2., (lone+lonw)/2., n, e, z;
+   if(numberof(invalid))
+      n(invalid) = e(invalid) = z(invalid) = 0;
 
    if(!am_subroutine() && centroid)
       return [n, e, z];
 
    if(am_subroutine() || !bbox) {
       ll2utm, latn, lonw, n, e, force_zone=z;
+      if(numberof(invalid))
+         n(invalid) = e(invalid) = z(invalid) = 0;
       if(!am_subroutine())
          return [n, e, z];
       north = n;
@@ -80,11 +86,15 @@ func qq2utm(qq, &north, &east, &zone, bbox=, centroid=) {
       return;
    }
 
-   local xne, xse, xnw, xne, yne, yse, ynw, yne;
+   local xne, xse, xnw, xsw, yne, yse, ynw, ysw;
    ll2utm, latn, lone, yne, xne, force_zone=z;
    ll2utm, latn, lonw, ynw, xnw, force_zone=z;
    ll2utm, lats, lone, yse, xse, force_zone=z;
    ll2utm, lats, lonw, ysw, xsw, force_zone=z;
+   if(numberof(invalid)) {
+      xne(invalid) = xse(invalid) = xnw(invalid) = xsw(invalid) = 0;
+      yne(invalid) = yse(invalid) = ynw(invalid) = ysw(invalid) = 0;
+   }
 
    return [min(yse, ysw), max(xne, xse), max(yne, ynw), min(xnw, xsw), z];
 }
