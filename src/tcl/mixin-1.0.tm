@@ -561,6 +561,46 @@ snit::widgetadaptor ::mixin::treeview::sortable {
     }
 }
 
+snit::widgetadaptor ::mixin::treeview::notebook {
+    delegate method * to hull
+    delegate option * to hull
+
+    option {-notebook notebook Notebook} -default {}
+    option {-tabid tabid Tabid} -default tabid
+
+    constructor args {
+        if {[winfo exists $win]} {
+            installhull $win
+        } else {
+            installhull using ttk::treeview
+            $self configure -selectmode browse -columns {tabid} \
+                    -displaycolumns {} -show tree
+        }
+        $self configure {*}$args
+
+        bind $self <<TreeviewSelect>> [mymethod TreeviewSelect]
+    }
+
+    method TreeviewSelect {} {
+        set nb [$self cget -notebook]
+        if {$nb eq ""} return
+
+        set sel [$self selection]
+        if {[llength $sel] != 1} {return}
+        set item [lindex $sel 0]
+
+        set cols [$self cget -columns]
+        set col [lsearch -exact $cols [$self cget -tabid]]
+        if {$col == -1} {return}
+
+        set tabid [lindex [$self item $item -values] $col]
+        if {$tabid eq ""} {return}
+
+        $nb select $tabid
+    }
+
+}
+
 namespace eval ::mixin::labelframe {}
 
 ttk::style configure Collapsible.TCheckbutton -relief flat
