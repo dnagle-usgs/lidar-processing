@@ -576,7 +576,6 @@ func ex_veg_all(rn, i, last=, graph=, use_be_centroid=, use_be_peak=, pse=, thre
       winbkp = current_window();
       window, win;
       fma;
-      limits;
       plmk, aa(1:n,i,1), msize=.2, marker=1, color="black";
       plg, aa(1:n,i,1);
       plmk, da, msize=.2, marker=1, color="black";
