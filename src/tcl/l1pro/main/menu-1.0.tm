@@ -236,8 +236,6 @@ proc menu_utilities mb {
     $mb add command {*}[menulabel "Browse &Rasters"] \
             -command ::l1pro::drast::gui
     $mb add separator
-    $mb add command {*}[menulabel "&Determine Roll Bias"] \
-            -command ::l1pro::tools::rollbias::gui
     $mb add command {*}[menulabel "Check and correct EDB time"] \
             -command ts_check
     $mb add separator
@@ -324,6 +322,8 @@ proc menu_deprecated_analysis mb {
             -command [list source [file join $::src_path drast.ytk]]
     $mb add command {*}[menulabel "Open Fit Gaussian GUI"] \
             -command [namespace code open_fit_gaussian_gui]
+    $mb add command {*}[menulabel "&Determine Roll Bias"] \
+            -command ::l1pro::tools::rollbias::gui
     return $mb
 }
 
