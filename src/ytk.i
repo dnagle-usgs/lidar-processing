@@ -584,8 +584,10 @@ func ytkquit {
    The Yorick built-in command quit was renamed to __quit if you need it.
 */
    tkcmd, "ytk_exit 0";
+   __quit;
 }
 __quit = quit;
-quit = ytkquit;
+// Disabled for now. This was preventing command history from saving.
+//quit = ytkquit;
 
 ytk_startup;
