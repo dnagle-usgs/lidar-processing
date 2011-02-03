@@ -4,9 +4,9 @@ require, "eaarl.i";
 //  Added guessrollbias, WW/RM 2005/11/29
 
 func updatebias(nil, slope=) {
-   tksetval, "::l1pro::tools::rollbias::v::bias", ops_conf.roll_bias;
+   tksetval, "::l1pro::deprecated::rollbias::v::bias", ops_conf.roll_bias;
    if(!is_void(slope))
-      tksetval, "::l1pro::tools::rollbias::v::slope", slope;
+      tksetval, "::l1pro::deprecated::rollbias::v::slope", slope;
 }
 
 func guessrollbias {

@@ -323,7 +323,7 @@ proc menu_deprecated_analysis mb {
     $mb add command {*}[menulabel "Open Fit Gaussian GUI"] \
             -command [namespace code open_fit_gaussian_gui]
     $mb add command {*}[menulabel "&Determine Roll Bias"] \
-            -command ::l1pro::tools::rollbias::gui
+            -command ::l1pro::deprecated::rollbias::gui
     return $mb
 }
 

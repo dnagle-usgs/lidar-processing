@@ -736,3 +736,168 @@ proc ::l1pro::deprecated::limits_tool {} {
     pack .limitstool.2 -side right
     pack .limitstool.2.dismiss .limitstool.2.l -padx 4 -side right
 }
+
+namespace eval ::l1pro::deprecated::rollbias {
+    namespace eval v {
+        variable top .l1wid.rollbias
+        variable active 0
+        variable var fs_all
+        variable winsrc 5
+        variable width 5
+        variable bias 0
+        variable slope 0
+        variable windst 0
+        variable inout 1
+    }
+
+    proc gui {} {
+        set ns [namespace current]
+        set v::var $::pro_var
+        set v::winsrc $::win_no
+        ybkg updatebias
+
+        set w $v::top
+        destroy $w
+        toplevel $w
+        wm title $w "Determine Roll Bias"
+
+        ttk::frame $w.f
+        grid $w.f -sticky news
+        grid columnconfigure $w 0 -weight 1
+        grid rowconfigure $w 0 -weight 1
+
+        foreach x {1 2 3} {
+            grid [ttk::frame $w.row$x] -in $w.f -sticky news
+        }
+
+        set f $w
+
+        ttk::label $f.lblvar -text "Variable:"
+        ttk::entry $f.var -width 5 -textvariable ${ns}::v::var
+        ttk::label $f.lblwinsrc -text "in window:"
+        ttk::spinbox $f.winsrc -width 2 \
+                -from 0 -to 63 -increment 1 \
+                -textvariable ${ns}::v::winsrc
+        ttk::label $f.lbltrans -text "Then click"
+        ttk::button $f.trans -text "Get Transect" -command ${ns}::transect
+        ttk::button $f.help -text "Help" -command ${ns}::help
+
+        ::tooltip::tooltip $f.var "EAARL source data"
+
+        grid $f.lblvar $f.var $f.lblwinsrc $f.winsrc $f.lbltrans $f.trans \
+                $f.help -in $w.row1 -sticky news -padx 1 -pady 1
+        grid columnconfigure $w.row1 1 -weight 1
+
+        ttk::label $f.lblwidth -text "Width:"
+        ttk::spinbox $f.width -width 4 \
+                -from 0 -to 10000 -increment 1 \
+                -textvariable ${ns}::v::width
+        ttk::label $f.lblbias -text "Current Roll Bias:"
+        ttk::entry $f.bias -width 8 -textvariable ${ns}::v::bias
+        ttk::label $f.lblslope -text "Current slope"
+        ttk::entry $f.slope -width 8 -textvariable ${ns}::v::slope
+
+        ::tooltip::tooltip $f.width "Transect width"
+
+        $f.bias state readonly
+        $f.slope state readonly
+
+        grid $f.lblwidth $f.width $f.lblbias $f.bias $f.lblslope $f.slope \
+                -in $w.row2 -sticky news -padx 1 -pady 1
+        grid columnconfigure $w.row2 {3 5} -weight 1
+
+        ttk::button $f.plot -text "Plot" -command ${ns}::plot
+        ttk::label $f.lblwindst -text "in win:"
+        ttk::spinbox $f.windst -width 2 \
+                -from 0 -to 63 -increment 1 \
+                -textvariable ${ns}::v::windst
+        ttk::button $f.selflt -text "Select Flightlines" \
+                -command ${ns}::select_flightlines
+        ttk::checkbutton $f.inout -text "into screen:" \
+                -variable ${ns}::v::inout \
+                -onvalue 1 -offvalue -1
+        ttk::button $f.determine -text "Determine Bias" \
+                -command ${ns}::determine_bias
+        grid columnconfigure $w.row3 {0 2} -weight 1
+        grid columnconfigure $w.row3 {3 5} -weight 2
+
+        ::tooltip::tooltip $f.plot "Plot flightline transect"
+
+        grid $f.plot $f.lblwindst $f.windst $f.selflt $f.inout $f.determine \
+                -in $w.row3 -sticky news -padx 1 -pady 1
+
+        foreach widget [grid slaves $w.row3] {
+            if {[winfo class $widget] eq "Spinbox"} {
+                set map {0 disabled 1 normal}
+            } else {
+                set map {0 disabled 1 !disabled}
+            }
+            ::mixin::statevar $widget \
+                    -statemap $map \
+                    -statevariable ${ns}::v::active
+        }
+    }
+
+    proc transect {} {
+        exp_send "transdata = get_transect($v::var, win=$v::winsrc, update=1,\
+                width=$v::width);\r"
+        set v::active 1
+    }
+
+    proc help {} {
+        set w $v::top.help
+        destroy $w
+        toplevel $w
+        wm title $w "Help: Determine Roll Bias"
+
+        ttk::frame $w.f
+        grid $w.f -sticky news
+        grid columnconfigure $w 0 -weight 1
+        grid rowconfigure $w 0 -weight 1
+
+        ttk::scrollbar $w.sb -command [list $w.doc yview]
+        ::mixin::text::readonly $w.doc -height 20 -width 65 \
+                -yscrollcommand [list $w.sb set]
+        grid $w.doc $w.sb -sticky news -in $w.f
+        grid columnconfigure $w.f 0 -weight 1
+        grid rowconfigure $w.f 0 -weight 1
+
+        $w.doc ins end \
+                "1.\tStart with point data plotted in a window and raw EAARL\
+                data loaded. Set the variable and window and click \"Get\
+                Transect\".\
+                \n2.\tDrag a line perpendicular to the flightlines you wish to\
+                examine.  In the window that appears, zoom into the top, type\
+                something, and hit enter. Now drag a box over the section of\
+                the transect you wish to keep.\
+                \n3.\tClick the \"Plot\" button to display the loaded transect.\
+                In order to determine the bias automatically all flightlines\
+                must be traveling the same direction, so you'll need to remove\
+                whichever direction is the minority.\
+                \n4.\tClick \"Select Flightlines\" and simply type \"y\" or\
+                \"n\" to keep or remove each flightline. Now you have a set of\
+                flightlines going the same direction.\
+                \n5.\tDetermine whether the flightlines are going into or out\
+                of the screen. If they are going INTO the screen, check the\
+                \"into screen\" box. If they are going OUT OF the screen,\
+                uncheck the \"into screen\" box.\
+                \n6.\tClick \"Determine bias\"." \
+                formatted
+
+        $w.doc tag configure formatted \
+                -lmargin2 20 -spacing3 5 -tabs "20 left" -wrap word
+    }
+
+    proc plot {} {
+        exp_send "plot_flightline_transect, transdata, $v::windst;\r"
+    }
+
+    proc select_flightlines {} {
+        exp_send "transdata = selgoodflightlines(transdata, win=$v::windst);\r"
+    }
+
+    proc determine_bias {} {
+        exp_send "goodroll = find_roll_bias(transdata, 0, $v::inout,\
+                update=1);\r"
+    }
+}
