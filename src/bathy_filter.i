@@ -249,9 +249,9 @@ func remove_bow_effect(data, factor=, mode=) {
   if (is_void(mode)) factor = 2;
   data = test_and_clean(data);
   if (mode == 2) 
-        data.depth -= factor*sin(((data.rn/0xffffff)/120.)*pi);
+        data.depth -= factor*sin(((data.rn>>24)/120.)*pi);
   if (mode == 3)
-        data.lelv -= factor*sin(((data.rn/0xffffff)/120.)*pi);
+        data.lelv -= factor*sin(((data.rn>>24)/120.)*pi);
   return data
 }
 
@@ -272,6 +272,6 @@ func strip_flightline_edges(data, startpulse=, endpulse=) {
   if (is_void(startpulse)) startpulse = 10;
   if (is_void(endpulse)) endpulse = 110;
   
-  idx = where((data.rn/0xffffff > startpulse) & (data.rn/0xffffff < endpulse));
+  idx = where(((data.rn>>24) > startpulse) & ((data.rn>>24) < endpulse));
   return idx
 }

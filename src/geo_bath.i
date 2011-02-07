@@ -59,7 +59,7 @@ for (i=1; i<=len; i=i+1) {
   // that have the first channel saturated and come from
   // close to the center of the swath.  added 12/03/04 by Amar Nayegandhi
   if (avg_surf) {
-   iidx = where((rrr(i).intensity > 220) & (rrr(i).rn/0xffffff > 35) & (rrr(i).rn/0xffffff < 85));
+   iidx = where((rrr(i).intensity > 220) & ((rrr(i).rn>>24) > 35) & ((rrr(i).rn>>24) < 85));
    if (is_array(iidx)) {
     elvs = median(rrr(i).elevation(iidx));
     elvsidx = where(abs(rrr(i).elevation(iidx)-elvs) <= 100) 

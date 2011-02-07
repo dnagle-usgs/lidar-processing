@@ -653,7 +653,7 @@ mode=, pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=) {
       pulse = array(60, dimsof(data));
       w = where(data.rn);
       if(numberof(w))
-         pulse(w) = data(w).rn/0xffffff;
+         pulse(w) = data(w).rn>>24;
       f_edge = ((pulse == 0) | (pulse == 1) | (pulse == 119) | (pulse == 120));
    } else {
       scan_dir = 0;

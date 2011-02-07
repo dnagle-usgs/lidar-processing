@@ -292,7 +292,7 @@ func mindata_dump_info(edb, mindata, minindx, last=, ref=) {
    }
 
    rasterno  = mindata.rn&0xffffff;
-   pulseno   = mindata.rn/0xffffff;
+   pulseno   = mindata.rn>>24;
    _last_soe = edb(mindata.rn&0xffffff).seconds;
 
    somd = edb(mindata.rn&0xffffff).seconds % 86400;

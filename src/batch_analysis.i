@@ -371,7 +371,7 @@ func batch_tans_pdop_anal(txt_file, tans_split=, pdop_split=, cumulative=) {
   write, f1, "tans pdop n RMSE ME MAE no_outliers R^2 RMSE_lsq";
   read_txt_anal_file, txt_file, pdop=1;
   //split by tans
-  rns = i / 0xffffff;
+  rns = i >> 24;
   ntans = 120/tans_split;
   min_pdop = min(pdop_val);
   max_pdop = max(pdop_val);

@@ -340,7 +340,7 @@ func plot_veg_result_points(i, pse=) {
   // amar nayegandhi 12/19/02
   extern nx_indx;
   rnp = i
-  rn = rnp & 0xffffff; p = rnp / 0xffffff
+  rn = rnp & 0xffffff; p = rnp >> 24;
   nx_indx = [];
   for (j=1; j<=numberof(rnp); j++) {
     depth = ex_veg(rn(j), p(j), last=250, graph=1, use_be_peak=1, pse=pse);

@@ -162,9 +162,9 @@ func parse_rn(rn, &raster, &pulse) {
 // Original David Nagle 2009-07-21
    if(am_subroutine()) {
       raster = rn&0xffffff;
-      pulse = rn/0xffffff;
+      pulse = rn >> 24;
    } else {
-      return [rn&0xffffff, rn/0xffffff];
+      return [rn&0xffffff, rn >> 24];
    }
 }
 

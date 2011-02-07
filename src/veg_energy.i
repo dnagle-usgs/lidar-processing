@@ -235,7 +235,7 @@ func make_large_footprint_waveform(eaarl, binsize=, digitizer=, normalize=, mode
  	     rn_old = rn;
 	     v1 = eaarl(indx(k));
 	     rn = v1.rn & 0xffffff;
-	     p = v1.rn / 0xffffff;
+	     p = v1.rn >> 24;
              if (rn != rn_old) {
   	         rr = decode_raster(get_erast(rn=rn));
 		 ai = irg(rn, inc=0, usecentroid=1);
@@ -339,7 +339,7 @@ func make_single_lfpw(eaarl,bin=,normalize=, plot=, correct_chp=, min_elv=, max_
       rn_old = rn;
       v1 = eaarl(k);
       rn = v1.rn & 0xffffff;
-      p = v1.rn / 0xffffff;
+      p = v1.rn >> 24;
       if (rn != rn_old) {
          rr = decode_raster(get_erast(rn=rn));
 	 ai = irg(rn, inc=0, usecentroid=1);

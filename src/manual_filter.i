@@ -246,7 +246,7 @@ func select_points(celldata, exclude=, win=) {
          }
          blockindx = minindx / 120;
          rasterno = mindata.rn&0xffffff;
-         pulseno  = mindata.rn/0xffffff;
+         pulseno  = mindata.rn>>24;
 
          if (mouse_button == left_mouse) {
             if (is_array(edb)) {

@@ -444,7 +444,7 @@ func test_veg(veg_all,  fname=, pse=, graph=) {
    rasternos = veg_all.rn;
 
    rasters = rasternos & 0xffffff;
-   pulses = rasternos / 0xffffff;
+   pulses = rasternos >> 24;
    tot_count = 0;
 
    for (i = 1; i <= numberof(rasters); i++) {
