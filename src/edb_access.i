@@ -394,6 +394,7 @@ Examples using the result data:
 
 */
    extern eaarl_time_offset, tca;
+   local rasternbr, type, len;
 
    return_raster = array(RAST,1);
    irange = array(int, 120);
