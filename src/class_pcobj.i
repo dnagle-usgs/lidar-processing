@@ -37,8 +37,6 @@ func pcobj(base, obj) {
          Source used to collect the data. Generally an airplane tail number.
       data(system,)              string      default: "unknown"
          Data acquisition system, ie. ATM, EAARL, etc.
-      data(record_format,)       long        default: 0
-         Defines how to interpret the record field.
 
    Array data members, for N points:
    Required:
@@ -48,10 +46,6 @@ func pcobj(base, obj) {
    Optional:
       data(soe,)                 array(double,N)
          The timestamp for the point, in UTC seconds of the epoch.
-      data(record,)              array(long,N,2)
-         The record number for the point. This value must be interpreted as
-         defined by "record_format". Together with "soe", this should uniquely
-         identify the point.
       data(intensity,)           array(float,N)
          The intensity value for the point. In other words, the energy value
          (or interpolated energy value) for the waveform where this point was
@@ -98,7 +92,6 @@ func pcobj(base, obj) {
                      source -> "merged"
                      system -> "merged"
                      cs -> uses cs_compromise
-                     record_format -> 0
             headers="keep" -- All header fields are kept as is.
             headers="replace" -- All header fields are replaced by those from
                the other data.
@@ -132,7 +125,7 @@ func pcobj(base, obj) {
 
    // Check for required keys and supply some defaults
    keyrequire, obj, cs, raw_xyz;
-   keydefault, obj, source="unknown", system="unknown", record_format=0;
+   keydefault, obj, source="unknown", system="unknown";
 
    // Import class methods
    obj_merge, obj, base;
@@ -162,7 +155,6 @@ func pcobj_summary(util) {
    keyval_val, head, "point count", dimsof(this.raw_xyz)(2), "%d";
    keyval_obj, head, this, "source", "%s";
    keyval_obj, head, this, "system", "%s";
-   keyval_obj, head, this, "record_format", "%d";
    if(use(*,"soe")) {
       times = swrite(format="%s to %s", soe2iso8601(use(soe)(min)),
          soe2iso8601(use(soe)(max)));
@@ -214,11 +206,8 @@ func pcobj_grow(obj, headers=) {
          save, res, source="merged";
       if(res.system != obj.system)
          save, res, system="merged";
-      if(res.record_format != obj.record_format)
-         save, res, record_format=0;
    } else if(headers == "replace") {
-      save, res, source=obj.source, system=obj.system,
-         record_format=obj.record_format;
+      save, res, source=obj.source, system=obj.system;
    }
 
    pcobj, res;

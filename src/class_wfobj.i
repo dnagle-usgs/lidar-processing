@@ -23,8 +23,8 @@ func wfobj(base, obj) {
                // fill in arrays...
                wfdata = wfobj(save(raw_xyz0, raw_xyz1, tx, rx,
                   cs=cs_wgs84(zone=15), sample_interval=1.))
-         In actual code, there would probably also be rn and soe arrays, as
-         well as record_format, source, and system header values.
+         In actual code, there would probably also be raster, pulse, and soe
+         arrays, as well as source, and system header values.
       wfobj, data
          When called in the subroutine form, DATA should be a group object.
          This is equivalent to the previous case, except that DATA is updated
@@ -55,8 +55,6 @@ func wfobj(base, obj) {
          Source used to collect the data. Generally an airplane tail number.
       data(system,)           string      default: "unknown"
          Data acquisition system, ie. ATM, EAARL, etc.
-      data(record_format,)    long        default: 0
-         Defines how to interpret the record field.
 
    Array data members, for N points:
    Required:
@@ -80,10 +78,6 @@ func wfobj(base, obj) {
    Optional:
       data(soe,)              array(double,N)
          The timestamp for the point, in UTC seconds of the epoch.
-      data(record,)           array(long,N,2)
-         The record number for the point. This value must be interpreted as
-         defined by "record_format". Together with "soe", this should uniquely
-         identify the waveform.
 
    Automatic:
    These data values are automatically created and should not be altered by the
@@ -112,7 +106,6 @@ func wfobj(base, obj) {
                      source -> "merged"
                      system -> "merged"
                      cs -> uses cs_compromise
-                     record_format -> 0
                      sample_interval -> 0
             headers="keep" -- All header fields are kept as is.
             headers="replace" -- All header fields are replaced by those from
@@ -151,7 +144,7 @@ func wfobj(base, obj) {
 
    // Check for required keys and supply some defaults
    keyrequire, obj, cs, sample_interval, raw_xyz0, raw_xyz1, tx, rx;
-   keydefault, obj, source="unknown", system="unknown", record_format=0;
+   keydefault, obj, source="unknown", system="unknown";
 
    // Import class methods
    obj_merge, obj, base;
@@ -195,7 +188,6 @@ func wfobj_summary {
    keyval_val, head, "waveform count", numberof(this.rx), "%d";
    keyval_obj, head, this, "source", "%s";
    keyval_obj, head, this, "system", "%s";
-   keyval_obj, head, this, "record_format", "%d";
    keyval_obj, head, this, "sample_interval", "%.6f ns/sample";
    if(use(*,"soe")) {
       times = swrite(format="%s to %s", soe2iso8601(use(soe)(min)),
@@ -248,13 +240,11 @@ func wfobj_grow(obj, headers=) {
          save, res, source="merged";
       if(res.system != obj.system)
          save, res, system="merged";
-      if(res.record_format != obj.record_format)
-         save, res, record_format=0;
       if(res.sample_interval != obj.sample_interval)
          save, res, sample_interval=0;
    } else if(headers == "replace") {
       save, res, source=obj.source, system=obj.system,
-         record_format=obj.record_format, sample_interval=obj.sample_interval;
+         sample_interval=obj.sample_interval;
    }
 
    wfobj, res;
