@@ -46,6 +46,18 @@ func pcobj(base, obj) {
    Optional:
       data(soe,)                 array(double,N)
          The timestamp for the point, in UTC seconds of the epoch.
+      data(raster_seconds,)           array(long,N)
+      data(raster_fseconds,)       array(long,N)
+         The combination of the above two fields can be used to uniquely
+         identify a raster in the TLD files. These are used to determine the
+         timestamp, but should not be used for that purpose here because they
+         are raw, unadjusted values. Use soe for time.
+      data(pulse,)            array(char,N) -or- array(short,N)
+         The pulse for the point. For EAARL1 data this will be a char value in
+         the range 1 to 120.
+      data(channel,)          array(char,N)
+         For EAARL1 data, the channel for the rx waveform. This is a number
+         between 1 and 3.
       data(intensity,)           array(float,N)
          The intensity value for the point. In other words, the energy value
          (or interpolated energy value) for the waveform where this point was
