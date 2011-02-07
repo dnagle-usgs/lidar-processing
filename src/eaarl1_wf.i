@@ -108,7 +108,7 @@ daystart=, update=, verbose=, interval=) {
    timer, t0;
 
    for(i = 1; i <= count; i++) {
-      rasts = decode_rasters(get_tld_rasts(fname=files(i)));
+      rasts = eaarl1_decode_rasters(get_tld_rasts(fname=files(i)));
       wf = georef_eaarl1(rasts, gns, ins, ops, daystart);
       rasts = [];
 
@@ -136,6 +136,8 @@ func georef_eaarl1(rasts, gns, ins, ops, daystart) {
 
    Result is an instance of wfobj.
 */
+   extern eaarl_time_offset, tca;
+
    if(is_string(gns))
       gns = load_pnav(fn=gns);
    if(is_string(ins))
@@ -143,19 +145,24 @@ func georef_eaarl1(rasts, gns, ins, ops, daystart) {
    if(is_string(ops))
       ops = load_ops_conf(ops);
 
-   // Eliminate any dimensionality if present
-   rasts = rasts(*);
+   // Make sure waveform data is present
+   if(!rasts(*,"channel1_wf"))
+      return [];
 
    // Initialize waveforms with raster, pulse, soe, and transmit waveform
-   shape = array(char(1), numberof(rasts), 120, 3);
+   shape = array(char(1), dimsof(rasts.channel1_wf), 3);
 
    // Calculate waveform and mirror locations
 
    // Range (magnitude)
-   rng = rasts.irange * NS2MAIR;
+   rng = rasts.integer_range * NS2MAIR;
+
+   // Time
+   soe = ((rasts.offset_time & 0x00ffffff) + rasts.fseconds) * 1.6e-6 \
+         + rasts.seconds;
 
    // Relative timestamps
-   somd = rasts.offset_time - soe_day_start;
+   somd = soe - soe_day_start;
 
    // Aircraft roll, pitch, and yaw (in degrees)
    aR = interp(ins.roll, ins.somd, somd);
@@ -178,7 +185,7 @@ func georef_eaarl1(rasts, gns, ins, ops, daystart) {
    pnorth = peast = somd = [];
 
    // Scan angle
-   ang = rasts.sa;
+   ang = rasts.shaft_angle;
 
    // Offsets
    dx = ops.x_offset;
@@ -220,23 +227,29 @@ func georef_eaarl1(rasts, gns, ins, ops, daystart) {
    raw_xyz1 = [x1, y1, z1];
    x1 = y1 = z1 = [];
 
-   record1 = shape * rasts.rasternbr(,-,-);
-   record2 = shape * indgen(120)(-,,-) * 4 + indgen(3)(-,-,);
-   record = [record1, record2];
-   record1 = record2 = [];
+   pulse = char(shape * indgen(dimsof(shape)(3))(-,,-));
+   channel = char(shape * indgen(3)(-,-,));
+   raster_seconds = shape * rasts.seconds;
+   raster_fseconds = shape * rasts.fseconds;
 
-   soe = array(transpose(rasts.offset_time), 3);
-   tx = map_pointers(mathop.bw_inv, array(transpose(rasts.tx), 3));
-   rx = map_pointers(mathop.bw_inv, transpose(rasts.rx(,1:3,), 2));
+   soe = array(soe, 3);
+   tx = map_pointers(mathop.bw_inv, array(rasts.transmit_wf, 3));
+   rx = array(pointer, dimsof(tx));
+   rx(..,1) = map_pointers(mathop.bw_inv, rasts.channel1_wf);
+   rx(..,2) = map_pointers(mathop.bw_inv, rasts.channel2_wf);
+   rx(..,3) = map_pointers(mathop.bw_inv, rasts.channel3_wf);
 
-   count = numberof(rasts) * 120 * 3;
+   count = numberof(rx);
    rasts = [];
 
    // Change dimension ordering to keep channels together for a pulse, and
    // pulses together for a raster
    raw_xyz0 = transpose(raw_xyz0, [3,1]);
    raw_xyz1 = transpose(raw_xyz1, [3,1]);
-   record = transpose(record, [3,1]);
+   raster_seconds = transpose(raster_seconds, [3,1]);
+   raster_fseconds = transpose(raster_fseconds, [3,1]);
+   pulse = transpose(pulse, [3,1]);
+   channel = transpose(channel, [3,1]);
    soe = transpose(soe, [3,1])
    tx = transpose(tx, [3,1])
    rx = transpose(rx, [3,1])
@@ -244,7 +257,10 @@ func georef_eaarl1(rasts, gns, ins, ops, daystart) {
    // Now get rid of multiple dimensions
    raw_xyz0 = reform(raw_xyz0, count, 3);
    raw_xyz1 = reform(raw_xyz1, count, 3);
-   record = reform(record, count, 2);
+   raster_seconds = raster_seconds(*);
+   raster_fseconds = raster_fseconds(*);
+   pulse = pulse(*);
+   channel = channel(*);
    soe = soe(*);
    tx = tx(*);
    rx = rx(*);
@@ -252,10 +268,9 @@ func georef_eaarl1(rasts, gns, ins, ops, daystart) {
    source = "unknown plane";
    system = "EAARL rev 1";
    cs = cs_wgs84(zone=zone);
-   record_format = 1;
    sample_interval = 1.0;
-   wf = save(source, system, cs, record_format, sample_interval, raw_xyz0,
-      raw_xyz1, soe, record, tx, rx);
+   wf = save(source, system, cs, sample_interval, raw_xyz0, raw_xyz1, soe,
+      raster_seconds, raster_fseconds, pulse, channel, tx, rx);
    wfobj, wf;
 
    // Now get rid of points without waveforms
