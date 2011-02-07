@@ -154,12 +154,18 @@ func cam_to_soe(filename, offset=) {
    return result;
 }
 
-func parse_rn(rn) {
+func parse_rn(rn, &raster, &pulse) {
 /* DOCUMENT parse_rn(rn)
+   -or- parse_rn, rn, raster, pulse
    Simple wrapper that returns [rasterno, pulseno] for the given rn.
 */
 // Original David Nagle 2009-07-21
-   return [rn&0xffffff, rn/0xffffff];
+   if(am_subroutine()) {
+      raster = rn&0xffffff;
+      pulse = rn/0xffffff;
+   } else {
+      return [rn&0xffffff, rn/0xffffff];
+   }
 }
 
 func parse_datum(text) {
