@@ -83,6 +83,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "json_encode.i";
    require, "kml.i";
    require, "las.i";
+   require, "las_filter.i";
    require, "lines.i";
    require, "ll2utm.i";
    require, "manual_filter.i";
