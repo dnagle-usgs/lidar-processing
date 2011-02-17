@@ -1,6 +1,55 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "eaarl.i";
 
+local LAS_ALPS;
+/* DOCUMENT
+
+   struct LAS_ALPS {
+
+   Identical to VEG__:
+
+      long rn;          compatibility; left as zero
+      long north;       northing (cm)
+      long east;        easting (cm)
+      long elevation;   elevation (cm)
+      long mnorth;      \
+      long meast;        > compatibility; either 0, or 100m above
+      long melevation;  /
+      long lnorth;      \                           north
+      long least;        > compatibility; same as < east
+      long lelv;        /                           elevation
+      short fint;       intensity
+      short lint;       compatibility; same as fint
+      char nx;          compatibility; one
+      double soe;       seconds of the epoch
+
+   Supplemental LAS-specific:
+
+      char ret_num;     Return number
+      char num_ret;     Number of returns
+      char f_edge;      Is this on a flightline edge?
+      char scan_dir;    Scan direction
+      char class;       LAS classification number
+      char synthetic;   Is this a synthetic point?
+      char keypoint;    Is this a keypoint?
+      char withheld;    Is this withheld?
+      long sequence;    Index of point in source LAS file
+   }
+*/
+
+struct LAS_ALPS {
+   long rn;
+   long north, east, elevation;
+   long mnorth, meast, melevation;
+   long lnorth, least, lelv;
+   short fint, lint;
+   char nx;
+   double soe;
+   char ret_num, num_ret, f_edge, scan_dir;
+   char class, synthetic, keypoint, withheld;
+   long sequence;
+}
+
 local las_old;
 /* DOCUMENT las_old
 
