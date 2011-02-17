@@ -734,7 +734,8 @@ shorten_fn=, update=, files=) {
          Default: searchstr="*.las"
 
       format= The format to store the data in. Valid values:
-            format="fs"   - Use the FS structure (default)
+            format="las"  - Use the LAS_ALPS structure (default)
+            format="fs"   - Use the FS structure
             format="veg"  - Use the VEG__ structure
 
       fakemirror= By default, the mirror coordinates will be faked by using the
@@ -954,7 +955,7 @@ func las2pbd(fn_las, fn_pbd=, format=, vname=, fakemirror=, rgbrn=, verbose=) {
 
    Options:
 
-      fn_pbd: The full path and filename where the PBD file should get created.
+      fn_pbd= The full path and filename where the PBD file should get created.
          Default is the same as fn_las, except with the .pbd extension.
 
       vname= The name of the variable to store the data as.
@@ -964,7 +965,7 @@ func las2pbd(fn_las, fn_pbd=, format=, vname=, fakemirror=, rgbrn=, verbose=) {
          Default: verbose=0
 */
    default, fn_pbd, file_rootname(fn_las) + ".pbd";
-   default, format, "fs";
+   default, format, "las";
    default, vname, "las_import";
    default, verbose, 0;
 
@@ -973,9 +974,11 @@ func las2pbd(fn_las, fn_pbd=, format=, vname=, fakemirror=, rgbrn=, verbose=) {
       fnc = las_to_fs;
    else if(format == "veg")
       fnc = las_to_veg;
+   else if(format == "las")
+      fnc = las_to_alps;
 
    if(is_void(fnc))
-      error, "Invalid format specified. Must be \"fs\" or \"veg\".";
+      error, "Invalid format specified. Must be \"las\", \"fs\", or \"veg\".";
 
    if(verbose) {
       write, format="  %s\n", file_tail(fn_pbd);
