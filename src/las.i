@@ -990,10 +990,10 @@ func las2pbd(fn_las, fn_pbd=, format=, vname=, fakemirror=, rgbrn=, verbose=) {
    pbd_save, fn_pbd, vname, unref(data);
 }
 
-func las_to_fs(las, fakemirror=, rgbrn=) {
-/* DOCUMENT fs = las_to_fs(las, fakemirror=, rgbrn=)
+func las_to_alps(las, fakemirror=, rgbrn=) {
+/* DOCUMENT fs = las_to_alps(las, fakemirror=, rgbrn=)
 
-   Converts LAS-format data to an array of FS.
+   Converts LAS-format data to an array of LAS_ALPS.
 
    Required parameter:
 
@@ -1005,6 +1005,7 @@ func las_to_fs(las, fakemirror=, rgbrn=) {
       See batch_las2pbd for documentation.
 
    See also:
+      las_to_fs: To use the FS structure
       las_to_veg: To use the VEG__ structure
       las2pbd: To convert to a PBD
       las_export_data: To write FS or other ALPS data to a LAS file
@@ -1012,17 +1013,23 @@ func las_to_fs(las, fakemirror=, rgbrn=) {
 */
    default, fakemirror, 1;
    default, rgbrn, 1;
-   if(typeof(las) == "string")
+   if(is_string(las))
       las = las_open(las);
 
    v_maj = las.header.version_major;
    v_min = las.header.version_minor;
 
-   data = array(FS, numberof(las.points));
+   data = array(LAS_ALPS, numberof(las.points));
    data.east = 100 * (las.points.x * las.header.x_scale + las.header.x_offset);
    data.north = 100 * (las.points.y * las.header.y_scale + las.header.y_offset);
    data.elevation = 100 * (las.points.z * las.header.z_scale + las.header.z_offset);
-   data.intensity = las.points.intensity;
+   data.fint = las.points.intensity;
+
+   data.least = data.east;
+   data.lnorth = data.north;
+   data.lelv = data.elevation;
+   data.lint = data.fint;
+   data.nx = 1;
 
    if(anyof(las.header.point_data_format_id == [1,3,4,5])) {
       if(v_maj == 1 && v_min > 0 && las_global_encoding(las.header).gps_soe) {
@@ -1044,7 +1051,50 @@ func las_to_fs(las, fakemirror=, rgbrn=) {
       data.rn = las.points.eaarl_rn;
    }
 
+   local ret_num, num_ret, f_edge, scan_dir;
+   las_decode_return, las.points.bitfield, ret_num, num_ret, f_edge, scan_dir;
+   data.ret_num = ret_num;
+   data.num_ret = num_ret;
+   data.f_edge = f_edge;
+   data.scan_dir = scan_dir;
+
+   local class, syn, key, with;
+   las_decode_classification, las.points.classification, class, syn, key, with;
+   data.class = class;
+   data.synthetic = syn;
+   data.keypoint = key;
+   data.withheld = with;
+
+   data.sequence = indgen(numberof(data));
+
    return data;
+}
+
+func las_to_fs(las, fakemirror=, rgbrn=) {
+/* DOCUMENT fs = las_to_fs(las, fakemirror=, rgbrn=)
+
+   Converts LAS-format data to an array of FS.
+
+   Required parameter:
+
+      las: This can be a filename, or it can be a filehandle as returned by
+         las_open.
+
+   Options:
+
+      See batch_las2pbd for documentation.
+
+   See also:
+      las_to_alps: To use the LAS_ALPS structure
+      las_to_veg: To use the VEG__ structure
+      las2pbd: To convert to a PBD
+      las_export_data: To write FS or other ALPS data to a LAS file
+      las_open: Opens a filehandle to a LAS file
+*/
+   alps = las_to_alps(las, fakemirror=fakemirror, rgbrn=rgbrn);
+   fs = struct_cast(alps, FS);
+   fs.intensity = alps.fint;
+   return fs;
 }
 
 func las_to_veg(las, fakemirror=, rgbrn=) {
@@ -1063,28 +1113,14 @@ func las_to_veg(las, fakemirror=, rgbrn=) {
       See batch_las2pbd for documentation.
 
    See also:
+      las_to_alps: To use the LAS_ALPS structure
       las_to_fs: To use the FS structure
       las2pbd: To convert to a PBD
       las_export_data: To write VEG__ or other ALPS data to a LAS file
       las_open: Opens a filehandle to a LAS file
 */
-   fs = las_to_fs(las, fakemirror=fakemirror, rgbrn=rgbrn);
-   veg = array(VEG__, dimsof(fs));
-   veg.rn = fs.rn;
-   veg.north = fs.north;
-   veg.east = fs.east;
-   veg.elevation = fs.elevation;
-   veg.mnorth = fs.mnorth;
-   veg.meast = fs.meast;
-   veg.melevation = fs.melevation;
-   veg.lnorth = fs.north;
-   veg.least = fs.east;
-   veg.lelv = fs.elevation;
-   veg.fint = fs.intensity;
-   veg.lint = fs.intensity;
-   veg.soe = fs.soe;
-   veg.nx = 1;
-   return veg;
+   alps = las_to_alps(las, fakemirror=fakemirror, rgbrn=rgbrn);
+   return struct_cast(alps, VEG__);
 }
 
 /********************************* BITFIELDS **********************************/
