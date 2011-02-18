@@ -22,7 +22,11 @@ func extract_qq(text, qqprefix=) {
 */
 //  Original David Nagle 2008-07-17
    regmatch, "(^|_|qq)([0-9][0-9][0-1][0-9][0-9][a-h][1-8][a-d])(\.|_|$)", text, , , qq;
-   if(qqprefix) qq = "qq" + qq;
+   if(qqprefix) {
+      w = where(qq);
+      if(numberof(w))
+         qq(w) = "qq" + qq(w);
+   }
    return qq;
 }
 
