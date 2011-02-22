@@ -457,6 +457,94 @@ func eaarl1_decode_pulse(raw, pulse, header=) {
    return result;
 }
 
+func eaarl1_decode_rasters(raw) {
+   if(!is_pointer(raw))
+      raw = &raw;
+   raw = raw(*);
+
+   count = numberof(raw);
+
+   // header fields
+   valid = array(char, count);
+   raster_length = seconds = fseconds = raster_number = array(long, count);
+   raster_type = number_of_pulses = digitizer = array(short, count);
+
+   // pulse fields -- never more than 120 pulses
+   offset_time = array(long, count, 120);
+   transmit_bias = transmit_length = channel1_bias = channel2_bias =
+         channel3_bias = array(char, count, 120);
+   shaft_angle = integer_range = data_length = channel1_length =
+         channel2_length = channel3_length = array(short, count, 120);
+   transmit_wf = channel1_wf = channel2_wf = channel3_wf =
+         array(pointer, count, 120);
+
+   for(i = 1; i <= count; i++) {
+      header = eaarl1_decode_header(*raw(i));
+      valid(i) = eaarl1_header_valid(header);
+      if(!valid(i))
+         continue;
+      raster_length(i) = header.raster_length;
+      raster_type(i) = header.raster_type;
+      seconds(i) = header.seconds;
+      fseconds(i) = header.fseconds;
+      raster_number(i) = header.raster_number;
+      number_of_pulses(i) = header.number_of_pulses;
+      digitizer(i) = header.digitizer;
+
+      for(j = 1; j <= number_of_pulses(i); j++) {
+         pulse = eaarl1_decode_pulse(*raw(i), j, header=header);
+         offset_time(i,j) = pulse.offset_time;
+         transmit_bias(i,j) = pulse.transmit_bias;
+         channel1_bias(i,j) = pulse.return_bias(1);
+         channel2_bias(i,j) = pulse.return_bias(2);
+         channel3_bias(i,j) = pulse.return_bias(3);
+         shaft_angle(i,j) = pulse.shaft_angle;
+         integer_range(i,j) = pulse.integer_range;
+         data_length(i,j) = pulse.data_length;
+         transmit_length(i,j) = pulse.transmit_length;
+         transmit_wf(i,j) = &pulse.transmit_wf;
+         channel1_length(i,j) = pulse.channel1_length;
+         channel1_wf(i,j) = &pulse.channel1_wf;
+         channel2_length(i,j) = pulse.channel2_length;
+         channel2_wf(i,j) = &pulse.channel2_wf;
+         channel3_length(i,j) = pulse.channel3_length;
+         channel3_wf(i,j) = &pulse.channel3_wf;
+      }
+   }
+
+   max_pulse = number_of_pulses(max);
+   if(max_pulse > 0 && max_pulse < 120) {
+      offset_time = offset_time(..,:max_pulse);
+      transmit_bias = transmit_bias(..,:max_pulse);
+      channel1_bias = channel1_bias(..,:max_pulse);
+      channel2_bias = channel2_bias(..,:max_pulse);
+      channel3_bias = channel3_bias(..,:max_pulse);
+      shaft_angle = shaft_angle(..,:max_pulse);
+      integer_range = integer_range(..,:max_pulse);
+      data_length = data_length(..,:max_pulse);
+      transmit_length = transmit_length(..,:max_pulse);
+      transmit_wf = transmit_wf(..,:max_pulse);
+      channel1_length = channel1_length(..,:max_pulse);
+      channel1_wf = channel1_wf(..,:max_pulse);
+      channel2_length = channel2_length(..,:max_pulse);
+      channel2_wf = channel2_wf(..,:max_pulse);
+      channel3_length = channel3_length(..,:max_pulse);
+      channel3_wf = channel3_wf(..,:max_pulse);
+   }
+
+   result = save(valid, raster_length, raster_type, seconds, fseconds,
+      raster_number, number_of_pulses, digitizer);
+
+   if(max_pulse) {
+      save, result, offset_time, shaft_angle, integer_range, data_length,
+            transmit_bias, transmit_length, transmit_wf, channel1_bias,
+            channel1_length, channel1_wf, channel2_bias, channel2_length,
+            channel2_wf, channel3_bias, channel3_length, channel3_wf;
+   }
+
+   return result;
+}
+
 func decode_raster(raw) {
    extern eaarl_time_offset, tca;
    local rasternbr, type, len;
