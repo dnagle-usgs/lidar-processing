@@ -362,146 +362,138 @@ func decode_rasters(raw) {
    return rasts;
 }
 
-func decode_raster(r) {
-/* DOCUMENT decode_raster(r)
-   Inputs:  r      ; r is an edb raster data variable
-   Returns:
-     decode_raster returns a RAST array of data.
-
-Type RAST to see whats in the RAST structure.
-
-Usage:
-  r = get_erast(rn = rn ); // get a raster from the database
-  rp = get_erast(rn = rn ); fma; drast(rp); rn +=1
-
-Examples using the result data:
-   Plot rx waveform 60 channel 1:  plg,(*p.rx(60)) (,1)
-   Plot irange values:             plmk,p.irange(1:0)
-   Plot sa values:                 plmk,p.sa(1:0)
-
-
- To extract waveform 1 from pixel 60 and assign to w:
-   w = (*p.rx(60))(,1)
-
- To extract, convert to integer, and remove bias from pixel 60, ch 1 use:
-   w = *p.rx(60,1)
-   w = int((~w+1) - (~w(1)+1));
-
- History:
-   2/7/02 ww Modified to check for short rasters and return an empty one if
-          short one was found.  The problem occured reading 9-7-01 data.  It
-      may have been caused by data system lockup.
-
-*/
+func eaarl1_decode_header(raw) {
    extern eaarl_time_offset, tca;
    local rasternbr, type, len;
 
-   return_raster = array(RAST,1);
-   irange = array(int, 120);
-   sa = array(int, 120);
-   offset_time = array(int, 120);
+   result = save();
+   save, result, raster_length=i24(raw, 1);
+   save, result, raster_type=raw(4);
 
-   len = i24(r, 1);           // raster length
-   type= r(4);                // raster type id (should be 5 )
-   if(type != 5) {
+   if(result.raster_type != 5)
+      return result;
+
+   if(result.raster_length >= 8)
+      save, result, seconds=i32(raw, 5);
+   if(result.raster_length >= 12)
+      save, result, fseconds=i32(raw, 9);
+   if(result.raster_length >= 16)
+      save, result, raster_number=i32(raw, 13);
+
+   if(result.raster_length >= 18) {
+      save, result, number_of_pulses=i16(raw, 17) & 0x7fff,
+            digitizer=(i16(raw,17) >> 15) & 0x1;
+
+      offset = 19;
+      pulse_offsets = array(-1, result.number_of_pulses);
+      for(i = 1; i <= result.number_of_pulses; i++) {
+         if(offset + 15 > result.raster_length)
+            break;
+         pulse_offsets(i) = offset;
+         offset += 15 + i16(raw, offset + 13);
+      }
+      save, result, pulse_offsets;
+   }
+
+   return result;
+}
+
+func eaarl1_header_valid(header) {
+   if(header.raster_length < 20)
+      return 0;
+   if(header.raster_type != 5)
+      return 0;
+   if(header.seconds < 0)
+      return 0;
+   if(header.fseconds < 0)
+      return 0;
+   if(header.raster_number < 0)
+      return 0;
+   if(header.number_of_pulses > 120)
+      return 0;
+   if(header.number_of_pulses < 0)
+      return 0;
+   return 1;
+}
+
+func eaarl1_decode_pulse(raw, pulse, header=) {
+   if(is_void(header)) header = decode_raster_header(raw);
+   result = save();
+   if(!eaarl1_header_valid(header))
+      return result;
+
+   offset = header.pulse_offsets(pulse);
+   save, result, offset_time=i32(raw, offset);
+   save, result, transmit_bias=raw(offset+4);
+   save, result, return_bias=raw(offset+5:offset+8);
+   save, result, shaft_angle=i16(raw, offset+9);
+   save, result, integer_range=i16(raw, offset+11);
+   save, result, data_length=i16(raw, offset+13);
+
+   offset += 15;
+   save, result, transmit_length=raw(offset);
+   if(result.transmit_length <= 0)
+      return result;
+   save, result, transmit_wf=raw(offset+1:offset+result.transmit_length);
+
+   offset += 1 + result.transmit_length;
+   save, result, channel1_length=i16(raw, offset);
+   if(result.channel1_length <= 0)
+      return result;
+   save, result, channel1_wf=raw(offset+2:offset+1+result.channel1_length);
+
+   offset += 2 + result.channel1_length;
+   save, result, channel2_length=i16(raw, offset);
+   if(result.channel2_length <= 0)
+      return result;
+   save, result, channel2_wf=raw(offset+2:offset+1+result.channel2_length);
+
+   offset += 2 + result.channel2_length;
+   save, result, channel3_length=i16(raw, offset);
+   if(result.channel3_length <= 0)
+      return result;
+   save, result, channel3_wf=raw(offset+2:offset+1+result.channel3_length);
+
+   return result;
+}
+
+func decode_raster(raw) {
+   extern eaarl_time_offset, tca;
+   local rasternbr, type, len;
+
+   result = array(RAST,1);
+   header = eaarl1_decode_header(raw);
+   if(header.raster_type != 5) {
       write, format="Raster %d has invalid type (%d) Len:%d\n",
-         rasternbr, type, len;
-      return return_raster;
+         header.raster_number, header.raster_type, header.raster_length;
+      return result;
+   }
+   if(!eaarl1_header_valid(header))
+      return result;
+
+   seconds = header.seconds + eaarl_time_offset;
+   if(!is_void(tca) && numberof(tca) >= header.raster_number)
+      seconds += tca(header.raster_number);
+
+   result.digitizer = header.digitizer;
+   result.soe = seconds;
+   result.rasternbr = header.raster_number;
+   result.npixels = header.number_of_pulses;
+
+   for(i = 1; i <= header.number_of_pulses; i++) {
+      pulse = eaarl1_decode_pulse(raw, i, header=header);
+      result.irange(i) = pulse.integer_range;
+      result.sa(i) = pulse.shaft_angle;
+      result.offset_time(i) = ((pulse.offset_time & 0x00ffffff) +
+         header.fseconds) * 1.6e-6 + seconds;
+      result.rxbias(i,) = pulse.return_bias;
+      result.tx(i) = &pulse.transmit_wf(:);
+      result.rx(i,1) = &pulse.channel1_wf(:);
+      result.rx(i,2) = &pulse.channel2_wf(:);
+      result.rx(i,3) = &pulse.channel3_wf(:);
    }
 
-   if(len < 20)               // return empty raster.
-      return return_raster;   // failed.
-
-   seconds = i32(r, 5);             // raster seconds of the day
-   seconds += eaarl_time_offset;    // correct for time set errors.
-
-   fseconds = i32(r, 9);            // raster fractional seconds 1.6us lsb
-   rasternbr = i32(r, 13);          // raster number
-   npixels = i16(r,17)&0x7fff;      // number of pixels
-   digitizer = (i16(r,17)>>15)&0x1; // digitizer
-   a = 19;                          // byte starting point for waveform data
-
-   if(anyof([rasternbr, fseconds, npixels] < 0))
-      return return_raster;
-   if(npixels > 120)
-      return return_raster;
-   if(seconds(1) < 0)
-      return return_raster;
-
-   if((!is_void(tca)) && (numberof(tca) > rasternbr))
-      seconds = seconds+tca(rasternbr);
-
-   for(i = 1; i <= npixels - 1; i++) { // loop thru entire set of pixels
-      offset_time(i) = i32(r, a);   a+=4; // fractional time of day since gps 1hz
-      txb = r(a);                   a++;  // transmit bias value
-      rxb = r(a:a+3);               a+=4; // waveform bias array
-      sa(i) = i16(r, a);            a+=2; // shaft angle values
-      irange(i) = i16(r, a);        a+=2; // integer NS range value
-      plen = i16(r, a);             a+=2;
-      wa = a;                             // starting waveform index (wa)
-      a = a + plen;                       // use plen to skip to next pulse
-      txlen = r(wa);                wa++; // transmit len is 8 bits max
-
-      if(txlen <= 0) {
-         write, format=" (txlen<=0) raster:%d edb_access.i:decode_raster(%d). Channel 1  Bad rxlen value (%d) i=%d\n", rasternbr, txlen, wa, i;
-         break;
-      }
-
-      txwf = r(wa:wa+txlen-1);            // get the transmit waveform
-      wa += txlen;                        // update wf address to first rx waveform
-      rxlen = i16(r,wa);         wa+=2;   // get 1st waveform and update wa to next
-
-      if(rxlen <= 0) {
-         write, format=" (rxlen<-0)raster:%d edb_access.i:decode_raster(%d). Channel 1  Bad rxlen value (%d) i=%d\n", rasternbr, rxlen, wa, i;
-         break;
-      }
-
-      rx = array(char, rxlen, 4);   // get all four return waveform bias values
-      rxr = r(wa: wa + rxlen -1);
-      if (numberof(rxr) != numberof(rx(,1))) break;
-      rx(,1) = rxr;  // get first waveform
-      wa += rxlen;         // update wa pointer to next
-      rxlen = i16(r,wa); wa += 2;
-
-      if(rxlen <= 0) {
-         write, format=" raster:%d edb_access.i:decode_raster(%d). Channel 2  Bad rxlen value (%d) i=%d\n", rasternbr, rxlen, wa, i;
-         break;
-      }
-
-      rxr = r(wa: wa + rxlen -1);
-      if (numberof(rxr) != numberof(rx(,2))) break;
-      rx(,2) = rxr;  // get first waveform
-      wa += rxlen;
-      rxlen = i16(r,wa); wa += 2;
-
-      if(rxlen <= 0) {
-         write, format=" raster:%d edb_access.i:decode_raster(%d). Channel 3  Bad rxlen value (%d) i=%d\n",
-            rasternbr, rxlen, wa, i ;
-         break;
-      }
-
-      rxr = r(wa: wa + rxlen -1);
-      if (numberof(rxr) != numberof(rx(,3))) break;
-      rx(,3) = rxr;  // get first waveform
-      return_raster.tx(i) = &txwf;
-      return_raster.rx(i,1) = &rx(,1);
-      return_raster.rx(i,2) = &rx(,2);
-      return_raster.rx(i,3) = &rx(,3);
-      return_raster.rx(i,4) = &rx(,4);
-      return_raster.rxbias(i,) = rxb;
-      /*****
-        write,format="\n%d %d %d %d %d %d",
-        i, offset_time, sa(i), irange(i), txlen , rxlen      */
-   }
-   return_raster.offset_time  = ((offset_time & 0x00ffffff)
-                                 + fseconds) * 1.6e-6 + seconds;
-   return_raster.irange    = irange;
-   return_raster.sa        = sa;
-   return_raster.digitizer = digitizer;
-   return_raster.soe       = seconds;
-   return_raster.rasternbr = rasternbr;
-   return_raster.npixels   = npixels;
-   return return_raster;
+   return result;
 }
 
 func edb_summary(path, searchstr=) {
