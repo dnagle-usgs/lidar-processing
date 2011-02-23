@@ -635,3 +635,66 @@ func edb_summary(path, searchstr=) {
       write, "";
    }
 }
+
+func eaarl1_fsecs2rn(seconds, fseconds, fast=) {
+/* DOCUMENT rn = eaarl1_fsecs2rn(seconds, fseconds, fast=)
+   Given a pair of values SECONDS and FSECONDS, this will return the
+   corresponding RN.
+
+   This requires that the mission configuration manager have the mission
+   configuration for the relevant dataset loaded.
+
+   Values will be looked up against the EDB extern first. Then, the RN
+   determined from that will be verified and refined by looking at the raw
+   data. (If a time correction was applied to the EDB data, then the
+   seconds/fseconds data in EDB may not match the raw data.) The raw data
+   lookup can be suppressed using fast=1.
+
+   This can accept scalar or array input. SECONDS and FSECONDS must have
+   identical dimensions.
+*/
+   extern edb;
+   default, fast, 0;
+
+   if(!is_scalar(seconds)) {
+      result = array(long, dimsof(seconds));
+      for(i = 1; i <= numberof(seconds); i++) {
+         result(i) = eaarl1_fsecs2rn(seconds(i), fseconds(i));
+      }
+      return result;
+   }
+
+   missiondata_soe_load, seconds + fseconds * 1.6e-6;
+   w = where(edb.seconds == seconds & edb.fseconds == fseconds);
+   if(numberof(w) == 1) {
+      rn = w(1);
+      if(fast)
+         return rn;
+   } else {
+      if(fast)
+         return -1;
+      rn = abs(edb.seconds - seconds)(mnx);
+   }
+
+   rast = eaarl1_decode_header(get_erast(rn=rn));
+   while(rast.seconds < seconds) {
+      rn++;
+      rast = eaarl1_decode_header(get_erast(rn=rn));
+   }
+   while(rast.seconds > seconds) {
+      rn--;
+      rast = eaarl1_decode_header(get_erast(rn=rn));
+   }
+   while(rast.seconds == seconds && rast.fseconds < fseconds) {
+      rn++;
+      rast = eaarl1_decode_header(get_erast(rn=rn));
+   }
+   while(rast.seconds == seconds && rast.fseconds > fseconds) {
+      rn--;
+      rast = eaarl1_decode_header(get_erast(rn=rn));
+   }
+
+   if(rast.seconds == seconds && rast.fseconds == fseconds)
+      return rn;
+   return -1;
+}
