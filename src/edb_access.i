@@ -642,13 +642,16 @@ func eaarl1_fsecs2rn(seconds, fseconds, fast=) {
    corresponding RN.
 
    This requires that the mission configuration manager have the mission
-   configuration for the relevant dataset loaded.
+   configuration for the relevant dataset loaded. Otherwise, -1 will be
+   returned.
 
    Values will be looked up against the EDB extern first. Then, the RN
    determined from that will be verified and refined by looking at the raw
    data. (If a time correction was applied to the EDB data, then the
    seconds/fseconds data in EDB may not match the raw data.) The raw data
    lookup can be suppressed using fast=1.
+
+   If no match is found, -1 is returned.
 
    This can accept scalar or array input. SECONDS and FSECONDS must have
    identical dimensions.
@@ -665,6 +668,8 @@ func eaarl1_fsecs2rn(seconds, fseconds, fast=) {
    }
 
    missiondata_soe_load, seconds + fseconds * 1.6e-6;
+   if(is_void(edb))
+      return -1;
    w = where(edb.seconds == seconds & edb.fseconds == fseconds);
    if(numberof(w) == 1) {
       rn = w(1);
