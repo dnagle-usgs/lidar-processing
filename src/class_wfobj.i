@@ -5,8 +5,8 @@ require, "eaarl.i";
 // with an underscore prefix.
 scratch = save(scratch, tmp, wfobj_xyzwrap, wfobj_summary, wfobj_index,
    wfobj_grow, wfobj_x0, wfobj_y0, wfobj_z0, wfobj_xyz0, wfobj_x1, wfobj_y1,
-   wfobj_z1, wfobj_xyz1, wfobj_save);
-tmp = save(help, summary, index, grow, x0, y0, z0, xyz0, x1, y1, z1, xyz1,
+   wfobj_z1, wfobj_xyz1, wfobj_rn, wfobj_save);
+tmp = save(help, summary, index, grow, x0, y0, z0, xyz0, x1, y1, z1, xyz1, rn,
    save);
 
 func wfobj(base, obj) {
@@ -139,6 +139,16 @@ func wfobj(base, obj) {
          Like "xyz0" or "xyz1", except they only return the x, y, or z
          coordinate. Like xyz0 and xyz1, these also can accept an "idx"
          parameter.
+      rn = data(rn,) -or- rn = data(rn,idx)
+         For EAARL data, will return the EDB raster number that corresponds to
+         the data point. This is fairly CPU-intensive and is primarily for
+         interactive use. In order to calculate an rn, the data must have
+         raster_seconds and raster_fseconds defined and the mission
+         configuration must be defined that covers the data. If an rn cannot be
+         determined, -1 will be returned instead. Values are cached to improve
+         performance; if you get -1 because you didn't have the mission
+         configuration loaded, then you'll have to do "wfobj, data" to clear
+         the cache after loading it.
       data, save, fn
          Saves the data for this wfobj object to a pbd file specified by FN.
          The data can later be restored using 'data = wfobj(fn)'.
@@ -161,14 +171,18 @@ func wfobj(base, obj) {
    // Import class methods
    obj_merge, obj, base;
 
+   count = dimsof(obj.raw_xyz0)(2);
+
+   rndefault = (obj(*,"raster_seconds") && obj(*,"raster_fseconds")) ? 0 : -1;
+
    // We don't want all of the objects to share a common data item, so they get
    // re-initialized here.
    save, obj,
       xyz0=closure(obj.xyz0.function, save(var="raw_xyz0", cs="-", xyz=[])),
-      xyz1=closure(obj.xyz1.function, save(var="raw_xyz1", cs="-", xyz=[]));
+      xyz1=closure(obj.xyz1.function, save(var="raw_xyz1", cs="-", xyz=[])),
+      rn=closure(obj.rn.function, array(rndefault, count));
 
    // Check and convert tx/rx if necessary
-   count = dimsof(obj.raw_xyz0)(2);
    if(numberof(obj.rx) == 2 && count > 10) {
       rx = tx = array(pointer, count);
       roff = toff = 1;
@@ -288,6 +302,27 @@ func wfobj_x1(idx) { return use(xyz1,)(idx, 1); }
 func wfobj_y1(idx) { return use(xyz1,)(idx, 2); }
 func wfobj_z1(idx) { return use(xyz1,)(idx, 3); }
 x1 = wfobj_x1; y1 = wfobj_y1; z1 = wfobj_z1;
+
+func wfobj_rn(cache, idx) {
+   if(is_void(idx))
+      idx = 1:0;
+   if(nallof(cache(idx))) {
+      if(is_range(idx))
+         idx = range_to_index(idx, numberof(cache));
+      for(i = 1; i <= numberof(idx); i++) {
+         if(cache(idx(i)))
+            continue;
+         result = eaarl1_fsecs2rn(use(raster_seconds,idx(i)),
+            use(raster_fseconds,idx(i)));
+         w = where(use(raster_seconds) == use(raster_seconds,idx(i)) &
+            use(raster_fseconds) == use(raster_fseconds,idx(i)));
+         cache(w) = result;
+         result = w = [];
+      }
+   }
+   return cache(idx);
+}
+rn = closure(wfobj_rn, array(short, 1));
 
 func wfobj_save(fn) {
    obj = obj_copy_data(use());
