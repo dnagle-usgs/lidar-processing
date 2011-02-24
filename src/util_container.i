@@ -589,3 +589,37 @@ func msort_array(x, which) {
 
    return sort(rank+indgen(0:mxrank)*norm);
 }
+
+func range_to_index(rng, size) {
+/* DOCUMENT range_to_index(rng, size)
+   Converts a Yorick range into an index list.
+
+   Arguments:
+      rng: A Yorick range, such as 3:9, -5:, or ::2.
+      size: The size of the array being worked with. This is necessary if the
+         max is left unspecified or if any values are negative.
+
+   Examples:
+      > range_to_index(5:8, 10)
+      [5,6,7,8]
+      > range_to_index(2::2, 10)
+      [2,4,6,8,10]
+      > range_to_index(-3:, 10)
+      [7,8,9,10]
+*/
+   if(is_range(rng))
+      rng = parse_range(rng);
+   if(numberof(rng) != 4)
+      error, "Invalid range argument";
+   if((rng(1) & 15) != 1)
+      error, "Invalid type of range";
+   if(rng(1) & Y_MIN_DFLT)
+      rng(2) = 1;
+   if(rng(1) & Y_MAX_DFLT)
+      rng(3) = size;
+   if(rng(2) < 1)
+      rng(2) += size;
+   if(rng(3) < 1)
+      rng(3) += size;
+   return indgen(rng(2):rng(3):rng(4));
+}
