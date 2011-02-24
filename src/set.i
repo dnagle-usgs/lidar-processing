@@ -6,6 +6,8 @@ func set_contains(A, b) {
    Returns an array of boolean values indicating which values in b are
    contained in A.
 */
+   // work-around for yorick bug, following line makes idx extern otherwise
+   local idx;
    idx = set_intersection(b, unref(A), idx=1);
    result = array(0, dimsof(b));
    if(numberof(idx)) {
