@@ -4,11 +4,11 @@ require, "eaarl.i";
 // scratch stores the values of scratch and tmp so that we can restore them
 // when we're done, leaving things as we found them.
 scratch = save(scratch, tmp, pcobj_summary, pcobj_index, pcobj_grow, pcobj_x,
-   pcobj_y, pcobj_z, pcobj_xyz, pcobj_save);
+   pcobj_y, pcobj_z, pcobj_xyz, pcobj_rn, pcobj_save);
 // tmp stores a list of the methods that will go into pcobj. It stores their
 // current values up-front, then restores them at the end while swapping the
 // new function definitions into pcobj.
-tmp = save(help, summary, index, grow, x, y, z, xyz, save);
+tmp = save(help, summary, index, grow, x, y, z, xyz, rn, save);
 
 func pcobj(base, obj) {
 /* DOCUMENT pcobj()
@@ -120,6 +120,16 @@ func pcobj(base, obj) {
       data(x,)  data(y,)  data(z,)
          Like "xyz", except they only return the x, y, or z coordinates. These
          also can accept an "idx" parameter.
+      rn = data(rn,) -or- rn = data(rn,idx)
+         For EAARL data, will return the EDB raster number that corresponds to
+         the data point. This is fairly CPU-intensive and is primarily for
+         interactive use. In order to calculate an rn, the data must have
+         raster_seconds and raster_fseconds defined and the mission
+         configuration must be defined that covers the data. If an rn cannot be
+         determined, -1 will be returned instead. Values are cached to improve
+         performance; if you get -1 because you didn't have the mission
+         configuration loaded, then you'll have to do "wfobj, data" to clear
+         the cache after loading it.
       data, save, fn
          Saves the data for this pcobj object to a pbd file specified by FN.
          The data can later be restored using 'data = pcobj(fn)'.
@@ -142,16 +152,20 @@ func pcobj(base, obj) {
    // Import class methods
    obj_merge, obj, base;
 
+   count = dimsof(obj.raw_xyz)(2);
+
+   rndefault = (obj(*,"raster_seconds") && obj(*,"raster_fseconds")) ? 0 : -1;
+
    // We don't want all of the objects to share a common data item, so they get
    // re-initialized here.
-   save, obj, xyz=closure(obj.xyz.function, save(cs="-", xyz=[]));
+   save, obj, xyz=closure(obj.xyz.function, save(cs="-", xyz=[])),
+      rn=closure(obj.rn.function, array(rndefault, count));
 
    // Initialize clsobj if needed, and restore if serialized
    keydefault, obj, class=clsobj(dimsof(obj.raw_xyz)(2));
    if(typeof(obj.class) == "char")
       save, obj, class=clsobj(obj.class);
 
-   count = dimsof(obj(raw_xyz))(2);
    raw_bounds = splitary([obj(raw_xyz)(min,),obj(raw_xyz)(max,)], 3);
    save, obj, count, raw_bounds;
 
@@ -255,6 +269,27 @@ func pcobj_x(idx) { return use(xyz,)(idx, 1); }
 func pcobj_y(idx) { return use(xyz,)(idx, 2); }
 func pcobj_z(idx) { return use(xyz,)(idx, 3); }
 x = pcobj_x; y = pcobj_y; z = pcobj_z;
+
+func pcobj_rn(cache, idx) {
+   if(is_void(idx))
+      idx = 1:0;
+   if(nallof(cache(idx))) {
+      if(is_range(idx))
+         idx = range_to_index(idx, numberof(cache));
+      for(i = 1; i <= numberof(idx); i++) {
+         if(cache(idx(i)))
+            continue;
+         result = eaarl1_fsecs2rn(use(raster_seconds,idx(i)),
+            use(raster_fseconds,idx(i)));
+         w = where(use(raster_seconds) == use(raster_seconds,idx(i)) &
+            use(raster_fseconds) == use(raster_fseconds,idx(i)));
+         cache(w) = result;
+         result = w = [];
+      }
+   }
+   return cache(idx);
+}
+rn = closure(pcobj_rn, array(short, 1));
 
 func pcobj_save(fn) {
    obj = obj_copy_data(use());
