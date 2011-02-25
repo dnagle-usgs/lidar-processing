@@ -675,6 +675,10 @@ func eaarl1_fsecs2rn(seconds, fseconds, fast=) {
       rn = w(1);
       if(fast)
          return rn;
+   } else if(numberof(w) > 1) {
+      if(fast)
+         return -1;
+      rn = w(abs(edb.fseconds(w) - fseconds)(mnx));
    } else {
       if(fast)
          return -1;
