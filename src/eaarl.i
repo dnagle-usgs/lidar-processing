@@ -67,6 +67,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "dirload.i";
    require, "dmars.i";
    require, "drast.i";
+   require, "eaarl1_raster.i";
    require, "eaarl1_wf.i";
    require, "eaarl_mounting_bias.i";
    require, "edb_access.i";
