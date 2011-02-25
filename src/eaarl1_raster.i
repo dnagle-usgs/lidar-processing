@@ -2,6 +2,22 @@
 require, "eaarl.i";
 
 func eaarl1_decode_header(raw) {
+/* DOCUMENT eaarl1_decode_header(raw)
+   Given the raw data for a raster, this will decode and return its header
+   information as an oxy group object with these fields:
+
+      raster_length = array(long)
+      raster_type = array(char)
+      seconds = array(long)
+      fseconds = array(long)
+      raster_number = array(long)
+      number_of_pulses = array(long)
+      digitizer = array(long)
+      pulse_offsets = array(long,119)
+
+   The dimension of pulse_offsets will match number_of_pulses and is usually
+   119.
+*/
    extern eaarl_time_offset, tca;
    local rasternbr, type, len;
 
@@ -38,6 +54,10 @@ func eaarl1_decode_header(raw) {
 }
 
 func eaarl1_header_valid(header) {
+/* DOCUMENT eaarl1_header_valid(header)
+   Returns 1 if the given header is valid, 0 if not. HEADER must be the result
+   of eaarl1_decode_header.
+*/
    if(header.raster_length < 20)
       return 0;
    if(header.raster_type != 5)
@@ -56,6 +76,39 @@ func eaarl1_header_valid(header) {
 }
 
 func eaarl1_decode_pulse(raw, pulse, header=) {
+/* DOCUMENT eaarl1_decode_header(raw)
+   Given the raw data for a raster, this will decode and return the pulse
+   information for the specified pulse number.
+
+   Parameters:
+      raw: An array of char data from a TLD file (as returned by get_erast).
+      pulse: Pulse number to retrieve, usually in the range 1-119.
+   Options:
+      header= The result of eaarl1_decode_header. If not supplied, it was be
+         determined from RAW. Providing the header is more efficient if you
+         already have it or will be retrieving multiple pulses from one raster.
+
+   The decoded information will be returned as an oxy group object with these
+   fields:
+
+      offset_time = array(long)
+      transmit_bias = array(char)
+      return_bias = array(char,4)
+      shaft_angle = array(short)
+      integer_range = array(short)
+      data_length = array(short)
+      transmit_length = array(char)
+      transmit_wf = array(char,x)
+      channel1_length = array(short)
+      channel1_wf = array(char,x)
+      channel2_length = array(short)
+      channel2_wf = array(char,x)
+      channel3_length = array(short)
+      channel3_wf = array(char,x)
+
+   The various *_wf fields will be vectors of varying lengths (as defined by
+   the corresponding *_length fields).
+*/
    if(is_void(header)) header = decode_raster_header(raw);
    result = save();
    if(!eaarl1_header_valid(header))
@@ -97,6 +150,39 @@ func eaarl1_decode_pulse(raw, pulse, header=) {
 }
 
 func eaarl1_decode_rasters(raw) {
+/* DOCUMENT data = eaarl1_decode_rasters(raw)
+   RAW may be an array of char for a single raster, or it may be an array of
+   pointers to such data. The raster data will be decoded and returned as an
+   oxy group object with the following fields:
+
+      valid = array(char,COUNT)
+      raster_length = array(long,COUNT)
+      raster_type = array(short,COUNT)
+      seconds = array(long,COUNT)
+      fseconds = array(long,COUNT)
+      raster_number = array(long,COUNT)
+      number_of_pulses = array(short,COUNT)
+      digitizer = array(short,COUNT)
+      offset_time = array(long,COUNT,NUM_PULSES)
+      shaft_angle = array(short,COUNT,NUM_PULSES)
+      integer_range = array(short,COUNT,NUM_PULSES)
+      data_length = array(short,COUNT,NUM_PULSES)
+      transmit_bias = array(char,COUNT,NUM_PULSES)
+      transmit_length = array(char,COUNT,NUM_PULSES)
+      transmit_wf = array(pointer,COUNT,NUM_PULSES)
+      channel1_bias = array(char,COUNT,NUM_PULSES)
+      channel1_length = array(short,COUNT,NUM_PULSES)
+      channel1_wf = array(pointer,COUNT,NUM_PULSES)
+      channel2_bias = array(char,COUNT,NUM_PULSES)
+      channel2_length = array(short,COUNT,NUM_PULSES)
+      channel2_wf = array(pointer,COUNT,NUM_PULSES)
+      channel3_bias = array(char,COUNT,NUM_PULSES)
+      channel3_length = array(short,COUNT,NUM_PULSES)
+      channel3_wf = array(pointer,COUNT,NUM_PULSES)
+
+   Where COUNT is the number of rasters provided and NUM_PULSES is the maximum
+   number of pulses found for any given raster.
+*/
    if(!is_pointer(raw))
       raw = &raw;
    raw = raw(*);
