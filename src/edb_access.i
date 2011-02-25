@@ -363,6 +363,29 @@ func decode_rasters(raw) {
 }
 
 func decode_raster(raw) {
+/* DOCUMENT rast = decode_raster(raw)
+   Decodes raw raster data (in a char array) into the RAST structure.
+
+   Parameter:
+      raw: An array of char as extracted from a TLD file by get_erast.
+
+   Returns:
+      array(RAST,1) with the decoded raster data.
+
+   Usage:
+      Retrieve raster data for a raster number:
+         rn = 1000
+         raw = get_erast(rn=rn);
+         rast = decode_raster(raw);
+
+      Extract waveform for channel 1 from pixel 60 and assign to wf:
+         wf = *rast.rx(60,1)
+
+      Extract, convert to integer, flip, and remove bias from pixel 60,
+      channel 1:
+         wf = *rast.rx(60,1)
+         wf = int((~wf+1)-(~wf(1)+1))
+*/
    extern eaarl_time_offset, tca;
    local rasternbr, type, len;
 
