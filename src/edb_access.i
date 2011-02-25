@@ -685,20 +685,21 @@ func eaarl1_fsecs2rn(seconds, fseconds, fast=) {
       rn = abs(edb.seconds - seconds)(mnx);
    }
 
+   count = numberof(edb);
    rast = eaarl1_decode_header(get_erast(rn=rn));
-   while(rast.seconds < seconds) {
+   while(rn < count && rast.seconds < seconds) {
       rn++;
       rast = eaarl1_decode_header(get_erast(rn=rn));
    }
-   while(rast.seconds > seconds) {
+   while(rn > 1 && rast.seconds > seconds) {
       rn--;
       rast = eaarl1_decode_header(get_erast(rn=rn));
    }
-   while(rast.seconds == seconds && rast.fseconds < fseconds) {
+   while(rn < count && rast.seconds == seconds && rast.fseconds < fseconds) {
       rn++;
       rast = eaarl1_decode_header(get_erast(rn=rn));
    }
-   while(rast.seconds == seconds && rast.fseconds > fseconds) {
+   while(rn > 1 && rast.seconds == seconds && rast.fseconds > fseconds) {
       rn--;
       rast = eaarl1_decode_header(get_erast(rn=rn));
    }
