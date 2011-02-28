@@ -409,46 +409,46 @@ gridmode=, ndivide=) {
       }
    }
 
-   pldj, min_e, min_n, min_e, max_n, color="green"
-      pldj, min_e, min_n, max_e, min_n, color="green"
-      pldj, max_e, min_n, max_e, max_n, color="green"
-      pldj, max_e, max_n, min_e, max_n, color="green"
+   pldj, min_e, min_n, min_e, max_n, color="green";
+   pldj, min_e, min_n, max_e, min_n, color="green";
+   pldj, max_e, min_n, max_e, max_n, color="green";
+   pldj, max_e, max_n, min_e, max_n, color="green";
 
-      for (i=1;i<=n;i++) {
-         write, format="Processing Region %d of %d\r",i,n;
-         dt_idx  = data_box(bdata.east/100., bdata.north/100., min_e(i)-100, max_e(i)+100, min_n(i)-100, max_n(i)+100);
+   for (i=1;i<=n;i++) {
+      write, format="Processing Region %d of %d\r",i,n;
+      dt_idx  = data_box(bdata.east/100., bdata.north/100., min_e(i)-100, max_e(i)+100, min_n(i)-100, max_n(i)+100);
 
-         if (!is_array(dt_idx)) continue;
-         dtdata = bdata(dt_idx);
+      if (!is_array(dt_idx)) continue;
+      dtdata = bdata(dt_idx);
 
-         dtdp = polyfit_eaarl_pts(dtdata, wslide=wslide, mode=mode, wbuf=wbuf, gridmode=gridmode,ndivide=ndivide);
+      dtdp = polyfit_eaarl_pts(dtdata, wslide=wslide, mode=mode, wbuf=wbuf, gridmode=gridmode,ndivide=ndivide);
 
-         if (!is_array(dtdp)) continue;
+      if (!is_array(dtdp)) continue;
 
-         didx  = data_box(dtdp.east/100., dtdp.north/100., min_e(i), max_e(i), min_n(i), max_n(i));
+      didx  = data_box(dtdp.east/100., dtdp.north/100., min_e(i), max_e(i), min_n(i), max_n(i));
 
-         if (!is_array(didx)) continue;
-         dtdp = dtdp(didx);
+      if (!is_array(didx)) continue;
+      dtdp = dtdp(didx);
 
-         n_dtdp = numberof(dtdp);
-         if ((ncount+n_dtdp) > n_bdata) {
-            // increase the output data array
-            nt_bdata++;
-            if (nt_bdata==1)
-               write, format="Warning... Output data array is bigger than input data array...\n";
-            outdata1 = outdata(1:ncount);
-            outdata = array(GEO,ncount+n_dtdp);
-            outdata(1:ncount) = outdata1;
-            outdata1 = [];
-         }
-
-         outdata(ncount+1:ncount+n_dtdp) = dtdp;
-         ncount += n_dtdp;
-         pldj, min_e(i), min_n(i), min_e(i), max_n(i), color="black";
-         pldj, min_e, min_n(i), max_e, min_n(i), color="black";
-         pldj, max_e, min_n(i), max_e, max_n(i), color="black";
-         pldj, max_e(i), max_n(i), min_e(i), max_n(i), color="black";
+      n_dtdp = numberof(dtdp);
+      if ((ncount+n_dtdp) > n_bdata) {
+         // increase the output data array
+         nt_bdata++;
+         if (nt_bdata==1)
+            write, format="Warning... Output data array is bigger than input data array...\n";
+         outdata1 = outdata(1:ncount);
+         outdata = array(GEO,ncount+n_dtdp);
+         outdata(1:ncount) = outdata1;
+         outdata1 = [];
       }
+
+      outdata(ncount+1:ncount+n_dtdp) = dtdp;
+      ncount += n_dtdp;
+      pldj, min_e(i), min_n(i), min_e(i), max_n(i), color="black";
+      pldj, min_e, min_n(i), max_e, min_n(i), color="black";
+      pldj, max_e, min_n(i), max_e, max_n(i), color="black";
+      pldj, max_e(i), max_n(i), min_e(i), max_n(i), color="black";
+   }
 
    outdata = outdata(1:ncount);
 
