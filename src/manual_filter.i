@@ -650,3 +650,15 @@ func extract_unique_data(data, ref, soefudge=) {
    return data(where(keep));
 }
 
+func scale_be_to_bathy(data) {
+/* DOCUMENT scale_be_to_bathy(data)
+   This performs a simple scaling to recast bare earth data as bathy data. The
+   first return coordinate is treated as the water surface; the distance from
+   first surface to bare earth is then scaled using the speed of light through
+   water instead of through air. The modified data is returned.
+*/
+   delta = data2xyz(data, mode="be") - data2xyz(data, mode="fs");
+   delta *= (CNSH2O2X/NS2MAIR);
+   newbe = data2xyz(data, mode="fs") + delta;
+   return xyz2data(newbe, data, mode="be");
+}
