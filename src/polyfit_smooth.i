@@ -37,16 +37,15 @@ ndivide=) {
       Data array of the same type as the 'eaarl' data array.
 */
 // Original 2005-08-05 Amar Nayegandhi
+   default, mode, 2;
+   default, gridmode, 1;
+   default, wbuf, 0;
+   default, ndivide, 8;
 
    tmr1 = tmr2 = array(double, 3);
    timer, tmr1;
-   if (!mode) mode = 2;
 
-   if (is_void(wbuf)) wbuf = 0;
-   if (is_void(gridmode)) gridmode=1;
    eaarl = test_and_clean(eaarl);
-
-   if (is_void(ndivide)) ndivide = 8;
 
    a = structof(eaarl(1));
    new_eaarl = array(a, numberof(eaarl) );
@@ -356,9 +355,10 @@ gridmode=, ndivide=) {
    See polyfit_eaarl_pts for explanation of input parameters
 */
 // Original 2005-08-12 Amar Nayegandhi
-   if (is_void(iwin)) iwin = 5;
+   default, iwin, 5;
+   default, mode, 2;
+
    window, iwin;
-   if (is_void(mode)) mode = 2;
    // ensure there are no 0 east or north values in bdata
    idx = where(bdata.east != 0);
    bdata = bdata(idx);
