@@ -19,6 +19,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "lmfit.i";
    require, "msort.i";
    require, "pnm.i";
+   require, "poly.i";
    require, "rdcols.i";
    require, "string.i";
    require, "unsigned.i";

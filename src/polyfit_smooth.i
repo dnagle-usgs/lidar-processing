@@ -1,4 +1,4 @@
-require, "poly.i"
+require, "eaarl.i";
 
 func polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, wbuf=, gridmode=, ndivide= ) {
   /* DOCUMENT polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, wbuf= ) 
