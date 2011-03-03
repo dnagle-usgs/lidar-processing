@@ -335,6 +335,7 @@ func edf_export_cast(&data, type=, words=) {
          "FS", h_new(nosoe=3, soe=101, words=8),
          "GEO", h_new(nosoe=4, soe=102, words=11),
          "VEG__", h_new(nosoe=8, soe=103, words=13),
+         "LAS_ALPS", h_new(nosoe=8, soe=103, words=13),
          "CVEG_ALL", h_new(nosoe=7, soe=104, words=9)
       );
 
