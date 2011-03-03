@@ -1,3 +1,4 @@
+// vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "eaarl.i";
 
 func fit_gauss(rast, i, graph=, add_peak=, lims=, verbose=, win=)
@@ -12,18 +13,17 @@ lims=[[x1,x2]], restricts the location of the new peak to within these
 limits. lims must be listed as an array of 2-value arrays.
 
 */
-// Original Christine Kranenburg 2009-08-06
 {
    default, win, 4;
    default, graph, 0;
    rp = decode_raster(get_erast(rn=rast));
 
-//   for (i=1; i<=119; i++) {
+//   for (i=1; i<=119; i++) 
 	w1=int(*rp.rx(i,1));
 	w1=max(w1)-w1;
 	x=indgen(numberof(w1));
 
-	ret = ex_veg_all(rast, i, use_be_peak=1, graph=graph, thresh=3, win=win, verbose=verbose)
+	ret = ex_veg(rast, i, use_be_peak=1, graph=graph, thresh=3, win=win, verbose=verbose)
 	mr = ret.mr(where(ret.mr))
 	mv = ret.mv(where(ret.mv))
 
@@ -121,7 +121,6 @@ func lclxtrem(w, thresh=)
    Function to return maxima and/or inflection points.
    Currently set to return inflection points. return idx if maxima
 */
-// Original Christine Kranenburg 2009-08-06
 {
    width=1
    if (!is_void(thresh)) w=((w-thresh)*(w-thresh > 0))
@@ -143,7 +142,6 @@ func gauss3(x, p)
    Function to return gaussian curve given mean, sigma and amplitude
    of gaussian as well as the independent variable
 */
-// Original Christine Kranenburg 2009-08-06
 {
    mu=p(1);
    s=p(2);
@@ -158,7 +156,6 @@ func lmfitfun(x, a, f=)
 Wrapper function that gets everything in the right format for LM_fit
 function to perform optimization.
 */
-// Original Christine Kranenburg 2009-08-06
 {
    if (is_void(f)) f=0;
    for (i=0; i < numberof(a)/3; i++) {
