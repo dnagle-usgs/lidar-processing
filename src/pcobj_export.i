@@ -36,7 +36,7 @@ func pcobj_to_old_fs(data, fs=, mirror=) {
       result.soe = fsdata(soe,);
    if(fsdata(*,"intensity"))
       result.intensity = fsdata(intensity,);
-   fsdata = [];
+   //fsdata = [];
 
    if(!fsdata(*,"soe"))
       return result;
