@@ -1347,11 +1347,12 @@ func xpeak( a ) {
 
 }
 
-func xgauss(w1, add_peak=, graph=, xaxis=) {
+func xgauss(w1, add_peak=, graph=, xaxis=,logmode=) {
 /* DOCUMENT xgauss
    Computer the gaussian decomposition of the waveform
    w1 = waveform to use
    add_peak = set to number of peaks to add for the gaussian fitting
+   logmode = do log transformation of waveform (on y-axis) before computing gaussian decomposition
 */
   n = numberof(w1);      // determine number of points in waveform
   if ( n < 8 ) 
@@ -1370,12 +1371,23 @@ func xgauss(w1, add_peak=, graph=, xaxis=) {
 
   a_init = a;
 
-  if (mv <= veg_conf.thresh) return [0,0,0];
+  //if (mv <= veg_conf.thresh) return [0,0,0];
   if (is_array(where(w1 < 0))) return [0,0,0];
 
-  n0 = numberof(where(w1==0));
+  w1_0 = where(w1==0);
+  n0 = numberof(w1_0);
   n_non0 = n-n0;
   if (n0 > n_non0) return [0,0,0];
+
+  if (logmode) {
+   // ensure that all values are non-zero
+   if (is_array(w1_0)) w1(w1_0) += 0.000000001 // need to fix later
+   lw1 = log(w1);
+   a(1) = lw1(mxx);
+   a(2) = 1.0;
+   a(3) = lw1(max);
+   a_init = a;
+   }
 
   r = lmfit(lmfitfun,x,a,w1,1.0,itmax=200);
   if (catch(-1)) return;
