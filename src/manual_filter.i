@@ -395,9 +395,11 @@ func filter_bounded_elv(eaarl, lbound=, ubound=, mode=, idx=) {
 }
 
 func batch_extract_corresponding_data(src_searchstr, ref_searchstr, maindir,
-srcdir=, refdir=, outdir=, fn_append=, vname_append=, soefudge=) {
+srcdir=, refdir=, outdir=, fn_append=, vname_append=, method=, soefudge=,
+fudge=, mode=, native=) {
 /* DOCUMENT batch_extract_corresponding_data, src_searchstr, ref_searchstr,
-   maindir, srcdir=, refdir=, outdir=, fn_append=, vname_append=, soefudge=
+   maindir, srcdir=, refdir=, outdir=, fn_append=, vname_append=, method=,
+   soefudge=, fudge=, mode=, native=
 
    This copies data from source (src) to output (out). It uses a given
    reference data (ref) to determine which points get copied.
@@ -445,7 +447,13 @@ srcdir=, refdir=, outdir=, fn_append=, vname_append=, soefudge=) {
       vname_append= A string to include in the output vname to indicate that
          it's extracted data.
             vname_append="ext"      (default)
+      method= Extraction method.
+            method="data"     Use extract_corresponding_data (default)
+            method="xyz"      Use extract_corresponding_xyz
       soefudge= Passed through to extract_corresponding_data.
+      fudge= Passed through to extract_corresponding_xyz.
+      mode= Passed through to extract_corresponding_xyz.
+      native= Passed through to extract_corresponding_exyz.
 
    Note on directory arguments/options:
       If you provide all three of srcdir=, refdir=, and outdir=, then you do
@@ -492,6 +500,7 @@ srcdir=, refdir=, outdir=, fn_append=, vname_append=, soefudge=) {
    default, outdir, maindir;
    default, fn_append, "extracted";
    default, vname_append, "ext";
+   default, method, "data";
    if(strpart(fn_append, 1:1) != "_")
       fn_append = "_" + fn_append;
    if(strlen(vname_append) && strpart(vname_append, 1:1) != "_")
@@ -521,12 +530,16 @@ srcdir=, refdir=, outdir=, fn_append=, vname_append=, soefudge=) {
       bbox = [x(min), y(min), x(max), y(max)] + [-10, -10, 10, 10];
       x = y = [];
       ref = dirload(refdir, searchstr=ref_searchstr, verbose=0,
-         filter=dlfilter_bbox(bbox));
+         filter=dlfilter_bbox(bbox, mode=mode));
 
       if(!numberof(ref))
          continue;
 
-      data = extract_corresponding_data(data, ref, soefudge=soefudge);
+      if(method == "xyz")
+         data = extract_corresponding_xyz(data, ref, fudge=fudge, mode=mode,
+            native=native);
+      else
+         data = extract_corresponding_data(data, ref, soefudge=soefudge);
       ref = [];
 
       if(!numberof(data))
