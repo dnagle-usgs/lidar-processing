@@ -615,6 +615,103 @@ func extract_corresponding_data(data, ref, soefudge=) {
    return data(where(keep));
 }
 
+func extract_corresponding_xyz(data, ref, fudge=, mode=, native=) {
+/* DOCUMENT extracted = extract_corresponding_xyz(data, ref, fudge=, mode=,
+   native=)
+
+   This extracts points from "data" that exist in "ref".
+
+   Unlike extract_corresponding_data, which uses soe and rn, this function uses
+   the x, y, and z coordinates.
+
+   An example use of this function:
+
+      We have a variable named "old_mf" that contains manually filtered VEG__
+      data that had been processed using rapid trajectory pnav files. We have
+      another variable "new" that contains data for the same region that was
+      processed using precision trajectory pnav files, but has not yet been
+      filtered. If we do this:
+
+         new_mf = extract_corresponding_data(new, old_mf);
+
+      Then new_mf will contain point data from new, but will only contain those
+      points that were present in old_mf.
+
+   Another example:
+
+      We have a variable "fs" that contains first surface data and a variable
+      "be" that contains bare earth data. If we do this:
+
+         be = extract_corresponding_data(be, fs);
+         fs = extract_corresponding_data(fs, be);
+
+      Both variables are now restricted to those points that existed in both
+      original point clouds.
+
+   Parameters:
+      data: The source data. The return result will contain points from this
+         variable.
+      ref: The reference data. Points in "data" will only be kept if they are
+         found in "ref".
+
+   Options:
+      fudge= This is the amount of "fudge" allowed for xyz coordinates, in cm. The
+         default value is 0 cm. Changing this might be helpful if one of your
+         variables was recreated from XYZ or LAS data and seems to have lost
+         some coordinate resolution.
+            fudge=0        0cm, default
+      mode= The data mode to use for performing comparisons. Only the XYZ
+         coordinates from this mode will be used for matching up points.
+            mode="fs"      First surface, default
+      native= Specifies whether to use the "native" values from the structure
+         or not. Default is to use native values, which means integer
+         comparisons.
+            native=1       Attempt integer comparisons, default
+            native=0       Do not attempt integer comparisons
+
+   SEE ALSO: extract_corresponding_data, batch_extract_corresponding_data
+*/
+   default, fudge, 0;
+   default, mode, "fs";
+   default, native, 1;
+   local dx, dy, dz, rx, ry, rz;
+
+   data2xyz, data, dx, dy, dz, mode=mode, native=native;
+   data = data(msort(dx, dy, dz));
+   data2xyz, ref, rx, ry, rz, mode=mode, native=native;
+   ref = ref(msort(rx, ry, rz));
+
+   data2xyz, data, dx, dy, dz, mode=mode, native=native;
+   data2xyz, ref, rx, ry, rz, mode=mode, native=native;
+
+   keep = array(char(0), numberof(data));
+
+   i = j = 1;
+   ndata = numberof(data);
+   nref = numberof(ref);
+   while(i <= ndata && j <= nref) {
+      if(dx(i) < rx(j) - fudge) {
+         i++;
+      } else if(dx(i) > rx(j) + fudge) {
+         j++;
+      } else if(dy(i) < ry(j) - fudge) {
+         i++;
+      } else if(dy(i) > ry(j) + fudge) {
+         j++;
+      } else if(dz(i) < rz(j) - fudge) {
+         i++;
+      } else if(dz(i) > rz(j) + fudge) {
+         j++;
+      } else {
+         keep(i) = 1;
+         i++;
+         j++;
+      }
+   }
+
+   return data(where(keep));
+}
+
 func extract_unique_data(data, ref, soefudge=) {
 /* DOCUMENT extracted = extract_unique_data(data, ref, soefudge=)
    Extracts data that doesn't exist in ref. This is the opposite of
