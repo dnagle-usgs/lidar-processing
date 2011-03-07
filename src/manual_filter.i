@@ -662,3 +662,24 @@ func scale_be_to_bathy(data) {
    newbe = data2xyz(data, mode="fs") + delta;
    return xyz2data(newbe, data, mode="be");
 }
+
+func batch_scale_be_to_bathy(srcdir, outdir=, searchstr=) {
+/* DOCUMENT batch_scale_be_to_bathy, srcdir, outdir=, searchstr=
+   Runs scale_be_to_bathy in batch mode. Created files will end with _spol.pbd.
+   Variable names will have _spol appended. (spol stands for SPeed Of Light
+   correction.)
+*/
+   local vname;
+   default, searchstr, "*.pbd";
+   srcfiles = find(srcdir, glob=searchstr);
+   dstfiles = file_rootname(srcfiles) + "_spol.pbd";
+   if(!is_void(outdir))
+      dstfiles = file_join(outdir, filt_tail(dstfiles));
+
+   count = numberof(srcfiles);
+   for(i = 1; i <= count; i++) {
+      data = pbd_load(srcfiles(i), , vname);
+      data = scale_be_to_bathy(data);
+      pbd_save, dstfiles(i), vname+"_spol", data;
+   }
+}
