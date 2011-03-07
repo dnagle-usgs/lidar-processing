@@ -447,33 +447,35 @@ func __dlfilter_data_poly(&data, filter, state) {
 /* DOCUMENT __dlfilter_data_poly, data, filter, state;
    Support function for dlfilter_poly.
 */
-   idx = testPoly(filter.poly, data.east/100., data.north/100.);
+   data2xyz, data, x, y, mode=filter.mode;
+   idx = testPoly(filter.poly, unref(x), unref(y));
    if(numberof(idx))
       data = data(idx);
    else
       data = [];
 }
 
-func dlfilter_poly(poly, prev=, next=) {
-/* DOCUMENT filter = dlfilter_poly(poly, prev=, next=)
+func dlfilter_poly(poly, prev=, next=, mode=) {
+/* DOCUMENT filter = dlfilter_poly(poly, prev=, next=, mode=)
    Creates a filter for dirload that will filter using the given polygon.
 */
+   default, mode, "fs";
    if(dimsof(poly)(2) != 2)
       poly = transpose(poly);
    filter = h_new(
       files=h_new(function=__dlfilter_files_poly, poly=poly),
-      data=h_new(function=__dlfilter_data_poly, poly=poly)
+      data=h_new(function=__dlfilter_data_poly, poly=poly, mode=mode)
    );
    return dlfilter_merge_filters(filter, prev=prev, next=next);
 }
 
-func dlfilter_bbox(bbox, prev=, next=) {
-/* DOCUMENT filter = dlfilter_bbox(bbox, prev=, next=)
+func dlfilter_bbox(bbox, prev=, next=, mode=) {
+/* DOCUMENT filter = dlfilter_bbox(bbox, prev=, next=, mode=)
    Creates a filter for dirload that will filter using the given bounding box.
    bbox should be [x1, y1, x2, y2].
 */
    poly = [bbox([1,3,3,1,1]), bbox([2,2,4,4,2])];
-   return dlfilter_poly(poly, prev=prev, next=next);
+   return dlfilter_poly(poly, prev=prev, next=next, mode=mode);
 }
 
 // *** ALPS INTEGRATION ***
