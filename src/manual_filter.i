@@ -396,10 +396,10 @@ func filter_bounded_elv(eaarl, lbound=, ubound=, mode=, idx=) {
 
 func batch_extract_corresponding_data(src_searchstr, ref_searchstr, maindir,
 srcdir=, refdir=, outdir=, fn_append=, vname_append=, method=, soefudge=,
-fudge=, mode=, native=) {
+fudge=, mode=, native=, verbose=) {
 /* DOCUMENT batch_extract_corresponding_data, src_searchstr, ref_searchstr,
    maindir, srcdir=, refdir=, outdir=, fn_append=, vname_append=, method=,
-   soefudge=, fudge=, mode=, native=
+   soefudge=, fudge=, mode=, native=, verbose=
 
    This copies data from source (src) to output (out). It uses a given
    reference data (ref) to determine which points get copied.
@@ -453,7 +453,11 @@ fudge=, mode=, native=) {
       soefudge= Passed through to extract_corresponding_data.
       fudge= Passed through to extract_corresponding_xyz.
       mode= Passed through to extract_corresponding_xyz.
-      native= Passed through to extract_corresponding_exyz.
+      native= Passed through to extract_corresponding_xyz.
+      verbose= Allows user to set verbosity level.
+         verbose=0   Silent.
+         verbose=1   Progress (default)
+         verbose=2   Debug, very chatty
 
    Note on directory arguments/options:
       If you provide all three of srcdir=, refdir=, and outdir=, then you do
@@ -495,12 +499,14 @@ fudge=, mode=, native=) {
 
    SEE ALSO: extract_corresponding_data
 */
+   local ref, data;
    default, srcdir, maindir;
    default, refdir, maindir;
    default, outdir, maindir;
    default, fn_append, "extracted";
    default, vname_append, "ext";
    default, method, "data";
+   default, verbose, 1;
    if(strpart(fn_append, 1:1) != "_")
       fn_append = "_" + fn_append;
    if(strlen(vname_append) && strpart(vname_append, 1:1) != "_")
@@ -519,10 +525,15 @@ fudge=, mode=, native=) {
    timer_init, t0;
    tp = t0;
    for(i = 1; i <= numberof(files); i++) {
+      if(verbose >= 2)
+         write, format="%d: %s\n", i, file_tail(files(i));
       data = pbd_load(files(i), , vname);
 
-      if(!numberof(data))
+      if(!numberof(data)) {
+         if(verbose >= 2)
+            write, " No data found.";
          continue;
+      }
 
       data2xyz, data, x, y;
       // Include a 10m buffer, in case the points are located slightly
@@ -532,8 +543,11 @@ fudge=, mode=, native=) {
       ref = dirload(refdir, searchstr=ref_searchstr, verbose=0,
          filter=dlfilter_bbox(bbox, mode=mode));
 
-      if(!numberof(ref))
+      if(!numberof(ref)) {
+         if(verbose >= 2)
+            write, " No reference data found.";
          continue;
+      }
 
       if(method == "xyz")
          data = extract_corresponding_xyz(data, ref, fudge=fudge, mode=mode,
@@ -542,19 +556,26 @@ fudge=, mode=, native=) {
          data = extract_corresponding_data(data, ref, soefudge=soefudge);
       ref = [];
 
-      if(!numberof(data))
+      if(!numberof(data)) {
+         if(verbose >= 2)
+            write, " Extraction eliminated all points.";
          continue;
+      }
 
       outfile = file_join(outdir, file_relative(srcdir, files(i)));
       outfile = file_rootname(outfile) + fn_append + ".pbd";
       vname += vname_append;
       mkdirp, file_dirname(outfile);
       pbd_append, outfile, vname, data, uniq=1;
+      if(verbose >= 2)
+         write, format="  -> %s\n", file_tail(outfile);
       data = [];
 
-      timer_remaining, t0, sizes(i), sizes(0), tp, interval=10;
+      if(verbose)
+         timer_remaining, t0, sizes(i), sizes(0), tp, interval=10;
    }
-   timer_finished, t0;
+   if(verbose)
+      timer_finished, t0;
 }
 
 func extract_corresponding_data(data, ref, soefudge=) {
