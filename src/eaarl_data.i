@@ -382,7 +382,7 @@ func xyz2data(_x, &_y, _z, &data, mode=, native=) {
          z = long(unref(z) * 100);
    }
 
-   if(is_void(data)) {
+   if(is_void(working)) {
       if(anyof(["ba","de"] == mode)) {
          working = array(GEO, numberof(x));
       } else if(anyof(["be","ch","lint"] == mode)) {
@@ -391,10 +391,10 @@ func xyz2data(_x, &_y, _z, &data, mode=, native=) {
          working = array(FS, numberof(x));
       }
    } else {
-      if(is_struct(data))
-         working = array(data, numberof(x));
+      if(is_struct(working))
+         working = array(working, numberof(x));
       else
-         working = (data);
+         working = (working);
    }
 
    // Most data modes use east/north for x/y. Only bare earth and be intensity
