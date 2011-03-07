@@ -247,6 +247,58 @@ func navd88_geoids_available(void) {
       return [];
 }
 
+func navd88_geoid_file_coverage(lon, lat, geoid, gdata_dir=) {
+/* DOCUMENT files = navd88_geoid_file_coverage(lon, lat, geoid, gdata_dir=)
+   Given arrays of lon and lat and a geoid, this will return a list of geoid
+   files that cover each of the given points. The result will have the same
+   dimensions as lon. If a file couldn't be found to cover a point, it will be
+   set to string(0).
+*/
+   default, gdata_dir, file_join(alpsrc.geoid_data_root, "GEOID"+geoid);
+
+   if(lon(1) < 0)
+      lon = lon + 360.;
+
+   // Get list of candidate GEOID files
+   files = [];
+   grow, files, find(gdata_dir, glob="*.pbd");
+   grow, files, find(gdata_dir, glob="*.bin");
+   grow, files, find(gdata_dir, glob="*.geo");
+
+   if(!numberof(files)) {
+      write, "No GEOID files found, aborting.";
+      return [];
+   }
+
+   files = files(sort(file_tail(files)));
+
+   // Get bounds for each file
+   latmin = latmax = lonmin = lonmax = array(double, numberof(files));
+   for(i = 1; i <= numberof(files); i++) {
+      g = geoid_load(files(i));
+      latmin(i) = g.glamn;
+      lonmin(i) = g.glomn;
+      latmax(i) = latmin(i) + g.dla * (g.nrows - 1);
+      lonmax(i) = lonmin(i) + g.dlo * (g.ncols - 1);
+      g = [];
+   }
+
+   // Calculate the file to use for each point
+   which = array(string(0), dimsof(lon));
+
+   for(i = 1; i <= numberof(files); i++) {
+      need = where(!which);
+      if(!numberof(need))
+         break;
+      idx = data_box(lon(need), lat(need), lonmin(i), lonmax(i),
+         latmin(i), latmax(i));
+      if(numberof(idx))
+         which(need(idx)) = files(i);
+   }
+
+   return which;
+}
+
 func nad832navd88(lon, lat, &elv, gdata_dir=, geoid=, verbose=) {
 /* DOCUMENT navd882nad83, lon, lat, &elv, gdata_dir=, geoid=
    Converts data from NAD83 to NAVD88. lon and lat should be in degrees. elv
@@ -336,42 +388,10 @@ func nad832navd88offset(lon, lat, gdata_dir=, geoid=, verbose=, interpolator=) {
    if(lon(1) < 0)
       lon = lon + 360.;
 
-   // Get list of candidate GEOID files
-   files = [];
-   grow, files, find(gdata_dir, glob="*.pbd");
-   grow, files, find(gdata_dir, glob="*.bin");
-   grow, files, find(gdata_dir, glob="*.geo");
-
-   if(!numberof(files)) {
-      write, "No GEOID files found, aborting.";
-      return;
-   }
-
-   files = files(sort(file_tail(files)));
-
-   // Get bounds for each file
-   latmin = latmax = lonmin = lonmax = array(double, numberof(files));
-   for(i = 1; i <= numberof(files); i++) {
-      g = geoid_load(files(i));
-      latmin(i) = g.glamn;
-      lonmin(i) = g.glomn;
-      latmax(i) = latmin(i) + g.dla * (g.nrows - 1);
-      lonmax(i) = lonmin(i) + g.dlo * (g.ncols - 1);
-      g = [];
-   }
-
-   // Calculate the file to use for each point
-   which = array(short(0), numberof(lon));
-
-   for(i = 1; i <= numberof(files); i++) {
-      need = where(!which);
-      if(!numberof(need))
-         break;
-      idx = data_box(lon(need), lat(need), lonmin(i), lonmax(i),
-         latmin(i), latmax(i));
-      if(numberof(idx))
-         which(need(idx)) = i;
-   }
+   which = navd88_geoid_file_coverage(lon, lat, geoid, gdata_dir=gdata_dir);
+   // navd88_geoid_file_coverage spits out a warning, so we don't need to here.
+   // Just abort.
+   if(is_void(which)) return;
 
    // This will hold our return results
    offset = array(0., numberof(lon));
@@ -392,7 +412,7 @@ func nad832navd88offset(lon, lat, gdata_dir=, geoid=, verbose=, interpolator=) {
          write, format="grid file = %s\n", files(needed(i));
 
       w = where(which == needed(i));
-      g = geoid_load(files(needed(i)));
+      g = geoid_load(needed(i));
 
       // Figure out where we are in the lat/lon grid
       ix = 1 + (lon(w) - g.glomn) / g.dlo;
