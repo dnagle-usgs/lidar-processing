@@ -809,7 +809,7 @@ namespace eval mission {
         set continue yes
         if {[llength [missionday_list]] > 0} {
             set continue [tk_messageBox \
-                -icon warning -parent $dlg -type yesno \
+                -icon warning -type yesno \
                 -message "Changing the mission path will clear all currently\
                     defined mission days. Are you sure you want to continue?"]
         }
