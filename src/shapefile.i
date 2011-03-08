@@ -161,7 +161,6 @@ func plot_shape(shp, color=, width=) {
             }
          }
       }
-      ply;
 
       if(numberof(ply(1,)) > 1) {
          plg, ply(2,), ply(1,), marks=0, color=color, width=width;
