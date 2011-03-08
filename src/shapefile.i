@@ -521,6 +521,10 @@ func polygon_read(filename) {
          }
       }
    }
+   if(noneof(new_names)) {
+      new_names = swrite(format="%s_%d", file_rootname(file_tail(filename)),
+         indgen(numberof(new_names)));
+   }
    w = where(new_names);
    grow, _poly_polys, new_polys(w);
    grow, _poly_names, new_names(w);
