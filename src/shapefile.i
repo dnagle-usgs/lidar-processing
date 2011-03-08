@@ -506,10 +506,11 @@ func polygon_write(filename) {
    Primarily intended for transparent use from the Plotting Tool GUI.
 */
 // Original David Nagle 2008-10-06
-   extern _poly_polys;
-   extern _poly_names;
+   extern _poly_polys, _poly_names, _poly_sox;
    meta = _poly_names;
    meta = "NAME=" + meta + "\n";
+   if(_poly_sox)
+      meta += "LINE_WIDTH=3\nLINE_COLOR=RGB(255,0,0)\n";
    write_ascii_shapefile, _poly_polys, filename, meta=meta;
 }
 
