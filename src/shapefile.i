@@ -20,6 +20,9 @@ func read_ascii_shapefile(filename, &meta) {
    Each segment may optionally be preceeded by attribute information. Each
    attribute must be written as "KEY=VALUE". There may be any arbitrary number
    of attributes.
+
+   The blank lines between segments may be omitted if the segments are
+   separated by attribute information.
 */
 // Original David Nagle 2008-10-06
    f = open(filename, "r");
@@ -31,6 +34,15 @@ func read_ascii_shapefile(filename, &meta) {
    while(1) {
       line = rdline(f);
       if(strglob("*=*", line)) {
+         if(state == "COORD") {
+            shp_idx++;
+            if(shp_idx > numberof(shp)) {
+               grow, shp, shp;
+            }
+            shp(shp_idx) = &ary;
+            ary = [];
+            state = "TOP";
+         }
          if(state == "TOP" || state == "ATTR") {
             // do nothing with the data
             state = "ATTR";
