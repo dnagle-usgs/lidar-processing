@@ -775,6 +775,13 @@ namespace eval mission {
     }
 
     proc date_add {} {
+        if {[mission_path] eq ""} {
+            tk_messageBox \
+                -icon error -type ok \
+                -message "Please use \[Specify mission path...\] before adding\
+                        a mission day."
+            return
+        }
         set dlg [iwidgets::promptdialog $v::toplevel.#auto \
             -modality application \
             -title "Add new mission day" \
