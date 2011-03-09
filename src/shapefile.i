@@ -593,3 +593,23 @@ func polygon_cs2cs(src, dst) {
          _poly_polys(i) = &transpose([x,y]);
    }
 }
+
+func polygon_summarize {
+/* DOCUMENT polygon_summarize
+   Quick summary of defined polygons, including coordinate system, number of
+   points, and name.
+*/
+   extern _poly_polys, _poly_names;
+   sizes = array(string, numberof(_poly_names));
+   css = array(string, numberof(_poly_names));
+   for(i = 1; i <= numberof(_poly_polys); i++) {
+      ply = *_poly_polys(i);
+      sizes(i) = swrite(format="%d", numberof(ply(1,)));
+      css(i) = ply(1,1) < 1000 ? "geo" : "utm";
+   }
+   fmtlen = max(3, strlen(sizes)(max));
+   fmt = swrite(format="%%s %%%ds %%s\n", fmtlen);
+   write, format=fmt, "cs ", "pts", "name";
+   write, format=fmt, "---", array("-", fmtlen)(sum), array("-", strlen(_poly_names)(max))(sum);
+   write, format=fmt, css, sizes, _poly_names;
+}
