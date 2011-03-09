@@ -375,9 +375,34 @@ func polygon_acquire(closed) {
    return poly;
 }
 
+func polygon_check_llutm(ref, ply) {
+/* DOCUMENT polygon_check_llutm, ref, ply
+   Makes sure PLY is in the same coordinate system (UTM or GEO) as REF. If it's
+   not, it converts it. This check is only done is curzone is set and non-zero,
+   so be sure to define curzone.
 
-func polygon_add(poly, name) {
-/* DOCUMENT polygon_add, poly, name
+   Intended for use by polygon_add.
+*/
+   extern curzone;
+   if(curzone) {
+      if(ref(1,1) < 1000) {
+         if(ply(1,1) > 1000) {
+            ll = utm2ll(ply(2,), ply(1,), curzone);
+            ply(1,) = ll(,1);
+            ply(2,) = ll(,2);
+         }
+      } else {
+         if(ply(1,1) < 1000) {
+            u = ll2utm(ply(2,), ply(1,), force_zone=curzone);
+            ply(1,) = u(2,);
+            ply(2,) = u(1,);
+         }
+      }
+   }
+}
+
+func polygon_add(ply, name) {
+/* DOCUMENT polygon_add, ply, name
    Adds the specified polygon to private variables for later use.
 
    Primarily intended for transparent use from the Plotting Tool GUI.
@@ -386,16 +411,17 @@ func polygon_add(poly, name) {
    extern _poly_polys;
    extern _poly_names;
 
-   if(is_void(poly))
+   if(is_void(ply))
       return;
 
    if(is_void(_poly_polys)) {
       _poly_polys = array(pointer, 1);
       _poly_names = array(string, 1);
-      _poly_polys(1) = &poly;
+      _poly_polys(1) = &ply;
       _poly_names(1) = name;
    } else {
-      grow, _poly_polys, &poly;
+      polygon_check_llutm, *_poly_polys(1), ply;
+      grow, _poly_polys, &ply;
       grow, _poly_names, name;
    }
 }
