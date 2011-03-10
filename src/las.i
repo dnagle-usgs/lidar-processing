@@ -1305,11 +1305,19 @@ func las_header(las) {
    write, format="%-19s : %s\n", "Generating software", tmp;
 
    if(has_member(header, "flight_day_of_year")) {
-      soe = time2soe([header.flight_year, header.flight_day_of_year, 0, 0, 0, 0]);
-      write, format="%-19s : %s\n", "Flight date", soe2date(soe);
+      if(header.flight_year > 0 & header.flight_day_of_year > 0) {
+         soe = time2soe([header.flight_year, header.flight_day_of_year, 0, 0, 0, 0]);
+         write, format="%-19s : %s\n", "Flight date", soe2date(soe);
+      } else {
+         write, format="%-19s : %s\n", "Flight date", "Unspecified";
+      }
    } else if(has_member(header, "creation_day_of_year")) {
-      soe = time2soe([header.creation_year, header.creation_day_of_year, 0, 0, 0, 0]);
-      write, format="%-19s : %s\n", "Creation date", soe2date(soe);
+      if(header.creation_year > 0 && header.creation_day_of_year > 0) {
+         soe = time2soe([header.creation_year, header.creation_day_of_year, 0, 0, 0, 0]);
+         write, format="%-19s : %s\n", "Creation date", soe2date(soe);
+      } else {
+         write, format="%-19s : %s\n", "Creation date", "Unspecified";
+      }
    }
 
    write, "";
