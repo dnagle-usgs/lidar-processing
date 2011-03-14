@@ -129,7 +129,7 @@ func cam_to_soe(filename, offset=) {
 */
    default, offset, 0;
 
-   dmreg = "0[1-9]|1[02]";             // (date) month reg exp 01-12
+   dmreg = "0[1-9]|1[012]";            // (date) month reg exp 01-12
    ddreg = "0[1-9]|[12][0-9]|3[01]";   // (date) day reg exp 01-31
    dyreg = "[12][90][890123][0-9]";    // (date) year reg exp 1980-2039
    threg = "[01][0-9]|2[0-3]";         // (time) hour reg exp 00-23
