@@ -144,7 +144,7 @@ maxfiles=, cir_soe_offset=) {
    mkdirp, file_join(inpho_dir, "tiles");
 }
 
-func gather_cir_data(photo_dir, conf_file=, downsample=, cir_soe_offset=) {
+func gather_cir_data(photo_dir, conf_file=, downsample=, cir_soe_offset=, searchstr=) {
 /* DOCUMENT gather_cir_data(photo_dir, conf_file=, downsample=, cir_soe_offset=)
    This creates a Yeti hash that represents a set of CIR images, including
    per-image data interpolated from tans.
@@ -170,11 +170,12 @@ func gather_cir_data(photo_dir, conf_file=, downsample=, cir_soe_offset=) {
 */
 // Original David B. Nagle 2009-03-15
    default, downsample, 0;
+   default, searchstr, "*.jpg";
    if(!is_void(conf_file))
       mission_load, conf_file;
 
    write, format="Locating images...%s", "\n";
-   photo_files = find(photo_dir, glob="*-cir.jpg");
+   photo_files = find(photo_dir, glob=searchstr);
    if(!numberof(photo_files))
       error, "No files found.";
 
