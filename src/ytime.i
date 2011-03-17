@@ -492,6 +492,16 @@ func soe2gpssow(soe, &week) {
    return (soe - 315964800) % 604800;
 }
 
+func gpssow2soe(sow, refsoe) {
+/* DOCUMENT soe = gpssow2soe(sow, refsoe)
+   Given a GPS seconds-of-the-week and a reference seconds-of-the-epoch from
+   the same week, this will return the corresponding seconds-of-the-epoch
+   value.
+*/
+   offset = long((refsoe - 315964800) / 604800.) * 604800 + 315964800;
+   return offset + sow;
+}
+
 /*******************************************************************************
 * Plot alt vs sod and then compute the time and cost between two points
 * time_plot
