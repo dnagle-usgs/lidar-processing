@@ -959,8 +959,9 @@ func copy_cirdata_images_splitdirs(cirdata, imgdir, maxfiles) {
    }
 }
 
-func extract_against_pbd_data(easting, northing, pbd_dir, searchstr=) {
-/* DOCUMENT idx = extract_against_pbd_data(easting, north, pbd_dir, searchstr=)
+func extract_against_pbd_data(easting, northing, pbd_dir, searchstr=, mode=) {
+/* DOCUMENT idx = extract_against_pbd_data(easting, north, pbd_dir, searchstr=,
+   mode=)
 
    Returns an index into the coordinates for those points that are located
    within point cloud extent for the pbd data.
@@ -972,6 +973,7 @@ func extract_against_pbd_data(easting, northing, pbd_dir, searchstr=) {
 
    Options:
       searchstr= Default is "*.pbd", specifies which pbd data to use.
+      mode= Default is "be"
 
    The pbd files located are each considered individually, forming a convex
    hull around the file's points and marking any easting/northing coordinates
@@ -980,7 +982,9 @@ func extract_against_pbd_data(easting, northing, pbd_dir, searchstr=) {
    This might return false positives, but it shouldn't result in false
    negatives.
 */
+   local x, y;
    default, searchstr, "*.pbd";
+   default, mode, "be";
 
    pbd_files = find(pbd_dir, glob=searchstr);
    if(!numberof(pbd_files))
@@ -992,12 +996,9 @@ func extract_against_pbd_data(easting, northing, pbd_dir, searchstr=) {
    keep = array(0, numberof(easting));
    for(i = 1; i <= numberof(pbd_files); i++) {
       timer_tick, tstamp, i, numberof(pbd_files);
-      f = openb(pbd_files(i));
-      hull = convex_hull(
-         get_member(f, f.vname).east(1:0:2),
-         get_member(f, f.vname).north(1:0:2)
-      ) / 100.;
-      close, f;
+      data = pbd_load(pbd_files(i));
+      data2xyz, data, x, y, mode=mode;
+      hull = convex_hull(x, y);
       idx = testPoly2(hull, easting, northing);
       if(numberof(idx))
          keep(idx) = 1;
