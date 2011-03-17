@@ -2,9 +2,10 @@ require, "mosaic_biases.i";
 require, "eaarl.i";
 
 func cir_create_level_a_tiles(mission_dir, pbd_dir, pro_cir_dir, raw_cir_dir=,
-conf_file=, downsample=, scheme=, cir_soe_offset=) {
+conf_file=, downsample=, scheme=, cir_soe_offset=, mode=, searchstr=) {
 /* DOCUMENT cir_create_leve_a_tiles, mission_dir, pbd_dir, pro_cir_dir,
-   raw_cir_dir= conf_file=, downsample=, scheme=, cir_soe_offset=
+   raw_cir_dir=, conf_file=, downsample=, scheme=, cir_soe_offset=, mode=,
+   searchstr=
 
    Creates the Level A directory structure of images.
 
@@ -34,7 +35,9 @@ conf_file=, downsample=, scheme=, cir_soe_offset=) {
       cir_soe_offset= A time offset to apply to the raw SOE values read from
          the CIR images. This should incorporate trigger delay, latency, and
          any other time issues that may arise.
-            offset=1.12       Default offset is 1.12 seconds (per cir_to_soe)
+            offset=1.12       Default varies, see cir_to_soe for details
+      mode= Default is "be"
+      searchstr= Default is "*.pbd"
 */
    default, downsample, 2;
    default, scheme, "10k2k";
@@ -45,9 +48,12 @@ conf_file=, downsample=, scheme=, cir_soe_offset=) {
    else
       mission_load, conf_file;
 
-   copy_cirdata_tiles, filter_cirdata_by_pbd_data(gather_cir_data(raw_cir_dir,
-      downsample=downsample, cir_soe_offset=cir_soe_offset), pbd_dir), scheme,
-      pro_cir_dir;
+   copy_cirdata_tiles, filter_cirdata_by_pbd_data(
+         gather_cir_data(
+            raw_cir_dir, downsample=downsample, cir_soe_offset=cir_soe_offset,
+            searchstr=searchstr
+         ), pbd_dir, mode=mode
+      ), scheme, pro_cir_dir;
 }
 
 func prepare_cir_for_inpho(cirdata, pbd_dir, inpho_dir, defn_buffer=,
