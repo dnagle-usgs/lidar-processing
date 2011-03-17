@@ -406,7 +406,7 @@ func gen_jgws_rough(photo_dir, conf_file=, elev=, camera=, cir_soe_offset=) {
 }
 
 func gen_jgws_with_lidar(photo_dir, pbd_dir, conf_file=, elev=, camera=,
-max_adjustments=, min_improvement=, buffer=, update=, cir_soe_offset=) {
+max_adjustments=, min_improvement=, buffer=, update=, cir_soe_offset=, mode=) {
 /* DOCUMENT gen_jgws_with_lidar, photo_dir, pbd_dir, conf_file=, elev=,
    camera=, max_adjustments=, min_improvement=, buffer=, update=, cir_soe_offset=
 
@@ -442,6 +442,7 @@ max_adjustments=, min_improvement=, buffer=, update=, cir_soe_offset=) {
    default, min_improvement, 0.001;
    default, buffer, 200.;
    default, update, 0;
+   default, mode, "be";
 
    cirdata = gather_cir_data(photo_dir, conf_file=conf_file, downsample=1, cir_soe_offset=cir_soe_offset);
    jgw_files = file_rootname(cirdata.files) + ".jgw";
@@ -499,7 +500,7 @@ max_adjustments=, min_improvement=, buffer=, update=, cir_soe_offset=) {
       // Retrieve data for region
       write, "Loading PBD data for region...";
       pbd_data = dirload(pbd_dir, uniq=1, searchstr=searchstr,
-         filter=dlfilter_poly(hull));
+         filter=dlfilter_poly(hull, mode=mode));
 
       write, "Generating JGWs...";
       // Now run through and generate the JGWs for real
@@ -512,7 +513,8 @@ max_adjustments=, min_improvement=, buffer=, update=, cir_soe_offset=) {
 
          result = [];
          jgw_data = gen_jgw_with_lidar(cirdata.tans(idx(j)), pbd_dir, result,
-            camera=camera, elev=elev, buffer=buffer, pbd_data=pbd_data);
+            camera=camera, elev=elev, buffer=buffer, pbd_data=pbd_data,
+            mode=mode);
 
          if(h_has(result, "nolidar")) {
             write, format="Image %d: Skipped, no PBD data.\n", processed;
