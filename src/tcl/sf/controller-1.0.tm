@@ -611,6 +611,18 @@ snit::type ::sf::controller {
         }
     }
 
+    method {dump images} {} {
+        if {[$gui cget -token] eq ""} {
+            $gui prompt error \
+                    "You must load a dataset before it can be exported."
+        } else {
+            set path [$gui prompt directory]
+            if {$path ne ""} {
+                ::sf::tools::dump_model_images $model $path
+            }
+        }
+    }
+
     # update info
     #   Updates the GUI's -info.
     method {update info} {} {

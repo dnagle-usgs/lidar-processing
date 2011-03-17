@@ -387,6 +387,8 @@ snit::widget ::sf::gui {
         $mb.file add separator
         $mb.file add command -label "Export current image..." \
                 -command [mymethod controller export image]
+        $mb.file add command -label "Dump all images..." \
+                -command [mymethod controller dump images]
 
         $mb add cascade -label "Bookmarks" -menu [menu $mb.bookmarks]
         $self refresh bookmarks {}
