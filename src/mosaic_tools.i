@@ -1125,7 +1125,7 @@ func gen_jgw_with_lidar(ins, pbd_dir, &meta, camera=, mounting_bias=, searchstr=
 
       if(numberof(idx)) {
          old_data = jgw_data;
-         elev = interquartial_mean(z);
+         elev = interquartile_mean(z);
          jgw_data = gen_jgw(ins, elev, camera=camera);
          comparison = jgw_compare(old_data, jgw_data, camera=camera);
       } else {
