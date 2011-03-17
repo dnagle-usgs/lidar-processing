@@ -1070,14 +1070,16 @@ Number of flightlines: %d\n\
    }
 }
 
-func gen_jgw_with_lidar(ins, pbd_dir, &meta, camera=, mounting_bias=, searchstr=, elev=, pbd_data=, buffer=) {
+func gen_jgw_with_lidar(ins, pbd_dir, &meta, camera=, mounting_bias=, searchstr=, elev=, pbd_data=, buffer=, mode=) {
 /* DOCUMENT jgw = gen_jgw_with_lidar(ins, pbd_dir, &meta, camera=,
-   mounting_bias=, searchstr=, elev=, pbd_data=)
+   mounting_bias=, searchstr=, elev=, pbd_data=, mode=)
    Generates a JGW array for the given information.
 */
+   local idx, x, y, z;
    default, buffer, 100;
-   meta = h_new();
+   default, mode, "be";
    default, elev, 0.;
+   meta = h_new();
 
    orig_data = jgw_data = gen_jgw(ins, elev, camera=camera);
 
@@ -1100,16 +1102,18 @@ func gen_jgw_with_lidar(ins, pbd_dir, &meta, camera=, mounting_bias=, searchstr=
       inside = testPoly2(pbd_hull, jgwp(1,), jgwp(2,));
       if(numberof(inside) != numberof(jgwp(1,))) {
          jgw_hull = buffer_hull(convex_hull(jgw_poly(jgw_data)), buffer);
-         pbd_data = dirload(pbd_dir, verbose=0, uniq=1, searchstr=searchstr, filter=dlfilter_poly(jgw_hull));
+         pbd_data = dirload(pbd_dir, verbose=0, uniq=1, searchstr=searchstr, filter=dlfilter_poly(jgw_hull, mode=mode));
       }
 
       idx = [];
-      if(numberof(pbd_data))
-         idx = testPoly2(jgwp*100, pbd_data.east, pbd_data.north);
+      if(numberof(pbd_data)) {
+         data2xyz, pbd_data, x, y, z, mode=mode;
+         idx = testPoly2(jgwp, x, y);
+      }
 
       if(numberof(idx)) {
          old_data = jgw_data;
-         elev = median(pbd_data.elevation(idx))/100.;
+         elev = median(z);
          jgw_data = gen_jgw(ins, elev, camera=camera);
          comparison = jgw_compare(old_data, jgw_data, camera=camera);
       } else {
