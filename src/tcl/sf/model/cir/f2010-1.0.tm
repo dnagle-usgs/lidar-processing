@@ -104,7 +104,7 @@ snit::type ::sf::model::translator::cir::f2010 {
     }
 
     typemethod {file clean} fn {
-        scan [file tail $fn] $patterns(fmtjpg) Y M D h m
+        scan [file tail $fn] $patterns(fmtjpg) Y M D h m - -
         set outdir [format "%02d%02d" $h $m]
         return [file join $outdir [file tail $fn]]
     }
