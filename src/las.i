@@ -712,10 +712,10 @@ mode=, pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=) {
 
 func batch_las2pbd(dir_las, outdir=, searchstr=, format=, fakemirror=, rgbrn=,
 verbose=, pre_vname=, post_vname=, shorten_vname=, pre_fn=, post_fn=,
-shorten_fn=, update=, files=) {
+shorten_fn=, update=, files=, date=) {
 /* DOCUMENT batch_las2pbd, dir_las, outdir=, searchstr=, format=, fakemirror=,
    rgbrn=, verbose=, pre_vname=, post_vname=, shorten_vname=, pre_fn=,
-   post_fn=, shorten_fn=, update, files=
+   post_fn=, shorten_fn=, update, files=, date=
 
    Batch converts LAS files to PBD files.
 
@@ -786,6 +786,9 @@ shorten_fn=, update=, files=) {
          contain. Possible values:
             shorten_fn=0  - Disabled shortening (default)
             shorten_fn=1  - Enables shortening
+
+      date= The date the data was acquired, in "YYYY-MM-DD" format. Only used
+         if the timestamp in the data is in GPS seconds-of-the-week format.
 
    About variable names:
 
@@ -933,16 +936,17 @@ shorten_fn=, update=, files=) {
       }
       las2pbd, files_las(i), fn_pbd=files_pbd(i), vname=vnames(i),
          format=format, fakemirror=fakemirror, rgbrn=rgbrn,
-         verbose=pass_verbose;
+         verbose=pass_verbose, date=date;
 
       if(pass_verbose)
          write, "";
    }
 }
 
-func las2pbd(fn_las, fn_pbd=, format=, vname=, fakemirror=, rgbrn=, verbose=) {
+func las2pbd(fn_las, fn_pbd=, format=, vname=, fakemirror=, rgbrn=, verbose=,
+date=) {
 /* DOCUMENT las2pbd, fn_las, fn_pbd=, format=, vname=, fakemirror=, rgbrn=,
-   verbose=
+   verbose=, date=
 
    Converts a LAS file or stream to a PBD file.
 
@@ -986,15 +990,15 @@ func las2pbd(fn_las, fn_pbd=, format=, vname=, fakemirror=, rgbrn=, verbose=) {
    }
 
    las = las_open(fn_las);
-   data = fnc(las, fakemirror=fakemirror, rgbrn=rgbrn);
+   data = fnc(las, fakemirror=fakemirror, rgbrn=rgbrn, date=date);
    close, las;
    fnc = [];
 
    pbd_save, fn_pbd, vname, unref(data);
 }
 
-func las_to_alps(las, fakemirror=, rgbrn=) {
-/* DOCUMENT fs = las_to_alps(las, fakemirror=, rgbrn=)
+func las_to_alps(las, fakemirror=, rgbrn=, date=) {
+/* DOCUMENT fs = las_to_alps(las, fakemirror=, rgbrn=, date=)
 
    Converts LAS-format data to an array of LAS_ALPS.
 
@@ -1037,6 +1041,18 @@ func las_to_alps(las, fakemirror=, rgbrn=) {
    if(anyof(las.header.point_data_format_id == [1,3,4,5])) {
       if(v_maj == 1 && v_min > 0 && las_global_encoding(las.header).gps_soe) {
          data.soe = gps_epoch_to_utc_epoch(las.points.gps_time + 1e9);
+      } else if(
+         !is_void(date) || (
+            v_maj == 1 && v_min == 0 && las.header.flight_year &&
+            las.header.flight_day_of_year
+         )
+      ) {
+         if(is_void(date))
+            date_soe = time2soe([las.header.flight_year,
+               las.header.flight_day_of_year, 0, 0, 0, 0]);
+         else
+            date_soe = date2soe(date);
+         data.soe = gpssow2soe(las.points.gps_time, date_soe);
       } else {
          // This is wrong... needs to be adjusted for GPS week, but we don't
          // know which week the GPS week is!
@@ -1073,8 +1089,8 @@ func las_to_alps(las, fakemirror=, rgbrn=) {
    return data;
 }
 
-func las_to_fs(las, fakemirror=, rgbrn=) {
-/* DOCUMENT fs = las_to_fs(las, fakemirror=, rgbrn=)
+func las_to_fs(las, fakemirror=, rgbrn=, date=) {
+/* DOCUMENT fs = las_to_fs(las, fakemirror=, rgbrn=, date=)
 
    Converts LAS-format data to an array of FS.
 
@@ -1094,14 +1110,14 @@ func las_to_fs(las, fakemirror=, rgbrn=) {
       las_export_data: To write FS or other ALPS data to a LAS file
       las_open: Opens a filehandle to a LAS file
 */
-   alps = las_to_alps(las, fakemirror=fakemirror, rgbrn=rgbrn);
+   alps = las_to_alps(las, fakemirror=fakemirror, rgbrn=rgbrn, date=date);
    fs = struct_cast(alps, FS);
    fs.intensity = alps.fint;
    return fs;
 }
 
-func las_to_veg(las, fakemirror=, rgbrn=) {
-/* DOCUMENT veg = las_to_veg(las, fakemirror=, rgbrn=)
+func las_to_veg(las, fakemirror=, rgbrn=, date=) {
+/* DOCUMENT veg = las_to_veg(las, fakemirror=, rgbrn=, date=)
 
    Converts LAS-format data to an array of VEG__. The first and last return
    information will be identical.
@@ -1122,7 +1138,7 @@ func las_to_veg(las, fakemirror=, rgbrn=) {
       las_export_data: To write VEG__ or other ALPS data to a LAS file
       las_open: Opens a filehandle to a LAS file
 */
-   alps = las_to_alps(las, fakemirror=fakemirror, rgbrn=rgbrn);
+   alps = las_to_alps(las, fakemirror=fakemirror, rgbrn=rgbrn, date=date);
    return struct_cast(alps, VEG__);
 }
 
