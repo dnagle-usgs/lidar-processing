@@ -75,7 +75,7 @@ struct CAMERA_SPECS {
 }
 
 ///////////////////////////////////////////
-// MS4000 info
+// MS4000 info (CIR)
 ///////////////////////////////////////////
 ms4000_specs = CAMERA_SPECS();
 ms4000_specs.name = "ms4000";
@@ -88,6 +88,23 @@ ms4000_specs.sensor_width = 1600;
 ms4000_specs.sensor_height = 1199;
 ms4000_specs.pix_x = 7.4e-6; // 7.4 micron
 ms4000_specs.pix_y = 7.4e-6; // 7.4 micron
+
+
+///////////////////////////////////////////
+// Prosilica GE2040C info
+///////////////////////////////////////////
+// http://www.1stvision.com/cameras/sensor_specs/KAI-4021LongSpec.pdf
+ge2040c_specs = CAMERA_SPECS();
+ge2040c_specs.name = "ge2040c";
+ge2040c_specs.focal_length = 0.018;
+ge2040c_specs.ccd_x = 0.01667;
+ge2040c_specs.ccd_y = 0.01605;
+ge2040c_specs.ccd_xy = 7.4e-6;
+ge2040c_specs.trigger_delay = 0.;
+ge2040c_specs.sensor_width = 2048;
+ge2040c_specs.sensor_height = 2048;
+ge2040c_specs.pix_x = 7.4e-6; // 7.4 micron
+ge2040c_specs.pix_y = 7.4e-6; // 7.4 micron
 
 
 // Defaults for CIR imagery
