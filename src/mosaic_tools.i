@@ -676,8 +676,10 @@ func plot_jgw_data(jgws, color=) {
    }
 }
 
-func filter_cirdata_by_pbd_data(cirdata, pbd_dir, searchstr=) {
-/* DOCUMENT newcirdata = filter_cirdata_by_pbd_data(cirdata, pbd_dir, searchstr=)
+func filter_cirdata_by_pbd_data(cirdata, pbd_dir, searchstr=, mode=) {
+/* DOCUMENT newcirdata = filter_cirdata_by_pbd_data(cirdata, pbd_dir,
+   searchstr=, mode=)
+
    This will reduce the dataset represented by cirdata by only keeping those
    images that would fall in the areas covered by the lidar data in pbd_dir.
 
@@ -685,14 +687,15 @@ func filter_cirdata_by_pbd_data(cirdata, pbd_dir, searchstr=) {
 
    pbd_dir should be the path to a directory of PBD files.
 
-   searchstr= specifies a search string to use for locating the right PBD files in
-   the directory.
+   searchstr= specifies a search string to use for locating the right PBD files
+      in the directory.
+   mode= Default is "be"
 
    This will return a new cirdata Yeti hash.
 */
 // Original David B. Nagle 2009-04-13
    idx = extract_against_pbd_data(cirdata.tans.easting, cirdata.tans.northing,
-      pbd_dir, searchstr=searchstr);
+      pbd_dir, searchstr=searchstr, mode=mode);
    return filter_cirdata_by_index(cirdata, idx);
 }
 
