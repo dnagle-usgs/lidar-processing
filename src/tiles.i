@@ -338,8 +338,19 @@ qqprefix=) {
       "dtcell" --> cell tiles
 */
    default, buffer, 100;
-   names = utm2tile_names(east, north, zone, type, dtlength=dtlength,
-      dtprefix=dtprefix, qqprefix=qqprefix);
+   names = [];
+   if(buffer) {
+      for(i = -1; i <= 1; i++) {
+         for(j = -1; j <= 1; j++) {
+            grow, names, utm2tile_names(east + (i * buffer), north + (j * buffer),
+               zone, type, dtlength=dtlength, dtprefix=dtprefix, qqprefix=qqprefix);
+         }
+      }
+   } else {
+      names = utm2tile_names(east, north, zone, type, dtlength=dtlength,
+         dtprefix=dtprefix, qqprefix=qqprefix);
+   }
+   names = set_remove_duplicates(names);
    tiles = h_new();
    count = numberof(names);
    for(i = 1; i <= count; i++) {
