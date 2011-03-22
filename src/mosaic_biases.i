@@ -106,6 +106,12 @@ ge2040c_specs.sensor_height = 2048;
 ge2040c_specs.pix_x = 7.4e-6; // 7.4 micron
 ge2040c_specs.pix_y = 7.4e-6; // 7.4 micron
 
+// RGB on n111x
+ge2040c_rgb_bias_n5308f = CAMERA_MOUNTING_BIAS();
+ge2040c_rgb_bias_n5308f.name = "n5308f ge2040c rgb";
+ge2040c_rgb_bias_n5308f.x = 0.000;
+ge2040c_rgb_bias_n5308f.y = 0.220;
+ge2040c_rgb_bias_n5308f.z = 0.760;
 
 // Defaults for CIR imagery
 camera_specs = ms4000_specs;
