@@ -1,6 +1,490 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "eaarl.i";
 
+func polyfit_xyz_xyz(x, y, z, grid=, buf=, n=) {
+/* DOCUMENT polyfit_xyz_xyz(x, y, z, grid=, buf=, n=)
+   Given a set of XYZ points, this will return a new set of XYZ points where
+   each XY point in the original is polyfit within a grid cell to determine a
+   new Z value.
+
+   See polyfit_data for more details.
+*/
+   default, grid, 2.5;
+   default, buf, 1;
+   default, n, 3;
+
+   grid = double(grid);
+
+   // Calculate grid points
+   xgrid = long(x/grid);
+   ygrid = long(y/grid);
+
+   // Make a copy of z for output
+   zfit = noop(z);
+
+   // Figure out the x-columns
+   xgrid_uniq = set_remove_duplicates(xgrid);
+   xgrid_count = numberof(xgrid_uniq);
+
+   // iterate over x-columns
+   for(xgi = 1; xgi <= xgrid_count; xgi++) {
+      // Extract indices for x grid and bufding
+      xg = xgrid_uniq(xgi);
+      curx_grid = where(xgrid == xg);
+      if(buf)
+         curx_buf = where(xg-buf <= xgrid & xgrid <= xg+buf);
+      else
+         curx_buf = curx_grid;
+
+      // Extract values to avoid having to repeatedly index into data
+      ygrid_xg = ygrid(curx_grid);
+      ygrid_xb = ygrid(curx_buf);
+
+      // Figure out the y-rows
+      ygrid_uniq = set_remove_duplicates(ygrid_xg);
+      ygrid_count = numberof(ygrid_uniq);
+
+      // iterate over y-rows
+      for(ygi = 1; ygi <= ygrid_count; ygi++) {
+         // Extract indices for y grid and bufding
+         yg = ygrid_uniq(ygi);
+         cury_grid = where(ygrid_xg == yg);
+         if(buf)
+            cury_buf = where(yg-buf <= ygrid_xb & ygrid_xb <= yg+buf);
+         else
+            cury_buf = cury_grid;
+
+         // resolve indices
+         idx_grid = curx_grid(cury_grid);
+         idx_buf = curx_buf(cury_buf);
+
+         // Ensure we have threshhold points
+         if(numberof(idx_buf) < n)
+            continue;
+
+         // Polyfit
+         c = poly2_fit(z(idx_buf), x(idx_buf), y(idx_buf), 3);
+         zfit(idx_grid) = poly2(x(idx_grid), y(idx_grid), c);
+      }
+   }
+
+   return [x,y,zfit];
+}
+
+func polyfit_xyz_rnd(x, y, z, grid=, buf=, n=, pts=) {
+/* DOCUMENT polyfit_xyz_rnd(x, y, z, grid=, buf=, n=, pts=)
+   Given a set of XYZ points, this will return a new set of XYZ points that are
+   randomly distributed in each grid square, with elevations poly-fit to the
+   input points.
+
+   See polyfit_data for more details.
+*/
+   default, grid, 2.5;
+   default, buf, 1;
+   default, n, 3;
+   default, pts, 2;
+
+   grid = double(grid);
+
+   // Calculate grid points
+   xgrid = long(x/grid);
+   ygrid = long(y/grid);
+
+   // Figure out the x-columns
+   xgrid_uniq = set_remove_duplicates(xgrid);
+   xgrid_count = numberof(xgrid_uniq);
+
+   // Temporary storage for x results
+   xtmp = array(pointer, xgrid_count, 3);
+
+   // iterate over x-columns
+   for(xgi = 1; xgi <= xgrid_count; xgi++) {
+      // Extract indices for x grid and bufding
+      xg = xgrid_uniq(xgi);
+      curx_grid = where(xgrid == xg);
+      if(buf)
+         curx_buf = where(xg-buf <= xgrid & xgrid <= xg+buf);
+      else
+         curx_buf = curx_grid;
+
+      // Extract values to avoid having to repeatedly index into data
+      ygrid_xg = ygrid(curx_grid);
+      ygrid_xb = ygrid(curx_buf);
+
+      // Figure out the y-rows
+      ygrid_uniq = set_remove_duplicates(ygrid_xg);
+      ygrid_count = numberof(ygrid_uniq);
+
+      // Temporary storage for y results
+      ytmp = array(pointer, ygrid_count, 3);
+
+      // iterate over y-rows
+      for(ygi = 1; ygi <= ygrid_count; ygi++) {
+         // Extract indices for y grid and bufding
+         yg = ygrid_uniq(ygi);
+         cury_grid = where(ygrid_xg == yg);
+         if(buf)
+            cury_buf = where(yg-buf <= ygrid_xb & ygrid_xb <= yg+buf);
+         else
+            cury_buf = cury_grid;
+
+         // resolve indices
+         idx_buf = curx_buf(cury_buf);
+
+         // Ensure we have threshhold points
+         if(numberof(idx_buf) < n)
+            continue;
+
+         // Generate random points
+         rx = (xg + random(pts)) * grid;
+         ry = (yg + random(pts)) * grid;
+
+         // Polyfit
+         c = poly2_fit(z(idx_buf), x(idx_buf), y(idx_buf), 3);
+         rz = poly2(rx, ry, c);
+
+         ytmp(ygi,1) = &rx;
+         ytmp(ygi,2) = &ry;
+         ytmp(ygi,3) = &rz;
+         rx = ry = rz = [];
+      }
+
+      // Coalesce y results and put in temporary x storage
+      xtmp(xgi,1) = &merge_pointers(ytmp(,1));
+      xtmp(xgi,2) = &merge_pointers(ytmp(,2));
+      xtmp(xgi,3) = &merge_pointers(ytmp(,3));
+      ytmp = [];
+   }
+
+   // Coalesce x results
+   rx = merge_pointers(xtmp(,1));
+   ry = merge_pointers(xtmp(,2));
+   rz = merge_pointers(xtmp(,3));
+   xtmp = [];
+
+   return [rx,ry,rz];
+}
+
+func polyfit_xyz_grd(x, y, z, grid=, buf=, n=, pts=) {
+/* DOCUMENT polyfit_xyz_grd(x, y, z, grid=, buf=, n=, pts=)
+   Given a set of XYZ points, this will return a new set of XYZ points that are
+   distributed in a regular grid in each grid square, with elevations poly-fit
+   to the input points.
+
+   See polyfit_data for more details.
+*/
+   default, grid, 250;
+   default, buf, 1;
+   default, n, 3;
+   default, pts, 2;
+
+   grid = double(grid);
+
+   // Calculate grid points
+   xgrid = long(x/grid);
+   ygrid = long(y/grid);
+
+   // Figure out the x-columns
+   xgrid_uniq = set_remove_duplicates(xgrid);
+   xgrid_count = numberof(xgrid_uniq);
+
+   // Temporary storage for x results
+   xtmp = array(pointer, xgrid_count, 3);
+
+   // Determine offsets to add to each grid cell to generate points
+   tmp = 1./pts/2.;
+   off = span(tmp, 1-tmp, pts);
+   xoff = array(off, pts)(*);
+   yoff = transpose(array(off, pts))(*);
+   tmp = off = [];
+
+   // iterate over x-columns
+   for(xgi = 1; xgi <= xgrid_count; xgi++) {
+      // Extract indices for x grid and bufding
+      xg = xgrid_uniq(xgi);
+      curx_grid = where(xgrid == xg);
+      if(buf)
+         curx_buf = where(xg-buf <= xgrid & xgrid <= xg+buf);
+      else
+         curx_buf = curx_grid;
+
+      // Extract values to avoid having to repeatedly index into data
+      ygrid_xg = ygrid(curx_grid);
+      ygrid_xb = ygrid(curx_buf);
+
+      // Figure out the y-rows
+      ygrid_uniq = set_remove_duplicates(ygrid_xg);
+      ygrid_count = numberof(ygrid_uniq);
+
+      // Temporary storage for y results
+      ytmp = array(pointer, ygrid_count, 3);
+
+      // iterate over y-rows
+      for(ygi = 1; ygi <= ygrid_count; ygi++) {
+         // Extract indices for y grid and bufding
+         yg = ygrid_uniq(ygi);
+         cury_grid = where(ygrid_xg == yg);
+         if(buf)
+            cury_buf = where(yg-buf <= ygrid_xb & ygrid_xb <= yg+buf);
+         else
+            cury_buf = cury_grid;
+
+         // resolve indices
+         idx_buf = curx_buf(cury_buf);
+
+         // Ensure we have threshhold points
+         if(numberof(idx_buf) < n)
+            continue;
+
+         // Generate random points
+         gx = (xg + xoff) * grid;
+         gy = (yg + yoff) * grid;
+
+         // Polyfit
+         c = poly2_fit(z(idx_buf), x(idx_buf), y(idx_buf), 3);
+         gz = poly2(gx, gy, c);
+
+         ytmp(ygi,1) = &gx;
+         ytmp(ygi,2) = &gy;
+         ytmp(ygi,3) = &gz;
+         gx = gy = gz = [];
+      }
+
+      // Coalesce y results and put in temporary x storage
+      xtmp(xgi,1) = &merge_pointers(ytmp(,1));
+      xtmp(xgi,2) = &merge_pointers(ytmp(,2));
+      xtmp(xgi,3) = &merge_pointers(ytmp(,3));
+      ytmp = [];
+   }
+
+   // Coalesce x results
+   gx = merge_pointers(xtmp(,1));
+   gy = merge_pointers(xtmp(,2));
+   gz = merge_pointers(xtmp(,3));
+   xtmp = [];
+
+   return [gx,gy,gz];
+}
+
+func polyfit_data(data, mode=, method=, grid=, buf=, n=, pts=) {
+/* DOCUMENT polyfit_data(data, mode=, method=, grid=, buf=, n=, pts)
+   Given ALPS data, this will return a new set of ALPS data that have had a
+   polyfit algorithm applied.
+
+   See batch_polyfit_data for more details.
+*/
+   default, mode, "fs";
+   default, method, "xyz";
+   default, grid, 2.5;
+   default, buf, 1;
+   default, n, 3;
+   default, pts, 2;
+
+   local x, y, z;
+   data2xyz, data, x, y, z, mode=mode;
+
+   if(method == "xyz") {
+      fit = polyfit_xyz_xyz(x, y, z, grid=grid, buf=buf, n=n);
+      if(is_numerical(data))
+         return fit;
+      return xyz2data(fit, data, mode=mode);
+   }
+
+   if(method == "random")
+      fnc = polyfit_xyz_rnd;
+   else if(method == "grid")
+      fnc = polyfit_xyz_grd;
+   else
+      error, "Unknown method=.";
+
+   fit = fnc(x, y, z, grid=grid, buf=buf, n=n, pts=pts);
+
+   if(is_numerical(data))
+      return fit;
+   return xyz2data(fit, structof(data), mode=mode);
+}
+
+func batch_polyfit_data(dir, outdir=, files=, searchstr=, update=, mode=,
+method=, grid=, buf=, n=, pts=, verbose=) {
+/* DOCUMENT batch_polyfit_data, dir, outdir=, files=, searchstr=, update=,
+   mode=, method=, grid=, buf=, n=, pts=, verbose=
+
+   Runs in batch mode over a set of files and apply a polyfit algorithm to
+   each.
+
+   Parameter:
+      dir: The directory in which to find files to polyfit.
+
+   Options:
+      outdir= Output directory for files. If omitted, they are created
+         alongside the originals.
+      files= Specifies an array of files to convert. If provided, "dir" is
+         ignored.
+      searchstr= A search string specifying the files to convert. Ignored if
+         "files=" specified.
+            searchstr="*.pbd"    Default
+      update= Specifies whether to skip existing output files.
+            update=0    Replace existing files (default)
+            update=1    Skip existing files
+      mode= Data mode to run in.
+            mode="fs"   Default
+            mode="be"
+            mode="ba"
+      method= Polyfit algorithm to use.
+            method="xyz"   In-place polyfit using x,y of original data, default
+            method="grid"  Polyfit to a regularly spaced grid of points
+            method="random"   Randomly select locations to polyfit
+      grid= A size in meters specifying what size grid cells to put on the
+         data. The polyfitting will operate on points within each of these grid
+         cells.
+            grid=2.5    2.5 meters, default
+      buf= An integer specifying how many adjacent grid cells should be used
+         for the polyfit model calculation. If buf=1, then 1 additional layer
+         of grid cells is used, meaning that a 2.5m x 2.5m grid cell will have
+         its poly model determined based on the surrounding 7.5m x 7.5m region
+         (3x3 cells). This must be a non-negative integer.
+            buf=1    1 layer of buffer cells, default
+            buf=0    No buffer cells
+      n= The number of points that must be present within the buffer region in
+         order to construct a poly model. If fewer points are found, no poly
+         models is created. For method="xyz", the original point will be left
+         unmodified. For method="grid" and method="random", that grid cell will
+         receive no points.
+            n=3      3 points, default
+      pts= Parameter that specifies how many points to add. For method="xyz",
+         this parameter is ignored. For method="random", this many points are
+         added for each grid cell. For method="grid", a grid of PTS x PTS will
+         be added for each grid cell (so the number of points added is the
+         square of PTS).
+            pts=2    Default. 2 random points, or a 2x2 grid of points.
+      verbose= Specifies whether to give progress output.
+            verbose=1   Display progress, default
+            verbose=0   Be quiet
+
+   Output files:
+      The output files are named in a way that reflects the parameters used.
+      Examples below are based on a file with an original name of ORIGINAL.pbd.
+
+      For method="xyz", output files will have a name like this:
+         ORIGINAL_pfz_g250_b1_n3.pbd
+      This means:
+         pfz - Poly Fit using xyZ method
+         g250 - 2.50m grid cell
+         b1 - 1 buffer layer
+         n3 - 3 points minimum for polyfit
+
+      For method="random", output files will have a name like this:
+         ORIGINAL_pfr_g250_b1_n3_p2.pbd
+      This means:
+         pfr - Poly Fit using Random method
+         g250 - 2.50m grid cell
+         b1 - 1 buffer layer
+         n3 - 3 points minimum for polyfit
+         p2 - 2 points created per grid cell
+
+      For method="grid", output files will have a name like this:
+         ORIGINAL_pfg_g250_b1_n3_p2.pbd
+      This means:
+         pfg - Poly Fit using Grid method
+         g250 - 2.50m grid cell
+         b1 - 1 buffer layer
+         n3 - 3 points minimum for polyfit
+         p2 - 2x2 points created per grid cell
+
+      Variable names will have a simple suffix added:
+         VNAME_pfz  for method="xyz"
+         VNAME_pfr  for method="random"
+         VNAME_pfg  for method="grid"
+*/
+   default, searchstr, "*.pbd";
+   default, mode, "fs";
+   default, method, "xyz";
+   default, grid, 2.5;
+   default, buf, 1;
+   default, n, 3;
+   default, pts, 2;
+   default, verbose, 1;
+
+   if(is_void(files))
+      files = find(dir, glob=searchstr);
+
+   outfiles = file_rootname(files);
+   if(!is_void(outdir))
+      outfiles = file_join(outdir, file_tail(outfiles));
+   if(method == "xyz") {
+      outfiles += swrite(format="_pfz_g%d_b%d_n%d.pbd", long(grid*100+.5),
+         long(buf), long(n));
+      suffix = "_pfz";
+   } else {
+      if(method == "random")
+         pf = "r";
+      else if(method == "grid")
+         pf = "g";
+      else
+         error, "Unknown method";
+      outfiles += swrite(format="_pf%s_g%d_b%d_n%d_p%d.pbd", pf,
+         long(grid*100+.5), long(buf), long(n), long(pts));
+      suffix = "_pf" + pf;
+   }
+
+   if(update) {
+      exists = file_exists(outfiles);
+      if(allof(exists)) {
+         if(verbose)
+            write, "All output files exist, aborting.";
+         return;
+      }
+      if(anyof(exists)) {
+         if(verbose)
+            write, format=" Skipping %d files that already exist\n",
+               numberof(where(exists));
+         w = where(!exists);
+         files = files(w);
+         outfiles = outfiles(w);
+         w = [];
+      }
+   }
+
+   if(numberof(files) > 1)
+      sizes = double(file_size(files))(cum)(2:);
+   else
+      sizes = file_size(files);
+
+   local data, vname;
+   t0 = tp = array(double, 3);
+   timer, t0;
+
+   for(i = 1; i <= numberof(files); i++) {
+      data = pbd_load(files(i), , vname);
+
+      if(!numberof(data)) {
+         if(verbose)
+            write, format=" Skipping %s, contained no data...\n",
+               file_tail(files(i));
+         continue;
+      }
+
+      data = polyfit_data(unref(data), mode=mode, method=method, grid=grid,
+         buf=buf, n=n, pts=pts);
+
+      if(!numberof(data)) {
+         if(verbose)
+            write, format=" Skipping %d, poly fit removed all data...\n",
+               file_tail(files(i));
+         continue;
+      }
+
+      vname += suffix;
+      pbd_save, outfiles(i), vname, data;
+
+      if(verbose)
+         timer_remaining, t0, sizes(i), sizes(0), tp, interval=10;
+   }
+
+   if(verbose)
+      timer_finished, t0;
+}
+
 func polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, wbuf=, gridmode=,
 ndivide=) {
 /* DOCUMENT polyfit_eaarl_pts(eaarl, wslide=, mode=, boxlist=, wbuf=,
