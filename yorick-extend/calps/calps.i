@@ -164,3 +164,17 @@ extern _yn88_interp_spline2d;
    void n88_interp_spline2d(double *result, double *x, double *y, long count,
    double *f, long fxcount, long fycount)
 */
+
+// *** defined in set.c ***
+
+extern _yset_intersect_long;
+/* PROTOTYPE
+   void set_intersect_long(long *result, long *A, long An, long *B, long Bn,
+   long flag)
+*/
+
+extern _yset_intersect_double;
+/* PROTOTYPE
+   void set_intersect_double(long *result, double *A, long An, double *B,
+   long Bn, long flag, double delta)
+*/

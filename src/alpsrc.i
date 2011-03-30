@@ -46,7 +46,7 @@ func alpsrc_load(void) {
    alpsrc = h_clone(__alpsrc_defaults);
    __alpsrc_load_and_merge, alpsrc, "/etc/alpsrc";
    __alpsrc_load_and_merge, alpsrc, "~/.alpsrc";
-   __alpsrc_load_and_merge, alpsrc, ".alpsrc";
+   __alpsrc_load_and_merge, alpsrc, "./.alpsrc";
 }
 
 func __alpsrc_load_and_merge(&hash, fn) {

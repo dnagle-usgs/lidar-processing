@@ -30,3 +30,5 @@ _yll2utm = [];
 _yutm2ll = [];
 calps_n88_interp_qfit2d = [];
 calps_n88_interp_spline2d = [];
+_yset_intersect_long = [];
+_yset_intersect_double = [];

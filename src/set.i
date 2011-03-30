@@ -40,51 +40,132 @@ func set_intersection(A, B, idx=, delta=) {
 */
    default, idx, 0;
    default, delta, 0;
+   return _set_intersection_master(A, B, 1, idx, delta);
+}
 
+func set_difference(A, B, idx=, delta=) {
+/* DOCUMENT set_difference(A, B, idx=, delta=)
+
+   Returns the difference of the sets represented by A and B.
+
+   The difference of A - B is the set of all elements that occur in A that do
+   not occur in B.
+
+   The elements of set_difference(a,b) and set_difference(b,a) will usually be
+   completely different.
+
+   To obtain a set S's complement when S is a subset of X, use
+   set_difference(X,S).
+
+   Options:
+
+      idx= Set to 1 and the index of the difference set into A will be returned
+         instead of the elements.
+
+      delta= If provided, this provides the range over which values are
+         considered equal, useful when dealing with floats and doubles.
+*/
+   default, idx, 0;
+   default, delta, 0;
+   return _set_intersection_master(A, B, 0, idx, delta);
+}
+
+func _set_intersection_master(A, B, flag, idx, delta) {
+/* DOCUMENT _set_intersection_master(A, B, flag, idx, delta)
+   Master function for set_intersection and set_difference. See
+   set_intersection or set_difference for explanation of parameters.
+
+   FLAG should be 0 for difference and 1 for intersection.
+
+   Depending on input and on available functions, this will call one of the
+   following:
+      _yset_intersect_double
+      _yset_intersect_long
+      _set_intersect_generic
+      _set_intersect_delta
+*/
    // Trivial case
    if(! numberof(A) || ! numberof(B))
       return [];
 
    aw = set_remove_duplicates(A, idx=1);
+   A = A(aw);
    B = set_remove_duplicates(B);
    an = numberof(aw);
    bn = numberof(B);
    ai = bi = 1;
-   C = array(short(0), numberof(aw));
-   if(delta) {
-      while(ai <= an && bi <= bn) {
-         if(abs(A(aw(ai)) - B(bi)) <= delta) {
-            C(ai) = 1;
-            ai++;
-            bi++;
-         } else {
-            if(A(aw(ai)) < B(bi))
-               ai++;
-            else
-               bi++;
-         }
+   C = array(long(!flag), numberof(aw));
+   if(
+      is_numerical(A) && is_numerical(B) && is_func(_yset_intersect_long) &&
+      is_func(_yset_intersect_double)
+   ) {
+      if(delta || is_real(A) || is_real(B)) {
+         if(typeof(A) != "double")
+            A = double(A);
+         if(typeof(B) != "double")
+            B = double(B);
+         _yset_intersect_double, C, A, an, B, bn, flag, double(delta);
+      } else {
+         if(typeof(A) != "long")
+            A = long(A);
+         if(typeof(B) != "long")
+            B = long(B);
+         _yset_intersect_long, C, A, an, B, bn, flag;
       }
    } else {
-      while(ai <= an && bi <= bn) {
-         if(A(aw(ai)) == B(bi)) {
-            C(ai) = 1;
-            ai++;
-            bi++;
-         } else {
-            if(A(aw(ai)) < B(bi))
-               ai++;
-            else
-               bi++;
-         }
+      if(delta) {
+         _set_intersect_delta, C, A, an, B, bn, flag, delta;
+      } else {
+         _set_intersect_generic, C, A, an, B, bn, flag;
       }
    }
    index = where(C);
    if(idx)
       return aw(index);
    if(numberof(index))
-      return A(aw(index))
+      return A(index);
    else
       return [];
+}
+
+func _set_intersect_generic(C, A, An, B, Bn, flag) {
+/* DOCUMENT _set_intersect_generic, C, A, An, B, Bn, flag;
+   Helper for _set_intersect_master suitable for using on any input that can be
+   compared element-by-element.
+*/
+   ai = bi = 1;
+   while(ai <= an && bi <= bn) {
+      if(A(ai) == B(bi)) {
+         C(ai) = flag;
+         ai++;
+         bi++;
+      } else {
+         if(A(ai) < B(bi))
+            ai++;
+         else
+            bi++;
+      }
+   }
+}
+
+func _set_intersect_delta(result, A, An, B, Bn, flag, delta) {
+/* DOCUMENT _set_intersect_delta, C, A, An, B, Bn, flag, delta;
+   Helper for _set_intersect_master suitable for using on any input that can be
+   treated as numbers.
+*/
+   ai = bi = 1;
+   while(ai <= an && bi <= bn) {
+      if(abs(A(ai) - B(bi)) <= delta) {
+         C(ai) = flag;
+         ai++;
+         bi++;
+      } else {
+         if(A(ai) < B(bi))
+            ai++;
+         else
+            bi++;
+      }
+   }
 }
 
 func set_intersect3(A, B) {
@@ -120,54 +201,6 @@ func set_intersect3(A, B) {
    return result;
 }
 
-func set_difference(A, B, idx=, delta=) {
-/* DOCUMENT set_difference(A, B, idx=, delta=)
-
-   Returns the difference of the sets represented by A and B.
-   
-   The difference of A - B is the set of all elements that occur in A that do
-   not occur in B.
-
-   The elements of set_difference(a,b) and set_difference(b,a) will usually be
-   completely different.
-
-   To obtain a set S's complement when S is a subset of X, use
-   set_difference(X,S).
-
-   Options:
-
-      idx= Set to 1 and the index of the difference set into A will be returned
-         instead of the elements.
-
-      delta= If provided, this provides the range over which values are
-         considered equal, useful when dealing with floats and doubles.
-*/
-   default, idx, 0;
-   default, delta, 0;
-
-   // Trivial cases
-   if(! numberof(A))
-      return [];
-   if(! numberof(B))
-      return idx ? indgen(numberof(A)) : A;
-
-   C = array(1, numberof(A));
-   if(delta)
-      for(i = 1; i <= numberof(B); i++)
-         C &= (abs(A - B(i)) > delta);
-   else
-      for(i = 1; i <= numberof(B); i++)
-         C &= (A != B(i));
-   index = where(C);
-
-   if(idx)
-      return index;
-   if(numberof(index))
-      return A(index);
-   else
-      return [];
-}
-
 func set_symmetric_difference(A, B, delta=) {
 /* DOCUMENT set_symmetric_difference(A, B, delta=)
 
@@ -175,11 +208,11 @@ func set_symmetric_difference(A, B, delta=) {
 
    The symmetric difference of A and B is all elements that occur in A or that
    occur in B, but that do not occur in both A and B.
-   
+
    The elements of set_symmetric_difference(a,b) and
    set_symmetric_difference(b,a) will be the same, but the arrays may not be
    ordered the same.
-   
+
    Options:
 
       delta= If provided, this provides the range over which values are
@@ -210,9 +243,9 @@ func set_cartesian_product(A, B) {
 
    The cartesian product of A and B is the set of all ordered pairs [X,Y] where
    X is a member of A and Y is a member of B.
-   
+
    The returned array will be two-dimensional.
-   
+
    If,   cp = set_cartesian_product(a,b);
    Then, cp(,1) is the values from a
          cp(,2) is the values from b
@@ -253,25 +286,16 @@ func set_remove_duplicates(A, idx=, delta=) {
    // Eliminate any dimensionality
    A = unref(A)(*);
 
-   // Eliminate duplicates in the initial sequence. Valuable when there are a
-   // large number of items that take a long time to sort, especially with
-   // strings.
-   seq = where(grow([1n], A(:-1) != A(2:)));
-
-   // If there's only one item, we're done!
-   if(numberof(seq) == 1)
-      return idx ? seq : A(seq);
-
    // Sort them
-   srt = sort(A(seq));
+   srt = sort(A);
 
    // Eliminate duplicates in the sorted sequence
-   unq = where(grow([1n], A(seq)(srt)(:-1) != A(seq)(srt)(2:)));
+   unq = where(grow([1n], A(srt)(:-1) != A(srt)(2:)));
 
    // If they want indices, we want to index into an index list instead of A
    if(idx) A = indgen(numberof(unref(A)));
 
-   return A(seq)(srt)(unq);
+   return A(srt)(unq);
 }
 
 func set_remove_duplicates_delta(A, delta=, idx=) {
@@ -313,7 +337,7 @@ func set_remove_duplicates_string(A, idx=) {
 /* DOCUMENT set_remove_duplicates_string(A, idx=)
    Returns the set A with its duplicate elements removed. The returned list
    will also be sorted.
-   
+
    Note that A *must* be strings. Anything else will cause an error.
 
    If idx=1, then the indices will be returned rather than the values.
