@@ -572,8 +572,9 @@ func determine_gps_time_correction(fn, verbose=) {
       if(is_void(gps_time_correction) || gps_time_correction != correction) {
          gps_time_correction = correction;
          if(verbose) {
-            write, format="*** NOTE: gps_time_correction is now set to %.1f seconds ***\n", gps_time_correction;
-      }
+            write, format=" *** NOTE: gps_time_correction is now set to %.1f seconds\n", gps_time_correction;
+            write, format=" ***       based on detected date: %s\n", ymd;
+         }
       }
    } else if(verbose && is_void(gps_time_correction)) {
       write, "*** NOTE: gps_time_correction could not be set!";
