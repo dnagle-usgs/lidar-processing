@@ -88,8 +88,13 @@ func _set_intersection_master(A, B, flag, idx, delta) {
    if(! numberof(A) || ! numberof(B))
       return [];
 
-   aw = set_remove_duplicates(A, idx=1);
-   A = A(aw);
+   if(is_scalar(A)) {
+      aw = [1];
+      A = [A];
+   } else {
+      aw = set_remove_duplicates(A, idx=1);
+      A = A(aw);
+   }
    B = set_remove_duplicates(B);
    an = numberof(aw);
    bn = numberof(B);
