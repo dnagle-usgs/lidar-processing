@@ -100,16 +100,8 @@ func _set_intersection_master(A, B, flag, idx, delta) {
       is_func(_yset_intersect_double)
    ) {
       if(delta || is_real(A) || is_real(B)) {
-         if(typeof(A) != "double")
-            A = double(A);
-         if(typeof(B) != "double")
-            B = double(B);
          _yset_intersect_double, C, A, an, B, bn, flag, double(delta);
       } else {
-         if(typeof(A) != "long")
-            A = long(A);
-         if(typeof(B) != "long")
-            B = long(B);
          _yset_intersect_long, C, A, an, B, bn, flag;
       }
    } else {
