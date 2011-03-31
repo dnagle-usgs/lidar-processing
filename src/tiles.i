@@ -391,11 +391,11 @@ func partition_type_summary(north, east, zone, buffer=, schemes=) {
 }
 
 func save_data_to_tiles(data, zone, dest_dir, scheme=, mode=, suffix=, buffer=,
-shorten=, flat=, uniq=, overwrite=, verbose=, split_zones=, split_days=,
-day_shift=, dtlength=, dtprefix=, qqprefix=) {
+flat=, uniq=, overwrite=, verbose=, split_zones=, split_days=, day_shift=,
+dtlength=, dtprefix=, qqprefix=) {
 /* DOCUMENT save_data_to_tiles, data, zone, dest_dir, scheme=, mode=, suffix=,
-   buffer=, shorten=, flat=, uniq=, overwrite=, verbose=, split_zones=,
-   split_days=, day_shift=, dtlength=, dtprefix=, qqprefix=
+   buffer=, flat=, uniq=, overwrite=, verbose=, split_zones=, split_days=,
+   day_shift=, dtlength=, dtprefix=, qqprefix=
 
    Given an array of data (which must be in an ALPS data structure such as
    VEG__) and a scalar or array of zone corresponding to it, this will create
@@ -424,11 +424,6 @@ day_shift=, dtlength=, dtprefix=, qqprefix=) {
          named (tile-name)_(suffix).pbd. (Without the parentheses.)
       buffer= Specifies a buffer to include around each tile, in meters.
          Defaults to 100.
-      shorten= By default (shorten=0), the long form of dt, it, and itdt tile
-         names will be used. If shorten=1, the short forms will be used. This
-         is shorthand for dtlength settings:
-            shorten=0   -->   dtlength="long"
-            shorten=1   -->   dtlength="short"
       flat= If set to 1, then no directory structure will be created. Instead,
          all files will be created directly into dest_dir.
       uniq= With the default value of uniq=1, only unique data points
@@ -464,7 +459,7 @@ day_shift=, dtlength=, dtprefix=, qqprefix=) {
             day_shift=-28800     -8 hours; PST and AKDT time
             day_shift=-32400     -9 hours; AKST time
       dtlength= Specifies whether to use the short or long form for data tile
-         (and related) schemes. By default, this is set based on shorten=.
+         (and related) schemes.
             dtlength="long"      Use long form: t_e234000_n3456000_15
             dtlength="short"     Use short form: e234_n3456_15
       dtprefix= Specifies whether to include the type prefix for data tile (and
@@ -492,7 +487,6 @@ day_shift=, dtlength=, dtprefix=, qqprefix=) {
    default, split_zones, scheme == "qq";
    default, split_days, 0;
    default, day_shift, 0;
-   default, dtlength, (shorten ? "short" : "long");
 
    aliases = h_new("10k2k", "itdt", "2k", "dt", "10k", "it");
    if(h_has(aliases, scheme))
@@ -704,6 +698,7 @@ split_zones=, split_days=, day_shift=, dtlength=, dtprefix=, qqprefix=) {
    default, searchstr, "*.pbd";
    default, remove_buffers, 1;
    default, verbose, 1;
+   default, dtlength, (shorten ? "short" : "long");
 
    // Locate files
    files = find(srcdir, glob=searchstr);
@@ -780,9 +775,10 @@ split_zones=, split_days=, day_shift=, dtlength=, dtprefix=, qqprefix=) {
          filezone = data.zone;
       }
       save_data_to_tiles, unref(data), unref(filezone), dstdir, scheme=scheme,
-         suffix=suffix, buffer=buffer, shorten=shorten, flat=flat, uniq=uniq,
+         suffix=suffix, buffer=buffer, flat=flat, uniq=uniq,
          verbose=passverbose, split_zones=split_zones, split_days=split_days,
-         day_shift=day_shift;
+         day_shift=day_shift, dtlength=dtlength, dtprefix=dtprefix,
+         qqprefix=qqprefix;
 
       if(verbose)
          timer_remaining, t0, sizes(i), sizes(0), tp, interval=10;
