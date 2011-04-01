@@ -392,10 +392,10 @@ func partition_type_summary(north, east, zone, buffer=, schemes=) {
 
 func save_data_to_tiles(data, zone, dest_dir, scheme=, mode=, suffix=, buffer=,
 flat=, uniq=, overwrite=, verbose=, split_zones=, split_days=, day_shift=,
-dtlength=, dtprefix=, qqprefix=) {
+dtlength=, dtprefix=, qqprefix=, restrict_tiles=) {
 /* DOCUMENT save_data_to_tiles, data, zone, dest_dir, scheme=, mode=, suffix=,
    buffer=, flat=, uniq=, overwrite=, verbose=, split_zones=, split_days=,
-   day_shift=, dtlength=, dtprefix=, qqprefix=
+   day_shift=, dtlength=, dtprefix=, qqprefix=, restrict_tiles=
 
    Given an array of data (which must be in an ALPS data structure such as
    VEG__) and a scalar or array of zone corresponding to it, this will create
@@ -471,6 +471,10 @@ dtlength=, dtprefix=, qqprefix=) {
          quad names.
             qqprefix=0  Exclude prefix (default)
             qqprefix=1  Include prefix
+      restrict_tiles= If specified, this must be a list of tile names that
+         output should be restricted to. Only tiles in this list will be
+         created.  Please make sure that these tiles have the same dtlength,
+         dtprefix, and qqprefix settings; comparisons will be made as-is.
 
    SEE ALSO: batch_tile
 */
@@ -506,6 +510,13 @@ dtlength=, dtprefix=, qqprefix=) {
       dtlength=dtlength, dtprefix=dtprefix, qqprefix=qqprefix);
 
    tile_names = h_keys(tiles);
+   if(!is_void(restrict_tiles))
+      tile_names = set_intersection(tile_names, restrict_tiles);
+   if(!numberof(tile_names)) {
+      if(verbose)
+         write, "No tiles found in list of permitted tiles (restrict_tiles=)";
+      return;
+   }
    tile_names = tile_names(sort(tile_names));
 
    if(verbose)
@@ -583,10 +594,12 @@ dtlength=, dtprefix=, qqprefix=) {
 
 func batch_tile(srcdir, dstdir, scheme=, mode=, searchstr=, suffix=,
 remove_buffers=, buffer=, uniq=, verbose=, zone=, shorten=, flat=,
-split_zones=, split_days=, day_shift=, dtlength=, dtprefix=, qqprefix=) {
+split_zones=, split_days=, day_shift=, dtlength=, dtprefix=, qqprefix=,
+verify_tiles=) {
 /* DOCUMENT batch_tile, srcdir, dstdir, scheme=, mode=, searchstr=, suffix=,
    remove_buffers=, buffer=, uniq=, verbose=, zone=, shorten=, flat=,
-   split_zones=, split_days=, day_shift=, dtlength=, dtprefix=, qqprefix=
+   split_zones=, split_days=, day_shift=, dtlength=, dtprefix=, qqprefix=,
+   verify_tiles=
 
    Loads the data in srcdir that matches searchstr= and partitions it into
    tiles, which are created in dstdir.
@@ -690,15 +703,27 @@ split_zones=, split_days=, day_shift=, dtlength=, dtprefix=, qqprefix=) {
          quad names.
             qqprefix=0  Exclude prefix (default)
             qqprefix=1  Include prefix
+      verify_tiles= By default, tiles are verified to ensure that no files get
+         created for a tile that only has data in a buffer region. This
+         requires a second pass across the input data. To disable this and
+         possibly result in files with data only in the buffer region, use
+         verify_tiles=0.
+            verify_tiles=1    Run two passes (default if buffer > 0)
+            verify_tiles=0    Run one pass only (default if buffer == 0)
 
    SEE ALSO: save_data_to_tiles
 */
+   t0 = array(double, 3);
+   timer, t0;
+
    default, mode, "fs";
    default, scheme, "10k2k";
    default, searchstr, "*.pbd";
    default, remove_buffers, 1;
+   default, buffer, 100;
    default, verbose, 1;
    default, dtlength, (shorten ? "short" : "long");
+   default, verify_tiles, (buffer > 0);
 
    // Locate files
    files = find(srcdir, glob=searchstr);
@@ -735,13 +760,23 @@ split_zones=, split_days=, day_shift=, dtlength=, dtprefix=, qqprefix=) {
       write, "";
    }
 
+   restrict_tiles = [];
+   if(verify_tiles) {
+      if(verbose)
+         write, format="Scanning data to determine tile coverage...%s", "\n";
+      restrict_tiles = file_tile_coverage(files=files, zone=zones,
+         scheme=scheme, remove_buffers=remove_buffers, dtlength=dtlength,
+         dtprefix=dtprefix, qqprefix=qqprefix, verbose=1);
+   }
+
    count = numberof(files);
    sizes = double(file_size(files));
    if(count > 1)
       sizes = sizes(cum)(2:);
 
-   t0 = tp = array(double, 3);
-   timer, t0;
+   write, format="Tiling data...%s", "\n";
+   t1 = tp = t0;
+   timer, t1;
    passverbose = max(0, verbose-1);
    for(i = 1; i <= count; i++) {
       if(verbose > 1)
@@ -778,12 +813,140 @@ split_zones=, split_days=, day_shift=, dtlength=, dtprefix=, qqprefix=) {
          suffix=suffix, buffer=buffer, flat=flat, uniq=uniq,
          verbose=passverbose, split_zones=split_zones, split_days=split_days,
          day_shift=day_shift, dtlength=dtlength, dtprefix=dtprefix,
-         qqprefix=qqprefix;
+         qqprefix=qqprefix, restrict_tiles=restrict_tiles;
+
+      if(verbose)
+         timer_remaining, t1, sizes(i), sizes(0), tp, interval=10;
+   }
+
+   if(verbose)
+      timer_finished, t0;
+}
+
+func file_tile_coverage(dir, searchstr=, files=, scheme=, zone=,
+remove_buffers=, dtlength=, dtprefix=, qqprefix=, mode=, verbose=) {
+/* DOCUMENT file_tile_coverage(dir, searchstr=, files=, scheme=, zone=,
+   remove_buffers=, dtlength=, dtprefix=, qqprefix=, mode=, verbose=)
+
+   Returns an array of the tiles covered by the given data.
+
+   Parameters:
+      dir: Directory of PBD data you want to examine.
+
+   Options:
+      searchstr= Search string to use when locating data. Example:
+            searchstr="*.pbd"    (default)
+      files= List of files to analyze. If provided, dir and searchstr= are
+         ignored.
+      scheme= Partioning scheme to use. Valid values:
+            scheme="dt"    2km structure
+            scheme="it"    10km structure
+            scheme="qq"    Quarter quad structure
+      zone= By default, the zone will be determined on a file-by-file basis
+         based on the file's name. If no parseable tile name can be determined,
+         the file will be ignored. You can specify a zone to use for all files
+         with this option.
+            zone=[]     No zone provided, autodetect (default)
+            zone=17     Force all input data to be treated as being in zone 17
+            zone=-1     After loading the data, use data.zone (useful for ATM)
+      remove_buffers= By default, it is assumed that your data are already
+         tiled and that any buffer regions on those tiles is redundant--and
+         probably not well manually filtered. Thus, by default the buffers
+         around the input tiles are removed. If your file names cannot be
+         parsed as tile names, they'll still be tiled without removing
+         anything. Valid settings:
+            remove_buffers=1     Attempt to remove source data buffers
+                                 (default)
+            remove_buffers=0     Use source data as is
+      dtlength= Specifies whether to use the short or long form for data tile
+         (and related) schemes. By default, this is set based on shorten=.
+            dtlength="long"      Use long form: t_e234000_n3456000_15
+            dtlength="short"     Use short form: e234_n3456_15
+      dtprefix= Specifies whether to include the type prefix for data tile (and
+         related) schemes. When enabled, index tiles are prefixed by i_, data
+         tiles by t_, quad tiles by q_, and cell tiles by c_.
+            dtprefix=0  Exclude prefix
+            dtprefix=1  Include prefix
+      qqprefix= Specifies whether to prepend "qq" to the beginning of quarter
+         quad names.
+            qqprefix=0  Exclude prefix
+            qqprefix=1  Include prefix
+      mode= Mode of data. Valid values include:
+            mode="fs"   First surface (default)
+            mode="be"   Bare earth
+            mode="ba"   Bathy
+      verbose= Specifies how much output should go to the screen.
+            verbose=2   Keeps you extremely well-informed
+            verbose=1   Provides estimated time to completion (default)
+            verbose=0   No screen output at all
+*/
+   local e, n;
+   default, searchstr, "*.pbd";
+   default, remove_buffers, 1;
+   default, mode, "fs";
+   default, scheme, "10k2k";
+   default, verbose, 1;
+
+   aliases = h_new("10k2k", "dt", "2k", "dt", "10k", "it");
+   if(h_has(aliases, scheme))
+      scheme = aliases(scheme);
+
+   if(is_void(files))
+      files = find(dir, glob=searchstr);
+
+   count = numberof(files);
+   file_tiles = extract_tile(file_tail(files));
+
+   sizes = double(file_size(files));
+   if(count > 1)
+      sizes = sizes(cum)(2:);
+
+   zones = tile2uz(file_tail(files));
+   if(!is_void(zone))
+      zones(*) = zone;
+
+   // Quick scan of the data to get tile information
+   tile_lists = array(pointer, count);
+
+   t0 = array(double, 3);
+   timer, t0;
+   tp = t0;
+
+   for(i = 1; i <= count; i++) {
+      data = pbd_load(files(i));
+
+      if(remove_buffers && file_tiles(i) && numberof(data)) {
+         filezone = zones(i);
+         if(filezone < 0) {
+            filezone = data.zone;
+         }
+         data2xyz, data, e, n, mode=mode;
+         idx = extract_for_tile(unref(e), unref(n), filezone, file_tiles(i), buffer=0);
+         if(numberof(idx))
+            data = data(idx);
+         else
+            data = [];
+      }
+
+      if(!numberof(data)) {
+         continue;
+      }
+
+      filezone = zones(i);
+      if(filezone < 0) {
+         filezone = data.zone;
+      }
+
+      data2xyz, data, e, n, mode=mode;
+
+      temp = partition_by_tile(e, n, filezone, scheme, buffer=0,
+         dtlength=dtlength, dtprefix=dtprefix, qqprefix=qqprefix);
+      tile_lists(i) = &h_keys(temp);
+      temp = [];
 
       if(verbose)
          timer_remaining, t0, sizes(i), sizes(0), tp, interval=10;
    }
 
-   if(verbose)
-      timer_finished, t0;
+   return set_remove_duplicates(merge_pointers(unref(tile_lists)));
 }
