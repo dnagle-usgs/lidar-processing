@@ -41,7 +41,7 @@ proc main {} {
    set ownerlen 0
    foreach fn [::fileutil::find $dirname [list file isfile]] {
       set tail [file tail $fn]
-      set good [regexp {^t_e[0-9]{6}_n[0-9]{7}_[0-9]{2}_(.*)$} $tail - pattern]
+      set good [regexp {^t_e[0-9]{6}_n[0-9]{7}_[0-9]{1,2}((_|\.).*)$} $tail - pattern]
       if {$good && [llength $globs]} {
          set good 0
          foreach glob $globs {
