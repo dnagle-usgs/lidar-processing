@@ -68,6 +68,14 @@ func triangulate(x, y, verbose=) {
    return _ytriangulate(strchar(opts), x, y);
 }
 
+// *** defined in geometry.c ***
+
+extern _yinterp_angles;
+/* PROTOTYPE
+   void interp_angles(double *x, double *y, long xyn,
+      double *xp, double *yp, long *xb, long xpypn)
+*/
+
 // *** defined in gridding.c ***
 
 // func det in mathop.i makes use of this, if it's available
@@ -178,3 +186,16 @@ extern _yset_intersect_double;
    void set_intersect_double(long *result, double *A, long An, double *B,
    long Bn, long flag, double delta)
 */
+
+__calps_backup = save(
+   calps_compatibility,
+   _ytriangulate, triangulate,
+   _yinterp_angles,
+   _ydet, _yplanar_params_from_pts,
+   _ycross_product_sign, _yin_triangle,
+   _ytriangle_interp, _ywrite_arc_grid,
+   _yin_box, _ylevel_short_dips,
+   _yll2utm, _yutm2ll,
+   calps_n88_interp_qfit2d, calps_n88_interp_spline2d,
+   _yset_intersect_long, _yset_intersect_double
+);

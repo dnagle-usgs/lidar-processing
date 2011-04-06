@@ -216,17 +216,24 @@ func interp_angles(ang, i, ip, rad=) {
    maxidx = min(numberof(i), digitize(ip(max), i) + 1);
    ang = ang(minidx:maxidx);
    i = i(minidx:maxidx);
-   
+
    if(!rad) ang *= DEG2RAD;
 
-   x = cos(ang);
-   y = sin(ang);
+   // Use C-ALPS helper if available
+   if(is_func(_yinterp_angles)) {
+      ib = digitize(ip, i);
+      _yinterp_angles, i, ang, numberof(i),
+         ip, angp, ib, numberof(ip);
+   } else {
+      x = cos(ang);
+      y = sin(ang);
 
-   xp = interp(x, i, ip);
-   yp = interp(y, i, ip);
-   
-   angp = atan(yp, xp);
-   
+      xp = interp(x, i, ip);
+      yp = interp(y, i, ip);
+
+      angp = atan(yp, xp);
+   }
+
    if(!rad) angp *= RAD2DEG;
 
    return dims(1) ? reform(angp, dims) : angp(1);

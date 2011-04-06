@@ -18,6 +18,7 @@ local nocalps_i;
 calps_compatibility = [];
 _ytriangulate = [];
 triangulate = [];
+_yinterp_angles = [];
 _ydet = [];
 _yplanar_params_from_pts = [];
 _ycross_product_sign = [];
