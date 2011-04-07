@@ -61,6 +61,10 @@ ge2040c_rgb_bias_n5308f.name = "n5308f ge2040c rgb";
 ge2040c_rgb_bias_n5308f.x = 0.000;
 ge2040c_rgb_bias_n5308f.y = 0.220;
 ge2040c_rgb_bias_n5308f.z = 0.760;
+// Calibration by Emily Klipp as of 2011-04-07 using ChanBerm 2011
+ge2040c_rgb_bias_n5308f.pitch = 1.2;
+ge2040c_rgb_bias_n5308f.roll = -0.6;
+ge2040c_rgb_bias_n5308f.heading = 0.;
 
 //=================================================
 // Camera specifications.
