@@ -277,8 +277,31 @@ func set_remove_duplicates(A, idx=, delta=) {
    if(numberof(A) == 1)
       return idx ? [1] : A;
 
+   if(is_func(_ymergeuniq_S) && is_string(A)) {
+      count = numberof(A);
+      unq = array(long, count);
+      _ymergeuniq_S, A, unq, count;
+      unq = unq(:count);
+      return idx ? unq : A(unq);
+   }
+
    if(typeof(A) == "string")
       return set_remove_duplicates_string(unref(A), idx=idx);
+
+   if(is_func(_ymergeuniq_L) && is_integer(A)) {
+      count = numberof(A);
+      unq = array(long, count);
+      _ymergeuniq_L, A, unq, count;
+      unq = unq(:count);
+      return idx ? unq : A(unq);
+   }
+   if(is_func(_ymergeuniq_D) && is_real(A)) {
+      count = numberof(A);
+      unq = array(long, count);
+      _ymergeuniq_D, A, unq, count;
+      unq = unq(:count);
+      return idx ? unq : A(unq);
+   }
 
    // Eliminate any dimensionality
    A = unref(A)(*);

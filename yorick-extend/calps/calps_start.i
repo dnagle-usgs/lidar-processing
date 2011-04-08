@@ -8,3 +8,4 @@ autoload, "calps.i", _yin_box, _ylevel_short_dips;
 autoload, "calps.i", _yll2utm, _yutm2ll;
 autoload, "calps.i", calps_n88_interp_qfit2d, calps_n88_interp_spline2d;
 autoload, "calps.i", _yset_intersect_long, _yset_intersect_double;
+autoload, "calps.i", _ymergeuniq_L, _ymergeuniq_D;

@@ -187,6 +187,18 @@ extern _yset_intersect_double;
    long Bn, long flag, double delta)
 */
 
+// *** defined in set_uniq.c ***
+
+extern _ymergeuniq_L;
+/* PROTOTYPE
+   void mergeuniq_L(long *, long *, long *);
+*/
+
+extern _ymergeuniq_D;
+/* PROTOTYPE
+   void mergeuniq_D(double *, long *, long *);
+*/
+
 __calps_backup = save(
    calps_compatibility,
    _ytriangulate, triangulate,
@@ -197,5 +209,6 @@ __calps_backup = save(
    _yin_box, _ylevel_short_dips,
    _yll2utm, _yutm2ll,
    calps_n88_interp_qfit2d, calps_n88_interp_spline2d,
-   _yset_intersect_long, _yset_intersect_double
+   _yset_intersect_long, _yset_intersect_double,
+   _ymergeuniq_L, _ymergeuniq_D
 );
