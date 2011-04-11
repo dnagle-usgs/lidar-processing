@@ -73,7 +73,7 @@ func polyfit_xyz_xyz(x, y, z, grid=, buf=, n=, degree=, constrain=) {
             zmax = z(idx_grid)(max);
             w = where(zfit(idx_grid) < zmin | zfit(idx_grid) > zmax);
             if(numberof(w)) {
-               zfit(idx_grid)(w) = z(idx_grid)(w);
+               zfit(idx_grid(w)) = z(idx_grid)(w);
             }
          }
       }
