@@ -87,8 +87,15 @@ func polyfit_xyz_xyz(x, y, z, grid=, buf=, n=, degree=, constrain=) {
          zfit(idx_grid) = poly2(x(idx_grid), y(idx_grid), c);
 
          if(constrain) {
-            zmin = z(idx_grid)(min);
-            zmax = z(idx_grid)(max);
+            if(constrain == 1) {
+               zmin = z(idx_grid)(min);
+               zmax = z(idx_grid)(max);
+            } else if(constrain == 2) {
+               zmin = z(idx_buf)(min);
+               zmax = z(idx_buf)(max);
+            } else {
+               error, "Invalid constrain= value.";
+            }
             w = where(zfit(idx_grid) < zmin | zfit(idx_grid) > zmax);
             if(numberof(w)) {
                zfit(idx_grid(w)) = z(idx_grid)(w);
@@ -179,9 +186,16 @@ func polyfit_xyz_rnd(x, y, z, grid=, buf=, n=, degree=, constrain=, pts=) {
          rz = poly2(rx, ry, c);
 
          if(constrain) {
-            idx_grid = curx_grid(cury_grid);
-            zmin = z(idx_grid)(min);
-            zmax = z(idx_grid)(max);
+            if(constrain == 1) {
+               idx_grid = curx_grid(cury_grid);
+               zmin = z(idx_grid)(min);
+               zmax = z(idx_grid)(max);
+            } else if(constrain == 2) {
+               zmin = z(idx_buf)(min);
+               zmax = z(idx_buf)(max);
+            } else {
+               error, "Invalid constrain= value.";
+            }
             w = where(zmin <= rz & rz <= zmax);
             if(!numberof(w)) {
                rx = ry = rz = [];
@@ -298,9 +312,16 @@ func polyfit_xyz_grd(x, y, z, grid=, buf=, n=, degree=, constrain=, pts=) {
          gz = poly2(gx, gy, c);
 
          if(constrain) {
-            idx_grid = curx_grid(cury_grid);
-            zmin = z(idx_grid)(min);
-            zmax = z(idx_grid)(max);
+            if(constrain == 1) {
+               idx_grid = curx_grid(cury_grid);
+               zmin = z(idx_grid)(min);
+               zmax = z(idx_grid)(max);
+            } else if(constrain == 2) {
+               zmin = z(idx_buf)(min);
+               zmax = z(idx_buf)(max);
+            } else {
+               error, "Invalid constrain= value.";
+            }
             w = where(zmin <= gz & gz <= zmax);
             if(!numberof(w)) {
                gx = gy = gz = [];
@@ -436,8 +457,13 @@ method=, grid=, buf=, n=, degree=, constrain=, pts=, verbose=) {
          points that would get fit outside of the bounds will simply be left at
          their original value. For method="random" and method="grid", any
          points that would get fit outside of the bounds will be discarded.
+         Using constrain=1 will constrain to the elevations found within just
+         the grid cell itself whereas constrain=2 will constrain to the bounds
+         of the whole buffer. (So constrain=2 is more relaxed than
+         constrain=1.)
             constrain=0    Do not constrain to grid elevation bounds, default
-            constrain=1    Constrain to grid elevation bounds
+            constrain=1    Constrain to grid cell elevation bounds
+            constrain=2    Constrain to buffer area elevation bounds
       pts= Parameter that specifies how many points to add. For method="xyz",
          this parameter is ignored. For method="random", this many points are
          added for each grid cell. For method="grid", a grid of PTS x PTS will
