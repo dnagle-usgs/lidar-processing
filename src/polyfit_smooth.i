@@ -1,8 +1,8 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "eaarl.i";
 
-func polyfit_xyz_xyz(x, y, z, grid=, buf=, n=) {
-/* DOCUMENT polyfit_xyz_xyz(x, y, z, grid=, buf=, n=)
+func polyfit_xyz_xyz(x, y, z, grid=, buf=, n=, degree=) {
+/* DOCUMENT polyfit_xyz_xyz(x, y, z, grid=, buf=, n=, degree=)
    Given a set of XYZ points, this will return a new set of XYZ points where
    each XY point in the original is polyfit within a grid cell to determine a
    new Z value.
@@ -12,6 +12,7 @@ func polyfit_xyz_xyz(x, y, z, grid=, buf=, n=) {
    default, grid, 2.5;
    default, buf, 1;
    default, n, 3;
+   default, degree, 3;
 
    grid = double(grid);
 
@@ -63,7 +64,7 @@ func polyfit_xyz_xyz(x, y, z, grid=, buf=, n=) {
             continue;
 
          // Polyfit
-         c = poly2_fit(z(idx_buf), x(idx_buf), y(idx_buf), 3);
+         c = poly2_fit(z(idx_buf), x(idx_buf), y(idx_buf), degree);
          zfit(idx_grid) = poly2(x(idx_grid), y(idx_grid), c);
       }
    }
@@ -71,8 +72,8 @@ func polyfit_xyz_xyz(x, y, z, grid=, buf=, n=) {
    return [x,y,zfit];
 }
 
-func polyfit_xyz_rnd(x, y, z, grid=, buf=, n=, pts=) {
-/* DOCUMENT polyfit_xyz_rnd(x, y, z, grid=, buf=, n=, pts=)
+func polyfit_xyz_rnd(x, y, z, grid=, buf=, n=, degree=, pts=) {
+/* DOCUMENT polyfit_xyz_rnd(x, y, z, grid=, buf=, n=, degree=, pts=)
    Given a set of XYZ points, this will return a new set of XYZ points that are
    randomly distributed in each grid square, with elevations poly-fit to the
    input points.
@@ -83,6 +84,7 @@ func polyfit_xyz_rnd(x, y, z, grid=, buf=, n=, pts=) {
    default, buf, 1;
    default, n, 3;
    default, pts, 2;
+   default, degree, 3;
 
    grid = double(grid);
 
@@ -140,7 +142,7 @@ func polyfit_xyz_rnd(x, y, z, grid=, buf=, n=, pts=) {
          ry = (yg + random(pts)) * grid;
 
          // Polyfit
-         c = poly2_fit(z(idx_buf), x(idx_buf), y(idx_buf), 3);
+         c = poly2_fit(z(idx_buf), x(idx_buf), y(idx_buf), degree);
          rz = poly2(rx, ry, c);
 
          ytmp(ygi,1) = &rx;
@@ -165,8 +167,8 @@ func polyfit_xyz_rnd(x, y, z, grid=, buf=, n=, pts=) {
    return [rx,ry,rz];
 }
 
-func polyfit_xyz_grd(x, y, z, grid=, buf=, n=, pts=) {
-/* DOCUMENT polyfit_xyz_grd(x, y, z, grid=, buf=, n=, pts=)
+func polyfit_xyz_grd(x, y, z, grid=, buf=, n=, degree=, pts=) {
+/* DOCUMENT polyfit_xyz_grd(x, y, z, grid=, buf=, n=, degree=, pts=)
    Given a set of XYZ points, this will return a new set of XYZ points that are
    distributed in a regular grid in each grid square, with elevations poly-fit
    to the input points.
@@ -176,6 +178,7 @@ func polyfit_xyz_grd(x, y, z, grid=, buf=, n=, pts=) {
    default, grid, 250;
    default, buf, 1;
    default, n, 3;
+   default, degree, 3;
    default, pts, 2;
 
    grid = double(grid);
@@ -241,7 +244,7 @@ func polyfit_xyz_grd(x, y, z, grid=, buf=, n=, pts=) {
          gy = (yg + yoff) * grid;
 
          // Polyfit
-         c = poly2_fit(z(idx_buf), x(idx_buf), y(idx_buf), 3);
+         c = poly2_fit(z(idx_buf), x(idx_buf), y(idx_buf), degree);
          gz = poly2(gx, gy, c);
 
          ytmp(ygi,1) = &gx;
@@ -266,8 +269,8 @@ func polyfit_xyz_grd(x, y, z, grid=, buf=, n=, pts=) {
    return [gx,gy,gz];
 }
 
-func polyfit_data(data, mode=, method=, grid=, buf=, n=, pts=) {
-/* DOCUMENT polyfit_data(data, mode=, method=, grid=, buf=, n=, pts)
+func polyfit_data(data, mode=, method=, grid=, buf=, n=, degree=, pts=) {
+/* DOCUMENT polyfit_data(data, mode=, method=, grid=, buf=, n=, degree=, pts)
    Given ALPS data, this will return a new set of ALPS data that have had a
    polyfit algorithm applied.
 
@@ -278,13 +281,14 @@ func polyfit_data(data, mode=, method=, grid=, buf=, n=, pts=) {
    default, grid, 2.5;
    default, buf, 1;
    default, n, 3;
+   default, degree, 3;
    default, pts, 2;
 
    local x, y, z;
    data2xyz, data, x, y, z, mode=mode;
 
    if(method == "xyz") {
-      fit = polyfit_xyz_xyz(x, y, z, grid=grid, buf=buf, n=n);
+      fit = polyfit_xyz_xyz(x, y, z, grid=grid, buf=buf, n=n, degree=degree);
       if(is_numerical(data))
          return fit;
       return xyz2data(fit, data, mode=mode);
@@ -297,7 +301,7 @@ func polyfit_data(data, mode=, method=, grid=, buf=, n=, pts=) {
    else
       error, "Unknown method=.";
 
-   fit = fnc(x, y, z, grid=grid, buf=buf, n=n, pts=pts);
+   fit = fnc(x, y, z, grid=grid, buf=buf, n=n, degree=degree, pts=pts);
 
    if(is_numerical(data))
       return fit;
@@ -305,9 +309,9 @@ func polyfit_data(data, mode=, method=, grid=, buf=, n=, pts=) {
 }
 
 func batch_polyfit_data(dir, outdir=, files=, searchstr=, update=, mode=,
-method=, grid=, buf=, n=, pts=, verbose=) {
+method=, grid=, buf=, n=, degree=, pts=, verbose=) {
 /* DOCUMENT batch_polyfit_data, dir, outdir=, files=, searchstr=, update=,
-   mode=, method=, grid=, buf=, n=, pts=, verbose=
+   mode=, method=, grid=, buf=, n=, degree=, pts=, verbose=
 
    Runs in batch mode over a set of files and apply a polyfit algorithm to
    each.
@@ -351,6 +355,11 @@ method=, grid=, buf=, n=, pts=, verbose=) {
          unmodified. For method="grid" and method="random", that grid cell will
          receive no points.
             n=3      3 points, default
+      degree= The degree of the 2D polynomial to fit.
+            degree=3    Fit a cubic polynomial (default)
+            degree=2    Fit a quadratic polynomial
+            degree=4    Fit a quartic polynomial
+            degree=1    Fit a linear polynomial
       pts= Parameter that specifies how many points to add. For method="xyz",
          this parameter is ignored. For method="random", this many points are
          added for each grid cell. For method="grid", a grid of PTS x PTS will
@@ -402,6 +411,7 @@ method=, grid=, buf=, n=, pts=, verbose=) {
    default, grid, 2.5;
    default, buf, 1;
    default, n, 3;
+   default, degree, 3;
    default, pts, 2;
    default, verbose, 1;
 
@@ -412,8 +422,8 @@ method=, grid=, buf=, n=, pts=, verbose=) {
    if(!is_void(outdir))
       outfiles = file_join(outdir, file_tail(outfiles));
    if(method == "xyz") {
-      outfiles += swrite(format="_pfz_g%d_b%d_n%d.pbd", long(grid*100+.5),
-         long(buf), long(n));
+      outfiles += swrite(format="_pfz_g%d_b%d_n%d_d%d.pbd", long(grid*100+.5),
+         long(buf), long(n), long(degree));
       suffix = "_pfz";
    } else {
       if(method == "random")
@@ -422,8 +432,8 @@ method=, grid=, buf=, n=, pts=, verbose=) {
          pf = "g";
       else
          error, "Unknown method";
-      outfiles += swrite(format="_pf%s_g%d_b%d_n%d_p%d.pbd", pf,
-         long(grid*100+.5), long(buf), long(n), long(pts));
+      outfiles += swrite(format="_pf%s_g%d_b%d_n%d_d%d_p%d.pbd", pf,
+         long(grid*100+.5), long(buf), long(n), long(degree), long(pts));
       suffix = "_pf" + pf;
    }
 
@@ -465,7 +475,7 @@ method=, grid=, buf=, n=, pts=, verbose=) {
       }
 
       data = polyfit_data(unref(data), mode=mode, method=method, grid=grid,
-         buf=buf, n=n, pts=pts);
+         buf=buf, n=n, degree=degree, pts=pts);
 
       if(!numberof(data)) {
          if(verbose)
