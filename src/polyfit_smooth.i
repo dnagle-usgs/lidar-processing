@@ -1,6 +1,22 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "eaarl.i";
 
+func poly2_fit_safe(y, x1, x2, m, w) {
+/* DOCUMENT poly2_fit_safe(y, x1, x2, m)
+   poly2_fit_safe(y, x1, x2, m, w)
+
+   This is a simple wrapper around poly2_fit. If an interpreted error occurs
+   during poly2_fit (as throw by the 'error' statement), a void result will be
+   returned instead of stopping for the error. This is intended to address the
+   scenario where an error arises when data points resolve into a singular
+   matrix.
+*/
+   if(catch(0x10)) {
+      return [];
+   }
+   return poly2_fit(y, x1, x2, m, w);
+}
+
 func polyfit_xyz_xyz(x, y, z, grid=, buf=, n=, degree=, constrain=) {
 /* DOCUMENT polyfit_xyz_xyz(x, y, z, grid=, buf=, n=, degree=, constrain=)
    Given a set of XYZ points, this will return a new set of XYZ points where
@@ -65,7 +81,9 @@ func polyfit_xyz_xyz(x, y, z, grid=, buf=, n=, degree=, constrain=) {
             continue;
 
          // Polyfit
-         c = poly2_fit(z(idx_buf), x(idx_buf), y(idx_buf), degree);
+         c = poly2_fit_safe(z(idx_buf), x(idx_buf), y(idx_buf), degree);
+         if(is_void(c))
+            continue;
          zfit(idx_grid) = poly2(x(idx_grid), y(idx_grid), c);
 
          if(constrain) {
@@ -155,7 +173,9 @@ func polyfit_xyz_rnd(x, y, z, grid=, buf=, n=, degree=, constrain=, pts=) {
          ry = (yg + random(pts)) * grid;
 
          // Polyfit
-         c = poly2_fit(z(idx_buf), x(idx_buf), y(idx_buf), degree);
+         c = poly2_fit_safe(z(idx_buf), x(idx_buf), y(idx_buf), degree);
+         if(is_void(c))
+            continue;
          rz = poly2(rx, ry, c);
 
          if(constrain) {
@@ -272,7 +292,9 @@ func polyfit_xyz_grd(x, y, z, grid=, buf=, n=, degree=, constrain=, pts=) {
          gy = (yg + yoff) * grid;
 
          // Polyfit
-         c = poly2_fit(z(idx_buf), x(idx_buf), y(idx_buf), degree);
+         c = poly2_fit_safe(z(idx_buf), x(idx_buf), y(idx_buf), degree);
+         if(is_void(c))
+            continue;
          gz = poly2(gx, gy, c);
 
          if(constrain) {
