@@ -182,7 +182,7 @@ func polyfit_xyz_rnd(x, y, z, grid=, buf=, n=, degree=, constrain=, pts=) {
             idx_grid = curx_grid(cury_grid);
             zmin = z(idx_grid)(min);
             zmax = z(idx_grid)(max);
-            w = where(rz >= zmin & zmax <= rz);
+            w = where(zmin <= rz & rz <= zmax);
             if(!numberof(w)) {
                rx = ry = rz = [];
                continue;
@@ -301,7 +301,7 @@ func polyfit_xyz_grd(x, y, z, grid=, buf=, n=, degree=, constrain=, pts=) {
             idx_grid = curx_grid(cury_grid);
             zmin = z(idx_grid)(min);
             zmax = z(idx_grid)(max);
-            w = where(gz >= zmin & zmax <= gz);
+            w = where(zmin <= gz & gz <= zmax);
             if(!numberof(w)) {
                gx = gy = gz = [];
                continue;
