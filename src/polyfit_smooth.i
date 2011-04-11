@@ -1,8 +1,8 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "eaarl.i";
 
-func polyfit_xyz_xyz(x, y, z, grid=, buf=, n=, degree=) {
-/* DOCUMENT polyfit_xyz_xyz(x, y, z, grid=, buf=, n=, degree=)
+func polyfit_xyz_xyz(x, y, z, grid=, buf=, n=, degree=, constrain=) {
+/* DOCUMENT polyfit_xyz_xyz(x, y, z, grid=, buf=, n=, degree=, constrain=)
    Given a set of XYZ points, this will return a new set of XYZ points where
    each XY point in the original is polyfit within a grid cell to determine a
    new Z value.
@@ -13,6 +13,7 @@ func polyfit_xyz_xyz(x, y, z, grid=, buf=, n=, degree=) {
    default, buf, 1;
    default, n, 3;
    default, degree, 3;
+   default, constrain, 0;
 
    grid = double(grid);
 
@@ -66,14 +67,25 @@ func polyfit_xyz_xyz(x, y, z, grid=, buf=, n=, degree=) {
          // Polyfit
          c = poly2_fit(z(idx_buf), x(idx_buf), y(idx_buf), degree);
          zfit(idx_grid) = poly2(x(idx_grid), y(idx_grid), c);
+
+         if(constrain) {
+            zmin = z(idx_grid)(min);
+            zmax = z(idx_grid)(max);
+            w = where(zfit(idx_grid) < zmin | zfit(idx_grid) > zmax);
+            if(numberof(w)) {
+               zfit(idx_grid)(w) = z(idx_grid)(w);
+            }
+         }
       }
    }
 
    return [x,y,zfit];
 }
 
-func polyfit_xyz_rnd(x, y, z, grid=, buf=, n=, degree=, pts=) {
-/* DOCUMENT polyfit_xyz_rnd(x, y, z, grid=, buf=, n=, degree=, pts=)
+func polyfit_xyz_rnd(x, y, z, grid=, buf=, n=, degree=, constrain=, pts=) {
+/* DOCUMENT polyfit_xyz_rnd(x, y, z, grid=, buf=, n=, degree=, constrain=,
+   pts=)
+
    Given a set of XYZ points, this will return a new set of XYZ points that are
    randomly distributed in each grid square, with elevations poly-fit to the
    input points.
@@ -83,8 +95,9 @@ func polyfit_xyz_rnd(x, y, z, grid=, buf=, n=, degree=, pts=) {
    default, grid, 2.5;
    default, buf, 1;
    default, n, 3;
-   default, pts, 2;
    default, degree, 3;
+   default, constrain, 0;
+   default, pts, 2;
 
    grid = double(grid);
 
@@ -145,6 +158,20 @@ func polyfit_xyz_rnd(x, y, z, grid=, buf=, n=, degree=, pts=) {
          c = poly2_fit(z(idx_buf), x(idx_buf), y(idx_buf), degree);
          rz = poly2(rx, ry, c);
 
+         if(constrain) {
+            idx_grid = curx_grid(cury_grid);
+            zmin = z(idx_grid)(min);
+            zmax = z(idx_grid)(max);
+            w = where(rz >= zmin & zmax <= rz);
+            if(!numberof(w)) {
+               rx = ry = rz = [];
+               continue;
+            }
+            rx = rx(w);
+            ry = ry(w);
+            rz = rz(w);
+         }
+
          ytmp(ygi,1) = &rx;
          ytmp(ygi,2) = &ry;
          ytmp(ygi,3) = &rz;
@@ -167,7 +194,7 @@ func polyfit_xyz_rnd(x, y, z, grid=, buf=, n=, degree=, pts=) {
    return [rx,ry,rz];
 }
 
-func polyfit_xyz_grd(x, y, z, grid=, buf=, n=, degree=, pts=) {
+func polyfit_xyz_grd(x, y, z, grid=, buf=, n=, degree=, constrain=, pts=) {
 /* DOCUMENT polyfit_xyz_grd(x, y, z, grid=, buf=, n=, degree=, pts=)
    Given a set of XYZ points, this will return a new set of XYZ points that are
    distributed in a regular grid in each grid square, with elevations poly-fit
@@ -179,6 +206,7 @@ func polyfit_xyz_grd(x, y, z, grid=, buf=, n=, degree=, pts=) {
    default, buf, 1;
    default, n, 3;
    default, degree, 3;
+   default, constrain, 0;
    default, pts, 2;
 
    grid = double(grid);
@@ -247,6 +275,20 @@ func polyfit_xyz_grd(x, y, z, grid=, buf=, n=, degree=, pts=) {
          c = poly2_fit(z(idx_buf), x(idx_buf), y(idx_buf), degree);
          gz = poly2(gx, gy, c);
 
+         if(constrain) {
+            idx_grid = curx_grid(cury_grid);
+            zmin = z(idx_grid)(min);
+            zmax = z(idx_grid)(max);
+            w = where(gz >= zmin & zmax <= gz);
+            if(!numberof(w)) {
+               gx = gy = gz = [];
+               continue;
+            }
+            gx = gx(w);
+            gy = gy(w);
+            gz = gz(w);
+         }
+
          ytmp(ygi,1) = &gx;
          ytmp(ygi,2) = &gy;
          ytmp(ygi,3) = &gz;
@@ -269,8 +311,11 @@ func polyfit_xyz_grd(x, y, z, grid=, buf=, n=, degree=, pts=) {
    return [gx,gy,gz];
 }
 
-func polyfit_data(data, mode=, method=, grid=, buf=, n=, degree=, pts=) {
-/* DOCUMENT polyfit_data(data, mode=, method=, grid=, buf=, n=, degree=, pts)
+func polyfit_data(data, mode=, method=, grid=, buf=, n=, degree=, constrain=,
+pts=) {
+/* DOCUMENT polyfit_data(data, mode=, method=, grid=, buf=, n=, degree=,
+   constrain=, pts)
+
    Given ALPS data, this will return a new set of ALPS data that have had a
    polyfit algorithm applied.
 
@@ -282,13 +327,15 @@ func polyfit_data(data, mode=, method=, grid=, buf=, n=, degree=, pts=) {
    default, buf, 1;
    default, n, 3;
    default, degree, 3;
+   default, constrain, 0;
    default, pts, 2;
 
    local x, y, z;
    data2xyz, data, x, y, z, mode=mode;
 
    if(method == "xyz") {
-      fit = polyfit_xyz_xyz(x, y, z, grid=grid, buf=buf, n=n, degree=degree);
+      fit = polyfit_xyz_xyz(x, y, z, grid=grid, buf=buf, n=n, degree=degree,
+         constrain=constrain);
       if(is_numerical(data))
          return fit;
       return xyz2data(fit, data, mode=mode);
@@ -301,7 +348,8 @@ func polyfit_data(data, mode=, method=, grid=, buf=, n=, degree=, pts=) {
    else
       error, "Unknown method=.";
 
-   fit = fnc(x, y, z, grid=grid, buf=buf, n=n, degree=degree, pts=pts);
+   fit = fnc(x, y, z, grid=grid, buf=buf, n=n, degree=degree,
+      constrain=constrain, pts=pts);
 
    if(is_numerical(data))
       return fit;
@@ -309,9 +357,9 @@ func polyfit_data(data, mode=, method=, grid=, buf=, n=, degree=, pts=) {
 }
 
 func batch_polyfit_data(dir, outdir=, files=, searchstr=, update=, mode=,
-method=, grid=, buf=, n=, degree=, pts=, verbose=) {
+method=, grid=, buf=, n=, degree=, constrain=, pts=, verbose=) {
 /* DOCUMENT batch_polyfit_data, dir, outdir=, files=, searchstr=, update=,
-   mode=, method=, grid=, buf=, n=, degree=, pts=, verbose=
+   mode=, method=, grid=, buf=, n=, degree=, constrain=, pts=, verbose=
 
    Runs in batch mode over a set of files and apply a polyfit algorithm to
    each.
@@ -360,6 +408,14 @@ method=, grid=, buf=, n=, degree=, pts=, verbose=) {
             degree=2    Fit a quadratic polynomial
             degree=4    Fit a quartic polynomial
             degree=1    Fit a linear polynomial
+      constrain= Specifies whether the points for a grid cell should be
+         constrained to the grid cell's original elevation bounds. This has
+         slightly different effects depending on method. For method="xyz", any
+         points that would get fit outside of the bounds will simply be left at
+         their original value. For method="random" and method="grid", any
+         points that would get fit outside of the bounds will be discarded.
+            constrain=0    Do not constrain to grid elevation bounds, default
+            constrain=1    Constrain to grid elevation bounds
       pts= Parameter that specifies how many points to add. For method="xyz",
          this parameter is ignored. For method="random", this many points are
          added for each grid cell. For method="grid", a grid of PTS x PTS will
@@ -375,30 +431,44 @@ method=, grid=, buf=, n=, degree=, pts=, verbose=) {
       Examples below are based on a file with an original name of ORIGINAL.pbd.
 
       For method="xyz", output files will have a name like this:
-         ORIGINAL_pfz_g250_b1_n3.pbd
+         ORIGINAL_pfz_g250_b1_n3_d3_c0.pbd
       This means:
          pfz - Poly Fit using xyZ method
          g250 - 2.50m grid cell
          b1 - 1 buffer layer
          n3 - 3 points minimum for polyfit
+         d3 - polynomial of degree 3
+         c0 - points were not constrained
 
       For method="random", output files will have a name like this:
-         ORIGINAL_pfr_g250_b1_n3_p2.pbd
+         ORIGINAL_pfr_g250_b1_n3_d3_p2_c0.pbd
       This means:
          pfr - Poly Fit using Random method
          g250 - 2.50m grid cell
          b1 - 1 buffer layer
          n3 - 3 points minimum for polyfit
+         d3 - polynomial of degree 3
          p2 - 2 points created per grid cell
+         c0 - points were not constrained
 
       For method="grid", output files will have a name like this:
-         ORIGINAL_pfg_g250_b1_n3_p2.pbd
+         ORIGINAL_pfg_g250_b1_n3_d3_p2_c0.pbd
       This means:
          pfg - Poly Fit using Grid method
          g250 - 2.50m grid cell
          b1 - 1 buffer layer
          n3 - 3 points minimum for polyfit
+         d3 - polynomial of degree 3
          p2 - 2x2 points created per grid cell
+         c0 - points were not constrained
+
+      The letters match to parameters as:
+         g - grid=
+         b - buf=
+         n - n=
+         d - degree=
+         p - pts=
+         c - constrain=
 
       Variable names will have a simple suffix added:
          VNAME_pfz  for method="xyz"
@@ -413,6 +483,7 @@ method=, grid=, buf=, n=, degree=, pts=, verbose=) {
    default, n, 3;
    default, degree, 3;
    default, pts, 2;
+   default, constrain, 0;
    default, verbose, 1;
 
    if(is_void(files))
@@ -422,8 +493,8 @@ method=, grid=, buf=, n=, degree=, pts=, verbose=) {
    if(!is_void(outdir))
       outfiles = file_join(outdir, file_tail(outfiles));
    if(method == "xyz") {
-      outfiles += swrite(format="_pfz_g%d_b%d_n%d_d%d.pbd", long(grid*100+.5),
-         long(buf), long(n), long(degree));
+      outfiles += swrite(format="_pfz_g%d_b%d_n%d_d%d_c%d.pbd",
+         long(grid*100+.5), long(buf), long(n), long(degree), long(constrain));
       suffix = "_pfz";
    } else {
       if(method == "random")
@@ -432,8 +503,9 @@ method=, grid=, buf=, n=, degree=, pts=, verbose=) {
          pf = "g";
       else
          error, "Unknown method";
-      outfiles += swrite(format="_pf%s_g%d_b%d_n%d_d%d_p%d.pbd", pf,
-         long(grid*100+.5), long(buf), long(n), long(degree), long(pts));
+      outfiles += swrite(format="_pf%s_g%d_b%d_n%d_d%d_p%d_c%d.pbd", pf,
+         long(grid*100+.5), long(buf), long(n), long(degree), long(pts),
+         long(constrain));
       suffix = "_pf" + pf;
    }
 
@@ -475,7 +547,7 @@ method=, grid=, buf=, n=, degree=, pts=, verbose=) {
       }
 
       data = polyfit_data(unref(data), mode=mode, method=method, grid=grid,
-         buf=buf, n=n, degree=degree, pts=pts);
+         buf=buf, n=n, degree=degree, pts=pts, constrain=constrain);
 
       if(!numberof(data)) {
          if(verbose)
