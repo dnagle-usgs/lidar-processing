@@ -243,6 +243,9 @@ proc menu_utilities mb {
             -command {exp_send "plot_no_raster_fltlines(gga, edb);\r"}
     $mb add command {*}[menulabel "S&how Flightlines with No TANS Data..."] \
             -command {exp_send "plot_no_tans_fltlines(tans, gga);\r"}
+    $mb add separator
+    $mb add cascade {*}[menulabel "Memory usage indicator..."] \
+        -menu [menu_utilities_memory $mb.mem]
 
     return $mb
 }
@@ -272,6 +275,27 @@ proc menu_utilities_statistics mb {
             -command [list segment_stat_launcher days]
     $mb add command {*}[menulabel "Day and digitizer"] \
             -command [list segment_stat_launcher days_digitizer]
+    return $mb
+}
+
+proc menu_utilities_memory mb {
+    menu $mb
+    foreach delay {
+        0 1 5 15 60
+    } name {
+        "Disable auto-refresh"
+        "Refresh every second"
+        "Refresh every 5 seconds"
+        "Refresh every 15 seconds"
+        "Refresh every minute"
+    } {
+        $mb add radiobutton \
+            -command ::l1pro::memory::autorefresh \
+            -label $name \
+            -variable ::l1pro::memory::refresh \
+            -value $delay
+    }
+
     return $mb
 }
 

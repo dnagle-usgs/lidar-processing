@@ -12,6 +12,7 @@ package require l1pro::file
 package require l1pro::filter
 package require l1pro::groundtruth
 package require l1pro::main
+package require l1pro::memory
 package require l1pro::pixelwf
 package require l1pro::processing
 package require l1pro::settings

@@ -154,4 +154,8 @@ snit::type ::yorick::session {
             update idletasks
         }
     }
+
+    method pid {} {
+        return [exp_pid -i $spawn_id]
+    }
 }

@@ -411,7 +411,18 @@ proc ::l1pro::main::panel_filter w {
             }
     ::tooltip::tooltip $w.tools "Choose any of the following tools:"
 
-    grid $w.filter $w.copy $w.tools
+    ttk::label $w.memlbl -text "Memory Usage:"
+    ttk::label $w.mem -textvariable ::l1pro::memory::current
+    foreach widget [list $w.memlbl $w.mem] {
+        ::tooltip::tooltip $widget \
+            "This displays the total memory currently in use by this\
+            \nALPS session, including Yorick, Tcl/Tk, and any other\
+            \ninvoked subprocesses. It is auto-refreshed as configured\
+            \nunder Utilities -> Memory usage indicator. If this says\
+            \n\"Unknown\", then the indicator is not set to auto-refresh."
+    }
+
+    grid $w.filter $w.copy $w.tools x $w.memlbl $w.mem
     grid columnconfigure $w 3 -weight 1
 
     return $w
