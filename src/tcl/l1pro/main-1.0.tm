@@ -418,8 +418,19 @@ proc ::l1pro::main::panel_filter w {
             "This displays the total memory currently in use by this\
             \nALPS session, including Yorick, Tcl/Tk, and any other\
             \ninvoked subprocesses. It is auto-refreshed as configured\
-            \nunder Utilities -> Memory usage indicator. If this says\
-            \n\"Unknown\", then the indicator is not set to auto-refresh."
+            \nunder Utilities -> Memory usage indicator.\
+            \n\
+            \nThe first value is the total amount of memory in use, in\
+            \nKilobytes, Megabytes, or Gigabytes. The second value, in\
+            \nparentheses, is how much of the system's memory you are\
+            \nusing. So a value of 50% means you are using 50% of the\
+            \ntotal memory available on the machine.\
+            \n\
+            \nIf this says \"Unknown\", then the indicator is not set to\
+            \nauto-refresh.\
+            \n\
+            \nIf this says \"(Error)\", then your system is not presently\
+            \ncompatible with the memory monitoring code."
     }
 
     grid $w.filter $w.copy $w.tools x $w.memlbl $w.mem
