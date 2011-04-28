@@ -219,6 +219,10 @@ snit::type ::sf::model::collection::null {
         $self SetTranslator -translator [$self cget -translator]
     }
 
+    destructor {
+        catch {destroy $translator}
+    }
+
     # SetTranslator <option> <value>
     #   Used to set the translator component. Should be passed a translator
     #   type command as its value.

@@ -177,6 +177,7 @@ snit::type ::sf::model::collection::tar::files {
         foreach mnt $mounted {
             catch {vfs::filesystem unmount $mnt}
         }
+        catch {$null destroy}
     }
 
     # ------------------------------ Variables ---------------------------------
@@ -405,6 +406,10 @@ snit::type ::sf::model::collection::tar::paths {
     #                                Internals                                 #
     #==========================================================================#
 
+    destructor {
+        catch {$files destroy}
+    }
+
     # SetPaths
     #   Normalize a list of paths and, if it's different than the existing
     #   list, update internally.
@@ -474,6 +479,10 @@ snit::type ::sf::model::collection::tar::path {
     #==========================================================================#
     #                                Internals                                 #
     #==========================================================================#
+
+    destructor {
+        catch {$paths destroy}
+    }
 
     # SetPath
     #   Passes the path along to -paths in the format it expects (a list).
