@@ -565,12 +565,18 @@ func missiondata_wrap(type) {
         );
     } else if(type == "ins") {
         extern iex_nav, iex_head, tans;
-        return h_new(
-            "__type", "ins",
-            "iex_nav", iex_nav,
-            "iex_head", iex_head,
-            "tans", tans
-        );
+        if(is_void(iex_nav)) {
+            return h_new(
+                "__type", "ins_tans",
+                "tans", tans
+            );
+        } else {
+            return h_new(
+                "__type", "ins_iex",
+                "iex_nav", iex_nav,
+                "iex_head", iex_head
+            );
+        }
     } else if(type == "ops_conf") {
         extern ops_conf;
         return h_new(
@@ -621,11 +627,15 @@ func missiondata_unwrap(data) {
         pnav = data.pnav;
         gga = data.gga;
         pnav_filename = data.pnav_filename;
-    } else if(type == "ins") {
+    } else if(type == "ins_tans") {
+        extern iex_nav, iex_head, tans;
+        iex_nav = iex_head = [];
+        tans = data.tans;
+    } else if(type == "ins_iex") {
         extern iex_nav, iex_head, tans;
         iex_nav = data.iex_nav;
         iex_head = data.iex_head;
-        tans = data.tans;
+        iex2tans;
     } else if(type == "ops_conf") {
         extern ops_conf;
         ops_conf = data.ops_conf;
