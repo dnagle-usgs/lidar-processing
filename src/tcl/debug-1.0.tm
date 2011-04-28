@@ -56,4 +56,27 @@ proc stack_trace_levels {} {
     }
 }
 
+proc ns_children_recursive {{ns ::}} {
+    set nslist [list $ns]
+    for {set i 0} {$i < [llength $nslist]} {incr i} {
+        lappend nslist {*}[namespace children [lindex $nslist $i]]
+    }
+    return [lsort $nslist]
+}
+
+proc vars_recursive {{ns ::}} {
+    set nslist [ns_children_recursive $ns]
+    set vars [list]
+    foreach ns $nslist {
+        lappend vars {*}[info vars ${ns}::*]
+    }
+    return [lsort $vars]
+}
+
+proc print_list {lst} {
+    foreach item $lst {
+        puts $item
+    }
+}
+
 } ;# end of namespace eval ::debug
