@@ -557,12 +557,18 @@ func missiondata_wrap(type) {
         );
     } else if(type == "pnav") {
         extern pnav, gga, pnav_filename;
-        return h_new(
-            "__type", "pnav",
-            "pnav", pnav,
-            "gga", gga,
-            "pnav_filename", pnav_filename
-        );
+        if(is_void(pnav)) {
+            return h_new(
+                "__type", "pnav_gga",
+                "gga", gga,
+            );
+        } else {
+            return h_new(
+                "__type", "pnav_pnav",
+                "pnav", pnav,
+                "pnav_filename", pnav_filename
+            );
+        }
     } else if(type == "ins") {
         extern iex_nav, iex_head, tans;
         if(is_void(iex_nav)) {
@@ -622,10 +628,13 @@ func missiondata_unwrap(data) {
         soe_day_start = data.soe_day_start;
         eaarl_time_offset = data.eaarl_time_offset;
         data_path = data.data_path;
-    } else if(type == "pnav") {
+    } else if(type == "pnav_gga") {
         extern pnav, gga, pnav_filename;
-        pnav = data.pnav;
+        pnav = pnav_filename = [];
         gga = data.gga;
+    } else if(type == "pnav_pnav") {
+        extern pnav, gga, pnav_filename;
+        pnav = gga = data.pnav;
         pnav_filename = data.pnav_filename;
     } else if(type == "ins_tans") {
         extern iex_nav, iex_head, tans;
