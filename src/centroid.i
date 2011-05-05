@@ -116,13 +116,8 @@ func cent(a) {
       result(2) = peak range
       result(3) = peak power
 */
-   n = numberof(a);
-   if(n < 2)
+   if(numberof(a) < 2)
       return [0., 0., 0.];
-
-   // Only use first 12
-   if(n > 12)
-      n = 12;
 
    // flip it over and convert to signed short
    a = -short(a);
@@ -133,7 +128,7 @@ func cent(a) {
    mv = a(max);
    mx = a(mxx);
 
-   c = min(wf_centroid(a(1:n)), 10000.);
+   c = wf_centroid(a, lim=12);
    return [c, mx, mv];
 }
 
