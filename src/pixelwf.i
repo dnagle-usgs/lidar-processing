@@ -15,7 +15,8 @@ if(is_void(pixelwfvars)) {
          win=5,
          pro_var="fs_all",
          extended=0,
-         sfsync=0
+         sfsync=0,
+         missionload=1
       ),
       fit_gauss=h_new(
          enabled=1,  //bool
@@ -92,6 +93,11 @@ func pixelwf_handle_result(vars, result) {
 
 func pixelwf_load_data(void) {
    extern pixelwfvars;
+
+   // Abort if autoloading is disabled
+   if(!pixelwfvars.selection.missionload)
+      return;
+
    day = pixelwfvars.selection.missionday;
    working = pixelwfvars.working;
 

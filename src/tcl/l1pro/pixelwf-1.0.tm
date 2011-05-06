@@ -24,6 +24,7 @@ if {![namespace exists ::l1pro::pixelwf]} {
                 variable radius 10.00
                 variable extended 0
                 variable sfsync 0
+                variable missionload 1
             }
             namespace eval fit_gauss {
                 variable enabled 0
@@ -132,7 +133,7 @@ if {![namespace exists ::l1pro::pixelwf]} {
             # applied.
             variable valid_values {
                 {0 1} {
-                    selection {extended sfsync}
+                    selection {extended sfsync missionload}
                     fit_gauss {enabled verbose}
                     ex_bath {enabled verbose}
                     ex_veg {enabled verbose use_be_peak use_be_centroid \
@@ -457,6 +458,20 @@ namespace eval ::l1pro::pixelwf::gui {
         ttk::checkbutton $f.chkSf -text "SF Sync" -variable ${ns}::sfsync
         ttk::checkbutton $f.chkExt -text "Extended output" \
                 -variable ${ns}::extended
+        ttk::checkbutton $f.chkLoad -text "Auto load mission data" \
+                -variable ${ns}::missionload
+
+        ::tooltip::tooltip $f.chkLoad \
+                "When this is enabled, the mission day will automatically be\
+                \ndetermined from the point's SOE value and the appropriate\
+                \nmission day will be loaded prior to displaying plots. If\
+                \nyour data contains multiple mission days, this should\
+                \nprobably be enabled.\
+                \n\
+                \nWhen this is disbled, the mission data is used as currently\
+                \nexists in memory. This is useful for fine-tuning ops_conf\
+                \nand bathy configuration settings, but should only be used if\
+                \nyou are only working with a single mission day."
 
         ttk::button $f.btnGraph -text "Plot" -command [list ybkg pixelwf_plot]
 
@@ -468,6 +483,7 @@ namespace eval ::l1pro::pixelwf::gui {
         grid $f.lblRaster $f.spnRaster $f.lblPulse $f.spnPulse
         grid $f.lblWindow $f.spnWindow $f.chkSf -
         grid $f.lblRadius $f.spnRadius $f.chkExt -
+        grid $f.chkLoad - - -
         grid $f.btnMouse - $f.btnGraph -
 
         default_sticky \
@@ -475,7 +491,7 @@ namespace eval ::l1pro::pixelwf::gui {
                 $f.lblRaster $f.spnRaster $f.lblPulse $f.spnPulse \
                 $f.lblWindow $f.spnWindow $f.lblVar $f.cboVar $f.chkSf \
                 $f.lblRadius $f.spnRadius $f.btnMouse $f.btnGraph \
-                $f.chkExt
+                $f.chkExt $f.chkLoad
 
         grid configure $f.btnMouse -sticky w
 
