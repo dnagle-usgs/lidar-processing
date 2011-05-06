@@ -198,7 +198,9 @@ func georef_eaarl1(rasts, gns, ins, ops, daystart) {
    mirang = -22.5;
 
    // Apply biases
-   rng -= ops.range_biasM;
+   rng = (rng - ops.range_biasM)(,,-) +
+      [ops.chn1_range_bias, ops.chn2_range_bias, ops.chn3_range_bias](-,-,);
+
    aR += ops.roll_bias;
    aP += ops.pitch_bias;
    aY += ops.yaw_bias;
@@ -214,12 +216,12 @@ func georef_eaarl1(rasts, gns, ins, ops, daystart) {
    aY = aP = aR = gx = gy = gz = dx = dy = dz = [];
    cyaw = lasang = mirang = ang = rng = [];
 
-   x0 = array(transpose(georef(..,1)), 3);
-   y0 = array(transpose(georef(..,2)), 3);
-   z0 = array(transpose(georef(..,3)), 3);
-   x1 = array(transpose(georef(..,4)), 3);
-   y1 = array(transpose(georef(..,5)), 3);
-   z1 = array(transpose(georef(..,6)), 3);
+   x0 = transpose(georef(..,1), [1,2]);
+   y0 = transpose(georef(..,2), [1,2]);
+   z0 = transpose(georef(..,3), [1,2]);
+   x1 = transpose(georef(..,4), [1,2]);
+   y1 = transpose(georef(..,5), [1,2]);
+   z1 = transpose(georef(..,6), [1,2]);
    georef = [];
 
    raw_xyz0 = [x0, y0, z0];
