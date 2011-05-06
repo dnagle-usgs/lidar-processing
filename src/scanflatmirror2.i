@@ -48,7 +48,8 @@ func scanflatmirror2_direct_vector(yaw, pitch, roll, gx, gy, gz, dx, dy, dz, cya
 */
 
 // These are the dimensions upon which everything else is based.
-dims = dimsof(yaw);
+dims = dimsof(yaw, pitch, roll, gx, gy, gz, dx, dy, dz, cyaw, lasang, mirang,
+   curang, mag);
 
 // Convert the yaw, pitch, roll into radians. We name the variables z, x, y
 // because these are the rotations about those axes.
