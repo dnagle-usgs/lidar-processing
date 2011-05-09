@@ -629,18 +629,28 @@ return home;
 }
 
 
-func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, max_elv=, normalize=) {
+func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, max_elv=, 
+normalize=, plot_discards=, verbose=) {
 /* DOCUMENT lfp_metrics(lfpveg, thresh=)
   This function calculates the composite large footprint metrics.
   amar nayegandhi 04/19/04.
+  updated 04/2011 by christine k. to include the following:
+	- all ch < 0.15 is set to 0
+	- home is now median of canopy portion of waveform only
+	- if ch < home AND ch < 3 then home=ch/2
+	- modified how lgr is determined, which changes crr/grr
+	- modified fill routine so it includes 0-values, only replaces a 
+	no-data pixel if it has 4 or more neighbors and to improve performance
   INPUT:
       lfpveg: large-footprint waveform array
       thresh= amplitude threshold to consider significan return
       img = 2d array of bare-earth data at same resolution
-      fill = set to 1 to fill in gaps in the data.  This will use the average value of the 5x5 neighbor to defien the value of the output metric. Those that are set to -1000 will be ignored.
+      fill = set to 1 to fill in gaps in the data.  This will use the average value of the 3x3 neighbor to defien the value of the output metric. Those that are set to -1000 will be ignored.
       min_elv = minimum elevation (in meters) to consider for bare earth
       max_elv = maximum elevation (in meters) to consider for canopy top elev.
       normalize = set to 0 if you do not want to normalize (default = 1).
+      plot_discards = set to 1 if you want to see plots of the pixels waveforms being discarded
+      verbose = set to 1 if you want to see a summary of the pixels where home is set to ch/2 and where ch is set to 0
   the output array will contain the following metrics:
    cht;	//canopy height in meters
    be;	// bare earth in meters
@@ -665,7 +675,10 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, max_elv=, normalize=) {
  if (is_void(thresh)) thresh = 5;
  if (is_void(min_elv)) min_elv = -2;
  if (is_void(max_elv)) max_elv = 300;
-  
+ discard=0;
+ counter=0;
+ adjusted=0;
+
  for (i=1;i<=dims(2);i++) {
     for (j=1;j<=dims(3);j++) {
 	lfprx = *lfpveg(i,j).rx;
@@ -745,6 +758,7 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, max_elv=, normalize=) {
 	     lfpelv = lfpelv(sidx:);
 	 }
 	gidx = (abs(lfpelv - img(i,j)))(mnx);
+	fgr=1; lgr=gidx+1;
 	if (abs(lfpelv(gidx)-img(i,j)) > 2) {
 	   // the composite waveform is "above" the elevation determined to be the ground.  All returns are from the canopy.
 	   //write, "composite waveform above ground elevation"
@@ -753,7 +767,8 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, max_elv=, normalize=) {
 	  // the waveforms is entirely from the canopy. CRR and GRR need to be set NOW.
 	   out(3,i,j) = 0;
 	   out(4,i,j) = 1;
-        } else {
+         } 
+/*	   else {
 	 mxxgnd = min(gidx+5, numberof(lfpelv)); // index to the waveform sample indicating the last point in the trailing edge of the ground return
          mxxgnd = long(mxxgnd(1));
          mnxgnd = max(gidx-5, 1);// index to the waveform sample indicating the first point in the leading edge of the ground return
@@ -776,46 +791,74 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, max_elv=, normalize=) {
 	   fgr = mnxgnd;
 	 }
        }
+*/
       }
- 
-      if (numberof(lfprx) < 2) continue;
-      lfpcum = (lfprx)(cum);
-      menergy = lfpcum(0)/2;
-      mindx = abs(lfpcum-menergy)(mnx);
-      out(5,i,j) = (lfpelv)(mindx)-out(2,i,j); // this is HOME 
+
+      idx = where(lfpelv > out(2,i,j));		// pts above BE
+      if (numberof(lfprx(idx)) < 2) continue;
+      beoffset = numberof(lfprx) - numberof(idx);
+      lfpcum = lfprx(idx)(cum)(2:);
+      menergy = lfpcum(1) + (lfpcum(0)-lfpcum(1))/2;
+//      mindx = abs(lfpcum-menergy)(mnx);
+//      out(5,i,j) = (lfpelv)(mindx+beoffset)-out(2,i,j); // this is HOME
+      mindx = interp(indgen(numberof(lfpcum)), lfpcum, menergy);
+      out(5,i,j) = interp(lfpelv, indgen(numberof(lfprx)), mindx+beoffset)-out(2,i,j);	// this is HOME
 
       lfpdif = where(lfprx(dif) <= -thresh);
       if (!is_array(lfpdif)) continue;
       mnxcan = min(lfpdif(0)-3,numberof(lfprx));
       if (mnxcan <= 0) continue;
       //mxxcan = (lfprx(mnxcan:lfpdif(0)))(mxx) + mnxcan -1;
-      mxidx = where(lfprx(mnxcan:lfpdif(0))(dif) < 0);
+      mxidx = where((lfprx(mnxcan:lfpdif(0)+1)(dif))< 0);
+
       if (is_array(mxidx)) {
 	mxxcan = mxidx(0) + mnxcan - 1;
       } else {
         mxxcan = (lfprx(mnxcan:lfpdif(0)))(mxx) + mnxcan -1;
       }
       out(1,i,j) = lfpelv(mxxcan)-out(2,i,j); // this is Canopy Height 
-      if (fgr >= lgr) continue;
-      if (lgr > numberof(lfprx)) lgr = numberof(lfprx);
-      if (fgr > numberof(lfprx)) fgr = numberof(lfprx);
-	lfpgnd = lfprx(fgr:lgr);
-	lfpgnpix = lfpnpix(fgr:lgr);
-	lfpcpy = lfprx(lgr:);
-	lfpcnpix = lfpnpix(lgr:);
-	lfpgsum = (lfpgnd)(sum);
-	lfpcsum = (lfpcpy)(sum);
-	if (out(1,i,j) <= 1) { // return only from gnd
+
+//	if (out(1,i,j) <= 1) { // return only from gnd
+	if (out(1,i,j) <= 0.15) { // return only from gnd
 	    out(1,i,j) = 0;
 	    out(3,i,j) = 1.0;
 	    out(4,i,j) = 0.0;
-        } else {
-	 if ((out(2,i,j) > min_elv) && (out(2,i,j) < max_elv)) {
-           out(3,i,j) = lfpgsum/(lfpgsum+lfpcsum);
-	   out(4,i,j) = lfpcsum/(lfpcsum+lfpgsum);
-         } 
-        }
+	    out(5,i,j) = 0.0;	// added by cjk
+	    counter++;
+	} else {
+	    if ((out(2,i,j) > min_elv) && (out(2,i,j) < max_elv)) {
+		lgndidx = where((lfpelv - out(2,i,j)) <= 0.5);
+		if (is_array(lgndidx)) lgr = lgndidx(0);
+		if (lgr > numberof(lfprx)) lgr = numberof(lfprx);
+		if (fgr > lgr) continue;
+//		if (fgr > numberof(lfprx)) fgr = numberof(lfprx);
+		lfpgnd = lfprx(fgr:lgr);
+		lfpgsum = (lfpgnd)(sum);
+		if (fgr == 0) {
+		   lfpcsum = 1;
+		   lfpgsum = 0;
+		} else if (lgr == mxxcan){
+		   lfpcsum = 0;
+		} else {
+		   lfpcpy = lfprx((lgr+1):mxxcan);
+		   lfpcsum = (lfpcpy)(sum);
+		}
+		out(3,i,j) = lfpgsum/(lfpgsum+lfpcsum);
+		out(4,i,j) = lfpcsum/(lfpcsum+lfpgsum);
+	    } 
+	}
 
+	if (out(1,i,j) <= out(5,i,j)) {
+	    if (out(1,i,j) <= 3) {
+		out(5,i,j) = out(1,i,j)/2;
+		if (out(1,i,j) !=0) adjusted++;
+	    } else {
+//		print, "WARNING ch < home and > 3", i,j, out(,i,j);
+		if (plot_discards) plot_wv, lfpelv, lfprx, out(,i,j), i, j;
+		out(,i,j) = [-1000,out(2,i,j),-1000,-1000,-1000];
+		discard++;
+	    }
+	}
  	/*
 	if ((out(2,i,j) != -1000) && (out(2,i,j) <= out(1,i,j))) {
 	  out(1,i,j) -= out(2,i,j); // correct CH for bare earth
@@ -824,56 +867,58 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, max_elv=, normalize=) {
 	  out(,i,j) = [-1000,-1000,-1000,-1000,-1000];
 	}
 	*/
-
-	// DO SOME FINAL CHECKS ON THE METRICS
-	// ch cannot be less than 0.
-	if (out(1,i,j) < 0) out(,i,j) = [-1000,-1000,-1000,-1000,-1000];
-	// home cannot be less than 0
-	if (out(5,i,j) < 0) out(,i,j) = [-1000,-1000,-1000,-1000,-1000];
     }
  }
 
+ if (verbose) {
+    nodat=[0,0,0,0,0];
+    for (p=1; p <=5; p++) nodat(p) = numberof(where(out(p,,) == -1000));
+
+    if ((numberof(where(out(1,,) < 0)) - nodat(1)) != 0)
+	write, "ch<0", numberof(where(out(1,,) < 0)) - nodat(1);
+    if ((numberof(where(out(5,,) < 0)) - nodat(5)) != 0)
+	write, "home<0", numberof(out(5,,) < 0) - nodat(5);
+    windx = where(out(1,,) < out(5,,));
+    if (is_array(windx)){
+	if (avg(out(1,windx)) != -1000)
+	   write, "ch<home", numberof(where(out(1,windx) != -1000));
+    }
+
+    write, discard, "points discarded.";
+    write, counter, "adjusted to 0";
+    write, adjusted, "adjusted to ch/2";
+ }
+
+  // DO SOME FINAL CHECKS ON THE METRICS
+  // ch cannot be less than 0.
+// if (out(1,i,j) < 0) out(,i,j) = [-1000,-1000,-1000,-1000,-1000];
+  // home cannot be less than 0
+// if (out(5,i,j) < 0) out(,i,j) = [-1000,-1000,-1000,-1000,-1000];
+
+
  if (fill) { // use this to fill in small gaps in the data.
-   fillgrid = 3;
+   fillgrid = 3;	// this is the size of the smoothing mask
+   fillgrid = int(fillgrid/2);
    new_out = out;
-   for (i=fillgrid;i<dims(2)-1;i++) {
-     ilow=i-fillgrid-1;
-     ihigh=i+fillgrid-1;
-     for (j=3;j<dims(3)-1;j++) {
-        jlow=j-2;
-        jhigh=j+2;
-	if (out(1,i,j) == -1000) continue;
-	if (out(4,i,j) == 0) {
-	  data = out(4,ilow:ihigh,jlow:jhigh);
-	  idx = where(data != 0 & data != -1000);
-          if (is_array(idx)) 
-	  new_out(4,i,j) = avg(data(idx));
-	}
-	if (out(3,i,j) == 0) {
-	  data = out(3,ilow:ihigh,jlow:jhigh);
-	  idx = where(data != 0 & data != -1000);
-          if (is_array(idx)) 
-	  new_out(3,i,j) = avg(data(idx));
-	}
-	if (out(2,i,j) == 0) {
-	  data = out(2,ilow:ihigh,jlow:jhigh);
-	  idx = where(data != 0 & data != -1000);
-          if (is_array(idx)) 
-	  new_out(2,i,j) = avg(data(idx));
-	}
-	if (out(1,i,j) == 0) {
-	  data = out(1,ilow:ihigh,jlow:jhigh);
-	  idx = where(data != 0 & data != -1000);
-          if (is_array(idx)) 
-	  new_out(1,i,j) = avg(data(idx));
-	}
-	if (out(5,i,j) == 0) {
-	  data = out(5,ilow:ihigh,jlow:jhigh);
-	  idx = where(data != 0 & data != -1000);
-          if (is_array(idx)) 
-	  new_out(5,i,j) = avg(data(idx));
-	}
-     }
+   nodat=[0,0,0,0,0];
+
+   for (p=1; p<=5; p++) {
+      fidx=where(out(p,,) == -1000);
+      nodat(p) = numberof(fidx);
+      for (q=1; q<=nodat(p); q++) {
+	j=int(fidx(q)/dims(2))+1;
+	i=fidx(q)-(dims(2)*(j-1));
+	ilow=i-fillgrid;
+	ihigh=i+fillgrid;
+	jlow=j-fillgrid;
+	jhigh=j+fillgrid;
+	if ((ilow < 1) || (jlow < 1) || (ihigh > dims(2)) || (jhigh > dims(3))) continue;
+
+	data = out(p,ilow:ihigh,jlow:jhigh);
+	idx = where(data != -1000);
+	if (numberof(idx) > 3)
+	   new_out(p,i,j) = avg(data(idx));
+      }
    }
    out = new_out;
    new_out = [];
@@ -888,10 +933,21 @@ func lfp_metrics(lfpveg, thresh=, img=, fill=, min_elv=, max_elv=, normalize=) {
     }
  }
 */
-	     
+
 return out;
 }
 
+
+func plot_wv(lfpelv, lfprx, mets, i ,j) {
+  fma;
+  plg, lfpelv, lfprx;
+  plmk, lfpelv, lfprx, color="red";
+  plhline, mets(2), color="green";
+  plhline, mets(1)+mets(2), color="red";
+  plhline, mets(5)+mets(2), color="blue";
+  pltitle, swrite(format="%d%s%d",i,",",j);
+  pause, 1500;
+}
   	
 
 func plot_metrics(vmets, lfpveg, vmetsidx=, cmin=, cmax=, msize=, marker= ,win=, dofma=, xbias=, ybias=) {

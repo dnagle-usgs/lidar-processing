@@ -148,7 +148,7 @@ func batch_veg_lfpw(ipath, opath, fname=, searchstr=, onlyupdate=, only_if_mf=, 
  return
 }
 
-func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, fill=, min_elv=, max_elv=, outwin=, onlyplot=, dofma=, use_be=, be_path=, be_ss=, smooth_be=, cl_lfpw=, onlyupdate=) {
+func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, fill=, min_elv=, max_elv=, outwin=, onlyplot=, dofma=, use_be=, be_path=, be_ss=, smooth_be=, cl_lfpw=, onlyupdate=, plot_discards=, verbose=) {
 /* DOCUMENT batch_veg_metrics(ipath, opath, searchstr=, plot=, plotclasses=)
    amar nayegandhi 10/01/04
    ipath = input path
@@ -173,6 +173,8 @@ func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, 
    cl_lfpw = set to 1 to reduce the noise in the large footprint waveform. (Default cl_lfpw=1)
 
    onlyupdate = only make metrics files for those tiles that don't have the output metric files.  Useful when the function is re-started midway through a batch run.
+   plot_discards = plot waveforms of pixels being discarded
+   verbose = print summary of the number of pixels where HOME and CH are adjusted
 */
 
    // start timer
@@ -340,7 +342,7 @@ func batch_veg_metrics(ipath, opath=, fname=,searchstr=, plotclasses=, thresh=, 
 	   outveg = clean_lfpw(outveg, beimg=img, min_elv=min_elv, max_elv=max_elv)
 	  }
 	   write, "computing large-footprint metrics..."
-	  mets = lfp_metrics(outveg, thresh=thresh, img=img, fill=fill, min_elv=min_elv);
+	  mets = lfp_metrics(outveg, thresh=thresh, img=img, fill=fill, min_elv=min_elv, plot_discards=plot_discards, verbose=verbose);
 	  write, "writing metrics file..."
  	  // write the mets array along with the positioning information and size of bin
 	  mets_pos = [[outveg(1,1).east, outveg(1,1).north], [outveg(0,0).east, outveg(0,0).north]]/100;
@@ -485,6 +487,8 @@ func batch_merge_veg_energy(ipath, opath=, searchstr=) {
     
        
   }
+//crash, will ya
+//dummy -=1;
 
 }
 
