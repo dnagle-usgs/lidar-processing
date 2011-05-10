@@ -1,6 +1,41 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "eaarl.i";
 
+func wfs_extract(method, wfs, lim=) {
+/* DOCUMENT result = wfs_extract(method, wfs, lim=)
+   Wrapper around various waveform target extraction algorithms.
+
+   Parameters:
+      method: Specifies which algorithm to use. Valid values:
+            "centroid" - Uses wf_centroid
+            "peak" - Uses wf_peak
+            "peaks" - Uses wf_peaks
+      wfs: An array of pointers to arrays of waveform data.
+
+   Options:
+      lim= Passed through to wf_centroid.
+
+   Returns:
+      Array of pointers to arrays of results.
+*/
+   result = array(pointer, dimsof(wfs));
+   n = numberof(wfs);
+
+   if(method == "centroid")
+      for(i = 1; i <= n; i++)
+         result(i) = &wf_centroid(*wfs(i), lim=lim);
+
+   if(method == "peak")
+      for(i = 1; i <= n; i++)
+         result(i) = &wf_peak(*wfs(i));
+
+   if(method == "peaks")
+      for(i = 1; i <= n; i++)
+         result(i) = &wf_peaks(*wfs(i));
+
+   return result;
+}
+
 func wf_centroid(wf, lim=) {
 /* DOCUMENT centroid = wf_centroid(wf, lim=)
    Returns the centroid index for a waveform.
