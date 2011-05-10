@@ -363,6 +363,31 @@ func rereference_angle(ang, fdir, fref, tdir, tref, rad=) {
    return ang;
 }
 
+func point_project(p1, p2, dist, tp=) {
+/* DOCUMENT point_project(p1, p2, dist, tp=)
+   Generalized point projection function. p1 and p2 must have conformable
+   dimensions. This works with points of any dimension (2d, 3d, or higher).
+
+   By default, points are assumed to be similar to [[x1,y1],[x2,y2],...]. To
+   provide points as [[x1,x2,...],[y1,y2,...]], set tp=1 (stands for
+   "transpose", and indicates that an internal set of transposes are
+   necessary).
+
+   This will return the point that lies DIST distance further beyond P2 from
+   P1. Some examples:
+
+      > point_project([0,0,0], [1,1,1], 2)
+      [2.1547,2.1547,2.1547]
+      > point_project([0,1], [0,0], 1)
+      [0,-1]
+*/
+   d1 = ppdist(p1, p2, tp=tp);
+   if(nallof(d1))
+      error, "p1 and p2 must not be the same";
+   d2 = d1 + dist;
+   return p1 + (p2 - p1) * (d2/d1);
+}
+
 func ppdist(p1, p2, tp=) {
 /* DOCUMENT ppdist(p1, p2, tp=)
    Generalized point-to-point distance function. p1 and p2 must have
