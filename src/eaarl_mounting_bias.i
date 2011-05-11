@@ -68,17 +68,10 @@ for the angle biases and the x,y and z offsets.
 *************************************************************/
  ops_default = array(mission_constants);
  ops_default.range_biasM =   0.7962;         // Laser range measurement bias.
-
-// chn range bias and max_sfc_sat settings are set by default to the values
-// below to allow backward compatibility.  The older ops_conf.i files did not
-// have these values set.  If these values remain -999 and -1 by default, then
-// the functions that use them will change it to the expected value
-// (0,0.36,0.23 for chn range biases and 2 for max_sfc_sat)
-
- ops_default.chn1_range_bias = -999;
- ops_default.chn2_range_bias = -999;
- ops_default.chn3_range_bias = -999;
- ops_default.max_sfc_sat = -1;
+ ops_default.chn1_range_bias = 0.;
+ ops_default.chn2_range_bias = 0.36;
+ ops_default.chn3_range_bias = 0.23;
+ ops_default.max_sfc_sat = 2;
 
  ops_tans = array(mission_constants);
  ops_tans = ops_default;
@@ -220,24 +213,17 @@ func write_ops_conf(fn, conf=) {
 
 func ops_conf_validate(&conf) {
 /* DOCUMENT ops_conf_validate, conf;
-   The channel range biases and the max_sfc_sat setting are set by default to
-   flag values to allow for backwards compatibility with old ops_conf.i files
-   that do not have the values set.
-
-   This function detects the flag values and converts them to proper values.
-
-   Setting           Flag value     Converted value
-   chn1_range_bias   -999           0.
-   chn2_range_bias   -999           0.36
-   chn3_range_bias   -999           0.23
-   max_sfc_sat       -1             2
+   This verifies that chn1_range_bias, chn2_range_bias, and chn3_range_bias are
+   properly set. Older ops_conf.i files may not have these settings defined,
+   and would need to have them specified to work with the current version of
+   the software.
 */
-   if(conf.chn1_range_bias == -999)
-      conf.chn1_range_bias = 0.;
-   if(conf.chn2_range_bias == -999)
-      conf.chn2_range_bias = 0.36;
-   if(conf.chn3_range_bias == -999)
-      conf.chn3_range_bias = 0.23;
-   if(conf.max_sfc_sat == -1)
-      conf.max_sfc_sat = 2;
+   if(noneof([conf.chn1_range_bias, conf.chn2_range_bias, conf.chn3_range_bias])) {
+      write,
+          "============================================================\n" +
+         " WARNING: Your ops_conf does not have valid values for\n" +
+         " chn1_range_bias, chn2_range_bias, and chn3_range_bias. You\n" +
+         " may also need to verify the value for max_sfc_sat.\n" +
+         " ============================================================";
+   }
 }
