@@ -128,7 +128,7 @@ func cent(a) {
    mv = a(max);
    mx = a(mxx);
 
-   c = wf_centroid(a, lim=12);
+   c = min(wf_centroid(a, lim=12), 10000.);
    return [c, mx, mv];
 }
 
