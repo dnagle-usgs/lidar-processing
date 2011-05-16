@@ -380,12 +380,14 @@ func point_project(p1, p2, dist, tp=) {
       [2.1547,2.1547,2.1547]
       > point_project([0,1], [0,0], 1)
       [0,-1]
+      > point_project([0,1], [0,0], [1,2,3])
+      [[0,-1],[0,-2],[0,-3]]
 */
    d1 = ppdist(p1, p2, tp=tp);
    if(nallof(d1))
       error, "p1 and p2 must not be the same";
    d2 = d1 + dist;
-   return p1 + (p2 - p1) * (d2/d1);
+   return p1 + (p2 - p1) * (d2/d1)(-,);
 }
 
 func ppdist(p1, p2, tp=) {
