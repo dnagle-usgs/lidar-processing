@@ -377,35 +377,36 @@ func array_allocate(&data, request) {
 
    Instead of writing this:
 
-   data = [];
-   for(i = 1; i <= 100000; i++) {
-      newdata = getnewdata(i);
-      grow, data, newdata;
-   }
+      data = [];
+      for(i = 1; i <= 100000; i++) {
+         newdata = getnewdata(i);
+         grow, data, newdata;
+      }
 
    Write this instead:
 
-   data = array(double, 1);
-   last = 0;
-   for(i = 1; i <= 100000; i++) {
-      newdata = getnewdata(i);
-      array_allocate, data, numberof(newdata) + last;
-      data(last+1:last+numberof(newdata)) = newdata;
-      last += numberof(newdata);
-   }
-   data = data(:last);
+      data = array(double, 1);
+      last = 0;
+      for(i = 1; i <= 100000; i++) {
+         newdata = getnewdata(i);
+         array_allocate, data, numberof(newdata) + last;
+         data(last+1:last+numberof(newdata)) = newdata;
+         last += numberof(newdata);
+      }
+      data = data(:last);
 
-   If you are working with multidimensional data, write this instead:
+   If you are working with multidimensional data, REQUEST should be the desired
+   size of the final dimension. Example usage:
 
-   data = array(double, 2, 1);
-   last = 0;
-   for(i = 1; i <= 100000; i++) {
-      newdata = getnewdata(i);
-      array_allocate, data, dimsof(newdata)(0) + last;
-      data(.., last+1:last+dimsof(newdata)(0)) = newdata;
-      last += dimsof(newdata)(0);
-   }
-   data = data(.., :last);
+      data = array(double, 2, 1);
+      last = 0;
+      for(i = 1; i <= 100000; i++) {
+         newdata = getnewdata(i);
+         array_allocate, data, dimsof(newdata)(0) + last;
+         data(.., last+1:last+dimsof(newdata)(0)) = newdata;
+         last += dimsof(newdata)(0);
+      }
+      data = data(.., :last);
 
    This will drastically speed running time up by reducing the number of times
    mememory has to be reallocated for your data. Repeated grows is very
