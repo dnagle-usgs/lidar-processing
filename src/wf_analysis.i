@@ -55,7 +55,7 @@ func wf_centroid(wf, lim=) {
    If wf=[], then will return inf.
 */
    if(!numberof(wf))
-      return [1e1000];
+      return 1e1000;
 
    if(!is_void(lim) && lim < numberof(wf))
       wf = wf(:lim);
@@ -63,12 +63,12 @@ func wf_centroid(wf, lim=) {
    sum_power = wf(sum);
 
    if(!sum_power)
-      return [1e1000];
+      return 1e1000;
 
    weighted_idx = double(wf) * indgen(numberof(wf));
    weighted_sum = weighted_idx(sum);
 
-   return [weighted_sum / sum_power];
+   return weighted_sum / sum_power;
 }
 
 func wf_peak(wf) {
@@ -82,8 +82,8 @@ func wf_peak(wf) {
       Integer position in wf where peak is located.
 */
    if(!numberof(wf))
-      return [1e1000];
-   return [wf(mxx)];
+      return 1e1000;
+   return wf(mxx);
 }
 
 func wf_peaks(wf) {
