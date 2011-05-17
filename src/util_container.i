@@ -414,6 +414,7 @@ func array_allocate(&data, request) {
    The only caveat is that you have to know what kind of data structure and
    dimensions you're using up front (to initialize the array).
 */
+   local tmp;
    if(is_void(data))
       error, "data array not initialized";
    dims = is_scalar(data) ? [1,1] : dimsof(data);
@@ -425,19 +426,26 @@ func array_allocate(&data, request) {
 
    // If we need to more than double... then just grow to the size requested
    if(size/double(request) < 0.5) {
-      dims(0) = request - size;
-      grow, data, array(data(1), dims);
+      dims(0) = request;
+      eq_nocopy, tmp, data;
+      data = array(structof(tmp), dims);
+      data(.., :size) = tmp;
       return;
    }
 
    // Try to double. If we fail, try to increase to the size requested.
    if(catch(0x08)) {
-      dims(0) = request - size;
-      grow, data, array(data(1), dims);
+      dims(0) = request;
+      eq_nocopy, tmp, data;
+      data = array(structof(tmp), dims);
+      data(.., :size) = tmp;
       return;
    }
 
-   grow, data, data;
+   dims(0) = size * 2;
+   eq_nocopy, tmp, data;
+   data = array(structof(tmp), dims);
+   data(.., :size) = tmp;
 }
 
 func splitary(args) {
