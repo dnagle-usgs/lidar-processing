@@ -332,7 +332,11 @@ func map_pointers(__map__f, __map__input) {
 
 func merge_pointers(pary) {
 /* DOCUMENT merged = merge_pointers(ptr_ary);
-   Merges the data pointed to by an array of pointers.
+   Merges the data pointed to by an array of pointers. This is effectively
+   equivalent to:
+      for(i = 1; i <= numberof(ptr_ary); i++)
+         grow, merged, *ptr_ary(i);
+   However, it is much more efficient as it pre-allocates space.
 
    > example = array(pointer, 3);
    > example(1) = &[1,2,3];
@@ -340,6 +344,11 @@ func merge_pointers(pary) {
    > example(3) = &[7,8,9,10];
    > merge_pointers(example)
    [1,2,3,4,5,6,7,8,9,10]
+   > example(1) = &[[1,2],[3,4]]
+   > example(2) = &[[5,6]]
+   > example(3) = &[[7,8],[9,10]]
+   > merge_pointers(example)
+   [[1,2],[3,4],[5,6],[7,8],[9,10]]
 */
    // Edge case: no input
    if(numberof(pary) == 0 || noneof(pary))
@@ -347,14 +356,16 @@ func merge_pointers(pary) {
    // Eliminate null pointers
    pary = pary(where(pary));
 
-   size = 0;
-   for(i = 1; i <= numberof(pary); i++)
-      size += numberof(*pary(i));
-   mary = array(structof(*pary(1)), size);
+   dims = [];
+   count = numberof(pary);
+   for(i = 1; i <= count; i++)
+      accum_growdims, dims, dimsof(*pary(i));
+   mary = array(structof(*pary(1)), dims);
    offset = 1;
-   for(i= 1; i <= numberof(pary); i++) {
-      nextoffset = offset + numberof(*pary(i));
-      mary(offset:nextoffset-1) = (*pary(i))(*);
+   for(i = 1; i <= count; i++) {
+      d = dimsof(*pary(i));
+      nextoffset = offset + (d(1) < dims(1) ? 1 : d(0));
+      mary(.., offset:nextoffset-1) = *pary(i);
       offset = nextoffset;
    }
    return mary;
