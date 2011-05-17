@@ -47,6 +47,33 @@ func h_merge(..) {
    return obj;
 }
 
+func accum_growdims(&dims, d) {
+/* DOCUMENT accum_growdims, dims, d
+   Accumulate a dimension argument D onto a dimension list DIMS. The
+   accumulation is handled as if the two arrays represented were combined with
+   grow.
+*/
+   if(is_void(dims)) {
+      // Broadcast a scalar up to an array
+      dims = d(1) ? d : [1,1];
+   } else if(is_void(d)) {
+      error, "no dimensions were provided";
+   } else {
+      if(dims(1) < d(1))
+         error, "dimensions not conformable";
+      for(i = 2; i < numberof(dims) && i < numberof(d); i++)
+         if(dims(i) != d(i))
+            error, "dimensions not conformable";
+      if(dims(1) > d(1)) {
+         // If d has to be broadcasted, it will simply add 1 to the final
+         // array's final dimension.
+         dims(0)++;
+      } else {
+         dims(0) += d(0);
+      }
+   }
+}
+
 func assign(args) {
 /* DOCUMENT assign, ary, v1, v2, v3, ...
    Assigns the values in an array to the specified variables. For example:
