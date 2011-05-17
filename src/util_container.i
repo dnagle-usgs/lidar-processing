@@ -395,15 +395,29 @@ func array_allocate(&data, request) {
    }
    data = data(:last);
 
+   If you are working with multidimensional data, write this instead:
+
+   data = array(double, 2, 1);
+   last = 0;
+   for(i = 1; i <= 100000; i++) {
+      newdata = getnewdata(i);
+      array_allocate, data, dimsof(newdata)(0) + last;
+      data(.., last+1:last+dimsof(newdata)(0)) = newdata;
+      last += dimsof(newdata)(0);
+   }
+   data = data(.., :last);
+
    This will drastically speed running time up by reducing the number of times
    mememory has to be reallocated for your data. Repeated grows is very
    expensive!
 
-   The only caveats are that you have to know what kind of data structure
-   you're using up front (to pre-create the array) and that it has to be
-   one-dimensional.
+   The only caveat is that you have to know what kind of data structure and
+   dimensions you're using up front (to initialize the array).
 */
-   size = numberof(data);
+   if(is_void(data))
+      error, "data array not initialized";
+   dims = is_scalar(data) ? [1,1] : dimsof(data);
+   size = dims(0);
 
    // If we have enough space... do nothing!
    if(request <= size)
@@ -411,13 +425,15 @@ func array_allocate(&data, request) {
 
    // If we need to more than double... then just grow to the size requested
    if(size/double(request) < 0.5) {
-      grow, data, data(array('\01', request-size));
+      dims(0) = request - size;
+      grow, data, array(data(1), dims);
       return;
    }
 
    // Try to double. If we fail, try to increase to the size requested.
    if(catch(0x08)) {
-      grow, data, data(array('\01', request-size));
+      dims(0) = request - size;
+      grow, data, array(data(1), dims);
       return;
    }
 
