@@ -84,9 +84,11 @@ func _set_intersection_master(A, B, flag, idx, delta) {
       _set_intersect_generic
       _set_intersect_delta
 */
-   // Trivial case
-   if(! numberof(A) || ! numberof(B))
+   // Trivial cases
+   if(! numberof(A))
       return [];
+   if(! numberof(B))
+      return idx ? indgen(numberof(A)) : A;
 
    if(is_scalar(A)) {
       aw = [1];
