@@ -593,12 +593,14 @@ func show_wf_transmit(rast, pix, win=, xfma=) {
    window, win;
 
    if(xfma) fma;
-   plmk, tx, marker=1, msize=0.3, color="black";
-   plg, tx;
 
-   xtitle = swrite(format="Pix:%d  Digital Counts", pix);
+   time = indgen(numberof(tx));
+   plg, time, tx, marker=0, color="black";
+   plmk, time, tx, msize=.2, marker=1, color="black";
+
+   xtitle = swrite(format="Pix:%d   Digital Counts", pix);
    if(!is_void(raster)) xtitle = swrite(format="Raster:%d %s", raster, xtitle);
-   ytitle = "Relative Energy";
+   ytitle = "Index";
    xytitles, xtitle, ytitle;
    pltitle, regsub("_", data_path, "!_", all=1);
 
