@@ -463,8 +463,10 @@ func mission_receive(void) {
 
 func missiondata_cache(action, day=) {
 /* DOCUMENT missiondata_cache, action
-    Does something cache related, depending on the action specified.
+    Does something cache related, depending on the action specified. Action
+    must be a string.
 
+        query   - Returns 1 if the cache is enabled, 0 if not
         clear   - Clears the cache
         enable  - Enables the use of the cache
         disable - Disabled the use of the cache (but does not clear it)
@@ -473,6 +475,10 @@ func missiondata_cache(action, day=) {
                 mission day. (Note: This does not write to file. It only
                 updates the cache so that working state is not lost.)
 
+    You can also pass the integers 1 or 0 to enable or disable the cache,
+    respectively. (Useful if you need to temporarily disable the cache and then
+    return it to its previous state.)
+
     Options:
         day= Only used for the "recache" option. If provided, this will update
                 the cache for the given day instead of the current mission day.
@@ -480,8 +486,12 @@ func missiondata_cache(action, day=) {
 */
     extern __mission_conf, __mission_day, __mission_cache, __mission_settings;
     default, day, __mission_day;
-    if(action == "clear") {
+    if(is_integer(action)) {
+        h_set, __mission_settings, "use cache", (action ? 1 : 0);
+    } else if(action == "clear") {
         __mission_cache = h_new();
+    } else if(action == "query") {
+        return __mission_settings("use cache");
     } else if(action == "enable") {
         h_set, __mission_settings, "use cache", 1;
     } else if(action == "disable") {
