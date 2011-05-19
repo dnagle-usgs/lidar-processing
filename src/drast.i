@@ -588,7 +588,6 @@ func show_wf_transmit(rast, pix, win=, xfma=) {
    }
 
    tx = *rast.tx(pix);
-   tx = tx(max) - tx;
 
    wbkp = current_window();
    window, win;
