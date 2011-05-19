@@ -12,7 +12,7 @@ func mission_georef_eaarl1(outdir=, update=) {
             update=0    Process all files; replace any existing PBD files.
             update=1    Create missing PBD files, skip existing ones.
 */
-   cache_state = __mission_settings("use cache");
+   cache_state = missiondata_cache("query");
    missiondata_cache, "disable";
    missiondata_cache, "clear";
 
@@ -26,8 +26,7 @@ func mission_georef_eaarl1(outdir=, update=) {
          outdir=outdir, update=update, interval=45;
    }
 
-   if(cache_state)
-      missiondata_cache, "enable";
+   missiondata_cache, cache_state;
 }
 
 func batch_georef_eaarl1(tlddir, files=, searchstr=, outdir=, gns=, ins=, ops=,
