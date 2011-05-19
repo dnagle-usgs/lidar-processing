@@ -243,7 +243,7 @@ if {![namespace exists ::l1pro::pixelwf]} {
             dict for {ns vars} $data {
                 foreach var $vars {
                 validation_trace append vars::${ns}::$var \
-                        {expr {%V eq ""}} \
+                        {expr {"%V" eq ""}} \
                         -invalidcmd [list constrain %v between $range_min \
                                 and $range_max]
                 }
