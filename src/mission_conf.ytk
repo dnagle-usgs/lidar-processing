@@ -472,21 +472,35 @@ namespace eval mission {
     }
 
     proc menu_launch_rgb {} {
-        set rgb_p [list]
-        set rgb_t [list]
+        set paths [list]
+        set date ""
         foreach day [missionday_list] {
             if {[mission_has "rgb dir" $day]} {
-                lappend rgb_p [mission_get "rgb dir" $day]
-            }
-            if {[mission_has "rgb file" $day]} {
-                lappend rgb_t [mission_get "rgb file" $day]
+                lappend paths [mission_get "rgb dir" $day]
+                set date [mission_get "date" $day]
             }
         }
-        if {[llength $rgb_p]} {
+        if {[llength $paths]} {
+            if {$date < "2011"} {
+                set driver rgb::f2006::tarpaths
+            } elseif {[file tail [lindex $paths 0]] eq "cam1"} {
+                set driver rgb::f2006::tarpaths
+            } else {
+                set driver cir::f2010::tarpaths
+            }
             set rgb [sf::controller %AUTO%]
-            $rgb load rgb::f2006::tarpaths -paths $rgb_p
+            $rgb load $driver -paths $paths
             ybkg set_sf_bookmarks \"$rgb\"
-        } elseif {[llength $rgb_t]} {
+            return
+        }
+
+        set paths [list]
+        foreach day [missionday_list] {
+            if {[mission_has "rgb file" $day]} {
+                lappend paths [mission_get "rgb file" $day]
+            }
+        }
+        if {[llength $paths} {
             set rgb [sf::controller %AUTO%]
             $rgb load rgb::f2001::tarfiles -files $rgb_t
             ybkg set_sf_bookmarks \"$rgb\"
@@ -756,8 +770,16 @@ namespace eval mission {
 
     proc date_rgb {day} {
         if {[mission_has "rgb dir" $day]} {
+            set path [mission_get "rgb dir" $day]
+            if {[mission_get "date" $day] < "2011"} {
+                set driver rgb::f2006::tarpath
+            } elseif {[file tail $path] eq "cam1"} {
+                set driver rgb::f2006::tarpath
+            } else {
+                set driver cir::f2010::tarpath
+            }
             set rgb [sf::controller %AUTO%]
-            $rgb load rgb::f2006::tarpath -path [mission_get "rgb dir" $day]
+            $rgb load $driver -path $path
             ybkg set_sf_bookmark \"$rgb\" \"$day\"
         } elseif {[mission_has "rgb file" $day]} {
             set rgb [sf::controller %AUTO%]
