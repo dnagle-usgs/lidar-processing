@@ -1074,15 +1074,17 @@ func autoselect_rgb_dir(dir) {
     This function attempts to determine the EAARL rgb directory to load for a
     dataset. The dir parameter should be the path to the mission day directory.
 
-    If a subdirectory "cam1" exists, it will be returned. Otherwise, string(0)
-    is returned.
+    If a subdirectory "rgb" or "cam1" exists, it will be returned. Otherwise,
+    string(0) is returned.
 */
 // Original David B. Nagle 2009-05-12
-    rgb_dir = file_join(dir, "cam1");
-    if(file_isdir(rgb_dir))
-        return rgb_dir;
-    else
-        return string(0);
+    dirs = ["rgb", "cam1"];
+    for(i = 1; i <= numberof(dirs); i++) {
+        rgb_dir = file_join(dir, dirs(i));
+        if(file_isdir(rgb_dir))
+            return rgb_dir;
+    }
+    return string(0);
 }
 
 func autoselect_rgb_tar(dir) {
