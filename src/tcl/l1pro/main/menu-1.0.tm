@@ -295,6 +295,9 @@ proc menu_utilities_memory mb {
             -variable ::l1pro::memory::refresh \
             -value $delay
     }
+    $mb add separator
+    $mb add command {*}[menulabel "Memory monitor"] \
+        -command ::l1pro::memory::launch_monitor
 
     return $mb
 }
