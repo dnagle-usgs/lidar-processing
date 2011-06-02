@@ -375,10 +375,10 @@ sub apply_template {
    setnode($doc, $status, [qw/gridsys utm utmzone/], $utm->[4]);
    setnode($doc, $status, [qw/refSysInfo identCode/], 'NAD_1983_UTM_Zone_' . $utm->[4]);
 
-   setnode($doc, $status, [qw/spdom bounding southbc/], format_number($ll->[0]));
-   setnode($doc, $status, [qw/spdom bounding westbc/ ], format_number($ll->[1]));
-   setnode($doc, $status, [qw/spdom bounding northbc/], format_number($ll->[2]));
-   setnode($doc, $status, [qw/spdom bounding eastbc/ ], format_number($ll->[3]));
+   setnode($doc, $status, [qw/spdom bounding southbc/], $ll->[0]);
+   setnode($doc, $status, [qw/spdom bounding westbc/ ], $ll->[1]);
+   setnode($doc, $status, [qw/spdom bounding northbc/], $ll->[2]);
+   setnode($doc, $status, [qw/spdom bounding eastbc/ ], $ll->[3]);
 
    # Lat/lon
    setnode($doc, $status, [qw/dataIdInfo geoBox southBL/], format_number($utm->[0]));
