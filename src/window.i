@@ -1,7 +1,10 @@
 require, "eaarl.i";
 
-func change_window_style(style, win=, dofma=, dpi=) {
-/* DOCUMENT change_window_style, style, win=, dofma=, dpi=
+func change_window_style(style, win=, dofma=, dpi=, parent=, xpos=, ypos=,
+wait=) {
+/* DOCUMENT change_window_style, style, win=, dofma=, dpi=, parent=, xpos=,
+   ypos=, wait=
+
    Changes the style of a Yorick window.
    Parameter:
       style: Name of style sheet to use, such as "work" or "nobox"
@@ -11,6 +14,11 @@ func change_window_style(style, win=, dofma=, dpi=) {
       dofma= Set to 1 to issue an FMA prior to changing. This avoids the need
          to re-plot the window's contents.
       dpi= The DPI setting to use. Normally either dpi=75 or dpi=100.
+
+   These options are passed to window without modification:
+      parent=
+      xpos=
+      ypos=
 */
    local wdata;
    default, win, current_window();
@@ -41,7 +49,8 @@ func change_window_style(style, win=, dofma=, dpi=) {
       wdata = plot_hash(win);
 
    winkill, win;
-   window, win, dpi=dpi, style=style+".gs", width=width, height=height;
+   window, win, dpi=dpi, style=style+".gs", width=width, height=height,
+      parent=parent, xpos=xpos, ypos=ypos, wait=wait;
    window, win, width=0, height=0;
    limits, square=1;
 
