@@ -125,6 +125,7 @@ if {![namespace exists ::l1pro::tools::histelev]} {
             variable normalize 1
             variable win 7
             variable dofma 1
+            variable dock 1
             variable logy 0
 
             variable plot_histline_show 1
@@ -171,6 +172,12 @@ proc ::l1pro::tools::histelev::plot {} {
         kdeline "hide"
     }
 
+    if {$v::dock} {
+        cbar_tool_docked $v::win
+    } else {
+        cbar_tool
+    }
+
     set cmd "hist_data_plot, $::pro_var"
 
     set mode_names [dict merge [lreverse $::l1pro_data(mode_mapping)] \
@@ -207,7 +214,6 @@ proc ::l1pro::tools::histelev::plot {} {
                 {$v::kdesample != 100}     ", kdesample=$v::kdesample"
     }
     exp_send "$cmd\r"
-    cbar_tool
 }
 
 proc ::l1pro::tools::histelev::krnl_profile {} {
@@ -260,6 +266,7 @@ proc ::l1pro::tools::histelev::gui_general {f labelsVar} {
     ttk::labelframe $f -text "General settings"
     ttk::label $f.lblnormalize -text "Y axis: "
     ttk::label $f.lblwin -text "Window: "
+    ttk::label $f.lbldock -text "Dock buttons to window"
     ttk::label $f.lbldofma -text "Clear before plotting"
     ttk::label $f.lbllogy -text "Use logarithmic y axis"
     ttk::label $f.lblautobin -text "Automatically set bin size"
@@ -273,6 +280,8 @@ proc ::l1pro::tools::histelev::gui_general {f labelsVar} {
             }
     ttk::spinbox $f.win -from 0 -to 63 -increment 1 \
             -textvariable ${ns}::v::win
+    ttk::checkbutton $f.dock \
+            -variable ${ns}::v::dock
     ttk::checkbutton $f.dofma \
             -variable ${ns}::v::dofma
     ttk::checkbutton $f.logy \
@@ -283,14 +292,15 @@ proc ::l1pro::tools::histelev::gui_general {f labelsVar} {
             -textvariable ${ns}::v::binsize
     grid $f.lblnormalize $f.normalize
     grid $f.lblwin $f.win
+    grid $f.dock $f.lbldock
     grid $f.dofma $f.lbldofma
     grid $f.logy $f.lbllogy
     grid $f.autobin $f.lblautobin
     grid $f.lblbinsize $f.binsize
-    grid $f.lblnormalize $f.lblwin $f.dofma $f.logy $f.autobin $f.lblbinsize \
-            -sticky e
+    grid $f.lblnormalize $f.lblwin $f.dock $f.dofma $f.logy $f.autobin \
+            $f.lblbinsize -sticky e
     grid $f.normalize $f.win $f.binsize -sticky ew
-    grid $f.lbldofma $f.lbllogy $f.lblautobin -sticky w
+    grid $f.lbldock $f.lbldofma $f.lbllogy $f.lblautobin -sticky w
     grid columnconfigure $f 1 -weight 1
     lappend labels $f.lblnormalize $f.lblwin $f.lblbinsize
 
@@ -298,6 +308,7 @@ proc ::l1pro::tools::histelev::gui_general {f labelsVar} {
             -statemap {0 normal 1 disabled} \
             -statevariable ${ns}::v::auto_binsize
 
+    ::misc::bind::label_to_checkbutton $f.lbldock $f.dock
     ::misc::bind::label_to_checkbutton $f.lbldofma $f.dofma
     ::misc::bind::label_to_checkbutton $f.lbllogy $f.logy
     ::misc::bind::label_to_checkbutton $f.lblautobin $f.autobin
@@ -511,15 +522,62 @@ proc ::l1pro::tools::histelev::cbar_tool {} {
     grid columnconfigure $f.f {0 1 2} -weight 1 -uniform 1
 }
 
-proc ::l1pro::tools::histelev::cbar_do cmd {
+proc ::l1pro::tools::histelev::cbar_tool_docked {win} {
+    set ns [namespace current]
+    set w ${v::cbartop}_$win
+    if {[winfo exists $w]} {
+        return
+    }
+    toplevel $w
+    wm resizable $w 0 0
+    wm title $w "Window $win - Colorbar Tool"
+    bind $w <Destroy> [list ybkg "winkill $win"]
+
+    ttk::frame $w.f
+    grid $w.f -sticky news
+    grid columnconfigure $w 0 -weight 1
+    grid rowconfigure $w 0 -weight 1
+
+    set f $w.f
+    ttk::frame $f.plot -width 454 -height 477
+    ttk::frame $f.buttons
+    grid $f.plot -sticky news
+    grid $f.buttons -sticky news -pady 3
+    grid columnconfigure $f 0 -weight 1
+    grid rowconfigure $f 1 -weight 1
+
+    exp_send "change_window_style, \"work\", win=$win,\
+            parent=[winfo id $f.plot], xpos=0, ypos=0;\r"
+
+    set f $f.buttons
+
+    set cmd [list apply [list op "return \"${ns}::cbar_do \$op $win $w\""]]
+    ttk::button $f.cmax -text "Cmax" -width 0 -command [{*}$cmd cmax]
+    ttk::button $f.cmin -text "Cmin" -width 0 -command [{*}$cmd cmin]
+    ttk::button $f.both -text "Both" -width 0 -command [{*}$cmd both]
+    ttk::button $f.dism -text "Close" -width 0 -command [{*}$cmd dism]
+    ttk::button $f.bdis -text "Both & Close" -width 0 -command [{*}$cmd bdis]
+
+    grid $f.cmax $f.cmin $f.both $f.bdis $f.dism -sticky ew -padx 1 -pady 1
+    grid columnconfigure $f {0 1 2 4} -weight 1 -uniform 1
+    grid columnconfigure $f 3 -weight 2 -uniform 1
+}
+
+proc ::l1pro::tools::histelev::cbar_do {cmd {win -1} {top null}} {
+    if {$win < 0} {
+        set win $v::win
+    }
+    if {$top eq "null"} {
+        set top $v::cbartop
+    }
     switch -- $cmd {
-        both  {exp_send "set_cbar, w=$v::win, \"both\"\r"}
-        cmax  {exp_send "set_cbar, w=$v::win, \"cmax\"\r"}
-        cmin  {exp_send "set_cbar, w=$v::win, \"cmin\"\r"}
-        dism  {destroy $v::cbartop}
+        both  {exp_send "set_cbar, w=$win, \"both\"\r"}
+        cmax  {exp_send "set_cbar, w=$win, \"cmax\"\r"}
+        cmin  {exp_send "set_cbar, w=$win, \"cmin\"\r"}
+        dism  {destroy $top}
         bdis  {
-            exp_send "set_cbar, w=$v::win, \"both\"; winkill, $v::win\r"
-            destroy $v::cbartop
+            exp_send "set_cbar, w=$win, \"both\"; winkill, $win\r"
+            destroy $top
         }
     }
 }
