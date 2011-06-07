@@ -1,6 +1,9 @@
 // vim: set ts=4 sts=4 sw=4 ai sr et:
 
-scratch = save(scratch, tmp, _long, _double, _float, _string);
+scratch = save(scratch, tmp,
+        jsonen_json_stringify, jsonen_long, jsonen_double, jsonen_string,
+        jsonen_void, jsonen_newline_indent, jsonen_json_array,
+        jsonen_json_object);
 tmp = save(
         // data items
         escape_find, escape_replace,
@@ -76,7 +79,7 @@ func json_encode(base, data, separators=, indent=) {
     return self(json_stringify, data);
 }
 
-func json_stringify(data) {
+func jsonen_json_stringify(data) {
 // Convert data into a json string
     self = use();
     type = typeof(data);
@@ -95,16 +98,17 @@ func json_stringify(data) {
 
     error, "Unsupported data type: " + type;
 }
+json_stringify = jsonen_json_stringify;
 
 // Encode various numerical types
-func _long(data) { return swrite(format="%d", data); }
-char = short = int = long = _long;
-func _double(data) { return swrite(format="%.16g", data); }
-double = _double;
-func _float(data) { return swrite(format="%.8g", data); }
-float = _float;
+func jsonen_long(data) { return swrite(format="%d", data); }
+char = short = int = long = jsonen_long;
+func jsonen_double(data) { return swrite(format="%.16g", data); }
+double = jsonen_double;
+func jsonen_float(data) { return swrite(format="%.8g", data); }
+float = jsonen_float;
 
-func _string(data) {
+func jsonen_string(data) {
 // Encodes a json string
     self = use();
     if(!is_scalar(data)) {
@@ -141,13 +145,14 @@ func _string(data) {
 
     return "\"" + data + "\"";
 }
-string = _string;
+string = jsonen_string;
 
-func void(data) {
+func jsonen_void(data) {
     return "null";
 }
+void = jsonen_void;
 
-func newline_indent(nil) {
+func jsonen_newline_indent(nil) {
 // Constructs a newline + indentation sequence
 // Used by json_array and json_object
     self = use();
@@ -156,8 +161,9 @@ func newline_indent(nil) {
         buffer += array(" ", self.indent * self.indent_level)(sum);
     return buffer;
 }
+newline_indent = jsonen_newline_indent;
 
-func json_array(data) {
+func jsonen_json_array(data) {
 // Constructs a json array
     self = use();
     buffer = "[";
@@ -184,8 +190,9 @@ func json_array(data) {
     buffer += "]";
     return buffer;
 }
+json_array = jsonen_json_array;
 
-func json_object(data) {
+func jsonen_json_object(data) {
 // Constructs a json object
     self = use();
     buffer = "{";
@@ -214,6 +221,7 @@ func json_object(data) {
     buffer += "}";
     return buffer;
 }
+json_object = jsonen_json_object;
 
 json_encode = closure(json_encode, restore(tmp));
 restore, scratch;
