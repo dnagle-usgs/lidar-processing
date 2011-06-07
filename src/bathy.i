@@ -348,10 +348,30 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=, verbose=) {
    n = min(n, last);
    first = min(n, first);
 
-   mv = db(first:n)(max);   // find peak value
-   mvi = (db(first:n)(mxx)-1)+first-1; // find peak position
-                                       // (adjusted to index the orginal
-                                       // return waveform)
+   // Added by AN - May/June 2011 to try and find the last peak of the resultant (db) waveform.  The algorithm used to find only the "max" peak of db.
+   db_good = db(first:n);
+   db_good = remove_noisy_tail(db_good, thresh=bath_ctl.thresh, verbose=verbose);
+   if (numberof(db_good) < 5) {
+      if (graph) {
+            plt, swrite("Waveform too short \n after removing noisy tail.\n Giving up."), mvi, bath_ctl.a(mvi,i,1)+2.0, tosys=1, color="red";
+      } 
+      if (verbose) {
+            write, "Waveform too short after removing noisy tail.  Giving up.";
+      }
+      return rv;
+   }
+   xr = extract_peaks_first_deriv(db_good, thresh=bath_ctl.thresh);
+
+   //xr = where(abs((dd>=bath_ctl.thresh)(dif)) == 1); 
+   nxr = numberof(xr);
+   if (nxr == 0) {
+      if (graph) plt, swrite("No significant inflection\n in bacscattered waveform\n after decay.  Giving up"), mvi, bath_ctl.a(mvi,i,1)+2.0, tosys=1, color="red";
+      return rv;
+   }
+   if (nxr >=1) {
+      mv = db_good(xr(0));
+      mvi = first+xr(0)-1;
+   }
 
    // test pw with 9-6-01:17673:50
    // first, just check to see if anything is above thresh
@@ -363,20 +383,18 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=, verbose=) {
             mvi, bath_ctl.a(mvi,i,1)+2.0, tosys=1, color="red";
          return rv;
       }
-      // modified by AN for drto large fov
-      l_wing = 0.9 * mv;  // +/- 2ns should be no more than .6 the max
-      r_wing = 0.9 * mv;  // +/- 2ns should be no more than .6 the max
+      // define pulse wings;
+      l_wing = 0.9 * mv;  
+      r_wing = 0.9 * mv; 
       if((db(lpx) <= l_wing) && (db(rpx) <= r_wing)) {
          mx = mvi;
          if(graph) {
-            show_pulse_wings;
-            plg,  [bath_ctl.a(mx,i,1)+1.5,0], [mx+1,mx+1],
+            show_pulse_wings(l_wing,r_wing);
+            plg,  [bath_ctl.a(mx,i,1)+1.5,0], [mx,mx],
                marks=0, type=2, color="blue";
-            plmk, bath_ctl.a(mx,i,1)+1.5, mx+1,
+            plmk, bath_ctl.a(mx,i,1)+1.5, mx,
                msize=1.0, marker=7, color="blue", width=10;
-            plt, swrite(format="    %3dns\n     %3.0f sfc\n    %3.1f cnts\n     (%3.1fm)",
-               mvi, mv1, mv, (mvi-7)*CNSH2O2X),
-               mx, bath_ctl.a(mx,i,1)+2.0, tosys=1, color="blue";
+            plt, swrite(format="    %3dns\n     %3.0f sfc\n    %3.1f cnts(blue)\n   %3.1f cnts(black)\n     (~%3.1fm)", mvi, mv1, mv, bath_ctl.a(mx,i,1), (mvi-7)*CNSH2O2X), mx, bath_ctl.a(mx,i,1)+3.0, tosys=1, color="blue";
          }
          rv.sa = rp.sa(i);
          rv.idx = mx;
@@ -386,7 +404,7 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=, verbose=) {
          return rv;
       } else {
          if(graph) {
-            show_pulse_wings;
+            show_pulse_wings(l_wing,r_wing);
             plmk, bath_ctl.a(mvi,i,chn)+1.5, mvi+1,
                msize=1.0, marker=6, color="red", width=10;
             plt, "Bad pulse\n shape",
@@ -410,7 +428,7 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=, verbose=) {
    return rv;
 }
 
-func show_pulse_wings {
+func show_pulse_wings(l_wing, r_wing) {
    plmk, l_wing, lpx, marker=5, color="magenta", msize=0.4, width=10;
    plmk, r_wing, rpx, marker=5, color="magenta", msize=0.4, width=10;
 }
