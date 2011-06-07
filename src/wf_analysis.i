@@ -130,3 +130,124 @@ func wf_peaks(wf) {
    }
    return peaks;
 }
+
+func remove_noisy_tail(w1,thresh=,verbose=) {
+/* DOCUMENT remove_noisy_tail(w1, thresh=)
+   This function removes the "noise" in the tail of the waveform that is above a certain threshold from its minimum value
+   Input:
+      w1: waveform (1-d) array
+      thresh: threshold value
+   Ouput
+      w1_out = output waveform
+*/
+
+   if (is_void(thresh)) thresh = 3;
+   if (verbose) write, "*** Func remove_noisy_tail ***";
+   if (verbose) write, format="Threshold value =%f\n",thresh;
+   minw1 = min(w1);
+   idx = where(w1 <= (minw1+thresh));
+   if (numberof(idx) < 2) {
+      if (verbose) write, "No data above threshold.  return."
+      return w1;
+   }
+   iscontidx = where(idx(dif)> 1); // check to see if the indices are continuous or select only the last continuos set of indices
+   if (is_array(iscontidx)) {
+      idxstart = idx(iscontidx(0)+1);
+   } else {
+      idxstart = idx(1);
+   }
+
+   if (idxstart>=1) w1_out = w1(1:idxstart);
+
+   return w1_out;
+}
+
+   
+func extract_peaks_first_deriv(w1, thresh=, verbose=, graph=, newgraph=, win=) {
+/* DOCUMENT extract_peaks_first_deriv(w1, thresh=, verbose=)
+   This function extracts the peaks (or inflections) in the waveform using the maxima method by finding the first derivative (difference) of the waveform.
+   Input:
+      w1: waveform (1-d) array
+      thresh: threshold value
+      verbose: verbose
+   Output:
+      peaks_idx = returns index to the maxima locations of w1.
+*/
+
+   if (is_void(thresh)) thresh = 3;
+   if (verbose) write, "*** Func extract_peaks_first_deriv ***";
+   if (verbose) write, format="Threshold value = %d; Diff operator threshold = %d\n", thresh, diffthresh;
+
+   if (newgraph) {
+      if (is_void(win)) win = 25;
+      window, win;fma;
+      plg, w1, color="black";
+      plmk, w1, color="black", msize=0.2, marker=4, width=10;
+   }
+
+   peaks_idx = [];
+   minw1 = min(w1);
+   w1_dif = w1(dif); // first derivative
+
+   w1_dif_sign = sign(w1_dif);
+   w1_dif_sign_dif = (w1_dif_sign)(dif);
+
+   peaks_idx = where(w1_dif_sign_dif == -2);
+
+   // index idx are the maxima points for each inflection
+
+   if (!(is_array(peaks_idx))) {
+      if (verbose) write, "No maxima points found.  return."
+      return peaks_idx;
+   }
+
+   peaks_idx += 1; // add 1 to fix indexing issue caused by dif operator
+
+   if (verbose) {
+      if (graph || newgraph) plmk, w1(peaks_idx), peaks_idx, color="green", marker=5, width=10, msize=0.3;
+   }
+
+   // now check if w1(idx) are above thresh
+   thresh_idx = where(w1(peaks_idx) >= thresh);
+
+   if (!(is_array(thresh_idx))) {
+      if (verbose) write, "Maxima points found are all below threshold.  return."
+      return ;
+   } else {
+      peaks_idx = peaks_idx(thresh_idx);
+   }
+
+   if (verbose) {
+      write, format="number of peaks=%d\n",numberof(peaks_idx); 
+      write, format="peaks index =%d\n",peaks_idx;
+   }
+
+   if (graph || newgraph) plmk, w1(peaks_idx), peaks_idx, color="red", marker=2, msize=0.4, width=10;
+
+   return peaks_idx
+}
+
+func txrx_wave_test_data(rn,i=,tx=,rx=,wait=) {
+/* DOCUMENT txrx_wave_test_data(rn,i=,tx=,rx=,wait=)
+   This function tests the peak finding algorithm: extract_peaks_first_deriv()
+*/
+   r = get_erast(rn= rn);
+   rp = decode_raster(r);
+   for (i=1;i<=120;i++) {
+      write, format="***  i=%d  ***\n",i;
+      if (tx) {
+         txw = *rp.tx(i);
+         if (is_void(txw)) continue; // no waveform recorded
+         txw_inv = float((~txw+1) - (~txw(1)+1));
+         txw_peaks = extract_peaks_first_deriv(txw_inv, thresh=3, verbose=1, graph=, newgraph=1, win=26); 
+         if (wait) pause, wait;
+      }
+      if (rx) {
+         rxw = *rp.rx(i,1);
+         if (is_void(rxw)) continue; // no waveform recorded
+         rxw_inv = float((~rxw+1) - (~rxw(1)+1));
+         rxw_peaks = extract_peaks_first_deriv(rxw_inv, thresh=3, verbose=1, graph=, newgraph=1, win=26); 
+         if (wait) pause, wait;
+      }
+   }
+}
