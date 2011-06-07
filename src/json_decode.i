@@ -207,7 +207,7 @@ func decode_error(msg) {
 errs2caller, decode_error;
 
 func next_chr(nil) {
-// Sets "ch" to the next character and advanced "at" to the next position.
+// Sets "ch" to the next character and advances "at" to the next position.
     self = use();
     if(self.at > self.len)
         save, self, ch=[], at=self.len+2;
@@ -450,6 +450,7 @@ func word(nil) {
         good &= (self(next_chr,) == 'r');
         good &= (self(next_chr,) == 'u');
         good &= (self(next_chr,) == 'e');
+        self, next_chr;
         if(good)
             return 1;
     } else if(self.ch == 'f') {
@@ -458,6 +459,7 @@ func word(nil) {
         good &= (self(next_chr,) == 'l');
         good &= (self(next_chr,) == 's');
         good &= (self(next_chr,) == 'e');
+        self, next_chr;
         if(good)
             return 0;
     } else if(self.ch == 'n') {
@@ -465,6 +467,7 @@ func word(nil) {
         good &= (self(next_chr,) == 'u');
         good &= (self(next_chr,) == 'l');
         good &= (self(next_chr,) == 'l');
+        self, next_chr;
         if(good)
             return [];
     }
@@ -472,7 +475,7 @@ func word(nil) {
     if(is_void(expect))
         self, decode_error, "malformed JSON string";
     else
-        self, decode_error, "'"+expect + "' expected";
+        self, decode_error, "'" + expect + "' expected";
 }
 
 func digits(nil) {
