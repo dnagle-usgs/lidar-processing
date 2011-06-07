@@ -3,7 +3,13 @@
 // partially adapted from
 // http://cpansearch.perl.org/src/MAKAMAKA/JSON-2.27/lib/JSON/PP.pm
 
-scratch = save(scratch, tmp, _array, _string);
+scratch = save(scratch, tmp,
+        jsonde_render_position, jsonde_decode_error, jsonde_next_chr,
+        jsonde_value, jsonde_hexdigits, jsonde_escape, jsonde_string,
+        jsonde_comment, jsonde_white, jsonde_array, jsonde_object,
+        jsonde_apply_conversions, jsonde_word, jsonde_digits,
+        jsonde_number_int, jsonde_number_frac, jsonde_number_exp,
+        jsonde_number);
 tmp = save(
         // data items
         escapes, bslash, fslash, dquote, lbrace, rbrace, lbracket, rbracket,
@@ -146,7 +152,7 @@ func json_decode(base, text, arrays=, objects=) {
     return result;
 }
 
-func render_position(pos) {
+func jsonde_render_position(pos) {
 /*
     Renders the current position in the input, primarily used by decode_error.
 
@@ -195,8 +201,9 @@ func render_position(pos) {
         carrot += "^";
     return swrite(format="  %s\n  %s", mess, carrot);
 }
+render_position = jsonde_render_position;
 
-func decode_error(msg) {
+func jsonde_decode_error(msg) {
 // Throws an error, showing where in the input the error occurs
     self = use();
     excerpt = self(render_position, self.at - 1);
@@ -204,9 +211,10 @@ func decode_error(msg) {
         self.at - 1, excerpt;
     error, msg;
 }
-errs2caller, decode_error;
+errs2caller, jsonde_decode_error;
+decode_error = jsonde_decode_error;
 
-func next_chr(nil) {
+func jsonde_next_chr(nil) {
 // Sets "ch" to the next character and advances "at" to the next position.
     self = use();
     if(self.at > self.len)
@@ -215,8 +223,9 @@ func next_chr(nil) {
         save, self, ch=self.text(self.at), at=self.at+1;
     return self.ch;
 }
+next_chr = jsonde_next_chr;
 
-func value(nil) {
+func jsonde_value(nil) {
 // Parses the input and returns the next complete value.
     self = use();
     self, white;
@@ -232,8 +241,9 @@ func value(nil) {
         return self(number,);
     return self(word,);
 }
+value = jsonde_value;
 
-func hexdigits(nil) {
+func jsonde_hexdigits(nil) {
 // Parses and returns four consecutive hex digits as a char array. (For use in
 // unicode escape sequences.)
     self = use();
@@ -245,8 +255,9 @@ func hexdigits(nil) {
     }
     return digits;
 }
+hexdigits = jsonde_hexdigits;
 
-func escape(nil) {
+func jsonde_escape(nil) {
 // Parses a backslash escape sequence, converts it, and returns it as a char
 // array.
     self = use();
@@ -268,8 +279,9 @@ func escape(nil) {
         self, decode_error, "illegal backslash escape";
     }
 }
+escape = jsonde_escape;
 
-func _string(nil) {
+func jsonde_string(nil) {
 // Parses and returns a string, converting any escape sequences encountered.
     self = use();
     if(self.ch != self.dquote)
@@ -300,9 +312,9 @@ func _string(nil) {
     }
     self, decode_error, "unexpected end of string while parsing JSON string";
 }
-string = _string;
+string = jsonde_string;
 
-func comment(nil) {
+func jsonde_comment(nil) {
 // Parses and ignores comments. Comments must be of one of these forms:
 //   /* multiline */
 //   // single line
@@ -333,8 +345,9 @@ func comment(nil) {
         self, decode_error, "malformed JSON string";
     }
 }
+comment = jsonde_comment;
 
-func white(nil) {
+func jsonde_white(nil) {
 // Parses and ignores whitespace and comments.
     self = use();
     while(!is_void(self.ch)) {
@@ -347,8 +360,9 @@ func white(nil) {
         }
     }
 }
+white = jsonde_white;
 
-func _array(nil) {
+func jsonde_array(nil) {
 // Parses and returns an array.
     self = use();
     ary = save();
@@ -380,9 +394,9 @@ func _array(nil) {
     }
     self, decode_error, "expected ',' or ']' while parsing array";
 }
-array = _array;
+array = jsonde_array;
 
-func object(nil) {
+func jsonde_object(nil) {
 // Parses and returns an object.
     self = use();
     obj = save();
@@ -421,8 +435,9 @@ func object(nil) {
     }
     self, decode_error, "expected ',' or '}' while parsing object";
 }
+object = jsonde_object;
 
-func apply_conversions(input, funcs) {
+func jsonde_apply_conversions(input, funcs) {
 // Used by array and object to apply conversions to final result
     count = numberof(funcs);
     for(i = 1; i <= count; i++) {
@@ -434,8 +449,9 @@ func apply_conversions(input, funcs) {
     }
     return input;
 }
+apply_conversions = jsonde_apply_conversions;
 
-func word(nil) {
+func jsonde_word(nil) {
 // Parses a bare word and returns its corresponding value. Three bare words are
 // valid:
 //    true, which converts to 1
@@ -477,8 +493,9 @@ func word(nil) {
     else
         self, decode_error, "'" + expect + "' expected";
 }
+word = jsonde_word;
 
-func digits(nil) {
+func jsonde_digits(nil) {
 // Parses a series of digits (0-9) and returns as a char array.
     self = use();
 
@@ -498,8 +515,9 @@ func digits(nil) {
     else
         return [];
 }
+digits = jsonde_digits;
 
-func number_int(nil) {
+func jsonde_number_int(nil) {
 // Parses the integer part of a number and returns as a char array.
     self = use();
 
@@ -525,8 +543,9 @@ func number_int(nil) {
 
     return result(:end);
 }
+number_int = jsonde_number_int;
 
-func number_frac(nil) {
+func jsonde_number_frac(nil) {
 // Parses the fractional part of a number (if present) and returns as a char
 // array.
     if(self.ch != '.')
@@ -546,8 +565,9 @@ func number_frac(nil) {
 
     return result;
 }
+number_frac = jsonde_number_frac;
 
-func number_exp(nil) {
+func jsonde_number_exp(nil) {
 // Parses the exponential part of a number (if present) and returns as a char
 // array.
     if(noneof(self.ch == ['e','E']))
@@ -573,8 +593,9 @@ func number_exp(nil) {
 
     return result;
 }
+number_exp = jsonde_number_exp;
 
-func number(nil) {
+func jsonde_number(nil) {
 // Parses a number and returns as a long or double.
     self = use();
 
@@ -590,6 +611,7 @@ func number(nil) {
         return long(val);
     return val;
 }
+number = jsonde_number;
 
 json_decode = closure(json_decode, restore(tmp));
 restore, scratch;
