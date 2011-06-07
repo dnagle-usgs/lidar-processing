@@ -1,13 +1,13 @@
 # vim: set ts=4 sts=4 sw=4 ai sr et:
 
-package provide l1pro::ascii 1.0
+package provide l1pro::asciixyz 1.0
 package require struct::list
 package require getstring
 package require snit
 
-namespace eval l1pro::ascii {
+namespace eval l1pro::asciixyz {
     namespace eval v {
-        variable top .l1wid.ascii
+        variable top .l1wid.asciixyz
         variable mappings {
             (ignore)
             east north elevation
@@ -22,11 +22,11 @@ namespace eval l1pro::ascii {
     }
 }
 
-proc ::l1pro::ascii::launch {} {
-    ::l1pro::ascii::gui .%AUTO%
+proc ::l1pro::asciixyz::launch {} {
+    ::l1pro::asciixyz::gui .%AUTO%
 }
 
-snit::widget ::l1pro::ascii::gui {
+snit::widget ::l1pro::asciixyz::gui {
     hulltype toplevel
     delegate option * to hull
     delegate method * to hull
@@ -158,7 +158,7 @@ snit::widget ::l1pro::ascii::gui {
         grid columnconfigure $w 2 -minsize 5
         grid rowconfigure $w {4 6} -weight 1 -uniform 1
 
-        $w.preview configure -mappings $::l1pro::ascii::v::mappings
+        $w.preview configure -mappings $::l1pro::asciixyz::v::mappings
 
         $w.preview configure -columncount 3
         $w.column set 3
@@ -446,7 +446,7 @@ snit::widget ::l1pro::ascii::gui {
     }
 }
 
-snit::widgetadaptor ::l1pro::ascii::sample {
+snit::widgetadaptor ::l1pro::asciixyz::sample {
     delegate method * to text
     delegate option * to text
 
@@ -483,7 +483,7 @@ snit::widgetadaptor ::l1pro::ascii::sample {
     }
 }
 
-snit::widgetadaptor ::l1pro::ascii::preview {
+snit::widgetadaptor ::l1pro::asciixyz::preview {
     delegate method * to tree
     delegate option * to tree
 

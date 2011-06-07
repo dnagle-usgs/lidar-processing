@@ -4,7 +4,7 @@ package provide l1pro 1.0
 
 namespace eval ::l1pro {}
 
-package require l1pro::ascii
+package require l1pro::asciixyz
 package require l1pro::deprecated
 package require l1pro::dirload
 package require l1pro::drast

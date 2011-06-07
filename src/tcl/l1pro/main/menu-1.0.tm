@@ -61,7 +61,7 @@ proc menu_file mb {
     $mb add command {*}[menulabel "&Import ASPRS LAS..."] \
             -command ::l1pro::file::load_las
     $mb add command {*}[menulabel "I&mport ASCII..."] \
-            -command ::l1pro::ascii::launch
+            -command ::l1pro::asciixyz::launch
     $mb add command {*}[menulabel "E&xport ASCII..."] \
             -command ::l1pro::file::export_ascii
     $mb add separator
