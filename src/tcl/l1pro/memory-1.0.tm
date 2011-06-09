@@ -5,6 +5,24 @@ package provide l1pro::memory 1.0
 namespace eval ::l1pro::memory {
     variable current Unknown
     variable refresh 0
+    variable avail -1
+}
+
+proc ::l1pro::memory::avail {} {
+    variable avail
+    if {$avail < 0} {
+        set grep [auto_execok grep]
+        set cmd [list {*}$grep MemTotal /proc/meminfo]
+        if {[catch {set data [exec -ignorestderr -- {*}$cmd]}]} {
+            set avail 0
+        } else {
+            set avail [lindex [scan $data {%s %d}] 1]
+            if {![string is integer -strict $avail]} {
+                set avail 0
+            }
+        }
+    }
+    return $avail
 }
 
 proc ::l1pro::memory::ps_info {childrenName meminfoName} {
@@ -57,8 +75,12 @@ proc ::l1pro::memory::usage {} {
             set total_mem [expr {$total_mem + $mem}]
         }
     }
+    set avail [avail]
+    if {$avail > 0} {
+        set total_pct [expr {(100. * $total_mem) / $avail}]
+    }
 
-    return [list [format %.1f $total_pct] $total_mem]
+    return [list $total_pct $total_mem]
 }
 
 proc ::l1pro::memory::update_current {} {
