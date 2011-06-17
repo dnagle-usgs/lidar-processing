@@ -950,3 +950,65 @@ remove_buffers=, dtlength=, dtprefix=, qqprefix=, mode=, verbose=) {
 
    return set_remove_duplicates(merge_pointers(unref(tile_lists)));
 }
+
+func tile_extent_shapefile(fn, dir, searchstr=, files=) {
+/* DOCUMENT tile_extent_shapefile(fn, dir, searchstr=)
+   -or- tile_extent_shapefile(fn, files=)
+
+   Creates an ASCII shapefile with polygons for each tile represented by the
+   given data. Each tile will have a closed polygon (a square) created with
+   associated attributes for the tile's name as well as its number in sequence.
+
+   Parameters:
+      fn: Output filename for the ASCII shapefile to create.
+      dir: Directory to search (using searchstr=) for file tile information.
+   Options:
+      searchstr= Search string to use with dir to find files.
+            searchstr="*.pbd"    Default
+      files= Specifies a list of files to use. This causes dir and searchstr=
+         to be ignored. This should be an array of strings. Each string should
+         be a filename. (You can also provide an array of tile names and that
+         will also work.)
+   Notes:
+      - This is only intended for use on 2km and 10km tiles.
+      - This will not work for quarter-quads. Attempting to use for
+        quarter-quads will provoke an error.
+      - This will not work properly for 1km quads or 250m cells. The tile
+        polygons and names will be correct, but the numbering will not be
+        correct.
+      - This will not work properly if there are multiple zones present. You
+        will have to handle each zone separately.
+      - If a searchstr= yields several files for the same tile, that tile will
+        only occur once in the output.
+*/
+// Original 2011-06-17 David Nagle
+   default, searchstr, "*.pbd";
+
+   if(is_void(files))
+      files = find(dir, glob=searchstr);
+   tiles = extract_tile(file_tail(files), dtlength="short", dtprefix=1);
+   tiles = set_remove_duplicates(tiles);
+
+   key = strsplit(tiles, "_");
+   // First, descending by northing
+   key1 = -atoi(strpart(key(,3), 2:));
+   // Then, ascending by easting
+   key2 = atoi(strpart(key(,2), 2:));
+   tiles = tiles(msort(key1, key2));
+   key = key1 = key2 = [];
+
+   count = numberof(tiles);
+   shp = array(pointer, count);
+   meta = array(string, count);
+   for(i = 1; i <= count; i++) {
+      bbox = tile2bbox(tiles(i));
+      shp(i) = &double(bbox([[2,3],[2,1],[4,1],[4,3],[2,3]]));
+      meta(i) = swrite(format="TILE_NAME=%s\n", tiles(i));
+      meta(i) += swrite(format="TILE_NUMBER=%d\n", i);
+      meta(i) += swrite(format="LABEL_POS=%.2f,%.2f\n",
+         bbox([2,4])(avg), bbox([1,3])(avg));
+      meta(i) += "CLOSED=YES\n";
+   }
+
+   write_ascii_shapefile, shp, fn, meta=meta;
+}
