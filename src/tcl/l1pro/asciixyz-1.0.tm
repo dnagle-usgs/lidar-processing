@@ -6,6 +6,8 @@ package require getstring
 package require snit
 
 namespace eval l1pro::asciixyz {
+    namespace export sample
+
     namespace eval v {
         variable top .l1wid.asciixyz
         variable mappings {

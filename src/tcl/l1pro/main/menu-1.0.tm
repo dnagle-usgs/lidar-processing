@@ -60,7 +60,9 @@ proc menu_file mb {
     $mb add separator
     $mb add command {*}[menulabel "&Import ASPRS LAS..."] \
             -command ::l1pro::file::load_las
-    $mb add command {*}[menulabel "I&mport ASCII..."] \
+    $mb add command {*}[menulabel "Import ASCII as a&rray..."] \
+            -command ::l1pro::ascii::launch
+    $mb add command {*}[menulabel "I&mport ASCII as ALPS structure..."] \
             -command ::l1pro::asciixyz::launch
     $mb add command {*}[menulabel "E&xport ASCII..."] \
             -command ::l1pro::file::export_ascii
