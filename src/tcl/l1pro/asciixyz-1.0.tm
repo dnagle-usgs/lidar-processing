@@ -112,10 +112,12 @@ snit::widget ::l1pro::asciixyz::gui {
 
         ttk::label $w.columnlbl -text "Columns:"
         ttk::spinbox $w.column \
-                -width 4 \
-                -from 1 -to 1000 -increment 1 -text 3 \
                 -textvariable [myvar columns] \
-                -command [list $w.preview configure -columncount %s]
+                -width 4 \
+                -from 1 -to 1000 -increment 1
+
+        trace add variable [myvar columns] write [list apply [list {n1 n2 op} \
+                "$w.preview configure -columncount \[set \$n1\]"]]
 
         ttk::label $w.previewlbl -text \
                 "Preview of import (click on column headings to re-assign):"
