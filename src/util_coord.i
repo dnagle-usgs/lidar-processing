@@ -160,6 +160,27 @@ func deg2dms_string(coord) {
       39, abs(dms(..,3)), 34);
 }
 
+func xyz_dm2deg(xyz, fixlon=) {
+/* DOCUMENT result = xyz_dm2deg(xyz, fixlon=)
+   Given a 2-dimensional array with five columns as [x degrees, x minutes, y
+   degrees, y minutes, z], this will convert it to [x degrees, y degrees, z].
+   In other words, it converts the degrees+minutes to decimal minutes for each
+   of x and y. The z values are left untouched.
+
+   By default, if all y degree resulting values are positive, they will be
+   converted to negative since we typically work in the western hemisphere. If
+   you wish to suppress this behavior, use fixlon=0.
+*/
+   local xdeg, xmin, ydeg, ymin, x, y, z;
+   default, fixlon, 1;
+   splitary, xyz, xdeg, xmin, ydeg, ymin, z;
+   x = xdeg + (xmin/60.);
+   y = ydeg + (ymin/60.);
+   if(fixlon && allof(x > 0))
+      x *= -1;
+   return [x,y,z];
+}
+
 func display_coord_bounds(x, y, cs, prefix=) {
 /* DOCUMENT display_coord_bounds, x, y, cs, prefix=
    Displays the boundars for the given set of coordinates. X and Y must be
