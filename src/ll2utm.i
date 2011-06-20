@@ -29,6 +29,7 @@ func fll2utm {}
 func ll2utm(lat, lon, &north, &east, &zone, force_zone=, ellipsoid=) {
 /* DOCUMENT u = ll2utm(lat, lon, force_zone=, ellipsoid=)
    ll2utm, lat, lon, north, east, zone, force_zone=, ellipsoid=
+   uxyz = ll2utm(llxyz, force_zone=, ellipsoid=)
 
    (This function can be called as either ll2utm or fll2utm; both are the same
    function.)
@@ -36,10 +37,17 @@ func ll2utm(lat, lon, &north, &east, &zone, force_zone=, ellipsoid=) {
    Converts geographic coordinates (lat/lon) to UTM coordinates (north, east,
    zone).
 
-   If called in the functional form, the return result u is a 3xn array:
+   If called in the functional form with parameters lat and lon, the return
+   result u is a 3xn array:
       u(1,) is Northing
       u(2,) is Easting
       u(3,) is Zone
+
+   If called in the functional form with parameter llxyz, then llxyz must be a
+   two-dimensional array of [lon,lat] or [lon,lat,elev] (or either transposed).
+   The return result will be [east,north] or [east,north,elev]. If force_zone
+   is not provided, then all coordinates will be converted to the zone that
+   most of the data is in.
 
    If a zone is provided by the option force_zone= or by the extern fixedzone,
    the coordinates will be forced to that zone. If both are set, then
@@ -58,6 +66,30 @@ func ll2utm(lat, lon, &north, &east, &zone, force_zone=, ellipsoid=) {
 
    See also: utm2ll
 */
+   // Support for 2-dimensional input
+   if(!am_subroutine() && is_void(lon)) {
+      z = [];
+      if(dimsof(lat)(1) != 2)
+         error, "Invalid call to ll2utm";
+      if(anyof(dimsof(lat)(2:3) == 3)) {
+         tmp = lat;
+         splitary, unref(tmp), 3, lon, lat, z;
+      } else if(anyof(dimsof(lat)(2:3) == 2)) {
+         tmp = lat;
+         splitary, unref(tmp), 2, lon, lat;
+      } else {
+         error, "Invalid call to ll2utm";
+      }
+      ll2utm, lat, lon, north, east, zone, force_zone=force_zone,
+         ellipsoid=ellipsoid;
+      if(is_void(force_zone) && allof(zone != zone(1))) {
+         force_zone = histogram(zone)(mxx);
+         ll2utm, lat, lon, north, east, zone, force_zone=force_zone,
+            ellipsoid=ellipsoid;
+      }
+      return is_void(z) ? [east, north] : [east, north, z];
+   }
+
    extern fixedzone, curzone;
    default, ellipsoid, "wgs84";
 
