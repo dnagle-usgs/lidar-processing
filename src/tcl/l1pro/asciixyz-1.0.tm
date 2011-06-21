@@ -116,14 +116,14 @@ snit::widget ::l1pro::asciixyz::gui {
                 -width 4 \
                 -from 1 -to 1000 -increment 1
 
-        trace add variable [myvar columns] write [list apply [list {n1 n2 op} \
-                "$w.preview configure -columncount \[set \$n1\]"]]
-
         ttk::label $w.previewlbl -text \
                 "Preview of import (click on column headings to re-assign):"
         preview $w.preview
         ttk::label $w.samplelbl -text "Sample from file:"
         sample $w.sample
+
+        trace add variable [myvar columns] write [list apply [list {n1 n2 op} \
+                "$w.preview configure -columncount \[set [myvar columns]\]"]]
 
         set nb $w.actions
         ttk::notebook $nb
