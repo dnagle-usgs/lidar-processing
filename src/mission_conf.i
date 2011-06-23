@@ -581,7 +581,7 @@ func missiondata_wrap(type) {
         }
     } else if(type == "ins") {
         extern iex_nav, iex_head, tans;
-        if(is_void(iex_nav)) {
+        if(is_void(iex_head)) {
             return h_new(
                 "__type", "ins_tans",
                 "tans", tans
