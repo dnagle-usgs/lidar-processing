@@ -564,11 +564,13 @@ proc ::l1pro::tools::histelev::cbar_tool_docked {win} {
 }
 
 proc ::l1pro::tools::histelev::cbar_do {cmd {win -1} {top null}} {
+    set docked 1
     if {$win < 0} {
         set win $v::win
     }
     if {$top eq "null"} {
         set top $v::cbartop
+        set docked 0
     }
     switch -- $cmd {
         both  {exp_send "set_cbar, w=$win, \"both\"\r"}
@@ -576,8 +578,13 @@ proc ::l1pro::tools::histelev::cbar_do {cmd {win -1} {top null}} {
         cmin  {exp_send "set_cbar, w=$win, \"cmin\"\r"}
         dism  {destroy $top}
         bdis  {
-            exp_send "set_cbar, w=$win, \"both\"; winkill, $win\r"
-            destroy $top
+            set cmd "set_cbar, w=$win, \"both\"; winkill, $win"
+            if {$docked} {
+                append cmd "; tkcmd, \"destroy $top\""
+            } else {
+                ::misc::idle [list destroy $top]
+            }
+            exp_send "$cmd\r"
         }
     }
 }
