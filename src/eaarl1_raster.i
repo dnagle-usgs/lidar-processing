@@ -96,6 +96,9 @@ func eaarl1_decode_pulse(raw, pulse, header=) {
       return_bias = array(char,4)
       shaft_angle = array(short)
       integer_range = array(short)
+      raw_irange = array(short)
+      flag_irange_bit14 = array(char)
+      flag_irange_bit15 = array(char)
       data_length = array(short)
       transmit_length = array(char)
       transmit_wf = array(char,x)
@@ -119,7 +122,12 @@ func eaarl1_decode_pulse(raw, pulse, header=) {
    save, result, transmit_bias=raw(offset+4);
    save, result, return_bias=raw(offset+5:offset+8);
    save, result, shaft_angle=i16(raw, offset+9);
-   save, result, integer_range=i16(raw, offset+11);
+   tmp = i16(raw, offset+11);
+   save, result, integer_range=(tmp & 16383);
+   save, result, raw_irange=tmp;
+   save, result, flag_irange_bit14=char((tmp & 16384) != 0);
+   save, result, flag_irange_bit15=char((tmp & 32768) != 0);
+   tmp = [];
    save, result, data_length=i16(raw, offset+13);
 
    offset += 15;
