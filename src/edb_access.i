@@ -410,7 +410,7 @@ func decode_raster(raw) {
 
    for(i = 1; i <= header.number_of_pulses; i++) {
       pulse = eaarl1_decode_pulse(raw, i, header=header);
-      result.irange(i) = pulse.integer_range;
+      result.irange(i) = pulse.raw_irange;
       result.sa(i) = pulse.shaft_angle;
       result.offset_time(i) = ((pulse.offset_time & 0x00ffffff) +
          header.fseconds) * 1.6e-6 + seconds;
