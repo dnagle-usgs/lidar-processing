@@ -232,6 +232,8 @@ func georef_eaarl1(rasts, gns, ins, ops, daystart) {
    channel = char(shape * indgen(3)(-,-,));
    raster_seconds = shape * rasts.seconds;
    raster_fseconds = shape * rasts.fseconds;
+   flag_irange_bit14 = shape * rasts.flag_irange_bit14;
+   flag_irange_bit15 = shape * rasts.flag_irange_bit15;
 
    soe = array(soe, 3);
    tx = map_pointers(mathop.bw_inv, array(rasts.transmit_wf, 3));
@@ -249,6 +251,8 @@ func georef_eaarl1(rasts, gns, ins, ops, daystart) {
    raw_xyz1 = transpose(raw_xyz1, [3,1]);
    raster_seconds = transpose(raster_seconds, [3,1]);
    raster_fseconds = transpose(raster_fseconds, [3,1]);
+   flag_irange_bit14 = transpose(flag_irange_bit14, [3,1]);
+   flag_irange_bit15 = transpose(flag_irange_bit15, [3,1]);
    pulse = transpose(pulse, [3,1]);
    channel = transpose(channel, [3,1]);
    soe = transpose(soe, [3,1])
@@ -260,6 +264,8 @@ func georef_eaarl1(rasts, gns, ins, ops, daystart) {
    raw_xyz1 = reform(raw_xyz1, count, 3);
    raster_seconds = raster_seconds(*);
    raster_fseconds = raster_fseconds(*);
+   flag_irange_bit14 = flag_irange_bit14(*);
+   flag_irange_bit15 = flag_irange_bit15(*);
    pulse = pulse(*);
    channel = channel(*);
    soe = soe(*);
@@ -271,7 +277,8 @@ func georef_eaarl1(rasts, gns, ins, ops, daystart) {
    cs = cs_wgs84(zone=zone);
    sample_interval = 1.0;
    wf = save(source, system, cs, sample_interval, raw_xyz0, raw_xyz1, soe,
-      raster_seconds, raster_fseconds, pulse, channel, tx, rx);
+      raster_seconds, raster_fseconds, flag_irange_bit14, flag_irange_bit15,
+      pulse, channel, tx, rx);
    wfobj, wf;
 
    // Now get rid of points without waveforms
