@@ -174,6 +174,9 @@ func eaarl1_decode_rasters(raw) {
       offset_time = array(long,COUNT,NUM_PULSES)
       shaft_angle = array(short,COUNT,NUM_PULSES)
       integer_range = array(short,COUNT,NUM_PULSES)
+      raw_irange = array(short,COUNT,NUM_PULSES)
+      flag_irange_bit14 = array(short,COUNT,NUM_PULSES)
+      flag_irange_bit15 = array(short,COUNT,NUM_PULSES)
       data_length = array(short,COUNT,NUM_PULSES)
       transmit_bias = array(char,COUNT,NUM_PULSES)
       transmit_length = array(char,COUNT,NUM_PULSES)
@@ -204,9 +207,10 @@ func eaarl1_decode_rasters(raw) {
 
    // pulse fields -- never more than 120 pulses
    offset_time = array(long, count, 120);
-   transmit_bias = transmit_length = channel1_bias = channel2_bias =
-         channel3_bias = array(char, count, 120);
-   shaft_angle = integer_range = data_length = channel1_length =
+   transmit_bias = flag_irange_bit14 = flag_irange_bit15 = transmit_length =
+         channel1_bias = channel2_bias = channel3_bias =
+         array(char, count, 120);
+   shaft_angle = integer_range = raw_irange = data_length = channel1_length =
          channel2_length = channel3_length = array(short, count, 120);
    transmit_wf = channel1_wf = channel2_wf = channel3_wf =
          array(pointer, count, 120);
@@ -233,6 +237,9 @@ func eaarl1_decode_rasters(raw) {
          channel3_bias(i,j) = pulse.return_bias(3);
          shaft_angle(i,j) = pulse.shaft_angle;
          integer_range(i,j) = pulse.integer_range;
+         raw_irange(i,j) = pulse.raw_irange;
+         flag_irange_bit14(i,j) = pulse.flag_irange_bit14;
+         flag_irange_bit15(i,j) = pulse.flag_irange_bit15;
          data_length(i,j) = pulse.data_length;
          transmit_length(i,j) = pulse.transmit_length;
          transmit_wf(i,j) = &pulse.transmit_wf;
@@ -254,6 +261,9 @@ func eaarl1_decode_rasters(raw) {
       channel3_bias = channel3_bias(..,:max_pulse);
       shaft_angle = shaft_angle(..,:max_pulse);
       integer_range = integer_range(..,:max_pulse);
+      raw_irange = raw_irange(..,:max_pulse);
+      flag_irange_bit14 = flag_irange_bit14(..,:max_pulse);
+      flag_irange_bit15 = flag_irange_bit15(..,:max_pulse);
       data_length = data_length(..,:max_pulse);
       transmit_length = transmit_length(..,:max_pulse);
       transmit_wf = transmit_wf(..,:max_pulse);
@@ -269,10 +279,11 @@ func eaarl1_decode_rasters(raw) {
       raster_number, number_of_pulses, digitizer);
 
    if(max_pulse) {
-      save, result, offset_time, shaft_angle, integer_range, data_length,
-            transmit_bias, transmit_length, transmit_wf, channel1_bias,
-            channel1_length, channel1_wf, channel2_bias, channel2_length,
-            channel2_wf, channel3_bias, channel3_length, channel3_wf;
+      save, result, offset_time, shaft_angle, integer_range, raw_irange,
+         flag_irange_bit14, flag_irange_bit15, data_length, transmit_bias,
+         transmit_length, transmit_wf, channel1_bias, channel1_length,
+         channel1_wf, channel2_bias, channel2_length, channel2_wf,
+         channel3_bias, channel3_length, channel3_wf;
    }
 
    return result;
