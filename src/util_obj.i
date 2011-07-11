@@ -415,6 +415,50 @@ func obj_index(this, idx, which=, ref=, size=, bymethod=, ignoremissing=) {
    return result;
 }
 
+func obj_sort(this, fields, which=, ref=, size=, bymethod=, ignoremissing=) {
+/* DOCUMENT result = obj_index(obj, fields, which=, ref=, size= bymethod=,
+      ignoremissing=)
+   -or- obj_index, obj, fields, idx, which=, ref=, size=, bymethod=,
+      ignoremissing=
+
+   Sorts using the specified fields.
+
+   Parameter:
+      fields: Must be a string or array of strings, specifying the field names
+         to sort by (in the order to use them).
+
+   Options:
+      Options are all passed to obj_index. See obj_index for details.
+
+   This is a wrapper around obj_index that constructs its argument by sorting
+   the specified fields. All fields must be conformable.
+*/
+   local list;
+
+   if(!this)
+      this = use();
+   result = am_subroutine() ? this : obj_copy(this);
+
+   mxrank = numberof(result(fields(1),))-1;
+   rank = msort_rank(result(fields(1),), list);
+   norm = 1./(mxrank+1.);
+   if(1.+norm == 1.)
+      error, pr1(mxrank+1)+" is too large an array";
+
+   for(i = 2; i <= numberof(fields); i++) {
+      rank += msort_rank(result(fields(i),))*norm;
+      rank = msort_rank(rank, list);
+      if(max(rank) == mxrank)
+         break;
+   }
+   rank = sort(rank + indgen(0:mxrank)*norm);
+
+   obj_index, result, rank, which=which, ref=ref, size=size,
+      bymethod=bymethod, ignoremissing=ignoremissing;
+
+   return result;
+}
+
 func obj_copy(this, dst, recurse=) {
 /* DOCUMENT newobj = obj_copy(obj)
    -or- obj_copy, obj, dst
