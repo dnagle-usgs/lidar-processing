@@ -3,12 +3,12 @@ require, "eaarl.i";
 
 // scratch stores the values of scratch and tmp so that we can restore them
 // when we're done, leaving things as we found them.
-scratch = save(scratch, tmp, pcobj_summary, pcobj_index, pcobj_grow, pcobj_x,
-   pcobj_y, pcobj_z, pcobj_xyz, pcobj_rn, pcobj_save);
+scratch = save(scratch, tmp, pcobj_summary, pcobj_index, pcobj_sort,
+   pcobj_grow, pcobj_x, pcobj_y, pcobj_z, pcobj_xyz, pcobj_rn, pcobj_save);
 // tmp stores a list of the methods that will go into pcobj. It stores their
 // current values up-front, then restores them at the end while swapping the
 // new function definitions into pcobj.
-tmp = save(help, summary, index, grow, x, y, z, xyz, rn, save);
+tmp = save(help, summary, index, sort, grow, x, y, z, xyz, rn, save);
 
 func pcobj(base, obj) {
 /* DOCUMENT pcobj()
@@ -96,6 +96,13 @@ func pcobj(base, obj) {
          Returns a new pcobj object. The new object will contain the same
          header information. However, it will only contain the points specified
          by "idx".
+      data(sort, fields)
+         Returns a new pcobj object. The new object will contain the same data,
+         however, the data will be sorted by the fields given. The fields
+         should be one or more string value corresponding to indexable fields
+         in the pcobj. It may include functional fields such as x, y, and z.
+      data, sort, fields
+         Like data(sort, fields), except it sorts the data in-place.
       data, grow, otherdata, headers=
          Appends the data in "otherdata" to the current data. The HEADERS=
          option specifies how to merge the header fields. Valid values:
@@ -252,6 +259,14 @@ func pcobj_index(idx) {
    return res;
 }
 index = pcobj_index;
+
+func pcobj_sort(fields) {
+   res = am_subroutine() ? use() : obj_copy(use(), recurse=1);
+   obj_sort, res, fields, bymethod=save(class="index"), size="count";
+   pcobj, res;
+   return res;
+}
+sort = pcobj_sort;
 
 func pcobj_xyz(working, idx) {
    extern current_cs;

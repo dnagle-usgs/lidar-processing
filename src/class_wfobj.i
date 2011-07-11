@@ -4,10 +4,10 @@ require, "eaarl.i";
 // To avoid name collisions breaking help, some functions get temporarily named
 // with an underscore prefix.
 scratch = save(scratch, tmp, wfobj_xyzwrap, wfobj_summary, wfobj_index,
-   wfobj_grow, wfobj_x0, wfobj_y0, wfobj_z0, wfobj_xyz0, wfobj_x1, wfobj_y1,
-   wfobj_z1, wfobj_xyz1, wfobj_rn, wfobj_save);
-tmp = save(help, summary, index, grow, x0, y0, z0, xyz0, x1, y1, z1, xyz1, rn,
-   save);
+   wfobj_sort, wfobj_grow, wfobj_x0, wfobj_y0, wfobj_z0, wfobj_xyz0, wfobj_x1,
+   wfobj_y1, wfobj_z1, wfobj_xyz1, wfobj_rn, wfobj_save);
+tmp = save(help, summary, index, sort, grow, x0, y0, z0, xyz0, x1, y1, z1,
+   xyz1, rn, save);
 
 func wfobj(base, obj) {
 /* DOCUMENT wfobj()
@@ -110,6 +110,13 @@ func wfobj(base, obj) {
          Returns a new wfobj object. The new object will contain the same
          header information. However, it will contain only the points specified
          by "idx".
+      data(sort, fields)
+         Returns a new wfobj object. The new object will contain the same data,
+         however, the data will be sorted by the fields given. The fields
+         should be one or more string value corresponding to indexable fields
+         in the wfobj. It may include functional fields such as x0, y0, and z0.
+      data, sort, fields
+         Like data(sort, fields), except it sorts the data in-place.
       data, grow, otherdata, headers=
          Appends the data in "otherdata" to the current data. The HEADERS=
          option specifies how to merge the header fields. Valid values:
@@ -361,6 +368,14 @@ func wfobj_index(idx) {
    return res;
 }
 index = wfobj_index;
+
+func wfobj_sort(fields) {
+   res = am_subroutine() ? use() : obj_copy(use(), recurse=1);
+   obj_sort, res, fields, size="count";
+   wfobj, res;
+   return res;
+}
+sort = wfobj_sort;
 
 help = closure(help, wfobj);
 
