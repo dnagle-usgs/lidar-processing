@@ -83,6 +83,10 @@ filter=, verbose=) {
       return [];
    }
 
+   // Sort files by size, descending, so that largest files get loaded first.
+   // This is safer when pushing up against the limits of memory.
+   files = files(sort(-file_size(files)));
+
    // Determine data structure; user's responsibility to ensure all files have
    // the same one.
    eaarl_struct = [];
