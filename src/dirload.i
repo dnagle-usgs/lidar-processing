@@ -49,6 +49,7 @@ filter=, verbose=) {
             searchstr="*.pbd"       All pbd files (default)
             searchstr="*fs*.pbd"    All first surface files
             searchstr="*.edf"       All edf files
+            searchstr="*.las"       All las files
 
       files= Specifies an array of file names to load and merge. If provided,
          then the dir parameter and the searchstr option are ignored.
@@ -94,6 +95,8 @@ filter=, verbose=) {
       ext = strlower(file_extension(files(i)));
       if(anyof(ext == [".bin", ".edf"]))
          temp = edf_import(files(i));
+      else if(ext == ".las")
+         temp = las_to_alps(files(i));
       else
          temp = pbd_load(files(i));
       if(!is_void(temp)) {
@@ -129,6 +132,8 @@ filter=, verbose=) {
       err = "";
       if(anyof(ext == [".bin", ".edf"]))
          temp = edf_import(files(i));
+      else if(ext == ".las")
+         temp = las_to_alps(files(i));
       else
          temp = pbd_load(files(i), err);
 
