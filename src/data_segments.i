@@ -18,7 +18,7 @@ func split_sequence_by_gaps(seq, gap=) {
       gap = seq(dif)(rms)*2;
 
    // Find indexes where the time exceeds the threshold
-   time_idx = where(seq(dif) > timediff);
+   time_idx = where(seq(dif) > gap);
    if(numberof(time_idx)) {
       num_lines = numberof(time_idx) + 1;
       segs_idx = grow(1, time_idx+1, numberof(seq)+1);
