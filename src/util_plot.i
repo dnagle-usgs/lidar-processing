@@ -92,3 +92,36 @@ func plgrid(y, x, color=, width=, type=) {
    yy = transpose(array(y, numberof(x)));
    plm, yy, xx, color=color, width=width, type=type;
 }
+
+func plpoly(ply, type=, width=, color=, marker=, msize=, mcolor=, mwidth=) {
+/* DOCUMENT plpoly, ply, type=, width=, color=, marker=, msize=, mcolor=,
+   mwidth=
+
+   Plots the polygon PLY. This must be an array of dimensions 2xN or Nx2
+   defining a polygon of at least three points.
+
+   Options as passed through to plg or plmk as follows.
+      type= Passed to plg as type=.
+      width= Passed to plg as width=.
+      color= Passed to plg as color=, defaults to color="black".
+      marker= Passed to plmk as marker=, defaults to marker=0 which means not
+         to plot markers. Use marker=4 to plot circles.
+      msize= Passed to plmk as msize=, defaults to msize=0.5.
+      mcolor= Passed to plmk as color=, defaults to mcolor=color.
+      mwidth= Passed to plmk as width=, defaults to mwidth=10.
+*/
+   local x, y;
+   default, color, "black";
+   default, marker, 0;
+   default, msize, 0.5;
+   default, mwidth, 10;
+   default, mcolor, color;
+   splitary, ply, x, y;
+   if(x(1) != x(0) || y(1) != y(0)) {
+      grow, x, x(1);
+      grow, y, y(1);
+   }
+   if(marker)
+      plmk, y, x, marker=marker, msize=msize, color=mcolor, width=mwidth;
+   plg, y, x, type=type, width=width, color=color, marks=0;
+}
