@@ -973,3 +973,33 @@ func line_to_poly(x0, y0, x1, y1, width=) {
    offset = [[xoff,yoff],[-xoff,-yoff],[-xoff,-yoff],[xoff,yoff]];
    return ply + offset;
 }
+
+func poly_to_circle(x, y) {
+/* DOCUMENT poly_to_circle(x, y)
+   -or- poly_to_circle(xy)
+
+   Given a polygon defined by the given coordinates, a circle that
+   circumscribes that polygon will be returned. The circle's center will be the
+   polygon's centroid, and the radius will be the distance to the furthest
+   point of the polygon from the centroid.
+
+   Returns:
+      [X, Y, R] where X and Y are the center and R is the radius
+
+   You can plot using pl_circle:
+      pl_circle, X, Y, R
+*/
+   if(is_void(y)) {
+      splitary, noop(x), x, y;
+   }
+   if(x(0) == x(1) && y(0) == y(1)) {
+      x = x(:-1);
+      y = y(:-1);
+   }
+
+   X = x(avg);
+   Y = y(avg);
+   R = ppdist([x,y], [X,Y], tp=1)(max);
+
+   return [X,Y,R];
+}
