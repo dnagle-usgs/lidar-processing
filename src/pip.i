@@ -60,8 +60,7 @@ func testPoly(pl, ptx, pty) {
    outside the polygon; otherwise, it is inside.
 
    Parameters:
-      pl: 2-dimensional array containing verticies of the polygon (dimsof(pl)
-         should be [2,2,?])
+      pl: 2-dimensional array containing vertices of the polygon, as 2xn or nx2
       ptx: 1-dimensional array containing x-coordinates of points to be tested
       pty: 1-dimensional array containing y-coordinates of points to be tested
 
@@ -72,18 +71,20 @@ func testPoly(pl, ptx, pty) {
 
    See also: testPoly2 _testPoly
 */
+   local plx, ply;
    if(is_void(pl) || is_void(ptx) || is_void(pty)) return [];
-   w = data_box(ptx, pty, pl(1,min), pl(1,max), pl(2,min), pl(2,max));
+   splitary, unref(pl), plx, ply;
+   w = data_box(ptx, pty, plx(min), plx(max), ply(min), ply(max));
    if(numberof(w)) {
-      idx = _testPoly(unref(pl), unref(ptx)(w), unref(pty)(w));
+      idx = _testPoly(unref(plx), unref(ply), unref(ptx)(w), unref(pty)(w));
       return w(idx);
    } else {
       return [];
    }
 }
 
-func _testPoly(pl, ptx, pty) {
-/* DOCUMENT idx = _testPoly(pl, ptx, pty)
+func _testPoly(plx, ply, ptx, pty) {
+/* DOCUMENT idx = _testPoly(plx, ply, ptx, pty)
    This function is called by testPoly to do most of its work. The only thing
    testPoly does that this does not is that testPoly first filters the points
    to the bounding box of the polygon. In cases where there are lots of points,
@@ -100,18 +101,16 @@ func _testPoly(pl, ptx, pty) {
    otherwise.  The algorithm uses the cross and dot product to determine the
    inverse tangent which will equal the angle between vectors.
 */
-   if(is_void(pl) || is_void(ptx) || is_void(pty)) return [];
-
    // array of angle sums between vectors	
    theta = array(double(0), dimsof(ptx));
 
    // Loop n-times where n = number of vertices
-   for(i = 1; i < (dimsof(pl)(3)); i++) {
+   for(i = 1; i < numberof(plx); i++) {
       // Calculate the delta for each vector in both x and y
-      dx1 = pl(1,i) - ptx;
-      dy1 = pl(2,i) - pty;
-      dx2 = pl(1,i+1) - ptx;
-      dy2 = pl(2,i+1) - pty;
+      dx1 = plx(i) - ptx;
+      dy1 = ply(i) - pty;
+      dx2 = plx(i+1) - ptx;
+      dy2 = ply(i+1) - pty;
 
       // Calculate dot product and cross product
       dp = dx1 * dx2 + dy1 * dy2;
@@ -154,7 +153,7 @@ func testPoly2(pl, ptx, pty, includevertices=) {
    For very large polygons and very large sets of x/y, testPoly2 is several
    magnitudes of order faster than testPoly.
 
-   Input: pl - 2xn array of polygon vertices
+   Input: pl - 2xn or nx2 array of polygon vertices
           ptx - 1xn array of x-coordinates for points to test
           pty - 1xn array of y-coordinates for points to test
 
@@ -166,19 +165,18 @@ func testPoly2(pl, ptx, pty, includevertices=) {
 // http://dawsdesign.com/drupal/google_maps_point_in_polygon
 // Also using info on the ray casting algorithm found on wikipedia:
 // http://en.wikipedia.org/w/index.php?title=Point_in_polygon&oldid=270279744
+   local plx, ply;
 
    // Short circuit if anything isn't defined
-   if(is_void(pl))
+   if(is_void(pl) || is_void(ptx) || is_void(pty))
       return [];
-   if(is_void(ptx))
-      return [];
-   if(is_void(pty))
-      return [];
+
+   splitary, pl, plx, ply;
 
    // It's fast and cheap to figure out which are within a bounding box, so
    // we restrict our search to those points.
-   in_bbox = (pl(1,min) <= ptx) & (ptx <= pl(1,max)) &
-             (pl(2,min) <= pty) & (pty <= pl(2,max));
+   in_bbox = (plx(min) <= ptx) & (ptx <= plx(max)) &
+             (ply(min) <= pty) & (pty <= ply(max));
    
    if(noneof(in_bbox))
       return [];
@@ -192,15 +190,15 @@ func testPoly2(pl, ptx, pty, includevertices=) {
    // idx never (or rarely) changes; thus, we get a speed-up by indexing ptx
    // once instead of on every loop iteration
    ptxi = ptx(idx);
-   for(i = 1; i <= dimsof(pl)(3); i++) {
+   for(i = 1; i <= numberof(plx); i++) {
       // rather than repeatedly indexing into pl for its x-coordinates, we do
       // it just once per point per iteration
-      plx1 = pl(1,i);
-      plx0 = pl(1,i-1);
+      plx1 = plx(i);
+      plx0 = plx(i-1);
 
       // test for vertex match
       if(!is_void(includevertices)) {
-         w = where( plx1 == ptxi & pl(2,i) == pty(idx) );
+         w = where( plx1 == ptxi & ply(i) == pty(idx) );
          if(numberof(w)) {
             isvertex(idx(w)) = 1;
             // if it's a vertex, we no longer need to test it
@@ -222,9 +220,9 @@ func testPoly2(pl, ptx, pty, includevertices=) {
       if(numberof(wx)) {
          // Flip the bit if we're crossing a boundary
          inpoly(idx(wx)) ~= (
-               pl(2,i) +
+               ply(i) +
                (ptxi(wx) - plx1) / (plx0 - plx1) *
-               (pl(2,i-1) - pl(2,i))
+               (ply(i-1) - ply(i))
             ) < pty(idx(wx));
       }
    }
