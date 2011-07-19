@@ -51,25 +51,6 @@ Returns:    ply - array of polygon vertices
   	return ply								
 }
 
-func plotPoly(pl, oututm=, color=)
-/* DOCUMENT function plotPoly
-    This function redraws the polygon or polygon vertices on the yorick window.
-	plotPoly can be used after a fma command.
-	Parameters: pl - array of polygon vertices
-	Return:	    pl - array of polygon vertices
-*/	
-{
-        if (oututm) {
-   	    pl1 = ((fll2utm(pl(2,), pl(1,)))(1:2,));
-	    pl = transpose ([pl1(2,), pl1(1,)]);
-        }
-	if (!color) color="black"
-	plmk,pl(2,), pl(1,) , marker = 4, msize = .5, width = 10, color=color;
-	plg, pl(2,), pl(1,), marks = 0, color=color;
-	plg, [pl(2,1), pl(2,0)], [pl(1,1), pl(1,0)], marks = 0, color=color;
-	return pl
-}
-
 func testPoly(pl, ptx, pty) {
 /* DOCUMENT idx = testPoly(pl, ptx, pty)
    This function determines whether points from a given set are inside or
