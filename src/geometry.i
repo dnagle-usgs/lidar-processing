@@ -1003,3 +1003,54 @@ func poly_to_circle(x, y) {
 
    return [X,Y,R];
 }
+
+func poly_intersect_circle_test(x0, y0, x1, y1) {
+/* DOCUMENT poly_intersect_circle_test(x0, y0, x1, y1)
+   Tests to see if two polygons might intersect by using a simple circle test.
+   A circle is calculated that circumscribes each polygon, then the distance
+   between their centers is compared to the sum of their radii.
+
+   Returns:
+      0 if the polygons are known to not intersect
+      1 if the polygons might intersect
+*/
+   local X0, Y0, R0, X1, Y1, R1;
+   assign, poly_to_circle(x0, y0), X0, Y0, R0;
+   assign, poly_to_circle(x1, y1), X1, Y1, R1;
+   dist = ppdist([X0,Y0], [X1,Y1]);
+   return dist <= R0 + R1;
+}
+
+func poly_intersect_bbox_test(x0, y0, x1, y1) {
+/* DOCUMENT poly_intersect_bbox_test(x0, y0, x1, y1)
+   Tests to see if two polygons might intersect by using a simple bounding box
+   test. The bounding box of each polygon is calculated and the bounding boxes
+   are checked to see if they overlap.
+
+   Returns:
+      0 if the polygons are known to not intersect
+      1 if the polygons might intersect
+*/
+   if(x0(min) > x1(max)) return 0;
+   if(x1(min) > x0(max)) return 0;
+   if(y0(min) > y1(max)) return 0;
+   if(y1(min) > y0(max)) return 0;
+   return 1;
+}
+
+func poly_intersect_test(x0, y0, x1, y1) {
+/* DOCUMENT poly_intersect_test(x0, y0, x1, y1)
+   Tests to see if two polygons might intersect by using simple circle and bbox
+   tests. This DOES NOT GUARANTEE that they intersect if it returns true, only
+   that they MIGHT.
+
+   Returns:
+      0 if the polygons are known to not intersect
+      1 if the polygons might intersect
+*/
+   if(!poly_intersect_bbox_test(x0, y0, x1, y1))
+      return 0
+   if(!poly_intersect_circle_test(x0, y0, x1, y1))
+      return 0;
+   return 1;
+}
