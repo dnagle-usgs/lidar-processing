@@ -805,7 +805,8 @@ Added server/client support (2009-01) Richard Mitchell
 
    if(pick==2) {
       ply=getPoly();
-      plotPoly(ply);
+      ply;
+      plpoly, ply, marker=4;
       box=boundBox(ply);
       rgn= array(float,4)
       rgn(1) = min ( [box(1,1)], [box(1,2)], [box(1,3)], [box(1,4)] );

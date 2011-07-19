@@ -489,7 +489,7 @@ proc ::l1pro::groundtruth::extract::region_lims which {
 
 proc ::l1pro::groundtruth::extract::region_plot which {
     set data [set v::${which}_region_data]
-    exp_send "plotPoly, $data;\r"
+    exp_send "plpoly, $data, marker=4;\r"
 }
 
 namespace eval ::l1pro::groundtruth::scatter {

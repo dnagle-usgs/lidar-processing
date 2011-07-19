@@ -187,7 +187,7 @@ write, format="Lon:%14.3f %14.3f\n", gga(3,min), gga(3,max)
 func gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=, pmulti=) {
 /* DOCUMENT gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=)
 This function uses the 'points in polygon' technique to select a region in the gga window.
-Also see: getPoly, plotPoly, testPoly, gga_win_sel
+Also see: getPoly, plpoly, testPoly, gga_win_sel
 */
    extern ZoneNumber, utm, ply, q, curzone;
    if (!(pmulti)) q = [];
@@ -293,7 +293,7 @@ func test_selection_size (q) {
 func gga_multi_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=, multi=) {
  /* DOCUMENT gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=)
  This function uses the 'points in polygon' technique to select a region in the gga window.
- Also see: getPoly, plotPoly, testPoly, gga_win_sel
+ Also see: getPoly, plpoly, testPoly, gga_win_sel
  */
  extern ZoneNumber, utm, ply
  q = [];

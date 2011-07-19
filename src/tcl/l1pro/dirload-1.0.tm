@@ -151,7 +151,7 @@ proc ::l1pro::dirload::region_lims {} {
 }
 
 proc ::l1pro::dirload::region_plot {} {
-    exp_send "plotPoly, $v::region_data;\r"
+    exp_send "plpoly, $v::region_data, marker=4;\r"
 }
 
 proc ::l1pro::dirload::load_data termaction {

@@ -1143,7 +1143,7 @@ func pip_fp(junk,fp=, ply=, win=, mode=,in_utm=,out_utm=, debug=) {
   if (is_void(ply)) 
     ply = getPoly();
   lply1 = ply;
-  plotPoly, lply1;
+  plpoly, lply1, marker=4;
 
 
   if (!is_array(fp)) {
