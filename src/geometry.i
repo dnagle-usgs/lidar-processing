@@ -1060,6 +1060,10 @@ func convex_poly_collision(x0, y0, x1, y1) {
    intersect and 0 if they do not. This only works with convex polygons. The
    function assumes the user is passing it convex polygons and will not verify.
 */
+   // Shortcut for obvious cases
+   if(!poly_intersect_bbox_test(x0, y0, x1, y1))
+      return 0;
+
    poly_normalize, x0, y0;
    poly_normalize, x1, y1;
 
