@@ -1053,3 +1053,59 @@ func poly_intersect_test(x0, y0, x1, y1) {
       return 0;
    return 1;
 }
+
+func poly_normalize(&x, &y) {
+/* DOCUMENT poly_normalize, x, y
+   -or- poly_normalize, ply
+   -or- poly_normalize(x, y)
+
+   Normalizes a polygon so that:
+      - it is closed
+      - it has no duplicated points in sequence
+      - points are in clockwise order
+      - first point is smallest x, then smallest y
+
+   Updates in place as subroutine, else returns new [x,y].
+*/
+   if(is_void(y)) {
+      splitary, x, 2, _x, _y;
+   } else {
+      _x = x;
+      _y = y;
+   }
+
+   // Make sure the polygon is closed
+   grow, _x, _x(1);
+   grow, _y, _y(1);
+
+   // Eliminate any duplicated points
+   w = where(grow(1, (_x(:-1) != _x(2:)) | (_y(:-1) != _y(2:))));
+   _x = _x(w);
+   _y = _y(w);
+
+   // Make sure points are in a clockwise order
+   dir = ((_x(2:) - _x(:-1)) * (_y(2:) + _y(:-1)))(sum);
+   if(dir < 0) {
+      _x = _x(::-1);
+      _y = _y(::-1);
+   }
+
+   // Make sure first point is smallest x, then smallest y
+   start = msort(_x, _y)(1);
+   if(start > 1) {
+      _x = grow(_x(start:-1), _x(1:start));
+      _y = grow(_y(start:-1), _y(1:start));
+   }
+
+   if(am_subroutine()) {
+      if(is_void(y)) {
+         x = [_x, _y];
+      } else {
+         x = _x;
+         y = _y;
+      }
+   } else {
+      return [_x, _y];
+   }
+}
+
