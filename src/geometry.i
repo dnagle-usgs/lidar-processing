@@ -658,8 +658,7 @@ func convex_hull(x, y) {
 // Adapted from algorithm found on Wikipedia:
 // http://en.wikipedia.org/w/index.php?title=Graham_scan&oldid=274508758
    if(is_void(y)) {
-      y = x(2,);
-      x = x(1,);
+      splitary, noop(x), 2, x, y;
    }
    x = x(*);
    y = y(*);
