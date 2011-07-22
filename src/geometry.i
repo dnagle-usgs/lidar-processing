@@ -1054,6 +1054,58 @@ func poly_intersect_test(x0, y0, x1, y1) {
    return 1;
 }
 
+func convex_poly_collision(x0, y0, x1, y1) {
+/* DOCUMENT convex_poly_collision(x0, y0, x1, y1)
+   Given two polygons defined by x0,y0 and x1,y1, returns 1 if the polygons
+   intersect and 0 if they do not. This only works with convex polygons. The
+   function assumes the user is passing it convex polygons and will not verify.
+*/
+   poly_normalize, x0, y0;
+   poly_normalize, x1, y1;
+
+   n0 = numberof(x0);
+   n1 = numberof(x1);
+
+   polys = [&[&x0, &y0], &[&x1, &y1]];
+
+   // Iterate over each poly...
+   for(j = 1; j <= 2; j++) {
+      eq_nocopy, xs, *(*polys(j))(1);
+      eq_nocopy, ys, *(*polys(j))(2);
+
+      // For each line segment in the poly...
+      for(i = 1; i < n0; i++) {
+         // For the current line segment, determine a line that's perpendicular
+         // to it
+         xa = xs(i);
+         ya = ys(i);
+         xb = xs(i) + (ys(i+1)-ys(i));
+         yb = ys(i) - (xs(i+1)-xs(i));
+
+         // Project all points onto the perpedicular line
+         p0 = perpendicular_intercept(xa, ya, xb, yb, x0, y0);
+         p1 = perpendicular_intercept(xa, ya, xb, yb, x1, y1);
+
+         // Determine whether x or y varies more quickly
+         if(p0(max,1)-p0(min,1) > p0(max,2)-p0(min,2)) {
+            // See if the segments are separated
+            if(p0(max,1) < p1(min,1))
+               return 0;
+            else if(p0(min,1) > p1(max,1))
+               return 0;
+         } else {
+            // See if the segments are separated
+            if(p0(max,2) < p1(min,2))
+               return 0;
+            else if(p0(min,2) > p1(max,2))
+               return 0;
+         }
+      }
+   }
+
+   return 1;
+}
+
 func poly_normalize(&x, &y) {
 /* DOCUMENT poly_normalize, x, y
    -or- poly_normalize, ply
