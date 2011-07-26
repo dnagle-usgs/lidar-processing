@@ -664,6 +664,12 @@ func convex_hull(x, y) {
    y = y(*);
    count = numberof(x);
 
+   if(count == 1) {
+      return transpose([x([1,1,1]), y([1,1,1])]);
+   } else if(count == 2) {
+      return transpose([x([1,2,1]), y([1,2,1])]);
+   }
+
    srt = sort(x);
    x = double(x(srt));
    y = double(y(srt));
