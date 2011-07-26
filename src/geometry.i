@@ -662,17 +662,19 @@ func convex_hull(x, y) {
    }
    x = x(*);
    y = y(*);
+   count = numberof(x);
 
    srt = sort(x);
    x = double(x(srt));
    y = double(y(srt));
+   srt = [];
 
    // L - lower; U - upper
-   Lx = Ly = Ux = Uy = array(double, numberof(x));
+   Lx = Ly = Ux = Uy = array(double, count);
    Lx([1,2]) = Ux([1,2]) = x([1,2]);
    Ly([1,2]) = Uy([1,2]) = y([1,2]);
    Li = Ui = 2;
-   for(i = 3; i <= numberof(x); i++) {
+   for(i = 3; i <= count; i++) {
       while(
          Li >= 2 &&
          cross_product_sign(Lx(Li-1), Ly(Li-1), Lx(Li), Ly(Li), x(i), y(i)) <= 0
