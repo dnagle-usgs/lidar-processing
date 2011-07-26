@@ -1142,17 +1142,27 @@ func poly_normalize(&x, &y) {
    _y = _y(w);
 
    // Make sure points are in a clockwise order
-   dir = ((_x(2:) - _x(:-1)) * (_y(2:) + _y(:-1)))(sum);
-   if(dir < 0) {
-      _x = _x(::-1);
-      _y = _y(::-1);
+   if(numberof(_x) > 1) {
+      dir = ((_x(2:) - _x(:-1)) * (_y(2:) + _y(:-1)))(sum);
+      if(dir < 0) {
+         _x = _x(::-1);
+         _y = _y(::-1);
+      }
    }
 
    // Make sure first point is smallest x, then smallest y
-   start = msort(_x, _y)(1);
-   if(start > 1) {
-      _x = grow(_x(start:-1), _x(1:start));
-      _y = grow(_y(start:-1), _y(1:start));
+   if(numberof(_x) > 1) {
+      start = msort(_x, _y)(1);
+      if(start > 1) {
+         _x = grow(_x(start:-1), _x(1:start));
+         _y = grow(_y(start:-1), _y(1:start));
+      }
+   }
+
+   // Make sure we have at least 3 points, even if it means having duplicates
+   if(numberof(_x) == 1) {
+      _x = _x([1,1,1]);
+      _y = _y([1,1,1]);
    }
 
    if(am_subroutine()) {
