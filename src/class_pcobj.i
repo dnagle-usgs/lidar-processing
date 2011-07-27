@@ -159,6 +159,10 @@ func pcobj(base, obj) {
    // Import class methods
    obj_merge, obj, base;
 
+   // If we only have a single point, make sure the array is properly formed
+   if(dimsof(obj.raw_xyz)(1) == 1)
+      save, obj, raw_xyz=transpose([obj.raw_xyz]);
+
    count = dimsof(obj.raw_xyz)(2);
 
    rndefault = (obj(*,"raster_seconds") && obj(*,"raster_fseconds")) ? 0 : -1;
@@ -174,7 +178,10 @@ func pcobj(base, obj) {
       save, obj, class=clsobj(obj.class);
 
    raw_bounds = splitary([obj(raw_xyz)(min,),obj(raw_xyz)(max,)], 3);
-   save, obj, count, raw_bounds;
+   raw_convex_hull = poly_normalize(convex_hull(obj(raw_xyz)(,1),
+      obj(raw_xyz)(,2)));
+
+   save, obj, count, raw_bounds, raw_convex_hull;
 
    return obj;
 }
@@ -249,12 +256,20 @@ func pcobj_grow(obj, headers=) {
 grow = pcobj_grow;
 
 func pcobj_index(idx) {
+   exclude = ["raw_bounds", "raw_convex_hull"];
    res = am_subroutine() ? use() : obj_copy(use(), recurse=1);
    if(is_string(idx))
       idx = use(class, where, idx);
-   if(!numberof(idx))
-      return [];
-   obj_index, res, idx, bymethod=save(class="index"), size="count";
+   if(!is_range(idx)) {
+      if(!numberof(idx))
+         return [];
+      idx = idx(*);
+   }
+   which = res(*,);
+   w = set_difference(which, exclude, idx=1);
+   which = which(w);
+   obj_index, res, idx, bymethod=save(class="index"), size="count",
+      which=which;
    pcobj, res;
    return res;
 }

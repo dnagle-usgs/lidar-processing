@@ -100,6 +100,10 @@ func wfobj(base, obj) {
          The bounds of the data, in the coordinate system specified by "cs".
          This array is [[xmin,xmax],[ymin,ymax],[zmin,zmax]]. These bounds
          cover the extent of both raw_xyz0 and raw_xyz1.
+      data(raw_convex_hull,)  array(double,?,2)
+         The convex hull of hte data, in the coordinate system specified by
+         "cs". This is the convex hull of X and Y, for both raw_xyz0 and
+         raw_xyz1.
 
    Methods:
       data, help
@@ -178,6 +182,12 @@ func wfobj(base, obj) {
    // Import class methods
    obj_merge, obj, base;
 
+   // If we only have a single point, make sure the array is properly formed
+   if(dimsof(obj.raw_xyz0)(1) == 1)
+      save, obj, raw_xyz0=transpose([obj.raw_xyz0]);
+   if(dimsof(obj.raw_xyz1)(1) == 1)
+      save, obj, raw_xyz1=transpose([obj.raw_xyz1]);
+
    count = dimsof(obj.raw_xyz0)(2);
 
    rndefault = (obj(*,"raster_seconds") && obj(*,"raster_fseconds")) ? 0 : -1;
@@ -202,12 +212,18 @@ func wfobj(base, obj) {
       save, obj, rx, tx;
    }
 
-   raw0min = obj(raw_xyz0)(min,);
-   raw0max = obj(raw_xyz0)(max,);
-   raw1min = obj(raw_xyz1)(min,);
-   raw1max = obj(raw_xyz1)(max,);
-   raw_bounds = splitary([min(raw0min,raw1min), max(raw0max,raw1max)], 3);
-   save, obj, count, raw_bounds;
+   raw_bounds = splitary([
+      min(obj(raw_xyz0)(min,), obj(raw_xyz1)(min,)),
+      max(obj(raw_xyz0)(max,), obj(raw_xyz1)(max,))
+   ], 3);
+
+   hull0 = splitary(convex_hull(obj(raw_xyz0)(,1), obj(raw_xyz0)(,2)), 2);
+   hull1 = splitary(convex_hull(obj(raw_xyz1)(,1), obj(raw_xyz1)(,2)), 2);
+
+   hull = convex_hull(grow(hull0(,1), hull1(,1)), grow(hull0(,2), hull1(,2)));
+   raw_convex_hull = poly_normalize(hull);
+
+   save, obj, count, raw_bounds, raw_convex_hull;
 
    return obj;
 }
@@ -362,8 +378,17 @@ func wfobj_save(fn) {
 save = wfobj_save;
 
 func wfobj_index(idx) {
+   exclude = ["raw_bounds", "raw_convex_hull"];
    res = am_subroutine() ? use() : obj_copy(use());
-   obj_index, res, idx, size="count";
+   if(!is_range(idx)) {
+      if(!numberof(idx))
+         return [];
+      idx = idx(*);
+   }
+   which = res(*,);
+   w = set_difference(which, exclude, idx=1);
+   which = which(w);
+   obj_index, res, idx, size="count", which=which;
    wfobj, res;
    return res;
 }
