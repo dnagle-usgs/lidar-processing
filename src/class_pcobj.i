@@ -8,8 +8,9 @@ scratch = save(scratch, tmp, pcobj_summary, pcobj_index, pcobj_sort,
 // tmp stores a list of the methods that will go into pcobj. It stores their
 // current values up-front, then restores them at the end while swapping the
 // new function definitions into pcobj.
-tmp = save(help, summary, index, sort, grow, x, y, z, xyz, rn, save);
+tmp = save(__bless, help, summary, index, sort, grow, x, y, z, xyz, rn, save);
 
+__bless = "pcobj";
 func pcobj(base, obj) {
 /* DOCUMENT pcobj()
    Creates a point cloud data object. This can be called in one of three ways.

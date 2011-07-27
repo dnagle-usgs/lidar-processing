@@ -5,9 +5,10 @@
 scratch = save(scratch, tmp, clsobj_set, clsobj_apply, clsobj_remove,
    clsobj_drop, clsobj_classes, clsobj_query, clsobj_where, clsobj_grow,
    clsobj_index, clsobj_serialize);
-tmp = save(set, apply, remove, drop, classes, query, where, grow, index,
-   serialize, help);
+tmp = save(__bless, set, apply, remove, drop, classes, query, where, grow,
+   index, serialize, help);
 
+__bless = "clsobj";
 func clsobj(base, count) {
 /* DOCUMENT clsobj()
    Creates a classification object. This can be called in one of two ways:
@@ -40,7 +41,7 @@ func clsobj(base, count) {
       data(serialize,)
          Returns an array of type char that represents the data stored in the
          object. This character array is opaque; outside code should not try to
-         modify it. The classification object can be restored later by classing
+         modify it. The classification object can be restored later by calling
          clsobj with this character data as its argument.
       data, set, class, vals
          Sets the values for classification CLASS to VALS. VALS must be either

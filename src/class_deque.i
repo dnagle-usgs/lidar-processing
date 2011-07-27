@@ -2,8 +2,9 @@
 
 scratch = save(scratch, tmp, deque_push, deque_pop, deque_unshift, deque_shift,
    deque_first, deque_last, deque_count, deque_help);
-tmp = save(data, push, pop, unshift, shift, first, last, count, help);
+tmp = save(__bless, data, push, pop, unshift, shift, first, last, count, help);
 
+__bless = "deque";
 func deque(base, data) {
 /* DOCUMENT deque()
    Creates a double-ended queue ("deque") object. This can be called in one of
