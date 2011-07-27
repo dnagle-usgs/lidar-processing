@@ -1,4 +1,5 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
+require, "eaarl.i";
 
 local coordinate_system;
 /* DOCUMENT coordinate_system

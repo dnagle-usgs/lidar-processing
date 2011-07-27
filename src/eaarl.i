@@ -65,6 +65,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "compare_transects.i";
    require, "comparison_fns.i";
    require, "cs.i";
+   require, "cs_geotiff.i";
    require, "data_rgn_selector.i";
    require, "data_segments.i";
    require, "datum_converter.i";
