@@ -425,7 +425,8 @@ func obj_sort(this, fields, which=, ref=, size=, bymethod=, ignoremissing=) {
 
    Parameter:
       fields: Must be a string or array of strings, specifying the field names
-         to sort by (in the order to use them).
+         to sort by (in the order to use them). Prefixing a field name with a
+         minus sign means to sort by reverse order on that field.
 
    Options:
       Options are all passed to obj_index. See obj_index for details.
@@ -439,18 +440,28 @@ func obj_sort(this, fields, which=, ref=, size=, bymethod=, ignoremissing=) {
       this = use();
    result = am_subroutine() ? this : obj_copy(this);
 
+   // Parse to determine which should sort in reverse order
+   fields = fields(*);
+   asc = strpart(fields, :1) != "-";
+   if(nallof(asc))
+      fields(where(!asc)) = strpart(fields(where(!asc)), 2:)
+   direction = (asc*2) - 1;
+
    mxrank = numberof(result(fields(1),))-1;
-   rank = msort_rank(result(fields(1),), list);
    norm = 1./(mxrank+1.);
    if(1.+norm == 1.)
       error, pr1(mxrank+1)+" is too large an array";
 
+   rank = msort_rank(result(fields(1),), list) * direction(1);
+   rank = msort_rank(rank);
+
    for(i = 2; i <= numberof(fields); i++) {
-      rank += msort_rank(result(fields(i),))*norm;
+      rank += (msort_rank(result(fields(i),)) * norm * direction(i));
       rank = msort_rank(rank, list);
       if(max(rank) == mxrank)
          break;
    }
+
    rank = sort(rank + indgen(0:mxrank)*norm);
 
    obj_index, result, rank, which=which, ref=ref, size=size,
