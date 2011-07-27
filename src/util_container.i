@@ -233,8 +233,38 @@ func pbd_load(file, &err, &vname) {
    f = openb(file);
    vars = get_vars(f);
 
+   if(is_present(vars, "__bless")) {
+      bless = f.__bless;
+
+      if(!symbol_exists(bless)) {
+         err = "__bless references non-existent function";
+         return [];
+      }
+
+      bless = symbol_def(bless);
+      if(!is_func(bless)) {
+         err = "__bless references non-function";
+         return [];
+      }
+
+      data = pbd2obj(f);
+      close, f;
+
+      if(catch(-1)) {
+         err = "__bless function failed";
+         return [];
+      }
+
+      bless, data;
+
+      vname = file_tail(file_rootname(file));
+      sanitize_vname, vname;
+
+      return data;
+   }
+
    if(!is_present(vars, "vname")) {
-      err = "no vname";
+      err = "no vname or __bless";
       return [];
    }
 
