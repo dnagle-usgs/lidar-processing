@@ -1,7 +1,7 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "eaarl.i";
 
-func cs_geotiff(cs) {
+func cs_encode_geotiff(cs) {
 /* DOCUMENT cs_geotiff(cs)
    Given a coordinate system, this will return the GeoTIFF encoding for that
    coordinate system.
