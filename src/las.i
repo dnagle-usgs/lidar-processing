@@ -605,21 +605,6 @@ mode=, pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=) {
    stream.points.y = y;
    stream.points.z = z;
 
-   // Verify that offsets and scales are defaults -- or update x/y/z if not
-   // This shouldn't get used often... if ever...
-   coords = ["x","y","z"];
-   for(i = 1; i <= 3; i++) {
-      scale = get_member(stream.header, coords(i)+"_scale");
-      if(scale != 0.01) {
-         factor = 0.01 / scale;
-         get_member(stream.points, coords(i)) *= factor;
-      }
-      offset = get_member(stream.header, coords(i)+"_offset");
-      if(offset != 0.) {
-         get_member(stream.points, coords(i)) -= offset;
-      }
-   }
-
    // Intensity
    if(mode == "fs" && has_member(data, "fint")) {
       stream.points.intensity = data.fint;
