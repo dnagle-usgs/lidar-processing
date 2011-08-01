@@ -4,6 +4,10 @@
 if(is_void(__eaarl_includes_included__)) {
    __eaarl_includes_included__ = 1;
 
+   // Configure doubles and floats so that northing values will render with two
+   // decimal places interactively by default
+   print_format, float="%.9g", double="%.9g";
+
    // roll is a yorick function but often gets overwritten, so copy it to yroll
    // so that it doesn't get lost
    if(is_void(yroll))
