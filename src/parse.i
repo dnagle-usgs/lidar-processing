@@ -168,6 +168,31 @@ func parse_rn(rn, &raster, &pulse) {
    }
 }
 
+func parse_tile_cs(text) {
+/* DOCUMENT parse_tile_cs(text)
+   Given a text string, this parses the coordinate system information out of it
+   if possible. The string must contain a tile name (either 2km/10km or quarter
+   quad) parseable by tile2uz and must also contain datum information parseable
+   by parse_datum. If a coordinate system cannot be parsed, string(0) is
+   returned.
+*/
+   local datum, geoid;
+   zone = tile2uz(text);
+   if(!zone)
+      return string(0);
+   assign, parse_datum(text), datum, geoid;
+   if(!geoid)
+      geoid = "03";
+   if(datum == "w84")
+      return cs_wgs84(zone=zone);
+   else if(datum == "n83")
+      return cs_nad83(zone=zone);
+   else if(datum == "n88")
+      return cs_navd88(zone=zone, geoid=geoid);
+   else
+      return string(0);
+}
+
 func parse_datum(text) {
 /* DOCUMENT parse_datum(text)
    Given a text string, this parses the datum information out of it if possible.
