@@ -564,6 +564,9 @@ mode=, pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=) {
    default, classification, 0;
    default, header, h_new();
 
+   local x, y, z;
+   data2xyz, data, x, y, z, mode=mode, native=native;
+
    //--- Initialize file, header
    stream = las_create(filename, v_maj=v_maj, v_min=v_min);
 
@@ -597,23 +600,10 @@ mode=, pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=) {
    if(has_member(stream.points(1), "gps_time"))
       stream.points.gps_time = 0;
 
-   // X/Y coordinates
-   if(mode == "be" && has_member(data, "least")) {
-      stream.points.x = data.least;
-      stream.points.y = data.lnorth;
-   } else {
-      stream.points.x = data.east;
-      stream.points.y = data.north;
-   }
-
-   // Z coordinate
-   if(mode == "be" && has_member(data, "lelv")) {
-      stream.points.z = data.lelv;
-   } else if(mode == "ba" && has_member(data, "depth")) {
-      stream.points.z = data.elevation + data.depth;
-   } else {
-      stream.points.z = data.elevation;
-   }
+   // coordinates
+   stream.points.x = x;
+   stream.points.y = y;
+   stream.points.z = z;
 
    // Verify that offsets and scales are defaults -- or update x/y/z if not
    // This shouldn't get used often... if ever...
