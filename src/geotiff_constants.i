@@ -1,22 +1,30 @@
-
 local GTIF;
 /* DOCUMENT GTIF
    An oxy group object containing constants that are from the GeoTIFF
    specification.
 
-   Contains three members:
+   Contains five members:
       GTIF.tag
       GTIF.key
       GTIF.code
+      GTIF.keytype
+      GTIF.keymap
 
-   Each are sub-objects containing name/value pairs of GeoTIFF containts
-   corresponding to their values as shorts.
+   .tag, .key, and .code are each sub-objects containing name/value pairs of
+   GeoTIFF containts corresponding to their values as shorts.
 
    Note that these are *unsigned* shorts, which Yorick doesn't handle, so a
    value like 34735s becomes -30801s. (In Yorick, 34735s == -30801s.)
 
    Values are in numerical order within .tag and .key. When working with
    GTIF.code, each group of values is in numerical order.
+
+   .keytype has the same keys as .key, but the values are one of "short",
+   "ascii", or "double" indicating how the key's value would be stored.
+
+   .keymap has the same keys as .key, but the values are glob patterns
+   corresponding to the keys in .code that are used for that key. These are
+   only defined when .keytype is "short".
 */
 
 GTIF = save();
@@ -31,13 +39,22 @@ save, GTIF.tag,
    GeoAsciiParamsTag = 34737s;
 
 // 6.2 Key ID Summary
-save, GTIF, key=save();
+save, GTIF, key=save(), keytype=save(), keymap=save();
 
 // 6.2.1 GeoTIFF Configuration Keys
 save, GTIF.key,
    GTModelTypeGeoKey = 1024s,    // 6.3.1.1
-   GTRasterTypeGeoKey = 1025s,   // 6.3.2.1
+   GTRasterTypeGeoKey = 1025s,   // 6.3.1.2
    GTCitationGeoKey = 1026s;     // string
+
+save, GTIF.keytype,
+   GTModelTypeGeoKey = "short",
+   GTRasterTypeGeoKey = "short",
+   GTCitationGeoKey = "ascii";
+
+save, GTIF.keymap,
+   GTModelTypeGeoKey = "ModelType*",
+   GTRasterTypeGeoKey = "RasterPixel*";
 
 // 6.2.1 Geographic CS Parameter Keys
 save, GTIF.key,
@@ -55,6 +72,31 @@ save, GTIF.key,
    GeogInvFlatteningGeoKey = 2059s,       // double, ratio
    GeogAzimuthUnitsGeoKey = 2060s,        // 6.3.1.4
    GeogPrimeMeridianLongGeoKey = 2061s;   // double, GeogAngularUnit
+
+save, GTIF.keytype,
+   GeographicTypeGeoKey = "short",
+   GeogCitationGeoKey = "ascii",
+   GeogGeodeticDatumGeoKey = "short",
+   GeogPrimeMeridianGeoKey = "short",
+   GeogLinearUnitsGEoKey = "short",
+   GeogLinearUnitSizeGeoKey = "double",
+   GeogAngularUnitsGeoKey = "short",
+   GeogAngularUnitSizeGeoKey = "double",
+   GeogEllipsoidGeoKey = "short",
+   GeogSemiMajorAxisGeoKey = "double",
+   GeogSemiMinorAxisGeoKey = "double",
+   GeogInvFlatteningGeoKey = "double",
+   GeogAzimuthUnitsGeoKey = "short",
+   GeogPrimeMeridianLongGeoKey = "double";
+
+save, GTIF.keymap,
+   GeographicTypeGeoKey = "GCS*",
+   GeogGeodeticDatumGeoKey = "Datum*",
+   GeogPrimeMeridianGeoKey = "PM*",
+   GeogLinearUnitsGEoKey = "Linear*",
+   GeogAngularUnitsGeoKey = "Angular*",
+   GeogEllipsoidGeoKey = "Ellipse*",
+   GeogAzimuthUnitsGeoKey = "Angular*";
 
 // 6.2.3 Projected CS Parameter Keys
 save, GTIF.key,
@@ -87,12 +129,59 @@ save, GTIF.key,
    ProjAzimuthAngleGeoKey = 3094s,           // double, GeogAzimuthUnit
    ProjStraightVertPoleLongGeoKey = 3095s;   // double, GeogAngularUnit
 
+save, GTIF.keytype,
+   ProjectedCSTypeGeoKey = "short",
+   PCSCitationGeoKey = "ascii",
+   ProjectionGeoKey = "short",
+   ProjCoordTransGeoKey = "short",
+   ProjLinearUnitsGeoKey = "short",
+   ProjLinearUnitSizeGeoKey = "double",
+   ProjStdParallel1GeoKey = "double",
+   ProjStdParallelGeoKey = "double",
+   ProjStdParallel2GeoKey = "double",
+   ProjNatOriginLongGeoKey = "double",
+   ProjOriginLongGeoKey = "double",
+   ProjNatOriginLatGeoKey = "double",
+   ProjOriginLatGeoKey = "double",
+   ProjFalseEastingGeoKey = "double",
+   ProjFalseNorthingGeoKey = "double",
+   ProjFalseOriginLongGeoKey = "double",
+   ProjFalseOriginLatGeoKey = "double",
+   ProjFalseOriginEastingGeoKey = "double",
+   ProjFalseOriginNorthingGeoKey = "double",
+   ProjCenterLongGeoKey = "double",
+   ProjCenterLatGeoKey = "double",
+   ProjCenterEastingGeoKey = "double",
+   ProjCenterNorthingGeoKey = "double",
+   ProjScaleAtNatOriginGeoKey = "double",
+   ProjScaleAtOriginGeoKey = "double",
+   ProjScaleAtCenterGeoKey = "double",
+   ProjAzimuthAngleGeoKey = "double",
+   ProjStraightVertPoleLongGeoKey = "double";
+
+save, GTIF.keymap,
+   ProjectedCSTypeGeoKey = "PCS*",
+   ProjectionGeoKey = "Proj*",
+   ProjCoordTransGeoKey = "CT*",
+   ProjLinearUnitsGeoKey = "Linear*";
+
 // 6.2.4 Vertical CS Keys
 save, GTIF.key,
    VerticalCSTypeGeoKey = 4096s,    // 6.3.4.1
    VerticalCitationGeoKey = 4097s,   // string
    VerticalDatumGeoKey = 4098s,     // 6.3.4.2
    VerticalUnitsGeoKey = 4099s;     // 6.3.1.3
+
+save, GTIF.keytype,
+   VerticalCSTypeGeoKey = "short",
+   VerticalCitationGeoKey = "ascii",
+   VerticalDatumGeoKey = "short",
+   VerticalUnitsGeoKey = "short";
+
+save, GTIF.keymap,
+   VerticalCSTypeGeoKey = "VertCS*",
+   VerticalDatumGeoKey = "NONE",
+   VerticalUnitsGeoKey = "Linear*";
 
 // 6.3 Key Code Summary
 save, GTIF, code=save();
@@ -1890,5 +1979,3 @@ save, GTIF.code,
    VertCS_Yellow_Sea_1956 = 5104s,
    VertCS_Baltic_Sea = 5105s,
    VertCS_Caspian_Sea = 5106s;
-
-
