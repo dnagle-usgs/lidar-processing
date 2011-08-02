@@ -263,12 +263,12 @@ local las;
 /******************************** ALPS EXPORT *********************************/
 // These functions facilitate the conversion of ALPS data formats into LAS.
 
-func batch_pbd2las(dir_pbd, outdir=, searchstr=, v_maj=, v_min=, zone=,
-cs_h=, cs_v=, mode=, pdrf=, encode_rn=, include_scan_angle_rank=, buffer=,
-classification=, header=, verbose=, pre_fn=, post_fn=, shorten_fn=) {
+func batch_pbd2las(dir_pbd, outdir=, searchstr=, v_maj=, v_min=, cs=, cs_out=,
+mode=, pdrf=, encode_rn=, include_scan_angle_rank=, buffer=, classification=,
+header=, verbose=, pre_fn=, post_fn=, shorten_fn=) {
 /* DOCUMENT batch_pbd2las, dir_pbd, outdir=, searchstr=, v_maj=, v_min=,
-   zone=, cs_h=, cs_v=, mode=, pdrf=, encode_rn=, include_scan_angle_rank=,
-   buffer=, classification=, header=, verbose=, pre_fn=, post_fn=, shorten_fn=
+   cs=, cs_out=, mode=, pdrf=, encode_rn=, include_scan_angle_rank=, buffer=,
+   classification=, header=, verbose=, pre_fn=, post_fn=, shorten_fn=
 
    Runs pbd2las in a batch mode. This converts individual PBD files into LAS
    files.
@@ -308,16 +308,13 @@ classification=, header=, verbose=, pre_fn=, post_fn=, shorten_fn=) {
       v_maj=, v_min= These two options specify the LAS version (major and
          minor) to use. The default is v_maj=1, v_min=2.
 
-      zone= The UTM zone of the data. By default, this is determined from the
-         file name (works with 2km, 10km, and qq tiling schemes).
+      cs= Coordinate system that the data is currently in. Should be a
+         coordinate system string or hash suitable for passing through
+         cs_parse. By default, this is parsed from the file's name.
 
-      cs_h= String indicating the horizontal coordinate system used. Valid
-         options are "wgs84", "navd88", and "nad83". By default, this is
-         determined from the file name.
-
-      cs_v= String indicating the vertical coordinate system used. Valid
-         options are "wgs84", "navd88", and "nad83". This defaults to the value
-         of cs_h.
+      cs_out= Coordinate system that the data should be converted to prior to
+         writing to LAS files. Should be a coordinate system string or hash
+         suitable for passing through cs_parse.
 
       pdrf= The "point data record format" to use, as defined in the LAS specs.
          Valid values:
@@ -424,21 +421,20 @@ classification=, header=, verbose=, pre_fn=, post_fn=, shorten_fn=) {
             i, numberof(files_pbd);
 
       pbd2las, files_pbd(i), fn_las=files_las(i), v_maj=v_maj, v_min=v_min,
-         zone=zone, cs_h=cs_h, cs_v=cs_v, mode=mode, pdrf=pdrf,
-         encode_rn=encode_rn, include_scan_angle_rank=include_scan_angle_rank,
-         buffer=buffer, classification=classification, header=header,
-         verbose=pass_verbose;
+         cs=cs, cs_out=cs_out, mode=mode, pdrf=pdrf, encode_rn=encode_rn,
+         include_scan_angle_rank=include_scan_angle_rank, buffer=buffer,
+         classification=classification, header=header, verbose=pass_verbose;
 
       if(pass_verbose)
          write, "";
    }
 }
 
-func pbd2las(fn_pbd, fn_las=, mode=, v_maj=, v_min=, zone=, cs_h=, cs_v=,
-pdrf=, encode_rn=, include_scan_angle_rank=, buffer=, classification=, header=,
+func pbd2las(fn_pbd, fn_las=, mode=, v_maj=, v_min=, cs=, cs_out=, pdrf=,
+encode_rn=, include_scan_angle_rank=, buffer=, classification=, header=,
 verbose=) {
-/* DOCUMENT pbd2las, fn_pbd, fn_las=, mode=, v_maj=, v_min=, zone=, cs_h=,
-   cs_v=, pdrf=, encode_rn=, include_scan_angle_rank=, buffer=, classification=,
+/* DOCUMENT pbd2las, fn_pbd, fn_las=, mode=, v_maj=, v_min=, cs=, cs_out=,
+   pdrf=, encode_rn=, include_scan_angle_rank=, buffer=, classification=,
    header=, verbose=
 
    Converts a Yorick pbd file into a LAS file.
@@ -473,20 +469,7 @@ verbose=) {
 */
    default, fn_las, file_rootname(fn_pbd) + ".las";
    default, verbose, 1;
-
-   if(is_void(cs_h)) {
-      if(strmatch(fn_pbd, "w84"))
-         cs_h = "wgs84";
-      else if(strmatch(fn_pbd, "n88"))
-         cs_h = "navd88";
-      else if(strmatch(fn_pbd, "n83"))
-         cs_h = "nad83";
-   }
-   default, cs_v, cs_h;
-
-   if(is_void(zone)) {
-      zone = tile2uz(file_tail(fn_pbd));
-   }
+   default, cs, parse_tile_cs(file_tail(fn_pbd));
 
    if(is_void(mode)) {
       if(strmatch(fn_pbd, "_fs"))
@@ -518,25 +501,23 @@ verbose=) {
    }
 
    if(verbose) {
-      cs = is_void(cs_h) ? "[]" : ("\"" + cs_h + "\"");
       write, file_tail(fn_las);
       write,
-         format=" cs_h=%s, zone=%d, mode=\"%s\"  --  %d points\n",
-         cs, int(zone), mode, numberof(data);
+         format=" cs=\"%s\", mode=\"%s\"  --  %d points\n",
+         cs, mode, numberof(data);
    }
 
-   las_export_data, fn_las, unref(data), v_maj=v_maj, v_min=v_min,
-      zone=zone, cs_h=cs_h, cs_v=cs_v, mode=mode, pdrf=pdrf,
-      encode_rn=encode_rn, include_scan_angle_rank=include_scan_angle_rank,
+   las_export_data, fn_las, unref(data), v_maj=v_maj, v_min=v_min, cs=cs,
+      cs_out=cs_out, mode=mode, pdrf=pdrf, encode_rn=encode_rn,
+      include_scan_angle_rank=include_scan_angle_rank,
       classification=classification, header=header;
    close, f;
 }
 
-func las_export_data(filename, data, v_maj=, v_min=, zone=, cs_h=, cs_v=,
-mode=, pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=) {
-/* DOCUMENT las_export_data, filename, data, v_maj=, v_min=, zone=, cs_h=,
-   cs_v=, mode=, pdrf=, encode_rn=, include_scan_angle_rank=, classification=,
-   header=
+func las_export_data(filename, data, v_maj=, v_min=, cs=, cs_out=, mode=,
+pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=) {
+/* DOCUMENT las_export_data, filename, data, v_maj=, v_min=, cs=, cs_out=,
+   mode=, pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=
 
    Creates a LAS file from EAARL data.
 
@@ -563,17 +544,38 @@ mode=, pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=) {
    default, include_scan_angle_rank, 0;
    default, classification, 0;
    default, header, h_new();
+   default, cs_out, cs;
 
    local x, y, z;
-   data2xyz, data, x, y, z, mode=mode, native=native;
+   data2xyz, data, x, y, z, mode=mode;
+   if(cs != cs_out)
+      cs2cs, cs, cs_out, x, y, z;
 
    //--- Initialize file, header
    stream = las_create(filename, v_maj=v_maj, v_min=v_min);
 
    stream.header.point_data_format_id = pdrf;
    stream.header.number_of_point_records = numberof(data);
-   stream.header.x_scale = stream.header.y_scale = stream.header.z_scale = 0.01;
-   stream.header.x_offset = stream.header.y_offset = stream.header.z_offset = 0;
+
+   units = "m";
+   if(cs_out) {
+      cs_out = cs_parse(cs_out, output="hash");
+      if(cs_out.proj == "longlat")
+         units = "d";
+   }
+
+   if(units == "m") {
+      stream.header.x_scale = stream.header.y_scale = 0.01;
+      stream.header.x_offset = stream.header.y_offset = 0;
+   } else {
+      stream.header.x_scale = 10. ^ ceil(log10((x(max) - x(min))/(2.^32-1)));
+      stream.header.y_scale = 10. ^ ceil(log10((y(max) - y(min))/(2.^32-1)));
+
+      stream.header.x_offset = (x(max) + x(min))/2.;
+      stream.header.y_offset = (y(max) + y(min))/2.;
+   }
+   stream.header.z_scale = 0.01;
+   stream.header.z_offset = 0;
 
    for(key = h_first(header); key; key = h_next(header, key)) {
       if(has_member(stream.header, key))
@@ -581,11 +583,8 @@ mode=, pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=) {
    }
 
    //--- Variable length data (just coordinate system info)
-   if(!is_void(zone) && !is_void(cs_h)) {
-      prj = h_new(zone=zone, horizontal=cs_h);
-      if(!is_void(cs_v))
-         h_set, prj, vertical=cs_v;
-      las_create_projection_record, stream, sizeof(stream.header), prj;
+   if(cs_out) {
+      las_create_projection_record, stream, sizeof(stream.header), cs_out;
    }
 
    //--- Point data
@@ -600,10 +599,9 @@ mode=, pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=) {
    if(has_member(stream.points(1), "gps_time"))
       stream.points.gps_time = 0;
 
-   // coordinates
-   stream.points.x = x;
-   stream.points.y = y;
-   stream.points.z = z;
+   stream.points.x = long((x-stream.header.x_offset)/stream.header.x_scale+0.5);
+   stream.points.y = long((y-stream.header.y_offset)/stream.header.y_scale+0.5);
+   stream.points.z = long((z-stream.header.z_offset)/stream.header.z_scale+0.5);
 
    // Intensity
    if(mode == "fs" && has_member(data, "fint")) {
@@ -1652,8 +1650,8 @@ func las_update_header(stream) {
    }
 }
 
-func las_create_projection_record(stream, offset, data) {
-/* DOCUMENT las_create_projection_record, stream, data
+func las_create_projection_record(stream, offset, cs) {
+/* DOCUMENT las_create_projection_record, stream, cs
    Creates the variable record entries for the projection information. This
    adds the variables sGeoKeys and sKeyEntry. This should be called after the
    corresponding variable-length record header has been added to the file.
@@ -1662,125 +1660,68 @@ func las_create_projection_record(stream, offset, data) {
 
       stream: The filehandle to the LAS file.
       offset: The offset into the file where the record should get created.
-      data: A Yeti hash with the information to add.
-
-   The data argument should be as follows:
-
-   data=h_new(
-      zone=  Zone number (integer) for this data
-      horizontal = Horizontal datum for this data; ideally, one of "wgs84",
-         "nad83", or "navd88". Assumes northern hemisphere.
-      vertical = Vertical datum for this data; ideally, one of "wgs84",
-         "nad83", or "navd88".
-   )
-
-   For advanced usage, the horizontal and vertical values can be a number
-   represented by a string; see the source code for details.
-
-   It's assumed that all units are in meters.
+      cs: The coordinate system to add.
 */
-// http://www.remotesensing.org/geotiff/spec/geotiff2.4.html#2.4
-// http://www.remotesensing.org/geotiff/spec/geotiff6.html
-// http://spatialreference.org/ref/epsg/26915/ etc.
    vlrh_name = las_install_vlrh(stream);
    las_install_vlr_gkdt, stream;
 
-   keyid = [];
-   value = [];
-
-   if(h_has(data, "horizontal")) {
-      // GTModelTypeGeoKey
-      // Defines the general type of model coordinate system used.
-      // Key ID = 1024
-      // Values:
-      //    1 = Projection coordinate system
-      //    2 = Geographic lat/lon system
-      //    3 = Geocentric (x,y,z) coordinate system
-      // We always use 1
-      grow, keyid, 1024s;
-      grow, value, 1s;
-
-      // ProjectedCSTypeGeoKey
-      // Specifies the projected coordinate system.
-      // Key ID = 3072
-      // Values:
-      //    WGS84 / UTM northern hemisphere: 326zz
-      //    WGS84 / UTM southern hemisphere: 627zz
-      //    NAD83 / UTM: 269zz
-      // (where zz is the UTM zone)
-      // See http://www.remotesensing.org/geotiff/spec/geotiff6.html#6.3.3.1
-      grow, keyid, 3072s;
-      if(data.horizontal == "wgs84") {
-         grow, value, short(32600 + data.zone);
-      } else if(data.horizontal == "nad83" || data.horizontal == "navd88") {
-         grow, value, short(26900 + data.zone);
-      } else {
-         // Assume the user provided a value to be used
-         grow, value, short(atoi(data.horizontal));
-      }
-
-      // ProjLinearUnitsGeoKey
-      // Defines linear units used by the projection.
-      // Key ID = 3076
-      // Values:
-      //    9001 = meters
-      // See http://www.remotesensing.org/geotiff/spec/geotiff6.html#6.3.1.3
-      grow, keyid, 3076s;
-      grow, value, 9001s;
-   }
-
-   if(h_has(data, "vertical")) {
-      // VerticalCSTypeGeoKey
-      // Specifies the vertical coordinate system.
-      // Key ID = 4096
-      // Values:
-      //    5019 = GRS 1980 ellipsoid
-      //    5030 = WGS 1984 ellipsoid
-      //    5103 = NAVD 1988 datum
-      // See http://www.remotesensing.org/geotiff/spec/geotiff6.html#6.3.4.1
-      grow, keyid, 4096s;
-      if(data.vertical == "wgs84") {
-         grow, value, 5030s;
-      } else if(data.vertical == "navd88") {
-         grow, value, 5103s;
-      } else if(data.vertical == "nad83") {
-         grow, value, 5019s;
-      } else {
-         // Assume the user provided a value to be used
-         grow, value, short(atoi(data.vertical));
-      }
-
-      // VerticalUnitsGeoKey
-      // Specifies the vertical units of measurement used.
-      // Key ID = 4099
-      // Values:
-      //    (same as for ProjLinearUnitsGeoKey)
-      grow, keyid, 4099s;
-      grow, value, 9001s;
-   }
+   gtif = cs_encode_geotiff(cs);
 
    add_variable, stream, offset, "vrh_cs", vlrh_name;
    stream.vrh_cs.user_id = strchar("LASF_Projection");
    stream.vrh_cs.record_id = 34735s;
-   stream.vrh_cs.length_after_header = 8 * (numberof(keyid) + 1);
+   stream.vrh_cs.length_after_header = 8 * (numberof(gtif.KeyId) + 1);
    stream.vrh_cs.description = '\0';
-   offset += 54;
+   offset += sizeof(stream.vrh_cs);
 
    add_variable, stream, offset, "sGeoKeys", "LAS_VLR_GKDT";
    stream.sGeoKeys.wKeyDirectoryVersion = 1s;
    stream.sGeoKeys.wKeyRevision = 1s;
    stream.sGeoKeys.wMinorRevision = 0s;
-   stream.sGeoKeys.wNumberOfKeys = short(numberof(keyid));
-   offset += 8;
+   stream.sGeoKeys.wNumberOfKeys = short(numberof(gtif.KeyId));
+   offset += sizeof(stream.sGeoKeys);
 
    add_variable, stream, offset, "sKeyEntry", "LAS_VLR_GKDT_KEY",
       stream.sGeoKeys.wNumberOfKeys;
-   stream.sKeyEntry.wKeyID = keyid;
-   stream.sKeyEntry.wTIFFTagLocation = 0;
-   stream.sKeyEntry.wCount = 1;
-   stream.sKeyEntry.wValue_Offset = value;
+   stream.sKeyEntry.wKeyID = gtif.KeyId;
+   stream.sKeyEntry.wTIFFTagLocation = gtif.TIFFTagLocation;
+   stream.sKeyEntry.wCount = gtif.Count;
+   stream.sKeyEntry.wValue_Offset = gtif.Value_Offset;
+   offset += sizeof(stream.sKeyEntry);
 
    stream.header.number_of_var_len_records += 1;
+
+   if(gtif(*,"GeoAsciiParamsTag")) {
+      add_variable, stream, offset, "vrh_cs_ascii", vlrh_name;
+      stream.vrh_cs_ascii.user_id = strchar("LASF_Projection");
+      stream.vrh_cs_ascii.record_id = 34737s;
+      stream.vrh_cs_ascii.length_after_header = numberof(gtif.GeoAsciiParamsTag);
+      stream.vrh_cs_ascii.description = '\0';
+      offset += sizeof(stream.vrh_cs_ascii);
+
+      add_variable, stream, offset, "sGeoAsciiParamsTag", "char",
+         numberof(gtif.GeoAsciiParamsTag);
+      stream.sGeoAsciiParamsTag = gtif.GeoAsciiParamsTag;
+      offset += sizeof(stream.sGeoAsciiParamsTag);
+
+      stream.header.number_of_var_len_records += 1;
+   }
+
+   if(gtif(*,"GeoDoubleParamsTag")) {
+      add_variable, stream, offset, "vrh_cs_double", vlrh_name;
+      stream.vrh_cs_ascii.user_id = strchar("LASF_Projection");
+      stream.vrh_cs_ascii.record_id = 34736s;
+      stream.vrh_cs_ascii.length_after_header = 8 * numberof(gtif.GeoDoubleParamsTag);
+      stream.vrh_cs_ascii.description = '\0';
+      offset += sizeof(stream.vrh_cs_double);
+
+      add_variable, stream, offset, "sGeoDoubleParamsTag", "double",
+         numberof(gtif.GeoDoubleParamsTag);
+      stream.sGeoDoubleParamsTag = gtif.GeoDoubleParamsTag;
+      offset += sizeof(stream.sGeoDoubleParamsTag);
+
+      stream.header.number_of_var_len_records += 1;
+   }
 }
 
 /***************************** INSTALL STRUCTURES *****************************/
