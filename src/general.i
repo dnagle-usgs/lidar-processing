@@ -321,18 +321,18 @@ func binary_search(ary, val, exact=, inline=) {
 
    // Initial bounds cover entire list
    b0 = 1
-   b1 = numberof(ary);
+   b1 = is_obj(ary) ? ary(*) : numberof(ary);
 
    // Make sure the value is in bounds. If not... this becomes trivial.
-   if(val <= ary(b0))
+   if(val <= ary(noop(b0)))
       b1 = b0;
-   else if(ary(b1) <= val)
+   else if(ary(noop(b1)) <= val)
       b0 = b1;
 
    // Narrow bounds until it's either a single value or adjacent indexes
    while(b1 - b0 > 1) {
       pivot = long((b0 + b1) / 2.);
-      pivotVal = ary(pivot);
+      pivotVal = ary(noop(pivot));
 
       if(pivotVal == val) {
          b0 = b1 = pivot;
@@ -348,18 +348,18 @@ func binary_search(ary, val, exact=, inline=) {
    if(b0 == b1) {
       nearest = b0;
    } else {
-      db0 = abs(val - ary(b0));
-      db1 = abs(val - ary(b1));
+      db0 = abs(val - ary(noop(b0)));
+      db1 = abs(val - ary(noop(b1)));
       nearest = (db0 < db1) ? b0 : b1;
    }
 
    // Handle exact=1
-   if(exact && ary(nearest) != val)
+   if(exact && ary(noop(nearest)) != val)
       nearest = [];
 
    // Handle inline=1
    if(inline && !is_void(nearest))
-      nearest = ary(nearest);
+      nearest = ary(noop(nearest));
 
    return nearest;
 }
