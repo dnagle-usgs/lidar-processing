@@ -303,7 +303,8 @@ func binary_search(ary, val, exact=, inline=) {
 /* DOCUMENT binary_search(ary, val, exact=, inline=)
    Searches in ary for val. The ary must be sorted and must contain numerical
    data. Will return the index corresponding to the value in ary that is
-   nearest to val.
+   nearest to val. If multiple indices match val exactly, then the first index
+   is selected.
 
    Parameters:
       ary - Array of data to search in. Must be numerical, sorted, and
@@ -326,7 +327,7 @@ func binary_search(ary, val, exact=, inline=) {
    // Make sure the value is in bounds. If not... this becomes trivial.
    if(val <= ary(noop(b0)))
       b1 = b0;
-   else if(ary(noop(b1)) <= val)
+   else if(ary(noop(b1)) < val)
       b0 = b1;
 
    // Narrow bounds until it's either a single value or adjacent indexes
@@ -334,9 +335,7 @@ func binary_search(ary, val, exact=, inline=) {
       pivot = long((b0 + b1) / 2.);
       pivotVal = ary(noop(pivot));
 
-      if(pivotVal == val) {
-         b0 = b1 = pivot;
-      } else if(pivotVal < val) {
+      if(pivotVal < val) {
          b0 = pivot;
       } else {
          b1 = pivot;
@@ -344,14 +343,9 @@ func binary_search(ary, val, exact=, inline=) {
    }
 
    // Select the nearest index
-   nearest = [];
-   if(b0 == b1) {
-      nearest = b0;
-   } else {
-      db0 = abs(val - ary(noop(b0)));
-      db1 = abs(val - ary(noop(b1)));
-      nearest = (db0 < db1) ? b0 : b1;
-   }
+   db0 = abs(val - ary(noop(b0)));
+   db1 = abs(val - ary(noop(b1)));
+   nearest = (db0 > db1) ? b1 : b0;
 
    // Handle exact=1
    if(exact && ary(noop(nearest)) != val)
