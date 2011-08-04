@@ -267,6 +267,94 @@ func pbd2obj(pbd) {
    return obj;
 }
 
+func obj2array(obj, &success) {
+/* DOCUMENT obj2array(obj, &success)
+   Converts an oxy group object into an array, if possible. Return parameter
+   success is 1 if it was possible, or 0 if not. Returns [] when success == 0;
+
+      > obj2array(save(a=10, b=20, c=30), success)
+      [10,20,30]
+      > success
+      1
+      > obj2array(save(), success)
+      []
+      > success
+      1
+      > obj2array(save(a=1,b="foo"), success)
+      []
+      > success
+      0
+*/
+   success = 0;
+   count = obj(*);
+
+   if(!count) {
+      success = 1;
+      return [];
+   }
+
+   // Scan object to determine member types and dimensions
+   types = array(string, count);
+   dims = array(short, count);
+   for(i = 1; i <= count; i++) {
+      types(i) = typeof(obj(noop(i)));
+
+      d = dimsof(obj(noop(i)));
+      if(numberof(d))
+         dims(i) = d(1);
+      else
+         dims(i) = -1;
+   }
+
+   // Can't convert if everything isn't conformable
+   if(nallof(dims == dims(1)))
+      return [];
+
+   // Upcast numeric types if needed
+   has_int = has_flt = 0;
+
+   upcast = ["char", "short", "int", "long"];
+   idx = set_intersection(upcast, types, idx=1);
+   if(numberof(idx)) {
+      has_int = 1;
+      upcast = upcast(idx(sort(idx)));
+      idx = set_intersection(types, upcast, idx=1);
+      types(idx) = upcast(0);
+   }
+
+   upcast = ["float", "double"];
+   idx = set_intersection(upcast, types, idx=1);
+   if(numberof(idx)) {
+      has_flt = 1;
+      upcast = upcast(idx(sort(idx)));
+      idx = set_intersection(types, upcast, idx=1);
+      types(idx) = upcast(0);
+   }
+
+   if(has_int && has_flt) {
+      upcast = ["char", "short", "int", "long", "float", "double"];
+      idx = set_intersection(types, upcast, idx=1);
+      types(idx) = "double";
+   }
+
+   // Make sure only permissible types are present
+   if(nallof(types == types(1)))
+      return [];
+
+   // Copy contents of obj to ary, but abort if any dims fail to match up
+   dims = dimsof(obj(1));
+   ary = array(symbol_def(types(1)), dims, count);
+   for(i = 1; i <= count; i++) {
+      if(nallof(dims == dimsof(obj(noop(i))))) {
+         return [];
+      }
+      ary(..,i) = obj(noop(i));
+   }
+
+   success = 1;
+   return ary;
+}
+
 func struct2hash(data) {
 /* DOCUMENT struct2hash(data)
    Converts data that is held in a struct to an equivalent hash (using Yeti).
