@@ -1665,7 +1665,7 @@ func las_create_projection_record(stream, offset, cs) {
    vlrh_name = las_install_vlrh(stream);
    las_install_vlr_gkdt, stream;
 
-   gtif = cs_encode_geotiff(cs);
+   gtif = geotiff_tags_encode(cs_encode_geotiff(cs));
 
    add_variable, stream, offset, "vrh_cs", vlrh_name;
    stream.vrh_cs.user_id = strchar("LASF_Projection");
