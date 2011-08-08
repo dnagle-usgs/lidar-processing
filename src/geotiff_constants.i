@@ -1979,3 +1979,8 @@ save, GTIF.code,
    VertCS_Yellow_Sea_1956 = 5104s,
    VertCS_Baltic_Sea = 5105s,
    VertCS_Caspian_Sea = 5106s;
+
+save, GTIF,
+   tag=GTIF.tag(sort(obj2array(GTIF.tag))),
+   key=GTIF.key(sort(obj2array(GTIF.key))),
+   code=GTIF.code(sort(obj2array(GTIF.code)));

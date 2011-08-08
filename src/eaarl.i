@@ -43,7 +43,6 @@ if(is_void(__eaarl_includes_included__)) {
    // These must come first, since some other functions make use of them at the
    // top level
    require, "eaarl_constants.i";
-   require, "geotiff_constants.i";
    require, "eaarl_structs.i";
    require, "eaarl_data.i";
    require, "general.i";
@@ -140,6 +139,7 @@ if(is_void(__eaarl_includes_included__)) {
    // Must come last, because it depends on some of the above (it actually runs
    // something instead of only defining functions)
    require, "alpsrc.i";
+   require, "geotiff_constants.i";
 }
 
 // Functions for working with sf_a.tcl
