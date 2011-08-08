@@ -438,7 +438,7 @@ snit::widget ::l1pro::file::gui::load_las {
     delegate method * to hull
 
     variable filename {}
-    variable struct FS
+    variable struct LAS_ALPS
     variable vname {}
     variable skip 1
     variable fakemirror 1
@@ -461,7 +461,7 @@ snit::widget ::l1pro::file::gui::load_las {
         ::mixin::combobox $win.cboStruct \
                 -state readonly \
                 -textvariable [myvar struct] \
-                -values {FS VEG__}
+                -values {LAS_ALPS FS VEG__}
 
         ttk::label $win.lblVname -text "Variable name: "
         ttk::entry $win.entVname -width 20 \
@@ -545,7 +545,8 @@ snit::widget ::l1pro::file::gui::load_las {
             return
         }
 
-        set func [dict get {FS las_to_fs VEG__ las_to_veg} $struct]
+        set func [dict get \
+                {LAS_ALPS las_to_alps FS las_to_fs VEG__ las_to_veg} $struct]
 
         set cmd "$vname = ${func}(\"$filename\", fakemirror=$fakemirror,\
                 rgbrn=$rgbrn)"
