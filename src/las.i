@@ -1362,6 +1362,7 @@ func las_header(las) {
    write, format="Max X / Y / Z    : %.10g / %.10g / %.10g\n",
       header.x_max, header.y_max, header.z_max;
 
+   write, "";
    cs = [];
    if(has_member(las, "sKeyEntry")) {
       gtif = struct2obj(las.sKeyEntry);
@@ -1371,14 +1372,16 @@ func las_header(las) {
          save, gtif, GeoAsciiParamsTag=las.GeoAsciiParamsTag;
 
       cs = cs_decode_geotiff(geotiff_tags_decode(gtif));
+
+      if(is_void(cs)) {
+         write, format="Coordinate system detected:  %s\n",
+            "(unable to parse)";
+      } else {
+         write, format="Coordinate system detected:\n  %s\n", cs;
+      }
+   } else {
+      write, format="No coordinate system information present.\n%s", "";
    }
-
-   if(is_void(cs))
-      write, format="\nUnable to detect coordinate system.\n%s", "";
-   else
-      write, format="\nDetected coordinate system:\n  %s\n", cs;
-
-
 }
 
 func las_get_version(las, &v_maj, &v_min) {
