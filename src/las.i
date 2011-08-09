@@ -1683,7 +1683,7 @@ func las_create_projection_record(stream, offset, cs) {
 
    add_variable, stream, offset, "sKeyEntry", "LAS_VLR_GKDT_KEY",
       stream.sGeoKeys.NumberOfKeys;
-   stream.sKeyEntry.KeyID = gtif.KeyId;
+   stream.sKeyEntry.KeyId = gtif.KeyId;
    stream.sKeyEntry.TIFFTagLocation = gtif.TIFFTagLocation;
    stream.sKeyEntry.Count = gtif.Count;
    stream.sKeyEntry.Value_Offset = gtif.Value_Offset;
@@ -1936,7 +1936,7 @@ func las_install_vlr_gkdt(stream) {
    add_member, stream, "LAS_VLR_GKDT", -1, "NumberOfKeys", "short";
    install_struct, stream, "LAS_VLR_GKDT";
 
-   add_member, stream, "LAS_VLR_GKDT_KEY", -1, "KeyID", "short";
+   add_member, stream, "LAS_VLR_GKDT_KEY", -1, "KeyId", "short";
    add_member, stream, "LAS_VLR_GKDT_KEY", -1, "TIFFTagLocation", "short";
    add_member, stream, "LAS_VLR_GKDT_KEY", -1, "Count", "short";
    add_member, stream, "LAS_VLR_GKDT_KEY", -1, "Value_Offset", "short";
