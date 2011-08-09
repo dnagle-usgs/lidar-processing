@@ -1428,7 +1428,7 @@ func las_setup_vlr_data(stream, offset, header) {
 
          add_variable, stream, offset, v_sGeoKeys, "LAS_VLR_GKDT";
          offset += sizeof(get_member(stream, v_sGeoKeys));
-         numkeys = get_member(stream, v_sGeoKeys).wNumberOfKeys;
+         numkeys = get_member(stream, v_sGeoKeys).NumberOfKeys;
          add_variable, stream, offset, v_sKeyEntry, "LAS_VLR_GKDT_KEY", numkeys;
       }
       if(record_id == 34736s) {
@@ -1675,18 +1675,18 @@ func las_create_projection_record(stream, offset, cs) {
    offset += sizeof(stream.vrh_cs);
 
    add_variable, stream, offset, "sGeoKeys", "LAS_VLR_GKDT";
-   stream.sGeoKeys.wKeyDirectoryVersion = 1s;
-   stream.sGeoKeys.wKeyRevision = 1s;
-   stream.sGeoKeys.wMinorRevision = 0s;
-   stream.sGeoKeys.wNumberOfKeys = short(numberof(gtif.KeyId));
+   stream.sGeoKeys.KeyDirectoryVersion = 1s;
+   stream.sGeoKeys.KeyRevision = 1s;
+   stream.sGeoKeys.MinorRevision = 0s;
+   stream.sGeoKeys.NumberOfKeys = short(numberof(gtif.KeyId));
    offset += sizeof(stream.sGeoKeys);
 
    add_variable, stream, offset, "sKeyEntry", "LAS_VLR_GKDT_KEY",
-      stream.sGeoKeys.wNumberOfKeys;
-   stream.sKeyEntry.wKeyID = gtif.KeyId;
-   stream.sKeyEntry.wTIFFTagLocation = gtif.TIFFTagLocation;
-   stream.sKeyEntry.wCount = gtif.Count;
-   stream.sKeyEntry.wValue_Offset = gtif.Value_Offset;
+      stream.sGeoKeys.NumberOfKeys;
+   stream.sKeyEntry.KeyID = gtif.KeyId;
+   stream.sKeyEntry.TIFFTagLocation = gtif.TIFFTagLocation;
+   stream.sKeyEntry.Count = gtif.Count;
+   stream.sKeyEntry.Value_Offset = gtif.Value_Offset;
    offset += sizeof(stream.sKeyEntry);
 
    stream.header.number_of_var_len_records += 1;
@@ -1930,16 +1930,16 @@ func las_install_vlr_gkdt(stream) {
    Structures LAS_VLR_GKDT and LAS_VLR_GKDT_KEY are not documented; refer to
    the source code for details.
 */
-   add_member, stream, "LAS_VLR_GKDT", -1, "wKeyDirectoryVersion", "short";
-   add_member, stream, "LAS_VLR_GKDT", -1, "wKeyRevision", "short";
-   add_member, stream, "LAS_VLR_GKDT", -1, "wMinorRevision", "short";
-   add_member, stream, "LAS_VLR_GKDT", -1, "wNumberOfKeys", "short";
+   add_member, stream, "LAS_VLR_GKDT", -1, "KeyDirectoryVersion", "short";
+   add_member, stream, "LAS_VLR_GKDT", -1, "KeyRevision", "short";
+   add_member, stream, "LAS_VLR_GKDT", -1, "MinorRevision", "short";
+   add_member, stream, "LAS_VLR_GKDT", -1, "NumberOfKeys", "short";
    install_struct, stream, "LAS_VLR_GKDT";
 
-   add_member, stream, "LAS_VLR_GKDT_KEY", -1, "wKeyID", "short";
-   add_member, stream, "LAS_VLR_GKDT_KEY", -1, "wTIFFTagLocation", "short";
-   add_member, stream, "LAS_VLR_GKDT_KEY", -1, "wCount", "short";
-   add_member, stream, "LAS_VLR_GKDT_KEY", -1, "wValue_Offset", "short";
+   add_member, stream, "LAS_VLR_GKDT_KEY", -1, "KeyID", "short";
+   add_member, stream, "LAS_VLR_GKDT_KEY", -1, "TIFFTagLocation", "short";
+   add_member, stream, "LAS_VLR_GKDT_KEY", -1, "Count", "short";
+   add_member, stream, "LAS_VLR_GKDT_KEY", -1, "Value_Offset", "short";
    install_struct, stream, "LAS_VLR_GKDT_KEY";
 }
 
