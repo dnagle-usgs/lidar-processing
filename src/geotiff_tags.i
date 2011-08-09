@@ -102,7 +102,7 @@ func geotiff_tags_decode(gtif, &err) {
       keyid = gtif.KeyId(i);
       idx = binary_search(GTIF.key, keyid, exact=1);
       if(is_void(idx)) {
-         grow, err, swrite(format="Invalid tag encountered, KeyID=%d", keyid);
+         grow, err, swrite(format="KeyID=%d is not recognized", keyid);
          continue;
       }
       key = GTIF.key(*,idx);
@@ -110,7 +110,10 @@ func geotiff_tags_decode(gtif, &err) {
 
       if(keytype == "ascii") {
          if(gtif.TIFFTagLocation(i) != GTIF.tag.GeoAsciiParamsTag) {
-            grow, err, swrite(format="KeyID=%d should have TIFFTagLocation=%d but instead has TIFFTagLocation=%d", keyid, GTIF.tag.GeoAsciiParamsTag, gtif.TIFFTagLocation(i));
+            grow, err, swrite(
+               format="%s: TIFFTagLocation is %d but should be %d",
+               key, u_cast(gtif.TIFFTagLocation(i), long),
+               u_cast(GTIF.tag.GeoAsciiParamsTag, long));
             continue;
          }
          start = gtif.Value_Offset(i);
@@ -118,7 +121,10 @@ func geotiff_tags_decode(gtif, &err) {
          val = strchar(gtif.GeoAsciiParamsTag(start:stop));
       } else if(keytype == "double") {
          if(gtif.TIFFTagLocation(i) != GTIF.tag.GeoDoubleParamsTag) {
-            grow, err, swrite(format="KeyID=%d should have TIFFTagLocation=%d but instead has TIFFTagLocation=%d", keyid, GTIF.tag.GeoDoubleParamsTag, gtif.TIFFTagLocation(i));
+            grow, err, swrite(
+               format="%s: TIFFTagLocation is %d but should be %d",
+               key, u_cast(gtif.TIFFTagLocation(i), long),
+               u_cast(GTIF.tag.GeoDoubleParamsTag, long));
             continue;
          }
          start = gtif.Value_Offset(i);
@@ -126,24 +132,30 @@ func geotiff_tags_decode(gtif, &err) {
          val = gtif.GeoDoubleParamsTag(start:stop);
       } else if(keytype == "short") {
          if(gtif.TIFFTagLocation(i) != 0s) {
-            grow, err, swrite(format="KeyID=%d should have TIFFTagLocation=%d but instead has TIFFTagLocation=%d", keyid, 0s, gtif.TIFFTagLocation(i));
+            grow, err, swrite(
+               format="%s: TIFFTagLocation is %d but should be 0",
+               key, u_cast(gtif.TIFFTagLocation(i), long));
             continue;
          }
          // valid is "val id" aka value id
          valid = gtif.Value_Offset(i);
          w = where(strglob(GTIF.keymap(noop(key)), GTIF.code(*,)));
          if(!numberof(w)) {
-            grow, err, swrite(format="No codes defined for KeyId=%d", keyid);
+            grow, err, swrite(
+               format="%s: Unable to look up code %d (no codes defined)",
+               key, u_cast(valid, long));
             continue;
          }
          idx = binary_search(GTIF.code(noop(w)), valid, exact=1);
          if(is_void(idx)) {
-            grow, err, swrite(format="Unable to look up code %d for KeyId=%d", valid, keyid);
+            grow, err, swrite(
+               format="%s: Unable to look up code %d",
+               key, u_cast(valid, long));
             continue;
          }
          val = GTIF.code(*,w(idx));
       } else {
-         grow, err, swrite(format="Invalid tag encountered, KeyID=%d", keyid);
+         grow, err, swrite(format="%s: Invalid", key);
          continue;
       }
 
