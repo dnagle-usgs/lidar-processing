@@ -1353,13 +1353,32 @@ func las_header(las) {
       header.number_of_points_by_return(5);
 
    write, "";
-   write, "   Minimum   Maximum     Scale    Offset";
-   write, format="X: %   8.0f  %   8.0f  %   8.4f  %   8.0f\n",
-      header.x_min, header.x_max, header.x_scale, header.x_offset;
-   write, format="Y: %   8.0f  %   8.0f  %   8.4f  %   8.0f\n",
-      header.y_min, header.y_max, header.y_scale, header.y_offset;
-   write, format="Z: %   8.2f  %   8.2f  %   8.4f  %   8.2f\n",
-      header.z_min, header.z_max, header.z_scale, header.z_offset;
+   write, format="Scale X / Y / Z  : %.10g / %.10g / %.10g\n",
+      header.x_scale, header.y_scale, header.z_scale;
+   write, format="Offset X / Y / Z : %.10g / %.10g / %.10g\n",
+      header.x_offset, header.y_offset, header.z_offset;
+   write, format="Min X / Y / Z    : %.10g / %.10g / %.10g\n",
+      header.x_min, header.y_min, header.z_min;
+   write, format="Max X / Y / Z    : %.10g / %.10g / %.10g\n",
+      header.x_max, header.y_max, header.z_max;
+
+   cs = [];
+   if(has_member(las, "sKeyEntry")) {
+      gtif = struct2obj(las.sKeyEntry);
+      if(has_member(las, "GeoDoubleParamsTag"))
+         save, gtif, GeoDoubleParamsTag=las.GeoDoubleParamsTag;
+      if(has_member(las, "GeoAsciiParamsTag"))
+         save, gtif, GeoAsciiParamsTag=las.GeoAsciiParamsTag;
+
+      cs = cs_decode_geotiff(geotiff_tags_decode(gtif));
+   }
+
+   if(is_void(cs))
+      write, format="\nUnable to detect coordinate system.\n%s", "";
+   else
+      write, format="\nDetected coordinate system:\n  %s\n", cs;
+
+
 }
 
 func las_get_version(las, &v_maj, &v_min) {
