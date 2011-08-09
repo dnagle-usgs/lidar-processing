@@ -1374,13 +1374,58 @@ func las_header(las) {
       cs = cs_decode_geotiff(geotiff_tags_decode(gtif));
 
       if(is_void(cs)) {
-         write, format="Coordinate system detected:  %s\n",
+         write, format="Coordinate system detected:\n  %s\n",
             "(unable to parse)";
       } else {
          write, format="Coordinate system detected:\n  %s\n", cs;
       }
    } else {
       write, format="No coordinate system information present.\n%s", "";
+   }
+
+   write, "";
+   write, format="Variable Length Records:\n%s", "";
+   vars = *(get_vars(las)(1));
+   if(!numberof(vars)) {
+      write, "  None\n%s", "";
+   } else {
+
+      record_types = save(
+         "LASF_Projection 34735", "Georeferencing (GeoKeyDirectoryTag)",
+         "LASF_Projection 34736", "Georefernecing (GeoDoubleParamsTag)",
+         "LASF_Projection 34737", "Georeferencing (GeoAsciiParamsTag)",
+         "LASF_Spec 0", "Classification lookup",
+         "LASF_Spec 2", "Histogram",
+         "LASF_Spec 3", "Text area description"
+      );
+      for(i = 100; i < 356; i++)
+         save, record_types, swrite(format="LASF_Spec %d", i),
+            "Waveform Packet Descriptor";
+      if(header.version_major == 1 && header.version_minor == 0)
+         save, record_types, "LASF_Spec 1", "Flightlines lookup";
+      else
+         save, record_types, "LASF_Spec 0", "Reserved";
+
+      vars = vars(where(strglob("vrh_*", vars)));
+      vars = vars(sort(vars));
+      for(i = 1; i <= numberof(vars); i++) {
+         vlr = get_member(las, vars(i));
+         user_id = strchar(vlr.user_id)(1);
+         record_id = u_cast(vlr.record_id, long);
+         write, format="  User ID: %s ; Record ID: %d\n", user_id, record_id;
+         lookup = swrite(format="%s %d", user_id, record_id);
+         if(record_types(*,lookup)) {
+            write, format="      Record type: %s\n", record_types(noop(lookup));
+         } else {
+            write, format="      Record type: %s\n", "Unknown";
+         }
+         write, format="      Description: %s\n", strchar(vlr.description)(1);
+      }
+   }
+   if(has_member(las, "text_area_descriptor")) {
+      write, "";
+      write, format="%s\n", "Text Area Descriptor:";
+      write, format="  %s\n", strchar(las.text_area_descriptor)(1);
    }
 }
 
