@@ -79,55 +79,72 @@ func geotiff_tags_encode(gtif) {
    return result;
 }
 
-func geotiff_tags_decode(gtif) {
-/* DOCUMENT geotiff_tags_decode(gtif)
+func geotiff_tags_decode(gtif, &err) {
+/* DOCUMENT geotiff_tags_decode(gtif, &err)
    Performs the inverse operation as geotiff_tags_encode. That is, if given an
    oxy group or Yeti hash that could have been returned by geotiff_tags_encode,
    this will construct an oxy group that would have generated that result. It
    will have keys that are key names from the GeoTIFF spec, and the values will
    be doubles, strings, or symbolic strings from the GeoTIFF spec.
 
+   If invalid data is encountered, such data is skipped and err will be an
+   array of strings containing error notices. Otherwise, err is [].
+
    SEE ALSO: geotiff_tags_encode
 */
    if(is_hash(gtif))
       gtif = hash2obj(gtif);
+   err = [];
 
    result = save();
    count = numberof(gtif.KeyId);
    for(i = 1; i <= count; i++) {
       keyid = gtif.KeyId(i);
       idx = binary_search(GTIF.key, keyid, exact=1);
-      if(is_void(idx))
-         error, "Invalid tag encountered";
+      if(is_void(idx)) {
+         grow, err, swrite(format="Invalid tag encountered, KeyID=%d", keyid);
+         continue;
+      }
       key = GTIF.key(*,idx);
       keytype = GTIF.keytype(noop(key));
 
       if(keytype == "ascii") {
-         if(gtif.TIFFTagLocation(i) != GTIF.tag.GeoAsciiParamsTag)
-            error, "Invalid tag encountered";
+         if(gtif.TIFFTagLocation(i) != GTIF.tag.GeoAsciiParamsTag) {
+            grow, err, swrite(format="KeyID=%d should have TIFFTagLocation=%d but instead has TIFFTagLocation=%d", keyid, GTIF.tag.GeoAsciiParamsTag, gtif.TIFFTagLocation(i));
+            continue;
+         }
          start = gtif.Value_Offset(i);
          stop = start + gtif.Count(i) - 1;
          val = strchar(gtif.GeoAsciiParamsTag(start:stop));
       } else if(keytype == "double") {
-         if(gtif.TIFFTagLocation(i) != GTIF.tag.GeoDoubleParamsTag)
-            error, "Invalid tag encountered";
+         if(gtif.TIFFTagLocation(i) != GTIF.tag.GeoDoubleParamsTag) {
+            grow, err, swrite(format="KeyID=%d should have TIFFTagLocation=%d but instead has TIFFTagLocation=%d", keyid, GTIF.tag.GeoDoubleParamsTag, gtif.TIFFTagLocation(i));
+            continue;
+         }
          start = gtif.Value_Offset(i);
          stop = start + gtif.Count(i) - 1;
          val = gtif.GeoDoubleParamsTag(start:stop);
       } else if(keytype == "short") {
-         if(gtif.TIFFTagLocation(i) != 0s)
-            error, "Invalid tag encountered";
+         if(gtif.TIFFTagLocation(i) != 0s) {
+            grow, err, swrite(format="KeyID=%d should have TIFFTagLocation=%d but instead has TIFFTagLocation=%d", keyid, 0s, gtif.TIFFTagLocation(i));
+            continue;
+         }
          // valid is "val id" aka value id
          valid = gtif.Value_Offset(i);
          w = where(strglob(GTIF.keymap(noop(key)), GTIF.code(*,)));
-         if(!numberof(w))
-            error, "Invalid tag encountered";
+         if(!numberof(w)) {
+            grow, err, swrite(format="No codes defined for KeyId=%d", keyid);
+            continue;
+         }
          idx = binary_search(GTIF.code(noop(w)), valid, exact=1);
-         if(is_void(idx))
-            error, "Invalid tag encountered";
+         if(is_void(idx)) {
+            grow, err, swrite(format="Unable to look up code %d for KeyId=%d", valid, keyid);
+            continue;
+         }
          val = GTIF.code(*,w(idx));
       } else {
-         error, "Invalid tag encountered";
+         grow, err, swrite(format="Invalid tag encountered, KeyID=%d", keyid);
+         continue;
       }
 
       save, result, noop(key), noop(val);
