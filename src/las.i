@@ -1363,33 +1363,11 @@ func las_header(las) {
       header.x_max, header.y_max, header.z_max;
 
    write, "";
-   cs = [];
-   if(has_member(las, "sKeyEntry")) {
-      gtif = struct2obj(las.sKeyEntry);
-      if(has_member(las, "GeoDoubleParamsTag"))
-         save, gtif, GeoDoubleParamsTag=las.GeoDoubleParamsTag;
-      if(has_member(las, "GeoAsciiParamsTag"))
-         save, gtif, GeoAsciiParamsTag=las.GeoAsciiParamsTag;
-
-      cs = cs_decode_geotiff(geotiff_tags_decode(gtif));
-
-      if(is_void(cs)) {
-         write, format="Coordinate system detected:\n  %s\n",
-            "(unable to parse)";
-      } else {
-         write, format="Coordinate system detected:\n  %s\n", cs;
-      }
-   } else {
-      write, format="No coordinate system information present.\n%s", "";
-   }
-
-   write, "";
    write, format="Variable Length Records:\n%s", "";
    vars = *(get_vars(las)(1));
    if(!numberof(vars)) {
       write, "  None\n%s", "";
    } else {
-
       record_types = save(
          "LASF_Projection 34735", "Georeferencing (GeoKeyDirectoryTag)",
          "LASF_Projection 34736", "Georefernecing (GeoDoubleParamsTag)",
@@ -1426,6 +1404,46 @@ func las_header(las) {
       write, "";
       write, format="%s\n", "Text Area Descriptor:";
       write, format="  %s\n", strchar(las.text_area_descriptor)(1);
+   }
+
+   write, "";
+   cs = [];
+   if(has_member(las, "sKeyEntry")) {
+      gtif = struct2obj(las.sKeyEntry);
+      if(has_member(las, "GeoDoubleParamsTag"))
+         save, gtif, GeoDoubleParamsTag=las.GeoDoubleParamsTag;
+      if(has_member(las, "GeoAsciiParamsTag"))
+         save, gtif, GeoAsciiParamsTag=las.GeoAsciiParamsTag;
+
+      err = [];
+      tags = geotiff_tags_decode(gtif, err);
+      cs = cs_decode_geotiff(tags);
+
+      if(is_void(cs)) {
+         write, format="Coordinate system detected:\n  %s\n",
+            "(unable to parse)";
+      } else {
+         write, format="Coordinate system detected:\n  %s\n", cs;
+      }
+
+      write, format="\nLASF_Projection parsed:\n%s", "";
+      for(i = 1; i <= tags(*); i++) {
+         if(is_string(tags(noop(i))))
+            write, format="  %s: %s\n", tags(*,i), tags(noop(i));
+         else if(is_real(tags(noop(i))))
+            write, format="  %s: %g\n", tags(*,i), tags(noop(i));
+         else if(is_integer(tags(noop(i))))
+            write, format="  %s: %g\n", tags(*,i), tags(noop(i));
+         else
+            write, format="  %s: (invalid value)\n", tags(*,i);
+      }
+      if(numberof(err)) {
+         write, format="\nLASF_Projection parsing errors:%s\n", "";
+         write, format="  %s\n", err;
+      }
+
+   } else {
+      write, format="No coordinate system information present.\n%s", "";
    }
 }
 
