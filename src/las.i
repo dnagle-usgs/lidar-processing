@@ -1365,6 +1365,10 @@ func las_header(las) {
    write, "";
    write, format="Variable Length Records:\n%s", "";
    vars = *(get_vars(las)(1));
+   if(numberof(vars)) {
+      vars = vars(sort(vars));
+      vars = vars(where(strglob("vrh_*", vars)));
+   }
    if(!numberof(vars)) {
       write, format="  None\n%s", "";
    } else {
@@ -1384,8 +1388,6 @@ func las_header(las) {
       else
          save, record_types, "LASF_Spec 0", "Reserved";
 
-      vars = vars(where(strglob("vrh_*", vars)));
-      vars = vars(sort(vars));
       for(i = 1; i <= numberof(vars); i++) {
          vlr = get_member(las, vars(i));
          user_id = strchar(vlr.user_id)(1);
