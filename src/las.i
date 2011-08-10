@@ -1366,7 +1366,7 @@ func las_header(las) {
    write, format="Variable Length Records:\n%s", "";
    vars = *(get_vars(las)(1));
    if(!numberof(vars)) {
-      write, "  None\n%s", "";
+      write, format="  None\n%s", "";
    } else {
       record_types = save(
          "LASF_Projection 34735", "Georeferencing (GeoKeyDirectoryTag)",
