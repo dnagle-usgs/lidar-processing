@@ -62,7 +62,7 @@ save, GTIF.key,
    GeogCitationGeoKey = 2049s,            // string
    GeogGeodeticDatumGeoKey = 2050s,       // 6.3.2.2
    GeogPrimeMeridianGeoKey = 2051s,       // 6.3.2.4
-   GeogLinearUnitsGEoKey = 2052s,         // 6.3.1.3
+   GeogLinearUnitsGeoKey = 2052s,         // 6.3.1.3
    GeogLinearUnitSizeGeoKey = 2053s,      // double, meters
    GeogAngularUnitsGeoKey = 2054s,        // 6.3.1.4
    GeogAngularUnitSizeGeoKey = 2055s,     // double, radians
@@ -78,7 +78,7 @@ save, GTIF.keytype,
    GeogCitationGeoKey = "ascii",
    GeogGeodeticDatumGeoKey = "short",
    GeogPrimeMeridianGeoKey = "short",
-   GeogLinearUnitsGEoKey = "short",
+   GeogLinearUnitsGeoKey = "short",
    GeogLinearUnitSizeGeoKey = "double",
    GeogAngularUnitsGeoKey = "short",
    GeogAngularUnitSizeGeoKey = "double",
@@ -93,7 +93,7 @@ save, GTIF.keymap,
    GeographicTypeGeoKey = "GCS*",
    GeogGeodeticDatumGeoKey = "Datum*",
    GeogPrimeMeridianGeoKey = "PM*",
-   GeogLinearUnitsGEoKey = "Linear*",
+   GeogLinearUnitsGeoKey = "Linear*",
    GeogAngularUnitsGeoKey = "Angular*",
    GeogEllipsoidGeoKey = "Ellipse*",
    GeogAzimuthUnitsGeoKey = "Angular*";
