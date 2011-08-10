@@ -42,6 +42,7 @@ transrch, cln_fs, fs, llst
 //            1      2       3        4          5         6       7
    clr = ["black", "red", "blue", "green", "magenta", "yellow", "cyan" ];
 
+   wbkp = current_window();
 
    extern mindata;
    extern _last_transrch;
@@ -155,6 +156,7 @@ plg, y, x, width=9.0, color="blue";
 
    _last_transrch = get_east_north_elv(mindata,disp_type=disp_type);
 
+   window_select, wbkp;
 }
 
 func mtransrch( fs, m, llst, _rx=, _el=, spot=, iwin=, disp_type=,ptype=, fset= ) {
@@ -170,6 +172,8 @@ m = mtransect(cln_fs, show=1);
 mtransrch, cln_fs, fs, llst
 
 */
+
+   wbkp = current_window();
 
    extern _last_transrch;
    extern _transrch_reference;
@@ -239,6 +243,8 @@ mtransrch, cln_fs, fs, llst
       }
 
    } while ( mouse_button != right_mouse );
+
+   window_select, wbkp;
 }
 
 

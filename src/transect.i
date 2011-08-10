@@ -90,6 +90,7 @@ See also: transect, _transect_history
  extern _transect_history;
  extern transect_line;
 
+ wbkp = current_window();
 
  if ( is_void(rtn)   )    rtn = 0;		// default is first return
  if ( is_void(w))             w = 150;
@@ -116,6 +117,7 @@ See also: transect, _transect_history
  } else {
   if ( numberof(_transect_history) == 0 ) {
     write, "No transect lines in _transect_history";
+    window_select, wbkp;
     return;
   }
   if ( recall > 0 ) recall = -recall;
@@ -141,6 +143,9 @@ See also: transect, _transect_history
 	limits(lmts(1),lmts(2), lmts(3), lmts(4));
    if ( ! is_void ( exp ) )
       write, format="%s\n", "END mtransect:";
+
+   window_select, wbkp;
+
   return glst;
 }
 
@@ -172,6 +177,7 @@ Input:
 */
   extern rx, elevation, glst, llst, segs;
 
+ wbkp = current_window();
 
  if ( is_void(rtn)   )    rtn = 0;		// default is first return
  if ( is_void(lw)    )    lw = 150;		// search width, cm
@@ -223,6 +229,7 @@ Input:
 
   if ( numberof(glst) == 0 ) {
     write, "No points found along specified line";
+    window_select, wbkp;
     return ;
   }
 
@@ -341,6 +348,7 @@ Input:
   write, format="%d:%d sod = %6.2f:%-10.2f(%10.4f) utc=%2d:%02d:%02d %5.1f %s\n",
                     t(1),t(2), tb, te, td, hms(1), hms(2), hms(3), hd, clr(c);
  }
+ window_select, wbkp;
  return glst(llst);
 }
 
