@@ -771,8 +771,9 @@ proc start_yorick {}  {
                   regsub -all "\r" $interact_out(0,string) "" str2
                   set str "$str$str2"
                   incr hwin
-                  set wintitle [ lindex [ split $str "\n" ] 0 ]
-                  toplevel .docwin$hwin
+                  set wintitle [lindex [split $str "\n"] 0]
+                  set wintitle [regsub -nocase {^ */\* *DOCU} $wintitle DOCU]
+                  toplevel .docwin$hwin -class DOCUMENT
                   set cmd "scrollbar .docwin$hwin.sb -command {.docwin$hwin.doc yview }"
                   eval $cmd
 
