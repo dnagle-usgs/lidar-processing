@@ -292,3 +292,49 @@ func auto_curzone(lat, lon, verbose=) {
       write, format="*** Please manually set curzone to the proper zone%s", "\n";
    }
 }
+
+func best_zone(lon, lat, method=) {
+/* DOCUMENT zone = best_zone(lon, lat, method=)
+   Determines the best zone for a set of lon,lat coordinates. "Best" means that
+   the UTM zone will yield coordinates with minimal distortion, as measured
+   from the zone's central meridian of 500,000m. There are three ways of
+   determining this:
+
+   method="rms" (default)
+      Best is the zone with the lowest RMS: sqrt(((east-500000)^2)(avg))
+   method="max"
+      Best is the zone with the lowest max: abs(east-500000)(max)
+   method="avg"
+      Best is the zone with the lowest average: abs(east-500000)(avg)
+
+   Of course, if the coordinates all lie within a single UTM zone, that zone
+   will always be returned.
+*/
+   default, method, "rms";
+   local north, east, zone;
+
+   ll2utm, lat, lon, north, east, zone;
+
+   if(allof(zone == zone(1)))
+      return zone(1);
+
+   zones = set_remove_duplicates(zone);
+   zone = [];
+
+   dist = array(double, numberof(zones));
+
+   for(i = 1; i <= numberof(zones); i++) {
+      ll2utm, lat, lon, north, east, force_zone=zones(i);
+      east -= 500000;
+      if(method == "rms")
+         dist(i) = sqrt((east^2)(avg));
+      else if(method == "max")
+         dist(i) = abs(east)(max);
+      else if(method == "avg")
+         dist(i) == abs(east)(avg);
+      else
+         error, "unknown method=";
+   }
+
+   return zones(dist(mnx));
+}
