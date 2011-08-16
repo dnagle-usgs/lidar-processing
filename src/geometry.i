@@ -283,6 +283,48 @@ func normalize_degrees(ary, mode=) {
    return ary;
 }
 
+func continuous_angles(ang, rad=) {
+/* DOCUMENT continuous_angles(ang, rad=)
+
+   Adjusts representation of angular values so that difference between
+   sequential angles is always acute, ie. less than 180 degrees (or less than
+   pi). The meaning of the angles stays the same.
+
+   Example:
+      > continuous_angles([350,10])
+      [350,370]
+
+   Angles 10 and 370 are equivalent, but the representation as 370 is closest
+   to 350.
+*/
+   default, rad, 0;
+
+   if(is_void(ang) || dimsof(ang)(1) != 1)
+      error, "requires vector";
+
+   // force a copy; otherwise, the original could get modified since we are
+   // always modifying by indexing into the array
+   ang = noop(ang);
+
+   half = (rad ? pi : 180);
+   whole = half + half;
+
+   offset = 0.;
+   for(i = 2; i <= numberof(ang); i++) {
+      ang(i) += offset;
+      while(ang(i) - ang(i-1) < half) {
+         ang(i) += whole;
+         offset += whole;
+      }
+      while(ang(i) - ang(i-1) > half) {
+         ang(i) -= whole;
+         offset -= whole;
+      }
+   }
+
+   return ang;
+}
+
 func rereference_angle(ang, fdir, fref, tdir, tref, rad=) {
 /* DOCUMENT rereference_angle(ang, fdir, fref, tdir, tref, rad=)
    
