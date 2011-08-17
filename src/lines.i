@@ -580,3 +580,70 @@ func level_short_dips(seq, dist=, thresh=) {
 
    return seq;
 }
+
+func find_windowed_subsequences(seq, win) {
+/* DOCUMENT find_windowed_subsequences(seq, win)
+   Returns an array of indices that define each subsequence in SEQ whose values
+   remain within a window of size WIN. In other words, given:
+      ends = find_windowed_subsequences(seq, win)
+   Then for every I in 1:numberof(seq), the subsequence seq(i:ends(i)) will
+   have values such that:
+      seq(i:ends(i))(max) - seq(i:ends(i))(min) <= win
+
+   For example:
+      > seq = [1,2,3,4,5,6,5,6,7,6,7,8,9]
+      > ends = find_windowed_subsequences(seq, 3)
+      > ends
+      [4,5,8,11,12,12,12,13,13,13,13,13,13]
+      > for(i = 1; i <= numberof(seq); i++)
+      cont> write, format="%d:%d  %s\n", i, ends(i), pr1(seq(i:ends(i)))
+      1:4  [1,2,3,4]
+      2:5  [2,3,4,5]
+      3:8  [3,4,5,6,5,6]
+      4:11  [4,5,6,5,6,7,6,7]
+      5:12  [5,6,5,6,7,6,7,8]
+      6:12  [6,5,6,7,6,7,8]
+      7:12  [5,6,7,6,7,8]
+      8:13  [6,7,6,7,8,9]
+      9:13  [7,6,7,8,9]
+      10:13  [6,7,8,9]
+      11:13  [7,8,9]
+      12:13  [8,9]
+      13:13  [9]
+      >
+*/
+   count = numberof(seq);
+   ends = array(long, count);
+
+   j = 0;
+   for(i = 1; i <= count; i++) {
+      if(j < i)
+         j = i;
+
+      smin = seq(i:j)(min);
+      smax = seq(i:j)(max);
+      srng = smax - smin;
+
+      while(j < count && srng <= win) {
+         j++;
+         seqj = seq(j);
+
+         if(smin <= seqj && seqj <= smax)
+            continue;
+
+         if(seqj < smin)
+            smin = seqj;
+         else if(smax < seqj)
+            smax = seqj;
+
+         srng = smax - smin;
+
+         if(srng > win)
+            j--;
+      }
+
+      ends(i) = j;
+   }
+
+   return ends;
+}
