@@ -647,3 +647,73 @@ func find_windowed_subsequences(seq, win) {
 
    return ends;
 }
+
+func range_bisection(seq) {
+/* DOCUMENT range_bisection(seq)
+   Bisections a sequence such that the two subsequences have as balanced a
+   range as possible. Range here is defined as the distance between the
+   sequence's min and max. The return result is an index into sequence where
+   the second subsequence starts.
+
+   If there are multiple spots where the sequence can be bisected to yield the
+   same balance of ranges, then the most central such spot is used. (If there
+   are an even number of such spots, the index is rounded up so that the lower
+   subsequence gains the extra.)
+
+   As special cases, sequences with a length of 3 or less will return the
+   length of the sequence (0 to 3) as the index.
+
+      > range_bisection([1,10,11,20])
+      3
+      > range_bisection([1,10,11,20,21,22,21,20])
+      3
+      > range_bisection([1,2,3,4])
+      3
+      > range_bisection([1,2,3,4,5])
+      4
+      > range_bisection([1,2,3,4,5,6])
+      4
+      > range_bisection([1,1,1,1])
+      3
+      > range_bisection([1,1,1])
+      3
+      > range_bisection([1,1])
+      2
+      > range_bisection([1])
+      1
+      > range_bisection([])
+      0
+*/
+   count = numberof(seq);
+   if(!count) return 0;
+   if(count == 1) return 1;
+   if(count == 2) return 2;
+
+   lower = upper = array(structof(seq), 3, count);
+   lower(,1) = [seq(1), seq(1), 0];
+   upper(,0) = [seq(0), seq(0), 0];
+
+   for(i = 2; i <= count; i++) {
+      lower(,i) = lower(,i-1);
+      if(seq(i) < lower(1,i))
+         lower(1,i) = seq(i);
+      else if(lower(2,i) < seq(i))
+         lower(2,i) = seq(i);
+      lower(3,i) = lower(2,i) - lower(1,i);
+   }
+
+   for(i = count-1; i >= 1; i--) {
+      upper(,i) = upper(,i+1);
+      if(seq(i) < upper(1,i))
+         upper(1,i) = seq(i);
+      else if(upper(2,i) < seq(i))
+         upper(2,i) = seq(i);
+      upper(3,i) = upper(2,i) - upper(1,i);
+   }
+
+   diff = abs(lower(3,:-1) - upper(3,2:));
+   w = where(diff == diff(min));
+   idx = w(numberof(w)/2+1) + 1;
+
+   return idx;
+}
