@@ -79,6 +79,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "eaarl_mounting_bias.i";
    require, "edb_access.i";
    require, "edf.i";
+   require, "flightlines.i";
    require, "geo_bath.i";
    require, "geometry.i";
    require, "geotiff_tags.i";
