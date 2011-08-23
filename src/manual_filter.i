@@ -805,7 +805,7 @@ func batch_scale_be_to_bathy(srcdir, outdir=, searchstr=) {
    srcfiles = find(srcdir, glob=searchstr);
    dstfiles = file_rootname(srcfiles) + "_spol.pbd";
    if(!is_void(outdir))
-      dstfiles = file_join(outdir, filt_tail(dstfiles));
+      dstfiles = file_join(outdir, file_tail(dstfiles));
 
    count = numberof(srcfiles);
    for(i = 1; i <= count; i++) {
