@@ -816,7 +816,7 @@ func eaarl_intensity_channel(intensity) {
 /* DOCUMENT channel = intensity_channel(intensity)
    Returns the channel associated with the given intensity.
 
-      channel = 1  if  intensity < 255
+      channel = 1  if    0 <= intensity < 300
       channel = 2  if  300 <= intensity < 600
       channel = 3  if  600 <= intensity < 900
       channel = 0  otherwise
@@ -824,9 +824,5 @@ func eaarl_intensity_channel(intensity) {
    Works for both scalars and arrays.
 */
 // Original David Nagle 2009-07-21
-   result = array(0, dimsof(intensity));
-   result += (intensity < 255);
-   result += 2 * ((intensity >= 300) & (intensity < 600));
-   result += 3 * ((intensity >= 600) & (intensity < 900));
-   return result;
+   return (digitize(intensity, [0,300,600,900])-1) % 4;
 }
