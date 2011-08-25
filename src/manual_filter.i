@@ -828,3 +828,99 @@ func batch_scale_be_to_bathy(srcdir, outdir=, searchstr=) {
       pbd_save, dstfiles(i), vname+"_spol", data;
    }
 }
+
+func snell_be_to_bathy(fs, be) {
+/* DOCUMENT snell_be_to_bathy(fs, be)
+   -or- snell_be_to_bathy(data)
+
+   This recasts bare earth data as bathy data by scaling for the speed of light
+   and by adjusting the angle of refraction per Snell's law.  The first return
+   coordinate is treated as the water surface.
+
+   Accepts data in one of two forms. In two argument form, fs and be must each
+   be arrays of [x,y,z]. In one argument form, data must be an array in an ALPS
+   structure that contains be and fs data.
+*/
+   if(is_void(be)) {
+      data = fs;
+      fs = data2xyz(data, mode="fs");
+      be = data2xyz(data, mode="be");
+      ba = snell_be_to_bathy(fs, be);
+      return xyz2data(ba, data, mode="be");
+   }
+
+   // Special handling in case input is [1,2,3] instead of [[1],[2],[3]]
+   vector = 0;
+   if(dimsof(fs)(1) == 1 && dimsof(fs)(2) == 3) {
+      fs = transpose([fs]);
+   }
+   if(dimsof(be)(1) == 1 && dimsof(be)(2) == 3) {
+      vector = 1;
+      be = transpose([be]);
+   }
+
+   delta = be - fs;
+
+   // Determine angle for x and y components of horizontal displacement
+   horiz = sqrt((delta(,1:2)^2)(,sum));
+   x = delta(,1);
+   y = delta(,2);
+   w = where(!y);
+   if(numberof(w))
+      y(w) = 1e-100;
+   theta = atan(y, x);
+   x = y = w = [];
+
+   // Calculate triangle components
+   dist = sqrt((delta^2)(,sum));
+   height = delta(,3);
+   hsign = sign(height);
+
+   // Avoid possible divide-by-zero below
+   w = where(dist == 0);
+   if(numberof(w))
+      dist(w) = 1e-10;
+   w = [];
+
+   // Calculate angle of incidence for laser intercepting water surface
+   phi_air = acos(height/dist);
+   // Use Snell's law to determine angle in water
+   phi_water = asin(sin(phi_air)/KH2O);
+
+   // Adjust distance for the speed of light in water
+   dist *= (CNSH2O2X/NS2MAIR);
+   // Calculate adjusted height and horizontal displacement
+   height = cos(phi_water) * dist;
+   horiz = sin(phi_water) * dist;
+
+   // Calculate new deltas
+   delta_x = horiz * cos(theta);
+   delta_y = horiz * sin(theta);
+   delta_z = height * hsign;
+   delta = [delta_x, delta_y, delta_z];
+
+   ba = fs + delta;
+   if(vector && numberof(ba) == 3)
+      ba = ba(*);
+   return ba;
+}
+
+func batch_snell_be_to_bathy(srcdir, outdir=, searchstr=) {
+/* DOCUMENT batch_snell_be_to_bathy, srcdir, outdir=, searchstr=
+   Runs snell_be_to_bathy in batch mode. Created files will end with _snell.pbd.
+   Variable names will have _snell appended.
+*/
+   local vname;
+   default, searchstr, "*.pbd";
+   srcfiles = find(srcdir, glob=searchstr);
+   dstfiles = file_rootname(srcfiles) + "_snell.pbd";
+   if(!is_void(outdir))
+      dstfiles = file_join(outdir, file_tail(dstfiles));
+
+   count = numberof(srcfiles);
+   for(i = 1; i <= count; i++) {
+      data = pbd_load(srcfiles(i), , vname);
+      data = snell_be_to_bathy(data);
+      pbd_save, dstfiles(i), vname+"_snell", data;
+   }
+}
