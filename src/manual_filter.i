@@ -781,17 +781,31 @@ func extract_unique_data(data, ref, soefudge=) {
    return data(where(keep));
 }
 
-func scale_be_to_bathy(data) {
-/* DOCUMENT scale_be_to_bathy(data)
+func scale_be_to_bathy(fs, be) {
+/* DOCUMENT scale_be_to_bathy(fs, be)
+   -or- scale_be_to_bathy(data)
+
    This performs a simple scaling to recast bare earth data as bathy data. The
    first return coordinate is treated as the water surface; the distance from
    first surface to bare earth is then scaled using the speed of light through
    water instead of through air. The modified data is returned.
+
+   Accepts data in one of two forms. In two argument form, fs and be must each
+   be arrays of [x,y,z]. In one argument form, data must be an array in an ALPS
+   structure that contains be and fs data.
 */
-   delta = data2xyz(data, mode="be") - data2xyz(data, mode="fs");
+   if(is_void(be)) {
+      data = fs;
+      fs = data2xyz(data, mode="fs");
+      be = data2xyz(data, mode="be");
+      ba = scale_be_to_bathy(fs, be);
+      return xyz2data(ba, data, mode="be");
+   }
+
+   delta = be - fs;
    delta *= (CNSH2O2X/NS2MAIR);
-   newbe = data2xyz(data, mode="fs") + delta;
-   return xyz2data(newbe, data, mode="be");
+   ba = fs + delta;
+   return ba;
 }
 
 func batch_scale_be_to_bathy(srcdir, outdir=, searchstr=) {
