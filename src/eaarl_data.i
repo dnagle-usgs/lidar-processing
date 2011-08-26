@@ -547,7 +547,7 @@ func display_data(data, mode=, axes=, cmin=, cmax=, marker=, msize=, win=, dofma
       window_select, wbkp;
 }
 
-func struct_cast(&data, dest, verbose=) {
+func struct_cast(&data, dest, verbose=, special=) {
 /* DOCUMENT result = struct_cast(data, dest)
    result = struct_cast(data)
    struct_cast, data, dest
@@ -584,7 +584,10 @@ func struct_cast(&data, dest, verbose=) {
    By default, this function is silent. Use verbose=1 to make it chatty.
 */
 // Original David Nagle 2010-02-05
+   local x, y, z;
+
    default, verbose, 0;
+   default, special, 1;
 
    // If dest wasn't provided, try to guess it.
    if(is_void(dest)) {
@@ -603,6 +606,58 @@ func struct_cast(&data, dest, verbose=) {
 
    if(verbose)
       write, format=" Converting %s to %s\n", nameof(structof(data)), nameof(dest);
+
+   if(special) {
+      src = structof(data);
+      dst = dest;
+
+      // LFP_VEG requires special treatment since once of its members is a pointer
+      if(structeq(src, LFP_VEG) && structeqany(dst, FS, VEG__, VEG_, VEG, GEO)) {
+         data = data(where(data.elevation));
+         result = array(dst, dimsof(data));
+         result.north = data.north;
+         result.east = data.east;
+         for(i = 1; i <= numberof(data); i++) {
+            result.elevation = (*data.elevation(i))(1);
+         }
+
+         if(structeqany(dst, VEG__, VEG_, VEG)) {
+            result.lnorth = result.north;
+            result.least = result.east;
+            for(i = 1; i <= numberof(data); i++) {
+               result.lelv = (*data.elevation(i))(0);
+            }
+         }
+
+         if(structeq(dst, GEO)) {
+            for(i = 1; i <= numberof(data); i++) {
+               result.depth = result.elevation - (*data.elevation(i))(0);
+            }
+         }
+
+         if(am_subroutine())
+            eq_nocopy, data, result;
+         return result;
+      }
+
+      if(structeqany(src, FS, VEG__, VEG_, VEG, GEO) && structeq(dst, LFP_VEG)) {
+         result = array(dst, dimsof(data));
+         result.north = data.north;
+         result.east = data.east;
+         for(i = 1; i <= numberof(data); i++) {
+            if(structeqany(src, VEG__, VEG_, VEG)) {
+               result.elevation = &[data.elevation, data.lelv];
+            } else if(structeq(src, GEO)) {
+               result.elevation = &[data.elevation, data.elevation - data.depth];
+            } else {
+               result.elevation = &[data.elevation];
+            }
+         }
+         if(am_subroutine())
+            eq_nocopy, data, result;
+         return result;
+      }
+   }
 
    // Figure out what kind of dimensions the destination wants
    sample = dest();
@@ -627,6 +682,51 @@ func struct_cast(&data, dest, verbose=) {
    for(i = 1; i <= numberof(fields); i++) {
       if(has_member(result, fields(i)))
          get_member(result, fields(i)) = reform(get_member(data, fields(i)), dims);
+   }
+
+   // Special cases
+   if(special) {
+      src = structof(data);
+      dst = structof(result);
+
+      if(structeq(dst, GEO) && structeqany(src, VEG__, VEG_, VEG)) {
+         result.north = data.lnorth;
+         result.east = data.least;
+         result.depth = data.elevation - data.lelv;
+         result.first_peak = data.fint;
+         result.bottom_peak = data.lint;
+      }
+
+      if(structeqany(dst, VEG__, VEG_, VEG) && structeq(src, GEO)) {
+         result.lnorth = data.north;
+         result.least = data.east;
+         result.lelv = data.elevation - data.depth;
+         result.fint = data.first_peak;
+         result.lint = data.bottom_peak;
+      }
+
+      if(structeq(dst, GEO) && structeq(src, FS)) {
+         result.bottom_peak = data.intensity;
+      }
+
+      if(structeq(dst, FS) && structeq(src, GEO)) {
+         result.elevation = data.elevation - data.depth;
+         result.intensity = data.bottom_peak;
+      }
+
+      if(structeqany(dst, FS, VEG__, VEG_, VEG, GEO) && structeq(src, ZGRID)) {
+         data2xyz, data, x, y, z;
+         result = array(dst, numberof(x));
+         result.east = x * 100 + .5;
+         result.north = y * 100 + .5;
+         result.elevation = z * 100 + .5;
+
+         if(structeqany(dst, VEG__, VEG_, VEG)) {
+            result.least = result.east;
+            result.lnorth = result.north;
+            result.lelv = result.elevation;
+         }
+      }
    }
 
    if(am_subroutine())
