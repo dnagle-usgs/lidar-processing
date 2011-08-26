@@ -67,25 +67,47 @@ func select_region_tile(data, win=, plot=, mode=) {
    return data(idx);
 }
 
-func test_and_clean(&data, verbose=, force=) {
-/* DOCUMENT test_and_clean, data, verbose=, force=
-   cleaned = test_and_clean(data, verbose=, force=)
+func test_and_clean(&data, verbose=, force=, mirror=, zeronorth=, zerodepth=) {
+/* DOCUMENT test_and_clean, data, verbose=, force=, mirror=, zeronorth=,
+      zerodepth=
+   cleaned = test_and_clean(data, verbose=, force=, mirror=, zeronorth=,
+      zerodepth=)
 
    Tests the data in various ways and cleans it as necessary.
 
-   By default, this is a no-op unless the structure of the data is one of
-   GEOALL, VEG_ALL_, VEG_ALL, or R (the raster structures). However, you can
-   force it to clean by specifying force=1.
+   The tests and cleaning that occurs corresponds to various options as
+   detailed below.
 
-   When cleaning, it does the following:
-      * Converts known raster format structured data into corresponding point
-        format structure data using struct_cast.
-      * If the data has .elevation, .lelv, and .melevation fields, then points
-        where both .elevation and .lelev equal .melevation are discarded.
-      * If the data has .elevation and .melevation but not .depth or .lelv,
-        then points where .elevation equals .melevation are discarded.
-      * Points with zero values for .north, .lnorth, and .depth are discarded
-        (only applies for the fields that are actually present).
+   The first test is to see if the data is in a raster format (GEOALL,
+   VEG_ALL_, VEG_ALL, or R). If it is, the data is coerced into the
+   corresponding point format (GEO, VEG__, VEG__, and FS respectively).
+
+   At this point, force= comes into play.
+
+   force= Specifies whether data should be cleaned when the structure is
+      already "right".
+         force=0        Default. If the structure was not GEOALL, VEG_ALL_,
+                        VEG_ALL, or R, then nothing further happens and the
+                        function is effectively a noop.
+         force=1        Further cleaning will always happen.
+
+   If further cleaning occurs, then the following options come into play.
+
+   mirror= Removes points by performing two checks using the mirror
+      coordinates. If the data has .elevation, .lelv, and .melevation fields,
+      then points where both .elevation and .lelv equal .melevation are
+      discarded.  If the data has .elevation and .melevation but not .depth or
+      .lelv, then points where .elevation equals .melevation are discarded.
+         mirror=1       Default. Perform this filtering.
+         mirror=0       Skip this filter.
+
+   zeronorth= Removes points with zero values for .north or .lnorth.
+         zeronorth=1    Default. Perform this filtering.
+         zeronorth=0    Skip this filter.
+
+   zerodepth= Removes points with zero .depth values.
+         zerodepth=1    Default. Perform this filtering.
+         zerodepth=0    Skip this filter.
 
    By default, it runs silently. Use verbose=1 to get some info.
 
@@ -95,6 +117,9 @@ func test_and_clean(&data, verbose=, force=) {
 */
    default, verbose, 0;
    default, force, 0;
+   default, mirror, 1;
+   default, zeronorth, 1;
+   default, zerodepth, 1;
 
    if(is_void(data)) {
       if(verbose)
@@ -121,48 +146,54 @@ func test_and_clean(&data, verbose=, force=) {
    if(verbose)
       write, "Cleaning data...";
 
-   // Only applies to veg types.
-   // Removes points where both of elevation and lelv equal the mirror.
-   if(
-      has_member(result, "elevation") && has_member(result, "lelv") &&
-      has_member(result, "melevation")
-   ) {
-      w = where(
-         (result.lelv != result.melevation) |
-         (result.elevation != result.melevation)
-      );
-      result = numberof(w) ? result(w) : [];
+   if(mirror) {
+      // Only applies to veg types.
+      // Removes points where both of elevation and lelv equal the mirror.
+      if(
+         has_member(result, "elevation") && has_member(result, "lelv") &&
+         has_member(result, "melevation")
+      ) {
+         w = where(
+            (result.lelv != result.melevation) |
+            (result.elevation != result.melevation)
+         );
+         result = numberof(w) ? result(w) : [];
+      }
+
+      // Only applies to fs types. (Explicitly avoiding veg and bathy.)
+      // Removes points where the elevation equals the mirror.
+      if(
+         has_member(result, "elevation") && has_member(result, "melevation") &&
+         !has_member(result, "depth") && !has_member(result, "lelv")
+      ) {
+         w = where(result.elevation != result.melevation);
+         result = numberof(w) ? result(w) : [];
+      }
    }
 
-   // Only applies to fs types. (Explicitly avoiding veg and bathy.)
-   // Removes points where the elevation equals the mirror.
-   if(
-      has_member(result, "elevation") && has_member(result, "melevation") &&
-      !has_member(result, "depth") && !has_member(result, "lelv")
-   ) {
-      w = where(result.elevation != result.melevation);
-      result = numberof(w) ? result(w) : [];
+   if(zeronorth) {
+      // Applies to all types.
+      // Removes points with zero fs northings.
+      if(has_member(result, "north")) {
+         w = where(result.north);
+         result = numberof(w) ? result(w) : [];
+      }
+
+      // Only applies to veg types.
+      // Removes points with zero be northings.
+      if(has_member(result, "lnorth")) {
+         w = where(result.lnorth);
+         result = numberof(w) ? result(w) : [];
+      }
    }
 
-   // Applies to all types.
-   // Removes points with zero fs northings.
-   if(has_member(result, "north")) {
-      w = where(result.north);
-      result = numberof(w) ? result(w) : [];
-   }
-
-   // Only applies to veg types.
-   // Removes points with zero be northings.
-   if(has_member(result, "lnorth")) {
-      w = where(result.lnorth);
-      result = numberof(w) ? result(w) : [];
-   }
-
-   // Only appllies to bathy types.
-   // Removes points with zero depths.
-   if(has_member(result, "depth")) {
-      w = where(result.depth);
-      result = numberof(w) ? result(w) : [];
+   if(zerodepth) {
+      // Only applies to bathy types.
+      // Removes points with zero depths.
+      if(has_member(result, "depth")) {
+         w = where(result.depth);
+         result = numberof(w) ? result(w) : [];
+      }
    }
 
    if(am_subroutine())
