@@ -67,11 +67,12 @@ func select_region_tile(data, win=, plot=, mode=) {
    return data(idx);
 }
 
-func test_and_clean(&data, verbose=, force=, mirror=, zeronorth=, zerodepth=) {
+func test_and_clean(&data, verbose=, force=, mirror=, zeronorth=, zerodepth=,
+negch=) {
 /* DOCUMENT test_and_clean, data, verbose=, force=, mirror=, zeronorth=,
-      zerodepth=
+      zerodepth=, negch=
    cleaned = test_and_clean(data, verbose=, force=, mirror=, zeronorth=,
-      zerodepth=)
+      zerodepth=, negch=)
 
    Tests the data in various ways and cleans it as necessary.
 
@@ -109,6 +110,13 @@ func test_and_clean(&data, verbose=, force=, mirror=, zeronorth=, zerodepth=) {
          zerodepth=1    Default. Perform this filtering.
          zerodepth=0    Skip this filter.
 
+   negch= Detects points with a negative canopy height; that is, where the
+      first return .elevation is lower than the last return .lelv. The actual
+      action taken depends on the setting's value.
+         negch=2        Default. Set .elevation to .lelv.
+         negch=1        Remove the points.
+         negch=0        Skip this filter.
+
    By default, it runs silently. Use verbose=1 to get some info.
 
    This function utilizes memory better when run as a subroutine rather than a
@@ -120,6 +128,7 @@ func test_and_clean(&data, verbose=, force=, mirror=, zeronorth=, zerodepth=) {
    default, mirror, 1;
    default, zeronorth, 1;
    default, zerodepth, 1;
+   default, negch, 2;
 
    if(is_void(data)) {
       if(verbose)
@@ -192,6 +201,28 @@ func test_and_clean(&data, verbose=, force=, mirror=, zeronorth=, zerodepth=) {
       // Removes points with zero depths.
       if(has_member(result, "depth")) {
          w = where(result.depth);
+         result = numberof(w) ? result(w) : [];
+      }
+   }
+
+   if(negch == 2) {
+      // Only applies to veg types.
+      // Ensures that first return is not lower than last return.
+      // For negch=2, coerce to match
+      if(has_member(result, "elevation") && has_member(result, "lelv")) {
+         w = where(result.lelv > result.elevation);
+         if(numberof(w)) {
+            result.north(w) = result.lnorth(w);
+            result.east(w) = result.least(w);
+            result.elevation(w) = result.lelv(w);
+         }
+      }
+   } else if(negch) {
+      // Only applies to veg types.
+      // Ensures that first return is not lower than last return.
+      // For negch=1, discard
+      if(has_member(result, "elevation") && has_member(result, "lelv")) {
+         w = where(result.lelv <= result.elevation);
          result = numberof(w) ? result(w) : [];
       }
    }
