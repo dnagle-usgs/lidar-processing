@@ -711,6 +711,32 @@ func downsample_grid(data, factor) {
    return newdata;
 }
 
+func pip_grid_mask(data, ply) {
+/* DOCUMENT pip_grid_mask(data, ply)
+   Returns a mask for data for the grid cells that are within the given polygon.
+
+   Parameters:
+      data: A scalar ZGRID value.
+      ply: A polygon.
+
+   Returns:
+      An array of char with dims matching ZGRID's grid, where 1 is cells inside
+      the poly and 0 is cells not inside the poly.
+*/
+   eq_nocopy, z, *data.zgrid;
+   x = y = array(double, dimsof(z));
+   xmax = data.xmin + dimsof(x)(2) * data.cell;
+   ymax = data.ymin + dimsof(y)(3) * data.cell;
+   hc = 0.5 * data.cell;
+   x(,) = span(data.xmin+hc, xmax-hc, dimsof(x)(2))(,-);
+   y(,) = span(data.ymin+hc, ymax-hc, dimsof(y)(3))(-,);
+   idx = testPoly(ply, x(*), y(*));
+   x = y = [];
+   mask = array(char(0), dimsof(z));
+   mask(idx) = 1;
+   return mask;
+}
+
 func batch_convert_arcgrid2geotiff(dir, searchstr=, outdir=, compress=,
 predictor=, tiled=, gdal_translate=, usetcl=) {
 /* DOCUMENT batch_convert_arcgrid2geotiff, dir, searchstr=, outdir=, compress=,
