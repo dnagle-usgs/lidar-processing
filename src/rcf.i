@@ -410,3 +410,153 @@ func rcf_classify(data, class, select=, rcfmode=, buf=, w=, n=) {
    if(numberof(keep))
       data, class, apply, class, consider(keep);
 }
+
+func rcf_2d(z, w, buf, n, nodata=, mask=, action=) {
+/* DOCUMENT rcf_2d(z, w, buf, n, nodata=, mask=, action=)
+   Runs a gridded RCF filter over a 2-dimensional array of values.
+
+   For each cell in Z, the neighborhood of width/height BUF centered on that
+   point are used as an RCF jury. If the point is among the winners for the
+   RCF, it is left as is. If it is not among the winners, then the outcome is
+   as specified by ACTION.
+
+   When working near the edges of the array, the neighborhood may be smaller
+   than the specified BUF as its edges are clipped to Z's extent. (A 5x5
+   neightborhood for point 1,2 will be clipped down to a 3x4 neighborhood, for
+   instance.)
+
+   Most ACTIONs will yield a result that is a modified form of the input Z.
+   When running the filter, all calculations are made on the original Z array.
+   So for example, for the default action="avgwin", the average values that
+   replace the failed cells does *not* impact the rest of the filtering.
+
+   Parameters:
+      z: A two-dimensional array of values.
+      w: The RCF window to use. The winners of each jury will fall within a
+         window of this size.
+      buf: The buffer to use when determining a cell's neighborhood. This must
+         be an odd integer. For example, 3 would define a 3x3 neighborhood (one
+         cell on each side of the target cell). This can also be provided as a
+         two-element array of [row_buf, col_buf] if you want to use different
+         size buffers for rows versus columns.
+      n: The number of winners required for a successful RCF. If fewer than
+         this many winners are found, then the cell is left alone (as if it had
+         passed the filter).
+
+   Options:
+      nodata= The nodata value used in the Z array. Any cells with this value
+         will be disregarded during filtering. If not provided, it is assumed
+         that all cells contain valid values. (If not provided and
+         action="remove", then the nodata value is the minimum Z value minus
+         1.)
+      mask= A mask defining which cells should be filtered. This mask should
+         match the dimensions of Z and should be 1 where cells should be
+         filtered and 0 where they should not. Cells that are not filtered are
+         treated much as a nodata= cell is treated.
+      action= Specifies what to do with cells that fail the filter.
+            action="avgwin"   Replace with the average of the winners (default)
+            action="minwin"   Replace with the minimum winner
+            action="maxwin"   Replace with the maximum winner
+            action="medwin"   Replace with the median of the winners
+            action="clampwin" Replace with the winner closest to the cell's value
+            action="remove"   Replace with the nodata value
+            action="mask"     Return a mask array where 1 represents the failures
+*/
+   // Validations and defaults
+
+   if(dimsof(z)(1) != 2)
+      error, "data must be two-dimensional";
+
+   if(!is_integer(buf))
+      error, "buf must be an integer";
+   if(numberof(buf) == 1) {
+      rbuf = cbuf = buf;
+   } else if(numberof(buf) == 2) {
+      rbuf = buf(1);
+      cbuf = buf(2);
+   } else {
+      error, "buf must be scalar or two-element array";
+   }
+
+   if(rbuf % 2 != 1 || cbuf % 2 != 1)
+      error, "buf must be odd value";
+
+   if(is_void(mask))
+      mask = array(char(1), dimsof(z));
+   if(is_void(nodata))
+      nodata = z(*)(min) - 1;
+   default, action, "avgwin";
+
+   if(dimsof(mask)(1) != 2 || nallof(dimsof(mask) == dimsof(z)))
+      error, "mask= must have same dimensions as input";
+   if(!is_integer(mask))
+      error, "mask= must be integers";
+
+   // Ensure we have a copy and aren't modifying the original in-place
+   z = noop(z);
+   result = noop(z);
+
+   if(action=="mask")
+      result = array(char(0), dimsof(z));
+
+   // rbuf and cbuf are originally the total buffer width; divide by 2 (and
+   // discard remainder) to turn into buffer on either side of the current cell
+   rbuf /= 2;
+   cbuf /= 2;
+
+   nrow = dimsof(z)(2);
+   ncol = dimsof(z)(3);
+
+   for(row = 1; row <= nrow; row++) {
+      row0 = max(1, row-rbuf);
+      row1 = min(nrow, row+rbuf);
+      for(col = 1; col <= ncol; col++) {
+         if(!mask(row,col))
+            continue;
+         if(z(row,col) == nodata)
+            continue;
+
+         col0 = max(1, col-cbuf);
+         col1 = min(ncol, col+cbuf);
+
+         jury = z(row0:row1, col0:col1);
+         idx = where(mask(row0:row1, col0:col1) > 0 & jury != nodata);
+
+         result = rcf(jury(idx), w, mode=2);
+         if(*result(2) < n)
+            continue;
+
+         // Note which cells were winners, then determine if that includes the
+         // current cell
+         keep = array(char(0), dimsof(jury));
+         keep(idx(*result(1))) = 1;
+
+         jrow = row - row0 + 1;
+         jcol = col - col0 + 1;
+
+         if(keep(jrow, jcol))
+            continue;
+
+         winners = jury(where(keep));
+
+         if(action == "avgwin")
+            result(row,col) = winners(avg);
+         else if(action == "minwin")
+            result(row,col) = winners(min);
+         else if(action == "maxwin")
+            result(row,col) = winners(max);
+         else if(action == "medwin")
+            result(row,col) = median(winners);
+         else if(action == "clampwin")
+            result(row,col) = median([z(row,col), winners(min), winners(max)]);
+         else if(action == "remove")
+            result(row,col) = nodata;
+         else if(action == "mask")
+            result(row,col) = 1;
+         else
+            error, "invalid action";
+      }
+   }
+
+   return result;
+}
