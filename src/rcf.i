@@ -535,7 +535,7 @@ func rcf_2d(z, w, buf, n, nodata=, mask=, action=) {
          jrow = row - row0 + 1;
          jcol = col - col0 + 1;
 
-         if(keep(jrow, jcol))
+         if(keep(jcol, jrow))
             continue;
 
          winners = jury(where(keep));
