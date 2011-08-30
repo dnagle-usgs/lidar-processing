@@ -522,14 +522,14 @@ func rcf_2d(z, w, buf, n, nodata=, mask=, action=) {
          jury = z(row0:row1, col0:col1);
          idx = where(mask(row0:row1, col0:col1) > 0 & jury != nodata);
 
-         result = rcf(jury(idx), w, mode=2);
-         if(*result(2) < n)
+         ptr = rcf(jury(idx), w, mode=2);
+         if(*ptr(2) < n)
             continue;
 
          // Note which cells were winners, then determine if that includes the
          // current cell
          keep = array(char(0), dimsof(jury));
-         keep(idx(*result(1))) = 1;
+         keep(idx(*ptr(1))) = 1;
 
          jrow = row - row0 + 1;
          jcol = col - col0 + 1;
