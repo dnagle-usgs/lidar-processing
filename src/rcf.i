@@ -413,7 +413,8 @@ func rcf_classify(data, class, select=, rcfmode=, buf=, w=, n=) {
 
 func rcf_2d(z, w, buf, n, nodata=, mask=, action=) {
 /* DOCUMENT rcf_2d(z, w, buf, n, nodata=, mask=, action=)
-   Runs a gridded RCF filter over a 2-dimensional array of values.
+   Runs a gridded RCF filter over a 2-dimensional array of values, an array
+   where dimsof(z) is [2,NCOLS,NROWS].
 
    For each cell in Z, the neighborhood of width/height BUF centered on that
    point are used as an RCF jury. If the point is among the winners for the
@@ -437,7 +438,7 @@ func rcf_2d(z, w, buf, n, nodata=, mask=, action=) {
       buf: The buffer to use when determining a cell's neighborhood. This must
          be an odd integer. For example, 3 would define a 3x3 neighborhood (one
          cell on each side of the target cell). This can also be provided as a
-         two-element array of [row_buf, col_buf] if you want to use different
+         two-element array of [col_buf, row_buf] if you want to use different
          size buffers for rows versus columns.
       n: The number of winners required for a successful RCF. If fewer than
          this many winners are found, then the cell is left alone (as if it had
@@ -472,8 +473,8 @@ func rcf_2d(z, w, buf, n, nodata=, mask=, action=) {
    if(numberof(buf) == 1) {
       rbuf = cbuf = buf;
    } else if(numberof(buf) == 2) {
-      rbuf = buf(1);
-      cbuf = buf(2);
+      cbuf = buf(1);
+      rbuf = buf(2);
    } else {
       error, "buf must be scalar or two-element array";
    }
@@ -504,23 +505,23 @@ func rcf_2d(z, w, buf, n, nodata=, mask=, action=) {
    rbuf /= 2;
    cbuf /= 2;
 
-   nrow = dimsof(z)(2);
-   ncol = dimsof(z)(3);
+   ncol = dimsof(z)(2);
+   nrow = dimsof(z)(3);
 
    for(row = 1; row <= nrow; row++) {
       row0 = max(1, row-rbuf);
       row1 = min(nrow, row+rbuf);
       for(col = 1; col <= ncol; col++) {
-         if(!mask(row,col))
+         if(!mask(col,row))
             continue;
-         if(z(row,col) == nodata)
+         if(z(col,row) == nodata)
             continue;
 
          col0 = max(1, col-cbuf);
          col1 = min(ncol, col+cbuf);
 
-         jury = z(row0:row1, col0:col1);
-         idx = where(mask(row0:row1, col0:col1) > 0 & jury != nodata);
+         jury = z(col0:col1,row0:row1);
+         idx = where(mask(col0:col1,row0:row1) > 0 & jury != nodata);
 
          ptr = rcf(jury(idx), w, mode=2);
          if(*ptr(2) < n)
@@ -540,19 +541,19 @@ func rcf_2d(z, w, buf, n, nodata=, mask=, action=) {
          winners = jury(where(keep));
 
          if(action == "avgwin")
-            result(row,col) = winners(avg);
+            result(col,row) = winners(avg);
          else if(action == "minwin")
-            result(row,col) = winners(min);
+            result(col,row) = winners(min);
          else if(action == "maxwin")
-            result(row,col) = winners(max);
+            result(col,row) = winners(max);
          else if(action == "medwin")
-            result(row,col) = median(winners);
+            result(col,row) = median(winners);
          else if(action == "clampwin")
-            result(row,col) = median([z(row,col), winners(min), winners(max)]);
+            result(col,row) = median([z(col,row), winners(min), winners(max)]);
          else if(action == "remove")
-            result(row,col) = nodata;
+            result(col,row) = nodata;
          else if(action == "mask")
-            result(row,col) = 1;
+            result(col,row) = 1;
          else
             error, "invalid action";
       }
