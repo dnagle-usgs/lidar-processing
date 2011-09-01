@@ -1262,6 +1262,54 @@ func las_open(filename) {
    return stream;
 }
 
+func batch_las_header(dir, searchstr=, files=, outfile=, toscreen=) {
+/* DOCUMENT batch_las_header, dir, searchstr=, files=, outfile=, toscreen=
+   Creates text files for each las file containing the output of las_header.
+   These files will be alongside the las file. For a file named EXAMPLE.las,
+   the created file will be EXAMPLE_header.txt.
+
+   Parameter:
+      dir: The directory in which to find las files.
+   Options:
+      searchstr= The search pattern to use when finding las files.
+            searchstr="*.las"    Default
+      files= An array of files to process. This will cause dir and searchstr=
+         to be ignored if provided.
+      outfile= If provided, this single file will be created with the
+         las_header output of all of the files found instead of creating an
+         output file for each input file.
+      toscreen= If provided, no output files are created. Instead, the output
+         will be displayed to the screen.
+*/
+   default, searchstr, "*.las";
+   default, toscreen, 0;
+   if(is_void(files)) {
+      files = find(dir, glob=searchstr);
+      files = files(sort(files));
+   }
+   count = numberof(files);
+   content = array(string, count);
+
+   for(i = 1; i <= count; i++)
+      content(i) = las_header(files(i))(sum);
+
+   if(toscreen || !is_void(outfile)) {
+      divider = "\n" + array("-", 72)(sum) + "\n\n";
+      content = strjoin(content, divider);
+      if(toscreen) {
+         write, format="%s", content;
+      } else {
+         mkdirp, file_dirname(outfile);
+         write, format="%s", open(outfile, "w"), content;
+      }
+   } else {
+      for(i = 1; i <= count; i++) {
+         fn = file_rootname(files(i)) + "_header.txt";
+         write, format="%s", open(fn, "w"), content(i);
+      }
+   }
+}
+
 func las_header(las) {
 /* DOCUMENT las_header, las;
    -or- lines = las_header(las);
