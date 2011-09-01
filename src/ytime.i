@@ -225,15 +225,22 @@ func time2soe( a ) {
    Original: W. Wright wright@lidar.wff.nasa.gov
 */
    extern _ys;
-   // Upcast to double if needed; soe values do not fit in floats
-   if(typeof(a) == "float")
+   // SOE values only fit in doubles and longs
+   if(is_real(a))
       a = double(a);
-   idx = int(a(*,1)) - 1969;  // convert to index
-   a(*,2)--;                  // convert to zero-based day number
-   usehms = a(*,3) == 0;
-   if(anyof(usehms))
-      a(*,3)(where(usehms)) = (a(*,4:6)(where(usehms),) * [3600,60,1](-,))(,sum);
-   return _ys(idx) + a(*,2)*86400 + a(*,3);
+   else if(is_integer(a))
+      a = long(a);
+   idx = int(a(..,1)) - 1969;  // convert to index
+   a(..,2)--;                  // convert to zero-based day number
+   usehms = a(..,3) == 0;
+   if(anyof(usehms)) {
+      temp = a(..,3);
+      temp(where(usehms)) = 3600 * a(..,4)(where(usehms)) +
+         60 * a(..,5)(where(usehms)) + a(..,6)(where(usehms));
+      a(..,3) = temp;
+      temp = [];
+   }
+   return _ys(idx) + a(..,2)*86400 + a(..,3);
 }
 
 func time_correct (path) {
