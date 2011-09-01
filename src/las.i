@@ -1264,27 +1264,32 @@ func las_open(filename) {
 
 func las_header(las) {
 /* DOCUMENT las_header, las;
+   -or- lines = las_header(las);
    Displays the data from a las file or stream's header in a user-friendly
-   fashion.
+   fashion. If called as a function, the output is returned as an array of
+   strings instead.
 */
    if(is_string(las))
       las = las_open(las);
+
+   result = string(0);
+
    header = las.header;
    fn = filepath(las);
    pdrf = header.point_data_format_id;
 
-   write, format="Header information for:\n  %s\n\n", file_tail(fn);
-
-   write, format="%-19s : %d.%d\n", "LAS version",
-      header.version_major, header.version_minor;
+   result += swrite(format="Header information for:\n  %s\n\n", file_tail(fn));
+   result += swrite(format="%-19s : %d.%d\n", "LAS version",
+      header.version_major, header.version_minor);
 
    lasf = strchar(header.file_signature);
    valid = lasf == "LASF" ? "valid" : "invalid";
-   write, format="%-19s : %s (%s)\n",
-      "File signature", unref(lasf), unref(valid);
+   result += swrite(format="%-19s : %s (%s)\n",
+      "File signature", unref(lasf), unref(valid));
 
    if(has_member(header, "file_source_id"))
-      write, format="%-19s : %d\n", "File source ID", header.file_source_id;
+      result += swrite(format="%-19s : %d\n",
+         "File source ID", header.file_source_id);
 
    msg = "GPS week time";
    if(noneof(pdrf == [1,3,4,5])) {
@@ -1294,7 +1299,7 @@ func las_header(las) {
       if(enc.gps_soe)
          msg = "GPS epoch time minus 1e9";
    }
-   write, format="%-19s : %s\n", "Time format", msg;
+   result += swrite(format="%-19s : %s\n", "Time format", msg);
 
    guid1 = swrite(format="%02x%02x%02x%02x", header.guid_1 >> 24,
       (header.guid_1 >> 16) & 0xff, (header.guid_1 >> 8) & 0xff,
@@ -1304,35 +1309,35 @@ func las_header(las) {
    guid4 = swrite(format="%02x", header.guid_4);
    guid = swrite(format="%s-%s-%s-%s-%s", guid1, guid2, guid3, guid4(1:2)(sum),
       guid4(3:)(sum));
-   write, format="%-19s : {%s}\n", "GUID", guid;
+   result += swrite(format="%-19s : {%s}\n", "GUID", guid);
    guid = guid1 = guid2 = guid3 = guid4 = [];
 
    tmp = [strchar(header.system_identifier)](sum);
    tmp = strlen(tmp) ? tmp : "(nil)"
-   write, format="%-19s : %s\n", "System identifier", tmp;
+   result += swrite(format="%-19s : %s\n", "System identifier", tmp);
 
    tmp = [strchar(header.generating_software)](sum);
    tmp = strlen(tmp) ? tmp : "(nil)"
-   write, format="%-19s : %s\n", "Generating software", tmp;
+   result += swrite(format="%-19s : %s\n", "Generating software", tmp);
 
    if(has_member(header, "flight_day_of_year")) {
       if(header.flight_year > 0 & header.flight_day_of_year > 0) {
-         soe = time2soe([header.flight_year, header.flight_day_of_year, 0, 0, 0, 0]);
-         write, format="%-19s : %s\n", "Flight date", soe2date(soe);
+         soe = time2soe([header.flight_year, header.flight_day_of_year, 0, 0, 0, 0])(1);
+         result += swrite(format="%-19s : %s\n", "Flight date", soe2date(soe));
       } else {
-         write, format="%-19s : %s\n", "Flight date", "Unspecified";
+         result += swrite(format="%-19s : %s\n", "Flight date", "Unspecified");
       }
    } else if(has_member(header, "creation_day_of_year")) {
       if(header.creation_year > 0 && header.creation_day_of_year > 0) {
-         soe = time2soe([header.creation_year, header.creation_day_of_year, 0, 0, 0, 0]);
-         write, format="%-19s : %s\n", "Creation date", soe2date(soe);
+         soe = time2soe([header.creation_year, header.creation_day_of_year, 0, 0, 0, 0])(1);
+         result += swrite(format="%-19s : %s\n", "Creation date", soe2date(soe));
       } else {
-         write, format="%-19s : %s\n", "Creation date", "Unspecified";
+         result += swrite(format="%-19s : %s\n", "Creation date", "Unspecified");
       }
    }
 
-   write, "";
-   write, format="Point data record format: %d\n", pdrf;
+   result += "\n";
+   result += swrite(format="Point data record format: %d\n", pdrf);
    if(0 <= pdrf && pdrf <= 5) {
       msg = [
          "Core data only (x, y, z, intensity, etc.)",
@@ -1342,35 +1347,34 @@ func las_header(las) {
          "Core data (x, y, z, etc.) plus GPS time and waveform data",
          "Core data (x, y, z, etc.) plus GPS time, RGB data, and waveform data"
       ](pdrf + 1);
-      write, format="  %s\n", msg;
+      result += swrite(format="  %s\n", msg);
    }
 
-   write, "";
-   write, format="Number of point records: %d\n", header.number_of_point_records;
-   write, format="Number of points by return: %d, %d, %d, %d, %d\n",
-      header.number_of_points_by_return(1), header.number_of_points_by_return(2),
-      header.number_of_points_by_return(3), header.number_of_points_by_return(4),
-      header.number_of_points_by_return(5);
+   result += "\n";
+   result += swrite(format="Number of point records: %d\n",
+      header.number_of_point_records);
+   result += swrite(format="Number of points by return: %s\n",
+      strjoin(swrite(format="%d", header.number_of_points_by_return), ", "));
 
-   write, "";
-   write, format="Scale X / Y / Z  : %.10g / %.10g / %.10g\n",
-      header.x_scale, header.y_scale, header.z_scale;
-   write, format="Offset X / Y / Z : %.10g / %.10g / %.10g\n",
-      header.x_offset, header.y_offset, header.z_offset;
-   write, format="Min X / Y / Z    : %.10g / %.10g / %.10g\n",
-      header.x_min, header.y_min, header.z_min;
-   write, format="Max X / Y / Z    : %.10g / %.10g / %.10g\n",
-      header.x_max, header.y_max, header.z_max;
+   result += "\n";
+   result += swrite(format="Scale X / Y / Z  : %.10g / %.10g / %.10g\n",
+      header.x_scale, header.y_scale, header.z_scale);
+   result += swrite(format="Offset X / Y / Z : %.10g / %.10g / %.10g\n",
+      header.x_offset, header.y_offset, header.z_offset);
+   result += swrite(format="Min X / Y / Z    : %.10g / %.10g / %.10g\n",
+      header.x_min, header.y_min, header.z_min);
+   result += swrite(format="Max X / Y / Z    : %.10g / %.10g / %.10g\n",
+      header.x_max, header.y_max, header.z_max);
 
-   write, "";
-   write, format="Variable Length Records:\n%s", "";
+   result += "\n";
+   result += "Variable Length Records:\n";
    vars = *(get_vars(las)(1));
    if(numberof(vars)) {
       vars = vars(sort(vars));
       vars = vars(where(strglob("vrh_*", vars)));
    }
    if(!numberof(vars)) {
-      write, format="  None\n%s", "";
+      result += "  None\n";
    } else {
       record_types = save(
          "LASF_Projection 34735", "Georeferencing (GeoKeyDirectoryTag)",
@@ -1392,23 +1396,26 @@ func las_header(las) {
          vlr = get_member(las, vars(i));
          user_id = strchar(vlr.user_id)(1);
          record_id = u_cast(vlr.record_id, long);
-         write, format="  User ID: %s ; Record ID: %d\n", user_id, record_id;
+         result += swrite(format="  User ID: %s ; Record ID: %d\n",
+            user_id, record_id);
          lookup = swrite(format="%s %d", user_id, record_id);
          if(record_types(*,lookup)) {
-            write, format="      Record type: %s\n", record_types(noop(lookup));
+            result += swrite(format="      Record type: %s\n",
+               record_types(noop(lookup)));
          } else {
-            write, format="      Record type: %s\n", "Unknown";
+            result += "      Record type: Unknown\n";
          }
-         write, format="      Description: %s\n", strchar(vlr.description)(1);
+         result += swrite(format="      Description: %s\n",
+            strchar(vlr.description)(1));
       }
    }
    if(has_member(las, "text_area_descriptor")) {
-      write, "";
-      write, format="%s\n", "Text Area Descriptor:";
-      write, format="  %s\n", strchar(las.text_area_descriptor)(1);
+      result += "\n";
+      result += "Text Area Descriptor:\n";
+      result += swrite(format="  %s\n", strchar(las.text_area_descriptor)(1));
    }
 
-   write, "";
+   result += "\n";
    cs = [];
    if(has_member(las, "sKeyEntry")) {
       gtif = struct2obj(las.sKeyEntry);
@@ -1422,31 +1429,37 @@ func las_header(las) {
       cs = cs_decode_geotiff(tags);
 
       if(is_void(cs)) {
-         write, format="Coordinate system detected:\n  %s\n",
-            "(unable to parse)";
+         result += "Coordinate system detected:\n  (unable to parse)\n";
       } else {
-         write, format="Coordinate system detected:\n  %s\n", cs;
+         result += swrite(format="Coordinate system detected:\n  %s\n", cs);
       }
 
-      write, format="\nLASF_Projection parsed:\n%s", "";
+      result += "\n";
+      result += "LASF_Projection parsed:\n";
       for(i = 1; i <= tags(*); i++) {
          if(is_string(tags(noop(i))))
-            write, format="  %s: %s\n", tags(*,i), tags(noop(i));
+            result += swrite(format="  %s: %s\n", tags(*,i), tags(noop(i)));
          else if(is_real(tags(noop(i))))
-            write, format="  %s: %g\n", tags(*,i), tags(noop(i));
+            result += swrite(format="  %s: %g\n", tags(*,i), tags(noop(i)));
          else if(is_integer(tags(noop(i))))
-            write, format="  %s: %g\n", tags(*,i), tags(noop(i));
+            result += swrite(format="  %s: %g\n", tags(*,i), tags(noop(i)));
          else
-            write, format="  %s: (invalid value)\n", tags(*,i);
+            result += swrite(format="  %s: (invalid value)\n", tags(*,i));
       }
       if(numberof(err)) {
-         write, format="\nLASF_Projection parsing errors:%s\n", "";
-         write, format="  %s\n", err;
+         result += "\n";
+         result += "LASF_Projection parsing errors:\n";
+         result += swrite(format="  %s\n", err)(sum);
       }
 
    } else {
-      write, format="No coordinate system information present.\n%s", "";
+      result += "No coordinate system information present.\n";
    }
+
+   if(am_subroutine())
+      write, format="%s", result;
+   else
+      return strsplit(result, "\n") + "\n";
 }
 
 func las_get_version(las, &v_maj, &v_min) {
