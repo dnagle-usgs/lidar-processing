@@ -531,8 +531,7 @@
   Each distribution has its own mechanisms for handling package management.
   Further, the exact names of packages may change over time. This makes it
   difficult to enumerate the exact steps required under every available
-  platform. This documentation was tested using Ubuntu 9.10; you may need to
-  adjust the directions to suit your own distribution.
+  platform.
 </p>
 
 <p>
@@ -540,7 +539,7 @@
   interface and <strong class="command">apt-get</strong> to manage packages
   from the command line. If you know exactly which packages (by name) you need
   to install, you can easily use <strong class="command">apt-get</strong>.
-  These are the commands required under a basic Ubuntu 9.10 installation:
+  In testing, these were the commands required under a basic installation:
 </p>
 
 <pre class="code">
@@ -553,12 +552,28 @@
 </pre>
 
 <p>
+  Fedora uses <strong class="command">yum</strong> to manage packages from the
+  command line instead of <strong class="command">apt-get</strong>. In testing,
+  these were the commands required under a basic Fedora installation:
+</p>
+
+<pre class="code">
+<span class="command">sudo yum</span> install bzip2-devel
+<span class="command">sudo yum</span> install gmp-devel
+<span class="command">sudo yum</span> install libjpeg-devel
+<span class="command">sudo yum</span> install libpng-devel
+<span class="command">sudo yum</span> install libtiff-devel
+<span class="command">sudo yum</span> install libX11-devel
+<span class="command">sudo yum</span> install readline-devel
+<span class="command">sudo yum</span> install zlib-devel
+</pre>
+
+<p>
   If you are using a different distribution or package manager, or if your
-  version of Ubuntu does not seem to recognize those package names, then you'll
-  need to use the GUI package manager to search for packages with similar names
-  as the above. The package names will normally end with -dev, which signifies
-  that it will include the development libraries needed for software to compile
-  using it.
+  version of the OS does not seem to recognize those package names, then you'll
+  need to search for packages with similar names as the above. The package
+  names will normally end with -dev or -devel, which signifies that it will
+  include the development libraries needed for software to compile using it.
 </p>
 
 <p>
