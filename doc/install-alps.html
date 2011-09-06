@@ -577,52 +577,30 @@
 </p>
 
 <p>
-  If your system does not appear to have a package manager, or if you do not
-  have system rights to install them, you may have to install them from source
-  files that you download elsewhere. However, that is very advanced and is
-  beyond the scope of this document.
+  If your system does not appear to have a package manager, or if your system's
+  OS is really old and uses outdated versions of the required libraries, or if
+  you do not have system rights to install them, you may have to install them
+  from source files that you download elsewhere. However, that is very advanced
+  and is beyond the scope of this document.
 </p>
 
 <h2 id="disable_rlwrap">Problems with rlwrap</h2>
 
 <p>
   The <strong class="command">rlwrap</strong> program requires the readline
-  library. If your system does not have readline installed, <strong
-  class="command">rlwrap</strong> will not install and you will encounter
-  errors. Ideally, you should attempt to install readline using the directions
-  in <a href="#need_devel">Missing development packages</a>.
+  library. If your system does not have readline installed or if the installed
+  version is too old, <strong class="command">rlwrap</strong> will not install
+  and you will encounter errors. Ideally, you should attempt to install
+  readline using the directions in <a href="#need_devel">Missing development
+  packages</a>.
 </p>
 
 <p>
   However, if for any reason you cannot install the readline library using your
-  distribution's package management, you can attempt to install readline using
-  the ALPS installer. You can also do this if your system's readline is too old.
-  The installer already has the readline source code, so all you need to do is
-  run:
-</p>
-
-<pre class="code">
-<span class="command">make</span> readline-install
-</pre>
-
-<p>
-  If you are using a <strong class="variable">prefix</strong>, be sure to
-  include in your <strong class="command">make</strong> statement. The readline
-  library will be installed locally into your ALPS installation and will not
-  impact anything else on your system.
-</p>
-
-<p>
-  Once installed, ALPS will automatically detect the ALPS-specific readline and
-  attempt to use it when installing <strong class="command">rlwrap</strong>.
-  Simply try to install ALPS again like normal.
-</p>
-
-<p>
-  If <strong class="command">rlwrap</strong> still won't install, then you can
-  also just omit it since it's an optional component. To disable rlwrap, you
-  can unset the <strong class="variable">rlwrapsrc</strong> setting to prevent
-  the installer from using it. For example:
+  distribution's package management, you can omit rlwrap since it's an optional
+  component. To disable rlwrap, you can unset the <strong
+  class="variable">rlwrapsrc</strong> setting to prevent the installer from
+  using it. For example:
 </p>
 
 <pre class="code">
