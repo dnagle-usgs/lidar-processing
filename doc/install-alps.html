@@ -131,7 +131,6 @@
     <li><a href="#nodata_download">The "-nodata" download</a></li>
   </ul>
 </li>
-<li><a href="#install_repo">Installing/upgrading from the repository</a></li>
 <li><a href="#prep_alpstcl">Preparing alpstcl</a></li>
 <li><a href="#prep_package">Preparing an installation package</a></li>
 </ul>
@@ -171,21 +170,21 @@
     necessary, follow the directions to remove your existing CVS checkout.
   </dd>
   <dt>
-    I want to install a basic ALPS installation for myself.
+    I want to install a basic ALPS installation that will be shared by several
+    users.
   </dt>
   <dd>
     Follow the directions under <a href="#install_package_basic">Basic
     installation</a>.
   </dd>
   <dt>
-    I want to install a basic ALPS installation that will be shared by several
-    users.
+    I want to install a basic ALPS installation for myself.
   </dt>
   <dd>
     Read <a href="#install_package_basic">Basic installation</a> for an
     overview, then follow those directions with the additional settings
     explained under <a href="#install_prefix">Installing to an alternate
-    location</a>.
+    location</a>. You will probably want to install it to your home directory.
   </dd>
   <dt>
     I encountered problems while trying to install ALPS.
@@ -223,10 +222,11 @@
     Yorick) or on other compiled components of the ALPS distribution.
   </dt>
   <dd>
-    Install as usual, but to a sandboxed location. Then consult <a
-    href="#install_repo">Installing/upgrading from the repository</a> for an
-    overview of how to upgrade individual components from within that
-    installation using its local repository.
+    Install as usual, but to a sandboxed location. Perform your development in
+    the repository within the installer source directory. As needed, use
+    <strong class="command">make easy-yorick</strong> (with the prefix for the
+    sandboxed location) to reinstall Yorick and all of its packages for
+    testing.
   </dd>
   <dt>
     I am an ALPS developer. I would like to create an installation distribution
@@ -412,13 +412,13 @@
 
 <p>
   That's it. Unless your system runs into problems with something or unless
-  you'd like to customize something, you're done! ALPS installs to your home
-  directory at <strong class="directory">~/eaarl/</strong> by default, so you
-  can now start ALPS like this:
+  you'd like to customize something, you're done! ALPS installs to <strong
+  class="directory">/opt/eaarl/</strong> by default, so you can now start ALPS
+  like this:
 </p>
 
 <pre class="code">
-<span class="command">cd</span> <span class="directory">~/eaarl/lidar-processing/src/</span>
+<span class="command">cd</span> <span class="directory">/opt/eaarl/lidar-processing/src/</span>
 <span class="command">./alps</span>
 </pre>
 
@@ -431,14 +431,14 @@
 
 <p>
   By default, ALPS will be installed at <strong
-  class="directory">~/eaarl</strong>. If you'd rather install it somewhere
+  class="directory">/opt/eaarl</strong>. If you'd rather install it somewhere
   else, use the <strong class="variable">prefix</strong> setting to specify the
-  desired directory path. For example, to install ALPS to <strong
-  class="directory">/opt/eaarl</strong>:
+  desired directory path. For example, to install ALPS under your home
+  directory at <strong class="directory">~/eaarl</strong>:
 </p>
 
 <pre class="code">
-<span class="command">make</span> install <span class="variable">prefix</span>=<span class="replaceable">/opt/eaarl</span>
+<span class="command">make</span> install <span class="variable">prefix</span>=<span class="replaceable">~/eaarl</span>
 </pre>
 
 <p>
@@ -747,60 +747,6 @@
   exactly the same as you normally would.
 </p>
 
-<h1 id="install_repo">Installing/upgrading from the repository</h1>
-
-<p>
-  If you're comfortable enough with linux, you can roll your own installer
-  using the repository. The seed functionality is found in the <strong
-  class="directory">installer</strong> subdirectory of the repository. Most
-  users probably will not want to use this option as the installation package
-  provides much of the same benefits without as much manual work.
-</p>
-
-<p>
-  You'll first need to download each of the component source archives manually.
-  If you read the <strong class="file">Makefile</strong>, it details the
-  websites where each of the components may be downloaded. Once you've
-  downloaded them, extract each archve as a subdirectory of the <strong
-  class="directory">installer</strong> directory.
-</p>
-
-<p>
-  Provided that the path names used by the various non-version components
-  haven't substantially changed much since the <strong
-  class="file">Makefile</strong> was last updated, you should then be able to
-  run the installer like you normally would. However, it's probably a good idea
-  to first check and make sure it's actually autodetecting everything properly.
-  Run this command:
-</p>
-
-<pre class="code">
-<span class="command">make</span> show
-</pre>
-
-<p>
-  You will receive a list detailing how many of the key variables are currently
-  defined.  If you plan to use any additional settings (such as <strong
-  class="variable">prefix</strong>), you can include them in the above command
-  to see what impact they would have on your settings.
-</p>
-
-<p>
-  The installer will automatically detect that it is being run from within a
-  repository and will adjust certain aspects of its behavior accordingly:
-</p>
-
-<ul>
-<li>
-  The default <strong class="variable">prefix</strong> will be oriented around your
-  repository rather than defaulting to your home directory.
-</li>
-<li>
-  The repository is not checked out or updated since you are already running
-  from within it.
-</li>
-</ul>
-
 <h1 id="prep_alpstcl">Preparing alpstcl</h1>
 
 <p>
@@ -855,7 +801,7 @@
 </pre>
 </li>
 <li>
-  Clone the repository at <strong class="directory"><span
+  Create a headless clone of the repository at <strong class="directory"><span
   class="replaceable">~/</span>alpsinstall.<span
   class="replaceable">20100328</span>/lidar-processing</strong>. Edit the
   file <strong class="file"><span
@@ -866,9 +812,9 @@
 </li>
 <li>
   Download all requisite installation archives and expand them into the
-  installation directory, similar to a <a href="#install_repo">repository-based
-  installation</a>. Make sure everything autodetects properly. Do not
-  include ActiveTcl; that would be a violation of ActiveState's license.
+  installation directory. The Makefile documents what needs to be downloaded.
+  Make sure everything autodetects properly. Do not include ActiveTcl; that
+  would be a violation of ActiveState's license.
 </li>
 <li>
   Add the GEOID files and map files under <strong
