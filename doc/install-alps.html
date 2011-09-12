@@ -131,7 +131,6 @@
     <li><a href="#nodata_download">The "-nodata" download</a></li>
   </ul>
 </li>
-<li><a href="#prep_alpstcl">Preparing alpstcl</a></li>
 <li><a href="#prep_package">Preparing an installation package</a></li>
 </ul>
 
@@ -212,7 +211,7 @@
     directions you followed when installing ALPS.
   </dd>
   <dt>
-    I am an ALPS developer. I intend to work extensively on GUI development.
+    I am an ALPS developer.
   </dt>
   <dd>
     Read all of <a href="#install_package">Installing ALPS</a>.
@@ -450,29 +449,26 @@
 <h2 id="install_activetcl">Installing ActiveTcl</h2>
 
 <p>
-  One of the software requirements for ALPS is <a
+  One of the software requirements for ALPS is Tcl/Tk. By default, the ALPS
+  installer includes the source code for Tcl/Tk and all necessary Tcl packages
+  and will compile that for installation.
+</p>
+<p>
+  As an alternative, you may elect to instead install <a
   href="http://www.activestate.com/activetcl/">ActiveTcl</a> from <a
-  href="http://www.activestate.com/">ActiveState</a>. Since the licensing terms
-  for ActiveTcl prohibit redistribution of their installer, the ALPS installer
-  cannot include it directly. Instead, it includes a custom program named
-  <strong class="command">alpstcl</strong> that compiles the Tcl interpreter
-  along with all of the package dependencies needed by ALPS into a single
-  executable.
+  href="http://www.activestate.com/">ActiveState</a>. This is a binary
+  distribution of Tcl/Tk and related packages and is the form of Tcl/Tk that
+  was used historically prior to 2011. However, the licensing terms for
+  ActiveTcl prohibit redistribution of their installer, so the ALPS installer
+  cannot include it directly.
 </p>
 
 <p>
-  The <strong class="command">alpstcl</strong> program should meet most users'
-  needs.  However, it does have two notable drawbacks: it takes longer to
-  initially start up and it provides less flexibility than an actual Tcl
-  installation would provide. Nonetheless, you probably won't need to worry
-  about ActiveTcl unless you are planning to do extensive GUI code development
-  or are planning to use Tcl outside of the ALPS processing environment.
-</p>
-
-<p>
-  The ALPS installer is designed to help you install ActiveTcl instead of
-  <strong class="command">alpstcl</strong>, but it does require you to manually
-  download the ActiveTcl installer. You can download ActiveTcl from <a
+  Installing Tcl/Tk from source should meet most users' needs. If for some
+  reason you cannot install Tcl/Tk or if you just prefer ActiveTcl, you may
+  install ActiveTcl instead.  The ALPS installer is designed to help you
+  install ActiveTcl, but it does require you to manually download the ActiveTcl
+  installer. You can download ActiveTcl from <a
   href="http://www.activestate.com/activetcl/">ActiveState's website</a>.
   Download the 8.5 release for your platform, then unpack it as a subdirectory
   of the installer. The download will have a filename like <strong
@@ -500,9 +496,8 @@
 
 <p>
   Alternately, if you've already installed everything and just want to replace
-  <strong class="command">alpstcl</strong> with ActiveTcl, then you can just
-  reinstall tcl as you would in a <a href="#upgrade_selective">selective
-  upgrade</a>:
+  a compiled Tcl/Tk with ActiveTcl, then you can just reinstall tcl as you
+  would in a <a href="#upgrade_selective">selective upgrade</a>:
 </p>
 
 <pre class="code">
@@ -682,7 +677,7 @@
 <li>
   If you manually included ActiveTcl's sources in your last install, then
   you'll need to do it again when you upgrade. Otherwise, your ActiveTcl
-  installation will be replaced with <strong class="command">alpstcl</strong>.
+  installation will be replaced with a compiled Tcl/Tk.
 </li>
 <li>
   If you had to perform a local installation of the readline library to
@@ -747,35 +742,6 @@
   exactly the same as you normally would.
 </p>
 
-<h1 id="prep_alpstcl">Preparing alpstcl</h1>
-
-<p>
-  In order to create the <strong class="file">alpstcl</strong> binary file that
-  gets included in the installer package, you'll need to first <a
-  href="#install_activetcl">install ActiveTcl</a>. You'll also need to purchase
-  and install ActiveState's <a
-  href="http://www.activestate.com/tcl_dev_ki/">TclDevKit</a>.
-</p>
-
-<p>
-  Once you have the software installed, you can generate alpstcl as follows:
-</p>
-
-<pre class="code">
-<span class="command">cd</span> <span class="directory"><span class="replaceable">~/</span>eaarl/alpstcl</span>
-<span class="command">make</span>
-</pre>
-
-<p>
-  If you'd like to copy it over into the repository's <strong
-  class="directory">installer</strong> directory:
-</p>
-
-<pre class="code">
-<span class="command">cd</span> <span class="directory"><span class="replaceable">~/</span>eaarl/alpstcl</span>
-<span class="command">make</span> installer
-</pre>
-
 <h1 id="prep_package">Preparing an installation package</h1>
 
 <p>
@@ -786,12 +752,6 @@
 <ol>
 <li>
   Start with a pristine copy of the repository.
-</li>
-<li>
-  <a href="#prep_alpstcl">Prepare alpstcl</a>. Use <code><strong
-  class="command">make</strong> installer</code> so that it copies to the
-  appropriate place in the <strong class="directory">installer</strong>
-  directory.
 </li>
 <li>
   Create a copy of <strong class="directory">installer</strong> that you can
