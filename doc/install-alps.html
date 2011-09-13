@@ -131,7 +131,13 @@
     <li><a href="#nodata_download">The "-nodata" download</a></li>
   </ul>
 </li>
-<li><a href="#prep_package">Preparing an installation package</a></li>
+<li><a href="#prep_package">Preparing an installation package</a>
+  <ul>
+    <li><a href="#prep_scratch">From scratch</a></li>
+    <li><a href="#prep_exist">From an existing installer</a></li>
+    <li><a href="#prep_nodata">The "-nodata" installer</a></li>
+  </ul>
+</li>
 </ul>
 
 <h1 id="start">Where do I start?</h1>
@@ -744,9 +750,10 @@
 
 <h1 id="prep_package">Preparing an installation package</h1>
 
+<h2 id="prep_scratch">From scratch</h2>
 <p>
-  These are the basic steps involved in creating or updating an installation
-  package.
+  These are the basic steps involved in creating an installation package
+  largely from scratch.
 </p>
 
 <ol>
@@ -763,8 +770,14 @@
 <li>
   Create a headless clone of the repository at <strong class="directory"><span
   class="replaceable">~/</span>alpsinstall.<span
-  class="replaceable">20100328</span>/lidar-processing</strong>. Edit the
-  file <strong class="file"><span
+  class="replaceable">20100328</span>/lidar-processing</strong>.
+<pre class="code">
+<span class="command">cd</span> <span class="directory"><span class="replaceable">~/</span>alpsinstall.<span class="replaceable">20100328</span></span>
+<span class="command">hg</span> clone -U <span class="directory"><span class="replaceable">~/</span>eaarl/lidar-processing</span>
+</pre>
+</li>
+<li>
+  Edit the file <strong class="file"><span
   class="replaceable">~/</span>alpsinstall.<span
   class="replaceable">20100328</span>/lidar-processing/.hg/hgrc</strong> to
   change the default path to <strong
@@ -772,9 +785,11 @@
 </li>
 <li>
   Download all requisite installation archives and expand them into the
-  installation directory. The Makefile documents what needs to be downloaded.
-  Make sure everything autodetects properly. Do not include ActiveTcl; that
-  would be a violation of ActiveState's license.
+  installation directory. Check out all requisite installation repositories
+  into the installation directory as well. The Makefile documents what needs to
+  be downloaded and where to download them from.  Make sure everything
+  autodetects properly. Do not include ActiveTcl; that would be a violation of
+  ActiveState's license.
 </li>
 <li>
   Add the GEOID files and map files under <strong
@@ -785,6 +800,106 @@
   Package everything together:
 <pre class="code">
 <span class="command">tar</span> cjvf <span class="file">alpsinstall.<span class="replaceable">20100328</span>.tar.bz2</span> <span class="directory">alpsinstall.<span class="replaceable">20100328</span></span>
+</pre>
+</li>
+<li>
+  Upload the installation package to lidar.net.
+</li>
+</ol>
+
+<h2 id="prep_exist">From an existing installer</h2>
+<p>
+  However, it's much easier to create an updated installer by using an existing
+  installer.
+</p>
+<ol>
+<li>
+  Obtain a prior copy of the installer.
+</li>
+<li>
+  Expand the installer archive.
+<pre class="code">
+<span class="command">tar</span> xjf <span class="file">alpsinstall.<span class="replaceable">20100328</span>.tar.bz2</span>
+</pre>
+</li>
+<li>
+  Rename the resulting directory to reflect the current date.
+<pre class="code">
+<span class="command">mv</span> <span class="directory">alpsinstall.<span class="replaceable">20100328</span></span> <span class="directory">alpsinstall.<span class="replaceable">20110912</span></span>
+</pre>
+</li>
+<li>
+  Update the repository.
+<pre class="code">
+<span class="command">cd</span> <span class="directory"><span class="replaceable">~/</span>alpsinstall.<span class="replaceable">20110912</span>/lidar-processing</span>
+<span class="command">hg</span> pull
+</pre>
+</li>
+<li>
+  Update repository-based installation subdirectories (typically checked out
+  via CVS from SourceForge or via Git from GitHub) as desired, renaming the
+  directory to change the date suffix to reflect the current date.
+</li>
+<li>
+  Update other installation subdirectories by deleting the old versions,
+  downloading the new tar files, and expanding into the installation directory.
+</li>
+<li>
+  Add new GEOID files, if applicable.
+</li>
+<li>
+  Update the Makefile by copying from the repository.
+<pre class="code">
+<span class="command">cd</span> <span class="directory"><span class="replaceable">~/</span>alpsinstall.<span class="replaceable">20110912</span></span>
+<span class="command">cp</span> -f <span class="file"><span class="replaceable">~/eaarl/</span>lidar-processing/install/Makefile<span> <span class="directory">./</span>
+</pre>
+</li>
+<li>
+  Update the share directory, if applicable.
+<pre class="code">
+<span class="command">cd</span> <span class="directory"><span class="replaceable">~/</span>alpsinstall.<span class="replaceable">20110912</span></span>
+<span class="command">cp</span> -af <span class="file"><span class="replaceable">~/eaarl/</span>lidar-processing/install/share<span> <span class="directory">./</span>
+</pre>
+</li>
+<li>
+  Package everything together:
+<pre class="code">
+<span class="command">tar</span> cjvf <span class="file">alpsinstall.<span class="replaceable">20100328</span>.tar.bz2</span> <span class="directory">alpsinstall.<span class="replaceable">20100328</span></span>
+</pre>
+</li>
+<li>
+  Upload the installation package to lidar.net.
+</li>
+</ol>
+
+<h2 id="prep_nodata">The -nodata installer</h2>
+<p>
+  The above directions all assume you are making a normal version with all of
+  the GEOID and maps data included. Making a <a href="#nodata_download">nodata
+  version</a> without that data requires only a few minor steps different from
+  the above.
+</p>
+<ol>
+<li>
+  Update the installer per either of the above sets of directions.
+</li>
+<li>
+  Remove the share directory and all it contains.
+<pre class="code">
+<span class="command">rm</span> -rf <span class="directory"><span class="replaceable">~/</span>alpsinstall.<span class="replaceable">20110912</span>/share</span>
+</pre>
+</li>
+<li>
+  Copy over the share directory from the repository.
+<pre class="code">
+<span class="command">cd</span> <span class="directory"><span class="replaceable">~/</span>alpsinstall.<span class="replaceable">20110912</span></span>
+<span class="command">cp</span> -af <span class="file"><span class="replaceable">~/eaarl/</span>lidar-processing/install/share<span> <span class="directory">./</span>
+</pre>
+</li>
+<li>
+  Package everything together:
+<pre class="code">
+<span class="command">tar</span> cjvf <span class="file">alpsinstall.<span class="replaceable">20100328</span>.tar.bz2</span> <span class="directory">alpsinstall-nodata.<span class="replaceable">20100328</span></span>
 </pre>
 </li>
 <li>
