@@ -1310,6 +1310,174 @@ func batch_las_header(dir, searchstr=, files=, outfile=, toscreen=) {
    }
 }
 
+func las_header_scan(las) {
+/* DOCUMENT data = las_header_scan(las)
+   Scans the data in a las file or stream's header and returns an oxy group
+   object with selected data parsed from it.
+*/
+   if(is_string(las))
+      las = las_open(las);
+
+   result = save();
+
+   header = las.header;
+   file = filepath(las);
+   pdrf = header.point_data_format_id;
+
+   save, result, file, file_tail=file_tail(file);
+   save, result, version=
+      swrite(format="%d.%d", header.version_major, header.version_minor);
+   save, result, file_signature=strchar(header.file_signature)(*)(sum);
+   save, result, signature_valid=result.file_signature == "LASF";
+
+   if(has_member(header, "file_source_id"))
+      save, result, file_source_id=header.file_source_id;
+
+   time_format = "GPS week time";
+   if(noneof(pdrf == [1,3,4,5])) {
+      time_format = "Not applicable";
+   } else if(has_member(header, "global_encoding")) {
+      enc = las_decode_global_encoding(header.global_encoding);
+      if(enc.gps_soe)
+         time_format = "GPS epoch time minus 1e9";
+   }
+   save, result, time_format;
+
+   guid1 = swrite(format="%02x%02x%02x%02x", header.guid_1 >> 24,
+         (header.guid_1 >> 16) & 0xff, (header.guid_1 >> 8) & 0xff,
+         header.guid_1 & 0xff);
+   guid2 = swrite(format="%02x%02x", header.guid_2 >> 8, header.guid_2 & 0xff);
+   guid3 = swrite(format="%02x%02x", header.guid_3 >> 8, header.guid_3 & 0xff);
+   guid4 = swrite(format="%02x", header.guid_4);
+   guid = swrite(format="%s-%s-%s-%s-%s", guid1, guid2, guid3, guid4(1:2)(*)(sum),
+         guid4(3:)(*)(sum));
+   save, result, guid;
+
+   tmp = [strchar(header.system_identifier)](*)(sum);
+   tmp = strlen(tmp) ? tmp : "(nil)";
+   save, result, system_identifier=tmp;
+
+   tmp = [strchar(header.generating_software)](*)(sum);
+   tmp = strlen(tmp) ? tmp : "(nil)";
+   save, result, generating_software=tmp;
+
+   flight_date = creation_date = "Unavailable";
+   if(has_member(header, "flight_day_of_year")) {
+      if(header.flight_year > 0 & header.flight_day_of_year > 0) {
+         soe = time2soe([header.flight_year, header.flight_day_of_year, 0, 0, 0, 0])(1);
+         flight_date = soe2date(soe);
+      } else {
+         flight_date = "Unspecified";
+      }
+   } else if(has_member(header, "creation_day_of_year")) {
+      if(header.creation_year > 0 && header.creation_day_of_year > 0) {
+         soe = time2soe([header.creation_year, header.creation_day_of_year, 0, 0, 0, 0])(1);
+         creation_date = soe2date(soe);
+      } else {
+         creation_date = "Unspecified";
+      }
+   }
+   save, result, flight_date, creation_date;
+
+   save, result, pdrf;
+   if(0 <= pdrf && pdrf <= 5) {
+      msg = [
+         "Core data only (x, y, z, intensity, etc.)",
+         "Core data (x, y, z, etc.) plus GPS time",
+         "Core data (x, y, z, etc.) plus RGB data",
+         "Core data (x, y, z, etc.) plus GPS time and RGB data",
+         "Core data (x, y, z, etc.) plus GPS time and waveform data",
+         "Core data (x, y, z, etc.) plus GPS time, RGB data, and waveform data"
+      ](pdrf + 1);
+      save, result, pdrf_friendly=msg;
+   } else {
+      save, result, pdrf_friendly="Unknown format";
+   }
+
+   save, result, number_of_point_records=header.number_of_point_records;
+   save, result, number_of_points_by_return=
+      strjoin(swrite(format="%d", header.number_of_points_by_return), ", ");
+
+   save, result,
+      x_scale=header.x_scale, y_scale=header.y_scale, z_scale=header.z_scale,
+      x_offset=header.x_offset, y_offset=header.y_offset, z_offset=header.z_offset,
+      x_min=header.x_min, y_min=header.y_min, z_min=header.z_min,
+      x_max=header.x_max, y_max=header.y_max, z_max=header.z_max;
+
+   save, result, scale=swrite(format="%.10g / %.10g / %.10g",
+      header.x_scale, header.y_scale, header.z_scale);
+   save, result, offset=swrite(format="%.10g / %.10g / %.10g",
+      header.x_offset, header.y_offset, header.z_offset);
+   save, result, "min", swrite(format="%.10g / %.10g / %.10g",
+      header.x_min, header.y_min, header.z_min);
+   save, result, "max", swrite(format="%.10g / %.10g / %.10g",
+      header.x_max, header.y_max, header.z_max);
+
+   vars = *(get_vars(las)(1));
+   if(numberof(vars)) {
+      vars = vars(sort(vars));
+      vars = vars(where(strglob("vrh_*", vars)));
+   }
+   vlrs = save();
+   if(numberof(vars)) {
+      record_types = save(
+         "LASF_Projection 34735", "Georeferencing (GeoKeyDirectoryTag)",
+         "LASF_Projection 34736", "Georefernecing (GeoDoubleParamsTag)",
+         "LASF_Projection 34737", "Georeferencing (GeoAsciiParamsTag)",
+         "LASF_Spec 0", "Classification lookup",
+         "LASF_Spec 2", "Histogram",
+         "LASF_Spec 3", "Text area description"
+      );
+      for(i = 100; i < 356; i++)
+         save, record_types, swrite(format="LASF_Spec %d", i),
+            "Waveform Packet Descriptor";
+      if(header.version_major == 1 && header.version_minor == 0)
+         save, record_types, "LASF_Spec 1", "Flightlines lookup";
+      else
+         save, record_types, "LASF_Spec 0", "Reserved";
+
+      count = numberof(vars);
+      for(i = 1; i <= count; i++) {
+         vlr = get_member(las, vars(i));
+         user_id = strchar(vlr.user_id)(1);
+         record_id = u_cast(vlr.record_id, long);
+         lookup = swrite(format="%s %d", user_id, record_id);
+         record_type = "Unknown";
+         if(record_types(*,lookup)) {
+            record_type = record_types(noop(lookup));
+         }
+         description = strchar(vlr.description)(*)(sum);
+         save, vlrs, string(0),
+            save(user_id, record_id, record_type, description);
+      }
+   }
+   save, result, vlrs;
+
+   if(has_member(las, "text_area_descriptor")) {
+      save, result, text_area_descriptor=strchar(las.text_area_descriptor)(*)(sum);
+   }
+
+   if(has_member(las, "sKeyEntry")) {
+      gtif = struct2obj(las.sKeyEntry);
+      if(has_member(las, "GeoDoubleParamsTag"))
+         save, gtif, GeoDoubleParamsTag=las.GeoDoubleParamsTag;
+      if(has_member(las, "GeoAsciiParamsTag"))
+         save, gtif, GeoAsciiParamsTag=las.GeoAsciiParamsTag;
+
+      err = [];
+      tags = geotiff_tags_decode(gtif, err);
+      cs = cs_decode_geotiff(tags);
+
+      if(is_void(cs)) {
+         cs = "(unable to parse)";
+      }
+      save, result, cs, lasf_projection_parse=tags;
+      if(numberof(err)) save, result, lasf_projection_err=err;
+   }
+
+   return result;
+}
+
 func las_header(las) {
 /* DOCUMENT las_header, las;
    -or- lines = las_header(las);
