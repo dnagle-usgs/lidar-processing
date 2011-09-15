@@ -293,6 +293,11 @@ func obj2array(obj, &success) {
       return [];
    }
 
+   // Any errors means that we failed
+   if(catch(0x01 | 0x08 | 0x10)) {
+      return [];
+   }
+
    // Scan object to determine member types and dimensions
    types = array(string, count);
    dims = array(short, count);
