@@ -653,8 +653,8 @@ func obj_delete(args) {
 errs2caller, obj_delete;
 wrap_args, obj_delete;
 
-func obj_transpose(obj, ary=) {
-/* DOCUMENT obj_transpose(obj, ary=)
+func obj_transpose(obj, ary=, fill_void=) {
+/* DOCUMENT obj_transpose(obj, ary=, fill_void=)
    Transposes a group of groups. For example:
       > temp = obj_transpose(save(alpha=save(a=1,b=2), beta=save(a=10,b=20)))
       > obj_show, temp
@@ -677,9 +677,21 @@ func obj_transpose(obj, ary=) {
        `- b (long,2) [2,20]
    Groups that cannot be converted successful to arrays (via obj2array) will
    remain groups.
+
+   If fill_void=1, then when converting groups of arrays (with ary=1), any void
+   items will be replaced by zero or nil in an attempt to help coerce the data
+   into arrays.
+      > grp = save()
+      > save, grp, string(0), save(a=1,b=2)
+      > save, grp, string(0), save(b=20)
+      > obj_show, obj_transpose(grp, ary=1, fill_void=1)
+       TOP (oxy_object, 2 entries)
+       |- a (long,2) [1,0]
+       `- b (long,2) [2,20]
 */
    local success;
    default, ary, 0;
+   default, fill_void, 0;
    keys = array(pointer, obj(*));
    for(i = 1; i <= obj(*); i++)
       keys(i) = &(obj(noop(i))(*,));
@@ -697,7 +709,21 @@ func obj_transpose(obj, ary=) {
             save, curres, obj(*,j), [];
       }
       if(ary) {
-         curary = obj2array(curres, success);
+         curary = obj_copy(curres);
+         if(fill_void) {
+            type = [];
+            for(j = 1; j <= curres(*); j++) {
+               if(!is_void(curres(noop(j)))) {
+                  type = structof(curres(noop(j)));
+                  break;
+               }
+            }
+            for(j = 1; j <= curres(*); j++) {
+               if(is_void(curres(noop(j))))
+                  save, curary, noop(j), type();
+            }
+         }
+         curary = obj2array(curary, success);
          if(success)
             save, result, noop(key), noop(curary);
          else
