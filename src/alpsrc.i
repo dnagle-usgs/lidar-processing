@@ -26,6 +26,9 @@ local alpsrc;
          indicator should be refreshed. Set to 0 to disable. This is only
          applied at start-up.
 
+      gdal_bin = ../../bin
+         Defines the directory where the GDAL binaries may be found.
+
    See also: alpsrc_load
 */
 
@@ -71,6 +74,7 @@ func __alpsrc_set_defaults(&hash) {
    sharedir = file_join(get_cwd(), "..", "..", "share");
    h_set, hash, geoid_data_root=file_join(sharedir, "NAVD88");
    h_set, hash, maps_dir=file_join(sharedir, "maps");
+   h_set, hash, gdal_bin=file_join(get_cwd(), "..", "..", "bin");
    h_set, hash, memory_autorefresh=5;
 }
 
