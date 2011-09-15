@@ -652,3 +652,39 @@ func obj_delete(args) {
 }
 errs2caller, obj_delete;
 wrap_args, obj_delete;
+
+func obj_transpose(obj) {
+/* DOCUMENT obj_transpose(obj)
+   Transposes a group of groups. For example:
+      > temp = obj_transpose(save(alpha=save(a=1,b=2), beta=save(a=10,b=20)))
+      > obj_show, temp
+       TOP (oxy_object, 2 entries)
+       |- a (oxy_object, 2 entries)
+       |  |- alpha (long) 1
+       |  `- beta (long) 10
+       `- b (oxy_object, 2 entries)
+          |- alpha (long) 2
+          `- beta (long) 20
+   Missing items will be represented by [].
+*/
+   keys = array(pointer, obj(*));
+   for(i = 1; i <= obj(*); i++)
+      keys(i) = &(obj(noop(i))(*,));
+   keys = set_remove_duplicates(merge_pointers(keys));
+
+   result = save();
+   for(i = 1; i <= numberof(keys); i++) {
+      key = keys(i);
+      curres = save();
+      for(j = 1; j <= obj(*); j++) {
+         curobj = obj(noop(j));
+         if(curobj(*,key))
+            save, curres, obj(*,j), curobj(noop(key));
+         else
+            save, curres, obj(*,j), [];
+      }
+      save, result, noop(key), noop(curres);
+   }
+
+   return result;
+}
