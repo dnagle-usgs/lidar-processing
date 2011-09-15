@@ -1536,7 +1536,7 @@ func las_header(las) {
       result += "  None\n";
    } else {
       for(i = 1; i <= data.vlrs(*); i++) {
-         vlr = vlrs(noop(i));
+         vlr = data.vlrs(noop(i));
          result += swrite(format="  User ID: %s ; Record ID: %d\n",
             vlr.user_id, vlr.record_id);
          result += swrite(format="      Record type: %s\n", vlr.record_type);
