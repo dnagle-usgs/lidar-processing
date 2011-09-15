@@ -553,7 +553,10 @@ func struct_cast(&data, dest, verbose=, special=) {
    struct_cast, data, dest
    struct_cast, data
 
-   Converts an array of raster data to an array of point data.
+   Converts an array from one structure to another structure. This will work on
+   any arbitrary pair of structures, provided they have fields in common.
+   However, it has additional specialized functionality for working with ALPS
+   raster and point data structures.
 
    If dest is provided, it should be a structure you would like the data
    converted to. Any field present in both the source and destination will be
@@ -580,6 +583,45 @@ func struct_cast(&data, dest, verbose=, special=) {
        array(R,2)
    Please note however that the point format HAS to be conformable with the
    raster format. In other words, numberof(data) must be divisible by 120.
+
+   Certain pairs of structures have specialized functionality. You can disable
+   this functionality by specifying special=0. Here are the conversions with
+   special functionality:
+      LFP_VEG -> FS, VEG__, VEG_, VEG, GEO
+         LFP_VEG uses pointers for .elevation; this dereferences them and stores
+         to .elevation creating multiple points (which means that
+         numberof(output) might be larger than numberof(input)). Also, VEG__,
+         VEG_, and VEG will populate .lnorth, .least, and .lelev with .north,
+         .east, and .elevation. Also, GEO will populate .depth based the first
+         .elevation value for each pointer.
+      FS -> LFP_VEG
+         Populates the pointers using just the single FS elevation for each
+         point.
+      VEG__, VEG_, VEG -> LFP_VEG
+         Populates the pointers using the first and last return for each point.
+      GEO -> LFP_VEG
+         Populates the pointers using the surface and depth elevations for each
+         point.
+      VEG__, VEG_, VEG -> GEO
+         Sets .north and .east from .lnorth and .least. Sets .depth based on
+         .elevation - .lelv. Sets .first_peak and .bottom_peak from .fint and
+         .lint.
+      GEO -> VEG__, VEG_, VEG
+         Sets .lnorth and .least from .north and .east. Sets .lelv from
+         .elevation - .depth. Sets .fint and .lint from .first_peak and
+         .bottom_peak.
+      FS -> GEO
+         Sets .bottom_peak from .intensity
+      GEO -> FS
+         Sets .elevation from .elevation - .depth. Sets .intensity from
+         .bottom_peak.
+      ZGRID -> FS, GEO
+         Sets .east, .north, and .elevation based on the result of
+         data2xyz(input). (For GEO, .depth is left as 0.)
+      ZGRID -> VEG__, VEG_, VEG
+         Sets .east, .north, and .elevation based on the result of
+         data2xyz(input). Sets .least, .lnorth, and .lelv to match .east,
+         .north, and .elevation.
 
    By default, this function is silent. Use verbose=1 to make it chatty.
 */
