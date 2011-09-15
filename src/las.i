@@ -1310,6 +1310,106 @@ func batch_las_header(dir, searchstr=, files=, outfile=, toscreen=) {
    }
 }
 
+func batch_las_header_summarize(dir, searchstr=, files=, outfile=, list_files=) {
+/* DOCUMENT batch_las_header_summarize, dir, searchstr=, files=, outfile=,
+   list_files=
+
+   Outputs an aggregate summary for all the LAS files found. These fields will
+   be reported on, if available:
+      LAS version
+      Time format
+      System identifier
+      Generating software
+      Flight date
+      Creation date
+      Coordinate system
+
+   Fields that are not available will be reported as "Unavailable".
+
+   Parameter:
+      dir: The directory in which to find las files.
+   Options:
+      searchstr= The search pattern to use when finding las files.
+            searchstr="*.las"    Default
+      files= An array of files to process. This will cause dir and searchstr=
+         to be ignored if provided.
+      outfile= If provided, this file will be created with the output that
+         would otherwise have gone to the screen.
+      list_files= By default, any fields that have different values across
+         multiple files will have the number of files with that value noted.
+         Setting this option will also list out the files that have that
+         setting.
+            list_files=0      Default. Only summarize file count.
+            list_files=1      Show all files for each varying value.
+*/
+   default, searchstr, "*.las";
+   default, list_files, 0;
+
+   if(is_void(files)) {
+      files = find(dir, glob=searchstr);
+      files = files(sort(files));
+   }
+   count = numberof(files);
+   data = save();
+   for(i = 1; i <= count; i++)
+      save, data, string(0), las_header_scan(files(i));
+   data = obj_transpose(data, ary=1, fill_void=1);
+
+   base = file_commonpath(files);
+   files = file_relative(base, files);
+
+   conf = save(
+      version="LAS version",
+      time_format="Time format",
+      system_identifier="System identifier",
+      generating_software="Generating software",
+      flight_date="Flight date",
+      creation_date="Creation date",
+      cs="Coordinate system"
+   );
+
+   agree = disagree = string(0);
+   for(i = 1; i <= conf(*); i++) {
+      key = conf(*,i);
+      label = conf(noop(i));
+      if(data(*,key))
+         items = data(noop(key));
+      else
+         items = array("Unavailable", numberof(files));
+
+      if(allof(items == items(1))) {
+         agree += swrite(format="%-19s : %s\n", label, items(1));
+      } else {
+         uniq = set_remove_duplicates(items);
+         disagree += label + ": multiple found...\n";
+         for(j = 1; j <= numberof(uniq); j++) {
+            w = where(items == uniq(j));
+            disagree += swrite(format="  %s (%d files)\n",
+               uniq(j), numberof(w));
+            if(list_files)
+               disagree += swrite(format="    %s\n", files(w))(sum)
+         }
+         disagree += "\n";
+      }
+   }
+
+   result = swrite(format="Summarizing for %d files\n", count);
+   result += swrite(format="In directory: %s\n", base);
+   result += "\n";
+
+   if(strlen(agree))
+      result += agree + "\n";
+   if(strlen(disagree))
+      result += disagree;
+
+   if(outfile)
+      write, open(outfile, "w"), format="%s", result;
+   else if(am_subroutine())
+      write, format="%s", result;
+
+   return strsplit(result, "\n") + "\n";
+}
+
 func las_header_scan(las) {
 /* DOCUMENT data = las_header_scan(las)
    Scans the data in a las file or stream's header and returns an oxy group
