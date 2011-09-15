@@ -653,8 +653,8 @@ func obj_delete(args) {
 errs2caller, obj_delete;
 wrap_args, obj_delete;
 
-func obj_transpose(obj) {
-/* DOCUMENT obj_transpose(obj)
+func obj_transpose(obj, ary=) {
+/* DOCUMENT obj_transpose(obj, ary=)
    Transposes a group of groups. For example:
       > temp = obj_transpose(save(alpha=save(a=1,b=2), beta=save(a=10,b=20)))
       > obj_show, temp
@@ -666,7 +666,20 @@ func obj_transpose(obj) {
           |- alpha (long) 2
           `- beta (long) 20
    Missing items will be represented by [].
+
+   If ary=1, then a group of arrays will be returned instead, if possible.
+      > grp = save()
+      > save, grp, string(0), save(a=1,b=2)
+      > save, grp, string(0), save(a=10,b=20)
+      > obj_show, obj_transpose(grp, ary=1)
+       TOP (oxy_object, 2 entries)
+       |- a (long,2) [1,10]
+       `- b (long,2) [2,20]
+   Groups that cannot be converted successful to arrays (via obj2array) will
+   remain groups.
 */
+   local success;
+   default, ary, 0;
    keys = array(pointer, obj(*));
    for(i = 1; i <= obj(*); i++)
       keys(i) = &(obj(noop(i))(*,));
@@ -683,7 +696,15 @@ func obj_transpose(obj) {
          else
             save, curres, obj(*,j), [];
       }
-      save, result, noop(key), noop(curres);
+      if(ary) {
+         curary = obj2array(curres, success);
+         if(success)
+            save, result, noop(key), noop(curary);
+         else
+            save, result, noop(key), noop(curres);
+      } else {
+         save, result, noop(key), noop(curres);
+      }
    }
 
    return result;
