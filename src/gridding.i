@@ -738,9 +738,9 @@ func pip_grid_mask(data, ply) {
 }
 
 func batch_convert_arcgrid2geotiff(dir, searchstr=, outdir=, compress=,
-predictor=, tiled=, gdal_translate=, usetcl=) {
+predictor=, tiled=, usetcl=) {
 /* DOCUMENT batch_convert_arcgrid2geotiff, dir, searchstr=, outdir=, compress=,
-   predictor=, tiled=, gdal_translate=, usetcl=;
+   predictor=, tiled=, usetcl=;
 
    Uses GDAL to batch convert ARC ASCII grids into GeoTIFFs.
 
@@ -767,9 +767,6 @@ predictor=, tiled=, gdal_translate=, usetcl=) {
       tiled= Specifies whether stripped or tiled TIFF files should be created.
             tiled=0  Create stripped TIFF files. (default)
             tiled=1  Create tiled TIFF files.
-      gdal_translate= Path to the gdal_translate program.
-            gdal_translate="gdal_translate"     Find it in the path (default)
-            gdal_translate="/opt/gdal/bin/gdal_translate"
       usetcl= Specifies whether Yorick should fork calls to gdal_translate, or
          whether it should ask Tcl to do so instead. Only use this if you're
          having problems doing it under Yorick.
@@ -785,7 +782,8 @@ predictor=, tiled=, gdal_translate=, usetcl=) {
       tiff = is_void(outdir) ? files(i) : file_join(outdir, file_tail(files(i)));
       tiff = file_rootname(tiff) + ".tif";
       write, format="%d/%d: %s\n", i, numberof(files), file_tail(tiff);
-      convert_arcgrid2geotiff, files(i), tiff, compress=compress, predictor=predictor, tiled=tiled, gdal_translate=gdal_translate, usetcl=usetcl;
+      convert_arcgrid2geotiff, files(i), tiff, compress=compress,
+         predictor=predictor, tiled=tiled, usetcl=usetcl;
       timer_remaining, t0, i, numberof(files), tp, interval=15;
       write, format="%s", "\n";
    }
@@ -793,9 +791,9 @@ predictor=, tiled=, gdal_translate=, usetcl=) {
 }
 
 func convert_arcgrid2geotiff(arcfn, tiffn, compress=, predictor=, tiled=,
-gdal_translate=, usetcl=) {
+usetcl=) {
 /* DOCUMENT convert_arcgrid2geotiff, arcfn, tiffn, compress=, predictor=,
-   tiled=, gdal_translate=, usetcl=;
+   tiled=, usetcl=;
 
    Uses GDAL to convert an ARC ASCII grid into a GeoTIFF.
 
@@ -812,7 +810,6 @@ gdal_translate=, usetcl=) {
    default, compress, 0;
    default, predictor, 0;
    default, tiled, 0;
-   default, gdal_translate, "gdal_translate";
    default, usetcl, 0;
    args = ["-of", "GTiff"];
    if(compress)
@@ -823,11 +820,14 @@ gdal_translate=, usetcl=) {
       grow, args, "-co", "TILED=YES";
    args = strjoin(args, " ");
    if(_ytk && usetcl) {
-      cmd = swrite(format="eval exec [auto_execok {%s}] [list %s {%s} {%s} >@ stdout 2>@1]", gdal_translate, args, arcfn, tiffn);
+      cmd = swrite(
+         format="eval exec [auto_execok {%s}] [list %s {%s} {%s} >@ stdout 2>@1]",
+         file_join(alpsrc.gdal_bin, "gdal_translate"), args, arcfn, tiffn);
       tkcmd, cmd, async=0;
       write, format="%s", "\n";
    } else {
-      cmd = swrite(format="'%s' %s '%s' '%s'", gdal_translate, args, arcfn, tiffn);
+      cmd = swrite(format="'%s' %s '%s' '%s'",
+         file_join(alpsrc.gdal_bin, "gdal_translate"), args, arcfn, tiffn);
       system, cmd;
    }
 }
