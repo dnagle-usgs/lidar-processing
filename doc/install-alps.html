@@ -108,7 +108,6 @@
   <ul>
   <li><a href="#install_package_basic">Basic installation</a></li>
   <li><a href="#install_prefix">Installing to an alternate location</a></li>
-  <li><a href="#install_activetcl">Installing ActiveTcl</a></li>
   </ul>
 </li>
 <li><a href="#troubleshooting">Troubleshooting</a>
@@ -123,6 +122,7 @@
     <li><a href="#upgrade_package_overview">Upgrade overview</a></li>
     <li><a href="#upgrade_selective">Selective upgrade</a></li>
     <li><a href="#nodata_download">The "-nodata" download</a></li>
+    <li><a href="#bye_activetcl">What happened to ActiveTcl?"</a></li>
     <li><a href="#migrating_201004">Upgrading installations from prior to April, 2010</a></li>
     <li><a href="#migrating_201007">Upgrading installations from prior to July, 2010</a></li>
   </ul>
@@ -357,71 +357,6 @@
   <strong>all</strong> calls to <strong class="command">make</strong>.)
 </p>
 
-<h2 id="install_activetcl">Installing ActiveTcl</h2>
-
-<p>
-  One of the software requirements for ALPS is Tcl/Tk. By default, the ALPS
-  installer includes the source code for Tcl/Tk and all necessary Tcl packages
-  and will compile that for installation.
-</p>
-<p>
-  As an alternative, you may elect to instead install <a
-  href="http://www.activestate.com/activetcl/">ActiveTcl</a> from <a
-  href="http://www.activestate.com/">ActiveState</a>. This is a binary
-  distribution of Tcl/Tk and related packages and is the form of Tcl/Tk that
-  was used historically prior to 2011. However, the licensing terms for
-  ActiveTcl prohibit redistribution of their installer, so the ALPS installer
-  cannot include it directly.
-</p>
-
-<p>
-  Installing Tcl/Tk from source should meet most users' needs. If for some
-  reason you cannot install Tcl/Tk or if you just prefer ActiveTcl, you may
-  install ActiveTcl instead.  The ALPS installer is designed to help you
-  install ActiveTcl, but it does require you to manually download the ActiveTcl
-  installer. You can download ActiveTcl from <a
-  href="http://www.activestate.com/activetcl/">ActiveState's website</a>.
-  Download the 8.5 release for your platform, then unpack it as a subdirectory
-  of the installer. The download will have a filename like <strong
-  class="file">ActiveTcl8.5.<span
-  class="replaceable">8.1.291945</span>-linux-<span
-  class="replaceable">ix86-threaded</span>.tar.gz</strong>. Once downloaded,
-  you'll need to put it where the ALPS installer can find it:
-</p>
-
-<pre class="code">
-<span class="command">cd</span> <span class="directory">alpsinstall.<span class="replaceable">20100328/</span></span>
-<span class="command">gunzip</span> <span class="file"><span class="replaceable">~/</span>ActiveTcl8.5.<span class="replaceable">8.1.291945</span>-linux-<span class="replaceable">ix86-threaded</span>.tar.gz</span>
-<span class="command">tar</span> xvf <span class="directory"><span class="replaceable">~/</span>ActiveTcl8.5.<span class="replaceable">8.1.291945</span>-linux-<span class="replaceable">ix86-threaded</span>.tar</span>
-</pre>
-
-<p>
-  After doing so, you should see the ActiveTcl directory inside the installer
-  directory. The installer will then automatically use ActiveTcl when you run
-  it. Install exactly like you normally would:
-</p>
-
-<pre class="code">
-<span class="command">make</span> install
-</pre>
-
-<p>
-  Alternately, if you've already installed everything and just want to replace
-  a compiled Tcl/Tk with ActiveTcl, then you can just reinstall tcl as you
-  would in a <a href="#upgrade_selective">selective upgrade</a>:
-</p>
-
-<pre class="code">
-<span class="command">make</span> easy-tcl
-</pre>
-
-<p>
-  Installation of ActiveTcl requires an active Internet connection to download
-  various Tcl packages. If you do not have an active Internet connection during
-  installation, then your ActiveTcl installation will not have all the
-  necessary packages needed to run ALPS.
-</p>
-
 <h1 id="troubleshooting">Troubleshooting</h1>
 
 <h2 id="need_devel">Missing development packages</h2>
@@ -586,11 +521,6 @@
   However, files with the same name may get overwritten.
 </li>
 <li>
-  If you manually included ActiveTcl's sources in your last install, then
-  you'll need to do it again when you upgrade. Otherwise, your ActiveTcl
-  installation will be replaced with a compiled Tcl/Tk.
-</li>
-<li>
   If you had to perform a local installation of the readline library to
   accomodate <strong class="command">rlwrap</strong>, then the existing
   installation from last time can be re-used during upgrade. You shouldn't need
@@ -651,6 +581,25 @@
 <p>
   When using the "-nodata" version, you still follow all other directions
   exactly the same as you normally would.
+</p>
+
+<h2 id="bye_activetcl">What happened to ActiveTcl?</h2>
+
+<p>
+  Prior to September 2011, ALPS used the binary distribution <a
+  href="http://www.activestate.com/activetcl">ActiveTcl</a> from <a
+  href="http://www.activestate.com">ActiveState</a> for its Tcl/Tk interpreter.
+  Unfortunately, the license for ActiveTcl forbids its redistribution, which
+  meant that older installers included a slimmed down custom Tcl interpreter
+  and recommended the user download ActiveTcl for themselves.
+</p>
+
+<p>
+  In September 2011, the installation procedure was simplified and made more
+  robust by including the Tcl/Tk source code as well as the source code for all
+  of the packages needed by ALPS. This eliminated the need for end-users to
+  download ActiveTcl themselves and allows the full ALPS environment to be
+  included in the ALPS installer.
 </p>
 
 <h2 id="migrating_201004">Upgrading installations from prior to April, 2010</h2>
@@ -782,8 +731,7 @@
   installation directory. Check out all requisite installation repositories
   into the installation directory as well. The Makefile documents what needs to
   be downloaded and where to download them from.  Make sure everything
-  autodetects properly. Do not include ActiveTcl; that would be a violation of
-  ActiveState's license.
+  autodetects properly.
 </li>
 <li>
   Add the GEOID files and map files under <strong
