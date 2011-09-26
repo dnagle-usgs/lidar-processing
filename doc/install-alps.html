@@ -113,6 +113,7 @@
 <li><a href="#troubleshooting">Troubleshooting</a>
   <ul>
   <li><a href="#need_devel">Missing development packages</a></li>
+  <li><a href="#need_sudo">Installing with sudo</a></li>
   <li><a href="#disable_rlwrap">Problems with rlwrap</a></li>
   <li><a href="#distclean">Modified configuration</a></li>
   </ul>
@@ -343,6 +344,15 @@
 </pre>
 
 <p>
+  (If you encounter permissions problems when trying to install, you probably
+  don't have permissions to access <strong
+  class="directory">/opt/alps</strong>. If you have permission to use <strong
+  class="command">sudo</strong>, you can follow the directions at <a
+  href="#need_sudo">Installing with sudo</a>. Otherwise, follow the directions
+  at <a href="#install_prefix">Installing to an alternate location</a>.)
+</p>
+
+<p>
   The rest of this section documents some customizations that are commonly
   applied.
 </p>
@@ -434,6 +444,48 @@
   from source files that you download elsewhere. However, that is very advanced
   and is beyond the scope of this document.
 </p>
+
+<h2 id="need_sudo">Installing with sudo</h2>
+
+<p>
+  By default, ALPS installs to <strong class="directory">/opt/alps</strong>. On
+  most systems, <strong class="directory">/opt</strong> is owned by root and
+  cannot be modified by a normal user.
+</p>
+
+<p>
+  In most software, this issue is addressed by running <strong
+  class="command">make install</strong> using <strong
+  class="command">sudo</strong>. This is normally preceded by two other steps,
+  <strong class="command">./configure</strong> and <strong
+  class="command">make</strong>.
+</p>
+
+<p>
+</p>
+
+<p>
+  When installing ALPS, you should <em>not</em> use <strong
+  class="command">sudo</strong> as mentioned above. You also shouldn't try to
+  run <strong class="command">./configure</strong> (it doesn't exist) or
+  <strong class="command">make</strong>. This is because the ALPS installer is
+  comprised of numerous sub-installers, some of which depend on one another,
+  which means that the installation process cannot be easily broken up into the
+  traditional three parts.
+</p>
+
+<p>
+  Instead, it is recommended that you use <strong class="command">sudo</strong>
+  before and after installing ALPS to negate the issue of permissions, as so (assuming that your user name and group name are <strong class="replaceable">user</strong> and <strong class="replaceable">group</strong>):
+</p>
+
+<pre class="code">
+<span class="command">sudo mkdir</span> -p <span class="directory">/opt/alps</span>
+<span class="command">sudo chown -R <span class="replaceable">user</span>.<span class="replaceable">group</span> <span class="directory">/opt/alps</span>
+<span class="command">cd</span> <span class="directory">alpsinstall.<span class="replaceeable">20100328</span>/</span>
+<span class="command">make</span> install
+<span class="command">sudo chown</span> -R root.root <span class="directory">/opt/alps</span>
+</pre>
 
 <h2 id="disable_rlwrap">Problems with rlwrap</h2>
 
