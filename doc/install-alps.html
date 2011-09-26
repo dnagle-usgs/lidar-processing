@@ -123,8 +123,9 @@
     <li><a href="#upgrade_selective">Selective upgrade</a></li>
     <li><a href="#nodata_download">The "-nodata" download</a></li>
     <li><a href="#bye_activetcl">What happened to ActiveTcl?"</a></li>
-    <li><a href="#migrating_201004">Upgrading installations from prior to April, 2010</a></li>
-    <li><a href="#migrating_201007">Upgrading installations from prior to July, 2010</a></li>
+    <li><a href="#migrating_201004">Upgrading installations from prior to April 2010</a></li>
+    <li><a href="#migrating_201007">Upgrading installations from prior to July 2010</a></li>
+    <li><a href="#migrating_201109">Upgrading installations from prior to September 2011</a></li>
   </ul>
 </li>
 <li><a href="#prep_package">Preparing an installation package</a>
@@ -154,21 +155,30 @@
 
 <dl>
   <dt>
+    I have an existing installation of ALPS located at <strong
+    class="directory">/opt/eaarl</strong>.
+  </dt>
+  <dd>
+    Read <a href="#migrating_201109">Upgrading installations from prior to
+    September 2011</a> and follow the directions relevant to your preferences.
+  </dd>
+  <dt>
     I have an existing installation of ALPS that was installed before April
     2010.
   </dt>
   <dd>
-    Read <a href="#migrating_201004">Installed prior to April, 2010</a> and
-    follow the directions to remove your existing ALPS installation before
-    attempting to install a fresh copy.
+    Read <a href="#migrating_201004">Upgrading installations from prior to
+    April 2010</a> and follow the directions to remove your existing ALPS
+    installation before attempting to install a fresh copy.
   </dd>
   <dt>
     I have an existing installation of ALPS that was installed between April
     and July 2010.
   </dt>
   <dd>
-    Read <a href="#migrating_201007">Installed prior to July, 2010</a> and, if
-    necessary, follow the directions to remove your existing CVS checkout.
+    Read <a href="#migrating_201007">Upgrading installations from prior to
+    July 2010</a> and, if necessary, follow the directions to remove your
+    existing CVS checkout.
   </dd>
   <dt>
     I want to install a basic ALPS installation that will be shared by several
@@ -323,12 +333,12 @@
 <p>
   That's it. Unless your system runs into problems with something or unless
   you'd like to customize something, you're done! ALPS installs to <strong
-  class="directory">/opt/eaarl/</strong> by default, so you can now start ALPS
+  class="directory">/opt/alps/</strong> by default, so you can now start ALPS
   like this:
 </p>
 
 <pre class="code">
-<span class="command">cd</span> <span class="directory">/opt/eaarl/lidar-processing/src/</span>
+<span class="command">cd</span> <span class="directory">/opt/alps/lidar-processing/src/</span>
 <span class="command">./alps</span>
 </pre>
 
@@ -341,14 +351,14 @@
 
 <p>
   By default, ALPS will be installed at <strong
-  class="directory">/opt/eaarl</strong>. If you'd rather install it somewhere
+  class="directory">/opt/alps</strong>. If you'd rather install it somewhere
   else, use the <strong class="variable">prefix</strong> setting to specify the
   desired directory path. For example, to install ALPS under your home
-  directory at <strong class="directory">~/eaarl</strong>:
+  directory at <strong class="directory">~/alps</strong>:
 </p>
 
 <pre class="code">
-<span class="command">make</span> install <span class="variable">prefix</span>=<span class="replaceable">~/eaarl</span>
+<span class="command">make</span> install <span class="variable">prefix</span>=<span class="directory">~/alps</span>
 </pre>
 
 <p>
@@ -553,7 +563,7 @@
 </p>
 
 <pre class="code">
-<span class="command">make</span> easy-yorick <span class="variable">prefix</span>=<span class="replaceable">/opt/</span>eaarl
+<span class="command">make</span> easy-yorick <span class="variable">prefix</span>=<span class="replaceable">~/</span>alps
 </pre>
 
 <h2 id="nodata_download">The "-nodata" download</h2>
@@ -602,7 +612,7 @@
   included in the ALPS installer.
 </p>
 
-<h2 id="migrating_201004">Upgrading installations from prior to April, 2010</h2>
+<h2 id="migrating_201004">Upgrading installations from prior to April 2010</h2>
 
 <p>
   The installation framework documented here was first put in place in March
@@ -619,19 +629,19 @@
 <ul>
 <li>
   Did you do any code development for ALPS? If so, then read <a
-  href="#migrating_201007">Installed prior to July, 2010</a> in addition to
+  href="#migrating_201007">Installed prior to July 2010</a> in addition to
   this section. Then, if relevant, make a copy of your uncommited changes.
 </li>
 <li>
   Did you add any custom files to <strong class="directory"><span
-  class="replaceable">~/</span>eaarl/lidar-processing/maps</strong>? The ALPS
+  class="replaceable">/opt/</span>alps/lidar-processing/maps</strong>? The ALPS
   installer provides all of the maps that are available from from lidar.net
   (you can find them inside the installer at <strong class="directory"><span
   class="replaceable">alpsinstall.20100328/</span>share/maps</strong> if you
   want to compare). If you added any custom maps not included with ALPS that
   you'd like to keep, then you'll have to make a copy of them. After installing
   ALPS, you can then place those copies back in <strong class="directory"><span
-  class="replaceable">~/</span>eaarl/share/maps</strong>.
+  class="replaceable">/opt/</span>alps/share/maps</strong>.
 </li>
 </ul>
 
@@ -643,7 +653,7 @@
 </p>
 
 <pre class="code">
-<span class="command">rm</span> -rf <span class="directory"><span class="replaceable">~/</span>eaarl</span>
+<span class="command">rm</span> -rf <span class="directory"><span class="replaceable">/opt/</span>alps</span>
 </pre>
 
 <p>
@@ -653,7 +663,7 @@
   in place, it will not conflict with your new ALPS installation.
 </p>
 
-<h2 id="migrating_201007">Upgrading installations from prior to July, 2010</h2>
+<h2 id="migrating_201007">Upgrading installations from prior to July 2010</h2>
 
 <p>
   In July 2010, the ALPS repository was migrated from <a
@@ -679,7 +689,7 @@
 </p>
 
 <pre class="code">
-<span class="command">rm</span> -rf <span class="directory"><span class="replaceable">~/</span>eaarl/lidar-processing-oldcvs</span>
+<span class="command">rm</span> -rf <span class="directory"><span class="replaceable">/opt/</span>alps/lidar-processing-oldcvs</span>
 </pre>
 
 <p>
@@ -690,6 +700,40 @@
   <strong class="command">hg import</strong>; however, that is beyond the scope
   of this document.
 </p>
+
+<h2 id="migrating_201109">Upgrading installations from prior to September 2011</h2>
+
+<p>
+  In September 2011, the default/recommended system-wide location for ALPS was
+  changed from <strong class="directory">/opt/eaarl</strong> to <strong
+  class="directory">/opt/alps</strong>. If you wish to upgrade your existing
+  ALPS installation, you can simply move the directory to the new default
+  location:
+</p>
+
+<pre class="code">
+<span class="command">mv</span> <span class="directory">/opt/eaarl</span> <span class="directory">/opt/alps</span>
+</pre>
+
+<p>
+  Alternately, if you have not modified anything in your ALPS installation and
+  you have downloaded the full installer, you can simply delete your old
+  installation prior to installing the new version:
+</p>
+
+<pre class="code">
+<span class="command">rm</span> -rf <span class="directory">/opt/eaarl</span>
+</pre>
+
+<p>
+  It's also possible to upgrade ALPS while keeping it at the old location. This
+  is not recommended, but if you need to do it, simply set the prefix to the
+  old path:
+</p>
+
+<pre class="code">
+<span class="command">make</span> install <span class="variable">prefix</span>=<span class="directory">/opt/eaarl</span>
+</pre>
 
 <h1 id="prep_package">Preparing an installation package</h1>
 
@@ -707,7 +751,7 @@
   Create a copy of <strong class="directory">installer</strong> that you can
   then build up into an actual installer.
 <pre class="code">
-<span class="command">cp</span> -r <span class="directory"><span class="replaceable">~/</span>eaarl/lidar-processing/installer</span> <span class="directory"><span class="replaceable">~/</span>alpsinstall.<span class="replaceable">20100328</span></span>
+<span class="command">cp</span> -r <span class="directory"><span class="replaceable">~/</span>alps/lidar-processing/installer</span> <span class="directory"><span class="replaceable">~/</span>alpsinstall.<span class="replaceable">20100328</span></span>
 </pre>
 </li>
 <li>
@@ -716,7 +760,7 @@
   class="replaceable">20100328</span>/lidar-processing</strong>.
 <pre class="code">
 <span class="command">cd</span> <span class="directory"><span class="replaceable">~/</span>alpsinstall.<span class="replaceable">20100328</span></span>
-<span class="command">hg</span> clone -U <span class="directory"><span class="replaceable">~/</span>eaarl/lidar-processing</span>
+<span class="command">hg</span> clone -U <span class="directory"><span class="replaceable">/opt/</span>alps/lidar-processing</span>
 </pre>
 </li>
 <li>
@@ -793,14 +837,14 @@
   Update the Makefile by copying from the repository.
 <pre class="code">
 <span class="command">cd</span> <span class="directory"><span class="replaceable">~/</span>alpsinstall.<span class="replaceable">20110912</span></span>
-<span class="command">cp</span> -f <span class="file"><span class="replaceable">~/eaarl/</span>lidar-processing/install/Makefile<span> <span class="directory">./</span>
+<span class="command">cp</span> -f <span class="file"><span class="replaceable">/opt/</span>alps/lidar-processing/install/Makefile<span> <span class="directory">./</span>
 </pre>
 </li>
 <li>
   Update the share directory, if applicable.
 <pre class="code">
 <span class="command">cd</span> <span class="directory"><span class="replaceable">~/</span>alpsinstall.<span class="replaceable">20110912</span></span>
-<span class="command">cp</span> -af <span class="file"><span class="replaceable">~/eaarl/</span>lidar-processing/install/share<span> <span class="directory">./</span>
+<span class="command">cp</span> -af <span class="file"><span class="replaceable">/opt/</span>/alps/lidar-processing/install/share<span> <span class="directory">./</span>
 </pre>
 </li>
 <li>
@@ -835,7 +879,7 @@
   Copy over the share directory from the repository.
 <pre class="code">
 <span class="command">cd</span> <span class="directory"><span class="replaceable">~/</span>alpsinstall.<span class="replaceable">20110912</span></span>
-<span class="command">cp</span> -af <span class="file"><span class="replaceable">~/eaarl/</span>lidar-processing/install/share<span> <span class="directory">./</span>
+<span class="command">cp</span> -af <span class="file"><span class="replaceable">/opt/</span>alps/lidar-processing/install/share<span> <span class="directory">./</span>
 </pre>
 </li>
 <li>
