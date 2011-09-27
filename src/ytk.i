@@ -73,7 +73,7 @@ func tky_bg_stdout(msg) {
          cmd = strpart(line, 1:3);
          data = strpart(line, 5:);
          if(cmd == "bkg") {
-            data = strchar(hex_decode(data));
+            data = strchar(base64_decode(data));
             self, append, data;
             tkcmd, "set ::__ybkg__wait 0"
          } else {

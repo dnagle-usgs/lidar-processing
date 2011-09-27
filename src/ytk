@@ -88,6 +88,7 @@ package require tile
 package require BWidget
 package require Expect
 package require Iwidgets
+package require base64
 package require fileutil
 package require log
 package require struct::list
@@ -183,7 +184,7 @@ proc ybkg args {
 ##
    set cmd [eval concat $args]
    set ::__ybkg__wait 1
-   set cmd [string_to_hex $cmd]
+   set cmd [base64::encode -wrapchar "" $cmd]
    puts $::tky_fifo "bkg $cmd"
    while {$::__ybkg__wait} {sleep 1}
 }
