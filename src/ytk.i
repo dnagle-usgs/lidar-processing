@@ -51,28 +51,6 @@ func open_tky_fifo(fn) {
    }
 }
 
-func hex_to_string(input) {
-/* DOCUMENT s = hex_to_string(input)
-   Given an input string in hexadecimal, this converts it to the data it
-   represents and returns it as a string.
-
-   Example:
-
-      > foo = "Hello, world!"
-      > bar = swrite(format="%02x", strchar(foo))(sum)
-      > bar
-      "48656c6c6f2c20776f726c642100"
-      > hex_to_string(bar)
-      "Hello, world!"
-      > hex_to_string(bar) == foo
-      1
-*/
-// This is needed for ASCII-armoring commands sent from Tcl to Yorick.
-   output = array(char, strlen(input)/2);
-   sread, input, format="%2x", output;
-   return strchar(output);
-}
-
 /*******************************************************************************
  * Handling for Tcl "ybkg" command
  */
@@ -93,7 +71,7 @@ func stdout(msg) {
          cmd = strpart(line, 1:3);
          data = strpart(line, 5:);
          if(cmd == "bkg") {
-            data = hex_to_string(data);
+            data = strchar(hex_decode(data));
             self, append, data;
             tkcmd, "set ::__ybkg__wait 0"
          } else {
