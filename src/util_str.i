@@ -319,8 +319,15 @@ func base64_decode(input) {
    Parameter:
       input: Must be a scalar string or a one-dimensional char array.
 
-   Output will be a scalar string.
+   Output will be an array of char data. (Pass to strchar to turn into a
+   string.)
 */
+// Rationale for returning char array instead of string:
+// When passing through strchar, an array of char data ending with a single \0
+// is treated the same as an array of char data ending without \0. Thus,
+// passing the decoded output through strchar prior to returning would result
+// in data loss in specific constrained circumstances.
+
    base64_alphabet = char(grow(
       indgen(65:90),    // A-Z   0 to 25
       indgen(97:122),   // a-z   26 to 51
@@ -389,5 +396,5 @@ func base64_decode(input) {
 
    data = data(:bitmod-3);
 
-   return strchar(data);
+   return data;
 }
