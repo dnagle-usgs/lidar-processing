@@ -398,3 +398,36 @@ func base64_decode(input) {
 
    return data;
 }
+
+func hex_encode(data) {
+/* DOCUMENT hex_encode(data)
+   Uses hex encoding to encode data. This inflates the size of the data by 100%.
+
+   Parameter:
+      data: Must be a scalar string or a one-dimensional char array.
+
+   Output will be a scalar string.
+*/
+   if(is_void(data) || (is_string(data) && !strlen(data)))
+      return [];
+   if(is_string(data))
+      data = strchar(data)(:-1);
+   return swrite(format="%02x", data)(sum);
+}
+
+func hex_decode(input) {
+/* DOCUMENT hex_decode(input)
+   Decodes a string that was encoded using hex_encode.
+
+   Parameter:
+      input: Must be a scalar string.
+
+   Output will be an array of char data. (Pass to strchar to turn into a
+   string.)
+*/
+// Rationale for returning char array instead of string:
+// See note under base64_decode.
+   output = array(char, strlen(input)/2);
+   sread, input, format="%2x", output;
+   return output;
+}
