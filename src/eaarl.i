@@ -49,6 +49,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "util_obj.i";
 
    require, "ascii.i";
+   require, "ascii_encode.i";
    require, "asciixyz.i";
    require, "atm.i";
    require, "batch_analysis.i";
