@@ -54,11 +54,12 @@ func open_tky_fifo(fn) {
 /*******************************************************************************
  * Handling for Tcl "ybkg" command
  */
-scratch = save(scratch, temp);
+scratch = save(scratch, temp, tky_bg_stdout, tky_bg_handler, tky_bg_pop,
+   tky_bg_append);
 temp = save(fragment, data, stdout, handler, pop, append);
 fragment = [];
 data = save();
-func stdout(msg) {
+func tky_bg_stdout(msg) {
    self = use();
    fragment = self.fragment;
    lines = spawn_callback(fragment, msg);
@@ -80,7 +81,9 @@ func stdout(msg) {
    }
    after, 0, self, handler;
 }
-func handler {
+stdout = tky_bg_stdout;
+
+func tky_bg_handler {
    self = use();
    if(self.data(*)) {
       f = self(pop,);
@@ -88,7 +91,9 @@ func handler {
       after, 0, self, handler;
    }
 }
-func pop(nil) {
+handler = tky_bg_handler;
+
+func tky_bg_pop(nil) {
    self = use();
    if(self.data(*)) {
       item = self.data(1);
@@ -101,10 +106,14 @@ func pop(nil) {
       return [];
    }
 }
-func append(item) {
+pop = tky_bg_pop;
+
+func tky_bg_append(item) {
    use, data;
    save, data, string(0), item;
 }
+append = tky_bg_append;
+
 tky_bg = restore(temp);
 restore, scratch;
 
