@@ -777,6 +777,75 @@ func struct_cast(&data, dest, verbose=, special=) {
       return result;
 }
 
+func batch_struct_cast(dir, dest_struct, searchstr=, files=, outdir=, special=,
+suffix_remove=, suffix=) {
+/* DOCUMENT batch_struct_cast, dir, dest_struct, searchstr=, files=, outdir=,
+   special=, suffix_remove=, suffix=
+
+   Runs struct_cast in batch mode.
+
+   Parameters:
+      dir: The directory containing the files to load.
+      dest_struct: Structure to cast the files to. (See struct_cast.)
+
+   Options:
+      searchstr= Search string used to find files.
+            searchstr= "*.pbd"      (Default)
+      files= Array of files to process. If provides, suppresses use of dir and
+         searchstr=.
+      outdir= Output directory where the converted files should go. Default is
+         in the same as the source directory.
+      special= Enables special mode (on by default), see struct_cast.
+      suffix_remove= A suffix to remove from all files.
+            suffix_remove=".pbd"    (Default)
+      suffix= A suffix to add to all files
+            suffix=".pbd"           (Default)
+*/
+   default, searchstr, "*.pbd";
+   default, suffix_remove, ".pbd";
+   default, suffix, ".pbd";
+   if(is_void(files)) {
+      files = find(dir, glob=searchstr);
+      if(is_void(files)) {
+         write, "No files found.";
+         return;
+      }
+      sizes = double(file_size(files));
+      srt = sort(-sizes);
+      files = files(srt);
+      sizes = sizes(srt);
+      srt = [];
+   } else {
+      sizes = double(file_size(files));
+   }
+   if(numberof(sizes) > 1)
+      sizes = sizes(cum)(2:);
+
+   local err, vname;
+   count = numberof(files);
+   t0 = tp = array(double, 3);
+   timer, t0;
+   for(i = 1; i <= count; i++) {
+      data = pbd_load(files(i), err, vname);
+      if(strlen(err))
+         continue;
+
+      outfile = files(i);
+      if(!is_void(outdir))
+         outfile = file_join(outdir, file_tail(outfile));
+      if(strpart(outfile, 1-strlen(suffix_remove):) == suffix_remove)
+         outfile = strpart(outfile, :-strlen(suffix_remove));
+      outfile += suffix;
+
+      struct_cast, data, dest_struct, special=special;
+      pbd_save, outfile, vname, data;
+      data = [];
+
+      timer_remaining, t0, sizes(i), sizes(0), tp, interval=5;
+   }
+   timer_finished, t0;
+}
+
 func uniq_data(data, idx=, bool=, mode=, forcesoe=, forcexy=, enablez=) {
 /* DOCUMENT uniq_data(data, idx=, bool=, mode=, forcesoe=, forcexy=, enablez=)
    Returns the unique data in the given array.
