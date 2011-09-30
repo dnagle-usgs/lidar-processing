@@ -183,10 +183,10 @@ func obj_grow(util, this, .., ref=, size=, exclude=) {
    return this;
 }
 
-scratch = save(scratch, tmp);
+scratch = save(scratch, tmp, obj_grow_dummy_array, obj_grow_find_needed);
 tmp = save(dummy_array, find_needed);
 
-func dummy_array(val, size) {
+func obj_grow_dummy_array(val, size) {
 // Utility function for obj_grow
 // Creates a dummy array with struct and dimensionf of VAL, except that its
 // leading dimension is changed to SIZE.
@@ -194,8 +194,9 @@ func dummy_array(val, size) {
    dims(2) = size;
    return array(structof(val), dims);
 }
+dummy_array = obj_grow_dummy_array;
 
-func find_needed(obj, ref, sizekey, exclude, &size, &need) {
+func obj_grow_find_needed(obj, ref, sizekey, exclude, &size, &need) {
 // Utility function for obj_grow
 // For a given object, finds the dimension size of its growable members and
 // determines which members need to be grown
@@ -256,6 +257,7 @@ func find_needed(obj, ref, sizekey, exclude, &size, &need) {
    if(!is_void(last_need))
       need(:numberof(last_need)) &= last_need;
 }
+find_needed = obj_grow_find_needed;
 
 obj_grow = closure(obj_grow, restore(tmp));
 restore, scratch;
