@@ -969,8 +969,9 @@ func tile_extent_shapefile(fn, dir, searchstr=, files=, usedirnames=, restrict=)
          to be ignored. This should be an array of strings. Each string should
          be a filename. (You can also provide an array of tile names and that
          will also work.)
-      usedirnames= When enabled, tile names will attempt to be parsed from the
-         directory names if a tile cannot be parsed from the file name.
+      usedirnames= When enabled, tile names will be parsed from the directory
+         names as well as the file names. This is recusive to all parent
+         directories.
             usedirnames=0        Do not use directory names for tiles (default)
             usedirnames=1        Attempt to use directory names for tiles
       restrict= Restrict the type of tiles that will be detected.
