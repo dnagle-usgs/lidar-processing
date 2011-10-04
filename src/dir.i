@@ -28,7 +28,7 @@ func file_dirname(re, fn) {
 }
 file_dirname = closure(file_dirname, regcomp("(.*)/[^/]*"));
 
-func file_tail(fn) {
+func file_tail(re, fn) {
 /* DOCUMENT file_tail(fn)
    Returns the last part of the path (the file's name). Similar to Tcl's "file
    tail". Works on arrays.
@@ -36,14 +36,15 @@ func file_tail(fn) {
    See also: file_dirname file_extension file_rootname split_path
 */
    slash = match = [];
-   regmatch, ".*(/)([^/]*)", fn, , slash, match;
+   regmatch, re, fn, , slash, match;
    w = where(!strlen(match) & !strlen(slash));
    if(numberof(w))
       match(w) = fn(w);
    return match;
 }
+file_tail = closure(file_tail, regcomp(".*(/)([^/]*)"));
 
-func file_extension(fn) {
+func file_extension(re, fn) {
 /* DOCUMENT file_extension(fn)
    Returns all characters in fn after and including the last dot in the last
    element in name, or the empty string. Similar to Tcl's "file extension".
@@ -52,11 +53,12 @@ func file_extension(fn) {
    See also: file_dirname file_tail file_rootname split_path
 */
    match = [];
-   regmatch, ".*(\\..*)", file_tail(fn), , match;
+   regmatch, re, file_tail(fn), , match;
    return match;
 }
+file_extension = closure(file_extension, regcomp(".*(\\..*)"));
 
-func file_rootname(fn) {
+func file_rootname(re, fn) {
 /* DOCUMENT file_rootname(fn)
    Returns all characters in fn up to but not including the last "." character
    in the last component of fn. If it doesn't contain a dot, then it returns
@@ -65,12 +67,13 @@ func file_rootname(fn) {
    See also: dir_dirname file_tail file_extension split_path
    */
    match = dot = [];
-   regmatch, "(.*)(\\.)[^\\./]*", fn, , match, dot;
+   regmatch, re, fn, , match, dot;
    w = where(!strlen(match) & !strlen(dot));
    if(numberof(w))
       match(w) = fn(w);
    return match;
 }
+file_rootname = closure(file_rootname, regcomp("(.*)(\\.)[^\\./]*"));
 
 func file_split(fn) {
 /* DOCUMENT file_split(fn)
