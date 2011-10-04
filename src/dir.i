@@ -13,12 +13,16 @@ func file_dirname(fn) {
    wnull = where(match == string(0));
    wroot = where(strpart(fn, 1:1) == "/");
    if(numberof(wnull)) {
-      wdot = set_difference(wnull, wroot);
-      wslash = set_intersection(wnull, wroot);
-      if(numberof(wdot))
-         match(wdot) = ".";
-      if(numberof(wslash))
-         match(wslash) = "/";
+      if(is_scalar(match)) {
+         match = numberof(wroot) ? "/" : ".";
+      } else {
+         wdot = set_difference(wnull, wroot);
+         wslash = set_intersection(wnull, wroot);
+         if(numberof(wdot))
+            match(wdot) = ".";
+         if(numberof(wslash))
+            match(wslash) = "/";
+      }
    }
    return match;
 }
