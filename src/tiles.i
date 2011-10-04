@@ -1002,7 +1002,7 @@ func tile_extent_shapefile(fn, dir, searchstr=, files=, usedirnames=, restrict=)
       error, "No files found";
    tiles = extract_tile(file_tail(files), dtlength="short", dtprefix=1);
    if(nallof(tiles) && usedirnames) {
-      dirs = set_remove_duplicates(files(where(!tiles)));
+      dirs = files;
       tiles = [&tiles];
       while(numberof(dirs)) {
          dirs = set_remove_duplicates(file_dirname(dirs));
