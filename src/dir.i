@@ -1,7 +1,7 @@
 // vim: set ts=3 sts=3 sw=3 ai sr et:
 require, "eaarl.i";
 
-func file_dirname(fn) {
+func file_dirname(re, fn) {
 /* DOCUMENT file_dirname(fn)
    Returns everything in the path except the last part. Similar to Tcl's "file
    dirname". Works on arrays.
@@ -9,7 +9,7 @@ func file_dirname(fn) {
    See also: file_tail file_extension file_rootname split_path
 */
    match = [];
-   regmatch, "(.*)/[^/]*", fn, , match;
+   regmatch, re, fn, , match;
    wnull = where(match == string(0));
    wroot = where(strpart(fn, 1:1) == "/");
    if(numberof(wnull)) {
@@ -26,6 +26,7 @@ func file_dirname(fn) {
    }
    return match;
 }
+file_dirname = closure(file_dirname, regcomp("(.*)/[^/]*"));
 
 func file_tail(fn) {
 /* DOCUMENT file_tail(fn)

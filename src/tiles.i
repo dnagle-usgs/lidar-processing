@@ -951,9 +951,9 @@ remove_buffers=, dtlength=, dtprefix=, qqprefix=, mode=, verbose=) {
    return set_remove_duplicates(merge_pointers(unref(tile_lists)));
 }
 
-func tile_extent_shapefile(fn, dir, searchstr=, files=) {
-/* DOCUMENT tile_extent_shapefile(fn, dir, searchstr=)
-   -or- tile_extent_shapefile(fn, files=)
+func tile_extent_shapefile(fn, dir, searchstr=, files=, usedirnames=, restrict=) {
+/* DOCUMENT tile_extent_shapefile(fn, dir, searchstr=, usedirnames=, restrict=)
+   -or- tile_extent_shapefile(fn, files=, usedirnames=, restrict=)
 
    Creates an ASCII shapefile with polygons for each tile represented by the
    given data. Each tile will have a closed polygon (a square) created with
@@ -969,6 +969,16 @@ func tile_extent_shapefile(fn, dir, searchstr=, files=) {
          to be ignored. This should be an array of strings. Each string should
          be a filename. (You can also provide an array of tile names and that
          will also work.)
+      usedirnames= When enabled, tile names will attempt to be parsed from the
+         directory names if a tile cannot be parsed from the file name.
+            usedirnames=0        Do not use directory names for tiles (default)
+            usedirnames=1        Attempt to use directory names for tiles
+      restrict= Restrict the type of tiles that will be detected.
+            restrict=[]       (or omitted) Do not restrict, default
+            restrict="dt"     Restrict to 2km tiles
+            restrict="2km"    Restrict to 2km tiles
+            restrict="it"     Restrict to 10km tiles
+            restrict="10km"   Restrict to 10km tiles
    Notes:
       - This is only intended for use on 2km and 10km tiles.
       - This will not work for quarter-quads. Attempting to use for
@@ -983,14 +993,35 @@ func tile_extent_shapefile(fn, dir, searchstr=, files=) {
 */
 // Original 2011-06-17 David Nagle
    default, searchstr, "*.pbd";
+   default, usedirnames, 0;
 
    if(is_void(files))
       files = find(dir, glob=searchstr);
    if(!numberof(files))
       error, "No files found";
    tiles = extract_tile(file_tail(files), dtlength="short", dtprefix=1);
+   if(nallof(tiles) && usedirnames) {
+      dirs = set_remove_duplicates(files(where(!tiles)));
+      tiles = [&tiles];
+      while(numberof(dirs)) {
+         dirs = set_remove_duplicates(file_dirname(dirs));
+         grow, tiles, &extract_tile(file_tail(dirs), dtlength="short", dtprefix=1);
+         dirs = set_difference(dirs, [".", "/"]);
+      }
+      tiles = merge_pointers(tiles);
+   }
    tiles = tiles(where(tiles));
+   if(!numberof(tiles))
+      error, "No tiles found";
    tiles = set_remove_duplicates(tiles);
+   if(restrict == "dt" || restrict == "2km") {
+      w = where(strpart(tiles, 1:2) == "t_");
+      tiles = numberof(w) ? tiles(w) : [];
+   }
+   if(restrict == "it" || restrict == "10km") {
+      w = where(strpart(tiles, 1:2) == "i_");
+      tiles = numberof(w) ? tiles(w) : [];
+   }
    if(!numberof(tiles))
       error, "No tiles found";
 
