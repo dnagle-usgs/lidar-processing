@@ -986,8 +986,13 @@ func tile_extent_shapefile(fn, dir, searchstr=, files=) {
 
    if(is_void(files))
       files = find(dir, glob=searchstr);
+   if(!numberof(files))
+      error, "No files found";
    tiles = extract_tile(file_tail(files), dtlength="short", dtprefix=1);
+   tiles = tiles(where(tiles));
    tiles = set_remove_duplicates(tiles);
+   if(!numberof(tiles))
+      error, "No tiles found";
 
    key = strsplit(tiles, "_");
    // First, descending by northing
