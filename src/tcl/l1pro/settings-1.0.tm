@@ -55,9 +55,6 @@ proc ::l1pro::settings::ops_conf::gui {} {
     wm title $w "ops_conf Settings"
 
     ttk::frame $w.f
-    grid $w.f -sticky news
-    grid columnconfigure $w 0 -weight 1
-    grid rowconfigure $w 0 -weight 1
     set f $w.f
 
     set var [namespace which -variable v::ops_conf]
@@ -79,6 +76,10 @@ proc ::l1pro::settings::ops_conf::gui {} {
     gui_spinbox $f max_sfc_sat -100 100 1
 
     grid columnconfigure $w.f 1 -weight 1
+
+    grid $w.f -sticky news
+    grid columnconfigure $w 0 -weight 1
+    grid rowconfigure $w 0 -weight 1
 
     bind $f <Enter> [namespace which -command gui_refresh]
     bind $f <Visibility> [namespace which -command gui_refresh]
