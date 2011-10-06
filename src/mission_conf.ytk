@@ -714,6 +714,11 @@ namespace eval mission {
             $w.entBath $w.entCir $w.entRgbDir $w.entRgbTar \
             -side top -pady 5 -padx 10 -fill x -expand yes
 
+        # On some systems, the window comes up with too-small dimensions
+        # because it was allocated prior to the packing of its contents. This
+        # ensures that it gets resized to accomodate its contents.
+        ::misc::idle [list wm geometry $dlg {}]
+
         set prompt_user 1
         while {$prompt_user} {
             set missing_needed 0
