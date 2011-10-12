@@ -2,8 +2,11 @@
 # vim: set tabstop=3 softtabstop=3 shiftwidth=3 shiftround autoindent expandtab:
 
 package require fileutil
-package require dict
 package require cmdline
+
+if {[info commands dict] ne "dict"} {
+   package require dict
+}
 
 # Summarizes the contents of an Index_Tiles directory. To use, change directory
 # to /path/to/my/data/Index_Tiles (or similar) and run:
