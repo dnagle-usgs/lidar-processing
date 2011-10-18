@@ -173,6 +173,9 @@ kdeline=, kernel=, bandwidth=, kdesample=, title=, xtitle=, ytitle=) {
   else
     data2xyz, unref(data), , , z, mode=mode;
 
+  // Collapse into vector. (Needed for EAARL raster format data.)
+  z = z(*);
+
   if(is_void(binsize)) {
     zrng = z(max)-z(min);
     binsize = 1/(1+exp(-((zrng-100)/20.)))*.2+.1;
