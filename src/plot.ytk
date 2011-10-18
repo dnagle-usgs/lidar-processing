@@ -105,11 +105,6 @@ proc ::plot::menu { } {
    $nb insert end map -text "Coastline"
    $nb insert end plan -text "Flight Plan"
 
-   grid $nb -sticky news
-   grid rowconfigure $w 0 -weight 1
-   grid columnconfigure $w 0 -weight 1
-   $nb raise settings
-
    set pane [$nb getframe interact]
 
    set f $pane.fraButtons
@@ -539,6 +534,11 @@ proc ::plot::menu { } {
 
    grid rowconfigure $pane 0 -weight 1
    grid columnconfigure $pane 0 -weight 1
+
+   grid $nb -sticky news
+   grid rowconfigure $w 0 -weight 1
+   grid columnconfigure $w 0 -weight 1
+   $nb raise settings
 }
 
 proc ::plot::replot_all { } {
