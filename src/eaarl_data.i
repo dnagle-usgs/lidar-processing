@@ -360,7 +360,7 @@ func xyz2data(_x, &_y, _z, &data, mode=, native=) {
   default, native, 0;
 
   // Extract arguments
-  if(is_void(z)) {
+  if(is_void(_z)) {
     splitary, unref(_x), 3, x, y, z;
     working = (_y);
   } else {
