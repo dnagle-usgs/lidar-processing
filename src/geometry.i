@@ -1225,3 +1225,20 @@ func poly_normalize(&x, &y) {
   }
 }
 
+func poly1_interp(y, x, m, xp, weights=) {
+/* DOCUMENT yp = poly1_interp(y, x, m, xp, weights=)
+   Interpolates using a polynomial fit. This is a simple wrapper around poly1
+   and poly1_fit as so:
+      poly1(xp, poly1_fit(y, x, m, weights))
+*/
+   return poly1(xp, poly1_fit(y, x, m, weights));
+}
+
+func poly2_interp(y, x1, x2, m, xp1, xp2, weights=) {
+/* DOCUMENT yp = poly2_interp(y, x1, x2, m, xp1, xp2, weights=)
+   Interpolates using a polynomial fit. This is a simple wrapper around poly2
+   and poly2_fit as so:
+      poly2(xp1, xp2, poly2_fit(y, x1, x2, m, weights))
+*/
+   return poly2(xp1, xp2, poly2_fit(y, x1, x2, m, weights));
+}
