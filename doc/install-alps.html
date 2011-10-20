@@ -627,9 +627,12 @@
   If you only want to upgrade one of the major components (<strong
   class="command">python</strong>, which includes Mercurial; <strong
   class="command">rlwrap</strong>; <strong class="command">yorick</strong>,
-  which includes all yorick-related plugins; or <strong
-  class="command">tcl</strong>), it's pretty easy to do so. Just run one of the
-  following four commands:
+  which includes all yorick-related plugins; <strong
+  class="command">tcl</strong>, which includes all Tcl-related extensions;
+  <strong class="command">gdal</strong>, or <strong
+  class="command">magick</strong>), it's pretty easy to do so. Just run one of
+  the
+  following commands:
 </p>
 
 <pre class="code">
@@ -637,10 +640,12 @@
 <span class="command">make</span> easy-yorick
 <span class="command">make</span> easy-rlwrap
 <span class="command">make</span> easy-tcl
+<span class="command">make</span> easy-gdal
+<span class="command">make</span> easy-magick
 </pre>
 
 <p>
-  The normal installation/upgrade procedure includes all four lines plus
+  The normal installation/upgrade procedure includes all those lines plus
   additional items. If you installed to an alternate location, you must also
   specify your <strong class="variable">prefix</strong>. For example:
 </p>
