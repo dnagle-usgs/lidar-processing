@@ -115,6 +115,7 @@
   <li><a href="#need_devel">Missing development packages</a></li>
   <li><a href="#need_sudo">Installing with sudo</a></li>
   <li><a href="#disable_rlwrap">Problems with rlwrap</a></li>
+  <li><a href="#fixed_width">GUIs have fixed-width font</a></li>
   <li><a href="#distclean">Modified configuration</a></li>
   </ul>
 </li>
@@ -517,6 +518,32 @@
 <p>
   The above will set <strong class="variable">rlwrapsrc</strong> to a null
   value, effectively disabling it.
+</p>
+
+<h2 id="fixed_width">GUIs have fixed-width font</h2>
+
+<p>
+  When you start ALPS, the GUIs should use a "normal" looking font. If they
+  start up using a fixed-width font (like Courier), that indicates that one of
+  the necessary development packages wasn't present during installation.
+</p>
+
+<p>
+  To fix this problem, you'll need to install the XFT library development
+  package (named something like libXft-devel or libxft-dev); see <a
+  href="#need_devel">Missing development packages</a> for details.
+</p>
+
+<p>
+  Next, you'll need to repeat the installation process. Make sure you review <a
+  href="#distclean">Modified configuration</a> first.
+</p>
+
+<p>
+  Since the only part of the installation affected by this issue is Tcl/Tk, you
+  can speed up the re-installation process by only re-installing Tcl/Tk.
+  Directions for how to do so are provided under <a
+  href="#upgrade_selective">Selective upgrade</a>.
 </p>
 
 <h2 id="distclean">Modified configuration</h2>
