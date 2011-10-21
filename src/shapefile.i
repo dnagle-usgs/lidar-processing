@@ -30,7 +30,7 @@ func read_ascii_shapefile(filename, &meta) {
    shp_idx = 0;
    state = "TOP";
    ary = [];
-   meta = h_new();
+   meta = save();
    while(1) {
       line = rdline(f);
       if(strglob("*=*", line)) {
@@ -47,10 +47,9 @@ func read_ascii_shapefile(filename, &meta) {
             // do nothing with the data
             state = "ATTR";
             parts = strtok(line, "=");
-            si = swrite(format="%d", shp_idx+1);
-            if(! h_has(meta, si))
-               h_set, meta, si, h_new();
-            h_set, meta(si), parts(1), strtrim(parts(2), blank=" \t\r\n");
+            while(meta(*) <= shp_idx)
+               save, meta, string(0), save();
+            save, meta(shp_idx+1), parts(1), strtrim(parts(2), blank=" \t\r\n");
          } else {
             // invalid
             error, "Unexpected attribution in " + state;
@@ -98,6 +97,8 @@ func read_ascii_shapefile(filename, &meta) {
    }
    close, f;
    shp = shp(:shp_idx);
+   while(meta(*) < shp_idx)
+      save, meta, string(0), save();
    return shp;
 }
 
@@ -544,23 +545,18 @@ func polygon_read(filename) {
    extern _poly_polys;
    extern _poly_names;
    new_polys = read_ascii_shapefile(filename, meta);
-   new_names = array(string(0), dimsof(new_polys));
+   new_names = array(string, dimsof(new_polys));
+   base = file_rootname(file_tail(filename));
    for(i = 1; i <= numberof(new_polys); i++) {
-      si = swrite(format="%d", i);
-      if(h_has(meta, si)) {
-         this_meta = meta(si);
-         if(h_has(this_meta, "NAME")) {
-            new_names(i) = this_meta("NAME");
-         }
-      }
+      if(meta(noop(i))(*,"NAME"))
+         new_names(i) = meta(noop(i))("NAME");
+      else if(meta(noop(i))(*,"TILE_NAME"))
+         new_names(i) = swrite(format="%s_%s", base, meta(noop(i))("TILE_NAME"));
+      else
+         new_names(i) = swrite(format="%s_%d", base, i);
    }
-   if(noneof(new_names)) {
-      new_names = swrite(format="%s_%d", file_rootname(file_tail(filename)),
-         indgen(numberof(new_names)));
-   }
-   w = where(new_names);
-   grow, _poly_polys, new_polys(w);
-   grow, _poly_names, new_names(w);
+   grow, _poly_polys, new_polys;
+   grow, _poly_names, new_names;
 
    polygon_sanitize;
    polygon_refresh_tcl;
