@@ -65,11 +65,12 @@ styleUrl=) {
       styleUrl=styleUrl);
 }
 
-__kml_randomcolor = random();
-func kml_randomcolor(void) {
-   extern __kml_randomcolor;
-   __kml_randomcolor += 0.195 + random()/1000.;
-   __kml_randomcolor %= 1.;
-   rgb = hsl2rgb(__kml_randomcolor, random()*.2+.8, random()*.1+.45);
+func kml_randomcolor(data, void) {
+   hue = data.hue;
+   hue += 0.195 + random()/1000.;
+   hue %= 1.;
+   save, data, hue;
+   rgb = hsl2rgb(hue, random()*.2+.8, random()*.1+.45);
    return kml_color(rgb(1), rgb(2), rgb(3));
 }
+kml_randomcolor = closure(kml_randomcolor, save(hue=random()));
