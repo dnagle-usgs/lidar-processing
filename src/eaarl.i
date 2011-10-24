@@ -93,6 +93,7 @@ if(is_void(__eaarl_includes_included__)) {
    require, "json_decode.i";
    require, "json_encode.i";
    require, "kml.i";
+   require, "kml_flightlines.i";
    require, "kml_jgw.i";
    require, "kml_markup.i";
    require, "las.i";
