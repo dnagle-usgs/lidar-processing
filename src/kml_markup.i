@@ -19,6 +19,39 @@ func kml_color(r, g, b, a) {
    return swrite(format="%02x%02x%02x%02x", short(a), short(b), short(g), short(r));
 }
 
+local kml_Document, kml_Style, kml_BalloonStyle, kml_IconStyle, kml_LineStyle,
+   kml_ListStyle, kml_PolyStyle, kml_Folder, kml_Placemark, kml_NetworkLink,
+   kml_Feature, kml_Snippet, kml_MultiGeometry, kml_LineString, kml_Point,
+   kml_coordinates, kml_Link, kml_Region, kml_LatLonBox, kml_Icon,
+   kml_GroundOverlay;
+/* DOCUMENT kml_Document kml_Style kml_BalloonStyle kml_IconStyle kml_LineStyle
+   kml_ListStyle kml_PolyStyle kml_Folder kml_Placemark kml_NetworkLink
+   kml_Feature kml_Snippet kml_MultiGeometry kml_LineString kml_Point
+   kml_coordinates kml_Link kml_Region kml_LatLonBox kml_Icon kml_GroundOverlay
+
+   The above functions each correspond directly to the KML tags they are named
+   for. These functions are constructed such that:
+
+      - Many of them take one or more positional arguments, which should be
+        strings or arrays of strings. Such strings will be wrapped within the
+        tag the function is named for.
+
+      - Many of them take one or more named optional arguments, which should
+        generally be strings. These arguments are either attributes on the tag
+        (such as id=) or are simple sub-tags that are often/always associated
+        with the tag.
+
+   As an example, consider kml_Link, which has the signature:
+
+      func kml_Link(items,..,id=,href=)
+
+   In the KML spec, the "Link" tag has one attribute, "id". It commonly
+   contains the tag "href". It also may contain other tags, but they'd have to
+   be passed in as string data as one of the ITEMS arguments.
+
+   SEE ALSO: kml_element kml_color
+*/
+
 func kml_Document(items, .., id=, name=, visibility=, Open=, description=,
 styleUrl=) {
    while(more_args())
