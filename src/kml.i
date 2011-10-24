@@ -58,6 +58,12 @@ func kmz_create(dest, files, ..) {
 
 func kml_save(fn, items, .., id=, name=, visibility=, Open=, description=,
 styleUrl=) {
+/* DOCUMENT kml_save, fn, items, items, ..., id=, name=, visibility=, Open=,
+   description=, styleUrl=
+   Saves the given items, which should be properly-formatted KML elements as
+   strings or string arrays, as a KML file. Items and all options are passed
+   through to kml_Document to construct the final data to be written to file.
+*/
    while(more_args())
       grow, items, next_arg();
    write, open(fn, "w"), format="%s\n", kml_Document(items, id=id, name=name,
@@ -66,8 +72,15 @@ styleUrl=) {
 }
 
 func kml_randomcolor(data, void) {
+/* DOCUMENT kml_randomcolor()
+   Returns a semi-random color, formatted in KML-appropriate notation. Each
+   time this is called, the hue is shifted by a random amount between 0.195 and
+   0.196 (which means it cycles through the spectrum of hues every ~5 calls).
+   The saturation value will be a random value between 0.8 and 1.0, and the
+   lightness will be a random value between .45 and .55.
+*/
    hue = data.hue;
-   hue += 0.195 + random()/1000.;
+   hue += 0.195 + random()*0.001;
    hue %= 1.;
    save, data, hue;
    rgb = hsl2rgb(hue, random()*.2+.8, random()*.1+.45);
