@@ -40,7 +40,7 @@ proc copy_points_using_tile {} {
 }
 
 proc filter_remove {} {
-    global varlist rmv_var plot_settings pro_var
+    global varlist rmv_var plot_settings pro_var remove_type
     destroy .rem
     toplevel .rem
     frame .rem.05
