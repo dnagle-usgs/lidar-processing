@@ -39,6 +39,7 @@ installer packages are typically available on lidar.net under
       their own directories
     - Python changes:
         - Replaced setuptools with distribute 0.6.21
+    - Removed support for installing ActiveTcl
 
 2011-09-14
     - Revised Makefile
@@ -93,6 +94,8 @@ installer packages are typically available on lidar.net under
 
 2010-10-12
     - Revised Makefile
+    - Tcl configured to install tcllib84 as well as tcllib85.
+    - Tcl configured to install getstring.
     - Upgraded Yorick to CVS revision as of 2010-10-12
     - Updated ALPS repository clone to tip 352cd05f786e
 
@@ -147,6 +150,12 @@ installer packages are typically available on lidar.net under
 2010-04-16
     - Revised Makefile
     - Revised alpstcl
+    - Tcl configured to install additional packages:
+        - json
+        - math
+        - tar
+        - tcllib85 (replaced tcllib)
+        - uuid
     - Updated static copy of ALPS repository
 
 2010-04-02
@@ -165,3 +174,37 @@ installer packages are typically available on lidar.net under
     - yorick-z 1.2
     - a static export of the ALPS repository
     - stub directory contents for share
+    Also had support for installing ActiveTcl, which had to be downloaded
+    separately. Tcl was configured to have these packages:
+    - BWidget
+    - Expect
+    - Img
+    - Itk
+    - Iwidgets
+    - Tktable
+    - Tclx
+    - dict
+    - getstring
+    - img::base
+    - img::bmp
+    - img::gif
+    - img::ico
+    - img::jpeg
+    - img::pcx
+    - img::pixmap
+    - img::png
+    - img::ppm
+    - img::ps
+    - img::sgi
+    - img::sun
+    - img::tga
+    - img::tiff
+    - img::window
+    - img::xbm
+    - img::xpm
+    - jpegtcl
+    - pngtcl
+    - tcllib
+    - tifftcl
+    - tooltip
+    - zlibtcl
