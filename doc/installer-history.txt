@@ -1,0 +1,167 @@
+This file documents the changes made to the ALPS installer package. These
+installer packages are typically available on lidar.net under
+/mnt/alps/eaarl/install/.
+
+2011-11-01
+    - Tcl changes:
+        - Revised Makefile
+        - Downgraded Tcl to 8.5.9 due to major Tk bug in Tk 8.5.10
+        - Downgraded Tk to 8.5.9 due to major Tk bug in Tk 8.5.10
+        - Upgraded tcllib to CVS revision 2011-11-01
+        - Upgraded Tkcon to CVS revision 2011-11-01
+        - Upgraded tklib to CVS revision 2011-11-01
+    - Yorick changes:
+        - Upgraded Yorick to Git revision 2011-11-01
+        - Upgraded Yorick-Z to Git revision 2011-11-01
+    - Updated ALPS repository clone to tip b192d8510f16
+
+2011-10-17
+    - Tcl changes:
+        - Revised Makefile
+        - Added Memchan 2.3
+        - Added sqlite 3070800
+        - Added TclOO 0.6
+        - Added thread 2.6.7
+        - Added tktreectrl 2.4
+        - Added tls CVS revision as of 2011-10-13
+        - Added trf 2.1.4
+        - Added trofs 0.4.4
+        - Added zlib
+    - Updated ALPS repository clone to tip a950805aaad1
+
+2011-10-11
+    - Revised all Makefiles
+    - Updated ALPS repository clone to tip 7238b296c87b
+
+2011-09-25
+    - Revised Makefile, splitting into sub-Makefiles
+    - Reorganized sources to put Tcl, Python, and Yorick related stuff each in
+      their own directories
+    - Python changes:
+        - Replaced setuptools with distribute 0.6.21
+
+2011-09-14
+    - Revised Makefile
+    - Restored share
+    - Added GDAL 1.8.1
+    - Upgraded ImageMagick to 6.7.2-6
+    - Updated ALPS repository clone to tip 5168a016944a
+    - Python changes:
+        - Upgraded Python to 2.7.2
+        - Upgraded Mercurial to 1.9.2
+        - Upgraded paramiko to 1.7.7.1
+    - Yorick changes:
+        - Upgraded yutils to Git revision as of 2011-09-13
+    - Removed readline (no longer including in installer)
+    - Removed alpstcl
+    - Added source-based Tcl/Tk installation, including:
+        - Tcl 8.5.10
+        - Tk 8.5.10
+        - bwidget CVS revision as of 2011-09-13
+        - Expect CVS revision as of 2011-09-13
+        - incrTcl CVS revision as of 2011-09-07
+        - iwidgets CVS revision as of 2011-09-07
+        - tcllib CVS revision as of 2011-09-13
+        - tclvfs CVS revision as of 2011-09-07
+        - tclx CVS revision as of 2011-09-08
+        - tkcon CVS revision as of 2011-09-12
+        - tkimg SVN revision as of 2011-09-13
+        - tklib CVS revision as of 2011-09-13
+        - Tktable CVS revision as of 2011-09-13
+
+2011-04-13
+    - Upgraded ImageMagick to 6.6.9-4
+    - Upgraded Mercurial to 1.8.2
+    - Upgraded Python to 2.7.1
+    - Upgraded readline to 6.2
+    - Upgraded Yeti to 6.3.2
+    - Upgraded Yorick to Git revision as of 2011-04-13
+    - Upgraded imutil to Git revision as of 2011-04-13
+    - Upgraded yutils to Git revision as of 2011-04-13
+    - Upgraded Yorick-Z to Git revision as of 2011-04-13
+    - Updated ALPS repository clone to tip d92dbb3f7ffc
+    - Removed share (inadvertent)
+
+2010-11-17
+    - Revised Makefile
+    - Updated ALPS repository clone to tip ed92b64dc7ba
+    - Upgraded Mercurial to 1.7.1
+    - Added docutils snapshot
+    - Added paramiko 1.7.4
+    - Added pycrypto 2.3
+    - Added setuptools 0.6c11
+
+2010-10-12
+    - Revised Makefile
+    - Upgraded Yorick to CVS revision as of 2010-10-12
+    - Updated ALPS repository clone to tip 352cd05f786e
+
+2010-09-20
+    - Revised Makefile
+    - Revised alpstcl
+    - Upgraded ImageMagick to 6.6.4-4
+    - Upgraded Yorick to CVS revision as of 2010-09-20
+    - Updated ALPS repository clone to tip 6270f0d1a3a2
+
+2010-08-30
+    - Upgraded Yorick to CVS revision as of 2010-08-30
+    - Updated ALPS repository clone to tip 19f715f5a076
+
+2010-08-03
+    - Upgraded Yorick to CVS revision as of 2010-08-03 (unmarked)
+
+2010-07-23
+    - Upgraded Mercurial to 1.6
+    - Upgraded Python to 2.7
+    - Upgraded Yorick to CVS revision as of 2010-07-23
+    - Updated ALPS repository clone to tip b41b53768e1d
+
+2010-07-06
+    - Revised Makefile
+    - Replaced static copy of ALPS repository with Mercurial clone with tip
+      90476d714216
+
+2010-06-21
+    - Revised Makefile
+    - Added Mercurial 1.5.4
+    - Added Python 2.6.5
+    - Upgraded ImageMagick to 6.6.2-6
+    - Upgraded Yeti to 6.3.1
+    - Upgraded Yorick to CVS revision as of 2010-06-21
+    - Upgraded Yorick imutil to 0.5.6
+    - Upgraded Yorick yutils to CVS revision as of 2010-06-21
+    - Upgraded Yorick-Z to CVS revision as of 2010-06-21
+    - Updated static copy of ALPS repository
+
+2010-05-05
+    - Upgraded rlwrap to 0.37
+
+2010-04-26
+    - Revised Makefile
+    - Added ImageMagick 6.6.1-4
+    - Upgraded Yorick to CVS revision as of 2010-04-19
+    - Upgraded Yorick yutils to CVS revision as of 2010-04-19
+    - Upgraded Yorick-Z to CVS revision as of 2010-04-19
+    - Updated static copy of ALPS repository
+
+2010-04-16
+    - Revised Makefile
+    - Revised alpstcl
+    - Updated static copy of ALPS repository
+
+2010-04-02
+    - Revised Makefile
+    - Updated static copy of ALPS repository
+
+2010-04-01
+    First installer. Contained:
+    - alpstcl, a custom-compiled Tcl/Tk interpreter
+    - readline 6.1
+    - rlwrap 0.36
+    - yeti 6.2.5
+    - yorick 2.1
+    - yorick-imutil 0.5.4
+    - yorick-yutils 1.4.0
+    - yorick-z 1.2
+    - a static export of the ALPS repository
+    - stub directory contents for share
