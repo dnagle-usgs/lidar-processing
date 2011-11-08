@@ -269,14 +269,59 @@ func kml_GroundOverlay(items, .., id=, name=, visibility=, Open=, description=, 
       name=name, visibility=visibility, Open=Open, styleUrl=styleUrl);
 }
 
-func kml_element(name, items, .., id=) {
-   while(more_args())
-      grow, items, next_arg();
+func kml_element(args) {
+/* DOCUMENT kml_element(name, items, items, ..., attrib=, attrib=, ...)
+   Generates the code for a generic KML tag. NAME is the tag's name, ITEMS
+   should go inside the element, and ATTRIB= can be any arbitrary attribute
+   name. For example:
 
-   if(is_void(items))
-      return [];
+      > write, kml_element("foo","bar",a="b",c=42)
+       <foo a="b" c=42>bar</foo>
 
-   id = is_void(id) ? "" : swrite(format=" id=\"%s\"", id);
+   Some particulars:
+
+      - NAME must be a scalar string.
+      - ITEMS is normally a string or array of strings.
+      - Multiple ITEMS are merged into a single array.
+      - If only one ITEMS is present and it is scalar, it may optionally be
+        numerical. Floating point values will receive at most 6 decimal places.
+      - ATTRIB names can be anything valid as a Yorick keyword argument. The
+        value should be a scalar string or scalar number. (Scalar numbers are
+        handled as for ITEMS.)
+
+   If you need to use an attribute that isn't a valid Yorick keyword argument
+   name, you can fake it by passing it through as part of NAME, like so:
+
+      > write, kml_element("example 1attrib=42", "foo")
+*/
+   name = args(1);
+   if(!is_string(name))
+      error, "First argument must be a string (the tag name)";
+
+   items = [];
+   for(i = 2; i <= args(0); i++)
+      grow, items, args(i);
+   if(is_void(items)) items = string(0);
+
+   attribs = "";
+   keys = args(-);
+   for(i = 1; i <= numberof(keys); i++) {
+      key = keys(i);
+      val = args(key);
+      if(!is_string(val) && !is_integer(val) && !is_real(val))
+         val = swrite(val);
+      if(is_string(val)) {
+         attribs += swrite(format=" %s=\"%s\"", key, val);
+      } else if(is_integer(val)) {
+         attribs += swrite(format=" %s=%d", key, val);
+      } else {
+         len = 0;
+         while(len < 6 && long(val * 10 ^ len)/(10. ^ len) != val)
+            len++;
+         fmt = swrite(format=" %%s=%%.%df", len);
+         attribs += swrite(format=fmt, key, val);
+      }
+   }
 
    if(numberof(items) == 1 && !is_string(items(1))) {
       items = items(1);
@@ -296,7 +341,7 @@ func kml_element(name, items, .., id=) {
    single = numberof(items) == 1;
 
    if(single)
-      single = strlen(name) * 2 + strlen(id) + strlen(items(1)) <= 66;
+      single = strlen(name) * 2 + strlen(attribs) + strlen(items(1)) <= 66;
 
    if(single)
       single = !strmatch(items(1), "\n");
@@ -314,5 +359,6 @@ func kml_element(name, items, .., id=) {
       fmt = "<%s%s>\n%s\n</%s>";
    }
 
-   return swrite(format=fmt, name, id, items, name);
+   return swrite(format=fmt, name, attribs, items, name);
 }
+wrap_args, kml_element;
