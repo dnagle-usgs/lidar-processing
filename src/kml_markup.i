@@ -174,10 +174,7 @@ styleUrl=) {
 }
 
 func kml_Snippet(text, maxLines=) {
-   if(is_void(maxLines))
-      return swrite(format="<Snippet>%s</Snippet>", text);
-   else
-      return swrite(format="<Snippet maxLines=\"%d\">%s</Snippet>", maxLines, text);
+   return kml_element("Snippet", text, maxLines=maxLines);
 }
 
 func kml_MultiGeometry(items, .., id=) {
