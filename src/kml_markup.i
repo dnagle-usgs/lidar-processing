@@ -288,6 +288,7 @@ func kml_element(args) {
       - ATTRIB names can be anything valid as a Yorick keyword argument. The
         value should be a scalar string or scalar number. (Scalar numbers are
         handled as for ITEMS.)
+      - An ATTRIB can also have a void value, in which case it will be ignored.
 
    If you need to use an attribute that isn't a valid Yorick keyword argument
    name, you can fake it by passing it through as part of NAME, like so:
@@ -308,6 +309,9 @@ func kml_element(args) {
    for(i = 1; i <= numberof(keys); i++) {
       key = keys(i);
       val = args(key);
+      // Ignore void keywords
+      if(is_void(val))
+         continue;
       if(!is_string(val) && !is_integer(val) && !is_real(val))
          val = swrite(val);
       if(is_string(val)) {
