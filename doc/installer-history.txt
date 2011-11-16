@@ -1,6 +1,6 @@
 This file documents the changes made to the ALPS installer package. These
 installer packages are typically available on lidar.net under
-/mnt/alps/eaarl/install/.
+/mnt/alps/install/.
 
 2011-11-16
     - Python changes:
