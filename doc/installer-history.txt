@@ -2,6 +2,13 @@ This file documents the changes made to the ALPS installer package. These
 installer packages are typically available on lidar.net under
 /mnt/alps/eaarl/install/.
 
+2011-11-16
+    - Python changes:
+        - Revised Makefile
+        - Added Twisted 11.0.0
+        - Added zope.interface 3.8.0
+    - Updated ALPS repository clone to tip 74daf50a7406
+
 2011-11-01
     - Tcl changes:
         - Revised Makefile
