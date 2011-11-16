@@ -134,7 +134,6 @@
   <ul>
     <li><a href="#prep_scratch">From scratch</a></li>
     <li><a href="#prep_exist">From an existing installer</a></li>
-    <li><a href="#prep_nodata">The "-nodata" installer</a></li>
   </ul>
 </li>
 </ul>
@@ -846,7 +845,7 @@
   Create a copy of <strong class="directory">installer</strong> that you can
   then build up into an actual installer.
 <pre class="code">
-<span class="command">cp</span> -r <span class="directory"><span class="replaceable">~/</span>alps/lidar-processing/installer</span> <span class="directory"><span class="replaceable">~/</span>alpsinstall.<span class="replaceable">20100328</span></span>
+<span class="command">cp</span> -r <span class="directory"><span class="replaceable">~/</span>alps/lidar-processing/installer/pkg</span> <span class="directory"><span class="replaceable">~/</span>alpsinstall.<span class="replaceable">20100328</span></span>
 </pre>
 </li>
 <li>
@@ -873,18 +872,30 @@
   autodetects properly.
 </li>
 <li>
-  Add the GEOID files and map files under <strong
-  class="directory">share</strong>. It's probably easiest to obtain them from a
-  prior installation package.
+  Obtain a pre-existing copy of the data archive (<strong
+  class="file">alpsinstall.<span
+  class="replaceable">20100109</span>-data.tar.bz</strong>), typically from
+  lidar.net.
 </li>
 <li>
   Package everything together:
 <pre class="code">
-<span class="command">tar</span> cjvf <span class="file">alpsinstall.<span class="replaceable">20100328</span>.tar.bz2</span> <span class="directory">alpsinstall.<span class="replaceable">20100328</span></span>
+<span class="command">cd <strong class="file"><span class="replaceable">~/</span></strong>
+<span class="command">/opt/alps/installer/package_installer.sh</span> <strong class="directory">alpsinstall.<span class="replaceable">20100328</span></strong> <strong class="directory"><span class="replaceable">/mnt/alps/eaarl/installer/</span>alpsinstall.<span class="replaceable">20100109</span>-data.tar.bz</strong>
 </pre>
+  This will create four archive files: <strong class="file">alpsinstall.<span
+  class="replaceable">20100328</span>.tar.bz2</strong>, <strong
+  class="file">alpsinstall.<span
+  class="replaceable">20100328</span>-nodata.tar.bz2</strong>, <strong
+  class="file">alpsinstall.<span
+  class="replaceable">20100328</span>-data.tar.bz2</strong>, and <strong
+  class="file">alpsinstall.<span
+  class="replaceable">20100328</span>-master.tar.bz2</strong>.
 </li>
 <li>
-  Upload the installation package to lidar.net.
+  Upload the four installation packages to lidar.net. If appropriate, delete
+  the non-master packages from the previous installation package. (But never
+  delete the master package.)
 </li>
 </ol>
 
@@ -895,12 +906,12 @@
 </p>
 <ol>
 <li>
-  Obtain a prior copy of the installer.
+  Obtain a master version of a prior copy of the installer.
 </li>
 <li>
   Expand the installer archive.
 <pre class="code">
-<span class="command">tar</span> xjf <span class="file">alpsinstall.<span class="replaceable">20100328</span>.tar.bz2</span>
+<span class="command">tar</span> xjf <span class="file">alpsinstall.<span class="replaceable">20100328</span>-master.tar.bz2</span>
 </pre>
 </li>
 <li>
@@ -926,65 +937,31 @@
   downloading the new tar files, and expanding into the installation directory.
 </li>
 <li>
-  Add new GEOID files, if applicable.
-</li>
-<li>
-  Update the Makefile by copying from the repository.
+  Update the Makefiles and share directory by copying from the repository.
 <pre class="code">
 <span class="command">cd</span> <span class="directory"><span class="replaceable">~/</span>alpsinstall.<span class="replaceable">20110912</span></span>
-<span class="command">cp</span> -f <span class="file"><span class="replaceable">/opt/</span>alps/lidar-processing/install/Makefile<span> <span class="directory">./</span>
-</pre>
-</li>
-<li>
-  Update the share directory, if applicable.
-<pre class="code">
-<span class="command">cd</span> <span class="directory"><span class="replaceable">~/</span>alpsinstall.<span class="replaceable">20110912</span></span>
-<span class="command">cp</span> -af <span class="file"><span class="replaceable">/opt/</span>/alps/lidar-processing/install/share<span> <span class="directory">./</span>
+<span class="command">cp</span> -rf <span class="file"><span class="replaceable">/opt/</span>alps/lidar-processing/installer/pkg/*<span> <span class="directory">./</span>
 </pre>
 </li>
 <li>
   Package everything together:
 <pre class="code">
-<span class="command">tar</span> cjvf <span class="file">alpsinstall.<span class="replaceable">20100328</span>.tar.bz2</span> <span class="directory">alpsinstall.<span class="replaceable">20100328</span></span>
+<span class="command">cd <strong class="file"><span class="replaceable">~/</span></strong>
+<span class="command">/opt/alps/installer/package_installer.sh</span> <strong class="directory">alpsinstall.<span class="replaceable">20100328</span></strong> <strong class="directory"><span class="replaceable">/mnt/alps/eaarl/installer/</span>alpsinstall.<span class="replaceable">20100109</span>-data.tar.bz</strong>
 </pre>
+  This will create four archive files: <strong class="file">alpsinstall.<span
+  class="replaceable">20100328</span>.tar.bz2</strong>, <strong
+  class="file">alpsinstall.<span
+  class="replaceable">20100328</span>-nodata.tar.bz2</strong>, <strong
+  class="file">alpsinstall.<span
+  class="replaceable">20100328</span>-data.tar.bz2</strong>, and <strong
+  class="file">alpsinstall.<span
+  class="replaceable">20100328</span>-master.tar.bz2</strong>.
 </li>
 <li>
-  Upload the installation package to lidar.net.
-</li>
-</ol>
-
-<h2 id="prep_nodata">The -nodata installer</h2>
-<p>
-  The above directions all assume you are making a normal version with all of
-  the GEOID and maps data included. Making a <a href="#nodata_download">nodata
-  version</a> without that data requires only a few minor steps different from
-  the above.
-</p>
-<ol>
-<li>
-  Update the installer per either of the above sets of directions.
-</li>
-<li>
-  Remove the share directory and all it contains.
-<pre class="code">
-<span class="command">rm</span> -rf <span class="directory"><span class="replaceable">~/</span>alpsinstall.<span class="replaceable">20110912</span>/share</span>
-</pre>
-</li>
-<li>
-  Copy over the share directory from the repository.
-<pre class="code">
-<span class="command">cd</span> <span class="directory"><span class="replaceable">~/</span>alpsinstall.<span class="replaceable">20110912</span></span>
-<span class="command">cp</span> -af <span class="file"><span class="replaceable">/opt/</span>alps/lidar-processing/install/share<span> <span class="directory">./</span>
-</pre>
-</li>
-<li>
-  Package everything together:
-<pre class="code">
-<span class="command">tar</span> cjvf <span class="file">alpsinstall.<span class="replaceable">20100328</span>.tar.bz2</span> <span class="directory">alpsinstall-nodata.<span class="replaceable">20100328</span></span>
-</pre>
-</li>
-<li>
-  Upload the installation package to lidar.net.
+  Upload the four installation packages to lidar.net. If appropriate, delete
+  the non-master packages from the previous installation package. (But never
+  delete the master package.)
 </li>
 </ol>
 
