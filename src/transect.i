@@ -1,15 +1,15 @@
-// vim: set ts=3 sts=3 sw=3 ai sr et:
+// vim: set ts=2 sts=2 sw=2 ai sr et:
 require, "eaarl.i";
 
 /**********************************************************************
 
-   Transect.i
-   Original W. Wright 9/21/2003
+  Transect.i
+  Original W. Wright 9/21/2003
 
   Contains:
 
-    mtransect
-     transect
+   mtransect
+    transect
 
 
 *********************************************************************/
@@ -55,13 +55,13 @@ Input:
   color=     :  The starting color 1:7, use negative to use only 1 color
   xfma=      :  Set to 1 to auto fma.
   rtn=       :  Select return type where:
-                0  first return
-                1  veg last return
-                2  submerged topo
+           0  first return
+           1  veg last return
+           2  submerged topo
   show=      :  Set to 1 to plot the transect in window, win.
   rcf_parms= :  Filter output with [W, P], where
-                W = filter width
-                P = # points on either side to use as jury pool
+           W = filter width
+           P = # points on either side to use as jury pool
   msize=		 :  set msize value (same as plcm, etc.), default = .1
   marker=	 :  set marker value (same as plcm, etc.), default = 1
 
@@ -72,7 +72,7 @@ Examples:
   - Use fs_all as data source
   - Connect the dots in the output plot
   - rcf filter the output with a 1.0 meter filter width and use 5
-    points on either side of each point as the jury pool
+   points on either side of each point as the jury pool
   - auto fma
   - returns the index of the selected points in g.
   This example expects you to generate the line segment with the mouse.
@@ -112,13 +112,13 @@ See also: transect, _transect_history
   transect_line = mouse(1, 2, "")(1:4)*100.0;
   l = transect_line;   // just to keep the equations short;
   if (show)
-    plg, [l(2),l(4)]/100., [l(1),l(3)]/100., width=2.0, color="red";
+   plg, [l(2),l(4)]/100., [l(1),l(3)]/100., width=2.0, color="red";
   grow, _transect_history, [l]
  } else {
   if ( numberof(_transect_history) == 0 ) {
-    write, "No transect lines in _transect_history";
-    window_select, wbkp;
-    return;
+   write, "No transect lines in _transect_history";
+   window_select, wbkp;
+   return;
   }
   if ( recall > 0 ) recall = -recall;
   l = _transect_history(, recall);
@@ -126,32 +126,32 @@ See also: transect, _transect_history
   // if ( color > 0 ) --color;  // XYZZY adjust for nsegs starting at 1
 
   glst = transect( fs, l, connect=connect, color=color,xfma=xfma, rcf_parms=rcf_parms,rtn=rtn, owin=owin, lw=w, msize=msize, marker=marker );
-   // plot the actual points selected onto the input window
-   if (show == 2 ) {
-	  data2xyz, unref(fs(glst)), x, y, z, mode=["be","ba","fs"](rtn)
-	  window, iwin; plmk, unref(y), unref(x), msize=msize, marker=marker, color="black", width=10;
-	}
-     //show_track,fs(glst), utm=1, skip=0, color="red", lines=0, win=iwin;
+  // plot the actual points selected onto the input window
+  if (show == 2 ) {
+    data2xyz, unref(fs(glst)), x, y, z, mode=["be","ba","fs"](rtn)
+    window, iwin; plmk, unref(y), unref(x), msize=msize, marker=marker, color="black", width=10;
+  }
+    //show_track,fs(glst), utm=1, skip=0, color="red", lines=0, win=iwin;
   if (show == 3 ) {   // this only redraws the last transect selected.
-    window,iwin;
-    plg, [transect_line(2),transect_line(4)]/100., [transect_line(1),transect_line(3)]/100., width=2.0, color="red";
+   window,iwin;
+   plg, [transect_line(2),transect_line(4)]/100., [transect_line(1),transect_line(3)]/100., width=2.0, color="red";
   }
   window,owin;
   if ( is_void(recall) ) {
-        limits
+      limits
   } else
-	limits(lmts(1),lmts(2), lmts(3), lmts(4));
-   if ( ! is_void ( exp ) )
-      write, format="%s\n", "END mtransect:";
+  limits(lmts(1),lmts(2), lmts(3), lmts(4));
+  if ( ! is_void ( exp ) )
+    write, format="%s\n", "END mtransect:";
 
-   window_select, wbkp;
+  window_select, wbkp;
 
   return glst;
 }
 
 func transect( fs, l, lw=, connect=, xtime=, msize=, xfma=, owin=, color=, rcf_parms=,rtn=, marker= ) {
 /* DOCUMENT transect( fs, l, lw=, connect=, xtime=, msize=, xfma=,
-                      owin=, color=,rtn= )
+               owin=, color=,rtn= )
 
 Input:
   fs         :  Data where you drew the line
@@ -162,13 +162,13 @@ Input:
   owin=      :  Set output window
   color=     :  Select starting color, 1-7, use negative to use only 1 color
   rcf_parms= :  [fw,np]  RCF the data where:
-                fw is the width of the filter
-                np is the number of points on either side of the index
-                   to use as a jury.
+           fw is the width of the filter
+           np is the number of points on either side of the index
+             to use as a jury.
   rtn=       :  Select return type where:
-                0  first return
-                1  veg last return
-                2  submerged topo from bathy algo
+           0  first return
+           1  veg last return
+           2  submerged topo from bathy algo
 
   msize		 :  set msize value (same as plcm, etc.), default = .1
   marker		 :  set marker value (same as plcm, etc.), default = 1
@@ -188,7 +188,7 @@ Input:
  window,wait=1;
  window, owin;
  if ( !is_void(xfma) ) {
-   if ( xfma)  fma;
+  if ( xfma)  fma;
  }
 
 
@@ -202,7 +202,7 @@ Input:
 // run east west
   dnom = l(1)-l(3);
   if ( dnom != 0.0 )
-    angle = atan( (l(2)-l(4)) / dnom ) ;
+   angle = atan( (l(2)-l(4)) / dnom ) ;
   else angle = pi/2.0;
 //  angle ;
 //  [n,s,e,w]
@@ -210,8 +210,8 @@ Input:
   // clean and sort fs
   fs = test_and_clean(fs);
   // sort by soe only if soe values are not the same.  This is necessary because some times a data set is brought in that does not have any soe value
-  if (is_array(where(fs.soe(dif)))) 
-		fs = fs(sort(fs.soe))
+  if (is_array(where(fs.soe(dif))))
+    fs = fs(sort(fs.soe))
 
 // build a matrix to select only the data withing the bounding box
 //  good = (fs.north(*) < n)  & ( fs.north(*) > s ) & (fs.east(*) < e ) & ( fs.east(*) > w );
@@ -222,15 +222,15 @@ Input:
 //            y' = ycos + xsin
 
 /* Steps:
-        1 translate data and line to 0,0
-        2 rotate data and line
-        3 select desired data
+      1 translate data and line to 0,0
+      2 rotate data and line
+      3 select desired data
 */
 
   if ( numberof(glst) == 0 ) {
-    write, "No points found along specified line";
-    window_select, wbkp;
-    return ;
+   write, "No points found along specified line";
+   window_select, wbkp;
+   return ;
   }
 
 
@@ -249,11 +249,11 @@ Input:
   // XYZZY - lw is the search width
   llst = where( abs(ry) < lw );
   if ( rtn == 0 )
-	  elevation = fs.elevation(*);
+    elevation = fs.elevation(*);
   else if ( rtn == 1 )
-	  elevation = fs.lelv(*);
+    elevation = fs.lelv(*);
   else if ( rtn == 2 )
-	  elevation = fs.elevation(*) + fs.depth(*);
+    elevation = fs.elevation(*) + fs.depth(*);
 
 //            1      2       3        4          5         6       7
   clr = ["black", "red", "blue", "green", "magenta", "yellow", "cyan" ];
@@ -266,70 +266,70 @@ Input:
 //segs
 //nsegs
   if ( nsegs > 1 ) {
-    // 20060425:  setting ss to [0] causes bizaar behavior where lines appear to get
-    // merged.
-    ss = [];
-    grow, ss,segs,[0];
-    segs = ss;
+   // 20060425:  setting ss to [0] causes bizaar behavior where lines appear to get
+   // merged.
+   ss = [];
+   grow, ss,segs,[0];
+   segs = ss;
 
-    segs = segs(where( abs(segs(dif)) > 1.0 ));
-    nsegs = numberof(segs)+1;
+   segs = segs(where( abs(segs(dif)) > 1.0 ));
+   nsegs = numberof(segs)+1;
   }
 
  ss = [0];
  if ( nsegs > 1 ) {
-   grow, ss,segs,[0];
+  grow, ss,segs,[0];
 
 // "ss";ss
 // "nsegs";nsegs
-   c = color;
-   msum=0;
-   for (i=1; i<numberof(ss); i++ ) {
-      if ( c >= 0 ) c = ((color+(i-1))%7);
+  c = color;
+  msum=0;
+  for (i=1; i<numberof(ss); i++ ) {
+    if ( c >= 0 ) c = ((color+(i-1))%7);
 //    write, format="%d: %d %2d %2d %d  ", c, color, i, color+i, ((color+i)%7);
-   soeb = fs.soe(*)(glst(llst)(ss(i)+1));
-      t = soe2time( soeb );
-     tb = fs.soe(*)(glst(llst)(ss(i)+1))%86400;
-     te = fs.soe(*)(glst(llst)(ss(i+1)))%86400;
-     td = abs(te - tb);
-     hms = sod2hms( tb );
+  soeb = fs.soe(*)(glst(llst)(ss(i)+1));
+    t = soe2time( soeb );
+    tb = fs.soe(*)(glst(llst)(ss(i)+1))%86400;
+    te = fs.soe(*)(glst(llst)(ss(i+1)))%86400;
+    td = abs(te - tb);
+    hms = sod2hms( tb );
 
-     // This grabs the heading from the tans data nearest the end point.
-     // This really only works when looking at "just processed" data and
-     // not batch processed data.
-	  // AN - 20090629 -- Will now work with batch processed data as well.
-   hd = 0.0;
-	if (is_array(tans)) {
-     foo = where ( abs(tans.somd-te) < .010 );
-     if ( numberof(foo) > 0 )
-        hd = tans.heading(foo(1));
-	}
+    // This grabs the heading from the tans data nearest the end point.
+    // This really only works when looking at "just processed" data and
+    // not batch processed data.
+    // AN - 20090629 -- Will now work with batch processed data as well.
+  hd = 0.0;
+  if (is_array(tans)) {
+    foo = where ( abs(tans.somd-te) < .010 );
+    if ( numberof(foo) > 0 )
+      hd = tans.heading(foo(1));
+  }
 
-     write, format="%d:%d sod = %6.2f:%-10.2f(%10.4f) utc=%2d:%02d:%02d %5.1f %s\n",
-                    t(1),t(2), tb, te, td, hms(1), hms(2), hms(3), hd, clr(abs(c));
+    write, format="%d:%d sod = %6.2f:%-10.2f(%10.4f) utc=%2d:%02d:%02d %5.1f %s\n",
+              t(1),t(2), tb, te, td, hms(1), hms(2), hms(3), hd, clr(abs(c));
 
-     if ( xtime ) {
-     plmk, elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0,
-           fs.soe(*)(llst)(ss(i)+1:ss(i+1))/100.0,color=clr(abs(c)), msize=msize, width=10, marker=marker;
-       if ( connect ) plg, elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0,
-                fs.soe(*)(llst)(ss(i)+1:ss(i+1))/100.0,color=clr(abs(c))
-     } else {
-     xx = rx(llst)(ss(i)+1:ss(i+1))/100.0;
-     si = sort(xx);
-     yy = elevation(glst(llst)(ss(i)+1:ss(i+1)))/100.0;
-     if ( !is_void(rcf_parms) )
-         si = si(moving_rcf(yy(si), rcf_parms(1), int(rcf_parms(2) )));
-     // XYZZY - this is where the points get plotted
-     plmk, yy(si), xx(si),color=clr(abs(c)), msize=msize, width=10, marker=marker;
-       if ( connect ) plg, yy(si), xx(si),color=clr(abs(c))
-    }
+    if ( xtime ) {
+    plmk, elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0,
+        fs.soe(*)(llst)(ss(i)+1:ss(i+1))/100.0,color=clr(abs(c)), msize=msize, width=10, marker=marker;
+     if ( connect ) plg, elevation(*)(glst(llst)(ss(i)+1:ss(i+1)))/100.0,
+           fs.soe(*)(llst)(ss(i)+1:ss(i+1))/100.0,color=clr(abs(c))
+    } else {
+    xx = rx(llst)(ss(i)+1:ss(i+1))/100.0;
+    si = sort(xx);
+    yy = elevation(glst(llst)(ss(i)+1:ss(i+1)))/100.0;
+    if ( !is_void(rcf_parms) )
+      si = si(moving_rcf(yy(si), rcf_parms(1), int(rcf_parms(2) )));
+    // XYZZY - this is where the points get plotted
+    plmk, yy(si), xx(si),color=clr(abs(c)), msize=msize, width=10, marker=marker;
+     if ( connect ) plg, yy(si), xx(si),color=clr(abs(c))
    }
+  }
  } else {
-   xx = rx(llst)/100.0;
-   yy = elevation(glst(llst))/100.0;
-   si = sort(xx);
-   if ( !is_void(rcf_parms) )
-         si = si(moving_rcf(yy(si), rcf_parms(1), int(rcf_parms(2) )));
+  xx = rx(llst)/100.0;
+  yy = elevation(glst(llst))/100.0;
+  si = sort(xx);
+  if ( !is_void(rcf_parms) )
+      si = si(moving_rcf(yy(si), rcf_parms(1), int(rcf_parms(2) )));
   plmk, yy(si),xx(si), color=clr(color), msize=msize, marker=marker, width=10;
   if ( connect ) plg, yy(si), xx(si),color=clr(color)
 
@@ -341,12 +341,12 @@ Input:
   td   = abs(te - tb);
   hms  = sod2hms( tb );
   if (is_array(tans)) {
-     hd   = tans.heading(*)(int(te));
+    hd   = tans.heading(*)(int(te));
   } else {
-	  hd = 0.0;
+    hd = 0.0;
   }
   write, format="%d:%d sod = %6.2f:%-10.2f(%10.4f) utc=%2d:%02d:%02d %5.1f %s\n",
-                    t(1),t(2), tb, te, td, hms(1), hms(2), hms(3), hd, clr(c);
+              t(1),t(2), tb, te, td, hms(1), hms(2), hms(3), hd, clr(c);
  }
  window_select, wbkp;
  return glst(llst);
@@ -357,79 +357,79 @@ func extract_transect_info(tlst, fs, &coords, &segtimes, rtn=) {
   Amar Nayegandhi Nov 2006
   This function saves relevant transect information.
   INPUT:
-	tlst: returned from the mtransect function. list of indices of the fs array that fall along the transect.
-	fs : the original data array (can be of type FS, VEG, or GEO)
-	rtn = defaults to 0.
-			Select return type where:
-			0 first return
-			1 veg last return
-			2 submerged topo
+  tlst: returned from the mtransect function. list of indices of the fs array that fall along the transect.
+  fs : the original data array (can be of type FS, VEG, or GEO)
+  rtn = defaults to 0.
+      Select return type where:
+      0 first return
+      1 veg last return
+      2 submerged topo
 */
 
-	if (is_void(rtn)) rtn=0;
-	// find the min and max easting and northing of the transect
-	if (rtn == 0 || rtn == 2) {
-		mxeast = max(fs.east(tlst));
-		mneast = min(fs.east(tlst));
-		mxnorth = max(fs.north(tlst));
-		mnnorth = min(fs.north(tlst));
-	}
-	if (rtn == 1) {
-		mxeast = max(fs.least(tlst));
-		mneast = min(fs.least(tlst));
-		mxnorth = max(fs.lnorth(tlst));
-		mnnorth = min(fs.lnorth(tlst));
-	}
+  if (is_void(rtn)) rtn=0;
+  // find the min and max easting and northing of the transect
+  if (rtn == 0 || rtn == 2) {
+    mxeast = max(fs.east(tlst));
+    mneast = min(fs.east(tlst));
+    mxnorth = max(fs.north(tlst));
+    mnnorth = min(fs.north(tlst));
+  }
+  if (rtn == 1) {
+    mxeast = max(fs.least(tlst));
+    mneast = min(fs.least(tlst));
+    mxnorth = max(fs.lnorth(tlst));
+    mnnorth = min(fs.lnorth(tlst));
+  }
 
-	coords = [[mneast/100., mnnorth/100., mxeast/100., mxnorth/100.]];
-	coords = double(coords);
+  coords = [[mneast/100., mnnorth/100., mxeast/100., mxnorth/100.]];
+  coords = double(coords);
 
-	write, format="Transect coordinates:\n NE: %8.2f m, %7.2f m\n SW: %8.2f m, %7.2f m\n",coords(4,1), coords(3,1), coords(2,1), coords(1,1);
+  write, format="Transect coordinates:\n NE: %8.2f m, %7.2f m\n SW: %8.2f m, %7.2f m\n",coords(4,1), coords(3,1), coords(2,1), coords(1,1);
 
-	tlength = sqrt((coords(1)-coords(3))^2 + (coords(2)-coords(4))^2);
+  tlength = sqrt((coords(1)-coords(3))^2 + (coords(2)-coords(4))^2);
 
-	write, format="Transect Length = %4.2f m\n",tlength;
-		
-	// find the start and stop time
-	// find number of flightline  segments
-	segs = where( abs(fs.soe(tlst)(dif)) > 5.0 );
-	nsegs = numberof(segs)+1;
-	segtimes = array(long,2,nsegs);
-	ss = [0];
-	if ( nsegs > 1 ) {
-		grow, ss,segs,[0]
-		write, "Flightline Segments:"
-		write, "Year:DayofYear\t SODbegin:SODend\t Time(s) "
-		for (i=1; i<numberof(ss); i++ ) {
-			soeb = fs.soe(*)(tlst(ss(i)+1));
-			t = soe2time( soeb );
-			tb = fs.soe(*)(tlst(ss(i)+1))%86400;
-			te = fs.soe(*)(tlst(ss(i+1)))%86400;
-			td = abs(te - tb);
-			hms = sod2hms( tb );
-			segtimes(1,i) = long(tb-1);
-			segtimes(2,i) = long(te+1);
+  write, format="Transect Length = %4.2f m\n",tlength;
 
-			write, format="%d:%d\t\t %6.2f:%-10.2f\t %-4.2f\n",
-					      t(1),t(2), tb, te, td;
-		}
-	}
+  // find the start and stop time
+  // find number of flightline  segments
+  segs = where( abs(fs.soe(tlst)(dif)) > 5.0 );
+  nsegs = numberof(segs)+1;
+  segtimes = array(long,2,nsegs);
+  ss = [0];
+  if ( nsegs > 1 ) {
+    grow, ss,segs,[0]
+    write, "Flightline Segments:"
+    write, "Year:DayofYear\t SODbegin:SODend\t Time(s) "
+    for (i=1; i<numberof(ss); i++ ) {
+      soeb = fs.soe(*)(tlst(ss(i)+1));
+      t = soe2time( soeb );
+      tb = fs.soe(*)(tlst(ss(i)+1))%86400;
+      te = fs.soe(*)(tlst(ss(i+1)))%86400;
+      td = abs(te - tb);
+      hms = sod2hms( tb );
+      segtimes(1,i) = long(tb-1);
+      segtimes(2,i) = long(te+1);
 
-	return 1;
+      write, format="%d:%d\t\t %6.2f:%-10.2f\t %-4.2f\n",
+              t(1),t(2), tb, te, td;
+    }
+  }
+
+  return 1;
 }
 
 func delete_transect_list(junk) {
-   extern coords_all, transect_all;
-   coords_all = transect_all = [];
-   return 1
+  extern coords_all, transect_all;
+  coords_all = transect_all = [];
+  return 1
 }
 
 func save_transect_list(filename) {
-   extern coords_all, transect_all;
-   f = createb(filename);
-   save, f, coords_all, transect_all;
-   close, f;
-   return 1
+  extern coords_all, transect_all;
+  f = createb(filename);
+  save, f, coords_all, transect_all;
+  close, f;
+  return 1
 }
 
 
@@ -438,21 +438,21 @@ func append_transect_list(tlst, fs, rtn=) {
   Amar Nayegandhi Nov 2006
   This function appends the transect coordinates and time of day to the global variables coords_all and transect_all array.
   INPUT:
-	tlst: returned from the mtransect function. list of indices of the fs array that fall along the transect.
-	fs : the original data array (can be of type FS, VEG, or GEO)
-	rtn = defaults to 0.
-			Select return type where:
-			0 first return
-			1 veg last return
-			2 submerged topo
+  tlst: returned from the mtransect function. list of indices of the fs array that fall along the transect.
+  fs : the original data array (can be of type FS, VEG, or GEO)
+  rtn = defaults to 0.
+      Select return type where:
+      0 first return
+      1 veg last return
+      2 submerged topo
 */
-	
-	extern transect_all, coords_all;
 
-	success = extract_transect_info(tlst,fs,coords,segtimes,rtn=rtn);
+  extern transect_all, coords_all;
 
-	transect_all = grow(transect_all, segtimes);
-	coords_all = grow(coords_all, coords);
+  success = extract_transect_info(tlst,fs,coords,segtimes,rtn=rtn);
+
+  transect_all = grow(transect_all, segtimes);
+  coords_all = grow(coords_all, coords);
 
 }
 
@@ -462,77 +462,77 @@ func reprocess_data_along_transect(new_pnav, outdir=, ofname_tag=, rtn=, w= ) {
  Amar Nayegandhi Jan 2006
  This function reprocesses data along the transects defined by the transect_all array.
  INPUT:
-	new_pnav : the new pnav data array.  The global variables gga and pnav will be assigned to this new_pnav
-   outdir = String.  The output directory where the pbd files will be written to.
-   ofname_tag = String.  Define tag name to the output filename that will help differentiate between data processed using different trajectories.  Usually name_tag will include the base station names used to processed the trajectory new_pnav. e.g. name_tag = "kwal_hg63" indicates trajectory processed using the Wallops Island base and the Hangar base station.
-	rtn = defaults to 0.
-			Select return type where:
-			0 first return
-			1 veg last return
-			2 submerged topo
-   The file name will also include the trajectory number.
+  new_pnav : the new pnav data array.  The global variables gga and pnav will be assigned to this new_pnav
+  outdir = String.  The output directory where the pbd files will be written to.
+  ofname_tag = String.  Define tag name to the output filename that will help differentiate between data processed using different trajectories.  Usually name_tag will include the base station names used to processed the trajectory new_pnav. e.g. name_tag = "kwal_hg63" indicates trajectory processed using the Wallops Island base and the Hangar base station.
+  rtn = defaults to 0.
+      Select return type where:
+      0 first return
+      1 veg last return
+      2 submerged topo
+  The file name will also include the trajectory number.
 
 */
-	
-	extern gga, pnav, coords_all, transect_all, _transect_history
 
-	if (!is_void(new_pnav)) {
-		gga = pnav = new_pnav;
-	}
+  extern gga, pnav, coords_all, transect_all, _transect_history
 
-   _transect_history = coords_all*100.;
+  if (!is_void(new_pnav)) {
+    gga = pnav = new_pnav;
+  }
+
+  _transect_history = coords_all*100.;
 
 
-   if (is_void(outdir)) {
-      write, "output directory not defined. Writing to home directory"
-      outdir = "~/";
+  if (is_void(outdir)) {
+    write, "output directory not defined. Writing to home directory"
+    outdir = "~/";
+  }
+
+  if (is_void(save_data)) save_data = 1;
+  if (is_void(save_transect_output)) save_transect_output = 1;
+  if (is_void(ofname_tag)) ofname_tag = "base";
+  if (is_void(rtn)) rtn = 0;
+
+  segtimes = transect_all;
+  nsegs = numberof(segtimes(1,));
+  q = [];
+
+  for (i=1;i<=nsegs;i++) {
+    idx = where((gga.sod >= segtimes(1,i)) & (gga.sod <= segtimes(2,i)));
+    q = grow(q,idx);
+  }
+
+  if (rtn == 0) {
+    data_re = make_fs(latutm=1, q=q, ext_bad_att=1, usecentroid=1);
+  }
+
+  if (rtn == 2) {
+    data_re = make_bathy(latutm=1, q=q, ext_bad_depth=1, ext_bad_att=1, avg_surf=0);
+  }
+
+  if (rtn == 1) {
+    data_re = make_veg(latutm=1, q=q, ext_bad_att=1, ext_bad_veg=1, use_centroid=1);
+  }
+
+  data_re = test_and_clean(data_re);
+  idx = sort(data_re.soe);
+  data_re = data_re(idx);
+  idx = unique(data_re.soe);
+  data_re = data_re(idx);
+  for (j=1;j<=numberof(coords_all(1,));j++) {
+    // run the mtransect function on the each transect
+    trans_output = mtransect(data_re, rtn=rtn,recall=1-j,w=w);
+    if (is_array(trans_output)) {
+      // write out to a file
+      // define output file name
+      ofname = swrite(format="T%d_%s.pbd",j,ofname_tag);
+      coords = coords_all(,j);
+      tdata = data_re(trans_output);
+      f = createb(outdir+ofname);
+      save, f, tdata, coords;
+      close, f;
+     }
    }
-
-   if (is_void(save_data)) save_data = 1;
-   if (is_void(save_transect_output)) save_transect_output = 1;
-   if (is_void(ofname_tag)) ofname_tag = "base";
-   if (is_void(rtn)) rtn = 0;
-
-   segtimes = transect_all;
-	nsegs = numberof(segtimes(1,));
-	q = [];
-
-	for (i=1;i<=nsegs;i++) {
-		idx = where((gga.sod >= segtimes(1,i)) & (gga.sod <= segtimes(2,i)));
-		q = grow(q,idx);
-	}
-
-	if (rtn == 0) {
-		data_re = make_fs(latutm=1, q=q, ext_bad_att=1, usecentroid=1);
-	}
-
-	if (rtn == 2) {
-		data_re = make_bathy(latutm=1, q=q, ext_bad_depth=1, ext_bad_att=1, avg_surf=0);
-	}
-
-	if (rtn == 1) {
-		data_re = make_veg(latutm=1, q=q, ext_bad_att=1, ext_bad_veg=1, use_centroid=1);
-	}
-
-   data_re = test_and_clean(data_re);
-   idx = sort(data_re.soe);
-   data_re = data_re(idx);
-   idx = unique(data_re.soe);
-   data_re = data_re(idx);
-   for (j=1;j<=numberof(coords_all(1,));j++) {
-      // run the mtransect function on the each transect
-      trans_output = mtransect(data_re, rtn=rtn,recall=1-j,w=w);
-      if (is_array(trans_output)) {
-         // write out to a file
-         // define output file name
-         ofname = swrite(format="T%d_%s.pbd",j,ofname_tag);
-         coords = coords_all(,j);
-         tdata = data_re(trans_output);
-         f = createb(outdir+ofname);
-         save, f, tdata, coords;
-         close, f;
-       }
-    }
 
 return 1;
 

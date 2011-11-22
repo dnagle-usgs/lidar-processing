@@ -1,25 +1,25 @@
-// vim: set ts=3 sts=3 sw=3 ai sr et:
+// vim: set ts=2 sts=2 sw=2 ai sr et:
 /***********************************************************************
-   Range_bias computed from 7-29-02 ground test.  The EAARL data 
- was taken from pulses 8716:10810 which was captured from a static 
- target at 101.1256 meters measured distance.  The EAARL centroid 
- range values were averaged and then the actual slope distance to 
- the target subtracted to yield the range_biasM.  The rms noise on 
+  Range_bias computed from 7-29-02 ground test.  The EAARL data
+ was taken from pulses 8716:10810 which was captured from a static
+ target at 101.1256 meters measured distance.  The EAARL centroid
+ range values were averaged and then the actual slope distance to
+ the target subtracted to yield the range_biasM.  The rms noise on
  the range values used to compute the range_biasM was 3.19cm
-   range_biasM is the measured range bias in Meters
+  range_biasM is the measured range bias in Meters
 ***********************************************************************/
 
 // Mission configuration data structure.
 struct mission_constants {
   string name;		// The name of the settings
-  string varname;	// The name of this variable 
-  float y_offset;    // Aircraft relative + fwd along fuselage 
+  string varname;	// The name of this variable
+  float y_offset;    // Aircraft relative + fwd along fuselage
   float x_offset;    // Aircraft relative + out the right wing
-  float z_offset;    // Aircraft relative + up  
-  float roll_bias;   // Instrument roll mounting bias 
+  float z_offset;    // Aircraft relative + up
+  float roll_bias;   // Instrument roll mounting bias
   float pitch_bias;  // Instrument pitch mounting bias
   float yaw_bias;    // Instrument yaw (heading) mounting bias
-  float scan_bias;   // Scan encoder mechanical offset from zero 
+  float scan_bias;   // Scan encoder mechanical offset from zero
   float range_biasM; //  Laser range measurement bias.
   float range_biasNS; //  Laser range measurement bias in NS
   float chn1_range_bias; // range bias for channel 1
@@ -39,7 +39,7 @@ struct mission_constants {
 
 which will preload your new config file with the default values
 and then simply set only parameters that need changing in your
-new config structure.  
+new config structure.
 
 for example, perhaps you need a slightly different roll_bias
 and pitch_bias value for your data set in which case your
@@ -50,12 +50,12 @@ custom file should have:
   tans_config.pitch_bias = -0.1;
 
 
-The intention of this is to permit multiple configurations to 
-exist at the same time and to allow easy switching between 
-those configurations.  New configurations will exist for the 
-Applanix, and for the new Inertial Science DTG unit.  If and 
-when the EAARL system is ever installed on an different aircraft 
-a new configuration file will need to be created with new values 
+The intention of this is to permit multiple configurations to
+exist at the same time and to allow easy switching between
+those configurations.  New configurations will exist for the
+Applanix, and for the new Inertial Science DTG unit.  If and
+when the EAARL system is ever installed on an different aircraft
+a new configuration file will need to be created with new values
 for the angle biases and the x,y and z offsets.
 
  The body coords. system of the plane is as follows:
@@ -64,7 +64,7 @@ for the angle biases and the x,y and z offsets.
  +Y  Forward along the fuselage
  +Z  Up.
 
- 
+
 *************************************************************/
  ops_default = array(mission_constants);
  ops_default.range_biasM =   0.7962;         // Laser range measurement bias.
@@ -82,8 +82,8 @@ for the angle biases and the x,y and z offsets.
  ops_tans.yaw_bias   =  0.0;
  ops_tans.y_offset   = -1.403;	// From Applanix pospac
  ops_tans.x_offset   =  -.470;       // From Applanix pospac
- ops_tans.z_offset   = -1.3;		// should be -1.708... but need better 
-                                        // measurement of IMU to laser point
+ ops_tans.z_offset   = -1.3;		// should be -1.708... but need better
+                           // measurement of IMU to laser point
  ops_tans.scan_bias  =  0.0;
  ops_tans.range_biasM = 0.7962;         // Laser range measurement bias.
 
@@ -91,19 +91,19 @@ for the angle biases and the x,y and z offsets.
  ops_conf = ops_tans;
 
  func opscpy( d, s ) {
-/* DOCUMENT opscpy( d, s ) 
+/* DOCUMENT opscpy( d, s )
 
   Documentation goes here.
 */
-   tmp1 = d.varname;
-	 tmp2 = d.name;
-	 tmp1;
-	 tmp2;
-	 d = s;
-	 d.varname = tmp1;
-	 d.name    = tmp2;
-	 d;
-	 return(d);
+  tmp1 = d.varname;
+   tmp2 = d.name;
+   tmp1;
+   tmp2;
+   d = s;
+   d.varname = tmp1;
+   d.name    = tmp2;
+   d;
+   return(d);
  }
 
 /**************************************************************
@@ -128,43 +128,43 @@ for the angle biases and the x,y and z offsets.
  ops_IMU2.varname    = "ops_IMU2"
  ops_IMU2.roll_bias  = -0.8;    // with 03/12 Albert Whitted runway
  ops_IMU2.pitch_bias = 0.1;    // with 03/12 Albert Whitted runway
- ops_IMU2.yaw_bias   = 0;    // 
+ ops_IMU2.yaw_bias   = 0;    //
 
 func display_mission_constants( m, ytk= ) {
   if ( ytk ) {
-  cmd = swrite( format="display_mission_constants { Name {%s} VarName %s Roll %4.2f  Pitch %4.2f Yaw %4.2f Scanner %5.3f {Range M} %5.3f {X offset} %5.2f {Y offset} %5.2f {Z offset} %5.2f {Chn1 range bias} %5.2f {Chn 2 Range bias} %5.2f {Chn3 Range bias} %5.2f {Max sfc sat} %2d }", 
-        m.name,
-	m.varname,
-        m.roll_bias,
-        m.pitch_bias,
-        m.yaw_bias,
-        m.scan_bias,
-        m.range_biasM,
-        m.x_offset,
-        m.y_offset,
-        m.z_offset, 
-		  m.chn1_range_bias,
-		  m.chn2_range_bias,
-		  m.chn3_range_bias,
-		  m.max_sfc_sat);
-      tkcmd, cmd
+  cmd = swrite( format="display_mission_constants { Name {%s} VarName %s Roll %4.2f  Pitch %4.2f Yaw %4.2f Scanner %5.3f {Range M} %5.3f {X offset} %5.2f {Y offset} %5.2f {Z offset} %5.2f {Chn1 range bias} %5.2f {Chn 2 Range bias} %5.2f {Chn3 Range bias} %5.2f {Max sfc sat} %2d }",
+      m.name,
+  m.varname,
+      m.roll_bias,
+      m.pitch_bias,
+      m.yaw_bias,
+      m.scan_bias,
+      m.range_biasM,
+      m.x_offset,
+      m.y_offset,
+      m.z_offset,
+      m.chn1_range_bias,
+      m.chn2_range_bias,
+      m.chn3_range_bias,
+      m.max_sfc_sat);
+    tkcmd, cmd
   } else {
   write,format="\nMounting Bias Values: %s\n", m.name
   write, "____________________BIAS__________________________   _____Offsets_____"
   write, "Roll Pitch Heading Scanner  RangeM  Chn1   Chn2   Chn3     X     Y     Z Max_Sfc_Sat"
   write, format="%4.2f  %4.2f    %4.2f  %5.3f  %5.3f %5.3f %5.3f    %5.2f %5.2f %5.2f   %3d\n",
-        m.roll_bias,
-        m.pitch_bias,
-        m.yaw_bias,
-        m.scan_bias,
-        m.range_biasM,
-		  m.chn1_range_bias,
-		  m.chn2_range_bias,
-		  m.chn3_range_bias,
-        m.x_offset,
-        m.y_offset,
-        m.z_offset,
-		  m.max_sfc_sat
+      m.roll_bias,
+      m.pitch_bias,
+      m.yaw_bias,
+      m.scan_bias,
+      m.range_biasM,
+      m.chn1_range_bias,
+      m.chn2_range_bias,
+      m.chn3_range_bias,
+      m.x_offset,
+      m.y_offset,
+      m.z_offset,
+      m.max_sfc_sat
 
   write,""
   }
@@ -172,58 +172,58 @@ func display_mission_constants( m, ytk= ) {
 
 func load_ops_conf(fn) {
 /* DOCUMENT conf = load_ops_conf(fn)
-   -or-  load_ops_conf, fn
-   Loads and returns a set of mission constants from a file. If called as a
-   function, the settings will be returned and no externs will be altered. If
-   called as a subroutine, then the extern ops_conf will be overwritten.
+  -or-  load_ops_conf, fn
+  Loads and returns a set of mission constants from a file. If called as a
+  function, the settings will be returned and no externs will be altered. If
+  called as a subroutine, then the extern ops_conf will be overwritten.
 */
-   local ops_conf;
-   // include, fn, 0 --> goes to global scope
-   // include, fn, 1 --> goes to local scope
-   include, fn, !am_subroutine();
-   return ops_conf;
+  local ops_conf;
+  // include, fn, 0 --> goes to global scope
+  // include, fn, 1 --> goes to local scope
+  include, fn, !am_subroutine();
+  return ops_conf;
 }
 
 func write_ops_conf(fn, conf=) {
 /* DOCUMENT write_ops_conf, fn, conf=
-   -or- write_ops_conf, conf=
+  -or- write_ops_conf, conf=
 
-   Allows you to write a set of mission constants to file. By default, it will
-   write out the constants in ops_conf; however, you can override that with the
-   conf= option.
+  Allows you to write a set of mission constants to file. By default, it will
+  write out the constants in ops_conf; however, you can override that with the
+  conf= option.
 
-   If you provide an argument, it should be the filename to write the conf file
-   to. Otherwise, it will print it to the screen.
+  If you provide an argument, it should be the filename to write the conf file
+  to. Otherwise, it will print it to the screen.
 */
-   extern ops_conf;
-   default, conf, ops_conf;
+  extern ops_conf;
+  default, conf, ops_conf;
 
-   ops = swrite(format="%s", print(conf)(sum));
-   if(!regmatch("mission_constants\\((.*)\\)", ops, , params))
-      error, "Invalid ops_conf!";
-   params = strjoin(strsplit(params, ","), ",\n  ");
+  ops = swrite(format="%s", print(conf)(sum));
+  if(!regmatch("mission_constants\\((.*)\\)", ops, , params))
+    error, "Invalid ops_conf!";
+  params = strjoin(strsplit(params, ","), ",\n  ");
 
-   f = [];
-   if(is_string(fn))
-      f = open(fn, "w");
-   write, f, format="// Exported from ALPS on %s\n", soe2date(getsoe());
-   write, f, format="ops_conf = mission_constants(\n  %s\n)\n", params;
-   if(f) close, f;
+  f = [];
+  if(is_string(fn))
+    f = open(fn, "w");
+  write, f, format="// Exported from ALPS on %s\n", soe2date(getsoe());
+  write, f, format="ops_conf = mission_constants(\n  %s\n)\n", params;
+  if(f) close, f;
 }
 
 func ops_conf_validate(&conf) {
 /* DOCUMENT ops_conf_validate, conf;
-   This verifies that chn1_range_bias, chn2_range_bias, and chn3_range_bias are
-   properly set. Older ops_conf.i files may not have these settings defined,
-   and would need to have them specified to work with the current version of
-   the software.
+  This verifies that chn1_range_bias, chn2_range_bias, and chn3_range_bias are
+  properly set. Older ops_conf.i files may not have these settings defined,
+  and would need to have them specified to work with the current version of
+  the software.
 */
-   if(noneof([conf.chn1_range_bias, conf.chn2_range_bias, conf.chn3_range_bias])) {
-      write,
-          "============================================================\n" +
-         " WARNING: Your ops_conf does not have valid values for\n" +
-         " chn1_range_bias, chn2_range_bias, and chn3_range_bias. You\n" +
-         " may also need to verify the value for max_sfc_sat.\n" +
-         " ============================================================";
-   }
+  if(noneof([conf.chn1_range_bias, conf.chn2_range_bias, conf.chn3_range_bias])) {
+    write,
+       "============================================================\n" +
+      " WARNING: Your ops_conf does not have valid values for\n" +
+      " chn1_range_bias, chn2_range_bias, and chn3_range_bias. You\n" +
+      " may also need to verify the value for max_sfc_sat.\n" +
+      " ============================================================";
+  }
 }

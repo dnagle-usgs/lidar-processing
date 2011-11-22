@@ -1,18 +1,19 @@
+// vim: set ts=2 sts=2 sw=2 ai sr et:
 local nocalps;
 local nocalps_i;
 /* DOCUMENT nocalps.i
-   Sourcing this file will disable all C-ALPS functionality. For functionality
-   that is implemented in both Yorick and C, the ALPS will fall back on the
-   Yorick implementation. Functionality implemented only in C will be
-   unavailable.
+  Sourcing this file will disable all C-ALPS functionality. For functionality
+  that is implemented in both Yorick and C, the ALPS will fall back on the
+  Yorick implementation. Functionality implemented only in C will be
+  unavailable.
 
-   This is only needed under a specific scenario. Yorick cannot dynamically
-   update itself if a new version of the C-ALPS plugin is installed into Yorick
-   while you have an ALPS session open. If this happens, all calls to C-ALPS
-   functionality are likely to result in segmentation violations. Your best
-   option in this scenario is to restart your ALPS session. However, if that is
-   not immediately viable, you can source this file to avoid using C-ALPS
-   functionality.
+  This is only needed under a specific scenario. Yorick cannot dynamically
+  update itself if a new version of the C-ALPS plugin is installed into Yorick
+  while you have an ALPS session open. If this happens, all calls to C-ALPS
+  functionality are likely to result in segmentation violations. Your best
+  option in this scenario is to restart your ALPS session. However, if that is
+  not immediately viable, you can source this file to avoid using C-ALPS
+  functionality.
 */
 
 calps_compatibility = [];

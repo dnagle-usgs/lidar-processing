@@ -1,18 +1,19 @@
+// vim: set ts=2 sts=2 sw=2 ai sr et:
 /*
-   Biases, offsets, calibration settings, and specifications for the cameras
-   and equipment used for various forms of imagery. These settings are used by
-   mosaic_tools.i.
+  Biases, offsets, calibration settings, and specifications for the cameras
+  and equipment used for various forms of imagery. These settings are used by
+  mosaic_tools.i.
 */
 
 // Camera mounting bias values.
 struct CAMERA_MOUNTING_BIAS {
-   string name;   // Aircraft id (N-Number).
-   float pitch;   // +nose up
-   float roll;    // +cw (roll to the right)
-   float heading; // +cw (right turn)
-   float x;       // Offset from Camera to IMU along the fuselage toward the nose
-   float y;       // Offset across the fueslage, positive toward the right wing
-   float z;       // Offset +up
+  string name;   // Aircraft id (N-Number).
+  float pitch;   // +nose up
+  float roll;    // +cw (roll to the right)
+  float heading; // +cw (right turn)
+  float x;       // Offset from Camera to IMU along the fuselage toward the nose
+  float y;       // Offset across the fueslage, positive toward the right wing
+  float z;       // Offset +up
 }
 
 //=================================================

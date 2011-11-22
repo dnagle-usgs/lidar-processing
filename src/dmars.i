@@ -7,57 +7,57 @@ extern dmars_i
 
   Original: W. Wright
 
-  The DMARS (Digital Miniature Attitude Reference System) is a set of 
-three spinning mass "dynamically tuned" gyros and a set of three high 
-accuracy precision accelerometers.  There is one gyro and one 
-accelerometer for each axis, X Y and Z.  
+  The DMARS (Digital Miniature Attitude Reference System) is a set of
+three spinning mass "dynamically tuned" gyros and a set of three high
+accuracy precision accelerometers.  There is one gyro and one
+accelerometer for each axis, X Y and Z.
 
-The gyros put out rotation rates for each axis, not the actual attitude. 
-In other words they put out how fast the pitch, roll, and yaw are changing.  
-The accelerometers output the acceleration along each axis.  Measurements 
-are taken and output every five miliseconds (0.005 seconds) which is 200 
-Hertz.  Every sample is locked to GPS time of day by way of a 1-Hz 
-electronic signal delivered from a precision GPS receiver to the DMARS IMU.  
+The gyros put out rotation rates for each axis, not the actual attitude.
+In other words they put out how fast the pitch, roll, and yaw are changing.
+The accelerometers output the acceleration along each axis.  Measurements
+are taken and output every five miliseconds (0.005 seconds) which is 200
+Hertz.  Every sample is locked to GPS time of day by way of a 1-Hz
+electronic signal delivered from a precision GPS receiver to the DMARS IMU.
 
-Extreme care must be taken to insure the DMARS is properly synchronized 
-with the GPS time and to minimize the number corrupt records. 
+Extreme care must be taken to insure the DMARS is properly synchronized
+with the GPS time and to minimize the number corrupt records.
 
-The EAARL DMARS datasystem consists of two single board Linux systems 
-interfaced to the DMARS via a 115kbaud asynchronous 8 bit rs-232 serial 
-connection. One datasystem captures DMARS data simultaneous with NTP 
-(Network Time Protocol) data and records the result in a compressed file.  
-The second system captures the same data stream using the builtin Linux 
-command "cat."  The "cat" file has no time information at all and is 
-intended as a backup in the even that the NTP based system fails for 
-some reason. 
+The EAARL DMARS datasystem consists of two single board Linux systems
+interfaced to the DMARS via a 115kbaud asynchronous 8 bit rs-232 serial
+connection. One datasystem captures DMARS data simultaneous with NTP
+(Network Time Protocol) data and records the result in a compressed file.
+The second system captures the same data stream using the builtin Linux
+command "cat."  The "cat" file has no time information at all and is
+intended as a backup in the even that the NTP based system fails for
+some reason.
 
  POST PROCESSING
-  
-Normally, only the NTP DMARS files need to be processed.  The "cat" 
-files only need to be processed if there were problems in the NTP system.  
-Problems in the NTP system are indicated by time gaps larger then 20-30ms 
+
+Normally, only the NTP DMARS files need to be processed.  The "cat"
+files only need to be processed if there were problems in the NTP system.
+Problems in the NTP system are indicated by time gaps larger then 20-30ms
 as indicated by reading the data file with rdmars.c as follows:
-  
+
 
 The normal NTP based IMU data undergoes the following processing:
 
 
- dmarsd -> *.bin -> 
+ dmarsd -> *.bin ->
                  rdmars.c
-                 dmars2iex.c -> *.imu -> 
-                                      Iex -> *INS.txt -> 
+                 dmars2iex.c -> *.imu ->
+                                      Iex -> *INS.txt ->
                                                       iex_ascii2pbd -> *.pbd
 
-Dmarsd is run during the flight mission to capture the NTP based data 
-(*.bin).  Postprocessing begins by running rdmars and simply viewing the 
-output and visually scanning for time gaps greater than 20-30ms. Problematic 
-data are typically indicated by gaps of several seconds.  If no larger gaps 
+Dmarsd is run during the flight mission to capture the NTP based data
+(*.bin).  Postprocessing begins by running rdmars and simply viewing the
+output and visually scanning for time gaps greater than 20-30ms. Problematic
+data are typically indicated by gaps of several seconds.  If no larger gaps
 are seen, then the dmars2iex "C" program is run which generates a *.imu file.
-If you detected gaps then see the section below "PROCESSING CAT FILES". The 
-*.imu file mus then be transferred to the Windows based Grafnav Inertial 
-Explorer (IEX) program where it will be combined with the GPS data to produce 
-an ASCII INS.txt file.  The ASCII INS.txt file is transferred back into your 
-linux system and converted to a Yorick *.pbd file using the ALPS Yorick 
+If you detected gaps then see the section below "PROCESSING CAT FILES". The
+*.imu file mus then be transferred to the Windows based Grafnav Inertial
+Explorer (IEX) program where it will be combined with the GPS data to produce
+an ASCII INS.txt file.  The ASCII INS.txt file is transferred back into your
+linux system and converted to a Yorick *.pbd file using the ALPS Yorick
 function iex_ascii2pbd found in dmars.i.
 
   Read a dmars dataset produced by dmarsd.c
@@ -67,15 +67,15 @@ function iex_ascii2pbd found in dmars.i.
 
 The critical piece of data you need to process "cat" data is the delta time
 from the DMARS unit's "tspo" (Time Since Power On) value to the actual GPS
-time of day when the data was captured.  The easiest way to get that 
-information is to run the dmars2iex program on the DMARS file which contains 
-the NTP time stamps.  The program will printout the time difference between 
-the IMU and NTP.  Even though the NTP file will contain the problematic data 
-gaps, it will also generate the correct time difference you will need to 
-process the "cat" data. 
-  
+time of day when the data was captured.  The easiest way to get that
+information is to run the dmars2iex program on the DMARS file which contains
+the NTP time stamps.  The program will printout the time difference between
+the IMU and NTP.  Even though the NTP file will contain the problematic data
+gaps, it will also generate the correct time difference you will need to
+process the "cat" data.
+
 Below is an example of how to run dmars2iex to find the time difference.
- 
+
 3:15 <129>% dmars2iex junk.bin
 Pass 1...
 ------------------------------------------------------------------
@@ -86,7 +86,7 @@ Gyro Scale: 2.746582e-03    Accel Scale: 5.981445e-04    Time: GPS
  Start SOW: 58522.000          Stop SOW: 82192.000
   Duration: 23670.0/secs (6.575/hrs)
 ------------------------------------------------------------------
- 
+
 23671 Time recs, 4734112 DMARS recs
 sizeof(hdr)=512
  sizeof(IEX_RECORD)=32, gscale=0.002747 ascale=0.000598
@@ -94,9 +94,9 @@ sizeof(hdr)=512
 GPS Seconds of the week time offset: 490519 seconds
 
  The "GPS Seconds of the week time offset" of 490519 is the number
-you will need to correctly process the DMARS "cat" file. An example 
+you will need to correctly process the DMARS "cat" file. An example
 run is shown below.  The input file is some-cat.bin and the output
-is some-cat.imu.  The time offset is 490519.  The diagonostic 
+is some-cat.imu.  The time offset is 490519.  The diagonostic
 printout shows the some limited information at records that have
 checksum errors. The Recs column shows the record number where
 the checksum error occured, the "Bad Recs" simply counts the number
@@ -126,13 +126,13 @@ Gyro Scale: 2.746582e-03    Accel Scale: 5.981445e-04    Time: GPS
 Once the .imu file is generated, it can be sent processed by
 the Windows IEX program which will produce a .INS file containing
 pitch/roll/heading and other information.
- 
-  
-*/ 
+
+
+*/
 
 G = 9.80665;
-GS = 90.0/double(2^15); 
-as = (19.6/double(2^15)); 
+GS = 90.0/double(2^15);
+as = (19.6/double(2^15));
 
 /*
    The sensor array is as follows:
@@ -143,7 +143,7 @@ as = (19.6/double(2^15));
     4     X Accel
     5     Y Accel
     6     Z Acces ( this one is very close to gravity)
-*/ 
+*/
 
 struct IEX {
   double sow;
@@ -219,7 +219,7 @@ func gen_cir_nav( offset_secs, verbose= ) {
   default, verbose, 1;
   if ( is_void( iex_nav) ) return -8;
   ins_rate = iex_nav(1:2).somd(dif)(1)
-  iticks = int(offset_secs*1000.0/int(ins_rate*1000.0001));   
+  iticks = int(offset_secs*1000.0/int(ins_rate*1000.0001));
   startIndex = where( (iex_nav(1:int(1/ins_rate)).somd % 1) == 0.0 )(1);
   startIndex += iticks;
   tmp = iex_nav(startIndex:0:int(1/ins_rate));
@@ -255,7 +255,7 @@ func load_raw_dmars(fn=) {
 
 // Create one for the dmars_ntptime values also.
  systime = array( int, 3, bsz );
- stime = []; 
+ stime = [];
 
  t = char();  // type is either 0x7d or 0x7e
  f = open(fn, "rb");
@@ -286,7 +286,7 @@ func load_raw_dmars(fn=) {
    if ( _read(f, p, t ) > 0 ) {
      p++;
      if ( t == 0x7d ) {   // system time
-       n = _read( f, p, la ); 
+       n = _read( f, p, la );
        systime(1:2,j) = la;
        systime(3,j) = tspo;
        if ( total_time == 0 ) {
@@ -300,17 +300,17 @@ func load_raw_dmars(fn=) {
          j = 1;
        }
 
-       if ( (systime(1,j-1) % 100) == 0 ) 
-          write,format="   %4.3f      %6.6f   %4.3fmb\r", 
-                 (systime(1,j-1)-start)/3600.0, 
+       if ( (systime(1,j-1) % 100) == 0 )
+          write,format="   %4.3f      %6.6f   %4.3fmb\r",
+                 (systime(1,j-1)-start)/3600.0,
                  systime(2,j-1)*1.0e-6,
                  (sizeof( dmars ) + sizeof(raw(1:i)))/1.0e6;
 
      } else if ( t == 0x7e ) { // dmars record
        total_dmars++;
        n = _read( f, p, tspo);    p += 4;
-       n = _read( f, p, status);  p += 1; 
-       n = _read( f, p, sensor);  p += 12; 
+       n = _read( f, p, status);  p += 1;
+       n = _read( f, p, sensor);  p += 12;
        p +=1;   // skip checksum
        raw.tspo(i) = tspo;
        raw.status(i) = status;
@@ -321,7 +321,7 @@ func load_raw_dmars(fn=) {
           i = 1;
        }
      }
-   } else  { 
+   } else  {
      grow, stime, systime;
      grow, dmars, raw(1:i);
      loop = 0;
@@ -345,8 +345,8 @@ func convert_raw_dmars_2_engr(dmars) {
  engr_dmars = array(ENGR_DMARS, numberof( dmars )  );
 
 // Convert the DMARS tspo (Time Since Power On) to GMT
-// using a time defference determined from near the end of the 
-// data set.  
+// using a time defference determined from near the end of the
+// data set.
  engr_dmars.soe = dmars.tspo/200.0 + tdiff;
  for (i=1, j=4; i<=3; i++,j++ ) {
    engr_dmars.sensor(i,) = dmars.sensor(i,) * GS;
@@ -362,11 +362,11 @@ r = 1:-1
 window,0
 fma
 limits,,,-5,5
-plg, dmars.sensor(6,1000:-1), 
-     dmars.soe(1000:-1) 
-plg, dmars_ntptime(r) - (stime(3,r)/200.0+tdiff), 
-      dmars_ntptime(r), 
-      color="red", 
+plg, dmars.sensor(6,1000:-1),
+     dmars.soe(1000:-1)
+plg, dmars_ntptime(r) - (stime(3,r)/200.0+tdiff),
+      dmars_ntptime(r),
+      color="red",
       width=6.0
 }
 
@@ -389,9 +389,9 @@ struct IEX_HEADER {
 func load_iex( fn ) {
 /* DOCUMENT load_iex, fn
 
-   Loads a DMARS IEX generic IMU format file.  The data file is 
-generate by the dmars2iex.c program.  To load the raw DMARS data 
-file (as generated by the dmarsd.c data capture program) use the 
+   Loads a DMARS IEX generic IMU format file.  The data file is
+generate by the dmars2iex.c program.  To load the raw DMARS data
+file (as generated by the dmarsd.c data capture program) use the
 load_raw_dmars function.
 
  See also: load_raw_dmars, convert_raw_dmars_2_engr
@@ -405,8 +405,8 @@ load_raw_dmars function.
     write,format="Unable to open %s\n", fn
     return;
   }
-  f = open(fn, "rb"); 
-  
+  f = open(fn, "rb");
+
   data_align, f, 1
   struct_align, f, 1
   add_member, f, "IEX_HEADER",   0, "szheader",     char, 8
@@ -424,55 +424,55 @@ load_raw_dmars function.
   add_member, f, "IEX_HEADER", 508, "nrecs",     int, 1
   install_struct, f, "IEX_HEADER"
   _read, f, 0, iex_header;
-  write,format="Loading %d records. This may take a few seconds....", 
+  write,format="Loading %d records. This may take a few seconds....",
   iex_header.nrecs
 
 
   add_member, f, "IEX",  0, "sow",     double
   add_member, f, "IEX", -1, "sensors", int, 6
   install_struct, f, "IEX"
-  iex = array( IEX, iex_header.nrecs); 
+  iex = array( IEX, iex_header.nrecs);
   _read,f, 512, iex;
   write,"All done."
 
 
   bsow = iex.sow(1);
   esow = iex.sow(0);
-  if ( iex_header.bisintelormotorola(1) ) 
+  if ( iex_header.bisintelormotorola(1) )
      s = "Motorola";
-  else 
+  else
      s = "Intel";
   write,
   "------------------------------------------------------------------"
-  write, 
-  format="    Header: %s             Version:%6.3f     Byte Order: %s\n", 
-      string(&iex_header.szheader), 
+  write,
+  format="    Header: %s             Version:%6.3f     Byte Order: %s\n",
+      string(&iex_header.szheader),
       iex_header.dversionnumber,
       s
-  write, 
-  format="DeltaTheta:%2d            Delta Velocity:%2d          Data Rate: %3.0f \n", 
+  write,
+  format="DeltaTheta:%2d            Delta Velocity:%2d          Data Rate: %3.0f \n",
       iex_header.bdeltatheta,
       iex_header.bdeltavelocity,
       iex_header.ddatarate
-  if ( iex_header.iutcorgpstime(1) ) 
+  if ( iex_header.iutcorgpstime(1) )
      s = "GPS";
-  else 
+  else
      s = "UTC";
-  write, 
-  format="Gyro Scale: %8.6e    Accel Scale: %8.6e    Time: %s\n", 
+  write,
+  format="Gyro Scale: %8.6e    Accel Scale: %8.6e    Time: %s\n",
       iex_header.dgyroscalefactor,
       iex_header.daccelscalefactor,
       s
-  write, 
-  format=" Time Corr: %1d                 Time Bias: %4.3f     Total Recs: %7d\n", 
+  write,
+  format=" Time Corr: %1d                 Time Bias: %4.3f     Total Recs: %7d\n",
       iex_header.ircvtimeorcorrtime,
       iex_header.dtimetagbias,
       iex_header.nrecs
   write,
   format=" Start SOW: %9.3f         Stop SOW: %9.3f\n", bsow, esow
   write,
-  format="  Duration: %6.1f/secs (%4.3f/hrs)\n", 
-       esow-bsow, 
+  format="  Duration: %6.1f/secs (%4.3f/hrs)\n",
+       esow-bsow,
        (esow-bsow)/3600.0;
   write,
   "------------------------------------------------------------------"
@@ -480,7 +480,7 @@ load_raw_dmars function.
 }
 
 struct IEX_ATTITUDE {
-  double somd   
+  double somd
   double lat
   double lon
   float  alt
@@ -491,7 +491,7 @@ struct IEX_ATTITUDE {
 
 
 struct IEX_ATTITUDEUTM {
-  double somd   
+  double somd
   double lat
   double lon
   double northing
@@ -511,7 +511,7 @@ func iex2tans( junk ) {
  2) Fills it with iex_data
 */
  extern tans, iex_nav;
- day_start = int(iex_nav.somd(1) / 86400) * 86400; 
+ day_start = int(iex_nav.somd(1) / 86400) * 86400;
  tans = array( IEX_ATTITUDE, dimsof(iex_nav)(2));
  tans.lat    = iex_nav.lat;
  tans.lon    = iex_nav.lon;
