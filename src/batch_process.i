@@ -1815,9 +1815,9 @@ prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=, verbose=) {
 
     if(verbose)
       write, format="%s%d/%d: %s%s",
-        (verbose > 1 ? "\n" : ""),
-        i, count, file_tail(file_out),
-        (verbose > 1 ? "\n" : "\r");
+          (verbose > 1 ? "\n" : ""),
+          i, count, file_tail(file_out),
+          (verbose > 1 ? "\n " : "\r");
 
     if(update && file_exists(file_out)) {
       if(verbose > 1)
@@ -1825,48 +1825,9 @@ prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=, verbose=) {
       continue;
     }
 
-    if(verbose > 1)
-      write, format="  loading...%s", "";
-
-    data = pbd_load(file_in, , vname);
-    if(is_void(data)) {
-      if(verbose > 1)
-        write, format=" no data found%s", "\n";
-      continue;
-    }
-
-    if(clean) {
-      if(verbose > 1)
-        write, format=" cleaning...%s", "";
-      data = test_and_clean(unref(data));
-    }
-
-    if(verbose > 1)
-      write, format=" filtering...%s", "";
-
-    // Apply prefiltering, if relevant
-    if(!is_void(prefilter_min) || !is_void(prefilter_max))
-      data = filter_bounded_elv(unref(data), lbound=prefilter_min,
-        ubound=prefilter_max, mode=mode);
-
-    // Apply rcf filter
-    data = rcf_filter_eaarl(unref(data), buf=buf, w=w, n=n, mode=mode,
-      rcfmode=rcfmode);
-
-    if(is_void(data)) {
-      if(verbose > 1)
-        write, format=" all points eliminated%s", "\n";
-      continue;
-    }
-
-    if(verbose > 1)
-      write, format=" saving...%s", "";
-    vname = regsub("_(v|b)$", vname, "");
-    vname += swrite(format="_%s_%s", mode, rcfmode);
-    pbd_save, file_out, vname, data;
-
-    if(verbose > 1)
-      write, format=" done%s", "\n";
+    rcf_filter_eaarl_file, file_in, file_out, mode=mode, clean=clean,
+        rcfmode=rcfmode, buf=buf, w=w, n=n, prefilter_min=prefilter_min,
+        prefilter_max=prefilter_max, verbose=(verbose > 1);
   }
 
   if(verbose == 1)

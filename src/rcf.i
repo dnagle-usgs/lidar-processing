@@ -357,6 +357,117 @@ func rcf_filter_eaarl(eaarl, mode=, clean=, rcfmode=, buf=, w=, n=, idx=) {
   return numberof(keep) ? eaarl(keep) : [];
 }
 
+func rcf_filter_eaarl_file(file_in, file_out, mode=, clean=, rcfmode=, buf=,
+w=, n=, prefilter_min=, prefilter_max=, verbose=) {
+/* DOCUMENT rcf_filter_eaarl_file(file_in, file_out, mode=, clean=, rcfmode=,
+  buf=, w=, n=, prefilter_min=, prefilter_max=, verbose=)
+
+  Applies the RCF filter to a file.
+
+  The variable name in the output file will be the same as in the input file,
+  except:
+    - any _v or _b suffix is removed
+    - the data mode and filter mode are appended
+  So a variable name of "example_v" will become "example_fs_grcf" with the
+  default settings.
+
+  Parameters:
+
+    file_in: File to load as input.
+
+    file_out: File to create as input. (If it already exists, it will be
+      clobbered silently.)
+
+  Options:
+
+    mode= Specifies which data mode to use for the data. Can be any setting
+      valid for data2xyz.
+        mode="fs"   First surface (default)
+        mode="be"   Bare earth
+        mode="ba"   Bathymetry (submerged topo)
+
+    clean= Specifies whether the data should be cleaned first using
+      test_and_clean. Settings:
+        clean=0     Do not clean the data.
+        clean=1     Clean the data. (default)
+
+    prefilter_min= Specifies a minimum value for the elevation values, in
+      meters. Points below this value are discarded prior to filtering.
+
+    prefilter_max= Specifies a maximum value for the elevation values, in
+      meters. Points above this value are discarded prior to filtering.
+
+    rcfmode= Specifies which rcf filter function to use. Possible settings:
+        rcfmode="grcf"    Use gridded_rcf (default)
+        rcfmode="rcf"     Use old_gridded_rcf (deprecated)
+
+    buf= Defines the size of the x/y neighborhood the filter uses, in
+      centimeters. Default is 700cm.
+
+    w= Defines the size of the vertical (z) window the filter uses, in
+      centimeters. Default is 200cm.
+
+    n= Defines the minimum number of points that are required in a window in
+      order to count as successful. Default is 3.
+
+    verbose= Specifies how talkative the function should be as it runs. Valid
+      settings:
+        verbose=1   Shows progress as the file is filtered (default)
+        verbose=0   Be completely silent
+*/
+  default, verbose, 1;
+  default, buf, 700;
+  default, w, 200;
+  default, n, 3;
+  default, clean, 1;
+  default, mode, "fs";
+  default, rcfmode, "grcf";
+
+  local vname;
+  if(verbose)
+    write, format=" %s", "loading...";
+  data = pbd_load(file_in, , vname);
+
+  if(is_void(data)) {
+    if(verbose)
+      write, "no data found";
+    return;
+  }
+
+  if(clean) {
+    if(verbose)
+      write, format=" %s", "cleaning...";
+    data = test_and_clean(unref(data));
+  }
+
+  if(verbose)
+    write, format=" %s", "filtering...";
+
+  // Apply prefiltering, if relevant
+  if(!is_void(prefilter_min) || !is_void(prefilter_max))
+    data = filter_bounded_elv(unref(data), lbound=prefilter_min,
+        ubound=prefilter_max, mode=mode);
+
+  // Apply rcf filter
+  data = rcf_filter_eaarl(unref(data), buf=buf, w=w, n=n, mode=mode,
+      rcfmode=rcfmode);
+
+  if(is_void(data)) {
+    if(verbose)
+      write, "all points eliminated";
+      return;
+  }
+
+  if(verbose)
+    write, format=" %s", "saving...";
+  vname = regsub("_(v|b)$", vname, "");
+  vname += swrite(format="_%s_%s", mode, rcfmode);
+  pbd_save, file_out, vname, data;
+
+  if(verbose)
+    write, "done";
+}
+
 func rcf_classify(data, class, select=, rcfmode=, buf=, w=, n=) {
 /* DOCUMENT rcf_classify, data, class, select=, rcfmode=, buf=, w=, n=
   Classify data using an RCF filter.
