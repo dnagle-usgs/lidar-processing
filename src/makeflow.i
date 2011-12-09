@@ -103,7 +103,7 @@ func makeflow_conf_to_script(conf, fn) {
   flow = "";
 
   flow += swrite(format="YORICK=%syorick\n", Y_LAUNCH);
-  flow += swrite(format="SRCDIR=%s\n", get_cwd());
+  flow += swrite(format="JOB=%sjob.i\n", get_cwd());
 
   for(i = 1; i <= conf(*); i++) {
     item = conf(noop(i));
@@ -143,7 +143,7 @@ func makeflow_conf_to_script(conf, fn) {
 
     flow += "\n";
     flow += swrite(format="%s:%s\n", output, input);
-    flow += swrite(format="\t%scd $SRCDIR ; $YORICK -batch job.i %s %s\n",
+    flow += swrite(format="\t%s$YORICK -batch $JOB %s %s\n",
       forcelocal, cmd, args);
   }
 
