@@ -27,24 +27,24 @@
   the configuration options in the passed configuration argument into
   parameters for an external function.
 
-  As above, arbitrary arguments ARGS can be specified on the command line and
-  will be passed as-is to the job function. A helper function exists to convert
-  that array into an oxy group object using key/value option switches. See
-  _job_parse_options for details on usage. It's strongly recommended that job
-  functions use this to evaluate their arguments. Using switches will help
-  better document what the input values are as they're given, and it will allow
-  more flexibility in case the accepted arguments need to change later.
+  As above, arbitrary arguments ARGS can be specified on the command line.
+  These arguments will be converted into an oxy group object using key/value
+  option switches. See _job_parse_options for details on usage. It's strongly
+  recommended that job functions use switches for their arguments. Using
+  switches will help better document what the input values are as they're
+  given, and it will allow more flexibility in case the accepted arguments need
+  to change later.
 
   As an example, here's the content of the debug command debug_show_conf.
 
-    func job_debug_parse(args) {
+    func job_debug_dump(conf) {
       require, "obj_show.i";
-      obj_show, _job_parse_options(args);
+      obj_show, conf;
     }
 
   And here's an example invocation:
 
-    $ yorick -batch job.i job_debug_parse --foo-bar baz --answer 42
+    $ yorick -batch job.i job_debug_dump --foo-bar baz --answer 42
      TOP (oxy_object, 4 entries)
      |- (nil) (void) []
      |- foo (oxy_object, 1 entry)
@@ -60,22 +60,10 @@
 
  ******************************************************************************/
 
-func job_debug_echo(args) {
-/* DOCUMENT job_debug_echo, args
-  Simple job command that echoes its input as expected to have received on the
-  command line.
-    > job_debug_echo, ["foo", "bar"]
-    yorick -batch job.i job_debug_echo "foo" "bar"
-    >
-*/
-  args = swrite(format=" \"%s\"", args)(sum);
-  write, format="yorick -batch job.i job_debug_echo%s\n", args;
-}
-
-func job_debug_parse(args) {
-/* DOCUMENT job_debug_parse, args
+func job_debug_dump(args) {
+/* DOCUMENT job_debug_dump, conf
   Simple job command that parses its arguments and dumps the tree to stdout.
-    > job_debug_parse, ["--foo-bar", "baz", "--answer", "42"]
+    > job_debug_dump, ["--foo-bar", "baz", "--answer", "42"]
      TOP (oxy_object, 4 entries)
      |- (nil) (void) []
      |- foo (oxy_object, 1 entry)
@@ -87,21 +75,18 @@ func job_debug_parse(args) {
   obj_show, _job_parse_options(args);
 }
 
-func job_debug_parse_to_file(args) {
-/* DOCUMENT job_debug_parse_to_file, args
+func job_debug_dump_file(conf) {
+/* DOCUMENT job_debug_dump_file, conf
   Simple job command that parses its arguments and dumps the tree to a file.
   The first non-switch argument will be used as the output file name. It's an
   error if at least one non-switch argument isn't given.
 */
-  pause, 5000;
-  require, "obj_show.i";
-  conf = _job_parse_options(args);
   fn = conf(1)(1);
   write, open(fn, "w"), format="%s\n", obj_show(conf);
 }
 
 func job_dirload(args) {
-/* DOCUMENT job_dirload, args
+/* DOCUMENT job_dirload, conf
   This is a wrapper around dirload. Each accepted command-line option
   corresponds to an option or parameter of dirload as follows.
 
@@ -117,7 +102,6 @@ func job_dirload(args) {
     --uniq defaults to "0"
     --skip defaults to "1"
 */
-  conf = _job_parse_options(args);
   files = outfile = outvname = uniq = skip = [];
   if(!conf(*,"file"))
     error, "missing required keys --file-in and --file-out";
@@ -138,8 +122,8 @@ func job_dirload(args) {
       skip=skip, verbose=0;
 }
 
-func job_rcf_eaarl(args) {
-/* DOCUMENT job_rcf_eaarl, args
+func job_rcf_eaarl(conf) {
+/* DOCUMENT job_rcf_eaarl, conf
   This is a wrapper around rcf_filter_eaarl_file. Each accepted command-line
   option corresponds to an option or parameter of rcf_filter_eaarl_file as
   follows.
@@ -155,7 +139,6 @@ func job_rcf_eaarl(args) {
     --prefilter-min   corresponds to  prefilter_min=
     --prefilter-max   corresponds to  prefilter_max=
 */
-  conf = _job_parse_options(args);
   require, "util_str.i";
   clean = buf = w = n = prefilter_min = prefilter_max = [];
   if(conf(*,"clean")) buf = atoi(conf.clean);
@@ -256,7 +239,6 @@ func _job_parse_options(args) {
   }
 
   return conf;
-
 }
 
 func __job_run(argv) {
@@ -276,7 +258,10 @@ func __job_run(argv) {
   if(numberof(argv) < 2)
     error, "must specify job function";
   job_func = argv(2);
-  args = numberof(argv) < 3 ? [] : argv(3:);
+
+  conf = save();
+  if(numberof(argv) > 2)
+    conf = _job_parse_options(args(3:));
   
   if(strpart(job_func, 1:4) != "job_")
     error, "job function must start with \"job_\"";
@@ -288,7 +273,7 @@ func __job_run(argv) {
   if(!is_func(f))
     error, "invalid job function: "+job_func;
 
-  f, args;
+  f, conf;
 }
 
 // Only kick off a job if called in batch mode.
