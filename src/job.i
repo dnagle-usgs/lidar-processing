@@ -85,7 +85,7 @@ func job_debug_dump_file(conf) {
   write, open(fn, "w"), format="%s\n", obj_show(conf);
 }
 
-func job_dirload(args) {
+func job_dirload(conf) {
 /* DOCUMENT job_dirload, conf
   This is a wrapper around dirload. Each accepted command-line option
   corresponds to an option or parameter of dirload as follows.
@@ -261,7 +261,7 @@ func __job_run(argv) {
 
   conf = save();
   if(numberof(argv) > 2)
-    conf = _job_parse_options(args(3:));
+    conf = _job_parse_options(argv(3:));
   
   if(strpart(job_func, 1:4) != "job_")
     error, "job function must start with \"job_\"";
