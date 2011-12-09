@@ -345,7 +345,6 @@ forcelocal=) {
 
     options=save(
       string(0), [],
-      forcelocal=forcelocal,
       "file-in", file_in,
       "file-out", file_out,
       mode=mode,
@@ -361,6 +360,7 @@ forcelocal=) {
       save, options, "prefilter-max", prefilter_max;
 
     save, conf, string(0), save(
+      forcelocal=forcelocal,
       input=file_in,
       output=file_out,
       command="job_rcf_eaarl",
