@@ -1,5 +1,6 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 require, "eaarl.i";
+require, "job.i";
 
 local makeflow_conf;
 /* DOCUMENT makeflow_conf
@@ -171,4 +172,84 @@ func makeflow_obj_to_switches(obj, prefix) {
     }
   }
   return result;
+}
+
+func sans_makeflow(conf, interval=) {
+/* DOCUMENT sans_makeflow, conf, interval=
+  Runs a makeflow batch, without using makeflow. Useful for systems that don't
+  have makeflow installed.
+
+    conf: The configuration parameter that would normally go to makeflow.
+    interval= Interval to pass to timer_remaining. Default is 15.
+*/
+  default, interval, 15;
+  t0 = t1 = tp = array(double, 3);
+  timer, t0;
+
+  // Scan through the conf and do two things:
+  //    - calculate the size of input (plus 1 byte, to avoid 0 byte files)
+  //    - make sure input exists; if it doesn't, we defer all items after the
+  //      first with missing input
+  defer = save();
+  sizes = array(1., conf(*));
+  for(i = 1; i <= conf(*); i++) {
+    cur = conf(noop(i));
+    if(nallof(file_exists(cur.input))) {
+      defer = conf(i:);
+      conf = conf(:i-1);
+      sizes = sizes(:i-1);
+      break;
+    }
+
+    sizes(i) += double(file_size(cur.input))(*)(sum);
+  }
+
+  // Recast sizes to be cumulative
+  sizes = sizes(cum)(2:);
+
+  if(defer(*)) {
+    write, format="Processing %d jobs; %d deferred\n", conf(*), defer(*);
+  } else {
+    write, format="Processing %d jobs\n", conf(*);
+  }
+
+  timer, t1;
+  for(i = 1; i <= conf(*); i++) {
+    cur = conf(noop(i));
+    cmd = cur.command;
+    opt = cur.options;
+
+    // Convert options to an object format. However, if it's already in an
+    // object format, first coerce into switch format to normalize cases like
+    // this:
+    //    save(file=save(in="/a", out="/b"))
+    //    save("file-in", "/a", "file-out", "/b")
+    // Both yield equivalent switches, but the job functions expect the first
+    // format.
+    if(is_obj(opt)) {
+      args = makeflow_obj_to_switches(opt(2:));
+      if(numberof(opt(1)))
+        grow, args, opt(1);
+      opt = args;
+      args = [];
+    }
+    if(is_scalar(opt)) {
+      opt = strsplit(opt, " ");
+    }
+    opt = _job_parse_options(opt);
+
+    f = symbol_def(cmd);
+    f, opt;
+
+    timer_remaining, t1, sizes(i), sizes(0), tp, interval=interval;
+  }
+
+  timer_finished, t0, fmt=swrite(format="Finished %d jobs in ELAPSED.\n", conf(*));
+
+  if(defer(*)) {
+    while(nallof(file_exists(defer(1).input)))
+      pause, 100;
+    write, "";
+    sans_makeflow, defer, interval=interval;
+  }
 }
