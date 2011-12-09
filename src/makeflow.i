@@ -131,7 +131,7 @@ func makeflow_conf_to_script(conf, fn) {
       }
     }
     if(is_obj(item.options)) {
-      args = __makeflow_obj_to_switches(item.options(2:));
+      args = makeflow_obj_to_switches(item.options(2:));
       if(numberof(item.options(1)))
         grow, args, item.options(1);
       args = strjoin(args, " ");
@@ -153,9 +153,10 @@ func makeflow_conf_to_script(conf, fn) {
   return flow;
 }
 
-func __makeflow_obj_to_switches(obj, prefix) {
-/* DOCUMENT __makeflow_obj_to_switches(obj, prefix)
-  Converts an oxy group object into an array of key/value switches.
+func makeflow_obj_to_switches(obj, prefix) {
+/* DOCUMENT makeflow_obj_to_switches(obj, prefix)
+  Converts an oxy group object into an array of key/value switches. Intended
+  for internal use in makeflow.i.
   SEE ALSO: makeflow
 */
   default, prefix, "-";
@@ -163,7 +164,7 @@ func __makeflow_obj_to_switches(obj, prefix) {
   keys = obj(*,);
   for(i = 1; i <= obj(*); i++) {
     if(is_obj(obj(noop(i)))) {
-      grow, result, __makeflow_obj_to_switches(obj(noop(i)), prefix+"-"+keys(i));
+      grow, result, makeflow_obj_to_switches(obj(noop(i)), prefix+"-"+keys(i));
     } else {
       for(j = 1; j <= numberof(obj(noop(i))); j++)
         grow, result, [prefix+"-"+keys(i), obj(noop(i))(j)];
