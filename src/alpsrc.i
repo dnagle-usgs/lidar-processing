@@ -32,6 +32,9 @@ local alpsrc;
     cctools_bin = ../../cctools/bin
       Defines the directory where the cctools binaries may be found.
 
+    makeflow_opts = -N alps -T local
+      Options to pass to makeflow. Use 'makeflow -h' for list of options.
+
   See also: alpsrc_load
 */
 
@@ -79,6 +82,7 @@ func __alpsrc_set_defaults(&hash) {
   h_set, hash, maps_dir=file_join(sharedir, "maps");
   h_set, hash, gdal_bin=file_join(get_cwd(), "..", "..", "gdal", "bin");
   h_set, hash, cctools_bin=file_join(get_cwd(), "..", "..", "cctools", "bin");
+  h_set, hash, makeflow_opts="-N alps -T local";
   h_set, hash, memory_autorefresh=5;
 }
 
