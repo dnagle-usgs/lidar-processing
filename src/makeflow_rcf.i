@@ -1,7 +1,9 @@
 require, "makeflow.i";
 
-func mf_automerge_tiles(path, makeflow_fn, searchstr=, verbose=, update=) {
-/* DOCUMENT mf_automerge_tiles(path, makeflow_fn, searchstr=, verbose=, update=)
+func mf_automerge_tiles(path, makeflow_fn, searchstr=, update=, forcelocal=) {
+/* DOCUMENT mf_automerge_tiles(path, makeflow_fn, searchstr=, update=,
+  forcelocal=)
+
   Specialized batch merging function for the initial merge of processed data.
 
   By default, it will find all files matching *_v.pbd and *_b.pbd. It will
@@ -10,8 +12,14 @@ func mf_automerge_tiles(path, makeflow_fn, searchstr=, verbose=, update=) {
   it's safe to run on a directory containing both veg and bathy or both w84
   and n88; they won't all get mixed together inappropriately.
 
+  If called as a subroutine, the jobs will be run with Makeflow. If called as a
+  function, the configuration that would have been passed to Makeflow is
+  returned instead.
+
   Parameters:
     path: The path to the directory.
+    makeflow_fn: The filename to use when writing out the makeflow. Ignored if
+      called as a function. If not provided, will be path+"/Makeflow".
 
   Options:
     searchstr= You can override the default search string if you're only
@@ -23,14 +31,15 @@ func mf_automerge_tiles(path, makeflow_fn, searchstr=, verbose=, update=) {
         searchstr="*w84*_v.pbd"             Find only w84 _v files
       Note that searchstr= can be an array for this function, if need be.
 
-    verbose= Specifies how chatty the function should be. Settings:
-        verbose=0      Be silent
-        verbose=1      Provide progress and information to the screen
-
     update= By default, existing files are overwritten. Using update=1 will
       skip them instead.
         update=0    Overwrite files if they exist
         update=1    Skip files if they exist
+
+    forcelocal= Forces local executation for these jobs. Local execution is
+      recommended as this is a CPU-light task with large data requirements.
+        forcelocal=1    Force local (default)
+        forcelocal=0    Allow remote
 
   Output:
     This will create the merged files in the directory specified, alongside
@@ -46,8 +55,8 @@ func mf_automerge_tiles(path, makeflow_fn, searchstr=, verbose=, update=) {
     Again, the information will vary based on the files merged.
 */
   default, searchstr, ["*_v.pbd", "*_b.pbd"];
-  default, verbose, 1;
   default, update, 0;
+  default, forcelocal, 1;
 
   // Locate files and split into dirs/tails
   files = find(path, glob=searchstr);
@@ -76,14 +85,7 @@ func mf_automerge_tiles(path, makeflow_fn, searchstr=, verbose=, update=) {
   problem = strlen(tiles) == 0 | strlen(types) == 0 | strlen(datums) == 0;
   if(anyof(problem)) {
     w = where(problem);
-    if(verbose) {
-      write, format="\nFound %d problem files that were non-parseable and will \
-        be skipped:\n", numberof(w);
-      write, format=" - %s\n", tails(w);
-    }
     if(allof(problem)) {
-      if(verbose)
-        write, format="All files were skipped. Aborting.%s", "\n";
       return;
     } else {
       w = where(!problem);
@@ -110,15 +112,8 @@ func mf_automerge_tiles(path, makeflow_fn, searchstr=, verbose=, update=) {
   if(anyof(exists)) {
     w = where(exists);
     existout = set_remove_duplicates(outfiles(w));
-    if(verbose) {
-      write, format="\nFound %d output files that already exist. %s\n",
-        numberof(existout), (update ? "Skipping." : "Overwriting.");
-      write, format=" - %s\n", file_tail(existout);
-    }
     if(update) {
       if(allof(exists)) {
-        if(verbose)
-          write, format="All files were skipped. Aborting.%s", "\n";
         return;
       } else {
         w = where(!exists);
@@ -132,8 +127,6 @@ func mf_automerge_tiles(path, makeflow_fn, searchstr=, verbose=, update=) {
       }
     } else {
       w = where(exists);
-      if(verbose)
-        write, format="Removing %d files to be overwritten...\n", numberof(w);
       for(i = 1; i <= numberof(w); i++)
         remove, outfiles(w(i));
     }
@@ -159,13 +152,6 @@ func mf_automerge_tiles(path, makeflow_fn, searchstr=, verbose=, update=) {
   suffixes = set_remove_duplicates(suffixes);
   nsuf = numberof(suffixes);
   outuniq = numberof(set_remove_duplicates(outfiles));
-  if(verbose) {
-    write, format="\nCreating %d set%s of merged files:\n", nsuf,
-      (nsuf > 1 ? "s" : "");
-    write, format=" - *%s\n", suffixes;
-    write, format="\nMerging %d input files into %d output files...\n",
-      count, outuniq;
-  }
 
   // Iterate through and load each file, saving whenever we're on the input
   // file for a given output file.
@@ -175,7 +161,7 @@ func mf_automerge_tiles(path, makeflow_fn, searchstr=, verbose=, update=) {
     while(j < count && outfiles(j+1) == outfiles(i))
       j++;
     save, conf, string(0), save(
-      forcelocal=1,
+      forcelocal=forcelocal,
       input=files(i:j),
       output=outfiles(i),
       command="job_dirload",
@@ -201,16 +187,17 @@ func mf_automerge_tiles(path, makeflow_fn, searchstr=, verbose=, update=) {
 
 func mf_batch_rcf(dir, makeflow_fn, searchstr=, merge=, files=, update=, mode=,
 clean=, prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=,
-verbose=) {
+forcelocal=) {
 /* DOCUMENT new_batch_rcf, dir, makeflow_fn, searchstr=, merge=, files=,
   update=, mode=, clean=, prefilter_min=, prefilter_max=, rcfmode=, buf=, w=,
-  n=, meta=, verbose=
+  n=, meta=, forcelocal=
 
-  This is a rewritten batch_rcf function. It iterates over each file in a set
-  of files and applies an RCF filter to its data.
+  This iterates over each file in a set of files and applies an RCF filter to
+  its data.
 
-  This function has many changes with respect to batch_rcf, as noted after the
-  parameters and options below.
+  If called as a subroutine, the jobs will be run with Makeflow. If called as a
+  function, the configuration that would have been passed to Makeflow is
+  returned instead.
 
   Parameters:
     dir: The directory containing the files you wish to filter.
@@ -277,47 +264,13 @@ verbose=) {
         meta=0   Do not include the filter parameters in the file name.
         meta=1   Include the filter parameters in the file name. (default)
 
-    verbose= Specifies how talkative the function should be as it runs. Valid
-      settings:
-        verbose=2   Lots of output, will scroll your window. (default)
-        verbose=1   Minimal output, just a basic progress line, no scroll.
-        verbose=0   Be completely silent.
-
-  Changes from batch_rcf:
-
-    No support for edf files. The readedf=, readpbd=, writeedf=, and
-    writepbd= options are thus not included.
-
-    The no_rcf= parameter is now just n=.
-
-    The mode= parameter is now "fs" instead of 1, etc.
-
-    The fname= parameter is replaced by files=.
-
-    No support for the special-case compare_noaa= option.
-
-    No support for merging *without* writing the merged files.
-
-    No support for merging without filtering. Use batch_automerge_tiles or
-    batch_merge_tiles for that.
-
-    The rcfmode= parameter accepts different settings and defaults to the new
-    gridded_rcf logic. No support yet for the triangulation filter (ircf).
-
-    There is no datum= option; the filtering is blind to datums.
-
-    There is no fsmode= or wfs= option; the combined first surface/bare earth
-    filtering is no longer in use. They are filtered separately now to avoid
-    unnecessary sparseness in the results.
-
-    There is no bmode= option.
-
-    The onlyupdate= option is now named update=.
-
-    There is no selectmode= option.
+    forcelocal= Forces local executation for these jobs. Local execution is
+      recommended for most networks as this is a CPU-light task with large data
+      requirements.
+        forcelocal=1    Force local (default)
+        forcelocal=0    Allow remote
 */
   default, searchstr, "*.pbd";
-  default, verbose, 2;
   default, update, 0;
   default, merge, 0;
   default, buf, 700;
@@ -327,6 +280,7 @@ verbose=) {
   default, meta, 1;
   default, mode, "fs";
   default, rcfmode, "grcf";
+  default, forcelocal, 1;
 
   t0 = array(double, 3);
   timer, t0;
@@ -343,11 +297,9 @@ verbose=) {
         documentation.";
     sstail = strpart(searchstr, -6:);
     if(sstail == "*_v.pbd") {
-      conf = mf_automerge_tiles(dir, searchstr=searchstr, verbose=verbose > 0,
-          update=update);
+      conf = mf_automerge_tiles(dir, searchstr=searchstr, update=update);
     } else if(sstail == "*_b.pbd") {
-      conf = mf_automerge_tiles(dir, searchstr=searchstr, verbose=verbose > 0,
-          update=update);
+      conf = mf_automerge_tiles(dir, searchstr=searchstr, update=update);
     } else {
       error, "Invalid setting for searchstr= with merge=1. See \
         documentation."
@@ -363,8 +315,6 @@ verbose=) {
   count = numberof(files);
 
   if(!count) {
-    if(verbose)
-      write, "No files found, nothing to do... Goodbye!";
     return;
   }
 
@@ -385,26 +335,17 @@ verbose=) {
     // .pbd
     file_out += ".pbd";
 
-    if(verbose)
-      write, format="%s%d/%d: %s%s",
-          (verbose > 1 ? "\n" : ""),
-          i, count, file_tail(file_out),
-          (verbose > 1 ? "\n " : "\r");
-
     if(file_exists(file_out)) {
       if(update) {
-        if(verbose > 1)
-          write, format="  already exists%s", "\n";
         continue;
       } else {
-        if(verbose > 1)
-          write, format="  removing existing to overwrite%s", "\n";
         remove, file_out;
       }
     }
 
     options=save(
       string(0), [],
+      forcelocal=forcelocal,
       "file-in", file_in,
       "file-out", file_out,
       mode=mode,
@@ -427,9 +368,6 @@ verbose=) {
     );
   }
 
-  if(verbose == 1)
-    write, format="%s", "\n";
-
   if(!am_subroutine())
     return conf;
 
@@ -438,5 +376,3 @@ verbose=) {
 
   timer_finished, t0;
 }
-
-
