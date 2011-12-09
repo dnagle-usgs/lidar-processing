@@ -54,21 +54,31 @@ local makeflow_conf;
   SEE ALSO: makeflow, _job_parse_options
 */
 
-func makeflow(conf, fn) {
-/* DOCUMENT makeflow, conf, fn;
-  Runs a set of jobs using Makeflow.
+func makeflow(conf, fn, interval=) {
+/* DOCUMENT makeflow, conf, fn, interval=;
+  Runs a set of jobs using Makeflow. If Makeflow isn't available, falls back on
+  sans_makeflow.
   
   Arguments:
     conf: The configuration directives that define the jobs to run. See
       makeflow_conf for details.
     fn: The filename at which to create the Makeflow file. This should
       generally have a suffix of ".makeflow".
+  Option:
+    interval= Time interval passed to timer_remaining when using sans_makeflow.
+      Ignored if Makeflow is available.
 
   SEE ALSO: makeflow_conf
 */
   extern alpsrc;
   makeflow_exe = file_join(alpsrc.cctools_bin, "makeflow");
   monitor_exe = file_join(alpsrc.cctools_bin, "makeflow_monitor");
+
+  if(!file_exists(makeflow_exe) || !file_exists(monitor_exe)) {
+    sans_makeflow, conf, interval=interval;
+    return;
+  }
+
   makeflow_log = fn+".makeflowlog";
 
   makeflow_conf_to_script, conf, fn;

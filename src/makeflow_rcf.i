@@ -182,7 +182,7 @@ func mf_automerge_tiles(path, makeflow_fn, searchstr=, update=, forcelocal=) {
     return conf;
 
   default, makeflow_fn, file_join(path, "Makeflow");
-  makeflow, conf, makeflow_fn;
+  makeflow, conf, makeflow_fn, interval=10;
 }
 
 func mf_batch_rcf(dir, makeflow_fn, searchstr=, merge=, files=, update=, mode=,
@@ -372,7 +372,7 @@ forcelocal=) {
     return conf;
 
   default, makeflow_fn, file_join(dir, "Makeflow");
-  makeflow, conf, makeflow_fn;
+  makeflow, conf, makeflow_fn, interval=15;
 
   timer_finished, t0;
 }
