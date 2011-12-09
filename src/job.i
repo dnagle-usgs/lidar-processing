@@ -100,6 +100,81 @@ func job_debug_parse_to_file(args) {
   write, open(fn, "w"), format="%s\n", obj_show(conf);
 }
 
+func job_dirload(args) {
+/* DOCUMENT job_dirload, args
+  This is a wrapper around dirload. Each accepted command-line option
+  corresponds to an option or parameter of dirload as follows.
+
+    --file-in   corresponds to  files=
+    --file-out  corresponds to  outfile=
+    --vname     corresponds to  outvname=
+    --uniq      corresponds to  uniq=
+    --skip      corresponds to  skip=
+
+  Additionally,
+
+    --file-in may be provided multiple times
+    --uniq defaults to "0"
+    --skip defaults to "1"
+*/
+  conf = _job_parse_options(args);
+  files = outfile = outvname = uniq = skip = [];
+  if(!conf(*,"file"))
+    error, "missing required keys --file-in and --file-out";
+  if(nallof(conf.file(*,["in","out"])))
+    error, "missing required keys --file-in and --file-out";
+  files = conf.file.in;
+  outfile = conf.file.out;
+  uniq = conf(*,"uniq") ? conf.uniq : "0";
+  skip = conf(*,"skip") ? conf.skip : "1";
+  outvname = conf(*,"vname") ? conf.vname : [];
+
+  require, "util_str.i";
+  uniq = atoi(uniq);
+  skip = atoi(skip);
+
+  require, "dirload.i";
+  dirload, files=files, outfile=outfile, outvname=outvname, uniq=uniq,
+      skip=skip, verbose=0;
+}
+
+func job_rcf_eaarl(args) {
+/* DOCUMENT job_rcf_eaarl, args
+  This is a wrapper around rcf_filter_eaarl_file. Each accepted command-line
+  option corresponds to an option or parameter of rcf_filter_eaarl_file as
+  follows.
+
+    --file-in         corresponds to  file_in
+    --file-out        corresponds to  file_out
+    --mode            corresponds to  mode=
+    --clean           corresponds to  clean=
+    --rcfmode         corresponds to  rcfmode=
+    --buf             corresponds to  buf=
+    --w               corresponds to  w=
+    --n               corresponds to  n=
+    --prefilter-min   corresponds to  prefilter_min=
+    --prefilter-max   corresponds to  prefilter_max=
+*/
+  conf = _job_parse_options(args);
+  require, "util_str.i";
+  clean = buf = w = n = prefilter_min = prefilter_max = [];
+  if(conf(*,"clean")) buf = atoi(conf.clean);
+  if(conf(*,"buf")) buf = atoi(conf.buf);
+  if(conf(*,"w")) w = atoi(conf.w);
+  if(conf(*,"n")) n = atoi(conf.n);
+  if(conf(*,"prefilter")) {
+    // .min and .max are syntax errors to the Yorick parser, so ("min") and
+    // ("max") must be used instead
+    if(conf.prefilter(*,"min")) prefilter_min = atod(conf.prefilter("min"));
+    if(conf.prefilter(*,"max")) prefilter_max = atod(conf.prefilter("max"));
+  }
+
+  require, "rcf.i";
+  rcf_filter_eaarl_file, conf.file.in, conf.file.out, mode=conf.mode,
+      clean=clean, rcfmode=conf.rcfmode, buf=buf, w=w, n=n,
+      prefilter_min=prefilter_min, prefilter_max=prefilter_max, verbose=0;
+}
+
 /******************************************************************************
  * INTERNALS                                                                  *
  ******************************************************************************
