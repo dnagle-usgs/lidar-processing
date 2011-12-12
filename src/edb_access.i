@@ -283,7 +283,7 @@ func get_tld_rasts(fn, fnum=, fname=) {
     fn = file_join(file_dirname(edb_filename), fn);
   }
 
-  f = open(tld, "rb");
+  f = open(fn, "rb");
   add_variable, f, -1, "raw", char, sizeof(f);
   offset = 0;
   rasts = array(pointer, 8192);
