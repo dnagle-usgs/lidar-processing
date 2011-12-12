@@ -170,10 +170,18 @@ func job_georef_eaarl1(conf) {
     --daystart      corresponds to  daystart
     --file-out      corresponds to  outfile=
 
+  Additionally, the following parameter not required by georef_eaarl1 is
+  required as well:
+
+    --gps_time_correction
+
   All options are required.
 */
+  extern gps_time_correction;
   require, "util_str.i";
-  if(nallof(conf(*,["file","daystart"])) || nallof(conf.file(*,["in","out"])))
+  if(nallof(conf(*,["file","daystart","gps_time_correction"])))
+    error, "missing required options";
+  if(nallof(conf.file(*,["in","out"])))
     error, "missing required options";
   if(nallof(conf.file.in(*,["tld","gns","ins","ops"])))
     error, "missing required options";
@@ -183,6 +191,7 @@ func job_georef_eaarl1(conf) {
   ins = conf.file.in.ins;
   ops = conf.file.in.ops;
   daystart = atoi(conf.daystart);
+  gps_time_correction = atod(conf.gps_time_correction);
   outfile = conf.file.out;
 
   require, "eaarl1_wf.i";

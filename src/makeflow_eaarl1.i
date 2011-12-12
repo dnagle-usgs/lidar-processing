@@ -130,6 +130,7 @@ ins=, ops=, daystart=, update=, forcelocal=) {
         "file-in-ins", ins,
         "file-in-ops", ops,
         "daystart", swrite(format="%d", daystart),
+        "gps_time_correction", swrite(format="%.0f", gps_time_correction),
         "file-out", outfiles(i)
       )
     );
