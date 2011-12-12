@@ -250,37 +250,52 @@ func edb_update(time_correction) {
   }
 }
 
-func get_tld_rasts(fnum=, fname=) {
-/* DOCUMENT rasts = get_tld_rasts(fnum=, fname=)
+func get_tld_rasts(fn, fnum=, fname=) {
+/* DOCUMENT rasts = get_tld_rasts(fn, fnum=, fname=)
   Returns an array of pointers to all of the rasters in a given TLD file.
 
-  One of these two options are required:
-    fnum= The file number in edb_files
-    fname= The file name in edb_files
+  The recommended usage of this function is as:
+    get_tld_rasts(fn)
+  Where FN is the full path to the TLD file to load. When called in this
+  manner, the function has no dependencies on any extern variables.
 
-  Result is a vector of pointers. Each pointer points to a vector of type
-  char. The char vectors can be interpreted using decode_raster.
+  Additionally, two deprecated modes of usage are also supported:
+    get_tld_rasts(fnum=FNUM)
+    get_tld_rast(fname=FNAME)
+  Where FNUM is an index into extern edb_files and FNAME is an entry in extern
+  edb_files. Either of these invocations will rely on edb_files to look up the
+  file name, and then edb_filename to resolve the absolute path to that file.
+
+  Result is a vector of pointers. Each pointer points to a vector of type char.
+  The char vectors can be interpreted using decode_raster.
 */
-  extern edb, edb_files, edb_filename;
-  if(is_void(fnum) && !is_void(fname)) {
-    w = where(strglob("*"+file_tail(fname), edb_files));
-    if(numberof(w) == 1)
-      fnum = w(1);
+  if(is_void(fn)) {
+    extern edb_files, edb_filename;
+    if(is_void(fnum) && !is_void(fname)) {
+      w = where(strglob("*"+file_tail(fname), edb_files));
+      if(numberof(w) == 1)
+        fnum = w(1);
+    }
+    if(is_void(fnum) || fnum < 1 || fnum > numberof(edb_files))
+      error, "Must provide valid fn, fnum= or fname=";
+    w = where(edb.file_number == fnum);
+    fn = file_tail(edb_files(fnum));
+    fn = file_join(file_dirname(edb_filename), fn);
   }
-  if(is_void(fnum) || fnum < 1 || fnum > numberof(edb_files))
-    error, "Must provide valid fnum= or fname=";
 
-  w = where(edb.file_number == fnum);
-  fn = file_tail(edb_files(fnum));
-  fullfn = file_join(file_dirname(edb_filename), fn);
-  f = open(fullfn, "rb");
+  f = open(tld, "rb");
   add_variable, f, -1, "raw", char, sizeof(f);
-
-  rasts = array(pointer, numberof(w));
-  offsets = (edb(w).raster_length)(cum);
-
-  for(i = 1; i <= numberof(rasts); i++)
-    rasts(i) = &(f.raw(offsets(i)+1:offsets(i+1)));
+  offset = 0;
+  rasts = array(pointer, 8192);
+  i = 0;
+  while(offset < numberof(f.raw)) {
+    i++;
+    array_allocate, rasts, i;
+    len = i24(f.raw(offset+1:offset+3), 1);
+    rasts(i) = &(f.raw(offset+1:offset+len));
+    offset += len;
+  }
+  rasts = rasts(:i);
 
   return rasts;
 }
