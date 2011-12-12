@@ -162,7 +162,7 @@ func georef_eaarl1(rasts, gns, ins, ops, daystart, outfile=) {
       + rasts.seconds;
 
   // Relative timestamps
-  somd = soe - soe_day_start;
+  somd = soe - daystart;
 
   // Aircraft roll, pitch, and yaw (in degrees)
   aR = interp(ins.roll, ins.somd, somd);
