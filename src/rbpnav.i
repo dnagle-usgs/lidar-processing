@@ -184,18 +184,18 @@ func load_pnav (junk, fn=, verbose=) {
 
   n = int(0);
   idf = open( ifn, "rb");
-
-  add_member, idf, "PNAV", 0,  "sv",    short;
-  add_member, idf, "PNAV",-1,  "flag",  short;
-  add_member, idf, "PNAV",-1,  "sod",   float;
-  add_member, idf, "PNAV",-1,  "pdop",  float;
-  add_member, idf, "PNAV",-1,  "alt",   float;
-  add_member, idf, "PNAV",-1,  "xrms",   float;
-  add_member, idf, "PNAV",-1,  "veast", float;
-  add_member, idf, "PNAV",-1,  "vnorth",float;
-  add_member, idf, "PNAV",-1,  "vup",   float;
-  add_member, idf, "PNAV",-1,  "lat",   double;
-  add_member, idf, "PNAV",-1,  "lon",   double;
+  i86_primitives, idf;
+  add_member, idf, "PNAV", -1, "sv", short;
+  add_member, idf, "PNAV", -1, "flag", short;
+  add_member, idf, "PNAV", -1, "sod", float;
+  add_member, idf, "PNAV", -1, "pdop", float;
+  add_member, idf, "PNAV", -1, "alt", float;
+  add_member, idf, "PNAV", -1, "xrms", float;
+  add_member, idf, "PNAV", -1, "veast", float;
+  add_member, idf, "PNAV", -1, "vnorth", float;
+  add_member, idf, "PNAV", -1, "vup", float;
+  add_member, idf, "PNAV", -1, "lat", double;
+  add_member, idf, "PNAV", -1, "lon", double;
   install_struct, idf, "PNAV";
 
   // get the integer number of records
