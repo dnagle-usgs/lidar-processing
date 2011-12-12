@@ -580,24 +580,27 @@ func missiondata_wrap(type) {
       );
     }
   } else if(type == "ins") {
-    extern iex_nav, iex_head, tans;
+    extern iex_nav, iex_head, tans, ins_filename;
     if(is_void(iex_head)) {
       return h_new(
         "__type", "ins_tans",
-        "tans", tans
+        "tans", tans,
+        "ins_filename", ins_filename
       );
     } else {
       return h_new(
         "__type", "ins_iex",
         "iex_nav", iex_nav,
-        "iex_head", iex_head
+        "iex_head", iex_head,
+        "ins_filename", ins_filename
       );
     }
   } else if(type == "ops_conf") {
     extern ops_conf;
     return h_new(
       "__type", "ops_conf",
-      "ops_conf", ops_conf
+      "ops_conf", ops_conf,
+      "ops_conf_filename", ops_conf_filename
     );
   } else if(type == "bath_ctl") {
     extern bath_ctl;
@@ -647,17 +650,20 @@ func missiondata_unwrap(data) {
     pnav = gga = data.pnav;
     pnav_filename = data.pnav_filename;
   } else if(type == "ins_tans") {
-    extern iex_nav, iex_head, tans;
+    extern iex_nav, iex_head, tans, ins_filename;
     iex_nav = iex_head = [];
     tans = data.tans;
+    ins_filename = data.ins_filename;
   } else if(type == "ins_iex") {
     extern iex_nav, iex_head, tans;
     iex_nav = data.iex_nav;
     iex_head = data.iex_head;
+    ins_filename = data.ins_filename;
     iex2tans;
   } else if(type == "ops_conf") {
-    extern ops_conf;
+    extern ops_conf, ops_conf_filename;
     ops_conf = data.ops_conf;
+    ops_conf_filename = data.ops_conf_filename;
   } else if(type == "bath_ctl") {
     extern bath_ctl;
     bath_ctl = data.bath_ctl;
@@ -748,22 +754,22 @@ func missiondata_load(type, day=, noerror=) {
     if(!is_void(pnav))
       auto_curzone, pnav.lat, pnav.lon;
   } else if(type == "ins") {
-    extern iex_nav, iex_head, tans;
+    extern iex_nav, iex_head, tans, ins_filename;
     if(cache_enabled && h_has(cache, "ins")) {
       missiondata_unwrap, cache("ins");
     } else if(mission_has("ins file", day=day)) {
-      insfile = mission_get("ins file", day=day);
-      if(file_extension(insfile) == ".pbd") {
-        load_iexpbd, insfile, verbose=0;
+      ins_filename = mission_get("ins file", day=day);
+      if(file_extension(ins_filename) == ".pbd") {
+        load_iexpbd, ins_filename, verbose=0;
       } else {
-        tans = iex_nav = rbtans(fn=insfile);
+        tans = iex_nav = rbtans(fn=ins_filename);
         iex_head = [];
       }
       if(cache_enabled) {
         h_set, cache, "ins", missiondata_wrap("ins");
       }
     } else if(noerror) {
-      iex_nav = iex_head = tans = [];
+      iex_nav = iex_head = tans = ins_filename = [];
     } else {
       error, "Could not load ins data: no ins file defined";
     }
@@ -773,14 +779,15 @@ func missiondata_load(type, day=, noerror=) {
     if(cache_enabled && h_has(cache, "ops_conf")) {
       missiondata_unwrap, cache("ops_conf");
     } else if(mission_has("ops_conf file", day=day)) {
-      extern ops_conf;
-      include, mission_get("ops_conf file", day=day), 1;
+      extern ops_conf, ops_conf_filename;
+      ops_conf_filename = mission_get("ops_conf file", day=day);
+      include, ops_conf_filename, 1;
       if(cache_enabled) {
         h_set, cache, "ops_conf", missiondata_wrap("ops_conf");
       }
     } else if(noerror) {
-      extern ops_conf;
-      ops_conf = [];
+      extern ops_conf, ops_conf_filename;
+      ops_conf = ops_conf_filename = [];
     } else {
       error, "Could not load ops_conf: no ops_conf file defined";
     }
