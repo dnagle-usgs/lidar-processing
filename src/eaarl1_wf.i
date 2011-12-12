@@ -107,12 +107,7 @@ daystart=, update=, verbose=, interval=) {
   timer, t0;
 
   for(i = 1; i <= count; i++) {
-    rasts = eaarl1_decode_rasters(get_tld_rasts(fname=files(i)));
-    wf = georef_eaarl1(rasts, gns, ins, ops, daystart);
-    rasts = [];
-
-    wf, save, outfiles(i);
-
+    georef_eaarl1, files(i), gns, ins, ops, daystart, outfile=outfiles(i);
     if(verbose)
       timer_remaining, t0, sizes(i), sizes(0), tp, interval=interval;
   }
@@ -120,12 +115,13 @@ daystart=, update=, verbose=, interval=) {
     timer_finished, t0;
 }
 
-func georef_eaarl1(rasts, gns, ins, ops, daystart) {
-/* DOCUMENT wfobj = georef_eaarl1(rasts, gns, is, ops, daystart)
+func georef_eaarl1(rasts, gns, ins, ops, daystart, outfile=) {
+/* DOCUMENT wfobj = georef_eaarl1(rasts, gns, is, ops, daystart, outfile=)
   Given raw EAARL data, this returns a georefenced waveforms object.
 
   Parameters:
-    rasts: An array of raster data in struct RAST.
+    rasts: An array of raster data in struct RAST, or a filename to a TLD which
+      will be loaded as thus.
     gns: An array of positional trajectory data in struct PNAV, or a filename
       to such data.
     ins: An array of attitude data in struct IEX_ATTITUDE, or a filename to
@@ -133,10 +129,15 @@ func georef_eaarl1(rasts, gns, ins, ops, daystart) {
     ops: An instance of mission_constants, or a filename to such data.
     daystart: The SOE value for the start of the mission day.
 
+  Options:
+    outfile= If provided, the resulting wfobj will be saved to this path.
+
   Result is an instance of wfobj.
 */
   extern eaarl_time_offset, tca;
 
+  if(is_string(rasts))
+    rasts = eaarl1_decode_rasters(get_tld_rasts(rasts));
   if(is_string(gns))
     gns = load_pnav(fn=gns);
   if(is_string(ins))
@@ -283,5 +284,11 @@ func georef_eaarl1(rasts, gns, ins, ops, daystart) {
 
   // Now get rid of points without waveforms
   w = where(rx);
-  return wf(index, w);
+  wf = wf(index, w);
+
+  // Write to file, if applicable
+  if(!is_void(outfile))
+    wf, save, outfile;
+
+  return wf;
 }
