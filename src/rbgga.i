@@ -51,8 +51,6 @@ Functions:
 */
 
 
-plmk_default,msize=.1
-
 struct GGA {
   float sod;
   double lat;

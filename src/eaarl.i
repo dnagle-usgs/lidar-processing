@@ -8,6 +8,9 @@ if(is_void(__eaarl_includes_included__)) {
   // decimal places interactively by default
   print_format, float="%.10g", double="%.10g";
 
+  plmk_default, msize=.1;
+  pldefault, marks=0;
+
   // roll is a yorick function but often gets overwritten, so copy it to yroll
   // so that it doesn't get lost
   if(is_void(yroll))

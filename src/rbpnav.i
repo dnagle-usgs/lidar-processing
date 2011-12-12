@@ -59,9 +59,6 @@ struct EGGNAV {
  float hdop;
 }
 
-plmk_default,msize=.1
-pldefault,marks=0
-
 func raeggnav (junk) {
 /* DOCUMENT raeggnav
   Read ASCII EGG precision navigation file.  This reads nav trajectories

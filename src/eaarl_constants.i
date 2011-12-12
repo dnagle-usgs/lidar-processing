@@ -87,6 +87,3 @@ for(key = h_first(ELLIPSOID); key; key = h_next(ELLIPSOID, key)) {
   h_set, tmp, e2=2*tmp.f - tmp.f*tmp.f;
 }
 tmp = [];
-
-// desired graphics default settings
-pldefault, marks=0;

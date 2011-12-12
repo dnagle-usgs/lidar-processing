@@ -39,8 +39,6 @@ struct TANS {
 };
 
 
-plmk_default,msize=.1
-
 func rbtans( junk, fn= ) {
  extern data_path;
  extern tans_filename;
