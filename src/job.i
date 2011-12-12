@@ -158,6 +158,37 @@ func job_rcf_eaarl(conf) {
       prefilter_min=prefilter_min, prefilter_max=prefilter_max, verbose=0;
 }
 
+func job_georef_eaarl1(conf) {
+/* DOCUMENT job_georef_eaarl1, conf
+  This is a wrapper around georef_eaarl1. Each accepted command-line option
+  corresponds to an option or parameter of georef_eaarl1 as follows.
+
+    --file-in-tld   corresponds to  rasts
+    --file-in-gns   corresponds to  gns
+    --file-in-ins   corresponds to  ins
+    --file-in-ops   corresponds to  ops
+    --daystart      corresponds to  daystart
+    --file-out      corresponds to  outfile=
+
+  All options are required.
+*/
+  require, "util_str.i";
+  if(nallof(conf(*,["file","daystart"])) || nallof(conf.file(*,["in","out"])))
+    error, "missing required options";
+  if(nallof(conf.file.in(*,["tld","gns","ins","ops"])))
+    error, "missing required options";
+  tld = gns = ins = ops = daystart = outfile = [];
+  tld = conf.file.in.tld;
+  gns = conf.file.in.gns;
+  ins = conf.file.in.ins;
+  ops = conf.file.in.ops;
+  daystart = atoi(conf.daystart);
+  outfile = conf.file.out;
+
+  require, "eaarl1_wf.i";
+  georef_eaarl1, tld, gns, ins, ops, daystart, outfile=outfile;
+}
+
 /******************************************************************************
  * INTERNALS                                                                  *
  ******************************************************************************
