@@ -2,6 +2,11 @@ This file documents the changes made to the ALPS installer package. These
 installer packages are typically available on lidar.net under
 /mnt/alps/install/.
 
+2011-12-13
+    - Added cctools 3.4.1
+    - Revised Makefile
+    - Updated ALPS repository clone to tip 4f0577155239
+
 2011-11-16
     - Python changes:
         - Revised Makefile
