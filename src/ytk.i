@@ -1,4 +1,5 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
+require, "rrequire.i";
 require, "ascii_encode.i";
 require, "yeti.i";
 
