@@ -15,9 +15,11 @@ func base64_encode(input, maxlen=, wrapchar=) {
 
   Options:
     maxlen= The maximum length for a single line in the encoded output. Lines
-      will be broken with wrapchar at this length. Defaults to 76.
-    wrapchar= The character to insert between lines, for wrapping. Defaults
-      to \n.
+      will be broken with wrapchar at this length.
+        maxlen=76       Default
+        maxlen=-1       Forces a single line (disables wrapping)
+    wrapchar= The character to insert between lines, for wrapping.
+        wrapchar='\n'   Default
 
   Output will be a scalar string.
 */
@@ -63,7 +65,7 @@ func base64_encode(input, maxlen=, wrapchar=) {
   else if(bitmod == 2)
     output(0) = '=';
 
-  if(numberof(output) > maxlen) {
+  if(numberof(output) > maxlen && maxlen > 0) {
     padding = maxlen - (numberof(output) % maxlen);
     padding = (padding == maxlen) ? 0 : padding;
     if(padding)
