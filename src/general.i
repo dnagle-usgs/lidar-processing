@@ -389,14 +389,14 @@ func bytes2text(bytes) {
     return reform(result, dims);
 }
 
-func z_compress(data) {
-/* DOCUMENT z_compress(data)
+func z_compress(data, level) {
+/* DOCUMENT z_compress(data, level)
   Wrapper around z_deflate/z_flush that compresses data in a single call.
   Returns the compressed data.
   SEE ALSO: z_flush z_deflate z_inflate z_decompress
 */
 // Original David B. Nagle 2010-07-23
-  return z_flush(z_deflate(), data);
+  return z_flush(z_deflate(level), data);
 }
 
 func z_decompress(data, type) {
