@@ -54,7 +54,7 @@ local makeflow_conf;
   SEE ALSO: makeflow, _job_parse_options
 */
 
-func makeflow(conf, fn, interval=) {
+func makeflow(conf, fn, norun=, interval=) {
 /* DOCUMENT makeflow, conf, fn, interval=;
   Runs a set of jobs using Makeflow. If Makeflow isn't available, falls back on
   sans_makeflow.
@@ -63,14 +63,18 @@ func makeflow(conf, fn, interval=) {
     conf: The configuration directives that define the jobs to run. See
       makeflow_conf for details.
     fn: The filename at which to create the Makeflow file. This should
-      generally have a suffix of ".makeflow".
+      generally have a suffix of ".makeflow". If omitted, a temporary file will
+      be used and then discarded.
   Option:
+    norun= Indicates that the Makeflow file should be created, but not
+      executed.
     interval= Time interval passed to timer_remaining when using sans_makeflow.
       Ignored if Makeflow is available.
 
   SEE ALSO: makeflow_conf
 */
   extern alpsrc;
+  default, norun, 0;
   makeflow_exe = file_join(alpsrc.cctools_bin, "makeflow");
   monitor_exe = file_join(alpsrc.cctools_bin, "makeflow_monitor");
 
@@ -79,26 +83,42 @@ func makeflow(conf, fn, interval=) {
     return;
   }
 
+  tempdir = [];
+  if(is_void(fn)) {
+    if(norun) {
+      error, "You can't provide norun=1 unless you also provide fn.";
+    }
+    tempdir = mktempdir("makeflow");
+    fn = file_join(tempdir, "Makeflow");
+  }
+
   makeflow_log = fn+".makeflowlog";
 
   makeflow_conf_to_script, conf, fn;
-  cmd_makeflow = swrite(format="cd %s ; %s %s %s > /dev/null",
-    file_dirname(fn), makeflow_exe, alpsrc.makeflow_opts, file_tail(fn));
+  if(norun) {
+    write, format=" Makeflow written to:\n %s\n", fn;
+    return;
+  }
+
+  cmd_makeflow = swrite(format="%s %s %s > /dev/null",
+    makeflow_exe, alpsrc.makeflow_opts, fn);
   cmd_monitor = swrite(format="%s -H %s", monitor_exe, makeflow_log);
 
   if(file_exists(makeflow_log))
     remove, makeflow_log;
 
   f = popen(cmd_makeflow, 0);
-  pause, 10;
-  //pipe = popen("sh", 1);
-  //write, pipe, format="%s > /dev/null\n", cmd_makeflow;
-  //fflush, pipe;
-  while(!file_exists(fn+".makeflowlog"))
+  do {
     pause, 10;
+  } while(!file_exists(fn+".makeflowlog"));
   system, cmd_monitor;
-  //close, pipe;
   close, f;
+
+  if(!is_void(tempdir)) {
+    remove, makeflow_log;
+    remove, fn;
+    rmdir, tempdir;
+  }
 
   write, format="%s", "Jobs completed.\n";
 }
