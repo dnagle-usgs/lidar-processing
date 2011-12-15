@@ -416,3 +416,14 @@ func z_decompress(data, type) {
     error, swrite(format="could not decompress, error code %d", flag);
   }
 }
+
+func pass_void(f, val) {
+/* DOCUMENT pass_void(f, val)
+  If VAL is void, return VAL (that is, return []).
+  Otherwise, return F(VAL).
+  This is useful if you need to filter val through a function, but only if it's
+  non-void -- and you're fine with it staying void if it already is.
+*/
+  if(is_void(val)) return val;
+  return f(val);
+}
