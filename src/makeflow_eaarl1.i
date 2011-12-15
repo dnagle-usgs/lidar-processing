@@ -43,7 +43,7 @@ norun=) {
     return conf;
 
   write, "Kicking off makeflow";
-  makeflow, conf, makeflow_fn, interval=30, norun=norun;
+  makeflow_run, conf, makeflow_fn, interval=30, norun=norun;
 
   timer_finished, t0;
 }
@@ -145,7 +145,7 @@ daystart=, update=, makeflow_fn=, forcelocal=, norun=) {
   if(!am_subroutine())
     return conf;
 
-  makeflow, conf, makeflow_fn, interval=15, norun=norun;
+  makeflow_run, conf, makeflow_fn, interval=15, norun=norun;
 
   timer_finished, t0;
 }

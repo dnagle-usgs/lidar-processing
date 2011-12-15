@@ -54,8 +54,8 @@ local makeflow_conf;
   SEE ALSO: makeflow, _job_parse_options
 */
 
-func makeflow(conf, fn, norun=, interval=) {
-/* DOCUMENT makeflow, conf, fn, interval=;
+func makeflow_run(conf, fn, norun=, interval=) {
+/* DOCUMENT makeflow_run, conf, fn, interval=;
   Runs a set of jobs using Makeflow. If Makeflow isn't available, falls back on
   sans_makeflow.
   

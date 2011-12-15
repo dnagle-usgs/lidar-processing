@@ -186,7 +186,7 @@ norun=) {
   if(!am_subroutine())
     return conf;
 
-  makeflow, conf, makeflow_fn, interval=10, norun=norun;
+  makeflow_run, conf, makeflow_fn, interval=10, norun=norun;
 }
 
 func mf_batch_rcf(dir, searchstr=, merge=, files=, update=, mode=,
@@ -380,7 +380,7 @@ makeflow_fn=, forcelocal=, norun=) {
   if(!am_subroutine())
     return conf;
 
-  makeflow, conf, makeflow_fn, interval=15, norun=norun;
+  makeflow_run, conf, makeflow_fn, interval=15, norun=norun;
 
   timer_finished, t0;
 }
