@@ -103,24 +103,16 @@ func job_dirload(conf) {
     --uniq defaults to "0"
     --skip defaults to "1"
 */
-  files = outfile = outvname = uniq = skip = [];
-  if(!conf(*,"file"))
-    error, "missing required keys --file-in and --file-out";
-  if(nallof(conf.file(*,["in","out"])))
-    error, "missing required keys --file-in and --file-out";
-  files = conf.file.in;
-  outfile = conf.file.out;
-  uniq = conf(*,"uniq") ? conf.uniq : "0";
-  skip = conf(*,"skip") ? conf.skip : "1";
-  outvname = conf(*,"vname") ? conf.vname : [];
-
+  require, "util_obj.i";
   require, "util_str.i";
-  uniq = atoi(uniq);
-  skip = atoi(skip);
+  keyrequire, conf, file=;
+  keyrequire, conf.file, in=, out=;
+  uniq = conf(*,"uniq") ? atoi(conf.uniq) : "0";
+  skip = conf(*,"skip") ? atoi(conf.skip) : "1";
 
   require, "dirload.i";
-  dirload, files=files, outfile=outfile, outvname=outvname, uniq=uniq,
-      skip=skip, verbose=0;
+  dirload, files=conf.file.in, outfile=conf.file.out, outvname=conf.vname,
+    uniq=uniq, skip=skip, verbose=0;
 }
 
 func job_rcf_eaarl(conf) {
@@ -140,12 +132,15 @@ func job_rcf_eaarl(conf) {
     --prefilter-min   corresponds to  prefilter_min=
     --prefilter-max   corresponds to  prefilter_max=
 */
+  require, "util_obj.i";
   require, "util_str.i";
-  clean = buf = w = n = prefilter_min = prefilter_max = [];
-  if(conf(*,"clean")) buf = atoi(conf.clean);
-  if(conf(*,"buf")) buf = atoi(conf.buf);
-  if(conf(*,"w")) w = atoi(conf.w);
-  if(conf(*,"n")) n = atoi(conf.n);
+  keyrequire, conf, file=;
+  keyrequire, conf.file, in=, out=;
+  clean = pass_void(atoi, conf.clean);
+  buf = pass_void(atoi, conf.buf);
+  w = pass_void(atoi, conf.w);
+  n = pass_void(atoi, conf.n);
+  prefilter_min = prefilter_max = [];
   if(conf(*,"prefilter")) {
     // .min and .max are syntax errors to the Yorick parser, so ("min") and
     // ("max") must be used instead
@@ -179,24 +174,17 @@ func job_georef_eaarl1(conf) {
   All options are required.
 */
   extern gps_time_correction;
+  require, "util_obj.i";
   require, "util_str.i";
-  if(nallof(conf(*,["file","daystart","gps_time_correction"])))
-    error, "missing required options";
-  if(nallof(conf.file(*,["in","out"])))
-    error, "missing required options";
-  if(nallof(conf.file.in(*,["tld","gns","ins","ops"])))
-    error, "missing required options";
-  tld = gns = ins = ops = daystart = outfile = [];
-  tld = conf.file.in.tld;
-  gns = conf.file.in.gns;
-  ins = conf.file.in.ins;
-  ops = conf.file.in.ops;
+  keyrequire, conf, file=, daystart=, gps_time_correction=;
+  keyrequire, conf.file, in=, out=;
+  keyrequire, conf.file.in, tld=, gns=, ins=, ops=;
   daystart = atoi(conf.daystart);
   gps_time_correction = atod(conf.gps_time_correction);
-  outfile = conf.file.out;
 
   require, "eaarl1_wf.i";
-  georef_eaarl1, tld, gns, ins, ops, daystart, outfile=outfile;
+  georef_eaarl1, conf.file.in.tld, conf.file.in.gns, conf.file.in.ins,
+    conf.file.in.ops, daystart, outfile=conf.file.out;
 }
 
 /******************************************************************************
