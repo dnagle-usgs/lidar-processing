@@ -257,8 +257,16 @@ func sans_makeflow(conf, interval=) {
   timer_finished, t0, fmt=swrite(format="Finished %d jobs in ELAPSED.\n", conf(*));
 
   if(defer(*)) {
-    while(nallof(file_exists(defer(1).input)))
+    timer, t0;
+    while(nallof(file_exists(defer(1).input))) {
       pause, 100;
+      timer, t1;
+      if(t1(3) - t1(3) > 120)
+        break;
+    }
+    if(nallof(file_exists(defer(1).input))) {
+      error, "Timed out while waiting for next input file to exist.";
+    }
     write, "";
     sans_makeflow, defer, interval=interval;
   }
