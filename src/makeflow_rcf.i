@@ -1,8 +1,9 @@
 require, "makeflow.i";
 
-func mf_automerge_tiles(path, makeflow_fn, searchstr=, update=, forcelocal=) {
-/* DOCUMENT mf_automerge_tiles(path, makeflow_fn, searchstr=, update=,
-  forcelocal=)
+func mf_automerge_tiles(path, searchstr=, update=, makeflow_fn=, forcelocal=,
+norun=) {
+/* DOCUMENT mf_automerge_tiles, path, makeflow_fn, searchstr=, update=,
+   makeflow_fn=, forcelocal=, norun=
 
   Specialized batch merging function for the initial merge of processed data.
 
@@ -18,8 +19,6 @@ func mf_automerge_tiles(path, makeflow_fn, searchstr=, update=, forcelocal=) {
 
   Parameters:
     path: The path to the directory.
-    makeflow_fn: The filename to use when writing out the makeflow. Ignored if
-      called as a function. If not provided, will be path+"/Makeflow".
 
   Options:
     searchstr= You can override the default search string if you're only
@@ -36,10 +35,16 @@ func mf_automerge_tiles(path, makeflow_fn, searchstr=, update=, forcelocal=) {
         update=0    Overwrite files if they exist
         update=1    Skip files if they exist
 
-    forcelocal= Forces local executation for these jobs. Local execution is
-      recommended as this is a CPU-light task with large data requirements.
-        forcelocal=1    Force local (default)
-        forcelocal=0    Allow remote
+    makeflow_fn= The filename to use when writing out the makeflow. Ignored if
+      called as a function. If not provided, a temporary file will be used then
+      discarded.
+
+    forcelocal= Forces local execution.
+        forcelocal=0    Default
+
+    norun= Don't actually run makeflow; just create the makeflow file.
+        norun=0   Runs makeflow, default
+        norun=1   Doesn't run makeflow
 
   Output:
     This will create the merged files in the directory specified, alongside
@@ -56,7 +61,7 @@ func mf_automerge_tiles(path, makeflow_fn, searchstr=, update=, forcelocal=) {
 */
   default, searchstr, ["*_v.pbd", "*_b.pbd"];
   default, update, 0;
-  default, forcelocal, 1;
+  default, forcelocal, 0;
 
   // Locate files and split into dirs/tails
   files = find(path, glob=searchstr);
@@ -181,16 +186,15 @@ func mf_automerge_tiles(path, makeflow_fn, searchstr=, update=, forcelocal=) {
   if(!am_subroutine())
     return conf;
 
-  default, makeflow_fn, file_join(path, "Makeflow");
-  makeflow, conf, makeflow_fn, interval=10;
+  makeflow, conf, makeflow_fn, interval=10, norun=norun;
 }
 
-func mf_batch_rcf(dir, makeflow_fn, searchstr=, merge=, files=, update=, mode=,
+func mf_batch_rcf(dir, searchstr=, merge=, files=, update=, mode=,
 clean=, prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=,
-forcelocal=) {
-/* DOCUMENT new_batch_rcf, dir, makeflow_fn, searchstr=, merge=, files=,
-  update=, mode=, clean=, prefilter_min=, prefilter_max=, rcfmode=, buf=, w=,
-  n=, meta=, forcelocal=
+makeflow_fn=, forcelocal=, norun=) {
+/* DOCUMENT new_batch_rcf, dir, searchstr=, merge=, files=, update=, mode=,
+   clean=, prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=,
+   makeflow_fn=, forcelocal=, norun=
 
   This iterates over each file in a set of files and applies an RCF filter to
   its data.
@@ -264,11 +268,16 @@ forcelocal=) {
         meta=0   Do not include the filter parameters in the file name.
         meta=1   Include the filter parameters in the file name. (default)
 
-    forcelocal= Forces local executation for these jobs. Local execution is
-      recommended for most networks as this is a CPU-light task with large data
-      requirements.
-        forcelocal=1    Force local (default)
-        forcelocal=0    Allow remote
+    makeflow_fn= The filename to use when writing out the makeflow. Ignored if
+      called as a function. If not provided, a temporary file will be used then
+      discarded.
+
+    forcelocal= Forces local execution.
+        forcelocal=0    Default
+
+    norun= Don't actually run makeflow; just create the makeflow file.
+        norun=0   Runs makeflow, default
+        norun=1   Doesn't run makeflow
 */
   default, searchstr, "*.pbd";
   default, update, 0;
@@ -280,7 +289,7 @@ forcelocal=) {
   default, meta, 1;
   default, mode, "fs";
   default, rcfmode, "grcf";
-  default, forcelocal, 1;
+  default, forcelocal, 0;
 
   t0 = array(double, 3);
   timer, t0;
@@ -371,8 +380,7 @@ forcelocal=) {
   if(!am_subroutine())
     return conf;
 
-  default, makeflow_fn, file_join(dir, "Makeflow");
-  makeflow, conf, makeflow_fn, interval=15;
+  makeflow, conf, makeflow_fn, interval=15, norun=norun;
 
   timer_finished, t0;
 }

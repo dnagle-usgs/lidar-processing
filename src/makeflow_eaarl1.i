@@ -1,13 +1,10 @@
 require, "makeflow.i";
 
-func mf_mission_georef_eaarl1(makeflow_fn, outdir=, update=, forcelocal=) {
-/* DOCUMENT mf_mission_georef_eaarl1, makeflow_fn, outdir=, update=, forcelocal=
+func mf_mission_georef_eaarl1(outdir=, update=, makeflow_fn=, forcelocal=,
+norun=) {
+/* DOCUMENT mf_mission_georef_eaarl1, outdir=, update=, makeflow_rn=,
+   forcelocal=, norun=
   Runs mf_georef_eaarl1 for each mission day in a mission configuration.
-
-  Parameter:
-    makeflow_fn: The filename to use when writing out the makeflow. Ignored if
-      called as a function. If not provided, will be outdir+"/Makeflow" if
-      outdir is provided; otherwise, mission_path()+"/Makeflow".
 
   Options:
     outdir= Specifies an output directory where the PBD data should go. By
@@ -15,6 +12,14 @@ func mf_mission_georef_eaarl1(makeflow_fn, outdir=, update=, forcelocal=) {
     update= Specifies whether to run in "update" mode.
         update=0    Process all files; replace any existing PBD files.
         update=1    Create missing PBD files, skip existing ones.
+    makeflow_fn= The filename to use when writing out the makeflow. Ignored if
+      called as a function. If not provided, a temporary file will be used then
+      discarded.
+    forcelocal= Forces local execution.
+        forcelocal=0    Default
+    norun= Don't actually run makeflow; just create the makeflow file.
+        norun=0   Runs makeflow, default
+        norun=1   Doesn't run makeflow
 */
   t0 = array(double, 3);
   timer, t0;
@@ -37,28 +42,21 @@ func mf_mission_georef_eaarl1(makeflow_fn, outdir=, update=, forcelocal=) {
   if(!am_subroutine())
     return conf;
 
-  if(!is_void(outdir))
-    default, makeflow_fn, file_join(outdir, "Makeflow");
-  else
-    default, makeflow_fn, file_join(mission_path(), "Makeflow");
   write, "Kicking off makeflow";
-  makeflow, conf, makeflow_fn, interval=20;
+  makeflow, conf, makeflow_fn, interval=30, norun=norun;
 
   timer_finished, t0;
 }
 
-func mf_georef_eaarl1(tlddir, makeflow_fn, files=, searchstr=, outdir=, gns=,
-ins=, ops=, daystart=, update=, forcelocal=) {
-/* DOCUMENT mf_georef_eaarl1, tlddir, makeflow_fn, files=, searchstr=, outdir=,
-  gns=, ins=, ops=, daystart=, update=, forcelocal=
+func mf_georef_eaarl1(tlddir, files=, searchstr=, outdir=, gns=, ins=, ops=,
+daystart=, update=, makeflow_fn=, forcelocal=, norun=) {
+/* DOCUMENT mf_georef_eaarl1, tlddir, files=, searchstr=, outdir=, gns=, ins=,
+   ops=, daystart=, update=, makeflow_fn=, forcelocal=, norun=
 
   Runs georef_eaarl1 in a batch mode over a set of TLD files.
 
   Parameters:
     tlddir: Directory under which TLD files are found.
-    makeflow_fn: The filename to use when writing out the makeflow. Ignored if
-      called as a function. If not provided, will be outdir+"/Makeflow" if
-      outdir is provided; otherwise, tlddir+"/Makeflow".
 
   Options:
     files= Specifies an array of TLD files to use. If this is specified, then
@@ -74,6 +72,14 @@ ins=, ops=, daystart=, update=, forcelocal=) {
     update= Specifies whether to run in "update" mode.
         update=0    Process all files; replace any existing PBD files.
         update=1    Create missing PBD files, skip existing ones.
+    makeflow_fn= The filename to use when writing out the makeflow. Ignored if
+      called as a function. If not provided, a temporary file will be used then
+      discarded.
+    forcelocal= Forces local execution.
+        forcelocal=0    Default
+    norun= Don't actually run makeflow; just create the makeflow file.
+        norun=0   Runs makeflow, default
+        norun=1   Doesn't run makeflow
 */
   extern pnav_filename, ins_filename, ops_conf_filename, soe_day_start;
   default, searchstr, "*.tld";
@@ -139,11 +145,7 @@ ins=, ops=, daystart=, update=, forcelocal=) {
   if(!am_subroutine())
     return conf;
 
-  if(!is_void(outdir))
-    default, makeflow_fn, file_join(outdir, "Makeflow");
-  else
-    default, makeflow_fn, file_join(tlddir, "Makeflow");
-  makeflow, conf, makeflow_fn, interval=15;
+  makeflow, conf, makeflow_fn, interval=15, norun=norun;
 
   timer_finished, t0;
 }
