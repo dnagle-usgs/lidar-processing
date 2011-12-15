@@ -187,6 +187,89 @@ func job_georef_eaarl1(conf) {
     conf.file.in.ops, daystart, outfile=conf.file.out;
 }
 
+func job_pbd2las(conf) {
+/* DOCUMENT job_pbd2las, conf
+  This is a wrapper around pbd2las. Each accepted command-line option
+  corresponds to an option or parameter of pbd2las as follows.
+
+    --file-in                   corresponds to  fn_pbd
+    --file-out                  corresponds to  fn_las=
+    --mode                      corresponds to  mode=
+    --v_maj                     corresponds to  v_maj=
+    --v_min                     corresponds to  v_min=
+    --cs                        corresponds to  cs=
+    --cs_out                    corresponds to  cs_out=
+    --pdrf                      corresponds to  pdrf=
+    --encode_rn                 corresponds to  encode_rn=
+    --include_scan_angle_rank   corresponds to  include_scan_angle_rank=
+    --buffer                    corresponds to  buffer=
+    --classification=           corresponds to  classification=
+    --header                    corresponds to  header=
+
+  The --header option has a special interpretation. The header= option is
+  supposed to be a Yeti hash, but that can't be passed via the command line.
+  Thus, the hash is encoded as thus:
+    base64_encode(z_compress(strchar(json_encode(HEADER)),9),maxlen=-1)
+  This ensures that the resulting argument is a simple string, without
+  quotation marks.
+*/
+  require, "general.i";
+  require, "util_obj.i";
+  require, "util_str.i";
+  keyrequire, conf, file=;
+  keyrequire, conf.file, in=, out=;
+
+  v_maj = pass_void(atoi, conf.v_maj);
+  v_min = pass_void(atoi, conf.v_min);
+  pdrf = pass_void(atoi, conf.pdrf);
+  encode_rn = pass_void(atoi, conf.encode_rn);
+  include_scan_angle_rank = pass_void(atoi, conf.include_scan_angle_rank);
+  buffer = pass_void(atod, conf.buffer);
+  classification = pass_void(atoi, conf.classification);
+
+  if(conf(*,"header")) {
+    require, "json_decode.i";
+    require, "ascii_encode.i";
+    header = json_decode(strchar(z_decompress(base64_decode(conf.header))));
+  }
+
+  pbd2las, conf.file.in, fn_las=conf.file.out, mode=conf.mode, v_maj=v_maj,
+    v_min=v_min, cs=conf.cs, cs_out=conf.cs_out, pdrf=pdrf,
+    encode_rn=encode_rn, include_scan_angle_rank=include_scan_angle_rank,
+    buffer=buffer, classification=classification, header=header, verbose=0;
+}
+
+func job_las2pbd(conf) {
+/* DOCUMENT job_las2pbd, conf
+  This is a wrapper around las2pbd. Each accepted command-line option
+  corresponds to an option or parameter of las2pbd as follows.
+
+    --file-in     corresponds to  fn_las
+    --file-out    corresponds to  fn_pbd=
+    --format      corresponds to  format=
+    --vname       corresponds to  vname=
+    --fakemirror  corresponds to  fakemirror=
+    --rgbrn       corresponds to  rgbrn=
+    --date        corresponds to  date=
+    --geo         corresponds to  geo=
+    --zone        corresponds to  zone=
+*/
+  require, "general.i";
+  require, "util_obj.i";
+  require, "util_str.i";
+  keyrequire, conf, file=;
+  keyrequire, conf.file, in=, out=;
+
+  fakemirror = pass_void(atoi, conf.fakemirror);
+  rgbrn = pass_void(atoi, conf.rgbrn);
+  geo = pass_void(atoi, conf.geo);
+  zone = pass_void(atoi, conf.zone);
+
+  las2pbd, conf.file.in, fn_pbd=conf.file.out, format=conf.format,
+    vname=conf.vname, fakemirror=fakemirror, rgbrn=rgbrn, verbose=0,
+    date=conf.date, geo=geo, zone=zone;
+}
+
 /******************************************************************************
  * INTERNALS                                                                  *
  ******************************************************************************
