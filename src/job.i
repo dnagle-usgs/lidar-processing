@@ -232,6 +232,7 @@ func job_pbd2las(conf) {
     header = json_decode(strchar(z_decompress(base64_decode(conf.header))));
   }
 
+  require, "las.i";
   pbd2las, conf.file.in, fn_las=conf.file.out, mode=conf.mode, v_maj=v_maj,
     v_min=v_min, cs=conf.cs, cs_out=conf.cs_out, pdrf=pdrf,
     encode_rn=encode_rn, include_scan_angle_rank=include_scan_angle_rank,
@@ -264,6 +265,7 @@ func job_las2pbd(conf) {
   geo = pass_void(atoi, conf.geo);
   zone = pass_void(atoi, conf.zone);
 
+  require, "las.i";
   las2pbd, conf.file.in, fn_pbd=conf.file.out, format=conf.format,
     vname=conf.vname, fakemirror=fakemirror, rgbrn=rgbrn, verbose=0,
     date=conf.date, geo=geo, zone=zone;
