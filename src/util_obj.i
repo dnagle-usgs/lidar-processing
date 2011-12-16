@@ -1,5 +1,7 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
+require, "general.i";
+require, "set.i";
+require, "util_cast.i";
 
 func keydefault(args) {
 /* DOCUMENT keydefault, obj, key1, val1, key2, val2, ...

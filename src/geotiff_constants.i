@@ -1,4 +1,6 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
+require, "util_cast.i";
+
 local GTIF;
 /* DOCUMENT GTIF
   An oxy group object containing constants that are from the GeoTIFF

@@ -1,4 +1,5 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
+require, "util_obj.i";
 
 // partially adapted from
 // http://cpansearch.perl.org/src/MAKAMAKA/JSON-2.27/lib/JSON/PP.pm

@@ -1,5 +1,7 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
+require, "general.i";
+require, "rdcols.i";
+require, "yeti_regex.i";
 
 func atoi(str) {
 /* DOCUMENT atoi(str)

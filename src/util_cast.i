@@ -1,5 +1,6 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
+require, "set.i";
+require, "ytk.i";
 
 func can_iter_list(x) {
 /* DOCUMENT can_iter_list(data)

@@ -1,5 +1,6 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
-require, "eaarl.i";
+require, "yeti_regex.i";
+require, "zlib.i";
 
 func default(&var, val) {
 /* DOCUMENT default, &variable, value

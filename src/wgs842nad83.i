@@ -1,4 +1,5 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
+require, "util_str.i";
 /*
   Equations can be found at:
   http://www.linz.govt.nz/geodetic/conversion-coordinates/geodetic-datum-conversion/datum-transformation-equations/index.aspx
