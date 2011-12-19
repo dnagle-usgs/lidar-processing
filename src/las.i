@@ -393,6 +393,8 @@ header=, verbose=, pre_fn=, post_fn=, shorten_fn=) {
   default, post_fn, ".las";
   default, shorten_fn, 0;
 
+  t0 = array(double, 3);
+
   files_pbd = find(dir_pbd, glob=searchstr);
   if(is_void(files_pbd))
     error, "No files found.";
@@ -428,6 +430,8 @@ header=, verbose=, pre_fn=, post_fn=, shorten_fn=) {
     if(pass_verbose)
       write, "";
   }
+
+  timer_finished, t0;
 }
 
 func pbd2las(fn_pbd, fn_las=, mode=, v_maj=, v_min=, cs=, cs_out=, pdrf=,
@@ -873,6 +877,9 @@ shorten_fn=, update=, files=, date=, geo=, zone=) {
   default, shorten_fn, 0;
   default, update, 0;
 
+  t0 = array(double, 3);
+  timer, t0;
+
   if(is_void(files))
     files_las = find(dir_las, glob=searchstr);
   else
@@ -922,6 +929,8 @@ shorten_fn=, update=, files=, date=, geo=, zone=) {
     if(pass_verbose)
       write, "";
   }
+
+  timer_finished, t0;
 }
 
 func las2pbd(fn_las, fn_pbd=, format=, vname=, fakemirror=, rgbrn=, verbose=,
