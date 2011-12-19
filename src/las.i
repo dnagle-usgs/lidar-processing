@@ -515,7 +515,6 @@ verbose=) {
     cs_out=cs_out, mode=mode, pdrf=pdrf, encode_rn=encode_rn,
     include_scan_angle_rank=include_scan_angle_rank,
     classification=classification, header=header;
-  close, f;
 }
 
 func las_export_data(filename, data, v_maj=, v_min=, cs=, cs_out=, mode=,
