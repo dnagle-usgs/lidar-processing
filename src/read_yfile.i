@@ -26,10 +26,15 @@ func restore_alps_data(fn, vname=, skip=) {
 
   sanitize_vname, vname;
   symbol_set, vname, data;
-  update_var_settings, data, vname, fn=fn;
-  tkcmd, swrite(format="append_varlist %s", vname);
-  tkcmd, swrite(format="set pro_var %s", vname);
-  write, format="Loaded variable %s\n", vname;
+
+  if(!is_obj(data) || data.__bless == "pcobj") {
+    update_var_settings, data, vname, fn=fn;
+    tkcmd, swrite(format="append_varlist %s", vname);
+    tkcmd, swrite(format="set pro_var %s", vname);
+    write, format="Loaded variable %s\n", vname;
+  } else {
+    write, format="Loaded object variable %s\n", vname;
+  }
 }
 
 func set_read_tk(junk) {
