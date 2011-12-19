@@ -1,9 +1,9 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 require, "eaarl.i";
 
-func mission_georef_eaarl1(outdir=, update=) {
-/* DOCUMENT mission_georef_eaarl1, outdir=, update=
-  Runs batch_georef_eaarl1 for each mission day in a mission configuration.
+func mission_georef_eaarla(outdir=, update=) {
+/* DOCUMENT mission_georef_eaarla, outdir=, update=
+  Runs batch_georef_eaarla for each mission day in a mission configuration.
 
   Options:
     outdir= Specifies an output directory where the PBD data should go. By
@@ -22,19 +22,19 @@ func mission_georef_eaarl1(outdir=, update=) {
     write, format="Processing day %d/%d:\n", i, count;
     missionday_current, days(i);
     missiondata_load, "all";
-    batch_georef_eaarl1, file_dirname(mission_get("edb file")),
+    batch_georef_eaarla, file_dirname(mission_get("edb file")),
       outdir=outdir, update=update, interval=45;
   }
 
   missiondata_cache, cache_state;
 }
 
-func batch_georef_eaarl1(tlddir, files=, searchstr=, outdir=, gns=, ins=, ops=,
+func batch_georef_eaarla(tlddir, files=, searchstr=, outdir=, gns=, ins=, ops=,
 daystart=, update=, verbose=, interval=) {
-/* DOCUMENT batch_georef_eaarl1, tlddir, files=, searchstr=, outdir=, gns=,
+/* DOCUMENT batch_georef_eaarla, tlddir, files=, searchstr=, outdir=, gns=,
   ins=, ops=, daystart=, update=
 
-  Runs georef_eaarl1 in a batch mode over a set of TLD files.
+  Runs georef_eaarla in a batch mode over a set of TLD files.
 
   Parameter:
     tlddir: Directory under which TLD files are found.
@@ -107,7 +107,7 @@ daystart=, update=, verbose=, interval=) {
   timer, t0;
 
   for(i = 1; i <= count; i++) {
-    georef_eaarl1, files(i), gns, ins, ops, daystart, outfile=outfiles(i);
+    georef_eaarla, files(i), gns, ins, ops, daystart, outfile=outfiles(i);
     if(verbose)
       timer_remaining, t0, sizes(i), sizes(0), tp, interval=interval;
   }
@@ -115,8 +115,8 @@ daystart=, update=, verbose=, interval=) {
     timer_finished, t0;
 }
 
-func georef_eaarl1(rasts, gns, ins, ops, daystart, outfile=) {
-/* DOCUMENT wfobj = georef_eaarl1(rasts, gns, is, ops, daystart, outfile=)
+func georef_eaarla(rasts, gns, ins, ops, daystart, outfile=) {
+/* DOCUMENT wfobj = georef_eaarla(rasts, gns, is, ops, daystart, outfile=)
   Given raw EAARL data, this returns a georefenced waveforms object.
 
   Parameters:
@@ -137,7 +137,7 @@ func georef_eaarl1(rasts, gns, ins, ops, daystart, outfile=) {
   extern eaarl_time_offset, tca;
 
   if(is_string(rasts))
-    rasts = eaarl1_decode_rasters(get_tld_rasts(rasts));
+    rasts = eaarla_decode_rasters(get_tld_rasts(rasts));
   if(is_string(gns))
     gns = load_pnav(fn=gns);
   if(is_string(ins))

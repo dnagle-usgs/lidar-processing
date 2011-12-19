@@ -86,10 +86,10 @@ func wfobj(base, obj) {
       timestamp, but should not be used for that purpose here because they
       are raw, unadjusted values. Use soe for time.
     data(pulse,)            array(char,N) -or- array(short,N)
-      The pulse for the point. For EAARL1 data this will be a char value in
+      The pulse for the point. For EAARL-A data this will be a char value in
       the range 1 to 120.
     data(channel,)          array(char,N)
-      For EAARL1 data, the channel for the rx waveform. This is a number
+      For EAARL-A data, the channel for the rx waveform. This is a number
       between 1 and 3.
 
   Automatic:
@@ -336,7 +336,7 @@ func wfobj_rn(cache, idx) {
     for(i = 1; i <= numberof(idx); i++) {
       if(cache(idx(i)))
         continue;
-      result = eaarl1_fsecs2rn(use(raster_seconds,idx(i)),
+      result = eaarla_fsecs2rn(use(raster_seconds,idx(i)),
         use(raster_fseconds,idx(i)));
       w = where(use(raster_seconds) == use(raster_seconds,idx(i)) &
         use(raster_fseconds) == use(raster_fseconds,idx(i)));

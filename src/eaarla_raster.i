@@ -1,8 +1,8 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 require, "eaarl.i";
 
-func eaarl1_decode_header(raw) {
-/* DOCUMENT eaarl1_decode_header(raw)
+func eaarla_decode_header(raw) {
+/* DOCUMENT eaarla_decode_header(raw)
   Given the raw data for a raster, this will decode and return its header
   information as an oxy group object with these fields:
 
@@ -53,10 +53,10 @@ func eaarl1_decode_header(raw) {
   return result;
 }
 
-func eaarl1_header_valid(header) {
-/* DOCUMENT eaarl1_header_valid(header)
+func eaarla_header_valid(header) {
+/* DOCUMENT eaarla_header_valid(header)
   Returns 1 if the given header is valid, 0 if not. HEADER must be the result
-  of eaarl1_decode_header.
+  of eaarla_decode_header.
 */
   if(header.raster_length < 20)
     return 0;
@@ -75,8 +75,8 @@ func eaarl1_header_valid(header) {
   return 1;
 }
 
-func eaarl1_decode_pulse(raw, pulse, header=) {
-/* DOCUMENT eaarl1_decode_header(raw)
+func eaarla_decode_pulse(raw, pulse, header=) {
+/* DOCUMENT eaarla_decode_header(raw)
   Given the raw data for a raster, this will decode and return the pulse
   information for the specified pulse number.
 
@@ -84,7 +84,7 @@ func eaarl1_decode_pulse(raw, pulse, header=) {
     raw: An array of char data from a TLD file (as returned by get_erast).
     pulse: Pulse number to retrieve, usually in the range 1-119.
   Options:
-    header= The result of eaarl1_decode_header. If not supplied, it was be
+    header= The result of eaarla_decode_header. If not supplied, it was be
       determined from RAW. Providing the header is more efficient if you
       already have it or will be retrieving multiple pulses from one raster.
 
@@ -114,7 +114,7 @@ func eaarl1_decode_pulse(raw, pulse, header=) {
 */
   if(is_void(header)) header = decode_raster_header(raw);
   result = save();
-  if(!eaarl1_header_valid(header))
+  if(!eaarla_header_valid(header))
     return result;
 
   offset = header.pulse_offsets(pulse);
@@ -157,8 +157,8 @@ func eaarl1_decode_pulse(raw, pulse, header=) {
   return result;
 }
 
-func eaarl1_decode_rasters(raw) {
-/* DOCUMENT data = eaarl1_decode_rasters(raw)
+func eaarla_decode_rasters(raw) {
+/* DOCUMENT data = eaarla_decode_rasters(raw)
   RAW may be an array of char for a single raster, or it may be an array of
   pointers to such data. The raster data will be decoded and returned as an
   oxy group object with the following fields:
@@ -216,8 +216,8 @@ func eaarl1_decode_rasters(raw) {
       array(pointer, count, 120);
 
   for(i = 1; i <= count; i++) {
-    header = eaarl1_decode_header(*raw(i));
-    valid(i) = eaarl1_header_valid(header);
+    header = eaarla_decode_header(*raw(i));
+    valid(i) = eaarla_header_valid(header);
     if(!valid(i))
       continue;
     raster_length(i) = header.raster_length;
@@ -229,7 +229,7 @@ func eaarl1_decode_rasters(raw) {
     digitizer(i) = header.digitizer;
 
     for(j = 1; j <= number_of_pulses(i); j++) {
-      pulse = eaarl1_decode_pulse(*raw(i), j, header=header);
+      pulse = eaarla_decode_pulse(*raw(i), j, header=header);
       offset_time(i,j) = pulse.offset_time;
       transmit_bias(i,j) = pulse.transmit_bias;
       channel1_bias(i,j) = pulse.return_bias(1);
@@ -289,8 +289,8 @@ func eaarl1_decode_rasters(raw) {
   return result;
 }
 
-func eaarl1_fsecs2rn(seconds, fseconds, fast=) {
-/* DOCUMENT rn = eaarl1_fsecs2rn(seconds, fseconds, fast=)
+func eaarla_fsecs2rn(seconds, fseconds, fast=) {
+/* DOCUMENT rn = eaarla_fsecs2rn(seconds, fseconds, fast=)
   Given a pair of values SECONDS and FSECONDS, this will return the
   corresponding RN.
 
@@ -315,7 +315,7 @@ func eaarl1_fsecs2rn(seconds, fseconds, fast=) {
   if(!is_scalar(seconds)) {
     result = array(long, dimsof(seconds));
     for(i = 1; i <= numberof(seconds); i++) {
-      result(i) = eaarl1_fsecs2rn(seconds(i), fseconds(i));
+      result(i) = eaarla_fsecs2rn(seconds(i), fseconds(i));
     }
     return result;
   }
@@ -339,22 +339,22 @@ func eaarl1_fsecs2rn(seconds, fseconds, fast=) {
   }
 
   count = numberof(edb);
-  rast = eaarl1_decode_header(get_erast(rn=rn));
+  rast = eaarla_decode_header(get_erast(rn=rn));
   while(rn < count && rast.seconds < seconds) {
     rn++;
-    rast = eaarl1_decode_header(get_erast(rn=rn));
+    rast = eaarla_decode_header(get_erast(rn=rn));
   }
   while(rn > 1 && rast.seconds > seconds) {
     rn--;
-    rast = eaarl1_decode_header(get_erast(rn=rn));
+    rast = eaarla_decode_header(get_erast(rn=rn));
   }
   while(rn < count && rast.seconds == seconds && rast.fseconds < fseconds) {
     rn++;
-    rast = eaarl1_decode_header(get_erast(rn=rn));
+    rast = eaarla_decode_header(get_erast(rn=rn));
   }
   while(rn > 1 && rast.seconds == seconds && rast.fseconds > fseconds) {
     rn--;
-    rast = eaarl1_decode_header(get_erast(rn=rn));
+    rast = eaarla_decode_header(get_erast(rn=rn));
   }
 
   if(rast.seconds == seconds && rast.fseconds == fseconds)
