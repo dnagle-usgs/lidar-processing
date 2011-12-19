@@ -205,6 +205,12 @@ func job_pbd2las(conf) {
     --classification=           corresponds to  classification=
     --header                    corresponds to  header=
 
+  The --cs and --cs_out options have special interpetations. These options are
+  each supposed to be a space-delimited string, but spaces do not work well on
+  the command line. To avoid issues, these strings are encoded as thus:
+    base64_encode(strchar(CS),maxlen=-1)
+  This ensures that the resulting argument is a simple string, without spaces.
+
   The --header option has a special interpretation. The header= option is
   supposed to be a Yeti hash, but that can't be passed via the command line.
   Thus, the hash is encoded as thus:
@@ -226,17 +232,24 @@ func job_pbd2las(conf) {
   buffer = pass_void(atod, conf.buffer);
   classification = pass_void(atoi, conf.classification);
 
-  if(conf(*,"header")) {
+  cs = cs_out = header = [];
+  if(anyof(conf(*,["cs","cs_out","header"]))) {
     require, "json_decode.i";
     require, "ascii_encode.i";
-    header = json_decode(strchar(z_decompress(base64_decode(conf.header))));
+
+    if(conf(*,"cs"))
+      cs = strchar(base64_decode(conf.cs));
+    if(conf(*,"cs_out"))
+      cs_out = strchar(base64_decode(conf.cs_out));
+    if(conf(*,"header"))
+      header = json_decode(strchar(z_decompress(base64_decode(conf.header))));
   }
 
   require, "las.i";
   pbd2las, conf.file.in, fn_las=conf.file.out, mode=conf.mode, v_maj=v_maj,
-    v_min=v_min, cs=conf.cs, cs_out=conf.cs_out, pdrf=pdrf,
-    encode_rn=encode_rn, include_scan_angle_rank=include_scan_angle_rank,
-    buffer=buffer, classification=classification, header=header, verbose=0;
+    v_min=v_min, cs=cs, cs_out=cs_out, pdrf=pdrf, encode_rn=encode_rn,
+    include_scan_angle_rank=include_scan_angle_rank, buffer=buffer,
+    classification=classification, header=header, verbose=0;
 }
 
 func job_las2pbd(conf) {
