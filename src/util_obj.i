@@ -750,3 +750,50 @@ func obj_transpose(obj, ary=, fill_void=) {
 
   return result;
 }
+
+func obj_subkeys(data) {
+/* DOCUMENT obj_subkeys(data)
+  Returns a list of all subkeys found in the given data, which should be an oxy
+  group object where each member is also an oxy group object.
+
+    > example = save(a=save(foo=1, bar=2), b=save(foo=3, baz=4),
+    cont> c=save(bar=5, baz=6));
+    ["foo","bar","baz"]
+
+  The return result is not guaranteed to be in any particular order.
+*/
+  count = data(*);
+  subkeys = save();
+  for(i = 1; i <= count; i++) {
+    keys = data(noop(i))(*,);
+    nkeys = numberof(keys);
+    for(j = 1; j <= nkeys; j++)
+      save, subkeys, keys(j), '\0';
+  }
+  return subkeys(*,);
+}
+
+func obj_has_subkey(data, subkey) {
+/* DOCUMENT obj_has_subkey(data, subkey)
+  Checks to see if a subkey is contained within each element in data, which
+  should be an oxy group object where each member is also an oxy group object.
+  An array is returned with the same length as data; 0 indicates the subkey was
+  not found, a positive number indicates the the subkey was found and specifies
+  its index.
+
+    > example = save(a=save(foo=1, bar=2), b=save(foo=3, baz=4),
+    cont> c=save(bar=5, baz=6));
+    > obj_has_subkey(example, "foo")
+    [1,1,0]
+    > obj_has_subkey(example, "bar")
+    [2,0,1]
+    > obj_has_subkey(example, "baz")
+    [0,2,2]
+*/
+  count = data(*);
+  result = array(short, count);
+  for(i = 1; i <= count; i++) {
+    result(i) = data(noop(i))(*,subkey);
+  }
+  return result;
+}
