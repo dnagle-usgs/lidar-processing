@@ -1,3 +1,6 @@
+require, "dir.i";
+require, "kml.i";
+
 func batch_kml_extents(datadir, outdir, searchstr=, name=, desc=, 
   visibility=, Open=, linecolor=, linewidth=) {
 /* DOCUMENT batch_kml_extents, datadir, outdir, searchstr=, visibility=, 
