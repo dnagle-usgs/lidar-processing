@@ -80,6 +80,7 @@ if(is_void(__eaarl_includes_included__)) {
   require, "drast.i";
   require, "eaarla_raster.i";
   require, "eaarla_wf.i";
+  require, "eaarlb_lsr.i";
   require, "eaarl_mounting_bias.i";
   require, "edb_access.i";
   require, "edf.i";

@@ -107,6 +107,9 @@ proc menu_mission mb {
             -command [namespace code load_ground_pnav]
     $mb add command {*}[menulabel "Load Ground PNAV2&FS (gt_fs) data..."] \
             -command [namespace code load_ground_pnav2fs]
+    $mb add separator
+    $mb add cascade {*}[menulabel "EAARL-&B"] \
+            -menu [menu_mission_eaarlb $mb.eaarlb]
     return $mb
 }
 
@@ -151,6 +154,13 @@ proc menu_mission_settings_ops mb {
             -command {exp_send "display_mission_constants, ops_IMU2, ytk=1;\r"}
     $mb add command {*}[menulabel "&Applanix 510 default"] \
             -command {exp_send "display_mission_constants, ops_IMU1, ytk=1;\r"}
+    return $mb
+}
+
+proc menu_mission_eaarlb mb {
+    menu $mb
+    $mb add command {*}[menulabel "&Laser Log Explorer"] \
+            -command l1pro::eaarlb::lsr::launch
     return $mb
 }
 
