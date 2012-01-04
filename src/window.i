@@ -132,7 +132,7 @@ func plot_hash(wsrc, pal=) {
 
   Use pal=0 if you do not want the palette saved.
 
-  See also: plot_restore plot_save plot_load
+  SEE ALSO: plot_restore plot_save plot_load
 
   Modified from function save_plot in copy_plot.i
 */
@@ -200,7 +200,7 @@ func plot_restore(wout, p, style=, clear=, lmt=, pal=) {
   Use pal=0 to disable using palette saved (if present).
   Use style=0 to disable using style saved.
 
-  See also: plot_hash plot_save plot_load
+  SEE ALSO: plot_hash plot_save plot_load
 
   Modified from function load_plot in copy_plot.i
 */
@@ -259,7 +259,7 @@ func plot_save(win, pbd) {
   Saves a window's plot to a pbd, which can then later be restored with
   plot_load.
 
-  See also: plot_hash plot_restore plot_load
+  SEE ALSO: plot_hash plot_restore plot_load
 */
   if(!is_hash(win))
     win = plot_hash(win);
@@ -271,7 +271,7 @@ func plot_load(win, pbd) {
 
   Loads a plot to a window that had been saved by plot_save.
 
-  See also: plot_hash plot_restore plot_save
+  SEE ALSO: plot_hash plot_restore plot_save
 */
   hash = pbd2hash(pbd);
   plot_restore, win, hash, style=0;

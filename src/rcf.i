@@ -108,7 +108,7 @@ func moving_rcf(yy, fw, n) {
   (fw) and a jury of +/-(n). It returns an index list to yy of the points
   within the filter. This is used in transect.i.
 
-  See also: rcf, rcf.i, transect, mtransect.
+  SEE ALSO: rcf, transect, mtransect
   Original:  W. Wright 9/30/2003
 */
   np = numberof(yy);
@@ -233,7 +233,7 @@ func gridded_rcf(x, y, z, w, buf, n) {
       one in rcfilter_eaarl_pts (and is about twice as fast as
       old_gridded_rcf).
 
-  See also: old_gridded_rcf
+  SEE ALSO: old_gridded_rcf
 */
   // We want to ensure that x has a smaller range than y so that we end up
   // doing fewer set_remove_duplicates calls.

@@ -19,7 +19,7 @@ func load_map( ffn=, color=,utm=) {
          load accordingly.
   11/3/2000 -an to display in utm coords.
 
-  See also:   ll2utm, show_map, convert_map
+  SEE ALSO:   ll2utm, show_map, convert_map
 
 
 */
@@ -156,7 +156,7 @@ func convert_map ( ffn= , utm=, msave=, arcview=) {
 
   Modified 11/3/2000 to display in utm coords.
 
-  See also:   ll2utm
+  SEE ALSO:   ll2utm
 */
   extern map_path;
   extern dllmap;		// array of pointers to digital map data

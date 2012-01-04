@@ -271,7 +271,7 @@ func set_remove_duplicates(A, idx=, delta=) {
 
   If idx=1, then the indices will be returned rather than the values.
 
-  See also: unique (in ALPS, bathy_filter.i)
+  SEE ALSO: unique
 */
   default, idx, 0;
   default, delta, 0;
@@ -369,7 +369,7 @@ func set_remove_duplicates_string(A, idx=) {
 
   If idx=1, then the indices will be returned rather than the values.
 
-  See also: set_remove_duplicates
+  SEE ALSO: set_remove_duplicates
 */
 // Original David Nagle 2009-07-15
 // Speed trials shows that this algorithm works much faster than the one in

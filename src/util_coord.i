@@ -18,7 +18,7 @@ func dm2deg(coord) {
 
     A scalar or array of the converted degree values.
 
-  See also: deg2dm, ddm2deg, deg2ddm, dms2deg, deg2dms
+  SEE ALSO: deg2dm, ddm2deg, deg2ddm, dms2deg, deg2dms
 */
   d = int(coord / 100.0);
   coord -= d * 100;
@@ -41,7 +41,7 @@ func deg2dm(coord) {
 
     A scalar or array of converted degree-minute values.
 
-  See also: dm2deg, ddm2deg, deg2ddm, dms2deg, deg2dms
+  SEE ALSO: dm2deg, ddm2deg, deg2ddm, dms2deg, deg2dms
 */
   d = floor(abs(coord));
   m = (abs(coord) - d) * 60;
@@ -66,7 +66,7 @@ func ddm2deg(coord) {
 
     A scalar or array of the converted degree values.
 
-  See also: dm2deg, deg2dm, deg2ddm, dms2deg, deg2dms
+  SEE ALSO: dm2deg, deg2dm, deg2ddm, dms2deg, deg2dms
 */
   return dm2deg(coord / 100.0);
 }
@@ -85,7 +85,7 @@ func deg2ddm(coord) {
 
     A scalar or array of converted degree-deciminute values.
 
-  See also: dm2deg, deg2dm, ddm2deg, dms2deg, deg2dms
+  SEE ALSO: dm2deg, deg2dm, ddm2deg, dms2deg, deg2dms
 */
   return deg2dm(coord) * 100;
 }
@@ -108,7 +108,7 @@ func dms2deg(coord) {
 
     A scalar or array of the converted degree values.
 
-  See also: dm2deg, deg2dm, deg2dms, ddm2deg, deg2ddm
+  SEE ALSO: dm2deg, deg2dm, deg2dms, ddm2deg, deg2ddm
 */
   d = int(coord / 10000.0);
   coord -= d * 10000;
@@ -137,7 +137,7 @@ func deg2dms(coord, arr=) {
 
     Depending on arr=, either [d, m, s] or [ddmmss.ss].
 
-  See also: dm2deg, deg2dm, dms2deg, ddm2deg, deg2ddm
+  SEE ALSO: dm2deg, deg2dm, dms2deg, ddm2deg, deg2ddm
 */
   d = floor(abs(coord));
   m = floor((abs(coord) - d) * 60);

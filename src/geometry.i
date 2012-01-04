@@ -19,7 +19,7 @@ func solve_affine(sx, sy, dx, dy) {
 
   Note that the affine elements are ordered as they would be for a JGW file.
 
-  See also: affine_transform
+  SEE ALSO: affine_transform
 */
   if(abs([numberof(sx), numberof(sy), numberof(dx), numberof(dy)](dif))(sum))
     error, "Number of points is not conformable."
@@ -48,7 +48,7 @@ func affine_transform(&sx, &sy, coeffs) {
 
   Where a-f correspond to the matrix shown in solve_affine.
 
-  See also: solve_affine
+  SEE ALSO: solve_affine
 */
   if(numberof(coeffs) != 6)
     error, "Affine transformations require 6 coefficients.";
@@ -577,7 +577,7 @@ func tbr_to_matrix(r, p, h) {
   Given a roll, pitch, and heading from a series of Tait-Bryan rotations, this
   will return the corresponding 3x3 matrix.
 
-  See also: matrix_to_tbr
+  SEE ALSO: matrix_to_tbr
 */
 // Original David Nagle 2008-12-30
 
@@ -615,7 +615,7 @@ func matrix_to_tbr(R) {
 
   Return value is an array [roll, pitch, heading] in degrees.
 
-  See also: tbr_to_matrix
+  SEE ALSO: tbr_to_matrix
 */
 // Original David Nagle 2008-12-30
 

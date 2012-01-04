@@ -17,7 +17,7 @@ func read_image(filename) {
   will be reloading an image many times, it will be much more efficient to
   externally convert your image to jpeg format first.
 
-  See also: jpeg_read jpeg_write
+  SEE ALSO: jpeg_read jpeg_write
 */
 // Orig: Amar Nayegandhi 12/08/2005.
   extern imgdir;

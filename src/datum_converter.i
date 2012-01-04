@@ -62,7 +62,7 @@ dst_geoid=, verbose=) {
   The src_geoid= and dst_geoid= options may also have their value prefixed by
   a lowercase g (ie., src_geoid="g09").
 
-  See also: datum_convert_utm, datum_convert_geo, datum_convert_pnav
+  SEE ALSO: datum_convert_utm, datum_convert_geo, datum_convert_pnav
 */
   default, verbose, 1;
   extern curzone;
@@ -159,7 +159,7 @@ src_geoid=, dst_datum=, dst_geoid=, verbose=) {
 
   All options are the same as is documented in datum_convert_data.
 
-  See also: datum_convert_data, datum_convert_geo
+  SEE ALSO: datum_convert_data, datum_convert_geo
 */
   extern curzone;
   local lat, lon;
@@ -206,7 +206,7 @@ dst_geoid=, verbose=) {
 
   All options are the same as is documented in datum_convert_data.
 
-  See also: datum_convert_data, datum_convert_utm
+  SEE ALSO: datum_convert_data, datum_convert_utm
 */
   default, src_datum, "w84";
   default, src_geoid, "03";
@@ -276,7 +276,7 @@ func datum_convert_pnav(pnav=, infile=, export=, outfile=, src_datum=, src_geoid
   The rest of the options are as defined in datum_convert_data. The converted
   PNAV data is returned.
 
-  See also: datum_convert_data datum_convert_geo
+  SEE ALSO: datum_convert_data datum_convert_geo
 */
   local pnav;
   default, verbose, 1;

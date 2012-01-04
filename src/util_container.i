@@ -113,7 +113,7 @@ func pbd_append(file, vname, data, uniq=) {
   Note that if "file" already exists, then the struct of its data must match
   the struct of "data".
 
-  See also: pbd_save pbd_load
+  SEE ALSO: pbd_save pbd_load
 */
 // Original David Nagle 2008-07-16
   default, uniq, 1;
@@ -167,7 +167,7 @@ func pbd_save(file, vname, data) {
   This creates the pbd "file" using variable name "vname" to store "data". If
   the file already exists, it will be overwritten.
 
-  See also: pbd_append pbd_load
+  SEE ALSO: pbd_append pbd_load
 */
 // Original David Nagle 2009-12-28
   default, vname, file_rootname(file_tail(file));
@@ -209,7 +209,7 @@ func pbd_load(file, &err, &vname) {
     "no vname"
     "invalid vname"
 
-  See also: pbd_append pbd_save
+  SEE ALSO: pbd_append pbd_save
 */
 // Original David Nagle 2009-12-21
   err = string(0);

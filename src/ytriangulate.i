@@ -70,7 +70,7 @@ func plot_triag_mesh(data, v, mode=, edges=, win=, cmin=, cmax=, dofma=, showcba
         restore_win=0  Leaves window() set to win= (default)
         restore_win=1  Restores window() to what it was prior to this
 
-  See also: triangulate
+  SEE ALSO: triangulate
 */
 // original amar nayegandhi 01/09/04
   default, win, window();

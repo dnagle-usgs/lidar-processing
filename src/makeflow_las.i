@@ -124,12 +124,7 @@ norun=) {
     on a set of files that contains multiple files for the same tile (such as
     a be and fs version of the same tile).
 
-  See also:
-    pbd2las - Converts a single file instead of a batch of them
-    mf_las2pbd - Batch converts LAS to PBD using Makeflow
-    batch_pbd2las - Batch converts PBD to LAS
-    batch_las2pbd - Batch converts LAS back to PBD
-    las - General documentation about LAS
+  SEE ALSO: pbd2las mf_las2pbd batch_pbd2las batch_las2pbd las
 */
   default, searchstr, "*.pbd";
   default, verbose, 2;
@@ -395,10 +390,7 @@ norun=) {
     The file would be the result of whichever of the files got converted
     last.
 
-  See also:
-    batch_pbd2las - To convert PBD files back to LAS
-    las2pbd - To convert a single file
-    las - General documentation about LAS
+  SEE ALSO: batch_pbd2las las2pbd las
 */
   default, searchstr, "*.las";
   default, verbose, 2;

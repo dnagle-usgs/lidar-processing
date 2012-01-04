@@ -284,7 +284,7 @@ func avgline(x, y, step=) {
   step= is the number of points to bin for one average point. Default is set
     to 10. For faster changing, but less noisy lines this should be reduced.
 
-  See also: average_line
+  SEE ALSO: average_line
 */
   default, step, 10;
   num = numberof(x);

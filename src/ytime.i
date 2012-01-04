@@ -29,8 +29,6 @@ func getsod(void) {
   Returns the current SOD based on Yorick's timestamp() function.
 
   SEE ALSO: timestamp, parsedate, getsoe
-  See also:
-    timestamp parsedate
 */
   return (parsedate(timestamp())(4:6)*[3600,60,1])(sum);
 }
@@ -54,8 +52,7 @@ func soe2sod(soe) {
   Convert a soe time to an sod. Data type of return value is the same as
   the data type of soe.
 
-  See also:
-    soe2sod soe2time hms2sod sod2hms time2soe
+  SEE ALSO: soe2sod soe2time hms2sod sod2hms time2soe
 
 */
   return soe % 86400;
@@ -95,8 +92,7 @@ func soe2time(soe) {
 
   Original: W. Wright wright@lidar.wff.nasa.gov 7/19/2001
 
-  See also:
-    soe2sod soe2time hms2sod sod2hms time2soe
+  SEE ALSO: soe2sod soe2time hms2sod sod2hms time2soe
 */
   yd = soe2yd(soe);
   sod = soe2sod(soe);
@@ -128,8 +124,7 @@ func hms2sod (h, m, s) {
   The return value will have the same type and dimensions as the input
   value(s). If h, m, and s are arrays, they must be conformable.
 
-  See also:
-    soe2sod soe2time hms2sod sod2hms time2soe
+  SEE ALSO: soe2sod soe2time hms2sod sod2hms time2soe
 */
   if(is_void(m)) {
     t = h;
@@ -174,9 +169,7 @@ func sod2hms(sod, noary=, decimal=, str=) {
   If decimal is set to 1, then the return values will be doubles. Otherwise,
   they will be integers.
 
-  See also:
-    soe2sod soe2time hms2sod sod2hms time2soe
-    rbgga.i: gga_find_times
+  SEE ALSO: soe2sod soe2time hms2sod sod2hms time2soe gga_find_times
 */
   default, noary, 0;
   default, decimal, 0;
@@ -219,8 +212,7 @@ func time2soe( a ) {
   the day, and then compute the SOE.  If a(3) is non-zero, then it
   ignores a(4:6).
 
-  See also:
-    soe2sod soe2time hms2sod sod2hms time2soe
+  SEE ALSO: soe2sod soe2time hms2sod sod2hms time2soe
 
   Original: W. Wright wright@lidar.wff.nasa.gov
 */
@@ -599,7 +591,7 @@ func soe2iso8601(soe) {
 
     YYYY-MM-DD HH:MM:SS
 
-  See also: soe2sod soe2time soe2ymd
+  SEE ALSO: soe2sod soe2time soe2ymd
 */
 // Original David Nagle 2009-01-07
   ymd = int(soe2ymd(soe));

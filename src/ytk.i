@@ -166,7 +166,7 @@ func tksetval(tkvar, yval) {
   Given the name of a tcl variable (as a string) and an arbitrary Yorick
   value, this will set the tcl variable to that value.
 
-  See also: tksetvar
+  SEE ALSO: tksetvar
 */
 // Original David Nagle 2009-08-13
   tkcmd, swrite(format="tky_set %s {%s}", tkvar, print(yval)(sum));
@@ -178,7 +178,7 @@ func tksetvar(tkvar, yvar) {
   expression (as a string), this will set the tcl variable to the Yorick
   variable's value.
 
-  See also: tksetval
+  SEE ALSO: tksetval
 */
 // Original David Nagle 2009-09-14
   tksetval, tkvar, var_expr_get(yvar);
@@ -266,7 +266,7 @@ func var_expr_get(expr) {
     > var_expr_get("foo.bar.baz")
     42
 
-  See also: var_expr_set
+  SEE ALSO: var_expr_set
 */
 // Original David Nagle 2009-08-14
   parts = strtok(expr, ".");

@@ -159,7 +159,7 @@ func make_fs_veg(d, rrr) {
 
  The return value veg is an array of structure VEGALL.
 
-  See also: first_surface, run_veg
+  SEE ALSO: first_surface, run_veg
 */
 
   // d is the veg array from veg.i
@@ -253,7 +253,7 @@ Returns:
  Check to see if the tans and pnav data have been loaded before
  executing make_veg.  See rbpnav() and rbtans() for details.
 
-    See also: first_surface, run_veg, make_fs_veg
+    SEE ALSO: first_surface, run_veg, make_fs_veg
 */
   extern edb, soe_day_start, tans, pnav, utm, rn_arr, rn_arr_idx, ba_veg, bd_veg, n_all3sat;
   veg_all = [];
@@ -774,7 +774,7 @@ func make_fs_veg_all (d, rrr) {
 
   The return value veg is an array of structure VEGALL.
 
-  See also: first_surface, run_veg
+  SEE ALSO: first_surface, run_veg
 */
 // d is the veg array from veg.i
 // rrr is the topo array from surface_topo.i

@@ -38,7 +38,7 @@ local alpsrc;
     makeflow_opts = -N alps -T local
       Options to pass to makeflow. Use 'makeflow -h' for list of options.
 
-  See also: alpsrc_load
+  SEE ALSO: alpsrc_load
 */
 
 func alpsrc_load(void) {
@@ -56,7 +56,7 @@ func alpsrc_load(void) {
   All rc files are formatted in JSON are specify a hash with keys that will
   become keys in alpsrc.
 
-  See also: alpsrc
+  SEE ALSO: alpsrc
 */
   extern alpsrc;
   // load default

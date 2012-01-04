@@ -381,11 +381,7 @@ header=, verbose=, pre_fn=, post_fn=, shorten_fn=) {
     on a set of files that contains multiple files for the same tile (such as
     a be and fs version of the same tile).
 
-  See also:
-    pbd2las - Converts a single file instead of a batch of them
-    batch_las2pbd - Batch converts LAS back to PBD
-    las_old - Documentation about the old version of this function
-    las - General documentation about LAS
+  SEE ALSO: pbd2las batch_las2pbd las_old las
 */
   default, searchstr, "*.pbd";
   default, verbose, 2;
@@ -464,12 +460,7 @@ verbose=) {
         verbose=1  -  Will display detailed output
         verbose=0  -  Will display no output unless issues are encountered
 
-  See also:
-    batch_pbd2las - Convert many files instead of just one
-    las2pbd - Convert LAS back to PBD
-    las_export_data - Save a data variable to a LAS file
-    las_old - Documentation about the old version of this function
-    las - General documentation about LAS
+  SEE ALSO: batch_pbd2las las2pbd las_export_data las_old las
 */
   default, fn_las, file_rootname(fn_pbd) + ".las";
   default, verbose, 1;
@@ -536,11 +527,7 @@ pdrf=, encode_rn=, include_scan_angle_rank=, classification=, header=) {
     The options available to this function operate as described in
     batch_pbd2las.
 
-  See also:
-    pbd2las - Converts a file to LAS
-    las_open - Opens a LAS file handle, with LAS-specific variables
-    las_to_fs - Loads LAS data into a FS structure
-    las_to_veg - Loads LAS data into a VEG structure
+  SEE ALSO: pbd2las las_open las_to_fs las_to_veg
 */
   default, pdrf, 1;
   default, encode_rn, 1;
@@ -861,10 +848,7 @@ shorten_fn=, update=, files=, date=, geo=, zone=) {
     The file would be the result of whichever of the files got converted
     last.
 
-  See also:
-    batch_pbd2las - To convert PBD files back to LAS
-    las2pbd - To convert a single file
-    las - General documentation about LAS
+  SEE ALSO: batch_pbd2las las2pbd las
 */
   default, searchstr, "*.las";
   default, verbose, 2;
@@ -1001,12 +985,7 @@ func las_to_alps(las, fakemirror=, rgbrn=, date=, geo=, zone=) {
 
     See batch_las2pbd for documentation.
 
-  See also:
-    las_to_fs: To use the FS structure
-    las_to_veg: To use the VEG__ structure
-    las2pbd: To convert to a PBD
-    las_export_data: To write FS or other ALPS data to a LAS file
-    las_open: Opens a filehandle to a LAS file
+  SEE ALSO: las_to_fs las_to_veg las2pbd las_export_data las_open
 */
   local north, east;
   default, fakemirror, 1;
@@ -1104,12 +1083,7 @@ func las_to_fs(las, fakemirror=, rgbrn=, date=, geo=, zone=) {
 
     See batch_las2pbd for documentation.
 
-  See also:
-    las_to_alps: To use the LAS_ALPS structure
-    las_to_veg: To use the VEG__ structure
-    las2pbd: To convert to a PBD
-    las_export_data: To write FS or other ALPS data to a LAS file
-    las_open: Opens a filehandle to a LAS file
+  SEE ALSO: las_to_alps las_to_veg las2pbd las_export_data las_open
 */
   alps = las_to_alps(las, fakemirror=fakemirror, rgbrn=rgbrn, date=date,
     geo=geo, zone=zone);
@@ -1133,12 +1107,7 @@ func las_to_veg(las, fakemirror=, rgbrn=, date=, geo=, zone=) {
 
     See batch_las2pbd for documentation.
 
-  See also:
-    las_to_alps: To use the LAS_ALPS structure
-    las_to_fs: To use the FS structure
-    las2pbd: To convert to a PBD
-    las_export_data: To write VEG__ or other ALPS data to a LAS file
-    las_open: Opens a filehandle to a LAS file
+  SEE ALSO: las_to_alps las_to_fs las2pbd las_export_data las_open
 */
   alps = las_to_alps(las, fakemirror=fakemirror, rgbrn=rgbrn, date=date,
     geo=geo, zone=zone);
@@ -1238,11 +1207,7 @@ func las_open(filename) {
   the data, you should probably convert it to an FS or VEG__ structure using
   las_to_fs or las_to_veg.
 
-  See also:
-    las_to_fs: Loads LAS data into FS structure
-    las_to_veg: Loads LAS data into VEG__ structure
-    las_export_data: Creates a LAS file from data
-    las2pbd: Converts a LAS file to PBD file
+  SEE ALSO: las_to_fs las_to_veg las_export_data las2pbd
 */
   stream = open(filename, "rb");
   las_install_primitives, stream;

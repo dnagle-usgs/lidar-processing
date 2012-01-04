@@ -83,7 +83,7 @@ Examples:
   This example is the same as above, except:
   - the transect line is taken from the global transect_history array.
 
-See also: transect, _transect_history
+SEE ALSO: transect, _transect_history
 
 */
 
@@ -172,7 +172,7 @@ Input:
 
   msize		 :  set msize value (same as plcm, etc.), default = .1
   marker		 :  set marker value (same as plcm, etc.), default = 1
- See also: mtransact, _transect_history
+ SEE ALSO: mtransact, _transect_history
 
 */
   extern rx, elevation, glst, llst, segs;

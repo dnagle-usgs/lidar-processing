@@ -69,7 +69,7 @@ func testPoly(pl, ptx, pty) {
   Returns:
     Array of indices into ptx/pty for the points within the polygon.
 
-  See also: testPoly2 _testPoly
+  SEE ALSO: testPoly2 _testPoly
 */
   local plx, ply;
   if(is_void(pl) || is_void(ptx) || is_void(pty)) return [];
@@ -92,7 +92,7 @@ func _testPoly(plx, ply, ptx, pty) {
 
   See testPoly for further description of what the function does.
 
-  See also: testPoly testPoly2
+  SEE ALSO: testPoly testPoly2
 */
 /*
   The algorithm used calculates the sum of the angles between two vectors that

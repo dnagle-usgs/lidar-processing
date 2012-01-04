@@ -233,7 +233,7 @@ func calc24qq(lat, lon, qqprefix=) {
 
     A string or array of strings containing the codes.
 
-  See also: get_conusqq_data qq_segment_pbd
+  SEE ALSO: get_conusqq_data qq_segment_pbd
 */
   if(anyof(lat < 0))
     error, "Latitude values must be positive.";

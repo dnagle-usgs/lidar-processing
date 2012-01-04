@@ -70,8 +70,7 @@ extern pnav
    pnav.lon	Longitude in degrees ( negative values for west )
    pnav.alt 	Altitude in meters
 
-   See also:  
-     rbgga	Reads ybin files into Yorick.
+   SEE ALSO: rbgga
 
 */
 
@@ -90,11 +89,8 @@ func rbgga( x, plt=, color=, map=, utm=, ifn= ) {
   rbgga, plt=1
   load_map
 
- See also: 
-  Variables: gga data_path
-  Functions: gga_win_sel show_gga_track mk_photo_list gga_click_times
-	     gga_find_times rbgga
-      Other: map.i:  load_map ll2utm convert_map
+ SEE ALSO: gga data_path gga_win_sel show_gga_track mk_photo_list
+    gga_click_times gga_find_times rbgga load_map ll2utm convert_map
 
 */
 
@@ -527,7 +523,7 @@ func gga_click_times( x )  {
    gga data.
 
 
-   See also: gga, rbgga, gga_find_times, gga_win_sel
+   SEE ALSO: gga, rbgga, gga_find_times, gga_win_sel
 */
   t =  gga_find_times(  gga_win_sel(0)  ); 
   write,format="%6.2f total seconds selected\n", (t(dif, )) (,sum)
@@ -542,8 +538,7 @@ func gga_find_times( q, win=, plt= ) {
    where  (1, ) is the starting sod of the segment and (2, ) is the
    ending sod.  Sos is Seconds-of-day.
 
-  See also: gga_win_sel, rbgga, plmk
-            ytime.i: sod2hms
+  SEE ALSO: gga_win_sel, rbgga, plmk, sod2hms
 */
 
 // begin with "q" list of selected points
@@ -786,7 +781,7 @@ func show_gga_track (x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, widt
    several missions and retain one in the global gga array.
    
 
-   See also: plmk, plg, color, show_track, show_pnav_track
+   SEE ALSO: plmk, plg, color, show_track, show_pnav_track
 
    This was the original function name, it now just calls show_pnav_track
 
@@ -1109,7 +1104,7 @@ utm=, width=, win=) {
    One exception: if color is not specified, each day's trackline will get a
    different color.
 
-   See also: show_gga_track, mission_conf
+   SEE ALSO: show_gga_track, mission_conf
 */
 // Original David B. Nagle 2009-03-12
    default, width, 1;

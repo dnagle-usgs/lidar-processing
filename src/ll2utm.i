@@ -64,7 +64,7 @@ func ll2utm(lat, lon, &north, &east, &zone, force_zone=, ellipsoid=) {
   such:
     ll2utm, lat, lon, UTMNorthing, UTMEasting, ZoneNumber
 
-  See also: utm2ll
+  SEE ALSO: utm2ll
 */
   // Support for 2-dimensional input
   if(!am_subroutine() && is_void(lon)) {
@@ -234,7 +234,7 @@ func utm2ll(north, east, zone, &lon, &lat, ellipsoid=) {
   The ellipsoid= option allows you to specify the ellipsoid to operate in.
   This defaults to ellipsoid="wgs84". See help, ELLIPSOID for other options.
 
-  See also: ll2utm
+  SEE ALSO: ll2utm
 */
   default, ellipsoid, "wgs84";
 

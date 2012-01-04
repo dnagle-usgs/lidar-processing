@@ -135,7 +135,7 @@ func strjoin2(lst, sep, stripnil=) {
 
   Example: strjoin2(["a", "b", "c"], "--") will return "a--b--c".
 
-  See also: string
+  SEE ALSO: string
 */
   default, stripnil, 0;
   if(!numberof(lst)) return string(0);

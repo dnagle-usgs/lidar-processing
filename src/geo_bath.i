@@ -30,7 +30,7 @@ avg_surf	Set to 1 if the surface returns should be averaged to the
 
    The return value depth is an array of structure GEOALL.
 
-   See also: first_surface, run_bath
+   SEE ALSO: first_surface, run_bath
 */
 
 
@@ -132,7 +132,7 @@ ofname=		File name of output file.
 This function returns the pointer to the data array with 
 computed depth.
 
-See also: make_fs_bath, make_bathy
+SEE ALSO: make_fs_bath, make_bathy
 
 */
    if(!is_void(ipath)) {
@@ -247,7 +247,7 @@ executing make_bathy.  See rbpnav() and rbtans() for details.
 The structure BATH_CTL must be initialized as well.  
 See define_bath_ctl()
 
-      See also: first_surface, run_bath, make_fs_bath 
+      SEE ALSO: first_surface, run_bath, make_fs_bath 
 */
    
    extern edb, soe_day_start, bath_ctl, tans, pnav, type, utm, depth_all, rn_arr, rn_arr_idx, ba_depth, bd_depth;
