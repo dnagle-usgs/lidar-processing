@@ -11,9 +11,9 @@ by some other set of code? Did we abandon whatever we were trying to do in it?
 Was it just a temporarily thrown-together script that isn't really useful in
 the long term?
 
-If for some reason you'd like to use some code that's located in the attic, you
-can #include it:
-  #include "attic/2010-01-example.i"
+If for some reason you'd like to use some Yorick code that's located in the
+attic, you can #include it:
+  #include "../attic/src/2010-01-example.i"
 Of course, you shouldn't do this in code you're planning to commit. If you're
 planning to commit code that refers to something in the attic, that's a sign
 that either the code you're writing should be updated (to reflect the changes
