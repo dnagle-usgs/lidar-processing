@@ -6,7 +6,7 @@ scratch = save(scratch, tmp, clsobj_set, clsobj_apply, clsobj_remove,
   clsobj_drop, clsobj_classes, clsobj_query, clsobj_where, clsobj_grow,
   clsobj_index, clsobj_serialize);
 tmp = save(__bless, __version, set, apply, remove, drop, classes, query, where,
-  grow, index, serialize, help);
+  grow, index, serialize, deserialize, help);
 
 __bless = "clsobj";
 __version = 1;
@@ -124,8 +124,71 @@ func clsobj(base, count) {
 */
   data = save();
   if(numberof(count) > 1) {
-    bits = count;
+    data = base.deserialize(count);
+  } else if(!count) {
+    error, "must provide either a count or data to restore";
+  }
+  obj = save(count, data);
+  obj_copy, base, obj;
+  return obj;
+}
 
+func clsobj_serialize(nil) {
+  use, count, data, __version;
+  classes = use(classes,);
+  numclasses = numberof(classes);
+
+  // byte sequence:
+  //  byte 0: marker, always 0
+  //  byte 1: version number
+  //  next bytes are class names with null terminators
+  //  following last class is a second null terminator
+  //  remaining data is encoded class values:
+  //    classes are broken into groups of 8
+  //    classes are represented by bits - 1 for when it applies, 0 otherwise
+  //    each group of 8 are encoded in a byte such that the lowest bit (1) is
+  //      the first class and the highest bit (128) is the last class
+  //    all the data for a group of 8 is a single sequence
+  //    if multiple groups of 8 are present, their sequences are concatenated
+
+  // special case for no classes: array of zeroes with count length
+  if(!numclasses)
+    return grow(char(0), char(__version), array(char(0), count));
+
+  bits = array(char, count, long(ceil(numclasses/8.)));
+
+  pos = 1;
+  pow = 0;
+  for(i = 1; i <= numclasses; i++) {
+    bits(,pos) |= data(classes(i)) << pow;
+    pow++;
+    if(pow == 8) {
+      pos++;
+      pow = 0;
+    }
+  }
+
+  classes = strchar(classes);
+
+  return grow(char(0), char(__version), classes, char(0), bits(*));
+}
+serialize = clsobj_serialize;
+
+func clsobj_deserialize(bits) {
+/*
+  This is a private class method. It does not utilize any internal data and may
+  be called directly from the base class.
+*/
+  if(numberof(bits) < 3)
+    error, "too few bytes";
+  if(bits(1) != 0)
+    error, "invalid leading byte";
+  version = long(bits(2));
+  bits = bits(3:);
+
+  data = save();
+
+  if(version == 1) {
     zeroes = !bits;
     w = where(zeroes(:-1) & zeroes(2:));
     if(!numberof(w))
@@ -135,6 +198,8 @@ func clsobj(base, count) {
     if(w(1) == 1) {
       count = numberof(bits);
       numclasses = 0;
+
+    // normal case
     } else {
       classes = strchar(bits(:w(1)));
       bits = bits(w(1)+2:);
@@ -153,39 +218,15 @@ func clsobj(base, count) {
         }
       }
     }
-  } else if(!count) {
-    error, "must provide either a count or data to restore";
-  }
-  obj = save(count, data);
-  obj_copy, base, obj;
-  return obj;
-}
 
-func clsobj_serialize(nil) {
-  use, count, data;
-  classes = use(classes,);
-  numclasses = numberof(classes);
-  // special case for no classes
-  if(!numclasses)
-    return array(char(0), count);
-  bits = array(char, count, long(ceil(numclasses/8.)));
-
-  pos = 1;
-  pow = 0;
-  for(i = 1; i <= numclasses; i++) {
-    bits(,pos) |= data(classes(i)) << pow;
-    pow++;
-    if(pow == 8) {
-      pos++;
-      pow = 0;
-    }
+  // version != 1
+  } else {
+    error, "unknown version number";
   }
 
-  classes = strchar(classes);
-
-  return grow(classes, char(0), bits(*));
+  return data;
 }
-serialize = clsobj_serialize;
+deserialize = clsobj_deserialize;
 
 func clsobj_set(class, vals) {
   if(!regmatch("^[a-zA-Z_][a-zA-Z_0-9]*$", class))
