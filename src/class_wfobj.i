@@ -6,10 +6,11 @@ require, "eaarl.i";
 scratch = save(scratch, tmp, wfobj_xyzwrap, wfobj_summary, wfobj_index,
   wfobj_sort, wfobj_grow, wfobj_x0, wfobj_y0, wfobj_z0, wfobj_xyz0, wfobj_x1,
   wfobj_y1, wfobj_z1, wfobj_xyz1, wfobj_rn, wfobj_save);
-tmp = save(__bless, help, summary, index, sort, grow, x0, y0, z0, xyz0, x1, y1,
-  z1, xyz1, rn, save);
+tmp = save(__bless, __version, help, summary, index, sort, grow, x0, y0, z0,
+  xyz0, x1, y1, z1, xyz1, rn, save);
 
 __bless = "wfobj";
+__version = 1;
 func wfobj(base, obj) {
 /* DOCUMENT wfobj()
   Creates a waveforms data object. This can be called in one of three ways.

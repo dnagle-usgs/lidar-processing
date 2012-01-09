@@ -5,10 +5,11 @@
 scratch = save(scratch, tmp, clsobj_set, clsobj_apply, clsobj_remove,
   clsobj_drop, clsobj_classes, clsobj_query, clsobj_where, clsobj_grow,
   clsobj_index, clsobj_serialize);
-tmp = save(__bless, set, apply, remove, drop, classes, query, where, grow,
-  index, serialize, help);
+tmp = save(__bless, __version, set, apply, remove, drop, classes, query, where,
+  grow, index, serialize, help);
 
 __bless = "clsobj";
+__version = 1;
 func clsobj(base, count) {
 /* DOCUMENT clsobj()
   Creates a classification object. This can be called in one of two ways:
