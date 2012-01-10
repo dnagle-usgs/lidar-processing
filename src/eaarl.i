@@ -78,10 +78,10 @@ if(is_void(__eaarl_includes_included__)) {
   require, "dirload.i";
   require, "dmars.i";
   require, "drast.i";
+  require, "eaarl_mounting_bias.i";
   require, "eaarla_raster.i";
   require, "eaarla_wf.i";
   require, "eaarlb_lsr.i";
-  require, "eaarl_mounting_bias.i";
   require, "edb_access.i";
   require, "edf.i";
   require, "flightlines.i";
@@ -97,8 +97,8 @@ if(is_void(__eaarl_includes_included__)) {
   require, "json_decode.i";
   require, "json_encode.i";
   require, "kml.i";
-  require, "kml_flightlines.i";
   require, "kml_extents.i";
+  require, "kml_flightlines.i";
   require, "kml_jgw.i";
   require, "kml_lines.i";
   require, "kml_markup.i";
@@ -106,6 +106,10 @@ if(is_void(__eaarl_includes_included__)) {
   require, "las_filter.i";
   require, "lines.i";
   require, "ll2utm.i";
+  require, "makeflow.i";
+  require, "makeflow_eaarla.i";
+  require, "makeflow_las.i";
+  require, "makeflow_rcf.i";
   require, "manual_filter.i";
   require, "map.i";
   require, "mathop.i";
@@ -116,8 +120,8 @@ if(is_void(__eaarl_includes_included__)) {
   require, "nav.i";
   require, "obj_show.i";
   require, "parse.i";
-  require, "pcobj_import.i";
   require, "pcobj_export.i";
+  require, "pcobj_import.i";
   require, "pip.i";
   require, "qaqc_fns.i";
   require, "rbgga.i";
