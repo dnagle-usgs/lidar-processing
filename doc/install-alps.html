@@ -34,6 +34,9 @@
     h2 {
       font-size: 1.2em;
     }
+    h3 {
+      font-size: 1em;
+    }
     pre.code {
       overflow: auto;
       padding: 0.5em 0.75em;
@@ -115,6 +118,7 @@
   <li><a href="#need_devel">Missing development packages</a></li>
   <li><a href="#need_sudo">Installing with sudo</a></li>
   <li><a href="#disable_rlwrap">Problems with rlwrap</a></li>
+  <li><a href="#cctools_readline">Readline problems with cctools</a></li>
   <li><a href="#fixed_width">GUIs have fixed-width font</a></li>
   <li><a href="#distclean">Modified configuration</a></li>
   </ul>
@@ -327,7 +331,7 @@
 </p>
 
 <pre class="code">
-<span class="command">cd</span> <span class="directory">alpsinstall.<span class="replaceeable">20100328</span>/</span>
+<span class="command">cd</span> <span class="directory">alpsinstall.<span class="replaceable">20100328</span>/</span>
 <span class="command">make</span> install
 </pre>
 
@@ -486,7 +490,7 @@
 <pre class="code">
 <span class="command">sudo mkdir</span> -p <span class="directory">/opt/alps</span>
 <span class="command">sudo chown -R <span class="replaceable">user</span>.<span class="replaceable">group</span> <span class="directory">/opt/alps</span>
-<span class="command">cd</span> <span class="directory">alpsinstall.<span class="replaceeable">20100328</span>/</span>
+<span class="command">cd</span> <span class="directory">alpsinstall.<span class="replaceable">20100328</span>/</span>
 <span class="command">make</span> install
 <span class="command">sudo chown</span> -R root.root <span class="directory">/opt/alps</span>
 </pre>
@@ -517,6 +521,95 @@
 <p>
   The above will set <strong class="variable">rlwrapsrc</strong> to a null
   value, effectively disabling it.
+</p>
+
+<h2 id="cctools_readline">Readline problems with cctools</h2>
+
+<p>
+  On certain versions of RedHat Enterprise Linux, the cctools installation does
+  not work because it cannot find the readline development library, even though
+  it's installed. If this is the case, the ALPS installation will fail and you
+  will see errors similar to the following:
+</p>
+
+<pre class="code">
+COMPILE make_int_sizes.o
+LINK make_int_sizes
+/usr/lib/gcc/x86_64-redhat-linux/3.4.6/../../../../lib64/libreadline.so: undefined reference to `tgetnum'
+/usr/lib/gcc/x86_64-redhat-linux/3.4.6/../../../../lib64/libreadline.so: undefined reference to `tgoto'
+/usr/lib/gcc/x86_64-redhat-linux/3.4.6/../../../../lib64/libreadline.so: undefined reference to `tgetflag'
+/usr/lib/gcc/x86_64-redhat-linux/3.4.6/../../../../lib64/libreadline.so: undefined reference to `BC'
+/usr/lib/gcc/x86_64-redhat-linux/3.4.6/../../../../lib64/libreadline.so: undefined reference to `tputs'
+/usr/lib/gcc/x86_64-redhat-linux/3.4.6/../../../../lib64/libreadline.so: undefined reference to `PC'
+/usr/lib/gcc/x86_64-redhat-linux/3.4.6/../../../../lib64/libreadline.so: undefined reference to `tgetent'
+/usr/lib/gcc/x86_64-redhat-linux/3.4.6/../../../../lib64/libreadline.so: undefined reference to `UP'
+/usr/lib/gcc/x86_64-redhat-linux/3.4.6/../../../../lib64/libreadline.so: undefined reference to `tgetstr'
+collect2: ld returned 1 exit status
+make[2]: *** [make_int_sizes] Error 1
+make[2]: Leaving directory `/home/dnagle/alpsinstall.20111213/cctools-3.4.1-src/dttools/src'
+/bin/sh: line 0: cd: test: No such file or directory
+make[1]: *** [all] Error 1
+make[1]: Leaving directory `/home/dnagle/alpsinstall.20111213/cctools-3.4.1-src/dttools'
+/bin/sh: line 0: cd: sand: No such file or directory
+/bin/sh: line 0: cd: allpairs: No such file or directory
+/bin/sh: line 0: cd: wavefront: No such file or directory
+/bin/sh: line 0: cd: makeflow: No such file or directory
+/bin/sh: line 0: cd: ftp_lite: No such file or directory
+/bin/sh: line 0: cd: s3tools: No such file or directory
+/bin/sh: line 0: cd: chirp: No such file or directory
+/bin/sh: line 0: cd: parrot: No such file or directory
+/bin/sh: line 0: cd: doc: No such file or directory
+/bin/sh: line 0: cd: apps: No such file or directory
+/bin/sh: line 0: cd: work_queue: No such file or directory
+make: *** [all] Error 1
+</pre>
+
+<p>
+  If this happens, you have two options. The first is to try to help cctools
+  find readline. The second is to omit cctools, which is an optional component
+  of ALPS.
+</p>
+
+<h3 id="cctools_readline_help">Help cctools find readline</h3>
+
+<p>
+  To help cctools find readline, you'll need to manually run the cctools
+  configuration script with some custom arguments. Follows is a modified
+  installation procedure that illustrates.
+</p>
+
+<pre class="code">
+<span class="command">cd</span> <span class="directory">alpsinstall.<span class="replaceable">20111213</span>/ctools-<span class="replaceable">3.4.1-src</span></span>
+<span class="command">./configure</span> --with-readline-path /lib:/usr/lib --prefix <span class="directory"><span class="replaceable">/opt/alps</span>/cctools</span>
+<span class="command">cd</span> ..
+<span class="command">make</span> install prefix=<span class="directory"><span class="replaceable">/opt/alps</span></span>
+</pre>
+
+<p>
+  If you're installing to the default location, you can omit the prefix= option
+  from <strong class="command">make</strong>. However, you must always include
+  the --prefix option to <strong class="command">configure</strong>.
+</p>
+
+<p>
+  If the installation continues to fail after this change, then you'll either
+  need to manually troubleshoot further or just omit cctools.
+</p>
+
+<h3 id="cctools_readline_omit">Omit cctools</h3>
+
+<p>
+  To omit cctools, just modify your <strong class="command">make</strong> call
+  to include an empty cctoolssrc= option as follows.
+</p>
+
+<pre class="code">
+<span class="command">make</span> install cctoolssrc=
+</pre>
+
+<p>
+  If you are using other options such as prefix=, you will need to include it
+  along with them.
 </p>
 
 <h2 id="fixed_width">GUIs have fixed-width font</h2>
