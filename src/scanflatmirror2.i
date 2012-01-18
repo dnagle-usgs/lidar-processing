@@ -277,55 +277,69 @@ ca - angle about y (varies with mirror oscillation)
 pa - angle about z (constant mounting angle))
 */
 
-// Following needs to be documented yet
+/*
+The matrix below (J-R) is constructed just like the earlier matrix (A-I) to
+handle the 3 rotations needed for a planar mirror. Only the third column gets
+used, so the other values are not created.
+*/
 
-J = cpa*cca-spa*sma*sca;		// These matrix components
-K = -spa*cma;				      // comprise the 3 rotations
-//L = cpa*sca+spa*sma*cca;		// needed for a planar mirror
-M = spa*cca+cpa*sma*sca;      // The third column is not used,
-N = cpa*cma;                  // and thus is not created.
-//O = spa*sca-cpa*sma*cca;
-P = -cma*sca;
-Q = sma;
-//R = cma*cca;
+//J = cpa*cca-spa*sma*sca;
+//K = -spa*cma;
+L = cpa*sca+spa*sma*cca;
+//M = spa*cca+cpa*sma*sca;
+//N = cpa*cma;
+O = spa*sca-cpa*sma*cca;
+//P = -cma*sca;
+//Q = sma;
+R = cma*cca;
 
 // No longer need these, clear memory
 cma = sma = cca = sca = cpa = spa = [];
 
 /*
+J-R rotates the mirror into the plane's vector space. A-I rotates the plane's
+vector space into the real world's vector space. To rotate from mirror vector
+space directly to real world vector space, the two need to get matrix
+multiplied together.
 
-A B C    J K L
-D E F    M N O
-G H I    P Q R
+  / A B C \   / J K L \
+  | D E F | * | M N O |
+  \ G H I /   \ P Q R /
 
-Following is just matrix multiplication between the above matrices?
+We need to know what vector is normal to the plane of the mirror. The mirror
+lies in the plane that contains the X and Y axes of its own vector space. So,
+the Z axis is normal: <0,0,1>. Multiplying this by the rotations above yields a
+vector that is normal in real world vector space. We call this vector "RM"
+below.
 
+        / A B C \   / J K L \   / 0 \
+  RM  = | D E F | * | M N O | * | 0 |
+        \ G H I /   \ P Q R /   \ 1 /
+
+        / A B C \   / L \
+      = | D E F | * | O |
+        \ G H I /   \ R /
+
+        / AL+BO+CR \
+      = | DL+EO+FR |
+        \ GL+HO+IR /
+*/
+RM = array(double, dims, 3);
+RM(..,1) = A*L + B*O + C*R;
+RM(..,2) = D*L + E*O + F*R;
+RM(..,3) = G*L + H*O + I*R;
+
+/*
+Using:
+  di - vector of incidence
+  dn - vector of surface normal
+  ds - vector of spectral reflection
+Then:
+  ds = 2(dn . di)dn - di
+Where . stands for dot product.
 */
 
-R1 = R2 = array(double, dims, 3);
-R1(..,1) = A*J + B*M + C*P;  // X-axis attitude after all
-R1(..,2) = D*J + E*M + F*P;  // rotations
-R1(..,3) = G*J + H*M + I*P;
-
-R2(..,1) = A*K + B*N + C*Q;  // Y-axis attitude after all
-R2(..,2) = D*K + E*N + F*Q;  // rotations
-R2(..,3) = G*K + H*N + I*Q;
-
-// Clear memory
-A = B = C = D = E = F = G = H = I = [];
-J = K = L = M = N = O = P = Q = R = [];
-
-// Following needs to be documented yet
-
-RM = array(double, dims, 3);
-RM(..,1) = R1(..,2)*R2(..,3) - R1(..,3)*R2(..,2);
-RM(..,2) = R1(..,3)*R2(..,1) - R1(..,1)*R2(..,3);   // and R2 to find normal (RM)
-RM(..,3) = R1(..,1)*R2(..,2) - R1(..,2)*R2(..,1);
-
-// Clear memory
-R1 = R2 = [];
-
-// Compute inner product
+// Compute dot product between normal to mirror and incident vector
 MM = RM(..,1)*a(..,1) + RM(..,2)*a(..,2) + RM(..,3)*a(..,3);
 
 mir(..,4) = a(..,1) - 2*MM*RM(..,1) + mir(..,1);	// Compute reflected vector
