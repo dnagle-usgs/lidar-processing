@@ -214,23 +214,22 @@ about the y axis.
 Let Rx be the rotation matrix about the x axis and Rz be the rotation matrix
 about the z axis. Then Rx and Rz are:
 
-        / 1 0   0  \        / cz -sz 0 \
-   Rx = | 0 cx -sx |   Rz = | sz  cz 0 |
-        \ 0 sx  cx /        \ 0   0  1 /
+        / cz -sz 0 \        / 1 0   0  \
+   Rz = | sz  cz 0 |   Rx = | 0 cx -sx |
+        \ 0   0  1 /        \ 0 sx  cx /
 
 The composite rotation matrix R is thus:
 
-                 / (cz)      (sz)    (0)  \
-   R = Rx * Rz = | (-cx*sz) (cx*cz)  (sz) |
-                 \ (sx*sz)  (-sx*cz) (cx) /
+                 / (cz) (-cx*sz) (sx*sz)  \
+   R = Rz * Rx = | (sz) (cx*cz)  (-sx*cz) |
+                 \ (0)  (sx)     (cx)     /
 
-Our laser vector is defined solely by a magnitude in the y direction. This
-magitude is represented in yorick as the variable 'mag'. If we call our laser
-distance vector D, then:
+Our laser vector is coming in solely from the y direction, which can be
+represented by a unit vector thus:
 
-       /  0  \
-   D = | mag |
-       \  0  /
+       / 0 \
+   D = | 1 |
+       \ 0 /
 
 Now, the above rotation matrix R is to transform from the laser beam's
 inertial reference to the plane intertial reference. We then have to transform
@@ -240,32 +239,30 @@ above.
 
 Let Rlp be the rotation matrix to transform from the laser to the plane. Let
 Rpg be the rotation matrix to transform from the plane to the real world (gps).
-Then to transform D into a real-world displacement vector, we need to do the
-following:
+Then to transform D into a real-world vector, we need to do the following:
 
-                   / A B C \   / (cz)      (sz)    (0)  \   /  0  \
-   Rpg * Rlp * D = | D E F | * | (-cx*sz) (cx*cz)  (sz) | * | mag |
-                   \ G H I /   \ (sx*sz)  (-sx*cz) (cx) /   \  0  /
+                   / A B C \   / (cz) (-cx*sz) (sx*sz)  \   / 0 \
+   Rpg * Rlp * D = | D E F | * | (sz) (cx*cz)  (-sx*cz) | * | 1 |
+                   \ G H I /   \ (0)  (sx)     (cx)     /   \ 0 /
 
-                   / A B C \   / (sz * mag)       \
-                 = | D E F | * | (cx * cz * mag)  |
-                   \ G H I /   \ (-sx * cz * mag) /
+                   / A B C \   / -cx*sz \
+                 = | D E F | * | cx*cz  |
+                   \ G H I /   \ sx     /
 
-It appears that the vector 'a' defined below is the second row of the above
-matrix, multiplied by the magnitude vector in the 'y' direction.
+                   / A*-cx*sz + B*cx*cz + C*sx \
+                 = | D*-cx*sz + E*cx*cz + F*sx |
+                   \ G*-cx*sz + H*cx*cz + I*sx /
 
-The maginitude vector is [0,mag,0]. We omit the first and third rows because
-they'll always be zero.
-
-The magnitude vector is a coordinate in "mirror space". This converts it to a
-coordinate in plane space. -- ?
+                   / (-A*sz + B*cz)*cx + C*sx \
+                 = | (-D*sz + E*cz)*cx + F*sx |
+                   \ (-G*sz + H*cz)*cx + I*sx /
 */
 
-// mag is the magnitude of the vector in the y direction
 a = array(double, dims, 3); // x-axis
-a(..,1) = ((-A*spa+B*cpa)*cla+C*sla)*mag;   // Move incident vector with
-a(..,2) = ((-D*spa+E*cpa)*cla+F*sla)*mag;   // aircraft attitude and then
-a(..,3) = ((-G*spa+H*cpa)*cla+I*sla)*mag;   // rotate about z-axis, then
+// Move incident vector with aircraft attitude and then rotate about z-axis
+a(..,1) = (-A*spa + B*cpa)*cla + C*sla;
+a(..,2) = (-D*spa + E*cpa)*cla + F*sla;
+a(..,3) = (-G*spa + H*cpa)*cla + I*sla;
 
 // No longer need, clear memory
 cla = sla = [];
@@ -342,9 +339,17 @@ Where . stands for dot product.
 // Compute dot product between normal to mirror and incident vector
 MM = RM(..,1)*a(..,1) + RM(..,2)*a(..,2) + RM(..,3)*a(..,3);
 
-mir(..,4) = a(..,1) - 2*MM*RM(..,1) + mir(..,1);	// Compute reflected vector
-mir(..,5) = a(..,2) - 2*MM*RM(..,2) + mir(..,2);  // x,y,z position
-mir(..,6) = a(..,3) - 2*MM*RM(..,3) + mir(..,3);
+// Compute vector of spectral reflection
+SR = array(double, dims, 3);
+SR(..,1) = 2 * MM * RM(..,1) - a(..,1);
+SR(..,2) = 2 * MM * RM(..,2) - a(..,2);
+SR(..,3) = 2 * MM * RM(..,3) - a(..,3);
+
+// Multiply spectral reflection unit vector by magnitude, then subtract from
+// mirror to yield point location.
+mir(..,4) = mir(..,1) - mag * SR(..,1);
+mir(..,5) = mir(..,2) - mag * SR(..,2);
+mir(..,6) = mir(..,3) - mag * SR(..,3);
 
 return mir;
 }
