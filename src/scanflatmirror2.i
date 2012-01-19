@@ -1,10 +1,3 @@
-/*
-   Modified 2008-12-05 David Nagle:
-      I have gone through and added a lot of documentation to explain (as best
-      I can) what is being done and why. No functionality has been altered.
-      I've only added documentation.
-*/
-
 func scanflatmirror2_direct_vector(yaw, pitch, roll, gx, gy, gz, dx, dy, dz, cyaw, lasang, mirang, curang, mag)
 {
 /* DOCUMENT scanflatmirror2_direct_vector(yaw, pitch, roll, gx, gy, gz, dx, dy,
