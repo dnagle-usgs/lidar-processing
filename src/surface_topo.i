@@ -171,20 +171,22 @@ use_highelv_echo=, quiet=, verbose=) {
 
   bcast = long(yaw * 0);
 
-  m = scanflatmirror2_direct_vector(
+  local mx, my, mz, px, py, pz;
+  scanflatmirror2_direct_vector,
     yaw, pitch, roll,
     easting, northing, palt,
     dx, dy, dz,
     bcast + cyaw(,-),
     bcast + lasang(,-),
-    bcast + mirang(,-), scan_angles, mag);
+    bcast + mirang(,-), scan_angles, mag,
+    mx, my, mz, px, py, pz;
 
-  rrr.meast  =     m(..,1) * 100.0;
-  rrr.mnorth =     m(..,2) * 100.0;
-  rrr.melevation=  m(..,3) * 100.0;
-  rrr.east   =     m(..,4) * 100.0;
-  rrr.north  =     m(..,5) * 100.0;
-  rrr.elevation =  m(..,6) * 100.0;
+  rrr.meast  =     mx * 100.0;
+  rrr.mnorth =     my * 100.0;
+  rrr.melevation=  mz * 100.0;
+  rrr.east   =     px * 100.0;
+  rrr.north  =     py * 100.0;
+  rrr.elevation =  pz * 100.0;
   rrr.rn = (a.raster&0xffffff)(-,);
   rrr.intensity = a.intensity;
   rrr.fs_rtn_centroid = a.fs_rtn_centroid;

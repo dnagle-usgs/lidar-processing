@@ -210,19 +210,21 @@ func georef_eaarla(rasts, gns, ins, ops, daystart, outfile=) {
   ang *= SAD;
 
   // Georeference
-  georef = scanflatmirror2_direct_vector(
+  local mx, my, mz, px, py, pz;
+  scanflatmirror2_direct_vector,
     aY, aP, aR, gx, gy, gz, dx, dy, dz,
-    cyaw, lasang, mirang, ang, rng);
+    cyaw, lasang, mirang, ang, rng,
+    mx, my, mz, px, py, pz;
   aY = aP = aR = gx = gy = gz = dx = dy = dz = [];
   cyaw = lasang = mirang = ang = rng = [];
 
-  x0 = transpose(georef(..,1), [1,2]);
-  y0 = transpose(georef(..,2), [1,2]);
-  z0 = transpose(georef(..,3), [1,2]);
-  x1 = transpose(georef(..,4), [1,2]);
-  y1 = transpose(georef(..,5), [1,2]);
-  z1 = transpose(georef(..,6), [1,2]);
-  georef = [];
+  x0 = transpose(mx, [1,2]);
+  y0 = transpose(my, [1,2]);
+  z0 = transpose(mz, [1,2]);
+  x1 = transpose(px, [1,2]);
+  y1 = transpose(py, [1,2]);
+  z1 = transpose(pz, [1,2]);
+  mx = my = mz = px = py = pz = [];
 
   raw_xyz0 = [x0, y0, z0];
   x0 = y0 = z0 = [];

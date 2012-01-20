@@ -1,43 +1,42 @@
-func scanflatmirror2_direct_vector(yaw, pitch, roll, gx, gy, gz, dx, dy, dz, cyaw, lasang, mirang, curang, mag)
+func scanflatmirror2_direct_vector(yaw, pitch, roll, gx, gy, gz, dx, dy, dz, cyaw, lasang, mirang, curang, mag, &mx, &my, &mz, &px, &py, &pz)
 {
 /* DOCUMENT scanflatmirror2_direct_vector(yaw, pitch, roll, gx, gy, gz, dx, dy,
-   dz, cyaw, lasang, mirang, curang, mag)
+   dz, cyaw, lasang, mirang, curang, mag, &mx, &my, &mz, &px, &py, &pz)
 
-   This function computes a vector (M) of xyz points projected in 3D space from
-   the origin...which in this case is the center of rotation of planar mirror
-   rotated about the y-axis.  The mirror will face the negative y-axis with a
-   pitch angle of -22.5 degrees. An incident vector intersects this mirror 45
-   degs.  from vertical. The direction of this vector is positive going giving
-   [0 mag 0] as our incident vector.
+  This function computes a vector (M) of xyz points projected in 3D space from
+  the origin...which in this case is the center of rotation of planar mirror
+  rotated about the y-axis.  The mirror will face the negative y-axis with a
+  pitch angle of -22.5 degrees. An incident vector intersects this mirror 45
+  degs.  from vertical. The direction of this vector is positive going giving
+  [0 mag 0] as our incident vector.
 
-   In the 'incident vector' above, 'mag' is the distance from the mirror to the
-   ground point.
+  In the 'incident vector' above, 'mag' is the distance from the mirror to the
+  ground point.
 
-   yaw    - yaw angle (z) of aircraft
-   pitch  - pitch angle (x) of aircraft
-   roll   - roll angle (y) of aircraft
-   gx     - GPS antenna x position
-   gy     - GPS antenna y position
-   gz     - GPS antenna z position
-   dx     - delta x distance from GPS antenna to mirror exit
-   dy     - delta y distance from GPS antenna to mirror exit
-   dz     - delta z distance from GPS antenna to mirror exit
-   cyaw   - yaw angle (z) about laser/mirror chassis
-   lasang - mounting angle of laser about x-axis
-   mirang - mounting angle of mirror about x-axis
-   curang - current angle of mirror rotating about y-axis
-   mag    - magnitude of vector in 'y' direction (distance mirror to ground)
+  Input parameters:
 
-   Return array is as follows (all values are in centimeters)
-   m(,1) = mirror east
-   m(,2) = mirror north
-   m(,3) = mirror elevation
-   m(,4) = ground point east
-   m(,5) = ground point north
-   m(,6) = ground point elevation
-   ---------------------------------------------------------------
-   SAB			NASA			8/11/2000
-   ---------------------------------------------------------------
+    yaw    - yaw angle (z) of aircraft
+    pitch  - pitch angle (x) of aircraft
+    roll   - roll angle (y) of aircraft
+    gx     - GPS antenna x position
+    gy     - GPS antenna y position
+    gz     - GPS antenna z position
+    dx     - delta x distance from GPS antenna to mirror exit
+    dy     - delta y distance from GPS antenna to mirror exit
+    dz     - delta z distance from GPS antenna to mirror exit
+    cyaw   - yaw angle (z) about laser/mirror chassis
+    lasang - mounting angle of laser about x-axis
+    mirang - mounting angle of mirror about x-axis
+    curang - current angle of mirror rotating about y-axis
+    mag    - magnitude of vector in 'y' direction (distance mirror to ground)
+
+  Return array is as follows (all values are in meters)
+    mx = mirror east
+    my = mirror north
+    mz = mirror elevation
+    px = target point east
+    py = target point north
+    pz = target point elevation
 */
 
 // These are the dimensions upon which everything else is based.
@@ -163,10 +162,10 @@ certain that they are equivalent.
 */
 
 // Preallocate mir; we'll fill in half now, and half later
-mir = array(double, dims, 6);
-mir(..,1) = A*dx + B*dy + C*dz + gx;   // Calc. freespace mirror
-mir(..,2) = D*dx + E*dy + F*dz + gy;   // position
-mir(..,3) = G*dx + H*dy + I*dz + gz;
+mx = my = mz = array(double, dims);
+mx = A*dx + B*dy + C*dz + gx;   // Calc. freespace mirror
+my = D*dx + E*dy + F*dz + gy;   // position
+mz = G*dx + H*dy + I*dz + gz;
 
 // Clear memory
 dx = dy = dz = gx = gy = gz = [];
@@ -340,9 +339,7 @@ SR(..,3) = 2 * MM * RM(..,3) - a(..,3);
 
 // Multiply spectral reflection unit vector by magnitude, then subtract from
 // mirror to yield point location.
-mir(..,4) = mir(..,1) + mag * SR(..,1);
-mir(..,5) = mir(..,2) + mag * SR(..,2);
-mir(..,6) = mir(..,3) + mag * SR(..,3);
-
-return mir;
+px = mx + mag * SR(..,1);
+py = my + mag * SR(..,2);
+pz = mz + mag * SR(..,3);
 }
