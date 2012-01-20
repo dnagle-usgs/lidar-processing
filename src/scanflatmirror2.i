@@ -38,20 +38,6 @@ func scanflatmirror2_direct_vector(yaw, pitch, roll, gx, gy, gz, dx, dy, dz, cya
     py = target point north
     pz = target point elevation
 */
-
-// These are the dimensions upon which everything else is based.
-dims = dimsof(yaw, pitch, roll, gx, gy, gz, dx, dy, dz, cyaw, lasang, mirang,
-   curang, mag);
-
-// Convert the yaw, pitch, roll into radians. We name the variables z, x, y
-// because these are the rotations about those axes.
-z = yaw * DEG2RAD;
-x = pitch * DEG2RAD;
-y = roll * DEG2RAD;
-
-// Clear memory
-yaw = pitch = roll = [];
-
 /*
 Following, we define a matrix that will transform coordinates from the plane's
 frame of reference to the GPS (world) frame of reference. We define nine
@@ -109,34 +95,6 @@ TODO: It would probably be more efficient to define cx, cy, cz, sx, sy, sz and
 use them in the calculations instead of a series of sin/cos operations. This
 would let us reduce 23 trig operations to 6 trig operations.
 */
-
-cx = cos(x);
-cy = cos(y);
-cz = cos(z);
-sx = sin(x);
-sy = sin(y);
-sz = sin(z);
-
-// Clear memory
-x = y = z = [];
-
-S1 = sx*sy; // Common terms, computed here to reduce computations
-C1 = cz*cy; // later
-SC1 = sz*cy;
-
-RarA =  C1 - sz*S1;
-RarB = -sz*cx;
-RarC =  cz*sy + SC1*sx;
-RarD =  SC1 + cz*S1;
-RarE =  cz*cx;
-RarF =  sz*sy - C1*sx;
-RarG = -cx*sy;
-RarH =  sx;
-RarI =  cx*cy;
-
-// Clear memory
-S1 = C1 = SC1 = cx = cy = cz = sx = sy = sz = [];
-
 /*
 Let R be the above matrix consisting of A through I. In yorick:
    M = [[A,B,C],[D,E,F],[G,H,I]]
@@ -160,40 +118,6 @@ TODO: Replace the next chunk of code with the above code. This should not be
 done unless the replacement is thoroughly tested to be absolutely, positively
 certain that they are equivalent.
 */
-
-// Preallocate mir; we'll fill in half now, and half later
-mx = my = mz = array(double, dims);
-mx = RarA*dx + RarB*dy + RarC*dz + gx;   // Calc. freespace mirror
-my = RarD*dx + RarE*dy + RarF*dz + gy;   // position
-mz = RarG*dx + RarH*dy + RarI*dz + gz;
-
-// Clear memory
-dx = dy = dz = gx = gy = gz = [];
-
-// NOTE: mir contains the east/north/elev values stored in meast/mnorth/melev
-
-// Convert additional angular values into radians.
-la = lasang * DEG2RAD; // mounting angle of laser about x-axis
-ma = mirang * DEG2RAD; // mounting angle of mirror about x-axis
-ca = curang * DEG2RAD; // current angle of mirror rotating about y-axis
-pa = cyaw * DEG2RAD;   // yaw angle (z) about laser/mirror chassis
-
-// No longer need these variables, free some memory.
-lasang = mirang = curang = cyaw = [];
-
-// Create shortcuts for sin/cos of each of the above
-cla  = cos(la);
-sla  = sin(la);
-cpa  = cos(pa);
-spa  = sin(pa);
-cca  = cos(ca);
-sca  = sin(ca);
-cma  = cos(ma);
-sma  = sin(ma);
-
-// No longer need these variables now either, free more memory.
-la = pa = ca = ma = [];
-
 /*
 Here we compensate for rotation of the laser beam (the vector between the
 mirror and the ground point).
@@ -249,6 +173,107 @@ Then to transform D into a real-world vector, we need to do the following:
                  = | (D*sz - E*cz)*cx - F*sx |
                    \ (G*sz - H*cz)*cx - I*sx /
 */
+/*
+J-R rotates the mirror into the plane's vector space. A-I rotates the plane's
+vector space into the real world's vector space. To rotate from mirror vector
+space directly to real world vector space, the two need to get matrix
+multiplied together.
+
+  / A B C \   / J K L \
+  | D E F | * | M N O |
+  \ G H I /   \ P Q R /
+
+We need to know what vector is normal to the plane of the mirror. The mirror
+lies in the plane that contains the X and Y axes of its own vector space. So,
+the Z axis is normal: <0,0,1>. Multiplying this by the rotations above yields a
+vector that is normal in real world vector space. We call this vector "N"
+below.
+
+        / A B C \   / J K L \   / 0 \
+  N  = | D E F | * | M N O | * | 0 |
+        \ G H I /   \ P Q R /   \ 1 /
+
+        / A B C \   / L \
+      = | D E F | * | O |
+        \ G H I /   \ R /
+
+        / AL+BO+CR \
+      = | DL+EO+FR |
+        \ GL+HO+IR /
+*/
+
+// These are the dimensions upon which everything else is based.
+dims = dimsof(yaw, pitch, roll, gx, gy, gz, dx, dy, dz, cyaw, lasang, mirang,
+   curang, mag);
+
+// Convert the yaw, pitch, roll into radians. We name the variables z, x, y
+// because these are the rotations about those axes.
+z = yaw * DEG2RAD;
+x = pitch * DEG2RAD;
+y = roll * DEG2RAD;
+
+// Clear memory
+yaw = pitch = roll = [];
+
+cx = cos(x);
+cy = cos(y);
+cz = cos(z);
+sx = sin(x);
+sy = sin(y);
+sz = sin(z);
+
+// Clear memory
+x = y = z = [];
+
+S1 = sx*sy; // Common terms, computed here to reduce computations
+C1 = cz*cy; // later
+SC1 = sz*cy;
+
+RarA =  C1 - sz*S1;
+RarB = -sz*cx;
+RarC =  cz*sy + SC1*sx;
+RarD =  SC1 + cz*S1;
+RarE =  cz*cx;
+RarF =  sz*sy - C1*sx;
+RarG = -cx*sy;
+RarH =  sx;
+RarI =  cx*cy;
+
+// Clear memory
+S1 = C1 = SC1 = cx = cy = cz = sx = sy = sz = [];
+
+// Preallocate mir; we'll fill in half now, and half later
+mx = my = mz = array(double, dims);
+mx = RarA*dx + RarB*dy + RarC*dz + gx;   // Calc. freespace mirror
+my = RarD*dx + RarE*dy + RarF*dz + gy;   // position
+mz = RarG*dx + RarH*dy + RarI*dz + gz;
+
+// Clear memory
+dx = dy = dz = gx = gy = gz = [];
+
+// NOTE: mir contains the east/north/elev values stored in meast/mnorth/melev
+
+// Convert additional angular values into radians.
+la = lasang * DEG2RAD; // mounting angle of laser about x-axis
+ma = mirang * DEG2RAD; // mounting angle of mirror about x-axis
+ca = curang * DEG2RAD; // current angle of mirror rotating about y-axis
+pa = cyaw * DEG2RAD;   // yaw angle (z) about laser/mirror chassis
+
+// No longer need these variables, free some memory.
+lasang = mirang = curang = cyaw = [];
+
+// Create shortcuts for sin/cos of each of the above
+cla  = cos(la);
+sla  = sin(la);
+cpa  = cos(pa);
+spa  = sin(pa);
+cca  = cos(ca);
+sca  = sin(ca);
+cma  = cos(ma);
+sma  = sin(ma);
+
+// No longer need these variables now either, free more memory.
+la = pa = ca = ma = [];
 
 a = array(double, dims, 3); // x-axis
 // Move incident vector with aircraft attitude and then rotate about z-axis
@@ -285,34 +310,6 @@ RmaI = cma*cca;
 // No longer need these, clear memory
 cma = sma = cca = sca = cpa = spa = [];
 
-/*
-J-R rotates the mirror into the plane's vector space. A-I rotates the plane's
-vector space into the real world's vector space. To rotate from mirror vector
-space directly to real world vector space, the two need to get matrix
-multiplied together.
-
-  / A B C \   / J K L \
-  | D E F | * | M N O |
-  \ G H I /   \ P Q R /
-
-We need to know what vector is normal to the plane of the mirror. The mirror
-lies in the plane that contains the X and Y axes of its own vector space. So,
-the Z axis is normal: <0,0,1>. Multiplying this by the rotations above yields a
-vector that is normal in real world vector space. We call this vector "N"
-below.
-
-        / A B C \   / J K L \   / 0 \
-  N  = | D E F | * | M N O | * | 0 |
-        \ G H I /   \ P Q R /   \ 1 /
-
-        / A B C \   / L \
-      = | D E F | * | O |
-        \ G H I /   \ R /
-
-        / AL+BO+CR \
-      = | DL+EO+FR |
-        \ GL+HO+IR /
-*/
 N = array(double, dims, 3);
 N(..,1) = RarA*RmaC + RarB*RmaF + RarC*RmaI;
 N(..,2) = RarD*RmaC + RarE*RmaF + RarF*RmaI;
