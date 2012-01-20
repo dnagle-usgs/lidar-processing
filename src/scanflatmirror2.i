@@ -1,7 +1,7 @@
-func scanflatmirror2_direct_vector(yaw, pitch, roll, gx, gy, gz, dx, dy, dz, cyaw, lasang, mirang, curang, mag, &mx, &my, &mz, &px, &py, &pz)
+func scanflatmirror2_direct_vector(arZ, arX, arY, gx, gy, gz, dx, dy, dz, maZ, laX, maX, maY, mag, &mx, &my, &mz, &px, &py, &pz)
 {
-/* DOCUMENT scanflatmirror2_direct_vector(yaw, pitch, roll, gx, gy, gz, dx, dy,
-   dz, cyaw, lasang, mirang, curang, mag, &mx, &my, &mz, &px, &py, &pz)
+/* DOCUMENT scanflatmirror2_direct_vector(arZ, arX, arY, gx, gy, gz, dx, dy,
+   dz, maZ, laX, maX, maY, mag, &mx, &my, &mz, &px, &py, &pz)
 
   This function computes a vector (M) of xyz points projected in 3D space from
   the origin...which in this case is the center of rotation of planar mirror
@@ -15,20 +15,20 @@ func scanflatmirror2_direct_vector(yaw, pitch, roll, gx, gy, gz, dx, dy, dz, cya
 
   Input parameters:
 
-    yaw    - yaw angle (z) of aircraft
-    pitch  - pitch angle (x) of aircraft
-    roll   - roll angle (y) of aircraft
-    gx     - GPS antenna x position
-    gy     - GPS antenna y position
-    gz     - GPS antenna z position
-    dx     - delta x distance from GPS antenna to mirror exit
-    dy     - delta y distance from GPS antenna to mirror exit
-    dz     - delta z distance from GPS antenna to mirror exit
-    cyaw   - yaw angle (z) about laser/mirror chassis
-    lasang - mounting angle of laser about x-axis
-    mirang - mounting angle of mirror about x-axis
-    curang - current angle of mirror rotating about y-axis
-    mag    - magnitude of vector in 'y' direction (distance mirror to ground)
+    arZ - yaw angle (z) of aircraft
+    arX - pitch angle (x) of aircraft
+    arY - roll angle (y) of aircraft
+    gx  - GPS antenna x position
+    gy  - GPS antenna y position
+    gz  - GPS antenna z position
+    dx  - delta x distance from GPS antenna to mirror exit
+    dy  - delta y distance from GPS antenna to mirror exit
+    dz  - delta z distance from GPS antenna to mirror exit
+    maZ - mounting angle of mirror/laser chassis about z-axis
+    laX - mounting angle of laser about x-axis
+    maX - mounting angle of mirror about x-axis
+    maY - current angle of mirror rotating about y-axis
+    mag - magnitude of vector in 'y' direction (distance mirror to ground)
 
   Return array is as follows (all values are in meters)
     mx = mirror east
@@ -203,17 +203,17 @@ below.
 */
 
 // These are the dimensions upon which everything else is based.
-dims = dimsof(yaw, pitch, roll, gx, gy, gz, dx, dy, dz, cyaw, lasang, mirang,
-   curang, mag);
+dims = dimsof(arZ, arX, arY, gx, gy, gz, dx, dy, dz, maZ, laX, maX,
+   maY, mag);
 
 // Convert the yaw, pitch, roll into radians. We name the variables z, x, y
 // because these are the rotations about those axes.
-z = yaw * DEG2RAD;
-x = pitch * DEG2RAD;
-y = roll * DEG2RAD;
+z = arZ * DEG2RAD;
+x = arX * DEG2RAD;
+y = arY * DEG2RAD;
 
 // Clear memory
-yaw = pitch = roll = [];
+arZ = arX = arY = [];
 
 cx = cos(x);
 cy = cos(y);
@@ -254,13 +254,13 @@ dx = dy = dz = gx = gy = gz = [];
 // NOTE: mir contains the east/north/elev values stored in meast/mnorth/melev
 
 // Convert additional angular values into radians.
-la = lasang * DEG2RAD; // mounting angle of laser about x-axis
-ma = mirang * DEG2RAD; // mounting angle of mirror about x-axis
-ca = curang * DEG2RAD; // current angle of mirror rotating about y-axis
-pa = cyaw * DEG2RAD;   // yaw angle (z) about laser/mirror chassis
+la = laX * DEG2RAD; // mounting angle of laser about x-axis
+ma = maX * DEG2RAD; // mounting angle of mirror about x-axis
+ca = maY * DEG2RAD; // current angle of mirror rotating about y-axis
+pa = maZ * DEG2RAD;   // yaw angle (z) about laser/mirror chassis
 
 // No longer need these variables, free some memory.
-lasang = mirang = curang = cyaw = [];
+laX = maX = maY = maZ = [];
 
 // Create shortcuts for sin/cos of each of the above
 cla  = cos(la);
