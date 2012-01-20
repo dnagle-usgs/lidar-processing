@@ -124,15 +124,15 @@ S1 = sx*sy; // Common terms, computed here to reduce computations
 C1 = cz*cy; // later
 SC1 = sz*cy;
 
-A  =  C1 - sz*S1;          // Variables A-I make up the
-B  = -sz*cx;               // aircraft rotations about
-C  =  cz*sy + SC1*sx;      // Yaw, Pitch, and Roll
-D  =  SC1 + cz*S1;
-E  =  cz*cx;
-F  =  sz*sy - C1*sx;
-G  = -cx*sy;
-H  =  sx;
-I  =  cx*cy;
+RarA =  C1 - sz*S1;
+RarB = -sz*cx;
+RarC =  cz*sy + SC1*sx;
+RarD =  SC1 + cz*S1;
+RarE =  cz*cx;
+RarF =  sz*sy - C1*sx;
+RarG = -cx*sy;
+RarH =  sx;
+RarI =  cx*cy;
 
 // Clear memory
 S1 = C1 = SC1 = cx = cy = cz = sx = sy = sz = [];
@@ -163,9 +163,9 @@ certain that they are equivalent.
 
 // Preallocate mir; we'll fill in half now, and half later
 mx = my = mz = array(double, dims);
-mx = A*dx + B*dy + C*dz + gx;   // Calc. freespace mirror
-my = D*dx + E*dy + F*dz + gy;   // position
-mz = G*dx + H*dy + I*dz + gz;
+mx = RarA*dx + RarB*dy + RarC*dz + gx;   // Calc. freespace mirror
+my = RarD*dx + RarE*dy + RarF*dz + gy;   // position
+mz = RarG*dx + RarH*dy + RarI*dz + gz;
 
 // Clear memory
 dx = dy = dz = gx = gy = gz = [];
@@ -252,9 +252,9 @@ Then to transform D into a real-world vector, we need to do the following:
 
 a = array(double, dims, 3); // x-axis
 // Move incident vector with aircraft attitude and then rotate about z-axis
-a(..,1) = (A*spa - B*cpa)*cla - C*sla;
-a(..,2) = (D*spa - E*cpa)*cla - F*sla;
-a(..,3) = (G*spa - H*cpa)*cla - I*sla;
+a(..,1) = (RarA*spa - RarB*cpa)*cla - RarC*sla;
+a(..,2) = (RarD*spa - RarE*cpa)*cla - RarF*sla;
+a(..,3) = (RarG*spa - RarH*cpa)*cla - RarI*sla;
 
 // No longer need, clear memory
 cla = sla = [];
@@ -272,15 +272,15 @@ handle the 3 rotations needed for a planar mirror. Only the third column gets
 used, so the other values are not created.
 */
 
-//J = cpa*cca-spa*sma*sca;
-//K = -spa*cma;
-L = cpa*sca+spa*sma*cca;
-//M = spa*cca+cpa*sma*sca;
-//N = cpa*cma;
-O = spa*sca-cpa*sma*cca;
-//P = -cma*sca;
-//Q = sma;
-R = cma*cca;
+//RmaA = cpa*cca-spa*sma*sca;
+//RmaB = -spa*cma;
+RmaC = cpa*sca+spa*sma*cca;
+//RmaD = spa*cca+cpa*sma*sca;
+//RmaE = cpa*cma;
+RmaF = spa*sca-cpa*sma*cca;
+//RmaG = -cma*sca;
+//RmaH = sma;
+RmaI = cma*cca;
 
 // No longer need these, clear memory
 cma = sma = cca = sca = cpa = spa = [];
@@ -298,11 +298,11 @@ multiplied together.
 We need to know what vector is normal to the plane of the mirror. The mirror
 lies in the plane that contains the X and Y axes of its own vector space. So,
 the Z axis is normal: <0,0,1>. Multiplying this by the rotations above yields a
-vector that is normal in real world vector space. We call this vector "RM"
+vector that is normal in real world vector space. We call this vector "N"
 below.
 
         / A B C \   / J K L \   / 0 \
-  RM  = | D E F | * | M N O | * | 0 |
+  N  = | D E F | * | M N O | * | 0 |
         \ G H I /   \ P Q R /   \ 1 /
 
         / A B C \   / L \
@@ -313,10 +313,10 @@ below.
       = | DL+EO+FR |
         \ GL+HO+IR /
 */
-RM = array(double, dims, 3);
-RM(..,1) = A*L + B*O + C*R;
-RM(..,2) = D*L + E*O + F*R;
-RM(..,3) = G*L + H*O + I*R;
+N = array(double, dims, 3);
+N(..,1) = RarA*RmaC + RarB*RmaF + RarC*RmaI;
+N(..,2) = RarD*RmaC + RarE*RmaF + RarF*RmaI;
+N(..,3) = RarG*RmaC + RarH*RmaF + RarI*RmaI;
 
 /*
 Using:
@@ -329,13 +329,13 @@ Where . stands for dot product.
 */
 
 // Compute dot product between normal to mirror and incident vector
-MM = RM(..,1)*a(..,1) + RM(..,2)*a(..,2) + RM(..,3)*a(..,3);
+MM = N(..,1)*a(..,1) + N(..,2)*a(..,2) + N(..,3)*a(..,3);
 
 // Compute vector of spectral reflection
 SR = array(double, dims, 3);
-SR(..,1) = 2 * MM * RM(..,1) - a(..,1);
-SR(..,2) = 2 * MM * RM(..,2) - a(..,2);
-SR(..,3) = 2 * MM * RM(..,3) - a(..,3);
+SR(..,1) = 2 * MM * N(..,1) - a(..,1);
+SR(..,2) = 2 * MM * N(..,2) - a(..,2);
+SR(..,3) = 2 * MM * N(..,3) - a(..,3);
 
 // Multiply spectral reflection unit vector by magnitude, then subtract from
 // mirror to yield point location.
