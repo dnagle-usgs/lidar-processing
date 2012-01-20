@@ -220,9 +220,9 @@ The composite rotation matrix R is thus:
 Our laser vector is coming in solely from the y direction, which can be
 represented by a unit vector thus:
 
-       / 0 \
-   D = | 1 |
-       \ 0 /
+       /  0 \
+   D = | -1 |
+       \  0 /
 
 Now, the above rotation matrix R is to transform from the laser beam's
 inertial reference to the plane intertial reference. We then have to transform
@@ -234,28 +234,28 @@ Let Rlp be the rotation matrix to transform from the laser to the plane. Let
 Rpg be the rotation matrix to transform from the plane to the real world (gps).
 Then to transform D into a real-world vector, we need to do the following:
 
-                   / A B C \   / (cz) (-cx*sz) (sx*sz)  \   / 0 \
-   Rpg * Rlp * D = | D E F | * | (sz) (cx*cz)  (-sx*cz) | * | 1 |
-                   \ G H I /   \ (0)  (sx)     (cx)     /   \ 0 /
+                   / A B C \   / (cz) (-cx*sz) (sx*sz)  \   /  0 \
+   Rpg * Rlp * D = | D E F | * | (sz) (cx*cz)  (-sx*cz) | * | -1 |
+                   \ G H I /   \ (0)  (sx)     (cx)     /   \  0 /
 
-                   / A B C \   / -cx*sz \
-                 = | D E F | * | cx*cz  |
-                   \ G H I /   \ sx     /
+                   / A B C \   / cx*sz \
+                 = | D E F | * | -cx*cz  |
+                   \ G H I /   \ -sx     /
 
-                   / A*-cx*sz + B*cx*cz + C*sx \
-                 = | D*-cx*sz + E*cx*cz + F*sx |
-                   \ G*-cx*sz + H*cx*cz + I*sx /
+                   / A*cx*sz + -B*cx*cz + -C*sx \
+                 = | D*cx*sz + -E*cx*cz + -F*sx |
+                   \ G*cx*sz + -H*cx*cz + -I*sx /
 
-                   / (-A*sz + B*cz)*cx + C*sx \
-                 = | (-D*sz + E*cz)*cx + F*sx |
-                   \ (-G*sz + H*cz)*cx + I*sx /
+                   / (A*sz - B*cz)*cx - C*sx \
+                 = | (D*sz - E*cz)*cx - F*sx |
+                   \ (G*sz - H*cz)*cx - I*sx /
 */
 
 a = array(double, dims, 3); // x-axis
 // Move incident vector with aircraft attitude and then rotate about z-axis
-a(..,1) = (-A*spa + B*cpa)*cla + C*sla;
-a(..,2) = (-D*spa + E*cpa)*cla + F*sla;
-a(..,3) = (-G*spa + H*cpa)*cla + I*sla;
+a(..,1) = (A*spa - B*cpa)*cla - C*sla;
+a(..,2) = (D*spa - E*cpa)*cla - F*sla;
+a(..,3) = (G*spa - H*cpa)*cla - I*sla;
 
 // No longer need, clear memory
 cla = sla = [];
@@ -340,9 +340,9 @@ SR(..,3) = 2 * MM * RM(..,3) - a(..,3);
 
 // Multiply spectral reflection unit vector by magnitude, then subtract from
 // mirror to yield point location.
-mir(..,4) = mir(..,1) - mag * SR(..,1);
-mir(..,5) = mir(..,2) - mag * SR(..,2);
-mir(..,6) = mir(..,3) - mag * SR(..,3);
+mir(..,4) = mir(..,1) + mag * SR(..,1);
+mir(..,5) = mir(..,2) + mag * SR(..,2);
+mir(..,6) = mir(..,3) + mag * SR(..,3);
 
 return mir;
 }
