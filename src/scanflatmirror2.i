@@ -311,6 +311,7 @@ func scanflatmirror2_direct_vector(arZ, arX, arY, gx, gy, gz, dx, dy, dz, maZ, l
 
   x = laX * DEG2RAD;
   z = maZ * DEG2RAD;
+  laX = maZ = [];
 
   cx = cos(x);
   sx = sin(x);
@@ -325,6 +326,7 @@ func scanflatmirror2_direct_vector(arZ, arX, arY, gx, gy, gz, dx, dy, dz, maZ, l
 
   x = maX * DEG2RAD;
   y = maY * DEG2RAD;
+  maX = maY = [];
 
   cx = cos(x);
   sx = sin(x);
