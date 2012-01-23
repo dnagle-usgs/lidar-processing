@@ -309,30 +309,35 @@ func scanflatmirror2_direct_vector(arZ, arX, arY, gx, gy, gz, dx, dy, dz, maZ, l
   mz = RarG*dx + RarH*dy + RarI*dz + gz;
   dx = dy = dz = gx = gy = gz = [];
 
-  laX = laX * DEG2RAD;
-  maX = maX * DEG2RAD;
-  maY = maY * DEG2RAD;
-  maZ = maZ * DEG2RAD;
+  x = laX * DEG2RAD;
+  z = maZ * DEG2RAD;
 
-  clax = cos(laX);
-  slax = sin(laX);
-  cmax = cos(maX);
-  smax = sin(maX);
-  cmay = cos(maY);
-  smay = sin(maY);
-  cmaz = cos(maZ);
-  smaz = sin(maZ);
-  laX = maX = maY = maZ = [];
+  cx = cos(x);
+  sx = sin(x);
+  cz = cos(z);
+  sz = sin(z);
+  x = z = [];
 
-  LIrX = (RarA*smaz - RarB*cmaz)*clax - RarC*slax;
-  LIrY = (RarD*smaz - RarE*cmaz)*clax - RarF*slax;
-  LIrZ = (RarG*smaz - RarH*cmaz)*clax - RarI*slax;
-  clax = slax = [];
+  LIrX = (RarA*sz - RarB*cz)*cx - RarC*sx;
+  LIrY = (RarD*sz - RarE*cz)*cx - RarF*sx;
+  LIrZ = (RarG*sz - RarH*cz)*cx - RarI*sx;
+  cx = sx = [];
 
-  RmaC = cmaz*smay+smaz*smax*cmay;
-  RmaF = smaz*smay-cmaz*smax*cmay;
-  RmaI = cmax*cmay;
-  cmax = smax = cmay = smay = cmaz = smaz = [];
+  x = maX * DEG2RAD;
+  y = maY * DEG2RAD;
+
+  cx = cos(x);
+  sx = sin(x);
+  cy = cos(y);
+  sy = sin(y);
+  x = y = [];
+
+  SXCY = sx*cy;
+
+  RmaC = sy*cz+SXCY*sz;
+  RmaF = sy*sz-SXCY*cz;
+  RmaI = cx*cy;
+  SXCY = cx = sx = cy = sy = cz = sz = [];
 
   LNrX = RarA*RmaC + RarB*RmaF + RarC*RmaI;
   LNrY = RarD*RmaC + RarE*RmaF + RarF*RmaI;
