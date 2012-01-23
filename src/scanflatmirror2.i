@@ -24,7 +24,8 @@ func scanflatmirror2_direct_vector(arZ, arX, arY, gx, gy, gz, dx, dy, dz, maZ, l
     dx  - delta x distance from GPS antenna to mirror exit
     dy  - delta y distance from GPS antenna to mirror exit
     dz  - delta z distance from GPS antenna to mirror exit
-    maZ - mounting angle of mirror/laser chassis about z-axis
+    maZ - mounting angle of mirror/laser chassis about z-axis (same angle used
+          for both mirror and laser)
     laX - mounting angle of laser about x-axis
     maX - mounting angle of mirror about x-axis
     maY - current angle of mirror rotating about y-axis
@@ -37,306 +38,355 @@ func scanflatmirror2_direct_vector(arZ, arX, arY, gx, gy, gz, dx, dy, dz, maZ, l
     px = target point east
     py = target point north
     pz = target point elevation
-*/
-/*
-Following, we define a matrix that will transform coordinates from the plane's
-frame of reference to the GPS (world) frame of reference. We define nine
-variables, A through I, to represent this matrix:
 
-   / A B C \
-   | D E F |
-   \ G H I /
+  Mathematics involved:
 
-The deriviation of this matrix is as follows.
+  --- Matrices of rotation ---
 
-We have values for roll, pitch, and heading, which are the angular rotations
-performed to transform between the two frames of reference. These correspond to
-angular transforms about the y-axiz, x-axis, and z-axis, in that order. To
-tranform a coordinate vector P in plane coordinates [Px,Py,Pz] to the
-equivalent gps coordinate G in gps coordinates [Gx,Gy,Gz], we need to perform a
-series of matrix multipications as follows:
+  There are two cases where we use a set of rotations about the y-, x-, and z-
+  axes to shift from one frame of reference to another. The mathematics in both
+  cases are the same. For brevity, those mathematics are described generally
+  here, then related more specifically later.
 
-   Rz * Rx * Ry * P -> G
+  Given values for rotation about the y-axis (typically called roll), about the
+  x-axis (typically called pitch) and about the z-axis (typically called yaw or
+  heading) repesented by variables X, Y, and Z, respectively; each in radians.
 
-Rz, Rx, and Ry are the matrixes used to rotate about the z-axis, x-axis, and y-axis respectively. They are defined as follows:
+  Define the sine and cosine of each angle as follows:
+    sx = sin(X)
+    sy = sin(Y)
+    sz = sin(Z)
+    cx = cos(X)
+    cy = cos(Y)
+    cz = cos(Z)
 
-        / 1 0   0  \        /  cy 0 sy \        / cz -sz 0 \
-   Rx = | 0 cx -sx |   Ry = |  0  1 0  |   Rz = | sz  cz 0 |
-        \ 0 sx  cx /        \ -sy 0 cy /        \ 0   0  1 /
+  The matrices for rotation about the three axes will be called Ry, Rx, and Rz.
+  They are defined as follows.
 
-If we multiply the three matrices together, the result is the following:
+         / 1 0  0   \        / cy  0 sy \        / cz -sz 0 \
+    Rx = | 0 cx -sx |   Ry = | 0   1 0  |   Rz = | sz cz  0 |
+         \ 0 sx cx  /        \ -sy 0 cy /        \ 0  0   1 /
 
-                  / cz -sz 0 \   / 1 0   0  \   /  cy 0 sy \
-   Rz * Rx * Ry = | sz  cz 0 | * | 0 cx -sx | * |  0  1 0  |
-                  \ 0   0  1 /   \ 0 sx  cx /   \ -sy 0 cy /
+  These three matrices must be applied in the order Y-X-Z. If we were
+  converting a vector P, we would perform the following calculations:
 
-                  / cz -sz 0 \   / (cy)     (0)  (sy)     \
-                = | sz  cz 0 | * | (sx*sy)  (cx) (-sx*cy) |
-                  \ 0   0  1 /   \ (-cx*sy) (sx) (cx*cy)  /
+    Rz * Rx * Ry * P
 
-                  / (cy*cz - sx*sy*sz) (-cx*sz) (sy*cz + sx*cy*sz) \
-                = | (cy*sz + sx*sy*cz) (cx*cz)  (sy*sz - sx*cy*cz) |
-                  \ (-cx*sy)           (sx)     (cx*cy)            /
+  Where * represents matrix multiplication. The part "Rz * Rx * Ry" can be
+  multiplied out and simplified.
 
-                   / A B C \
-                -> | D E F |
-                   \ G H I /
+                   / cz -sz 0 \   / 1 0   0  \   /  cy 0 sy \
+    Rz * Rx * Ry = | sz  cz 0 | * | 0 cx -sx | * |  0  1 0  |
+                   \ 0   0  1 /   \ 0 sx  cx /   \ -sy 0 cy /
 
-As indicated, we store the matrix elements in the variables A through I.
+                   / cz -sz 0 \   / (cy)     (0)  (sy)     \
+                 = | sz  cz 0 | * | (sx*sy)  (cx) (-sx*cy) |
+                   \ 0   0  1 /   \ (-cx*sy) (sx) (cx*cy)  /
 
-   / A B C \   / (cy*cz - sx*sy*sz) (-cx*sz) (sy*cz + sx*cy*sz) \
-   | D E F | = | (cy*sz + sx*sy*cz) (cx*cz)  (sy*sz - sx*cy*sz) |
-   \ G H I /   \ (-cs*sy)           (sx)     (cx*cy)            /
+                   / (cy*cz - sx*sy*sz) (-cx*sz) (sy*cz + sx*cy*sz) \
+                 = | (cy*sz + sx*sy*cz) (cx*cz)  (sy*sz - sx*cy*cz) |
+                   \ (-cx*sy)           (sx)     (cx*cy)            /
 
-Note: In the above, sin(x), sin(y), cos(z), etc. are abbreviated as sx, sy, cz,
-etc.
+                    / A B C \
+                 -> | D E F |
+                    \ G H I /
 
-TODO: It would probably be more efficient to define cx, cy, cz, sx, sy, sz and
-use them in the calculations instead of a series of sin/cos operations. This
-would let us reduce 23 trig operations to 6 trig operations.
-*/
-/*
-Let R be the above matrix consisting of A through I. In yorick:
-   M = [[A,B,C],[D,E,F],[G,H,I]]
+  The 9 matrix elements are stored in variable components named A through I.
 
-Let D be the delta distance vector from the GPS antenna to the mirror exit. In
-yorick:
-   D = [dx,dy,dz]
+    / A B C \   / (cy*cz - sx*sy*sz) (-cx*sz) (sy*cz + sx*cy*sz) \
+    | D E F | = | (cy*sz + sx*sy*cz) (cx*cz)  (sy*sz - sx*cy*sz) |
+    \ G H I /   \ (-cs*sy)           (sx)     (cx*cy)            /
 
-Let G be the GPS antenna coordinates. In yorick:
-   G = [gx,gy,gz]
+  --- Rotation of aircraft wrt real world ---
 
-In order to calculate the mirror position, we apply our rotation matrix to our
-displacement vector to convert it into real-world coordinates, then add it to
-the gps position. In Yorick:
-   mir = M(,+,) * D(+) + G(-,)
+  The angles arZ, arX, and arY define a set of rotations necessary to change
+  from the aircraft's rotational frame of reference to the real world's
+  rotational frame of reference. These angles are applied as described in
+  "Matrices of rotation" above.
 
-The next sequence of code should be equivalent to the above, but is broken up
-into steps instead.
+  In the code for this function, these three rotations are achieved using a
+  matrix Rar (*R*otation from *a*ircarft to *r*eal world) which is comprised of
+  nine variables as follows:
 
-TODO: Replace the next chunk of code with the above code. This should not be
-done unless the replacement is thoroughly tested to be absolutely, positively
-certain that they are equivalent.
-*/
-/*
-Here we compensate for rotation of the laser beam (the vector between the
-mirror and the ground point).
+    / RarA RarB RarC \   / (cy*cz - sx*sy*sz) (-cx*sz) (sy*cz + sx*cy*sz) \
+    | RarD RarE RarF | = | (cy*sz + sx*sy*cz) (cx*cz)  (sy*sz - sx*cy*sz) |
+    \ RarG RarH RarI /   \ (-cs*sy)           (sx)     (cx*cy)            /
 
-Let x be the rotation about the x axis (refered to as la in the yorick code).
-Let z be the rotation about the z axis (refered to as pa in the yorick code).
-Our y axis is defined as the laser vector itself; thus, there is no rotation
-about the y axis.
+  --- Location of mirror ---
 
-Let Rx be the rotation matrix about the x axis and Rz be the rotation matrix
-about the z axis. Then Rx and Rz are:
+  To determine the location of the mirror, the displacement vector from the GPS
+  unit to the mirror is changed from the aircraft's rotational frame of
+  reference to that of the real world; then the displacement vector is added to
+  the GPS unit's location. We represent the GPS antenna's location using the
+  variable g (gx, gy, gz) and the displacement vector using the variable d (dx,
+  dy, dz). The rotations are handled using the rotation matrix Rar as described
+  above. The mirror's location is stored in the variable m (mx, my, mz).
+  Mathematically:
 
-        / cz -sz 0 \        / 1 0   0  \
-   Rz = | sz  cz 0 |   Rx = | 0 cx -sx |
-        \ 0   0  1 /        \ 0 sx  cx /
+    m = g + Rar * d
 
-The composite rotation matrix R is thus:
+  Where * represents matrix multiplication. In the code, this is separated out
+  into individual variables:
 
-                 / (cz) (-cx*sz) (sx*sz)  \
-   R = Rz * Rx = | (sz) (cx*cz)  (-sx*cz) |
-                 \ (0)  (sx)     (cx)     /
+    mx = RarA*dx + RarB*dy + RarC*dz + gx
+    my = RarD*dx + RarE*dy + RarF*dz + gy
+    mz = RarG*dx + RarH*dy + RarI*dz + gz
 
-Our laser vector is coming in solely from the y direction, which can be
-represented by a unit vector thus:
+  --- Rotation of mirror wrt aircraft ---
 
-       /  0 \
-   D = | -1 |
-       \  0 /
+  The angles maZ, maX, and maY define a set of rotations necessary to change
+  from the mirror's rotation frame of reference to the aircraft's rotation
+  frame of reference. These angles are applied as described in "Matrices of
+  rotation" above.
 
-Now, the above rotation matrix R is to transform from the laser beam's
-inertial reference to the plane intertial reference. We then have to transform
-from the plane's intertial reference to the real world's inertial reference.
-Thus, we need the matrix defined by yorick variables A through I further up
-above.
+  In the code for this function, these three rotations are acehived using a
+  matrix Rma (*R*otation from *m*irror to *a*ircraft) which is comprised of
+  nine variables as follows:
 
-Let Rlp be the rotation matrix to transform from the laser to the plane. Let
-Rpg be the rotation matrix to transform from the plane to the real world (gps).
-Then to transform D into a real-world vector, we need to do the following:
+    / RmaA RmaB RmaC \   / (cy*cz - sx*sy*sz) (-cx*sz) (sy*cz + sx*cy*sz) \
+    | RmaD RmaE RmaF | = | (cy*sz + sx*sy*cz) (cx*cz)  (sy*sz - sx*cy*sz) |
+    \ RmaG RmaH RmaI /   \ (-cs*sy)           (sx)     (cx*cy)            /
 
-                   / A B C \   / (cz) (-cx*sz) (sx*sz)  \   /  0 \
-   Rpg * Rlp * D = | D E F | * | (sz) (cx*cz)  (-sx*cz) | * | -1 |
-                   \ G H I /   \ (0)  (sx)     (cx)     /   \  0 /
+  For reasons described elsewhere, we only end up actually using three of those
+  variables (RmaC, RmaF, and RmaI) so the other six are not actually defined in
+  the code.
 
-                   / A B C \   / cx*sz \
-                 = | D E F | * | -cx*cz  |
-                   \ G H I /   \ -sx     /
+  --- Rotation of laser wrt aircraft ---
 
-                   / A*cx*sz + -B*cx*cz + -C*sx \
-                 = | D*cx*sz + -E*cx*cz + -F*sx |
-                   \ G*cx*sz + -H*cx*cz + -I*sx /
+  The angles maZ and laX define a set of rotations necessary to change from the
+  laser's frame of rotation to the aircraft's frame of rotation. There is no
+  rotation necessary about the Y axis, so there is an implicit laY=0. These
+  angles are applied as described in "Matrices of rotation" above. However,
+  since the rotation about the Y axis is zero, the math can be simplified.
 
-                   / (A*sz - B*cz)*cx - C*sx \
-                 = | (D*sz - E*cz)*cx - F*sx |
-                   \ (G*sz - H*cz)*cx - I*sx /
-*/
-/*
-J-R rotates the mirror into the plane's vector space. A-I rotates the plane's
-vector space into the real world's vector space. To rotate from mirror vector
-space directly to real world vector space, the two need to get matrix
-multiplied together.
+  The individual rotation matrices:
 
-  / A B C \   / J K L \
-  | D E F | * | M N O |
-  \ G H I /   \ P Q R /
+         / 1 0  0   \        / cy  0 sy \        / cz -sz 0 \
+    Rx = | 0 cx -sx |   Ry = | 0   1 0  |   Rz = | sz cz  0 |
+         \ 0 sx cx  /        \ -sy 0 cy /        \ 0  0   1 /
 
-We need to know what vector is normal to the plane of the mirror. The mirror
-lies in the plane that contains the X and Y axes of its own vector space. So,
-the Z axis is normal: <0,0,1>. Multiplying this by the rotations above yields a
-vector that is normal in real world vector space. We call this vector "N"
-below.
+  However, Ry simplifies to the identity matrix:
 
-        / A B C \   / J K L \   / 0 \
-  N  = | D E F | * | M N O | * | 0 |
-        \ G H I /   \ P Q R /   \ 1 /
+         / cy  0 sy \   / cos(0)  0 sin(0) \   / 1 0 0 \
+    Ry = | 0   1 0  | = | 0       1 0      | = | 0 1 0 |
+         \ -sy 0 cy /   \ -sin(0) 0 cos(0) /   \ 0 0 1 /
 
-        / A B C \   / L \
-      = | D E F | * | O |
-        \ G H I /   \ R /
+  The composite matrix is not used as is in the code, but it will be referred
+  to as Rla (*R*otation from *l*aser to *a*ircraft) in these notes. The
+  composite rotation matrix simplifies as follows:
 
-        / AL+BO+CR \
-      = | DL+EO+FR |
-        \ GL+HO+IR /
-*/
+                         / cz -sz 0 \   / 1 0   0  \   / 1 0 0 \
+    Rla = Rz * Rx * Ry = | sz  cz 0 | * | 0 cx -sx | * | 0 1 0 |
+                         \ 0   0  1 /   \ 0 sx  cx /   \ 0 0 1 /
 
-// These are the dimensions upon which everything else is based.
-dims = dimsof(arZ, arX, arY, gx, gy, gz, dx, dy, dz, maZ, laX, maX,
-   maY, mag);
+                         / cz -sz 0 \   / 1 0   0  \
+                       = | sz  cz 0 | * | 0 cx -sx |
+                         \ 0   0  1 /   \ 0 sx  cx /
 
-// Convert the yaw, pitch, roll into radians. We name the variables z, x, y
-// because these are the rotations about those axes.
-z = arZ * DEG2RAD;
-x = arX * DEG2RAD;
-y = arY * DEG2RAD;
+                         / (cz) (-cx*sz) (sx*sz)  \
+                       = | (sz) (cx*cz)  (-sx*cz) |
+                         \ (0)  (sx)     (cx)     /
 
-// Clear memory
-arZ = arX = arY = [];
+  --- Incidence vector for laser ---
 
-cx = cos(x);
-cy = cos(y);
-cz = cos(z);
-sx = sin(x);
-sy = sin(y);
-sz = sin(z);
+  In its own frame of rotation, the laser comes in from the y axis and is
+  represented by an incidence vector of <0, -1, 0>.
 
-// Clear memory
-x = y = z = [];
+  Using the rotation matrix Rla from "Rotation of laser wrt aircraft" above,
+  the vector can be put in the aircraft's frame of rotation. We can then
+  further transition it into the real world's frame of reference using the
+  matrix Rar from "Rotation of aircraft wrt real world" above.
 
-S1 = sx*sy; // Common terms, computed here to reduce computations
-C1 = cz*cy; // later
-SC1 = sz*cy;
+  The vector of incidence in its own frame of reference is refered to as LIl;
+  in the real world's frame of reference, LIr.
 
-RarA =  C1 - sz*S1;
-RarB = -sz*cx;
-RarC =  cz*sy + SC1*sx;
-RarD =  SC1 + cz*S1;
-RarE =  cz*cx;
-RarF =  sz*sy - C1*sx;
-RarG = -cx*sy;
-RarH =  sx;
-RarI =  cx*cy;
+    LIr = Rar * Rla * LIl
 
-// Clear memory
-S1 = C1 = SC1 = cx = cy = cz = sx = sy = sz = [];
+          / RarA RarB RarC \   / (cz) (-cx*sz) (sx*sz)  \   /  0 \
+    LIr = | RarD RarE RarF | * | (sz) (cx*cz)  (-sx*cz) | * | -1 |
+          \ RarG RarH RarI /   \ (0)  (sx)     (cx)     /   \  0 /
 
-// Preallocate mir; we'll fill in half now, and half later
-mx = my = mz = array(double, dims);
-mx = RarA*dx + RarB*dy + RarC*dz + gx;   // Calc. freespace mirror
-my = RarD*dx + RarE*dy + RarF*dz + gy;   // position
-mz = RarG*dx + RarH*dy + RarI*dz + gz;
+          / RarA RarB RarC \   / cx*sz  \
+        = | RarD RarE RarF | * | -cx*cz |
+          \ RarG RarH RarI /   \ -sx    /
 
-// Clear memory
-dx = dy = dz = gx = gy = gz = [];
+          / RarA*cx*sz + -RarB*cx*cz + -RarC*sx \
+        = | RarD*cx*sz + -RarE*cx*cz + -RarF*sx |
+          \ RarG*cx*sz + -RarH*cx*cz + -RarI*sx /
 
-// NOTE: mir contains the east/north/elev values stored in meast/mnorth/melev
+          / (RarA*sz - RarB*cz)*cx - RarC*sx \   / LIrX \
+        = | (RarD*sz - RarE*cz)*cx - RarF*sx | = | LIrY |
+          \ (RarG*sz - RarH*cz)*cx - RarI*sx /   \ LIrZ /
 
-// Convert additional angular values into radians.
-la = laX * DEG2RAD; // mounting angle of laser about x-axis
-ma = maX * DEG2RAD; // mounting angle of mirror about x-axis
-ca = maY * DEG2RAD; // current angle of mirror rotating about y-axis
-pa = maZ * DEG2RAD;   // yaw angle (z) about laser/mirror chassis
+  --- Normal vector for laser ---
 
-// No longer need these variables, free some memory.
-laX = maX = maY = maZ = [];
+  The laser reflects off the mirror. The mirror lies within the plane formed by
+  the X and Y axes of its own frame of rotation. Thus, the surface normal
+  vector would be along the Z axis: <0,0,1>.
 
-// Create shortcuts for sin/cos of each of the above
-cla  = cos(la);
-sla  = sin(la);
-cpa  = cos(pa);
-spa  = sin(pa);
-cca  = cos(ca);
-sca  = sin(ca);
-cma  = cos(ma);
-sma  = sin(ma);
+  The normal vector in its own frame of reference is refered to as LNm; in the
+  real world's frame of reference, LNr. Following similar math as in other
+  sections above, LNr is derived as follows.
 
-// No longer need these variables now either, free more memory.
-la = pa = ca = ma = [];
+    LNr = Rar * Rma * LNm
 
-a = array(double, dims, 3); // x-axis
-// Move incident vector with aircraft attitude and then rotate about z-axis
-a(..,1) = (RarA*spa - RarB*cpa)*cla - RarC*sla;
-a(..,2) = (RarD*spa - RarE*cpa)*cla - RarF*sla;
-a(..,3) = (RarG*spa - RarH*cpa)*cla - RarI*sla;
+          / RarA RarB RarC \   / RmaA RmaB RmaC \   / 0 \
+    LNr = | RarD RarE RarF | * | RmaD RmaE RmaF | * | 0 |
+          \ RarG RarH RarI /   \ RmaG RmaH RmaI /   \ 1 /
 
-// No longer need, clear memory
-cla = sla = [];
+          / RarA RarB RarC \   / RmaC \
+        = | RarD RarE RarF | * | RmaF |
+          \ RarG RarH RarI /   \ RmaI /
 
-/*
-Rotation angles for the mirror
-ma - angle about x (constant mounting angle)
-ca - angle about y (varies with mirror oscillation)
-pa - angle about z (constant mounting angle))
+          / RarA*RmaC RarB*RmaF RarC*RmaI \   / LNrX \
+        = | RarD*RmaC RarE*RmaF RarF*RmaI | = | LNrY |
+          \ RarG*RmaC RarH*RmaF RarI*RmaI /   \ LNrZ /
+
+  --- Reflection vector for laser ---
+
+  The vector of spectral reflection (in the real world's frame of rotation) is
+  refered to as LSr. It is derived using the equation for spectral reflection
+  off of a mirror.
+
+    LSr = 2 * (LNr . LIr) * LNr - LIr
+
+  Where the period "." stands for dot product.
+
+  The dot product of LNr and LIr is referred to as DP below. It is computed as
+  follows:
+
+    DP = LNrX*LIrX + LNrY*LIrY + LNrZ*LIrZ
+
+  The earlier equation for LSr then simplifies to:
+
+    LSr = 2 * DP * LNr - LIr
+
+                   / LNrX \   / LIrX \
+    LSr = 2 * DP * | LNrY | - | LIrY |
+                   \ LNrZ /   \ LIrZ /
+
+  --- Location of target ---
+
+  The mirror has a known location m. The target point is at a distance of mag
+  in the direction of LSr. Thus, the target point p is derived as follows.
+
+    p = LSr * mag + m
+
+    px = LSrX * mag + mx
+    py = LSrY * mag + my
+    pz = LSrZ * mag + mz
 */
 
-/*
-The matrix below (J-R) is constructed just like the earlier matrix (A-I) to
-handle the 3 rotations needed for a planar mirror. Only the third column gets
-used, so the other values are not created.
-*/
+  // These are the dimensions upon which everything else is based.
+  dims = dimsof(arZ, arX, arY, gx, gy, gz, dx, dy, dz, maZ, laX, maX, maY,
+    mag);
 
-//RmaA = cpa*cca-spa*sma*sca;
-//RmaB = -spa*cma;
-RmaC = cpa*sca+spa*sma*cca;
-//RmaD = spa*cca+cpa*sma*sca;
-//RmaE = cpa*cma;
-RmaF = spa*sca-cpa*sma*cca;
-//RmaG = -cma*sca;
-//RmaH = sma;
-RmaI = cma*cca;
+  // Convert the yaw, pitch, roll into radians. We name the variables z, x, y
+  // because these are the rotations about those axes.
+  z = arZ * DEG2RAD;
+  x = arX * DEG2RAD;
+  y = arY * DEG2RAD;
 
-// No longer need these, clear memory
-cma = sma = cca = sca = cpa = spa = [];
+  // Clear memory
+  arZ = arX = arY = [];
 
-N = array(double, dims, 3);
-N(..,1) = RarA*RmaC + RarB*RmaF + RarC*RmaI;
-N(..,2) = RarD*RmaC + RarE*RmaF + RarF*RmaI;
-N(..,3) = RarG*RmaC + RarH*RmaF + RarI*RmaI;
+  // Calculate trig values just once to avoid computational overhead.
+  cx = cos(x);
+  cy = cos(y);
+  cz = cos(z);
+  sx = sin(x);
+  sy = sin(y);
+  sz = sin(z);
 
-/*
-Using:
-  di - vector of incidence
-  dn - vector of surface normal
-  ds - vector of spectral reflection
-Then:
-  ds = 2(dn . di)dn - di
-Where . stands for dot product.
-*/
+  // Clear memory
+  x = y = z = [];
 
-// Compute dot product between normal to mirror and incident vector
-MM = N(..,1)*a(..,1) + N(..,2)*a(..,2) + N(..,3)*a(..,3);
+  // Common terms, to further reduce computation.
+  SXSY = sx*sy;
+  CYCZ = cy*cz;
+  CYSZ = cy*sz;
 
-// Compute vector of spectral reflection
-SR = array(double, dims, 3);
-SR(..,1) = 2 * MM * N(..,1) - a(..,1);
-SR(..,2) = 2 * MM * N(..,2) - a(..,2);
-SR(..,3) = 2 * MM * N(..,3) - a(..,3);
+  RarA = CYCZ - sz*SXSY;
+  RarB = -sz*cx;
+  RarC = cz*sy + CYSZ*sx;
+  RarD = CYSZ + cz*SXSY;
+  RarE = cz*cx;
+  RarF = sz*sy - CYCZ*sx;
+  RarG = -cx*sy;
+  RarH = sx;
+  RarI = cx*cy;
 
-// Multiply spectral reflection unit vector by magnitude, then subtract from
-// mirror to yield point location.
-px = mx + mag * SR(..,1);
-py = my + mag * SR(..,2);
-pz = mz + mag * SR(..,3);
+  // Clear memory
+  SXSY = CYCZ = CYSZ = cx = cy = cz = sx = sy = sz = [];
+
+  // Calculate location of mirror
+  mx = my = mz = array(double, dims);
+  mx = RarA*dx + RarB*dy + RarC*dz + gx;
+  my = RarD*dx + RarE*dy + RarF*dz + gy;
+  mz = RarG*dx + RarH*dy + RarI*dz + gz;
+
+  // Clear memory
+  dx = dy = dz = gx = gy = gz = [];
+
+  // Convert additional angular values into radians.
+  // (We don't use laX *= DEG2RAD to avoid changing original arrays.)
+  laX = laX * DEG2RAD;
+  maX = maX * DEG2RAD;
+  maY = maY * DEG2RAD;
+  maZ = maZ * DEG2RAD;
+
+  // Create shortcuts for sin/cos of each of the above
+  clax = cos(laX);
+  slax = sin(laX);
+  cmax = cos(maX);
+  smax = sin(maX);
+  cmay = cos(maY);
+  smay = sin(maY);
+  cmaz = cos(maZ);
+  smaz = sin(maZ);
+
+  // No longer need these variables, free some memory.
+  laX = maX = maY = maZ = [];
+
+  // incident vector
+  LIrX = (RarA*smaz - RarB*cmaz)*clax - RarC*slax;
+  LIrY = (RarD*smaz - RarE*cmaz)*clax - RarF*slax;
+  LIrZ = (RarG*smaz - RarH*cmaz)*clax - RarI*slax;
+
+  // No longer need, clear memory
+  clax = slax = [];
+
+  // Only need RmaC, RmaF, and RmaI, but documenting the others for reference.
+
+  //RmaA = cmaz*cmay-smaz*smax*smay;
+  //RmaB = -smaz*cmax;
+  RmaC = cmaz*smay+smaz*smax*cmay;
+  //RmaD = smaz*cmay+cmaz*smax*smay;
+  //RmaE = cmaz*cmax;
+  RmaF = smaz*smay-cmaz*smax*cmay;
+  //RmaG = -cmax*smay;
+  //RmaH = smax;
+  RmaI = cmax*cmay;
+
+  // No longer need these, clear memory
+  cmax = smax = cmay = smay = cmaz = smaz = [];
+
+  // Normal vector
+  LNrX = RarA*RmaC + RarB*RmaF + RarC*RmaI;
+  LNrY = RarD*RmaC + RarE*RmaF + RarF*RmaI;
+  LNrZ = RarG*RmaC + RarH*RmaF + RarI*RmaI;
+
+  // Compute dot product between normal to mirror and incident vector
+  DP = LNrX*LIrX + LNrY*LIrY + LNrZ*LIrZ;
+
+  // Compute vector of spectral reflection
+  LSrX = 2 * DP * LNrX - LIrX;
+  LSrY = 2 * DP * LNrY - LIrY;
+  LSrZ = 2 * DP * LNrZ - LIrZ;
+
+  // Multiply spectral reflection unit vector by magnitude, then subtract from
+  // mirror to yield point location.
+  px = LSrX * mag + mx;
+  py = LSrY * mag + my;
+  pz = LSrZ * mag + mz;
 }
