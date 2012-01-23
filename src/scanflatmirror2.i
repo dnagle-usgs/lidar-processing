@@ -276,32 +276,19 @@ func scanflatmirror2_direct_vector(arZ, arX, arY, gx, gy, gz, dx, dy, dz, maZ, l
     py = LSrY * mag + my
     pz = LSrZ * mag + mz
 */
-
-  // These are the dimensions upon which everything else is based.
-  dims = dimsof(arZ, arX, arY, gx, gy, gz, dx, dy, dz, maZ, laX, maX, maY,
-    mag);
-
-  // Convert the yaw, pitch, roll into radians. We name the variables z, x, y
-  // because these are the rotations about those axes.
   z = arZ * DEG2RAD;
   x = arX * DEG2RAD;
   y = arY * DEG2RAD;
-
-  // Clear memory
   arZ = arX = arY = [];
 
-  // Calculate trig values just once to avoid computational overhead.
   cx = cos(x);
   cy = cos(y);
   cz = cos(z);
   sx = sin(x);
   sy = sin(y);
   sz = sin(z);
-
-  // Clear memory
   x = y = z = [];
 
-  // Common terms, to further reduce computation.
   SXSY = sx*sy;
   CYCZ = cy*cz;
   CYSZ = cy*sz;
@@ -315,27 +302,18 @@ func scanflatmirror2_direct_vector(arZ, arX, arY, gx, gy, gz, dx, dy, dz, maZ, l
   RarG = -cx*sy;
   RarH = sx;
   RarI = cx*cy;
-
-  // Clear memory
   SXSY = CYCZ = CYSZ = cx = cy = cz = sx = sy = sz = [];
 
-  // Calculate location of mirror
-  mx = my = mz = array(double, dims);
   mx = RarA*dx + RarB*dy + RarC*dz + gx;
   my = RarD*dx + RarE*dy + RarF*dz + gy;
   mz = RarG*dx + RarH*dy + RarI*dz + gz;
-
-  // Clear memory
   dx = dy = dz = gx = gy = gz = [];
 
-  // Convert additional angular values into radians.
-  // (We don't use laX *= DEG2RAD to avoid changing original arrays.)
   laX = laX * DEG2RAD;
   maX = maX * DEG2RAD;
   maY = maY * DEG2RAD;
   maZ = maZ * DEG2RAD;
 
-  // Create shortcuts for sin/cos of each of the above
   clax = cos(laX);
   slax = sin(laX);
   cmax = cos(maX);
@@ -344,48 +322,29 @@ func scanflatmirror2_direct_vector(arZ, arX, arY, gx, gy, gz, dx, dy, dz, maZ, l
   smay = sin(maY);
   cmaz = cos(maZ);
   smaz = sin(maZ);
-
-  // No longer need these variables, free some memory.
   laX = maX = maY = maZ = [];
 
-  // incident vector
   LIrX = (RarA*smaz - RarB*cmaz)*clax - RarC*slax;
   LIrY = (RarD*smaz - RarE*cmaz)*clax - RarF*slax;
   LIrZ = (RarG*smaz - RarH*cmaz)*clax - RarI*slax;
-
-  // No longer need, clear memory
   clax = slax = [];
 
-  // Only need RmaC, RmaF, and RmaI, but documenting the others for reference.
-
-  //RmaA = cmaz*cmay-smaz*smax*smay;
-  //RmaB = -smaz*cmax;
   RmaC = cmaz*smay+smaz*smax*cmay;
-  //RmaD = smaz*cmay+cmaz*smax*smay;
-  //RmaE = cmaz*cmax;
   RmaF = smaz*smay-cmaz*smax*cmay;
-  //RmaG = -cmax*smay;
-  //RmaH = smax;
   RmaI = cmax*cmay;
-
-  // No longer need these, clear memory
   cmax = smax = cmay = smay = cmaz = smaz = [];
 
-  // Normal vector
   LNrX = RarA*RmaC + RarB*RmaF + RarC*RmaI;
   LNrY = RarD*RmaC + RarE*RmaF + RarF*RmaI;
   LNrZ = RarG*RmaC + RarH*RmaF + RarI*RmaI;
 
-  // Compute dot product between normal to mirror and incident vector
   DP = LNrX*LIrX + LNrY*LIrY + LNrZ*LIrZ;
 
-  // Compute vector of spectral reflection
   LSrX = 2 * DP * LNrX - LIrX;
   LSrY = 2 * DP * LNrY - LIrY;
   LSrZ = 2 * DP * LNrZ - LIrZ;
+  DP = LNrX = LNrY = LNrz = LIrX = LIrY = LIrZ = [];
 
-  // Multiply spectral reflection unit vector by magnitude, then subtract from
-  // mirror to yield point location.
   px = LSrX * mag + mx;
   py = LSrY * mag + my;
   pz = LSrZ * mag + mz;
