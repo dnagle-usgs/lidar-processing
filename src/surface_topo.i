@@ -1,6 +1,6 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 require, "eaarl.i";
-require, "scanflatmirror2.i";
+require, "eaarla_vector.i";
 
 /*
   the a array has an array of RTRS structures;

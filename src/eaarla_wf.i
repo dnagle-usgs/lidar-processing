@@ -1,5 +1,6 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 require, "eaarl.i";
+require, "eaarla_vector.i";
 
 func mission_georef_eaarla(outdir=, update=) {
 /* DOCUMENT mission_georef_eaarla, outdir=, update=
