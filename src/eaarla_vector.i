@@ -3,15 +3,7 @@ maY, mag, &mx, &my, &mz, &px, &py, &pz) {
 /* DOCUMENT eaarla_direct_vector(arZ, arX, arY, gx, gy, gz, dx, dy, dz, maZ,
    laX, maX, maY, mag, &mx, &my, &mz, &px, &py, &pz)
 
-  This function computes a vector (M) of xyz points projected in 3D space from
-  the origin...which in this case is the center of rotation of planar mirror
-  rotated about the y-axis.  The mirror will face the negative y-axis with a
-  pitch angle of -22.5 degrees. An incident vector intersects this mirror 45
-  degs.  from vertical. The direction of this vector is positive going giving
-  [0 mag 0] as our incident vector.
-
-  In the 'incident vector' above, 'mag' is the distance from the mirror to the
-  ground point.
+  This function computes the mirror and target points for the EAARL-A system.
 
   Input parameters:
 
@@ -25,9 +17,9 @@ maY, mag, &mx, &my, &mz, &px, &py, &pz) {
     dy  - delta y distance from GPS antenna to mirror exit
     dz  - delta z distance from GPS antenna to mirror exit
     maZ - mounting angle of mirror/laser chassis about z-axis (same angle used
-          for both mirror and laser)
-    laX - mounting angle of laser about x-axis
-    maX - mounting angle of mirror about x-axis
+          for both mirror and laser); this is always 0 degrees
+    laX - mounting angle of laser about x-axis; this is always 45 degrees
+    maX - mounting angle of mirror about x-axis; this is always -22.5 degrees
     maY - current angle of mirror rotating about y-axis
     mag - magnitude of vector in 'y' direction (distance mirror to ground)
 
@@ -50,7 +42,7 @@ maY, mag, &mx, &my, &mz, &px, &py, &pz) {
 
   Given values for rotation about the y-axis (typically called roll), about the
   x-axis (typically called pitch) and about the z-axis (typically called yaw or
-  heading) repesented by variables X, Y, and Z, respectively; each in radians.
+  heading) represented by variables X, Y, and Z, respectively; each in radians.
 
   Define the sine and cosine of each angle as follows:
     sx = sin(X)
@@ -139,7 +131,7 @@ maY, mag, &mx, &my, &mz, &px, &py, &pz) {
   frame of reference. These angles are applied as described in "Matrices of
   rotation" above.
 
-  In the code for this function, these three rotations are acehived using a
+  In the code for this function, these three rotations are achieved using a
   matrix Rma (*R*otation from *m*irror to *a*ircraft) which is comprised of
   nine variables as follows:
 
@@ -197,7 +189,7 @@ maY, mag, &mx, &my, &mz, &px, &py, &pz) {
   further transition it into the real world's frame of reference using the
   matrix Rar from "Rotation of aircraft wrt real world" above.
 
-  The vector of incidence in its own frame of reference is refered to as LIl;
+  The vector of incidence in its own frame of reference is referred to as LIl;
   in the real world's frame of reference, LIr.
 
     LIr = Rar * Rla * LIl
@@ -224,7 +216,7 @@ maY, mag, &mx, &my, &mz, &px, &py, &pz) {
   the X and Y axes of its own frame of rotation. Thus, the surface normal
   vector would be along the Z axis: <0,0,1>.
 
-  The normal vector in its own frame of reference is refered to as LNm; in the
+  The normal vector in its own frame of reference is referred to as LNm; in the
   real world's frame of reference, LNr. Following similar math as in other
   sections above, LNr is derived as follows.
 
@@ -245,7 +237,7 @@ maY, mag, &mx, &my, &mz, &px, &py, &pz) {
   --- Reflection vector for laser ---
 
   The vector of spectral reflection (in the real world's frame of rotation) is
-  refered to as LSr. It is derived using the equation for spectral reflection
+  referred to as LSr. It is derived using the equation for spectral reflection
   off of a mirror.
 
     LSr = 2 * (LNr . LIr) * LNr - LIr
