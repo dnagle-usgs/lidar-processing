@@ -172,7 +172,7 @@ use_highelv_echo=, quiet=, verbose=) {
   bcast = long(yaw * 0);
 
   local mx, my, mz, px, py, pz;
-  scanflatmirror2_direct_vector,
+  eaarla_direct_vector,
     yaw, pitch, roll,
     easting, northing, palt,
     dx, dy, dz,

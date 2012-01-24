@@ -1,7 +1,7 @@
-func scanflatmirror2_direct_vector(arZ, arX, arY, gx, gy, gz, dx, dy, dz, maZ, laX, maX, maY, mag, &mx, &my, &mz, &px, &py, &pz)
-{
-/* DOCUMENT scanflatmirror2_direct_vector(arZ, arX, arY, gx, gy, gz, dx, dy,
-   dz, maZ, laX, maX, maY, mag, &mx, &my, &mz, &px, &py, &pz)
+func eaarla_direct_vector(arZ, arX, arY, gx, gy, gz, dx, dy, dz, maZ, laX, maX,
+maY, mag, &mx, &my, &mz, &px, &py, &pz) {
+/* DOCUMENT eaarla_direct_vector(arZ, arX, arY, gx, gy, gz, dx, dy, dz, maZ,
+   laX, maX, maY, mag, &mx, &my, &mz, &px, &py, &pz)
 
   This function computes a vector (M) of xyz points projected in 3D space from
   the origin...which in this case is the center of rotation of planar mirror

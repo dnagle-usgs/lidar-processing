@@ -212,7 +212,7 @@ func georef_eaarla(rasts, gns, ins, ops, daystart, outfile=) {
 
   // Georeference
   local mx, my, mz, px, py, pz;
-  scanflatmirror2_direct_vector,
+  eaarla_direct_vector,
     aY, aP, aR, gx, gy, gz, dx, dy, dz,
     cyaw, lasang, mirang, ang, rng,
     mx, my, mz, px, py, pz;
