@@ -25,16 +25,24 @@ local LAS_ALPS;
 
   Supplemental LAS-specific:
 
-    char ret_num;     Return number
-    char num_ret;     Number of returns
-    char f_edge;      Is this on a flightline edge?
-    char scan_dir;    Scan direction
-    char class;       LAS classification number
-    char synthetic;   Is this a synthetic point?
-    char keypoint;    Is this a keypoint?
-    char withheld;    Is this withheld?
-    long sequence;    Index of point in source LAS file
+    char ret_num;           Return number
+    char num_ret;           Number of returns
+    char f_edge;            Is this on a flightline edge?
+    char scan_dir;          Scan direction
+    char class;             LAS classification number
+    char synthetic;         Is this a synthetic point?
+    char keypoint;          Is this a keypoint?
+    char withheld;          Is this withheld?
+    long sequence;          Index of point in source LAS file
+    short point_source_id;  Point source ID as defined in LAS file
+    float scan_angle;       Scan angle
+    char user_data;         User data field
+    char r, g, b;           Red, green, blue triplet
+
   }
+
+  Note that not all fields will always be populated. For instance, many LAS
+  files do not contain RGB info, and LAS 1.0 did not have point_source_id.
 */
 
 struct LAS_ALPS {
@@ -48,6 +56,10 @@ struct LAS_ALPS {
   char ret_num, num_ret, f_edge, scan_dir;
   char class, synthetic, keypoint, withheld;
   long sequence;
+  short point_source_id;
+  float scan_angle;
+  char user_data;
+  char r, g, b;
 }
 
 local las_old;
@@ -1065,6 +1077,21 @@ func las_to_alps(las, fakemirror=, rgbrn=, date=, geo=, zone=) {
   data.withheld = with;
 
   data.sequence = indgen(numberof(data));
+
+  if(has_member(las.points, "point_source_id")) {
+    data.point_source_id = las.points.point_source_id;
+  }
+  if(has_member(las.points, "scan_angle_rank")) {
+    data.scan_angle = float(s_char(las.points.scan_angle_rank));
+  }
+  if(has_member(las.points, "user_data")) {
+    data.user_data = las.points.user_data;
+  }
+  if(has_member(las.points, "red")) {
+    data.r = char(u_div(las.points.red, 256));
+    data.g = char(u_div(las.points.green, 256));
+    data.b = char(u_div(las.points.blue, 256));
+  }
 
   return data;
 }
