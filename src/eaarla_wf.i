@@ -234,6 +234,7 @@ func georef_eaarla(rasts, gns, ins, ops, daystart, outfile=) {
 
   pulse = char(shape * indgen(dimsof(shape)(3))(-,,-));
   channel = char(shape * indgen(3)(-,-,));
+  digitizer = shape * char(rasts.digitizer);
   raster_seconds = shape * rasts.seconds;
   raster_fseconds = shape * rasts.fseconds;
   flag_irange_bit14 = shape * rasts.flag_irange_bit14;
@@ -253,6 +254,7 @@ func georef_eaarla(rasts, gns, ins, ops, daystart, outfile=) {
   // pulses together for a raster
   raw_xyz0 = transpose(raw_xyz0, [3,1]);
   raw_xyz1 = transpose(raw_xyz1, [3,1]);
+  digitizer = transpose(digitizer, [3,1]);
   raster_seconds = transpose(raster_seconds, [3,1]);
   raster_fseconds = transpose(raster_fseconds, [3,1]);
   flag_irange_bit14 = transpose(flag_irange_bit14, [3,1]);
@@ -266,6 +268,7 @@ func georef_eaarla(rasts, gns, ins, ops, daystart, outfile=) {
   // Now get rid of multiple dimensions
   raw_xyz0 = reform(raw_xyz0, count, 3);
   raw_xyz1 = reform(raw_xyz1, count, 3);
+  digitizer = digitizer(*);
   raster_seconds = raster_seconds(*);
   raster_fseconds = raster_fseconds(*);
   flag_irange_bit14 = flag_irange_bit14(*);
@@ -281,8 +284,8 @@ func georef_eaarla(rasts, gns, ins, ops, daystart, outfile=) {
   cs = cs_wgs84(zone=zone);
   sample_interval = 1.0;
   wf = save(source, system, cs, sample_interval, raw_xyz0, raw_xyz1, soe,
-    raster_seconds, raster_fseconds, flag_irange_bit14, flag_irange_bit15,
-    pulse, channel, tx, rx);
+    digitizer, raster_seconds, raster_fseconds, flag_irange_bit14,
+    flag_irange_bit15, pulse, channel, tx, rx);
   wfobj, wf;
 
   // Now get rid of points without waveforms

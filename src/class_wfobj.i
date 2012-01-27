@@ -80,8 +80,8 @@ func wfobj(base, obj) {
   Optional:
     data(soe,)              array(double,N)
       The timestamp for the point, in UTC seconds of the epoch.
-    data(raster_seconds,)           array(long,N)
-    data(raster_fseconds,)       array(long,N)
+    data(raster_seconds,)   array(long,N)
+    data(raster_fseconds,)  array(long,N)
       The combination of the above two fields can be used to uniquely
       identify a raster in the TLD files. These are used to determine the
       timestamp, but should not be used for that purpose here because they
@@ -92,6 +92,8 @@ func wfobj(base, obj) {
     data(channel,)          array(char,N)
       For EAARL-A data, the channel for the rx waveform. This is a number
       between 1 and 3.
+    data(digitizer,)        array(char,N)
+      For EAARL-A data, the digitizer (0 or 1) used to record the raster.
 
   Automatic:
   These data values are automatically created and should not be altered by the
