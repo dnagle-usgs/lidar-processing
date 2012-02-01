@@ -112,7 +112,7 @@ func eaarla_decode_pulse(raw, pulse, header=) {
   The various *_wf fields will be vectors of varying lengths (as defined by
   the corresponding *_length fields).
 */
-  if(is_void(header)) header = decode_raster_header(raw);
+  if(is_void(header)) header = eaarla_decode_header(raw);
   result = save();
   if(!eaarla_header_valid(header))
     return result;
