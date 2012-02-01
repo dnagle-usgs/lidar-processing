@@ -1,6 +1,60 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 require, "eaarl.i";
 
+/*
+  Structure of a TLD file
+
+  RASTER
+  ----------------------------------
+  Pos Len Type
+  1   18  RASTER_HEADER
+  19  ?   PULSE[?] where ? is number of pulses specified
+
+  RASTER_HEADER
+  ----------------------------------
+  Pos Len Type    Description
+  1   3   ui24    Raster length in bytes
+  4   1   ui8     Raster type ID (always 5)
+  5   4   ui32    Seconds since 1970
+  9   4   ui32    Fractional seconds 1.6us lsb
+  13  4   ui32    Raster number
+  17  2   ui16    Bitfield:
+                  15 bits: number of pulses in this raster (& 0x7fff)
+                  1 bit: digitizer (>>15 &0x1)
+
+  PULSE
+  ----------------------------------
+  1   15  PULSE_HEADER
+  16  ?   TX_WF - Transmit
+  ?   ?   RX_WF - Channel 1
+  ?   ?   RX_WF - Channel 2
+  ?   ?   RX_WF - Channel 3
+
+  PULSE_HEADER
+  ----------------------------------
+  Pos Len Type    Description
+  1   3   ui24    Offset time lbs=200e-9
+  4   1   ui8     Number of waveforms in this sample
+  5   1   ui8     Transmit bias
+  6   4   ui8[4]  Return biases
+  10  2   i16     Scan angle counts
+  12  2   ui16    Bitfield:
+                  14 bits: integer range (& 16383)
+                  1 bit: flag (& 16384)
+                  1 bit: flag (& 32768)
+  14  2   ui16    Data length
+
+  TX_WF
+  ----------------------------------
+  1   1   ui8     Length of waveform
+  2   ?   ui8[?]  Array of char data with length given
+
+  RX_WF
+  ----------------------------------
+  1   2   ui16    Length of waveform
+  3   ?   ui8[?]  Array of char data with length given
+*/
+
 func eaarla_decode_header(raw) {
 /* DOCUMENT eaarla_decode_header(raw)
   Given the raw data for a raster, this will decode and return its header
