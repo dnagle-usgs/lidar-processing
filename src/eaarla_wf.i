@@ -159,8 +159,7 @@ func georef_eaarla(rasts, gns, ins, ops, daystart, outfile=) {
   rng = rasts.integer_range * NS2MAIR;
 
   // Time
-  soe = ((rasts.offset_time & 0x00ffffff) + rasts.fseconds) * 1.6e-6 \
-      + rasts.seconds;
+  soe = (rasts.offset_time + rasts.fseconds) * 1.6e-6 + rasts.seconds;
 
   // Relative timestamps
   somd = soe - daystart;

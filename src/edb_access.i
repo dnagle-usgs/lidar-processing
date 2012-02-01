@@ -427,8 +427,8 @@ func decode_raster(raw) {
     pulse = eaarla_decode_pulse(raw, i, header=header);
     result.irange(i) = pulse.raw_irange;
     result.sa(i) = pulse.shaft_angle;
-    result.offset_time(i) = ((pulse.offset_time & 0x00ffffff) +
-      header.fseconds) * 1.6e-6 + seconds;
+    result.offset_time(i) = (pulse.offset_time + header.fseconds) \
+      * 1.6e-6 + seconds;
     result.rxbias(i,) = pulse.return_bias;
     result.tx(i) = &pulse.transmit_wf(:);
     result.rx(i,1) = &pulse.channel1_wf(:);

@@ -92,6 +92,7 @@ func eaarla_decode_pulse(raw, pulse, header=) {
   fields:
 
     offset_time = array(long)
+    number_of_waveforms = array(char)
     transmit_bias = array(char)
     return_bias = array(char,4)
     shaft_angle = array(short)
@@ -118,7 +119,11 @@ func eaarla_decode_pulse(raw, pulse, header=) {
     return result;
 
   offset = header.pulse_offsets(pulse);
-  save, result, offset_time=i32(raw, offset);
+  save, result, offset_time=i24(raw, offset);
+  save, result, number_of_waveforms=raw(offset+3);
+  if(result.number_of_waveforms != 4)
+    write, format="WARNING: number_of_waveforms = %d\n",
+      result.number_of_waveforms;
   save, result, transmit_bias=raw(offset+4);
   save, result, return_bias=raw(offset+5:offset+8);
   save, result, shaft_angle=i16(raw, offset+9);
@@ -172,6 +177,7 @@ func eaarla_decode_rasters(raw) {
     number_of_pulses = array(short,COUNT)
     digitizer = array(short,COUNT)
     offset_time = array(long,COUNT,NUM_PULSES)
+    number_of_waveforms = array(char,COUNT,NUM_PULSES)
     shaft_angle = array(short,COUNT,NUM_PULSES)
     integer_range = array(short,COUNT,NUM_PULSES)
     raw_irange = array(short,COUNT,NUM_PULSES)
@@ -207,9 +213,9 @@ func eaarla_decode_rasters(raw) {
 
   // pulse fields -- never more than 120 pulses
   offset_time = array(long, count, 120);
-  transmit_bias = flag_irange_bit14 = flag_irange_bit15 = transmit_length =
-      channel1_bias = channel2_bias = channel3_bias =
-      array(char, count, 120);
+  number_of_waveforms = transmit_bias = flag_irange_bit14 = flag_irange_bit15 =
+    transmit_length = channel1_bias = channel2_bias = channel3_bias =
+    array(char, count, 120);
   shaft_angle = integer_range = raw_irange = data_length = channel1_length =
       channel2_length = channel3_length = array(short, count, 120);
   transmit_wf = channel1_wf = channel2_wf = channel3_wf =
@@ -231,6 +237,7 @@ func eaarla_decode_rasters(raw) {
     for(j = 1; j <= number_of_pulses(i); j++) {
       pulse = eaarla_decode_pulse(*raw(i), j, header=header);
       offset_time(i,j) = pulse.offset_time;
+      number_of_waveforms(i,j) = pulse.number_of_waveforms;
       transmit_bias(i,j) = pulse.transmit_bias;
       channel1_bias(i,j) = pulse.return_bias(1);
       channel2_bias(i,j) = pulse.return_bias(2);
@@ -279,11 +286,11 @@ func eaarla_decode_rasters(raw) {
     raster_number, number_of_pulses, digitizer);
 
   if(max_pulse) {
-    save, result, offset_time, shaft_angle, integer_range, raw_irange,
-      flag_irange_bit14, flag_irange_bit15, data_length, transmit_bias,
-      transmit_length, transmit_wf, channel1_bias, channel1_length,
-      channel1_wf, channel2_bias, channel2_length, channel2_wf,
-      channel3_bias, channel3_length, channel3_wf;
+    save, result, offset_time, number_of_waveforms, shaft_angle, integer_range,
+      raw_irange, flag_irange_bit14, flag_irange_bit15, data_length,
+      transmit_bias, transmit_length, transmit_wf, channel1_bias,
+      channel1_length, channel1_wf, channel2_bias, channel2_length,
+      channel2_wf, channel3_bias, channel3_length, channel3_wf;
   }
 
   return result;
