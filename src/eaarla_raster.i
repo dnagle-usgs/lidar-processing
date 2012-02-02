@@ -55,8 +55,8 @@ require, "eaarl.i";
   3   ?   ui8[?]  Array of char data with length given
 */
 
-func eaarla_decode_header(raw) {
-/* DOCUMENT eaarla_decode_header(raw)
+func eaarla_decode_header(raw, offset) {
+/* DOCUMENT eaarla_decode_header(raw, offset)
   Given the raw data for a raster, this will decode and return its header
   information as an oxy group object with these fields:
 
@@ -70,33 +70,37 @@ func eaarla_decode_header(raw) {
     pulse_offsets = array(long,119)
 
   The dimension of pulse_offsets will match number_of_pulses and is usually
-  119.
+  119. OFFSET should be the offset into the RAW data where the raster starts;
+  it defaults to 1, which is appropriate when passed individual raster
+  segments.
 */
   extern eaarl_time_offset, tca;
   local rasternbr, type, len;
+  default, offset, 1;
+  start = offset;
 
   result = save();
-  save, result, raster_length=i24(raw, 1);
-  save, result, raster_type=raw(4);
+  save, result, raster_length=i24(raw, offset);
+  save, result, raster_type=raw(offset+3);
 
   if(result.raster_type != 5)
     return result;
 
   if(result.raster_length >= 8)
-    save, result, seconds=i32(raw, 5);
+    save, result, seconds=i32(raw, offset+4);
   if(result.raster_length >= 12)
-    save, result, fseconds=i32(raw, 9);
+    save, result, fseconds=i32(raw, offset+8);
   if(result.raster_length >= 16)
-    save, result, raster_number=i32(raw, 13);
+    save, result, raster_number=i32(raw, offset+12);
 
   if(result.raster_length >= 18) {
-    save, result, number_of_pulses=i16(raw, 17) & 0x7fff,
-        digitizer=(i16(raw,17) >> 15) & 0x1;
+    save, result, number_of_pulses=i16(raw, offset+16) & 0x7fff,
+        digitizer=(i16(raw,offset+16) >> 15) & 0x1;
 
-    offset = 19;
+    offset += 18;
     pulse_offsets = array(-1, result.number_of_pulses);
     for(i = 1; i <= result.number_of_pulses; i++) {
-      if(offset + 15 > result.raster_length)
+      if(offset + 15 > start + result.raster_length - 1)
         break;
       pulse_offsets(i) = offset;
       offset += 15 + i16(raw, offset + 13);
@@ -129,14 +133,16 @@ func eaarla_header_valid(header) {
   return 1;
 }
 
-func eaarla_decode_pulse(raw, pulse, header=) {
-/* DOCUMENT eaarla_decode_header(raw)
+func eaarla_decode_pulse(raw, pulse, offset, header=) {
+/* DOCUMENT eaarla_decode_pulse(raw, pulse, offset, header=)
   Given the raw data for a raster, this will decode and return the pulse
   information for the specified pulse number.
 
   Parameters:
     raw: An array of char data from a TLD file (as returned by get_erast).
     pulse: Pulse number to retrieve, usually in the range 1-119.
+    offset: Offset into RAW where raster starts. Defaults to 1, which is
+      appropriate when passed individual raster data chunks.
   Options:
     header= The result of eaarla_decode_header. If not supplied, it was be
       determined from RAW. Providing the header is more efficient if you
@@ -167,7 +173,8 @@ func eaarla_decode_pulse(raw, pulse, header=) {
   The various *_wf fields will be vectors of varying lengths (as defined by
   the corresponding *_length fields).
 */
-  if(is_void(header)) header = eaarla_decode_header(raw);
+  default, offset, 1;
+  if(is_void(header)) header = eaarla_decode_header(raw, offset);
   result = save();
   if(!eaarla_header_valid(header))
     return result;
@@ -276,7 +283,7 @@ func eaarla_decode_rasters(raw) {
       array(pointer, count, 120);
 
   for(i = 1; i <= count; i++) {
-    header = eaarla_decode_header(*raw(i));
+    header = eaarla_decode_header(*raw(i), 1);
     valid(i) = eaarla_header_valid(header);
     if(!valid(i))
       continue;
@@ -289,7 +296,7 @@ func eaarla_decode_rasters(raw) {
     digitizer(i) = header.digitizer;
 
     for(j = 1; j <= number_of_pulses(i); j++) {
-      pulse = eaarla_decode_pulse(*raw(i), j, header=header);
+      pulse = eaarla_decode_pulse(*raw(i), j, 1, header=header);
       offset_time(i,j) = pulse.offset_time;
       number_of_waveforms(i,j) = pulse.number_of_waveforms;
       transmit_bias(i,j) = pulse.transmit_bias;
