@@ -116,7 +116,7 @@ func geotiff_tags_decode(gtif, &err) {
           u_cast(GTIF.tag.GeoAsciiParamsTag, long));
         continue;
       }
-      start = gtif.Value_Offset(i);
+      start = gtif.Value_Offset(i) + 1;
       stop = start + gtif.Count(i) - 1;
       val = strchar(gtif.GeoAsciiParamsTag(start:stop));
     } else if(keytype == "double") {
@@ -127,7 +127,7 @@ func geotiff_tags_decode(gtif, &err) {
           u_cast(GTIF.tag.GeoDoubleParamsTag, long));
         continue;
       }
-      start = gtif.Value_Offset(i);
+      start = gtif.Value_Offset(i) + 1;
       stop = start + gtif.Count(i) - 1;
       val = gtif.GeoDoubleParamsTag(start:stop);
     } else if(keytype == "short") {
