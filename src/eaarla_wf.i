@@ -137,8 +137,12 @@ func georef_eaarla(rasts, gns, ins, ops, daystart, outfile=) {
 */
   extern eaarl_time_offset, tca;
 
-  if(is_string(rasts))
-    rasts = eaarla_decode_rasters(get_tld_rasts(rasts));
+  if(is_string(rasts)) {
+    f = open(rasts, "rb");
+    add_variable, f, -1, "raw", char, sizeof(f);
+    rasts = eaarla_decode_rasters(f.raw, wfs=1);
+    close, f;
+  }
   if(is_string(gns))
     gns = load_pnav(fn=gns);
   if(is_string(ins))

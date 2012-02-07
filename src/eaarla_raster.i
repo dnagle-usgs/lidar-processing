@@ -133,7 +133,7 @@ func eaarla_header_valid(header) {
   return 1;
 }
 
-func eaarla_decode_pulse(raw, pulse, offset, header=) {
+func eaarla_decode_pulse(raw, pulse, offset, header=, wfs=) {
 /* DOCUMENT eaarla_decode_pulse(raw, pulse, offset, header=)
   Given the raw data for a raster, this will decode and return the pulse
   information for the specified pulse number.
@@ -147,6 +147,8 @@ func eaarla_decode_pulse(raw, pulse, offset, header=) {
     header= The result of eaarla_decode_header. If not supplied, it was be
       determined from RAW. Providing the header is more efficient if you
       already have it or will be retrieving multiple pulses from one raster.
+    wfs= By default the waveforms aren't included. Set to wfs=1 to include
+      them.
 
   The decoded information will be returned as an oxy group object with these
   fields:
@@ -162,12 +164,19 @@ func eaarla_decode_pulse(raw, pulse, offset, header=) {
     flag_irange_bit15 = array(char)
     data_length = array(short)
     transmit_length = array(char)
-    transmit_wf = array(char,x)
+    transmit_offset = array(long,x)
     channel1_length = array(short)
-    channel1_wf = array(char,x)
+    channel1_offset = array(long,x)
     channel2_length = array(short)
-    channel2_wf = array(char,x)
+    channel2_offset = array(long,x)
     channel3_length = array(short)
+    channel3_offset = array(long,x)
+
+  And if wfs=1:
+
+    transmit_wf = array(char,x)
+    channel1_wf = array(char,x)
+    channel2_wf = array(char,x)
     channel3_wf = array(char,x)
 
   The various *_wf fields will be vectors of varying lengths (as defined by
@@ -197,33 +206,41 @@ func eaarla_decode_pulse(raw, pulse, offset, header=) {
   save, result, data_length=i16(raw, offset+13);
 
   offset += 15;
+  save, result, transmit_offset=offset+1;
   save, result, transmit_length=raw(offset);
   if(result.transmit_length <= 0)
     return result;
-  save, result, transmit_wf=raw(offset+1:offset+result.transmit_length);
+  if(wfs)
+    save, result, transmit_wf=raw(offset+1:offset+result.transmit_length);
 
   offset += 1 + result.transmit_length;
+  save, result, channel1_offset=offset+2;
   save, result, channel1_length=i16(raw, offset);
   if(result.channel1_length <= 0)
     return result;
-  save, result, channel1_wf=raw(offset+2:offset+1+result.channel1_length);
+  if(wfs)
+    save, result, channel1_wf=raw(offset+2:offset+1+result.channel1_length);
 
   offset += 2 + result.channel1_length;
+  save, result, channel2_offset=offset+2;
   save, result, channel2_length=i16(raw, offset);
   if(result.channel2_length <= 0)
     return result;
-  save, result, channel2_wf=raw(offset+2:offset+1+result.channel2_length);
+  if(wfs)
+    save, result, channel2_wf=raw(offset+2:offset+1+result.channel2_length);
 
   offset += 2 + result.channel2_length;
+  save, result, channel3_offset=offset+2;
   save, result, channel3_length=i16(raw, offset);
   if(result.channel3_length <= 0)
     return result;
-  save, result, channel3_wf=raw(offset+2:offset+1+result.channel3_length);
+  if(wfs)
+    save, result, channel3_wf=raw(offset+2:offset+1+result.channel3_length);
 
   return result;
 }
 
-func eaarla_decode_rasters(raw) {
+func eaarla_decode_rasters(raw, wfs=) {
 /* DOCUMENT data = eaarla_decode_rasters(raw)
   RAW may be an array of char for a single raster, or it may be an array of
   pointers to such data. The raster data will be decoded and returned as an
@@ -246,26 +263,38 @@ func eaarla_decode_rasters(raw) {
     flag_irange_bit15 = array(short,COUNT,NUM_PULSES)
     data_length = array(short,COUNT,NUM_PULSES)
     transmit_bias = array(char,COUNT,NUM_PULSES)
+    transmit_offset = array(long,COUNT,NUM_PULSES)
     transmit_length = array(char,COUNT,NUM_PULSES)
-    transmit_wf = array(pointer,COUNT,NUM_PULSES)
     channel1_bias = array(char,COUNT,NUM_PULSES)
+    channel1_offset = array(long,COUNT,NUM_PULSES)
     channel1_length = array(short,COUNT,NUM_PULSES)
-    channel1_wf = array(pointer,COUNT,NUM_PULSES)
     channel2_bias = array(char,COUNT,NUM_PULSES)
+    channel2_offset = array(long,COUNT,NUM_PULSES)
     channel2_length = array(short,COUNT,NUM_PULSES)
-    channel2_wf = array(pointer,COUNT,NUM_PULSES)
     channel3_bias = array(char,COUNT,NUM_PULSES)
+    channel3_offset = array(long,COUNT,NUM_PULSES)
     channel3_length = array(short,COUNT,NUM_PULSES)
-    channel3_wf = array(pointer,COUNT,NUM_PULSES)
 
   Where COUNT is the number of rasters provided and NUM_PULSES is the maximum
   number of pulses found for any given raster.
-*/
-  if(!is_pointer(raw))
-    raw = &raw;
-  raw = raw(*);
 
-  count = numberof(raw);
+  If wfs=1, then the additional fields are also included:
+
+    transmit_wf = array(pointer,COUNT,NUM_PULSES)
+    channel1_wf = array(pointer,COUNT,NUM_PULSES)
+    channel2_wf = array(pointer,COUNT,NUM_PULSES)
+    channel3_wf = array(pointer,COUNT,NUM_PULSES)
+*/
+  default, wfs, 0;
+
+  count = 0;
+  offset = 1;
+  nraw = numberof(raw);
+  while(offset < nraw) {
+    count++;
+    offset += u_cast(i24(raw, offset), long);
+  }
+  nraw = [];
 
   // header fields
   valid = array(char, count);
@@ -279,8 +308,12 @@ func eaarla_decode_rasters(raw) {
     array(char, count, 120);
   shaft_angle = integer_range = raw_irange = data_length = channel1_length =
       channel2_length = channel3_length = array(short, count, 120);
-  transmit_wf = channel1_wf = channel2_wf = channel3_wf =
-      array(pointer, count, 120);
+  transmit_offset = channel1_offset = channel2_offset = channel3_offset =
+      array(long, count, 120);
+  if(wfs) {
+    transmit_wf = channel1_wf = channel2_wf = channel3_wf =
+        array(pointer, count, 120);
+  }
 
   for(i = 1; i <= count; i++) {
     header = eaarla_decode_header(*raw(i), 1);
@@ -296,7 +329,7 @@ func eaarla_decode_rasters(raw) {
     digitizer(i) = header.digitizer;
 
     for(j = 1; j <= number_of_pulses(i); j++) {
-      pulse = eaarla_decode_pulse(*raw(i), j, 1, header=header);
+      pulse = eaarla_decode_pulse(*raw(i), j, 1, header=header, wfs=wfs);
       offset_time(i,j) = pulse.offset_time;
       number_of_waveforms(i,j) = pulse.number_of_waveforms;
       transmit_bias(i,j) = pulse.transmit_bias;
@@ -310,13 +343,17 @@ func eaarla_decode_rasters(raw) {
       flag_irange_bit15(i,j) = pulse.flag_irange_bit15;
       data_length(i,j) = pulse.data_length;
       transmit_length(i,j) = pulse.transmit_length;
-      transmit_wf(i,j) = &pulse.transmit_wf;
+      if(wfs)
+        transmit_wf(i,j) = &pulse.transmit_wf;
       channel1_length(i,j) = pulse.channel1_length;
-      channel1_wf(i,j) = &pulse.channel1_wf;
+      if(wfs)
+        channel1_wf(i,j) = &pulse.channel1_wf;
       channel2_length(i,j) = pulse.channel2_length;
-      channel2_wf(i,j) = &pulse.channel2_wf;
+      if(wfs)
+        channel2_wf(i,j) = &pulse.channel2_wf;
       channel3_length(i,j) = pulse.channel3_length;
-      channel3_wf(i,j) = &pulse.channel3_wf;
+      if(wfs)
+        channel3_wf(i,j) = &pulse.channel3_wf;
     }
   }
 
@@ -334,13 +371,20 @@ func eaarla_decode_rasters(raw) {
     flag_irange_bit15 = flag_irange_bit15(..,:max_pulse);
     data_length = data_length(..,:max_pulse);
     transmit_length = transmit_length(..,:max_pulse);
-    transmit_wf = transmit_wf(..,:max_pulse);
+    transmit_offset = transmit_offset(..,:max_pulse);
     channel1_length = channel1_length(..,:max_pulse);
-    channel1_wf = channel1_wf(..,:max_pulse);
+    channel1_offset = channel1_offset(..,:max_pulse);
     channel2_length = channel2_length(..,:max_pulse);
-    channel2_wf = channel2_wf(..,:max_pulse);
+    channel2_offset = channel2_offset(..,:max_pulse);
     channel3_length = channel3_length(..,:max_pulse);
-    channel3_wf = channel3_wf(..,:max_pulse);
+    channel3_offset = channel3_offset(..,:max_pulse);
+
+    if(wfs) {
+      transmit_wf = transmit_wf(..,:max_pulse);
+      channel1_wf = channel1_wf(..,:max_pulse);
+      channel2_wf = channel2_wf(..,:max_pulse);
+      channel3_wf = channel3_wf(..,:max_pulse);
+    }
   }
 
   result = save(valid, raster_length, raster_type, seconds, fseconds,
@@ -349,9 +393,12 @@ func eaarla_decode_rasters(raw) {
   if(max_pulse) {
     save, result, offset_time, number_of_waveforms, shaft_angle, integer_range,
       raw_irange, flag_irange_bit14, flag_irange_bit15, data_length,
-      transmit_bias, transmit_length, transmit_wf, channel1_bias,
-      channel1_length, channel1_wf, channel2_bias, channel2_length,
-      channel2_wf, channel3_bias, channel3_length, channel3_wf;
+      transmit_bias, transmit_length, transmit_offset, channel1_bias,
+      channel1_length, channel1_offset, channel2_bias, channel2_length,
+      channel2_offset, channel3_bias, channel3_length, channel3_offset;
+    if(wfs) {
+      save, result, transmit_wf, channel1_wf, channel2_wf, channel3_wf;
+    }
   }
 
   return result;

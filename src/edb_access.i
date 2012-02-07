@@ -424,7 +424,7 @@ func decode_raster(raw) {
   result.npixels = header.number_of_pulses;
 
   for(i = 1; i <= header.number_of_pulses; i++) {
-    pulse = eaarla_decode_pulse(raw, i, header=header);
+    pulse = eaarla_decode_pulse(raw, i, header=header, wfs=1);
     result.irange(i) = pulse.raw_irange;
     result.sa(i) = pulse.shaft_angle;
     result.offset_time(i) = (pulse.offset_time + header.fseconds) \
