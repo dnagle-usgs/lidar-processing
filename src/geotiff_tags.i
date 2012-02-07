@@ -118,7 +118,10 @@ func geotiff_tags_decode(gtif, &err) {
       }
       start = gtif.Value_Offset(i) + 1;
       stop = start + gtif.Count(i) - 1;
-      val = strchar(gtif.GeoAsciiParamsTag(start:stop));
+      str = gtif.GeoAsciiParamsTag(start:stop);
+      if(str(0) == '|')
+        str(0) = 0x00;
+      val = strchar(str);
     } else if(keytype == "double") {
       if(gtif.TIFFTagLocation(i) != GTIF.tag.GeoDoubleParamsTag) {
         grow, err, swrite(
