@@ -294,7 +294,6 @@ func eaarla_decode_rasters(raw, wfs=) {
     count++;
     offset += u_cast(i24(raw, offset), long);
   }
-  nraw = [];
 
   // header fields
   valid = array(char, count);
@@ -315,12 +314,17 @@ func eaarla_decode_rasters(raw, wfs=) {
         array(pointer, count, 120);
   }
 
-  for(i = 1; i <= count; i++) {
-    header = eaarla_decode_header(*raw(i), 1);
+  offset = 1;
+  i = 0;
+  while(offset < nraw) {
+    i++;
+    header = eaarla_decode_header(raw, offset);
     valid(i) = eaarla_header_valid(header);
-    if(!valid(i))
-      continue;
     raster_length(i) = header.raster_length;
+    if(!valid(i)) {
+      offset += raster_length(i);
+      continue;
+    }
     raster_type(i) = header.raster_type;
     seconds(i) = header.seconds;
     fseconds(i) = header.fseconds;
@@ -329,7 +333,7 @@ func eaarla_decode_rasters(raw, wfs=) {
     digitizer(i) = header.digitizer;
 
     for(j = 1; j <= number_of_pulses(i); j++) {
-      pulse = eaarla_decode_pulse(*raw(i), j, 1, header=header, wfs=wfs);
+      pulse = eaarla_decode_pulse(raw, j, offset, header=header, wfs=wfs);
       offset_time(i,j) = pulse.offset_time;
       number_of_waveforms(i,j) = pulse.number_of_waveforms;
       transmit_bias(i,j) = pulse.transmit_bias;
@@ -343,18 +347,23 @@ func eaarla_decode_rasters(raw, wfs=) {
       flag_irange_bit15(i,j) = pulse.flag_irange_bit15;
       data_length(i,j) = pulse.data_length;
       transmit_length(i,j) = pulse.transmit_length;
+      transmit_offset(i,j) = pulse.transmit_offset;
       if(wfs)
         transmit_wf(i,j) = &pulse.transmit_wf;
       channel1_length(i,j) = pulse.channel1_length;
+      channel1_offset(i,j) = pulse.channel1_offset;
       if(wfs)
         channel1_wf(i,j) = &pulse.channel1_wf;
       channel2_length(i,j) = pulse.channel2_length;
+      channel2_offset(i,j) = pulse.channel2_offset;
       if(wfs)
         channel2_wf(i,j) = &pulse.channel2_wf;
       channel3_length(i,j) = pulse.channel3_length;
+      channel3_offset(i,j) = pulse.channel3_offset;
       if(wfs)
         channel3_wf(i,j) = &pulse.channel3_wf;
     }
+    offset += raster_length(i);
   }
 
   max_pulse = number_of_pulses(max);
