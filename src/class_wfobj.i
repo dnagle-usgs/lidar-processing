@@ -105,9 +105,13 @@ func wfobj(base, obj) {
       This array is [[xmin,xmax],[ymin,ymax],[zmin,zmax]]. These bounds
       cover the extent of both raw_xyz0 and raw_xyz1.
     data(raw_convex_hull,)  array(double,?,2)
-      The convex hull of hte data, in the coordinate system specified by
+      The convex hull of the data, in the coordinate system specified by
       "cs". This is the convex hull of X and Y, for both raw_xyz0 and
       raw_xyz1.
+    data(source_path,)      mapobj sub-object
+      The filename the point was loaded from. This is an instance of the
+      "mapobj" class, see mapobj for details. Points that were not loaded from
+      file will be represented by an empty string: "".
 
   Methods:
     data, help
@@ -173,7 +177,9 @@ func wfobj(base, obj) {
 
   // For restoring from file
   if(is_string(obj)) {
-    obj = pbd2obj(obj);
+    source_path = obj;
+    obj = pbd2obj(source_path);
+    save, obj, source_path=array(source_path, dimsof(obj.raw_xyz0)(2));
   // If calling as a function, don't modify in place
   } else if(!am_subroutine()) {
     obj = obj_copy(obj);
@@ -215,6 +221,11 @@ func wfobj(base, obj) {
     }
     save, obj, rx, tx;
   }
+
+  if(!is_void(obj.source_path))
+    save, obj, source_path=mapobj(obj.source_path);
+  else
+    save, obj, source_path=mapobj(count);
 
   raw_bounds = splitary([
     min(obj(raw_xyz0)(min,), obj(raw_xyz1)(min,)),
@@ -354,6 +365,8 @@ rn = closure(wfobj_rn, array(short, 1));
 func wfobj_save(fn) {
   obj = obj_copy_data(use());
 
+  obj_delete, obj, "source_path";
+
   // saving/loading a large array of small pointers is much more expensive
   // than saving/loading a small array of large pointers; thus tx and rx get
   // converted to a more efficient format for saving
@@ -392,7 +405,8 @@ func wfobj_index(idx) {
   which = res(*,);
   w = set_difference(which, exclude, idx=1);
   which = which(w);
-  obj_index, res, idx, size="count", which=which;
+  obj_index, res, idx, bymethod=save(source_path="index"), size="count",
+    which=which;
   bless, res;
   return res;
 }
@@ -400,7 +414,7 @@ index = wfobj_index;
 
 func wfobj_sort(fields) {
   res = am_subroutine() ? use() : obj_copy(use(), recurse=1);
-  obj_sort, res, fields, size="count";
+  obj_sort, res, fields, bymethod=save(source_path="index"), size="count";
   bless, res;
   return res;
 }
