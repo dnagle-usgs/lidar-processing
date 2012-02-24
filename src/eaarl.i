@@ -63,6 +63,7 @@ if(is_void(__eaarl_includes_included__)) {
   require, "centroid.i";
   require, "class_clsobj.i";
   require, "class_deque.i";
+  require, "class_mapobj.i";
   require, "class_pcobj.i";
   require, "class_wfobj.i";
   require, "colorbar.i";
