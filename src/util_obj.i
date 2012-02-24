@@ -3,6 +3,37 @@ require, "general.i";
 require, "set.i";
 require, "util_cast.i";
 
+func bless(obj, cls) {
+/* DOCUMENT bless, obj, class
+  -or- bless, obj
+  -or- bless(obj, class)
+  -or- bless(obj)
+
+  "Blesses" the given oxy group OBJ into the given "class" CLASS. CLASS must be
+  a function name (as a string) or a function reference. The function must
+  accept one parameter, the oxy group. It should perform whatever setup is
+  necessary to "bless" the group into its "class".
+
+  For example, this:
+    bless, myobj, "wfobj"
+  Is equivalent to:
+    wfobj, myobj
+
+  If the CLASS parameter is omitted, it is inferred from the oxy group itself
+  by looking for a member named __bless. This allows for an object to be
+  blessed (or re-blessed) even withough explicitly knowing its class. This, in
+  part, helps support "sub-classing".
+*/
+  if(is_void(cls)) cls = obj.__bless;
+  if(!is_func(cls)) {
+    if(!symbol_exists(cls)) error, "Unknown class";
+    cls = symbol_def(cls);
+  }
+  if(!am_subroutine())
+    return cls(obj);
+  cls, obj;
+}
+
 func keydefault(args) {
 /* DOCUMENT keydefault, obj, key1, val1, key2, val2, ...
   keydefault, obj, key1=val1, key2=val2, ...
