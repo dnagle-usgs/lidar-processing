@@ -300,7 +300,7 @@ func wfobj_grow(obj, headers=) {
       sample_interval=obj.sample_interval;
   }
 
-  wfobj, res;
+  bless, res;
   return res;
 }
 grow = wfobj_grow;
@@ -393,7 +393,7 @@ func wfobj_index(idx) {
   w = set_difference(which, exclude, idx=1);
   which = which(w);
   obj_index, res, idx, size="count", which=which;
-  wfobj, res;
+  bless, res;
   return res;
 }
 index = wfobj_index;
@@ -401,7 +401,7 @@ index = wfobj_index;
 func wfobj_sort(fields) {
   res = am_subroutine() ? use() : obj_copy(use(), recurse=1);
   obj_sort, res, fields, size="count";
-  wfobj, res;
+  bless, res;
   return res;
 }
 sort = wfobj_sort;

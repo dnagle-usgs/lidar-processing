@@ -253,7 +253,7 @@ func pcobj_grow(obj, headers=) {
     save, res, source=obj.source, system=obj.system;
   }
 
-  pcobj, res;
+  bless, res;
   return res;
 }
 grow = pcobj_grow;
@@ -273,7 +273,7 @@ func pcobj_index(idx) {
   which = which(w);
   obj_index, res, idx, bymethod=save(class="index"), size="count",
     which=which;
-  pcobj, res;
+  bless, res;
   return res;
 }
 index = pcobj_index;
@@ -281,7 +281,7 @@ index = pcobj_index;
 func pcobj_sort(fields) {
   res = am_subroutine() ? use() : obj_copy(use(), recurse=1);
   obj_sort, res, fields, bymethod=save(class="index"), size="count";
-  pcobj, res;
+  bless, res;
   return res;
 }
 sort = pcobj_sort;
