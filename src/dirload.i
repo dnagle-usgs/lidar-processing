@@ -439,9 +439,11 @@ func __dlfilter_files_poly(&files, filter, state) {
 */
   poly = filter.poly;
   fbbox = [poly(1,min), poly(1,max), poly(2,min), poly(2,max)];
-  keep = array(short, numberof(files));
+  keep = array(short(1), numberof(files));
   for(i = 1; i <= numberof(files); i++) {
-    dbbox = tile2bbox(file_tail(files(i)))([4,2,1,3]);
+    bbox = tile2bbox(file_tail(files(i)));
+    if(is_void(bbox)) continue;
+    dbbox = bbox([4,2,1,3]);
     keep(i) = dbbox(1) <= fbbox(2) && fbbox(1) <= dbbox(2) &&
       dbbox(3) <= fbbox(4) && fbbox(3) <= dbbox(4);
   }
