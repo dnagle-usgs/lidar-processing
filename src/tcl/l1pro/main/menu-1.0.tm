@@ -440,7 +440,7 @@ proc set_yorick_gridxy {x y} {
 }
 
 proc open_fit_gaussian_gui {} {
-    source [file join $::src_path attic 2010-10-fit_gauss.ytk]
+    source [file join $::src_path .. attic src 2010-10-fit_gauss.ytk]
     fit_gauss::create_gui
 }
 

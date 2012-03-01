@@ -681,13 +681,13 @@ proc ::l1pro::deprecated::rbgga::request_heading {psf inhd_count sod} {
 
 proc ::l1pro::deprecated::start_sf {} {
     global cir_id data_path
-    exec ./attic/2010-07-sf_a.tcl -parent [::comm::comm self] \
+    exec ../attic/src/2010-07-sf_a.tcl -parent [::comm::comm self] \
             -cir $cir_id -path $data_path &
 }
 
 proc ::l1pro::deprecated::start_cir {} {
     global sf_a_id data_path
-    exec ./attic/2010-07-cir.tcl -parent [::comm::comm self] \
+    exec ../attic/src/2010-07-cir.tcl -parent [::comm::comm self] \
             -sf $sf_a_id -path $data_path &
 }
 
