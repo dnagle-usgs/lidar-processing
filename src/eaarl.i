@@ -74,7 +74,6 @@ if(is_void(__eaarl_includes_included__)) {
   require, "data_rgn_selector.i";
   require, "data_segments.i";
   require, "datum_converter.i";
-  require, "determine_bias.i";
   require, "dir.i";
   require, "dirload.i";
   require, "dmars.i";
@@ -124,7 +123,6 @@ if(is_void(__eaarl_includes_included__)) {
   require, "pcobj_export.i";
   require, "pcobj_import.i";
   require, "pip.i";
-  require, "qaqc_fns.i";
   require, "rbgga.i";
   require, "rbpnav.i";
   require, "rbtans.i";
