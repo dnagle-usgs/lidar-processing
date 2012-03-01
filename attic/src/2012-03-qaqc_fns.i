@@ -1,4 +1,8 @@
 require, "eaarl.i";
+/******************************************************************************\
+* This file was moved to the attic on 2012-03-01. This file is used by the     *
+* deprecated GUI for Roll Bias, which sources this file directly.              *
+\******************************************************************************/
 
 func split_digitizer(data, mdate, edblocation=, digi0=) {
 	if (!edblocation) edblocation = "/data/";

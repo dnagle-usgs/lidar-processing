@@ -751,6 +751,9 @@ namespace eval ::l1pro::deprecated::rollbias {
     }
 
     proc gui {} {
+        source [file join $::src_path attic src 2012-03-qaqc_fns.i]
+        source [file join $::src_path attic src 2012-03-determine_bias.i]
+
         set ns [namespace current]
         set v::var $::pro_var
         set v::winsrc $::win_no

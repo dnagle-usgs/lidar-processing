@@ -1,5 +1,10 @@
 require, "eaarl.i";
-require, "qaqc_fns.i";
+/******************************************************************************\
+* This file was moved to the attic on 2012-03-01. This file depends on         *
+* 2012-03-qaqc_fns.i. This file is used by the deprecated GUI for Roll Bias,   *
+* which sources this file directly.                                            *
+\******************************************************************************/
+
 //This document contains functions that can determine bias corrections
 // Original: ?????
 //  Added guessrollbias, WW/RM 2005/11/29
