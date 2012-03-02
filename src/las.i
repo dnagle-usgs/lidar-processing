@@ -1522,7 +1522,7 @@ func las_header_scan(las) {
   if(numberof(vars)) {
     record_types = save(
       "LASF_Projection 34735", "Georeferencing (GeoKeyDirectoryTag)",
-      "LASF_Projection 34736", "Georefernecing (GeoDoubleParamsTag)",
+      "LASF_Projection 34736", "Georeferencing (GeoDoubleParamsTag)",
       "LASF_Projection 34737", "Georeferencing (GeoAsciiParamsTag)",
       "LASF_Spec 0", "Classification lookup",
       "LASF_Spec 2", "Histogram",
