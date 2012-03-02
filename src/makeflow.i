@@ -56,8 +56,8 @@ local makeflow_conf;
 
 func makeflow_run(conf, fn, norun=, interval=) {
 /* DOCUMENT makeflow_run, conf, fn, interval=;
-  Runs a set of jobs using Makeflow. If Makeflow isn't available, falls back on
-  sans_makeflow.
+  Runs a set of jobs using Makeflow. If Makeflow isn't available (or is
+  disabled), falls back on sans_makeflow.
   
   Arguments:
     conf: The configuration directives that define the jobs to run. See
@@ -75,8 +75,13 @@ func makeflow_run(conf, fn, norun=, interval=) {
 */
   extern alpsrc;
   default, norun, 0;
-  makeflow_exe = file_join(alpsrc.cctools_bin, "makeflow");
-  monitor_exe = file_join(alpsrc.cctools_bin, "makeflow_monitor");
+
+  makeflow_exe = monitor_exe = "";
+
+  if(alpsrc.makeflow_enable) {
+    makeflow_exe = file_join(alpsrc.cctools_bin, "makeflow");
+    monitor_exe = file_join(alpsrc.cctools_bin, "makeflow_monitor");
+  }
 
   if(!file_exists(makeflow_exe) || !file_exists(monitor_exe)) {
     sans_makeflow, conf, interval=interval;

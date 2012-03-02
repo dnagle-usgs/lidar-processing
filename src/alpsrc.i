@@ -38,6 +38,9 @@ local alpsrc;
     makeflow_opts = -N alps -T local
       Options to pass to makeflow. Use 'makeflow -h' for list of options.
 
+    makeflow_enable = 1
+      Use 1 to enable use of Makeflow. Use 0 to disable.
+
   SEE ALSO: alpsrc_load
 */
 
@@ -86,6 +89,7 @@ func __alpsrc_set_defaults(&hash) {
   h_set, hash, gdal_bin=file_join(get_cwd(), "..", "..", "gdal", "bin");
   h_set, hash, cctools_bin=file_join(get_cwd(), "..", "..", "cctools", "bin");
   h_set, hash, makeflow_opts="-N alps -T local";
+  h_set, hash, makeflow_enable=1;
   h_set, hash, memory_autorefresh=5;
 }
 
