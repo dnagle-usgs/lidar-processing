@@ -2164,41 +2164,61 @@ func las_install_pdrf(stream) {
 
   s_name = swrite(format="LAS_%d_%d_PDRF_%d", v_maj, v_min, format);
 
+  cursize = 0;
   add_member, stream, s_name, -1, "x", "int";
   add_member, stream, s_name, -1, "y", "int";
   add_member, stream, s_name, -1, "z", "int";
+  cursize += (4*3);
   add_member, stream, s_name, -1, "intensity", "short";
+  cursize += 2;
   add_member, stream, s_name, -1, "bitfield", "char";
   add_member, stream, s_name, -1, "classification", "char";
   add_member, stream, s_name, -1, "scan_angle_rank", "char";
+  cursize += (1*3);
   if(v_min == 1 && v_maj == 0) {
     add_member, stream, s_name, -1, "file_marker", "char";
     add_member, stream, s_name, -1, "user_bit_field", "short";
+    cursize += 1 + 2;
   } else {
     add_member, stream, s_name, -1, "user_data", "char";
     add_member, stream, s_name, -1, "point_source_id", "short";
+    cursize += 1 + 2;
   }
   if(format == 1 || format == 3 || format == 4 || format == 5) {
     add_member, stream, s_name, -1, "gps_time", "double";
+    cursize += 8;
   }
   if(format == 2 || format == 3 || format == 5) {
     add_member, stream, s_name, -1, "red", "short";
     add_member, stream, s_name, -1, "green", "short";
     add_member, stream, s_name, -1, "blue", "short";
+    cursize += (4*3);
     if(format == 2) {
       add_member, stream, s_name, 20, "eaarl_rn", "int";
+      cursize += 2;
     } else {
       add_member, stream, s_name, 28, "eaarl_rn", "int";
+      cursize += 2;
     }
   }
   if(format == 4 || format == 5) {
     add_member, stream, s_name, -1, "wf_packet_desc_index", "char";
+    cursize += 1;
     add_member, stream, s_name, -1, "wf_packet_offset", "long";
+    cursize += 8;
     add_member, stream, s_name, -1, "wf_packet_size", "int";
+    cursize += 4;
     add_member, stream, s_name, -1, "wf_return_offset", "float";
+    cursize += 4;
     add_member, stream, s_name, -1, "wf_xt", "float";
     add_member, stream, s_name, -1, "wf_yt", "float";
     add_member, stream, s_name, -1, "wf_zt", "float";
+    cursize += (4*3);
+  }
+
+  extra = stream.header.point_data_record_len - cursize;
+  if(extra > 0) {
+    add_member, stream, s_name, -1, "extra", "char", extra;
   }
 
   install_struct, stream, s_name;
