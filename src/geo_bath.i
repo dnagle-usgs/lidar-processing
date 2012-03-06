@@ -253,17 +253,6 @@ See define_bath_ctl()
    extern edb, soe_day_start, bath_ctl, tans, pnav, type, utm, depth_all, rn_arr, rn_arr_idx, ba_depth, bd_depth;
    depth_all = [];
    
-   /* check to see if required parameters have been initialized */
-
-/*
-   if (!(type)) {
-    write, "BATH_CTL structure not initialized.  Running define_bath_ctl... \n";
-     type=define_bath_ctl(junk);
-     write, "\n";
-   }
-   write, "BATH_CTL initialized to : \r";
-*/
-
    /* define cmin and cmax depending on type */
    if (type == "tampabay") {
      cmin = -6;
@@ -338,104 +327,9 @@ See define_bath_ctl()
 
     if (_ytk) tkcmd, "destroy .seg";
 
-    /* if ext_bad_att is set, find all points having elevation = ht 
-        of airplane 
-    */
-/*
-    if (ext_bad_att && is_array(depth_all)) {
-        write, "Extracting and writing false first points";
-        // compare depth.elevation within 20m  of depth.melevation 
-	elv_thresh = (depth_all.melevation-2000);
-        ba_indx = where(depth_all.elevation > elv_thresh);
-	ba_count += numberof(ba_indx);
-	ba_depth = depth_all;
-	deast = depth_all.east;
-   	if ((is_array(ba_indx))) {
-	  deast(ba_indx) = 0;
-        }
-	 dnorth = depth_all.north;
-   	if ((is_array(ba_indx))) {
-	 dnorth(ba_indx) = 0;
-	}
-	depth_all.east = deast;
-	depth_all.north = dnorth;
-
-	// compute array for bad attitude (ba_depth) to write to a file 
-	ba_indx_r = where(ba_depth.elevation < elv_thresh);
-	bdeast = ba_depth.east;
-   	if ((is_array(ba_indx_r))) {
-	 bdeast(ba_indx_r) = 0;
- 	}
-	bdnorth = ba_depth.north;
-   	if ((is_array(ba_indx_r))) {
-	 bdnorth(ba_indx_r) = 0;
-	}
-	ba_depth.east = bdeast;
-	ba_depth.north = bdnorth;
-
-      } 
-*/
-
-      /* if ext_bad_depth is set, find all points having depth 
-         and bath = 0  
-      */
-/*
-      if (ext_bad_depth && is_array(depth_all)) {
-        write, "Extracting false depths ";
-        // compare depth.depth with 0 
-        bd_indx = where(depth_all.depth == 0);
-	bd_count += numberof(ba_indx);
-	bd_depth = depth_all;
-	deast = depth_all.east;
-	deast(bd_indx) = 0;
-	dnorth = depth_all.north;
-	dnorth(bd_indx) = 0;
-	//depth_all.east = deast;
-	//depth_all.north = dnorth;
-
-	// compute array for bad depth (bd_depth) to write to a file 
-	bd_indx_r = where(bd_depth.depth != 0);
-	if (is_array(bd_indx_r)) {
-	  bdeast = bd_depth.east;
-	  bdeast(bd_indx_r) = 0;
-	  bdnorth = bd_depth.north;
-	  bdnorth(bd_indx_r) = 0;
-	  bd_depth.east = bdeast;
-	  bd_depth.north = bdnorth;
-  	}
-
-      } 
-*/
-
-
     write, "\nStatistics: \r";
     write, format="Total number of records processed = %d\n",tot_count;
-/*
-    write, format="Total number of records with false first "+
-                   "returns data = %d\n",ba_count;
-    write, format = "Total number of records with false depth data = %d\n",
-                    bd_count;
-    write, format="Total number of GOOD data points = %d \n",
-                   (tot_count-ba_count-bd_count);
 
-    if ( tot_count != 0 ) {
-       pba = float(ba_count)*100.0/tot_count;
-       write, format = "%5.2f%% of the total records had "+
-                       "false first returns! \n",pba;
-    } else 
-	write, "No good returns found"
-
-    if ( ba_count > 0 ) {
-      if (tot_count != ba_count) {
-        pbd = float(bd_count)*100.0/(tot_count-ba_count);
-      } else {
-	pbd = 100.0;
-      }
-      write, format = "%5.2f%% of total records with good "+
-                      "first returns had false depth! \n",pbd; 
-    } else 
-	write, "No bathy records found"
-*/
     no_append = 0;
     rn_arr_idx = (rn_arr(dif,)(,cum)+1)(*);	
     return depth_all;
