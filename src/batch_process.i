@@ -1114,13 +1114,12 @@ func show_files(files=, str=) {
   }
 }
 
-func batch_rcf(dirname, fname=, buf=, w=, tw=, fbuf=, fw=, no_rcf=, mode=, meta=, prefilter_min=, prefilter_max=, clean=, compare_noaa=, merge=, write_merge=, readedf=, readpbd=, writeedf=, writepbd=, rcfmode=, datum=, fsmode=, wfs=, searchstr=, bmode=, interactive=, onlyupdate=, selectmode=, tile_id=) {
+func batch_rcf(dirname, fname=, buf=, w=, tw=, fbuf=, fw=, no_rcf=, mode=, meta=, prefilter_min=, prefilter_max=, clean=, merge=, write_merge=, readedf=, readpbd=, writeedf=, writepbd=, rcfmode=, datum=, fsmode=, wfs=, searchstr=, bmode=, interactive=, onlyupdate=, selectmode=, tile_id=) {
 /* DOCUMENT
-func batch_rcf(dirname, fname=, buf=, w=, tw=, fbuf=, fw=, no_rcf=,
-          mode=, meta=, prefilter_min=, prefilter_max=, clean=,
-          compare_noaa=, merge=, write_merge=, readedf=, readpbd=,
-          writeedf=, writepbd=, rcfmode=, datum=, fsmode=, wfs=,
-          searchstr=, bmode=, interactive=, onlyupdate=)
+func batch_rcf(dirname, fname=, buf=, w=, tw=, fbuf=, fw=, no_rcf=, mode=,
+          meta=, prefilter_min=, prefilter_max=, clean=, merge=, write_merge=,
+          readedf=, readpbd=, writeedf=, writepbd=, rcfmode=, datum=, fsmode=,
+          wfs=, searchstr=, bmode=, interactive=, onlyupdate=)
 
 This function batch processes using the rcf filter.
 
@@ -1160,9 +1159,6 @@ Input:
   clean=   : Set to 1 to eliminate data points that have already
          been determined as erroneous for one of the data
          structure fields.
-
-  compare_noaa=  : Set to 1 to compare bathy data with the NOAA
-             data in the florida keys.
 
   merge=   : Set to 0 to not merge all the files in directory
          dirname before filtering (as defined by searchstr).
@@ -1225,7 +1221,6 @@ Original amar nayegandhi. Started 12/06/02.
   if (!meta) meta = 1;
   if (!clean) clean = 1;
   default, dorcf, 1;
-  if (compare_noaa && is_void(datum)) datum = "n88";
   if (!mode) mode=2;
   default, bmode,   1;
   default, rcfmode, 2;
@@ -1362,7 +1357,6 @@ Original amar nayegandhi. Started 12/06/02.
       fn = fn_all(i);
       oldfn = split_path(fn,1,ext=1);
       if (merge) fnametag = "_merged";
-      if (compare_noaa) fnametag = fnametag+"_cnoaa";
       if ((mode == 1) && (strglob("*_v*",fn))) fnametag = fnametag+"_fs";
       if (rcfmode >=1) {
         if (rcfmode ==1) rcftag="_rcf";
@@ -1495,27 +1489,6 @@ Original amar nayegandhi. Started 12/06/02.
       if (is_array(pfindx)) {
         eaarl = eaarl(pfindx);
       } else continue;
-    }
-    if (!is_array(eaarl))  continue;
-    if (!(is_void(compare_noaa))) {
-      //comparing data to noaa bathy data
-      if (mode == 2) {
-        if (vnametag) {
-          vnametag = vnametag+"_cn"
-        } else {
-          vnametag = "_cn"
-        }
-        if (fnametag) {
-          fnametag = fnametag+"_cnoaa"
-        } else {
-          fnametag = "_cnoaa"
-        }
-        write, "comparing data to noaa bathy data";
-        if (!is_array(noaa_data)) {
-          noaa_data = read_4wd_ascii("~/lidar-processing/noaa/", "bathy_data_keys_0_40m_min_max.txt");
-        }
-        eaarl = compare_data(noaa_data, eaarl);
-      }
     }
     if (!is_array(eaarl)) continue;
 
@@ -1723,8 +1696,6 @@ prefilter_min=, prefilter_max=, rcfmode=, buf=, w=, n=, meta=, verbose=) {
     The mode= parameter is now "fs" instead of 1, etc.
 
     The fname= parameter is replaced by files=.
-
-    No support for the special-case compare_noaa= option.
 
     No support for merging *without* writing the merged files.
 
