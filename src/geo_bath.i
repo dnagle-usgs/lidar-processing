@@ -222,9 +222,8 @@ SEE ALSO: make_fs_bath, make_bathy
    return &data
 }
 
-func make_bathy(latutm=, q=, ext_bad_att=, ext_bad_depth=, avg_surf=) {
-/* DOCUMENT make_bathy(opath=,ofname=,ext_bad_att=, ext_bad_depth=, 
-            latlon=, llarr=)
+func make_bathy(latutm=, q=, avg_surf=) {
+/* DOCUMENT make_bathy(latutm=, q=, avg_surf=)
 
  This function allows a user to define a region on the gga plot 
 of flightlines (usually window 6) to write out a 'level 1' file 
@@ -233,11 +232,6 @@ are:
 
  opath 		ouput path where the output file must be written 
  ofname 	output file name 
- ext_bad_att  	Extract bad first return points (those points that 
-                were termed 'bad' in the first surface return function) 
-                and write these points to a file.
- ext_bad_depth  Extract the points that failed to show any depth using 
-                the run_bath function and write these points to a file.
 
 Returns:
 This function returns the array depth_arr.

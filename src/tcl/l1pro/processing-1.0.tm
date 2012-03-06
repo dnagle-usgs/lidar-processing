@@ -102,7 +102,7 @@ proc ::l1pro::processing::process {} {
         }
         bathy {
             set cmd "$::pro_var = make_bathy(latutm = 1, q = q,\
-                    ext_bad_depth=1, ext_bad_att=1, avg_surf=$::avg_surf)"
+                    avg_surf=$::avg_surf)"
             }
         veg {
             set cmd "$::pro_var = make_veg(latutm=1, q=q, ext_bad_att=1,\

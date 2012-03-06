@@ -507,7 +507,7 @@ func reprocess_data_along_transect(new_pnav, outdir=, ofname_tag=, rtn=, w= ) {
   }
 
   if (rtn == 2) {
-    data_re = make_bathy(latutm=1, q=q, ext_bad_depth=1, ext_bad_att=1, avg_surf=0);
+    data_re = make_bathy(latutm=1, q=q, avg_surf=0);
   }
 
   if (rtn == 1) {
