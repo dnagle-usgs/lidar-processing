@@ -992,11 +992,11 @@ func strip_flightline_edges(data, startpulse=, endpulse=) {
   Remove the edges of the flightlines based on pulse number.
 
   Parameters:
-    data: Input data array with ".rn" field
+    data: Input data array with ".rn" field.
   Options:
-    startpulse= Remove all pulses before this number
+    startpulse= Remove all pulses before and including this number.
         startpulse=10 (default)
-    endpulse= Remove all pulses after this number
+    endpulse= Remove all pulses after and including this number.
         endpulse=110 (default)
 
   There are typically 119 laser pulses per raster.  Therefore, you should
@@ -1005,9 +1005,10 @@ func strip_flightline_edges(data, startpulse=, endpulse=) {
   Returns:
     returns the indices to the data after the edges are removed
 */
-  if (is_void(startpulse)) startpulse = 10;
-  if (is_void(endpulse)) endpulse = 110;
-
-  idx = where(((data.rn>>24) > startpulse) & ((data.rn>>24) < endpulse));
-  return idx
+  local pulse;
+  default, startpulse, 10;
+  default, endpulse, 110;
+  parse_rn, data.rn, , pulse;
+  idx = where((startpulse < pulse) & (pulse < endpulse));
+  return idx;
 }
