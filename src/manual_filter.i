@@ -987,9 +987,10 @@ func batch_snell_be_to_bathy(srcdir, outdir=, searchstr=) {
   }
 }
 
-func strip_flightline_edges(data, startpulse=, endpulse=) {
-/* DOCUMENT strip_flightline(data, startpulse=, endpulse=)
-  Remove the edges of the flightlines based on pulse number.
+func strip_flightline_edges(data, startpulse=, endpulse=, idx=) {
+/* DOCUMENT strip_flightline(data, startpulse=, endpulse=, idx=)
+  Remove the edges of the flightlines based on pulse number. The data without
+  the edges will be returned.
 
   Parameters:
     data: Input data array with ".rn" field.
@@ -998,17 +999,20 @@ func strip_flightline_edges(data, startpulse=, endpulse=) {
         startpulse=10 (default)
     endpulse= Remove all pulses after and including this number.
         endpulse=110 (default)
+    idx= Specifies that the indices into data should be returned instead of
+      the corresponding data.
+        idx=0     return data (default)
+        idx=1     return indices
 
-  There are typically 119 laser pulses per raster.  Therefore, you should
-  usually have 1 < firstpulse < endpulse < 119.
-
-  Returns:
-    returns the indices to the data after the edges are removed
+  There are typically 119 laser pulses per raster. Therefore, you should
+  usually have 1 <= firstpulse < endpulse <= 119.
 */
   local pulse;
   default, startpulse, 10;
   default, endpulse, 110;
+  default, idx, 0;
   parse_rn, data.rn, , pulse;
-  idx = where((startpulse < pulse) & (pulse < endpulse));
-  return idx;
+  w = where((startpulse < pulse) & (pulse < endpulse));
+  if(idx) return w;
+  return data(w);
 }
