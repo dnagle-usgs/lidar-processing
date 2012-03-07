@@ -1,3 +1,9 @@
+/******************************************************************************\
+* This file was moved to the attic on 2012-03-07. The code in this file was    *
+* primarily used for a specific dataset and are no longer generally relevant   *
+* in ALPS.                                                                     *
+\******************************************************************************/
+
 func read_4wd_ascii(ipath, ifname, no_lines=) {
 /* DOCUMENT read_4wd_ascii(ipath, ifname, no_lines=)
     Original amar nayegandhi 02/28/03
