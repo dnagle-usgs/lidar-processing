@@ -254,24 +254,3 @@ func remove_bow_effect(data, factor=, mode=) {
         data.lelv -= factor*sin(((data.rn>>24)/120.)*pi);
   return data
 }
-
-func strip_flightline_edges(data, startpulse=, endpulse=) {
-/* DOCUMENT func strip_flightline(data, startpulse=, endpulse=)
-   amar nayegandhi 08/01/2005
-   This function remove the edges of the flightlines based on pulse number.
-   INPUT: 
-	data: Input data array
-	startpulse = remove all pulses before this number.  Default = 10
-	endpulse = remove all pulses after this number.  Default = 110.
- 	There are 120 laser pulses per raster.  Therefore,
-	1 < firstpulse < endpulse < 120.
-   OUTPUT:
-	returns the indices to the data after the edges are removed.
-*/
-
-  if (is_void(startpulse)) startpulse = 10;
-  if (is_void(endpulse)) endpulse = 110;
-  
-  idx = where(((data.rn>>24) > startpulse) & ((data.rn>>24) < endpulse));
-  return idx
-}
