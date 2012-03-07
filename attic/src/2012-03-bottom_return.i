@@ -1,3 +1,8 @@
+/******************************************************************************\
+* This file was moved to the attic on 2012-03-07. The code in this file has    *
+* not been substantively modified since 2003 and is no longer in active use.   *
+\******************************************************************************/
+
 require, "eaarl.i";
 
 struct BOTRET {
