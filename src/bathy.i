@@ -390,7 +390,7 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=, verbose=) {
     if((db(lpx) <= l_wing) && (db(rpx) <= r_wing)) {
       mx = mvi;
       if(graph) {
-        show_pulse_wings(l_wing,r_wing);
+        show_pulse_wings, l_wing, r_wing;
         plg,  [bath_ctl.a(mx,i,1)+1.5,0], [mx,mx],
           marks=0, type=2, color="blue";
         plmk, bath_ctl.a(mx,i,1)+1.5, mx,
@@ -405,7 +405,7 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=, verbose=) {
       return rv;
     } else {
       if(graph) {
-        show_pulse_wings(l_wing,r_wing);
+        show_pulse_wings, l_wing, r_wing;
         plmk, bath_ctl.a(mvi,i,chn)+1.5, mvi+1,
           msize=1.0, marker=6, color="red", width=10;
         plt, "Bad pulse\n shape",
