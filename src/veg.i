@@ -62,6 +62,100 @@ func veg_winpix(m) {
   rn;
 }
 
+func run_vegx(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, use_be_centroid=, use_be_peak=, hard_surface=, alg_mode=, multi_peaks=) {
+/* DOCUMENT depths = run_vegx(rn=, len=, start=, stop=, center=, delta=, last=,
+  graph=, pse=, use_be_centroid=, use_be_peak=, hard_surface=, multi_peaks=)
+
+  This returns an array of VEGPIX or VEGPIXS.
+
+  One of the following pairs of options must provided to specify which data to
+  process:
+    rn, len
+    center, delta
+    start, stop
+
+  Options:
+    rn = Raster number
+    len = Number of rasters to process, starting from rn.
+	start = Raster number to start with.
+    stop = Ending raster number.
+    center = Center raster when doing before and after.
+    delta = Number of rasters to process before and after.
+    pse = If specified, this is the length of time in milleseconds to pause
+      between calls to ex_veg. (Default: pse=0)
+	multi_peaks = return only first and last peaks (default), or return first 10 peaks.
+	  Deault: 0 (first and last)
+
+  Options passed to ex_veg (see help, ex_veg for details):
+    graph = (Default: graph=0)
+    last = (Default: last=250)
+    use_be_centroid =
+    use_be_peak =
+    hard_surface =
+
+  SEE ALSO: first_surface, ex_veg, ex_veg_all
+*/
+  extern ops_conf, veg_conf;
+  default, graph, 0;
+  default, last, 250;
+  default, pse, 0;
+  default, multi_peaks, 0;
+
+  ops_conf_validate, ops_conf;
+
+  define_veg_conf;
+
+  if (is_void(rn) || is_void(len)) {
+    if (!is_void(center) && !is_void(delta)) {
+      rn = center - delta;
+      len = 2 * delta;
+    } else if (!is_void(start) && !is_void(stop)) {
+      rn = start - 1;
+      len = stop - start + 1;
+    } else {
+      write, "Input parameters not correctly defined. See help, run_veg. Please start again.";
+      return 0;
+    }
+  }
+
+  update_freq = 10;
+  if (len >= 200) update_freq = 20;
+  if (len >= 400) update_freq = 50;
+
+  if (multi_peaks) {
+	depths = array(VEGPIXS, 120, len);
+  } else {
+	depths = array(VEGPIX, 120, len );
+  }
+
+  if (graph) animate, 1;
+  for (j = 1; j <= len; j++) {
+    if ((j % update_freq) == 0) {
+      if (_ytk) {
+        tkcmd, swrite(format="set progress %d", j*100/len);
+      } else {
+        write, format="   %d of %d   \r", j, len;
+      }
+    }
+
+    for (i = 1; i <= 120; i++) {
+	  if (multi_peaks) {
+		depths(i,j) = ex_veg_all( rn+j, i, last=last, graph=graph, 
+		use_be_centroid=use_be_centroid,use_be_peak=use_be_peak);
+	  } else {
+		depths(i,j) = ex_veg(rn+j, i, last=last, graph=graph, 
+		use_be_centroid=use_be_centroid, use_be_peak=use_be_peak,
+		hard_surface=hard_surface, alg_mode=alg_mode);
+	  }
+      if (pse) pause, pse;
+    }
+  }
+  if (!_ytk) write, format="%s", "\n"; // clear \r from above
+  if (graph) animate, 0;
+
+  return depths;
+}
+
 func run_veg(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=,
 use_be_centroid=, use_be_peak=, hard_surface=, alg_mode=) {
 /* DOCUMENT depths = run_veg(rn=, len=, start=, stop=, center=, delta=, last=,
@@ -320,7 +414,7 @@ Returns:
           grow, veg_all, veg;
           tot_count += numberof(veg.elevation);
         } else {
-          d = run_veg_all(start=rn_arr(1,i), stop=rn_arr(2,i),use_be_peak=use_be_peak);
+	  d = run_veg_all(start=rn_arr(1,i), stop=rn_arr(2,i),use_be_peak=use_be_peak);
           a = [];
           write, "Using make_fs_veg_all (multiple peaks!) for vegetation...";
           veg = make_fs_veg_all(d, rrr);
