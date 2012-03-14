@@ -63,8 +63,8 @@ func veg_winpix(m) {
 }
 
 func run_vegx(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, use_be_centroid=, use_be_peak=, hard_surface=, alg_mode=, multi_peaks=) {
-/* DOCUMENT depths = run_vegx(rn=, len=, start=, stop=, center=, delta=, last=,
-  graph=, pse=, use_be_centroid=, use_be_peak=, hard_surface=, multi_peaks=)
+/* DOCUMENT depths = run_vegx(rn=, len=, start=, stop=, center=, delta=, last=, graph=, 
+     pse=, use_be_centroid=, use_be_peak=, hard_surface=, alg_mode=, multi_peaks=)
 
   This returns an array of VEGPIX or VEGPIXS.
 
