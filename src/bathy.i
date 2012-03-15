@@ -231,35 +231,22 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=, verbose=) {
     rp = ex_bath_rp;
   }
 
-  chn = 1; // waveform channel to use
-  n = numberof(*rp.rx(i, chn));
   rv.sa = rp.sa(i);
-  if(n == 0)
-    return rv;
+  chn = 0;
+  do {
+    chn++;
+    w = *rp.rx(i, chn);
+    n = numberof(w);
+    if(n == 0)
+      return rv;
+    // list of saturated samples
+    nsat = where(w == 0);
+    // saturated sample count
+    numsat = numberof(nsat);
+  } while(numsat > bath_ctl.maxsat && chn < 3);
 
-  w = *rp.rx(i, chn);
-  nsat = where(w == 0);            // Create a list of saturated samples
-  numsat = numberof(nsat);         // Count how many are saturated
-  // Added by AN to use red or blue channels if waveform is saturated
-  if(numsat > bath_ctl.maxsat) {
-    chn = 2;  //use red channel waveform
-    n = numberof(*rp.rx(i, chn));
-    w = *rp.rx(i, chn);
-    nsat = where(w == 0);         // Create a list of saturated samples
-    numsat = numberof(nsat);      // Count how many are saturated
-  }
-  if(numsat > bath_ctl.maxsat) {
-    chn = 3;  //use blue channel waveform
-    n = numberof(*rp.rx(i, chn));
-    w = *rp.rx(i, chn);
-    nsat = where(w == 0);         // Create a list of saturated samples
-    numsat = numberof(nsat);      // Count how many are saturated
-  }
-  bath_ctl.a(1:n, i) = float((~w+1) - (~w(1)+1));
   dbias = int(~w(1)+1);
-
-  nsat = where(w == 0);            // Create a list of saturated samples
-  numsat = numberof(nsat);         // Count how many are saturated
+  bath_ctl.a(1:n, i) = float((~w+1) - dbias);
 
   // Dont bother processing returns with more than bathctl.maxsat saturated
   // values.
