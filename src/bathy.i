@@ -393,10 +393,10 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=, verbose=) {
     } else {
       if(graph) {
         show_pulse_wings, l_wing, r_wing;
-        plmk, bath_ctl.a(mvi,i,chn)+1.5, mvi+1,
+        plmk, bath_ctl.a(mvi,i,1)+1.5, mvi+1,
           msize=1.0, marker=6, color="red", width=10;
         plt, "Bad pulse\n shape",
-          mvi+2.0, bath_ctl.a(mvi,i,chn)+2.0, tosys=1, color="red";
+          mvi+2.0, bath_ctl.a(mvi,i,1)+2.0, tosys=1, color="red";
       }
       if(verbose)
         write,"Rejected: Pulse shape. \n";
@@ -404,11 +404,11 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=, verbose=) {
   } else {
     if(graph)
       plt, "Below\nthreshold", mvi+2.0,
-        bath_ctl.a(mvi,i,chn)+2.0, tosys=1,color="red";
+        bath_ctl.a(mvi,i,1)+2.0, tosys=1,color="red";
     if(verbose)
       write, "Rejected: below threshold\n";
     rv.idx = 0;
-    rv.bottom_peak = bath_ctl.a(mvi,i,chn);
+    rv.bottom_peak = bath_ctl.a(mvi,i,1);
     //new
     rv.first_peak = mv1;
     return rv;
@@ -435,8 +435,8 @@ func plot_bath_ctl(chn, n, i, thresh=, first=, last=, laser_decay=, agc=) {
     plg, [0,thresh], [first,first], marks=0, color="green", width=7;
     plg, [0,thresh], [last,last], marks=0, color="red", width=7;
   }
-  plmk, bath_ctl.a(1:n,i,chn), msize=.2, marker=1, color="black";
-  plg, bath_ctl.a(1:n,i,chn), color=black, width=4;
+  plmk, bath_ctl.a(1:n,i,1), msize=.2, marker=1, color="black";
+  plg, bath_ctl.a(1:n,i,1), color=black, width=4;
   if(!is_void(laser_decay)) plg, laser_decay, color="magenta";
   if(!is_void(agc)) plg, agc*40, color=[100,100,100];
 }
