@@ -338,7 +338,7 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=, verbose=) {
 
   // Added by AN - May/June 2011 to try and find the last peak of the resultant (db) waveform.  The algorithm used to find only the "max" peak of db.
   db_good = db(first:n);
-  db_good = remove_noisy_tail(db_good, thresh=bath_ctl.thresh, verbose=verbose);
+  db_good = remove_noisy_tail(db_good, thresh=thresh, verbose=verbose);
   if (numberof(db_good) < 5) {
     if (graph) {
         plt, swrite("Waveform too short \n after removing noisy tail.\n Giving up."), mvi, bath_ctl.a(mvi)+2.0, tosys=1, color="red";
@@ -348,9 +348,8 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=, verbose=) {
     }
     return rv;
   }
-  xr = extract_peaks_first_deriv(db_good, thresh=bath_ctl.thresh);
+  xr = extract_peaks_first_deriv(db_good, thresh=thresh);
 
-  //xr = where(abs((dd>=bath_ctl.thresh)(dif)) == 1);
   nxr = numberof(xr);
   if (nxr == 0) {
     if (graph) plt, swrite("No significant inflection\n in bacscattered waveform\n after decay.  Giving up"), mvi, bath_ctl.a(mvi)+2.0, tosys=1, color="red";
@@ -389,7 +388,6 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=, verbose=) {
       rv.bottom_peak = bath_ctl.a(mx);
       //new
       rv.first_peak = mv1;
-      return rv;
     } else {
       if(graph) {
         show_pulse_wings, l_wing, r_wing;
@@ -411,7 +409,6 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=, verbose=) {
     rv.bottom_peak = bath_ctl.a(mvi);
     //new
     rv.first_peak = mv1;
-    return rv;
   }
   return rv;
 }
