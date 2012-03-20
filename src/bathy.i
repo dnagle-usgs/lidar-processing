@@ -271,11 +271,10 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=, verbose=) {
   if((numsat > 1) && (nsat(1) <= 12)) {
     if(nsat(dif)(max) == 1) {        // only surface saturated
       last_surface_sat = nsat(0);   // so use last one
-      escale = 255 - dbias;
     } else {                         // bottom must be saturated too
       last_surface_sat = nsat(where(nsat(dif) > 1))(1);
-      escale = 255 - dbias;
     }
+    escale = 255 - dbias;
   } else { // do this when none saturated
     wflen = numberof(w);
     if(wflen > 18) {
@@ -284,9 +283,8 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=, verbose=) {
     } else {
       last_surface_sat = 10;
     }
-    if(wflen < 10) wfl = wflen;
-    else wfl = 10;
-    escale = (255 - w(1:wfl)(min)) - dbias;
+    wfl = min(10, wflen);
+    escale = 255 - dbias - w(1:wfl)(min);
   }
 
   laser_decay     = exp( bath_ctl.laser * attdepth) * escale;
