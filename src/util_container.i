@@ -173,9 +173,9 @@ func pbd_save(file, vname, data) {
   default, vname, file_rootname(file_tail(file));
   sanitize_vname, vname;
   f = createb(file, i86_primitives);
+  save, f, vname;
   add_variable, f, -1, vname, structof(data), dimsof(data);
   get_member(f, vname) = data;
-  save, f, vname;
   close, f;
 }
 
