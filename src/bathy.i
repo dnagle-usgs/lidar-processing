@@ -268,14 +268,22 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=, verbose=) {
       return rv;
     }
 
+  // For EAARL, first return saturation should always start in first 12 samples.
+  // If a saturated first return is found...
   if((numsat > 1) && (nsat(1) <= 12)) {
-    if(nsat(dif)(max) == 1) {        // only surface saturated
-      last_surface_sat = nsat(0);   // so use last one
-    } else {                         // bottom must be saturated too
+    // If all saturated samples are contiguous, only surface is saturated.
+    if(nsat(dif)(max) == 1) {
+      // Last surface saturated sample is the last in nsat.
+      last_surface_sat = nsat(0);
+    // Otherwise, bottom is also saturated.
+    } else {
+      // Last surface saturated sample is where the first contiguous series
+      // ends.
       last_surface_sat = nsat(where(nsat(dif) > 1))(1);
     }
     escale = 255 - dbias;
-  } else { // do this when none saturated
+  // Else if no saturated first return is found...
+  } else {
     wflen = numberof(w);
     if(wflen > 18) {
       wflen = 18;
