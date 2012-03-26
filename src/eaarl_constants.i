@@ -52,9 +52,6 @@ NS2MAIR = CNS/KAIR*0.5;
 CNSH2O2X = CNS/KH2O*0.5;
 CNSH2O2XF = CNSH2O2X*3.280839895;
 
-// Attenuation depths in water for calculating the bottom detection threshold
-attdepth = span(0.0, 256 * CNSH2O2X, 256 );
-
 local ELLIPSOID;
 /* DOCUMENT ELLIPSOID
   A Yeti hash containing constants that define the ellipsoids implemented in

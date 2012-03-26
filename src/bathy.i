@@ -218,6 +218,7 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=, verbose=) {
   default, ex_bath_rn, -1;
   default, graph, 0;
   default, verbose, graph;
+  default, oldbath, 0;
 
   rv = BATHPIX();       // setup the return struct
   rv.rastpix = rn + (i<<24);
@@ -295,8 +296,12 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=, verbose=) {
     escale = 255 - dbias - w(1:wfl)(min);
   }
 
-  laser_decay     = exp( bath_ctl.laser * attdepth) * escale;
-  secondary_decay = exp( bath_ctl.water * attdepth) * escale;
+  // Attenuation depths in water
+  attdepth = indgen(0:255) * CNSH2O2X;
+  if(oldbath) attdepth *= (256/255.);
+
+  laser_decay     = exp(bath_ctl.laser * attdepth) * escale;
+  secondary_decay = exp(bath_ctl.water * attdepth) * escale;
 
   laser_decay(last_surface_sat:0) = laser_decay(1:0-last_surface_sat+1) +
     secondary_decay(1:0-last_surface_sat+1)*.25;
