@@ -158,8 +158,8 @@ func show_bath_constants {
   }
 }
 
-func ex_bath(rn, i, last=, graph=, win=, xfma=, verbose=) {
-/* DOCUMENT ex_bath(raster_number, pulse_index)
+func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) {
+/* DOCUMENT ex_bath(raster_number, pulse_number)
   See run_bath for details on usage.
 
   This function returns a BATHPIX structure element
@@ -171,7 +171,7 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=, verbose=) {
   bath_ctl = BATH_CTL(laser=-2.5,water=-0.3,agc=-0.3,thresh=3)
 */
 /*
-  The following developed using 7-14-01 data at rn = 46672 data. (sod=70510)
+  The following developed using 7-14-01 data at raster = 46672 data. (sod=70510)
   Check waveform samples to see how many samples are
   saturated.
   At this time, this function checks only for the following conditions:
@@ -221,22 +221,22 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=, verbose=) {
   default, oldbath, 0;
 
   rv = BATHPIX();       // setup the return struct
-  rv.rastpix = rn + (i<<24);
+  rv.rastpix = raster_number + (pulse_number<<24);
 
-  if(ex_bath_rn != rn) {  // simple cache for raster data
-    r = get_erast(rn= rn);
+  if(ex_bath_rn != raster_number) {  // simple cache for raster data
+    r = get_erast(rn=raster_number);
     rp = decode_raster(r);
-    ex_bath_rn = rn;
+    ex_bath_rn = raster_number;
     ex_bath_rp = rp;
   } else {
     rp = ex_bath_rp;
   }
 
-  rv.sa = rp.sa(i);
-  chn = 0;
+  rv.sa = rp.sa(pulse_number);
+  channel = 0;
   do {
-    chn++;
-    w = *rp.rx(i, chn);
+    channel++;
+    w = *rp.rx(pulse_number, channel);
     n = numberof(w);
     if(n == 0)
       return rv;
@@ -244,7 +244,7 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=, verbose=) {
     nsat = where(w == 0);
     // saturated sample count
     numsat = numberof(nsat);
-  } while(numsat > bath_ctl.maxsat && chn < 3);
+  } while(numsat > bath_ctl.maxsat && channel < 3);
 
   dbias = int(~w(1)+1);
   bath_ctl.a(1:n) = float((~w+1) - dbias);
@@ -262,7 +262,7 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=, verbose=) {
           (limits()(1:2)(dif)/2)(1),
           (limits()(3:4)(dif)/2)(1),
           tosys=1,color="red";
-        plot_bath_ctl, chn, n, i, last=last;
+        plot_bath_ctl, channel, n, pulse_number, last=last;
       }
       if(verbose)
         write, format="Rejected: Saturation. numsat=%d\n", numsat;
@@ -334,7 +334,7 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=, verbose=) {
     window, win;
     gridxy, 2, 2;
     if(xfma) fma;
-    plot_bath_ctl, chn, n, i, thresh=thresh, laser_decay=laser_decay, agc=agc;
+    plot_bath_ctl, channel, n, pulse_number, thresh=thresh, laser_decay=laser_decay, agc=agc;
     plmk, da(1:n), msize=.2, marker=1, color="black";
     plg, da(1:n);
     plmk, db(1:n), msize=.2, marker=1, color="blue";
@@ -394,7 +394,7 @@ func ex_bath(rn, i, last=, graph=, win=, xfma=, verbose=) {
           msize=1.0, marker=7, color="blue", width=10;
         plt, swrite(format="    %3dns\n     %3.0f sfc\n    %3.1f cnts(blue)\n   %3.1f cnts(black)\n     (~%3.1fm)", mvi, mv1, mv, bath_ctl.a(mx), (mvi-7)*CNSH2O2X), mx, bath_ctl.a(mx)+3.0, tosys=1, color="blue";
       }
-      rv.sa = rp.sa(i);
+      rv.sa = rp.sa(pulse_number);
       rv.idx = mx;
       rv.bottom_peak = bath_ctl.a(mx);
       //new
