@@ -224,8 +224,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   rv.rastpix = raster_number + (pulse_number<<24);
 
   if(ex_bath_rn != raster_number) {  // simple cache for raster data
-    r = get_erast(rn=raster_number);
-    rp = decode_raster(r);
+    rp = decode_raster(get_erast(rn=raster_number));
     ex_bath_rn = raster_number;
     ex_bath_rp = rp;
   } else {
