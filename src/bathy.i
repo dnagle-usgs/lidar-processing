@@ -284,14 +284,14 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     escale = 255 - dbias;
   // Else if no saturated first return is found...
   } else {
-    wflen = numberof(wf);
-    if(wflen > 18) {
-      wflen = 18;
+    wfl = numberof(wf);
+    if(wfl > 18) {
+      wfl = 18;
       last_surface_sat = wf(1:10)(mnx);
     } else {
       last_surface_sat = 10;
     }
-    wfl = min(10, wflen);
+    wfl = min(10, wfl);
     escale = 255 - dbias - wf(1:wfl)(min);
   }
 
