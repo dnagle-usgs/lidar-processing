@@ -256,12 +256,11 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
         window, win;
         gridxy, 2, 2;
         if(xfma) fma;
-        last = wflen;
         plt, swrite(format="%d points\saturatedurated.", numsat),
           (limits()(1:2)(dif)/2)(1),
           (limits()(3:4)(dif)/2)(1),
           tosys=1,color="red";
-        plot_bath_ctl, channel, wf, last=last;
+        plot_bath_ctl, channel, wf, last=wflen;
       }
       if(verbose)
         write, format="Rejected: Saturation. numsat=%d\n", numsat;
