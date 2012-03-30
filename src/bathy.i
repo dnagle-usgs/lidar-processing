@@ -181,7 +181,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     4) Bottom signal above specified threshold
   We'll used this infomation to develope the threshold
   array for this waveform.
-  We come out of this with the last_surface_sat set to the last
+  We come out of this with the surface_sat_end set to the last
   saturated value of surface return.
   The 12 represents the last place a surface can be found
 
@@ -199,7 +199,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
  Variables:
    saturated          A list of saturated pixels in this waveform
    numsat        Number of saturated pixels in this waveform
-   last_surface_sat  The last pixel saturated in the surface region of the
+   surface_sat_end  The last pixel saturated in the surface region of the
                Waveform.
    escale        The maximum value of the exponential pulse decay.
    laser_decay         The primary exponential decay array which mostly describes
@@ -274,12 +274,12 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     // If all saturated samples are contiguous, only surface is saturated.
     if(saturated(dif)(max) == 1) {
       // Last surface saturated sample is the last in saturated.
-      last_surface_sat = saturated(0);
+      surface_sat_end = saturated(0);
     // Otherwise, bottom is also saturated.
     } else {
       // Last surface saturated sample is where the first contiguous series
       // ends.
-      last_surface_sat = saturated(where(saturated(dif) > 1))(1);
+      surface_sat_end = saturated(where(saturated(dif) > 1))(1);
     }
     escale = 255 - dbias;
   // Else if no saturated first return is found...
@@ -287,9 +287,9 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     wfl = numberof(raw_wf);
     if(wfl > 18) {
       wfl = 18;
-      last_surface_sat = raw_wf(1:min(10,wflen))(mnx);
+      surface_sat_end = raw_wf(1:min(10,wflen))(mnx);
     } else {
-      last_surface_sat = min(10,wflen);
+      surface_sat_end = min(10,wflen);
     }
     wfl = min(10, wfl);
     escale = 255 - dbias - raw_wf(1:wfl)(min);
@@ -302,13 +302,13 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   laser_decay     = exp(bath_ctl.laser * attdepth) * escale;
   secondary_decay = exp(bath_ctl.water * attdepth) * escale;
 
-  laser_decay(last_surface_sat:0) = laser_decay(1:0-last_surface_sat+1) +
-    secondary_decay(1:0-last_surface_sat+1)*.25;
-  laser_decay(1:min(wflen,last_surface_sat+1)) = escale;
+  laser_decay(surface_sat_end:0) = laser_decay(1:0-surface_sat_end+1) +
+    secondary_decay(1:0-surface_sat_end+1)*.25;
+  laser_decay(1:min(wflen,surface_sat_end+1)) = escale;
 
   agc     = 1.0 - exp( bath_ctl.agc * attdepth);
-  agc(last_surface_sat:0) = agc(1:0-last_surface_sat+1);
-  agc(1:last_surface_sat) = 0.0;
+  agc(surface_sat_end:0) = agc(1:0-surface_sat_end+1);
+  agc(1:surface_sat_end) = 0.0;
   agc = agc(1:wflen);
 
   bias = (1-agc) * -5.0;
