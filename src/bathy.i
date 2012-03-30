@@ -220,33 +220,33 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   default, verbose, graph;
   default, oldbath, 0;
 
-  rv = BATHPIX();       // setup the return struct
-  rv.rastpix = raster_number + (pulse_number<<24);
+  result = BATHPIX();       // setup the return struct
+  result.rastpix = raster_number + (pulse_number<<24);
 
   if(ex_bath_rn != raster_number) {  // simple cache for raster data
-    rp = decode_raster(get_erast(rn=raster_number));
+    raster = decode_raster(get_erast(rn=raster_number));
     ex_bath_rn = raster_number;
-    ex_bath_rp = rp;
+    ex_bath_rp = raster;
   } else {
-    rp = ex_bath_rp;
+    raster = ex_bath_rp;
   }
 
-  rv.sa = rp.sa(pulse_number);
+  result.sa = raster.sa(pulse_number);
   channel = 0;
   do {
     channel++;
-    w = *rp.rx(pulse_number, channel);
-    n = numberof(w);
+    wf = *raster.rx(pulse_number, channel);
+    n = numberof(wf);
     if(n == 0)
-      return rv;
+      return result;
     // list of saturated samples
-    nsat = where(w == 0);
+    nsat = where(wf == 0);
     // saturated sample count
     numsat = numberof(nsat);
   } while(numsat > bath_ctl.maxsat && channel < 3);
 
-  dbias = int(~w(1)+1);
-  bath_ctl.a(1:n) = float((~w+1) - dbias);
+  dbias = int(~wf(1)+1);
+  bath_ctl.a(1:n) = float((~wf+1) - dbias);
 
   // Dont bother processing returns with more than bathctl.maxsat saturated
   // values.
@@ -265,7 +265,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
       }
       if(verbose)
         write, format="Rejected: Saturation. numsat=%d\n", numsat;
-      return rv;
+      return result;
     }
 
   // For EAARL, first return saturation should always start in first 12 samples.
@@ -284,15 +284,15 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     escale = 255 - dbias;
   // Else if no saturated first return is found...
   } else {
-    wflen = numberof(w);
+    wflen = numberof(wf);
     if(wflen > 18) {
       wflen = 18;
-      last_surface_sat = w(1:10)(mnx);
+      last_surface_sat = wf(1:10)(mnx);
     } else {
       last_surface_sat = 10;
     }
     wfl = min(10, wflen);
-    escale = 255 - dbias - w(1:wfl)(min);
+    escale = 255 - dbias - wf(1:wfl)(min);
   }
 
   // Attenuation depths in water
@@ -356,14 +356,14 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     if (verbose) {
         write, "Waveform too short after removing noisy tail.  Giving up.";
     }
-    return rv;
+    return result;
   }
   xr = extract_peaks_first_deriv(db_good, thresh=thresh);
 
   nxr = numberof(xr);
   if (nxr == 0) {
     if (graph) plt, swrite("No significant inflection\n in bacscattered waveform\n after decay.  Giving up"), mvi, bath_ctl.a(mvi)+2.0, tosys=1, color="red";
-    return rv;
+    return result;
   }
   if (nxr >=1) {
     mv = db_good(xr(0));
@@ -378,7 +378,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     if((lpx < first) || (rpx > last)) {
       if(graph) plt, swrite("Too close\nto gate edge."),
         mvi, bath_ctl.a(mvi)+2.0, tosys=1, color="red";
-      return rv;
+      return result;
     }
     // define pulse wings;
     l_wing = 0.9 * mv;
@@ -393,11 +393,11 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
           msize=1.0, marker=7, color="blue", width=10;
         plt, swrite(format="    %3dns\n     %3.0f sfc\n    %3.1f cnts(blue)\n   %3.1f cnts(black)\n     (~%3.1fm)", mvi, mv1, mv, bath_ctl.a(mx), (mvi-7)*CNSH2O2X), mx, bath_ctl.a(mx)+3.0, tosys=1, color="blue";
       }
-      rv.sa = rp.sa(pulse_number);
-      rv.idx = mx;
-      rv.bottom_peak = bath_ctl.a(mx);
+      result.sa = raster.sa(pulse_number);
+      result.idx = mx;
+      result.bottom_peak = bath_ctl.a(mx);
       //new
-      rv.first_peak = mv1;
+      result.first_peak = mv1;
     } else {
       if(graph) {
         show_pulse_wings, l_wing, r_wing;
@@ -415,12 +415,12 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
         bath_ctl.a(mvi)+2.0, tosys=1,color="red";
     if(verbose)
       write, "Rejected: below threshold\n";
-    rv.idx = 0;
-    rv.bottom_peak = bath_ctl.a(mvi);
+    result.idx = 0;
+    result.bottom_peak = bath_ctl.a(mvi);
     //new
-    rv.first_peak = mv1;
+    result.first_peak = mv1;
   }
-  return rv;
+  return result;
 }
 
 func show_pulse_wings(l_wing, r_wing) {
