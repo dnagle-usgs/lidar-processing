@@ -261,7 +261,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
           (limits()(1:2)(dif)/2)(1),
           (limits()(3:4)(dif)/2)(1),
           tosys=1,color="red";
-        plot_bath_ctl, channel, wflen, pulse_number, last=last;
+        plot_bath_ctl, channel, bath_ctl.a(1:wflen), last=last;
       }
       if(verbose)
         write, format="Rejected: Saturation. numsat=%d\n", numsat;
@@ -333,7 +333,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     window, win;
     gridxy, 2, 2;
     if(xfma) fma;
-    plot_bath_ctl, channel, wflen, pulse_number, thresh=thresh, laser_decay=laser_decay, agc=agc;
+    plot_bath_ctl, channel, bath_ctl.a(1:wflen), thresh=thresh, laser_decay=laser_decay, agc=agc;
     plmk, da(1:wflen), msize=.2, marker=1, color="black";
     plg, da(1:wflen);
     plmk, db(1:wflen), msize=.2, marker=1, color="blue";
@@ -428,22 +428,22 @@ func show_pulse_wings(l_wing, r_wing) {
   plmk, r_wing, rpx, marker=5, color="magenta", msize=0.4, width=10;
 }
 
-func plot_bath_ctl(chn, n, i, thresh=, first=, last=, laser_decay=, agc=) {
+func plot_bath_ctl(channel, wf, thresh=, first=, last=, laser_decay=, agc=) {
   extern bath_ctl;
-  default, chn, 1;
+  default, channel, 1;
   default, thresh, bath_ctl.thresh;
   default, first, bath_ctl.first;
   default, last, bath_ctl.last;
-  if(chn == 1) pltitle, "Black (90\%) Channel";
-  if(chn == 2) pltitle, "Red (9\%) Channel";
-  if(chn == 3) pltitle, "Blue (1\%) Channel";
+  if(channel == 1) pltitle, "Black (90\%) Channel";
+  if(channel == 2) pltitle, "Red (9\%) Channel";
+  if(channel == 3) pltitle, "Blue (1\%) Channel";
   if(!is_void(thresh)) {
     plg, [thresh,thresh], [first,last], marks=0, color="red";
     plg, [0,thresh], [first,first], marks=0, color="green", width=7;
     plg, [0,thresh], [last,last], marks=0, color="red", width=7;
   }
-  plmk, bath_ctl.a(1:n), msize=.2, marker=1, color="black";
-  plg, bath_ctl.a(1:n), color=black, width=4;
+  plmk, wf, msize=.2, marker=1, color="black";
+  plg, wf, color=black, width=4;
   if(!is_void(laser_decay)) plg, laser_decay, color="magenta";
   if(!is_void(agc)) plg, agc*40, color=[100,100,100];
 }
