@@ -287,16 +287,16 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     wfl = numberof(raw_wf);
     if(wfl > 18) {
       wfl = 18;
-      last_surface_sat = raw_wf(1:10)(mnx);
+      last_surface_sat = raw_wf(1:min(10,wflen))(mnx);
     } else {
-      last_surface_sat = 10;
+      last_surface_sat = min(10,wflen);
     }
     wfl = min(10, wfl);
     escale = 255 - dbias - raw_wf(1:wfl)(min);
   }
 
   // Attenuation depths in water
-  attdepth = indgen(0:255) * CNSH2O2X;
+  attdepth = indgen(0:wflen-1) * CNSH2O2X;
   if(oldbath) attdepth *= (256/255.);
 
   laser_decay     = exp(bath_ctl.laser * attdepth) * escale;
@@ -304,7 +304,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
 
   laser_decay(last_surface_sat:0) = laser_decay(1:0-last_surface_sat+1) +
     secondary_decay(1:0-last_surface_sat+1)*.25;
-  laser_decay(1:last_surface_sat+1) = escale;
+  laser_decay(1:min(wflen,last_surface_sat+1)) = escale;
 
   agc     = 1.0 - exp( bath_ctl.agc * attdepth);
   agc(last_surface_sat:0) = agc(1:0-last_surface_sat+1);
@@ -313,12 +313,12 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
 
   bias = (1-agc) * -5.0;
 
-  da = wf - laser_decay(1:wflen);
+  da = wf - laser_decay;
   db = da*agc + bias;
 
   //new
   thresh = bath_ctl.thresh;
-  dd = wf(1:wflen)(dif);
+  dd = wf(dif);
   xr = where(((dd >= thresh)(dif)) == 1);
   nxr = numberof(xr);
   if(nxr > 0) {
@@ -335,10 +335,10 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     gridxy, 2, 2;
     if(xfma) fma;
     plot_bath_ctl, channel, wf, thresh=thresh, laser_decay=laser_decay, agc=agc;
-    plmk, da(1:wflen), msize=.2, marker=1, color="black";
-    plg, da(1:wflen);
-    plmk, db(1:wflen), msize=.2, marker=1, color="blue";
-    plg, db(1:wflen), color="blue";
+    plmk, da, msize=.2, marker=1, color="black";
+    plg, da;
+    plmk, db, msize=.2, marker=1, color="blue";
+    plg, db, color="blue";
   }
 
   first = bath_ctl.first;
