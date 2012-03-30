@@ -197,7 +197,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
    thresh      4.0    1:50      Bottom peak value threshold
 
  Variables:
-   nsat          A list of saturated pixels in this waveform
+   saturated          A list of saturated pixels in this waveform
    numsat        Number of saturated pixels in this waveform
    last_surface_sat  The last pixel saturated in the surface region of the
                Waveform.
@@ -236,17 +236,17 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   do {
     channel++;
     wf = *raster.rx(pulse_number, channel);
-    n = numberof(wf);
-    if(n == 0)
+    wflen = numberof(wf);
+    if(wflen == 0)
       return result;
     // list of saturated samples
-    nsat = where(wf == 0);
+    saturated = where(wf == 0);
     // saturated sample count
-    numsat = numberof(nsat);
+    numsat = numberof(saturated);
   } while(numsat > bath_ctl.maxsat && channel < 3);
 
   dbias = int(~wf(1)+1);
-  bath_ctl.a(1:n) = float((~wf+1) - dbias);
+  bath_ctl.a(1:wflen) = float((~wf+1) - dbias);
 
   // Dont bother processing returns with more than bathctl.maxsat saturated
   // values.
@@ -256,12 +256,12 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
         window, win;
         gridxy, 2, 2;
         if(xfma) fma;
-        last = n;
-        plt, swrite(format="%d points\nsaturated.", numsat),
+        last = wflen;
+        plt, swrite(format="%d points\saturatedurated.", numsat),
           (limits()(1:2)(dif)/2)(1),
           (limits()(3:4)(dif)/2)(1),
           tosys=1,color="red";
-        plot_bath_ctl, channel, n, pulse_number, last=last;
+        plot_bath_ctl, channel, wflen, pulse_number, last=last;
       }
       if(verbose)
         write, format="Rejected: Saturation. numsat=%d\n", numsat;
@@ -270,16 +270,16 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
 
   // For EAARL, first return saturation should always start in first 12 samples.
   // If a saturated first return is found...
-  if((numsat > 1) && (nsat(1) <= 12)) {
+  if((numsat > 1) && (saturated(1) <= 12)) {
     // If all saturated samples are contiguous, only surface is saturated.
-    if(nsat(dif)(max) == 1) {
-      // Last surface saturated sample is the last in nsat.
-      last_surface_sat = nsat(0);
+    if(saturated(dif)(max) == 1) {
+      // Last surface saturated sample is the last in saturated.
+      last_surface_sat = saturated(0);
     // Otherwise, bottom is also saturated.
     } else {
       // Last surface saturated sample is where the first contiguous series
       // ends.
-      last_surface_sat = nsat(where(nsat(dif) > 1))(1);
+      last_surface_sat = saturated(where(saturated(dif) > 1))(1);
     }
     escale = 255 - dbias;
   // Else if no saturated first return is found...
@@ -317,7 +317,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
 
   //new
   thresh = bath_ctl.thresh;
-  dd = bath_ctl.a(1:n)(dif);
+  dd = bath_ctl.a(1:wflen)(dif);
   xr = where(((dd >= thresh)(dif)) == 1);
   nxr = numberof(xr);
   if(nxr > 0) {
@@ -333,21 +333,21 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     window, win;
     gridxy, 2, 2;
     if(xfma) fma;
-    plot_bath_ctl, channel, n, pulse_number, thresh=thresh, laser_decay=laser_decay, agc=agc;
-    plmk, da(1:n), msize=.2, marker=1, color="black";
-    plg, da(1:n);
-    plmk, db(1:n), msize=.2, marker=1, color="blue";
-    plg, db(1:n), color="blue";
+    plot_bath_ctl, channel, wflen, pulse_number, thresh=thresh, laser_decay=laser_decay, agc=agc;
+    plmk, da(1:wflen), msize=.2, marker=1, color="black";
+    plg, da(1:wflen);
+    plmk, db(1:wflen), msize=.2, marker=1, color="blue";
+    plg, db(1:wflen), color="blue";
   }
 
   first = bath_ctl.first;
   last = bath_ctl.last;
 
-  n = min(n, last);
-  first = min(n, first);
+  wflen = min(wflen, last);
+  first = min(wflen, first);
 
   // Added by AN - May/June 2011 to try and find the last peak of the resultant (db) waveform.  The algorithm used to find only the "max" peak of db.
-  db_good = db(first:n);
+  db_good = db(first:wflen);
   db_good = remove_noisy_tail(db_good, thresh=thresh, verbose=verbose);
   if (numberof(db_good) < 5) {
     if (graph) {
@@ -374,7 +374,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   // first, just check to see if anything is above thresh
   lpx = mvi - 1;
   rpx = mvi + 3;
-  if((mv > thresh) && (n >= rpx)) {
+  if((mv > thresh) && (wflen >= rpx)) {
     if((lpx < first) || (rpx > last)) {
       if(graph) plt, swrite("Too close\nto gate edge."),
         mvi, bath_ctl.a(mvi)+2.0, tosys=1, color="red";
