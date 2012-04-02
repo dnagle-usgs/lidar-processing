@@ -213,7 +213,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
    da                The return waveform with the computed exponentials substracted
    db                The return waveform equalized by agc and tilted by bias.
 */
-  extern ex_bath_rn, ex_bath_rp, a, db, bath_ctl;
+  extern ex_bath_rn, ex_bath_rp, bath_ctl;
   default, win, 4;
   default, ex_bath_rn, -1;
   default, graph, 0;
