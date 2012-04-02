@@ -998,7 +998,7 @@ only_veg=, update=, avg_surf=,conf_file=, now=) {
   default, now, 1;
   mbatch_process, typ=typ, save_dir=save_dir, shem=shem, zone=zone,
     dat_tag=dat_tag, cmdfile=cmdfile, n=n, onlyplot=onlyplot, mdate=mdate,
-    pbd=pdb, edf=edf, win=win, auto=auto, pick=pick, get_typ=get_typ,
+    pbd=pbd, edf=edf, win=win, auto=auto, pick=pick, get_typ=get_typ,
     only_bathy=only_bathy, only_veg=only_veg, update=update,
     avg_surf=avg_surv,conf_file=conf_file, now=now;
 }
