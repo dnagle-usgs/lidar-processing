@@ -245,8 +245,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     numsat = numberof(saturated);
   } while(numsat > bath_ctl.maxsat && channel < 3);
 
-  dbias = int(~raw_wf(1)+1);
-  wf = float((~raw_wf+1) - dbias);
+  wf = float(~raw_wf) - ~raw_wf(1);
 
   // Dont bother processing returns with more than bathctl.maxsat saturated
   // values.
@@ -280,7 +279,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
       // ends.
       surface_sat_end = saturated(where(saturated(dif) > 1))(1);
     }
-    escale = 255 - dbias;
+    escale = raw_wf(1) - 1;
   // Else if no saturated first return is found...
   } else {
     wfl = numberof(raw_wf);
@@ -291,7 +290,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
       surface_sat_end = min(10,wflen);
     }
     wfl = min(10, wfl);
-    escale = 255 - dbias - raw_wf(1:wfl)(min);
+    escale = raw_wf(1) - 1 - raw_wf(1:wfl)(min);
   }
 
   // Attenuation depths in water
