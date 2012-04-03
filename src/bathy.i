@@ -343,10 +343,9 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     }
     return result;
   }
-  if(nxr >=1) {
-    mv = db_good(xr(0));
-    mvi = first+xr(0)-1;
-  }
+
+  mv = db_good(xr(0));
+  mvi = first+xr(0)-1;
 
   // test pw with 9-6-01:17673:50
   // first, just check to see if anything is above thresh
