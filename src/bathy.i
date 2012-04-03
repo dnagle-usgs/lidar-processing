@@ -319,11 +319,11 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   first = bath_ctl.first;
   last = bath_ctl.last;
 
-  wflen = min(wflen, last);
+  last = min(wflen, last);
   first = min(wflen, first);
 
   // Added by AN - May/June 2011 to try and find the last peak of the resultant (db) waveform.  The algorithm used to find only the "max" peak of db.
-  db_good = db(first:wflen);
+  db_good = db(first:last);
   db_good = remove_noisy_tail(db_good, thresh=thresh, verbose=verbose);
   if(numberof(db_good) < 5) {
     if(graph) {
@@ -352,7 +352,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   // first, just check to see if anything is above thresh
   lpx = mvi - 1;
   rpx = mvi + 3;
-  if((mv > thresh) && (wflen >= rpx)) {
+  if((mv > thresh) && (last >= rpx)) {
     if((lpx < first) || (rpx > last)) {
       if(graph) plt, swrite("Too close\nto gate edge."),
         mvi, wf(mvi)+2.0, tosys=1, color="red";
