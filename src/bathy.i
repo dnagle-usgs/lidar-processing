@@ -311,6 +311,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     gridxy, 2, 2;
     if(xfma) fma;
     plot_bath_ctl, channel, wf, thresh=thresh;
+    port = viewport();
   }
 
   wf_decay = bathy_wf_compensate_decay(wf, surface=surface_sat_end, laser_coeff=bath_ctl.laser, water_coeff=bath_ctl.water, agc_coeff=bath_ctl.agc, max_intensity=escale, sample_interval=1., graph=graph, win=win);
@@ -326,7 +327,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   db_good = remove_noisy_tail(db_good, thresh=thresh, verbose=verbose);
   if(numberof(db_good) < 5) {
     if(graph) {
-      plt, swrite("Waveform too short \n after removing noisy tail.\n Giving up."), mvi, wf(mvi)+2.0, tosys=1, color="red";
+      plt, "Waveform too short\nafter removing noisy tail.\nGiving up.", port(1), port(4), tosys=0, justify="LT", color="red";
     }
     if (verbose) {
       write, "Waveform too short after removing noisy tail.  Giving up.";
@@ -338,7 +339,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   nxr = numberof(xr);
   if(nxr == 0) {
     if(graph) {
-      plt, swrite("No significant inflection\n in bacscattered waveform\n after decay.  Giving up"), mvi, wf(mvi)+2.0, tosys=1, color="red";
+      plt, "No significant inflection\n in backscattered waveform\nafter decay. Giving up.", port(1), port(4), tosys=0, justify="LT", color="red";
     }
     return result;
   }
