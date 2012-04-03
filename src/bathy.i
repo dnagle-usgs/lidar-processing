@@ -218,7 +218,6 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   default, ex_bath_rn, -1;
   default, graph, 0;
   default, verbose, graph;
-  default, oldbath, 0;
 
   result = BATHPIX();       // setup the return struct
   result.rastpix = raster_number + (pulse_number<<24);
@@ -402,11 +401,9 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
 }
 
 func bathy_wf_compensate_decay(wf, surface=, laser_coeff=, water_coeff=, agc_coeff=, max_intensity=, sample_interval=, graph=, win=) {
-  extern oldbath;
   default, sample_interval, 1.0;
   wflen = numberof(wf);
   attdepth = indgen(0:wflen-1) * sample_interval * CNSH2O2X;
-  if(oldbath) attdepth *= (256/255.);
 
   laser_decay = exp(laser_coeff * attdepth) * max_intensity;
   secondary_decay = exp(water_coeff * attdepth) * max_intensity;
