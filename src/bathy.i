@@ -293,27 +293,6 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     escale = raw_wf(1) - 1 - raw_wf(1:wfl)(min);
   }
 
-  // Attenuation depths in water
-  attdepth = indgen(0:wflen-1) * CNSH2O2X;
-  if(oldbath) attdepth *= (256/255.);
-
-  laser_decay     = exp(bath_ctl.laser * attdepth) * escale;
-  secondary_decay = exp(bath_ctl.water * attdepth) * escale;
-
-  laser_decay(surface_sat_end:0) = laser_decay(1:0-surface_sat_end+1) +
-    secondary_decay(1:0-surface_sat_end+1)*.25;
-  laser_decay(1:min(wflen,surface_sat_end+1)) = escale;
-
-  agc     = 1.0 - exp( bath_ctl.agc * attdepth);
-  agc(surface_sat_end:0) = agc(1:0-surface_sat_end+1);
-  agc(1:surface_sat_end) = 0.0;
-  agc = agc(1:wflen);
-
-  bias = (1-agc) * -5.0;
-
-  da = wf - laser_decay;
-  db = da*agc + bias;
-
   //new
   thresh = bath_ctl.thresh;
   dd = wf(dif);
@@ -333,11 +312,9 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     gridxy, 2, 2;
     if(xfma) fma;
     plot_bath_ctl, channel, wf, thresh=thresh, laser_decay=laser_decay, agc=agc;
-    plmk, da, msize=.2, marker=1, color="black";
-    plg, da;
-    plmk, db, msize=.2, marker=1, color="blue";
-    plg, db, color="blue";
   }
+
+  db = bathy_wf_compensate_decay(wf, surface=surface_sat_end, laser_coeff=bath_ctl.laser, water_coeff=bath_ctl.water, agc_coeff=bath_ctl.agc, max_intensity=escale, sample_interval=1., graph=graph, win=win);
 
   first = bath_ctl.first;
   last = bath_ctl.last;
@@ -420,6 +397,41 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     result.first_peak = mv1;
   }
   return result;
+}
+
+func bathy_wf_compensate_decay(wf, surface=, laser_coeff=, water_coeff=, agc_coeff=, max_intensity=, sample_interval=, graph=, win=) {
+  extern oldbath;
+  default, sample_interval, 1.0;
+  wflen = numberof(wf);
+  attdepth = indgen(0:wflen-1) * sample_interval * CNSH2O2X;
+  if(oldbath) attdepth *= (256/255.);
+
+  laser_decay = exp(laser_coeff * attdepth) * max_intensity;
+  secondary_decay = exp(water_coeff * attdepth) * max_intensity;
+
+  laser_decay(surface:0) = laser_decay(1:0-surface+1) +
+    secondary_decay(1:0-surface+1)*.25;
+  laser_decay(1:min(wflen,surface+1)) = max_intensity;
+
+  agc = 1.0 - exp(agc_coeff * attdepth);
+  agc(surface:0) = agc(1:0-surface+1);
+  agc(1:surface) = 0.0;
+
+  bias = (1-agc) * -5.0;
+  da = wf - laser_decay;
+  db = da*agc + bias;
+
+  if(graph) {
+    wbkp = current_window();
+    window, win;
+    plmk, da, msize=.2, marker=1, color="black";
+    plg, da;
+    plmk, db, msize=.2, marker=1, color="blue";
+    plg, db, color="blue";
+    window_select, wbkp;
+  }
+
+  return db;
 }
 
 func show_pulse_wings(l_wing, r_wing) {
