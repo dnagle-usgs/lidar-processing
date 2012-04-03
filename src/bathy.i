@@ -311,7 +311,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     window, win;
     gridxy, 2, 2;
     if(xfma) fma;
-    plot_bath_ctl, channel, wf, thresh=thresh, laser_decay=laser_decay, agc=agc;
+    plot_bath_ctl, channel, wf, thresh=thresh;
   }
 
   db = bathy_wf_compensate_decay(wf, surface=surface_sat_end, laser_coeff=bath_ctl.laser, water_coeff=bath_ctl.water, agc_coeff=bath_ctl.agc, max_intensity=escale, sample_interval=1., graph=graph, win=win);
@@ -325,23 +325,25 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   // Added by AN - May/June 2011 to try and find the last peak of the resultant (db) waveform.  The algorithm used to find only the "max" peak of db.
   db_good = db(first:wflen);
   db_good = remove_noisy_tail(db_good, thresh=thresh, verbose=verbose);
-  if (numberof(db_good) < 5) {
-    if (graph) {
-        plt, swrite("Waveform too short \n after removing noisy tail.\n Giving up."), mvi, wf(mvi)+2.0, tosys=1, color="red";
+  if(numberof(db_good) < 5) {
+    if(graph) {
+      plt, swrite("Waveform too short \n after removing noisy tail.\n Giving up."), mvi, wf(mvi)+2.0, tosys=1, color="red";
     }
     if (verbose) {
-        write, "Waveform too short after removing noisy tail.  Giving up.";
+      write, "Waveform too short after removing noisy tail.  Giving up.";
     }
     return result;
   }
   xr = extract_peaks_first_deriv(db_good, thresh=thresh);
 
   nxr = numberof(xr);
-  if (nxr == 0) {
-    if (graph) plt, swrite("No significant inflection\n in bacscattered waveform\n after decay.  Giving up"), mvi, wf(mvi)+2.0, tosys=1, color="red";
+  if(nxr == 0) {
+    if(graph) {
+      plt, swrite("No significant inflection\n in bacscattered waveform\n after decay.  Giving up"), mvi, wf(mvi)+2.0, tosys=1, color="red";
+    }
     return result;
   }
-  if (nxr >=1) {
+  if(nxr >=1) {
     mv = db_good(xr(0));
     mvi = first+xr(0)-1;
   }
@@ -424,6 +426,8 @@ func bathy_wf_compensate_decay(wf, surface=, laser_coeff=, water_coeff=, agc_coe
   if(graph) {
     wbkp = current_window();
     window, win;
+    plg, laser_decay, color="magenta";
+    plg, agc*40, color=[100,100,100];
     plmk, da, msize=.2, marker=1, color="black";
     plg, da;
     plmk, db, msize=.2, marker=1, color="blue";
@@ -439,7 +443,7 @@ func show_pulse_wings(l_wing, r_wing) {
   plmk, r_wing, rpx, marker=5, color="magenta", msize=0.4, width=10;
 }
 
-func plot_bath_ctl(channel, wf, thresh=, first=, last=, laser_decay=, agc=) {
+func plot_bath_ctl(channel, wf, thresh=, first=, last=) {
   extern bath_ctl;
   default, channel, 1;
   default, thresh, bath_ctl.thresh;
@@ -455,6 +459,4 @@ func plot_bath_ctl(channel, wf, thresh=, first=, last=, laser_decay=, agc=) {
   }
   plmk, wf, msize=.2, marker=1, color="black";
   plg, wf, color=black, width=4;
-  if(!is_void(laser_decay)) plg, laser_decay, color="magenta";
-  if(!is_void(agc)) plg, agc*40, color=[100,100,100];
 }
