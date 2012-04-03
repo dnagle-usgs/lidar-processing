@@ -314,7 +314,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     plot_bath_ctl, channel, wf, thresh=thresh;
   }
 
-  db = bathy_wf_compensate_decay(wf, surface=surface_sat_end, laser_coeff=bath_ctl.laser, water_coeff=bath_ctl.water, agc_coeff=bath_ctl.agc, max_intensity=escale, sample_interval=1., graph=graph, win=win);
+  wf_decay = bathy_wf_compensate_decay(wf, surface=surface_sat_end, laser_coeff=bath_ctl.laser, water_coeff=bath_ctl.water, agc_coeff=bath_ctl.agc, max_intensity=escale, sample_interval=1., graph=graph, win=win);
 
   first = bath_ctl.first;
   last = bath_ctl.last;
@@ -323,7 +323,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   first = min(wflen, first);
 
   // Added by AN - May/June 2011 to try and find the last peak of the resultant (db) waveform.  The algorithm used to find only the "max" peak of db.
-  db_good = db(first:last);
+  db_good = wf_decay(first:last);
   db_good = remove_noisy_tail(db_good, thresh=thresh, verbose=verbose);
   if(numberof(db_good) < 5) {
     if(graph) {
@@ -361,7 +361,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     // define pulse wings;
     l_wing = 0.9 * mv;
     r_wing = 0.9 * mv;
-    if((db(lpx) <= l_wing) && (db(rpx) <= r_wing)) {
+    if((wf_decay(lpx) <= l_wing) && (wf_decay(rpx) <= r_wing)) {
       mx = mvi;
       if(graph) {
         show_pulse_wings, l_wing, r_wing;
