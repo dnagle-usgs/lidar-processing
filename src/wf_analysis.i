@@ -131,35 +131,46 @@ func wf_peaks(wf) {
   return peaks;
 }
 
-func remove_noisy_tail(w1,thresh=,verbose=) {
-/* DOCUMENT remove_noisy_tail(w1, thresh=)
-  This function removes the "noise" in the tail of the waveform that is above a certain threshold from its minimum value
+func remove_noisy_tail(wf, thresh=, verbose=, idx=) {
+/* DOCUMENT remove_noisy_tail(wf, thresh=, verbose=, idx=)
+  This function removes the "noise" in the tail of the waveform that is above a
+  certain threshold from its minimum value.
   Input:
-    w1: waveform (1-d) array
-    thresh: threshold value
-  Ouput
-    w1_out = output waveform
+    wf: waveform (1-d) array of intensity values
+    thresh: intensity threshold value; default: 3
+    verbose: 1 for verbose output, 0 for silent; default: 0
+    idx: by default returns modified waveform; idx=1 returns index to last
+      sample
+  Output:
+    1-d array of intensity values with noisy tail removed -or- scalar index
+
+  If the mininum intensity value is 2 and thresh=3, then the tail will be
+  trimmed back to one sample beyond the first value greater than or equal to 5.
 */
+  default, thresh, 3.;
+  default, verbose, 0;
+  default, idx, 0;
 
-  if (is_void(thresh)) thresh = 3;
-  if (verbose) write, "*** Func remove_noisy_tail ***";
-  if (verbose) write, format="Threshold value =%f\n",thresh;
-  minw1 = min(w1);
-  idx = where(w1 <= (minw1+thresh));
-  if (numberof(idx) < 2) {
-    if (verbose) write, "No data above threshold.  return."
-    return w1;
-  }
-  iscontidx = where(idx(dif)> 1); // check to see if the indices are continuous or select only the last continuos set of indices
-  if (is_array(iscontidx)) {
-    idxstart = idx(iscontidx(0)+1);
-  } else {
-    idxstart = idx(1);
+  min_intensity = wf(min);
+
+  if(verbose) {
+    write, "*** Func remove_noisy_tail ***";
+    write, format=" Threshold value = %f\n", double(thresh);
+    write, format=" Minimum intensity = %f\n", double(min_intensity);
   }
 
-  if (idxstart>=1) w1_out = w1(1:idxstart);
+  w = where(wf > min_intensity+thresh);
+  if(!numberof(w)) {
+    if(verbose) {
+      write, "No data above threshold.";
+    }
+    return idx ? numberof(wf) : wf;
+  }
 
-  return w1_out;
+  last = min(numberof(wf), w(0)+1);
+
+  if(idx) return last;
+  return wf(:last);
 }
 
 
