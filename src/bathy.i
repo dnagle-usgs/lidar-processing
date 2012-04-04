@@ -322,10 +322,13 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   last = min(wflen, last);
   first = min(wflen, first);
 
-  // Added by AN - May/June 2011 to try and find the last peak of the resultant (db) waveform.  The algorithm used to find only the "max" peak of db.
-  db_good = wf_decay(first:last);
-  db_good = remove_noisy_tail(db_good, thresh=thresh, verbose=verbose);
-  if(numberof(db_good) < 5) {
+  offset = first - 1;
+
+  // Added by AN - May/June 2011 to try and find the last peak of the resultant
+  // (wf_decay) waveform.  The algorithm used to find only the "max" peak of
+  // wf_decay.
+  last_new = remove_noisy_tail(wf_decay(first:last), thresh=thresh, verbose=verbose, idx=1) + offset;
+  if(last_new - first < 4) {
     if(graph) {
       plt, "Waveform too short\nafter removing noisy tail.\nGiving up.", port(1), port(4), tosys=0, justify="LT", color="red";
     }
@@ -334,7 +337,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     }
     return result;
   }
-  xr = extract_peaks_first_deriv(db_good, thresh=thresh);
+  xr = extract_peaks_first_deriv(wf_decay(first:last_new), thresh=thresh);
 
   nxr = numberof(xr);
   if(nxr == 0) {
@@ -344,8 +347,8 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     return result;
   }
 
-  mv = db_good(xr(0));
-  mvi = first+xr(0)-1;
+  mv = wf_decay(first:last_new)(xr(0));
+  mvi = xr(0) + offset;
 
   // test pw with 9-6-01:17673:50
   // first, just check to see if anything is above thresh
