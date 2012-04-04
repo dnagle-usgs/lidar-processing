@@ -296,8 +296,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   thresh = bath_ctl.thresh;
   dd = wf(dif);
   xr = where(((dd >= thresh)(dif)) == 1);
-  nxr = numberof(xr);
-  if(nxr > 0) {
+  if(numberof(xr)) {
     mx1 = wf(xr(1):min(wflen,xr(1)+5))(mxx) + xr(1) - 1; // find surface peak now
     mv1 = wf(mx1);
   } else mv1 = 0;
@@ -339,8 +338,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   }
   xr = extract_peaks_first_deriv(wf_decay(first:last_new), thresh=thresh);
 
-  nxr = numberof(xr);
-  if(nxr == 0) {
+  if(!numberof(xr)) {
     if(graph) {
       plt, "No significant inflection\n in backscattered waveform\nafter decay. Giving up.", port(1), port(4), tosys=0, justify="LT", color="red";
     }
