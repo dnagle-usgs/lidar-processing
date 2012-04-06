@@ -364,18 +364,17 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     l_wing = 0.9 * bottom_intensity;
     r_wing = 0.9 * bottom_intensity;
     if((wf_decay(lwing_idx) <= l_wing) && (wf_decay(rwing_idx) <= r_wing)) {
-      mx = bottom_peak;
       if(graph) {
         show_pulse_wings, l_wing, r_wing, lwing_idx, rwing_idx;
-        plg,  [wf(mx)+1.5,0], [mx,mx],
+        plg,  [wf(bottom_peak)+1.5,0], [bottom_peak,bottom_peak],
           marks=0, type=2, color="blue";
-        plmk, wf(mx)+1.5, mx,
+        plmk, wf(bottom_peak)+1.5, bottom_peak,
           msize=1.0, marker=7, color="blue", width=10;
-        plt, swrite(format="    %3dns\n     %3.0f sfc\n    %3.1f cnts(blue)\n   %3.1f cnts(black)\n     (~%3.1fm)", bottom_peak, mv1, bottom_intensity, wf(mx), (bottom_peak-7)*CNSH2O2X), mx, wf(mx)+3.0, tosys=1, color="blue";
+        plt, swrite(format="    %3dns\n     %3.0f sfc\n    %3.1f cnts(blue)\n   %3.1f cnts(black)\n     (~%3.1fm)", bottom_peak, mv1, bottom_intensity, wf(bottom_peak), (bottom_peak-7)*CNSH2O2X), bottom_peak, wf(bottom_peak)+3.0, tosys=1, color="blue";
       }
       result.sa = raster.sa(pulse_number);
-      result.idx = mx;
-      result.bottom_peak = wf(mx);
+      result.idx = bottom_peak;
+      result.bottom_peak = wf(bottom_peak);
       //new
       result.first_peak = mv1;
     } else {
