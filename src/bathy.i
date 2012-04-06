@@ -299,7 +299,9 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     // find surface peak now
     mx1 = wf(xr(1):min(wflen,xr(1)+5))(mxx) + xr(1) - 1;
     mv1 = wf(mx1);
-  } else mv1 = 0;
+  } else {
+    mv1 = 0;
+  }
 
   if(numsat > 14) {
     thresh = thresh * (numsat-13)*0.65;
