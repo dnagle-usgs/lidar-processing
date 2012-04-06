@@ -292,12 +292,12 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     escale = raw_wf(1) - 1 - raw_wf(1:wfl)(min);
   }
 
-  //new
   thresh = bath_ctl.thresh;
   dd = wf(dif);
   xr = where(((dd >= thresh)(dif)) == 1);
   if(numberof(xr)) {
-    mx1 = wf(xr(1):min(wflen,xr(1)+5))(mxx) + xr(1) - 1; // find surface peak now
+    // find surface peak now
+    mx1 = wf(xr(1):min(wflen,xr(1)+5))(mxx) + xr(1) - 1;
     mv1 = wf(mx1);
   } else mv1 = 0;
 
@@ -336,40 +336,42 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     }
     return result;
   }
-  xr = extract_peaks_first_deriv(wf_decay(first:last_new), thresh=thresh);
+  peaks = extract_peaks_first_deriv(wf_decay(first:last_new), thresh=thresh);
 
-  if(!numberof(xr)) {
+  if(!numberof(peaks)) {
     if(graph) {
       plt, "No significant inflection\n in backscattered waveform\nafter decay. Giving up.", port(1), port(4), tosys=0, justify="LT", color="red";
     }
     return result;
   }
 
-  mv = wf_decay(first:last_new)(xr(0));
-  mvi = xr(0) + offset;
+  bottom_peak = peaks(0) + offset;
+  bottom_intensity = wf_decay(bottom_peak);
+
+  // pulse wings
+  lwing_idx = bottom_peak - 1;
+  rwing_idx = bottom_peak + 3;
 
   // test pw with 9-6-01:17673:50
   // first, just check to see if anything is above thresh
-  lpx = mvi - 1;
-  rpx = mvi + 3;
-  if((mv > thresh) && (last >= rpx)) {
-    if((lpx < first) || (rpx > last)) {
+  if((bottom_intensity > thresh) && (last >= rwing_idx)) {
+    if((lwing_idx < first) || (rwing_idx > last)) {
       if(graph) plt, swrite("Too close\nto gate edge."),
-        mvi, wf(mvi)+2.0, tosys=1, color="red";
+        bottom_peak, wf(bottom_peak)+2.0, tosys=1, color="red";
       return result;
     }
     // define pulse wings;
-    l_wing = 0.9 * mv;
-    r_wing = 0.9 * mv;
-    if((wf_decay(lpx) <= l_wing) && (wf_decay(rpx) <= r_wing)) {
-      mx = mvi;
+    l_wing = 0.9 * bottom_intensity;
+    r_wing = 0.9 * bottom_intensity;
+    if((wf_decay(lwing_idx) <= l_wing) && (wf_decay(rwing_idx) <= r_wing)) {
+      mx = bottom_peak;
       if(graph) {
         show_pulse_wings, l_wing, r_wing;
         plg,  [wf(mx)+1.5,0], [mx,mx],
           marks=0, type=2, color="blue";
         plmk, wf(mx)+1.5, mx,
           msize=1.0, marker=7, color="blue", width=10;
-        plt, swrite(format="    %3dns\n     %3.0f sfc\n    %3.1f cnts(blue)\n   %3.1f cnts(black)\n     (~%3.1fm)", mvi, mv1, mv, wf(mx), (mvi-7)*CNSH2O2X), mx, wf(mx)+3.0, tosys=1, color="blue";
+        plt, swrite(format="    %3dns\n     %3.0f sfc\n    %3.1f cnts(blue)\n   %3.1f cnts(black)\n     (~%3.1fm)", bottom_peak, mv1, bottom_intensity, wf(mx), (bottom_peak-7)*CNSH2O2X), mx, wf(mx)+3.0, tosys=1, color="blue";
       }
       result.sa = raster.sa(pulse_number);
       result.idx = mx;
@@ -379,22 +381,22 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     } else {
       if(graph) {
         show_pulse_wings, l_wing, r_wing;
-        plmk, wf(mvi)+1.5, mvi+1,
+        plmk, wf(bottom_peak)+1.5, bottom_peak+1,
           msize=1.0, marker=6, color="red", width=10;
         plt, "Bad pulse\n shape",
-          mvi+2.0, wf(mvi)+2.0, tosys=1, color="red";
+          bottom_peak+2.0, wf(bottom_peak)+2.0, tosys=1, color="red";
       }
       if(verbose)
         write,"Rejected: Pulse shape. \n";
     }
   } else {
     if(graph)
-      plt, "Below\nthreshold", mvi+2.0,
-        wf(mvi)+2.0, tosys=1,color="red";
+      plt, "Below\nthreshold", bottom_peak+2.0,
+        wf(bottom_peak)+2.0, tosys=1,color="red";
     if(verbose)
       write, "Rejected: below threshold\n";
     result.idx = 0;
-    result.bottom_peak = wf(mvi);
+    result.bottom_peak = wf(bottom_peak);
     //new
     result.first_peak = mv1;
   }
@@ -437,8 +439,8 @@ func bathy_wf_compensate_decay(wf, surface=, laser_coeff=, water_coeff=, agc_coe
 }
 
 func show_pulse_wings(l_wing, r_wing) {
-  plmk, l_wing, lpx, marker=5, color="magenta", msize=0.4, width=10;
-  plmk, r_wing, rpx, marker=5, color="magenta", msize=0.4, width=10;
+  plmk, l_wing, lwing_idx, marker=5, color="magenta", msize=0.4, width=10;
+  plmk, r_wing, rwing_idx, marker=5, color="magenta", msize=0.4, width=10;
 }
 
 func plot_bath_ctl(channel, wf, thresh=, first=, last=) {
