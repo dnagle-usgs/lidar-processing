@@ -366,7 +366,6 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
           msize=1.0, marker=7, color="blue", width=10;
         plt, swrite(format="%3dns\n%3.0f sfc\n%3.1f cnts(blue)\n%3.1f cnts(black)\n(~%3.1fm)", bottom_peak, surface_intensity, bottom_intensity, wf(bottom_peak), (bottom_peak-7)*sample_interval*CNSH2O2X), port(2), port(3), justify="RB", tosys=0, color="red";
       }
-      result.sa = raster.sa(pulse_number);
       result.idx = bottom_peak;
     } else {
       ex_bath_reject, graph, verbose, "Bad pulse shape";
