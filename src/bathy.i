@@ -297,10 +297,10 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   xr = where(((dd >= thresh)(dif)) == 1);
   if(numberof(xr)) {
     // find surface peak now
-    mx1 = wf(xr(1):min(wflen,xr(1)+5))(mxx) + xr(1) - 1;
-    mv1 = wf(mx1);
+    surface_peak = wf(xr(1):min(wflen,xr(1)+5))(mxx) + xr(1) - 1;
+    surface_intensity = wf(surface_peak);
   } else {
-    mv1 = 0;
+    surface_intensity = 0;
   }
 
   if(numsat > 14) {
@@ -363,25 +363,25 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
       return result;
     }
     // define pulse wings;
-    l_wing = 0.9 * bottom_intensity;
-    r_wing = 0.9 * bottom_intensity;
-    if((wf_decay(lwing_idx) <= l_wing) && (wf_decay(rwing_idx) <= r_wing)) {
+    lwing_thresh = 0.9 * bottom_intensity;
+    rwing_thresh = 0.9 * bottom_intensity;
+    if((wf_decay(lwing_idx) <= lwing_thresh) && (wf_decay(rwing_idx) <= rwing_thresh)) {
       if(graph) {
-        show_pulse_wings, l_wing, r_wing, lwing_idx, rwing_idx;
+        show_pulse_wings, lwing_thresh, rwing_thresh, lwing_idx, rwing_idx;
         plg,  [wf(bottom_peak)+1.5,0], [bottom_peak,bottom_peak],
           marks=0, type=2, color="blue";
         plmk, wf(bottom_peak)+1.5, bottom_peak,
           msize=1.0, marker=7, color="blue", width=10;
-        plt, swrite(format="    %3dns\n     %3.0f sfc\n    %3.1f cnts(blue)\n   %3.1f cnts(black)\n     (~%3.1fm)", bottom_peak, mv1, bottom_intensity, wf(bottom_peak), (bottom_peak-7)*CNSH2O2X), bottom_peak, wf(bottom_peak)+3.0, tosys=1, color="blue";
+        plt, swrite(format="    %3dns\n     %3.0f sfc\n    %3.1f cnts(blue)\n   %3.1f cnts(black)\n     (~%3.1fm)", bottom_peak, surface_intensity, bottom_intensity, wf(bottom_peak), (bottom_peak-7)*CNSH2O2X), bottom_peak, wf(bottom_peak)+3.0, tosys=1, color="blue";
       }
       result.sa = raster.sa(pulse_number);
       result.idx = bottom_peak;
       result.bottom_peak = wf(bottom_peak);
       //new
-      result.first_peak = mv1;
+      result.first_peak = surface_intensity;
     } else {
       if(graph) {
-        show_pulse_wings, l_wing, r_wing, lwing_idx, rwing_idx;
+        show_pulse_wings, lwing_thresh, rwing_thresh, lwing_idx, rwing_idx;
         plmk, wf(bottom_peak)+1.5, bottom_peak+1,
           msize=1.0, marker=6, color="red", width=10;
         plt, "Bad pulse\n shape",
@@ -399,7 +399,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     result.idx = 0;
     result.bottom_peak = wf(bottom_peak);
     //new
-    result.first_peak = mv1;
+    result.first_peak = surface_intensity;
   }
   return result;
 }
@@ -421,27 +421,27 @@ func bathy_wf_compensate_decay(wf, surface=, laser_coeff=, water_coeff=, agc_coe
   agc(1:surface) = 0.0;
 
   bias = (1-agc) * -5.0;
-  da = wf - laser_decay;
-  db = da*agc + bias;
+  wf_temp = wf - laser_decay;
+  wf_decay = wf_temp*agc + bias;
 
   if(graph) {
     wbkp = current_window();
     window, win;
     plg, laser_decay, color="magenta";
     plg, agc*40, color=[100,100,100];
-    plmk, da, msize=.2, marker=1, color="black";
-    plg, da;
-    plmk, db, msize=.2, marker=1, color="blue";
-    plg, db, color="blue";
+    plmk, wf_temp, msize=.2, marker=1, color="black";
+    plg, wf_temp;
+    plmk, wf_decay, msize=.2, marker=1, color="blue";
+    plg, wf_decay, color="blue";
     window_select, wbkp;
   }
 
-  return db;
+  return wf_decay;
 }
 
-func show_pulse_wings(l_wing, r_wing, lwing_idx, rwing_idx) {
-  plmk, l_wing, lwing_idx, marker=5, color="magenta", msize=0.4, width=10;
-  plmk, r_wing, rwing_idx, marker=5, color="magenta", msize=0.4, width=10;
+func show_pulse_wings(lwing_thresh, rwing_thresh, lwing_idx, rwing_idx) {
+  plmk, lwing_thresh, lwing_idx, marker=5, color="magenta", msize=0.4, width=10;
+  plmk, rwing_thresh, rwing_idx, marker=5, color="magenta", msize=0.4, width=10;
 }
 
 func plot_bath_ctl(channel, wf, thresh=, first=, last=) {
