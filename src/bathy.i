@@ -377,7 +377,6 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     }
   } else {
     ex_bath_reject, graph, verbose, "Below threshold";
-    result.idx = 0;
   }
   return result;
 }
