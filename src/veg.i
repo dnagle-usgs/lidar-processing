@@ -113,7 +113,7 @@ func run_vegx(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, us
       rn = start - 1;
       len = stop - start + 1;
     } else {
-      write, "Input parameters not correctly defined. See help, run_veg. Please start again.";
+      write, "Input parameters not correctly defined. See help, run_vegx. Please start again.";
       return 0;
     }
   }
@@ -346,14 +346,14 @@ Returns:
         rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=use_centroid, use_highelv_echo=use_highelv_echo);
         write, format="Processing segment %d of %d for vegetation\n", i, no_t;
         if (!multi_peaks) {
-          d = run_veg(start=rn_arr(1,i), stop=rn_arr(2,i),use_be_centroid=use_be_centroid, use_be_peak=use_be_peak, hard_surface=hard_surface, alg_mode=alg_mode);
+          d = run_vegx(start=rn_arr(1,i), stop=rn_arr(2,i),use_be_centroid=use_be_centroid, use_be_peak=use_be_peak, hard_surface=hard_surface, alg_mode=alg_mode);
           a=[];
           write, "Using make_fs_veg for vegetation...";
           veg = make_fs_veg(d,rrr);
           grow, veg_all, veg;
           tot_count += numberof(veg.elevation);
         } else {
-          d = run_veg_all(start=rn_arr(1,i), stop=rn_arr(2,i),use_be_peak=use_be_peak);
+          d = run_vegx(start=rn_arr(1,i), stop=rn_arr(2,i),use_be_peak=use_be_peak,last=255,multi_peaks=1);
           a = [];
           write, "Using make_fs_veg_all (multiple peaks!) for vegetation...";
           veg = make_fs_veg_all(d, rrr);
