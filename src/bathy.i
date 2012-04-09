@@ -219,6 +219,9 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   default, graph, 0;
   default, verbose, graph;
 
+  // hard coded for now
+  sample_interval = 1.;
+
   if(graph) {
     window, win;
     gridxy, 2, 2;
@@ -309,7 +312,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     plot_bath_ctl, channel, wf, thresh=thresh;
   }
 
-  wf_decay = bathy_wf_compensate_decay(wf, surface=surface_sat_end, laser_coeff=bath_ctl.laser, water_coeff=bath_ctl.water, agc_coeff=bath_ctl.agc, max_intensity=escale, sample_interval=1., graph=graph, win=win);
+  wf_decay = bathy_wf_compensate_decay(wf, surface=surface_sat_end, laser_coeff=bath_ctl.laser, water_coeff=bath_ctl.water, agc_coeff=bath_ctl.agc, max_intensity=escale, sample_interval=sample_interval, graph=graph, win=win);
 
   first = bath_ctl.first;
   last = bath_ctl.last;
@@ -358,7 +361,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
           marks=0, type=2, color="blue";
         plmk, wf(bottom_peak)+1.5, bottom_peak,
           msize=1.0, marker=7, color="blue", width=10;
-        plt, swrite(format="%3dns\n%3.0f sfc\n%3.1f cnts(blue)\n%3.1f cnts(black)\n(~%3.1fm)", bottom_peak, surface_intensity, bottom_intensity, wf(bottom_peak), (bottom_peak-7)*CNSH2O2X), port(2), port(3), justify="RB", tosys=0, color="red";
+        plt, swrite(format="%3dns\n%3.0f sfc\n%3.1f cnts(blue)\n%3.1f cnts(black)\n(~%3.1fm)", bottom_peak, surface_intensity, bottom_intensity, wf(bottom_peak), (bottom_peak-7)*sample_interval*CNSH2O2X), port(2), port(3), justify="RB", tosys=0, color="red";
       }
       result.sa = raster.sa(pulse_number);
       result.idx = bottom_peak;
