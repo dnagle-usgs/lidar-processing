@@ -260,7 +260,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   // values.
   if(numsat != 0)
     if(numsat >= bath_ctl.maxsat) {
-      ex_bath_reject, graph, verbose, swrite(format="%d points saturated", numsat);
+      ex_bath_message, graph, verbose, swrite(format="%d points saturated", numsat);
       if(graph)
         plot_bath_ctl, channel, wf, last=wflen;
       return result;
@@ -328,13 +328,13 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   // wf_decay.
   last_new = remove_noisy_tail(wf_decay(first:last), thresh=thresh, verbose=verbose, idx=1) + offset;
   if(last_new - first < 4) {
-    ex_bath_reject, graph, verbose, "Waveform too short after removing noisy tail";
+    ex_bath_message, graph, verbose, "Waveform too short after removing noisy tail";
     return result;
   }
   peaks = extract_peaks_first_deriv(wf_decay(first:last_new), thresh=thresh);
 
   if(!numberof(peaks)) {
-    ex_bath_reject, graph, verbose, "No significant inflection in backscattered waveform after decay";
+    ex_bath_message, graph, verbose, "No significant inflection in backscattered waveform after decay";
     return result;
   }
 
@@ -351,7 +351,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   // first, just check to see if anything is above thresh
   if((bottom_intensity > thresh) && (last >= rwing_idx)) {
     if((lwing_idx < first) || (rwing_idx > last)) {
-      ex_bath_reject, graph, verbose, "Too close to edge gate";
+      ex_bath_message, graph, verbose, "Too close to edge gate";
       return result;
     }
     // define pulse wings;
@@ -364,11 +364,11 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
           marks=0, type=2, color="blue";
         plmk, wf(bottom_peak)+1.5, bottom_peak,
           msize=1.0, marker=7, color="blue", width=10;
-        plt, swrite(format="%3dns\n%3.0f sfc\n%3.1f cnts(blue)\n%3.1f cnts(black)\n(~%3.1fm)", bottom_peak, surface_intensity, bottom_intensity, wf(bottom_peak), (bottom_peak-7)*sample_interval*CNSH2O2X), port(2), port(3), justify="RB", tosys=0, color="red";
+        ex_bath_message, graph, 0, swrite(format="%3dns\n%3.0f sfc\n%3.1f cnts(blue)\n%3.1f cnts(black)\n(~%3.1fm)", bottom_peak, surface_intensity, bottom_intensity, wf(bottom_peak), (bottom_peak-7)*sample_interval*CNSH2O2X);
       }
       result.idx = bottom_peak;
     } else {
-      ex_bath_reject, graph, verbose, "Bad pulse shape";
+      ex_bath_message, graph, verbose, "Bad pulse shape";
       if(graph) {
         show_pulse_wings, lwing_thresh, rwing_thresh, lwing_idx, rwing_idx;
         plmk, wf(bottom_peak)+1.5, bottom_peak+1,
@@ -376,16 +376,16 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
       }
     }
   } else {
-    ex_bath_reject, graph, verbose, "Below threshold";
+    ex_bath_message, graph, verbose, "Below threshold";
   }
   return result;
 }
 
-func ex_bath_reject(graph, verbose, msg) {
+func ex_bath_message(graph, verbose, msg) {
   if(graph) {
     port = viewport();
-    plt, strwrap(msg, width=25), port(2), port(3), justify="RB", tosys=0,
-      color="red";
+    plt, strwrap(msg, width=25, paragraph="\n"), port(2), port(3),
+      justify="RB", tosys=0, color="red";
   }
   if(verbose) write, "Rejected: "+msg+"\n";
 }
