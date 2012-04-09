@@ -257,12 +257,9 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   // values.
   if(numsat != 0)
     if(numsat >= bath_ctl.maxsat) {
-      if(graph) {
+      ex_bath_reject, graph, verbose, swrite(format="%d points saturated", numsat);
+      if(graph)
         plot_bath_ctl, channel, wf, last=wflen;
-        plt, swrite(format="%d points\nsaturated", numsat), port(2), port(3), justify="RB", tosys=0, color="red";
-      }
-      if(verbose)
-        write, format="Rejected: Saturation. numsat=%d\n", numsat;
       return result;
     }
 
@@ -327,20 +324,13 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   // wf_decay.
   last_new = remove_noisy_tail(wf_decay(first:last), thresh=thresh, verbose=verbose, idx=1) + offset;
   if(last_new - first < 4) {
-    if(graph) {
-      plt, "Waveform too short\nafter removing noisy tail.\nGiving up.", port(2), port(3), justify="RB", tosys=0, color="red";
-    }
-    if (verbose) {
-      write, "Waveform too short after removing noisy tail.  Giving up.";
-    }
+    ex_bath_reject, graph, verbose, "Waveform too short after removing noisy tail";
     return result;
   }
   peaks = extract_peaks_first_deriv(wf_decay(first:last_new), thresh=thresh);
 
   if(!numberof(peaks)) {
-    if(graph) {
-      plt, "No significant inflection\n in backscattered waveform\nafter decay. Giving up.", port(2), port(3), justify="RB", tosys=0, color="red";
-    }
+    ex_bath_reject, graph, verbose, "No significant inflection in backscattered waveform after decay";
     return result;
   }
 
@@ -355,8 +345,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   // first, just check to see if anything is above thresh
   if((bottom_intensity > thresh) && (last >= rwing_idx)) {
     if((lwing_idx < first) || (rwing_idx > last)) {
-      if(graph)
-        plt, "Too close\nto gate edge.", port(2), port(3), justify="RB", tosys=0, color="red";
+      ex_bath_reject, graph, verbose, "Too close to edge gate";
       return result;
     }
     // define pulse wings;
@@ -374,29 +363,31 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
       result.sa = raster.sa(pulse_number);
       result.idx = bottom_peak;
       result.bottom_peak = wf(bottom_peak);
-      //new
       result.first_peak = surface_intensity;
     } else {
+      ex_bath_reject, graph, verbose, "Bad pulse shape";
       if(graph) {
         show_pulse_wings, lwing_thresh, rwing_thresh, lwing_idx, rwing_idx;
         plmk, wf(bottom_peak)+1.5, bottom_peak+1,
           msize=1.0, marker=6, color="red", width=10;
-        plt, "Bad pulse shape", port(2), port(3), justify="RB", tosys=0, color="red";
       }
-      if(verbose)
-        write,"Rejected: Pulse shape. \n";
     }
   } else {
-    if(graph)
-      plt, "Below\nthreshold", port(2), port(3), justify="RB", tosys=0, color="red";
-    if(verbose)
-      write, "Rejected: below threshold\n";
+    ex_bath_reject, graph, verbose, "Below threshold";
     result.idx = 0;
     result.bottom_peak = wf(bottom_peak);
-    //new
     result.first_peak = surface_intensity;
   }
   return result;
+}
+
+func ex_bath_reject(graph, verbose, msg) {
+  if(graph) {
+    port = viewport();
+    plt, strwrap(msg, width=25), port(2), port(3), justify="RB", tosys=0,
+      color="red";
+  }
+  if(verbose) write, "Rejected: "+msg+"\n";
 }
 
 func bathy_wf_compensate_decay(wf, surface=, laser_coeff=, water_coeff=, agc_coeff=, max_intensity=, sample_interval=, graph=, win=) {
