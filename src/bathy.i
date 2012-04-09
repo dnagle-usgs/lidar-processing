@@ -303,6 +303,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   } else {
     surface_intensity = 0;
   }
+  result.first_peak = surface_intensity;
 
   if(numsat > 14) {
     thresh = thresh * (numsat-13)*0.65;
@@ -340,6 +341,8 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   bottom_peak = peaks(0) + offset;
   bottom_intensity = wf_decay(bottom_peak);
 
+  result.bottom_peak = wf(bottom_peak);
+
   // pulse wings
   lwing_idx = bottom_peak - 1;
   rwing_idx = bottom_peak + 3;
@@ -365,8 +368,6 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
       }
       result.sa = raster.sa(pulse_number);
       result.idx = bottom_peak;
-      result.bottom_peak = wf(bottom_peak);
-      result.first_peak = surface_intensity;
     } else {
       ex_bath_reject, graph, verbose, "Bad pulse shape";
       if(graph) {
@@ -378,8 +379,6 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   } else {
     ex_bath_reject, graph, verbose, "Below threshold";
     result.idx = 0;
-    result.bottom_peak = wf(bottom_peak);
-    result.first_peak = surface_intensity;
   }
   return result;
 }
