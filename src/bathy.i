@@ -219,6 +219,13 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   default, graph, 0;
   default, verbose, graph;
 
+  if(graph) {
+    window, win;
+    gridxy, 2, 2;
+    if(xfma) fma;
+    port = viewport();
+  }
+
   result = BATHPIX();       // setup the return struct
   result.rastpix = raster_number + (pulse_number<<24);
 
@@ -251,14 +258,8 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   if(numsat != 0)
     if(numsat >= bath_ctl.maxsat) {
       if(graph) {
-        window, win;
-        gridxy, 2, 2;
-        if(xfma) fma;
-        plt, swrite(format="%d points\saturatedurated.", numsat),
-          (limits()(1:2)(dif)/2)(1),
-          (limits()(3:4)(dif)/2)(1),
-          tosys=1,color="red";
         plot_bath_ctl, channel, wf, last=wflen;
+        plt, swrite(format="%d points\nsaturated", numsat), port(2), port(3), justify="RB", tosys=0, color="red";
       }
       if(verbose)
         write, format="Rejected: Saturation. numsat=%d\n", numsat;
@@ -308,11 +309,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   }
 
   if(graph) {
-    window, win;
-    gridxy, 2, 2;
-    if(xfma) fma;
     plot_bath_ctl, channel, wf, thresh=thresh;
-    port = viewport();
   }
 
   wf_decay = bathy_wf_compensate_decay(wf, surface=surface_sat_end, laser_coeff=bath_ctl.laser, water_coeff=bath_ctl.water, agc_coeff=bath_ctl.agc, max_intensity=escale, sample_interval=1., graph=graph, win=win);
@@ -331,7 +328,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   last_new = remove_noisy_tail(wf_decay(first:last), thresh=thresh, verbose=verbose, idx=1) + offset;
   if(last_new - first < 4) {
     if(graph) {
-      plt, "Waveform too short\nafter removing noisy tail.\nGiving up.", port(1), port(4), tosys=0, justify="LT", color="red";
+      plt, "Waveform too short\nafter removing noisy tail.\nGiving up.", port(2), port(3), justify="RB", tosys=0, color="red";
     }
     if (verbose) {
       write, "Waveform too short after removing noisy tail.  Giving up.";
@@ -342,7 +339,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
 
   if(!numberof(peaks)) {
     if(graph) {
-      plt, "No significant inflection\n in backscattered waveform\nafter decay. Giving up.", port(1), port(4), tosys=0, justify="LT", color="red";
+      plt, "No significant inflection\n in backscattered waveform\nafter decay. Giving up.", port(2), port(3), justify="RB", tosys=0, color="red";
     }
     return result;
   }
@@ -358,8 +355,8 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   // first, just check to see if anything is above thresh
   if((bottom_intensity > thresh) && (last >= rwing_idx)) {
     if((lwing_idx < first) || (rwing_idx > last)) {
-      if(graph) plt, swrite("Too close\nto gate edge."),
-        bottom_peak, wf(bottom_peak)+2.0, tosys=1, color="red";
+      if(graph)
+        plt, "Too close\nto gate edge.", port(2), port(3), justify="RB", tosys=0, color="red";
       return result;
     }
     // define pulse wings;
@@ -372,7 +369,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
           marks=0, type=2, color="blue";
         plmk, wf(bottom_peak)+1.5, bottom_peak,
           msize=1.0, marker=7, color="blue", width=10;
-        plt, swrite(format="    %3dns\n     %3.0f sfc\n    %3.1f cnts(blue)\n   %3.1f cnts(black)\n     (~%3.1fm)", bottom_peak, surface_intensity, bottom_intensity, wf(bottom_peak), (bottom_peak-7)*CNSH2O2X), bottom_peak, wf(bottom_peak)+3.0, tosys=1, color="blue";
+        plt, swrite(format="%3dns\n%3.0f sfc\n%3.1f cnts(blue)\n%3.1f cnts(black)\n(~%3.1fm)", bottom_peak, surface_intensity, bottom_intensity, wf(bottom_peak), (bottom_peak-7)*CNSH2O2X), port(2), port(3), justify="RB", tosys=0, color="red";
       }
       result.sa = raster.sa(pulse_number);
       result.idx = bottom_peak;
@@ -384,16 +381,14 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
         show_pulse_wings, lwing_thresh, rwing_thresh, lwing_idx, rwing_idx;
         plmk, wf(bottom_peak)+1.5, bottom_peak+1,
           msize=1.0, marker=6, color="red", width=10;
-        plt, "Bad pulse\n shape",
-          bottom_peak+2.0, wf(bottom_peak)+2.0, tosys=1, color="red";
+        plt, "Bad pulse shape", port(2), port(3), justify="RB", tosys=0, color="red";
       }
       if(verbose)
         write,"Rejected: Pulse shape. \n";
     }
   } else {
     if(graph)
-      plt, "Below\nthreshold", bottom_peak+2.0,
-        wf(bottom_peak)+2.0, tosys=1,color="red";
+      plt, "Below\nthreshold", port(2), port(3), justify="RB", tosys=0, color="red";
     if(verbose)
       write, "Rejected: below threshold\n";
     result.idx = 0;
