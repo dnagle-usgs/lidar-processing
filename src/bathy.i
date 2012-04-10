@@ -213,9 +213,8 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
    da                The return waveform with the computed exponentials substracted
    db                The return waveform equalized by agc and tilted by bias.
 */
-  extern ex_bath_rn, ex_bath_rp, bath_ctl;
+  extern bath_ctl;
   default, win, 4;
-  default, ex_bath_rn, -1;
   default, graph, 0;
   default, verbose, graph;
 
@@ -279,8 +278,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   offset = first - 1;
 
   local bottom_peak, msg;
-  bathy_detect_bottom, wf_decay, first, last, thresh,
-      bottom_peak, msg;
+  bathy_detect_bottom, wf_decay, first, last, thresh, bottom_peak, msg;
 
   if(!is_void(msg)) {
     ex_bath_message, graph, verbose, msg;
@@ -291,7 +289,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   result.bottom_peak = wf(bottom_peak);
 
   msg = [];
-  bathy_validate_bottom, wf_decay, bottom_peak, first, last, thresh, msg;
+  bathy_validate_bottom, wf_decay, bottom_peak, first, last, thresh, graph, msg;
 
   if(!is_void(msg)) {
     ex_bath_message, graph, verbose, msg;
@@ -321,6 +319,7 @@ func ex_bath_message(graph, verbose, msg) {
 
 func bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &raw_wf, &wf, &scan_angle, &channel, &saturated) {
   extern ex_bath_rn, ex_bath_rp;
+  default, ex_bath_rn, -1;
   // simple cache for raster data
   if(ex_bath_rn != raster_number) {
     raster = decode_raster(get_erast(rn=raster_number));
@@ -442,7 +441,7 @@ func bathy_detect_bottom(wf, first, last, thresh, &bottom_peak, &msg) {
   bottom_peak = peaks(0) + offset;
 }
 
-func bathy_validate_bottom(wf, bottom, first, last, thresh, &msg) {
+func bathy_validate_bottom(wf, bottom, first, last, thresh, graph, &msg) {
   msg = [];
 
   // pulse wings
