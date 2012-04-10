@@ -228,32 +228,20 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     if(xfma) fma;
   }
 
-  result = BATHPIX();       // setup the return struct
+  // setup the return struct
+  result = BATHPIX();
   result.rastpix = raster_number + (pulse_number<<24);
 
-  if(ex_bath_rn != raster_number) {  // simple cache for raster data
-    raster = decode_raster(get_erast(rn=raster_number));
-    ex_bath_rn = raster_number;
-    ex_bath_rp = raster;
-  } else {
-    raster = ex_bath_rp;
-  }
+  local raw_wf, wf, scan_angle, channel, saturated;
+  bathy_lookup_raster_pulse, raster_number, pulse_number, bath_ctl.maxsat,
+    raw_wf, wf, scan_angle, channel, saturated;
 
-  result.sa = raster.sa(pulse_number);
-  channel = 0;
-  do {
-    channel++;
-    raw_wf = *raster.rx(pulse_number, channel);
-    wflen = numberof(raw_wf);
-    if(wflen == 0)
-      return result;
-    // list of saturated samples
-    saturated = where(raw_wf == 0);
-    // saturated sample count
-    numsat = numberof(saturated);
-  } while(numsat > bath_ctl.maxsat && channel < 3);
+  result.sa = scan_angle;
+  wflen = numberof(wf);
+  numsat = numberof(saturated);
 
-  wf = float(~raw_wf) - ~raw_wf(1);
+  if(!wflen)
+    return result;
 
   // Dont bother processing returns with more than bathctl.maxsat saturated
   // values.
@@ -326,7 +314,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   offset = first - 1;
 
   // Added by AN - May/June 2011 to try and find the last peak of the resultant
-  // (wf_decay) waveform.  The algorithm used to find only the "max" peak of
+  // (wf_decay) waveform. The algorithm used to find only the "max" peak of
   // wf_decay.
   last_new = offset + remove_noisy_tail(wf_decay(first:last), thresh=thresh,
       verbose=verbose, idx=1);
@@ -398,6 +386,34 @@ func ex_bath_message(graph, verbose, msg) {
       justify="RB", tosys=0, color="red";
   }
   if(verbose) write, "Rejected: "+msg+"\n";
+}
+
+func bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &raw_wf, &wf, &scan_angle, &channel, &saturated) {
+  extern ex_bath_rn, ex_bath_rp;
+  // simple cache for raster data
+  if(ex_bath_rn != raster_number) {
+    raster = decode_raster(get_erast(rn=raster_number));
+    ex_bath_rn = raster_number;
+    ex_bath_rp = raster;
+  } else {
+    raster = ex_bath_rp;
+  }
+  scan_angle = raster.sa(pulse_number);
+
+  channel = 0;
+  do {
+    channel++;
+    raw_wf = *raster.rx(pulse_number, channel);
+    wflen = numberof(raw_wf);
+    if(wflen == 0)
+      return;
+    // list of saturated samples
+    saturated = where(raw_wf == 0);
+    // saturated sample count
+    numsat = numberof(saturated);
+  } while(numsat > maxsat && channel < 3);
+
+  wf = float(~raw_wf) - ~raw_wf(1);
 }
 
 func bathy_wf_compensate_decay(wf, surface=, laser_coeff=, water_coeff=, agc_coeff=, max_intensity=, sample_interval=, graph=, win=) {
