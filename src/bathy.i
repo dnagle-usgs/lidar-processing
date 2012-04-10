@@ -324,10 +324,14 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   lwing_thresh = 0.9 * bottom_intensity;
   rwing_thresh = 0.9 * bottom_intensity;
 
+  if(graph) {
+    plmk, lwing_thresh, lwing_idx, marker=5, color="magenta", msize=0.4, width=10;
+    plmk, rwing_thresh, rwing_idx, marker=5, color="magenta", msize=0.4, width=10;
+  }
+
   if((wf_decay(lwing_idx) > lwing_thresh) || (wf_decay(rwing_idx) > rwing_thresh)) {
     ex_bath_message, graph, verbose, "Bad pulse shape";
     if(graph) {
-      show_pulse_wings, lwing_thresh, rwing_thresh, lwing_idx, rwing_idx;
       plmk, wf(bottom_peak)+1.5, bottom_peak+1,
         msize=1.0, marker=6, color="red", width=10;
     }
@@ -335,7 +339,6 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   }
 
   if(graph) {
-    show_pulse_wings, lwing_thresh, rwing_thresh, lwing_idx, rwing_idx;
     plg, [wf(bottom_peak)+1.5,0], [bottom_peak,bottom_peak],
       marks=0, type=2, color="blue";
     plmk, wf(bottom_peak)+1.5, bottom_peak,
@@ -457,11 +460,6 @@ func bathy_wf_compensate_decay(wf, surface=, laser_coeff=, water_coeff=, agc_coe
   }
 
   return wf_decay;
-}
-
-func show_pulse_wings(lwing_thresh, rwing_thresh, lwing_idx, rwing_idx) {
-  plmk, lwing_thresh, lwing_idx, marker=5, color="magenta", msize=0.4, width=10;
-  plmk, rwing_thresh, rwing_idx, marker=5, color="magenta", msize=0.4, width=10;
 }
 
 func plot_bath_ctl(channel, wf, thresh=, first=, last=) {
