@@ -282,7 +282,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   bathy_detect_bottom, wf_decay, first, last, thresh,
       bottom_peak, msg;
 
-  if(is_void(bottom_peak)) {
+  if(!is_void(msg)) {
     ex_bath_message, graph, verbose, msg;
     return result;
   }
@@ -290,37 +290,11 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   bottom_intensity = wf_decay(bottom_peak);
   result.bottom_peak = wf(bottom_peak);
 
-  // pulse wings
-  lwing_idx = bottom_peak - 1;
-  rwing_idx = bottom_peak + 3;
+  msg = [];
+  bathy_validate_bottom, wf_decay, bottom_peak, first, last, thresh, msg;
 
-  // test pw with 9-6-01:17673:50
-  // first, just check to see if anything is above thresh
-  if((bottom_intensity <= thresh) || (last < rwing_idx)) {
-    ex_bath_message, graph, verbose, "Below threshold";
-    return result;
-  }
-
-  if((lwing_idx < first) || (rwing_idx > last)) {
-    ex_bath_message, graph, verbose, "Too close to edge gate";
-    return result;
-  }
-
-  // define pulse wings;
-  lwing_thresh = 0.9 * bottom_intensity;
-  rwing_thresh = 0.9 * bottom_intensity;
-
-  if(graph) {
-    plmk, lwing_thresh, lwing_idx, marker=5, color="magenta", msize=0.4, width=10;
-    plmk, rwing_thresh, rwing_idx, marker=5, color="magenta", msize=0.4, width=10;
-  }
-
-  if((wf_decay(lwing_idx) > lwing_thresh) || (wf_decay(rwing_idx) > rwing_thresh)) {
-    ex_bath_message, graph, verbose, "Bad pulse shape";
-    if(graph) {
-      plmk, wf(bottom_peak)+1.5, bottom_peak+1,
-        msize=1.0, marker=6, color="red", width=10;
-    }
+  if(!is_void(msg)) {
+    ex_bath_message, graph, verbose, msg;
     return result;
   }
 
@@ -466,6 +440,43 @@ func bathy_detect_bottom(wf, first, last, thresh, &bottom_peak, &msg) {
   }
 
   bottom_peak = peaks(0) + offset;
+}
+
+func bathy_validate_bottom(wf, bottom, first, last, thresh, &msg) {
+  msg = [];
+
+  // pulse wings
+  lwing_idx = bottom_peak - 1;
+  rwing_idx = bottom_peak + 3;
+
+  // test pw with 9-6-01:17673:50
+  // first, just check to see if anything is above thresh
+  if((wf(bottom) <= thresh) || (last < rwing_idx)) {
+    msg = "Below threshold";
+    return;
+  }
+
+  if((lwing_idx < first) || (rwing_idx > last)) {
+    msg = "Too close to edge gate";
+    return;
+  }
+
+  // define pulse wings;
+  lwing_thresh = 0.9 * wf(bottom);
+  rwing_thresh = 0.9 * wf(bottom);
+
+  if(graph) {
+    plmk, lwing_thresh, lwing_idx, marker=5, color="magenta", msize=0.4, width=10;
+    plmk, rwing_thresh, rwing_idx, marker=5, color="magenta", msize=0.4, width=10;
+  }
+
+  if((wf(lwing_idx) > lwing_thresh) || (wf(rwing_idx) > rwing_thresh)) {
+    msg = "Bad pulse shape";
+    if(graph) {
+      plmk, wf(bottom_peak)+1.5, bottom_peak+1,
+        msize=1.0, marker=6, color="red", width=10;
+    }
+  }
 }
 
 func plot_bath_ctl(channel, wf, thresh=, first=, last=) {
