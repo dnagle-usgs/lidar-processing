@@ -273,11 +273,8 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
       agc_coeff=bath_ctl.agc, max_intensity=escale,
       sample_interval=sample_interval, graph=graph, win=win);
 
-  first = bath_ctl.first;
-  last = bath_ctl.last;
-
-  last = min(wflen, last);
-  first = min(wflen, first);
+  first = min(wflen, bath_ctl.first);
+  last = min(wflen, bath_ctl.last);
 
   offset = first - 1;
 
