@@ -278,27 +278,16 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
 
   offset = first - 1;
 
-  // Added by AN - May/June 2011 to try and find the last peak of the resultant
-  // (wf_decay) waveform. The algorithm used to find only the "max" peak of
-  // wf_decay.
-  last_new = offset + remove_noisy_tail(wf_decay(first:last), thresh=thresh,
-      verbose=verbose, idx=1);
-  if(last_new - first < 4) {
-    ex_bath_message, graph, verbose,
-        "Waveform too short after removing noisy tail";
-    return result;
-  }
-  peaks = extract_peaks_first_deriv(wf_decay(first:last_new), thresh=thresh);
+  local bottom_peak, msg;
+  bathy_detect_bottom, wf_decay, first, last, thresh,
+      bottom_peak, msg;
 
-  if(!numberof(peaks)) {
-    ex_bath_message, graph, verbose,
-        "No significant inflection in backscattered waveform after decay";
+  if(is_void(bottom_peak)) {
+    ex_bath_message, graph, verbose, msg;
     return result;
   }
 
-  bottom_peak = peaks(0) + offset;
   bottom_intensity = wf_decay(bottom_peak);
-
   result.bottom_peak = wf(bottom_peak);
 
   // pulse wings
@@ -457,6 +446,26 @@ func bathy_wf_compensate_decay(wf, surface=, laser_coeff=, water_coeff=, agc_coe
   }
 
   return wf_decay;
+}
+
+func bathy_detect_bottom(wf, first, last, thresh, &bottom_peak, &msg) {
+  bottom_peak = msg = [];
+  offset = first - 1;
+
+  last_new = offset + remove_noisy_tail(wf(first:last), thresh=thresh,
+      verbose=verbose, idx=1);
+  if(last_new - first < 4) {
+    msg = "Waveform too short after removing noisy tail";
+    return;
+  }
+  peaks = extract_peaks_first_deriv(wf_decay(first:last_new), thresh=thresh);
+
+  if(!numberof(peaks)) {
+    msg = "No significant inflection in backscattered waveform after decay";
+    return;
+  }
+
+  bottom_peak = peaks(0) + offset;
 }
 
 func plot_bath_ctl(channel, wf, thresh=, first=, last=) {
