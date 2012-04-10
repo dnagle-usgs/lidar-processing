@@ -234,7 +234,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
 
   local raw_wf, wf, scan_angle, channel, saturated;
   bathy_lookup_raster_pulse, raster_number, pulse_number, bath_ctl.maxsat,
-    raw_wf, wf, scan_angle, channel, saturated;
+      raw_wf, wf, scan_angle, channel, saturated;
 
   result.sa = scan_angle;
   wflen = numberof(wf);
@@ -245,53 +245,21 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
 
   // Dont bother processing returns with more than bathctl.maxsat saturated
   // values.
-  if(numsat != 0)
+  if(numsat != 0) {
     if(numsat >= bath_ctl.maxsat) {
       ex_bath_message, graph, verbose, swrite(format="%d points saturated", numsat);
       if(graph)
         plot_bath_ctl, channel, wf, last=wflen;
       return result;
     }
-
-  // For EAARL, first return saturation should always start in first 12 samples.
-  // If a saturated first return is found...
-  if((numsat > 1) && (saturated(1) <= 12)) {
-    // If all saturated samples are contiguous, only surface is saturated.
-    if(saturated(dif)(max) == 1) {
-      // Last surface saturated sample is the last in saturated.
-      surface_sat_end = saturated(0);
-    // Otherwise, bottom is also saturated.
-    } else {
-      // Last surface saturated sample is where the first contiguous series
-      // ends.
-      surface_sat_end = saturated(where(saturated(dif) > 1))(1);
-    }
-    escale = raw_wf(1) - 1;
-  // Else if no saturated first return is found...
-  } else {
-    wfl = numberof(raw_wf);
-    if(wfl > 18) {
-      wfl = 18;
-      surface_sat_end = raw_wf(1:min(10,wflen))(mnx);
-    } else {
-      surface_sat_end = min(10,wflen);
-    }
-    wfl = min(10, wfl);
-    escale = raw_wf(1) - 1 - raw_wf(1:wfl)(min);
   }
 
-  thresh = bath_ctl.thresh;
-  dd = wf(dif);
-  xr = where(((dd >= thresh)(dif)) == 1);
-  if(numberof(xr)) {
-    // find surface peak now
-    surface_peak = wf(xr(1):min(wflen,xr(1)+5))(mxx) + xr(1) - 1;
-    surface_intensity = wf(surface_peak);
-  } else {
-    surface_intensity = 0;
-  }
+  local surface_sat_end, surface_intensity, escale;
+  bathy_detect_surface, wf, wf_raw, saturated, bath_ctl.thresh,
+      surface_sat_end, surface_intensity, escale;
   result.first_peak = surface_intensity;
 
+  thresh = bath_ctl.thresh;
   if(numsat > 14) {
     thresh = thresh * (numsat-13)*0.65;
   }
@@ -414,6 +382,46 @@ func bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &raw_wf, &wf
   } while(numsat > maxsat && channel < 3);
 
   wf = float(~raw_wf) - ~raw_wf(1);
+}
+
+func bathy_detect_surface(wf, wf_raw, saturated, thresh, &surface, &surface_intensity, &escale) {
+  numsat = numberof(saturated);
+  // For EAARL, first return saturation should always start in first 12 samples.
+  // If a saturated first return is found...
+  if((numsat > 1) && (saturated(1) <= 12)) {
+    // If all saturated samples are contiguous, only surface is saturated.
+    if(saturated(dif)(max) == 1) {
+      // Last surface saturated sample is the last in saturated.
+      surface = saturated(0);
+    // Otherwise, bottom is also saturated.
+    } else {
+      // Last surface saturated sample is where the first contiguous series
+      // ends.
+      surface = saturated(where(saturated(dif) > 1))(1);
+    }
+    escale = raw_wf(1) - 1;
+  // Else if no saturated first return is found...
+  } else {
+    wfl = numberof(raw_wf);
+    if(wfl > 18) {
+      wfl = 18;
+      surface = raw_wf(1:min(10,wflen))(mnx);
+    } else {
+      surface = min(10,wflen);
+    }
+    wfl = min(10, wfl);
+    escale = raw_wf(1) - 1 - raw_wf(1:wfl)(min);
+  }
+
+  dd = wf(dif);
+  xr = where(((dd >= thresh)(dif)) == 1);
+  if(numberof(xr)) {
+    // find surface peak now
+    surface_peak = wf(xr(1):min(wflen,xr(1)+5))(mxx) + xr(1) - 1;
+    surface_intensity = wf(surface_peak);
+  } else {
+    surface_intensity = 0;
+  }
 }
 
 func bathy_wf_compensate_decay(wf, surface=, laser_coeff=, water_coeff=, agc_coeff=, max_intensity=, sample_interval=, graph=, win=) {
