@@ -226,7 +226,6 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     window, win;
     gridxy, 2, 2;
     if(xfma) fma;
-    port = viewport();
   }
 
   result = BATHPIX();       // setup the return struct
@@ -313,7 +312,10 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     plot_bath_ctl, channel, wf, thresh=thresh;
   }
 
-  wf_decay = bathy_wf_compensate_decay(wf, surface=surface_sat_end, laser_coeff=bath_ctl.laser, water_coeff=bath_ctl.water, agc_coeff=bath_ctl.agc, max_intensity=escale, sample_interval=sample_interval, graph=graph, win=win);
+  wf_decay = bathy_wf_compensate_decay(wf, surface=surface_sat_end,
+      laser_coeff=bath_ctl.laser, water_coeff=bath_ctl.water,
+      agc_coeff=bath_ctl.agc, max_intensity=escale,
+      sample_interval=sample_interval, graph=graph, win=win);
 
   first = bath_ctl.first;
   last = bath_ctl.last;
@@ -326,15 +328,18 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   // Added by AN - May/June 2011 to try and find the last peak of the resultant
   // (wf_decay) waveform.  The algorithm used to find only the "max" peak of
   // wf_decay.
-  last_new = remove_noisy_tail(wf_decay(first:last), thresh=thresh, verbose=verbose, idx=1) + offset;
+  last_new = offset + remove_noisy_tail(wf_decay(first:last), thresh=thresh,
+      verbose=verbose, idx=1);
   if(last_new - first < 4) {
-    ex_bath_message, graph, verbose, "Waveform too short after removing noisy tail";
+    ex_bath_message, graph, verbose,
+        "Waveform too short after removing noisy tail";
     return result;
   }
   peaks = extract_peaks_first_deriv(wf_decay(first:last_new), thresh=thresh);
 
   if(!numberof(peaks)) {
-    ex_bath_message, graph, verbose, "No significant inflection in backscattered waveform after decay";
+    ex_bath_message, graph, verbose,
+        "No significant inflection in backscattered waveform after decay";
     return result;
   }
 
@@ -375,14 +380,14 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
 
   if(graph) {
     show_pulse_wings, lwing_thresh, rwing_thresh, lwing_idx, rwing_idx;
-    plg,  [wf(bottom_peak)+1.5,0], [bottom_peak,bottom_peak],
+    plg, [wf(bottom_peak)+1.5,0], [bottom_peak,bottom_peak],
       marks=0, type=2, color="blue";
     plmk, wf(bottom_peak)+1.5, bottom_peak,
       msize=1.0, marker=7, color="blue", width=10;
     ex_bath_message, graph, 0, swrite(format="%3dns\n%3.0f sfc\n%3.1f cnts(blue)\n%3.1f cnts(black)\n(~%3.1fm)", bottom_peak, surface_intensity, bottom_intensity, wf(bottom_peak), (bottom_peak-7)*sample_interval*CNSH2O2X);
   }
-  result.idx = bottom_peak;
 
+  result.idx = bottom_peak;
   return result;
 }
 
