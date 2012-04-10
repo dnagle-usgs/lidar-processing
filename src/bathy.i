@@ -358,27 +358,31 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
     ex_bath_message, graph, verbose, "Too close to edge gate";
     return result;
   }
+
   // define pulse wings;
   lwing_thresh = 0.9 * bottom_intensity;
   rwing_thresh = 0.9 * bottom_intensity;
-  if((wf_decay(lwing_idx) <= lwing_thresh) && (wf_decay(rwing_idx) <= rwing_thresh)) {
-    if(graph) {
-      show_pulse_wings, lwing_thresh, rwing_thresh, lwing_idx, rwing_idx;
-      plg,  [wf(bottom_peak)+1.5,0], [bottom_peak,bottom_peak],
-        marks=0, type=2, color="blue";
-      plmk, wf(bottom_peak)+1.5, bottom_peak,
-        msize=1.0, marker=7, color="blue", width=10;
-      ex_bath_message, graph, 0, swrite(format="%3dns\n%3.0f sfc\n%3.1f cnts(blue)\n%3.1f cnts(black)\n(~%3.1fm)", bottom_peak, surface_intensity, bottom_intensity, wf(bottom_peak), (bottom_peak-7)*sample_interval*CNSH2O2X);
-    }
-    result.idx = bottom_peak;
-  } else {
+
+  if((wf_decay(lwing_idx) > lwing_thresh) || (wf_decay(rwing_idx) > rwing_thresh)) {
     ex_bath_message, graph, verbose, "Bad pulse shape";
     if(graph) {
       show_pulse_wings, lwing_thresh, rwing_thresh, lwing_idx, rwing_idx;
       plmk, wf(bottom_peak)+1.5, bottom_peak+1,
         msize=1.0, marker=6, color="red", width=10;
     }
+    return result;
   }
+
+  if(graph) {
+    show_pulse_wings, lwing_thresh, rwing_thresh, lwing_idx, rwing_idx;
+    plg,  [wf(bottom_peak)+1.5,0], [bottom_peak,bottom_peak],
+      marks=0, type=2, color="blue";
+    plmk, wf(bottom_peak)+1.5, bottom_peak,
+      msize=1.0, marker=7, color="blue", width=10;
+    ex_bath_message, graph, 0, swrite(format="%3dns\n%3.0f sfc\n%3.1f cnts(blue)\n%3.1f cnts(black)\n(~%3.1fm)", bottom_peak, surface_intensity, bottom_intensity, wf(bottom_peak), (bottom_peak-7)*sample_interval*CNSH2O2X);
+  }
+  result.idx = bottom_peak;
+
   return result;
 }
 
