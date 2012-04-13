@@ -24,7 +24,7 @@ struct VEGPIX {
 struct VEGPIXS {
   int rastpix;   // raster + pulse << 24
   short sa;      // scan angle
-  short mx(10);  // range in ns of all return peaks from irange
+  float mx(10);  // range in ns of all return peaks from irange
   short mr(10);  // range in ns of all return peaks from irange
   short mv(10);  // intensities of all return peaks (max 10)
   char nx;       // number of return pulses found
