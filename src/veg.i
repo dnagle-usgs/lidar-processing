@@ -796,11 +796,11 @@ func make_fs_veg_all (d, rrr) {
           // find actual ground surface elevation using simple trig (similar triangles)
 
           if ((d(j,i).mx(1) > 0) && (rrr(i).melevation(j) > 0)) {
-            eratio = float(d(j,i).mx(k))/float(d(j,i).mx(1));
+            eratio = float(d(j,i).mx(mindx(k)))/float(d(j,i).mx(1));
             geoveg.elevation(ccount) = int(rrr(i).melevation(j) - eratio * elvdiff(j));
             geoveg.north(ccount) = int(rrr(i).mnorth(j) - eratio * ndiff(j));
             geoveg.east(ccount) = int(rrr(i).meast(j) - eratio * ediff(j));
-            geoveg.intensity(ccount) = d(j,i).mv(k);
+            geoveg.intensity(ccount) = d(j,i).mv(mindx(k));
           }
         }
       }
