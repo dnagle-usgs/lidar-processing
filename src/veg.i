@@ -1463,5 +1463,86 @@ func xgauss(w1, add_peak=, graph=, xaxis=,logmode=) {
   if (numberof(a) > 3) a = a(,sort(a(1,)))
 
   return [ret(1,1), ret(3,1)];
+}
 
+func vegpix2vegpixs (d) {
+/* DOCUMENT vegpix2vegpixs(d)
+   Transforms data in a VEGPIX structure which only stores first and 
+     last returns to VEGPIXS structure which stores up to 10 returns.
+
+   Input:
+    d = array of structure VEGPIX.
+      This is the return value of func ex_veg.
+    rrr = array of structure R containing first surface information.
+      This is the return value of func first_surface.
+
+   SEE ALSO: VEGPIX, VEGPIXS, first_survace, ex_veg
+*/
+  dm = array(VEGPIXS, dimsof(d));
+
+  dm.rastpix = d.rastpix;
+  dm.sa = d.sa;
+  dm.nx = d.nx;
+  dm.mx(1,)=d.mx1
+  dm.mx(2,)=d.mx0
+  dm.mv(1,)=d.mv1
+  dm.mv(2,)=d.mv0
+
+  return dm;
+}
+
+func cveg_all2veg_all_ (cveg, d, rrr) {
+/*DOCUMENT cveg_all2veg_all_ (cveg, d, rrr)
+  Transforms data in a CVEG_ALL structure to a VEG_ALL_ structure.
+
+  Input:
+    cveg = array of structure CVEG_ALL.
+      This is the return value of func make_fs_veg_all.
+    d = array of structure VEGPIX.
+      This is the return value of func ex_veg.
+    rrr = array of structure R containing first surface information.
+      This is the return value of func first_surface.
+
+  SEE ALSO: CVEG_ALL, VEGPIX, R, VEG_ALL_, first_surface, ex_veg, make_fs_veg_all
+*/
+  len = numberof(rrr);
+  geoveg = array(VEG_ALL_, len);
+  np = dimsof(geoveg.rn)(2);		// number of pulses
+
+  geoveg.rn = rrr.rn;
+  geoveg.north = rrr.north;
+  geoveg.east = rrr.east;
+  geoveg.elevation = rrr.elevation;
+  geoveg.mnorth = rrr.mnorth;
+  geoveg.meast = rrr.meast;
+  geoveg.melevation = rrr.melevation;
+  geoveg.soe = rrr.soe;
+  geoveg.fint = rrr.intensity;
+  geoveg.lint = d.mv0;
+  geoveg.nx = d.nx;
+  geoveg.lnorth = cveg(2,,).north;
+  geoveg.least = cveg(2,,).east;
+  geoveg.lelv = cveg(2,,).elevation;
+
+// Assign 0 to east, north, elev for those array elements within the 
+// raster that did not have valid mx0/1 values
+  tzero = array(1,np,len);
+  tzero(where(d.mx0 <= 0 | d.mx1 <= 0)) = 0;
+  geoveg.north *= tzero;
+  geoveg.east *= tzero;
+  geoveg.elevation *= tzero;
+
+/* Check where the first surface algo assigned the first return elevation
+   to the mirror elevation. The values may not be exactly the same becuase
+   of the range bias - we will check for where the melevation is within 
+   10m of the elevation.
+*/
+  edidx = where((abs(rrr.melevation - rrr.elevation) < 1000));
+  tzero(*,) = 1;
+  tzero(edidx) = 0;
+  geoveg.lnorth = geoveg.lnorth*tzero + rrr.north*(!tzero);
+  geoveg.least = geoveg.least*tzero + rrr.east*(!tzero);
+  geoveg.lelv = geoveg.lelv*tzero + rrr.elevation*(!tzero);
+
+  return geoveg;
 }
