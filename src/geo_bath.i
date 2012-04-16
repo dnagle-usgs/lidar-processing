@@ -274,5 +274,8 @@ func make_bathy(latutm=, q=, avg_surf=) {
     rn_arr_idx = (rn_arr(dif,)(,cum)+1)(*);
     return depth_all;
 
-  } else write, "No Data in selected flightline. Good Bye!";
+  } else {
+    write, "No Data in selected flightline. Good Bye!";
+    return []
+  }
 }
