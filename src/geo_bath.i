@@ -1,43 +1,30 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 require, "eaarl.i";
 /*
-   Orginal by Amar Nayegandhi
-
-   7/6/02 WW
-	Minor changes and additions made to many DOCUMENTS, comments,
-        and a couple of divide by zero error checks made.
-
-  This program is used to process bathymetry data using the
-  topographic georectification.
+   For processing bathymetry data using the topographic georectification.
 */
 
-
-func make_fs_bath (d, rrr, avg_surf=) {
+func make_fs_bath(d, rrr, avg_surf=) {
 /* DOCUMENT make_fs_bath (d, rrr)
 
-   This function makes a depth or bathymetric image using the
-   georectification of the first surface return.  The parameters are as
-   follows:
+  This function makes a depth or bathymetric image using the georectification
+  of the first surface return. The parameters are as follows:
 
- d		Array of structure BATHPIX  containing depth information.
-                This is the return value of function run_bath.
+    d: Array of structure BATHPIX containing depth information. This is the
+      return value of function run_bath.
 
- rrr		Array of structure R containing first surface information.
-                This the is the return value of function first_surface.
+    rrr: Array of structure R containing first surface information. This the is
+      the return value of function first_surface.
 
-avg_surf	Set to 1 if the surface returns should be averaged to the
-		first surface returns at the center of the swath.
-
+    avg_surf= Set to 1 if the surface returns should be averaged to the first
+      surface returns at the center of the swath.
 
    The return value depth is an array of structure GEOALL.
 
    SEE ALSO: first_surface, run_bath
 */
-
-
   // d is the depth array from bathy.i
   // rrr is the topo array from surface_topo.i
-
 
   if (numberof(d(0,,)) < numberof(rrr)) { len = numberof(d(0,,)); } else {
     len = numberof(rrr);}
@@ -53,12 +40,11 @@ avg_surf	Set to 1 if the surface returns should be averaged to the
     geodepth(i).rn = rrr(i).rn;
     geodepth(i).north = rrr(i).north;
     geodepth(i).east = rrr(i).east;
-    //
-    // code added by AN (Dec 04) to make all surface returns
-    // across a raster to be the average of the fresnel reflections.
-    // the surface return is determined from the reflections
-    // that have the first channel saturated and come from
-    // close to the center of the swath.  added 12/03/04 by Amar Nayegandhi
+
+    // code added by AN (12/03/04) to make all surface returns across a raster
+    // to be the average of the fresnel reflections.  the surface return is
+    // determined from the reflections that have the first channel saturated
+    // and come from close to the center of the swath.
     if (avg_surf) {
       iidx = where((rrr(i).intensity > 220) & ((rrr(i).rn>>24) > 35) & ((rrr(i).rn>>24) < 85));
       if (is_array(iidx)) {
@@ -66,12 +52,12 @@ avg_surf	Set to 1 if the surface returns should be averaged to the
         elvsidx = where(abs(rrr(i).elevation(iidx)-elvs) <= 100) ;
         elvs = avg(rrr(i).elevation(iidx(elvsidx)));
         old_elvs = rrr(i).elevation;
-        //write, format="%5.2f ",elvs/100.;
         indx = where(rrr(i).elevation < (rrr(i).melevation - 5000));
         if (is_array(indx)) rrr(i).elevation(indx) = int(elvs);
-        // now rrr.fs_rtn_centroid will change depending on where in time the surface occurs
-        // for each laser pulse with respect to where its current surface elevation is.
-        // this change is defined by the array offset
+        // now rrr.fs_rtn_centroid will change depending on where in time the
+        // surface occurs for each laser pulse with respect to where its
+        // current surface elevation is. this change is defined by the array
+        // offset
         offset = ((old_elvs - elvs)/(CNSH2O2X*100.));
       } else {
         write,format= "No water surface Fresnel reflection in raster rn = %d\n",(rrr(i).rn(1) & 0xffffff);
@@ -91,10 +77,8 @@ avg_surf	Set to 1 if the surface returns should be averaged to the
       } else {
         fs_rtn_cent = rrr(i).fs_rtn_centroid(indx);
       }
-      // 2009-03-16: rwm: changed:  = short() to: = int()
       geodepth(i).depth(indx) = int((-d(,i).idx(indx) + fs_rtn_cent ) * CNSH2O2X *100.-0.5);
       bath_arr(indx,i) = long(((-d(,i).idx(indx)+fs_rtn_cent ) * CNSH2O2X *100) + rrr(i).elevation(indx));
-      // 2009-04-15: amar: change: short() to int()
       geodepth(i).sr2(indx) =int((d(,i).idx(indx) - fs_rtn_cent)*10);
     }
     geodepth(i).bottom_peak = d(,i).bottom_peak;
@@ -106,33 +90,25 @@ avg_surf	Set to 1 if the surface returns should be averaged to the
     geodepth(i).meast = rrr(i).meast;
     geodepth(i).melevation = rrr(i).melevation;
     geodepth(i).soe = rrr(i).soe;
+  }
 
-    //indx1 = where(geodepth(i).elevation > 0.7*geodepth(i).melevation);
-    //if (is_array(indx1))
-    //  geodepth(i).north(indx1) = 0;
-
-  } /* end for loop */
-
-  //write,format="Processing complete. %d rasters drawn. %s", len, "\n"
   return geodepth;
 }
 
-func compute_depth(data_ptr=, ipath=,fname=,ofname=) {
-/* DOCUMENT compute_depth(data_ptr=, ipath=,fname=,ofname=)
-This function computes the depth in water using the mirror position
-and the angle of refraction in water.  The input parameters defined
-are as follows:
+func compute_depth(data_ptr=, ipath=, fname=, ofname=) {
+/* DOCUMENT compute_depth(data_ptr=, ipath=, fname=, ofname=)
+  This function computes the depth in water using the mirror position and the
+  angle of refraction in water.  The input parameters defined are as follows:
 
-data_ptr=	Pointer to data array of structure GEOALL.
-ipath= 		Input (and output) directory.
-fname= 		File name of input file.
-ofname=		File name of output file.
+  data_ptr= Pointer to data array of structure GEOALL.
+  ipath= Input (and output) directory.
+  fname= File name of input file.
+  ofname= File name of output file.
 
-This function returns the pointer to the data array with
-computed depth.
+  This function returns the pointer to the data array with
+  computed depth.
 
-SEE ALSO: make_fs_bath, make_bathy
-
+  SEE ALSO: make_fs_bath, make_bathy
 */
   if(!is_void(ipath)) {
     files = [];
@@ -180,12 +156,6 @@ SEE ALSO: make_fs_bath, make_bathy
     D = -(data.sr2*CNSH2O2X*10)*cos(phi_water);
     //overwrite existing depths with newly calculated depths
     data.depth = D;
-    /*
-    Dindx = where(D != 0);
-    data1 = data.bath;
-    data1(Dindx) = long(D(Dindx)+data.elevation(Dindx));
-    data.bath = data1;
-    */
 
     // Added by AN on 12/15/04 to correct for easting and northing code below
     // (within for loop) uses the ratio of the mirror easting and northing to
@@ -221,24 +191,21 @@ SEE ALSO: make_fs_bath, make_bathy
 
 func make_bathy(latutm=, q=, avg_surf=) {
 /* DOCUMENT make_bathy(latutm=, q=, avg_surf=)
+  This function allows a user to define a region on the gga plot of flightlines
+  (usually window 6) to write out a 'level 1' file and plot a depth image
+  defined in that region. The input parameters are:
 
- This function allows a user to define a region on the gga plot
-of flightlines (usually window 6) to write out a 'level 1' file
-and plot a depth image defined in that region.  The input parameters
-are:
+  opath: ouput path where the output file must be written
+  ofname:  output file name
 
- opath 		ouput path where the output file must be written
- ofname 	output file name
+  Returns:
+  This function returns the array depth_arr.
 
-Returns:
-This function returns the array depth_arr.
+  Please ensure that the tans and pnav data have been loaded before executing
+  make_bathy.  See rbpnav() and rbtans() for details.  The structure BATH_CTL
+  must be initialized as well. See define_bath_ctl()
 
- Please ensure that the tans and pnav data have been loaded before
-executing make_bathy.  See rbpnav() and rbtans() for details.
-The structure BATH_CTL must be initialized as well.
-See define_bath_ctl()
-
-      SEE ALSO: first_surface, run_bath, make_fs_bath
+  SEE ALSO: first_surface, run_bath, make_fs_bath
 */
   extern edb, soe_day_start, bath_ctl, tans, pnav, type, utm, depth_all, rn_arr, rn_arr_idx, ba_depth, bd_depth;
   depth_all = [];
@@ -318,9 +285,8 @@ See define_bath_ctl()
     write, format="Total number of records processed = %d\n",tot_count;
 
     no_append = 0;
-    rn_arr_idx = (rn_arr(dif,)(,cum)+1)(*);	
+    rn_arr_idx = (rn_arr(dif,)(,cum)+1)(*);
     return depth_all;
 
   } else write, "No Data in selected flightline. Good Bye!";
-
 }
