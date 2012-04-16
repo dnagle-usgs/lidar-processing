@@ -207,7 +207,7 @@ func make_bathy(latutm=, q=, avg_surf=) {
 
   SEE ALSO: first_surface, run_bath, make_fs_bath
 */
-  extern edb, soe_day_start, bath_ctl, tans, pnav, type, utm, depth_all, rn_arr, rn_arr_idx, ba_depth, bd_depth;
+  extern tans, pnav, depth_all, rn_arr, rn_arr_idx;
   depth_all = [];
 
   if (!is_array(tans)) {
