@@ -95,8 +95,8 @@ func make_fs_bath(d, rrr, avg_surf=) {
   return geodepth;
 }
 
-func compute_depth(data_ptr=) {
-/* DOCUMENT compute_depth(data_ptr=)
+func compute_depth(data) {
+/* DOCUMENT compute_depth(data)
   This function computes the depth in water using the mirror position and the
   angle of refraction in water.  The input parameters defined are as follows:
 
@@ -107,60 +107,55 @@ func compute_depth(data_ptr=) {
 
   SEE ALSO: make_fs_bath, make_bathy
 */
-  nfiles = numberof(data_ptr);
+  // define the altitude for the 3rd point in poi
+  pa = data.melevation - data.elevation;
 
-  for (i=1;i<=nfiles;i++) {
-    data = *data_ptr(i);
-    // define the altitude for the 3rd point in poi
-    pa = data.melevation - data.elevation;
+  // now define H, the laser slant range using 3D version of
+  // Pythagorean Theorem
 
-    // now define H, the laser slant range using 3D version of
-    // Pythagorean Theorem
+  a = double((data.mnorth - data.north))^2;
+  b = double((data.meast - data.east))^2;
+  c = double((data.melevation - data.elevation))^2;
+  H= sqrt(a + b + c);
 
-    a = double((data.mnorth - data.north))^2;
-    b = double((data.meast - data.east))^2;
-    c = double((data.melevation - data.elevation))^2;
-    H= sqrt(a + b + c);
+  // the angle of incidence that the laser intercepts the surface is:
+  Hindx = where(H == 0);
+  if (is_array(Hindx))
+    H(Hindx) = 0.0001;
+  phi_air = acos(pa/H);
 
-    // the angle of incidence that the laser intercepts the surface is:
-    Hindx = where(H == 0);
-    if (is_array(Hindx))
-      H(Hindx) = 0.0001;
-    phi_air = acos(pa/H);
+  // using Snells law:
+  phi_water = asin(sin(phi_air)/KH2O);
+  // where KH20 is the index of refraction at the operating
+  // wavelength of 532nm.
 
-    // using Snells law:
-    phi_water = asin(sin(phi_air)/KH2O);
-    // where KH20 is the index of refraction at the operating
-    // wavelength of 532nm.
+  // finally, depth D is given by:
+  D = -(data.sr2*CNSH2O2X*10)*cos(phi_water);
+  //overwrite existing depths with newly calculated depths
+  data.depth = D;
 
-    // finally, depth D is given by:
-    D = -(data.sr2*CNSH2O2X*10)*cos(phi_water);
-    //overwrite existing depths with newly calculated depths
-    data.depth = D;
+  // Added by AN on 12/15/04 to correct for easting and northing code below
+  // (within for loop) uses the ratio of the mirror easting and northing to
+  // the surface easting and northing to determine the change in the
+  // horizontal for the bottom.  The data.east and data.north values are
+  // replaced with the bottom easting and northing.
 
-    // Added by AN on 12/15/04 to correct for easting and northing code below
-    // (within for loop) uses the ratio of the mirror easting and northing to
-    // the surface easting and northing to determine the change in the
-    // horizontal for the bottom.  The data.east and data.north values are
-    // replaced with the bottom easting and northing.
-
-    for (i=1;i<=numberof(data);i++) {
-      idx = where(irg_a(i).irange != 0);
-      if (!is_array(idx)) continue;
-      nsdepth = -1*data(i).depth/(CNSH2O2X*100); // actual depth in ns
-      dratio = float(irg_a(i).irange(idx)+nsdepth(idx)+irg_a(i).fs_rtn_centroid(idx))/float(irg_a(i).irange(idx)+irg_a(i).fs_rtn_centroid(idx));
-      ndiff = data(i).mnorth-data(i).north;
-      ediff = data(i).meast-data(i).east;
-      bnorth = (data(i).mnorth(idx)-dratio*ndiff(idx));
-      beast = (data(i).meast(idx)-dratio*ediff(idx));
-      idxx = where((data(i).north(idx) != 0) &
-          (data(i).east(idx) != 0) );
-      if (!is_array(idx(idxx))) continue;
-      data(i).north(idx(idxx)) = int(bnorth(idxx));
-      data(i).east(idx(idxx)) = int(beast(idxx));
-    }
+  for (i=1;i<=numberof(data);i++) {
+    idx = where(irg_a(i).irange != 0);
+    if (!is_array(idx)) continue;
+    nsdepth = -1*data(i).depth/(CNSH2O2X*100); // actual depth in ns
+    dratio = float(irg_a(i).irange(idx)+nsdepth(idx)+irg_a(i).fs_rtn_centroid(idx))/float(irg_a(i).irange(idx)+irg_a(i).fs_rtn_centroid(idx));
+    ndiff = data(i).mnorth-data(i).north;
+    ediff = data(i).meast-data(i).east;
+    bnorth = (data(i).mnorth(idx)-dratio*ndiff(idx));
+    beast = (data(i).meast(idx)-dratio*ediff(idx));
+    idxx = where((data(i).north(idx) != 0) &
+        (data(i).east(idx) != 0) );
+    if (!is_array(idx(idxx))) continue;
+    data(i).north(idx(idxx)) = int(bnorth(idxx));
+    data(i).east(idx(idxx)) = int(beast(idxx));
   }
-  return &data
+  return data
 }
 
 func make_bathy(latutm=, q=, avg_surf=) {
@@ -231,9 +226,7 @@ func make_bathy(latutm=, q=, avg_surf=) {
 
         //make depth correction using compute_depth
         write, "Correcting water depths for Snells law...";
-        cdepth_ptr = compute_depth(data_ptr=&depth);
-        depth = *cdepth_ptr(1);
-        grow, depth_all, depth;
+        grow, depth_all, compute_depth(depth);
         tot_count += numberof(depth.elevation);
       }
     }
