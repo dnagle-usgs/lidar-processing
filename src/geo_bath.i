@@ -210,20 +210,6 @@ func make_bathy(latutm=, q=, avg_surf=) {
   extern edb, soe_day_start, bath_ctl, tans, pnav, type, utm, depth_all, rn_arr, rn_arr_idx, ba_depth, bd_depth;
   depth_all = [];
 
-  /* define cmin and cmax depending on type */
-  if (type == "tampabay") {
-    cmin = -6;
-    cmax = -0.5;
-  }
-  if (type == "keys") {
-    cmin = -18;
-    cmax = -2;
-  }
-  if (type == "wva") {
-    cmin = -10;
-    cmax = 0;
-  }
-
   if (!is_array(tans)) {
     write, "TANS information not loaded.  Running function rbtans() ... \n";
     tans = rbtans();
