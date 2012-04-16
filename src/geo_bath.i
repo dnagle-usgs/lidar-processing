@@ -95,37 +95,18 @@ func make_fs_bath(d, rrr, avg_surf=) {
   return geodepth;
 }
 
-func compute_depth(data_ptr=, ipath=, fname=, ofname=) {
-/* DOCUMENT compute_depth(data_ptr=, ipath=, fname=, ofname=)
+func compute_depth(data_ptr=) {
+/* DOCUMENT compute_depth(data_ptr=)
   This function computes the depth in water using the mirror position and the
   angle of refraction in water.  The input parameters defined are as follows:
 
   data_ptr= Pointer to data array of structure GEOALL.
-  ipath= Input (and output) directory.
-  fname= File name of input file.
-  ofname= File name of output file.
 
   This function returns the pointer to the data array with
   computed depth.
 
   SEE ALSO: make_fs_bath, make_bathy
 */
-  if(!is_void(ipath)) {
-    files = [];
-    if(is_void(data_ptr) && is_void(fname)) {
-      /* extract all data with *.bin extension from directory*/
-      files = find(ipath, glob=["*.bin", "*.edf"]);
-    } else if(!is_void(fname)) {
-      /* extract data from file(s) */
-      files = file_join(ipath, fname);
-    }
-    if(!is_void(files)) {
-      data_ptr = array(pointer, numberof(files));
-      for(i = 1; i <= numberof(files); i++)
-        data_ptr(i) = &edf_import(files(i));
-    }
-  }
-
   nfiles = numberof(data_ptr);
 
   for (i=1;i<=nfiles;i++) {
@@ -178,13 +159,6 @@ func compute_depth(data_ptr=, ipath=, fname=, ofname=) {
       data(i).north(idx(idxx)) = int(bnorth(idxx));
       data(i).east(idx(idxx)) = int(beast(idxx));
     }
-
-    if (!is_void(ofname)) {
-      //write current data out to output file ofname
-      // if only one file, then append
-      edf_export, file_join(ipath, ofname), data, append=(i == 1);
-    }
-
   }
   return &data
 }
@@ -254,7 +228,6 @@ func make_bathy(latutm=, q=, avg_surf=) {
         a=[];
         write, "Using make_fs_bath for submerged topography...";
         depth = make_fs_bath(d,rrr, avg_surf=avg_surf) ;
-        //limits,square=1; limits
 
         //make depth correction using compute_depth
         write, "Correcting water depths for Snells law...";
