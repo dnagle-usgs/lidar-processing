@@ -226,11 +226,12 @@ func make_bathy(latutm=, q=, avg_surf=) {
         rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=1);
         a=[];
         write, "Using make_fs_bath for submerged topography...";
-        depth = make_fs_bath(d,rrr, avg_surf=avg_surf) ;
+        depth = make_fs_bath(d,rrr, avg_surf=avg_surf);
 
         //make depth correction using compute_depth
         write, "Correcting water depths for Snells law...";
-        grow, depth_all, compute_depth(depth, irg_a.irange, irg_a.fs_rtn_centroid);
+        rtrs = irg(rn_arr(1,i), rn_arr(2,i), usecentroid=1);
+        grow, depth_all, compute_depth(depth, rtrs.irange, rtrs.fs_rtn_centroid);
         tot_count += numberof(depth.elevation);
       }
     }
