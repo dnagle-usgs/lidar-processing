@@ -93,7 +93,7 @@ func make_fs_bath(d, rrr, avg_surf=) {
   return geodepth;
 }
 
-func compute_depth(data) {
+func compute_depth(data, irange, fs_centroid) {
 /* DOCUMENT compute_depth(data)
   This function computes the depth in water using the mirror position and the
   angle of refraction in water. The input parameters defined are as follows:
@@ -145,10 +145,10 @@ func compute_depth(data) {
   // replaced with the bottom easting and northing.
 
   for (i=1;i<=numberof(data);i++) {
-    idx = where(irg_a(i).irange != 0);
+    idx = where(irange(,i) != 0);
     if (!is_array(idx)) continue;
     nsdepth = -1*data(i).depth/(CNSH2O2X*100); // actual depth in ns
-    dratio = float(irg_a(i).irange(idx)+nsdepth(idx)+irg_a(i).fs_rtn_centroid(idx))/float(irg_a(i).irange(idx)+irg_a(i).fs_rtn_centroid(idx));
+    dratio = float(irange(idx,i)+nsdepth(idx)+fs_centroid(idx,i))/float(irange(idx,i)+fs_centroid(idx,i));
     ndiff = data(i).mnorth-data(i).north;
     ediff = data(i).meast-data(i).east;
     bnorth = (data(i).mnorth(idx)-dratio*ndiff(idx));
@@ -230,7 +230,7 @@ func make_bathy(latutm=, q=, avg_surf=) {
 
         //make depth correction using compute_depth
         write, "Correcting water depths for Snells law...";
-        grow, depth_all, compute_depth(depth);
+        grow, depth_all, compute_depth(depth, irg_a.irange, irg_a.fs_rtn_centroid);
         tot_count += numberof(depth.elevation);
       }
     }
