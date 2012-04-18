@@ -104,6 +104,9 @@ func compute_depth(data) {
 
   SEE ALSO: make_fs_bath, make_bathy
 */
+  // Force copy so that original isn't modified in place.
+  data = noop(data);
+
   // define the altitude for the 3rd point in poi
   pa = data.melevation - data.elevation;
 
