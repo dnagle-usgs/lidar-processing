@@ -5,7 +5,7 @@ require, "eaarl.i";
 */
 
 func make_fs_bath(d, rrr, avg_surf=) {
-/* DOCUMENT make_fs_bath (d, rrr)
+/* DOCUMENT make_fs_bath (d, rrr, avg_surf=)
 
   This function makes a depth or bathymetric image using the georectification
   of the first surface return. The parameters are as follows:
@@ -25,11 +25,9 @@ func make_fs_bath(d, rrr, avg_surf=) {
 */
   // d is the depth array from bathy.i
   // rrr is the topo array from surface_topo.i
+  default, avg_surf, 0;
 
-  if (numberof(d(0,,)) < numberof(rrr)) { len = numberof(d(0,,)); } else {
-    len = numberof(rrr);}
-
-  if (is_void(avg_surf)) avg_surf = 0;
+  len = (numberof(d(0,,)) < numberof(rrr)) ? numberof(d(0,,)) : numberof(rrr);
 
   geodepth = array(GEOALL, len);
   bath_arr = array(long,120,len);
@@ -98,12 +96,11 @@ func make_fs_bath(d, rrr, avg_surf=) {
 func compute_depth(data) {
 /* DOCUMENT compute_depth(data)
   This function computes the depth in water using the mirror position and the
-  angle of refraction in water.  The input parameters defined are as follows:
+  angle of refraction in water. The input parameters defined are as follows:
 
-  data_ptr= Pointer to data array of structure GEOALL.
+  data= Data array of structure GEOALL.
 
-  This function returns the pointer to the data array with
-  computed depth.
+  This function returns the data array with computed depth.
 
   SEE ALSO: make_fs_bath, make_bathy
 */
