@@ -147,17 +147,20 @@ func compute_depth(data, irange, fs_centroid) {
   for (i=1;i<=numberof(data);i++) {
     idx = where(irange(,i) != 0);
     if (!is_array(idx)) continue;
+    idxx = where((data(i).north(idx) != 0) & (data(i).east(idx) != 0));
+    if (!is_array(idx(idxx))) continue;
+    idx = idx(idxx);
+
     nsdepth = -1*data(i).depth/(CNSH2O2X*100); // actual depth in ns
     dratio = float(irange(idx,i)+nsdepth(idx)+fs_centroid(idx,i))/float(irange(idx,i)+fs_centroid(idx,i));
+
     ndiff = data(i).mnorth-data(i).north;
-    ediff = data(i).meast-data(i).east;
     bnorth = (data(i).mnorth(idx)-dratio*ndiff(idx));
+    data(i).north(idx) = long(bnorth);
+
+    ediff = data(i).meast-data(i).east;
     beast = (data(i).meast(idx)-dratio*ediff(idx));
-    idxx = where((data(i).north(idx) != 0) &
-        (data(i).east(idx) != 0) );
-    if (!is_array(idx(idxx))) continue;
-    data(i).north(idx(idxx)) = int(bnorth(idxx));
-    data(i).east(idx(idxx)) = int(beast(idxx));
+    data(i).east(idx) = long(beast);
   }
   return data;
 }
