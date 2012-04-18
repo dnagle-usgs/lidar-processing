@@ -93,7 +93,7 @@ func make_fs_bath(d, rrr, avg_surf=) {
   return geodepth;
 }
 
-func compute_depth(data, irange, fs_centroid) {
+func compute_depth(data) {
 /* DOCUMENT compute_depth(data)
   This function computes the depth in water using the mirror position and the
   angle of refraction in water. The input parameters defined are as follows:
@@ -134,35 +134,9 @@ func compute_depth(data, irange, fs_centroid) {
   fs = reform(fs, dims);
   ba = reform(ba, dims);
 
-  //data.east = ba(..,1)*100;
-  //data.north = ba(..,2)*100;
+  data.east = ba(..,1)*100;
+  data.north = ba(..,2)*100;
   data.depth = (ba(..,3) - fs(..,3))*100;
-
-  // Added by AN on 12/15/04 to correct for easting and northing code below
-  // (within for loop) uses the ratio of the mirror easting and northing to
-  // the surface easting and northing to determine the change in the
-  // horizontal for the bottom.  The data.east and data.north values are
-  // replaced with the bottom easting and northing.
-
-  for (i=1;i<=numberof(data);i++) {
-    idx = where(irange(,i) != 0);
-    if (!is_array(idx)) continue;
-    idxx = where((data(i).north(idx) != 0) & (data(i).east(idx) != 0));
-    if (!is_array(idx(idxx))) continue;
-    idx = idx(idxx);
-
-    fs_ns = irange(idx,i) + fs_centroid(idx,i);
-    ba_ns = -1 * data.depth(idx,i) / 100. / CNSH2O2X;
-    dratio = float(fs_ns+ba_ns)/float(fs_ns);
-
-    ndiff = data(i).mnorth-data(i).north;
-    bnorth = (data(i).mnorth(idx)-dratio*ndiff(idx));
-    data(i).north(idx) = long(bnorth);
-
-    ediff = data(i).meast-data(i).east;
-    beast = (data(i).meast(idx)-dratio*ediff(idx));
-    data(i).east(idx) = long(beast);
-  }
   return data;
 }
 
@@ -234,8 +208,7 @@ func make_bathy(latutm=, q=, avg_surf=) {
 
         //make depth correction using compute_depth
         write, "Correcting water depths for Snells law...";
-        rtrs = irg(rn_arr(1,i), rn_arr(2,i), usecentroid=1);
-        grow, depth_all, compute_depth(depth, rtrs.irange, rtrs.fs_rtn_centroid);
+        grow, depth_all, compute_depth(depth);
         tot_count += numberof(depth.elevation);
       }
     }
