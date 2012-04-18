@@ -107,32 +107,36 @@ func compute_depth(data) {
   // Force copy so that original isn't modified in place.
   data = noop(data);
 
-  // define the altitude for the 3rd point in poi
-  pa = data.melevation - data.elevation;
+  dist = data.sr2/10. * NS2MAIR;
 
-  // now define H, the laser slant range using 3D version of
-  // Pythagorean Theorem
+  ref = [data.meast/100., data.mnorth/100., data.melevation/100.];
+  fs = [data.east/100., data.north/100., data.elevation/100.];
 
-  a = double((data.mnorth - data.north))^2;
-  b = double((data.meast - data.east))^2;
-  c = double((data.melevation - data.elevation))^2;
-  H= sqrt(a + b + c);
+  dims = dimsof(ref);
+  ref = reform(ref, [2, numberof(ref)/3, 3]);
+  fs = reform(fs, [2, numberof(fs)/3, 3]);
+  dist = dist(*);
 
-  // the angle of incidence that the laser intercepts the surface is:
-  Hindx = where(H == 0);
-  if (is_array(Hindx))
-    H(Hindx) = 0.0001;
-  phi_air = acos(pa/H);
+  be = ba = array(double, dimsof(fs));
 
-  // using Snells law:
-  phi_water = asin(sin(phi_air)/KH2O);
-  // where KH20 is the index of refraction at the operating
-  // wavelength of 532nm.
+  valid = fs(..,3) <= ref(..,3);
+  if(anyof(valid)) {
+    w = where(valid);
+    be(w,) = point_project(ref(w,), fs(w,), dist(w), tp=1);
+    ba(w,) = snell_be_to_bathy(fs(w,), be(w,));
+  }
+  if(nallof(valid)) {
+    w = where(!valid);
+    be(w,) = point_project(ref(w,), fs(w,), -dist(w), tp=1);
+    ba(w,) = snell_be_to_bathy(fs(w,), be(w,));
+  }
 
-  // finally, depth D is given by:
-  D = -(data.sr2*CNSH2O2X*10)*cos(phi_water);
-  //overwrite existing depths with newly calculated depths
-  data.depth = D;
+  fs = reform(fs, dims);
+  ba = reform(ba, dims);
+
+  //data.east = ba(..,1)*100;
+  //data.north = ba(..,2)*100;
+  data.depth = (ba(..,3) - fs(..,3))*100;
 
   // Added by AN on 12/15/04 to correct for easting and northing code below
   // (within for loop) uses the ratio of the mirror easting and northing to
@@ -155,7 +159,7 @@ func compute_depth(data) {
     data(i).north(idx(idxx)) = int(bnorth(idxx));
     data(i).east(idx(idxx)) = int(beast(idxx));
   }
-  return data
+  return data;
 }
 
 func make_bathy(latutm=, q=, avg_surf=) {
