@@ -151,8 +151,9 @@ func compute_depth(data, irange, fs_centroid) {
     if (!is_array(idx(idxx))) continue;
     idx = idx(idxx);
 
-    nsdepth = -1*data(i).depth/(CNSH2O2X*100); // actual depth in ns
-    dratio = float(irange(idx,i)+nsdepth(idx)+fs_centroid(idx,i))/float(irange(idx,i)+fs_centroid(idx,i));
+    fs_ns = irange(idx,i) + fs_centroid(idx,i);
+    ba_ns = -1 * data.depth(idx,i) / 100. / CNSH2O2X;
+    dratio = float(fs_ns+ba_ns)/float(fs_ns);
 
     ndiff = data(i).mnorth-data(i).north;
     bnorth = (data(i).mnorth(idx)-dratio*ndiff(idx));
