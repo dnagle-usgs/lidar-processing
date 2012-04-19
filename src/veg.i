@@ -751,7 +751,7 @@ func run_veg_all( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=
   return d;
 }
 
-func make_fs_veg_all (d, rrr) {
+func make_fs_veg_all (d, rrr, multi_peaks=) {
 /* DOCUMENT make_fs_veg_all (d, rrr)
 
   This function makes a veg data array using the
@@ -761,53 +761,51 @@ func make_fs_veg_all (d, rrr) {
  d    Array of structure VEGPIX  containing veg information.
            This is the return value of function run_bath.
 
- rrr     Array of structure R containing first surface information.
+ rrr  Array of structure R containing first surface information.
            This the is the return value of function first_surface.
+ multi_peaks Set to 1 for data with first 10 returs per pulse, set 
+           to 0 for data with only first and last returns. default=1. 
 
+  The return value veg is an array of structure VEG_ALL_.
 
-  The return value veg is an array of structure VEGALL.
-
-  SEE ALSO: first_surface, run_veg
+  SEE ALSO: first_surface, run_vegx
 */
-// d is the veg array from veg.i
-// rrr is the topo array from surface_topo.i
+  default, multi_peaks, 1;
 
   if (numberof(d(0,,)) < numberof(rrr)) { len = numberof(d(0,,)); } else {
     len = numberof(rrr);}
 
-  geoveg = array(CVEG_ALL, len*120*10);
+  geoveg = array(CVEG_ALL, 10,120,len);
 
-  ccount = 0;
   for (i=1; i<=len; i++) {
     elvdiff = rrr(i).melevation - rrr(i).elevation;
     ndiff = rrr(i).mnorth - rrr(i).north;
     ediff = rrr(i).meast - rrr(i).east;
     for (j=1; j<=120; j++) {
+      geoveg.rn(,j,i) = rrr(i).rn(j);
+      geoveg.mnorth(,j,i) = rrr(i).mnorth(j);
+      geoveg.meast(,j,i) = rrr(i).meast(j);
+      geoveg.melevation(,j,i) = rrr(i).melevation(j);
+      geoveg.soe(,j,i) = rrr(i).soe(j);
+
       mindx = where(d(j,i).mx > 0);
       if (is_array(mindx)) {
-        for (k=1;k<=numberof(mindx);k++) {
-          ccount++;
-          geoveg.rn(ccount) = rrr(i).rn(j);
-          geoveg.mnorth(ccount) = rrr(i).mnorth(j);
-          geoveg.meast(ccount) = rrr(i).meast(j);
-          geoveg.melevation(ccount) = rrr(i).melevation(j);
-          geoveg.soe(ccount) = rrr(i).soe(j);
-          geoveg.nx(ccount) = char(k);
-          // find actual ground surface elevation using simple trig (similar triangles)
-
-          if ((d(j,i).mx(1) > 0) && (rrr(i).melevation(j) > 0)) {
-            eratio = float(d(j,i).mx(mindx(k)))/float(d(j,i).mx(1));
-            geoveg.elevation(ccount) = int(rrr(i).melevation(j) - eratio * elvdiff(j));
-            geoveg.north(ccount) = int(rrr(i).mnorth(j) - eratio * ndiff(j));
-            geoveg.east(ccount) = int(rrr(i).meast(j) - eratio * ediff(j));
-            geoveg.intensity(ccount) = d(j,i).mv(mindx(k));
-          }
+	k=indgen(numberof(mindx));
+	geoveg.nx(k,j,i) = char(k);
+// find actual ground surface elevation using simple trig (similar triangles)
+        if ((d(j,i).mx(1) > 0) && (rrr(i).melevation(j) > 0)) {
+	  eratio = float(d(j,i).mx(mindx))/float(d(j,i).mx(1));
+          geoveg.elevation(k,j,i) = int(rrr(i).melevation(j) - eratio * elvdiff(j));
+          geoveg.north(k,j,i) = int(rrr(i).mnorth(j) - eratio * ndiff(j));
+          geoveg.east(k,j,i) = int(rrr(i).meast(j) - eratio * ediff(j));
+          geoveg.intensity(k,j,i) = d(j,i).mv(mindx);
         }
       }
     }
   } /* end for loop */
 
-  geoveg = geoveg(1:ccount);
+  if (multi_peaks)
+    geoveg = geoveg(where(geoveg.nx !=0));
 
   //write,format="Processing complete. %d rasters drawn. %s", len, "\n"
   return geoveg;
@@ -944,7 +942,6 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=, hard_sur
   rv_null.nx = -1;
   if (irange < 0)
     return rv_null;
-
 
  // This is the transmit pulse... use algorithm for transmit pulse based on algo used for return pulse.
    rptxi = -short(*rp.tx(i));	// flip it over and convert to signed short
