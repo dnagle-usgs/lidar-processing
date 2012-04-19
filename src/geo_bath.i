@@ -172,9 +172,6 @@ func make_bathy(latutm=, q=, avg_surf=) {
   /* find start and stop raster numbers for all flightlines */
   rn_arr = sel_region(q);
 
-  /* initialize counter variables */
-  tot_count = 0;
-
   if(is_void(rn_arr)) {
     write, "No Data in selected flightline. Good Bye!";
     return [];
@@ -198,15 +195,14 @@ func make_bathy(latutm=, q=, avg_surf=) {
       //make depth correction using compute_depth
       write, "Correcting water depths for Snells law...";
       grow, depth_all, compute_depth(depth);
-      tot_count += numberof(depth.elevation);
     }
   }
 
   if (_ytk) tkcmd, "destroy .seg";
 
   write, "\nStatistics: \r";
-  write, format="Total number of records processed = %d\n",tot_count;
+  write, format="Total number of records processed = %d\n",
+      numberof(depth_all.elevation);
 
-  no_append = 0;
   return depth_all;
 }
