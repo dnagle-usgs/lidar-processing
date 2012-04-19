@@ -175,39 +175,38 @@ func make_bathy(latutm=, q=, avg_surf=) {
   /* initialize counter variables */
   tot_count = 0;
 
-  if (is_array(rn_arr)) {
-    no_t = numberof(rn_arr(1,));
-
-    open_seg_process_status_bar;
-
-    for (i=1;i<=no_t;i++) {
-      if ((rn_arr(1,i) != 0)) {
-        write, format="Processing segment %d of %d for bathymetry\n", i, no_t;
-        d = run_bath(start=rn_arr(1,i), stop=rn_arr(2,i));
-        if ( d == 0 ) return 0;
-        write, "Processing for first_surface...";
-        rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=1);
-        a=[];
-        write, "Using make_fs_bath for submerged topography...";
-        depth = make_fs_bath(d,rrr, avg_surf=avg_surf);
-
-        //make depth correction using compute_depth
-        write, "Correcting water depths for Snells law...";
-        grow, depth_all, compute_depth(depth);
-        tot_count += numberof(depth.elevation);
-      }
-    }
-
-    if (_ytk) tkcmd, "destroy .seg";
-
-    write, "\nStatistics: \r";
-    write, format="Total number of records processed = %d\n",tot_count;
-
-    no_append = 0;
-    return depth_all;
-
-  } else {
+  if(is_void(rn_arr)) {
     write, "No Data in selected flightline. Good Bye!";
-    return []
+    return [];
   }
+
+  no_t = numberof(rn_arr(1,));
+
+  open_seg_process_status_bar;
+
+  for (i=1;i<=no_t;i++) {
+    if ((rn_arr(1,i) != 0)) {
+      write, format="Processing segment %d of %d for bathymetry\n", i, no_t;
+      d = run_bath(start=rn_arr(1,i), stop=rn_arr(2,i));
+      if ( d == 0 ) return 0;
+      write, "Processing for first_surface...";
+      rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=1);
+      a=[];
+      write, "Using make_fs_bath for submerged topography...";
+      depth = make_fs_bath(d,rrr, avg_surf=avg_surf);
+
+      //make depth correction using compute_depth
+      write, "Correcting water depths for Snells law...";
+      grow, depth_all, compute_depth(depth);
+      tot_count += numberof(depth.elevation);
+    }
+  }
+
+  if (_ytk) tkcmd, "destroy .seg";
+
+  write, "\nStatistics: \r";
+  write, format="Total number of records processed = %d\n",tot_count;
+
+  no_append = 0;
+  return depth_all;
 }
