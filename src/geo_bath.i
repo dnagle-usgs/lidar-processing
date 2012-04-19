@@ -159,19 +159,10 @@ func make_bathy(latutm=, q=, avg_surf=) {
   extern tans, pnav, rn_arr;
   depth_all = [];
 
-  if (!is_array(tans)) {
-    write, "TANS information not loaded.  Running function rbtans() ... \n";
-    tans = rbtans();
-    write, "\n";
-  }
-  write, "TANS information LOADED. \n";
-  if (!is_array(pnav)) {
-    write, "Precision Navigation (PNAV) data not loaded."+
-      "Running function rbpnav() ... \n";
-    pnav = rbpnav();
-  }
-  write, "PNAV information LOADED. \n"
-    write, "\n";
+  if(is_void(tans))
+    error, "TANS/INS data not loaded";
+  if(is_void(pnav))
+    error, "PNAV data not loaded";
 
   if (!is_array(q)) {
     /* select a region using function gga_win_sel in rbgga.i */
