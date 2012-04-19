@@ -347,7 +347,6 @@ Returns:
         write, format="Processing segment %d of %d for vegetation\n", i, no_t;
         if (!multi_peaks) {
           d = run_vegx(start=rn_arr(1,i), stop=rn_arr(2,i),use_be_centroid=use_be_centroid, use_be_peak=use_be_peak, hard_surface=hard_surface, alg_mode=alg_mode);
-          a=[];
           write, "Using make_fs_veg_all (multi_peaks=0) for vegetation...";
 	  dm = vegpix2vegpixs(d);
 	  cveg = make_fs_veg_all(dm, rrr, multi_peaks=0);
@@ -356,7 +355,6 @@ Returns:
           tot_count += numberof(veg.elevation);
         } else {
           d = run_vegx(start=rn_arr(1,i), stop=rn_arr(2,i),use_be_peak=use_be_peak,last=255,multi_peaks=1);
-          a = [];
           write, "Using make_fs_veg_all (multi_peaks=1) for vegetation...";
           veg = make_fs_veg_all(d, rrr);
           grow, veg_all, veg;
