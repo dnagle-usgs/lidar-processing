@@ -750,7 +750,7 @@ func run_veg_all( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=
 }
 
 func make_fs_veg_all (d, rrr, multi_peaks=) {
-/* DOCUMENT make_fs_veg_all (d, rrr)
+/* DOCUMENT make_fs_veg_all (d, rrr, multi_peaks=)
 
   This function makes a veg data array using the
   georectification of the first surface return.  The parameters are as
@@ -761,6 +761,7 @@ func make_fs_veg_all (d, rrr, multi_peaks=) {
 
  rrr  Array of structure R containing first surface information.
            This the is the return value of function first_surface.
+
  multi_peaks Set to 1 for data with first 10 returs per pulse, set 
            to 0 for data with only first and last returns. default=1. 
 
