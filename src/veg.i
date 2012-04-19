@@ -335,13 +335,11 @@ Returns:
     tot_count = 0;
     ba_count = 0;
     bd_count = 0;
-    fcount = 0;
     n_all3sat = 0;
 
     open_seg_process_status_bar;
     for (i=1;i<=no_t;i++) {
       if ((rn_arr(1,i) != 0)) {
-        fcount ++;
         write, "Processing for first_surface...";
         rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=use_centroid, use_highelv_echo=use_highelv_echo);
         write, format="Processing segment %d of %d for vegetation\n", i, no_t;
