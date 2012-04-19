@@ -30,7 +30,6 @@ func make_fs_bath(d, rrr, avg_surf=) {
   len = (numberof(d(0,,)) < numberof(rrr)) ? numberof(d(0,,)) : numberof(rrr);
 
   geodepth = array(GEOALL, len);
-  bath_arr = array(long,120,len);
 
   offset = array(double, 120);
 
@@ -76,7 +75,6 @@ func make_fs_bath(d, rrr, avg_surf=) {
         fs_rtn_cent = rrr(i).fs_rtn_centroid(indx);
       }
       geodepth(i).depth(indx) = int((-d(,i).idx(indx) + fs_rtn_cent ) * CNSH2O2X *100.-0.5);
-      bath_arr(indx,i) = long(((-d(,i).idx(indx)+fs_rtn_cent ) * CNSH2O2X *100) + rrr(i).elevation(indx));
       geodepth(i).sr2(indx) =int((d(,i).idx(indx) - fs_rtn_cent)*10);
     }
     geodepth(i).bottom_peak = d(,i).bottom_peak;
@@ -158,7 +156,7 @@ func make_bathy(latutm=, q=, avg_surf=) {
 
   SEE ALSO: first_surface, run_bath, make_fs_bath
 */
-  extern tans, pnav, rn_arr, rn_arr_idx;
+  extern tans, pnav, rn_arr;
   depth_all = [];
 
   if (!is_array(tans)) {
@@ -185,9 +183,6 @@ func make_bathy(latutm=, q=, avg_surf=) {
 
   /* initialize counter variables */
   tot_count = 0;
-  ba_count = 0;
-  bd_count = 0;
-  fcount = 0;
 
   if (is_array(rn_arr)) {
     no_t = numberof(rn_arr(1,));
@@ -196,7 +191,6 @@ func make_bathy(latutm=, q=, avg_surf=) {
 
     for (i=1;i<=no_t;i++) {
       if ((rn_arr(1,i) != 0)) {
-        fcount ++;
         write, format="Processing segment %d of %d for bathymetry\n", i, no_t;
         d = run_bath(start=rn_arr(1,i), stop=rn_arr(2,i));
         if ( d == 0 ) return 0;
@@ -219,7 +213,6 @@ func make_bathy(latutm=, q=, avg_surf=) {
     write, format="Total number of records processed = %d\n",tot_count;
 
     no_append = 0;
-    rn_arr_idx = (rn_arr(dif,)(,cum)+1)(*);
     return depth_all;
 
   } else {
