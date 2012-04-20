@@ -60,9 +60,6 @@ func make_fs_bath(d, rrr, avg_surf=) {
         write,format= "No water surface Fresnel reflection in raster rn = %d\n",(rrr(i).rn(1) & 0xffffff);
         offset(*) = 0;
       }
-    }
-    //
-    if (avg_surf) {
       indx = where((d(,i).idx > 0) & (abs(offset) < 100));
     } else {
       indx = where((d(,i).idx));
@@ -165,11 +162,11 @@ func make_bathy(latutm=, q=, avg_surf=) {
     error, "PNAV data not loaded";
 
   if (!is_array(q)) {
-    /* select a region using function gga_win_sel in rbgga.i */
+    // select a region using function gga_win_sel in rbgga.i
     q = gga_win_sel(2, latutm=latutm, llarr=llarr);
   }
 
-  /* find start and stop raster numbers for all flightlines */
+  // find start and stop raster numbers for all flightlines
   rn_arr = sel_region(q);
 
   if(is_void(rn_arr)) {
@@ -192,7 +189,7 @@ func make_bathy(latutm=, q=, avg_surf=) {
       write, "Using make_fs_bath for submerged topography...";
       depth = make_fs_bath(d,rrr, avg_surf=avg_surf);
 
-      //make depth correction using compute_depth
+      // make depth correction using compute_depth
       write, "Correcting water depths for Snells law...";
       grow, depth_all, compute_depth(depth);
     }
@@ -200,7 +197,7 @@ func make_bathy(latutm=, q=, avg_surf=) {
 
   if (_ytk) tkcmd, "destroy .seg";
 
-  write, "\nStatistics: \r";
+  write, "\nStatistics:";
   write, format="Total number of records processed = %d\n",
       numberof(depth_all.elevation);
 
