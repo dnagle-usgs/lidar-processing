@@ -37,13 +37,16 @@ func make_fs_bath(d, rrr, avg_surf=) {
 
   offset = array(double, 120);
 
+  local raster, pulse;
+  parse_rn, rrr.rn, raster, pulse;
+
   for (i=1; i<=len; i=i+1) {
     // code added by AN (12/03/04) to make all surface returns across a raster
     // to be the average of the fresnel reflections.  the surface return is
     // determined from the reflections that have the first channel saturated
     // and come from close to the center of the swath.
     if (avg_surf) {
-      iidx = where((rrr(i).intensity > 220) & ((rrr(i).rn>>24) > 35) & ((rrr(i).rn>>24) < 85));
+      iidx = where((rrr(i).intensity > 220) & (pulse(,i) > 35) & (pulse(,i) < 85));
       if (is_array(iidx)) {
         elvs = median(rrr(i).elevation(iidx));
         elvsidx = where(abs(rrr(i).elevation(iidx)-elvs) <= 100) ;
@@ -57,7 +60,7 @@ func make_fs_bath(d, rrr, avg_surf=) {
         // offset
         offset = ((old_elvs - elvs)/(CNSH2O2X*100.));
       } else {
-        write,format= "No water surface Fresnel reflection in raster rn = %d\n",(rrr(i).rn(1) & 0xffffff);
+        write,format= "No water surface Fresnel reflection in raster rn = %d\n", raster(1,i);
         offset(*) = 0;
       }
       indx = where((d(,i).idx > 0) & (abs(offset) < 100));
