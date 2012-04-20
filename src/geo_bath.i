@@ -4,8 +4,8 @@ require, "eaarl.i";
    For processing bathymetry data using the topographic georectification.
 */
 
-func make_fs_bath(d, rrr, avg_surf=) {
-/* DOCUMENT make_fs_bath (d, rrr, avg_surf=)
+func make_fs_bath(d, rrr, avg_surf=, sample_interval=) {
+/* DOCUMENT make_fs_bath (d, rrr, avg_surf=, sample_interval=)
 
   This function makes a depth or bathymetric image using the georectification
   of the first surface return. The parameters are as follows:
@@ -65,7 +65,7 @@ func make_fs_bath(d, rrr, avg_surf=) {
         // surface occurs for each laser pulse with respect to where its
         // current surface elevation is. this change is defined by the array
         // offset
-        offset = ((old_elvs - elvs)/(CNSH2O2X*100.));
+        offset = ((old_elvs - elvs)/(CNSH2O2X*sample_interval*100.));
       }
     }
     indx = where((d(,i).idx > 0) & (abs(offset) < 100));
@@ -90,8 +90,8 @@ func make_fs_bath(d, rrr, avg_surf=) {
   return geodepth;
 }
 
-func compute_depth(data) {
-/* DOCUMENT compute_depth(data)
+func compute_depth(data, sample_interval=) {
+/* DOCUMENT compute_depth(data, sample_interval=)
   This function computes the depth in water using the mirror position and the
   angle of refraction in water. The input parameters defined are as follows:
 
@@ -104,7 +104,7 @@ func compute_depth(data) {
   // Force copy so that original isn't modified in place.
   data = noop(data);
 
-  dist = data.sr2/10. * NS2MAIR;
+  dist = data.sr2/10. * NS2MAIR * sample_interval;
 
   ref = [data.meast/100., data.mnorth/100., data.melevation/100.];
   fs = [data.east/100., data.north/100., data.elevation/100.];
@@ -157,6 +157,7 @@ func make_bathy(latutm=, q=, avg_surf=) {
 */
   extern tans, pnav, rn_arr;
   depth_all = [];
+  sample_interval = 1.0;
 
   if(is_void(tans))
     error, "TANS/INS data not loaded";
@@ -189,11 +190,12 @@ func make_bathy(latutm=, q=, avg_surf=) {
       rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=1);
       a=[];
       write, "Using make_fs_bath for submerged topography...";
-      depth = make_fs_bath(d,rrr, avg_surf=avg_surf);
+      depth = make_fs_bath(d,rrr, avg_surf=avg_surf,
+        sample_interval=sample_interval);
 
       // make depth correction using compute_depth
       write, "Correcting water depths for Snells law...";
-      grow, depth_all, compute_depth(depth);
+      grow, depth_all, compute_depth(depth, sample_interval=sample_interval);
     }
   }
 
