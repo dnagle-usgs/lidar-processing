@@ -45,13 +45,16 @@ func make_fs_bath(d, rrr, avg_surf=) {
   pulse_window = 25;
 
   for (i=1; i<=len; i=i+1) {
+    offset(*) = 0.;
     // code added by AN (12/03/04) to make all surface returns across a raster
     // to be the average of the fresnel reflections.  the surface return is
     // determined from the reflections that have the first channel saturated
     // and come from close to the center of the swath.
-    if (avg_surf) {
+    if(avg_surf) {
       iidx = where((rrr(i).intensity > 220) & (abs(60 - pulse(,i)) < pulse_window));
-      if (is_array(iidx)) {
+      if(!is_array(iidx)) {
+        write,format= "No water surface Fresnel reflection in raster rn = %d\n", raster(1,i);
+      } else {
         elvs = median(rrr(i).elevation(iidx));
         elvsidx = where(abs(rrr(i).elevation(iidx)-elvs) <= surface_window);
         elvs = avg(rrr(i).elevation(iidx(elvsidx)));
@@ -63,20 +66,11 @@ func make_fs_bath(d, rrr, avg_surf=) {
         // current surface elevation is. this change is defined by the array
         // offset
         offset = ((old_elvs - elvs)/(CNSH2O2X*100.));
-      } else {
-        write,format= "No water surface Fresnel reflection in raster rn = %d\n", raster(1,i);
-        offset(*) = 0;
       }
-      indx = where((d(,i).idx > 0) & (abs(offset) < 100));
-    } else {
-      indx = where((d(,i).idx));
     }
+    indx = where((d(,i).idx > 0) & (abs(offset) < 100));
     if (is_array(indx)) {
-      if (avg_surf) {
-        fs_rtn_cent = rrr(i).fs_rtn_centroid(indx)+offset(indx);
-      } else {
-        fs_rtn_cent = rrr(i).fs_rtn_centroid(indx);
-      }
+      fs_rtn_cent = rrr(i).fs_rtn_centroid(indx)+offset(indx);
       geodepth(i).depth(indx) = int((-d(,i).idx(indx) + fs_rtn_cent ) * CNSH2O2X *100.-0.5);
       geodepth(i).sr2(indx) =int((d(,i).idx(indx) - fs_rtn_cent)*10);
     }
