@@ -40,19 +40,23 @@ func make_fs_bath(d, rrr, avg_surf=) {
   local raster, pulse;
   parse_rn, rrr.rn, raster, pulse;
 
+  surface_window = 100;
+  altitude_thresh = 5000;
+  pulse_window = 25;
+
   for (i=1; i<=len; i=i+1) {
     // code added by AN (12/03/04) to make all surface returns across a raster
     // to be the average of the fresnel reflections.  the surface return is
     // determined from the reflections that have the first channel saturated
     // and come from close to the center of the swath.
     if (avg_surf) {
-      iidx = where((rrr(i).intensity > 220) & (pulse(,i) > 35) & (pulse(,i) < 85));
+      iidx = where((rrr(i).intensity > 220) & (abs(60 - pulse(,i)) < pulse_window));
       if (is_array(iidx)) {
         elvs = median(rrr(i).elevation(iidx));
-        elvsidx = where(abs(rrr(i).elevation(iidx)-elvs) <= 100) ;
+        elvsidx = where(abs(rrr(i).elevation(iidx)-elvs) <= surface_window);
         elvs = avg(rrr(i).elevation(iidx(elvsidx)));
         old_elvs = rrr(i).elevation;
-        indx = where(rrr(i).elevation < (rrr(i).melevation - 5000));
+        indx = where(rrr(i).melevation - rrr(i).elevation > altitude_thresh);
         if (is_array(indx)) rrr(i).elevation(indx) = int(elvs);
         // now rrr.fs_rtn_centroid will change depending on where in time the
         // surface occurs for each laser pulse with respect to where its
