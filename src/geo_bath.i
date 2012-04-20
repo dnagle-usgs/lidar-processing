@@ -27,17 +27,17 @@ func make_fs_bath(d, rrr, avg_surf=) {
   // rrr is the topo array from surface_topo.i
   default, avg_surf, 0;
 
-  len = (numberof(d(0,,)) < numberof(rrr)) ? numberof(d(0,,)) : numberof(rrr);
+  if(dimsof(d)(3) < numberof(rrr))
+    rrr = rrr(:dimsof(d)(3));
+  if(numberof(rrr) < dimsof(d)(3))
+    d = d(,:numberof(rrr));
 
+  len = numberof(rrr);
   geodepth = array(GEOALL, len);
 
   offset = array(double, 120);
 
   for (i=1; i<=len; i=i+1) {
-    geodepth(i).rn = rrr(i).rn;
-    geodepth(i).north = rrr(i).north;
-    geodepth(i).east = rrr(i).east;
-
     // code added by AN (12/03/04) to make all surface returns across a raster
     // to be the average of the fresnel reflections.  the surface return is
     // determined from the reflections that have the first channel saturated
@@ -74,16 +74,18 @@ func make_fs_bath(d, rrr, avg_surf=) {
       geodepth(i).depth(indx) = int((-d(,i).idx(indx) + fs_rtn_cent ) * CNSH2O2X *100.-0.5);
       geodepth(i).sr2(indx) =int((d(,i).idx(indx) - fs_rtn_cent)*10);
     }
-    geodepth(i).bottom_peak = d(,i).bottom_peak;
-    geodepth(i).first_peak = d(,i).first_peak;
-
-
-    geodepth(i).elevation = rrr(i).elevation;
-    geodepth(i).mnorth = rrr(i).mnorth;
-    geodepth(i).meast = rrr(i).meast;
-    geodepth(i).melevation = rrr(i).melevation;
-    geodepth(i).soe = rrr(i).soe;
   }
+
+  geodepth.rn = rrr.rn;
+  geodepth.north = rrr.north;
+  geodepth.east = rrr.east;
+  geodepth.elevation = rrr.elevation;
+  geodepth.mnorth = rrr.mnorth;
+  geodepth.meast = rrr.meast;
+  geodepth.melevation = rrr.melevation;
+  geodepth.soe = rrr.soe;
+  geodepth.bottom_peak = d.bottom_peak;
+  geodepth.first_peak = d.first_peak;
 
   return geodepth;
 }
