@@ -67,7 +67,6 @@ func make_fs_bath(d, rrr, avg_surf=) {
     if (is_array(indx)) {
       if (avg_surf) {
         fs_rtn_cent = rrr(i).fs_rtn_centroid(indx)+offset(indx);
-        rrr(i).fs_rtn_centroid(indx) += offset(indx);
       } else {
         fs_rtn_cent = rrr(i).fs_rtn_centroid(indx);
       }
