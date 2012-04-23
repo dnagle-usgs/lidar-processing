@@ -188,7 +188,7 @@ func make_bathy(latutm=, q=, avg_surf=) {
       if ( d == 0 ) return 0;
       write, "Processing for first_surface...";
       rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=1);
-      a=[];
+
       write, "Using make_fs_bath for submerged topography...";
       depth = make_fs_bath(d,rrr, avg_surf=avg_surf,
         sample_interval=sample_interval);
