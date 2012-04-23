@@ -124,13 +124,6 @@ verbose=) {
           rtrs(i).fs_rtn_centroid(ii) = centroid_values(4);
         }
       }
-    } else if(usecentroid == 2) {
-      //  This area is for the Leading-edge-tracker stuff
-      for(ii = 1; ii < rp.npixels(1); ii++) {
-        centroid_values = let(rp, ii);
-        rtrs(i).irange(ii) = centroid_values(1);
-        rtrs(i).intensity(ii) = centroid_values(2);
-      }
     } else {
       // This section processes basic irange
       rtrs(i).irange = rp.irange;
