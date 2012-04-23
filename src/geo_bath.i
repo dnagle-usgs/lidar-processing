@@ -157,7 +157,7 @@ func make_bathy(latutm=, q=, avg_surf=) {
   SEE ALSO: first_surface, run_bath, make_fs_bath, rbpnav, rbtans,
     define_bath_ctl
 */
-  extern tans, pnav, rn_arr;
+  extern tans, pnav;
   depth_all = [];
   sample_interval = 1.0;
 
