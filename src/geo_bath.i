@@ -141,19 +141,21 @@ func make_bathy(latutm=, q=, avg_surf=) {
 /* DOCUMENT make_bathy(latutm=, q=, avg_surf=)
   This function allows a user to define a region on the gga plot of flightlines
   (usually window 6) to write out a 'level 1' file and plot a depth image
-  defined in that region. The input parameters are:
+  defined in that region.
 
-  opath: ouput path where the output file must be written
-  ofname:  output file name
+    latutm= Passed to gga_win_sel, if q is void.
+    q= Indices into extern pnav where data should be processed.
+    avg_surf= Set to 1 if the surface returns should be averaged to the first
+      surface returns at the center of the swath.
 
-  Returns:
-  This function returns the array depth_arr.
+  Returns an array depth_all of GEOALL.
 
   Please ensure that the tans and pnav data have been loaded before executing
-  make_bathy.  See rbpnav() and rbtans() for details.  The structure BATH_CTL
-  must be initialized as well. See define_bath_ctl()
+  make_bathy. See rbpnav() and rbtans() for details. The structure BATH_CTL
+  must be initialized as well. See define_bath_ctl().
 
-  SEE ALSO: first_surface, run_bath, make_fs_bath
+  SEE ALSO: first_surface, run_bath, make_fs_bath, rbpnav, rbtans,
+    define_bath_ctl
 */
   extern tans, pnav, rn_arr;
   depth_all = [];
@@ -185,7 +187,8 @@ func make_bathy(latutm=, q=, avg_surf=) {
     if ((rn_arr(1,i) != 0)) {
       write, format="Processing segment %d of %d for bathymetry\n", i, no_t;
       d = run_bath(start=rn_arr(1,i), stop=rn_arr(2,i));
-      if ( d == 0 ) return 0;
+      if(d == 0) return 0;
+
       write, "Processing for first_surface...";
       rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=1);
 
