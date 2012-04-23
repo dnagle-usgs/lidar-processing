@@ -30,29 +30,10 @@ struct RTRS {
   short fs_rtn_centroid(120);
 };
 
-local XRTRS;
-/* DOCUMENT XRTRS
-  XRTRS = Extended RTRS to hold info for qde georef.  The additional
-  information is radian roll, pitch, and precision altitude in meters.
-*/
-struct XRTRS {
-  int raster;             // Raster number
-  double soe(120);        // Seconds of the epoch for each pulse
-  float irange(120);      // Integer range counter values
-  short intensity(120);   // Laser return intensity
-  short sa(120);          // Scan angle counts
-  float rroll(120);       // Roll in radians
-  float rpitch(120);      // Pitch in radians
-  float alt(120);         // Altitude in either NS or meters
-  // The location within the return waveform of the first return centroid.
-  // This is to used to subtract from the depth idx to get true depth.
-  short fs_rtn_centroid(120);
-}
-
-func irg(start, stop, inc=, delta=, georef=, usecentroid=, use_highelv_echo=,
-skip=, verbose=) {
-/* DOCUMENT irg(start, stop, inc=, delta=, georef=, usecentroid=,
-  use_highelv_echo=, skip=, verbose=)
+func irg(start, stop, inc=, delta=, usecentroid=, use_highelv_echo=, skip=,
+verbose=) {
+/* DOCUMENT irg(start, stop, inc=, delta=, usecentroid=, use_highelv_echo=,
+   skip=, verbose=)
 
   Returns an array of irange values for the specified records, from START to
   STOP.
@@ -76,11 +57,6 @@ skip=, verbose=) {
         skip=2   Use every 2nd record
         skip=15  Use every 15th record
 
-  Option that specifies return type:
-    georef= Specifies whether normal or georefectified output is desired.
-        georef=0    Return result uses struct RTRS (default)
-        georef=1    Return result uses struct XRTRS
-
   Options that alter range algorithm:
     usecentroid= Allows centroid range to be determined using all three
       waveforms to correct for range walk.
@@ -91,6 +67,8 @@ skip=, verbose=) {
       higher than the bias.
         use_highelv_echo=0   Disable (default)
         use_highelv_echo=1   Enable
+
+  Returns data in RTRS structure.
 */
   extern ops_conf;
   ops_conf_validate, ops_conf;
@@ -106,7 +84,6 @@ skip=, verbose=) {
 
   default, skip, 1;
   default, verbose, 0;
-  default, georef, 0;
   default, usecentroid, 0;
   default, use_highelv_echo, 0;
 
@@ -117,7 +94,7 @@ skip=, verbose=) {
   count = numberof(rasters);
 
   // Initialize output
-  rtrs = array((georef ? XRTRS : RTRS), count);
+  rtrs = array(RTRS, count);
   rtrs.raster = unref(rasters);
 
   // Determine if ytk popup status dialogs are used.
@@ -165,12 +142,6 @@ skip=, verbose=) {
       else if(verbose)
         write, format="  %d/%d     \r", i, count;
     }
-  }
-  if(georef) {
-    atime = rtrs.soe - soe_day_start;
-    rtrs.rroll = interp(tans.roll*DEG2RAD, tans.somd, atime);
-    rtrs.rpitch = interp(tans.pitch*DEG2RAD, tans.somd, atime);
-    rtrs.alt = interp(pnav.alt, pnav.sod, atime);
   }
 
   return rtrs;
