@@ -172,28 +172,32 @@ func make_bathy(latutm=, q=, avg_surf=) {
   }
 
   // find start and stop raster numbers for all flightlines
-  rn_arr = sel_region(q);
+  raster_ranges = sel_region(q);
 
-  if(is_void(rn_arr)) {
+  if(is_void(raster_ranges)) {
     write, "No Data in selected flightline. Good Bye!";
     return [];
   }
+  raster_starts = raster_ranges(1,);
+  raster_stops = raster_ranges(2,);
+  raster_ranges = [];
 
-  no_t = numberof(rn_arr(1,));
+  count = numberof(raster_starts);
 
   open_seg_process_status_bar;
 
-  for (i=1;i<=no_t;i++) {
-    if ((rn_arr(1,i) != 0)) {
-      write, format="Processing segment %d of %d for bathymetry\n", i, no_t;
-      d = run_bath(start=rn_arr(1,i), stop=rn_arr(2,i));
-      if(d == 0) return 0;
+  for(i = 1; i <= count; i++) {
+    if((raster_starts(i) != 0)) {
+      write, format="Processing segment %d of %d for bathymetry\n", i, count;
+      depth = run_bath(start=raster_starts(i), stop=raster_stops(i));
+      if(depth == 0) return 0;
 
       write, "Processing for first_surface...";
-      rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=1);
+      surface = first_surface(start=raster_starts(i), stop=raster_stops(i),
+        usecentroid=1);
 
       write, "Using make_fs_bath for submerged topography...";
-      depth = make_fs_bath(d,rrr, avg_surf=avg_surf,
+      depth = make_fs_bath(depth, surface, avg_surf=avg_surf,
         sample_interval=sample_interval);
 
       // make depth correction using compute_depth

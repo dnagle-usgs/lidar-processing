@@ -114,22 +114,22 @@ skip=, verbose=) {
   rasters = indgen(start:stop:skip);
 
   // Calculate length of output array
-  len = numberof(rasters);
+  count = numberof(rasters);
 
   // Initialize output
-  rtrs = array((georef ? XRTRS : RTRS), len);
+  rtrs = array((georef ? XRTRS : RTRS), count);
   rtrs.raster = unref(rasters);
 
   // Determine if ytk popup status dialogs are used.
-  use_ytk = _ytk && len >= 10;
+  use_ytk = _ytk && count >= 10;
 
   // Scale update_freq based on how many rasters are processing.
-  update_freq = [10,20,50](digitize(len, [200,400]));
+  update_freq = [10,20,50](digitize(count, [200,400]));
 
   if(verbose)
     write, format="skip: %d\n", skip;
 
-  for(i = 1; i <= len; i++) {
+  for(i = 1; i <= count; i++) {
     // decode a raster
     rp = decode_raster(get_erast(rn=rtrs(i).raster));
 
@@ -161,9 +161,9 @@ skip=, verbose=) {
     rtrs(i).sa = rp.sa;
     if((i % update_freq) == 0) {
       if(use_ytk)
-        tkcmd, swrite(format="set progress %d", i*100/len);
+        tkcmd, swrite(format="set progress %d", i*100/count);
       else if(verbose)
-        write, format="  %d/%d     \r", i, len;
+        write, format="  %d/%d     \r", i, count;
     }
   }
   if(georef) {
