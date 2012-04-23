@@ -1,8 +1,8 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 require, "eaarl.i";
 
-func pcr(rast, n) {
-/* DOCUMENT pcr(rast,n)
+func pcr(rast, pulse) {
+/* DOCUMENT pcr(rast, pulse)
 
   Computes the centroid of the transmit and return pulses, then derives a
   range value that corrects for signal level range walk. The most sensitive
@@ -10,7 +10,7 @@ func pcr(rast, n) {
 
   Parameters:
     rast: A raster array of type RAST.
-    n: The pixel within the raster to use.
+    pulse: The pulse number within the raster to use.
 
   **Important** The centroid calculations do not include corrections for
   range_bias.
@@ -30,7 +30,7 @@ func pcr(rast, n) {
   SEE ALSO: RAST, cent
 */
   extern ops_conf;
-  if(n == 0)
+  if(pulse == 0)
     return [];
 
   // Return values
@@ -38,7 +38,7 @@ func pcr(rast, n) {
 
   // find out how many waveform points are in the primary (most sensitive)
   // receiver channel
-  np = numberof(*rast.rx(n,1));
+  np = numberof(*rast.rx(pulse,1));
 
   // give up if there are not at least two points
   if(np < 2)
@@ -48,10 +48,10 @@ func pcr(rast, n) {
   if(np > 12)
     np = 12;
 
-  if(numberof(*rast.tx(n)) > 0)
-    rv(4) = (*rast.tx(n) == 0)(sum);
+  if(numberof(*rast.tx(pulse)) > 0)
+    rv(4) = (*rast.tx(pulse) == 0)(sum);
   // compute transmit centroid
-  ctx = cent(*rast.tx(n));
+  ctx = cent(*rast.tx(pulse));
 
   /*
     Now examine all three receiver waveforms for saturation, and use the one
@@ -75,8 +75,8 @@ func pcr(rast, n) {
     This would go in the first "if" statement below.
   */
 
-  if((numberof(where(((*rast.rx(n,1))(1:np)) < 5))) <= ops_conf.max_sfc_sat) {
-    cv = cent( *rast.rx(n, 1 ) );
+  if((numberof(where(((*rast.rx(pulse,1))(1:np)) < 5))) <= ops_conf.max_sfc_sat) {
+    cv = cent(*rast.rx(pulse,1));
     // Must be water column only return.
     if(cv(3) < -90) {
       slope = 0.029625;
@@ -85,29 +85,29 @@ func pcr(rast, n) {
       cv(1) += y;
     }
     cv(1:2) += ops_conf.chn1_range_bias;
-  } else if(numberof(where(((*rast.rx(n,2))(1:np)) < 5)) <= ops_conf.max_sfc_sat) {
-    cv = cent(*rast.rx(n, 2));
+  } else if(numberof(where(((*rast.rx(pulse,2))(1:np)) < 5)) <= ops_conf.max_sfc_sat) {
+    cv = cent(*rast.rx(pulse,2));
     cv(1:2) += ops_conf.chn2_range_bias;
     cv(3) += 300;
   } else {
-    cv = cent(*rast.rx(n, 3));
+    cv = cent(*rast.rx(pulse,3));
     cv(1:2) += ops_conf.chn3_range_bias;
     cv(3) += 600;
   }
 
   // Now compute the actual range value in NS
-  rv(1) = float(rast.irange(n)) - ctx(1) + cv(1);
+  rv(1) = float(rast.irange(pulse)) - ctx(1) + cv(1);
   rv(2) = cv(3);
-  rv(3) = rast.irange(n);
+  rv(3) = rast.irange(pulse);
 
   // This will be needed to compute true depth
   rv(4) = cv(1);
   return rv;
 }
 
-func cent(a) {
+func cent(raw_wf) {
 /* DOCUMENT cent(a)
-  Compute the centroid of "a" using the no more than the first 12 points.
+  Compute the centroid of "raw_wf" using the no more than the first 12 points.
   This function considers the entire pulse and is probably only good for solid
   first-return targets or bottom pulses.
 
@@ -116,18 +116,18 @@ func cent(a) {
     result(2) = peak range
     result(3) = peak power
 */
-  if(numberof(a) < 2)
+  if(numberof(raw_wf) < 2)
     return [0., 0., 0.];
 
   // flip it over and convert to signed short
-  a = -short(a);
+  wf = -short(raw_wf);
   // remove bias using first point of wf
-  a -= a(1);
+  wf -= wf(1);
 
   // Find maximum value & associated index
-  mv = a(max);
-  mx = a(mxx);
+  max_index = wf(mxx);
+  max_intensity = wf(max_index);
 
-  c = min(wf_centroid(a, lim=12), 10000.);
-  return [c, mx, mv];
+  centroid = min(wf_centroid(wf, lim=12), 10000.);
+  return [centroid, max_index, max_intensity];
 }
