@@ -19,7 +19,7 @@ require, "eaarla_vector.i";
 */
 
 func first_surface(nil, start=, stop=, center=, delta=, north=, usecentroid=,
-use_highelv_echo=, quiet=, verbose=) {
+use_highelv_echo=, verbose=) {
 /* DOCUMENT first_surface(start=, stop=, center=, delta=, north=, usecentroid=,
  * use_highelv_echo=, verbose=)
 
@@ -34,6 +34,8 @@ use_highelv_echo=, quiet=, verbose=) {
     usecentroid= Set to 1 to use the centroid of the waveform.
     use_highelv_echo= Set to 1 to exclude waveforms that tripped above the
         range gate.
+    verbose= By default, progress/info output is enabled (verbose=1). Set
+        verbose=0 to silence it.
 
   This returns an array of type "R" which will contain the xyz of the mirror
   "track point" and the xyz of the "first surface threshold trigger point" or
@@ -45,13 +47,8 @@ use_highelv_echo=, quiet=, verbose=) {
     0 = center, delta
     1 = start,  stop
     2 = start,  delta
-
-  verbose= By default, progress/info output is enabled (verbose=1). Set
-  verbose=0 to silence it. (For backwards compatibility, there is also a
-  quiet= option that works inversely to verbose=, but it is deprecated.)
 */
-  default, quiet, 0;
-  default, verbose, !quiet;
+  default, verbose, 1;
   default, north, 0;
 
   if(is_void(ops_conf))
