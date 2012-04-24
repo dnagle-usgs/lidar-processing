@@ -39,7 +39,7 @@ use_highelv_echo=, quiet=, verbose=) {
   "track point" and the xyz of the "first surface threshold trigger point" or
   "fsttp." The "fsttp" is derived here by using the "irange" (integer range)
   value from the raw data. While the fsttp is certainly not the best range
-  measurement, it does establish highly acurate vector information which will
+  measurement, it does establish highly accurate vector information which will
   greatly simplify additional subaerial waveform processing.
 
     0 = center, delta
@@ -50,7 +50,6 @@ use_highelv_echo=, quiet=, verbose=) {
   verbose=0 to silence it. (For backwards compatibility, there is also a
   quiet= option that works inversely to verbose=, but it is deprecated.)
 */
-  extern roll, pitch, heading, palt, utm, northing, easting, a, irg_a;
   default, quiet, 0;
   default, verbose, !quiet;
   default, north, 0;
