@@ -322,7 +322,7 @@ func bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &raw_wf, &wf
   default, ex_bath_rn, -1;
   // simple cache for raster data
   if(ex_bath_rn != raster_number) {
-    raster = decode_raster(get_erast(rn=raster_number));
+    raster = decode_raster(rn=raster_number);
     ex_bath_rn = raster_number;
     ex_bath_rp = raster;
   } else {

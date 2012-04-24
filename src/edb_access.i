@@ -156,7 +156,7 @@ func load_edb(fn=, update=, verbose=, override_offset=) {
   eaarl_time_offset = 0;
 
   if(is_void(override_offset))
-    eaarl_time_offset = edb(1).seconds - decode_raster(get_erast(rn=1)).soe;
+    eaarl_time_offset = edb(1).seconds - decode_raster(rn=1).soe;
   else
     eaarl_time_offset = override_offset;
 
@@ -377,12 +377,16 @@ func decode_rasters(raw) {
   return rasts;
 }
 
-func decode_raster(raw) {
-/* DOCUMENT rast = decode_raster(raw)
+func decode_raster(raw, rn=) {
+/* DOCUMENT rast = decode_raster(raw, rn=)
   Decodes raw raster data (in a char array) into the RAST structure.
 
   Parameter:
     raw: An array of char as extracted from a TLD file by get_erast.
+
+  Option:
+    rn= A raster number to look up via get_erast; used only if raw is not
+      supplied.
 
   Returns:
     array(RAST,1) with the decoded raster data.
@@ -403,6 +407,9 @@ func decode_raster(raw) {
 */
   extern eaarl_time_offset, tca;
   local rasternbr, type, len;
+
+  if(is_void(raw) && !is_void(rn))
+    raw = get_erast(rn=rn);
 
   result = array(RAST,1);
   header = eaarla_decode_header(raw);

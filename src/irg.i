@@ -108,7 +108,7 @@ verbose=) {
 
   for(i = 1; i <= count; i++) {
     // decode a raster
-    rp = decode_raster(get_erast(rn=rtrs(i).raster));
+    rp = decode_raster(rn=rtrs(i).raster);
 
     rtrs(i).soe = rp.offset_time;
     if(usecentroid == 1) {
