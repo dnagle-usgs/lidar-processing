@@ -107,28 +107,27 @@ verbose=) {
     write, format="skip: %d\n", skip;
 
   for(i = 1; i <= count; i++) {
-    // decode a raster
-    rp = decode_raster(rn=rtrs(i).raster);
+    raster = decode_raster(rn=rtrs(i).raster);
 
-    rtrs(i).soe = rp.offset_time;
+    rtrs(i).soe = raster.offset_time;
     if(usecentroid == 1) {
-      for(ii = 1; ii < rp.npixels(1); ii++ ) {
+      for(pulse = 1; pulse < raster.npixels(1); pulse++) {
         if(use_highelv_echo) {
-          if(int((*rp.rx(ii,1))(max)-min((*rp.rx(ii,1))(1),(*rp.rx(ii,1))(0))) >= 5)
+          if(int((*raster.rx(pulse,1))(max)-min((*raster.rx(pulse,1))(1),(*raster.rx(pulse,1))(0))) >= 5)
             continue;
         }
-        centroid_values = pcr(rp, ii);
+        centroid_values = pcr(raster, pulse);
         if(numberof(centroid_values)) {
-          rtrs(i).irange(ii) = centroid_values(1);
-          rtrs(i).intensity(ii) = centroid_values(2);
-          rtrs(i).fs_rtn_centroid(ii) = centroid_values(4);
+          rtrs(i).irange(pulse) = centroid_values(1);
+          rtrs(i).intensity(pulse) = centroid_values(2);
+          rtrs(i).fs_rtn_centroid(pulse) = centroid_values(4);
         }
       }
     } else {
       // This section processes basic irange
-      rtrs(i).irange = rp.irange;
+      rtrs(i).irange = raster.irange;
     }
-    rtrs(i).sa = rp.sa;
+    rtrs(i).sa = raster.sa;
     if((i % update_freq) == 0) {
       if(use_ytk)
         tkcmd, swrite(format="set progress %d", i*100/count);
