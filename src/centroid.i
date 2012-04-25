@@ -13,12 +13,13 @@ func pcr(rast, pulse) {
     pulse: The pulse number within the raster to use.
 
   **Important** The centroid calculations do not include corrections for
-  range_bias.
+  range_bias. They do however include corrections for chn1_range_bias,
+  chn2_range_bias, and chn3_range_bias as necessary.
 
-  Return result is array(double, 4) where:
+  Return result is array(double, 3) where:
     result(1) = Centroid corrected range
     result(2) = Return's peak power
-    result(3) = Number of saturated pixels in transmit waveform
+    result(3) = Centroid range for rx waveform
 
   Note: result(2), return power, contains values ranging from 0 to 900 digital
   counts. The values are contained in three discrete ranges and each range
@@ -92,7 +93,7 @@ func pcr(rast, pulse) {
     rx_centroid(3) += 600;
   }
 
-  // Now compute the actual range value in NS
+  // Now compute the actual range value in sample counts
   result(1) = float(rast.irange(pulse)) - tx_centroid(1) + rx_centroid(1);
   result(2) = rx_centroid(3);
 
@@ -102,7 +103,7 @@ func pcr(rast, pulse) {
 }
 
 func cent(raw_wf) {
-/* DOCUMENT cent(a)
+/* DOCUMENT cent(raw_wf)
   Compute the centroid of "raw_wf" using the no more than the first 12 points.
   This function considers the entire pulse and is probably only good for solid
   first-return targets or bottom pulses.
