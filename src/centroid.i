@@ -47,8 +47,9 @@ func pcr(rast, pulse) {
 
   if(numberof(*rast.tx(pulse)) > 0)
     result(3) = (*rast.tx(pulse) == 0)(sum);
+
   // compute transmit centroid
-  ctx = cent(*rast.tx(pulse));
+  tx_centroid = cent(*rast.tx(pulse))(1);
 
   /*
     Now examine all three receiver waveforms for saturation, and use the one
@@ -93,7 +94,7 @@ func pcr(rast, pulse) {
   }
 
   // Now compute the actual range value in NS
-  result(1) = float(rast.irange(pulse)) - ctx(1) + cv(1);
+  result(1) = float(rast.irange(pulse)) - tx_centroid + cv(1);
   result(2) = cv(3);
 
   // This will be needed to compute true depth
