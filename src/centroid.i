@@ -33,7 +33,7 @@ func pcr(rast, pulse) {
     return [];
 
   // Return values
-  rv = array(float,3);
+  result = array(float,3);
 
   // find out how many waveform points are in the primary (most sensitive)
   // receiver channel
@@ -48,7 +48,7 @@ func pcr(rast, pulse) {
     np = 12;
 
   if(numberof(*rast.tx(pulse)) > 0)
-    rv(3) = (*rast.tx(pulse) == 0)(sum);
+    result(3) = (*rast.tx(pulse) == 0)(sum);
   // compute transmit centroid
   ctx = cent(*rast.tx(pulse));
 
@@ -95,12 +95,12 @@ func pcr(rast, pulse) {
   }
 
   // Now compute the actual range value in NS
-  rv(1) = float(rast.irange(pulse)) - ctx(1) + cv(1);
-  rv(2) = cv(3);
+  result(1) = float(rast.irange(pulse)) - ctx(1) + cv(1);
+  result(2) = cv(3);
 
   // This will be needed to compute true depth
-  rv(3) = cv(1);
-  return rv;
+  result(3) = cv(1);
+  return result;
 }
 
 func cent(raw_wf) {
