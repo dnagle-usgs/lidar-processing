@@ -108,8 +108,9 @@ verbose=) {
 
   for(i = 1; i <= count; i++) {
     raster = decode_raster(rn=rtrs(i).raster);
-
     rtrs(i).soe = raster.offset_time;
+    rtrs(i).sa = raster.sa;
+
     if(usecentroid == 1) {
       for(pulse = 1; pulse <= raster.npixels(1); pulse++) {
         if(use_highelv_echo) {
@@ -128,7 +129,7 @@ verbose=) {
       // This section processes basic irange
       rtrs(i).irange = raster.irange;
     }
-    rtrs(i).sa = raster.sa;
+
     if((i % update_freq) == 0) {
       if(use_ytk)
         tkcmd, swrite(format="set progress %d", i*100/count);
