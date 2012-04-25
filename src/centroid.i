@@ -18,8 +18,7 @@ func pcr(rast, pulse) {
   Return result is array(double, 4) where:
     result(1) = Centroid corrected range
     result(2) = Return's peak power
-    result(3) = Uncorrected irange value
-    result(4) = Number of saturated pixels in transmit waveform
+    result(3) = Number of saturated pixels in transmit waveform
 
   Note: result(2), return power, contains values ranging from 0 to 900 digital
   counts. The values are contained in three discrete ranges and each range
@@ -34,7 +33,7 @@ func pcr(rast, pulse) {
     return [];
 
   // Return values
-  rv = array(float,4);
+  rv = array(float,3);
 
   // find out how many waveform points are in the primary (most sensitive)
   // receiver channel
@@ -49,7 +48,7 @@ func pcr(rast, pulse) {
     np = 12;
 
   if(numberof(*rast.tx(pulse)) > 0)
-    rv(4) = (*rast.tx(pulse) == 0)(sum);
+    rv(3) = (*rast.tx(pulse) == 0)(sum);
   // compute transmit centroid
   ctx = cent(*rast.tx(pulse));
 
@@ -98,10 +97,9 @@ func pcr(rast, pulse) {
   // Now compute the actual range value in NS
   rv(1) = float(rast.irange(pulse)) - ctx(1) + cv(1);
   rv(2) = cv(3);
-  rv(3) = rast.irange(pulse);
 
   // This will be needed to compute true depth
-  rv(4) = cv(1);
+  rv(3) = cv(1);
   return rv;
 }
 

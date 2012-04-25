@@ -122,7 +122,7 @@ verbose=) {
         if(numberof(centroid_values)) {
           rtrs(i).irange(pulse) = centroid_values(1);
           rtrs(i).intensity(pulse) = centroid_values(2);
-          rtrs(i).fs_rtn_centroid(pulse) = centroid_values(4);
+          rtrs(i).fs_rtn_centroid(pulse) = centroid_values(3);
         }
       }
     } else {
