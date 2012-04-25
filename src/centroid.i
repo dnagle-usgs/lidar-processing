@@ -40,12 +40,10 @@ func pcr(rast, pulse) {
   np = numberof(*rast.rx(pulse,1));
 
   // give up if there are not at least two points
-  if(np < 2)
-    return;
+  if(np < 2) return;
 
   // use no more than 12
-  if(np > 12)
-    np = 12;
+  np = min(np,12);
 
   if(numberof(*rast.tx(pulse)) > 0)
     result(3) = (*rast.tx(pulse) == 0)(sum);
