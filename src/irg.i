@@ -113,7 +113,8 @@ verbose=) {
     if(usecentroid == 1) {
       for(pulse = 1; pulse <= raster.npixels(1); pulse++) {
         if(use_highelv_echo) {
-          if(int((*raster.rx(pulse,1))(max)-min((*raster.rx(pulse,1))(1),(*raster.rx(pulse,1))(0))) >= 5)
+          wf = *raster.rx(pulse,1);
+          if(int(wf(max) - min(wf(1), wf(0))) >= 5)
             continue;
         }
         centroid_values = pcr(raster, pulse);
