@@ -45,9 +45,6 @@ func pcr(rast, pulse) {
   // use no more than 12
   np = min(np,12);
 
-  if(numberof(*rast.tx(pulse)) > 0)
-    result(3) = (*rast.tx(pulse) == 0)(sum);
-
   // compute transmit centroid
   tx_centroid = cent(*rast.tx(pulse));
 
