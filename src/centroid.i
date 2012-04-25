@@ -73,8 +73,10 @@ func pcr(rast, pulse) {
     This would go in the first "if" statement below.
   */
 
-  if((numberof(where(((*rast.rx(pulse,1))(1:np)) < 5))) <= ops_conf.max_sfc_sat) {
-    cv = cent(*rast.rx(pulse,1));
+  rx = rast.rx(pulse,);
+
+  if((numberof(where((*rx(1))(1:np) < 5))) <= ops_conf.max_sfc_sat) {
+    cv = cent(*rx(1));
     // Must be water column only return.
     if(cv(3) < -90) {
       slope = 0.029625;
@@ -83,12 +85,12 @@ func pcr(rast, pulse) {
       cv(1) += y;
     }
     cv(1:2) += ops_conf.chn1_range_bias;
-  } else if(numberof(where(((*rast.rx(pulse,2))(1:np)) < 5)) <= ops_conf.max_sfc_sat) {
-    cv = cent(*rast.rx(pulse,2));
+  } else if(numberof(where((*rx(2))(1:np) < 5)) <= ops_conf.max_sfc_sat) {
+    cv = cent(*rx(2));
     cv(1:2) += ops_conf.chn2_range_bias;
     cv(3) += 300;
   } else {
-    cv = cent(*rast.rx(pulse,3));
+    cv = cent(*rx(3));
     cv(1:2) += ops_conf.chn3_range_bias;
     cv(3) += 600;
   }
