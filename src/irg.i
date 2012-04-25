@@ -111,7 +111,7 @@ verbose=) {
 
     rtrs(i).soe = raster.offset_time;
     if(usecentroid == 1) {
-      for(pulse = 1; pulse < raster.npixels(1); pulse++) {
+      for(pulse = 1; pulse <= raster.npixels(1); pulse++) {
         if(use_highelv_echo) {
           if(int((*raster.rx(pulse,1))(max)-min((*raster.rx(pulse,1))(1),(*raster.rx(pulse,1))(0))) >= 5)
             continue;
