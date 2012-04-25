@@ -666,3 +666,58 @@ func seconds2prettytime(seconds, maxparts=) {
     pretty(w) = "0 seconds";
   return dims(0) ? reform(pretty, dims) : pretty(1);
 }
+
+func seconds2clocktime(seconds, maxparts=) {
+/* DOCUMENT seconds2clocktime(seconds, maxparts=)
+  Converts a duration in seconds to a clock-style text representation of the
+  same duration.
+
+  If maxparts is used, it limits how many parts will get emitted. It is only
+  compatible with scalar input.
+
+  Examples:
+    > seconds2clocktime(0)
+    "00:00:00"
+    > seconds2clocktime(1)
+    "00:00:01"
+    > seconds2clocktime(100)
+    "00:01:40"
+    > seconds2clocktime(3600)
+    "01:00:00"
+    > seconds2clocktime(3000000)
+    "833:20:00"
+    > seconds2clocktime([1,2,3,4])
+    ["00:00:01","00:00:02","00:00:03","00:00:04"]
+    > seconds2clocktime([[1,2],[3,4]])
+    [["00:00:01","00:00:02"],["00:00:03","00:00:04"]]
+    > seconds2clocktime(1.234)
+    "00:00:01"
+    > seconds2clocktime(100, maxparts=2)
+    "01:40"
+    > seconds2clocktime(3000000, maxparts=2)
+    "833:20"
+*/
+  dims = dimsof(seconds);
+  if(!is_void(maxparts) && !is_scalar(seconds))
+    error, "maxparts= only compatible with scalars.";
+  seconds = reform(long(seconds), [1, numberof(seconds)]);
+  s = seconds % 60;
+  m = (seconds / 60) % 60;
+  h = seconds / 3600;
+  vals = [h,m,s];
+  if(maxparts) {
+    vals = vals(*);
+    w = where(vals != 0);
+    if(numberof(w) && w(1) < numberof(vals))
+      vals = vals(w(1):);
+    if(numberof(vals) > maxparts)
+      vals = vals(:maxparts);
+    vals = transpose([vals]);
+  }
+  clock = swrite(format="%02d:", vals)(,sum);
+  clock = strpart(clock, :-1);
+  w = where(strlen(clock) == 0);
+  if(numberof(w))
+    clock(w) = "00";
+  return dims(0) ? reform(clock, dims) : clock(1);
+}
