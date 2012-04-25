@@ -30,8 +30,8 @@ struct RTRS {
   short fs_rtn_centroid(120);
 };
 
-func irg(start, stop, inc=, delta=, usecentroid=, use_highelv_echo=, skip=,
-verbose=) {
+func irg(start, stop, inc=, delta=, usecentroid=, use_highelv_echo=,
+highelv_thresh=, skip=, verbose=) {
 /* DOCUMENT irg(start, stop, inc=, delta=, usecentroid=, use_highelv_echo=,
    skip=, verbose=)
 
@@ -65,8 +65,10 @@ verbose=) {
     use_highelv_echo= Excludes records whose waveforms tripped above the
       range gate and whose echo caused a peak in the positive direction
       higher than the bias.
-        use_highelv_echo=0   Disable (default)
-        use_highelv_echo=1   Enable
+        use_highelv_echo=0    Disable (default)
+        use_highelv_echo=1    Enable
+    highelv_thresh= Threshhold value used when use_highelv_echo=1.
+        highelv_tresh=5       Default
 
   Returns data in RTRS structure.
 */
@@ -86,6 +88,7 @@ verbose=) {
   default, verbose, 0;
   default, usecentroid, 0;
   default, use_highelv_echo, 0;
+  default, highlelv_thresh, 5;
 
   // Calculate desired rasters
   rasters = indgen(start:stop:skip);
@@ -115,7 +118,7 @@ verbose=) {
       for(pulse = 1; pulse <= raster.npixels(1); pulse++) {
         if(use_highelv_echo) {
           wf = *raster.rx(pulse,1);
-          if(wf(max) - wf(min) >= 5)
+          if(wf(max) - wf(min) >= highelv_thresh)
             continue;
         }
         centroid_values = pcr(raster, pulse);
