@@ -93,8 +93,8 @@ func run_bath(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=) {
         tkcmd, swrite(format="set progress %d", j*100/len);
       else
         write, format="%5d of %5d rasters completed \r",j,len;
-    for(i=1; i<119; i++) {
-      depths(i,j) = ex_bath(rn+j, i, last = last, graph=graph);
+    for(pulse=1; pulse<119; pulse++) {
+      depths(pulse,j) = ex_bath(rn+j, pulse, last=last, graph=graph);
       pause, pse;
     }
   }
