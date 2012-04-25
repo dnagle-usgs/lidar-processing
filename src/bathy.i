@@ -85,17 +85,18 @@ func run_bath(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=) {
   depths = array(BATHPIX, 120, len);
 
   // set update interval for progress indicator
-  udi = (_ytk ? 10 : 25);
+  update_freq = [10,25,50](digitize(len, [200,400]));
 
   for(j=1; j<=len; j++) {
-    if((!(j % udi)) || ( j==len))
-      if(_ytk)
-        tkcmd, swrite(format="set progress %d", j*100/len);
-      else
-        write, format="%5d of %5d rasters completed \r",j,len;
     for(pulse=1; pulse<119; pulse++) {
       depths(pulse,j) = ex_bath(rn+j, pulse, last=last, graph=graph);
       pause, pse;
+    }
+    if((j % update_freq) == 0) {
+      if(_ytk)
+        tkcmd, swrite(format="set progress %d", j*100/len);
+      else
+        write, format="%5d of %5d rasters completed\r",j,len;
     }
   }
   return depths;
