@@ -49,7 +49,7 @@ func pcr(rast, pulse) {
     result(3) = (*rast.tx(pulse) == 0)(sum);
 
   // compute transmit centroid
-  tx_centroid = cent(*rast.tx(pulse))(1);
+  tx_centroid = cent(*rast.tx(pulse));
 
   /*
     Now examine all three receiver waveforms for saturation, and use the one
@@ -69,38 +69,38 @@ func pcr(rast, pulse) {
       correcting the centroid range by 0.2ns (3cm) for each saturated point.
 
     Code for note 1:
-      if(nsat1 > 1) cv(1) = cv(1) - (nsat1 -1 ) * .1;
+      if(nsat1 > 1) rx_centroid(1) = rx_centroid(1) - (nsat1 -1 ) * .1;
     This would go in the first "if" statement below.
   */
 
   rx = rast.rx(pulse,);
 
   if((numberof(where((*rx(1))(1:np) < 5))) <= ops_conf.max_sfc_sat) {
-    cv = cent(*rx(1));
+    rx_centroid = cent(*rx(1));
     // Must be water column only return.
-    if(cv(3) < -90) {
+    if(rx_centroid(3) < -90) {
       slope = 0.029625;
-      x = cv(3) - 90;
+      x = rx_centroid(3) - 90;
       y = slope * x;
-      cv(1) += y;
+      rx_centroid(1) += y;
     }
-    cv(1:2) += ops_conf.chn1_range_bias;
+    rx_centroid(1:2) += ops_conf.chn1_range_bias;
   } else if(numberof(where((*rx(2))(1:np) < 5)) <= ops_conf.max_sfc_sat) {
-    cv = cent(*rx(2));
-    cv(1:2) += ops_conf.chn2_range_bias;
-    cv(3) += 300;
+    rx_centroid = cent(*rx(2));
+    rx_centroid(1:2) += ops_conf.chn2_range_bias;
+    rx_centroid(3) += 300;
   } else {
-    cv = cent(*rx(3));
-    cv(1:2) += ops_conf.chn3_range_bias;
-    cv(3) += 600;
+    rx_centroid = cent(*rx(3));
+    rx_centroid(1:2) += ops_conf.chn3_range_bias;
+    rx_centroid(3) += 600;
   }
 
   // Now compute the actual range value in NS
-  result(1) = float(rast.irange(pulse)) - tx_centroid + cv(1);
-  result(2) = cv(3);
+  result(1) = float(rast.irange(pulse)) - tx_centroid(1) + rx_centroid(1);
+  result(2) = rx_centroid(3);
 
   // This will be needed to compute true depth
-  result(3) = cv(1);
+  result(3) = rx_centroid(1);
   return result;
 }
 
