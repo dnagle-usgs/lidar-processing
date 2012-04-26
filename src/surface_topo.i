@@ -19,7 +19,7 @@ require, "eaarla_vector.i";
 */
 
 func first_surface(nil, start=, stop=, center=, delta=, north=, usecentroid=,
-use_highelv_echo=, verbose=) {
+use_highelv_echo=, verbose=, msg=) {
 /* DOCUMENT first_surface(start=, stop=, center=, delta=, north=, usecentroid=,
  * use_highelv_echo=, verbose=)
 
@@ -29,7 +29,7 @@ use_highelv_echo=, verbose=) {
     start= Raster number to start with.
     stop= Ending raster number.
     center= Center raster when doing before and after.
-    delta= NUmber of rasters to process before and after.
+    delta= Number of rasters to process before and after.
     north= Ignore heading, and assume north.
     usecentroid= Set to 1 to use the centroid of the waveform.
     use_highelv_echo= Set to 1 to exclude waveforms that tripped above the
@@ -84,7 +84,9 @@ use_highelv_echo=, verbose=) {
     return merge_pointers(parts);
   }
 
-  a = irg(start, stop, usecentroid=usecentroid, use_highelv_echo=use_highelv_echo);
+  a = irg(start, stop, usecentroid=usecentroid, use_highelv_echo=use_highelv_echo, msg=msg);
+  if(!is_void(msg))
+    status, start, msg=msg;
   irg_a = a;
 
   atime = a.soe - soe_day_start;
@@ -197,6 +199,8 @@ use_highelv_echo=, verbose=) {
       roll(60,100:count:100),
       pitch(60,100:count:100);
 
+  if(!is_void(msg))
+    status, finished;
   return rrr;
 }
 

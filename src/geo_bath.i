@@ -172,6 +172,7 @@ func make_bathy(latutm=, q=, avg_surf=) {
   }
 
   // find start and stop raster numbers for all flightlines
+  status, start, msg="Scanning flightlines for rasters...";
   raster_ranges = sel_region(q);
 
   if(is_void(raster_ranges)) {
@@ -184,18 +185,23 @@ func make_bathy(latutm=, q=, avg_surf=) {
 
   count = numberof(raster_starts);
 
-  open_seg_process_status_bar;
-
   for(i = 1; i <= count; i++) {
     if((raster_starts(i) != 0)) {
+      msg_prefix = swrite(format="Line %d/%d; ", i, count);
+      msg = msg_prefix + "Step 1/3: Processing bathymetry...";
       write, format="Processing segment %d of %d for bathymetry\n", i, count;
-      depth = run_bath(start=raster_starts(i), stop=raster_stops(i));
+      status, start, msg=msg;
+      depth = run_bath(start=raster_starts(i), stop=raster_stops(i), msg=msg);
       if(depth == 0) return 0;
 
+      msg = msg_prefix + "Step 2/3: Processing surface...";
       write, "Processing for first_surface...";
+      status, start, msg=msg;
       surface = first_surface(start=raster_starts(i), stop=raster_stops(i),
-        usecentroid=1);
+        usecentroid=1, msg=msg);
 
+      msg = msg_prefix + "Step 3/3: Merging and correcting depths...";
+      status, start, msg=msg;
       write, "Using make_fs_bath for submerged topography...";
       depth = make_fs_bath(depth, surface, avg_surf=avg_surf,
         sample_interval=sample_interval);
@@ -205,8 +211,7 @@ func make_bathy(latutm=, q=, avg_surf=) {
       grow, depth_all, compute_depth(depth, sample_interval=sample_interval);
     }
   }
-
-  if (_ytk) tkcmd, "destroy .seg";
+  status, finished;
 
   write, "\nStatistics:";
   write, format="Total number of records processed = %d\n",

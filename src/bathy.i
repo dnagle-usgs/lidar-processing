@@ -57,11 +57,12 @@ func bath_winpix(m) {
   rn;
 }
 
-func run_bath(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=) {
+func run_bath(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, msg=) {
   extern bath_ctl;
   default, last, 250;
   default, graph, 0;
   default, pse, 0;
+  default, msg, "Processing bathymetry...";
 
   if(is_void(rn) || is_void(len)) {
     if(!is_void(center) && !is_void(delta)) {
@@ -84,21 +85,15 @@ func run_bath(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=) {
 
   depths = array(BATHPIX, 120, len);
 
-  // set update interval for progress indicator
-  update_freq = [10,25,50](digitize(len, [200,400]));
-
+  status, start, msg=msg;
   for(j=1; j<=len; j++) {
     for(pulse=1; pulse<119; pulse++) {
       depths(pulse,j) = ex_bath(rn+j, pulse, last=last, graph=graph);
       pause, pse;
     }
-    if((j % update_freq) == 0) {
-      if(_ytk)
-        tkcmd, swrite(format="set progress %d", j*100/len);
-      else
-        write, format="%5d of %5d rasters completed\r",j,len;
-    }
+    status, progress, j, len;
   }
+  status, finished;
   return depths;
 }
 

@@ -31,7 +31,7 @@ struct RTRS {
 };
 
 func irg(start, stop, inc=, delta=, usecentroid=, use_highelv_echo=,
-highelv_thresh=, skip=, verbose=) {
+highelv_thresh=, skip=, verbose=, msg=) {
 /* DOCUMENT irg(start, stop, inc=, delta=, usecentroid=, use_highelv_echo=,
    skip=, verbose=)
 
@@ -89,6 +89,7 @@ highelv_thresh=, skip=, verbose=) {
   default, usecentroid, 0;
   default, use_highelv_echo, 0;
   default, highlelv_thresh, 5;
+  default, msg, "Processing integer ranges...";
 
   // Calculate desired rasters
   rasters = indgen(start:stop:skip);
@@ -109,6 +110,7 @@ highelv_thresh=, skip=, verbose=) {
   if(verbose)
     write, format="skip: %d\n", skip;
 
+  status, start, msg=msg;
   for(i = 1; i <= count; i++) {
     raster = decode_raster(rn=rtrs(i).raster);
     rtrs(i).soe = raster.offset_time;
@@ -139,7 +141,9 @@ highelv_thresh=, skip=, verbose=) {
       else if(verbose)
         write, format="  %d/%d     \r", i, count;
     }
+    status, progress, i, count;
   }
+  status, finished;
 
   return rtrs;
 }
