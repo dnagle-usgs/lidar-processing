@@ -21,7 +21,7 @@ require, "eaarla_vector.i";
 func first_surface(nil, start=, stop=, center=, delta=, north=, usecentroid=,
 use_highelv_echo=, verbose=, msg=) {
 /* DOCUMENT first_surface(start=, stop=, center=, delta=, north=, usecentroid=,
- * use_highelv_echo=, verbose=)
+   use_highelv_echo=, verbose=)
 
   Project the EAARL threshold trigger point to the surface.
 
@@ -84,12 +84,12 @@ use_highelv_echo=, verbose=, msg=) {
     return merge_pointers(parts);
   }
 
-  a = irg(start, stop, usecentroid=usecentroid, use_highelv_echo=use_highelv_echo, msg=msg);
+  rtrs = irg(start, stop, usecentroid=usecentroid, use_highelv_echo=use_highelv_echo, msg=msg);
   if(!is_void(msg))
     status, start, msg=msg;
-  irg_a = a;
+  irg_a = rtrs;
 
-  atime = a.soe - soe_day_start;
+  atime = rtrs.soe - soe_day_start;
 
   if(verbose)
     write, format="%s", "\n Interpolating: roll...";
@@ -122,7 +122,6 @@ use_highelv_echo=, verbose=, msg=) {
   pnav_north = pnav_east = [];
 
   count = stop - start + 1;
-  rrr = array(R, count);
 
   cyaw = array(0., 120);
 
@@ -144,24 +143,24 @@ use_highelv_echo=, verbose=, msg=) {
   if(is_array(fix_sa1) && is_array(fix_sa2)) {
     write, "Using scan angle fixes...";
 
-    if(a(1).sa(1) > a(1).sa(118))
+    if(rtrs(1).sa(1) > rtrs(1).sa(118))
       fix=fix_sa1(start:stop);
     else
       fix=fix_sa2(start:stop);
 
     for(i = 1; i <= count; i++)
-      scan_bias(i) = a(i).sa(1) - fix(i);
+      scan_bias(i) = rtrs(i).sa(1) - fix(i);
   }
 
   // Calculate scan angles
-  scan_angles = SAD * (a.sa + scan_bias(-,));
+  scan_angles = SAD * (rtrs.sa + scan_bias(-,));
   scan_bias = [];
 
   // edit out tx/rx dropouts
-  a.irange *= ((long(a.irange) & 0xc000) == 0);
+  rtrs.irange *= ((long(rtrs.irange) & 0xc000) == 0);
 
   // Calculate magnitude of vectors from mirror to ground
-  mag = a.irange * NS2MAIR - ops_conf.range_biasM;
+  mag = rtrs.irange * NS2MAIR - ops_conf.range_biasM;
 
   pitch += ops_conf.pitch_bias;
   roll += ops_conf.roll_bias;
@@ -179,29 +178,30 @@ use_highelv_echo=, verbose=, msg=) {
     bcast + mirang(,-), scan_angles, mag,
     mx, my, mz, px, py, pz;
 
-  rrr.meast  =     mx * 100.0;
-  rrr.mnorth =     my * 100.0;
-  rrr.melevation=  mz * 100.0;
-  rrr.east   =     px * 100.0;
-  rrr.north  =     py * 100.0;
-  rrr.elevation =  pz * 100.0;
-  rrr.rn = (a.raster&0xffffff)(-,);
-  rrr.intensity = a.intensity;
-  rrr.fs_rtn_centroid = a.fs_rtn_centroid;
-  rrr.rn += (indgen(120)*2^24)(,-);
-  rrr.soe = a.soe;
+  surface = array(R, count);
+  surface.meast  =     mx * 100.0;
+  surface.mnorth =     my * 100.0;
+  surface.melevation=  mz * 100.0;
+  surface.east   =     px * 100.0;
+  surface.north  =     py * 100.0;
+  surface.elevation =  pz * 100.0;
+  surface.rn = (rtrs.raster&0xffffff)(-,);
+  surface.intensity = rtrs.intensity;
+  surface.fs_rtn_centroid = rtrs.fs_rtn_centroid;
+  surface.rn += (indgen(120)*2^24)(,-);
+  surface.soe = rtrs.soe;
 
   if(verbose && count >= 100)
     write, format="%5d %8.1f %6.2f %6.2f %6.2f\n",
       indgen(100:count:100),
-      a(100:count:100).soe(60)%86400,
+      rtrs(100:count:100).soe(60)%86400,
       palt(60,100:count:100),
       roll(60,100:count:100),
       pitch(60,100:count:100);
 
   if(!is_void(msg))
     status, finished;
-  return rrr;
+  return surface;
 }
 
 func open_seg_process_status_bar {
