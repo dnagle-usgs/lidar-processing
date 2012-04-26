@@ -4,6 +4,10 @@
 package provide l1pro::main 1.0
 package require l1pro::main::menu
 
+set ::status(progress) 0
+set ::status(time) ""
+set ::status(message) "Ready."
+
 namespace eval ::l1pro::main {}
 
 proc ::l1pro::main::gui {} {
@@ -20,11 +24,15 @@ proc ::l1pro::main::gui {} {
     panel_plot $w.plot
     panel_tools $w.tools
     panel_filter $w.filter
+    ttk::separator $w.sep -orient horizontal
+    panel_status $w.status
 
     grid $w.pro - -sticky ew
     grid $w.cbar $w.plot -sticky ews
     grid $w.tools - -sticky ew
     grid $w.filter - -sticky ew
+    grid $w.sep - -sticky ew
+    grid $w.status - -sticky ew
     grid columnconfigure $w 1 -weight 1
 }
 
@@ -435,6 +443,19 @@ proc ::l1pro::main::panel_filter w {
 
     grid $w.filter $w.copy $w.tools x $w.memlbl $w.mem
     grid columnconfigure $w 3 -weight 1
+
+    return $w
+}
+
+proc ::l1pro::main::panel_status w {
+    ttk::frame $w
+
+    ttk::label $w.status -textvariable ::status(message)
+    ttk::label $w.time -textvariable ::status(time)
+    ttk::progressbar $w.progress -variable ::status(progress) -maximum 100 \
+            -length 200
+    grid $w.status $w.time $w.progress -sticky news -padx 2
+    grid columnconfigure $w 0 -weight 1
 
     return $w
 }

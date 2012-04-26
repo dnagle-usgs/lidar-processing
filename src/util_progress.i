@@ -135,3 +135,106 @@ func timer_finished(t0, fmt=) {
   fmt = regsub("SECONDS", fmt, swrite(format="%.4f", elapsed), all=1);
   write, format="%s", fmt;
 }
+
+scratch = save(scratch, tmp, status_start, status_progress, status_finished,
+    status_msg);
+tmp = save(start, progress, finished, cache, msg);
+
+func status_start(count=, interval=, msg=) {
+  use, cache;
+  default, count, 1;
+  default, interval, 1;
+  default, msg, "Processing...";
+
+  t0 = array(double, 3);
+  timer, t0;
+  tp = t0;
+
+  save, cache, interval, msg, t0, tp, pct=0,
+      has_current=strglob("*CURRENT*", msg),
+      has_count=strglob("*COUNT*", msg);
+
+  tkcmd, swrite(format="set ::status(message) {%s}", use(msg, 0, count));
+  tkcmd, "set ::status(time) {--:--:--}";
+  tkcmd, "set ::status(progress) 0";
+}
+start = status_start;
+
+func status_progress(current, count) {
+  use, cache;
+  t1 = cache.t0;
+  timer, t1;
+  if(t1(3) - cache.tp(3) >= cache.interval) {
+    save, cache, tp=t1;
+    elapsed = t1(3) - cache.t0(3);
+    remain = elapsed/double(current) * (count - current);
+    tkcmd, swrite(format="set ::status(message) {%s}", use(msg, current, count));
+    tkcmd, swrite(format="set ::status(time) {%s}", seconds2clocktime(remain));
+  }
+  pct = 100*double(current)/count;
+  if(abs(pct - cache.pct) > 0.5) {
+    save, cache, pct;
+    tkcmd, swrite(format="set ::status(progress) {%f}", pct);
+  }
+}
+progress = status_progress;
+
+func status_finished {
+  tkcmd, "set ::status(message) {Ready.}";
+  tkcmd, "set ::status(time) {}";
+  tkcmd, "set ::status(progress) 0";
+}
+finished = status_finished;
+
+func status_msg(current, count) {
+  use, cache;
+  msg = cache.msg;
+  if(cache.has_current) {
+    fmt = is_integer(current) ? "%d" : "%f";
+    msg = regsub("CURRENT", msg, swrite(format=fmt, current), all=1);
+  }
+  if(cache.has_count) {
+    fmt = is_integer(count) ? "%d" : "%f";
+    msg = regsub("COUNT", msg, swrite(format=fmt, count), all=1);
+  }
+  return msg;
+}
+msg = status_msg;
+
+cache = save();
+
+local status; status = restore(tmp); restore, scratch;
+/* DOCUMENT status
+  The status object is used to send status and progress information to the
+  l1pro GUI status area. This is primarily used to give progress information
+  during long-running processes.
+
+  The status object has three subcommands:
+
+  status, start, count=, interval=, msg=
+    Used at the start of a process to initialize the status display. Parameters:
+        count= Specifies the number of steps in the task. Only necessary if
+          msg= uses the COUNT substitution. Defaults to 1.
+        interval= The interval at which the time display will be updated.
+          Defaults to 1 second.
+        msg= The message to display in the status area. This can optionally
+          have two substitution keywords: COUNT and CURRENT. These will be
+          substituted based on what's passed to 'status, progress'. (For the
+          initial display, current will be 0 and count will be 1 or what is
+          passed via count=.) Default is "Processing...".
+    This will initialize the status text using the given MSG. The time
+    remaining will be updated to "--:--:--", and the progress bar will be
+    emptied.
+
+  status, progress, current, count
+    Used during the process to update the progress information. CURRENT is the
+    current numerical value indicating how far through to COUNT the process is.
+    If the time elapsed since the last update is more then INTERVAL, the status
+    message and time remaining will be updated. If the percent progress has
+    changed by more than 0.5%, the progress bar will be updated.
+
+  status, finished
+    Used to reset the status when processing is finished. The status text will
+    be set to "Ready.", the time remaining will be cleared, and the progress
+    bar will be emptied.
+*/
