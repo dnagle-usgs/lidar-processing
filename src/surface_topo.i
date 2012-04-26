@@ -50,6 +50,7 @@ use_highelv_echo=, verbose=, msg=) {
 */
   default, verbose, 1;
   default, north, 0;
+  sample_interval = 1.0;
 
   if(is_void(ops_conf))
     error, "ops_conf is not set";
@@ -160,7 +161,7 @@ use_highelv_echo=, verbose=, msg=) {
   rtrs.irange *= ((long(rtrs.irange) & 0xc000) == 0);
 
   // Calculate magnitude of vectors from mirror to ground
-  mag = rtrs.irange * NS2MAIR - ops_conf.range_biasM;
+  mag = rtrs.irange * NS2MAIR * sample_interval - ops_conf.range_biasM;
 
   pitch += ops_conf.pitch_bias;
   roll += ops_conf.roll_bias;
