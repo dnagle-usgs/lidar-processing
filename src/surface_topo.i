@@ -18,9 +18,9 @@ require, "eaarla_vector.i";
  values are in air-centimeters.
 */
 
-func first_surface(nil, start=, stop=, center=, delta=, north=, usecentroid=,
+func first_surface(nil, start=, stop=, center=, delta=, usecentroid=,
 use_highelv_echo=, verbose=, msg=) {
-/* DOCUMENT first_surface(start=, stop=, center=, delta=, north=, usecentroid=,
+/* DOCUMENT first_surface(start=, stop=, center=, delta=, usecentroid=,
    use_highelv_echo=, verbose=)
 
   Project the EAARL threshold trigger point to the surface.
@@ -30,7 +30,6 @@ use_highelv_echo=, verbose=, msg=) {
     stop= Ending raster number.
     center= Center raster when doing before and after.
     delta= Number of rasters to process before and after.
-    north= Ignore heading, and assume north.
     usecentroid= Set to 1 to use the centroid of the waveform.
     use_highelv_echo= Set to 1 to exclude waveforms that tripped above the
         range gate.
@@ -49,7 +48,6 @@ use_highelv_echo=, verbose=, msg=) {
     2 = start,  delta
 */
   default, verbose, 1;
-  default, north, 0;
   sample_interval = 1.0;
 
   if(is_void(ops_conf))
@@ -78,7 +76,7 @@ use_highelv_echo=, verbose=, msg=) {
     for(i = start, interval = 1; interval <= intervals; i+=maxcount, interval++) {
       i = min(stop, i);
       j = min(stop, i + maxcount - 1);
-      parts(interval) = &first_surface(start=i, stop=j, north=north,
+      parts(interval) = &first_surface(start=i, stop=j,
         usecentroid=usecentroid, use_highelv_echo=use_highelv_echo,
         verbose=verbose, msg=msg);
     }
@@ -100,15 +98,9 @@ use_highelv_echo=, verbose=, msg=) {
     write, format="%s", " pitch...";
   pitch = interp(tans.pitch, tans.somd, atime);
 
-  if(!north) {
-    if(verbose)
-      write, format="%s", " heading...";
-    heading = interp_angles(tans.heading, tans.somd, atime);
-  } else {
-    if(verbose)
-      write, format="%s", " interpolating north only...";
-    heading = array(0., dimsof(atime));
-  }
+  if(verbose)
+    write, format="%s", " heading...";
+  heading = interp_angles(tans.heading, tans.somd, atime);
 
   if(verbose)
     write, format="%s", " altitude...";
