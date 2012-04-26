@@ -155,7 +155,7 @@ func status_start(count=, interval=, msg=) {
       has_count=strglob("*COUNT*", msg);
 
   tkcmd, swrite(format="set ::status(message) {%s}", use(msg, 0, count));
-  tkcmd, "set ::status(time) {--:--:--}";
+  tkcmd, "set ::status(time) {}";
   tkcmd, "set ::status(progress) 0";
 }
 start = status_start;
@@ -223,8 +223,9 @@ local status; status = restore(tmp); restore, scratch;
           initial display, current will be 0 and count will be 1 or what is
           passed via count=.) Default is "Processing...".
     This will initialize the status text using the given MSG. The time
-    remaining will be updated to "--:--:--", and the progress bar will be
-    emptied.
+    remaining will be blanked, and the progress bar will be emptied. Note that
+    this can also be used to update the status message arbitrarily in between
+    tasks.
 
   status, progress, current, count
     Used during the process to update the progress information. CURRENT is the
