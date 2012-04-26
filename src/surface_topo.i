@@ -79,7 +79,7 @@ use_highelv_echo=, verbose=, msg=) {
       j = min(stop, i + maxcount - 1);
       parts(interval) = &first_surface(start=i, stop=j, north=north,
         usecentroid=usecentroid, use_highelv_echo=use_highelv_echo,
-        verbose=verbose);
+        verbose=verbose, msg=msg);
     }
     return merge_pointers(parts);
   }
