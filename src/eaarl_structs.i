@@ -169,7 +169,7 @@ local GEO;
   Point structure for bathymetry.
 
   struct GEO {
-    long rn ;            raster + pulse << 24
+    long rn;             raster + pulse << 24
     long north;          surface northing in cm
     long east;           surface easting in cm
     short sr2;           slant range first to last return in ns*10
@@ -179,7 +179,7 @@ local GEO;
     long melevation;     mirror elevation
     short bottom_peak;   peak amplitude of bottom return signal
     short first_peak;    peak amplitude of first surface return signal
-    long bath;           ?
+    long bath;           unused?
     short depth;         water depth in cm
     double soe;          seconds of the epoch
   }
