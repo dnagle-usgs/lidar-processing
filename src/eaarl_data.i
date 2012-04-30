@@ -587,6 +587,18 @@ func struct_cast(&data, dest, verbose=, special=) {
   Certain pairs of structures have specialized functionality. You can disable
   this functionality by specifying special=0. Here are the conversions with
   special functionality:
+    GEOALL, VEG_ALL, VEG_ALL_, R -> POINTCLOUD
+      These are handled as a two-step process. Specifically:
+        GEOALL -> GEO -> POINTCLOUD
+        VEG_ALL -> VEG_ -> POINTCLOUD
+        VEG_ALL_ -> VEG__ -> POINTCLOUD
+        R -> FS -> POINTCLOUD
+    POINTCLOUD -> GEOALL, VEG_ALL, VEG_ALL_, R
+      These are handled as a two-step process. Specifically:
+        POINTCLOUD -> GEO -> GEOALL
+        POINTCLOUD -> VEG_ -> VEG_ALL
+        POINTCLOUD -> VEG__ -> VEG_ALL_
+        POINTCLOUD -> FS -> R
     LFP_VEG -> FS, VEG__, VEG_, VEG, GEO
       LFP_VEG uses pointers for .elevation; this dereferences them and stores
       to .elevation creating multiple points (which means that
@@ -652,6 +664,24 @@ func struct_cast(&data, dest, verbose=, special=) {
   if(special) {
     src = structof(data);
     dst = dest;
+
+    if(structeqany(src, GEOALL, VEG_ALL, VEG_ALL_, R) && structeq(dst, POINTCLOUD)) {
+      struct_cast, data, verbose=verbose;
+      src = structof(data);
+    }
+
+    if(structeq(src, POINTCLOUD)) {
+      if(structeq(dst, GEOALL)) {
+        struct_cast, data, GEO, verbose=verbose;
+      } else if(structeq(dst, VEG_ALL)) {
+        struct_cast, data, VEG_, verbose=verbose;
+      } else if(structeq(dst, VEG_ALL_)) {
+        struct_cast, data, VEG__, verbose=verbose;
+      } else if(structeq(dst, R)) {
+        struct_cast, data, FS, verbose=verbose;
+      }
+      src = structof(data);
+    }
 
     // LFP_VEG requires special treatment since once of its members is a pointer
     if(structeq(src, LFP_VEG) && structeqany(dst, FS, VEG__, VEG_, VEG, GEO)) {
