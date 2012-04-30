@@ -14,6 +14,45 @@ local eaarl_structs, eaarl_structs_i;
     > write, format="%s\n", symbol_names(64)
 */
 
+local POINTCLOUD;
+/* DOCUMENT
+  Transitional structure for point cloud data. This will supercede FS, VEG__,
+  GEO, etc. as well as their raster-oriented counterparts.
+
+  struct POINTCLOUD {
+    double mx, my, mz;      mirror coordinates
+    double fx, fy, fz;      first return coordinates
+    double lx, ly, lz;      last return coordinates
+    double soe;             seconds of epoch
+    long rn;                legacy: raster + pulse << 24
+    long raster_seconds;    raster_seconds+raster_fseconds replace rn and
+    long raster_fseconds;     allow unique lookups
+    char pulse, channel;    pulse number and channel number
+    char digitizer;         digitizer used
+    float fint, lint;       first/last intensity value (return)
+    float ftx, frx;         first transmit/return index in waveform
+    float ltx, lrx;         last transmit/return index in waveform
+    char nx;                number of returns detected
+  }
+*/
+
+struct POINTCLOUD {
+  double mx, my, mz;
+  double fx, fy, fz;
+  double lx, ly, lz;
+  char zone;
+  double soe;
+  long rn;
+  long raster_seconds;
+  long raster_fseconds;
+  char pulse, channel;
+  char digitizer;
+  float fint, lint;
+  float ftx, frx;
+  float ltx, lrx;
+  char nx;
+}
+
 local FS;
 /* DOCUMENT
   Point structure for first returns. (Note that struct VEG__ also is used for
