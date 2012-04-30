@@ -764,7 +764,7 @@ func struct_cast(&data, dest, verbose=, special=) {
     if(structeq(dst, GEO) && structeqany(src, VEG__, VEG_, VEG)) {
       result.north = data.lnorth;
       result.east = data.least;
-      result.depth = data.elevation - data.lelv;
+      result.depth = data.lelv - data.elevation;
       result.first_peak = data.fint;
       result.bottom_peak = data.lint;
     }
@@ -772,7 +772,7 @@ func struct_cast(&data, dest, verbose=, special=) {
     if(structeqany(dst, VEG__, VEG_, VEG) && structeq(src, GEO)) {
       result.lnorth = data.north;
       result.least = data.east;
-      result.lelv = data.elevation - data.depth;
+      result.lelv = data.elevation + data.depth;
       result.fint = data.first_peak;
       result.lint = data.bottom_peak;
     }
