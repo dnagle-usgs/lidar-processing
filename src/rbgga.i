@@ -153,8 +153,7 @@ func rbgga(x, plt=, color=, map=, utm=, ifn=) {
                    Enter: show_gga_track to see it \n\
                    or type: help, rbgga for more info."
   } else if(plt != 0) {
-    if(is_void(color))
-      color = "red";
+    default, color, red;
     show_gga_track, color=color;
   }
 
@@ -223,9 +222,9 @@ Also see: getPoly, plpoly, testPoly, gga_win_sel
   }
   write, format="%d GGA records found\n", numberof(q);
   if((show != 0) && (show != 2)) {
-    if(is_void(msize)) msize = 0.1;
-    if(is_void(color)) color = "red";
-    if(is_void(skip)) skip = 10;
+    default, msize, 0.1;
+    default, color, "red";
+    default, skip, 10;
     plmk, gga.lat(q(1:0:skip)), gga.lon(q(1:0:skip)), msize=msize, color=color;
   }
   test_selection_size, q;
@@ -280,8 +279,8 @@ func gga_multi_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=, multi
  */
   extern ZoneNumber, utm, ply;
   q = [];
-  if(is_void(multi)) multi=1;
-  if(is_void(win)) win = 6;
+  default, multi, 1;
+  default, win, 6;
   window, win;
   for(i=1;i<=multi;i++) {
     write, format="selecting region %d\n", i;
@@ -303,9 +302,9 @@ func gga_multi_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=, multi
   }
   write, format="%d GGA records found\n", numberof(q);
   if((show != 0) && (show != 2)) {
-    if(is_void(msize)) msize = 0.1;
-    if(is_void(color)) color = "red";
-    if(is_void(skip)) skip = 10;
+    default, msize, 0.1;
+    default, color, "red";
+    default, skip, 10;
     plmk, gga.lat(q(1:0:skip)), gga.lon(q(1:0:skip)), msize=msize, color=color;
   }
   test_selection_size, q;
@@ -335,9 +334,7 @@ properly to the zoom buttons.
 
 */
   extern ZoneNumber, utm, ply, curzone;
-  if(is_void(win))
-    win = window();
-
+  default, win, window();
   window, win;
   if(!is_array(llarr)) {
     a = mouse(1, 1, "Hold the left mouse button down, select a region:");
@@ -392,9 +389,9 @@ properly to the zoom buttons.
   }
   write, format="%d GGA records found\n", numberof(q);
   if((show != 0) && (show != 2)) {
-    if(is_void(msize)) msize = 0.1;
-    if(is_void(color)) color = "red";
-    if(is_void(skip)) skip  = 10;
+    default, msize, 0.1;
+    default, color, "red";
+    default, skip, 10;
     plmk, gga.lat(q(1:0:skip)), gga.lon(q(1:0:skip)), msize=msize, color=color;
   }
 
@@ -411,7 +408,7 @@ properly to the zoom buttons.
 
 */
   extern ZoneNumber, utm, ply, curzone;
-  if(is_void(win)) win = window();
+  default, win, window();
   if(utm && !curzone) {
     write, "Zone Number not defined.  Please set variable curzone to UTM Zone Number.";
     return;
@@ -472,9 +469,9 @@ properly to the zoom buttons.
     didx = dist(mnx);
     q = q(didx);
     if((show != 0) && (show != 2)) {
-      if(is_void(msize)) msize = 0.1;
-      if(is_void(color)) color = "red";
-      if(is_void(skip)) skip = 10;
+      default, msize, 0.1;
+      default, color, "red";
+      default, skip, 10;
       plmk, gga.lat(q(1:0:skip)), gga.lon(q(1:0:skip)), msize=msize, color=color;
     }
 
@@ -561,9 +558,9 @@ func gga_find_times(q, win=, plt=) {
 
   // to see a plot of the selected times with green/red markers at the
   // beginning and end of each list, enab enable the following:
-  if(is_void(plt)) plt = 0;
+  default, plt, 0;
   if(plt == 1) {
-    if(is_void(win)) win=6;
+    default, win, 6;
     window, win;
     fma;
     plmk, pnav.sod(q), q;   // plot the selected times
@@ -794,22 +791,16 @@ func show_pnav_track(pn, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, 
 */
   extern curzone;
 
-  if(is_void(win)) {
-    win = 6;
-  }
+  default, win, 6;
+  default, width, 5.;
+  default, msize, 0.1;
+  default, marker, 1;
+  default, skip, 50;
+  default, color, "red";
+  default, lines, 1;
+
   window, win;
-  if(is_void(width))
-    width= 5.0;
-  if(is_void(msize))
-    msize= 0.1;
-  if(is_void(marker))
-    marker= 1;
-  if(is_void(skip))
-    skip = 50;
-  if(is_void(color))
-    color = "red";
-  if(is_void(lines))
-    lines = 1;
+
   if(is_void(x)) {
     if(is_void(pn)) {
       write, "No pnav/gga data available... aborting.";
@@ -915,7 +906,7 @@ func plot_no_tans_fltlines (tans, pnav) {
 
   w = current_window();
   window, 6;
-  if(is_void(width)) width = 5.0;
+  default, width, 5.;
 
   // find where the diff in tans is greater than 0.5 second
   tans_dif = tans.somd(dif);
@@ -955,8 +946,8 @@ func select_any_region(xdata, ydata, mode=, win=) {
  OUTPUT:  The output is a index that contains the x and y data points in the selected region.
  amar nayegandhi 11/26/02.
 */
-  if(!win) win = 5;
-  if(!mode) mode = 1;
+  default, win, 5;
+  default, mode, 1;
 
   w = current_window();
 
