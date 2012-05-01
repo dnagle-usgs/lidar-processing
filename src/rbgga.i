@@ -331,18 +331,12 @@ properly to the zoom buttons.
   extern ZoneNumber, utm, ply, curzone;
   default, win, window();
   window, win;
+  local minlon, minlat, maxlon, maxlat;
   if(!is_array(llarr)) {
-    a = mouse(1, 1, "Hold the left mouse button down, select a region:");
-    a(1:4);
-    minlon = min([a(1),a(3)]);
-    maxlon = max([a(1),a(3)]);
-    minlat = min([a(2),a(4)]);
-    maxlat = max([a(2),a(4)]);
+    mouse_bounds, minlon, minlat, maxlon, maxlat;
+    [minlon, minlat, maxlon, maxlat];
   } else {
-    minlon = llarr(1);
-    maxlon = llarr(2);
-    minlat = llarr(3);
-    maxlat = llarr(4);
+    assign, llarr, minlon, maxlon, minlat, maxlat;
   }
   if(latutm) {
     tkcmd, swrite(format="send_latlon_to_l1pro %7.3f %7.3f %7.3f %7.3f %d\n",
@@ -397,18 +391,13 @@ properly to the zoom buttons.
     return;
   }
   window, win;
+  local minlon, minlat, maxlon, maxlat;
   if(!is_array(llarr)) {
-    a = mouse(1, 1, "Hold the left mouse button down, select a point on the flightline map:");
-    a(1:4);
-    minlon = min([a(1),a(3)]);
-    maxlon = max([a(1),a(3)]);
-    minlat = min([a(2),a(4)]);
-    maxlat = max([a(2),a(4)]);
+    mouse_bounds, minlon, minlat, maxlon, maxlat,
+        prompt="Hold the left mouse button down, select a point on the flightline map:";
+    [minlon, minlat, maxlon, maxlat];
   } else {
-    minlon = llarr(1);
-    maxlon = llarr(2);
-    minlat = llarr(3);
-    maxlat = llarr(4);
+    assign, llarr, minlon, maxlon, minlat, maxlat;
   }
   if(latutm) {
     tkcmd, swrite(format="send_latlon_to_l1pro %7.3f %7.3f %7.3f %7.3f %d\n",
@@ -432,7 +421,7 @@ properly to the zoom buttons.
 
   ply = [[minlat, minlon], [maxlat, maxlon]];
   q = data_box(gga.lon, gga.lat, minlon-.1, maxlon+.1, minlat-.1, maxlat+.1);
-  write,format="%d GGA records found\n", numberof(q);
+  write, format="%d GGA records found\n", numberof(q);
   // now find the closest gga record to the selected point
   if(numberof(q)) {
     ggaq = gga(q);
