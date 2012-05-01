@@ -935,16 +935,15 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=, hard_sur
 
   // setup the return struct
   rv = VEGPIX();
-  rv_null = VEGPIX();
-  rv.rastpix = rv_null.rastpix = rn + (i<<24);
-  rv_null.sa = rp.sa(i);
-  rv_null.mx0 = -1;
-  rv_null.mv0 = -10;
-  rv_null.mx1 = -1;
-  rv_null.mv1 = -11;
-  rv_null.nx = -1;
+  rv.rastpix = rn + (i<<24);
+  rv.sa = rp.sa(i);
+  rv.mx0 = -1;
+  rv.mv0 = -10;
+  rv.mx1 = -1;
+  rv.mv1 = -11;
+  rv.nx = -1;
   if (irange < 0)
-    return rv_null;
+    return rv;
 
  // This is the transmit pulse... use algorithm for transmit pulse based on algo used for return pulse.
    rptxi = -short(*rp.tx(i));	// flip it over and convert to signed short
@@ -964,7 +963,7 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=, hard_sur
 
   // if transmit pulse does not exist, return
   if ((ctx(1) == 0)  || (ctx(1) == 1e1000)) {
-    return rv_null
+    return rv;
   }
 
   n = numberof(*rp.rx(i, 1));
@@ -1005,7 +1004,7 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=, hard_sur
   }
 
   if (!ai) {
-    return rv_null;
+    return rv;
   }
 
   wflen = min(18, numberof(w));
@@ -1020,12 +1019,8 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=, hard_sur
   nxr = numberof(xr);
 
   if (numberof(xr) == 0) {
-    rv.sa = rp.sa(i);
-    rv.mx0 = -1;
-    rv.mv0 = aa(max,ai);
-    rv.mx1 = -1;
-    rv.mv1 = rv.mv0;
-    rv.nx = numberof(xr);
+    rv.mv0 = rv.mv1 = aa(max,ai); 
+    rv.nx = 0;
     _errno = 0;
     return rv;
   }
@@ -1044,7 +1039,7 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=, hard_sur
   if (retdist < 5) ai = 0; // this eliminates possible noise pulses.
   if (!ai) {
     _errno = 0;
-    return rv_null;
+    return rv;
   }
   if (pse) pause, pse;
 
@@ -1070,7 +1065,7 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=, hard_sur
     b = aa(int(xr(0)+1):int(xr(0)+retdist),ai);
     if ((min(b) > 240) && (max(b) < veg_conf.thresh)) {
       //write, format="This happens when rn = %d, pulse =%d\n", rn, i;
-      return rv_null;
+      return rv;
     }
     mx00 = irange + xr(0) - ctx(1)
     if (ai == 1)
@@ -1106,7 +1101,7 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=, hard_sur
        if (alg_mode=="gauss") {
         c = xgauss(b, add_peak=0,graph=graph, xaxis=xaxis);
        }
-       if (c(1) <= 0) return rv_null;
+       if (c(1) <= 0) return rv;
         mx0 = mx00 + c(1);
        if (ai == 1) {
           mv0 = aa(int(xr(0)+c(1)),ai);
