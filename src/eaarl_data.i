@@ -587,12 +587,13 @@ func struct_cast(&data, dest, verbose=, special=) {
   Certain pairs of structures have specialized functionality. You can disable
   this functionality by specifying special=0. Here are the conversions with
   special functionality:
-    GEOALL, VEG_ALL, VEG_ALL_, R -> POINTCLOUD_2PT
+    GEOALL, VEG_ALL, VEG_ALL_, R, ZGRID -> POINTCLOUD_2PT
       These are handled as a two-step process. Specifically:
         GEOALL -> GEO -> POINTCLOUD_2PT
         VEG_ALL -> VEG_ -> POINTCLOUD_2PT
         VEG_ALL_ -> VEG__ -> POINTCLOUD_2PT
         R -> FS -> POINTCLOUD_2PT
+        ZGRID -> FS -> POINTCLOUD_2PT
     POINTCLOUD_2PT -> GEOALL, VEG_ALL, VEG_ALL_, R
       These are handled as a two-step process. Specifically:
         POINTCLOUD_2PT -> GEO -> GEOALL
@@ -667,6 +668,11 @@ func struct_cast(&data, dest, verbose=, special=) {
 
     if(structeqany(src, GEOALL, VEG_ALL, VEG_ALL_, R) && structeq(dst, POINTCLOUD_2PT)) {
       struct_cast, data, verbose=verbose;
+      src = structof(data);
+    }
+
+    if(structeq(src, ZGRID) && structeq(dst, POINTCLOUD_2PT)) {
+      struct_cast, data, FS, verbose=verbose;
       src = structof(data);
     }
 
