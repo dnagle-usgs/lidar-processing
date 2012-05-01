@@ -136,3 +136,36 @@ func mouse_measure(sys, style, prompt, win=) {
     write, format=" Distance: %.10g\n", dist;
   return dist;
 }
+
+func mouse_bounds(&xmin, &ymin, &xmax, &ymax, sys=, style=, prompt=, win=) {
+/* DOCUMENT mouse_bounds(sys=, style=, prompt=, win=)
+  -or- mouse_bounds, xmin, ymin, xmax, ymax, sys=, style=, prompt=, win=
+
+  Prompts the user to click and drag in the current window to determine a
+  bounding box. If called as a function, the coordinates [xmin, ymin, xmax,
+  ymax] will be returned. If called as a subroutine, the coordinates will be
+  stored in the variables given.
+
+  Options SYS, STYLE, and PROMPT are passed through to the mouse function and
+  default to 1, 1, and "Click and drag in window %d to select bounds",
+  respectively. WIN is the window the user should click in and defaults to the
+  current window.
+*/
+  default, sys, 1;
+  default, style, 1
+  default, win, window();
+  default, prompt, swrite(format="Click and drag in window %d to select bounds", win);
+
+  wbkp = current_window();
+  window, win;
+
+  click = mouse(sys, style, prompt);
+  xmin = click([1,3])(min);
+  xmax = click([1,3])(max);
+  ymin = click([2,4])(min);
+  ymax = click([2,4])(max);
+
+  window_select, win;
+
+  return [xmin, ymin, xmax, ymax];
+}
