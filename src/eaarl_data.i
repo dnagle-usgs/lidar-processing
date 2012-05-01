@@ -805,6 +805,86 @@ func struct_cast(&data, dest, verbose=, special=) {
         result.lelv = result.elevation;
       }
     }
+
+    if(structeq(src, POINTCLOUD_2PT)) {
+      if(has_member(result, "meast"))
+        result.meast = data.mx * 100 + 0.5;
+      if(has_member(result, "mnorth"))
+        result.mnorth = data.my * 100 + 0.5;
+      if(has_member(result, "melevation"))
+        result.melevation = data.mz * 100 + 0.5;
+      if(has_member(result, "east"))
+        result.east = data.fx * 100 + 0.5;
+      if(has_member(result, "north"))
+        result.north = data.fy * 100 + 0.5;
+      if(has_member(result, "elevation"))
+        result.elevation = data.fz * 100 + 0.5;
+      if(has_member(result, "least"))
+        result.least = data.lx * 100 + 0.5;
+      if(has_member(result, "lnorth"))
+        result.lnorth = data.ly * 100 + 0.5;
+      if(has_member(result, "lelv"))
+        result.lelv = data.lz * 100 + 0.5;
+      if(has_member(result, "intensity"))
+        result.intensity = data.fint;
+      if(has_member(result, "first_peak"))
+        result.first_peak = data.fint;
+      if(has_member(result, "bottom_peak"))
+        result.bottom_peak = data.lint;
+
+      if(structeq(dst, GEO)) {
+        result.east = data.lx * 100 + 0.5;
+        result.north = data.ly * 100 + 0.5;
+        result.depth = (data.lz - data.fz) * 100 + 0.5;
+      }
+    }
+
+    if(structeq(dst, POINTCLOUD_2PT)) {
+      if(has_member(data, "meast"))
+        result.mx = data.meast * 0.01;
+      if(has_member(data, "mnorth"))
+        result.my = data.mnorth * 0.01;
+      if(has_member(data, "melevation"))
+        result.mz = data.melevation * 0.01;
+      if(has_member(data, "east"))
+        result.fx = data.east * 0.01;
+      if(has_member(data, "north"))
+        result.fy = data.north * 0.01;
+      if(has_member(data, "elevation"))
+        result.fz = data.elevation * 0.01;
+      if(has_member(data, "least"))
+        result.lx = data.least * 0.01;
+      if(has_member(data, "lnorth"))
+        result.ly = data.lnorth * 0.01;
+      if(has_member(data, "lelv"))
+        result.lz = data.lelv * 0.01;
+      if(has_member(data, "intensity"))
+        result.fint = data.intensity;
+      if(has_member(data, "first_peak"))
+        result.fint = data.first_peak;
+      if(has_member(data, "bottom_peak"))
+        result.lint = data.bottom_peak;
+      if(has_member(data, "rn"))
+        result.pulse = parse_rn(data.rn)(,2);
+
+      if(structeq(src, FS)) {
+        result.lx = result.fx;
+        result.ly = result.fy;
+        result.lz = result.fz;
+        result.channel = eaarl_intensity_channel(result.fint);
+        result.nx = 1;
+      }
+      if(structeq(src, VEG__)) {
+        result.channel = eaarl_intensity_channel(result.lint);
+      }
+      if(structeq(src, GEO)) {
+        result.lx = result.fx;
+        result.ly = result.fy;
+        result.lz = (data.elevation + data.depth) * 0.01;
+        result.channel = eaarl_intensity_channel(result.lint);
+        result.nx = 2;
+      }
+    }
   }
 
   if(am_subroutine())
