@@ -123,9 +123,11 @@ func run_vegx(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, us
   if (len >= 400) update_freq = 50;
 
   if (multi_peaks) {
-	depths = array(VEGPIXS, 120, len);
+    depths = array(VEGPIXS, 120, len);
   } else {
-	depths = array(VEGPIX, 120, len );
+    depths = array(VEGPIX, 120, len );
+    depths.mv0 = -10	// initialize result for non-existant pulses
+    depths.nx = -1;	// temporary, will be removed later
   }
 
   if (graph) animate, 1;
@@ -138,15 +140,17 @@ func run_vegx(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, us
       }
     }
 
-    for (i = 1; i <= 120; i++) {
-	  if (multi_peaks) {
-		depths(i,j) = ex_veg_all(rn+j, i, last=last, graph=graph, 
-		use_be_centroid=use_be_centroid, use_be_peak=use_be_peak);
-	  } else {
-		depths(i,j) = ex_veg(rn+j, i, last=last, graph=graph, 
-		use_be_centroid=use_be_centroid, use_be_peak=use_be_peak,
-		hard_surface=hard_surface, alg_mode=alg_mode);
-	  }
+    raw = get_erast(rn=rn+j);
+    header = eaarla_decode_header(raw);
+    for (i = 1; i <= header.number_of_pulses; i++) {
+      if (multi_peaks) {
+        depths(i,j) = ex_veg_all(rn+j, i, last=last, graph=graph, 
+        use_be_centroid=use_be_centroid, use_be_peak=use_be_peak);
+      } else {
+        depths(i,j) = ex_veg(rn+j, i, last=last, graph=graph, 
+        use_be_centroid=use_be_centroid, use_be_peak=use_be_peak,
+        hard_surface=hard_surface, alg_mode=alg_mode);
+      }
       if (pse) pause, pse;
     }
   }
