@@ -538,8 +538,8 @@ func ex_veg_all(rn, i, last=, graph=, use_be_centroid=, use_be_peak=, pse=, thre
   default, graph, 0;
   default, verbose, graph;
   default, ex_bath_rn, -1;
-  default, aa, array(float, 256, 120, 4);
   default, thresh, 4.0;
+  aa = array(float, 256, 120, 4);
 
   // check if global variable irg_a contains the current raster number (rn)
   if (is_void(irg_a) || !is_array(where(irg_a.raster == rn))) {
@@ -902,7 +902,7 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=, hard_sur
   default, verbose, graph;
 
   default, ex_bath_rn, -1;
-  default, aa, array(float, 256, 120, 4);
+  aa = array(float, 256, 120, 4);
 
   _errno = 0; // If not specifically set, preset to assume no errors.
 
