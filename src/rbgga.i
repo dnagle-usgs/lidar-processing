@@ -317,12 +317,7 @@ func gga_from_utm_bbox(north, west, south, east, zone) {
 */
   minll = utm2ll(south, west, zone);
   maxll = utm2ll(north, east, zone);
-  minlat = minll(2);
-  maxlat = maxll(2);
-  minlon = minll(1);
-  maxlon = maxll(1);
-  q = where(gga.lon >= minlon & gga.lon <= maxlon & gga.lat >= minlat & gga.lat <= maxlat);
-  return q;
+  return data_box(gga.lon, gga.lat, minll(1), maxll(1), minll(2), maxll(2));
 }
 
 func gga_win_sel(show, win=, color=, msize=, skip= , latutm=, llarr=, _batch=) {
@@ -371,19 +366,7 @@ properly to the zoom buttons.
   }
 
   ply = [[minlat, minlon], [maxlat, maxlon]];
-  q = where(gga.lon > minlon);
-  if(is_array(q)) {
-    qq = where(gga.lon(q) < maxlon);
-    q = q(qq);
-  }
-  if(is_array(q)) {
-    qq = where(gga.lat(q) > minlat);
-    q = q(qq);
-  }
-  if(is_array(q)) {
-    qq = where(gga.lat(q) < maxlat);
-    q = q(qq);
-  }
+  q = data_box(gga.lon, gga.lat, minlon, maxlon, minlat, maxlat);
   if(is_array(q)) {
     plg, a_y, a_x, color="black";
   }
@@ -432,7 +415,7 @@ properly to the zoom buttons.
         minlon, maxlon, minlat, maxlat, utm);
   }
   if(show == 2) {
-    /* plot a window over selected region */
+    // plot a window over selected region
     a_x=[minlon, maxlon, maxlon, minlon, minlon];
     a_y=[minlat, minlat, maxlat, maxlat, minlat];
     plg, a_y, a_x, color=color;
@@ -448,19 +431,7 @@ properly to the zoom buttons.
   }
 
   ply = [[minlat, minlon], [maxlat, maxlon]];
-  q = where(gga.lon > (minlon-0.1));
-  if(is_array(q)) {
-    qq = where(gga.lon(q) < (maxlon+0.1));
-    q = q(qq);
-  }
-  if(is_array(q)) {
-    qq = where(gga.lat(q) > (minlat-0.1));
-    q = q(qq);
-  }
-  if(is_array(q)) {
-    qq = where(gga.lat(q) < (maxlat+0.1));
-    q = q(qq);
-  }
+  q = data_box(gga.lon, gga.lat, minlon-.1, maxlon+.1, minlat-.1, maxlat+.1);
   write,format="%d GGA records found\n", numberof(q);
   // now find the closest gga record to the selected point
   if(numberof(q)) {
