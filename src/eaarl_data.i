@@ -234,6 +234,41 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
     return splitary(data(xyz, class), 3, x, y, z);
   }
 
+  // Special handling for POINTCLOUD_2PT
+  if(structeq(structof(data), POINTCLOUD_2PT)) {
+    if(anyof(["ba","be","ch","de","lint"] == mode)) {
+      x = data.lx;
+      y = data.ly;
+    } else if(anyof(["fint","fs"] == mode)) {
+      x = data.fx;
+      y = data.fy;
+    } else if(mode == "mir") {
+      x = data.mx;
+      y = data.my;
+    } else {
+      error, "Unknown mode.";
+    }
+
+    if(anyof(["ba","be"] == mode)) {
+      z = data.lz;
+    } else if(mode == "ch") {
+      z = data.fz - data.lz;
+    } else if(mode == "de") {
+      z = data.lz - data.fz;
+    } else if(mode == "fint") {
+      z = data.fint;
+    } else if(mode == "fs") {
+      z = data.fz;
+    } else if(mode == "lint") {
+      z = data.lint;
+    } else if(mode == "mir") {
+      z = data.mz;
+    }
+
+    if(am_subroutine()) return;
+    return [x, y, z];
+  }
+
   // Most data modes use east/north for x/y. Only bare earth and be intensity
   // use least/lnorth.
   if(anyof(["ba","ch","de","fint","fs"] == mode)) {
