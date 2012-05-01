@@ -181,11 +181,23 @@ func data2xyz(data, &x, &y, &z, mode=, native=) {
       y = .mnorth
       z = .melevation
 
-  As a special case, this function can also handle multi-dimensional numerical
-  arrays as input. In these cases, data must be an array with two or more
-  dimensions, and either the first, second, or last dimension must have a size
-  of three. The first of those dimensions with size three will be used to
-  break the array up into x, y, z components.
+  This function can also handle a number of special cases for input:
+
+  - Multi-dimensional numerical arrays. The data must be an array with two or
+    more dimensions, and either the first, second, or last dimension must have
+    a size of three. The first of those dimensions with size three will be used
+    to break the array up into x, y, z components.
+
+  - Gridded data in ZGRID structure. This data will be converted into a
+    multi-dimensional numerical array and then handled as described above.
+
+  - Objects of the pcobj class. Only "be", "ba", and "fs" modes are supported.
+    The points returned will be those corresponding to the "bare_earth",
+    "submerged_topo", and "first_surface" classes respectively.
+
+  - Data in the POINTCLOUD_2PT structure. This data is handled similarly to the
+    tranditional structures, except that "native=" has no effect since the data
+    is natively in floating point format.
 */
 // Original David Nagle 2009-01-25
   default, mode, "fs";
