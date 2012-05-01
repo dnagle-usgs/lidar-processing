@@ -14,12 +14,12 @@ local eaarl_structs, eaarl_structs_i;
     > write, format="%s\n", symbol_names(64)
 */
 
-local POINTCLOUD;
+local POINTCLOUD_2PT;
 /* DOCUMENT
   Transitional structure for point cloud data. This will supercede FS, VEG__,
   GEO, etc. as well as their raster-oriented counterparts.
 
-  struct POINTCLOUD {
+  struct POINTCLOUD_2PT {
     double mx, my, mz;      mirror coordinates
     double fx, fy, fz;      first return coordinates
     double lx, ly, lz;      last return coordinates
@@ -36,7 +36,7 @@ local POINTCLOUD;
   }
 */
 
-struct POINTCLOUD {
+struct POINTCLOUD_2PT {
   double mx, my, mz;
   double fx, fy, fz;
   double lx, ly, lz;
