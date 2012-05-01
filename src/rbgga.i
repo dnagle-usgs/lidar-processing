@@ -50,30 +50,26 @@ Functions:
 
 */
 
+local GGA;
+/* DOCUMENT
+  Structure for navigation data. This is an older structure and is replaced by
+  PNAV for newer datasets.
 
+  struct GGA {
+    float sod;    seconds of the day
+    double lat;   latitude in decimal degrees (negative is south)
+    double lon;   longitude in decimal degrees (negative is west)
+    float alt;    altitude of aircraft in meters
+  }
+
+  SEE ALSO: PNAV
+*/
 struct GGA {
   float sod;
   double lat;
   double lon;
   float alt;
 };
-
-
-
-extern pnav
-/* DOCUMENT pnav
-
-  pnav is a structure containing:
-
-   pnav.sod      Seconds of the day.  
-   pnav.lat 	Latitude in degrees
-   pnav.lon	Longitude in degrees ( negative values for west )
-   pnav.alt 	Altitude in meters
-
-   SEE ALSO: rbgga
-
-*/
-
 
 func rbgga( x, plt=, color=, map=, utm=, ifn= ) {
 /* DOCUMENT v = rbgga( plt=(0/1), map=(0/1) ) 
