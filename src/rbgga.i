@@ -160,39 +160,18 @@ properly to the zoom buttons.
   return q;
 }
 
-func gga_point_sel(show, win=, color=, msize=, skip= , latutm=, llarr=, _batch=) {
-/* DOCUMENT gga_point_sel( show, color=, msize=, skip= )
-
-  There's a bug in yorick 1.5 which causes all the graphics screens to get fouled up
-if you set show=1 when using this function.  The screen will reverse fg/bg and not respond
-properly to the zoom buttons.
-
+func gga_point_sel(void) {
+/* DOCUMENT gga_point_sel()
 */
   extern ZoneNumber, utm, ply, curzone;
-  default, win, window();
   if(utm && !curzone) {
     write, "Zone Number not defined.  Please set variable curzone to UTM Zone Number.";
     return;
   }
-  window, win;
+  window;
   local minlon, minlat, maxlon, maxlat;
-  if(!is_array(llarr)) {
-    mouse_bounds, minlon, minlat, maxlon, maxlat,
-        prompt="Hold the left mouse button down, select a point on the flightline map:";
-    [minlon, minlat, maxlon, maxlat];
-  } else {
-    assign, llarr, minlon, maxlon, minlat, maxlat;
-  }
-  if(latutm) {
-    tkcmd, swrite(format="send_latlon_to_l1pro %7.3f %7.3f %7.3f %7.3f %d\n",
-        minlon, maxlon, minlat, maxlat, utm);
-  }
-  if(show == 2) {
-    // plot a window over selected region
-    a_x=[minlon, maxlon, maxlon, minlon, minlon];
-    a_y=[minlat, minlat, maxlat, maxlat, minlat];
-    plg, a_y, a_x, color=color;
-  }
+  mouse_bounds, minlon, minlat, maxlon, maxlat,
+      prompt="Hold the left mouse button down, select a point on the flightline map:";
   if(utm == 1) {
     minll = utm2ll(minlat, minlon, curzone);
     maxll = utm2ll(maxlat, maxlon, curzone);
@@ -212,18 +191,9 @@ properly to the zoom buttons.
     dist = (ggaq.lon-minlon)^2 + (ggaq.lat-minlat)^2;
     didx = dist(mnx);
     q = q(didx);
-    if((show != 0) && (show != 2)) {
-      default, msize, 0.1;
-      default, color, "red";
-      default, skip, 10;
-      plmk, gga.lat(q(1:0:skip)), gga.lon(q(1:0:skip)), msize=msize, color=color;
-    }
-
-    if(!_batch) test_selection_size, q;
   }
   return q;
 }
-
 
 func gga_click_start_isod(x) {
 /* DOCUMENT gga_click_start_isod
@@ -233,7 +203,7 @@ of the selected region.  You can then use the "Examine Rasters" button on sf to 
 and continue looking at data down the flight line.
 
 */
-  q = gga_point_sel(0);
+  q = gga_point_sel();
   if(numberof(q)) {
     st = gga(q).sod;
   } else {
