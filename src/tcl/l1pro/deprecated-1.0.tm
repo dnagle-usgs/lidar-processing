@@ -588,7 +588,7 @@ proc ::l1pro::deprecated::rbgga_menu {{mode eaarl}} {
                     skip=$gga(skip)$marker, msize=$gga(msize), utm=$utm,\
                     win=$_map(window), width=$gga(linewidth);\r" 
         } else {
-            exp_send "show_gga_track, color=\"$gga(linecolor)\",\
+            exp_send "show_pnav_track, pnav, color=\"$gga(linecolor)\",\
                     skip=$gga(skip)$marker,msize=$gga(msize), utm=$utm,\
                     win=$_map(window), width=$gga(linewidth);\r" 
         }

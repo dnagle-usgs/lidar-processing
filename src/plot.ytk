@@ -606,7 +606,7 @@ proc ::plot::track_plot { } {
       set ::utm 0
    }
 
-   exp_send "show_gga_track, color=\"$g::trackLineColor\", skip=$g::trackSkip, marker=$marker, msize=$g::trackMarkerSize, utm=$::utm, win=$::_map(window), width=$g::trackLineWidth\r"
+   exp_send "show_pnav_track, pnav, color=\"$g::trackLineColor\", skip=$g::trackSkip, marker=$marker, msize=$g::trackMarkerSize, utm=$::utm, win=$::_map(window), width=$g::trackLineWidth\r"
    expect {>}
    exp_send "\r\n"
    expect {>}

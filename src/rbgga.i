@@ -728,7 +728,7 @@ func show_track(fs, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, width
 /* DOCUMENT show_track, fs, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, width=, win=
   fs can either be an FS or PNAV
 
-  See show_gga_track
+  SEE ALSO: show_pnav_track
 */
   a = structof(fs);
   if(structeq(a, FS)) pn = fs2pnav(fs);
@@ -738,16 +738,8 @@ func show_track(fs, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, width
     marker=marker, lines=lines, utm=utm, width=width, win=win;
 }
 
-// 2008-11-06: this was the original show_gga_track, but added which data to
-// plot as pn results are ugly when called just as show_track(pnav), needs to
-// be: show_pnav_track(pnav, color="red", skip=0, utm=1)
 func show_pnav_track(pn, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, width=, win=)  {
 /* DOCUMENT func show_pnav_track, pn, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, width=, win=
-
-  This was the original show_gga_track, but added which data to plot as the
-  first argument
-
-   See show_gga_track()
 */
   extern curzone;
 
@@ -835,7 +827,7 @@ func plot_no_raster_fltlines(pnav, edb) {
       if(l_norast(i) >= f_norast(i)) {
         indx1 = where((pnav.sod >= f_norast(i)) & (pnav.sod <= l_norast(i)));
         if(is_array(indx1))
-          show_gga_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=4,
+          show_pnav_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=4,
               skip=50, color="yellow", utm=utm;
       }
     }
@@ -843,7 +835,7 @@ func plot_no_raster_fltlines(pnav, edb) {
   // also plot over region before the system is initially started.
   indx1 = where(pnav.sod < sod_edb(1));
   if(is_array(indx1))
-    show_gga_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=4,
+    show_pnav_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=4,
         skip=50, color="yellow", utm=utm;
 
   // also plot over region before first good raster
@@ -851,7 +843,7 @@ func plot_no_raster_fltlines(pnav, edb) {
   if(is_array(lindx))
     indx1 = where(pnav.sod <= sod_edb(lindx(0)+2));
   if(is_array(indx1))
-    show_gga_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=4,
+    show_pnav_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=4,
         skip=50, color="yellow", utm=utm;
 
   window_select, w;
@@ -882,7 +874,7 @@ func plot_no_tans_fltlines (tans, pnav) {
         q = where(pnav.sod(indx1) <= l_notans(i));
         if(is_array(q)) {
           indx1 = indx1(q);
-          show_gga_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=5,
+          show_pnav_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=5,
               color="magenta", skip=50, msize=0.2, utm=utm, width=width;
         }
       }
@@ -890,7 +882,7 @@ func plot_no_tans_fltlines (tans, pnav) {
   }
   // also plot over region before the tans system is initially started.
   indx1 = where(pnav.sod < tans.somd(1));
-  show_gga_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=5,
+  show_pnav_track, x=pnav.lon(indx1), y=pnav.lat(indx1), marker=5,
       color="magenta", skip=1, msize=0.2, utm=utm, width=width;
 
   window_select, w;
@@ -1010,15 +1002,16 @@ utm=, width=, win=) {
    Displays the pnav tracks for all mission days (as defined in the loaded
    mission configuration).
 
-   See show_gga_track for an explanation of options; most are passed as-is to
+   See show_pnav_track for an explanation of options; most are passed as-is to
    it.
 
    One exception: if color is not specified, each day's trackline will get a
    different color.
 
-   SEE ALSO: show_gga_track, mission_conf
+   SEE ALSO: mission_conf
 */
 // Original David B. Nagle 2009-03-12
+  extern pnav;
   default, width, 1;
   default, msize, 0.1;
   default, marker, 0;
@@ -1030,7 +1023,7 @@ utm=, width=, win=) {
       color_tracker--;
       cur_color = is_void(color) ? color_tracker : color;
       missiondata_load, "pnav", day=days(i);
-      show_gga_track, color=cur_color, skip=skip, msize=msize,
+      show_pnav_track, pnav, color=cur_color, skip=skip, msize=msize,
         marker=marker, lines=lines, utm=utm, width=width, win=win;
     }
   }
