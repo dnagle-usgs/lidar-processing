@@ -1,5 +1,5 @@
 /******************************************************************************\
-* Function let was moved to the attick from centroid.i on 2012-04-23. The      *
+* Function let was moved to the attic from centroid.i on 2012-04-23. The       *
 * function is no longer used and is documented as being broken.                *
 \******************************************************************************/
 
