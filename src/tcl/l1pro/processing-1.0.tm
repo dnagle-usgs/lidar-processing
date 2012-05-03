@@ -8,7 +8,7 @@ namespace eval ::l1pro::processing {
 }
 
 proc ::l1pro::processing::define_region_box {} {
-    exp_send "q = gga_win_sel(2, win=$::_map(window));\r"
+    exp_send "q = gga_win_sel(win=$::_map(window));\r"
 }
 
 proc ::l1pro::processing::define_region_poly {} {
@@ -73,7 +73,7 @@ snit::widget ::l1pro::processing::define_region_rect::gui {
         lassign [lsort -real [list $y0 $y1]] ymin ymax
         set utm [expr {$xmin > 1000}]
         exp_send "utm = $utm;\
-                q = gga_win_sel(2, win=$::_map(window),\
+                q = gga_win_sel(win=$::_map(window),\
                         llarr=\[$xmin,$xmax,$ymin,$ymax\]);\r"
         destroy $self
     }

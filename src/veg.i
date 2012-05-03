@@ -321,7 +321,7 @@ Returns:
 
   if (!is_array(q)) {
     /* select a region using function gga_win_sel in rbgga.i */
-    q = gga_win_sel(2, latutm=latutm, llarr=llarr);
+    q = gga_win_sel(latutm=latutm, llarr=llarr);
   }
 
   /* find start and stop raster numbers for all flightlines */

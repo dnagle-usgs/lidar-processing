@@ -82,13 +82,8 @@ func test_selection_size (q) {
   }
 }
 
-func gga_win_sel(show, win=, color=, latutm=, llarr=, _batch=) {
-/* DOCUMENT gga_win_sel(show, color=, latutm=, llarr=, _batch=)
-
-  There's a bug in yorick 1.5 which causes all the graphics screens to get fouled up
-if you set show=1 when using this function.  The screen will reverse fg/bg and not respond
-properly to the zoom buttons.
-
+func gga_win_sel(win=, color=, latutm=, llarr=, _batch=) {
+/* DOCUMENT gga_win_sel(color=, latutm=, llarr=, _batch=)
 */
   extern utm, ply, curzone;
   default, win, window();
