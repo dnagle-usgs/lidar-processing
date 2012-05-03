@@ -12,7 +12,7 @@ proc ::l1pro::processing::define_region_box {} {
 }
 
 proc ::l1pro::processing::define_region_poly {} {
-    exp_send "q = gga_pip_sel(1, win=$::_map(window));\r"
+    exp_send "q = gga_pip_sel(win=$::_map(window));\r"
 }
 
 proc ::l1pro::processing::define_region_rect {} {

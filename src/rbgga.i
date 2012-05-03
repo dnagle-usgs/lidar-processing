@@ -1,41 +1,32 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 require, "eaarl.i";
 
-func gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=) {
-/* DOCUMENT gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=)
-This function uses the 'points in polygon' technique to select a region in the gga window.
-Also see: getPoly, plpoly, testPoly, gga_win_sel
+func gga_pip_sel(win=) {
+/* DOCUMENT gga_pip_sel(win=)
+  The user is prompted to draw out a polygon. The points of GGA within that
+  polygon are found and the corresponding indices are returned.
+
+  SEE ALSO: getPoly, plpoly, testPoly, gga_win_sel
 */
-  extern utm, ply, q, curzone;
-  q = [];
+  extern utm, ply, curzone, gga;
   default, win, 6;
   window, win;
-  if(!is_array(llarr)) {
-    if(utm && !curzone) {
-      message = "Points in Polygon requires that you set curzone if utm=1. Aborting.";
-      if(!is_void(_ytk))
-        tk_messageBox, message, "ok";
-      error, message;
-    }
-    ply = getPoly();
-    box = boundBox(ply);
-    if(utm) {
-      ZN = curzone;
-      box = transpose(utm2ll(box(2,), box(1,), ZN));
-      ply = transpose(utm2ll(ply(2,), ply(1,), ZN));
-      show = 0;
-    }
-    box_pts = ptsInBox(box, gga.lon, gga.lat);
-    poly_pts = testPoly(ply, gga.lon(box_pts), gga.lat(box_pts));
-    q = box_pts(poly_pts);
+  if(utm && !curzone) {
+    message = "Points in Polygon requires that you set curzone if utm=1. Aborting.";
+    if(!is_void(_ytk))
+      tk_messageBox, message, "ok";
+    error, message;
   }
+  ply = getPoly();
+  box = boundBox(ply);
+  if(utm) {
+    box = transpose(utm2ll(box(2,), box(1,), curzone));
+    ply = transpose(utm2ll(ply(2,), ply(1,), curzone));
+  }
+  box_pts = ptsInBox(box, gga.lon, gga.lat);
+  poly_pts = testPoly(ply, gga.lon(box_pts), gga.lat(box_pts));
+  q = box_pts(poly_pts);
   write, format="%d GGA records found\n", numberof(q);
-  if((show != 0) && (show != 2)) {
-    default, msize, 0.1;
-    default, color, "red";
-    default, skip, 10;
-    plmk, gga.lat(q(1:0:skip)), gga.lon(q(1:0:skip)), msize=msize, color=color;
-  }
   test_selection_size, q;
   return q;
 }
@@ -159,7 +150,7 @@ func gga_find_times(q, win=, plt=) {
    This function finds the start and stop times from a list generated
    by the gga_win_sel() function. It returns an array of 2xN floats
    where  (1, ) is the starting sod of the segment and (2, ) is the
-   ending sod.  Sos is Seconds-of-day.
+   ending sod.  Sod is Seconds-of-day.
 
   SEE ALSO: gga_win_sel, rbgga, plmk, sod2hms
 */
