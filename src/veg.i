@@ -905,8 +905,6 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=,
   default, win, 4;
   default, graph, 0;
   default, verbose, graph;
-
-  default, ex_bath_rn, -1;
   aa = array(float, 256, 3);
 
   _errno = 0; // If not specifically set, preset to assume no errors.
@@ -946,16 +944,14 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=,
  // This is the transmit pulse... use algorithm for transmit pulse based on algo used for return pulse.
    rptxi = -short(pulse.transmit_wf);	// flip it over and convert to signed short
    rptxi -= rptxi(1);			// remove bias using first point of wf
+
   if (alg_mode=="cent") {
     ctx = xcent(rptxi);
-  }
-  if (alg_mode=="peak") {
+  } else if (alg_mode=="peak") {
     ctx = xpeak(rptxi);
-  }
-  if (alg_mode=="gauss") {
+  } else if (alg_mode=="gauss") {
     ctx = xgauss(rptxi);
-  }
-  if (is_void(alg_mode)) {
+  } else if (is_void(alg_mode)) {
     ctx = cent(pulse.transmit_wf);
   }
 
@@ -1067,9 +1063,9 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=,
     mx00 = irange + xr(0) - ctx(1)
     if (ai == 1)
         mx00 += ops_conf.chn1_range_bias;
-    if (ai == 2)
+    else if (ai == 2)
         mx00 += ops_conf.chn2_range_bias;
-    if (ai == 3)
+    else if (ai == 3)
         mx00 += ops_conf.chn3_range_bias;
 
     if (graph) {
@@ -1091,11 +1087,9 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=,
       if (b(sum) != 0) {
        if (alg_mode=="cent") {
         c = xcent(b);
-       }
-       if (alg_mode=="peak") {
+       } else if (alg_mode=="peak") {
         c = xpeak(b);
-       }
-       if (alg_mode=="gauss") {
+       } else if (alg_mode=="gauss") {
         c = xgauss(b, add_peak=0,graph=graph, xaxis=xaxis);
        }
        if (c(1) <= 0) return rv;
@@ -1148,12 +1142,10 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=,
       if (ai == 1) {
         mx0 = irange+xr(0)+idx1(1)-ctx(1)+ops_conf.chn1_range_bias;
         mv0 = aa(int(xr(0)+idx1(1)),ai);
-      }
-      if (ai == 2) {
+      } else if (ai == 2) {
         mx0 = irange+xr(0)+idx1(1)-ctx(1)+ops_conf.chn2_range_bias; // in ns - amar
         mv0 = aa(int(xr(0)+idx1(1)),ai)+300;
-      }
-      if (ai == 3) {
+      } else if (ai == 3) {
         mx0 = irange+xr(0)+idx1(1)-ctx(1)+ops_conf.chn3_range_bias; // in ns - amar
         mv0 = aa(int(xr(0)+idx1(1)),ai)+600;
       }
