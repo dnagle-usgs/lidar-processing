@@ -624,8 +624,8 @@ proc ::plot::fma { } {
 proc ::plot::jump { } {
    ::plot::window_store
    ::plot::window_set
-   exp_send "gga_click_start_isod()\r"
-   expect "region_selected"
+   exp_send "gga_click_start_isod;\r"
+   expect {>}
    ::plot::window_restore
 }
 

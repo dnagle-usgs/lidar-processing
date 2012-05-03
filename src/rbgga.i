@@ -160,61 +160,36 @@ properly to the zoom buttons.
   return q;
 }
 
-func gga_point_sel(void) {
-/* DOCUMENT gga_point_sel()
-*/
-  extern ZoneNumber, utm, ply, curzone;
-  if(utm && !curzone) {
-    write, "Zone Number not defined.  Please set variable curzone to UTM Zone Number.";
-    return;
-  }
-  window;
-  local minlon, minlat, maxlon, maxlat;
-  mouse_bounds, minlon, minlat, maxlon, maxlat,
-      prompt="Hold the left mouse button down, select a point on the flightline map:";
-  if(utm == 1) {
-    minll = utm2ll(minlat, minlon, curzone);
-    maxll = utm2ll(maxlat, maxlon, curzone);
-    minlat = minll(2);
-    maxlat = maxll(2);
-    minlon = minll(1);
-    maxlon = maxll(1);
-    write, format="minlat = %7.3f, minlon= %7.3f\n", minlat, minlon;
-  }
-
-  ply = [[minlat, minlon], [maxlat, maxlon]];
-  q = data_box(gga.lon, gga.lat, minlon-.1, maxlon+.1, minlat-.1, maxlat+.1);
-  write, format="%d GGA records found\n", numberof(q);
-  // now find the closest gga record to the selected point
-  if(numberof(q)) {
-    ggaq = gga(q);
-    dist = (ggaq.lon-minlon)^2 + (ggaq.lat-minlat)^2;
-    didx = dist(mnx);
-    q = q(didx);
-  }
-  return q;
-}
-
 func gga_click_start_isod(x) {
 /* DOCUMENT gga_click_start_isod
-
-   Select a region from the gga map. This procedure will then show the picture at the start
-of the selected region.  You can then use the "Examine Rasters" button on sf to see the raster
-and continue looking at data down the flight line.
-
+  Prompt the user to click a point on the map and then prompt SF to display the
+  corresponding picture.
 */
-  q = gga_point_sel();
-  if(numberof(q)) {
-    st = gga(q).sod;
+  extern utm, curzone;
+  if(utm && !curzone) {
+    write, "Abort: curzone is not defined, please set to current UTM zone number";
+    return;
+  }
+
+  local lon, lat;
+  click = mouse(1, 0, "Left-click to select point on flightline");
+  if(utm) {
+    utm2ll, click(4), click(3), curzone, lon, lat;
   } else {
-    st = [];
+    lon = click(3);
+    lat = click(4);
   }
-  if(numberof(st)) {
-    st = int(st);
-    send_sod_to_sf, st;   // command sf and drast there.
+
+  near = data_box(gga.lon, gga.lat, lon-.1, lon+.1, lat-.1, lat+.1);
+  if(!numberof(near)) {
+    write, "Abort: no nearby points found";
+    return;
   }
-  write, "region_selected";
-  return st;
+
+  distsq = (gga(near).lon-lon)^2 + (gga(near).lat-lat)^2;
+  nearest = distsq(mnx);
+
+  send_sod_to_sf, long(gga(nearest).sod);
 }
 
 func gga_find_times(q, win=, plt=) {

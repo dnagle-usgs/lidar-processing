@@ -599,7 +599,7 @@ proc ::l1pro::deprecated::rbgga_menu {{mode eaarl}} {
             -command {exp_send "window,$_map(window); fma\r"}
     button $mw.f1.jump -text "Jump" -command { 
         exp_send "wsav=current_window();window,$_map(window);\
-                gga_click_start_isod()\r" 
+                gga_click_start_isod\r"
         #tk_messageBox  -message "Click using left mouse button over a section
         #of a flightline in Yorick window-6."  -type ok
         expect "region_selected"
