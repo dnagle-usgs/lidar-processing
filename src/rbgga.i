@@ -6,20 +6,16 @@ func gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=, pmulti=) {
 This function uses the 'points in polygon' technique to select a region in the gga window.
 Also see: getPoly, plpoly, testPoly, gga_win_sel
 */
-  extern ZoneNumber, utm, ply, q, curzone;
+  extern utm, ply, q, curzone;
   if(!(pmulti)) q = [];
   default, win, 6;
   window, win;
   if(!is_array(llarr)) {
     if(utm && !curzone) {
-      if(is_void(ZoneNumber)) {
-        message = "Points in Polygon requires that you set curzone if utm=1. Aborting.";
-        if(!is_void(_ytk))
-          tk_messageBox, message, "ok";
-        error, message;
-      } else {
-        curzone = ZoneNumber(1);
-      }
+      message = "Points in Polygon requires that you set curzone if utm=1. Aborting.";
+      if(!is_void(_ytk))
+        tk_messageBox, message, "ok";
+      error, message;
     }
     ply = getPoly();
     box = boundBox(ply);
@@ -70,7 +66,7 @@ func mark_time_pos(win, sod, msize=, marker=, color=) {
  sf_a.tcl via eaarl.ytk
 
 */
-  extern utm, UTMNorthing, UTMEasting, ZoneNumber;
+  extern utm;
   default, marker, 5;
   default, color, "blue";
   default, msize, 0.6;
@@ -78,8 +74,9 @@ func mark_time_pos(win, sod, msize=, marker=, color=) {
   q = where(gga.sod == sod);
   window, win;
   if(utm) {
-    fll2utm, gga.lat(q), gga.lon(q), UTMNorthing, UTMEasting, ZoneNumber;
-    plmk, UTMNorthing, UTMEasting, marker=marker, color=color, msize=msize;
+    local north, east;
+    fll2utm, gga.lat(q), gga.lon(q), north, east;
+    plmk, north, east, marker=marker, color=color, msize=msize;
   } else {
     plmk, gga.lat(q), gga.lon(q), marker=marker, color=color, msize=msize;
   }
@@ -112,7 +109,7 @@ if you set show=1 when using this function.  The screen will reverse fg/bg and n
 properly to the zoom buttons.
 
 */
-  extern ZoneNumber, utm, ply, curzone;
+  extern utm, ply, curzone;
   default, win, window();
   window, win;
   local minlon, minlat, maxlon, maxlat;
