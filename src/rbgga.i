@@ -160,7 +160,7 @@ properly to the zoom buttons.
   return q;
 }
 
-func gga_click_start_isod(x) {
+func gga_click_start_isod {
 /* DOCUMENT gga_click_start_isod
   Prompt the user to click a point on the map and then prompt SF to display the
   corresponding picture.
@@ -445,7 +445,6 @@ func show_pnav_track(pn, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, 
           width=width;
   }
 }
-
 
 func plot_no_raster_fltlines(pnav, edb) {
 /* Document no_raster_flightline (gga, edb)
