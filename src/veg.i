@@ -923,7 +923,6 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=,
   }
   this_irg = irg_a(where(rn == irg_a.raster));
   irange = this_irg.irange(i);
-  intensity = this_irg.intensity(i);
 
   raw = get_erast(rn=rn);
   if (is_void(header)) {
@@ -1146,9 +1145,6 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=,
       }
     }
     if (is_array(idx1)) {
-      ftrail = idx1(1);
-      ltrail = retdist;
-      //halftrail = 0.5*(ltrail - ftrail);
       if (ai == 1) {
         mx0 = irange+xr(0)+idx1(1)-ctx(1)+ops_conf.chn1_range_bias;
         mv0 = aa(int(xr(0)+idx1(1)),ai);
@@ -1260,7 +1256,6 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=,
   irange *= el;
 
   if (pse) pause, pse;
-  rv.sa = pulse.shaft_angle;
   rv.mx0 = mx0;
   rv.mv0 = mv0;
   rv.mx1 = mx1;
@@ -1272,7 +1267,6 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=,
     // check to see if there is only 1 inflection
     if (nxr == 1) {
       //use first surface algorithm data to define range
-      rv.sa = pulse.shaft_angle;
       rv.mx0 = mx1;
       rv.mv0 = mv1;
     }
