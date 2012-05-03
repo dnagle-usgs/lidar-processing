@@ -1,13 +1,13 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 require, "eaarl.i";
 
-func gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=, pmulti=) {
+func gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=) {
 /* DOCUMENT gga_pip_sel(show, win=, color=, msize=, skip=, latutm=, llarr=)
 This function uses the 'points in polygon' technique to select a region in the gga window.
 Also see: getPoly, plpoly, testPoly, gga_win_sel
 */
   extern utm, ply, q, curzone;
-  if(!(pmulti)) q = [];
+  q = [];
   default, win, 6;
   window, win;
   if(!is_array(llarr)) {
@@ -27,26 +27,7 @@ Also see: getPoly, plpoly, testPoly, gga_win_sel
     }
     box_pts = ptsInBox(box, gga.lon, gga.lat);
     poly_pts = testPoly(ply, gga.lon(box_pts), gga.lat(box_pts));
-    if(!(pmulti)) {
-      q = box_pts(poly_pts);
-    } else {
-      v = box_pts(poly_pts);
-      ino = dimsof(q);
-      if((is_array(ino)) && (ino(1) > 1)) {
-        w = q;
-        q = array(long, ino(2)+1, max(ino(2),numberof(v)));
-        q(1:numberof(w(,1)),1:dimsof(w)(0)) = w;
-        q(0,1:dimsof(v)(0)) = v;
-      } else {
-        if(is_array(ino)) {
-          q = array(long, 2, max(ino(2),numberof(v)));
-          q(1,1:dimsof(w)(0)) = w;
-          q(2,1:dimsof(v)(0)) = v;
-        } else {
-          q = v;
-        }
-      }
-    }
+    q = box_pts(poly_pts);
   }
   write, format="%d GGA records found\n", numberof(q);
   if((show != 0) && (show != 2)) {
