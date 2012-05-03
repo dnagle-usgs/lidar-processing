@@ -82,8 +82,8 @@ func test_selection_size (q) {
   }
 }
 
-func gga_win_sel(show, win=, color=, msize=, skip= , latutm=, llarr=, _batch=) {
-/* DOCUMENT gga_win_sel( show, color=, msize=, skip= )
+func gga_win_sel(show, win=, color=, latutm=, llarr=, _batch=) {
+/* DOCUMENT gga_win_sel(show, color=, latutm=, llarr=, _batch=)
 
   There's a bug in yorick 1.5 which causes all the graphics screens to get fouled up
 if you set show=1 when using this function.  The screen will reverse fg/bg and not respond
@@ -105,12 +105,6 @@ properly to the zoom buttons.
         minlon, maxlon, minlat, maxlat, utm);
   }
 
-  if(show == 2) {
-    // plot a window over selected region
-    a_x = [minlon, maxlon, maxlon, minlon, minlon];
-    a_y = [minlat, minlat, maxlat, maxlat, minlat];
-  }
-
   if(utm == 1) {
     minll = utm2ll(minlat, minlon, curzone);
     maxll = utm2ll(maxlat, maxlon, curzone);
@@ -124,15 +118,9 @@ properly to the zoom buttons.
   ply = [[minlat, minlon], [maxlat, maxlon]];
   q = data_box(gga.lon, gga.lat, minlon, maxlon, minlat, maxlat);
   if(is_array(q)) {
-    plg, a_y, a_x, color="black";
+    plg, [minlat,maxlat]([1,1,2,2,1]), [minlon,maxlon]([1,2,2,1,1]), color=color;
   }
   write, format="%d GGA records found\n", numberof(q);
-  if((show != 0) && (show != 2)) {
-    default, msize, 0.1;
-    default, color, "red";
-    default, skip, 10;
-    plmk, gga.lat(q(1:0:skip)), gga.lon(q(1:0:skip)), msize=msize, color=color;
-  }
 
   if(!_batch) test_selection_size, q;
   return q;
