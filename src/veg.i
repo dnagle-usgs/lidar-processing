@@ -899,7 +899,7 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=,
       "gauss": use gaussian decomposition algorithm, see func xgauss
     pse= Time (in milliseconds) to pause between each waveform plot.
 */
-  extern veg_conf, ops_conf, n_all3sat, ex_bath_rn, ex_bath_rp, a, irg_a, _errno, ohno;
+  extern veg_conf, ops_conf, n_all3sat, irg_a, _errno, ohno;
   define_veg_conf;
 
   default, win, 4;
