@@ -850,16 +850,16 @@ func clean_cveg_all(vegall, rcf_width=) {
 }
 
 
-func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=, 
+func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak=, 
   hard_surface=, alg_mode=, pse=, verbose=, add_peak=, header=) {
-/* DOCUMENT rv = ex_veg(rn, i, last=, graph=, win=, use_be_centroid=,
+/* DOCUMENT rv = ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=,
   use_be_peak=, hard_surface=, alg_mode=, pse=, verbose=, header=)
 
   This function returns an array of VEGPIX structures.
 
   Parameters:
     rn: Raster number
-    i: Pulse number
+    pulse_number: Pulse number
 
   Options:
     last= Max veg
@@ -905,11 +905,10 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=,
   default, win, 4;
   default, graph, 0;
   default, verbose, graph;
-  aa = array(float, 256, 3);
 
   _errno = 0; // If not specifically set, preset to assume no errors.
 
-  if (rn == 0 && i == 0) {
+  if (rn == 0 && pulse_number == 0) {
     write, format="Are you clicking in window %d? No data was found.\n", win;
     _errno = -1;
     return;
@@ -920,18 +919,18 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=,
     irg_a = irg(rn, rn, usecentroid=1);
   }
   this_irg = irg_a(where(rn == irg_a.raster));
-  irange = this_irg.irange(i);
+  irange = this_irg.irange(pulse_number);
 
   raw = get_erast(rn=rn);
   if (is_void(header)) {
-    pulse = eaarla_decode_pulse(raw, i, wfs=1);
+    pulse = eaarla_decode_pulse(raw, pulse_number, wfs=1);
   } else {
-    pulse = eaarla_decode_pulse(raw, i, i, header=header, wfs=1);
+    pulse = eaarla_decode_pulse(raw, pulse_number, header=header, wfs=1);
   }
 
   // setup the return struct
   rv = VEGPIX();
-  rv.rastpix = rn + (i<<24);
+  rv.rastpix = rn + (pulse_number<<24);
   rv.sa = pulse.shaft_angle;
   rv.mx0 = -1;
   rv.mv0 = -10;
@@ -942,15 +941,15 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=,
     return rv;
 
  // This is the transmit pulse... use algorithm for transmit pulse based on algo used for return pulse.
-   rptxi = -short(pulse.transmit_wf);	// flip it over and convert to signed short
-   rptxi -= rptxi(1);			// remove bias using first point of wf
+   tx_wf = -short(pulse.transmit_wf);	// flip it over and convert to signed short
+   tx_wf -= tx_wf(1);			// remove bias using first point of wf
 
   if (alg_mode=="cent") {
-    ctx = xcent(rptxi);
+    ctx = xcent(tx_wf);
   } else if (alg_mode=="peak") {
-    ctx = xpeak(rptxi);
+    ctx = xpeak(tx_wf);
   } else if (alg_mode=="gauss") {
-    ctx = xgauss(rptxi);
+    ctx = xgauss(tx_wf);
   } else if (is_void(alg_mode)) {
     ctx = cent(pulse.transmit_wf);
   }
@@ -967,52 +966,48 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=,
   }
 
   // Try 1st channel
-  ai = 1;
-  w = pulse.channel1_wf;
-  aa(1:pulse.channel1_length,ai) = float((~w+1) - (~w(1)+1));
-  nsat = where(w < 5);       // Create a list of saturated samples
-  numsat = numberof(nsat);   // Count how many are saturated
+  channel = 1;
+  raw_wf = pulse.channel1_wf;
+  wf = float((~raw_wf+1) - (~raw_wf(1)+1));
+  saturated = where(raw_wf < 5);    // Create a list of saturated samples
+  numsat = numberof(saturated);     // Count how many are saturated
 
-  if (numsat > veg_conf.max_sat(ai)) {
+  if (numsat > veg_conf.max_sat(channel)) {
     // Try 2nd channel
-    ai = 2;
-    w = pulse.channel2_wf;
-    aa(1:pulse.channel2_length,ai) = float((~w+1) - (~w(1)+1));
-    nsat = where(w == 0);
-    numsat = numberof(nsat);
+    channel = 2;
+    raw_wf = pulse.channel2_wf;
+    wf = float((~raw_wf+1) - (~raw_wf(1)+1));
+    saturated = where(raw_wf == 0);
+    numsat = numberof(saturated);
 
-    if (numsat > veg_conf.max_sat(ai)) {
+    if (numsat > veg_conf.max_sat(channel)) {
       // Try 3rd channel
-      ai = 3;
-      w = pulse.channel3_wf;
-      aa(1:pulse.channel3_length,ai) = float((~w+1) - (~w(1)+1));
-      nsat = where(w == 0);
-      numsat = numberof(nsat);
+      channel = 3;
+      raw_wf = pulse.channel3_wf;
+      wf = float((~raw_wf+1) - (~raw_wf(1)+1));
+      saturated = where(raw_wf == 0);
+      numsat = numberof(saturated);
     }
   }
 
-  if (numsat > veg_conf.max_sat(ai)) {
+  if (numsat > veg_conf.max_sat(channel)) {
     n_all3sat++;
-    ai = 0;
+    channel = 0;
   }
 
-  if (!ai) {
+  if (!channel) {
     return rv;
   }
 
-  wflen = min(18, numberof(w));
-  last_surface_sat = w(1:wflen)(mnx);
-  escale = 255 - w(1:wflen)(min);
-
-  da = aa(1:n,ai);
-  dd = da(dif);
+  wflen = min(18, numberof(wf));
+  dd = wf(dif);
 
   // xr(1) will be the first pulse edge and xr(0) will be the last
   xr = where((dd >= veg_conf.thresh)(dif) == 1);
   nxr = numberof(xr);
 
   if (numberof(xr) == 0) {
-    rv.mv0 = rv.mv1 = aa(max,ai); 
+    rv.mv0 = rv.mv1 = wf(max);
     rv.nx = 0;
     _errno = 0;
     return rv;
@@ -1026,11 +1021,12 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=,
   // return (starting from xr(0)). Assume 18ns to be the longest duration for
   // a complete bottom return.
   retdist = 18;
+
   // If 18 is too long, then cut it short based on the length of the waveform.
   retdist = min(retdist, n - xr(0) - 1);
 
-  if (retdist < 5) ai = 0; // this eliminates possible noise pulses.
-  if (!ai) {
+  if (retdist < 5) channel = 0; // this eliminates possible noise pulses.
+  if (!channel) {
     _errno = 0;
     return rv;
   }
@@ -1052,20 +1048,20 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=,
       write, format="idx/idx1 is nuller for rn=%d, i=%d    \r", rn, i;
     }
     //now check to see if it it passes intensity test
-    mxmint = aa(xr(0)+1:xr(0)+retdist,ai)(max);
+    mxmint = wf(xr(0)+1:xr(0)+retdist)(max);
     // Create array b for retdist returns beyond the last peak leading
     // edge.
-    b = aa(int(xr(0)+1):int(xr(0)+retdist),ai);
+    b = wf(int(xr(0)+1):int(xr(0)+retdist));
     if ((min(b) > 240) && (max(b) < veg_conf.thresh)) {
       //write, format="This happens when rn = %d, pulse =%d\n", rn, i;
       return rv;
     }
     mx00 = irange + xr(0) - ctx(1)
-    if (ai == 1)
+    if (channel == 1)
         mx00 += ops_conf.chn1_range_bias;
-    else if (ai == 2)
+    else if (channel == 2)
         mx00 += ops_conf.chn2_range_bias;
-    else if (ai == 3)
+    else if (channel == 3)
         mx00 += ops_conf.chn3_range_bias;
 
     if (graph) {
@@ -1074,14 +1070,14 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=,
       fma;
       xaxis = span(mx00+1,mx00+numberof(b), numberof(b));
       limits, xaxis(1), xaxis(0), 0, 250;
-      //  plmk, da(xr(0):xr(0)+retdist)+(ai-1)*300, msize=.2, marker=1, color="magenta";
+      //  plmk, wf(xr(0):xr(0)+retdist)+(ai-1)*300, msize=.2, marker=1, color="magenta";
       plmk, b, xaxis, msize=.2, marker=1, color="black";
-      // plg, da(xr(0):xr(0)+retdist)+(ai-1)*300, color="magenta";
+      // plg, wf(xr(0):xr(0)+retdist)+(ai-1)*300, color="magenta";
       plg, b, xaxis, color="black";
-      pltitle, swrite(format="Channel ID = %d", ai);
+      pltitle, swrite(format="Channel ID = %d", channel);
       window_select, winbkp;
     }
-    if (abs(aa(xr(0)+1,ai) - aa(xr(0)+retdist,ai)) < 0.8*mxmint) {
+    if (abs(wf(xr(0)+1) - wf(xr(0)+retdist)) < 0.8*mxmint) {
       // This return is good to compute range.
       // compute range
       if (b(sum) != 0) {
@@ -1094,12 +1090,12 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=,
        }
        if (c(1) <= 0) return rv;
         mx0 = mx00 + c(1);
-       if (ai == 1) {
-          mv0 = aa(int(xr(0)+c(1)),ai);
-       } else if (ai == 2) {
-          mv0 = aa(int(xr(0)+c(1)),ai)+300;
-       } else if (ai == 3) {
-          mv0 = aa(int(xr(0)+c(1)),ai)+600;
+       if (channel == 1) {
+          mv0 = wf(int(xr(0)+c(1)));
+       } else if (channel == 2) {
+          mv0 = wf(int(xr(0)+c(1)))+300;
+       } else if (channel == 3) {
+          mv0 = wf(int(xr(0)+c(1)))+600;
        }
       } else {
       if (is_void(ohno)) ohno = 0;
@@ -1130,8 +1126,6 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=,
     idx = where(dd(xr(0)+1:xr(0)+retdist) > 0);
     idx1 = where(dd(xr(0)+1:xr(0)+retdist) < 0);
     if (is_array(idx1) && is_array(idx)) {
-      //write, idx;
-      //write, idx1;
       if (idx(0) > idx1(1)) {
         //take length of  return at this point
         //write, format="this happens!! rn = %d; i = %d\n",rn,i;
@@ -1139,15 +1133,15 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=,
       }
     }
     if (is_array(idx1)) {
-      if (ai == 1) {
+      if (channel == 1) {
         mx0 = irange+xr(0)+idx1(1)-ctx(1)+ops_conf.chn1_range_bias;
-        mv0 = aa(int(xr(0)+idx1(1)),ai);
-      } else if (ai == 2) {
+        mv0 = wf(int(xr(0)+idx1(1)));
+      } else if (channel == 2) {
         mx0 = irange+xr(0)+idx1(1)-ctx(1)+ops_conf.chn2_range_bias; // in ns - amar
-        mv0 = aa(int(xr(0)+idx1(1)),ai)+300;
-      } else if (ai == 3) {
+        mv0 = wf(int(xr(0)+idx1(1)))+300;
+      } else if (channel == 3) {
         mx0 = irange+xr(0)+idx1(1)-ctx(1)+ops_conf.chn3_range_bias; // in ns - amar
-        mv0 = aa(int(xr(0)+idx1(1)),ai)+600;
+        mv0 = wf(int(xr(0)+idx1(1)))+600;
       }
       //mx0 = irange+xr(0)+idx1(1)-irg_a.fs_rtn_centroid(i);
     } else {
@@ -1170,25 +1164,25 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=,
       write, format="idx/idx1 is nuller for rn=%d, i=%d    \r", rn, i;
     }
     //now check to see if it it passes intensity test
-    mxmint = aa(xr(0)+1:xr(0)+retdist,ai)(max);
-    if (abs(aa(xr(0)+1,ai) - aa(xr(0)+retdist,ai)) < 0.2*mxmint) {
+    mxmint = wf(xr(0)+1:xr(0)+retdist)(max);
+    if (abs(wf(xr(0)+1) - wf(xr(0)+retdist)) < 0.2*mxmint) {
       // This return is good to compute centroid.
       // Create array b for retdist returns beyond the last peak leading
       // edge.
-      b = aa(int(xr(0)+1):int(xr(0)+retdist),ai);
+      b = wf(int(xr(0)+1):int(xr(0)+retdist));
       // compute centroid
       if (b(sum) != 0) {
         c = float(b*indgen(1:retdist)) (sum) / (b(sum));
         mx0 = irange + xr(0) + c - ctx(1);
-        if (ai == 1) {
+        if (channel == 1) {
           mx0 += ops_conf.chn1_range_bias;
-          mv0 = aa(int(xr(0)+c),ai);
-        } else if (ai == 2) {
+          mv0 = wf(int(xr(0)+c));
+        } else if (channel == 2) {
           mx0 += ops_conf.chn2_range_bias;
-          mv0 = aa(int(xr(0)+c),ai)+300;
-        } else if (ai == 3) {
+          mv0 = wf(int(xr(0)+c))+300;
+        } else if (channel == 3) {
           mx0 += ops_conf.chn3_range_bias; // in ns -amar
-          mv0 = aa(int(xr(0)+c),ai)+600;
+          mv0 = wf(int(xr(0)+c))+600;
         }
       } else {
         mx0 = -10;
@@ -1203,10 +1197,12 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=,
   else if (!use_be_centroid && !use_be_peak && is_void(alg_mode)) {
     // no bare earth algorithm selected.
     //do not use centroid or trailing edge
-    mvx = aa(xr(0):xr(0)+5,1)(mxx);
+// CHECK LOGIC. may have to reset wf
+//    mvx = wf(xr(0):xr(0)+5,i,1)(mxx);
+    mvx = wf(xr(0):xr(0)+5)(mxx);
     // find bottom peak now
-    mx0 = irange+aa(xr(0):xr(0)+5,i,1)(mxx) + xr(0) - 1;
-    mv0 = aa(mvx, 1);
+    mx0 = irange+wf(xr(0):xr(0)+5)(mxx) + xr(0) - 1;
+    mv0 = wf(mvx);
   }
   // stuff below is for mx1 (first surface in veg).
 
@@ -1238,8 +1234,8 @@ func ex_veg(rn, i, last=, graph=, win=, use_be_centroid=, use_be_peak=,
     mv1 = cv(3);
   } else {
     // find surface peak now
-    mx1 = aa(xr(1):xr(1)+5,1)(mxx) + xr(1) - 1;
-    mv1 = aa(mx1,1);
+    mx1 = wf(xr(1):xr(1)+5)(mxx) + xr(1) - 1;
+    mv1 = wf(mx1);
   }
 
   // Make mx1 be the irange value and mv1 be the intensity value from variable
