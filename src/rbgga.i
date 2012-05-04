@@ -65,7 +65,18 @@ func pnav_sel_rgn(win=, color=, mode=, region=, _batch=) {
   }
 
   write, format=" %d GGA records found\n", numberof(q);
-  if(!_batch) test_selection_size, q;
+
+  if(!_batch) {
+    seconds = ((gga_find_times(q)(dif,sum)))(1);
+    write, format=" %5.1f seconds of data selected\n", seconds;
+    if(seconds > 500) {
+      write, format="%s\n", strindent(strwrap(
+        "Warning!!! The area you selected may be too large. For interactive "+
+        "processing, 500 seconds or less of flight time is recommended. Try "+
+        "selecting a smaller area before pressing the Process button."
+        ), " *** ");
+    }
+  }
 
   return q;
 }
@@ -111,24 +122,6 @@ func mark_time_pos(win, sod, msize=, marker=, color=) {
     plmk, gga.lat(q), gga.lon(q), marker=marker, color=color, msize=msize;
   }
   window_select, current_win;
-}
-
-func test_selection_size (q) {
-  if(!is_array(q)) return;
-  sel_secs = ((gga_find_times(q)(dif,sum)))(1);
-  write, format="%5.1f seconds of data selected\n", sel_secs;
-  if(sel_secs > 500) {
-    msg = "** Warning!!!  The area you selected is probably too large."+
-        "               We recommend keeping the selected area less then"+
-        "               500 seconds of flight time."+
-        "Try selecting a smaller area before pressing the Process Now button";
-    if(_ytk ) {
-      cmd = "tk_messageBox -icon warning -message {" + msg + "}\n";
-      tkcmd, cmd;
-    } else {
-      write, format="\n%s\n", msg;
-    }
-  }
 }
 
 func gga_click_start_isod {
