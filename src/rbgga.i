@@ -144,58 +144,24 @@ func gga_click_start_isod {
   send_sod_to_sf, long(gga(nearest).sod);
 }
 
-func gga_find_times(q, win=, plt=) {
+func gga_find_times(q) {
 /* DOCUMENT gga_find_times(q)
-
-   This function finds the start and stop times from a list generated
-   by the gga_win_sel() function. It returns an array of 2xN floats
-   where  (1, ) is the starting sod of the segment and (2, ) is the
-   ending sod.  Sod is Seconds-of-day.
+  Input Q should be an index list into gga/pnav for points of interest. The
+  function will return the start and stop times for the continuous ranges of
+  points found in the index list as a 2xN array of floats where result(1,) is
+  the start time and result(2,) is the stop time of the ranges. The times will
+  be in seconds-of-the-day format.
 
   SEE ALSO: gga_win_sel, rbgga, plmk, sod2hms
 */
+  if(!numberof(q)) return;
+  extern pnav;
 
-  // begin with "q" list of selected points
-  // add a 0 element to the start and end so they will produce
-  //   a dif.
-  lq = grow([1], q);
-  lq = grow(lq, [1]);
+  w = where(q(dif) > 2);
+  start = grow([0], w) + 1;
+  stop = grow(w, numberof(q));
 
-  // Now we take the first dif of the sods in the gga records and then get a
-  // list of all the places where the dif is larger than one second.  This list
-  // "endptlist" will be an index into the list "lq" where had a change larger
-  // than one second.  Adding one to "endptlist" gets us the starting point of
-  // the next segment.
-  endptlist = where(abs((gga.sod(lq)(dif))) > 2);
-  if(numberof(endptlist) == 0)
-    return;
-  startptlist = endptlist+1;
-
-  // start of each line is at qq+1
-  // end of each line is at qq
-  startggasod = pnav.sod(lq(startptlist));
-  stopggasod = pnav.sod(lq(endptlist));
-
-  // The startggasod and stopggasod have bogus values at the beginning and end
-  // so we want to fix that and also copy the proper start/stop times to a
-  // 2-by-n array to be returned to the caller.
-  ssa = array(float, 2, numberof(startggasod) - 1);
-  ssa(1,) = startggasod(1:-1);
-  ssa(2,) = stopggasod(2:0);
-
-  // to see a plot of the selected times with green/red markers at the
-  // beginning and end of each list, enab enable the following:
-  default, plt, 0;
-  if(plt == 1) {
-    default, win, 6;
-    window, win;
-    fma;
-    plmk, pnav.sod(q), q;   // plot the selected times
-    plmk, startggasod(1:-1), lq(startptlist(1:-1)), color="green", msize=.3;
-    plmk, stopggasod(2:0)-1, lq(startptlist(2:0)-1), color="red", msize=.3;
-    limits;
-  }
-  return ssa;
+  return pnav.sod(transpose(q([start,stop])));
 }
 
 func sel_region (q, all_tans=) {
