@@ -1,6 +1,75 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 require, "eaarl.i";
 
+func pnav_sel_rgn(win=, color=, mode=, region=, _batch=) {
+/* DOCUMENT pnav_sel_rgn(win=, color=, mode=, region=, _batch=)
+  The user is prompted to draw out a box or polygon. The points of PNAV within
+  that region are found and the corresponding indices are returned.
+
+  Options:
+    win= The window where GGA/PNAV is plotted. The user will be prompted to
+      click in this window.
+        win=6   Default
+    color= After dragging out the box or drawing the polygon, the bounding box
+      for that region will be drawn in this color.
+        color="cyan"  Default
+    mode= The selection mode to use.
+        mode="box"    The user will be prompted to drag out a box (default)
+        mode="pip"    The user will be prompted to draw a polygon
+    region= If provided, then these coordinates are used instead of prompting
+      the user to draw a box. This can accept two kinds of input:
+        - If region is a 4-element vector, it will be interpreted as an array
+          [min_x, max_x, min_y, max_y].
+        - Otherwise, region must be a 2xN array of vertices for a polygon.
+    _batch= If set to 1, no check will be made on the size of the selected
+      region. Otherwise, too large a selection will result in an warning.
+
+  Additionally, three externs are used:
+    utm: If utm=1, then the input coordinates are considered to be in UTM and
+      will be converted to lat/lon prior to use.
+    curzone: If utm=1, then curzone must be set to the current zone.
+    pnav: The array of PNAV data that the return result will be an index into.
+*/
+  extern utm, curzone, pnav;
+  default, win, 6;
+  default, color, "cyan";
+  default, mode, "box";
+  default, _batch, 0;
+
+  if(is_void(region)) {
+    if(mode == "pip") {
+      ply = getPoly();
+    } else {
+      bounds = mouse_bounds();
+      ply = bounds([[1,2],[1,4],[3,4],[3,2]]);
+    }
+  } else {
+    if(dimsof(region)(1) == 1 && numberof(region) == 4) {
+      ply = region([[1,3],[1,4],[2,4],[2,3]]);
+    } else {
+      ply = region;
+    }
+  }
+
+  plg, [ply(2,min),ply(2,max)]([1,1,2,2,1]), [ply(1,min),ply(1,max)]([1,2,2,1,1]),
+      color=color;
+
+  if(utm) {
+    ply = transpose(utm2ll(ply(2,), ply(1,), curzone));
+  }
+
+  q = testPoly(ply, pnav.lon, pnav.lat);
+  if(is_void(q)) {
+    write, "No GGA records found, aborting";
+    return [];
+  }
+
+  write, format=" %d GGA records found\n", numberof(q);
+  if(!_batch) test_selection_size, q;
+
+  return q;
+}
+
 func gga_pip_sel(win=) {
 /* DOCUMENT gga_pip_sel(win=)
   The user is prompted to draw out a polygon. The points of GGA within that
@@ -8,27 +77,16 @@ func gga_pip_sel(win=) {
 
   SEE ALSO: getPoly, plpoly, testPoly, gga_win_sel
 */
-  extern utm, ply, curzone, gga;
-  default, win, 6;
-  window, win;
-  if(utm && !curzone) {
-    message = "Points in Polygon requires that you set curzone if utm=1. Aborting.";
-    if(!is_void(_ytk))
-      tk_messageBox, message, "ok";
-    error, message;
-  }
-  ply = getPoly();
-  box = boundBox(ply);
-  if(utm) {
-    box = transpose(utm2ll(box(2,), box(1,), curzone));
-    ply = transpose(utm2ll(ply(2,), ply(1,), curzone));
-  }
-  box_pts = ptsInBox(box, gga.lon, gga.lat);
-  poly_pts = testPoly(ply, gga.lon(box_pts), gga.lat(box_pts));
-  q = box_pts(poly_pts);
-  write, format="%d GGA records found\n", numberof(q);
-  test_selection_size, q;
-  return q;
+  return pnav_sel_rgn(win=win, mode="pip");
+}
+
+func gga_win_sel(win=, color=, latutm=, llarr=, _batch=) {
+/* DOCUMENT gga_win_sel(win=, color=, latutm=, llarr=, _batch=)
+  The user is prompted to draw out a bounding box. The points of GGA within
+  that polygon are found and the corresponding indices are returned.
+*/
+  return pnav_sel_rgn(win=win, mode="box", color=color, region=llarr,
+    _batch=_batch);
 }
 
 func mark_time_pos(win, sod, msize=, marker=, color=) {
@@ -71,45 +129,6 @@ func test_selection_size (q) {
       write, format="\n%s\n", msg;
     }
   }
-}
-
-func gga_win_sel(win=, color=, latutm=, llarr=, _batch=) {
-/* DOCUMENT gga_win_sel(color=, latutm=, llarr=, _batch=)
-*/
-  extern utm, ply, curzone;
-  default, win, window();
-  window, win;
-  local minlon, minlat, maxlon, maxlat;
-  if(!is_array(llarr)) {
-    mouse_bounds, minlon, minlat, maxlon, maxlat;
-    [minlon, minlat, maxlon, maxlat];
-  } else {
-    assign, llarr, minlon, maxlon, minlat, maxlat;
-  }
-  if(latutm) {
-    tkcmd, swrite(format="send_latlon_to_l1pro %7.3f %7.3f %7.3f %7.3f %d\n",
-        minlon, maxlon, minlat, maxlat, utm);
-  }
-
-  if(utm == 1) {
-    minll = utm2ll(minlat, minlon, curzone);
-    maxll = utm2ll(maxlat, maxlon, curzone);
-    minlat = minll(2);
-    maxlat = maxll(2);
-    minlon = minll(1);
-    maxlon = maxll(1);
-    write, format="minlat = %7.3f, minlon= %7.3f\n", minlat, minlon;
-  }
-
-  ply = [[minlat, minlon], [maxlat, maxlon]];
-  q = data_box(gga.lon, gga.lat, minlon, maxlon, minlat, maxlat);
-  if(is_array(q)) {
-    plg, [minlat,maxlat]([1,1,2,2,1]), [minlon,maxlon]([1,2,2,1,1]), color=color;
-  }
-  write, format="%d GGA records found\n", numberof(q);
-
-  if(!_batch) test_selection_size, q;
-  return q;
 }
 
 func gga_click_start_isod {
