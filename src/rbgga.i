@@ -195,7 +195,7 @@ func sel_region(q) {
   }
 
   sods = gga_find_times(q);
-  write, format="Total seconds of flightline data selected = %6.2f\n",
+  write, format=" Seconds of flightline data selected = %6.2f\n",
       (sods(dif,))(,sum);
 
   sod_start = sods(1,);
@@ -204,29 +204,27 @@ func sel_region(q) {
   // now loop through the times and find corresponding start and stop raster
   // numbers
   count = numberof(sods(1,));
-  write, format="Number of flightlines selected = %d \n", count;
+  write, format=" Number of flightline segments selected = %d\n", count;
+
+  tans_bounds = digitize(sods, tans.somd) - 1;
+  tans_start = tans_bounds(1,);
+  tans_stop = tans_bounds(2,);
+  tans_bounds = [];
 
   // Detect gaps
   for(i = 1; i <= count; i++) {
-    tyes = 1;
-    write, format="Processing %d of %d\r", i, count;
-    bounds = digitize([sod_start(i), sod_stop(i)], tans.somd) - 1;
-
-    gaps = where(tans.somd(bounds(1):bounds(0))(dif) > 0.5);
+    gaps = where(tans.somd(tans_start(i):tans_stop(i))(dif) > 0.5);
     if(numberof(gaps)) {
-      gaps = gaps + bounds(1) - 1;
-      // this means there are gaps in the tans data for that flightline.
-      // break the flightline at these gaps
-      write, format="Due to gaps in TANS data, flightline # %d is split into %d segments\n", i, numberof(gaps)+1;
-      ntsomd = array(float, 2, numberof(gaps));
-      ntsomd(1,) = tans.somd(gaps);
-      ntsomd(2,) = tans.somd(gaps+1);
-      sod_stop(i) = ntsomd(1,1);
-      for(ti = 1; ti < numberof(gaps); ti++) {
-        grow, sod_start, ntsomd(2,ti);
-        grow, sod_stop, ntsomd(1,ti+1);
+      // Change to index into tans.somd
+      gaps = gaps + tans_start(i) - 1;
+
+      write, format="Segment #%d has gaps in TANS data, splitting into %d segments\n", i, numberof(gaps)+1;
+      sod_stop(i) = tans.somd(gaps(1));
+      if(numberof(gaps) > 1) {
+        grow, sod_start, tans.somd(gaps(:-1)+1);
+        grow, sod_start, tans.somd(gaps(2:));
       }
-      grow, sod_start, ntsomd(2,0);
+      grow, sod_start, tans.somd(gaps(0)+1);
       grow, sod_stop, tans.somd(bounds(0));
     }
   }
