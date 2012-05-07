@@ -198,19 +198,21 @@ func sel_region(q) {
   write, format="Total seconds of flightline data selected = %6.2f\n",
       (sods(dif,))(,sum);
 
+  sod_start = sods(1,);
+  sod_stop = sods(2,);
+
   // now loop through the times and find corresponding start and stop raster
   // numbers
   count = numberof(sods(1,));
   write, format="Number of flightlines selected = %d \n", count;
-  t_new = [];
 
   // Detect gaps
   for(i = 1; i <= count; i++) {
     tyes = 1;
     write, format="Processing %d of %d\r", i, count;
-    tans_idx = where(tans.somd >= sods(1,i));
+    tans_idx = where(tans.somd >= sod_start(i));
     if(is_array(tans_idx)) {
-      tans_q = where(tans.somd(tans_idx) <= sods(2,i));
+      tans_q = where(tans.somd(tans_idx) <= sod_stop(i));
       if(numberof(tans_q) > 1) {
         tans_idx = tans_idx(tans_q);
         ftans = [];
@@ -224,13 +226,15 @@ func sel_region(q) {
           ntsomd = array(float, 2, numberof(tg_idx));
           ntsomd(1,) = ftans(tg_idx);
           ntsomd(2,) = ftans(tg_idx+1);
-          grow, t_new, [[ftans(1), ntsomd(1,1)]]; // add first segment to t_new
+          sod_stop(i) = ntsomd(1,1);
           for(ti = 1; ti < numberof(tg_idx); ti++) {
             write, "enters for loop";
-            grow, t_new, [[ntsomd(2,ti), ntsomd(1,ti+1)]];
+            grow, sod_start, ntsomd(2,ti);
+            grow, sod_stop, ntsomd(1,ti+1);
           }
-          grow, t_new, [[ntsomd(2,0), ftans(0)]]; //add last segment to t_new
-        } else grow, t_new, [[ftans(1), ftans(0)]];
+          grow, sod_start, ntsomd(2,0);
+          grow, sod_stop, ftans(0);
+        }
       }
     }
     if(!is_array(ftans)) {
@@ -239,21 +243,23 @@ func sel_region(q) {
     }
   } // end for loop for t
 
-  if(!is_void(t_new)) {
-    t_new;
-    count = numberof(t_new(1,));
+  sod_start = sod_start(sort(sod_start));
+  sod_stop = sod_stop(sort(sod_stop));
+
+  if(!is_void(sod_start)) {
+    count = numberof(sod_start);
     tyes_arr = array(int, count);
     tyes_arr(1:0) = 1;
     rn_arr = array(int, 2, count);
     for(i = 1; i <= count; i++) {
-      rnsidx = where(((edb.seconds - soe_day_start)) >= ceil(t_new(1,i)));
+      rnsidx = where(((edb.seconds - soe_day_start)) >= ceil(sod_start(i)));
       if(is_array(rnsidx) && (numberof(rnsidx) > 1)) {
         idxrn = where(rnsidx(dif) == 1);
         rn_indx_start = rnsidx(idxrn(1));
       } else {
         rn_indx_start = [];
       }
-      rnsidx = where(((edb.seconds - soe_day_start)) <= int(t_new(2,i)));
+      rnsidx = where(((edb.seconds - soe_day_start)) <= int(sod_stop(i)));
       if(is_array(rnsidx) && (numberof(rnsidx) > 1)) {
         idxrn = where(rnsidx(dif) == 1);
         rn_indx_stop = rnsidx(idxrn(0));
@@ -278,7 +284,7 @@ func sel_region(q) {
         tyes_arr(i) = 0;
       }
       // assume a maximum of 40 rasters per second
-      if((rn_stop-rn_start) > (t_new(,i)(dif)(1)*40)) {
+      if((rn_stop-rn_start) > (sod_stop(i)-sod_start(i))*40) {
         write, format="Time error in determining number of rasters.  Eliminating flightline segment %d.\n", i;
         rn_start = 0;
         rn_stop = 0;
