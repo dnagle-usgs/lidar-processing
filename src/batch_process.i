@@ -942,11 +942,11 @@ Added server/client support (2009-01) Richard Mitchell
       }
     }
     write, format = "Selecting Region %d of %d\n",i,n;
-    q = gga_win_sel(win=win, llarr=[min_e(i)-200.0, max_e(i)+200.0, min_n(i)-200.0, max_n(i)+200.0], _batch=1);
+    q = pnav_sel_rgn(win=win, region=[min_e(i)-200.0, max_e(i)+200.0, min_n(i)-200.0, max_n(i)+200.0], _batch=1);
     // 2009-01-15: came across odd bug where q was:  <nuller>:
     // To avoid, check for numberof as well.
     if ( ! is_void(q) && numberof(q) > 0 ) {
-      r = gga_win_sel(win=win, color="green", llarr=[min_e(i), max_e(i), min_n(i), max_n(i)], _batch=1);
+      r = pnav_sel_rgn(win=win, color="green", region=[min_e(i), max_e(i), min_n(i), max_n(i)], _batch=1);
       if ( ! is_void(r) && numberof(r) > 0 ) {
         // Show the tile that is being prepared to be processed.
         pldj, min_e(i), min_n(i), min_e(i), max_n(i), color="blue"

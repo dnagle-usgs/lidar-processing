@@ -81,10 +81,13 @@ func pnav_sel_rgn(win=, color=, mode=, region=, _batch=) {
   return q;
 }
 
-func gga_win_sel(win=, color=, latutm=, llarr=, _batch=) {
-/* DOCUMENT gga_win_sel(win=, color=, latutm=, llarr=, _batch=)
+func gga_win_sel(win=, latutm=, llarr=) {
+/* DOCUMENT gga_win_sel(win=, latutm=, llarr=)
   The user is prompted to draw out a bounding box. The points of GGA within
   that polygon are found and the corresponding indices are returned.
+
+  DEPRECATED 2012-05-07: Calls to this function should be replaced by
+  equivalent calls to pnav_sel_rgn.
 */
   return pnav_sel_rgn(win=win, mode="box", color=color, region=llarr,
     _batch=_batch);

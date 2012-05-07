@@ -24,7 +24,7 @@ func process_for_dws(q) {
   n = 360;
   d =  int((n/rr)*.5)+1;
   if ( is_void(q) )
-     q = gga_win_sel(win=6);
+     q = pnav_sel_rgn(win=6);
   p = int(median(q));
   q = indgen(p-2000:p+1000);	// generate a shorter list of gga index values
   tc = int(gga(p).sod);

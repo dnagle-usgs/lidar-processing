@@ -143,7 +143,7 @@ func make_bathy(latutm=, q=, avg_surf=) {
   (usually window 6) to write out a 'level 1' file and plot a depth image
   defined in that region.
 
-    latutm= Passed to gga_win_sel, if q is void.
+    latutm= Passed to pnav_sel_rgn, if q is void.
     q= Indices into extern pnav where data should be processed.
     avg_surf= Set to 1 if the surface returns should be averaged to the first
       surface returns at the center of the swath.
@@ -167,8 +167,7 @@ func make_bathy(latutm=, q=, avg_surf=) {
     error, "PNAV data not loaded";
 
   if (!is_array(q)) {
-    // select a region using function gga_win_sel in rbgga.i
-    q = gga_win_sel(latutm=latutm, llarr=llarr);
+    q = pnav_sel_rgn(region=llarr);
   }
 
   // find start and stop raster numbers for all flightlines

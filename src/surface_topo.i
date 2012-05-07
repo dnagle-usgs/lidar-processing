@@ -236,8 +236,7 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
   write, "PNAV information LOADED. \n\n";
 
   if(!is_array(q)) {
-    // select a region using function gga_win_sel in rbgga.i
-    q = gga_win_sel(latutm=latutm, llarr=llarr);
+    q = pnav_sel_rgn(region=llarr);
   }
 
   // find start and stop raster numbers for all flightlines
