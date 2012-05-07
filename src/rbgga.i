@@ -182,39 +182,38 @@ func gga_find_times(q) {
   return pnav.sod(transpose(q([start,stop])));
 }
 
-func sel_region (q, all_tans=) {
+func sel_region(q, all_tans=) {
 /* DOCUMENT sel_region(q, all_tans=)
    This function extracts the raster numbers for a region selected.
    It returns a the array rn_arr containing start and stop raster numbers
    for each flightline.
-   Set all_tans = 1 if the selected rasters should be processed without tans data.
-   amar nayegandhi 9/18/02.
+   Set all_tans=1 if the selected rasters should be processed without tans data.
 */
 
   // find the start and stop times using gga_find_times in rbgga.i
-  t = gga_find_times(q);
+  sods = gga_find_times(q);
 
-  if(is_void(t)) {
+  if(is_void(sods)) {
     write, "No flightline found in selected area. Please start again... \r";
     return;
   }
 
   write, "\n";
   write, format="Total seconds of flightline data selected = %6.2f\n",
-      (t(dif,))(,sum);
+      (sods(dif,))(,sum);
 
   // now loop through the times and find corresponding start and stop raster
   // numbers
-  no_t = numberof(t(1,));
+  no_t = numberof(sods(1,));
   write, format="Number of flightlines selected = %d \n", no_t;
   t_new = [];
   if(!all_tans) {
-    for(i = 1; i <= numberof(t(1,)); i++) {
+    for(i = 1; i <= no_t; i++) {
       tyes = 1;
-      write, format="Processing %d of %d\r", i, numberof(t(1,));
-      tans_idx = where(tans.somd >= t(1,i));
+      write, format="Processing %d of %d\r", i, no_t;
+      tans_idx = where(tans.somd >= sods(1,i));
       if(is_array(tans_idx)) {
-        tans_q = where(tans.somd(tans_idx) <= t(2,i));
+        tans_q = where(tans.somd(tans_idx) <= sods(2,i));
         if(numberof(tans_q) > 1) {
           tans_idx = tans_idx(tans_q);
           ftans = [];
@@ -244,7 +243,7 @@ func sel_region (q, all_tans=) {
     } // end for loop for t
   }
 
-  if(all_tans) t_new = t;
+  if(all_tans) t_new = sods;
 
   if(!is_void(t_new)) {
     t_new;
