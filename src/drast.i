@@ -489,7 +489,7 @@ func geo_rast(rn, fsmarks=, eoffset=, win=, verbose=, titles=, rcfw=, style=, bg
   window, win;
   fma;
 
-  fs = first_surface(start=rn, stop=rn+1, north=1, verbose=verbose)(1);
+  fs = first_surface(start=rn, stop=rn+1, verbose=verbose)(1);
   sp = fs.elevation/100.0;
   skip = array(short(0), numberof(sp));
   if(rcfw) {
