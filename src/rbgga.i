@@ -210,38 +210,27 @@ func sel_region(q) {
   for(i = 1; i <= count; i++) {
     tyes = 1;
     write, format="Processing %d of %d\r", i, count;
-    tans_idx = where(tans.somd >= sod_start(i));
-    if(is_array(tans_idx)) {
-      tans_q = where(tans.somd(tans_idx) <= sod_stop(i));
-      if(numberof(tans_q) > 1) {
-        tans_idx = tans_idx(tans_q);
-        ftans = [];
-        ftans = tans.somd(tans_idx);
-        // now find the gaps in tans data for this flightline
-        tg_idx = where(ftans(dif) > 0.5);
-        if(is_array(tg_idx)) {
-          // this means there are gaps in the tans data for that flightline.
-          // break the flightline at these gaps
-          write, format="Due to gaps in TANS data, flightline # %d is split into %d segments\n", i, numberof(tg_idx)+1;
-          ntsomd = array(float, 2, numberof(tg_idx));
-          ntsomd(1,) = ftans(tg_idx);
-          ntsomd(2,) = ftans(tg_idx+1);
-          sod_stop(i) = ntsomd(1,1);
-          for(ti = 1; ti < numberof(tg_idx); ti++) {
-            write, "enters for loop";
-            grow, sod_start, ntsomd(2,ti);
-            grow, sod_stop, ntsomd(1,ti+1);
-          }
-          grow, sod_start, ntsomd(2,0);
-          grow, sod_stop, ftans(0);
-        }
+    bounds = digitize([sod_start(i), sod_stop(i)], tans.somd) - 1;
+    tans_idx = indgen(bounds(1):bounds(0));
+    ftans = tans.somd(tans_idx);
+    // now find the gaps in tans data for this flightline
+    tg_idx = where(ftans(dif) > 0.5);
+    if(is_array(tg_idx)) {
+      // this means there are gaps in the tans data for that flightline.
+      // break the flightline at these gaps
+      write, format="Due to gaps in TANS data, flightline # %d is split into %d segments\n", i, numberof(tg_idx)+1;
+      ntsomd = array(float, 2, numberof(tg_idx));
+      ntsomd(1,) = ftans(tg_idx);
+      ntsomd(2,) = ftans(tg_idx+1);
+      sod_stop(i) = ntsomd(1,1);
+      for(ti = 1; ti < numberof(tg_idx); ti++) {
+        grow, sod_start, ntsomd(2,ti);
+        grow, sod_stop, ntsomd(1,ti+1);
       }
+      grow, sod_start, ntsomd(2,0);
+      grow, sod_stop, ftans(0);
     }
-    if(!is_array(ftans)) {
-      write, format="Corresponding TANS data for flightline %d not found."+
-        "Omitting flightline ... \n",i;
-    }
-  } // end for loop for t
+  }
 
   sod_start = sod_start(sort(sod_start));
   sod_stop = sod_stop(sort(sod_stop));
