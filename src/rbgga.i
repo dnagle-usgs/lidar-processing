@@ -182,12 +182,11 @@ func gga_find_times(q) {
   return pnav.sod(transpose(q([start,stop])));
 }
 
-func sel_region(q, all_tans=) {
-/* DOCUMENT sel_region(q, all_tans=)
+func sel_region(q) {
+/* DOCUMENT sel_region(q)
    This function extracts the raster numbers for a region selected.
    It returns a the array rn_arr containing start and stop raster numbers
    for each flightline.
-   Set all_tans=1 if the selected rasters should be processed without tans data.
 */
 
   // find the start and stop times using gga_find_times in rbgga.i
@@ -207,43 +206,40 @@ func sel_region(q, all_tans=) {
   no_t = numberof(sods(1,));
   write, format="Number of flightlines selected = %d \n", no_t;
   t_new = [];
-  if(!all_tans) {
-    for(i = 1; i <= no_t; i++) {
-      tyes = 1;
-      write, format="Processing %d of %d\r", i, no_t;
-      tans_idx = where(tans.somd >= sods(1,i));
-      if(is_array(tans_idx)) {
-        tans_q = where(tans.somd(tans_idx) <= sods(2,i));
-        if(numberof(tans_q) > 1) {
-          tans_idx = tans_idx(tans_q);
-          ftans = [];
-          ftans = tans.somd(tans_idx);
-          // now find the gaps in tans data for this flightline
-          tg_idx = where(ftans(dif) > 0.5);
-          if(is_array(tg_idx)) {
-            // this means there are gaps in the tans data for that flightline.
-            // break the flightline at these gaps
-            write, format="Due to gaps in TANS data, flightline # %d is split into %d segments\n", i, numberof(tg_idx)+1;
-            ntsomd = array(float, 2, numberof(tg_idx));
-            ntsomd(1,) = ftans(tg_idx);
-            ntsomd(2,) = ftans(tg_idx+1);
-            grow, t_new, [[ftans(1), ntsomd(1,1)]]; // add first segment to t_new
-            for(ti = 1; ti < numberof(tg_idx); ti++) {
-              write, "enters for loop";
-              grow, t_new, [[ntsomd(2,ti), ntsomd(1,ti+1)]];
-            }
-            grow, t_new, [[ntsomd(2,0), ftans(0)]]; //add last segment to t_new
-          } else grow, t_new, [[ftans(1), ftans(0)]];
-        }
-      }
-      if(!is_array(ftans)) {
-        write, format="Corresponding TANS data for flightline %d not found."+
-          "Omitting flightline ... \n",i;
-      }
-    } // end for loop for t
-  }
 
-  if(all_tans) t_new = sods;
+  for(i = 1; i <= no_t; i++) {
+    tyes = 1;
+    write, format="Processing %d of %d\r", i, no_t;
+    tans_idx = where(tans.somd >= sods(1,i));
+    if(is_array(tans_idx)) {
+      tans_q = where(tans.somd(tans_idx) <= sods(2,i));
+      if(numberof(tans_q) > 1) {
+        tans_idx = tans_idx(tans_q);
+        ftans = [];
+        ftans = tans.somd(tans_idx);
+        // now find the gaps in tans data for this flightline
+        tg_idx = where(ftans(dif) > 0.5);
+        if(is_array(tg_idx)) {
+          // this means there are gaps in the tans data for that flightline.
+          // break the flightline at these gaps
+          write, format="Due to gaps in TANS data, flightline # %d is split into %d segments\n", i, numberof(tg_idx)+1;
+          ntsomd = array(float, 2, numberof(tg_idx));
+          ntsomd(1,) = ftans(tg_idx);
+          ntsomd(2,) = ftans(tg_idx+1);
+          grow, t_new, [[ftans(1), ntsomd(1,1)]]; // add first segment to t_new
+          for(ti = 1; ti < numberof(tg_idx); ti++) {
+            write, "enters for loop";
+            grow, t_new, [[ntsomd(2,ti), ntsomd(1,ti+1)]];
+          }
+          grow, t_new, [[ntsomd(2,0), ftans(0)]]; //add last segment to t_new
+        } else grow, t_new, [[ftans(1), ftans(0)]];
+      }
+    }
+    if(!is_array(ftans)) {
+      write, format="Corresponding TANS data for flightline %d not found."+
+        "Omitting flightline ... \n",i;
+    }
+  } // end for loop for t
 
   if(!is_void(t_new)) {
     t_new;
