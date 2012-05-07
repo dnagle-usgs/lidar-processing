@@ -8,7 +8,7 @@ func sf_mediator_plot(win, soe, msize, marker, color, errcmd) {
   env_bkp = missiondata_wrap("all");
   if(missiondata_soe_load(soe)) {
     sod = soe - soe_day_start;
-    mark_time_pos, win, sod, msize=msize, marker=marker, color=color;
+    mark_time_pos, sod, win=win, msize=msize, marker=marker, color=color;
   } else {
     tkcmd, swrite(format="%s {No data found in mission configuration for soe %d}", errcmd, int(soe));
   }

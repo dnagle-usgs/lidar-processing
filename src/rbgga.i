@@ -93,28 +93,41 @@ func gga_win_sel(win=, latutm=, llarr=) {
     _batch=_batch);
 }
 
-func mark_time_pos(win, sod, msize=, marker=, color=) {
-/* DOCUMENT mark_time_pos, sod
+func mark_time_pos(sod, win=, msize=, marker=, color=) {
+/* DOCUMENT mark_time_pos, sod, win=, msize=, marker=, color=
+  Plots a mark for the PNAV location at the given timestamp SOD.
 
-   Mark a lat/lon position on window, win  based on the sod.  Used from
- sf_a.tcl via eaarl.ytk
-
+  Parameter:
+    sod: The seconds-of-the-day value to plot.
+  Options:
+    win= Window to plot in, defaults to current.
+    msize= Marker size to use, defaults to 0.6.
+    marker= Marker to use, defaults to 5 (diamond), see plmk for others.
+    color= Color to use, defaults to blue.
+  Externs used:
+    pnav= The array of navigation data used to look up the x,y location.
+    utm= If utm=1, then the lat/lon coordinate from pnav is converted to UTM
+      northing/easting.
+    curzone= If set and if utm=1, then UTM conversion is forced to this zone.
 */
-  extern utm;
+  extern pnav, utm, curzone;
+  default, win, window();
   default, marker, 5;
   default, color, "blue";
   default, msize, 0.6;
-  current_win = current_window();
-  q = where(gga.sod == sod);
+
+  q = where(pnav.sod == sod);
+  if(!numberof(q))
+    error, "Time not found";
+  x = pnav.lon(q(1));
+  y = pnav.lat(q(1));
+  if(utm)
+    ll2utm, noop(y), noop(x), y, x, force_zone=curzone;
+
+  wbkp = current_window();
   window, win;
-  if(utm) {
-    local north, east;
-    fll2utm, gga.lat(q), gga.lon(q), north, east;
-    plmk, north, east, marker=marker, color=color, msize=msize;
-  } else {
-    plmk, gga.lat(q), gga.lon(q), marker=marker, color=color, msize=msize;
-  }
-  window_select, current_win;
+  plmk, y, x, marker=marker, color=color, msize=msize;
+  window_select, wbkp;
 }
 
 func gga_click_start_isod {

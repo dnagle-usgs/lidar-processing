@@ -690,9 +690,8 @@ proc ::plot::qq_grid_show_name {} {
 }
 
 proc ::plot::mark_time_pos { sod } {
-   # TODO: adapt mark_time_pos to accept settings arguments
    set marker [lsearch $c::markerShapes $g::markShape]
-   exp_send "mark_time_pos, $::_map(window), $sod, msize=$g::markSize, marker=$marker, color=\"$g::markColor\"\r"
+   exp_send "mark_time_pos, $sod, win=$::_map(window), msize=$g::markSize, marker=$marker, color=\"$g::markColor\"\r"
 }
 
 proc ::plot::mark_pos { lat lon } {
