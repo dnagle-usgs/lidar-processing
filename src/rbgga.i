@@ -189,15 +189,14 @@ func sel_region(q) {
    for each flightline.
 */
 
-  // find the start and stop times using gga_find_times in rbgga.i
-  sods = gga_find_times(q);
-
-  if(is_void(sods)) {
-    write, "No flightline found in selected area. Please start again... \r";
+  if(is_void(q)) {
+    write, "No flightline selection provided, aborting!";
     return;
   }
 
-  write, "\n";
+  // find the start and stop times using gga_find_times in rbgga.i
+  sods = gga_find_times(q);
+
   write, format="Total seconds of flightline data selected = %6.2f\n",
       (sods(dif,))(,sum);
 
