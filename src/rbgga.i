@@ -194,21 +194,20 @@ func sel_region(q) {
     return;
   }
 
-  // find the start and stop times using gga_find_times in rbgga.i
   sods = gga_find_times(q);
-
   write, format="Total seconds of flightline data selected = %6.2f\n",
       (sods(dif,))(,sum);
 
   // now loop through the times and find corresponding start and stop raster
   // numbers
-  no_t = numberof(sods(1,));
-  write, format="Number of flightlines selected = %d \n", no_t;
+  count = numberof(sods(1,));
+  write, format="Number of flightlines selected = %d \n", count;
   t_new = [];
 
-  for(i = 1; i <= no_t; i++) {
+  // Detect gaps
+  for(i = 1; i <= count; i++) {
     tyes = 1;
-    write, format="Processing %d of %d\r", i, no_t;
+    write, format="Processing %d of %d\r", i, count;
     tans_idx = where(tans.somd >= sods(1,i));
     if(is_array(tans_idx)) {
       tans_q = where(tans.somd(tans_idx) <= sods(2,i));
@@ -242,11 +241,11 @@ func sel_region(q) {
 
   if(!is_void(t_new)) {
     t_new;
-    no_t = numberof(t_new(1,));
-    tyes_arr = array(int, no_t);
+    count = numberof(t_new(1,));
+    tyes_arr = array(int, count);
     tyes_arr(1:0) = 1;
-    rn_arr = array(int, 2, no_t);
-    for(i = 1; i <= no_t; i++) {
+    rn_arr = array(int, 2, count);
+    for(i = 1; i <= count; i++) {
       rnsidx = where(((edb.seconds - soe_day_start)) >= ceil(t_new(1,i)));
       if(is_array(rnsidx) && (numberof(rnsidx) > 1)) {
         idxrn = where(rnsidx(dif) == 1);
