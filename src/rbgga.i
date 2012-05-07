@@ -81,16 +81,6 @@ func pnav_sel_rgn(win=, color=, mode=, region=, _batch=) {
   return q;
 }
 
-func gga_pip_sel(win=) {
-/* DOCUMENT gga_pip_sel(win=)
-  The user is prompted to draw out a polygon. The points of GGA within that
-  polygon are found and the corresponding indices are returned.
-
-  SEE ALSO: getPoly, plpoly, testPoly, gga_win_sel
-*/
-  return pnav_sel_rgn(win=win, mode="pip");
-}
-
 func gga_win_sel(win=, color=, latutm=, llarr=, _batch=) {
 /* DOCUMENT gga_win_sel(win=, color=, latutm=, llarr=, _batch=)
   The user is prompted to draw out a bounding box. The points of GGA within
