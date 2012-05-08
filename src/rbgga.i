@@ -240,47 +240,26 @@ func sel_region(q, max_rps=) {
   sod_stop = sod_stop(sort(sod_stop));
 
   count = numberof(sod_start);
-  tyes_arr = array(int, count);
-  tyes_arr(1:0) = 1;
   rn_arr = array(int, 2, count);
   for(i = 1; i <= count; i++) {
-    rnsidx = where(((edb.seconds - soe_day_start)) >= ceil(sod_start(i)));
-    if(is_array(rnsidx) && (numberof(rnsidx) > 1)) {
-      idxrn = where(rnsidx(dif) == 1);
-      rn_indx_start = rnsidx(idxrn(1));
-    } else {
-      rn_indx_start = [];
-    }
-    rnsidx = where(((edb.seconds - soe_day_start)) <= int(sod_stop(i)));
-    if(is_array(rnsidx) && (numberof(rnsidx) > 1)) {
-      idxrn = where(rnsidx(dif) == 1);
-      rn_indx_stop = rnsidx(idxrn(0));
-    } else {
-      rn_indx_stop = [];
-    }
-    if((!is_array(rn_indx_start) || !is_array(rn_indx_stop)) || (rn_indx_start > rn_indx_stop)) {
+    rn_start = rn_stop = 0;
+    rnsidx = where(edb.seconds >= ceil(sod_start(i)) + soe_day_start);
+    if(numberof(rnsidx))
+      rn_start = rnsidx(1);
+    rnsidx = where(edb.seconds <= floor(sod_stop(i)) + soe_day_start);
+    if(numberof(rnsidx) > 1)
+      rn_stop = rnsidx(-1);
+    if(!rn_start || !rn_stop || (rn_start > rn_stop)) {
       write, format="Corresponding rasters for segment %d not found,"+
         " omitting flightline.\n",i;
       rn_start = 0;
       rn_stop = 0;
-      tyes_arr(i) = 0;
-    } else {
-      rn_start = rn_indx_start(1);
-      rn_stop = rn_indx_stop(0);
-    }
-    if(rn_start > rn_stop) {
-      write, format="Corresponding rasters for segment %d not found,"+
-        " omitting flightline.\n",i;
-      rn_start = 0;
-      rn_stop = 0;
-      tyes_arr(i) = 0;
     }
     // assume a maximum of 40 rasters per second
     if((rn_stop-rn_start) > (sod_stop(i)-sod_start(i))*max_rps) {
       write, format="Time error in determining number of rasters.  Eliminating flightline segment %d.\n", i;
       rn_start = 0;
       rn_stop = 0;
-      tyes_arr(i) = 0;
     }
 
     rn_arr(,i) = [rn_start, rn_stop];
