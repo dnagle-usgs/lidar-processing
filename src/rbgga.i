@@ -252,8 +252,8 @@ func sel_region(q) {
       rn_indx_stop = [];
     }
     if((!is_array(rn_indx_start) || !is_array(rn_indx_stop)) || (rn_indx_start > rn_indx_stop)) {
-      write, format="Corresponding Rasters for flightline %d not found."+
-        "  Omitting flightline ... \n",i;
+      write, format="Corresponding rasters for segment %d not found,"+
+        " omitting flightline.\n",i;
       rn_start = 0;
       rn_stop = 0;
       tyes_arr(i) = 0;
@@ -262,8 +262,8 @@ func sel_region(q) {
       rn_stop = rn_indx_stop(0);
     }
     if(rn_start > rn_stop) {
-      write, format="Corresponding Rasters for flightline %d not found."+
-        "  Omitting flightline ... \n",i;
+      write, format="Corresponding rasters for segment %d not found,"+
+        " omitting flightline.\n",i;
       rn_start = 0;
       rn_stop = 0;
       tyes_arr(i) = 0;
@@ -278,11 +278,8 @@ func sel_region(q) {
 
     rn_arr(,i) = [rn_start, rn_stop];
   }
-  write, format="\nNumber of Rasters selected = %6d\n", (rn_arr(dif,)) (,sum);
+  write, format=" Number of rasters selected = %6d\n", rn_arr(dif,sum);
 
-  if(!(is_array(rn_arr))) {
-    rn_arr = [];
-  }
   return rn_arr;
 }
 
