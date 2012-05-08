@@ -182,12 +182,19 @@ func gga_find_times(q) {
   return pnav.sod(transpose(q([start,stop])));
 }
 
-func sel_region(q) {
-/* DOCUMENT sel_region(q)
-   This function extracts the raster numbers for a region selected.
-   It returns a the array rn_arr containing start and stop raster numbers
-   for each flightline.
+func sel_region(q, max_rps=) {
+/* DOCUMENT sel_region(q, max_rps=)
+   This function extracts the raster numbers for a region selected. It returns
+   a the array rn_arr containing start and stop raster numbers for each
+   flightline.
+
+   Options:
+    max_rps= Maximum rasters per second. If a segment appears to have more
+      rasters per second than this threshold, it will be rejected (with the
+      assumption that the corresponding TANS data is corrupted).
+        max_rps=40    Default
 */
+  default, max_rps, 40;
 
   if(is_void(q)) {
     write, "No flightline selection provided, aborting!";
@@ -269,7 +276,7 @@ func sel_region(q) {
       tyes_arr(i) = 0;
     }
     // assume a maximum of 40 rasters per second
-    if((rn_stop-rn_start) > (sod_stop(i)-sod_start(i))*40) {
+    if((rn_stop-rn_start) > (sod_stop(i)-sod_start(i))*max_rps) {
       write, format="Time error in determining number of rasters.  Eliminating flightline segment %d.\n", i;
       rn_start = 0;
       rn_stop = 0;
@@ -278,7 +285,7 @@ func sel_region(q) {
 
     rn_arr(,i) = [rn_start, rn_stop];
   }
-  write, format=" Number of rasters selected = %6d\n", rn_arr(dif,sum);
+  write, format=" Number of rasters selected = %d\n", rn_arr(dif,sum);
 
   return rn_arr;
 }
