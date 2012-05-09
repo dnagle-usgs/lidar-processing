@@ -300,8 +300,8 @@ func get_tld_rasts(fn, fnum=, fname=) {
   return rasts;
 }
 
-func get_erast(rn=, sod=, hms=, timeonly=) {
-/* DOCUMENT get_erast(rn=, sod=, hms=, timeonly=)
+func get_erast(rn=, soe=, sod=, hms=, timeonly=) {
+/* DOCUMENT get_erast(rn=, soe=, sod=, hms=, timeonly=)
 
   Returns the requested raster from the database. The request can specify the
   raster either by raster number, sod (seconds-of-day), or hms
@@ -329,9 +329,11 @@ func get_erast(rn=, sod=, hms=, timeonly=) {
   if(is_void(rn)) {
     if(is_void(sod) && !is_void(hms))
       sod = hms2sod(hms);
+    if(is_void(soe) && !is_void(sod))
+      soe = sod + soe_day_start;
     if(!is_void(sod)) {
-      rn = set_intersection(edb.seconds, sod, idx=1);
-      scalar = is_scalar(sod);
+      rn = set_intersection(edb.seconds, soe, idx=1);
+      scalar = is_scalar(soe);
     }
   }
 
