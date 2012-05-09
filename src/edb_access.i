@@ -355,8 +355,8 @@ func get_erast(rn=, soe=, sod=, hms=, timeonly=) {
       sod = hms2sod(hms);
     if(is_void(soe) && !is_void(sod))
       soe = sod + soe_day_start;
-    if(!is_void(sod)) {
-      rn = set_intersection(edb.seconds, soe, idx=1);
+    if(!is_void(soe)) {
+      rn = where(set_contains(soe, edb.seconds));
       scalar = is_scalar(soe);
     }
   }
