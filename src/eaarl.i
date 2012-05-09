@@ -50,6 +50,7 @@ if(is_void(__eaarl_includes_included__)) {
   require, "eaarl_data.i";
   require, "general.i";
   require, "util_obj.i";
+  require, "util_progress.i";
 
   require, "ascii.i";
   require, "ascii_encode.i";
@@ -141,7 +142,6 @@ if(is_void(__eaarl_includes_included__)) {
   require, "util_container.i";
   require, "util_coord.i";
   require, "util_plot.i";
-  require, "util_progress.i";
   require, "util_str.i";
   require, "veg.i";
   require, "wf_analysis.i";
