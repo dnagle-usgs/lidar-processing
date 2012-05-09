@@ -300,6 +300,30 @@ func get_tld_rasts(fn, fnum=, fname=) {
   return rasts;
 }
 
+func get_soe_rasts(start, stop) {
+/* DOCUMENT get_soe_rasts(start, stop)
+  Given a START time and STOP time in seconds of the epoch, this will return
+  the raw rasters for that range of times. START and STOP may optionally be
+  arrays (which must match each other in dimensions). The return result will be
+  a 1-dimensional array of pointers to raw char data.
+
+  This function requires that a mission configuration is loaded. Each
+  START/STOP range must fall within a single mission day; however, multiple
+  START/STOP ranges may fall within multiple mission days.
+*/
+  start = long(floor(start));
+  stop = long(ceil(stop));
+  count = numberof(start);
+  result = array(pointer, count);
+  for(i = 1; i <= count; i++) {
+    missiondata_soe_load, start(i);
+    b1 = digitize(start(i)-1, edb.seconds);
+    b0 = digitize(stop(i), edb.seconds) - 1;
+    result(i) = &get_erast(rn=indgen(b1:b0));
+  }
+  return merge_pointers(result);
+}
+
 func get_erast(rn=, soe=, sod=, hms=, timeonly=) {
 /* DOCUMENT get_erast(rn=, soe=, sod=, hms=, timeonly=)
 
