@@ -959,7 +959,6 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
     return rv;
   }
 
-  n = pulse.channel1_length;
   if (pulse.transmit_length == 0) {
     _errno = -1;
     return rv;
@@ -987,24 +986,20 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
       wf = float((~raw_wf+1) - (~raw_wf(1)+1));
       saturated = where(raw_wf == 0);
       numsat = numberof(saturated);
+
+      if (numsat > veg_conf.max_sat(channel)) {
+        // All 3 channels saturated
+        n_all3sat++;
+        return rv;
+      }
     }
   }
 
-  if (numsat > veg_conf.max_sat(channel)) {
-    n_all3sat++;
-    channel = 0;
-  }
-
-  if (!channel) {
-    return rv;
-  }
-
-  wflen = min(18, numberof(wf));
+  wflen = numberof(wf);
   dd = wf(dif);
 
   // xr(1) will be the first pulse edge and xr(0) will be the last
   xr = where((dd >= veg_conf.thresh)(dif) == 1);
-  nxr = numberof(xr);
 
   if (numberof(xr) == 0) {
     rv.mv0 = rv.mv1 = wf(max);
@@ -1015,7 +1010,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
 
   // see if user specified the max veg
   if(!is_void(last))
-    n = min(n, last);
+    wflen = min(wflen, last);
 
   // Find the length of the section of the waveform that represents the last
   // return (starting from xr(0)). Assume 18ns to be the longest duration for
@@ -1023,7 +1018,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
   retdist = 18;
 
   // If 18 is too long, then cut it short based on the length of the waveform.
-  retdist = min(retdist, n - xr(0) - 1);
+  retdist = min(retdist, wflen - xr(0) - 1);
 
   if (retdist < 5) channel = 0; // this eliminates possible noise pulses.
   if (!channel) {
@@ -1119,7 +1114,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
     nidx = where(dd(xr(0):xr(0)+3) < 0);
     if (is_array(nidx)) {
       xr(0) = xr(0) + nidx(1);
-      if (xr(0)+retdist+1 > n) retdist = n - xr(0)-1;
+      if (xr(0)+retdist+1 > wflen) retdist = wflen - xr(0)-1;
     }
     // using trailing edge algorithm for bottom return
     // find where the bottom return pulse changes direction after its trailing edge
@@ -1240,8 +1235,8 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
 
   // Make mx1 be the irange value and mv1 be the intensity value from variable
   // 'a'.  Edit out tx/rx dropouts.
-  el = (int(irange) & 0xc000) == 0;
-  irange *= el;
+//  el = (int(irange) & 0xc000) == 0;
+//  irange *= el;
 
   if (pse) pause, pse;
   rv.mx0 = mx0;
@@ -1253,7 +1248,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
 
   if (hard_surface) {
     // check to see if there is only 1 inflection
-    if (nxr == 1) {
+    if (numberof(xr) == 1) {
       //use first surface algorithm data to define range
       rv.mx0 = mx1;
       rv.mv0 = mv1;
