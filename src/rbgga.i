@@ -220,31 +220,8 @@ func tans_check_times(sods) {
   return transpose([sod_start,sod_stop]);
 }
 
-func sel_region(q, max_rps=) {
-/* DOCUMENT sel_region(q, max_rps=)
-   This function extracts the raster numbers for a region selected. It returns
-   a the array rn_arr containing start and stop raster numbers for each
-   flightline.
-
-   Options:
-    max_rps= Maximum rasters per second. If a segment appears to have more
-      rasters per second than this threshold, it will be rejected (with the
-      assumption that the corresponding TANS data is corrupted).
-        max_rps=40    Default
-*/
-  default, max_rps, 40;
-
-  if(is_void(q)) {
-    write, "No flightline selection provided, aborting!";
-    return;
-  }
-
-  sods = gga_find_times(q);
-  write, format=" Seconds of flightline data selected = %6.2f\n",
-      (sods(dif,))(,sum);
-
-  sods = tans_check_times(sods);
-
+func edb_sods_to_rns(sods, max_rps=) {
+  extern soe_day_start, edb;
   sod_start = sods(1,);
   sod_stop = sods(2,);
 
@@ -273,9 +250,39 @@ func sel_region(q, max_rps=) {
 
     rn_arr(,i) = [rn_start, rn_stop];
   }
-  write, format=" Number of rasters selected = %d\n", rn_arr(dif,sum);
-
   return rn_arr;
+}
+
+func sel_region(q, max_rps=) {
+/* DOCUMENT sel_region(q, max_rps=)
+   This function extracts the raster numbers for a region selected. It returns
+   a the array rn_arr containing start and stop raster numbers for each
+   flightline.
+
+   Options:
+    max_rps= Maximum rasters per second. If a segment appears to have more
+      rasters per second than this threshold, it will be rejected (with the
+      assumption that the corresponding TANS data is corrupted).
+        max_rps=40    Default
+*/
+  default, max_rps, 40;
+
+  if(is_void(q)) {
+    write, "No flightline selection provided, aborting!";
+    return;
+  }
+
+  sods = gga_find_times(q);
+  write, format=" Seconds of flightline data selected = %6.2f\n",
+      (sods(dif,))(,sum);
+
+  sods = tans_check_times(sods);
+
+  rns = edb_sods_to_rns(sods, max_rps=max_rps);
+
+  write, format=" Number of rasters selected = %d\n", rns(dif,sum);
+
+  return rns;
 }
 
 func show_track(fs, x=, y=, color=,  skip=, msize=, marker=, lines=, utm=, width=, win=) {
