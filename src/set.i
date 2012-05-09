@@ -7,16 +7,12 @@ func set_contains(A, b) {
   Returns an array of boolean values indicating which values in b are
   contained in A.
 */
-  // work-around for yorick bug, following line makes idx extern otherwise
-  local idx;
-  idx = set_intersection(b, unref(A), idx=1);
+  common = set_intersection(b, A);
+  count = numberof(common);
+  if(is_scalar(b)) return count;
   result = array(0, dimsof(b));
-  if(numberof(idx)) {
-    if(dimsof(result)(1))
-      result(idx) = 1;
-    else
-      result = 1;
-  }
+  for(i = 1; i <= count; i++)
+    result(where(b == common(i))) = 1;
   return result;
 }
 
