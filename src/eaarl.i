@@ -79,6 +79,7 @@ if(is_void(__eaarl_includes_included__)) {
   require, "dmars.i";
   require, "drast.i";
   require, "eaarl_mounting_bias.i";
+  require, "eaarla_filter.i";
   require, "eaarla_raster.i";
   require, "eaarla_wf.i";
   require, "eaarlb_lsr.i";
