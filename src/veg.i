@@ -899,7 +899,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
       "gauss": use gaussian decomposition algorithm, see func xgauss
     pse= Time (in milliseconds) to pause between each waveform plot.
 */
-  extern veg_conf, ops_conf, n_all3sat, irg_a, _errno, ohno;
+  extern veg_conf, ops_conf, n_all3sat, irg_a, _errno;
   define_veg_conf;
 
   default, win, 4;
@@ -967,7 +967,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
   // Try 1st channel
   channel = 1;
   raw_wf = pulse.channel1_wf;
-  wf = float((~raw_wf+1) - (~raw_wf(1)+1));
+  wf = float(~raw_wf) - ~raw_wf(1);
   saturated = where(raw_wf < 5);    // Create a list of saturated samples
   numsat = numberof(saturated);     // Count how many are saturated
 
@@ -975,7 +975,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
     // Try 2nd channel
     channel = 2;
     raw_wf = pulse.channel2_wf;
-    wf = float((~raw_wf+1) - (~raw_wf(1)+1));
+    wf = float(~raw_wf) - ~raw_wf(1);
     saturated = where(raw_wf == 0);
     numsat = numberof(saturated);
 
@@ -983,7 +983,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
       // Try 3rd channel
       channel = 3;
       raw_wf = pulse.channel3_wf;
-      wf = float((~raw_wf+1) - (~raw_wf(1)+1));
+      wf = float(~raw_wf) - ~raw_wf(1);
       saturated = where(raw_wf == 0);
       numsat = numberof(saturated);
 
@@ -1027,6 +1027,8 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
   }
   if (pse) pause, pse;
 
+  // initialize return to discard pulse
+  mx0 = mv0 = -10;
 
   // now process the trailing edge of the last inflection in the waveform
   if (!is_void(alg_mode)) {
@@ -1044,21 +1046,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
     }
     //now check to see if it it passes intensity test
     mxmint = wf(xr(0)+1:xr(0)+retdist)(max);
-    // Create array b for retdist returns beyond the last peak leading
-    // edge.
-    b = wf(int(xr(0)+1):int(xr(0)+retdist));
-    if ((min(b) > 240) && (max(b) < veg_conf.thresh)) {
-      //write, format="This happens when rn = %d, pulse =%d\n", rn, i;
-      return rv;
-    }
-    mx00 = irange + xr(0) - ctx(1)
-    if (channel == 1)
-        mx00 += ops_conf.chn1_range_bias;
-    else if (channel == 2)
-        mx00 += ops_conf.chn2_range_bias;
-    else if (channel == 3)
-        mx00 += ops_conf.chn3_range_bias;
-
+/*
     if (graph) {
       winbkp = current_window();
       window, win;
@@ -1072,41 +1060,41 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
       pltitle, swrite(format="Channel ID = %d", channel);
       window_select, winbkp;
     }
+*/
     if (abs(wf(xr(0)+1) - wf(xr(0)+retdist)) < 0.8*mxmint) {
       // This return is good to compute range.
       // compute range
+      // Create array b for retdist returns beyond the last peak leading edge.
+      b = wf(int(xr(0)+1):int(xr(0)+retdist));
+      if ((min(b) > 240) && (max(b) < veg_conf.thresh)) {
+        //write, format="This happens when rn = %d, pulse =%d\n", rn, i;
+        return rv;
+      }
       if (b(sum) != 0) {
-       if (alg_mode=="cent") {
-        c = xcent(b);
-       } else if (alg_mode=="peak") {
-        c = xpeak(b);
-       } else if (alg_mode=="gauss") {
-        c = xgauss(b, add_peak=0,graph=graph, xaxis=xaxis);
-       }
-       if (c(1) <= 0) return rv;
-        mx0 = mx00 + c(1);
-       if (channel == 1) {
-          mv0 = wf(int(xr(0)+c(1)));
-       } else if (channel == 2) {
-          mv0 = wf(int(xr(0)+c(1)))+300;
-       } else if (channel == 3) {
-          mv0 = wf(int(xr(0)+c(1)))+600;
-       }
-      } else {
-      if (is_void(ohno)) ohno = 0;
-      ohno++;
-        mx0 = -10;
-        mv0 = -10;
+        if (alg_mode=="cent") {
+          c = xcent(b);
+        } else if (alg_mode=="peak") {
+          c = xpeak(b);
+        } else if (alg_mode=="gauss") {
+          c = xgauss(b, add_peak=0); // ,graph=graph, xaxis=xaxis);
+        }
+        if (c(1) <= 0) return rv;
+
+        if (int(xr(0)+c(1)) <= wflen) {
+          mx0 = irange + xr(0) - ctx(1) + c(1);
+          if (channel == 1) {
+            mx0 += ops_conf.chn1_range_bias;
+            mv0 = wf(int(xr(0)+c(1)));
+          } else if (channel == 2) {
+            mx0 += ops_conf.chn2_range_bias;
+            mv0 = wf(int(xr(0)+c(1)))+300;
+          } else if (channel == 3) {
+            mx0 += ops_conf.chn3_range_bias;
+            mv0 = wf(int(xr(0)+c(1)))+600;
+          }
+        }
       }
     }
-     else {
-      if (is_void(ohno)) ohno = 0;
-      ohno++;
-      // for now, discard this pulse
-      mx0 = -10;
-      mv0 = -10;
-    }
-
   }
   else if (!use_be_centroid && use_be_peak && is_void(alg_mode)) {
     // this is the algorithm used most commonly in ALPS v1.
@@ -1139,9 +1127,6 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
         mv0 = wf(int(xr(0)+idx1(1)))+600;
       }
       //mx0 = irange+xr(0)+idx1(1)-irg_a.fs_rtn_centroid(i);
-    } else {
-      mx0 = -10;
-      mv0 = -10;
     }
   }
   else if (use_be_centroid && !use_be_peak && is_void(alg_mode)) {
@@ -1162,38 +1147,34 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
     mxmint = wf(xr(0)+1:xr(0)+retdist)(max);
     if (abs(wf(xr(0)+1) - wf(xr(0)+retdist)) < 0.2*mxmint) {
       // This return is good to compute centroid.
-      // Create array b for retdist returns beyond the last peak leading
-      // edge.
+      // Create array b for retdist returns beyond the last peak leading edge.
       b = wf(int(xr(0)+1):int(xr(0)+retdist));
+
       // compute centroid
       if (b(sum) != 0) {
         c = float(b*indgen(1:retdist)) (sum) / (b(sum));
-        mx0 = irange + xr(0) + c - ctx(1);
-        if (channel == 1) {
-          mx0 += ops_conf.chn1_range_bias;
-          mv0 = wf(int(xr(0)+c));
-        } else if (channel == 2) {
-          mx0 += ops_conf.chn2_range_bias;
-          mv0 = wf(int(xr(0)+c))+300;
-        } else if (channel == 3) {
-          mx0 += ops_conf.chn3_range_bias; // in ns -amar
-          mv0 = wf(int(xr(0)+c))+600;
+        if (c <= 0) return rv;
+        if (int(xr(0)+c) <= wflen) {
+          mx0 = irange + xr(0) + c - ctx(1);
+          if (channel == 1) {
+            mx0 += ops_conf.chn1_range_bias;
+            mv0 = wf(int(xr(0)+c));
+          } else if (channel == 2) {
+            mx0 += ops_conf.chn2_range_bias;
+            mv0 = wf(int(xr(0)+c))+300;
+          } else if (channel == 3) {
+            mx0 += ops_conf.chn3_range_bias; // in ns -amar
+            mv0 = wf(int(xr(0)+c))+600;
+          }
         }
-      } else {
-        mx0 = -10;
-        mv0 = -10;
       }
-    } else {
-      // for now, discard this pulse
-      mx0 = -10;
-      mv0 = -10;
     }
-  }
+  } 
   else if (!use_be_centroid && !use_be_peak && is_void(alg_mode)) {
     // no bare earth algorithm selected.
     //do not use centroid or trailing edge
-// CHECK LOGIC. may have to reset wf
-//    mvx = wf(xr(0):xr(0)+5,i,1)(mxx);
+    raw_wf = pulse.channel1_wf;
+    wf = float(~raw_wf) - ~raw_wf(1);
     mvx = wf(xr(0):xr(0)+5)(mxx);
     // find bottom peak now
     mx0 = irange+wf(xr(0):xr(0)+5)(mxx) + xr(0) - 1;
@@ -1202,10 +1183,8 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
   // stuff below is for mx1 (first surface in veg).
 
   if (use_be_centroid || use_be_peak || !is_void(alg_mode)) {
-    // Find out how many waveform points are in the primary (most sensitive)
-    // receiver channel.
-
-    // Give up if there are not at least two points.
+    // Exit if there are not at least two points in the primary 
+    // (most sensitive) receiver channel.
     if (pulse.channel1_length < 2) {
       _errno = -1;
       return;
