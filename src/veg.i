@@ -940,6 +940,12 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
   if (irange < 0)
     return rv;
 
+  // If transmit or return pulse is missing, return
+  if (pulse.transmit_length == 0 || pulse.channel1_length < 2) {
+    _errno = -1;
+    return rv;
+  }
+
  // This is the transmit pulse... use algorithm for transmit pulse based on algo used for return pulse.
    tx_wf = -short(pulse.transmit_wf);	// flip it over and convert to signed short
    tx_wf -= tx_wf(1);			// remove bias using first point of wf
@@ -956,11 +962,6 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
 
   // if transmit pulse does not exist, return
   if ((ctx(1) == 0)  || (ctx(1) == 1e1000)) {
-    return rv;
-  }
-
-  if (pulse.transmit_length == 0) {
-    _errno = -1;
     return rv;
   }
 
@@ -1169,13 +1170,6 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
   // stuff below is for mx1 (first surface in veg).
 
   if (use_be_centroid || use_be_peak || !is_void(alg_mode)) {
-    // Exit if there are not at least two points in the primary 
-    // (most sensitive) receiver channel.
-    if (pulse.channel1_length < 2) {
-      _errno = -1;
-      return;
-    }
-
     np = min(pulse.channel1_length, 12); // use no more than 12
     if (numberof(where((pulse.channel1_wf(1:np)) < 5)) <= ops_conf.max_sfc_sat) {
       cv = cent(pulse.channel1_wf);
@@ -1203,7 +1197,6 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
 //  el = (int(irange) & 0xc000) == 0;
 //  irange *= el;
 
-  if (pse) pause, pse;
   rv.mx0 = mx0;
   rv.mv0 = mv0;
   rv.mx1 = mx1;
