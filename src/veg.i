@@ -1138,7 +1138,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
 
       // compute centroid
       if (b(sum) != 0) {
-        c = float(b*indgen(1:retdist)) (sum) / (b(sum));
+        c = xcent(b)(1);
         if (c <= 0) return rv;
         if (int(xr(0)+c) <= wflen) {
           mx0 = irange + xr(0) + c - ctx(1);
