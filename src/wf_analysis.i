@@ -1,8 +1,10 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 require, "eaarl.i";
 
-func wfs_extract(method, wfs, lim=) {
+func wfs_extract(method, wfs, position, intensity, lim=) {
 /* DOCUMENT result = wfs_extract(method, wfs, lim=)
+  -or- wfs_extract, method, wfs, position, intensity, lim=
+
   Wrapper around various waveform target extraction algorithms.
 
   Parameters:
@@ -12,36 +14,60 @@ func wfs_extract(method, wfs, lim=) {
         "peaks" - Uses wf_peaks
     wfs: An array of pointers to arrays of waveform data.
 
+  Output parameters:
+    position: Array of pointers to position values.
+    intensity: Array of pointers to intensity values.
+
   Options:
     lim= Passed through to wf_centroid.
 
   Returns:
-    Array of pointers to arrays of results.
+    The same value as POSITION above.
 */
-  result = array(pointer, dimsof(wfs));
+  position = intensity = array(pointer, dimsof(wfs));
   n = numberof(wfs);
 
   if(method == "centroid")
-    for(i = 1; i <= n; i++)
-      result(i) = &wf_centroid(*wfs(i), lim=lim);
+    for(i = 1; i <= n; i++) {
+      wf_centroid, wfs(i), pos, pow, lim=lim;
+      position(i) = &pos;
+      intensity(i) = &pow;
+    }
 
   if(method == "peak")
-    for(i = 1; i <= n; i++)
-      result(i) = &wf_peak(*wfs(i));
+    for(i = 1; i <= n; i++) {
+      wf_peak, *wfs(i), pos, pow;
+      position(i) = &pos;
+      intensity(i) = &pow;
+    }
 
   if(method == "peaks")
-    for(i = 1; i <= n; i++)
-      result(i) = &wf_peaks(*wfs(i));
+    for(i = 1; i <= n; i++) {
+      wf_peaks, *wfs(i), pos, pow;
+      position(i) = &pos;
+      intensity(i) = &pow;
+    }
 
-  return result;
+  return position;
 }
 
-func wf_centroid(wf, lim=) {
-/* DOCUMENT centroid = wf_centroid(wf, lim=)
+func wf_centroid(wf, &position, &intensity, lim=) {
+/* DOCUMENT position = wf_centroid(wf, lim=)
+  -or- wf_centroid, wf, position, intensity, lim=
+
   Returns the centroid index for a waveform.
 
   Parameter:
-    wf: Should be a vector of power values, with 0 representing "no power".
+    wf: Should be a vector of intensity values, with 0 representing "no power".
+
+  Output parameters:
+    position: The floating-point position into WF where the centroid is
+      located. Note that the centroid's location may actually be outside the
+      bounds of WF, particularly if WF contains negative values. If WF is [],
+      then POSITION is set to 1e1000 (inf) to represet the invalid condition.
+    intensity: The floating-point intensity value found at POSITION,
+      interpolated. Points outside of range will receive the intensity of the
+      first or last sample (whichever is closer).
 
   Options:
     lim= Limit number of points considered. If omitted, the whole waveform is
@@ -50,51 +76,85 @@ func wf_centroid(wf, lim=) {
       provided.
 
   Returns:
-    Floating-point position in wf where the centroid is located.
+    The same value as POSITION above.
 
   If wf=[], then will return inf.
 */
+  // Values to return in case of an error situation
+  position = 1e1000;
+  intensity = double(wf(0));
+
   if(!numberof(wf))
-    return 1e1000;
+    return position;
 
   if(!is_void(lim) && lim < numberof(wf))
     wf = wf(:lim);
 
   sum_power = wf(sum);
 
+  // If sum_power == 0, then we'll get a divide-by-zero situation below.
   if(!sum_power)
-    return 1e1000;
+    return position;
 
   weighted_idx = double(wf) * indgen(numberof(wf));
   weighted_sum = weighted_idx(sum);
 
-  return weighted_sum / sum_power;
+  position = weighted_sum / sum_power;
+  intensity = interp(wf, indgen(numberof(wf)), position);
+
+  return position;
 }
 
-func wf_peak(wf) {
-/* DOCUMENT peak = wf_peak(wf)
+func wf_peak(wf, &position, &intensity) {
+/* DOCUMENT position = wf_peak(wf)
+  -or- wf_peak, wf, position, intensity
+
   Returns the peak index of a waveform.
 
   Parameter:
-    wf: Should be a vector of power values.
+    wf: Should be a vector of intensity values.
+
+  Output parameters:
+    position: The integer position into WF where the peak is located. If there
+      are multiple indices with the same maximal intensity, the first is
+      returned. If WF is [], then POSITION is set to 1e1000 (inf) to represet
+      the invalid condition.
+    intensity: The intensity value found at POSITION. (If POSITION=inf, then
+      the final intensity value is used.)
 
   Returns:
-    Integer position in wf where peak is located.
+    The same value as POSITION above.
 */
+  // Values to return in case of an error situation
+  position = 1e1000;
+  intensity = double(wf(0));
+
   if(!numberof(wf))
-    return 1e1000;
-  return wf(mxx);
+    return position;
+
+  position = wf(mxx);
+  intensity = wf(position);
+  return position;
 }
 
-func wf_peaks(wf) {
+func wf_peaks(wf, &position, &intensity) {
 /* DOCUMENT peaks = wf_peaks(wf)
   Returns the peak indices of a waveform.
 
   Parameter:
-    wf: Should be a vector of power values.
+    wf: Should be a vector of intensity values.
+
+  Output parameters:
+    position: A vector containing the floating-point positions into WF where
+      the peaks are located.
+    intensity: A vector containing the floating-point intensity values
+      corresponding to POSITION.
 
   Returns:
-    Floating-point positions in wf where peaks are located.
+    The same value as POSITION above.
+
+  This function defines a "peak" as any sample (or range of identical samples)
+  that have lower values immediately before and after.
 
   If a waveform has a flat peak, then the center point of that peak will be
   returned. For example:
@@ -113,7 +173,7 @@ func wf_peaks(wf) {
     []
 */
   n = numberof(wf);
-  peaks = [];
+  position = intensity = [];
   for(i = 2; i < n; i++) {
     if(wf(i-1) > wf(i)) {
       start = [];
@@ -124,11 +184,13 @@ func wf_peaks(wf) {
     }
     if(wf(i+1) < wf(i)) {
       stop = i;
-      if(!is_void(start))
-        grow, peaks, (start+stop)/2.;
+      if(!is_void(start)) {
+        grow, position, (start+stop)/2.;
+        grow, intensity, double(wf(long(position)));
+      }
     }
   }
-  return peaks;
+  return position;
 }
 
 func remove_noisy_tail(wf, thresh=, verbose=, idx=) {
