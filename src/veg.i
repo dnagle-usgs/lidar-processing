@@ -1046,21 +1046,6 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
     }
     //now check to see if it it passes intensity test
     mxmint = wf(xr(0)+1:xr(0)+retdist)(max);
-/*
-    if (graph) {
-      winbkp = current_window();
-      window, win;
-      fma;
-      xaxis = span(mx00+1,mx00+numberof(b), numberof(b));
-      limits, xaxis(1), xaxis(0), 0, 250;
-      //  plmk, wf(xr(0):xr(0)+retdist)+(ai-1)*300, msize=.2, marker=1, color="magenta";
-      plmk, b, xaxis, msize=.2, marker=1, color="black";
-      // plg, wf(xr(0):xr(0)+retdist)+(ai-1)*300, color="magenta";
-      plg, b, xaxis, color="black";
-      pltitle, swrite(format="Channel ID = %d", channel);
-      window_select, winbkp;
-    }
-*/
     if (abs(wf(xr(0)+1) - wf(xr(0)+retdist)) < 0.8*mxmint) {
       // This return is good to compute range.
       // compute range
@@ -1079,6 +1064,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
           c = xgauss(b, add_peak=0); // ,graph=graph, xaxis=xaxis);
         }
         if (c(1) <= 0) return rv;
+        if (graph) plot_veg_wf, channel, b, (irange+xr(0)-ctx(1));
 
         if (int(xr(0)+c(1)) <= wflen) {
           mx0 = irange + xr(0) - ctx(1) + c(1);
@@ -1242,7 +1228,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
     window_select, winbkp;
   }
   if (verbose) {
-    write, format="Range between first and last return = %4.2f ns\n",(rv.mx0-rv.mx1);
+    write, format="Range between first and last return %d = %4.2f ns\n", rv.rastpix, (rv.mx0-rv.mx1);
   }
 
   return rv;
@@ -1493,4 +1479,18 @@ func cveg_all2veg_all_ (cveg, d, rrr) {
   geoveg.lelv = geoveg.lelv*tzero + rrr.elevation*(!tzero);
 
   return geoveg;
+}
+
+func plot_veg_wf(channel, wf, mx00) {
+  default, channel, 1;
+  default, win, 4;
+  winbkp = current_window();
+  window, win;
+  fma;
+  xaxis = span(mx00+1,mx00+numberof(wf), numberof(wf));
+  limits, xaxis(1), xaxis(0), 0, 250;
+  plmk, wf, xaxis, msize=.2, marker=1, color="black";
+  plg, wf, xaxis, color="black";
+  pltitle, swrite(format="Channel ID = %d", channel);
+  window_select, winbkp;
 }
