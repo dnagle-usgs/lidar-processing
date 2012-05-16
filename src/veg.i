@@ -905,6 +905,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
   default, win, 4;
   default, graph, 0;
   default, verbose, graph;
+  local retdist, idx1;
 
   _errno = 0; // If not specifically set, preset to assume no errors.
 
@@ -1021,8 +1022,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
   // If 18 is too long, then cut it short based on the length of the waveform.
   retdist = min(retdist, wflen - xr(0) - 1);
 
-  if (retdist < 5) channel = 0; // this eliminates possible noise pulses.
-  if (!channel) {
+  if (retdist < 5) { // this eliminates possible noise pulses.
     _errno = 0;
     return rv;
   }
@@ -1030,21 +1030,11 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
 
   // initialize return to discard pulse
   mx0 = mv0 = -10;
-
   // now process the trailing edge of the last inflection in the waveform
   if (!is_void(alg_mode)) {
-    // find where the bottom return pulse changes direction after its
-    // trailing edge
-    idx = where(dd(xr(0)+1:xr(0)+retdist) > 0);
-    idx1 = where(dd(xr(0)+1:xr(0)+retdist) < 0);
-    if (is_array(idx1) && is_array(idx)) {
-      if (idx(0) > idx1(1)) {
-        // take length of return at this point
-        retdist = idx(0);
-      }
-    } else {
-      write, format="idx/idx1 is nuller for rn=%d, i=%d    \r", rn, i;
-    }
+    // find where the bottom return pulse changes direction after its trailing edge
+    trailing_edge, wf, retdist, idx1;
+
     //now check to see if it it passes intensity test
     mxmint = wf(xr(0)+1:xr(0)+retdist)(max);
     if (abs(wf(xr(0)+1) - wf(xr(0)+retdist)) < 0.8*mxmint) {
@@ -1092,16 +1082,8 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
       if (xr(0)+retdist+1 > wflen) retdist = wflen - xr(0)-1;
     }
     // using trailing edge algorithm for bottom return
-    // find where the bottom return pulse changes direction after its trailing edge
-    idx = where(dd(xr(0)+1:xr(0)+retdist) > 0);
-    idx1 = where(dd(xr(0)+1:xr(0)+retdist) < 0);
-    if (is_array(idx1) && is_array(idx)) {
-      if (idx(0) > idx1(1)) {
-        //take length of  return at this point
-        //write, format="this happens!! rn = %d; i = %d\n",rn,i;
-        retdist = idx(0);
-      }
-    }
+    trailing_edge, wf, retdist, idx1, xr=xr;
+
     if (is_array(idx1)) {
       if (channel == 1) {
         mx0 = irange+xr(0)+idx1(1)-ctx(1)+ops_conf.chn1_range_bias;
@@ -1120,16 +1102,8 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
     // this is less used in ALPS v1
     // find where the bottom return pulse changes direction after its
     // trailing edge
-    idx = where(dd(xr(0)+1:xr(0)+retdist) > 0);
-    idx1 = where(dd(xr(0)+1:xr(0)+retdist) < 0);
-    if (is_array(idx1) && is_array(idx)) {
-      if (idx(0) > idx1(1)) {
-        // take length of return at this point
-        retdist = idx(0);
-      }
-    } else {
-      write, format="idx/idx1 is nuller for rn=%d, i=%d    \r", rn, i;
-    }
+    trailing_edge, wf, retdist, idx1;
+
     //now check to see if it it passes intensity test
     mxmint = wf(xr(0)+1:xr(0)+retdist)(max);
     if (abs(wf(xr(0)+1) - wf(xr(0)+retdist)) < 0.2*mxmint) {
@@ -1390,6 +1364,37 @@ func xgauss(w1, add_peak=, graph=, xaxis=,logmode=) {
   if (numberof(a) > 3) a = a(,sort(a(1,)))
 
   return [ret(1,1), ret(3,1)];
+}
+
+func trailing_edge(wf, &retdist, &idx1, xr=) {
+/* DOCUMENT trailing_edge(wf, retdist, idx, xr=)
+  Find where the bottom return pulse changes direction after its
+  trailing edge.
+
+  Input:
+    wf = input waveform
+    retdist = length of the section of the wf that represents the 
+      last return (starting from xr(0).
+    idx1 = array of points from xr(0) with negative gradients.
+    xr = array of pulse edges. The function calculates xr unless it
+      is modified to search further along the tail, in which case
+      it should be supplied as a parameter.
+
+  SEE ALSO: ex_veg
+*/
+  dd = wf(dif);
+  if (is_void(xr))
+    xr = where((dd >= veg_conf.thresh)(dif) == 1);
+
+  idx = where(dd(xr(0)+1:xr(0)+retdist) > 0);
+  idx1 = where(dd(xr(0)+1:xr(0)+retdist) < 0);
+  if (is_array(idx1) && is_array(idx)) {
+    if (idx(0) > idx1(1)) {
+      // take length of return at this point
+      retdist = idx(0);
+    }
+  }
+  return retdist;
 }
 
 func vegpix2vegpixs (d) {
