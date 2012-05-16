@@ -251,7 +251,7 @@ func mapobj_index(idx) {
   res = am_subroutine() ? use() : obj_copy(use(), recurse=1);
   if(is_string(idx))
     idx = use(where, idx);
-  obj_index, res, idx;
+  obj_index, res, idx, which="mapping";
   mapobj, res;
   return res;
 }
