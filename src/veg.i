@@ -1028,6 +1028,14 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
   }
   if (pse) pause, pse;
 
+  // set range_bias to that of the first unsaturated channel
+  if (channel == 1)
+    range_bias = ops_conf.chn1_range_bias;
+  else if (channel == 2)
+    range_bias = ops_conf.chn2_range_bias;
+  else if (channel == 3)
+    range_bias = ops_conf.chn3_range_bias;
+
   // initialize return to discard pulse
   mx0 = mv0 = -10;
   // now process the trailing edge of the last inflection in the waveform
@@ -1058,17 +1066,8 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
         if (graph) plot_veg_wf, channel, wf_tail, (irange+xr(0)-ctx(1));
 
         if (int(xr(0)+wf_tail_peak(1)) <= wflen) {
-          mx0 = irange + xr(0) - ctx(1) + wf_tail_peak(1);
-          if (channel == 1) {
-            mx0 += ops_conf.chn1_range_bias;
-            mv0 = wf(int(xr(0)+wf_tail_peak(1)));
-          } else if (channel == 2) {
-            mx0 += ops_conf.chn2_range_bias;
-            mv0 = wf(int(xr(0)+wf_tail_peak(1)))+300;
-          } else if (channel == 3) {
-            mx0 += ops_conf.chn3_range_bias;
-            mv0 = wf(int(xr(0)+wf_tail_peak(1)))+600;
-          }
+          mx0 = irange + xr(0) - ctx(1) + wf_tail_peak(1) + range_bias;
+          mv0 = wf(int(xr(0)+wf_tail_peak(1))) + (channel-1)*300;
         }
       }
     }
@@ -1085,17 +1084,8 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
     trailing_edge, wf, retdist, idx1, xr=xr;
 
     if (is_array(idx1)) {
-      if (channel == 1) {
-        mx0 = irange+xr(0)+idx1(1)-ctx(1)+ops_conf.chn1_range_bias;
-        mv0 = wf(int(xr(0)+idx1(1)));
-      } else if (channel == 2) {
-        mx0 = irange+xr(0)+idx1(1)-ctx(1)+ops_conf.chn2_range_bias; // in ns - amar
-        mv0 = wf(int(xr(0)+idx1(1)))+300;
-      } else if (channel == 3) {
-        mx0 = irange+xr(0)+idx1(1)-ctx(1)+ops_conf.chn3_range_bias; // in ns - amar
-        mv0 = wf(int(xr(0)+idx1(1)))+600;
-      }
-      //mx0 = irange+xr(0)+idx1(1)-irg_a.fs_rtn_centroid(i);
+      mx0 = irange+xr(0)+idx1(1)-ctx(1)+range_bias;  // in ns
+      mv0 = wf(int(xr(0)+idx1(1))) + (channel-1)*300;
     }
   }
   else if (use_be_centroid && !use_be_peak && is_void(alg_mode)) {
@@ -1116,17 +1106,8 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
         wf_tail_peak = xcent(wf_tail)(1);
         if (wf_tail_peak <= 0) return rv;
         if (int(xr(0)+wf_tail_peak) <= wflen) {
-          mx0 = irange + xr(0) + wf_tail_peak - ctx(1);
-          if (channel == 1) {
-            mx0 += ops_conf.chn1_range_bias;
-            mv0 = wf(int(xr(0)+wf_tail_peak));
-          } else if (channel == 2) {
-            mx0 += ops_conf.chn2_range_bias;
-            mv0 = wf(int(xr(0)+wf_tail_peak))+300;
-          } else if (channel == 3) {
-            mx0 += ops_conf.chn3_range_bias; // in ns -amar
-            mv0 = wf(int(xr(0)+wf_tail_peak))+600;
-          }
+          mx0 = irange + xr(0) + wf_tail_peak - ctx(1) + range_bias;
+          mv0 = wf(int(xr(0)+wf_tail_peak)) + (channel-1)*300;
         }
       }
     }
