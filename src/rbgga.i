@@ -176,8 +176,13 @@ func gga_find_times(q) {
   extern pnav;
 
   w = where(q(dif) > 2);
-  start = grow([0], w) + 1;
-  stop = grow(w, numberof(q));
+  if(numberof(w)) {
+    start = grow([0], w) + 1;
+    stop = grow(w, numberof(q));
+  } else {
+    start = [1];
+    stop = [numberof(q)];
+  }
 
   return pnav.sod(transpose(q([start,stop])));
 }
