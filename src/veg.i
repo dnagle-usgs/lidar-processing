@@ -1048,36 +1048,36 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
     //now check to see if it it passes intensity test
     mxmint = wf(xr(0)+1:xr(0)+retdist)(max);
     if (abs(wf(xr(0)+1) - wf(xr(0)+retdist)) < 0.8*mxmint) {
-      // This return is good to compute range.
-      // compute range
-      // Create array b for retdist returns beyond the last peak leading edge.
-      b = wf(int(xr(0)+1):int(xr(0)+retdist));
-      if ((min(b) > 240) && (max(b) < veg_conf.thresh)) {
+      // This return is good to compute range. compute range
+      // Create array wf_tail for retdist returns beyond the last 
+      // peak leading edge.
+      wf_tail = wf(int(xr(0)+1):int(xr(0)+retdist));
+      if ((min(wf_tail) > 240) && (max(wf_tail) < veg_conf.thresh)) {
         //write, format="This happens when rn = %d, pulse =%d\n", rn, i;
         return rv;
       }
-      if (b(sum) != 0) {
+      if (wf_tail(sum) != 0) {
         if (alg_mode=="cent") {
-          c = xcent(b);
+          wf_tail_peak = xcent(wf_tail);
         } else if (alg_mode=="peak") {
-          c = xpeak(b);
+          wf_tail_peak = xpeak(wf_tail);
         } else if (alg_mode=="gauss") {
-          c = xgauss(b, add_peak=0); // ,graph=graph, xaxis=xaxis);
+          wf_tail_peak = xgauss(wf_tail, add_peak=0);
         }
-        if (c(1) <= 0) return rv;
-        if (graph) plot_veg_wf, channel, b, (irange+xr(0)-ctx(1));
+        if (wf_tail_peak(1) <= 0) return rv;
+        if (graph) plot_veg_wf, channel, wf_tail, (irange+xr(0)-ctx(1));
 
-        if (int(xr(0)+c(1)) <= wflen) {
-          mx0 = irange + xr(0) - ctx(1) + c(1);
+        if (int(xr(0)+wf_tail_peak(1)) <= wflen) {
+          mx0 = irange + xr(0) - ctx(1) + wf_tail_peak(1);
           if (channel == 1) {
             mx0 += ops_conf.chn1_range_bias;
-            mv0 = wf(int(xr(0)+c(1)));
+            mv0 = wf(int(xr(0)+wf_tail_peak(1)));
           } else if (channel == 2) {
             mx0 += ops_conf.chn2_range_bias;
-            mv0 = wf(int(xr(0)+c(1)))+300;
+            mv0 = wf(int(xr(0)+wf_tail_peak(1)))+300;
           } else if (channel == 3) {
             mx0 += ops_conf.chn3_range_bias;
-            mv0 = wf(int(xr(0)+c(1)))+600;
+            mv0 = wf(int(xr(0)+wf_tail_peak(1)))+600;
           }
         }
       }
@@ -1134,24 +1134,24 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
     mxmint = wf(xr(0)+1:xr(0)+retdist)(max);
     if (abs(wf(xr(0)+1) - wf(xr(0)+retdist)) < 0.2*mxmint) {
       // This return is good to compute centroid.
-      // Create array b for retdist returns beyond the last peak leading edge.
-      b = wf(int(xr(0)+1):int(xr(0)+retdist));
+      // Create array wf_tail for retdist returns beyond the last peak leading edge.
+      wf_tail = wf(int(xr(0)+1):int(xr(0)+retdist));
 
       // compute centroid
-      if (b(sum) != 0) {
-        c = xcent(b)(1);
-        if (c <= 0) return rv;
-        if (int(xr(0)+c) <= wflen) {
-          mx0 = irange + xr(0) + c - ctx(1);
+      if (wf_tail(sum) != 0) {
+        wf_tail_peak = xcent(wf_tail)(1);
+        if (wf_tail_peak <= 0) return rv;
+        if (int(xr(0)+wf_tail_peak) <= wflen) {
+          mx0 = irange + xr(0) + wf_tail_peak - ctx(1);
           if (channel == 1) {
             mx0 += ops_conf.chn1_range_bias;
-            mv0 = wf(int(xr(0)+c));
+            mv0 = wf(int(xr(0)+wf_tail_peak));
           } else if (channel == 2) {
             mx0 += ops_conf.chn2_range_bias;
-            mv0 = wf(int(xr(0)+c))+300;
+            mv0 = wf(int(xr(0)+wf_tail_peak))+300;
           } else if (channel == 3) {
             mx0 += ops_conf.chn3_range_bias; // in ns -amar
-            mv0 = wf(int(xr(0)+c))+600;
+            mv0 = wf(int(xr(0)+wf_tail_peak))+600;
           }
         }
       }
