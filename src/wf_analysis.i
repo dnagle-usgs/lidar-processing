@@ -29,7 +29,7 @@ func wfs_extract(method, wfs, &position, &intensity, lim=) {
 
   if(method == "centroid")
     for(i = 1; i <= n; i++) {
-      wf_centroid, wfs(i), pos, pow, lim=lim;
+      wf_centroid, *wfs(i), pos, pow, lim=lim;
       position(i) = &pos;
       intensity(i) = &pow;
     }
