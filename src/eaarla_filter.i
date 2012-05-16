@@ -95,23 +95,23 @@ func eaarla_wf_filter_bias(wf, which=, method=, lim=) {
     wf = wf(index, 1:wf.count);
 
   // Use rx to store the waveforms, which are usually rx
-  rx = wfobj(noop(which));
+  rx = wf(noop(which));
 
   if(method == "first") {
     // Bias is the first sample
     for(i = 1; i <= wf.count; i++)
-      rx(i) = rx(i) - rx(i)(1);
+      rx(i) = &(*rx(i) - (*rx(i))(1));
   } else if(method == "min") {
     // Bias is the minimum value in waveform
     for(i = 1; i <= wf.count; i++)
-      rx(i) = rx(i) - rx(i)(min);
+      rx(i) = &(*rx(i) - (*rx(i))(min));
   } else if(method == "most") {
     // Bias is the most popular value in waveform
     for(i = 1; i <= wf.count; i++) {
-      rx(i) = rx(i) - rx(i)(min) + 1;
-      hist = histogram(long(rx(i)+0.5));
+      rx(i) = &(*rx(i) - (*rx(i))(min) + 1);
+      hist = histogram(long(*rx(i)+0.5));
       np = min(lim, numberof(hist));
-      rx(i) = rx(i) - hist(:np)(mxx);
+      rx(i) = &(*rx(i) - hist(:np)(mxx));
     }
   }
 
