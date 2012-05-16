@@ -1,7 +1,7 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 require, "eaarl.i";
 
-func wfs_extract(method, wfs, position, intensity, lim=) {
+func wfs_extract(method, wfs, &position, &intensity, lim=) {
 /* DOCUMENT result = wfs_extract(method, wfs, lim=)
   -or- wfs_extract, method, wfs, position, intensity, lim=
 
