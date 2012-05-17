@@ -275,36 +275,21 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
 
     // if ext_bad_att is set, find all points having elevation = 70% of ht of
     // airplane
-    if(is_array(fs_all)) {
-      if(ext_bad_att) {
-        write, "Extracting and writing false first points";
-        // compare rrr.elevation within 20m  of rrr.melevation
-        elv_thresh = fs_all.melevation-2000;
-        ba_indx = where(fs_all.elevation > elv_thresh);
+    if(is_array(fs_all) && ext_bad_att) {
+      write, "Extracting and writing false first points";
+      // compare rrr.elevation within 20m  of rrr.melevation
+      ba_indx = where(fs_all.melevation - fs_all.elevation < 2000);
+      if(numberof(ba_indx)) {
         ba_count += numberof(ba_indx);
-        ba_fs = fs_all;
-        deast = fs_all.east;
-        if((is_array(ba_indx))) {
-          deast(ba_indx) = 0;
-        }
-        dnorth = fs_all.north;
-        if((is_array(ba_indx))) {
-          dnorth(ba_indx) = 0;
-        }
-        fs_all.east = deast;
-        fs_all.north = dnorth;
-
-        ba_indx_r = where(ba_fs.elevation < elv_thresh);
-        bdeast = ba_fs.east;
-        if((is_array(ba_indx_r))) {
-          bdeast(ba_indx_r) = 0;
-        }
-        bdnorth = ba_fs.north;
-        if((is_array(ba_indx_r))) {
-          bdnorth(ba_indx_r) = 0;
-        }
-        ba_fs.east = bdeast;
-        ba_fs.north = bdnorth;
+        // fs_all.east(ba_indx) cannot be assigned to (not an l-value), so must
+        // jump through hoops instead
+        tmp = fs_all.east;
+        tmp(ba_indx) = 0;
+        fs_all.east = tmp;
+        tmp = fs_all.north;
+        tmp(ba_indx) = 0;
+        fs_all.north = tmp;
+        tmp = [];
       }
     }
 
