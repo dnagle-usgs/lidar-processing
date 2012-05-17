@@ -1036,8 +1036,43 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
   else if (channel == 3)
     range_bias = ops_conf.chn3_range_bias;
 
+  // stuff below is for mx1 (first surface in veg).
+  if (use_be_centroid || use_be_peak || !is_void(alg_mode)) {
+    np = min(pulse.channel1_length, 12); // use no more than 12
+    if (numberof(where((pulse.channel1_wf(1:np)) < 5)) <= ops_conf.max_sfc_sat) {
+      crx = cent(pulse.channel1_wf);
+      crx(1) += ops_conf.chn1_range_bias;
+    } else if (numberof(where((pulse.channel2_wf(1:np)) < 5)) <= ops_conf.max_sfc_sat) {
+      crx = cent(pulse.channel2_wf);
+      crx(1) += ops_conf.chn2_range_bias;
+      crx(3) += 300;
+    } else {
+      crx = cent(pulse.channel3_wf);
+      crx(1) += ops_conf.chn3_range_bias;
+      crx(3) += 600;
+    }
+    mx1 = (crx(1) >= 10000) ? -10 : irange + crx(1) - ctx(1);
+    mv1 = crx(3);
+  } else {
+    // find surface peak now
+    mx1 = wf(xr(1):xr(1)+5)(mxx) + xr(1) - 1;
+    mv1 = wf(mx1);
+  }
+
+  if (hard_surface) {
+    // check to see if there is only 1 inflection
+    if (numberof(xr) == 1) {
+      //use first surface algorithm data to define range
+      rv.mx0 = rv.mx1 = mx1;
+      rv.mv0 = rv.mv1 = mv1;
+      rv.nx = 1;
+      return rv;
+    }
+  }
+
   // initialize return to discard pulse
   mx0 = mv0 = -10;
+
   // now process the trailing edge of the last inflection in the waveform
   if (!is_void(alg_mode)) {
     // find where the bottom return pulse changes direction after its trailing edge
@@ -1065,7 +1100,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
         if (graph) plot_veg_wf, channel, wf_tail, (irange+xr(0)-ctx(1));
 
         if (int(xr(0)+wf_tail_peak(1)) <= wflen) {
-          mx0 = irange + xr(0) - ctx(1) + wf_tail_peak(1) + range_bias;
+          mx0 = irange + xr(0) - ctx(1) + range_bias + wf_tail_peak(1);
           mv0 = wf(int(xr(0)+wf_tail_peak(1))) + (channel-1)*300;
         }
       }
@@ -1121,30 +1156,6 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
     mx0 = irange+wf(xr(0):xr(0)+5)(mxx) + xr(0) - 1;
     mv0 = wf(mvx);
   }
-  // stuff below is for mx1 (first surface in veg).
-
-  if (use_be_centroid || use_be_peak || !is_void(alg_mode)) {
-    np = min(pulse.channel1_length, 12); // use no more than 12
-    if (numberof(where((pulse.channel1_wf(1:np)) < 5)) <= ops_conf.max_sfc_sat) {
-      crx = cent(pulse.channel1_wf);
-      crx(1) += ops_conf.chn1_range_bias;
-    } else if (numberof(where((pulse.channel2_wf(1:np)) < 5)) <= ops_conf.max_sfc_sat) {
-      crx = cent(pulse.channel2_wf);
-      crx(1) += ops_conf.chn2_range_bias;
-      crx(3) += 300;
-    } else {
-      crx = cent(pulse.channel3_wf);
-      crx(1) += ops_conf.chn3_range_bias;
-      crx(3) += 600;
-    }
-
-    mx1 = (crx(1) >= 10000) ? -10 : irange + crx(1) - ctx(1);
-    mv1 = crx(3);
-  } else {
-    // find surface peak now
-    mx1 = wf(xr(1):xr(1)+5)(mxx) + xr(1) - 1;
-    mv1 = wf(mx1);
-  }
 
   rv.mx0 = mx0;
   rv.mv0 = mv0;
@@ -1153,14 +1164,6 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
   rv.nx = numberof(xr);
   _errno = 0;
 
-  if (hard_surface) {
-    // check to see if there is only 1 inflection
-    if (numberof(xr) == 1) {
-      //use first surface algorithm data to define range
-      rv.mx0 = mx1;
-      rv.mv0 = mv1;
-    }
-  }
   if (graph) {
     winbkp = current_window();
     window, win;
