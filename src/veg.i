@@ -1051,7 +1051,6 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
       // peak leading edge.
       wf_tail = wf(int(xr(0)+1):int(xr(0)+retdist));
       if ((min(wf_tail) > 240) && (max(wf_tail) < veg_conf.thresh)) {
-        //write, format="This happens when rn = %d, pulse =%d\n", rn, i;
         return rv;
       }
       if (wf_tail(sum) != 0) {
@@ -1127,30 +1126,25 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
   if (use_be_centroid || use_be_peak || !is_void(alg_mode)) {
     np = min(pulse.channel1_length, 12); // use no more than 12
     if (numberof(where((pulse.channel1_wf(1:np)) < 5)) <= ops_conf.max_sfc_sat) {
-      cv = cent(pulse.channel1_wf);
-      cv(1) += ops_conf.chn1_range_bias;
+      crx = cent(pulse.channel1_wf);
+      crx(1) += ops_conf.chn1_range_bias;
     } else if (numberof(where((pulse.channel2_wf(1:np)) < 5)) <= ops_conf.max_sfc_sat) {
-      cv = cent(pulse.channel2_wf);
-      cv(1) += ops_conf.chn2_range_bias;
-      cv(3) += 300;
+      crx = cent(pulse.channel2_wf);
+      crx(1) += ops_conf.chn2_range_bias;
+      crx(3) += 300;
     } else {
-      cv = cent(pulse.channel3_wf);
-      cv(1) += ops_conf.chn3_range_bias;
-      cv(3) += 600;
+      crx = cent(pulse.channel3_wf);
+      crx(1) += ops_conf.chn3_range_bias;
+      crx(3) += 600;
     }
 
-    mx1 = (cv(1) >= 10000) ? -10 : irange + cv(1) - ctx(1);
-    mv1 = cv(3);
+    mx1 = (crx(1) >= 10000) ? -10 : irange + crx(1) - ctx(1);
+    mv1 = crx(3);
   } else {
     // find surface peak now
     mx1 = wf(xr(1):xr(1)+5)(mxx) + xr(1) - 1;
     mv1 = wf(mx1);
   }
-
-  // Make mx1 be the irange value and mv1 be the intensity value from variable
-  // 'a'.  Edit out tx/rx dropouts.
-//  el = (int(irange) & 0xc000) == 0;
-//  irange *= el;
 
   rv.mx0 = mx0;
   rv.mv0 = mv0;
@@ -1178,7 +1172,6 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
   if (verbose) {
     write, format="Range between first and last return %d = %4.2f ns\n", rv.rastpix, (rv.mx0-rv.mx1);
   }
-
   return rv;
 }
 
