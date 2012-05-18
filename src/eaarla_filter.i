@@ -9,9 +9,11 @@ func eaarla_wf_filter_channel(wf, lim=, max_intensity=, max_saturated=) {
 /* DOCUMENT eaarla_wf_filter_channel(wf, lim=, max_intensity=, max_saturated=)
   The input for this must be a wfobj from the EAARL-A system. This function
   will go through each pulse's triplet of channels to select the best one in
-  terms of saturation. A new wfobj with just these will be returned, sorted by
-  raster_seconds, raster_fseconds, and pulse; the new wfobj will have 1/3 the
-  size of the original.
+  terms of saturation. A new wfobj with just these will be returned; the new
+  wfobj will have 1/3 the size of the original.
+
+  Note: The input WF -must- already be sorted so that each pulse's channels are
+  together as a triplet in 1-2-3 order!
 
   The waveforms should -not- be corrected for bias before running through this
   function.
@@ -39,9 +41,6 @@ func eaarla_wf_filter_channel(wf, lim=, max_intensity=, max_saturated=) {
 
   if(wf.count % 3 != 0)
     error, "Invalid input to eaarla_wf_select_channel";
-
-  // Reorder so that channel triplets are together
-  wf, sort, ["raster_seconds", "raster_fseconds", "pulse", "channel"];
 
   keep = array(short(0), wf.count);
 
