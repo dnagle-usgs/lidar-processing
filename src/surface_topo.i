@@ -259,8 +259,7 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
   status, finished;
   fs_all = merge_pointers(fs_all);
 
-  // if ext_bad_att is set, find all points having elevation = 70% of ht of
-  // airplane
+  // if ext_bad_att is set, eliminate points within 20m of mirror
   if(is_array(fs_all) && ext_bad_att) {
     msg = "Extracting and writing false first points";
     write, msg;
