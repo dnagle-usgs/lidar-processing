@@ -294,8 +294,6 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
     write, "No first surface returns found";
   }
 
-  no_append = 0;
-
   // Compute a list of indices into each flight segment from rn_arr. This
   // information can be used to selectively plot each selected segment
   // along, or only a specfic group of selected segments.
