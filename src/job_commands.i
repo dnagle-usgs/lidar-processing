@@ -1,20 +1,6 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
 /******************************************************************************
- * RUNNING A JOB
- ******************************************************************************
-  Syntax for running a job is:
-    yorick -batch job.i COMMAND [ARGS]
-  where COMMAND is the name of a job command defined below and ARGS are any
-  additional arguments to be processed.
-
-  A command is a special function defined below. All command functions are
-  prefixed with "job_". See JOB COMMANDS below for further details.
-
-  ARGS can be any number of additional arguments. The expected arguments should
-  be documented in the job function's help.
-
- ******************************************************************************
  * JOB COMMANDS                                                               *
  ******************************************************************************
   A job command is a special function defined below that has a "job_" prefix.
@@ -56,7 +42,8 @@
   type conversions itself.
 
   Also, note that your job function MUST require any additional include files
-  it needs. This file (job.i) does not include any other include files.
+  it needs. The suite of job includes (job.i, job_support.i, and job_command.i)
+  do not include any additional include files by default.
 
  ******************************************************************************/
 
