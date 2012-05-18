@@ -241,8 +241,7 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
   ba_count = 0;
   fcount = 0;
 
-  fs_all = array(R, rn_arr(dif,sum)(1)+numberof(rn_arr(1,)));
-  end = 0;
+  fs_all = array(pointer, no_t);
   for(i = 1; i <= no_t; i++) {
     if(rn_arr(1,i) != 0) {
       fcount++;
@@ -253,14 +252,12 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
           usecentroid=usecentroid, msg=msg);
       // Must call again since first_surface will clear it:
       status, start, msg=msg;
-      new_end = end + numberof(rrr);
-      fs_all(end+1:new_end) = rrr;
-      end = new_end;
+      fs_all(i) = &rrr;
       tot_count += numberof(rrr.elevation);
     }
   }
   status, finished;
-  fs_all = end ? fs_all(:end) : [];
+  fs_all = merge_pointers(fs_all);
 
   // if ext_bad_att is set, find all points having elevation = 70% of ht of
   // airplane
