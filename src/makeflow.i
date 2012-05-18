@@ -1,6 +1,6 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 require, "eaarl.i";
-require, "job.i";
+require, "job_support.i";
 
 local makeflow_conf;
 /* DOCUMENT makeflow_conf
