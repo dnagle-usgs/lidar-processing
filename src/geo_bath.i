@@ -176,6 +176,7 @@ func make_bathy(latutm=, q=, avg_surf=) {
 
   if(is_void(raster_ranges)) {
     write, "No Data in selected flightline. Good Bye!";
+    status, finished;
     return [];
   }
   raster_starts = raster_ranges(1,);
@@ -191,7 +192,10 @@ func make_bathy(latutm=, q=, avg_surf=) {
       write, format="Processing segment %d of %d for bathymetry\n", i, count;
       status, start, msg=msg;
       depth = run_bath(start=raster_starts(i), stop=raster_stops(i), msg=msg);
-      if(depth == 0) return 0;
+      if(depth == 0) {
+        status, finished;
+        return 0;
+      }
 
       msg = msg_prefix + "Step 2/3: Processing surface...";
       write, "Processing for first_surface...";
