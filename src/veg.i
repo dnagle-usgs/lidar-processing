@@ -1097,8 +1097,6 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
           wf_tail_peak = xgauss(wf_tail, add_peak=0);
         }
         if (wf_tail_peak(1) <= 0) return rv;
-        if (graph) plot_veg_wf, channel, wf_tail, (irange+xr(0)-ctx(1));
-
         if (int(xr(0)+wf_tail_peak(1)) <= wflen) {
           mx0 = irange + xr(0) - ctx(1) + range_bias + wf_tail_peak(1);
           mv0 = wf(int(xr(0)+wf_tail_peak(1))) + (channel-1)*300;
@@ -1165,12 +1163,8 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
   _errno = 0;
 
   if (graph) {
-    winbkp = current_window();
-    window, win;
-    //mx_start = irg_a.fs_rtn_centroid(i);
-    plmk, mv1, mx1, msize=.5, marker=4, color="blue", width=10;
-    plmk, mv0, mx0, msize=.5, marker=7, color="red", width=10;
-    window_select, winbkp;
+    cval = [mx0, mv0, mx1, mv1];
+    plot_veg_wf, channel, wf, (irange-ctx(1)), cval;
   }
   if (verbose) {
     write, format="Range between first and last return %d = %4.2f ns\n", rv.rastpix, (rv.mx0-rv.mx1);
@@ -1456,7 +1450,7 @@ func cveg_all2veg_all_ (cveg, d, rrr) {
   return geoveg;
 }
 
-func plot_veg_wf(channel, wf, mx00) {
+func plot_veg_wf(channel, wf, mx00, cval) {
   default, channel, 1;
   default, win, 4;
   winbkp = current_window();
@@ -1464,8 +1458,15 @@ func plot_veg_wf(channel, wf, mx00) {
   fma;
   xaxis = span(mx00+1,mx00+numberof(wf), numberof(wf));
   limits, xaxis(1), xaxis(0), 0, 250;
+  // cval contains [mx0, mv0, mx1, mv1]
+  if (channel == 2 || channel == 3) {
+    cval(2) -= (channel-1)*300;
+    cval(4) -= (channel-1)*300;
+  }
   plmk, wf, xaxis, msize=.2, marker=1, color="black";
   plg, wf, xaxis, color="black";
+  plmk, cval(4), cval(3), msize=.5, marker=4, color="blue", width=10;
+  plmk, cval(2), cval(1), msize=.5, marker=7, color="red", width=10;
   pltitle, swrite(format="Channel ID = %d", channel);
   window_select, winbkp;
 }
