@@ -215,29 +215,16 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
 */
 // Original amar nayegandhi 09/18/02
   extern edb, soe_day_start, tans, pnav, type, utm, rn_arr_idx, rn_arr;
-  rn_arr =[];
+
   if(is_void(ops_conf))
     error, "ops_conf is not set";
+  if(is_void(tans))
+    error, "tans is not set";
+  if(is_void(pnav))
+    error, "pnav is not set";
 
-  if(!is_array(tans)) {
-    write, "INS information not loaded.  Running function load_iexpbd() ... \n";
-    // tans = rbtans();
-    x = ops_conf;        // save ops_conf before load_iexpbd trashes it.
-    load_iexpbd, ins_filename;
-    ops_conf = x;        // now set it back.
-    write, "\n";
-  }
-  write, "TANS information LOADED. \n";
-  if(!is_array(pnav)) {
-    write, "Precision Navigation (PNAV) data not loaded. " +
-      "Running function rbpnav() ... \n";
-    pnav = rbpnav(fn=pnav_filename);
-  }
-  write, "PNAV information LOADED. \n\n";
-
-  if(!is_array(q)) {
+  if(is_void(q))
     q = pnav_sel_rgn(region=llarr);
-  }
 
   // find start and stop raster numbers for all flightlines
   rn_arr = sel_region(q);
