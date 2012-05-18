@@ -246,23 +246,28 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
   for(i = 1; i <= no_t; i++) {
     if(rn_arr(1,i) != 0) {
       fcount++;
-      write, format="Processing segment %d of %d for first_surface...\n",
-          i, no_t;
+      msg = swrite(format="Line %d/%d: Processing first surface...", i, no_t);
+      write, msg;
+      status, start, msg=msg;
       rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i),
-          usecentroid=usecentroid);
-      //a=[];
+          usecentroid=usecentroid, msg=msg);
+      // Must call again since first_surface will clear it:
+      status, start, msg=msg;
       new_end = end + numberof(rrr);
       fs_all(end+1:new_end) = rrr;
       end = new_end;
       tot_count += numberof(rrr.elevation);
     }
   }
+  status, finished;
   fs_all = end ? fs_all(:end) : [];
 
   // if ext_bad_att is set, find all points having elevation = 70% of ht of
   // airplane
   if(is_array(fs_all) && ext_bad_att) {
-    write, "Extracting and writing false first points";
+    msg = "Extracting and writing false first points";
+    write, msg;
+    status, start, msg=msg;
     // compare rrr.elevation within 20m  of rrr.melevation
     ba_indx = where(fs_all.melevation - fs_all.elevation < 2000);
     if(numberof(ba_indx)) {
@@ -277,6 +282,7 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
       fs_all.north = tmp;
       tmp = [];
     }
+    status, finished;
   }
 
   write, "\nStatistics: \r";
