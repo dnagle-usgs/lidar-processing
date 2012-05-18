@@ -229,76 +229,76 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
   // find start and stop raster numbers for all flightlines
   rn_arr = sel_region(q);
 
-  if(!is_void(rn_arr)) {
-
-    no_t = numberof(rn_arr(1,));
-
-    // initialize counter variables
-    tot_count = 0;
-    ba_count = 0;
-    fcount = 0;
-
-    fs_all = array(R, rn_arr(dif,sum)(1)+numberof(rn_arr(1,)));
-    end = 0;
-    for(i = 1; i <= no_t; i++) {
-      if(rn_arr(1,i) != 0) {
-        fcount++;
-        write, format="Processing segment %d of %d for first_surface...\n",
-            i, no_t;
-        rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i),
-            usecentroid=usecentroid);
-        //a=[];
-        new_end = end + numberof(rrr);
-        fs_all(end+1:new_end) = rrr;
-        end = new_end;
-        tot_count += numberof(rrr.elevation);
-      }
-    }
-    fs_all = end ? fs_all(:end) : [];
-
-    // if ext_bad_att is set, find all points having elevation = 70% of ht of
-    // airplane
-    if(is_array(fs_all) && ext_bad_att) {
-      write, "Extracting and writing false first points";
-      // compare rrr.elevation within 20m  of rrr.melevation
-      ba_indx = where(fs_all.melevation - fs_all.elevation < 2000);
-      if(numberof(ba_indx)) {
-        ba_count += numberof(ba_indx);
-        // fs_all.east(ba_indx) cannot be assigned to (not an l-value), so must
-        // jump through hoops instead
-        tmp = fs_all.east;
-        tmp(ba_indx) = 0;
-        fs_all.east = tmp;
-        tmp = fs_all.north;
-        tmp(ba_indx) = 0;
-        fs_all.north = tmp;
-        tmp = [];
-      }
-    }
-
-    write, "\nStatistics: \r";
-    write, format="Total records processed = %d\n", tot_count;
-    write, format="Total records with inconclusive first surface" +
-        "return range = %d\n", ba_count;
-
-    if(tot_count != 0) {
-      pba = float(ba_count)*100.0/tot_count;
-      write, format = "%5.2f%% of the total records had "+
-          "inconclusive first surface return ranges \n", pba;
-    } else {
-      write, "No first surface returns found";
-    }
-
-    no_append = 0;
-
-    // Compute a list of indices into each flight segment from rn_arr. This
-    // information can be used to selectively plot each selected segment
-    // along, or only a specfic group of selected segments.
-    rn_arr_idx = (rn_arr(dif,)(,cum)+1)(*);
-
-    write, "fs_all contains the data, and rn_arr_idx contains a list of indices";
-    return fs_all;
-  } else {
-    write, "No good returns found";
+  if(is_void(rn_arr)) {
+    write, "No rasters found, aborting";
+    return;
   }
+
+  no_t = numberof(rn_arr(1,));
+
+  // initialize counter variables
+  tot_count = 0;
+  ba_count = 0;
+  fcount = 0;
+
+  fs_all = array(R, rn_arr(dif,sum)(1)+numberof(rn_arr(1,)));
+  end = 0;
+  for(i = 1; i <= no_t; i++) {
+    if(rn_arr(1,i) != 0) {
+      fcount++;
+      write, format="Processing segment %d of %d for first_surface...\n",
+          i, no_t;
+      rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i),
+          usecentroid=usecentroid);
+      //a=[];
+      new_end = end + numberof(rrr);
+      fs_all(end+1:new_end) = rrr;
+      end = new_end;
+      tot_count += numberof(rrr.elevation);
+    }
+  }
+  fs_all = end ? fs_all(:end) : [];
+
+  // if ext_bad_att is set, find all points having elevation = 70% of ht of
+  // airplane
+  if(is_array(fs_all) && ext_bad_att) {
+    write, "Extracting and writing false first points";
+    // compare rrr.elevation within 20m  of rrr.melevation
+    ba_indx = where(fs_all.melevation - fs_all.elevation < 2000);
+    if(numberof(ba_indx)) {
+      ba_count += numberof(ba_indx);
+      // fs_all.east(ba_indx) cannot be assigned to (not an l-value), so must
+      // jump through hoops instead
+      tmp = fs_all.east;
+      tmp(ba_indx) = 0;
+      fs_all.east = tmp;
+      tmp = fs_all.north;
+      tmp(ba_indx) = 0;
+      fs_all.north = tmp;
+      tmp = [];
+    }
+  }
+
+  write, "\nStatistics: \r";
+  write, format="Total records processed = %d\n", tot_count;
+  write, format="Total records with inconclusive first surface" +
+      "return range = %d\n", ba_count;
+
+  if(tot_count != 0) {
+    pba = float(ba_count)*100.0/tot_count;
+    write, format = "%5.2f%% of the total records had "+
+        "inconclusive first surface return ranges \n", pba;
+  } else {
+    write, "No first surface returns found";
+  }
+
+  no_append = 0;
+
+  // Compute a list of indices into each flight segment from rn_arr. This
+  // information can be used to selectively plot each selected segment
+  // along, or only a specfic group of selected segments.
+  rn_arr_idx = (rn_arr(dif,)(,cum)+1)(*);
+
+  write, "fs_all contains the data, and rn_arr_idx contains a list of indices";
+  return fs_all;
 }
