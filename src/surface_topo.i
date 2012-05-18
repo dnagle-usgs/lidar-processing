@@ -214,7 +214,7 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
   selected region of flightlines.
 */
 // Original amar nayegandhi 09/18/02
-  extern edb, soe_day_start, tans, pnav, type, utm, rn_arr_idx, rn_arr;
+  extern ops_conf, tans, pnav;
 
   if(is_void(ops_conf))
     error, "ops_conf is not set";
@@ -294,11 +294,5 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
     write, "No first surface returns found";
   }
 
-  // Compute a list of indices into each flight segment from rn_arr. This
-  // information can be used to selectively plot each selected segment
-  // along, or only a specfic group of selected segments.
-  rn_arr_idx = (rn_arr(dif,)(,cum)+1)(*);
-
-  write, "fs_all contains the data, and rn_arr_idx contains a list of indices";
   return fs_all;
 }
