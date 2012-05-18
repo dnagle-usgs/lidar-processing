@@ -295,7 +295,7 @@ func sel_region(q, max_rps=) {
 
   rns = edb_sods_to_rns(sods, max_rps=max_rps);
 
-  write, format=" Number of rasters selected = %d\n", rns(dif,sum);
+  write, format=" Number of rasters selected = %d\n", rns(dif,sum)(1)+dimsof(rns)(3);
 
   return rns;
 }
