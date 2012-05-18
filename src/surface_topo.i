@@ -251,7 +251,6 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
     ba_count = 0;
     fcount = 0;
 
-    open_seg_process_status_bar;
     fs_all = array(R, rn_arr(dif,sum)(1)+numberof(rn_arr(1,)));
     end = 0;
     for(i = 1; i <= no_t; i++) {
@@ -269,9 +268,6 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
       }
     }
     fs_all = end ? fs_all(:end) : [];
-
-    if(_ytk)
-      tkcmd,"destroy .seg";
 
     // if ext_bad_att is set, find all points having elevation = 70% of ht of
     // airplane
