@@ -1054,7 +1054,9 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
     mx1 = (crx(1) >= 10000) ? -10 : irange + crx(1) - ctx(1);
     mv1 = crx(3);
   } else {
-    // find surface peak now
+    // find surface peak now; note wf is reset to channel 1.
+    raw_wf = pulse.channel1_wf;
+    wf = float(~raw_wf) - ~raw_wf(1);
     mx1 = wf(xr(1):xr(1)+5)(mxx) + xr(1) - 1;
     mv1 = wf(mx1);
   }
@@ -1147,8 +1149,6 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
   else if (!use_be_centroid && !use_be_peak && is_void(alg_mode)) {
     // no bare earth algorithm selected.
     //do not use centroid or trailing edge
-    raw_wf = pulse.channel1_wf;
-    wf = float(~raw_wf) - ~raw_wf(1);
     mvx = wf(xr(0):xr(0)+5)(mxx);
     // find bottom peak now
     mx0 = irange+wf(xr(0):xr(0)+5)(mxx) + xr(0) - 1;
