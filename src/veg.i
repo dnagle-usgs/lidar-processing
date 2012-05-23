@@ -62,9 +62,10 @@ func veg_winpix(m) {
   rn;
 }
 
-func run_vegx(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, use_be_centroid=, use_be_peak=, hard_surface=, alg_mode=, multi_peaks=) {
+func run_vegx(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, 
+  use_be_centroid=, use_be_peak=, hard_surface=, alg_mode=, multi_peaks=, msg=) {
 /* DOCUMENT depths = run_vegx(rn=, len=, start=, stop=, center=, delta=, last=, graph=,
-     pse=, use_be_centroid=, use_be_peak=, hard_surface=, alg_mode=, multi_peaks=)
+     pse=, use_be_centroid=, use_be_peak=, hard_surface=, alg_mode=, multi_peaks=, msg=)
 
   This returns an array of VEGPIX or VEGPIXS.
 
@@ -85,6 +86,7 @@ func run_vegx(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, us
       between calls to ex_veg. (Default: pse=0)
     multi_peaks = return only first and last peaks (default), or return first 10 peaks.
       Deault: 0 (first and last)
+    msg = message to display in status bar.
 
   Options passed to ex_veg (see help, ex_veg for details):
     graph = (Default: graph=0)
@@ -100,9 +102,9 @@ func run_vegx(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, us
   default, last, 250;
   default, pse, 0;
   default, multi_peaks, 0;
+  default, msg, "Processing vegetation...";
 
   ops_conf_validate, ops_conf;
-
   define_veg_conf;
 
   if (is_void(rn) || is_void(len)) {
@@ -118,10 +120,6 @@ func run_vegx(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, us
     }
   }
 
-  update_freq = 10;
-  if (len >= 200) update_freq = 20;
-  if (len >= 400) update_freq = 50;
-
   if (multi_peaks) {
     depths = array(VEGPIXS, 120, len);
   } else {
@@ -130,16 +128,10 @@ func run_vegx(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, us
     depths.nx = -1;	// temporary, will be removed later
   }
 
+  if (msg != 0)
+    status, start, msg=msg;
   if (graph) animate, 1;
   for (j = 1; j <= len; j++) {
-    if ((j % update_freq) == 0) {
-      if (_ytk) {
-        tkcmd, swrite(format="set progress %d", j*100/len);
-      } else {
-        write, format="   %d of %d   \r", j, len;
-      }
-    }
-
     raw = get_erast(rn=rn+j);
     header = eaarla_decode_header(raw);
     for (i = 1; i <= header.number_of_pulses; i++) {
@@ -153,10 +145,10 @@ func run_vegx(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, us
       }
       if (pse) pause, pse;
     }
+    if (msg != 0) status, progress, j, len;
   }
-  if (!_ytk) write, format="%s", "\n"; // clear \r from above
   if (graph) animate, 0;
-
+  if (msg != 0) status, finished;
   return depths;
 }
 
@@ -341,14 +333,18 @@ Returns:
     bd_count = 0;
     n_all3sat = 0;
 
-    open_seg_process_status_bar;
     for (i=1;i<=no_t;i++) {
       if ((rn_arr(1,i) != 0)) {
-        write, "Processing for first_surface...";
-        rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=use_centroid, use_highelv_echo=use_highelv_echo);
-        write, format="Processing segment %d of %d for vegetation\n", i, no_t;
+        msg = "Processing for first_surface...";
+        write, msg;
+        status, start, msg=msg;
+        rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=use_centroid, use_highelv_echo=use_highelv_echo, msg=msg);
+        msg = swrite(format="Processing segment %d of %d for vegetation", i, no_t);
+        write, msg;
+        status, start, msg=msg;
         if (!multi_peaks) {
-          d = run_vegx(start=rn_arr(1,i), stop=rn_arr(2,i),use_be_centroid=use_be_centroid, use_be_peak=use_be_peak, hard_surface=hard_surface, alg_mode=alg_mode);
+          d = run_vegx(start=rn_arr(1,i), stop=rn_arr(2,i),use_be_centroid=use_be_centroid, 
+            use_be_peak=use_be_peak, hard_surface=hard_surface, alg_mode=alg_mode,msg=msg);
           write, "Using make_fs_veg_all (multi_peaks=0) for vegetation...";
 	  dm = vegpix2vegpixs(d);
 	  cveg = make_fs_veg_all(dm, rrr, multi_peaks=0);
@@ -356,7 +352,8 @@ Returns:
           grow, veg_all, veg;
           tot_count += numberof(veg.elevation);
         } else {
-          d = run_vegx(start=rn_arr(1,i), stop=rn_arr(2,i),use_be_peak=use_be_peak,last=255,multi_peaks=1);
+          d = run_vegx(start=rn_arr(1,i), stop=rn_arr(2,i),use_be_centroid=use_be_centroid, 
+            use_be_peak=use_be_peak,last=255,multi_peaks=1,msg=msg);
           write, "Using make_fs_veg_all (multi_peaks=1) for vegetation...";
           veg = make_fs_veg_all(d, rrr);
           grow, veg_all, veg;
@@ -365,16 +362,12 @@ Returns:
       }
     }
 
-    if (_ytk) {
-      tkcmd, "destroy .seg"
-    } else write, "\n";
-
-    /* if ext_bad_att is set, find all points having elevation = ht
-      of airplane
-    */
+    // if ext_bad_att is set, eliminate all points within 20m of mirror
     if ((ext_bad_att==1) && (is_array(veg_all))) {
-      write, "Extracting and writing false first points";
-      /* compare veg.elevation within 20m of veg.melevation */
+      msg = "Extracting and writing false first points";
+      write, msg;
+      status, start, msg=msg;
+      // compare veg.elevation within 20m of veg.melevation
       elv_thresh = (veg_all.melevation-2000);
       ba_indx = where(veg_all.elevation > elv_thresh);
       ba_count += numberof(ba_indx);
@@ -408,13 +401,14 @@ Returns:
       }
       ba_veg.east = bdeast;
       ba_veg.north = bdnorth;
-
+      status, finished;
     }
 
-    /* if ext_bad_veg is set, find all points having veg = 0
-     */
+    /* if ext_bad_veg is set, find all points having veg = 0 */
     if ((ext_bad_veg==1) && (is_array(veg_all)))  {
-      write, "Extracting false last surface returns ";
+      msg = "Extracting false last surface returns ";
+      write, msg;
+      status, start, msg=msg;
       /* compare veg_all.lelv with 0 */
       bd_indx = where((veg_all.lelv == 0));
       bd_count += numberof(bd_indx);
@@ -436,7 +430,7 @@ Returns:
         bd_veg.east = bdeast;
         bd_veg.north = bdnorth;
       }
-
+      status, finished;
     }
     write, "\nStatistics: \r";
     write, format="Total records processed = %d\n",tot_count;
@@ -465,6 +459,7 @@ Returns:
     if (numberof(rn_arr)>2) {
       rn_arr_idx = (rn_arr(dif,)(,cum)+1)(*);
     }
+    status, finished;
     return veg_all;
   } else write, "No record numbers found for selected flightline.";
 }
@@ -917,7 +912,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
 
   // check if global variable irg_a contains the current raster number (rn)
   if (is_void(irg_a) || !is_array(where(irg_a.raster == rn))) {
-    irg_a = irg(rn, rn, usecentroid=1);
+    irg_a = irg(rn, rn, usecentroid=1, msg=0);
   }
   this_irg = irg_a(where(rn == irg_a.raster));
   irange = this_irg.irange(pulse_number);
