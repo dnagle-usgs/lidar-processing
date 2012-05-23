@@ -84,7 +84,7 @@ use_highelv_echo=, verbose=, msg=) {
   }
 
   rtrs = irg(start, stop, usecentroid=usecentroid, use_highelv_echo=use_highelv_echo, msg=msg);
-  if(!is_void(msg))
+  if (msg)
     status, start, msg=msg;
   irg_a = rtrs;
 
@@ -192,7 +192,7 @@ use_highelv_echo=, verbose=, msg=) {
       roll(60,100:count:100),
       pitch(60,100:count:100);
 
-  if(!is_void(msg))
+  if (msg)
     status, finished;
   return surface;
 }
