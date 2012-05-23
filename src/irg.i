@@ -110,7 +110,8 @@ highelv_thresh=, skip=, verbose=, msg=) {
   if(verbose)
     write, format="skip: %d\n", skip;
 
-  status, start, msg=msg;
+  if (msg)
+    status, start, msg=msg;
   for(i = 1; i <= count; i++) {
     raster = decode_raster(rn=rtrs(i).raster);
     rtrs(i).soe = raster.offset_time;
@@ -141,9 +142,11 @@ highelv_thresh=, skip=, verbose=, msg=) {
       else if(verbose)
         write, format="  %d/%d     \r", i, count;
     }
-    status, progress, i, count;
+    if (msg)
+      status, progress, i, count;
   }
-  status, finished;
+  if (msg)
+    status, finished;
 
   return rtrs;
 }
