@@ -137,11 +137,11 @@ func run_vegx(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=,
     for (i = 1; i <= header.number_of_pulses; i++) {
       if (multi_peaks) {
         depths(i,j) = ex_veg_all(rn+j, i, last=last, graph=graph, 
-        use_be_centroid=use_be_centroid, use_be_peak=use_be_peak);
+        use_be_centroid=use_be_centroid, use_be_peak=use_be_peak, header=header);
       } else {
         depths(i,j) = ex_veg(rn+j, i, last=last, graph=graph, 
         use_be_centroid=use_be_centroid, use_be_peak=use_be_peak,
-        hard_surface=hard_surface, alg_mode=alg_mode);
+        hard_surface=hard_surface, alg_mode=alg_mode, header=header);
       }
       if (pse) pause, pse;
     }
@@ -502,10 +502,10 @@ func test_veg(veg_all,  fname=, pse=, graph=) {
   return veg_all;
 }
 
-func ex_veg_all(rn, i, last=, graph=, use_be_centroid=, use_be_peak=, pse=, thresh=, win=, verbose=) {
-/* DOCUMENT ex_veg_all(rn, i,  last=, graph=, use_be_centroid=, use_be_peak=, pse= ) {
+func ex_veg_all(rn, i, last=, graph=, use_be_centroid=, use_be_peak=, pse=, thresh=, win=, verbose=,header=) {
+/* DOCUMENT ex_veg_all(rn, i,  last=, graph=, use_be_centroid=, use_be_peak=, pse=, header= ) {
 
- This function returns an array of VEGPIX structures.
+ This function returns an array of VEGPIXS structures.
 
   [ rp.sa(i), mx, a(mx,i,1) ];
 
@@ -525,18 +525,17 @@ func ex_veg_all(rn, i, last=, graph=, use_be_centroid=, use_be_peak=, pse=, thre
  saturated value of surface return.
  The 12 represents the last place a surface can be found
  Variables:
-   last              The last point in the waveform to consider.
+   last       The last point in the waveform to consider.
    nsat       A list of saturated pixels in this waveform
    numsat     Number of saturated pixels in this waveform
    last_surface_sat  The last pixel saturated in the surface region of the
                Waveform.
-   da                The return waveform with the computed exponentials substracted
+   da         The return waveform with the computed exponentials substracted
 */
-  extern ex_bath_rn, ex_bath_rp, a, irg_a, _errno, pr, aa;
+  extern irg_a, _errno, pr;
   default, win, 4;
   default, graph, 0;
   default, verbose, graph;
-  default, ex_bath_rn, -1;
   default, thresh, 4.0;
   aa = array(float, 256, 120, 4);
 
@@ -549,27 +548,27 @@ func ex_veg_all(rn, i, last=, graph=, use_be_centroid=, use_be_peak=, pse=, thre
   intensity = this_irg.intensity(i);
   //irange=0;
   //intensity = a(where(rn==a.raster)).intensity(i);
-  rv = VEGPIXS();       // setup the return struct
-  rv.rastpix = rn + (i<<24);
-  if (irange < 1) return rv;
 
-  if (ex_bath_rn != rn) {  // simple cache for raster data
-    r = get_erast(rn=rn);
-    rp = decode_raster(r);
-    ex_bath_rn = rn;
-    ex_bath_rp = rp;
+  raw = get_erast(rn=rn);
+  if (is_void(header)) {
+    pulse = eaarla_decode_pulse(raw, i, wfs=1);
   } else {
-    rp = ex_bath_rp;
+    pulse = eaarla_decode_pulse(raw, i, header=header, wfs=1);
   }
 
-  ctx = cent(*rp.tx(i));
+  // setup the return struct
+  rv = VEGPIXS();
+  rv.rastpix = rn + (i<<24);
+  if (irange < 1) return rv;
+  rv.sa = pulse.shaft_angle;
 
-  n  = numberof(*rp.rx(i,1));
-  rv.sa = rp.sa(i);
+  ctx = cent(pulse.transmit_wf);
+
+  n = pulse.channel1_length;
   if (n == 0)
     return rv;
 
-  w = *rp.rx(i,1);
+  w = pulse.channel1_wf;
   aa(1:n,i) = float((~w+1) - (~w(1)+1));
 
   if (!(use_be_centroid) && !(use_be_peak)) {
