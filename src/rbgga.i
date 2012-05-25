@@ -263,7 +263,10 @@ func edb_sods_to_rns(sods, max_rps=) {
       rn_stop = 0;
     }
     // assume a maximum of 40 rasters per second
-    if(sod_start(i) < sod_stop(i) && (rn_stop-rn_start) > (sod_stop(i)-sod_start(i))*max_rps) {
+    if(
+      sod_start(i) < sod_stop(i) &&
+      (rn_stop-rn_start+1) > (ceil(sod_stop(i))-floor(sod_start(i)))*max_rps
+    ) {
       write, format="Time error in determining number of rasters.  Eliminating flightline segment %d.\n", i;
       rn_start = 0;
       rn_stop = 0;
