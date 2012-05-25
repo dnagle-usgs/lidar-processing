@@ -28,6 +28,7 @@ struct RTRS {
   // The location within the return waveform of the first return centroid.
   // This is to used to subtract from the depth idx to get true depth.
   short fs_rtn_centroid(120);
+  char dropout(120);      // Specifies whether the tx/rx dropout flags are set
 };
 
 func irg(start, stop, inc=, delta=, usecentroid=, use_highelv_echo=,
@@ -116,6 +117,7 @@ highelv_thresh=, skip=, verbose=, msg=) {
     raster = decode_raster(rn=rtrs(i).raster);
     rtrs(i).soe = raster.offset_time;
     rtrs(i).sa = raster.sa;
+    rtrs(i).dropout = long(raster.irange) >> 14;
 
     if(usecentroid == 1) {
       for(pulse = 1; pulse <= raster.npixels(1); pulse++) {

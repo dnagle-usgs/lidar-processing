@@ -150,7 +150,7 @@ use_highelv_echo=, verbose=, msg=) {
   scan_bias = [];
 
   // edit out tx/rx dropouts
-  rtrs.irange *= ((long(rtrs.irange) & 0xc000) == 0);
+  rtrs.irange *= (rtrs.dropout == 0);
 
   // Calculate magnitude of vectors from mirror to ground
   mag = rtrs.irange * NS2MAIR * sample_interval - ops_conf.range_biasM;
