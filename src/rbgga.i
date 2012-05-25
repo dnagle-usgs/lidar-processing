@@ -175,13 +175,15 @@ func gga_find_times(q) {
   if(!numberof(q)) return;
   extern pnav;
 
-  w = where(q(dif) > 2);
-  if(numberof(w)) {
-    start = grow([0], w) + 1;
-    stop = grow(w, numberof(q));
-  } else {
-    start = [1];
-    stop = [numberof(q)];
+  start = [1];
+  stop = [numberof(q)];
+
+  if(numberof(q) > 1) {
+    w = where(q(dif) > 2);
+    if(numberof(w)) {
+      start = grow([0], w) + 1;
+      stop = grow(w, numberof(q));
+    }
   }
 
   return pnav.sod(transpose(q([start,stop])));
@@ -203,6 +205,8 @@ func tans_check_times(sods) {
 
   // Detect gaps
   for(i = 1; i <= count; i++) {
+    if(tans_start(i) == tans_stop(i))
+      continue;
     gaps = where(tans.somd(tans_start(i):tans_stop(i))(dif) > 0.5);
     if(numberof(gaps)) {
       // Change to index into tans.somd
@@ -246,10 +250,10 @@ func edb_sods_to_rns(sods, max_rps=) {
   rn_arr = array(int, 2, count);
   for(i = 1; i <= count; i++) {
     rn_start = rn_stop = 0;
-    rnsidx = where(edb.seconds >= ceil(sod_start(i)) + soe_day_start);
+    rnsidx = where(edb.seconds >= floor(sod_start(i)) + soe_day_start);
     if(numberof(rnsidx))
       rn_start = rnsidx(1);
-    rnsidx = where(edb.seconds <= floor(sod_stop(i)) + soe_day_start);
+    rnsidx = where(edb.seconds <= ceil(sod_stop(i)) + soe_day_start);
     if(numberof(rnsidx) > 1)
       rn_stop = rnsidx(-1);
     if(!rn_start || !rn_stop || (rn_start > rn_stop)) {
@@ -259,7 +263,7 @@ func edb_sods_to_rns(sods, max_rps=) {
       rn_stop = 0;
     }
     // assume a maximum of 40 rasters per second
-    if((rn_stop-rn_start) > (sod_stop(i)-sod_start(i))*max_rps) {
+    if(sod_start(i) < sod_stop(i) && (rn_stop-rn_start) > (sod_stop(i)-sod_start(i))*max_rps) {
       write, format="Time error in determining number of rasters.  Eliminating flightline segment %d.\n", i;
       rn_start = 0;
       rn_stop = 0;
@@ -392,8 +396,12 @@ func plot_no_raster_fltlines(pnav, edb) {
   sod_edb = edb.seconds - soe_day_start;
 
   // find where the diff in sod_edb is greater than 5 second
-  sod_dif = abs(sod_edb(dif));
-  indx = where((sod_dif > 5) & (sod_dif < 100000));
+  indx = [];
+  if(numberof(sod_edb) > 1) {
+    sod_dif = abs(sod_edb(dif));
+    indx = where((sod_dif > 5) & (sod_dif < 100000));
+    sod_dif = [];
+  }
   if(is_array(indx)) {
     f_norast = sod_edb(indx);
     l_norast = sod_edb(indx+1);
