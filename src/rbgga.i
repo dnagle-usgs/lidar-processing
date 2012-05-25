@@ -274,7 +274,8 @@ func edb_sods_to_rns(sods, max_rps=) {
 
     rn_arr(,i) = [rn_start, rn_stop];
   }
-  return rn_arr;
+  w = where(rn_arr(1,));
+  return numberof(w) ? rn_arr(,w) : [];
 }
 
 func sel_region(q, max_rps=) {
