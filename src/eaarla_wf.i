@@ -230,7 +230,7 @@ func georef_eaarla(rasts, gns, ins, ops, daystart, outfile=) {
   z1 = transpose(pz, [1,2]);
   mx = my = mz = px = py = pz = [];
 
-  raw_xyz0 = array([x0, y0, z0], 3);
+  raw_xyz0 = [array(x0,3), array(y0,3), array(z0,3)];
   x0 = y0 = z0 = [];
   raw_xyz1 = [x1, y1, z1];
   x1 = y1 = z1 = [];
