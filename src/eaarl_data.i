@@ -855,23 +855,23 @@ func struct_cast(&data, dest, verbose=, special=) {
 
     if(structeq(src, POINTCLOUD_2PT)) {
       if(has_member(result, "meast"))
-        result.meast = data.mx * 100 + 0.5;
+        result.meast = data.mx * 100;
       if(has_member(result, "mnorth"))
-        result.mnorth = data.my * 100 + 0.5;
+        result.mnorth = data.my * 100;
       if(has_member(result, "melevation"))
-        result.melevation = data.mz * 100 + 0.5;
+        result.melevation = data.mz * 100;
       if(has_member(result, "east"))
-        result.east = data.fx * 100 + 0.5;
+        result.east = data.fx * 100;
       if(has_member(result, "north"))
-        result.north = data.fy * 100 + 0.5;
+        result.north = data.fy * 100;
       if(has_member(result, "elevation"))
-        result.elevation = data.fz * 100 + 0.5;
+        result.elevation = data.fz * 100;
       if(has_member(result, "least"))
-        result.least = data.lx * 100 + 0.5;
+        result.least = data.lx * 100;
       if(has_member(result, "lnorth"))
-        result.lnorth = data.ly * 100 + 0.5;
+        result.lnorth = data.ly * 100;
       if(has_member(result, "lelv"))
-        result.lelv = data.lz * 100 + 0.5;
+        result.lelv = data.lz * 100;
       if(has_member(result, "intensity"))
         result.intensity = data.fint;
       if(has_member(result, "first_peak"))
@@ -880,9 +880,9 @@ func struct_cast(&data, dest, verbose=, special=) {
         result.bottom_peak = data.lint;
 
       if(structeq(dst, GEO)) {
-        result.east = data.lx * 100 + 0.5;
-        result.north = data.ly * 100 + 0.5;
-        result.depth = (data.lz - data.fz) * 100 + 0.5;
+        result.east = data.lx * 100;
+        result.north = data.ly * 100;
+        result.depth = (data.lz - data.fz) * 100;
       }
     }
 
