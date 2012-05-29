@@ -502,8 +502,8 @@ func test_veg(veg_all,  fname=, pse=, graph=) {
   return veg_all;
 }
 
-func ex_veg_all(rn, i, last=, graph=, use_be_centroid=, use_be_peak=, pse=, thresh=, win=, verbose=,header=) {
-/* DOCUMENT ex_veg_all(rn, i,  last=, graph=, use_be_centroid=, use_be_peak=, pse=, header= ) {
+func ex_veg_all(rn, pulse_number, last=, graph=, use_be_centroid=, use_be_peak=, pse=, thresh=, win=, verbose=,header=) {
+/* DOCUMENT ex_veg_all(rn, pulse_number, last=, graph=, use_be_centroid=, use_be_peak=, pse=, header= ) {
 
  This function returns an array of VEGPIXS structures.
 
@@ -512,89 +512,77 @@ func ex_veg_all(rn, i, last=, graph=, use_be_centroid=, use_be_peak=, pse=, thre
 */
 
 /*
- Check waveform samples to see how many samples are
- saturated.
+ Check waveform samples to see how many samples are saturated.
  The function checks the following conditions so far:
   1) Saturated surface return - locates last saturated sample
   2) Non-saturated surface with saturated bottom signal
   3) Non saturated surface with non-saturated bottom
   4) Bottom signal above specified threshold
- We'll used this infomation to develope the threshold
+ We'll use this infomation to develop the threshold
  array for this waveform.
  We come out of this with the last_surface_sat set to the last
  saturated value of surface return.
  The 12 represents the last place a surface can be found
  Variables:
    last       The last point in the waveform to consider.
-   nsat       A list of saturated pixels in this waveform
+   saturated  A list of saturated pixels in this waveform
    numsat     Number of saturated pixels in this waveform
    last_surface_sat  The last pixel saturated in the surface region of the
                Waveform.
-   da         The return waveform with the computed exponentials substracted
+   wf         The return waveform with the computed exponentials substracted
 */
-  extern irg_a, _errno, pr;
+  extern irg_a, _errno;
   default, win, 4;
   default, graph, 0;
   default, verbose, graph;
   default, thresh, 4.0;
-  aa = array(float, 256, 120, 4);
 
   // check if global variable irg_a contains the current raster number (rn)
   if (is_void(irg_a) || !is_array(where(irg_a.raster == rn))) {
-    irg_a = irg(rn,rn, usecentroid=1);
+    irg_a = irg(rn,rn, usecentroid=1, msg=0);
   }
   this_irg = irg_a(where(rn==irg_a.raster));
-  irange = this_irg.irange(i);
-  intensity = this_irg.intensity(i);
-  //irange=0;
-  //intensity = a(where(rn==a.raster)).intensity(i);
-
-  raw = get_erast(rn=rn);
-  if (is_void(header)) {
-    pulse = eaarla_decode_pulse(raw, i, wfs=1);
-  } else {
-    pulse = eaarla_decode_pulse(raw, i, header=header, wfs=1);
-  }
+  irange = this_irg.irange(pulse_number);
 
   // setup the return struct
   rv = VEGPIXS();
-  rv.rastpix = rn + (i<<24);
+  rv.rastpix = rn + (pulse_number<<24);
   if (irange < 1) return rv;
-  rv.sa = pulse.shaft_angle;
 
-  ctx = cent(pulse.transmit_wf);
-
-  n = pulse.channel1_length;
-  if (n == 0)
-    return rv;
-
-  w = pulse.channel1_wf;
-  aa(1:n,i) = float((~w+1) - (~w(1)+1));
-
-  if (!(use_be_centroid) && !(use_be_peak)) {
-    nsat = where(w == 0);               // Create a list of saturated samples
-    numsat = numberof(nsat);            // Count how many are saturated
-    // allowing 3 saturated samples per inflection
-    if ((numsat > 3) && (nsat(1) <= 12)) {
-      if (nsat(dif)(max) == 1) {       // only surface saturated
-        last_surface_sat = nsat(0);   // so use last one
-        escale = 255;
-      } else {                         // bottom must be saturated too
-        // allowing 3 saturated samples per inflection
-        last_surface_sat = nsat(where(nsat(dif) > 3))(1);
-        escale = 255;
-      }
-    } else {                            // surface not saturated
-      wflen = numberof(w);
-      if (wflen > 12) wflen = 12;
-      last_surface_sat = w(1:wflen)(mnx);
-      escale = 255 - w(1:wflen)(min);
-    }
-
+  raw = get_erast(rn=rn);
+  if (is_void(header)) {
+    pulse = eaarla_decode_pulse(raw, pulse_number, wfs=1);
+  } else {
+    pulse = eaarla_decode_pulse(raw, pulse_number, header=header, wfs=1);
   }
 
-  da = aa(1:n,i,1);
-  dd = da(dif);
+  rv.sa = pulse.shaft_angle;
+  if (pulse.channel1_length == 0)
+    return rv;
+
+  ctx = cent(pulse.transmit_wf);
+  raw_wf = pulse.channel1_wf;
+  wf = float(~raw_wf) - ~raw_wf(1);
+
+  if (!(use_be_centroid) && !(use_be_peak)) {
+    saturated = where(raw_wf == 0);   // Create a list of saturated samples
+    numsat = numberof(sataturated);   // Count how many are saturated
+    // allowing 3 saturated samples per inflection
+    if ((numsat > 3) && (saturated(1) <= 12)) {
+      if (saturated(dif)(max) == 1) {     // only surface saturated
+        last_surface_sat = saturated(0);  // so use last one
+      } else {                        // bottom must be saturated too
+        // allowing 3 saturated samples per inflection
+        last_surface_sat = saturated(where(saturated(dif) > 3))(1);
+      }
+    } else {                          // surface not saturated
+      wflen = min(pulse.channel1_length, 12);
+      last_surface_sat = raw_wf(1:wflen)(mnx);
+    }
+  }
+
+  dd = wf(dif);
+  wflen = numberof(wf);
 
   /******************************************
     xr(1) will be the first pulse edge
@@ -605,15 +593,13 @@ func ex_veg_all(rn, i, last=, graph=, use_be_centroid=, use_be_peak=, pse=, thre
     winbkp = current_window();
     window, win;
     fma;
-    plmk, aa(1:n,i,1), msize=.2, marker=1, color="black";
-    plg, aa(1:n,i,1);
-    plmk, da, msize=.2, marker=1, color="black";
-    plg, da;
+    plmk, wf, msize=.2, marker=1, color="black";
+    plg, wf;
     plg, dd-100, color="red";
     window_select, winbkp;
   }
   if (verbose)
-    write, format="rn=%d; i = %d\n",rn,i;
+    write, format="rn=%d; pulse_number = %d\n",rn, pulse_number;
 
   // this is the idx for start time for each 'layer'.
   xr = where(((dd >= thresh)(dif)) == 1);
@@ -628,9 +614,10 @@ func ex_veg_all(rn, i, last=, graph=, use_be_centroid=, use_be_peak=, pse=, thre
   }
 
   // this is the idx for peak time for each 'layer'.
-  if (is_array(pr))
-    pr += xr(1);
+  if (!is_array(pr))
+    return rv;
 
+  pr += xr(1);
   if (numberof(pr) < numberof(xr))
     xr = xr(1:numberof(pr));
 
@@ -640,36 +627,31 @@ func ex_veg_all(rn, i, last=, graph=, use_be_centroid=, use_be_peak=, pse=, thre
   // 2) look for the time when the trailing edge crosses the threshold.
 
   if (numberof(xr) >= 2) {
-    er = grow(xr(2:),n);
+    er = grow(xr(2:), wflen);
   } else {
-    er = [n];
+    er = [wflen];
   }
-
-  nxr = numberof(xr);
 
   // see if user specified the max veg
   if(!is_void(last))
-    n = min(n, last);
+    wflen = min(wflen, last);
 
-  rv.nx = nxr;
+  rv.nx = nxr = numberof(xr);
+
   //maximum number of peaks is limited to 10
   nxr = min(nxr, 10);
   noise = 0;
 
-  if (numberof(pr) == 0)
-    return rv;
   if (numberof(pr) != numberof(er))
     return rv;
 
   for (j = 1; j <= nxr; j++) {
-    pta = da(pr(j):er(j));
+    pta = wf(pr(j):er(j));
     idx = where(pta <= thresh);
     if (is_array(idx)) {
-      if (pr(j) + idx(1) <= n) {
-        er(j) = pr(j) + idx(1);
-      } else {
-        er(j) = pr(j) + idx(1) - 1;
-      }
+      er(j) = pr(j) + idx(1);
+      if (pr(j) + idx(1) > wflen)
+        er(j) -= 1;
     }
 
     if ((er(j) - xr(j)) < 4) {
@@ -682,20 +664,20 @@ func ex_veg_all(rn, i, last=, graph=, use_be_centroid=, use_be_peak=, pse=, thre
       continue; // noise spike
     }
 
-    // the peak position should be the max da between xr and er
-    pr(j) = xr(j) + da(xr(j):er(j))(mxx) -1;
+    // the peak position should be the max wf between xr and er
+    pr(j) = xr(j) + wf(xr(j):er(j))(mxx) -1;
 
-    if (((er(j) - pr(j)) < 2) || (da(pr(j))-da(er(j)) <= thresh)) {
+    if (((er(j) - pr(j)) < 2) || (wf(pr(j))-wf(er(j)) <= thresh)) {
       if (j != nxr && er(j) == xr(j+1)) {
         xr(j+1) = xr(j);
       }
       noise++;
       continue; // no real trailing edge
     }
-    if (((pr(j) - xr(j)) < 2) || (da(pr(j))-da(xr(j)) <= thresh)) {
+    if (((pr(j) - xr(j)) < 2) || (wf(pr(j))-wf(xr(j)) <= thresh)) {
       if (j != 1 && xr(j) == er(j-1)) {
         er(j-1) = er(j);
-        pta = da(pr(j-1):er(j-1)-1);
+        pta = wf(pr(j-1):er(j-1)-1);
         idx = where(pta <= thresh);
         if (is_array(idx))
           er(j-1) = pr(j-1)+idx(1);
@@ -703,16 +685,15 @@ func ex_veg_all(rn, i, last=, graph=, use_be_centroid=, use_be_peak=, pse=, thre
         continue; // no real leading edge
       }
     }
-    ai = 1; //channel number
 
-    rv.mx(j) = irange-1+xr(j)+da(xr(j):er(j)-1)(mxx)-ctx(1);
-    rv.mr(j) = xr(j)-1+da(xr(j):er(j)-1)(mxx);
-    rv.mv(j) = aa(int(xr(j)-1+da(xr(j):er(j)-1)(mxx)),i,ai);
+    rv.mx(j) = irange-1+xr(j)+wf(xr(j):er(j)-1)(mxx)-ctx(1);
+    rv.mr(j) = xr(j)-1+wf(xr(j):er(j)-1)(mxx);
+    rv.mv(j) = wf(int(xr(j)-1+wf(xr(j):er(j)-1)(mxx)));
 
     if (graph) {
       winbkp = current_window();
       window, win;
-      plmk, rv.mv(j), xr(j)-1+da(xr(j):er(j)-1)(mxx), msize=.5, marker=7, color="blue", width=1;
+      plmk, rv.mv(j), xr(j)-1+wf(xr(j):er(j)-1)(mxx), msize=.5, marker=7, color="blue", width=1;
       window_select, winbkp;
     }
     if (verbose)
@@ -720,8 +701,7 @@ func ex_veg_all(rn, i, last=, graph=, use_be_centroid=, use_be_peak=, pse=, thre
     if (pse) pause, pse;
   }
 
-  nxr = nxr - noise;
-  rv.nx = nxr;
+  rv.nx = nxr - noise;
 
   return rv;
 }
