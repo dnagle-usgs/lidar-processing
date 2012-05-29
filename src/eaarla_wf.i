@@ -222,18 +222,14 @@ func georef_eaarla(rasts, gns, ins, ops, daystart, outfile=) {
   aY = aP = aR = gx = gy = gz = dx = dy = dz = [];
   cyaw = lasang = mirang = ang = rng = [];
 
-  x0 = transpose(mx, [1,2]);
-  y0 = transpose(my, [1,2]);
-  z0 = transpose(mz, [1,2]);
-  x1 = transpose(px, [1,2]);
-  y1 = transpose(py, [1,2]);
-  z1 = transpose(pz, [1,2]);
-  mx = my = mz = px = py = pz = [];
-
-  raw_xyz0 = [array(x0,3), array(y0,3), array(z0,3)];
-  x0 = y0 = z0 = [];
-  raw_xyz1 = [x1, y1, z1];
-  x1 = y1 = z1 = [];
+  x0 = mx * shape;
+  y0 = my * shape;
+  z0 = mz * shape;
+  mx = my = mz =[];
+  x1 = px * shape;
+  y1 = py * shape;
+  z1 = pz * shape;
+  px = py = pz = [];
 
   pulse = char(shape * indgen(dimsof(shape)(3))(-,,-));
   channel = char(shape * indgen(3)(-,-,));
@@ -242,8 +238,8 @@ func georef_eaarla(rasts, gns, ins, ops, daystart, outfile=) {
   raster_fseconds = shape * rasts.fseconds;
   flag_irange_bit14 = shape * rasts.flag_irange_bit14;
   flag_irange_bit15 = shape * rasts.flag_irange_bit15;
+  soe = shape * soe;
 
-  soe = array(soe, 3);
   tx = map_pointers(mathop.bw_inv, array(rasts.transmit_wf, 3));
   rx = array(pointer, dimsof(tx));
   rx(..,1) = map_pointers(mathop.bw_inv, rasts.channel1_wf);
@@ -255,8 +251,12 @@ func georef_eaarla(rasts, gns, ins, ops, daystart, outfile=) {
 
   // Change dimension ordering to keep channels together for a pulse, and
   // pulses together for a raster
-  raw_xyz0 = transpose(raw_xyz0, [3,1]);
-  raw_xyz1 = transpose(raw_xyz1, [3,1]);
+  x0 = transpose(x0, [3,1]);
+  y0 = transpose(y0, [3,1]);
+  z0 = transpose(z0, [3,1]);
+  x1 = transpose(x1, [3,1]);
+  y1 = transpose(y1, [3,1]);
+  z1 = transpose(z1, [3,1]);
   digitizer = transpose(digitizer, [3,1]);
   raster_seconds = transpose(raster_seconds, [3,1]);
   raster_fseconds = transpose(raster_fseconds, [3,1]);
@@ -269,8 +269,12 @@ func georef_eaarla(rasts, gns, ins, ops, daystart, outfile=) {
   rx = transpose(rx, [3,1])
 
   // Now get rid of multiple dimensions
-  raw_xyz0 = reform(raw_xyz0, count, 3);
-  raw_xyz1 = reform(raw_xyz1, count, 3);
+  x0 = x0(*);
+  y0 = y0(*);
+  z0 = z0(*);
+  x1 = x1(*);
+  y1 = y1(*);
+  z1 = z1(*);
   digitizer = digitizer(*);
   raster_seconds = raster_seconds(*);
   raster_fseconds = raster_fseconds(*);
@@ -281,6 +285,11 @@ func georef_eaarla(rasts, gns, ins, ops, daystart, outfile=) {
   soe = soe(*);
   tx = tx(*);
   rx = rx(*);
+
+  // Group coordinates
+  raw_xyz0 = [x0,y0,z0];
+  raw_xyz1 = [x1,y1,z1];
+  x0 = y0 = z0 = x1 = y1 = z1 = [];
 
   source = "unknown plane";
   system = "EAARL rev 1";
