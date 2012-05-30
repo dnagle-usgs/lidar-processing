@@ -1,9 +1,9 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 require, "eaarl.i";
 
-func wfs_extract(method, wfs, &position, &intensity, lim=) {
-/* DOCUMENT result = wfs_extract(method, wfs, lim=)
-  -or- wfs_extract, method, wfs, position, intensity, lim=
+func wfs_extract(method, wfs, &position, &intensity, lim=, fmt=) {
+/* DOCUMENT result = wfs_extract(method, wfs, lim=, fmt=)
+  -or- wfs_extract, method, wfs, position, intensity, lim=, fmt=
 
   Wrapper around various waveform target extraction algorithms.
 
@@ -15,38 +15,81 @@ func wfs_extract(method, wfs, &position, &intensity, lim=) {
     wfs: An array of pointers to arrays of waveform data.
 
   Output parameters:
-    position: Array of pointers to position values.
-    intensity: Array of pointers to intensity values.
+    position: Array of integers, floats, or pointers to position values.
+    intensity: Array of integers, floats, or pointers to intensity values.
 
   Options:
     lim= Passed through to wf_centroid.
+    fmt= Can be used to specify the type of output.
+        fmt="pointer"   Return pointers to the values (default)
+        fmt="long"      Return integers if possible
+        fmt="double"    Return doubles if possible
+      Note that fmt="long" and fmt="double" only work for methods that return
+      single responses per input; thus, method="peaks" cannot be used with
+      them.
 
   Returns:
     The same value as POSITION above.
 */
-  position = intensity = array(pointer, dimsof(wfs));
+  default, fmt, "pointer";
+  if(method == "peaks" && fmt != "pointer")
+    error, "cannot use fmt=\"pointer\" when method is \"peaks\"";
+  if(fmt == "pointer")
+    position = intensity = array(pointer, dimsof(wfs));
+  else if(fmt == "double")
+    position = intensity = array(double, dimsof(wfs));
+  else if(fmt == "long")
+    position = intensity = array(long, dimsof(wfs));
   n = numberof(wfs);
 
-  if(method == "centroid")
-    for(i = 1; i <= n; i++) {
-      wf_centroid, *wfs(i), pos, pow, lim=lim;
-      position(i) = &pos;
-      intensity(i) = &pow;
-    }
+  // The following would be much shorter and less redundant if the if tests
+  // were placed within the loop. However, that would mean that the if checks
+  // had to happen on each iteration of the loop. Placing them outside the
+  // loops is more efficient, at the cost of a bit of repetition.
 
-  if(method == "peak")
-    for(i = 1; i <= n; i++) {
-      wf_peak, *wfs(i), pos, pow;
-      position(i) = &pos;
-      intensity(i) = &pow;
+  if(method == "centroid") {
+    if(is_pointer(position)) {
+      for(i = 1; i <= n; i++) {
+        wf_centroid, *wfs(i), pos, pow, lim=lim;
+        position(i) = &pos;
+        intensity(i) = &pow;
+      }
+    } else {
+      for(i = 1; i <= n; i++) {
+        wf_centroid, *wfs(i), pos, pow, lim=lim;
+        position(i) = pos;
+        intensity(i) = pow;
+      }
     }
-
-  if(method == "peaks")
-    for(i = 1; i <= n; i++) {
-      wf_peaks, *wfs(i), pos, pow;
-      position(i) = &pos;
-      intensity(i) = &pow;
+  } else if(method == "peak") {
+    if(is_pointer(position)) {
+      for(i = 1; i <= n; i++) {
+        wf_peak, *wfs(i), pos, pow;
+        position(i) = &pos;
+        intensity(i) = &pow;
+      }
+    } else {
+      for(i = 1; i <= n; i++) {
+        wf_peak, *wfs(i), pos, pow;
+        position(i) = pos;
+        intensity(i) = pow;
+      }
     }
+  } else if(method == "peaks") {
+    if(is_pointer(position)) {
+      for(i = 1; i <= n; i++) {
+        wf_peaks, *wfs(i), pos, pow;
+        position(i) = &pos;
+        intensity(i) = &pow;
+      }
+    } else {
+      for(i = 1; i <= n; i++) {
+        wf_peaks, *wfs(i), pos, pow;
+        position(i) = pos;
+        intensity(i) = pow;
+      }
+    }
+  }
 
   return position;
 }
