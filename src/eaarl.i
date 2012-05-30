@@ -146,6 +146,7 @@ if(is_void(__eaarl_includes_included__)) {
   require, "util_str.i";
   require, "veg.i";
   require, "wf_analysis.i";
+  require, "wf_filter.i";
   require, "wgs842nad83.i";
   require, "window.i";
   require, "ytime.i";
