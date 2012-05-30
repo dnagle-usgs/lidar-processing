@@ -5,12 +5,12 @@ require, "eaarl.i";
 // returning a subset of the object or by modifying the object's contents in
 // some way.
 
-func eaarla_wf_filter_bias(wf, which=, method=, lim=) {
-/* DOCUMENT wf = eaarla_wf_filter_bias(wf, which=, method=, lim=)
+func wf_filter_bias(wf, which=, method=, lim=) {
+/* DOCUMENT wf = wf_filter_bias(wf, which=, method=, lim=)
   Modifies the waveforms in the given wfobj object WF to remove bias. WF should
-  be a waveform object with EAARL-A data.  WHICH specifies which waveform to
-  modify and is usually "rx" but can also be "tx".  METHOD specifies the method
-  to use for determining the bias. Methods available:
+  be a waveform object. WHICH specifies which waveform to modify and is usually
+  "rx" but can also be "tx". METHOD specifies the method to use for determining
+  the bias. Methods available:
 
     method="first"
       The value of the first sample is used as the bias.
