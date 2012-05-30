@@ -40,21 +40,52 @@ func wf_filter_bias(wf, which=, method=, lim=) {
   if(method == "first") {
     // Bias is the first sample
     for(i = 1; i <= wf.count; i++)
-      rx(i) = &(*rx(i) - (*rx(i))(1));
+      rx(i) = &wf_filter_bias_first(*rx(i));
   } else if(method == "min") {
     // Bias is the minimum value in waveform
     for(i = 1; i <= wf.count; i++)
-      rx(i) = &(*rx(i) - (*rx(i))(min));
+      rx(i) = &wf_filter_bias_min(*rx(i));
   } else if(method == "most") {
     // Bias is the most popular value in waveform
-    for(i = 1; i <= wf.count; i++) {
-      rx(i) = &(*rx(i) - (*rx(i))(min) + 1);
-      hist = histogram(long(*rx(i)+0.5));
-      np = min(lim, numberof(hist));
-      rx(i) = &(*rx(i) - hist(:np)(mxx));
-    }
+    for(i = 1; i <= wf.count; i++)
+      rx(i) = &wf_filter_bias_most(*rx(i), lim=lim);
   }
 
   save, wf, noop(which), rx;
   return wf;
+}
+
+func wf_filter_bias_first(wf) {
+/* DOCUMENT newwf = wf_filter_bias_first(wf)
+  Returns a modified waveform with the bias removed. The bias is defined as the
+  value of the first sample.
+*/
+  return numberof(wf) ? wf - wf(1) : [];
+}
+
+func wf_filter_bias_min(wf) {
+/* DOCUMENT newwf = wf_filter_bias_min(wf)
+  Returns a modified waveform with the bias removed. The bias is defined as the
+  minimum sample value.
+*/
+  return numberof(wf) ? wf - wf(1) : [];
+  return numberof(wf) ? wf - wf(min) : [];
+}
+
+func wf_filter_bias_most(wf, lim=) {
+/* DOCUMENT newwf = wf_filter_bias_most(wf, lim=)
+  Returns a modified waveform with the bias removed. The most frequent value
+  in the waveform is used as the bias. If multiple values are tied, then the
+  first such value is used. Option LIM can be provided to limit the range of
+  values considered. That is, if the minimum value in a waveform is 2 and
+  lim=3, then only values 2 through 4 are considered when determining the bias.
+  This method works best when the waveforms are integers; if they are floats,
+  then samples will be temporarily rounded to the nearest integer for purposes
+  of determining the bias.
+*/
+  if(!numberof(wf)) return [];
+  wf = wf - wf(min) + 1;
+  hist = histogram(long(wf+0.5));
+  np = lim ? min(lim, numberof(hist)) : numberof(hist);
+  return wf - hist(:np)(mxx);
 }
