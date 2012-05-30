@@ -589,15 +589,6 @@ func ex_veg_all(rn, pulse_number, last=, graph=, use_be_centroid=, use_be_peak=,
     and xr(0) will be the last
   *******************************************/
 
-  if (graph) {
-    winbkp = current_window();
-    window, win;
-    fma;
-    plmk, wf, msize=.2, marker=1, color="black";
-    plg, wf;
-    plg, dd-100, color="red";
-    window_select, winbkp;
-  }
   if (verbose)
     write, format="rn=%d; pulse_number = %d\n",rn, pulse_number;
 
@@ -690,19 +681,15 @@ func ex_veg_all(rn, pulse_number, last=, graph=, use_be_centroid=, use_be_peak=,
     rv.mr(j) = xr(j)-1+wf(xr(j):er(j)-1)(mxx);
     rv.mv(j) = wf(int(xr(j)-1+wf(xr(j):er(j)-1)(mxx)));
 
-    if (graph) {
-      winbkp = current_window();
-      window, win;
-      plmk, rv.mv(j), xr(j)-1+wf(xr(j):er(j)-1)(mxx), msize=.5, marker=7, color="blue", width=1;
-      window_select, winbkp;
-    }
     if (verbose)
       write, format= "xr = %d, pr = %d, er = %d\n",xr(j),pr(j),er(j);
-    if (pse) pause, pse;
   }
 
-  rv.nx = nxr - noise;
+  if (graph)
+    plot_veg_wf, wf, mx=rv.mr, mv=rv.mv, diff=1;
+  if (pse) pause, pse;
 
+  rv.nx = nxr - noise;
   return rv;
 }
 
@@ -1137,8 +1124,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
   _errno = 0;
 
   if (graph) {
-    cval = [mx0, mv0, mx1, mv1];
-    plot_veg_wf, channel, wf, (irange-ctx(1)), cval;
+    plot_veg_wf, wf, channel, (irange-ctx(1)), mx=[mx0,mx1], mv=[mv0,mv1];
   }
   if (verbose) {
     write, format="Range between first and last return %d = %4.2f ns\n", rv.rastpix, (rv.mx0-rv.mx1);
@@ -1424,23 +1410,43 @@ func cveg_all2veg_all_ (cveg, d, rrr) {
   return geoveg;
 }
 
-func plot_veg_wf(channel, wf, mx00, cval) {
+func plot_veg_wf(wf, channel, mx00, mx=, mv=, diff=) {
+/* DOCUMENT: plot_veg_wf(wf, channel, mx00, mx=, mv=, diff=)
+  Plots the waveform supplied in wf.
+
+  Input:
+    wf = the intensity waveform to be plotted.
+    channel = which channel it came from.
+    mx00 = starting (adjusted) range. If 0 or ommitted, x-axis = 1,2,3..
+    mx = x-coordinates of points to plot on the graph.
+    mv = y-coordinates of points to plot on the graph.
+    diff = flag indicating gradient of graph should be plotted.
+           Default = 0 (do not plot gradient).
+*/
   default, channel, 1;
+  default, mx00, 0;
+  default, diff, 0;
   default, win, 4;
+
   winbkp = current_window();
   window, win;
   fma;
   xaxis = span(mx00+1,mx00+numberof(wf), numberof(wf));
   limits, xaxis(1), xaxis(0), 0, 250;
-  // cval contains [mx0, mv0, mx1, mv1]
-  if (channel == 2 || channel == 3) {
-    cval(2) -= (channel-1)*300;
-    cval(4) -= (channel-1)*300;
-  }
+
+  if (diff) {		// plot gradients
+    dd = wf(dif)-100;
+    range, min(dd), 250;
+    plg, dd, xaxis(2:), color="red";
+  } 
+
   plmk, wf, xaxis, msize=.2, marker=1, color="black";
   plg, wf, xaxis, color="black";
-  plmk, cval(4), cval(3), msize=.5, marker=4, color="blue", width=10;
-  plmk, cval(2), cval(1), msize=.5, marker=7, color="red", width=10;
+  if (!is_void(mx)) {
+    if (channel == 2 || channel == 3)
+      mv -= (channel-1)*300;
+    plmk, mv, mx, msize=.4, marker=7, color="red", width=10;
+  }
   pltitle, swrite(format="Channel ID = %d", channel);
   window_select, winbkp;
 }
