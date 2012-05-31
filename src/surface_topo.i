@@ -116,16 +116,15 @@ use_highelv_echo=, verbose=, msg=) {
 
   count = stop - start + 1;
 
-  cyaw = array(0., 120);
-
   // mirror offsets
-  dx = array(ops_conf.x_offset, 120); // perpendicular to fuselage
-  dy = array(ops_conf.y_offset, 120); // along fuselage
-  dz = array(ops_conf.z_offset, 120); // vertical
+  dx = ops_conf.x_offset; // perpendicular to fuselage
+  dy = ops_conf.y_offset; // along fuselage
+  dz = ops_conf.z_offset; // vertical
 
   // Constants for mirror angle and laser angle
-  mirang = array(-22.5, 120);
-  lasang = array(45.0, 120);
+  mirang = -22.5;
+  lasang = 45.0;
+  cyaw = 0.;
 
   if(verbose)
     write, "Projecting to the surface...";
@@ -162,16 +161,14 @@ use_highelv_echo=, verbose=, msg=) {
   roll += ops_conf.roll_bias;
   yaw = -heading + ops_conf.yaw_bias;
 
-  bcast = long(yaw * 0);
-
   local mx, my, mz, px, py, pz;
   eaarla_direct_vector,
     yaw, pitch, roll,
     easting, northing, palt,
     dx, dy, dz,
-    bcast + cyaw(,-),
-    bcast + lasang(,-),
-    bcast + mirang(,-), scan_angles, mag,
+    cyaw,
+    lasang,
+    mirang, scan_angles, mag,
     mx, my, mz, px, py, pz;
 
   surface = array(R, count);
