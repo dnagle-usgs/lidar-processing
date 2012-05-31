@@ -1,8 +1,8 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 require, "eaarl.i";
 
-func pnav_sel_rgn(win=, color=, mode=, region=, _batch=) {
-/* DOCUMENT pnav_sel_rgn(win=, color=, mode=, region=, _batch=)
+func pnav_sel_rgn(win=, color=, mode=, region=, verbose=, _batch=) {
+/* DOCUMENT pnav_sel_rgn(win=, color=, mode=, region=, verbose=, _batch=)
   The user is prompted to draw out a box or polygon. The points of PNAV within
   that region are found and the corresponding indices are returned.
 
@@ -21,6 +21,8 @@ func pnav_sel_rgn(win=, color=, mode=, region=, _batch=) {
         - If region is a 4-element vector, it will be interpreted as an array
           [min_x, max_x, min_y, max_y].
         - Otherwise, region must be a 2xN array of vertices for a polygon.
+    verbose= By default informational output is displayed to the console. Use
+      verbose=0 to disable.
     _batch= If set to 1, no check will be made on the size of the selected
       region. Otherwise, too large a selection will result in an warning.
 
@@ -34,6 +36,7 @@ func pnav_sel_rgn(win=, color=, mode=, region=, _batch=) {
   default, win, 6;
   default, color, "cyan";
   default, mode, "box";
+  default, verbose, 1;
   default, _batch, 0;
 
   if(is_void(region)) {
@@ -60,7 +63,7 @@ func pnav_sel_rgn(win=, color=, mode=, region=, _batch=) {
 
   q = testPoly(ply, pnav.lon, pnav.lat);
   if(is_void(q)) {
-    write, "No GGA records found, aborting";
+    if(verbose) write, "No GGA records found, aborting";
     return [];
   }
 
@@ -68,13 +71,15 @@ func pnav_sel_rgn(win=, color=, mode=, region=, _batch=) {
 
   if(!_batch) {
     seconds = ((gga_find_times(q)(dif,sum)))(1);
-    write, format=" %5.1f seconds of data selected\n", seconds;
+    if(verbose) write, format=" %5.1f seconds of data selected\n", seconds;
     if(seconds > 500) {
-      write, format="%s\n", strindent(strwrap(
-        "Warning!!! The area you selected may be too large. For interactive "+
-        "processing, 500 seconds or less of flight time is recommended. Try "+
-        "selecting a smaller area before pressing the Process button."
-        ), " *** ");
+      if(verbose)
+        write, format="%s\n", strindent(strwrap(
+          "Warning!!! The area you selected may be too large. For "+
+          "interactive processing, 500 seconds or less of flight time is "+
+          "recommended. Try selecting a smaller area before pressing the "+
+          "Process button."
+          ), " *** ");
     }
   }
 
@@ -189,14 +194,16 @@ func gga_find_times(q) {
   return pnav.sod(transpose(q([start,stop])));
 }
 
-func tans_check_times(sods) {
+func tans_check_times(sods, verbose=) {
+  default, verbose, 1;
   sod_start = sods(1,);
   sod_stop = sods(2,);
 
   // now loop through the times and find corresponding start and stop raster
   // numbers
   count = numberof(sods(1,));
-  write, format=" Number of flightline segments selected = %d\n", count;
+  if(verbose)
+    write, format=" Number of flightline segments selected = %d\n", count;
 
   tans_bounds = digitize(sods, tans.somd) - 1;
   tans_start = tans_bounds(1,);
@@ -212,7 +219,8 @@ func tans_check_times(sods) {
       // Change to index into tans.somd
       gaps = gaps + tans_start(i) - 1;
 
-      write, format="Segment #%d has gaps in TANS data, splitting into %d segments\n", i, numberof(gaps)+1;
+      if(verbose)
+        write, format="Segment #%d has gaps in TANS data, splitting into %d segments\n", i, numberof(gaps)+1;
       sod_stop(i) = tans.somd(gaps(1));
       if(numberof(gaps) > 1) {
         grow, sod_start, tans.somd(gaps(:-1)+1);
@@ -229,8 +237,8 @@ func tans_check_times(sods) {
   return transpose([sod_start,sod_stop]);
 }
 
-func edb_sods_to_rns(sods, max_rps=) {
-/* DOCUMENT edb_sods_to_rns(sods, max_rps=)
+func edb_sods_to_rns(sods, max_rps=, verbose=) {
+/* DOCUMENT edb_sods_to_rns(sods, max_rps=, verbose=)
   Given an array of seconds-of-the-day values, this will return the
   corresponding raster numbers.
 
@@ -239,9 +247,12 @@ func edb_sods_to_rns(sods, max_rps=) {
       rasters per second than this threshold, it will be rejected (with the
       assumption that the corresponding TANS data is corrupted).
         max_rps=40    Default
+    verbose= By default, informational messages are displayed to the console.
+      These can be mostly silenced with verbose=0.
 */
   extern soe_day_start, edb;
   default, max_rps, 40;
+  default, verbose, 1;
 
   sod_start = sods(1,);
   sod_stop = sods(2,);
@@ -257,8 +268,9 @@ func edb_sods_to_rns(sods, max_rps=) {
     if(numberof(rnsidx) > 1)
       rn_stop = rnsidx(-1);
     if(!rn_start || !rn_stop || (rn_start > rn_stop)) {
-      write, format="Corresponding rasters for segment %d not found,"+
-        " omitting flightline.\n",i;
+      if(verbose)
+        write, format="Corresponding rasters for segment %d not found,"+
+          " omitting flightline.\n",i;
       rn_start = 0;
       rn_stop = 0;
     }
@@ -267,7 +279,8 @@ func edb_sods_to_rns(sods, max_rps=) {
       sod_start(i) < sod_stop(i) &&
       (rn_stop-rn_start+1) > (ceil(sod_stop(i))-floor(sod_start(i)))*max_rps
     ) {
-      write, format="Time error in determining number of rasters.  Eliminating flightline segment %d.\n", i;
+      if(verbose)
+        write, format="Time error in determining number of rasters.  Eliminating flightline segment %d.\n", i;
       rn_start = 0;
       rn_stop = 0;
     }
@@ -278,8 +291,8 @@ func edb_sods_to_rns(sods, max_rps=) {
   return numberof(w) ? rn_arr(,w) : [];
 }
 
-func sel_region(q, max_rps=) {
-/* DOCUMENT sel_region(q, max_rps=)
+func sel_region(q, max_rps=, verbose=) {
+/* DOCUMENT sel_region(q, max_rps=, verbose=)
   This function extracts the raster numbers for a region selected. It returns a
   the array rn_arr containing start and stop raster numbers for each
   flightline.
@@ -289,21 +302,27 @@ func sel_region(q, max_rps=) {
       rasters per second than this threshold, it will be rejected (with the
       assumption that the corresponding TANS data is corrupted).
         max_rps=40    Default
+    verbose= By default, informational messages are displayed to the console.
+      These can be mostly silenced with verbose=0.
 */
+  default, verbose, 1;
   if(is_void(q)) {
-    write, "No flightline selection provided, aborting!";
+    if(verbose) write, "No flightline selection provided, aborting!";
     return;
   }
 
   sods = gga_find_times(q);
-  write, format=" Seconds of flightline data selected = %6.2f\n",
-      (sods(dif,))(,sum);
+  if(verbose)
+    write, format=" Seconds of flightline data selected = %6.2f\n",
+        (sods(dif,))(,sum);
 
-  sods = tans_check_times(sods);
+  sods = tans_check_times(sods, verbose=verbose);
 
-  rns = edb_sods_to_rns(sods, max_rps=max_rps);
+  rns = edb_sods_to_rns(sods, max_rps=max_rps, verbose=verbose);
 
-  write, format=" Number of rasters selected = %d\n", rns(dif,sum)(1)+dimsof(rns)(3);
+  if(verbose)
+    write, format=" Number of rasters selected = %d\n",
+        rns(dif,sum)(1)+dimsof(rns)(3);
 
   return rns;
 }

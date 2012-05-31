@@ -82,7 +82,7 @@ use_highelv_echo=, verbose=, msg=) {
     }
     return merge_pointers(parts);
   }
-
+  extern rtrs;
   rtrs = irg(start, stop, usecentroid=usecentroid, use_highelv_echo=use_highelv_echo, msg=msg);
   if (msg)
     status, start, msg=msg;
@@ -208,13 +208,14 @@ func open_seg_process_status_bar {
   }
 }
 
-func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
-/* DOCUMENT make_fs(latutm=, q=, ext_bad_att=, usecentroid=)
+func make_fs(latutm=, q=, ext_bad_att=, usecentroid=, verbose=) {
+/* DOCUMENT make_fs(latutm=, q=, ext_bad_att=, usecentroid=, verbose=)
   This function prepares data to write/plot first surface topography for a
   selected region of flightlines.
 */
 // Original amar nayegandhi 09/18/02
   extern ops_conf, tans, pnav;
+  default, verbose, 1;
 
   if(is_void(ops_conf))
     error, "ops_conf is not set";
@@ -227,7 +228,7 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
     q = pnav_sel_rgn(region=llarr);
 
   // find start and stop raster numbers for all flightlines
-  rn_arr = sel_region(q);
+  rn_arr = sel_region(q, verbose=verbose);
 
   if(is_void(rn_arr)) {
     write, "No rasters found, aborting";
@@ -246,10 +247,10 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
     if(rn_arr(1,i) != 0) {
       fcount++;
       msg = swrite(format="Line %d/%d: Processing first surface...", i, no_t);
-      write, msg;
+      if(verbose) write, msg;
       status, start, msg=msg;
       rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i),
-          usecentroid=usecentroid, msg=msg);
+          usecentroid=usecentroid, msg=msg, verbose=verbose);
       // Must call again since first_surface will clear it:
       status, start, msg=msg;
       fs_all(i) = &rrr;
@@ -262,7 +263,7 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
   // if ext_bad_att is set, eliminate points within 20m of mirror
   if(is_array(fs_all) && ext_bad_att) {
     msg = "Extracting and writing false first points";
-    write, msg;
+    if(verbose) write, msg;
     status, start, msg=msg;
     // compare rrr.elevation within 20m  of rrr.melevation
     ba_indx = where(fs_all.melevation - fs_all.elevation < 2000);
@@ -281,17 +282,19 @@ func make_fs(latutm=, q=, ext_bad_att=, usecentroid=) {
     status, finished;
   }
 
-  write, "\nStatistics: \r";
-  write, format="Total records processed = %d\n", tot_count;
-  write, format="Total records with inconclusive first surface" +
-      "return range = %d\n", ba_count;
+  if(verbose) {
+    write, "\nStatistics: \r";
+    write, format="Total records processed = %d\n", tot_count;
+    write, format="Total records with inconclusive first surface" +
+        "return range = %d\n", ba_count;
 
-  if(tot_count != 0) {
-    pba = float(ba_count)*100.0/tot_count;
-    write, format = "%5.2f%% of the total records had "+
-        "inconclusive first surface return ranges \n", pba;
-  } else {
-    write, "No first surface returns found";
+    if(tot_count != 0) {
+      pba = float(ba_count)*100.0/tot_count;
+      write, format = "%5.2f%% of the total records had "+
+          "inconclusive first surface return ranges \n", pba;
+    } else {
+      write, "No first surface returns found";
+    }
   }
 
   return fs_all;
