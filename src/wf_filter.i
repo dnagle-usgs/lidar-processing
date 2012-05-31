@@ -68,7 +68,6 @@ func wf_filter_bias_min(wf) {
   Returns a modified waveform with the bias removed. The bias is defined as the
   minimum sample value.
 */
-  return numberof(wf) ? wf - wf(1) : [];
   return numberof(wf) ? wf - wf(min) : [];
 }
 
