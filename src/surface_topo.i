@@ -148,14 +148,12 @@ use_highelv_echo=, verbose=, msg=) {
   scan_angles = SAD * (rtrs.sa + scan_bias(-,));
   scan_bias = [];
 
-  // edit out tx/rx dropouts
-  rtrs.irange *= (rtrs.dropout == 0);
-
-  // edit out points with out-of-range centroid values
-  rtrs.irange *= (rtrs.fs_rtn_centroid < 10000);
-
   // Calculate magnitude of vectors from mirror to ground
   mag = rtrs.irange * NS2MAIR * sample_interval - ops_conf.range_biasM;
+
+  // Edit out tx/rx dropouts and points with out-of-range centroid values
+  w = where(rtrs.dropout != 0 | rtrs.fs_rtn_centroid == 10000);
+  mag(w) = 0;
 
   pitch += ops_conf.pitch_bias;
   roll += ops_conf.roll_bias;
