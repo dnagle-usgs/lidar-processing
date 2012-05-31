@@ -152,6 +152,9 @@ use_highelv_echo=, verbose=, msg=) {
   // edit out tx/rx dropouts
   rtrs.irange *= (rtrs.dropout == 0);
 
+  // edit out points with out-of-range centroid values
+  rtrs.irange *= (rtrs.fs_rtn_centroid < 10000);
+
   // Calculate magnitude of vectors from mirror to ground
   mag = rtrs.irange * NS2MAIR * sample_interval - ops_conf.range_biasM;
 
