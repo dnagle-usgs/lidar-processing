@@ -27,6 +27,9 @@ func wf_filter_bias(wf, which=, method=, lim=) {
       waveforms are integers; if they are floats, then samples will be
       temporarily rounded to the nearest integer for purposes of determining
       the bias.
+
+  Note: This does not do any type conversions. If your wavesforms are of type
+  CHAR, you should cast them to SHORT prior to passing it to this function.
 */
   default, which, "rx";
   default, method, "first";
@@ -59,6 +62,9 @@ func wf_filter_bias_first(wf) {
 /* DOCUMENT newwf = wf_filter_bias_first(wf)
   Returns a modified waveform with the bias removed. The bias is defined as the
   value of the first sample.
+
+  Note: This does not do any type conversions. If your WF is type CHAR, you
+  should cast it to SHORT prior to passing it to this function.
 */
   return numberof(wf) ? wf - wf(1) : [];
 }
@@ -67,6 +73,9 @@ func wf_filter_bias_min(wf) {
 /* DOCUMENT newwf = wf_filter_bias_min(wf)
   Returns a modified waveform with the bias removed. The bias is defined as the
   minimum sample value.
+
+  Note: This does not do any type conversions. If your WF is type CHAR, you
+  should cast it to SHORT prior to passing it to this function.
 */
   return numberof(wf) ? wf - wf(min) : [];
 }
@@ -81,6 +90,9 @@ func wf_filter_bias_most(wf, lim=) {
   This method works best when the waveforms are integers; if they are floats,
   then samples will be temporarily rounded to the nearest integer for purposes
   of determining the bias.
+
+  Note: This does not do any type conversions. If your WF is type CHAR, you
+  should cast it to SHORT prior to passing it to this function.
 */
   if(!numberof(wf)) return [];
   wf = wf - wf(min) + 1;
