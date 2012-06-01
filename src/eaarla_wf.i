@@ -201,9 +201,12 @@ func georef_eaarla(rasts, gns, ins, ops, daystart, outfile=) {
   lasang = 45.;
   mirang = -22.5;
 
+  // Sample range biases
+  sample_bias = NS2MAIR *
+      [ops.chn1_range_bias, ops.chn2_range_bias, ops.chn3_range_bias];
+
   // Apply biases
-  rng = (rng - ops.range_biasM)(,,-) +
-    [ops.chn1_range_bias, ops.chn2_range_bias, ops.chn3_range_bias](-,-,);
+  rng = (rng - ops.range_biasM)(,,-) + sample_bias(-,-,);
 
   aR += ops.roll_bias;
   aP += ops.pitch_bias;
