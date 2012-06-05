@@ -75,63 +75,59 @@ func gt_extract_comparisons(model, truth, modelmode=, truthmode=, radius=) {
   // results.
   keep = array(char(0), dimsof(mx));
 
-  // In order to reduce the overall number of point-to-point comparisons
-  // necessary, the truth data is partitioned into successively smaller
-  // regions. The corresponding model points are extracted for each partition.
-  // This works especially well when the truth points are clustered in several
-  // disparate areas.
-  //
-  // A stack is used to handle the partitioning. Each item in the stack is a
-  // group object with three members:
-  //    t - index list into the truth data for this set of points
-  //    m - index list into the model data that corresponds to the above
-  //    schemes - string array with the tiling schemes that need to be applied
-  //          yet for this point cloud's partitioning
-  //
-  // When an item is popped off the stack, one of two things happens depending
-  // on the number of schemes defined for it. If the number of schemes is
-  // non-zero, then the truth points are partitioned with the first scheme in
-  // the list. Each tile gets pushed onto the stack as a new item; each will
-  // be provided with the model points that match the truth points' area as
-  // well as with the array of remaining schemes that must be applied.
-  //
-  // If an item is popped that has no remaining schemes, then the points are
-  // analyzed to extract the relevant truth values for each model value. These
-  // values go in t_best, t_nearest, etc.
-  stack = deque();
-  stack, push, save(t=indgen(numberof(tx)), m=indgen(numberof(mx)),
-    schemes=["it","dt","dtquad","dtcell"]);
+  // In order to speed up the comparisons, the x and y coordinates are binned
+  // into a grid so that only relevant sub-sections of the data need to be
+  // examined. This avoids needing to query the entire point cloud each time.
+
+  mxgrid = long(mx/radius);
+  mygrid = long(my/radius);
+
+  txgrid = long(tx/radius);
+  tygrid = long(ty/radius);
+
+  mxgrid_uniq = set_remove_duplicates(mxgrid);
+  mxgrid_count = numberof(mxgrid_uniq);
 
   t0 = array(double, 3);
   timer, t0;
-  tp = t0;
-  while(stack(count,)) {
-    top = stack(pop,);
-    if(numberof(top.schemes)) {
-      tiles = partition_by_tile(tx(top.t), ty(top.t), zone, top.schemes(1),
-        buffer=0);
-      names = h_keys(tiles);
-      count = numberof(names);
-      schemes = (numberof(top.schemes) > 1 ? top.schemes(2:) : []);
-      for(i = 1; i <= count; i++) {
-        t = top.t(tiles(names(i)));
-        xmin = tx(t)(min) - radius;
-        ymin = ty(t)(min) - radius;
-        xmax = tx(t)(max) + radius;
-        ymax = ty(t)(max) + radius;
-        idx = data_box(mx(top.m), my(top.m), xmin, xmax, ymin, ymax);
-        if(numberof(idx)) {
-          m = top.m(idx);
-          stack, push, save(t, m, schemes);
-        }
+  p_count = numberof(mx);
+  p_finished = 0;
+  status, start, count=p_count, msg="Comparison analysis, done CURRENT of COUNT model points";
+  for(mxgi = 1; mxgi <= mxgrid_count; mxgi++) {
+    status, progress, p_finished, p_count;
+
+    mxgw = where(mxgrid == mxgrid_uniq(mxgi));
+    if(is_void(mxgw)) continue;
+
+    txgw = where(abs(txgrid - mxgrid_uniq(mxgi)) <= 1);
+    if(is_void(txgw)) {
+      p_finished += numberof(mxgw);
+      continue;
+    }
+
+    mygrid_uniq = set_remove_duplicates(mygrid(mxgw));
+    mygrid_count = numberof(mygrid_uniq);
+
+    for(mygi = 1; mygi <= mygrid_count; mygi++) {
+      status, progress, p_finished, p_count;
+
+      mygw = where(mygrid(mxgw) == mygrid_uniq(mygi));
+      if(is_void(mygw)) continue;
+      mw = mxgw(mygw);
+
+      tygw = where(abs(tygrid(txgw) - mygrid_uniq(mygi)) <= 1);
+      if(is_void(tygw)) {
+        p_finished += numberof(mygw);
+        continue;
       }
-    } else {
-      X = tx(top.t);
-      Y = ty(top.t);
-      Z = tz(top.t);
-      count = numberof(top.m);
+      tw = txgw(tygw);
+
+      X = tx(tw);
+      Y = ty(tw);
+      Z = tz(tw);
+      count = numberof(mw);
       for(i = 1; i <= count; i++) {
-        j = top.m(i);
+        j = mw(i);
         idx = find_points_in_radius(mx(j), my(j), X, Y, radius=radius);
         if(!numberof(idx))
           continue;
@@ -151,15 +147,11 @@ func gt_extract_comparisons(model, truth, modelmode=, truthmode=, radius=) {
         t_average(j) = ZP(avg);
         t_median(j) = median(ZP);
       }
+
+      p_finished += numberof(mygw);
     }
-    // The timer_remaining call will be fairly inaccurate, but in a
-    // pessimistic sense. There's a larger up-front cost due to the
-    // partitioning. Still, in extremely large datasets, this is better than
-    // nothing.
-    if(anyof(match))
-      timer_remaining, t0, numberof(where(match)), numberof(match), tp,
-        interval=10;
   }
+  status, finished;
   timer_finished, t0;
 
   if(noneof(keep))
