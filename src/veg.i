@@ -307,10 +307,9 @@ Returns:
   if (is_void(pnav))
     error, "pnav is not set";
 
-  //select a region using function gga_win_sel in rbgga.i
-  if (!is_array(q)) {
-    q = gga_win_sel(latutm=latutm, llarr=llarr);
-  }
+  //select a region using function pnav_sel_rgn in rbgga.i
+  if (is_void(q))
+    q = pnav_sel_rgn(latutm=latutm, llarr=llarr);
 
   //find start and stop raster numbers for all flightlines
   rn_arr = sel_region(q);
