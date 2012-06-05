@@ -299,28 +299,20 @@ Returns:
 
   if (use_be_peak) write, "Using peak of last return to find bare earth...";
 
-  /* check to see if required parameters have been initialized */
+  // check to see if required parameters have been initialized
+  if (is_void(ops_conf))
+    error, "ops_conf is not set";
+  if (is_void(tans))
+    error, "tans is not set";
+  if (is_void(pnav))
+    error, "pnav is not set";
 
-  if (!is_array(tans)) {
-    write, "TANS information not loaded.  Running function rbtans() ... \n";
-    tans = rbtans();
-    write, "\n";
-  }
-  write, "TANS information LOADED. \n";
-  if (!is_array(pnav)) {
-    write, "Precision Navigation (PNAV) data not loaded."+
-      "Running function rbpnav() ... \n";
-    pnav = rbpnav();
-  }
-  write, "PNAV information LOADED. \n";
-  write, "\n";
-
+  //select a region using function gga_win_sel in rbgga.i
   if (!is_array(q)) {
-    /* select a region using function gga_win_sel in rbgga.i */
     q = gga_win_sel(latutm=latutm, llarr=llarr);
   }
 
-  /* find start and stop raster numbers for all flightlines */
+  //find start and stop raster numbers for all flightlines
   rn_arr = sel_region(q);
 
 
