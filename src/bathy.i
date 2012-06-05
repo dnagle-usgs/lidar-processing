@@ -250,7 +250,7 @@ func ex_bath(raster_number, pulse_number, last=, graph=, win=, xfma=, verbose=) 
   }
 
   local surface_sat_end, surface_intensity, escale;
-  bathy_detect_surface, wf, wf_raw, saturated, bath_ctl.thresh,
+  bathy_detect_surface, wf, raw_wf, saturated, bath_ctl.thresh,
       surface_sat_end, surface_intensity, escale;
   result.first_peak = surface_intensity;
 
@@ -342,7 +342,7 @@ func bathy_lookup_raster_pulse(raster_number, pulse_number, maxsat, &raw_wf, &wf
   wf = float(~raw_wf) - ~raw_wf(1);
 }
 
-func bathy_detect_surface(wf, wf_raw, saturated, thresh, &surface, &surface_intensity, &escale) {
+func bathy_detect_surface(wf, raw_wf, saturated, thresh, &surface, &surface_intensity, &escale) {
   numsat = numberof(saturated);
   // For EAARL, first return saturation should always start in first 12 samples.
   // If a saturated first return is found...
