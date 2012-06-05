@@ -276,7 +276,7 @@ Inputs are:
            the run_veg function and write these points to an array
 
 Returns:
- veg_arr        This function returns the array veg_arr.
+ veg_all        This function returns the array veg_all.
 
 **Note:
  Check to see if the tans and pnav data have been loaded before
@@ -284,7 +284,7 @@ Returns:
 
     SEE ALSO: first_surface, run_veg, make_fs_veg
 */
-  extern edb, soe_day_start, tans, pnav, utm, rn_arr, rn_arr_idx, ba_veg, bd_veg, n_all3sat;
+  extern edb, soe_day_start, tans, pnav, n_all3sat;
   veg_all = [];
 /************
   Currently, we are setting the following as defaults for last_surface determination algorithm:
@@ -364,89 +364,48 @@ Returns:
 
     // if ext_bad_att is set, eliminate all points within 20m of mirror
     if ((ext_bad_att==1) && (is_array(veg_all))) {
-      msg = "Extracting and writing false first points";
+      msg = "Eliminating false first return points";
       write, msg;
       status, start, msg=msg;
       // compare veg.elevation within 20m of veg.melevation
-      elv_thresh = (veg_all.melevation-2000);
-      ba_indx = where(veg_all.elevation > elv_thresh);
+      ba_indx = where(veg_all.melevation - veg_all.elevation < 2000);
       ba_count += numberof(ba_indx);
-      ba_veg = veg_all;
-      deast = veg_all.east;
-      dleast = veg_all.least;
-      if ((is_array(ba_indx))) {
-        deast(ba_indx) = 0;
-        dleast(ba_indx) = 0;
-      }
-      dnorth = veg_all.north;
-      dlnorth = veg_all.lnorth;
-      if ((is_array(ba_indx))) {
-        dnorth(ba_indx) = 0;
-        dlnorth(ba_indx) = 0;
-      }
-      veg_all.east = deast;
-      veg_all.north = dnorth;
-      veg_all.least = dleast;
-      veg_all.lnorth = dlnorth;
 
-      /* compute array for bad attitude (ba_veg) to write to a file */
-      ba_indx_r = where(ba_veg.elevation < elv_thresh);
-      bdeast = ba_veg.east;
-      if ((is_array(ba_indx_r))) {
-        bdeast(ba_indx_r) = 0;
+      if (is_array(ba_indx)) {
+        tmp = veg_all.east;
+        tmp(ba_indx) = 0;
+        veg_all.east = tmp;
+        tmp = veg_all.north;
+        tmp(ba_indx) = 0;
+        veg_all.north = tmp;
+        tmp = veg_all.least;
+        tmp(ba_indx) = 0;
+        veg_all.least = tmp;
+        tmp = veg_all.lnorth;
+        tmp(ba_indx) = 0;
+        veg_all.lnorth = tmp;
+        tmp = [];
       }
-      bdnorth = ba_veg.north;
-      if ((is_array(ba_indx_r))) {
-        bdnorth(ba_indx_r) = 0;
-      }
-      ba_veg.east = bdeast;
-      ba_veg.north = bdnorth;
       status, finished;
     }
 
-    /* if ext_bad_veg is set, find all points having veg = 0 */
-    if ((ext_bad_veg==1) && (is_array(veg_all)))  {
-      msg = "Extracting false last surface returns ";
-      write, msg;
-      status, start, msg=msg;
-      /* compare veg_all.lelv with 0 */
-      bd_indx = where((veg_all.lelv == 0));
-      bd_count += numberof(bd_indx);
-      bd_veg = veg_all;
-      deast = veg_all.east;
-      deast(bd_indx) = 0;
-      dnorth = veg_all.north;
-      dnorth(bd_indx) = 0;
-      bd_indx = where(veg_all.lelv == veg_all.melevation);
-      bd_count += numberof(bd_indx);
+    bd_indx = where(veg_all.lelv == 0 | veg_all.lelv == veg_all.melevation);
+    bd_count += numberof(bd_indx);
 
-      /* compute array for bad veg (bd_veg) */
-      bd_indx_r = where(bd_veg.lelv != 0);
-      if (is_array(bd_indx_r)) {
-        bdeast = bd_veg.east;
-        bdeast(bd_indx_r) = 0;
-        bdnorth = bd_veg.north;
-        bdnorth(bd_indx_r) = 0;
-        bd_veg.east = bdeast;
-        bd_veg.north = bdnorth;
-      }
-      status, finished;
-    }
     write, "\nStatistics: \r";
     write, format="Total records processed = %d\n",tot_count;
-    write, format = "Total records with all 3 channels saturated = %d\n", n_all3sat;
+    write, format="Total records with all 3 channels saturated = %d\n", n_all3sat;
     write, format="Total records with inconclusive first surface range = %d\n", ba_count;
-    write, format = "Total records with inconclusive last surface range = %d\n",
-      bd_count;
+    write, format="Total records with inconclusive last surface range = %d\n", bd_count;
 
-    if ( tot_count != 0 ) {
+    if (tot_count != 0) {
       pba = float(ba_count)*100.0/tot_count;
       write, format = "%5.2f%% of the total records had "+
         "inconclusive first return range\n",pba;
     } else
       write, "No good returns found";
 
-    if ( ba_count > 0 ) {
+    if (ba_count > 0) {
       diff_count = (tot_count-ba_count);
       if (diff_count) {
         pbd = float(bd_count)*100.0/diff_count;
@@ -455,14 +414,12 @@ Returns:
       }
     } else
       write, "No records processed for Topo under veg";
-    no_append = 0;
-    if (numberof(rn_arr)>2) {
-      rn_arr_idx = (rn_arr(dif,)(,cum)+1)(*);
-    }
+
     status, finished;
     return veg_all;
   } else write, "No record numbers found for selected flightline.";
 }
+
 
 func test_veg(veg_all,  fname=, pse=, graph=) {
   // this function can be used to process for vegetation for only those pulses that are in data array veg_all or  those that are in file fname.
@@ -723,7 +680,7 @@ func make_fs_veg_all (d, rrr, multi_peaks=) {
 
  d    Array of structure VEGPIX  containing veg information.
            This is the return value of function run_bath.
-
+ 
  rrr  Array of structure R containing first surface information.
            This the is the return value of function first_surface.
 
@@ -756,7 +713,7 @@ func make_fs_veg_all (d, rrr, multi_peaks=) {
       if (is_array(mindx)) {
 	k=indgen(numberof(mindx));
 	geoveg.nx(k,j,i) = char(k);
-// find actual ground surface elevation using simple trig (similar triangles)
+        // find actual ground surface elevation using simple trig (similar triangles)
         if ((d(j,i).mx(1) > 0) && (rrr(i).melevation(j) > 0)) {
 	  eratio = float(d(j,i).mx(mindx))/float(d(j,i).mx(1));
           geoveg.elevation(k,j,i) = int(rrr(i).melevation(j) - eratio * elvdiff(j));
