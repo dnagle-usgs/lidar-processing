@@ -314,7 +314,6 @@ Returns:
   //find start and stop raster numbers for all flightlines
   rn_arr = sel_region(q);
 
-
   if (is_array(rn_arr)) {
     no_t = numberof(rn_arr(1,));
 
@@ -333,20 +332,20 @@ Returns:
         msg = swrite(format="Processing segment %d of %d for vegetation", i, no_t);
         write, msg;
         status, start, msg=msg;
-        if (!multi_peaks) {
+        if (multi_peaks) {
+          d = run_vegx(start=rn_arr(1,i), stop=rn_arr(2,i),use_be_centroid=use_be_centroid, 
+            use_be_peak=use_be_peak,last=255,multi_peaks=1,msg=msg);
+          write, "Using make_fs_veg_all (multi_peaks=1) for vegetation...";
+          veg = make_fs_veg_all(d, rrr);
+          grow, veg_all, veg;
+          tot_count += numberof(veg.elevation);
+        } else {
           d = run_vegx(start=rn_arr(1,i), stop=rn_arr(2,i),use_be_centroid=use_be_centroid, 
             use_be_peak=use_be_peak, hard_surface=hard_surface, alg_mode=alg_mode,msg=msg);
           write, "Using make_fs_veg_all (multi_peaks=0) for vegetation...";
 	  dm = vegpix2vegpixs(d);
 	  cveg = make_fs_veg_all(dm, rrr, multi_peaks=0);
 	  veg = cveg_all2veg_all_(cveg, d, rrr);
-          grow, veg_all, veg;
-          tot_count += numberof(veg.elevation);
-        } else {
-          d = run_vegx(start=rn_arr(1,i), stop=rn_arr(2,i),use_be_centroid=use_be_centroid, 
-            use_be_peak=use_be_peak,last=255,multi_peaks=1,msg=msg);
-          write, "Using make_fs_veg_all (multi_peaks=1) for vegetation...";
-          veg = make_fs_veg_all(d, rrr);
           grow, veg_all, veg;
           tot_count += numberof(veg.elevation);
         }
@@ -397,9 +396,8 @@ Returns:
       write, "No good returns found";
 
     if (ba_count > 0) {
-      diff_count = (tot_count-ba_count);
-      if (diff_count) {
-        pbd = float(bd_count)*100.0/diff_count;
+      if (tot_count != ba_count) {
+        pbd = float(bd_count)*100.0/(tot_count-ba_count);
         write, format = "%5.2f%% of total records with good "+
           "first return had inconclusive last return range \n",pbd;
       }
