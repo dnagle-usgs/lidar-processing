@@ -337,8 +337,6 @@ Returns:
             use_be_peak=use_be_peak,last=255,multi_peaks=1,msg=msg);
           write, "Using make_fs_veg_all (multi_peaks=1) for vegetation...";
           veg = make_fs_veg_all(d, rrr);
-          grow, veg_all, veg;
-          tot_count += numberof(veg.elevation);
         } else {
           d = run_vegx(start=rn_arr(1,i), stop=rn_arr(2,i),use_be_centroid=use_be_centroid, 
             use_be_peak=use_be_peak, hard_surface=hard_surface, alg_mode=alg_mode,msg=msg);
@@ -346,9 +344,9 @@ Returns:
 	  dm = vegpix2vegpixs(d);
 	  cveg = make_fs_veg_all(dm, rrr, multi_peaks=0);
 	  veg = cveg_all2veg_all_(cveg, d, rrr);
-          grow, veg_all, veg;
-          tot_count += numberof(veg.elevation);
         }
+        grow, veg_all, veg;
+        tot_count += numberof(veg.elevation);
       }
     }
 
@@ -368,19 +366,20 @@ Returns:
         tmp = veg_all.north;
         tmp(ba_indx) = 0;
         veg_all.north = tmp;
-        tmp = veg_all.least;
-        tmp(ba_indx) = 0;
-        veg_all.least = tmp;
-        tmp = veg_all.lnorth;
-        tmp(ba_indx) = 0;
-        veg_all.lnorth = tmp;
+        if (!multi_peaks) {
+          tmp = veg_all.least;
+          tmp(ba_indx) = 0;
+          veg_all.least = tmp;
+          tmp = veg_all.lnorth;
+          tmp(ba_indx) = 0;
+          veg_all.lnorth = tmp;
+          bd_indx = where(veg_all.lelv == 0 | veg_all.lelv == veg_all.melevation);
+          bd_count += numberof(bd_indx);
+        }
         tmp = [];
       }
       status, finished;
     }
-
-    bd_indx = where(veg_all.lelv == 0 | veg_all.lelv == veg_all.melevation);
-    bd_count += numberof(bd_indx);
 
     write, "\nStatistics: \r";
     write, format="Total records processed = %d\n",tot_count;
