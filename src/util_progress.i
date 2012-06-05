@@ -205,19 +205,21 @@ start = status_start;
 
 func status_progress(current, count) {
   use, cache;
+  bar_changed = 0;
+  pct = 100*double(current)/count;
+  if(abs(pct - cache.pct) > 0.5) {
+    save, cache, pct;
+    tkcmd, swrite(format="set ::status(progress) {%f}", pct);
+    bar_changed = 1;
+  }
   t1 = cache.t0;
   timer, t1;
-  if(t1(3) - cache.tp(3) >= cache.interval) {
+  if(bar_changed || t1(3) - cache.tp(3) >= cache.interval) {
     save, cache, tp=t1;
     elapsed = t1(3) - cache.t0(3);
     remain = elapsed/double(current) * (count - current);
     tkcmd, swrite(format="set ::status(message) {%s}", use(msg, current, count));
     tkcmd, swrite(format="set ::status(time) {%s}", seconds2clocktime(remain));
-  }
-  pct = 100*double(current)/count;
-  if(abs(pct - cache.pct) > 0.5) {
-    save, cache, pct;
-    tkcmd, swrite(format="set ::status(progress) {%f}", pct);
   }
 }
 progress = status_progress;
