@@ -125,6 +125,8 @@ func eaarla_init_pointcloud(wf, rn_start=) {
     result.rn += (long(wf(pulse,)) << 24);
   }
 
+  cs = cs_parse(wf.cs, output="hash");
+
   result.zone = h_has(cs, zone=) ? cs.zone : 0;
   result.mx = wf(raw_xyz0, , 1);
   result.my = wf(raw_xyz0, , 2);
@@ -177,7 +179,6 @@ func eaarla_fs(wf, opt=, usecentroid=, altitude_thresh=, rn_start=, keepbad=) {
   opt = obj_merge(save(usecentroid, altitude_thresh, rn_start, keepbad), opt);
 
   sample2m = wf.sample_interval * NS2MAIR;
-  cs = cs_parse(wf.cs, output="hash");
 
   if(opt.usecentroid) {
     // Pick the channel for each triplet
