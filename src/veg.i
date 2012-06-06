@@ -314,98 +314,101 @@ Returns:
   //find start and stop raster numbers for all flightlines
   rn_arr = sel_region(q);
 
-  if (is_array(rn_arr)) {
-    no_t = numberof(rn_arr(1,));
+  if (is_void(rn_arr)) {
+    write, "No rasters found, aborting";
+    return;
+  }
 
-    /* initialize counter variables */
-    tot_count = 0;
-    ba_count = 0;
-    bd_count = 0;
-    n_all3sat = 0;
+  no_t = numberof(rn_arr(1,));
 
-    for (i=1;i<=no_t;i++) {
-      if ((rn_arr(1,i) != 0)) {
-        msg = "Processing for first_surface...";
-        write, msg;
-        status, start, msg=msg;
-        rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=use_centroid, use_highelv_echo=use_highelv_echo, msg=msg);
-        msg = swrite(format="Processing segment %d of %d for vegetation", i, no_t);
-        write, msg;
-        status, start, msg=msg;
-        if (multi_peaks) {
-          d = run_vegx(start=rn_arr(1,i), stop=rn_arr(2,i),use_be_centroid=use_be_centroid, 
-            use_be_peak=use_be_peak,last=255,multi_peaks=1,msg=msg);
-          write, "Using make_fs_veg_all (multi_peaks=1) for vegetation...";
-          veg = make_fs_veg_all(d, rrr);
-        } else {
-          d = run_vegx(start=rn_arr(1,i), stop=rn_arr(2,i),use_be_centroid=use_be_centroid, 
-            use_be_peak=use_be_peak, hard_surface=hard_surface, alg_mode=alg_mode,msg=msg);
-          write, "Using make_fs_veg_all (multi_peaks=0) for vegetation...";
-	  dm = vegpix2vegpixs(d);
-	  cveg = make_fs_veg_all(dm, rrr, multi_peaks=0);
-	  veg = cveg_all2veg_all_(cveg, d, rrr);
-        }
-        grow, veg_all, veg;
-        tot_count += numberof(veg.elevation);
-      }
-    }
+  // initialize counter variables
+  tot_count = 0;
+  ba_count = 0;
+  bd_count = 0;
+  n_all3sat = 0;
 
-    // if ext_bad_att is set, eliminate all points within 20m of mirror
-    if ((ext_bad_att==1) && (is_array(veg_all))) {
-      msg = "Eliminating false first return points";
+  for (i=1;i<=no_t;i++) {
+    if ((rn_arr(1,i) != 0)) {
+      msg = "Processing for first_surface...";
       write, msg;
       status, start, msg=msg;
-      // compare veg.elevation within 20m of veg.melevation
-      ba_indx = where(veg_all.melevation - veg_all.elevation < 2000);
-      ba_count += numberof(ba_indx);
-
-      if (is_array(ba_indx)) {
-        tmp = veg_all.east;
-        tmp(ba_indx) = 0;
-        veg_all.east = tmp;
-        tmp = veg_all.north;
-        tmp(ba_indx) = 0;
-        veg_all.north = tmp;
-        if (!multi_peaks) {
-          tmp = veg_all.least;
-          tmp(ba_indx) = 0;
-          veg_all.least = tmp;
-          tmp = veg_all.lnorth;
-          tmp(ba_indx) = 0;
-          veg_all.lnorth = tmp;
-          bd_indx = where(veg_all.lelv == 0 | veg_all.lelv == veg_all.melevation);
-          bd_count += numberof(bd_indx);
-        }
-        tmp = [];
+      rrr = first_surface(start=rn_arr(1,i), stop=rn_arr(2,i), usecentroid=use_centroid, use_highelv_echo=use_highelv_echo, msg=msg);
+      msg = swrite(format="Processing segment %d of %d for vegetation", i, no_t);
+      write, msg;
+      status, start, msg=msg;
+      if (multi_peaks) {
+        d = run_vegx(start=rn_arr(1,i), stop=rn_arr(2,i),use_be_centroid=use_be_centroid, 
+          use_be_peak=use_be_peak,last=255,multi_peaks=1,msg=msg);
+        write, "Using make_fs_veg_all (multi_peaks=1) for vegetation...";
+        veg = make_fs_veg_all(d, rrr);
+      } else {
+        d = run_vegx(start=rn_arr(1,i), stop=rn_arr(2,i),use_be_centroid=use_be_centroid, 
+          use_be_peak=use_be_peak, hard_surface=hard_surface, alg_mode=alg_mode,msg=msg);
+        write, "Using make_fs_veg_all (multi_peaks=0) for vegetation...";
+        dm = vegpix2vegpixs(d);
+        cveg = make_fs_veg_all(dm, rrr, multi_peaks=0);
+        veg = cveg_all2veg_all_(cveg, d, rrr);
       }
-      status, finished;
+      grow, veg_all, veg;
+      tot_count += numberof(veg.elevation);
     }
+  }
 
-    write, "\nStatistics: \r";
-    write, format="Total records processed = %d\n",tot_count;
-    write, format="Total records with all 3 channels saturated = %d\n", n_all3sat;
-    write, format="Total records with inconclusive first surface range = %d\n", ba_count;
-    write, format="Total records with inconclusive last surface range = %d\n", bd_count;
+  // if ext_bad_att is set, eliminate all points within 20m of mirror
+  if ((ext_bad_att==1) && (is_array(veg_all))) {
+    msg = "Eliminating false first return points";
+    write, msg;
+    status, start, msg=msg;
+    // compare veg.elevation within 20m of veg.melevation
+    ba_indx = where(veg_all.melevation - veg_all.elevation < 2000);
+    ba_count += numberof(ba_indx);
 
-    if (tot_count != 0) {
-      pba = float(ba_count)*100.0/tot_count;
-      write, format = "%5.2f%% of the total records had "+
-        "inconclusive first return range\n",pba;
-    } else
-      write, "No good returns found";
-
-    if (ba_count > 0) {
-      if (tot_count != ba_count) {
-        pbd = float(bd_count)*100.0/(tot_count-ba_count);
-        write, format = "%5.2f%% of total records with good "+
-          "first return had inconclusive last return range \n",pbd;
+    if (is_array(ba_indx)) {
+      tmp = veg_all.east;
+      tmp(ba_indx) = 0;
+      veg_all.east = tmp;
+      tmp = veg_all.north;
+      tmp(ba_indx) = 0;
+      veg_all.north = tmp;
+      if (!multi_peaks) {
+        tmp = veg_all.least;
+        tmp(ba_indx) = 0;
+        veg_all.least = tmp;
+        tmp = veg_all.lnorth;
+        tmp(ba_indx) = 0;
+        veg_all.lnorth = tmp;
+        bd_indx = where(veg_all.lelv == 0 | veg_all.lelv == veg_all.melevation);
+        bd_count += numberof(bd_indx);
       }
-    } else
-      write, "No records processed for Topo under veg";
-
+      tmp = [];
+    }
     status, finished;
-    return veg_all;
-  } else write, "No record numbers found for selected flightline.";
+  }
+
+  write, "\nStatistics: \r";
+  write, format="Total records processed = %d\n",tot_count;
+  write, format="Total records with all 3 channels saturated = %d\n", n_all3sat;
+  write, format="Total records with inconclusive first surface range = %d\n", ba_count;
+  write, format="Total records with inconclusive last surface range = %d\n", bd_count;
+
+  if (tot_count != 0) {
+    pba = float(ba_count)*100.0/tot_count;
+    write, format = "%5.2f%% of the total records had "+
+      "inconclusive first return range\n",pba;
+  } else
+    write, "No good returns found";
+
+  if (ba_count > 0) {
+    if (tot_count != ba_count) {
+      pbd = float(bd_count)*100.0/(tot_count-ba_count);
+      write, format = "%5.2f%% of total records with good "+
+        "first return had inconclusive last return range \n",pbd;
+    }
+  } else
+    write, "No records processed for Topo under veg";
+
+  status, finished;
+  return veg_all;
 }
 
 
@@ -1291,10 +1294,10 @@ func vegpix2vegpixs (d) {
   dm.rastpix = d.rastpix;
   dm.sa = d.sa;
   dm.nx = d.nx;
-  dm.mx(1,)=d.mx1
-  dm.mx(2,)=d.mx0
-  dm.mv(1,)=d.mv1
-  dm.mv(2,)=d.mv0
+  dm.mx(1,) = d.mx1;
+  dm.mx(2,) = d.mx0;
+  dm.mv(1,) = d.mv1;
+  dm.mv(2,) = d.mv0;
 
   return dm;
 }
