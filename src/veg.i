@@ -162,6 +162,7 @@ use_be_centroid=, use_be_peak=, hard_surface=, alg_mode=) {
     (see help, run_vegx for details).
 
   SEE ALSO: run_vegx, run_veg_all, make_veg, ex_veg
+  DEPRECATED: Call run_vegx with multi_peaks=0 instead.
 */
 
   d = run_vegx(rn=rn, len=len, start=start, stop=stop, center=center, delta=delta, 
@@ -174,25 +175,21 @@ use_be_centroid=, use_be_peak=, hard_surface=, alg_mode=) {
 
 func make_fs_veg(d, rrr) {
 /* DOCUMENT make_fs_veg (d, rrr)
-
- This function makes a veg data array using the
- georectification of the first surface return.  The parameters are as
- follows:
+ This function makes a veg data array using the georectification of the
+ first surface return.  The parameters are as follows:
 
  d Array of structure VEGPIX  containing veg information.
-      This is the return value of function run_bath.
+      This is the return value of function run_vegx.
 
  rrr    Array of structure R containing first surface information.
       This the is the return value of function first_surface.
 
+ The return value geoveg is an array of VEG_ALL_ structures.
 
- The return value veg is an array of structure VEGALL.
-
-  SEE ALSO: first_surface, run_veg
+  SEE ALSO: first_surface, run_vegx, make_fs_veg_all
+  DEPRECATED: use make_fs_veg_all along with type conversion
+    functions vegpix2vegpixs and cveg_all2veg_all_ instead.
 */
-
-  // d is the veg array from veg.i
-  // rrr is the topo array from surface_topo.i
 
   if (numberof(d(0,,)) < numberof(rrr)) { len = numberof(d(0,,)); } else {
     len = numberof(rrr);}
@@ -260,29 +257,23 @@ func make_fs_veg(d, rrr) {
 }
 
 func make_veg(latutm=, q=, ext_bad_att=, ext_bad_veg=, use_centroid=, use_highelv_echo=, multi_peaks=, alg_mode=) {
-/* DOCUMENT make_veg(opath=,ofname=,ext_bad_att=, ext_bad_veg=)
-
- This function allows a user to define a region on the gga plot
-of flightlines (usually window 6) to  process data using the
-Vegetation algorithm.
+/* DOCUMENT make_veg(latutm=, q=, ext_bad_att=, ext_bad_veg=, use_centroid=, use_highelv_echo=, multi_peaks=, alg_mode=)
+ This function allows a user to define a region on the gga plot of
+ flightlines (usually window 6) to  process data using the vegetation
+ algorithm.
 
 Inputs are:
 
- ext_bad_att   Extract bad first return points (those points that
-           were termed 'bad' in the first surface return function)
-           and writes it out to an array.
+ ext_bad_att   Eliminate points within 20m of mirror.
 
- ext_bad_veg    Extract the points that failed to show any veg using
-           the run_veg function and write these points to an array
+ ext_bad_veg   Unused. Originally, extract the points that failed to
+  show any veg using the run_vegx function and write these points to an array
 
 Returns:
- veg_all        This function returns the array veg_all.
+ veg_all       This function returns the array veg_all of type VEG_ALL_
+  or CVEG_ALL depending on whether multi_peaks is set.
 
-**Note:
- Check to see if the tans and pnav data have been loaded before
- executing make_veg.  See rbpnav() and rbtans() for details.
-
-    SEE ALSO: first_surface, run_veg, make_fs_veg
+    SEE ALSO: first_surface, run_vegx, make_fs_veg_all
 */
   extern edb, soe_day_start, tans, pnav, n_all3sat;
   veg_all = [];
@@ -299,7 +290,6 @@ Returns:
 
   if (use_be_peak) write, "Using peak of last return to find bare earth...";
 
-  // check to see if required parameters have been initialized
   if (is_void(ops_conf))
     error, "ops_conf is not set";
   if (is_void(tans))
@@ -453,10 +443,16 @@ func test_veg(veg_all,  fname=, pse=, graph=) {
 func ex_veg_all(rn, pulse_number, last=, graph=, use_be_centroid=, use_be_peak=, pse=, thresh=, win=, verbose=,header=) {
 /* DOCUMENT ex_veg_all(rn, pulse_number, last=, graph=, use_be_centroid=, use_be_peak=, pse=, header= ) {
 
- This function returns an array of VEGPIXS structures.
+ This function returns an array of VEGPIXS structures containing the
+ elevation and timing of each surface intercepted by the pulse.
 
-  [ rp.sa(i), mx, a(mx,i,1) ];
-
+ Inputs:
+   rn = Raster number
+   graph = plot each waveform and the critical points.
+   pse = time (in ms) to pause between each plot.
+   header = decoded header of raster rn
+   thresh = gradient threshold needed for a significant return (Default = 4)
+   win = window to plot waveforms in if graph = 1
 */
 
 /*
@@ -512,7 +508,7 @@ func ex_veg_all(rn, pulse_number, last=, graph=, use_be_centroid=, use_be_peak=,
   raw_wf = pulse.channel1_wf;
   wf = float(~raw_wf) - ~raw_wf(1);
 
-  if (!(use_be_centroid) && !(use_be_peak)) {
+  if (!use_be_centroid && !use_be_peak) {
     saturated = where(raw_wf == 0);   // Create a list of saturated samples
     numsat = numberof(sataturated);   // Count how many are saturated
     // allowing 3 saturated samples per inflection
@@ -577,7 +573,7 @@ func ex_veg_all(rn, pulse_number, last=, graph=, use_be_centroid=, use_be_peak=,
 
   rv.nx = nxr = numberof(xr);
 
-  //maximum number of peaks is limited to 10
+  // maximum number of peaks is limited to 10
   nxr = min(nxr, 10);
   noise = 0;
 
@@ -652,6 +648,7 @@ func run_veg_all( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=
     (see help, run_vegx for details).
 
   SEE ALSO: run_vegx, run_veg, make_veg, ex_veg_all
+  DEPRECATED: Call run_vegx with multi_peaks=1 instead.
 */
   default, last, 255;
 
@@ -664,21 +661,19 @@ func run_veg_all( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=
 
 func make_fs_veg_all (d, rrr, multi_peaks=) {
 /* DOCUMENT make_fs_veg_all (d, rrr, multi_peaks=)
+  This function makes a veg data array using the georectification of the
+  first surface return. The parameters are as follows:
 
-  This function makes a veg data array using the
-  georectification of the first surface return.  The parameters are as
-  follows:
+  d    Array of structure VEGPIX  containing veg information.
+       This is the return value of function run_vegx.
 
- d    Array of structure VEGPIX  containing veg information.
-           This is the return value of function run_bath.
- 
- rrr  Array of structure R containing first surface information.
-           This the is the return value of function first_surface.
+  rrr  Array of structure R containing first surface information.
+       This the is the return value of function first_surface.
 
- multi_peaks Set to 1 for data with first 10 returs per pulse, set 
+  multi_peaks Set to 1 for data with first 10 returs per pulse, set
            to 0 for data with only first and last returns. default=1. 
 
-  The return value veg is an array of structure VEG_ALL_.
+  The return value geoveg is an array of CVEG_ALL structures.
 
   SEE ALSO: first_surface, run_vegx
 */
@@ -719,7 +714,6 @@ func make_fs_veg_all (d, rrr, multi_peaks=) {
   if (multi_peaks)
     geoveg = geoveg(where(geoveg.nx !=0));
 
-  //write,format="Processing complete. %d rasters drawn. %s", len, "\n"
   return geoveg;
 }
 
@@ -1081,7 +1075,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
 }
 
 
-func xcent( a ) {
+func xcent(a) {
 /* DOCUMENT cent(a)
   Compute the centroid of "a" of the inflection in the waveform.
 */
@@ -1105,7 +1099,7 @@ func xcent( a ) {
 }
 
 
-func xpeak( a ) {
+func xpeak(a) {
 /* DOCUMENT xpeak(a)
   Compute the peak of "a" of the inflection in the waveform.
 */
