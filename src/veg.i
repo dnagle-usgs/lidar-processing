@@ -136,8 +136,7 @@ func run_vegx(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=,
     header = eaarla_decode_header(raw);
     for (i = 1; i <= header.number_of_pulses; i++) {
       if (multi_peaks) {
-        depths(i,j) = ex_veg_all(rn+j, i, last=last, graph=graph, 
-        use_be_centroid=use_be_centroid, use_be_peak=use_be_peak, header=header);
+        depths(i,j) = ex_veg_all(rn+j, i, last=last, graph=graph, header=header);
       } else {
         depths(i,j) = ex_veg(rn+j, i, last=last, graph=graph, 
         use_be_centroid=use_be_centroid, use_be_peak=use_be_peak,
@@ -327,8 +326,7 @@ Returns:
       write, msg;
       status, start, msg=msg;
       if (multi_peaks) {
-        d = run_vegx(start=rn_arr(1,i), stop=rn_arr(2,i),use_be_centroid=use_be_centroid, 
-          use_be_peak=use_be_peak,last=255,multi_peaks=1,msg=msg);
+        d = run_vegx(start=rn_arr(1,i), stop=rn_arr(2,i), multi_peaks=1,msg=msg);
         write, "Using make_fs_veg_all (multi_peaks=1) for vegetation...";
         veg = make_fs_veg_all(d, rrr);
       } else {
@@ -440,40 +438,22 @@ func test_veg(veg_all,  fname=, pse=, graph=) {
   return veg_all;
 }
 
-func ex_veg_all(rn, pulse_number, last=, graph=, use_be_centroid=, use_be_peak=, pse=, thresh=, win=, verbose=,header=) {
-/* DOCUMENT ex_veg_all(rn, pulse_number, last=, graph=, use_be_centroid=, use_be_peak=, pse=, header= ) {
+func ex_veg_all(rn, pulse_number, last=, graph=, pse=, thresh=, win=, verbose=,header=) {
+/* DOCUMENT ex_veg_all(rn, pulse_number, last=, graph=, pse=, thresh=, win=, verbose=, header=)
 
  This function returns an array of VEGPIXS structures containing the
  elevation and timing of each surface intercepted by the pulse.
 
  Inputs:
    rn = Raster number
+   pulse_number = pulse number
    graph = plot each waveform and the critical points.
    pse = time (in ms) to pause between each plot.
    header = decoded header of raster rn
    thresh = gradient threshold needed for a significant return (Default = 4)
-   win = window to plot waveforms in if graph = 1
-*/
-
-/*
- Check waveform samples to see how many samples are saturated.
- The function checks the following conditions so far:
-  1) Saturated surface return - locates last saturated sample
-  2) Non-saturated surface with saturated bottom signal
-  3) Non saturated surface with non-saturated bottom
-  4) Bottom signal above specified threshold
- We'll use this infomation to develop the threshold
- array for this waveform.
- We come out of this with the last_surface_sat set to the last
- saturated value of surface return.
- The 12 represents the last place a surface can be found
- Variables:
-   last       The last point in the waveform to consider.
-   saturated  A list of saturated pixels in this waveform
-   numsat     Number of saturated pixels in this waveform
-   last_surface_sat  The last pixel saturated in the surface region of the
-               Waveform.
-   wf         The return waveform with the computed exponentials substracted
+   win =  window to plot waveforms in if graph = 1
+   last = The last point in the waveform to consider.
+   wf = The return waveform with the computed exponentials substracted
 */
   extern irg_a, _errno;
   default, win, 4;
@@ -507,23 +487,6 @@ func ex_veg_all(rn, pulse_number, last=, graph=, use_be_centroid=, use_be_peak=,
   ctx = cent(pulse.transmit_wf);
   raw_wf = pulse.channel1_wf;
   wf = float(~raw_wf) - ~raw_wf(1);
-
-  if (!use_be_centroid && !use_be_peak) {
-    saturated = where(raw_wf == 0);   // Create a list of saturated samples
-    numsat = numberof(sataturated);   // Count how many are saturated
-    // allowing 3 saturated samples per inflection
-    if ((numsat > 3) && (saturated(1) <= 12)) {
-      if (saturated(dif)(max) == 1) {     // only surface saturated
-        last_surface_sat = saturated(0);  // so use last one
-      } else {                        // bottom must be saturated too
-        // allowing 3 saturated samples per inflection
-        last_surface_sat = saturated(where(saturated(dif) > 3))(1);
-      }
-    } else {                          // surface not saturated
-      wflen = min(pulse.channel1_length, 12);
-      last_surface_sat = raw_wf(1:wflen)(mnx);
-    }
-  }
 
   dd = wf(dif);
   wflen = numberof(wf);
@@ -653,8 +616,7 @@ func run_veg_all( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=
   default, last, 255;
 
   d = run_vegx(rn=rn, len=len, start=start, stop=stop, center=center, 
-    delta=delta, last=last, graph=graph, pse=pse, multi_peaks=1, 
-    use_be_centroid=use_be_centroid, use_be_peak=use_be_peak);
+    delta=delta, last=last, graph=graph, pse=pse, multi_peaks=1);
 
   return d;
 }
@@ -664,7 +626,7 @@ func make_fs_veg_all (d, rrr, multi_peaks=) {
   This function makes a veg data array using the georectification of the
   first surface return. The parameters are as follows:
 
-  d    Array of structure VEGPIX  containing veg information.
+  d    Array of structure VEGPIXS containing veg information.
        This is the return value of function run_vegx.
 
   rrr  Array of structure R containing first surface information.
