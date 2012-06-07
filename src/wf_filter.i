@@ -1,16 +1,41 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 require, "eaarl.i";
 
-// The functions in this file are used to filter wfobj objects, either by
-// returning a subset of the object or by modifying the object's contents in
-// some way.
+// The functions in this file are used to filter waveforms or wfobj objects,
+// either by returning a subset of the data or by modifying the data in some
+// way.
 
-func wf_filter_bias(wf, which=, method=, lim=) {
-/* DOCUMENT wf = wf_filter_bias(wf, which=, method=, lim=)
+func wfobj_filter_bias(wf, which=, method=, lim=) {
+/* DOCUMENT wf = wfobj_filter_bias(wf, which=, method=, lim=)
   Modifies the waveforms in the given wfobj object WF to remove bias. WF should
   be a waveform object. WHICH specifies which waveform to modify and is usually
   "rx" but can also be "tx". METHOD specifies the method to use for determining
-  the bias. Methods available:
+  the bias. See wf_filter_bias for details on METHOD.
+
+  Note: This does not do any type conversions. If your wavesforms are of type
+  CHAR, you should cast them to SHORT prior to passing it to this function.
+*/
+  default, which, "rx";
+  default, method, "first";
+  default, lim, 1e1000;
+  if(!am_subroutine())
+    wf = wf(index, 1:wf.count);
+
+  // Use rx to store the waveforms, which are usually rx
+  rx = wf(noop(which));
+
+  for(i = 1; i <= wf.count; i++)
+    rx(i) = &wf_filter_bias(*rx(i), method=method, lim=lim);
+
+  save, wf, noop(which), rx;
+  return wf;
+}
+
+func wf_filter_bias(wf, method=, lim=) {
+/* DOCUMENT wf = wf_filter_bias(wf, which=, method=, lim=)
+  Modifies the waveform WF to remove bias. WF should be an array of intensity
+  values. METHOD specifies the method to use for determining the bias. Methods
+  available:
 
     method="first"
       The value of the first sample is used as the bias.
@@ -28,34 +53,21 @@ func wf_filter_bias(wf, which=, method=, lim=) {
       temporarily rounded to the nearest integer for purposes of determining
       the bias.
 
-  Note: This does not do any type conversions. If your wavesforms are of type
-  CHAR, you should cast them to SHORT prior to passing it to this function.
+  Note: This does not do any type conversions. If your wavesform is of type
+  CHAR, you should cast it to SHORT prior to passing it to this function.
 */
-  default, which, "rx";
   default, method, "first";
   default, lim, 1e1000;
-  if(!am_subroutine())
-    wf = wf(index, 1:wf.count);
-
-  // Use rx to store the waveforms, which are usually rx
-  rx = wf(noop(which));
 
   if(method == "first") {
-    // Bias is the first sample
-    for(i = 1; i <= wf.count; i++)
-      rx(i) = &wf_filter_bias_first(*rx(i));
+    return wf_filter_bias_first(wf);
   } else if(method == "min") {
-    // Bias is the minimum value in waveform
-    for(i = 1; i <= wf.count; i++)
-      rx(i) = &wf_filter_bias_min(*rx(i));
+    return wf_filter_bias_min(wf);
   } else if(method == "most") {
-    // Bias is the most popular value in waveform
-    for(i = 1; i <= wf.count; i++)
-      rx(i) = &wf_filter_bias_most(*rx(i), lim=lim);
+    return wf_filter_bias_most(wf, lim=lim);
+  } else {
+    return wf;
   }
-
-  save, wf, noop(which), rx;
-  return wf;
 }
 
 func wf_filter_bias_first(wf) {
