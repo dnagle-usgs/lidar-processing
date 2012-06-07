@@ -485,9 +485,11 @@ func ex_veg_all(rn, pulse_number, last=, graph=, pse=, thresh=, win=, verbose=,h
     return rv;
 
   ctx = cent(pulse.transmit_wf);
+  if (ctx(1) == 0 || ctx(1) == 10000)
+    return rv;
+
   raw_wf = pulse.channel1_wf;
   wf = float(~raw_wf) - ~raw_wf(1);
-
   dd = wf(dif);
   wflen = numberof(wf);
 
@@ -584,9 +586,9 @@ func ex_veg_all(rn, pulse_number, last=, graph=, pse=, thresh=, win=, verbose=,h
       }
     }
 
-    rv.mx(j) = irange-1+xr(j)+wf(xr(j):er(j)-1)(mxx)-ctx(1);
     rv.mr(j) = xr(j)-1+wf(xr(j):er(j)-1)(mxx);
-    rv.mv(j) = wf(int(xr(j)-1+wf(xr(j):er(j)-1)(mxx)));
+    rv.mx(j) = irange + rv.mr(j) - ctx(1);
+    rv.mv(j) = wf(rv.mr(j));
 
     if (verbose)
       write, format= "xr = %d, pr = %d, er = %d\n",xr(j),pr(j),er(j);
@@ -827,9 +829,8 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
   }
 
   // if transmit pulse does not exist, return
-  if ((ctx(1) == 0)  || (ctx(1) == 1e1000)) {
+  if ((ctx(1) == 0)  || (ctx(1) == 10000))
     return rv;
-  }
 
   // Try 1st channel
   channel = 1;
