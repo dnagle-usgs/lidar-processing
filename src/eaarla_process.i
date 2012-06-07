@@ -148,6 +148,10 @@ func eaarla_fs(wf, opt=, usecentroid=, altitude_thresh=, rn_start=, keepbad=) {
   Processes waveform data for first surface returns. WF should be a wfobj with
   EAARL-A data.
 
+  The WF input should contain all three channels. As a side-effect, WF will be
+  modified to select one channel per pulse. Thus WF.count will be reduced by a
+  factor of 3.
+
   Options:
     opt= May be an oxy group or Yeti hash containing any of the other options
       accepted by this function.
@@ -189,12 +193,12 @@ func eaarla_fs(wf, opt=, usecentroid=, altitude_thresh=, rn_start=, keepbad=) {
 
     for(i = 1; i <= wf.count; i++) {
       tx_pos = [];
-      tx = wf_filter_bias_first(short(*wf.tx(i)));
+      tx = wf_filter_bias(short(*wf.tx(i)), method="first");
       wf_centroid, tx, tx_pos, lim=12;
       tx = [];
 
       rx_pos = rx_pow = [];
-      rx = wf_filter_bias_first(short(*wf.rx(i)));
+      rx = wf_filter_bias(short(*wf.rx(i)), method="first");
       wf_centroid, rx, rx_pos, lim=12;
       wf_peak, rx, , rx_pow;
       rx = [];
