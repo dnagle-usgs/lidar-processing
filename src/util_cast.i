@@ -396,3 +396,24 @@ func list2obj(data) {
   }
   return result;
 }
+
+func args2obj(args) {
+/* DOCUMENT args2obj(args)
+  Converts an ARGS object (from wrap_args) into a Yorick oxy group object.
+*/
+  obj = save();
+  for(i = 1; i <= args(0); i++)
+    save, obj, string(0), args(noop(i));
+  keys = args(-);
+  count = numberof(keys);
+  for(i = 1; i <= count; i++)
+    save, obj, keys(i), args(keys(i));
+  return obj;
+}
+
+func args2hash(args) {
+/* DOCUMENT args2obj(args)
+  Converts an ARGS object (from wrap_args) into a Yeti hash.
+*/
+  return obj2hash(args2obj(args));
+}
