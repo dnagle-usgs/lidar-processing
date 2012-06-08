@@ -716,3 +716,88 @@ func range_to_index(rng, size) {
     rng(3) += size;
   return indgen(rng(2):rng(3):rng(4));
 }
+
+func wrap_args_passed(&args) {
+/* DOCUMENT wrap_args_passed, args
+  This function allows for the recursive passing of arbitrary parameters from
+  one function to the next using the special keyword args=. The function should
+  be wrapped with wrap_args, and wrap_args_passed should be at the very top of
+  the function body. This function will then do the following:
+
+    - Converts the wrap_args object into an oxy object.
+    - If the object contains an args sub-object, then the object is merged into
+      that sub-object and is then replaced by the sub-object.
+    - Positional parameters are grouped at the beginning, followed by keywords.
+
+  The behavior can be illustrated as follows:
+
+    func example1(args) {
+      wrap_args_passed, args;
+      keydefault, args, a=1, b=2, c=3, d=4;
+      example2, "example2", e=5, g=7, args=args;
+    }
+    wrap_args, example1;
+
+    func example2(args) {
+      wrap_args_passed, args;
+      keydefault, args, a=10, c=30, e=50, f=60;
+      obj_show, args;
+    }
+    wrap_args, example2;
+
+  Then at the command line:
+
+    > example1, "example1", a=100, b=200, e=500, h=800
+     TOP (oxy_object, 10 entries)
+     |- (nil) (string) "example1"
+     |- (nil) (string) "example2"
+     |- a (long) 100
+     |- b (long) 200
+     |- e (long) 5
+     |- h (long) 800
+     |- c (long) 3
+     |- d (long) 4
+     |- g (long) 7
+     `- f (long) 60
+
+  Thus when args=args is passed through, new positional parameters are added
+  after ones already existing in the passed args. Keyword arguments passed
+  directly to the function are added to or overwrite existing keywords in the
+  passed args.
+
+  Also note that "keydefault" is used instead of "default" to set default
+  values. In the function, parameters are then accessed via the args object.
+  For example, args.a would retrieve the value for a=.
+
+  The point of this is that it allows a function to pass through parameters to
+  another function without having to know what parameters that function
+  accepts.
+*/
+  // Convert wrap_args object into oxy object
+  args = args2obj(args);
+
+  // If there's an args sub-object, remove from parent then merge its parent
+  // into it
+  if(is_obj(args.args)) {
+    passed = args.args;
+    w = where(args(*,) != "args")
+    args = numberof(w) ? args(noop(w)) : save();
+    args = obj_merge(passed, args);
+  }
+
+  // Re-order the contents so that positional arguments (with string(0) keys)
+  // come first, followed by keywords
+  if(args(*)) {
+    positional = !args(*,);
+    srt = [];
+    if(anyof(positional))
+      grow, srt, where(positional);
+    if(nallof(positional))
+      grow, srt, where(!positional);
+    positional = [];
+    tmp = save();
+    for(i = 1; i <= numberof(srt); i++)
+      save, tmp, args(*,srt(i)), args(srt(i));
+    args = tmp;
+  }
+}
