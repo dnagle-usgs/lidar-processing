@@ -422,13 +422,6 @@ func xyz2data(_x, &_y, _z, &data, mode=, native=) {
     error, "When using xyz2data as a subroutine, data cannot be a struct reference.";
   }
 
-  if(!native) {
-    x = long(unref(x) * 100);
-    y = long(unref(y) * 100);
-    if(anyof(["ba","be","ch","de","fs","mir"] == mode))
-      z = long(unref(z) * 100);
-  }
-
   if(is_void(working)) {
     if(anyof(["ba","de"] == mode)) {
       working = array(GEO, numberof(x));
@@ -442,6 +435,65 @@ func xyz2data(_x, &_y, _z, &data, mode=, native=) {
       working = array(working, numberof(x));
     else
       working = (working);
+  }
+
+  // POINTCLOUD_2PT gets special handling
+  if(structeq(structof(working), POINTCLOUD_2PT)) {
+    if(anyof(["ba","be","de","lint"] == mode)) {
+      working.lx = x;
+      working.ly = y;
+    } else if("ch" == mode) {
+      if(noneof(working.fy)) {
+        working.fx = x;
+        working.fy = y;
+      }
+      if(noneof(working.ly)) {
+        working.lx = x;
+        working.ly = y;
+      }
+    } else if(anyof(["fint","fs"] == mode)) {
+      working.fx = x;
+      working.fy = y;
+    } else if("mir" == mode) {
+      working.mx = x;
+      working.my = y;
+    }
+
+    if(anyof(["ba","be"] == mode)) {
+      working.lz = z;
+    } else if(mode == "ch") {
+      if(anyof(working.fz))
+        working.lz = working.fz - z;
+      else
+        working.fz = working.lz + z;
+    } else if(mode == "de") {
+      working.lz = working.fz + z;
+    } else if(mode == "fint") {
+      working.fint = z;
+    } else if(mode == "fs") {
+      working.fz = z;
+    } else if(mode == "lint") {
+      working.lint = z;
+    } else if(mode == "mir") {
+      working.mz = z;
+    }
+
+    if(am_subroutine()) {
+      if(is_void(_z))
+        eq_nocopy, _y, working;
+      else
+        eq_nocopy, data, working;
+      return;
+    } else {
+      return working;
+    }
+  }
+
+  if(!native) {
+    x = long(unref(x) * 100);
+    y = long(unref(y) * 100);
+    if(anyof(["ba","be","ch","de","fs","mir"] == mode))
+      z = long(unref(z) * 100);
   }
 
   // Most data modes use east/north for x/y. Only bare earth and be intensity
