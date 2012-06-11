@@ -828,3 +828,21 @@ func obj_has_subkey(data, subkey) {
   }
   return result;
 }
+
+func obj_anons(obj) {
+/* DOCUMENT w = obj_anons(obj)
+  Returns an an index into OBJ indicating which members are anonymous.
+*/
+  if(!obj(*)) return where(0);
+  return where(strlen(obj(*,))==0);
+}
+
+func obj_keys(obj) {
+/* DOCUMENT keys = obj_keys(obj)
+  Returns the keyword members of OBJ. If there are anonymous members, they will
+  not be included.
+*/
+  if(!obj(*)) return [];
+  keys = obj(*,);
+  return keys(where(strlen(keys)));
+}
