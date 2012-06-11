@@ -1,8 +1,8 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 require, "eaarl.i";
 
-func eaarla_process(fnc, q=, region=, verbose=, opt=) {
-/* DOCUMENT eaarla_process(fnc, q=, region=, verbose=, opt=)
+func eaarla_process(args) {
+/* DOCUMENT eaarla_process(fnc, q=, region=, verbose=, ..., args=)
   Processes EAARL-A data.
 
   Parameter FNC must be a function or function name. The function must have a
@@ -25,7 +25,7 @@ func eaarla_process(fnc, q=, region=, verbose=, opt=) {
     verbose= Specifies whether informational output should be displayed by
       eaarla_process. By default it is, use verbose=0 to disable. This value is
       stored to OPT as well, unless OPT already has a VERBOSE= key.
-    opt= An oxy group object containing key-value pairs that will be passed to
+    args= An oxy group object containing key-value pairs that will be passed to
       FNC. This allows for arbitrary key-value configuration information to be
       passed through to the function.
 
@@ -34,6 +34,13 @@ func eaarla_process(fnc, q=, region=, verbose=, opt=) {
   efficiently calculate raster numbers. If the user supplies a value for
   rn_start in OPT, that value will be clobbered.
 */
+  wrap_args_passed, args;
+
+  if(numberof(obj_anons(args)) < 1)
+    error, "must provide function or function name as first argument";
+
+  fnc = args(1);
+
   extern edb, soe_day_start, tans, pnav, ops_conf;
   if(is_void(ops_conf))
     error, "ops_conf is not set";
@@ -52,9 +59,7 @@ func eaarla_process(fnc, q=, region=, verbose=, opt=) {
   if(!is_func(fnc))
     error, "must provide function or function name as first argument";
   
-  default, verbose, 1;
-  default, opt, save();
-  keydefault, opt, verbose=verbose;
+  keydefault, args, verbose=1;
 
   if(is_void(q))
     q = pnav_sel_rgn(region=region, verbose=verbose);
@@ -93,15 +98,18 @@ func eaarla_process(fnc, q=, region=, verbose=, opt=) {
     rasts = eaarla_decode_rasters(raw, wfs=1);
     wf = georef_eaarla(rasts, pnav, tans, ops_conf, soe_day_start);
     raw = rasts = [];
-    save, opt, rn_start=start(i);
-    // Pass a copy of OPT to guard against any changes FNC might make.
-    result(i) = &fnc(wf, opt=obj_copy(opt));
+    // Replace first parameter (function name) with waveforms and pass along
+    // this wfobj's starting raster number
+    save, args, 1, wf, rn_start=start(i);
+    // Pass a copy of ARGS to guard against any changes FNC might make
+    result(i) = &fnc(args=obj_copy(args));
     status, progress, progress(i), progress(0);
   }
   status, finished;
 
   return merge_pointers(result);
 }
+wrap_args, eaarla_process;
 
 func eaarla_init_pointcloud(wf, rn_start=) {
 /* DOCUMENT result = eaarla_init_pointcloud(wf, rn_start=)
@@ -141,8 +149,8 @@ func eaarla_init_pointcloud(wf, rn_start=) {
   return result;
 }
 
-func eaarla_fs(wf, opt=, usecentroid=, altitude_thresh=, rn_start=, keepbad=) {
-/* DOCUMENT pointcloud = eaarla_fs(wf, opt=, usecentroid=, altitude_thresh=,
+func eaarla_fs(args) {
+/* DOCUMENT pointcloud = eaarla_fs(wf, args=, usecentroid=, altitude_thresh=,
     rn_start=, keepbad=)
 
   Processes waveform data for first surface returns. WF should be a wfobj with
@@ -153,7 +161,7 @@ func eaarla_fs(wf, opt=, usecentroid=, altitude_thresh=, rn_start=, keepbad=) {
   factor of 3.
 
   Options:
-    opt= May be an oxy group or Yeti hash containing any of the other options
+    args= May be an oxy group or Yeti hash containing any of the other options
       accepted by this function.
     usecentroid= Specifies whether the centroid should be used for locating the
       peaks in TX and RX.
@@ -174,22 +182,22 @@ func eaarla_fs(wf, opt=, usecentroid=, altitude_thresh=, rn_start=, keepbad=) {
       points are kept instead of removed, but their xyz fields will all be set
       to 0 to make them easier to remove later.
 */
-  default, opt, save();
-  if(is_hash(opt)) opt = hash2obj(opt);
-  default, usecentroid, 1
-  default, altitude_thresh, []
-  default, rn_start, 1;
-  default, keepbad, 0;
-  opt = obj_merge(save(usecentroid, altitude_thresh, rn_start, keepbad), opt);
+  wrap_args_passed, args;
+  keydefault, args, usecentroid=1, altitude_thresh=[], rn_start=1, keepbad=0;
+
+  if(numberof(obj_anons(args)) < 1)
+    error, "Must provide WF as first positional argument";
+
+  wf = args(1);
 
   sample2m = wf.sample_interval * NS2MAIR;
 
-  if(opt.usecentroid) {
+  if(args.usecentroid) {
     // Pick the channel for each triplet
     eaarla_wf_filter_channel, wf, lim=12, max_intensity=251,
       max_saturated=ops_conf.max_sfc_sat;
 
-    working = eaarla_init_pointcloud(wf, rn_start=opt.rn_start);
+    working = eaarla_init_pointcloud(wf, rn_start=args.rn_start);
 
     for(i = 1; i <= wf.count; i++) {
       tx_pos = [];
@@ -221,7 +229,7 @@ func eaarla_fs(wf, opt=, usecentroid=, altitude_thresh=, rn_start=, keepbad=) {
     // Take first of each triplet
     wf, index, 1:wf.count:3;
 
-    working = eaarla_init_pointcloud(wf, rn_start=opt.rn_start);
+    working = eaarla_init_pointcloud(wf, rn_start=args.rn_start);
 
     working.fx = working.lx = wf(raw_xyz1, , 1);
     working.fy = working.ly = wf(raw_xyz1, , 2);
@@ -240,8 +248,8 @@ func eaarla_fs(wf, opt=, usecentroid=, altitude_thresh=, rn_start=, keepbad=) {
 
   // This provides support equivalent to ext_bad_att=1 when
   // altitude_thresh=20
-  if(!is_void(opt.altitude_thresh)) {
-    w = where(working.mz - working.fz < opt.altitude_thresh);
+  if(!is_void(args.altitude_thresh)) {
+    w = where(working.mz - working.fz < args.altitude_thresh);
     if(numberof(w)) {
       working.fx(w) = working.fy(w) = working.fz(w) =
         working.lx(w) = working.ly(w) = working.lz(w) = 0;
@@ -256,10 +264,11 @@ func eaarla_fs(wf, opt=, usecentroid=, altitude_thresh=, rn_start=, keepbad=) {
   }
 
   // Unless we're supposed to keep them, remove the points flagged for removal
-  if(!opt.keepbad) {
+  if(!args.keepbad) {
     w = where(working.fx != 0);
     working = numberof(w) ? working(w) : [];
   }
 
   return working;
 }
+wrap_args, eaarla_fs;
