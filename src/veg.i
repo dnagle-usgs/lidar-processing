@@ -920,9 +920,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
     mx1 = (crx(1) >= 10000) ? -10 : irange + crx(1) - ctx(1);
     mv1 = crx(3);
   } else {
-    // find surface peak now; note wf is reset to channel 1.
-    raw_wf = pulse.channel1_wf;
-    wf = float(~raw_wf) - ~raw_wf(1);
+    // find surface peak now
     mx1 = wf(xr(1):xr(1)+5)(mxx) + xr(1) - 1;
     mv1 = wf(mx1);
   }
