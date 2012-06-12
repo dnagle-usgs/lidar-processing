@@ -106,9 +106,6 @@ struct BATH_CTL{
   int   first;   // first nanosecond to consider (maxdepth in ns)  (150)
   int   last;    // last nanosecond to consider (maxdepth in ns)  (150)
   int   maxsat;  // Maximum number of saturated points.
-
-  //// Data area
-  float a(256);   // array for interim waveform data
 };
 
 extern bath_ctl;
