@@ -359,10 +359,6 @@ proc menu_deprecated_analysis mb {
     menu $mb
     $mb add command {*}[menulabel "Examine Lidar Rasters..."] \
             -command [list source [file join $::src_path drast.ytk]]
-    $mb add command {*}[menulabel "Open Fit Gaussian GUI"] \
-            -command [namespace code open_fit_gaussian_gui]
-    $mb add command {*}[menulabel "&Determine Roll Bias"] \
-            -command ::l1pro::deprecated::rollbias::gui
     return $mb
 }
 
@@ -392,14 +388,6 @@ proc menu_deprecated_visualization mb {
     ### Deprecated 2009-02-02
     $mb add command {*}[menulabel "Flight Tracks && Coastlines..."] \
             -command ::l1pro::deprecated::rbgga_menu
-
-    ### Deprecated 2009-10-19
-    $mb add command {*}[menulabel "1-Hz RGB Low-Res Images..."] \
-            -command ::l1pro::deprecated::start_sf
-
-    ### Deprecated 2009-10-19
-    $mb add command {*}[menulabel "1-Hz CIR High-Res Images..."] \
-            -command ::l1pro::deprecated::start_cir
 
     return $mb
 }
@@ -437,11 +425,6 @@ proc set_yorick_style s {
 
 proc set_yorick_gridxy {x y} {
     exp_send "gridxy, $x, $y;\r"
-}
-
-proc open_fit_gaussian_gui {} {
-    source [file join $::src_path .. attic src 2010-10-fit_gauss.ytk]
-    fit_gauss::create_gui
 }
 
 } ;# closes namespace eval ::l1pro::main::menu
