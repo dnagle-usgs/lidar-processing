@@ -84,14 +84,27 @@ func plrect(rec, color=, text=, width=) {
     plt, "^" + text, x(min), y(max), height=8, tosys=1, color=color;
 }
 
-func lldist ( lat0,lon0,lat1,lon1 )
-{
-  rlat0 = DEG2RAD * lat0;
-  rlat1 = DEG2RAD * lat1;
-  rlon0 = DEG2RAD * lon0;
-  rlon1 = DEG2RAD * lon1;
-  rv=60.0*acos(sin(rlat0)*sin(rlat1)+cos(rlat0) * cos(rlat1)*cos(rlon0-rlon1));
-  return rv * RAD2DEG;
+func lldist(lat0, lon0, lat1, lon1) {
+/* DOCUMENT lldist(lat0, lon0, lat1, lon1)
+  Calculates the great circle distance in nautical miles between two points
+  given in geographic coordiantes. Input values may be conformable arrays;
+  output will have dimensionality to match.
+
+  To convert to kilometers, multiply by 1.852
+  To convert to statute miles, multiply by 1.150779
+*/
+  lat0 *= DEG2RAD;
+  lon0 *= DEG2RAD;
+  lat1 *= DEG2RAD;
+  lon1 *= DEG2RAD;
+  // Calculate the central angle between the two points, using the spherical
+  // law of cosines
+  ca = acos(sin(lat0)*sin(lat1) + cos(lat0)*cos(lat1)*cos(lon0-lon1));
+  // Convert the central angle into degrees; then convert degrees into nautical
+  // miles. A nautical mile is defined as a minute of arc along a meridian, so
+  // we can approximate the conversion by multiplying by 60 (the number of
+  // arcminutes in a degree).
+  return ca * RAD2DEG * 60;
 }
 
 func mdist ( none, nodraw=, units=, win=, redrw=, nox= ) {
