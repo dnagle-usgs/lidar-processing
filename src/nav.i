@@ -1,5 +1,36 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
+extern FB;
+/* DOCUMENT FB
+  Struct used for flight planning.
+
+  struct FB {
+    string name;    // block name
+    int block;      // block number
+    float aw;       // area width  (km)
+    float sw;       // scan  spacing (km)
+    float kmlen;    // length of block (km)
+    double dseg(4); // defining segment
+    float alat(5);  // lat corners of total area
+    float alon(5);  // lon corners of total area
+    pointer p;      // a pointer to the array of flightlines.
+  };
+*/
+
+struct FB {
+  string name;
+  int block;
+  float aw, sw, kmlen;
+  double dseg(4);
+  float alat(5), alon(5);
+  pointer p;
+};
+
+struct FP {
+  string name;
+  double lat1, lon1, lat2, lon2;
+}
+
 func fb2fp( fb ) {
 /* DOCUMENT fb2fp(fb)
 
@@ -67,7 +98,7 @@ func dms2dd( v ) {
       if ( (f(1) == "n") || (f(1) == "N") ) 
         fs = "%1s%02f%02f%f";
       else 
-        fs = "%1s%03f%02f%f";	// This works for EeWw values
+        fs = "%1s%03f%02f%f"; // This works for EeWw values
       nbr=sread(v(i), format=fs, f(1), d(1), d(2), d(3)); 
     }
     if ( (f(1) == "S") || (f(1)=="s")  || (f(1)=="W") || (f(1)=="w")) {
@@ -96,7 +127,7 @@ rec is a vector with four elements arranged as:
  pair the lower left and upper right points automatically. 
 
  Input:
-    rec 	array of cornet points
+    rec   array of cornet points
     format=     "dms" if the elements of rec are in the string 
                 format "n38:35:234.434"  See: ddmmss function for 
                 acceptable details.
@@ -137,35 +168,6 @@ rec is a vector with four elements arranged as:
     plt, "^" + text, x(4), y(4), height=8, tosys=1,color=color;
   }
 }
-
-extern FB;
-/* DOCUMENT FB
-
-struct FB {
-    string name;	// block name
-    int block;		// block number
-    float aw;		// area width  (km)
-    float sw;		// scan  spacing (km)
-    float kmlen;	// length of block (km)
-    double dseg(4);	// defining segment
-    float  alat(5);	// lat corners of total area
-    float  alon(5);	// lon corners of total area
-    float  *p;    	// a pointer to the array of flightlines.
-};
- 
-*/
-
-struct FB {
-    string name;	// block name
-    int block;		// block number
-    float aw;		// area width  (km)
-    float sw;		// scan  spacing (km)
-    float kmlen;	// length of block (km)
-    double dseg(4);	// defining segment
-    float  alat(5);	// lat corners of total area
-    float  alon(5);	// lon corners of total area
-    float  *p;    	// a pointer to the array of flightlines.
-};
 
 func dist ( lat0,lon0,lat1,lon1 ) {
   lat0 =  DEG2RAD * lat0;
@@ -744,14 +746,6 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
   blockn++;
   mission_time += blocksecs/3600.0;
   return rs;
-}
-
-struct FP {
-  string name;
-  double lat1;
-  double lon1;
-  double lat2;
-  double lon2;
 }
 
 func pl_fp( fp, win=, color= , width=, skip=, labels=) {
