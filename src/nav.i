@@ -31,18 +31,16 @@ struct FP {
   double lat1, lon1, lat2, lon2;
 }
 
-func fb2fp( fb ) {
+func fb2fp(fb) {
 /* DOCUMENT fb2fp(fb)
-
    Convert an FB variable to an FP variable.
    Inputs: a variable of type FB
    returns: FB data converted to FP type.
-
 */
-  nbr = dimsof( *fb.p )(2);
-  fp = array(FP, nbr );
+  nbr = dimsof(*fb.p)(2);
+  fp = array(FP, nbr);
   fp.name = fb.name;
-  for (i=1; i<= nbr; i++ ) {
+  for(i=1; i<= nbr; i++) {
     pt = array(double, 4);
     fp(i).name = fb.name;
     pt = (*fb.p)(i,);
@@ -54,59 +52,36 @@ func fb2fp( fb ) {
   return fp;
 }
 
-func plrect( rec, format=, color=, text=, width=) {
-/* DOCUMENT plrect( rec, color=, text=, width=)
+func plrect(rec, color=, text=, width=) {
+/* DOCUMENT plrect(rec, color=, text=, width=)
+  Plots a rectangle includes a text label, useful for plotting areas of
+  interest. REC should be a vector with four values as such:
 
-   Use this to plot a rectangle on a lat/lon map and include a
-text name.  This is useful for plotting areas of interest.  The
-rec is a vector with four elements arranged as:
-  [ lat0, lon0, lat1, lon1 ]
+    [y0, x0, y1, x1]
 
- The values define the left/right top/bottom corner points of the
- rectangle.  The order is not important, as this function will 
- pair the lower left and upper right points automatically. 
+  These values define a bounding box; order is not important.
 
- Input:
-    rec   array of cornet points
-    format=     "dms" if the elements of rec are in the string 
-                format "n38:35:234.434"  See: ddmmss function for 
-                acceptable details.
-
+  Parameter:
+    rec: The input vector representing the rectangle.
+  Options:
+    color= Color to use when plotting box and text.
+        color="red"   Default
+    text= Text to display at top left of box (optional).
+    width= Width to make lines in box.
+        width=1.0     Default
 */
-  if ( is_void(format) ) 
-    format= "double"; 
-  if ( format == "dms" ) {
-    o = array(double,4);
-    for (i=1; i<=numberof(rec); i++ ) {
-      o(i) = dms_string2deg(rec(i) );
-    }
-    rec = o;
-  }
+  default, color, "red";
+  default, width, 1.0;
 
-  if ( is_void(color) ) 
-    color = "red";
+  if(is_string(rec))
+    rec = dms_string2deg(rec);
 
-  if ( is_void(width) )
-    width= 1.0;
+  y = rec([1,3])([1,1,2,2,1]);
+  x = rec([2,4])([1,2,2,1,1]);
 
-  s = min( rec(1), rec(3) ); 
-  m = max( rec(1), rec(3) );
-  rec(1) = s;
-  rec(3) = m;
-  s = min( rec(2), rec(4) ); 
-  m = max( rec(2), rec(4) );
-  rec(2) = s;
-  rec(4) = m;
-
-  y = [ rec(1), rec(1), rec(3), rec(3), rec(1) ];
-  x = [ rec(2), rec(4), rec(4), rec(2), rec(2) ];
-  x;
-  y;
   plg, y, x, marks=0, color=color, width=width;
-  if ( !is_void(text) ) {
-    text;
-    plt, "^" + text, x(4), y(4), height=8, tosys=1,color=color;
-  }
+  if(!is_void(text))
+    plt, "^" + text, x(min), y(max), height=8, tosys=1, color=color;
 }
 
 func dist ( lat0,lon0,lat1,lon1 ) {
