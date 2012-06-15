@@ -107,8 +107,8 @@ func lldist(lat0, lon0, lat1, lon1) {
   return ca * RAD2DEG * 60;
 }
 
-func mdist(nil, units=, win=, plot=, verbose=, nox=, noy=) {
-/* DOCUMENT mdist(units=, win=, plot=, verbose=, nox=, noy=)
+func mdist(&click, units=, win=, plot=, verbose=, nox=, noy=) {
+/* DOCUMENT mdist(&click, units=, win=, plot=, verbose=, nox=, noy=)
   Measure the distance between two points as selected by mouse click and return
   the distance in meters. The distance in nautical miles, statue miles, and
   meters or kilometers will also be displayed to the console.
@@ -133,6 +133,9 @@ func mdist(nil, units=, win=, plot=, verbose=, nox=, noy=) {
     noy= Eliminates Y from the distance calculation.
         noy=0   Include Y (default)
         noy=1   Exclude Y
+
+  Output parameters:
+    click: The return result from mouse() obtained from the user.
 
   Returns:
     Scalar distance in meters.
@@ -286,17 +289,17 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
 
   if ( is_void( line ) ) {
     if (in_utm) {
-      res = mdist(nodraw=1,units="m"); // get the segment from the user in utm
+      res = mdist(click,plot=0,units="m"); // get the segment from the user in utm
     } else {
-      res = mdist(nodraw=1);  // get the segment from the user in ll
+      res = mdist(click,plot=0);  // get the segment from the user in ll
     }
-    sf = aw / res(14);    // determine scale factor
-    km = res(14);
+    km = res / 1000.;
+    sf = aw / (km/1.852); // determine scale factor
   } else {
-    res = array(float, 4 );
-    n = sread(line,format="%f %f %f %f", res(2), res(1), res(4), res(3) );
+    click = array(float, 4 );
+    n = sread(line,format="%f %f %f %f", click(2), click(1), click(4), click(3) );
     // lldist output is in nautical miles, x by 1.852 for km
-    km = lldist( res(2), res(1), res(4), res(3) ) * 1.852;
+    km = lldist( click(2), click(1), click(4), click(3) ) * 1.852;
     sf = aw / km;   // determine scale factor
   }
   write, format="Scale factor before = %5.3f\n",sf;
@@ -309,30 +312,30 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
       read, prompt="Could not determine UTM Zone Number.\nPlease enter zone number: ",czone;
       sread, czone, format="%d",curzone;
     }
-    ll = utm2ll([res(2), res(4)], [res(1), res(3)], [curzone, curzone]);
-    res(1) = ll(1,1);
-    res(2) = ll(1,2);
-    res(3) = ll(2,1);
-    res(4) = ll(2,2);
+    ll = utm2ll([click(2), click(4)], [click(1), click(3)], [curzone, curzone]);
+    click(1) = ll(1,1);
+    click(2) = ll(1,2);
+    click(3) = ll(2,1);
+    click(4) = ll(2,2);
   }
 
   // adjust so all segments are from left to right
   // only the user coords. are changed
 
   //if (mode != 4) {
-  if ( res(1) > res(3) ) {
-    temp = res;
-    res(1) = temp(3);
-    res(2) = temp(4);
-    res(3) = temp(1);
-    res(4) = temp(2);
+  if ( click(1) > click(3) ) {
+    temp = click;
+    click(1) = temp(3);
+    click(2) = temp(4);
+    click(3) = temp(1);
+    click(4) = temp(2);
     sf = -sf;   // keep block on same side
   }
   //}
-  res;
+  click;
 
-  llat = [res(2), res(4)];
-  llon = [res(1), res(3)] - res(1);   // translate to zero longitude
+  llat = [click(2), click(4)];
+  llon = [click(1), click(3)] - click(1);   // translate to zero longitude
   fll2utm, llat, llon, UTMNorthing, UTMEasting, ZoneNumber; // convert to utm
   zone = ZoneNumber(1); // they are all the same cuz we translated
 
@@ -504,8 +507,8 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
   // Add the longitude back in that we subtrated in the beginning.
   // to keep it all i the same utm zone
   if (is_array(ply1))
-    res(1) = min(ply1(1,));
-  Long += res(1);
+    click(1) = min(ply1(1,));
+  Long += click(1);
   //Long += min(ply1(1,));
 
   // save previous zone number
@@ -541,9 +544,9 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
   if (!silent) {
     write,format="# set sw %f; set aw %f;  set msec %f; set ssturn %f set block %d\n",
       sw, aw, msec, stturn, blockn;
-    write,format="# %f %f %f %f \n", res(2),res(1), res(4), res(3);
+    write,format="# %f %f %f %f \n", click(2),click(1), click(4), click(3);
   }
-  segsecs = res(0)*1000.0 / msec;
+  segsecs = km*1000.0 / msec;
   blocksecs = (segsecs + stturn ) * int(segs);
   if (!silent) {
     write, format="# set Seglen %5.3fkm; set segtime %4.2f; (min) set Total_time %3.2f(hrs)\n",
@@ -556,11 +559,11 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
   zone = array(pZoneNumber, dimsof( sega) (2) );
   utm2ll, sega(,1), sega(,2), zone, Long, Lat;
   sega(,1) = Lat;
-  sega(,2) = Long + res(1);
+  sega(,2) = Long + click(1);
   //sega(,2) = Long + min(ply1(1,));
   utm2ll, sega(,3), sega(,4), zone, Long, Lat;
   sega(,3) = Lat;
-  sega(,4) = Long + res(1);
+  sega(,4) = Long + click(1);
   //sega(,4) = Long + min(ply1(1,));
   rg = 1:0:2;
 
@@ -627,7 +630,7 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
   /// plg,Lat(r),Long(r)
   if (!in_utm) {
     if ( (fill & 0x4 ) == 4 ) {
-      plg, [res(2),res(4)], [res(1),res(3)],color="red",marks=0;
+      plg, [click(2),click(4)], [click(1),click(3)],color="red",marks=0;
     }
   }
 
@@ -639,7 +642,7 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
   rs.p = &sega; // pointer to all the segments
   rs.sw = sw;   // flight line spacing (swath width)
   rs.aw = aw;   // area width
-  rs.dseg = res(1:4); // block definition segment
+  rs.dseg = click(1:4); // block definition segment
 
   blockn++;
   mission_time += blocksecs/3600.0;
