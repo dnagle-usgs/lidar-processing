@@ -101,6 +101,7 @@ if(is_void(__eaarl_includes_included__)) {
   require, "kml.i";
   require, "kml_extents.i";
   require, "kml_flightlines.i";
+  require, "kml_fp.i";
   require, "kml_jgw.i";
   require, "kml_lines.i";
   require, "kml_markup.i";
