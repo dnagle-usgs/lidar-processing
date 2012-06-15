@@ -147,7 +147,7 @@ func __batch_kml_mission_builder(node) {
 }
 
 func kml_mission(void, conf_file=, outdir=, name=, keepkml=, webdest=) {
-/* DOCUMENT kml_mission, conf_file=, outdir=, name=
+/* DOCUMENT kml_mission, conf_file=, outdir=, name=, keepkml=, webdest=
   Creates kml/kmz files for a mission, based on the currently defined mission
   configuration.
 
@@ -270,8 +270,8 @@ func kml_mission(void, conf_file=, outdir=, name=, keepkml=, webdest=) {
 
 func kml_pnav(input, output, name=, edb=, soe_day_start=, ins_header=,
 webdest=, keepkml=) {
-/* DOCUMENT kml_pnav, input, output, name=, edb=, soe_day_start=, ins_header,
-  keepkml=, webdest=
+/* DOCUMENT kml_pnav, input, output, name=, edb=, soe_day_start=, ins_header=,
+  webdest=, keepkml=
   Creates KML/KMZ files for a PNAV file.
 
   Parameters:
@@ -759,7 +759,7 @@ func kml_pnav_edb(pnav, edb, soe_day_start, maxdist=, visibility=) {
 }
 
 func kml_pnav_LineString(pnav, maxdist=, alt=) {
-/* DOCUMENT kml_pnav_LineString(pnav, maxdist=)
+/* DOCUMENT kml_pnav_LineString(pnav, maxdist=, alt=)
   Given an array of PNAV data, this will return a <LineString> element
   representing its trajectory. Option maxdist= is passed to downsample_line
   and defaults to 10.
