@@ -211,31 +211,31 @@ if (is_void(sw) )
 
 func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=, debug=) {
 /* DOCUMENT sdist(junk, block=, line= , mode=, fill=)
-   Measure distance, and draw a proportional rectangle showing the 
+   Measure distance, and draw a proportional rectangle showing the
    resulting coverage.
 
    Develops a flightline block from the line segment.  If called
-   as sdist(), it will expect the user to select the points with the 
+   as sdist(), it will expect the user to select the points with the
    mouse by clicking and holding down the left button over one endpoint
    and releasing the mouse over the other endpoint.
 
    If called with "block" it will expect a block of FB data. The block of
-   FB data usually would be a previously returned FB block, but with 
+   FB data usually would be a previously returned FB block, but with
    altered values for sw, aw, etc. etc.
-   
 
-   If it is called as sdist( line="A B C D" ) then it expects a 
-   string of four floating point numbers as "A B C D" where A and B are 
-   the lat/lon pair for one endpoint and C D are the lat/lon pair for 
-   the other point.  All points are in decimal degrees and west longitudes 
-   are represented by negative numbers.  
- 
+
+   If it is called as sdist( line="A B C D" ) then it expects a
+   string of four floating point numbers as "A B C D" where A and B are
+   the lat/lon pair for one endpoint and C D are the lat/lon pair for
+   the other point.  All points are in decimal degrees and west longitudes
+   are represented by negative numbers.
+
    fill=V   This controls what is displayed for a block.  Each bit in the
    values turns on/off pats of the diplay.  Not defining fill will default
    to everything being displayed. The bits are as follows:
    1  Display all flight lines in the block with alternating colors.
    2  Show the first flight line in Green.
-   4  Show the centerline. 
+   4  Show the centerline.
    8  Area filled with color.
 
    A structure of type FB is returned. Type FB at the command prompt to
@@ -243,7 +243,7 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
 
    mode=[1,2,3]
 
-   where:   
+   where:
    1 = right, bottom
    2 = center
    3 = left, top
@@ -254,11 +254,15 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
    7/3/02  -WW Added left/right selection lines
 
 */
-  extern mission_time, aw, sw;
-  extern sr, dv, rdv, lrdv, rrdv;
-  extern blockn, segn;
-  extern curzone; // current zone number if in UTM
+  extern mission_time, aw, sw, sr, dv, rdv, lrdv, rrdv, blockn, segn, curzone;
   default, mission_time, 0.;
+  default, in_utm, 0;
+  default, out_utm, 0;
+  // line mode
+  // 1 = right, bottom
+  // 2 = center
+  // 3 = left, top
+  default, mode, 2;
 
   if (is_array(ply)) {
     if (!in_utm) {
@@ -267,7 +271,7 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
       ply(1,) = ply(1,)-min(ply(1,));
     }
     box = boundBox(ply, noplot=1);
-    if (!in_utm) 
+    if (!in_utm)
       box = fll2utm(box(2,), box(1,))(1:2,);
     dist1 = sqrt((box(1,3)-box(1,1))^2+(box(2,3)-box(2,1))^2);
     dist2 = sqrt((box(1,2)-box(1,4))^2+(box(2,2)-box(2,4))^2);
@@ -279,16 +283,6 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
   segs = aw / sw;   // compute number of segments
   sega = array(float, int(segs),4);
   sr = array(float, 7, 2);    //the array to hold the rectangle
-
-  if (is_void(in_utm)) in_utm = 0;
-  if (is_void(out_utm)) out_utm = 0;
-
-  // line mode
-  // 1 = right, bottom
-  // 2 = center
-  // 3 = left, top
-  if ( is_void( mode ) ) 
-    mode = 2;
 
   if ( is_void( line ) ) {
     if (in_utm) {
@@ -322,7 +316,7 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
     res(4) = ll(2,2);
   }
 
-  // adjust so all segments are from left to right 
+  // adjust so all segments are from left to right
   // only the user coords. are changed
 
   //if (mode != 4) {
@@ -349,7 +343,7 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
       window, 5; fma;
       plmk, uply(1,), uply(2,), marker=4, width=10, color="black", msize=0.3;
     }
-    // user can plot the line anywhere to define slope.  Use the pip coords to 
+    // user can plot the line anywhere to define slope.  Use the pip coords to
     // define region.
     slope = (UTMNorthing(2)-UTMNorthing(1))/(UTMEasting(2)-UTMEasting(1));
     // find the leftmost ply point in translated utm coords
@@ -361,7 +355,7 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
     //minnorthidx = (uply(1,))(mxx);
     //northpt = [uply(2,minnorthidx), uply(1,minnorthidx)]; // xy format
 
-    // now loop through each uply pt and find the line passing through it with 
+    // now loop through each uply pt and find the line passing through it with
     // slope "slope"
 
     npty = northpt(2);
@@ -382,9 +376,9 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
      */
     // the slope of the line perpedicular to this line is -1/slope
     pslope = -1.0/slope;
-    // now loop through each uply pt and find the intersecting pt of the 2 
-    // perpendicular lines -- one line is the line passing through leftpt 
-    // with slope "slope" and other line is passing through a ply pt with 
+    // now loop through each uply pt and find the intersecting pt of the 2
+    // perpendicular lines -- one line is the line passing through leftpt
+    // with slope "slope" and other line is passing through a ply pt with
     // slope "pslope".
 
     px = array(double,numberof(uply(2,)));
@@ -435,13 +429,13 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
     xc = UTMEasting(2)+sqrt(s*s/(slope*slope+1));
     yc = UTMNorthing(2)+slope*(xc-UTMEasting(2));
 
-    UTMNorthing(2) = yc; 
+    UTMNorthing(2) = yc;
     UTMEasting(2) = xc;
 
     xc = UTMEasting(1)-sqrt(s*s/(slope*slope+1));
     yc = UTMNorthing(1)+slope*(xc-UTMEasting(1));
 
-    UTMNorthing(1) = yc; 
+    UTMNorthing(1) = yc;
     UTMEasting(1) = xc;
 
     if (debug) {
@@ -494,7 +488,7 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
     ssf = (sw/aw) * -lrdv * 2.0;  // scale for one scan line
     sega(1,1:2) = sr(3,) + ssf/2.0;
     sega(1,3:4) = sr(4,) + ssf/2.0;
-  } 
+  }
 
   for (i=2; i<=int(segs); i++ ) {
     sega(i,1:2) = sega(i-1,1:2) +ssf;
@@ -521,12 +515,12 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
     // convert to utm so as to plot it on the window
     u = fll2utm(Lat, Long);
   }
-  // Plot the scan rectangle.  Points 3:7 have the vertices of 
+  // Plot the scan rectangle.  Points 3:7 have the vertices of
   // the scan rectangle.  1:2 have the end points.
   r = 3:7;
 
   // plot a filled rectangle
-  if ( is_void( fill ) ) 
+  if ( is_void( fill ) )
     fill = 0xf;
 
   if ( (fill & 0x8)  == 8 ) {
@@ -545,14 +539,14 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
     msec = 50.0;    // speed in meters/second
 
   if (!silent) {
-    write,format="# set sw %f; set aw %f;  set msec %f; set ssturn %f set block %d\n", 
+    write,format="# set sw %f; set aw %f;  set msec %f; set ssturn %f set block %d\n",
       sw, aw, msec, stturn, blockn;
     write,format="# %f %f %f %f \n", res(2),res(1), res(4), res(3);
   }
   segsecs = res(0)*1000.0 / msec;
   blocksecs = (segsecs + stturn ) * int(segs);
   if (!silent) {
-    write, format="# set Seglen %5.3fkm; set segtime %4.2f; (min) set Total_time %3.2f(hrs)\n", 
+    write, format="# set Seglen %5.3fkm; set segtime %4.2f; (min) set Total_time %3.2f(hrs)\n",
       km, segsecs/60.0, blocksecs/3600.0;
   }
 
@@ -561,11 +555,11 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
   Xlat  = Lat;
   zone = array(pZoneNumber, dimsof( sega) (2) );
   utm2ll, sega(,1), sega(,2), zone, Long, Lat;
-  sega(,1) = Lat; 
+  sega(,1) = Lat;
   sega(,2) = Long + res(1);
   //sega(,2) = Long + min(ply1(1,));
   utm2ll, sega(,3), sega(,4), zone, Long, Lat;
-  sega(,3) = Lat; 
+  sega(,3) = Lat;
   sega(,4) = Long + res(1);
   //sega(,4) = Long + min(ply1(1,));
   rg = 1:0:2;
@@ -579,7 +573,7 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
       pldj,usega(rg,2),usega(rg,1),usega(rg,4),usega(rg,3),color="yellow";
     } else {
       pldj,sega(rg,2),sega(rg,1),sega(rg,4),sega(rg,3),color="yellow";
-    }    
+    }
     rg = 2:0:2;
     if ( (dimsof(sega)(2)) > 1 ) {
       if (in_utm) {
@@ -613,13 +607,13 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
       nsewa(, 1) = nsewa(, 3) = 'n';
       nsewa(, 2) = nsewa(, 4) = 's';
       q = where( nsew(, 1) == 1 );
-      if ( numberof(q) ) nsewa(q,1) = 's'; 
+      if ( numberof(q) ) nsewa(q,1) = 's';
       q = where( nsew(, 3) == 1 );
-      if ( numberof(q) ) nsewa(q,3) = 's'; 
+      if ( numberof(q) ) nsewa(q,3) = 's';
       q = where( nsew(, 2) == 1 );
-      if ( numberof(q) ) nsewa(q,2) = 'w'; 
+      if ( numberof(q) ) nsewa(q,2) = 'w';
       q = where( nsew(, 4) == 1 );
-      if ( numberof(q) ) nsewa(q,4) = 'w'; 
+      if ( numberof(q) ) nsewa(q,4) = 'w';
       write,format="llseg %d-%d %c%013.8f:%c%12.8f %c%013.8f:%c%12.8f\n", blockn, indgen(1:int(segs)),
         nsewa(,1),segd(,1),
         nsewa(,2),segd(,2),
@@ -654,11 +648,11 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
 
 func pl_fp( fp, win=, color= , width=, skip=, labels=) {
 /* DOCUMENT pl_fp(fp, color=)
-  
-  Plot the given flight plan on win= using color=.  Default 
-window is 6, and color is magenta. 
 
-  Inputs: 
+  Plot the given flight plan on win= using color=.  Default
+window is 6, and color is magenta.
+
+  Inputs:
   fp  Array of Flight plan (FP) structures
   win=  Window number for display. Default=6
   color=  Set the color of the displayed flight plan.
@@ -667,15 +661,11 @@ window is 6, and color is magenta.
 
   Orginal W. Wright
 */
-  if ( is_void(win))
-    win = 6;
-  if ( is_void(color))
-    color="magenta";
-  if ( is_void(width))
-    width=1;
-  if ( is_void(skip))
-    skip = 5;
-  
+  default, win, 6;
+  default, color, "magenta";
+  default, width, 1;
+  default, skip, 5;
+
   bb = strtok(fp.name, "-");
   if (numberof(bb) > 2) {
     mask = grow([1n], bb(1,1:-1) != bb(1,2:0), [1n]);
@@ -700,7 +690,7 @@ window is 6, and color is magenta.
         plt, dd(r)(j), fpx.lon1(r)(j), fpx.lat1(r)(j), tosys=1, height=15, justify="CC", color="black";
         pldj, fpx.lon1(r)(j),fpx.lat1(r)(j),fpx.lon2(r)(j),fpx.lat2(r)(j),color=color, width=5*width;
       }
-    }  
+    }
   }
   //pldj, fpx.lon1(1),fpx.lat1(1),fpx.lon2(1),fpx.lat2(1),color="green", width=2*width;
 
@@ -719,7 +709,7 @@ the sdist() flight planning function.
  fpoly=  ??
  plot=  Draw flightplan lines on the current window.
 
-  Orginal: amar nayegandhi 07/22/02 
+  Orginal: amar nayegandhi 07/22/02
 
   9/4/2002 -ww Modified so you don't need to know how many lines in the
                file.  I will stop reading the file when 50 null lines
@@ -731,17 +721,17 @@ the sdist() flight planning function.
 
   fp_arr = array(FP,10000);
 
-  i = 0;   
+  i = 0;
   nc = 0; // null line counter
-  loop=1; 
+  loop=1;
 
   while (loop) {
     i++;
     if ( nc > 50 ) break;
     a = rdline( fp) (1);
     if ( strlen(a) == 0 ) // null counter
-      nc++; 
-    else 
+      nc++;
+    else
       nc = 0;
     w="";x="";y="";z="";
     if ((a > "") && !(strmatch(a,"#"))) {
@@ -785,7 +775,7 @@ the sdist() flight planning function.
         fp_arr(i).lon2 = zlat;
       }
     }
-  }  
+  }
 
   indx = where( strlen(fp_arr.name) != 0);
   fp_arr = fp_arr(indx);
@@ -799,7 +789,7 @@ the sdist() flight planning function.
       fp_arr.lat2 = u2(1,);
       fp_arr.lon1 = u1(2,);
       fp_arr.lon2 = u2(2,);
-    } 
+    }
   } else {
     if (in_utm) {
       ll1 = utm2ll(fp_arr.lat1, fp_arr.lon1, curzone);
@@ -845,7 +835,7 @@ the sdist() flight planning function.
         fp_arr1(2,2*i) = fp_arr(i).lat1;
       }
     }
-    fw_arr = strtok(fname, ".");  
+    fw_arr = strtok(fname, ".");
     fw_name = fw_arr(1)+"_utm_poly.txt"
       fp = open(fw_name, "w");
     for (i=1;i<=numberof(fp_arr1(1,));i++) {
@@ -854,8 +844,8 @@ the sdist() flight planning function.
     close, fp;
   }
 
-  if (!fpoly) {  
-    return fp_arr; 
+  if (!fpoly) {
+    return fp_arr;
   } else {
     return fp_arr1;
   }
@@ -863,22 +853,22 @@ the sdist() flight planning function.
 
 func utmfp2ll (fname, zone=) {
   //amar nayegandhi 06/14/03
-  
+
   if (!zone) zone = 19;
   // read the input ascii file
   fp = open(fname, "r");
 
-  i = 0;   
+  i = 0;
   nc = 0; // null line counter
-  loop=1; 
+  loop=1;
 
   while (loop) {
     i++;
     if ( nc > 50 ) break;
     a = rdline(fp) (1);
     if ( strlen(a) == 0 ) // null counter
-      nc++; 
-    else 
+      nc++;
+    else
       nc = 0;
     st = ""; w=0.0;x=0.0;y=0.0;z=0.0;
     if ((a > "") && !(strmatch(a,"#"))) {
@@ -891,7 +881,7 @@ func utmfp2ll (fname, zone=) {
 }
 
 func read_xy(file,yx=, utm=, zone=, color=, win=, plot=, writefile=) {
-/* read_xy(file,yx=, utm=, zone=) 
+/* read_xy(file,yx=, utm=, zone=)
   amar nayegandhi 11/17/03
 */
 
@@ -899,9 +889,9 @@ func read_xy(file,yx=, utm=, zone=, color=, win=, plot=, writefile=) {
 
   if (!color) color="blue";
 
-  i = 0;   
+  i = 0;
   nc = 0; // null line counter
-  loop=1; 
+  loop=1;
 
   x = 0.0;
   y = 0.0;
@@ -913,9 +903,9 @@ func read_xy(file,yx=, utm=, zone=, color=, win=, plot=, writefile=) {
     a = rdline(f);
     if ( strlen(a) == 0 ) {
       // null counter
-      nc++; 
+      nc++;
       continue;
-    } else { 
+    } else {
       nc = 0;
     }
     if (a > "") {
@@ -960,7 +950,7 @@ func pip_fp(junk,fp=, ply=, win=, mode=,in_utm=,out_utm=, debug=) {
   This function allows the user to make a flight plan by selecting a polygon
   with a series of mouse clicks and defining the orientation...
   The orientation can be defined anywhere in the window by drawing a line.
-  The orientation MUST be defined south->north. 
+  The orientation MUST be defined south->north.
   amar nayegandhi 07/11/04.
   updated by AN on 09/15/04 to include pip and orientation feature.
   Intersection point of 2 lines equation described by Paul Bourke at
@@ -981,14 +971,13 @@ func pip_fp(junk,fp=, ply=, win=, mode=,in_utm=,out_utm=, debug=) {
   Output:  Variable of type FB.  Also writes out the flight plan lines
            to terminal.
 */
-  extern curzone
-    extern lply1;
-  if (is_void(mode)) mode = 4;
-  if (is_void(win)) win = 6;
+  extern curzone, lply1;
+  default, mode, 4;
+  default, win, 6;
   window, win;
 
   //ply = lply1;
-  if (is_void(ply)) 
+  if (is_void(ply))
     ply = getPoly();
   lply1 = ply;
   plpoly, lply1, marker=4;
@@ -1021,7 +1010,7 @@ func pip_fp(junk,fp=, ply=, win=, mode=,in_utm=,out_utm=, debug=) {
   ply = grow(ply, ply(,1));
   fp_new = array(FB);
 
-  if ( !fp.name  ) 
+  if ( !fp.name  )
     fp.name = "noname";
 
   fp_new.name = fp.name;
@@ -1123,12 +1112,11 @@ func write_fp(fp, sw=, aw=, plot=) {
    This function writes out the flight plan to the standard output
    amar nayegandhi 07/12/04
 */
-  if (is_void(sw)) sw = 0.12;
-  if (is_void(aw)) aw = 15.0;
-  if (is_void(msec)) msec = 50.0; // speed of aircraft 50m/s
-  if (is_void(ssturn)) ssturn = 300.0; // 300 seconds to turn
-
-  if (is_void(blockn)) blockn = 7;
+  default, sw, 0.12;
+  default, aw, 15.;
+  default, msec, 50.; // speed of aircraft 50m/s
+  default, ssturn, 300.; // 300 seconds to turn
+  default, blockn, 7;
 
   sw = fp.sw;
   aw = fp.aw;
@@ -1153,7 +1141,7 @@ func write_fp(fp, sw=, aw=, plot=) {
   segsecs = sum(segdist*1000./msec);
   blocksecs = segsecs+(ssturn*numberof(segdist));
 
-  write, format="# Total Seglen=%5.3fkm Total segtime=%4.2f(min) Total time=%3.2f(hrs)\n", 
+  write, format="# Total Seglen=%5.3fkm Total segtime=%4.2f(min) Total time=%3.2f(hrs)\n",
     km, segsecs/60.0, blocksecs/3600.0;
 
   lat1d = abs(double(int(fpxy(2,))*100 + ((fpxy(2,) - int(fpxy(2,))) * 60.0) ));
@@ -1161,7 +1149,7 @@ func write_fp(fp, sw=, aw=, plot=) {
   lat2d = abs(double(int(fpxy(4,))*100 + ((fpxy(4,) - int(fpxy(4,))) * 60.0) ));
   lon2d = abs(double(int(fpxy(3,))*100 + ((fpxy(3,) - int(fpxy(3,))) * 60.0) ));
 
-  write, format="llseg %s-%d n%013.8f:w%12.8f n%13.8f:w%12.8f\n", fp.name, counter, lat1d, lon1d, lat2d, lon2d; 
+  write, format="llseg %s-%d n%013.8f:w%12.8f n%13.8f:w%12.8f\n", fp.name, counter, lat1d, lon1d, lat2d, lon2d;
 
   if (plot) {
     fpfp = array(FP,numberof(fpxy(2,)));
@@ -1174,7 +1162,7 @@ func write_fp(fp, sw=, aw=, plot=) {
 }
 
 func write_globalmapper_fp(fp=, ifname=, ofname=, out_utm=) {
-/* DOCUMENT write_globalmapper_fp(fp, ifname=, ofname=) 
+/* DOCUMENT write_globalmapper_fp(fp, ifname=, ofname=)
      This function writes out the flight plan to an ascii file formatted for global mapper.
      INPUT:
         fp = flight plan array. If ifname is set, fp is not required.
