@@ -86,6 +86,7 @@ func plrect(rec, color=, text=, width=) {
 
 func lldist(lat0, lon0, lat1, lon1) {
 /* DOCUMENT lldist(lat0, lon0, lat1, lon1)
+  -or- lldist([lat0, lon0, lat1, lon1])
   Calculates the great circle distance in nautical miles between two points
   given in geographic coordiantes. Input values may be conformable arrays;
   output will have dimensionality to match.
@@ -93,6 +94,9 @@ func lldist(lat0, lon0, lat1, lon1) {
   To convert to kilometers, multiply by 1.852
   To convert to statute miles, multiply by 1.150779
 */
+  if(is_void(lon0) && numberof(lat0) == 4) {
+    assign, noop(lat0), lat0, lon0, lat1, lon1;
+  }
   lat0 *= DEG2RAD;
   lon0 *= DEG2RAD;
   lat1 *= DEG2RAD;
