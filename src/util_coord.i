@@ -160,6 +160,96 @@ func deg2dms_string(coord) {
     39, abs(dms(..,3)), 34);
 }
 
+func dms_string2deg(coord) {
+/* DOCUMENT dms_string2deg(coord)
+  Converts a geographic coordinate in a string representation of
+  degrees-minutes-seconds format into decimal degrees. Return values will be
+  doubles in the range (-180,180].
+
+  As an illustrative example of the input this can handle, given this test
+  input:
+
+    [
+      ["n25:08:53.69144", "w080:31:58.48680"],
+      ["n25:08:53.69144", "w80:31:58.48680"],
+      ["n25 08 53.69144", "w080 31 58.48680"],
+      ["n25 08 53.69144", "w80 31 58.48680"],
+      ["n250853.69144",   "w0803158.48680"],
+      ["n250853.69144",   "w803158.48680"],
+      ["25:08:53.69144",  "-080:31:58.48680"],
+      ["25:08:53.69144",  "-80:31:58.48680"],
+      ["25 08 53.69144",  "-080 31 58.48680"],
+      ["25 08 53.69144",  "-80 31 58.48680"],
+      ["250853.69144",    "-0803158.48680"],
+      ["n25:08:53.69144", "E279:28:1.5132"],
+      ["n250853.69144",   "E2792801.5132"],
+      ["25:08:53.69144",  "279:28:1.5132"],
+      ["250853.69144",    "2792801.5132"]
+    ]
+
+  The output should all be pairs of [25.14824762,-80.532913].
+
+  Specifically:
+    - Direction can optionally be noted with any of N, S, W, E, n, s, w, or e
+      as the first character. North and east are positive, south and west are
+      negative.
+    - Direction can also be noted using a negative sign.
+    - In the absence of a leading letter or sign, the coordinate is treated as
+      positive.
+    - The degrees, minutes, and seconds may optionally be separated by a colon
+      or space.
+    - If the deegres, minutes, and seconds are not separated by a colon or
+      space, then minutes and seconds must be zero padded if the values are
+      less than 10.
+    - If longitude is given as a positive value over 180, it will be converted
+      into the corresponding negative value.
+    - The output will have the same dimensionality as the input.
+    - Output is not well defined for values that do not fit expected input. A
+      string with no numerical values will result in 0, other strings may have
+      arbitrary results.
+*/
+  if(!is_scalar(coord)) {
+    result = array(double, dimsof(coord));
+    count = numberof(result);
+    for(i = 1; i <= count; i++) {
+      result(i) = dms_string2deg(coord(i));
+    }
+    return result;
+  }
+
+  // Ignore leading/trailing whitespace
+  coord = strtrim(coord);
+
+  // Return 0 for a bad string
+  if(!strlen(coord))
+    return 0;
+
+  // Detect sign
+  sgn = 1;
+  if(strmatch("NnEeSsWw", strpart(coord, 1:1))) {
+    if(strmatch("SsWw", strpart(coord, 1:1)))
+      sgn = -1;
+    coord = strpart(coord, 2:);
+  }
+
+  // Coerce to number(s)
+  d = m = s = 0.;
+  null = "";
+  count = sread(coord, format="%f%[-: ]%f%[-: ]%f", d, null, m, null, s);
+
+  // Coerce to degrees
+  if(count == 1)
+    deg = sgn * dms2deg(d);
+  else
+    deg = (abs(d) + m / 60.0 + s / 3600.0) * sign(d) * sgn;
+
+  // Handle large longitudes
+  if(deg > 180)
+    deg -= 360;
+
+  return deg;
+}
+
 func xyz_dm2deg(xyz, fixlon=) {
 /* DOCUMENT result = xyz_dm2deg(xyz, fixlon=)
   Given a 2-dimensional array with five columns as [x degrees, x minutes, y
