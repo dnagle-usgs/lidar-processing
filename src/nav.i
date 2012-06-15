@@ -44,10 +44,10 @@ func fb2fp(fb) {
     pt = array(double, 4);
     fp(i).name = fb.name;
     pt = (*fb.p)(i,);
-    fp(i).lat1 = pt(1);
-    fp(i).lon1 = pt(2);
-    fp(i).lat2 = pt(3);
-    fp(i).lon2 = pt(4);
+    fp(i).lon1 = pt(1);
+    fp(i).lat1 = pt(2);
+    fp(i).lon2 = pt(3);
+    fp(i).lat2 = pt(4);
   }
   return fp;
 }
