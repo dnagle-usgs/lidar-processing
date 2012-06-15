@@ -1168,35 +1168,64 @@ func write_fp(fp, sw=, aw=, plot=) {
   }
 }
 
-func write_globalmapper_fp(fp=, ifname=, ofname=, out_utm=) {
-/* DOCUMENT write_globalmapper_fp(fp, ifname=, ofname=)
-     This function writes out the flight plan to an ascii file formatted for global mapper.
-     INPUT:
-        fp = flight plan array. If ifname is set, fp is not required.
-        ifname= input file name for the flight planning file. If fp is set, ifname is not required.
-        ofname = output file name for the Ascii Global Mapper formatted file.  If ifname is set and ofname is not set, ofname will be determined from ifname.
-        out_utm = set to 1 if you want the output to be in UTM coordinates
-     Amar Nayegandhi Feb 10, 2005.
+func write_globalmapper_fp(input, fp=, ifname=, ofname=, outfile=, out_utm=) {
+/* DOCUMENT write_globalmapper_fp(fp, outfile=, out_utm=)
+  This function writes out the flight plan to an ascii file formatted for
+  Global Mapper.
+
+  Parameters:
+    input: The flight plan array (in FB or FP struct) or the name of a flight
+      planning file.
+  Options:
+    fp= Flight plan array. (deprecated, ignored if INPUT provided)
+    ifname= Input file name for flight planning file. (deprecated, ignored if
+      INPUT provided)
+    outfile= Output file name. If an input file name was given, this defaults to
+      the input file with _globalmapper or _globalmapper_utm inserted before
+      the extension.
+    out_utm= Set to 1 to make output in UTM coordinates.
+
+  Deprecated:
+  The following old options are still accepted, but are deprecated:
+    fp= Flight plan array. (deprecated, ignored if INPUT provided)
+    ifname= Input file name for flight planning file. (deprecated, ignored if
+      INPUT provided)
+    ofname= Output file name. If an input file name was given, this defaults to
+      the input file with _globalmapper or _globalmapper_utm inserted before
+      the extension. (deprecated, ignored if OUTFILE= is given)
 */
-  if (!is_void(ifname)) {
-    fp = read_fp(ifname, out_utm=out_utm);
+// Deprecated 2012-06-15: fp=, ifname=, and ofname
+  default, input, ifname;
+  default, input, fp;
+  default, outfile, ofname;
+
+  if(is_string(input)) {
+    default, outfile,
+      file_rootname(input)+"_globalmapper"+(out_utm?"_utm":"")+file_tail(input);
+    input = read_fp(input, out_utm=out_utm);
   }
 
-  if (is_void(ofname)) {
-    sp = split_path(ifname,0, ext=1);
-    if (is_void(out_utm)) {
-      ofname = sp(1)+"_globalmapper"+sp(2);
-    } else {
-      ofname = sp(1)+"_globalmapper_utm"+sp(2);
-    }
-  }
+  if(structeq(structof(input), FB))
+    input = fb2fp(input);
 
-  f = open(ofname,"w");
-  if (is_void(out_utm)) {
-    write, f, format="%10.6f %10.6f \n%10.6f %10.6f\n\n",fp.lon1, fp.lat1, fp.lon2, fp.lat2;
-  } else {
-    write, f, format="%10.2f %10.2f \n%10.2f %10.2f\n\n",fp.lon1, fp.lat1, fp.lon2, fp.lat2;
+  count = numberof(input);
+  shp = array(pointer, count);
+  meta = array(string, count);
+  for(i = 1; i <= count; i++) {
+    ply = [[input(i).lon1,input(i).lat1],[input(i).lon2,input(i).lat2]];
+    shp(i) = &ply;
+    meta(i) = "BORDER_COLOR=RGB(0,255,0)\n"+
+      "BORDER_WIDTH=3\n"+
+      "BORDER_STYLE=Solid\n"+
+      "FILL_COLOR=RGB(0,0,0)\n"+
+      "FILL_STYLE=No Fill\n"+
+      swrite(format="LABEL_POS=%g,%g\n", ply(1,avg), ply(2,avg))+
+      "CLOSED=YES\n"+
+      "FONT_SIZE=12\n"+
+      "FONT_COLOR=RGB(0,0,0)\n"+
+      "FONT_CHARSET=0\n"+
+      swrite(format="FLIGHTLINE_NUMBER=%d\n", i)+
+      swrite(format="FLIGHTLINE_LENGTH=%.2f km\n", lldist(ply(*))*1.852);
   }
-
-  close, f;
+  write_ascii_shapefile, shp, outfile, meta=meta;
 }
