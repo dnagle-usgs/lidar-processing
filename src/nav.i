@@ -84,16 +84,6 @@ func plrect(rec, color=, text=, width=) {
     plt, "^" + text, x(min), y(max), height=8, tosys=1, color=color;
 }
 
-func dist ( lat0,lon0,lat1,lon1 ) {
-  lat0 =  DEG2RAD * lat0;
-  lat1 =  DEG2RAD * lat1;
-  lon0 =  DEG2RAD * lon0;
-  lon1 =  DEG2RAD * lon1;
-  rv   =  60.0*acos(sin(lat0)*sin(lat1)+cos(lat0) * cos(lat1)*cos(lon0-lon1));
-  return rv * RAD2DEG;
-}
-
-
 func lldist ( lat0,lon0,lat1,lon1 )
 {
   rlat0 = DEG2RAD * lat0;
