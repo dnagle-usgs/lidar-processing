@@ -107,114 +107,100 @@ func lldist(lat0, lon0, lat1, lon1) {
   return ca * RAD2DEG * 60;
 }
 
-func mdist ( none, nodraw=, units=, win=, redrw=, nox= ) {
-/* DOCUMENT mdist
+func mdist(nil, units=, win=, plot=, verbose=, nox=, noy=) {
+/* DOCUMENT mdist(units=, win=, plot=, verbose=, nox=, noy=)
+  Measure the distance between two points as selected by mouse click and return
+  the distance in meters. The distance in nautical miles, statue miles, and
+  meters or kilometers will also be displayed to the console.
 
-  Measure the distance between two points clicked on by the mouse
-  and return the distance.  The win= lets you make the measurement in
-  other than the current window.  The current window is restored afterward.
-  "units=" can be either "ll", "m", "cm", or "mm" where ll selects 
-  decimal latitude, longitude for inout, and "m" for meters, "cm" for 
-  centimeters, and "mm" for millimeters.  The "units=" describes the
-  scaling of the input data.  For example, if the input data is in centimeters
-  then selecting units="cm" will insure the output will be in meters. The
-  output is intended to always be in meters.  If the nodraw= parameter is
-  true, then when in the "ll" mode the measured line will not be displayed.
-  
-
-   Inputs:
-         win=   Select a window different than current.
-      nodraw= 
-       units= "m"  for meters
-              "cm" for Centimeters
-              "mm" for Millimeters
-              "ll" for lat/lon in decimal degrees 
-         nox=   Remove X from the calculation.  This is useful in a
-                transect window to get height differences.
-
+  Options:
+    units= Specifies the units used in the input window.
+        units="ll"  Geographic coordinates in degrees (default)
+        units="m"   Meters
+        units="cm"  Centimeters
+        units="mm"  Millimeters
+    win= Specifies a window. If omitted, the current window is used.
+    plot= Can be used to turn on/off plotting of the line drawn.
+        plot=0      Turn off plotting
+        plot=1      Turn on plotting (default)
+    verbose= Specifies whether to display text to the console.
+        verbose=0   Display nothing to the console
+        verbose=1   Display info to the console (default)
+    nox= Eliminates X from the distance calculation. (Useful to get height
+      differences in a transect window, for example.)
+        nox=0   Include X (default)
+        nox=1   Exclude X
+    noy= Eliminates Y from the distance calculation.
+        noy=0   Include Y (default)
+        noy=1   Exclude Y
 
   Returns:
-    Distance in meters. 
+    Scalar distance in meters.
 
-  SEE ALSO:  sdist, lldist, plrect, pip_fp
-
+  SEE ALSO: sdist, lldist, plrect, pip_fp
 */
+  default, units, "ll";
+  default, win, window();
+  default, plot, 1;
+  default, verbose, 1;
 
-// Default to decimal degrees of lat/lon if units is not
-// set.
-  msz = .3;
-  if ( is_void( units ) ) {
-    units = "ll";
-  }
+  msize = 0.3;
+  prompt = swrite(format="Click and drag left mouse button in window %d:", win);
 
-  if ( !is_void(win) ) {
-    winSave = current_window();
-    window(win);
-  }
+  wbkp = current_window();
+  window, win;
 
   forever = 1;
-  do  {
-    res = mouse(1, 2, "Hold left mouse, and drag distance:"); // style=2 normally
-    forever = [abs(res(1:4:2)(dif))(1),abs(res(2:4:2)(dif))(1)](sum); 
-    if ( forever == 0 ) 
-      write,format="\007You must keep the left mouse button down when you're dragging out the line!","";
-  } while ( forever == 0 );
-  if ( redrw ) 
-    redraw;
-
-  d = array(double, 3);
-  if ( units == "ll" ) {   ////////////  Lat/Lon
-    d(1) = lldist( res(2), res(1), res(4), res(3) );
-    d(2) = d(1)  * 1.1507794;      // convert to stat miles
-    d(3) = d(1)  * 1.852;          // also to kilometers
-    print,"# nm/sm/km",d;
-
-    if ( is_void(nodraw) ) {
-      plmk, res(2),res(1), msize=msz;
-      plmk, res(4),res(3), msize=msz;
-      plg, [res(2),res(4)], [res(1),res(3)],color="red",marks=0;
-    }
-    grow, res, d;
-    rv = res;
+  while(1) {
+    click = mouse(1, 2, prompt);
+    if(anyof(click(1:2) - click(3:4))) break;
+    write, "You must keep the left mouse button down while dragging the line.";
+    write, "Make sure you click in the correct window.";
   }
 
-  if ( (units=="mm") || (units=="cm") || (units=="m") ) {
-    if ( nox == 1 )
-      dx = 0;
-    else 
-      dx = res(3) - res(1);
-    dy = res(4) - res(2);
-    if ( units == "m" )  div =    1.0;
-    else if ( units == "cm" ) div =  100.0;
-    else if ( units == "mm" ) div = 1000.0;
+  result = [];
 
-    dist = sqrt( dx^2 + dy^2) ;
-    distm = dist / div;
+  if(units == "ll") {
+    nm = lldist(click(2), click(1), click(4), click(3));
+    sm = nm * 1.150779;
+    km = nm * 1.852;
+    m = km / 1000.;
+  } else {
+    dx = nox ? 0 : (click(3) - click(1));
+    dy = noy ? 0 : (click(4) - click(2));
+    m = sqrt(dx*dx + dy*dy);
 
-    d(3) = dist/1000; // convert to km
-    d(1) = d(3)/1.852;  // convert to nautical miles
-    d(2) = d(1)*1.1507794; // convert to stat miles
-    print,"# nm/sm/km",d;
+    if(units == "cm")
+      m *= 0.01;
+    else if(units == "mm")
+      m *= 0.001;
+    else if(units != "m")
+      error, "Unknown units= value";
 
-    if ( is_void(nodraw) ) {
-      plmk, res(2),res(1), msize=msz;
-      plmk, res(4),res(3), msize=msz;
-      plg, [res(2),res(4)], [res(1),res(3)],color="red",marks=0;
-    }
-    grow, res, d;
-    rv = res;
+    km = m / 1000.;
+    nm = km / 1.852;
+    sm = nm * 1.150779;
+  }
 
-    if ( distm > 1000.0 )
-      write,format="Distance is %5.3f kilometers\n", distm/1000.0;
+  if(verbose) {
+    write, "Distance is:";
+    write, format="   %.3f nautical miles\n", nm;
+    write, format="   %.3f statute miles\n", sm;
+    if(km > 1)
+      write, format="   %.3f kilometers\n", km;
     else
-      write,format="Distance is %5.3f meters\n", distm;
-
-    //rv = dist;
+      write, format="   %.3f meters\n", m;
   }
-  if ( !is_void(win) )    // restore orginal window
-    window_select,winSave;
-  return rv;
-}                                                     
+
+  if(plot) {
+    plmk, click(2), click(1), msize=msize;
+    plmk, click(4), click(3), msize=msize;
+    plg, [click(2),click(4)], [click(1),click(3)], color="red", marks=0;
+  }
+
+  window_select, wbkp;
+  return m;
+}
 
 if (is_void(blockn) )
   blockn = 1;   // block number
