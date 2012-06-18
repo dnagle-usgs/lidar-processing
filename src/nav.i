@@ -624,7 +624,7 @@ func pl_fp(fp, win=, color=, width=, labels=, skip=) {
   window_select, wbkp;
 }
 
-func read_fp(fname, utm=, plot=, win=) {
+func read_fp(fname, utm=, shapefile=, plot=, win=) {
 /*
   A .fp file will generally have a format like this:
 
@@ -696,6 +696,14 @@ func read_fp(fname, utm=, plot=, win=) {
   }
 
   fp.lines = &[x1,y1,x2,y2];
+
+  if(!is_void(shapefile)) {
+    shp = read_ascii_shapefile(shapefile);
+    if(numberof(shp) != 1)
+      error, "shapefile must contain exactly one polygon!";
+    fp.region = shp(1);
+    shp = [];
+  }
 
   if(plot) {
     pl_fp, fp, win=win;
