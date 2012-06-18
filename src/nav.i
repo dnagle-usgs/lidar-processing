@@ -52,10 +52,8 @@ func fb2fp(fb) {
 */
   nbr = dimsof(*fb.p)(2);
   fp = array(FP, nbr);
-  fp.name = fb.name;
+  fp.name = swrite(format="%s-%d", fb.name, indgen(nbr));
   for(i=1; i<= nbr; i++) {
-    pt = array(double, 4);
-    fp(i).name = fb.name;
     pt = (*fb.p)(i,);
     fp(i).lon1 = pt(1);
     fp(i).lat1 = pt(2);
