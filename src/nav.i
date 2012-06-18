@@ -750,8 +750,6 @@ func pip_fp(junk, fp=, ply=, shapefile=, win=, mode=, in_utm=, out_utm=, debug=)
   if(!is_array(fp)) {
     write, "Please define flight plan orientation";
     fp = sdist(mode=mode, block=block, line=line,in_utm=in_utm, out_utm=out_utm, ply=ply, silent=1, fill=0, debug=debug);
-    extern fpbkp;
-    fpbkp = fp;
   }
   fpxy = *fp.lines;
   // convert to utm
