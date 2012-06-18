@@ -764,8 +764,15 @@ func read_fp(fname, utm=, plot=, win=) {
   fp_arr = fb2fp(read_fp_as_fb(fname));
 
   if(utm) {
-    u1 = fll2utm(fp_arr.lat1, fp_arr.lon1);
-    u2 = fll2utm(fp_arr.lat2, fp_arr.lon2);
+    u1 = ll2utm(fp_arr.lat1, fp_arr.lon1);
+    u2 = ll2utm(fp_arr.lat2, fp_arr.lon2);
+    // If they aren't all in the same zone, then force them to curzone if set.
+    if(nallof(u1(3,) == u1(3,1)) || nallof(u2(3,) == u1(3,))) {
+      if(curzone) {
+        u1 = ll2utm(fp_arr.lat1, fp_arr.lon1, force_zone=curzone);
+        u2 = ll2utm(fp_arr.lat2, fp_arr.lon2, force_zone=curzone);
+      }
+    }
     fp_arr.lat1 = u1(1,);
     fp_arr.lat2 = u2(1,);
     fp_arr.lon1 = u1(2,);
