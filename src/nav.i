@@ -488,18 +488,18 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
     }
   }
 
-  if (is_void(stturn) )
-    stturn = 300.0; // seconds to turn
+  if (is_void(ssturn) )
+    ssturn = 300.0; // seconds to turn
   if (is_void(msec) )
     msec = 50.0;    // speed in meters/second
 
   if (!silent) {
     write,format="# set sw %f; set aw %f;  set msec %f; set ssturn %f set block %d\n",
-      sw, aw, msec, stturn, blockn;
+      sw, aw, msec, ssturn, blockn;
     write,format="# %f %f %f %f \n", click(2),click(1), click(4), click(3);
   }
   segsecs = km*1000.0 / msec;
-  blocksecs = (segsecs + stturn ) * int(segs);
+  blocksecs = (segsecs + ssturn ) * int(segs);
   if (!silent) {
     write, format="# set Seglen %5.3fkm; set segtime %4.2f; (min) set Total_time %3.2f(hrs)\n",
       km, segsecs/60.0, blocksecs/3600.0;
