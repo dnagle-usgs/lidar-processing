@@ -9,7 +9,8 @@ func kml_fp(fp, outfile=, color=, name=) {
   if(is_void(outfile))
     error, "Must supply outfile=";
 
-  default, color, kml_color(0,255,0);
+  // Default is gray with 10% opacity
+  default, color, kml_color(128,128,128,25);
   if(is_numerical(color)) {
     if(numberof(color) == 3)
       color = kml_color(color(1), color(2), color(3));
