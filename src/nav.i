@@ -52,38 +52,6 @@ func fb2fp(fb) {
   return fp;
 }
 
-func plrect(rec, color=, text=, width=) {
-/* DOCUMENT plrect(rec, color=, text=, width=)
-  Plots a rectangle includes a text label, useful for plotting areas of
-  interest. REC should be a vector with four values as such:
-
-    [y0, x0, y1, x1]
-
-  These values define a bounding box; order is not important.
-
-  Parameter:
-    rec: The input vector representing the rectangle.
-  Options:
-    color= Color to use when plotting box and text.
-        color="red"   Default
-    text= Text to display at top left of box (optional).
-    width= Width to make lines in box.
-        width=1.0     Default
-*/
-  default, color, "red";
-  default, width, 1.0;
-
-  if(is_string(rec))
-    rec = dms_string2deg(rec);
-
-  y = rec([1,3])([1,1,2,2,1]);
-  x = rec([2,4])([1,2,2,1,1]);
-
-  plg, y, x, marks=0, color=color, width=width;
-  if(!is_void(text))
-    plt, "^" + text, x(min), y(max), height=8, tosys=1, color=color;
-}
-
 func lldist(lat0, lon0, lat1, lon1) {
 /* DOCUMENT lldist(lat0, lon0, lat1, lon1)
   -or- lldist([lat0, lon0, lat1, lon1])
