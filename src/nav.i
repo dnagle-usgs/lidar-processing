@@ -1082,22 +1082,11 @@ func pip_fp(junk,fp=, ply=, win=, mode=,in_utm=,out_utm=, debug=) {
   return fp_new;
 }
 
-func write_fp(fp, sw=, aw=, plot=) {
+func write_fp(fp, plot=) {
 /* DOCUMENT write_fp(fp)
    This function writes out the flight plan to the standard output
    amar nayegandhi 07/12/04
 */
-  default, sw, 0.12;
-  default, aw, 15.;
-  default, msec, 50.; // speed of aircraft 50m/s
-  default, ssturn, 300.; // 300 seconds to turn
-  default, blockn, 7;
-
-  sw = fp.sw;
-  aw = fp.aw;
-  msec = fp.msec;
-  ssturn = fp.ssturn;
-
   fpxy = *fp.p;
   fpxy = transpose(fpxy);
 
@@ -1108,7 +1097,7 @@ func write_fp(fp, sw=, aw=, plot=) {
   res(3) = max(fpxy(3,));
   res(4) = max(fpxy(4,));
 
-  write,format="# sw=%f aw=%f msec=%f ssturn=%f block=%d\n", sw, aw, msec, ssturn, blockn;
+  write,format="# sw=%f aw=%f msec=%f ssturn=%f block=%d\n", fp.sw, fp.aw, fp.msec, fp.ssturn, fp.block;
   write,format="# %f %f %f %f \n", res(2),res(1), res(4), res(3);
 
   // now calculate the new total segment length and total time
