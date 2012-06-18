@@ -1,10 +1,10 @@
 require, "eaarl.i";
 
-func kml_fp(fb, outfile=, color=, name=) {
-  if(is_string(fb)) {
+func kml_fp(fp, outfile=, color=, name=) {
+  if(is_string(fp)) {
     default, ofname,
-      file_rootname(fb)+"_globalmapper"+(out_utm?"_utm":"")+file_tail(fp);
-    fb = read_fp(fb);
+      file_rootname(fp)+"_globalmapper"+(out_utm?"_utm":"")+file_tail(fp);
+    fp = read_fp(fp);
   }
   if(is_void(outfile))
     error, "Must supply outfile=";
@@ -19,12 +19,12 @@ func kml_fp(fb, outfile=, color=, name=) {
   }
 
 
-  default, name, fb.name;
+  default, name, fp.name;
 
-  lon1 = (*fb.p)(,1);
-  lat1 = (*fb.p)(,2);
-  lon2 = (*fb.p)(,3);
-  lat2 = (*fb.p)(,4);
+  lon1 = (*fp.p)(,1);
+  lat1 = (*fp.p)(,2);
+  lon2 = (*fp.p)(,3);
+  lat2 = (*fp.p)(,4);
 
   count = numberof(lon1);
   lines = array(string, count);
@@ -59,9 +59,9 @@ func kml_fp(fb, outfile=, color=, name=) {
     desc += swrite(format="msec=%.3f\n", msec);
     desc += swrite(format="ssturn=%.3f\n", ssturn);
   }
-  if(!is_void(fb)) {
-    desc += swrite(format="aw=%.6f\n", fb.aw);
-    desc += swrite(format="sw=%.6f\n", fb.sw);
+  if(!is_void(fp)) {
+    desc += swrite(format="aw=%.6f\n", fp.aw);
+    desc += swrite(format="sw=%.6f\n", fp.sw);
   }
   desc = strjoin(strsplit(desc, "\n"), "<br />");
   desc = "<![CDATA["+desc+"]]>";
