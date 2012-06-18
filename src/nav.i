@@ -50,16 +50,13 @@ func fb2fp(fb) {
    Inputs: a variable of type FB
    returns: FB data converted to FP type.
 */
-  nbr = dimsof(*fb.p)(2);
-  fp = array(FP, nbr);
-  fp.name = swrite(format="%s-%d", fb.name, indgen(nbr));
-  for(i=1; i<= nbr; i++) {
-    pt = (*fb.p)(i,);
-    fp(i).lon1 = pt(1);
-    fp(i).lat1 = pt(2);
-    fp(i).lon2 = pt(3);
-    fp(i).lat2 = pt(4);
-  }
+  count = dimsof(*fb.p)(2);
+  fp = array(FP, count);
+  fp.name = swrite(format="%s-%d", fb.name, indgen(count));
+  fp.lon1 = (*fb.p)(,1);
+  fp.lat1 = (*fb.p)(,2);
+  fp.lon2 = (*fb.p)(,3);
+  fp.lat2 = (*fb.p)(,4);
   return fp;
 }
 
