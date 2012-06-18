@@ -26,7 +26,8 @@ extern FP;
     double dseg(4); // defining segment
     float alat(5);  // lat corners of total area
     float alon(5);  // lon corners of total area
-    pointer lines;  // a pointer to the array of flightlines.
+    pointer lines;  // a pointer to the array of flightlines
+    pointer region; // polygon for region selected
   };
 */
 
@@ -36,7 +37,7 @@ struct FP {
   float aw, sw, msec, ssturn, kmlen;
   double dseg(4);
   float alat(5), alon(5);
-  pointer lines;
+  pointer lines, region;
 };
 
 func lldist(lat0, lon0, lat1, lon1) {
@@ -788,6 +789,7 @@ func pip_fp(junk, fp=, ply=, shapefile=, win=, mode=, in_utm=, out_utm=, debug=)
   fp_new.dseg = fp.dseg;
   fp_new.alat = fp.alat;
   fp_new.alon = fp.alon;
+  fp_new.region = &ply;
 
   for (i=1; i<numberof(ply(1,));i++) {
     x1 = ply(1,i);
