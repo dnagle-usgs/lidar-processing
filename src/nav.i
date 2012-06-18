@@ -944,11 +944,21 @@ func pip_fp(junk,fp=, ply=, win=, mode=,in_utm=,out_utm=, debug=) {
   return fp_new;
 }
 
-func write_fp(fp, plot=) {
-/* DOCUMENT write_fp(fp)
-   This function writes out the flight plan to the standard output
-   amar nayegandhi 07/12/04
+func write_fp(fp, outfile=, plot=) {
+/* DOCUMENT write_fp(fp, outfile=, plot=)
+  Writes the data for a flight plan.
+
+  Parameter:
+    fp: An instance of FB data, containing the flight plan.
+  Options:
+    outfile= If specified, output will be written to this file. Otherwise, it
+      will go to stdout (the console).
+    plot= If plot=1, the data will be plotted as well.
 */
+  f = [];
+  if(outfile)
+    f = open(outfile, "w");
+
   fpxy = *fp.p;
   fpxy = transpose(fpxy);
 
@@ -959,8 +969,9 @@ func write_fp(fp, plot=) {
   res(3) = max(fpxy(3,));
   res(4) = max(fpxy(4,));
 
-  write,format="# sw=%f aw=%f msec=%f ssturn=%f block=%d\n", fp.sw, fp.aw, fp.msec, fp.ssturn, fp.block;
-  write,format="# %f %f %f %f \n", res(2),res(1), res(4), res(3);
+  write, f, format="# sw=%f aw=%f msec=%f ssturn=%f block=%d\n",
+    fp.sw, fp.aw, fp.msec, fp.ssturn, fp.block;
+  write, f, format="# %f %f %f %f \n", res(2),res(1), res(4), res(3);
 
   // now calculate the new total segment length and total time
   segdist = lldist(fpxy(2,), fpxy(1,), fpxy(4,), fpxy(3,));
@@ -969,7 +980,8 @@ func write_fp(fp, plot=) {
   segsecs = sum(segdist*1000./msec);
   blocksecs = segsecs+(ssturn*numberof(segdist));
 
-  write, format="# Total Seglen=%5.3fkm Total segtime=%4.2f(min) Total time=%3.2f(hrs)\n",
+  write, f,
+    format="# Total Seglen=%5.3fkm Total segtime=%4.2f(min) Total time=%3.2f(hrs)\n",
     km, segsecs/60.0, blocksecs/3600.0;
 
   lat1d = abs(double(int(fpxy(2,))*100 + ((fpxy(2,) - int(fpxy(2,))) * 60.0) ));
@@ -977,7 +989,11 @@ func write_fp(fp, plot=) {
   lat2d = abs(double(int(fpxy(4,))*100 + ((fpxy(4,) - int(fpxy(4,))) * 60.0) ));
   lon2d = abs(double(int(fpxy(3,))*100 + ((fpxy(3,) - int(fpxy(3,))) * 60.0) ));
 
-  write, format="llseg %s-%d n%013.8f:w%12.8f n%13.8f:w%12.8f\n", fp.name, counter, lat1d, lon1d, lat2d, lon2d;
+  write, f, format="llseg %s-%d n%013.8f:w%12.8f n%13.8f:w%12.8f\n",
+    fp.name, counter, lat1d, lon1d, lat2d, lon2d;
+
+  if(!is_void(f))
+    close, f;
 
   if (plot) {
     fpfp = array(FP,numberof(fpxy(2,)));
