@@ -712,7 +712,7 @@ func read_fp(fname, utm=, shapefile=, plot=, win=) {
   return fp;
 }
 
-func pip_fp(junk, fp=, ply=, shapefile=, win=, mode=, in_utm=, out_utm=, debug=) {
+func pip_fp(junk, fp=, ply=, shapefile=, name=, win=, mode=, in_utm=, out_utm=, debug=) {
 /* DOCUMENT pip_fp(fp, ply=, win=)
   This function allows the user to make a flight plan by selecting a polygon
   with a series of mouse clicks and defining the orientation...
@@ -739,6 +739,9 @@ func pip_fp(junk, fp=, ply=, shapefile=, win=, mode=, in_utm=, out_utm=, debug=)
            to terminal.
 */
   extern curzone, lply1;
+  if(!is_void(fp))
+    default, name, fp(1).name;
+  default, name, "noname";
   default, mode, 4;
   default, win, 6;
   window, win;
@@ -785,10 +788,7 @@ func pip_fp(junk, fp=, ply=, shapefile=, win=, mode=, in_utm=, out_utm=, debug=)
   ply = grow(ply, ply(,1));
   fp_new = array(FP);
 
-  if ( !fp.name  )
-    fp.name = "noname";
-
-  fp_new.name = fp.name;
+  fp_new.name = name;
   fp_new.block = fp.block;
   fp_new.aw = fp.aw;
   fp_new.sw = fp.sw;
