@@ -752,38 +752,32 @@ func read_fp(fname, utm=, plot=, win=) {
       be in lat/lon.
     plot= Plot the flightline lines if plot=1. Otherwise, don't.
     win= Specifies the window to plot in, defaulting to the current.
-
-  Orginal: amar nayegandhi 07/22/02
-
-  9/4/2002 -ww Modified so you don't need to know how many lines in the
-               file.  I will stop reading the file when 50 null lines
-               are detected in a sequence.
 */
   default, plot, 0;
 
-  fp_arr = fb2fp(read_fp_as_fb(fname));
+  fp = fb2fp(read_fp_as_fb(fname));
 
   if(utm) {
-    u1 = ll2utm(fp_arr.lat1, fp_arr.lon1);
-    u2 = ll2utm(fp_arr.lat2, fp_arr.lon2);
+    u1 = ll2utm(fp.lat1, fp.lon1);
+    u2 = ll2utm(fp.lat2, fp.lon2);
     // If they aren't all in the same zone, then force them to curzone if set.
     if(nallof(u1(3,) == u1(3,1)) || nallof(u2(3,) == u1(3,))) {
       if(curzone) {
-        u1 = ll2utm(fp_arr.lat1, fp_arr.lon1, force_zone=curzone);
-        u2 = ll2utm(fp_arr.lat2, fp_arr.lon2, force_zone=curzone);
+        u1 = ll2utm(fp.lat1, fp.lon1, force_zone=curzone);
+        u2 = ll2utm(fp.lat2, fp.lon2, force_zone=curzone);
       }
     }
-    fp_arr.lat1 = u1(1,);
-    fp_arr.lat2 = u2(1,);
-    fp_arr.lon1 = u1(2,);
-    fp_arr.lon2 = u2(2,);
+    fp.lat1 = u1(1,);
+    fp.lat2 = u2(1,);
+    fp.lon1 = u1(2,);
+    fp.lon2 = u2(2,);
   }
 
-  if ( plot ) {
-    pl_fp(fp_arr, win=win);
+  if(plot) {
+    pl_fp, fp, win=win;
   }
 
-  return fp_arr;
+  return fp;
 }
 
 func utmfp2ll (fname, zone=) {
