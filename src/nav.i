@@ -274,7 +274,6 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
   // adjust so all segments are from left to right
   // only the user coords. are changed
 
-  //if (mode != 4) {
   if ( click(1) > click(3) ) {
     temp = click;
     click(1) = temp(3);
@@ -283,7 +282,6 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
     click(4) = temp(2);
     sf = -sf;   // keep block on same side
   }
-  //}
   click;
 
   llat = [click(2), click(4)];
@@ -305,30 +303,7 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
     uply = fll2utm(ply(2,), ply(1,));
     minleftidx = (uply(2,))(mnx);
     leftpt = [uply(2,minleftidx), uply(1,minleftidx)]; // xy format
-    /*
-    // now find the northernmost ply translated pt
-    //minnorthidx = (uply(1,))(mxx);
-    //northpt = [uply(2,minnorthidx), uply(1,minnorthidx)]; // xy format
 
-    // now loop through each uply pt and find the line passing through it with
-    // slope "slope"
-
-    npty = northpt(2);
-    spty = southpt(2);
-    nptx = array(double,numberof(uply(2,)));
-    sptx = array(double,numberof(uply(2,)));
-    for (i=1;i<=numberof(uply(2,));i++) {
-    nptx(i) = uply(2,i)-(uply(1,i)-npty)/slope;
-    sptx(i) = uply(2,i)-(uply(1,i)-spty)/slope;
-    }
-
-    sptxidx = sptx(mnx);
-    fsouthpt = [sptx(sptxidx), spty];
-
-    //UTMNorthing = [spty,npty];
-    //UTMEasting = [sptx(sptxidx),nptx(sptxidx)];
-
-     */
     // the slope of the line perpedicular to this line is -1/slope
     pslope = -1.0/slope;
     // now loop through each uply pt and find the intersecting pt of the 2
@@ -351,9 +326,9 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
       plmk, fleftpt(2), fleftpt(1), marker=4, width=10, color="blue", msize=0.3;
     }
 
-    // now this is the left most point but we still need to find the north and south extent
-    // again find intersecting pt of perpendiculars to this line and take the southermost
-    // and northernmost points as end points
+    // now this is the left most point but we still need to find the north and
+    // south extent again find intersecting pt of perpendiculars to this line
+    // and take the southermost and northernmost points as end points
     px = array(double,numberof(uply(2,)));
     py = array(double,numberof(uply(2,)));
     for (i=1;i<=numberof(uply(2,));i++) {
@@ -461,7 +436,6 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
   if (is_array(ply1))
     click(1) = min(ply1(1,));
   Long += click(1);
-  //Long += min(ply1(1,));
 
   // save previous zone number
   pZoneNumber = ZoneNumber(1);
@@ -505,21 +479,19 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
       km, segsecs/60.0, blocksecs/3600.0;
   }
 
-  /////////// Now convert the actual flight lines
+  // Now convert the actual flight lines
   Xlong = Long; // save Long cuz utm2ll clobbers it
   Xlat  = Lat;
   zone = array(pZoneNumber, dimsof( sega) (2) );
   utm2ll, sega(,1), sega(,2), zone, Long, Lat;
   sega(,1) = Lat;
   sega(,2) = Long + click(1);
-  //sega(,2) = Long + min(ply1(1,));
   utm2ll, sega(,3), sega(,4), zone, Long, Lat;
   sega(,3) = Lat;
   sega(,4) = Long + click(1);
-  //sega(,4) = Long + min(ply1(1,));
   rg = 1:0:2;
 
-  /* See if the user want's to display the lines */
+  // See if the user want's to display the lines
   if ( (fill & 0x1 ) == 1 ) {
     if (in_utm) {
       useg1 = fll2utm(sega(,1), sega(,2));
@@ -547,7 +519,6 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
       pldj,sega(rg,2),sega(rg,1),sega(rg,4),sega(rg,3),color="green";
     }
   }
-  //  write,format="%12.8f %12.8f %12.8f %12.8f\n", sega(,1),sega(,2),sega(,3),sega(,4)
   if (!silent) {
     if (out_utm) {
       write,format="utmseg %d-%d e%8.2f:n%9.2f e%8.2f:n%9.2f\n", blockn, indgen(1:int(segs)),
@@ -579,7 +550,6 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
   }
   // put a line around it
   r = 3:7;
-  /// plg,Lat(r),Long(r)
   if (!in_utm) {
     if ( (fill & 0x4 ) == 4 ) {
       plg, [click(2),click(4)], [click(1),click(3)],color="red",marks=0;
