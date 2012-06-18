@@ -944,12 +944,12 @@ func pip_fp(junk,fp=, ply=, win=, mode=,in_utm=,out_utm=, debug=) {
   return fp_new;
 }
 
-func write_fp(fp, outfile=, plot=) {
-/* DOCUMENT write_fp(fp, outfile=, plot=)
+func write_fp(fb, outfile=, plot=) {
+/* DOCUMENT write_fp(fb, outfile=, plot=)
   Writes the data for a flight plan.
 
   Parameter:
-    fp: An instance of FB data, containing the flight plan.
+    fb: An instance of FB data, containing the flight plan.
   Options:
     outfile= If specified, output will be written to this file. Otherwise, it
       will go to stdout (the console).
@@ -959,22 +959,22 @@ func write_fp(fp, outfile=, plot=) {
   if(outfile)
     f = open(outfile, "w");
 
-  fpxy = *fp.p;
-  fpxy = transpose(fpxy);
+  fbxy = *fb.p;
+  fbxy = transpose(fbxy);
 
-  counter = int(span(1,numberof(fpxy(1,)), numberof(fpxy(1,))));
+  counter = int(span(1,numberof(fbxy(1,)), numberof(fbxy(1,))));
   res = array(double, 4);
-  res(1) = min(fpxy(1,));
-  res(2) = min(fpxy(2,));
-  res(3) = max(fpxy(3,));
-  res(4) = max(fpxy(4,));
+  res(1) = min(fbxy(1,));
+  res(2) = min(fbxy(2,));
+  res(3) = max(fbxy(3,));
+  res(4) = max(fbxy(4,));
 
   write, f, format="# sw=%f aw=%f msec=%f ssturn=%f block=%d\n",
-    fp.sw, fp.aw, fp.msec, fp.ssturn, fp.block;
+    fb.sw, fb.aw, fb.msec, fb.ssturn, fb.block;
   write, f, format="# %f %f %f %f \n", res(2),res(1), res(4), res(3);
 
   // now calculate the new total segment length and total time
-  segdist = lldist(fpxy(2,), fpxy(1,), fpxy(4,), fpxy(3,));
+  segdist = lldist(fbxy(2,), fbxy(1,), fbxy(4,), fbxy(3,));
 
   km = sum(segdist);
   segsecs = sum(segdist*1000./msec);
@@ -984,24 +984,19 @@ func write_fp(fp, outfile=, plot=) {
     format="# Total Seglen=%5.3fkm Total segtime=%4.2f(min) Total time=%3.2f(hrs)\n",
     km, segsecs/60.0, blocksecs/3600.0;
 
-  lat1d = abs(double(int(fpxy(2,))*100 + ((fpxy(2,) - int(fpxy(2,))) * 60.0) ));
-  lon1d = abs(double(int(fpxy(1,))*100 + ((fpxy(1,) - int(fpxy(1,))) * 60.0) ));
-  lat2d = abs(double(int(fpxy(4,))*100 + ((fpxy(4,) - int(fpxy(4,))) * 60.0) ));
-  lon2d = abs(double(int(fpxy(3,))*100 + ((fpxy(3,) - int(fpxy(3,))) * 60.0) ));
+  lat1d = abs(double(int(fbxy(2,))*100 + ((fbxy(2,) - int(fbxy(2,))) * 60.0) ));
+  lon1d = abs(double(int(fbxy(1,))*100 + ((fbxy(1,) - int(fbxy(1,))) * 60.0) ));
+  lat2d = abs(double(int(fbxy(4,))*100 + ((fbxy(4,) - int(fbxy(4,))) * 60.0) ));
+  lon2d = abs(double(int(fbxy(3,))*100 + ((fbxy(3,) - int(fbxy(3,))) * 60.0) ));
 
   write, f, format="llseg %s-%d n%013.8f:w%12.8f n%13.8f:w%12.8f\n",
-    fp.name, counter, lat1d, lon1d, lat2d, lon2d;
+    fb.name, counter, lat1d, lon1d, lat2d, lon2d;
 
   if(!is_void(f))
     close, f;
 
-  if (plot) {
-    fpfp = array(FP,numberof(fpxy(2,)));
-    fpfp.lat1 = fpxy(2,);
-    fpfp.lon1 = fpxy(1,);
-    fpfp.lat2 = fpxy(4,);
-    fpfp.lon2 = fpxy(3,);
-    pl_fp, fpfp, win=win, color="blue";
+  if(plot) {
+    pl_fp, fb2fp(fb), win=win, color="blue";
   }
 }
 
