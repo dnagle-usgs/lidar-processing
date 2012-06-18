@@ -1,16 +1,23 @@
 require, "eaarl.i";
 
-func kml_fp(fp, outfile=, color=, name=) {
+func kml_fp(fp, shapefile=, outfile=, color=, name=) {
   if(is_string(fp)) {
     default, ofname,
       file_rootname(fp)+"_globalmapper"+(out_utm?"_utm":"")+file_tail(fp);
     fp = read_fp(fp);
   }
+  if(!is_void(shapefile)) {
+    shp = read_ascii_shapefile(shapefile);
+    if(numberof(shp) != 1)
+      error, "shapefile must contain exactly one polygon!";
+    fp.region = shp(1);
+    shp = [];
+  }
   if(is_void(outfile))
     error, "Must supply outfile=";
 
   // Default is gray with 10% opacity
-  default, color, kml_color(128,128,128,25);
+  default, color, kml_color(0,0,255);
   if(is_numerical(color)) {
     if(numberof(color) == 3)
       color = kml_color(color(1), color(2), color(3));
@@ -43,7 +50,7 @@ func kml_fp(fp, outfile=, color=, name=) {
     }
     desc = "<![CDATA["+desc+"]]>";
     lines(i) = kml_Placemark(
-      kml_Style(kml_LineStyle(color=color, width=2)),
+      kml_Style(kml_LineStyle(color=kml_color(128,128,128,25), width=2)),
       kml_LineString([lon1(i),lon2(i)],[lat1(i),lat2(i)], tessellate=1),
       name=swrite(format="Flightline %d", i), description=desc,
       visibility=1
@@ -71,5 +78,16 @@ func kml_fp(fp, outfile=, color=, name=) {
     name=name+" Flightlines", description=desc
   );
 
-  kml_save, outfile, lines, name=name;
+  region = "";
+  if(fp.region) {
+    lon = (*fp.region)(1,);
+    lat = (*fp.region)(2,);
+    region = kml_Placemark(
+      kml_Style(kml_LineStyle(color=color, width=2)),
+      kml_LineString(lon, lat, tessellate=1),
+      name=name+" Boundary", visibility=1
+    );
+  }
+
+  kml_save, outfile, lines, region, name=name;
 }
