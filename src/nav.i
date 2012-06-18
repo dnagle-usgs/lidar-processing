@@ -26,7 +26,7 @@ extern FP;
     double dseg(4); // defining segment
     float alat(5);  // lat corners of total area
     float alon(5);  // lon corners of total area
-    pointer p;      // a pointer to the array of flightlines.
+    pointer lines;  // a pointer to the array of flightlines.
   };
 */
 
@@ -36,7 +36,7 @@ struct FP {
   float aw, sw, msec, ssturn, kmlen;
   double dseg(4);
   float alat(5), alon(5);
-  pointer p;
+  pointer lines;
 };
 
 func lldist(lat0, lon0, lat1, lon1) {
@@ -561,7 +561,7 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
   rs.alat = Xlat(r);
   rs.alon = Xlong(r);
   rs.block = blockn;
-  rs.p = &sega; // pointer to all the segments
+  rs.lines = &sega(,[2,1,4,3]); // pointer to all the segments
   rs.sw = sw;   // flight line spacing (swath width)
   rs.aw = aw;   // area width
   rs.msec = msec;
@@ -605,10 +605,10 @@ func pl_fp(fp, win=, color=, width=, labels=, skip=) {
   wbkp = current_window();
   window, win;
 
-  lon1 = (*fp.p)(,1);
-  lat1 = (*fp.p)(,2);
-  lon2 = (*fp.p)(,3);
-  lat2 = (*fp.p)(,4);
+  lon1 = (*fp.lines)(,1);
+  lat1 = (*fp.lines)(,2);
+  lon2 = (*fp.lines)(,3);
+  lat2 = (*fp.lines)(,4);
 
   pldj, lon1, lat1, lon2, lat2, color=color, width=width;
   if(labels) {
@@ -694,7 +694,7 @@ func read_fp(fname, utm=, plot=, win=) {
     x2 = u2(2,);
   }
 
-  fp.p = &[x1,y1,x2,y2];
+  fp.lines = &[x1,y1,x2,y2];
 
   if(plot) {
     pl_fp, fp, win=win;
@@ -743,11 +743,13 @@ func pip_fp(junk,fp=, ply=, win=, mode=,in_utm=,out_utm=, debug=) {
   if (!is_array(fp)) {
     write, "Please define flight plan orientation";
     fp = sdist(mode=mode, block=block, line=line,in_utm=in_utm, out_utm=out_utm, ply=ply, silent=1, fill=0, debug=debug);
+    extern fpbkp;
+    fpbkp = fp;
   }
-  fpxy = *fp.p;
+  fpxy = *fp.lines;
   // convert to utm
-  ufpxy1 = transpose(fll2utm(fpxy(,1), fpxy(,2), force_zone=curzone));
-  ufpxy2 = transpose(fll2utm(fpxy(,3), fpxy(,4), force_zone=curzone));
+  ufpxy1 = transpose(fll2utm(fpxy(,2), fpxy(,1), force_zone=curzone));
+  ufpxy2 = transpose(fll2utm(fpxy(,4), fpxy(,3), force_zone=curzone));
   fpxy(,1:2) = ufpxy1(,1:2);
   fpxy(,3:4) = ufpxy2(,1:2);
   //curzone = ufpxy1(1,3);
@@ -860,7 +862,7 @@ func pip_fp(junk,fp=, ply=, win=, mode=,in_utm=,out_utm=, debug=) {
   new_fpxy(,1:2) = xy1;
   new_fpxy(,3:4) = xy2;
 
-  fp_new.p = &new_fpxy;
+  fp_new.lines = &new_fpxy;
 
   write_fp, fp_new, plot=1;
 
@@ -882,7 +884,7 @@ func write_fp(fp, outfile=, plot=) {
   if(outfile)
     f = open(outfile, "w");
 
-  fpxy = *fp.p;
+  fpxy = *fp.lines;
   fpxy = transpose(fpxy);
 
   counter = int(span(1,numberof(fpxy(1,)), numberof(fpxy(1,))));
@@ -960,7 +962,7 @@ func write_globalmapper_fp(input, fp=, ifname=, ofname=, outfile=, out_utm=) {
     input = read_fp(input, out_utm=out_utm);
   }
 
-  lines = *input.p;
+  lines = *input.lines;
   count = dimsof(lines)(2);
   shp = array(pointer, count);
   meta = array(string, count);

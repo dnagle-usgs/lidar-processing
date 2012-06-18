@@ -21,10 +21,10 @@ func kml_fp(fp, outfile=, color=, name=) {
 
   default, name, fp.name;
 
-  lon1 = (*fp.p)(,1);
-  lat1 = (*fp.p)(,2);
-  lon2 = (*fp.p)(,3);
-  lat2 = (*fp.p)(,4);
+  lon1 = (*fp.lines)(,1);
+  lat1 = (*fp.lines)(,2);
+  lon2 = (*fp.lines)(,3);
+  lat2 = (*fp.lines)(,4);
 
   count = numberof(lon1);
   lines = array(string, count);
