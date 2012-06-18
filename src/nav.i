@@ -1,5 +1,16 @@
 // vim: set ts=2 sts=2 sw=2 ai sr et:
 
+extern blockn, aw, sw;
+/* DOCUMENT
+  Externs used by sdist:
+    blockn    Block number
+    aw        Area width
+    sw        Scan width in km (minus desired overlap)
+*/
+default, blockn, 1;
+default, aw, 1.0;
+default, sw, 0.2;
+
 extern FB;
 /* DOCUMENT FB
   Struct used for flight planning.
@@ -176,13 +187,6 @@ func mdist(&click, units=, win=, plot=, verbose=, nox=, noy=) {
   window_select, wbkp;
   return m;
 }
-
-if (is_void(blockn) )
-  blockn = 1;   // block number
-if (is_void(aw) )
-  aw = 1.0;     // area width
-if (is_void(sw) )
-  sw = 0.2;     // scan width in km (minus desired overlap)
 
 func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=, debug=) {
 /* DOCUMENT sdist(junk, block=, line= , mode=, fill=)
