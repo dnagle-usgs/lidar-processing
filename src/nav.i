@@ -629,8 +629,8 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
   return rs;
 }
 
-func pl_fp( fp, win=, color= , width=, skip=, labels=) {
-/* DOCUMENT pl_fp(fp, color=)
+func pl_fp(fp, win=, color=, width=, skip=, labels=) {
+/* DOCUMENT pl_fp(fp, win=, color=, width=, skip=, labels=)
 
   Plot the given flight plan on win= using color=.  Default
 window is 6, and color is magenta.
@@ -648,6 +648,9 @@ window is 6, and color is magenta.
   default, color, "magenta";
   default, width, 1;
   default, skip, 5;
+
+  if(structeq(structof(fp), FB))
+    fp = fb2fp(fp);
 
   bb = strtok(fp.name, "-");
   if (numberof(bb) > 2) {
@@ -996,7 +999,7 @@ func write_fp(fb, outfile=, plot=) {
     close, f;
 
   if(plot) {
-    pl_fp, fb2fp(fb), win=win, color="blue";
+    pl_fp, fb, win=win, color="blue";
   }
 }
 
