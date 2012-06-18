@@ -241,3 +241,37 @@ func longest_common_suffix(S) {
   }
   return strchar(s1);
 }
+
+func longest_common_prefix(S) {
+/* DOCUMENT prefix = longest_common_prefix(S)
+  Returns the longest string that is a common prefix to all strings in S. If
+  there is no common prefix, then string(0) is returned.
+*/
+  nS = numberof(S);
+  if(nS == 0)
+    return string(0);
+  if(nS == 1)
+    return S(1);
+
+  s1 = strchar(S(1));
+  for(i = 2; i <= nS; i++) {
+    s2 = strchar(S(i));
+    len = min(numberof(s1), numberof(s2));
+    if(!len)
+      return string(0);
+
+    s1 = s1(:len);
+    s2 = s2(:len);
+
+    nomatch = s1 != s2;
+    if(allof(nomatch))
+      return string(0);
+
+    first = noneof(nomatch) ? len+1 : (nomatch * indgen(len:1))(mxx);
+    if(first == 1)
+      return string(0);
+
+    s1 = s1(:first-1);
+  }
+  return strchar(s1);
+}
