@@ -765,69 +765,7 @@ func read_fp(fname, in_utm=, out_utm=, fpoly=, plot=, win=) {
   default, plot, 0;
   extern a;
 
-  fp = open(fname, "r");
-
-  fp_arr = array(FP,10000);
-
-  i = 0;
-  nc = 0; // null line counter
-  loop=1;
-
-  while (loop) {
-    i++;
-    if ( nc > 50 ) break;
-    a = rdline( fp) (1);
-    if ( strlen(a) == 0 ) // null counter
-      nc++;
-    else
-      nc = 0;
-    w="";x="";y="";z="";
-    if ((a > "") && !(strmatch(a,"#"))) {
-      sread, a, w,x,y,z;
-      yarr = strtok(y,":");
-      yarr = strpart(yarr,2:);
-      ylat = 0.0; ylon=0.0;
-      sread, yarr(1), ylat;
-      sread, yarr(2), ylon;
-      if (!in_utm) {
-        ylat1=ylat/100.; ylon1 = ylon/100.;
-        ydeclat = (ylat1-int(ylat1))*100./60.;
-        ydeclon = (ylon1-int(ylon1))*100./60.;
-        ylat = int(ylat1) + ydeclat;
-        ylon = int(ylon1) + ydeclon;
-      }
-      zarr = strtok(z,":");
-      zarr = strpart(zarr,2:);
-      zlat = 0.0; zlon=0.0;
-      sread, zarr(1), zlat;
-      sread, zarr(2), zlon;
-      if (!in_utm) {
-        zlat1=zlat/100.; zlon1 = zlon/100.;
-        zdeclat = (zlat1-int(zlat1))*100./60.;
-        zdeclon = (zlon1-int(zlon1))*100./60.;
-        zlat = int(zlat1) + zdeclat;
-        zlon = int(zlon1) + zdeclon;
-      }
-
-      // now write information to structure FP
-      fp_arr(i).name = x;
-      if (!in_utm) {
-        fp_arr(i).lat1 = ylat;
-        fp_arr(i).lon1 = -ylon;
-        fp_arr(i).lat2 = zlat;
-        fp_arr(i).lon2 = -zlon;
-      } else {
-        fp_arr(i).lat1 = ylon;
-        fp_arr(i).lon1 = ylat;
-        fp_arr(i).lat2 = zlon;
-        fp_arr(i).lon2 = zlat;
-      }
-    }
-  }
-
-  indx = where( strlen(fp_arr.name) != 0);
-  fp_arr = fp_arr(indx);
-  close, fp;
+  fp_arr = fb2fp(read_fp_as_fb(fname));
 
   if (out_utm) {
     if (!in_utm) {
