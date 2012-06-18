@@ -738,8 +738,9 @@ func pip_fp(junk, fp=, ply=, shapefile=, win=, mode=, in_utm=, out_utm=, debug=)
   if(!is_void(shapefile)) {
     shp = read_ascii_shapefile(shapefile);
     if(numberof(shp) != 1)
-      error, "shapefile contains multiple polygons! must contain exactly one";
+      error, "shapefile must contain exactly one polygon!";
     ply = *shp(1);
+    shp = [];
   }
 
   if(is_void(ply))
@@ -789,7 +790,7 @@ func pip_fp(junk, fp=, ply=, shapefile=, win=, mode=, in_utm=, out_utm=, debug=)
   fp_new.dseg = fp.dseg;
   fp_new.alat = fp.alat;
   fp_new.alon = fp.alon;
-  fp_new.region = &ply;
+  fp_new.region = &lply1;
 
   for (i=1; i<numberof(ply(1,));i++) {
     x1 = ply(1,i);
