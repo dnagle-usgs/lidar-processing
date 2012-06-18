@@ -1,10 +1,10 @@
 require, "eaarl.i";
 
-func kml_fp(fp, outfile=, color=, name=) {
-  if(is_string(fp)) {
+func kml_fp(fb, outfile=, color=, name=) {
+  if(is_string(fb)) {
     default, ofname,
-      file_rootname(fp)+"_globalmapper"+(out_utm?"_utm":"")+file_tail(fp);
-    fp = read_fp(fp, out_utm=out_utm);
+      file_rootname(fb)+"_globalmapper"+(out_utm?"_utm":"")+file_tail(fp);
+    fb = read_fp(fb);
   }
   if(is_void(outfile))
     error, "Must supply outfile=";
@@ -19,23 +19,20 @@ func kml_fp(fp, outfile=, color=, name=) {
   }
 
 
-  fb = [];
-  if(structeq(structof(fp), FB)) {
-    fb = fp;
-    fp = fb2fp(fp);
+  default, name, fb.name;
 
-    if(fb.name != "noname")
-      default, name, fb.name;
-  }
-  default, name, "Region";
+  lon1 = (*fb.p)(,1);
+  lat1 = (*fb.p)(,2);
+  lon2 = (*fb.p)(,3);
+  lat2 = (*fb.p)(,4);
 
-  count = numberof(fp);
+  count = numberof(lon1);
   lines = array(string, count);
   total_km = 0.;
   longest_km = 0.;
   total_secs = 0.;
   for(i = 1; i <= count; i++) {
-    km = 1.852 * lldist(fp(i).lat1, fp(i).lon1, fp(i).lat2, fp(i).lon2);
+    km = 1.852 * lldist(lat1(i), lon1(i), lat2(i), lon2(i));
     total_km += km;
     longest_km = max(longest_km, km);
     desc = swrite(format="Line length: %.2f km\n", km);
@@ -47,7 +44,7 @@ func kml_fp(fp, outfile=, color=, name=) {
     desc = "<![CDATA["+desc+"]]>";
     lines(i) = kml_Placemark(
       kml_Style(kml_LineStyle(color=color, width=2)),
-      kml_LineString([fp(i).lon1,fp(i).lon2],[fp(i).lat1,fp(i).lat2], tessellate=1),
+      kml_LineString([lon1(i),lon2(i)],[lat1(i),lat2(i)], tessellate=1),
       name=swrite(format="Flightline %d", i), description=desc,
       visibility=1
     );
@@ -55,7 +52,7 @@ func kml_fp(fp, outfile=, color=, name=) {
 
   desc = "";
   desc += swrite(format="Total length: %.2f km\n", total_km);
-  desc += swrite(format="Number of lines: %d\n", numberof(fp));
+  desc += swrite(format="Number of lines: %d\n", count);
   desc += swrite(format="Longest line: %.2f km\n", longest_km);
   if(!is_void(msec) && !is_void(ssturn)) {
     desc += swrite(format="Total estimated time: %.2f minutes\n", total_secs/60.);
@@ -74,5 +71,5 @@ func kml_fp(fp, outfile=, color=, name=) {
     name=name+" Flightlines", description=desc
   );
 
-  kml_save, outfile, lines, name="Test";
+  kml_save, outfile, lines, name=name;
 }
