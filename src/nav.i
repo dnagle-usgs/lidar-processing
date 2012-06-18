@@ -780,35 +780,6 @@ func read_fp(fname, utm=, plot=, win=) {
   return fp;
 }
 
-func utmfp2ll (fname, zone=) {
-  //amar nayegandhi 06/14/03
-
-  if (!zone) zone = 19;
-  // read the input ascii file
-  fp = open(fname, "r");
-
-  i = 0;
-  nc = 0; // null line counter
-  loop=1;
-
-  while (loop) {
-    i++;
-    if ( nc > 50 ) break;
-    a = rdline(fp) (1);
-    if ( strlen(a) == 0 ) // null counter
-      nc++;
-    else
-      nc = 0;
-    st = ""; w=0.0;x=0.0;y=0.0;z=0.0;
-    if ((a > "") && !(strmatch(a,"#"))) {
-      sread, a, st, w,x,y,z;
-      ll = utm2ll([w,y], [x,z], zone);
-      lldm = abs(ll-int(ll))*60.0;
-      write,format="llseg %s %c%02d%10.8f:%c%d%10.8f %c%02d%10.8f:%c%d%10.8f\n", st, 'n',int(ll(3)),lldm(3), 'w', abs(int(ll(1))), lldm(1), 'n', int(ll(4)), lldm(4), 'w', abs(int(ll(2))), lldm(2);
-    }
-  }
-}
-
 func read_xy(file,yx=, utm=, zone=, color=, win=, plot=, writefile=) {
 /* read_xy(file,yx=, utm=, zone=)
   amar nayegandhi 11/17/03
