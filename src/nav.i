@@ -703,7 +703,7 @@ func read_fp(fname, utm=, plot=, win=) {
   return fp;
 }
 
-func pip_fp(junk,fp=, ply=, win=, mode=,in_utm=,out_utm=, debug=) {
+func pip_fp(junk, fp=, ply=, shapefile=, win=, mode=, in_utm=, out_utm=, debug=) {
 /* DOCUMENT pip_fp(fp, ply=, win=)
   This function allows the user to make a flight plan by selecting a polygon
   with a series of mouse clicks and defining the orientation...
@@ -734,13 +734,20 @@ func pip_fp(junk,fp=, ply=, win=, mode=,in_utm=,out_utm=, debug=) {
   default, win, 6;
   window, win;
 
-  //ply = lply1;
-  if (is_void(ply))
+  if(!is_void(shapefile)) {
+    shp = read_ascii_shapefile(shapefile);
+    if(numberof(shp) != 1)
+      error, "shapefile contains multiple polygons! must contain exactly one";
+    ply = *shp(1);
+  }
+
+  if(is_void(ply))
     ply = getPoly();
+
   lply1 = ply;
   plpoly, lply1, marker=4;
 
-  if (!is_array(fp)) {
+  if(!is_array(fp)) {
     write, "Please define flight plan orientation";
     fp = sdist(mode=mode, block=block, line=line,in_utm=in_utm, out_utm=out_utm, ply=ply, silent=1, fill=0, debug=debug);
     extern fpbkp;
