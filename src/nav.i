@@ -19,7 +19,9 @@ extern FB;
     string name;    // block name
     int block;      // block number
     float aw;       // area width  (km)
-    float sw;       // scan  spacing (km)
+    float sw;       // scan spacing (km)
+    float msec;     // meters-per-second flight speed
+    float ssturn;   // seconds to allocate per turn
     float kmlen;    // length of block (km)
     double dseg(4); // defining segment
     float alat(5);  // lat corners of total area
@@ -31,7 +33,7 @@ extern FB;
 struct FB {
   string name;
   int block;
-  float aw, sw, kmlen;
+  float aw, sw, msec, ssturn, kmlen;
   double dseg(4);
   float alat(5), alon(5);
   pointer p;
@@ -618,6 +620,8 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
   rs.p = &sega; // pointer to all the segments
   rs.sw = sw;   // flight line spacing (swath width)
   rs.aw = aw;   // area width
+  rs.msec = msec;
+  rs.ssturn = ssturn;
   rs.dseg = click(1:4); // block definition segment
 
   blockn++;
@@ -986,6 +990,8 @@ func pip_fp(junk,fp=, ply=, win=, mode=,in_utm=,out_utm=, debug=) {
   fp_new.block = fp.block;
   fp_new.aw = fp.aw;
   fp_new.sw = fp.sw;
+  fp_new.msec = fp.msec;
+  fp_new.ssturn = fp.ssturn;
   fp_new.kmlen = fp.kmlen;
   fp_new.dseg = fp.dseg;
   fp_new.alat = fp.alat;
@@ -1089,6 +1095,8 @@ func write_fp(fp, sw=, aw=, plot=) {
 
   sw = fp.sw;
   aw = fp.aw;
+  msec = fp.msec;
+  ssturn = fp.ssturn;
 
   fpxy = *fp.p;
   fpxy = transpose(fpxy);
