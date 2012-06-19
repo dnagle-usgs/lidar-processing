@@ -837,6 +837,41 @@ func write_fp(fp, outfile=, nolines=, plot=) {
 }
 
 func fp_export(fp, shapefile=, name=, base=, color=, outdir=, kml=, gm_lines=, gm_boundary=) {
+/* DOCUMENT fp_export, fp, shapefile=, name=, base=, color=, outdir=, kml=,
+   gm_lines=, gm_boundary=
+
+   Exports a flight plan in up to three formats:
+    - a KML/KMZ file with the lines and boundary
+    - an ASCII shapefile with the lines
+    - an ASCII shapefile with the boundaries
+
+  Parameter:
+    fp: A FP variable or the path to the flight plan file.
+  Options:
+    shapefile= A shapefile to load for the boundary. (The boundary from fp will
+      be used if present if shapefile is not provided.)
+    name= A user-friendly name to use for the region. If not provided, fp.name
+      will be used.
+    base= A filesystem-friendly name to use for the region. If not provided,
+      the name used by name= will be converted into a filesystem friendly
+      format.
+    color= A three or four element array specifying [R,G,B] or [R,G,B,A] that
+      is used as the color for the boundary. The numbers should be integers in
+      the range 0 to 255.
+        color=[0,0,255]   Default, pure blue
+    outdir= The output directory to create the new files in.
+    kml= Set kml=0 to disable the creation of a KML file. By default, a KML
+      file will be created as OUTDIR/BASE.kmz. If you want to create it at an
+      alternate path, provide that path to kml=.
+    gm_lines= Set gm_lines=0 to disable the creation of the ASCII shapefile
+      with the flight lines. By default, this file will be created as
+      OUTDIR/BASE_lines.xyz. If you want to create it at an alternate path,
+      provide that path to gm_lines=.
+    gm_boundary= Set gm_boundary=0 to disable the creation of the ASCII
+      shapefile with the boundary. By default, this file will be created as
+      OUTDIR/BASE_boundary.xyz. If you want to create it at an alternate path,
+      provide that path to gm_boundary=.
+*/
   if(is_string(fp)) {
     default, outdir, file_dirname(fp);
     fp = read_fp(fp);
