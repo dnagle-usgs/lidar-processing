@@ -2,8 +2,7 @@ require, "eaarl.i";
 
 func kml_fp(fp, shapefile=, outfile=, color=, name=) {
   if(is_string(fp)) {
-    default, ofname,
-      file_rootname(fp)+"_globalmapper"+(out_utm?"_utm":"")+file_tail(fp);
+    default, outfile, file_rootname(fp)+".kmz";
     fp = read_fp(fp);
   }
   if(!is_void(shapefile)) {
