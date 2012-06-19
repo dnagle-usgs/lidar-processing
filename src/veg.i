@@ -151,27 +151,6 @@ func run_vegx(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=,
   return depths;
 }
 
-func run_veg(rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=,
-use_be_centroid=, use_be_peak=, hard_surface=, alg_mode=) {
-/* DOCUMENT depths = run_veg(rn=, len=, start=, stop=, center=, delta=, last=, 
-     graph=, pse=, use_be_centroid=, use_be_peak=, hard_surface=, alg_mode=)
-
-  Original function run_veg converted to a wrapper for run_vegx.
-    All parameters are being passed through to run_vegx.
-    (see help, run_vegx for details).
-
-  SEE ALSO: run_vegx, run_veg_all, make_veg, ex_veg
-  DEPRECATED: Call run_vegx with multi_peaks=0 instead.
-*/
-
-  d = run_vegx(rn=rn, len=len, start=start, stop=stop, center=center, delta=delta, 
-    last=last, graph=graph, pse=pse, use_be_centroid=use_be_centroid, 
-    use_be_peak=use_be_peak, hard_surface=hard_surface, alg_mode=alg_mode);
-
-  return d;
-}
-
-
 func make_fs_veg(d, rrr) {
 /* DOCUMENT make_fs_veg (d, rrr)
  This function makes a veg data array using the georectification of the
@@ -596,27 +575,6 @@ func ex_veg_all(rn, pulse_number, last=, graph=, pse=, thresh=, win=, verbose=,h
 
   rv.nx = nxr - noise;
   return rv;
-}
-
-func run_veg_all( rn=, len=, start=, stop=, center=, delta=, last=, graph=, pse=, use_be_centroid=,use_be_peak=) {
-/* DOCUMENT depths = run_veg_all( rn=, len=, start=, stop=, center=, delta=, 
-     last=, graph=, pse=, use_be_centroid=, use_be_peak=) {
-
-  Original function run_veg_all converted to a wrapper for run_vegx.
-    All parameters are being passed through to run_vegx, along with 
-    multi_peaks, which determines whether only first and last peaks are 
-    returned or the first 10.
-    (see help, run_vegx for details).
-
-  SEE ALSO: run_vegx, run_veg, make_veg, ex_veg_all
-  DEPRECATED: Call run_vegx with multi_peaks=1 instead.
-*/
-  default, last, 255;
-
-  d = run_vegx(rn=rn, len=len, start=start, stop=stop, center=center, 
-    delta=delta, last=last, graph=graph, pse=pse, multi_peaks=1);
-
-  return d;
 }
 
 func make_fs_veg_all (d, rrr, multi_peaks=) {
