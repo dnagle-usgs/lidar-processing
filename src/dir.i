@@ -304,8 +304,8 @@ func file_relative(base, dest) {
     if(file_pathtype(base) != file_pathtype(dest))
       error, "Unable to compute relation for paths of different path types.";
 
-    base = file_split(base);
-    dest = file_split(dest);
+    base = file_split(file_join(pwd(), base));
+    dest = file_split(file_join(pwd(), dest));
 
     while(base(1) == dest(1)) {
       base = numberof(base) > 1 ? base(2:) : [];
