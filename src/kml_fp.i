@@ -1,6 +1,26 @@
 require, "eaarl.i";
 
 func kml_fp(fp, shapefile=, outfile=, color=, name=) {
+/* DOCUMENT kml_fp, fp, shapefile=, outfile=, color=, name=
+  Creates a KML or KMZ for a flight plan.
+
+  Parameter:
+    fp: This may be the file name of a flight plan file, or it may be an
+      already-loaded flight plan in FP format.
+  Options:
+    shapefile= The path to an ASCII shapefile containing the boundary polygon.
+      Must contain exactly one polygon. If omitted, the boundary polygon stored
+      in FP will be used, if present.
+    outfile= The output file to create. This should be a KML or KMZ file. If
+      omitted and if FP is provided as a filename, then it will default to the
+      same filename with the extension changed to .kmz.
+    color= The color to use for the boundary polygon. This must be provided as
+      a three or four element array, [R,G,B], or [R,G,B,A].
+        color=[0,0,255]       Default, pure blue.
+        color=[0,0,255,128]   Blue with 50% opacity.
+    name= The name to use for the region of interest. If omitted, FP.name will
+      be used.
+*/
   if(is_string(fp)) {
     default, outfile, file_rootname(fp)+".kmz";
     fp = read_fp(fp);
@@ -15,7 +35,7 @@ func kml_fp(fp, shapefile=, outfile=, color=, name=) {
   if(is_void(outfile))
     error, "Must supply outfile=";
 
-  // Default is gray with 10% opacity
+  // Default is blue
   default, color, kml_color(0,0,255);
   if(is_numerical(color)) {
     if(numberof(color) == 3)
