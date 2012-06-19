@@ -79,7 +79,7 @@ func ndrast(r, rn=, units=, win=, graph=, sfsync=) {
   if(is_void(r) && !is_void(rn))
     r = decode_raster(get_erast(rn=rn));
 
-  aa = array(short(255), 250, 120, 3);
+  aa = array(short(255), 250, 120, 4);
 
   npix = r.npixels(1);
   somd = (r.soe - soe_day_start)(1);
@@ -93,7 +93,7 @@ func ndrast(r, rn=, units=, win=, graph=, sfsync=) {
     }
   }
   for (i=1; i< npix; i++) {
-    for (j=1; j<=3; j++) {
+    for (j=1; j<=4; j++) {
       n = numberof(*r.rx(i,j));  // number of samples
       if (n) aa(1:n,i,j) = *r.rx(i,j);
     }
@@ -285,8 +285,8 @@ func msel_wf(w, cb=, geo=, winsel=, winplot=, winbath=, seltype=) {
 }
 
 
-func show_wf(r, pix, win=, nofma=, cb=, c1=, c2=, c3=, raster=) {
-/* DOCUMENT show_wf, r, pix, win=, nofma=, cb=, c1=, c2=, c3=, raster=
+func show_wf(r, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, raster=) {
+/* DOCUMENT show_wf, r, pix, win=, nofma=, cb=, c1=, c2=, c3=, c4=, raster=
   Display a set of waveforms for a given pulse.
 
   Parameters:
@@ -299,11 +299,12 @@ func show_wf(r, pix, win=, nofma=, cb=, c1=, c2=, c3=, raster=) {
       for the plot.
     nofma= Set to 1 to disable automatic fma.
     cb= Channel bitmask indicating which channels should be displayed. 1 is
-      channel 1, 2 is channel 2, 4 is channel 3. Defaults to 0 (no
-      channels). This is additive to c1=, c2=, and c3= below.
+      channel 1, 2 is channel 2, 4 is channel 3, 8 is channel 4. Defaults to 0
+      (no channels). This is additive to c1=, c2=, c3=, and c4= below.
     c1= Set to 1 to display channel 1.
     c2= Set to 1 to display channel 2.
     c3= Set to 1 to display channel 3.
+    c4= Set to 1 to display channel 4.
     raster= Raster where pulse is located. This is printed if present.
 */
   extern _depth_scale, _depth_display_units, data_path;
@@ -313,6 +314,7 @@ func show_wf(r, pix, win=, nofma=, cb=, c1=, c2=, c3=, raster=) {
   default, c1, 0;
   default, c2, 0;
   default, c3, 0;
+  default, c4, 0;
 
   if(is_scalar(r)) {
     raster = r;
@@ -322,6 +324,7 @@ func show_wf(r, pix, win=, nofma=, cb=, c1=, c2=, c3=, raster=) {
   if(cb & 1) c1 = 1;
   if(cb & 2) c2 = 1;
   if(cb & 4) c3 = 1;
+  if(cb & 8) c4 = 1;
 
   if(!is_void(win)) {
     prev_win = current_window();
@@ -340,6 +343,10 @@ func show_wf(r, pix, win=, nofma=, cb=, c1=, c2=, c3=, raster=) {
   if(c3) {
     plg, _depth_scale, r(,pix,3),  marker=0, color="blue";
     plmk, _depth_scale, r(,pix,3), msize=.2, marker=1, color="blue";
+  }
+  if(c4) {
+    plg, _depth_scale, r(,pix,4),  marker=0, color="magenta";
+    plmk, _depth_scale, r(,pix,4), msize=.2, marker=1, color="magenta";
   }
 
   xtitle = swrite(format="Pix:%d   Digital Counts", pix);
