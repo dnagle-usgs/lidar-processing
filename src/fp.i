@@ -641,6 +641,8 @@ func pip_fp(nil, fp=, ply=, shapefile=, name=, win=, mode=, in_utm=, out_utm=, d
       error, "shapefile must contain exactly one polygon!";
     ply = *shp(1);
     shp = [];
+  } else if(!is_void(fp)) {
+    ply = *fp.region;
   }
 
   if(is_void(ply))
@@ -649,10 +651,9 @@ func pip_fp(nil, fp=, ply=, shapefile=, name=, win=, mode=, in_utm=, out_utm=, d
   lply1 = ply;
   plpoly, lply1, marker=4;
 
-  if(!is_array(fp)) {
-    write, "Please define flight plan orientation";
-    fp = sdist(mode=mode, block=block, line=line,in_utm=in_utm, out_utm=out_utm, ply=ply, silent=1, fill=0, debug=debug);
-  }
+  write, "Please define flight plan orientation";
+  fp = sdist(mode=mode, block=block, line=line, in_utm=in_utm, out_utm=out_utm, ply=ply, silent=1, fill=0, debug=debug);
+
   fpxy = *fp.lines;
   // convert to utm
   ufpxy1 = transpose(fll2utm(fpxy(,2), fpxy(,1), force_zone=curzone));
