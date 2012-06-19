@@ -761,8 +761,8 @@ func pip_fp(junk, fp=, ply=, shapefile=, name=, win=, mode=, in_utm=, out_utm=, 
   return fp_new;
 }
 
-func write_fp(fp, outfile=, plot=) {
-/* DOCUMENT write_fp(fp, outfile=, plot=)
+func write_fp(fp, outfile=, nolines=, plot=) {
+/* DOCUMENT write_fp(fp, outfile=, nolines=, plot=)
   Writes the data for a flight plan.
 
   Parameter:
@@ -770,8 +770,12 @@ func write_fp(fp, outfile=, plot=) {
   Options:
     outfile= If specified, output will be written to this file. Otherwise, it
       will go to stdout (the console).
+    nolines= If nolines=1, the lines won't be written, only the header.
     plot= If plot=1, the data will be plotted as well.
 */
+  default, nolines, 0;
+  default, plot, 0;
+
   f = [];
   if(outfile)
     f = open(outfile, "w");
@@ -801,13 +805,15 @@ func write_fp(fp, outfile=, plot=) {
     format="# Total Seglen=%5.3fkm Total segtime=%4.2f(min) Total time=%3.2f(hrs)\n",
     km, segsecs/60.0, blocksecs/3600.0;
 
-  lat1d = abs(double(int(fpxy(2,))*100 + ((fpxy(2,) - int(fpxy(2,))) * 60.0) ));
-  lon1d = abs(double(int(fpxy(1,))*100 + ((fpxy(1,) - int(fpxy(1,))) * 60.0) ));
-  lat2d = abs(double(int(fpxy(4,))*100 + ((fpxy(4,) - int(fpxy(4,))) * 60.0) ));
-  lon2d = abs(double(int(fpxy(3,))*100 + ((fpxy(3,) - int(fpxy(3,))) * 60.0) ));
+  if(!nolines) {
+    lat1d = abs(double(int(fpxy(2,))*100 + ((fpxy(2,) - int(fpxy(2,))) * 60.0)));
+    lon1d = abs(double(int(fpxy(1,))*100 + ((fpxy(1,) - int(fpxy(1,))) * 60.0)));
+    lat2d = abs(double(int(fpxy(4,))*100 + ((fpxy(4,) - int(fpxy(4,))) * 60.0)));
+    lon2d = abs(double(int(fpxy(3,))*100 + ((fpxy(3,) - int(fpxy(3,))) * 60.0)));
 
-  write, f, format="llseg %s-%d n%013.8f:w%12.8f n%13.8f:w%12.8f\n",
-    fp.name, counter, lat1d, lon1d, lat2d, lon2d;
+    write, f, format="llseg %s-%d n%013.8f:w%12.8f n%13.8f:w%12.8f\n",
+      fp.name, counter, lat1d, lon1d, lat2d, lon2d;
+  }
 
   if(!is_void(f))
     close, f;
