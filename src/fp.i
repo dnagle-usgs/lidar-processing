@@ -500,6 +500,19 @@ func pl_fp(fp, win=, color=, width=, labels=, skip=) {
 }
 
 func read_fp(fname, utm=, shapefile=, plot=, win=) {
+/* DOCUMENT fp = read_fp(fname, utm=, shapefile=, plot=, win=)
+  Read a flight plan file and return an FP variable.
+
+  Parameter:
+    fname: The input file, as created by write_fp.
+  Options:
+    utm= Set utm=1 to convert intput to UTM after loading. Not recommended.
+    shapefile= The filename of an ASCII shapefile that defines the region of
+      interest. This will be loaded and stored in the FP variable for later
+      use. Optional.
+    plot= Set plot=1 to plot the lines after loading.
+    win= The window to plot in if plot=1.
+*/
 /*
   A .fp file will generally have a format like this:
 
@@ -587,7 +600,7 @@ func read_fp(fname, utm=, shapefile=, plot=, win=) {
   return fp;
 }
 
-func pip_fp(junk, fp=, ply=, shapefile=, name=, win=, mode=, in_utm=, out_utm=, debug=) {
+func pip_fp(nil, fp=, ply=, shapefile=, name=, win=, mode=, in_utm=, out_utm=, debug=) {
 /* DOCUMENT pip_fp(fp, ply=, shapefile=, name=, win=, mode=, in_utm=, out_utm=, debug=)
   Create a flight plan by interactively selecting a polygon with a series of
   mouse clicks and then interactively defining the orientation for the
@@ -689,7 +702,6 @@ func pip_fp(junk, fp=, ply=, shapefile=, name=, win=, mode=, in_utm=, out_utm=, 
       y4 = fpxy(j,3);
 
       denom = ((y4-y3)*(x2-x1)-(x4-x3)*(y2-y1));
-
 
       // Check for zero denominator where perfect north/south or east/west line
       // drawn. If it is zero, make it 1.0 for now. This should be fixed by
