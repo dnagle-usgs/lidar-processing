@@ -816,8 +816,9 @@ func write_fp(fp, outfile=, plot=) {
   }
 }
 
-func write_globalmapper_fp(input, fp=, ifname=, ofname=, outfile=, out_utm=) {
-/* DOCUMENT write_globalmapper_fp(fp, outfile=, out_utm=)
+func write_globalmapper_fp(input, fp=, ifname=, ofname=, outfile=, name=,
+color=, out_utm=) {
+/* DOCUMENT write_globalmapper_fp(fp, outfile=, name=, color=, out_utm=)
   This function writes out the flight plan to an ascii file formatted for
   Global Mapper.
 
@@ -825,12 +826,14 @@ func write_globalmapper_fp(input, fp=, ifname=, ofname=, outfile=, out_utm=) {
     input: The flight plan array (in FP struct) or the name of a flight
       planning file.
   Options:
-    fp= Flight plan array. (deprecated, ignored if INPUT provided)
-    ifname= Input file name for flight planning file. (deprecated, ignored if
-      INPUT provided)
     outfile= Output file name. If an input file name was given, this defaults to
       the input file with _globalmapper or _globalmapper_utm inserted before
       the extension.
+    name= The name to use in the description. By default, this will use
+      fp.name.
+    color= The color to make the flightlines. This should be a three or four
+      element array of [R,G,B] or [R,G,B,A] (though the A is ignored).
+        color=[127,127,127]   Default, gray
     out_utm= Set to 1 to make output in UTM coordinates.
 
   Deprecated:
@@ -846,32 +849,34 @@ func write_globalmapper_fp(input, fp=, ifname=, ofname=, outfile=, out_utm=) {
   default, input, ifname;
   default, input, fp;
   default, outfile, ofname;
+  default, color, [127,127,127];
 
   if(is_string(input)) {
     default, outfile,
       file_rootname(input)+"_globalmapper"+(out_utm?"_utm":"")+file_tail(input);
     input = read_fp(input, out_utm=out_utm);
   }
+  default, name, input.name;
 
   lines = *input.lines;
   count = dimsof(lines)(2);
   shp = array(pointer, count);
   meta = array(string, count);
   for(i = 1; i <= count; i++) {
-    ply = lines(i,[[1,2],[3,4]]);
+    ply = transpose(grow(lines(i,[[1,3],[2,4]]), -999999));
     shp(i) = &ply;
-    meta(i) = "BORDER_COLOR=RGB(0,255,0)\n"+
-      "BORDER_WIDTH=3\n"+
+    meta(i) =
+      swrite(format="NAME=Flightline %d\n", i)+
+      swrite(format="DESCRIPTION=%s\n", name)+
+      swrite(format="FLIGHTLINE_NUMBER=%d\n", i)+
+      swrite(format="FLIGHTLINE_LENGTH=%.2f km\n", lldist(ply(*)(:4))*NMI2KM)+
+      swrite(format="BORDER_COLOR=RGB(%d,%d,%d)\n", color(1), color(2), color(3))+
+      "BORDER_WIDTH=1\n"+
       "BORDER_STYLE=Solid\n"+
-      "FILL_COLOR=RGB(0,0,0)\n"+
-      "FILL_STYLE=No Fill\n"+
       swrite(format="LABEL_POS=%g,%g\n", ply(1,avg), ply(2,avg))+
-      "CLOSED=YES\n"+
       "FONT_SIZE=12\n"+
       "FONT_COLOR=RGB(0,0,0)\n"+
-      "FONT_CHARSET=0\n"+
-      swrite(format="FLIGHTLINE_NUMBER=%d\n", i)+
-      swrite(format="FLIGHTLINE_LENGTH=%.2f km\n", lldist(ply(*))*NMI2KM);
+      "FONT_CHARSET=0\n";
   }
   write_ascii_shapefile, shp, outfile, meta=meta;
 }
