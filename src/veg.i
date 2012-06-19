@@ -488,8 +488,7 @@ func ex_veg_all(rn, pulse_number, last=, graph=, pse=, thresh=, win=, verbose=,h
   if (ctx(1) == 0 || ctx(1) == 10000)
     return rv;
 
-  raw_wf = pulse.channel1_wf;
-  wf = float(~raw_wf) - ~raw_wf(1);
+  wf = wf_filter_bias(short(~pulse.channel1_wf), method="first");
   dd = wf(dif);
   wflen = numberof(wf);
 
@@ -815,8 +814,7 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
   }
 
  // This is the transmit pulse... use algorithm for transmit pulse based on algo used for return pulse.
-   tx_wf = -short(pulse.transmit_wf);	// flip it over and convert to signed short
-   tx_wf -= tx_wf(1);			// remove bias using first point of wf
+   tx_wf = wf_filter_bias(short(~pulse.transmit_wf), method="first");
 
   if (alg_mode=="cent") {
     ctx = xcent(tx_wf);
@@ -834,25 +832,22 @@ func ex_veg(rn, pulse_number, last=, graph=, win=, use_be_centroid=, use_be_peak
 
   // Try 1st channel
   channel = 1;
-  raw_wf = pulse.channel1_wf;
-  wf = float(~raw_wf) - ~raw_wf(1);
-  saturated = where(raw_wf < 5);    // Create a list of saturated samples
+  wf = wf_filter_bias(short(~pulse.channel1_wf), method="first");
+  saturated = where(pulse.channel1_wf < 5);    // Create a list of saturated samples
   numsat = numberof(saturated);     // Count how many are saturated
 
   if (numsat > veg_conf.max_sat(channel)) {
     // Try 2nd channel
     channel = 2;
-    raw_wf = pulse.channel2_wf;
-    wf = float(~raw_wf) - ~raw_wf(1);
-    saturated = where(raw_wf == 0);
+    wf = wf_filter_bias(short(~pulse.channel2_wf), method="first");
+    saturated = where(pulse.channel2_wf == 0);
     numsat = numberof(saturated);
 
     if (numsat > veg_conf.max_sat(channel)) {
       // Try 3rd channel
       channel = 3;
-      raw_wf = pulse.channel3_wf;
-      wf = float(~raw_wf) - ~raw_wf(1);
-      saturated = where(raw_wf == 0);
+      wf = wf_filter_bias(short(~pulse.channel3_wf), method="first");
+      saturated = where(pulse.channel3_wf == 0);
       numsat = numberof(saturated);
 
       if (numsat > veg_conf.max_sat(channel)) {
