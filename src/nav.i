@@ -40,33 +40,6 @@ struct FP {
   pointer lines, region;
 };
 
-func lldist(lat0, lon0, lat1, lon1) {
-/* DOCUMENT lldist(lat0, lon0, lat1, lon1)
-  -or- lldist([lat0, lon0, lat1, lon1])
-  Calculates the great circle distance in nautical miles between two points
-  given in geographic coordiantes. Input values may be conformable arrays;
-  output will have dimensionality to match.
-
-  To convert to kilometers, multiply by 1.852
-  To convert to statute miles, multiply by 1.150779
-*/
-  if(is_void(lon0) && numberof(lat0) == 4) {
-    assign, noop(lat0), lat0, lon0, lat1, lon1;
-  }
-  lat0 *= DEG2RAD;
-  lon0 *= DEG2RAD;
-  lat1 *= DEG2RAD;
-  lon1 *= DEG2RAD;
-  // Calculate the central angle between the two points, using the spherical
-  // law of cosines
-  ca = acos(sin(lat0)*sin(lat1) + cos(lat0)*cos(lat1)*cos(lon0-lon1));
-  // Convert the central angle into degrees; then convert degrees into nautical
-  // miles. A nautical mile is defined as a minute of arc along a meridian, so
-  // we can approximate the conversion by multiplying by 60 (the number of
-  // arcminutes in a degree).
-  return ca * RAD2DEG * 60;
-}
-
 func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=, debug=) {
 /* DOCUMENT sdist(junk, block=, line= , mode=, fill=)
    Measure distance, and draw a proportional rectangle showing the
