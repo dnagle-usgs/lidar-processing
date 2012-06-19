@@ -125,7 +125,7 @@ func wf_centroid(wf, &position, &intensity, lim=) {
 */
   // Values to return in case of an error situation
   position = 1e1000;
-  intensity = double(wf(0));
+  intensity = 1e1000;
 
   if(!numberof(wf))
     return position;
@@ -163,14 +163,14 @@ func wf_peak(wf, &position, &intensity) {
       returned. If WF is [], then POSITION is set to 1e1000 (inf) to represet
       the invalid condition.
     intensity: The intensity value found at POSITION. (If POSITION=inf, then
-      the final intensity value is used.)
+      so too is INTENSITY.)
 
   Returns:
     The same value as POSITION above.
 */
   // Values to return in case of an error situation
   position = 1e1000;
-  intensity = double(wf(0));
+  intensity = 1e1000;
 
   if(!numberof(wf))
     return position;
