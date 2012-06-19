@@ -87,6 +87,7 @@ if(is_void(__eaarl_includes_included__)) {
   require, "edb_access.i";
   require, "edf.i";
   require, "flightlines.i";
+  require, "fp.i";
   require, "geo_bath.i";
   require, "geometry.i";
   require, "geotiff_tags.i";
@@ -120,7 +121,6 @@ if(is_void(__eaarl_includes_included__)) {
   require, "mosaic_tools.i";
   require, "mouse.i";
   require, "nad832navd88.i";
-  require, "nav.i";
   require, "obj_show.i";
   require, "parse.i";
   require, "pcobj_export.i";
