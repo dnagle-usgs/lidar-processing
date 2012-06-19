@@ -816,6 +816,66 @@ func write_fp(fp, outfile=, plot=) {
   }
 }
 
+func fp_export(fp, shapefile=, name=, base=, color=, outdir=, kml=, gm_lines=, gm_boundary=) {
+  if(is_string(fp)) {
+    default, outdir, file_dirname(fp);
+    fp = read_fp(fp);
+  }
+  if(!is_void(shapefile)) {
+    shp = read_ascii_shapefile(shapefile);
+    if(numberof(shp) != 1)
+      error, "shapefile must contain exactly one polygon!";
+    fp.region = shp(1);
+    shp = [];
+  }
+  default, name, fp.name;
+  default, base, name;
+  default, color, [0,0,255];
+  default, kml, 1;
+  default, gm_lines, 1;
+  default, gm_boundary, 1;
+
+  base = file_sanitize(base);
+  if(kml && is_integer(kml)) {
+    kml = base + ".kmz";
+    if(outdir) kml = file_join(outdir, kml);
+  }
+  if(gm_lines && is_integer(gm_lines)) {
+    gm_lines = base + "_lines.xyz";
+    if(outdir) gm_lines = file_join(outdir, gm_lines);
+  }
+  if(gm_boundary && is_integer(gm_boundary)) {
+    gm_boundary = base + "_boundary.xyz";
+    if(outdir) gm_boundary = file_join(outdir, gm_boundary);
+  }
+
+  if(kml) {
+    kml_fp, fp, outfile=kml, color=color, name=name;
+    write, "Created "+kml;
+  }
+  if(gm_lines) {
+    write_globalmapper_fp, fp, outfile=gm_lines, name=name;
+    write, "Created "+gm_lines;
+  }
+  if(gm_boundary) {
+    meta =
+      swrite(format="NAME=%s Boundary\n", name)+
+      swrite(format="DESCRIPTION=%s\n", name)+
+      swrite(format="BORDER_COLOR=RGB(%d,%d,%d)\n", color(1), color(2), color(3))+
+      "BORDER_WIDTH=3\n"+
+      "BORDER_STYLE=Solid\n"+
+      "CLOSED=YES\n"+
+      "FONT_SIZE=12\n"+
+      "FONT_COLOR=RGB(0,0,0)\n"+
+      "FONT_CHARSET=0\n";
+    shp = *fp.region;
+    if(dimsof(shp)(2) == 2)
+      shp = transpose(grow(transpose(shp), -999999));
+    write_ascii_shapefile, &shp, gm_boundary, meta=meta;
+    write, "Created "+gm_boundary;
+  }
+}
+
 func write_globalmapper_fp(input, fp=, ifname=, ofname=, outfile=, name=,
 color=, out_utm=) {
 /* DOCUMENT write_globalmapper_fp(fp, outfile=, name=, color=, out_utm=)
