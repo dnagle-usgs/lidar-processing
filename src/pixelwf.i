@@ -49,7 +49,8 @@ if(is_void(pixelwfvars)) {
       win=7,
       c1=1,          //bool; channel 1
       c2=1,          //bool; channel 2
-      c3=1           //bool; channel 3
+      c3=1,          //bool; channel 3
+      c4=0           //bool; channel 4
     ),
     show_wf_transmit=h_new(
       enabled=1,
@@ -158,7 +159,8 @@ func pixelwf_show_wf(void) {
   pixelwf_load_data;
 
   win = current_window();
-  show_wf, raster, pulse, win=vars.win, c1=vars.c1, c2=vars.c2, c3=vars.c3;
+  show_wf, raster, pulse, win=vars.win, c1=vars.c1, c2=vars.c2, c3=vars.c3,
+    c4=vars.c4;
   window_select, win;
 }
 

@@ -58,6 +58,7 @@ if {![namespace exists ::l1pro::pixelwf]} {
                 variable c1 1
                 variable c2 1
                 variable c3 1
+                variable c4 0
             }
             namespace eval show_wf_transmit {
                 variable enabled 0
@@ -138,7 +139,7 @@ if {![namespace exists ::l1pro::pixelwf]} {
                     ex_bath {enabled verbose}
                     ex_veg {enabled verbose use_be_peak use_be_centroid \
                             hard_surface}
-                    show_wf {enabled c1 c2 c3}
+                    show_wf {enabled c1 c2 c3 c4}
                     show_wf {enabled}
                     geo_rast {enabled verbose}
                     ndrast {enabled}
@@ -613,12 +614,13 @@ namespace eval ::l1pro::pixelwf::gui {
         ttk::checkbutton $f.chkC1 -text c1 -variable ${ns}::c1
         ttk::checkbutton $f.chkC2 -text c2 -variable ${ns}::c2
         ttk::checkbutton $f.chkC3 -text c3 -variable ${ns}::c3
+        ttk::checkbutton $f.chkC4 -text c4 -variable ${ns}::c4
 
         ttk::button $f.btnGraph -text Plot -command [list ybkg pixelwf_show_wf]
 
         ttk::frame $f.fraC
         lower $f.fraC
-        grid $f.chkC1 $f.chkC2 $f.chkC3 -in $f.fraC
+        grid $f.chkC1 $f.chkC2 $f.chkC3 $f.chkC4 -in $f.fraC
         grid columnconfigure $f.fraC 2 -weight 1
 
         grid $f.lblWindow $f.spnWindow
