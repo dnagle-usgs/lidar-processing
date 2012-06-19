@@ -106,7 +106,7 @@ proc ::l1pro::processing::process {} {
             }
         veg {
             set cmd "$::pro_var = make_veg(latutm=1, q=q, ext_bad_att=1,\
-                    ext_bad_veg=1, use_centroid=$::usecentroid)"
+                    use_centroid=$::usecentroid)"
         }
         cveg {
             set cmd "$::pro_var = make_veg(latutm=1, q=q,\

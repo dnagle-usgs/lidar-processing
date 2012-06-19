@@ -255,8 +255,8 @@ func make_fs_veg(d, rrr) {
   return geoveg;
 }
 
-func make_veg(latutm=, q=, ext_bad_att=, ext_bad_veg=, use_centroid=, use_highelv_echo=, multi_peaks=, alg_mode=) {
-/* DOCUMENT make_veg(latutm=, q=, ext_bad_att=, ext_bad_veg=, use_centroid=, use_highelv_echo=, multi_peaks=, alg_mode=)
+func make_veg(latutm=, q=, ext_bad_att=, use_centroid=, use_highelv_echo=, multi_peaks=, alg_mode=) {
+/* DOCUMENT make_veg(latutm=, q=, ext_bad_att=, use_centroid=, use_highelv_echo=, multi_peaks=, alg_mode=)
  This function allows a user to define a region on the gga plot of
  flightlines (usually window 6) to  process data using the vegetation
  algorithm.
@@ -264,9 +264,6 @@ func make_veg(latutm=, q=, ext_bad_att=, ext_bad_veg=, use_centroid=, use_highel
 Inputs are:
 
  ext_bad_att   Eliminate points within 20m of mirror.
-
- ext_bad_veg   Unused. Originally, extract the points that failed to
-  show any veg using the run_vegx function and write these points to an array
 
 Returns:
  veg_all       This function returns the array veg_all of type VEG_ALL_
