@@ -877,7 +877,7 @@ func fp_export(fp, shapefile=, name=, base=, color=, outdir=, kml=, gm_lines=, g
     write_globalmapper_fp, fp, outfile=gm_lines, name=name;
     write, "Created "+gm_lines;
   }
-  if(gm_boundary) {
+  if(gm_boundary && fp.region) {
     meta =
       swrite(format="NAME=%s Boundary\n", name)+
       swrite(format="DESCRIPTION=%s\n", name)+
