@@ -169,3 +169,101 @@ func mouse_bounds(&xmin, &ymin, &xmax, &ymax, sys=, style=, prompt=, win=) {
 
   return [xmin, ymin, xmax, ymax];
 }
+
+func mdist(&click, units=, win=, plot=, verbose=, nox=, noy=) {
+/* DOCUMENT mdist(&click, units=, win=, plot=, verbose=, nox=, noy=)
+  Measure the distance between two points as selected by mouse click and return
+  the distance in meters. The distance in nautical miles, statue miles, and
+  meters or kilometers will also be displayed to the console.
+
+  Options:
+    units= Specifies the units used in the input window.
+        units="ll"  Geographic coordinates in degrees (default)
+        units="m"   Meters
+        units="cm"  Centimeters
+        units="mm"  Millimeters
+    win= Specifies a window. If omitted, the current window is used.
+    plot= Can be used to turn on/off plotting of the line drawn.
+        plot=0      Turn off plotting
+        plot=1      Turn on plotting (default)
+    verbose= Specifies whether to display text to the console.
+        verbose=0   Display nothing to the console
+        verbose=1   Display info to the console (default)
+    nox= Eliminates X from the distance calculation. (Useful to get height
+      differences in a transect window, for example.)
+        nox=0   Include X (default)
+        nox=1   Exclude X
+    noy= Eliminates Y from the distance calculation.
+        noy=0   Include Y (default)
+        noy=1   Exclude Y
+
+  Output parameters:
+    click: The return result from mouse() obtained from the user.
+
+  Returns:
+    Scalar distance in meters.
+
+  SEE ALSO: lldist, mouse_measure
+*/
+  default, units, "ll";
+  default, win, window();
+  default, plot, 1;
+  default, verbose, 1;
+
+  msize = 0.3;
+  prompt = swrite(format="Click and drag left mouse button in window %d:", win);
+
+  wbkp = current_window();
+  window, win;
+
+  forever = 1;
+  while(1) {
+    click = mouse(1, 2, prompt);
+    if(anyof(click(1:2) - click(3:4))) break;
+    write, "You must keep the left mouse button down while dragging the line.";
+    write, "Make sure you click in the correct window.";
+  }
+
+  result = [];
+
+  if(units == "ll") {
+    nm = lldist(click(2), click(1), click(4), click(3));
+    sm = nm * 1.150779;
+    km = nm * 1.852;
+    m = km / 1000.;
+  } else {
+    dx = nox ? 0 : (click(3) - click(1));
+    dy = noy ? 0 : (click(4) - click(2));
+    m = sqrt(dx*dx + dy*dy);
+
+    if(units == "cm")
+      m *= 0.01;
+    else if(units == "mm")
+      m *= 0.001;
+    else if(units != "m")
+      error, "Unknown units= value";
+
+    km = m / 1000.;
+    nm = km / 1.852;
+    sm = nm * 1.150779;
+  }
+
+  if(verbose) {
+    write, "Distance is:";
+    write, format="   %.3f nautical miles\n", nm;
+    write, format="   %.3f statute miles\n", sm;
+    if(km > 1)
+      write, format="   %.3f kilometers\n", km;
+    else
+      write, format="   %.3f meters\n", m;
+  }
+
+  if(plot) {
+    plmk, click(2), click(1), msize=msize;
+    plmk, click(4), click(3), msize=msize;
+    plg, [click(2),click(4)], [click(1),click(3)], color="red", marks=0;
+  }
+
+  window_select, wbkp;
+  return m;
+}
