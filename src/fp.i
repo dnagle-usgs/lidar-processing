@@ -607,8 +607,8 @@ func pip_fp(junk, fp=, ply=, shapefile=, name=, win=, mode=, in_utm=, out_utm=, 
     out_utm= Set out_utm=1 if the output should be in UTM. This is not recommended.
     debug= Set debug=1 for debug mode.
 
-  This will return a variable of type FP. It will also write the flight plan to
-  the terminal.
+  This will return a variable of type FP. It will also write a summary of the
+  flight plan to the terminal.
 */
 /*
   Intersection point of 2 lines equation described by Paul Bourke at
@@ -756,7 +756,8 @@ func pip_fp(junk, fp=, ply=, shapefile=, name=, win=, mode=, in_utm=, out_utm=, 
 
   fp_new.lines = &new_fpxy;
 
-  write_fp, fp_new, plot=1;
+  write_fp, fp_new, plot=1, nolines=1;
+  write, format="# %d total flightlines\n", dimsof(*fp_new.lines)(2);
 
   return fp_new;
 }
