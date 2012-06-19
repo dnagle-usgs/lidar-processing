@@ -329,8 +329,8 @@ func lldist(lat0, lon0, lat1, lon1) {
   given in geographic coordiantes. Input values may be conformable arrays;
   output will have dimensionality to match.
 
-  To convert to kilometers, multiply by 1.852
-  To convert to statute miles, multiply by 1.150779
+  To convert to kilometers, multiply by NMI2KM.
+  To convert to statute miles, multiply by NMI2MI.
 */
   if(is_void(lon0) && numberof(lat0) == 4) {
     assign, noop(lat0), lat0, lon0, lat1, lon1;

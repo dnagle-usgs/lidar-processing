@@ -28,6 +28,22 @@ local MPS2KN, KN2MPS;
 MPS2KN = 1.943844;
 KN2MPS = 0.514444;
 
+local NMI2KM, NMI2MI, MI2KM, KM2NMI, MI2NMI, KM2MI;
+/* DOCUMENT
+  NMI2KM -- constant for converting nautical miles to kilometers
+  NMI2MI -- constant for converting nautical miles to statue miles
+  MI2KM -- constant for converting statute miles to kilometers
+  KM2NMI -- constant for converting kilometers to nautical miles
+  MI2NMI -- constant for converting statute miles to nautical miles
+  KM2MI -- constant for converting kilometers to statute miles
+*/
+NMI2KM = 1.852;
+KM2NMI = 1./NMI2KM;
+MI2KM = 1.609344;
+KM2MI = 1/MI2KM;
+NMI2MI = NMI2KM * KM2MI;
+MI2NMI = MI2KM * KM2NMI;
+
 local CNS;
 /* DOCUMENT CNS
   Speed of light in space, in meters per nanosecond.

@@ -122,12 +122,12 @@ func sdist( junk, block=, line= , mode=, fill=, in_utm=, out_utm=, ply=, silent=
       res = mdist(click,plot=0);  // get the segment from the user in ll
     }
     km = res / 1000.;
-    sf = aw / (km/1.852); // determine scale factor
+    sf = aw / (km * KM2NMI); // determine scale factor
   } else {
     click = array(float, 4 );
     n = sread(line,format="%f %f %f %f", click(2), click(1), click(4), click(3) );
-    // lldist output is in nautical miles, x by 1.852 for km
-    km = lldist( click(2), click(1), click(4), click(3) ) * 1.852;
+    // lldist output is in nautical miles
+    km = lldist( click(2), click(1), click(4), click(3) ) * NMI2KM;
     sf = aw / km;   // determine scale factor
   }
   write, format="Scale factor before = %5.3f\n",sf;
@@ -871,7 +871,7 @@ func write_globalmapper_fp(input, fp=, ifname=, ofname=, outfile=, out_utm=) {
       "FONT_COLOR=RGB(0,0,0)\n"+
       "FONT_CHARSET=0\n"+
       swrite(format="FLIGHTLINE_NUMBER=%d\n", i)+
-      swrite(format="FLIGHTLINE_LENGTH=%.2f km\n", lldist(ply(*))*1.852);
+      swrite(format="FLIGHTLINE_LENGTH=%.2f km\n", lldist(ply(*))*NMI2KM);
   }
   write_ascii_shapefile, shp, outfile, meta=meta;
 }

@@ -228,8 +228,8 @@ func mdist(&click, units=, win=, plot=, verbose=, nox=, noy=) {
 
   if(units == "ll") {
     nm = lldist(click(2), click(1), click(4), click(3));
-    sm = nm * 1.150779;
-    km = nm * 1.852;
+    sm = nm * NMI2MI;
+    km = nm * NMI2KM;
     m = km / 1000.;
   } else {
     dx = nox ? 0 : (click(3) - click(1));

@@ -58,7 +58,7 @@ func kml_fp(fp, shapefile=, outfile=, color=, name=) {
   longest_km = 0.;
   total_secs = 0.;
   for(i = 1; i <= count; i++) {
-    km = 1.852 * lldist(lat1(i), lon1(i), lat2(i), lon2(i));
+    km = NMI2KM * lldist(lat1(i), lon1(i), lat2(i), lon2(i));
     total_km += km;
     longest_km = max(longest_km, km);
     desc = swrite(format="Line length: %.2f km\n", km);
