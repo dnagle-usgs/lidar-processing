@@ -31,7 +31,9 @@ func kmz_create(dest, files, ..) {
     error, "Unable to zip command.";
   }
 
-  files = file_relative(file_dirname(dest), files);
+  files = file_join(
+    file_relative(file_dirname(dest), file_dirname(files)),
+    file_tail(files));
 
   if(file_exists(dest))
     remove, dest;
