@@ -530,7 +530,7 @@ func read_fp(fname, utm=, shapefile=, plot=, win=) {
   // Initialize fp using info in the first three lines which are usually header
   // comments in a specific format. If they're not in the right format, the
   // values just get left as 0.
-  lines = rdfile(fname, 3);
+  lines = rdfile(fname, 4);
 
   sw = aw = msec = ssturn = 0.;
   block = 0;
@@ -546,10 +546,14 @@ func read_fp(fname, utm=, shapefile=, plot=, win=) {
   sread, lines(3), format="# Total Seglen=%fkm", kmlen;
   fp.kmlen = kmlen;
 
+  linecount = 0;
+  name = "noname";
+  sread, lines(4), format="# Total Lines=%d  Area Name=%[^\n]", linecount, name;
+  fp.name = (name ? name : "noname");
+
   // Load in flightlines data and the block name
   cols = rdcols(fname, delim=" :");
   count = numberof(*cols(1));
-  fp.name = strtrim(longest_common_prefix(*cols(2)), 2, blank="-");
 
   y1 = dm2deg(atod(strpart(*cols(3), 2:)));
   south = strpart(*cols(3), :1) == "s";
@@ -770,7 +774,6 @@ func pip_fp(nil, fp=, ply=, shapefile=, name=, win=, mode=, in_utm=, out_utm=, d
   fp_new.lines = &new_fpxy;
 
   write_fp, fp_new, plot=1, nolines=1;
-  write, format="# %d total flightlines\n", dimsof(*fp_new.lines)(2);
 
   return fp_new;
 }
@@ -819,14 +822,18 @@ func write_fp(fp, outfile=, nolines=, plot=) {
     format="# Total Seglen=%5.3fkm Total segtime=%4.2f(min) Total time=%3.2f(hrs)\n",
     km, segsecs/60.0, blocksecs/3600.0;
 
+  write, f,
+    format="# Total Lines=%d  Area Name=%s\n",
+    dimsof(*fp.lines)(2), fp.name;
+
   if(!nolines) {
     lat1d = abs(double(int(fpxy(2,))*100 + ((fpxy(2,) - int(fpxy(2,))) * 60.0)));
     lon1d = abs(double(int(fpxy(1,))*100 + ((fpxy(1,) - int(fpxy(1,))) * 60.0)));
     lat2d = abs(double(int(fpxy(4,))*100 + ((fpxy(4,) - int(fpxy(4,))) * 60.0)));
     lon2d = abs(double(int(fpxy(3,))*100 + ((fpxy(3,) - int(fpxy(3,))) * 60.0)));
 
-    write, f, format="llseg %s-%d n%013.8f:w%12.8f n%13.8f:w%12.8f\n",
-      fp.name, counter, lat1d, lon1d, lat2d, lon2d;
+    write, f, format="llseg line-%d n%013.8f:w%12.8f n%13.8f:w%12.8f\n",
+      counter, lat1d, lon1d, lat2d, lon2d;
   }
 
   if(!is_void(f))
