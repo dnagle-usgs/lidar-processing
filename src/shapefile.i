@@ -114,17 +114,22 @@ func write_ascii_shapefile(shp, filename, meta=) {
 */
 // Original David Nagle 2008-10-06
   // Check a polygon and determine if it's in UTM or lat/lon
-  if((*shp(1))(1,)(max) < 0)
-    fmt = "%.10f,%.10f\n";
+  if((*shp(1))(1,)(max) <= 360)
+    fmt = "%.10f,%.10f";
   else
-    fmt = "%.3f,%.3f\n";
+    fmt = "%.3f,%.3f";
 
   f = open(filename, "w");
   for(i = 1; i <= numberof(shp); i++) {
     if(!is_void(meta)) {
       write, f, format="%s", meta(i);
     }
-    write, f, format=fmt, (*shp(i))(1,), (*shp(i))(2,);
+    ply = *shp(i);
+    if(dimsof(ply)(2) > 2) {
+      write, f, format=fmt+",%.3f\n", ply(1,), ply(2,), ply(3,);
+    } else {
+      write, f, format=fmt+"\n", ply(1,), ply(2,);
+    }
     write, f, format="%s", "\n";
   }
   close, f;
