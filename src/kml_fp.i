@@ -89,5 +89,12 @@ func kml_fp(fp, shapefile=, outfile=, color=, name=) {
     );
   }
 
-  kml_save, outfile, lines, region, name=name;
+  if(strcase(0, file_extension(outfile)) == ".kmz") {
+    kml = file_join(file_dirname(outfile), "doc.kml");
+    kml_save, kml, lines, region, name=name;
+    kmz_create, outfile, kml;
+    remove, kml;
+  } else {
+    kml_save, outfile, lines, region, name=name;
+  }
 }
