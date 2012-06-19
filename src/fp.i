@@ -604,7 +604,7 @@ func pip_fp(nil, fp=, ply=, shapefile=, name=, win=, mode=, in_utm=, out_utm=, d
 /* DOCUMENT pip_fp(fp, ply=, shapefile=, name=, win=, mode=, in_utm=, out_utm=, debug=)
   Create a flight plan by interactively selecting a polygon with a series of
   mouse clicks and then interactively defining the orientation for the
-  flightlines. The orientation MUST be defined south->north.
+  flightlines.
 
   Options:
     fp= The input fp variable, optional. If not set, the user will be prompted
