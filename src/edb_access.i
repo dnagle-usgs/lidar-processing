@@ -463,10 +463,11 @@ func decode_raster(raw, rn=) {
     result.offset_time(i) = (pulse.offset_time + header.fseconds) \
       * 1.6e-6 + seconds;
     result.rxbias(i,) = pulse.return_bias;
-    result.tx(i) = &pulse.transmit_wf(:);
-    result.rx(i,1) = &pulse.channel1_wf(:);
-    result.rx(i,2) = &pulse.channel2_wf(:);
-    result.rx(i,3) = &pulse.channel3_wf(:);
+    result.tx(i) = &pulse.transmit_wf;
+    result.rx(i,1) = &pulse.channel1_wf;
+    result.rx(i,2) = &pulse.channel2_wf;
+    result.rx(i,3) = &pulse.channel3_wf;
+    result.rx(i,4) = &pulse.channel4_wf;
   }
 
   return result;
