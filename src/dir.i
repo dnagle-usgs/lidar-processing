@@ -698,3 +698,31 @@ func dir_empty(dir) {
   found = found ? 0 : 1;
   return found;
 }
+
+func file_sanitize(&fn) {
+/* DOCUMENT sanitized = file_sanitize(fn)
+  -or- file_sanitize, fn
+
+  Sanitizes a filename so that it does not contain inappropriate characters.
+  The sanitiziation process replaces all series of invalid characters with an
+  underscore; invalid leading and trailing characters are simply removed. Only
+  the following characters are permitted:
+    alphabet: A-Za-z
+    numbers: 0-9
+    punctuation: -_/.
+  Note that spaces are not allowed.
+
+  As an edge case, if the filename begins or ends with a series of invalid
+  characters adjacent to an underscore, that underscore will also be removed.
+  However, if a filename begins or ends directly with an underscore, it will be
+  left in place.
+*/
+  which = 0;
+  if(strpart(fn, 1:1) != "_") which |= 1;
+  if(strpart(fn, 0:0) != "_") which |= 2;
+  ofn = regsub("[^-A-Za-z0-9_/.]+", fn, "_", all=1);
+  if(which) ofn = strtrim(ofn, which, blank="_");
+  if(am_subroutine())
+    fn = ofn;
+  return ofn;
+}
